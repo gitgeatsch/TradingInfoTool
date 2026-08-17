@@ -149,6 +149,73 @@ ZEITGRENZE_ROLLE_G_SEKUNDEN = 75
 # Aufgabegrenze 600 s - zehn von fuenfzehn Minuten, fuenf Minuten Luft.
 WARTE_AUF_PLATZ_SEKUNDEN = 480
 
+# WIE VIELE TRANSPORTFEHLER IN FOLGE DEN UMLAUF ABBRECHEN (17.08.2026).
+#
+# DER PREIS DER LANGEN WARTEZEIT. Mit 180 s wartete ein Faden bei einem
+# Ausfall drei Minuten aufs Nichts; mit 480 s waeren es acht - mal vierzig
+# Faeden. Die Wartezeit hilft gegen Andrang und schadet bei Ausfall, also
+# braucht sie einen Gegenspieler, der Andrang von Ausfall unterscheidet.
+#
+# IN FOLGE, NICHT INSGESAMT. Ein Anbieter, der weg ist, laesst ALLES
+# scheitern; ein wackliger laesst Erfolge dazwischen zu. Eine Gesamtzahl
+# wuerde einen Umlauf mit drei verstreuten Aussetzern genauso abbrechen wie
+# einen mit totem Anbieter - und das sind zwei verschiedene Lagen.
+#
+# DREI, nicht eins: einzelne HTTP-Fehler kamen in den Messungen am 17.08.
+# vereinzelt vor, ohne dass der Anbieter weg war. Drei in Folge bei zwei
+# gleichzeitigen Plaetzen sind kein Zufall mehr.
+AUSFALL_SCHWELLE = 3
+
+_ausfall = {"folge": 0, "aus": None}
+_AUSFALL_SPERRE = threading.Lock()
+
+
+def beginne_umlauf() -> None:
+    """Setzt den Abbruch zurueck - EIN Umlauf, EINE Entscheidung.
+
+    Der Abbruch gilt fuer den laufenden Umlauf, nicht fuer immer. Beim
+    naechsten Takt (alle 15 Minuten) wird wieder probiert: dann kostet ein
+    fortdauernder Ausfall drei Aufrufe statt vierzig."""
+    with _AUSFALL_SPERRE:
+        _ausfall["folge"] = 0
+        _ausfall["aus"] = None
+
+
+def _ist_transportfehler(exc: BaseException) -> bool:
+    """Hat der Anbieter geantwortet - oder war er nicht erreichbar?
+
+    NUR TRANSPORT ZAEHLT. Eine unbrauchbare Antwort (kaputtes JSON, fehlendes
+    Feld) ist ein INHALTSPROBLEM: der Anbieter lebt, er hat geantwortet. Sie
+    zu zaehlen hiesse, wegen schlechter Antworten das Fragen einzustellen -
+    und genau die Faelle sind die, die man sehen will."""
+    import requests
+
+    return isinstance(exc, (requests.exceptions.RequestException, OSError))
+
+
+def _buche(exc: BaseException | None) -> None:
+    """Zaehlt Fehlschlaege in Folge und loest bei der Schwelle aus."""
+    if exc is not None and not _ist_transportfehler(exc):
+        exc = None          # der Anbieter hat geantwortet - er lebt
+    with _AUSFALL_SPERRE:
+        if exc is None:
+            _ausfall["folge"] = 0
+            return
+        _ausfall["folge"] += 1
+        if _ausfall["folge"] < AUSFALL_SCHWELLE or _ausfall["aus"]:
+            return
+        _ausfall["aus"] = f"{AUSFALL_SCHWELLE} Transportfehler in Folge " \
+                          f"(zuletzt: {type(exc).__name__})"
+        gruende = _ausfall["aus"]
+    # EINMAL LAUT, nicht vierzigmal. Ausserhalb der Sperre, damit das Logging
+    # nicht die Bremse selbst blockiert.
+    logger.warning("Rolle G fuer diesen Umlauf abgebrochen: %s", gruende)
+
+
+def _abgebrochen() -> str | None:
+    with _AUSFALL_SPERRE:
+        return _ausfall["aus"]
+
 
 def _mit_platz(fn, *a, **kw):
     """Ruft `fn` auf, sobald ein Z.ai-Platz frei ist.
@@ -162,17 +229,54 @@ def _mit_platz(fn, *a, **kw):
     genauso aus wie eines, das die Pruefung bestanden hat. Wer nicht drankam,
     muss sich vom Rest unterscheiden lassen - sonst zaehlen wir spaeter
     Ausfaelle als Zustimmung."""
+    # ⚠️ VOR DEM WARTEN. Steht der Anbieter, hat Warten keinen Zweck -
+    # der Faden ginge acht Minuten in eine Schlange, an deren Ende
+    # dieselbe Zeitgrenze steht, die schon dreimal ablief.
+    grund = _abgebrochen()
+    if grund:
+        raise Ausfall(grund)
     if not _PLATZ.acquire(timeout=WARTE_AUF_PLATZ_SEKUNDEN):
         raise Andrang("kein Z.ai-Platz binnen "
                       f"{WARTE_AUF_PLATZ_SEKUNDEN:.0f} s frei")
     try:
-        return fn(*a, **kw)
+        # ⚠️ UND NOCH EINMAL NACH DEM WARTEN. Wer beim Eintritt in die
+        # Schlange stand, hat den Abbruch nicht gesehen - bei 480 s
+        # Wartezeit sind das im Andrangfall fast alle. Ohne diese zweite
+        # Frage brennt jeder wartende Faden nach dem Abbruch noch seine
+        # eigene Zeitgrenze ab, und der Abbruch spart nichts.
+        grund = _abgebrochen()
+        if grund:
+            raise Ausfall(grund)
+        ergebnis = fn(*a, **kw)
+    except Ausfall:
+        raise
+    except BaseException as exc:
+        _buche(exc)
+        raise
+    else:
+        _buche(None)
+        return ergebnis
     finally:
         _PLATZ.release()
 
 
 class Andrang(RuntimeError):
     """Es war kein Platz frei - der Aufruf hat NICHT stattgefunden."""
+
+
+class Ausfall(Andrang):
+    """Der Anbieter ist weg - fuer diesen Umlauf wird nicht mehr gefragt.
+
+    ERBT VON `Andrang`, WEIL DIE FOLGE DIESELBE IST: der Aufruf hat nicht
+    stattgefunden, und der Aufrufer bucht ihn als *uebersprungen*, nicht als
+    *fehlgeschlagen*. Jeder bestehende `except Andrang` behandelt ihn damit
+    richtig, ohne dass eine Stelle nachgezogen werden muss.
+
+    UNTERSCHEIDBAR BLEIBT ER TROTZDEM - am Typ und am Text. Andrang heisst
+    'zu viele auf einmal', Ausfall heisst 'der Anbieter antwortet nicht'.
+    Das sind zwei verschiedene Lagen mit zwei verschiedenen Massnahmen, und
+    sie in einer Zahl zu verruehren waere genau das Verschlucken, gegen das
+    diese Klassen gebaut sind."""
 
 
 # ---------------------------------------------------------------------------
@@ -591,8 +695,21 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
             # sich vom Rest unterscheiden lassen - sonst zaehlen wir Ausfaelle
             # spaeter als Zustimmung.
             aus["uebersprungen"] = str(e)
+            # DIE ART, NICHT NUR DER TEXT. "Zu viele auf einmal" und "der
+            # Anbieter ist weg" verlangen zwei verschiedene Massnahmen; sie
+            # spaeter aus einem Satz zurueckzulesen waere Raten.
+            aus["uebersprungen_art"] = ("ausfall" if isinstance(e, Ausfall)
+                                        else "andrang")
             logger.info("Rolle G uebersprungen: %s", e)
-        except Exception:                                    # noqa: BLE001
+        except Exception as e:                               # noqa: BLE001
+            # ⚠️ AUCH DER FEHLSCHLAG MUSS SICHTBAR SEIN (17.08.2026).
+            # Beim Nachweis am toten Anbieter aufgefallen: die ersten drei
+            # Signale - die VOR dem Abbruch - landeten hier und setzten gar
+            # nichts. Ihre Mails gingen ohne Gegenpruefung UND ohne Hinweis
+            # raus, also genau so, wie sie aussaehen, wenn es zu diesem Wert
+            # keine Gegenquelle gibt.
+            aus["uebersprungen"] = f"{type(e).__name__}"
+            aus["uebersprungen_art"] = "fehler"
             logger.info("Z.ai-Rolle G fehlgeschlagen (P-8)", exc_info=True)
 
     faden = threading.Thread(target=arbeite, daemon=True,
@@ -654,6 +771,27 @@ def schreibe(conn, signal_id: int, ergebnis: dict) -> bool:
         return False
 
 
+# WAS IN DER MAIL STEHT, WENN DIE GEGENPRUEFUNG NICHT LIEF.
+#
+# ● UND NICHT ▼: das Zeichen faerbt die Zeile grau, nicht rot. Ein Ausfall
+# unserer Technik ist kein Befund ueber den Handel - ihn rot zu setzen
+# hiesse, dem Leser eine Warnung ueber sein Geschaeft zu geben, wo eine
+# ueber unser Werkzeug gemeint ist.
+#
+# KEINE ZAHLEN, KEINE ANBIETERNAMEN IM GRUND: der Leser kann mit "Z.ai
+# ConnectTimeout nach 3 Versuchen" nichts anfangen. Was er wissen muss, ist,
+# dass dieses Signal OHNE Gegenpruefung zu ihm kommt.
+_UEBERSPRUNGEN = {
+    "andrang": "● Gegenpruefung nicht gelaufen - zu viele Signale in diesem "
+               "Umlauf. Dieses Signal ist NICHT gegengeprueft.",
+    "fehler": "● Gegenpruefung nicht gelaufen - die Gegenquelle hat nicht "
+              "geantwortet. Dieses Signal ist NICHT gegengeprueft.",
+    "ausfall": "● Gegenpruefung nicht gelaufen - die Gegenquelle war in "
+               "diesem Umlauf nicht erreichbar. Dieses Signal ist NICHT "
+               "gegengeprueft.",
+}
+
+
 def zeilen(ergebnis: dict) -> list[str]:
     """Die Zeilen fuer die Mail. Leer, wenn nichts vorliegt.
 
@@ -663,6 +801,17 @@ def zeilen(ergebnis: dict) -> list[str]:
     if not ergebnis:
         return []
     z: list[str] = []
+    # ⚠️ WER NICHT DRANKAM, MUSS SICH VOM REST UNTERSCHEIDEN LASSEN
+    # (17.08.2026). Bis heute setzte `hole()` ein Feld `uebersprungen`, das
+    # NIRGENDS gelesen wurde: bei Andrang oder Ausfall fehlte der Abschnitt
+    # ersatzlos, und eine ausgefallene Gegenpruefung sah aus wie eine, die
+    # es zu diesem Wert nicht gibt.
+    #
+    # Das ist nicht dasselbe wie der leere Abschnitt, vor dem der Docstring
+    # warnt: dort stuende ein Befund ohne Inhalt, hier steht ein Grund.
+    _art = ergebnis.get("uebersprungen_art")
+    if _art and not ergebnis.get("einwand"):
+        return [_UEBERSPRUNGEN.get(_art, _UEBERSPRUNGEN["andrang"])]
     # ⚠️ HIER STAND DIE KONSISTENZZEILE - "Ein zweites Modell nennt die
     # Begruendung schluessig". Entfernt am 16.08.2026 zusammen mit dem Aufruf,
     # der sie erzeugte: der Nutzer hat sie am 16.08. ausdruecklich abgelehnt

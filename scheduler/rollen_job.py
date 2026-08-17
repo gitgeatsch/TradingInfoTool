@@ -302,6 +302,12 @@ def fuehre_umlauf(*, conn_factory, config, clients=None, zai_client=None,
     uebrigen nicht mitnehmen - dieselbe Regel wie fuer ein einzelnes Asset im
     Lauf."""
     from agent import assetklassen as AK
+    from agent import zweite_meinung as ZM
+
+    # ⚠️ EIN UMLAUF, EINE ENTSCHEIDUNG UEBER DEN ANBIETER (17.08.2026).
+    # Hier und nicht in `fuehre_bereich`: sonst wuerde der Abbruch je Gruppe
+    # neu erprobt und kostete sechsmal drei Aufrufe statt dreimal.
+    ZM.beginne_umlauf()
 
     aus = []
     for gruppe, instrument, symbole in AK.laeufe():

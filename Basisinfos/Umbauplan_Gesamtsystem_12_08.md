@@ -10788,3 +10788,110 @@ Bei Haltedauern um 25 Handelstage folgenlos.
 8 statt 3 Minuten aufs Nichts. Sauber lösen würde das ein Abbruch nach *n*
 Transportfehlern im selben Umlauf — **nicht gebaut**, das ist eigene Mechanik
 und war nicht beauftragt.
+
+---
+
+## Kapitel 87 — Der Gegenspieler zur langen Wartezeit (17.08.2026)
+
+**Der Preis von Kapitel 86.** Mit 180 s wartete ein Faden bei einem
+Anbieterausfall drei Minuten aufs Nichts; mit 480 s wären es acht — **mal
+vierzig Fäden**. Die Wartezeit hilft gegen Andrang und schadet bei Ausfall,
+also braucht sie einen Gegenspieler, der die beiden Lagen unterscheidet.
+
+### 87.1 Die Mechanik
+
+**`AUSFALL_SCHWELLE = 3` Transportfehler IN FOLGE brechen den Umlauf ab.**
+
+| Entscheidung | warum |
+|---|---|
+| **in Folge**, nicht insgesamt | ein Anbieter, der weg ist, lässt ALLES scheitern; ein wackliger lässt Erfolge dazwischen zu. Eine Gesamtzahl behandelte beide Lagen gleich |
+| **drei**, nicht eins | einzelne HTTP-Fehler kamen am 17.08. vereinzelt vor, ohne dass der Anbieter weg war |
+| nur **Transport** | eine unbrauchbare Antwort ist ein Inhaltsproblem — der Anbieter lebt. Sie zu zählen hieße, wegen schlechter Antworten das Fragen einzustellen |
+| je **Umlauf**, nicht für immer | beim nächsten Takt kostet ein fortdauernder Ausfall drei Aufrufe statt vierzig |
+
+**`Ausfall` erbt von `Andrang`** — die Folge ist dieselbe (der Aufruf hat
+nicht stattgefunden), also behandelt jeder bestehende `except Andrang` ihn
+richtig, ohne dass eine Stelle nachgezogen werden muss. Unterscheidbar bleibt
+er am Typ und am Text.
+
+### 87.2 Zweimal gefragt, nicht einmal
+
+```python
+grund = _abgebrochen()          # VOR dem Warten
+if grund: raise Ausfall(grund)
+if not _PLATZ.acquire(...): raise Andrang(...)
+try:
+    grund = _abgebrochen()      # UND NOCH EINMAL danach
+```
+
+> **Wer beim Eintritt in die Schlange stand, hat den Abbruch nicht gesehen** —
+> bei 480 s Wartezeit sind das im Andrangfall fast alle. Ohne die zweite Frage
+> brennt jeder wartende Faden nach dem Abbruch noch seine eigene Zeitgrenze
+> ab, und der Abbruch spart nichts.
+
+### 87.3 Der Nachweis am Ausfall selbst
+
+Maßstab 1:100, 40 Signale, toter Anbieter:
+
+| | Aufrufe ins Leere | Umlauf | Buchung |
+|---|---:|---:|---|
+| ohne Abbruch | **14** | 525 s | 14 Fehler + 26 Andrang |
+| mit Abbruch | **4** | 150 s | 4 Fehler + 36 Ausfall |
+
+Vier statt drei, weil zwei Aufrufe gleichzeitig laufen: **wer schon unterwegs
+ist, wird nicht zurückgerufen.**
+
+### 87.4 Und dabei die eigentliche Blindheit gefunden
+
+Der Lauf gegen den toten Anbieter zeigte etwas, das nicht am Abbruch lag:
+
+```
+1.  art=None   Mailzeilen=0
+2.  art=None   Mailzeilen=0
+3.  art=None   Mailzeilen=0
+4.  art='ausfall'  Mailzeilen=1
+```
+
+⚠️ **`aus["uebersprungen"]` wurde gesetzt und NIRGENDS gelesen.** `zeilen()`
+lieferte nur bei gesetztem `einwand` etwas — bei Andrang, Ausfall und
+Fehlschlag fehlte der Abschnitt **ersatzlos**. Eine ausgefallene Gegenprüfung
+sah aus wie eine, die es zu diesem Wert gar nicht gibt.
+
+**Jetzt sagt die Mail es, in drei unterscheidbaren Sätzen:**
+
+```
+● Gegenpruefung nicht gelaufen - zu viele Signale in diesem Umlauf.
+  Dieses Signal ist NICHT gegengeprueft.
+● Gegenpruefung nicht gelaufen - die Gegenquelle war in diesem Umlauf
+  nicht erreichbar. Dieses Signal ist NICHT gegengeprueft.
+● Gegenpruefung nicht gelaufen - die Gegenquelle hat nicht geantwortet.
+  Dieses Signal ist NICHT gegengeprueft.
+```
+
+**● und nicht ▼:** grau, nicht rot. Ein Ausfall unserer Technik ist kein
+Befund über den Handel — ihn rot zu setzen hieße, dem Leser eine Warnung über
+sein Geschäft zu geben, wo eine über unser Werkzeug gemeint ist.
+
+**Keine Anbieternamen, keine Fehlertypen im Satz.** Mit „ConnectTimeout nach
+3 Versuchen" kann der Leser nichts anfangen; was er wissen muss, ist, dass
+dieses Signal **ohne** Gegenprüfung zu ihm kommt.
+
+### 87.5 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.099**, alle bestanden — **19 neu unter `--paket Ausfall`** |
+| zwei Fehler | brechen NICHT ab · ein Erfolg dazwischen setzt zurück |
+| drei in Folge | brechen ab · weitere Aufrufe werfen `Ausfall` in **0,000 s** |
+| Inhaltsfehler | fünf kaputte Antworten brechen nicht ab |
+| Rücksetzung | `beginne_umlauf()` in `fuehre_umlauf`, am Code geprüft |
+| Mail | drei Lagen, drei Sätze, alle grau, ein echter Befund verdrängt sie |
+| echter Weg | `ZM.hole()` mit totem Client: keine Ausnahme nach oben, Mail geht raus |
+| freie Namen · Zahlenprüfer · Belegprüfer · Darstellung | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 9 Mails, **0 Fehler, 0 Lücken** |
+
+### 87.6 Was bleibt
+
+Die drei Aufrufe vor dem Auslösen laufen weiterhin ins Leere — **das ist der
+Preis dafür, einen Ausfall von einem Aussetzer zu unterscheiden.** Ihre Mails
+tragen jetzt den Hinweis.

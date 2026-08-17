@@ -8377,6 +8377,205 @@ def paket_andrang() -> None:
             _b.join()
 
 
+def paket_ausfall() -> None:
+    """Der Abbruch nach Transportfehlern - der Preis der langen Wartezeit.
+
+    Mit 180 s wartete ein Faden bei einem Anbieterausfall drei Minuten aufs
+    Nichts; mit 480 s waeren es acht, mal vierzig Faeden. Die Wartezeit hilft
+    gegen Andrang und schadet bei Ausfall, also braucht sie einen
+    Gegenspieler, der die beiden Lagen unterscheidet (17.08.2026)."""
+    import json as _json
+    import threading as _th
+    import time as _t
+
+    import requests as _rq
+
+    from agent import zweite_meinung as _ZM
+
+    P = "Ausfall"
+
+    # ---- UEBERSPRUNGEN IST NICHT FEHLGESCHLAGEN ----
+    pruefe(P, "Ausfall erbt von Andrang",
+           issubclass(_ZM.Ausfall, _ZM.Andrang),
+           "die Folge ist dieselbe - der Aufruf hat nicht stattgefunden -, "
+           "also behandelt jeder bestehende `except Andrang` ihn richtig, "
+           "ohne dass eine Stelle nachgezogen werden muss")
+    pruefe(P, "und bleibt trotzdem unterscheidbar",
+           _ZM.Ausfall is not _ZM.Andrang,
+           "'zu viele auf einmal' und 'der Anbieter ist weg' sind zwei "
+           "Lagen mit zwei Massnahmen")
+
+    _alt_w, _alt_s = _ZM.WARTE_AUF_PLATZ_SEKUNDEN, _ZM.AUSFALL_SCHWELLE
+    try:
+        _ZM.beginne_umlauf()
+
+        def _tot():
+            raise _rq.exceptions.ConnectionError("weg")
+
+        def _lebt():
+            return "ok"
+
+        # ---- IN FOLGE, NICHT INSGESAMT ----
+        for _ in range(_ZM.AUSFALL_SCHWELLE - 1):
+            try:
+                _ZM._mit_platz(_tot)
+            except _rq.exceptions.ConnectionError:
+                pass
+        pruefe(P, f"{_ZM.AUSFALL_SCHWELLE - 1} Fehler brechen NICHT ab",
+               _ZM._abgebrochen() is None,
+               "einzelne HTTP-Fehler kamen am 17.08. vereinzelt vor, ohne "
+               "dass der Anbieter weg war")
+        _ZM._mit_platz(_lebt)
+        for _ in range(_ZM.AUSFALL_SCHWELLE - 1):
+            try:
+                _ZM._mit_platz(_tot)
+            except _rq.exceptions.ConnectionError:
+                pass
+        pruefe(P, "ein Erfolg dazwischen setzt den Zaehler zurueck",
+               _ZM._abgebrochen() is None,
+               "ein Anbieter, der weg ist, laesst ALLES scheitern - ein "
+               "wackliger laesst Erfolge dazwischen zu. Eine Gesamtzahl "
+               "wuerde beide Lagen gleich behandeln")
+
+        # ---- UND DER LETZTE LOEST AUS ----
+        try:
+            _ZM._mit_platz(_tot)
+        except _rq.exceptions.ConnectionError:
+            pass
+        pruefe(P, f"{_ZM.AUSFALL_SCHWELLE} in Folge brechen ab",
+               _ZM._abgebrochen() is not None)
+
+        # ---- DANACH WIRD NICHT MEHR GEFRAGT, UND ZWAR SOFORT ----
+        _gefragt = [0]
+
+        def _zaehl():
+            _gefragt[0] += 1
+            return "ok"
+
+        _t0 = _t.perf_counter()
+        _geworfen = False
+        try:
+            _ZM._mit_platz(_zaehl)
+        except _ZM.Ausfall:
+            _geworfen = True
+        _dauer = _t.perf_counter() - _t0
+        pruefe(P, "weitere Aufrufe werfen Ausfall statt zu fragen",
+               _geworfen and _gefragt[0] == 0)
+        pruefe(P, "und zwar OHNE zu warten",
+               _dauer < 1.0,
+               f"{_dauer:.3f} s - stuende der Anbieter, ginge der Faden "
+               f"sonst {_ZM.WARTE_AUF_PLATZ_SEKUNDEN:.0f} s in eine "
+               f"Schlange, an deren Ende dieselbe Zeitgrenze steht, die "
+               f"schon dreimal ablief")
+
+        # ---- DER NAECHSTE UMLAUF PROBIERT WIEDER ----
+        _ZM.beginne_umlauf()
+        pruefe(P, "beginne_umlauf() macht den Weg wieder frei",
+               _ZM._abgebrochen() is None and _ZM._mit_platz(_lebt) == "ok",
+               "der Abbruch gilt fuer den laufenden Umlauf, nicht fuer "
+               "immer - beim naechsten Takt kostet ein fortdauernder "
+               "Ausfall drei Aufrufe statt vierzig")
+        pruefe(P, "und der Umlauf setzt ihn wirklich zurueck",
+               "ZM.beginne_umlauf()"
+               in _quelltext("scheduler/rollen_job.py"),
+               "in fuehre_umlauf, nicht in fuehre_bereich - sonst wuerde je "
+               "Gruppe neu erprobt")
+
+        # ---- INHALT IST KEIN TRANSPORT ----
+        _ZM.beginne_umlauf()
+
+        def _kaputt():
+            _json.loads("{nicht json")
+
+        for _ in range(_ZM.AUSFALL_SCHWELLE + 2):
+            try:
+                _ZM._mit_platz(_kaputt)
+            except _json.JSONDecodeError:
+                pass
+        pruefe(P, "unbrauchbare ANTWORTEN brechen nicht ab",
+               _ZM._abgebrochen() is None,
+               "der Anbieter lebt, er hat geantwortet - sie zu zaehlen "
+               "hiesse, wegen schlechter Antworten das Fragen einzustellen, "
+               "und genau die Faelle will man sehen")
+
+        # ---- DER NACHWEIS AM AUSFALL SELBST, Massstab 1:100 ----
+        def _lauf(mit_abbruch: bool) -> tuple:
+            _ZM.beginne_umlauf()
+            _ZM.WARTE_AUF_PLATZ_SEKUNDEN = 1.2
+            _ZM.AUSFALL_SCHWELLE = 3 if mit_abbruch else 10 ** 9
+            _n = [0]
+            _s = _th.Lock()
+
+            def _langsam_tot():
+                with _s:
+                    _n[0] += 1
+                _t.sleep(0.15)                  # die Zeitgrenze laeuft ab
+                raise _rq.exceptions.ConnectTimeout("weg")
+
+            def _einer():
+                try:
+                    _ZM._mit_platz(_langsam_tot)
+                except Exception:                            # noqa: BLE001
+                    pass
+
+            _f = [_th.Thread(target=_einer) for _ in range(20)]
+            _a = _t.perf_counter()
+            for _x in _f:
+                _x.start()
+            for _x in _f:
+                _x.join()
+            return _n[0], _t.perf_counter() - _a
+
+        _ohne, _dauer_ohne = _lauf(False)
+        _mit, _dauer_mit = _lauf(True)
+        pruefe(P, "im Ausfall spart der Abbruch Aufrufe UND Zeit",
+               _mit < _ohne and _dauer_mit < _dauer_ohne,
+               f"{_mit} statt {_ohne} Aufrufe, {_dauer_mit:.1f} statt "
+               f"{_dauer_ohne:.1f} s bei 20 Signalen")
+        pruefe(P, "und mehr als die Schwelle laufen kaum durch",
+               _mit <= _ZM.AUSFALL_SCHWELLE + _ZM.MAX_GLEICHZEITIG,
+               f"{_mit} - die Schwelle ist 3, aber zwei laufen gleichzeitig: "
+               f"wer schon unterwegs ist, wird nicht zurueckgerufen")
+    finally:
+        _ZM.WARTE_AUF_PLATZ_SEKUNDEN = _alt_w
+        _ZM.AUSFALL_SCHWELLE = _alt_s
+        _ZM.beginne_umlauf()
+
+    # ---- UND DER LESER ERFAEHRT ES ----
+    pruefe(P, "die Mail sagt, dass NICHT gegengeprueft wurde",
+           all("NICHT gegengeprueft" in _ZM.zeilen({"uebersprungen_art": a})[0]
+               for a in ("andrang", "ausfall", "fehler")),
+           "das Feld `uebersprungen` wurde bis heute gesetzt und NIRGENDS "
+           "gelesen - eine ausgefallene Gegenpruefung sah aus wie eine, die "
+           "es zu diesem Wert gar nicht gibt")
+    pruefe(P, "und nennt die beiden Lagen verschieden",
+           _ZM.zeilen({"uebersprungen_art": "andrang"})
+           != _ZM.zeilen({"uebersprungen_art": "ausfall"}))
+    pruefe(P, "grau, nicht rot",
+           all(_ZM.zeilen({"uebersprungen_art": a})[0].startswith("●")
+               for a in ("andrang", "ausfall")),
+           "ein Ausfall unserer Technik ist kein Befund ueber den Handel")
+    pruefe(P, "ein echter Befund verdraengt die Zeile",
+           len(_ZM.zeilen({"uebersprungen_art": "andrang", "einwand": "nein",
+                           "einwand_grund": "x"})) > 1,
+           "kam die Pruefung doch noch durch, gilt ihr Ergebnis")
+    # ⚠️ DIE DREI VOR DEM ABBRUCH. Beim Nachweis am toten Anbieter
+    # aufgefallen: sie landen im P-8-Zweig, nicht bei Andrang/Ausfall.
+    _q = _quelltext("agent/zweite_meinung.py")
+    pruefe(P, "auch der blosse Fehlschlag setzt eine Art",
+           'aus["uebersprungen_art"] = "fehler"' in _q,
+           "sonst gehen die Mails VOR dem Abbruch ohne Gegenpruefung UND "
+           "ohne Hinweis raus - genau so, wie sie aussaehen, wenn es zu "
+           "diesem Wert gar keine Gegenquelle gibt")
+    pruefe(P, "und die drei Lagen sind drei verschiedene Saetze",
+           len({_ZM.zeilen({"uebersprungen_art": a})[0]
+                for a in ("andrang", "ausfall", "fehler")}) == 3)
+
+    pruefe(P, "und ohne alles bleibt es leer",
+           _ZM.zeilen({}) == [] and _ZM.zeilen({"einwand": None}) == [],
+           "ein Abschnitt ohne Inhalt saehe aus wie ein Befund")
+
+
 def paket_luecken() -> None:
     """Eine Luecke nur melden, wo es die Groesse ueberhaupt gibt (17.08.2026).
 
@@ -8431,7 +8630,7 @@ def paket_luecken() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall,
           "Frische": paket_frische}
 
 
