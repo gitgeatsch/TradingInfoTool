@@ -8856,6 +8856,21 @@ def paket_dimension() -> None:
            "Zusammenlegung sie, hier waeren sie 44 Codestellen Risiko "
            "ohne Gegenwert")
 
+    # ---- DER NB-EXPORT MUSS DEN UMBAU KENNEN ----
+    _ex = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "der Export hat einen Abschnitt zur Dimensionierung",
+           "def _dimensionierung(" in _ex
+           and '"dimensionierung": dimensionierung,' in _ex,
+           "bis heute kannte der Export vom Umbau NICHTS - jede Auswertung "
+           "waere auf Altdaten gelaufen und haette die alten Schluesse "
+           "bestaetigt")
+    pruefe(P, "und trennt EINGESTELLT von GEMESSEN",
+           '"eingestellt"' in _ex and '"gemessen"' in _ex
+           and '"erwartet_nach_s5"' in _ex,
+           "stimmen beide nicht ueberein, ist die Einstellung nicht "
+           "wirksam - genau der Fall, der am 18.08. beim Schluessel "
+           "risiko_pro_trade_prozent_hebel auffiel")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

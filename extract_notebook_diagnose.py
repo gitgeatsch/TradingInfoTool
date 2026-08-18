@@ -1460,6 +1460,104 @@ def _anlass_einstellungen() -> dict:
         return {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
 
 
+def _dimensionierung(conn) -> dict:
+    """S1 bis S5 des Umbauplans Kapitel 90 - im BETRIEB nachweisbar.
+
+    WOZU. Der Umbau vom 18.08. aendert Stop, Betrag und Hebel jedes Signals.
+    Ob er auf dem Notebook tatsaechlich greift, liess sich bis hierher nur an
+    einzelnen Mails ablesen - und die zeigen nie die Verteilung.
+
+    ⚠️ ZWEI DINGE, DIE NICHT VERWECHSELT WERDEN DUERFEN:
+
+      eingestellt   was in der config.yaml steht - also was gelten SOLL
+      gemessen      was an den Signalen der letzten Tage ankam
+
+    Stimmen beide nicht ueberein, ist die Einstellung nicht wirksam. Genau
+    dieser Fall - Konfiguration sagt eins, Verhalten macht ein anderes - ist
+    am 18.08. beim Schluessel `risiko_pro_trade_prozent_hebel` aufgefallen
+    (config sagt 1 %, die Kette rechnete 5 %)."""
+    import statistics as _st
+
+    aus: dict = {"stand": "Umbauplan Kapitel 90, S1-S5"}
+
+    # ---- WAS EINGESTELLT IST ----
+    try:
+        from agent import betraege as _BE
+        import config as _cfg
+
+        _c = _cfg.load_config()
+        aus["eingestellt"] = {
+            "stop_min_atr": _BE.stop_min_atr(_c),
+            "stop_min_atr_vorgabe_ohne_eintrag": 0.75,
+            "verlustanteil": {i: _BE.verlustanteil(i, _c)
+                              for i in ("spot", "hebel", "absicherung")},
+            "einsatz_eur": {i: _BE.einsatz_eur(i, "einstieg", _c)
+                            for i in ("spot", "hebel", "absicherung")},
+        }
+    except Exception as exc:  # noqa: BLE001
+        aus["eingestellt"] = {"nicht_lesbar": str(exc)}
+
+    # ---- WAS ANGEKOMMEN IST ----
+    try:
+        rows = [row_to_dict(r) for r in conn.execute(
+            "SELECT symbol, action, created_at, hebel, entry_eur_von, "
+            "entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
+            "position_size_eur FROM signals "
+            "WHERE created_at >= date('now', '-7 day') "
+            "AND entry_eur_von > 0 AND stop_loss_eur_von > 0")]
+    except Exception as exc:  # noqa: BLE001
+        aus["gemessen"] = {"nicht_lesbar": str(exc)}
+        return aus
+
+    stops, hebel = [], []
+    for r in rows:
+        ein = (float(r["entry_eur_von"])
+               + float(r["entry_eur_bis"] or r["entry_eur_von"])) / 2
+        st_ = (float(r["stop_loss_eur_von"])
+               + float(r["stop_loss_eur_bis"] or r["stop_loss_eur_von"])) / 2
+        if ein > 0:
+            stops.append(abs(ein - st_) / ein)
+        if r.get("hebel") is not None:
+            hebel.append(float(r["hebel"]))
+
+    def _q(werte, p):
+        if not werte:
+            return None
+        s = sorted(werte)
+        return round(s[min(len(s) - 1, int(p * len(s)))], 4)
+
+    aus["gemessen"] = {
+        "signale_7_tage": len(rows),
+        "stopabstand_relativ": {
+            "median": _q(stops, 0.5), "p25": _q(stops, 0.25),
+            "p75": _q(stops, 0.75),
+            "unter_3_prozent": sum(1 for s in stops if s < 0.03),
+            "ueber_4_prozent": sum(1 for s in stops if s > 0.04),
+        },
+        "hebel": {
+            "median": round(_st.median(hebel), 2) if hebel else None,
+            "mit_hebel_ueber_1": sum(1 for h in hebel if h > 1.0),
+            "von": len(hebel),
+            "anteil_prozent": (round(100 * sum(1 for h in hebel if h > 1.0)
+                                     / len(hebel), 1) if hebel else None),
+        },
+    }
+
+    # ---- DIE ERWARTUNG AUS DER MESSUNG, damit man sie NICHT raten muss ----
+    #
+    # Gemessen an 58 Symbolen vor dem Umbau (Umbauplan 92.9): Stop 4-6 %
+    # statt ~3 %, Hebel-Median 1,00 statt 5,0, Anteil mit Hebel rund 44 %
+    # statt 98 %. Weicht der Betrieb davon ab, ist entweder die Einstellung
+    # nicht angekommen oder der Markt ein anderer als am 18.08.
+    aus["erwartet_nach_s5"] = {
+        "stopabstand_relativ_median": "0,04 bis 0,06",
+        "hebel_median": 1.0,
+        "anteil_mit_hebel_prozent": "rund 44",
+        "quelle": "Umbauplan 92.9, gemessen an der Simulation vom 18.08.",
+    }
+    return aus
+
+
 def _rollen_kette(conn) -> dict:
     """Die zwei Tabellen der neuen Kette - vom Drift-Waechter selbst gemeldet.
 
@@ -2254,6 +2352,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             rollen_kette = {"nicht_verfuegbar": str(exc)}
         try:
+            dimensionierung = _dimensionierung(conn)
+        except Exception as exc:  # noqa: BLE001
+            dimensionierung = {"nicht_verfuegbar": str(exc)}
+        try:
             externe_reihen = _externe_reihen(conn)
         except Exception as exc:  # noqa: BLE001
             externe_reihen = {"nicht_verfuegbar": str(exc)}
@@ -2591,6 +2693,7 @@ def main() -> None:
         "llm_kontingent": llm_kontingent,
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
+        "dimensionierung": dimensionierung,
             "externe_reihen": externe_reihen,
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,
