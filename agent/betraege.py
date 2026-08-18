@@ -187,7 +187,19 @@ def einsatz_eur(instrument: str, strategie: str,
 
 
 def verlustanteil(instrument: str, config: dict | None = None) -> float:
-    """Welcher Anteil des Einsatzes darf im schlechtesten Fall weg sein."""
+    """Welcher Anteil des Einsatzes darf im schlechtesten Fall weg sein.
+
+    ⚠️ DIES IST DIE SPOT/HEBEL-GRENZE DER NEUEN KETTE (18.08.2026), auch
+    wenn der Name das nicht sagt. Es gilt `Hebel = Verlustanteil /
+    Stopabstand`, also `Hebel > 1 <=> Stop < Verlustanteil`. Bei 15 % ist
+    praktisch jedes Geschaeft ein Hebelgeschaeft, unabhaengig davon, wie
+    der Stop gesetzt wird.
+
+    NICHT ZU VERWECHSELN mit `config.yaml::risiko_pro_trade_prozent` und
+    `risiko_pro_trade_prozent_hebel`. Die beiden Schluessel steuern die
+    ALTEN Pipelines (risk_gate.py, hebel_risk_gate.py) und werden von der
+    Rollen-Kette nicht gelesen. Sie sagen 1 bzw. 2 %, hier stehen 15 % -
+    wer das eine liest und das andere meint, irrt um den Faktor fuenf."""
     i = str(instrument or "").strip().lower()
     ueber = _cfg(config, "verlustanteil")
     wert = ueber.get(i, VORGABE_VERLUSTANTEIL.get(i))

@@ -11128,3 +11128,126 @@ keine Hysterese gebaut · keine Zusammenlegung der Läufe · keine Prompt-Änder
 | 1 | Verlustanteil und k festlegen | nein |
 | 2 | Hysterese festlegen, aus der Sprungrate | nein |
 | 3 | Prompt, Schema, Vertrag, `rechne()`, Läufe zusammenlegen, Kanarienvogel je Symbol | **ja** |
+
+---
+
+## Kapitel 89 — Stufe 0 gemessen: was besser wird und was schlechter (18.08.2026)
+
+**Nichts geändert.** `rechne()` ist unberührt, die Produktion kennt die neue
+Funktion nicht. Werkzeug: `messe_dimensionierung.py`, Daten aus dem
+Notebook-Backup vom 18.08. (58 Symbole).
+
+### 89.1 Das Feld — Anteil Hebel je (k, Verlustanteil)
+
+| k \ VA | 1 % | 2 % | 5 % | 10 % | 15 % |
+|---:|---:|---:|---:|---:|---:|
+| **0,75** *(heute)* | 9 % | 33 % | 91 % | 97 % | **98 %** |
+| 1,00 | 0 % | 21 % | 78 % | 93 % | 98 % |
+| 1,50 | 0 % | 9 % | 48 % | 91 % | 93 % |
+| 2,00 | 0 % | 0 % | 29 % | 78 % | 91 % |
+| 2,50 | 0 % | 0 % | 21 % | 64 % | 90 % |
+
+**Der Ist-Zustand steht in der Ecke mit 98 % Hebel.** Und die Tabelle zeigt,
+welche Achse was tut: **der Verlustanteil entscheidet über das Etikett**
+(waagerecht die großen Sprünge), **k über die Kosten** (senkrecht).
+
+### 89.2 Die Sprungrate — Hysterese ist kaum nötig
+
+Wechsel des Etiketts je 100 Handelstage, Median über alle Symbole:
+
+| | maximal |
+|---|---:|
+| über das ganze Feld | **4,3** |
+
+> **Ein Asset wechselt im Median höchstens alle 23 Handelstage die Schublade.**
+> Das ist die Zahl, die über Hysterese entscheiden sollte — und sie sagt:
+> **eine Hysterese wird nicht gebraucht.** Der Deadband-Aufwand aus der
+> Literatur adressiert ein Problem, das wir messbar nicht haben.
+
+### 89.3 Rauschtreffer — auf frischen Daten bestätigt
+
+26.910 Anker, Horizont 5 Handelstage:
+
+| Stop | wird getroffen |
+|---:|---:|
+| **0,75 ATR** *(heute)* | **57,3 %** |
+| 1,00 ATR | 45,5 % |
+| 1,50 ATR | 27,5 % |
+| 2,50 ATR | 9,4 % |
+
+Die alte Messung auf der Juli-Datenbank sagte 56,7 % — **auf frischen Daten
+57,3 %.** Der Befund ist stabil.
+
+### 89.4 Was besser wird — und was das NICHT heißt
+
+| | Stop | Tage | Hebel | Betrag | zu klein | **nötiger Vorsprung** |
+|---|---:|---:|---:|---:|---:|---:|
+| **heute** (k 0,75 · VA 15 %) | 2,6 % | 2 | **5,82** | 1.000 € | 0 | **38,8 pp** |
+| bestes Feld (k 2,5 · VA 1 %) | 8,6 % | 25 | **1,00** | 116 € | 0 | **11,6 pp** |
+
+**Der nötige Vorsprung vor dem Zufall sinkt um den Faktor 3,3.**
+10 von 25 Feldern liegen unter der Hälfte des heutigen Werts.
+
+> ⚠️ **Was diese Spalte NICHT sagt:** dass die Trades besser laufen. Sie sagt,
+> wie viel Treffsicherheit **über dem Zufall** nötig wäre, damit sie sich
+> tragen. Kleiner ist *leichter*, nicht *gut*. Die Basisrate bleibt 33,3 %,
+> und 11,6 pp Vorsprung sind immer noch mehr, als dieses Projekt je gemessen
+> hat.
+
+**Was schlechter wird**, ehrlich benannt:
+
+| | |
+|---|---|
+| **Betrag** | 1.000 € → 116 €. Wer 1.000 € einsetzen will, kann das bei 1 % Verlustanteil nicht mehr |
+| **Haltedauer** | 2 → 25 Handelstage. Aus Zwei-Tage-Geschäften werden Fünf-Wochen-Geschäfte |
+| **Hebel verschwindet** | 5,82 → 1,00. Wer Hebelgeschäfte will, bekommt bei 1 % keine mehr |
+| Mindestgröße | **0 Unterschreitungen** in allen 25 Feldern — der einzige befürchtete Nebeneffekt tritt nicht ein |
+
+### 89.5 Der Config-Schlüssel, über den niemand mehr stolpern soll
+
+`risiko_pro_trade_prozent_hebel: 1` ist **nicht obsolet** — `hebel_risk_gate.py`
+und `risk_gate.py` lesen ihn, beide gehören zu den **alten** Pipelines. Die
+Rollen-Kette liest ihn nicht; sie dimensioniert über
+`betraege.VORGABE_VERLUSTANTEIL` (15 %).
+
+**Behandlung statt Löschung:**
+
+| | |
+|---|---|
+| `config.yaml` | Geltungsvermerk *„GILT NUR FUER DIE ALTEN PIPELINES"* mit Verweis auf `betraege.py` |
+| `betraege.py` | Gegenverweis im Docstring von `verlustanteil()` — *„nicht zu verwechseln … wer das eine liest und das andere meint, irrt um den Faktor fünf"* |
+| Prüfung | `--paket Dimension` hält **beide** Vermerke fest |
+
+> Ein Schlüssel, der für die eine Kette gilt und für die andere nicht, ist
+> gefährlicher als ein toter — deshalb steht der Geltungsbereich jetzt an
+> beiden Enden.
+
+⚠️ **Und die Prüfung selbst hatte den Fehler:** sie las über `_quelltext`,
+das Kommentarzeilen entfernt — ein Geltungsvermerk *ist* ein Kommentar. Sie
+schlug fehl, obwohl der Vermerk dastand. Jetzt liest sie roh.
+
+### 89.6 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.116**, alle bestanden — **17 neu unter `--paket Dimension`** |
+| Reinheit | zweimal derselbe Aufruf, zweimal dasselbe Ergebnis |
+| drei Böden | jeder greift einzeln, der weiteste gewinnt, Obergrenze bindet |
+| Grenzfall | Stop = Verlustanteil → **spot**, nicht hebel |
+| SHORT | erzwingt das Etikett `hebel` |
+| Handelbarkeit | ohne Hebel-Angebot entsteht keiner |
+| Spiegelung | LONG/SHORT identischer Stopabstand |
+| **nie still nichts** | 3 unbrauchbare Eingaben + 4 falsche Verlustanteile werfen **benannt** |
+| freie Namen · Zahlen · Belege · Darstellung | 0 · 9/9 · 9/9 · bestanden |
+| Simulation | 4 Gruppen, 9 Mails, 0 Fehler, 0 Lücken — **Produktion unverändert** |
+
+### 89.7 Was jetzt entschieden werden kann
+
+| | Messgrundlage |
+|---|---|
+| **Verlustanteil** | 1 % → 9 % Hebel · 2 % → 33 % · 15 % → 98 % (bei k 0,75) |
+| **k** | Rauschtreffer 57,3 % (0,75) · 27,5 % (1,5) · 9,4 % (2,5) |
+| **Hysterese** | **nicht nötig** — Sprungrate maximal 4,3 je 100 Tage |
+| `hebel_max` | bindet weiterhin nie |
+
+**Offen bleibt** die Funding-Achse — ein Monat Historie reicht nicht.

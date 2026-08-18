@@ -2720,4 +2720,21 @@ geantwortet*. Alle mit `●` (grau), nicht `▼` (rot):
 
 > **Ein Ausfall unserer Technik ist kein Befund über den Handel.** Ihn rot zu
 > setzen hieße, dem Leser eine Warnung über sein Geschäft zu geben, wo eine
-> über unser Werkzeug gemeint ist.
+> über unser Werkzeug gemeint ist.
+
+## 2.40 Eine Pruefung, die den eigenen Leser nicht kennt (neu 2026-08-18)
+
+`_quelltext()` entfernt Kommentarzeilen - richtig, weil dieses Projekt
+Entferntes ausfuehrlich im Kommentar festhaelt und ein `grep` die geloeschte
+Zeile sonst in ihrer eigenen Grabinschrift wiederfindet.
+
+**Genau deshalb kann er einen Geltungsvermerk nicht sehen.** Die erste
+Fassung von `paket_dimension` suchte den Vermerk
+*"GILT NUR FUER DIE ALTEN PIPELINES"* in `config.yaml` ueber `_quelltext`
+und schlug fehl - obwohl der Vermerk dastand.
+
+> **Regel: wer Kommentare oder Dokumentation prueft, liest ROH.**
+> `_quelltext` ist fuer aktiven Code da. Ein Vermerk ist kein Code.
+
+---
+

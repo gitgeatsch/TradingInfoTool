@@ -771,3 +771,117 @@ def saetze(e: dict, marken: list | None = None,
                     "sich heraus)" if e["betrag_min_eur"] <= 50 else
                     "(Boerse: 1 EUR fix je Seite - kleiner lohnt nicht)"))
     return z
+
+
+# ---------------------------------------------------------------------------
+# STUFE 0 DES PLANS (Umbauplan Kapitel 88, Fassung 2, 18.08.2026)
+# ---------------------------------------------------------------------------
+
+
+class Dimension(dict):
+    """Das Ergebnis von `dimensioniere` - ein dict mit Namen."""
+
+
+def dimensioniere(*, kurs: float, atr: float, k: float, verlustanteil: float,
+                  einsatz_eur: float, marke_preis: float | None = None,
+                  umgeworfen_preis_eur: float | None = None,
+                  ist_short: bool = False, hebel_handelbar: bool = True,
+                  mindestgroesse_eur: float = 0.0) -> Dimension:
+    """Stop, Betrag, Hebel und Etikett - REIN, ohne DB, Uhr oder Netz.
+
+    DIE EINE STELLE fuer die Dimensionierung. Zwei Aufrufer: die Messung
+    (`messe_dimensionierung.py`) und spaeter die Produktion. Zwei Rechnungen
+    an zwei Orten sind der Fehler, an dem in diesem Projekt schon einmal
+    Werte auseinandergelaufen sind (Umbauplan 70.4).
+
+    DREI BOEDEN, DER WEITESTE GEWINNT:
+
+        Rauschen    k x ATR             - unter dem Rauschen ist jeder Stop
+                                          eine Frage der Zeit, nicht der These
+        Struktur    Marke +- 0,25 ATR   - jenseits des Niveaus, nicht darauf
+        These       Widerlegungspreis   - wo das Modell seine Begruendung
+                                          fuer erledigt haelt
+
+    Das ist die Kombination, die `_stop_abstand`s Docstring seit jeher als
+    Standard beschreibt; gebaut war bisher nur der erste Boden, und der zu
+    niedrig (0,75 ATR - gemessen 56,7 % Rauschtreffer in fuenf Tagen).
+
+    UND DER HEBEL FAELLT AN, er wird nicht gewaehlt:
+
+        Hebel = Verlustanteil / Stopabstand
+
+    Daraus folgt `Hebel > 1  <=>  Stop < Verlustanteil`. Die Spot/Hebel-Grenze
+    IST der Verlustanteil - das ist der Befund, der die Erstfassung des Plans
+    widerlegt hat.
+
+    ⚠️ SHORT ERZWINGT HEBEL. Spot kann bei Bitpanda nicht short; die Richtung
+    ist damit selbst ein Hebelkriterium - eine Tatsache, keine Prognose.
+
+    ⚠️ NIE `None`. Fuer jede Eingabe kommt ein Ergebnis oder eine benannte
+    Ausnahme. Eine Funktion, die still nichts liefert, waere genau die
+    Bauform, die den Deadloop erzeugt hat.
+    """
+    for name, wert in (("Kurs", kurs), ("ATR", atr), ("Einsatz", einsatz_eur)):
+        if not wert or float(wert) <= 0:
+            raise RechnungBlockiert(f"{name} fehlt oder ist nicht positiv")
+    if not 0 < float(verlustanteil) < 1:
+        raise RechnungBlockiert(
+            f"Verlustanteil {verlustanteil!r} liegt nicht zwischen 0 und 1")
+    kurs, atr, einsatz_eur = float(kurs), float(atr), float(einsatz_eur)
+    verlustanteil = float(verlustanteil)
+
+    boeden = {"Rauschen": float(k) * atr}
+    if marke_preis and float(marke_preis) > 0:
+        # JENSEITS der Marke, nicht darauf. Wer genau auf das Niveau geht,
+        # wird von jedem Test des Niveaus ausgestoppt.
+        ab = ((float(marke_preis) - kurs) if ist_short
+              else (kurs - float(marke_preis))) + GRENZEN["zone_atr"] * atr
+        if ab > 0:
+            boeden["Struktur"] = ab
+    if umgeworfen_preis_eur and float(umgeworfen_preis_eur) > 0:
+        ab = ((float(umgeworfen_preis_eur) - kurs) if ist_short
+              else (kurs - float(umgeworfen_preis_eur)))
+        if ab > 0:
+            boeden["These"] = ab
+
+    regel = max(boeden, key=boeden.get)
+    abstand = boeden[regel]
+    deckel = GRENZEN["stop_max_relativ"] * kurs
+    if abstand > deckel:
+        abstand, regel = deckel, "Obergrenze"
+    stop_rel = abstand / kurs
+
+    risiko_eur = verlustanteil * einsatz_eur
+    hebel_noetig = verlustanteil / stop_rel
+    sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
+
+    if hebel_handelbar and (hebel_noetig > 1.0 or ist_short):
+        etikett = "hebel"
+        hebel = max(1.0, min(hebel_noetig, sicher, GRENZEN["hebel_max"]))
+        betrag = einsatz_eur if hebel >= hebel_noetig - 1e-9 else risiko_eur / (hebel * stop_rel)
+        gebunden = ("Risikobudget" if hebel <= hebel_noetig + 1e-9
+                    else ("RM-11 Liquidationsabstand" if sicher < GRENZEN["hebel_max"]
+                          else "Hoechsthebel"))
+    else:
+        # KEIN HEBEL NOETIG (oder keiner handelbar): der Betrag folgt dem
+        # Risikobudget. Ihn bei `einsatz_eur` zu lassen hiesse, mehr zu
+        # riskieren als erlaubt - genau die stillschweigende Umdeutung, die
+        # am 15.08. aus `max(1.0, ...)` entfernt wurde.
+        etikett = "spot"
+        hebel = 1.0
+        betrag = min(einsatz_eur, risiko_eur / stop_rel)
+        gebunden = ("Risikobudget" if risiko_eur / stop_rel < einsatz_eur
+                    else "Einsatzwunsch")
+
+    weg = GRENZEN["crv"] * abstand
+    return Dimension({
+        "stop_rel": stop_rel, "stop_eur": abstand, "stop_regel": regel,
+        "boeden": {n: v / kurs for n, v in boeden.items()},
+        "betrag_eur": betrag, "hebel": hebel, "etikett": etikett,
+        "hebel_noetig": hebel_noetig, "hebel_sicher": sicher,
+        "gebunden_durch": gebunden, "risiko_eur": risiko_eur,
+        "tage": _haltedauer_tage(weg, atr),
+        "unter_mindestgroesse": bool(mindestgroesse_eur
+                                     and betrag < float(mindestgroesse_eur)),
+        "hebel_handelbar": bool(hebel_handelbar),
+    })

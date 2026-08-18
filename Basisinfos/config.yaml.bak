@@ -397,6 +397,15 @@ risiko:
     max_hebel: 10                      # 2026-07-14 kalibriert gegen echte Bitpanda-
                                         # Margin-Historie (185 Positionen, 2-10x genutzt,
                                         # Oe 6,44x je Einzelkauf) - vorher Platzhalter "3"
+    # GILT NUR FUER DIE ALTEN PIPELINES (Vermerk 18.08.2026).
+    # Gelesen von hebel_risk_gate.py::pre_check_hebel und risk_gate.py -
+    # beide werden von der ROLLEN-KETTE nicht aufgerufen. Die neue Kette
+    # dimensioniert ueber agent/betraege.py (VORGABE_VERLUSTANTEIL, heute
+    # 15 % des Einsatzes = 150 EUR gegen einen Hebeltopf von 3.000 EUR,
+    # also 5 % je Trade). Konfiguration und Verhalten widersprechen sich
+    # damit um den Faktor fuenf - der Schluessel ist NICHT obsolet, aber
+    # auch NICHT massgeblich fuer die neue Kette. Wer ihn aendert, aendert
+    # die alten Pipelines. Siehe Umbauplan Kapitel 88.10.
     risiko_pro_trade_prozent_hebel: 1  # RM-1-Aequivalent fuer Hebel, bewusst niedriger als
                                         # Spot (2%) wegen Liquidations-Gap-Risiko +
                                         # laufender Finanzierungsgebuehr, siehe

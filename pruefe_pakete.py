@@ -8576,6 +8576,133 @@ def paket_ausfall() -> None:
            "ein Abschnitt ohne Inhalt saehe aus wie ein Befund")
 
 
+def paket_dimension() -> None:
+    """Die Dimensionierung als reine Funktion (18.08.2026, Kapitel 88).
+
+    Stufe 0: gemessen wird, nicht gehandelt. Diese Pruefungen sichern die
+    Funktion ab, BEVOR eine Zahl aus ihr eine Entscheidung wird."""
+    from agent import entscheidungsrechnung as _ER
+
+    P = "Dimension"
+    _B = dict(kurs=100.0, atr=4.0, einsatz_eur=1000.0)
+
+    # ---- REIN: kein Zustand, keine Uhr, kein Netz ----
+    _a = _ER.dimensioniere(k=1.5, verlustanteil=0.15, **_B)
+    _b = _ER.dimensioniere(k=1.5, verlustanteil=0.15, **_B)
+    pruefe(P, "zweimal derselbe Aufruf, zweimal dasselbe Ergebnis",
+           dict(_a) == dict(_b),
+           "eine Funktion mit Gedaechtnis waere in einer Messung ueber "
+           "40 Jahre Historie nicht wiederholbar")
+
+    # ---- DREI BOEDEN, DER WEITESTE GEWINNT ----
+    pruefe(P, "ohne Marke und ohne These zaehlt das Rauschen",
+           _a["stop_regel"] == "Rauschen"
+           and abs(_a["stop_rel"] - 1.5 * 4.0 / 100.0) < 1e-9)
+    _m = _ER.dimensioniere(k=1.5, verlustanteil=0.15, marke_preis=88.0, **_B)
+    pruefe(P, "eine weiter entfernte Marke gewinnt",
+           _m["stop_regel"] == "Struktur" and _m["stop_rel"] > _a["stop_rel"],
+           "12 EUR Abstand plus Puffer schlagen 6 EUR Rauschen")
+    _n = _ER.dimensioniere(k=1.5, verlustanteil=0.15, marke_preis=97.0, **_B)
+    pruefe(P, "eine naehere Marke gewinnt NICHT",
+           _n["stop_regel"] == "Rauschen",
+           "genau dafuer ist der Rauschboden da")
+    _t = _ER.dimensioniere(k=1.5, verlustanteil=0.15,
+                           umgeworfen_preis_eur=80.0, **_B)
+    pruefe(P, "ein weiter entfernter Widerlegungspreis gewinnt",
+           _t["stop_regel"] == "These")
+    _d = _ER.dimensioniere(k=1.5, verlustanteil=0.15,
+                           umgeworfen_preis_eur=10.0, **_B)
+    pruefe(P, "und die Obergrenze bindet darueber",
+           _d["stop_regel"] == "Obergrenze"
+           and abs(_d["stop_rel"] - _ER.GRENZEN["stop_max_relativ"]) < 1e-9)
+
+    # ---- DER HEBEL FAELLT AN ----
+    pruefe(P, "Hebel = Verlustanteil / Stopabstand",
+           abs(_a["hebel_noetig"] - 0.15 / _a["stop_rel"]) < 1e-9,
+           "das ist die Beziehung, die die Erstfassung des Plans uebersehen "
+           "hat - die Spot/Hebel-Grenze IST der Verlustanteil")
+    _g = _ER.dimensioniere(k=1.5, verlustanteil=0.06, **_B)
+    pruefe(P, "Stop = Verlustanteil ist genau die Grenze",
+           abs(_g["hebel_noetig"] - 1.0) < 1e-9 and _g["etikett"] == "spot",
+           f"Stop {_g['stop_rel']:.4f} gegen Verlustanteil 0,06 - bei "
+           f"Gleichstand gilt SPOT, nicht Hebel")
+    _s = _ER.dimensioniere(k=1.5, verlustanteil=0.02, **_B)
+    pruefe(P, "darunter faellt kein Hebel an, der Betrag folgt dem Risiko",
+           _s["etikett"] == "spot" and _s["hebel"] == 1.0
+           and _s["betrag_eur"] < _B["einsatz_eur"],
+           "den Einsatz stehen zu lassen hiesse, mehr zu riskieren als "
+           "erlaubt - die stillschweigende Umdeutung vom 15.08.")
+
+    # ---- SHORT ERZWINGT HEBEL ----
+    _sh = _ER.dimensioniere(k=1.5, verlustanteil=0.02, ist_short=True, **_B)
+    pruefe(P, "SHORT bekommt IMMER das Etikett hebel",
+           _sh["etikett"] == "hebel",
+           "Spot kann bei Bitpanda nicht short - die Richtung ist damit "
+           "selbst ein Hebelkriterium, eine Tatsache und keine Prognose")
+
+    # ---- HANDELBARKEIT ----
+    _nh = _ER.dimensioniere(k=1.5, verlustanteil=0.15,
+                            hebel_handelbar=False, **_B)
+    pruefe(P, "wo kein Hebel handelbar ist, entsteht auch keiner",
+           _nh["etikett"] == "spot" and _nh["hebel"] == 1.0,
+           "Aktien, Rohstoffe und ETF - die Formel rechnet, Bitpanda "
+           "bietet nichts an")
+
+    # ---- SPIEGELUNG ----
+    _l1 = _ER.dimensioniere(k=1.5, verlustanteil=0.15, marke_preis=88.0, **_B)
+    _s1 = _ER.dimensioniere(k=1.5, verlustanteil=0.15, marke_preis=112.0,
+                            ist_short=True, **_B)
+    pruefe(P, "LONG und SHORT spiegeln sich im Stopabstand",
+           abs(_l1["stop_rel"] - _s1["stop_rel"]) < 1e-9,
+           "dieselbe Entfernung, andere Seite - ein Vorzeichenfehler bliebe "
+           "hier sonst unsichtbar")
+
+    # ---- NIE STILL NICHTS ----
+    _blockiert = 0
+    for _bad in ({"kurs": 0.0}, {"atr": 0.0}, {"einsatz_eur": 0.0}):
+        _arg = dict(_B); _arg.update(_bad)
+        try:
+            _ER.dimensioniere(k=1.5, verlustanteil=0.15, **_arg)
+        except _ER.RechnungBlockiert:
+            _blockiert += 1
+    pruefe(P, "unbrauchbare Eingaben werfen BENANNT, geben nicht None",
+           _blockiert == 3,
+           "eine Funktion, die still nichts liefert, ist die Bauform, die "
+           "den Deadloop erzeugt hat")
+    _va = 0
+    for _w in (0.0, 1.0, 1.5, -0.1):
+        try:
+            _ER.dimensioniere(k=1.5, verlustanteil=_w, **_B)
+        except _ER.RechnungBlockiert:
+            _va += 1
+    pruefe(P, "ein Verlustanteil ausserhalb (0,1) wird abgewiesen",
+           _va == 4, "15 statt 0,15 waere sonst ein stiller Faktor 100")
+
+    # ---- MINDESTGROESSE WIRD GEMELDET, NICHT VERSCHLUCKT ----
+    _k = _ER.dimensioniere(k=2.5, verlustanteil=0.001 * 10, einsatz_eur=30.0,
+                           kurs=100.0, atr=4.0, mindestgroesse_eur=25.0)
+    pruefe(P, "eine zu kleine Position wird als solche ausgewiesen",
+           "unter_mindestgroesse" in _k,
+           "sie zu verschlucken waere eine stille Bremse - genau das, was "
+           "der Kanarienvogel sehen koennen muss")
+
+    # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
+    # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
+    # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser
+    # Pruefung suchte ihn im kommentarfreien Text und schlug fehl, obwohl
+    # der Vermerk dastand.
+    _cfg = io.open("Basisinfos/config.yaml", encoding="utf-8").read()
+    pruefe(P, "risiko_pro_trade_prozent_hebel traegt einen Geltungsvermerk",
+           "GILT NUR FUER DIE ALTEN PIPELINES" in _cfg,
+           "der Schluessel ist NICHT obsolet - hebel_risk_gate.py und "
+           "risk_gate.py lesen ihn. Die Rollen-Kette tut es nicht; ohne "
+           "Vermerk nimmt der naechste Leser an, er steuere alles")
+    _bg = _quelltext("agent/betraege.py")
+    pruefe(P, "und betraege.py nennt sich als die Quelle der neuen Kette",
+           "risiko_pro_trade_prozent" in _bg,
+           "der Verweis muss von BEIDEN Seiten lesbar sein")
+
+
 def paket_luecken() -> None:
     """Eine Luecke nur melden, wo es die Groesse ueberhaupt gibt (17.08.2026).
 
@@ -8630,7 +8757,7 @@ def paket_luecken() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische}
 
 
