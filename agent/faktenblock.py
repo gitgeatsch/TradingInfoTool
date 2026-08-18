@@ -92,9 +92,26 @@ ZUSATZ_JE_BEREICH = {
     # sie an beiden Stellen - und mit VERSCHIEDENEN Zahlen, weil die eine aus
     # einem Fakt und die andere aus der Rechnung kam. Genau der Fehler, den
     # die alte Hebel-Mail hatte (Umbauplan 12.5).
+    # ⚠️ EIN FAKTENSATZ STATT ZWEI (S4, 18.08.2026, Umbauplan Kapitel 90).
+    #
+    # Bis heute bekam die Spot-Beurteilung EINEN Zusatzfakt, die
+    # Hebel-Beurteilung VIER - fuer dasselbe Asset, zum selben Zeitpunkt, mit
+    # demselben Kurs. Die Begruendung war das Instrument; sie traegt nicht:
+    # Finanzierungsrate, Put-Skew und der Anteil der Long-Konten sagen etwas
+    # ueber die POSITIONIERUNG im Markt, und die ist dieselbe, ob man sie
+    # gehebelt handelt oder nicht.
+    #
+    # UND SIE SIND DIE INDIKATOREN, DIE DIE LITERATUR NENNT: hohes Open
+    # Interest bei negativem Funding ist ein ueberfuellter Shortmarkt - eine
+    # Aussage ueber den Kurs, nicht ueber das Instrument.
+    #
+    # DAS IST KEINE NEUTRALE AENDERUNG. Ein groesserer Faktensatz heisst ein
+    # anderer Fingerabdruck, also eine andere Ausloeserate bei Spot. Gemessen
+    # und dokumentiert in Umbauplan 92.8.
     "krypto_hebel": ("funding_eur_tag", "put_skew",
                      "retail_long_pct", "btc_relativwert_pct"),
-    "krypto_spot": ("btc_relativwert_pct",),
+    "krypto_spot": ("funding_eur_tag", "put_skew",
+                    "retail_long_pct", "btc_relativwert_pct"),
     "aktien": ("kgv", "insider_saldo", "short_interest_pct", "analysten_trend"),
     "rohstoffe": ("lagerbestand_trend", "cot_netto_pct"),
     "themen_etf": (),

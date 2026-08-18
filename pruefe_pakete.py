@@ -8822,6 +8822,35 @@ def paket_dimension() -> None:
            "Modell nicht mehr - signal_abbildung und trade_chart lesen die "
            "GERECHNETEN und bleiben unberuehrt")
 
+    # ---- S4: EIN FAKTENSATZ STATT ZWEI (Kapitel 90) ----
+    from agent.faktenblock import ZUSATZ_JE_BEREICH as _ZJB
+
+    pruefe(P, "Spot und Hebel bekommen denselben Faktensatz",
+           _ZJB["krypto_spot"] == _ZJB["krypto_hebel"],
+           "Finanzierungsrate, Put-Skew und Long-Anteil sagen etwas ueber "
+           "die POSITIONIERUNG - die ist dieselbe, ob man sie gehebelt "
+           "handelt oder nicht")
+    pruefe(P, "und es sind vier, nicht einer",
+           len(_ZJB["krypto_spot"]) == 4,
+           "vorher hatte Spot genau einen: btc_relativwert_pct")
+    pruefe(P, "die anderen Klassen bleiben unberuehrt",
+           _ZJB["aktien"] == ("kgv", "insider_saldo", "short_interest_pct",
+                              "analysten_trend")
+           and _ZJB["rohstoffe"] == ("lagerbestand_trend", "cot_netto_pct")
+           and _ZJB["themen_etf"] == (),
+           "S4 betrifft die Krypto-Trennung, nicht die Assetklassen")
+
+    # ⚠️ F1 UND F2 SIND NICHT TEIL VON S4 (Korrektur am eigenen Plan).
+    # Ein gemeinsames Aktionsvokabular ist erst noetig, wenn die beiden
+    # Laeufe ZUSAMMENGELEGT werden - bis dahin kennt jeder Lauf sein
+    # Instrument. 44 Codestellen haengen an "ERÖFFNEN"; sie jetzt anzufassen
+    # waere Risiko ohne Anlass.
+    pruefe(P, "das Aktionsvokabular haengt WEITERHIN am Instrument",
+           _EV.aktionen_fuer("spot") != _EV.aktionen_fuer("hebel"),
+           "F1/F2 gehoeren zu S6, nicht zu S4 - dort erzwingt die "
+           "Zusammenlegung sie, hier waeren sie 44 Codestellen Risiko "
+           "ohne Gegenwert")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

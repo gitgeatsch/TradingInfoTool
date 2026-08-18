@@ -16927,3 +16927,34 @@ Pruefung haelt beide Herkuenfte auseinander.
 
 1.139 Pruefungen (10 neu), sechs Vertragsfaelle einzeln, freie Namen 0, drei
 Selbsttests, Prompt-Matrix sauber, Simulation 9 Mails ohne Fehler.
+
+
+---
+
+## 2026-08-18 (8) — S4 GEBAUT: ein Faktensatz statt zwei, und eine Planaenderung
+
+Volltext: Umbauplan 92.8.
+
+**Korrektur am eigenen Plan:** Kapitel 90 hatte F1 (gemeinsames
+Aktionsvokabular) und F2 (richtung) in S4 gelegt. Beide gehoeren nach S6 - ein
+gemeinsames Vokabular ist erst noetig, wenn die Laeufe zusammengelegt werden;
+bis dahin kennt jeder Lauf sein Instrument. 44 Codestellen haengen an
+ERÖFFNEN, sie jetzt anzufassen waere Risiko ohne Anlass. Eine Pruefung haelt
+fest, dass das Vokabular WEITERHIN am Instrument haengt, damit die
+Verschiebung nicht vergessen wird.
+
+**Gebaut wurde F10:** krypto_spot bekommt denselben Zusatzfaktensatz wie
+krypto_hebel - vier statt einem. Die bisherige Begruendung war das Instrument
+und traegt nicht: Finanzierungsrate, Put-Skew und Long-Anteil sagen etwas
+ueber die Positionierung im Markt, und die ist dieselbe, ob man sie gehebelt
+handelt oder nicht.
+
+**Und eine ehrliche Korrektur:** Kapitel 90 behauptete, S1 bis S4 seien
+verhaltensneutral. Fuer S4 stimmt das NICHT - ein groesserer Faktensatz heisst
+ein anderer Fingerabdruck und damit eine andere Ausloeserate bei Spot. Die
+Richtung ist absehbar, die Groesse nicht; zu beobachten, nicht zu schaetzen.
+
+Promptlaenge danach: Spot 2.110, Hebel 2.414 Zeichen.
+
+1.143 Pruefungen (4 neu), freie Namen 0, drei Selbsttests, Prompt-Matrix
+unveraendert, Simulation 9 Mails aus 4 Gruppen ohne Fehler und ohne Luecke.

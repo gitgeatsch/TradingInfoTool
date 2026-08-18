@@ -11674,3 +11674,49 @@ nachgewiesen bereinigt · gerechnete Felder weiterhin vorhanden · freie Namen
 0 · drei Selbsttests · **Prompt-Matrix** sauber · Simulation 9 Mails aus 4
 Gruppen, 0 Fehler, 0 Lücken.
 
+### 92.8 S4 gebaut: ein Faktensatz statt zwei (18.08.2026)
+
+**⚠️ Korrektur am eigenen Plan.** Kapitel 90 hatte F1 (gemeinsames
+Aktionsvokabular) und F2 (`richtung`) in S4 gelegt. Beide gehören dorthin
+**nicht**:
+
+> Ein gemeinsames Vokabular ist erst nötig, wenn die beiden Läufe
+> **zusammengelegt** werden. Bis dahin kennt jeder Lauf sein Instrument, und
+> das Enum darf davon abhängen. **44 Codestellen** hängen an `ERÖFFNEN` —
+> sie jetzt anzufassen wäre Risiko ohne Anlass.
+
+**F1 und F2 sind nach S6 verschoben**, wo die Zusammenlegung sie erzwingt.
+S4 ist damit F10: ein Faktensatz.
+
+#### Was geändert wurde
+
+| Bereich | vorher | nachher |
+|---|---:|---:|
+| `krypto_spot` | **1** Zusatzfakt | **4** |
+| `krypto_hebel` | 4 | 4 |
+| aktien · rohstoffe · themen_etf · hedge | unverändert | unverändert |
+
+**Die Begründung war das Instrument, und sie trägt nicht.**
+Finanzierungsrate, Put-Skew und der Anteil der Long-Konten sagen etwas über
+die **Positionierung im Markt** — und die ist dieselbe, ob man sie gehebelt
+handelt oder nicht. Es sind zudem genau die Indikatoren, die die Literatur
+für die kurzfristige Chance nennt (hohes Open Interest bei negativem Funding
+= überfüllte Shortseite).
+
+#### ⚠️ Das ist KEINE neutrale Änderung
+
+Kapitel 90 hatte behauptet, S1 bis S4 seien verhaltensneutral. **Für S4
+stimmt das nicht:** ein größerer Faktensatz heißt ein anderer
+Fingerabdruck — und damit eine andere Auslöserate bei Spot. Die Richtung ist
+absehbar (mehr bewegliche Fakten → häufigeres Auslösen), die Größe nicht.
+**Zu beobachten, nicht zu schätzen.**
+
+Promptlänge nach der Änderung: Spot **2.110**, Hebel **2.414** Zeichen —
+beide weit unter den 34.611 der alten Kette.
+
+**Gegenprüft:** 1.143 Prüfungen (4 neu) · Faktensätze identisch · andere
+Klassen unberührt · **Vokabular hängt weiterhin am Instrument** (als Prüfung
+festgehalten, damit die Verschiebung nach S6 nicht vergessen wird) · freie
+Namen 0 · drei Selbsttests · Prompt-Matrix unverändert · Simulation 9 Mails
+aus 4 Gruppen, 0 Fehler, 0 Lücken.
+
