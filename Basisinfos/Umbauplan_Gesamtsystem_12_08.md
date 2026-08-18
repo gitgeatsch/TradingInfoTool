@@ -11531,3 +11531,77 @@ Punkt 1 und 2 zu entscheiden, nicht vorher. Ohne Messung wäre es geraten.
 | **P1c** | Messung: trägt das Extrem? | **nein** |
 | P2 | GitHub- und CoinMetrics-Anbindung | nein |
 | P3 | Unterscheidung je Strategie — **nur bei positivem Befund** | ja |
+
+---
+
+## Kapitel 92 — S1 gebaut: der Rauschboden ist ein Regler (18.08.2026)
+
+**Verhalten unverändert.** Ohne Eintrag in der Konfiguration rechnet die Kette
+bitgleich wie zuvor — nachgewiesen im Ende-zu-Ende-Lauf.
+
+### 92.1 Was gebaut wurde
+
+| | |
+|---|---|
+| `betraege.stop_min_atr(config)` | liest den Faktor aus **beiden** Konfigurationspfaden, gibt **`None`**, wenn nichts gesetzt ist |
+| `entscheidungsrechnung._stop_abstand(..., min_atr=None)` | benutzt ihn statt der festen `GRENZEN["stop_min_atr"]` |
+| `rechne(..., stop_min_atr=None)` | reicht ihn durch |
+| `rollen_lauf` | `stop_min_atr=BE.stop_min_atr(config)` |
+
+**`None` statt eines wiederholten Vorgabewerts.** Die Vorgabe 0,75 steht an
+genau **einer** Stelle; sie in `betraege` zu wiederholen hieße, dieselbe Zahl
+an zwei Orten zu pflegen — der Fehler aus Umbauplan 70.4.
+
+### 92.2 ⚠️ Wo der Regler wirkt — und wo nicht
+
+```
+Modell liefert einen Preis  →  Klemme RM-1b/1c   ← HIER wirkt k
+Modell liefert nichts       →  _stop_aus_atr     ← hier NICHT (2,5 ATR)
+```
+
+**Das ist kein Mangel, sondern der Produktionsfall:** gemessen liefert das
+Modell **12 von 12** Mal einen Preis, und **10 davon** liegen im Rauschen und
+werden auf die Klemme gehoben. Der Regler greift also genau dort, wo die
+Produktion landet.
+
+Der ATR-Rückfall benutzt weiterhin `stop_ziel_atr = 2,5` — zufällig der Wert,
+den die Messung als sinnvoll ausweist. **Dass beide Zweige denselben Faktor
+benutzen sollten, gehört zu S5**, nicht hierher.
+
+Nachgerechnet auf dem Produktionspfad (Kurs 100, ATR 4, Widerlegungspreis 99):
+
+| k | Stop | Hebel |
+|---:|---:|---:|
+| 0,75 *(heute)* | 3,00 % | 5,0 |
+| 1,5 | 6,00 % | 2,5 |
+| **2,0** | **8,00 %** | **1,9** |
+
+### 92.3 Der Wert wird geprüft, nicht geglaubt
+
+`stop_min_atr` außerhalb von (0, 10] wird abgewiesen. **25 statt 2,5 wäre
+sonst ein stiller Faktor zehn** — dieselbe Klasse wie „15 statt 0,15" beim
+Verlustanteil.
+
+### 92.4 Gegenprüfung
+
+| | |
+|---|---|
+| Paketprüfungen | **1.123**, alle bestanden — **7 neu unter `--paket Dimension`** |
+| **bitgleich ohne Eintrag** | `rechne(**e) == rechne(**e, stop_min_atr=None)` |
+| beide Konfigurationspfade | `rollen_kette.*` und `risiko.rollen_kette.*` |
+| unsinnige Werte | 0, −1, 11 werden **benannt** abgewiesen |
+| Wirkung auf dem Produktionspfad | 3,00 % → 8,00 %, Hebel 5,0 → 1,9 |
+| Durchreichung | am Quelltext von `rollen_lauf` geprüft |
+| freie Namen · Zahlen · Belege · Darstellung | 0 · 9/9 · 9/9 · bestanden |
+| **Ende zu Ende** | Simulation: 12 Aufrufe an `rechne()`, **alle mit `None`** — 4 Signale, 4 Mails, 0 Fehler, 0 Lücken |
+
+**Der Ende-zu-Ende-Nachweis ist der wichtigste:** er zeigt, dass der Regler
+die Aufrufstelle erreicht **und** dass ohne Konfigurationseintrag nichts
+passiert. Ein Regler, der die Aufrufstelle nicht erreicht, wäre Dekoration;
+einer, der ungewollt greift, wäre ein Verhaltenswechsel durch die Hintertür.
+
+### 92.5 Nächster Schritt
+
+**S2 — die Marken durchreichen** (F6 aus 88.5). Ebenfalls verhaltensneutral:
+`_marken_werte` erreicht `rechne()`, ohne dass `_stop_abstand` sie schon
+benutzt.

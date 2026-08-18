@@ -98,7 +98,8 @@ class RechnungBlockiert(ValueError):
 
 def _stop_abstand(kurs: float, atr: float,
                   umgeworfen_preis_eur: float | None = None,
-                  ist_short: bool = False) -> tuple[float, str]:
+                  ist_short: bool = False,
+                  min_atr: float | None = None) -> tuple[float, str]:
     """Der Stopabstand in Euro, plus die Regel, die ihn bestimmt hat.
 
     DIE TRADINGSTANDARDS KENNEN ZWEI SCHULEN, und die Praxis kombiniert sie:
@@ -133,8 +134,14 @@ def _stop_abstand(kurs: float, atr: float,
     Rauschen des Symbols; liegt der Widerlegungspreis innerhalb des Rauschens,
     gilt der Rauschboden. Damit kann aus dieser Quelle kein 1,5-%-Stop werden,
     auch wenn das Modell einen nennt."""
-    min_abstand = max(GRENZEN["stop_min_relativ"] * kurs,
-                      GRENZEN["stop_min_atr"] * atr)
+    # ⚠️ DER RAUSCHBODEN IST SEIT S1 EIN REGLER (18.08.2026, Kapitel 90).
+    # `min_atr=None` heisst: es gilt die Vorgabe 0,75 - bitgleich zu
+    # vorher. Gemessen an 26.910 Ankern wird ein Stop bei 0,75 ATR in
+    # 57,3 % der Faelle binnen fuenf Handelstagen vom blossen Rauschen
+    # getroffen; bei 2,0 ATR sind es 15,9 %. Diese Zahl zu bewegen ist
+    # der Sinn des Parameters - aber nicht seine Vorgabe.
+    _k = GRENZEN["stop_min_atr"] if min_atr is None else float(min_atr)
+    min_abstand = max(GRENZEN["stop_min_relativ"] * kurs, _k * atr)
     max_abstand = GRENZEN["stop_max_relativ"] * kurs
 
     # BEI SHORT LIEGT DER WIDERLEGUNGSPREIS UEBER DEM KURS (Paket 13). Die
@@ -388,7 +395,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            umgeworfen_tage: int | None = None,
            widerstand: tuple[float, int] | None = None,
            kostenklasse: str = "krypto",
-           ist_short: bool = False) -> dict:
+           ist_short: bool = False,
+           stop_min_atr: float | None = None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -406,7 +414,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         raise RechnungBlockiert(f"{', '.join(fehlt)} fehlt - keine Empfehlung")
 
     kurs, atr, risiko_eur = float(kurs), float(atr), float(risiko_eur)
-    abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur, ist_short)
+    abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur,
+                                        ist_short, stop_min_atr)
     stop_rel = abstand / kurs
     ziel, crv, ziel_regel = _ziel(kurs, abstand, atr, widerstand, ist_short)
 

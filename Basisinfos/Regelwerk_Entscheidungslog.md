@@ -16831,3 +16831,34 @@ Der beste "ist der Coin tot"-Indikator der Literatur fehlt uns komplett.
 
 **Verworfen:** sofort zu filtern. Genau diese Umkehrung der Reihenfolge hat
 den Deadloop erzeugt.
+
+
+---
+
+## 2026-08-18 (5) — S1 GEBAUT: der Rauschboden ist ein Regler
+
+**Verhalten unveraendert.** Volltext: Umbauplan Kapitel 92.
+
+`betraege.stop_min_atr(config)` liest den ATR-Faktor aus beiden
+Konfigurationspfaden und gibt None, wenn nichts gesetzt ist;
+`entscheidungsrechnung._stop_abstand` und `rechne` nehmen ihn entgegen,
+`rollen_lauf` reicht ihn durch. Ohne Eintrag gilt die Vorgabe 0,75 - im
+Ende-zu-Ende-Lauf nachgewiesen: 12 Aufrufe an rechne(), alle mit None.
+
+**None statt eines wiederholten Vorgabewerts**, weil die Vorgabe an genau
+einer Stelle steht (GRENZEN). Sie in betraege zu wiederholen waere der Fehler
+aus Umbauplan 70.4.
+
+**Wo der Regler wirkt:** auf der Klemme RM-1b/1c, nicht auf dem ATR-Rueckfall.
+Das ist der Produktionsfall - das Modell liefert 12 von 12 Mal einen Preis,
+10 davon liegen im Rauschen. Dass beide Zweige denselben Faktor benutzen
+sollten, gehoert zu S5.
+
+**Der Wert wird geprueft:** ausserhalb (0, 10] wird er benannt abgewiesen -
+25 statt 2,5 waere sonst ein stiller Faktor zehn.
+
+1.123 Pruefungen (7 neu), freie Namen 0, drei Selbsttests, Simulation 4
+Signale und 4 Mails ohne Fehler und ohne Luecke.
+
+**Offen notiert (Nutzer 18.08.):** das News-Thema als Anbindung und ob es in
+eine LLM-Bewertung einfliessen soll - noch nicht bewertet.

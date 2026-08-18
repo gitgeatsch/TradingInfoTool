@@ -1136,6 +1136,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt
                              # es sie nicht - dort ist LONG die einzige Lage.
                              ist_short=(befund.get("richtung") == "SHORT"),
+                             # S1, Kapitel 90: der Rauschboden aus der
+                             # Konfiguration. Ohne Eintrag None - dann
+                             # gilt die Vorgabe und nichts aendert sich.
+                             stop_min_atr=BE.stop_min_atr(config),
                              # ⚠️ KEIN DECKEL MEHR (17.08.2026, gemessen).
                              # Heute frueh reichte diese Stelle den
                              # naechsten Widerstand an `_ziel` durch. Das

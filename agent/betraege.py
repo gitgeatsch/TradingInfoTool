@@ -186,6 +186,41 @@ def einsatz_eur(instrument: str, strategie: str,
     return float(tabelle[s])
 
 
+def stop_min_atr(config: dict | None = None) -> float | None:
+    """Der ATR-Faktor des Rauschbodens - oder None, wenn nichts gesetzt ist.
+
+    S1 DES UMBAUPLANS KAPITEL 90 (18.08.2026). Bisher war der Wert eine feste
+    Zahl in `entscheidungsrechnung.GRENZEN` und damit nur durch eine
+    Codeaenderung zu bewegen. Der gleichnamige Schluessel
+    `risiko.sl_abstand_min_atr_faktor` steuert die ALTEN Pipelines und wird
+    von der Rollen-Kette nicht gelesen - wer ihn drehte, aenderte hier nichts.
+
+    GIBT None STATT EINES VORGABEWERTS. Die Vorgabe steht an genau einer
+    Stelle (`GRENZEN["stop_min_atr"]`); sie hier zu wiederholen hiesse,
+    dieselbe Zahl an zwei Orten zu pflegen - der Fehler aus Umbauplan 70.4.
+
+    ⚠️ DIESER SCHALTER AENDERT DAS VERHALTEN DER KETTE. Ohne Eintrag in der
+    Konfiguration bleibt alles, wie es war; mit Eintrag verschiebt sich der
+    Stop und damit Betrag, Hebel und Etikett jedes Signals."""
+    # `_cfg` liefert ein dict; hier steht ein Skalar. Beide Pfade werden
+    # gelesen, damit der Schluessel dort stehen darf, wo der Nutzer ihn
+    # vermutet - dieselbe Falle wie am 14.08. beim Einsatz.
+    _q = config or {}
+    roh = ((_q.get("rollen_kette") or {}).get("stop_min_atr")
+           if isinstance(_q.get("rollen_kette"), dict) else None)
+    if roh is None:
+        roh = (((_q.get("risiko") or {}).get("rollen_kette") or {})
+               .get("stop_min_atr"))
+    wert = roh if isinstance(roh, (int, float)) else None
+    if wert is None:
+        return None
+    if not 0 < float(wert) <= 10:
+        raise BetragUnbekannt(
+            f"stop_min_atr {wert!r} liegt ausserhalb (0, 10] - ein Faktor "
+            f"auf die Schwankungsbreite, keine Prozentzahl")
+    return float(wert)
+
+
 def verlustanteil(instrument: str, config: dict | None = None) -> float:
     """Welcher Anteil des Einsatzes darf im schlechtesten Fall weg sein.
 

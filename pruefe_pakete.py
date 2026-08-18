@@ -8686,6 +8686,47 @@ def paket_dimension() -> None:
            "sie zu verschlucken waere eine stille Bremse - genau das, was "
            "der Kanarienvogel sehen koennen muss")
 
+    # ---- S1: DER RAUSCHBODEN IST EIN REGLER (Kapitel 90) ----
+    from agent import betraege as _BE
+
+    pruefe(P, "ohne Konfigurationseintrag ist nichts gesetzt",
+           _BE.stop_min_atr(None) is None and _BE.stop_min_atr({}) is None,
+           "die Vorgabe steht an EINER Stelle (GRENZEN) - sie hier zu "
+           "wiederholen hiesse, dieselbe Zahl an zwei Orten zu pflegen")
+    for _pfad in ({"rollen_kette": {"stop_min_atr": 2.0}},
+                  {"risiko": {"rollen_kette": {"stop_min_atr": 2.0}}}):
+        pruefe(P, "gelesen ueber " + sorted(_pfad)[0],
+               _BE.stop_min_atr(_pfad) == 2.0,
+               "beide Pfade, weil der Schluessel dort stehen darf, wo der "
+               "Nutzer ihn vermutet - dieselbe Falle wie am 14.08.")
+    _ab = 0
+    for _w in (0, -1, 11):
+        try:
+            _BE.stop_min_atr({"rollen_kette": {"stop_min_atr": _w}})
+        except _BE.BetragUnbekannt:
+            _ab += 1
+    pruefe(P, "unsinnige Faktoren werden abgewiesen", _ab == 3,
+           "ein Faktor auf die Schwankungsbreite, keine Prozentzahl - 25 "
+           "statt 2,5 waere sonst ein stiller Faktor zehn")
+
+    # ⚠️ BITGLEICH OHNE EINTRAG. Das ist die ganze Zusage von S1.
+    _e = dict(kurs=100.0, atr=4.0, risiko_eur=150.0, betrag_wunsch_eur=1000.0,
+              instrument="hebel", umgeworfen_preis_eur=99.0)
+    pruefe(P, "ohne Regler rechnet rechne() wie zuvor",
+           dict(_ER.rechne(**_e)) == dict(_ER.rechne(**_e, stop_min_atr=None)),
+           "S1 darf kein Verhalten aendern - der Wechsel kommt erst in S5")
+    _r075 = _ER.rechne(**_e)
+    _r20 = _ER.rechne(**_e, stop_min_atr=2.0)
+    pruefe(P, "und mit Regler greift er auf dem Produktionspfad",
+           _r20["stop_relativ"] > _r075["stop_relativ"] * 2.5
+           and _r20["hebel"] < _r075["hebel"],
+           "in 10 von 12 echten Faellen bindet genau diese Klemme - der "
+           "ATR-Rueckfall dagegen wird von ihr nicht beruehrt")
+    pruefe(P, "die Kette reicht ihn durch",
+           "stop_min_atr=BE.stop_min_atr(config)"
+           in _quelltext("agent/rollen_lauf.py"),
+           "ein Regler, der die Aufrufstelle nicht erreicht, ist Dekoration")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser
