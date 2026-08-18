@@ -16660,3 +16660,50 @@ jemand sie bemerkt.
 gelesen** — eine ausgefallene Gegenprüfung sah in der Mail aus wie eine, die
 es zu diesem Wert gar nicht gibt. Jetzt drei unterscheidbare Sätze, grau (`●`)
 statt rot (`▼`): ein Ausfall unserer Technik ist kein Befund über den Handel.
+
+
+---
+
+## 2026-08-18 — PLAN Hebel als Ergebnis (Stufe 0), und zwei eigene Fehler
+
+**Plan, nichts gebaut.** Volltext: `Umbauplan_Gesamtsystem_12_08.md` Kapitel 88.
+
+**Der Befund:** Krypto laeuft mit DERSELBEN Symbolliste durch beide
+Instrumente (43 Assets, 86 Urteile). Stop, Zone, Ziel und Haltedauer sind in
+beiden Laeufen identisch; `asset_hebel_settings` hat **0 Zeilen**, also stehen
+alle auf Vorgabe "erlaubt"; ein Hebel-Eignungskriterium gibt es in der neuen
+Kette nicht (`pre_check_hebel` wird nicht aufgerufen). Der Hebel ist ein
+Divisionsergebnis aus einem Stop, der in 10 von 12 Faellen aus der Klemme
+RM-1b/1c stammt.
+
+**Die Regel:** drei Boeden (Rauschen k*ATR, Struktur, Widerlegungspreis), der
+weiteste gewinnt; Betrag folgt dem Risiko; Hebel faellt an; Etikett folgt der
+Zahl. Das ist Volatility Targeting - stetig, ohne Schwelle. Es gibt genau
+EINEN zu waehlenden Parameter: k.
+
+**Warum das kein Gate ist:** ein Gate ENTFERNT Urteile und ist deshalb nicht
+messbar; eine Klassifikation ORDNET sie zu und ist es. Dauervorgabe daraus:
+*kein Kriterium darf ein Urteil verhindern, es darf nur bestimmen, welcher Art
+das Urteil ist.* Kanarienvogel: Zahl der Urteile konstant, nur die Verteilung
+verschiebt sich.
+
+**Zwei Fehler, die der Nutzer aufgedeckt hat:**
+
+1. **DB-Backup uebersehen.** Alle Volatilitaetszahlen liefen zunaechst gegen
+   die Desktop-Datenbank, deren Kursreihen am 19.07. enden (die App lief
+   zuletzt an diesem Tag, `data/gui_heartbeat.txt`). Im Austauschordner liegt
+   unter `DB_Backups/` ein taegliches Notebook-Backup. Auf frischen Daten
+   drehte sich ein Befund: auf Juli-Daten trug KEIN Kryptowert einen Hebel,
+   auf dem Stand vom 18.08. sind es fuenfzehn - darunter BTC, ETH, BNB, SOL.
+   Der Memory-Eintrag, der "eine JSON, KEIN DB-Backup" behauptete, ist
+   korrigiert.
+
+2. **"Beobachten statt messen" war faul.** Mein erster Stufe-0-Vorschlag
+   wollte zwei bis drei Wochen mitschreiben. Die OHLC-Historie reicht von
+   **1985-10-01** bis heute (63 Symbole) - die Sprungfrage ist historisch
+   beantwortbar, Warten waere die schlechtere Messung. Nur Funding hat
+   tatsaechlich nur einen Monat Historie.
+
+**Verworfen:** eine Vorpruefung/Eignungsschwelle vor der Signalerzeugung.
+Genau diese Bauform hat den Deadloop erzeugt; die Klassifikation leistet
+dasselbe ohne die Bauform.

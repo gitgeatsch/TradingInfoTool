@@ -10895,3 +10895,159 @@ dieses Signal **ohne** Gegenprüfung zu ihm kommt.
 Die drei Aufrufe vor dem Auslösen laufen weiterhin ins Leere — **das ist der
 Preis dafür, einen Ausfall von einem Aussetzer zu unterscheiden.** Ihre Mails
 tragen jetzt den Hinweis.
+
+---
+
+## Kapitel 88 — PLAN: Hebel als Ergebnis statt als Kategorie (18.08.2026)
+
+**Status: Plan, nichts gebaut.** Freigabe des Nutzers steht aus.
+
+### 88.1 Der Befund, aus dem der Plan folgt
+
+| | |
+|---|---|
+| `laeufe()` gibt Krypto **dieselbe Symbolliste an beide Instrumente** | 43 Assets → 86 Urteile |
+| Stop, Einstiegszone, Ziel, Haltedauer | **in beiden Läufen identisch** |
+| `asset_hebel_settings` | **0 Zeilen** — alle 43 auf Vorgabe „erlaubt" |
+| Hebel-Eignungskriterium in der neuen Kette | **existiert nicht** (`pre_check_hebel` wird nicht aufgerufen) |
+| `_stop_abstand` | kennt weder Instrument noch Marken |
+
+> **Der Hebel wird nicht gewählt, er ist ein Divisionsergebnis** —
+> `Risiko / (Betrag × Stopabstand)`. Und der Stopabstand kommt in 10 von 12
+> Fällen aus der Klemme RM-1b/1c, nicht aus einem Urteil.
+
+**Gemessen (63.884 Anker, alte DB):** ein Stop bei 0,75 ATR wird in **56,7 %**
+der Fälle binnen fünf Handelstagen vom bloßen Rauschen getroffen.
+
+### 88.2 Die Regel (fachlich)
+
+**Ein Urteil je Asset. Der Hebel fällt an. Das Etikett folgt der Zahl.**
+
+```
+stop = min( 25 % · Kurs,                        Deckel, unverändert
+            max( k · ATR,                       Rauschboden
+                 Marke ± 0,25 ATR,              Struktur
+                 Widerlegungspreis ) )          These (Modell)
+```
+
+Drei Böden, der weiteste gewinnt. Das ist die Kombination, die
+`_stop_abstand`s eigener Docstring seit jeher als Standard beschreibt — heute
+gebaut ist nur der erste, und der zu eng.
+
+```
+Betrag  = Risikobudget / stop_relativ           (bereits so gebaut, 15.08.)
+Hebel   = Risiko / (Betrag × stop_relativ)      (bereits so gebaut)
+Etikett = "hebel" wenn Hebel > 1,0, sonst "spot"
+```
+
+**Es gibt keine Schwelle zu wählen.** Der einzige Schnitt liegt bei Hebel
+1,0 — die arithmetische Grenze zwischen *braucht geliehenes Geld* und
+*braucht keines*. Zu wählen ist **ein** Parameter: **k**.
+
+⚠️ **Das ist Volatility Targeting**, nur ohne es so zu nennen: mit
+`stop = k · ATR` gilt `Hebel ∝ 1/Volatilität` — stetig, ohne Schwelle, ohne
+Filter. Die Literatur nennt genau das als Vorteil: *„scales continuously,
+never fully exiting — avoids the all-or-nothing whipsaw."*
+
+### 88.3 Warum das KEIN Gate ist (die Deadloop-Frage)
+
+| | Gate | Klassifikation |
+|---|---|---|
+| tut | **entfernt** Urteile vor der Entscheidung | **ordnet** jedes Urteil zu |
+| Deadloop möglich | **ja** | nein |
+| messbar | **nein** — was weg ist, hinterlässt keine Spur | **ja** — alles ist noch da |
+
+> **Kein Kriterium darf ein Urteil verhindern. Es darf nur bestimmen, welcher
+> Art das Urteil ist.**
+
+**Der Kanarienvogel:** je Umlauf werden **Zahl der Urteile** und **Verteilung
+spot/hebel** nebeneinander gezählt. Bleibt die Zahl konstant und verschiebt
+sich nur die Verteilung → Klassifikation. Sinkt die Zahl → irgendwo filtert
+etwas, sichtbar in derselben Zeile.
+
+**Die zwei Stellen, an denen es doch eine stille Bremse werden könnte:**
+
+1. `RechnungBlockiert` bei Unterschreitung der Mindestgröße. Gemessen 0 von 59
+   bei 25 € Risiko — muss trotzdem **gezählt und gemeldet**, nie verschluckt.
+2. Funding im 99. Perzentil (2.129 %/Jahr). Auch das **kein Veto**: der Trade
+   wird dann Spot, nicht „kein Trade".
+
+### 88.4 Der Bau (technisch)
+
+**Eine reine Funktion, zwei Aufrufer.** Genau das Muster, an dem dieses
+Projekt schon zweimal gescheitert ist, wenn es fehlte (Umbauplan 70.4).
+
+```
+agent/entscheidungsrechnung.py
+    dimensioniere(kurs, atr, risiko_eur, betrag_wunsch_eur, k,
+                  marke=None, umgeworfen_preis_eur=None,
+                  instrument_erlaubt=True) -> dict
+        # rein, ohne DB, ohne Uhr, ohne Netz
+        # liefert: stop_rel, stop_regel, betrag, hebel, etikett,
+        #          gebunden_durch, tage_schaetzung
+```
+
+| Aufrufer | wozu |
+|---|---|
+| `rechne()` | Produktion — **erst nach der Freigabe verdrahtet** |
+| `messe_hebelentscheidung.py` | Stufe 0 — läuft über die ganze OHLC-Historie |
+
+**Datenquelle für die Messung:** `DB_Backups/tradinginfotool_*.db.gz` vom
+Notebook, ausgepackt in den Scratchpad, `PRAGMA integrity_check`. **Nicht die
+Desktop-Datenbank** — die endet am 19.07. (`data/gui_heartbeat.txt`).
+
+**Prüfungen (`--paket Dimension`), vor der ersten Messung:**
+
+| | |
+|---|---|
+| Rein | zweimal derselbe Aufruf = dasselbe Ergebnis, kein Zustand |
+| Böden | jeder der drei greift einzeln; der weiteste gewinnt; Deckel bindet |
+| Grenzfall | Hebel exakt 1,0 → Etikett `spot`, Betrag folgt dem Risiko |
+| Spiegelung | LONG/SHORT symmetrisch, Marke auf der richtigen Seite |
+| Kein Filter | die Funktion gibt für JEDE Eingabe ein Ergebnis oder eine benannte Ausnahme — nie `None` |
+| Mindestgröße | Unterschreitung wird **gemeldet**, nicht verschluckt |
+
+### 88.5 Was Stufe 0 misst — heute, nicht in drei Wochen
+
+**OHLC reicht von 1985-10-01 bis 2026-08-18** (63 Symbole, 116.535 Zeilen).
+Die Sprungfrage ist damit historisch beantwortbar; auf Beobachtung zu warten
+wäre die schlechtere Messung.
+
+| Frage | Messung |
+|---|---|
+| **Wie oft springt ein Asset zwischen Spot und Hebel?** | je Asset und Tag über die volle Historie, für k ∈ {1,0 · 1,5 · 2,0 · 2,5} |
+| Wie sieht die Verteilung spot/hebel aus? | je k, je Assetklasse |
+| Wie oft trifft das Rauschen den Stop? | je k, Horizont 5 und 20 Tage (Neuauflage auf frischen Daten) |
+| Wie klein werden die Beträge? | Verteilung, Unterschreitungen der Mindestgröße |
+| Was ändert sich am Kostenbild? | nötiger Vorsprung vor dem Zufall, je k |
+| Wie stabil ist die Zahl selbst? | Streuung des Hebels von Tag zu Tag — **das ist die Zahl, die über Hysterese entscheidet** |
+
+⚠️ **Was Stufe 0 NICHT beantworten kann:** Funding hat nur **einen Monat**
+Historie (ab 2026-07-14, 39 Symbole). Diese eine Größe wächst tatsächlich erst
+an — alles andere nicht.
+
+### 88.6 Was in dieser Stufe ausdrücklich NICHT passiert
+
+- **kein Eingriff in die Produktion** — `rechne()` bleibt unverändert
+- **kein k festgelegt** — das folgt aus der Messung
+- **keine Hysterese gebaut** — sie folgt aus der gemessenen Sprungrate
+- **keine Zusammenlegung der beiden Läufe** — das ist Stufe 3
+
+### 88.7 Die Entscheidungen, die dem Nutzer gehören
+
+| | Stand |
+|---|---|
+| **k** (ATR-Faktor des Stops) | offen — Messung liefert die Grundlage |
+| **Hebeldeckel** | wir 10, Literatur meist **2** — Risikoentscheidung |
+| **Wohin die Hysterese wirkt** | auf Etikett/Topf/Cooldown — oder gar nicht |
+| **Laufende Positionen bei Volatilitätsanstieg** | Stop nachziehen · verkleinern · unverändert — heute nirgends geregelt |
+| **Was der Hebel-Schalter künftig bedeutet** | Erlaubnis („hier darf gehebelt werden") statt Kategorie |
+
+### 88.8 Reihenfolge
+
+| Stufe | Inhalt | ändert Verhalten |
+|---|---|---|
+| **0** | reine Funktion + Prüfungen + Messung über die Historie | **nein** |
+| 1 | k festlegen, aus der Rauschmessung | nein |
+| 2 | Hysterese festlegen, aus der Sprungrate | nein |
+| 3 | `rechne()` verdrahten, beide Läufe zusammenlegen, Kanarienvogel | **ja** |
