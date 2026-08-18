@@ -11251,3 +11251,116 @@ schlug fehl, obwohl der Vermerk dastand. Jetzt liest sie roh.
 | `hebel_max` | bindet weiterhin nie |
 
 **Offen bleibt** die Funding-Achse — ein Monat Historie reicht nicht.
+
+---
+
+## Kapitel 90 — UMSETZUNGSPLAN Stufe 3: k = 2,0 und Verlustanteil 6 % (18.08.2026)
+
+**Status: Plan, nichts gebaut.** Baut auf Kapitel 88 (Fassung 2) und den
+Messergebnissen aus Kapitel 89.
+
+### 90.1 Was gesetzt wird — und warum genau diese zwei Werte
+
+| | Wert | Begründung |
+|---|---:|---|
+| **k** (ATR-Faktor des Rauschbodens) | **2,0** | Rauschtreffer **15,9 %** statt 57,3 % — in 5 von 6 Fällen entscheidet die These, nicht das Zappeln. Liegt zwischen Elder (2 ATR) und Chandelier (3 ATR) |
+| **Verlustanteil** | **6 %** | = **2 % des Hebeltopfes** je Trade, der obere Literaturwert. Ergibt 45 % Hebel statt 98 % |
+
+**Warum 6 % und nicht 3 %:** beide sind Literaturwerte (1 % bzw. 2 % des
+Kapitals). 6 % ist der **halb so große Eingriff** — 53 Prozentpunkte
+Verschiebung statt 88. Alles, was an F5 hängt (Töpfe, Cooldowns, Mailbetreff,
+DB-Werte), wird entsprechend weniger durchgeschüttelt. **3 % bleibt der
+nächste Schritt, nicht der erste.**
+
+### 90.2 ⚠️ DIE REGLER-FRAGE — ist VA 3 später eine Zeile oder wieder Arbeit?
+
+**Geprüft, mit unterschiedlichem Ergebnis je Größe:**
+
+| | Zustand heute | |
+|---|---|---|
+| **Verlustanteil** | **ist bereits ein Regler.** `betraege._cfg(config, "verlustanteil")` liest ihn; nachgewiesen funktionieren **beide** Pfade: `rollen_kette.verlustanteil.hebel` und `risiko.rollen_kette.verlustanteil.hebel` | ✅ |
+| **k** | `GRENZEN["stop_min_atr"] = 0,75` ist ein **fester Modulwert**. Der Kommentar daneben nennt zwar `risiko.sl_abstand_min_atr_faktor`, aber der Schlüssel steuert die **alten** Pipelines, nicht diese Zeile | ❌ |
+
+**Daraus die Antwort auf die Frage:**
+
+> **VA 3 %, 4 %, 8 % sind nach diesem Umbau eine Konfigurationszeile — kein
+> Code, keine Detailarbeit.** Der Regler existiert bereits; in `config.yaml`
+> steht heute nur kein Eintrag, also gilt die Codevorgabe 15 %.
+>
+> **k muss in diesem Umbau erst ein Regler werden** (Schritt S1). Danach gilt
+> dasselbe für ihn.
+
+**Der Preis, der bleibt** — und der ist nicht technisch: **jede Änderung an
+VA verschiebt die Population zwischen den Schubladen und bricht damit die
+Messreihe (F9).** Der Code kostet nichts, die Vergleichbarkeit schon. VA ist
+deshalb ein Regler, den man *selten* dreht, nicht ein Schalter zum Probieren.
+
+### 90.3 Die Schritte — jeder einzeln prüfbar und einzeln rückholbar
+
+**S1 bis S4 ändern kein beobachtbares Verhalten.** Der Wechsel passiert in
+einem einzigen Schritt (S5), und der ist eine Konfigurationszeile.
+
+| Schritt | Inhalt | Fallstricke | ändert Verhalten |
+|---|---|---|---|
+| **S1** | **k wird ein Regler.** `GRENZEN["stop_min_atr"]` aus `config` lesbar, **Vorgabe bleibt 0,75** | — | **nein** |
+| **S2** | **Marken durchreichen.** `_marken_werte` erreicht `rechne()`; noch ohne Wirkung, weil `_stop_abstand` sie nicht benutzt | **F6** | **nein** |
+| **S3** | **Vertrag umbauen.** Richtungsbewusste Prüfung auf `umgeworfen_preis_eur`; danach `einstieg_eur`/`stop_eur` aus Prompt und Schema streichen | **F7**, Teil von **F1** | **nein** (die Prüfung ersetzt eine gleichwertige) |
+| **S4** | **Prompt und Schema vereinheitlichen.** Gemeinsames Aktionsvokabular beim Einstieg, Instrument nur noch beim Bestand, **ein** Faktensatz | **F1 · F2 · F10** | **nein** |
+| **S5** | **`rechne()` auf `dimensioniere()` umstellen**, dann `k = 2,0` und `verlustanteil = 0,06` in `config.yaml` | **F3 · F4 entfallen** (s. u.) | **JA** |
+| **S6** | **Läufe zusammenlegen** + Kanarienvogel **je Symbol** | **F5 · F8 · F9** | **JA** |
+
+**F3 und F4 entfallen ersatzlos**, weil der Verlustanteil für Spot und Hebel
+derselbe ist:
+
+```
+Hebel = Verlustanteil / Stopabstand      ← kein Einsatz, kein Topf
+```
+
+Das Etikett ist damit **wohldefiniert, ohne das Instrument zu kennen.** Der
+Zirkelbezug entsteht erst, wenn die beiden Instrumente verschiedene
+Verlustanteile bekommen — was hier ausdrücklich **nicht** geschieht.
+
+### 90.4 Was je Schritt geprüft wird
+
+| Schritt | Prüfung |
+|---|---|
+| **S1** | ohne Konfigurationseintrag ist jedes Ergebnis **bitgleich** zu heute; mit Eintrag greift der Wert |
+| **S2** | die Marke kommt an und ist dieselbe wie in der Mail — **eine Quelle, nicht zwei** (Umbauplan 70.4) |
+| **S3** | SHORT mit Stop über dem Einstieg wird **nicht** mehr degradiert; ein widersprüchlicher Widerlegungspreis schon. `ERÖFFNEN` ist nicht mehr ungeprüft |
+| **S4** | jedes Instrument bekommt ein gültiges Schema; kein Modell antwortet mit einem unbekannten Enum; R-T1…R-T12 und N1–N5 laufen durch |
+| **S5** | `rechne()` und `dimensioniere()` liefern für dieselbe Eingabe **dasselbe** — die reine Funktion ist die einzige Quelle |
+| **S6** | **Zahl der Urteile je Symbol konstant**, nur die Verteilung verschiebt sich |
+
+### 90.5 Der Kanarienvogel und die Rückfahrkarte
+
+**Je Umlauf zu zählen und nebeneinander zu berichten:**
+
+| Größe | erwartet |
+|---|---|
+| Urteile **je Symbol** | **konstant** (nicht je Lauf — der halbiert sich gewollt, F8) |
+| Verteilung spot/hebel | verschiebt sich von 98/2 auf rund **55/45** |
+| `RechnungBlockiert` unter Mindestgröße | gemessen 0, **muss trotzdem gezählt werden** |
+| `Andrang`/`Ausfall` bei Rolle G | unverändert |
+
+**Rückfahrkarte:** S5 ist eine Konfigurationszeile. Fällt etwas auf, wird
+`verlustanteil` auf 0,15 und `stop_min_atr` auf 0,75 zurückgesetzt — **ohne
+Codeänderung.** S6 ist die einzige Stufe, die einen echten Rückbau bräuchte;
+sie kommt deshalb zuletzt und getrennt.
+
+### 90.6 Was NICHT in diesem Umbau ist
+
+- **keine Hysterese** — gemessen nicht nötig (max. 4,3 Wechsel je 100 Tage)
+- **kein Eingriff an `hebel_max`** — bindet nachweislich nie
+- **keine Cluster-/Heat-Grenze** — fachlich begründet (Korrelation 0,50,
+  effektiv 1,9 unabhängige Wetten), aber ein **eigenes** Vorhaben
+- **keine Funding-Bedingung** — ein Monat Historie reicht nicht
+- **kein VA 3 %** — der nächste Schritt, nicht dieser
+
+### 90.7 Restrisiko, offen benannt
+
+| | |
+|---|---|
+| **Der Charakter der Geschäfte ändert sich** | Haltedauer 2 → 16 Handelstage, Betrag 1.000 → 874 €, Hebel 5,8 → 1,2 im Median. Das ist gewollt, aber spürbar |
+| **F8 ist auf 37 Paaren gemessen** | vor S6 auf voller Historie nachzumessen |
+| **Der nötige Vorsprung bleibt bei 14,6 pp** | über der Basisrate von 33,3 %. **Kein Trade trägt sich dadurch** — die Lücke schrumpft von 38,8 auf 14,6, sie schließt sich nicht |
+| **S4 berührt den Prompt** | und damit die einzige Ebene, deren Verhalten wir nicht deterministisch vorhersagen können. Deshalb steht S4 **vor** S5: erst der Prompt stabil, dann die Zahlen |

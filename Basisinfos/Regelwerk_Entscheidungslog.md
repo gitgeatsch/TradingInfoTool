@@ -16751,3 +16751,43 @@ Genau diese Bauform hat den Deadloop erzeugt.
 
 **Nutzervorgabe 18.08.:** Messungen und Ausgangswerte an Literatur und Praxis
 ausrichten - Risiko je Trade 1-2 %, Hebeldeckel 2.
+
+
+---
+
+## 2026-08-18 (3) — Umsetzungsplan Stufe 3 festgelegt: k = 2,0 und Verlustanteil 6 %
+
+**Plan, nichts gebaut.** Volltext: `Umbauplan_Gesamtsystem_12_08.md` Kapitel 90.
+
+**Die zwei Werte:** k = 2,0 (Rauschtreffer 15,9 % statt 57,3 %; zwischen
+Elder 2 ATR und Chandelier 3 ATR) und Verlustanteil 6 % (= 2 % des
+Hebeltopfes, oberer Literaturwert; 45 % Hebel statt 98 %).
+
+**Warum 6 % und nicht 3 %:** beide sind Literaturwerte, aber 6 % ist der halb
+so grosse Eingriff - 53 Prozentpunkte Verschiebung statt 88. VA 3 % bleibt
+der naechste Schritt, nicht der erste.
+
+**Reglerfrage geprueft, unterschiedliches Ergebnis je Groesse:** der
+Verlustanteil IST bereits ein Regler (`betraege._cfg`, beide Konfigurationspfade
+nachgewiesen) - VA 3/4/8 sind spaeter eine Konfigurationszeile ohne Code. k ist
+es NICHT (`GRENZEN["stop_min_atr"]` ist ein fester Modulwert; der
+gleichnamige config-Schluessel steuert die alten Pipelines). Schritt S1 macht
+ihn dazu.
+
+**Der Preis, der bleibt, ist nicht technisch:** jede VA-Aenderung verschiebt
+die Population zwischen den Schubladen und bricht die Messreihe. VA ist ein
+Regler, den man selten dreht.
+
+**F3 und F4 aus Kapitel 88.5 entfallen ersatzlos**, weil Spot und Hebel
+denselben Verlustanteil bekommen: in `Hebel = Verlustanteil / Stopabstand`
+steht weder Einsatz noch Topf, das Etikett ist also ohne Kenntnis des
+Instruments wohldefiniert. Der Zirkelbezug entstuende erst bei
+unterschiedlichen Verlustanteilen.
+
+**Sechs Schritte, S1 bis S4 verhaltensneutral**, der Wechsel passiert in S5
+und ist eine Konfigurationszeile (Rueckfahrkarte ohne Codeaenderung). S6
+(Laeufe zusammenlegen) zuletzt und getrennt.
+
+**Nicht enthalten:** Hysterese (gemessen nicht noetig), hebel_max (bindet
+nie), Cluster-/Heat-Grenze (fachlich begruendet, eigenes Vorhaben),
+Funding-Bedingung (ein Monat Historie reicht nicht), VA 3 %.
