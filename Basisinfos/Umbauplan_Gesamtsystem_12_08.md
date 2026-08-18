@@ -11391,3 +11391,143 @@ festzulegen.
 | **F8 ist auf 37 Paaren gemessen** | vor S6 auf voller Historie nachzumessen |
 | **Der nötige Vorsprung bleibt bei 14,6 pp** | über der Basisrate von 33,3 %. **Kein Trade trägt sich dadurch** — die Lücke schrumpft von 38,8 auf 14,6, sie schließt sich nicht |
 | **S4 berührt den Prompt** | und damit die einzige Ebene, deren Verhalten wir nicht deterministisch vorhersagen können. Deshalb steht S4 **vor** S5: erst der Prompt stabil, dann die Zahlen |
+
+---
+
+## Kapitel 91 — PLAN: die Extreme sichtbar machen (18.08.2026)
+
+**Status: Plan, nichts gebaut.** Nutzerfreigabe für **Punkt 1** liegt vor:
+*„kein Filter — saubere und FETTE Kennzeichnung."*
+
+### 91.1 Die Frage, aus der dieses Kapitel entstand
+
+Nutzerfrage 18.08., und sie ist besser gestellt als alles, was der Umbauplan
+bisher beantwortet:
+
+> *„Wie finde ich unter den Kryptos Trades mit Potential? Ein Smallcap ist seit
+> 150 Tagen im Abwärtstrend — ist der Coin tot oder nur Bodenbildung für einen
+> Spot-Kauf? Und selbst wenn er tot ist: mit Hebel und kurzfristigem Einstieg
+> kann ich eine Chance nutzen — ich muss sie erkennen können."*
+
+**Das sind zwei verschiedene Fragen mit zwei verschiedenen Indikatorfamilien:**
+
+| | Frage | Horizont | Indikatoren laut Literatur |
+|---|---|---|---|
+| **Spot** | tot oder Boden? | Monate | On-chain-Aktivität bei fallendem Kurs · **Entwickleraktivität** · Börsenbestände |
+| **Hebel** | Bewegung in Sicht? | 2–5 Sitzungen | **Funding extrem negativ** · hohes OI bei negativem Funding · niedriger Long-Anteil |
+
+### 91.2 ⚠️ DER BEFUND: wir sammeln sie bereits
+
+```
+mindestkriterien.QUELLEN_G = {
+  'terminmarkt': ('oi_aenderung_pct', 'funding_perzentil',
+                  'long_anteil_pct', 'divergenz'),   <- die Squeeze-Indikatoren
+  'onchain':     ('boersenfluss',),                  <- der Akkumulations-Indikator
+  'optionsmarkt': ('dvol', 'skew'), ...
+}
+```
+
+**Genau die Größen, die die Literatur nennt** — 120.641 Funding-Messwerte
+liegen in der Datenbank.
+
+**Der Fehler ist nicht, dass sie fehlen, sondern wie wir sie benutzen.** Aus
+dem eigenen Befund vom 17.08.:
+
+> *„Funding-Rate und Open Interest haben dokumentierte Vorhersagekraft — **nur
+> an den Extremen** (Granger-Tests über 35,7 Mio. Minutenbeobachtungen). Unsere
+> Sätze sagen in vier von fünf Fällen ‚im gewohnten Bereich', also genau dort,
+> wo die Literatur nichts findet."*
+
+**Wir schreiben den Indikator in 80 % der Fälle hin, wo er nichts sagt — und
+ziehen in den 20 %, wo er etwas sagt, keine Konsequenz.** Dasselbe Muster wie
+bei den Marken, bei `uebersprungen`, bei `funding_eur_tag`: eingesammelt,
+nicht angeschlossen.
+
+### 91.3 Punkt 1 — was gebaut wird
+
+**Die Schwelle muss nicht erfunden werden: sie existiert schon.**
+`marktlage._einordnung` teilt Perzentile in *gewohnt* und *auffällig*;
+gemessen sind **79 von 101** Werten „gewohnt", also **rund ein Fünftel
+auffällig** — genau die Größenordnung, die die Literatur als „Extreme" meint.
+
+Drei Änderungen, alle additiv:
+
+| | |
+|---|---|
+| **1. Merkmal am Signal** | jedes auffällige Terminmarkt- oder On-chain-Merkmal wird als **Flag am Signal gespeichert** (Name, Wert, Perzentil, Richtung) |
+| **2. Kennzeichnung in der Mail** | die betreffende Zeile wird **fett** gesetzt — und behält ihre Richtungsfarbe (▲ grün / ▼ rot), damit sie von den schwarz-fetten **Handelsparametern** unterscheidbar bleibt |
+| **3. Zeile im Export** | Anzahl und Art der Auffälligkeiten je Umlauf |
+
+**Ohne Flag ändert sich nichts** — die Zeile bleibt, wie sie ist. Und die
+gewohnten Werte werden weiterhin über `ohne_gewohntes()` zusammengefasst; die
+Kennzeichnung ist genau deren Gegenstück.
+
+### 91.4 Was ausdrücklich NICHT passiert
+
+> **Kein Filter. Keine Bevorzugung. Kein Gate.**
+
+- Ein Signal mit auffälligem Funding wird **nicht** eher versendet
+- Ein Signal ohne Auffälligkeit wird **nicht** unterdrückt
+- Die Reihenfolge, die Töpfe, die Cooldowns bleiben unberührt
+- Das Modell erfährt nichts Neues — die Fakten stehen schon im Prompt
+
+**Es ist eine Kennzeichnung, keine Entscheidung.** Damit gilt die stehende
+Regel: *kein Kriterium darf ein Urteil verhindern, es darf nur bestimmen,
+welcher Art das Urteil ist.* Hier bestimmt es nicht einmal das — es macht nur
+sichtbar, was ohnehin dasteht.
+
+### 91.5 Wozu das gut ist: es macht die Literaturfrage messbar
+
+Sobald das Flag am Signal steht, lässt sich **zum ersten Mal** fragen:
+
+> **Verhalten sich Signale mit auffälligem Funding/OI anders als die übrigen?**
+
+| | |
+|---|---|
+| historisch | Funding reicht nur bis **2026-07-14** — ein Monat, 39 Symbole. Für einen ersten Blick, nicht für ein Urteil |
+| laufend | jedes neue Signal trägt das Flag; die Auswertung wächst mit |
+| Maßstab | dieselbe wie immer: **schlägt es die Basisrate?** |
+
+**Erst wenn diese Frage mit Ja beantwortet ist, darf aus der Kennzeichnung
+eine Unterscheidung werden.** Das ist die Reihenfolge, deren Umkehrung den
+Deadloop erzeugt hat.
+
+### 91.6 Punkt 2 — die zwei fehlenden Quellen (danach)
+
+Beide gehören zur **Spot**-Frage, also genau zu der aus dem Nutzerbeispiel:
+
+| Größe | Quelle | Kosten | Stand |
+|---|---|---|---|
+| **Entwickleraktivität** (Commits, aktive Entwickler) | GitHub-API, öffentliche Repos | **frei** | fehlt vollständig |
+| **Netzwerkaktivität** (aktive Adressen) | CoinMetrics Community — **wir rufen CoinMetrics bereits täglich auf** | **frei** | fehlt vollständig |
+
+**Der beste „ist der Coin tot"-Indikator der Literatur — Entwickleraktivität —
+fehlt uns komplett**, und er kostet nichts.
+
+⚠️ **Neue Quelle = neue Zeile in `datenfrische`**, sonst wird sie still nicht
+überwacht (dieselbe Falle wie bei `SYMBOL_ZU_COT_ROHSTOFF`).
+
+### 91.7 Punkt 3 — erst danach eine Unterscheidung
+
+Ob aus den Merkmalen je Strategie verschiedene Fragen werden, ist **nach**
+Punkt 1 und 2 zu entscheiden, nicht vorher. Ohne Messung wäre es geraten.
+
+### 91.8 Fallstricke
+
+| # | | Umgang |
+|---|---|---|
+| **G1** | **Zwei Sorten Fett in derselben Mail.** Schwarz-fett sind heute die Handelsparameter (Einstiegszone, Stop, TP …) | die Auffälligkeit bleibt **farbig** fett (▲/▼), nicht schwarz — sonst wird „fett" bedeutungslos |
+| **G2** | **R-T6, kein konstantes Feld.** Erschiene die Kennzeichnung fast immer, wäre sie wertlos | rund ein Fünftel erwartet; **die Rate ist zu messen und zu berichten**, nicht anzunehmen |
+| **G3** | **Ohne Speicherung ist nichts messbar.** Eine Kennzeichnung nur in der Mail wäre in einer Woche verloren | Flag gehört an das Signal in der Datenbank, nicht nur in den Text |
+| **G4** | **Ein Monat Funding-Historie** | für einen ersten Blick, ausdrücklich nicht für ein Urteil |
+| **G5** | **Die Versuchung, sofort zu filtern** | genau das ist der Deadloop. Punkt 1 ist absichtlich folgenlos |
+
+### 91.9 Reihenfolge
+
+| | Inhalt | ändert Verhalten |
+|---|---|---|
+| **P1a** | Flag am Signal speichern | **nein** |
+| **P1b** | Kennzeichnung in Mail und Export | **nein** (nur Darstellung) |
+| **P1c** | Messung: trägt das Extrem? | **nein** |
+| P2 | GitHub- und CoinMetrics-Anbindung | nein |
+| P3 | Unterscheidung je Strategie — **nur bei positivem Befund** | ja |

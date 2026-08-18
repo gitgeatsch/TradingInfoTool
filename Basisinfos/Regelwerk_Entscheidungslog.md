@@ -16791,3 +16791,43 @@ und ist eine Konfigurationszeile (Rueckfahrkarte ohne Codeaenderung). S6
 **Nicht enthalten:** Hysterese (gemessen nicht noetig), hebel_max (bindet
 nie), Cluster-/Heat-Grenze (fachlich begruendet, eigenes Vorhaben),
 Funding-Bedingung (ein Monat Historie reicht nicht), VA 3 %.
+
+
+---
+
+## 2026-08-18 (4) — Kapitel 91 geplant: die Extreme sichtbar machen
+
+**Plan, nichts gebaut.** Nutzerfreigabe fuer Punkt 1 liegt vor: kein Filter,
+saubere und fette Kennzeichnung.
+
+**Anlass ist die bessere Frage des Nutzers:** nicht "wann ist Hebel
+angemessen", sondern "wie finde ich unter den Kryptos Trades mit Potential" -
+am Beispiel eines Smallcaps im 150-Tage-Abwaertstrend: tot oder Bodenbildung
+(Spot), und selbst wenn tot, gibt es kurzfristig eine Chance (Hebel)?
+
+**Recherche:** zwei getrennte Indikatorfamilien. Spot - On-chain-Aktivitaet
+bei fallendem Kurs, Entwickleraktivitaet, Boersenbestaende. Hebel - Funding
+extrem negativ, hohes OI bei negativem Funding, niedriger Long-Anteil; die
+intensivste Phase dauert 2-5 Sitzungen, also genau unser Hebelfenster.
+
+**Der Befund: wir sammeln beide Familien bereits.** QUELLEN_G fuehrt
+terminmarkt (oi_aenderung_pct, funding_perzentil, long_anteil_pct, divergenz)
+und onchain (boersenfluss) - exakt die Groessen der Literatur. Der Fehler ist
+nicht, dass sie fehlen, sondern dass wir sie in den 80 % der Faelle
+hinschreiben, wo sie nichts sagen, und in den 20 % keine Konsequenz ziehen.
+
+**Die Schwelle muss nicht erfunden werden:** marktlage._einordnung teilt
+bereits in gewohnt und auffaellig, gemessen 79 von 101 Werten gewohnt - rund
+ein Fuenftel auffaellig.
+
+**Punkt 1 ist absichtlich folgenlos:** Flag am Signal speichern, Zeile in der
+Mail fett kennzeichnen (FARBIG fett, nicht schwarz - schwarz-fett sind die
+Handelsparameter), Zeile im Export. Kein Filter, keine Bevorzugung, kein
+Gate. Erst dadurch wird messbar, ob die Literatur bei UNS gilt.
+
+**Fehlend und frei verfuegbar:** Entwickleraktivitaet (GitHub-API) und
+aktive Adressen (CoinMetrics Community, wird bereits taeglich aufgerufen).
+Der beste "ist der Coin tot"-Indikator der Literatur fehlt uns komplett.
+
+**Verworfen:** sofort zu filtern. Genau diese Umkehrung der Reihenfolge hat
+den Deadloop erzeugt.
