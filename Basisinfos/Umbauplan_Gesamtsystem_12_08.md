@@ -10896,158 +10896,235 @@ Die drei Aufrufe vor dem Auslösen laufen weiterhin ins Leere — **das ist der
 Preis dafür, einen Ausfall von einem Aussetzer zu unterscheiden.** Ihre Mails
 tragen jetzt den Hinweis.
 
+
 ---
 
-## Kapitel 88 — PLAN: Hebel als Ergebnis statt als Kategorie (18.08.2026)
+## Kapitel 88 — PLAN Fassung 2: Hebel als Ergebnis statt als Kategorie (18.08.2026)
 
-**Status: Plan, nichts gebaut.** Freigabe des Nutzers steht aus.
+**Ersetzt die Erstfassung desselben Tages.** Die Erstfassung behauptete, es
+gebe genau EINEN freien Parameter (k). Das war falsch — siehe 88.2. Sie steht
+in der Git-Historie; zwei nebeneinander stehende Pläne wären genau der
+Schaden, den die Doku-Regel benennt.
 
-### 88.1 Der Befund, aus dem der Plan folgt
+**Status: Plan, nichts gebaut.**
+
+### 88.1 Der Befund
 
 | | |
 |---|---|
 | `laeufe()` gibt Krypto **dieselbe Symbolliste an beide Instrumente** | 43 Assets → 86 Urteile |
-| Stop, Einstiegszone, Ziel, Haltedauer | **in beiden Läufen identisch** |
-| `asset_hebel_settings` | **0 Zeilen** — alle 43 auf Vorgabe „erlaubt" |
-| Hebel-Eignungskriterium in der neuen Kette | **existiert nicht** (`pre_check_hebel` wird nicht aufgerufen) |
-| `_stop_abstand` | kennt weder Instrument noch Marken |
+| Stop, Zone, Ziel, Haltedauer | **in beiden Läufen identisch** (`_stop_abstand` kennt kein Instrument) |
+| `asset_hebel_settings` | **0 Zeilen** — alle auf Vorgabe „erlaubt" |
+| Hebel-Eignungskriterium | **existiert nicht** — `pre_check_hebel` wird von der neuen Kette nicht aufgerufen, `krise_extrem` kommt dort nicht vor |
+| Stopquelle | in **10 von 12** echten Fällen die Klemme RM-1b/1c, nicht das Urteil |
+| Rauschtreffer bei 0,75 ATR | **56,7 %** binnen 5 Handelstagen (63.884 Anker) |
 
-> **Der Hebel wird nicht gewählt, er ist ein Divisionsergebnis** —
-> `Risiko / (Betrag × Stopabstand)`. Und der Stopabstand kommt in 10 von 12
-> Fällen aus der Klemme RM-1b/1c, nicht aus einem Urteil.
-
-**Gemessen (63.884 Anker, alte DB):** ein Stop bei 0,75 ATR wird in **56,7 %**
-der Fälle binnen fünf Handelstagen vom bloßen Rauschen getroffen.
-
-### 88.2 Die Regel (fachlich)
-
-**Ein Urteil je Asset. Der Hebel fällt an. Das Etikett folgt der Zahl.**
+### 88.2 ⚠️ DIE KORREKTUR: zwei Achsen, nicht eine
 
 ```
-stop = min( 25 % · Kurs,                        Deckel, unverändert
-            max( k · ATR,                       Rauschboden
+Hebel = Verlustanteil / Stopabstand      →   Hebel > 1  ⟺  Stop < Verlustanteil
+```
+
+**Die Spot/Hebel-Grenze IST der Verlustanteil.** Er steht heute bei **15 %**
+für **beide** Instrumente (`betraege.VORGABE_VERLUSTANTEIL`) — vermutlich nie
+so entschieden, sondern nie unterschieden.
+
+Bei ATR-Median 3,41 % liegt ein 1,5-ATR-Stop bei rund 5 %. **Also ist bei
+15 % Verlustanteil praktisch alles ein Hebelgeschäft — unabhängig von k.**
+Das ist die eigentliche Ursache von „derzeit fast immer Hebel".
+
+Gemessen mit den echten Budgets (Einsatz 1.000 €, Risiko 150 €), 59 Symbole:
+
+| k | Hebel nötig (Median) |
+|---:|---:|
+| 0,75 (heute) | **5,9x** |
+| 1,5 | 2,9x |
+| 2,5 | 1,8x |
+
+**Literaturwerte als Ausgangspunkt (Nutzervorgabe 18.08.):** Risiko je Trade
+**1–2 %** des Kapitals, Hebeldeckel **2**. Heute: 150 € gegen einen Hebeltopf
+von 3.000 € = **5 %** je Trade. `config.yaml` führt
+`risiko_pro_trade_prozent_hebel: 1` — **die neue Kette liest den Schlüssel
+nicht.** Konfiguration und Verhalten widersprechen sich um den Faktor fünf.
+
+### 88.3 Die Regel
+
+```
+stop = min( 25 % x Kurs,                        Deckel, unverändert
+            max( k x ATR,                       Rauschboden
                  Marke ± 0,25 ATR,              Struktur
                  Widerlegungspreis ) )          These (Modell)
+Betrag  = Risikobudget / stop_relativ
+Hebel   = Verlustanteil / stop_relativ
+Etikett = "hebel" wenn Hebel > 1,0
 ```
 
-Drei Böden, der weiteste gewinnt. Das ist die Kombination, die
-`_stop_abstand`s eigener Docstring seit jeher als Standard beschreibt — heute
-gebaut ist nur der erste, und der zu eng.
+Das ist **Volatility Targeting**: Hebel proportional zu 1/Volatilität,
+stetig, ohne Schwelle. Die Literatur nennt genau das als Vorteil — *„scales
+continuously with forecast risk, never fully exiting."*
 
-```
-Betrag  = Risikobudget / stop_relativ           (bereits so gebaut, 15.08.)
-Hebel   = Risiko / (Betrag × stop_relativ)      (bereits so gebaut)
-Etikett = "hebel" wenn Hebel > 1,0, sonst "spot"
-```
+**Zwei harte Zusatzbedingungen, beide Tatsachen statt Prognosen:**
 
-**Es gibt keine Schwelle zu wählen.** Der einzige Schnitt liegt bei Hebel
-1,0 — die arithmetische Grenze zwischen *braucht geliehenes Geld* und
-*braucht keines*. Zu wählen ist **ein** Parameter: **k**.
+1. **SHORT ⇒ Hebel.** Spot kann bei Bitpanda nicht short. Die Richtung ist
+   damit selbst ein Hebelkriterium, und zwar ein zwingendes.
+2. **Hebel nur bei Krypto.** `INSTRUMENTE_JE_GRUPPE` — für Aktien, Rohstoffe
+   und ETF rechnet die Formel zwar einen Hebel aus, handelbar ist er nicht.
+   Dort wirkt das Ergebnis als Betragsbegrenzung, nicht als Etikett.
 
-⚠️ **Das ist Volatility Targeting**, nur ohne es so zu nennen: mit
-`stop = k · ATR` gilt `Hebel ∝ 1/Volatilität` — stetig, ohne Schwelle, ohne
-Filter. Die Literatur nennt genau das als Vorteil: *„scales continuously,
-never fully exiting — avoids the all-or-nothing whipsaw."*
+### 88.4 Was das Modell sieht — und was nur gerechnet wird
 
-### 88.3 Warum das KEIN Gate ist (die Deadloop-Frage)
+**Die Trennlinie verläuft nicht bei „Zahl / keine Zahl", sondern bei der
+Frage:** *„wo setzt du den Stop"* ist ein Risikoparameter (kann es nicht),
+*„wo stirbt deine Begründung"* ist ein Urteil über den eigenen Text (kann es).
 
-| | Gate | Klassifikation |
+| | Modell | Rechnung |
 |---|---|---|
-| tut | **entfernt** Urteile vor der Entscheidung | **ordnet** jedes Urteil zu |
-| Deadloop möglich | **ja** | nein |
-| messbar | **nein** — was weg ist, hinterlässt keine Spur | **ja** — alles ist noch da |
+| Lage, Belege, Richtung, Aktion | ✓ | |
+| `umgeworfen_durch` + `umgeworfen_preis_eur` | ✓ | |
+| Stop, Zone, Ziel, Haltedauer, Betrag, Hebel, Etikett | | ✓ |
+
+**⚠️ BEFUND: `einstieg_eur` und `stop_eur` werden verlangt, verworfen — und
+sind trotzdem tödlich.** `rechne()` liest sie nie; `empfehlung_vertrag.py:206`
+nimmt aber die Aktion auf **NICHTS_TUN** zurück, wenn sie fehlen oder wenn
+`stop >= einstieg`. Zwei Zahlen, die das Modell nicht schätzen kann, können
+den Trade beenden.
+
+**Zwei Folgefehler an derselben Stelle, beide heute schon wirksam:**
+
+| | |
+|---|---|
+| Die Prüfung greift nur bei `KAUFEN`/`NACHKAUFEN` | **`ERÖFFNEN` — die Haupt-Hebelaktion — ist ungeprüft.** Die riskanteste Aktion ist die einzige ohne Kontrolle |
+| Die Prüfung kennt **keine Richtung** | bei SHORT liegt der Stop korrekt ÜBER dem Einstieg → ein SHORT-`NACHKAUFEN` wird still zu NICHTS_TUN. Dieselbe Klasse wie die 313 SHORTs, die als HALTEN in der Datenbank lagen |
+
+**Änderungen am Prompt (Stufe 3, nicht jetzt):**
+
+1. `einstieg_eur` und `stop_eur` **streichen**.
+2. Das Instrument verlässt den Prompt **nur beim Einstieg**. Beim **Bestand**
+   bleibt es: eine bestehende Position *ist* gehebelt — Tatsache, keine
+   Prognose. Nur dort ergeben `HEBEL_ERHÖHEN`/`HEBEL_SENKEN` Sinn.
+3. **Ein Faktensatz statt zwei** — Funding, Put-Skew und Retail-Long gehen an
+   jedes Krypto-Urteil.
+
+### 88.5 ⚠️ DIE FALLSTRICKE — vollständig, aus der Gegenprüfung
+
+| # | Fallstrick | Umgang |
+|---|---|---|
+| **F1** | **Das JSON-Schema hängt am Instrument.** `llm_schema.py:515` wählt das Aktions-Enum je Instrument — *„ein Schema mit dem falschen Enum lässt das Modell gar nicht erst antworten."* Spot kennt 5 Aktionen, Hebel 7 | Einstieg braucht ein gemeinsames Vokabular. `KAUFEN` entspricht `ERÖFFNEN` — vorerst **spots Wort behalten**, das Etikett kommt danach. Umbenennen berührt 24 Codestellen und DB-Werte |
+| **F2** | **`richtung` gibt es nur bei Hebel.** Ohne Instrument im Prompt könnte das Modell SHORT sagen — was Spot nicht kann | genau deshalb **SHORT ⇒ Hebel** (88.3). Kein Widerspruch, sondern die Auflösung |
+| **F3** | **Zirkelbezug Budget ↔ Instrument.** `risiko_eur(instrument,…)` und `einsatz_eur(instrument,…)` brauchen das Instrument, das erst am Ende entsteht | Konvention: **das Etikett entscheidet sich am Spot-Budget**, danach gilt das Hebel-Budget. Ein Durchlauf, kein Iterieren |
+| **F4** | **Töpfe ebenso.** `topf_frei_eur` wird vor `rechne()` aus dem Topf des Instruments geholt | dieselbe Konvention wie F3 |
+| **F5** | **24 Codestellen** in 8 Modulen hängen an `instrument == "hebel"` | Stufe 3 ist der große Teil des Umbaus, nicht Stufe 0 |
+| **F6** | **Die Marken erreichen `rechne()` nicht** — `widerstand` wird von keinem Aufrufer gefüllt | Durchreichung neu bauen; die Werte liegen in `_marken_werte` bereit |
+| **F7** | **Der Vertrag verliert seine Plausibilitätsprüfung**, wenn die beiden Preisfelder gehen | Prüfung wandert auf `umgeworfen_preis_eur` — und **muss richtungsbewusst** sein, sonst wird F2 nachgebaut |
+| **F8** | **Anlass: zwei Fingerabdrücke werden zu einem.** Gemessen an 37 Paaren: 59,5 % ändern sich gemeinsam, 8,1 % nur Spot, 0 % nur Hebel → **rund 53 % der Urteile bleiben** | die Stichprobe ist klein (die Läufe fallen selten auf dieselbe Minute). **Vor Stufe 3 auf voller Historie nachmessen** |
+| **F9** | **Messreihenbruch**: bisherige Signale tragen ein Etikett aus dem Lauf, künftige eines aus der Rechnung | Stichtag setzen, Vergleiche nur innerhalb einer Seite |
+| **F10** | **Längerer Prompt** durch den gemeinsamen Faktensatz | gegen R-T1…R-T12 prüfen. **Geprüft: N1–N5 hängen am Prompttext, nicht an den Antwortfeldern** — das Streichen ist dort folgenlos |
+
+### 88.6 Deadloop-Sicherheit
 
 > **Kein Kriterium darf ein Urteil verhindern. Es darf nur bestimmen, welcher
 > Art das Urteil ist.**
 
-**Der Kanarienvogel:** je Umlauf werden **Zahl der Urteile** und **Verteilung
-spot/hebel** nebeneinander gezählt. Bleibt die Zahl konstant und verschiebt
-sich nur die Verteilung → Klassifikation. Sinkt die Zahl → irgendwo filtert
-etwas, sichtbar in derselben Zeile.
+| | Gate | Klassifikation |
+|---|---|---|
+| tut | **entfernt** Urteile | **ordnet** sie zu |
+| Deadloop möglich | ja | nein |
+| messbar | nein — was weg ist, hinterlässt keine Spur | ja |
 
-**Die zwei Stellen, an denen es doch eine stille Bremse werden könnte:**
+**Kanarienvogel:** je Umlauf **Zahl der Urteile** und **Verteilung
+spot/hebel** nebeneinander. Zahl konstant und Verteilung verschiebt sich =
+Klassifikation. Zahl sinkt = irgendwo filtert etwas.
 
-1. `RechnungBlockiert` bei Unterschreitung der Mindestgröße. Gemessen 0 von 59
-   bei 25 € Risiko — muss trotzdem **gezählt und gemeldet**, nie verschluckt.
-2. Funding im 99. Perzentil (2.129 %/Jahr). Auch das **kein Veto**: der Trade
-   wird dann Spot, nicht „kein Trade".
+⚠️ **Achtung, die Zahl sinkt durch F8 gewollt um rund die Hälfte.** Der
+Kanarienvogel muss deshalb **je Symbol** zählen, nicht je Lauf — sonst meldet
+er den geplanten Umbau als Defekt.
 
-### 88.4 Der Bau (technisch)
+**Zwei Stellen, an denen es doch eine stille Bremse würde:**
 
-**Eine reine Funktion, zwei Aufrufer.** Genau das Muster, an dem dieses
-Projekt schon zweimal gescheitert ist, wenn es fehlte (Umbauplan 70.4).
+1. `RechnungBlockiert` unter der Mindestgröße — gemessen 0 von 59 bei 25 €
+   Risiko, **muss trotzdem gezählt und gemeldet werden**.
+2. Funding im 99. Perzentil (2.129 %/Jahr) — **kein Veto**: der Trade wird
+   dann Spot.
+
+### 88.7 Der Bau (technisch)
+
+**Eine reine Funktion, zwei Aufrufer** — das Muster, dessen Fehlen am 70.4
+schon einmal Werte auseinanderlaufen ließ.
 
 ```
 agent/entscheidungsrechnung.py
-    dimensioniere(kurs, atr, risiko_eur, betrag_wunsch_eur, k,
+    dimensioniere(kurs, atr, k, verlustanteil, einsatz_eur,
                   marke=None, umgeworfen_preis_eur=None,
-                  instrument_erlaubt=True) -> dict
-        # rein, ohne DB, ohne Uhr, ohne Netz
-        # liefert: stop_rel, stop_regel, betrag, hebel, etikett,
-        #          gebunden_durch, tage_schaetzung
+                  ist_short=False, hebel_handelbar=True) -> dict
+        # rein: ohne DB, ohne Uhr, ohne Netz
+        # liefert stop_rel, stop_regel, betrag, hebel, etikett,
+        #         gebunden_durch, tage_schaetzung
 ```
 
-| Aufrufer | wozu |
+| Aufrufer | Zweck |
 |---|---|
-| `rechne()` | Produktion — **erst nach der Freigabe verdrahtet** |
-| `messe_hebelentscheidung.py` | Stufe 0 — läuft über die ganze OHLC-Historie |
+| `messe_hebelentscheidung.py` | Stufe 0 — über die volle OHLC-Historie |
+| `rechne()` | Produktion — **erst in Stufe 3** |
 
-**Datenquelle für die Messung:** `DB_Backups/tradinginfotool_*.db.gz` vom
-Notebook, ausgepackt in den Scratchpad, `PRAGMA integrity_check`. **Nicht die
-Desktop-Datenbank** — die endet am 19.07. (`data/gui_heartbeat.txt`).
+**Datenquelle:** `DB_Backups/tradinginfotool_*.db.gz` im Austauschordner
+(täglich vom Notebook), auspacken in den Scratchpad, `PRAGMA
+integrity_check`. **Nicht die Desktop-Datenbank** — sie endet am 19.07.
+(`data/gui_heartbeat.txt`).
 
-**Prüfungen (`--paket Dimension`), vor der ersten Messung:**
+**Prüfungen `--paket Dimension`, vor der ersten Messung:**
 
 | | |
 |---|---|
-| Rein | zweimal derselbe Aufruf = dasselbe Ergebnis, kein Zustand |
-| Böden | jeder der drei greift einzeln; der weiteste gewinnt; Deckel bindet |
-| Grenzfall | Hebel exakt 1,0 → Etikett `spot`, Betrag folgt dem Risiko |
-| Spiegelung | LONG/SHORT symmetrisch, Marke auf der richtigen Seite |
-| Kein Filter | die Funktion gibt für JEDE Eingabe ein Ergebnis oder eine benannte Ausnahme — nie `None` |
-| Mindestgröße | Unterschreitung wird **gemeldet**, nicht verschluckt |
+| Rein | zweimal derselbe Aufruf = dasselbe Ergebnis |
+| Böden | jeder greift einzeln, der weiteste gewinnt, Deckel bindet |
+| Grenzfall | Hebel exakt 1,0 → `spot`, Betrag folgt dem Risiko |
+| Spiegelung | LONG/SHORT symmetrisch; SHORT ⇒ Etikett `hebel` |
+| Handelbarkeit | Nicht-Krypto bekommt nie das Etikett `hebel` |
+| Kein Filter | **nie `None`** — für jede Eingabe ein Ergebnis oder eine benannte Ausnahme |
+| Mindestgröße | Unterschreitung wird gemeldet, nicht verschluckt |
 
-### 88.5 Was Stufe 0 misst — heute, nicht in drei Wochen
+### 88.8 Stufe 0 — was gemessen wird, heute
 
 **OHLC reicht von 1985-10-01 bis 2026-08-18** (63 Symbole, 116.535 Zeilen).
-Die Sprungfrage ist damit historisch beantwortbar; auf Beobachtung zu warten
-wäre die schlechtere Messung.
+Die Sprungfrage ist historisch beantwortbar; Beobachten wäre die schlechtere
+Messung.
+
+**Zwei Achsen, ein Feld statt einer Zeile:**
+k aus {0,75 · 1,0 · 1,5 · 2,0 · 2,5} **mal** Verlustanteil aus
+{1 % · 2 % · 5 % · 10 % · 15 %}
 
 | Frage | Messung |
 |---|---|
-| **Wie oft springt ein Asset zwischen Spot und Hebel?** | je Asset und Tag über die volle Historie, für k ∈ {1,0 · 1,5 · 2,0 · 2,5} |
-| Wie sieht die Verteilung spot/hebel aus? | je k, je Assetklasse |
-| Wie oft trifft das Rauschen den Stop? | je k, Horizont 5 und 20 Tage (Neuauflage auf frischen Daten) |
-| Wie klein werden die Beträge? | Verteilung, Unterschreitungen der Mindestgröße |
-| Was ändert sich am Kostenbild? | nötiger Vorsprung vor dem Zufall, je k |
-| Wie stabil ist die Zahl selbst? | Streuung des Hebels von Tag zu Tag — **das ist die Zahl, die über Hysterese entscheidet** |
+| Anteil Hebel/Spot | je Feld |
+| **Sprungrate** je Asset | wie oft wechselt das Etikett — entscheidet über Hysterese |
+| Rauschtreffer | je k, Horizont 5 und 20 Tage, auf frischen Daten |
+| Betragsverteilung | Unterschreitungen der Mindestgröße |
+| nötiger Vorsprung vor dem Zufall | je Feld |
+| Streuung des Hebels von Tag zu Tag | die eigentliche Hysterese-Zahl |
 
-⚠️ **Was Stufe 0 NICHT beantworten kann:** Funding hat nur **einen Monat**
-Historie (ab 2026-07-14, 39 Symbole). Diese eine Größe wächst tatsächlich erst
-an — alles andere nicht.
+⚠️ **Nicht messbar in Stufe 0:** Funding hat nur **einen Monat** Historie
+(ab 2026-07-14, 39 Symbole). Diese eine Größe wächst tatsächlich erst an.
 
-### 88.6 Was in dieser Stufe ausdrücklich NICHT passiert
+### 88.9 Was NICHT passiert
 
-- **kein Eingriff in die Produktion** — `rechne()` bleibt unverändert
-- **kein k festgelegt** — das folgt aus der Messung
-- **keine Hysterese gebaut** — sie folgt aus der gemessenen Sprungrate
-- **keine Zusammenlegung der beiden Läufe** — das ist Stufe 3
+kein Eingriff in `rechne()` · kein k festgelegt · kein Verlustanteil geändert ·
+keine Hysterese gebaut · keine Zusammenlegung der Läufe · keine Prompt-Änderung
 
-### 88.7 Die Entscheidungen, die dem Nutzer gehören
+### 88.10 Offene Entscheidungen des Nutzers
 
 | | Stand |
 |---|---|
-| **k** (ATR-Faktor des Stops) | offen — Messung liefert die Grundlage |
-| **Hebeldeckel** | wir 10, Literatur meist **2** — Risikoentscheidung |
-| **Wohin die Hysterese wirkt** | auf Etikett/Topf/Cooldown — oder gar nicht |
-| **Laufende Positionen bei Volatilitätsanstieg** | Stop nachziehen · verkleinern · unverändert — heute nirgends geregelt |
-| **Was der Hebel-Schalter künftig bedeutet** | Erlaubnis („hier darf gehebelt werden") statt Kategorie |
+| **Verlustanteil je Instrument** | heute 15 % für beide. Literatur 1–2 %. **Die eigentliche Spot/Hebel-Grenze** |
+| **k** | offen — folgt aus der Rauschmessung |
+| `hebel_max` | bindet nachweislich nie (0 von 59); RM-11 kann bei Verlustanteil unter 91 % **mathematisch nie** binden. Vorerst unangetastet |
+| Aktionsvokabular beim Einstieg | `KAUFEN` behalten oder umbenennen (F1) |
+| Laufende Positionen bei Volatilitätsanstieg | Stop nachziehen · verkleinern · unverändert — heute nirgends geregelt |
 
-### 88.8 Reihenfolge
+### 88.11 Reihenfolge
 
 | Stufe | Inhalt | ändert Verhalten |
 |---|---|---|
-| **0** | reine Funktion + Prüfungen + Messung über die Historie | **nein** |
-| 1 | k festlegen, aus der Rauschmessung | nein |
+| **0** | reine Funktion + `--paket Dimension` + Messung über die Historie | **nein** |
+| 1 | Verlustanteil und k festlegen | nein |
 | 2 | Hysterese festlegen, aus der Sprungrate | nein |
-| 3 | `rechne()` verdrahten, beide Läufe zusammenlegen, Kanarienvogel | **ja** |
+| 3 | Prompt, Schema, Vertrag, `rechne()`, Läufe zusammenlegen, Kanarienvogel je Symbol | **ja** |

@@ -16707,3 +16707,47 @@ verschiebt sich.
 **Verworfen:** eine Vorpruefung/Eignungsschwelle vor der Signalerzeugung.
 Genau diese Bauform hat den Deadloop erzeugt; die Klassifikation leistet
 dasselbe ohne die Bauform.
+
+
+---
+
+## 2026-08-18 (2) — Plan Kapitel 88 auf Fassung 2, nach detaillierter Gegenpruefung
+
+**Die Erstfassung war falsch in einem tragenden Punkt.** Sie behauptete, es
+gebe genau EINEN freien Parameter (den ATR-Faktor k). Tatsaechlich gilt
+`Hebel = Verlustanteil / Stopabstand`, also ist die Spot/Hebel-Grenze der
+VERLUSTANTEIL - heute 15 % fuer beide Instrumente, vermutlich nie so
+entschieden, sondern nie unterschieden. Bei ATR-Median 3,41 % liegt ein
+1,5-ATR-Stop bei rund 5 %; bei 15 % Verlustanteil ist damit praktisch alles
+ein Hebelgeschaeft, unabhaengig von k. Das ist die eigentliche Ursache von
+"derzeit fast immer Hebel". Stufe 0 misst deshalb ZWEI Achsen.
+
+**Der Hebeldeckel ist Dekoration.** Da `hebel_noetig/sicher =
+Verlustanteil/0,91` konstant ist, kuerzt sich der Stopabstand heraus: RM-11
+kann bei einem Verlustanteil unter 91 % MATHEMATISCH NIE binden, und
+`hebel_max = 10` bindet gemessen in 0 von 59 Faellen. Die Frage "10 oder 2"
+ist die falsche Frage; wirksam waere der Verlustanteil.
+
+**Was das LLM sieht (Nutzerfrage):** `einstieg_eur` und `stop_eur` werden vom
+Modell verlangt, von `rechne()` NIE gelesen - und koennen den Trade trotzdem
+toeten: `empfehlung_vertrag.py:206` nimmt die Aktion auf NICHTS_TUN zurueck,
+wenn sie fehlen oder wenn stop >= einstieg. Zwei Folgefehler an derselben
+Stelle: die Pruefung greift nur bei KAUFEN/NACHKAUFEN, also ist ERÖFFNEN -
+die Haupt-Hebelaktion - ungeprueft; und sie kennt keine Richtung, also wird
+ein SHORT-NACHKAUFEN mit korrektem Stop still zu NICHTS_TUN.
+
+**Zehn Fallstricke** sind in 88.5 einzeln erfasst, darunter: das JSON-Schema
+haengt am Instrument (falsches Enum = keine Antwort), der Zirkelbezug
+Budget/Topf gegen Instrument, 24 Codestellen am Etikett, und der
+Anlass-Effekt (zwei Fingerabdruecke werden zu einem - gemessen an 37 Paaren
+bleiben rund 53 % der Urteile; Stichprobe klein, vor Stufe 3 nachzumessen).
+
+**Neue Bedingung, aus der Recherche:** SHORT erzwingt Hebel, weil Spot bei
+Bitpanda nicht short kann. Die Richtung ist damit selbst ein Hebelkriterium -
+eine Tatsache, keine Prognose.
+
+**Verworfen:** eine Vorpruefung/Eignungsschwelle vor der Signalerzeugung.
+Genau diese Bauform hat den Deadloop erzeugt.
+
+**Nutzervorgabe 18.08.:** Messungen und Ausgangswerte an Literatur und Praxis
+ausrichten - Risiko je Trade 1-2 %, Hebeldeckel 2.
