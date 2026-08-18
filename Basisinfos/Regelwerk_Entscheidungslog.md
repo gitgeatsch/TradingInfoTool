@@ -16997,3 +16997,30 @@ Codeaenderung.
 
 1.143 Pruefungen, sieben Stopfaelle einzeln, freie Namen 0, drei
 Selbsttests, Simulation 9 Mails aus 4 Gruppen ohne Fehler und ohne Luecke.
+
+---
+
+## 2026-08-18 (10) - NB-Export kennt den Umbau: Abschnitt dimensionierung
+
+Volltext: Umbauplan 92.10. Nutzerfrage zur Kontrolle - und das Memory sagte
+es ausdruecklich: der Export kannte vom Umbau nichts.
+
+Der neue Abschnitt trennt drei Dinge: EINGESTELLT (stop_min_atr,
+Verlustanteil, Einsatz je Instrument - was gelten soll), GEMESSEN
+(Stopabstand und Hebel der Signale der letzten sieben Tage - was ankam) und
+ERWARTET_NACH_S5 (die Zahlen aus 92.9, damit niemand raten muss).
+
+Stimmen eingestellt und gemessen nicht ueberein, ist die Einstellung nicht
+wirksam - genau der Fall, der am selben Tag beim Schluessel
+risiko_pro_trade_prozent_hebel auffiel: config sagte 1 %, die Kette
+rechnete 5 %.
+
+Der Abschnitt hat sofort geliefert: gegen das Backup von 04:45 steht
+eingestellt stop_min_atr 2,0 gegen gemessen Hebel-Median 3,8 und 91,6 % mit
+Hebel bei 618 Signalen. Kein Fehler, sondern der Zweck - das Backup ist von
+vor dem Einspielen. Nach dem naechsten Umlauf muessen die Bloecke
+zusammenlaufen.
+
+1.145 Pruefungen (2 neu), gegen die echte Notebook-Datenbank ausgefuehrt,
+freie Namen 0, Simulation 9 Mails ohne Fehler.
+

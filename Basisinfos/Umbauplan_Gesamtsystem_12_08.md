@@ -11784,3 +11784,41 @@ k = 2,0 mit Marke) · freie Namen 0 · drei Selbsttests · Simulation 9 Mails au
 
 Die beiden Konfigurationszeilen löschen — **ohne Codeänderung** ist der alte
 Zustand wieder da.
+
+### 92.10 Der NB-Export kennt den Umbau (18.08.2026)
+
+**Nutzerfrage: „was ist mit dem NB-Export zur Kontrolle?"** — berechtigt, und
+das Memory sagte es ausdrücklich: *der Export kennt vom Umbau nachgezählt
+NICHTS.*
+
+Neuer Abschnitt `dimensionierung` in `notebook_diagnose.json`:
+
+| Block | Inhalt |
+|---|---|
+| **eingestellt** | `stop_min_atr`, Verlustanteil und Einsatz je Instrument — also was gelten **soll** |
+| **gemessen** | Stopabstand und Hebel der Signale der letzten sieben Tage — was **ankam** |
+| **erwartet_nach_s5** | die Zahlen aus 92.9, damit niemand raten muss |
+
+> ⚠️ **Zwei Dinge, die nicht verwechselt werden dürfen.** Stimmen
+> *eingestellt* und *gemessen* nicht überein, ist die Einstellung **nicht
+> wirksam**. Genau dieser Fall — Konfiguration sagt eins, Verhalten macht ein
+> anderes — ist am 18.08. beim Schlüssel `risiko_pro_trade_prozent_hebel`
+> aufgefallen: config sagte 1 %, die Kette rechnete 5 %.
+
+**Und der Abschnitt hat sofort geliefert.** Gegen das Backup von 04:45:
+
+| | |
+|---|---:|
+| eingestellt | `stop_min_atr: 2,0` · Verlustanteil 6 % |
+| **gemessen** (618 Signale) | Hebel-Median **3,8** · **91,6 %** mit Hebel |
+| erwartet | Hebel-Median 1,0 · rund 44 % |
+
+Das ist **kein Fehler, sondern der Zweck**: das Backup ist von *vor* dem
+Einspielen. Nach dem nächsten Umlauf auf dem Notebook müssen die beiden Blöcke
+zusammenlaufen — **und wenn nicht, sieht man es in einer Zeile, statt es aus
+einzelnen Mails zu erschließen.**
+
+**Gegenprüft:** 1.145 Prüfungen (2 neu) · Abschnitt vorhanden und in die JSON
+eingehängt · Trennung eingestellt/gemessen/erwartet festgehalten · gegen die
+echte Notebook-Datenbank ausgeführt · freie Namen 0 · Simulation 9 Mails aus 4
+Gruppen ohne Fehler.
