@@ -96,10 +96,54 @@ class RechnungBlockiert(ValueError):
     """Eine Eingabe fehlt oder eine Grenze ist verletzt - es gibt kein Ergebnis."""
 
 
+def _boeden(kurs: float, atr: float, k: float,
+            marke_preis: float | None = None,
+            umgeworfen_preis_eur: float | None = None,
+            ist_short: bool = False) -> dict:
+    """Die Untergrenzen des Stopabstands, benannt - DIE EINE STELLE.
+
+    S5 des Umbauplans Kapitel 90 (18.08.2026). Drei Boeden, der weiteste
+    gewinnt:
+
+        Rauschen    max(2,5 % Kurs, k x ATR)  - unter dem Rauschen ist jeder
+                                                Stop eine Frage der Zeit
+        Struktur    Marke +- 0,25 ATR         - jenseits des Niveaus, nicht
+                                                darauf
+        These       Widerlegungspreis         - wo das Modell seine eigene
+                                                Begruendung fuer erledigt haelt
+
+    Das ist die Kombination, die `_stop_abstand`s Docstring seit jeher als
+    Standard beschreibt. Gebaut war bis heute nur der erste Boden, und der zu
+    niedrig: 0,75 ATR wird in 57,3 % der Faelle binnen fuenf Handelstagen vom
+    blossen Rauschen getroffen (26.910 Anker).
+
+    VON `_stop_abstand` UND `dimensioniere` GEMEINSAM BENUTZT. Zwei Rechnungen
+    an zwei Orten sind der Fehler, an dem in diesem Projekt schon einmal Werte
+    auseinandergelaufen sind (Umbauplan 70.4)."""
+    aus = {"Rauschen": max(GRENZEN["stop_min_relativ"] * kurs,
+                           float(k) * atr)}
+    if isinstance(marke_preis, (int, float)) and marke_preis > 0:
+        # JENSEITS der Marke, nicht darauf. Wer genau auf das Niveau geht,
+        # wird von jedem Test des Niveaus ausgestoppt. Dieselbe Breite, die
+        # die Zielrechnung VOR den Widerstand legt - keine neue Groesse.
+        ab = ((float(marke_preis) - kurs) if ist_short
+              else (kurs - float(marke_preis))) + GRENZEN["zone_atr"] * atr
+        if ab > 0:
+            aus["Struktur"] = ab
+    if isinstance(umgeworfen_preis_eur, (int, float)) and umgeworfen_preis_eur > 0:
+        # BEI SHORT LIEGT DER WIDERLEGUNGSPREIS UEBER DEM KURS (Paket 13).
+        ab = ((float(umgeworfen_preis_eur) - kurs) if ist_short
+              else (kurs - float(umgeworfen_preis_eur)))
+        if ab > 0:
+            aus["These"] = ab
+    return aus
+
+
 def _stop_abstand(kurs: float, atr: float,
                   umgeworfen_preis_eur: float | None = None,
                   ist_short: bool = False,
-                  min_atr: float | None = None) -> tuple[float, str]:
+                  min_atr: float | None = None,
+                  marke_preis: float | None = None) -> tuple[float, str]:
     """Der Stopabstand in Euro, plus die Regel, die ihn bestimmt hat.
 
     DIE TRADINGSTANDARDS KENNEN ZWEI SCHULEN, und die Praxis kombiniert sie:
@@ -134,32 +178,37 @@ def _stop_abstand(kurs: float, atr: float,
     Rauschen des Symbols; liegt der Widerlegungspreis innerhalb des Rauschens,
     gilt der Rauschboden. Damit kann aus dieser Quelle kein 1,5-%-Stop werden,
     auch wenn das Modell einen nennt."""
-    # ⚠️ DER RAUSCHBODEN IST SEIT S1 EIN REGLER (18.08.2026, Kapitel 90).
-    # `min_atr=None` heisst: es gilt die Vorgabe 0,75 - bitgleich zu
-    # vorher. Gemessen an 26.910 Ankern wird ein Stop bei 0,75 ATR in
-    # 57,3 % der Faelle binnen fuenf Handelstagen vom blossen Rauschen
-    # getroffen; bei 2,0 ATR sind es 15,9 %. Diese Zahl zu bewegen ist
-    # der Sinn des Parameters - aber nicht seine Vorgabe.
+    # SEIT S5 DREI BOEDEN, DER WEITESTE GEWINNT (18.08.2026).
+    #
+    # Vorher kannte diese Funktion zwei Quellen: den Widerlegungspreis und den
+    # Rauschboden. Die Marken unter dem Kurs sah sie NIE - der Docstring oben
+    # zitiert die strukturbasierte Schule und baute sie nicht.
+    #
+    # `min_atr=None` heisst weiterhin: es gilt die Vorgabe aus GRENZEN.
     _k = GRENZEN["stop_min_atr"] if min_atr is None else float(min_atr)
-    min_abstand = max(GRENZEN["stop_min_relativ"] * kurs, _k * atr)
+    boeden = _boeden(kurs, atr, _k, marke_preis, umgeworfen_preis_eur,
+                     ist_short)
     max_abstand = GRENZEN["stop_max_relativ"] * kurs
 
-    # BEI SHORT LIEGT DER WIDERLEGUNGSPREIS UEBER DEM KURS (Paket 13). Die
-    # These "es faellt" ist widerlegt, wenn es steigt - der Abstand wird
-    # deshalb andersherum gebildet. Wer das vergisst, bekommt bei jedem
-    # SHORT einen negativen Abstand und faellt still auf den ATR-Stop zurueck.
-    if isinstance(umgeworfen_preis_eur, (int, float)) and umgeworfen_preis_eur > 0:
-        abstand = ((float(umgeworfen_preis_eur) - kurs) if ist_short
-                   else (kurs - float(umgeworfen_preis_eur)))
-        if abstand <= 0:
-            return _stop_aus_atr(kurs, atr)
-        if abstand < min_abstand:
-            return min_abstand, "Widerlegungspreis lag im Rauschen - RM-1b/1c"
-        if abstand > max_abstand:
-            return max_abstand, f"Widerlegungspreis zu weit - Obergrenze {100 * GRENZEN['stop_max_relativ']:.0f} %"
-        return abstand, "Widerlegungspreis des Modells"
+    # DER ALTE RUECKFALL BLEIBT UNTERGRENZE, wenn das Modell nichts sagt.
+    # Ohne ihn bekaeme ein Signal ohne Widerlegungspreis bei k < 2,5 ploetzlich
+    # einen ENGEREN Stop als vorher - eine Verschlechterung durch die
+    # Hintertuer, und zwar genau dort, wo ohnehin am wenigsten bekannt ist.
+    if "These" not in boeden:
+        boeden["ATR-Rueckfall"] = _stop_aus_atr(kurs, atr)[0]
 
-    return _stop_aus_atr(kurs, atr)
+    regel = max(boeden, key=boeden.get)
+    abstand = boeden[regel]
+    _deckel = 100 * GRENZEN["stop_max_relativ"]
+    if abstand > max_abstand:
+        return max_abstand, "Obergrenze {:.0f} %".format(_deckel)
+    if regel == "These":
+        return abstand, "Widerlegungspreis des Modells"
+    if regel == "Struktur":
+        return abstand, "jenseits der naechsten Marke"
+    if regel == "ATR-Rueckfall":
+        return abstand, _stop_aus_atr(kurs, atr)[1]
+    return abstand, "Rauschboden RM-1b/1c"
 
 
 def _stop_aus_atr(kurs: float, atr: float) -> tuple[float, str]:
@@ -416,7 +465,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     kurs, atr, risiko_eur = float(kurs), float(atr), float(risiko_eur)
     abstand, stop_regel = _stop_abstand(kurs, atr, umgeworfen_preis_eur,
-                                        ist_short, stop_min_atr)
+                                        ist_short, stop_min_atr,
+                                        marke_stop_eur)
     stop_rel = abstand / kurs
     ziel, crv, ziel_regel = _ziel(kurs, abstand, atr, widerstand, ist_short)
 
@@ -850,19 +900,10 @@ def dimensioniere(*, kurs: float, atr: float, k: float, verlustanteil: float,
     kurs, atr, einsatz_eur = float(kurs), float(atr), float(einsatz_eur)
     verlustanteil = float(verlustanteil)
 
-    boeden = {"Rauschen": float(k) * atr}
-    if marke_preis and float(marke_preis) > 0:
-        # JENSEITS der Marke, nicht darauf. Wer genau auf das Niveau geht,
-        # wird von jedem Test des Niveaus ausgestoppt.
-        ab = ((float(marke_preis) - kurs) if ist_short
-              else (kurs - float(marke_preis))) + GRENZEN["zone_atr"] * atr
-        if ab > 0:
-            boeden["Struktur"] = ab
-    if umgeworfen_preis_eur and float(umgeworfen_preis_eur) > 0:
-        ab = ((float(umgeworfen_preis_eur) - kurs) if ist_short
-              else (kurs - float(umgeworfen_preis_eur)))
-        if ab > 0:
-            boeden["These"] = ab
+    # DIESELBE STELLE WIE `_stop_abstand` (S5). Vorher stand die
+    # Boden-Rechnung hier ein zweites Mal.
+    boeden = _boeden(kurs, atr, k, marke_preis, umgeworfen_preis_eur,
+                     ist_short)
 
     regel = max(boeden, key=boeden.get)
     abstand = boeden[regel]

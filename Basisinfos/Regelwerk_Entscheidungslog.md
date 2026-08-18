@@ -16958,3 +16958,42 @@ Promptlaenge danach: Spot 2.110, Hebel 2.414 Zeichen.
 
 1.143 Pruefungen (4 neu), freie Namen 0, drei Selbsttests, Prompt-Matrix
 unveraendert, Simulation 9 Mails aus 4 Gruppen ohne Fehler und ohne Luecke.
+
+
+---
+
+## 2026-08-18 (9) — S5 GEBAUT: der Wechsel ist scharf
+
+Volltext: Umbauplan 92.9.
+
+**Die Stopregel steht jetzt an EINER Stelle.** `_boeden()` liefert die
+benannten Untergrenzen - Rauschen, Struktur, These -, und `_stop_abstand`
+sowie `dimensioniere` benutzen beide diese Funktion. Vorher stand die
+Rechnung zweimal da, der Fehler aus 70.4.
+
+**Der dritte Boden ist angeschlossen:** die Marke auf der Stopseite, die S2
+nur verkabelt hatte.
+
+**Der ATR-Rueckfall bleibt Untergrenze**, wenn das Modell nichts liefert -
+sonst bekaeme ein Signal ohne Widerlegungspreis bei k < 2,5 ploetzlich einen
+ENGEREN Stop als vorher.
+
+**Zwei Konfigurationszeilen:** `stop_min_atr: 2.0` und `verlustanteil` 0,06
+fuer alle drei Instrumente. Derselbe Wert fuer alle, damit das Etikett ohne
+Kenntnis des Instruments definiert ist - F3 und F4 aus 88.5 entfallen damit
+ersatzlos.
+
+**Gemessen an der echten Kette:** Stop 4-6 % statt ~3 %, Hebel-Median 1,00
+statt 5,0, Anteil mit Hebel 7 von 16 = 44 % statt 98 %, Risiko je Trade 60
+statt 150 EUR. Alle drei Boeden entscheiden in denselben neun Mails.
+
+**Zwei Pruefungen nachgezogen, keine Aenderung zurueckgedreht:** die eine
+erwartete das Wort "Rauschen", die Regel heisst jetzt "Rauschboden"; die
+andere behauptete, die Marke aendere den Stop nicht - richtig fuer S2,
+ueberholt mit S5.
+
+**Rueckfahrkarte:** die beiden Konfigurationszeilen loeschen, ohne
+Codeaenderung.
+
+1.143 Pruefungen, sieben Stopfaelle einzeln, freie Namen 0, drei
+Selbsttests, Simulation 9 Mails aus 4 Gruppen ohne Fehler und ohne Luecke.

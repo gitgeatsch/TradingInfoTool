@@ -11720,3 +11720,67 @@ festgehalten, damit die Verschiebung nach S6 nicht vergessen wird) · freie
 Namen 0 · drei Selbsttests · Prompt-Matrix unverändert · Simulation 9 Mails
 aus 4 Gruppen, 0 Fehler, 0 Lücken.
 
+### 92.9 S5 gebaut: der Wechsel (18.08.2026)
+
+**Der Schritt, der die Zahlen dreht.** Zwei Konfigurationszeilen — und eine
+Codeänderung, die sie erst wirksam macht.
+
+#### Die Stopregel steht jetzt an EINER Stelle
+
+`_boeden(kurs, atr, k, marke, widerlegung, ist_short)` liefert die benannten
+Untergrenzen; **`_stop_abstand` und `dimensioniere` benutzen beide diese
+Funktion.** Vorher stand die Rechnung zweimal da — der Fehler aus 70.4,
+diesmal vermieden statt nachgebaut.
+
+| Boden | woher |
+|---|---|
+| **Rauschen** | `max(2,5 % Kurs, k × ATR)` |
+| **Struktur** | Marke ± 0,25 ATR — **seit S5 angeschlossen** |
+| **These** | Widerlegungspreis des Modells |
+
+⚠️ **Der ATR-Rückfall bleibt Untergrenze**, wenn das Modell nichts sagt. Ohne
+ihn bekäme ein Signal ohne Widerlegungspreis bei k < 2,5 plötzlich einen
+**engeren** Stop als vorher — eine Verschlechterung durch die Hintertür, und
+zwar dort, wo ohnehin am wenigsten bekannt ist.
+
+#### Die zwei Zeilen
+
+```yaml
+rollen_kette:
+  stop_min_atr: 2.0
+  verlustanteil: {spot: 0.06, hebel: 0.06, absicherung: 0.06}
+```
+
+**Für beide Instrumente derselbe Verlustanteil** — und das ist kein Zufall:
+wären sie verschieden, hinge das Etikett davon ab, welches Budget man vorher
+gewählt hat. **F3 und F4 aus 88.5 entfallen damit ersatzlos.**
+
+#### Gemessen an der echten Kette
+
+| | vorher | nachher |
+|---|---:|---:|
+| Stopabstand | ~3 % | **4–6 %** |
+| Hebel (Median) | 5,0 | **1,00** |
+| Anteil mit Hebel | 98 % | **7 von 16 = 44 %** |
+| Risiko je Trade | 150 € | **60 €** (= 2 % des Topfes) |
+
+**Alle drei Böden entscheiden in der Praxis** — „jenseits der nächsten Marke",
+„Widerlegungspreis des Modells" und „Rauschboden RM-1b/1c" stehen
+nebeneinander in denselben neun Mails.
+
+#### Zwei Prüfungen mussten nachgezogen werden
+
+| | |
+|---|---|
+| „ein 1,26-%-Stop kommt nicht durch" | erwartete das Wort **„Rauschen"**, die Regel heißt jetzt **„Rauschboden"** — Wortlaut, kein Verhalten |
+| „die Marke ändert den Stop noch NICHT" | war für **S2** richtig und ist mit S5 überholt. **Erwartung nachgezogen, nicht die Änderung zurückgedreht** |
+
+**Gegenprüft:** 1.143 Prüfungen · sieben Stopfälle einzeln (ohne alles · These
+im Rauschen · These weit · Marke gewinnt · These schlägt Marke · Obergrenze ·
+k = 2,0 mit Marke) · freie Namen 0 · drei Selbsttests · Simulation 9 Mails aus
+4 Gruppen, 0 Fehler, 0 Lücken.
+
+#### Rückfahrkarte
+
+Die beiden Konfigurationszeilen löschen — **ohne Codeänderung** ist der alte
+Zustand wieder da.

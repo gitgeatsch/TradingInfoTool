@@ -1997,6 +1997,40 @@ gegenpruefung:
 # also keine zweite Meinung zum selben Asset geben. Ziel ist, das Ergebnis
 # an echten Mails zu sehen und danach zu optimieren.
 rollen_kette:
+  # ===================================================================
+  # S5 DES UMBAUPLANS KAPITEL 90 (18.08.2026) - HIER DREHT SICH ALLES.
+  # ===================================================================
+  #
+  # Diese zwei Zeilen sind der gesamte Verhaltenswechsel. S1 bis S4 haben
+  # nur die Wege gebaut; zurueckgenommen wird er, indem man sie loescht -
+  # OHNE Codeaenderung.
+  #
+  # stop_min_atr: der ATR-Faktor des Rauschbodens. Gemessen an 26.910
+  #   Ankern wird ein Stop bei 0,75 ATR in 57,3 % der Faelle binnen fuenf
+  #   Handelstagen vom blossen Rauschen getroffen - bei 2,0 ATR in 15,9 %.
+  #   In fuenf von sechs Faellen entscheidet damit die These und nicht das
+  #   Zappeln. 2,0 liegt zwischen Elder (2 ATR) und Chandelier (3 ATR).
+  #
+  # verlustanteil: der Anteil des EINSATZES, der im schlechtesten Fall weg
+  #   sein darf - und damit die eigentliche Spot/Hebel-Grenze, denn es gilt
+  #   `Hebel = Verlustanteil / Stopabstand`. Bei 15 % war praktisch jedes
+  #   Geschaeft ein Hebelgeschaeft (98 %), bei 6 % sind es rund 45 %.
+  #   6 % des Einsatzes von 1.000 EUR sind 60 EUR = 2 % des Hebeltopfes von
+  #   3.000 EUR - der obere Literaturwert (1-2 % des Kapitals je Trade).
+  #
+  #   FUER BEIDE INSTRUMENTE DERSELBE WERT, und das ist kein Zufall: waeren
+  #   sie verschieden, haenge das Etikett davon ab, welches Budget man
+  #   vorher gewaehlt hat - ein Zirkelbezug (F3/F4 aus Kapitel 88.5). Mit
+  #   einem Wert ist das Etikett ohne Kenntnis des Instruments definiert.
+  #
+  #   NAECHSTER SCHRITT waere 3 % (= 1 % des Topfes). Das ist dann nur noch
+  #   diese Zeile - aber es bricht die Messreihe, also selten drehen.
+  stop_min_atr: 2.0
+  verlustanteil:
+    spot: 0.06
+    hebel: 0.06
+    absicherung: 0.06
+
   # DER VOLLUMSTIEG (15.08.2026). Alle sechs Gruppen laufen ueber die
   # Rollen-Kette; der Budget-Allocator und der Multi-Asset-Batch werden
   # damit fuer JEDE Gruppe uebersprungen. "Eine Klasse, eine Kette."

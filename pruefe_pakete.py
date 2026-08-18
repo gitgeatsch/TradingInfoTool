@@ -977,7 +977,8 @@ def paket_10() -> None:
            "die Zahl wandert in die Mail - der Nutzer entscheidet")
     a, regel = ER._stop_abstand(55500, 1677, 54800)
     pruefe(P, "ein 1,26-%-Stop kommt nicht durch",
-           a / 55500 >= ER.GRENZEN["stop_min_relativ"] and "Rauschen" in regel,
+           a / 55500 >= ER.GRENZEN["stop_min_relativ"]
+           and "Rauschboden" in regel,
            "gemessen 0,0 % Trefferquote ueber 9 Trades unter 2 %")
 
     # OBERGRENZE - die gab es vorher NICHT. Ein zu weiter Stop faellt durch
@@ -8745,11 +8746,15 @@ def paket_dimension() -> None:
     _m = dict(kurs=100.0, atr=4.0, risiko_eur=150.0, betrag_wunsch_eur=1000.0,
               instrument="hebel", umgeworfen_preis_eur=99.0)
     _ohne, _mit = _ER.rechne(**_m), _ER.rechne(**_m, marke_stop_eur=92.0)
-    pruefe(P, "die Marke aendert den Stop noch NICHT",
-           _ohne["stop_relativ"] == _mit["stop_relativ"]
-           and _ohne["hebel"] == _mit["hebel"],
-           "angeschlossen wird sie erst in S5 - S2 stellt nur die "
-           "Verkabelung her, damit sie einzeln pruefbar ist")
+    # ⚠️ SEIT S5 IST SIE ANGESCHLOSSEN. Bis dahin pruefte diese Zeile das
+    # Gegenteil ("aendert den Stop noch NICHT") - die alte Erwartung war
+    # richtig fuer S2 und ist mit S5 ueberholt. Nicht die Aenderung
+    # zurueckdrehen, sondern die Erwartung nachziehen.
+    pruefe(P, "die Marke traegt den Stop, wenn sie weiter steht",
+           _mit["stop_relativ"] > _ohne["stop_relativ"]
+           and _mit["hebel"] < _ohne["hebel"],
+           "Struktur schlaegt Rauschen, wenn sie weiter liegt - das ist der "
+           "Sinn des dritten Bodens")
     pruefe(P, "sie steht aber im Ergebnis",
            _mit["marke_stop_eur"] == 92.0 and _ohne["marke_stop_eur"] is None)
 
