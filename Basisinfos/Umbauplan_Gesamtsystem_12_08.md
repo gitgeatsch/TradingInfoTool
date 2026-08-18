@@ -11347,6 +11347,33 @@ Verlustanteile bekommen — was hier ausdrücklich **nicht** geschieht.
 Codeänderung.** S6 ist die einzige Stufe, die einen echten Rückbau bräuchte;
 sie kommt deshalb zuletzt und getrennt.
 
+### 90.5b Cluster-Grenze — OPTIONAL, und sie löst kein Problem
+
+**Nutzerentscheidung 18.08.: aufnehmen, aber als Option, und erst wenn das
+System läuft.**
+
+| | |
+|---|---|
+| Messgrundlage | 40 Kryptowerte, mittlere paarweise Korrelation **0,50**, effektiv **1,9 unabhängige Wetten** |
+| Literatur | korrelierte Positionen als **eine** Risikoeinheit, Gruppe bei 3 % gedeckelt |
+| eigener Befund | Verlustquelle ist die Wiederholung — 5 Symbole = 102 % des Minus |
+| heute | Hebel gedeckelt bei 3.000 EUR, **Spot überhaupt nicht** (`toepfe_deckel_eur.spot` leer) |
+
+**Kein Qualitäts-Gate.** Sie sagt nicht „dieser Trade ist schlecht", sondern
+„du bist in dieser Wette bereits voll" — dieselbe Bauform wie der bestehende
+Hebeltopf. Der Deadloop kam von Filtern, die dem Modell WIDERSPRACHEN; ein
+Kapazitätsdeckel widerspricht ihm nicht.
+
+**Sie gehört zu S5**, weil Heat die Summe der Risiken ist und das Risiko je
+Trade der Verlustanteil — getrennt zu bauen hieße, dieselbe Größe zweimal
+festzulegen.
+
+> ⚠️ **Was sie NICHT tut, ausdrücklich:** sie löst das Auswahlproblem nicht.
+> „Jeden Tag ein guter Tag zum Traden" bleibt im URTEIL bestehen — 52 % aller
+> Urteile sind Einstiege, am 17.08. waren es 142 an einem Tag. Die
+> Cluster-Grenze begrenzt, wie viele davon GLEICHZEITIG gehandelt werden
+> dürfen. Mehr nicht.
+
 ### 90.6 Was NICHT in diesem Umbau ist
 
 - **keine Hysterese** — gemessen nicht nötig (max. 4,3 Wechsel je 100 Tage)
