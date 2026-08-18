@@ -125,6 +125,27 @@ def _fuehrung_zu(ergebnis: dict, symbol: str, instrument: str) -> dict:
             .get((str(symbol).upper(), str(instrument))) or {})
 
 
+def _marke_am_stop(bloecke: dict | None, ist_short: bool) -> float | None:
+    """Die Marke auf der STOPSEITE - Preis in EUR, sonst None.
+
+    S2 des Umbauplans Kapitel 90 (18.08.2026). Bei LONG ist das die naechste
+    UNTERSTUETZUNG, bei SHORT der naechste WIDERSTAND - also jeweils die
+    ANDERE Marke als bei `_marke_im_weg`, die dem ZIEL im Weg steht.
+
+    ⚠️ SIE DARF NICHT DENSELBEN WEG NEHMEN. `rechne(widerstand=...)` geht an
+    `_ziel()` und wuerde den Widerstandsdeckel wieder scharf schalten - der
+    wurde am 17.08. gemessen und verworfen (44 von 44 Symbolen gedeckelt,
+    98 % unter CRV 0,5). Deshalb ein eigener Parameter, der NUR den Stop
+    betrifft.
+
+    LIEST, RECHNET NICHT - dieselbe Quelle wie der Satz in der Mail."""
+    m = ((bloecke or {}).get("_marken_werte") or {}).get(
+        "widerstand" if ist_short else "unterstuetzung")
+    if not m or not m.get("preis_eur"):
+        return None
+    return float(m["preis_eur"])
+
+
 def _marke_im_weg(bloecke: dict | None, ist_short: bool) -> tuple | None:
     """Die Marke zwischen Kurs und Ziel - (Preis in EUR, Beruehrungen).
 
@@ -1140,6 +1161,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # Konfiguration. Ohne Eintrag None - dann
                              # gilt die Vorgabe und nichts aendert sich.
                              stop_min_atr=BE.stop_min_atr(config),
+                             # S2, Kapitel 90: die Marke auf der
+                             # STOPSEITE. Sie liegt vorerst ungenutzt im
+                             # Ergebnis - angeschlossen wird sie in S5.
+                             marke_stop_eur=_marke_am_stop(
+                                 _bloecke_anlass,
+                                 befund.get("richtung") == "SHORT"),
                              # ⚠️ KEIN DECKEL MEHR (17.08.2026, gemessen).
                              # Heute frueh reichte diese Stelle den
                              # naechsten Widerstand an `_ziel` durch. Das

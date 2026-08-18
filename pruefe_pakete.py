@@ -8727,6 +8727,52 @@ def paket_dimension() -> None:
            in _quelltext("agent/rollen_lauf.py"),
            "ein Regler, der die Aufrufstelle nicht erreicht, ist Dekoration")
 
+    # ---- S2: DIE MARKE AUF DER STOPSEITE (Kapitel 90) ----
+    from agent import rollen_lauf as _RL
+
+    _B = {"_marken_werte": {"unterstuetzung": {"preis_eur": 92.0},
+                            "widerstand": {"preis_eur": 108.0}}}
+    pruefe(P, "LONG nimmt die Unterstuetzung, SHORT den Widerstand",
+           _RL._marke_am_stop(_B, False) == 92.0
+           and _RL._marke_am_stop(_B, True) == 108.0,
+           "die ANDERE Marke als `_marke_im_weg`, die dem Ziel im Weg steht "
+           "- ein vertauschtes Paar bliebe hier sonst unsichtbar")
+    pruefe(P, "ohne Marken gibt es None statt eines Fehlers",
+           _RL._marke_am_stop({}, False) is None
+           and _RL._marke_am_stop(None, True) is None)
+
+    # ⚠️ S2 IST REINE VERKABELUNG - der Stop darf sich NICHT bewegen.
+    _m = dict(kurs=100.0, atr=4.0, risiko_eur=150.0, betrag_wunsch_eur=1000.0,
+              instrument="hebel", umgeworfen_preis_eur=99.0)
+    _ohne, _mit = _ER.rechne(**_m), _ER.rechne(**_m, marke_stop_eur=92.0)
+    pruefe(P, "die Marke aendert den Stop noch NICHT",
+           _ohne["stop_relativ"] == _mit["stop_relativ"]
+           and _ohne["hebel"] == _mit["hebel"],
+           "angeschlossen wird sie erst in S5 - S2 stellt nur die "
+           "Verkabelung her, damit sie einzeln pruefbar ist")
+    pruefe(P, "sie steht aber im Ergebnis",
+           _mit["marke_stop_eur"] == 92.0 and _ohne["marke_stop_eur"] is None)
+
+    # ⚠️ NICHT UEBER `widerstand`. Der geht an `_ziel()` und wuerde den am
+    # 17.08. gemessen verworfenen Widerstandsdeckel reaktivieren.
+    # ⚠️ AM SYNTAXBAUM, NICHT AM TEXT. Meine erste Fassung suchte
+    # "widerstand=" im Quelltext - und fand ihren eigenen Warnhinweis im
+    # Docstring von `_marke_am_stop`. `_quelltext` entfernt Kommentarzeilen,
+    # aber KEINE Docstrings. Dieselbe Klasse wie die Grabinschrift vom
+    # 12.08., nur eine Etage tiefer.
+    import ast as _ast
+
+    _baum = _ast.parse(io.open("agent/rollen_lauf.py", encoding="utf-8").read())
+    _wid = [k for _n in _ast.walk(_baum) if isinstance(_n, _ast.Call)
+            for k in (_n.keywords or []) if k.arg == "widerstand"]
+    _q = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "kein Aufruf uebergibt `widerstand`",
+           not _wid,
+           "44 von 44 Symbolen gedeckelt, 98 % unter CRV 0,5 - der Deckel "
+           "bleibt aus, und die Stopmarke nimmt einen eigenen Weg")
+    pruefe(P, "und reicht die Stopmarke durch",
+           "marke_stop_eur=_marke_am_stop(" in _q)
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

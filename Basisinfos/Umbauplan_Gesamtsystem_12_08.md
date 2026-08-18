@@ -11605,3 +11605,38 @@ einer, der ungewollt greift, wäre ein Verhaltenswechsel durch die Hintertür.
 **S2 — die Marken durchreichen** (F6 aus 88.5). Ebenfalls verhaltensneutral:
 `_marken_werte` erreicht `rechne()`, ohne dass `_stop_abstand` sie schon
 benutzt.
+
+### 92.6 S2 gebaut: die Marke auf der Stopseite (18.08.2026)
+
+**Reine Verkabelung, Nutzerentscheidung A** — der Stop bewegt sich nicht.
+
+| | |
+|---|---|
+| `rollen_lauf._marke_am_stop(bloecke, ist_short)` | LONG → Unterstuetzung, SHORT → Widerstand |
+| `rechne(..., marke_stop_eur=None)` | nimmt sie entgegen, traegt sie im Ergebnis |
+| angeschlossen | **erst in S5** |
+
+⚠️ **DIE FALLE, DIE DABEI UMGANGEN WURDE.** `rechne()` hat bereits einen
+Parameter `widerstand` — ihn zu fuellen waere der naheliegende Weg und waere
+falsch: er geht an `_ziel()` und wuerde den **Widerstandsdeckel** wieder
+scharf schalten, der am 17.08. gemessen verworfen wurde (44 von 44 Symbolen
+gedeckelt, 98 % unter CRV 0,5, Median 0,21). Die Stopmarke nimmt deshalb
+einen **eigenen** Weg.
+
+**Sichtbarkeit vorher geprueft, nicht angenommen:** `_bloecke_anlass` wird in
+Zeile 651 gesetzt, `rechne()` in Zeile 1126 gerufen — beide in `_ein_asset`
+(ab 596), **kein `def` dazwischen**. Genau die Falle der freien Namen, die in
+diesem Projekt dreimal zugeschlagen hat.
+
+⚠️ **Und ein Fehler in der eigenen Pruefung:** sie suchte `"widerstand="` im
+Quelltext und fand **ihren eigenen Warnhinweis im Docstring**. `_quelltext`
+entfernt Kommentarzeilen, aber **keine Docstrings**. Jetzt prueft sie am
+**Syntaxbaum**: kein `ast.Call` uebergibt das Schluesselwort. Dieselbe Klasse
+wie Methodik 2.40, nur eine Etage tiefer.
+
+**Gegenprueft:** 1.129 Pruefungen (6 neu) · Marke aendert Stop und Hebel
+nicht · steht im Ergebnis · LONG/SHORT nehmen die richtige Seite · leere
+Bloecke geben `None` · freie Namen 0 · drei Selbsttests · **Ende zu Ende:
+12 Aufrufe, 4 davon mit Stopmarke, Stop unveraendert**, 9 Mails aus 4
+Gruppen ohne Fehler und ohne Luecke.
+

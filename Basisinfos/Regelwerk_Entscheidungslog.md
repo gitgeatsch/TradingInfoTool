@@ -16862,3 +16862,35 @@ Signale und 4 Mails ohne Fehler und ohne Luecke.
 
 **Offen notiert (Nutzer 18.08.):** das News-Thema als Anbindung und ob es in
 eine LLM-Bewertung einfliessen soll - noch nicht bewertet.
+
+
+---
+
+## 2026-08-18 (6) — S2 GEBAUT: die Marke auf der Stopseite (reine Verkabelung)
+
+**Verhalten unveraendert.** Volltext: Umbauplan 92.6. Nutzerentscheidung:
+Variante A (reine Verkabelung), weil S5 zuegig folgen soll.
+
+`rollen_lauf._marke_am_stop()` liefert bei LONG die Unterstuetzung, bei SHORT
+den Widerstand - also jeweils die ANDERE Marke als `_marke_im_weg`, die dem
+Ziel im Weg steht. `rechne(marke_stop_eur=...)` nimmt sie entgegen und traegt
+sie im Ergebnis; angeschlossen wird sie erst in S5.
+
+**Die Falle, die dabei umgangen wurde:** `rechne()` hat bereits einen
+Parameter `widerstand`. Ihn zu fuellen waere der naheliegende Weg und waere
+falsch - er geht an `_ziel()` und wuerde den am 17.08. gemessen verworfenen
+Widerstandsdeckel reaktivieren (44 von 44 Symbolen gedeckelt, 98 % unter
+CRV 0,5). Die Stopmarke nimmt einen eigenen Weg.
+
+**Sichtbarkeit vorher geprueft:** `_bloecke_anlass` wird in Zeile 651 gesetzt,
+`rechne()` in Zeile 1126 gerufen, beide in `_ein_asset` ab Zeile 596, kein
+`def` dazwischen. Genau die Falle der freien Namen.
+
+**Fehler in der eigenen Pruefung:** sie suchte "widerstand=" im Quelltext und
+fand ihren eigenen Warnhinweis im DOCSTRING. `_quelltext` entfernt
+Kommentarzeilen, aber keine Docstrings. Jetzt prueft sie am Syntaxbaum -
+kein ast.Call uebergibt das Schluesselwort.
+
+1.129 Pruefungen (6 neu), freie Namen 0, drei Selbsttests, Simulation 9 Mails
+aus 4 Gruppen ohne Fehler; Ende zu Ende 12 Aufrufe, 4 mit Stopmarke, Stop
+unveraendert.

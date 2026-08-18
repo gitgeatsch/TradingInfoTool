@@ -396,7 +396,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            widerstand: tuple[float, int] | None = None,
            kostenklasse: str = "krypto",
            ist_short: bool = False,
-           stop_min_atr: float | None = None) -> dict:
+           stop_min_atr: float | None = None,
+           marke_stop_eur: float | None = None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -421,6 +422,16 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     e = {
         "ist_short": bool(ist_short),
+        # S2 (18.08.2026): die Marke auf der STOPSEITE - unten bei LONG,
+        # oben bei SHORT. Sie wird HIER NOCH NICHT BENUTZT; der Stop
+        # kennt sie erst ab S5. Reine Durchreichung, damit die Verkabelung
+        # steht und einzeln pruefbar ist.
+        #
+        # NICHT ueber `widerstand` - der geht an `_ziel()` und wuerde den
+        # am 17.08. verworfenen Widerstandsdeckel reaktivieren.
+        "marke_stop_eur": (float(marke_stop_eur)
+                           if isinstance(marke_stop_eur, (int, float))
+                           and marke_stop_eur > 0 else None),
         "einstieg_eur": _runde_kurs(kurs),
         "einstieg_von_eur": _runde_kurs(kurs - GRENZEN["zone_atr"] * atr),
         "einstieg_bis_eur": _runde_kurs(kurs + GRENZEN["zone_atr"] * atr),

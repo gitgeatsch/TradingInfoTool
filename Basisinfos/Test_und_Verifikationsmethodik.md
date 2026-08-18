@@ -2737,4 +2737,36 @@ und schlug fehl - obwohl der Vermerk dastand.
 > `_quelltext` ist fuer aktiven Code da. Ein Vermerk ist kein Code.
 
 ---
+
+## 2.41 `_quelltext` entfernt Kommentare - keine Docstrings (neu 2026-08-18)
+
+Methodik 2.40 hielt fest: **wer Dokumentation prueft, liest roh.** Einen Tag
+spaeter dieselbe Klasse in der Gegenrichtung.
+
+Eine Pruefung sollte sicherstellen, dass die Kette `rechne(widerstand=...)`
+NICHT fuellt - sonst waere der verworfene Widerstandsdeckel wieder scharf.
+Sie suchte `"widerstand="` im Quelltext und schlug fehl. Gefunden hatte sie
+**ihren eigenen Warnhinweis im Docstring** der Funktion, die den Weg
+vermeidet.
+
+> `_quelltext` entfernt Zeilen, die mit `#` beginnen. **Ein Docstring ist
+> kein Kommentar.** In einem Projekt, das Verworfenes ausfuehrlich
+> beschreibt, steht der gesuchte Text deshalb regelmaessig in seiner eigenen
+> Grabinschrift - nur eine Etage tiefer als am 12.08.
+
+### Die Regel
+
+**Wer prueft, ob ein Aufruf ein Schluesselwort uebergibt, prueft am
+Syntaxbaum, nicht am Text:**
+
+```python
+baum = ast.parse(io.open(pfad, encoding="utf-8").read())
+treffer = [k for n in ast.walk(baum) if isinstance(n, ast.Call)
+           for k in (n.keywords or []) if k.arg == "widerstand"]
+```
+
+Textsuche bleibt richtig fuer Konstanten und Vermerke. Fuer **Aufrufe** ist
+sie zu grob - sie kann Beschreibung nicht von Ausfuehrung unterscheiden.
+
+---
 
