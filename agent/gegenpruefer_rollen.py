@@ -316,6 +316,11 @@ def satz(ergebnis: dict) -> list[str]:
 # Fassung: keine `aktion`, keine `richtung`, kein Betrag, keine Zone. Z.ai soll
 # aus den Fakten eine EIGENE Richtung ableiten; wer ihr die Antwort zeigt,
 # misst nur noch das Echo.
+# ⚠️ `einstieg_eur` und `stop_eur` KANN DAS MODELL SEIT S3 (18.08.2026) GAR
+# NICHT MEHR LIEFERN - sie sind aus Prompt und Schema entfernt. Die Eintraege
+# bleiben stehen: eine Verbotsliste, die einen unmoeglichen Fall mit abdeckt,
+# schadet nicht - eine, der ein moeglicher fehlt, schon. Wer sie streicht,
+# muss sicher sein, dass kein Altbestand sie mehr traegt.
 _VERBOTEN_FUER_RICHTUNG = ("aktion", "richtung", "einstieg_eur", "stop_eur",
                            "ziel_eur", "tranche_eur", "betrag_eur",
                            "confidence_pct", "konfidenz", "unabhaengige_faktoren")

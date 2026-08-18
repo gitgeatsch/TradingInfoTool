@@ -520,8 +520,10 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
             **({"richtung": {"type": "string",
                              "enum": sorted(RICHTUNGEN)}}
                if instrument == "hebel" else {}),
-            "einstieg_eur": NUM,
-            "stop_eur": NUM,
+            # ⚠️ `einstieg_eur` UND `stop_eur` SIND RAUS (S3, 18.08.2026).
+            # Sie wurden verlangt, von `rechne()` nie gelesen - und konnten
+            # den Trade trotzdem toeten. Wo Zahlen gerechnet werden, soll das
+            # Modell keine nennen; es faellt sonst auf die eigenen herein.
             "begruendung": TXT,
             "was_dagegen": TXT,
             "umgeworfen_durch": TXT,

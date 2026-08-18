@@ -89,7 +89,10 @@ BRAUCHT_BETRAG = ("KAUFEN", "NACHKAUFEN", "REDUZIEREN", "VERKAUFEN")
 
 # Aktionen, die einen Einstieg und einen Stop brauchen. Beim Verkauf ist der
 # Einstieg gegenstandslos - man geht raus, nicht rein.
-BRAUCHT_EINSTIEG = ("KAUFEN", "NACHKAUFEN")
+# ⚠️ "ERÖFFNEN" FEHLTE HIER (S3, 18.08.2026). Die Pruefung unten galt nur
+# fuer KAUFEN und NACHKAUFEN - die HAUPT-Hebelaktion war damit die einzige
+# Einstiegsaktion ohne jede Kontrolle.
+BRAUCHT_EINSTIEG = ("KAUFEN", "NACHKAUFEN", "ERÖFFNEN")
 
 REQUIRED_FELDER = (
     "aktion",
@@ -145,7 +148,8 @@ def _zahl(wert) -> float | None:
 
 
 def validiere(antwort: dict, symbol: str = "?",
-              instrument: str = "spot") -> dict:
+              instrument: str = "spot",
+              kurs: float | None = None) -> dict:
     """Prueft den Vertrag. Wirft, wenn die Antwort keine Empfehlung ist."""
     if not isinstance(antwort, dict):
         raise EmpfehlungUngueltig(f"{symbol}: Antwort ist kein Objekt")
@@ -201,20 +205,40 @@ def validiere(antwort: dict, symbol: str = "?",
                                        if antwort.get("_korrekturen") else "") + (
                 f"tranche_eur {vorher!r} auf {min(TRANCHEN_EUR)} gesetzt")
 
-    # --- Kurs und Stop, beide in EUR. --------------------------------------
+    # --- Der Widerlegungspreis muss zur Richtung passen. -------------------
+    #
+    # ⚠️ HIER STANDEN `einstieg_eur` UND `stop_eur` (bis 18.08.2026, S3).
+    #
+    # Beide wurden vom Modell VERLANGT, von `rechne()` NIE gelesen - und
+    # konnten den Trade trotzdem toeten: fehlten sie, oder lag der Stop nicht
+    # unter dem Einstieg, wurde die Aktion auf NICHTS_TUN zurueckgenommen.
+    # Zwei Zahlen, die ein Sprachmodell nicht schaetzen kann, entschieden
+    # ueber einen Handel, dessen Zahlen woanders gerechnet werden.
+    #
+    # UND DIE PRUEFUNG KANNTE KEINE RICHTUNG. Bei einem SHORT liegt der Stop
+    # korrekterweise UEBER dem Einstieg - ein SHORT-NACHKAUFEN mit richtigem
+    # Stop wurde damit still zu NICHTS_TUN. Dieselbe Klasse wie die 313
+    # SHORT-Vorschlaege, die als HALTEN in der Datenbank lagen.
+    #
+    # WAS STATTDESSEN GEPRUEFT WIRD: der Widerlegungspreis - die eine Zahl,
+    # die dem Modell gehoert, weil sie ein Urteil ueber die eigene
+    # Begruendung ist und kein Risikoparameter.
     if aktion in BRAUCHT_EINSTIEG:
-        einstieg = _zahl(antwort.get("einstieg_eur"))
-        stop = _zahl(antwort.get("stop_eur"))
-        # HIER BLEIBT ES HART, aber als Degradierung statt Verwerfen: eine
-        # Kaufempfehlung ohne Ausstieg oder mit einem Stop ueber dem Einstieg
-        # ist gefaehrlich, nicht nur unvollstaendig. Die Analyse bleibt
-        # erhalten, die Handlung wird zurueckgenommen - der Nutzer sieht die
-        # Belege und weiss, warum daraus keine Order wurde.
+        _wid = _zahl(antwort.get("umgeworfen_preis_eur"))
+        _ist_short = str(antwort.get("richtung") or "").upper() == "SHORT"
         grund = None
-        if einstieg is None or stop is None:
-            grund = "ohne Einstieg oder Ausstieg"
-        elif stop >= einstieg:
-            grund = f"Ausstieg {stop} liegt nicht unter dem Einstieg {einstieg}"
+        # ⚠️ FEHLEN IST ERLAUBT. Das Schema laesst null ausdruecklich zu:
+        # nicht jede Beobachtung hat einen Kurs, und eine erzwungene Zahl
+        # waere erfunden. Nur ein WIDERSPRUCH wird beanstandet.
+        if _wid is not None and isinstance(kurs, (int, float)) and kurs > 0:
+            if _ist_short and _wid <= float(kurs):
+                grund = (f"Widerlegungspreis {_wid} liegt bei SHORT nicht "
+                         f"ueber dem Kurs {kurs}")
+            elif not _ist_short and _wid >= float(kurs):
+                grund = (f"Widerlegungspreis {_wid} liegt bei LONG nicht "
+                         f"unter dem Kurs {kurs}")
+        if isinstance(grund, tuple):
+            grund = "".join(grund)
         if grund:
             antwort["aktion"] = "NICHTS_TUN"
             antwort["_degradiert"] = (

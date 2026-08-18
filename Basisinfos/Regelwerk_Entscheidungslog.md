@@ -16894,3 +16894,36 @@ kein ast.Call uebergibt das Schluesselwort.
 1.129 Pruefungen (6 neu), freie Namen 0, drei Selbsttests, Simulation 9 Mails
 aus 4 Gruppen ohne Fehler; Ende zu Ende 12 Aufrufe, 4 mit Stopmarke, Stop
 unveraendert.
+
+
+---
+
+## 2026-08-18 (7) — S3 GEBAUT: der Vertrag prueft die richtige Zahl
+
+Volltext: Umbauplan 92.7. Der erste Schritt, der den Prompt beruehrt.
+
+`einstieg_eur` und `stop_eur` sind aus Prompt und Schema ENTFERNT. Sie wurden
+vom Modell verlangt, von `rechne()` nie gelesen - und konnten den Trade
+trotzdem toeten. An ihre Stelle tritt eine richtungsbewusste Pruefung des
+Widerlegungspreises, der einen Zahl, die dem Modell gehoert, weil sie ein
+Urteil ueber die eigene Begruendung ist und kein Risikoparameter.
+
+Zwei Fehler dabei behoben, beide vorher wirksam: die Pruefung galt nur fuer
+KAUFEN/NACHKAUFEN, also war ERÖFFNEN - die Haupt-Hebelaktion - die einzige
+Einstiegsaktion ohne Kontrolle; und sie kannte keine Richtung, also wurde
+jedes SHORT mit korrektem Stop still zu NICHTS_TUN.
+
+Fehlen bleibt erlaubt: das Schema laesst null ausdruecklich zu. Nur ein
+Widerspruch wird beanstandet.
+
+DOKU-GEGENPRUEFUNG (Nutzerauftrag): `Rollenkonzept_Entwurf_10_08.md` nennt
+beide Felder als Antwortfelder und wird dadurch zusaetzlich falsch - Nachtrag
+im Standvermerk gesetzt. `gegenpruefer_rollen._VERBOTEN_FUER_RICHTUNG`
+verbietet Felder, die es nicht mehr gibt - gekennzeichnet, NICHT gestrichen:
+eine Verbotsliste mit einem unmoeglichen Fall schadet nicht, eine ohne einen
+moeglichen schon. `signal_abbildung`, `ui/trade_chart` und `rollen_lauf:1207`
+lesen die GERECHNETEN Felder gleichen Namens und bleiben unberuehrt - eine
+Pruefung haelt beide Herkuenfte auseinander.
+
+1.139 Pruefungen (10 neu), sechs Vertragsfaelle einzeln, freie Namen 0, drei
+Selbsttests, Prompt-Matrix sauber, Simulation 9 Mails ohne Fehler.

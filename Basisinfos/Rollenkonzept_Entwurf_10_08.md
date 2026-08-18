@@ -2,6 +2,13 @@
 
 > ## ⚠️ STANDVERMERK 16.08.2026 — dieses Dokument ist ÜBERHOLT
 >
+> **Nachtrag 18.08.2026 (S3):** die Feldliste unten nennt `einstieg_eur` und
+> `stop_eur` als Antwortfelder des Modells. **Beide sind entfernt** — sie
+> wurden verlangt, von `rechne()` nie gelesen und konnten den Trade trotzdem
+> auf NICHTS_TUN zurücknehmen. An ihre Stelle tritt eine
+> **richtungsbewusste** Prüfung des Widerlegungspreises. Siehe Umbauplan
+> Kapitel 92.7.
+>
 > **Der Text unten bleibt vollständig stehen.** Seine Begründungen sind der
 > wertvollere Teil, und mehrere davon gelten unverändert — allen voran die
 > Grundregel *„kein Block erscheint bei zwei Rollen"*, die inzwischen als

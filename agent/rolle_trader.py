@@ -121,7 +121,6 @@ Antworte AUSSCHLIESSLICH mit JSON:
 "gewicht": "hoch|mittel|gering"}}],
  "unabhaengige_faktoren": <zahl>,
  "aktion": "<eine der oben genannten>",{richtungsfeld}
- "einstieg_eur": <zahl>, "stop_eur": <zahl>,
  "begruendung": "<ein bis zwei Saetze>",
  "was_dagegen": "<der staerkste Gegengrund>",
  "umgeworfen_durch": "<eine ueberpruefbare Beobachtung>",
@@ -478,7 +477,8 @@ class TraderAntwortUngueltig(ValueError):
 def validiere(antwort: dict, symbol: str = "?",
               max_tranche_eur: int | None = None,
               atr: float | None = None,
-              instrument: str = "spot", strategie: str = "einstieg") -> dict:
+              instrument: str = "spot", strategie: str = "einstieg",
+              kurs: float | None = None) -> dict:
     """Prueft die Rollen-eigenen Felder; der Handlungsteil laeuft danach durch
     `empfehlung_vertrag.validiere()`.
 
@@ -627,4 +627,7 @@ def validiere(antwort: dict, symbol: str = "?",
     # DAS INSTRUMENT GEHT MIT (Paket 13). Ohne es prueft der Vertrag ein
     # Hebel-Signal gegen das Spot-Vokabular und wirft bei ERÖFFNEN -
     # dieselbe Antwort waere je nach Aufrufer gueltig oder nicht.
-    return vertrag_validieren(antwort, symbol, instrument=instrument)
+    # `kurs` seit S3 (18.08.2026): der Vertrag prueft den Widerlegungspreis
+    # gegen die Richtung, und dafuer braucht er einen Bezugspunkt.
+    return vertrag_validieren(antwort, symbol, instrument=instrument,
+                              kurs=kurs)

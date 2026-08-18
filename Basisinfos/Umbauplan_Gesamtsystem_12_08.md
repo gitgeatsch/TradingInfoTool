@@ -11640,3 +11640,37 @@ Bloecke geben `None` · freie Namen 0 · drei Selbsttests · **Ende zu Ende:
 12 Aufrufe, 4 davon mit Stopmarke, Stop unveraendert**, 9 Mails aus 4
 Gruppen ohne Fehler und ohne Luecke.
 
+### 92.7 S3 gebaut: der Vertrag prüft die richtige Zahl (18.08.2026)
+
+**Der erste Schritt, der den Prompt berührt.**
+
+| vorher | nachher |
+|---|---|
+| `einstieg_eur` und `stop_eur` **verlangt**, von `rechne()` **nie gelesen**, und trotzdem tödlich | **entfernt** aus Prompt und Schema |
+| Prüfung nur bei `KAUFEN`/`NACHKAUFEN` — **`ERÖFFNEN` ungeprüft** | alle drei Einstiegsaktionen |
+| **keine Richtung** — SHORT mit korrektem Stop wurde still zu NICHTS_TUN | **richtungsbewusst** |
+| geprüft wurde eine Zahl, die das Modell nicht schätzen kann | geprüft wird der **Widerlegungspreis** — die eine Zahl, die ihm gehört |
+
+**Fehlen bleibt erlaubt.** Das Schema lässt `null` ausdrücklich zu — nicht
+jede Beobachtung hat einen Kurs, und eine erzwungene Zahl wäre erfunden. Nur
+ein **Widerspruch** wird beanstandet.
+
+#### Doku-Gegenprüfung (Nutzerauftrag)
+
+| Stelle | Wirkung | erledigt |
+|---|---|---|
+| `Rollenkonzept_Entwurf_10_08.md` | nennt beide Felder als Antwortfelder — **wird durch S3 zusätzlich falsch** | Nachtrag im Standvermerk |
+| `Umbauplan` 88.4 · `Entscheidungslog` | beschreiben den **Plan**, sie zu entfernen | bleibt richtig |
+| `gegenpruefer_rollen._VERBOTEN_FUER_RICHTUNG` | verbietet Felder, die es nicht mehr gibt | gekennzeichnet, **nicht gestrichen** |
+| `signal_abbildung` · `ui/trade_chart` · `rollen_lauf:1207` | lesen `rechnung.get("stop_eur")` — die **gerechneten** Felder | **unberührt** |
+
+> ⚠️ **Gleicher Name, zwei Herkünfte.** `einstieg_eur`/`stop_eur` gibt es
+> als Antwortfeld des Modells **und** als Ergebnisfeld von `rechne()`. Nur
+> die ersten sind weg. Eine Prüfung hält beides auseinander.
+
+**Gegenprüft:** 1.139 Prüfungen (10 neu) · sechs Vertragsfälle einzeln
+(LONG/SHORT × richtig/falsch/fehlend, plus ohne Kurs) · Schema und Prompt
+nachgewiesen bereinigt · gerechnete Felder weiterhin vorhanden · freie Namen
+0 · drei Selbsttests · **Prompt-Matrix** sauber · Simulation 9 Mails aus 4
+Gruppen, 0 Fehler, 0 Lücken.
+

@@ -894,7 +894,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                         bc_ein, "agent.rolle_trader")
     try:
         befund = RT.validiere(bc_roh, symbol, atr=atr_e, instrument=instrument,
-                              strategie=strategie)
+                              strategie=strategie, kurs=kurs_e)
     except fehlertypen as exc:
         durchlauf.verloren(symbol, "urteil", type(exc).__name__)
         ergebnis["fehler"].append(f"{symbol}: {exc}")

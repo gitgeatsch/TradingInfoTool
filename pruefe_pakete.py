@@ -8773,6 +8773,55 @@ def paket_dimension() -> None:
     pruefe(P, "und reicht die Stopmarke durch",
            "marke_stop_eur=_marke_am_stop(" in _q)
 
+    # ---- S3: DER VERTRAG PRUEFT DEN WIDERLEGUNGSPREIS (Kapitel 90) ----
+    from agent import empfehlung_vertrag as _EV
+
+    def _v(a, **kw):
+        return _EV.validiere(dict(a), "X", **kw).get("aktion")
+
+    pruefe(P, "ERÖFFNEN wird ueberhaupt geprueft",
+           "ERÖFFNEN" in _EV.BRAUCHT_EINSTIEG,
+           "bis zum 18.08. galt die Pruefung nur fuer KAUFEN/NACHKAUFEN - "
+           "die HAUPT-Hebelaktion war die einzige ohne Kontrolle")
+    pruefe(P, "LONG: Widerlegung ueber dem Kurs wird beanstandet",
+           _v({"aktion": "KAUFEN", "umgeworfen_preis_eur": 110}, kurs=100)
+           == "NICHTS_TUN")
+    pruefe(P, "LONG: Widerlegung unter dem Kurs bleibt",
+           _v({"aktion": "KAUFEN", "umgeworfen_preis_eur": 90}, kurs=100)
+           == "KAUFEN")
+    pruefe(P, "SHORT: Widerlegung UEBER dem Kurs ist RICHTIG",
+           _v({"aktion": "ERÖFFNEN", "richtung": "SHORT",
+               "umgeworfen_preis_eur": 110}, kurs=100, instrument="hebel")
+           == "ERÖFFNEN",
+           "die alte Pruefung kannte keine Richtung und degradierte jedes "
+           "SHORT mit korrektem Stop - dieselbe Klasse wie die 313 "
+           "SHORT-Vorschlaege, die als HALTEN in der Datenbank lagen")
+    pruefe(P, "SHORT: Widerlegung unter dem Kurs wird beanstandet",
+           _v({"aktion": "ERÖFFNEN", "richtung": "SHORT",
+               "umgeworfen_preis_eur": 90}, kurs=100, instrument="hebel")
+           == "NICHTS_TUN")
+    pruefe(P, "ein fehlender Widerlegungspreis degradiert NICHT",
+           _v({"aktion": "KAUFEN"}, kurs=100) == "KAUFEN",
+           "das Schema laesst null ausdruecklich zu - nicht jede Beobachtung "
+           "hat einen Kurs, und eine erzwungene Zahl waere erfunden")
+    pruefe(P, "und ohne Kurs wird nicht geraten",
+           _v({"aktion": "KAUFEN", "umgeworfen_preis_eur": 110}) == "KAUFEN")
+
+    # ⚠️ DIE ZWEI PREISFELDER SIND RAUS - aus Prompt UND Schema.
+    pruefe(P, "das Schema verlangt keinen Einstiegs- und Stopkurs mehr",
+           '"einstieg_eur": NUM' not in _quelltext("agent/llm_schema.py")
+           and '"stop_eur": NUM' not in _quelltext("agent/llm_schema.py"),
+           "verlangt, von rechne() nie gelesen - und trotzdem toedlich")
+    pruefe(P, "und der Prompt fragt nicht mehr danach",
+           '"einstieg_eur": <zahl>'
+           not in _quelltext("agent/rolle_trader.py"))
+    pruefe(P, "die gerechneten Felder heissen weiter so",
+           _ER.rechne(kurs=100.0, atr=4.0, risiko_eur=150.0,
+                      betrag_wunsch_eur=1000.0).get("stop_eur") is not None,
+           "gleicher Name, andere Herkunft: `rechne()` liefert sie, das "
+           "Modell nicht mehr - signal_abbildung und trade_chart lesen die "
+           "GERECHNETEN und bleiben unberuehrt")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser
