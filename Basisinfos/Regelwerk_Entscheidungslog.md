@@ -17285,3 +17285,52 @@ OFFEN: die Vereinigung ist damit weiterhin unbekannt. Sie braucht einen
 vollen Lauf mit der neuen CSV; die DefiLlama-Seite (19 von 43 mit eigener
 Kette) liegt bereits belastbar vor.
 
+---
+
+## 2026-08-19 (9) - GEMESSEN: 58 % Abdeckung fuer die Spot-Frage
+
+Voller Lauf mit CSV-Ausgabe, dazu die drei Unbekannten mit 20 s Abstand
+nachgezogen. Endstand:
+
+    Repository verknuepft (CoinGecko)     14 von 43
+    eigene Kette (DefiLlama)              19 von 43
+
+    VEREINIGUNG                           25 von 43   58 %
+       beides                              8   ALGO BTC ETH INJ NEAR SOL TAO XLM
+       nur Repository                      6   ASTER KAS LINK ONDO W XNO
+       nur Kette                          11   APT AVAX BNB HYPE IMX MON
+                                               PLUME S SEI SUI SUPRA
+
+    OHNE INDIKATOR                        18   AIOZ AKT BEAMX BIO BRETT
+                                               CANTON CAT FLOKI GRIFFAIN IO
+                                               KAIA KAITO MORPHO QNT RENDER
+                                               TURBO VIRTUAL VSN
+
+DIE ZAHL IST BELASTBAR, obwohl drei Symbole (SUI, S, BNB) auf der
+Repository-Achse weiter unbekannt sind: alle drei haben eine eigene Kette
+und sind damit ohnehin abgedeckt. Ihre Aufloesung koennte die Vereinigung
+nur bestaetigen, nicht erhoehen.
+
+DIE BEIDEN QUELLEN ERGAENZEN SICH STARK. Einzeln 33 % und 44 %, nur acht
+Ueberschneidungen - zusammen 58 %. Keine der beiden allein haette gereicht.
+
+NUTZERSCHWELLE ERREICHT: 'wenn wir annaehernd 50 Prozent Abdeckung haben
+passt das'. 58 % liegen darueber.
+
+DIE 18 OHNE INDIKATOR sind genau die kleinen Werte und Memecoins - AIOZ,
+BRETT, FLOKI, TURBO, CAT, IO, GRIFFAIN. Fuer sie bleibt die Spot-Frage
+'tot oder Bodenbildung' strukturell unbeantwortbar, unabhaengig davon,
+welche Quelle noch angebunden wird. Das ist eine Eigenschaft dieser Coins,
+keine Luecke des Systems - und damit eine Frage der Assetauswahl.
+
+NEBENBEFUND: die 429er treffen bei jedem Lauf ANDERE Symbole. Beim ersten
+vollen Lauf waren es TAO, RENDER, IMX, PLUME, CANTON, VIRTUAL; beim zweiten
+SUI, RENDER, S, BIO, GRIFFAIN, BNB. Eine einzelne Messung ist deshalb nie
+vollstaendig - die CSV und das Nachziehen einzelner Symbole sind Pflicht,
+nicht Kuer.
+
+NAECHSTER SCHRITT, nicht gebaut: die Anbindung selbst - ein Modul, das den
+Indikator je Symbol liefert, in `datenfrische` registriert (sonst wird die
+Quelle still nicht ueberwacht), mit Zwischenspeicher wegen der Ratenlimits
+und den drei Zustaenden bis in den Faktensatz.
+
