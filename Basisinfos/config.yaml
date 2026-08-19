@@ -363,9 +363,26 @@ risiko:
   # Entscheidung einen Portfoliowert, dessen Ausfall dann alles sperrt.
   # Leer heisst KEINE Begrenzung.
   toepfe_deckel_eur:
-    spot:                              # leer - die RM-Regeln begrenzen die
-                                       # Einzelposition; ein zweiter Deckel
-                                       # waere nur eine zweite Blockadestelle
+    # ⚠️ SPOT BEKOMMT EINEN DECKEL (19.08.2026, Nutzerentscheidung:
+    # 'du kannst gerne einen Deckel einfuehren, soll keine Blockierung
+    # darstellen').
+    #
+    # ANLASS: seit S5 faellt in vier von fuenf Faellen Hebel 1,0 an, und seit
+    # heute folgt der Topf der ZAHL statt dem Lauf. Damit wandert der
+    # Grossteil der Signale in den Spot-Topf - der bis hierher UNGEDECKELT
+    # war. Vorher hat der Hebeltopf sie faktisch auf drei begrenzt, falsch
+    # zugeordnet, aber wirksam.
+    #
+    # ER BLOCKIERT NICHT. `entscheidungsrechnung` meldet nur
+    # `topf_wuerde_ueberschreiten` und schreibt die Zahl in die Mail; der
+    # Betrag bleibt stehen. Nachgemessen: 800 EUR Betrag bei 200 EUR freiem
+    # Topf, mit Vermerk. Ein Deckel, der ein Signal verschwinden laesst,
+    # waere ein unsichtbares Veto - genau das ist er NICHT.
+    #
+    # 4000 = fuenf Positionen zu 800 EUR. Zusammen mit dem Hebeltopf (3000)
+    # sind das 7000 EUR Gesamtanspruch. Der Wert ist ein Startpunkt und
+    # ausdruecklich zum Drehen gedacht - er steht hier und nicht im Code.
+    spot: 4000
     hebel: 3000                        # NUTZERENTSCHEIDUNG 13.08.2026:
                                        # "Hebeltopf gesamt kann 3000 Euro
                                        # sein, eine Hebelposition vorerst

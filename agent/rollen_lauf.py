@@ -1139,8 +1139,41 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # RM-4: was nach der Reserve ueberhaupt noch einsetzbar ist. Im
     # Trockenlauf None - er hat keine Verbindung zu einer echten Lage.
     cash_frei = TO.cash_frei_eur(conn, config) if betriebsart != TROCKEN else None
-    frei = TO.frei_eur(instrument, config=config,
-                       belegt_eur=(TO.belegt_eur(conn, instrument)
+    # ⚠️ DER TOPF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026).
+    #
+    # Vorher stand hier `instrument` - also das Etikett des LAUFS. Seit S5
+    # faellt in vier von fuenf Faellen Hebel 1,0 an; diese Signale belegten
+    # trotzdem den HEBELTOPF (3.000 EUR, bei 1.000 EUR Einsatz also drei
+    # Positionen). Der Hebeltopf fuellte sich mit Geschaeften, die keine
+    # Hebelgeschaefte sind - und der Spot-Topf blieb leer.
+    #
+    # KEIN ZIRKELBEZUG MEHR. `Hebel = Verlustanteil / Stopabstand` enthaelt
+    # weder Topf noch Einsatz; das Etikett steht also fest, BEVOR der Topf
+    # gebraucht wird. Genau deshalb sind F3 und F4 aus 88.5 entfallen.
+    _topf_instrument = instrument
+    try:
+        _vor = ER.dimensioniere(
+            kurs=kurs_e, atr=atr_e,
+            k=(BE.stop_min_atr(config)
+               or ER.GRENZEN["stop_min_atr"]),
+            verlustanteil=BE.verlustanteil(instrument, config),
+            einsatz_eur=BE.einsatz_eur(instrument, strategie, config,
+                                       assetklasse),
+            marke_preis=_marke_am_stop(_bloecke_anlass,
+                                       befund.get("richtung") == "SHORT"),
+            umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
+            ist_short=(befund.get("richtung") == "SHORT"),
+            hebel_handelbar=(instrument == "hebel"))
+        _topf_instrument = ("hebel" if _vor["etikett"] == "hebel"
+                            else ("spot" if instrument == "hebel"
+                                  else instrument))
+    except Exception as exc:                                 # noqa: BLE001
+        # FAIL-SOFT MIT VERMERK. Faellt die Vorabrechnung aus, gilt das alte
+        # Verhalten - aber es steht im Lauf, statt still zu passieren.
+        ergebnis.setdefault("fehler", []).append(
+            f"{symbol}: Topfzuordnung aus dem Lauf statt aus der Zahl: {exc}")
+    frei = TO.frei_eur(_topf_instrument, config=config,
+                       belegt_eur=(TO.belegt_eur(conn, _topf_instrument)
                                    if betriebsart != TROCKEN else 0.0))
     # DIE BETRAEGE KOMMEN AUS `betraege`, NICHT AUS DIESER ZEILE. Vorher standen
     # hier 75.0 und 500.0 - Zahlen, die niemand hergeleitet hatte und die jedes

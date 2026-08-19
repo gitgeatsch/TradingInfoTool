@@ -504,9 +504,25 @@ def paket_5() -> None:
            T.budget_eur("absicherung", cfg) is None,
            "wer im fallenden Markt absichern will und an eine Obergrenze "
            "stoesst, hat sie am falschen Ende")
-    pruefe(P, "Spot wird nicht doppelt gedeckelt",
-           T.budget_eur("spot", cfg) is None,
-           "die RM-Regeln begrenzen die Einzelposition bereits")
+    # ⚠️ DIESE PRUEFUNG STAND UMGEKEHRT (bis 19.08.2026). Sie verlangte, dass
+    # Spot KEINEN Deckel hat, mit der Begruendung: "die RM-Regeln begrenzen
+    # die Einzelposition bereits, ein zweiter Deckel waere nur eine zweite
+    # Blockadestelle".
+    #
+    # DIE PRAEMISSE IST WEGGEFALLEN. Damals folgte der Topf dem LAUF, und der
+    # Grossteil der Signale lag im gedeckelten Hebeltopf. Seit S5 faellt in
+    # vier von fuenf Faellen Hebel 1,0 an, und seit heute folgt der Topf der
+    # ZAHL - der Grossteil wandert damit in den Spot-Topf, der ungedeckelt
+    # war. Was frueher eine zweite Blockade gewesen waere, ist jetzt die
+    # einzige Begrenzung ueberhaupt.
+    #
+    # UND ER BLOCKIERT NICHT (Nutzervorgabe 19.08.: "soll keine Blockierung
+    # darstellen"). Gemessen: 800 EUR Betrag bei 200 EUR freiem Topf, mit
+    # Vermerk in der Mail. Die alte Sorge trifft ihn nicht.
+    pruefe(P, "Spot hat jetzt einen Deckel - und er blockiert nicht",
+           T.budget_eur("spot", cfg) is not None,
+           "seit der Topf der Zahl folgt, waere Spot sonst die einzige "
+           "unbegrenzte Stelle - bei rund 80 % der Signale")
     pruefe(P, "der Hebel behaelt als EINZIGER einen Deckel",
            T.budget_eur("hebel", cfg) is not None
            and T.frei_eur("hebel", 99999, cfg) == 0.0,
@@ -9012,6 +9028,37 @@ def paket_dimension() -> None:
            _ME.ABSTAND_S >= 4.0,
            "CoinGeckos Gratis-Tier nennt 10-30 je Minute; 5 s sind 12/min - "
            "bewusst am unteren Rand, weil ein 429 die Messung wertlos macht")
+
+    # ---- DER TOPF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026) ----
+    _qrl2 = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "der Topf wird nach dem gerechneten Etikett geholt",
+           "TO.frei_eur(_topf_instrument" in _qrl2
+           and "TO.belegt_eur(conn, _topf_instrument)" in _qrl2,
+           "vorher stand dort `instrument` - seit S5 faellt in vier von "
+           "fuenf Faellen Hebel 1,0 an, und diese Signale belegten trotzdem "
+           "den Hebeltopf (3.000 EUR = drei Positionen)")
+    pruefe(P, "faellt die Vorabrechnung aus, wird das VERMERKT",
+           "Topfzuordnung aus dem Lauf statt aus der Zahl" in _qrl2,
+           "fail-soft ist fail-silent - ein Rueckfall gehoert in den Lauf, "
+           "nicht ins Schweigen")
+
+    # ⚠️ DER DECKEL DARF NICHT BLOCKIEREN (Nutzervorgabe 19.08.).
+    _voll = _ER.rechne(kurs=100.0, atr=4.0, risiko_eur=48.0,
+                       betrag_wunsch_eur=800.0, instrument="spot",
+                       topf_frei_eur=200.0, umgeworfen_preis_eur=99.0)
+    pruefe(P, "ein voller Topf laesst den Betrag stehen",
+           _voll["betrag_eur"] == 800.0,
+           "ein Deckel, der ein Signal verschwinden laesst, waere ein "
+           "unsichtbares Veto")
+    pruefe(P, "und meldet die Ueberschreitung",
+           _voll.get("topf_wuerde_ueberschreiten") is True
+           and _voll.get("topf_frei_eur") == 200.0,
+           "die Zahl wandert in die Mail - der Nutzer entscheidet")
+    _cfg2 = io.open("Basisinfos/config.yaml", encoding="utf-8").read()
+    pruefe(P, "der Spot-Deckel steht in der Konfiguration, nicht im Code",
+           "spot: 4000" in _cfg2,
+           "ein Startwert, ausdruecklich zum Drehen - er gehoert dorthin, "
+           "wo der Nutzer ihn findet")
 
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -

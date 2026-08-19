@@ -17372,3 +17372,39 @@ Finanzierungsraten-Zeile ausserhalb des gewohnten Bereichs.
 1.168 Pruefungen, freie Namen 0, drei Selbsttests, Darstellungstest,
 Simulation 9 Mails ohne Fehler.
 
+---
+
+## 2026-08-19 (11) - Der Topf folgt der Zahl, und Spot bekommt einen Deckel
+
+ZWEI EINGRIFFE, EIN ANLASS. Seit S5 faellt in vier von fuenf Faellen Hebel
+1,0 an - diese Signale belegten aber weiter den HEBELTOPF (3.000 EUR, bei
+1.000 EUR Einsatz drei Positionen), weil `TO.frei_eur(instrument)` am
+Etikett des LAUFS hing. Der Hebeltopf fuellte sich mit Geschaeften, die
+keine Hebelgeschaefte sind, und begrenzte den Handel kuenstlich auf drei.
+
+1) DER TOPF FOLGT JETZT DER ZAHL. Vor dem Topf wird ueber `dimensioniere()`
+   das Etikett bestimmt; danach wird der passende Topf geholt. Kein
+   Zirkelbezug, weil `Hebel = Verlustanteil / Stopabstand` weder Topf noch
+   Einsatz enthaelt - genau deshalb sind F3 und F4 aus 88.5 entfallen.
+   Faellt die Vorabrechnung aus, gilt das alte Verhalten UND es steht im
+   Lauf, statt still zu passieren.
+
+2) SPOT BEKOMMT EINEN DECKEL: 4.000 EUR, fuenf Positionen zu 800.
+   Nutzerentscheidung 19.08.: 'du kannst gerne einen Deckel einfuehren, soll
+   keine Blockierung darstellen'. Er blockiert nachweislich nicht -
+   gemessen 800 EUR Betrag bei 200 EUR freiem Topf, mit Vermerk in der Mail.
+
+EINE BESTEHENDE PRUEFUNG STAND UMGEKEHRT: 'Spot wird nicht doppelt
+gedeckelt', begruendet mit 'ein zweiter Deckel waere nur eine zweite
+Blockadestelle'. Die PRAEMISSE ist weggefallen - damals folgte der Topf dem
+Lauf und der Grossteil lag im gedeckelten Hebeltopf. Was frueher eine
+zweite Blockade gewesen waere, ist jetzt die einzige Begrenzung ueberhaupt.
+Pruefung nachgezogen, nicht geloescht; die alte Begruendung steht als
+Kommentar daneben.
+
+Ende zu Ende: in der Kette landen jetzt 2 Signale im Spot- und 2 im
+Hebeltopf - vorher waren es 4 im Hebeltopf.
+
+1.173 Pruefungen, freie Namen 0, drei Selbsttests, Darstellungstest,
+Simulation 9 Mails ohne Fehler.
+
