@@ -458,6 +458,13 @@ def main() -> int:
                         f"{gruppe}/{instrument} "
                         f"{eintrag.get('symbol', '?')}: nicht fett "
                         f"hervorgehoben {sorted(_fehlt)}")
+            # DER TRICHTER GEHOERT IN JEDE MAIL MIT EINSTIEGSZONE (93 A).
+            # Wo eine Zone gerechnet wurde, lagen Kurs UND ATR vor - dann
+            # gibt es keinen Grund, warum die Spanne fehlen duerfte.
+            if "Einstiegszone" in text and "Uebliche Kursbewegung" not in text:
+                gesamt["luecken"].append(
+                    f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
+                    f"Trichter fehlt trotz Einstiegszone")
             if "Marktstruktur" not in text:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "

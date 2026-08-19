@@ -11993,3 +11993,79 @@ Urteil ist.**
 bemessene Geschäfte, Handeln nur bei Anlass — und **zum ersten Mal prüfbare
 Aussagen.** Ein Trichter, der nicht hält, ist widerlegt. Das hat bisher kein
 Teil dieses Systems von sich behaupten können.
+
+
+---
+
+### 93.11 Stufe A ist GEBAUT (19.08.2026) — `agent/trichter.py`
+
+**Der Trichter steht in jeder Mail mit Einstiegszone.** Ende-zu-Ende
+nachgewiesen: 4 Gruppen, 8 Signale, 9 Mails, 0 Lücken.
+
+#### Was drinsteht
+
+```
+Uebliche Kursbewegung (80 % der Faelle, Richtung offen):
+   in   5 Handelstagen +/- 7,3 %
+   in  20 Handelstagen +/- 14,7 %
+   in  60 Handelstagen +/- 25,4 %
+   Was das heisst: In 80 von 100 vergleichbaren Faellen blieb die
+   Kursaenderung binnen 5 Handelstagen innerhalb dieser Spanne - nach oben
+   wie nach unten. In 20 von 100 nicht.
+   Der Trichter sagt WIE WEIT, nicht WOHIN. Er ist keine Prognose und wird
+   breiter mit der Wurzel der Zeit, nicht linear.
+   Ihr Stop liegt 4,9 % entfernt und damit INNERHALB dieser Bewegung - er
+   wird auch ohne Gegenargument getroffen.
+   Gemessen an 30.116 Ankern der eigenen Reihen.
+```
+
+#### Die Faktoren sind gemessen, nicht abgeschrieben
+
+`FAKTOR = {0.68: 0,73 · 0.80: 0,98 · 0.90: 1,35 · 0.95: 1,75}` — Quantile von
+`|Schlussänderung| / (ATR × √t)` über 30.116 Anker. Die Lehrbuchzuordnung
+„1 ATR = 68 %" liefert hier 81 %, weil **ATR die Tagesspanne misst
+(True Range, mit Lücken), der Trichter die Änderung von Schluss zu Schluss**.
+Über 5 / 20 / 60 Tage schwanken die Faktoren nur um Hundertstel — die
+√t-Skalierung trägt, ein Faktor je Wahrscheinlichkeit genügt.
+
+#### Zwei Entscheidungen, die im Code festgeschrieben sind
+
+| | |
+|---|---|
+| **`TrichterUnbekannt` statt Schätzung** | ohne Kurs oder ATR gibt es **keine** Spanne. Eine erfundene Spanne ist schlimmer als keine, weil Stop und Größe daran hängen |
+| **Ungemessene Wahrscheinlichkeiten werden abgewiesen** | zwischen 0,80 und 0,90 zu interpolieren hieße, eine nie geprüfte Zahl zu erfinden |
+
+#### ⚠️ Ein Wort war doppelt belegt — beim Bauen aufgefallen
+
+Die Mail sagt weiter oben *„der Widerstand liegt 0,7 Schwankungsbreiten
+höher"* — dort ist **ein ATR** gemeint, die Tagesspanne als Maßstab für
+Abstände. Der Trichter misst etwas anderes. Dasselbe Wort für zwei Größen in
+einer Mail wäre eine Falle gewesen; deshalb heißt es hier **„übliche
+Kursbewegung"**, und die Schlusszeile benennt den Unterschied ausdrücklich.
+Eine Paketprüfung hält das fest.
+
+#### Der eine Satz, der ihn nützlich macht
+
+Der Stopvergleich ist reine Arithmetik aus zwei Zahlen, die ohnehin
+dastanden — aber er beantwortet die Frage, um die dieses Projekt seit dem
+Deadloop kreist: **wird dieser Stop vom gewöhnlichen Rauschen getroffen?**
+Ohne Stop bleibt der Satz weg, statt zu raten.
+
+#### Was er NICHT ist
+
+Keine Richtungsaussage, keine Sicherheit. ⚠️ **Überlebensverzerrung:** die
+Reihen enthalten nur, was es noch gibt — der echte Trichter ist breiter als
+der gemessene. Und die Kalibrierung kann veralten (A2); die Trefferquote
+laufend mitzumessen steht noch aus.
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` Paket **Trichter** (10 Prüfungen: gemessene Faktoren ·
+Monotonie in Wahrscheinlichkeit und Zeit · √t statt linear · Symmetrie um den
+Kurs · wirft statt zu raten · weist ungemessene Anteile ab · Beschreibung
+vorhanden · Wortkonflikt vermieden · Stopvergleich in beide Richtungen · in
+der echten Rechnung sichtbar) · `simuliere_kette.py` meldet den **fehlenden
+Trichter als Lücke**, sobald eine Mail eine Einstiegszone hat.
+
+**Offen aus Kapitel 93:** B (Drift je Asset), C (Sammeln beginnt), D (Anlass,
+zur Diskussion), E (Zusammenführung).

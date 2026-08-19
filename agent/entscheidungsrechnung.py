@@ -472,6 +472,10 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     e = {
         "ist_short": bool(ist_short),
+        # DER ATR GEHOERT INS ERGEBNIS (19.08.2026). Der Trichter braucht
+        # ihn, und ihn dort neu zu bestimmen waere die zweite Stelle, an der
+        # zwei Rechnungen auseinanderlaufen koennen (Umbauplan 70.4).
+        "atr": float(atr),
         # S2 (18.08.2026): die Marke auf der STOPSEITE - unten bei LONG,
         # oben bei SHORT. Sie wird HIER NOCH NICHT BENUTZT; der Stop
         # kennt sie erst ab S5. Reine Durchreichung, damit die Verkabelung
@@ -799,6 +803,24 @@ def saetze(e: dict, marken: list | None = None,
          f"Take-Profit     {preis(e['ziel_von_eur'])} bis {preis(e['ziel_bis_eur'])} EUR  "
          f"(CRV {_eur(e['crv'], 1)} - {e['ziel_regel']})"]
     z += marken_saetze(e, marken, liquiditaetszonen)
+
+    # ⚠️ DER TRICHTER (19.08.2026, Kapitel 93 A). Die einzige Aussage ueber
+    # die ZUKUNFT, die dieses System belegen kann - und sie sagt nur, WIE
+    # WEIT, nicht wohin. Die Groesse einer Bewegung ist prognostizierbar,
+    # die Richtung nicht.
+    #
+    # Sie steht NACH Stop und Ziel, weil sie die dortigen Zahlen einordnet:
+    # ein Stop innerhalb der ueblichen Schwankung wird vom Zufall getroffen,
+    # ein Ziel jenseits davon in der Zeit nicht erreicht.
+    try:
+        from agent import trichter as _TR
+
+        z += _TR.saetze(e.get("einstieg_eur"), e.get("atr"),
+                        stop_relativ=e.get("stop_relativ"))
+    except Exception:                                        # noqa: BLE001
+        # KEIN GRUND, EINE MAIL ZU VERLIEREN. Fehlt der Trichter, fehlt eine
+        # Einordnung - nicht die Empfehlung.
+        pass
     if not e["crv_erreicht"]:
         z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
                  f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")

@@ -9108,6 +9108,90 @@ def paket_dimension() -> None:
            "fail-soft ist fail-silent - wer nicht drankam, muss sich vom "
            "Rest unterscheiden lassen")
 
+    # ---- DER TRICHTER (Kapitel 93 A, 19.08.2026) ----
+    from agent import trichter as _TR
+
+    pruefe(P, "die Faktoren sind GEMESSEN, nicht aus dem Lehrbuch",
+           _TR.FAKTOR[0.68] < 0.9 and _TR.ANKER_GEMESSEN > 20000,
+           "1 ATR x sqrt(t) deckt gemessen rund 81 % ab statt 68 % - ATR "
+           "misst die Tagesspanne, der Trichter die Aenderung von Schluss "
+           "zu Schluss. Zwei verschiedene Groessen")
+    pruefe(P, "breiter wird er mit hoeherer Wahrscheinlichkeit",
+           _TR.FAKTOR[0.68] < _TR.FAKTOR[0.80] < _TR.FAKTOR[0.90]
+           < _TR.FAKTOR[0.95])
+    _s5 = _TR.spanne(100.0, 4.0, 5)
+    _s20 = _TR.spanne(100.0, 4.0, 20)
+    pruefe(P, "und mit der Zeit - aber nur mit der WURZEL",
+           _s20["weite_eur"] > _s5["weite_eur"]
+           and abs(_s20["weite_eur"] / _s5["weite_eur"] - 2.0) < 0.01,
+           "vier Mal so lange heisst doppelt so weit, nicht vier Mal - "
+           "gemessen traegt die Skalierung ueber einen zwoelffachen "
+           "Horizont (81,5 % gegen 79,6 %)")
+    pruefe(P, "die Spanne liegt symmetrisch um den Kurs",
+           abs((_s5["oben_eur"] + _s5["unten_eur"]) / 2 - 100.0) < 1e-9,
+           "der Trichter sagt WIE WEIT, nicht wohin - eine Schieflage waere "
+           "eine Richtungsaussage durch die Hintertuer")
+
+    # ⚠️ NIE EINE GERATENE SPANNE.
+    _ab = 0
+    for _arg in ({"kurs": 0.0}, {"atr": 0.0}, {"horizont": 0}):
+        _a2 = {"kurs": 100.0, "atr": 4.0, "horizont": 5}
+        _a2.update(_arg)
+        try:
+            _TR.spanne(**_a2)
+        except _TR.TrichterUnbekannt:
+            _ab += 1
+    pruefe(P, "ohne Grundlage wirft er, statt zu raten", _ab == 3,
+           "eine erfundene Spanne ist schlimmer als keine - Stop und "
+           "Groesse haengen daran")
+    _zw = 0
+    try:
+        _TR.spanne(100.0, 4.0, 5, anteil=0.75)
+    except _TR.TrichterUnbekannt:
+        _zw = 1
+    pruefe(P, "und ungemessene Wahrscheinlichkeiten weist er ab", _zw == 1,
+           "zwischen zwei gemessenen Faktoren zu interpolieren hiesse, eine "
+           "Zahl zu erfinden, die nie geprueft wurde")
+    _tz = _TR.saetze(100.0, 4.0)
+    pruefe(P, "in der Mail steht die Richtung ausdruecklich als OFFEN",
+           any("Richtung offen" in z for z in _tz)
+           and any("WIE WEIT, nicht WOHIN" in z for z in _tz),
+           "wer ihn als Prognose liest, liest mehr hinein als dasteht")
+    pruefe(P, "und eine BESCHREIBUNG steht daneben (Nutzerwunsch 19.08.)",
+           any("Was das heisst" in z for z in _tz)
+           and any("von 100" in z for z in _tz)
+           and any("30.116" in z for z in _tz),
+           "eine neue Zahl ohne Satz daneben zwingt den Leser zu raten, ob "
+           "sie Prognose, Garantie oder Schaetzung ist")
+
+    # ⚠️ EIN WORT, ZWEI BEDEUTUNGEN - DIE FALLE.
+    pruefe(P, "er belegt das Wort 'Schwankungsbreite' NICHT doppelt",
+           not any(z.startswith("Uebliche") and "Schwankungsbreite" in z
+                   for z in _tz)
+           and any("Tagesspanne" in z for z in _tz),
+           "weiter oben in derselben Mail heisst '0,7 Schwankungsbreiten' "
+           "ein Vielfaches des ATR (Tagesspanne); der Trichter misst die "
+           "Aenderung von Schluss zu Schluss ueber mehrere Tage")
+
+    # DER SATZ, DER DEN TRICHTER NUETZLICH MACHT - IN BEIDE RICHTUNGEN.
+    _innen = _TR.saetze(100.0, 4.0, stop_relativ=0.05)
+    _aussen = _TR.saetze(100.0, 1.2, stop_relativ=0.05)
+    pruefe(P, "er sagt, ob der Stop im gewoehnlichen Rauschen liegt",
+           any("INNERHALB dieser Bewegung" in z for z in _innen)
+           and any("ausserhalb" in z for z in _aussen),
+           "ein Stop innerhalb der ueblichen Bewegung wird getroffen, ohne "
+           "dass die These widerlegt waere - genau die Frage, um die dieses "
+           "Projekt seit dem Deadloop kreist")
+    pruefe(P, "ohne Stop bleibt der Satz WEG statt zu raten",
+           not any("Ihr Stop liegt" in z for z in _tz))
+    pruefe(P, "und er erscheint in der echten Rechnung",
+           any("Uebliche Kursbewegung" in z for z in _ER.saetze(
+               _ER.rechne(kurs=100.0, atr=4.0, risiko_eur=60.0,
+                          betrag_wunsch_eur=1000.0, instrument="hebel",
+                          umgeworfen_preis_eur=99.0))),
+           "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
+           "mehrfach Wochen gekostet hat")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

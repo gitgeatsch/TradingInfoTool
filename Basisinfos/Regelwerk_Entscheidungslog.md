@@ -17516,3 +17516,40 @@ Nachricht wie Ruhe aussieht.
 Fallstricke je Stufe im Kapitel einzeln erfasst; E1 ist der wichtigste -
 jede Stufe kann zur Bremse werden, wenn sie zur Bedingung wird.
 
+
+[2026-08-19] KAPITEL 93 STUFE A GEBAUT - der Trichter (agent/trichter.py)
+
+Die erste Aussage ueber die Zukunft, die dieses System ehrlich treffen kann,
+steht in jeder Mail mit Einstiegszone: wie weit sich der Kurs auf 5, 20 und
+60 Handelstage ueblicherweise bewegt - 80 % der Faelle, Richtung offen.
+
+FAKTOREN GEMESSEN, NICHT ABGESCHRIEBEN: 0,73 / 0,98 / 1,35 / 1,75 fuer
+68/80/90/95 %, Quantile von |Schlussaenderung| / (ATR x sqrt(t)) ueber 30.116
+Anker. '1 ATR = 68 %' liefert hier 81 %, weil ATR die Tagesspanne misst und
+der Trichter die Aenderung von Schluss zu Schluss.
+
+ZWEI FESTLEGUNGEN IM CODE: ohne Kurs oder ATR wird TrichterUnbekannt
+geworfen statt geschaetzt - eine erfundene Spanne ist schlimmer als keine,
+weil Stop und Groesse daran haengen. Und ungemessene Wahrscheinlichkeiten
+werden abgewiesen statt interpoliert.
+
+DER NUTZEN IST EIN SATZ: 'Ihr Stop liegt 4,9 % entfernt und damit INNERHALB
+dieser Bewegung - er wird auch ohne Gegenargument getroffen.' Reine
+Arithmetik aus zwei Zahlen, die ohnehin in der Mail standen, aber es ist die
+Frage, um die dieses Projekt seit dem Deadloop kreist.
+
+BEIM BAUEN GEFUNDEN: das Wort 'Schwankungsbreite' war bereits vergeben -
+weiter oben in derselben Mail meint '0,7 Schwankungsbreiten' ein Vielfaches
+des ATR. Zwei Bedeutungen in einer Mail waeren eine Falle; der Trichter
+heisst deshalb 'uebliche Kursbewegung' und benennt den Unterschied.
+
+BESCHREIBUNG AUF NUTZERWUNSCH: jede neue Zahl bekommt einen Satz daneben,
+der sagt, was sie ist und was nicht - sonst muss der Leser raten, ob sie
+Prognose, Garantie oder Schaetzung ist.
+
+GEPRUEFT: 1.189 Paketpruefungen (10 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 4 Gruppen / 8 Signale / 9 Mails / 0 Fehler / 0 Luecken. Die
+Simulation meldet einen fehlenden Trichter ab sofort als Luecke.
+
+OFFEN: Trefferquote laufend mitmessen (Fallstrick A2), Ueberlebensverzerrung
+bleibt (der echte Trichter ist breiter), Stufen B bis E.
