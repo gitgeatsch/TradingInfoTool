@@ -17210,3 +17210,50 @@ NEBENBEFUND ZUM WERKZEUG: der Rueckgabewert 2 bei offenen Fehlern kam nicht
 an, weil die Ausgabe durch `| tail` lief - die Pipeline meldet den Code von
 tail. Der Rueckgabewert taugt damit nur ohne Pipe als Signal.
 
+---
+
+## 2026-08-19 (7) - Quellenpruefung fuer die Spot-Frage abgeschlossen
+
+Geprueft wurde, welche freie Quelle die Frage 'lebt dieses Projekt' UEBER
+ALLE Assets beantworten kann. Ergebnis je Quelle:
+
+    CoinMetrics Community    aktive Adressen: BTC-ONLY (direkt abgefragt;
+                             SOL 'forbidden', AIOZ/GRIFFAIN/KAS 'bad
+                             parameter' auf den Metrik-Parameter)
+
+    CoinGecko developer_data 15 von 43 mit verknuepftem Repository (35 %),
+                             22 ohne, 6 nicht erfahren. Zuordnung geloest,
+                             Abdeckung zu duenn
+
+    DefiLlama Ketten-TVL     19 von 43 haben eine eigene Kette. Fuer die
+                             uebrigen 24 sagt TVL nichts - sie sind Token
+                             auf fremden Ketten oder Memecoins
+
+    DefiLlama Protokolle     27 von 43 per Symbolabgleich - NICHT
+                             belastbar: kurze Ticker wie S, W, CAT, MON,
+                             BIO treffen fremde Protokolle, und TVL eines
+                             Protokolls ist nicht die Lebendigkeit eines
+                             Tokens
+
+    Artemis                  API nur mit Schluessel/Registrierung
+    Token Terminal           kostenpflichtig
+    Dune                     Gratis-Tier nur mit Schluessel, und es ist
+                             keine Nachschlage-API - man muss SQL gegen
+                             indizierte Tabellen schreiben, Abdeckung
+                             haengt an der indizierten Kette
+
+DIE ANTWORT AUF DIE AUSGANGSFRAGE IST DAMIT: es gibt keine freie Quelle,
+die 'lebt es' fuer ALLE unsere Assets beantwortet. Die beiden gemessenen
+decken 35 % und 44 % ab, und beide schweigen genau dort, wo die Frage am
+wichtigsten waere - bei den kleinen Werten.
+
+NUTZERENTSCHEIDUNG 19.08.: bei Kleinstcoins kann bzw. muss man u. U.
+verzichten. Damit wird aus der Luecke eine ASSETAUSWAHL-Frage statt einer
+Datenfrage - und das ist eine andere und ehrlichere Sache.
+
+NAECHSTER SCHRITT, noch nicht gemessen: die VEREINIGUNG der beiden Quellen.
+CoinGecko-Repo und DefiLlama-Kette ueberschneiden sich nur teilweise; die
+gemeinsame Abdeckung koennte deutlich ueber 44 % liegen. Sie ist zu messen
+und nicht zu schaetzen - dieselbe Regel, an der die Katalogzahl gescheitert
+ist.
+
