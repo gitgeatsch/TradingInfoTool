@@ -9197,6 +9197,65 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- LEBENDIGKEIT: SAMMELN OHNE ZU URTEILEN (93 C, 19.08.2026) ----
+    from agent import lebendigkeit as _LB
+
+    pruefe(P, "drei Zustaende, die nie verschmelzen",
+           set(_LB.ZUSTAENDE) == {"wert", "keine_quelle", "fehler"},
+           "wer 'nicht erfahren' mit 'gibt es nicht' verrechnet, erklaert "
+           "lebendige Ketten fuer tot - am 19.08. ergab genau das '0 von "
+           "43', waehrend BTC 73.168 Sterne meldete")
+    _fehler = 0
+    try:
+        _LB.schreibe(None, symbol="X", quelle="tvl", zustand="tot")
+    except ValueError:
+        _fehler = 1
+    pruefe(P, "und ein erfundener Zustand wird abgewiesen", _fehler == 1)
+
+    # ⚠️ SOLANGE DIE REIHE KURZ IST, GIBT ES KEINE RICHTUNG.
+    _kurz = _LB.richtung([("2026-08-01", 100.0), ("2026-08-02", 200.0)],
+                         "tvl")
+    pruefe(P, "eine kurze Reihe liefert KEINE Richtungsaussage",
+           _kurz["tragfaehig"] is False and _kurz["richtung"] is None
+           and _kurz["beobachtungen"] == 2,
+           "eine Verdopplung an zwei Tagen ist keine Entwicklung - der Uebergang ist das Signal, und den sieht man erst ueber Wochen")
+    _lang = _LB.richtung([("t%d" % i, 100.0) for i in range(20)]
+                         + [("u%d" % i, 200.0) for i in range(20)], "tvl")
+    pruefe(P, "eine lange Reihe schon - und in der richtigen Richtung",
+           _lang["tragfaehig"] and _lang["richtung"] == "staerker")
+    pruefe(P, "kleine Bewegungen heissen unveraendert, nicht staerker",
+           _LB.richtung([("t%d" % i, 100.0) for i in range(20)]
+                        + [("u%d" % i, 103.0) for i in range(20)],
+                        "tvl")["richtung"] == "unveraendert",
+           "unter zehn Prozent ist bei TVL das Rauschen des Kurses selbst, "
+           "nicht die Nutzung")
+
+    # DER WARNHINWEIS IST DER NUTZERWUNSCH - er muss auch WEGGEHEN.
+    _lq = _quelltext("agent/lebendigkeit.py")
+    pruefe(P, "der Warnhinweis haengt an der Reihenlaenge, nicht an einem Schalter",
+           "NOCH KEINE RICHTUNGSAUSSAGE" in _lq
+           and 'if r["tragfaehig"] and r["richtung"]:' in _lq,
+           "er verschwindet von selbst, sobald genug Messungen da sind - "
+           "niemand muss daran denken (Nutzerwunsch 19.08.)")
+    pruefe(P, "und die Zeilen sagen ausdruecklich, dass sie nichts sperren",
+           "kein Urteil" in _lq and "sperren nichts" in _lq,
+           "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
+
+    # ⚠️ DAS KONTINGENT ENTSCHEIDET DEN TAKT.
+    _bq = _quelltext("scheduler/background.py")
+    pruefe(P, "TVL laeuft taeglich, die Entwicklerdaten nur montags",
+           "def lebendigkeit_job" in _bq
+           and "weekday() == 0" in _bq and 'id="lebendigkeit"' in _bq,
+           "TVL kostet ZWEI Sammelabrufe, CoinGecko EINEN JE SYMBOL - "
+           "taeglich waeren das rund 1.230 im Monat bei 3.521 von 10.000 "
+           "verbrauchten. Und commit_count_4_weeks misst ohnehin vier "
+           "Wochen: taeglich abgefragt ergaebe es 28-fach ueberlappende "
+           "Messwerte")
+    pruefe(P, "die Simulation weist die Zeile in der fertigen Mail nach",
+           "lebendigkeit_gesehen" in _quelltext("simuliere_kette.py"),
+           "eine Stufe gilt erst als gebaut, wenn simuliere_kette.py sie in "
+           "der Mail nachweist - Rolle G war drei Tage lang 'fertig'")
+
     # ---- EIN FAKTOR FUER ALLE WAR FALSCH (93 A/A2, 19.08.2026) ----
     pruefe(P, "jede Anlageklasse hat ihre eigenen gemessenen Faktoren",
            set(_TR.FAKTOR_JE_KLASSE) == {"krypto", "aktien", "etf"}

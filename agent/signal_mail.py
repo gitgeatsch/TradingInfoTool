@@ -302,6 +302,10 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               gegenpruefung: list | None = None,
               marken_werte: dict | None = None,
               umgeworfen_preis_eur: float | None = None,
+              # 93 C: was an Nutzung und Entwicklung messbar ist - MIT
+              # Warnhinweis, solange die eigene Reihe zu kurz ist. Kein
+              # Urteil, kein Gate: diese Zeilen sperren nichts.
+              lebendigkeit: list[str] | None = None,
               assetklasse: str | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
@@ -376,6 +380,8 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     if faktenblock:
         eins += ([""] if eins else []) + faktenblock
     eins += list(coin_fakten or [])
+    if lebendigkeit:
+        eins += ([""] if eins else []) + list(lebendigkeit)
     if lage_fakten:
         eins += ["", "Umfeld:"] + [
             f"  {z}" for z in ohne_gewohntes(lage_fakten,

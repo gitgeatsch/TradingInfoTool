@@ -421,6 +421,41 @@ def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:
         conn.close()
 
 
+def lebendigkeit_job(conn_factory, watchlist_provider) -> bool:
+    """93 C: die eigene Reihe aufbauen. SAMMELT NUR - urteilt nicht.
+
+    ⚠️ ZWEI TAKTE IN EINEM JOB. TVL kostet zwei Sammelabrufe und laeuft
+    taeglich; die Entwicklerdaten kosten EINEN Abruf JE SYMBOL und laufen
+    nur montags. Taeglich waeren das rund 1.230 CoinGecko-Abrufe im Monat -
+    bei 3.521 von 10.000 verbrauchten (Stand 19.08.) waere das nahe an der
+    80-%-Warnschwelle, und `commit_count_4_weeks` misst ohnehin ein
+    Vier-Wochen-Fenster: taeglich abgefragt ergaebe es 28-fach
+    ueberlappende Messwerte.
+
+    Faellt der Job aus, fehlt ein Messpunkt - nie ein Signal. Deshalb faengt
+    er breit ab und meldet nur.
+    """
+    from agent import lebendigkeit as LB
+
+    try:
+        conn = conn_factory()
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Lebendigkeit: keine Datenbankverbindung")
+        return False
+    try:
+        montags = datetime.now(timezone.utc).weekday() == 0
+        LB.job(conn, watchlist_provider(), mit_entwickler=montags)
+        return True
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Lebendigkeit: Sammellauf fehlgeschlagen")
+        return False
+    finally:
+        try:
+            conn.close()
+        except Exception:                                    # noqa: BLE001
+            pass
+
+
 def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provider, fred_api_key) -> bool:
     """MS-3: 2x taeglich (04:00/16:00, siehe build_scheduler()) - kompletter
     Marktscan-Lauf (Stufe A-D, agent/krypto/marktscan.py). Braucht ein aktuelles Regime
@@ -3966,6 +4001,16 @@ def build_scheduler(
         args=[db_conn_factory, watchlist_provider, coingecko_client, gemini_client, mistral_client,
               zai_client, openrouter_client],
         id="multi_asset_batch",
+    )
+    # 93 C (19.08.2026): die Lebendigkeitsreihe aufbauen. Frueh am Tag, weit
+    # weg von den Signallaeufen - der Job holt Daten, er braucht keine.
+    scheduler.add_job(
+        lebendigkeit_job,
+        "cron",
+        hour=3,
+        minute=20,
+        args=[db_conn_factory, watchlist_provider],
+        id="lebendigkeit",
     )
     # MS-3: erster CronTrigger im Projekt (bisherige Jobs nutzen nur "interval") -
     # feste Uhrzeiten statt Intervall, siehe config.yaml marktscan.zeiten.

@@ -12157,3 +12157,72 @@ Daten). Insgesamt **1.196 Prüfungen**, 0 freie Namen, Ende-zu-Ende 8 Signale
 was es noch gibt), und `aktien` steht auf **2 Reihen** — die Zahl steht, aber
 sie ist die Eigenart zweier Werte. Der Lauf ist zu wiederholen, wenn Reihen
 dazukommen.
+
+
+---
+
+### 93.13 Stufe C — das Sammeln hat begonnen (19.08.2026), `agent/lebendigkeit.py`
+
+**Der Blocker war belegt und ist nicht verschwunden: CoinGecko liefert keine
+Historie.** Deshalb wird ab sofort die eigene Reihe aufgebaut — und der Wert
+steht **von Anfang an in der Mail, mit Warnhinweis** (Nutzerwunsch 19.08.):
+
+```
+Lebendigkeit des Projekts (Merkmal, kein Urteil):
+   Im Protokoll hinterlegtes Kapital: 300.465.312 USD. ⚠️ NOCH KEINE
+   RICHTUNGSAUSSAGE - die eigene Reihe hat erst 1 von 30 noetigen Messungen.
+   Ein Projekt kann verkuemmern und der Kurs trotzdem steigen - und
+   umgekehrt. Diese Zeilen sperren nichts.
+```
+
+**Der Hinweis verschwindet von selbst**, sobald die Reihe lang genug ist — er
+hängt an der Reihenlänge, nicht an einem Schalter. Niemand muss daran denken.
+
+#### Zwei Quellen, zwei Takte — und der Grund ist das Kontingent
+
+| Quelle | Kennzahl | Kosten | Takt |
+|---|---|---|---|
+| **DefiLlama** | im Protokoll hinterlegtes Kapital | **zwei** Sammelabrufe für **alle** Symbole, kein Kontingent | täglich 03:20 |
+| **CoinGecko** | Commits in vier Wochen | **ein Abruf je Symbol** | **nur montags** |
+
+**Gemessen, nicht geschätzt:** CoinGecko stand am 19.08. bei **3.521 von
+10.000** im Monat. Täglich 41 Zusatzabrufe wären +1.230/Monat und brächten
+uns nahe an die 80-%-Warnschwelle. **Wöchentlich ist außerdem das
+methodisch Richtige**: `commit_count_4_weeks` misst selbst ein
+Vier-Wochen-Fenster — täglich abgefragt ergäbe das 28-fach überlappende
+Messwerte.
+
+**Abdeckung DefiLlama: 25 von 44** Kryptowerten (live geprüft). Wo nichts
+kommt, steht `keine_quelle` — LINK etwa ist ein Orakel und hat kein
+hinterlegtes Kapital. Das ist eine Auskunft, kein Ausfall.
+
+#### Drei Zustände, die nie verschmelzen
+
+`wert` · `keine_quelle` · `fehler`. **Auch Fehler werden geschrieben** — eine
+Lücke ohne Eintrag sähe später aus wie ein Tag, an dem es das Projekt nicht
+gab. Ein erfundener Zustand wird abgewiesen.
+
+#### Wann darf es eine Richtung nennen?
+
+`MINDESTREIHE = {"tvl": 30, "entwickler": 12}` — **aus dem Messfenster
+abgeleitet, nicht geraten**: TVL täglich, ein Monat ist die kürzeste Spanne,
+in der ein Trend nicht die Kursbewegung derselben Woche ist. Entwicklerdaten
+wöchentlich bei einem 4-Wochen-Fenster → drei unabhängige Fenster = 12
+Messungen. Die Richtung vergleicht **erste gegen letzte Hälfte** (ein
+Ausreißer am Rand soll sie nicht bestimmen), Schwelle 10 %.
+
+#### ⚠️ Kein Gate — und das ist der Kern
+
+Die Zeilen **sperren nichts**. Ein statisches „tot"-Gate hätte den
+wertvollsten Fall blockiert: **den Coin, der stirbt und dreht.** Der Übergang
+ist das Signal, nicht der Pegel.
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` (9 neue Prüfungen), **1.205 gesamt** · `simuliere_kette.py`
+sammelt in die **Kopie** und weist die Zeile in der fertigen Mail nach —
+fehlt sie, ist es eine Lücke. Lauf: 8 Signale / 9 Mails / 0 Lücken.
+
+**Offen:** die Auswertung selbst. Frühestens in 30 Tagen (TVL) bzw. 12 Wochen
+(Entwickler) — vorher gibt es nichts zu sehen, und genau deshalb musste heute
+begonnen werden.

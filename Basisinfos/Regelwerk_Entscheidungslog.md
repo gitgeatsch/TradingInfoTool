@@ -17598,3 +17598,40 @@ Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken, Messlauf Rueckgabe 0.
 
 OFFEN: Ueberlebensverzerrung bleibt; aktien steht auf 2 Reihen. Lauf
 wiederholen, wenn Reihen dazukommen.
+
+
+[2026-08-19] STUFE 93 C BEGONNEN - die Lebendigkeitsreihe wird aufgebaut
+(agent/lebendigkeit.py)
+
+Ohne Historie kein Uebergang, und CoinGecko liefert keine. Also wird ab
+sofort selbst gesammelt. Der Wert steht VON ANFANG AN in der Mail, mit
+Warnhinweis (Nutzerwunsch): "NOCH KEINE RICHTUNGSAUSSAGE - die eigene Reihe
+hat erst 1 von 30 noetigen Messungen." Der Hinweis haengt an der
+Reihenlaenge und verschwindet von selbst.
+
+ZWEI TAKTE, UND DAS KONTINGENT ENTSCHEIDET: DefiLlama kostet ZWEI
+Sammelabrufe fuer alle Symbole und laeuft taeglich; CoinGecko kostet EINEN
+JE SYMBOL und laeuft nur montags. Gemessen im NB-Export: 3.521 von 10.000
+im August. Taeglich waeren +1.230/Monat - nahe an der 80-%-Warnschwelle.
+Woechentlich ist ausserdem methodisch richtig, weil commit_count_4_weeks
+selbst vier Wochen misst.
+
+ABDECKUNG DEFILLAMA: 25 von 44, live geprueft. Wo nichts kommt, steht
+keine_quelle - LINK ist ein Orakel und hat kein hinterlegtes Kapital. Das
+ist eine Auskunft, kein Ausfall. Auch Fehler werden geschrieben: eine Luecke
+ohne Eintrag saehe spaeter aus wie ein Tag, an dem es das Projekt nicht gab.
+
+MINDESTREIHE AUS DEM MESSFENSTER ABGELEITET, nicht geraten: tvl 30
+(taeglich, ein Monat), entwickler 12 (woechentlich, drei unabhaengige
+Vier-Wochen-Fenster). Richtung aus erster gegen letzte Haelfte, Schwelle
+10 %.
+
+KEIN GATE. Die Zeilen sperren nichts. Ein statisches "tot"-Gate haette den
+wertvollsten Fall blockiert - den Coin, der stirbt und dreht.
+
+GEPRUEFT: 1.205 Paketpruefungen (9 neue), 0 freie Namen, Darstellungstest;
+simuliere_kette.py sammelt in die KOPIE und weist die Zeile in der fertigen
+Mail nach - fehlt sie, ist es eine Luecke. 8 Signale / 9 Mails / 0 Luecken.
+
+OFFEN: die Auswertung. Fruehestens in 30 Tagen bzw. 12 Wochen - und genau
+deshalb musste heute begonnen werden.

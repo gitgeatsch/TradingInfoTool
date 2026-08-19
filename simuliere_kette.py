@@ -340,9 +340,28 @@ def main() -> int:
     print("Cooldown in der Kopie um 30 Tage zurueckdatiert - sonst prueft "
           "die Simulation einen Produktionsstand statt der Kette.")
 
+    # 93 C: EINEN MESSPUNKT IN DIE KOPIE SAMMELN (19.08.2026).
+    #
+    # Ohne Beobachtung gibt es keine Lebendigkeitszeile, und die Simulation
+    # koennte nicht zeigen, dass sie ankommt - "gebaut und nicht verdrahtet"
+    # waere unbemerkt geblieben. Zwei Sammelabrufe bei DefiLlama, KEIN
+    # CoinGecko-Kontingent, und geschrieben wird ausschliesslich in die
+    # KOPIE.
+    try:
+        import config as _C
+
+        from agent import lebendigkeit as _LB
+        with sqlite3.connect(db) as _c1:
+            _z = _LB.job(_c1, _C.get_watchlist(), mit_entwickler=False)
+        print(f"Lebendigkeit in die Kopie gesammelt: {_z['tvl']}")
+    except Exception as _exc:                                # noqa: BLE001
+        print(f"Lebendigkeit nicht sammelbar ({type(_exc).__name__}) - die "
+              f"Mailzeile fehlt dann, das ist KEIN Kettenfehler")
+
     reihen = lade_reihen_aus_db(db)
     gesamt = {"gruppen": 0, "signale": 0, "mails": 0, "fehler": [],
               "luecken": [], "gruppen_gelaufen": [],
+              "lebendigkeit_gesehen": False,
               "gruppen_uebersprungen": []}
 
     for gruppe, instrument, symbole in AK.laeufe():
@@ -465,6 +484,13 @@ def main() -> int:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
                     f"Trichter fehlt trotz Einstiegszone")
+            # 93 C: die Lebendigkeitszeile gehoert in jede KRYPTO-Mail zu
+            # einem Symbol, zu dem eine Quelle etwas liefert. Wo DefiLlama
+            # nichts kennt (LINK etwa ist ein Orakel), fehlt sie zu Recht -
+            # deshalb wird nicht je Mail geprueft, sondern ob die Zeile
+            # UEBERHAUPT ankommt.
+            if gruppe == "krypto" and "Lebendigkeit des Projekts" in text:
+                gesamt["lebendigkeit_gesehen"] = True
             if "Marktstruktur" not in text:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
@@ -578,6 +604,11 @@ def main() -> int:
     # --- Was ist in der Datenbank angekommen? -----------------------------
     print("\n" + "=" * 76)
     print("WAS IN DER DATENBANK ANGEKOMMEN IST")
+    # 93 C: gesammelt UND angekommen? Beides, sonst ist es halb gebaut.
+    if not gesamt["lebendigkeit_gesehen"]:
+        gesamt["luecken"].append(
+            "Lebendigkeit (93 C): in KEINER Kryptomail angekommen - "
+            "gesammelt wurde, angezeigt nicht")
     print("=" * 76)
     c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     for tabelle, spalte in (("signals", "quelle_kette"),
