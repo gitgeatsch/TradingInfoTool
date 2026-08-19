@@ -32,6 +32,7 @@ unterscheidet deshalb "kein Repo hinterlegt" von "Repo vorhanden, aber ruhig".
 from __future__ import annotations
 
 import argparse
+import io
 import sys
 import time
 
@@ -84,6 +85,15 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--abstand", type=float, default=ABSTAND_S)
     p.add_argument("--nur", type=int, default=0, help="nur die ersten N")
+    # ERGEBNIS AUF PLATTE, NICHT NUR AUF DIE KONSOLE (19.08.2026).
+    #
+    # Der erste volle Lauf dauerte vier Minuten und lief im Hintergrund;
+    # seine Ausgabedatei wurde auf die letzten 32 Zeilen gekuerzt. Die
+    # Einzelwerte der ersten 28 Symbole waren damit verloren, und eine
+    # Auswertung darauf zaehlte 4 statt 15 Repos. Eine Messung, die vier
+    # Minuten kostet und nur in den Bildschirm schreibt, ist nach dem
+    # Scrollen weg.
+    p.add_argument("--datei", default="messwerte_entwickler.csv")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -121,6 +131,17 @@ def main() -> int:
             time.sleep(a.abstand)
 
     print("\n" + "=" * 74)
+    if a.datei:
+        with io.open(a.datei, "w", encoding="utf-8", newline="") as f:
+            f.write("symbol;zustand;commits_4w;sterne;grund\n")
+            for zustand, eintraege in eimer.items():
+                for sym, w in eintraege:
+                    f.write(";".join([
+                        sym, zustand,
+                        str(w.get("commit_count_4_weeks", "")),
+                        str(w.get("stars", "")),
+                        str(w.get("grund", ""))]) + "\n")
+        print(f"  Einzelwerte geschrieben: {a.datei}")
     print("ERGEBNIS - die drei Zustaende bleiben getrennt")
     print("=" * 74)
     for name, wort in (("repo", "Repository verknuepft"),

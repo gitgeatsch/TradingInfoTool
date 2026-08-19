@@ -17257,3 +17257,31 @@ gemeinsame Abdeckung koennte deutlich ueber 44 % liegen. Sie ist zu messen
 und nicht zu schaetzen - dieselbe Regel, an der die Katalogzahl gescheitert
 ist.
 
+---
+
+## 2026-08-19 (8) - Vereinigung NICHT gemessen, und warum
+
+ZURUECKGEZOGEN: eine Zwischenrechnung nannte 21 von 43 (49 %) fuer die
+Vereinigung aus CoinGecko-Repository und DefiLlama-Kette. Die Zahl ist
+FALSCH und wird nicht verwendet.
+
+Der Grund ist eine Luecke im eigenen Werkzeug. Der volle CoinGecko-Lauf
+schrieb seine Einzelergebnisse nur auf die Konsole; er lief im Hintergrund,
+und die Ausgabedatei wurde auf die letzten 32 Zeilen gekuerzt - sie beginnt
+bei Symbol 29. Die Auswertung fand darin 4 Repos statt der 15, die der Lauf
+selbst gemeldet hatte, und rechnete die Vereinigung auf einem Viertel der
+Daten.
+
+AUFGEFALLEN IST ES NUR, weil die Teilsumme dem eigenen Ergebnisblock des
+Laufs widersprach (4 gegen 15). Ohne diesen Gegenwert waere die 49 %
+unbemerkt in die Entscheidung gegangen.
+
+BEHOBEN: `messe_entwickleraktivitaet.py` schreibt die Einzelwerte jetzt als
+CSV (`--datei`, Vorgabe messwerte_entwickler.csv) - Symbol, Zustand,
+Commits, Sterne, Grund. Eine Messung, die vier Minuten kostet und nur in
+den Bildschirm schreibt, ist nach dem Scrollen weg.
+
+OFFEN: die Vereinigung ist damit weiterhin unbekannt. Sie braucht einen
+vollen Lauf mit der neuen CSV; die DefiLlama-Seite (19 von 43 mit eigener
+Kette) liegt bereits belastbar vor.
+

@@ -90,3 +90,4 @@ kettennaht*.json
 # einem `git add -A` ins Repo gelangt, Stunden nach dem WAL-Umbau.
 *.db-wal
 *.db-shm
+messwerte_entwickler.csv
