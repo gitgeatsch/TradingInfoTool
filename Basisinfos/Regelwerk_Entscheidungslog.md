@@ -17635,3 +17635,42 @@ Mail nach - fehlt sie, ist es eine Luecke. 8 Signale / 9 Mails / 0 Luecken.
 
 OFFEN: die Auswertung. Fruehestens in 30 Tagen bzw. 12 Wochen - und genau
 deshalb musste heute begonnen werden.
+
+
+[2026-08-19] STUFE 93 B GEMESSEN - die Drift traegt nicht (messe_drift.py)
+
+Aufbau nach dem Nutzereinwand: keine mittlere Drift ueber die Kategorie
+(die IST der Markt und muss null ergeben), sondern eine RANGLISTE QUER UEBER
+DIE SYMBOLE AM SELBEN TAG, marktbereinigt. Der t-Wert laeuft ueber TERMINE
+mit einem Schritt von einem ganzen Horizont - 32 Symbole an 3.259 Tagen sind
+keine 100.000 unabhaengigen Faelle.
+
+ERGEBNIS: kein Fenster traegt. Auf fuenf Tagen -0,1 bis -0,4 % Abstand
+zwischen bestem und schlechtestem Fuenftel, t zwischen -0,6 und -0,2.
+
+EIN FELD von neun lag bei |t| = 2,59 - und genau eines ist bei neun Tests
+der Erwartungswert des Zufalls. Schwelle deshalb auf 2,77 angehoben
+(Bonferroni); es ueberlebt sie nicht, hat negatives Vorzeichen (Umkehr) und
+steht auf 10 Terminen. Es liegt ausserdem UNTER seiner eigenen
+Nachweisgrenze von 14,2 % - Rauschen nach dem eigenen Massstab.
+
+DIE GEGENPRUEFUNG, OHNE DIE EIN NULLBEFUND NICHTS WERT IST: ein
+eingepflanzter Effekt von 3 % wird auf fuenf Tagen mit t rund 8 gefunden, auf
+60 Tagen NICHT. Damit ist belegt, dass die Messung etwas finden kann - und
+wo sie blind ist.
+
+DESHALB DREI ZUSTAENDE AUCH HIER: GEMESSEN und nichts gefunden (alle
+5-Tage-Felder, Nachweisgrenze 1,6-1,8 %) gegen NICHT MESSBAR (alle 20- und
+60-Tage-Felder, Nachweisgrenze 6-21 %). Auf 60 Tagen ist nichts widerlegt,
+dort wurde nicht hingesehen.
+
+NICHT GEBAUT: die Drift geht NICHT in die Mail. Ein Merkmal ohne
+nachgewiesene Wirkung dort hineinzuschreiben hiesse, Rauschen als Erkenntnis
+zu verkaufen. Eine Paketpruefung haelt fest, dass sie nicht verdrahtet ist.
+
+GEPRUEFT: 1.213 Paketpruefungen (8 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+FOLGE FUER DIE AUSGANGSFRAGE: "jeder Trade ist gleich gut" bleibt bestehen.
+B war der Weg, der das Vorzeichen haette drehen koennen. Uebrig bleiben
+Nachrichten (D, ungeloest) und Kosten - und C, dessen Reihe erst beginnt.

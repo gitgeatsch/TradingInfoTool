@@ -9197,6 +9197,52 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DRIFT: DIE MESSUNG MUSS SICH SELBST MISSTRAUEN (93 B) ----
+    _dq = _quelltext("messe_drift.py")
+
+    pruefe(P, "die Marktbewegung wird abgezogen - sonst ist es keine Auswahl",
+           "kuenftig = kuenftig - kuenftig.mean()" in _dq,
+           "ein Mittelwert ueber eine Kategorie MUSS null ergeben, er IST "
+           "der Markt. Genau dieser Einwand des Nutzers hat acht Messungen "
+           "dieses Projekts erledigt")
+    pruefe(P, "der t-Wert laeuft ueber TERMINE, nicht ueber Anker",
+           "for t in range(rueckblick, n_t - horizont, horizont)" in _dq,
+           "32 Symbole an 500 Tagen sind keine 16.000 unabhaengigen Faelle - "
+           "an einem Tag bewegt sich alles gemeinsam. Der Schritt ist ein "
+           "ganzer Horizont, damit sich auch die Termine nicht ueberlappen")
+    pruefe(P, "neun Felder heben die Schwelle an (Bonferroni)",
+           "0.05 / (2 * felder)" in _dq,
+           "bei neun Tests ist EIN Feld mit |t| >= 2 der Erwartungswert des "
+           "Zufalls. Genau ein solches Feld kam heraus - es zu behalten "
+           "hiesse, sich ein Ergebnis gesucht zu haben")
+
+    # ⚠️ DIE WICHTIGSTE: EIN NULLBEFUND BRAUCHT EINE POSITIVKONTROLLE.
+    pruefe(P, "es gibt eine Positivkontrolle - sonst sagt das 'nichts' nichts",
+           "--positivkontrolle" in _dq and "kontrolle: float = 0.0" in _dq,
+           "gemessen: ein eingepflanzter Effekt von 3 % wird auf fuenf Tagen "
+           "mit t rund 8 gefunden. Erst damit ist der Nullbefund einer")
+    pruefe(P, "und der kleinste nachweisbare Abstand steht in jeder Zeile",
+           "kleinster_nachweisbarer" in _dq,
+           "ohne diese Zahl ist 'nichts gefunden' nicht von 'nicht "
+           "hingesehen' zu unterscheiden")
+    pruefe(P, "beides wird getrennt ausgewiesen, nicht verrechnet",
+           "NICHT MESSBAR" in _dq and "GEMESSEN, nichts gefunden" in _dq,
+           "dieselbe Regel wie bei den Fremdquellen: ja / nein / NICHT "
+           "ERFAHREN. Auf 60 Tagen schlaegt die Messung erst ab 14 % an - "
+           "dort ist nichts widerlegt, dort wurde nicht hingesehen")
+
+    # ⚠️ UND DER BEFUND DARF NICHT STILL IN DIE MAIL WANDERN.
+    pruefe(P, "die Drift geht NICHT in die Mail - sie hat nichts gezeigt",
+           "messe_drift" not in _quelltext("agent/rollen_lauf.py")
+           and "messe_drift" not in _quelltext("agent/signal_mail.py"),
+           "ein Merkmal ohne nachgewiesene Wirkung in die Mail zu schreiben "
+           "hiesse, Rauschen als Erkenntnis zu verkaufen - der Trichter "
+           "steht dort, WEIL er widerlegbar ist")
+    pruefe(P, "die Ueberlebensverzerrung wird beim Namen genannt (B1)",
+           "Ausgefallene Werte fehlen VOLLSTAENDIG" in _dq,
+           "wer ausgefallen ist, waere im schlechtesten Fuenftel gelandet - "
+           "und fehlt")
+
     # ---- LEBENDIGKEIT: SAMMELN OHNE ZU URTEILEN (93 C, 19.08.2026) ----
     from agent import lebendigkeit as _LB
 

@@ -12226,3 +12226,99 @@ fehlt sie, ist es eine Lücke. Lauf: 8 Signale / 9 Mails / 0 Lücken.
 **Offen:** die Auswertung selbst. Frühestens in 30 Tagen (TVL) bzw. 12 Wochen
 (Entwickler) — vorher gibt es nichts zu sehen, und genau deshalb musste heute
 begonnen werden.
+
+
+---
+
+### 93.14 Stufe B gemessen — die Drift trägt nicht (19.08.2026), `messe_drift.py`
+
+**Ergebnis vorweg: kein Fenster trägt.** Das Werkzeug endet mit Rückgabe 2.
+Die Rangliste nach vergangener Drift sagt über die künftige nichts, was über
+Rauschen hinausgeht.
+
+#### Der Aufbau war der Einwand des Nutzers
+
+> *„du spannst wieder über alle Assets einer Kategorie den Schirm"*
+
+Ein Mittelwert über eine Kategorie **muss** null ergeben — er *ist* der
+Markt. Deshalb wird hier nicht die mittlere Drift gemessen, sondern eine
+**Rangliste quer über die Symbole am selben Tag**, und die Marktbewegung wird
+abgezogen. Nicht „Krypto steigt" (keine Auswahl), sondern „diese fünf steigen
+stärker als jene fünf" (eine Auswahl).
+
+**Und der t-Wert läuft über Termine, nicht über Anker.** 32 Symbole an 3.259
+Tagen sind keine 100.000 unabhängigen Fälle — an einem Tag bewegt sich alles
+gemeinsam. Je Termin **eine** Zahl, Schrittweite ein ganzer Horizont, damit
+auch die Termine sich nicht überlappen.
+
+#### Das Ergebnis
+
+| Rückblick | Horizont | Termine | Abstand | t |
+|---:|---:|---:|---:|---:|
+| 60 | 5 | 133 | −0,38 % | −0,63 |
+| 60 | 20 | 32 | −5,22 % | −1,85 |
+| 60 | 60 | 10 | −13,25 % | **−2,59** |
+| 120 | 5 | 121 | −0,11 % | −0,18 |
+| 250 | 5 | 95 | −0,13 % | −0,22 |
+| 250 | 20 | 23 | +0,82 % | +0,39 |
+
+**Ein Feld von neun liegt über |t| ≥ 2 — und genau eines ist bei neun Tests
+der Erwartungswert des Zufalls.** Die Schwelle wird deshalb auf |t| ≥ 2,77
+angehoben (Bonferroni); das Feld überlebt sie nicht. Es hat außerdem
+**negatives** Vorzeichen (Umkehr, nicht Fortsetzung) und steht auf **10**
+Terminen.
+
+#### ⚠️ Die Gegenprüfung, ohne die ein Nullbefund nichts wert ist
+
+**Positivkontrolle:** ein künstlicher Effekt von 3 % wird eingepflanzt. Das
+Werkzeug findet ihn auf fünf Tagen mit **t ≈ 8** — auf 60 Tagen **nicht**.
+Damit ist bewiesen, dass die Messung überhaupt etwas finden kann, **und wo
+sie blind ist**.
+
+#### Und deshalb sind nicht alle „Nichts" gleich viel wert
+
+Dieselbe Regel wie bei den Fremdquellen — **ja / nein / nicht erfahren**:
+
+| | |
+|---|---|
+| **GEMESSEN, nichts gefunden** | 60/5 · 120/5 · 250/5 — dort fällt schon ein Abstand von **1,7 %** auf, gefunden werden 0,1–0,4 %, mit falschem Vorzeichen |
+| **NICHT MESSBAR** | alle 20- und 60-Tage-Felder — sie schlagen erst ab 6 bis 21 % an. **Dort ist nichts widerlegt, dort wurde nicht hingesehen** |
+
+Bemerkenswert: das „auffällige" Feld 60/60 liegt mit 13,25 % **unter** seiner
+eigenen Nachweisgrenze von 14,2 % — es ist nach dem eigenen Maßstab des
+Werkzeugs Rauschen.
+
+#### Was daraus folgt — und was ausdrücklich NICHT gebaut wurde
+
+**Die Drift geht NICHT in die Mail.** Ein Merkmal ohne nachgewiesene Wirkung
+dort hineinzuschreiben hieße, Rauschen als Erkenntnis zu verkaufen. Der
+Trichter steht in der Mail, *weil* er widerlegbar ist und hält; die Drift
+steht nicht drin, *weil* sie geprüft wurde und nicht hält. Eine Paketprüfung
+hält fest, dass sie nicht verdrahtet ist.
+
+⚠️ **Überlebensverzerrung (B1) bleibt und ist hier zerstörerisch:**
+ausgefallene Werte fehlen vollständig — gerade sie wären im schlechtesten
+Fünftel gelandet.
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` (8 neue Prüfungen: Marktbereinigung · t über Termine ·
+Bonferroni · Positivkontrolle vorhanden · Nachweisgrenze ausgewiesen ·
+messbar/nicht-messbar getrennt · **nicht in der Mail verdrahtet** ·
+Überlebensverzerrung benannt). **1.213 Prüfungen** gesamt, 0 freie Namen,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
+
+#### Der Stand von Kapitel 93
+
+| Stufe | |
+|---|---|
+| **A / A1 / A2** | gebaut, in Produktion, hält |
+| **B** | **gemessen — trägt nicht.** Auf kurzen Horizonten belastbar widerlegt, auf langen nicht messbar |
+| **C** | sammelt seit 19.08. — auswertbar in 30 Tagen bzw. 12 Wochen |
+| **D** | offen, Deckelproblem ungeklärt |
+| **E** | hängt an C |
+
+**Was das für die Ausgangsfrage bedeutet.** *„Jeder Trade ist gleich gut"*
+bleibt bestehen. B war der Weg, der das Vorzeichen hätte drehen können — er
+tut es nicht. Übrig bleiben aus dem Grundbefund: **Nachrichten** (D, ungelöst)
+und **Kosten**. Und C, dessen Reihe gerade erst beginnt.
