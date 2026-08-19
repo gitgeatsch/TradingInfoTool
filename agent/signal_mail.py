@@ -172,6 +172,25 @@ def preis(wert: float) -> str:
 GEWOHNT = "im gewohnten Bereich"
 
 
+def auffaellige(zeilen) -> list:
+    """Die Perzentilzeilen, die NICHT im gewohnten Bereich liegen.
+
+    P1 aus Umbauplan Kapitel 91 (19.08.2026). Die Schwelle wird nicht
+    erfunden: `marktlage._einordnung` teilt bereits in gewohnt und
+    auffaellig, und gemessen sind 79 von 101 moeglichen Perzentilwerten
+    "gewohnt" - also rund ein Fuenftel auffaellig. Genau die Groessenordnung,
+    die die Literatur als "Extreme" meint.
+
+    ⚠️ KENNZEICHNUNG, KEINE ENTSCHEIDUNG. Ein Signal mit auffaelligem
+    Funding wird nicht eher versendet und keines ohne unterdrueckt. Erst
+    dadurch wird ueberhaupt MESSBAR, ob die dokumentierte Vorhersagekraft
+    der Extreme (Granger-Tests ueber 35,7 Mio. Minutenbeobachtungen) auch
+    bei UNS gilt - und erst danach darf daraus eine Unterscheidung werden.
+    Die Umkehrung dieser Reihenfolge hat den Deadloop erzeugt."""
+    return [z for z in (zeilen or [])
+            if "Perzentil" in z and GEWOHNT not in z]
+
+
 def ohne_gewohntes(zeilen: list | None, was: str = "Angaben") -> list[str]:
     """Nur was auffaellt - plus EIN Satz fuer den Rest.
 

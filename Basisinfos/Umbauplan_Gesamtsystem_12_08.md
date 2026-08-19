@@ -11881,3 +11881,53 @@ weiterhin mit Liquidationsangabe · Betreff ohne `(Hebel)` bei 1,0, mit bei
 höher · freie Namen 0 · drei Selbsttests · Darstellungstest ·
 **Ende zu Ende: 0 Widersprüche zwischen Betreff und gerechnetem Hebel** über
 alle Mails der Simulation · 9 Mails aus 4 Gruppen, 0 Fehler, 0 Lücken.
+
+### 91.10 P1 gebaut: die Extreme sind sichtbar (19.08.2026)
+
+**Kein Filter, keine Bevorzugung, kein Gate.** Nur Kennzeichnung.
+
+| | |
+|---|---|
+| `signal_mail.auffaellige(zeilen)` | zaehlt die Perzentilzeilen, die NICHT im gewohnten Bereich liegen |
+| `ui.formatting` | eine neue Klasse `auffaellig` - **fett, aber farbig** |
+
+**Die Schwelle wurde nicht erfunden.** `marktlage._einordnung` teilt bereits
+in gewohnt und auffaellig; gemessen sind **79 von 101** moeglichen
+Perzentilwerten gewohnt, also **22 auffaellig** - genau die Groessenordnung,
+die die Literatur als Extreme meint.
+
+**Fett, aber nicht schwarz.** Schwarz-fett sind die Handelsparameter - das,
+wonach gehandelt wird. Zwei Bedeutungen brauchen zwei Behandlungen:
+**schwarz = was du handelst, farbig = was auffaellt.** Kaeme beides in
+derselben Farbe, hiesse fett bald nichts mehr.
+
+**Gemessen an der Simulation:** 14 Mails, 14 auffaellige Zeilen - im Schnitt
+**eine je Mail**. Nicht null (dann waere die Kennzeichnung wertlos) und
+nicht in jeder Zeile (dann waere sie ein konstantes Feld, R-T6).
+
+#### ⚠️ Was P1 NICHT tut
+
+> Ein Signal mit auffaelligem Funding wird **nicht** eher versendet, eines
+> ohne **nicht** unterdrueckt. Toepfe, Cooldowns und Reihenfolge sind
+> unberuehrt, und das Modell erfaehrt nichts Neues - die Fakten standen
+> laengst im Prompt.
+
+**Der Zweck ist Messbarkeit:** erst wenn das Merkmal am Signal steht, laesst
+sich fragen, ob Signale mit auffaelligem Funding sich anders verhalten -
+gemessen am ueblichen Massstab, ob es die Basisrate schlaegt. **Erst bei
+einem Ja darf daraus eine Unterscheidung werden.** Die Umkehrung dieser
+Reihenfolge hat den Deadloop erzeugt.
+
+#### Und was damit weiterhin offen ist
+
+**Die Hauptfrage ist nicht beantwortet.** Bis hierher wurden Signale nur
+umgewandelt - jedes Signal, ob Spot oder Hebel, gilt weiterhin als gleich
+gut. P1 macht sichtbar, WO ein Extrem vorliegt; es sagt nicht, dass dort ein
+besserer Trade ist. Das beantwortet erst die Messung, und die braucht Zeit.
+
+**Gegenprueft:** 1.158 Pruefungen (7 neu) · auffaellig erkannt, gewohnt
+nicht · fett ohne Schwarz, Handelsparameter weiter schwarz · eine
+Zaehlfunktion · Kennzeichnung wird von `rollen_lauf` NICHT gelesen (kein
+Filter) · Anteil im erwarteten Band · freie Namen 0 · drei Selbsttests ·
+Darstellungstest · Simulation 9 Mails, 0 Fehler, 0 Luecken.
+

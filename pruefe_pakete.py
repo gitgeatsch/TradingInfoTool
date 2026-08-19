@@ -8913,6 +8913,47 @@ def paket_dimension() -> None:
     pruefe(P, "und nennt ihn, wo einer anfaellt",
            "(Hebel)" in _betreff(_mit_h))
 
+    # ---- P1 AUS KAPITEL 91: DIE EXTREME SICHTBAR MACHEN ----
+    from agent import marktlage as _ML3
+    from agent import signal_mail as _SM3
+    from ui import formatting as _F3
+
+    _A = "Die Rate steht im 96. Perzentil - aussergewoehnlich hoch."
+    _G = "Das Interesse steht im 50. Perzentil - im gewohnten Bereich."
+    pruefe(P, "auffaellige Perzentile werden erkannt",
+           _F3.classify_detail_line(_A) == "auffaellig")
+    pruefe(P, "gewohnte NICHT",
+           _F3.classify_detail_line(_G) != "auffaellig",
+           "sie werden ohnehin zu einer Zeile zusammengefasst - sie auch "
+           "noch fett zu setzen hiesse, jede Mail fett zu setzen")
+    pruefe(P, "fett, aber NICHT schwarz",
+           "font-weight:bold" in _F3.render_detail_html(_A)
+           and "#000000" not in _F3.render_detail_html(_A),
+           "schwarz-fett sind die Handelsparameter - zwei Bedeutungen "
+           "brauchen zwei Behandlungen, sonst heisst fett bald nichts mehr")
+    pruefe(P, "und die Handelsparameter bleiben schwarz",
+           "#000000" in _F3.render_detail_html("Stop            3,60 EUR"))
+    pruefe(P, "gezaehlt wird ueber EINE Funktion",
+           len(_SM3.auffaellige([_A, _G, "Stop 1"])) == 1,
+           "die Schwelle stammt aus marktlage._einordnung und wird nicht "
+           "neu gesetzt")
+
+    # ⚠️ P1 IST ABSICHTLICH FOLGENLOS. Kein Filter, keine Bevorzugung.
+    _q3 = _quelltext("agent/signal_mail.py")
+    pruefe(P, "die Kennzeichnung entscheidet nichts",
+           "def auffaellige(" in _q3
+           and "auffaellige(" not in _quelltext("agent/rollen_lauf.py"),
+           "ein Signal mit auffaelligem Funding wird nicht eher versendet "
+           "und keines ohne unterdrueckt - erst dadurch wird messbar, ob "
+           "die Extreme bei UNS tragen")
+
+    _gew = sum(1 for _p in range(101)
+               if _ML3._einordnung(_p) == _SM3.GEWOHNT)
+    pruefe(P, "rund ein Fuenftel der Perzentilwerte gilt als auffaellig",
+           15 <= 101 - _gew <= 30,
+           f"{101 - _gew} von 101 - genau die Groessenordnung, die die "
+           f"Literatur als Extreme meint (R-T6: kein konstantes Feld)")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

@@ -17053,3 +17053,33 @@ und action heisst weiter EROEFFNEN statt KAUFEN (44 Codestellen).
 Darstellungstest, Ende zu Ende null Widersprueche zwischen Betreff und
 gerechnetem Hebel, Simulation 9 Mails ohne Fehler.
 
+---
+
+## 2026-08-19 (2) - P1 GEBAUT: die Extreme sind sichtbar, kein Filter
+
+Volltext: Umbauplan 91.10.
+
+signal_mail.auffaellige() zaehlt die Perzentilzeilen, die nicht im
+gewohnten Bereich liegen; ui.formatting setzt sie fett, aber FARBIG - nicht
+schwarz, weil schwarz-fett die Handelsparameter sind. Schwarz = was du
+handelst, farbig = was auffaellt.
+
+Die Schwelle wurde nicht erfunden: marktlage._einordnung teilt bereits in
+gewohnt und auffaellig, gemessen 79 von 101 Werten gewohnt.
+
+Gemessen an der Simulation: 14 Mails, 14 auffaellige Zeilen, im Schnitt eine
+je Mail - nicht null und nicht in jeder Zeile.
+
+P1 ist absichtlich folgenlos: kein Filter, keine Bevorzugung, kein Gate. Der
+Zweck ist Messbarkeit - erst wenn das Merkmal am Signal steht, laesst sich
+fragen, ob auffaellige Signale sich anders verhalten. Erst bei einem Ja darf
+daraus eine Unterscheidung werden.
+
+OFFEN BLEIBT DIE HAUPTFRAGE, und der Nutzer hat sie erneut benannt: bis
+hierher wurden Signale nur umgewandelt, jedes gilt weiterhin als gleich gut.
+P1 macht sichtbar, WO ein Extrem vorliegt - nicht, dass dort ein besserer
+Trade ist.
+
+1.158 Pruefungen (7 neu), freie Namen 0, drei Selbsttests,
+Darstellungstest, Simulation 9 Mails ohne Fehler.
+

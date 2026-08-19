@@ -294,6 +294,17 @@ def classify_detail_line(line: str) -> str | None:
     # AM ERSTEN WORT ERKANNT, nicht am Vorkommen irgendwo: "Stop" steht
     # auch mitten in Saetzen ("der Trailing-Stop loest erst aus"), und die
     # sollen NICHT fett werden.
+    # ⚠️ AUFFAELLIGE PERZENTILE - FETT, ABER NICHT SCHWARZ (19.08.2026).
+    #
+    # Schwarz-fett sind die HANDELSPARAMETER (Einstiegszone, Stop, TP ...) -
+    # das, wonach gehandelt wird. Kaeme die Auffaelligkeit ebenfalls
+    # schwarz-fett dazu, hiesse "fett" bald nichts mehr. Zwei Bedeutungen,
+    # zwei Behandlungen: schwarz = was du handelst, farbig = was auffaellt.
+    #
+    # Die Schwelle stammt aus `marktlage._einordnung` und wird hier NICHT
+    # neu gesetzt - "im gewohnten Bereich" ist ihr Gegenwort.
+    if "Perzentil" in stripped and "im gewohnten Bereich" not in stripped:
+        return "auffaellig"
     if stripped.split(" ", 1)[0].rstrip(":") in HANDELSPARAMETER:
         return "handelsparameter"
     if stripped[0] in "⚠":
@@ -343,6 +354,9 @@ _HTML_STYLE_BY_TAG = {
     # Leser genau sie sucht - und sie sind das einzige in der Mail, wonach
     # tatsaechlich eine Order eingegeben wird.
     "handelsparameter": "font-weight:bold;color:#000000;",
+    # Fett wie die Handelsparameter, aber in einem eigenen Ton - der
+    # Leser soll die zwei Arten von "wichtig" auseinanderhalten koennen.
+    "auffaellig": "font-weight:bold;color:#8a5a00;",
     "warning": "font-weight:bold;color:#c0392b;",
     "risk_positiv": "color:#1a7f37;",
     "risk_neutral": "color:#4a4a4a;",
