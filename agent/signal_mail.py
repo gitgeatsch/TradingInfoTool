@@ -320,7 +320,20 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                             and aktion not in AKTIONEN_MIT_EINSTIEG)
     betreff = (f"TradingInfoTool: {symbol} - "
                + (dringend if _dringend_im_betreff else aktion)
-               + (" (Hebel)" if instrument == "hebel" else ""))
+               # ⚠️ DER BETREFF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026).
+               #
+               # Vorher stand hier `instrument == "hebel"` - also das
+               # Etikett des LAUFS. Seit S5 faellt in vier von fuenf Faellen
+               # Hebel 1,0 an, und der Betreff behauptete trotzdem ein
+               # Hebelgeschaeft. Drei Stellen sagten "Hebel", die Rechnung
+               # sagte nein.
+               #
+               # VORGEZOGEN AUS S6. Dort folgt das ganze Etikett der Zahl -
+               # Toepfe, Cooldowns, Datenbankwerte. Hier nur der Betreff,
+               # weil der Widerspruch sonst in jeder Mail steht.
+               + (" (Hebel)"
+                  if float((rechnung or {}).get("hebel") or 1.0) > 1.0
+                  else ""))
 
     kopf = [titel,
             f"Kurs {preis(kurs_eur)} EUR"

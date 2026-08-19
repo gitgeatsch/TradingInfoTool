@@ -17024,3 +17024,32 @@ zusammenlaufen.
 1.145 Pruefungen (2 neu), gegen die echte Notebook-Datenbank ausgefuehrt,
 freie Namen 0, Simulation 9 Mails ohne Fehler.
 
+---
+
+## 2026-08-19 - Hebelzeile immer, Betreff folgt der Zahl (vorgezogen aus S6)
+
+Volltext: Umbauplan 92.11. Nutzerfund an echten Mails: bei den
+Hebel-Signalen steht kein Hebel. Bestaetigt an AKT - EROEFFNEN (Hebel) vom
+19.08. 06:12: Stop 11,6 % (Rauschboden RM-1b/1c), keine Hebelzeile - weil
+bei diesem Stopabstand Hebel 0,52 anfaellt, auf 1,0 gesetzt wird und
+`if hebel > 1` die Zeile unterdrueckte.
+
+Drei Stellen behaupteten Hebel, eine sagte nein: der Betreff (aus dem Lauf),
+der Faktenblock (aus dem Hebel-Faktensatz) und die Rechnung (kein Hebel).
+Das ist F5 aus 88.5, eingetreten - der Fallstrick war benannt und nach S6
+verschoben, er zeigte sich in der ersten Nacht.
+
+Gebaut: die Hebelzeile steht IMMER da, auch bei 1,0 mit der Begruendung
+'kein Hebel noetig, der Betrag folgt dem Risikobudget'; und der Betreff
+folgt der ZAHL statt dem Lauf.
+
+AUSDRUECKLICH EIN ZWISCHENSCHRITT. Der Betreff ist aus S6 vorgezogen; dort
+folgt das ganze Etikett der Zahl - Toepfe, Cooldowns, Datenbankwerte,
+Aktionsvokabular. Weiterhin nicht stimmig: der Faktenblock erklaert
+Hebelfaktoren auch ohne Hebel, Topf und Cooldown richten sich nach dem Lauf,
+und action heisst weiter EROEFFNEN statt KAUFEN (44 Codestellen).
+
+1.151 Pruefungen (5 neu), freie Namen 0, drei Selbsttests,
+Darstellungstest, Ende zu Ende null Widersprueche zwischen Betreff und
+gerechnetem Hebel, Simulation 9 Mails ohne Fehler.
+

@@ -8879,6 +8879,40 @@ def paket_dimension() -> None:
            "wirksam - genau der Fall, der am 18.08. beim Schluessel "
            "risiko_pro_trade_prozent_hebel auffiel")
 
+    # ---- HEBEL: ZEILE UND BETREFF FOLGEN DER ZAHL (19.08.2026) ----
+    from agent import signal_mail as _SM2
+
+    def _mit(atr):
+        return _ER.rechne(kurs=100.0, atr=atr, risiko_eur=60.0,
+                          betrag_wunsch_eur=1000.0, instrument="hebel",
+                          umgeworfen_preis_eur=99.0, stop_min_atr=2.0)
+
+    _ohne_h, _mit_h = _mit(4.0), _mit(0.8)
+    pruefe(P, "bei Hebel 1,0 steht die Zeile TROTZDEM da",
+           any(z.strip().startswith("Hebel") for z in _ER.saetze(_ohne_h)),
+           "eine Mail OHNE Hebelzeile sieht aus wie eine, bei der die "
+           "Angabe vergessen wurde - nicht wie eine ohne Hebel. Nutzerfund "
+           "an einer echten AKT-Mail: Betreff Hebel, im Koerper keiner")
+    pruefe(P, "und sie sagt, warum es keinen braucht",
+           any("kein Hebel noetig" in z for z in _ER.saetze(_ohne_h)))
+    pruefe(P, "ueber 1,0 bleibt die alte Zeile mit Liquidation",
+           any("Liquidation etwa" in z for z in _ER.saetze(_mit_h)))
+
+    def _betreff(r):
+        return _SM2.baue_mail(symbol="AKT", name="AKT", kurs_eur=100.0,
+                              instrument="hebel", strategie="einstieg",
+                              rechnung=r,
+                              urteil={"aktion": "ERÖFFNEN",
+                                      "begruendung": "x"})[0]
+
+    pruefe(P, "der Betreff behauptet keinen Hebel, wo keiner ist",
+           "(Hebel)" not in _betreff(_ohne_h),
+           "vorher hing er am INSTRUMENT, also am Lauf - seit S5 faellt in "
+           "vier von fuenf Faellen 1,0 an, und drei Stellen sagten Hebel, "
+           "waehrend die Rechnung nein sagte")
+    pruefe(P, "und nennt ihn, wo einer anfaellt",
+           "(Hebel)" in _betreff(_mit_h))
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

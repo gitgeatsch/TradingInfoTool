@@ -810,9 +810,22 @@ def saetze(e: dict, marken: list | None = None,
          f"Betrag          {_eur(e['betrag_eur'])} EUR"
          + (f"  - begrenzt durch {e['betrag_gedeckelt_durch']}"
             if e.get("betrag_gedeckelt_durch") else "")]
+    # ⚠️ DIE ZEILE STEHT IMMER DA, AUCH BEI 1,0 (19.08.2026).
+    #
+    # Bis heute erschien sie nur bei `hebel > 1`. Seit S5 kommt in vier von
+    # fuenf Faellen 1,0 heraus - und eine Mail OHNE Hebelzeile sieht aus wie
+    # eine, bei der die Angabe vergessen wurde, nicht wie eine, bei der es
+    # keinen Hebel gibt. Nutzerfund an einer echten AKT-Mail: Betreff
+    # "EROEFFNEN (Hebel)", im Koerper kein Hebel.
+    #
+    # Dasselbe Muster wie `uebersprungen` bei Rolle G: das Fehlen einer
+    # Zeile ist keine Aussage, sondern eine Luecke.
     if e["hebel"] > 1:
         z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
                  f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR)")
+    elif e.get("instrument") == "hebel" or e.get("hebel") is not None:
+        z.append("Hebel           1,0x  - kein Hebel noetig, der Betrag "
+                 "folgt dem Risikobudget")
     z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
              f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
 

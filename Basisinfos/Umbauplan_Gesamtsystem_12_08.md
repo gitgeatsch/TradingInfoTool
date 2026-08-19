@@ -11822,3 +11822,62 @@ einzelnen Mails zu erschließen.**
 eingehängt · Trennung eingestellt/gemessen/erwartet festgehalten · gegen die
 echte Notebook-Datenbank ausgeführt · freie Namen 0 · Simulation 9 Mails aus 4
 Gruppen ohne Fehler.
+
+### 92.11 Der Hebel steht in der Mail — und der Betreff lügt nicht mehr (19.08.2026)
+
+**Nutzerfund an echten Mails:** *„bei den Hebel-Signalen steht kein Hebel."*
+Bestätigt an `AKT — ERÖFFNEN (Hebel)` vom 19.08. 06:12:
+
+```
+Stop            0,3885 EUR  (11,6 % - Rauschboden RM-1b/1c)
+Take-Profit     0,5348 bis 0,5475 EUR  (CRV 2,0)
+```
+
+Keine Hebel-Zeile — und das war **folgerichtig**: bei 11,6 % Stop ist
+`Hebel = 0,06 / 0,116 = 0,52` → auf 1,0 gesetzt → `if e["hebel"] > 1`
+unterdrückte die Zeile.
+
+#### Drei Stellen behaupteten Hebel, eine sagte nein
+
+| Stelle | sagte | Quelle |
+|---|---|---|
+| **Betreff** „(Hebel)" | Hebelgeschäft | der **Lauf** (`instrument == "hebel"`) |
+| **Faktenblock** | Hebelgeschäft | der **Hebel-Faktensatz** |
+| **Rechnung** | **kein Hebel** | die **Rechnung** |
+
+> **Das ist F5 aus 88.5, eingetreten.** Das Etikett kommt aus dem Lauf, die
+> Zahl aus der Rechnung — und S5 hat sie auseinandergebracht. Der Fallstrick
+> war benannt und nach S6 verschoben; er zeigte sich in der ersten Nacht.
+
+#### Gebaut
+
+| | |
+|---|---|
+| **Die Hebel-Zeile steht immer da** | auch bei 1,0: *„1,0x — kein Hebel nötig, der Betrag folgt dem Risikobudget"* |
+| **Der Betreff folgt der Zahl** | `(Hebel)` nur, wenn `rechnung["hebel"] > 1,0` |
+
+**Warum die Zeile und nicht nur der Betreff:** das Fehlen einer Zeile ist
+keine Aussage, sondern eine Lücke — dasselbe Muster wie `uebersprungen` bei
+Rolle G. Der Leser soll nicht aus einer Abwesenheit schließen müssen.
+
+#### ⚠️ Ein Zwischenschritt — und wo er endet
+
+**Der Betreff ist vorgezogen aus S6.** Dort folgt das **ganze** Etikett der
+Zahl: Töpfe, Cooldowns, Datenbankwerte, das Aktionsvokabular. Hier ist nur
+der Betreff korrigiert, weil der Widerspruch sonst in jeder Mail steht.
+
+**Was damit noch NICHT stimmt:**
+
+| | |
+|---|---|
+| **Der Faktenblock** erklärt weiter Hebelfaktoren, auch wenn keiner anfällt | S4 hat die Faktensätze vereinheitlicht, den *Text* nicht |
+| **Topf und Cooldown** richten sich weiter nach dem Lauf | S6 |
+| **`action`** heißt weiter `ERÖFFNEN` statt `KAUFEN` | S6, 44 Codestellen |
+
+#### Gegenprüfung
+
+1.151 Prüfungen (5 neu) · Zeile bei 1,0 vorhanden und begründet · über 1,0
+weiterhin mit Liquidationsangabe · Betreff ohne `(Hebel)` bei 1,0, mit bei
+höher · freie Namen 0 · drei Selbsttests · Darstellungstest ·
+**Ende zu Ende: 0 Widersprüche zwischen Betreff und gerechnetem Hebel** über
+alle Mails der Simulation · 9 Mails aus 4 Gruppen, 0 Fehler, 0 Lücken.
