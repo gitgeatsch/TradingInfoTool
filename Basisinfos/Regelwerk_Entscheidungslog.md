@@ -17118,3 +17118,32 @@ selbst. Die GitHub-Haelfte (Entwickleraktivitaet) ist davon unberuehrt,
 braucht aber eine Zuordnung Symbol -> Repository, und die gibt es nicht
 automatisch.
 
+---
+
+## 2026-08-19 (4) - KORREKTUR zur Abdeckungszahl: mein Abgleich war naiv
+
+Nutzereinwand: 'dass TAO fehlt ist kaum moeglich'. Er hatte recht.
+
+TAO steht im Katalog als `tao_bittensor`, nicht als `tao`. Mein Abgleich
+verglich den blanken Ticker in Grossbuchstaben gegen die Asset-Id und hat
+ihn deshalb uebersehen. Neben `tao_bittensor` fuehrt der Katalog auch
+`tao_fusotao` und `tao_taoevm.tao` - qualifizierte Ids, keine Ticker.
+
+DAMIT IST DIE GEGENRICHTUNG EBENSO FRAGLICH. Bei kurzen Tickern - S, W,
+BIO, CAT, MON - kann derselbe Abgleich in einem Katalog mit 6.075 Eintraegen
+genauso gut das FALSCHE Asset getroffen haben. Die Zahl '41 von 43
+abgedeckt' ist damit in beide Richtungen unbelegt und darf nicht
+weiterverwendet werden.
+
+WAS UNBERUEHRT BLEIBT, weil es direkt abgefragt und nicht aus dem Katalog
+geschlossen wurde: die Kennzahl AdrActCnt ist im Gratis-Tier praktisch
+BTC-only. SOL antwortet 'forbidden', AIOZ, GRIFFAIN und KAS 'bad parameter'
+auf den METRIK-Parameter, waehrend BTC 642.144 liefert. P2 bleibt aus diesem
+Grund gestoppt - nicht wegen der Abdeckungszahl.
+
+LEHRE, und sie steht schon im Regelwerk: 'Katalog ist keine Messung'. Ich
+habe sie zitiert und im selben Schritt gegen sie verstossen - der Katalog
+war meine Quelle fuer die Abdeckung, statt eines Abrufs je Symbol. Eine
+Zuordnung Ticker -> Asset-Id muss aufgebaut und geprueft werden, bevor
+irgendeine Abdeckungszahl genannt wird.
+
