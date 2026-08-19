@@ -2322,3 +2322,35 @@ dasselbe Objekt.
 verletzt die Konstruktionsbedingung der zweiten Stufe: Rolle G hat beides seit
 dem Morgen des 16.08., und ein Parameter gehört zu genau einem Modell.
 Begründung und die offene Entscheidung stehen im Umbauplan, Kapitel 38.1.
+
+
+## F-157 Momentum je Symbol: ein Feld von neun, nicht bestaetigt (20.08.2026)
+
+FRAGE: Sagt die vergangene Entwicklung eines Kryptowerts relativ zu den
+anderen etwas ueber seine kuenftige?
+
+GEMESSEN: Rangliste quer ueber 40 Symbole am selben Tag, marktbereinigt,
+3.290 Termine (2017-08-17 bis 2026-08-19), Newey-West-korrigiert, Schwelle
+aus 40 Placebo-Laeufen.
+
+BEFUND: 250 Tage Rueckblick / 5 Tage Horizont: +1,01 % Abstand zwischen
+bestem und schlechtestem Fuenftel, t = 3,20 - erstmals ueber der Schwelle
+3,05 und mit positivem Vorzeichen. 250/20 und 250/60 zeigen dieselbe
+Richtung, ohne die Schwelle zu erreichen.
+
+EINSCHRAENKUNG, DIE DEN BEFUND TRAEGT ODER STUERZT: das Signal liegt in der
+nachgeladenen Historie (t=3,21 vor 2024-07-17, t=1,57 danach). Diese Zeit ist
+auswahlverzerrt - die Reihen enthalten nur Werte, die es heute noch gibt, und
+ein Wert steht auf der Liste, WEIL er einmal gelaufen ist. NICHT BESTAETIGT.
+
+DER BELASTBARERE TEIL: 250 Tage Rueckblick / 60 Tage Horizont zeigt in
+beiden Zeitraeumen dasselbe Vorzeichen und ist im unbelasteten Teil
+signifikant (+10,70 %, t = 3,88, Nachweisgrenze 7,6 %). Auf 454
+ueberlappenden Terminen in zwei Jahren.
+
+FOLGE: kein Merkmal in der Mail. Weitermessen mit vorab festgelegten
+Varianten (ausgelassener letzter Monat, volatilitaetsskalierte Rendite) und
+auf einer anderen Anlageklasse.
+
+WERKZEUG: messe_drift.py (--ab/--bis fuer die Zeitaufteilung, --placebo fuer
+die Schwelle, --positivkontrolle fuer die Aussagekraft).

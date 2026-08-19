@@ -12442,3 +12442,118 @@ Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
 verschiedene Tage - die „zwei Tage alte" Kerze war für die Funktion einen Tag
 alt, und die Prüfung schlug fehl. **Eine Prüfung darf ihre Eingabe nicht aus
 einer anderen Quelle nehmen als die geprüfte Funktion.** Behoben.
+
+
+---
+
+### 93.17 Mehr Historie - und der erste positive Driftbefund (20.08.2026)
+
+**Werkzeug: `lade_historie_nach.py`.** Es hat **28.838 Kerzen** ergaenzt und
+die Zahl brauchbarer Kryptoreihen von **32 auf 40** gehoben.
+
+#### Die Wand war Krakens API, nicht unser Code
+
+25 Reihen endeten an demselben Tag: 733 Kerzen ab dem 17.07.2024. Krakens
+OHLC-Endpunkt gibt hoechstens 720 Punkte heraus. `api/boersen_klines.py`
+holte bei Binance/Bybit die letzten 1.000 - **ohne `startTime`**. Binance
+kennt den Parameter; man kann zurueckblaettern.
+
+| | vorher | nachher |
+|---|---:|---:|
+| ETH | 733 ab 2024-07-17 | **3.290 ab 2017-08-17** |
+| BNB | 448 ab 2025-04-22 | **3.209 ab 2017-11-06** |
+| XLM | 727 | 3.003 ab 2018-05-31 |
+| XNO | **0** | 1.665 ab 2022-01-28 |
+| IO, KAIA, KAITO, BRETT, SUPRA | **0** | 546 bis 854 |
+
+**Vier Symbole bleiben ohne Reihe** (AKT, GRIFFAIN, CANTON, VSN) - an keiner
+der beiden Boersen gelistet. Das ist eine Auskunft, kein Ausfall.
+
+#### Drei Sicherungen, jede aus einem alten Schaden
+
+| | |
+|---|---|
+| **Nie ueberschreiben, nur ergaenzen** | fuer MORPHO liefert Binance erst ab 2025-10-03, unsere Reihe reicht bis 2024-11-21. Wer hier „aktualisiert", verschlechtert |
+| **Ueberlappungsprobe** | mindestens 30 gemeinsame Tage, Median der Abweichung hoechstens 2 %. Gemessen lagen alle uebernommenen Reihen bei 0,00 bis 0,76 % |
+| **Preisprobe bei leerer Reihe** | hoechstens 5 % Abstand zum aktuellen Preis. Der abgeloeste yfinance-Rueckfall riet Ticker, drei von acht gehoerten einem toten Asset (IO: 269 %) |
+
+#### ⚠️ Der Fehler, den die erste Fassung machte
+
+Sie nahm den Vergleichspreis aus `price_cache` **der eigenen Datenbank** und
+lehnte vier Symbole ab - KAIA mit *„30 % Abweichung, das ist ein anderes
+Asset"*. Der Preis stammte vom **19.07.**, ueber einen Monat alt, weil die
+Produktion auf dem Notebook laeuft. Dazu kam: die Abfrage hatte **kein ORDER
+BY** und nahm eine beliebige von 31 gespeicherten Zeilen.
+
+Mit einem frisch geholten Preis betraegt die Abweichung derselben Reihe
+**0,4 %**. Die Ablehnung mass das Alter der eigenen Datenbank, nicht das
+Asset. **Ein Vergleichsmassstab muss frischer sein als das, was er prueft.**
+
+---
+
+#### Und dann kippte der B-Befund
+
+Dieselbe Messung wie am 19.08., nur auf 40 statt 32 Reihen und 3.290 statt
+733 Terminen:
+
+| Rueckblick/Horizont | Termine | Abstand | t |
+|---|---:|---:|---:|
+| **250/5** | 1.874 | **+1,01 %** | **3,20** |
+| 250/20 | 1.859 | +3,85 % | 2,54 |
+| 250/60 | 1.819 | +10,10 % | 1,58 |
+
+**Erstmals ein Feld ueber der Schwelle - und mit positivem Vorzeichen**
+(Fortsetzung, nicht Umkehr). Alle drei 250er-Horizonte zeigen dieselbe
+Richtung.
+
+#### ⚠️ Genau hier ist Misstrauen Pflicht
+
+**Die nachgeladene Historie enthaelt nur Werte, die es HEUTE noch gibt** - und
+ein Wert steht auf unserer Liste, *weil* er einmal gelaufen ist. Seine fruehe
+Historie enthaelt genau den Anstieg, der ihn bekannt gemacht hat. Das erzeugt
+Momentum aus der **Auswahl**, nicht aus dem Markt.
+
+Also aufgeteilt:
+
+| Zeitraum | 250/5 | 250/60 |
+|---|---|---|
+| **vor** 2024-07-17 (nachgeladen, Auswahl wirkt) | +1,46 %, t = **3,21** | +12,26 %, t = 1,13 |
+| **ab** 2024-07-17 (Bestand, Auswahl wirkt nicht) | +0,69 %, t = 1,57 | +10,70 %, t = **3,88** |
+
+**Das 250/5-Signal lebt in der nachgeladenen Zeit** - es ist mit der
+Auswahlverzerrung vereinbar und damit **nicht bestaetigt**.
+
+**250/60 zeigt in BEIDEN Zeitraeumen dasselbe Vorzeichen** und ist im
+unbelasteten Teil signifikant (t = 3,88, ueber der eigenen Nachweisgrenze von
+7,6 %). Das ist der belastbarere der beiden - aber auf 454 ueberlappenden
+Terminen in zwei Jahren, also wenigen unabhaengigen Beobachtungen.
+
+#### Der Placebo wurde neu gefahren - und die Schwelle NICHT gesenkt
+
+| Datenstand | empirische Schwelle | groesster Zufallswert |
+|---|---:|---:|
+| 32 Reihen, 733 Termine | 3,05 | 3,67 |
+| 40 Reihen, 2.064 Termine | **2,40** | 3,12 |
+
+Mit mehr Terminen werden die Raender zahmer - erwartbar. **Stehen bleibt die
+3,05.** Eine Schwelle unmittelbar nach einem positiven Fund zu senken waere
+genau die Bewegung, die dieses Projekt sich selbst verboten hat. Der Fund
+haelt ohnehin beide.
+
+#### Was das heisst - und was ausdruecklich noch nicht
+
+**Noch nichts fuer die Mail.** Ein Feld von neun, dessen staerkste Auspraegung
+in der auswahlbelasteten Zeit liegt, ist ein Anlass zum Weitermessen, kein
+Merkmal fuer eine Empfehlung. Die naechsten Schritte sind Punkt 3 des Plans:
+die vorab festgelegten Varianten (ausgelassener letzter Monat,
+volatilitaetsskalierte Rendite) und eine Wiederholung auf einer anderen
+Anlageklasse.
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` - 5 neue Pruefungen: nie ueberschreiben; jede Reihe wird
+gegengeprueft; **der Vergleichspreis kommt nicht aus der eigenen Datenbank**;
+die Drift laesst sich auf Zeitfenster einschraenken; die Schwelle wurde nach
+dem Fund nicht gesenkt. **1.223 Pruefungen** gesamt, 0 freie Namen,
+Darstellungstest, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken. Sicherung der
+Datenbank vor dem Schreiben angelegt.

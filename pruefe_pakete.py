@@ -9206,6 +9206,46 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- NACHGELADENE HISTORIE: NIE UEBERSCHREIBEN (93 B Punkt 2) ----
+    _hq = _quelltext("lade_historie_nach.py")
+
+    pruefe(P, "vorhandene Kerzen bleiben unberuehrt",
+           "INSERT OR IGNORE INTO price_history_ohlc" in _hq
+           and "UPDATE price_history_ohlc" not in _hq,
+           "MORPHO ist der Beleg: Binance liefert dort erst ab 2025-10-03, "
+           "die Datenbank reicht bis 2024-11-21. Wer aktualisiert, "
+           "verschlechtert")
+    pruefe(P, "jede Reihe wird vor dem Schreiben gegengeprueft",
+           "MAX_ABWEICHUNG_REIHE" in _hq and "MIN_UEBERLAPPUNG" in _hq
+           and "MAX_ABWEICHUNG_PREIS" in _hq,
+           "der abgeloeste yfinance-Rueckfall riet Ticker; drei von acht "
+           "gehoerten einem anderen, toten Asset - bei IO 269 % Abweichung")
+
+    # ⚠️ DER VERGLEICHSPREIS MUSS FRISCHER SEIN ALS DAS GEPRUEFTE.
+    pruefe(P, "der Vergleichspreis kommt NICHT aus der eigenen Datenbank",
+           "def preise_frisch" in _hq and "simple/price" in _hq
+           # Auf die ABFRAGE pruefen, nicht auf das Wort: der Docstring
+           # erklaert ausfuehrlich, warum price_cache NICHT genommen wird.
+           and "FROM price_cache" not in _hq,
+           "erste Fassung nahm price_cache und lehnte vier Symbole ab - "
+           "KAIA mit '30 % Abweichung, anderes Asset'. Der Preis war vom "
+           "19.07., ueber einen Monat alt, weil die Produktion auf dem "
+           "Notebook laeuft. Mit frischem Preis: 0,4 % Abweichung")
+
+    # ⚠️ EIN FUND IN NACHGELADENER ZEIT IST VERDAECHTIG.
+    _dq2 = _quelltext("messe_drift.py")
+    pruefe(P, "die Drift laesst sich auf Zeitfenster einschraenken",
+           '"--ab"' in _dq2 and '"--bis"' in _dq2,
+           "die nachgeladene Historie enthaelt nur Werte, die es HEUTE noch "
+           "gibt - ein Wert steht auf unserer Liste, WEIL er einmal gelaufen "
+           "ist. Jeder Fund muss auch auf der nicht nachgeladenen Zeit "
+           "stehen, sonst misst er die Auswahl")
+    pruefe(P, "und die Schwelle wurde nach dem Fund NICHT gesenkt",
+           "SCHWELLE_GEMESSEN = 3.05" in _dq2,
+           "auf den breiteren Daten misst der Placebo 2,40 - die strengere "
+           "3,05 bleibt stehen. Eine Schwelle unmittelbar nach einem "
+           "positiven Fund zu senken waere Rosinenpickerei")
+
     # ---- JEDER NEUE WERT SAGT, WAS GUT UND WAS SCHLECHT IST (20.08.) ----
     #
     # Nutzervorgabe: auch - und gerade - bei den noch ungeprueften Werten.

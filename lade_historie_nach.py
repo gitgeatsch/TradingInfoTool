@@ -1,177 +1,297 @@
-# -*- coding: utf-8 -*-
-"""Faehlende Kurshistorie VOR dem vorhandenen Bestand nachladen (L6, 12.08.2026).
+"""Mehr Kryptohistorie - rueckwaerts geblaettert (Umbauplan 93 B, Punkt 2)
 
-DER ANLASS. Beim Bau der Trendlage (Arbeitsstand 7.29) fiel auf, dass BTC in
-unserer Datenbank nur bis zum 17.07.2024 zurueckreicht - 733 Kerzen. Damit
-fehlen der Baerenmarkt 2022 und das Hoch 2021 vollstaendig. Was in frueheren
-Messungen als "Baerenphase" simuliert wurde, war der Rueckgang seit Juli 2025:
-ein Jahr, keine Marktphasen.
+DAS PROBLEM. 25 unserer Kryptoreihen enden an DERSELBEN Wand: 733 Kerzen ab
+dem 17.07.2024. Das ist kein Zufall und kein Fehler, sondern Krakens
+OHLC-Endpunkt - er gibt hoechstens 720 Punkte heraus. Fuer die Driftmessung
+(93 B) heisst das: zwei Jahre, EIN Regime, und an einem Termin oft nur 20
+vergleichbare Symbole. Bei 20 Symbolen besteht ein Fuenftel aus vier Werten.
 
-Der Grund ist die Quelle, nicht der Markt. Krakens OHLC-Endpunkt liefert rund
-720 Kerzen und keine aelteren - er kennt kein Blaettern in die Vergangenheit.
-Binance kennt es (`endTime`), und liefert je Abruf 1.000 Kerzen.
+DIE LOESUNG IST KEINE NEUE QUELLE, SONDERN EIN ZWEITER GRIFF IN DIE ALTE.
+`api/boersen_klines.py` holt bei Binance/Bybit die letzten 1.000 Kerzen -
+ohne `startTime`. Binance kennt den Parameter aber, man kann also
+zurueckblaettern. Live geprueft am 20.08.2026:
 
-DIE NAHT, und warum sie vertretbar ist. Der Bestand kommt von Kraken, die
-Ergaenzung von Binance. Das ist ein Bruch der Regel "genau EINE Quelle je
-Symbol", die in `api/boersen_klines.py` steht - deshalb hier die Begruendung,
-warum dieser Fall ein anderer ist:
+    BTC     ab 2017-08-17 (paginiert)      SUI  ab 2023-05-03 statt 2024-07-17
+    XNO     ab 2022-01-28, DB hatte NULL   IO   ab 2024-06-11, DB hatte NULL
 
-    Die Regel richtet sich gegen VERSCHRAENKUNG - zwei Quellen, die denselben
-    Zeitraum bedienen und einander zeilenweise ueberschreiben. Das ergibt eine
-    Reihe, die es an keiner Boerse gab. Hier gibt es dagegen einen sauberen
-    zeitlichen Schnitt: vor dem 17.07.2024 Binance, danach Kraken, kein Tag
-    doppelt.
+⚠️ UND EIN GEGENBEISPIEL, DAS DIE GANZE VORSICHT BEGRUENDET: fuer MORPHO
+liefert Binance erst ab 2025-10-03, waehrend die Datenbank bis 2024-11-21
+zurueckreicht. Wer hier "aktualisiert", verschlechtert. Deshalb wird NIE
+ueberschrieben, sondern ausschliesslich Fehlendes ergaenzt.
 
-    Und die Naht ist gemessen, nicht geschaetzt. Ueber die 733 ueberlappenden
-    Tage weichen beide Boersen im Median um 0,039 % voneinander ab, im 95.
-    Perzentil um 0,143 %, maximal um 0,617 %. Das liegt unter dem, was zwei
-    Abrufzeitpunkte an derselben Boerse auseinanderbringen.
+⚠️ DIE FALLE, DIE DIESES PROJEKT SCHON EINMAL ERWISCHT HAT. Der abgeloeste
+yfinance-Rueckfall riet Ticker nach dem Muster `<SYM>-USD`; drei von acht
+gehoerten einem anderen, toten Asset - bei IO waren es 269 % Abweichung. Hier
+wird deshalb JEDE Reihe gegengeprueft, bevor eine Zeile geschrieben wird:
 
-    Trotzdem wird die Herkunft MARKIERT: die nachgeladenen Zeilen tragen
-    `quelle='binance_historie'`. Eine Naht, die man in den Daten sieht, ist
-    eine andere Sache als eine, die man spaeter suchen muss.
+    Reihe schon da    Ueberlappung mit den vorhandenen Kerzen: mindestens 30
+                      gemeinsame Tage, Median der Abweichung hoechstens 2 %.
+                      Sonst ist es ein anderes Asset oder eine andere
+                      Preisbasis - und beides gehoert nicht in dieselbe Reihe.
+    Reihe leer        keine Ueberlappung moeglich, also gegen den aktuellen
+                      Preis von CoinGecko: hoechstens 5 % Abstand. Ohne
+                      Vergleichspreis wird NICHT geschrieben.
 
-NUR USD. Binance fuehrt BTCEUR erst seit dem 17.11.2023 - dort waere nichts zu
-holen. `lade_reihen_aus_db()` waehlt fuer BTC ohnehin USD (eine Waehrung je
-Symbol, USD bevorzugt), die Rollen-Ebene bekommt also die volle Reihe.
+⚠️ DER VERGLEICHSPREIS MUSS FRISCHER SEIN ALS DAS GEPRUEFTE. Die erste
+Fassung nahm ihn aus der eigenen Datenbank und lehnte vier Symbole ab - KAIA
+mit "30 % Abweichung, das ist ein anderes Asset". Der Preis stammte vom
+19.07., ueber einen Monat alt, weil die Produktion auf dem Notebook laeuft.
+Mit einem frisch geholten Preis betraegt die Abweichung 0,4 %. Die Ablehnung
+mass das Alter der eigenen Datenbank, nicht das Asset.
 
-BESTEHENDE ZEILEN WERDEN NIE ANGEFASST. `upsert_ohlc_points()` ueberschreibt
-bei Konflikt - deshalb filtert dieses Skript selbst auf Tage VOR dem aeltesten
-vorhandenen Datum. Ein Lauf kann den Bestand nicht verschlechtern.
+⚠️ EINE NAHT BLEIBT EINE NAHT. Aeltere Kerzen kommen von Binance, juengere
+von Kraken. Die Ueberlappungspruefung sagt, dass die beiden am selben Tag
+dasselbe meinen - sie macht sie nicht identisch. `quelle` haelt fest, woher
+jede Zeile stammt.
 
-    python lade_historie_nach.py BTC              # Trockenlauf, zeigt nur
-    python lade_historie_nach.py BTC --schreiben  # schreibt
+    python lade_historie_nach.py                 # nur berichten
+    python lade_historie_nach.py --schreiben     # nach Sicherung eintragen
 """
 from __future__ import annotations
 
 import argparse
+import io
+import json
+import os
+import shutil
 import sqlite3
 import sys
 import time
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
-import requests
+sys.path.insert(0, ".")
 
-DB = "data/tradinginfotool.db"
-URL = "https://api.binance.com/api/v3/klines"
+BINANCE = "https://api.binance.com/api/v3/klines"
+BYBIT = "https://api.bybit.com/v5/market/kline"
 MAX_KERZEN = 1000
-MAX_RUNDEN = 20          # 20.000 Kerzen - mehr Historie hat keine Boerse
+# Binance beginnt 2017; frueher gibt es dort nichts, und ein frueherer
+# Startpunkt kostet nur einen leeren Abruf.
+START_MS = 1483228800000  # 2017-01-01
+ABSTAND_S = 0.25
+
+# Die Gegenprobe. Zwei Prozent sind mehr als der Unterschied zweier Boersen
+# am selben Tag und weniger als jede Verwechslung, die dieses Projekt je
+# gesehen hat (IO: 269 %).
+MAX_ABWEICHUNG_REIHE = 0.02
+MAX_ABWEICHUNG_PREIS = 0.05
+MIN_UEBERLAPPUNG = 30
 
 
 def _tag(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date().isoformat()
 
 
-def hole_alles(paar: str, session: requests.Session) -> dict[str, list]:
-    """Rueckwaerts blaettern, bis die Boerse nichts Aelteres mehr hat."""
-    alle: dict[str, list] = {}
-    ende = None
-    for _ in range(MAX_RUNDEN):
-        p = {"symbol": paar, "interval": "1d", "limit": MAX_KERZEN}
-        if ende:
-            p["endTime"] = ende
-        r = session.get(URL, params=p, timeout=20)
+def hole_binance_alles(symbol: str, sitzung) -> list[tuple]:
+    """Alle Tageskerzen, vorwaerts geblaettert. (datum, o, h, l, c, v)."""
+    aus, start = [], START_MS
+    while True:
+        r = sitzung.get(BINANCE, params={
+            "symbol": f"{symbol}USDT", "interval": "1d",
+            "limit": MAX_KERZEN, "startTime": start}, timeout=25)
+        if r.status_code == 400:
+            # Das Paar gibt es dort nicht - eine Auskunft, kein Ausfall.
+            return []
         r.raise_for_status()
-        z = r.json() or []
-        if not z:
+        d = r.json() or []
+        if not d:
             break
-        for k in z:
-            alle[_tag(int(k[0]))] = k
-        ende = int(z[0][0]) - 1
-        if len(z) < MAX_KERZEN:
+        aus += [(_tag(int(z[0])), float(z[1]), float(z[2]), float(z[3]),
+                 float(z[4]), float(z[5])) for z in d]
+        if len(d) < MAX_KERZEN:
             break
-        time.sleep(0.25)
-    return alle
+        start = int(d[-1][0]) + 86_400_000
+        time.sleep(ABSTAND_S)
+    return aus
 
 
-def pruefe_taeglich(tage: list[str]) -> tuple[int, int]:
-    """Median- und Groesstabstand. Eine Reihe mit Loechern taugt nicht als
-    Historie - jeder Fensterindikator zaehlt Zeilen, nicht Kalendertage."""
-    d = [date.fromisoformat(t) for t in tage]
-    ab = sorted((d[i + 1] - d[i]).days for i in range(len(d) - 1))
-    return ab[len(ab) // 2], ab[-1]
+def hole_bybit_alles(symbol: str, sitzung) -> list[tuple]:
+    """Bybit als Rueckfall. Liefert absteigend und paginiert ueber `end`."""
+    aus, ende = [], None
+    while True:
+        p = {"category": "spot", "symbol": f"{symbol}USDT", "interval": "D",
+             "limit": MAX_KERZEN}
+        if ende is not None:
+            p["end"] = ende
+        r = sitzung.get(BYBIT, params=p, timeout=25)
+        r.raise_for_status()
+        liste = ((r.json().get("result") or {}).get("list")) or []
+        if not liste:
+            break
+        aus += [(_tag(int(z[0])), float(z[1]), float(z[2]), float(z[3]),
+                 float(z[4]), float(z[5])) for z in liste]
+        if len(liste) < MAX_KERZEN:
+            break
+        ende = int(liste[-1][0]) - 1
+        time.sleep(ABSTAND_S)
+    return sorted(set(aus))
+
+
+def _vorhanden(conn, symbol: str) -> dict:
+    return {r[0]: float(r[1]) for r in conn.execute(
+        "SELECT date, close FROM price_history_ohlc WHERE symbol = ? "
+        "AND currency = 'USD'", (symbol,))}
+
+
+def preise_frisch(ids: list[str], sitzung) -> dict:
+    """Aktuelle Preise von CoinGecko - EIN Abruf fuer alle.
+
+    ⚠️ WARUM NICHT AUS `price_cache` (Fund vom 20.08.2026). Genau das war die
+    erste Fassung, und sie hat vier Symbole zu Unrecht abgelehnt: KAIA mit
+    "30 % Abweichung - das ist ein anderes Asset". Der Vergleichspreis auf
+    dem Entwicklungsrechner stammte vom 19.07. - ueber einen Monat alt, weil
+    die Produktion auf dem Notebook laeuft. Dreissig Prozent in einem Monat
+    sind bei einem Kleinwert normal.
+
+    Die Ablehnung mass nicht das Asset, sondern das Alter der eigenen
+    Datenbank. Dazu kam ein zweiter Fehler: die Abfrage hatte kein ORDER BY
+    und nahm damit eine BELIEBIGE der 31 gespeicherten Zeilen.
+
+    Ein Vergleichsmassstab muss frischer sein als das, was er pruefen soll."""
+    if not ids:
+        return {}
+    try:
+        r = sitzung.get("https://api.coingecko.com/api/v3/simple/price",
+                        params={"ids": ",".join(sorted(set(ids))),
+                                "vs_currencies": "usd"}, timeout=30)
+        if r.status_code != 200:
+            return {}
+        return {k: float(v.get("usd")) for k, v in (r.json() or {}).items()
+                if v.get("usd")}
+    except Exception:                                        # noqa: BLE001
+        return {}
+
+
+def pruefe(neu: list[tuple], alt: dict, preis) -> tuple[bool, str]:
+    """Darf diese Reihe zu unserer dazu? DEFAULT IST NEIN."""
+    if not neu:
+        return False, "keine Kerzen von der Boerse"
+    gemeinsam = [(alt[d], c) for d, _o, _h, _l, c, _v in neu if d in alt]
+    if alt:
+        if len(gemeinsam) < MIN_UEBERLAPPUNG:
+            return False, (f"nur {len(gemeinsam)} gemeinsame Tage - zu wenig "
+                           f"fuer eine Gegenprobe")
+        ab = sorted(abs(a - b) / a for a, b in gemeinsam if a > 0)
+        med = ab[len(ab) // 2] if ab else 1.0
+        if med > MAX_ABWEICHUNG_REIHE:
+            return False, (f"Median der Abweichung {100 * med:.1f} % auf "
+                           f"{len(gemeinsam)} gemeinsamen Tagen - anderes "
+                           f"Asset oder andere Preisbasis")
+        return True, f"Ueberlappung {len(gemeinsam)} Tage, {100 * med:.2f} %"
+    # Leere Reihe: die einzige Gegenprobe ist der aktuelle Preis.
+    if not preis or preis <= 0:
+        return False, "Reihe leer UND kein Vergleichspreis - nicht pruefbar"
+    letzte = neu[-1][4]
+    ab = abs(letzte - preis) / preis
+    if ab > MAX_ABWEICHUNG_PREIS:
+        return False, (f"letzte Kerze {letzte:.6g} gegen Preis {preis:.6g} = "
+                       f"{100 * ab:.0f} % - das ist ein anderes Asset")
+    return True, f"Preisprobe {100 * ab:.1f} %"
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("symbol")
-    ap.add_argument("--waehrung", default="USD")
-    ap.add_argument("--paar", default=None, help="Boersensymbol, sonst <SYM>USDT")
-    ap.add_argument("--schreiben", action="store_true")
-    ap.add_argument("--db", default=DB)
-    a = ap.parse_args()
-    paar = a.paar or f"{a.symbol}USDT"
+    p = argparse.ArgumentParser()
+    p.add_argument("--db", default="data/tradinginfotool.db")
+    p.add_argument("--schreiben", action="store_true",
+                   help="ohne dieses Wort wird NUR berichtet")
+    p.add_argument("--nur", default="", help="Symbole, kommagetrennt")
+    p.add_argument("--datei", default="messwerte_historie.json")
+    a = p.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    con = sqlite3.connect(a.db)
-    n, aeltester, neuester = con.execute(
-        "SELECT COUNT(*), MIN(date), MAX(date) FROM price_history_ohlc "
-        "WHERE symbol=? AND currency=?", (a.symbol, a.waehrung)).fetchone()
-    if not n:
-        print(f"{a.symbol}/{a.waehrung} steht nicht in der Datenbank.")
-        return 1
-    print(f"Bestand  {a.symbol}/{a.waehrung}: {n} Zeilen  {aeltester} .. {neuester}")
+    import requests
 
-    print(f"Abruf    {paar} bei Binance ...")
-    alle = hole_alles(paar, requests.Session())
-    if not alle:
-        print("   nichts erhalten.")
-        return 1
-    tage = sorted(alle)
-    median, groesste = pruefe_taeglich(tage)
-    print(f"   {len(tage)} Kerzen  {tage[0]} .. {tage[-1]}  "
-          f"Median-Abstand {median}, groesste Luecke {groesste}")
-    if median != 1:
-        print("   ABBRUCH: keine Tageskerzen.")
-        return 1
+    import config as C
 
-    # Die Naht messen, bevor irgendetwas geschrieben wird
-    bestand = dict(con.execute(
-        "SELECT date, close FROM price_history_ohlc WHERE symbol=? AND currency=?",
-        (a.symbol, a.waehrung)))
-    gem = [(abs(float(alle[t][4]) - bestand[t]) / bestand[t] * 100.0)
-           for t in tage if t in bestand and bestand[t]]
-    if gem:
-        gem.sort()
-        print(f"   Naht ueber {len(gem)} ueberlappende Tage: Median "
-              f"{gem[len(gem)//2]:.3f} %  p95 {gem[int(.95*len(gem))]:.3f} %  "
-              f"max {gem[-1]:.3f} %")
+    wl = [x for x in C.get_watchlist()
+          if str(getattr(x, "assetklasse", "") or "").lower() == "krypto"
+          and not getattr(x, "ist_cash_aequivalent", False)]
+    if a.nur:
+        wunsch = {s.strip().upper() for s in a.nur.split(",")}
+        wl = [x for x in wl if x.symbol.upper() in wunsch]
+
+    print("=" * 78)
+    print("MEHR KRYPTOHISTORIE - rueckwaerts geblaettert (93 B, Punkt 2)")
+    print("=" * 78)
+    print(f"  {len(wl)} Kryptowerte   Datenbank: {a.db}")
+    if a.schreiben:
+        sicherung = f"{a.db}.vor_historie_{datetime.now(timezone.utc):%Y%m%d}"
+        if not os.path.exists(sicherung):
+            with sqlite3.connect(a.db) as q, sqlite3.connect(sicherung) as z:
+                q.backup(z)
+            print(f"  Sicherung angelegt: {os.path.basename(sicherung)}")
+        print("  SCHREIBMODUS - es wird NIE ueberschrieben, nur ergaenzt")
     else:
-        print("   KEINE Ueberlappung - die Naht ist ungeprueft. "
-              "Das ist ein Grund innezuhalten, kein Grund weiterzumachen.")
-        if a.schreiben:
-            return 1
+        print("  Nur Bericht. Zum Eintragen: --schreiben")
+    print("")
 
-    # NUR was vor dem Bestand liegt. Bestehende Zeilen bleiben unberuehrt.
-    neu = [t for t in tage if t < aeltester]
-    print(f"\nNachzuladen: {len(neu)} Tage vor {aeltester}"
-          + (f"  ({neu[0]} .. {neu[-1]})" if neu else ""))
-    if not neu:
-        print("   nichts zu tun.")
-        return 0
-    if not a.schreiben:
-        print("\nTROCKENLAUF - nichts geschrieben. Mit --schreiben ausfuehren.")
-        return 0
-
-    sys.path.insert(0, ".")
-    import database.db as db
-    from database.models import OhlcPoint
-    # `database.db` liest Spalten ueber den Namen (`r["name"]`) und setzt
-    # deshalb eine Row-Factory voraus. Ohne sie scheitert schon die
-    # Schema-Migration - vor jedem Schreibzugriff, weshalb der Fehlversuch
-    # den Bestand nicht angefasst hat.
-    con.row_factory = sqlite3.Row
+    conn = sqlite3.connect(a.db)
+    sitzung = requests.Session()
+    # Nur fuer Symbole OHNE eigene Reihe - dort ist der Preis die einzige
+    # moegliche Gegenprobe. Wo Kerzen liegen, prueft die Ueberlappung.
+    _leer = [x for x in wl if not _vorhanden(conn, x.symbol.upper())]
+    frisch = preise_frisch([getattr(x, "coingecko_id", None) for x in _leer
+                            if getattr(x, "coingecko_id", None)], sitzung)
+    if _leer:
+        print(f"  Vergleichspreise fuer {len(_leer)} Reihen ohne Historie: "
+              f"{len(frisch)} von CoinGecko geholt (frisch, nicht aus der "
+              f"eigenen Datenbank)\n")
     jetzt = datetime.now(timezone.utc).isoformat()
-    punkte = [OhlcPoint(symbol=a.symbol, currency=a.waehrung, date=t,
-                        open=float(alle[t][1]), high=float(alle[t][2]),
-                        low=float(alle[t][3]), close=float(alle[t][4]),
-                        volume=float(alle[t][5]), fetched_at=jetzt)
-              for t in neu]
-    db.upsert_ohlc_points(con, punkte, quelle="binance_historie")
-    con.commit()
-    n2, a2, b2 = con.execute(
-        "SELECT COUNT(*), MIN(date), MAX(date) FROM price_history_ohlc "
-        "WHERE symbol=? AND currency=?", (a.symbol, a.waehrung)).fetchone()
-    print(f"\nGeschrieben. Bestand jetzt: {n2} Zeilen  {a2} .. {b2}")
+    bericht, gewachsen, abgelehnt = [], 0, 0
+    for i, asset in enumerate(wl, 1):
+        sym = asset.symbol.upper()
+        alt = _vorhanden(conn, sym)
+        neu, quelle = [], "binance"
+        try:
+            neu = hole_binance_alles(sym, sitzung)
+            if not neu:
+                quelle = "bybit"
+                neu = hole_bybit_alles(sym, sitzung)
+        except Exception as exc:                             # noqa: BLE001
+            print(f"  {i:3d}/{len(wl)} {sym:9} FEHLER {type(exc).__name__} - "
+                  f"nicht erfahren, kein Nein")
+            bericht.append({"symbol": sym, "zustand": "fehler"})
+            continue
+        ok, grund = pruefe(neu, alt,
+                           frisch.get(getattr(asset, "coingecko_id", None)))
+        fehlend = [z for z in neu if z[0] not in alt]
+        if not ok:
+            print(f"  {i:3d}/{len(wl)} {sym:9} ABGELEHNT - {grund}")
+            bericht.append({"symbol": sym, "zustand": "abgelehnt",
+                            "grund": grund})
+            abgelehnt += 1
+            continue
+        aeltester_alt = min(alt) if alt else None
+        aeltester_neu = min(z[0] for z in neu)
+        print(f"  {i:3d}/{len(wl)} {sym:9} {len(alt):5} -> "
+              f"{len(alt) + len(fehlend):5} Kerzen  (+{len(fehlend):4})  "
+              f"ab {aeltester_alt or '-'} -> {min(aeltester_neu, aeltester_alt or aeltester_neu)}"
+              f"   [{quelle}, {grund}]")
+        bericht.append({"symbol": sym, "zustand": "ok", "quelle": quelle,
+                        "vorher": len(alt), "dazu": len(fehlend),
+                        "ab_neu": aeltester_neu, "grund": grund})
+        gewachsen += len(fehlend)
+        if a.schreiben and fehlend:
+            # ⚠️ INSERT OR IGNORE - eine vorhandene Kerze bleibt, wie sie
+            # ist. MORPHO ist der Beleg, warum: dort waere "aktualisieren"
+            # eine Verschlechterung gewesen.
+            conn.executemany(
+                "INSERT OR IGNORE INTO price_history_ohlc (symbol, currency, "
+                "date, open, high, low, close, volume, fetched_at, quelle) "
+                "VALUES (?, 'USD', ?, ?, ?, ?, ?, ?, ?, ?)",
+                [(sym, d, o, h, l, c, v, jetzt, quelle)
+                 for d, o, h, l, c, v in fehlend])
+            conn.commit()
+
+    print("\n" + "=" * 78)
+    print(f"  {gewachsen} Kerzen "
+          + ("eingetragen" if a.schreiben else "waeren einzutragen")
+          + f", {abgelehnt} Symbole abgelehnt")
+    if not a.schreiben:
+        print("  Nichts geschrieben. Mit --schreiben eintragen.")
+    print("=" * 78)
+    if a.datei:
+        io.open(a.datei, "w", encoding="utf-8").write(
+            json.dumps(bericht, ensure_ascii=False, indent=1))
     return 0
 
 

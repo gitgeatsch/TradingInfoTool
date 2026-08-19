@@ -93,3 +93,5 @@ kettennaht*.json
 messwerte_entwickler.csv
 messwerte_trichter.json
 messwerte_drift.json
+messwerte_historie.json
+*.db.vor_historie_*

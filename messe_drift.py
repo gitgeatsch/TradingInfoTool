@@ -83,6 +83,16 @@ HORIZONTE = (5, 20, 60)
 MINDEST_SYMBOLE = 10
 # Aus 40 Placebo-Laeufen gemessen (95. Perzentil der Hoechstwerte je Lauf).
 # NICHT geraten und NICHT aus der Tabelle - siehe Modul-Docstring.
+#
+# ⚠️ ZWEIMAL GEMESSEN, UND DER STRENGERE GILT (20.08.2026):
+#
+#     32 Reihen, 733 Termine    3,05   groesster Zufallswert 3,67
+#     40 Reihen, 2.064 Termine  2,40   groesster Zufallswert 3,12
+#
+# Mit mehr Terminen werden die Raender zahmer - das ist zu erwarten und kein
+# Widerspruch. Stehen bleibt die 3,05: eine Schwelle unmittelbar nach einem
+# positiven Fund zu SENKEN waere genau die Bewegung, die dieses Projekt sich
+# selbst verboten hat. Der Fund haelt ohnehin beide.
 SCHWELLE_GEMESSEN = 3.05
 FUENFTEL = 5
 
@@ -235,6 +245,8 @@ def main() -> int:
     p.add_argument("--nicht-ueberlappend", action="store_true",
                    dest="nicht_ueberlappend",
                    help="alte, konservative Fassung zum Vergleich")
+    p.add_argument("--ab", default="", help="nur Termine ab diesem Datum")
+    p.add_argument("--bis", default="", help="nur Termine bis dieses Datum")
     p.add_argument("--placebo", type=int, default=0,
                    help="N Laeufe mit zerwuerfelter Rangliste - prueft, ob "
                         "die Newey-West-Korrektur reicht")
@@ -253,6 +265,27 @@ def main() -> int:
               f"Rangliste keine. KEIN URTEIL.")
         return 1
     termine, tafel, symbole = _tafel(reihen)
+    # ⚠️ ZEITFENSTER - FUER DIE UEBERLEBENS-GEGENPROBE (20.08.2026).
+    #
+    # Die nachgeladene Historie reicht bis 2017 zurueck, enthaelt aber nur
+    # Werte, die es 2026 NOCH GIBT. Wer 2018 im besten Fuenftel stand und
+    # 2019 verschwand, fehlt. Schlimmer: ein Wert steht heute auf unserer
+    # Liste, WEIL er einmal gelaufen ist - seine fruehe Historie enthaelt
+    # genau den Anstieg, der ihn bekannt gemacht hat. Das erzeugt Momentum
+    # aus der Auswahl, nicht aus dem Markt.
+    #
+    # Deshalb muss jedes Ergebnis auf der ALTEN, nicht nachgeladenen Zeit
+    # wiederholbar sein - dort war die Zusammensetzung nicht rueckwirkend
+    # bestimmt.
+    if a.ab or a.bis:
+        maske = np.ones(len(termine), dtype=bool)
+        if a.ab:
+            maske &= termine >= a.ab
+        if a.bis:
+            maske &= termine < a.bis
+        termine, tafel = termine[maske], tafel[:, maske]
+        print(f"  ZEITFENSTER {a.ab or 'Anfang'} bis {a.bis or 'Ende'}: "
+              f"{len(termine)} Termine")
     laengen = sorted((int((~np.isnan(tafel[i])).sum()), s)
                      for i, s in enumerate(symbole))
     print(f"  {len(symbole)} Reihen, {len(termine)} Termine "

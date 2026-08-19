@@ -2809,3 +2809,54 @@ Verneinung - es koennte ein Fehlerkoerper mit Status 200 sein.
 
 ---
 
+
+## 2.43 Ein Vergleichsmassstab muss frischer sein als das Geprueffte (20.08.2026)
+
+`lade_historie_nach.py` prueft nachgeladene Kursreihen gegen einen aktuellen
+Preis - und nahm ihn zuerst aus `price_cache` der eigenen Datenbank. Vier
+Symbole wurden abgelehnt, KAIA mit "30 % Abweichung, das ist ein anderes
+Asset".
+
+Der Preis stammte vom 19.07., ueber einen Monat alt: die Produktion laeuft
+auf dem Notebook, der Entwicklungsrechner sieht ihre Daten nicht. Dreissig
+Prozent in einem Monat sind bei einem Kleinwert normal. Mit einem frisch
+geholten Preis betrug die Abweichung derselben Reihe 0,4 %.
+
+REGEL: wer eine Fremdquelle gegen die eigene Datenbank prueft, prueft zwei
+Dinge gleichzeitig - die Quelle UND das Alter der eigenen Daten. Der
+Massstab muss aus einer Quelle kommen, die mindestens so frisch ist wie das
+Geprueffte. Vgl. 2.36 (Datenstand gegen Abrufstand).
+
+ZWEITER FUND IM SELBEN ATEMZUG: die Abfrage hatte kein ORDER BY und nahm
+damit eine BELIEBIGE der 31 gespeicherten Zeilen. Eine Abfrage ohne
+Sortierung auf einer Tabelle mit Historie ist immer ein Fehler, auch wenn
+sie zufaellig oft richtig liegt.
+
+## 2.44 Ein Fund in nachgeladenen Daten ist zuerst verdaechtig (20.08.2026)
+
+Nach dem Nachladen von 28.838 Kerzen zeigte die Driftmessung erstmals einen
+signifikanten positiven Wert (250 Tage Rueckblick, 5 Tage Horizont, t=3,20).
+
+DIE PRUEFUNG, DIE DAZUGEHOERT: die nachgeladene Historie enthaelt nur Werte,
+die es HEUTE noch gibt - und ein Wert steht auf der Watchlist, WEIL er
+einmal gelaufen ist. Seine fruehe Historie enthaelt genau den Anstieg, der
+ihn bekannt gemacht hat. Das erzeugt Momentum aus der Auswahl.
+
+Deshalb wird jeder Fund auf zwei Zeitfenster aufgeteilt: die nachgeladene
+Zeit (Auswahl wirkt rueckwirkend) und die schon vorhandene (Auswahl wirkt
+nicht). Ein Fund, der nur im ersten steht, ist NICHT bestaetigt.
+
+Gemessen: 250/5 lebt in der nachgeladenen Zeit (t=3,21 davor, t=1,57 danach)
+- nicht bestaetigt. 250/60 zeigt in beiden dasselbe Vorzeichen und ist im
+unbelasteten Teil signifikant.
+
+## 2.45 Schwellen werden nicht nach dem Ergebnis angepasst (20.08.2026)
+
+Der Placebo-Lauf misst die Schwelle, gegen die ein Fund bestehen muss. Auf
+733 Terminen ergab er 3,05, auf 2.064 Terminen 2,40 - mit mehr Terminen
+werden die Raender zahmer, das ist erwartbar.
+
+Die 3,05 bleibt stehen. Eine Schwelle unmittelbar nach einem positiven Fund
+zu SENKEN ist Rosinenpickerei, auch wenn die neue Zahl besser gemessen ist.
+Wer sie senken will, muss es VOR dem naechsten Fund tun und begruenden.
+Eine Paketpruefung haelt den Wert fest.

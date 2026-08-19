@@ -17727,3 +17727,48 @@ Funktion. Behoben.
 
 GEPRUEFT: 1.218 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
 Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] MEHR KRYPTOHISTORIE NACHGELADEN - und der B-Befund kippt
+
+lade_historie_nach.py hat 28.838 Kerzen ergaenzt; brauchbare Kryptoreihen von
+32 auf 40. Die Wand bei 733 Kerzen ab 17.07.2024 war Krakens API-Grenze (720
+Punkte). api/boersen_klines.py holte bei Binance die letzten 1.000 OHNE
+startTime - Binance kennt den Parameter, man kann zurueckblaettern. ETH jetzt
+ab 2017, BNB ab 2017, XLM ab 2018; XNO, IO, KAIA, KAITO, BRETT, SUPRA hatten
+NULL und haben jetzt 546 bis 1.665.
+
+DREI SICHERUNGEN: nie ueberschreiben (MORPHO ist der Beleg - Binance liefert
+dort erst ab 2025-10-03, unsere Reihe ab 2024-11-21); Ueberlappungsprobe
+(mindestens 30 gemeinsame Tage, Median hoechstens 2 % - gemessen 0,00 bis
+0,76 %); Preisprobe bei leerer Reihe (hoechstens 5 %).
+
+DER FEHLER DER ERSTEN FASSUNG: Vergleichspreis aus price_cache der EIGENEN
+Datenbank. Vier Symbole abgelehnt, KAIA mit "30 % Abweichung, anderes
+Asset". Der Preis war vom 19.07. - ueber einen Monat alt, weil die Produktion
+auf dem Notebook laeuft; dazu eine Abfrage ohne ORDER BY, die eine beliebige
+von 31 Zeilen nahm. Mit frischem Preis: 0,4 %. Ein Vergleichsmassstab muss
+frischer sein als das, was er prueft.
+
+UND DANN KIPPTE B: auf 40 Reihen und 3.290 Terminen liegt 250/5 bei +1,01 %
+mit t = 3,20 - erstmals ueber der Schwelle, und mit POSITIVEM Vorzeichen.
+Alle drei 250er-Horizonte zeigen dieselbe Richtung.
+
+MISSTRAUEN WAR PFLICHT UND HAT GETRAGEN. Die nachgeladene Historie enthaelt
+nur Werte, die es heute noch gibt - und ein Wert steht auf unserer Liste,
+WEIL er einmal gelaufen ist. Aufgeteilt: 250/5 lebt in der nachgeladenen Zeit
+(t = 3,21 davor, t = 1,57 danach) - mit der Auswahlverzerrung vereinbar, also
+NICHT bestaetigt. 250/60 zeigt in BEIDEN Zeitraeumen dasselbe Vorzeichen und
+ist im unbelasteten Teil signifikant (+10,70 %, t = 3,88).
+
+PLACEBO NEU GEFAHREN: auf den breiteren Daten liegt die empirische Schwelle
+bei 2,40 statt 3,05. Die STRENGERE bleibt stehen - eine Schwelle unmittelbar
+nach einem positiven Fund zu senken waere Rosinenpickerei. Der Fund haelt
+ohnehin beide.
+
+NOCH NICHTS FUER DIE MAIL. Ein Feld von neun, dessen staerkste Auspraegung in
+der auswahlbelasteten Zeit liegt, ist ein Anlass zum Weitermessen, kein
+Merkmal fuer eine Empfehlung.
+
+GEPRUEFT: 1.223 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken. DB-Sicherung vor dem Schreiben.
