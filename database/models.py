@@ -451,6 +451,11 @@ class Signal:
     # wieder still den Lesepfad kappt.
     quelle_kette: str | None = None            # 'rollen' | None (alte Kette)
     unabhaengige_faktoren: int | None = None
+    # P1a (19.08.2026): die auffaelligen Perzentilzeilen der Mail, als JSON.
+    # Sie entscheiden nichts - sie halten fest, WO ein Extrem vorlag, damit
+    # spaeter messbar wird, ob Extreme tragen. Ohne dieses Feld waere die
+    # Kennzeichnung reine Anzeige und mit dem naechsten Umlauf vergessen.
+    auffaellige_json: str | None = None
     belege_json: str | None = None             # die Belege SELBST, nicht nur
                                                # ihre Anzahl (14.08.) - sonst
                                                # ist "warum erfolgte die

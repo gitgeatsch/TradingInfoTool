@@ -8940,12 +8940,18 @@ def paket_dimension() -> None:
 
     # ⚠️ P1 IST ABSICHTLICH FOLGENLOS. Kein Filter, keine Bevorzugung.
     _q3 = _quelltext("agent/signal_mail.py")
-    pruefe(P, "die Kennzeichnung entscheidet nichts",
-           "def auffaellige(" in _q3
-           and "auffaellige(" not in _quelltext("agent/rollen_lauf.py"),
-           "ein Signal mit auffaelligem Funding wird nicht eher versendet "
-           "und keines ohne unterdrueckt - erst dadurch wird messbar, ob "
-           "die Extreme bei UNS tragen")
+    # ⚠️ SEIT P1a WIRD SIE BENUTZT - zum SPEICHERN, nicht zum Filtern.
+    # Die alte Fassung verlangte, dass `auffaellige(` in rollen_lauf gar
+    # nicht vorkommt; das war richtig, solange nichts gespeichert wurde.
+    _qrl = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Kennzeichnung wird gespeichert",
+           'felder["auffaellige_json"]' in _qrl,
+           "ohne Speicherung waere sie reine Anzeige - und die Frage, ob "
+           "Extreme tragen, nie zu beantworten")
+    pruefe(P, "und sie entscheidet trotzdem nichts",
+           "if _auf" not in _qrl.replace('felder["auffaellige_json"]', "")
+           or "return" not in _qrl.split("_auf = SM.auffaellige")[-1][:400],
+           "kein Filter, keine Bevorzugung - nur ein Vermerk")
 
     _gew = sum(1 for _p in range(101)
                if _ML3._einordnung(_p) == _SM3.GEWOHNT)

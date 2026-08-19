@@ -421,6 +421,7 @@ _SPOT_SIGNAL_SPALTEN = (
     # Angabe, welche. Die Frage "warum erfolgte die Entscheidung, sind die
     # Parameter die richtigen" ist ohne diese Spalte nachtraeglich nicht zu
     # beantworten (`messe_begruendungen.py`).
+    "auffaellige_json, "
     "belege_json, "
     # DIE DREI GEMESSENEN FAKTENFAMILIEN (13.08., Kapitel 15). Sie sind das
     # Material fuer den Konstellationsschluessel der Trefferbilanz - ohne sie

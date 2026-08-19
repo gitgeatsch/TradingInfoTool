@@ -121,6 +121,17 @@ SPALTEN_SIGNAL = {
     # ALS JSON, nicht als Spalten. Fuenf Belege mal drei Felder waeren fuenfzehn
     # Spalten, deren Zahl vom Modell abhaengt; die alte Kette hat das mit
     # `top_grund_1..5` gemacht und dabei den sechsten stillschweigend verloren.
+    # DIE AUFFAELLIGEN PERZENTILE, ALS JSON (P1a, 19.08.2026, Kapitel 91).
+    #
+    # Bis heute war die Kennzeichnung reine ANZEIGE: die Mail setzte
+    # auffaellige Werte fett, und mit dem naechsten Umlauf war es vergessen.
+    # Damit konnte die einzige Frage, fuer die P1 gebaut wurde, nie gestellt
+    # werden: verhalten sich Signale mit auffaelligem Funding anders?
+    #
+    # Die Antwort braucht Signale, deren Ausgang NOCH OFFEN ist - jeder Tag
+    # ohne dieses Feld ist ein verlorener Tag. Es entscheidet nichts und
+    # filtert nichts; es haelt nur fest, was in der Mail ohnehin stand.
+    "auffaellige_json": "TEXT",
     "belege_json": "TEXT",
     "umgeworfen_durch": "TEXT",
     "umgeworfen_preis_eur": "REAL",

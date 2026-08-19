@@ -2569,7 +2569,21 @@ def _row_to_signal(row: sqlite3.Row) -> Signal:
     data["war_re_evaluierung_faellig"] = bool(data.get("war_re_evaluierung_faellig") or False)
     if data["umgesetzt"] is not None:
         data["umgesetzt"] = bool(data["umgesetzt"])
-    return Signal(**data)
+    # ⚠️ NUR FELDER, DIE `Signal` KENNT (19.08.2026).
+    #
+    # Vorher ging die ganze Zeile als `Signal(**data)` hinein - eine NEUE
+    # Spalte in der Tabelle liess damit den LESEPFAD abstuerzen, nicht das
+    # Schreiben. Genau so ist er nach der Migration schon einmal tot
+    # gewesen: `Signal` fehlten fuenfzehn Felder, und niemand hat es beim
+    # Anlegen der Spalten gemerkt.
+    #
+    # Eine Spalte, die `Signal` nicht kennt, ist kein Fehler - sie gehoert
+    # einer anderen Auswertung. Sie stillschweigend fallen zu lassen ist
+    # richtig; an ihr die Zeile zu verlieren waere es nicht.
+    import dataclasses as _dc
+
+    _bekannt = {f.name for f in _dc.fields(Signal)}
+    return Signal(**{k: v for k, v in data.items() if k in _bekannt})
 
 
 def get_latest_signal(conn: sqlite3.Connection, symbol: str) -> Signal | None:

@@ -32,6 +32,7 @@ hier steht nur die Reihenfolge und die Frage, was ein Fehlschlag bedeutet.
 """
 from __future__ import annotations
 
+import json as _json
 import logging
 from datetime import datetime, timezone
 
@@ -1419,6 +1420,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # Faktenblock der Mail gingen. Sie sind das einzige Material fuer den
         # Konstellationsschluessel, das NICHT die Entscheidung wiederholt.
         familien=kern)
+    # P1a (19.08.2026): die auffaelligen Perzentilzeilen der FERTIGEN Mail
+    # mitschreiben - dieselbe Quelle, die der Leser sieht. Sie neu zu
+    # bestimmen waere die zweite Stelle, an der beide auseinanderlaufen.
+    try:
+        _auf = SM.auffaellige((eintrag.get("text") or "").splitlines())
+        if _auf:
+            felder["auffaellige_json"] = _json.dumps(_auf, ensure_ascii=False)
+    except Exception as exc:                                 # noqa: BLE001
+        # KEIN GRUND, EIN SIGNAL ZU VERLIEREN. Das Merkmal ist eine
+        # Beobachtung, keine Voraussetzung.
+        ergebnis.setdefault("fehler", []).append(
+            f"{symbol}: Auffaelligkeiten nicht notiert: {exc}")
+
     signal_id = SA.schreibe_signal(conn, felder, symbol=symbol)
     eintrag["signal_id"] = signal_id
     ergebnis["signale"].append({"symbol": symbol, "id": signal_id,

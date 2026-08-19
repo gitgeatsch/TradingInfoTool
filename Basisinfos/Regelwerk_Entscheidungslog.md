@@ -17334,3 +17334,41 @@ Indikator je Symbol liefert, in `datenfrische` registriert (sonst wird die
 Quelle still nicht ueberwacht), mit Zwischenspeicher wegen der Ratenlimits
 und den drei Zustaenden bis in den Faktensatz.
 
+---
+
+## 2026-08-19 (10) - P1a GEBAUT: das Merkmal wird gespeichert
+
+P1 war bis heute HALB gebaut: die Mail setzte auffaellige Perzentile fett,
+gespeichert wurde nichts. Damit war die Kennzeichnung reine Anzeige und mit
+dem naechsten Umlauf vergessen - die Frage, fuer die P1 existiert (tragen
+die Extreme?), konnte nie gestellt werden. Jeder Tag ohne dieses Feld ist
+ein verlorener Tag, weil die Messung Signale mit noch offenem Ausgang
+braucht.
+
+Gebaut: Spalte `auffaellige_json` in signals, gefuellt aus der FERTIGEN
+Mail - derselben Quelle, die der Leser sieht. Sie neu zu bestimmen waere die
+zweite Stelle, an der beide auseinanderlaufen. Ein Fehler beim Notieren
+kostet kein Signal (die Beobachtung ist keine Voraussetzung).
+
+DREI FOLGEFEHLER, die die Pruefung gefunden hat und die ich sonst
+uebersehen haette:
+
+1. `db._row_to_signal` reichte die ganze Zeile als `Signal(**data)` weiter -
+   eine neue Spalte liess damit den LESEPFAD abstuerzen, nicht das
+   Schreiben. Genau so war er nach der Migration schon einmal tot.
+   Gehaertet: es gehen nur Felder hinein, die `Signal` kennt.
+2. Die Hausregel verlangt trotzdem, dass JEDE Spalte ein Feld hat - die
+   Haertung ist ein Netz, kein Ersatz. Feld in `Signal` nachgetragen.
+3. Der Export kannte die Spalte nicht. Nachgetragen.
+
+Und meine eigene P1-Pruefung war ueberholt: sie verlangte, dass
+`auffaellige(` in rollen_lauf GAR NICHT vorkommt. Das war richtig, solange
+nichts gespeichert wurde. Jetzt prueft sie, dass gespeichert und trotzdem
+nicht gefiltert wird.
+
+Ende zu Ende: 12 Signale, 2 mit Merkmal - beide mit einer
+Finanzierungsraten-Zeile ausserhalb des gewohnten Bereichs.
+
+1.168 Pruefungen, freie Namen 0, drei Selbsttests, Darstellungstest,
+Simulation 9 Mails ohne Fehler.
+
