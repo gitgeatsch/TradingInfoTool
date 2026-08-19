@@ -584,7 +584,20 @@ def _hebelgeometrie(atr: float, close: float,
     teile = [f"bei {S.de(h, 0)}-fach {S.de(100.0 / h, 0)} %, also "
              f"{S.de((float(close) / h) / float(atr), 1)} Schwankungsbreiten"
              for h in GRENZHEBEL]
-    return ["Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor: "
+    # ⚠️ BEDINGT FORMULIERT SEIT S5 (19.08.2026, Nutzerfund an echten Mails).
+    #
+    # Vorher begann der Satz mit "Der Abstand zur Zwangsaufloesung haengt
+    # allein am Hebelfaktor" - eine Feststellung, die ein Hebelgeschaeft
+    # UNTERSTELLT. Seit S5 faellt in vier von fuenf Faellen Hebel 1,0 an;
+    # der Faktenblock erklaerte dann Hebelfaktoren, waehrend die Rechnung
+    # zwei Abschnitte weiter "kein Hebel noetig" schrieb.
+    #
+    # DER TEXT BLEIBT VOLLSTAENDIG, nur die Voraussetzung wird genannt. Die
+    # Schranke fuer das Modell ("der Faktor wird erst nach der Entscheidung
+    # gerechnet") ist unberuehrt - sie ist der Grund, warum dieser Absatz
+    # ueberhaupt existiert.
+    return ["Falls ein Hebel noetig wird, haengt der Abstand zur "
+            "Zwangsaufloesung allein am Faktor: "
             + "; ".join(teile) + ".",
             # ⚠️ KEINE ANREDE AN DAS MODELL IN EINEM SATZ, DEN DER NUTZER
             # LIEST (17.08.2026, Nutzerpruefung einer BTC-Mail). Hier stand
@@ -599,7 +612,8 @@ def _hebelgeometrie(atr: float, close: float,
             # anspricht, schreibt fuer den anderen falsch.
             "Welcher Faktor es wird, folgt aus dem Risikobudget und dem "
             "gewaehlten Stopabstand - er wird erst nach der Entscheidung "
-            "gerechnet."]
+            "gerechnet und steht dann im Abschnitt DIE RECHNUNG. Faellt dort "
+            "1,0 an, ist es kein Hebelgeschaeft."]
 
 
 def _referenz(referenz: dict | None) -> list[str]:

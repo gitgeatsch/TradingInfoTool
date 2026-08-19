@@ -17408,3 +17408,35 @@ Hebeltopf - vorher waren es 4 im Hebeltopf.
 1.173 Pruefungen, freie Namen 0, drei Selbsttests, Darstellungstest,
 Simulation 9 Mails ohne Fehler.
 
+---
+
+## 2026-08-19 (12) - Der Faktenblock unterstellt kein Hebelgeschaeft mehr
+
+Der letzte sichtbare Widerspruch aus S5. `_hebelgeometrie` begann mit
+'Der Abstand zur Zwangsaufloesung haengt allein am Hebelfaktor' - eine
+FESTSTELLUNG. Seit S5 faellt in vier von fuenf Faellen Hebel 1,0 an; der
+Faktenblock erklaerte dann Hebelfaktoren, waehrend die Rechnung zwei
+Abschnitte weiter 'kein Hebel noetig' schrieb.
+
+GEAENDERT WURDE DIE VORAUSSETZUNG, NICHT DER INHALT: 'Falls ein Hebel
+noetig wird, haengt der Abstand zur Zwangsaufloesung allein am Faktor: ...'
+Dazu ein Verweis auf die Stelle, die es aufloest: '... steht dann im
+Abschnitt DIE RECHNUNG. Faellt dort 1,0 an, ist es kein Hebelgeschaeft.'
+
+DIE SCHRANKE FUER DAS MODELL BLEIBT UNBERUEHRT ('der Faktor wird erst nach
+der Entscheidung gerechnet') - sie ist der Grund, warum der Absatz
+ueberhaupt existiert, und eine bestehende Pruefung haelt sie fest.
+
+WARUM NICHT ENTFERNT: der Faktenblock geht an BEIDE Leser. Fuer das Modell
+ist die Aussage die Begruendung, warum es keinen Faktor nennen soll; fuer
+den Nutzer war sie eine falsche Unterstellung. Eine bedingte Formulierung
+bedient beide - eine Streichung haette die Schranke mitgenommen.
+
+Ende zu Ende: der Satz steht nur noch in Mails, deren Rechnung tatsaechlich
+einen Hebel ausweist (3,0 und 1,6 in der Simulation) - und dort ist er
+richtig.
+
+1.175 Pruefungen (2 neu), freie Namen 0, drei Selbsttests,
+Darstellungstest, Prompt-Matrix unveraendert, Simulation 9 Mails aus 4
+Gruppen ohne Fehler und ohne Luecke.
+

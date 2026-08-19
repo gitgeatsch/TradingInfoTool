@@ -7970,6 +7970,20 @@ def paket_btcmail() -> None:
            and "nach der Entscheidung" in _hg,
            "sie haelt das Modell davon ab, selbst einen Faktor zu waehlen")
 
+    # ⚠️ UND SIE UNTERSTELLT KEIN HEBELGESCHAEFT MEHR (19.08.2026).
+    # Vorher begann sie mit "Der Abstand ... haengt allein am Hebelfaktor" -
+    # eine Feststellung. Seit S5 faellt in vier von fuenf Faellen Hebel 1,0
+    # an, und der Faktenblock erklaerte dann Hebelfaktoren, waehrend die
+    # Rechnung zwei Abschnitte weiter "kein Hebel noetig" schrieb.
+    pruefe(P, "C: der Satz ist BEDINGT, nicht feststellend",
+           _hg.startswith("Falls ein Hebel noetig wird"),
+           "ein Faktenblock, der ein Hebelgeschaeft unterstellt, "
+           "widerspricht in vier von fuenf Mails der eigenen Rechnung")
+    pruefe(P, "C: und er verweist auf die Stelle, die es aufloest",
+           "DIE RECHNUNG" in _hg and "kein Hebelgeschaeft" in _hg,
+           "der Leser soll nicht raten muessen, wo die Bedingung "
+           "beantwortet wird")
+
     # --- D: Grammatik.
     _r = _ER.rechne(kurs=100.0, atr=2.0, risiko_eur=25.0, instrument="spot",
                     betrag_wunsch_eur=1000.0)
