@@ -8864,6 +8864,14 @@ def paket_dimension() -> None:
            "bis heute kannte der Export vom Umbau NICHTS - jede Auswertung "
            "waere auf Altdaten gelaufen und haette die alten Schluesse "
            "bestaetigt")
+    pruefe(P, "und schluesselt JE TAG auf, nicht nur als Summe",
+           '"je_tag"' in _ex,
+           "meine erste Fassung fasste sieben Tage zu einer Zahl "
+           "zusammen und verdeckte damit genau das, wofuer sie gebaut "
+           "war: die Umstellung lief am 18.08. gegen 20:00 an, und in "
+           "845 Signalen der Vorwoche gingen die ersten 78 danach "
+           "unter. Eine Kennzahl, die eine Aenderung glaettet, ist zur "
+           "Kontrolle einer Aenderung unbrauchbar")
     pruefe(P, "und trennt EINGESTELLT von GEMESSEN",
            '"eingestellt"' in _ex and '"gemessen"' in _ex
            and '"erwartet_nach_s5"' in _ex,

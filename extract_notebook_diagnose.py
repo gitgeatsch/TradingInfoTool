@@ -1543,6 +1543,44 @@ def _dimensionierung(conn) -> dict:
         },
     }
 
+    # ---- JE TAG, NICHT NUR ALS SUMME ----
+    #
+    # ⚠️ DER FEHLER MEINER ERSTEN FASSUNG (19.08.2026). Sie fasste sieben
+    # Tage zu EINER Zahl zusammen - und verdeckte damit genau das, wofuer
+    # sie gebaut war: die Umstellung lief am 18.08. gegen 20:00 an, und in
+    # 845 Signalen der Vorwoche gingen die ersten 78 danach unter. Der
+    # Abschnitt meldete "Hebel-Median 3,4", waehrend er seit der Umstellung
+    # bei 1,00 lag.
+    #
+    # Eine Kennzahl, die eine Aenderung glaettet, ist zur Kontrolle einer
+    # Aenderung unbrauchbar.
+    je_tag: dict = {}
+    for r in rows:
+        tag = str(r.get("created_at") or "")[:10]
+        if not tag:
+            continue
+        ein = (float(r["entry_eur_von"])
+               + float(r["entry_eur_bis"] or r["entry_eur_von"])) / 2
+        st_ = (float(r["stop_loss_eur_von"])
+               + float(r["stop_loss_eur_bis"] or r["stop_loss_eur_von"])) / 2
+        e = je_tag.setdefault(tag, {"n": 0, "stops": [], "hebel": []})
+        e["n"] += 1
+        if ein > 0:
+            e["stops"].append(abs(ein - st_) / ein)
+        if r.get("hebel") is not None:
+            e["hebel"].append(float(r["hebel"]))
+    aus["gemessen"]["je_tag"] = {
+        tag: {
+            "signale": e["n"],
+            "stopabstand_median": _q(e["stops"], 0.5),
+            "hebel_median": (round(_st.median(e["hebel"]), 2)
+                             if e["hebel"] else None),
+            "anteil_mit_hebel_prozent": (
+                round(100 * sum(1 for h in e["hebel"] if h > 1.0)
+                      / len(e["hebel"]), 1) if e["hebel"] else None),
+        }
+        for tag, e in sorted(je_tag.items(), reverse=True)}
+
     # ---- DIE ERWARTUNG AUS DER MESSUNG, damit man sie NICHT raten muss ----
     #
     # Gemessen an 58 Symbolen vor dem Umbau (Umbauplan 92.9): Stop 4-6 %
