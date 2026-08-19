@@ -11782,152 +11782,27 @@ k = 2,0 mit Marke) · freie Namen 0 · drei Selbsttests · Simulation 9 Mails au
 
 #### Rückfahrkarte
 
-Die beiden Konfigurationszeilen löschen — **ohne Codeänderung** ist der alte
-Zustand wieder da.
+> ⚠️ **KORREKTUR 19.08.2026 — dieser Absatz war FALSCH.** Er lautete: *„Die
+> beiden Konfigurationszeilen löschen — ohne Codeänderung ist der alte Zustand
+> wieder da."* Das stimmt nicht.
 
-### 92.10 Der NB-Export kennt den Umbau (18.08.2026)
+**Der Struktur-Boden steckt im CODE, nicht in der Konfiguration.** `_boeden`
+nimmt die Marke auf, sobald eine übergeben wird — unabhängig von
+`stop_min_atr`. Nachgerechnet (Kurs 100, ATR 4, Widerlegungspreis 99, Marke
+92, **ohne jede Konfiguration**):
 
-**Nutzerfrage: „was ist mit dem NB-Export zur Kontrolle?"** — berechtigt, und
-das Memory sagte es ausdrücklich: *der Export kennt vom Umbau nachgezählt
-NICHTS.*
+| | Stop | Regel | Hebel |
+|---|---:|---|---:|
+| ohne Marke | 3,00 % | Rauschboden | 5,0 |
+| **mit Marke** | **9,00 %** | **jenseits der nächsten Marke** | **1,7** |
 
-Neuer Abschnitt `dimensionierung` in `notebook_diagnose.json`:
+Die zwei Zeilen zu löschen ergäbe also einen **dritten Zustand** — weder den
+alten noch den neuen. Ein echter Rückbau bräuchte einen Schalter am
+`_boeden`-Aufruf, und das ist eine Codeänderung.
 
-| Block | Inhalt |
-|---|---|
-| **eingestellt** | `stop_min_atr`, Verlustanteil und Einsatz je Instrument — also was gelten **soll** |
-| **gemessen** | Stopabstand und Hebel der Signale der letzten sieben Tage — was **ankam** |
-| **erwartet_nach_s5** | die Zahlen aus 92.9, damit niemand raten muss |
+**Was die zwei Zeilen tatsächlich zurücknehmen:** den Rauschboden von 2,0 auf
+0,75 ATR und den Verlustanteil von 6 % auf 15 %. Das ist viel, aber nicht
+alles.
 
-> ⚠️ **Zwei Dinge, die nicht verwechselt werden dürfen.** Stimmen
-> *eingestellt* und *gemessen* nicht überein, ist die Einstellung **nicht
-> wirksam**. Genau dieser Fall — Konfiguration sagt eins, Verhalten macht ein
-> anderes — ist am 18.08. beim Schlüssel `risiko_pro_trade_prozent_hebel`
-> aufgefallen: config sagte 1 %, die Kette rechnete 5 %.
-
-**Und der Abschnitt hat sofort geliefert.** Gegen das Backup von 04:45:
-
-| | |
-|---|---:|
-| eingestellt | `stop_min_atr: 2,0` · Verlustanteil 6 % |
-| **gemessen** (618 Signale) | Hebel-Median **3,8** · **91,6 %** mit Hebel |
-| erwartet | Hebel-Median 1,0 · rund 44 % |
-
-Das ist **kein Fehler, sondern der Zweck**: das Backup ist von *vor* dem
-Einspielen. Nach dem nächsten Umlauf auf dem Notebook müssen die beiden Blöcke
-zusammenlaufen — **und wenn nicht, sieht man es in einer Zeile, statt es aus
-einzelnen Mails zu erschließen.**
-
-**Gegenprüft:** 1.145 Prüfungen (2 neu) · Abschnitt vorhanden und in die JSON
-eingehängt · Trennung eingestellt/gemessen/erwartet festgehalten · gegen die
-echte Notebook-Datenbank ausgeführt · freie Namen 0 · Simulation 9 Mails aus 4
-Gruppen ohne Fehler.
-
-### 92.11 Der Hebel steht in der Mail — und der Betreff lügt nicht mehr (19.08.2026)
-
-**Nutzerfund an echten Mails:** *„bei den Hebel-Signalen steht kein Hebel."*
-Bestätigt an `AKT — ERÖFFNEN (Hebel)` vom 19.08. 06:12:
-
-```
-Stop            0,3885 EUR  (11,6 % - Rauschboden RM-1b/1c)
-Take-Profit     0,5348 bis 0,5475 EUR  (CRV 2,0)
-```
-
-Keine Hebel-Zeile — und das war **folgerichtig**: bei 11,6 % Stop ist
-`Hebel = 0,06 / 0,116 = 0,52` → auf 1,0 gesetzt → `if e["hebel"] > 1`
-unterdrückte die Zeile.
-
-#### Drei Stellen behaupteten Hebel, eine sagte nein
-
-| Stelle | sagte | Quelle |
-|---|---|---|
-| **Betreff** „(Hebel)" | Hebelgeschäft | der **Lauf** (`instrument == "hebel"`) |
-| **Faktenblock** | Hebelgeschäft | der **Hebel-Faktensatz** |
-| **Rechnung** | **kein Hebel** | die **Rechnung** |
-
-> **Das ist F5 aus 88.5, eingetreten.** Das Etikett kommt aus dem Lauf, die
-> Zahl aus der Rechnung — und S5 hat sie auseinandergebracht. Der Fallstrick
-> war benannt und nach S6 verschoben; er zeigte sich in der ersten Nacht.
-
-#### Gebaut
-
-| | |
-|---|---|
-| **Die Hebel-Zeile steht immer da** | auch bei 1,0: *„1,0x — kein Hebel nötig, der Betrag folgt dem Risikobudget"* |
-| **Der Betreff folgt der Zahl** | `(Hebel)` nur, wenn `rechnung["hebel"] > 1,0` |
-
-**Warum die Zeile und nicht nur der Betreff:** das Fehlen einer Zeile ist
-keine Aussage, sondern eine Lücke — dasselbe Muster wie `uebersprungen` bei
-Rolle G. Der Leser soll nicht aus einer Abwesenheit schließen müssen.
-
-#### ⚠️ Ein Zwischenschritt — und wo er endet
-
-**Der Betreff ist vorgezogen aus S6.** Dort folgt das **ganze** Etikett der
-Zahl: Töpfe, Cooldowns, Datenbankwerte, das Aktionsvokabular. Hier ist nur
-der Betreff korrigiert, weil der Widerspruch sonst in jeder Mail steht.
-
-**Was damit noch NICHT stimmt:**
-
-| | |
-|---|---|
-| **Der Faktenblock** erklärt weiter Hebelfaktoren, auch wenn keiner anfällt | S4 hat die Faktensätze vereinheitlicht, den *Text* nicht |
-| **Topf und Cooldown** richten sich weiter nach dem Lauf | S6 |
-| **`action`** heißt weiter `ERÖFFNEN` statt `KAUFEN` | S6, 44 Codestellen |
-
-#### Gegenprüfung
-
-1.151 Prüfungen (5 neu) · Zeile bei 1,0 vorhanden und begründet · über 1,0
-weiterhin mit Liquidationsangabe · Betreff ohne `(Hebel)` bei 1,0, mit bei
-höher · freie Namen 0 · drei Selbsttests · Darstellungstest ·
-**Ende zu Ende: 0 Widersprüche zwischen Betreff und gerechnetem Hebel** über
-alle Mails der Simulation · 9 Mails aus 4 Gruppen, 0 Fehler, 0 Lücken.
-
-### 91.10 P1 gebaut: die Extreme sind sichtbar (19.08.2026)
-
-**Kein Filter, keine Bevorzugung, kein Gate.** Nur Kennzeichnung.
-
-| | |
-|---|---|
-| `signal_mail.auffaellige(zeilen)` | zaehlt die Perzentilzeilen, die NICHT im gewohnten Bereich liegen |
-| `ui.formatting` | eine neue Klasse `auffaellig` - **fett, aber farbig** |
-
-**Die Schwelle wurde nicht erfunden.** `marktlage._einordnung` teilt bereits
-in gewohnt und auffaellig; gemessen sind **79 von 101** moeglichen
-Perzentilwerten gewohnt, also **22 auffaellig** - genau die Groessenordnung,
-die die Literatur als Extreme meint.
-
-**Fett, aber nicht schwarz.** Schwarz-fett sind die Handelsparameter - das,
-wonach gehandelt wird. Zwei Bedeutungen brauchen zwei Behandlungen:
-**schwarz = was du handelst, farbig = was auffaellt.** Kaeme beides in
-derselben Farbe, hiesse fett bald nichts mehr.
-
-**Gemessen an der Simulation:** 14 Mails, 14 auffaellige Zeilen - im Schnitt
-**eine je Mail**. Nicht null (dann waere die Kennzeichnung wertlos) und
-nicht in jeder Zeile (dann waere sie ein konstantes Feld, R-T6).
-
-#### ⚠️ Was P1 NICHT tut
-
-> Ein Signal mit auffaelligem Funding wird **nicht** eher versendet, eines
-> ohne **nicht** unterdrueckt. Toepfe, Cooldowns und Reihenfolge sind
-> unberuehrt, und das Modell erfaehrt nichts Neues - die Fakten standen
-> laengst im Prompt.
-
-**Der Zweck ist Messbarkeit:** erst wenn das Merkmal am Signal steht, laesst
-sich fragen, ob Signale mit auffaelligem Funding sich anders verhalten -
-gemessen am ueblichen Massstab, ob es die Basisrate schlaegt. **Erst bei
-einem Ja darf daraus eine Unterscheidung werden.** Die Umkehrung dieser
-Reihenfolge hat den Deadloop erzeugt.
-
-#### Und was damit weiterhin offen ist
-
-**Die Hauptfrage ist nicht beantwortet.** Bis hierher wurden Signale nur
-umgewandelt - jedes Signal, ob Spot oder Hebel, gilt weiterhin als gleich
-gut. P1 macht sichtbar, WO ein Extrem vorliegt; es sagt nicht, dass dort ein
-besserer Trade ist. Das beantwortet erst die Messung, und die braucht Zeit.
-
-**Gegenprueft:** 1.158 Pruefungen (7 neu) · auffaellig erkannt, gewohnt
-nicht · fett ohne Schwarz, Handelsparameter weiter schwarz · eine
-Zaehlfunktion · Kennzeichnung wird von `rollen_lauf` NICHT gelesen (kein
-Filter) · Anteil im erwarteten Band · freie Namen 0 · drei Selbsttests ·
-Darstellungstest · Simulation 9 Mails, 0 Fehler, 0 Luecken.
-
+⚠️ **Die Lehre:** eine Rückfahrkarte gehört geprüft wie eine Änderung. Ich
+habe sie behauptet, ohne sie zu fahren.
