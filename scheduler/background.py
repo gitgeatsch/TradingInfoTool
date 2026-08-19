@@ -3279,6 +3279,30 @@ def hebel_screening_job(
                         )
                 except Exception:
                     logger.exception("Auto-Add unbekannter Hebel-Symbole fehlgeschlagen")
+            # ⚠️ EIN BITPANDA-AUSFALL DARF DIE KETTE NICHT MITNEHMEN
+            # (19.08.2026, echter Fehlerfall).
+            #
+            # Dieser try hatte nur ein `finally`. Ein 503 von
+            # /v1/wallets/transactions lief damit bis zum aeusseren Handler
+            # durch - und `fuehre_umlauf()` weiter unten wurde NIE ERREICHT.
+            # Ein Ausfall beim Nachlesen bestehender Brokerpositionen kostete
+            # so den KOMPLETTEN Umlauf: keine Urteile, keine Signale, keine
+            # Mails. Am 18.08. traf es 04:23, am selben Tag 12:53 erneut.
+            #
+            # DIE MELDUNG VERSCHLEIERTE ES ZUSAETZLICH: "Job hebel_screening
+            # fehlgeschlagen" liest sich wie ein Screening-Problem, und die
+            # 60-Minuten-Spamsperre versteckte die naechsten vier Umlaeufe.
+            #
+            # DER SYNC IST KONTEXT, NICHT DIE ARBEIT. Er liest, was beim
+            # Broker offen ist; die Arbeit ist die Urteilskette. Ein
+            # fehlender Abgleich soll den Lauf DEGRADIEREN, nicht absagen -
+            # dieselbe Regel, nach der Rolle G am 17.08. umgebaut wurde.
+            except Exception as exc:                         # noqa: BLE001
+                logger.warning(
+                    "Hebel-Positions-Abgleich uebersprungen (%s: %s) - die "
+                    "Kette laeuft weiter. Bestehende Brokerpositionen sind "
+                    "in diesem Umlauf moeglicherweise nicht aktuell.",
+                    type(exc).__name__, exc)
             finally:
                 conn.close()
 

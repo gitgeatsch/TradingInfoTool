@@ -17440,3 +17440,35 @@ richtig.
 Darstellungstest, Prompt-Matrix unveraendert, Simulation 9 Mails aus 4
 Gruppen ohne Fehler und ohne Luecke.
 
+---
+
+## 2026-08-19 (13) - Ein Bitpanda-Ausfall nimmt die Kette nicht mehr mit
+
+BEFUND VOM 18.08. (Nutzermail 'Job hebel_screening fehlgeschlagen', 503 von
+api.bitpanda.com/v1/wallets/transactions): der innere try um
+`sync_hebel_positions` hatte NUR ein `finally`, keinen Handler. Ein 503 lief
+damit bis zum aeusseren Handler durch - und `fuehre_umlauf()` weiter unten
+wurde NIE ERREICHT.
+
+Ein Ausfall beim Nachlesen bestehender Brokerpositionen kostete so den
+KOMPLETTEN Umlauf: keine Urteile, keine Signale, keine Mails. Am 18.08. traf
+es um 04:23 und um 12:53 erneut - Bitpanda hat sporadische 503er.
+
+DIE MELDUNG VERSCHLEIERTE ES: 'Job hebel_screening fehlgeschlagen' liest
+sich wie ein Screening-Problem, und die 60-Minuten-Spamsperre versteckte
+die naechsten vier Umlaeufe.
+
+BEHOBEN: der Abgleich bekommt einen eigenen Fehlerfang und meldet
+'Hebel-Positions-Abgleich uebersprungen ... die Kette laeuft weiter'. Der
+Sync ist KONTEXT, nicht die Arbeit - er liest, was beim Broker offen ist,
+die Arbeit ist die Urteilskette. Ein fehlender Abgleich soll den Lauf
+degradieren, nicht absagen; dieselbe Regel wie bei Rolle G am 17.08.
+
+Die Pruefung laeuft ueber den SYNTAXBAUM, nicht ueber den Text (Methodik
+2.41): sie sucht den try, der `sync_hebel_positions` umschliesst und NICHT
+`fuehre_umlauf`, und verlangt, dass er Handler hat. Ein `except` im
+Kommentar zu finden waere kein Nachweis.
+
+1.177 Pruefungen (2 neu), freie Namen 0, drei Selbsttests,
+Darstellungstest, Simulation 9 Mails aus 4 Gruppen ohne Fehler.
+

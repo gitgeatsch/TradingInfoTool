@@ -9074,6 +9074,40 @@ def paket_dimension() -> None:
            "ein Startwert, ausdruecklich zum Drehen - er gehoert dorthin, "
            "wo der Nutzer ihn findet")
 
+    # ---- EIN BITPANDA-AUSFALL DARF DIE KETTE NICHT MITNEHMEN ----
+    #
+    # AM SYNTAXBAUM GEPRUEFT, nicht am Text (Methodik 2.41): ein `except`
+    # im Kommentar zu finden waere kein Nachweis.
+    import ast as _ast2
+
+    _bg2 = _ast2.parse(io.open("scheduler/background.py",
+                               encoding="utf-8").read())
+    _job = next(n for n in _ast2.walk(_bg2)
+                if isinstance(n, _ast2.FunctionDef)
+                and n.name == "hebel_screening_job")
+    _sync_try = [n for n in _ast2.walk(_job) if isinstance(n, _ast2.Try)
+                 and any(isinstance(c, _ast2.Call)
+                         and isinstance(c.func, _ast2.Name)
+                         and c.func.id == "sync_hebel_positions"
+                         for c in _ast2.walk(n))]
+    _innen = [n for n in _sync_try
+              if not any(isinstance(c, _ast2.Call)
+                         and isinstance(c.func, _ast2.Name)
+                         and c.func.id == "fuehre_umlauf"
+                         for c in _ast2.walk(n))]
+    pruefe(P, "der Bitpanda-Abgleich hat einen eigenen Fehlerfang",
+           bool(_innen) and all(n.handlers for n in _innen),
+           "vorher hatte dieser try NUR ein finally - ein 503 lief bis zum "
+           "aeusseren Handler durch, und fuehre_umlauf() wurde NIE "
+           "erreicht. Ein Ausfall beim Nachlesen von Brokerpositionen "
+           "kostete den KOMPLETTEN Umlauf: keine Urteile, keine Signale, "
+           "keine Mails")
+    pruefe(P, "und er meldet, dass er uebersprungen hat",
+           "Hebel-Positions-Abgleich uebersprungen"
+           in _quelltext("scheduler/background.py"),
+           "fail-soft ist fail-silent - wer nicht drankam, muss sich vom "
+           "Rest unterscheiden lassen")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser
