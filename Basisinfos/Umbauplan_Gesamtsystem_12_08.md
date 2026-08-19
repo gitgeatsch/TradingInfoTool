@@ -12322,3 +12322,123 @@ Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
 bleibt bestehen. B war der Weg, der das Vorzeichen hätte drehen können — er
 tut es nicht. Übrig bleiben aus dem Grundbefund: **Nachrichten** (D, ungelöst)
 und **Kosten**. Und C, dessen Reihe gerade erst beginnt.
+
+
+---
+
+### 93.15 B2 - die Messung sieht jetzt hin (20.08.2026)
+
+**Die erste B-Fassung war blind, nicht falsch.** Sie nahm die Termine im
+Abstand eines ganzen Horizonts, damit die Vorwärtsrenditen sich nicht
+überlappen. Ehrlich, aber teuer: auf 20 Tagen blieben **32 Termine**, die
+Nachweisgrenze lag bei **7,8 %** je Trade. Ein „nichts gefunden" bei dieser
+Grenze heißt *nicht hingesehen*.
+
+⚠️ **Und mein Kopfsatz war zu breit.** Ich schrieb „32 Symbole an 3.259
+Tagen". Nachgezählt sind es **733 Tage mit mindestens 10 vergleichbaren
+Symbolen, 17.07.2024 bis 19.07.2026** - zwei Jahre, ein Regime.
+
+#### Was gebaut wurde
+
+**Jeder Tag ist ein Termin, der Standardfehler wird nach Newey-West
+korrigiert** (Bartlett-Gewichte, Lag = Überlappung). Das bringt **423 bis 668
+statt 7 bis 133** Termine. Die Korrektur bremst messbar - Faktor **1,7** auf
+fünf Tagen bis **5,3** auf sechzig, also genau dort am stärksten, wo die
+Überlappung am größten ist.
+
+| Rückblick/Horizont | Nachweisgrenze vorher | nachher |
+|---|---:|---:|
+| 250/20 | 5,8 % | **4,0 %** |
+| 60/20 | 7,8 % | 6,7 % |
+| 250/60 | kein Urteil | **7,6 %** |
+
+#### ⚠️ Eine Korrektur ist eine Behauptung - also wird sie geprüft
+
+`--placebo N` zerwürfelt die Rangliste und zerstört jeden Zusammenhang. Was
+dann noch anschlägt, ist der Fehler der Methode. **40 Läufe, 360 Felder:**
+
+- Anteil mit t ab 2,0: **5,3 %** (erwartet rund 5 %) - die Korrektur hält in
+  der Mitte der Verteilung
+- größter Zufalls-t-Wert: **3,67**
+- **empirische Schwelle** (95. Perzentil der Höchstwerte je Lauf): **3,05**
+
+**Die Tabellenschwelle 2,77 ist zu milde** - autokorrelierte Reihen haben
+dickere Ränder als die Normalverteilung. Es gilt jetzt der **gemessene** Wert.
+
+#### Das Ergebnis bleibt: nichts
+
+Größter echter t-Wert **1,72** gegen eine Schwelle von 3,05. Die
+Positivkontrolle findet jetzt schon einen eingepflanzten Effekt von **2 %**
+(vorher 3 %) - die Aussagekraft ist real gestiegen, das Ergebnis bleibt.
+
+**B ist damit belastbar geschlossen für kurze Horizonte und deutlich besser
+belegt für mittlere.** Offen bleibt: zwei Jahre, ein Regime, 20 bis 32
+Symbole. Bei 20 Symbolen besteht ein Fünftel aus vier Werten.
+
+---
+
+### 93.16 Die neuen Werte in der Mail - Kennzeichnung und Bewertung (20.08.)
+
+**Zwei Nutzervorgaben:** die neuen Werte müssen *auf einen Blick auffindbar*
+sein, und **jeder** von ihnen muss sagen, **was gut und was schlecht ist** -
+auch die noch ungeprüften.
+
+#### Drei Mängel, beim Nachsehen gefunden
+
+| | |
+|---|---|
+| **Der Trichter zerschnitt die sechs Handelsparameter** | er stand zwischen Take-Profit und Haltedauer - sieben Zeilen dazwischen machen aus der Tabelle eine Suche. **Jetzt steht er hinter allen sechs.** |
+| **Der Warnhinweis blieb grau** | das Warnzeichen stand *mitten* in der Zeile; `ui.formatting` setzt nur eine Zeile als Warnung, die damit **beginnt**. Jetzt eigene Zeile, fett rot |
+| **Keine Gut/Schlecht-Aussage** | die Zahlen standen unbewertet da |
+
+#### Was jetzt bewertet wird
+
+**Trichter - Stop und Ziel, in beide Richtungen:**
+
+```
+   Ihr Stop liegt 4,9 % entfernt - INNERHALB dieser Bewegung.
+Warnung: UNGUENSTIG - ein Stop im gewoehnlichen Rauschen wird auch dann
+   getroffen, wenn nichts gegen den Trade spricht.
+   Ihr Ziel liegt 9,9 % entfernt - innerhalb der ueblichen Bewegung von
+   20 Handelstagen.
+   GUENSTIG: ein Weg dieser Laenge kommt in diesem Zeitraum gewoehnlich vor.
+```
+
+**Lebendigkeit - auch ohne tragfähige Reihe:**
+
+```
+   Im Protokoll hinterlegtes Kapital: 300.255.868 USD
+   Zu lesen: ueber Wochen STEIGEND waere gut (das Projekt wird genutzt),
+   FALLEND schlecht. Der Pegel allein sagt wenig.
+Warnung: NOCH KEINE BEWERTUNG MOEGLICH - die eigene Reihe hat erst 1 von 30
+   noetigen Messungen. Bis dahin ist dies eine Beobachtung, kein Befund.
+```
+
+Sobald die Reihe trägt: `GUT: staerker` / `SCHLECHT: schwaecher` /
+`NEUTRAL: unveraendert`, jeweils mit Änderung und Zahl der Messungen.
+
+#### Wie es gesetzt wird - am gerenderten HTML geprüft
+
+| Zeile | Klasse | Darstellung |
+|---|---|---|
+| `Lebendigkeit des Projekts ...:` | `sub_header` | **fett schwarz** |
+| `Uebliche Kursbewegung ...:` | `sub_header` | **fett schwarz** |
+| Warnzeilen (UNGUENSTIG, KEINE BEWERTUNG) | `warning` | **fett rot** |
+| Einstiegszone, Stop, Take-Profit, Haltedauer, Betrag, Hebel | `handelsparameter` | **fett schwarz, zusammenhängend** |
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` - 5 neue Prüfungen: Trichter bewertet Stop **und** Ziel in
+beide Richtungen; die schlechte Nachricht steht am **Zeilenanfang** (sonst
+bleibt sie grau); **die sechs Parameter sind lückenlos benachbart**; die
+Lebendigkeit sagt es auch ohne tragfähige Reihe; GUT/SCHLECHT/NEUTRAL
+benannt. **1.218 Prüfungen** gesamt, 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
+
+#### Nebenbefund: eine Prüfung stolperte über Mitternacht
+
+`is_history_stale` rechnet in **UTC**, die Prüfung baute ihr Testdatum aus der
+**lokalen** Uhr. Zwischen Mitternacht und der UTC-Grenze sind das zwei
+verschiedene Tage - die „zwei Tage alte" Kerze war für die Funktion einen Tag
+alt, und die Prüfung schlug fehl. **Eine Prüfung darf ihre Eingabe nicht aus
+einer anderen Quelle nehmen als die geprüfte Funktion.** Behoben.

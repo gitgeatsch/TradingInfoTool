@@ -819,16 +819,6 @@ def saetze(e: dict, marken: list | None = None,
     # Sie steht NACH Stop und Ziel, weil sie die dortigen Zahlen einordnet:
     # ein Stop innerhalb der ueblichen Schwankung wird vom Zufall getroffen,
     # ein Ziel jenseits davon in der Zeit nicht erreicht.
-    try:
-        from agent import trichter as _TR
-
-        z += _TR.saetze(e.get("einstieg_eur"), e.get("atr"),
-                        stop_relativ=e.get("stop_relativ"),
-                        klasse=e.get("assetklasse"))
-    except Exception:                                        # noqa: BLE001
-        # KEIN GRUND, EINE MAIL ZU VERLIEREN. Fehlt der Trichter, fehlt eine
-        # Einordnung - nicht die Empfehlung.
-        pass
     if not e["crv_erreicht"]:
         z.append(f"                !! Der Weg bis dorthin traegt nur CRV "
                  f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")
@@ -858,6 +848,24 @@ def saetze(e: dict, marken: list | None = None,
                  "folgt dem Risikobudget")
     z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
              f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
+    # DER TRICHTER STEHT NACH DEN SECHS HANDELSPARAMETERN (20.08.2026).
+    #
+    # Er stand zuerst zwischen Take-Profit und Haltedauer und hat damit den
+    # Block zerschnitten, den der Nutzer am 17.08. ausdruecklich zusammen
+    # und fett sehen wollte: Einstiegszone, Stop, TP, Haltedauer, Betrag,
+    # Hebel. Sieben Zeilen dazwischen machen aus einer Tabelle eine Suche.
+    try:
+        from agent import trichter as _TR
+        z += _TR.saetze(e.get("einstieg_eur"), e.get("atr"),
+                        stop_relativ=e.get("stop_relativ"),
+                        ziel_relativ=(
+                            (e.get("ziel_eur") - e.get("einstieg_eur"))
+                            / e.get("einstieg_eur")
+                            if e.get("ziel_eur") and e.get("einstieg_eur")
+                            else None),
+                        klasse=e.get("assetklasse"))
+    except Exception:                                        # noqa: BLE001
+        pass
 
     # DIE LAGE - Information, kein Eingriff (15.08.2026).
     #

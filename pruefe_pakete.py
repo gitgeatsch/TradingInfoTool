@@ -6191,10 +6191,19 @@ def paket_15() -> None:
     # Fall traf zu. Einen Tag spaeter sind es drei, beide Schwellen
     # schlagen an, und die Pruefung scheiterte. Sie mass den Kalender
     # statt den Code und lief mit der Zeit ab.
-    from datetime import date as _d5
+    # ⚠️ ZWEITE KORREKTUR, 20.08.2026: DIESELBE UHR WIE DIE FUNKTION.
+    #
+    # Hier stand `date.today()` - die LOKALE Uhr. `is_history_stale` rechnet
+    # aber in UTC. Zwischen Mitternacht und der UTC-Grenze sind das zwei
+    # verschiedene Tage: die Pruefung baute eine "zwei Tage alte" Kerze, die
+    # fuer die Funktion einen Tag alt war, und schlug fehl - gefunden genau
+    # in dieser Stunde. Eine Pruefung darf ihre Eingabe nicht aus einer
+    # anderen Quelle nehmen als die geprueffte Funktion.
+    from datetime import datetime as _dt5
     from datetime import timedelta as _td5
+    from datetime import timezone as _tz5
 
-    _zwei_tage_alt = (_d5.today() - _td5(days=2)).isoformat()
+    _zwei_tage_alt = (_dt5.now(_tz5.utc).date() - _td5(days=2)).isoformat()
     pruefe(P, "und der echte Ausfall wuerde jetzt erkannt",
            ST5.is_history_stale(_zwei_tage_alt, schwelle_tage=1) is True
            and ST5.is_history_stale(_zwei_tage_alt) is False,
@@ -9197,6 +9206,54 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- JEDER NEUE WERT SAGT, WAS GUT UND WAS SCHLECHT IST (20.08.) ----
+    #
+    # Nutzervorgabe: auch - und gerade - bei den noch ungeprueften Werten.
+    # Eine Zahl ohne Einordnung zwingt den Leser, sich die Bedeutung selbst
+    # zu bauen, und dabei irrt er.
+    _eng = _TR.saetze(100.0, 4.0, stop_relativ=0.03, ziel_relativ=0.09,
+                      klasse="krypto")
+    _weit = _TR.saetze(100.0, 4.0, stop_relativ=0.20, ziel_relativ=0.50,
+                       klasse="krypto")
+    pruefe(P, "der Trichter bewertet Stop UND Ziel, in beide Richtungen",
+           any("UNGUENSTIG" in z for z in _eng)
+           and any("GUENSTIG: gewoehnliches Schwanken" in z for z in _weit)
+           and any("Ihr Ziel liegt" in z for z in _eng),
+           "ein Stop im Rauschen wird ohne Gegenargument getroffen, ein Ziel "
+           "jenseits der ueblichen Bewegung wird in der Zeit nicht erreicht "
+           "- beides folgt aus Zahlen, die ohnehin dastehen")
+    pruefe(P, "und die schlechte Nachricht steht am ZEILENANFANG",
+           all(z.lstrip().startswith("UNGUENSTIG") is False or
+               z.startswith("⚠️") for z in _eng + _weit),
+           "nur eine Zeile, die mit dem Warnzeichen BEGINNT, wird von "
+           "ui.formatting als Warnung gesetzt - steht es mitten im Satz, "
+           "bleibt die Zeile grauer Fliesstext")
+
+    # ⚠️ DIE SECHS HANDELSPARAMETER GEHOEREN ZUSAMMEN.
+    _mz = [z.split(" ", 1)[0].rstrip(":") for z in _ER.saetze(
+        _ER.rechne(kurs=100.0, atr=4.0, risiko_eur=60.0,
+                   betrag_wunsch_eur=1000.0, instrument="hebel",
+                   umgeworfen_preis_eur=95.0, assetklasse="krypto"))]
+    from ui import formatting as _FMT
+    _pos = [i for i, w in enumerate(_mz) if w in _FMT.HANDELSPARAMETER]
+    pruefe(P, "der Trichter zerschneidet die sechs Parameter NICHT",
+           bool(_pos) and (max(_pos) - min(_pos) + 1) == len(_pos),
+           "er stand zuerst zwischen Take-Profit und Haltedauer - sieben "
+           "Zeilen dazwischen machen aus der Tabelle eine Suche. Der Nutzer "
+           "wollte die sechs am 17.08. ausdruecklich zusammen und fett")
+
+    # ⚠️ AUCH DER UNGEPRUEFTE WERT SAGT, WAS GUT WAERE.
+    # Eigener Name: `_lq` entsteht erst weiter unten im Lebendigkeitsblock.
+    _lq0 = _quelltext("agent/lebendigkeit.py")
+    pruefe(P, "die Lebendigkeit sagt es AUCH ohne tragfaehige Reihe",
+           "STEIGEND waere gut" in _lq0 and "FALLEND schlecht" in _lq0
+           and "kein Befund" in _lq0,
+           "solange die Reihe zu kurz ist, gibt es keine Bewertung - aber "
+           "die Lesehilfe steht trotzdem da, sonst raet der Leser")
+    pruefe(P, "und benennt schwaecher als SCHLECHT, staerker als GUT",
+           "GUT: " in _lq0 and "SCHLECHT: " in _lq0
+           and "NEUTRAL: " in _lq0)
+
     # ---- DRIFT: DIE MESSUNG MUSS SICH SELBST MISSTRAUEN (93 B) ----
     _dq = _quelltext("messe_drift.py")
 
@@ -9206,7 +9263,8 @@ def paket_dimension() -> None:
            "der Markt. Genau dieser Einwand des Nutzers hat acht Messungen "
            "dieses Projekts erledigt")
     pruefe(P, "der t-Wert laeuft ueber TERMINE, nicht ueber Anker",
-           "for t in range(rueckblick, n_t - horizont, horizont)" in _dq,
+           "schritt = 1 if ueberlappend else horizont" in _dq
+           and "def _newey_west" in _dq,
            "32 Symbole an 500 Tagen sind keine 16.000 unabhaengigen Faelle - "
            "an einem Tag bewegt sich alles gemeinsam. Der Schritt ist ein "
            "ganzer Horizont, damit sich auch die Termine nicht ueberlappen")
@@ -9279,7 +9337,7 @@ def paket_dimension() -> None:
     # DER WARNHINWEIS IST DER NUTZERWUNSCH - er muss auch WEGGEHEN.
     _lq = _quelltext("agent/lebendigkeit.py")
     pruefe(P, "der Warnhinweis haengt an der Reihenlaenge, nicht an einem Schalter",
-           "NOCH KEINE RICHTUNGSAUSSAGE" in _lq
+           "NOCH KEINE BEWERTUNG MOEGLICH" in _lq
            and 'if r["tragfaehig"] and r["richtung"]:' in _lq,
            "er verschwindet von selbst, sobald genug Messungen da sind - "
            "niemand muss daran denken (Nutzerwunsch 19.08.)")

@@ -17674,3 +17674,56 @@ Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
 FOLGE FUER DIE AUSGANGSFRAGE: "jeder Trade ist gleich gut" bleibt bestehen.
 B war der Weg, der das Vorzeichen haette drehen koennen. Uebrig bleiben
 Nachrichten (D, ungeloest) und Kosten - und C, dessen Reihe erst beginnt.
+
+
+[2026-08-20] B2: DIE DRIFTMESSUNG SIEHT JETZT HIN - Ergebnis bleibt nichts
+
+Die erste Fassung war BLIND, nicht falsch: Termine im Abstand eines ganzen
+Horizonts, auf 20 Tagen nur 32 Termine, Nachweisgrenze 7,8 %. Ein "nichts
+gefunden" bei dieser Grenze heisst nicht hingesehen.
+
+KORREKTUR AM EIGENEN KOPFSATZ: ich schrieb "32 Symbole an 3.259 Tagen".
+Nachgezaehlt sind es 733 Tage mit mindestens 10 vergleichbaren Symbolen,
+17.07.2024 bis 19.07.2026 - zwei Jahre, EIN Regime.
+
+GEBAUT: jeder Tag ein Termin, Standardfehler nach Newey-West (Bartlett,
+Lag = Ueberlappung). 423 bis 668 statt 7 bis 133 Termine. Die Bremse waechst
+mit dem Horizont: Faktor 1,7 auf fuenf Tagen, 5,3 auf sechzig.
+
+DIE KORREKTUR IST EINE BEHAUPTUNG, ALSO WIRD SIE GEPRUEFT: 40 Placebo-Laeufe
+mit zerwuerfelter Rangliste, 360 Felder. 5,3 % mit t ab 2,0 (erwartet 5 %) -
+die Korrektur haelt. ABER: das 95. Perzentil der Hoechstwerte liegt bei 3,05,
+nicht bei der Tabellenschwelle 2,77. Autokorrelierte Reihen haben dickere
+Raender. Es gilt jetzt der GEMESSENE Wert.
+
+ERGEBNIS: groesster echter t-Wert 1,72 gegen Schwelle 3,05. Die
+Positivkontrolle findet jetzt 2 % statt 3 % - die Aussagekraft ist real
+gestiegen, das Ergebnis bleibt.
+
+[2026-08-20] DIE NEUEN WERTE IN DER MAIL - KENNZEICHNUNG UND BEWERTUNG
+
+Nutzervorgaben: auffindbar auf einen Blick, und JEDER neue Wert sagt, was gut
+und was schlecht ist - auch die ungeprueften.
+
+DREI MAENGEL GEFUNDEN: (1) der Trichter zerschnitt die sechs
+Handelsparameter, er stand zwischen Take-Profit und Haltedauer - jetzt
+dahinter. (2) Das Warnzeichen stand MITTEN in der Zeile; ui.formatting setzt
+nur als Warnung, was damit BEGINNT - die Zeile blieb grau. Jetzt eigene
+Zeile, fett rot. (3) Keine Gut/Schlecht-Aussage.
+
+JETZT BEWERTET: der Trichter Stop UND Ziel in beide Richtungen (ein Stop im
+Rauschen wird ohne Gegenargument getroffen; ein Ziel jenseits der ueblichen
+Bewegung wird in der Zeit nicht erreicht). Die Lebendigkeit sagt AUCH ohne
+tragfaehige Reihe, was gut waere - und dass es noch kein Befund ist.
+
+Am gerenderten HTML geprueft: Ueberschriften fett schwarz, Warnungen fett
+rot, die sechs Parameter fett schwarz und lueckenlos benachbart.
+
+NEBENBEFUND: eine Pruefung stolperte ueber Mitternacht. is_history_stale
+rechnet in UTC, die Pruefung baute ihr Testdatum aus der LOKALEN Uhr - die
+"zwei Tage alte" Kerze war fuer die Funktion einen Tag alt. Eine Pruefung
+darf ihre Eingabe nicht aus einer anderen Quelle nehmen als die geprueffte
+Funktion. Behoben.
+
+GEPRUEFT: 1.218 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.

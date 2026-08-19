@@ -159,6 +159,7 @@ def _grundlage_satz(klasse: str | None) -> str:
 
 def saetze(kurs: float, atr: float, anteil: float = 0.80,
            horizonte=HORIZONTE, stop_relativ: float | None = None,
+           ziel_relativ: float | None = None,
            klasse: str | None = None) -> list[str]:
     """Die Zeilen fuer die Mail. Leer, wenn nichts berechenbar ist.
 
@@ -198,20 +199,43 @@ def saetze(kurs: float, atr: float, anteil: float = 0.80,
         "   Der Trichter sagt WIE WEIT, nicht WOHIN. Er ist keine Prognose "
         "und wird breiter mit der Wurzel der Zeit, nicht linear.")
 
-    # ⚠️ DER EINE SATZ, DER DEN TRICHTER NUETZLICH MACHT.
+    # ⚠️ DIE SAETZE, DIE DEN TRICHTER NUETZLICH MACHEN - MIT BEWERTUNG.
     #
-    # Ein Stop innerhalb der ueblichen Bewegung wird vom gewoehnlichen Rauschen
-    # getroffen - ohne dass die These widerlegt waere. Das ist die Frage, die
-    # dieses Projekt seit dem Deadloop umkreist, und sie ist hier reine
-    # Arithmetik aus zwei Zahlen, die ohnehin in der Mail stehen.
+    # Nutzervorgabe 20.08.2026: bei jedem neuen Wert gehoert dazu, was daran
+    # GUT und was SCHLECHT ist. Eine Zahl ohne diese Einordnung zwingt den
+    # Leser, sich die Bedeutung selbst zu bauen - und dabei irrt er.
+    #
+    # Beides ist reine Arithmetik aus Zahlen, die ohnehin in der Mail
+    # stehen. Der Stop gegen das kurze Fenster, das Ziel gegen das mittlere:
+    # ein Stop im gewoehnlichen Rauschen wird getroffen, ohne dass die These
+    # widerlegt waere, und ein Ziel jenseits der ueblichen Bewegung wird in
+    # der geplanten Zeit meist nicht erreicht.
     if stop_relativ and stop_relativ > 0:
         eng = float(stop_relativ) < kurz["weite_relativ"]
+        aus.append(f"   Ihr Stop liegt {de(100 * float(stop_relativ), 1)} % "
+                   f"entfernt - " + ("INNERHALB" if eng else "ausserhalb")
+                   + " dieser Bewegung.")
         aus.append(
-            f"   Ihr Stop liegt {de(100 * float(stop_relativ), 1)} % entfernt "
-            + (f"und damit INNERHALB dieser Bewegung - er wird auch ohne "
-               f"Gegenargument getroffen." if eng else
-               f"und damit ausserhalb - gewoehnliches Schwanken allein "
-               f"erreicht ihn nicht."))
+            "⚠️ UNGUENSTIG: ein Stop im gewoehnlichen Rauschen wird auch "
+            "dann getroffen, wenn nichts gegen den Trade spricht."
+            if eng else
+            "   GUENSTIG: gewoehnliches Schwanken allein erreicht ihn nicht "
+            "- wer ihn ausloest, hat ein Argument geliefert.")
+    if ziel_relativ and ziel_relativ > 0:
+        # Das Ziel gegen das MITTLERE Fenster - eine Haltedauer von Wochen
+        # ist der Rahmen, in dem dieses System plant.
+        mittel = werte[1] if len(werte) > 1 else kurz
+        erreichbar = float(ziel_relativ) <= mittel["weite_relativ"]
+        aus.append(f"   Ihr Ziel liegt {de(100 * float(ziel_relativ), 1)} % "
+                   f"entfernt - " + ("innerhalb" if erreichbar else "JENSEITS")
+                   + f" der ueblichen Bewegung von "
+                   f"{de(mittel['horizont'], 0)} Handelstagen.")
+        aus.append(
+            "   GUENSTIG: ein Weg dieser Laenge kommt in diesem Zeitraum "
+            "gewoehnlich vor." if erreichbar else
+            "⚠️ UNGUENSTIG: ein Weg dieser Laenge ist in diesem Zeitraum die "
+            "Ausnahme - das Ziel braucht mehr Zeit oder mehr als eine "
+            "gewoehnliche Bewegung.")
 
     aus.append(_grundlage_satz(kurz["klasse"]))
     aus.append("   Nicht zu verwechseln mit 'Schwankungsbreiten' weiter oben "

@@ -198,16 +198,36 @@ def saetze(conn, symbol: str, assetklasse: str = "") -> list[str]:
         if r["jetzt"] is None:
             continue
         wert = de(r["jetzt"], 0) + einheit
+        teile.append(f"   {name}: {wert}")
+        # ⚠️ WAS IST DARAN GUT, WAS SCHLECHT? (Nutzervorgabe 20.08.2026)
+        #
+        # Auch - und gerade - beim ungeprueften Wert. Wer nur eine Zahl
+        # sieht, baut sich die Bedeutung selbst zusammen, und dabei irrt er.
+        # Hier heisst die Regel: der PEGEL sagt wenig, die RICHTUNG sagt
+        # etwas. Deshalb steht die Lesehilfe auch dann da, wenn wir die
+        # Richtung noch nicht nennen duerfen.
         if r["tragfaehig"] and r["richtung"]:
+            gut = {"staerker": ("   GUT: ", "wird mehr genutzt als zu Beginn "
+                                "der Reihe."),
+                   "schwaecher": ("⚠️ SCHLECHT: ", "wird weniger genutzt als "
+                                  "zu Beginn der Reihe."),
+                   "unveraendert": ("   NEUTRAL: ", "bewegt sich nicht - "
+                                    "weder Zerfall noch Zulauf.")}[
+                                        r["richtung"]]
             teile.append(
-                f"   {name}: {wert} - {r['richtung']} "
-                f"({de(100 * r['aenderung_relativ'], 0)} % gegenueber dem "
-                f"Beginn der Reihe, {de(r['beobachtungen'], 0)} Messungen).")
+                f"{gut[0]}{r['richtung']} ({de(100 * r['aenderung_relativ'], 0)}"
+                f" % gegenueber dem Beginn, {de(r['beobachtungen'], 0)} "
+                f"Messungen) - das Projekt {gut[1]}")
         else:
             teile.append(
-                f"   {name}: {wert}. ⚠️ NOCH KEINE RICHTUNGSAUSSAGE - die "
-                f"eigene Reihe hat erst {de(r['beobachtungen'], 0)} von "
-                f"{de(r['noetig'], 0)} noetigen Messungen.")
+                "   Zu lesen: ueber Wochen STEIGEND waere gut (das Projekt "
+                "wird genutzt), FALLEND schlecht. Der Pegel allein sagt "
+                "wenig - er haengt an der Groesse des Projekts.")
+            teile.append(
+                f"⚠️ NOCH KEINE BEWERTUNG MOEGLICH - die eigene Reihe hat "
+                f"erst {de(r['beobachtungen'], 0)} von {de(r['noetig'], 0)} "
+                f"noetigen Messungen. Bis dahin ist dies eine Beobachtung, "
+                f"kein Befund.")
     if not teile:
         return []
     return (["Lebendigkeit des Projekts (Merkmal, kein Urteil):"] + teile
