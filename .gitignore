@@ -91,3 +91,4 @@ kettennaht*.json
 *.db-wal
 *.db-shm
 messwerte_entwickler.csv
+messwerte_trichter.json

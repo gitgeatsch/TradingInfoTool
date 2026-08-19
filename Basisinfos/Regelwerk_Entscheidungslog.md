@@ -17553,3 +17553,48 @@ Simulation meldet einen fehlenden Trichter ab sofort als Luecke.
 
 OFFEN: Trefferquote laufend mitmessen (Fallstrick A2), Ueberlebensverzerrung
 bleibt (der echte Trichter ist breiter), Stufen B bis E.
+
+
+[2026-08-19] TREFFERQUOTENMESSUNG (A2) GEBAUT - und sie hat den eigenen
+Trichter widerlegt (messe_trichter_treffer.py)
+
+Der Trichter behauptet "80 von 100". Eine widerlegbare Aussage, die niemand
+nachrechnet, ist wieder nur eine Behauptung - also Walk-Forward (Faktor NUR
+aus der Zeit davor), Gegenprobe auf konstanter Besetzung, und eine
+Rauschgrenze auf der WIRKSAMEN Ankerzahl (n/Horizont, weil taegliche Anker
+sich ueberlappen).
+
+DIE GEGENPROBE HAT EINEN FEHLSCHLUSS VERHINDERT. Erster Befund: "2025/26
+liegt bei 86 % statt 80 %" - das sah nach ALTERUNG aus. Auf konstanter
+Besetzung war die Quote dort NIEDRIGER. Es war die ZUSAMMENSETZUNG: die
+juengeren Bloecke sind kryptolastig. Ohne Gegenprobe haette ich eine
+Anlageklasse als Zeitverlauf wegkalibriert.
+
+DER ECHTE FEHLER: vier interne Hilfsreihen (_THEMEN_ETF_BENCHMARK_SPY, drei
+_ROHSTOFF_FUTURES) steckten in der Kalibrierung. Fuer sie entsteht nie eine
+Mail, aber sie reichen bis 2001 zurueck und stellten die HAELFTE aller
+Anker. Der Faktor 0,98 war zur Haelfte auf Werten gewachsen, die das System
+nicht handelt.
+
+EIN FAKTOR FUER ALLE WAR FALSCH - und zwar fuer jede Klasse einzeln:
+krypto 87,5 % (eigener Faktor 0,79), aktien 83,8 % (0,91), etf 72,7 %
+(1,18). Ueber einen zwoelffachen Horizont stabil, also Klasseneigenschaft
+und keine Streuung. Damit ist auch Fallstrick A1 ("je Asset oder global?")
+nicht mehr offen, sondern gemessen.
+
+UMGESETZT: FAKTOR_JE_KLASSE, FAKTOR bleibt Rueckfall fuer ungemessene
+Klassen - und die Mail sagt ausdruecklich, dass keine eigene Messung
+vorliegt, statt eine fremde Zahl als eigene auszugeben. Eine schmale
+Grundlage wird benannt ("Nur 2 Reihen"). Die Anlageklasse steuert KEINE
+Rechnung, nur die Wahl der Faktoren.
+
+WIRKUNG, GEMESSEN: Abweichungen im Walk-Forward von 5 auf 0. Quote je
+Klasse jetzt 80,5 / 81,1 / 79,9 %. Derselbe Stop von 8,0 % liegt bei Krypto
+AUSSERHALB der ueblichen Bewegung und bei einem ETF INNERHALB - vorher
+dieselbe Aussage fuer beide.
+
+GEPRUEFT: 1.196 Paketpruefungen (7 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken, Messlauf Rueckgabe 0.
+
+OFFEN: Ueberlebensverzerrung bleibt; aktien steht auf 2 Reihen. Lauf
+wiederholen, wenn Reihen dazukommen.

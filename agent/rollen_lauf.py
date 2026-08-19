@@ -1180,6 +1180,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Signal gleich gross machten.
     try:
         rechnung = ER.rechne(kurs=kurs_e, atr=atr_e,
+                             # Nur fuer den Trichter: welche Faktoren
+                             # gelten hier? (93 A/A2)
+                             assetklasse=assetklasse,
                              risiko_eur=BE.risiko_eur(instrument, strategie,
                                                       config, assetklasse),
                              instrument=instrument,

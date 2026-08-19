@@ -444,6 +444,12 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            umgeworfen_tage: int | None = None,
            widerstand: tuple[float, int] | None = None,
            kostenklasse: str = "krypto",
+           # DIE ANLAGEKLASSE - NUR FUER DEN TRICHTER (19.08.2026).
+           # Sie steuert KEINE Rechnung, nur die Wahl der gemessenen
+           # Trichterfaktoren: Krypto schwankt anders als ein ETF, und
+           # ein Faktor fuer alle war fuer jede Klasse falsch (93 A/A2).
+           # Leer heisst Rueckfall, und die Mail sagt das dann auch.
+           assetklasse: str = "",
            ist_short: bool = False,
            stop_min_atr: float | None = None,
            marke_stop_eur: float | None = None) -> dict:
@@ -476,6 +482,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         # ihn, und ihn dort neu zu bestimmen waere die zweite Stelle, an der
         # zwei Rechnungen auseinanderlaufen koennen (Umbauplan 70.4).
         "atr": float(atr),
+        "assetklasse": str(assetklasse or ""),
         # S2 (18.08.2026): die Marke auf der STOPSEITE - unten bei LONG,
         # oben bei SHORT. Sie wird HIER NOCH NICHT BENUTZT; der Stop
         # kennt sie erst ab S5. Reine Durchreichung, damit die Verkabelung
@@ -816,7 +823,8 @@ def saetze(e: dict, marken: list | None = None,
         from agent import trichter as _TR
 
         z += _TR.saetze(e.get("einstieg_eur"), e.get("atr"),
-                        stop_relativ=e.get("stop_relativ"))
+                        stop_relativ=e.get("stop_relativ"),
+                        klasse=e.get("assetklasse"))
     except Exception:                                        # noqa: BLE001
         # KEIN GRUND, EINE MAIL ZU VERLIEREN. Fehlt der Trichter, fehlt eine
         # Einordnung - nicht die Empfehlung.

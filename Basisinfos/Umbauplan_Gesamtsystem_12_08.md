@@ -12069,3 +12069,91 @@ Trichter als Lücke**, sobald eine Mail eine Einstiegszone hat.
 
 **Offen aus Kapitel 93:** B (Drift je Asset), C (Sammeln beginnt), D (Anlass,
 zur Diskussion), E (Zusammenführung).
+
+
+---
+
+### 93.12 Fallstrick A2 erledigt — und er hat A1 gleich mit beantwortet (19.08.2026)
+
+**Werkzeug: `messe_trichter_treffer.py`.** Rückgabe 0, wenn der Trichter
+trägt; **2**, wenn nicht. Damit ist die erste widerlegbare Aussage des Systems
+auch wirklich widerlegbar.
+
+#### Die Messung ist so gebaut, dass sie sich nicht selbst bestätigt
+
+| | |
+|---|---|
+| **Walk-Forward** | der Faktor wird **nur aus der Zeit davor** bestimmt und auf der Zeit danach gemessen. Die Gesamtquote ist **kein Test** — ein Quantil trifft sein eigenes Quantil |
+| **Gegenprobe** | dieselbe Rechnung nur auf Reihen, die in **jedem** Block vorkommen |
+| **Wirksame Ankerzahl** | tägliche Anker mit 20-Tage-Horizont überlappen sich 19-fach. Die Rauschgrenze rechnet mit **n/Horizont**, sonst wird jede Schwankung „hoch signifikant" |
+
+#### Was sie gefunden hat — und was davon Schein war
+
+**Erster Befund: fünf Abweichungen**, darunter „2025/26 liegt bei 86 % statt
+80 %". Das sah nach **Alterung** aus. ⚠️ **Es war Zusammensetzung.** Auf
+konstanter Besetzung war die Quote dort *niedriger*, nicht höher — die
+jüngeren Blöcke sind kryptolastig. **Ohne die Gegenprobe hätte ich eine
+Anlageklasse als Zeitverlauf wegkalibriert.**
+
+**Zweiter Befund, der echte:** vier interne **Hilfsreihen**
+(`_THEMEN_ETF_BENCHMARK_SPY`, drei `_ROHSTOFF_FUTURES`) waren in der
+Kalibrierung. Für sie entsteht nie eine Mail — aber sie reichen bis **2001**
+zurück und stellten die **Hälfte aller Anker**. Der ausgelieferte Faktor 0,98
+war zur Hälfte auf Werten gewachsen, die das System nicht handelt.
+
+#### Der Faktor 0,98 passte auf keine einzige Anlageklasse
+
+| Klasse | Reihen | Anker | Quote mit 0,98 | eigener Faktor (80 %) |
+|---|---:|---:|---:|---:|
+| krypto | 34 | 23.343 | **87,5 %** | **0,79** |
+| aktien | 2 | 3.875 | 83,8 % | 0,91 |
+| etf | 4 | 8.877 | **72,7 %** | **1,18** |
+
+Über einen **zwölffachen Horizont** stabil (5/20/60 Tage) — das ist keine
+Streuung, sondern eine Klasseneigenschaft. Für Krypto war der Trichter rund
+ein Viertel **zu weit**, für ETF deutlich **zu eng**.
+
+**Damit ist Fallstrick A1 („je Asset oder global?") nicht mehr offen, sondern
+gemessen:** je Klasse. Der Plan sagte „das stabilere nehmen — nicht raten".
+
+#### Umgesetzt
+
+`FAKTOR_JE_KLASSE` je Klasse, `FAKTOR` bleibt als **Rückfall** für
+ungemessene Klassen (Rohstoffe landen heute dort) — und **die Mail sagt das
+ausdrücklich**, statt eine fremde Zahl als eigene auszugeben. Eine **schmale
+Grundlage wird benannt**: „Nur 2 Reihen — das ist eher die Eigenart dieser
+Werte als die der Anlageklasse." Die Anlageklasse wird von `rollen_lauf`
+über `rechne()` durchgereicht; sie steuert **keine Rechnung**, nur die Wahl
+der Faktoren.
+
+#### Vorher / nachher, gemessen
+
+| | Abweichungen im Walk-Forward |
+|---|---|
+| ein Faktor für alle | **5** |
+| Faktor je Klasse | **0** |
+
+Quote je Klasse nach dem Umbau: krypto 80,5 % · aktien 81,1 % · etf 79,9 %
+(5 Tage). Und derselbe Stop von 8,0 % wird jetzt richtig verschieden
+beurteilt: bei Krypto **außerhalb** der üblichen Bewegung, bei einem ETF
+**innerhalb**.
+
+#### Rückfahrkarte
+
+`FAKTOR_JE_KLASSE` leeren — dann greift für alles der Rückfall `FAKTOR`, und
+die Mail weist für jeden Wert aus, dass keine eigene Messung vorliegt. **Das
+ist nachgerechnet, nicht behauptet** (die Lehre aus 92.9).
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` (7 weitere Prüfungen: eigene Faktoren je Klasse ·
+gemessene Reihenfolge krypto < aktien < etf · Rückfall sagt sich an · schmale
+Grundlage wird benannt · Klasse erreicht den Trichter aus der Rechnung ·
+Messung schließt Hilfsreihen aus · Messung prüft nicht auf ihren eigenen
+Daten). Insgesamt **1.196 Prüfungen**, 0 freie Namen, Ende-zu-Ende 8 Signale
+/ 9 Mails / 0 Lücken.
+
+⚠️ **Was NICHT erledigt ist:** Überlebensverzerrung (die Reihen enthalten nur,
+was es noch gibt), und `aktien` steht auf **2 Reihen** — die Zahl steht, aber
+sie ist die Eigenart zweier Werte. Der Lauf ist zu wiederholen, wenn Reihen
+dazukommen.

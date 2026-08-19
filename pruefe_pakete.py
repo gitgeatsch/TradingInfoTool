@@ -9160,7 +9160,12 @@ def paket_dimension() -> None:
     pruefe(P, "und eine BESCHREIBUNG steht daneben (Nutzerwunsch 19.08.)",
            any("Was das heisst" in z for z in _tz)
            and any("von 100" in z for z in _tz)
-           and any("30.116" in z for z in _tz),
+           # NICHT auf die Ankerzahl selbst pruefen: sie hat sich schon
+           # einmal geaendert (30.116 -> 36.095, als die Hilfsreihen
+           # herausfielen), und die Pruefung schlug an, obwohl die
+           # Beschreibung vollstaendig war.
+           and any("Gemessen an" in z or "KEINE eigene Messung" in z
+                   for z in _tz),
            "eine neue Zahl ohne Satz daneben zwingt den Leser zu raten, ob "
            "sie Prognose, Garantie oder Schaetzung ist")
 
@@ -9191,6 +9196,50 @@ def paket_dimension() -> None:
                           umgeworfen_preis_eur=99.0))),
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
+
+    # ---- EIN FAKTOR FUER ALLE WAR FALSCH (93 A/A2, 19.08.2026) ----
+    pruefe(P, "jede Anlageklasse hat ihre eigenen gemessenen Faktoren",
+           set(_TR.FAKTOR_JE_KLASSE) == {"krypto", "aktien", "etf"}
+           and all(set(v) == set(_TR.FAKTOR)
+                   for v in _TR.FAKTOR_JE_KLASSE.values()),
+           "der erste Faktor 0,98 passte auf KEINE Klasse: Krypto 87,5 %, "
+           "ETF 72,7 % statt 80 %")
+    pruefe(P, "und Krypto schwankt enger als ETF - nicht umgekehrt",
+           _TR.FAKTOR_JE_KLASSE["krypto"][0.80]
+           < _TR.FAKTOR_JE_KLASSE["aktien"][0.80]
+           < _TR.FAKTOR_JE_KLASSE["etf"][0.80],
+           "gemessen 0,79 / 0,91 / 1,18 - ueber einen zwoelffachen Horizont "
+           "stabil, also eine Klasseneigenschaft und keine Streuung")
+    pruefe(P, "eine unbekannte Klasse faellt zurueck und SAGT es",
+           _TR.faktoren("rohstoff") == (_TR.FAKTOR, None)
+           and any("KEINE eigene Messung" in z
+                   for z in _TR.saetze(100.0, 4.0, klasse="rohstoff")),
+           "einen Rueckfall als Messwert dieser Klasse auszugeben waere "
+           "eine erfundene Grundlage")
+    pruefe(P, "eine schmale Grundlage wird benannt, nicht verschwiegen",
+           any("Nur 2 Reihen" in z
+               for z in _TR.saetze(100.0, 4.0, klasse="aktien"))
+           and not any("Nur 34 Reihen" in z
+                       for z in _TR.saetze(100.0, 4.0, klasse="krypto")),
+           "eine Zahl aus zwei Reihen ist anders zu lesen als eine aus 34")
+    pruefe(P, "und die Klasse erreicht den Trichter aus der Rechnung",
+           any("Krypto-Reihen" in z for z in _ER.saetze(
+               _ER.rechne(kurs=100.0, atr=4.0, risiko_eur=60.0,
+                          betrag_wunsch_eur=1000.0, instrument="hebel",
+                          umgeworfen_preis_eur=99.0, assetklasse="krypto"))),
+           "ohne Durchreichen waere die Klassenmessung gebaut und unwirksam")
+
+    # ⚠️ DIE HILFSREIHEN GEHOEREN NICHT IN DIE KALIBRIERUNG.
+    _mq = _quelltext("messe_trichter_treffer.py")
+    pruefe(P, "die Messung schliesst die internen Hilfsreihen aus",
+           '_sym.startswith("_")' in _mq,
+           "_THEMEN_ETF_BENCHMARK_SPY und die drei _ROHSTOFF_FUTURES "
+           "reichen bis 2001 zurueck und stellten die HAELFTE aller "
+           "Anker - fuer sie entsteht nie eine Mail")
+    pruefe(P, "und sie prueft den Faktor NICHT auf seinen eigenen Daten",
+           "WALK-FORWARD" in _mq and "GEGENPROBE" in _mq,
+           "ein Quantil trifft sein eigenes Quantil; und der scheinbare "
+           "Anstieg 2025/26 war die Besetzung, nicht die Zeit")
 
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
