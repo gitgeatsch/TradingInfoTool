@@ -17472,3 +17472,47 @@ Kommentar zu finden waere kein Nachweis.
 1.177 Pruefungen (2 neu), freie Namen 0, drei Selbsttests,
 Darstellungstest, Simulation 9 Mails aus 4 Gruppen ohne Fehler.
 
+---
+
+## 2026-08-19 (14) - Kapitel 93 geplant: Verteilung statt Meinung
+
+Nach dem Nutzerbefund, dass zwei Wochen Umbau nur eine Umschichtung waren
+und keinen Nutzen erzeugt haben. Das trifft zu: S1-S5 haben den noetigen
+Vorsprung von 38,8 auf 14,6 Prozentpunkte gesenkt, die Basisrate liegt bei
+33,3 % - weniger schlecht ist nicht gut.
+
+DIE UMFORMULIERUNG: 'die wahrscheinlichste Kursentwicklung' ist nicht
+lieferbar. Die GROESSE einer Bewegung ist prognostizierbar, die RICHTUNG
+nicht. Lieferbar ist ein Trichter; die Richtung kommt aus Drift, Struktur
+und Anlass - keine davon eine Prognose.
+
+DREI FRAGEN, DREI MASCHINEN: 'ist er tot' ist eine Zustandsfrage ueber
+Monate, 'wie weit bewegt er sich' eine Verteilungsfrage ueber Tage, 'in
+welche Richtung' gar keine Schaetzung. Das bisherige System behandelt alles
+mit derselben Maschine - daran ist es gescheitert.
+
+MACHBARKEIT STUFE A GEPRUEFT, 30.116 Anker: die Wurzel-Zeit-Skalierung
+traegt (81,5 % auf 5 Tage gegen 79,6 % auf 60), aber die Lehrbuchzuordnung
+'1 ATR = 68 %' stimmt nicht - der Trichter ist zu weit. Grund: ATR misst
+die Tagesspanne inklusive Luecken, der Trichter die Aenderung von Schluss
+zu Schluss. Folge: empirisch kalibrieren statt Normalverteilung annehmen.
+
+KORREKTUR AM EIGENEN VORSCHLAG (Nutzereinwand): 'kein Spot, egal wie der
+Chart aussieht' waere ein statisches Qualitaetsgate - die Bauform, die den
+Deadloop erzeugt hat, und sie haette ausgerechnet den wertvollsten Fall
+blockiert: den Coin, der stirbt und dreht. Lebendigkeit ist deshalb kein
+Zustand, sondern eine RICHTUNG; der Uebergang ist das Signal, nicht der
+Pegel.
+
+BLOCKER STUFE C, belegt: CoinGecko liefert developer_data nur als aktuellen
+Stand, keine Historie. Ohne Historie kein Uebergang. Die Reihe muss selbst
+aufgebaut werden - ab sofort sammeln, Auswertung fruehestens in Monaten.
+
+STUFE D (Anlass) zurueckgestellt, Nutzereinschaetzung 'heikel, schwierig,
+Deckelproblem' - berechtigt: keine freie vollstaendige Quelle, und ein
+lueckenhafter Kalender ist gefaehrlicher als keiner, weil eine fehlende
+Nachricht wie Ruhe aussieht.
+
+Fallstricke je Stufe im Kapitel einzeln erfasst; E1 ist der wichtigste -
+jede Stufe kann zur Bremse werden, wenn sie zur Bedingung wird.
+

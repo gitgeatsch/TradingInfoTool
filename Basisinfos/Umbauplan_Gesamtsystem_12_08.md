@@ -11806,3 +11806,190 @@ alles.
 
 ⚠️ **Die Lehre:** eine Rückfahrkarte gehört geprüft wie eine Änderung. Ich
 habe sie behauptet, ohne sie zu fahren.
+
+---
+
+## Kapitel 93 — PLAN: Verteilung statt Meinung (19.08.2026)
+
+**Status: Plan. Stufe A ist auf Machbarkeit geprüft, C hat einen belegten
+Blocker, D ist offen zur Diskussion.**
+
+### 93.1 Der Anlass
+
+Nutzerbefund nach zwei Wochen Umbau: *„weder die Funktionalität noch die
+Daten bringen einen Nutzen — wir haben nur eine Umschichtung vorgenommen."*
+
+**Das trifft zu.** S1–S5 haben den nötigen Vorsprung von 38,8 auf 14,6
+Prozentpunkte gesenkt. Die Basisrate liegt bei 33,3 %, und kein Verfahren
+dieses Projekts hat je einen Vorsprung nachgewiesen. **Weniger schlecht ist
+nicht gut.**
+
+### 93.2 Die Umformulierung, ohne die nichts geht
+
+Gewünscht war: *„die wahrscheinlichste Kursentwicklung annehmen"*. In dieser
+Form nicht lieferbar — aus einem der robustesten Befunde der
+Finanzökonometrie:
+
+> **Die Größe einer Bewegung ist prognostizierbar. Die Richtung nicht.**
+> Volatilität clustert und ist autokorreliert; Renditen sind es nicht.
+
+Lieferbar ist deshalb **kein Pfad, sondern ein Trichter** — und die Richtung
+kommt aus drei Quellen, von denen **keine eine Prognose ist**: gemessene
+**Drift**, beobachtete **Struktur**, datierter **Anlass**.
+
+### 93.3 Drei Fragen, drei Maschinen
+
+Daran ist das bisherige System gescheitert: es behandelt alles mit derselben.
+
+| Frage | Objekt | Zeitskala | Maschine |
+|---|---|---|---|
+| Ist der Coin tot? | Zustand **und Übergang** | Monate | Überlebensmerkmale, kein Kurs |
+| Wie weit bewegt er sich? | Verteilung | Tage | Volatilitätsmodell |
+| In welche Richtung? | **keine Schätzung** | — | Drift · Struktur · Anlass |
+
+**Ein toter Coin kann kurzfristig 50 % steigen.** „Tot" und „bewegt sich"
+widersprechen sich nicht — das heutige System kann das nicht ausdrücken.
+
+---
+
+### 93.4 Stufe A — der Trichter · MACHBARKEIT GEPRÜFT
+
+**Gemessen an 30.116 Ankern**, ATR mit √t-Skalierung:
+
+| Horizont | Faktor 1,0 | 1,5 | 2,0 |
+|---:|---:|---:|---:|
+| 5 Tage | 81,5 % *(Lehrbuch 68)* | 93,0 % *(87)* | **96,9 %** *(95)* |
+| 20 Tage | 80,9 % | 92,5 % | 96,8 % |
+| 60 Tage | 79,6 % | 91,4 % | 95,7 % |
+
+**Zwei Befunde:**
+
+1. **Die √t-Skalierung trägt.** Von 5 auf 60 Tage fällt die Trefferquote nur
+   von 81,5 auf 79,6 % — über einen zwölffachen Horizont.
+2. ⚠️ **Die Lehrbuchzuordnung ist falsch.** „1 ATR = 68 %" stimmt hier nicht;
+   der Trichter ist zu weit. **Grund: ATR misst die Tagesspanne (True Range,
+   inklusive Lücken und Intraday-Extremen), der Trichter die Änderung von
+   Schluss zu Schluss.** Zwei verschiedene Größen.
+
+**Folge: empirisch kalibrieren statt Normalverteilung annehmen.** Der Faktor
+wird aus der eigenen Historie abgelesen, nicht aus einer Tabelle.
+
+**Fallstricke A**
+
+| # | | Umgang |
+|---|---|---|
+| A1 | **Kalibrierung je Asset oder global?** Global ist stabiler, je Asset genauer | beides messen, das stabilere nehmen — nicht raten |
+| A2 | **Die Kalibrierung veraltet.** Volatilitätsregime wechseln | rollierendes Fenster, und die Trefferquote **laufend mitmessen** — ein Trichter, der nicht hält, muss auffallen |
+| A3 | **Überlebensverzerrung** | die Reihen enthalten nur, was noch da ist; die Spanne ist dadurch zu optimistisch |
+| A4 | **Deribit deckt nur BTC/ETH** | die implizite Verteilung ist ein Zusatz, nie die Grundlage |
+
+---
+
+### 93.5 Stufe B — Drift je Asset
+
+**Rangliste statt Mittelwert.** Der Nutzereinwand war richtig: ein Schirm
+über die Kategorie erzeugt genau das Nullergebnis, das dieses Projekt seit
+8.441 Fällen produziert.
+
+**Und der Mittelwert von −65 % über zwei Jahre ist kein Nullbefund, sondern
+ein starkes Signal mit falschem Vorzeichen.** Bei negativer Drift ist LONG
+schlechter als die Basisrate und SHORT besser — und das System ist
+`nur_long`.
+
+**Fallstricke B**
+
+| # | | Umgang |
+|---|---|---|
+| B1 | ⚠️ **Überlebensverzerrung ist hier zerstörerisch.** Die ausgefallenen Coins fehlen — jede Driftzahl ist zu optimistisch | Reihenlänge je Symbol ausweisen; wer erst seit einem Jahr dabei ist, hat keine Zweijahresaussage |
+| B2 | **Historische Drift ist keine künftige** | die Regel lautet nicht „steigt weiter", sondern „stell dich nicht gegen die gemessene Verteilung" |
+| B3 | **Ein Zyklus ist kein Gesetz** | mehrere Fenster rechnen, nicht eines |
+| B4 | **`nur_long` ist eine Nutzerentscheidung** | die Messung liefert die Grundlage, nicht den Beschluss |
+
+---
+
+### 93.6 Stufe C — Lebendigkeit ⚠️ ALS ÜBERGANG, NICHT ALS GATE
+
+**Korrektur am eigenen Vorschlag (Nutzereinwand 19.08.).** Ich hatte
+geschrieben: *„kein Spot, egal wie der Chart aussieht."* Das wäre ein
+**statisches Qualitätsgate** — genau die Bauform, die den Deadloop erzeugt
+hat, und sie würde ausgerechnet den wertvollsten Fall blockieren:
+
+> **Der Coin, der stirbt und dreht.** Ein langfristiger Abwärtstrend, der in
+> einen Aufwärtstrend übergeht, ist die größte Chance — und ein Gate auf
+> „tot" hätte sie ausgeschlossen.
+
+**Lebendigkeit ist deshalb kein Zustand, sondern eine Richtung.** Nicht
+„lebt / lebt nicht", sondern **„wird schwächer / stabilisiert sich / wird
+stärker"** — auf Entwicklungs-, Netzwerk- und Liquiditätsmerkmalen. Der
+**Übergang ist das Signal**, nicht der Pegel.
+
+⚠️ **BLOCKER, BELEGT:** CoinGecko liefert `developer_data` nur als
+**aktuellen Stand**, keine Historie. **Ohne Historie kein Übergang.** Die
+Reihe muss also selbst aufgebaut werden — ab dem ersten Lauf, und sie ist
+frühestens in Monaten auswertbar.
+
+**Damit ist C nicht sofort baubar, aber sofort zu BEGINNEN:** täglich
+mitschreiben, was CoinGecko und DefiLlama liefern. Wer heute nicht anfängt,
+hat in drei Monaten dieselbe Lücke.
+
+**Fallstricke C**
+
+| # | | Umgang |
+|---|---|---|
+| C1 | **kein Gate** | das Ergebnis geht als Merkmal in die Mail, es unterdrückt nichts |
+| C2 | ⚠️ **58 % Abdeckung** | für 18 von 43 bleibt es „unbekannt" — und „unbekannt" darf nie wie „tot" aussehen |
+| C3 | **Historie fehlt** | ab sofort sammeln, sonst verschiebt sich alles um dieselbe Zeit |
+| C4 | **Kursbewegung ist kein Lebendigkeitsmerkmal** | sonst misst C dasselbe wie B, nur schlechter |
+
+---
+
+### 93.7 Stufe D — Anlass ⚠️ ZURÜCKGESTELLT, ZUR DISKUSSION
+
+**Nutzereinschätzung 19.08.: heikel und schwierig, Deckelproblem.**
+
+Und sie ist berechtigt. Ein Anlasskalender hat drei ungelöste Seiten:
+
+| | |
+|---|---|
+| **Quelle** | Unlocks und Listings stehen in keiner freien, vollständigen API — dasselbe Problem wie bei den On-Chain-Daten, nur schlimmer |
+| **Vollständigkeit** | ein Kalender mit Lücken ist gefährlicher als keiner: fehlt ein Anlass, sieht die Lage ruhig aus |
+| **Deckelproblem** | ein Anlass, der zur Bedingung wird, ist ein Gate — und ein lückenhaftes Gate sperrt zufällig |
+
+**Vor jedem Bau zu klären**, nicht nebenbei zu entscheiden.
+
+---
+
+### 93.8 Stufe E — Zusammenführung
+
+Erst hier entsteht ein Urteil, und zwar als **Bedingungskette**, nicht als
+Modellmeinung:
+
+```
+Trichter   →  Stop, Ziel, Größe, Haltedauer   (immer)
+Drift      →  welche Seite, oder keine        (gemessen)
+Lebendig-  →  Richtung der Entwicklung        (Merkmal, kein Gate)
+  keit
+Anlass     →  ob JETZT                        (später)
+```
+
+**Fallstrick E1 — der wichtigste des ganzen Kapitels:** jede dieser Stufen
+kann zur Bremse werden, wenn sie zur Bedingung wird. **Die Regel bleibt: kein
+Kriterium darf ein Urteil verhindern. Es darf nur bestimmen, welcher Art das
+Urteil ist.**
+
+### 93.9 Reihenfolge und Machbarkeit
+
+| Stufe | Machbarkeit | Beginn |
+|---|---|---|
+| **A** Trichter | **geprüft, 30.116 Anker** — mit Kalibrierungskorrektur | sofort |
+| **B** Drift | Daten vorhanden, Verzerrung benannt | sofort |
+| **C** Lebendigkeit | **Historie fehlt** — Sammeln beginnt sofort, Auswertung in Monaten | Sammeln sofort |
+| **D** Anlass | **ungeklärt** | erst nach Diskussion |
+| **E** Zusammenführung | hängt an A–C | zuletzt |
+
+### 93.10 Was dieses Kapitel NICHT verspricht
+
+**Keinen Richtungsvorteil.** Was entsteht: weniger falsche Geschäfte, richtig
+bemessene Geschäfte, Handeln nur bei Anlass — und **zum ersten Mal prüfbare
+Aussagen.** Ein Trichter, der nicht hält, ist widerlegt. Das hat bisher kein
+Teil dieses Systems von sich behaupten können.
