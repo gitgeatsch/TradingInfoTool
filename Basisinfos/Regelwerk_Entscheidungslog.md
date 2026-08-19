@@ -17174,3 +17174,39 @@ werden.
 
 1.167 Pruefungen (10 neu), freie Namen 0.
 
+---
+
+## 2026-08-19 (6) - GEMESSEN: Entwickleraktivitaet deckt rund ein Drittel
+
+Voller Lauf ueber alle 43 Kryptowerte, 6 s Abstand, drei Zustaende getrennt:
+
+    Repository verknuepft          15 von 43   (35 %)
+    kein Repository hinterlegt     22 von 43   (51 %)
+    NICHT ERFAHREN (429)            6 von 43   (14 %)
+
+    belastbar beantwortet          37 von 43   (86 %)
+
+Nicht erfahren: TAO, RENDER, IMX, PLUME, CANTON, VIRTUAL - diese sechs
+sind UNBEKANNT, nicht 'ohne Repo', und duerfen in keiner Abdeckungszahl als
+Nein gezaehlt werden.
+
+DIE ANTWORT AUF DIE FRAGE VON P2 IST DAMIT NEIN. Die Nutzervorgabe lautet:
+das System muss ueber ALLE Assets funktionieren. Bei 35 % Abdeckung waere
+die Entwickleraktivitaet ein Indikator fuer ein Drittel und ein Schweigen
+fuer zwei Drittel - also genau das Zwei-Klassen-System, das bei CoinMetrics
+schon der Grund zum Abbruch war.
+
+WICHTIG FUER DIE DEUTUNG: die 22 ohne Repository sind NICHT tot. CoinGecko
+hat dort schlicht keines verknuepft. Das ist eine Grenze der QUELLE, nicht
+des Indikators - die GitHub-API direkt koennte mehr abdecken, braucht aber
+eine Zuordnung Symbol -> Repository, die es nicht automatisch gibt.
+
+Vier Werte haben ein Repo und 0 Commits in vier Wochen: ONDO, KAS, INJ,
+BNB. Das ist der einzige Zustand, der als Indikator taugt - 'ruhig' ist
+eine Aussage, 'kein Repo' ist keine. Bei BNB (4.249 Sterne, 0 Commits) liegt
+der Verdacht nahe, dass ein Spiegel-Repository verknuepft ist.
+
+NEBENBEFUND ZUM WERKZEUG: der Rueckgabewert 2 bei offenen Fehlern kam nicht
+an, weil die Ausgabe durch `| tail` lief - die Pipeline meldet den Code von
+tail. Der Rueckgabewert taugt damit nur ohne Pipe als Signal.
+
