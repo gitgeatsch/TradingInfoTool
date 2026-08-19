@@ -8954,6 +8954,59 @@ def paket_dimension() -> None:
            f"{101 - _gew} von 101 - genau die Groessenordnung, die die "
            f"Literatur als Extreme meint (R-T6: kein konstantes Feld)")
 
+    # ---- DREI ZUSTAENDE, DIE NIE VERSCHMELZEN (91 P2, 19.08.2026) ----
+    import messe_entwickleraktivitaet as _ME
+
+    class _Antwort:
+        def __init__(self, code, koerper):
+            self.status_code, self._k = code, koerper
+
+        def json(self):
+            if self._k is None:
+                raise ValueError("kein JSON")
+            return self._k
+
+    class _Sitzung:
+        def __init__(self, *antworten):
+            self._a = list(antworten)
+
+        def get(self, *a, **kw):
+            return self._a.pop(0) if self._a else _Antwort(500, {})
+
+    _voll = {"developer_data": {"stars": 73168, "forks": 3,
+                               "commit_count_4_weeks": 108}}
+    _leer = {"developer_data": {"stars": 0, "forks": 0, "subscribers": 0,
+                               "total_issues": 0,
+                               "commit_count_4_weeks": 0}}
+    pruefe(P, "ein verknuepftes Repository heisst repo",
+           _ME._hole("x", _Sitzung(_Antwort(200, _voll)))[0] == "repo")
+    pruefe(P, "eine Antwort ohne Repo heisst kein_repo",
+           _ME._hole("x", _Sitzung(_Antwort(200, _leer)))[0] == "kein_repo")
+
+    # ⚠️ DER WICHTIGE FALL. Meine erste Messung zaehlte 429-Antworten als
+    # "kein Repository" - Ergebnis "0 von 43", waehrend BTC zwei Minuten
+    # zuvor 73.168 Sterne gemeldet hatte. Ein Abbruch war zu einem
+    # plausibel aussehenden Messwert geworden.
+    _drei429 = _Sitzung(*[_Antwort(429, {}) for _ in range(3)])
+    pruefe(P, "ein 429 ist ein FEHLER, kein Nein",
+           _ME._hole("x", _drei429)[0] == "fehler",
+           "wer den dritten Zustand mit dem zweiten verrechnet, erklaert "
+           "lebendige Ketten fuer tot")
+    for _code in (500, 404, 403):
+        pruefe(P, f"HTTP {_code} ebenso",
+               _ME._hole("x", _Sitzung(_Antwort(_code, {})))[0] == "fehler")
+    pruefe(P, "eine 200 OHNE developer_data ist auch ein Fehler",
+           _ME._hole("x", _Sitzung(_Antwort(200, {"status": "x"})))[0]
+           == "fehler",
+           "eine unerwartete Form ist keine Auskunft - vielleicht ein "
+           "Fehlerkoerper mit 200")
+    pruefe(P, "und kaputtes JSON ebenso",
+           _ME._hole("x", _Sitzung(_Antwort(200, None)))[0] == "fehler")
+    pruefe(P, "die Drosselung ist vorsichtig gewaehlt",
+           _ME.ABSTAND_S >= 4.0,
+           "CoinGeckos Gratis-Tier nennt 10-30 je Minute; 5 s sind 12/min - "
+           "bewusst am unteren Rand, weil ein 429 die Messung wertlos macht")
+
     # ---- DER CONFIG-SCHLUESSEL, UEBER DEN NIEMAND MEHR STOLPERN SOLL ----
     # ⚠️ ROH LESEN, NICHT UEBER `_quelltext`. Der entfernt Kommentarzeilen -
     # und ein Geltungsvermerk IST ein Kommentar. Die erste Fassung dieser

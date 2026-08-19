@@ -2768,5 +2768,44 @@ treffer = [k for n in ast.walk(baum) if isinstance(n, ast.Call)
 Textsuche bleibt richtig fuer Konstanten und Vermerke. Fuer **Aufrufe** ist
 sie zu grob - sie kann Beschreibung nicht von Ausfuehrung unterscheiden.
 
----
+---
+
+## 2.42 Ein Abbruch darf nie zu einem Messwert werden (neu 2026-08-19)
+
+**Selbst gebaut, am selben Tag.** Ein Skript fragte 43 Symbole bei CoinGecko
+nach Entwicklerdaten und wertete so aus:
+
+```python
+dev = d.get("developer_data") or {}      # bei HTTP 429 leer
+s = dev.get("stars") or 0                # -> 0
+(mit_repo if s else ohne_repo).append(…)  # -> 'kein Repository'
+```
+
+Ergebnis: **0 von 43 haben ein Repository** - waehrend BTC zwei Minuten
+zuvor 73.168 Sterne gemeldet hatte. Der Lauf war ins Rate-Limit gelaufen,
+und **jede Fehlerantwort wurde zu einem Nein**.
+
+> Ein Abbruch sieht in einer Zaehlung genauso aus wie eine Verneinung -
+> wenn man ihn laesst. Dieselbe Klasse wie *fail-soft ist fail-silent*, nur
+> in einem Pruefskript statt im Produkt.
+
+### Die Regel
+
+**Jede Erhebung ueber eine fremde Quelle braucht DREI Zustaende, und sie
+duerfen nie verschmelzen:**
+
+| | |
+|---|---|
+| **ja** | die Quelle hat geantwortet und sagt ja |
+| **nein** | die Quelle hat geantwortet und sagt nein |
+| **nicht erfahren** | Netz, 429, unerwartete Form - **keine Auskunft** |
+
+Und die Abdeckungszahl nennt **nur die ersten beiden** als beantwortet.
+`messe_entwickleraktivitaet.py` weist die drei getrennt aus und liefert
+Rueckgabewert 2, solange der dritte nicht leer ist.
+
+⚠️ **Auch eine 200 ohne das erwartete Feld ist ein Fehler**, keine
+Verneinung - es koennte ein Fehlerkoerper mit Status 200 sein.
+
+---
 

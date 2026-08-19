@@ -17147,3 +17147,30 @@ war meine Quelle fuer die Abdeckung, statt eines Abrufs je Symbol. Eine
 Zuordnung Ticker -> Asset-Id muss aufgebaut und geprueft werden, bevor
 irgendeine Abdeckungszahl genannt wird.
 
+---
+
+## 2026-08-19 (5) - Messwerkzeug Entwickleraktivitaet, mit drei Zustaenden
+
+`messe_entwickleraktivitaet.py` gebaut. Drosselung 5 s (12 Aufrufe je
+Minute, bewusst am unteren Rand von CoinGeckos 10-30), 429 wird dreimal mit
+steigender Wartezeit wiederholt.
+
+DREI ZUSTAENDE, DIE NIE VERSCHMELZEN: repo (Repository verknuepft),
+kein_repo (Antwort kam an und sagt nein), fehler (nicht erfahren - Netz,
+429, unerwartete Form). Die Abdeckungszahl nennt nur die ersten beiden als
+beantwortet; der Rueckgabewert ist 2, solange Fehler offen sind.
+
+Probelauf ueber sechs Symbole: BTC, ETH, SOL und LINK mit Repo (108, 41,
+171, 87 Commits in vier Wochen), AVAX ohne verknuepftes Repository, SUI
+nach drei 429ern als FEHLER - nicht als Nein.
+
+WICHTIG FUER DIE SPAETERE AUSWERTUNG: 'Repo da, 0 Commits' ist eine
+Aussage, 'kein Repo hinterlegt' ist keine. AVAX meldet 0/0/0 und ist keine
+eingestellte Kette, sondern ein fehlender Link. Nur der erste Fall taugt als
+Indikator.
+
+Die Lehre steht als Methodik 2.42: ein Abbruch darf nie zu einem Messwert
+werden.
+
+1.167 Pruefungen (10 neu), freie Namen 0.
+
