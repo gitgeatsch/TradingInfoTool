@@ -17083,3 +17083,38 @@ Trade ist.
 1.158 Pruefungen (7 neu), freie Namen 0, drei Selbsttests,
 Darstellungstest, Simulation 9 Mails ohne Fehler.
 
+---
+
+## 2026-08-19 (3) - P2 GESTOPPT: CoinMetrics Community traegt die Kennzahl nicht
+
+NICHTS GEBAUT. Vor dem Bau geprueft, und die Pruefung hat den Plan
+widerlegt.
+
+Der Katalog sieht gut aus: die Community-API kennt 6.075 Assets, davon
+41 von 43 unserer Kryptowerte - nur CANTON und TAO fehlen. Auf dieser
+Grundlage haette man die Anbindung gebaut.
+
+DIE KENNZAHL IST ABER NICHT DABEI. Ein Abruf von AdrActCnt (aktive
+Adressen - der Indikator, um den es geht) liefert:
+
+    BTC       642.144 zum 18.08.        -> vorhanden
+    SOL       'forbidden'               -> Metrik existiert, nicht im Gratis-Tier
+    AIOZ      'bad parameter'           -> fuer dieses Asset gar nicht gefuehrt
+    GRIFFAIN  'bad parameter'
+    KAS       'bad parameter'
+
+Also: aktive Adressen sind ueber die Community-API praktisch BTC-ONLY. Die
+41 von 43 im Katalog sind eine Scheinabdeckung - genau der Fall, den die
+stehende Regel 'Katalog ist keine Messung' beschreibt.
+
+FOLGE FUER KAPITEL 91 P2: die CoinMetrics-Haelfte faellt weg. Sie haette
+ein Zwei-Klassen-System erzeugt - BTC mit Netzwerkaktivitaet, alle anderen
+ohne -, und die Nutzervorgabe lautet ausdruecklich: das System muss ueber
+ALLE Assets funktionieren.
+
+NAECHSTE SCHRITTE, noch nicht geprueft: DefiLlama (rufen wir bereits
+taeglich auf), Artemis, Token Terminal, Dune, oder die Explorer der Ketten
+selbst. Die GitHub-Haelfte (Entwickleraktivitaet) ist davon unberuehrt,
+braucht aber eine Zuordnung Symbol -> Repository, und die gibt es nicht
+automatisch.
+
