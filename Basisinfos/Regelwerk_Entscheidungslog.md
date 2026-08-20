@@ -17868,3 +17868,60 @@ VERDRAHTUNG: alle vier neuen Module erreichen die Mail; die Simulation weist
 zwei davon in der fertigen Mail nach.
 
 1.241 Pruefungen, 0 freie Namen, 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] DAS SAMMELN FOLGT DER WATCHLIST - jetzt mit Vorrat
+
+Nutzerfrage: Top 100 und Bestand, oder startet das Sammeln bei jedem neuen
+Asset? Geprueft: lebendigkeit.job() filtert die Watchlist auf krypto - 44
+kuratierte Werte, keine Top-100-Liste, keine automatische Erweiterung. Ein
+neuer Wert wird ab dem naechsten Lauf gesammelt, aber BEI NULL, und Historie
+laesst sich nicht nachladen.
+
+Damit traefe die Luecke ausgerechnet den interessanten Fall: der kleine Wert,
+der gerade auffaellt und deshalb neu aufgenommen wird, waere 30 Tage lang der
+einzige ohne Aussage.
+
+GELOEST OHNE ZUSATZKOSTEN: DefiLlama liefert zwei Abrufe fuer ueber 8.000
+Protokolle - nur 44 davon auszuwerten war Verschwendung. VORRAT_GROESSTE=150
+schreibt die groessten Werte mit, auch ohne Watchlist-Eintrag. Gemessen: 25
+Watchlist-Werte + 136 Vorrat aus denselben zwei Abrufen. Der Deckel verhindert
+Wildwuchs (8.082 taeglich waeren drei Millionen Zeilen im Jahr).
+
+ZWEI FEHLER BEIM BAUEN, BEIDE AN EINER ZAHL SICHTBAR: (1) die erste Fassung
+filterte schon beim Einlesen auf die Watchlist - der Vorrat konnte gar nicht
+entstehen, sichtbar an der 0. (2) Mein Kuerzel-Filter verlangte mindestens
+zwei Zeichen und warf W (Wormhole) und S (Sonic) aus der eigenen Watchlist -
+sichtbar nur daran, dass die Werte von 25 auf 23 fielen.
+
+[2026-08-20] STUFE 93 E GEBAUT - die Zusammenfuehrung, die nichts sperrt
+
+Fallstrick E1: kein Kriterium darf ein Urteil verhindern, es darf nur
+bestimmen, welcher Art das Urteil ist. agent/gesamtbild.py ist deshalb keine
+Note und kein Filter.
+
+DER TRICK: ES LIEST DIE FERTIGE MAIL. Alle vier Stufen setzen bereits ein
+Etikett (GUENSTIG, UNGUENSTIG, NOCH KEINE BEWERTUNG MOEGLICH); das Gesamtbild
+zaehlt sie und stellt das Ergebnis nach vorn. Damit gibt es KEINE zweite
+Rechnung, die von der ersten abweichen koennte - der Fehler, der vier Kopien
+derselben Stopzeile hinterliess.
+
+In der Mail: "Auf einen Blick: von 4 pruefbaren Merkmalen 1 spricht dafuer,
+1 dagegen, 2 noch nicht bewertbar." Bei AIOZ sind es 3 von 4 - dort kennt
+DefiLlama kein hinterlegtes Kapital, der Block fehlt und wird nicht
+mitgezaehlt.
+
+"NOCH NICHT BEWERTBAR" IST DIE HAEUFIGSTE ANTWORT, und das ist ehrlich. Wer
+daraus eine Note baute, bekaeme eine Zahl, die Sicherheit vortaeuscht.
+
+DIE PRUEFUNG, DIE AM MEISTEN WERT IST: das Gesamtbild sucht nach Etiketten.
+Benennt jemand eines um, zaehlt es STILL falsch - ohne Fehlermeldung, ohne
+Luecke in der Simulation. Eine Paketpruefung haelt fest, dass jedes gesuchte
+Etikett in mindestens einem der vier Module vorkommt.
+
+KAPITEL 93 IST DAMIT VOLLSTAENDIG. Was es nicht geliefert hat und nicht
+liefern sollte: einen Richtungsvorteil. Was es geliefert hat: vier pruefbare
+Aussagen statt keiner, jede mit ihrem gemessenen Wert daneben.
+
+GEPRUEFT: 1.247 Paketpruefungen (6 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.

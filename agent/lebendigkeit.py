@@ -78,6 +78,24 @@ MINDESTREIHE = {"tvl": 30, "entwickler": 12}
 # Nutzung - und bei Commits sind es einzelne Arbeitstage.
 SCHWELLE_RELATIV = 0.10
 
+# ⚠️ WIR SAMMELN BREITER ALS DIE WATCHLIST (Nutzerfrage 20.08.2026):
+# "startet das Sammeln immer, wenn ein neues Krypto-Asset hinzukommt?"
+#
+# Ja - und genau das war das Problem. Ein neu aufgenommener Wert haette 30
+# Tage lang keine Aussage, und Historie laesst sich NICHT nachladen: beide
+# Quellen liefern nur den aktuellen Stand. Ausgerechnet der interessante
+# Fall - der kleine Wert, der gerade auffaellt - waere der blindeste.
+#
+# DefiLlama kostet ZWEI Abrufe, unabhaengig davon, fuer wie viele Symbole
+# wir die Antwort auswerten. Also werden die groessten Werte gleich
+# mitgeschrieben, auch wenn sie (noch) nicht auf der Watchlist stehen. Kommt
+# einer spaeter dazu, ist seine Reihe schon da.
+#
+# Die Zahl ist ein Deckel gegen Wildwuchs: 8.082 Protokolle taeglich waeren
+# drei Millionen Zeilen im Jahr. 150 sind rund 55.000 - und decken alles ab,
+# was je in die engere Wahl kommt.
+VORRAT_GROESSTE = 150
+
 ZUSTAENDE = ("wert", "keine_quelle", "fehler")
 
 
@@ -239,7 +257,22 @@ def saetze(conn, symbol: str, assetklasse: str = "") -> list[str]:
 # DIE SAMMLER. Sie urteilen nicht und rechnen nicht - sie holen und schreiben.
 # ---------------------------------------------------------------------------
 
-def sammle_tvl(conn, symbole, sitzung=None, jetzt: str | None = None) -> dict:
+def _brauchbares_kuerzel(sym: str) -> bool:
+    """Ist das ueberhaupt ein Kuerzel? Buchstaben und Ziffern, hoechstens
+    zwoelf Zeichen.
+
+    ⚠️ KEINE UNTERGRENZE VON ZWEI ZEICHEN (korrigiert 20.08.2026). Die erste
+    Fassung verlangte mindestens zwei - und warf damit W (Wormhole) und S
+    (Sonic) aus der eigenen Watchlist heraus. Sichtbar wurde es nur daran,
+    dass die Zahl der Werte von 25 auf 23 fiel; ohne diesen Vergleich waeren
+    zwei Reihen still verhungert. `isalnum` allein reicht: "-" faellt
+    ohnehin durch."""
+    s = str(sym or "").strip()
+    return 1 <= len(s) <= 12 and s.isalnum()
+
+
+def sammle_tvl(conn, symbole, sitzung=None, jetzt: str | None = None,
+               vorrat: int = VORRAT_GROESSTE) -> dict:
     """DefiLlama: ZWEI Abrufe fuer ALLE Symbole, kein Kontingent.
 
     ⚠️ Faellt der Abruf aus, wird fuer JEDES Symbol ein `fehler` geschrieben -
@@ -259,7 +292,13 @@ def sammle_tvl(conn, symbole, sitzung=None, jetzt: str | None = None) -> dict:
             for e in antwort.json():
                 sym = str(e.get(feld) or "").upper()
                 tvl = e.get("tvl")
-                if sym in gesucht and tvl:
+                # ⚠️ ALLES AUFNEHMEN, ERST DANACH AUSWAEHLEN. Die erste
+                # Fassung filterte hier schon auf die Watchlist - damit blieb
+                # der Vorrat zwangslaeufig leer, und der Fehler war an der
+                # Zahl 0 sofort sichtbar.
+                # DefiLlama fuehrt Eintraege ohne Symbol als "-" - das ist
+                # kein Kuerzel, sondern eine Leerstelle.
+                if tvl and _brauchbares_kuerzel(sym):
                     # Ein Symbol kann mehrere Protokolle haben - sie gehoeren
                     # addiert, sonst zaehlt zufaellig das erstgefundene.
                     summe[sym] = summe.get(sym, 0.0) + float(tvl)
@@ -269,7 +308,19 @@ def sammle_tvl(conn, symbole, sitzung=None, jetzt: str | None = None) -> dict:
                      grund=type(exc).__name__, jetzt=jetzt)
         return {"fehler": len(gesucht), "wert": 0, "keine_quelle": 0}
 
-    zaehl = {"wert": 0, "keine_quelle": 0, "fehler": 0}
+    # DIE GROESSTEN MITSCHREIBEN, auch ohne Watchlist-Eintrag. Kostet keinen
+    # weiteren Abruf - die Antwort liegt ohnehin vor.
+    vorrat_symbole = set()
+    if vorrat:
+        groesste = sorted(summe, key=lambda s: summe[s], reverse=True)
+        vorrat_symbole = {s for s in groesste[:vorrat] if s not in gesucht}
+
+    zaehl = {"wert": 0, "keine_quelle": 0, "fehler": 0, "vorrat": 0}
+    for sym in sorted(vorrat_symbole):
+        if schreibe(conn, symbol=sym, quelle="tvl", zustand="wert",
+                    wert=summe[sym], grund="Vorrat, nicht auf der Watchlist",
+                    jetzt=jetzt):
+            zaehl["vorrat"] += 1
     for sym in sorted(gesucht):
         if sym in summe:
             schreibe(conn, symbol=sym, quelle="tvl", zustand="wert",

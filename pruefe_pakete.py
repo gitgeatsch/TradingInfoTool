@@ -9206,6 +9206,58 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DIE ZUSAMMENFUEHRUNG (93 E) - ZAEHLT, RECHNET NICHT ----
+    from agent import gesamtbild as _GB
+
+    _gq = _quelltext("agent/gesamtbild.py")
+    # AM AUSGEGEBENEN TEXT geprueft, nicht am Quelltext: was der Leser sieht,
+    # ist die Zusage - und der Quelltext schreibt sie in Grossbuchstaben,
+    # woran die erste Fassung dieser Pruefung scheiterte.
+    _gz = _GB.saetze(["Uebliche Kursbewegung:", "⚠️ UNGUENSTIG: x"])
+    pruefe(P, "das Gesamtbild kann keinen Einstieg verhindern (E1)",
+           any("keine Sperre" in z for z in _gz)
+           and any("verhindert keine Empfehlung" in z for z in _gz),
+           "Fallstrick E1 ist der wichtigste des Kapitels: kein Kriterium "
+           "darf ein Urteil verhindern, es darf nur bestimmen, welcher Art "
+           "das Urteil ist")
+
+    # ⚠️ ES LIEST DIE FERTIGE MAIL - KEINE ZWEITE RECHNUNG.
+    _mq = _quelltext("agent/signal_mail.py")
+    pruefe(P, "und es rechnet nichts neu, sondern liest den fertigen Text",
+           "zeilen = text.split" in _mq and "_GB.saetze(zeilen)" in _mq,
+           "eine zweite Rechnung koennte von der ersten abweichen - genau "
+           "der Fehler, der vier Kopien derselben Stopzeile hinterliess")
+
+    # ⚠️ DIE ETIKETTEN MUESSEN ZU DEN MODULEN PASSEN.
+    #
+    # Das Gesamtbild sucht nach "GUENSTIG", "UNGUENSTIG" und den
+    # Unbekannt-Worten. Benennt jemand eines um, zaehlt es still falsch -
+    # ohne Fehlermeldung, ohne Luecke in der Simulation.
+    _quellen = (_quelltext("agent/trichter.py")
+                + _quelltext("agent/lebendigkeit.py")
+                + _quelltext("agent/drift.py")
+                + _quelltext("agent/anlass_kalender.py"))
+    pruefe(P, "die gesuchten Etiketten kommen in den Modulen auch vor",
+           _GB.DAGEGEN in _quellen and _GB.DAFUER in _quellen
+           and all(w in _quellen for w in _GB.UNBEKANNT),
+           "wer ein Etikett umbenennt, muss gesamtbild.py mitziehen - sonst "
+           "zaehlt es still falsch")
+    pruefe(P, "und jeder Blockanfang steht in genau einem Modul",
+           all(_quellen.count(a) >= 1 for _n, a in _GB.MERKMALE))
+
+    # DAS ZAEHLEN SELBST - an einem gebauten Beispiel.
+    _bsp = ["Uebliche Kursbewegung (80 %):", "⚠️ UNGUENSTIG: x", "",
+            "Bekannte Termine in den naechsten 30 Tagen:", "   GUENSTIG: y",
+            "", "Lebendigkeit des Projekts:",
+            "⚠️ NOCH KEINE BEWERTUNG MOEGLICH - z"]
+    _b = _GB.bewerte(_bsp)
+    pruefe(P, "drei Merkmale, drei verschiedene Urteile - richtig zugeordnet",
+           _b["dagegen"] == 1 and _b["dafuer"] == 1 and _b["unbekannt"] == 1,
+           "ein UNGUENSTIG aus dem Trichter darf nicht dem Terminblock "
+           "zugerechnet werden - die Bloecke trennt die Leerzeile")
+    pruefe(P, "ohne Merkmale bleibt die Zeile weg, statt '0 von 0'",
+           _GB.saetze([]) == [] and _GB.saetze(["irgendwas"]) == [])
+
     # ---- GESAMTPRUEFUNG KAPITEL 93: KEINE ZAHL ZWEIMAL (20.08.2026) ----
     #
     # Der Mailtext nennt Messwerte ("ein Feld von 27 haelt die Schwelle").

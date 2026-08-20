@@ -12800,3 +12800,123 @@ fehlende Zeile gilt als Lücke.
 
 **1.241 Prüfungen**, 0 freie Namen, Darstellungstest, Ende-zu-Ende 8 Signale
 / 9 Mails / 0 Lücken.
+
+
+---
+
+### 93.22 Das Sammeln folgt der Watchlist - und das war zu eng (20.08.2026)
+
+**Nutzerfrage:** *„haben wir hier eine Menge an Symbolen welche Top 100 und
+Bestand, oder startet das Sammeln immer, wenn ein neues Krypto-Asset
+hinzukommt?"*
+
+**Geprüft:** `lebendigkeit.job()` filtert die Watchlist auf
+`assetklasse == krypto`. Es ist **keine** Top-100-Liste, sondern die **44
+kuratierten Werte** aus der Konfiguration, und die Watchlist wächst **nicht**
+automatisch - der Marktscan schreibt nichts hinein.
+
+**Also: ja, ein neuer Wert wird ab dem nächsten Lauf gesammelt - aber bei
+null.** Und Historie lässt sich nicht nachladen: beide Quellen liefern
+ausschließlich den aktuellen Stand.
+
+⚠️ **Damit träfe die Lücke ausgerechnet den interessanten Fall.** Der kleine
+Wert, der gerade auffällt und deshalb neu aufgenommen wird, wäre 30 Tage lang
+der einzige ohne Aussage.
+
+#### Die Lösung kostet nichts
+
+DefiLlama liefert **zwei Sammelabrufe für alles** - die Antwort enthält
+ohnehin über 8.000 Protokolle. Es war reine Verschwendung, davon nur 44
+auszuwerten.
+
+`VORRAT_GROESSTE = 150`: die größten Werte nach hinterlegtem Kapital werden
+**mitgeschrieben, auch ohne Watchlist-Eintrag**. Kommt einer später dazu, ist
+seine Reihe schon da. Gemessen: **25 Watchlist-Werte + 136 Vorrat** aus
+denselben zwei Abrufen.
+
+Die 150 sind ein Deckel gegen Wildwuchs: 8.082 Protokolle täglich wären drei
+Millionen Zeilen im Jahr, 150 sind rund 55.000.
+
+#### Zwei Fehler beim Bauen, beide an einer Zahl sichtbar
+
+| | |
+|---|---|
+| **Vorrat blieb leer** | die erste Fassung filterte schon beim Einlesen auf die Watchlist - der Vorrat konnte gar nicht entstehen. Sichtbar an der Zahl 0 |
+| ⚠️ **W und S fielen heraus** | mein Kürzel-Filter verlangte mindestens zwei Zeichen. **Wormhole (W) und Sonic (S)** sind einzeichig. Sichtbar nur daran, dass die Werte von 25 auf 23 fielen - ohne diesen Vergleich wären zwei Reihen still verhungert |
+
+---
+
+### 93.23 Stufe E gebaut - die Zusammenführung (20.08.2026)
+
+**Fallstrick E1 ist der wichtigste des ganzen Kapitels:**
+
+> Jede Stufe kann zur Bremse werden, wenn sie zur Bedingung wird. **Kein
+> Kriterium darf ein Urteil verhindern. Es darf nur bestimmen, welcher Art
+> das Urteil ist.**
+
+`agent/gesamtbild.py` ist deshalb **keine Note und kein Filter**. Es rechnet
+nichts neu, entscheidet nichts, und kann keinen Einstieg verhindern.
+
+#### Der Trick: es liest die Mail, die ohnehin entsteht
+
+Alle vier Stufen setzen bereits ein Etikett - `GUENSTIG`, `UNGUENSTIG`,
+`NOCH KEINE BEWERTUNG MOEGLICH`. Das Gesamtbild **zählt sie und stellt das
+Ergebnis nach vorn**. Es gibt also **keine zweite Rechnung, die von der
+ersten abweichen könnte** - der Fehler, der am 18.08. vier Kopien derselben
+Stopzeile hinterlassen hat.
+
+```
+ASTER (ASTER)
+Kurs 0,5430 EUR · 2026-08-19 · Modell attrappe
+Hebel / Einstieg
+
+Auf einen Blick: von 4 pruefbaren Merkmalen 1 spricht dafuer, 1 dagegen,
+2 noch nicht bewertbar.
+Warnung: Dagegen spricht: Schwankungsbreite und Stop. Das ist ein Hinweis,
+   keine Sperre - die Einzelheiten stehen unten.
+   Diese Zeile fasst nur zusammen, was weiter unten steht. Sie verhindert
+   keine Empfehlung und ersetzt keine.
+```
+
+Bei AIOZ sind es **3 von 4** - dort kennt DefiLlama kein hinterlegtes
+Kapital, also fehlt der Block. Richtig so: ein fehlendes Merkmal wird nicht
+mitgezählt.
+
+#### ⚠️ „Noch nicht bewertbar" ist die häufigste Antwort - und das ist ehrlich
+
+Die Lebendigkeitsreihe ist erst ab Ende September auswertbar, der Rangplatz
+hat gemessen keinen handelbaren Vorteil. **Wer daraus eine Note baute,
+bekäme eine Zahl, die Sicherheit vortäuscht, wo keine ist.**
+
+#### Die Prüfung, die am meisten wert ist
+
+Das Gesamtbild sucht nach Etiketten wie `UNGUENSTIG`. Benennt jemand eines
+um, zählt es **still falsch** - ohne Fehlermeldung, ohne Lücke in der
+Simulation. Eine Paketprüfung hält deshalb fest, dass jedes gesuchte Etikett
+in mindestens einem der vier Module tatsächlich vorkommt.
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` - 6 neue Prüfungen: kann keinen Einstieg verhindern (am
+ausgegebenen Text geprüft, nicht am Quelltext); liest den fertigen Text statt
+neu zu rechnen; die Etiketten passen zu den Modulen; drei Merkmale werden
+richtig zugeordnet (ein `UNGUENSTIG` aus dem Trichter darf nicht dem
+Terminblock zufallen); ohne Merkmale bleibt die Zeile weg.
+**1.247 Prüfungen** gesamt, 0 freie Namen, Darstellungstest, Ende-zu-Ende
+8 Signale / 9 Mails / 0 Lücken.
+
+#### Kapitel 93 ist damit vollständig
+
+| Stufe | |
+|---|---|
+| **A** Trichter | in Produktion, hält (A2 misst laufend mit) |
+| **A1** Faktor je Klasse | gemessen, umgesetzt |
+| **B** Drift | gemessen, abgeschlossen - Rangplatz als Tatsache in der Mail |
+| **C** Lebendigkeit | sammelt, jetzt mit Vorrat - Auswertung ab ca. 18.09. |
+| **D** Anlass | gebaut, drei Quellen, kein Gate |
+| **E** Zusammenführung | **gebaut** - zählt, sperrt nicht |
+
+**Was Kapitel 93 nicht geliefert hat und auch nicht liefern sollte:** einen
+Richtungsvorteil. Was es geliefert hat: vier prüfbare Aussagen statt keiner,
+jede mit ihrem gemessenen Wert daneben - und eine Zeile ganz oben, die sagt,
+wie viel Boden unter der Empfehlung ist.

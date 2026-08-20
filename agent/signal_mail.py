@@ -586,4 +586,24 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
            "Ausfuehrung manuell ueber die Bitpanda-App. Details im Hebel-Tab."
            if instrument == "hebel" else
            "Ausfuehrung manuell ueber die Bitpanda-App."])
+
+    # 93 E: DAS GESAMTBILD GANZ NACH OBEN (20.08.2026).
+    #
+    # Es liest die FERTIGE Mail und zaehlt die Etiketten, die weiter unten
+    # ohnehin stehen. Damit gibt es KEINE zweite Rechnung, die von der
+    # ersten abweichen koennte - genau der Fehler, der am 18.08. vier
+    # Kopien derselben Stopzeile hinterlassen hat.
+    #
+    # ⚠️ ES SPERRT NICHTS (Fallstrick E1). Auch "3 dagegen" ist eine
+    # Zusammenfassung, kein Veto.
+    try:
+        from agent import gesamtbild as _GB
+        zeilen = text.split("\n")
+        kopf = _GB.saetze(zeilen)
+        if kopf:
+            # Unter die drei Kopfzeilen (Titel, Kurs, Instrument), vor den
+            # ersten Abschnitt - "das fuer mich Wichtige zuerst".
+            text = "\n".join(zeilen[:3] + [""] + kopf + zeilen[3:])
+    except Exception:                                        # noqa: BLE001
+        pass
     return betreff, text
