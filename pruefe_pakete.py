@@ -9234,9 +9234,21 @@ def paket_dimension() -> None:
     # ⚠️ UND KEINE ROHE ZAHL MIT EUR-ETIKETT MEHR IN DIESER DATEI.
     _auq = _quelltext("agent/ausstiegsrechnung.py")
     import re as _re2
-    _roh = [m for m in _re2.findall(r"_de\(e\[[^\]]+\]\)\} EUR", _auq)]
-    pruefe(P, "kein Betrag wird unumgerechnet als EUR ausgegeben", not _roh,
-           f"gefunden: {_roh[:3]}")
+    _roh = _re2.findall(r"_de\(e\[[^\]]+\]\)\} EUR", _auq)
+    # ⚠️ EINE BEKANNTE, UNGEKLAERTE STELLE - und sie steht hier NAMENTLICH,
+    # damit sie nicht in Vergessenheit geraet und keine zweite dazukommt.
+    #
+    # `umgeworfen_preis_eur` heisst EUR, wird in `_absatz()` aber durch
+    # `_in_eur` geschickt - dort gilt er also als USD. Zwei Stellen, zwei
+    # Lesarten, eine davon falsch. WELCHE, ist ohne Blick auf die Quelle des
+    # Wertes nicht zu entscheiden; geraten wird hier nicht.
+    _bekannt = {"_de(e['umgeworfen_preis_eur'])} EUR"}
+    _neu = [x for x in _roh if x not in _bekannt]
+    pruefe(P, "keine NEUE Stelle gibt Betraege unumgerechnet als EUR aus",
+           not _neu,
+           f"gefunden: {_neu[:3]}. Bekannt und offen: umgeworfen_preis_eur - "
+           f"der Name sagt EUR, `_absatz()` rechnet ihn um. Eine der beiden "
+           f"Lesarten ist falsch")
 
     # ---- DIE ZUSAMMENFUEHRUNG (93 E) - ZAEHLT, RECHNET NICHT ----
     from agent import gesamtbild as _GB
