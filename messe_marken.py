@@ -70,6 +70,7 @@ import numpy as np
 sys.path.insert(0, ".")
 from agent import lagebeschreibung as LB                      # noqa: E402
 from agent import trefferbilanz as TB                         # noqa: E402
+from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, _marktphase,          # noqa: E402
                               _reihen_roh)
 
@@ -193,7 +194,7 @@ def bewerte(faelle, klasse: str) -> tuple[int, float, float]:
         return len(ent), float("nan"), float("nan")
     quote = sum(1 for f in ent if f["ausgang"] == "ziel") / len(ent)
     stop_rel = float(np.median([f["stop_relativ"] for f in ent]))
-    gebuehr = TB.KOSTEN_JE_SEITE.get(klasse, 0.015)
+    gebuehr = _GEB(klasse)
     return len(ent), quote, quote - TB.breakeven(2 * gebuehr / stop_rel, CRV)
 
 
@@ -319,7 +320,7 @@ def main() -> int:
         reihen = [np.array([p for _i, p in sorted(v)])
                   for v in ordnung.values()]
         lang = sum(1 for r in reihen if len(r) >= 2 * a.blocklaenge)
-        gebuehr = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+        gebuehr = _GEB(a.klasse)
         stop_h = float(np.median(stop_arr[ist_h]))
         schwelle_be = TB.breakeven(2 * gebuehr / stop_h, CRV)
         werte = []

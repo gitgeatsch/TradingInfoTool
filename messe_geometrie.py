@@ -82,6 +82,7 @@ import numpy as np
 
 sys.path.insert(0, ".")
 from agent import trefferbilanz as TB                        # noqa: E402
+from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, PHASE_FENSTER,       # noqa: E402
                               PHASE_SCHWELLE, _atr, _marktphase,
                               _reihen_roh)
@@ -132,7 +133,7 @@ def laufe(db: str, klasse: str) -> list[dict]:
 
 def bewerte(faelle: list, klasse: str, mischen=None) -> dict:
     """Je Feld: Quote, Breakeven und der Abstand dazwischen."""
-    gebuehr = TB.KOSTEN_JE_SEITE.get(klasse, 0.015)
+    gebuehr = _GEB(klasse)
     if mischen is not None:
         ausgaenge = list(mischen.permutation([f["ausgang"] for f in faelle]))
     else:

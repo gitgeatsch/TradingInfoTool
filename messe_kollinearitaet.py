@@ -59,6 +59,7 @@ sys.path.insert(0, ".")
 from agent import trefferbilanz as TB                        # noqa: E402
 from messe_drift_absolut import BAENDER, DRIFT_FENSTER, _band  # noqa: E402
 from messe_geometrie import CRV_WERTE, K_WERTE               # noqa: E402
+from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, _marktphase,         # noqa: E402
                               _reihen_roh)
 
@@ -111,7 +112,7 @@ def abstand(faelle, klasse: str) -> tuple[int, float]:
         return len(ent), float("nan")
     quote = sum(1 for f in ent if f["ausgang"] == "ziel") / len(ent)
     stop_rel = float(np.median([f["stop_relativ"] for f in ent]))
-    gebuehr = TB.KOSTEN_JE_SEITE.get(klasse, 0.015)
+    gebuehr = _GEB(klasse)
     return len(ent), quote - TB.breakeven(2 * gebuehr / stop_rel,
                                           ent[0]["crv"])
 
@@ -268,7 +269,7 @@ def main() -> int:
         print("  aus 300 Zellen bei reinem Zufall.")
         print("-" * 78)
         rng = np.random.default_rng(20260820)
-        gebuehr = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+        gebuehr = _GEB(a.klasse)
         # ⚠️ EINMAL INDIZIEREN, NICHT DREIHUNDERTMAL FILTERN. Die erste
         # Fassung ging je Zelle durch alle 850.000 Saetze - zwoelf Laeufe
         # waeren 255 Millionen Vergleiche gewesen und liefen in kein
@@ -343,7 +344,7 @@ def main() -> int:
         print("  benachbarter Anker stehen, statt sie wegzuwuerfeln.")
         print("-" * 78)
         rngb = np.random.default_rng(20260821)
-        gebuehr = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+        gebuehr = _GEB(a.klasse)
         _erste = next(iter(geo.values()))
         gedreht = sum(1 for r in _erste["reihen"] if len(r) >= 2 * a.blocklaenge)
         hoechste_b, eine_zelle = [], []

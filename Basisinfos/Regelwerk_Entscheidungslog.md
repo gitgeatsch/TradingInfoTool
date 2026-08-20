@@ -18466,3 +18466,41 @@ Datenmenge - 1.301 H-Faelle ueber 24 Reihen, Schwelle +10,0 gegen Effekt
 laengere Historien, fuer diese Frage nie gemessen), erst danach eine vorab
 benannte Pruefung des weiten Stopbands. Die Reihenfolge ist wichtig: das Band
 jetzt zu pruefen hiesse, es aus einem Ergebnis zu benennen.
+
+
+[2026-08-20] KAPITEL 106: DIE MACHBARKEITSPRUEFUNG KIPPT DEN EIGENEN PLAN
+
+105.5 hatte Aktien und ETF als naechsten Schritt "eindeutig und ohne
+Alternative" genannt. Die Machbarkeitspruefung sagt Nein, aus zwei
+unabhaengigen Gruenden.
+
+1. DIE REIHEN SIND NICHT DA: krypto 39 Reihen / 52.407 Kerzen, aktien 2 /
+   3.913, etf 4 / 10.199, rohstoff+thema_etf+devisen NULL. Die bindende
+   Grenze war "24 Reihen lang genug fuer zwei Bloecke" - sechs weitere machen
+   daraus 30. Laenge ersetzt keine Breite: die Block-Permutation zaehlt
+   REIHEN, nicht Kerzen.
+
+2. ⚠️ STILLER DEFEKT GEFUNDEN: sechs Messwerkzeuge lasen
+   TB.KOSTEN_JE_SEITE.get(klasse, 0.015). Fuer 'aktien' und 'etf' gibt es
+   keinen Schluessel - sie haetten kommentarlos die KRYPTO-Gebuehr genommen.
+   An der Boerse sind die Kosten Fixgebuehr je Seite PLUS Spread,
+   positionsgroessen-abhaengig; ein einzelner Prozentsatz kann das nicht
+   ausdruecken. Haette ich 105.5 einfach ausgefuehrt, waere eine falsche
+   Messung herausgekommen, die niemand als falsch erkannt haette.
+   BEHOBEN: simuliere_bremse.gebuehr_je_seite() ist die einzige Stelle und
+   BRICHT AB statt zu schaetzen. Fuer krypto unveraendert 0,015 -
+   nachgerechnet, alle bisherigen Zahlen bleiben gueltig.
+
+DER WEG, DER OFFEN IST: mehr KRYPTOREIHEN. CoinGecko fuehrt mehrere hundert,
+wir messen auf 39. Zwei Bedingungen: (a) EIGENE MESSDATENBANK - neue Symbole
+in die Produktions-Watchlist zu schreiben hiesse, den Live-Betrieb als
+Nebenwirkung einer Messung zu aendern; _reihen_roh nimmt den Pfad als
+Parameter. (b) DIE UEBERLEBENSVERZERRUNG GEHOERT BENANNT - wer heute die
+groessten 150 laedt, laedt die, die ueberlebt haben. Fuer eine Renditemessung
+toedlich; hier weniger schlimm, weil H gegen Nicht-H auf DENSELBEN Ankern
+derselben Reihe verglichen wird und die Verzerrung beide Arme gleich trifft.
+Sie bleibt trotzdem im Befund stehen.
+
+UMSETZUNGSREIFE: NEIN. Vorsprung +7,1 gegen Schwelle +10,0. Ein Filter, der
+die Zufallsschwelle nicht nimmt, wuerde Signale wegnehmen, ohne dass jemand
+sagen koennte, ob die weggenommenen die schlechteren waren.

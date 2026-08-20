@@ -14206,3 +14206,74 @@ Alternative:**
 **Die Reihenfolge ist wichtig:** das breite Band jetzt zu prüfen hieße, es aus
 einem Ergebnis zu benennen. Mit mehr Reihen wäre es aus einem Grund benennbar
 — nämlich aus dem hier dokumentierten Verlauf.
+
+
+---
+
+## Kapitel 106 — Die Machbarkeitsprüfung kippt meinen eigenen Plan (20.08.2026)
+
+Kapitel 105.5 hatte den nächsten Schritt „eindeutig und ohne Alternative"
+genannt: **Aktien und ETF**, um die zu schmale Basis zu verbreitern. **Die
+Machbarkeitsprüfung sagt Nein — aus zwei unabhängigen Gründen.**
+
+### 106.1 Die Reihen sind nicht da
+
+| Klasse | Reihen | ab 500 Kerzen | Kerzen gesamt |
+|---|---:|---:|---:|
+| krypto | 39 | 36 | 52.407 |
+| **aktien** | **2** | 2 | 3.913 |
+| **etf** | **4** | 4 | 10.199 |
+| rohstoff / thema_etf / devisen | **0** | — | — |
+
+Die bindende Grenze war *„24 Reihen lang genug für zwei Blöcke"*. **Sechs
+zusätzliche Reihen machen daraus 30** — eine Verbreiterung um ein Viertel, wo
+ein Vielfaches nötig wäre. Die Historien sind zwar länger (Median 2.357 gegen
+960 Kerzen), aber **Länge ersetzt keine Breite**: die Block-Permutation zählt
+Reihen, nicht Kerzen.
+
+### 106.2 ⚠️ Und das Kostenmodell überträgt sich nicht — ein stiller Defekt
+
+Beim Prüfen gefunden: **sechs Messwerkzeuge lasen
+`TB.KOSTEN_JE_SEITE.get(klasse, 0.015)`.** Für `aktien` und `etf` gibt es dort
+keinen Schlüssel — sie hätten kommentarlos die **Krypto-Gebühr** genommen.
+
+An der Börse sind die Kosten eine **Fixgebühr je Seite plus Spread**. Die
+Fixgebühr hängt an der Positionsgröße und kürzt sich aus
+`2 × Gebühr / Stopabstand` **nicht heraus** — ein einzelner Prozentsatz kann
+sie gar nicht ausdrücken. Die Produktion rechnet das seit jeher richtig
+(`TB.kosten_r_aus_stop`); die Simulationen kennen keine Positionsgröße.
+
+**Hätte ich 105.5 einfach ausgeführt, wäre eine falsche Messung
+herausgekommen, die niemand als falsch erkannt hätte** — sie hätte eine Zahl
+gehabt, ein Vorzeichen und eine Schwelle.
+
+**Behoben:** `simuliere_bremse.gebuehr_je_seite()` ist jetzt die einzige
+Stelle und **bricht ab**, statt zu schätzen. Für `krypto` ist der Wert
+unverändert 0,015 — **alle bisherigen Zahlen bleiben gültig**, nachgerechnet.
+
+### 106.3 Der Weg, der tatsächlich offen ist
+
+Die Basis verbreitert sich nur über **mehr Kryptoreihen**. CoinGecko führt
+mehrere hundert; wir messen auf 39.
+
+⚠️ **Zwei Bedingungen, ohne die es nicht geht:**
+
+**Eine eigene Messdatenbank.** Neue Symbole in die Produktions-Watchlist zu
+schreiben hieße, den Live-Betrieb als Nebenwirkung einer Messung zu ändern.
+`_reihen_roh(db, klasse)` nimmt den Pfad als Parameter — die Messreihen
+gehören in eine getrennte Datei.
+
+**Die Überlebensverzerrung gehört benannt.** Wer heute die größten 150 Coins
+lädt, lädt genau die, die überlebt haben. Für eine *Renditemessung* wäre das
+tödlich. **Hier ist es deutlich weniger schlimm, aber nicht null:** verglichen
+wird H gegen Nicht-H **auf denselben Ankern derselben Reihe** — die
+Verzerrung trifft beide Arme gleich. Sie bleibt trotzdem im Befund stehen.
+
+### 106.4 Was das für die Umsetzungsreife heißt
+
+**Die Strukturhypothese ist nicht widerlegt und nicht bestätigt.** Der
+bereinigte Vorsprung liegt bei +7,1 Punkten, die Schwelle bei +10,0 — es
+fehlen Reihen, kein Verfahren. Solange das so ist, ist **kein Einsatz im
+Betrieb vertretbar**: ein Filter, der die Zufallsschwelle nicht nimmt, würde
+Signale wegnehmen, ohne dass jemand sagen könnte, ob die weggenommenen die
+schlechteren waren.

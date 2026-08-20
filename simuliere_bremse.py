@@ -129,6 +129,35 @@ def _reihen_roh(db: str, klasse: str) -> dict:
     return aus
 
 
+
+def gebuehr_je_seite(klasse: str) -> float:
+    """Der Gebuehrensatz je Seite - und ein LAUTES Nein fuer alles andere.
+
+    ⚠️ HIER STAND EIN STILLER RUECKFALL. Alle Messwerkzeuge lasen
+    `TB.KOSTEN_JE_SEITE.get(klasse, 0.015)`. Fuer 'aktien' und 'etf' gibt es
+    dort keinen Schluessel - sie bekamen also kommentarlos die KRYPTO-Gebuehr
+    und haetten eine Messung ausgegeben, die niemand als falsch erkannt
+    haette.
+
+    An der Boerse sind die Kosten eine FIXGEBUEHR je Seite plus Spread. Die
+    Fixgebuehr haengt an der Positionsgroesse und kuerzt sich aus
+    `2 * Gebuehr / Stopabstand` nicht heraus - ein einzelner Prozentsatz kann
+    sie gar nicht ausdruecken. Die Produktion rechnet das richtig
+    (`TB.kosten_r_aus_stop`); diese Simulationen kennen keine
+    Positionsgroesse.
+
+    Deshalb wird hier abgebrochen statt geschaetzt. Wer die Messungen auf
+    Boersenklassen ausweiten will, muss ihnen zuerst eine Positionsgroesse
+    geben - siehe Umbauplan 106."""
+    satz = TB.KOSTEN_JE_SEITE.get(klasse)
+    if satz is None:
+        raise SystemExit(
+            f"Anlageklasse '{klasse}' hat keinen Gebuehrensatz je Seite. "
+            f"Boersenklassen rechnen mit Fixgebuehr + Spread und brauchen "
+            f"eine Positionsgroesse (TB.kosten_r_aus_stop). Ein stiller "
+            f"Rueckfall auf den Krypto-Satz waere eine falsche Messung.")
+    return float(satz)
+
 def _marktphase(roh: dict) -> dict:
     """Datum -> "bulle" / "seitwaerts" / "baer".
 
@@ -228,7 +257,7 @@ def main() -> int:
           f"{100 * ausg.get('ziel', 0) / max(1, n_ent):.1f} %")
 
     # Kosten je Trade in R - dieselbe Rechnung wie im Betrieb.
-    kosten_je_seite = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+    kosten_je_seite = gebuehr_je_seite(a.klasse)
     schnitt_stop = float(np.median([f["stop_relativ"] for f in faelle]))
     # Beim Hebel laeuft die Finanzierung mit der Haltedauer mit - gerechnet
     # mit der MEDIAN-Haltedauer der entschiedenen Faelle, nicht mit dem

@@ -9248,6 +9248,28 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- KEIN STILLER RUECKFALL AUF DEN KRYPTO-SATZ (Kapitel 106) ----
+    import simuliere_bremse as _SB106
+    from agent.krypto import backward_tracking as BT106
+
+    pruefe(P, "der Gebuehrensatz kommt aus EINER Funktion",
+           hasattr(_SB106, "gebuehr_je_seite")
+           and "KOSTEN_JE_SEITE.get(klasse, 0.015)"
+           not in _quelltext("messe_marken.py")
+           and "KOSTEN_JE_SEITE.get(a.klasse, 0.015)"
+           not in _quelltext("simuliere_bremse.py"),
+           "sechs Werkzeuge hatten je einen eigenen Rueckfall auf 0,015")
+    pruefe(P, "krypto ist unveraendert 0,015",
+           _SB106.gebuehr_je_seite("krypto") == BT106._KOSTEN_KRYPTO_JE_SEITE,
+           "alle Messungen der Kapitel 99-105 muessen gueltig bleiben")
+    pruefe(P, "eine Boersenklasse bricht LAUT ab, statt zu schaetzen",
+           _wirft(lambda: _SB106.gebuehr_je_seite("aktien"), SystemExit)
+           and _wirft(lambda: _SB106.gebuehr_je_seite("etf"), SystemExit),
+           "an der Boerse sind die Kosten Fixgebuehr je Seite PLUS Spread "
+           "und damit positionsgroessen-abhaengig - ein einzelner Prozentsatz "
+           "kann das nicht ausdruecken. Der stille Rueckfall haette eine "
+           "falsche Messung geliefert, die niemand als falsch erkennt")
+
     # ---- H BEI GLEICHEN KOSTEN (Kapitel 105) ----
     from messe_struktur_bereinigt import MINDESTALTER as _SB_ALTER
     _sq = _quelltext("messe_struktur_bereinigt.py")

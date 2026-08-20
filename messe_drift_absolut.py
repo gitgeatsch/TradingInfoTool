@@ -66,6 +66,7 @@ import numpy as np
 
 sys.path.insert(0, ".")
 from agent import trefferbilanz as TB                        # noqa: E402
+from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, PHASE_FENSTER,       # noqa: E402
                               _marktphase, _reihen_roh)
 
@@ -143,7 +144,7 @@ def main() -> int:
     print("  vom 19.08. per Konstruktion nicht sehen konnte.")
     print("=" * 78)
     faelle = laufe(a.db, a.klasse)
-    gebuehr = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+    gebuehr = _GEB(a.klasse)
     stop_rel = float(np.median([f["stop_relativ"] for f in faelle]))
     schwelle = TB.breakeven(2 * gebuehr / stop_rel, CRV)
     driftfrei = TB.basisrate_fuer(CRV)
