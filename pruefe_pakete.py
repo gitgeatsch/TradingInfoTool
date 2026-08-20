@@ -9206,6 +9206,38 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- WAEHRUNG: KEIN BETRAG MIT "EUR" OHNE UMRECHNUNG (20.08.2026) ----
+    from agent import ausstiegsrechnung as _AU
+
+    # ⚠️ AN EINER ECHTEN MAIL GEFUNDEN. ETH stand bei 1.931,49 EUR, darunter
+    # "Stop auf 2.025,02 EUR nachziehen" - ein Stop UEBER dem Marktpreis.
+    # Wer ihn so eintraegt, verkauft sofort. Die Rechnung war richtig, die
+    # Waehrung nicht: 2.025,02 ist USD, in EUR sind es 1.735.
+    _e = {"stop_empfohlen": 2025.02, "gesicherte_r": 0.366,
+          "eur_je_usd": 0.8567175487465181, "stand_r": 1.074,
+          "stand_prozent": 0.1736, "mfe_r": 1.366, "mfe_prozent": 0.2208,
+          "empfehlung": "STOP NACHZIEHEN", "gruende": []}
+    _zs = [z for z in _AU.saetze(_e) if z.startswith("Stop")]
+    pruefe(P, "der nachgezogene Stop steht in EUR, nicht in Quellwaehrung",
+           bool(_zs) and "1.735" in _zs[0] and "2.025" not in _zs[0],
+           "dieselbe Zahl wurde zweimal ausgegeben - `_absatz()` rechnete "
+           "um, `saetze()` nicht. Der Docstring von `_in_eur` nennt genau "
+           "diesen Fehler als Grund seiner Existenz")
+    _ohne = dict(_e)
+    _ohne.pop("eur_je_usd")
+    pruefe(P, "ohne Umrechnungsfaktor steht KEINE Zahl da",
+           "2.025" not in [z for z in _AU.saetze(_ohne)
+                           if z.startswith("Stop")][0],
+           "lieber keine Zahl als eine in der falschen Waehrung - dieselbe "
+           "Regel, die `_in_eur` schon fuer die Sammelmail durchsetzt")
+
+    # ⚠️ UND KEINE ROHE ZAHL MIT EUR-ETIKETT MEHR IN DIESER DATEI.
+    _auq = _quelltext("agent/ausstiegsrechnung.py")
+    import re as _re2
+    _roh = [m for m in _re2.findall(r"_de\(e\[[^\]]+\]\)\} EUR", _auq)]
+    pruefe(P, "kein Betrag wird unumgerechnet als EUR ausgegeben", not _roh,
+           f"gefunden: {_roh[:3]}")
+
     # ---- DIE ZUSAMMENFUEHRUNG (93 E) - ZAEHLT, RECHNET NICHT ----
     from agent import gesamtbild as _GB
 

@@ -208,11 +208,21 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
     # eine gefallene These beendet den Handel, ein nachgezogener Stop nicht.
     gruende = []
     if e["stop_bereits_unterschritten"]:
+        # ⚠️ HIER GIBT ES DEN UMRECHNUNGSFAKTOR NOCH NICHT.
+        #
+        # `bewerte()` ist waehrungsblind - sie bekommt Zahlen und weiss
+        # nicht, in welcher Waehrung. `eur_je_usd` haengt der Aufrufer erst
+        # danach an. Eine Zahl mit "EUR" zu beschriften waere hier also
+        # geraten, und genau das stand hier bis zum 20.08.2026.
+        #
+        # Also steht die Waehrung NICHT dabei. Der Satz sagt dasselbe ohne
+        # sie - dass der Stop hinter dem Kurs liegt, ist ein Verhaeltnis,
+        # kein Betrag. Die Sammelmail nennt die Zahl an anderer Stelle
+        # korrekt umgerechnet.
         gruende.append(
-            f"Der nachgezogene Stop bei {_de(e['stop_empfohlen'])} EUR liegt "
-            f"BEREITS hinter dem aktuellen Kurs ({_de(kurs_aktuell)} EUR). Die "
-            f"Position haette danach schliessen muessen - die Marke ist kein "
-            f"Vorschlag fuer morgen, sondern ein Ereignis von gestern.")
+            "Der nachgezogene Stop liegt BEREITS hinter dem aktuellen Kurs. "
+            "Die Position haette danach schliessen muessen - die Marke ist "
+            "kein Vorschlag fuer morgen, sondern ein Ereignis von gestern.")
     if e["falsifiziert"]:
         gruende.append(
             f"Der Kurs hat den Preis erreicht, bei dem das Modell seine eigene "
@@ -304,7 +314,24 @@ def saetze(e: dict) -> list[str]:
             zeile += " - Hoechststand noch nicht nachgefuehrt"
         z.append(zeile)
     if e.get("stop_empfohlen") is not None:
-        z.append(f"Stop         auf {_de(e['stop_empfohlen'])} EUR nachziehen "
+        # ⚠️ UMRECHNEN. DIESELBE ZAHL, ZWEI AUSGABEN - EINE WAR FALSCH.
+        #
+        # Gefunden am 20.08.2026 an einer echten Mail: ETH stand bei 1.931,49
+        # EUR, und darunter "Stop auf 2.025,02 EUR nachziehen". Ein Stop
+        # ueber dem Marktpreis - wer ihn so eintraegt, verkauft sofort.
+        #
+        # Die Rechnung war richtig, die Waehrung nicht: 2.025,02 ist USD
+        # (Einstieg 1.911,89 USD, Hoechstkurs 2.334 USD, minus 1 R). In EUR
+        # sind es 1.735,00 - sauber unter dem Kurs.
+        #
+        # `_absatz()` machte es zwei Bildschirmseiten weiter richtig, mit
+        # `_kurs(_in_eur(...))`. Diese Zeile hier nicht. Der Docstring von
+        # `_in_eur` nennt genau diesen Fehler als Grund seiner Existenz.
+        #
+        # Fehlt der Umrechnungsfaktor, steht "-" statt einer Zahl. Lieber
+        # keine als eine in der falschen Waehrung - dieselbe Regel wie dort.
+        z.append(f"Stop         auf "
+                 f"{_kurs(_in_eur(e, e['stop_empfohlen']), 'EUR')} nachziehen "
                  f"- sichert {_de(e['gesicherte_r'], 2, True)} R")
     elif e.get("mfe_r") is not None and not e.get("trailing_aktiv"):
         z.append(f"Stop         unveraendert - der Trailing-Stop loest erst "
