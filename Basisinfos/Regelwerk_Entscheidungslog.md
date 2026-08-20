@@ -18182,3 +18182,45 @@ Signalgenerierung und -bewertung, konkret bei Marktphase und Asset-Auswahl.
 
 GEPRUEFT: 1.276 Paketpruefungen (5 neue), 0 freie Namen, 8 Signale / 9 Mails
 / 0 Luecken.
+
+
+[2026-08-20] KAPITEL 100: WO DER UNTERSCHIED WIRKLICH SITZT
+
+Drei Fragen VORAB festgelegt in messe_konstellationen.py, geschrieben bevor
+die erste Zahl gerechnet wurde. 40.499 entschiedene Faelle, Placebo mit
+gewuerfelten Etiketten.
+
+H1 MARKTPHASE: bulle 28,1 %, seitwaerts 31,2 %, baer 42,4 %. Abstand Baer
+minus Bulle +14,3 Punkte, t = 24,36 gegen Placebo-Schwelle 1,72. Der
+Baermarkt liegt UEBER dem Breakeven (42,4 gegen 40,3 %). Groesster gemessener
+Einzeleffekt in der Geschichte des Projekts. Plausibel ohne Zusatzannahme:
+der Stop liegt bei 2,0 ATR, im Baermarkt ist der ATR gross, der Stop damit
+weit - und ein weiter Stop wird seltener vom Rauschen getroffen.
+
+H2 ASSET: Streuung der Symbolquoten 11,2 Punkte gegen 2,1 zufaellig
+erwartete, Faktor 5,23 gegen Schwelle 1,32. ABER: das ist keine Auswahlregel.
+Symbole nach vergangener Trefferquote zu waehlen ist die Falle aus 93.17;
+der Unterschied muesste sich vorwaerts wiederholen. Die Warnung steht im Kopf
+des Werkzeugs.
+
+H3 - DIE FRAGE DES NUTZERS nach Zwischenstufen: die Zahl SORTIERT NICHT. Die
+Quote steigt bis zum vierten Zehntel (37,5 %) und faellt danach wieder; das
+oberste Zehntel, genau wo die harte Schwelle schneidet, liegt bei 33,9 % und
+damit UNTER den mittleren. Eine weichere Schwelle hilft deshalb nicht - die
+Zahl zeigt in der oberen Haelfte in die falsche Richtung. Sie traegt zwar
+Information (t = 3,14 gegen 1,74), aber nicht in der Form, in der sie benutzt
+wird.
+
+SPOT UND HEBEL IDENTISCH - richtig so, die Geometrie ist dieselbe, nur der
+Breakeven unterscheidet sich.
+
+FOLGE: der Hebel liegt bei 14,3 Punkten (Phase) und 11,2 Punkten Streuung
+(Asset) gegen 0,3 Punkte des nachgelagerten Filters - rund 40 zu 1. Die
+Bremse gehoert vor die Signalgenerierung, nicht dahinter.
+
+⚠️ WAS NICHT FOLGT: einen Marktphasen-Filter zu bauen. "Im Bullenmarkt keine
+Longs" waere ein statisches Gate - die Bauform, die den Deadloop erzeugt hat.
+Der naechste ehrliche Schritt ist zu pruefen, ob die GEOMETRIE mit der Phase
+mitwandern sollte, nicht ob man Phasen ausschliesst.
+
+GEPRUEFT: 1.281 Paketpruefungen (5 neue), 0 freie Namen.

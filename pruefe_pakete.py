@@ -9215,6 +9215,39 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- H1/H2/H3 SIND VORAB FESTGELEGT (Kapitel 100, 20.08.) ----
+    _kq = _quelltext("messe_konstellationen.py")
+    _kroh = io.open("messe_konstellationen.py", encoding="utf-8").read()
+
+    # Die Vorabfestlegung steht im MODULKOPF - und der ueberlebt
+    # `_quelltext` nicht als Kommentar, sondern als Docstring. Deshalb hier
+    # der rohe Text.
+    pruefe(P, "die drei Fragen stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _kroh
+           and "H1  MARKTPHASE" in _kroh and "H2  ASSET" in _kroh
+           and "H3  ZWISCHENSTUFEN" in _kroh,
+           "wer sie nachtraeglich an ein Ergebnis anpasst, hat sich ein "
+           "Ergebnis gesucht (Methodik 2.45/2.46)")
+    pruefe(P, "H3 misst, ob die Zahl SORTIERT - nicht ob sie hoch ist",
+           "zehntel" in _kq and "np.argsort(p)" in _kq,
+           "eine weiche Schwelle hilft nur, wenn hoeheres p auch oefter "
+           "trifft. Gemessen: die Quote steigt bis zum vierten Zehntel und "
+           "FAELLT danach - der Filter schneidet an der falschen Stelle")
+    pruefe(P, "die Asset-Streuung wird gegen die ZUFALLSSTREUUNG gemessen",
+           "streuung_zufall" in _kq,
+           "elf Punkte Streuung klingen viel - entscheidend ist, wie viel "
+           "bei gleicher Fallzahl ohnehin entstuende (gemessen 2,1)")
+    pruefe(P, "ohne Placebo gilt nichts",
+           "ohne Placebo kein Urteil" in _kq and "--placebo" in _kq)
+
+    # ⚠️ DIE WARNUNG ZU H2 GEHOERT IN DEN KOPF, nicht in eine Fussnote.
+    pruefe(P, "H2 traegt die Auswahlwarnung bei sich",
+           "auswahlverzerrten Zeit" in _kroh
+           and "noch keine Auswahlregel" in _kroh,
+           "Symbole nach vergangener Trefferquote zu waehlen ist die Falle "
+           "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
+           "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
+
     # ---- DIE BREMSE IST SIMULIERT, NICHT GERECHNET (Kapitel 99) ----
     _bq = _quelltext("simuliere_bremse.py")
 

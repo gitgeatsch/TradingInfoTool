@@ -13511,3 +13511,108 @@ Bewertung"*. Genau das sagen die beiden Aufschlüsselungen — der Hebel liegt
 Walk-Forward an der Code-Reihenfolge geprüft · Stop zuerst · Spot und Hebel
 getrennt · Phase und Asset aufgeschlüsselt). **1.276 Prüfungen** gesamt,
 0 freie Namen, Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
+
+
+---
+
+## Kapitel 100 — Wo der Unterschied wirklich sitzt (20.08.2026)
+
+**Vorab festgelegt** in `messe_konstellationen.py`, geschrieben **bevor** die
+erste Zahl gerechnet wurde. Drei Fragen, in dieser Reihenfolge:
+
+| | |
+|---|---|
+| **H1** Marktphase | Unterscheidet sich die Trefferquote zwischen Bulle, Seitwärts und Bär? |
+| **H2** Asset | Unterscheiden sich die Symbole stärker, als der Zufall erlaubt? |
+| **H3** Zwischenstufen | **Die Frage des Nutzers:** lohnt ein weicher Übergang statt der harten Schwelle? |
+
+**40.499 entschiedene Fälle**, Trefferquote gesamt 34,4 %. Alle Etiketten im
+Placebo gewürfelt — was dort noch anschlägt, ist der Fehler der Methode.
+
+### 100.1 H1 — die Marktphase entscheidet mehr als alles andere
+
+| Phase | entschieden | Quote |
+|---|---:|---:|
+| bulle | 11.296 | **28,1 %** |
+| seitwärts | 14.651 | 31,2 % |
+| **bär** | 14.552 | **42,4 %** |
+
+**Abstand Bär minus Bulle: +14,3 Punkte, t = 24,36** gegen eine
+Placebo-Schwelle von **1,72**.
+
+⚠️ **Und der Bärmarkt liegt über dem Breakeven** (42,4 % gegen 40,3 %). Das
+ist der größte gemessene Einzeleffekt in der Geschichte dieses Projekts.
+
+**Warum das plausibel ist, ohne dass es eine Erklärung braucht:** der Stop
+liegt bei 2,0 ATR, das Ziel bei CRV 2,0. Im Bärmarkt ist der ATR groß, der
+Stop damit weit — und ein weiter Stop wird seltener vom Rauschen getroffen.
+Der Trichter aus Kapitel 93 sagt dasselbe von der anderen Seite.
+
+### 100.2 H2 — die Symbole unterscheiden sich fünffach
+
+| | |
+|---|---|
+| Streuung der Symbolquoten | **11,2 Punkte** |
+| bei reinem Zufall erwartet | 2,1 Punkte |
+| **Faktor** | **5,23** gegen Placebo-Schwelle 1,32 |
+
+⚠️ **Aber das ist noch keine Auswahlregel.** Symbole nach ihrer vergangenen
+Trefferquote zu wählen ist genau die Falle aus Kapitel 93.17 — dort lebte das
+Momentum-Signal in der auswahlverzerrten Zeit. **Ein Unterschied zwischen
+Symbolen müsste sich vorwärts wiederholen**, bevor er eine Regel wird. Die
+Warnung steht im Kopf des Werkzeugs, nicht in einer Fußnote.
+
+### 100.3 H3 — die Antwort auf die Nutzerfrage: die Zahl sortiert nicht
+
+| Zehntel | p | Quote |
+|---:|---:|---:|
+| 1 | 29,6 % | 30,6 % |
+| 2 | 31,9 % | 32,0 % |
+| 3 | 33,0 % | 32,7 % |
+| **4** | 33,6 % | **37,5 %** |
+| 5 | 34,2 % | 35,9 % |
+| 6 | 34,9 % | 36,6 % |
+| 7 | 35,6 % | 36,1 % |
+| 8 | 36,6 % | 34,6 % |
+| 9 | 37,7 % | 33,8 % |
+| **10** | **40,4 %** | **33,9 %** |
+
+**Der Verlauf ist nicht monoton — er steigt bis zum vierten Zehntel und fällt
+danach wieder.** Das oberste Zehntel, genau dort wo die harte Schwelle
+schneidet, liegt mit 33,9 % **unter** den mittleren Zehnteln.
+
+**Damit ist die Frage beantwortet, und zwar mit einem klaren Nein:** eine
+weichere Schwelle hilft nicht, weil die Zahl in der oberen Hälfte in die
+**falsche Richtung** zeigt. Kein Schwellenwert auf dieser Größe — hart oder
+weich — kann mehr leisten, als die Simulation in Kapitel 99 gezeigt hat.
+
+Die Zahl trägt zwar Information (t = 3,14 gegen Schwelle 1,74), aber **nicht
+in der Form, in der sie benutzt wird.**
+
+### 100.4 Spot und Hebel sind hier identisch
+
+Beide Instrumente liefern dieselben Zahlen — richtig so: **die Geometrie ist
+dieselbe** (Kapitel 90: `Hebel = Verlustanteil / Stopabstand`), nur der
+Breakeven unterscheidet sich (40,3 % gegen 41,2 %).
+
+### 100.5 Was das für die Bremse heißt
+
+**Die Bremse gehört nicht hinter die Signalgenerierung, sondern davor.** Der
+Nutzer hat es selbst so formuliert: *„geringere Anzahl an Signalen durch
+optimierte Signalgenerierung und Bewertung."*
+
+Gemessen liegt der Hebel bei **14,3 Punkten (Marktphase)** und **11,2 Punkten
+Streuung (Asset)** gegen **0,3 Punkte**, die der nachgelagerte Filter
+bewirkt. Das ist ein Verhältnis von rund 40 zu 1.
+
+⚠️ **Was NICHT folgt:** dass man jetzt einen Marktphasen-Filter bauen soll.
+„Im Bullenmarkt keine Longs" wäre ein statisches Gate — genau die Bauform,
+die den Deadloop erzeugt hat, und sie widerspricht dem, wofür ein
+Trendfolgesystem existiert. Der nächste ehrliche Schritt ist zu prüfen, **ob
+die Geometrie mit der Phase mitwandern sollte** (weiterer Stop im ruhigen
+Markt), nicht ob man Phasen ausschließt.
+
+**Abgesichert durch** 5 Prüfungen (Vorabfestlegung im Kopf · H3 misst
+Sortierung statt Höhe · Asset-Streuung gegen Zufallsstreuung · ohne Placebo
+kein Urteil · H2 trägt die Auswahlwarnung bei sich). **1.281 Prüfungen**
+gesamt, 0 freie Namen.
