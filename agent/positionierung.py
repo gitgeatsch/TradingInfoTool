@@ -220,6 +220,23 @@ def _perzentil(werte: list, wert: float) -> int | None:
 FLUSS_FENSTER_TAGE = 730
 FLUSS_MINDESTREIHE = 120
 
+# ⚠️ EIN PERZENTIL AUS ZWEI WERTEN IST KEINE EINORDNUNG (20.08.2026).
+#
+# In einer echten Mail stand: "Der Anteil der Konten auf der Kaufseite steht
+# im 0. Perzentil der letzten 2 MESSUNGEN - aussergewoehnlich wenige." Das
+# klingt nach einem Befund und ist eine Muenze: bei zwei Werten gibt es nur
+# 0 oder 100, und beide heissen "aussergewoehnlich".
+#
+# Nutzerrueckmeldung 20.08.: die Perzentile seien "zum Teil nicht oder
+# schwierig einzuordnen". Dieser Fall war nicht schwierig einzuordnen,
+# sondern gar nicht - und er sah trotzdem aus wie eine Aussage.
+#
+# Dreissig ist die Zahl, unter der ein einzelner Wert mehr als drei
+# Prozentpunkte verschiebt. Die Nachbarn dieses Moduls liegen bei 40 bis 120;
+# hier gilt der niedrigste Wert, der noch traegt, weil die Reihe je Symbol
+# erst aufgebaut wird.
+PERZENTIL_MINDESTREIHE = 30
+
 # EIN ABRUF JE TAG, NICHT JE SYMBOL. Rolle G laeuft fuer jedes Signal; der Wert
 # gilt fuer den ganzen Kryptomarkt. Ohne diesen Zwischenspeicher holte ein Lauf
 # mit zwanzig Signalen zwanzigmal dieselben 800 Zeilen - an einer Schnittstelle
@@ -652,8 +669,11 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
 
     if fund:
         aus["funding_jetzt"] = fund[0]
-        aus["funding_perzentil"] = _perzentil(fund, fund[0])
         aus["funding_n"] = len(fund)
+        # Dieselbe Mindestreihe wie beim Kontenanteil - der Fehler war dort
+        # sichtbar, das Muster ist hier dasselbe.
+        if len(fund) >= PERZENTIL_MINDESTREIHE:
+            aus["funding_perzentil"] = _perzentil(fund, fund[0])
     elif str(instrument or "") != "hebel":
         # NUR MELDEN, WENN SIE HIER HINGEHOERT. Beim Hebel ist ihre
         # Abwesenheit Absicht, kein Mangel - "keine Angabe" waere gelogen.
@@ -661,8 +681,11 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
 
     if lang:
         aus["long_anteil_pct"] = round(float(lang[0]), 1)
-        aus["long_perzentil"] = _perzentil(lang, lang[0])
         aus["long_n"] = len(lang)
+        # Unter der Mindestreihe KEIN Perzentil - lieber die rohe Zahl ohne
+        # Einordnung als eine Einordnung, die keine ist.
+        if len(lang) >= PERZENTIL_MINDESTREIHE:
+            aus["long_perzentil"] = _perzentil(lang, lang[0])
     else:
         _melde("Anteil der Long-Konten")
 
@@ -914,7 +937,12 @@ def saetze(e: dict) -> list[str]:
             satz += (f" steht im {lp}. Perzentil der letzten "
                      f"{e.get('long_n', 0)} Messungen - {wie}")
         else:
-            satz += " laesst sich nicht einordnen"
+            # ⚠️ DEN GRUND NENNEN, nicht nur das Fehlen. "Laesst sich nicht
+            # einordnen" liest sich wie ein Datenausfall; hier ist es eine
+            # zu kurze eigene Reihe, und das ist etwas anderes.
+            satz += (f" laesst sich noch nicht einordnen - die eigene Reihe "
+                     f"hat erst {e.get('long_n', 0)} von "
+                     f"{PERZENTIL_MINDESTREIHE} noetigen Messungen")
         z.append(satz + ".")
 
     # DIE ZWEITE INFORMATIONSART. Kein Wort ueber Richtung oder Folgen: dass

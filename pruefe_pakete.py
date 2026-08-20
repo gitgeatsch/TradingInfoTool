@@ -9215,6 +9215,35 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- PERZENTILE: LESBAR UND MIT GENUG MESSUNGEN (20.08.2026) ----
+    #
+    # Nutzerrueckmeldung: die Perzentile seien "zum Teil nicht oder schwierig
+    # einzuordnen". Zwei getrennte Maengel, beide an echten Mails gefunden.
+    from agent import positionierung as _PO
+
+    # ⚠️ EIN PERZENTIL AUS ZWEI WERTEN IST EINE MUENZE, KEINE EINORDNUNG.
+    _kurz = _PO.saetze({"long_anteil_pct": 67.0, "long_n": 2})
+    pruefe(P, "unter der Mindestreihe steht KEIN Perzentil",
+           not any("Perzentil" in z for z in _kurz)
+           and any("2 von 30" in z for z in _kurz),
+           "in einer echten Mail stand 'im 0. Perzentil der letzten 2 "
+           "Messungen - aussergewoehnlich wenige'. Bei zwei Werten gibt es "
+           "nur 0 oder 100, und beide heissen aussergewoehnlich")
+    pruefe(P, "und der Grund steht dabei, nicht nur das Fehlen",
+           any("noch nicht einordnen" in z and "noetigen Messungen" in z
+               for z in _kurz),
+           "'laesst sich nicht einordnen' liest sich wie ein Datenausfall - "
+           "eine zu kurze eigene Reihe ist etwas anderes")
+
+    # ⚠️ UND DAS WORT SELBST WIRD EINMAL JE MAIL ERKLAERT.
+    _smq = _quelltext("agent/signal_mail.py")
+    pruefe(P, "'Perzentil' wird an der ersten Fundstelle erklaert",
+           "Perzentil = Rangplatz in der eigenen Geschichte" in _smq
+           and "nur 7 von 100" in _smq,
+           "das Wort steht an 141 Stellen im System und wurde an keiner "
+           "erklaert - und die Konvention ist mehrdeutig, wenn man sie nicht "
+           "kennt. `marktlage._perzentil` zaehlt die Werte DARUNTER")
+
     # ---- DIE WIDERLEGUNG WIRD IN EINER WAEHRUNG GEPRUEFT (94, 20.08.) ----
     #
     # `bewerte()` vergleicht den Widerlegungspreis direkt mit `kurs_aktuell`.

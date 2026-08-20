@@ -13080,3 +13080,93 @@ Drei Prüfungen: der Widerlegungspreis wird vor der Prüfung umgerechnet · ohne
 Faktor wird gar nicht geprüft · der Parameter trägt keine Währung mehr im
 Namen. **1.258 Prüfungen** gesamt, 0 freie Namen, `pruefe_waehrungen.py`
 meldet weiterhin **0 ROH**, Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
+
+
+---
+
+## Kapitel 95 — Perzentile lesbar machen (20.08.2026)
+
+**Nutzerrückmeldung:** *„versuche auch die Mails mit Perzentile und für mich
+zum Teil nicht oder schwierig einzuordnenden Bezeichnungen zu prüfen."*
+
+Gemessen an den echten Mails vom 20.08.: **drei getrennte Mängel**, zwei davon
+behoben, einer benannt.
+
+### 95.1 Das Wort stand an 141 Stellen und wurde an keiner erklärt
+
+Und es ist **mehrdeutig, wenn man die Konvention nicht kennt**: heißt
+„7. Perzentil" sieben Prozent darüber oder darunter?
+
+**Die Antwort steht im Code, nicht in der Vermutung.**
+`marktlage._perzentil` rechnet `Anteil der Vergleichswerte, die UNTER dem
+aktuellen liegen`. Sieben heißt also: **nur sieben von hundert lagen tiefer.**
+
+Ab sofort steht **eine Zeile je Mail, an der ersten Fundstelle**:
+
+```
+   (Perzentil = Rangplatz in der eigenen Geschichte dieses Werts.
+   "7. Perzentil" heisst: nur 7 von 100 Vergleichswerten lagen tiefer,
+   93 lagen hoeher.)
+```
+
+Nicht 141 Umschreibungen und keine Legende am Ende, die niemand liest —
+dieselbe Bauform wie beim Gesamtbild: **der fertige Text wird gelesen, nichts
+neu gerechnet.** Mails ohne Perzentil bekommen die Zeile nicht.
+
+### 95.2 ⚠️ Ein Perzentil aus zwei Werten ist eine Münze
+
+In einer echten Mail stand:
+
+> *„Der Anteil der Konten auf der Kaufseite steht im 0. Perzentil der letzten
+> **2 Messungen** — außergewöhnlich wenige."*
+
+**Bei zwei Werten gibt es nur 0 oder 100, und beide heißen
+„außergewöhnlich".** Das klingt nach einem Befund und ist Rauschen — und es
+war nicht *schwierig* einzuordnen, sondern **gar nicht**.
+
+`PERZENTIL_MINDESTREIHE = 30`: darunter wird **kein Perzentil** mehr gebildet.
+Dreißig ist die Zahl, unter der ein einzelner Wert mehr als drei Prozentpunkte
+verschiebt; die Nachbarn dieses Moduls liegen bei 40 bis 120. Dieselbe Regel
+gilt jetzt auch für die Finanzierungsrate — der Fehler war dort nicht
+sichtbar, das Muster ist dasselbe.
+
+**Und der Grund steht dabei:**
+
+> *„Der Anteil der Konten auf der Kaufseite lässt sich noch nicht einordnen —
+> die eigene Reihe hat erst 2 von 30 nötigen Messungen."*
+
+„Lässt sich nicht einordnen" allein liest sich wie ein **Datenausfall**; eine
+zu kurze eigene Reihe ist etwas anderes.
+
+### 95.3 Benannt, nicht behoben: derselbe Fakt einmal dafür, einmal dagegen
+
+An den Mails desselben Laufs:
+
+| Mail | |
+|---|---|
+| ETH | **▼** Aussergewoehnlich hoher Umschlag (100. Perzentil) |
+| VIRTUAL | **▲** Umschlag von 14,6 % liegt im 100. Perzentil |
+| ONDO | **▲** Umschlag im 99. Perzentil (hohe Aktivität) |
+| KAIA | **▲** Umschlag im 96. Perzentil |
+
+**Das ist die Bewertung des Modells, nicht unsere Rechnung.** Die
+Projektregel lautet: *kein deterministischer Override des LLM-Werturteils* —
+also wird hier nichts umgeschrieben.
+
+Was der Leser wissen muss, steht ohnehin da: die Belege tragen ▲/▼ und
+stehen unter der Überschrift *„DAS URTEIL DES MODELLS [BEHAUPTET]"*, während
+der Faktenblock daneben die **gemessene** Richtung nennt. Wer beide liest,
+sieht den Unterschied zwischen Meinung und Messung.
+
+⚠️ **Offen bleibt:** das Modell kürzt in seinen Belegen die Erklärung weg. Im
+Faktenblock heißt es *„Der Umschlag dieses Werts beträgt 14,6 %: so viel vom
+Umlaufbestand hat binnen 24 Stunden den Besitzer gewechselt"* — im Beleg nur
+noch „Umschlag". Das ließe sich nur über den Prompt beeinflussen, nicht über
+die Darstellung.
+
+### 95.4 Abgesichert durch
+
+Drei Prüfungen: unter der Mindestreihe steht kein Perzentil · der Grund steht
+dabei · das Wort wird an der ersten Fundstelle erklärt. **1.261 Prüfungen**
+gesamt, 0 freie Namen, Darstellungstest, Ende-zu-Ende 8 Signale / 9 Mails /
+0 Lücken.

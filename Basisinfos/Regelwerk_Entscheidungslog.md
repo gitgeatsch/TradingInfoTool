@@ -17997,3 +17997,37 @@ Fehler zwei.
 GEPRUEFT: 1.258 Paketpruefungen (3 neue), 0 freie Namen, pruefe_waehrungen
 weiterhin 0 ROH, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken, NB-Export und
 backward_tracking importierbar.
+
+
+[2026-08-20] KAPITEL 95: PERZENTILE LESBAR MACHEN
+
+Nutzerrueckmeldung: die Perzentile seien "zum Teil nicht oder schwierig
+einzuordnen". An den echten Mails geprueft - drei getrennte Maengel.
+
+1. DAS WORT STAND AN 141 STELLEN UND WURDE AN KEINER ERKLAERT, und es ist
+mehrdeutig: heisst "7. Perzentil" sieben Prozent darueber oder darunter? Die
+Antwort steht im Code (`marktlage._perzentil` zaehlt die Werte DARUNTER), also
+sieben von hundert lagen tiefer. Ab sofort eine Zeile je Mail an der ERSTEN
+Fundstelle - nicht 141 Umschreibungen, keine Legende am Ende. Der fertige Text
+wird gelesen, nichts neu gerechnet.
+
+2. EIN PERZENTIL AUS ZWEI WERTEN IST EINE MUENZE. In einer echten Mail stand
+"im 0. Perzentil der letzten 2 Messungen - aussergewoehnlich wenige". Bei zwei
+Werten gibt es nur 0 oder 100, und beide heissen aussergewoehnlich. Das war
+nicht schwierig einzuordnen, sondern gar nicht. PERZENTIL_MINDESTREIHE = 30,
+gilt jetzt auch fuer die Finanzierungsrate. Und der Grund steht dabei: "die
+eigene Reihe hat erst 2 von 30 noetigen Messungen" - "laesst sich nicht
+einordnen" allein liest sich wie ein Datenausfall.
+
+3. BENANNT, NICHT BEHOBEN: derselbe Fakt "Umschlag im 100. Perzentil" steht
+bei ETH als DAGEGEN und bei VIRTUAL, ONDO, KAIA als DAFUER - im selben Lauf.
+Das ist die Bewertung des MODELLS, und die Projektregel verbietet einen
+deterministischen Override. Die Belege stehen unter "DAS URTEIL DES MODELLS
+[BEHAUPTET]", der Faktenblock nennt daneben die gemessene Richtung.
+
+OFFEN: das Modell kuerzt in seinen Belegen die Erklaerung weg ("Umschlag"
+statt "so viel vom Umlaufbestand hat binnen 24 Stunden den Besitzer
+gewechselt"). Nur ueber den Prompt beeinflussbar, nicht ueber die Darstellung.
+
+GEPRUEFT: 1.261 Paketpruefungen (3 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.

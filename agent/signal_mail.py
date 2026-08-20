@@ -587,6 +587,32 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
            if instrument == "hebel" else
            "Ausfuehrung manuell ueber die Bitpanda-App."])
 
+    # ⚠️ "PERZENTIL" EINMAL ERKLAEREN - AN DER ERSTEN STELLE (20.08.2026).
+    #
+    # Nutzerrueckmeldung: die Perzentile seien "zum Teil nicht oder schwierig
+    # einzuordnen". Zu Recht - das Wort steht an 141 Stellen im System und
+    # wird an keiner erklaert. Und es ist mehrdeutig, wenn man die Konvention
+    # nicht kennt: heisst "7. Perzentil" sieben Prozent daruber oder darunter?
+    #
+    # DIE ANTWORT STEHT IM CODE, nicht in der Vermutung: `marktlage._perzentil`
+    # rechnet `Anteil der Vergleichswerte, die UNTER dem aktuellen liegen`.
+    # Sieben heisst also: nur sieben von hundert lagen tiefer.
+    #
+    # Eine Zeile je Mail, an der ERSTEN Fundstelle - nicht 141 Umschreibungen
+    # und keine Legende am Ende, die niemand liest. Dieselbe Bauform wie beim
+    # Gesamtbild: der fertige Text wird gelesen, nichts neu gerechnet.
+    try:
+        _z = text.split("\n")
+        _i = next((k for k, z in enumerate(_z) if "Perzentil" in z), None)
+        if _i is not None:
+            _z.insert(_i + 1,
+                      "   (Perzentil = Rangplatz in der eigenen Geschichte "
+                      "dieses Werts. \"7. Perzentil\" heisst: nur 7 von 100 "
+                      "Vergleichswerten lagen tiefer, 93 lagen hoeher.)")
+            text = "\n".join(_z)
+    except Exception:                                        # noqa: BLE001
+        pass
+
     # 93 E: DAS GESAMTBILD GANZ NACH OBEN (20.08.2026).
     #
     # Es liest die FERTIGE Mail und zaehlt die Etiketten, die weiter unten
