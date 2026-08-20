@@ -17925,3 +17925,43 @@ Aussagen statt keiner, jede mit ihrem gemessenen Wert daneben.
 
 GEPRUEFT: 1.247 Paketpruefungen (6 neue), 0 freie Namen, Darstellungstest,
 Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] KAPITEL 94: WAEHRUNGEN EINMAL GRUENDLICH
+
+Anlass war ein Stop UEBER dem Marktpreis: ETH bei 1.931,49 EUR, darunter
+"Stop auf 2.025,02 EUR nachziehen". Die Rechnung stimmte, die Waehrung nicht -
+2.025,02 war USD, in EUR sind es 1.735.
+
+DIESELBE ZAHL, ZWEI AUSGABEN, EINE FALSCH: `_absatz()` schickte sie durch
+`_in_eur`, `saetze()` nicht. Der Docstring von `_in_eur` nennt genau diesen
+Fehler als Grund seiner Existenz - er war schon einmal da (Umbauplan 12.5).
+
+DIE WURZEL: die Waehrung steht im Feldnamen, und nichts prueft den Inhalt.
+`bewerte()` ist waehrungsblind; ihr Feld hiess `risiko_eur` und enthielt
+308,98 USD.
+
+AUFNAHME MIT pruefe_waehrungen.py, ueber den Syntaxbaum: 111 Stellen mit
+Waehrungsangabe in 31 Dateien, 0 davon ohne erkennbare Umrechnung.
+
+ZWEI EIGENE FEHLER BEIM BAUEN DES WERKZEUGS: `_eur\b` fand `entry_eur_von`
+nicht, und Zwischenvariablen wurden nicht aufgeloest. Fuenf gemeldete Stellen
+waren sauber. Ein Pruefwerkzeug mit Fehlalarmen wird nicht mehr aufgerufen -
+also jede gemeldete Stelle einzeln nachpruefen, bevor man das Ergebnis meldet.
+
+KORRIGIERT: der nachgezogene Stop laeuft durch _in_eur (1.735 statt 2.025);
+die Begruendungszeile in bewerte() nennt gar keine Waehrung mehr, weil dort
+der Faktor noch nicht existiert; risiko_eur heisst jetzt
+risiko_quellwaehrung.
+
+VERANKERT: pruefe_pakete ruft das Werkzeug auf - eine neue ROH-Stelle laesst
+die Suite scheitern. Und es prueft sich selbst: findet es weniger als 80
+Stellen, ist das Werkzeug kaputt und nicht der Code sauber.
+
+QUERVERWEISE gesetzt in _in_eur und format_money auf das Werkzeug, Umbauplan
+94 und Methodik 2.50.
+
+OFFEN: umgeworfen_preis_eur - Name sagt EUR, eine Stelle rechnet um. Steht
+namentlich in der Ausnahme, jede NEUE Stelle schlaegt an.
+
+1.255 Pruefungen, 0 freie Namen, 8 Signale / 9 Mails / 0 Luecken.

@@ -12920,3 +12920,113 @@ Terminblock zufallen); ohne Merkmale bleibt die Zeile weg.
 Richtungsvorteil. Was es geliefert hat: vier prüfbare Aussagen statt keiner,
 jede mit ihrem gemessenen Wert daneben - und eine Zeile ganz oben, die sagt,
 wie viel Boden unter der Empfehlung ist.
+
+
+---
+
+## Kapitel 94 — Währungen: einmal gründlich statt immer wieder (20.08.2026)
+
+**Nutzervorgabe:** *„das EUR-USD-Umrechnen war immer schon punktuell ein
+Problem — vielleicht kannst du das Thema nochmal breit prüfen, damit wir
+nicht mehrere Stellen hin und her ändern."* Und danach: *„eine wirklich
+gründliche Prüfung und Korrektur, damit das Thema nicht immer wieder kommt,
+inkl. Verweise."*
+
+### 94.1 Der Anlass: ein Stop über dem Marktpreis
+
+Eine echte Mail vom 20.08. zeigte ETH bei **1.931,49 EUR** und darunter
+*„Stop auf 2.025,02 EUR nachziehen"*. **Wer das so einträgt, verkauft
+sofort.**
+
+Aus den Rohdaten des NB-Exports:
+
+| | |
+|---|---:|
+| Einstieg | 1.911,89 **USD** |
+| R (Einstieg − Originalstop) | 308,98 |
+| Höchstkurs (Einstieg + 1,366 R) | 2.334 **USD** |
+| Trailing-Stop (Höchstkurs − 1 R) | **2.025 USD** |
+| in EUR (× 0,8567) | **1.735** |
+
+**Die Rechnung war vollständig richtig. Nur die Währung stand falsch daneben.**
+
+⚠️ **Und dieselbe Zahl wurde an zwei Stellen ausgegeben:** `_absatz()`
+(Sammelmail) schickte sie durch `_in_eur`, `saetze()` (Einzelmail) nicht. Der
+Docstring von `_in_eur` nennt genau diesen Fehler als Grund seiner Existenz —
+*„Genau das war der Fehler der alten Hebel-Mail (Umbauplan 12.5)."* Er war
+also schon einmal da.
+
+### 94.2 Die Wurzel: eine Namenskonvention ohne Durchsetzung
+
+Die Währung steckt im **Feldnamen** (`stop_eur`, `einstieg_eur`,
+`risiko_eur`), und **nichts prüft, ob der Inhalt dazu passt.**
+
+`ausstiegsrechnung.bewerte()` ist währungsblind — sie rechnet mit dem, was
+der Aufrufer übergibt, und das ist für Krypto und Hebel USD. Ihr Ergebnisfeld
+hieß trotzdem `risiko_eur` und enthielt bei ETH **308,98 USD**.
+
+**Der Name log, und niemand merkte es**, weil keine Zeile Code den Namen mit
+dem Inhalt vergleicht.
+
+### 94.3 Die Aufnahme: `pruefe_waehrungen.py`
+
+Kein Hinsehen, sondern der **Syntaxbaum**. Das Werkzeug findet jeden
+f-String mit Währungsangabe in `agent`, `ui`, `api`, `scheduler`, `database`
+und `remote` und urteilt je Stelle:
+
+| Urteil | |
+|---|---|
+| **UMGERECHNET** | der Wert läuft durch eine Umrechnung |
+| **NATIV** | das Feld trägt die Währung im Namen |
+| **ROH** | weder noch — hier steht möglicherweise die falsche Währung |
+| **OHNE_BETRAG** | kein Kursbetrag (Summen, Deckel aus der Konfiguration) |
+
+**Ergebnis: 111 Stellen in 31 Dateien — davon 0 ROH.**
+
+⚠️ **Zwei eigene Fehler beim Bauen des Werkzeugs**, beide gefunden, weil die
+gemeldeten Stellen sich beim Nachsehen als sauber erwiesen:
+
+1. **`_eur\b` fand `entry_eur_von` nicht** — auf „eur" folgt ein
+   Unterstrich, und der ist ein Wortzeichen. Vier von fünf Fehlalarmen kamen
+   daher.
+2. **Zwischenvariablen wurden nicht aufgelöst.** `ui/portfolio.py` schreibt
+   `preis = format_money(...effective_avg_price_eur)` und gibt dann
+   `{preis} EUR` aus. Wer nur den f-String ansieht, meldet eine rohe Zahl, wo
+   eine saubere steht.
+
+**Ein Werkzeug mit Fehlalarmen wird nach dem dritten nicht mehr aufgerufen** —
+deshalb löst es Zuweisungen eine Ebene weit auf.
+
+### 94.4 Korrigiert
+
+| | |
+|---|---|
+| `ausstiegsrechnung.saetze()` | der nachgezogene Stop läuft jetzt durch `_in_eur`. **1.735 EUR statt 2.025,02** |
+| die Begründungszeile in `bewerte()` | dort gibt es den Umrechnungsfaktor noch **nicht** — der Aufrufer hängt ihn erst danach an. Die Währung steht deshalb gar nicht mehr dabei; der Satz sagt dasselbe ohne sie |
+| `risiko_eur` → `risiko_quellwaehrung` | der Wert war nie falsch, nur falsch **benannt**. Er wird nur für R-Verhältnisse gebraucht, wo sich die Währung herauskürzt |
+
+**Fehlt der Umrechnungsfaktor, steht „−" statt einer Zahl.** Lieber keine als
+eine in der falschen Währung — die Regel, die `_in_eur` schon durchsetzte,
+gilt jetzt auch hier.
+
+### 94.5 ⚠️ Eine Stelle bleibt offen — und sie steht namentlich
+
+`umgeworfen_preis_eur` **heißt** EUR, wird in `_absatz()` aber durch
+`_in_eur` geschickt — dort gilt er also als USD. **Zwei Stellen, zwei
+Lesarten, eine davon falsch.**
+
+Welche, ist ohne Blick auf die Quelle des Wertes nicht zu entscheiden, und
+hier wird nicht geraten. Die Prüfung lässt **genau diese eine** Stelle zu und
+schlägt bei jeder neuen an.
+
+### 94.6 Damit es nicht wiederkommt
+
+| | |
+|---|---|
+| **Die Prüfung läuft mit** | `pruefe_pakete.py` ruft das Werkzeug auf; eine neue ROH-Stelle lässt die Suite scheitern |
+| **Und sie prüft sich selbst** | findet das Werkzeug plötzlich weniger als 80 Stellen, ist es kaputt und nicht der Code sauber |
+| **Querverweise im Code** | `_in_eur` und `format_money` verweisen auf das Werkzeug und auf dieses Kapitel — wer dort hinsieht, findet den Weg |
+
+**Verweise:** `pruefe_waehrungen.py` · `agent/ausstiegsrechnung.py::_in_eur`
+· `ui/formatting.py::format_money` · Test- und Verifikationsmethodik **2.50**
+· Umbauplan **12.5** (der erste Auftritt desselben Fehlers).

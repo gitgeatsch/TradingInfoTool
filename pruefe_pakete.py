@@ -9207,6 +9207,33 @@ def paket_dimension() -> None:
            "mehrfach Wochen gekostet hat")
 
     # ---- WAEHRUNG: KEIN BETRAG MIT "EUR" OHNE UMRECHNUNG (20.08.2026) ----
+    #
+    # DIE BREITE PRUEFUNG LAEUFT MIT (Nutzervorgabe 20.08.: "damit das Thema
+    # nicht immer wieder kommt"). `pruefe_waehrungen.py` geht ueber den
+    # Syntaxbaum ALLER Ausgabedateien und meldet jede Stelle, die einen
+    # Kursbetrag mit Waehrungsetikett ausgibt, ohne ihn umzurechnen oder ein
+    # Feld mit Waehrung im Namen zu benutzen.
+    import pruefe_waehrungen as _PW
+
+    _stellen = []
+    for _pfad in _PW._dateien(False):
+        try:
+            _q = io.open(_pfad, encoding="utf-8").read()
+        except OSError:
+            continue
+        _stellen += [dict(x, urteil=_PW.beurteile(x))
+                     for x in _PW._zerlege(_q, _pfad)]
+    _rohe = [x for x in _stellen if x["urteil"] == "ROH"]
+    pruefe(P, "keine Ausgabestelle beschriftet einen Betrag unumgerechnet",
+           not _rohe,
+           "gefunden: "
+           + "; ".join(f"{x['datei']}:{x['zeile']}" for x in _rohe[:4])
+           + f" (von {len(_stellen)} Stellen mit Waehrungsangabe)")
+    pruefe(P, "und das Werkzeug findet ueberhaupt etwas",
+           len(_stellen) > 80,
+           f"{len(_stellen)} Stellen - findet es ploetzlich fast nichts, ist "
+           f"das Werkzeug kaputt und nicht der Code sauber")
+
     from agent import ausstiegsrechnung as _AU
 
     # ⚠️ AN EINER ECHTEN MAIL GEFUNDEN. ETH stand bei 1.931,49 EUR, darunter

@@ -61,6 +61,15 @@ def risikofaktoren_hinweis(signal, faktoren_text: str) -> str:
     return "Keine strukturierten Risikofaktoren verfügbar."
 
 
+# ⚠️ DIESE FUNKTION FORMATIERT, SIE RECHNET NICHT UM (Vermerk 20.08.2026).
+#
+# `format_money(x)` haengt KEINE Waehrung an - das tut der Aufrufer, und
+# genau dort ist am 20.08. ein Stop in USD mit dem Etikett EUR gelandet.
+# Wer hier einen Betrag durchschickt, muss vorher wissen, in welcher
+# Waehrung er steht.
+#
+# Uebersicht ueber alle Ausgabestellen: `pruefe_waehrungen.py`.
+# Hintergrund: Umbauplan 94, Test_und_Verifikationsmethodik 2.50.
 def format_money(value: float | None) -> str:
     if value is None:
         return "-"

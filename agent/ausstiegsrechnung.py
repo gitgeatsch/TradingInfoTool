@@ -136,7 +136,17 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
     else:
         empf = None
 
-    e = {"risiko_eur": risiko,
+    # ⚠️ NICHT "risiko_eur" - DER NAME WAERE EINE LUEGE (20.08.2026).
+    #
+    # `bewerte()` ist waehrungsblind: sie rechnet mit dem, was der Aufrufer
+    # uebergibt, und das ist fuer Krypto und Hebel USD. Bei ETH stand hier
+    # 308,98 - USD, nicht EUR. Der Wert wird nur fuer R-Verhaeltnisse
+    # gebraucht, wo sich die Waehrung herauskuerzt; ausgegeben wird er nie.
+    # Er war also nie falsch, nur falsch BENANNT - und genau dieser Name hat
+    # am 20.08. eine Stunde Fehlersuche gekostet.
+    #
+    # Siehe pruefe_waehrungen.py und Test_und_Verifikationsmethodik 2.50.
+    e = {"risiko_quellwaehrung": risiko,
          "stand_r": (((einstieg - kurs_aktuell) if ist_short else
                       (kurs_aktuell - einstieg)) / risiko)
                     if kurs_aktuell else None,
@@ -385,7 +395,16 @@ def _kurs(wert: float | None, waehrung: str = "USD") -> str:
 def _in_eur(e: dict, wert: float | None) -> float | None:
     """USD-Zone in EUR. None, wenn der Faktor fehlt - lieber keine Zahl als
     eine in der falschen Waehrung. Genau das war der Fehler der alten
-    Hebel-Mail (Umbauplan 12.5)."""
+    Hebel-Mail (Umbauplan 12.5).
+
+    ⚠️ UND ER IST AM 20.08.2026 WIEDERGEKOMMEN: `saetze()` gab den
+    nachgezogenen Stop ohne diese Funktion aus - 2.025,02 USD mit dem
+    Etikett EUR, bei einem Kurs von 1.931,49 EUR. Ein Stop ueber dem Markt.
+
+    Wer einen Betrag mit Waehrung ausgibt, schickt ihn hier durch. Was das
+    fuer das ganze System heisst und wie es geprueft wird:
+    `pruefe_waehrungen.py`, Umbauplan 94 und
+    Test_und_Verifikationsmethodik 2.50."""
     faktor = e.get("eur_je_usd")
     return None if wert is None or not faktor else float(wert) * float(faktor)
 

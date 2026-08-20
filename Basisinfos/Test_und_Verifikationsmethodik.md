@@ -2914,3 +2914,38 @@ Drei Pruefungen binden die Zahlen aneinander: Feldzahl gegen das Werkzeug,
 Schwelle gegen die Feldzahl, Ankerzahl gegen die Summe je Klasse. Dasselbe
 Muster wie bei den vier Kopien der Stopzeile im August - nur diesmal ueber
 Modulgrenzen hinweg.
+
+
+## 2.50 Waehrung gehoert an den Wert, nicht in den Namen (20.08.2026)
+
+ANLASS: eine Mail zeigte ETH bei 1.931,49 EUR und darunter "Stop auf
+2.025,02 EUR nachziehen" - einen Stop UEBER dem Marktpreis. Die Rechnung war
+richtig, die Waehrung nicht: der Wert war USD.
+
+DIE WURZEL: die Waehrung steht im FELDNAMEN (`stop_eur`, `risiko_eur`), und
+nichts prueft, ob der Inhalt dazu passt. `ausstiegsrechnung.bewerte()` ist
+waehrungsblind und rechnet mit dem, was der Aufrufer uebergibt - fuer Krypto
+ist das USD. Ihr Feld hiess trotzdem `risiko_eur`.
+
+REGEL: wer einen Betrag MIT Waehrungsangabe ausgibt, schickt ihn vorher durch
+eine Umrechnung ODER benutzt ein Feld, dessen Waehrung an der Quelle
+feststeht. Fehlt der Umrechnungsfaktor, steht "-" statt einer Zahl - lieber
+keine als eine in der falschen Waehrung.
+
+WERKZEUG: `pruefe_waehrungen.py` geht ueber den SYNTAXBAUM (nicht per
+Textsuche, siehe 2.41) und urteilt je Stelle UMGERECHNET / NATIV / ROH /
+OHNE_BETRAG. Gemessen am 20.08.: 111 Stellen in 31 Dateien, 0 ROH. Der Lauf
+ist in pruefe_pakete.py verankert.
+
+⚠️ ZWEI EIGENE FEHLER BEIM BAUEN DES WERKZEUGS, und beide sind die eigentliche
+Lehre: `_eur\b` fand `entry_eur_von` nicht (auf "eur" folgt ein Unterstrich,
+und der ist ein Wortzeichen), und Zwischenvariablen wurden nicht aufgeloest.
+Fuenf gemeldete Stellen waren sauber.
+
+EIN PRUEFWERKZEUG MIT FEHLALARMEN WIRD NACH DEM DRITTEN NICHT MEHR AUFGERUFEN.
+Wer eines baut, prueft jede gemeldete Stelle einzeln nach, BEVOR er das
+Ergebnis meldet - sonst misst er sein eigenes Muster statt des Codes.
+
+OFFEN UND NAMENTLICH FESTGEHALTEN: `umgeworfen_preis_eur` heisst EUR, wird an
+einer Stelle aber umgerechnet. Zwei Lesarten, eine falsch; ohne Blick auf die
+Quelle nicht entscheidbar. Die Pruefung laesst genau diese eine Stelle zu.
