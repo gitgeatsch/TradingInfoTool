@@ -13170,3 +13170,98 @@ Drei Prüfungen: unter der Mindestreihe steht kein Perzentil · der Grund steht
 dabei · das Wort wird an der ersten Fundstelle erklärt. **1.261 Prüfungen**
 gesamt, 0 freie Namen, Darstellungstest, Ende-zu-Ende 8 Signale / 9 Mails /
 0 Lücken.
+
+
+---
+
+## Kapitel 96 — Sieht der Leser, was das Modell bewertet? (20.08.2026)
+
+**Nutzerfrage:** *„Da wir hier eigene Texte und LLM-Texte mischen, prüfe auch,
+ob unsere Berechnung bzw. die Indikatoren, die wir verwenden, mit jenen der
+LLM ident sind — die LLM-Bewertungen sollten die Parameter bewerten, die wir
+auch nutzen, dann sollten diese natürlich ident sein."*
+
+**Die Frage war berechtigt, und die Antwort lautete: nein.**
+
+### 96.1 Gemessen an 25 echten Mails
+
+Jeder Beleg des Modells mit einer Zahl wurde gegen unseren Faktenblock
+geprüft:
+
+| | |
+|---|---:|
+| Belege mit Zahl | 63 |
+| davon mit einer Zahl, die im Faktenblock **fehlt** | **15** |
+
+⚠️ **Und alle fünfzehn betrafen dieselbe Zeile — den Umschlag:**
+
+> *„▲ Umschlag von 11,2 % im 100. Perzentil deutet auf extreme Aktivität hin"*
+
+In derselben Mail stand von uns nur: *„Volumen das 4,0-fache des Mittels"* —
+**eine andere Kennzahl.** Der Leser konnte die Begründung nicht nachprüfen,
+weil ihm der Fakt fehlte.
+
+### 96.2 Die Ursache: eine von Hand geführte Liste
+
+`lagebeschreibung.BLOCK_REIHENFOLGE` kennt **zehn** Blöcke. Der Prompt baut
+sich daraus:
+
+```python
+return [satz for block in BLOCK_REIHENFOLGE for satz in bloecke[block]]
+```
+
+Die Mail bekam dagegen eine **abgetippte Auswahl** — und darin fehlten
+`umschlag` und `fundamental`. Beide gingen ans Modell und nicht an den
+Nutzer.
+
+⚠️ Genau diesen Zustand beschreibt der Docstring von `geteilt()` als
+**behoben**: *„Die Sätze EXISTIEREN längst; sie gingen bisher nur ans
+Modell."* Er war für die anderen acht Blöcke behoben — für zwei nicht.
+
+### 96.3 Korrigiert: eine Liste für beide
+
+Die Mail liest jetzt **dieselbe Konstante** wie der Prompt. Damit können die
+beiden nicht mehr auseinanderlaufen.
+
+**Gegengeprüft, bevor es blieb:**
+
+| Frage | Antwort |
+|---|---|
+| Bleibt die Reihenfolge der bisherigen Blöcke? | **ja, unverändert** |
+| Was kommt hinzu? | `fundamental`, `umschlag` |
+| Was fällt weg? | **nichts** |
+| Doppelte Darstellung? | nein — beide erscheinen nirgends sonst |
+| Weitere Aufrufer von `baue_mail`? | nur einer |
+| Bekommt der Blockbauer die Daten? | ja: `rollen_eingabe.umschlag()` → `beschreibe_lage(umschlag=…)` → Block |
+
+### 96.4 ⚠️ Ein Namenskonflikt, den ich selbst gebaut hatte
+
+`_LB` war seit jeher `lagebeschreibung`. Mein Import vom 19.08.
+(`lebendigkeit as _LB`) hat ihn **überschrieben**. Die früheren Verwendungen
+liefen weiter richtig, weil sie vor der Zeile stehen — erst der Zugriff auf
+`BLOCK_REIHENFOLGE` flog auf, mit einem `AttributeError`, der das falsche
+Modul nannte.
+
+`lebendigkeit` heißt jetzt `_LEB`. **`finde_freie_namen.py` hätte das nicht
+gefunden** — der Name war ja belegt, nur mit dem falschen Modul. Gefunden hat
+es die Simulation.
+
+### 96.5 Abgesichert durch
+
+Fünf Prüfungen: die Mail bekommt alle Blöcke statt einer Handauswahl · die
+beiden fehlenden Blöcke existieren wirklich · **Prompt und Mail speisen sich
+aus derselben Liste** · jeder Block ist entweder eigens dargestellt oder dabei
+· die Modulkürzel sind eindeutig.
+
+**1.266 Prüfungen** gesamt, 0 freie Namen, Darstellungstest,
+`pruefe_waehrungen` 0 ROH, Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
+
+### 96.6 Systemstand aus dem Export vom 20.08., 18:57
+
+| | |
+|---|---|
+| Fehler im 72-Stunden-Fenster | 38 — davon **34 am 19.08.** (Netzvorfall 07:58–08:00), **heute genau einer** (Heartbeat, harmlos) |
+| Signale heute | 156 (106 ERÖFFNEN) |
+| Lebendigkeitsreihe | 43 Zeilen, 25 mit Wert — der Vorrat kommt beim nächsten Lauf |
+
+**Das System läuft stabil.**

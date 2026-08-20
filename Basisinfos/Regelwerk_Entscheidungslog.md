@@ -18031,3 +18031,41 @@ gewechselt"). Nur ueber den Prompt beeinflussbar, nicht ueber die Darstellung.
 
 GEPRUEFT: 1.261 Paketpruefungen (3 neue), 0 freie Namen, Darstellungstest,
 Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] KAPITEL 96: SIEHT DER LESER, WAS DAS MODELL BEWERTET?
+
+Nutzerfrage: ob die Indikatoren, die das Modell bewertet, mit unseren
+identisch sind. Antwort: nein - und der Fund ist praezise.
+
+GEMESSEN AN 25 ECHTEN MAILS: von 63 Belegen mit Zahl nannten 15 eine Zahl,
+die im Faktenblock NICHT vorkam. Alle 15 betrafen dieselbe Zeile, den
+Umschlag: "Umschlag von 11,2 % im 100. Perzentil" - waehrend von uns nur
+"Volumen das 4,0-fache des Mittels" dastand, eine andere Kennzahl.
+
+URSACHE: lagebeschreibung.BLOCK_REIHENFOLGE kennt ZEHN Bloecke, und der
+Prompt baut sich daraus. Die Mail bekam eine abgetippte Auswahl, in der
+`umschlag` und `fundamental` fehlten. Beide gingen ans Modell und nicht an
+den Nutzer - genau der Zustand, den der Docstring von `geteilt()` als behoben
+beschreibt. Fuer acht Bloecke war er behoben, fuer zwei nicht.
+
+KORRIGIERT: die Mail liest dieselbe Konstante wie der Prompt.
+
+GEGENGEPRUEFT VOR DER UEBERNAHME: Reihenfolge der bisherigen Bloecke
+unveraendert, nichts faellt weg, keine doppelte Darstellung, nur ein
+Aufrufer von baue_mail, und die Datenkette bis zum Block nachverfolgt
+(rollen_eingabe.umschlag -> beschreibe_lage -> geteilt).
+
+⚠️ EIN NAMENSKONFLIKT, SELBST GEBAUT: `_LB` war lagebeschreibung; mein Import
+vom 19.08. (lebendigkeit as _LB) hat ihn ueberschrieben. Die frueheren
+Verwendungen liefen richtig, weil sie VOR der Zeile stehen - erst der Zugriff
+auf BLOCK_REIHENFOLGE flog auf. finde_freie_namen.py haette das NICHT
+gefunden: der Name war belegt, nur mit dem falschen Modul. Gefunden hat es
+die Simulation.
+
+SYSTEMSTAND (Export 18:57): 38 Fehler im 72-Stunden-Fenster, davon 34 am
+19.08. durch einen Netzvorfall, heute genau einer (Heartbeat, harmlos). 156
+Signale heute. Das System laeuft stabil.
+
+GEPRUEFT: 1.266 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
+pruefe_waehrungen 0 ROH, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.

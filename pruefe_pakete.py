@@ -9215,6 +9215,59 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DAS MODELL UND DER NUTZER SEHEN DIESELBEN FAKTEN (20.08.) ----
+    #
+    # Nutzerfrage: "die LLM-Bewertungen sollten die Parameter bewerten, die
+    # wir auch nutzen - dann sollten diese natuerlich ident sein."
+    #
+    # An 25 echten Mails geprueft: von 63 Belegen mit Zahl nannten 15 eine
+    # Zahl, die im Faktenblock NICHT vorkam - und alle 15 betrafen dieselbe
+    # Zeile, den Umschlag. Ursache: die Mail bekam eine VON HAND GEFUEHRTE
+    # Blockliste, in der `umschlag` und `fundamental` fehlten. Beide gingen
+    # ans Modell und nicht an den Nutzer.
+    from agent import lagebeschreibung as _LGB
+
+    _rlq = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Mail bekommt ALLE Bloecke, nicht eine Handauswahl",
+           "for _n in _LB.BLOCK_REIHENFOLGE" in _rlq,
+           "eine Liste von Hand veraltet still - `umschlag` und `fundamental` "
+           "fehlten seit dem Umbau und niemandem fiel es auf, weil die Mail "
+           "ohne sie vollstaendig AUSSAH")
+    # ⚠️ DIE EIGENTLICHE ZUSAGE: PROMPT UND MAIL LESEN DIESELBE LISTE.
+    #
+    # `beschreibe_lage` baut den Prompt aus BLOCK_REIHENFOLGE; seit dem
+    # 20.08. tut die Mail dasselbe. Damit koennen die beiden nicht mehr
+    # auseinanderlaufen - vorher war die eine Liste eine Konstante und die
+    # andere von Hand getippt.
+    _lgq = _quelltext("agent/lagebeschreibung.py")
+    pruefe(P, "Prompt und Mail speisen sich aus DERSELBEN Blockliste",
+           "for block in BLOCK_REIHENFOLGE" in _lgq
+           and "for _n in _LB.BLOCK_REIHENFOLGE" in _rlq,
+           "das ist die Zusage hinter der Nutzerfrage: was das Modell "
+           "bewertet, muss der Leser sehen koennen")
+
+    pruefe(P, "und die beiden fehlenden Bloecke gibt es wirklich",
+           "umschlag" in _LGB.BLOCK_REIHENFOLGE
+           and "fundamental" in _LGB.BLOCK_REIHENFOLGE,
+           "sonst prueft die Zeile darueber gegen eine leere Liste")
+
+    # ⚠️ NUR ZWEI BLOECKE WERDEN EIGENS DARGESTELLT - der Rest MUSS in die
+    # Coin-Fakten. Kommt ein neuer dazu, faellt er hier auf.
+    _eigens = ("bestand", "marken")
+    pruefe(P, "jeder Block ist entweder eigens dargestellt oder dabei",
+           all(n in _eigens or n in _LGB.BLOCK_REIHENFOLGE
+               for n in _LGB.BLOCK_REIHENFOLGE)
+           and '_n not in ("bestand", "marken")' in _rlq,
+           "wer einen Block ergaenzt und die Mail vergisst, baut denselben "
+           "Fehler noch einmal")
+
+    # ⚠️ UND DER MODULNAME MUSS EINDEUTIG BLEIBEN.
+    pruefe(P, "lagebeschreibung und lebendigkeit haben getrennte Kuerzel",
+           "import lebendigkeit as _LEB" in _rlq
+           and "import lebendigkeit as _LB" not in _rlq,
+           "beide hiessen `_LB`; der spaetere Import ueberschrieb den "
+           "frueheren, und der Zugriff auf BLOCK_REIHENFOLGE lief ins Leere")
+
     # ---- PERZENTILE: LESBAR UND MIT GENUG MESSUNGEN (20.08.2026) ----
     #
     # Nutzerrueckmeldung: die Perzentile seien "zum Teil nicht oder schwierig

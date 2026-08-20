@@ -1343,8 +1343,14 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # 93 C: LEBENDIGKEIT ALS MERKMAL, mit Warnhinweis solange die eigene
     # Reihe zu kurz ist. Faellt sie aus, fehlt eine Zeile - nie die Mail.
     try:
-        from agent import lebendigkeit as _LB
-        _leben = _LB.saetze(conn, symbol, assetklasse)
+        # ⚠️ NICHT `_LB` - DER NAME GEHOERT SCHON `lagebeschreibung`
+        # (Kollision, gefunden 20.08.2026). Mein Import vom 19.08. hat ihn
+        # ueberschrieben; die frueheren Verwendungen liefen noch richtig,
+        # weil sie VOR dieser Zeile stehen. Erst der Zugriff auf
+        # `BLOCK_REIHENFOLGE` weiter unten flog auf - mit einem
+        # AttributeError, der das falsche Modul nannte.
+        from agent import lebendigkeit as _LEB
+        _leben = _LEB.saetze(conn, symbol, assetklasse)
     except Exception:                                        # noqa: BLE001
         _leben = []
     # Rangplatz zuerst, Lebendigkeit darunter - beide sind Merkmale ueber
@@ -1375,12 +1381,24 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Leser soll denselben Faktensatz sehen wie das Modell - und
             # gerade der Luecken-Block gehoert ihm: er sagt, worueber diese
             # Empfehlung NICHTS weiss.
-            coin_fakten=((_bloecke.get("verlauf") or [])
-                         + (_bloecke.get("hebelgeometrie") or [])
-                         + (_bloecke.get("referenz") or [])
-                         + (_bloecke.get("volumen") or [])
-                         + (_bloecke.get("finanzierung") or [])
-                         + (_bloecke.get("luecken") or [])) or None,
+            # ⚠️ ALLE BLOECKE, IN DER REIHENFOLGE VON `BLOCK_REIHENFOLGE`.
+            #
+            # Bis zum 20.08.2026 fehlten hier ZWEI: `umschlag` und
+            # `fundamental`. Sie gingen ans Modell und nicht an den Nutzer -
+            # genau der Zustand, den der Docstring von `geteilt()` als behoben
+            # beschreibt ("die Saetze gingen bisher nur ans Modell").
+            #
+            # SICHTBAR WURDE ES AN DEN BELEGEN: das Modell begruendete in 15
+            # von 15 Mails mit "Umschlag von 11,2 % im 100. Perzentil" - einer
+            # Zahl, die in der Mail nirgends stand. Der Leser konnte die
+            # Begruendung nicht nachpruefen, weil ihm der Fakt fehlte.
+            #
+            # Die Liste wird nicht mehr von Hand gefuehrt: was in
+            # `BLOCK_REIHENFOLGE` steht und nicht eigens dargestellt wird,
+            # landet hier. Eine Paketpruefung haelt das fest.
+            coin_fakten=[z for _n in _LB.BLOCK_REIHENFOLGE
+                         if _n not in ("bestand", "marken")
+                         for z in (_bloecke.get(_n) or [])] or None,
             # DIESELBEN SAETZE AN MODELL UND NUTZER. Bei der Absicherung
             # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
             # der Entscheidung, das Umfeld nur ihr Hintergrund.
