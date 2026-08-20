@@ -9248,6 +9248,75 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE KOLLINEARITAETSPROBE UND IHRE KONTROLLE (Kapitel 103) ----
+    _lq = _quelltext("messe_kollinearitaet.py")
+    _lroh = io.open("messe_kollinearitaet.py", encoding="utf-8").read()
+    from simuliere_bremse import MAX_TAGE as _MAXT
+
+    pruefe(P, "die Frage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _lroh
+           and "VERSCHIEDENE INFORMATION TRAGEN" in _lroh,
+           "das Nutzermodell - schwache Einzelteile, starke Konjunktion - "
+           "hat eine harte Vorbedingung, und die gehoert VOR die Rechnung")
+    pruefe(P, "eine Stichprobe, nicht je Kombination eine neue",
+           "EINE STICHPROBE, NICHT VIELE" in _lroh,
+           "wer je Kombination neu anlaeuft, misst teils Auswahl statt "
+           "Wirkung - dieselbe Falle wie in Kapitel 101")
+    pruefe(P, "eine Zelle braucht eine Mindestzahl",
+           "MIN_FAELLE = 300" in _lq and _lq.count("< MIN_FAELLE") >= 2,
+           "5 k x 4 CRV x 3 Phasen x 5 Baender sind 300 Zellen; ohne "
+           "Mindestzahl misst man Rauschen")
+
+    # ⚠️ DER FREIE PLACEBO WUERFELT INNERHALB DER GEOMETRIE. Wuerfelte er
+    # darueber hinweg, zerstoerte er die LEGITIMEN k/CRV-Unterschiede - genau
+    # der kaputte Massstab aus Kapitel 101.6 (Schwelle |t| >= 104).
+    pruefe(P, "der freie Placebo wuerfelt INNERHALB der Geometrie",
+           "for (k, crv), g in geo.items()" in _lq
+           and "rng.permutation(g[\"ausgang\"])" in _lq,
+           "ueber die Geometrien hinweg zu wuerfeln zerstoerte die "
+           "Arithmetik (CRV 1,0 trifft oefter als CRV 3,0) statt der "
+           "Behauptung - ein kaputter Massstab, kein strenger")
+
+    # ⚠️ UND ER REICHT NICHT. Taegliche Anker mit 120 Tagen Vorwaertsfenster
+    # ueberlappen um mehr als 99 %; freies Wuerfeln unterstellt Unabhaengig-
+    # keit, die es nicht gibt, und macht die Schwelle zu niedrig.
+    pruefe(P, "es gibt die Block-Permutation, die zur Zeitstruktur passt",
+           "--blockplacebo" in _lroh and "hoechste_b" in _lq,
+           "der freie Placebo behauptete eine Schwelle von 4,7 Punkten; die "
+           "richtige liegt bei 16,8 bis 18,4 - Faktor vier")
+    pruefe(P, "der Block ist laenger als das Vorwaertsfenster",
+           "blocklaenge\", type=int, default=250" in _lroh
+           and _MAXT <= 250,
+           f"das Vorwaertsfenster ist {_MAXT} Tage; ein kuerzerer "
+           "Block zerschnitte genau die Abhaengigkeit, die er erhalten soll")
+    pruefe(P, "die Blockgrenzen wandern je Lauf",
+           "rngb.integers(0, a.blocklaenge)" in _lq,
+           "bei festen Grenzen reisten immer dieselben Anker gemeinsam - "
+           "das macht die Zufallsverteilung schmaler, als sie sein darf")
+    pruefe(P, "Bloecke werden je Symbol in ZEITLICHER Ordnung gebildet",
+           "reihen" in _lq and "sorted(v)" in _lq,
+           "ein Block ist nur dann ein Zeitblock, wenn er aus aufeinander"
+           "folgenden Ankern DESSELBEN Symbols besteht")
+
+    # ⚠️ EINE PROBE, DIE ZU STRENG IST, TAUGT SO WENIG WIE EINE LAXE.
+    # ⚠️ DER PREIS DES ABSUCHENS GEHOERT BEZIFFERT. Die Haelfte der Huerde
+    # entsteht nicht aus der Datenlage, sondern daraus, dass 300 Zellen
+    # abgesucht wurden (20,5 gegen 10,2 Punkte, Methodik 2.49).
+    pruefe(P, "die Huerde bei EINER vorab benannten Zelle wird ausgewiesen",
+           "eine_zelle" in _lq and "HUERDENRECHNUNG" in _lq,
+           "sie zeigt, was eine begruendete Hypothese wert waere - und dass "
+           "der Weg nach vorn nicht mehr Methode ist, sondern weniger Zellen")
+    pruefe(P, "und sie ist als Rechnung ausgewiesen, nicht als Urteil",
+           "waere zirkulaer" in _lroh or "zirkulaer" in _lq,
+           "die Siegerzelle nachtraeglich zu benennen und dann an der "
+           "Ein-Zellen-Schwelle zu messen waere genau die Rosinenpickerei, "
+           "gegen die die Schwelle gedacht ist")
+    pruefe(P, "es gibt eine Positivkontrolle mit vorab benannter Zelle",
+           "--positiv" in _lroh
+           and 'PFLANZE = ("seitwaerts", "+10 bis +30 %", 2.5, 1.5)' in _lq,
+           "ohne sie hiesse 'nichts gefunden' nur 'nicht hingesehen' - und "
+           "die Zelle darf nicht die Siegerzelle sein")
+
     # ---- DIE BREMSE IST SIMULIERT, NICHT GERECHNET (Kapitel 99) ----
     _bq = _quelltext("simuliere_bremse.py")
 

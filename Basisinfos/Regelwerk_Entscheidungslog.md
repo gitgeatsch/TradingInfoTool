@@ -18334,3 +18334,46 @@ sind 1,5 % der Stichprobe; mit Autokorrelation ist die wirksame Zahl kleiner.
 FOLGE: das Nutzermodell hat den ersten ernsthaften Beleg bekommen - nicht ein
 einzelner Wert traegt, sondern die Konjunktion. Aber die Reihenfolge steht
 fest: erst die Block-Permutation, dann Schritt 2.
+
+
+[2026-08-20] KAPITEL 103 AUFGELOEST: DIE BLOCK-PERMUTATION - der Fund faellt
+
+Die strengere Probe ist gelaufen: ganze ZEITBLOECKE von 250 Handelstagen
+getauscht statt einzelner Ausgaenge. Blocklaenge (250) ueber dem
+Vorwaertsfenster (120), damit die Ueberlappung im Block erhalten bleibt;
+Blockgrenzen wandern je Lauf, weil bei festen Grenzen immer dieselben Anker
+gemeinsam reisen.
+
+ERGEBNIS (40 Laeufe): groesster Zufallswert +21,8, Schwelle +20,5, gemessen
++17,8 -> TRAEGT NICHT. Der freie Placebo war um mehr als das Vierfache zu
+schwach (4,7 statt 20,5). Die +17,8 Punkte entstehen allein aus der
+Zeitstruktur.
+
+⚠️ DIE ZWISCHENSTAENDE SIND DIE LEHRE: 20 Laeufe feste Grenzen +18,4 (traegt
+nicht), 20 Laeufe wandernde Grenzen +16,8 (TRAEGT), 40 Laeufe wandernde
+Grenzen +20,5 (traegt nicht). Haette ich beim zweiten aufgehoert, stuende hier
+'bestaetigt'. Eine Schwelle aus 20 Ziehungen ist selbst eine Schaetzung mit
+Fehler. NEUE METHODIKREGEL: liegt der Messwert im Bereich der
+Schwellen-Unsicherheit, wird die Zahl der Laeufe erhoeht, bevor irgendetwas
+behauptet wird.
+
+POSITIVKONTROLLE: in vorab benannter Zelle (seitwaerts, +10..+30 %, k=2,5,
+CRV=1,5 - NICHT die Siegerzelle) 500 Stops zu Zielen gemacht. Gemessen +22,1
+gegen Schwelle +18,5 - besteht, aber knapp. Das Werkzeug ist stumpf, nicht
+kaputt: unter etwa 20 Punkten kann diese Datenmenge nichts von Zufall
+unterscheiden. Grund: nur 26 REIHEN sind lang genug fuer zwei Bloecke. Die
+Stichprobe sind nicht 41.003 Anker, sondern 26 Kursreihen zu je fuenf
+Marktepisoden.
+
+⚠️ DER EIGENTLICHE ERTRAG - DER PREIS DES ABSUCHENS: dieselben Laeufe, nur
+EINE Zelle statt 300 ausgewertet (als Huerdenrechnung, nicht als Urteil).
+Schwelle bei 300 Zellen +20,5, bei EINER vorab benannten Zelle +10,2. DIE
+HAELFTE DER HUERDE ENTSTEHT AUS DEM SUCHEN, nicht aus der Datenlage.
+
+FOLGE FUER SCHRITT 2: das Nutzermodell ist NICHT widerlegt - es ist mit dieser
+Herangehensweise nicht pruefbar. Schritt 2 in der geplanten Form liefe an
+dieselbe Wand, denn mehr Werte machen die Zellen kleiner und die Huerde
+hoeher. Zwei Wege daran vorbei: mehr Reihen (dauert, teils nicht zu haben)
+oder WENIGER ZELLEN - eine vorab benannte Kombination halbiert die Huerde von
+20,5 auf 10,2, kostet nichts und ist heute machbar. Verlangt aber, die
+Kombination aus einem GRUND zu benennen statt aus einem Ergebnis.

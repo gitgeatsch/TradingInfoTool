@@ -13884,3 +13884,107 @@ Messung nicht hatte.
 2. Ein Befund aus 300 Zellen, dessen Kontrolle die Zeitstruktur ignoriert, ist
 genau die Sorte Fund, an der dieses Projekt am 20.08. schon einmal
 vorbeigeschrammt ist (Kapitel 93.17).
+
+
+### 103.6 Die Block-Permutation — der Fund fällt (20.08.2026)
+
+Die in 103.3 angekündigte strengere Probe ist gelaufen. **Sie tauscht ganze
+Zeitblöcke von 250 Handelstagen** statt einzelner Ausgänge: innerhalb eines
+Blocks bleibt alles, wie es war — die Abhängigkeit benachbarter Anker **und**
+die legitimen k/CRV-Unterschiede. Verschoben wird nur, *wann* ein Block liegt,
+und damit genau die Zuordnung zu Phase und Band.
+
+Zwei Details machen sie erst richtig: die **Blocklänge (250) liegt über dem
+Vorwärtsfenster (120)**, damit die Überlappung der Anker im Block vollständig
+erhalten bleibt — und die **Blockgrenzen wandern je Lauf**, weil bei festen
+Grenzen immer dieselben Anker gemeinsam reisen und die Zufallsverteilung
+schmaler wird, als sie sein darf.
+
+| Probe | größter Zufallswert | Schwelle (95 %) | gemessen | |
+|---|---:|---:|---:|---|
+| frei gewürfelt | +4,3 | +4,7 | +17,8 | trägt |
+| **Zeitblöcke, 40 Läufe** | **+21,8** | **+20,5** | **+17,8** | **trägt nicht** |
+
+**Der freie Placebo war um mehr als das Vierfache zu schwach.** Er behauptete
+eine Schwelle von 4,7 Punkten; die richtige liegt bei 20,5. **Die +17,8 Punkte
+entstehen allein aus der Zeitstruktur.**
+
+### 103.7 Die Zwischenstände, weil sie die Lehre sind
+
+Die Probe lief dreimal, und die ersten beiden widersprachen einander:
+
+| | Schwelle | Urteil |
+|---|---:|---|
+| 20 Läufe, feste Blockgrenzen | +18,4 | trägt nicht |
+| 20 Läufe, wandernde Grenzen | +16,8 | **trägt** |
+| **40 Läufe, wandernde Grenzen** | **+20,5** | trägt nicht |
+
+⚠️ **Ein Befund, der kippt, je nachdem wie man die Blöcke schneidet und wie
+oft man würfelt, ist kein Befund.** Hätte ich beim zweiten Lauf aufgehört,
+stünde hier „bestätigt". **Eine Schwelle aus 20 Ziehungen ist selbst eine
+Schätzung mit Fehler** — und wenn die Messung nahe an ihr liegt, entscheidet
+dieser Fehler das Urteil. Das gehört ab jetzt zur Methodik: **liegt der
+Messwert im Bereich der Schwellen-Unsicherheit, wird die Zahl der Läufe
+erhöht, bevor irgendetwas behauptet wird.**
+
+### 103.8 Die Positivkontrolle — das Werkzeug ist stumpf, nicht kaputt
+
+Damit „nichts gefunden" nicht bloß „nicht hingesehen" heißt: in einer **vorab
+benannten, unauffälligen Zelle** (`seitwärts` · `+10 bis +30 %` · k=2,5 ·
+CRV=1,5 — bewusst **nicht** die Siegerzelle) wurde ein echter Effekt
+eingepflanzt, 500 Stops zu Zielen gemacht.
+
+| | |
+|---|---:|
+| gepflanzte Zelle, gemessen | **+22,1** (1.523 Fälle) |
+| Schwelle der Block-Probe | +18,5 |
+
+**Sie besteht — aber knapp.** Ein Effekt von rund 20 Punkten wird gerade noch
+gefunden. **Alles darunter kann diese Datenmenge nicht von Zufall
+unterscheiden.**
+
+Der Grund steht in einer einzigen Zeile des Laufs: **nur 26 Reihen sind lang
+genug für zwei Blöcke.** Die Stichprobe sind nicht 41.003 Anker, sondern
+**26 Kursreihen zu je etwa fünf Marktepisoden**. Alles andere ist dieselbe
+Episode, vielfach gezählt.
+
+### 103.9 ⚠️ Der eigentliche Ertrag: der Preis des Absuchens
+
+Dieselben 40 Läufe, aber nur **eine** Zelle statt 300 ausgewertet — nicht als
+Urteil (die Siegerzelle nachträglich zu benennen wäre zirkulär), sondern als
+**Hürdenrechnung**:
+
+| | Schwelle |
+|---|---:|
+| Maximum aus 300 Zellen | +20,5 |
+| **eine vorab benannte Zelle** | **+10,2** |
+| **Preis des Absuchens** | **10,2 Punkte** |
+
+**Die Hälfte der Hürde entsteht nicht aus der Datenlage, sondern aus dem
+Suchen.** Wer 300 Kombinationen durchprobiert, muss doppelt so viel liefern
+wie jemand, der **eine vorher benennt.**
+
+### 103.10 Was das für Schritt 2 heißt
+
+**Das Nutzermodell ist nicht widerlegt — es ist mit dieser Herangehensweise
+nicht prüfbar.** Das ist ein anderer Satz, und er ist wichtig: gemessen wurde
+nicht „die Kombination trägt nicht", sondern „ein Effekt dieser Größe ist bei
+26 Reihen und 300 Zellen nicht von Zufall zu trennen."
+
+**Schritt 2 in der geplanten Form würde an dieselbe Wand laufen** — mehr Werte
+zu kombinieren macht die Zellen kleiner, nicht größer, und die Hürde damit
+höher.
+
+Zwei Wege führen daran vorbei, und der zweite ist sofort verfügbar:
+
+1. **Mehr Reihen.** Andere Anlageklassen und mehr Historie verbreitern die
+   Basis. Das dauert und ist teils gar nicht zu haben (BTC hatte bis vor
+   kurzem ein Jahr).
+2. **Weniger Zellen.** **Eine** vorab benannte Kombination statt einer Suche
+   über 300 — das halbiert die Hürde von 20,5 auf 10,2 Punkte, kostet nichts
+   und ist heute machbar. Es verlangt allerdings, die Kombination **aus einem
+   Grund** zu benennen statt aus einem Ergebnis.
+
+**Der Weg nach vorn ist also nicht mehr Methode, sondern eine begründete
+Hypothese.** Genau das war die Vorgabe vom 15.08. — *aufgemacht, um besser zu
+werden*, mit Argumenten ohne Prognose.

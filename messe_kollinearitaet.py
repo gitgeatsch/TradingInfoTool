@@ -74,8 +74,8 @@ def laufe(db: str, klasse: str) -> list[dict]:
     roh = _reihen_roh(db, klasse)
     phase = _marktphase(roh)
     aus = []
-    for sym, (c, h, l, v, a, off, d) in roh.items():
-        del v, sym
+    for sym_name, (c, h, l, v, a, off, d) in roh.items():
+        del v
         start = max(off, DRIFT_FENSTER) + 1
         for i in range(start, len(c) - 1):
             atr, einstieg, frueher = a[i - off], c[i], c[i - DRIFT_FENSTER]
@@ -99,7 +99,7 @@ def laufe(db: str, klasse: str) -> list[dict]:
                             ausgang = "ziel"
                             break
                     aus.append({"phase": ph, "band": bd, "k": k, "crv": crv,
-                                "ausgang": ausgang,
+                                "ausgang": ausgang, "sym": sym_name, "i": i,
                                 "stop_relativ": float(risiko / einstieg)})
     return aus
 
@@ -124,6 +124,19 @@ def main() -> int:
                     help="N Laeufe mit INNERHALB der Geometrie gewuerfelten "
                          "Ausgaengen - prueft, ob das Maximum aus 300 Zellen "
                          "auch zufaellig entstuende")
+    ap.add_argument("--blockplacebo", type=int, default=0,
+                    help="wie --placebo, aber es werden ganze ZEITBLOECKE "
+                         "getauscht statt einzelner Ausgaenge - die einzige "
+                         "Probe, die zur Autokorrelation passt")
+    ap.add_argument("--blocklaenge", type=int, default=250,
+                    help="Handelstage je Block; mindestens so lang wie das "
+                         "Vorwaertsfenster (120), damit die Abhaengigkeit "
+                         "INNERHALB des Blocks erhalten bleibt")
+    ap.add_argument("--positiv", type=float, default=0.0,
+                    help="POSITIVKONTROLLE: hebt die Trefferquote in EINER "
+                         "vorab benannten Zelle kuenstlich um X Punkte. Die "
+                         "Proben muessen diesen Effekt finden - eine Probe, "
+                         "die zu streng ist, taugt so wenig wie eine laxe.")
     ap.add_argument("--datei", default="messwerte_kollinearitaet.json")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -133,6 +146,24 @@ def main() -> int:
     print("=" * 78)
     faelle = laufe(a.db, a.klasse)
     print(f"  {len(faelle)} Anker-Geometrie-Paare")
+
+    # ⚠️ POSITIVKONTROLLE - vorab benannte Zelle, NICHT die Siegerzelle.
+    # Gewaehlt ist eine unauffaellige Mitte des Rasters; faende die Probe
+    # einen dort eingepflanzten echten Effekt nicht, waere sie unbrauchbar.
+    PFLANZE = ("seitwaerts", "+10 bis +30 %", 2.5, 1.5)
+    if a.positiv:
+        rngp = np.random.default_rng(20260822)
+        traf = 0
+        for f in faelle:
+            if (f["phase"], f["band"], f["k"], f["crv"]) != PFLANZE:
+                continue
+            if f["ausgang"] == "stop" and rngp.random() < a.positiv:
+                f["ausgang"] = "ziel"
+                traf += 1
+        print(f"  ⚠️ POSITIVKONTROLLE AKTIV: in Zelle {PFLANZE} wurden "
+              f"{traf} Stops zu Zielen gemacht.")
+        print("     Diese Zelle MUSS jetzt als beste herauskommen und beide "
+              "Proben bestehen.")
 
     def teil(**wo):
         return [f for f in faelle
@@ -247,14 +278,26 @@ def main() -> int:
             if f["ausgang"] not in ("ziel", "stop"):
                 continue
             g = geo.setdefault((f["k"], f["crv"]),
-                               {"zelle": [], "ausgang": [], "stop": []})
+                               {"zelle": [], "ausgang": [], "stop": [],
+                                "sym": [], "i": []})
             g["zelle"].append((f["phase"], f["band"]))
             g["ausgang"].append(f["ausgang"] == "ziel")
             g["stop"].append(f["stop_relativ"])
+            g["sym"].append(f["sym"])
+            g["i"].append(f["i"])
         for g in geo.values():
             g["zelle"] = np.array([f"{p}|{b}" for p, b in g["zelle"]])
             g["ausgang"] = np.array(g["ausgang"])
             g["stop"] = np.array(g["stop"])
+            # ⚠️ JE SYMBOL DIE POSITIONEN IN ZEITLICHER ORDNUNG. Ein Block
+            # ist nur dann ein Zeitblock, wenn er aus aufeinanderfolgenden
+            # Ankern DESSELBEN Symbols besteht.
+            ordnung: dict = {}
+            for pos, (s, i) in enumerate(zip(g["sym"], g["i"])):
+                ordnung.setdefault(s, []).append((i, pos))
+            g["reihen"] = [np.array([pos for _i, pos in sorted(v)])
+                           for v in ordnung.values()]
+            del g["sym"], g["i"]
         hoechste = []
         for _lauf in range(a.placebo):
             beste = -9.9
@@ -277,6 +320,92 @@ def main() -> int:
                          "hergibt" if wert_komb > schwelle else
                          "NICHTS - das Maximum aus 300 Zellen entsteht auch "
                          "ohne jeden Zusammenhang"))
+
+    # ⚠️ DIE PROBE, DIE ZUR ZEITSTRUKTUR PASST.
+    #
+    # Der Placebo oben wuerfelt die Ausgaenge FREI. Er unterstellt damit, dass
+    # die Anker unabhaengig sind - und das sind sie nicht: taegliche Einstiege
+    # mit bis zu 120 Tagen Vorwaertsfenster ueberlappen einander um mehr als
+    # 99 %, und die Marktphase ist ein zusammenhaengender Zeitblock. Freies
+    # Wuerfeln macht die Zufallsverteilung ZU SCHMAL und die Schwelle damit
+    # ZU NIEDRIG.
+    #
+    # HIER WERDEN GANZE ZEITBLOECKE GETAUSCHT. Innerhalb eines Blocks bleibt
+    # alles, wie es war - die Abhaengigkeit der Anker untereinander UND die
+    # legitimen Unterschiede zwischen k und CRV. Verschoben wird nur, WANN ein
+    # Block liegt, und damit genau die Zuordnung zu Phase und Band.
+    if a.blockplacebo:
+        print("\n" + "-" * 78)
+        print(f"BLOCK-PLACEBO - {a.blockplacebo} Laeufe, ganze Zeitbloecke von")
+        print(f"  {a.blocklaenge} Handelstagen getauscht statt einzelner "
+              f"Ausgaenge.")
+        print("  Das ist die strengere Probe: sie laesst die Abhaengigkeit")
+        print("  benachbarter Anker stehen, statt sie wegzuwuerfeln.")
+        print("-" * 78)
+        rngb = np.random.default_rng(20260821)
+        gebuehr = TB.KOSTEN_JE_SEITE.get(a.klasse, 0.015)
+        _erste = next(iter(geo.values()))
+        gedreht = sum(1 for r in _erste["reihen"] if len(r) >= 2 * a.blocklaenge)
+        hoechste_b, eine_zelle = [], []
+        for _lauf in range(a.blockplacebo):
+            beste = -9.9
+            for (k, crv), g in geo.items():
+                gew = g["ausgang"].copy()
+                for reihe in g["reihen"]:
+                    if len(reihe) < 2 * a.blocklaenge:
+                        continue          # zu kurz - bleibt, wie es ist
+                    # ⚠️ ZUFAELLIGER VERSATZ. Bei festen Grenzen reisten
+                    # immer dieselben Anker gemeinsam; das macht die
+                    # Zufallsverteilung schmaler, als sie sein darf.
+                    v = int(rngb.integers(0, a.blocklaenge))
+                    schnitte = ([reihe[:v]] if v else []) + [
+                        reihe[s:s + a.blocklaenge]
+                        for s in range(v, len(reihe), a.blocklaenge)]
+                    neu = np.concatenate([schnitte[j] for j in
+                                          rngb.permutation(len(schnitte))])
+                    gew[reihe] = g["ausgang"][neu]
+                for zelle in np.unique(g["zelle"]):
+                    m = g["zelle"] == zelle
+                    if m.sum() < MIN_FAELLE:
+                        continue
+                    quote = float(gew[m].mean())
+                    stop_rel = float(np.median(g["stop"][m]))
+                    w = quote - TB.breakeven(2 * gebuehr / stop_rel, crv)
+                    beste = max(beste, w)
+                    # ⚠️ DIESELBEN LAEUFE, ABER NUR EINE ZELLE. Nicht als
+                    # Urteil - die Siegerzelle nachtraeglich zu benennen
+                    # waere zirkulaer -, sondern als HUERDENRECHNUNG: wie
+                    # hoch laege die Schwelle, wenn man EINE Kombination
+                    # VORHER benannt haette statt 300 abzusuchen?
+                    if (bestes and (k, crv) == (bestes[2], bestes[3])
+                            and zelle == f"{bestes[0]}|{bestes[1]}"):
+                        eine_zelle.append(w)
+            hoechste_b.append(beste)
+        schwelle_b = float(np.quantile(hoechste_b, 0.95))
+        print(f"  {gedreht} Reihen lang genug fuer mindestens zwei Bloecke")
+        print(f"  groesster Zufallswert  {100 * max(hoechste_b):+.1f} Punkte")
+        print(f"  SCHWELLE (95 %)        {100 * schwelle_b:+.1f} Punkte")
+        print(f"  gemessen               {100 * wert_komb:+.1f} Punkte")
+        print("  -> " + ("TRAEGT AUCH HIER" if wert_komb > schwelle_b else
+                         "NICHTS - der freie Placebo war zu schwach, die "
+                         "Zeitstruktur allein erzeugt diesen Wert"))
+        if eine_zelle:
+            s1 = float(np.quantile(eine_zelle, 0.95))
+            print("")
+            print("  HUERDENRECHNUNG - dieselben Laeufe, aber nur EINE")
+            print(f"  Zelle statt 300. Kein Urteil (die Siegerzelle nach-")
+            print(f"  traeglich zu benennen waere zirkulaer), sondern die")
+            print(f"  Frage: wie hoch laege die Huerde bei EINER vorab")
+            print(f"  benannten Kombination?")
+            print(f"    Schwelle bei 300 Zellen   {100 * schwelle_b:+.1f} "
+                  f"Punkte")
+            print(f"    Schwelle bei EINER Zelle  {100 * s1:+.1f} Punkte")
+            print(f"    Der Preis des Absuchens: "
+                  f"{100 * (schwelle_b - s1):.1f} Punkte.")
+        if max(hoechste_b) > max(hoechste):
+            print(f"  ⚠️ Der Block-Placebo streut breiter als der freie "
+                  f"({100 * max(hoechste_b):+.1f} gegen "
+                  f"{100 * max(hoechste):+.1f}) - genau der erwartete Effekt.")
 
     if a.datei:
         io.open(a.datei, "w", encoding="utf-8").write(json.dumps({

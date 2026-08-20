@@ -2949,3 +2949,51 @@ Ergebnis meldet - sonst misst er sein eigenes Muster statt des Codes.
 OFFEN UND NAMENTLICH FESTGEHALTEN: `umgeworfen_preis_eur` heisst EUR, wird an
 einer Stelle aber umgerechnet. Zwei Lesarten, eine falsch; ohne Blick auf die
 Quelle nicht entscheidbar. Die Pruefung laesst genau diese eine Stelle zu.
+
+
+## 2.47 Ueberlappende Anker: der freie Placebo reicht nicht (20.08.2026)
+
+**Der Fall.** Kapitel 103 mass +17,8 Punkte. Ein Placebo mit frei
+gewuerfelten Ausgaengen setzte die Schwelle auf **+4,7** - der Fund haette
+klar getragen. Eine Block-Permutation setzte sie auf **+20,5**. Derselbe
+Messwert, dasselbe Datenmaterial, entgegengesetztes Urteil.
+
+**Die Ursache.** Taegliche Anker mit einem Vorwaertsfenster von 120 Tagen
+ueberlappen einander um mehr als 99 %. Freies Wuerfeln unterstellt
+Unabhaengigkeit, die es nicht gibt, und macht die Zufallsverteilung **zu
+schmal** - die Schwelle damit zu niedrig.
+
+**Die Regel.** Wo Anker zeitlich ueberlappen, ist ein freier Placebo kein
+gueltiger Massstab. Es gilt die **Block-Permutation**:
+
+- Blocklaenge **groesser als das Vorwaertsfenster**, sonst zerschneidet sie
+  genau die Abhaengigkeit, die sie erhalten soll
+- Bloecke aus **aufeinanderfolgenden Ankern desselben Symbols**
+- **Blockgrenzen wandern je Lauf** - feste Grenzen lassen immer dieselben
+  Anker gemeinsam reisen und verschmaelern die Verteilung
+
+## 2.48 Die Schwelle ist selbst eine Schaetzung (20.08.2026)
+
+Dieselbe Probe lief dreimal: 20 Laeufe mit festen Grenzen ergaben +18,4
+(traegt nicht), 20 Laeufe mit wandernden Grenzen +16,8 (**traegt**), 40 Laeufe
++20,5 (traegt nicht). **Haette man beim zweiten aufgehoert, stuende dort
+'bestaetigt'.**
+
+**Die Regel.** Liegt der Messwert im Bereich der Schwellen-Unsicherheit, wird
+die **Zahl der Laeufe erhoeht**, bevor irgendetwas behauptet wird. Ein Urteil,
+das bei mehr Ziehungen kippt, war nie eins.
+
+## 2.49 Der Preis des Absuchens ist zu beziffern (20.08.2026)
+
+Dieselben 40 Laeufe, aber nur **eine** Zelle statt 300 ausgewertet:
+
+| | Schwelle |
+|---|---:|
+| Maximum aus 300 Zellen | +20,5 |
+| eine vorab benannte Zelle | **+10,2** |
+
+**Die Haelfte der Huerde entsteht aus dem Suchen, nicht aus der Datenlage.**
+Wer viele Kombinationen durchprobiert, muss ein Vielfaches liefern. Deshalb
+gehoert zu jeder Rastermessung die Angabe, **wie hoch die Huerde bei einer
+vorab benannten Kombination laege** - sie zeigt, was eine begruendete
+Hypothese wert waere.
