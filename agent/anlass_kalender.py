@@ -41,6 +41,35 @@ from datetime import date, datetime, timezone
 
 logger = logging.getLogger(__name__)
 
+# ⚠️ EIN ABRUF JE TAG, NICHT JE ASSET (Fehler vom 20.08.2026, im Betrieb
+# gefunden).
+#
+# `saetze()` wird in `rollen_lauf._ein_asset` hinter der letzten Abbruchstelle
+# aufgerufen - also fuer JEDES Asset, das die Geometrie besteht, nicht nur
+# fuer die wenigen mit Mail. Bei rund 60 Assets je Umlauf und einem Umlauf
+# alle 15 Minuten waren das mehrere tausend FRED-Abrufe am Tag, jeder mit
+# 15 Sekunden Zeitgrenze. FRED zeigte im Fehlerlog des Notebooks bereits
+# Zeitueberschreitungen.
+#
+# Beide Fremdquellen aendern sich langsam: ein Veroeffentlichungstermin steht
+# tagelang fest, die offenen Kontrakte eines Verfalltermins aendern sich
+# stetig, aber nicht in Minuten. Deshalb ein Speicher, der einmal je Tag
+# (CPI) beziehungsweise je Stunde (Verfall) neu fragt.
+_SPEICHER: dict = {}
+
+
+def _gemerkt(schluessel, holen):
+    """Ergebnis merken. ⚠️ AUCH FEHLSCHLAEGE - sonst versucht es jedes Asset
+    im Umlauf erneut, und ein Ausfall kostet 60 mal die Zeitgrenze."""
+    if schluessel not in _SPEICHER:
+        _SPEICHER[schluessel] = holen()
+        # Der Speicher waechst je Tag um wenige Eintraege; aeltere sind
+        # wertlos und werden weggeworfen, damit er nicht endlos laeuft.
+        if len(_SPEICHER) > 64:
+            for k in list(_SPEICHER)[:32]:
+                _SPEICHER.pop(k, None)
+    return _SPEICHER[schluessel]
+
 DERIBIT_ZUSAMMENFASSUNG = ("https://www.deribit.com/api/v2/public/"
                            "get_book_summary_by_currency")
 
@@ -82,6 +111,11 @@ def _cpi(heute: date, fred_key: str | None) -> tuple[list, bool]:
     ist etwas anderes als "kein Termin"."""
     if not fred_key:
         return [], False
+    return _gemerkt(("cpi", heute.isoformat()),
+                    lambda: _cpi_holen(heute, fred_key))
+
+
+def _cpi_holen(heute: date, fred_key: str) -> tuple[list, bool]:
     try:
         from api.macro import get_next_fred_release
         r = get_next_fred_release(10, "cpi_headline", fred_key,
@@ -110,6 +144,12 @@ def _verfall(heute: date, symbol: str, sitzung=None) -> tuple[list, str]:
     waehrung = str(symbol).upper()
     if waehrung not in ("BTC", "ETH"):
         return [], "entfaellt"
+    return _gemerkt(("verfall", waehrung, heute.isoformat(),
+                     datetime.now(timezone.utc).hour),
+                    lambda: _verfall_holen(heute, waehrung, sitzung))
+
+
+def _verfall_holen(heute: date, waehrung: str, sitzung=None) -> tuple:
     try:
         import requests
         s = sitzung or requests.Session()

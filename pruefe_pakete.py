@@ -9310,6 +9310,18 @@ def paket_dimension() -> None:
            "lueckenhaftes Gate sperrt zufaellig. Genau daran ist der "
            "Deadloop entstanden (Nutzereinwand 19.08.)")
 
+    # ⚠️ EIN ABRUF JE TAG, NICHT JE ASSET (Betriebsfund 20.08.2026).
+    pruefe(P, "der Kalender fragt die Fremdquellen gemerkt ab",
+           "_gemerkt" in _aq and "_SPEICHER" in _aq,
+           "saetze() laeuft hinter der letzten Abbruchstelle, also fuer "
+           "JEDES Asset - bei 60 Assets je Umlauf und einem Umlauf alle 15 "
+           "Minuten waren das mehrere tausend FRED-Abrufe am Tag, jeder mit "
+           "15 s Zeitgrenze. Gemessen: 60 Aufrufe von 35 s auf 1 ms")
+    pruefe(P, "und merkt sich auch FEHLSCHLAEGE",
+           "AUCH FEHLSCHLAEGE" in _aq,
+           "sonst versucht es jedes Asset erneut, und ein Ausfall kostet "
+           "sechzigmal die Zeitgrenze")
+
     # ⚠️ DIE LUECKE IST GEFAEHRLICHER ALS DER FEHLER.
     _az = _AK.saetze("AIOZ", "krypto", fred_key="")
     pruefe(P, "jede Mail sagt, welche Ereignisarten NICHT abgedeckt sind",
