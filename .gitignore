@@ -103,3 +103,4 @@ _geo.log
 messwerte_drift_absolut.json
 messwerte_kollinearitaet.json
 _koll.log
+messwerte_marken*.json

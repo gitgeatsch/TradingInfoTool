@@ -18377,3 +18377,53 @@ hoeher. Zwei Wege daran vorbei: mehr Reihen (dauert, teils nicht zu haben)
 oder WENIGER ZELLEN - eine vorab benannte Kombination halbiert die Huerde von
 20,5 auf 10,2, kostet nichts und ist heute machbar. Verlangt aber, die
 Kombination aus einem GRUND zu benennen statt aus einem Ergebnis.
+
+
+[2026-08-20] KAPITEL 104: DIE STRUKTUR, VORAB BENANNT - traegt nicht
+
+Nutzervorgabe: "Wir muessen jedenfalls einen Schritt nach vorne unternehmen,
+auch wenn einige scheitern sollten." Dieser ist gescheitert.
+
+WARUM DIESER KANAL: Kapitel 100-103 liefen alle ueber den ATR-Kanal. Struktur
+ist etwas anderes - WO der Einstieg liegt, nicht WIE WEIT der Markt schwankt.
+Vorab festgelegt EINE Hypothese statt einer Suche ueber 300 Zellen (2.49
+halbiert damit die Huerde): H = kein mehrfach beruehrter Widerstand zwischen
+Einstieg und Ziel (A) UND eine mehrfach beruehrte Unterstuetzung ueber dem
+Stop (B). Geometrie fest bei k=2,0/CRV=2,0.
+
+ROHBEFUND: alle Anker 34,4 % (-5,4 Punkte), H 39,7 % (+1,3) auf 2.519 Faellen.
+Block-Permutation Schwelle +0,2 -> TRAEGT. Und zum ersten Mal ueberhaupt
+bestand ein Befund die PHASENPROBE (+10,7 / +6,4 / +2,6).
+
+DREI ARTEFAKTPROBEN, DIE DRITTE KIPPT IHN:
+1. Die Konjunktion ist SCHLECHTER als ihr Teil - A allein +1,8, H +1,3. B
+   schadet. Das Nutzermodell ist hier NICHT eingetreten. Urteil bleibt
+   trotzdem bei H; A nachtraeglich zum Sieger zu erklaeren waere
+   Rosinenpickerei.
+2. H haengt am ATR: Median-Stopabstand 19,67 % gegen 15,44 %. Fuers Urteil
+   verkraftbar (eigener Breakeven), aber kein unabhaengiger Kanal.
+3. ⚠️ 48 % ALLER H-FAELLE LIEGEN IN DEN ERSTEN 250 HANDELSTAGEN IHRER REIHE
+   (12,6 % Anteil dort gegen 2-4 % spaeter). Dort gibt es kaum bestaetigte
+   Swings - "kein Widerstand im Weg" ist ein DATENzustand, kein Marktzustand.
+
+ENTSCHEIDENDER LAUF, ohne die ersten 250 Tage je Reihe (51.778 -> 42.031
+Anker): H 40,6 % / +0,8 Punkte auf 1.301 Faellen, Schwelle +2,4 -> TRAEGT
+NICHT. Der Rohbefund war die Datenlage.
+
+POSITIVKONTROLLE: 445 Stops in H zu Zielen gemacht -> +19,0 gegen Schwelle
++2,4, gefunden. "Traegt nicht" heisst hier nicht "nicht hingesehen". (Das
+Einpflanzen in H hebt auch die Nullverteilung mit an - die Kontrolle ist
+dadurch strenger als noetig und hat trotzdem bestanden.)
+
+⚠️ DER EIGENTLICHE ERTRAG: H trifft mit 40,6 % gegen 34,4 % - 6,2 Punkte mehr.
+DAS IST DER ERSTE FILTER DIESES PROJEKTS, DER DIE TREFFERQUOTE SELBST BEWEGT
+statt nur die Kostenhuerde. Er zahlt nicht, weil er die Huerde im selben Mass
+mithebt (weiterer Stop -> hoeherer Breakeven). NAECHSTE FRAGE, konkret und
+billig: traegt H auch INNERHALB eines schmalen Stopbands? Dann waere der
+Vorteil echt und nicht bloss Kostenarithmetik.
+
+GEBAUT: messe_marken.py. Die Messung ruft die PRODUKTIONSFUNKTION, keinen
+Nachbau; LB._swings wird einmal je Reihe geholt und je Anker zugeschnitten
+(Praefix-Eigenschaft). Belegt statt behauptet: 3.120 Vergleiche gegen
+niveaus_werte(), NULL Abweichungen, plus Selbstpruefung an fuenf echten
+Ankern je Reihe in jedem Lauf.

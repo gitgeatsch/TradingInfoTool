@@ -9248,6 +9248,63 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE STRUKTURHYPOTHESE UND IHRE ARTEFAKTPROBEN (Kapitel 104) ----
+    from messe_marken import BLOCKLAENGE as _MK_BLOCK
+    from simuliere_bremse import MAX_TAGE as _MAXT2
+    _mq = _quelltext("messe_marken.py")
+    _mroh = io.open("messe_marken.py", encoding="utf-8").read()
+
+    pruefe(P, "die Hypothese steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _mroh
+           and "A  FREIER WEG" in _mroh and "B  STOP GEDECKT" in _mroh,
+           "eine vorab benannte Hypothese kostet die halbe Huerde (2.49) - "
+           "aber nur, wenn sie WIRKLICH vorher steht")
+    pruefe(P, "A und B einzeln sind ausdruecklich KEIN Urteil",
+           "KEINE Kandidaten fuer" in _mroh
+           and "kein Urteil" in _mq,
+           "sonst waeren es drei Versuche statt einem - und A allein lag "
+           "mit +1,8 ueber H mit +1,3, die Versuchung war real")
+    pruefe(P, "die Geometrie wird NICHT abgesucht",
+           "K = 2.0" in _mq and "CRV = 2.0" in _mq
+           and "K_WERTE" not in _mq,
+           "ein Raster haette die Huerde verdoppelt (Kapitel 103.9)")
+
+    # ⚠️ DIE MESSUNG RUFT DIE PRODUKTIONSFUNKTION, KEINEN NACHBAU.
+    pruefe(P, "sie benutzt die Marken-Ermittlung des Betriebs",
+           "from agent import lagebeschreibung as LB" in _mq
+           and "LB._cluster_mit_art(" in _mq and "LB._swings(" in _mq
+           and "LB.NIVEAU_MIN_ABSTAND_ATR" in _mq,
+           "eine nachgebaute Fassung veraltet still - dann misst man eine "
+           "Struktur, die es im Betrieb nicht gibt")
+    pruefe(P, "und die Abkuerzung wird belegt, nicht behauptet",
+           "def pruefe_gleichheit" in _mq and "roh_pruefen" in _mq
+           and "Swing-Speicher weicht ab" in _mq,
+           "der Swing-Speicher ist nur zulaessig, weil das Ergebnis fuer "
+           "kleineres `bis` ein PRAEFIX ist - das wird bei jedem Lauf an "
+           "fuenf echten Ankern je Reihe gegen das Original geprueft")
+
+    # ⚠️ DIE ARTEFAKTPROBE, DIE DEN BEFUND GEKIPPT HAT.
+    pruefe(P, "es gibt die Reifeprobe auf junge Reihen",
+           "--mindestalter" in _mroh and "mindestalter" in _mq,
+           "48 % aller H-Faelle lagen in den ersten 250 Handelstagen ihrer "
+           "Reihe - dort ist 'kein Widerstand im Weg' ein DATENzustand. "
+           "Ohne diese Tage faellt der Befund von +1,3 auf +0,8 bei einer "
+           "Schwelle von +2,4")
+    pruefe(P, "die Knappheitsregel 2.48 ist eingebaut",
+           "ZU KNAPP" in _mq and "Schaetzfehler der Schwelle" in _mroh,
+           "liegt der Messwert im Schaetzfehler der Schwelle, gilt nichts - "
+           "genau daran waere Kapitel 103 fast falsch entschieden worden")
+    pruefe(P, "Block-Permutation mit wandernden Grenzen, kein freier Placebo",
+           "rngb.integers(0, a.blocklaenge)" in _mq
+           and "--blockplacebo" in _mroh,
+           "Methodik 2.47 - bei ueberlappenden Ankern ist ein freier "
+           "Placebo kein Massstab")
+    pruefe(P, "der Block ist laenger als das Vorwaertsfenster",
+           _MK_BLOCK > _MAXT2,
+           f"Vorwaertsfenster {_MAXT2} Tage, Block {_MK_BLOCK} - ein "
+           "kuerzerer Block zerschnitte die Abhaengigkeit, die er erhalten "
+           "soll")
+
     # ---- DIE KOLLINEARITAETSPROBE UND IHRE KONTROLLE (Kapitel 103) ----
     _lq = _quelltext("messe_kollinearitaet.py")
     _lroh = io.open("messe_kollinearitaet.py", encoding="utf-8").read()

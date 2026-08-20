@@ -13988,3 +13988,127 @@ Zwei Wege führen daran vorbei, und der zweite ist sofort verfügbar:
 **Der Weg nach vorn ist also nicht mehr Methode, sondern eine begründete
 Hypothese.** Genau das war die Vorgabe vom 15.08. — *aufgemacht, um besser zu
 werden*, mit Argumenten ohne Prognose.
+
+
+---
+
+## Kapitel 104 — Die Struktur, vorab benannt: trägt nicht, aber sie bewegt etwas Neues (20.08.2026)
+
+**Nutzervorgabe:** *„Wir müssen jedenfalls einen Schritt nach vorne
+unternehmen, auch wenn einige scheitern sollten."* — Dieser hier ist
+gescheitert. Was er hinterlässt, ist trotzdem mehr als die Kapitel davor.
+
+### 104.1 Warum dieser Kanal, und warum nur EINE Hypothese
+
+Kapitel 100–103 haben drei Hebel gemessen, und **alle drei liefen über
+denselben Kanal**: hoher ATR → weiter Stop in Prozent → Kosten in R sinken →
+Breakeven sinkt. **Struktur ist etwas anderes** — Marken beschreiben, *wo* im
+Kursverlauf der Einstieg liegt, nicht *wie weit* der Markt schwankt.
+
+Vorab festgelegt, **eine** Hypothese aus einem Grund statt einer Suche über
+300 Zellen (Methodik 2.49 — das halbiert die Hürde):
+
+> Ein Einstieg trägt sich eher, wenn zwischen Einstieg und Ziel **keine**
+> mehrfach berührte Marke liegt (**A**) **und** der Stop **unter** einer
+> mehrfach berührten Unterstützung steht (**B**). **H = A und B.**
+
+Geometrie fest beim Betriebszustand k = 2,0 / CRV = 2,0. Kein Raster.
+
+### 104.2 Der Rohbefund sah gut aus
+
+| Gruppe | Fälle | Quote | Abstand zum Breakeven |
+|---|---:|---:|---:|
+| alle Anker | 50.079 | 34,4 % | −5,4 |
+| A (einzeln, kein Urteil) | 4.766 | 40,1 % | +1,8 |
+| B (einzeln, kein Urteil) | 41.716 | 33,9 % | −6,2 |
+| **H — die Hypothese** | **2.519** | **39,7 %** | **+1,3** |
+
+Block-Permutation: Schwelle +0,2, gemessen +1,3 → **trägt**. Und zum ersten
+Mal überhaupt bestand ein Befund die **Phasenprobe**: Vorsprung +10,7 / +6,4 /
++2,6 in Bulle, Seitwärts und Bär.
+
+### 104.3 ⚠️ Drei Artefaktproben, und die dritte kippt ihn
+
+**(1) Die Konjunktion ist schlechter als ihr Teil.** A allein liegt bei +1,8,
+H bei +1,3 — B *schadet*. **Das Nutzermodell ist hier also nicht eingetreten**;
+getragen hat eine einzelne Bedingung, nicht die Kombination. Das Urteil bleibt
+trotzdem bei H: A nachträglich zum Sieger zu erklären wäre genau die
+Rosinenpickerei, gegen die die Schwelle gedacht ist.
+
+**(2) H hängt am ATR.** Median-Stopabstand in H **19,67 %** gegen 15,44 % im
+Schnitt. Für das Urteil verkraftbar (jede Gruppe wird gegen ihren *eigenen*
+Breakeven gemessen), aber ein unabhängiger Kanal ist die Struktur damit nicht.
+
+**(3) ⚠️ 48 % aller H-Fälle liegen in den ersten 250 Handelstagen ihrer
+Reihe.**
+
+| Alter der Reihe | Anteil H |
+|---|---:|
+| 0–249 Handelstage | **12,6 %** |
+| 250–499 | 4,0 % |
+| 500–749 | 2,9 % |
+| ab 750 | 0,6–5,3 % |
+
+Am Anfang einer Kursreihe gibt es kaum bestätigte Swings. **„Kein Widerstand
+im Weg" ist dort kein Marktzustand, sondern ein Datenzustand.**
+
+Immerhin: H verteilt sich auf **39 Symbole**, die größten fünf machen 40 % aus
+— eine Coinwette ist es nicht.
+
+### 104.4 Der entscheidende Lauf
+
+Dieselbe Messung, aber **die ersten 250 Handelstage jeder Reihe verworfen**
+(51.778 → 42.031 Anker):
+
+| | Fälle | Quote | Abstand |
+|---|---:|---:|---:|
+| alle Anker | 40.459 | 34,4 % | −6,0 |
+| **H** | **1.301** | **40,6 %** | **+0,8** |
+
+| Block-Permutation | |
+|---|---:|
+| größter Zufallswert | +7,8 |
+| **Schwelle (95 %)** | **+2,4** |
+| gemessen | **+0,8** |
+
+**TRÄGT NICHT.** Der Rohbefund war die Datenlage.
+
+### 104.5 Die Positivkontrolle — die Probe ist nicht blind
+
+445 Stops in H künstlich zu Zielen gemacht: gemessen **+19,0** gegen Schwelle
++2,4 → **gefunden**. „Trägt nicht" heißt hier also nicht „nicht hingesehen".
+
+⚠️ Anzumerken: das Einpflanzen *in H* hebt auch die Nullverteilung mit an (die
+gepflanzten Ausgänge verteilen sich beim Würfeln mit). Die Kontrolle ist
+dadurch **strenger** als nötig — sie hat trotzdem bestanden.
+
+### 104.6 ⚠️ Und das hier ist der eigentliche Ertrag
+
+**H trifft mit 40,6 % gegen 34,4 % — 6,2 Punkte mehr.** Das ist der **erste
+Filter dieses Projekts, der die Trefferquote selbst bewegt** statt nur die
+Kostenhürde. Alle bisherigen Hebel (Kapitel 100–103) senkten den Breakeven;
+dieser hebt die Quote.
+
+**Er zahlt trotzdem nicht — weil er die Hürde im selben Maß mithebt.** H hat
+den weiteren Stop (19,67 % gegen 15,44 %), und ein weiter Stop bedeutet
+höheren Breakeven. Der Vorsprung von 6,2 Punkten wird von der eigenen Hürde
+genau aufgefressen.
+
+**Damit ist zum ersten Mal eine konkrete, prüfbare Frage benannt:** lässt sich
+der Quotenvorteil von H **ohne** den weiteren Stop haben? Geschichtet nach
+Stopabstand wäre das messbar — trägt H auch innerhalb eines schmalen
+Stopbands, ist der Vorteil echt und nicht bloß Kostenarithmetik. Das ist der
+nächste Schritt, und er ist billig.
+
+### 104.7 Was gebaut wurde
+
+`messe_marken.py` mit der Vorabfestlegung im Kopf, den vier Pflichtkontrollen
+(Block-Permutation · Läufe-erhöhen bei Knappheit · Positivkontrolle ·
+Phasenprobe) und der Artefaktprobe `--mindestalter`.
+
+⚠️ **Die Messung ruft die Produktionsfunktion, keinen Nachbau.** Damit sie
+nicht quadratisch läuft (67 Mio. Fensteroperationen), wird `LB._swings` einmal
+je Reihe geholt und je Anker zugeschnitten — zulässig, weil das Ergebnis für
+kleineres `bis` ein **Präfix** ist. **Das wurde nicht behauptet, sondern
+belegt:** 3.120 Vergleiche gegen `niveaus_werte()`, **null Abweichungen**, und
+die Messung prüft sich bei jedem Lauf selbst an fünf echten Ankern je Reihe.
