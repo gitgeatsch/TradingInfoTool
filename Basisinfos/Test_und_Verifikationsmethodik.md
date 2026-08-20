@@ -2886,3 +2886,31 @@ die Halbierung der Symbolliste. Ein echter Zusammenhang steht in beiden
 Haelften; einer, der an wenigen Werten haengt, nur in einer.
 
 Der Punkt gilt damit als TEILWEISE erledigt, nicht als erledigt.
+
+
+## 2.48 Ein deutsches Datum ist keine englische Zahl (20.08.2026)
+
+Mit dem Terminkalender (93 D) stand erstmals ein Datum in der Mail:
+"FOMC-Sitzung (15.09.-16.09.2026)". simuliere_kette.py meldete daraufhin acht
+Luecken - "15.09" und "16.09" sahen fuer die Schreibweisenpruefung aus wie
+englische Dezimalschreibweise.
+
+DER FEHLER LAG IN DER PRUEFUNG, NICHT IN DER MAIL. Datumsangaben im Format
+15.09. oder 16.09.2026 werden jetzt vorher herausgeschnitten; "1.5" bleibt
+ein Fund.
+
+REGEL: eine Pruefung, die zum ersten Mal auf eine neue Textart trifft, ist
+zuerst selbst verdaechtig. Acht gleichartige Meldungen auf einmal sind ein
+Hinweis auf die Pruefung, nicht auf acht neue Fehler.
+
+## 2.49 Keine Zahl zweimal fuehren - auch nicht zwischen Code und Mailtext (20.08.2026)
+
+agent/drift.py nennt in der Mail Messwerte: "ein Feld von 27 haelt die
+Schwelle". Diese 27 steht auch in messe_drift.py, gerechnet aus Rueckblicken
+mal Horizonten mal Varianten. Wer eine Variante ergaenzt und den Mailtext
+vergisst, luegt die Mail an.
+
+Drei Pruefungen binden die Zahlen aneinander: Feldzahl gegen das Werkzeug,
+Schwelle gegen die Feldzahl, Ankerzahl gegen die Summe je Klasse. Dasselbe
+Muster wie bei den vier Kopien der Stopzeile im August - nur diesmal ueber
+Modulgrenzen hinweg.

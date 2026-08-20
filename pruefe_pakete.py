@@ -9206,6 +9206,90 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- GESAMTPRUEFUNG KAPITEL 93: KEINE ZAHL ZWEIMAL (20.08.2026) ----
+    #
+    # Der Mailtext nennt Messwerte ("ein Feld von 27 haelt die Schwelle").
+    # Wer die Messung aendert und den Text vergisst, luegt die Mail an -
+    # dasselbe Muster wie die vier Kopien der Stopzeile im August.
+    import messe_drift as _MD
+    from statistics import NormalDist as _ND
+
+    # Eigene Namen: `_DR` und `_TR` entstehen erst weiter unten in ihren
+    # eigenen Bloecken - genau die Falle aus feedback_freie_namen_falle.
+    from agent import drift as _DR0
+    from agent import trichter as _TR0
+
+    _f = len(_MD.RUECKBLICKE) * len(_MD.HORIZONTE) * len(_MD.VARIANTEN)
+    pruefe(P, "die Feldzahl in der Mail stammt aus dem Messwerkzeug",
+           _DR0.GEMESSEN["felder"] == _f,
+           f"agent/drift nennt {_DR0.GEMESSEN['felder']}, "
+           f"messe_drift rechnet {_f}")
+    pruefe(P, "und die Schwelle passt zu dieser Feldzahl",
+           abs(_DR0.GEMESSEN["schwelle"]
+               - _ND().inv_cdf(1 - 0.05 / (2 * _f))) < 0.02,
+           "3,11 ist die Bonferroni-Schwelle fuer 27 Felder - eine andere "
+           "Feldzahl macht sie falsch")
+    pruefe(P, "die Ankerzahl des Trichters ist die Summe der Klassen",
+           _TR0.ANKER_GEMESSEN == sum(
+               v[1] for v in _TR0.GRUNDLAGE.values()),
+           "36.095 = 23.343 Krypto + 3.875 Aktien + 8.877 ETF. Faellt eine "
+           "Klasse weg, muss die Gesamtzahl mit")
+
+    # ⚠️ UND DER NB-EXPORT MUSS DEN NEUEN BEREICH KENNEN.
+    _nb = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "der NB-Export weist Kapitel 93 aus",
+           "def _kapitel93" in _nb and '"kapitel93": kapitel93' in _nb,
+           "ein Wert, der nur auf dem Entwicklungsrechner nachweisbar ist, "
+           "ist nicht nachgewiesen - Rolle G galt drei Tage als fertig und "
+           "war nie gelaufen")
+    pruefe(P, "und meldet eine ausbleibende Lebendigkeitsreihe als WARNUNG",
+           "Der Job `lebendigkeit` laeuft nicht" in _nb,
+           "die Auswertung kommt erst in Wochen - ein Ausbleiben des "
+           "Sammelns muss SOFORT auffallen, nicht in Wochen")
+
+    # ---- DER TERMINKALENDER: ANZEIGE, KEIN GATE (93 D, 20.08.2026) ----
+    from agent import anlass_kalender as _AK
+
+    _aq = _quelltext("agent/anlass_kalender.py")
+    pruefe(P, "der Kalender sperrt nichts - das Deckelproblem",
+           "kein Urteil" in _aq and "KEIN GATE" in _aq
+           and "return" in _aq and "gesperrt" not in _aq,
+           "ein Anlass, der zur BEDINGUNG wird, ist ein Gate - und ein "
+           "lueckenhaftes Gate sperrt zufaellig. Genau daran ist der "
+           "Deadloop entstanden (Nutzereinwand 19.08.)")
+
+    # ⚠️ DIE LUECKE IST GEFAEHRLICHER ALS DER FEHLER.
+    _az = _AK.saetze("AIOZ", "krypto", fred_key="")
+    pruefe(P, "jede Mail sagt, welche Ereignisarten NICHT abgedeckt sind",
+           any("NICHT ABGEDECKT" in z for z in _az)
+           and any("Token-Freigaben" in z for z in _az),
+           "ein Kalender mit Luecken ist gefaehrlicher als keiner: fehlt "
+           "ein Anlass, sieht die Lage RUHIG aus")
+    pruefe(P, "und welche Quellen gefragt wurden",
+           any("Gefragt wurde" in z for z in _az))
+
+    # ⚠️ DREI ZUSTAENDE, AUCH HIER.
+    _zust = _AK.termine("AIOZ", "krypto", fred_key="")["erreicht"]
+    pruefe(P, "'gibt es hier nicht' und 'nicht erfahren' bleiben getrennt",
+           _zust["Optionsverfall (nur BTC/ETH)"] == "entfaellt"
+           and _zust["CPI-Veroeffentlichung"] == "fehler",
+           "fuer AIOZ gibt es keinen Optionsmarkt - das ist nicht "
+           "zutreffend, kein Ausfall. Die erste Fassung meldete beides als "
+           "NICHT ERREICHT und liess die Mail nach Stoerung aussehen")
+    pruefe(P, "ein Termin in den naechsten fuenf Tagen heisst UNGUENSTIG",
+           "UNGUENSTIG FUER EINEN EINSTIEG JETZT" in _aq
+           and "GUENSTIG: kein Termin" in _aq,
+           "was dann passiert, entscheidet die Nachricht - nicht der Aufbau")
+
+    # ⚠️ EIN DEUTSCHES DATUM IST KEINE ENGLISCHE ZAHL.
+    from simuliere_kette import _englische_zahlen as _EZ
+    pruefe(P, "die Schreibweisenpruefung stolpert nicht ueber Datumsangaben",
+           _EZ("FOMC-Sitzung (15.09.-16.09.2026)") == []
+           and _EZ("Stop 1.5 Prozent") == ["1.5"],
+           "mit dem Terminkalender stand erstmals ein Datum in der Mail und "
+           "die Simulation meldete acht Luecken - der Fehler lag in der "
+           "Pruefung, nicht in der Mail")
+
     # ---- DIE DREI VARIANTEN UND DER RANGPLATZ (93 B Punkt 3) ----
     _dq3 = _quelltext("messe_drift.py")
 

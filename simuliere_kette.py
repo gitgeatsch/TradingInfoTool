@@ -50,9 +50,23 @@ from ui import formatting as _FORM
 _ENG_ZAHL = _re.compile(r"(?<![\d.])\d+\.(\d+)")
 
 
+# ⚠️ EIN DEUTSCHES DATUM IST KEINE ENGLISCHE ZAHL (20.08.2026).
+#
+# Mit dem Terminkalender (93 D) stand erstmals ein Datum in der Mail:
+# "FOMC-Sitzung (15.09.-16.09.2026)". Die Pruefung meldete daraufhin acht
+# Luecken - "15.09" und "16.09" sahen fuer sie aus wie 15.09 in englischer
+# Dezimalschreibweise. Der Fehler lag NICHT in der Mail.
+#
+# Datumsangaben werden deshalb vorher herausgeschnitten. Sie zu ignorieren
+# ist richtig, sie zu erlauben waere falsch: "1.5" bleibt ein Fund.
+_DATUM = _re.compile(r"\b\d{1,2}\.\d{1,2}\.(?:\d{2,4})?")
+
+
 def _englische_zahlen(text: str) -> list[str]:
     """Zahlen in englischer Schreibweise. Genau drei Ziffern nach dem Punkt
-    gelten als Tausendergruppe (1.234,5) und zaehlen nicht."""
+    gelten als Tausendergruppe (1.234,5) und zaehlen nicht; Datumsangaben
+    im Format 15.09. oder 16.09.2026 ebenso wenig."""
+    text = _DATUM.sub(" ", text)
     return sorted({m.group(0) for m in _ENG_ZAHL.finditer(text)
                    if len(m.group(1)) != 3})
 

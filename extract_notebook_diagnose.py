@@ -1461,6 +1461,78 @@ def _anlass_einstellungen() -> dict:
         return {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
 
 
+def _kapitel93(conn) -> dict:
+    """Trichter, Lebendigkeit, Rangplatz, Termine - im BETRIEB nachweisbar.
+
+    ⚠️ WOZU. Alles aus Kapitel 93 ist am 19./20.08. gebaut worden, und der
+    Export kannte davon NICHTS. Genau dieses Muster hat das Projekt schon
+    einmal Wochen gekostet: Rolle G galt drei Tage als fertig und war nie
+    gelaufen. Ein Wert, der nur auf dem Entwicklungsrechner nachweisbar ist,
+    ist nicht nachgewiesen.
+
+    Was hier steht, beantwortet drei Fragen:
+      1. Welche Fassung laeuft dort? (die gemessenen Konstanten)
+      2. Waechst die Lebendigkeitsreihe? (93 C - sie ist erst in Wochen
+         auswertbar, aber ein Ausbleiben muss SOFORT auffallen)
+      3. Bleiben die drei Zustaende getrennt?"""
+    aus: dict = {}
+    try:
+        from agent import trichter as TR
+        aus["trichter"] = {
+            "stand": TR.STAND, "anker": TR.ANKER_GEMESSEN,
+            "faktoren_je_klasse": {k: v[0.80]
+                                   for k, v in TR.FAKTOR_JE_KLASSE.items()},
+            "rueckfall_80": TR.FAKTOR[0.80]}
+    except Exception as exc:                                 # noqa: BLE001
+        aus["trichter"] = {"nicht_verfuegbar": str(exc)}
+    try:
+        from agent import drift as DR
+        aus["rangplatz"] = dict(DR.GEMESSEN)
+    except Exception as exc:                                 # noqa: BLE001
+        aus["rangplatz"] = {"nicht_verfuegbar": str(exc)}
+
+    # 93 C: waechst die Reihe? Die Auswertung kommt spaeter, das Sammeln
+    # muss JETZT nachweisbar sein.
+    try:
+        n = conn.execute("SELECT COUNT(*) FROM lebendigkeit_beobachtung"
+                         ).fetchone()[0]
+        je = {f"{r[0]}/{r[1]}": r[2] for r in conn.execute(
+            "SELECT quelle, zustand, COUNT(*) FROM lebendigkeit_beobachtung "
+            "GROUP BY 1, 2")}
+        spanne = conn.execute(
+            "SELECT MIN(erfasst_am), MAX(erfasst_am), "
+            "COUNT(DISTINCT substr(erfasst_am, 1, 10)) "
+            "FROM lebendigkeit_beobachtung").fetchone()
+        symbole = conn.execute(
+            "SELECT COUNT(DISTINCT symbol) FROM lebendigkeit_beobachtung "
+            "WHERE zustand = 'wert'").fetchone()[0]
+        aus["lebendigkeit"] = {
+            "zeilen": n, "je_quelle_und_zustand": je,
+            "erste": spanne[0], "letzte": spanne[1], "tage": spanne[2],
+            "symbole_mit_wert": symbole,
+            "hinweis": ("Auswertbar ab 30 Messungen (tvl) bzw. 12 "
+                        "(entwickler) - siehe agent/lebendigkeit.MINDESTREIHE")}
+        if not n:
+            aus["lebendigkeit"]["WARNUNG"] = (
+                "KEINE Zeile. Der Job `lebendigkeit` laeuft nicht - jeder "
+                "Tag ohne Sammeln verschiebt die Auswertung um einen Tag.")
+    except Exception as exc:                                 # noqa: BLE001
+        aus["lebendigkeit"] = {
+            "nicht_verfuegbar": str(exc),
+            "WARNUNG": "Tabelle fehlt - der Sammeljob hat nie geschrieben."}
+
+    # 93 D: welche Terminquellen sind erreichbar? OHNE Netzaufruf - hier wird
+    # nur berichtet, was das Modul KENNT, nicht was es gerade liefert.
+    try:
+        from agent import anlass_kalender as AK
+        aus["termine"] = {"quellen": list(AK.QUELLEN),
+                          "nicht_abgedeckt": list(AK.NICHT_ABGEDECKT),
+                          "vorschau_tage": AK.VORSCHAU_TAGE}
+    except Exception as exc:                                 # noqa: BLE001
+        aus["termine"] = {"nicht_verfuegbar": str(exc)}
+    return aus
+
+
 def _dimensionierung(conn) -> dict:
     """S1 bis S5 des Umbauplans Kapitel 90 - im BETRIEB nachweisbar.
 
@@ -2392,8 +2464,10 @@ def main() -> None:
             rollen_kette = {"nicht_verfuegbar": str(exc)}
         try:
             dimensionierung = _dimensionierung(conn)
+            kapitel93 = _kapitel93(conn)
         except Exception as exc:  # noqa: BLE001
             dimensionierung = {"nicht_verfuegbar": str(exc)}
+            kapitel93 = {"nicht_verfuegbar": str(exc)}
         try:
             externe_reihen = _externe_reihen(conn)
         except Exception as exc:  # noqa: BLE001
@@ -2733,6 +2807,7 @@ def main() -> None:
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
         "dimensionierung": dimensionierung,
+        "kapitel93": kapitel93,
             "externe_reihen": externe_reihen,
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,

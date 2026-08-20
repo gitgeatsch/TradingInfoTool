@@ -1323,6 +1323,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         _lage.append(f"{_kl.get('klasse', '?').capitalize()}: "
                      f"{_kl['beurteilung']}")
 
+    # 93 D: BEKANNTE TERMINE - Anzeige, kein Gate. Das Deckelproblem ist
+    # durch die Bauform geloest: diese Zeilen sperren nichts, und sie sagen
+    # ausdruecklich, welche Ereignisarten NICHT abgedeckt sind.
+    try:
+        from agent import anlass_kalender as _AK
+        _anlaesse = _AK.saetze(symbol, assetklasse)
+    except Exception:                                        # noqa: BLE001
+        _anlaesse = []
+
     # 93 B Punkt 3: DER RANGPLATZ ALS TATSACHE, mit dem gemessenen Wert
     # daneben. Kein Gate - er sperrt nichts und empfiehlt nichts.
     try:
@@ -1342,6 +1351,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # den WERT, keine Rechnung; sie gehoeren nebeneinander.
     if _leben0:
         _leben = _leben0 + ([""] if _leben else []) + _leben
+    if _anlaesse:
+        _leben = _leben + ([""] if _leben else []) + _anlaesse
 
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(

@@ -17817,3 +17817,54 @@ Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
 OFFEN: die zweite Anlageklasse (Reihen fehlen). Und 250/60 mit +10 %
 Abstand ist der einzige oekonomisch interessante Kandidat - ueberall positiv,
 Schwelle nur im juengsten Zeitfenster.
+
+
+[2026-08-20] STUFE 93 D GEBAUT - der Anlass, ohne Deckel
+
+Das Deckelproblem ist durch die BAUFORM geloest, nicht durch eine Regel:
+agent/anlass_kalender.py urteilt nicht und sperrt nichts. Es nennt Termine
+mit Datum und Quelle, die Entscheidung bleibt beim Leser.
+
+DREI QUELLEN, ALLE SCHON IM HAUS - und zwei davon gebaut, aber nie in der
+Mail: FOMC (agent/cycles, statische Liste, NUR 2026), CPI (FRED, ohne
+Schluessel NICHT ABGEFRAGT statt "kein Termin") und Optionsverfall (Deribit,
+nur BTC/ETH). Ein Verfalltermin gilt nur als Ereignis, wenn er die uebrigen
+um Faktor 2 uebersteigt - sonst stuende an jedem Freitag ein Grossereignis.
+Live gemessen: 68.668 offene Kontrakte am 28.08. gegen 1.838 bis 22.500 sonst.
+
+DIE LUECKE IST GEFAEHRLICHER ALS DER FEHLER. In jeder Mail steht, welche
+Quellen gefragt wurden und welche Ereignisarten NICHT abgedeckt sind
+(Token-Freigaben, Boersenzugaenge, Netzwerk-Umstellungen, Zwischenfaelle).
+Fuer keine davon gibt es eine freie, vollstaendige Quelle - der Grund fuer
+die Zurueckstellung gilt weiter, aber er wird jetzt AUSGESPROCHEN.
+
+DREI ZUSTAENDE, beim ersten Probelauf korrigiert: fuer AIOZ meldete die
+erste Fassung den Optionsverfall als NICHT ERREICHT. Es gibt dort keinen
+Optionsmarkt - das ist "nicht zutreffend", kein Ausfall.
+
+BEIM BAUEN GEFUNDEN: mit dem Kalender stand erstmals ein Datum in der Mail,
+und die Schreibweisenpruefung meldete acht Luecken - "15.09" sah aus wie
+englische Dezimalschreibweise. Der Fehler lag in der PRUEFUNG. Datumsangaben
+werden jetzt vorher herausgeschnitten, "1.5" bleibt ein Fund.
+
+[2026-08-20] GESAMTPRUEFUNG UEBER DEN NEUEN BEREICH (Nutzervorgabe)
+
+AUSFALLVERHALTEN: fuenf Faelle geprueft (Trichter ohne ATR, ungemessene
+Klasse, Rangplatz ohne Reihen, Lebendigkeit ohne DB, Kalender ohne Netz).
+Keiner kostet eine Mail, keiner erfindet eine Zahl.
+
+DOPPELT GEFUEHRTE ZAHLEN: der Mailtext nennt Messwerte ("ein Feld von 27").
+Drei neue Pruefungen binden sie an den Code - Feldzahl an messe_drift,
+Schwelle an die Feldzahl, Ankerzahl an die Summe je Klasse.
+
+DIE EINE ECHTE LUECKE: der NB-Export kannte Kapitel 93 nicht. Trichter,
+Lebendigkeit und Terminkalender fehlten vollstaendig. Ein Wert, der nur auf
+dem Entwicklungsrechner nachweisbar ist, ist nicht nachgewiesen. _kapitel93()
+ergaenzt - und meldet ein Ausbleiben der Lebendigkeitsreihe als WARNUNG,
+weil die Auswertung erst in Wochen kommt und ein Ausbleiben SOFORT auffallen
+muss.
+
+VERDRAHTUNG: alle vier neuen Module erreichen die Mail; die Simulation weist
+zwei davon in der fertigen Mail nach.
+
+1.241 Pruefungen, 0 freie Namen, 8 Signale / 9 Mails / 0 Luecken.

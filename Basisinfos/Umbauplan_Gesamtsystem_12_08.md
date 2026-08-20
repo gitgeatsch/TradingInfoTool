@@ -12670,3 +12670,133 @@ den gemessenen Wert **mit** den Kosten; ohne Kursreihen bleibt die Zeile weg.
 fehlen die Reihen. Und 250/60 (+10 % Abstand) ist der einzige ökonomisch
 interessante Kandidat; er ist überall positiv, erreicht die Schwelle aber nur
 im jüngsten Zeitfenster.
+
+
+---
+
+### 93.20 Stufe D gebaut - der Anlass, ohne Deckel (20.08.2026)
+
+**Nutzereinschätzung vom 19.08.: „heikel und schwierig, Deckelproblem."** Sie
+war berechtigt, und die Lösung liegt nicht in einer Regel, sondern in der
+**Bauform**: `agent/anlass_kalender.py` urteilt nicht und sperrt nichts. Es
+nennt Termine mit Datum und Quelle - die Entscheidung bleibt beim Leser.
+
+#### Die drei Quellen waren alle schon im Haus
+
+| Quelle | was sie liefert | Einschränkung |
+|---|---|---|
+| **FOMC** | `agent/cycles.FOMC_MEETING_DATES_2026` | ⚠️ **nur 2026** - ab Januar 2027 liefert sie nichts, und das sähe aus wie „keine Sitzung" |
+| **CPI** | `api/macro.get_next_fred_release` | ohne FRED-Schlüssel: **nicht abgefragt**, nicht „kein Termin" |
+| **Optionsverfall** | Deribit, offene Kontrakte je Verfalltag | nur **BTC und ETH** |
+
+**Beide ersten waren gebaut und erreichten die Mail nie** - dasselbe Muster,
+das Rolle G drei Tage lang „fertig" aussehen ließ.
+
+Der Verfalltermin gilt nur als Ereignis, wenn er die übrigen deutlich
+übersteigt (Faktor 2 zum Median) - sonst stünde an jedem Freitag ein
+„Großereignis". Live gemessen: 68.668 offene Kontrakte am 28.08. gegen 1.838
+bis 22.500 an den anderen Tagen.
+
+#### So sieht es in der Mail aus
+
+```
+Bekannte Termine in den naechsten 30 Tagen (Anzeige, kein Urteil):
+   in  8 Tagen: Optionsverfall BTC, 68.668 offene Kontrakte  [Deribit]
+   in 26 Tagen: FOMC-Sitzung (15.09.-16.09.2026)  [federalreserve.gov]
+   GUENSTIG: kein Termin in den naechsten fuenf Tagen - die naechste
+   Bewegung entscheidet sich am Aufbau, nicht an einer Veroeffentlichung.
+   Gefragt wurde: FOMC, CPI, Optionsverfall. Fuer diesen Wert nicht
+   vorhanden: Optionsverfall. NICHT ERREICHT (Ausfall, kein Nein): CPI.
+Warnung: NICHT ABGEDECKT: Token-Freigaben, Boersenzugaenge,
+   Netzwerk-Umstellungen, Zwischenfaelle. Fuer diese gibt es keine freie,
+   vollstaendige Quelle - was hier nicht steht, kann trotzdem anstehen.
+```
+
+#### ⚠️ Die Lücke ist gefährlicher als der Fehler
+
+Ein Kalender mit Lücken ist schlimmer als keiner: **fehlt ein Anlass, sieht
+die Lage ruhig aus.** Deshalb steht in **jeder** Mail, welche Quellen gefragt
+wurden und welche Ereignisarten nicht abgedeckt sind. Wer die Zeile liest,
+weiß, was er nicht weiß.
+
+#### Drei Zustände - auch hier, und beim ersten Probelauf korrigiert
+
+Für AIOZ meldete die erste Fassung den Optionsverfall als **„NICHT
+ERREICHT"**. Es gibt dort aber keinen Optionsmarkt - das ist **„nicht
+zutreffend"**, kein Ausfall. Wer beides zusammenwirft, lässt eine Mail nach
+Störung aussehen, wo schlicht nichts zu holen ist.
+
+#### Beim Bauen gefunden: ein deutsches Datum ist keine englische Zahl
+
+Mit dem Kalender stand **erstmals ein Datum in der Mail**. Die
+Schreibweisenprüfung meldete daraufhin **acht Lücken**: „15.09" und „16.09"
+sahen für sie aus wie englische Dezimalschreibweise. **Der Fehler lag in der
+Prüfung, nicht in der Mail.** Datumsangaben werden jetzt vorher
+herausgeschnitten - „1.5" bleibt ein Fund.
+
+---
+
+### 93.21 Gesamtprüfung über den neuen Bereich (20.08.2026)
+
+**Nutzervorgabe:** *„mach noch eine Gesamtprüfung über den gesamten neuen
+Bereich ob etwas fehlt - Abhängigkeiten, Gegenprüfung."*
+
+#### 1. Ausfallverhalten - was passiert, wenn die Quelle fehlt?
+
+| Fall | Ergebnis |
+|---|---|
+| Trichter ohne ATR | leere Liste, keine Zeile |
+| Trichter, ungemessene Anlageklasse | Rückfall **und die Mail sagt es** |
+| Rangplatz ohne Kursreihen | leere Liste |
+| Lebendigkeit ohne Datenbank | leere Liste |
+| Kalender ohne Netz | Block bleibt, Quellen als „nicht erreicht" |
+
+**Keiner der fünf Fälle kostet eine Mail, keiner erfindet eine Zahl.**
+
+#### 2. Doppelt geführte Zahlen - und jetzt geprüft
+
+Der Mailtext nennt Messwerte („ein Feld von **27** hält die Schwelle").
+Ändert jemand die Messung und vergisst den Text, lügt die Mail. Drei neue
+Prüfungen binden die Zahlen aneinander:
+
+| | |
+|---|---|
+| `drift.GEMESSEN["felder"]` | = `len(RUECKBLICKE) × len(HORIZONTE) × len(VARIANTEN)` |
+| `drift.GEMESSEN["schwelle"]` | = Bonferroni für genau diese Feldzahl |
+| `trichter.ANKER_GEMESSEN` | = Summe der Anker je Klasse |
+
+#### 3. ⚠️ Die eine echte Lücke: der NB-Export kannte Kapitel 93 nicht
+
+Trichter, Lebendigkeit und Terminkalender fehlten vollständig. **Ein Wert,
+der nur auf dem Entwicklungsrechner nachweisbar ist, ist nicht
+nachgewiesen** - genau das Muster, das Rolle G drei Tage lang „fertig"
+aussehen ließ.
+
+`_kapitel93(conn)` ist ergänzt und beantwortet drei Fragen: welche Fassung
+läuft dort (die gemessenen Konstanten), **wächst die Lebendigkeitsreihe**, und
+bleiben die drei Zustände getrennt. Bleibt das Sammeln aus, steht dort:
+
+> *„KEINE Zeile. Der Job `lebendigkeit` läuft nicht - jeder Tag ohne Sammeln
+> verschiebt die Auswertung um einen Tag."*
+
+Das ist wichtig, weil die Auswertung erst in Wochen kommt: **ein Ausbleiben
+muss sofort auffallen, nicht im November.**
+
+#### 4. Gebaut, aber nicht verdrahtet?
+
+Geprüft für alle vier neuen Module - **alle erreichen die Mail**. Die
+Simulation weist Trichter und Lebendigkeit in der fertigen Mail nach; eine
+fehlende Zeile gilt als Lücke.
+
+#### Stand nach der Gesamtprüfung
+
+| Stufe | |
+|---|---|
+| **A / A1 / A2** | in Produktion, hält |
+| **B** | gemessen, abgeschlossen; Rangplatz als Tatsache in der Mail |
+| **C** | sammelt - **erste Auswertung ab ca. 18.09.** |
+| **D** | **gebaut**, drei Quellen, kein Gate |
+| **E** | offen - die Zusammenführung hängt an C |
+
+**1.241 Prüfungen**, 0 freie Namen, Darstellungstest, Ende-zu-Ende 8 Signale
+/ 9 Mails / 0 Lücken.
