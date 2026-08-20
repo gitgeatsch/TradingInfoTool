@@ -17965,3 +17965,35 @@ OFFEN: umgeworfen_preis_eur - Name sagt EUR, eine Stelle rechnet um. Steht
 namentlich in der Ausnahme, jede NEUE Stelle schlaegt an.
 
 1.255 Pruefungen, 0 freie Namen, 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] KAPITEL 94 NACHTRAG: die Widerlegung wurde in zwei Waehrungen
+geprueft - das war eine Entscheidung, kein Anzeigefehler
+
+Die in 94.5 offen gelassene Stelle ist geklaert, und zwar durch Nachverfolgen
+BEIDER Enden: `bewerte()` vergleicht den Widerlegungspreis direkt mit
+`kurs_aktuell`, und der Aufrufer uebergibt USD (kurs_usd, entry_usd_*). Die
+Spalte `umgeworfen_preis_eur` kommt dagegen aus der Modellantwort und steht in
+EUR - `entscheidungsrechnung` prueft denselben Wert gegen den EUR-Kurs.
+
+FOLGE: EUR liegt rund 14 % unter USD. Bei LONG loeste die Widerlegung zu
+SPAET aus, bei SHORT zu FRUEH - und sie fuehrt zur Empfehlung SCHLIESSEN.
+
+KORRIGIERT AN DER WURZEL: der Aufrufer rechnet um. Ohne Faktor findet keine
+Widerlegungspruefung statt. Der Parameter heisst jetzt `umgeworfen_preis` -
+die Funktion ist waehrungsblind, und der Name mit "_eur" war die Behauptung,
+die den Fehler verdeckt hat. Die Datenbankspalte behaelt ihren Namen, sie
+enthaelt wirklich EUR.
+
+DIE BEGRUENDUNGSZEILE nennt keine Zahl mehr, weil in `bewerte()` der Faktor
+fehlt; sie verweist auf den Abschnitt DIE RECHNUNG.
+
+⚠️ UND EINE KORREKTE PRUEFUNG WAERE DABEI FALSCH GEWORDEN: die Pruefung auf
+deutsche Schreibweise hing an genau dieser Zahl und schlug fehl. Sie haengt
+jetzt am nachgezogenen Stop. Genau dafuer war dieser Durchgang da - eine
+Korrektur, die eine korrekte Pruefung mitreisst, macht aus einem behobenen
+Fehler zwei.
+
+GEPRUEFT: 1.258 Paketpruefungen (3 neue), 0 freie Namen, pruefe_waehrungen
+weiterhin 0 ROH, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken, NB-Export und
+backward_tracking importierbar.

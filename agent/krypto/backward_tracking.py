@@ -4866,13 +4866,32 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
 
             kurs_usd = (preise.get(row["symbol"]).price_usd
                         if preise.get(row["symbol"]) else None)
+            # ⚠️ DER WIDERLEGUNGSPREIS STEHT IN EUR - ALLES ANDERE HIER IN USD
+            # (gefunden 20.08.2026, Kapitel 94).
+            #
+            # `bewerte()` vergleicht ihn direkt mit `kurs_aktuell`, und der ist
+            # USD. Die Spalte `umgeworfen_preis_eur` kommt dagegen aus der
+            # Modellantwort, und dort ist sie EUR: `entscheidungsrechnung`
+            # prueft denselben Wert gegen den EUR-Kurs. Beide Enden
+            # nachverfolgt, nicht geraten.
+            #
+            # Die Folge war KEIN Anzeigefehler, sondern eine falsche
+            # Entscheidung: EUR liegt rund 14 % unter USD, also loeste die
+            # Widerlegung bei LONG zu spaet aus und bei SHORT zu frueh - und
+            # sie fuehrt zur Empfehlung SCHLIESSEN.
+            _fx = _eur_je_usd(preise.get(row["symbol"]))
+            _umg_eur = (row["umgeworfen_preis_eur"]
+                        if "umgeworfen_preis_eur" in spalten else None)
+            # Ohne Faktor lieber KEINE Widerlegungspruefung als eine in der
+            # falschen Waehrung - dieselbe Regel wie in `_in_eur`.
+            _umg_usd = (float(_umg_eur) / float(_fx)
+                        if _umg_eur and _fx else None)
             voll = _AR.bewerte(
                 einstieg=z["entry"], stop_original=z["stop"],
                 kurs_aktuell=kurs_usd, ziel=z.get("ziel"),
                 mfe_r=row["outcome_max_realisiertes_crv"],
                 ist_short=z["ist_short"],
-                umgeworfen_preis_eur=(row["umgeworfen_preis_eur"]
-                                      if "umgeworfen_preis_eur" in spalten else None),
+                umgeworfen_preis=_umg_usd,
                 umgeworfen_bis=(row["umgeworfen_bis"]
                                 if "umgeworfen_bis" in spalten else None),
                 umgeworfen_durch=(row["umgeworfen_durch"]

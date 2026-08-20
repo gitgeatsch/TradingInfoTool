@@ -1604,18 +1604,18 @@ def paket_14() -> None:
            "die +0,092 R sind MIT diesem Randfall gemessen")
 
     # WIDERLEGUNGSPREIS - die K2-Luecke. Er stand bisher nur im Schema.
-    falsch = lauf(kurs_aktuell=50900, umgeworfen_preis_eur=51000)
+    falsch = lauf(kurs_aktuell=50900, umgeworfen_preis=51000)
     pruefe(P, "ein erreichter Widerlegungspreis fuehrt zu SCHLIESSEN",
            falsch["falsifiziert"] and falsch["empfehlung"] == AR.SCHLIESSEN,
            "die Fakten-Entscheidungsmappe: 'heute von niemandem ausgewertet'")
     pruefe(P, "ein NICHT erreichter nicht",
-           lauf(kurs_aktuell=56000, umgeworfen_preis_eur=51000)["falsifiziert"] is False)
+           lauf(kurs_aktuell=56000, umgeworfen_preis=51000)["falsifiziert"] is False)
     pruefe(P, "faellt er mit dem Stop zusammen, wird das gesagt",
            falsch["falsifikator_eigenstaendig"] is False
            and any("beide sagen dasselbe" in g for g in falsch["gruende"]),
            "in der neuen Kette wird der Stop AUS diesem Preis abgeleitet - "
            "dann ist die Pruefung keine zweite Absicherung")
-    eigen = lauf(kurs_aktuell=52000, umgeworfen_preis_eur=52500)
+    eigen = lauf(kurs_aktuell=52000, umgeworfen_preis=52500)
     pruefe(P, "und wo er eigenstaendig ist, ebenfalls",
            eigen["falsifikator_eigenstaendig"] is True)
 
@@ -1633,7 +1633,7 @@ def paket_14() -> None:
     pruefe(P, "eine laufende Frist nicht",
            "FRIST" not in lauf(umgeworfen_bis="2026-12-01")["empfehlung"])
     pruefe(P, "SCHLIESSEN wird von der Frist nicht verwaessert",
-           lauf(kurs_aktuell=50900, umgeworfen_preis_eur=51000,
+           lauf(kurs_aktuell=50900, umgeworfen_preis=51000,
                 umgeworfen_bis="2026-08-01")["empfehlung"] == AR.SCHLIESSEN)
 
     # WAS NICHT PRUEFBAR IST, WIRD NICHT BEHAUPTET.
@@ -1645,12 +1645,12 @@ def paket_14() -> None:
 
     # SHORT.
     kurz = AR.bewerte(einstieg=100.0, stop_original=110.0, kurs_aktuell=112.0,
-                      ist_short=True, umgeworfen_preis_eur=111.0, heute="2026-08-13")
+                      ist_short=True, umgeworfen_preis=111.0, heute="2026-08-13")
     pruefe(P, "bei SHORT faellt die These nach OBEN",
            kurz["falsifiziert"] is True)
     pruefe(P, "und bei LONG nicht bei demselben Kurs",
            AR.bewerte(einstieg=100.0, stop_original=90.0, kurs_aktuell=112.0,
-                      umgeworfen_preis_eur=111.0, heute="2026-08-13")["falsifiziert"] is False)
+                      umgeworfen_preis=111.0, heute="2026-08-13")["falsifiziert"] is False)
 
     # KEIN ERGEBNIS OHNE GRUNDLAGE.
     for fehlt, kw in (("Einstieg", dict(einstieg=None)),
@@ -1999,11 +1999,20 @@ def paket_14() -> None:
            "sonst waere die Unterscheidung nur eine Umbenennung")
 
     # EINE SCHREIBWEISE.
-    zahlen = " ".join(AR.saetze(lauf(kurs_aktuell=50900,
-                                     umgeworfen_preis_eur=50901,
-                                     hoechstkurs=ein + 1.8 * 4500)))
+    # ⚠️ DIE ZAHL HAT DEN PLATZ GEWECHSELT (20.08.2026, Kapitel 94).
+    #
+    # Geprueft wurde die Schreibweise am Widerlegungspreis. Der steht dort
+    # nicht mehr: `bewerte()` kennt den Umrechnungsfaktor nicht, also nannte
+    # die Zeile eine Zahl in ungewisser Waehrung. Sie verweist jetzt auf den
+    # Abschnitt DIE RECHNUNG, wo der Preis umgerechnet steht.
+    #
+    # Die Pruefung haengt deshalb am nachgezogenen Stop - einer Zahl, die
+    # weiterhin ausgegeben wird. Der Faktor 1,0 haelt sie wiedererkennbar.
+    zahlen = " ".join(AR.saetze({
+        "stop_empfohlen": 50901.0, "gesicherte_r": 0.5, "eur_je_usd": 1.0,
+        "empfehlung": "STOP NACHZIEHEN", "gruende": []}))
     pruefe(P, "alle Betraege in deutscher Schreibweise",
-           "50.901,00" in zahlen and "50,901.00" not in zahlen,
+           "50.901" in zahlen and "50,901" not in zahlen,
            "die erste Fassung schickte die ganze Zeile durch translate - "
            "daneben stand '50,901.00 EUR' unuebersetzt")
 
@@ -9205,6 +9214,28 @@ def paket_dimension() -> None:
                           umgeworfen_preis_eur=99.0))),
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
+
+    # ---- DIE WIDERLEGUNG WIRD IN EINER WAEHRUNG GEPRUEFT (94, 20.08.) ----
+    #
+    # `bewerte()` vergleicht den Widerlegungspreis direkt mit `kurs_aktuell`.
+    # Der Aufrufer uebergibt USD; die Datenbankspalte `umgeworfen_preis_eur`
+    # steht aber in EUR - beide Enden nachverfolgt. Bis zum 20.08. wurde sie
+    # ununsgerechnet durchgereicht: EUR liegt rund 14 % unter USD, also loeste
+    # die Widerlegung bei LONG zu SPAET und bei SHORT zu FRUEH aus - und sie
+    # fuehrt zur Empfehlung SCHLIESSEN. Kein Anzeigefehler, eine Entscheidung.
+    _btq = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "der Widerlegungspreis wird vor der Pruefung umgerechnet",
+           "_umg_usd" in _btq and "float(_umg_eur) / float(_fx)" in _btq,
+           "sonst wird ein EUR-Preis gegen einen USD-Kurs geprueft")
+    pruefe(P, "ohne Umrechnungsfaktor wird gar nicht geprueft",
+           "if _umg_eur and _fx else None" in _btq,
+           "lieber keine Widerlegungspruefung als eine in der falschen "
+           "Waehrung - dieselbe Regel wie in `_in_eur`")
+    pruefe(P, "und der Parameter heisst nicht mehr nach einer Waehrung",
+           "umgeworfen_preis: float | None" in _quelltext(
+               "agent/ausstiegsrechnung.py"),
+           "die Funktion ist waehrungsblind - ein Name mit '_eur' war die "
+           "Behauptung, die den Fehler verdeckt hat")
 
     # ---- WAEHRUNG: KEIN BETRAG MIT "EUR" OHNE UMRECHNUNG (20.08.2026) ----
     #

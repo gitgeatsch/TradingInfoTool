@@ -13030,3 +13030,53 @@ schlägt bei jeder neuen an.
 **Verweise:** `pruefe_waehrungen.py` · `agent/ausstiegsrechnung.py::_in_eur`
 · `ui/formatting.py::format_money` · Test- und Verifikationsmethodik **2.50**
 · Umbauplan **12.5** (der erste Auftritt desselben Fehlers).
+
+
+### 94.7 Der zweite Fund: die Widerlegung wurde in zwei Währungen geprüft (20.08.)
+
+Die offene Stelle aus 94.5 ist geklärt — und sie war **kein Anzeigefehler,
+sondern eine falsche Entscheidung.**
+
+**Beide Enden nachverfolgt, nicht geraten:**
+
+| | |
+|---|---|
+| `ausstiegsrechnung.bewerte()` | vergleicht den Widerlegungspreis **direkt** mit `kurs_aktuell` |
+| der Aufrufer in `backward_tracking` | übergibt `kurs_aktuell = kurs_usd` und Einstieg/Stop aus `entry_usd_*` — also **USD** |
+| die Spalte `umgeworfen_preis_eur` | kommt aus der Modellantwort, und dort ist sie **EUR**: `entscheidungsrechnung` prüft denselben Wert gegen den EUR-Kurs |
+
+**Ein EUR-Preis wurde gegen einen USD-Kurs geprüft.** EUR liegt rund 14 %
+unter USD, also:
+
+- bei **LONG** löste die Widerlegung **zu spät** aus — die Schwelle lag zu tief
+- bei **SHORT** **zu früh** — und sie führt zur Empfehlung **SCHLIESSEN**
+
+#### Korrigiert an der Wurzel
+
+Der Aufrufer rechnet jetzt um (`_umg_usd = _umg_eur / _fx`). Fehlt der Faktor,
+findet **keine Widerlegungsprüfung statt** — dieselbe Regel wie in `_in_eur`.
+
+Der Parameter heißt nicht mehr `umgeworfen_preis_eur`, sondern
+**`umgeworfen_preis`**: die Funktion ist währungsblind, und der Name mit
+„_eur" war genau die Behauptung, die den Fehler verdeckt hat. **Die
+Datenbankspalte behält ihren Namen** — sie enthält tatsächlich EUR.
+
+#### Und eine Zeile nennt jetzt keine Zahl mehr
+
+Die Begründung *„Der Kurs hat den Preis erreicht, bei dem das Modell seine
+eigene Begründung für widerlegt erklärte (… EUR)"* entsteht **in
+`bewerte()`** — dort gibt es den Umrechnungsfaktor nicht. Sie verweist jetzt
+auf den Abschnitt DIE RECHNUNG, wo der Preis umgerechnet steht.
+
+⚠️ **Eine Prüfung hing an genau dieser Zahl** (deutsche Schreibweise) und
+schlug fehl. Sie hängt jetzt am nachgezogenen Stop — einer Zahl, die es noch
+gibt. **Das ist der Grund, warum dieser Durchgang nötig war:** eine
+Korrektur, die eine korrekte Prüfung mitreißt, macht aus einem behobenen
+Fehler zwei.
+
+#### Abgesichert durch
+
+Drei Prüfungen: der Widerlegungspreis wird vor der Prüfung umgerechnet · ohne
+Faktor wird gar nicht geprüft · der Parameter trägt keine Währung mehr im
+Namen. **1.258 Prüfungen** gesamt, 0 freie Namen, `pruefe_waehrungen.py`
+meldet weiterhin **0 ROH**, Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.

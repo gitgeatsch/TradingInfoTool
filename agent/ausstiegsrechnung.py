@@ -22,9 +22,16 @@ DREI PRUEFUNGEN, UND NUR ZWEI DAVON SIND NEU:
                           waere die Sorte Kopie, die still veraltet.
   2. Widerlegungspreis    NEU. Das Modell nennt bei jeder Entscheidung einen
                           Kurs, der sie als falsch erweisen wuerde
-                          (`umgeworfen_preis_eur`). Die Fakten-
-                          Entscheidungsmappe haelt fest, dass er "heute von
-                          niemandem ausgewertet" wird (8c.2/K2). Ab hier schon.
+                          (Spalte `umgeworfen_preis_eur`, in EUR). Die
+                          Fakten-Entscheidungsmappe haelt fest, dass er "heute
+                          von niemandem ausgewertet" wird (8c.2/K2). Ab hier
+                          schon.
+                          ⚠️ DIESE FUNKTION ERWARTET IHN IN QUELLWAEHRUNG,
+                          nicht in EUR - sie vergleicht ihn mit
+                          `kurs_aktuell`, und der ist fuer Krypto USD. Der
+                          Aufrufer rechnet um; bis zum 20.08.2026 tat er es
+                          nicht, und die Widerlegung loeste bei LONG zu spaet
+                          und bei SHORT zu frueh aus (Umbauplan 94).
   3. Frist                NEU. `umgeworfen_bis` - bis wann die Begruendung
                           gelten soll. 15 bis 21 % aller Faelle laufen ohne
                           Entscheidung aus (Arbeitsstand 7.23); heute merkt
@@ -108,7 +115,10 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
             kurs_aktuell: float | None,
             hoechstkurs: float | None = None, mfe_r: float | None = None,
             stop_aktuell: float | None = None, ist_short: bool = False,
-            umgeworfen_preis_eur: float | None = None,
+            # ⚠️ IN DERSELBEN WAEHRUNG WIE `einstieg` UND `kurs_aktuell`.
+            # Diese Funktion ist waehrungsblind; der Name trug bis zum
+            # 20.08.2026 ein "_eur", waehrend der Aufrufer USD uebergab.
+            umgeworfen_preis: float | None = None,
             ziel: float | None = None,
             umgeworfen_bis=None, umgeworfen_durch: str | None = None,
             heute=None, ausloese_r: float = AUSLOESE_R,
@@ -197,16 +207,16 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
     # schliesst; bei SHORT darueber.
     e["falsifiziert"] = False
     e["falsifikator_eigenstaendig"] = None
-    if (isinstance(umgeworfen_preis_eur, (int, float)) and umgeworfen_preis_eur > 0
+    if (isinstance(umgeworfen_preis, (int, float)) and umgeworfen_preis > 0
             and kurs_aktuell):
-        getroffen = (kurs_aktuell >= umgeworfen_preis_eur if ist_short
-                     else kurs_aktuell <= umgeworfen_preis_eur)
-        e["umgeworfen_preis_eur"] = float(umgeworfen_preis_eur)
+        getroffen = (kurs_aktuell >= umgeworfen_preis if ist_short
+                     else kurs_aktuell <= umgeworfen_preis)
+        e["umgeworfen_preis"] = float(umgeworfen_preis)
         e["falsifiziert"] = bool(getroffen)
         # SAGT ER ETWAS EIGENES? Wo der Stop aus diesem Preis abgeleitet wurde,
         # fallen beide zusammen und die Pruefung ist keine zweite Absicherung.
         e["falsifikator_eigenstaendig"] = (
-            abs(float(umgeworfen_preis_eur) - float(stop_original)) > 1e-6)
+            abs(float(umgeworfen_preis) - float(stop_original)) > 1e-6)
 
     # 3. FRIST.
     bis = _als_datum(umgeworfen_bis)
@@ -237,7 +247,7 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
         gruende.append(
             f"Der Kurs hat den Preis erreicht, bei dem das Modell seine eigene "
             f"Begruendung fuer widerlegt erklaert hat "
-            f"({_de(e['umgeworfen_preis_eur'])} EUR)."
+            f"- die Marke steht im Abschnitt DIE RECHNUNG."
             + ("" if e["falsifikator_eigenstaendig"] else
                " Er entspricht dem Stop - beide sagen dasselbe."))
     if e["frist_abgelaufen"]:
@@ -536,7 +546,7 @@ def _absatz(e: dict, waehrung: str = "EUR") -> list[str]:
     if e.get("falsifiziert"):
         z.append(f"      Der Kurs hat die Marke erreicht, bei der das Modell seine "
                  f"eigene Begruendung fuer widerlegt erklaerte "
-                 f"({_kurs(_in_eur(e, e.get('umgeworfen_preis_eur')), waehrung)}).")
+                 f"({_kurs(_in_eur(e, e.get('umgeworfen_preis')), waehrung)}).")
     if e.get("ziel_in_reichweite"):
         z.append(f"      {100 * e['weg_zum_ziel']:.0f} % des Weges zum Ziel "
                  f"({_kurs(_in_eur(e, e.get('ziel')), waehrung)}) sind "
