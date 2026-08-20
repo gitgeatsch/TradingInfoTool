@@ -13265,3 +13265,67 @@ aus derselben Liste** · jeder Block ist entweder eigens dargestellt oder dabei
 | Lebendigkeitsreihe | 43 Zeilen, 25 mit Wert — der Vorrat kommt beim nächsten Lauf |
 
 **Das System läuft stabil.**
+
+
+---
+
+## Kapitel 97 — Korrektur zu 95.3: der Umschlag-Widerspruch ist keiner (20.08.2026)
+
+**Nutzerfrage:** *„Was ist beim Widerspruch beim Umschlag aktuell — ist der
+Unterschied die Richtung oder der Wert?"*
+
+Ich hatte in 95.3 geschrieben, derselbe Fakt werde „einmal dafür, einmal
+dagegen" bewertet, und es als Ungereimtheit des Modells stehen lassen.
+**Nachgemessen an 20 Umschlag-Belegen aus 25 Mails ist das so nicht haltbar.**
+
+### 97.1 Der Unterschied ist nicht der Wert
+
+| Richtung | Anzahl | Perzentile |
+|---|---:|---|
+| ▲ dafür | 17 | 92 bis 100 |
+| ● neutral | 1 | 100 |
+| ▼ dagegen | 2 | 90 und 100 |
+
+Bei **Perzentil 100** vergibt das Modell **alle drei** Richtungen. Der Wert
+allein erklärt die Richtung also nicht.
+
+### 97.2 Der Unterschied ist der Zusammenhang — und das Modell nennt ihn
+
+Beide ▼ betreffen **ETH**, und in beiden Fällen steht die Begründung dabei:
+
+> **ETH, Perzentil 100, ▼:** *„Der extrem hohe Umschlag von 13,2 %
+> signalisiert ein mögliches Erschöpfungsrisiko oder eine kurzfristige
+> Überhitzung."* — Aktion NACHKAUFEN **in eine bestehende Position mit
+> großem Buchgewinn.**
+
+> **TAO, Perzentil 100, ▲:** *„Die extrem hohe Handelsaktivität bei
+> gleichzeitig günstigen Finanzierungskosten deutet auf einen bevorstehenden
+> Ausbruch aus der Konsolidierung."* — **Neueinstieg aus einer
+> Seitwärtsphase.**
+
+**Hoher Umschlag nach einer Aufwärtsbewegung heißt Verteilung, hoher Umschlag
+in einer Konsolidierung heißt Sammlung.** Beide Lesarten sind gängig, und das
+Modell nennt jedes Mal, welche es anwendet.
+
+**Damit ist es kein Widerspruch, sondern eine Beurteilung, die vom
+Zusammenhang abhängt.**
+
+### 97.3 ⚠️ Was trotzdem gilt
+
+Die Richtung ist **Meinung, nicht Messung.** Das Modell erzeugt in beiden
+Fällen eine plausible Geschichte, und wir haben **nie gemessen**, ob „hoher
+Umschlag nach Anstieg = Erschöpfung" trägt. Genau dafür steht über dem
+Abschnitt **[BEHAUPTET - Rolle Händler]**.
+
+**Die Arbeitsteilung ist damit die richtige:** das ▲/▼ ist die Meinung, die
+Zahl daneben ist die Tatsache — und seit Kapitel 96 steht diese Zahl auch in
+der Mail, sodass der Leser die Meinung nachprüfen kann. Vorher war das
+unmöglich, und genau das war der eigentliche Mangel.
+
+### 97.4 Die Lehre für mich
+
+**Ich habe aus zwei Mails auf eine Ungereimtheit geschlossen und es
+dokumentiert, bevor ich die Begründungszeilen gelesen hatte.** Zwei
+Beobachtungen sind eine Auffälligkeit, kein Befund — dieselbe Regel, die
+dieses Projekt für Messungen aufgestellt hat, gilt auch für das Lesen von
+Mails.

@@ -18069,3 +18069,34 @@ Signale heute. Das System laeuft stabil.
 
 GEPRUEFT: 1.266 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
 pruefe_waehrungen 0 ROH, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+
+[2026-08-20] KORREKTUR ZU 95.3: DER UMSCHLAG-WIDERSPRUCH IST KEINER
+
+Ich hatte geschrieben, derselbe Fakt werde "einmal dafuer, einmal dagegen"
+bewertet, und es als Ungereimtheit des Modells stehen lassen. Nachgemessen an
+20 Umschlag-Belegen aus 25 Mails ist das so nicht haltbar.
+
+DER UNTERSCHIED IST NICHT DER WERT: bei Perzentil 100 vergibt das Modell alle
+drei Richtungen (8x dafuer, 1x neutral, 1x dagegen). Verteilung ▲ 17 / ● 1 /
+▼ 2, Perzentile 90 bis 100.
+
+DER UNTERSCHIED IST DER ZUSAMMENHANG, und das Modell nennt ihn jedes Mal:
+ETH (▼, Perzentil 100) "extrem hoher Umschlag signalisiert ein moegliches
+Erschoepfungsrisiko" - bei NACHKAUFEN in eine Position mit grossem
+Buchgewinn. TAO (▲, Perzentil 100) "extrem hohe Handelsaktivitaet deutet auf
+einen bevorstehenden Ausbruch aus der Konsolidierung" - Neueinstieg aus einer
+Seitwaertsphase. Hoher Umschlag nach Anstieg heisst Verteilung, in der
+Konsolidierung heisst er Sammlung. Beide Lesarten sind gaengig.
+
+WAS TROTZDEM GILT: die Richtung ist Meinung, nicht Messung. Wir haben nie
+gemessen, ob "hoher Umschlag nach Anstieg = Erschoepfung" traegt. Dafuer
+steht ueber dem Abschnitt [BEHAUPTET - Rolle Haendler]. Die Zahl daneben ist
+die Tatsache - und seit Kapitel 96 steht sie in der Mail, sodass der Leser
+die Meinung nachpruefen kann.
+
+DIE LEHRE: ich habe aus ZWEI Mails auf eine Ungereimtheit geschlossen und es
+dokumentiert, BEVOR ich die Begruendungszeilen gelesen hatte. Zwei
+Beobachtungen sind eine Auffaelligkeit, kein Befund - dieselbe Regel, die
+dieses Projekt fuer Messungen aufgestellt hat, gilt auch fuer das Lesen von
+Mails.
