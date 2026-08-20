@@ -57,7 +57,16 @@ def _urteil(zeilen: list[str], anfang: str) -> str | None:
     Leerzeilen getrennt und beginnen mit ihrer Ueberschrift."""
     gefunden, block = False, []
     for z in zeilen:
-        if z.startswith(anfang):
+        # ⚠️ OHNE EINRUECKUNG VERGLEICHEN (Betriebsfund 20.08.2026).
+        #
+        # In BESTANDSMAILS steht der ganze Rechnungsblock eingerueckt unter
+        # "Zusaetzlicher Einstieg:". `startswith` am rohen Text fand den
+        # Trichter dort nicht - die Kopfzeile meldete "von 3 pruefbaren
+        # Merkmalen", obwohl vier Bloecke in der Mail standen. Gemessen an
+        # den echten Mails vom 20.08.: ONDO 4 vorhanden / 3 gezaehlt,
+        # VIRTUAL 3 / 2. CAT (nicht eingerueckt) stimmte - deshalb faellt es
+        # nur auf, wenn man mehrere Mails nebeneinander legt.
+        if z.lstrip().startswith(anfang):
             gefunden, block = True, []
             continue
         if gefunden:

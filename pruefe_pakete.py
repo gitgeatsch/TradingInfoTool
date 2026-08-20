@@ -9255,6 +9255,24 @@ def paket_dimension() -> None:
            _b["dagegen"] == 1 and _b["dafuer"] == 1 and _b["unbekannt"] == 1,
            "ein UNGUENSTIG aus dem Trichter darf nicht dem Terminblock "
            "zugerechnet werden - die Bloecke trennt die Leerzeile")
+    # ⚠️ EINGERUECKTE BLOECKE ZAEHLEN AUCH (Betriebsfund 20.08.2026).
+    #
+    # In Bestandsmails steht der Rechnungsblock eingerueckt unter
+    # "Zusaetzlicher Einstieg:". Die erste Fassung verglich am rohen
+    # Zeilenanfang und uebersah den Trichter dort - ONDO meldete "3
+    # pruefbare Merkmale", obwohl vier Bloecke in der Mail standen.
+    _eing = ["  Uebliche Kursbewegung (80 %):", "     GUENSTIG: x", "",
+             "Bekannte Termine in den naechsten 30 Tagen:",
+             "⚠️ UNGUENSTIG: y"]
+    pruefe(P, "eingerueckte Bloecke werden mitgezaehlt",
+           _GB.bewerte(_eing)["vorhanden"] == 2
+           and _GB.bewerte(_eing)["dafuer"] == 1
+           and _GB.bewerte(_eing)["dagegen"] == 1,
+           "an den echten Mails vom 20.08. gemessen: ONDO 4 Bloecke / 3 "
+           "gezaehlt, VIRTUAL 3 / 2. CAT stimmte, weil dort nichts "
+           "eingerueckt war - der Fehler faellt nur auf, wenn man mehrere "
+           "Mails nebeneinander legt")
+
     pruefe(P, "ohne Merkmale bleibt die Zeile weg, statt '0 von 0'",
            _GB.saetze([]) == [] and _GB.saetze(["irgendwas"]) == [])
 
