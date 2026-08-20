@@ -9215,6 +9215,36 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DIE BREMSE IST SIMULIERT, NICHT GERECHNET (Kapitel 99) ----
+    _bq = _quelltext("simuliere_bremse.py")
+
+    pruefe(P, "die Simulation benutzt DIESELBEN Funktionen wie der Betrieb",
+           "from agent import trefferbilanz as TB" in _bq
+           and "TB.merkmale(" in _bq and "TB.geschrumpft(" in _bq
+           and "TB.breakeven(" in _bq,
+           "eine nachgebaute Fassung waere die Sorte Kopie, die still "
+           "veraltet - dann simuliert man eine Bremse, die es nicht gibt")
+    pruefe(P, "Walk-Forward: der eigene Fall zaehlt erst NACH seinem Urteil",
+           # AN DER REIHENFOLGE IM CODE, nicht am Kommentar: `_quelltext`
+           # entfernt Kommentare (Methodik 2.41), und eine Pruefung, die
+           # ihren eigenen Hinweistext sucht, findet immer sich selbst.
+           _bq.index("else blockiert).append(f)")
+           < _bq.index('e["faelle"] += 1'),
+           "sonst sieht der Filter in die Zukunft und misst sich selbst")
+    pruefe(P, "faellt beides in eine Kerze, gilt der STOP",
+           _bq.index("if l[j] <= stop:") < _bq.index("if h[j] >= ziel:"),
+           "die Tageskerze verraet die Reihenfolge nicht - die vorsichtige "
+           "Lesart zaehlt")
+    pruefe(P, "Spot und Hebel werden getrennt gerechnet",
+           "FINANZIERUNG_JE_TAG" in _bq,
+           "die Geometrie ist dieselbe, die Kosten sind es nicht - eine "
+           "gemeinsame Zahl waere fuer beide falsch")
+    pruefe(P, "und Marktphase und Asset werden aufgeschluesselt",
+           "def _marktphase" in _bq and "JE ASSET" in _bq,
+           "bis heute lief JEDE Messung dieses Projekts auf einem einzigen "
+           "Regime - eine nur im Baermarkt gepruefte Bremse ist keine "
+           "geprueffte Bremse")
+
     # ---- DIE UMSCHLAG-LESART IST GEMESSEN (Umbauplan 97, 20.08.) ----
     _uq = _quelltext("messe_umschlag_kontext.py")
 

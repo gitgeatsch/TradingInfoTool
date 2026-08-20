@@ -18140,3 +18140,45 @@ und jetzt ist dokumentiert, dass die gaengige Lesart dazu nicht traegt.
 
 GEPRUEFT: 1.271 Paketpruefungen (5 neue), 0 freie Namen, 8 Signale / 9 Mails
 / 0 Luecken.
+
+
+[2026-08-20] KAPITEL 99: DIE BREMSE SIMULIERT - NICHT ANWENDEN
+
+Nutzervorgabe: nur die rechnerische Bremse ("traegt sich nicht") kommt in
+Frage, und sie ist ueber historische Daten zu simulieren - Spot und Hebel,
+Krypto vorerst. Auf Rueckfrage ergaenzt: alle Marktphasen und je Asset.
+Beides fehlte im ersten Entwurf und wurde ergaenzt, BEVOR gemessen wurde.
+
+AUFBAU: 42.072 Anker aus den eigenen Kryptoreihen, Ausgang gelaufen statt
+geschaetzt, Stop zuerst bei Gleichstand in der Kerze, Walk-Forward (der
+eigene Fall zaehlt erst nach seinem Urteil), dieselben Funktionen wie der
+Betrieb (merkmale, geschrumpft, breakeven importiert).
+
+BESTAETIGUNG DES AUFBAUS: Trefferquote ueber alle entschiedenen Faelle 34,4 %
+gegen die bekannte Basisrate 34,0 %.
+
+ERGEBNIS: Spot laesst 3,8 % durch mit 34,7 % gegen 34,4 % blockiert, bei
+einem Breakeven von 40,3 %. Hebel 2,5 % durch mit 35,9 % gegen 34,3 %, bei
+41,2 %. Der Filter blockiert 96 bis 97,5 % und hebt die Quote um 0,3 bis 1,6
+Punkte - auf einen Wert, der weiter fuenf Punkte unter dem Breakeven liegt.
+Er waehlt aus, ohne zu verbessern. NICHT ANWENDEN.
+
+JE MARKTPHASE - und hier wird es interessant: bulle 29,9 / 28,0, seitwaerts
+33,2 / 31,2, BAER 41,5 / 42,4. Im Baermarkt liegt die Quote UEBER dem
+Breakeven, und dort ist der Filter schlechter als das, was er wegwirft. Das
+ist die erste gemessene Quote dieses Projekts ueber dem Breakeven - aber aus
+einer nicht vorab festgelegten Aufschluesselung, also ein Anlass zum
+Weitermessen, kein Befund (Methodik 2.45/2.46).
+
+JE ASSET: 18 Symbole mit genug Faellen, 5 davon ueber dem Breakeven. BNB
+50,5 %, IMX 47,5 %, SOL 42,5 % gegen KAS 19,4 %, XLM 20,5 %, QNT 22,7 %. Der
+Unterschied zwischen Symbolen ist um ein Vielfaches groesser als alles, was
+der Filter bewirkt.
+
+FOLGE: die Bremse in dieser Form wird nicht gebaut - sie ist weder leicht
+(96 % blockiert) noch sicher (das Durchgelassene traegt sich nicht). Der
+Hebel liegt dort, wo die Nutzervorgabe ihn ohnehin sieht: in der
+Signalgenerierung und -bewertung, konkret bei Marktphase und Asset-Auswahl.
+
+GEPRUEFT: 1.276 Paketpruefungen (5 neue), 0 freie Namen, 8 Signale / 9 Mails
+/ 0 Luecken.

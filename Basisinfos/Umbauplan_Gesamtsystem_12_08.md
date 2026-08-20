@@ -13409,3 +13409,105 @@ Mail**, und ab jetzt ist auch dokumentiert, dass die gängige Lesart dazu
 Newey-West · beide Kontrollen vorhanden · Volumen null zählt nicht als
 niedrigster Rang). **1.271 Prüfungen** gesamt, 0 freie Namen, Ende-zu-Ende
 8 Signale / 9 Mails / 0 Lücken.
+
+
+---
+
+## Kapitel 99 — Die Bremse simuliert: sie soll NICHT angewandt werden (20.08.2026)
+
+**Nutzervorgabe:** *„Es kommt nur 1. in Frage — und diese Bremse ist nicht nur
+zu messen bzw. rechnen, sondern wir müssen über historische Daten detailliert
+simulieren, ob wir den Filter anwenden. Vor allem SPOT und Hebel, Krypto
+vorerst."* Und: *„Die 106 Mails sollen NICHT zusammengefasst werden — die
+Mailanzahl muss sich durch das System regulieren."*
+
+Auf Rückfrage ergänzt: *„über alle Strategien, Marktphasen und auf Ebene der
+einzelnen Assets"*. Beides war im ersten Entwurf **nicht** drin und wurde
+ergänzt, bevor gemessen wurde.
+
+### 99.1 Unsere Zeitfenster, an der Quelle abgelesen
+
+| | |
+|---|---|
+| Haltedauer-Deckel | **120 Handelstage** (`GRENZEN["tage_max"]`) |
+| Stop | **2,0 ATR** (`config.yaml::rollen_kette.stop_min_atr`) |
+| Ziel | **CRV 2,0** — dieselbe Zahl wie die Trefferbilanz |
+| Median-Haltedauer, simuliert | **13 Handelstage** |
+
+### 99.2 Der Aufbau
+
+**42.072 Anker** aus den eigenen Kryptoreihen, jeder Handelstag ein möglicher
+Einstieg. Der Ausgang wird **gelaufen**, nicht geschätzt — Tag für Tag, bis
+Ziel oder Stop fällt. Fällt beides in dieselbe Kerze, gilt der **Stop**; die
+Tageskerze verrät die Reihenfolge nicht.
+
+Dieselben Funktionen wie der Betrieb — `merkmale()`, `geschrumpft()`,
+`breakeven()` werden importiert, nicht nachgebaut. **Walk-Forward:** der
+eigene Fall wird erst **nach** seinem Urteil eingebucht.
+
+**Erste Bestätigung:** die Trefferquote über alle entschiedenen Fälle beträgt
+**34,4 %** — die Basisrate des Projekts liegt bei 34,0 %. Die Simulation
+reproduziert den bekannten Wert.
+
+### 99.3 Das Ergebnis: die Bremse wählt aus, ohne zu verbessern
+
+| | Spot | Hebel |
+|---|---|---|
+| Breakeven | 40,3 % | 41,2 % |
+| durchgelassen | 1.617 (**3,8 %**) | 1.047 (**2,5 %**) |
+| Trefferquote **durch** | **34,7 %** | **35,9 %** |
+| Trefferquote **blockiert** | 34,4 % | 34,3 % |
+
+**Der Filter blockiert 96 bis 97,5 Prozent und hebt die Trefferquote um 0,3
+bis 1,6 Punkte — auf einen Wert, der weiterhin fünf Punkte unter dem
+Breakeven liegt.**
+
+Er wählt also aus, ohne zu verbessern. **Damit ist die Antwort auf die Frage
+„anwenden?" ein Nein** — aus der Simulation, nicht aus einer Vermutung.
+
+### 99.4 Je Marktphase — und hier wird es interessant
+
+| Phase | Anker | Quote durch | Quote blockiert |
+|---|---:|---:|---:|
+| bulle | 11.413 | 29,9 % | 28,0 % |
+| seitwärts | 14.770 | 33,2 % | 31,2 % |
+| **bär** | 15.889 | 41,5 % | **42,4 %** |
+
+Zwei Dinge stechen heraus. Erstens: **im Bärmarkt liegt die Trefferquote über
+dem Breakeven** — 42,4 % gegen 40,3 %. Zweitens: dort ist der Filter
+**schlechter** als das, was er wegwirft.
+
+**Das ist die erste Stelle in diesem Projekt, an der eine gemessene Quote den
+Breakeven übersteigt.** Sie stammt aber aus einer Aufschlüsselung, die nicht
+vorab festgelegt war — nach den eigenen Regeln (Methodik 2.45/2.46) ist das
+ein **Anlass zum Weitermessen, kein Befund**.
+
+### 99.5 Je Asset — die Streuung ist gewaltig
+
+**18 Symbole** mit mindestens 30 entschiedenen Durchlässen, **5 davon über
+dem Breakeven**:
+
+| | |
+|---|---|
+| oben | BNB 50,5 % · IMX 47,5 % · SOL 42,5 % · FLOKI 41,9 % · NEAR 41,7 % |
+| unten | KAS 19,4 % · XLM 20,5 % · QNT 22,7 % |
+
+**Von 19 auf 51 Prozent** — der Unterschied zwischen Symbolen ist um ein
+Vielfaches größer als alles, was der Filter bewirkt.
+
+### 99.6 Was daraus folgt
+
+**Die Bremse in dieser Form wird nicht gebaut.** Sie erfüllt die Vorgabe
+„leicht und relativ sicher" nicht: sie ist nicht leicht (sie blockiert 96 %)
+und nicht sicher (das Durchgelassene trägt sich weiterhin nicht).
+
+**Und die Vorgabe des Nutzers weist bereits in die richtige Richtung:**
+*„geringere Anzahl an Signalen durch optimierte Signalgenerierung und
+Bewertung"*. Genau das sagen die beiden Aufschlüsselungen — der Hebel liegt
+**nicht** in einer nachgelagerten Bremse, sondern in **Marktphase** und
+**Asset-Auswahl**, wo die Unterschiede zehnmal größer sind.
+
+**Abgesichert durch** 5 Prüfungen (dieselben Funktionen wie der Betrieb ·
+Walk-Forward an der Code-Reihenfolge geprüft · Stop zuerst · Spot und Hebel
+getrennt · Phase und Asset aufgeschlüsselt). **1.276 Prüfungen** gesamt,
+0 freie Namen, Ende-zu-Ende 8 Signale / 9 Mails / 0 Lücken.
