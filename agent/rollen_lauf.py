@@ -1323,6 +1323,14 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         _lage.append(f"{_kl.get('klasse', '?').capitalize()}: "
                      f"{_kl['beurteilung']}")
 
+    # 93 B Punkt 3: DER RANGPLATZ ALS TATSACHE, mit dem gemessenen Wert
+    # daneben. Kein Gate - er sperrt nichts und empfiehlt nichts.
+    try:
+        from agent import drift as _DR
+        _leben0 = _DR.saetze(reihen, symbol, assetklasse)
+    except Exception:                                        # noqa: BLE001
+        _leben0 = []
+
     # 93 C: LEBENDIGKEIT ALS MERKMAL, mit Warnhinweis solange die eigene
     # Reihe zu kurz ist. Faellt sie aus, fehlt eine Zeile - nie die Mail.
     try:
@@ -1330,6 +1338,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         _leben = _LB.saetze(conn, symbol, assetklasse)
     except Exception:                                        # noqa: BLE001
         _leben = []
+    # Rangplatz zuerst, Lebendigkeit darunter - beide sind Merkmale ueber
+    # den WERT, keine Rechnung; sie gehoeren nebeneinander.
+    if _leben0:
+        _leben = _leben0 + ([""] if _leben else []) + _leben
 
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(

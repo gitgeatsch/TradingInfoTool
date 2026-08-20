@@ -81,6 +81,24 @@ HORIZONTE = (5, 20, 60)
 # Rangliste ueberhaupt eine ist? Unter zehn ist das oberste Fuenftel ein
 # einzelner Wert.
 MINDEST_SYMBOLE = 10
+# ⚠️ DIE DREI VARIANTEN STEHEN HIER, WEIL SIE VORHER FESTGELEGT WURDEN.
+#
+# Punkt 3 des Plans vom 19.08., beschlossen BEVOR die erste von ihnen
+# gerechnet war. Beide Zusaetze stammen aus der Literatur zum Momentum und
+# nicht aus einem Blick in unsere Daten:
+#
+#   ohne_monat    der letzte Monat wird aus dem Rueckblick ausgeklammert.
+#                 Kurzfristige Umkehr ueberlagert sonst das Momentum - das
+#                 ist der Standard seit Jegadeesh/Titman.
+#   vol_skaliert  die Rendite wird durch ihre eigene Schwankung geteilt.
+#                 Sonst steht im besten Fuenftel, wer am wildesten
+#                 schwankt, nicht wer am staerksten gestiegen ist.
+#
+# NACHTRAEGLICH EINE VIERTE ZU ERGAENZEN WAERE ROSINENPICKEREI. Die Zahl der
+# Felder geht in die Schwelle ein; wer Varianten nachschiebt, bis eine
+# passt, hat sich ein Ergebnis gesucht.
+VARIANTEN = ("roh", "ohne_monat", "vol_skaliert")
+AUSLASSUNG_TAGE = 21
 # Aus 40 Placebo-Laeufen gemessen (95. Perzentil der Hoechstwerte je Lauf).
 # NICHT geraten und NICHT aus der Tabelle - siehe Modul-Docstring.
 #
@@ -162,9 +180,27 @@ def _newey_west(a, lag: int) -> float:
     return math.sqrt(s / n)
 
 
+def _rangwert(tafel, t: int, rueckblick: int, gut, variante: str):
+    """Wonach sortiert wird. DREI VARIANTEN, VORHER FESTGELEGT."""
+    jetzt = tafel[:, t][gut]
+    frueher = tafel[:, t - rueckblick][gut]
+    if variante == "ohne_monat":
+        # Bis vor einem Monat, nicht bis heute.
+        ende = tafel[:, t - AUSLASSUNG_TAGE][gut]
+        return ende / frueher - 1.0
+    r = jetzt / frueher - 1.0
+    if variante != "vol_skaliert":
+        return r
+    fenster = tafel[:, t - rueckblick:t + 1][gut]
+    taeglich = np.diff(fenster, axis=1) / fenster[:, :-1]
+    vol = np.nanstd(taeglich, axis=1)
+    vol[~np.isfinite(vol) | (vol <= 0)] = np.nan
+    return r / vol
+
+
 def messe(tafel, rueckblick: int, horizont: int,
           kontrolle: float = 0.0, ueberlappend: bool = True,
-          mischen=None) -> dict:
+          mischen=None, variante: str = "roh") -> dict:
     """Der Abstand zwischen bestem und schlechtestem Fuenftel, je Termin.
 
     GIBT DIE EINZELWERTE ZURUECK, nicht nur den Mittelwert - erst ueber die
@@ -188,7 +224,12 @@ def messe(tafel, rueckblick: int, horizont: int,
                & (jetzt > 0) & (frueher > 0))
         if gut.sum() < MINDEST_SYMBOLE:
             continue
-        vergangen = jetzt[gut] / frueher[gut] - 1.0
+        vergangen = _rangwert(tafel, t, rueckblick, gut, variante)
+        if not np.all(np.isfinite(vergangen)):
+            # Eine Variante, die fuer einen Wert keine Zahl liefert, darf
+            # ihn nicht auf Platz eins oder letzten setzen - der Termin
+            # entfaellt lieber ganz.
+            continue
         if mischen is not None:
             # ⚠️ PLACEBO: die Rangliste wird zerwuerfelt. Jeder echte
             # Zusammenhang ist danach weg - was die Messung jetzt noch
@@ -245,6 +286,8 @@ def main() -> int:
     p.add_argument("--nicht-ueberlappend", action="store_true",
                    dest="nicht_ueberlappend",
                    help="alte, konservative Fassung zum Vergleich")
+    p.add_argument("--haelfte", type=int, default=0, choices=(0, 1, 2),
+                   help="nur jedes zweite Symbol - die Unabhaengigkeitsprobe")
     p.add_argument("--ab", default="", help="nur Termine ab diesem Datum")
     p.add_argument("--bis", default="", help="nur Termine bis dieses Datum")
     p.add_argument("--placebo", type=int, default=0,
@@ -265,6 +308,25 @@ def main() -> int:
               f"Rangliste keine. KEIN URTEIL.")
         return 1
     termine, tafel, symbole = _tafel(reihen)
+    # ⚠️ DIE UNABHAENGIGKEITSPROBE - ERSATZ FUER DIE ZWEITE ANLAGEKLASSE.
+    #
+    # Punkt 3 des Plans sah vor, einen Fund auf einer anderen Anlageklasse zu
+    # wiederholen. DAS GEHT NICHT: die Watchlist hat 2 Aktien und 4 ETF, und
+    # unter zehn Symbolen ist eine Rangliste keine. Das ist eine Luecke, kein
+    # erledigter Punkt - sie wird hier benannt statt umgangen.
+    #
+    # Was moeglich ist: die Symbole in zwei Haelften teilen (jedes zweite
+    # alphabetisch) und beide getrennt messen. Ein echter Zusammenhang steht
+    # in beiden; einer, der an wenigen Werten haengt, nur in einer.
+    if a.haelfte:
+        wahl = [i for i in range(len(symbole)) if i % 2 == (a.haelfte - 1)]
+        tafel = tafel[wahl]
+        # ⚠️ DIE NAMENSLISTE MUSS MIT. Sie erst danach zu kuerzen vergessen
+        # heisst, dass jede spaetere Zuordnung um bis zu 20 Plaetze
+        # verrutscht - hier faellt es sofort auf, weil der Index knallt.
+        symbole = [symbole[i] for i in wahl]
+        print(f"  HAELFTE {a.haelfte}: {len(wahl)} Symbole "
+              f"({', '.join(symbole[:6])} ...)")
     # ⚠️ ZEITFENSTER - FUER DIE UEBERLEBENS-GEGENPROBE (20.08.2026).
     #
     # Die nachgeladene Historie reicht bis 2017 zurueck, enthaelt aber nur
@@ -318,7 +380,9 @@ def main() -> int:
             je_lauf = [0.0]
             for rb in RUECKBLICKE:
                 for hz in HORIZONTE:
-                    r = messe(tafel, rb, hz, ueberlappend=True, mischen=rng)
+                    r = messe(tafel, rb, hz, ueberlappend=True,
+                              mischen=rng,
+                              variante=VARIANTEN[_lauf % len(VARIANTEN)])
                     if r["t"] is None:
                         continue
                     gesamt_n += 1
@@ -368,61 +432,56 @@ def main() -> int:
     # acht vergisst, hat sich ein Ergebnis gesucht - genau die Bauform, vor
     # der die Methodik dieses Projekts seit dem CRV-Gate warnt. Die Schwelle
     # wird deshalb auf die Zahl der Felder angehoben (Bonferroni).
-    felder = len(RUECKBLICKE) * len(HORIZONTE)
+    felder = len(RUECKBLICKE) * len(HORIZONTE) * len(VARIANTEN)
     from statistics import NormalDist
     schwelle = NormalDist().inv_cdf(1 - 0.05 / (2 * felder))
     # ⚠️ DIE SCHWELLE KOMMT AUS DEM PLACEBO, NICHT AUS DER TABELLE.
-    # Gemessen ueber 40 Placebo-Laeufe (siehe Modul-Docstring): das 95.
-    # Perzentil der Hoechstwerte liegt bei 3,05, nicht bei 2,77.
     schwelle = max(schwelle, SCHWELLE_GEMESSEN)
-    print(f"  Schwelle: |t| >= {schwelle:.2f} (Tabelle {felder} Felder: "
-          f"2,77 - angehoben auf den GEMESSENEN Placebo-Wert 3,05, weil "
-          f"autokorrelierte Reihen dickere Raender haben)")
-    # ⚠️ DREI ZUSTAENDE, AUCH HIER (dieselbe Regel wie bei den Fremdquellen).
-    #
-    # "nichts gefunden" und "nicht messbar" sind NICHT dasselbe. Ein Feld,
-    # das erst ab 20 % Abstand anschlagen wuerde, hat nichts widerlegt - es
-    # hat nicht hingesehen. Wer beides zusammenwirft, verkauft eine Luecke
-    # als Befund. Die Grenze liegt bei 5 % je Trade: darunter waere ein
-    # Effekt fuer dieses System ohnehin nicht handelbar (Kosten 3 %).
+    print(f"  Schwelle: |t| >= {schwelle:.2f} ({felder} Felder = "
+          f"{len(RUECKBLICKE)} Rueckblicke x {len(HORIZONTE)} Horizonte x "
+          f"{len(VARIANTEN)} Varianten; der gemessene Placebo-Wert "
+          f"{SCHWELLE_GEMESSEN} gilt, wenn er strenger ist)")
     HANDELBAR = 0.05
     stark, knapp, blind = [], [], []
-    for rb in RUECKBLICKE:
-        for hz in HORIZONTE:
-            r = messe(tafel, rb, hz, kontrolle=a.positivkontrolle,
-                      ueberlappend=not a.nicht_ueberlappend)
-            bericht["felder"][f"{rb}/{hz}"] = {
-                k: v for k, v in r.items() if k not in ("idx", "werte")}
-            if r["abstand"] is None:
-                print(f"  {rb:>10} {hz:>9} {r['termine']:>8}   zu wenige "
-                      f"Termine - KEIN URTEIL")
-                continue
-            # Zwei Standardfehler sind die uebliche Schwelle; bei neun
-            # Feldern ist ein einzelner Ausreisser darunter zu erwarten.
-            urteil = ("TRAEGT" if abs(r["t"]) >= schwelle else
-                      "einzeln auffaellig" if abs(r["t"]) >= 2.0 else
-                      "nichts")
-            if abs(r["t"]) >= schwelle:
-                stark.append((rb, hz, r["abstand"], r["t"], r))
-            elif abs(r["t"]) >= 2.0:
-                knapp.append((rb, hz, r["abstand"], r["t"], r["termine"]))
-            if r["kleinster_nachweisbarer"] > HANDELBAR:
-                blind.append((rb, hz, r["kleinster_nachweisbarer"]))
-            print(f"  {rb:>10} {hz:>9} {r['termine']:>8} "
-                  f"{100 * r['abstand']:>8.2f}% {r['t']:>7.2f}  {urteil}"
-                  f"   (nachweisbar ab "
-                  f"{100 * r['kleinster_nachweisbarer']:.1f} %"
-                  + (f", NW-Bremse x{r['nw_faktor']:.1f}"
-                     if r.get("nw_faktor") else "") + ")")
+    for variante in VARIANTEN:
+        print(f"\n  --- {variante} ---")
+        for rb in RUECKBLICKE:
+            for hz in HORIZONTE:
+                r = messe(tafel, rb, hz, kontrolle=a.positivkontrolle,
+                          ueberlappend=not a.nicht_ueberlappend,
+                          variante=variante)
+                bericht["felder"][f"{variante}/{rb}/{hz}"] = {
+                    k: v for k, v in r.items() if k not in ("idx", "werte")}
+                if r["abstand"] is None:
+                    print(f"  {rb:>10} {hz:>9} {r['termine']:>8}   zu wenige "
+                          f"Termine - KEIN URTEIL")
+                    continue
+                urteil = ("TRAEGT" if abs(r["t"]) >= schwelle else
+                          "einzeln auffaellig" if abs(r["t"]) >= 2.0 else
+                          "nichts")
+                if abs(r["t"]) >= schwelle:
+                    stark.append((variante, rb, hz, r["abstand"], r["t"], r))
+                elif abs(r["t"]) >= 2.0:
+                    knapp.append((variante, rb, hz, r["abstand"], r["t"],
+                                  r["termine"]))
+                if r["kleinster_nachweisbarer"] > HANDELBAR:
+                    blind.append((rb, hz, r["kleinster_nachweisbarer"]))
+                print(f"  {rb:>10} {hz:>9} {r['termine']:>8} "
+                      f"{100 * r['abstand']:>8.2f}% {r['t']:>7.2f}  {urteil}"
+                      f"   (nachweisbar ab "
+                      f"{100 * r['kleinster_nachweisbarer']:.1f} %"
+                      + (f", NW-Bremse x{r['nw_faktor']:.1f}"
+                         if r.get("nw_faktor") else "") + ")")
+
 
     print("\n" + "=" * 76)
     if not stark:
         print("KEIN FENSTER TRAEGT. Die Rangliste nach vergangener Drift "
               "sagt ueber die kuenftige nichts aus, was ueber Rauschen "
               "hinausgeht.")
-        for rb, hz, ab, tw, n in knapp:
+        for va, rb, hz, ab, tw, n in knapp:
             print(f"   Einzeln auffaellig, aber NICHT ueber der Schwelle: "
-                  f"Rueckblick {rb} / Horizont {hz}, {100 * ab:+.2f} %, "
+                  f"{va} {rb}/{hz}, {100 * ab:+.2f} %, "
                   f"t = {tw:+.2f} auf nur {n} Terminen."
                   + ("  Vorzeichen NEGATIV - das waere Umkehr, nicht "
                      "Fortsetzung." if ab < 0 else ""))
@@ -441,7 +500,7 @@ def main() -> int:
         blinde = {f"{x}/{y}" for x, y, _ in blind}
         for rb in RUECKBLICKE:
             for hz in HORIZONTE:
-                f = bericht["felder"].get(f"{rb}/{hz}") or {}
+                f = bericht["felder"].get(f"roh/{rb}/{hz}") or {}
                 if f.get("abstand") is None:
                     print(f"   {rb:>3}/{hz:<3} NICHT MESSBAR - zu wenige "
                           f"Termine")
@@ -466,8 +525,8 @@ def main() -> int:
     else:
         print(f"{len(stark)} von {len(RUECKBLICKE) * len(HORIZONTE)} Feldern "
               f"tragen (|t| >= 2):")
-        for rb, hz, ab, tw, r in stark:
-            print(f"   Rueckblick {rb}, Horizont {hz}: "
+        for va, rb, hz, ab, tw, r in stark:
+            print(f"   {va}, Rueckblick {rb}, Horizont {hz}: "
                   f"{100 * ab:+.2f} % je Trade, t = {tw:+.2f}, "
                   f"{r['termine']} Termine, "
                   f"{100 * r['positive_termine']:.0f} % der Termine positiv")

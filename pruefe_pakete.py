@@ -9206,6 +9206,50 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DIE DREI VARIANTEN UND DER RANGPLATZ (93 B Punkt 3) ----
+    _dq3 = _quelltext("messe_drift.py")
+
+    pruefe(P, "die Varianten standen VOR der ersten Rechnung fest",
+           'VARIANTEN = ("roh", "ohne_monat", "vol_skaliert")' in _dq3,
+           "beide Zusaetze stammen aus der Literatur, nicht aus einem Blick "
+           "in unsere Daten. Nachtraeglich eine vierte zu ergaenzen waere "
+           "Rosinenpickerei")
+    pruefe(P, "und sie erhoehen die Schwelle, statt sie zu umgehen",
+           "len(RUECKBLICKE) * len(HORIZONTE) * len(VARIANTEN)" in _dq3,
+           "27 Felder statt 9 - wer Varianten rechnet, ohne die Schwelle "
+           "mitzuziehen, kauft sich Signifikanz")
+    pruefe(P, "es gibt eine Unabhaengigkeitsprobe ueber zwei Haelften",
+           '"--haelfte"' in _dq3,
+           "eine zweite Anlageklasse ist unmoeglich - die Watchlist hat 2 "
+           "Aktien und 4 ETF, und unter zehn Symbolen ist eine Rangliste "
+           "keine. Ersatz: beide Haelften der Symbolliste getrennt")
+
+    # ---- DER RANGPLATZ IN DER MAIL: TATSACHE JA, BEHAUPTUNG NEIN ----
+    from agent import drift as _DR
+
+    _rq = _quelltext("agent/drift.py")
+    pruefe(P, "der Rangplatz zaehlt nur Werte DERSELBEN Anlageklasse",
+           "def _gleiche_klasse" in _rq,
+           "erste Fassung meldete 'Platz 15 von 47 Kryptowerten', waehrend "
+           "die Datenbank 41 Kryptoreihen kennt - Aktien und ETF standen mit "
+           "in der Liste")
+    pruefe(P, "ohne genug Historie gibt es keinen Rang, nicht Platz eins",
+           "len(kerzen) <= rueckblick" in _rq and "return None" in _rq,
+           "wer erst seit hundert Tagen dabei ist, hat keine "
+           "Jahresentwicklung - ihn mit null zu fuehren waere eine "
+           "erfundene Zahl")
+
+    # ⚠️ DIE ZEILE MUSS SAGEN, WAS SIE WERT IST.
+    _rz = _DR.saetze({}, "BTC", "krypto")
+    pruefe(P, "und die Mail nennt den gemessenen Wert MIT den Kosten",
+           "KEIN HANDELBARER VORTEIL" in _rq and "Handelskosten" in _rq
+           and "keine Prognose" in _rq,
+           "+1,0 % Abstand heisst rund +0,5 % fuer das beste Fuenftel gegen "
+           "3 % Kosten. Der Vorteil ist gemessen UND zu klein, um ihn zu "
+           "bezahlen - beides gehoert in dieselbe Zeile")
+    pruefe(P, "ohne Kursreihen bleibt die Zeile weg, statt zu raten",
+           _rz == [] and _DR.rang({}, "BTC") is None)
+
     # ---- NACHGELADENE HISTORIE: NIE UEBERSCHREIBEN (93 B Punkt 2) ----
     _hq = _quelltext("lade_historie_nach.py")
 

@@ -17772,3 +17772,48 @@ Merkmal fuer eine Empfehlung.
 
 GEPRUEFT: 1.223 Paketpruefungen (5 neue), 0 freie Namen, Darstellungstest,
 Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken. DB-Sicherung vor dem Schreiben.
+
+
+[2026-08-20] PUNKT 3: VARIANTEN, GEGENPROBE, UND DER RANGPLATZ IN DER MAIL
+
+Zwei Varianten VOR der ersten Rechnung festgelegt, beide aus der Literatur:
+ohne_monat (letzter Monat ausgeklammert, Jegadeesh/Titman) und vol_skaliert
+(Rendite durch eigene Schwankung). Sie erhoehen die Schwelle auf 27 Felder
+und damit auf 3,11 - wer Varianten rechnet, ohne die Schwelle mitzuziehen,
+kauft sich Signifikanz.
+
+ERGEBNIS: ein Feld von 27 haelt die Schwelle - roh 250/5 mit t = 3,20 gegen
+3,11. Knapp. Warnzeichen: ohne den letzten Monat faellt derselbe Wert auf
+1,68. Klassisches Momentum sollte das aushalten; es spricht dafuer, dass der
+Vorteil an der juengsten Bewegung haengt.
+
+ZWEITE ANLAGEKLASSE NICHT MOEGLICH - die Watchlist hat 2 Aktien und 4 ETF,
+unter zehn Symbolen ist eine Rangliste keine. Das ist eine LUECKE, kein
+erledigter Punkt. Ersatz: Symbolliste halbiert, beide Haelften getrennt
+gemessen. Beide zeigen dasselbe Vorzeichen in allen drei Horizonten, bei
+250/5 fast denselben Wert (+0,56 gegen +0,57 %). Der Effekt haengt nicht an
+wenigen Werten - er ist nur klein. Signifikant ist keine Haelfte fuer sich.
+
+DER RANGPLATZ STEHT JETZT IN DER MAIL (Nutzerfrage: "warum zeigen wir das
+Feld nicht an?"). Die Antwort war nie die Zahl, sondern das Etikett: der
+Rangplatz ist eine Tatsache ueber die Vergangenheit, die Behauptung "deshalb
+kaufen" war es nicht. Jetzt ist sie gemessen, also kann sie beschriftet
+werden.
+
+agent/drift.py schreibt Platz und Fuenftel - und daneben: "KEIN HANDELBARER
+VORTEIL: das beste Fuenftel liegt rund 0,5 % ueber dem Markt, die
+Handelskosten betragen 3 %." Der Vorteil ist gemessen UND zu klein, um ihn zu
+bezahlen; beides steht in derselben Zeile.
+
+BEIM BAUEN GEFUNDEN: (1) die erste Fassung rangierte gegen ALLE Reihen -
+"Platz 15 von 47 Kryptowerten", waehrend die Datenbank 41 kennt; Aktien und
+ETF standen mit in der Liste. (2) finde_freie_namen.py fand _leben0 - ich
+hatte die Verwendung eingefuegt und die Definition nicht. Genau der
+Fehlertyp, fuer den das Werkzeug existiert.
+
+GEPRUEFT: 1.230 Paketpruefungen (7 neue), 0 freie Namen, Darstellungstest,
+Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken.
+
+OFFEN: die zweite Anlageklasse (Reihen fehlen). Und 250/60 mit +10 %
+Abstand ist der einzige oekonomisch interessante Kandidat - ueberall positiv,
+Schwelle nur im juengsten Zeitfenster.

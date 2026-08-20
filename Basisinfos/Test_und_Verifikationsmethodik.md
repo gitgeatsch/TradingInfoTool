@@ -2860,3 +2860,29 @@ Die 3,05 bleibt stehen. Eine Schwelle unmittelbar nach einem positiven Fund
 zu SENKEN ist Rosinenpickerei, auch wenn die neue Zahl besser gemessen ist.
 Wer sie senken will, muss es VOR dem naechsten Fund tun und begruenden.
 Eine Paketpruefung haelt den Wert fest.
+
+
+## 2.46 Varianten erhoehen die Schwelle, sie umgehen sie nicht (20.08.2026)
+
+messe_drift.py rechnet drei Rangvarianten (roh, ohne_monat, vol_skaliert)
+ueber drei Rueckblicke und drei Horizonte - 27 Felder statt 9. Die
+Bonferroni-Schwelle steigt damit von 2,77 auf 3,11.
+
+REGEL: jede zusaetzliche Variante ist ein zusaetzlicher Versuch. Wer sie
+rechnet, ohne die Schwelle mitzuziehen, kauft sich Signifikanz. Und wer
+nachtraeglich eine vierte ergaenzt, weil die dritte nicht passte, hat sich
+ein Ergebnis gesucht - die Varianten stehen deshalb als Konstante im Code,
+mit dem Vermerk, dass sie vor der ersten Rechnung festgelegt wurden.
+
+## 2.47 Wenn die Gegenprobe nicht moeglich ist, wird sie benannt (20.08.2026)
+
+Punkt 3 des Plans sah vor, einen Fund auf einer zweiten Anlageklasse zu
+wiederholen. Das ging nicht: 2 Aktien und 4 ETF in der Watchlist, und unter
+zehn Symbolen ist eine Rangliste keine.
+
+FALSCH WAERE GEWESEN, es trotzdem zu rechnen und das Ergebnis zu melden.
+Richtig ist: die Luecke benennen und den naechstbesten Ersatz nehmen - hier
+die Halbierung der Symbolliste. Ein echter Zusammenhang steht in beiden
+Haelften; einer, der an wenigen Werten haengt, nur in einer.
+
+Der Punkt gilt damit als TEILWEISE erledigt, nicht als erledigt.

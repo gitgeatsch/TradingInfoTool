@@ -12557,3 +12557,116 @@ die Drift laesst sich auf Zeitfenster einschraenken; die Schwelle wurde nach
 dem Fund nicht gesenkt. **1.223 Pruefungen** gesamt, 0 freie Namen,
 Darstellungstest, Ende-zu-Ende 8 Signale / 9 Mails / 0 Luecken. Sicherung der
 Datenbank vor dem Schreiben angelegt.
+
+
+---
+
+### 93.18 Punkt 3: die Varianten, die Gegenprobe - und der Rangplatz in der Mail (20.08.2026)
+
+**Zwei Varianten, VOR der ersten Rechnung festgelegt**, beide aus der
+Literatur und nicht aus einem Blick in unsere Daten:
+
+| | |
+|---|---|
+| `ohne_monat` | der letzte Monat wird aus dem Rückblick ausgeklammert - Standard seit Jegadeesh/Titman, weil kurzfristige Umkehr das Momentum überlagert |
+| `vol_skaliert` | die Rendite wird durch ihre eigene Schwankung geteilt - sonst steht im besten Fünftel, wer am wildesten schwankt |
+
+**Und sie erhöhen die Schwelle, statt sie zu umgehen:** 27 Felder statt 9,
+Bonferroni **3,11**. Wer Varianten rechnet, ohne die Schwelle mitzuziehen,
+kauft sich Signifikanz.
+
+#### Das Ergebnis
+
+| Variante | 250/5 | 250/20 | 250/60 |
+|---|---:|---:|---:|
+| **roh** | +1,01 %, **t = 3,20** | +3,85 %, 2,54 | +10,10 %, 1,58 |
+| ohne_monat | +0,56 %, 1,68 | +2,22 %, 1,13 | +9,07 %, 1,38 |
+| vol_skaliert | +0,83 %, 2,84 | +2,55 %, 1,47 | +6,12 %, 1,02 |
+
+**Ein Feld von 27 hält die Schwelle** - `roh` 250/5 mit 3,20 gegen 3,11.
+Knapp.
+
+⚠️ **Und ein Warnzeichen:** ohne den letzten Monat fällt derselbe Wert von
+3,20 auf 1,68. Klassisches Momentum sollte das aushalten. Es spricht dafür,
+dass der Vorteil an der **jüngsten** Bewegung hängt, nicht an der
+Jahresentwicklung.
+
+#### Die zweite Anlageklasse war nicht möglich - das ist eine Lücke, kein erledigter Punkt
+
+Die Watchlist hat **2 Aktien und 4 ETF**. Unter zehn Symbolen ist eine
+Rangliste keine. **Ersatz: die Symbolliste halbiert** (jedes zweite
+alphabetisch) und beide Hälften getrennt gemessen:
+
+| | 250/5 | 250/20 | 250/60 |
+|---|---|---|---|
+| Hälfte 1 (20 Symbole) | +0,56 %, t = 1,15 | +1,98 %, 1,32 | +6,11 %, 1,31 |
+| Hälfte 2 (20 Symbole) | +0,57 %, t = 0,97 | +2,71 %, 1,13 | +11,08 %, 2,00 |
+
+**Beide Hälften zeigen dasselbe Vorzeichen, in allen drei Horizonten** - und
+bei 250/5 fast denselben Wert (+0,56 gegen +0,57 %). Der Effekt hängt also
+**nicht an wenigen Werten**. Signifikant ist keine der beiden für sich.
+
+**Zusammen gelesen: konsistent, aber klein.**
+
+---
+
+### 93.19 Warum der Rangplatz jetzt DOCH in der Mail steht
+
+**Nutzerfrage:** *„warum zeigen wir das Feld nicht im Mail an, was fehlt hier
+noch?"*
+
+**Die Antwort war nie die Zahl, sondern das Etikett.** Der Rangplatz ist eine
+Tatsache über die Vergangenheit - nachrechenbar, unstrittig, und im Chart
+ohnehin sichtbar. Sie zu verschweigen wäre die „Einschränkung, damit es
+weniger wird". Was nicht in die Mail durfte, war die *Behauptung*, dass daraus
+etwas folgt. Diese Behauptung ist jetzt gemessen, also kann sie beschriftet
+werden.
+
+`agent/drift.py` schreibt seit heute in jede Kryptomail:
+
+```
+Rangplatz nach 250-Tage-Entwicklung (Tatsache, keine Prognose):
+   Platz 33 von 41 Kryptowerten, im schlechtesten Fuenftel
+   (-58,1 % in diesem Zeitraum).
+   Was das bringt, ist GEMESSEN: der Abstand zwischen bestem und
+   schlechtestem Fuenftel betraegt 1,0 % auf fuenf Handelstage - ein Feld
+   von 27 haelt die Schwelle.
+Warnung: KEIN HANDELBARER VORTEIL - das beste Fuenftel liegt damit rund
+   0,5 % ueber dem Markt, die Handelskosten betragen 3 %. Der Rangplatz ist
+   eine Beobachtung, kein Kaufgrund.
+```
+
+**Das ist die entscheidende Zahl des ganzen Kapitels:** der Vorteil ist
+gemessen **und** zu klein, um ihn zu bezahlen. Beides steht in derselben
+Zeile, damit niemand nur die Hälfte liest.
+
+#### Beim Bauen gefunden
+
+| | |
+|---|---|
+| **Rang gegen die falsche Grundgesamtheit** | erste Fassung meldete „Platz 15 von 47 Kryptowerten", während die Datenbank 41 Kryptoreihen kennt - Aktien und ETF standen mit in der Liste. Ein Rangplatz gegen einen ETF sagt über einen Coin nichts |
+| **Ein freier Name** | `finde_freie_namen.py` fand `_leben0` - ich hatte die Verwendung eingefügt und die Definition nicht. Genau der Fehlertyp, für den das Werkzeug existiert; er wäre erst bei ETF-Mails aufgeschlagen |
+
+#### Abgesichert durch
+
+`pruefe_pakete.py` - 7 neue Prüfungen: Varianten vorher festgelegt; sie
+erhöhen die Schwelle; Unabhängigkeitsprobe vorhanden; Rang nur gegen dieselbe
+Anlageklasse; ohne genug Historie kein Rang statt Platz eins; die Mail nennt
+den gemessenen Wert **mit** den Kosten; ohne Kursreihen bleibt die Zeile weg.
+**1.230 Prüfungen** gesamt, 0 freie Namen, Darstellungstest, Ende-zu-Ende
+8 Signale / 9 Mails / 0 Lücken.
+
+#### Stand von Kapitel 93
+
+| Stufe | |
+|---|---|
+| **A / A1 / A2** | gebaut, in Produktion, hält |
+| **B** | **gemessen und abgeschlossen**: ein Feld von 27 hält die Schwelle, konsistent im Vorzeichen, **zu klein für die Kosten**. Der Rangplatz steht als Tatsache in der Mail |
+| **C** | sammelt seit 19.08. |
+| **D** | offen, Deckelproblem ungeklärt |
+| **E** | hängt an C |
+
+**Was offen bleibt:** die Wiederholung auf einer zweiten Anlageklasse - dafür
+fehlen die Reihen. Und 250/60 (+10 % Abstand) ist der einzige ökonomisch
+interessante Kandidat; er ist überall positiv, erreicht die Schwelle aber nur
+im jüngsten Zeitfenster.
