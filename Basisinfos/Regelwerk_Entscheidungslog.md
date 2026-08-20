@@ -18299,3 +18299,38 @@ weite Geometrie sind moeglicherweise DIESELBE GROESSE unter drei Namen -
 hohe Volatilitaet. Wer sie addiert, ohne das geprueft zu haben, zaehlt
 denselben Effekt dreimal. Die naechste Messung ist das Geometrieraster
 INNERHALB von Phase und Driftband.
+
+
+[2026-08-20] KAPITEL 103: DIE KOLLINEARITAETSPROBE - die Hebel sind NICHT dasselbe
+
+Mein Verdacht war, dass Marktphase, Driftband und Geometrie dieselbe Groesse
+unter drei Namen sind (alle ueber den ATR). Er hat sich NICHT bestaetigt.
+
+AUFBAU: Geometrieraster INNERHALB von Phase und Driftband, 300 Zellen aus
+derselben Stichprobe von 850.668 Paaren, Mindestbelegung 300 Faelle.
+
+ERGEBNIS: Ausgangspunkt -6,0 Punkte. Staerkster Hebel allein +1,6. Wenn sie
+sich addierten +9,6. GEMESSEN KOMBINIERT +17,8, in der Zelle Phase 'baer',
+Band '-10 bis +10 %', k=4,0, CRV=3,0 auf 620 Faellen. Also nicht nur additiv,
+sondern ueberadditiv.
+
+GEGENPROBE: gewuerfelt INNERHALB jeder Geometrie - das erhaelt die legitimen
+k/CRV-Unterschiede und zerstoert nur die Zuordnung zu Phase und Band.
+Groesster Zufallswert +6,0, Schwelle +4,7, gemessen +17,8. Der Fund liegt
+beim Dreifachen des groessten Zufallswerts.
+
+⚠️ UND IST TROTZDEM NOCH NICHT BESTAETIGT: der Placebo wuerfelt die Ausgaenge
+FREI und ignoriert, dass die Anker zeitlich zusammenhaengen. Taegliche
+Einstiege mit bis zu 120 Tagen Vorwaertsfenster sind stark autokorreliert,
+und die Baerphase ist ein zusammenhaengender Zeitblock. Freies Wuerfeln macht
+die Zufallsverteilung ZU SCHMAL und die Schwelle zu niedrig. Die strengere
+Probe ist eine BLOCK-PERMUTATION.
+
+ZWEI WEITERE VORBEHALTE: die beste Zelle liegt im MITTLEREN Driftband - genau
+dem, das in Kapitel 102 allein gemessen das schlechteste war (-11,3). Eine
+echte Wechselwirkung kann so aussehen, Rauschen aber auch. Und 620 Faelle
+sind 1,5 % der Stichprobe; mit Autokorrelation ist die wirksame Zahl kleiner.
+
+FOLGE: das Nutzermodell hat den ersten ernsthaften Beleg bekommen - nicht ein
+einzelner Wert traegt, sondern die Konjunktion. Aber die Reihenfolge steht
+fest: erst die Block-Permutation, dann Schritt 2.

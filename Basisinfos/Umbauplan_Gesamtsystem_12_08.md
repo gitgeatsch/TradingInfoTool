@@ -13800,3 +13800,87 @@ zählt denselben Effekt dreimal.
 **Das ist die nächste Messung, und sie ist billig:** das Geometrieraster
 *innerhalb* von Phase und Driftband rechnen und sehen, ob sich die Effekte
 addieren oder überlappen.
+
+
+---
+
+## Kapitel 103 — Die Kollinearitätsprobe: die Hebel sind NICHT dasselbe (20.08.2026)
+
+**Nutzermodell:** *„Ein Wert hat fast keine positive Auswirkung, aber die
+richtige Kombination der Trichterwerte bildet dann den Trichter der
+Optimierung."*
+
+Das Prinzip ist etabliert. Es hat eine harte Vorbedingung — **die
+Bestandteile müssen verschiedene Information tragen.** Mein Verdacht war,
+dass Marktphase, Driftband und Geometrie **dieselbe Größe unter drei Namen**
+sind (alle laufen über den ATR). **Der Verdacht hat sich nicht bestätigt.**
+
+### 103.1 Der Aufbau
+
+Das Geometrieraster **innerhalb** von Phase und Driftband — 3 × 5 × 5 × 4 =
+**300 Zellen**, alle aus derselben Stichprobe von 850.668
+Anker-Geometrie-Paaren, Mindestbelegung 300 entschiedene Fälle.
+
+### 103.2 Das Ergebnis
+
+| | Punkte zum Breakeven |
+|---|---:|
+| Ausgangspunkt (k=2,0 / CRV=2,0, alle Lagen) | **−6,0** |
+| stärkster Hebel allein (Phase „bär") | +1,6 |
+| wenn sich die drei addierten | +9,6 |
+| **gemessen kombiniert** | **+17,8** |
+
+**Beste Zelle:** Phase „bär", Band „−10 bis +10 %", k = 4,0, CRV = 3,0 —
+**+17,8 Punkte auf 620 Fällen.**
+
+**Das ist nicht nur additiv, sondern überadditiv** (200 % dessen, was eine
+Addition verspräche). Die Hebel messen also **nicht** dasselbe.
+
+### 103.3 Die Gegenprobe — und ihre Lücke
+
+**Die richtige Kontrolle war hier nötig**, denn ein Maximum aus 300 Zellen ist
+auch bei reinem Zufall groß. Gewürfelt wurde **innerhalb jeder Geometrie**:
+das erhält die legitimen k/CRV-Unterschiede (Arithmetik) und zerstört nur die
+Zuordnung zu Phase und Band (die Behauptung).
+
+| | |
+|---|---:|
+| größter Zufallswert aus 20 Läufen | +6,0 |
+| Schwelle (95 %) | **+4,7** |
+| gemessen | **+17,8** |
+
+**Der Fund liegt beim Dreifachen des größten Zufallswerts.**
+
+⚠️ **Und trotzdem ist er noch nicht bestätigt.** Der Placebo würfelt die
+Ausgänge frei — er ignoriert, dass **die Anker zeitlich zusammenhängen**:
+tägliche Einstiege mit bis zu 120 Tagen Vorwärtsfenster sind stark
+autokorreliert, und die Bärphase ist ein zusammenhängender Zeitblock. Ein
+freies Würfeln macht die Zufallsverteilung **zu schmal** und die Schwelle
+damit **zu niedrig**.
+
+**Die strengere Probe ist eine Block-Permutation** — ganze Zeitblöcke tauschen
+statt einzelner Ausgänge. Bis die gelaufen ist, gilt der Befund als **stark,
+aber nicht abgesichert.**
+
+### 103.4 Zwei weitere Vorbehalte, die ich nicht verschweige
+
+**Die beste Zelle liegt im mittleren Driftband** („−10 bis +10 %") — genau
+dem Band, das in Kapitel 102 allein gemessen **das schlechteste** war
+(−11,3 Punkte). Eine echte Wechselwirkung kann so aussehen; Rauschen aber
+auch.
+
+**620 Fälle sind 1,5 % der Stichprobe.** Mit Autokorrelation ist die wirksame
+Zahl deutlich kleiner.
+
+### 103.5 Was das für den Plan heißt
+
+**Das Nutzermodell hat den ersten ernsthaften Beleg bekommen.** Nicht ein
+einzelner Wert trägt, sondern die Konjunktion — und zwar deutlich stärker als
+die Summe der Teile. Damit hat **Schritt 2** (echte Konjunktion über Kanäle
+hinweg: Volatilität × Struktur × Umschlag) eine Grundlage, die er vor dieser
+Messung nicht hatte.
+
+**Aber die Reihenfolge steht fest:** erst die Block-Permutation, dann Schritt
+2. Ein Befund aus 300 Zellen, dessen Kontrolle die Zeitstruktur ignoriert, ist
+genau die Sorte Fund, an der dieses Projekt am 20.08. schon einmal
+vorbeigeschrammt ist (Kapitel 93.17).

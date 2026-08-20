@@ -101,3 +101,5 @@ messwerte_konstellationen.json
 messwerte_geometrie.json
 _geo.log
 messwerte_drift_absolut.json
+messwerte_kollinearitaet.json
+_koll.log
