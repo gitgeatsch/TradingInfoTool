@@ -9215,6 +9215,32 @@ def paket_dimension() -> None:
            "gebaut und nicht verdrahtet ist das Muster, das dieses Projekt "
            "mehrfach Wochen gekostet hat")
 
+    # ---- DIE UMSCHLAG-LESART IST GEMESSEN (Umbauplan 97, 20.08.) ----
+    _uq = _quelltext("messe_umschlag_kontext.py")
+
+    pruefe(P, "der Aufbau stand VOR der ersten Rechnung fest",
+           "FENSTER = 250" in _uq and "HOCH_AB = 90" in _uq
+           and "SCHWELLE = 0.10" in _uq,
+           "Anker, Zusammenhang und Schwellen sind aus der Behauptung "
+           "abgeleitet, nicht aus einem Blick in die Daten")
+    pruefe(P, "marktbereinigt - sonst misst man den Markt",
+           "kuenftig = kuenftig - kuenftig.mean()" in _uq)
+    pruefe(P, "Signifikanz ueber Termine, Newey-West-korrigiert",
+           "_newey_west(a, horizont - 1)" in _uq,
+           "an einem Tag bewegt sich alles gemeinsam, und ueberlappende "
+           "Vorwaertsfenster sind autokorreliert")
+    pruefe(P, "beide Kontrollen sind eingebaut",
+           "--positivkontrolle" in _uq and "--placebo" in _uq,
+           "gemessen: ein eingepflanzter Effekt von 2 % wird auf fuenf "
+           "Tagen mit t = -6,21 gefunden; der Placebo setzt die Schwelle "
+           "auf |t| >= 1,65")
+
+    # ⚠️ VOLUMEN NULL IST KEIN VOLUMEN.
+    pruefe(P, "handelsfreie Tage werden nicht als niedrigster Rang gezaehlt",
+           "vol if vol > 0 else np.nan" in _uq,
+           "eine 0 im Volumen waere der niedrigste Rang und damit ein "
+           "erfundener Anker - hier zaehlt sie als fehlend")
+
     # ---- DAS MODELL UND DER NUTZER SEHEN DIESELBEN FAKTEN (20.08.) ----
     #
     # Nutzerfrage: "die LLM-Bewertungen sollten die Parameter bewerten, die

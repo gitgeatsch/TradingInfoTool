@@ -95,3 +95,4 @@ messwerte_trichter.json
 messwerte_drift.json
 messwerte_historie.json
 *.db.vor_historie_*
+messwerte_umschlag.json

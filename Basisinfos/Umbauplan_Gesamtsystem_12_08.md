@@ -13329,3 +13329,83 @@ dokumentiert, bevor ich die Begründungszeilen gelesen hatte.** Zwei
 Beobachtungen sind eine Auffälligkeit, kein Befund — dieselbe Regel, die
 dieses Projekt für Messungen aufgestellt hat, gilt auch für das Lesen von
 Mails.
+
+
+---
+
+## Kapitel 98 — Die Umschlag-Lesart gemessen (20.08.2026), `messe_umschlag_kontext.py`
+
+**Nutzerauftrag:** die in 97.3 offen gebliebene Frage messen — *„Führt hoher
+Umschlag nach einem Anstieg häufiger zu einem Rückschlag als hoher Umschlag
+in einer Seitwärtsphase?"*
+
+### 98.1 Warum es messbar ist, obwohl der Umlaufbestand fehlt
+
+Der Umschlag ist Umsatz geteilt durch Umlaufbestand. Den Bestand führt nur
+`price_cache`, und der reicht **Tage** zurück, nicht Jahre.
+
+**Gebraucht wird er nicht:** gemessen wird das **Perzentil innerhalb der
+eigenen Historie**, und ein je Symbol konstanter Nenner kürzt sich in einem
+Rang vollständig heraus. ⚠️ Nicht ganz konstant — Emissionen verschieben den
+Bestand um einige Prozent im Jahr; der Befund gilt streng für den
+**Umsatzrang**.
+
+### 98.2 Der Aufbau, vorab festgelegt
+
+| | |
+|---|---|
+| **Anker** | Umsatz im 90. Perzentil des eigenen 250-Tage-Fensters |
+| **Zusammenhang** | Bewegung der 20 Tage davor: > +10 % · −10…+10 % · < −10 % |
+| **Ergebnis** | Vorwärtsrendite 5 und 20 Tage, **marktbereinigt** |
+| **Signifikanz** | über Termine, Newey-West — wie in `messe_drift.py` |
+
+**39 Reihen, 3.290 Termine (2017–2026).**
+
+### 98.3 Das Ergebnis
+
+| Lage | 5 Tage | 20 Tage |
+|---|---:|---:|
+| nach Anstieg | −0,48 % (t = −1,06) | −2,14 % (t = −1,51) |
+| **seitwärts** | **−0,96 % (t = −2,80)** | **−2,77 % (t = −2,85)** |
+| nach Rückgang | −0,70 % (t = −1,57) | −1,21 % (t = −1,59) |
+| **Unterschied** Anstieg − Seitwärts | **+0,48 % (t = +0,85)** | **+0,62 % (t = +0,36)** |
+
+**Kontrollen:** ein eingepflanzter 2-%-Effekt wird auf fünf Tagen mit
+**t = −6,21** gefunden — das Werkzeug ist für diese Größenordnung
+ausreichend. 40 Placebo-Läufe mit gewürfelten Lagen ergeben einen größten
+Zufallswert von 1,98 und die **empirische Schwelle |t| ≥ 1,65**.
+
+### 98.4 ⚠️ Die Unterscheidung des Modells trägt nicht
+
+Der Unterschied liegt bei t = 0,85 und 0,36 — **weit unter der gemessenen
+Schwelle**, und mit **umgekehrtem Vorzeichen**: nach einem Anstieg ist das
+Ergebnis eher *etwas besser* als in der Seitwärtsphase, nicht schlechter.
+
+**Die ETH-Begründung („Erschöpfungsrisiko nach dem Anstieg") ist damit nicht
+belegt.** Und die TAO-Begründung („Ausbruch aus der Konsolidierung") zeigt
+sogar in die **falsche** Richtung: die Seitwärtsphase ist die einzige Lage,
+in der hoher Umsatz belastbar auf eine unterdurchschnittliche Entwicklung
+folgt.
+
+### 98.5 Was auffällt, aber noch keinen Befund ergibt
+
+**Alle drei Lagen sind negativ** — hoher Umsatz wird durchweg von
+unterdurchschnittlicher Entwicklung gefolgt, −0,5 bis −1,0 % auf fünf Tage.
+
+⚠️ **Das ist noch nicht kontrolliert.** Der Placebo würfelt die *Lagen* und
+prüft damit den Unterschied, nicht das Niveau. Für die Aussage „hoher Umsatz
+ist überhaupt ein Warnsignal" bräuchte es einen anderen Vergleich: Anker
+gegen **alle** Tage. Bis dahin ist es eine Beobachtung.
+
+### 98.6 Was daraus folgt
+
+**Nichts wird umgeschrieben.** Die Richtung im Beleg bleibt die Meinung des
+Modells unter `[BEHAUPTET]`, und die Regel gegen deterministische Overrides
+gilt weiter. Was sich geändert hat: **die Zahl steht seit Kapitel 96 in der
+Mail**, und ab jetzt ist auch dokumentiert, dass die gängige Lesart dazu
+**gemessen nicht trägt**.
+
+**Abgesichert durch** 5 Prüfungen (Aufbau vorab festgelegt · marktbereinigt ·
+Newey-West · beide Kontrollen vorhanden · Volumen null zählt nicht als
+niedrigster Rang). **1.271 Prüfungen** gesamt, 0 freie Namen, Ende-zu-Ende
+8 Signale / 9 Mails / 0 Lücken.

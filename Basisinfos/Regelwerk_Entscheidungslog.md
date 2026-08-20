@@ -18100,3 +18100,43 @@ dokumentiert, BEVOR ich die Begruendungszeilen gelesen hatte. Zwei
 Beobachtungen sind eine Auffaelligkeit, kein Befund - dieselbe Regel, die
 dieses Projekt fuer Messungen aufgestellt hat, gilt auch fuer das Lesen von
 Mails.
+
+
+[2026-08-20] KAPITEL 98: DIE UMSCHLAG-LESART GEMESSEN - sie traegt nicht
+
+Auftrag aus 97.3: fuehrt hoher Umschlag nach einem Anstieg haeufiger zu einem
+Rueckschlag als in der Seitwaertsphase?
+
+MESSBAR TROTZ FEHLENDEM UMLAUFBESTAND: gemessen wird das Perzentil in der
+eigenen Historie, und ein je Symbol konstanter Nenner kuerzt sich im Rang
+heraus. Streng gilt der Befund fuer den Umsatzrang (Emissionen verschieben
+den Bestand um einige Prozent im Jahr).
+
+AUFBAU VORAB FESTGELEGT: Anker = Umsatz im 90. Perzentil des eigenen
+250-Tage-Fensters; Lage = Bewegung der 20 Tage davor (ueber +10 / -10..+10 /
+unter -10 %); Ergebnis = marktbereinigte Vorwaertsrendite ueber 5 und 20
+Tage; Signifikanz ueber Termine mit Newey-West. 39 Reihen, 3.290 Termine.
+
+ERGEBNIS: nach Anstieg -0,48 % (t=-1,06), seitwaerts -0,96 % (t=-2,80), nach
+Rueckgang -0,70 % (t=-1,57) auf fuenf Tage. UNTERSCHIED Anstieg minus
+Seitwaerts +0,48 % (t=+0,85) und +0,62 % (t=+0,36) auf zwanzig.
+
+KONTROLLEN: eingepflanzter 2-%-Effekt wird mit t=-6,21 gefunden; 40
+Placebo-Laeufe ergeben groessten Zufallswert 1,98 und Schwelle |t| >= 1,65.
+
+DIE UNTERSCHEIDUNG DES MODELLS TRAEGT NICHT - weit unter der Schwelle und mit
+umgekehrtem Vorzeichen. Die ETH-Begruendung ("Erschoepfungsrisiko") ist nicht
+belegt; die TAO-Begruendung ("Ausbruch aus der Konsolidierung") zeigt sogar in
+die falsche Richtung: die Seitwaertsphase ist die einzige Lage, in der hoher
+Umsatz belastbar auf eine unterdurchschnittliche Entwicklung folgt.
+
+BEOBACHTUNG OHNE BEFUND: alle drei Lagen sind negativ. Der Placebo wuerfelt
+die LAGEN und prueft damit den Unterschied, nicht das Niveau. Fuer "hoher
+Umsatz ist ueberhaupt ein Warnsignal" braeuchte es Anker gegen ALLE Tage.
+
+FOLGE: nichts wird umgeschrieben - die Richtung bleibt die Meinung des
+Modells unter [BEHAUPTET]. Aber die Zahl steht seit Kapitel 96 in der Mail,
+und jetzt ist dokumentiert, dass die gaengige Lesart dazu nicht traegt.
+
+GEPRUEFT: 1.271 Paketpruefungen (5 neue), 0 freie Namen, 8 Signale / 9 Mails
+/ 0 Luecken.
