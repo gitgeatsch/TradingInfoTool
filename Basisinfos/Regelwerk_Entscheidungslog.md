@@ -18224,3 +18224,44 @@ Der naechste ehrliche Schritt ist zu pruefen, ob die GEOMETRIE mit der Phase
 mitwandern sollte, nicht ob man Phasen ausschliesst.
 
 GEPRUEFT: 1.281 Paketpruefungen (5 neue), 0 freie Namen.
+
+
+[2026-08-20] KAPITEL 101: DIE GEOMETRIE GEMESSEN
+
+Nutzervorgabe: weiter denken als ein Marktphasen-System, und eine Kombination
+weiterer Trichterwerte testen. Beides fuehrt auf dieselbe Messung, weil Phase
+und Geometrie dasselbe Thema sind: der Stop steht bei k x ATR, im Baermarkt
+ist der ATR gross, der Stop damit in Prozent weit - und ein weiter Stop wirkt
+zweimal (seltener vom Rauschen getroffen UND niedrigere Huerde, weil
+Kosten_R = 2 x Gebuehr / Stopabstand).
+
+RASTER VORAB FESTGELEGT: k in 1,5/2,0/2,5/3,0/4,0 gegen CRV in
+1,0/1,5/2,0/3,0. 840.536 Anker-Geometrie-Paare aus DENSELBEN Ankern.
+
+ERGEBNIS - Abstand zum eigenen Breakeven in Punkten: heute (k=2,0/CRV=2,0)
+-6,0. Bestes Feld k=4,0/CRV=3,0 mit +0,1. Der Verlauf ist in BEIDEN
+Richtungen monoton, ueber alle zwanzig Felder ohne Ausnahme - weiterer Stop
+besser, hoeheres CRV besser. Die Kosten fallen von 0,21 auf 0,11 R, genau wie
+die Formel verlangt.
+
+ABER DAS ZIEL IST NICHT ERREICHT: das beste Feld liegt praktisch auf null
+(t = +0,36) und besteht die Phasenprobe NICHT - bulle -5,3, seitwaerts -1,7,
+baer +7,5. Eine Geometrie, die nur im Baermarkt traegt, ist die
+Marktphasenwette mit anderem Namen.
+
+WAS ES TROTZDEM WERT IST: der Weg von -6,0 auf -0,4 Punkte ist real und ohne
+Annahme ueber den Markt zu haben. Er bringt das System nicht ueber den
+Breakeven, aber von deutlich darunter auf fast heran.
+
+⚠️ NICHT UEBERSEHEN: ein Stop bei 4 ATR sind 28,5 % Abstand. Bei 6 %
+Verlustanteil ergibt das einen Hebel von 0,2 - kein Hebelgeschaeft mehr,
+sondern eine kleine Spot-Position. Die Geometrie zu weiten heisst, die
+Positionen zu verkleinern.
+
+⚠️ EIN FEHLER IN DER EIGENEN KONTROLLE: die erste Fassung hatte einen
+Placebo, der die Ausgaenge ueber alle Felder wuerfelte und eine Schwelle von
+|t| >= 104 ergab. Kein strenger Massstab, sondern ein kaputter - die Felder
+unterscheiden sich LEGITIM (CRV 1,0 wird oefter erreicht als CRV 3,0, das ist
+Arithmetik). Eine Kontrolle muss ZUR FRAGE passen: hier ist der
+Binomialfehler das richtige Mass. Gegen Rosinenpickerei hilft das vorab
+festgelegte Raster, der Verlauf ueber alle Felder und die Phasenprobe.

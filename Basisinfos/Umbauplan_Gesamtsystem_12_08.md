@@ -13616,3 +13616,106 @@ Markt), nicht ob man Phasen ausschließt.
 Sortierung statt Höhe · Asset-Streuung gegen Zufallsstreuung · ohne Placebo
 kein Urteil · H2 trägt die Auswahlwarnung bei sich). **1.281 Prüfungen**
 gesamt, 0 freie Namen.
+
+
+---
+
+## Kapitel 101 — Die Geometrie gemessen: der Verlauf ist eindeutig, das Ziel nicht erreicht (20.08.2026)
+
+**Nutzervorgabe:** *„wenn wir in diese Richtung gehen, sollte das etwas weiter
+gedacht werden als ein einfaches Marktphasen-System"* und *„wir könnten eine
+Kombination von weiteren Trichterwerten testen"*.
+
+Beides führt auf dieselbe Messung — denn **Phase und Geometrie sind dasselbe
+Thema.**
+
+### 101.1 Warum das so ist
+
+Der Stop steht bei **k × ATR**, das Ziel bei **CRV × k × ATR**. Im Bärmarkt
+ist der ATR groß, der Stop damit *in Prozent* weit — und ein weiter Stop wirkt
+**zweimal**:
+
+1. Er wird seltener vom Rauschen getroffen (genau das sagt der Trichter).
+2. **Er senkt die Hürde.** `Kosten in R = 2 × Gebühr / Stopabstand` — bei
+   doppelt so weitem Stop halb so groß, und damit sinkt der Breakeven.
+
+**Der Bärmarkt-Befund aus Kapitel 100 könnte also gar nichts über den
+Bärmarkt sagen, sondern nur darüber, dass unsere Geometrie im ruhigen Markt
+zu eng ist.**
+
+### 101.2 Das Raster, vorab festgelegt
+
+**840.536 Anker-Geometrie-Paare** aus denselben Ankern — je Anker alle zwanzig
+Kombinationen, damit die Unterschiede nicht teils Auswahl sind.
+
+**Abstand zum eigenen Breakeven, in Prozentpunkten** (positiv = trägt sich):
+
+| k \ CRV | 1,0 | 1,5 | **2,0** | 3,0 |
+|---|---:|---:|---:|---:|
+| 1,5 | −14,7 | −11,0 | −8,3 | −5,7 |
+| **2,0** (heute) | −10,6 | −7,4 | **−6,0** | −3,8 |
+| 2,5 | −7,6 | −5,6 | −4,2 | −2,8 |
+| 3,0 | −5,4 | −3,9 | −2,9 | −1,7 |
+| **4,0** | −2,4 | −1,1 | −0,4 | **+0,1** |
+
+### 101.3 Der Verlauf ist vollkommen systematisch
+
+**In beiden Richtungen monoton, über alle zwanzig Felder ohne eine einzige
+Ausnahme:** weiterer Stop → besser, höheres CRV → besser. Das ist kein
+Rauschen, sondern die Kostenarithmetik sichtbar gemacht.
+
+| | Stop | Kosten | Quote | Breakeven |
+|---|---:|---:|---:|---:|
+| heute (k=2,0 / CRV=2,0) | 14,3 % | 0,21 R | 34,4 % | 40,3 % |
+| k=4,0 / CRV=1,0 | 28,5 % | **0,11 R** | 52,9 % | 55,3 % |
+
+**Die Kosten halbieren sich von 0,21 auf 0,11 R** — genau wie die Formel es
+verlangt.
+
+### 101.4 ⚠️ Und trotzdem: das Ziel ist nicht erreicht
+
+**Das beste Feld liegt bei +0,1 Punkten** (k=4,0 / CRV=3,0), also praktisch
+auf null, mit t = +0,36. Und es besteht die Phasenprobe **nicht**:
+
+| Phase | Abstand |
+|---|---:|
+| bulle | **−5,3** |
+| seitwärts | −1,7 |
+| bär | **+7,5** |
+
+**Eine Geometrie, die nur im Bärmarkt trägt, ist die Marktphasenwette mit
+anderem Namen.** Also kein Befund.
+
+### 101.5 Was das trotzdem wert ist
+
+**Der Weg von −6,0 auf −0,4 Punkten ist real und kostenfrei zu haben.** Er
+bringt das System nicht über den Breakeven, aber er bringt es **von deutlich
+darunter auf fast heran** — und zwar ohne eine einzige Annahme über den Markt,
+allein durch die Geometrie.
+
+⚠️ **Was dabei nicht übersehen werden darf:** ein Stop bei 4 ATR bedeutet
+28,5 % Abstand. Bei einem Verlustanteil von 6 % ergibt das rechnerisch einen
+Hebel von 0,2 — also **kein Hebelgeschäft mehr, sondern eine kleine
+Spot-Position**. Die Geometrie zu weiten heißt, die Positionen zu
+verkleinern; das ist dieselbe Zahl von der anderen Seite und gehört
+mitentschieden.
+
+### 101.6 ⚠️ Ein Fehler in der eigenen Kontrolle
+
+Die erste Fassung hatte einen Placebo, der die Ausgänge über alle Felder
+würfelte — und eine Schwelle von **|t| ≥ 104** ergab.
+
+**Das war kein strenger Maßstab, sondern ein kaputter.** Die Felder
+unterscheiden sich **legitim** in ihrer Trefferquote: ein Ziel bei CRV 1,0
+wird öfter erreicht als eines bei CRV 3,0, und das ist Arithmetik, kein
+Signal. Das Würfeln zerstört genau diesen Unterschied.
+
+**Die Regel dahinter, und sie gilt allgemein: eine Kontrolle muss zur Frage
+passen.** Ein Placebo prüft, ob ein *Zusammenhang* zufällig ist. Hier wird
+gefragt, ob eine Quote über ihrem *eigenen* Breakeven liegt — dafür ist der
+Binomialfehler das richtige Maß.
+
+Gegen Rosinenpickerei hilft hier etwas anderes und Strengeres: **vorab
+festgelegtes Raster · der Verlauf über alle zwanzig Felder · Befund muss in
+allen drei Phasen stehen.** Ein systematischer Verlauf ist mehr wert als ein
+Ausreißer — und genau den zeigt die Tabelle.
