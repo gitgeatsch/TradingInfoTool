@@ -18265,3 +18265,37 @@ unterscheiden sich LEGITIM (CRV 1,0 wird oefter erreicht als CRV 3,0, das ist
 Arithmetik). Eine Kontrolle muss ZUR FRAGE passen: hier ist der
 Binomialfehler das richtige Mass. Gegen Rosinenpickerei hilft das vorab
 festgelegte Raster, der Verlauf ueber alle Felder und die Phasenprobe.
+
+
+[2026-08-20] KAPITEL 102: DIE DRIFT, RICHTIG GEFRAGT
+
+Nutzervermutung, ob bei der Drift ein Fehler passiert ist: berechtigt, und es
+war ein Fehler in der FRAGESTELLUNG. messe_drift.py fragte eine RANGFRAGE
+quer ueber die Symbole MIT abgezogenem Marktmittel. Der Grundbefund meint
+aber die Drift DES PFADES - und die Marktbereinigung entfernt genau diese
+Groesse.
+
+NEU GEMESSEN, ohne Marktbereinigung, Schichtung nach eigener 250-Tage-
+Steigung, Betriebsgeometrie k=2,0/CRV=2,0. 42.579 Anker, 41.003 entschieden.
+
+ERGEBNIS: kein Band erreicht den Breakeven. unter -30 %: 36,2 % (-4,1
+Punkte), -30..-10 %: 27,8 % (-12,5), -10..+10 %: 29,0 % (-11,3), +10..+30 %:
+34,2 % (-6,2), ueber +30 %: 35,9 % (-4,4).
+
+EINE MEINER FEHLERQUELLEN IST ERLEDIGT: die Stop-zuerst-Regel unterschaetzt
+die Quote NICHT nennenswert - vorsichtig 34,3 %, mild 34,4 %, also 0,1 Punkte.
+Das gilt rueckwirkend fuer alle Simulationen dieser Woche, auch fuer die
+Bremse in Kapitel 99.
+
+DER EIGENTLICHE BEFUND IST DIE FORM: die Baender verlaufen U-foermig - die
+Extreme bei 36 %, die Mitte bei 28-29 %. Nicht die RICHTUNG der Drift
+entscheidet, sondern ihr BETRAG. Und ein starker Trend heisst hoher ATR, also
+weiter Stop in Prozent, also niedrigere Kosten in R - derselbe Mechanismus
+wie in Kapitel 101. Die Phasenprobe bestaetigt: im besten Band ist nur der
+Baermarkt positiv (+3,7), Bulle liegt bei -27,0.
+
+⚠️ WICHTIGSTER HINWEIS FUER ALLES WEITERE: Drift-Extrem, Marktphase Baer und
+weite Geometrie sind moeglicherweise DIESELBE GROESSE unter drei Namen -
+hohe Volatilitaet. Wer sie addiert, ohne das geprueft zu haben, zaehlt
+denselben Effekt dreimal. Die naechste Messung ist das Geometrieraster
+INNERHALB von Phase und Driftband.

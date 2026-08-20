@@ -13719,3 +13719,84 @@ Gegen Rosinenpickerei hilft hier etwas anderes und Strengeres: **vorab
 festgelegtes Raster · der Verlauf über alle zwanzig Felder · Befund muss in
 allen drei Phasen stehen.** Ein systematischer Verlauf ist mehr wert als ein
 Ausreißer — und genau den zeigt die Tabelle.
+
+
+---
+
+## Kapitel 102 — Die Drift, richtig gefragt (20.08.2026)
+
+**Nutzerfrage:** *„Was war beim Drift das Problem? Ich kann mich erinnern,
+dass der Drift eigentlich der wichtigste Punkt im Plan war. Kann es sein, dass
+wir einen Mess- oder Rechenfehler gemacht haben und er doch tragen sollte?"*
+
+⚠️ **Die Vermutung war berechtigt — es war ein Fehler in der Fragestellung.**
+
+### 102.1 Zwei verschiedene Fragen
+
+`messe_drift.py` (19.08.) fragte: *steigt ein Coin, der zuletzt stärker
+gestiegen ist als die anderen, auch künftig stärker als die anderen?* Eine
+**Rangfrage** quer über die Symbole, **mit abgezogenem Marktmittel**.
+
+Der Grundbefund des Projekts meint aber:
+
+> Ein Barrierensystem auf einem **driftfreien Pfad** hat brutto den
+> Erwartungswert null — für jede Geometrie.
+
+Der Ausweg daraus ist die **Drift des Pfades**, nicht ein Rangplatz gegenüber
+anderen. **Und die Marktbereinigung entfernt genau diese Größe:** driftet die
+ganze Anlageklasse, sieht die Rangmessung davon per Konstruktion nichts.
+
+### 102.2 Die Messung, wie sie hätte sein müssen
+
+Schichtung nach der **eigenen absoluten Steigung** über 250 Handelstage, ohne
+Marktbereinigung. Geometrie: der Betriebszustand k = 2,0 / CRV = 2,0.
+**42.579 Anker, 41.003 entschieden.**
+
+| Driftband | Fälle | Quote | Abstand zum Breakeven |
+|---|---:|---:|---:|
+| unter −30 % | 17.887 | 36,2 % | **−4,1** |
+| −30 bis −10 % | 4.948 | 27,8 % | −12,5 |
+| −10 bis +10 % | 3.755 | 29,0 % | −11,3 |
+| +10 bis +30 % | 2.890 | 34,2 % | −6,2 |
+| über +30 % | 11.523 | 35,9 % | −4,4 |
+
+**Kein Band erreicht den Breakeven.** Das beste liegt 4,1 Punkte darunter.
+
+### 102.3 ⚠️ Eine meiner Fehlerquellen ist damit erledigt
+
+Ich hatte zwei genannt. Die erste — *„fällt in einer Kerze beides, werte ich
+als Stop, das unterschätzt die Quote"* — ist **gemessen und widerlegt**:
+
+| | vorsichtig | mild |
+|---|---:|---:|
+| Gesamtquote | 34,3 % | **34,4 %** |
+
+**0,1 Punkte Unterschied.** Die Reihenfolge in der Kerze spielt keine Rolle,
+und **das gilt rückwirkend für alle Simulationen dieser Woche** — auch für
+die Bremse in Kapitel 99.
+
+### 102.4 Der eigentliche Befund ist die Form der Kurve
+
+Die Bänder verlaufen **U-förmig**: die Extreme (−30 % und +30 %) liegen bei
+36 %, die Mitte bei 28–29 %. **Nicht die Richtung der Drift entscheidet,
+sondern ihr Betrag.**
+
+Und ein starker Trend in eine Richtung heißt: **hoher ATR** — also weiter
+Stop in Prozent, also niedrigere Kosten in R. **Das ist derselbe Mechanismus
+wie in Kapitel 101.** Die Phasenprobe bestätigt es: im besten Band ist nur
+der Bärmarkt positiv (+3,7), Bulle liegt bei −27,0.
+
+### 102.5 Was das für den Plan heißt
+
+**Die Drift ist gemessen — jetzt richtig — und sie trägt für sich allein
+nicht.** Aber sie ist damit nicht „weg": sie liefert **+1,9 Punkte** (bestes
+Band gegen Mittel), und die fehlen bis zum Breakeven noch **6,0**.
+
+⚠️ **Der wichtigste Hinweis für alles Weitere:** Drift-Extrem, Marktphase Bär
+und weite Geometrie sind **möglicherweise dieselbe Größe unter drei Namen** —
+nämlich **hohe Volatilität**. Wer sie addiert, ohne das geprüft zu haben,
+zählt denselben Effekt dreimal.
+
+**Das ist die nächste Messung, und sie ist billig:** das Geometrieraster
+*innerhalb* von Phase und Driftband rechnen und sehen, ob sich die Effekte
+addieren oder überlappen.
