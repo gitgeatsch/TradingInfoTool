@@ -18427,3 +18427,42 @@ Nachbau; LB._swings wird einmal je Reihe geholt und je Anker zugeschnitten
 (Praefix-Eigenschaft). Belegt statt behauptet: 3.120 Vergleiche gegen
 niveaus_werte(), NULL Abweichungen, plus Selbstpruefung an fuenf echten
 Ankern je Reihe in jedem Lauf.
+
+
+[2026-08-20] KAPITEL 105: H BEI GLEICHEN KOSTEN - meine Erklaerung war falsch
+
+104.6 hatte behauptet: der Quotenvorteil von H IST der weitere Stop. Vorab
+festgelegt geprueft durch Schichtung nach Stopabstand (fuenf Fuenftel, in
+jedem H gegen Nicht-H, entschieden ueber die gewichtete Summe - nicht ueber
+das beste Band).
+
+⚠️ DIE ERKLAERUNG IST WIDERLEGT: roher Vorsprung +6,4, bereinigt +7,1 - also
+111 % ueberleben die Kostenbereinigung. Der Quotenvorteil entsteht NICHT aus
+dem weiteren Stop.
+
+Zwei Saetze sind gleichzeitig wahr: der QUOTENvorsprung kommt nicht vom
+weiteren Stop; der weitere Stop hebt trotzdem H's EIGENEN Breakeven, weshalb
+in 104 unterm Strich nur +0,8 blieb. H verbindet einen echten Quotenvorteil
+mit einem Kostennachteil, der ihn gerade aufhebt.
+
+UND TROTZDEM: TRAEGT NICHT. Block-Permutation 40 Laeufe, groesster
+Zufallswert +11,2, Schwelle +10,0, gemessen +7,1. Positivkontrolle: 189
+gepflanzte Treffer -> +21,7 gegen +14,2, gefunden. Die Probe ist nicht blind.
+
+⚠️ ZWEI DINGE KONNTEN NICHT GEZEIGT WERDEN:
+1. DIE PHASENPROBE FIEL AUS. Nur bulle hat genug H-Faelle je Band (865,
+   +23,8); seitwaerts 315 und baer 148 sind zu duenn. Das ist KEINE
+   bestandene Probe, sondern eine ausgefallene.
+2. DIE BAENDER SIND NICHT KONSISTENT: 3-10 % -5,8 · 10-13 % +2,8 · 13-16 %
+   +8,4 · 16-21 % +2,1 · 21-93 % +19,4. Der Vorsprung wird fast vollstaendig
+   vom breitesten Band getragen, im schmalsten ist H sogar SCHLECHTER. Das
+   breiteste Band ist ausdruecklich KEIN Befund - es nachtraeglich
+   herauszugreifen waere Rosinenpickerei, und der Kostenrest ist dort mit
+   1,02 Punkten am groessten.
+
+FOLGE: zum DRITTEN Mal in Folge ist nicht die Methode die Grenze, sondern die
+Datenmenge - 1.301 H-Faelle ueber 24 Reihen, Schwelle +10,0 gegen Effekt
++7,1. Naechster Schritt damit eindeutig: ANDERE ANLAGEKLASSEN (Aktien, ETF -
+laengere Historien, fuer diese Frage nie gemessen), erst danach eine vorab
+benannte Pruefung des weiten Stopbands. Die Reihenfolge ist wichtig: das Band
+jetzt zu pruefen hiesse, es aus einem Ergebnis zu benennen.

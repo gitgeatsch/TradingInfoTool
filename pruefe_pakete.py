@@ -9248,6 +9248,47 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- H BEI GLEICHEN KOSTEN (Kapitel 105) ----
+    from messe_struktur_bereinigt import MINDESTALTER as _SB_ALTER
+    _sq = _quelltext("messe_struktur_bereinigt.py")
+    _sroh = io.open("messe_struktur_bereinigt.py", encoding="utf-8").read()
+
+    pruefe(P, "die Frage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _sroh
+           and "Stopabstand KONSTANT" in _sroh)
+    pruefe(P, "entschieden wird EINE Zahl, nicht das beste Band",
+           "EIN EINZELNES BAND IST KEIN URTEIL" in _sroh
+           and "def bereinigter_vorsprung" in _sq,
+           "fuenf Baender abzusuchen kostet nach 2.49 die doppelte Huerde - "
+           "und der Vorsprung kam fast nur aus dem breitesten Band (+19,4 "
+           "gegen -5,8 im schmalsten)")
+    pruefe(P, "die Bandgrenzen kommen aus ALLEN Ankern, nicht aus H",
+           "nicht aus H" in _sroh,
+           "aus H allein waeren die Grenzen von der zu pruefenden Gruppe "
+           "gesetzt")
+
+    # ⚠️ DIE REIFEPROBE IST HIER PFLICHT, NICHT OPTION (Kapitel 104.3).
+    pruefe(P, "die Reifeprobe ist ab Werk an",
+           _SB_ALTER >= 250 and "_reif(laufe(" in _sq,
+           f"Vorgabe {_SB_ALTER} Handelstage - ohne sie misst die Rechnung "
+           "wieder die Datenlage junger Reihen")
+
+    # ⚠️ DIE ABKUERZUNG WIRD BELEGT, NICHT BEHAUPTET - wie beim Swing-
+    # Speicher in Kapitel 104. Die Permutation rechnet in Zahlen statt in
+    # Woerterbuechern und muss vorher bitgenau dasselbe liefern.
+    pruefe(P, "die schnelle Fassung wird gegen die langsame geprueft",
+           "Zahlenfassung weicht ab" in _sq
+           and "statistik(ziel) - vorsprung" in _sq,
+           "eine Beschleunigung, die niemand nachrechnet, ist eine zweite "
+           "Implementierung mit eigenem Fehler")
+    pruefe(P, "und es wird ausgewiesen, ob ueberhaupt Kosten bereinigt sind",
+           "MAX_KOSTENREST" in _sq and "zu grob" in _sq,
+           "stehen die Stopabstaende je Band noch weit auseinander, ist "
+           "'gleiche Kosten' eine Behauptung statt einer Schichtung")
+    pruefe(P, "Block-Permutation und Knappheitsregel sind da",
+           "rngb.integers(0, a.blocklaenge)" in _sq and "ZU KNAPP" in _sq,
+           "Methodik 2.47 und 2.48")
+
     # ---- DIE STRUKTURHYPOTHESE UND IHRE ARTEFAKTPROBEN (Kapitel 104) ----
     from messe_marken import BLOCKLAENGE as _MK_BLOCK
     from simuliere_bremse import MAX_TAGE as _MAXT2

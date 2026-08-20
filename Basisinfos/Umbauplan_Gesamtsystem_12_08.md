@@ -14112,3 +14112,97 @@ je Reihe geholt und je Anker zugeschnitten — zulässig, weil das Ergebnis für
 kleineres `bis` ein **Präfix** ist. **Das wurde nicht behauptet, sondern
 belegt:** 3.120 Vergleiche gegen `niveaus_werte()`, **null Abweichungen**, und
 die Messung prüft sich bei jedem Lauf selbst an fünf echten Ankern je Reihe.
+
+
+---
+
+## Kapitel 105 — H bei gleichen Kosten: meine eigene Erklärung war falsch (20.08.2026)
+
+### 105.1 Die Frage
+
+Kapitel 104.6 hatte behauptet: *H trifft 6,2 Punkte öfter und hat 6,2 Punkte
+mehr Hürde — der Quotenvorteil ist der weitere Stop.* Diese Erklärung wurde
+vorab festgelegt geprüft, indem der **Stopabstand konstant gehalten** wird.
+
+Fünf gleich große Stopband-Fünftel, in jedem H gegen Nicht-H. Entschieden wird
+über die gewichtete Summe (direkte Standardisierung), **nicht** über das beste
+Band — das kostete nach Methodik 2.49 die doppelte Hürde.
+
+### 105.2 ⚠️ Die Erklärung aus 104.6 ist widerlegt
+
+| | |
+|---|---:|
+| roher Vorsprung H gegen Rest | +6,4 |
+| **bereinigt um den Stopabstand** | **+7,1** |
+| davon übrig | **111 %** |
+
+**Der Quotenvorteil ist NICHT der weitere Stop.** Er überlebt die
+Kostenbereinigung vollständig — die Bereinigung vergrößert ihn sogar leicht.
+
+Damit sind zwei Sätze gleichzeitig wahr, und sie widersprechen einander nicht:
+
+- Der **Quotenvorsprung** von H entsteht nicht aus dem weiteren Stop.
+- Der weitere Stop hebt trotzdem H's **eigenen Breakeven** — deshalb blieb in
+  Kapitel 104 unterm Strich nur +0,8.
+
+**H verbindet einen echten Quotenvorteil mit einem Kostennachteil, der ihn
+gerade aufhebt.** Das ist etwas anderes als „der Vorteil war nur Kosten".
+
+### 105.3 Und trotzdem: trägt nicht
+
+| Block-Permutation, 40 Läufe | |
+|---|---:|
+| größter Zufallswert | +11,2 |
+| **Schwelle (95 %)** | **+10,0** |
+| gemessen | **+7,1** |
+
+**TRÄGT NICHT.** Der bereinigte Vorsprung liegt unter dem, was 24 Kursreihen
+mit vertauschten Zeitblöcken ohnehin hergeben.
+
+Die **Positivkontrolle** zeigt, dass die Probe nicht blind ist: 189
+eingepflanzte Treffer ergeben +21,7 gegen Schwelle +14,2 → gefunden.
+
+### 105.4 ⚠️ Zwei Dinge, die diese Messung NICHT zeigen konnte
+
+**Die Phasenprobe war nicht durchführbar.** Nur der Bullenmarkt hat genug
+H-Fälle je Band (865, +23,8 Punkte); Seitwärts (315) und Bär (148) sind zu
+dünn. **Der Befund ist damit über die Marktlagen unbestätigt** — das ist
+keine bestandene Probe, sondern eine ausgefallene.
+
+**Die Bänder sind nicht konsistent.**
+
+| Stopband | H | Quote H | Quote Rest | Differenz |
+|---|---:|---:|---:|---:|
+| 3–10 % | 200 | 34,0 % | 39,8 % | **−5,8** |
+| 10–13 % | 227 | 38,3 % | 35,5 % | +2,8 |
+| 13–16 % | 243 | 40,3 % | 31,9 % | +8,4 |
+| 16–21 % | 259 | 35,9 % | 33,8 % | +2,1 |
+| **21–93 %** | 372 | 48,9 % | 29,6 % | **+19,4** |
+
+Der bereinigte Vorsprung wird fast vollständig vom **breitesten Band**
+getragen; im schmalsten Band ist H sogar **schlechter**. Ein Effekt, der nur
+bei weiten Stops auftritt, ist nicht dasselbe wie ein Effekt.
+
+⚠️ **Und das breiteste Band ist ausdrücklich kein Befund.** Es nachträglich
+herauszugreifen wäre genau die Rosinenpickerei, gegen die die Vorabfestlegung
+gedacht ist. Der Kostenrest ist dort mit 1,02 Punkten zudem am größten.
+
+### 105.5 Was das für den Plan heißt
+
+**Zum dritten Mal in Folge ist nicht die Methode die Grenze, sondern die
+Datenmenge.** 1.301 H-Fälle über **24 Kursreihen**; die Schwelle liegt bei
++10,0 Punkten, der Effekt bei +7,1. Es fehlt kein Verfahren — es fehlen
+Reihen.
+
+Damit ist der nächste Schritt zum ersten Mal **eindeutig bestimmt und ohne
+Alternative:**
+
+1. **Andere Anlageklassen.** Aktien und ETF haben längere Historien als
+   Krypto und sind für diese Frage **nie gemessen** worden. Sie verbreitern
+   die Basis genau dort, wo sie zu schmal ist.
+2. Erst danach eine vorab benannte Prüfung des weiten Stopbands — mit einer
+   Schwelle, die zu einer einzelnen Bedingung passt.
+
+**Die Reihenfolge ist wichtig:** das breite Band jetzt zu prüfen hieße, es aus
+einem Ergebnis zu benennen. Mit mehr Reihen wäre es aus einem Grund benennbar
+— nämlich aus dem hier dokumentierten Verlauf.
