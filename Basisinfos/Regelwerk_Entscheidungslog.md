@@ -18671,3 +18671,43 @@ traegt Information (108), WARUM wissen wir nicht mehr, und die Marktphase
 misst moeglicherweise die Vergangenheit und wirkt invers. Naechster Schritt
 sollte deshalb NICHT die naechste Strukturvariante sein, sondern der
 Phasenbegriff selbst.
+
+
+[2026-08-20] KAPITEL 111: DIE ZERLEGUNG - H ist mehr als Momentum
+
+FRAGE 1, PHASENHORIZONT - VORHERSAGE WIDERLEGT. Beim Bauen zeigte sich, dass
+die Frage ohne Korrektur nicht stellbar ist: die feste +/-20-%-Schwelle passt
+nur zu 250 Tagen, auf 20 Tagen waeren 2.435 von 3.290 Tagen "seitwaerts"
+gewesen. Schwelle skaliert jetzt mit der Wurzel des Fensters; Betriebsvorgabe
+unveraendert, nachgeprueft. Ergebnis: Fenster 20 Spanne 10,3 · Fenster 60
+Spanne 6,4 · Fenster 250 Spanne 14,8. DAS LANGE FENSTER TRENNT AM SCHAERFSTEN.
+Die Vermutung aus 110 wird nicht gestuetzt. Daneben: im Bullenmarkt hilft H
+bei JEDEM Horizont (+8,8 / +6,1 / +8,5); nur den Schaden im Baermarkt zeigt
+allein das 250-Tage-Fenster.
+
+FRAGE 2, IST H NUR "NAHE AM HOCH"? Der Verdacht war berechtigt - Median-
+Abstand zum 250-Tage-Hoch: H -30,4 %, der Rest -61,4 %. ABER H UEBERLEBT:
+roher Vorsprung +4,0, Restvorsprung bei gleichem Hochabstand +2,3, also 44 %
+vom Hochabstand erklaert. Block-Permutation 40 Laeufe Schwelle +1,7, 120
+Laeufe +1,8 - stabil, Befund haelt (2.48 mit verdreifachter Laufzahl
+geprueft, weil 0,6 Punkte knapp sind). DIE MARKEN TRAGEN EIGENE INFORMATION,
+56 % sind kein Momentum-Ersatz.
+
+⚠️ DIE FRAGEFORM ENTSCHIED UEBER DAS ERGEBNIS. Urspruenglich als Fallbeil
+geplant (besteht H die Kontrolle?), auf Nutzervorgabe zur ZERLEGUNG umgebaut
+(wie viel erklaert der Verdacht, was bleibt?). Das hat den Fehlschluss
+verhindert - bei einer Ja/Nein-Frage mit unglueklicher Schwelle waere daraus
+"H ist Momentum, erledigt" geworden, und die +2,3 Punkte waeren mit
+weggeraeumt worden. Neue Methodikregel 2.51.
+
+TAUSCH-KANDIDAT NEBENBEI: der Hochabstand als eigene Groesse - Band -100 bis
+-76 % liegt bei +1,1 und ist als einziges UEBER dem Breakeven. Wieder eine
+U-Form, wieder mit dem Verdacht aus 100-103 (tief gefallen -> hoher ATR ->
+weiter Stop -> niedrigere Huerde). Zu pruefen, bevor daraus etwas wird; es
+waere der fuenfte Auftritt desselben Kanals. Wechselwirkung: in genau diesem
+Band SCHADET H (-5,3), in der Mitte traegt es am staerksten (+13,2).
+
+STAND: vier Erklaerungen sind gefallen (Uebertragbarkeit 109, Richtung 110,
+Kurzfristigkeit 111.1, Momentum 111.2), der Befund selbst steht. Was fehlt,
+ist keine weitere Kontrolle, sondern eine ERKLAERUNG - naechster Kandidat
+sind die Daten, die H wegwirft: Beruehrungszahl, Alter der Marke, gefegt.

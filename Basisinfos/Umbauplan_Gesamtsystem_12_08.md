@@ -14696,3 +14696,124 @@ steht, ist schmaler, aber härter:
 sondern der Phasenbegriff selbst.** Solange „bär" das Gegenteil von dem
 bedeutet, was man beim Lesen annimmt, ist jede Aussage über Marktlagen in
 diesem Projekt schwer interpretierbar — auch die bereits getroffenen.
+
+
+---
+
+## Kapitel 111 — Die Zerlegung: H ist mehr als Momentum (20.08.2026)
+
+Zwei Fragen auf einer Datenbasis, beide vorab festgelegt.
+
+### 111.1 Frage 1 — der Phasenhorizont: Vorhersage widerlegt
+
+Kapitel 110 hatte vermutet, die fehlende Größe sei *„der Markt steigt
+gerade"* statt *„der Markt ist gestiegen"*. Daraus folgt: ein **kurzes**
+Phasenfenster müsste schärfer trennen.
+
+⚠️ **Beim Bauen zeigte sich, dass die Frage ohne eine Korrektur gar nicht
+stellbar ist.** Die feste ±20-%-Schwelle passt nur zu 250 Tagen; auf 20 Tagen
+wären **2.435 von 3.290 Tagen „seitwärts"** gewesen. Die Schwelle skaliert
+deshalb mit der Wurzel des Fensters (Zufallspfad-Skalierung) — danach liegen
+alle drei bei etwa einem Drittel je Lage. Die Betriebsvorgabe bleibt
+unverändert, nachgeprüft.
+
+| Fenster | Schwelle | bulle | seitwärts | bär | **Spanne** |
+|---|---:|---:|---:|---:|---:|
+| 20 Tage | 5,7 % | +8,8 | −0,9 | −1,5 | 10,3 |
+| 60 Tage | 9,8 % | +6,1 | +1,5 | −0,3 | 6,4 |
+| **250 Tage** | 20,0 % | +8,5 | +5,7 | −6,4 | **14,8** |
+
+**Das lange Fenster trennt am schärfsten. Die Vorhersage ist widerlegt.** Der
+Effekt ist ein Langhorizont-Phänomen; die Vermutung aus 110 wird davon nicht
+gestützt.
+
+Bemerkenswert daneben: **im Bullenmarkt hilft H bei jedem Horizont**
+(+8,8 / +6,1 / +8,5). Nur den Schaden im Bärmarkt zeigt allein das
+250-Tage-Fenster.
+
+### 111.2 Frage 2 — ist H nur „nahe am Hoch"?
+
+**Der Verdacht war berechtigt.** Widerstände *sind* alte Hochs; wo keiner mehr
+über dem Kurs liegt, steht der Kurs nahe an seinem Hoch:
+
+| Median-Abstand zum 250-Tage-Hoch | |
+|---|---:|
+| H | **−30,4 %** |
+| der Rest | −61,4 % |
+
+**Aber H überlebt die Bereinigung:**
+
+| | |
+|---|---:|
+| roher Vorsprung | +4,0 |
+| **Restvorsprung bei gleichem Hochabstand** | **+2,3** |
+| vom Hochabstand erklärt | **44 %** |
+
+| Block-Permutation | 40 Läufe | **120 Läufe** |
+|---|---:|---:|
+| Schwelle (95 %) | +1,7 | **+1,8** |
+| Restvorsprung | +2,3 | +2,3 |
+
+**Die Schwelle ist stabil, der Befund hält** — nach Methodik 2.48 mit
+verdreifachter Laufzahl geprüft, weil 0,6 Punkte Abstand knapp sind.
+
+> **Die Marken tragen eigene Information.** 56 % des Vorsprungs sind kein
+> Momentum-Ersatz.
+
+### 111.3 ⚠️ Warum die Frageform hier über das Ergebnis entschied
+
+**Nutzervorgabe (20.08.):** *„'erledigt' ist immer so endgültig und es wird
+weggelegt und als Erkenntnis abgehakt — hier sollten wir vorsichtiger
+vorgehen, sonst fehlen uns die Optionen und wir haben am Ende wieder kein
+Ergebnis, sondern wir haben uns selbst durch einen methodisch harten
+Regel-Filter den Weg verbaut."*
+
+Die Frage war ursprünglich als **Fallbeil** geplant: *besteht H die Kontrolle
+auf Hochabstand?* Umgebaut wurde sie zur **Zerlegung**: *wie viel erklärt der
+Hochabstand, was bleibt übrig?*
+
+**Das hat den Fehlschluss verhindert.** Der Hochabstand erklärt 44 % — bei
+einer Ja/Nein-Frage mit unglücklich gesetzter Schwelle wäre daraus leicht
+„H ist Momentum, erledigt" geworden. Der Restvorsprung von +2,3 Punkten wäre
+mit weggeräumt worden.
+
+Daraus wird **Methodik 2.51**.
+
+### 111.4 Der Tausch-Kandidat, der nebenbei entstand
+
+Der Hochabstand wurde als eigener Kandidat mit ausgewiesen — genau der Punkt,
+an dem ein Nullbefund zu einem Tausch würde statt zu einem Ende:
+
+| Abstand zum Hoch | Fälle | Abstand zum Breakeven |
+|---|---:|---:|
+| **−100 bis −76 %** | 84.905 | **+1,1** |
+| −76 bis −66 % | 85.604 | −5,2 |
+| −66 bis −55 % | 85.940 | −9,3 |
+| −55 bis −39 % | 86.947 | −10,7 |
+| −39 bis +0 % | 87.535 | −4,3 |
+
+**Die am tiefsten gefallenen Werte liegen als einzige über dem Breakeven.**
+
+⚠️ **Und wieder eine U-Form** — mit demselben Verdacht wie in den Kapiteln
+100–103: tief gefallen heißt hoher ATR, heißt weiter Stop in Prozent, heißt
+niedrigere Hürde. **Das ist zu prüfen, bevor daraus etwas wird**; es wäre der
+fünfte Auftritt desselben Kanals unter neuem Namen.
+
+Interessant ist die Wechselwirkung: **in genau diesem Band schadet H**
+(−5,3 Punkte gegenüber dem Rest), während es in der Mitte am stärksten trägt
+(+13,2 im Band −55 bis −39 %).
+
+### 111.5 Stand
+
+| | |
+|---|---|
+| H trägt Information | **ja** — auch bei gleichem Hochabstand (111.2) |
+| H ist übertragbar über Regimewechsel | **nein** (109) |
+| H ist eine Richtungsbedingung | **nein** (110) |
+| Der Phaseneffekt ist kurzfristig | **nein** (111.1) |
+| H ist Momentum | **nein, zu 56 %** (111.2) |
+
+Vier Erklärungen sind gefallen, der Befund selbst steht. **Was fehlt, ist
+nicht eine weitere Kontrolle, sondern eine Erklärung** — und der nächste
+Kandidat dafür liegt in den Daten, die H bisher wegwirft: Berührungszahl,
+Alter der Marke, ob sie schon einmal gefegt wurde.

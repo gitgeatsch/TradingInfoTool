@@ -189,6 +189,12 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
                         # Das Datum, damit sich die Phase NACHTRAEGLICH mit
                         # einem anderen Index nachrechnen laesst (107.4).
                         "datum": d[i],
+                        # ⚠️ NUR RUECKWAERTS: h[i-249 .. i]. Der Abstand zum
+                        # eigenen Hoch ist der Verdacht aus Kapitel 111 -
+                        # "kein Widerstand im Weg" heisst fast zwangslaeufig
+                        # "nahe am Hoch", weil Widerstaende alte Hochs sind.
+                        "hoch_abstand": float(
+                            einstieg / max(h[max(0, i - 249):i + 1]) - 1.0),
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
                         "stop_relativ": float((einstieg - stop) / einstieg)})

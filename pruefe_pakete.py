@@ -9248,6 +9248,44 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE ZERLEGUNG (Kapitel 111) ----
+    _zlq = _quelltext("messe_zerlegung.py")
+    _zlroh = io.open("messe_zerlegung.py", encoding="utf-8").read()
+    import simuliere_bremse as _SB111
+
+    pruefe(P, "beide Fragen stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _zlroh
+           and "FRAGE 1" in _zlroh and "FRAGE 2" in _zlroh)
+
+    # ⚠️ OHNE SKALIERUNG WAEREN AUF 20 TAGEN 2.435 VON 3.290 TAGEN
+    # "SEITWAERTS" - die Messung haette drei Fenster verglichen, von denen
+    # zwei nichts unterscheiden.
+    pruefe(P, "die Phasenschwelle skaliert mit dem Fenster",
+           "math.sqrt(fenster / PHASE_FENSTER)"
+           in _quelltext("simuliere_bremse.py"),
+           "+/-20 % sind fuer 250 Tage die gaengige Zahl; auf 20 Tagen "
+           "waeren sie fast nie erreicht")
+    pruefe(P, "und die Betriebsvorgabe bleibt davon unberuehrt",
+           _SB111._marktphase.__defaults__[1] is None,
+           "ohne Angabe gilt PHASE_SCHWELLE unskaliert - die Produktion "
+           "darf von der Messerweiterung nichts merken")
+
+    # ⚠️ METHODIK 2.51 - ZERLEGUNG STATT FALLBEIL (Nutzervorgabe 20.08.).
+    pruefe(P, "Frage 2 ist eine Zerlegung, kein Fallbeil",
+           "ZERLEGUNG GESTELLT, NICHT ALS FALLBEIL" in _zlroh
+           and "roh_vorsprung" in _zlq and "rest_vorsprung" in _zlq,
+           "als Ja/Nein-Frage haette ein knapper Fehlschlag zu 'H ist "
+           "Momentum, erledigt' gefuehrt - und die +2,3 Punkte waeren mit "
+           "weggeraeumt worden")
+    pruefe(P, "die Kontrollgroesse wird SELBST als Kandidat ausgewiesen",
+           "ALS EIGENER KANDIDAT" in _zlq,
+           "faellt der Resteffekt auf null, ist das ein TAUSCH und kein "
+           "Ende - ein Weg schliesst sich erst, wenn beide Zahlen null sind")
+    pruefe(P, "der Hochabstand wird nur RUECKWAERTS gerechnet",
+           "h[max(0, i - 249):i + 1]" in _quelltext("messe_marken.py"),
+           "ein Hoch aus der Zukunft waere der Fehler, den `_swings` seit "
+           "jeher vermeidet")
+
     # ---- DIE SPIEGELBEDINGUNG (Kapitel 110) ----
     _spq = _quelltext("messe_spiegel.py")
     _sproh = io.open("messe_spiegel.py", encoding="utf-8").read()

@@ -53,6 +53,8 @@ import io
 import json
 import sys
 
+import math
+
 import numpy as np
 
 sys.path.insert(0, ".")
@@ -185,7 +187,8 @@ def gebuehr_je_seite(klasse: str) -> float:
             f"Rueckfall auf den Krypto-Satz waere eine falsche Messung.")
     return float(satz)
 
-def _marktphase(roh: dict) -> dict:
+def _marktphase(roh: dict, fenster: int = PHASE_FENSTER,
+                schwelle: float | None = None) -> dict:
     """Datum -> "bulle" / "seitwaerts" / "baer".
 
     ⚠️ AUS DEM MARKT SELBST, NICHT AUS EINEM ETIKETT. Das Projekt hat sich
@@ -202,14 +205,21 @@ def _marktphase(roh: dict) -> dict:
             reihen.setdefault(tag, []).append(c[j] / c[0])
     tage = sorted(reihen)
     index = np.array([float(np.mean(reihen[t])) for t in tage])
+    # ⚠️ DIE SCHWELLE MUSS ZUM FENSTER PASSEN. +/-20 % sind fuer 250 Tage die
+    # gaengige Zahl; auf 20 Tagen waeren sie fast nie erreicht - dann hiesse
+    # jeder Zeitpunkt "seitwaerts" und die Messung vergliche nichts.
+    # Skaliert wird mit der Wurzel des Fensters, wie es fuer einen zufaelligen
+    # Pfad zu erwarten ist. Ohne Angabe bleibt es bei der alten Zahl.
+    s = (PHASE_SCHWELLE if schwelle is None
+         else schwelle * math.sqrt(fenster / PHASE_FENSTER))
     aus = {}
     for j, tag in enumerate(tage):
-        if j < PHASE_FENSTER or index[j - PHASE_FENSTER] <= 0:
+        if j < fenster or index[j - fenster] <= 0:
             aus[tag] = "unbekannt"
             continue
-        r = index[j] / index[j - PHASE_FENSTER] - 1.0
-        aus[tag] = ("bulle" if r > PHASE_SCHWELLE else
-                    "baer" if r < -PHASE_SCHWELLE else "seitwaerts")
+        r = index[j] / index[j - fenster] - 1.0
+        aus[tag] = ("bulle" if r > s else
+                    "baer" if r < -s else "seitwaerts")
     return aus
 
 

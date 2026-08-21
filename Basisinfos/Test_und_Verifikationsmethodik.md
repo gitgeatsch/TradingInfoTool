@@ -3025,3 +3025,36 @@ die Einschraenkung eine andere Basisrate hat.
 
 Beide Male sah das Ergebnis aus wie ein Befund und war ein Artefakt der
 Kontrolle.
+
+
+## 2.51 Ein Nullbefund gehoert als Zerlegung abgelegt, nicht als "erledigt" (20.08.2026)
+
+**Nutzervorgabe.** *"'Erledigt' ist immer so endgueltig und es wird weggelegt
+und als Erkenntnis abgehakt - hier sollten wir vorsichtiger vorgehen, sonst
+fehlen uns die Optionen und wir haben am Ende wieder kein Ergebnis, sondern
+wir haben uns selbst durch einen methodisch harten Regel-Filter den Weg
+verbaut."*
+
+**Der Fall.** Kapitel 111 sollte pruefen, ob die Strukturbedingung H nur ein
+umstaendlicher Momentum-Indikator ist ("nahe am Hoch"). Als Ja/Nein-Frage
+gebaut, haette ein knapper Fehlschlag zu "H ist Momentum, erledigt" gefuehrt.
+
+Als ZERLEGUNG gebaut, kam heraus: der Hochabstand erklaert **44 %**, es
+bleiben **+2,3 Punkte** ueber der Schwelle. Beides ist wahr, und die
+Ja/Nein-Form haette die zweite Haelfte weggeraeumt.
+
+**Die Regel.** Eine Kontrollfrage wird als Zerlegung gestellt:
+
+    roher Effekt      die gemessene Groesse
+    Resteffekt        nach Bereinigung um den Verdacht
+    Anteil erklaert   was der Verdacht traegt
+
+**Und die Kontrollgroesse wird SELBST als Kandidat ausgewiesen.** Faellt der
+Resteffekt auf null, ist das kein Ende, sondern ein TAUSCH - eine einfachere
+Groesse an derselben Stelle. Ein Weg schliesst sich erst, wenn beide Zahlen
+null sind.
+
+⚠️ Das ist kein Aufweichen der Strenge: die Schwelle bleibt, die
+Block-Permutation bleibt, die Laufzahl wird bei Knappheit erhoeht. Was sich
+aendert, ist nur, WAS am Ende in der Ablage steht - eine Zahl mit Restgroesse
+statt eines Hakens.
