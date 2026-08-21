@@ -3082,3 +3082,28 @@ kein Mangel, sondern die Zeitstruktur.
 Zeile `0 Reihen lang genug` waere der Nullbefund nicht als Nullkontrolle
 aufgefallen. Eine Kontrolle, die nichts kontrolliert, sieht von aussen aus wie
 eine, die bestanden wurde.
+
+
+## 2.53 "Traegt" ist ohne den Abstand zum Breakeven unvollstaendig (20.08.2026)
+
+**Der Fall.** Kapitel 113 misst einen Drifteffekt von **+0,6 Punkten** gegen
+eine Schwelle von **-0,1** - formal ein "traegt". Bei 442.000 Ankern und 308
+Reihen ist die Zufallsverteilung so schmal, dass fast jeder von null
+verschiedene Effekt signifikant wird.
+
+**+0,6 Punkte sind statistisch echt und wirtschaftlich nichts.** Bis zum
+Breakeven fehlen 5 bis 7 Punkte.
+
+**Die Regel.** Jedes Urteil "traegt / traegt nicht" wird zusammen mit dem
+ABSOLUTEN Abstand zum Breakeven berichtet. Die Schwelle beantwortet, ob ein
+Effekt **echt** ist; sie beantwortet nicht, ob er **reicht**.
+
+⚠️ Beide Fehler sind moeglich und beide sind teuer:
+
+| | |
+|---|---|
+| kleine Stichprobe | echter Effekt faellt durch (103, 105) |
+| grosse Stichprobe | belangloser Effekt besteht (113) |
+
+Die Kette schuetzt vor dem ersten. Vor dem zweiten schuetzt nur, dass die
+wirtschaftliche Groesse danebensteht.

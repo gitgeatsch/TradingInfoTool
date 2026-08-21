@@ -14913,3 +14913,100 @@ tragen nichts. **H benutzt schon alles, was diese Marke hergibt.**
 
 Der Befund aus 111 bleibt davon unberührt: H trägt Information, auch bei
 gleichem Hochabstand. Nur **feiner wird es hier nicht.**
+
+
+---
+
+## Kapitel 113 — Der Drift, zerlegt: die U-Form war Rauschen (20.08.2026)
+
+Kapitel 102 hatte den Drift weggelegt („kein Band erreicht den Breakeven") —
+die **Handelsfrage**. Nach Methodik 2.51 wurde die **Informationsfrage**
+nachgeholt: die Spanne zwischen den Bändern betrug 8,4 Punkte, doppelt so viel
+wie der Strukturvorsprung von H.
+
+⚠️ **Und diese Prüfung lief außerhalb der eigenen Daten.** Kapitel 102 hatte
+39 Reihen; die 347 der Messdatenbank hat die Hypothese nie gesehen.
+
+### 113.1 D1 — die U-Form hält nicht
+
+| Driftband | Fälle | Quote **347 Reihen** | *102 auf 39 Reihen* |
+|---|---:|---:|---:|
+| unter −30 % | 217.595 | **34,8 %** | *36,2 %* |
+| −30 bis −10 % | 55.920 | **32,6 %** | *27,8 %* |
+| −10 bis +10 % | 46.614 | **34,0 %** | *29,0 %* |
+| +10 bis +30 % | 24.100 | **35,1 %** | *34,2 %* |
+| über +30 % | 86.702 | **34,2 %** | *35,9 %* |
+
+| | 39 Reihen | **347 Reihen** |
+|---|---:|---:|
+| Extreme gegen Mitte | +7,0 | **+0,6** |
+| Spanne über alle Bänder | 8,4 | **2,5** |
+
+**Die U-Form ist weg.** Die Kurve ist praktisch flach, und die Mitte — 2019 das
+schlechteste Band mit 29,0 % — liegt jetzt bei 34,0 %, mitten im Feld.
+
+**Die 8,4 Punkte aus Kapitel 102 waren Rauschen aus 39 Reihen.** Das ist ein
+sauberes Ergebnis: die Frage, ob wir den Drift zu früh weggelegt haben, ist
+damit **beantwortet — wir haben nicht.**
+
+### 113.2 D2 — und der ATR-Verdacht trifft nicht zu
+
+| | |
+|---|---:|
+| roh | +0,6 |
+| **bei gleichem Stopabstand** | **+1,5** |
+
+**Die Kostenbereinigung vergrößert den Effekt, statt ihn aufzuzehren.** Der
+Drift ist damit **nicht** der fünfte Auftritt des ATR-Kanals — der Verdacht aus
+102.4 ist widerlegt. Was übrig bleibt, ist klein, aber es ist eigenes.
+
+### 113.3 ⚠️ D3 ist nicht beantwortbar — und das ist die Antwort
+
+| | Fälle | Quote | Abstand |
+|---|---:|---:|---:|
+| H, Drift extrem | 8.666 | 37,7 % | −0,7 |
+| **H, Drift Mitte** | **106** | — | **zu wenige** |
+| kein H, Drift extrem | 295.631 | 34,5 % | −5,2 |
+| kein H, Drift Mitte | 46.508 | 34,0 % | −7,4 |
+
+**92 % aller H-Fälle liegen in den Extrem-Driftbändern**, nur **1,1 %** in der
+Mitte — bei einem Basisanteil von 10,8 %. **H ist in der Mitte zehnfach
+unterrepräsentiert.**
+
+Der Grund ist mechanisch: H verlangt „kein Widerstand bis zum Ziel", und das
+setzt einen Kurs nahe seinem Hoch voraus — also einen Trend. **H kommt ohne
+Drift praktisch nicht vor.**
+
+Die Wechselwirkung ist damit nicht messbar: die Zelle, die man dafür braucht,
+existiert nicht. **Das ist keine fehlende Messung, sondern ein Befund über die
+beiden Größen** — sie sind nicht unabhängig genug für eine Konjunktion.
+
+### 113.4 ⚠️ Was diese Messung über die Schwellen selbst lehrt
+
+| Frage | gemessen | Schwelle | Urteil |
+|---|---:|---:|---|
+| D1 U-Form roh | +0,6 | **−0,1** | trägt |
+| D2 kostenbereinigt | +1,5 | **+0,3** | trägt |
+
+Beide „tragen" — bei Schwellen von **−0,1 und +0,3**. Bei 442.000 Ankern und
+308 Reihen wird die Zufallsverteilung so schmal, dass **fast jeder Effekt
+signifikant wird.**
+
+> **Ein Effekt von +0,6 Punkten ist statistisch von null verschieden und
+> wirtschaftlich nichts.** Bis zum Breakeven fehlen 5 bis 7 Punkte.
+
+Daraus wird **Methodik 2.53**: ein Urteil „trägt" ist ohne den **Abstand zum
+Breakeven** daneben unvollständig. Die Schwelle sagt, ob ein Effekt echt ist —
+nicht, ob er reicht.
+
+### 113.5 Was die Wiederaufnahme wert war
+
+Die Frage des Nutzers — *„sind wir zu hart und ohne Abstufung vorgegangen und
+haben zu früh weggelegt?"* — ist für den Drift **beantwortet, und zwar mit
+Nein.** Nicht weil die damalige Methodik richtig war (sie war eine
+Ja/Nein-Frage), sondern weil die Zahl, die sie interessant gemacht hätte, auf
+zehnfacher Datenbasis verschwindet.
+
+**Der Ertrag ist trotzdem real:** eine offene Frage ist geschlossen, der
+ATR-Verdacht ist widerlegt, und wir wissen jetzt, dass H und Drift **nicht
+kombinierbar** sind, weil H ohne Drift nicht vorkommt.

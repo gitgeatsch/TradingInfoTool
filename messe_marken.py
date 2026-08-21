@@ -221,6 +221,11 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
                         # "nahe am Hoch", weil Widerstaende alte Hochs sind.
                         "hoch_abstand": float(
                             einstieg / max(h[max(0, i - 249):i + 1]) - 1.0),
+                        # Die eigene Steigung ueber 250 Handelstage - die
+                        # Groesse aus Kapitel 102, hier am selben Anker
+                        # (Kapitel 113). None, wenn die Reihe nicht reicht.
+                        "drift": (float(einstieg / c[i - 250] - 1.0)
+                                  if i >= 250 and c[i - 250] > 0 else None),
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
                         # Die Merkmale der TRAGENDEN Marke - nur gefuellt,

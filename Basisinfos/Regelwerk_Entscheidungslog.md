@@ -18754,3 +18754,42 @@ Ergebnis.
 
 FOLGE: die Granularitaet ist an dieser Stelle ausgeschoepft - H benutzt schon
 alles, was diese Marke hergibt. Der Befund aus 111 bleibt unberuehrt.
+
+
+[2026-08-20] KAPITEL 113: DER DRIFT, ZERLEGT - die U-Form war Rauschen
+
+Nutzerfrage: sind wir bei frueheren Messungen zu hart und ohne Abstufung
+vorgegangen? Fuer den Drift nachgeholt - 102 hatte die HANDELSfrage
+beantwortet ("kein Band erreicht den Breakeven"), die INFORMATIONSfrage nie.
+Die Spanne betrug damals 8,4 Punkte, doppelt so viel wie H.
+
+⚠️ AUSSERHALB DER EIGENEN DATEN: 102 hatte 39 Reihen, die 347 der
+Messdatenbank hat die Hypothese nie gesehen.
+
+D1 - DIE U-FORM HAELT NICHT. Auf 347 Reihen: 34,8 / 32,6 / 34,0 / 35,1 /
+34,2 % gegen damals 36,2 / 27,8 / 29,0 / 34,2 / 35,9 %. Extreme gegen Mitte
++0,6 statt +7,0; Spanne 2,5 statt 8,4. Die Mitte war damals das schlechteste
+Band (29,0 %) und liegt jetzt mitten im Feld (34,0 %). DIE 8,4 PUNKTE WAREN
+RAUSCHEN AUS 39 REIHEN. Die Frage "zu frueh weggelegt?" ist damit beantwortet
+- wir haben nicht.
+
+D2 - DER ATR-VERDACHT TRIFFT NICHT ZU: roh +0,6, bei gleichem Stopabstand
++1,5. Die Kostenbereinigung VERGROESSERT den Effekt. Der Drift ist nicht der
+fuenfte Auftritt des ATR-Kanals.
+
+⚠️ D3 IST NICHT BEANTWORTBAR, UND DAS IST DIE ANTWORT: 92 % aller H-Faelle
+liegen in den Extrem-Driftbaendern, nur 1,1 % in der Mitte bei einem
+Basisanteil von 10,8 % - zehnfach unterrepraesentiert. H verlangt "kein
+Widerstand bis zum Ziel", das setzt einen Kurs nahe seinem Hoch voraus, also
+einen Trend. H KOMMT OHNE DRIFT PRAKTISCH NICHT VOR. Die Zelle fuer die
+Wechselwirkung existiert nicht - kein Messfehler, sondern ein Befund: die
+beiden sind nicht unabhaengig genug fuer eine Konjunktion.
+
+⚠️ WAS DIE MESSUNG UEBER DIE SCHWELLEN LEHRT: D1 +0,6 gegen Schwelle -0,1,
+D2 +1,5 gegen +0,3 - beide "tragen". Bei 442.000 Ankern und 308 Reihen wird
+die Zufallsverteilung so schmal, dass fast jeder Effekt signifikant wird. Ein
+Effekt von +0,6 Punkten ist statistisch echt und wirtschaftlich nichts; bis
+zum Breakeven fehlen 5 bis 7 Punkte. NEUE METHODIKREGEL 2.53: jedes Urteil
+"traegt" wird mit dem ABSOLUTEN Abstand zum Breakeven berichtet. Kleine
+Stichprobe laesst echte Effekte durchfallen (103, 105), grosse laesst
+belanglose bestehen (113).

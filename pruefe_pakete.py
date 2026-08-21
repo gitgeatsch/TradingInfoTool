@@ -9248,6 +9248,33 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DER DRIFT, ZERLEGT (Kapitel 113) ----
+    _dzq = _quelltext("messe_drift_zerlegt.py")
+    _dzroh = io.open("messe_drift_zerlegt.py", encoding="utf-8").read()
+
+    pruefe(P, "die drei Driftfragen stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _dzroh
+           and "D1  DIE U-FORM" in _dzroh and "D2  DIE KOSTEN" in _dzroh
+           and "D3  GEGEN H" in _dzroh)
+
+    # ⚠️ DER WERT DER MESSUNG HAENGT DARAN, DASS SIE AUF NEUEN REIHEN LAEUFT.
+    pruefe(P, "die alten Werte aus Kapitel 102 stehen zum Vergleich daneben",
+           "auf 39 Reihen" in _dzq and "36.2" in _dzq,
+           "102 lief auf 39 Reihen - die 347 hat die Hypothese nie gesehen. "
+           "Ohne die alten Zahlen daneben faellt nicht auf, dass die U-Form "
+           "verschwindet (+7,0 -> +0,6)")
+    pruefe(P, "die Kostenbereinigung ist eine Zerlegung, kein Urteil",
+           "def _uform_bereinigt" in _dzq and "Vom rohen Effekt bleiben"
+           in _dzq,
+           "Methodik 2.51 - der ATR-Verdacht wird beziffert, nicht "
+           "abgehakt; hier vergroessert die Bereinigung den Effekt sogar")
+    pruefe(P, "Bloecke in Kalenderzeit, wie 2.52 verlangt",
+           "idx - bloecke[-1][0] >= a.blocklaenge" in _dzq)
+    pruefe(P, "und der absolute Abstand steht neben jeder Quote",
+           _dzq.count("bewerte(") >= 2,
+           "Methodik 2.53 - bei 442.000 Ankern wird fast jeder Effekt "
+           "signifikant; +0,6 Punkte sind echt und wirtschaftlich nichts")
+
     # ---- DIE ANREICHERUNG (Kapitel 112) ----
     _anq = _quelltext("messe_anreicherung.py")
     _anroh = io.open("messe_anreicherung.py", encoding="utf-8").read()
