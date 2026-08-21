@@ -76,6 +76,7 @@ es sich für mich", beide immer nebeneinander.**
 | H über dem Breakeven bei Referenzgebühr | 119 | **+3,1** (Betrieb: −1,0) | +0,086 R je Trade |
 | **H trägt je Kategorie** | **120/121** | auf **523 Reihen** (mit den Ausfällen): Large **+5,9** · Small **+7,9**, beide gegen die Schwelle aus acht (+5,1) | Mid +2,5 trägt nicht |
 | Spot gegen Hebel | 120 | Unterschied 0,017 R — **dreht kein Vorzeichen** | Finanzierung 0,03 %/Tag |
+| **Strukturboden im Stop schadet nicht** | **124** | −0,0008 R über 631.755 Anker, greift bei 1,1 % | gemessen mit der Produktionsfunktion |
 
 | Befund | Kapitel | Zahl | worauf es ruht |
 |---|---|---|---|
@@ -233,14 +234,39 @@ auf 523 Reihen; die Watchlist kann ihn weder bestätigen noch widerlegen.
 
 ## 6. Was für den Betrieb gilt
 
-**Nichts davon ist umsetzungsreif.** H liegt bei −0,3 unter seinem eigenen
-Breakeven und überträgt sich nicht über Regimewechsel. Ein Filter, der die
-Zufallsschwelle nicht nimmt, würde Signale wegnehmen, ohne dass jemand sagen
-könnte, ob die weggenommenen die schlechteren waren.
+⚠️ **Dieser Abschnitt stand bis Kapitel 124 auf dem Stand von 118** („nichts
+ist umsetzungsreif, H liegt bei −0,3 unter seinem Breakeven"). Das war die
+Lesart **mit der Bitpanda-Gebühr im Maßstab** und auf 347 Reihen. Seit 119
+(zwei Sätze), 121 (523 Reihen) und 122 (echte Auswahl) gilt:
 
-⚠️ **Und alles Gemessene liegt auf Binance-USDT**, nicht auf Bitpanda-EUR mit
-unseren 39 Symbolen und unseren Kosten. Vor jedem Eingriff in den Betrieb muss
-ein Befund **auf unserer Auswahl** nachgewiesen werden.
+| | ohne Filter | mit H |
+|---|---:|---:|
+| Referenz 0,30 % | −0,031 R | **+0,114 R** |
+| Betrieb 1,50 % | −0,182 R | **−0,036 R** |
 
-**Die Überlebensverzerrung** (347 heute handelnde Paare) gehört in jeden
-Befund, der auf dieser Basis steht.
+**H ist gemessen wirksam (+0,15 R je Trade an beiden Sätzen) und zum
+Betriebssatz trotzdem nicht profitabel.** Die bindende Größe ist der
+Handelsplatz, nicht der Filter.
+
+**Was das für einen Eingriff heißt:**
+
+| | |
+|---|---|
+| H als **Vorfilter** (Signalzahl, LLM-Budget) | zulässig — er nimmt nachweislich die schlechteren weg |
+| H als **Freigabe zum Handeln** | **nein**, solange 1,50 % gilt |
+| Nachweis auf 29 Watchlist-Symbolen | Punktschätzer **+4,8**, stimmig, **nicht unabhängig bestätigbar** (122.3) |
+| Handelbarkeit im dünnsten Band | ⚠️ **mit Kursdaten unprüfbar** (121.5) — 18 von 29 liegen dort |
+
+**Die Überlebensverzerrung** ist seit 121 **korrigiert**: 523 Reihen inklusive
+der 176 eingestellten Paare. H trägt dort **stärker**, nicht schwächer.
+
+### 6.1 Was in der Produktion nachgeprüft wurde
+
+| Merkmal | Kapitel | Urteil |
+|---|---|---|
+| **Strukturboden im Stop** (Unterstützung trägt den Stop) | **124** | **gebaut, verdrahtet, schadet nicht** — −0,0008 R, unter der Relevanzhürde |
+| Teilverkauf bei +1R / Einstandstop | 123 | beide **schlechter** als durchhalten — **nicht** eingebaut |
+
+⚠️ **124 hat auch ein Werkzeugproblem freigelegt:** bei 631.755 Ankern ist
+fast jeder Effekt statistisch von null verschieden. Ein Urteil braucht
+**Relevanz vor Vertrauensintervall** (Methodik 2.56).

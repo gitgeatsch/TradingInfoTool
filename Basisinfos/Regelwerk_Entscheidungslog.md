@@ -19180,3 +19180,48 @@ FOLGE: der vermutete Ausstiegshebel existiert nicht; von den drei Varianten
 ist die einfachste die beste (Stop fest, Ziel fest). Damit ist auch der letzte
 naheliegende Hebel bearbeitet - was bleibt, sind die Kosten (bindend) und die
 Nachrichten (nie bearbeitet, schlecht pruefbar).
+
+
+[2026-08-21] KAPITEL 124: DER STRUKTURBODEN IM STOP - GEPRUEFT, SCHADET NICHT
+
+KORREKTUR AM EIGENEN GEDAECHTNIS: Im Memory stand die Asymmetrie ("die
+Unterstuetzung traegt den Stop nicht") als DRINGEND OFFEN. An der Quelle
+nachgesehen ist sie seit 18.08.2026 gebaut UND verdrahtet: _boeden() kennt drei
+Boeden (weitester gewinnt), _marke_am_stop() liest die Unterstuetzung,
+rollen_lauf.py:1162 reicht sie als marke_preis durch. Der Eintrag war drei Tage
+veraltet - Bestaetigung der stehenden Regel "erst offen, wenn der Code das
+bestaetigt".
+
+DIE WICHTIGERE FRAGE: Der Boden macht den Stop WEITER, und Kapitel 119 hat
+gemessen, dass weitere Stops zum Referenzsatz schlechter sind (k=2,5 -1,8;
+k=4,0 -5,2). Ein live laufendes Merkmal stand unter Verdacht zu schaden. Der
+Schluss waere aber unzulaessig gewesen: 119 variierte k EINHEITLICH, der Boden
+variiert ihn JE ANKER. Deshalb gemessen.
+
+GEMESSEN MIT DER PRODUKTIONSFUNKTION: _stop_abstand zweimal je Anker, einmal
+mit marke_preis=None, einmal mit der naechsten Unterstuetzung (>=2
+Beruehrungen). Kontrolle Block-Bootstrap (2.55), weil beide Varianten
+deterministische Umrechnungen desselben Pfades sind.
+
+ERGEBNIS: 631.755 Anker, der Boden greift bei 6.648 = 1,1 %. Damit faellt schon
+die halbe Sorge - das Rechenbeispiel mit 5,25 ATR war konstruiert, nicht
+typisch. Stopabstand wo er greift: 14,2 % -> 17,5 %. Ueber alles:
+-0,0008 R, 95-%-Intervall [-0,0016, -0,0003].
+
+⚠️ MEIN EIGENES WERKZEUG HAT GEGEN REGEL 2.53 VERSTOSSEN. Die erste Fassung
+urteilte allein am Vertrauensintervall und meldete bei -0,0008 R ein
+dramatisches "EIN PRODUKTIONSMERKMAL SCHADET". Bei 631.755 Ankern ist fast
+jeder Effekt statistisch von null verschieden; die Frage ist, ob er REICHT.
+Das Werkzeug hat jetzt ZWEI HUERDEN: Relevanzschwelle 0,01 R VOR dem
+Vertrauensintervall. Urteil neu: "kein Unterschied von Belang - statistisch von
+null verschieden, wirtschaftlich nicht".
+
+DER LEHRREICHE TEIL: Wo der Boden greift, kippt das Vorzeichen mit dem
+Gebuehrensatz. Brutto kostet der weitere Stop 0,028 R, aber er spart Gebuehr
+(Kosten_R = 2 x Gebuehr / Stopabstand): Referenz spart 0,008 (netto -0,020),
+Betrieb spart 0,040 (netto +0,013). BEIM SATZ, DEN DER NUTZER TATSAECHLICH
+ZAHLT, IST DER BODEN DORT LEICHT POSITIV. Derselbe Mechanismus wie 119, nur mit
+umgekehrtem Vorzeichen, weil er gezielt greift statt gleichmaessig.
+
+ENTSCHEIDUNG: Kein Betriebsbefund. Die Produktion bleibt wie sie ist. Kapitel
+119 gilt weiter, aber nur fuer GLEICHMAESSIGE Weitung.

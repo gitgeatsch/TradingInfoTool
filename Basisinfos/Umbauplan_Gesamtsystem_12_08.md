@@ -16019,3 +16019,133 @@ Damit ist auch der letzte der drei ursprünglich benannten Wege bearbeitet:
 | Nachrichten | nie bearbeitet, schlecht prüfbar |
 | *Struktur (H)* | *trägt, reicht zum Betriebssatz nicht* |
 | *Ausstieg* | **kein Hebel (123)** |
+
+
+---
+
+## Kapitel 124 — Der Strukturboden im Stop: geprüft, und er schadet nicht (21.08.2026)
+
+### 124.1 ⚠️ Zuerst eine Korrektur am eigenen Gedächtnis
+
+Im Memory stand die Asymmetrie („die Unterstützung trägt den Stop nicht") als
+**dringend offen**. An der Quelle nachgesehen ist sie **seit dem 18.08.2026
+gebaut UND verdrahtet**:
+
+| Stelle | was sie tut |
+|---|---|
+| `entscheidungsrechnung._boeden()` | kennt drei Böden, der weiteste gewinnt |
+| `rollen_lauf._marke_am_stop()` | liest die Unterstützung (LONG) / den Widerstand (SHORT) |
+| `rollen_lauf.py:1162` | reicht sie als `marke_preis` durch |
+| `_stop_abstand` | meldet „jenseits der naechsten Marke" |
+
+**Der Memory-Eintrag war drei Tage veraltet.** Bestätigung der stehenden Regel:
+*Ein Planschritt gilt erst als offen, wenn der Code das bestätigt.*
+
+### 124.2 Damit stellte sich die wichtigere Frage
+
+Der Strukturboden macht den Stop **weiter**. Kapitel 119 hat zum Referenzsatz
+gemessen, dass weitere Stops **schlechter** sind:
+
+| k | Vorsprung |
+|---:|---:|
+| 1,5 | −1,8 |
+| 2,0 | −1,5 |
+| 2,5 | −1,8 |
+| 3,0 | −2,7 |
+| 4,0 | −5,2 |
+
+⚠️ Ein gebautes, verdrahtetes, **live laufendes** Merkmal stand damit unter
+Verdacht, aktiv zu schaden. Das ist kein Dokumentationsthema — das wird
+gemessen.
+
+**Aber der Schluss aus 119 wäre unzulässig gewesen:** dort wurde k
+**einheitlich** über alle Anker variiert, der Strukturboden variiert ihn **je
+Anker** und abhängig davon, wo die Marke liegt. Deshalb gemessen statt
+geschlossen.
+
+### 124.3 Wie gemessen wurde
+
+`pruefe_strukturstop.py` ruft **die Produktionsfunktion** `_stop_abstand`
+zweimal je Anker auf — einmal mit `marke_preis=None`, einmal mit der nächsten
+Unterstützung mit ≥2 Berührungen. Der Unterschied **ist** der Strukturboden;
+nachgebaut wird nichts, sonst misst man eine Kopie, die still veraltet.
+
+Kontrolle: **Block-Bootstrap** (Methodik 2.55) — beide Varianten sind
+deterministische Umrechnungen desselben Pfades, es gibt keine Zuordnung, die
+eine Permutation zerstören könnte.
+
+### 124.4 Das Ergebnis
+
+**631.755 Anker. Der Boden greift bei 6.648 — also bei 1,1 %.**
+
+⚠️ Damit fällt schon die halbe Sorge: das Rechenbeispiel mit **5,25 ATR** war
+konstruiert (Marke bei −20 %), nicht typisch.
+
+| Stopabstand im Median | mechanisch | mit Boden |
+|---|---:|---:|
+| alle Anker | 19,6 % | 19,7 % |
+| **wo er greift** | 14,2 % | **17,5 %** |
+
+| Erwartungswert je Trade, **alle Anker** | brutto | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|---:|
+| mechanisch | +0,032 | +0,001 | −0,121 |
+| mit Strukturboden | +0,031 | +0,000 | −0,121 |
+
+**Block-Bootstrap, 400 Ziehungen, 2.719 Zeitblöcke:**
+
+| | |
+|---|---:|
+| Strukturboden gegen mechanisch | **−0,0008 R** |
+| 95-%-Intervall | [−0,0016, −0,0003] |
+
+### 124.5 ⚠️ Und hier hat mein eigenes Werkzeug gegen Regel 2.53 verstoßen
+
+Die erste Fassung urteilte **allein am Vertrauensintervall** und meldete:
+
+> ⚠️ EIN GEBAUTES UND VERDRAHTETES PRODUKTIONSMERKMAL SCHADET.
+
+**Bei −0,0008 R.** Das ist ein Fünfzehntel dessen, was H bringt (+0,15 R) —
+messbar und bedeutungslos. Bei 631.755 Ankern ist fast jeder Effekt
+statistisch von null verschieden; die Frage ist, ob er **reicht**.
+
+Das Werkzeug hat jetzt **zwei Hürden statt einer**: eine Relevanzschwelle von
+**0,01 R je Trade** vor dem Vertrauensintervall. Urteil neu:
+
+> **kein Unterschied von Belang.** Statistisch von null verschieden,
+> wirtschaftlich nicht.
+
+### 124.6 Der lehrreiche Teil: wo er greift, kippt das Vorzeichen mit dem Satz
+
+| nur die 6.648 Fälle | brutto | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|---:|
+| mechanisch | +0,168 | +0,126 | −0,044 |
+| mit Strukturboden | +0,140 | +0,106 | **−0,031** |
+| Unterschied | −0,028 | −0,020 | **+0,013** |
+
+**Brutto kostet der weitere Stop 0,028 R — aber er spart Gebühr**, weil
+`Kosten_R = 2 × Gebühr / Stopabstand`:
+
+| | Kosten_R mechanisch | mit Boden | Ersparnis |
+|---|---:|---:|---:|
+| Referenz 0,30 % | 0,042 | 0,034 | +0,008 R |
+| **Betrieb 1,50 %** | 0,211 | 0,171 | **+0,040 R** |
+
+> **Zum Referenzsatz kostet der Boden mehr als er spart (−0,020 R), zum
+> Betriebssatz spart er mehr als er kostet (+0,013 R).** Bei dem Satz, den der
+> Nutzer tatsächlich zahlt, ist der Strukturboden dort, wo er greift, leicht
+> **positiv**.
+
+⚠️ Das ist derselbe Mechanismus wie in 119 — nur mit umgekehrtem Vorzeichen,
+weil er hier gezielt greift statt gleichmäßig. **Der Schluss aus 119 auf
+diesen Fall wäre falsch gewesen.**
+
+### 124.7 Entscheidung
+
+| | |
+|---|---|
+| Ist die Asymmetrie gebaut? | **ja, seit 18.08. und verdrahtet** |
+| Schadet der Strukturboden? | **nein** — −0,0008 R über alles, unter der Relevanzhürde |
+| Muss etwas geändert werden? | **nein** |
+| Gilt Kapitel 119 weiter? | **ja, aber nur für gleichmäßige Weitung** |
+
+**Kein Betriebsbefund. Die Produktion bleibt wie sie ist.**

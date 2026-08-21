@@ -3169,3 +3169,42 @@ Antwort.
 kontrolliert, sieht von aussen aus wie eine bestandene. Ein Ergebnis, bei dem
 Schwelle und Messwert uebereinstimmen, ist IMMER ein Befund ueber die
 Kontrolle - nie einer ueber die Sache.
+
+
+### 2.56 Ein Vertrauensintervall allein ist kein Urteil — die Relevanzhürde kommt zuerst
+
+**Anlass (21.08.2026, Kapitel 124):** `pruefe_strukturstop.py` verglich zwei
+Stopvarianten über 631.755 Anker und meldete:
+
+> ⚠️ EIN GEBAUTES UND VERDRAHTETES PRODUKTIONSMERKMAL SCHADET. Das gehoert
+> sofort gemeldet.
+
+Der gemessene Unterschied war **−0,0008 R je Trade**.
+
+**Warum das passiert:** Bei sechsstelligen Fallzahlen wird das
+Vertrauensintervall so eng, dass fast **jeder** Effekt von null verschieden
+ist. „Statistisch nachweisbar" trennt dann nicht mehr wichtig von unwichtig —
+es sagt nur noch, dass genug gemessen wurde.
+
+**Die Regel:** Jedes Werkzeug, das ein Urteil ausspricht, prüft **zwei Hürden
+in dieser Reihenfolge**:
+
+| | |
+|---|---|
+| 1. **Relevanz** | Reicht der Punktschätzer überhaupt? Schwelle **vorab** im Kopf festlegen. |
+| 2. **Vertrauensintervall** | Erst wenn ja: ist er von Zufall zu trennen? |
+
+Fällt der Effekt unter die Relevanzhürde, lautet das Urteil **„kein
+Unterschied von Belang"** — nicht „besser" und nicht „schlechter".
+
+**Wie die Schwelle gewählt wird:** am größten bekannten Effekt des Projekts.
+H bringt +0,15 R je Trade; eine Zehntelstelle davon (0,01 R) ist die Grenze,
+unter der ein Unterschied die Entscheidung nicht mehr dreht.
+
+⚠️ **Das ist die Umkehrung von 2.48.** Dort war die Schwelle zu hoch angesetzt
+und hat einen echten Effekt begraben. Hier war sie gar nicht vorhanden und hat
+ein Nichts zum Alarm gemacht. **Beide Fehler kommen daher, dass eine einzige
+Zahl über ein Urteil entscheiden durfte.**
+
+**Umgesetzt in:** `pruefe_strukturstop.py` (`RELEVANZ = 0.01`). Bei jedem
+neuen Vergleichswerkzeug mitzubauen.

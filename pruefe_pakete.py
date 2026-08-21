@@ -9286,6 +9286,63 @@ def paket_dimension() -> None:
            "A1 und A2 sind deterministische Umrechnungen DESSELBEN Pfades - "
            "es gibt keine Zuordnung, die der Zufall zerstoeren koennte")
 
+    # ---- DER STRUKTURBODEN IM STOP (Kapitel 124) ----
+    _stq = _quelltext("pruefe_strukturstop.py")
+    _stroh = io.open("pruefe_strukturstop.py", encoding="utf-8").read()
+
+    pruefe(P, "der Strukturstop-Vergleich steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _stroh)
+
+    # ⚠️ NACHGEBAUT WAERE WERTLOS - eine Kopie veraltet still, waehrend die
+    # Produktion sich aendert.
+    pruefe(P, "gemessen wird mit der PRODUKTIONSFUNKTION",
+           "from agent.entscheidungsrechnung import _stop_abstand" in _stq,
+           "_stop_abstand wird aufgerufen, nicht nachgebaut")
+    pruefe(P, "die beiden Aufrufe unterscheiden sich NUR in der Marke",
+           "_stop_abstand(kurs, atr, None, False, None, None)" in _stq
+           and "_stop_abstand(kurs, atr, None, False, None, marke)" in _stq,
+           "jeder weitere Unterschied wuerde mitgemessen und dem Boden "
+           "zugerechnet")
+
+    # ⚠️ METHODIK 2.55 - beide Varianten sind deterministische Umrechnungen
+    # desselben Pfades.
+    pruefe(P, "die Kontrolle ist ein BOOTSTRAP, keine Permutation",
+           "rng.integers(0, len(bloecke), len(bloecke))" in _stq)
+
+    # ⚠️ METHODIK 2.56 - DIE REGEL, DIE DIESES WERKZEUG SELBST VERLETZT HAT.
+    # Die erste Fassung urteilte allein am Vertrauensintervall und meldete bei
+    # -0,0008 R einen Produktionsalarm.
+    pruefe(P, "die Relevanzhuerde steht VOR dem Vertrauensintervall",
+           "RELEVANZ = 0.01" in _stq
+           and _stq.index("abs(d) < RELEVANZ")
+           < _stq.index('"BESSER" if u > 0'),
+           "bei 631.755 Ankern ist fast jeder Effekt statistisch von null "
+           "verschieden - die Frage ist, ob er REICHT")
+    pruefe(P, "und ein Nichtbefund heisst nicht 'schlechter'",
+           "kein Unterschied von Belang" in _stq,
+           "-0,0008 R ist ein Fuenfzehntel dessen, was H bringt")
+
+    # ⚠️ DIE ASYMMETRIE SELBST - hier als DAUERPRUEFUNG, weil sie in der
+    # Produktion laeuft. Faellt eine dieser drei Stellen weg, traegt die
+    # Unterstuetzung den Stop wieder nicht, und niemand merkt es.
+    _rlq = _quelltext("agent/rollen_lauf.py")
+    _ekq = _quelltext("agent/entscheidungsrechnung.py")
+    # ⚠️ DIESER PRUEFSTRING KAM ZUERST AUS MEINER ERINNERUNG statt aus der
+    # Quelle und schlug fehl: der Code liest `_marken_werte` und waehlt DANN
+    # die Seite, er indiziert nicht direkt.
+    pruefe(P, "die Unterstuetzung wird fuer den Stop ausgelesen",
+           "def _marke_am_stop(" in _rlq
+           and '"widerstand" if ist_short else "unterstuetzung"' in _rlq,
+           "bei LONG die Unterstuetzung, bei SHORT der Widerstand - jeweils "
+           "die ANDERE Marke als bei `_marke_im_weg`")
+    pruefe(P, "und als marke_preis durchgereicht",
+           "marke_preis=" in _rlq,
+           "gebaut UND verdrahtet seit 18.08.2026 - das Memory hatte sie "
+           "drei Tage laenger als offen gefuehrt")
+    pruefe(P, "der weiteste der drei Boeden gewinnt",
+           "def _boeden(" in _ekq
+           and "jenseits der naechsten Marke" in _ekq)
+
     # ---- DIE UEBERLEBENSVERZERRUNG (Kapitel 121) ----
     _ueq = _quelltext("messe_ueberleben.py")
     _ueroh = io.open("messe_ueberleben.py", encoding="utf-8").read()
