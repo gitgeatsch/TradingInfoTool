@@ -9248,6 +9248,44 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE ANREICHERUNG (Kapitel 112) ----
+    _anq = _quelltext("messe_anreicherung.py")
+    _anroh = io.open("messe_anreicherung.py", encoding="utf-8").read()
+    _mkq112 = _quelltext("messe_marken.py")
+
+    pruefe(P, "die drei Vorhersagen stehen im Kopf, VOR dem Ergebnis",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _anroh
+           and "E1  STAERKE" in _anroh and "E2  ALTER" in _anroh
+           and "E3  GEFEGT" in _anroh)
+
+    # ⚠️ DIE ZUKUNFTSFALLE IN `_gefegt` - 79,0 % statt korrekt 67,3 %.
+    pruefe(P, "gefegt wird auf der GEKUERZTEN Reihe gerechnet",
+           "bis_anker = c[:i + 1]" in _mkq112
+           and "LB._gefegt(bis_anker" in _mkq112,
+           "LB._gefegt liest c[ab_index+1:] - in der Produktion richtig, "
+           "weil die Reihe vorher gekuerzt wird; mit historischen Ankern "
+           "waere es ein Blick in die Zukunft")
+
+    # ⚠️ EINE KONTROLLE, DIE NICHTS KONTROLLIERT, SIEHT AUS WIE EINE
+    # BESTANDENE (Methodik 2.52).
+    pruefe(P, "Bloecke werden in KALENDERZEIT gebildet, nicht in Ankerzahl",
+           "idx - bloecke[-1][0] >= a.blocklaenge" in _anq,
+           "innerhalb H ist nur jeder fuenfzigste Tag ein Anker - nach "
+           "Ankerzahl geschnitten war KEINE Reihe lang genug, es wurde "
+           "nichts gewuerfelt, und die Schwelle kam exakt auf den Messwert")
+    pruefe(P, "die Zahl der brauchbaren Reihen wird ausgegeben",
+           "Reihen lang genug" in _anq,
+           "ohne diese Zeile waere die Nullkontrolle nicht aufgefallen")
+    pruefe(P, "beide Schwellen werden ausgewiesen - einzeln und aus dreien",
+           "SCHWELLE FUER DAS MAXIMUM AUS DREI FRAGEN" in _anq,
+           "wer nur die Einzelschwelle liest, unterschlaegt den Preis des "
+           "Absuchens (2.49)")
+    pruefe(P, "und der absolute Abstand beider Arme steht daneben",
+           "abstand_ja" in _anq and "abstand_nein" in _anq,
+           "Methodik 2.51 - ein Merkmal, das den Vorsprung nicht "
+           "vergroessert, den Trade aber ueber den Breakeven hebt, ist ein "
+           "Ergebnis und kein Fehlschlag")
+
     # ---- DIE ZERLEGUNG (Kapitel 111) ----
     _zlq = _quelltext("messe_zerlegung.py")
     _zlroh = io.open("messe_zerlegung.py", encoding="utf-8").read()

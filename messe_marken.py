@@ -119,7 +119,19 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
     """`LB.niveaus_werte` mit vorberechneten Swings - Rest unveraendert.
 
     Der Code darunter ist Zeile fuer Zeile der der Produktion; nur die
-    Swing-Ermittlung kommt aus dem Speicher."""
+    Swing-Ermittlung kommt aus dem Speicher.
+
+    ⚠️ EINE STELLE MUSSTE ANGEPASST WERDEN, UND SIE IST DIE GEFAEHRLICHSTE
+    DER GANZEN MESSUNG. `LB._gefegt` liest `c[ab_index + 1:]` - also die
+    GESAMTE restliche Reihe. In der Produktion ist das richtig, weil
+    `bloecke()` die Reihe vorher auf den Anker kuerzt (`hist =
+    reihe[:index + 1]`) und dann `i = len(c) - 1` setzt. Hier steht aber die
+    volle Reihe, und `i` ist ein historischer Anker: ohne Kuerzung wuesste
+    die Marke, was NACH dem Einstieg passiert.
+
+    Deshalb wird `c[:i + 1]` uebergeben - das stellt genau die
+    Produktionsbedingung her. Die Swings sind davon unberuehrt: `_swings`
+    begrenzt ohnehin auf `bis - FENSTER + 1`, was hier bindet."""
     hi, lo = sp.bis(i)
     if (not hi and not lo) or atr <= 0:
         return {"oben": [], "unten": []}
@@ -128,12 +140,19 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
     niveaus = LB._cluster_mit_art(
         [(float(h[j]), "hoch", j) for j in hi]
         + [(float(l[j]), "tief", j) for j in lo], atr)
+    bis_anker = c[:i + 1]
     oben, unten = [], []
     for e in niveaus:
-        satz = {"preis": e["preis"], "beruehrungen": e["hoch"] + e["tief"]}
+        satz = {"preis": e["preis"], "beruehrungen": e["hoch"] + e["tief"],
+                # Alter in Handelstagen seit der letzten Beruehrung.
+                "alter": i - e["letzter_index"]}
         if e["preis"] - kurs >= grenze:
+            satz["gefegt"] = LB._gefegt(bis_anker, e["preis"],
+                                        e["letzter_index"], True)
             oben.append(satz)
         elif kurs - e["preis"] >= grenze:
+            satz["gefegt"] = LB._gefegt(bis_anker, e["preis"],
+                                        e["letzter_index"], False)
             unten.append(satz)
     return {"oben": oben, "unten": unten}
 
@@ -173,8 +192,15 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
             frei = not any(m["beruehrungen"] >= MIN_BERUEHRUNGEN
                            and m["preis"] < ziel for m in n["oben"])
             # B - STOP GEDECKT: eine mehrfach beruehrte Marke ueber dem Stop.
-            gedeckt = any(m["beruehrungen"] >= MIN_BERUEHRUNGEN
-                          and m["preis"] > stop for m in n["unten"])
+            traeger = [m for m in n["unten"]
+                       if m["beruehrungen"] >= MIN_BERUEHRUNGEN
+                       and m["preis"] > stop]
+            gedeckt = bool(traeger)
+            # ⚠️ WELCHE MARKE, WENN ES MEHRERE GIBT? Die NAECHSTE am Kurs -
+            # sie ist die, auf die der Kurs zuerst faellt. Vorab festgelegt
+            # (Kapitel 112); "die staerkste" waere schon eine Auswahl nach
+            # dem Merkmal, das geprueft werden soll.
+            naechste = max(traeger, key=lambda m: m["preis"]) if traeger                 else None
             ausgang = "abgelaufen"
             for j in range(i + 1, min(i + 1 + MAX_TAGE, len(c))):
                 # Faellt beides in eine Kerze, gilt der STOP - die vorsichtige
@@ -197,6 +223,12 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
                             einstieg / max(h[max(0, i - 249):i + 1]) - 1.0),
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
+                        # Die Merkmale der TRAGENDEN Marke - nur gefuellt,
+                        # wenn es sie gibt (Kapitel 112).
+                        "b_beruehrungen": (naechste["beruehrungen"]
+                                           if naechste else None),
+                        "b_alter": naechste["alter"] if naechste else None,
+                        "b_gefegt": naechste["gefegt"] if naechste else None,
                         "stop_relativ": float((einstieg - stop) / einstieg)})
         if fortschritt and time.time() - _letzte >= 60:
             _letzte = time.time()

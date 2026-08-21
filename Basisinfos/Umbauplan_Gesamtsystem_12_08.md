@@ -14817,3 +14817,99 @@ Vier Erklärungen sind gefallen, der Befund selbst steht. **Was fehlt, ist
 nicht eine weitere Kontrolle, sondern eine Erklärung** — und der nächste
 Kandidat dafür liegt in den Daten, die H bisher wegwirft: Berührungszahl,
 Alter der Marke, ob sie schon einmal gefegt wurde.
+
+
+---
+
+## Kapitel 112 — Die Anreicherung: die Marke weiß nicht mehr (20.08.2026)
+
+H fragt bisher nur *„gibt es eine Marke mit mindestens zwei Berührungen, ja
+oder nein"*. `niveaus_werte` weiß mehr — Zahl der Berührungen, Alter der
+letzten, ob schon einmal **gefegt**. Drei Vorhersagen, jede aus einem Grund,
+alle vorab benannt.
+
+⚠️ **Nur B ließ sich anreichern, nicht A.** A ist eine **Abwesenheit** („kein
+Widerstand im Weg") — an einer Marke, die es nicht gibt, ist kein Merkmal zu
+messen. Das ist ein Befund über den Bau der Regel, keine Lücke der Messung.
+
+### 112.1 ⚠️ Die Falle vor der Messung: `_gefegt` liest die Zukunft
+
+`LB._gefegt` wertet `c[ab_index + 1:]` aus — **die gesamte restliche Reihe.**
+In der Produktion ist das korrekt, weil `bloecke()` die Reihe vorher auf den
+Anker kürzt (`hist = reihe[:index + 1]`, dann `i = len(c) - 1`). **In einer
+Messung mit historischen Ankern ist es ein Blick in die Zukunft.**
+
+| Anteil „gefegt" | |
+|---|---:|
+| korrekt, bis zum Anker | **67,3 %** |
+| mit Blick in die Zukunft | **79,0 %** |
+
+**11,7 Prozentpunkte der Marken wären falsch etikettiert gewesen** — und zwar
+systematisch so, dass das Merkmal interessanter aussieht. `_niveaus_schnell`
+übergibt deshalb `c[:i + 1]`; **1.950 Vergleiche gegen die
+Produktionsfunktion, null Abweichungen.** Die Produktion selbst ist sauber,
+an den Aufrufern geprüft.
+
+### 112.2 ⚠️ Und eine kaputte Kontrolle, die wie ein Ergebnis aussah
+
+Der erste Lauf meldete dreimal „trägt nicht" — mit einer Schwelle, die **exakt
+dem Messwert entsprach** (+2,0 / −0,0 / −4,2). Der Grund stand in einer Zeile
+darüber: **`0 Reihen lang genug für mindestens zwei Blöcke`.**
+
+Die Blockbildung schneidet nach der **Anzahl aufeinanderfolgender Anker**. In
+allen bisherigen Messungen war das richtig, weil dort jeder Handelstag ein
+Anker ist — 250 Anker sind 250 Tage. **Innerhalb von H ist aber nur etwa jeder
+fünfzigste Tag ein Anker:** 9.405 Fälle auf 260 Symbole, rund 36 je Reihe. Die
+Bedingung „mindestens 500" traf auf **keine einzige** Reihe zu; es wurde nichts
+gewürfelt, und jede „Zufallsziehung" war die Messung selbst.
+
+**Drei „trägt nicht" in Folge sahen aus wie ein sauberer Nullbefund und waren
+eine Nullkontrolle.**
+
+Richtig ist ein **Block in Kalenderzeit**: alle H-Anker, deren Index in
+dasselbe 250-Handelstage-Fenster fällt, bilden einen Block. Die Blöcke werden
+dadurch verschieden groß — das ist genau die Zeitstruktur, die erhalten
+bleiben soll. Danach: **191 Reihen** mit mindestens zwei Blöcken.
+
+Daraus wird **Methodik 2.52**.
+
+### 112.3 Das Ergebnis
+
+| | Fälle | Quote | Abstand | Unterschied | Schwelle | |
+|---|---:|---:|---:|---:|---:|:--|
+| **E1** ≥ 3 Berührungen | 4.468 | 39,3 % | **+1,1** | **+2,0** | +3,3 | trägt nicht |
+| genau 2 | 4.753 | 37,2 % | −1,7 | | | |
+| **E2** ≤ 11 Tage | 4.727 | 38,2 % | −0,6 | −0,0 | +2,1 | trägt nicht |
+| älter | 4.494 | 38,2 % | −0,0 | | | |
+| **E3** nicht gefegt | 3.614 | 35,6 % | −2,9 | **−4,2** | −0,5 | trägt nicht |
+| gefegt | 5.607 | 39,9 % | **+1,3** | | | |
+
+**Schwelle für das Maximum aus drei Fragen: +3,3 Punkte** — der Preis des
+Absuchens, ausgewiesen wie von 2.49 verlangt.
+
+**Keines der drei Merkmale trägt.** Die Marke weiß nicht mehr, als H schon
+benutzt.
+
+### 112.4 Zwei Beobachtungen, die stehen bleiben
+
+**E1 zeigt in die vorhergesagte Richtung**, und der starke Arm liegt mit
+**+1,1 über dem Breakeven** — er verfehlt nur die Schwelle (+2,0 gegen +3,3).
+Nach 2.51 gehört das notiert statt weggeräumt: als *Trennschärfe* ist der
+Unterschied real, als *Beleg* reicht er nicht.
+
+⚠️ **E3 steht auf dem Kopf.** Die **schon gefegte** Marke schneidet besser ab
+(+1,3 gegen −2,9), nicht schlechter. Das ist das Gegenteil der Vorhersage.
+
+**Die Vorhersage war vorher da, sie ist falsch, und das bleibt so stehen.**
+Ob der umgekehrte Effekt trägt, ist **nicht geprüft** — die Kontrolle war
+einseitig angelegt, passend zur gerichteten Vorhersage. Das jetzt umzudrehen
+wäre eine neue Frage aus einem Ergebnis und kostet die volle Hürde.
+
+### 112.5 Was das für den Stand bedeutet
+
+Die **Granularität**, nach der der Nutzer gefragt hatte, ist damit an dieser
+Stelle ausgeschöpft: die verfügbaren Zusatzmerkmale der tragenden Marke
+tragen nichts. **H benutzt schon alles, was diese Marke hergibt.**
+
+Der Befund aus 111 bleibt davon unberührt: H trägt Information, auch bei
+gleichem Hochabstand. Nur **feiner wird es hier nicht.**

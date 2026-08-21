@@ -18711,3 +18711,46 @@ STAND: vier Erklaerungen sind gefallen (Uebertragbarkeit 109, Richtung 110,
 Kurzfristigkeit 111.1, Momentum 111.2), der Befund selbst steht. Was fehlt,
 ist keine weitere Kontrolle, sondern eine ERKLAERUNG - naechster Kandidat
 sind die Daten, die H wegwirft: Beruehrungszahl, Alter der Marke, gefegt.
+
+
+[2026-08-20] KAPITEL 112: DIE ANREICHERUNG - die Marke weiss nicht mehr
+
+Drei Vorhersagen zu den ungenutzten Merkmalen der tragenden Marke, alle vorab
+benannt: E1 Staerke (>=3 Beruehrungen schlaegt genau 2), E2 Alter (frisch
+schlaegt alt), E3 gefegt (nicht gefegt schlaegt gefegt).
+
+⚠️ NUR B LIESS SICH ANREICHERN, NICHT A - A ist eine ABWESENHEIT, an einer
+Marke die es nicht gibt ist kein Merkmal zu messen. Befund ueber den Bau der
+Regel.
+
+⚠️ FALLE 1, VOR DER MESSUNG: LB._gefegt liest c[ab_index+1:], also die
+GESAMTE restliche Reihe. In der Produktion richtig (Reihe wird vorher auf den
+Anker gekuerzt), in einer Messung mit historischen Ankern ein Blick in die
+Zukunft. Gemessen: 79,0 % waeren als "gefegt" gegolten statt korrekt 67,3 % -
+11,7 Punkte, systematisch in die Richtung, die das Merkmal interessant
+aussehen laesst. Behoben durch c[:i+1]; 1.950 Vergleiche gegen die
+Produktionsfunktion, null Abweichungen. Produktion selbst ist sauber.
+
+⚠️ FALLE 2, KAPUTTE KONTROLLE: der erste Lauf meldete dreimal "traegt nicht"
+mit einer Schwelle, die EXAKT dem Messwert entsprach. Grund: die Blockbildung
+schneidet nach ANZAHL aufeinanderfolgender Anker; innerhalb H ist nur jeder
+fuenfzigste Tag ein Anker (rund 36 je Reihe), also traf "mindestens 500" auf
+KEINE Reihe zu. Es wurde nichts gewuerfelt. Drei Nullbefunde in Folge waren
+eine NULLKONTROLLE. Behoben durch Bloecke in KALENDERZEIT -> 191 brauchbare
+Reihen. Neue Methodikregel 2.52.
+
+ERGEBNIS mit funktionierender Kontrolle: E1 +2,0 gegen Schwelle +3,3, E2 -0,0
+gegen +2,1, E3 -4,2 gegen -0,5. KEINES DER DREI MERKMALE TRAEGT. Schwelle
+fuer das Maximum aus drei Fragen +3,3 (Preis des Absuchens, 2.49).
+
+ZWEI BEOBACHTUNGEN, die nach 2.51 stehen bleiben statt weggeraeumt zu werden:
+E1 zeigt in die vorhergesagte Richtung und der starke Arm liegt mit +1,1 UEBER
+dem Breakeven - er verfehlt nur die Schwelle. Und E3 STEHT AUF DEM KOPF: die
+schon gefegte Marke schneidet besser ab (+1,3 gegen -2,9). Die Vorhersage war
+vorher da, sie ist falsch, das bleibt stehen. Ob der umgekehrte Effekt traegt,
+ist NICHT geprueft - die Kontrolle war einseitig angelegt, passend zur
+gerichteten Vorhersage; das umzudrehen waere eine neue Frage aus einem
+Ergebnis.
+
+FOLGE: die Granularitaet ist an dieser Stelle ausgeschoepft - H benutzt schon
+alles, was diese Marke hergibt. Der Befund aus 111 bleibt unberuehrt.

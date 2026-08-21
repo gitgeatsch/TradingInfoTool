@@ -3058,3 +3058,27 @@ null sind.
 Block-Permutation bleibt, die Laufzahl wird bei Knappheit erhoeht. Was sich
 aendert, ist nur, WAS am Ende in der Ablage steht - eine Zahl mit Restgroesse
 statt eines Hakens.
+
+
+## 2.52 Die Blockbildung muss zur Ankerdichte passen (20.08.2026)
+
+**Der Fall.** Kapitel 112 meldete dreimal "traegt nicht" - mit einer Schwelle,
+die EXAKT dem Messwert entsprach. Der Grund stand eine Zeile darueber:
+`0 Reihen lang genug fuer mindestens zwei Bloecke`.
+
+Die Block-Permutation schneidet Bloecke nach der **Anzahl aufeinanderfolgender
+Anker**. Solange jeder Handelstag ein Anker ist, sind 250 Anker auch 250 Tage.
+Innerhalb einer Teilmenge (hier: H) ist das nicht mehr so - dort war nur etwa
+jeder fuenfzigste Tag ein Anker, rund 36 je Reihe. Die Bedingung "mindestens
+500" traf auf KEINE Reihe zu, es wurde nichts gewuerfelt, und jede
+Zufallsziehung war die Messung selbst.
+
+**Die Regel.** Ein Block ist ein ZEITRAUM, keine Anzahl. Gebildet wird nach dem
+Index der Anker (`idx - block_start >= blocklaenge`), nicht nach ihrer
+Position in der Liste. Die Bloecke werden dadurch verschieden gross - das ist
+kein Mangel, sondern die Zeitstruktur.
+
+⚠️ **Und die Zahl der brauchbaren Reihen gehoert IMMER ausgegeben.** Ohne die
+Zeile `0 Reihen lang genug` waere der Nullbefund nicht als Nullkontrolle
+aufgefallen. Eine Kontrolle, die nichts kontrolliert, sieht von aussen aus wie
+eine, die bestanden wurde.
