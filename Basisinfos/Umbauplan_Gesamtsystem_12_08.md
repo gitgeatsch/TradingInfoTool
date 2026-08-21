@@ -15623,3 +15623,95 @@ es **nicht**.
 **Das ist kein „geschafft".** Es ist: die Frage nach dem guten Trade hat zum
 ersten Mal eine positive, kontrollierte Antwort — und die Gebühr ist der
 Grund, warum sie achtzehn Kapitel lang wie ein Nein aussah.
+
+
+---
+
+## Kapitel 120 — Für wen gilt der Befund? (20.08.2026)
+
+**Nutzervorgabe:** *„Es ist erforderlich, die Voraussage auch auf weitere
+Parameter zu teilen — Krypto-Klasse: BTC, Midcap, Smallcap — und
+Handelsstrategie: Hebel oder Spot. Das ist essentiell für die
+Zielerreichung."*
+
+Alles bisher Gemessene lag in **einem Topf aus 347 Reihen**. Für ein Signal
+ist das unbrauchbar — es muss sagen, **für welche Klasse** die Aussage gilt.
+
+### 120.1 H gegen Nicht-H, gebührenfrei
+
+| Kategorie | H | Quote H | Nicht-H | Quote | **Vorsprung** | Stop | Tage |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| BTC | 202 | — | — | — | *zu wenige* | | |
+| **Large** ≥ 50 M | 2.031 | 35,8 % | 32.228 | 27,9 % | **+7,9** | 20,8 % | 12 |
+| **Mid** 5–50 M | 3.216 | 34,1 % | 123.613 | 29,6 % | **+4,6** | 23,1 % | 11 |
+| **Small** < 5 M | 3.956 | **41,7 %** | 278.432 | 35,1 % | **+6,7** | 16,1 % | 10 |
+
+| Kategorie | gemessen | Schwelle einzeln | Schwelle aus acht | Urteil |
+|---|---:|---:|---:|---|
+| **Large** | +7,9 | +5,6 | +5,6 | **TRÄGT, auch aus acht** |
+| Mid | +4,6 | +2,0 | +5,6 | trägt einzeln, **nicht** aus acht |
+| **Small** | +6,7 | +2,6 | +5,6 | **TRÄGT, auch aus acht** |
+
+**Zwei von drei Kategorien tragen auch gegen die strenge Schwelle.** Und die
+Größe des Vorsprungs unterscheidet sich deutlich — genau die Information, die
+ein Signal braucht.
+
+### 120.2 Nettoerwartungswert je Trade, in R
+
+| Kategorie | Strategie | **Referenz 0,30 %** | Betrieb 1,50 % | Nicht-H (Ref.) |
+|---|---|---:|---:|---:|
+| Large | spot | **+0,045** | −0,070 | −0,193 |
+| Large | hebel | +0,028 | −0,087 | −0,210 |
+| Mid | spot | −0,002 | −0,105 | −0,139 |
+| Mid | hebel | −0,016 | −0,120 | −0,154 |
+| **Small** | **spot** | **+0,215** | **+0,066** | +0,014 |
+| **Small** | hebel | +0,196 | +0,047 | −0,004 |
+
+**Small trägt sogar zum Betriebssatz** — als einzige Kategorie. Large trägt
+nur zur Referenz, Mid liegt um null.
+
+**Die Finanzierung kostet durchgängig rund 0,017 R** (0,03 %/Tag über 13
+Tage). **Sie dreht kein Vorzeichen** — Spot und Hebel unterscheiden sich
+messbar, aber nicht in der Aussage.
+
+### 120.3 ⚠️ Der Vorbehalt, der ausgerechnet Small am härtesten trifft
+
+**Die Grundquote von Small ist mit 35,1 % höher als die von Large (27,9 %)** —
+und höher als der driftfreie Wert von 33,3 %. Das ist erklärungsbedürftig, und
+die naheliegende Erklärung ist **Überlebensverzerrung**:
+
+> Die 347 Reihen sind Paare, die **heute** auf Binance handeln. Ein Smallcap,
+> der eingestellt wurde oder auf null ging, ist **nicht in der Stichprobe**.
+> Genau in der kleinsten und ausfallanfälligsten Kategorie fehlen also die
+> Verlierer.
+
+**Der Vorsprung von H selbst ist davon weniger betroffen** — er vergleicht H
+gegen Nicht-H **innerhalb derselben überlebenden Reihen**, und die Verzerrung
+trifft beide Arme. **Der absolute Erwartungswert von Small ist es sehr wohl.**
+
+⚠️ **Die Zeile „Small spot +0,066 zum Betriebssatz" ist deshalb die
+unsicherste Zahl dieses Kapitels**, obwohl sie am besten aussieht.
+
+### 120.4 ⚠️ Und BTC ist nicht messbar
+
+**202 H-Fälle.** BTC ist eine einzige Reihe; H feuert auf 2,1 % der Tage, und
+mehr Tage gibt es nicht. **Für das wichtigste Einzelasset des Systems lässt
+sich mit diesem Aufbau keine Aussage treffen** — nicht aus Nachlässigkeit,
+sondern aus Datenmangel.
+
+### 120.5 Was daraus für das Signal folgt
+
+Zum ersten Mal ist eine differenzierte Aussage belegt:
+
+| | |
+|---|---|
+| **Large** | H trägt (+7,9), Erwartungswert positiv **nur zur Referenzgebühr** |
+| **Mid** | H trägt schwach (+4,6), Erwartungswert **um null** — kein Nutzen |
+| **Small** | H trägt (+6,7), Erwartungswert positiv **auch im Betrieb** — ⚠️ aber überlebensverzerrt |
+| **BTC** | **nicht messbar** |
+| Spot vs. Hebel | Unterschied 0,017 R, **dreht kein Vorzeichen** |
+
+**Der nächste notwendige Schritt ist die Überlebensverzerrung** — sie ist der
+einzige Vorbehalt, der die beste Zeile entwerten könnte, und sie ist
+grundsätzlich prüfbar: über eingestellte Paare, die Binance historisch
+gelistet hatte.

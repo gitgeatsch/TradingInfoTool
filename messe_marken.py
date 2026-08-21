@@ -213,15 +213,15 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
             # (Kapitel 112); "die staerkste" waere schon eine Auswahl nach
             # dem Merkmal, das geprueft werden soll.
             naechste = max(traeger, key=lambda m: m["preis"]) if traeger                 else None
-            ausgang = "abgelaufen"
+            ausgang, tage = "abgelaufen", MAX_TAGE
             for j in range(i + 1, min(i + 1 + MAX_TAGE, len(c))):
                 # Faellt beides in eine Kerze, gilt der STOP - die vorsichtige
                 # Lesart. Gemessen (Kapitel 102.3): 0,1 Punkte Unterschied.
                 if l[j] <= stop:
-                    ausgang = "stop"
+                    ausgang, tage = "stop", j - i
                     break
                 if h[j] >= ziel:
-                    ausgang = "ziel"
+                    ausgang, tage = "ziel", j - i
                     break
             aus.append({"sym": sym, "i": i, "frei": frei, "gedeckt": gedeckt,
                         # Das Datum, damit sich die Phase NACHTRAEGLICH mit
@@ -243,6 +243,9 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
                         "umsatz": _umsatz60(umsatz, i),
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
+                        # Haltedauer in Handelstagen - fuer
+                        # die Finanzierung beim Hebel (120).
+                        "tage": tage,
                         # Die Merkmale der TRAGENDEN Marke - nur gefuellt,
                         # wenn es sie gibt (Kapitel 112).
                         "b_beruehrungen": (naechste["beruehrungen"]

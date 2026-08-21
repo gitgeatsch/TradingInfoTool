@@ -19031,3 +19031,44 @@ untereinander vergleichbar, mit Kapitel 101 NICHT.
 EINSCHRAENKUNGEN: H feuert auf 2,1 % der Tage; die halbe Stichprobe nimmt ihre
 Schwelle nicht; in der ZEITdimension ist H gescheitert (109, 118); gemessen
 auf Binance-USDT statt auf den 39 Produktionssymbolen in Euro.
+
+
+[2026-08-20] KAPITEL 120: FUER WEN GILT DER BEFUND? - Kategorie und Strategie
+
+Nutzervorgabe: die Voraussage muss auf Krypto-Klassen (BTC, Mid, Small) und
+Handelsstrategie (Spot, Hebel) geteilt werden. Bisher lag alles in EINEM Topf
+aus 347 Reihen.
+
+KATEGORIEN vorab festgelegt mit nennbaren Grenzen: BTC eigene Zeile, Large ab
+50 Mio. USD Tagesumsatz, Mid 5-50 Mio., Small darunter. Der Umsatz kommt vom
+ANKER (Median der letzten 60 Kerzen, nur rueckwaerts) - nicht aus der
+Gesamthistorie, sonst wuesste die Einteilung, wie gross ein Coin SPAETER wurde.
+
+ERGEBNIS gebuehrenfrei: Large +7,9 (Schwelle einzeln +5,6, aus acht +5,6) ->
+TRAEGT auch aus acht. Mid +4,6 (+2,0 / +5,6) -> traegt einzeln, nicht aus
+acht. Small +6,7 (+2,6 / +5,6) -> TRAEGT auch aus acht. BTC nur 202 H-Faelle,
+nicht messbar.
+
+NETTOERWARTUNGSWERT je Trade: Large spot +0,045 R zur Referenz und -0,070 im
+Betrieb; Mid spot -0,002 / -0,105; Small spot +0,215 / +0,066. SMALL TRAEGT
+ALS EINZIGE AUCH ZUM BETRIEBSSATZ. Die Finanzierung kostet durchgaengig rund
+0,017 R (0,03 %/Tag ueber 13 Tage) und DREHT KEIN VORZEICHEN - Spot und Hebel
+unterscheiden sich messbar, aber nicht in der Aussage.
+
+⚠️ DER VORBEHALT TRIFFT AUSGERECHNET SMALL AM HAERTESTEN: die Grundquote von
+Small ist mit 35,1 % hoeher als die von Large (27,9 %) und hoeher als der
+driftfreie Wert. Naheliegende Erklaerung: UEBERLEBENSVERZERRUNG - die 347
+Reihen sind Paare, die HEUTE handeln; ein Smallcap, der eingestellt wurde,
+fehlt. Der VORSPRUNG von H ist davon weniger betroffen (H gegen Nicht-H
+innerhalb derselben ueberlebenden Reihen, die Verzerrung trifft beide Arme),
+der ABSOLUTE Erwartungswert sehr wohl. Die Zeile "Small spot +0,066 im
+Betrieb" ist damit die unsicherste Zahl des Kapitels, obwohl sie am besten
+aussieht.
+
+⚠️ UND BTC IST NICHT MESSBAR: 202 H-Faelle. BTC ist eine Reihe, H feuert auf
+2,1 % der Tage, mehr Tage gibt es nicht. Fuer das wichtigste Einzelasset des
+Systems laesst sich mit diesem Aufbau keine Aussage treffen.
+
+NAECHSTER NOTWENDIGER SCHRITT: die Ueberlebensverzerrung - der einzige
+Vorbehalt, der die beste Zeile entwerten koennte, und grundsaetzlich pruefbar
+ueber eingestellte Paare, die Binance historisch gelistet hatte.

@@ -9248,6 +9248,38 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- KATEGORIE UND STRATEGIE (Kapitel 120) ----
+    _klq = _quelltext("messe_klassen.py")
+    _klroh = io.open("messe_klassen.py", encoding="utf-8").read()
+    import messe_klassen as _KL
+
+    pruefe(P, "die Kategorien stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _klroh
+           and "BTC      die Referenzreihe" in _klroh)
+    pruefe(P, "die Grenzen sind nennbare Zahlen, keine Quantile",
+           _KL.GRENZE_LARGE == 50_000_000 and _KL.GRENZE_MID == 5_000_000,
+           "eine Quantilsgrenze waendert sich mit der Stichprobe und laesst "
+           "sich in keinem Signal nennen")
+
+    # ⚠️ DIE EINTEILUNG DARF NICHT WISSEN, WIE GROSS EIN COIN SPAETER WURDE.
+    pruefe(P, "der Umsatz kommt vom ANKER, nicht aus der Gesamthistorie",
+           'f["umsatz"]' in _klq
+           and "umsatz[max(0, i - 59):i + 1]" in _quelltext("messe_marken.py"),
+           "sonst wuesste die Kategorie die Zukunft - derselbe Fehlertyp wie "
+           "bei `gefegt` in Kapitel 112")
+    pruefe(P, "Spot und Hebel werden getrennt gerechnet",
+           "FINANZIERUNG_JE_TAG" in _klq and '"tage"' in _klq,
+           "die Finanzierung kostet rund 0,017 R - messbar, aber sie dreht "
+           "kein Vorzeichen")
+    pruefe(P, "beide Schwellen werden ausgewiesen",
+           "max_aus_acht" in _klq and "aus acht" in _klq,
+           "acht Zellen sind ein Suchpreis (2.49) - Mid traegt einzeln und "
+           "NICHT aus acht, und genau das muss sichtbar sein")
+    pruefe(P, "gewuerfelt wird INNERHALB jeder Kategorie",
+           "INNERHALB jeder Kategorie" in _klq,
+           "gefragt ist, ob H DORT etwas beitraegt - nicht, ob die "
+           "Kategorien sich unterscheiden (2.50)")
+
     # ---- NEUBEWERTUNG ZU ZWEI SAETZEN (Kapitel 119) ----
     _nbq = _quelltext("bewerte_neu.py")
     _nbroh = io.open("bewerte_neu.py", encoding="utf-8").read()
