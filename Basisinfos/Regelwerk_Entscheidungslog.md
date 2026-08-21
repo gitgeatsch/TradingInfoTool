@@ -19072,3 +19072,41 @@ Systems laesst sich mit diesem Aufbau keine Aussage treffen.
 NAECHSTER NOTWENDIGER SCHRITT: die Ueberlebensverzerrung - der einzige
 Vorbehalt, der die beste Zeile entwerten koennte, und grundsaetzlich pruefbar
 ueber eingestellte Paare, die Binance historisch gelistet hatte.
+
+
+[2026-08-20] KAPITEL 121: UEBERLEBENSVERZERRUNG - gemessen, beide Vorhersagen falsch
+
+MACHBAR: Binance fuehrt 209 eingestellte USDT-Paare (BREAK), der
+Kline-Endpunkt liefert weiterhin Daten. 176 mit genug Historie, 231.824
+Kerzen -> Messbasis 347 auf 523 Reihen, ein Drittel hat bisher gefehlt.
+Geprueft: von den 176 Basiswerten handelt KEIN EINZIGER noch irgendwo -
+es sind echte Ausfaelle, keine Umbenennungen.
+
+VORAB ENTSCHIEDEN: ein Anker, dessen Vorwaertsfenster ueber das Reihenende
+reicht, zaehlt als FEHLSCHLAG (2.54). Ihn zu verwerfen haette den terminalen
+Absturz herausgefiltert.
+
+⚠️ BEIDE VORHERSAGEN WIDERLEGT. S1 (Grundquote faellt, am staerksten bei
+Small): bei Small STEIGT sie um 1,4 Punkte (35,1 -> 36,5). S2 (H's Vorsprung
+aendert sich wenig): er aendert sich um bis zu 2,1 Punkte - Large +7,9 ->
++5,9, Mid +4,6 -> +2,5, Small +6,7 -> +7,9.
+
+DIE URTEILE HALTEN: Large +5,9 und Small +7,9 gegen die Schwelle aus acht
+(+5,1) -> beide tragen; Mid +2,5 traegt nicht. Auf 523 statt 347 Reihen.
+Small verbessert sich auf +0,300 R Referenz / +0,172 R Betrieb.
+
+⚠️ DREI ERKLAERUNGSVERSUCHE, KEIN TREFFER. Warum treffen sterbende Coins
+haeufiger ihr Ziel (39,3 % gegen 35,2 %)? (1) Umbenennungen - widerlegt.
+(2) Mehr nicht entschiedene Faelle - widerlegt, sie haben WENIGER Ablaeufe
+(2,9 % gegen 3,9 %). (3) Unrealistische Kosten - widerlegt, Small bleibt bis
+2,5 % je Seite positiv. Einziger sichtbarer Unterschied ist die hoehere
+Volatilitaet (ATR/Kurs 8,3 % gegen 7,2 %) - aber in einem System, das Stop und
+Ziel in ATR misst, sollte das Niveau die Quote nicht verschieben. ICH HABE
+KEINE ERKLAERUNG.
+
+⚠️ DIE GRENZE, DIE UNSERE DATEN NICHT UEBERSCHREITEN: Small ist unter 5 Mio.
+USD Tagesumsatz definiert und enthaelt Werte auf dem Weg zum Delisting. Ob
+sich eine 4-ATR-Bewegung dort HANDELN laesst, steht in keiner OHLC-Reihe -
+Spread, Markttiefe und die Frage nach einem Kaeufer beim Ausstieg sind nicht
+enthalten und sind KEIN Gebuehrenproblem. Das ist die haerteste Einschraenkung
+des besten Ergebnisses und mit Tagesdaten nicht aufloesbar.

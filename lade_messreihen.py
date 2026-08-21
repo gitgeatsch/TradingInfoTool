@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS price_history_ohlc (
     PRIMARY KEY (symbol, currency, date));
 CREATE TABLE IF NOT EXISTS messreihen (
     symbol TEXT PRIMARY KEY, assetklasse TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS messreihen_status (
+    symbol TEXT PRIMARY KEY, status TEXT NOT NULL);
 """
 
 
@@ -72,11 +74,22 @@ def _tag(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, tz=timezone.utc).date().isoformat()
 
 
-def paare(s: requests.Session) -> list[str]:
+def paare(s: requests.Session, status: str = "TRADING") -> list[str]:
+    """Alle USDT-Spotpaare mit diesem Status.
+
+    ⚠️ `BREAK` sind die EINGESTELLTEN Paare - und genau sie fehlen jeder
+    Messung, die nur die heute handelnden laedt (Ueberlebensverzerrung,
+    Kapitel 120.3). Der Kline-Endpunkt liefert fuer sie weiterhin Daten;
+    gepruefft am 20.08.2026 an BCCUSDT, EOSUSDT, VENUSDT.
+
+    ⚠️ UND `BREAK` IST NICHT GLEICH GESCHEITERT. Darin stecken auch
+    Umbenennungen (BCC -> BCH, VEN -> VET) und Wechsel der Notierungs-
+    waehrung. Die Gruppe ist heterogen; das gehoert in jeden Befund, der
+    auf ihr steht."""
     r = s.get(EXCHANGE_INFO, params={"permissions": "SPOT"}, timeout=30)
     r.raise_for_status()
     return sorted(x["symbol"] for x in r.json()["symbols"]
-                  if x["quoteAsset"] == "USDT" and x["status"] == "TRADING")
+                  if x["quoteAsset"] == "USDT" and x["status"] == status)
 
 
 def hole_alles(s: requests.Session, paar: str) -> list[tuple]:
@@ -123,6 +136,11 @@ def main() -> int:
     ap.add_argument("--schreiben", action="store_true",
                     help="ohne dies wird nur gezaehlt, nichts geschrieben")
     ap.add_argument("--nur", default="", help="Paare, kommagetrennt")
+    ap.add_argument("--status", default="TRADING",
+                    choices=("TRADING", "BREAK"),
+                    help="TRADING sind die heute handelnden, BREAK die "
+                         "EINGESTELLTEN - ohne sie ist jede Messung "
+                         "ueberlebensverzerrt (Kapitel 120.3)")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -134,7 +152,7 @@ def main() -> int:
 
     s = requests.Session()
     liste = ([x.strip() for x in a.nur.split(",") if x.strip()] if a.nur
-             else paare(s))
+             else paare(s, a.status))
     print("=" * 78)
     print(f"BREITE MESSBASIS - {len(liste)} USDT-Spotpaare -> {a.db}")
     print(f"  {'PROBELAUF, es wird nichts geschrieben' if not a.schreiben else 'schreibend'}")
@@ -172,6 +190,10 @@ def main() -> int:
                  for z in rohe])
             conn.execute("INSERT OR REPLACE INTO messreihen VALUES (?,?)",
                          (sym, KLASSE))
+            conn.execute("INSERT OR REPLACE INTO messreihen_status "
+                         "VALUES (?,?)",
+                         (sym, "eingestellt" if a.status == "BREAK"
+                          else "handelnd"))
             conn.commit()
         if (i + 1) % 100 == 0:
             print(f"  {i + 1}/{len(liste)} nach {time.time() - t0:.0f} s - "

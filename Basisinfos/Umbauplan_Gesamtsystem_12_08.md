@@ -15715,3 +15715,114 @@ Zum ersten Mal ist eine differenzierte Aussage belegt:
 einzige Vorbehalt, der die beste Zeile entwerten könnte, und sie ist
 grundsätzlich prüfbar: über eingestellte Paare, die Binance historisch
 gelistet hatte.
+
+
+---
+
+## Kapitel 121 — Die Überlebensverzerrung: gemessen, und beide Vorhersagen falsch (20.08.2026)
+
+Kapitel 120.3 hatte die Grundquote der Smallcaps (35,1 %) als
+erklärungsbedürftig markiert — höher als Large (27,9 %) und höher als der
+driftfreie Wert. Verdacht: **Überlebensverzerrung.**
+
+### 121.1 Die Korrektur war machbar
+
+Binance führt **209 eingestellte USDT-Paare** (Status `BREAK`), und der
+Kline-Endpunkt liefert für sie weiterhin Daten. **176 davon haben genug
+Historie** — 231.824 Kerzen. Die Messbasis wächst von 347 auf **523 Reihen**;
+**ein Drittel der Stichprobe hat bisher gefehlt.**
+
+⚠️ **Und es sind echte Ausfälle.** Der naheliegende Einwand — darin steckten
+Umbenennungen wie BCC→BCH — wurde geprüft: **von den 176 Basiswerten handelt
+kein einziger noch irgendwo auf Binance.**
+
+⚠️ **Die vorab getroffene Entscheidung:** ein Anker, dessen Vorwärtsfenster
+über das Reihenende hinausreicht, zählt als **Fehlschlag** (vorsichtige
+Lesart, 2.54). Ihn zu verwerfen hätte genau den terminalen Absturz
+herausgefiltert — die Verzerrung wäre durch die Hintertür zurückgekommen.
+
+### 121.2 Beide Vorhersagen sind widerlegt
+
+| Kategorie | | Quote Rest | H-Vorsprung |
+|---|---|---:|---:|
+| Large | nur handelnd | 27,9 % | +7,9 |
+| | **alle 523** | 27,6 % | **+5,9** |
+| Mid | nur handelnd | 29,6 % | +4,6 |
+| | **alle** | 29,6 % | **+2,5** |
+| **Small** | nur handelnd | 35,1 % | +6,7 |
+| | **alle** | **36,5 %** | **+7,9** |
+
+**S1 („die Grundquote fällt, am stärksten bei Small") ist falsch** — bei Small
+*steigt* sie um 1,4 Punkte.
+
+**S2 („H's Vorsprung ändert sich wenig") ist auch falsch** — er ändert sich um
+bis zu 2,1 Punkte, bei Large und Mid nach unten, bei Small nach oben.
+
+### 121.3 Die Urteile halten trotzdem
+
+| Kategorie | gemessen | Schwelle aus acht | Urteil |
+|---|---:|---:|---|
+| **Large** | +5,9 | +5,1 | **trägt** |
+| Mid | +2,5 | +5,1 | trägt nicht |
+| **Small** | +7,9 | +5,1 | **trägt** |
+
+Auf **523 statt 347 Reihen**, mit korrigierten Zahlen. Und Small verbessert
+sich: **+0,300 R** zur Referenz, **+0,172 R** im Betrieb (vorher +0,215 /
++0,066).
+
+### 121.4 ⚠️ Drei Erklärungsversuche, kein Treffer
+
+**Warum treffen ausgerechnet die sterbenden Coins häufiger ihr Ziel?**
+
+| Gruppe | Anker | Quote | abgelaufen | Stop | ATR/Kurs |
+|---|---:|---:|---:|---:|---:|
+| Small handelnd | 282.388 | 35,2 % | 3,9 % | 14,3 % | 7,2 % |
+| **Small eingestellt** | 149.297 | **39,3 %** | 2,9 % | 16,6 % | **8,3 %** |
+
+**Versuch 1 — Umbenennungen im Ausfallsample.** Geprüft, **widerlegt**: alle
+176 Basiswerte sind weg.
+
+**Versuch 2 — die nicht entschiedenen Fälle.** Widerlegt: die eingestellten
+Reihen haben *weniger* Abläufe (2,9 % gegen 3,9 %), nicht mehr.
+
+**Versuch 3 — unrealistische Kosten.** Widerlegt: Small bleibt bis **2,5 % je
+Seite** positiv.
+
+| Gebühr je Seite | netto R |
+|---|---:|
+| 0,30 % Referenz | +0,294 |
+| 1,50 % Betrieb | +0,144 |
+| 2,50 % | +0,019 |
+
+**Ich habe keine Erklärung.** Der einzige sichtbare Unterschied ist die höhere
+Volatilität (8,3 % gegen 7,2 % ATR/Kurs) — aber in einem Barrierensystem, das
+Stop und Ziel in ATR misst, sollte das Niveau der Volatilität die Quote nicht
+verschieben.
+
+### 121.5 ⚠️ Die Grenze, die unsere Daten nicht überschreiten können
+
+**Die Small-Kategorie ist definiert als unter 5 Mio. USD Tagesumsatz** — und
+sie enthält Werte auf dem Weg zum Delisting.
+
+> **Ob sich eine 4-ATR-Bewegung in einem solchen Wert tatsächlich handeln
+> lässt, steht in keiner OHLC-Reihe.** Spread, Markttiefe und die Frage, ob es
+> zum Ausstiegszeitpunkt überhaupt einen Käufer gibt, sind in unseren Daten
+> nicht enthalten — und sie sind **kein Gebührenproblem**, das ein höherer
+> Satz abbilden würde.
+
+**Das ist die härteste Einschränkung des besten Ergebnisses**, und sie lässt
+sich mit Tagesdaten nicht auflösen. Sie gehört an jede Verwendung der
+Small-Zeile geschrieben.
+
+### 121.6 Stand
+
+| | |
+|---|---|
+| Überlebensverzerrung | **gemessen und korrigiert** (523 statt 347 Reihen) |
+| Large | H trägt (+5,9), Erwartungswert negativ zu beiden Sätzen |
+| Mid | trägt nicht |
+| **Small** | H trägt (+7,9), Erwartungswert positiv bis 2,5 % Gebühr — ⚠️ **Handelbarkeit ungeprüft und mit diesen Daten unprüfbar** |
+| BTC | nicht messbar (202 Fälle) |
+
+**Der Befund ist besser belegt als je zuvor und zugleich an einer Stelle
+begrenzt, die keine weitere Messung auf Kursdaten aufheben kann.**

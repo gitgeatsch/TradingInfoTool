@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 120. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 121. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -73,7 +73,7 @@ es sich für mich", beide immer nebeneinander.**
 
 | **H trägt — gebührenfrei** | **119** | Vorsprung **+4,5** gegen Schwelle +2,6, volle Stichprobe | 9.405 Fälle, 312 Reihen |
 | H über dem Breakeven bei Referenzgebühr | 119 | **+3,1** (Betrieb: −1,0) | +0,086 R je Trade |
-| **H trägt je Kategorie** | **120** | Large **+7,9** · Small **+6,7** — beide auch gegen die Schwelle aus acht | Mid +4,6 nur einzeln |
+| **H trägt je Kategorie** | **120/121** | auf **523 Reihen** (mit den Ausfällen): Large **+5,9** · Small **+7,9**, beide gegen die Schwelle aus acht (+5,1) | Mid +2,5 trägt nicht |
 | Spot gegen Hebel | 120 | Unterschied 0,017 R — **dreht kein Vorzeichen** | Finanzierung 0,03 %/Tag |
 
 | Befund | Kapitel | Zahl | worauf es ruht |
@@ -182,7 +182,8 @@ wurde nie angefasst.** Er ist der einzige Kanal, der weder über den ATR noch
 | Ist die Marktbreite als *inverses* Signal brauchbar? | offen | ein verlässlich inverser Zusammenhang ist so gut wie ein positiver |
 | Trägt der **Umschlag**? | offen | einziger unberührter Kanal in den Kursdaten |
 | Trägt „gefegt" **umgekehrt**? | offen (112.4) | Beobachtung −4,2, Richtung ungeprüft |
-| **Überlebensverzerrung messen** | **neu, dringend (120.3)** | die Grundquote von Small (35,1 %) liegt über dem driftfreien Wert — eingestellte Paare fehlen. Entwertet womöglich die beste Zeile |
+| **Warum treffen sterbende Coins häufiger ihr Ziel?** | offen (121.4) | 39,3 % gegen 35,2 %; drei Erklärungsversuche widerlegt, **keine Erklärung** |
+| **Handelbarkeit in Small** | ⚠️ **mit Kursdaten unprüfbar** (121.5) | Spread, Markttiefe und ob es beim Ausstieg einen Käufer gibt, stehen in keiner OHLC-Reihe — und sind kein Gebührenproblem |
 | **BTC ist nicht messbar** | 120.4 | 202 H-Fälle; eine Reihe, 2,1 % der Tage. Für das wichtigste Einzelasset gibt es keine Aussage |
 | **Nachrichten** | **nie bearbeitet** | einziger Kanal außerhalb der Kursreihe — und damit der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert |
 

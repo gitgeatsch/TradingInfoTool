@@ -9248,6 +9248,39 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE UEBERLEBENSVERZERRUNG (Kapitel 121) ----
+    _ueq = _quelltext("messe_ueberleben.py")
+    _ueroh = io.open("messe_ueberleben.py", encoding="utf-8").read()
+    _lmroh = io.open("lade_messreihen.py", encoding="utf-8").read()
+
+    pruefe(P, "die beiden Fragen stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _ueroh
+           and "S1  Wie stark" in _ueroh and "S2  Wie stark" in _ueroh)
+    pruefe(P, "das Ladewerkzeug kennt die eingestellten Paare",
+           '"TRADING", "BREAK"' in _lmroh,
+           "ohne sie ist jede Messung ueberlebensverzerrt - und die "
+           "Verzerrung lag bis Kapitel 120 bei 100 %")
+    pruefe(P, "und es steht dabei, dass BREAK nicht gleich gescheitert ist",
+           "NICHT GLEICH GESCHEITERT" in _lmroh,
+           "Umbenennungen wie BCC -> BCH stecken darin; geprueft wurde es "
+           "trotzdem, und bei den geladenen 176 handelt keiner mehr")
+
+    # ⚠️ EIN ANKER OHNE VORWAERTSFENSTER DARF NICHT VERWORFEN WERDEN.
+    pruefe(P, "der Ablauf am Reihenende zaehlt als Fehlschlag",
+           # ⚠️ Beide Seiten kleinschreiben - die erste Fassung senkte nur
+           # den Heuhaufen und suchte mit grossem L.
+           "vorsichtige lesart" in _ueroh.lower()
+           and "durch die Hintertuer" in _ueroh,
+           "wer solche Anker verwirft, filtert genau den terminalen Absturz "
+           "heraus - die Verzerrung waere wieder drin, nur versteckter")
+    pruefe(P, "ohne die Statustabelle bricht die Messung ab",
+           "messreihen_status` fehlt" in _ueq,
+           "still weiterzurechnen hiesse, eine Verzerrungsmessung ohne die "
+           "Verzerrung zu machen")
+    pruefe(P, "beide Stichproben werden nebeneinander berichtet",
+           '"nur handelnd"' in _ueq and '"ALLE"' in _ueq,
+           "erst der Vergleich zeigt, wie stark die Verzerrung wirkt")
+
     # ---- KATEGORIE UND STRATEGIE (Kapitel 120) ----
     _klq = _quelltext("messe_klassen.py")
     _klroh = io.open("messe_klassen.py", encoding="utf-8").read()
