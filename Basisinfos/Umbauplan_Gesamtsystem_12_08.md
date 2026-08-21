@@ -15010,3 +15010,98 @@ zehnfacher Datenbasis verschwindet.
 **Der Ertrag ist trotzdem real:** eine offene Frage ist geschlossen, der
 ATR-Verdacht ist widerlegt, und wir wissen jetzt, dass H und Drift **nicht
 kombinierbar** sind, weil H ohne Drift nicht vorkommt.
+
+
+---
+
+## Kapitel 114 — Die Marktphase ist nicht invers, sondern stumm (20.08.2026)
+
+Kapitel 110.5 hatte einen Verdacht aufgeworfen, der **jede Lagenaussage des
+Projekts betrifft**: Shorts schneiden im „Bärmarkt" am schlechtesten ab
+(−15,3 gegen −7,0), Longs im Bärmarkt besser als im Bullenmarkt (−2,2 gegen
+−3,3). Beides zusammen ergäbe Sinn, wenn das Etikett **nachliefe** —
+`_marktphase` misst die vergangenen 250 Tage.
+
+**Die Frage wurde an der Wurzel gestellt**, am Index selbst statt am
+Barrierensystem: *steigt der Markt nach „bär" mehr als nach „bulle"?*
+
+### 114.1 Das Ergebnis — beide Indizes, alle Horizonte
+
+| Horizont | bulle | seitwärts | bär | bär − bulle | Schwelle | |
+|---|---:|---:|---:|---:|---:|:--|
+| **Produktionsindex** | | | | | | |
+| 20 Tage | +4,7 | −1,6 | +1,2 | −3,5 | +6,4 | nicht invers |
+| 60 Tage | +17,5 | −1,8 | +5,7 | −11,8 | +20,0 | nicht invers |
+| 120 Tage | +40,7 | +4,0 | +16,4 | −24,4 | +64,1 | nicht invers |
+| **BTC allein** | | | | | | |
+| 20 Tage | +4,5 | +2,0 | +1,0 | −3,4 | +5,0 | nicht invers |
+| 60 Tage | +12,8 | +8,5 | +5,1 | −7,7 | +19,8 | nicht invers |
+| 120 Tage | +27,3 | +18,2 | +17,9 | −9,4 | +35,0 | nicht invers |
+
+**Der Verdacht ist widerlegt.** In **sechs von sechs** Fällen zeigt die
+Differenz in die *entgegengesetzte* Richtung: nach „bulle" steigt der Markt
+**mehr**, nicht weniger. Das Etikett läuft zwar nach, wirkt aber wie
+Momentum — nicht wie ein Kontraindikator.
+
+### 114.2 ⚠️ Und zugleich: es trägt gar nichts
+
+**Keine einzige Differenz erreicht ihre Schwelle** — auch nicht in der
+Momentum-Richtung, für die man die andere Seite der Verteilung bräuchte. Bei
+**13 Zeitblöcken** ist die Kontrolle so grob, dass nur riesige Effekte
+nachweisbar wären (Schwelle bis +64,1 Punkte).
+
+**Was sich sagen lässt und was nicht:**
+
+| | |
+|---|---|
+| **invers?** | nein — sechs von sechs Punktschätzern gegen die Hypothese |
+| **momentum?** | Richtung ja, **nachweisbar nein** — Kontrolle zu schwach |
+| **vorhersagend?** | **nicht messbar**, in keiner Richtung |
+
+Neun Jahre Krypto sind eben nur **13 unabhängige Zeitblöcke**. Das ist keine
+Schwäche dieser Messung, sondern die Datenlage.
+
+### 114.3 Was das für die bisherigen Urteile heißt
+
+**Die Phasenprobe bleibt gültig — aber sie heißt etwas anderes, als bisher
+dabeisteht.** Sie hat die Kapitel 101, 102, 103 und 109 zu Fall gebracht, und
+sie tut das zu Recht: sie prüft, ob ein Befund **in allen drei
+Zeitabschnitten** steht.
+
+⚠️ **„Bär" ist dabei als Zeitraum-Etikett zu lesen, nicht als Marktzustand
+mit Prognosegehalt.** Ein Befund, der die Phasenprobe nicht besteht, gilt
+eben nur in einem Teil der Historie — das ist genau die Aussage, die wir
+brauchen, und sie hängt nicht daran, ob das Etikett in die Zukunft zeigt.
+
+**Kein früheres Urteil ist zu revidieren.** Die Formulierung ist zu schärfen.
+
+### 114.4 ⚠️ Der Nebenbefund bleibt unerklärt
+
+Die Zahlen aus 108 und 110, die diesen Verdacht ausgelöst haben, sind damit
+**nicht erklärt** — nur eine Erklärung ist ausgeschlossen. Shorts schneiden im
+trailing-Bärmarkt weiterhin am schlechtesten ab, und das ist offen.
+
+Ein Kandidat steht bereits im Raum und ist billig zu prüfen: **die
+Volatilität**. Im Bärmarkt ist der ATR hoch, der Stop in Prozent weit, der
+Breakeven niedrig — der Kanal aus den Kapiteln 100–103. Die
+Abstandsrechnung berücksichtigt das je Gruppe, die **Trefferquote** selbst
+aber nicht.
+
+### 114.5 Zwei eigene Fehlversuche beim Bau, beide verworfen
+
+Für die Gegenprobe gegen die Zusammensetzung lag ein verketteter Querschnitt
+der Tagesrenditen nahe. **Beide Fassungen sind unbrauchbar, und zwar messbar:**
+
+| | über die ganze Reihe |
+|---|---:|
+| aus **Medianen** verkettet | **−100 %** |
+| aus **Mitteln** verkettet | **+194.392 %** |
+
+Der Median-Tag ist bei schiefer Verteilung negativ, während ein Portfolio
+steigt — **verkettete Mediane sind kein Index.** Und das Mittel wird von
+Ausreißern erschlagen: +28,6 % durchschnittliche Tagesrendite stammen aus
+Neulistungen und Mikrowerten, nicht aus dem Markt.
+
+**Gewählt wurde stattdessen BTC allein** — eine Reihe, durchgehend ab
+2017-08-17, keine wandernde Zusammensetzung, keine Konstruktionsannahme. Dass
+beide Indizes dasselbe sagen, ist der eigentliche Beleg dieses Kapitels.

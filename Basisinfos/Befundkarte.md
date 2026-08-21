@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 113. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 114. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -75,6 +75,7 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 
 | Behauptung | Kapitel | woran sie fiel |
 |---|---|---|
+| Die Marktphase wirkt **invers** | **114** | 6 von 6 Punktschätzern dagegen, beide Indizes |
 | Die U-Form der Driftbänder | **113** | +7,0 auf 39 Reihen → **+0,6** auf 347 |
 | Der Drift ist derselbe ATR-Kanal | **113** | Bereinigung **vergrößert** ihn (+0,6 → +1,5) |
 | Kombination dreier Hebel trägt | 103 | Block-Permutation: +17,8 gegen Schwelle +20,5 |
@@ -126,6 +127,11 @@ Grundbefund: driftfreier Pfad = Erwartungswert null
    |                                        die Zelle fehlt)
    |
    +-- Nachrichten -------> NIE BEARBEITET
+
+Quer dazu: 114 prueft den BEGRIFF Marktphase selbst
+   -> nicht invers, aber auch nicht vorhersagend (13 Zeitbloecke)
+   -> die Phasenprobe bleibt gueltig, heisst aber "gilt in allen drei
+      ZEITABSCHNITTEN", nicht "gilt in allen Marktzustaenden"
 ```
 
 **Was das zeigt:** die Kapitel 109–112 hängen alle an **einem** Befund (108)
@@ -143,7 +149,7 @@ wurde nie angefasst.** Er ist der einzige Kanal, der weder über den ATR noch
 
 | Frage | Kapitel | was sie ändern würde |
 |---|---|---|
-| Wirkt die Marktphase **invers**? | offen (110.5) | betrifft **jede** Lagenaussage des Projekts rückwirkend |
+| Warum schneiden Shorts im trailing-Bär am schlechtesten ab? | offen (114.4) | Kandidat: Volatilität — die Quote selbst, nicht der Abstand |
 | Ist die Marktbreite als *inverses* Signal brauchbar? | offen | ein verlässlich inverser Zusammenhang ist so gut wie ein positiver |
 | Trägt der **Umschlag**? | offen | einziger unberührter Kanal in den Kursdaten |
 | Trägt „gefegt" **umgekehrt**? | offen (112.4) | Beobachtung −4,2, Richtung ungeprüft |

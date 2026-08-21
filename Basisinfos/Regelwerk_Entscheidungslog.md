@@ -18793,3 +18793,43 @@ zum Breakeven fehlen 5 bis 7 Punkte. NEUE METHODIKREGEL 2.53: jedes Urteil
 "traegt" wird mit dem ABSOLUTEN Abstand zum Breakeven berichtet. Kleine
 Stichprobe laesst echte Effekte durchfallen (103, 105), grosse laesst
 belanglose bestehen (113).
+
+
+[2026-08-20] KAPITEL 114: DIE MARKTPHASE IST NICHT INVERS, SONDERN STUMM
+
+110.5 hatte vermutet, das Phasen-Etikett laufe nach und wirke als
+Kontraindikator. Die Frage wurde AN DER WURZEL gestellt - am Index selbst
+statt am Barrierensystem: steigt der Markt nach "baer" mehr als nach "bulle"?
+
+ERGEBNIS, beide Indizes, alle drei Horizonte: Produktionsindex 120 Tage bulle
++40,7 %, baer +16,4 % (Differenz -24,4, Schwelle +64,1). BTC allein bulle
++27,3 %, baer +17,9 % (-9,4 gegen +35,0). IN SECHS VON SECHS FAELLEN zeigt die
+Differenz in die ENTGEGENGESETZTE Richtung - nach "bulle" steigt der Markt
+MEHR. Der Verdacht ist widerlegt; das Etikett laeuft nach, wirkt aber wie
+Momentum, nicht wie ein Kontraindikator.
+
+⚠️ UND ZUGLEICH TRAEGT ES GAR NICHTS: keine Differenz erreicht ihre Schwelle.
+Bei 13 Zeitbloecken ist die Kontrolle so grob, dass nur riesige Effekte
+nachweisbar waeren. Neun Jahre Krypto sind eben nur 13 unabhaengige Bloecke.
+Sagbar: invers NEIN (6 von 6 Punktschaetzern dagegen), Momentum in der
+Richtung ja aber NICHT nachweisbar, vorhersagend NICHT MESSBAR.
+
+WAS DAS FUER DIE BISHERIGEN URTEILE HEISST: die Phasenprobe bleibt gueltig,
+heisst aber etwas anderes als bisher dabeisteht. Sie prueft, ob ein Befund in
+ALLEN DREI ZEITABSCHNITTEN steht - "baer" ist als Zeitraum-Etikett zu lesen,
+nicht als Marktzustand mit Prognosegehalt. KEIN frueheres Urteil ist zu
+revidieren, die Formulierung ist zu schaerfen.
+
+⚠️ DER NEBENBEFUND BLEIBT UNERKLAERT: dass Shorts im trailing-Baermarkt am
+schlechtesten abschneiden, ist damit NICHT erklaert - nur eine Erklaerung ist
+ausgeschlossen. Naechster Kandidat: die VOLATILITAET. Im Baermarkt ist der ATR
+hoch, der Stop weit, der Breakeven niedrig; die Abstandsrechnung
+beruecksichtigt das je Gruppe, die TREFFERQUOTE selbst aber nicht.
+
+ZWEI EIGENE FEHLVERSUCHE BEIM BAU, beide verworfen und dokumentiert: ein
+verketteter Querschnitt der Tagesrenditen ergibt aus MEDIANEN -100 % und aus
+MITTELN +194.392 % ueber die ganze Reihe. Verkettete Mediane sind kein Index
+(der Median-Tag ist bei schiefer Verteilung negativ), und das Mittel wird von
+Neulistungen erschlagen (+28,6 %/Tag). Gewaehlt: BTC allein - eine Reihe ab
+2017, keine wandernde Zusammensetzung. Dass beide Indizes dasselbe sagen, ist
+der eigentliche Beleg.

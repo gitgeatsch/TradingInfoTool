@@ -9248,6 +9248,39 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- IST DIE MARKTPHASE INVERS? (Kapitel 114) ----
+    _piq = _quelltext("messe_phase_invers.py")
+    _piroh = io.open("messe_phase_invers.py", encoding="utf-8").read()
+
+    pruefe(P, "die Frage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _piroh
+           and "P1  Ist die kuenftige Indexbewegung" in _piroh)
+
+    # ⚠️ ZWEI INDIZES - sonst haengt der Befund am Indexbau statt am Markt.
+    pruefe(P, "gemessen wird mit ZWEI Indizes",
+           "def _index_produktion" in _piq
+           and "def _index_zusammensetzungsfrei" in _piq,
+           "der Produktionsindex normiert auf c[j]/c[0] und mittelt ueber "
+           "2 bis 347 Reihen - die Falle aus 93 A2")
+    pruefe(P, "die Gegenprobe braucht BTC und bricht sonst ab",
+           "BTC fehlt in dieser Datenbank" in _piq,
+           "ohne Referenzreihe ist die Gegenprobe nicht moeglich - still "
+           "weiterrechnen waere schlimmer als abbrechen")
+    pruefe(P, "die verworfenen Indexversuche sind dokumentiert",
+           "verkettete Mediane sind schlicht kein Index" in _piroh
+           and "194.392" in _piroh,
+           "aus Medianen verkettet -100 %, aus Mitteln +194.392 % - wer das "
+           "nicht aufschreibt, baut es beim naechsten Mal wieder")
+    pruefe(P, "die Kontrolle wuerfelt ZEITBLOECKE",
+           "def _blockschwelle" in _piq and "blocklaenge" in _piq,
+           "Vorwaertsfenster von 120 Tagen auf taeglichen Etiketten "
+           "ueberlappen um mehr als 99 % (2.47)")
+    pruefe(P, "die Zahl der Bloecke wird ausgewiesen",
+           "Zeitbloecke fuer die Kontrolle" in _piq,
+           "13 Bloecke heisst: nur riesige Effekte waeren nachweisbar - "
+           "ohne diese Zahl liest sich 'nicht invers' als Nachweis, und es "
+           "ist nur eine Punktschaetzung (2.52)")
+
     # ---- DER DRIFT, ZERLEGT (Kapitel 113) ----
     _dzq = _quelltext("messe_drift_zerlegt.py")
     _dzroh = io.open("messe_drift_zerlegt.py", encoding="utf-8").read()
