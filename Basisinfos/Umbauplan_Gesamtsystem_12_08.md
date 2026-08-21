@@ -14370,3 +14370,121 @@ bei +7,1.
 Richtungen.** Sie kann die Strukturhypothese bestätigen — oder sie sauber
 erledigen. Beides ist mehr wert als das „nicht entscheidbar" der letzten drei
 Kapitel.
+
+
+---
+
+## Kapitel 108 — Die Wiederholung auf 262 Reihen: der erste bestätigte Befund (20.08.2026)
+
+Kapitel 104 und 105, unverändert wiederholt auf der breiten Basis. **Keine
+Bedingung wurde angepasst** — dieselben fünf Stopbänder, dieselbe
+Mindestfallzahl, dieselbe Reifeprobe, dasselbe Urteilsmaß. Sonst wäre es keine
+Wiederholung, sondern eine neue Suche.
+
+### 108.1 Die Basis
+
+| | schmal (104/105) | **breit (108)** |
+|---|---:|---:|
+| Anker | 51.778 | **533.080** |
+| reife Anker | 42.031 | **446.502** |
+| Reihen in der Blockprobe | 24 | **262** |
+| H-Fälle | 1.301 | **9.221** |
+
+Der Swing-Speicher wurde an **1.735 echten Ankern** gegen die
+Produktionsfunktion geprüft — wieder ohne Abweichung.
+
+### 108.2 Der Befund trägt — statistisch
+
+| Gruppe | Fälle | Quote | Abstand zum Breakeven |
+|---|---:|---:|---:|
+| alle Anker | 430.931 | 34,3 % | −5,7 |
+| A allein *(kein Urteil)* | 17.015 | 38,1 % | −0,5 |
+| B allein *(kein Urteil)* | 368.460 | 33,6 % | −6,4 |
+| **H** | **9.221** | **38,2 %** | **−0,3** |
+
+**Block-Permutation: größter Zufallswert −0,6, Schwelle −2,1, gemessen −0,3.**
+H schlägt **alle vierzig** Zufallsziehungen. Auf der schmalen Basis war es
++0,8 gegen +2,4 — also nicht entscheidbar.
+
+**Das ist der erste Befund dieses Projekts, der auf breiter Basis seine eigene
+Kontrolle besteht.**
+
+### 108.3 Der Quotenvorteil ist kostenunabhängig — und jetzt konsistent
+
+| Stopband | H | Quote H | Quote Rest | Differenz | Kostenrest |
+|---|---:|---:|---:|---:|---:|
+| 0–11 % | 1.289 | 42,1 % | 37,9 % | +4,2 | 1,04 P |
+| 11–14 % | 1.192 | 36,2 % | 34,4 % | +1,8 | 0,05 P |
+| 14–17 % | 1.263 | 38,5 % | 33,7 % | +4,8 | 0,12 P |
+| 17–22 % | 1.789 | 38,0 % | 33,7 % | +4,3 | 0,40 P |
+| 22–100 % | 3.688 | 37,5 % | 31,2 % | +6,3 | 2,62 P |
+
+**Bereinigter Vorsprung +4,8 gegen Schwelle +2,0 → trägt.** 121 % des rohen
+Vorsprungs überleben die Kostenbereinigung.
+
+⚠️ **Der Unterschied zur schmalen Basis ist der wichtigste Teil:** dort kam
+der ganze Effekt aus dem breitesten Band, und im schmalsten war H **schlechter**
+(−5,8). Jetzt sind **alle fünf Bänder positiv** — auch die drei mit sauberem
+Kostenrest (0,05 / 0,12 / 0,40 Punkte). Die vorab eingebaute Warnung schlägt
+nur für das breiteste Band an (2,62 P); die anderen vier tragen die Aussage
+ohne es.
+
+### 108.4 ⚠️ Und er ist nicht phasenrobust — zweifach belegt
+
+| Phase | 104-Maß | 105-Maß (bereinigt) |
+|---|---:|---:|
+| bulle | +8,5 | **+7,6** |
+| seitwärts | +5,7 | **+6,0** |
+| **bär** | **−6,4** | **−6,5** |
+
+Zwei unabhängig gerechnete Maße, praktisch identische Zahlen. **Die Regel
+hilft in steigenden und seitwärts laufenden Märkten und schadet in fallenden.**
+
+### 108.5 Die Gegenprobe zum Phasenindex
+
+⚠️ **Der Index ist zusammensetzungsabhängig.** `_marktphase` normiert jede
+Reihe auf ihre eigene erste Kerze und mittelt über die, die es an dem Tag
+schon gibt — **von 2 Reihen (2017) auf 347 (2026)**. Genau die Falle aus
+Kapitel 93 A2: *es war die Zusammensetzung, nicht die Zeit.*
+
+Die beiden Indizes stimmen zu **82,1 %** überein (3.290 gemeinsame Tage, keine
+echten Umkehrungen — nur 8 Tage „bär breit" gegen „bulle schmal"). Die
+restlichen 18 % entscheiden. Deshalb dieselbe Phasenprobe noch einmal mit den
+Etiketten des **alten, schmalen** Index (`pruefe_phasenindex.py`):
+
+| Phase | Index breit | **Index schmal** |
+|---|---:|---:|
+| bulle | +7,6 | **+11,9** |
+| seitwärts | +6,0 | **+7,6** |
+| **bär** | **−6,5** | **−10,1** |
+
+**Der Befund hält — mit dem alten Index ist er sogar deutlicher.** Die
+Phasenabhängigkeit hängt am Markt, nicht am Indexbau.
+
+### 108.6 Wo wir damit stehen
+
+Drei Sätze, alle belegt:
+
+1. **Die Strukturbedingung trägt ein echtes Signal.** +4,8 Punkte
+   kostenbereinigt gegen eine Schwelle von +2,0, auf 262 Reihen, konsistent
+   über alle fünf Stopbänder.
+2. **Sie zahlt für sich allein nicht.** H liegt bei −0,3 unter seinem eigenen
+   Breakeven — der Quotenvorteil wird von der höheren Hürde des weiteren Stops
+   aufgezehrt.
+3. **Sie ist nicht phasenrobust.** Im Bärmarkt kehrt sich der Vorteil um.
+
+**Umsetzungsreife: nein** — aber aus einem anderen Grund als bisher. Bislang
+hieß es „nicht entscheidbar". Jetzt ist entschieden, dass etwas da ist, und
+benannt, was ihm fehlt.
+
+### 108.7 ⚠️ Der naheliegende nächste Schritt ist auch der gefährlichste
+
+„H nur außerhalb des Bärmarkts anwenden" folgt **aus einem Ergebnis**, nicht
+aus einem Grund. Die Phasenprobe war als **Robustheitsprüfung** angelegt, nicht
+als Filterdimension; sie jetzt zur Regel zu machen ist genau der Schritt, vor
+dem Methodik 2.49 warnt.
+
+Prüfbar wäre er trotzdem — aber nur **an Daten, die die Hypothese nicht
+gesehen hat**: Anpassung auf der ersten Hälfte der Zeitreihe, Prüfung auf der
+zweiten. Das ist der einzige Weg, der aus einem gefundenen Muster eine
+belastbare Aussage macht.

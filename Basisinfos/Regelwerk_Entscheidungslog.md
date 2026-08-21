@@ -18539,3 +18539,49 @@ beide Arme gleich, gehoert aber in jeden Befund auf diesen Daten.
 FOLGE: die Schwelle skaliert grob mit der Wurzel der Reihenzahl - aus +10,0
 wuerde rechnerisch etwa +3, der Effekt liegt bei +7,1. Die Messung wird zum
 ersten Mal ENTSCHEIDUNGSFAEHIG, in beide Richtungen.
+
+
+[2026-08-20] KAPITEL 108: DIE WIEDERHOLUNG AUF 262 REIHEN - erster bestaetigter Befund
+
+104 und 105 unveraendert wiederholt. KEINE Bedingung angepasst - dieselben
+fuenf Stopbaender, dieselbe Mindestfallzahl, dieselbe Reifeprobe, dasselbe
+Urteilsmass.
+
+BASIS: 533.080 Anker (vorher 51.778), 446.502 reif, 262 Reihen in der
+Blockprobe (vorher 24), 9.221 H-Faelle (vorher 1.301). Swing-Speicher an
+1.735 echten Ankern gegen die Produktionsfunktion geprueft, ohne Abweichung.
+
+TRAEGT - STATISTISCH: alle Anker 34,3 % (-5,7), H 38,2 % (-0,3) auf 9.221
+Faellen. Block-Permutation groesster Zufallswert -0,6, Schwelle -2,1,
+gemessen -0,3 -> H schlaegt ALLE vierzig Ziehungen. Auf der schmalen Basis
+war es +0,8 gegen +2,4, also nicht entscheidbar. ERSTER BEFUND DES PROJEKTS,
+DER AUF BREITER BASIS SEINE EIGENE KONTROLLE BESTEHT.
+
+KOSTENUNABHAENGIG UND KONSISTENT: bereinigter Vorsprung +4,8 gegen Schwelle
++2,0, 121 % ueberleben die Bereinigung. Wichtigster Unterschied zur schmalen
+Basis: dort kam alles aus dem breitesten Band und im schmalsten war H
+SCHLECHTER (-5,8); jetzt sind ALLE FUENF Baender positiv (+4,2 / +1,8 / +4,8
+/ +4,3 / +6,3), auch die drei mit sauberem Kostenrest. Die Warnung schlaegt
+nur fuers breiteste Band an (2,62 P).
+
+⚠️ NICHT PHASENROBUST, ZWEIFACH BELEGT: 104-Mass bulle +8,5 / seitwaerts
++5,7 / baer -6,4; 105-Mass +7,6 / +6,0 / -6,5. Zwei unabhaengig gerechnete
+Masse, praktisch identisch.
+
+GEGENPROBE ZUM PHASENINDEX: _marktphase normiert auf die erste Kerze je Reihe
+und mittelt ueber die vorhandenen - von 2 Reihen (2017) auf 347 (2026), also
+zusammensetzungsabhaengig (Falle aus 93 A2). Beide Indizes stimmen zu 82,1 %
+ueberein, keine echten Umkehrungen. Dieselbe Probe mit den ALTEN Etiketten:
+bulle +11,9, seitwaerts +7,6, baer -10,1 - der Befund haelt und ist sogar
+deutlicher. Werkzeug: pruefe_phasenindex.py.
+
+STAND: (1) die Strukturbedingung traegt ein echtes Signal, (2) sie zahlt fuer
+sich allein nicht (-0,3 unter dem eigenen Breakeven), (3) sie ist nicht
+phasenrobust. Umsetzungsreife: NEIN - aber aus einem anderen Grund als
+bisher. Es ist entschieden, DASS etwas da ist, und benannt, WAS ihm fehlt.
+
+⚠️ DER NAHELIEGENDE NAECHSTE SCHRITT IST DER GEFAEHRLICHSTE: "H nur ausserhalb
+des Baermarkts" folgt aus einem ERGEBNIS, nicht aus einem Grund. Die
+Phasenprobe war als Robustheitspruefung angelegt, nicht als Filterdimension.
+Pruefbar nur an Daten, die die Hypothese nicht gesehen hat: Anpassung auf der
+ersten Haelfte der Zeitreihe, Pruefung auf der zweiten.

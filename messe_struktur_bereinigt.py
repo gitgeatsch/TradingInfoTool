@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import time
 import json
 import math
 import sys
@@ -143,7 +144,8 @@ def main() -> int:
     print("  Kapitel 104: H trifft 6,2 Punkte oefter - und hat 6,2 Punkte")
     print("  mehr Huerde. Hier wird der Stopabstand konstant gehalten.")
     print("=" * 78)
-    faelle = _reif(laufe(a.db, a.klasse), a.mindestalter)
+    faelle = _reif(laufe(a.db, a.klasse, fortschritt=True),
+                   a.mindestalter)
     print(f"  {len(faelle)} reife Anker (erste {a.mindestalter} Handelstage "
           f"je Reihe verworfen - Pflicht nach 104.3)")
 
@@ -248,8 +250,14 @@ def main() -> int:
         if abs(statistik(ziel) - vorsprung) > 1e-12:
             raise SystemExit("Zahlenfassung weicht ab - Messung ungueltig")
         print("  Zahlenfassung gegen die Woerterbuchfassung geprueft - gleich")
-        werte = []
+        werte, _tp = [], time.time()
         for _lauf in range(a.blockplacebo):
+            if time.time() - _tp >= 60:
+                _tp = time.time()
+                print(f"  [Placebo] {_lauf}/{a.blockplacebo} Laeufe, "
+                      f"Schwelle bisher "
+                      f"{100 * float(np.quantile(werte, 0.95)):+.1f}",
+                      flush=True)
             gew_ziel = ziel.copy()
             for reihe in reihen:
                 if len(reihe) < 2 * a.blocklaenge:

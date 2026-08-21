@@ -61,6 +61,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import time
 import json
 import math
 import sys
@@ -137,12 +138,18 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
     return {"oben": oben, "unten": unten}
 
 
-def laufe(db: str, klasse: str, roh_pruefen: bool = True) -> list[dict]:
-    """Je Anker: A, B, Ausgang, Phase - und Symbol/Zeit fuer die Bloecke."""
+def laufe(db: str, klasse: str, roh_pruefen: bool = True,
+          fortschritt: bool = False) -> list[dict]:
+    """Je Anker: A, B, Ausgang, Phase - und Symbol/Zeit fuer die Bloecke.
+
+    `fortschritt` meldet einmal je Minute den Stand - bei 347 Reihen laeuft
+    das eine halbe Stunde, und ein Lauf ohne Lebenszeichen ist von einem
+    haengenden nicht zu unterscheiden."""
     roh = _reihen_roh(db, klasse, _KLASSEN(db))
     phase = _marktphase(roh)
     aus, geprueft = [], 0
-    for sym, (c, h, l, v, a, off, d) in roh.items():
+    _t0 = _letzte = time.time()
+    for _nr, (sym, (c, h, l, v, a, off, d)) in enumerate(roh.items(), 1):
         del v
         sp = _SwingSpeicher(h, l)
         if roh_pruefen:
@@ -179,9 +186,19 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True) -> list[dict]:
                     ausgang = "ziel"
                     break
             aus.append({"sym": sym, "i": i, "frei": frei, "gedeckt": gedeckt,
+                        # Das Datum, damit sich die Phase NACHTRAEGLICH mit
+                        # einem anderen Index nachrechnen laesst (107.4).
+                        "datum": d[i],
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
                         "stop_relativ": float((einstieg - stop) / einstieg)})
+        if fortschritt and time.time() - _letzte >= 60:
+            _letzte = time.time()
+            _h = sum(1 for f in aus if f["frei"] and f["gedeckt"])
+            _rest = (_letzte - _t0) * (len(roh) - _nr) / max(_nr, 1)
+            print(f"  [{(_letzte - _t0) / 60:4.1f} min] Reihe {_nr}/{len(roh)}"
+                  f" - {len(aus)} Anker, {_h} in H"
+                  f" - noch ca. {_rest / 60:.0f} min", flush=True)
     if roh_pruefen:
         print(f"  Swing-Speicher an {geprueft} echten Ankern gegen die "
               f"Produktionsfunktion geprueft - gleich")

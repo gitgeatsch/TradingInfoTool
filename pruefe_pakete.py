@@ -9248,6 +9248,27 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE WIEDERHOLUNG AUF BREITER BASIS (Kapitel 108) ----
+    _pq108 = _quelltext("pruefe_phasenindex.py")
+    _mq108 = _quelltext("messe_marken.py")
+
+    # ⚠️ DER PHASENINDEX IST ZUSAMMENSETZUNGSABHAENGIG - er normiert auf die
+    # erste Kerze je Reihe und mittelt ueber die, die es an dem Tag gibt: von
+    # 2 Reihen (2017) auf 347 (2026). Genau die Falle aus Kapitel 93 A2.
+    pruefe(P, "es gibt die Gegenprobe zum Phasenindex",
+           "_marktphase" in _pq108 and "bereinigter_vorsprung" in _pq108,
+           "der Baermarkt-Befund (-6,5) haengt sonst an einem Index, dessen "
+           "Zusammensetzung ueber neun Jahre wandert. Mit den alten "
+           "Etiketten kommt -10,1 heraus - er haelt")
+    pruefe(P, "der Anker traegt sein Datum",
+           '"datum": d[i]' in _mq108,
+           "ohne Datum laesst sich die Phase nicht mit einem anderen Index "
+           "nachrechnen - die Gegenprobe waere unmoeglich")
+    pruefe(P, "die Messung meldet sich waehrend langer Laeufe",
+           "fortschritt" in _mq108 and "noch ca." in _mq108,
+           "ein Lauf ohne Lebenszeichen ist von einem haengenden nicht zu "
+           "unterscheiden")
+
     # ---- DIE BREITE MESSBASIS (Kapitel 107) ----
     import simuliere_bremse as _SB107
     _lq107 = _quelltext("lade_messreihen.py")
