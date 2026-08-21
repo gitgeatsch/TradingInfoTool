@@ -3134,3 +3134,38 @@ DERSELBEN Lesart wie das Urteil - ein milderer Massstab waere zu niedrig
 
 ⚠️ Die Entscheidungsquote gehoert IMMER ausgegeben. Ohne sie sieht ein
 Auswahleffekt aus wie ein Befund.
+
+
+## 2.55 Eine Permutation ist die falsche Kontrolle fuer eine deterministische Umrechnung (20.08.2026)
+
+**Der Fall.** Kapitel 123 verglich zwei Ausstiegsregeln gegen die Basis. Die
+Kontrolle war eine Block-Permutation - und sie lieferte eine Schwelle, die auf
+drei Stellen genau dem Messwert entsprach. "Nicht besser" war keine Aussage,
+sondern eine Tautologie.
+
+**Zwei Gruende, und der zweite ist der wichtigere:**
+
+  1. Eine Permutation vertauscht Werte. Sie aendert den MITTELWERT nicht -
+     wer Mittelwerte vergleicht, misst also garantiert nichts.
+
+  2. ⚠️ Es gab hier NICHTS ZU PERMUTIEREN. Die Varianten sind
+     deterministische Umrechnungen DESSELBEN Pfades; es existiert keine
+     zufaellige Zuordnung, die eine Permutation zerstoeren koennte.
+
+**Die Regel.** Vor jeder Kontrolle ist zu benennen, WAS der Zufall zerstoeren
+soll:
+
+    zufaellige Zuordnung vorhanden   -> Permutation (2.47, 2.50, 2.52)
+    deterministische Umrechnung      -> BLOCK-BOOTSTRAP auf den PAARWEISEN
+                                        Differenzen; Zeitbloecke MIT
+                                        Zuruecklegen ziehen, Vertrauens-
+                                        intervall bilden
+
+Die Frage lautet dann nicht "ist der Unterschied echt", sondern "wie genau ist
+er geschaetzt" - und ein Intervall, das die Null nicht einschliesst, ist die
+Antwort.
+
+⚠️ Und die Warnung aus 2.52 gilt hier genauso: eine Kontrolle, die nichts
+kontrolliert, sieht von aussen aus wie eine bestandene. Ein Ergebnis, bei dem
+Schwelle und Messwert uebereinstimmen, ist IMMER ein Befund ueber die
+Kontrolle - nie einer ueber die Sache.

@@ -19145,3 +19145,38 @@ DIE BINDENDE GROESSE IST NICHT DER FILTER, SONDERN DIE HANDELSGEBUEHR - H
 schliesst etwa vier Fuenftel der Luecke, das letzte Fuenftel schliesst nur der
 Handelsplatz. Bei 6 % Verlustanteil: +0,68 % Kapital je Trade zur Referenz,
 -0,22 % im Betrieb.
+
+
+[2026-08-20] KAPITEL 123: DER AUSSTIEG - der vermutete Hebel existiert nicht
+
+Die Kapitel 104-122 prueften nur den EINSTIEG. Der Projektbefund vom 04.08.
+(50 % standen bei +1R, 17,6 % kamen an) waere ein Ausstiegsproblem und braucht
+KEINE Prognose - und er waere der erste Hebel, der auf JEDEN Trade wirkt.
+
+DER ALTE BEFUND HAELT NUR ZUR HAELFTE: +1R beruehrt 50,6 % (04.08.: 50 %,
+punktgenau), Ziel erreicht aber 34,4 % statt 17,6 %. Von denen, die +1R sahen,
+kommen 67,9 % an - nicht ein Drittel. Die Luecke ist halb so gross wie gedacht.
+
+BEIDE REGELN MACHEN ES SCHLECHTER: Basis brutto +0,031 R, A1 Teilverkauf
+-0,038, A2 Einstandstop -0,088. Auf H: Basis +0,142, A1 +0,029, A2 -0,007.
+Block-Bootstrap 400 Ziehungen auf 477 Reihen: A1 -0,069 R [-0,078, -0,061],
+A2 -0,119 R [-0,127, -0,111] - beide Intervalle vollstaendig unter null.
+
+DER MECHANISMUS folgt aus der ersten Tabelle: der Einstandstop rettet die 32 %,
+die nach +1R drehen, und kostet bei jedem Trade, der kurz zum Einstand
+zurueckkommt und dann doch ans Ziel laeuft. Bei 67,9 % Durchlaufquote
+ueberwiegt der zweite Fall. ⚠️ Das widerspricht einer der verbreitetsten
+Handelsregeln - "Stop auf Einstand ziehen" kostet hier 0,119 R je Trade, mehr
+als H einbringt.
+
+⚠️ UND EINE KONTROLLE, DIE NICHTS KONTROLLIEREN KONNTE: die erste Fassung
+nutzte eine Block-Permutation und lieferte eine Schwelle, die auf drei Stellen
+genau dem Messwert entsprach. Eine Permutation vertauscht Werte und aendert den
+MITTELWERT nicht - und tiefer: es gab nichts zu permutieren, weil A1 und A2
+deterministische Umrechnungen DESSELBEN Pfades sind. Richtig ist ein
+BLOCK-BOOTSTRAP auf den paarweisen Differenzen. Neue Methodikregel 2.55.
+
+FOLGE: der vermutete Ausstiegshebel existiert nicht; von den drei Varianten
+ist die einfachste die beste (Stop fest, Ziel fest). Damit ist auch der letzte
+naheliegende Hebel bearbeitet - was bleibt, sind die Kosten (bindend) und die
+Nachrichten (nie bearbeitet, schlecht pruefbar).

@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 122. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 123. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -53,6 +53,7 @@ ab jetzt nur noch Rechenzeit.
 | 11 | **Zerlegung statt Fallbeil** | dass ein Nullbefund Optionen mit wegräumt | **2.51** |
 | 12 | **Abstand zum Breakeven** neben jedem Urteil | dass ein belangloser Effekt als Fund gilt | **2.53** |
 | 13 | **Zwei Lesarten** für Unentschiedene | dass ein Auswahleffekt wie ein Befund aussieht | **2.54** |
+| 14 | **Bootstrap statt Permutation** bei deterministischen Umrechnungen | eine Kontrolle, die den Mittelwert gar nicht ändern kann | **2.55** |
 
 **Regel 2.51 wirkt rückwärts:** Befunde, die vor ihrer Einführung als
 „erledigt" abgelegt wurden, beantworten meist die *Handelsfrage* („erreicht es
@@ -185,6 +186,7 @@ wurde nie angefasst.** Er ist der einzige Kanal, der weder über den ATR noch
 | **Warum treffen sterbende Coins häufiger ihr Ziel?** | offen (121.4) | 39,3 % gegen 35,2 %; drei Erklärungsversuche widerlegt, **keine Erklärung** |
 | **Handelbarkeit in Small** | ⚠️ **mit Kursdaten unprüfbar** (121.5) | Spread, Markttiefe und ob es beim Ausstieg einen Käufer gibt, stehen in keiner OHLC-Reihe — und sind kein Gebührenproblem |
 | **BTC ist nicht messbar** | 120.4 | 202 H-Fälle; eine Reihe, 2,1 % der Tage. Für das wichtigste Einzelasset gibt es keine Aussage |
+| **Ausstieg** | **erledigt (123)** | Teilverkauf −0,069 R, Einstandstop −0,119 R — beide Intervalle unter null. Die einfachste Variante ist die beste |
 | **Nachrichten** | **nie bearbeitet** | einziger Kanal außerhalb der Kursreihe — und damit der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert |
 
 ---

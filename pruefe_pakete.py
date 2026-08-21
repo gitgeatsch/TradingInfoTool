@@ -9248,6 +9248,44 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DER AUSSTIEG (Kapitel 123) ----
+    _asq = _quelltext("messe_ausstieg.py")
+    _asroh = io.open("messe_ausstieg.py", encoding="utf-8").read()
+
+    pruefe(P, "die zwei Ausstiegsregeln stehen als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _asroh
+           and "A1  TEILVERKAUF" in _asroh and "A2  EINSTANDSTOP" in _asroh)
+    pruefe(P, "alle drei Varianten aus EINEM Vorwaertsdurchlauf",
+           "EIN Vorwaertsdurchlauf fuer alle drei" in _asroh,
+           "drei Laeufe waeren drei Stichproben, und Unterschiede teils "
+           "Auswahl")
+
+    # ⚠️ DIE KERZE, IN DER +1R ZUERST BERUEHRT WIRD, ENTSCHEIDET UEBER DIE
+    # GANZE REGEL - dort war die erste Fassung zu guenstig.
+    pruefe(P, "die Ausloesekerze zaehlt schon als ausgeloest",
+           "ausgeloest = eins_beruehrt or h[j] >= marke1" in _asq,
+           "beruehrt dieselbe Kerze auch den Einstand, ist die Reihenfolge "
+           "unbekannt - die vorsichtige Lesart nimmt an, dass der "
+           "nachgezogene Stop gegriffen hat")
+    pruefe(P, "die Kosten sind bei allen Varianten gleich",
+           "teilt die" in _asroh and "Ausstiegsmenge" in _asroh,
+           "ein Teilverkauf teilt die Menge, nicht die Summe - "
+           "unterschiedliche Kosten haetten den Vergleich wertlos gemacht")
+
+    # ⚠️ METHODIK 2.55 - eine Permutation aendert den Mittelwert nicht.
+    pruefe(P, "die Kontrolle ist ein BOOTSTRAP, keine Permutation",
+           "rng.integers(0, len(bloecke), len(bloecke))" in _asq
+           and "Intervall" in _asq,
+           "die erste Fassung permutierte und lieferte eine Schwelle, die "
+           "auf drei Stellen genau dem Messwert entsprach - eine Permutation "
+           "vertauscht Werte und aendert den Mittelwert nicht")
+    pruefe(P, "und der Grund steht dabei",
+           # ⚠️ Nur der Kern des Satzes - der Zeilenumbruch im Quelltext
+           # zerlegt jede laengere Wendung.
+           "ZU PERMUTIEREN" in _asroh,
+           "A1 und A2 sind deterministische Umrechnungen DESSELBEN Pfades - "
+           "es gibt keine Zuordnung, die der Zufall zerstoeren koennte")
+
     # ---- DIE UEBERLEBENSVERZERRUNG (Kapitel 121) ----
     _ueq = _quelltext("messe_ueberleben.py")
     _ueroh = io.open("messe_ueberleben.py", encoding="utf-8").read()

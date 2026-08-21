@@ -15931,3 +15931,91 @@ Handelsplatz.
 | Reicht H allein zum Betriebssatz? | **nein** (−0,036 R) |
 | Reicht H zum Referenzsatz? | **ja** (+0,114 R) |
 | Ist die dünne Liquidität handelbar? | ⚠️ **mit Kursdaten unprüfbar** (121.5) |
+
+
+---
+
+## Kapitel 123 — Der Ausstieg: der vermutete Hebel existiert nicht (20.08.2026)
+
+Die Kapitel 104–122 haben ausschließlich den **Einstieg** geprüft. Im Projekt
+stand seit dem 04.08. ein Befund, dem nie jemand nachgegangen ist: *50 % der
+Trades standen bei +1R — angekommen sind 17,6 %.* Wenn das stimmt, ist es ein
+**Ausstiegsproblem**, und es verlangt **keine Prognose**.
+
+⚠️ **Und es wäre der erste Hebel, der auf jeden Trade wirkt** — H feuert auf
+2,1 % der Tage.
+
+### 123.1 Der alte Befund hält nur zur Hälfte
+
+| | 04.08., schmale Basis | **523 Reihen** |
+|---|---:|---:|
+| +1R berührt | 50 % | **50,6 %** |
+| Ziel erreicht | 17,6 % | **34,4 %** |
+| **von +1R aus angekommen** | ~35 % | **67,9 %** |
+
+**Die erste Zahl stimmt punktgenau, die zweite ist doppelt so hoch.** Von den
+Trades, die den halben Weg schaffen, kommen **mehr als zwei Drittel an** — die
+Lücke, die das ganze Thema motiviert hat, ist nur halb so groß wie gedacht.
+
+### 123.2 Beide Regeln machen es schlechter
+
+| Variante | brutto | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|---:|
+| **Basis** (Stop fest, Ziel fest) | **+0,031** | −0,007 | −0,160 |
+| A1 Teilverkauf bei +1R | −0,038 | −0,076 | −0,229 |
+| A2 Einstandstop bei +1R | −0,088 | −0,126 | −0,279 |
+
+**Auf H dasselbe Bild:** Basis **+0,142**, A1 +0,029, A2 −0,007.
+
+| Block-Bootstrap, 400 Ziehungen, 477 Reihen | Differenz | 95-%-Intervall | |
+|---|---:|---|---|
+| A1 Teilverkauf | −0,069 R | [−0,078, −0,061] | **schlechter** |
+| A2 Einstandstop | −0,119 R | [−0,127, −0,111] | **schlechter** |
+
+**Beide Intervalle liegen vollständig unter null.**
+
+### 123.3 Der Mechanismus folgt direkt aus 123.1
+
+Der Einstandstop rettet die **32 %**, die nach +1R drehen — und kostet bei
+jedem Trade, der kurz zum Einstand zurückkommt und **dann doch ans Ziel
+läuft**. Bei einer Durchlaufquote von **67,9 %** überwiegt der zweite Fall
+deutlich.
+
+⚠️ **Das widerspricht einer der verbreitetsten Handelsregeln überhaupt.**
+„Stop auf Einstand ziehen, sobald es läuft" gilt als selbstverständlich
+vernünftig. Auf 523 Reihen kostet es **0,119 R je Trade** — mehr, als H
+einbringt (+0,15 R).
+
+### 123.4 ⚠️ Und eine Kontrolle, die gar nichts kontrollieren konnte
+
+Die erste Fassung prüfte mit einer **Block-Permutation**. Sie lieferte eine
+Schwelle, die **auf drei Stellen genau dem Messwert entsprach** — und „nicht
+besser" war damit keine Aussage, sondern eine Tautologie.
+
+**Der Grund ist elementar: eine Permutation vertauscht Werte und ändert den
+Mittelwert nicht.**
+
+Und er liegt tiefer als der Programmierfehler: **hier gibt es nichts zu
+permutieren.** A1 und A2 sind deterministische Umrechnungen *desselben*
+Pfades — es existiert keine zufällige Zuordnung, die man zerstören könnte.
+
+> Die Frage ist nicht *„ist der Unterschied echt"*, sondern *„wie genau ist er
+> geschätzt"*. Dafür ist der **Block-Bootstrap** das Werkzeug: ganze
+> Zeitblöcke **mit Zurücklegen** ziehen und ein Vertrauensintervall bilden.
+
+Daraus wird **Methodik 2.55**.
+
+### 123.5 Was das für den Plan heißt
+
+**Der vermutete Ausstiegshebel existiert nicht.** Von den drei geprüften
+Varianten ist die **einfachste die beste**: Stop fest, Ziel fest.
+
+Damit ist auch der letzte der drei ursprünglich benannten Wege bearbeitet:
+
+| Weg | Stand |
+|---|---|
+| Drift | ausgereizt (113) |
+| Kosten | Arithmetik, **bindende Größe** (119, 122) |
+| Nachrichten | nie bearbeitet, schlecht prüfbar |
+| *Struktur (H)* | *trägt, reicht zum Betriebssatz nicht* |
+| *Ausstieg* | **kein Hebel (123)** |
