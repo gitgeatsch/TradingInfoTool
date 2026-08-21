@@ -9248,6 +9248,43 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE FRAGE EINMAL RICHTIG GESTELLT (Kapitel 118) ----
+    _sbq = _quelltext("messe_dosis_sauber.py")
+    _sbroh = io.open("messe_dosis_sauber.py", encoding="utf-8").read()
+    import messe_dosis_sauber as _SB118
+
+    pruefe(P, "die Vorabfestlegung schliesst eine zweite Runde aus",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _sbroh
+           and "KEINE zweite Runde" in _sbroh,
+           "117 verfehlte um 0,2 Punkte - ohne diesen Satz waere die "
+           "Versuchung gross gewesen, so lange umzuformulieren, bis es passt")
+
+    # ⚠️ DIE ZELLE AUS 117 DARF NICHT NACHTRAEGLICH ZUR VORAB BENANNTEN
+    # ERKLAERT WERDEN (2.49) - deshalb waehlen und pruefen auf GETRENNTEN
+    # Daten.
+    pruefe(P, "gewaehlt und geprueft wird auf getrennten Daten",
+           "def _waehle" in _sbq and "waehl_je" in _sbq
+           and "pruef_je" in _sbq,
+           "auf der Pruefseite wird nichts mehr gesucht - nur deshalb gilt "
+           "dort die Ein-Zellen-Schwelle")
+    pruefe(P, "die Zeitteilung hat einen Puffer",
+           _SB118.PUFFER_TAGE >= max(_SB118.HORIZONTE),
+           f"Puffer {_SB118.PUFFER_TAGE} Tage gegen einen Horizont von "
+           f"{max(_SB118.HORIZONTE)} - ohne ihn sickert die Antwort in die "
+           "Waehlseite")
+    pruefe(P, "es gibt ZWEI Teilungen mit verschiedenen Schwaechen",
+           '"ZEIT", "SYMBOL"' in _sbq,
+           "Zeit schliesst die Epochenwette aus, Symbol die Coinwette - "
+           "einzeln waere jede angreifbar")
+    pruefe(P, "gerechnet wird in der vorsichtigen Lesart",
+           "Vorsichtige Lesart" in _sbroh or "Ablauf zaehlt als Fehlschlag"
+           in _sbroh,
+           "Methodik 2.54 - sonst vergleicht man Auswahlen statt Horizonte")
+    pruefe(P, "und die Basis derselben Zelle steht als Bezug daneben",
+           "der faire Bezug" in _sbroh,
+           "H gegen ALLE Anker zu vergleichen mischt die Geometriewahl in "
+           "den Vergleich (2.50)")
+
     # ---- DIE DOSIS (Kapitel 117) ----
     _dsq = _quelltext("messe_dosis.py")
     _dsroh = io.open("messe_dosis.py", encoding="utf-8").read()

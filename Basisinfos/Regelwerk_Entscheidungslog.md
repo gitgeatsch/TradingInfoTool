@@ -18950,3 +18950,45 @@ Daten, welche die Hypothese nicht gesehen hat.
 ⚠️ VORBEHALT, der auch dann bleibt: ein Stop bei 3 ATR sind rund 21 %
 Abstand; bei 6 % Verlustanteil ein Hebel von 0,3 - kein Hebelgeschaeft mehr,
 sondern eine kleine Spot-Position (schon 101.5 benannt).
+
+
+[2026-08-20] KAPITEL 118: DIE FRAGE EINMAL RICHTIG GESTELLT - NEIN
+
+117 hatte die Schwelle um 0,2 Punkte verfehlt; die Huerdenrechnung zeigte,
+dass eine VORAB benannte Zelle gereicht haette. Die Zelle nachtraeglich dazu
+zu erklaeren waere zirkulaer gewesen. Stattdessen: Geometrie WAEHLEN auf
+einem Teil, PRUEFEN auf einem anderen - auf der Pruefseite wird nichts mehr
+gesucht, also gilt dort die Ein-Zellen-Schwelle.
+
+ZEIT (Puffer 250 Tage, 32.946 Anker verworfen): gewaehlt k=3,0/CRV=1,5/250
+mit +13,1 auf der Waehlseite. Auf der Pruefseite H -7,8, Basis -7,5, Beitrag
+-0,3, Schwelle -1,6 -> TRAEGT NICHT. Von +13,1 bleibt NICHTS.
+
+SYMBOL (jede zweite Reihe, gleicher Zeitraum): gewaehlt k=4,0/CRV=3,0/250 mit
++6,6. Auf der Pruefseite H +1,2, Basis -3,6, Beitrag +4,8 (stimmig mit den
++7,7 aus 117), Schwelle +4,5 -> TRAEGT NICHT, weil H's ABSOLUTER Abstand
+darunter bleibt.
+
+⚠️ UND DIE GEWAEHLTE GEOMETRIE IST NICHT STABIL: Zeit waehlt CRV=1,5, Symbol
+waehlt CRV=3,0. Zwei Teilungen derselben Daten waehlen zwei verschiedene
+Optima - damit ist die Dosisfrage aus 117 endgueltig beantwortet.
+
+URTEIL: die Frage ist in ihrer sauberen Form beantwortet, und zwar mit NEIN.
+Keine zweite Runde, so vorab festgelegt.
+
+VOLLSTAENDIGER STAND ZU H: traegt Information JA (108, 111, 116) - ist
+Momentum NEIN - ist Liquiditaet NEIN - mit Drift kombinierbar NEIN -
+uebertraegt sich ueber Regimewechsel NEIN - hat einen Anwendungszeitpunkt
+NEIN - braucht eigene Dosis NEIN - haelt ausserhalb der eigenen Daten NEIN.
+H ist innerhalb der Stichprobe real und ausserhalb nicht nachweisbar; das ist
+die Standardgestalt von data snooping (Park & Irwin; Sullivan/Timmermann/
+White).
+
+⚠️ FOLGE FUERS GESAMTVORHABEN: alle Kandidaten aus 99-118 stammen aus der
+KURSREIHE und sind untereinander verwandt (ATR-Kanal fuenfmal, H und Drift
+92 % Ueberlappung). KEINER hat einen Ausser-Stichproben-Test bestanden. Die
+Antwort auf die Kernfrage lautet damit: aus der Kursreihe allein laesst sich
+fuer dieses Barrierensystem keine Regel gewinnen, die ausserhalb ihrer
+eigenen Daten traegt. Was bleibt, ist die Pruefkette (2.47-2.54) und die
+Datenbasis (347 Reihen) - beide erledigen den naechsten Kandidaten in
+Stunden.

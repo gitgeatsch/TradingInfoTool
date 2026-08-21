@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 117. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 118. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -77,6 +77,7 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 
 | Behauptung | Kapitel | woran sie fiel |
 |---|---|---|
+| **H hält außerhalb seiner eigenen Daten** | **118** | Zeit −7,8 gegen −1,6 · Symbol +1,2 gegen +4,5 |
 | **H braucht eine eigene Dosis** | **117** | Optimum liegt in derselben Ecke wie das der Basis |
 | **H braucht Liquidität** | **116** | +2,7 gegen Schwelle +6,3; im liquidesten Band ist H am schlechtesten |
 | **H hat einen Anwendungszeitpunkt** | **115** | Beharrung +3,9 gegen Schwelle +7,9; über Breakeven in **2 von 20** Fenstern |
@@ -127,6 +128,10 @@ Grundbefund: driftfreier Pfad = Erwartungswert null
    |        |              111 Hochabstand ........ 44 % erklärt, 56 % bleibt
    |        |              112 Anreicherung ....... nichts mehr zu holen
    |        |
+   |        +-- AUSSERHALB? -------> 118 zwei Teilungen .. BEIDE NEIN
+   |        |                              und die gewaehlte Geometrie ist
+   |        |                              nicht einmal stabil (CRV 1,5/3,0)
+   |        |
    |        +-- WELCHE DOSIS? -----> 117 Geometrie .. dieselbe wie Basis
    |        |                              +4,5 gegen Schwelle +4,7
    |        |                              (eine vorab benannte Zelle: +3,7)
@@ -167,6 +172,23 @@ wurde nie angefasst.** Er ist der einzige Kanal, der weder über den ATR noch
 | Trägt der **Umschlag**? | offen | einziger unberührter Kanal in den Kursdaten |
 | Trägt „gefegt" **umgekehrt**? | offen (112.4) | Beobachtung −4,2, Richtung ungeprüft |
 | **Nachrichten** | **nie bearbeitet** | einziger Kanal außerhalb der Kursreihe — und damit der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert |
+
+---
+
+## 5b. ⚠️ Die Antwort auf die Kernfrage (Stand 118)
+
+Alle Kandidaten der Kapitel 99–118 stammen aus **der Kursreihe**. Sie sind
+untereinander verwandt — der ATR-Kanal trat **fünfmal** unter neuem Namen auf,
+H und Drift überlappen zu 92 %. **Keiner hat einen Außer-Stichproben-Test
+bestanden.**
+
+> **Aus der Kursreihe allein lässt sich für dieses Barrierensystem keine Regel
+> gewinnen, die außerhalb ihrer eigenen Daten trägt.**
+
+Das ist ein Ergebnis, kein Scheitern — und es ist mehr wert als ein Filter,
+der auf einem Stichprobenartefakt in den Betrieb gegangen wäre. Was bleibt:
+die **Prüfkette** (vierzehn Stufen, 2.47–2.54) und die **Datenbasis** (347
+Reihen). Beide erledigen den nächsten Kandidaten in Stunden statt Wochen.
 
 ---
 

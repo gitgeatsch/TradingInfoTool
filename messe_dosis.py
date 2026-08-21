@@ -84,12 +84,12 @@ def sammle(db: str, klasse: str) -> tuple[dict, dict, dict]:
     # (Reihennummer, Ankerindex, Ausgang, Tage, istH). Als Listen gesammelt
     # und am Ende zu numpy verdichtet - 8,9 Mio. Saetze als dicts waeren
     # nicht tragbar.
-    roh_zellen: dict = {(k, crv): {"r": [], "i": [], "aus": [], "tg": [],
-                                   "h": []}
+    roh_zellen: dict = {(k, crv): {"r": [], "i": [], "t": [], "aus": [],
+                                   "tg": [], "h": []}
                         for k in K_WERTE for crv in CRV_WERTE}
     t0 = letzte = time.time()
     for nr, (sym, (c, h, l, v, a, off, d)) in enumerate(roh.items(), 1):
-        del v, sym, d
+        del v, sym
         sp = _SwingSpeicher(h, l)
         start = off + 1 + MINDESTALTER
         for i in range(start, len(c) - 1):
@@ -128,6 +128,8 @@ def sammle(db: str, klasse: str) -> tuple[dict, dict, dict]:
                     rz = roh_zellen[(k, crv)]
                     rz["r"].append(nr)
                     rz["i"].append(i)
+                    # Das Datum als Zahl - fuer die Zeitteilung in 118.
+                    rz["t"].append(int(str(d[i])[:10].replace("-", "")))
                     rz["aus"].append(0 if ausgang == "stop"
                                      else 1 if ausgang == "ziel" else 2)
                     rz["tg"].append(tage)
@@ -160,6 +162,7 @@ def sammle(db: str, klasse: str) -> tuple[dict, dict, dict]:
         roh_zellen[schl] = {
             "r": np.array(rz["r"], dtype=np.int16),
             "i": np.array(rz["i"], dtype=np.int32),
+            "t": np.array(rz["t"], dtype=np.int32),
             "aus": np.array(rz["aus"], dtype=np.int8),
             "tg": np.array(rz["tg"], dtype=np.int16),
             "h": np.array(rz["h"], dtype=bool)}

@@ -15410,3 +15410,102 @@ Solange das nicht gelaufen ist, steht hier ein **Nein**.
 **kein Hebelgeschäft mehr, sondern eine kleine Spot-Position** (schon in
 101.5 benannt). Die Geometrie zu weiten heißt, die Positionen zu
 verkleinern.
+
+
+---
+
+## Kapitel 118 — Die Frage einmal richtig gestellt: Nein (20.08.2026)
+
+Kapitel 117 hatte die Schwelle um **0,2 Punkte** verfehlt, und die
+Hürdenrechnung zeigte: bei einer *vorab benannten* Zelle hätte sie gereicht.
+⚠️ **Die Zelle nachträglich zur vorab benannten zu erklären, wäre zirkulär
+gewesen.** Stattdessen: Geometrie **wählen** auf einem Teil der Daten,
+**prüfen** auf einem anderen. Auf der Prüfseite wird nichts mehr gesucht —
+deshalb gilt dort die Ein-Zellen-Schwelle zu Recht.
+
+**Zwei Teilungen, weil ihre Schwächen verschieden sind.**
+
+### 118.1 Teilung nach ZEIT
+
+Wählen bis zur Mitte, **250 Tage Puffer** (32.946 Anker verworfen), prüfen
+danach.
+
+| | | |
+|---|---:|---:|
+| gewählt | k=3,0 / CRV=1,5 / 250 T | **+13,1** auf der Wählseite |
+| **H auf der Prüfseite** | 4.418 Fälle | **−7,8** |
+| Basis dort | 361.162 Fälle | −7,5 |
+| **H's Beitrag** | | **−0,3** |
+| Ein-Zellen-Schwelle | | −1,6 |
+
+**Trägt nicht.** Von +13,1 auf der Wählseite bleibt auf der Prüfseite
+**nichts** — H's Beitrag ist −0,3.
+
+### 118.2 Teilung nach SYMBOL
+
+Wählen auf jeder zweiten Reihe, prüfen auf den übrigen. Beide Hälften decken
+denselben Zeitraum ab.
+
+| | | |
+|---|---:|---:|
+| gewählt | k=4,0 / CRV=3,0 / 250 T | +6,6 auf der Wählseite |
+| **H auf der Prüfseite** | 3.824 Fälle | **+1,2** |
+| Basis dort | 227.053 Fälle | −3,6 |
+| **H's Beitrag** | | **+4,8** |
+| Ein-Zellen-Schwelle | | **+4,5** |
+
+**Trägt nicht.** H's *Beitrag* von +4,8 ist stimmig mit den +7,7 aus 117 —
+aber H's **absoluter** Abstand (+1,2) bleibt unter der Schwelle.
+
+### 118.3 ⚠️ Und die gewählte Geometrie ist nicht einmal stabil
+
+| Teilung | gewählte Zelle |
+|---|---|
+| Zeit | k=3,0 / CRV=**1,5** |
+| Symbol | k=4,0 / CRV=**3,0** |
+
+**Zwei Teilungen derselben Daten wählen zwei verschiedene Optima.** Damit ist
+auch die Dosisfrage aus 117 endgültig beantwortet: es gibt keine stabile
+beste Geometrie für H, sondern nur eine, die pro Stichprobe woanders liegt.
+
+### 118.4 Das Urteil
+
+> **Die Frage ist in ihrer sauberen Form beantwortet, und zwar mit Nein.**
+
+Es gibt keine zweite Runde. Das war vorab so festgelegt.
+
+### 118.5 Was das über H heißt — vollständig
+
+| Frage | Kapitel | Antwort |
+|---|---|---|
+| trägt H Information? | 108, 111, 116 | **ja**, dreimal bestätigt |
+| ist H Momentum? | 111 | nein |
+| ist H Liquidität? | 116 | nein |
+| ist H mit dem Drift kombinierbar? | 113 | nein (92 % Überlappung) |
+| überträgt sich H über einen Regimewechsel? | 109 | **nein** |
+| hat H einen Anwendungszeitpunkt? | 115 | **nein** |
+| braucht H eine eigene Dosis? | 117 | nein |
+| **hält H außerhalb seiner eigenen Daten?** | **118** | **nein** |
+
+**H ist innerhalb der Stichprobe real und außerhalb nicht nachweisbar.** Das
+ist kein Widerspruch, sondern die Standardgestalt eines Befundes, der die
+Datenmenge ausgereizt hat — und genau der Zustand, den die Literatur zur
+technischen Analyse als *data snooping* beschreibt (Park & Irwin; Sullivan,
+Timmermann & White).
+
+### 118.6 ⚠️ Was daraus für das Gesamtvorhaben folgt
+
+**Alle Kandidaten der Kapitel 99–118 stammen aus der Kursreihe.** Sie sind
+untereinander verwandt: der ATR-Kanal ist fünfmal unter neuem Namen
+aufgetreten, H und Drift überlappen zu 92 %. **Keiner hat einen
+Außer-Stichproben-Test bestanden.**
+
+Das ist die Antwort auf die Kernfrage des Projekts — und sie ist ein
+Ergebnis, kein Scheitern:
+
+> **Aus der Kursreihe allein lässt sich für dieses Barrierensystem keine
+> Regel gewinnen, die außerhalb ihrer eigenen Daten trägt.**
+
+Was bleibt, ist **die Prüfkette** (vierzehn Stufen, Methodik 2.47–2.54) und
+**die Datenbasis** (347 Reihen). Beide sind unabhängig davon wertvoll, dass
+der erste Kandidat gefallen ist — sie erledigen den nächsten in Stunden.
