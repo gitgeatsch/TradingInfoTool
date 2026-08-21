@@ -15212,3 +15212,87 @@ aufgetreten, H und Drift überlappen zu 92 %.
 **Die einzige benannte Quelle, die nicht aus der Kursreihe stammt, ist
 „Nachrichten"** — seit dem Grundbefund auf der Liste, nie angefasst. Sie ist
 der einzige mögliche Partner, der mit H nicht per Konstruktion korreliert ist.
+
+
+---
+
+## Kapitel 116 — Liquidität: die Hypothese fällt, H überlebt zum dritten Mal (20.08.2026)
+
+`_reihen_roh` liefert das Volumen seit jeher — und **jedes Messwerkzeug seit
+Kapitel 99 beginnt mit `del v`.** Zwölf Kapitel lang weggeworfen.
+
+**Drei unabhängige Gründe** sprachen für die Prüfung: der **Mechanismus**
+(Marken wirken, weil viele sie beobachten — in dünnen Märkten gibt es die
+Vielen nicht), **Osler (2000)** (Vorhersagekraft von S/R variiert zwischen
+Instrumenten), und die **Praxisliteratur** (Marken brechen eher bei wenig
+Liquidität).
+
+### 116.1 L1 — die Vorhersage ist widerlegt
+
+| Umsatz USD/Tag | H | Quote H | Quote Rest | Diff | Abstand H |
+|---|---:|---:|---:|---:|---:|
+| 20 T – 776 T | 1.224 | 42,1 % | 41,4 % | +0,7 | **+1,4** |
+| 776 T – 1,8 M | 1.041 | 40,0 % | 35,7 % | +4,3 | +0,5 |
+| **1,8 M – 4,2 M** | 1.352 | 45,0 % | 33,5 % | **+11,5** | **+6,1** |
+| 4,2 M – 15 M | 1.773 | 39,6 % | 30,2 % | +9,4 | +1,7 |
+| **über 15 M** | 3.831 | 33,5 % | 30,5 % | **+3,0** | **−4,5** |
+
+| | gemessen | Schwelle | |
+|---|---:|---:|---|
+| **L1** obere zwei gegen untere zwei | **+2,7** | +6,3 | **trägt nicht** |
+
+**Die Hypothese fällt** — und nicht knapp. Im **liquidesten** Band ist H's
+Vorsprung am kleinsten (+3,0) und sein absoluter Abstand am schlechtesten
+(−4,5).
+
+⚠️ **Drei unabhängige Gründe waren sich einig, und alle drei lagen falsch.**
+Das ist der lehrreichste Teil: Mechanismus plus Literatur plus Praxis ergeben
+zusammen keinen Beleg, sondern eine Hypothese — genau so war die Recherche
+vorab eingeordnet worden.
+
+### 116.2 L2 — H ist nicht Liquidität
+
+| | |
+|---|---:|
+| roher Vorsprung | +4,0 |
+| **Restvorsprung bei gleichem Umsatz** | **+5,3** (Schwelle +2,4) → **trägt** |
+| von der Liquidität erklärt | **−33 %** |
+
+**Die Bereinigung vergrößert den Vorsprung.** Liquidität erklärt H nicht — sie
+verdeckt es eher.
+
+**Damit hat H den dritten Erklärungsversuch überstanden:** Momentum (111,
+44 % erklärt, Rest trägt), Drift (113, nicht kombinierbar), Liquidität (116,
+−33 %). **H ist auf keine unserer anderen Größen zurückführbar.**
+
+### 116.3 ⚠️ Zwei Beobachtungen, die NICHT vorab benannt waren
+
+**Der H-Vorsprung ist buckelförmig** — Maximum im mittleren Band (+11,5), an
+beiden Rändern klein. Das war nicht vorhergesagt; ein Buckel aus fünf Zellen
+ist genau die Sorte Muster, die eine eigene Vorabfestlegung braucht. **Hier
+steht er als Beobachtung, nicht als Befund.**
+
+**Die Liquidität allein verläuft monoton fallend:**
+
+| Umsatz | Abstand |
+|---|---:|
+| 20 T – 776 T | **+0,1** |
+| über 15 M | **−8,8** |
+
+Das illiquideste Band ist als einziges über null. ⚠️ **Und das ist mit hoher
+Wahrscheinlichkeit der ATR-Kanal zum fünften Mal:** illiquide heißt volatil
+heißt weiter Stop heißt niedrigere Hürde. Wer daraus eine Regel machen will,
+muss das zuerst herausrechnen — dieselbe Falle wie in 101, 102, 111 und 113.
+
+### 116.4 Stand
+
+| | |
+|---|---|
+| H trägt Information | ja (108, 111, **116**) |
+| H ist Momentum | nein (111) |
+| H ist Liquidität | **nein (116)** |
+| H braucht Liquidität | **nein (116)** |
+| H hat einen Anwendungszeitpunkt | nein (115) |
+
+**H ist irreduzibel und unanwendbar zugleich.** Jede Größe, mit der wir es
+erklären wollten, erklärt es nicht — und keine Bedingung sagt, wann es trägt.

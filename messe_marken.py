@@ -157,6 +157,13 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
     return {"oben": oben, "unten": unten}
 
 
+def _umsatz60(umsatz: np.ndarray, i: int) -> float | None:
+    """Median-Tagesumsatz der letzten 60 Kerzen bis EINSCHLIESSLICH i."""
+    fenster = umsatz[max(0, i - 59):i + 1]
+    gut = fenster[np.isfinite(fenster) & (fenster > 0)]
+    return float(np.median(gut)) if len(gut) >= 30 else None
+
+
 def laufe(db: str, klasse: str, roh_pruefen: bool = True,
           fortschritt: bool = False) -> list[dict]:
     """Je Anker: A, B, Ausgang, Phase - und Symbol/Zeit fuer die Bloecke.
@@ -169,7 +176,12 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
     aus, geprueft = [], 0
     _t0 = _letzte = time.time()
     for _nr, (sym, (c, h, l, v, a, off, d)) in enumerate(roh.items(), 1):
-        del v
+        # ⚠️ HIER STAND `del v`. Das Volumen wurde seit Kapitel 99 in JEDEM
+        # Messwerkzeug weggeworfen - dabei ist Liquiditaet die Vorbedingung
+        # dafuer, dass Marken ueberhaupt wirken koennen (Kapitel 116).
+        # UMSATZ statt Stueckzahl: Stueckzahlen sind zwischen Symbolen
+        # bedeutungslos (BTC handelt in Coins, FLOKI in Milliarden).
+        umsatz = np.asarray(c, dtype=float) * np.asarray(v, dtype=float)
         sp = _SwingSpeicher(h, l)
         if roh_pruefen:
             # ⚠️ AN ECHTEN ANKERN, nicht an gedachten. Fuenf ueber die Reihe
@@ -226,6 +238,9 @@ def laufe(db: str, klasse: str, roh_pruefen: bool = True,
                         # (Kapitel 113). None, wenn die Reihe nicht reicht.
                         "drift": (float(einstieg / c[i - 250] - 1.0)
                                   if i >= 250 and c[i - 250] > 0 else None),
+                        # Median-Tagesumsatz der letzten 60 Kerzen, nur
+                        # rueckwaerts. None, wenn die Quelle nichts liefert.
+                        "umsatz": _umsatz60(umsatz, i),
                         "phase": phase.get(d[i], "unbekannt"),
                         "ausgang": ausgang,
                         # Die Merkmale der TRAGENDEN Marke - nur gefuellt,

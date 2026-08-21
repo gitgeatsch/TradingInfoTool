@@ -18877,3 +18877,36 @@ Kursreihe, und sind untereinander verwandt (ATR-Kanal viermal, H und Drift
 92 % Ueberlappung). Die einzige benannte Quelle ausserhalb der Kursreihe ist
 NACHRICHTEN - seit dem Grundbefund auf der Liste, nie angefasst, und der
 einzige moegliche Partner, der mit H nicht per Konstruktion korreliert.
+
+
+[2026-08-20] KAPITEL 116: LIQUIDITAET - Hypothese faellt, H ueberlebt zum dritten Mal
+
+DIE LUECKE: _reihen_roh liefert das Volumen seit jeher, und JEDES
+Messwerkzeug seit Kapitel 99 beginnt mit `del v`. Zwoelf Kapitel weggeworfen.
+Drei unabhaengige Gruende sprachen fuer die Pruefung: Mechanismus (Marken
+wirken durch Koordination vieler), Osler 2000 (Vorhersagekraft variiert
+zwischen Instrumenten), Praxisliteratur (Marken brechen eher bei wenig
+Liquiditaet).
+
+L1 WIDERLEGT: obere zwei Umsatzbaender gegen untere zwei +2,7 gegen Schwelle
++6,3. Im LIQUIDESTEN Band ist H's Vorsprung am kleinsten (+3,0) und sein
+absoluter Abstand am schlechtesten (-4,5). ⚠️ Drei unabhaengige Gruende waren
+sich einig und alle drei lagen falsch - Mechanismus plus Literatur plus Praxis
+ergeben eine Hypothese, keinen Beleg.
+
+L2: roher Vorsprung +4,0, Restvorsprung bei gleichem Umsatz +5,3 (Schwelle
++2,4) -> traegt. Die Liquiditaet erklaert -33 %, die Bereinigung VERGROESSERT
+also den Vorsprung. H ist nicht Liquiditaet. Damit hat H den DRITTEN
+Erklaerungsversuch ueberstanden (Momentum 111, Drift 113, Liquiditaet 116) -
+es ist auf keine unserer anderen Groessen zurueckfuehrbar.
+
+⚠️ ZWEI NICHT VORAB BENANNTE BEOBACHTUNGEN: der H-Vorsprung ist
+BUCKELFOERMIG (Maximum +11,5 im mittleren Band, an beiden Raendern klein) -
+ein Buckel aus fuenf Zellen braucht eine eigene Vorabfestlegung, hier steht
+er als Beobachtung. Und die Liquiditaet allein verlaeuft MONOTON FALLEND
+(+0,1 im illiquidesten Band bis -8,8 im liquidesten) - mit hoher
+Wahrscheinlichkeit der ATR-Kanal zum FUENFTEN Mal.
+
+STAND: H ist IRREDUZIBEL und UNANWENDBAR zugleich. Jede Groesse, mit der wir
+es erklaeren wollten, erklaert es nicht - und keine Bedingung sagt, wann es
+traegt.

@@ -9248,6 +9248,41 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- BRAUCHT H LIQUIDITAET? (Kapitel 116) ----
+    _lqq = _quelltext("messe_liquiditaet.py")
+    _lqroh = io.open("messe_liquiditaet.py", encoding="utf-8").read()
+    _mkq116 = _quelltext("messe_marken.py")
+
+    pruefe(P, "die Liquiditaetsfrage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _lqroh
+           and "L1  BEDINGUNG" in _lqroh and "L2  ZERLEGUNG" in _lqroh)
+
+    # ⚠️ ZWOELF KAPITEL LANG WURDE `del v` GERECHNET.
+    pruefe(P, "das Volumen wird nicht mehr weggeworfen",
+           "del v" not in _mkq116 and "umsatz = np.asarray" in _mkq116,
+           "jedes Messwerkzeug seit Kapitel 99 begann mit `del v` - dabei "
+           "ist Liquiditaet die Vorbedingung dafuer, dass Marken wirken")
+    # ⚠️ AUF DEM ROHTEXT, nicht auf `_quelltext`. Die Begruendung steht in
+    # einem Kommentar, und `_quelltext` entfernt Kommentare (Methodik 2.41) -
+    # die erste Fassung dieser Pruefung suchte deshalb etwas, das sie per
+    # Konstruktion nie finden konnte.
+    pruefe(P, "gerechnet wird UMSATZ, nicht Stueckzahl",
+           "UMSATZ statt Stueckzahl"
+           in io.open("messe_marken.py", encoding="utf-8").read(),
+           "Stueckzahlen sind zwischen Symbolen bedeutungslos - BTC handelt "
+           "in Coins, FLOKI in Milliarden")
+    pruefe(P, "der Umsatz wird nur RUECKWAERTS gerechnet",
+           "umsatz[max(0, i - 59):i + 1]" in _mkq116)
+    pruefe(P, "die Literaturquelle steht mit URL im Kopf",
+           "ideas.repec.org" in _lqroh and "Osler" in _lqroh,
+           "Recherche liefert Gruende, keine Belege - und ohne Quelle ist "
+           "sie im Projekt nicht zitierbar. Hier lagen alle drei Gruende "
+           "falsch, und das gehoert danebengeschrieben")
+    pruefe(P, "die Liquiditaet wird SELBST als Kandidat ausgewiesen",
+           "ALS EIGENER KANDIDAT" in _lqq,
+           "Methodik 2.51 - faellt der Rest auf null, ist das ein Tausch "
+           "und kein Ende")
+
     # ---- WANN TRAEGT H? (Kapitel 115) ----
     _wnq = _quelltext("messe_wann.py")
     _wnroh = io.open("messe_wann.py", encoding="utf-8").read()

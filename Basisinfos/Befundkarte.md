@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 115. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 116. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -69,12 +69,14 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 | **H trägt Information** | 108 | −0,3 gegen Schwelle −2,1, schlägt alle 40 Ziehungen | 262 Reihen, 9.221 Fälle |
 | **kostenunabhängig** | 108 | +4,8 gegen +2,0; alle fünf Stopbänder positiv | direkte Standardisierung |
 | **kein Momentum-Ersatz** | 111 | +2,3 gegen +1,8 bei gleichem Hochabstand | 120 Läufe, stabil ab 40 |
+| **keine Liquiditätsfolge** | 116 | +5,3 gegen +2,4 bei gleichem Umsatz | Bereinigung vergrößert ihn |
 | **Geometrie ist reine Kostenarithmetik** | 101 | −6,0 → +0,1 über 20 Felder, monoton | vollständig erklärt |
 
 ### 3.2 Was fiel — und woran
 
 | Behauptung | Kapitel | woran sie fiel |
 |---|---|---|
+| **H braucht Liquidität** | **116** | +2,7 gegen Schwelle +6,3; im liquidesten Band ist H am schlechtesten |
 | **H hat einen Anwendungszeitpunkt** | **115** | Beharrung +3,9 gegen Schwelle +7,9; über Breakeven in **2 von 20** Fenstern |
 | Die Marktphase wirkt **invers** | **114** | 6 von 6 Punktschätzern dagegen, beide Indizes |
 | Die U-Form der Driftbänder | **113** | +7,0 auf 39 Reihen → **+0,6** auf 347 |
