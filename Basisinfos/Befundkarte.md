@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 118. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 119. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -64,6 +64,15 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 ## 3. Der Befundstand
 
 ### 3.1 Was steht
+
+⚠️ **Kapitel 119 hat die Beurteilungsgrundlage korrigiert.** Alle Urteile der
+Kapitel 99–118 liefen über den Abstand zum Breakeven — und der enthielt
+Bitpandas Brokerspread von 1,5 %. Seit 119 gilt: **Referenzsatz 0,30 % je
+Seite für die Frage „ist das ein guter Trade", Betriebssatz 1,50 % für „rechnet
+es sich für mich", beide immer nebeneinander.**
+
+| **H trägt — gebührenfrei** | **119** | Vorsprung **+4,5** gegen Schwelle +2,6, volle Stichprobe | 9.405 Fälle, 312 Reihen |
+| H über dem Breakeven bei Referenzgebühr | 119 | **+3,1** (Betrieb: −1,0) | +0,086 R je Trade |
 
 | Befund | Kapitel | Zahl | worauf es ruht |
 |---|---|---|---|

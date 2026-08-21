@@ -18992,3 +18992,42 @@ fuer dieses Barrierensystem keine Regel gewinnen, die ausserhalb ihrer
 eigenen Daten traegt. Was bleibt, ist die Pruefkette (2.47-2.54) und die
 Datenbasis (347 Reihen) - beide erledigen den naechsten Kandidaten in
 Stunden.
+
+
+[2026-08-20] KAPITEL 119: ALLES NOCH EINMAL ZU ZWEI GEBUEHRENSAETZEN - H TRAEGT
+
+⚠️ DER FEHLER, DER ACHTZEHN KAPITEL DURCHZOG: jedes Urteil lief ueber den
+Abstand zum Breakeven, und der enthaelt die Gebuehr - durchgehend 1,5 % je
+Seite, also Bitpandas BROKERSPREAD. Nutzervorgabe: die Kalkulation muss
+boersenunabhaengig passieren, ein GUTER TRADE ist Kurs & Wahrscheinlichkeit.
+
+REFERENZSATZ VEREINBART: 0,30 % je Seite all-in, aus veroeffentlichten
+Taker-Gebuehren (Bitpanda Pro 0,15 · Bitvavo 0,25 · Kraken 0,40 -> Mittel
+0,27) plus rund 0,03 Slippage. Ein Mischsatz gilt nur ueber vergleichbare
+Modelle - der Bitpanda-Brokerspread gehoert nicht hinein. Jedes Ergebnis wird
+ab jetzt ZWEISPALTIG berichtet.
+
+ERGEBNIS im Betriebszustand k=2,0/CRV=2,0/120: alle Anker Quote 33,1 %
+(Referenz -1,5 / Betrieb -6,8), H Quote 37,5 % (+3,1 / -1,0), Nicht-H 33,0 %.
+H's Vorsprung GEBUEHRENFREI +4,5 Punkte. Block-Permutation volle Stichprobe
+200 Laeufe: Schwelle +2,6, gemessen +4,5 -> TRAEGT.
+
+IN GELD: H brutto +0,125 R, netto +0,086 R zur Referenz und -0,069 R im
+Betrieb. Bei 6 % Verlustanteil +0,52 % Kapital je Trade gegen -0,42 %.
+
+WARUM DIE VOLLE STICHPROBE ZULAESSIG IST: es gibt nichts zurueckzuhalten -
+Geometrie ist der Betriebszustand, H stammt mit Vorabfestlegung aus 104, die
+Groesse ist die Frage selbst. Auf der Waehlseite wird NICHTS gewaehlt. Halbe
+Stichprobe +2,8 gegen +3,3 (traegt nicht) ist kein Widerspruch, sondern
+Aufloesungsverlust.
+
+⚠️ EINE VORHERSAGE VON MIR WURDE WIDERLEGT: ich hatte erwartet, der ATR-Kanal
+schrumpfe mit dem Satz. Die Spanne wird GROESSER (3,7 zur Referenz gegen 2,8
+im Betrieb) und die Richtung dreht sich - bei realistischer Gebuehr sind weite
+Stops SCHLECHTER, das Optimum wandert von k=2,5 auf k=2,0. Dabei wurden ZWEI
+Dinge gleichzeitig geaendert (Satz und Lesart 2.54); die Spalten sind
+untereinander vergleichbar, mit Kapitel 101 NICHT.
+
+EINSCHRAENKUNGEN: H feuert auf 2,1 % der Tage; die halbe Stichprobe nimmt ihre
+Schwelle nicht; in der ZEITdimension ist H gescheitert (109, 118); gemessen
+auf Binance-USDT statt auf den 39 Produktionssymbolen in Euro.

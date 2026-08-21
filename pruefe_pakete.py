@@ -9248,6 +9248,51 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- NEUBEWERTUNG ZU ZWEI SAETZEN (Kapitel 119) ----
+    _nbq = _quelltext("bewerte_neu.py")
+    _nbroh = io.open("bewerte_neu.py", encoding="utf-8").read()
+    import simuliere_bremse as _SB119
+    # ⚠️ ROHTEXT, nicht `_quelltext` - die Herleitung des Satzes steht in
+    # Kommentaren, und die entfernt `_quelltext` (Methodik 2.41). Das ist
+    # hier zum ZWEITEN Mal passiert; eine Pruefung auf eine BEGRUENDUNG
+    # gehoert immer auf den Rohtext.
+    _SB119_ROH = io.open("simuliere_bremse.py", encoding="utf-8").read()
+
+    pruefe(P, "es gibt einen Referenzsatz getrennt vom Betriebssatz",
+           _SB119.REFERENZ_JE_SEITE == 0.003
+           and _SB119.gebuehr_je_seite("krypto") == 0.015,
+           "der Referenzsatz beantwortet 'ist das ein guter Trade', der "
+           "Betriebssatz 'rechnet sich das fuer mich' - die Produktion "
+           "bleibt bei 1,5 %")
+    pruefe(P, "der Referenzsatz ist hergeleitet, nicht gesetzt",
+           "Bitvavo 0,25" in _SB119_ROH and "Kraken 0,40" in _SB119_ROH,
+           "aus veroeffentlichten Taker-Gebuehren der Grundstufe - eine "
+           "gegriffene Zahl waere eine Annahme ohne Quelle")
+    pruefe(P, "ein Mischsatz gilt nur ueber vergleichbare Modelle",
+           "kein Kontinuum" in _SB119_ROH,
+           "Spread (Bitpanda) und Orderbuch sind zwei Geschaeftsmodelle - "
+           "ein Mittel daraus beschriebe keinen existierenden Handelsplatz")
+    pruefe(P, "beide Saetze werden nebeneinander berichtet",
+           "SAETZE_ZUM_BERICHTEN" in _quelltext("simuliere_bremse.py")
+           and "SAETZE_ZUM_BERICHTEN" in _nbq,
+           "ein Ergebnis ohne sein reales Gegenstueck laedt zur "
+           "Fehldeutung ein")
+
+    # ⚠️ DIE ENTSCHEIDENDE GROESSE IST GEBUEHRENFREI.
+    pruefe(P, "das Urteil haengt an der QUOTENDIFFERENZ",
+           "gebuehrenfrei" in _nbq and "Quotendifferenz" in _nbroh,
+           "der Abstand zum Breakeven enthaelt die Gebuehr - genau der "
+           "Fehler, der achtzehn Kapitel durchzog")
+    pruefe(P, "eine Zaehlung, zwei Bewertungen",
+           "Die Zaehlung ist gebuehrenfrei" in _nbroh,
+           "sammle zaehlt Ausgaenge, die Gebuehr geht erst in abstand ein - "
+           "beide Spalten stehen garantiert auf DENSELBEN Faellen")
+    pruefe(P, "die widerlegte eigene Vorhersage steht im Kapitel",
+           "schrumpft mit dem Satz" in _nbroh,
+           "sie wurde gemessen und traf nicht zu - die Spanne wird groesser, "
+           "nicht kleiner. Das gehoert dokumentiert, nicht stillschweigend "
+           "korrigiert")
+
     # ---- DIE FRAGE EINMAL RICHTIG GESTELLT (Kapitel 118) ----
     _sbq = _quelltext("messe_dosis_sauber.py")
     _sbroh = io.open("messe_dosis_sauber.py", encoding="utf-8").read()

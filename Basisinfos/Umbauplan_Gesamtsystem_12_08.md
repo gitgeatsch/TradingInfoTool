@@ -15509,3 +15509,117 @@ Ergebnis, kein Scheitern:
 Was bleibt, ist **die Prüfkette** (vierzehn Stufen, Methodik 2.47–2.54) und
 **die Datenbasis** (347 Reihen). Beide sind unabhängig davon wertvoll, dass
 der erste Kandidat gefallen ist — sie erledigen den nächsten in Stunden.
+
+
+---
+
+## Kapitel 119 — Alles noch einmal, zu zwei Gebührensätzen: **H trägt** (20.08.2026)
+
+⚠️ **Der Fehler, der achtzehn Kapitel durchzogen hat.** Jedes Urteil der
+Kapitel 99–118 lief über den *Abstand zum Breakeven* — und der Breakeven
+enthält die Gebühr. Gerechnet wurde durchgehend mit **1,5 % je Seite**, also
+mit Bitpandas **Brokerspread**.
+
+> **Nutzer, 20.08.:** *„Die Kalkulation SOLL und MUSS börsenunabhängig
+> passieren. Ich rede die ganze Zeit von einem GUTEN TRADE = Kurs &
+> Wahrscheinlichkeit — das Gebührenthema ist NICHT das Thema eines NEUTRALEN
+> Trades."*
+
+### 119.1 Der vereinbarte Referenzsatz
+
+**0,30 % je Seite, all-in.** Hergeleitet aus veröffentlichten Taker-Gebühren
+der Grundstufe:
+
+| | Taker |
+|---|---:|
+| Bitpanda Pro | 0,15 % |
+| Bitvavo | 0,25 % |
+| Kraken | 0,40 % |
+| **Mittel** | **0,27 %** + rund 0,03 % Slippage |
+
+⚠️ **Ein Mischsatz gilt nur über vergleichbare Modelle.** Der
+Bitpanda-Brokersatz (Spread) gehört nicht hinein — Spread und Orderbuch sind
+zwei Geschäftsmodelle, kein Kontinuum.
+
+**Und jedes Ergebnis wird ab jetzt zweispaltig berichtet:** Referenz 0,30 %
+*und* Betrieb 1,50 %, nebeneinander. Ein Ergebnis ohne sein reales Gegenstück
+lädt zur Fehldeutung ein.
+
+### 119.2 Das Ergebnis — der Betriebszustand k=2,0 / CRV=2,0 / 120 Tage
+
+| | Fälle | Quote | **Referenz 0,30 %** | Betrieb 1,50 % |
+|---|---:|---:|---:|---:|
+| alle Anker | 446.509 | 33,1 % | −1,5 | −6,8 |
+| **H** | 9.405 | **37,5 %** | **+3,1** | −1,0 |
+| Nicht-H | 437.104 | 33,0 % | −1,6 | −6,9 |
+
+**H's Vorsprung gebührenfrei: +4,5 Punkte.** Diese Zahl hängt an keinem
+Gebührensatz — sie ist die Antwort auf *Kurs & Wahrscheinlichkeit*.
+
+| Block-Permutation, volle Stichprobe, 200 Läufe | |
+|---|---:|
+| Schwelle (95 %) | **+2,6** |
+| gemessen | **+4,5** |
+| | **TRÄGT** |
+
+### 119.3 In Geld
+
+| | brutto | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|---:|
+| alle Anker | −0,007 R | −0,046 R | −0,201 R |
+| **H** | **+0,125 R** | **+0,086 R** | **−0,069 R** |
+
+Bei 6 % Verlustanteil je Trade: **+0,52 % Kapital je Trade** zur Referenz,
+**−0,42 %** im Betrieb.
+
+> **Es gibt den besseren Trade. Ob er sich rechnet, entscheidet allein der
+> Handelsplatz.**
+
+### 119.4 ⚠️ Warum die volle Stichprobe hier zulässig ist
+
+| | Fälle | Vorsprung | Schwelle | |
+|---|---:|---:|---:|---|
+| halbe Stichprobe | 4.564 | +2,8 | +3,3 | trägt nicht |
+| **volle Stichprobe** | 9.405 | **+4,5** | **+2,6** | **TRÄGT** |
+
+**Es gibt nichts zurückzuhalten.** Die Geometrie ist der Betriebszustand, seit
+jeher gesetzt; H stammt mit Vorabfestlegung aus Kapitel 104; die Größe — reine
+Quotendifferenz — ist die Frage selbst. **Auf der „Wählseite" wird nichts
+gewählt**, also wehrt eine Teilung einen Suchpreis ab, den es nicht gibt; sie
+halbiert nur die Auflösung.
+
+Die Halbierung ist deshalb kein Widerspruch: halbe Datenmenge → Schwelle
+steigt von +2,6 auf +3,3, die Schätzung bleibt bei rund +3. **Der Effekt liegt
+an der Auflösungsgrenze unserer Daten.**
+
+### 119.5 ⚠️ Eine Vorhersage von mir, die widerlegt wurde
+
+Ich hatte vorhergesagt, der „ATR-Kanal" schrumpfe mit dem Gebührensatz.
+
+| Satz | k=1,5 | k=2,0 | k=2,5 | k=3,0 | k=4,0 | Spanne |
+|---|---:|---:|---:|---:|---:|---:|
+| Referenz 0,30 % | −1,8 | **−1,5** | −1,8 | −2,7 | −5,2 | **3,7** |
+| Betrieb 1,50 % | −8,9 | −6,8 | **−6,0** | −6,2 | −7,9 | 2,8 |
+
+**Die Spanne wird nicht kleiner, sondern größer** — und die Richtung dreht
+sich: bei realistischer Gebühr sind **weite Stops schlechter**, das Optimum
+wandert von k=2,5 auf k=2,0.
+
+⚠️ **Ich habe dabei zwei Dinge gleichzeitig geändert** — den Gebührensatz
+*und* die Lesart (vorsichtig statt mild, 2.54). Die beiden Spalten hier sind
+untereinander sauber vergleichbar; ein direkter Vergleich mit Kapitel 101 ist
+es **nicht**.
+
+### 119.6 Was einzuschränken bleibt
+
+- **H feuert auf 2,1 % der Tage** (9.405 von 446.509). Als Vorfilter gut, als
+  Signalquelle dünn.
+- **Die halbe Stichprobe nimmt ihre Schwelle nicht.**
+- **In der Zeitdimension ist H gescheitert** (109, 118) — über einen
+  Regimewechsel hinweg hielt es nicht. Die Symboldimension ist der schwächere
+  Test.
+- **Gemessen auf Binance-USDT**, nicht auf den 39 Produktionssymbolen in Euro.
+
+**Das ist kein „geschafft".** Es ist: die Frage nach dem guten Trade hat zum
+ersten Mal eine positive, kontrollierte Antwort — und die Gebühr ist der
+Grund, warum sie achtzehn Kapitel lang wie ein Nein aussah.

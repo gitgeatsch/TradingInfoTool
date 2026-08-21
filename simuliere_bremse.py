@@ -159,7 +159,31 @@ def klassen_aus_db(db: str) -> dict | None:
         return None
 
 
-def gebuehr_je_seite(klasse: str) -> float:
+# ⚠️ ZWEI SAETZE, ZWEI FRAGEN (Umbauplan 119, Nutzerentscheidung 20.08.).
+#
+#   REFERENZ  0,30 % je Seite - beantwortet "IST DAS EIN GUTER TRADE?".
+#             Boersenunabhaengig, weil sonst nicht der Markt gemessen wird,
+#             sondern das Preismodell eines Anbieters. Hergeleitet aus
+#             veroeffentlichten Taker-Gebuehren der Grundstufe:
+#             Bitpanda Pro 0,15 % · Bitvavo 0,25 % · Kraken 0,40 %
+#             -> Mittel 0,27 %, plus rund 0,03 % Slippage.
+#             ⚠️ Ein Mischsatz gilt nur ueber VERGLEICHBARE Modelle. Der
+#             Bitpanda-Brokersatz (Spread) gehoert nicht hinein - Spread und
+#             Orderbuch sind zwei Geschaeftsmodelle, kein Kontinuum.
+#
+#   BETRIEB   1,50 % je Seite - beantwortet "RECHNET SICH DAS FUER MICH?".
+#             Bitpandas Brokerspread, 0,99 % (BTC) bis 2,49 % (Altcoins).
+#             Bleibt fuer die Produktion und fuer die Portfoliorechnung in
+#             den Mails unveraendert massgeblich.
+#
+# ⚠️ JEDES MESSERGEBNIS WIRD ZWEISPALTIG BERICHTET - Referenz UND Betrieb
+# nebeneinander. Ein Ergebnis ohne sein reales Gegenstueck laedt zur
+# Fehldeutung ein; laufen die beiden auseinander, IST das die Aussage.
+REFERENZ_JE_SEITE = 0.003
+SAETZE_ZUM_BERICHTEN = (("Referenz 0,30 %", 0.003), ("Betrieb 1,50 %", 0.015))
+
+
+def gebuehr_je_seite(klasse: str, satz: float | None = None) -> float:
     """Der Gebuehrensatz je Seite - und ein LAUTES Nein fuer alles andere.
 
     ⚠️ HIER STAND EIN STILLER RUECKFALL. Alle Messwerkzeuge lasen
@@ -178,6 +202,8 @@ def gebuehr_je_seite(klasse: str) -> float:
     Deshalb wird hier abgebrochen statt geschaetzt. Wer die Messungen auf
     Boersenklassen ausweiten will, muss ihnen zuerst eine Positionsgroesse
     geben - siehe Umbauplan 106."""
+    if satz is not None:
+        return float(satz)
     satz = TB.KOSTEN_JE_SEITE.get(klasse)
     if satz is None:
         raise SystemExit(
