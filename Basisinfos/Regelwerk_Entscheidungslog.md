@@ -18910,3 +18910,43 @@ Wahrscheinlichkeit der ATR-Kanal zum FUENFTEN Mal.
 STAND: H ist IRREDUZIBEL und UNANWENDBAR zugleich. Jede Groesse, mit der wir
 es erklaeren wollten, erklaert es nicht - und keine Bedingung sagt, wann es
 traegt.
+
+
+[2026-08-20] KAPITEL 117: DIE DOSIS - um 0,2 Punkte verfehlt
+
+Nutzervergleich (Heilmittel: wann einnehmen, wie lange). 115 hatte den
+ZEITPUNKT geprueft; DOSIS und DAUER waren nie geprueft - H wurde zwoelf
+Kapitel lang bei k=2,0/CRV=2,0 gemessen, laut 101 der schlechtesten Ecke.
+
+⚠️ DER HORIZONTVERGLEICH WAR VERZERRT: bei 60 Tagen entschieden nur 70,2 %
+der Faelle, bei 250 Tagen 95,1 %. Der erste Durchgang zeigte k=4,0/CRV=3,0/60
+Tage mit +11,0 - in der vorsichtigen Lesart (Ablauf = Fehlschlag) sind es
+-6,4. Der ganze Vorteil war ein Auswahleffekt. Neue Methodikregel 2.54.
+
+D1 WIDERLEGT: unter der vorsichtigen Lesart liegt H's Optimum in DERSELBEN
+Ecke wie das der Basis (k=3,0/CRV=3,0/250 Tage). H braucht keine eigene
+Dosis; die Geometriewahl bleibt Kostenarithmetik aus 101.
+
+D2: in dieser Zelle H +4,5 (8.130 Faelle, 95,1 % entschieden), Basis -3,3
+(437.543 Faelle), Beitrag +7,7. ZUM ERSTEN MAL LIEGT H UEBER NULL - nicht
+durch eine eigene Dosis, sondern weil die gemeinsame beste Geometrie plus H
+zusammen reichen.
+
+⚠️ UND ES VERFEHLT DIE SCHWELLE UM 0,2 PUNKTE: Block-Permutation 200 Laeufe,
+Schwelle fuer das Maximum aus 60 Zellen +4,7, gemessen +4,5. TRAEGT NICHT.
+
+HUERDENRECHNUNG (2.49): Schwelle bei 60 Zellen +4,7, bei EINER vorab
+benannten +3,7 - Preis des Absuchens 1,0 Punkt. Waere die Geometrie vorher
+benannt worden, haette +4,5 die Huerde genommen. Diese Zelle nachtraeglich
+zur vorab benannten zu erklaeren waere ZIRKULAER; der Befund lautet: traegt
+nicht.
+
+FOLGE: nicht umdeuten, sondern die Frage EINMAL richtig stellen. Kapitel 101
+hat den Verlauf ueber alle zwanzig Felder als MONOTON ausgewiesen - damit war
+"die weiteste noch betriebstaugliche Geometrie" aus einem GRUND benennbar.
+Der saubere Weg: Geometrie vorab aus 101 begruendet, EIN Ziel, geprueft an
+Daten, welche die Hypothese nicht gesehen hat.
+
+⚠️ VORBEHALT, der auch dann bleibt: ein Stop bei 3 ATR sind rund 21 %
+Abstand; bei 6 % Verlustanteil ein Hebel von 0,3 - kein Hebelgeschaeft mehr,
+sondern eine kleine Spot-Position (schon 101.5 benannt).

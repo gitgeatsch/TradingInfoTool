@@ -9248,6 +9248,37 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE DOSIS (Kapitel 117) ----
+    _dsq = _quelltext("messe_dosis.py")
+    _dsroh = io.open("messe_dosis.py", encoding="utf-8").read()
+
+    pruefe(P, "die Dosisfrage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _dsroh
+           and "D1  LIEGT H's OPTIMUM WOANDERS" in _dsroh)
+    pruefe(P, "H wird JE ZELLE neu gebildet",
+           "A haengt an k UND crv" in _dsroh,
+           "A fragt nach Marken bis zum ZIEL, B nach einer Marke ueber dem "
+           "STOP - beide wandern mit der Geometrie. Eine einmal fixierte "
+           "Bedingung waere nicht die Dosis, sondern dieselbe Auswahl in "
+           "anderer Umgebung")
+
+    # ⚠️ METHODIK 2.54 - OHNE DIE ZWEITE LESART SIEHT EIN AUSWAHLEFFEKT
+    # AUS WIE EIN BEFUND (+11,0 statt -6,4).
+    pruefe(P, "beide Lesarten werden gerechnet",
+           "lesart" in _dsq and "vorsichtig" in _dsq and "mild" in _dsq,
+           "bei 60 Tagen entscheiden 70,2 % der Faelle, bei 250 Tagen "
+           "95,1 % - wer nur die Entschiedenen vergleicht, vergleicht drei "
+           "verschiedene Grundgesamtheiten")
+    pruefe(P, "die Entscheidungsquote wird ausgegeben",
+           "ENTSCHEIDUNGSQUOTE" in _dsq)
+    pruefe(P, "der Placebo rechnet in DERSELBEN Lesart wie das Urteil",
+           "DIESELBE LESART WIE DAS URTEIL" in _dsroh,
+           "ein milderer Massstab waere zu niedrig (2.50)")
+    pruefe(P, "die Huerdenrechnung weist beide Schwellen aus",
+           "HUERDENRECHNUNG" in _dsq and "eine_zelle" in _dsq,
+           "60 Zellen kosten 1,0 Punkt gegenueber einer vorab benannten - "
+           "und genau diese 1,0 fehlen dem Befund")
+
     # ---- BRAUCHT H LIQUIDITAET? (Kapitel 116) ----
     _lqq = _quelltext("messe_liquiditaet.py")
     _lqroh = io.open("messe_liquiditaet.py", encoding="utf-8").read()

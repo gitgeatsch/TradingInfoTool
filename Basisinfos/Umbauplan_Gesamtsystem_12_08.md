@@ -15296,3 +15296,117 @@ muss das zuerst herausrechnen — dieselbe Falle wie in 101, 102, 111 und 113.
 
 **H ist irreduzibel und unanwendbar zugleich.** Jede Größe, mit der wir es
 erklären wollten, erklärt es nicht — und keine Bedingung sagt, wann es trägt.
+
+
+---
+
+## Kapitel 117 — Die Dosis: um 0,2 Punkte verfehlt (20.08.2026)
+
+**Nutzervergleich:** *„Nur weil ich nicht weiß, warum ein Heilmittel hilft, ist
+das zwar nicht gut — aber wenn ich weiß, **wann** ich es einnehmen soll und
+**wie lange**, damit es wirkt, sollte das reichen."*
+
+Kapitel 115 hatte den **Zeitpunkt** geprüft und verworfen. **Dosis und Dauer
+waren nie geprüft:** H wurde in zwölf Kapiteln bei genau einer Geometrie
+gemessen — k = 2,0 / CRV = 2,0, laut Kapitel 101 die **schlechteste Ecke des
+Rasters**.
+
+### 117.1 ⚠️ Der Horizontvergleich war verzerrt — und das kippt alles
+
+Der erste Durchgang zeigte H bei **k=4,0 / CRV=3,0 / 60 Tage** mit **+11,0
+Punkten**. Die Entscheidungsquote entlarvt ihn:
+
+| Haltedauer | entschieden | Anteil |
+|---|---:|---:|
+| 60 Tage | 5.709 von 8.130 | **70,2 %** |
+| 120 Tage | 7.208 | 88,7 % |
+| 250 Tage | 7.733 | **95,1 %** |
+
+**Bei 60 Tagen wurden 30 % der Fälle stillschweigend weggelassen** — sie liefen
+ab und wurden nicht gewertet. Wer die Quote *unter den Entschiedenen*
+vergleicht, vergleicht bei 60 Tagen eine **andere Auswahl** als bei 250.
+
+Gerechnet wird deshalb ab jetzt in **zwei Lesarten**, wie in Kapitel 102:
+
+| H, k=4,0 / CRV=3,0 | mild | **vorsichtig** |
+|---|---:|---:|
+| 60 Tage | **+11,0** | **−6,4** |
+| 120 Tage | +8,4 | −0,6 |
+| 250 Tage | +8,5 | +4,1 |
+
+**Aus +11,0 wird −6,4.** Der 60-Tage-Vorteil war vollständig ein
+Auswahleffekt. Daraus wird **Methodik 2.54**.
+
+### 117.2 D1 — H braucht KEINE eigene Dosis
+
+| | beste Zelle (vorsichtig) | Abstand |
+|---|---|---:|
+| Basis | k=3,0 / CRV=3,0 / 250 T | **−3,3** |
+| **H** | **k=3,0 / CRV=3,0 / 250 T** | **+4,5** |
+
+**Dieselbe Ecke.** Unter der milden Lesart hatten die Optima noch
+auseinandergelegen — unter der vorsichtigen fallen sie zusammen. Die
+Geometriewahl ist für alle dieselbe und bleibt die Kostenarithmetik aus
+Kapitel 101.
+
+**Die Dosis-Hypothese ist damit widerlegt.**
+
+### 117.3 D2 — und trotzdem: erstmals über null
+
+In der jointly besten Zelle:
+
+| | |
+|---|---:|
+| H | **+4,5** (8.130 Fälle, 95,1 % entschieden) |
+| Basis | −3,3 (437.543 Fälle) |
+| **H's Beitrag** | **+7,7 Punkte** |
+
+**Zum ersten Mal liegt H über null** — nicht durch eine eigene Dosis, sondern
+weil die *gemeinsame* beste Geometrie plus H zusammen reichen.
+
+### 117.4 ⚠️ Und es verfehlt die Schwelle um 0,2 Punkte
+
+| Block-Permutation, 200 Läufe, vorsichtige Lesart | |
+|---|---:|
+| größter Zufallswert | +6,6 |
+| **Schwelle, Maximum aus 60 Zellen** | **+4,7** |
+| gemessen | **+4,5** |
+
+**Trägt nicht.** 0,2 Punkte.
+
+**Die Hürdenrechnung (2.49) zeigt, woran es liegt:**
+
+| | Schwelle |
+|---|---:|
+| Maximum aus **60** Zellen | +4,7 |
+| **eine vorab benannte** Zelle | **+3,7** |
+| **Preis des Absuchens** | **1,0 Punkt** |
+
+> **Wäre die Geometrie vorher benannt worden, hätte +4,5 die Hürde von +3,7
+> genommen.** Das Absuchen hat 1,0 Punkte gekostet, und gefehlt haben 0,2.
+
+⚠️ **Diese Zelle jetzt nachträglich zur „vorab benannten" zu erklären, wäre
+zirkulär** — genau der Fehler, gegen den 2.49 gebaut ist. Der Befund lautet
+also: **trägt nicht.**
+
+### 117.5 Was daraus folgt — und was ausdrücklich nicht
+
+**Nicht:** „+4,5 ist im Grunde ein Treffer." Das wäre die Ausrede, die dieses
+Projekt siebzehn Kapitel lang vermieden hat.
+
+**Sondern:** wir hatten einen **Grund**, die Geometrie vorher zu benennen, und
+haben ihn nicht benutzt. Kapitel 101 hat den Verlauf über alle zwanzig Felder
+als **monoton** ausgewiesen — weiterer Stop und höheres CRV sind besser, ohne
+eine einzige Ausnahme. Damit war *„die weiteste noch betriebstaugliche
+Geometrie"* **aus einem Grund benennbar**, nicht aus einem Ergebnis.
+
+**Der saubere Weg ist deshalb nicht, diese Messung umzudeuten, sondern die
+Frage EINMAL richtig zu stellen:** Geometrie vorab aus 101 begründet, ein
+einziges Ziel, und geprüft an Daten, welche die Hypothese nicht gesehen hat.
+Solange das nicht gelaufen ist, steht hier ein **Nein**.
+
+⚠️ Und ein Vorbehalt, der auch dann bleibt: **ein Stop bei 3 ATR bedeutet rund
+21 % Abstand.** Bei 6 % Verlustanteil ist das rechnerisch ein Hebel von 0,3 —
+**kein Hebelgeschäft mehr, sondern eine kleine Spot-Position** (schon in
+101.5 benannt). Die Geometrie zu weiten heißt, die Positionen zu
+verkleinern.

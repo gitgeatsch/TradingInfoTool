@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 116. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 117. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -52,6 +52,7 @@ ab jetzt nur noch Rechenzeit.
 | 10 | **Zeitteilung** | dass ein Muster als Regel gilt | 109 |
 | 11 | **Zerlegung statt Fallbeil** | dass ein Nullbefund Optionen mit wegräumt | **2.51** |
 | 12 | **Abstand zum Breakeven** neben jedem Urteil | dass ein belangloser Effekt als Fund gilt | **2.53** |
+| 13 | **Zwei Lesarten** für Unentschiedene | dass ein Auswahleffekt wie ein Befund aussieht | **2.54** |
 
 **Regel 2.51 wirkt rückwärts:** Befunde, die vor ihrer Einführung als
 „erledigt" abgelegt wurden, beantworten meist die *Handelsfrage* („erreicht es
@@ -76,6 +77,7 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 
 | Behauptung | Kapitel | woran sie fiel |
 |---|---|---|
+| **H braucht eine eigene Dosis** | **117** | Optimum liegt in derselben Ecke wie das der Basis |
 | **H braucht Liquidität** | **116** | +2,7 gegen Schwelle +6,3; im liquidesten Band ist H am schlechtesten |
 | **H hat einen Anwendungszeitpunkt** | **115** | Beharrung +3,9 gegen Schwelle +7,9; über Breakeven in **2 von 20** Fenstern |
 | Die Marktphase wirkt **invers** | **114** | 6 von 6 Punktschätzern dagegen, beide Indizes |
@@ -124,6 +126,10 @@ Grundbefund: driftfreier Pfad = Erwartungswert null
    |        |              111 Phasenhorizont ..... Erklärung fällt
    |        |              111 Hochabstand ........ 44 % erklärt, 56 % bleibt
    |        |              112 Anreicherung ....... nichts mehr zu holen
+   |        |
+   |        +-- WELCHE DOSIS? -----> 117 Geometrie .. dieselbe wie Basis
+   |        |                              +4,5 gegen Schwelle +4,7
+   |        |                              (eine vorab benannte Zelle: +3,7)
    |        |
    |        +-- WANN anwenden? -----> 115 Beharrung .. KEINE
    |        |                              -> H ist real und nicht handelbar

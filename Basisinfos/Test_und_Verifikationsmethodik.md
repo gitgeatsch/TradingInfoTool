@@ -3107,3 +3107,30 @@ Effekt **echt** ist; sie beantwortet nicht, ob er **reicht**.
 
 Die Kette schuetzt vor dem ersten. Vor dem zweiten schuetzt nur, dass die
 wirtschaftliche Groesse danebensteht.
+
+
+## 2.54 Horizonte vergleichen nur, wer die Unentschiedenen gleich behandelt (20.08.2026)
+
+**Der Fall.** Kapitel 117 verglich Haltedauern von 60, 120 und 250 Tagen. Die
+kuerzeste sah mit **+11,0 Punkten** am besten aus.
+
+Der Grund war eine Auswahl: bei 60 Tagen entschieden nur **70,2 %** der Faelle,
+bei 250 Tagen **95,1 %**. Die uebrigen liefen ab und wurden NICHT gewertet.
+Wer die Quote unter den Entschiedenen vergleicht, vergleicht bei jedem
+Horizont eine ANDERE Grundgesamtheit.
+
+Rechnet man einen Ablauf als Fehlschlag, wird aus **+11,0** ein **-6,4**.
+
+**Die Regel.** Bei jedem Vergleich ueber Horizonte hinweg werden zwei Lesarten
+ausgewiesen:
+
+    mild          nur Entschiedene (die Auswahl bleibt drin)
+    vorsichtig    ein Ablauf zaehlt als Fehlschlag
+
+Das URTEIL haengt an der vorsichtigen; die Wahrheit liegt dazwischen, denn ein
+Ablauf ist ein Ausstieg zum Marktpreis. ⚠️ Und der Placebo rechnet in
+DERSELBEN Lesart wie das Urteil - ein milderer Massstab waere zu niedrig
+(2.50).
+
+⚠️ Die Entscheidungsquote gehoert IMMER ausgegeben. Ohne sie sieht ein
+Auswahleffekt aus wie ein Befund.
