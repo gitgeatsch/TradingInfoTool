@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 114. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 115. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -75,6 +75,7 @@ der Grund, warum Kapitel 113 den Drift wieder aufmacht.
 
 | Behauptung | Kapitel | woran sie fiel |
 |---|---|---|
+| **H hat einen Anwendungszeitpunkt** | **115** | Beharrung +3,9 gegen Schwelle +7,9; über Breakeven in **2 von 20** Fenstern |
 | Die Marktphase wirkt **invers** | **114** | 6 von 6 Punktschätzern dagegen, beide Indizes |
 | Die U-Form der Driftbänder | **113** | +7,0 auf 39 Reihen → **+0,6** auf 347 |
 | Der Drift ist derselbe ATR-Kanal | **113** | Bereinigung **vergrößert** ihn (+0,6 → +1,5) |
@@ -122,6 +123,10 @@ Grundbefund: driftfreier Pfad = Erwartungswert null
    |        |              111 Hochabstand ........ 44 % erklärt, 56 % bleibt
    |        |              112 Anreicherung ....... nichts mehr zu holen
    |        |
+   |        +-- WANN anwenden? -----> 115 Beharrung .. KEINE
+   |        |                              -> H ist real und nicht handelbar
+   |        |                                 ZWEIG GESCHLOSSEN (104-115)
+   |        |
    |        +-- womit kombinieren? --> 113 Drift ... NICHT kombinierbar
    |                                       (H liegt zu 92 % im Driftextrem,
    |                                        die Zelle fehlt)
@@ -153,7 +158,7 @@ wurde nie angefasst.** Er ist der einzige Kanal, der weder über den ATR noch
 | Ist die Marktbreite als *inverses* Signal brauchbar? | offen | ein verlässlich inverser Zusammenhang ist so gut wie ein positiver |
 | Trägt der **Umschlag**? | offen | einziger unberührter Kanal in den Kursdaten |
 | Trägt „gefegt" **umgekehrt**? | offen (112.4) | Beobachtung −4,2, Richtung ungeprüft |
-| Nachrichten | **nie bearbeitet** | einziger Kanal außerhalb der Kursreihe |
+| **Nachrichten** | **nie bearbeitet** | einziger Kanal außerhalb der Kursreihe — und damit der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert |
 
 ---
 
