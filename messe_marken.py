@@ -71,6 +71,7 @@ sys.path.insert(0, ".")
 from agent import lagebeschreibung as LB                      # noqa: E402
 from agent import trefferbilanz as TB                         # noqa: E402
 from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
+from simuliere_bremse import klassen_aus_db as _KLASSEN  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, _marktphase,          # noqa: E402
                               _reihen_roh)
 
@@ -138,7 +139,7 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
 
 def laufe(db: str, klasse: str, roh_pruefen: bool = True) -> list[dict]:
     """Je Anker: A, B, Ausgang, Phase - und Symbol/Zeit fuer die Bloecke."""
-    roh = _reihen_roh(db, klasse)
+    roh = _reihen_roh(db, klasse, _KLASSEN(db))
     phase = _marktphase(roh)
     aus, geprueft = [], 0
     for sym, (c, h, l, v, a, off, d) in roh.items():

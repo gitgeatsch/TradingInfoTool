@@ -60,6 +60,7 @@ from agent import trefferbilanz as TB                        # noqa: E402
 from messe_drift_absolut import BAENDER, DRIFT_FENSTER, _band  # noqa: E402
 from messe_geometrie import CRV_WERTE, K_WERTE               # noqa: E402
 from simuliere_bremse import gebuehr_je_seite as _GEB  # noqa: E402
+from simuliere_bremse import klassen_aus_db as _KLASSEN  # noqa: E402
 from simuliere_bremse import (MAX_TAGE, _marktphase,         # noqa: E402
                               _reihen_roh)
 
@@ -72,7 +73,7 @@ def laufe(db: str, klasse: str) -> list[dict]:
 
     ⚠️ EINE STICHPROBE, NICHT VIELE. Wer je Kombination neu anlaeuft, misst
     teils Auswahl statt Wirkung."""
-    roh = _reihen_roh(db, klasse)
+    roh = _reihen_roh(db, klasse, _KLASSEN(db))
     phase = _marktphase(roh)
     aus = []
     for sym_name, (c, h, l, v, a, off, d) in roh.items():

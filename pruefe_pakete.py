@@ -9248,6 +9248,44 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE BREITE MESSBASIS (Kapitel 107) ----
+    import simuliere_bremse as _SB107
+    _lq107 = _quelltext("lade_messreihen.py")
+    _lroh107 = io.open("lade_messreihen.py", encoding="utf-8").read()
+
+    # ⚠️ EIN TIPPFEHLER IM PFAD WUERDE 484 FREMDE SYMBOLE IN DIE PRODUKTION
+    # SCHREIBEN - und die Watchlist steuert, was das System handelt.
+    pruefe(P, "das Ladewerkzeug sperrt die Produktionsdatenbank",
+           "PRODUKTION = " in _lq107
+           and "ist die Produktionsdatenbank" in _lq107,
+           "Messreihen gehoeren in eine eigene Datei, nicht in den Betrieb")
+    pruefe(P, "jede Reihe prueft sich selbst vor dem Schreiben",
+           "def pruefe(" in _lq107 and "Median-Abstand" in _lq107
+           and "unplausible Kerze" in _lq107 and "doppelte Daten" in _lq107,
+           "eine Quelle, die sich nicht selbst prueft, verlaesst sich "
+           "darauf, dass eine spaetere Stufe ihren Fehler faengt")
+    pruefe(P, "die Ueberlebensverzerrung steht im Kopf",
+           "UEBERLEBENSVERZERRUNG" in _lroh107,
+           "geladen wurden die HEUTE handelnden Paare - das trifft beide "
+           "Arme gleich, gehoert aber in jeden Befund auf diesen Daten")
+
+    # ⚠️ OHNE DIE ZUORDNUNG WAEREN 29 STATT 347 REIHEN GEMESSEN WORDEN -
+    # ohne Fehler, ohne Warnung.
+    pruefe(P, "die Messdatenbank bringt ihre Anlageklassen selbst mit",
+           hasattr(_SB107, "klassen_aus_db")
+           and "CREATE TABLE IF NOT EXISTS messreihen" in _lq107,
+           "_reihen_roh liest die Klasse aus der WATCHLIST - neue Symbole "
+           "haetten dort keinen Eintrag und waeren STILL uebersprungen")
+    pruefe(P, "ohne die Tabelle gilt die Watchlist, nicht 'nichts'",
+           _SB107.klassen_aus_db("data/tradinginfotool.db") is None
+           and _SB107.klassen_aus_db("data/gibtsnicht.db") is None,
+           "ein Rueckfall auf ein leeres Woerterbuch wuerde JEDE Reihe "
+           "verwerfen - die Messung liefe ohne eine einzige Zeile durch")
+    pruefe(P, "ohne Angabe verhaelt sich _reihen_roh wie bisher",
+           "klassen if klassen is not None else"
+           in _quelltext("simuliere_bremse.py"),
+           "die Produktion darf von dieser Erweiterung nichts merken")
+
     # ---- KEIN STILLER RUECKFALL AUF DEN KRYPTO-SATZ (Kapitel 106) ----
     import simuliere_bremse as _SB106
     from agent.krypto import backward_tracking as BT106

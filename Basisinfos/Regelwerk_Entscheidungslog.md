@@ -18504,3 +18504,38 @@ Sie bleibt trotzdem im Befund stehen.
 UMSETZUNGSREIFE: NEIN. Vorsprung +7,1 gegen Schwelle +10,0. Ein Filter, der
 die Zufallsschwelle nicht nimmt, wuerde Signale wegnehmen, ohne dass jemand
 sagen koennte, ob die weggenommenen die schlechteren waren.
+
+
+[2026-08-20] KAPITEL 107: DIE BREITE MESSBASIS - 347 statt 39 Reihen
+
+VORFLUGKONTROLLE: 484 USDT-Spotpaare bei Binance, Listungsdatum je Paar
+geprueft (484 Anfragen, 146 s, 0 Fehler), davon 265 mit mindestens 750
+Handelstagen. Gewichtsspitze 332 von 6.000/min.
+
+LADELAUF: 347 von 484 Reihen brauchbar, 539.049 Kerzen, 305 s. 137 abgelehnt,
+ALLE wegen zu kurzer Historie - keine einzige wegen unplausibler Daten.
+Zeitraum 17.08.2017 bis 21.08.2026. Vorher: 39 Reihen, 52.407 Kerzen, davon
+24 lang genug fuer die Blockprobe; jetzt 265.
+
+⚠️ DAS HINDERNIS WAR REAL UND WAERE STILL GEWESEN: _reihen_roh liest die
+Anlageklasse aus der WATCHLIST, nicht aus der Datenbank. Gemessen: mit der
+neuen Zuordnung 347 Reihen, ohne sie 29. Die Messung waere durchgelaufen,
+haette normal ausgesehen und 29 statt 347 Reihen benutzt - kein Fehler, keine
+Warnung. Geloest ueber einen OPTIONALEN Parameter; ohne Angabe alles wie
+bisher, nachgemessen bitgleiche Zahlen auf der Produktions-DB (51.778 ->
+42.031 -> H 1.301 Faelle, +0,8). Der Rueckfall in klassen_aus_db ist bewusst
+None, nicht ein leeres Woerterbuch - ein leeres haette JEDE Reihe verworfen.
+
+ZWEI SPERREN IM LADEWERKZEUG: harte Pfadpruefung gegen die Produktions-DB
+(getestet, bricht ab) und Selbstpruefung je Reihe vor dem Schreiben
+(Median-Tagesabstand 1, high >= low, Preise > 0, keine Dubletten, >= 400
+Kerzen).
+
+WAS DIE DATEN SIND: Binance-USDT, nicht Bitpanda-EUR - fuer H gegen Nicht-H
+auf denselben Ankern unkritisch, fuer eine Euro-Renditeaussage nicht.
+UEBERLEBENSVERZERRUNG: geladen wurden die heute handelnden Paare. Trifft
+beide Arme gleich, gehoert aber in jeden Befund auf diesen Daten.
+
+FOLGE: die Schwelle skaliert grob mit der Wurzel der Reihenzahl - aus +10,0
+wuerde rechnerisch etwa +3, der Effekt liegt bei +7,1. Die Messung wird zum
+ersten Mal ENTSCHEIDUNGSFAEHIG, in beide Richtungen.

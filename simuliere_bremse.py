@@ -108,13 +108,24 @@ def _rang(reihe, i: int, fenster: int = FENSTER):
     return int(round(100.0 * float((v < reihe[i]).mean())))
 
 
-def _reihen_roh(db: str, klasse: str) -> dict:
-    """Symbol -> (close, high, low, volumen, atr, offset)."""
+def _reihen_roh(db: str, klasse: str, klassen: dict | None = None) -> dict:
+    """Symbol -> (close, high, low, volumen, atr, offset).
+
+    ⚠️ DIE ANLAGEKLASSE STEHT NICHT IN DER DATENBANK, sondern in der
+    Watchlist. Eine Messdatenbank mit eigenen Symbolen haette dort keinen
+    Eintrag - jede Reihe waere STILL uebersprungen worden, und die Messung
+    haette wie gewohnt ausgesehen, nur mit den alten 24 Reihen (Umbauplan
+    107).
+
+    `klassen` ist deshalb ein optionaler Ersatz fuer diese Zuordnung. Ohne
+    Angabe bleibt alles exakt wie bisher - die Produktion sieht keinen
+    Unterschied."""
     import config as C
     from backtest_llm1_historisch import lade_reihen_aus_db
 
-    kl = {x.symbol: str(getattr(x, "assetklasse", "") or "").lower()
-          for x in C.get_watchlist()}
+    kl = klassen if klassen is not None else {
+        x.symbol: str(getattr(x, "assetklasse", "") or "").lower()
+        for x in C.get_watchlist()}
     aus = {}
     for sym, kerzen in lade_reihen_aus_db(db).items():
         if sym.startswith("_") or kl.get(sym) != klasse or len(kerzen) < 400:
@@ -128,6 +139,22 @@ def _reihen_roh(db: str, klasse: str) -> dict:
         aus[sym] = (c, h, l, v, a, len(c) - len(a), d)
     return aus
 
+
+
+def klassen_aus_db(db: str) -> dict | None:
+    """Die Anlageklassen, die eine MESSdatenbank selbst mitbringt.
+
+    ⚠️ Gibt None zurueck, wenn es die Tabelle nicht gibt - dann gilt die
+    Watchlist wie bisher. Ein Rueckfall auf ein leeres Woerterbuch waere der
+    schlimmste Fall: er wuerde JEDE Reihe verwerfen, und die Messung liefe
+    ohne eine einzige Zeile durch (Umbauplan 107)."""
+    import sqlite3
+    try:
+        with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as c:
+            return {s: k for s, k in
+                    c.execute("SELECT symbol, assetklasse FROM messreihen")}
+    except sqlite3.Error:
+        return None
 
 
 def gebuehr_je_seite(klasse: str) -> float:

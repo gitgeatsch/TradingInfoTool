@@ -14277,3 +14277,96 @@ fehlen Reihen, kein Verfahren. Solange das so ist, ist **kein Einsatz im
 Betrieb vertretbar**: ein Filter, der die Zufallsschwelle nicht nimmt, würde
 Signale wegnehmen, ohne dass jemand sagen könnte, ob die weggenommenen die
 schlechteren waren.
+
+
+---
+
+## Kapitel 107 — Die breite Messbasis: 347 statt 39 Reihen (20.08.2026)
+
+Kapitel 106 hatte den einzigen offenen Weg benannt: **mehr Kryptoreihen, in
+einer eigenen Datenbank.** Er ist gegangen.
+
+### 107.1 Die Vorflugkontrolle
+
+| | |
+|---|---:|
+| USDT-Spotpaare im Handel (Binance) | **484** |
+| Listungsdatum je Paar geprüft | 484, **0 Fehler**, 146 s |
+| davon ≥ 750 Handelstage | **265** |
+| Gewicht | Spitze 332 von **6.000/Minute** |
+
+Die 750 Tage sind kein runder Wert, sondern die Bedingung der Messung: 250 für
+die Reifeprobe (104.3) plus zweimal 250 für die Blöcke (2.47).
+
+### 107.2 Der Ladelauf
+
+| | |
+|---|---:|
+| brauchbare Reihen | **347 von 484** |
+| Kerzen | **539.049** |
+| Dauer | 305 s |
+| abgelehnt | 137 — **alle** wegen zu kurzer Historie |
+
+**Keine einzige Reihe fiel wegen unplausibler Daten durch** — keine Lücken im
+Tagesraster, keine `high < low`, keine doppelten Daten. Der Zeitraum reicht
+vom **17.08.2017 bis 21.08.2026**.
+
+Zum Vergleich der Stand davor: **39 Reihen, 52.407 Kerzen** — davon 24 lang
+genug für die Blockprobe. Jetzt sind es **265**.
+
+### 107.3 ⚠️ Das Hindernis war real — und es wäre still gewesen
+
+`_reihen_roh()` liest die Anlageklasse **nicht aus der Datenbank, sondern aus
+der Produktions-Watchlist**. Neue Symbole haben dort keinen Eintrag und wären
+übersprungen worden.
+
+**Gemessen, nicht vermutet:**
+
+| | Reihen |
+|---|---:|
+| mit der neuen Zuordnung | **347** |
+| ohne sie (Watchlist, wie bisher) | **29** |
+
+**Die Messung wäre durchgelaufen, hätte normal ausgesehen und 29 statt 347
+Reihen benutzt.** Kein Fehler, keine Warnung — nur ein Ergebnis, das
+niemanden stutzig gemacht hätte.
+
+Gelöst über einen **optionalen** Parameter: ohne Angabe verhält sich alles
+exakt wie bisher. Nachgemessen — die vollständige Messung auf der
+Produktionsdatenbank liefert nach dem Umbau **bitgleiche Zahlen** (51.778
+Anker → 42.031 reif → H mit 1.301 Fällen bei +0,8).
+
+⚠️ Der Rückfall in `klassen_aus_db()` ist bewusst `None`, **nicht** ein leeres
+Wörterbuch: ein leeres hätte jede Reihe verworfen, und die Messung wäre ohne
+eine einzige Zeile durchgelaufen.
+
+### 107.4 Zwei Sperren im Ladewerkzeug
+
+**Der Pfad wird hart geprüft.** Ein Tippfehler würde sonst 484 fremde Symbole
+in die Produktionsdatenbank schreiben — und die Watchlist steuert, was das
+System handelt. Getestet: `--db data/tradinginfotool.db` bricht ab.
+
+**Jede Reihe prüft sich selbst, bevor eine Zeile geschrieben wird:**
+Median-Tagesabstand genau 1 · `high ≥ low` · alle Preise > 0 · keine
+doppelten Daten · mindestens 400 Kerzen.
+
+### 107.5 Was diese Daten sind — und was nicht
+
+**Binance-USDT, nicht Bitpanda-EUR.** Für den Vergleich H gegen Nicht-H auf
+denselben Ankern derselben Reihe ist das unkritisch — beide Arme sehen
+dieselben Kurse. Für eine Renditeaussage in Euro wäre es das nicht.
+
+⚠️ **Überlebensverzerrung.** Geladen wurden die heute handelnden Paare;
+eingestellte fehlen. Auch das trifft beide Arme gleich, **gehört aber in jeden
+Befund, der auf diesen Daten steht.**
+
+### 107.6 Was jetzt möglich ist
+
+Die Zufallsschwelle skaliert grob mit der Wurzel der Reihenzahl. Bei elffacher
+Breite wäre aus +10,0 Punkten rechnerisch etwa +3 — der gemessene Effekt liegt
+bei +7,1.
+
+**Damit wird die Messung zum ersten Mal entscheidungsfähig, und zwar in beide
+Richtungen.** Sie kann die Strukturhypothese bestätigen — oder sie sauber
+erledigen. Beides ist mehr wert als das „nicht entscheidbar" der letzten drei
+Kapitel.
