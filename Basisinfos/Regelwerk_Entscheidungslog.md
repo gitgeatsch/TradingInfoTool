@@ -18833,3 +18833,47 @@ MITTELN +194.392 % ueber die ganze Reihe. Verkettete Mediane sind kein Index
 Neulistungen erschlagen (+28,6 %/Tag). Gewaehlt: BTC allein - eine Reihe ab
 2017, keine wandernde Zusammensetzung. Dass beide Indizes dasselbe sagen, ist
 der eigentliche Beleg.
+
+
+[2026-08-20] KAPITEL 115: H HAT KEINEN ANWENDUNGSZEITPUNKT
+
+Nutzerfrage: muessen wir den GRUND kennen, oder reicht zu wissen, DASS und WIE
+es wirkt - und WANN wenden wir es an? Die Frage dreht das Problem richtig
+herum: eine Regel braucht keinen Mechanismus, sie braucht eine
+ANWENDBARKEITSBEDINGUNG, die am Entscheidungstag bekannt ist. Die billigste
+ohne Theorie ist H's eigene juengste Leistung - eine Frage nach BEHARRUNG.
+
+⚠️ ZEITVERSATZ IST DER KERN: ein Anker aus Fenster w hat 120 Tage
+Vorwaertsfenster, sein Ausgang steht erst am Ende von w+1 fest. Signal fuer
+w+2 stammt deshalb aus w - ZWEI Fenster, 240 Handelstage.
+
+DAS BILD: 446.502 reife Anker ergeben 20 brauchbare Fenster. H-Vorsprung
+Median -2,7, Spanne -21,1 bis +19,8, POSITIV IN 7 VON 20, UEBER DEM BREAKEVEN
+IN 2 VON 20. Das ist die aufschlussreichste Zahl: der aggregierte Vorsprung
+von +4,8 (Kapitel 108) stammt aus einer MINDERHEIT von Perioden - H traegt
+nicht durchgehend ein bisschen, sondern selten viel, und wir wissen vorher
+nicht, welche Periode es wird.
+
+W1 KEINE BEHARRUNG: nach positivem Fenster -0,6, nach negativem -4,6,
+Unterschied +3,9 gegen Schwelle +7,9 (200 Laeufe, Fensterreihenfolge
+getauscht). Richtung stimmt, Betrag reicht nicht; bei 16 auswertbaren
+Fensterpaaren ist die Schwelle zu Recht hoch.
+
+W2 WIDERSPRICHT SOGAR: Abstand nach positivem Fenster -14,9, nach negativem
++0,2. Kein Widerspruch in der Sache, sondern die Trennung der Groessen - der
+Vorsprung misst H gegen die Nachbarn im selben Fenster, der Abstand gegen den
+eigenen Breakeven. H schlaegt seine Nachbarn am deutlichsten dort, wo alle
+schlecht sind. ES GIBT KEIN KOHAERENTES SIGNAL.
+
+FOLGE: H ist real und NICHT IN EINE HANDLUNG UEBERSETZBAR. Der Zweig H ist
+nach zwoelf Kapiteln (104-115) praktisch geschlossen - traegt Information JA,
+erklaert sich NEIN, hat einen Anwendungszeitpunkt NEIN. Nach 2.51 bleibt der
+Rest stehen: H ist eine gemessene kontrollierte Groesse und koennte
+BESTANDTEIL einer Konjunktion sein; mit dem Drift geht es nicht (92 %
+Ueberlappung). Was fehlt, ist ein Partner aus einem ANDEREN Kanal.
+
+RICHTUNG: alle Kandidaten der Kapitel 100-115 stammen aus EINER Quelle, der
+Kursreihe, und sind untereinander verwandt (ATR-Kanal viermal, H und Drift
+92 % Ueberlappung). Die einzige benannte Quelle ausserhalb der Kursreihe ist
+NACHRICHTEN - seit dem Grundbefund auf der Liste, nie angefasst, und der
+einzige moegliche Partner, der mit H nicht per Konstruktion korreliert.

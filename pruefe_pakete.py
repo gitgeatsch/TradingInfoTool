@@ -9248,6 +9248,32 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- WANN TRAEGT H? (Kapitel 115) ----
+    _wnq = _quelltext("messe_wann.py")
+    _wnroh = io.open("messe_wann.py", encoding="utf-8").read()
+    import messe_wann as _WN
+
+    pruefe(P, "die Beharrungsfrage steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _wnroh
+           and "W1  BEHARRUNG" in _wnroh and "W2  NUTZEN" in _wnroh)
+
+    # ⚠️ OHNE VERSATZ BENUTZT DAS SIGNAL ERGEBNISSE, DIE ES NOCH NICHT GAB.
+    pruefe(P, "das Signal hat zwei Fenster Versatz",
+           _WN.VERSATZ >= 2 and "NICHT verhandelbar" in _wnq,
+           "ein Anker aus Fenster w hat 120 Tage Vorwaertsfenster - sein "
+           "Ausgang steht erst am Ende von w+1 fest")
+    pruefe(P, "der Vorsprung wird je Fenster gegen DASSELBE Fenster gerechnet",
+           "def _fenster_vorspruenge" in _wnq,
+           "sonst misst man die Marktlage des Fensters mit (2.50)")
+    pruefe(P, "die Kontrolle tauscht die FENSTERREIHENFOLGE",
+           "rng.permutation(vorspruenge)" in _wnq,
+           "gefragt ist, ob die ABFOLGE Information traegt - also muss "
+           "genau sie zerstoert werden und sonst nichts")
+    pruefe(P, "Vorsprung und absoluter Abstand werden GETRENNT berichtet",
+           "W2 - REICHT ES BIS ZUM BREAKEVEN" in _wnq,
+           "sie sind entkoppelt: nach positivem Fenster Vorsprung -0,6 aber "
+           "Abstand -14,9, nach negativem -4,6 aber +0,2 (Methodik 2.53)")
+
     # ---- IST DIE MARKTPHASE INVERS? (Kapitel 114) ----
     _piq = _quelltext("messe_phase_invers.py")
     _piroh = io.open("messe_phase_invers.py", encoding="utf-8").read()

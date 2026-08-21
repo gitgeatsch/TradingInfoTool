@@ -15105,3 +15105,110 @@ Neulistungen und Mikrowerten, nicht aus dem Markt.
 **Gewählt wurde stattdessen BTC allein** — eine Reihe, durchgehend ab
 2017-08-17, keine wandernde Zusammensetzung, keine Konstruktionsannahme. Dass
 beide Indizes dasselbe sagen, ist der eigentliche Beleg dieses Kapitels.
+
+
+---
+
+## Kapitel 115 — H hat keinen Anwendungszeitpunkt (20.08.2026)
+
+**Nutzerfrage:** *„Müssen wir den tatsächlichen Grund wissen, warum es so ist —
+oder müssen wir nur wissen, DASS es so ist und wie es sich auswirkt? Und damit
+es eine Regel wird: WANN wenden wir sie an? Lässt sich das zurückrechnen?"*
+
+**Die Frage dreht das Problem richtig herum.** Eine Regel braucht keinen
+Mechanismus — sie braucht eine **Anwendbarkeitsbedingung, die am
+Entscheidungstag bekannt ist.** Der Mechanismus ist nur die robusteste Quelle
+dafür, nicht die einzige.
+
+Die billigste Bedingung ohne jede Theorie ist **H's eigene jüngste Leistung**.
+Das ist eine Frage nach **Beharrung**, nicht nach Ursache — und sie ist
+zurückrechenbar.
+
+### 115.1 ⚠️ Der Zeitversatz ist der Kern, nicht ein Detail
+
+Ein Anker aus Fenster *w* hat ein Vorwärtsfenster von 120 Tagen; sein Ausgang
+steht erst am Ende von Fenster *w+1* fest. **Wer den Vorsprung aus Fenster w
+als Signal für w+1 benutzt, benutzt Ergebnisse, die es da noch nicht gab.**
+
+Deshalb: **Signal für Fenster w+2 stammt aus Fenster w — zwei Fenster Versatz,
+240 Handelstage.** Konservativ und überprüfbar.
+
+### 115.2 Das Bild, das die Fenster zeigen
+
+446.502 reife Anker ergeben **20 brauchbare Fenster** à 120 Handelstage.
+
+| | |
+|---|---:|
+| H-Vorsprung je Fenster, Median | **−2,7** |
+| Spanne | −21,1 bis +19,8 |
+| **positiv in** | **7 von 20** Fenstern |
+| **über dem Breakeven in** | **2 von 20** Fenstern |
+
+⚠️ **Das ist die aufschlussreichste Zahl des ganzen Kapitels.** Der aggregierte
+Vorsprung von +4,8 Punkten (Kapitel 108) stammt aus einer **Minderheit von
+Perioden** — H trägt nicht durchgehend ein bisschen, sondern selten viel. Und
+wir können vorher nicht sagen, welche Periode es wird.
+
+### 115.3 W1 — keine Beharrung
+
+| | Fenster | Vorsprung |
+|---|---:|---:|
+| nach einem **positiven** Fenster | 6 | −0,6 |
+| nach einem negativen Fenster | 10 | −4,6 |
+| **Unterschied** | | **+3,9** |
+
+| Kontrolle (Fensterreihenfolge getauscht, 200 Läufe) | |
+|---|---:|
+| Schwelle (95 %) | **+7,9** |
+| gemessen | **+3,9** |
+
+**Keine Beharrung.** Die Richtung stimmt, der Betrag reicht nicht — und bei
+16 auswertbaren Fensterpaaren ist die Schwelle zu Recht hoch.
+
+### 115.4 W2 — und die absolute Zahl widerspricht sogar
+
+| | Abstand zum Breakeven |
+|---|---:|
+| nach einem positiven Fenster | **−14,9** |
+| nach einem negativen Fenster | **+0,2** |
+
+**Genau umgekehrt zu W1.** Der Grund ist keine Ungereimtheit, sondern die
+Trennung der beiden Größen: der *Vorsprung* misst H gegen seine Nachbarn im
+selben Fenster, der *Abstand* misst H gegen seinen eigenen Breakeven. **Beide
+sind entkoppelt** — H schlägt seine Nachbarn am deutlichsten in Fenstern, in
+denen alle schlecht abschneiden.
+
+**Es gibt also kein kohärentes Signal**, weder im Vorsprung noch im Ertrag.
+
+### 115.5 Was das für H bedeutet — und für den Plan
+
+> **H ist real und nicht in eine Handlung übersetzbar.** Es gibt keinen
+> erkennbaren Zeitpunkt, an dem es eher trägt als sonst.
+
+Das ist der harte Ausgang, der vor dem Lauf benannt war. **Er beantwortet die
+Nutzerfrage vollständig:** wir brauchen den Grund nicht — aber wir brauchen
+*irgendeine* Bedingung, und die billigste mechanismenfreie gibt es nicht.
+
+**Damit ist der Zweig H nach zwölf Kapiteln (104–115) praktisch geschlossen.**
+Nicht weil er falsch wäre, sondern weil er nicht handelbar ist:
+
+| | |
+|---|---|
+| H trägt Information | ja (108, 111) |
+| H erklärt sich | nein (109–114) |
+| H hat einen Anwendungszeitpunkt | **nein (115)** |
+
+⚠️ **Nach 2.51 bleibt der Rest stehen, nicht der Haken.** H ist eine gemessene,
+kontrollierte Größe (+4,8 kostenbereinigt) und könnte **Bestandteil** einer
+künftigen Konjunktion sein. Was 113 gezeigt hat: mit dem Drift geht es nicht
+(92 % Überlappung). Was fehlt, ist ein Partner aus einem **anderen Kanal**.
+
+### 115.6 Was daraus für die Richtung folgt
+
+Alle Kandidaten der Kapitel 100–115 stammen aus **einer** Quelle: der
+Kursreihe. Sie sind untereinander verwandt — der ATR-Kanal ist viermal
+aufgetreten, H und Drift überlappen zu 92 %.
+
+**Die einzige benannte Quelle, die nicht aus der Kursreihe stammt, ist
+„Nachrichten"** — seit dem Grundbefund auf der Liste, nie angefasst. Sie ist
+der einzige mögliche Partner, der mit H nicht per Konstruktion korreliert ist.
