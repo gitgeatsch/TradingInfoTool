@@ -14488,3 +14488,107 @@ Prüfbar wäre er trotzdem — aber nur **an Daten, die die Hypothese nicht
 gesehen hat**: Anpassung auf der ersten Hälfte der Zeitreihe, Prüfung auf der
 zweiten. Das ist der einzige Weg, der aus einem gefundenen Muster eine
 belastbare Aussage macht.
+
+
+---
+
+## Kapitel 109 — Die Zeitteilung: aus dem Muster wird keine Regel (20.08.2026)
+
+Kapitel 108 hatte gemessen, dass H im Bullenmarkt **+5,1 Punkte über** seinem
+Breakeven liegt und im Bärmarkt −8,5 darunter. Daraus die Regel *„H nur
+außerhalb des Bärmarkts"* zu machen, hieße eine Bedingung **aus einem Ergebnis**
+zu benennen. Die Phasenprobe war als Robustheitsprüfung angelegt, nicht als
+Filterdimension.
+
+**Deshalb der Test an Daten, welche die Hypothese nie gesehen hat.**
+
+### 109.1 Der Aufbau
+
+| | |
+|---|---|
+| **Festlegung** | erste Hälfte, bis 2022-03-02 — hier **ist** Suche erlaubt |
+| **Puffer** | 2022-03-02 bis 2022-06-30, **16.912 Anker verworfen** |
+| **Prüfung** | zweite Hälfte, ab 2022-06-30 — die Regel wird nicht mehr angefasst |
+
+⚠️ **Der Puffer ist nicht optional.** Ein Anker kurz vor der Trennlinie hat
+sein Vorwärtsfenster jenseits davon — sein Ausgang gehört schon zur
+Prüfhälfte. Ohne Puffer sickert die Antwort in die Festlegung.
+
+**Die Regel, auf der ersten Hälfte bestimmt:** Bulle **+8,2**, Seitwärts
+**+4,3**, Bär zu wenige Fälle → **H nur in Bulle und Seitwärts.**
+
+### 109.2 Das Ergebnis
+
+| in der Prüfhälfte, Lagen Bulle + Seitwärts | Fälle | Quote | Abstand |
+|---|---:|---:|---:|
+| H mit der Regel | 2.264 | 31,0 % | **−8,8** |
+| H ohne die Regel (alle Lagen) | 4.339 | 30,6 % | −9,7 |
+| alle Anker in denselben Lagen | 194.657 | 28,4 % | −11,5 |
+
+**H bringt +2,7 Punkte gegenüber vergleichbaren Ankern** — gegen +8,5
+innerhalb der eigenen Daten. Die Lagenbedingung selbst bringt **+0,9 Punkte**.
+
+**Block-Permutation auf der Prüfhälfte: Schwelle −5,3, gemessen −8,8.**
+
+> **Die Regel hält nicht.** Der Vorsprung von +2,7 liegt innerhalb dessen, was
+> der Zufall auf 222 Reihen hergibt.
+
+### 109.3 ⚠️ Zwei Fehler im eigenen Aufbau, beide gefunden und behoben
+
+**Der Vergleichsmaßstab war unfair.** Die erste Fassung stellte H in
+Bulle+Seitwärts gegen *alle* Anker in *allen* Lagen (−7,2) — das mischt die
+Lagenwahl in den Vergleich und lädt zu einem falschen Schluss ein. Richtig ist
+der Vergleich **innerhalb derselben Lagen** (−11,5).
+
+**Und das Null-Modell passte nicht zur Frage.** Die Block-Permutation würfelte
+die Ausgänge über **alle** Lagen der Prüfhälfte, auch über den Bärmarkt. Die
+Regel beschränkt sich aber auf Bulle und Seitwärts, und die haben in der
+zweiten Hälfte eine **niedrigere Grundquote** als der Durchschnitt (28,4 %
+gegen 33,0 %).
+
+**Der Zufallsarm bekam damit 4,6 Punkte geschenkt, die nichts mit H zu tun
+haben, sondern mit der Lagenwahl.** Nach der Korrektur wandert die Schwelle
+von −1,8 auf **−5,3**.
+
+⚠️ **Und das Urteil bleibt trotzdem.** Das ist der wichtigste Satz dieses
+Kapitels: der Fehler wurde gefunden, behoben, und er hat das Ergebnis **nicht**
+gedreht. Ein Befund, der eine korrigierte Kontrolle übersteht, ist mehr wert
+als einer, der nie geprüft wurde.
+
+### 109.4 Was der Test nicht beantwortet
+
+⚠️ **Die Teilung ist verzerrt — dreifach:**
+
+| Lage | Festlegung | Prüfung |
+|---|---:|---:|
+| bulle | **69,6 %** | **12,4 %** |
+| seitwärts | 19,2 % | 41,2 % |
+| bär | 11,2 % | 46,4 % |
+
+Dazu wandert die **Zusammensetzung**: 2017 bestand der Index aus 2 Reihen,
+2022 aus 190. Und die zweite Hälfte enthält **fünfmal so viele Anker** wie die
+erste.
+
+**Gescheitert ist damit die Aussage „die Regel überträgt sich über einen
+Regimewechsel hinweg".** Ob sie sich auf **andere Assets innerhalb derselben
+Zeit** überträgt, ist eine andere Frage — dafür wäre eine Teilung nach
+Symbolen nötig, und die ist ausdrücklich der **schwächere** Test: alle Coins
+laufen gleichzeitig durch dieselben Regime.
+
+### 109.5 Wo wir stehen
+
+**Kapitel 108 war ein Befund innerhalb der eigenen Daten. Kapitel 109 zeigt,
+dass er sich nicht überträgt.** Genau dafür ist die Maschinerie gebaut — ohne
+diesen Schritt würde jetzt ein Filter entstehen, der auf einer
+Bullenmarkt-Episode von 2017 bis 2022 beruht.
+
+Was bleibt, ist nicht nichts:
+
+- Die Strukturbedingung trägt **Information** (+2,7 außerhalb der eigenen
+  Daten, in der Richtung stimmig mit +8,5 innerhalb).
+- Sie trägt **keinen Trade** — bei −8,8 Punkten unter dem Breakeven ist der
+  Abstand zur Handelbarkeit nicht klein, sondern groß.
+- Und die **Prüfkette steht**: Vorabfestlegung · Block-Permutation ·
+  Läufe-erhöhen · Hürdenrechnung · Positivkontrolle · Reifeprobe ·
+  Phasenprobe · Zeitteilung. Jeder weitere Kandidat kostet ab jetzt nur noch
+  Rechenzeit.

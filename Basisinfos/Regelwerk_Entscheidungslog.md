@@ -18585,3 +18585,43 @@ des Baermarkts" folgt aus einem ERGEBNIS, nicht aus einem Grund. Die
 Phasenprobe war als Robustheitspruefung angelegt, nicht als Filterdimension.
 Pruefbar nur an Daten, die die Hypothese nicht gesehen hat: Anpassung auf der
 ersten Haelfte der Zeitreihe, Pruefung auf der zweiten.
+
+
+[2026-08-20] KAPITEL 109: DIE ZEITTEILUNG - aus dem Muster wird keine Regel
+
+108 hatte gemessen: H im Bullenmarkt +5,1 UEBER dem Breakeven, im Baermarkt
+-8,5 darunter. Daraus eine Regel zu machen hiesse, eine Bedingung aus einem
+ERGEBNIS zu benennen. Deshalb der Test an Daten, die die Hypothese nie
+gesehen hat.
+
+AUFBAU: Festlegung bis 2022-03-02 (hier IST Suche erlaubt), Puffer bis
+2022-06-30 mit 16.912 verworfenen Ankern (ihr Vorwaertsfenster liegt jenseits
+der Trennlinie), Pruefung ab 2022-06-30. Regel aus der ersten Haelfte: Bulle
++8,2, Seitwaerts +4,3 -> H nur in Bulle und Seitwaerts.
+
+ERGEBNIS: H mit Regel -8,8 auf 2.264 Faellen, H ohne Regel -9,7, alle Anker
+in denselben Lagen -11,5. H bringt also +2,7 Punkte gegenueber vergleichbaren
+Ankern - gegen +8,5 innerhalb der eigenen Daten. Block-Permutation Schwelle
+-5,3, gemessen -8,8 -> DIE REGEL HAELT NICHT.
+
+⚠️ ZWEI FEHLER IM EIGENEN AUFBAU, gefunden und behoben:
+1. Der Vergleichsmassstab war unfair - H in zwei Lagen gegen ALLE Anker in
+   ALLEN Lagen. Richtig ist der Vergleich innerhalb derselben Lagen.
+2. Das Null-Modell passte nicht zur Frage: gewuerfelt wurde ueber alle Lagen,
+   obwohl die Regel nur zwei benutzt - und die haben eine niedrigere
+   Grundquote (28,4 % gegen 33,0 %). Der Zufallsarm bekam 4,6 Punkte
+   geschenkt. Schwelle nach der Korrektur -5,3 statt -1,8.
+UND DAS URTEIL BLEIBT TROTZDEM. Der Fehler hat das Ergebnis nicht gedreht.
+Neue Methodikregel 2.50.
+
+⚠️ WAS DER TEST NICHT BEANTWORTET: die Teilung ist dreifach verzerrt -
+Festlegung 69,6 % Bulle gegen Pruefung 12,4 %; die Zusammensetzung wandert
+(2 Reihen 2017, 190 im Jahr 2022); die zweite Haelfte hat fuenfmal so viele
+Anker. Gescheitert ist die Aussage "die Regel uebertraegt sich ueber einen
+REGIMEWECHSEL hinweg". Ob sie sich auf andere ASSETS in derselben Zeit
+uebertraegt, waere eine Symbolteilung - ausdruecklich der SCHWAECHERE Test.
+
+STAND: die Strukturbedingung traegt INFORMATION (+2,7 ausserhalb der eigenen
+Daten, richtungsstimmig mit +8,5 innerhalb), aber KEINEN TRADE (-8,8 unter
+dem Breakeven). Die Pruefkette steht vollstaendig; jeder weitere Kandidat
+kostet nur noch Rechenzeit.

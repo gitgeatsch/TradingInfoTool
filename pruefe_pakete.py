@@ -9248,6 +9248,38 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE ZEITTEILUNG (Kapitel 109) ----
+    _zq = _quelltext("messe_zeitteilung.py")
+    _zroh = io.open("messe_zeitteilung.py", encoding="utf-8").read()
+
+    pruefe(P, "die Zeitteilung steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _zroh
+           and "FESTLEGUNG" in _zroh and "PRUEFUNG" in _zroh)
+
+    # ⚠️ OHNE PUFFER SICKERT DIE ANTWORT IN DIE FESTLEGUNG.
+    pruefe(P, "der Puffer gegen das Vorwaertsfenster ist da",
+           "puffer_bis" in _zq and "MAX_TAGE" in _zq,
+           "ein Anker kurz vor der Trennlinie hat seinen Ausgang JENSEITS "
+           "davon - 16.912 Anker wurden deshalb verworfen")
+    pruefe(P, "die Zusammensetzung beider Haelften wird ausgewiesen",
+           "ZUSAMMENSETZUNG DER HAELFTEN" in _zq,
+           "Festlegung 69,6 % Bulle gegen Pruefung 12,4 % - das muss man "
+           "sehen, nicht ahnen")
+
+    # ⚠️ METHODIK 2.50 - DIE KONTROLLE BENUTZT DIESELBE GRUNDGESAMTHEIT.
+    pruefe(P, "die Block-Permutation wuerfelt NUR in den Regel-Lagen",
+           'and f["phase"] in regel' in _zq,
+           "ueber alle Lagen gewuerfelt bekam der Zufallsarm 4,6 Punkte "
+           "geschenkt, die von der Lagenwahl kamen statt von H - die "
+           "Schwelle stand bei -1,8 statt bei -5,3 (Methodik 2.50)")
+    pruefe(P, "verglichen wird INNERHALB derselben Lagen",
+           "alle Anker IN diesen Lagen" in _zq
+           and "DAS ist der faire Vergleich" in _zq,
+           "gegen alle Anker in allen Lagen zu vergleichen mischt die "
+           "Lagenwahl in den Vergleich")
+    pruefe(P, "die Knappheitsregel 2.48 gilt auch hier",
+           "ZU KNAPP" in _zq)
+
     # ---- DIE WIEDERHOLUNG AUF BREITER BASIS (Kapitel 108) ----
     _pq108 = _quelltext("pruefe_phasenindex.py")
     _mq108 = _quelltext("messe_marken.py")

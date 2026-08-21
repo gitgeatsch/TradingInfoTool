@@ -2997,3 +2997,31 @@ Wer viele Kombinationen durchprobiert, muss ein Vielfaches liefern. Deshalb
 gehoert zu jeder Rastermessung die Angabe, **wie hoch die Huerde bei einer
 vorab benannten Kombination laege** - sie zeigt, was eine begruendete
 Hypothese wert waere.
+
+
+## 2.50 Die Kontrolle muss dieselbe Grundgesamtheit benutzen wie die Regel (20.08.2026)
+
+**Der Fall.** Kapitel 109 prueft die Regel *"H nur in Bulle und Seitwaerts"*.
+Die Block-Permutation wuerfelte die Ausgaenge zunaechst ueber **alle** Lagen
+der Pruefhaelfte - auch ueber den Baermarkt.
+
+Die Regel beschraenkt sich aber auf zwei Lagen, und die hatten in dieser
+Periode eine **niedrigere Grundquote** als der Durchschnitt: 28,4 % gegen
+33,0 %. Der Zufallsarm bekam damit **4,6 Punkte geschenkt**, die nichts mit
+der geprueften Groesse zu tun haben, sondern mit der Auswahl der Lagen. Die
+Schwelle stand bei -1,8 statt bei -5,3.
+
+**Die Regel.** Schraenkt eine Hypothese die Grundgesamtheit ein (Lage, Klasse,
+Zeitfenster, Instrument), muss die Kontrolle **dieselbe** Einschraenkung
+tragen. Sonst misst man nicht, ob die Hypothese etwas beitraegt, sondern ob
+die Einschraenkung eine andere Basisrate hat.
+
+**Zusammen mit 101.6 ergibt das ein Paar:**
+
+| | |
+|---|---|
+| 101.6 | Die Kontrolle darf nicht ZERSTOEREN, was legitim verschieden ist |
+| **2.50** | Die Kontrolle darf nicht BEKOMMEN, was die Regel nicht hat |
+
+Beide Male sah das Ergebnis aus wie ein Befund und war ein Artefakt der
+Kontrolle.
