@@ -15826,3 +15826,108 @@ Small-Zeile geschrieben.
 
 **Der Befund ist besser belegt als je zuvor und zugleich an einer Stelle
 begrenzt, die keine weitere Messung auf Kursdaten aufheben kann.**
+
+
+---
+
+## Kapitel 122 — Die Brücke zur echten Auswahl (20.08.2026)
+
+Alles bis hierher lag auf 523 fremden Binance-Reihen. Die entscheidende
+praktische Frage lautet: **wirkt H auf den Symbolen, die dieses System
+tatsächlich handelt?**
+
+### 122.1 ⚠️ Zwei Fallen auf dem Weg dorthin
+
+**Erstens: die Kategoriegrenzen sind nicht übertragbar.** Die
+Produktions-Datenbank misst das Volumen an *ihrer* Quelle, nicht an Binance:
+
+| | Produktion | Messdaten | Faktor |
+|---|---:|---:|---:|
+| BTC | 319 Mio | 932 Mio | 2,9 |
+| ETH | 100 Mio | 390 Mio | 3,9 |
+| AVAX | 5,1 Mio | 10,3 Mio | 2,0 |
+
+Die Grenzen aus Kapitel 120 direkt auf Produktionsdaten anzuwenden hätte
+**30 von 39 Symbolen als „Small" eingestuft** — darunter SOL und AVAX. Beide
+Seiten müssen mit **demselben** Maßstab gemessen werden.
+
+**Zweitens: die Kategorienamen sind irreführend.** Sie messen
+**Binance-USDT-Spotumsatz**, also Liquidität an *einer* Börse — nicht
+Marktkapitalisierung. **APT hat eine Milliardenbewertung und 2,7 Mio. USD
+Spotumsatz.** Für die Handelbarkeitsfrage ist Liquidität die richtige Größe;
+die Namen suggerieren etwas anderes.
+
+Mit gleichem Maßstab gemessen:
+
+| Kategorie | Watchlist-Symbole |
+|---|---:|
+| BTC | 1 |
+| Large | 3 (BNB, ETH, SOL) |
+| Mid | 7 (AVAX, LINK, NEAR, ONDO, SUI, TAO, XLM) |
+| **Small** | **18** |
+
+⚠️ **18 von 29 messbaren Symbolen liegen im dünnsten Band** — genau dort, wo H
+am stärksten wirkt und die Handelbarkeit am wenigsten gesichert ist. Weitere
+**15 der 44 Watchlist-Symbole** handeln gar nicht als USDT-Spotpaar auf
+Binance.
+
+### 122.2 Das Ergebnis auf der echten Auswahl
+
+**37.623 Anker aus 29 Watchlist-Symbolen:**
+
+| | Fälle | Quote |
+|---|---:|---:|
+| H | 1.232 | **38,4 %** |
+| Nicht-H | 36.391 | 33,5 % |
+| **Vorsprung** | | **+4,8 Punkte** |
+
+**Der Punktschätzer stimmt mit allem überein**, was wir gemessen haben: +4,5
+auf allen 523 Reihen, +5,9 Large, +7,9 Small, +4,8 hier.
+
+| Nettoerwartungswert je Trade | H | ohne Filter |
+|---|---:|---:|
+| **Referenz 0,30 %** | **+0,114 R** | −0,031 R |
+| **Betrieb 1,50 %** | **−0,036 R** | −0,182 R |
+
+### 122.3 ⚠️ Und er ist auf 29 Symbolen nicht bestätigbar
+
+| | |
+|---|---:|
+| Reihen mit zwei Zeitblöcken | **27** |
+| Schwelle (95 %) | **+9,2** |
+| gemessen | +4,8 |
+| | **trägt nicht** |
+
+**Dieselbe Wand wie in Kapitel 105** (24 Reihen, Schwelle +10,0). 29 Symbole
+reichen nicht, um einen Effekt dieser Größe von Zufall zu trennen.
+
+**Das ist kein Widerspruch zum Befund aus 119–121.** Der Nachweis steht auf
+523 Reihen; die Watchlist ist eine Teilmenge derselben Grundgesamtheit, deren
+Punktschätzer passt. Sie kann ihn **nicht unabhängig bestätigen** — sie kann
+ihn auch nicht widerlegen.
+
+### 122.4 Die praktische Bilanz
+
+| | ohne Filter | mit H | Gewinn |
+|---|---:|---:|---:|
+| Referenz 0,30 % | −0,031 R | **+0,114 R** | +0,145 |
+| **Betrieb 1,50 %** | −0,182 R | **−0,036 R** | **+0,146** |
+
+> **H verbessert den Erwartungswert um rund 0,15 R je Trade — an beiden
+> Sätzen gleich. Zum Betriebssatz reicht das nicht bis über null.**
+
+**Die bindende Größe ist damit nicht der Filter, sondern die Handelsgebühr.**
+H schließt etwa vier Fünftel der Lücke; das letzte Fünftel schließt nur der
+Handelsplatz.
+
+⚠️ Bei 6 % Verlustanteil je Trade: **+0,68 % Kapital je Trade** zur Referenz,
+**−0,22 %** im Betrieb.
+
+### 122.5 Was damit entschieden ist und was nicht
+
+| | |
+|---|---|
+| Wirkt H auf der echten Auswahl? | Punktschätzer **+4,8**, stimmig — **nicht unabhängig bestätigbar** |
+| Reicht H allein zum Betriebssatz? | **nein** (−0,036 R) |
+| Reicht H zum Referenzsatz? | **ja** (+0,114 R) |
+| Ist die dünne Liquidität handelbar? | ⚠️ **mit Kursdaten unprüfbar** (121.5) |

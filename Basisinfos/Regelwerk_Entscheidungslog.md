@@ -19110,3 +19110,38 @@ sich eine 4-ATR-Bewegung dort HANDELN laesst, steht in keiner OHLC-Reihe -
 Spread, Markttiefe und die Frage nach einem Kaeufer beim Ausstieg sind nicht
 enthalten und sind KEIN Gebuehrenproblem. Das ist die haerteste Einschraenkung
 des besten Ergebnisses und mit Tagesdaten nicht aufloesbar.
+
+
+[2026-08-20] KAPITEL 122: DIE BRUECKE ZUR ECHTEN AUSWAHL
+
+ZWEI FALLEN AUF DEM WEG: (1) Die Kategoriegrenzen sind NICHT uebertragbar -
+die Produktions-DB misst das Volumen an ihrer Quelle, Faktor 1,6 bis 3,9
+niedriger als Binance. Direkt angewendet waeren 30 von 39 Symbolen als "Small"
+gelandet, darunter SOL und AVAX. (2) Die Kategorienamen sind irrefuehrend: sie
+messen BINANCE-USDT-SPOTUMSATZ, nicht Marktkapitalisierung - APT hat
+Milliardenbewertung und 2,7 Mio. Spotumsatz.
+
+MIT GLEICHEM MASSSTAB: von 29 messbaren Watchlist-Symbolen sind 18 Small,
+7 Mid, 3 Large, 1 BTC. Weitere 15 der 44 handeln gar nicht als USDT-Spotpaar
+auf Binance. 18 von 29 liegen also im duennsten Band - dort wirkt H am
+staerksten UND die Handelbarkeit ist am wenigsten gesichert.
+
+ERGEBNIS auf 37.623 Ankern aus 29 Symbolen: H 1.232 Faelle, Quote 38,4 % gegen
+33,5 % -> Vorsprung +4,8 Punkte. Der Punktschaetzer stimmt mit allem ueberein
+(+4,5 auf 523 Reihen, +5,9 Large, +7,9 Small).
+
+NETTO je Trade: Referenz H +0,114 R gegen ohne Filter -0,031; Betrieb H
+-0,036 gegen -0,182.
+
+⚠️ NICHT BESTAETIGBAR auf 29 Symbolen: nur 27 Reihen mit zwei Bloecken,
+Schwelle +9,2 gegen gemessen +4,8. Dieselbe Wand wie Kapitel 105 (24 Reihen,
++10,0). Kein Widerspruch zu 119-121 - der Nachweis steht auf 523 Reihen, die
+Watchlist ist eine zu kleine Teilmenge, um ihn unabhaengig zu bestaetigen oder
+zu widerlegen.
+
+PRAKTISCHE BILANZ: H verbessert den Erwartungswert um rund 0,15 R je Trade,
+an beiden Saetzen gleich. Zum Betriebssatz reicht das NICHT bis ueber null.
+DIE BINDENDE GROESSE IST NICHT DER FILTER, SONDERN DIE HANDELSGEBUEHR - H
+schliesst etwa vier Fuenftel der Luecke, das letzte Fuenftel schliesst nur der
+Handelsplatz. Bei 6 % Verlustanteil: +0,68 % Kapital je Trade zur Referenz,
+-0,22 % im Betrieb.

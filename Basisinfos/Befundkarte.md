@@ -4,7 +4,7 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 121. Einzelheiten je Kapitel:
+Stand: 20.08.2026, Kapitel 122. Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
 `Test_und_Verifikationsmethodik.md` 2.47–2.53.
 
@@ -203,6 +203,29 @@ Das ist ein Ergebnis, kein Scheitern — und es ist mehr wert als ein Filter,
 der auf einem Stichprobenartefakt in den Betrieb gegangen wäre. Was bleibt:
 die **Prüfkette** (vierzehn Stufen, 2.47–2.54) und die **Datenbasis** (347
 Reihen). Beide erledigen den nächsten Kandidaten in Stunden statt Wochen.
+
+---
+
+## 5c. Die praktische Bilanz auf der ECHTEN Auswahl (122)
+
+29 Watchlist-Symbole, 37.623 Anker. H-Vorsprung **+4,8 Punkte** — stimmig mit
++4,5 auf allen 523 Reihen.
+
+| Nettoerwartungswert je Trade | ohne Filter | **mit H** | Gewinn |
+|---|---:|---:|---:|
+| Referenz 0,30 % | −0,031 R | **+0,114 R** | +0,145 |
+| **Betrieb 1,50 %** | −0,182 R | **−0,036 R** | +0,146 |
+
+> **H verbessert um rund 0,15 R je Trade — an beiden Sätzen gleich. Zum
+> Betriebssatz reicht das nicht bis über null.**
+
+⚠️ **Die bindende Größe ist nicht der Filter, sondern die Handelsgebühr.** H
+schließt vier Fünftel der Lücke; das letzte Fünftel schließt nur der
+Handelsplatz.
+
+⚠️ Und auf 29 Symbolen ist der Effekt **nicht bestätigbar** (27 Reihen mit zwei
+Blöcken, Schwelle +9,2) — dieselbe Wand wie Kapitel 105. Der Nachweis steht
+auf 523 Reihen; die Watchlist kann ihn weder bestätigen noch widerlegen.
 
 ---
 
