@@ -18625,3 +18625,49 @@ STAND: die Strukturbedingung traegt INFORMATION (+2,7 ausserhalb der eigenen
 Daten, richtungsstimmig mit +8,5 innerhalb), aber KEINEN TRADE (-8,8 unter
 dem Breakeven). Die Pruefkette steht vollstaendig; jeder weitere Kandidat
 kostet nur noch Rechenzeit.
+
+
+[2026-08-20] KAPITEL 110: DIE SPIEGELBEDINGUNG - die Vorhersage ist widerlegt
+
+108 hatte eine ERKLAERUNG angeboten: H sei eine LONG-Bedingung, deshalb drehe
+sie im Baermarkt. Daraus folgt die Vorhersage, dass die gespiegelte Bedingung
+H' im Baermarkt traegt und im Bullenmarkt versagt.
+
+VIER ASYMMETRIEN VORAB BENANNT (der Nutzer hatte gewarnt, die Spiegelung sei
+womoeglich keine einfache Umkehrung - die Pruefung gibt ihm recht): andere
+Kosten (Short nur ueber Hebel, Finanzierung 0,03 %/Tag bei 14 Tagen
+Median-Haltedauer, eingerechnet) · Aufwaertsdrift des Marktes, deshalb
+Vergleich nur gegen SHORT-Anker derselben Lage · unsymmetrischer Preisraum,
+6.013 Anker verworfen weil ihr Ziel unter null laege · das System handelt nur
+long, also MECHANISMUSPRUEFUNG statt Handelsvorschlag.
+
+ERGEBNIS - GENAU SPIEGELVERKEHRT ZUR VORHERSAGE: bulle H' -5,4 gegen Basis
+-7,0 (Vorsprung +1,7), seitwaerts -2,7 gegen -3,5 (+0,7), baer -22,7 gegen
+-15,3 (-7,4). Block-Permutation im Baermarkt: Schwelle -17,9, gemessen -22,7.
+H' verhaelt sich wie H - es hilft im Bullenmarkt und schadet im Baermarkt. Es
+spiegelt NICHT.
+
+⚠️ DAMIT IST DIE ERKLAERUNG AUS 108 WIDERLEGT. Waere die Phasenabhaengigkeit
+eine Folge der RICHTUNG, muesste die gespiegelte Bedingung die Richtung
+mitdrehen. Sie tut es nicht. Der Mechanismus war eine plausible Geschichte -
+und sie ist falsch.
+
+NUTZERHINWEIS ZU 2022, GEPRUEFT: vor 2022 Vorsprung -7,3, ab 2022 -6,8. Das
+Niveau verschiebt sich deutlich (Basis von -18,2 auf -7,7), der VORSPRUNG
+bleibt praktisch gleich. Der Strukturwandel erklaert es nicht.
+
+⚠️ NEBENBEFUND, DER ALLE PHASENAUSSAGEN BETRIFFT: Shorts schneiden im
+Baermarkt AM SCHLECHTESTEN ab (-15,3 gegen -7,0 im Bullenmarkt). Das ist nur
+erklaerbar, wenn das Etikett NACHLAEUFT: _marktphase misst die Indexbewegung
+ueber die VERGANGENEN 250 Tage. "Baer" heisst "der Markt IST gefallen", nicht
+"der Markt faellt" - und nach einem langen Fall folgt oft die Gegenbewegung.
+Bei diesem Horizont ist unsere Marktphase ein KONTRAINDIKATOR. Dieselbe Zahl
+steht in 108: Long-Anker im Baermarkt -2,2, im Bullenmarkt -3,3. Beobachtung
+aus diesem Lauf, KEINE geprueffte Aussage - gehoert aber an jede
+Phasenaussage des Projekts und ist ein eigener, billiger Pruefkandidat.
+
+STAND: gefallen sind die Regel (109) und ihre Erklaerung (110). Es steht: H
+traegt Information (108), WARUM wissen wir nicht mehr, und die Marktphase
+misst moeglicherweise die Vergangenheit und wirkt invers. Naechster Schritt
+sollte deshalb NICHT die naechste Strukturvariante sein, sondern der
+Phasenbegriff selbst.

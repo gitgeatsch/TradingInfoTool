@@ -14592,3 +14592,107 @@ Was bleibt, ist nicht nichts:
   Läufe-erhöhen · Hürdenrechnung · Positivkontrolle · Reifeprobe ·
   Phasenprobe · Zeitteilung. Jeder weitere Kandidat kostet ab jetzt nur noch
   Rechenzeit.
+
+
+---
+
+## Kapitel 110 — Die Spiegelbedingung: die Vorhersage ist widerlegt (20.08.2026)
+
+Kapitel 108 hatte eine **Erklärung** für die Phasenabhängigkeit von H
+angeboten: H sei eine **Long-Bedingung**, „kein Widerstand bis zum Ziel" heiße
+im fallenden Markt „kein Halt nach unten". Daraus folgt eine **prüfbare
+Vorhersage**: die gespiegelte Bedingung H' muss im Bärmarkt tragen und im
+Bullenmarkt versagen.
+
+**Sie trifft nicht zu — und zwar mit umgekehrtem Vorzeichen.**
+
+### 110.1 Vier Asymmetrien, alle vorab benannt
+
+Der Nutzer hatte gewarnt, die Spiegelung sei womöglich keine einfache
+Umkehrung. **Die Prüfung gibt ihm recht:**
+
+1. **Andere Kosten.** Short geht nur über Hebel → `FINANZIERUNG_JE_TAG`
+   (0,03 %/Tag) fällt an. Bei 14 Tagen Median-Haltedauer ist das kein
+   Rundungsfehler; es ist eingerechnet.
+2. **Der Markt driftet nach oben** (34,4 % gegen 33,3 % driftfrei). Ein Short
+   läuft dagegen an — verglichen wird deshalb nur gegen **Short**-Anker
+   derselben Lage.
+3. **Der Preisraum ist nicht symmetrisch.** **6.013 Anker verworfen**, weil
+   ihr Ziel unter null läge.
+4. **Das System handelt nur long.** Das hier ist eine **Mechanismusprüfung**,
+   kein Handelsvorschlag.
+
+### 110.2 Das Ergebnis — genau spiegelverkehrt zur Vorhersage
+
+| Lage | H' | alle Short-Anker | Vorsprung | vorhergesagt |
+|---|---:|---:|---:|:--|
+| bulle | −5,4 | −7,0 | **+1,7** | negativ |
+| seitwärts | −2,7 | −3,5 | +0,7 | — |
+| **bär** | **−22,7** | −15,3 | **−7,4** | **positiv** |
+
+**Block-Permutation im Bärmarkt: Schwelle −17,9, gemessen −22,7.**
+
+> **Die Vorhersage trifft nicht zu.** H' verhält sich wie H — es hilft im
+> Bullenmarkt und schadet im Bärmarkt. Es spiegelt nicht.
+
+### 110.3 ⚠️ Damit ist die Erklärung aus 108 widerlegt
+
+Wäre die Phasenabhängigkeit von H eine Folge davon, dass H eine
+**Richtungsbedingung** ist, müsste die gespiegelte Bedingung die Richtung
+mitdrehen. **Sie tut es nicht.** Beide Bedingungen bevorzugen denselben
+Marktzustand.
+
+**Der Mechanismus, den 108.x als Erklärung angeboten hat, ist damit vom
+Tisch.** Das ist kein kleiner Verlust: er war der Grund, warum der Long-Befund
+mehr wirkte als ein Muster. Er war eine plausible Geschichte, und sie ist
+falsch.
+
+### 110.4 Der Hinweis des Nutzers zu 2022 — geprüft und beantwortet
+
+| | H' | alle Short-Anker | Vorsprung |
+|---|---:|---:|---:|
+| vor 2022-01-01 | −25,6 | −18,2 | **−7,3** |
+| ab 2022-01-01 | −14,5 | −7,7 | **−6,8** |
+
+**Der Strukturwandel erklärt es nicht.** Das Niveau verschiebt sich deutlich
+(alle Short-Anker von −18,2 auf −7,7), der **Vorsprung** aber bleibt praktisch
+gleich. Ein sauberer negativer Befund zu einer berechtigten Frage.
+
+### 110.5 ⚠️ Und ein Nebenbefund, der alle Phasenaussagen betrifft
+
+In der Tabelle steht etwas, das ökonomisch nicht sein dürfte:
+
+| Lage | alle **Short**-Anker |
+|---|---:|
+| bulle | −7,0 |
+| seitwärts | −3,5 |
+| **bär** | **−15,3** |
+
+**Shorts schneiden im Bärmarkt am schlechtesten ab.** Das ist nur erklärbar,
+wenn das Etikett **nachläuft**: `_marktphase` misst die Indexbewegung über die
+**vergangenen 250 Tage**. „Bär" heißt also *„der Markt IST gefallen"*, nicht
+*„der Markt fällt"* — und nach einem langen Fall folgt oft die Gegenbewegung.
+
+**Bei diesem Horizont ist unsere Marktphase ein Kontraindikator.** Dieselbe
+Zahl steht auch in Kapitel 108: dort liegen die Long-Anker im Bärmarkt bei
+−2,2 und im Bullenmarkt bei −3,3 — Long ist im *trailing*-Bärmarkt **besser**.
+
+⚠️ **Das ist eine Beobachtung aus diesem Lauf, keine geprüfte Aussage.** Aber
+sie gehört an jede Phasenaussage dieses Projekts geschrieben, und sie ist ein
+eigener, billiger Prüfkandidat.
+
+### 110.6 Was bleibt
+
+**Zwei Dinge sind gefallen:** die Regel (109) und ihre Erklärung (110). Was
+steht, ist schmaler, aber härter:
+
+- H trägt **Information** — auf 262 Reihen, kostenbereinigt, gegen eine
+  ordentliche Kontrolle (108).
+- **Warum**, wissen wir nicht mehr. Die Richtungserklärung ist widerlegt.
+- Und ein neuer, konkreter Verdacht steht im Raum: unsere **Marktphase misst
+  die Vergangenheit** und wirkt bei 250 Tagen invers.
+
+**Der nächste Schritt sollte deshalb nicht die nächste Strukturvariante sein,
+sondern der Phasenbegriff selbst.** Solange „bär" das Gegenteil von dem
+bedeutet, was man beim Lesen annimmt, ist jede Aussage über Marktlagen in
+diesem Projekt schwer interpretierbar — auch die bereits getroffenen.

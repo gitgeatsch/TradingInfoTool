@@ -9248,6 +9248,38 @@ def paket_dimension() -> None:
            "aus Kapitel 93.17 - ein Unterschied ZWISCHEN Symbolen ist noch "
            "keine Regel, dafuer muesste er sich vorwaerts wiederholen")
 
+    # ---- DIE SPIEGELBEDINGUNG (Kapitel 110) ----
+    _spq = _quelltext("messe_spiegel.py")
+    _sproh = io.open("messe_spiegel.py", encoding="utf-8").read()
+
+    pruefe(P, "die Vorhersage steht im Kopf, VOR dem Ergebnis",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _sproh
+           and "baer     H' besser" in _sproh,
+           "eine Vorhersage aus einem Grund kostet die halbe Huerde (2.49) - "
+           "aber nur, wenn sie vorher dasteht und scheitern kann")
+
+    # ⚠️ VIER ASYMMETRIEN - die Spiegelung ist KEINE einfache Umkehrung.
+    pruefe(P, "die Finanzierung ist eingerechnet",
+           "FINANZIERUNG_JE_TAG" in _spq and '"tage"' in _spq,
+           "Short geht nur ueber Hebel; ein Vergleich mit den Long-Zahlen "
+           "ohne Finanzierung waere falsch")
+    pruefe(P, "unmoegliche Ziele werden verworfen UND gezaehlt",
+           "unmoeglich" in _spq and "ziel <= 0" in _spq,
+           "nach unten ist bei null Schluss, nach oben nicht - 6.013 Anker "
+           "betrifft das, und ihre Zahl gehoert zum Ergebnis")
+    pruefe(P, "verglichen wird gegen SHORT-Anker, nie gegen die Long-Zahlen",
+           "def bewerte_short" in _spq,
+           "der Markt driftet nach oben - die Basisrate fuer Short ist "
+           "mechanisch niedriger")
+    pruefe(P, "der Bruch 2022 steht als benannte Unterteilung",
+           'BRUCH = "2022-01-01"' in _spq,
+           "aus Sachkenntnis vorab benannt (Nutzerhinweis), nicht aus einem "
+           "Ergebnis gesucht - Vorsprung vor 2022 -7,3, danach -6,8")
+    pruefe(P, "und es steht da, dass dies keine Handelsempfehlung ist",
+           "MECHANISMUSPRUEFUNG" in _sproh and "nur long" in _sproh,
+           "das System handelt nur long; eine positive Zahl waere ein Beleg "
+           "ueber den Pfad, kein Vorschlag")
+
     # ---- DIE ZEITTEILUNG (Kapitel 109) ----
     _zq = _quelltext("messe_zeitteilung.py")
     _zroh = io.open("messe_zeitteilung.py", encoding="utf-8").read()
