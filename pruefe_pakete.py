@@ -2416,25 +2416,50 @@ def paket_13() -> None:
                                           validiere)
     from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
 
-    # DAS VOKABULAR IST DAS DER ALTEN KETTE - sonst braeuchte es eine
-    # Abbildung, und jede Abbildung ist eine Stelle zum Auseinanderlaufen.
-    pruefe(P, "die sieben Hebel-Aktionen sind die der alten Kette",
-           set(AKTIONEN_HEBEL) == set(REQUIRED_HEBEL_ACTIONS),
-           f"neu {sorted(AKTIONEN_HEBEL)} gegen alt {sorted(REQUIRED_HEBEL_ACTIONS)}")
-    pruefe(P, "Spot behaelt seine fuenf", len(aktionen_fuer("spot")) == 5
-           and set(aktionen_fuer("spot")) == set(AKTIONEN))
-    pruefe(P, "und Hebel hat sieben", len(aktionen_fuer("hebel")) == 7)
+    # ---- S6a (22.08.2026): EIN VOKABULAR FUER BEIDE INSTRUMENTE -------
+    # ⚠️ DIESE PRUEFUNGEN STANDEN BIS HEUTE AUF DEM GEGENTEIL ("Spot behaelt
+    # seine fuenf, Hebel hat sieben"). Sie sind nicht angepasst worden, damit
+    # sie gruen werden, sondern weil sich die ABSICHT geaendert hat: das Verb
+    # sagt, WAS getan wird, das Instrument WIE. Zwei Dinge, zwei Felder.
+    pruefe(P, "Spot und Hebel fragen dasselbe Vokabular",
+           aktionen_fuer("spot") == aktionen_fuer("hebel") == AKTIONEN
+           and len(AKTIONEN) == 5,
+           "bis S6a trug das VERB eine Instrumentendeutung - 'ERÖFFNEN' las "
+           "sich wie ein Hebelgeschaeft, auch bei Hebel 1,0 (76 % der Faelle)")
+
+    # ⚠️ DIE ZWEI HEBEL-AKTIONEN SIND ERSATZLOS ENTFALLEN, und zwar aus einem
+    # Regelgrund: sie liessen das MODELL den Hebelfaktor aendern.
+    pruefe(P, "HEBEL_ERHÖHEN und HEBEL_SENKEN gibt es nicht mehr",
+           not {"HEBEL_ERHÖHEN", "HEBEL_SENKEN"} & set(AKTIONEN),
+           "Regelwerksmanual A: der Hebelfaktor kommt nicht vom Modell. In "
+           "1.998 Hebel-Signalen kamen sie zweimal vor")
+
+    # ⚠️ UND DIE ALTEN NAMEN MUESSEN LESBAR BLEIBEN - es gibt tausende Zeilen.
+    from agent.empfehlung_vertrag import AKTION_AUS_HEBEL, AKTIONEN_HEBEL_ALT
+
+    pruefe(P, "das alte Hebel-Vokabular ist vollstaendig abbildbar",
+           set(AKTIONEN_HEBEL_ALT) - {"HEBEL_ERHÖHEN", "HEBEL_SENKEN"}
+           <= set(AKTION_AUS_HEBEL)
+           and set(AKTION_AUS_HEBEL.values()) <= set(AKTIONEN),
+           "1.998 Zeilen in hebel_signals tragen die alten Namen - ohne "
+           "Abbildung waere jede Auswertung ueber die Grenze hinweg blind")
+    pruefe(P, "und das alte Vokabular ist das der alten Kette geblieben",
+           set(AKTIONEN_HEBEL_ALT) == set(REQUIRED_HEBEL_ACTIONS),
+           "hebel_analyst laeuft fuer Krypto nicht mehr, schreibt aber "
+           "weiter in dieselbe Tabelle - ein Eingriff dort waere Arbeit an "
+           "einem toten Pfad")
 
     basis = {"begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
 
     # DIE RICHTUNG IST PFLICHT, WO SIE ETWAS BEDEUTET - und nur dort.
-    ok = validiere({**basis, "aktion": "ERÖFFNEN", "richtung": "short",
+    ok = validiere({**basis, "aktion": "KAUFEN", "richtung": "short",
                     "tranche_eur": 300}, "BTC", "hebel")
-    pruefe(P, "ERÖFFNEN mit Richtung wird angenommen und vereinheitlicht",
-           ok["aktion"] == "ERÖFFNEN" and ok["richtung"] == "SHORT")
-    for aktion in ("ERÖFFNEN", "NACHKAUFEN"):
+    pruefe(P, "KAUFEN mit Richtung wird angenommen und vereinheitlicht",
+           ok["aktion"] == "KAUFEN" and ok["richtung"] == "SHORT")
+    for aktion in ("KAUFEN", "NACHKAUFEN"):
         try:
-            validiere({**basis, "aktion": aktion, "tranche_eur": 300}, "BTC", "hebel")
+            validiere({**basis, "aktion": aktion, "tranche_eur": 300},
+                      "BTC", "hebel")
             fehlt = False
         except EmpfehlungUngueltig:
             fehlt = True
@@ -2442,44 +2467,55 @@ def paket_13() -> None:
                "bei der Tranche ist die kleinste Groesse die vorsichtige "
                "Antwort - bei der Richtung gibt es keine: LONG statt SHORT "
                "ist nicht 'weniger', sondern das Gegenteil")
-    pruefe(P, "HALTEN braucht keine Richtung",
-           validiere({**basis, "aktion": "HALTEN"}, "BTC", "hebel")["aktion"] == "HALTEN")
+    pruefe(P, "NICHTS_TUN braucht keine Richtung",
+           validiere({**basis, "aktion": "NICHTS_TUN"},
+                     "BTC", "hebel")["aktion"] == "NICHTS_TUN")
     try:
-        validiere({**basis, "aktion": "ERÖFFNEN", "tranche_eur": 300}, "BTC", "spot")
-        getrennt = False
+        validiere({**basis, "aktion": "ERÖFFNEN", "tranche_eur": 300},
+                  "BTC", "spot")
+        weg = False
     except EmpfehlungUngueltig:
-        getrennt = True
-    pruefe(P, "eine Hebel-Aktion ist bei Spot ungueltig", getrennt,
-           "ohne das Instrument haette dieselbe Antwort je nach Aufrufer "
-           "gegolten oder nicht")
+        weg = True
+    pruefe(P, "ein alter Hebel-Name wird jetzt ueberall abgewiesen", weg,
+           "frueher galt er bei Hebel und fiel bei Spot durch - jetzt gilt "
+           "EIN Vokabular, und das ist der Punkt von S6a")
 
     # DER PROMPT FRAGT DIE RICHTUNG, ABER NICHT DEN FAKTOR (Kapitel 11.6).
     p_hebel = rolle_trader.prompt_fuer("hebel", "einstieg")
     p_spot = rolle_trader.prompt_fuer("spot", "einstieg")
-    pruefe(P, "der Hebel-Prompt nennt alle sieben Aktionen",
-           all(a in p_hebel for a in AKTIONEN_HEBEL))
-    pruefe(P, "er fragt nach LONG oder SHORT",
-           "LONG" in p_hebel and "SHORT" in p_hebel)
-    pruefe(P, "und verbietet ausdruecklich den Hebelfaktor",
-           "KEINEN Hebelfaktor" in p_hebel,
+    pruefe(P, "beide Prompts nennen dieselben fuenf Aktionen",
+           all(a in p_hebel for a in AKTIONEN)
+           and all(a in p_spot for a in AKTIONEN))
+    pruefe(P, "und sie sind woertlich derselbe Satz", p_hebel == p_spot,
+           "solange sie sich unterscheiden, sind es zwei Fragen - und S6b "
+           "koennte den zweiten Lauf nicht streichen")
+    pruefe(P, "beide fragen nach LONG oder SHORT",
+           all("LONG" in p and "SHORT" in p for p in (p_hebel, p_spot)),
+           "ohne die Richtung im Spot-Lauf waere 'Spot oder Hebel' schon "
+           "dadurch vorentschieden, dass SHORT gar nicht sagbar ist")
+    pruefe(P, "und verbieten ausdruecklich den Hebelfaktor",
+           all("KEINEN Hebelfaktor" in p for p in (p_hebel, p_spot)),
            "der Faktor folgt aus Risikobudget und Liquidationsabstand - "
-           "Kapitel 11.6: Risikoparameter kommen nicht vom Modell")
-    pruefe(P, "der Spot-Prompt bleibt unveraendert bei fuenf",
-           "NICHTS_TUN" in p_spot and "HEBEL_SENKEN" not in p_spot
-           and "LONG" not in p_spot)
+           "Regelwerksmanual A: Risikoparameter kommen nicht vom Modell")
+    pruefe(P, "und sagen, dass die RECHNUNG ueber das Instrument entscheidet",
+           all("entscheidet" in p and "nicht du" in p
+               for p in (p_hebel, p_spot)),
+           "das Modell soll gar nicht erst versuchen, Spot oder Hebel zu "
+           "waehlen")
 
     # DAS SCHEMA HAENGT AM INSTRUMENT.
     sch_h = llm_schema.baue_trader_schema(rolle_trader, "hebel")
     sch_s = llm_schema.baue_trader_schema(rolle_trader, "spot")
     ph = sch_h.get("properties", sch_h)
     ps = sch_s.get("properties", sch_s)
-    pruefe(P, "das Hebel-Schema erlaubt sieben Aktionen",
-           len(ph["aktion"]["enum"]) == 7)
-    pruefe(P, "und traegt das Richtungsfeld", "richtung" in ph
-           and set(ph["richtung"]["enum"]) == set(RICHTUNGEN))
-    pruefe(P, "das Spot-Schema traegt es NICHT", "richtung" not in ps,
-           "ein Feld, das bei Spot nie gefuellt wird, waere eine Frage nach "
-           "etwas, das es dort nicht gibt")
+    pruefe(P, "beide Schemata erlauben dieselben fuenf Aktionen",
+           set(ph["aktion"]["enum"]) == set(ps["aktion"]["enum"])
+           == set(AKTIONEN))
+    pruefe(P, "und BEIDE tragen das Richtungsfeld",
+           "richtung" in ph and "richtung" in ps
+           and set(ph["richtung"]["enum"]) == set(RICHTUNGEN),
+           "bis S6a fehlte es bei Spot - damit konnte der Spot-Lauf kein "
+           "SHORT liefern, und das Instrument war vorentschieden")
 
     # DIE ARITHMETIK DREHT SICH BEI SHORT - alle vier Groessen.
     kurs = 55500.0
@@ -2545,8 +2581,15 @@ def gesamtpruefung() -> None:
     from agent.krypto.hebel_analyst import REQUIRED_HEBEL_ACTIONS
 
     # --- VOKABULAR: sagen alle Pakete dasselbe? ---
-    pruefe(P, "das Hebel-Vokabular deckt sich mit der alten Kette",
-           set(AKTIONEN_HEBEL) == set(REQUIRED_HEBEL_ACTIONS))
+    # ⚠️ S6a: `AKTIONEN_HEBEL` IST JETZT `AKTIONEN`. Die Deckung mit der
+    # alten Kette gehoert seither zu `AKTIONEN_HEBEL_ALT`.
+    from agent.empfehlung_vertrag import AKTIONEN_HEBEL_ALT as _AHA
+
+    pruefe(P, "das ALTE Hebel-Vokabular deckt sich mit der alten Kette",
+           set(_AHA) == set(REQUIRED_HEBEL_ACTIONS),
+           "hebel_analyst schreibt weiter in hebel_signals - die Namen "
+           "muessen lesbar bleiben, auch wenn die neue Kette sie nicht mehr "
+           "spricht")
     pruefe(P, "JEDE Aktion beider Instrumente erreicht die Datenbank",
            all(SA.UMBENENNUNG.get(a, a) in SA.AKTIONEN
                for a in tuple(AKTIONEN) + tuple(AKTIONEN_HEBEL)),
@@ -2771,7 +2814,7 @@ def paket_b1() -> None:
              "was_dagegen": "z", "umgeworfen_durch": "w"}
         if richtung:
             d["richtung"] = richtung
-        if aktion in ("KAUFEN", "ERÖFFNEN"):
+        if aktion in ("KAUFEN", "NACHKAUFEN"):
             d |= {"einstieg_eur": round(kk, 2), "stop_eur": round(kk - 2.5 * aa, 2)}
         return d
 
@@ -2801,7 +2844,7 @@ def paket_b1() -> None:
     pruefe(P, "ein Spot-Lauf erzeugt eine Mail",
            len(_lauf("spot", "KAUFEN")["mails"]) == 1)
     pruefe(P, "ein Hebel-Lauf ebenfalls",
-           len(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"]) == 1,
+           len(_lauf("hebel", "KAUFEN", "LONG")["mails"]) == 1,
            "vorher war er gar nicht moeglich")
     # --- O-38: DER TROCKENLAUF SIEHT DIE NUTZERSTUFEN (16.08.2026) -----
     #
@@ -2810,7 +2853,7 @@ def paket_b1() -> None:
     # denen der Vollumstieg geprueft wurde.
     _db_mod.set_hebel_pruefung_erlaubt(con, "ETH", False)
     pruefe(P, "ein abgeschaltetes Asset erzeugt AUCH TROCKEN keine Mail",
-           len(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"]) == 0,
+           len(_lauf("hebel", "KAUFEN", "LONG")["mails"]) == 0,
            "asset_schalter ist ein reiner Leser - es gab nie einen Grund, "
            "ihn trocken zu ueberspringen, und der Nutzer hatte abgewaehlt")
     _db_mod.set_hebel_pruefung_erlaubt(con, "ETH", True)
@@ -2849,8 +2892,8 @@ def paket_b1() -> None:
 
     kurs_eth = RE.kurs_eur("ETH", reihen["ETH"], len(reihen["ETH"]) - 1,
                            "data/tradinginfotool.db")
-    lang = _marken(_lauf("hebel", "ERÖFFNEN", "LONG")["mails"][0]["text"])
-    kurz = _marken(_lauf("hebel", "ERÖFFNEN", "SHORT")["mails"][0]["text"])
+    lang = _marken(_lauf("hebel", "KAUFEN", "LONG")["mails"][0]["text"])
+    kurz = _marken(_lauf("hebel", "KAUFEN", "SHORT")["mails"][0]["text"])
     pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
            lang["stop"] < kurs_eth < kurz["stop"],
            f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei {kurs_eth:.0f}")
@@ -7140,10 +7183,10 @@ def paket_15() -> None:
     _ohne = [a for a in _AH
              if not VK11.betrifft_bestand(a)
              and a not in SM3.AKTIONEN_MIT_EINSTIEG]
-    pruefe(P, "keine Hebel-Aktion faellt mehr durch alle Raster",
-           _ohne == ["HALTEN"],
-           f"ohne Klasse: {_ohne} - nur HALTEN darf uebrigbleiben, denn es "
-           "aendert nichts")
+    pruefe(P, "keine Aktion faellt mehr durch alle Raster",
+           _ohne == ["NICHTS_TUN"],
+           f"ohne Klasse: {_ohne} - nur NICHTS_TUN darf uebrigbleiben, denn "
+           f"es aendert nichts. (Hiess bis S6a HALTEN - derselbe Vorgang.)")
     pruefe(P, "beide Hebelaenderungen sind Anpassungen, kein Verkauf",
            VK11.ist_anpassung("HEBEL_ERHÖHEN")
            and VK11.ist_anpassung("HEBEL_SENKEN")
@@ -8832,10 +8875,16 @@ def paket_dimension() -> None:
     def _v(a, **kw):
         return _EV.validiere(dict(a), "X", **kw).get("aktion")
 
-    pruefe(P, "ERÖFFNEN wird ueberhaupt geprueft",
-           "ERÖFFNEN" in _EV.BRAUCHT_EINSTIEG,
+    # ⚠️ S6a: DIE HAUPT-EINSTIEGSAKTION HEISST JETZT KAUFEN. Der Sinn der
+    # Pruefung bleibt: jede Aktion, die eine Position aufbaut, wird gegen den
+    # Widerlegungspreis geprueft - bis zum 18.08. galt das fuer die
+    # damalige Haupt-Hebelaktion NICHT.
+    pruefe(P, "jede Einstiegsaktion wird gegen die Widerlegung geprueft",
+           set(_EV.HEBEL_MIT_EINSTIEG) <= set(_EV.BRAUCHT_EINSTIEG)
+           and "KAUFEN" in _EV.BRAUCHT_EINSTIEG,
            "bis zum 18.08. galt die Pruefung nur fuer KAUFEN/NACHKAUFEN - "
-           "die HAUPT-Hebelaktion war die einzige ohne Kontrolle")
+           "ERÖFFNEN, die damalige Haupt-Hebelaktion, war die einzige ohne "
+           "Kontrolle")
     pruefe(P, "LONG: Widerlegung ueber dem Kurs wird beanstandet",
            _v({"aktion": "KAUFEN", "umgeworfen_preis_eur": 110}, kurs=100)
            == "NICHTS_TUN")
@@ -8843,14 +8892,14 @@ def paket_dimension() -> None:
            _v({"aktion": "KAUFEN", "umgeworfen_preis_eur": 90}, kurs=100)
            == "KAUFEN")
     pruefe(P, "SHORT: Widerlegung UEBER dem Kurs ist RICHTIG",
-           _v({"aktion": "ERÖFFNEN", "richtung": "SHORT",
+           _v({"aktion": "KAUFEN", "richtung": "SHORT",
                "umgeworfen_preis_eur": 110}, kurs=100, instrument="hebel")
-           == "ERÖFFNEN",
+           == "KAUFEN",
            "die alte Pruefung kannte keine Richtung und degradierte jedes "
            "SHORT mit korrektem Stop - dieselbe Klasse wie die 313 "
            "SHORT-Vorschlaege, die als HALTEN in der Datenbank lagen")
     pruefe(P, "SHORT: Widerlegung unter dem Kurs wird beanstandet",
-           _v({"aktion": "ERÖFFNEN", "richtung": "SHORT",
+           _v({"aktion": "KAUFEN", "richtung": "SHORT",
                "umgeworfen_preis_eur": 90}, kurs=100, instrument="hebel")
            == "NICHTS_TUN")
     pruefe(P, "ein fehlender Widerlegungspreis degradiert NICHT",
@@ -8893,16 +8942,13 @@ def paket_dimension() -> None:
            and _ZJB["themen_etf"] == (),
            "S4 betrifft die Krypto-Trennung, nicht die Assetklassen")
 
-    # ⚠️ F1 UND F2 SIND NICHT TEIL VON S4 (Korrektur am eigenen Plan).
-    # Ein gemeinsames Aktionsvokabular ist erst noetig, wenn die beiden
-    # Laeufe ZUSAMMENGELEGT werden - bis dahin kennt jeder Lauf sein
-    # Instrument. 44 Codestellen haengen an "ERÖFFNEN"; sie jetzt anzufassen
-    # waere Risiko ohne Anlass.
-    pruefe(P, "das Aktionsvokabular haengt WEITERHIN am Instrument",
-           _EV.aktionen_fuer("spot") != _EV.aktionen_fuer("hebel"),
-           "F1/F2 gehoeren zu S6, nicht zu S4 - dort erzwingt die "
-           "Zusammenlegung sie, hier waeren sie 44 Codestellen Risiko "
-           "ohne Gegenwert")
+    # ⚠️ DIESE PRUEFUNG STAND BIS S6a AUF DEM GEGENTEIL. Sie hielt fest,
+    # dass F1/F2 zu S6 gehoeren und nicht zu S4 - "44 Codestellen Risiko
+    # ohne Anlass". Der Anlass ist jetzt da: S6a IST dieser Schritt.
+    pruefe(P, "das Aktionsvokabular haengt NICHT mehr am Instrument",
+           _EV.aktionen_fuer("spot") == _EV.aktionen_fuer("hebel"),
+           "S6a (22.08.) - erst damit kann S6b den zweiten Lauf streichen, "
+           "denn zwei Laeufe mit derselben Frage sind eine Frage zu viel")
 
     # ---- DER NB-EXPORT MUSS DEN UMBAU KENNEN ----
     _ex = _quelltext("extract_notebook_diagnose.py")
@@ -10821,6 +10867,43 @@ def paket_dimension() -> None:
     pruefe(P, "und die Zeilen sagen ausdruecklich, dass sie nichts sperren",
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
+
+    # ---- S6a: DIE DREI ABHAENGIGKEITEN, DIE FAST GEBROCHEN WAEREN -----
+    # ⚠️ Alle drei fand erst die Gegenpruefung ueber ALLE Rollen, nicht die
+    # Arbeit an der geaenderten Stelle. Eine geaenderte FRAGE kann an vier
+    # Orten scheitern, und drei davon merkt man erst im Betrieb.
+
+    # 1) DER SCHWERSTE: die Aufloesung leitete die Richtung aus der AKTION
+    #    ab, weil das Signal kein Richtungsfeld hatte. Seit S6a hat es eins.
+    #    Ohne den Vorrang waere ein SHORT mit aktion="KAUFEN" als LONG
+    #    aufgeloest worden - Stop und Ziel vertauscht, und zwar STILL.
+    _btq2 = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "die Aufloesung nimmt das RICHTUNGSFELD vor der Ableitung",
+           'getattr(signal, "richtung", "")' in _btq2
+           and _btq2.index('getattr(signal, "richtung", "")')
+           < _btq2.index('richtung_aus_action(signal.action)'),
+           "ein SHORT traegt seit S6a aktion='KAUFEN'; die Ableitung liefert "
+           "dafuer LONG. Ohne Vorrang waeren Stop und Ziel vertauscht")
+    pruefe(P, "und die Ableitung bleibt als Rueckfall",
+           "richtung_aus_action(signal.action)" in _btq2,
+           "tausende Altzeilen tragen kein richtung - fuer sie ist die "
+           "Ableitung weiterhin die richtige Antwort")
+
+    # 2) Der Kanarienvogel zaehlte nur den ALTEN Namen.
+    _kvq = _quelltext("agent/krypto/kanarienvogel.py")
+    pruefe(P, "der Kanarienvogel zaehlt BEIDE Vokabulare",
+           '"KAUFEN", "ERÖFFNEN"' in _kvq or '_AUFBAU = ("KAUFEN"' in _kvq,
+           "sonst faellt der Eroeffnungsanteil auf null und der Vogel meldet "
+           "einen Verhaltensbruch, den allein die Umbenennung erzeugt hat")
+
+    # 3) Die Kategorienkarte kannte beide schon - das wird festgehalten,
+    #    damit es beim naechsten Umbau nicht verlorengeht.
+    from agent.krypto import signal_stabilitaet as _SS
+
+    pruefe(P, "die Aktionskategorien kennen altes UND neues Vokabular",
+           {"KAUFEN", "ERÖFFNEN"} <= set(_SS._AKTIONS_KATEGORIE),
+           "beide Namen muessen dieselbe Kategorie bekommen, sonst wechselt "
+           "ein Signal beim Umbenennen die Klasse")
 
     # ---- KAPITEL 132: WER ENTSCHEIDET UEBER SPOT ODER HEBEL? ----------
     # ⚠️ Die Regel steht im Regelwerksmanual A: das Modell nennt KEINE

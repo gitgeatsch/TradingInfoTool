@@ -3532,3 +3532,14 @@ selben Morgen hat sich am selben Tag bezahlt gemacht.
 | Skript | Beantwortet |
 |---|---|
 | `messe_stopquelle.py` | Darf der Rauschboden das Modellurteil ueberstimmen? (130) - **ja**, -0,609 R fuer die These |
+
+
+### Nachtrag 22.08.2026 - die Gegenpruefung ueber alle Rollen
+
+| Skript | Beantwortet |
+|---|---|
+| `pruefe_s6a_rollen.py` | Haelt eine geaenderte FRAGE ueber ALLE Rollen? (133) - Prompt gegen Schema, Validator, Datenbank, Rolle G. **Drei Abhaengigkeiten waeren gebrochen** |
+
+⚠️ **Bei jeder Aenderung an Prompt, Schema oder Aktionsvokabular aufrufen.**
+Alle drei Funde kamen aus dieser Pruefung, keiner aus der Arbeit an der
+geaenderten Stelle.

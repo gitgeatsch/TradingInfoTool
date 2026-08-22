@@ -17655,3 +17655,144 @@ Krisenbremse, Regimekonflikt-Deckel und Höchstwert aus der Konfiguration.
 `verlustanteil / stop_rel`, nicht an der Zahl der Läufe. **S6 beendet die
 Doppelfrage, nicht die Hebelknappheit.** Das ist eine getrennte Entscheidung
 und gehört nach Kapitel 129.
+
+
+---
+
+## Kapitel 133 — S6a gebaut: ein Vokabular für Spot und Hebel (22.08.2026)
+
+**Der erste Schritt von S6.** Solange Spot und Hebel verschiedene Fragen
+bekommen, kann S6b den zweiten Lauf nicht streichen.
+
+### 133.1 Was geändert wurde
+
+| Stelle | vorher | nachher |
+|---|---|---|
+| `empfehlung_vertrag.AKTIONEN_HEBEL` | 7 eigene Aktionen | **= `AKTIONEN`** (5) |
+| `aktionen_fuer(instrument)` | zwei Listen | **eine**, für beide |
+| `rolle_trader._HANDELN` | zwei Sätze | **ein** Satz |
+| `rolle_trader._RICHTUNGSFELD` | nur Hebel | **beide** |
+| `llm_schema`: `richtung` | nur Hebel | **immer** |
+
+**Inhaltlich waren es dieselben fünf Vorgänge unter zwei Namen:**
+
+| Vorgang | Spot | Hebel |
+|---|---|---|
+| eröffnen | KAUFEN | ERÖFFNEN |
+| vergrößern | NACHKAUFEN | NACHKAUFEN |
+| verkleinern | REDUZIEREN | TEILVERKAUF |
+| schließen | VERKAUFEN | SCHLIESSEN |
+| nichts tun | NICHTS_TUN | HALTEN |
+
+> **Das Verb sagt jetzt, WAS getan wird, das Instrument WIE.** Zwei Dinge,
+> zwei Felder. Bis S6a trug das Verb eine Instrumentendeutung, die ihm nicht
+> gehört — „ERÖFFNEN" liest sich wie ein Hebelgeschäft, auch bei Hebel 1,0
+> (76 % der Fälle, Kapitel 129).
+
+### 133.2 ⚠️ HEBEL_ERHÖHEN und HEBEL_SENKEN entfallen — aus einem Regelgrund
+
+Sie ließen **das Modell den Hebelfaktor ändern**. Das widerspricht dem
+`Regelwerksmanual` Abschnitt A: *„der Hebelfaktor kommt nicht vom Modell, er
+folgt aus Risikobudget und Liquidationsabstand"* — und dem Prompt zwei Zeilen
+weiter unten, der es ausdrücklich verbietet.
+
+**Gemessen:** in 1.998 Hebel-Signalen kamen sie **zweimal** vor. Die neue
+Kette kannte sie ohnehin nicht.
+
+⚠️ **Die alte Kette bleibt unberührt.** `hebel_analyst.REQUIRED_HEBEL_ACTIONS`
+führt weiter die sieben Namen und schreibt in `hebel_signals`; sie läuft für
+Krypto nicht mehr. `AKTIONEN_HEBEL_ALT` und `AKTION_AUS_HEBEL` halten die
+alten Namen lesbar — 1.998 Zeilen tragen sie.
+
+### 133.3 ⚠️ Die Gegenprüfung über ALLE Rollen — drei Abhängigkeiten wären gebrochen
+
+**Auf Nutzerauftrag:** *„mach eine detaillierte Gegenprüfung, damit wir bei
+den LLMs und den Abhängigkeiten nicht scheitern — für alle Rollen inkl. G."*
+
+**Alle drei Funde kamen aus der Gegenprüfung, keiner aus der Arbeit an der
+geänderten Stelle.** Eine geänderte Frage kann an vier Orten scheitern, und
+drei davon merkt man erst im Betrieb.
+
+#### Fund 1 — der schwerste: die Auflösung hätte SHORT als LONG gelesen
+
+`backward_tracking.check_signal_outcome` leitete die Richtung aus der
+**Aktion** ab:
+
+```python
+ist_short = richtung_aus_action(signal.action) == "SHORT"
+```
+
+Der Docstring nennt den Grund: *„statt eines nativen richtung-Felds
+(**Signal hat keins**)"*.
+
+> ⚠️ **Seit S6a hat es eins.** Ein SHORT trägt jetzt `aktion="KAUFEN"`, und
+> `richtung_aus_action("KAUFEN")` liefert **LONG**. Stop und Ziel wären
+> vertauscht interpretiert worden — **und zwar still**, weil beide Zonen
+> gesetzt sind und nichts auffällt.
+
+**Behoben:** das Feld schlägt die Ableitung; die Ableitung bleibt als
+Rückfall für die tausenden Altzeilen ohne `richtung`.
+
+#### Fund 2 — der Kanarienvogel hätte Fehlalarm geschlagen
+
+`kanarienvogel` zählte den Eröffnungsanteil nur über `("ERÖFFNEN",
+"EROEFFNEN")`. Nach S6a wäre er **null**, und die Meldung lautete
+„ERÖFFNEN-Anteil 85 % → 0 %" — **ein Verhaltensbruch, den allein eine
+Umbenennung erzeugt hat**, ausgerechnet in dem Werkzeug, das echte Brüche
+finden soll.
+
+**Behoben:** beide Vokabulare werden gezählt.
+
+#### Fund 3 — die Kategorienkarte war bereits vollständig
+
+`signal_stabilitaet._AKTIONS_KATEGORIE` kannte beide Vokabulare schon. **Kein
+Bruch** — festgehalten als Dauerprüfung, damit es beim nächsten Umbau nicht
+verlorengeht.
+
+#### Was geprüft wurde und hielt
+
+| | |
+|---|---|
+| Schema-Enum = Prompt-Aktionen, beide Instrumente | ✔ |
+| beide Prompts **wörtlich identisch** | ✔ |
+| Validator nimmt alle 5 Aktionen in beiden Instrumenten | ✔ (10 Fälle) |
+| jede Aktion erreicht die Datenbankspalte | ✔ |
+| alte Namen bleiben abbildbar | ✔ |
+| Rolle G (`gegenpruefung`) | Vokabular gelesen, **kein Vergleichsbruch** |
+
+### 133.4 ⚠️ Und eine Falle, die ich beinahe selbst gebaut hätte
+
+Der Prompt zeigt dem Modell eine **JSON-Vorlage**. `_RICHTUNGSFELD` gab das
+Richtungsfeld nur beim Hebel aus — **hätte ich nur das Schema umgestellt,
+sähe das Modell ein Pflichtfeld, das in seiner Vorlage nicht vorkommt.** Der
+sicherste Weg zu einer Antwort, die am Schema scheitert.
+
+> **Schema und Vorlage müssen gemeinsam wandern.** Gefunden von der eigenen
+> Prüfung „beide Prompts sind wörtlich derselbe Satz" — sie schlug fehl, und
+> das war ihr Zweck.
+
+### 133.5 Vier Prüfungen, die auf dem Gegenteil standen
+
+Diese Prüfungen behaupteten den Vor-S6a-Zustand und wurden **nicht angepasst,
+damit sie grün werden**, sondern weil sich die Absicht geändert hat:
+
+| bisher | jetzt |
+|---|---|
+| „Spot behält seine fünf, Hebel hat sieben" | **beide fragen dasselbe Vokabular** |
+| „das Aktionsvokabular hängt WEITERHIN am Instrument" | **hängt nicht mehr daran** |
+| „das Hebel-Vokabular deckt sich mit der alten Kette" | gilt jetzt für `AKTIONEN_HEBEL_ALT` |
+| „nur HALTEN darf ohne Klasse übrigbleiben" | **NICHTS_TUN** — derselbe Vorgang |
+
+⚠️ Eine davon hielt ausdrücklich fest: *„F1/F2 gehören zu S6, nicht zu S4 —
+dort erzwingt die Zusammenlegung sie, hier wären sie 44 Codestellen Risiko
+ohne Gegenwert."* **Der Anlass ist jetzt da.**
+
+### 133.6 Was S6a NICHT tut
+
+| | |
+|---|---|
+| die Doppelläufe beenden | **S6b** — bis dahin laufen beide, nur mit derselben Frage |
+| den Hebelanteil ändern | er hängt an `verlustanteil / stop_rel` (Kapitel 129) |
+| die alte Kette anfassen | sie läuft für Krypto nicht mehr |
+
+**Suite: 1.504 Prüfungen. Gegenprüfung über alle Rollen: 25, alle bestanden.**

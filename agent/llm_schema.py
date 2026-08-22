@@ -519,9 +519,16 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
             # falschen Enum laesst das Modell gar nicht erst antworten.
             "aktion": {"type": "string",
                        "enum": sorted(aktionen_fuer(instrument))},
-            **({"richtung": {"type": "string",
-                             "enum": sorted(RICHTUNGEN)}}
-               if instrument == "hebel" else {}),
+            # ⚠️ S6a (22.08.2026): DIE RICHTUNG STEHT IMMER IM SCHEMA.
+            #
+            # Bis heute gab es sie nur im Hebel-Lauf. Damit konnte der
+            # Spot-Lauf gar kein SHORT liefern - und die Frage "Spot oder
+            # Hebel" war schon dadurch vorentschieden, dass die Richtung
+            # fehlte. Genau diese Vorentscheidung soll S6 beenden.
+            #
+            # SHORT bleibt handelbar nur ueber Hebel; das entscheidet aber
+            # `dimensioniere()` NACH der Antwort, nicht das Schema davor.
+            "richtung": {"type": "string", "enum": sorted(RICHTUNGEN)},
             # ⚠️ `einstieg_eur` UND `stop_eur` SIND RAUS (S3, 18.08.2026).
             # Sie wurden verlangt, von `rechne()` nie gelesen - und konnten
             # den Trade trotzdem toeten. Wo Zahlen gerechnet werden, soll das

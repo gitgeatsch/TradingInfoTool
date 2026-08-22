@@ -157,8 +157,21 @@ def pruefe_llm_drift(llm_client, system_prompt: str, frage_fn,
         return befund
 
     befund.lauf_konfidenz = statistics.fmean(konfidenzen) if konfidenzen else None
+    # ⚠️ BEIDE VOKABULARE ZAEHLEN (S6a, 22.08.2026).
+    #
+    # Bis S6a hiess die Eroeffnungsaktion "ERÖFFNEN", seither "KAUFEN".
+    # Zaehlte man weiter nur den alten Namen, faele der Anteil auf NULL - und
+    # der Kanarienvogel meldete "EROEFFNEN-Anteil 85 % -> 0 %" als
+    # Verhaltensbruch des Modells. Ein Fehlalarm, erzeugt allein durch eine
+    # Umbenennung, und einer, der genau das Werkzeug unbrauchbar macht, das
+    # echte Bruecke finden soll.
+    #
+    # Die ALTEN Namen bleiben mitgezaehlt: die Grundlinie kann aus der Zeit
+    # davor stammen, und ein Vergleich gegen eine Grundlinie mit anderem
+    # Vokabular waere derselbe Fehlalarm mit umgekehrtem Vorzeichen.
+    _AUFBAU = ("KAUFEN", "ERÖFFNEN", "EROEFFNEN")
     befund.lauf_eroeffnen_anteil = sum(
-        1 for a in aktionen if a in ("ERÖFFNEN", "EROEFFNEN")) / len(aktionen)
+        1 for a in aktionen if a in _AUFBAU) / len(aktionen)
 
     grund = lade_grundlinie()
     if grund is None:

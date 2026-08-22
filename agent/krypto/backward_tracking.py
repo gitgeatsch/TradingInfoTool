@@ -481,7 +481,24 @@ def check_signal_outcome(
 
     from agent.krypto.gegenpruefung import richtung_aus_action
 
-    ist_short = richtung_aus_action(signal.action) == "SHORT"
+    # ⚠️ DAS FELD SCHLAEGT DIE ABLEITUNG (S6a, 22.08.2026).
+    #
+    # Der Docstring oben sagt "abgeleitet statt eines nativen richtung-Felds
+    # (Signal hat keins)". SEIT S6a HAT ES EINS: die Rollen-Kette fragt die
+    # Richtung fuer BEIDE Instrumente und schreibt sie in `signals.richtung`.
+    #
+    # Ohne diese Zeile waere S6a ein schwerer Betriebsfehler gewesen: ein
+    # SHORT traegt jetzt `aktion="KAUFEN"` (frueher "ERÖFFNEN"), und
+    # `richtung_aus_action("KAUFEN")` liefert LONG. Stop und Ziel waeren
+    # vertauscht interpretiert worden - und zwar still, weil beide Zonen
+    # gesetzt sind und nichts auffaellt.
+    #
+    # DIE ABLEITUNG BLEIBT ALS RUECKFALL. Tausende Altzeilen tragen kein
+    # `richtung` (die Spot-Familie hatte das Feld nie), und fuer sie ist sie
+    # weiterhin die richtige Antwort.
+    _feld = str(getattr(signal, "richtung", "") or "").strip().upper()
+    ist_short = (_feld == "SHORT" if _feld in ("LONG", "SHORT")
+                 else richtung_aus_action(signal.action) == "SHORT")
 
     take_profit_threshold = _zonen_schwelle(
         signal.take_profit_usd_von, signal.take_profit_usd_bis,

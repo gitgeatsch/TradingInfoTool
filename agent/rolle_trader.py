@@ -141,17 +141,35 @@ Antworte AUSSCHLIESSLICH mit JSON:
 # URTEIL - faellt der Wert oder steigt er. Der Faktor ist ein Risikoparameter,
 # und Kapitel 11.6 haelt fest, dass die nicht vom Modell kommen: er folgt aus
 # Risikobudget und Liquidationsabstand und wird gerechnet.
+# ⚠️ S6a (22.08.2026): SPOT UND HEBEL FRAGEN JETZT DASSELBE.
+#
+# Bis heute nannte der Hebel-Satz sieben Aktionen, der Spot-Satz fuenf -
+# inhaltlich dieselben Vorgaenge unter zwei Namen. Damit trug das VERB eine
+# Instrumentendeutung, die ihm nicht gehoert: "ERÖFFNEN" liest sich wie ein
+# Hebelgeschaeft, auch wo die Rechnung Hebel 1,0 ergibt (76 % der Faelle).
+#
+# HEBEL_ERHÖHEN und HEBEL_SENKEN sind ersatzlos entfallen - sie liessen das
+# Modell einen Risikoparameter setzen, was der Satz zwei Zeilen weiter unten
+# ausdruecklich verbietet. In 1.998 Hebel-Signalen kamen sie zweimal vor.
+#
+# DIE RICHTUNG WIRD JETZT IN BEIDEN FAELLEN GEFRAGT. Ohne sie koennte der
+# Spot-Lauf kein SHORT liefern - und die Frage "Spot oder Hebel" waere schon
+# dadurch vorentschieden, dass die Richtung fehlt.
+_HANDELN_GEMEINSAM = (
+    " Waehle GENAU EINE: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende "
+    "Position vergroessern), REDUZIEREN (Teilverkauf), VERKAUFEN (ganz "
+    "schliessen) oder NICHTS_TUN."
+    " Bei KAUFEN und NACHKAUFEN nenne ZUSAETZLICH die Richtung: LONG, wenn "
+    "du steigende Kurse erwartest, SHORT bei fallenden."
+    " Nenne KEINEN Hebelfaktor und KEINE Positionsgroesse - beide folgen aus "
+    "dem Risikobudget und dem Abstand zur Zwangsliquidation und werden "
+    "gerechnet, nicht geschaetzt."
+    " Ob daraus ein Spot-Kauf oder eine gehebelte Position wird, entscheidet "
+    "die Rechnung nach deiner Antwort - nicht du.")
+
 _HANDELN = {
-    "spot": (" Waehle: KAUFEN (neu aufbauen), NACHKAUFEN (bestehende Position "
-             "vergroessern), REDUZIEREN, VERKAUFEN oder NICHTS_TUN."),
-    "hebel": (" Waehle GENAU EINE: ERÖFFNEN (neue Position), NACHKAUFEN "
-              "(vergroessern), HEBEL_ERHÖHEN, HEBEL_SENKEN, TEILVERKAUF, "
-              "SCHLIESSEN oder HALTEN."
-              " Bei ERÖFFNEN und NACHKAUFEN nenne ZUSAETZLICH die Richtung: "
-              "LONG, wenn du steigende Kurse erwartest, SHORT bei fallenden."
-              " Nenne KEINEN Hebelfaktor - der folgt aus dem Risikobudget und "
-              "dem Abstand zur Zwangsliquidation und wird gerechnet, nicht "
-              "geschaetzt."),
+    "spot": _HANDELN_GEMEINSAM,
+    "hebel": _HANDELN_GEMEINSAM,
     # PAKET 14 (15.08.2026): DIE ABSICHERUNG FRAGT ANDERS.
     #
     # Bis heute lief sie durch den Spot-Satz - dieselbe Frage wie bei einem
@@ -185,7 +203,18 @@ _HANDELN = {
 # Das Richtungsfeld erscheint NUR bei Hebel im Antwortschema. Ein Feld, das
 # bei Spot nie gefuellt wird, waere eine Frage nach etwas, das es dort nicht
 # gibt - derselbe Fehler wie die Kursfrage bei Akkumulation (12.08.).
-_RICHTUNGSFELD = {"spot": "", "hebel": "\n \"richtung\": \"LONG|SHORT\","}
+# ⚠️ S6a (22.08.2026): DIE VORLAGE ZEIGT DIE RICHTUNG IN BEIDEN FAELLEN.
+#
+# Bis heute stand hier {"spot": "", "hebel": "..."} - das Schema verlangte die
+# Richtung nur beim Hebel, und die JSON-Vorlage zeigte sie auch nur dort.
+# Beides zusammen machte SHORT im Spot-Lauf UNSAGBAR, und damit war "Spot oder
+# Hebel" vorentschieden, bevor das Modell ueberhaupt antwortete.
+#
+# ⚠️ SCHEMA UND VORLAGE MUESSEN GEMEINSAM WANDERN. Haette ich nur das Schema
+# umgestellt, saehe das Modell ein Pflichtfeld, das in seiner Vorlage nicht
+# vorkommt - der sicherste Weg zu einer Antwort, die am Schema scheitert.
+_RICHTUNG_ZEILE = "\n \"richtung\": \"LONG|SHORT\","
+_RICHTUNGSFELD = {"spot": _RICHTUNG_ZEILE, "hebel": _RICHTUNG_ZEILE}
 
 _KURSSATZ = {
     True:  " Bei KAUFEN und NACHKAUFEN zusaetzlich den Einstiegskurs und den "

@@ -53,22 +53,50 @@ from __future__ import annotations
 
 AKTIONEN = ("KAUFEN", "NACHKAUFEN", "REDUZIEREN", "VERKAUFEN", "NICHTS_TUN")
 
-# HEBEL HAT SIEBEN AKTIONEN, NICHT FUENF (Paket 13, 13.08.2026). Eine gehebelte
-# Position kennt zwei Zuege, die es bei Spot nicht gibt: den Hebel aendern,
-# ohne die Position zu aendern. Genau dafuer stehen HEBEL_ERHOEHEN und
-# HEBEL_SENKEN.
+# ⚠️ S6a (22.08.2026): EIN VOKABULAR FUER BEIDE INSTRUMENTE.
 #
-# DIE SCHREIBWEISE IST DIE DER ALTEN KETTE, samt Umlauten. `hebel_analyst.
-# REQUIRED_HEBEL_ACTIONS` schreibt "ERÖFFNEN" und "HEBEL_ERHÖHEN", und die
-# neue Kette schreibt in dieselbe Tabelle `hebel_signals`. Eine zweite
-# Schreibweise haette eine Abbildung noetig gemacht - und jede Abbildung ist
-# eine Stelle, an der zwei Vokabulare auseinanderlaufen koennen.
-AKTIONEN_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN", "HEBEL_SENKEN",
-                  "TEILVERKAUF", "SCHLIESSEN", "HALTEN")
+# Bis heute hatte Hebel sieben Aktionen und Spot fuenf. Inhaltlich waren es
+# DIESELBEN fuenf Vorgaenge unter zwei Namen:
+#
+#     Position eroeffnen   KAUFEN      <->  ERÖFFNEN
+#     vergroessern         NACHKAUFEN  <->  NACHKAUFEN
+#     verkleinern          REDUZIEREN  <->  TEILVERKAUF
+#     schliessen           VERKAUFEN   <->  SCHLIESSEN
+#     nichts tun           NICHTS_TUN  <->  HALTEN
+#
+# DAS VERB TRUG DAMIT EINE INSTRUMENTENDEUTUNG, die ihm nicht gehoert. Wer
+# "ERÖFFNEN" liest, denkt an eine gehebelte Position - auch dort, wo die
+# Rechnung Hebel 1,0 ergibt (in 76 % der Faelle, Kapitel 129).
+#
+# JETZT SAGT DIE AKTION, WAS GETAN WIRD, UND DAS INSTRUMENT, WIE.
+# Zwei Dinge, zwei Felder. Das Instrument faellt aus `dimensioniere()` an
+# und steht in `etikett` - es muss nicht im Verb mitreisen.
+#
+# ⚠️ HEBEL_ERHÖHEN UND HEBEL_SENKEN ENTFALLEN ERSATZLOS, und zwar nicht aus
+# Bequemlichkeit: sie lassen das MODELL den Hebelfaktor aendern. Das
+# widerspricht dem Regelwerksmanual Abschnitt A ("der Hebelfaktor kommt
+# nicht vom Modell, er folgt aus Risikobudget und Liquidationsabstand").
+# Gemessen kamen sie in 1.998 Hebel-Signalen ZWEIMAL vor, und die neue Kette
+# kannte sie ohnehin nicht.
+#
+# DIE ALTE KETTE BLEIBT UNBERUEHRT. `hebel_analyst.REQUIRED_HEBEL_ACTIONS`
+# fuehrt weiter die sieben Namen; sie schreibt in `hebel_signals` und laeuft
+# fuer Krypto nicht mehr. Ein Eingriff dort waere Arbeit an einem toten Pfad.
+AKTIONEN_HEBEL = AKTIONEN
+
+# Das alte Hebel-Vokabular - NUR fuer die Abbildung bestehender Zeilen und
+# fuer die Gegenpruefung, die noch mit `hebel_signals` arbeitet.
+AKTIONEN_HEBEL_ALT = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN",
+                      "HEBEL_SENKEN", "TEILVERKAUF", "SCHLIESSEN", "HALTEN")
+
+# Alt -> neu. EINE Stelle; wer sie umgeht, baut die zweite Schreibweise.
+AKTION_AUS_HEBEL = {"ERÖFFNEN": "KAUFEN", "TEILVERKAUF": "REDUZIEREN",
+                    "SCHLIESSEN": "VERKAUFEN", "HALTEN": "NICHTS_TUN",
+                    "NACHKAUFEN": "NACHKAUFEN"}
 
 # Nur diese eroeffnen oder vergroessern eine Position - nur sie brauchen eine
 # Richtung und eine Einstiegsrechnung.
-HEBEL_MIT_EINSTIEG = ("ERÖFFNEN", "NACHKAUFEN")
+HEBEL_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN")
 
 # Die Richtung ist die EINZIGE zusaetzliche Angabe, die das Modell fuer Hebel
 # liefert. Der Hebelfaktor NICHT: er folgt aus Risikobudget und
@@ -78,8 +106,13 @@ RICHTUNGEN = ("LONG", "SHORT")
 
 
 def aktionen_fuer(instrument: str = "spot") -> tuple:
-    """Das Aktionsvokabular des Instruments. EINE Stelle, kein Duplikat."""
-    return AKTIONEN_HEBEL if instrument == "hebel" else AKTIONEN
+    """Das Aktionsvokabular. SEIT S6a FUER BEIDE INSTRUMENTE DASSELBE.
+
+    Der Parameter bleibt, damit kein Aufrufer bricht - und damit die Stelle
+    auffaellt, falls je wieder zwei Vokabulare gewollt sein sollten. Heute
+    gibt sie fuer jedes Instrument dieselbe Liste zurueck."""
+    del instrument
+    return AKTIONEN
 
 # Die Tranchen aus der Praxis des Nutzers. Eine AUSWAHL, keine Rechnung.
 TRANCHEN_EUR = (100, 300, 500)

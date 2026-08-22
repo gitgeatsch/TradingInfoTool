@@ -86,6 +86,12 @@ from agent.empfehlung_vertrag import AKTIONEN_HEBEL
 
 # Was die neue Kette sagt -> was in der Spalte steht. Nur EIN Eintrag, und der
 # ist begruendet (siehe Eckpunkt 1): gleiche Aktion, gleiches Ergebnis.
+#
+# ⚠️ S6a AENDERT HIER NICHTS. Die neue Kette spricht seit S6a nur noch das
+# Spot-Vokabular; NICHTS_TUN -> HALTEN gilt unveraendert. Die alten
+# Hebel-Namen erreichen die Spalte nicht mehr aus der neuen Kette - sie
+# stehen weiter in `hebel_signals` aus der alten und in bestehenden Zeilen.
+# Fuer deren Auswertung gibt es `empfehlung_vertrag.AKTION_AUS_HEBEL`.
 UMBENENNUNG = {"NICHTS_TUN": "HALTEN"}
 
 # Das Vokabular der SPALTE nach der Abbildung. NICHTS_TUN steht bewusst NICHT

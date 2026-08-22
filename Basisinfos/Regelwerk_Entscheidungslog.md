@@ -19934,3 +19934,56 @@ die Stopregel (130 hat sie gemessen), die Richtung als Modellausgabe. DER
 HEBELANTEIL AENDERT SICH DURCH S6 NICHT - er haengt an verlustanteil/stop_rel,
 nicht an der Zahl der Laeufe. S6 beendet die Doppelfrage, nicht die
 Hebelknappheit; das ist eine getrennte Entscheidung aus Kapitel 129.
+
+
+[2026-08-22] KAPITEL 133: S6a GEBAUT - EIN VOKABULAR FUER SPOT UND HEBEL
+
+Der erste Schritt von S6. Solange Spot und Hebel verschiedene Fragen
+bekommen, kann S6b den zweiten Lauf nicht streichen.
+
+GEAENDERT: AKTIONEN_HEBEL = AKTIONEN (7 -> 5), aktionen_fuer gibt fuer beide
+dieselbe Liste, rolle_trader._HANDELN ist EIN Satz, _RICHTUNGSFELD gilt fuer
+beide, llm_schema traegt `richtung` immer.
+
+Inhaltlich waren es dieselben fuenf Vorgaenge unter zwei Namen (KAUFEN/
+ERÖFFNEN, REDUZIEREN/TEILVERKAUF, VERKAUFEN/SCHLIESSEN, NICHTS_TUN/HALTEN).
+Das VERB sagt jetzt WAS, das Instrument WIE.
+
+⚠️ HEBEL_ERHÖHEN und HEBEL_SENKEN entfallen aus einem REGELGRUND: sie liessen
+das Modell den Hebelfaktor aendern, was Regelwerksmanual A verbietet und der
+Prompt zwei Zeilen weiter unten ausdruecklich untersagt. In 1.998
+Hebel-Signalen kamen sie zweimal vor.
+
+⚠️ DIE GEGENPRUEFUNG UEBER ALLE ROLLEN (Nutzerauftrag) FAND DREI
+ABHAENGIGKEITEN - keine davon an der geaenderten Stelle:
+
+FUND 1, DER SCHWERSTE: check_signal_outcome leitete die Richtung aus der
+AKTION ab ("statt eines nativen richtung-Felds - Signal hat keins"). SEIT S6a
+HAT ES EINS. Ein SHORT traegt jetzt aktion="KAUFEN", und
+richtung_aus_action("KAUFEN") liefert LONG - Stop und Ziel waeren vertauscht
+interpretiert worden, und zwar STILL. Behoben: das Feld schlaegt die
+Ableitung, die Ableitung bleibt Rueckfall fuer Altzeilen.
+
+FUND 2: der Kanarienvogel zaehlte den Eroeffnungsanteil nur ueber ERÖFFNEN.
+Nach S6a waere er null und die Meldung lautete "85 % -> 0 %" - ein
+Verhaltensbruch, den allein die Umbenennung erzeugt, ausgerechnet im Werkzeug
+zum Finden echter Brueche. Behoben.
+
+FUND 3: signal_stabilitaet._AKTIONS_KATEGORIE kannte beide Vokabulare bereits
+- kein Bruch, als Dauerpruefung festgehalten.
+
+⚠️ UND EINE FALLE, DIE ICH BEINAHE SELBST GEBAUT HAETTE: der Prompt zeigt eine
+JSON-Vorlage, und _RICHTUNGSFELD gab sie nur beim Hebel aus. Haette ich nur
+das Schema umgestellt, saehe das Modell ein Pflichtfeld, das in seiner
+Vorlage fehlt. Gefunden von der eigenen Pruefung "beide Prompts sind
+woertlich derselbe Satz" - sie schlug fehl, und das war ihr Zweck.
+
+VIER PRUEFUNGEN STANDEN AUF DEM GEGENTEIL und wurden umgestellt, weil sich
+die ABSICHT geaendert hat, nicht damit sie gruen werden. Eine hielt
+ausdruecklich fest: "F1/F2 gehoeren zu S6, nicht zu S4 - hier waeren sie 44
+Codestellen Risiko ohne Gegenwert." Der Anlass ist jetzt da.
+
+WAS S6a NICHT TUT: die Doppellaeufe beenden (das ist S6b), den Hebelanteil
+aendern (der haengt an verlustanteil/stop_rel), die alte Kette anfassen.
+
+Suite 1504 Pruefungen, Gegenpruefung ueber alle Rollen 25 - alle bestanden.
