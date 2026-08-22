@@ -311,6 +311,10 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               # Nutzer vier Wochen lang SIEHT, was ein spaeterer Filter
               # weggenommen haette, bevor er weggenommen wird.
               vorfilter: list[str] | None = None,
+              # 22.08.2026: die ZUSAMMENFUEHRUNG. Sie gehoert VOR alles
+              # andere - der Leser soll die Zahl sehen, bevor er die
+              # Einzelteile liest, aus denen sie entsteht.
+              wahrscheinlichkeit: list[str] | None = None,
               assetklasse: str | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
@@ -378,8 +382,14 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # gemessene Faktenblock, zuletzt das Umfeld. Absolute Zahlen vor
     # relativen - das ist die Regel der NUTZER-Schiene, nicht die des Modells.
     eins = []
+    # ⚠️ GANZ NACH OBEN, NOCH VOR DEN BESTAND. Bis heute stand hier eine
+    # Strichliste ("1 dafuer, 1 dagegen, 2 nicht bewertbar") - sie liess die
+    # Zusammenfuehrung beim Leser. Die gerechnete Zahl ersetzt sie nicht,
+    # sie steht davor: erst das Ergebnis, dann die Bestandteile.
+    if wahrscheinlichkeit:
+        eins += list(wahrscheinlichkeit)
     if bestand:
-        eins.append(bestand)
+        eins += ([""] if eins else []) + [bestand]
     if marken:
         eins += marken
     if faktenblock:

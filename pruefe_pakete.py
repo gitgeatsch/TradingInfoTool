@@ -10822,6 +10822,90 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- DIE ZUSAMMENFUEHRUNG: EINE ZAHL STATT EINER STRICHLISTE -------
+    # ⚠️ ANLASS, Nutzereinwand 22.08.2026: "das System kann diese
+    # Informationen nicht SELBST in Zusammenhang bringen und eine Bewertung
+    # bzw. Wahrscheinlichkeit zum gesamten Trade durchfuehren - was das
+    # eigentliche Ziel des Systems ist und war."
+    #
+    # DIE GEFAHR DIESER STUFE IST DIE UMGEKEHRTE ZUM SCHATTEN: nicht dass
+    # sie sperrt, sondern dass sie mehr behauptet, als gemessen ist. Deshalb
+    # pruefen die folgenden Zeilen vor allem, was NICHT in die Zahl darf.
+    from agent import wahrscheinlichkeit as _WK
+
+    _r_h = _WK.rechne(crv=2.0, stop_relativ=0.20, gebuehr_je_seite=0.003,
+                      klasse="krypto", h=True)
+    _r_ohne = _WK.rechne(crv=2.0, stop_relativ=0.20, gebuehr_je_seite=0.003,
+                         klasse="krypto", h=False)
+    _r_unbek = _WK.rechne(crv=2.0, stop_relativ=0.20, gebuehr_je_seite=0.003,
+                          klasse="krypto", h=None)
+    _r_aktie = _WK.rechne(crv=2.0, stop_relativ=0.20, gebuehr_je_seite=0.003,
+                          klasse="aktien", h=True)
+
+    pruefe(P, "die Basisrate ist die Arithmetik, nicht der Messwert",
+           abs(_WK.basisrate(2.0) - 1 / 3) < 1e-9
+           and _WK.BASISRATE_GEMESSEN == 0.340,
+           "gemessen sind 34,0 % - die 0,7 Punkte sind Drift, und ihn "
+           "einzurechnen hiesse den guenstigeren der beiden Werte nehmen")
+    pruefe(P, "H hebt die Quote um genau die gemessenen 4,5 Punkte",
+           abs(100 * (_r_h["quote"] - _r_ohne["quote"]) - 4.5) < 1e-9)
+    pruefe(P, "trifft H nicht zu, traegt es NICHTS - kein Abzug",
+           abs(_r_ohne["quote"] - _r_ohne["basisrate"]) < 1e-12,
+           "ein Merkmal, das nicht zutrifft, ist kein Gegenargument")
+    pruefe(P, "unbekanntes H wirkt wie nicht zutreffend, heisst aber anders",
+           abs(_r_unbek["quote"] - _r_ohne["quote"]) < 1e-12
+           and any(z["zustand"] == "nie" and z["name"].startswith("Vorfilter")
+                   for z in _r_unbek["beitraege"]),
+           "in der Zahl gleich, im Text verschieden - sonst sieht "
+           "'unbekannt' aus wie 'geprueft und nein'")
+    pruefe(P, "auf anderen Klassen traegt H NICHT bei",
+           abs(_r_aktie["quote"] - _r_aktie["basisrate"]) < 1e-12,
+           "die 523 Reihen sind Binance-USDT - der Vorsprung dort gilt "
+           "nicht fuer Aktien")
+
+    # ⚠️ DER TRICHTER DARF NICHT ZWEIMAL ZAEHLEN.
+    pruefe(P, "der Trichter steckt in der Basisrate, nicht als Zuschlag",
+           any(z["name"].startswith("Trichter")
+               and z["zustand"] == "enthalten" and z["punkte"] == 0.0
+               for z in _r_h["beitraege"]),
+           "er BESTIMMT die Geometrie - ihn zusaetzlich zu addieren waere "
+           "dieselbe Information zweimal")
+
+    # ⚠️ WAS NICHT DRINSTECKT, MUSS IN DERSELBEN ZUSAMMENFASSUNG STEHEN.
+    _wz = _WK.saetze(crv=2.0, stop_relativ=0.20, klasse="krypto", h=True)
+    pruefe(P, "die Mail nennt beide Gebuehrensaetze",
+           any("Referenz" in z for z in _wz)
+           and any("Betrieb" in z for z in _wz))
+    pruefe(P, "und benennt jedes NICHT eingerechnete Merkmal",
+           all(any(b.name.split(" (")[0] in z for z in _wz)
+               for b in _WK.BEITRAEGE),
+           "ohne diese Zeilen liest sich die Quote, als waere alles "
+           "beruecksichtigt worden, was in der Mail steht")
+    pruefe(P, "die Zahl gibt sich ausdruecklich NICHT als Prognose aus",
+           any("KEINE PROGNOSE" in z for z in _wz)
+           and any("steckt NICHT in dieser Zahl" in z for z in _wz),
+           "sie ist die Haeufigkeit in einer Gruppe - und das LLM-Urteil "
+           "steht daneben, nicht darin (Nutzervorgabe)")
+
+    # ⚠️ LIEBER KEINE ZAHL ALS EINE ERFUNDENE.
+    for _feld, _wert in (("crv", 0.0), ("stop_relativ", 0.0)):
+        _arg = {"crv": 2.0, "stop_relativ": 0.20, "gebuehr_je_seite": 0.003}
+        _arg[_feld] = _wert
+        try:
+            _WK.rechne(**_arg)
+            _warf = False
+        except _WK.WahrscheinlichkeitUnbekannt:
+            _warf = True
+        pruefe(P, f"ohne {_feld} wird geworfen, nicht geraten", _warf)
+
+    # ⚠️ UND SIE MUSS IN DER MAIL GANZ OBEN STEHEN.
+    _smq = _quelltext("agent/signal_mail.py")
+    pruefe(P, "die Zusammenfuehrung steht VOR dem Bestand",
+           "if wahrscheinlichkeit:" in _smq
+           and _smq.index("if wahrscheinlichkeit:") < _smq.index("if bestand:"),
+           "erst das Ergebnis, dann die Bestandteile - sonst ist es wieder "
+           "eine Strichliste, die der Leser selbst zusammenrechnet")
+
     # ---- DIE BEFUNDKARTE MUSS ZUM CODE PASSEN (22.08.2026) --------------
     # ⚠️ ANLASS: Abschnitt 7 der Befundkarte ("Die Selektionsebene") nennt
     # Faktoren, Schwellen und Messwerte im Klartext. Ein Uebersichtsdokument

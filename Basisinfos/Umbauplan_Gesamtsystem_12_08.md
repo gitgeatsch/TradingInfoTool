@@ -16446,3 +16446,119 @@ es keine weiteren Grautöne.
 vergleichen: eine feste Zeichenkette würde jede spätere Umbenennung
 durchwinken. Sie verlangt **≥ 12:1** und zugleich, dass der Ton heller bleibt
 als der Fließtext.
+
+
+---
+
+## Die Zusammenführung — eine Zahl statt einer Strichliste (22.08.2026)
+
+### Der Einwand, und er trifft
+
+> *„Gefühlt werden die Infos in die eMail übernommen — aber das System kann
+> diese Informationen nicht SELBST in Zusammenhang bringen und eine Bewertung
+> bzw. Wahrscheinlichkeit zum gesamten Trade bzw. Signal durchzuführen —
+> was das eigentliche Ziel des Systems ist und war."*
+
+**Er hat recht.** `gesamtbild.py` **zählt Etiketten**: *„von 4 prüfbaren
+Merkmalen 1 spricht dafür, 1 dagegen, 2 noch nicht bewertbar."* Das ist eine
+Strichliste — und sie lässt genau die Arbeit beim Leser, die das System
+machen soll.
+
+⚠️ **Warum das einmal richtig war und jetzt nicht mehr.** Bis Kapitel 118 gab
+es nichts Gemessenes zu addieren; eine Zahl zu bauen hätte Sicherheit
+vorgetäuscht. **Seit 119–122 gibt es zwei belastbare Größen** — die Basisrate
+aus der Geometrie und den Vorsprung von H. Damit ist die Zusammenführung
+keine Behauptung mehr, sondern eine Rechnung.
+
+### Die Rechnung
+
+    Basisrate   = 1 / (1 + CRV)              driftfrei, reine Arithmetik
+    + Beiträge                               nur GEMESSENE Punkte
+    = Quote                                  geschätzte Trefferquote
+    Breakeven   = (1 + Kosten_R) / (1 + CRV)
+    Kosten_R    = 2 × Gebühr / Stopabstand
+    Abstand     = Quote − Breakeven          DAS ist die Aussage
+
+⚠️ **Gerechnet wird mit der Arithmetik (33,3 %), nicht mit den gemessenen
+34,0 %.** Die 0,7 Punkte Unterschied sind der leichte Aufwärtsdrift des
+Marktes; ihn einzurechnen hieße, den günstigeren der beiden Werte zu nehmen.
+
+### So sieht es in der Mail aus — ganz oben, vor allem anderen
+
+```
+Wie wahrscheinlich trägt dieser Trade? (gerechnet, kein Urteil)
+   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %
+   + Vorfilter H (Weg frei, Stop gedeckt)                 +4,5
+     (der einzige gemessene Kandidat, der die Zufallsschwelle nimmt)
+   = geschätzte Trefferquote                            37,8 %
+   nötig bei Referenz 0,30 %: 34,3 % → 3,5 Punkte, trägt (0,105 R)
+⚠️ nötig bei Betrieb 1,50 %: 38,3 % → −0,5 Punkte, trägt NICHT (−0,015 R)
+   Bereits enthalten: Trichter — er BESTIMMT die Geometrie
+   Nicht eingerechnet, und warum:
+      Rangplatz: verfehlt um 0,10 Punkte zum Referenzsatz
+      Lebendigkeit: auswertbar ab 18.09.2026
+      Bekannte Termine: nie gegen den Zufall gemessen
+⚠️ KEINE PROGNOSE FÜR DIESEN TRADE … Das Urteil der Modelle steckt NICHT
+   in dieser Zahl — es steht daneben.
+```
+
+### Fünf Zustände, die nie verschmelzen
+
+| Zustand | Bedeutung | in der Zahl? |
+|---|---|---|
+| `traegt` | gemessen, über der Zufallsschwelle | **ja** |
+| `enthalten` | steckt schon in der Basisrate | **ja, indirekt** |
+| `null` | gemessen und zu klein | nein, **wird genannt** |
+| `noch_nicht` | eigene Reihe zu kurz | nein, **mit Termin** |
+| `nie` | nie gemessen | nein, **ohne Versprechen** |
+
+⚠️ **Der Unterschied zwischen `null` und `nie` ist der wichtige:** das eine
+heißt „geprüft und zu klein", das andere „wir wissen es nicht". Wer sie
+zusammenwirft, verliert genau die Information, die sagt, **wo sich Arbeit
+lohnt**.
+
+### Erweiterbar gebaut, weil es das sein muss
+
+> *„Wir müssen aus dem Fleckerteppich ein stabiles und erweiterbares System
+> bauen, was auf einer guten Grundlage basiert."*
+
+Deshalb eine **Registrierung**: jeder Beitrag ist ein Eintrag mit Wert,
+Zustand, Quelle und Begründung. Kommt einer dazu oder wechselt seinen Zustand
+— etwa die Lebendigkeit am 18.09. —, ist das **eine Zeile**. Kein Umbau der
+Rechnung, keine zweite Stelle, die auseinanderlaufen kann.
+
+### Was die Zahl sofort sichtbar macht
+
+Bei einem Stop von **5 %** (Widerlegungspreis nah am Kurs) liegt der
+Breakeven schon zum **Referenzsatz** bei 37,3 % — der Trade trägt mit
+−4,0 Punkten **nicht**, auch mit H nicht. **Die Kopplung zwischen Stopabstand
+und Tragfähigkeit steht damit je Signal in der Mail**, statt nur in einem
+Kapitel.
+
+**Dreizehn Dauerprüfungen**, die vor allem prüfen, **was nicht in die Zahl
+darf**: kein Abzug für ein nicht zutreffendes Merkmal · kein Beitrag auf
+fremden Anlageklassen · der Trichter nicht doppelt · geworfen statt geraten.
+
+---
+
+## ⚠️ Kostenrevision: der Rangplatz verfehlt nur noch um 0,10 Punkte
+
+**Nutzerhinweis 22.08.:** *„sollten wir nicht nochmal die bereits
+existierenden Funktionen prüfen ob es hier eine Optimierung gibt — wir haben
+gestern die Kosten für die Börsen angepasst."*
+
+**Der Hinweis trifft.** `drift.GEMESSEN["kosten"] = 0.03` — das sind 3 %, die
+**Runde zum Betriebssatz** (2 × 1,50 %). Zum Referenzsatz sind es **0,60 %**.
+
+| Kostenannahme | Runde | Rest vom Vorteil (+0,51 %) |
+|---|---:|---:|
+| im Modul hinterlegt (Betrieb) | 3,00 % | **−2,50 %** |
+| **Referenz 0,30 %** | 0,60 % | **−0,10 %** |
+
+> **Der Rangplatz verfehlt zum Referenzsatz um ein Zehntel Prozentpunkt statt
+> um das Sechsfache.** Das Urteil kippt nicht — aber es wandert von
+> „aussichtslos" zu „eine kleine Verbesserung entfernt".
+
+**Sonst steht nichts auf der alten Basis.** Geprüft: die Fixgebühren bei
+Rohstoffen und Themen-ETF (1 EUR je Seite) sind ein eigenes, korrektes Modell
+und vom Krypto-Referenzsatz unberührt.

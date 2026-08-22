@@ -1375,8 +1375,24 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         logger.exception("Vorfilter-Schatten fuer %s uebersprungen", symbol)
         _vf_bewertung, _vf_zeilen = None, []
 
+    # DIE ZUSAMMENFUEHRUNG (22.08.2026). Sie rechnet aus DERSELBEN
+    # Geometrie, die weiter unten in der Mail steht, und aus demselben
+    # H-Ergebnis wie der Schatten darueber - keine zweite Ermittlung, die
+    # auseinanderlaufen koennte.
+    try:
+        from agent import wahrscheinlichkeit as _WK
+        _wk_zeilen = _WK.saetze(
+            crv=rechnung.get("crv"),
+            stop_relativ=rechnung.get("stop_relativ"),
+            klasse=assetklasse,
+            h=(_vf_bewertung or {}).get("h"))
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Wahrscheinlichkeit fuer %s uebersprungen", symbol)
+        _wk_zeilen = []
+
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(
+            wahrscheinlichkeit=_wk_zeilen or None,
             lebendigkeit=_leben or None,
             vorfilter=_vf_zeilen or None,
             # DER BESTAND GANZ OBEN - Nutzervorgabe 12.08.: "Das fuer mich

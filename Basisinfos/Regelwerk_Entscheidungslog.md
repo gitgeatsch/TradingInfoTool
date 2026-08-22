@@ -19374,3 +19374,63 @@ ui/formatting.py; im Mailpfad gibt es keine weiteren Grautoene.
 
 Die Dauerpruefung RECHNET den Kontrast aus statt eine Farbprobe zu
 vergleichen - eine feste Zeichenkette wuerde jede Umbenennung durchwinken.
+
+
+[2026-08-22] DIE ZUSAMMENFUEHRUNG - EINE ZAHL STATT EINER STRICHLISTE
+
+NUTZEREINWAND, und er trifft: "das System kann diese Informationen nicht
+SELBST in Zusammenhang bringen und eine Bewertung bzw. Wahrscheinlichkeit zum
+gesamten Trade durchfuehren - was das eigentliche Ziel des Systems ist und
+war." gesamtbild.py ZAEHLT Etiketten; das ist eine Strichliste und laesst die
+Zusammenfuehrung beim Leser.
+
+WARUM DAS EINMAL RICHTIG WAR: bis Kapitel 118 gab es nichts Gemessenes zu
+addieren. Seit 119-122 gibt es zwei belastbare Groessen - Basisrate aus der
+Geometrie und Vorsprung von H. Die Zusammenfuehrung ist damit keine
+Behauptung mehr, sondern eine Rechnung.
+
+GEBAUT: agent/wahrscheinlichkeit.py mit einer REGISTRIERUNG statt fester
+Formel - jeder Beitrag ist ein Eintrag mit Wert, Zustand, Quelle und
+Begruendung. Fuenf Zustaende: traegt, enthalten, null, noch_nicht, nie. Der
+Unterschied zwischen `null` (geprueft und zu klein) und `nie` (wissen wir
+nicht) ist der wichtige - er sagt, wo sich Arbeit lohnt.
+
+Gerechnet wird mit der ARITHMETIK (33,3 %), nicht mit den gemessenen 34,0 % -
+die 0,7 Punkte sind Drift, und ihn einzurechnen hiesse den guenstigeren Wert
+nehmen.
+
+IN DER MAIL GANZ OBEN, vor dem Bestand: erst das Ergebnis, dann die
+Bestandteile. Beide Gebuehrensaetze nebeneinander, und jedes NICHT
+eingerechnete Merkmal wird benannt - ohne diese Zeilen liest sich die Quote,
+als waere alles beruecksichtigt, was in der Mail steht.
+
+SICHTBAR WIRD SOFORT ETWAS WICHTIGES: bei 5 % Stop liegt der Breakeven schon
+zum Referenzsatz bei 37,3 %, der Trade traegt mit -4,0 Punkten nicht - auch
+mit H nicht. Die Kopplung zwischen Stopabstand und Tragfaehigkeit steht damit
+je Signal in der Mail statt nur in einem Kapitel.
+
+13 Dauerpruefungen, die vor allem pruefen, WAS NICHT IN DIE ZAHL DARF: kein
+Abzug fuer ein nicht zutreffendes Merkmal, kein Beitrag auf fremden
+Anlageklassen, der Trichter nicht doppelt (er bestimmt die Geometrie und
+steckt ueber sie schon drin), geworfen statt geraten.
+
+[2026-08-22] KOSTENREVISION: DER RANGPLATZ VERFEHLT NUR NOCH UM 0,10 PUNKTE
+
+Nutzerhinweis: "sollten wir nicht nochmal die bereits existierenden
+Funktionen pruefen ob es hier eine Optimierung gibt - wir haben gestern die
+Kosten fuer die Boersen angepasst."
+
+DER HINWEIS TRIFFT. drift.GEMESSEN["kosten"] = 0.03 sind die RUNDE zum
+BETRIEBSSATZ (2 x 1,50 %). Zum Referenzsatz sind es 0,60 %.
+
+    Vorteil bestes Fuenftel gegenueber Markt      +0,51 %
+    Runde zum Betriebssatz                         3,00 %  -> -2,50 %
+    Runde zum Referenzsatz                         0,60 %  -> -0,10 %
+
+Der Rangplatz verfehlt zum Referenzsatz um ein ZEHNTEL Prozentpunkt statt um
+das Sechsfache. Das Urteil kippt nicht, aber es wandert von "aussichtslos" zu
+"eine kleine Verbesserung entfernt".
+
+SONST STEHT NICHTS AUF DER ALTEN BASIS - geprueft: die Fixgebuehren bei
+Rohstoffen und Themen-ETF (1 EUR je Seite) sind ein eigenes, korrektes Modell
+und vom Krypto-Referenzsatz unberuehrt.
