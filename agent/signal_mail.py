@@ -306,6 +306,11 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               # Warnhinweis, solange die eigene Reihe zu kurz ist. Kein
               # Urteil, kein Gate: diese Zeilen sperren nichts.
               lebendigkeit: list[str] | None = None,
+              # V1 (22.08.2026): das Merkmal H als SCHATTEN. Es sperrt
+              # nichts und aendert nichts - es steht in der Mail, damit der
+              # Nutzer vier Wochen lang SIEHT, was ein spaeterer Filter
+              # weggenommen haette, bevor er weggenommen wird.
+              vorfilter: list[str] | None = None,
               assetklasse: str | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
@@ -382,6 +387,11 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     eins += list(coin_fakten or [])
     if lebendigkeit:
         eins += ([""] if eins else []) + list(lebendigkeit)
+    # ⚠️ EIGENER ABSATZ, NICHT ANS LAGEBILD ANGEHAENGT. Der Schatten sagt
+    # etwas ueber UNSERE Auswahl, nicht ueber den Wert - wer ihn zwischen
+    # die Marktmerkmale mischt, liest ihn als weiteren Marktfakt.
+    if vorfilter:
+        eins += ([""] if eins else []) + list(vorfilter)
     if lage_fakten:
         eins += ["", "Umfeld:"] + [
             f"  {z}" for z in ohne_gewohntes(lage_fakten,

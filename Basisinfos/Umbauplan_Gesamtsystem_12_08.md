@@ -16320,3 +16320,129 @@ im Plan, und zusätzlich in Zwischenstand 8b.4.
 > **Das ist derselbe Fehlertyp wie in Methodik 2.48:** eine Schwelle ist
 > selbst eine Schätzung. Neu ist hier, dass sie auf eine **andere Größe**
 > angewendet wurde als die, mit der sie begründet wurde.
+
+
+---
+
+## V1 — H als Schatten: markieren, nicht sperren (22.08.2026)
+
+### Warum diese Bauform und nicht gleich der Filter
+
+| | |
+|---|---:|
+| H gemessen auf | **523** Binance-USDT-Reihen |
+| Vorsprung | **+4,5** Punkte gegen Schwelle +2,6 |
+| auf der echten Watchlist | +4,8 — **aber nicht bestätigbar** (27 Reihen, Schwelle +9,2) |
+| **H trifft zu auf** | **3,3 %** der Ankertage |
+
+⚠️ **Über 29 Symbole ist das rund EIN Symboltag pro Tag.** Aus den 24
+Eröffnungen des 21.08. würde ungefähr **eine**.
+
+Ein Schnitt dieser Größe wird nicht auf einen Befund von *fremden* Reihen
+gebaut — das wäre genau der Fehler aus Kapitel 109 (Regel auf der einen
+Grundgesamtheit, Kontrolle auf einer anderen). Deshalb erst vier Wochen
+mitschreiben, dann prüfen, ob die von H aussortierten Signale **wirklich** die
+schlechteren waren — auf unseren eigenen.
+
+### Was gebaut wurde
+
+| Stelle | was sie tut |
+|---|---|
+| `agent/vorfilter.py` | `bewerte()` · `saetze()` · `schreibe()` · `stand()` |
+| `rollen_lauf._ein_asset` | rechnet vor dem Mailbau, schreibt **nach** der `signal_id` |
+| `signal_mail.baue_mail(vorfilter=…)` | eigener Absatz unter **1. DER WERT** |
+| `vorfilter_schatten` (SQLite) | eine Zeile je Signal, mit den **Zutaten** |
+| `simuliere_kette.py` | `vorfilter_gesehen` — Lücke, wenn er in keiner Mail steht |
+| NB-Export | Abschnitt `vorfilter_schatten` |
+
+### Wo es in der Mail steht
+
+Unter **„1. DER WERT"**, als eigener Absatz — nicht zwischen den
+Marktmerkmalen, denn der Schatten sagt etwas über **unsere Auswahl**, nicht
+über den Wert:
+
+```
+Vorfilter H (Schattenmessung, sperrt nichts):
+   A Weg zum Ziel frei: NEIN - Marke bei 112,0000 EUR (3-mal berührt)
+                              liegt vor dem Ziel
+   B Stop gedeckt: ja - Marke bei 93,0000 EUR (4-mal berührt) liegt
+                        über dem Stop
+   trifft NICHT zu - auf 523 fremden Reihen waren solche Einstiege die
+   schlechtere Hälfte.
+⚠️ NUR MITGESCHRIEBEN, NICHT ANGEWENDET - der Befund steht auf fremden
+   Reihen und ist auf unseren 29 Symbolen noch nicht bestätigt. Diese
+   Zeilen sperren nichts.
+```
+
+⚠️ **A und B stehen einzeln da, nicht nur das Ergebnis.** Fällt H aus, will
+man wissen **woran** — sonst ist die Zeile eine Note ohne Begründung, der
+niemand widersprechen kann. Die genannten Preise und Berührungszahlen sind
+dieselben, die weiter oben als Marken stehen.
+
+### Drei Fälle, in denen H *kein* Urteil abgibt
+
+| Fall | Ausgabe | warum |
+|---|---|---|
+| **SHORT** | `h = None` | Kapitel 110: die Spiegelbedingung **spiegelt nicht**. Sie hilft im Bullenmarkt und schadet im Bär, genau wie H |
+| keine Marken / kein Stop / kein Ziel | `h = None` | „wissen wir nicht" ist nicht „geprüft und nein" |
+| **Aktien, Rohstoffe, ETF, Hedge** | H wird gerechnet, aber die Mail sagt **„auf … NIE GEMESSEN"** | die 523 Reihen sind Krypto |
+
+> ⚠️ **`None` ist nicht `False`.** Ein Merkmal, das man nicht kennt, darf nie
+> aussehen wie eines, das man geprüft hat.
+
+### ⚠️ Und ein Unterschied zur Messung bleibt — beabsichtigt
+
+Dort standen Stop und Ziel auf **fester** Geometrie (k · ATR, CRV 2,0), hier
+stehen die **echten** Werte des Signals. Das ist die Größe, die interessiert:
+ob H auf dem hilft, was wir tatsächlich handeln. Kapitel 117/118 stützen das —
+H braucht keine eigene Geometrie.
+
+**Deshalb werden die Zutaten mitgeschrieben, nicht nur das Urteil.** Wer H
+später anders schneiden will (drei Berührungen, anderer Abstand), rechnet es
+aus `zutaten_json` nach, ohne vier Wochen zu verlieren.
+
+### Der Nachweis
+
+**Vierzehn Dauerprüfungen**, davon zehn gegen **echte Daten**. Geprüft wird
+ausdrücklich auch, dass das Modul **keine** Entscheidung berührt:
+
+> Ein Schatten, der eine Entscheidung berührt, ist keiner — und es wäre
+> niemandem aufgefallen, weil weniger Signale genau so aussehen wie ein
+> ruhiger Markt.
+
+### Was V2 braucht
+
+Aufgelöste Signale mit `signal_id`. Der Export meldet deshalb
+`ohne_signal_id` — jede Zeile ohne sie ist für den Vergleich verloren.
+
+
+---
+
+## Der neutrale Grauton der Mail — zum zweiten Mal nachgedunkelt (22.08.2026)
+
+**Nutzerhinweis, wörtlich:** *„ich hatte bereits einmal gesagt dass das grau
+im eMail schwer zu lesen ist … das Grau erscheint etwas zu hell"*.
+
+| Farbe | Kontrast auf Weiß | |
+|---|---:|---|
+| `#666666` | 5,7:1 | bis 25.07. |
+| `#4a4a4a` | 8,9:1 | bis 22.08. |
+| **`#333333`** | **12,6:1** | **jetzt** |
+| `#1a1a1a` | 17,4:1 | der Fließtext der Mail |
+
+⚠️ **Dass es beim ersten Mal nicht reichte, lag nicht am Kontrastwert** —
+8,9:1 ist bereits AAA. Der Kontrastwert misst Farbe gegen Farbe, nicht
+Lesbarkeit bei kleiner, teils **kursiver** Schrift (`legend`).
+
+**Nicht weiter als bis 12,6:1**: bei `#2b2b2b` (14,2:1) verschwindet der
+Abstand zum Fließtext, und damit die Abstufung „nachrangig". Dann wäre die
+Farbe besser ganz aufzugeben als unkenntlich zu machen.
+
+Betroffen sind `risk_neutral`, `fazit_neutral`, `legend` und das
+Fazit-Label — **vier Stellen, alle in `ui/formatting.py`**; im Mailpfad gibt
+es keine weiteren Grautöne.
+
+**Die Dauerprüfung rechnet den Kontrast aus**, statt eine Farbprobe zu
+vergleichen: eine feste Zeichenkette würde jede spätere Umbenennung
+durchwinken. Sie verlangt **≥ 12:1** und zugleich, dass der Ton heller bleibt
+als der Fließtext.

@@ -2595,6 +2595,14 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             dimensionierung = {"nicht_verfuegbar": str(exc)}
             kapitel93 = {"nicht_verfuegbar": str(exc)}
+        # V1 (22.08.2026): waechst die Schattenmessung zum Vorfilter H?
+        # ⚠️ EIGENER try-Block, nicht an den obigen angehaengt - sonst
+        # reisst ein Fehler hier zwei fremde Abschnitte mit ins Leere.
+        try:
+            from agent import vorfilter as _VF
+            vorfilter_schatten = _VF.stand(conn)
+        except Exception as exc:  # noqa: BLE001
+            vorfilter_schatten = {"nicht_verfuegbar": str(exc)}
         try:
             externe_reihen = _externe_reihen(conn)
         except Exception as exc:  # noqa: BLE001
@@ -2934,7 +2942,8 @@ def main() -> None:
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
         "dimensionierung": dimensionierung,
-        "kapitel93": kapitel93,
+        "kapitel93": kapitel93,
+        "vorfilter_schatten": vorfilter_schatten,
             "externe_reihen": externe_reihen,
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,

@@ -19316,3 +19316,61 @@ Zwei eigene Pruefungen fielen dabei durch und wurden korrigiert: die
 Testdaten liefen im Datum um (i % 28, ab 29 Messungen ueberschrieben sie
 sich), und die Termin-Pruefung suchte ein Datum, das nur im KOMMENTAR steht -
 `_quelltext` entfernt Kommentare. Jetzt geprueft wird die Konstante.
+
+
+[2026-08-22] V1 GEBAUT: H ALS SCHATTEN - MARKIEREN, NICHT SPERREN
+
+WARUM NICHT GLEICH DER FILTER: H trifft auf 3,3 % der Ankertage zu - ueber 29
+Symbole rund EIN Symboltag pro Tag. Aus den 24 Eroeffnungen des 21.08. wuerde
+ungefaehr eine. Ein Schnitt dieser Groesse wird nicht auf einen Befund von
+FREMDEN Reihen gebaut; auf der echten Watchlist stimmt zwar der Punktschaetzer
+(+4,8), aber 27 Reihen tragen die Schwelle (+9,2) nicht.
+
+GEBAUT: agent/vorfilter.py (bewerte/saetze/schreibe/stand), Aufruf in
+rollen_lauf._ein_asset (Rechnung vor dem Mailbau, Schreiben NACH der
+signal_id), signal_mail.baue_mail(vorfilter=...), Tabelle vorfilter_schatten,
+Nachweis in simuliere_kette (vorfilter_gesehen), Abschnitt im NB-Export.
+
+IN DER MAIL unter "1. DER WERT" als eigener Absatz - nicht zwischen den
+Marktmerkmalen, denn der Schatten sagt etwas ueber UNSERE AUSWAHL, nicht ueber
+den Wert. A und B stehen EINZELN da, mit Preis und Beruehrungszahl: faellt H
+aus, will man wissen woran, sonst ist die Zeile eine Note ohne Begruendung.
+
+DREI FAELLE OHNE URTEIL, alle mit h=None statt False: SHORT (Kapitel 110 - die
+Spiegelbedingung spiegelt NICHT), fehlende Marken/Stop/Ziel, und ausserhalb
+von Krypto sagt die Mail ausdruecklich "auf ... NIE GEMESSEN" (die 523 Reihen
+sind Binance-USDT). Der Schatten laeuft trotzdem ueber alle Klassen - sonst
+haben wir in vier Wochen wieder nur Krypto-Daten.
+
+UNTERSCHIED ZUR MESSUNG, beabsichtigt: dort feste Geometrie (k x ATR, CRV
+2,0), hier die ECHTEN Werte des Signals - das ist die Groesse, die
+interessiert. Deshalb werden die ZUTATEN mitgeschrieben, nicht nur das
+Urteil: wer H spaeter anders schneidet, rechnet es nach statt vier Wochen zu
+verlieren.
+
+VIERZEHN DAUERPRUEFUNGEN, zehn davon gegen ECHTE Daten - darunter
+ausdruecklich, dass das Modul KEINE Entscheidung beruehrt. Ein Schatten, der
+eine Entscheidung beruehrt, ist keiner, und es waere niemandem aufgefallen:
+weniger Signale sehen genau so aus wie ein ruhiger Markt.
+
+NEBENBEFUND ZUR ASYMMETRIE (Nutzerfrage): _boeden, _marke_am_stop und
+_marke_im_weg spiegeln fuer SHORT alle drei sauber - nachgerechnet, gleiche
+Entfernung ergibt gleichen Abstand. ABER Kapitel 124 hat nur LONG gemessen,
+und seit dem 05.08. ist nur_long nur noch ein MAIL-Filter: SHORT-Signale
+werden weiterhin erzeugt und verfolgt. Die SHORT-Seite des Strukturbodens ist
+also gebaut, gespiegelt und ungemessen.
+
+[2026-08-22] DER GRAUTON DER MAIL, ZUM ZWEITEN MAL NACHGEDUNKELT
+
+Nutzerhinweis: "ich hatte bereits einmal gesagt dass das grau im eMail schwer
+zu lesen ist ... das Grau erscheint etwas zu hell". #4a4a4a -> #333333
+(8,9:1 -> 12,6:1 auf Weiss). DASS ES BEIM ERSTEN MAL NICHT REICHTE, LAG NICHT
+AM KONTRASTWERT - 8,9:1 ist bereits AAA. Der Kontrastwert misst Farbe gegen
+Farbe, nicht Lesbarkeit bei kleiner, teils KURSIVER Schrift.
+
+Nicht weiter als 12,6:1: bei #2b2b2b verschwindet der Abstand zum Fliesstext
+(#1a1a1a) und damit die Abstufung "nachrangig". Vier Stellen, alle in
+ui/formatting.py; im Mailpfad gibt es keine weiteren Grautoene.
+
+Die Dauerpruefung RECHNET den Kontrast aus statt eine Farbprobe zu
+vergleichen - eine feste Zeichenkette wuerde jede Umbenennung durchwinken.

@@ -375,7 +375,8 @@ def main() -> int:
     reihen = lade_reihen_aus_db(db)
     gesamt = {"gruppen": 0, "signale": 0, "mails": 0, "fehler": [],
               "luecken": [], "gruppen_gelaufen": [],
-              "lebendigkeit_gesehen": False,
+              "lebendigkeit_gesehen": False,
+              "vorfilter_gesehen": False,
               "gruppen_uebersprungen": []}
 
     for gruppe, instrument, symbole in AK.laeufe():
@@ -505,6 +506,11 @@ def main() -> int:
             # UEBERHAUPT ankommt.
             if gruppe == "krypto" and "Lebendigkeit des Projekts" in text:
                 gesamt["lebendigkeit_gesehen"] = True
+            # V1: der Vorfilter-Schatten gehoert in JEDE Mail - anders als
+            # die Lebendigkeit haengt er an keiner Fremdquelle. Steht er
+            # nicht da, ist die Schattenmessung stumm.
+            if "Vorfilter H" in text:
+                gesamt["vorfilter_gesehen"] = True
             if "Marktstruktur" not in text:
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
@@ -623,6 +629,10 @@ def main() -> int:
         gesamt["luecken"].append(
             "Lebendigkeit (93 C): in KEINER Kryptomail angekommen - "
             "gesammelt wurde, angezeigt nicht")
+    if not gesamt["vorfilter_gesehen"]:
+        gesamt["luecken"].append(
+            "Vorfilter H (V1): in KEINER Mail angekommen - die "
+            "Schattenmessung laeuft dann ins Leere")
     print("=" * 76)
     c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     for tabelle, spalte in (("signals", "quelle_kette"),

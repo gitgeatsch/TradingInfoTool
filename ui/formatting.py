@@ -354,6 +354,24 @@ def classify_detail_line(line: str) -> str | None:
 # 2026-07-25, Nutzer-Fund: der neutrale Grauton (risk_neutral/fazit_neutral/
 # legend) war mit #666666 in der echten Gmail-Darstellung teils schwer lesbar
 # - auf #4a4a4a nachgedunkelt (Kontrast zu Weiss steigt von ~5,7:1 auf ~8,4:1).
+#
+# ⚠️ 2026-08-22, DERSELBE NUTZER-FUND ZUM ZWEITEN MAL ("das Grau erscheint
+# etwas zu hell"). Weiter nachgedunkelt, Kontrast gegen Weiss:
+#
+#     666666    5,7:1   bis 25.07.
+#     4a4a4a    8,9:1   bis 22.08.
+#     333333   12,6:1   jetzt
+#     1a1a1a   17,4:1   der Fliesstext der Mail
+#
+# DASS ES BEIM ERSTEN MAL NICHT REICHTE, LAG NICHT AM KONTRASTWERT - 8,9:1
+# ist bereits AAA. Der Kontrastwert misst Farbe gegen Farbe, nicht Lesbarkeit
+# bei kleiner Schrift, und `legend` ist zusaetzlich KURSIV, was die Striche
+# duenner macht. Wer diesen Ton kuenftig aufhellen will, moege ihn vorher am
+# Geraet des Nutzers ansehen und nicht am Rechenwert.
+#
+# NOCH DUNKLER GEHT NICHT SINNVOLL: bei 2b2b2b (14,2:1) ist der Abstand zum
+# Fliesstext so klein, dass die Abstufung "nachrangig" verschwindet - dann
+# waere die Farbe besser ganz aufzugeben als sie unkenntlich zu machen.
 _HTML_STYLE_BY_TAG = {
     "section_header": "font-weight:bold;font-size:1.05em;color:#0056b3;",
     "sub_header": "font-weight:bold;color:#000000;",
@@ -368,23 +386,23 @@ _HTML_STYLE_BY_TAG = {
     "auffaellig": "font-weight:bold;color:#8a5a00;",
     "warning": "font-weight:bold;color:#c0392b;",
     "risk_positiv": "color:#1a7f37;",
-    "risk_neutral": "color:#4a4a4a;",
+    "risk_neutral": "color:#333333;",
     "risk_negativ": "color:#c0392b;",
     # 2026-07-26 (Nutzer-Wunsch "nur das Wort Fazit unterstreichen, nicht der
     # ganze Text"): Unterstreichung NICHT mehr hier - nur noch fett+farbig
     # fuer den Rest der Zeile, das Wort "Fazit:" selbst bekommt zusaetzlich
     # _FAZIT_LABEL_STYLE_BY_TAG (siehe render_detail_html()/_split_fazit_label()).
     "fazit_positiv": "font-weight:bold;color:#1a7f37;",
-    "fazit_neutral": "font-weight:bold;color:#4a4a4a;",
+    "fazit_neutral": "font-weight:bold;color:#333333;",
     "fazit_negativ": "font-weight:bold;color:#c0392b;",
-    "legend": "color:#4a4a4a;font-style:italic;",
+    "legend": "color:#333333;font-style:italic;",
 }
 
 # Nur fuer das "Fazit:"-Label-Praefix (siehe _split_fazit_label()) - dieselbe
 # Farbe wie der jeweilige Basis-Tag oben, zusaetzlich unterstrichen.
 _FAZIT_LABEL_STYLE_BY_TAG = {
     "fazit_positiv": "font-weight:bold;text-decoration:underline;color:#1a7f37;",
-    "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#4a4a4a;",
+    "fazit_neutral": "font-weight:bold;text-decoration:underline;color:#333333;",
     "fazit_negativ": "font-weight:bold;text-decoration:underline;color:#c0392b;",
 }
 

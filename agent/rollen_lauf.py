@@ -1360,9 +1360,25 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     if _anlaesse:
         _leben = _leben + ([""] if _leben else []) + _anlaesse
 
+    # V1 (22.08.2026): H ALS SCHATTEN. Rechnet aus denselben Marken, die
+    # in der Mail stehen, und aus dem ECHTEN Stop und Ziel dieses Signals.
+    # ⚠️ SPERRT NICHTS - das Ergebnis geht in die Mail und in die Datenbank,
+    # in keine Entscheidung. Faellt es aus, fehlt eine Zeile, nie ein Signal.
+    try:
+        from agent import vorfilter as _VF
+        _vf_bewertung = _VF.bewerte(
+            _bloecke.get("_marken_werte"),
+            rechnung.get("stop_eur"), rechnung.get("ziel_eur"),
+            bool(rechnung.get("ist_short")), assetklasse)
+        _vf_zeilen = _VF.saetze(_vf_bewertung)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Vorfilter-Schatten fuer %s uebersprungen", symbol)
+        _vf_bewertung, _vf_zeilen = None, []
+
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(
             lebendigkeit=_leben or None,
+            vorfilter=_vf_zeilen or None,
             # DER BESTAND GANZ OBEN - Nutzervorgabe 12.08.: "Das fuer mich
             # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
             bestand=(_bloecke.get("bestand") or [None])[0],
@@ -1521,6 +1537,18 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
     signal_id = SA.schreibe_signal(conn, felder, symbol=symbol)
     eintrag["signal_id"] = signal_id
+    # ⚠️ ERST HIER, WEIL ERST HIER DIE `signal_id` FESTSTEHT. Ohne sie
+    # laesst sich die Zeile spaeter nicht mit dem Ausgang verbinden - und
+    # genau das ist der ganze Zweck der Schattenmessung.
+    if _vf_bewertung:
+        try:
+            from agent import vorfilter as _VF2
+            _VF2.schreibe(conn, symbol=symbol, bewertung=_vf_bewertung,
+                          signal_id=signal_id, assetklasse=assetklasse,
+                          instrument=instrument)
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Vorfilter-Schatten fuer %s nicht geschrieben",
+                             symbol)
     ergebnis["signale"].append({"symbol": symbol, "id": signal_id,
                                 "felder": felder})
 

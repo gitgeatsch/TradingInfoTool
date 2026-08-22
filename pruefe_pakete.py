@@ -8981,6 +8981,39 @@ def paket_dimension() -> None:
            "brauchen zwei Behandlungen, sonst heisst fett bald nichts mehr")
     pruefe(P, "und die Handelsparameter bleiben schwarz",
            "#000000" in _F3.render_detail_html("Stop            3,60 EUR"))
+
+    # ---- DAS GRAU DARF NICHT WIEDER AUFHELLEN (22.08.2026) --------------
+    # ⚠️ ZWEIMAL DERSELBE NUTZER-FUND: 25.07. "#666666 schwer lesbar", 22.08.
+    # "das Grau erscheint etwas zu hell" (#4a4a4a). Beim ersten Mal wurde auf
+    # einen Wert nachgedunkelt, der rechnerisch bereits AAA war - der
+    # Kontrastwert misst Farbe gegen Farbe, nicht Lesbarkeit bei kleiner,
+    # teils KURSIVER Schrift.
+    #
+    # Geprueft wird deshalb der GERECHNETE Kontrast, nicht die Zeichenkette:
+    # eine feste Farbprobe wuerde jede spaetere Umbenennung durchwinken.
+    def _leuchtkraft(farbe: str) -> float:
+        v = [int(farbe[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        v = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+             for c in v]
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
+
+    def _kontrast(farbe: str) -> float:
+        a, b = _leuchtkraft(farbe), _leuchtkraft("#ffffff")
+        return (max(a, b) + 0.05) / (min(a, b) + 0.05)
+
+    _grau = re.findall(r"color:(#[0-9a-fA-F]{6});",
+                       " ".join(_F3._HTML_STYLE_BY_TAG[t]
+                                for t in ("risk_neutral", "fazit_neutral",
+                                          "legend")))
+    _schwaechster = min((_kontrast(g) for g in _grau), default=0.0)
+    pruefe(P, "der neutrale Grauton der Mail traegt mindestens 12:1",
+           _schwaechster >= 12.0,
+           f"gemessen {_schwaechster:.1f}:1 auf Weiss ({', '.join(sorted(set(_grau)))}) "
+           f"- 8,9:1 war rechnerisch AAA und dem Nutzer trotzdem zu hell")
+    pruefe(P, "und bleibt heller als der Fliesstext",
+           _schwaechster < _kontrast("#1a1a1a"),
+           "sonst verschwindet die Abstufung 'nachrangig', und dann waere "
+           "die Farbe besser ganz aufzugeben als unkenntlich zu machen")
     pruefe(P, "gezaehlt wird ueber EINE Funktion",
            len(_SM3.auffaellige([_A, _G, "Stop 1"])) == 1,
            "die Schwelle stammt aus marktlage._einordnung und wird nicht "
@@ -10788,6 +10821,97 @@ def paket_dimension() -> None:
     pruefe(P, "und die Zeilen sagen ausdruecklich, dass sie nichts sperren",
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
+
+    # ---- V1: H ALS SCHATTEN - MARKIEREN, NICHT SPERREN (22.08.2026) ----
+    # ⚠️ DIE GEFAHR DIESER STUFE IST NICHT, DASS SIE FALSCH RECHNET, sondern
+    # dass sie IRGENDWANN DOCH SPERRT. Ein Schatten, der eine Entscheidung
+    # beruehrt, ist kein Schatten mehr - und es waere niemandem aufgefallen,
+    # weil weniger Signale genau so aussehen wie ein ruhiger Markt.
+    from agent import vorfilter as _VF
+
+    def _mw(oben, unten):
+        return {"oben": [{"preis_eur": p, "beruehrungen": b}
+                         for p, b in oben],
+                "unten": [{"preis_eur": p, "beruehrungen": b}
+                          for p, b in unten]}
+
+    _h_ja = _VF.bewerte(_mw([(135.0, 3)], [(93.0, 4)]), 90.0, 120.0,
+                        False, "krypto")
+    _h_a = _VF.bewerte(_mw([(112.0, 3)], [(93.0, 4)]), 90.0, 120.0,
+                       False, "krypto")
+    _h_b = _VF.bewerte(_mw([(135.0, 3)], [(85.0, 4)]), 90.0, 120.0,
+                       False, "krypto")
+    _h_1x = _VF.bewerte(_mw([(112.0, 1)], [(93.0, 1)]), 90.0, 120.0,
+                        False, "krypto")
+    _h_short = _VF.bewerte(_mw([(135.0, 3)], [(93.0, 4)]), 90.0, 120.0,
+                           True, "krypto")
+    _h_aktie = _VF.bewerte(_mw([(135.0, 3)], [(93.0, 4)]), 90.0, 120.0,
+                           False, "aktien")
+
+    pruefe(P, "H trifft zu, wenn der Weg frei UND der Stop gedeckt ist",
+           _h_ja["h"] is True and _h_ja["frei"] and _h_ja["gedeckt"])
+    pruefe(P, "eine Marke VOR dem Ziel nimmt A",
+           _h_a["h"] is False and _h_a["frei"] is False
+           and _h_a["widerstand_eur"] == 112.0,
+           "und sie wird BENANNT - eine Note ohne Begruendung kann niemand "
+           "widerlegen")
+    pruefe(P, "keine Marke ueber dem Stop nimmt B",
+           _h_b["h"] is False and _h_b["gedeckt"] is False)
+    pruefe(P, "einmal beruehrt ist keine Marke",
+           _h_1x["frei"] is True and _h_1x["gedeckt"] is False,
+           f"MIN_BERUEHRUNGEN = {_VF.MIN_BERUEHRUNGEN}, dieselbe Zahl wie in "
+           f"`messe_marken` - ein einzelner Wendepunkt ist keine Marke")
+
+    # ⚠️ UNBEKANNT DARF NIE WIE GEPRUEFT AUSSEHEN.
+    pruefe(P, "SHORT liefert None, nicht False",
+           _h_short["h"] is None and "110" in _h_short["grund"],
+           "Kapitel 110 hat die Spiegelbedingung gemessen: sie spiegelt "
+           "NICHT. 'False' hiesse geprueft und nein - hier gilt unbelegt")
+    pruefe(P, "ohne Marken, Stop oder Ziel ebenfalls None",
+           _VF.bewerte(None, 90.0, 120.0)["h"] is None
+           and _VF.bewerte(_mw([], []), None, 120.0)["h"] is None)
+
+    # ⚠️ UND AUSSERHALB VON KRYPTO IST DAS KEINE SCHWAECHERE AUSSAGE,
+    # SONDERN GAR KEINE - die 523 Reihen sind Binance-USDT.
+    pruefe(P, "auf anderen Anlageklassen sagt die Mail, dass nie gemessen wurde",
+           _h_aktie["in_gemessener_klasse"] is False
+           and any("NIE" in z and "GEMESSEN" in z
+                   for z in _VF.saetze(_h_aktie))
+           and _h_ja["in_gemessener_klasse"] is True,
+           "der Schatten laeuft trotzdem ueber alle Klassen - sonst haben "
+           "wir in vier Wochen wieder nur Krypto-Daten")
+
+    # ⚠️ DER SCHATTEN MUSS SICHTBAR UND STUMM ZUGLEICH SEIN.
+    _vfq = _quelltext("agent/vorfilter.py")
+    _vfroh = io.open("agent/vorfilter.py", encoding="utf-8").read()
+    pruefe(P, "jede Zeile sagt selbst, dass sie nichts sperrt",
+           all("sperrt nichts" in z or "NICHT ANGEWENDET" in z
+               or "NIE\nGEMESSEN" in z or "NIE " in z or z.startswith("   ")
+               for z in _VF.saetze(_h_ja)[:1])
+           and "sperrt nichts" in _VF.saetze(_h_ja)[0])
+    pruefe(P, "und das Modul trifft keine Entscheidung",
+           "return" in _vfq and "aktion" not in _vfq
+           and "veto" not in _vfq.lower(),
+           "ein Schatten, der eine Entscheidung beruehrt, ist keiner - und "
+           "weniger Signale sehen genau so aus wie ein ruhiger Markt")
+    pruefe(P, "der Schatten haengt an der signal_id",
+           # ⚠️ Der Indexname entsteht per f-String (`idx_{_TABELLE}_signal`)
+           # und steht nirgends am Stueck im Quelltext - deshalb auf die
+           # Bestandteile pruefen, nicht auf den fertigen Namen.
+           "signal_id" in _vfq and "CREATE INDEX IF NOT EXISTS idx_" in _vfq
+           and "ON {_TABELLE}(signal_id)" in _vfq,
+           "ohne sie laesst sich die Zeile nie mit dem Ausgang verbinden - "
+           "und genau das ist der ganze Zweck")
+
+    # ⚠️ UND ER MUSS IN DER MAIL ANKOMMEN (die Regel vom 17.08.: gebaut ist,
+    # was `simuliere_kette` in der FERTIGEN Mail nachweist).
+    pruefe(P, "die Kette weist den Schatten in der fertigen Mail nach",
+           '"vorfilter_gesehen"' in _quelltext("simuliere_kette.py")
+           and "Vorfilter H" in io.open("simuliere_kette.py",
+                                        encoding="utf-8").read())
+    pruefe(P, "und der NB-Export meldet seinen Stand",
+           '"vorfilter_schatten"' in _nb and "def stand" in _vfq,
+           "Rolle G galt drei Tage als fertig und war nie gelaufen")
 
     # ---- DIE TENDENZ SCHON SEHEN, ABER NICHT ALS URTEIL (22.08.2026) ----
     # ⚠️ Nutzervorgabe: "fuer mich als Info waere hilfreich die Tendenz
