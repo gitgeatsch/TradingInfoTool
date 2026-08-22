@@ -271,3 +271,207 @@ der 176 eingestellten Paare. H trägt dort **stärker**, nicht schwächer.
 ⚠️ **124 hat auch ein Werkzeugproblem freigelegt:** bei 631.755 Ankern ist
 fast jeder Effekt statistisch von null verschieden. Ein Urteil braucht
 **Relevanz vor Vertrauensintervall** (Methodik 2.56).
+
+
+---
+
+# 7. Die Selektionsebene — was es gibt, was davon gemessen ist
+
+**Angelegt am 22.08.2026 auf Nutzerfrage:** *„habe jetzt keinen Überblick mehr
+zu dem Trichter Thema und welche Parameter im Bereich der Qualität und
+Selektion vorhanden sind … mir fehlt der gesamte Plan bzw. das Bild dazu."*
+
+⚠️ **Alles hier ist an der Quelle nachgesehen, nicht aus Plänen abgeschrieben.**
+Zwei Einträge dieser Woche standen elf bzw. drei Tage zu Unrecht als offen.
+
+## 7.1 Was heute wirklich sperrt — und es sind wenige
+
+| Stufe | prüft | sperrt? | je gegen Zufall gemessen? |
+|---|---|---|---|
+| `anlass.sperrt()` | **ist das dieselbe Frage?** Fingerabdruck des Prompttexts, 24 h | **ja**, `anlass.aktiv: true` | ⚠️ **braucht keine Prognose** — „das haben wir schon gefragt" ist keine Qualitätsaussage |
+| `asset_schalter.ist_handelbar()` | Bitpanda-Listing | **ja** | entfällt — Rahmenbedingung |
+| `mail_richtung_erlaubt()` | `nur_long` | **nur den Versand** (seit 05.08.) | entfällt |
+| `mindestkriterien.melde()` | hat die Rolle genug Grundlage? | **nein** — `sperren: []` | nein |
+| CRV-Abstufung, Mindestgröße, Cooldowns | Geometrie und Takt | teils | **nein** |
+
+> ⚠️ **Kein einziger dieser Regler ist je gegen den Zufall gemessen worden.**
+> Der einzige gemessene Kandidat ist **H** — und der läuft seit dem 22.08. als
+> Schatten, der nichts sperrt.
+
+**Das ist kein Versäumnis, sondern die Vorgabe:** *„AUFGEMACHT um besser zu
+werden — nicht einschränken, damit es weniger wird."* `anlass` ist bewusst so
+gebaut, dass es **keine Prognose** braucht.
+
+## 7.2 Was beschreibt, aber nichts sperrt — die vier Merkmale plus H
+
+| # | Merkmal | Aussage | Stand |
+|---|---|---|---|
+| 93 A | **Trichter** | wie weit kann sich der Kurs bewegen | läuft |
+| 93 B | **Rangplatz** | wo steht der Wert im Feld | läuft, **nur Krypto** |
+| 93 C | **Lebendigkeit** | wächst die Nutzung des Projekts | sammelt, ab **18.09.** |
+| 93 D | **Termine** | was steht an | läuft |
+| 93 E | **Gesamtbild** | zählt die vier — *„1 dafür, 1 dagegen, 2 nicht bewertbar"* | läuft |
+| V1 | **Vorfilter H** | Weg frei und Stop gedeckt | **Schatten seit 22.08.** |
+
+⚠️ **„Noch nicht bewertbar" ist die häufigste Antwort, und das ist ehrlich.**
+Wer daraus eine Note baute, bekäme eine Zahl, die Sicherheit vortäuscht.
+
+## 7.3 Der Trichter — genau
+
+**Eine Formel, keine Prognose:**
+
+    Weite = Faktor × ATR × √Horizont
+
+| Klasse | Faktor (80 %) | Grundlage |
+|---|---:|---|
+| **krypto** | **0,79** | 34 Reihen, 23.343 Anker |
+| aktien | 0,91 | ⚠️ **2 Reihen**, 3.875 Anker |
+| etf | 1,18 | ⚠️ 4 Reihen, 8.877 Anker |
+| *Rückfall* | 0,90 | 40 Reihen, 36.095 Anker |
+
+**Beispiel Krypto, Kurs 100 EUR, ATR 4:**
+
+| Horizont | Spanne (80 %) | |
+|---:|---|---:|
+| 5 Tage | 92,9 – 107,1 EUR | ±7,1 % |
+| 20 Tage | 85,9 – 114,1 EUR | ±14,1 % |
+| 60 Tage | 75,5 – 124,5 EUR | ±24,5 % |
+
+**Wozu er dient — die halbe Entscheidung:**
+liegt der **Stop** innerhalb der üblichen Bewegung (dann wird er vom bloßen
+Rauschen getroffen)? Ist das **Ziel** im gewählten Zeitraum überhaupt
+erreichbar?
+
+⚠️ **Er sagt die GRÖSSE, nie die RICHTUNG.** Volatilität clustert und ist
+autokorreliert, Renditen sind es nicht — einer der robustesten Befunde der
+Finanzökonometrie. Deshalb ein Trichter und keine Kurve.
+
+⚠️ **Und die Faktoren sind gemessen, nicht aus dem Lehrbuch.** „1 ATR = 68 %"
+gilt hier **nicht**: ATR misst die Tagesspanne, der Trichter die Änderung von
+Schluss zu Schluss. Es gibt auch **keinen Faktor für alle Klassen** — die
+erste Fassung hatte einen (0,98), und er passte auf keine einzige.
+
+⚠️ **Er wirft, statt zu raten.** Ohne Kurs oder ATR gibt es keine Spanne —
+eine erfundene Spanne wäre schlimmer als keine, weil Stop und Größe daran
+hängen.
+
+## 7.4 Die Reihung — und was du anders in Erinnerung hast
+
+**Du hast recht, dass es sie gibt, und recht, dass sie Assets untereinander
+vergleicht.** Sie rangiert **innerhalb derselben Anlageklasse** über 250
+Handelstage:
+
+> *Platz 7 von 41 Kryptowerten, im besten Fünftel (+34,2 % in diesem
+> Zeitraum).*
+
+⚠️ **Aber sie sagt NICHT, wer das beste Potenzial hat — und das ist gemessen,
+nicht vermutet:**
+
+| Rückblick / Horizont | Abstand bestes zu schlechtestem Fünftel | t | Schwelle |
+|---|---:|---:|---:|
+| 250 / **5 Tage** | **+1,01 %** | **3,20** | 3,11 |
+| 250 / 20 Tage | +3,85 % | 2,54 | — |
+| 250 / 60 Tage | +10,10 % | 1,58 | — |
+
+**Genau ein Feld von 27 hält die Schwelle** — ausgerechnet das kürzeste. Und
++1,01 % Abstand heißt rund **+0,5 % für das beste Fünftel gegenüber dem
+Markt**, bei **3 % Handelskosten**.
+
+> **Der Vorteil ist gemessen und gleichzeitig zu klein, um ihn zu bezahlen.**
+> Deshalb steht in der Mail ein Rangplatz und keine Empfehlung — mit genau
+> diesem Satz daneben.
+
+**Drei Einschränkungen gehören dazu:** ohne den letzten Monat im Rückblick
+fällt t von 3,20 auf 1,68 · der Effekt lebt in der **auswahlverzerrten**
+nachgeladenen Zeit · beide Hälften der Symbolliste zeigen dasselbe Vorzeichen,
+keine ist für sich signifikant.
+
+⚠️ **Und er läuft nur für Krypto.** `drift.saetze()` gibt für alle anderen
+Klassen eine leere Liste zurück.
+
+## 7.5 Marktphasen — wir schalten bewusst NICHTS um
+
+**Nachgesehen: kein einziger Parameter wird nach Marktphase umgeschaltet.**
+Weder in `rollen_lauf`, noch in `entscheidungsrechnung`, `mindestkriterien`
+oder `betraege`.
+
+**Das ist Absicht, und der Grund ist teuer bezahlt.** Ein binäres Etikett
+(„Bär"/„Bulle", „über/unter der 200-Tage-Linie") verleitet zur Binärlesung —
+und genau ein solches Etikett hat den Deadloop gebaut. `_struktur()` nannte
+eine Lage „intakter Abwärtstrend", während die Jahreszahl daneben stieg.
+
+**Stattdessen beschreibt das Lagebild die Phase in ZAHLEN:**
+
+| | Quelle |
+|---|---|
+| eigene Rendite über 12 Monate **und** über 60 Handelstage | Moskowitz/Ooi/Pedersen, *Time Series Momentum*, JFE 2012 |
+| Lage zwischen Jahrestief und Jahreshoch, **beide Ränder** | George/Hwang, *The 52-Week High*, JF 2004 |
+
+Laufen die beiden Trendzahlen auseinander, ist das eine Korrektur — der Leser
+sieht das, statt ein Etikett zu bekommen.
+
+**Und die Messseite sagt dasselbe:**
+
+| Befund | Kapitel |
+|---|---|
+| **H überträgt sich NICHT über einen Regimewechsel** | 109 |
+| Die Marktphase wirkt **nicht invers** — 6 von 6 Punktschätzern dagegen | 114 |
+| Die Spiegelbedingung H' **spiegelt nicht** — hilft im Bullen, schadet im Bär, wie H | 110 |
+| ⚠️ **Das Regime war im gesamten Messzeitraum „bär"** | Memory |
+
+> ⚠️ **Daraus folgt eine Regel, keine Lücke:** „Modell oder Markt?" ist mit
+> unseren Daten **unbeantwortbar**, weil es nie eine zweite Phase gab. Die
+> Marktphase taugt höchstens als **Schichtung** einer Messung, nie als
+> Schalter für einen Parameter.
+
+## 7.6 Die Anlageklassen — der ehrliche Stand
+
+| | Trichter | Rangplatz | Lebendigkeit | Rolle G | **H gemessen** |
+|---|---|---|---|---|---|
+| **krypto** | eigener Faktor (34 Reihen) | ✔ | ✔ | **2 Quellen** | **✔ 523 Reihen** |
+| aktien | eigener Faktor ⚠️ **2 Reihen** | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+| etf | eigener Faktor ⚠️ 4 Reihen | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+| rohstoffe | *Rückfall* | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+| hedge | *Rückfall* | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+
+**Zwei verschiedene Ursachen, und nur eine ist lösbar:**
+
+**(1) Das Universum ist zu klein** — 2 Aktien, 4 Rohstoffe, 5 Themen-ETF,
+2 Hedge. Externer Standard sind 30 aufgelöste Fälle als Untergrenze, 100+ für
+Belastbarkeit. **Bei dieser Größe entsteht in keiner Nicht-Krypto-Klasse je
+eine auswertbare Stichprobe** — unabhängig davon, wie gut der Code wird. Das
+steht als **C1** im Zwischenstand: *Nutzerentscheidung, Code kann das nicht
+lösen.*
+
+**(2) Rolle G ist für vier Klassen nicht verdrahtet** — und das **ist**
+lösbar: die Clients liegen **fertig** in `api/` (`finra`, `sec_edgar`,
+`cftc_cot`) und sind nicht angeschlossen. Deshalb steht dort 0 von 2 Quellen,
+und deshalb bleibt `sperren: []` leer — ein scharfes Kriterium hätte Rolle G
+für diese Klassen sofort stillgelegt.
+
+⚠️ **Der Vorfilter-Schatten läuft ab dem 22.08. über ALLE Klassen** — mit dem
+Vermerk „auf dieser Klasse nie gemessen". Sonst hätten wir in vier Wochen
+wieder nur Krypto-Daten.
+
+## 7.7 Das Bild in einem Satz
+
+> **Es gibt genau eine gemessene Selektionsgröße (H, nur Krypto), vier
+> beschreibende Merkmale ohne Sperrwirkung, und keinen einzigen betrieblichen
+> Regler, der je gegen den Zufall geprüft wurde. Die Marktphase schaltet
+> nichts, weil sie es nach allem Gemessenen nicht darf.**
+
+## 7.8 Was daraus als Reihenfolge folgt
+
+| | Schritt | Voraussetzung | frühestens |
+|---|---|---|---|
+| **1** | **V1 läuft** — H im Schatten, alle Klassen | — | **läuft** |
+| **2** | **V2**: waren die von H aussortierten Signale die schlechteren? | ~4 Wochen aufgelöste Signale | **~20.09.** |
+| **3** | **93 C auswerten** (TVL) | 30 Messungen | **18.09.** |
+| 4 | **Rolle G für Aktien/Rohstoffe/ETF verdrahten** | die drei Clients anschließen | jederzeit |
+| 5 | Strukturboden auch für **SHORT** messen | Erweiterung von `pruefe_strukturstop.py` | jederzeit |
+| 6 | **93 C** (Entwickler) | 12 Wochenmessungen | **09.11.** |
+| 7 | **Nachrichten** (C3) — die einzige nie erprobte Informationskategorie | Konzept | offen |
+
+⚠️ **Schritt 4 ändert die Datenlage, nicht das Universum.** Er macht Rolle G
+für die anderen Klassen überhaupt erst urteilsfähig — die Stichprobengröße
+(C1) bleibt davon unberührt.

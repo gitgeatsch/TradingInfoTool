@@ -10822,6 +10822,49 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- DIE BEFUNDKARTE MUSS ZUM CODE PASSEN (22.08.2026) --------------
+    # ⚠️ ANLASS: Abschnitt 7 der Befundkarte ("Die Selektionsebene") nennt
+    # Faktoren, Schwellen und Messwerte im Klartext. Ein Uebersichtsdokument
+    # mit veralteten Zahlen ist schlimmer als keines - der Leser glaubt ihm.
+    # Diese Pruefungen binden die Zahlen an ihre Quelle im Code.
+    from agent import drift as _DR2
+    from agent import trichter as _TR2
+
+    _bk = io.open("Basisinfos/Befundkarte.md", encoding="utf-8").read()
+    pruefe(P, "die Befundkarte kennt die Selektionsebene",
+           "7. Die Selektionsebene" in _bk)
+    for _kl, _wert in (("krypto", 0.79), ("aktien", 0.91), ("etf", 1.18)):
+        pruefe(P, f"Trichterfaktor {_kl} steht im Code wie in der Karte",
+               abs(_TR2.FAKTOR_JE_KLASSE[_kl][0.80] - _wert) < 1e-9
+               and f"| **{_wert:.2f}** |".replace(".", ",") in _bk
+               or f"| {_wert:.2f} |".replace(".", ",") in _bk,
+               f"Code sagt {_TR2.FAKTOR_JE_KLASSE[_kl][0.80]}")
+    pruefe(P, "rohstoffe und hedge haben KEINEN eigenen Trichterfaktor",
+           _TR2.faktoren("rohstoffe")[1] is None
+           and _TR2.faktoren("hedge")[1] is None,
+           "die Karte fuehrt sie als Rueckfall - waere einer hinzugekommen, "
+           "waere die Zeile still falsch")
+    pruefe(P, "der Rangplatz-Messwert steht im Code wie in der Karte",
+           abs(_DR2.GEMESSEN["abstand_5t"] - 0.0101) < 1e-9
+           and _DR2.GEMESSEN["felder"] == 27
+           and "+1,01 %" in _bk and "27" in _bk)
+    pruefe(P, "der Rangplatz gilt NUR fuer Krypto",
+           _DR2.saetze({}, "AAPL", "aktien") == []
+           and _DR2.saetze({}, "GOLD", "rohstoffe") == [],
+           "die Karte sagt das - eine spaetere Ausweitung ohne Nachtrag "
+           "waere ein stiller Widerspruch")
+
+    # ⚠️ DIE AUSSAGE, DIE AM LEICHTESTEN UNBEMERKT KIPPT.
+    _umschalter = [f for f in ("agent/rollen_lauf.py",
+                               "agent/entscheidungsrechnung.py",
+                               "agent/mindestkriterien.py",
+                               "agent/betraege.py")
+                   if re.search(r"\bregime\b", _quelltext(f))]
+    pruefe(P, "kein Parameter wird nach Marktphase umgeschaltet",
+           not _umschalter,
+           f"gefunden in {_umschalter} - die Karte sagt das Gegenteil, und "
+           f"ein binaeres Phasenetikett hat den Deadloop gebaut")
+
     # ---- V1: H ALS SCHATTEN - MARKIEREN, NICHT SPERREN (22.08.2026) ----
     # ⚠️ DIE GEFAHR DIESER STUFE IST NICHT, DASS SIE FALSCH RECHNET, sondern
     # dass sie IRGENDWANN DOCH SPERRT. Ein Schatten, der eine Entscheidung
