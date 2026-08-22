@@ -20038,3 +20038,74 @@ Deckel - nicht optional). ⚠️ Der Hebelanteil aendert sich durch S6b NICHT; w
 sich aendert, sind die Modellaufrufe fuer Krypto - sie halbieren sich.
 
 Suite 1506, Rollen-Gegenpruefung 25, finde_freie_namen 0.
+
+
+[2026-08-22] KAPITEL 135: S6c - DAS NEUE WORT WAR DA, GELESEN HAT ES NIEMAND
+
+S6c sollte eine Abbildung alter Namen werden. Es wurden zwei Funde, und der
+zweite ist durch meinen eigenen Umbau entstanden.
+
+ERST DIE ABGRENZUNG. Drei Fragen an den Code statt an den Plan: nur
+REDUZIEREN erreicht die Spalte woertlich (NICHTS_TUN wird zu HALTEN);
+risk_gate laeuft in der neuen Kette NICHT; die neue Kette schreibt nie nach
+hebel_signals. Damit fielen von 48 Rohtreffern 42 weg. Ein Zaehlstand ist
+keine Befundmenge.
+
+FUND 1: REDUZIEREN WURDE NIE AUFGELOEST. `_TRACKABLE_ACTIONS` kannte das Wort
+nicht, und check_signal_outcome() steigt in der ersten Zeile aus. Belegt in
+drei Quellen: Code; Export 21.08. (spot_h7_mit_halten zaehlt REDUZIEREN 8x,
+ohne_halten gar nicht); DB-Kopie 19.08. (57 REDUZIEREN, alle aus der
+Rollen-Kette, 55 auf nicht_anwendbar).
+
+⚠️ KORREKTUR MEINER EIGENEN AUSSAGE: die Ergaenzung wirkt rueckwirkend nur auf
+die 10 Zeilen MIT Zonen, nicht auf 57. Die uebrigen 47 bleiben zu Recht
+nicht_anwendbar - _zonen_schwelle() liefert None und die Funktion steigt
+sauber aus. Nebenbefund: REDUZIEREN traegt nur zu 18 % Zonen, KAUFEN zu
+100 %, VERKAUFEN zu 53 %. Eigener offener Punkt, gehoert zu O-29.
+
+Fuenf weitere Stellen kannten REDUZIEREN nicht: Ueberholt-Erkennung,
+Instabilitaetswaechter, Wiederholungserkennung, Bitpanda-Abgleich, Vorzeichen
+im Bestandsdialog. EINE wurde bewusst NICHT geaendert: verkaufsrechnung laesst
+REDUZIEREN in den else-Zweig fallen und gibt ihm TEIL_ANTEIL - genau richtig,
+es IST der Teilverkauf. Dort steht jetzt ein Vermerk.
+
+⚠️ FUND 2: DIE RICHTUNGSPFLICHT WAR SEIT S6b TOT. Die Bedingung lautete
+`instrument == "hebel" and aktion in HEBEL_MIT_EINSTIEG`; S6b laesst Krypto
+nur noch mit instrument="spot" laufen, also war sie nie wieder wahr. Ich habe
+das beim Bauen von S6a und S6b nicht gesehen - gefunden hat es erst die
+Gegenpruefung von S6c. Vorher: spot/KAUFEN ohne Richtung ANGENOMMEN,
+spot/REDUZIEREN mit richtung=LONG GESPEICHERT. Beides waere still teuer
+geworden - ein KAUFEN ohne Richtung faellt auf richtung_aus_action() zurueck
+und liest LONG (bei gemeintem SHORT sind Stop und Ziel vertauscht), und bei
+REDUZIEREN beschreibt das Feld die BESTEHENDE Position, nicht die Zonen.
+
+MACHBARKEIT VORAB GEPRUEFT: alte Hebelkette, wo die Pflicht galt - 315 LONG,
+100 SHORT, NULL ohne Richtung. Spot-Kette, wo sie nicht galt - 41 ohne. Das
+Modell liefert sie, wenn sie verlangt wird, und der Prompt verlangt sie seit
+S6a fuer beide. Ein Ausfall waere nicht still: EmpfehlungUngueltig landet in
+ergebnis["fehler"] und in verloren_je_stufe.
+
+HEBEL_MIT_EINSTIEG heisst jetzt BRAUCHT_RICHTUNG (alter Name als Verweis) -
+er behauptete etwas, das seit S6a nicht mehr stimmt, und stand genau in der
+Bedingung, die den Fehler verdeckt hat.
+
+DIE SIMULATION HAT DEN NACHWEIS DURCH SCHEITERN GEFUEHRT: nach der Reparatur
+0 Signale, 6 Fehler, alle "ohne Richtung". Kein Fehlalarm - die Attrappe trug
+DIESELBE Instrument-Abfrage wie der Vertrag, und sie hat vorgefuehrt, was
+passiert, wenn das Modell die Richtung nicht nennt. Nach dem Nachziehen:
+6 Signale, 7 Mails, 0 Fehler, 0 Luecken.
+
+WAECHTER: pruefe_aktionsvokabular.py geht ueber den Syntaxbaum aller
+Betriebsdateien. Jede Ausnahme traegt einen GRUND, keinen Haken - die Suite
+prueft, dass der Grund da ist. Positivkontrolle bestanden.
+
+SIEBEN TESTVORLAGEN standen auf dem alten Stand und wurden nachgezogen; ihr
+Gegenstand war nie die Richtung. EINE wurde nicht angefasst: "KAUFEN OHNE
+Richtung wird abgewiesen" stand bereits richtig da - nur fuer
+instrument="hebel". Eine richtige Pruefung am falschen Fall.
+
+OFFEN: S6d (fuenf verwaiste Deckel, nicht optional); warum traegt die
+Verkaufsseite so selten Zonen; ⚠️ REDUZIEREN auf einer SHORT-Position waere
+bullisch - mit der SHORT-Verdrahtung nachzuziehen.
+
+Suite 1520, Rollen-Gegenpruefung 25, Vokabular 16, freie Namen 0.

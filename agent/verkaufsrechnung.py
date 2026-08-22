@@ -162,6 +162,9 @@ def rechne(*, aktion: str, menge: float, kurs_eur: float,
         return None
 
     a = str(aktion or "").strip().upper()
+    # ⚠️ S6c HAT HIER BEWUSST NICHTS GEAENDERT. REDUZIEREN faellt in den
+    # `else`-Zweig und bekommt TEIL_ANTEIL - genau richtig, es IST der
+    # Teilverkauf. Eine Ergaenzung in der oberen Liste waere ein Fehler.
     anteil = 1.0 if a in ("VERKAUFEN", "SCHLIESSEN") else TEIL_ANTEIL
     verkaufsmenge = frei * anteil
     gegenwert = verkaufsmenge * float(kurs_eur)

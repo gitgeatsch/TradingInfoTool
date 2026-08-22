@@ -96,7 +96,16 @@ AKTION_AUS_HEBEL = {"ERÖFFNEN": "KAUFEN", "TEILVERKAUF": "REDUZIEREN",
 
 # Nur diese eroeffnen oder vergroessern eine Position - nur sie brauchen eine
 # Richtung und eine Einstiegsrechnung.
-HEBEL_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN")
+# Welche Aktionen eine Richtung BRAUCHEN. Nur die beiden Einstiege: dort
+# entscheidet LONG oder SHORT, wo Stop und Ziel liegen.
+#
+# ⚠️ UMBENANNT (S6c, 22.08.2026). Der alte Name `HEBEL_MIT_EINSTIEG` stammt
+# aus der Zeit, als nur der Hebel eine Richtung kannte. Seit S6a fragt die
+# Kette sie fuer BEIDE Instrumente - der Name behauptete etwas, das nicht
+# mehr stimmt, und genau dieser Name stand in der Bedingung, die den Fehler
+# unten verdeckt hat.
+BRAUCHT_RICHTUNG = ("KAUFEN", "NACHKAUFEN")
+HEBEL_MIT_EINSTIEG = BRAUCHT_RICHTUNG          # alter Name, gleiche Sache
 
 # Die Richtung ist die EINZIGE zusaetzliche Angabe, die das Modell fuer Hebel
 # liefert. Der Hebelfaktor NICHT: er folgt aus Risikobudget und
@@ -212,8 +221,31 @@ def validiere(antwort: dict, symbol: str = "?",
             f"{symbol}: aktion={antwort['aktion']!r}, erlaubt {erlaubt}")
     antwort["aktion"] = aktion
 
-    # --- Die Richtung. Nur bei Hebel, und nur wo sie etwas bedeutet. ----
-    if instrument == "hebel" and aktion in HEBEL_MIT_EINSTIEG:
+    # --- Die Richtung. Nur wo sie etwas bedeutet - aber dort IMMER. -------
+    #
+    # ⚠️ HIER STAND `instrument == "hebel" and ...`, UND DAS WAR SEIT S6b EINE
+    # TOTE PRUEFUNG. S6b laesst Krypto nur noch mit instrument="spot" laufen -
+    # die Bedingung war damit nie wieder wahr, und die Richtungspflicht war
+    # ersatzlos weg, ohne dass irgendwo etwas rot wurde.
+    #
+    # ZWEI WEGE, AUF DENEN DAS TEUER GEWORDEN WAERE:
+    #
+    #   1  Ein KAUFEN ohne Richtung waere durchgegangen. Die Aufloesung faellt
+    #      dann auf `richtung_aus_action()` zurueck und liest LONG - bei einem
+    #      gemeinten SHORT sind Stop und Ziel vertauscht, und zwar still.
+    #   2  Ein REDUZIEREN MIT `richtung="LONG"` waere gespeichert worden. Das
+    #      Feld beschreibt dort die BESTEHENDE Position, nicht die Zonen (so
+    #      stand es schon im G-Prompt der alten Kette) - die Aufloesung haette
+    #      es als Zonenrichtung gelesen und den Teilverkauf bullisch bewertet.
+    #
+    # GEMESSEN, NICHT VERMUTET (DB-Kopie 19.08.): 415 Zeilen der alten
+    # Hebelkette, wo die Pflicht galt - 315 LONG, 100 SHORT, KEINE ohne
+    # Richtung. 41 KAUFEN der Spot-Kette, wo sie nicht galt - alle ohne. Das
+    # Modell liefert sie, wenn sie verlangt wird; der Prompt verlangt sie seit
+    # S6a fuer beide Instrumente. Das Ablehnungsrisiko ist damit belegt klein.
+    #
+    # `instrument` bleibt im Aufruf - es steuert weiterhin den Aktionssatz.
+    if aktion in BRAUCHT_RICHTUNG:
         richtung = str(antwort.get("richtung") or "").strip().upper()
         if richtung not in RICHTUNGEN:
             # KEINE VORSICHTIGE ANNAHME. Bei der Tranche ist die kleinste
@@ -224,6 +256,15 @@ def validiere(antwort: dict, symbol: str = "?",
                 f"{symbol}: {aktion} ohne Richtung - erlaubt {RICHTUNGEN}, "
                 f"bekommen {antwort.get('richtung')!r}")
         antwort["richtung"] = richtung
+    else:
+        # ⚠️ UND SONST WEG DAMIT. Bei REDUZIEREN, VERKAUFEN und NICHTS_TUN
+        # beschreibt `richtung` nicht die Zonen, sondern hoechstens die
+        # bestehende Position oder eine allgemeine Markterwartung. Wer sie
+        # spaeter liest, kann das nicht unterscheiden - und `check_signal_
+        # outcome()` liest genau dieses Feld mit Vorrang vor der Ableitung.
+        #
+        # EIN FELD, DAS ZWEI DINGE HEISSEN KANN, IST SCHLIMMER ALS KEINES.
+        antwort.pop("richtung", None)
 
     # --- Der Betrag. Ohne ihn ist es eine Meinung, keine Empfehlung. --------
     if aktion in BRAUCHT_BETRAG:

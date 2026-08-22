@@ -14,7 +14,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-DEFAULT_RELEVANTE_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
+# ⚠️ S6c: REDUZIEREN ergaenzt - ein zweiter Teilverkauf auf denselben Bestand
+# ist dieselbe Wiederholung wie ein zweites VERKAUFEN.
+DEFAULT_RELEVANTE_AKTIONEN = ("VERKAUFEN", "TAUSCHEN", "REDUZIEREN")
 DEFAULT_MINDEST_STUNDEN = 4.0
 
 

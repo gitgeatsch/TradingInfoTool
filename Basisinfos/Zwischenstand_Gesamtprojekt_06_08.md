@@ -585,7 +585,7 @@ Regel. Alles hier als **ein** Deployment-Paket, nicht einzeln.
 |---|---|---|
 | **S6a** | ein Aktionsvokabular für Spot und Hebel | **gebaut** (Kapitel 133) |
 | **S6b** | ein Lauf je Asset, Instrument fällt aus der Rechnung an | **gebaut** (Kapitel 134) |
-| **S6c** | Abbildung der Hebelaktionen auf Spot bei bestehenden Zeilen | offen |
+| **S6c** | das neue Wort `REDUZIEREN` erreicht jede lesende Stelle | **gebaut** (Kapitel 135) |
 | **S6d** | die **fünf verwaisten Risikodeckel** in die neue Kette | ⚠️ **offen, nicht optional** |
 
 ⚠️ **S6d ist der einzige mit Sicherheitsbezug.** Solange er offen ist, laufen

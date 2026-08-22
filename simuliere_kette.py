@@ -181,7 +181,20 @@ class Attrappe:
             "umgeworfen_preis_eur": round(kurs * 0.93, 8),
             "umgeworfen_bis": None,
         }
-        if self.instrument == "hebel":
+        # ⚠️ S6c (22.08.2026): HING AM INSTRUMENT, WIE DER VERTRAG SELBST.
+        #
+        # Hier stand `if self.instrument == "hebel"`. Als S6c die
+        # Richtungspflicht instrumentunabhaengig machte, lieferte diese
+        # Attrappe fuer Spot weiter keine Richtung - und die Simulation
+        # meldete 6 Fehler und NULL Signale. Das war kein Fehlalarm, sondern
+        # genau die Auskunft, fuer die es sie gibt: wenn das Modell die
+        # Richtung nicht nennt, kommt nichts mehr durch.
+        #
+        # DER PROMPT VERLANGT SIE SEIT S6a FUER BEIDE INSTRUMENTE ("Bei
+        # KAUFEN und NACHKAUFEN nenne ZUSAETZLICH die Richtung"). Die
+        # Attrappe bildet jetzt ab, was der Prompt fordert - nicht weniger.
+        from agent.empfehlung_vertrag import BRAUCHT_RICHTUNG
+        if aktion in BRAUCHT_RICHTUNG:
             antwort["richtung"] = "LONG"
         if aktion not in ("NICHTS_TUN", "HALTEN"):
             antwort["einstieg_eur"] = round(kurs, 8)

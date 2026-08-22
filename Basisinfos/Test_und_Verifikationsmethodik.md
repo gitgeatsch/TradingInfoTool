@@ -3543,3 +3543,27 @@ selben Morgen hat sich am selben Tag bezahlt gemacht.
 ⚠️ **Bei jeder Aenderung an Prompt, Schema oder Aktionsvokabular aufrufen.**
 Alle drei Funde kamen aus dieser Pruefung, keiner aus der Arbeit an der
 geaenderten Stelle.
+
+
+### `pruefe_aktionsvokabular.py` — kennt jede Stelle das volle Vokabular?
+
+**Auslöser:** eine Aktion wird ergänzt, umbenannt oder entfernt.
+
+**Was es prüft.** Über den Syntaxbaum aller Betriebsdateien: jede Liste und
+jeder Vergleich, der eine verkaufsseitige Aktion nennt, muss die
+verkaufsseitigen Aktionen der **neuen** Kette vollständig nennen.
+
+**Warum es das gibt (22.08.2026, S6c).** `REDUZIEREN` fehlte an sechs Stellen
+— darunter `_TRACKABLE_ACTIONS`, die entscheidet, ob ein Signal überhaupt
+**aufgelöst** wird. 57 Signale lagen in der Datenbank, 55 auf
+`nicht_anwendbar`; im Export standen sie im Band `mit_halten` und fehlten in
+`ohne_halten`. Sie sahen aus wie NICHTS_TUN.
+
+⚠️ **Der Fehler war nicht der Tippfehler, sondern die Bauart:** wer eine
+Aktion ergänzt, muss von Hand jede Liste finden, die Aktionen aufzählt.
+
+⚠️ **Jede Ausnahme trägt einen Grund, keinen Haken.** Die Suite prüft, dass
+der Grund vorhanden und nicht leer ist — eine Ausnahme ohne Begründung ist
+ein Schalter, keine Aussage.
+
+**Läuft in der Suite mit.** Einzeln: `python pruefe_aktionsvokabular.py`.

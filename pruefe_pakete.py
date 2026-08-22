@@ -32,6 +32,8 @@ from __future__ import annotations
 
 import argparse
 import io
+import subprocess as _SUB
+import ast as _AST
 import re
 import sys
 
@@ -113,6 +115,10 @@ def paket_1() -> None:
     grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
                         {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
              "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             # ⚠️ S6c: die Richtung ist bei KAUFEN Pflicht - fuer BEIDE
+             # Instrumente. Bis dahin galt sie nur bei instrument="hebel",
+             # und seit S6b war dieser Zweig tot.
+             "richtung": "LONG",
              "einstieg_eur": 100.0, "stop_eur": 94.0,
              "begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
     ohne = RT.validiere({**grund, "aktion": "NICHTS_TUN"}, "X", atr=atr)
@@ -272,6 +278,10 @@ def paket_2() -> None:
     grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
                         {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
              "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             # ⚠️ S6c: die Richtung ist bei KAUFEN Pflicht - fuer BEIDE
+             # Instrumente. Bis dahin galt sie nur bei instrument="hebel",
+             # und seit S6b war dieser Zweig tot.
+             "richtung": "LONG",
              "einstieg_eur": 100.0, "stop_eur": 94.0,
              "begruendung": "x", "was_dagegen": "y", "umgeworfen_durch": "z"}
     akk = RT.validiere(dict(grund), "X", atr=4.0,
@@ -587,6 +597,7 @@ def paket_6() -> None:
     grund_a = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
                           {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
                "unabhaengige_faktoren": 2, "einstieg_eur": 100.0,
+               "richtung": "LONG",         # S6c: Pflicht bei KAUFEN
                "stop_eur": 94.0, "begruendung": "x", "was_dagegen": "y",
                "umgeworfen_durch": "z"}
     abbild = {a: SA.felder_aus_entscheidung(
@@ -618,6 +629,7 @@ def paket_6() -> None:
             {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
                         {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
              "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "richtung": "LONG",           # S6c: Pflicht bei KAUFEN
              "einstieg_eur": 100.0, "stop_eur": 94.0, "begruendung": "x",
              "was_dagegen": "y", "umgeworfen_durch": "z"}, "BTC", atr=4.0)
         felder = SA.felder_aus_entscheidung(antwort, fakten={"asset": "BTC"},
@@ -693,6 +705,7 @@ def paket_7() -> None:
     grund = {"belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"},
                         {"fakt": "b", "richtung": "dafuer", "gewicht": "mittel"}],
              "unabhaengige_faktoren": 2, "aktion": "KAUFEN",
+             "richtung": "LONG",           # S6c: Pflicht bei KAUFEN
              "einstieg_eur": 87.44, "stop_eur": 82.19, "begruendung": "x",
              "was_dagegen": "y", "umgeworfen_durch": "z"}
     a = RT.validiere(dict(grund), "BTC", atr=3.5)
@@ -2736,6 +2749,9 @@ def paket_b1() -> None:
         k = RE.kurs_eur(sym, r, i, "data/tradinginfotool.db")
         a = RE.atr_eur(sym, r, i, "data/tradinginfotool.db")
         return {"aktion": "KAUFEN" if kauft else "NICHTS_TUN",
+                # S6c: bei KAUFEN Pflicht, bei NICHTS_TUN wird sie verworfen -
+                # beides deckt dieselbe Zeile ab.
+                **({"richtung": "LONG"} if kauft else {}),
                 "belege": [{"fakt": "Schwankung niedrig", "richtung": "dafuer",
                             "gewicht": "hoch"}],
                 "unabhaengige_faktoren": 2,
@@ -2812,6 +2828,11 @@ def paket_b1() -> None:
              "belege": [{"fakt": "x", "richtung": "dafuer", "gewicht": "hoch"}],
              "unabhaengige_faktoren": 2, "begruendung": "y",
              "was_dagegen": "z", "umgeworfen_durch": "w"}
+        # ⚠️ S6c: KAUFEN/NACHKAUFEN OHNE Richtung werden jetzt abgewiesen.
+        # Der Vorgabewert LONG haelt die Faelle lauffaehig, in denen die
+        # Richtung nicht das Thema ist; wer sie prueft, gibt sie mit.
+        if not richtung and aktion in ("KAUFEN", "NACHKAUFEN"):
+            richtung = "LONG"
         if richtung:
             d["richtung"] = richtung
         if aktion in ("KAUFEN", "NACHKAUFEN"):
@@ -3383,6 +3404,9 @@ def paket_15() -> None:
         k = RE.kurs_eur(sym, r, i, "data/tradinginfotool.db")
         a = RE.atr_eur(sym, r, i, "data/tradinginfotool.db")
         return {"aktion": "KAUFEN" if kauft else "NICHTS_TUN",
+                # S6c: bei KAUFEN Pflicht, bei NICHTS_TUN wird sie verworfen -
+                # beides deckt dieselbe Zeile ab.
+                **({"richtung": "LONG"} if kauft else {}),
                 "belege": [{"fakt": "Schwankung niedrig", "richtung": "dafuer",
                             "gewicht": "hoch"}],
                 "unabhaengige_faktoren": 2,
@@ -8893,7 +8917,13 @@ def paket_dimension() -> None:
     from agent import empfehlung_vertrag as _EV
 
     def _v(a, **kw):
-        return _EV.validiere(dict(a), "X", **kw).get("aktion")
+        # ⚠️ S6c: die Richtung ist bei KAUFEN/NACHKAUFEN Pflicht. Thema DIESER
+        # Pruefungen ist der Widerlegungspreis, nicht die Richtung - der
+        # Vorgabewert LONG haelt sie auf ihrem Gegenstand.
+        a = dict(a)
+        if a.get("aktion") in _EV.BRAUCHT_RICHTUNG:
+            a.setdefault("richtung", "LONG")
+        return _EV.validiere(a, "X", **kw).get("aktion")
 
     # ⚠️ S6a: DIE HAUPT-EINSTIEGSAKTION HEISST JETZT KAUFEN. Der Sinn der
     # Pruefung bleibt: jede Aktion, die eine Position aufbaut, wird gegen den
@@ -10316,6 +10346,83 @@ def paket_dimension() -> None:
            len(_stellen) > 80,
            f"{len(_stellen)} Stellen - findet es ploetzlich fast nichts, ist "
            f"das Werkzeug kaputt und nicht der Code sauber")
+
+    # ---- AKTIONSVOKABULAR: KENNT JEDE STELLE `REDUZIEREN`? (22.08.2026) ----
+    #
+    # ⚠️ WARUM DAUERHAFT. S6c fand `REDUZIEREN` an sechs Stellen fehlend -
+    # darunter `_TRACKABLE_ACTIONS`, die entscheidet, ob ein Signal ueberhaupt
+    # AUFGELOEST wird. Acht Signale lagen mit gespeicherten Zonen in der
+    # Datenbank und bekamen nie ein Ergebnis; sie sahen aus wie NICHTS_TUN.
+    #
+    # Der Fehler war nicht der Tippfehler, sondern die Bauart: wer eine Aktion
+    # ergaenzt, muss von Hand jede Liste finden, die Aktionen aufzaehlt.
+    import pruefe_aktionsvokabular as _PAV
+
+    _av_dateien = _SUB.run(["git", "ls-files", "*.py"], capture_output=True,
+                           text=True, encoding="utf-8").stdout.split()
+    _av_offen, _av_geprueft = [], 0
+    for _pfad in _av_dateien:
+        if (not _pfad.startswith(_PAV.BETRIEB) or "hebel_" in _pfad
+                or _pfad in _PAV.AUSGENOMMEN):
+            continue
+        try:
+            _baum = _AST.parse(io.open(_pfad, encoding="utf-8").read())
+        except (OSError, SyntaxError):
+            continue
+        _s = _PAV.Sammler()
+        _s.visit(_baum)
+        for _zeile, _gef in _s.funde:
+            if not _gef & _PAV.VERKAUFSSEITIG_NEU:
+                continue
+            _av_geprueft += 1
+            if _PAV.VERKAUFSSEITIG_NEU - _gef:
+                _av_offen.append(f"{_pfad}:{_zeile}")
+    pruefe(P, "jede Stelle im Betrieb kennt das verkaufsseitige Vokabular",
+           not _av_offen,
+           "blind fuer REDUZIEREN: " + ", ".join(_av_offen[:4]))
+    pruefe(P, "und das Werkzeug findet ueberhaupt Stellen",
+           _av_geprueft >= 5,
+           f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
+           f"kaputt und nicht der Code sauber")
+    # ---- DIE RICHTUNGSPFLICHT HAENGT NICHT AM INSTRUMENT (22.08.2026) ----
+    #
+    # ⚠️ SIE WAR SEIT S6b TOT. Die Bedingung lautete `instrument == "hebel"
+    # and ...`; S6b laesst Krypto nur noch mit instrument="spot" laufen, also
+    # war sie nie wieder wahr. Ein KAUFEN ohne Richtung waere durchgegangen
+    # und bei der Aufloesung als LONG gelesen worden - bei gemeintem SHORT
+    # sind Stop und Ziel vertauscht, und zwar still.
+    _basis_r = {"begruendung": "x", "was_dagegen": "y",
+                "umgeworfen_durch": "z", "tranche_eur": 300}
+    for _instr in ("spot", "hebel"):
+        for _aktion in _EV.BRAUCHT_RICHTUNG:
+            _abgelehnt = False
+            try:
+                _EV.validiere(dict(_basis_r, aktion=_aktion), "X",
+                              instrument=_instr)
+            except _EV.EmpfehlungUngueltig:
+                _abgelehnt = True
+            pruefe(P, f"{_instr}/{_aktion} ohne Richtung wird abgelehnt",
+                   _abgelehnt,
+                   "ohne diese Pflicht liest die Aufloesung LONG, auch wo "
+                   "SHORT gemeint war")
+        # Und umgekehrt: wo die Richtung nichts bedeutet, darf sie nicht
+        # stehenbleiben - `check_signal_outcome()` liest das Feld mit Vorrang.
+        for _aktion in ("REDUZIEREN", "VERKAUFEN", "NICHTS_TUN"):
+            _e = dict(_basis_r, aktion=_aktion, richtung="LONG")
+            _out = _EV.validiere(dict(_e), "X", instrument=_instr)
+            pruefe(P, f"{_instr}/{_aktion} traegt keine Richtung mehr",
+                   "richtung" not in _out,
+                   "bei einem Ausstieg beschreibt das Feld die BESTEHENDE "
+                   "Position, nicht die Zonen - ein Feld mit zwei "
+                   "Bedeutungen ist schlimmer als keines")
+    pruefe(P, "und der alte Name zeigt auf dieselbe Liste",
+           _EV.HEBEL_MIT_EINSTIEG == _EV.BRAUCHT_RICHTUNG,
+           "sonst gaebe es zwei Wahrheiten")
+
+    pruefe(P, "jede Ausnahme traegt einen Grund",
+           all(len(str(g).strip()) >= 20
+               for g in _PAV.AUSGENOMMEN.values()),
+           "eine Ausnahme ohne Grund ist ein Schalter, keine Aussage")
 
     from agent import ausstiegsrechnung as _AU
 

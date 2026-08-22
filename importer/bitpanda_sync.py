@@ -71,7 +71,10 @@ FIAT_SYMBOL = "EUR"
 # gleichzeitig, fehleranfaelliger) - bleibt weiterhin nur manuell ueber den
 # bestehenden UmsetzungDialog bestaetigbar.
 _KAUF_AKTIONEN = {"KAUFEN", "NACHKAUFEN"}
-_VERKAUF_AKTIONEN = {"VERKAUFEN"}
+# ⚠️ S6c: REDUZIEREN ergaenzt. Auch der Teilverkauf senkt die Menge - ohne
+# den Eintrag liesse sich ein umgesetztes REDUZIEREN nie automatisch
+# zuordnen und blieb dauerhaft unbestaetigt.
+_VERKAUF_AKTIONEN = {"VERKAUFEN", "REDUZIEREN"}
 
 
 @dataclass

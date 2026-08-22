@@ -50,6 +50,13 @@ _AKTIONS_KATEGORIE = {
     "KAUFEN": _KATEGORIE_AUFBAU,
     "VERKAUFEN": _KATEGORIE_ABBAU,
     "TAUSCHEN": _KATEGORIE_ABBAU,
+    # ⚠️ S6c: REDUZIEREN fehlte. Der Vorgabewert von `_kategorie()` ist
+    # NEUTRAL - ein Teilverkauf zaehlte damit wie HALTEN, und ein Wechsel
+    # zwischen Kaufen und Reduzieren sah aus wie gar kein Wechsel. Der
+    # Instabilitaetswaechter war fuer genau diese Aktion blind.
+    "REDUZIEREN": _KATEGORIE_ABBAU,
+    "NICHTS_TUN": _KATEGORIE_NEUTRAL,   # nur der Klarheit halber - der
+                                        # Vorgabewert waere derselbe
 }
 
 

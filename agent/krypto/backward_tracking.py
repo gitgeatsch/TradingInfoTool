@@ -190,7 +190,28 @@ def _tier_fuer_spot_symbol(symbol: str, assetklasse_by_symbol: dict[str, str]) -
 # CRV-Pflicht/Zonen-Richtungs-Garantie fuer irgendeine Richtung) zuverlaessig
 # bearisch orientiert sind (Take-Profit UNTER, Stop-Loss UEBER dem Entry).
 # HALTEN bleibt weiterhin nicht trackbar (keine Handlung, keine Zonen-These).
-_TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN", "VERKAUFEN", "TAUSCHEN"}
+# ⚠️ S6c (22.08.2026): REDUZIEREN FEHLTE - UND DAMIT WURDE ES NIE AUFGELOEST.
+#
+# REDUZIEREN ist die einzige Aktion der neuen Kette, die WOERTLICH in der
+# Spalte landet (NICHTS_TUN wird zu HALTEN, siehe signal_abbildung.py). Ohne
+# den Eintrag hier lief jedes REDUZIEREN-Signal in `OUTCOME_NICHT_ANWENDBAR`:
+# Zonen gespeichert, Ergebnis nie ermittelt, in keiner Messung enthalten.
+#
+# BELEGT IM EXPORT vom 21.08.: `spot_h7_mit_halten` zaehlt REDUZIEREN 8x,
+# `spot_h7_ohne_halten` gar nicht - dieselbe Abfrage, einmal mit und einmal
+# ohne den Handelbarkeitsfilter. Acht Signale, die aussahen wie NICHTS_TUN.
+#
+# ⚠️ DIE ERGAENZUNG WIRKT RUECKWIRKEND. Der Filter bremst die AUSWERTUNG, nicht
+# die Speicherung - die Zonen dieser acht Zeilen stehen laengst in der
+# Datenbank. Beim naechsten Lauf bekommen sie ihr Ergebnis nachtraeglich, und
+# die Bilanz aendert sich um bis zu acht Faelle.
+#
+# RICHTUNG: REDUZIEREN ist der Teilverkauf, also dieselbe baerische These wie
+# VERKAUFEN. `richtung_aus_action()` bildet es bereits auf SHORT ab; das Feld
+# `richtung` traegt es nicht (nur KAUFEN/NACHKAUFEN tun das, siehe
+# empfehlung_vertrag.HEBEL_MIT_EINSTIEG), also greift genau dieser Weg.
+_TRACKABLE_ACTIONS = {"KAUFEN", "NACHKAUFEN", "VERKAUFEN", "TAUSCHEN",
+                      "REDUZIEREN"}
 
 # Inhaltsbasierte Ablaufzeit (2026-07-19, Backtracking-Aussagekraft-Audit -
 # Nutzer-Wunsch: "der zeitliche Faktor sollte durch den Inhalt bzw. Angabe -
@@ -1002,7 +1023,9 @@ def check_signal_selbst_halten_outcome(
     }
 
 
-_GEGENRICHTUNG_AKTIONEN = ("VERKAUFEN", "TAUSCHEN")
+# ⚠️ S6c: REDUZIEREN ergaenzt. Ein Teilverkauf ueberholt einen offenen Kauf
+# genauso wie ein voller - die Menge unterscheidet sich, die Richtung nicht.
+_GEGENRICHTUNG_AKTIONEN = ("VERKAUFEN", "TAUSCHEN", "REDUZIEREN")
 
 
 def _is_superseded(

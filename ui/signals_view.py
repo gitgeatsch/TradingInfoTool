@@ -61,7 +61,10 @@ def _format_json_pretty(raw: str | None) -> str:
 # umgesetzt 2026-07-09): bei TAUSCHEN wird nur die Quell-Position reduziert, das
 # Ziel-Asset wird bewusst NICHT automatisch angelegt (out of scope fuer diese Slice,
 # Nutzer muesste das separat/manuell erfassen).
-ACTION_HOLDING_SIGN = {"KAUFEN": 1, "NACHKAUFEN": 1, "VERKAUFEN": -1, "TAUSCHEN": -1}
+# ⚠️ S6c: REDUZIEREN ergaenzt. Ohne Vorzeichen bot der Dialog fuer einen
+# Teilverkauf keine Bestandsaenderung an - sichtbar fuer den Nutzer.
+ACTION_HOLDING_SIGN = {"KAUFEN": 1, "NACHKAUFEN": 1, "VERKAUFEN": -1,
+                       "TAUSCHEN": -1, "REDUZIEREN": -1}
 
 
 def _parse_optional_float(text: str) -> float | None:

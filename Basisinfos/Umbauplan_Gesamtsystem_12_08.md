@@ -17909,3 +17909,169 @@ Zustand festzuhalten. Sie hat ihren Zweck erfüllt und ist jetzt umgedreht.
 ⚠️ **Der Hebelanteil ändert sich durch S6b NICHT.** Er hängt an
 `verlustanteil / stop_rel`. Was sich ändert: **die Modellaufrufe für Krypto
 halbieren sich**, weil dieselbe Frage nicht mehr zweimal gestellt wird.
+
+
+---
+
+## Kapitel 135 — S6c: das neue Wort war da, gelesen hat es niemand (22.08.2026)
+
+**S6c sollte eine Abbildung alter Namen werden.** Es wurde etwas anderes:
+zwei Funde, von denen der zweite durch meinen eigenen Umbau entstanden ist.
+
+### 135.1 Erst die Abgrenzung — wer liest überhaupt mit?
+
+Bevor irgendetwas geändert wurde, drei Fragen an den Code statt an den Plan:
+
+| Frage | Antwort |
+|---|---|
+| Welches neue Wort erreicht die Spalte? | **Nur `REDUZIEREN`.** `NICHTS_TUN` wird von `signal_abbildung.UMBENENNUNG` zu `HALTEN` |
+| Läuft `risk_gate` in der neuen Kette? | **Nein** — `rollen_lauf` ruft es nirgends |
+| Schreibt die neue Kette je nach `hebel_signals`? | **Nein**, nur nach `signals`; `_topf_instrument` steuert allein den Geldtopf |
+
+Damit fielen von 48 Rohtreffern eines ersten Suchlaufs **42 weg** — sie
+betreffen Prompttexte und Auswertungen der alten Kette, die `REDUZIEREN` nie
+sehen. ⚠️ Ein Zählstand ist keine Befundmenge.
+
+### 135.2 Fund 1 — `REDUZIEREN` wurde nie aufgelöst
+
+`_TRACKABLE_ACTIONS` kannte das Wort nicht. `check_signal_outcome()` steigt
+in der ersten Zeile aus:
+
+```python
+if signal.action not in _TRACKABLE_ACTIONS:
+    return OUTCOME_NICHT_ANWENDBAR, {}
+```
+
+**Belegt in drei unabhängigen Quellen:**
+
+| Quelle | Beleg |
+|---|---|
+| Code | `_TRACKABLE_ACTIONS = {KAUFEN, NACHKAUFEN, VERKAUFEN, TAUSCHEN}` |
+| Export 21.08. | `spot_h7_mit_halten` zählt REDUZIEREN 8×, `ohne_halten` gar nicht |
+| DB-Kopie 19.08. | **57 REDUZIEREN**, alle aus der Rollen-Kette, **55 auf `nicht_anwendbar`** |
+
+⚠️ **Und die Korrektur meiner eigenen ersten Aussage.** Ich schrieb, die
+Ergänzung löse die Zeilen rückwirkend auf. Sie tut das — aber nur für die
+**10 mit Zonen**, nicht für 57:
+
+| action | gesamt | mit Zonen | |
+|---|---:|---:|---:|
+| KAUFEN | 65 | 65 | 100 % |
+| NACHKAUFEN | 67 | 66 | 99 % |
+| TAUSCHEN | 22 | 19 | 86 % |
+| VERKAUFEN | 15 | 8 | 53 % |
+| **REDUZIEREN** | **57** | **10** | **18 %** |
+
+Die übrigen 47 bleiben zu Recht `nicht_anwendbar` — `_zonen_schwelle()`
+liefert `None`, und die Funktion steigt sauber aus. **Kein Absturz, kein
+falsches Ergebnis.** Dass die Verkaufsseite so viel seltener Zonen trägt, ist
+ein **eigener offener Punkt** und gehört zu O-29.
+
+Fünf weitere Stellen kannten `REDUZIEREN` ebenfalls nicht: die
+Überholt-Erkennung, der Instabilitätswächter, die Wiederholungserkennung, der
+Bitpanda-Abgleich und das Vorzeichen im Bestandsdialog.
+
+⚠️ **Eine Stelle wurde bewusst NICHT geändert:** `verkaufsrechnung` lässt
+`REDUZIEREN` in den `else`-Zweig fallen und gibt ihm `TEIL_ANTEIL` — genau
+richtig, es *ist* der Teilverkauf. Dort steht jetzt ein Vermerk, damit es
+niemand „repariert".
+
+### 135.3 ⚠️ Fund 2 — die Richtungspflicht war seit S6b tot
+
+```python
+if instrument == "hebel" and aktion in HEBEL_MIT_EINSTIEG:   # vorher
+```
+
+**S6b lässt Krypto nur noch mit `instrument="spot"` laufen.** Die Bedingung
+war damit nie wieder wahr — und die Richtungspflicht ersatzlos weg, ohne dass
+irgendwo etwas rot wurde. **Ich habe das beim Bauen von S6a und S6b nicht
+gesehen; gefunden hat es erst die Gegenprüfung von S6c.**
+
+Gemessen statt vermutet:
+
+| | vorher | jetzt |
+|---|---|---|
+| `spot` / KAUFEN / ohne Richtung | **angenommen** | abgelehnt |
+| `spot` / REDUZIEREN / `richtung=LONG` | **gespeichert** | Feld verworfen |
+
+Beides wäre teuer geworden — und **still**:
+
+1. Ein KAUFEN ohne Richtung fällt bei der Auflösung auf
+   `richtung_aus_action()` zurück und liest **LONG**. Bei gemeintem SHORT sind
+   Stop und Ziel vertauscht.
+2. Ein REDUZIEREN **mit** `richtung="LONG"` wäre gespeichert worden. Dort
+   beschreibt das Feld die **bestehende Position**, nicht die Zonen — so stand
+   es schon im G-Prompt der alten Kette. Die Auflösung liest es aber seit S6a
+   **mit Vorrang** vor der Ableitung.
+
+Heute tragen alle 57 REDUZIEREN `richtung=None`, der Schaden ist also noch
+nicht eingetreten. ⚠️ **Aber S6a hat die Tür geöffnet:** seither steht
+`richtung` für beide Instrumente im Schema.
+
+**Machbarkeit vorab geprüft, nicht gehofft.** Eine Pflicht, die das Modell
+nicht erfüllt, kostet Signale:
+
+| Kette | Pflicht galt | LONG | SHORT | ohne Richtung |
+|---|---|---:|---:|---:|
+| alte Hebelkette (`ERÖFFNEN`) | ja | 315 | 100 | **0** |
+| Spot-Kette (`KAUFEN`) | nein | – | – | **41** |
+
+Das Modell liefert die Richtung, **wenn sie verlangt wird**. Der Prompt
+verlangt sie seit S6a für beide Instrumente. Das Ablehnungsrisiko ist damit
+belegt klein — und ein Ausfall wäre nicht still: `EmpfehlungUngueltig` landet
+in `ergebnis["fehler"]` und in `verloren_je_stufe`.
+
+**`HEBEL_MIT_EINSTIEG` heißt jetzt `BRAUCHT_RICHTUNG`** (alter Name bleibt als
+Verweis). Der alte Name behauptete etwas, das seit S6a nicht mehr stimmt — und
+stand genau in der Bedingung, die den Fehler verdeckt hat.
+
+### 135.4 Die Simulation hat den Nachweis geführt — durch Scheitern
+
+Nach der Reparatur meldete `simuliere_kette.py`:
+
+```
+3 Gruppen durchlaufen, 0 Signale, 1 Mails, 6 Fehler, 2 Luecken
+  krypto/spot: ASTER: KAUFEN ohne Richtung - erlaubt ('LONG','SHORT')
+```
+
+⚠️ **Das war kein Fehlalarm, sondern genau die Auskunft, für die es sie
+gibt.** Die Attrappe trug dieselbe Instrument-Abfrage wie der Vertrag
+(`if self.instrument == "hebel"`) — derselbe Fehler an einer zweiten Stelle.
+Und sie hat vorgeführt, was passiert, wenn das Modell die Richtung nicht
+nennt: **null Signale.**
+
+Nach dem Nachziehen: **6 Signale, 7 Mails, 0 Fehler, 0 Lücken** — und die
+zuvor gemeldeten Lücken (Lebendigkeit 93 C, Vorfilter H) waren mit ihnen weg.
+
+### 135.5 Der Wächter, damit es sich nicht wiederholt
+
+`pruefe_aktionsvokabular.py` geht über den Syntaxbaum aller Betriebsdateien
+und meldet jede Liste, die eine verkaufsseitige Aktion nennt, ohne die
+verkaufsseitigen Aktionen der neuen Kette vollständig zu nennen.
+
+⚠️ **Jede Ausnahme trägt einen Grund, keinen Haken** — und die Suite prüft,
+dass der Grund da ist. Ein Eintrag ohne Begründung fällt durch.
+
+**Positivkontrolle** (Pflicht seit 93 B): `REDUZIEREN` in einer Datei
+entfernt → gemeldet; zurückgebaut → wieder grün.
+
+**Suite 1.520 · Rollen-Gegenprüfung 25 · Vokabular 16 · freie Namen 0.**
+
+### 135.6 Sieben Testvorlagen standen auf dem alten Stand
+
+Die Suite fing die Änderung selbst — sieben Vorlagen riefen `validiere()` mit
+KAUFEN ohne Richtung. Alle nachgezogen; **ihr Gegenstand war nie die
+Richtung**, sondern Akkumulation, Abbildung und Widerlegungspreis.
+
+⚠️ Eine Prüfung wurde **nicht** angefasst: „KAUFEN OHNE Richtung wird
+abgewiesen" stand bereits richtig da — nur für `instrument="hebel"`. Sie war
+die ganze Zeit korrekt und hat den Fehler trotzdem nicht gefunden, weil sie
+den Spot-Fall nie fragte. **Eine richtige Prüfung am falschen Fall.**
+
+### 135.7 Was offen bleibt
+
+| | |
+|---|---|
+| **S6d** | die fünf verwaisten Deckel (131.2) — ⚠️ **nicht optional** |
+| neu | **warum trägt die Verkaufsseite so selten Zonen?** 18 % bei REDUZIEREN gegen 100 % bei KAUFEN — gehört zu O-29 |
+| neu | ⚠️ **REDUZIEREN auf einer SHORT-Position wäre bullisch.** `richtung_aus_action()` liefert dafür SHORT. Solange es nur Long-Bestände gibt, ist das richtig; mit der SHORT-Verdrahtung muss es nachgezogen werden |
