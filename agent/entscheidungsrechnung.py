@@ -971,9 +971,28 @@ def dimensioniere(*, kurs: float, atr: float, k: float, verlustanteil: float,
         etikett = "hebel"
         hebel = max(1.0, min(hebel_noetig, sicher, GRENZEN["hebel_max"]))
         betrag = einsatz_eur if hebel >= hebel_noetig - 1e-9 else risiko_eur / (hebel * stop_rel)
-        gebunden = ("Risikobudget" if hebel <= hebel_noetig + 1e-9
-                    else ("RM-11 Liquidationsabstand" if sicher < GRENZEN["hebel_max"]
-                          else "Hoechsthebel"))
+        # ⚠️ DIE BEDINGUNG WAR VERDREHT (22.08.2026, gefunden bei S6d).
+        #
+        # Hier stand `if hebel <= hebel_noetig + 1e-9`. Da `hebel` aus einem
+        # min() ueber hebel_noetig kommt, ist das bei LONG IMMER wahr - die
+        # beiden anderen Zweige waren toter Code. Ueber 18 geprueften
+        # Kombinationen kam ausschliesslich "Risikobudget" heraus, auch bei
+        # Stop 2,5 %, wo hebel_noetig 12,0 betraegt und der Hoechsthebel auf
+        # 10,0 deckelt.
+        #
+        # RICHTIG HERUM: "Risikobudget" heisst, die Rechnung hat bekommen, was
+        # sie brauchte. Liegt der Hebel DARUNTER, hat ein Deckel gebunden -
+        # und welcher, ist genau die Auskunft, fuer die das Feld da ist.
+        #
+        # ⚠️ NIEMAND LIEST DAS FELD BISHER - deshalb ist es nie aufgefallen.
+        # Das ist der Grund, es jetzt zu reparieren und nicht spaeter: die
+        # erste Auswertung, die es benutzt, waere sonst falsch.
+        if hebel >= hebel_noetig - 1e-9:
+            gebunden = "Risikobudget"
+        elif sicher <= GRENZEN["hebel_max"] + 1e-9 and hebel <= sicher + 1e-9:
+            gebunden = "RM-11 Liquidationsabstand"
+        else:
+            gebunden = "Hoechsthebel"
     else:
         # KEIN HEBEL NOETIG (oder keiner handelbar): der Betrag folgt dem
         # Risikobudget. Ihn bei `einsatz_eur` zu lassen hiesse, mehr zu

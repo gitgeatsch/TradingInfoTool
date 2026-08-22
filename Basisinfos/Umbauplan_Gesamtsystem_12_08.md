@@ -18075,3 +18075,129 @@ den Spot-Fall nie fragte. **Eine richtige Prüfung am falschen Fall.**
 | **S6d** | die fünf verwaisten Deckel (131.2) — ⚠️ **nicht optional** |
 | neu | **warum trägt die Verkaufsseite so selten Zonen?** 18 % bei REDUZIEREN gegen 100 % bei KAUFEN — gehört zu O-29 |
 | neu | ⚠️ **REDUZIEREN auf einer SHORT-Position wäre bullisch.** `richtung_aus_action()` liefert dafür SHORT. Solange es nur Long-Bestände gibt, ist das richtig; mit der SHORT-Verdrahtung muss es nachgezogen werden |
+
+
+---
+
+## Kapitel 136 — S6d vermessen: ein Hebeldeckel senkt das Risiko nicht mehr (22.08.2026)
+
+**S6d hieß: „die fünf verwaisten Deckel in die neue Kette ziehen."** Das
+Vermessen zeigt: so gebaut wäre es ein Schutz, der das Gegenteil tut.
+
+### 136.1 Erst der Bestand — alle sechs sind noch verwaist
+
+An der Quelle geprüft, nicht aus 131.2 übernommen:
+
+| Schlüssel | in der neuen Kette | gelesen von |
+|---|:--:|---|
+| `max_hebel` | ✘ | `hebel_analyst`, `hebel_risk_gate`, `regelwerk_parameter` |
+| `regime_konflikt_hebel_deckel` | ✘ | `hebel_risk_gate` |
+| `retail_konsens_hebel_deckel` | ✘ | `hebel_risk_gate` |
+| `technischer_konflikt_hebel_deckel` | ✘ | `hebel_risk_gate` |
+| `gegenszenario_hebel_deckel` | ✘ | `hebel_risk_gate` |
+| `crv_knapp_hebel_deckel` | ✘ | `hebel_risk_gate` |
+
+Der Höchsthebel steht in der neuen Kette als `GRENZEN["hebel_max"] = 10.0`.
+⚠️ **Und als einziger Wert in `GRENZEN` ohne genannte config-Quelle** — jede
+andere Zahl dort trägt ihren Schlüssel im Kommentar.
+
+### 136.2 ⚠️ Der Kernbefund — der Deckel vergrößert die Position
+
+In der alten Kette **wählte** das Modell den Hebel, und das Risiko folgte
+daraus. In der neuen ist es umgekehrt:
+
+```
+risiko_eur   = verlustanteil × einsatz_eur      ← steht VOR dem Hebel fest
+hebel_noetig = verlustanteil / stop_rel
+hebel        = max(1, min(hebel_noetig, sicher, hebel_max))
+betrag       = einsatz_eur  wenn hebel == hebel_noetig
+               risiko_eur / (hebel × stop_rel)  sonst
+```
+
+Gerechnet, nicht behauptet (Stop 2,5 %, Verlustanteil 6 %):
+
+| Deckel | Hebel | Nominale | **Risiko je Trade** |
+|---:|---:|---:|---:|
+| 10,0 | 2,40 | 1.000 € | **60 €** |
+| 4,0 | 2,40 | 1.000 € | **60 €** |
+| 2,0 | 2,00 | 1.200 € | **60 €** |
+| 1,5 | 1,50 | 1.600 € | **60 €** |
+
+**Das Risiko je Trade ist in jeder Zeile dasselbe.** Der Deckel senkt es
+nicht — er **vergrößert die Nominale**, damit derselbe Stop denselben Betrag
+kostet. ⚠️ Und eine größere Nominale heißt **mehr** Verlust, wenn der Kurs
+über den Stop hinwegspringt.
+
+**Ein Hebeldeckel, unverändert übernommen, wäre in der neuen Kette ein
+Risiko-ERHÖHER bei genau den Anlässen, für die er gedacht war.**
+
+### 136.3 Und drei der fünf haben gar keine Eingabe mehr
+
+| Deckel | Eingabe | Zustand in der neuen Kette |
+|---|---|---|
+| `regime_konflikt` | Lagebild + Richtung | ✔ vorhanden (`lagebeschreibung`, `richtung` seit S6a Pflicht) |
+| `retail_konsens` | `long_account_pct` | ✔ vorhanden (`positionierung`) |
+| `technischer_konflikt` | `overall_bias == "gemischt"` | ⚠️ **bewusst nicht gebaut** |
+| `gegenszenario` | `forecast.probability_pct` | ⚠️ **nur im alten Schema** |
+| `crv_knapp` | variables CRV | ⚠️ CRV ist **fest 2,0** |
+
+Zu den drei ⚠️-Fällen im Einzelnen:
+
+**Technischer Konflikt.** `szenario_fakten` schreibt die **Zählung**
+(`pro_aufwaerts` / `pro_abwaerts` / `neutral`), nicht die Gesamttendenz. Der
+Kommentar dort sagt warum: *„gemischt wäre ein Urteil."* Das ist eine
+getroffene Entscheidung, kein Versäumnis — die Zählung ist der zulässige
+Ersatz.
+
+**Gegenszenario.** `_FORECAST` mit `probability_pct` gehört zu
+`baue_signal_schema()`, dem Schema der **alten** Kette. Die neue fragt keine
+Prozentzahl ab, und das ist die stehende Vorgabe („keine Zahlen in die
+Ablaufkette bzw. LLM"). ⚠️ **Diesen Deckel zurückzuholen hieße, die Vorgabe
+zurückzunehmen.**
+
+**CRV knapp am Minimum.** Der alte Deckel griff, wenn das CRV knapp über dem
+Minimum lag; er unterschied 2,01 von 4,0. In der neuen Kette ist das geplante
+CRV **fest 2,0** — die Frage „knapp darüber?" hat keinen Spielraum mehr. Das
+Gegenstück wäre `crv_erreicht = False`: ein Ziel, das hinter einer Mauer
+liegt.
+
+### 136.4 Nebenfund — `gebunden_durch` konnte nur einen Wert annehmen
+
+```python
+gebunden = ("Risikobudget" if hebel <= hebel_noetig + 1e-9 else ...)
+```
+
+`hebel` kommt aus einem `min()` über `hebel_noetig` — bei LONG ist die
+Bedingung **immer** wahr. Die Zweige „Höchsthebel" und „RM-11
+Liquidationsabstand" waren **toter Code**. Über 18 geprüfte Kombinationen kam
+ausschließlich `Risikobudget` heraus, auch bei Stop 2,5 %, wo `hebel_noetig`
+12,0 beträgt und der Höchsthebel auf 10,0 deckelt.
+
+Nach der Reparatur, jeder Zweig mit seinem Fall belegt:
+
+| Stop | Verlustanteil | nötig | sicher | Hebel | gebunden durch |
+|---:|---:|---:|---:|---:|---|
+| 5,0 % | 30 % | 6,00 | 18,20 | 6,00 | Risikobudget |
+| 2,5 % | 30 % | 12,00 | 36,40 | 10,00 | **Höchsthebel** |
+| 22,0 % | 95 % | 4,32 | 4,14 | 4,14 | **RM-11 Liquidationsabstand** |
+
+⚠️ **Niemand liest das Feld bisher** — deshalb ist es nie aufgefallen. Genau
+das ist der Grund, es jetzt zu reparieren: die erste Auswertung, die es
+benutzt, wäre sonst falsch gewesen.
+
+### 136.5 Was S6d damit ist — und was zu entscheiden bleibt
+
+**Sofort und ohne Entscheidung baubar:**
+
+| | |
+|---|---|
+| `max_hebel` | aus der `config` statt als Modulkonstante — mit derselben Suite-Prüfung, die schon für die Stop-Untergrenzen gilt |
+| `gebunden_durch` | **erledigt** (136.4) |
+
+⚠️ **Vier Konfliktdeckel brauchen eine Entscheidung**, weil sie als
+*Hebeldeckel* nicht mehr wirken. Was sie meinten — *„bei einem Konflikt
+weniger riskieren"* — müsste am **Verlustanteil** greifen, nicht am Hebel.
+Das ist ein Eingriff in das Risikomodell und keine Verdrahtung.
+
+**Der Zustand ist damit nicht mehr „vergessen", sondern „vermessen und
+begründet offen".** Suite 1.526.

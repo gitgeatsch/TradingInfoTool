@@ -10384,6 +10384,59 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- `gebunden_durch` MUSS DEN ECHTEN DECKEL NENNEN (22.08.2026) ----
+    #
+    # ⚠️ DIE BEDINGUNG WAR VERDREHT. Sie lautete `hebel <= hebel_noetig`, und
+    # da `hebel` aus einem min() ueber hebel_noetig kommt, war das bei LONG
+    # IMMER wahr - die Zweige "Hoechsthebel" und "RM-11" waren toter Code.
+    # Ueber 18 Kombinationen kam nur "Risikobudget" heraus, auch bei Stop
+    # 2,5 %, wo hebel_noetig 12,0 ist und der Hoechsthebel auf 10,0 deckelt.
+    from agent import entscheidungsrechnung as _ERD
+
+    def _gebunden(stop_rel, va):
+        return _ERD.dimensioniere(
+            kurs=100.0, atr=stop_rel * 100.0 / 2.5, k=2.5, verlustanteil=va,
+            einsatz_eur=1000.0, hebel_handelbar=True)
+
+    _faelle = ((0.05, 0.30, "Risikobudget"),
+               (0.025, 0.30, "Hoechsthebel"),
+               (0.22, 0.95, "RM-11 Liquidationsabstand"))
+    for _sr, _va, _erwartet in _faelle:
+        _d = _gebunden(_sr, _va)
+        pruefe(P, f"Stop {_sr*100:.1f} % / Verlust {_va*100:.0f} % ist "
+                  f"gebunden durch {_erwartet}",
+               _d["gebunden_durch"] == _erwartet,
+               f"gemeldet: {_d['gebunden_durch']} (Hebel {_d['hebel']:.2f}, "
+               f"noetig {_d['hebel_noetig']:.2f}, sicher "
+               f"{_d['hebel_sicher']:.2f})")
+    pruefe(P, "und alle drei Gruende sind ueberhaupt erreichbar",
+           len({_gebunden(s, v)["gebunden_durch"]
+                for s, v, _ in _faelle}) == 3,
+           "ein Feld, das nur einen Wert annehmen kann, ist keine Auskunft")
+
+    # ⚠️ UND DER DECKEL SENKT DAS RISIKO NICHT. In der neuen Rechnung steht
+    # der Verlust je Trade VOR dem Hebel fest (verlustanteil x einsatz); ein
+    # niedrigerer Hebel vergroessert die Nominale, damit derselbe Stop
+    # denselben Betrag kostet. Wer das vergisst, baut einen Schutz, der das
+    # Gegenteil tut - siehe Umbauplan Kapitel 136.
+    _echt_max = _ERD.GRENZEN["hebel_max"]
+    try:
+        _risiken, _nominalen = set(), []
+        for _deckel in (10.0, 4.0, 2.0, 1.5):
+            _ERD.GRENZEN["hebel_max"] = _deckel
+            _d = _gebunden(0.025, 0.06)
+            _risiken.add(round(_d["risiko_eur"], 6))
+            _nominalen.append(_d["betrag_eur"])
+    finally:
+        _ERD.GRENZEN["hebel_max"] = _echt_max
+    pruefe(P, "ein Hebeldeckel laesst das Risiko je Trade unveraendert",
+           len(_risiken) == 1, f"Risiken: {sorted(_risiken)}")
+    pruefe(P, "und vergroessert dabei die Nominale",
+           _nominalen == sorted(_nominalen),
+           f"Nominalen: {[round(x) for x in _nominalen]} - ein Deckel, der "
+           f"die Nominale SENKT, waere ein anderer Mechanismus als der hier "
+           f"beschriebene")
+
     # ---- DIE RICHTUNGSPFLICHT HAENGT NICHT AM INSTRUMENT (22.08.2026) ----
     #
     # ⚠️ SIE WAR SEIT S6b TOT. Die Bedingung lautete `instrument == "hebel"

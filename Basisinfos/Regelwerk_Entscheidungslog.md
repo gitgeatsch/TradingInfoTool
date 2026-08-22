@@ -20109,3 +20109,55 @@ Verkaufsseite so selten Zonen; ⚠️ REDUZIEREN auf einer SHORT-Position waere
 bullisch - mit der SHORT-Verdrahtung nachzuziehen.
 
 Suite 1520, Rollen-Gegenpruefung 25, Vokabular 16, freie Namen 0.
+
+
+[2026-08-22] KAPITEL 136: S6d VERMESSEN - EIN HEBELDECKEL SENKT DAS RISIKO NICHT
+
+S6d hiess "die fuenf verwaisten Deckel in die neue Kette ziehen". Das
+Vermessen zeigt: so gebaut waere es ein Schutz, der das Gegenteil tut.
+
+BESTAND an der Quelle geprueft, nicht aus 131.2 uebernommen: alle sechs
+Schluessel werden weiterhin NUR von hebel_risk_gate.py gelesen (max_hebel
+zusaetzlich von hebel_analyst und regelwerk_parameter). Der Hoechsthebel steht
+in der neuen Kette als GRENZEN["hebel_max"] = 10.0 - ⚠️ als EINZIGER Wert in
+GRENZEN ohne genannte config-Quelle.
+
+⚠️ DER KERNBEFUND. In der alten Kette WAEHLTE das Modell den Hebel, und das
+Risiko folgte daraus. In der neuen steht risiko_eur = verlustanteil x
+einsatz_eur VOR dem Hebel fest. Gerechnet bei Stop 2,5 % und Verlustanteil
+6 %: Deckel 10,0 -> Hebel 2,40, Nominale 1.000, Risiko 60 EUR; Deckel 2,0 ->
+Hebel 2,00, Nominale 1.200, Risiko 60 EUR; Deckel 1,5 -> Hebel 1,50, Nominale
+1.600, Risiko 60 EUR. Das Risiko ist in JEDER Zeile dasselbe - der Deckel
+vergroessert die NOMINALE, damit derselbe Stop denselben Betrag kostet. Und
+eine groessere Nominale heisst MEHR Verlust, wenn der Kurs ueber den Stop
+hinwegspringt. Ein unveraendert uebernommener Hebeldeckel waere ein
+Risiko-ERHOEHER bei genau den Anlaessen, fuer die er gedacht war.
+
+DREI VON FUENF HABEN GAR KEINE EINGABE MEHR. Vorhanden: regime_konflikt
+(Lagebild + richtung, seit S6a Pflicht) und retail_konsens (long_account_pct
+in positionierung.py - die "0 verschieden" dort betrifft die Boersen-Kopien,
+nicht die Zeitreihe). NICHT vorhanden: technischer_konflikt (szenario_fakten
+schreibt die ZAEHLUNG, nicht die Gesamttendenz - "gemischt waere ein Urteil",
+eine getroffene Entscheidung); gegenszenario (forecast.probability_pct gehoert
+zu baue_signal_schema, dem ALTEN Schema - ihn zurueckzuholen hiesse, die
+Vorgabe "keine Zahlen ins LLM" zurueckzunehmen); crv_knapp (das geplante CRV
+ist fest 2,0, die Frage "knapp darueber?" hat keinen Spielraum - das
+Gegenstueck waere crv_erreicht=False).
+
+NEBENFUND, REPARIERT: `gebunden_durch` konnte nur EINEN Wert annehmen. Die
+Bedingung `hebel <= hebel_noetig + 1e-9` ist bei LONG immer wahr, weil hebel
+aus einem min() ueber hebel_noetig kommt - die Zweige "Hoechsthebel" und
+"RM-11 Liquidationsabstand" waren toter Code. Ueber 18 Kombinationen kam nur
+"Risikobudget" heraus, auch bei Stop 2,5 % mit hebel_noetig 12,0 gegen Deckel
+10,0. Nach der Reparatur jeder Zweig mit seinem Fall belegt. ⚠️ Niemand liest
+das Feld bisher - deshalb fiel es nie auf, und genau deshalb jetzt und nicht
+spaeter.
+
+WAS S6d IST: sofort baubar sind `max_hebel` aus der config (mit derselben
+Suite-Pruefung wie die Stop-Untergrenzen) und `gebunden_durch` (erledigt).
+⚠️ Die vier Konfliktdeckel brauchen eine ENTSCHEIDUNG - was sie meinten ("bei
+einem Konflikt weniger riskieren") muesste am VERLUSTANTEIL greifen, nicht am
+Hebel. Das ist ein Eingriff ins Risikomodell, keine Verdrahtung.
+
+Der Zustand ist damit nicht mehr "vergessen", sondern "vermessen und
+begruendet offen". Suite 1526.
