@@ -3447,3 +3447,74 @@ angelegt.**
 > `pruefe_auswertbarkeit.py`, **bevor** eine Messung gestartet wird — sie
 > beantwortet genau die Frage, an der die Läufe vom 10.08. gescheitert sind
 > („Messung VOR dem Start prüfen, nicht das Ergebnis").
+
+
+### 2.59 Eine Positivkontrolle misst die VERSCHIEBUNG, nicht den Wert danach
+
+**Anlass (22.08.2026, Kapitel 125).** Die Kontrolle pflanzte 300 Treffer ein
+und verglich das **Ergebnis** mit der Zufallsschwelle: **+0,4 gegen +2,5**.
+Der naheliegende Schluss wäre gewesen: *das Werkzeug ist stumpf, ein
+Nullbefund wäre wertlos* — und ein echter Befund von **−5,8 Punkten** wäre als
+„nicht messbar" abgelegt worden.
+
+**Der Fehler:** der eingepflanzte Effekt wirkte exakt richtig
+(**Verschiebung +6,3, erwartet +6,3**). Nur lag der Ausgangswert so tief, dass
+die Summe trotzdem unter der Schwelle blieb.
+
+> **Die Frage lautet nicht „ist das Ergebnis groß genug", sondern „sehe ich
+> die Änderung, die ich selbst verursacht habe".**
+
+**Die Regel:** eine Positivkontrolle misst **immer** gegen denselben Lauf
+ohne Einpflanzung. Sie druckt drei Zahlen: vorher, nachher, Verschiebung —
+und daneben, was zu erwarten war. Weicht die Verschiebung um mehr als eine
+kleine Toleranz ab, bricht der Lauf ab.
+
+⚠️ **Der Fehler ist besonders tückisch, weil er nur bei einem starken echten
+Effekt auftritt** — also genau dann, wenn etwas zu finden gewesen wäre.
+
+**Umgesetzt in:** `messe_reihung_x_h.py`.
+
+### 2.60 Wiederholte Bewertungen desselben Werts sind EINE Beobachtung
+
+**Anlass (22.08.2026, Nutzerfrage):** *„wie wir diese korrekt zählen wenn
+z. B. HYPE 5 mal am Tag eine Bewertung erhalten hat, ist das abgrenzbar?"*
+
+**Gemessen an den 1.118 Z.ai-Gegenprüfungen: Faktor 5,82.**
+
+| | |
+|---|---:|
+| Einträge | 1.118 |
+| verschiedene Symbole | **22** |
+| verschiedene (Symbol, Tag) | **192** |
+| Höchstzahl an einem Tag | **48** |
+
+**Die Folge:** Vertrauensintervalle werden um rund **Faktor 2,4** breiter.
+In Kapitel 126 hat das **drei von vier Urteilen gekippt** — von „BESSER" bzw.
+„SCHLECHTER" zu „nicht unterscheidbar".
+
+**Die Regel:**
+
+| | |
+|---|---|
+| **Zähleinheit** | der **Anlass**, nicht das Signal — `agent/anlass.py` definiert ihn (derselbe Fingerabdruck binnen 24 h) |
+| **Näherung** | (Symbol, Tag), wenn der Fingerabdruck nicht vorliegt |
+| **Rechnung** | Intervall auf `n / Häufungsfaktor`, die **Quote bleibt** |
+| **Mindestzahl** | gilt für die **effektive** Stichprobe, nicht die rohe |
+
+⚠️ **Das ist die Ergänzung zu 2.19.1**, die dort als Forderung stand
+(*„jede künftige Messung dieser Bauart braucht die Gewichtung"*) und bis heute
+in keinem Werkzeug umgesetzt war.
+
+**Umgesetzt in:** `messe_signalbilanz.py` (`HAEUFUNG_GEMESSEN`).
+
+
+### Nachtrag 22.08.2026 (abends) - zwei weitere Werkzeuge
+
+| Skript | Beantwortet |
+|---|---|
+| `messe_reihung_x_h.py` | Traegt die Reihung **zusaetzlich zu H**? (125) - Antwort: sie traegt **negativ**, -5,8 Punkte |
+| `messe_signalbilanz.py` | Was haben unsere **echten** Signale gebracht? (126) - Anbieter, Rolle G, Schatten, mit Haeufungskorrektur |
+
+⚠️ Beide wurden von der Dauerpruefung "jedes Messwerkzeug steht im
+Werkzeugkasten" gefangen, bevor sie hier fehlen konnten - die Pruefung vom
+selben Morgen hat sich am selben Tag bezahlt gemacht.

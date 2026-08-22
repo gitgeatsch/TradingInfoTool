@@ -16701,3 +16701,150 @@ Spalte daneben — dort, wo er den Widerspruch oben sichtbar macht.
    SHORT-Vorschläge als HALTEN gebucht.
 4. **Überlebensverzerrung der Auflösung** — offene Verlierer laufen länger als
    offene Gewinner.
+
+
+---
+
+## ⚠️ Korrektur zu Kapitel 126 — die Häufung kippt beide Urteile (22.08.2026)
+
+**Die Frage kam vom Nutzer, noch am selben Tag:**
+
+> *„was hier noch offen wäre wie wir diese korrekt zählen wenn z. B. HYPE
+> 5 mal am Tag eine Bewertung erhalten hat, ist das abgrenzbar?"*
+
+**Ja — und es ist gravierender, als die Frage vermuten lässt.**
+
+| | |
+|---|---:|
+| Einträge | **1.118** |
+| verschiedene Symbole | **22** |
+| verschiedene (Symbol, Tag) | **192** |
+| Bewertungen je Symbol und Tag | **5,82** |
+| Höchstzahl an einem Tag | **48** (VIRTUAL am 31.07.) |
+
+**Das sind keine 1.118 unabhängigen Beobachtungen.** Fünf Bewertungen
+desselben Symbols am selben Tag schauen auf dieselbe Zukunft — sie sind
+**eine** Beobachtung mit fünf Meinungen.
+
+⚠️ **Methodik 2.19.1 kennt das seit dem 10.08.** — *„jede künftige Messung
+dieser Bauart braucht die Gewichtung"*. Meine erste Fassung von Kapitel 126
+hat es trotzdem übersehen und Wilson-Intervalle auf die **rohen** Fallzahlen
+gerechnet.
+
+### Was sich dadurch ändert — beide Urteile fallen
+
+| | n | Quote | Intervall **vorher** | Intervall **korrigiert** | Urteil |
+|---|---:|---:|---|---|---|
+| hebel / gemini | 311 | 21,2 % | [17,0; 26,1] → SCHLECHTER | **[12,0; 33,5]** | **nicht unterscheidbar** |
+| hebel / mistral | 494 | 40,3 % | [36,0; 44,7] → BESSER | **[30,2; 50,6]** | **nicht unterscheidbar** |
+| krypto / mistral | 407 | 41,0 % | [36,4; 45,9] → BESSER | **[30,6; 53,1]** | **nicht unterscheidbar** |
+| krypto / „unbekannt" | 111 | 84,7 % | BESSER | — | **nicht entscheidbar** (19 unabhängige) |
+
+> **Nach der Korrektur ist kein einziger Anbieter von der Basisrate zu
+> unterscheiden.** Das deckt sich exakt mit dem Grundbefund des Projekts vom
+> 10.08.: *kein Verfahren schlägt die Basisrate.*
+
+**Die Quoten selbst bleiben, wie sie sind** — gehäufte Beobachtungen
+verzerren sie nicht, sie machen sie nur **unsicherer**. Was fällt, sind die
+Urteile, nicht die Zahlen.
+
+### Die Zähleinheit ist der ANLASS, nicht das Signal
+
+`agent/anlass.py` definiert sie bereits: **derselbe Fingerabdruck binnen 24
+Stunden ist dieselbe Frage.** (Symbol, Tag) ist die grobe, konservative
+Näherung davon — genauer wäre der Fingerabdruck, aber der steht im Export
+nicht je Fall.
+
+⚠️ **Damit ist die Nutzervorgabe bestätigt:** *„als Richtschnur müssen wir
+großteils nach Mistral zählen"* — Mistral ist der einzige Anbieter, der die
+Mindestzahl an **unabhängigen** Fällen überhaupt erreicht. Und selbst er
+liefert kein unterscheidbares Ergebnis.
+
+---
+
+## ⚠️ Rolle G: 93,9 % der Aufrufe können per Konstruktion nie ausgewertet werden
+
+Beim Nachgehen der Frage „warum tragen nur 50 von 1.118 einen Ausgang" kam
+ein Betriebsbefund heraus, kein Messproblem:
+
+| action | n | mit Ausgang | Anteil |
+|---|---:|---:|---:|
+| **HALTEN** | **1.046** | **0** | **0,0 %** |
+| ERÖFFNEN | 68 | 66 | 97,1 % |
+| TEILVERKAUF | 3 | 0 | 0,0 % |
+| SCHLIESSEN | 1 | 0 | 0,0 % |
+
+**Die Verknüpfung ist nicht kaputt — es gibt nichts zu verknüpfen.** Rolle G
+läuft ganz überwiegend auf **HALTEN**, und HALTEN bekommt per Konstruktion
+nie einen Ausgang.
+
+> **93,9 % des Z.ai-Kontingents gehen an Fälle, deren Urteil nie überprüfbar
+> wird.** Seit dem 26.07.
+
+**Drei Wege, und sie schließen sich nicht aus:**
+
+| | Weg | Wirkung |
+|---|---|---|
+| **A** | Rolle G nur bei **ERÖFFNEN** aufrufen | spart ~94 % des Kontingents sofort |
+| **B** | HALTEN an den **HALTEN-Schatten** koppeln (`selbst_gewaehltes_halten_performance` existiert und hat Daten) | macht die 1.046 auswertbar |
+| C | HALTEN weiter mitlaufen lassen, aber als **unauswertbar ausweisen** | ehrlich, ändert nichts |
+
+⚠️ **Auch der auswertbare Rest reicht nicht:** 66 Fälle sind bei Häufung 5,82
+rund **11 unabhängige** — unter der Mindestzahl. Die Gruppe „widerspruch" hat
+**5** Einträge. Selbst mit perfekter Verknüpfung wäre die Frage heute nicht
+beantwortbar.
+
+
+---
+
+## ⚠️ Korrektur zum Rolle-G-Befund: HALTEN ist NICHT unauswertbar (22.08.2026, abends)
+
+**Nutzerfrage:** *„schau nach ob und warum HALTEN keinen Ausgang hat — du
+hast HALTEN irgendwann in NICHTS_TUN geändert, warum weiß ich nicht."*
+
+### Zur Umbenennung: sie kam von dir
+
+`agent/signal_abbildung.py` hält es wörtlich fest — am 12.08. hatte ich
+behauptet, HALTEN und NICHTS_TUN seien verschieden. Dein Einwand:
+
+> *„auf z. B. Assets hätte ich diese analog verstanden — beides bedeutet beim
+> Asset keine Aktion, aktueller Stand bleibt so."*
+
+Du hattest recht. `UMBENENNUNG = {"NICHTS_TUN": "HALTEN"}` **verhindert genau
+den Fehler, der sonst jede Auswertung hätte halbieren können**: läge in der
+alten Kette HALTEN und in der neuen NICHTS_TUN, müsste jede Messung beide
+kennen.
+
+### ⚠️ Und mein Befund von heute Nachmittag war zur Hälfte falsch
+
+Ich hatte geschrieben: *„HALTEN bekommt per Konstruktion nie einen Ausgang —
+es gibt nichts zu verknüpfen."* **Das stimmt nicht.**
+
+| | |
+|---|---|
+| `_hat_selbst_halten_these()` | ein **selbst gewähltes** HALTEN (`ist_reines_llm_halten`) **mit allen drei Zonen** ist ein Schattenkandidat |
+| `check_signal_selbst_halten_outcome()` | löst es genauso auf wie einen echten Trade |
+| `hebel_signals.selbst_halten_outcome_*` | die Spalten existieren und werden gefüllt |
+
+**Der Ausgang existiert — nur in einer anderen Spalte.** Die Exportabfrage
+für `zai_gegenpruefung_verlauf` las bis heute **nur `outcome_*`**.
+
+> **Damit war es kein Konstruktionsproblem, sondern eine nicht gelesene
+> Spalte.** Der Satz „93,9 % sind nie auswertbar" gilt nur für diese eine
+> Spalte, nicht für die Datenlage.
+
+**Behoben:** die Abfrage holt jetzt `selbst_halten_outcome_status`,
+`selbst_halten_outcome_realisiertes_crv` und `ist_reines_llm_halten` mit;
+`messe_signalbilanz.py` liest beide Ausgangsspalten und weist aus, wie viele
+Fälle aus dem Schatten stammen.
+
+⚠️ **Wirksam erst nach Pull und neuem Export** — der vorliegende Export vom
+22.08. kennt die Spalten noch nicht. Das Werkzeug sagt das ausdrücklich,
+damit die unveränderte Zahl 50 nicht wie ein gescheiterter Fix aussieht.
+
+### Was davon bestehen bleibt
+
+**Der Kontingentpunkt.** Rolle G läuft zu 93,9 % auf HALTEN. Selbst wenn diese
+Fälle jetzt auswertbar werden, bleibt die Frage, ob eine Gegenprüfung auf
+einem Nicht-Handeln denselben Wert hat wie auf einem Einstieg — und ob sie
+das Kontingent wert ist, das sie kostet.

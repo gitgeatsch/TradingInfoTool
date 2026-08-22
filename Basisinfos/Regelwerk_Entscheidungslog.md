@@ -19500,3 +19500,94 @@ an der GEOMETRIE. Korrigiert auf das geplante CRV.
 VIER VORBEHALTE: grossteils alte Kette (Rollen-Kette erst seit 15.08.) -
 Regime durchgehend baer - nur_long filtert seit 05.08. nur den Versand (davor
 313 SHORT als HALTEN gebucht) - Ueberlebensverzerrung der Aufloesung.
+
+
+[2026-08-22] KORREKTUR ZU 126: DIE HAEUFUNG KIPPT DIE URTEILE
+
+NUTZERFRAGE, noch am selben Tag: "wie wir diese korrekt zaehlen wenn z.B.
+HYPE 5 mal am Tag eine Bewertung erhalten hat, ist das abgrenzbar?"
+
+JA, UND GRAVIERENDER ALS GEDACHT. 1.118 Eintraege verteilen sich auf 192
+(Symbol, Tag) und 22 Symbole; VIRTUAL bekam an EINEM Tag 48 Bewertungen.
+Faktor 5,82 - die Vertrauensintervalle sind rund 2,4-mal zu eng.
+
+Methodik 2.19.1 fordert die Gewichtung seit dem 10.08. Meine erste Fassung von
+126 hat sie uebersehen.
+
+WAS SICH AENDERT - BEIDE URTEILE FALLEN:
+    gemini/hebel   21,2 %  [17,0; 26,1] -> [12,0; 33,5]  nicht unterscheidbar
+    mistral/hebel  40,3 %  [36,0; 44,7] -> [30,2; 50,6]  nicht unterscheidbar
+    mistral/krypto 41,0 %  [36,4; 45,9] -> [30,6; 53,1]  nicht unterscheidbar
+    "unbekannt"    84,7 %  111 Faelle = 19 unabhaengige  nicht entscheidbar
+
+NACH DER KORREKTUR IST KEIN EINZIGER ANBIETER VON DER BASISRATE ZU
+UNTERSCHEIDEN - deckungsgleich mit dem Grundbefund vom 10.08. Die Quoten
+selbst bleiben; gehaeufte Beobachtungen verzerren sie nicht, sie machen sie
+unsicherer.
+
+DIE ZAEHLEINHEIT IST DER ANLASS, nicht das Signal - agent/anlass.py definiert
+ihn bereits (gleicher Fingerabdruck binnen 24 h). Damit ist auch die
+Nutzervorgabe bestaetigt, "grossteils nach Mistral zu zaehlen": er ist der
+einzige mit genug UNABHAENGIGEN Faellen, und selbst er liefert kein
+unterscheidbares Ergebnis.
+
+[2026-08-22] ROLLE G: 93,9 % DER AUFRUFE SIND NIE AUSWERTBAR
+
+Beim Nachgehen von "warum tragen nur 50 von 1.118 einen Ausgang" kam ein
+BETRIEBSBEFUND heraus, kein Messproblem:
+
+    HALTEN        1.046 Aufrufe,  0 mit Ausgang
+    EROEFFNEN        68 Aufrufe, 66 mit Ausgang
+    TEILVERKAUF       3 Aufrufe,  0
+    SCHLIESSEN        1 Aufruf,   0
+
+Die Verknuepfung ist nicht kaputt - es gibt nichts zu verknuepfen. Rolle G
+laeuft ganz ueberwiegend auf HALTEN, und HALTEN bekommt per Konstruktion nie
+einen Ausgang. 93,9 % des Z.ai-Kontingents gehen seit dem 26.07. an Faelle,
+deren Urteil nie ueberpruefbar wird.
+
+DREI WEGE: (A) Rolle G nur bei EROEFFNEN aufrufen - spart ~94 % sofort.
+(B) HALTEN an den HALTEN-Schatten koppeln, den es schon gibt
+(selbst_gewaehltes_halten_performance) - macht die 1.046 auswertbar.
+(C) weiterlaufen lassen, aber als unauswertbar ausweisen.
+
+⚠️ AUCH DER REST REICHT NICHT: 66 Faelle sind bei Haeufung 5,82 rund 11
+unabhaengige, die Gruppe "widerspruch" hat 5. Selbst mit perfekter
+Verknuepfung waere die Frage heute nicht beantwortbar.
+
+METHODIK NEU: 2.59 (Positivkontrolle misst die Verschiebung, nicht den Wert
+danach) und 2.60 (wiederholte Bewertungen desselben Werts sind EINE
+Beobachtung - Zaehleinheit ist der Anlass).
+
+
+[2026-08-22 abends] KORREKTUR: HALTEN IST NICHT UNAUSWERTBAR
+
+Nutzerfrage: "schau nach ob und warum halten keinen ausgang hat, du hast
+halten irgendwann in nichts tun geaendert ... warum weis ich nicht".
+
+ZUR UMBENENNUNG: sie kam vom Nutzer selbst. agent/signal_abbildung.py haelt
+es woertlich fest - am 12.08. hatte ich behauptet, HALTEN und NICHTS_TUN
+seien verschieden; der Nutzer widersprach ("beides bedeutet beim Asset keine
+Aktion") und hatte recht. UMBENENNUNG = {"NICHTS_TUN": "HALTEN"} verhindert,
+dass jede Auswertung beide Vokabeln kennen muss.
+
+⚠️ MEIN BEFUND VON HEUTE NACHMITTAG WAR ZUR HAELFTE FALSCH. Ich schrieb,
+HALTEN bekomme per Konstruktion nie einen Ausgang. Stimmt nicht: ein SELBST
+GEWAEHLTES HALTEN mit allen drei Zonen ist ein Schattenkandidat
+(_hat_selbst_halten_these), wird von check_signal_selbst_halten_outcome
+aufgeloest und landet in hebel_signals.selbst_halten_outcome_*.
+
+DIE EXPORTABFRAGE FUER zai_gegenpruefung_verlauf LAS BIS HEUTE NUR outcome_*.
+Kein Konstruktionsproblem, sondern eine nicht gelesene Spalte.
+
+BEHOBEN: die Abfrage holt selbst_halten_outcome_status,
+selbst_halten_outcome_realisiertes_crv und ist_reines_llm_halten mit;
+messe_signalbilanz.py liest beide Spalten und weist aus, wie viele Faelle aus
+dem Schatten stammen. ⚠️ Wirksam erst nach Pull und neuem Export - das
+Werkzeug sagt das ausdruecklich, damit die unveraenderte Zahl 50 nicht wie
+ein gescheiterter Fix aussieht.
+
+WAS BESTEHEN BLEIBT: der Kontingentpunkt. Rolle G laeuft zu 93,9 % auf
+HALTEN. Auch wenn diese Faelle auswertbar werden, bleibt die Frage, ob eine
+Gegenpruefung auf einem Nicht-Handeln denselben Wert hat wie auf einem
+Einstieg - und ob sie das Kontingent wert ist.

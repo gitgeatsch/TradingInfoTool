@@ -47,6 +47,11 @@ SPAETER NICHT MEHR AUFFALLEN WUERDEN:
   4. UEBERLEBENSVERZERRUNG DER AUFLOESUNG: ein Signal zaehlt erst, wenn es
      aufgeloest ist. Laufende Positionen fehlen, und offene Verlierer laufen
      laenger als offene Gewinner.
+  5. ⚠️ DIE HAEUFUNG - der schwerste. 1.118 Gegenpruefungen verteilen sich
+     auf 192 (Symbol, Tag) und 22 Symbole; VIRTUAL bekam an EINEM Tag 48
+     Bewertungen. Die Intervalle werden deshalb auf die EFFEKTIVE
+     Stichprobe gerechnet (Faktor 5,82), nicht auf die rohe Fallzahl.
+     Siehe `HAEUFUNG_GEMESSEN`.
 
 DIE ABBRUCHREGEL JE FRAGE:
 
@@ -92,6 +97,34 @@ STOP_RELATIV = 0.20
 # steht als eigene Spalte daneben, wo er hingehoert.
 CRV_GEPLANT = 2.0
 
+# ⚠️ DIE HAEUFUNG - UND SIE IST DER GROESSTE EINZELNE FEHLER DIESER MESSUNG
+# GEWESEN (Korrektur 22.08.2026, auf Nutzerfrage).
+#
+# Nutzerfrage woertlich: *"wie wir diese korrekt zaehlen wenn z.B. Hype 5 mal
+# am Tag eine Bewertung erhalten hat, ist das abgrenzbar?"*
+#
+# JA, UND ES IST GRAVIEREND. Gemessen an den 1.118 Gegenpruefungen:
+#
+#     Eintraege                    1.118
+#     verschiedene Symbole            22
+#     verschiedene (Symbol, Tag)     192
+#     Hoechstzahl an einem Tag        48   (VIRTUAL am 31.07.)
+#
+# Das sind KEINE 1.118 unabhaengigen Beobachtungen. Fuenf Bewertungen
+# desselben Symbols am selben Tag schauen auf dieselbe Zukunft - sie sind
+# EINE Beobachtung mit fuenf Meinungen, nicht fuenf Beobachtungen.
+#
+# Methodik 2.19.1 kennt das seit dem 10.08. ("jede kuenftige Messung dieser
+# Bauart braucht die Gewichtung") - meine erste Fassung hat es trotzdem
+# uebersehen und Wilson-Intervalle auf die rohen Fallzahlen gerechnet.
+#
+# ⚠️ DIE ZAEHLEINHEIT IST DER ANLASS, NICHT DAS SIGNAL. `agent/anlass.py`
+# definiert sie bereits: derselbe Fingerabdruck binnen 24 Stunden ist
+# DIESELBE Frage. (Symbol, Tag) ist die grobe, konservative Naeherung davon -
+# genauer waere der Fingerabdruck, aber der steht im Export nicht je Fall.
+HAEUFUNG_GEMESSEN = 5.82
+HAEUFUNG_QUELLE = "1.118 Gegenpruefungen -> 192 (Symbol, Tag), 22 Symbole"
+
 
 def _wilson(treffer: int, n: int) -> tuple:
     """Vertrauensintervall einer Quote (Wilson, 95 %).
@@ -113,13 +146,21 @@ def _breakeven(crv: float, satz: float, stop_relativ: float) -> float:
     return (1.0 + 2.0 * satz / stop_relativ) / (1.0 + crv)
 
 
-def _urteil(treffer: int, n: int, crv: float) -> tuple:
-    """(Text, Quote, Intervall) - oder 'nicht entscheidbar'."""
-    if n < MINDEST_FAELLE:
-        return (f"nicht entscheidbar ({n} < {MINDEST_FAELLE} Faelle)",
-                None, None)
+def _urteil(treffer: int, n: int, crv: float,
+            haeufung: float = HAEUFUNG_GEMESSEN) -> tuple:
+    """(Text, Quote, Intervall) - oder 'nicht entscheidbar'.
+
+    ⚠️ DAS INTERVALL WIRD AUF DIE EFFEKTIVE STICHPROBE GERECHNET, nicht auf
+    die rohe Fallzahl. Die Quote selbst bleibt, wie sie ist - gehaeufte
+    Beobachtungen verzerren sie nicht, sie machen sie nur unsicherer."""
+    # Die Untergrenze gilt fuer die EFFEKTIVE Stichprobe: 30 gehaeufte
+    # Faelle sind bei Faktor 5,8 nur fuenf unabhaengige.
+    n_eff = max(1, int(round(n / max(haeufung, 1.0))))
+    if n_eff < MINDEST_FAELLE:
+        return (f"nicht entscheidbar ({n} Faelle = {n_eff} unabhaengige, "
+                f"noetig {MINDEST_FAELLE})", None, None)
     q = treffer / n
-    unten, oben = _wilson(treffer, n)
+    unten, oben = _wilson(int(round(q * n_eff)), n_eff)
     basis = 1.0 / (1.0 + crv)
     if unten <= basis <= oben:
         return ("nicht unterscheidbar von der Basisrate", q, (unten, oben))
@@ -193,11 +234,63 @@ def gegenpruefung(daten: dict) -> None:
     eintraege = v.get("eintraege") or []
     print(f"  {v.get('anzahl_gesamt', 0)} Gegenpruefungen insgesamt, "
           f"{len(eintraege)} im Export enthalten")
+
+    # ⚠️ DER GRUND, WARUM FAST NICHTS AUSWERTBAR IST - und er ist ein
+    # BETRIEBSBEFUND, keine Messgrenze (gefunden 22.08.2026).
+    #
+    # Die Aufschluesselung nach `action` zeigt es sofort: Rolle G laeuft
+    # ueberwiegend auf HALTEN, und HALTEN bekommt per Konstruktion nie einen
+    # Ausgang. Ohne diese Zeilen sieht es aus, als sei die Verknuepfung
+    # kaputt - sie ist es nicht, es gibt schlicht nichts zu verknuepfen.
+    import collections as _c
+
+    kreuz = _c.Counter(
+        (str(x.get("action")), str(x.get("outcome_status")))
+        for x in eintraege)
+    akt = _c.Counter(str(x.get("action")) for x in eintraege)
+    print(f"\n  {'action':16}{'n':>7}{'mit Ausgang':>14}{'Anteil':>10}")
+    for aktion, n in akt.most_common():
+        mit = sum(w for (a, st), w in kreuz.items()
+                  if a == aktion
+                  and st not in ("nicht_anwendbar", "None", "offen"))
+        print(f"  {aktion:16}{n:>7}{mit:>14}{100 * mit / n:9.1f} %")
+    eroeffnen = akt.get("ERÖFFNEN", 0)
+    if eroeffnen and len(eintraege):
+        print(f"\n  ⚠️ {100 * (1 - eroeffnen / len(eintraege)):.1f} % der "
+              f"Aufrufe entfallen auf HALTEN.")
+        # ⚠️ UND HALTEN IST NICHT GRUNDSAETZLICH UNAUSWERTBAR - das war mein
+        # erster Schluss und er war zur Haelfte falsch. Ein selbst
+        # gewaehltes HALTEN mit gesetzten Zonen wird sehr wohl aufgeloest,
+        # nur in `selbst_halten_outcome_*`. Die Exportabfrage las bis zum
+        # 22.08. nur `outcome_*`.
+        if not any("selbst_halten_outcome_status" in x for x in eintraege[:1]):
+            print("     ⚠️ DIESER EXPORT KENNT DIE SCHATTENSPALTEN NOCH "
+                  "NICHT - der Ausgang eines")
+            print("        selbst gewaehlten HALTEN steht in "
+                  "`selbst_halten_outcome_*`, und die")
+            print("        Abfrage las bis zum 22.08. nur `outcome_*`. Nach "
+                  "Pull und neuem")
+            print("        Export werden diese Faelle auswertbar - vorher "
+                  "nicht.")
     # ⚠️ NUR AUFGELOESTE FAELLE. `outcome_status` "nicht_anwendbar" heisst,
     # dass es nie einen Ausgang gab - sie mitzuzaehlen waere ein Nenner aus
     # Faellen, die die Frage gar nicht beantworten koennen.
-    auf = [e for e in eintraege
-           if (e.get("outcome_realisiertes_crv") is not None)]
+    # ⚠️ BEIDE SPALTEN, NICHT NUR EINE (Korrektur 22.08.2026). Ein selbst
+    # gewaehltes HALTEN mit gesetzten Zonen wird aufgeloest - aber in
+    # `selbst_halten_outcome_realisiertes_crv`, nicht in `outcome_*`. Wer
+    # nur die erste liest, haelt 1.046 auswertbare Faelle fuer unauswertbar.
+    def _ergebnis(e):
+        for feld in ("outcome_realisiertes_crv",
+                     "selbst_halten_outcome_realisiertes_crv"):
+            if e.get(feld) is not None:
+                return float(e[feld])
+        return None
+
+    auf = [e for e in eintraege if _ergebnis(e) is not None]
+    aus_schatten = sum(
+        1 for e in auf if e.get("outcome_realisiertes_crv") is None)
+    if aus_schatten:
+        print(f"  davon aus dem HALTEN-Schatten: {aus_schatten}")
     print(f"  davon mit Ausgang: {len(auf)}")
     if not auf:
         print("  ⚠️ KEIN einziger Eintrag traegt einen Ausgang - die Frage")
@@ -210,8 +303,7 @@ def gegenpruefung(daten: dict) -> None:
             wert = e.get(feld)
             if wert is None:
                 continue
-            gruppen.setdefault(str(wert), []).append(
-                float(e["outcome_realisiertes_crv"]))
+            gruppen.setdefault(str(wert), []).append(_ergebnis(e))
         print(f"\n  --- {name} ---")
         if not gruppen:
             print("     kein Eintrag traegt dieses Feld")

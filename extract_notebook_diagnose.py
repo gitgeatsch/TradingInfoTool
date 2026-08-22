@@ -2173,7 +2173,21 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
         "SELECT symbol, richtung, action, created_at, confidence_pct, "
         "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
         "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
-        "outcome_status, outcome_realisiertes_crv "
+        "outcome_status, outcome_realisiertes_crv, "
+        # ⚠️ DIE SCHATTENSPALTEN GEHOEREN DAZU (22.08.2026). Ohne sie sah es
+        # so aus, als koennte Rolle G grundsaetzlich nicht ausgewertet
+        # werden: 1.046 von 1.118 Gegenpruefungen laufen auf HALTEN, und
+        # HALTEN traegt in `outcome_status` immer "nicht_anwendbar".
+        #
+        # DER AUSGANG EXISTIERT ABER - nur in einer anderen Spalte. Ein
+        # selbst gewaehltes HALTEN mit gesetzten Zonen wird von
+        # `check_signal_selbst_halten_outcome` aufgeloest und landet in
+        # `selbst_halten_outcome_*`. Die Abfrage hat sie nie gelesen.
+        #
+        # Damit war der Befund "93,9 % der Aufrufe sind nie auswertbar" nur
+        # zur Haelfte richtig: sie sind nicht auswertbar UEBER DIESE SPALTE.
+        "selbst_halten_outcome_status, "
+        "selbst_halten_outcome_realisiertes_crv, ist_reines_llm_halten "
         "FROM hebel_signals WHERE zai_gegenpruefung_urteil IS NOT NULL "
         "OR zai_eigene_richtung IS NOT NULL "
         "ORDER BY created_at ASC"
@@ -2942,7 +2956,7 @@ def main() -> None:
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
         "dimensionierung": dimensionierung,
-        "kapitel93": kapitel93,
+        "kapitel93": kapitel93,
         "vorfilter_schatten": vorfilter_schatten,
             "externe_reihen": externe_reihen,
             "joblaeufe": joblaeufe,
