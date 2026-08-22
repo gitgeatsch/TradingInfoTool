@@ -498,6 +498,17 @@ funktioniert), und er schaltet zwei Punkte auf einmal frei (W1 → W2).
 | SC2 Allokator gegen Zufall | 3 Wochen ab 05.08. | Datumsfilter ab 05.08. |
 | CoinGecko-80-%-Warnmail | Monatsende | Hochrechnung 8.335 von 10.000 |
 | Tageswert-Neuschreibung mit ≥ 80 % Abdeckung | morgen 06:30 | erster Lauf nach dem Fix |
+| **93 C · Lebendigkeit über TVL** | **ca. 18.09.2026** | 30 Tagesmessungen ab 20.08. — **läuft nachweislich**, 401 Zeilen am 22.08. |
+| **93 C · Lebendigkeit über Entwicklerdaten** | **09.11.2026** | 12 Wochenmessungen ab Montag **24.08.** — Wochentakt, ein Abruf je Symbol |
+
+> ⚠️ **Beide Termine stehen seit dem 22.08. im NB-Export selbst**
+> (`kapitel93.lebendigkeit.entwickler_takt`), samt Warnung, sobald ein
+> fälliger Montag ohne Messung verstreicht. Vorher konnte der Export „noch
+> nicht fällig" nicht von „nie gelaufen" unterscheiden — siehe Methodik 2.57.
+>
+> ⚠️ **Reichweitengrenze:** ~18 der 44 Kryptowerte sehen über TVL nur
+> `keine_quelle` und werden dort **nie** auswertbar. Für sie bleibt allein die
+> Entwicklerquelle.
 
 ---
 

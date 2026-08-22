@@ -19225,3 +19225,55 @@ umgekehrtem Vorzeichen, weil er gezielt greift statt gleichmaessig.
 
 ENTSCHEIDUNG: Kein Betriebsbefund. Die Produktion bleibt wie sie ist. Kapitel
 119 gilt weiter, aber nur fuer GLEICHMAESSIGE Weitung.
+
+
+[2026-08-22] 93 C GEPRUEFT - DIE SAMMLUNG LAEUFT, DER EXPORT KONNTE ES NICHT ZEIGEN
+
+DIE ANTWORT AUF DIE HAUPTFRAGE IST JA: 401 Zeilen, 20.08. bis 22.08., taeglich
+01:20 UTC (03:20 Ortszeit, wie in build_scheduler eingetragen), 347 tvl/wert +
+54 tvl/keine_quelle, 163 Symbole mit Wert. Kein Ausfall.
+
+⚠️ ABER KEINE DIESER ZAHLEN BEANTWORTET, OB DIE SAMMLUNG GESUND IST. Drei
+Luecken derselben Bauart - der Export meldete WACHSTUM, nicht GESUNDHEIT:
+
+1. WATCHLIST UND VORRAT VERMISCHT. "163 Symbole mit Wert" las sich wie
+Abdeckung, war aber ~26 eigene plus den DefiLlama-Vorrat (VORRAT_GROESSTE =
+150, die Reserve fuer spaeter hinzukommende Assets, 93.22). Dahinter die
+GRENZE VON 93 C: 18 der 44 Kryptowerte sehen nur keine_quelle - fuer sie gibt
+es ueber TVL NIE eine Aussage, es bleibt allein die Entwicklerquelle. Kein
+Fehler (LINK ist ein Orakel ohne hinterlegtes Kapital), aber es begrenzt,
+worueber 93 C je etwas sagen kann.
+
+2. NUR LEBENSZEITSUMMEN. Erwartet waeren 3 x (44 + 136) = 540 Zeilen, da
+stehen 401. Dass das trotzdem richtig ist, liess sich nur ueber den Umweg
+erschliessen, dass der erste Lauf noch ohne Vorrat war (44 + 180 + 180 = 404).
+Eine Zahl, die man rekonstruieren muss, ist keine Diagnose - und ein
+halbierter Lauf waere an der wachsenden Summe unsichtbar.
+
+3. DER WOCHENTAKT WAR BLIND. entwickler laeuft nur montags (weekday() == 0),
+ein Abruf je Symbol. Im Export stand KEINE Entwicklerzeile - und das war
+RICHTIG: die Sammlung begann Donnerstag 20.08., der erste Montag ist der
+24.08. NUR: IM NOVEMBER HAETTE DASSELBE BILD GENAUSO AUSGESEHEN. Der Export,
+der eigens dafuer gebaut wurde, dass ein Ausbleiben SOFORT auffaellt, konnte
+"noch nicht faellig" nicht von "nie gelaufen" unterscheiden.
+
+NACHGERUESTET: eigene_symbole (mit_wert, ohne_jeden_tvl_wert, stumme_symbole),
+letzter_lauf (je_tag ueber 14 Tage, davon_eigene), entwickler_takt
+(erste_faellige_montagsmessung 2026-08-24, zwoelfte_und_damit_auswertbar
+2026-11-09, WARNUNG erst ab einem verstrichenen faelligen Montag).
+
+⚠️ DEFEKT, DER ERST DURCH DIE PRUEFUNG AUFFIEL: extract_notebook_diagnose.py
+las sys.argv BEIM IMPORT. "pruefe_pakete.py --paket Dimension" brach mit
+ValueError ab, ohne --paket lief dieselbe Suite durch. Ein Pruefwerkzeug, das
+nur in einer seiner beiden Betriebsarten funktioniert, ist keins. Behoben mit
+_EIGENER_AUFRUF: als Programm ist ein unlesbares Argument ein LAUTER Fehler,
+importiert gehoeren die Argumente jemand anderem. Ein stiller Rueckfall auf 72
+waere fail-soft ist fail-silent gewesen.
+
+NACHWEIS: neun Dauerpruefungen, sieben davon gegen ECHTE SQLite-Daten statt
+gegen Quelltext - der Fehler lag nicht in einem fehlenden Wort, sondern in
+einer Zahl, die zu viel enthielt. Alle drei Faelle geprueft (noch nicht
+faellig / ueberfaellig / laeuft).
+
+⚠️ DER EXPORT LAEUFT AUF DEM NOTEBOOK - die neuen Felder erscheinen erst im
+naechsten Export nach einem Pull.

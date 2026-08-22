@@ -1,5 +1,26 @@
 # -*- coding: utf-8 -*-
-"""H auf der ECHTEN Auswahl - Watchlist-Symbole, mit Binance-Daten."""
+"""H auf der ECHTEN Auswahl - Watchlist-Symbole, mit Binance-Daten.
+
+⚠️ DIESER KOPF IST *KEINE* VORABFESTLEGUNG - und das ist Absicht
+(nachgetragen 22.08.2026, nicht rueckdatiert).
+
+Beim Nachziehen des Werkzeugkastens fiel auf, dass dieses Skript als einziges
+der Messkette 99-124 ohne Vorabfestlegung dasteht. Sie hier nachtraeglich
+hineinzuschreiben waere genau das, was die Regel verbietet: eine Frage
+"vorab" zu formulieren, nachdem die Antwort bekannt ist.
+
+WAS STATTDESSEN GILT: Es gibt hier nichts vorab festzulegen. Die Regel H
+(frei UND gedeckt) und ihr Massstab stehen seit Kapitel 108 bzw. 119 fest;
+dieses Skript wendet sie unveraendert auf eine TEILMENGE an. Kein Parameter
+wird gesucht, keine Schwelle gewaehlt, keine Variante verglichen - der einzige
+Freiheitsgrad ist, WELCHE Symbole zur Watchlist gehoeren, und den bestimmt
+`config.get_watchlist()`, nicht dieses Skript.
+
+⚠️ DESHALB IST DER BEFUND AUS 122 AUCH NICHT BESTAETIGEND. Er ist eine
+Uebertragungsprobe: der Punktschaetzer (+4,8) stimmt mit den 523 Reihen
+ueberein, aber 27 Reihen tragen die Schwelle (+9,2) nicht. Das steht so in
+122.3 und darf nicht zu "auf der echten Auswahl nachgewiesen" werden.
+"""
 import sys, math
 sys.path.insert(0, ".")
 import numpy as np

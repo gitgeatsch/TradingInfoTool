@@ -16149,3 +16149,105 @@ diesen Fall wäre falsch gewesen.**
 | Gilt Kapitel 119 weiter? | **ja, aber nur für gleichmäßige Weitung** |
 
 **Kein Betriebsbefund. Die Produktion bleibt wie sie ist.**
+
+
+---
+
+## 93 C geprüft — die Sammlung läuft, der Export konnte es nicht zeigen (22.08.2026)
+
+**Der erste echte NB-Export seit dem Bau von 93 C.** Erste Frage, wie im
+Referenzeintrag festgelegt: *wächst die Reihe?*
+
+### Die Antwort: ja
+
+| | |
+|---|---:|
+| Zeilen | **401** |
+| Zeitraum | 20.08. 01:20 UTC → 22.08. 01:20 UTC |
+| Tage | 3 |
+| `tvl/wert` | 347 |
+| `tvl/keine_quelle` | 54 |
+| Symbole mit Wert | 163 |
+
+Der Job läuft täglich um 03:20 Ortszeit (01:20 UTC), wie in
+`build_scheduler()` eingetragen. **Kein Ausfall.**
+
+### ⚠️ Aber keine dieser Zahlen beantwortet, ob die Sammlung *gesund* ist
+
+Drei Lücken, alle derselben Bauart — **der Export meldete Wachstum, nicht
+Gesundheit**:
+
+**1. Watchlist und Vorrat vermischt.** „163 Symbole mit Wert" las sich wie
+Abdeckung. Tatsächlich sind es **~26 eigene Werte plus den DefiLlama-Vorrat**
+(`VORRAT_GROESSTE = 150`, siehe 93.22 — genau die Reserve für später
+hinzukommende Assets). Die Zahl, auf die es ankommt — wie viele *unserer*
+Werte je auswertbar werden — stand nirgends.
+
+Und dahinter die Grenze von 93 C: **18 der 44 Kryptowerte sehen nur
+`keine_quelle`.** Für sie gibt es über TVL **nie** eine Aussage; es bleibt
+allein die Entwicklerquelle. Das ist kein Fehler (LINK ist ein Orakel und hat
+kein hinterlegtes Kapital) — aber es begrenzt, worüber 93 C je etwas sagen
+kann.
+
+**2. Nur Lebenszeitsummen.** Schreibt ein Lauf plötzlich die Hälfte, wächst
+die Summe weiter und nichts sieht falsch aus. Bei 401 Zeilen auf 3 Tagen war
+das schon konkret: erwartet wären 3 × (44 + 136) = 540. Dass 401 trotzdem
+richtig ist, ließ sich nur über den Umweg erschließen, dass **der erste Lauf
+noch ohne Vorrat war** (44 + 180 + 180 = 404). **Eine Zahl, die man
+rekonstruieren muss, ist keine Diagnose.**
+
+**3. Der Wochentakt war blind.** `entwickler` läuft nur montags
+(`lebendigkeit_job`, `weekday() == 0`) — ein Abruf je Symbol, das
+CoinGecko-Kontingent lässt keinen Tagestakt zu. Im Export stand **keine
+einzige Entwicklerzeile**.
+
+> ⚠️ **Und das war richtig.** Die Sammlung begann am **Donnerstag,
+> 20.08.** — der erste Montag ist der **24.08.** Nichts war ausgefallen.
+>
+> **Nur: im November hätte dasselbe Bild genauso ausgesehen.** Der Export,
+> der eigens gebaut wurde, damit ein Ausbleiben *sofort* auffällt, konnte
+> „noch nicht fällig" nicht von „nie gelaufen" unterscheiden.
+
+### Was nachgerüstet wurde
+
+| Feld | Frage, die es jetzt beantwortet |
+|---|---|
+| `eigene_symbole.mit_wert` | wie viele **unserer** Werte tragen eine Reihe |
+| `eigene_symbole.ohne_jeden_tvl_wert` + `stumme_symbole` | welche werden über TVL **nie** auswertbar |
+| `letzter_lauf.je_tag` (14 Tage) | hat ein Lauf **weniger** geschrieben als sonst |
+| `letzter_lauf.davon_eigene` | derselbe Schnitt für den jüngsten Lauf |
+| `entwickler_takt.erste_faellige_montagsmessung` | **ab wann** ein Fehlen ein Fehler ist |
+| `entwickler_takt.zwoelfte_und_damit_auswertbar` | **09.11.2026** |
+| `entwickler_takt.WARNUNG` | erscheint erst, wenn ein fälliger Montag **ohne** Zeile verstrichen ist |
+
+### ⚠️ Und ein Defekt, der erst durch die Prüfung auffiel
+
+`extract_notebook_diagnose.py` las **`sys.argv` beim Import**:
+
+```
+python pruefe_pakete.py --paket Dimension
+-> ValueError: invalid literal for int() with base 10: 'Dimension'
+```
+
+Ohne `--paket` lief dieselbe Suite durch. **Ein Prüfwerkzeug, das nur in
+einer seiner beiden Betriebsarten funktioniert, ist keins.**
+
+Behoben mit der Unterscheidung `_EIGENER_AUFRUF`: läuft die Datei als
+Programm, ist ein unlesbares Argument **ein lauter Fehler**; wurde sie
+importiert, gehören die Argumente jemand anderem und werden ignoriert. Ein
+stiller Rückfall auf 72 wäre *fail-soft ist fail-silent* gewesen.
+
+### Nachweis
+
+**Neun Dauerprüfungen**, davon sieben gegen **echte SQLite-Daten** statt
+gegen Quelltext — der Fehler lag nicht in einem fehlenden Wort, sondern in
+einer Zahl, die zu viel enthielt. Geprüft werden alle drei Fälle:
+
+| Fall | Erwartung |
+|---|---|
+| Start Donnerstag, kein Montag vergangen | **keine** Warnung, Hinweis „und das ist RICHTIG" |
+| Start vor 30 Tagen, Montage vergangen, keine Zeile | **WARNUNG** |
+| Entwicklerzeilen vorhanden | Warnung schweigt |
+
+⚠️ **Der Export läuft auf dem Notebook.** Diese Felder erscheinen erst im
+**nächsten** Export nach einem Pull.

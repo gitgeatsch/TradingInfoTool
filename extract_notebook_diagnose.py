@@ -217,8 +217,41 @@ from agent.krypto.backward_tracking import (
 from agent.krypto.regime import get_last_known_regime_status
 from agent.portfolio_historie import pruefe_z3
 
-DEEP_DIVE_SYMBOL = sys.argv[1] if len(sys.argv) > 1 else "LINK"
-LOG_FENSTER_STUNDEN = int(sys.argv[2]) if len(sys.argv) > 2 else 72
+# ⚠️ DIE ARGUMENTE GEHOEREN DEM AUFRUFER, NICHT DEM MODUL (22.08.2026).
+# Bis hierher wurde `sys.argv` beim IMPORT gelesen. Wer dieses Modul aus
+# einem anderen Skript importierte, bekam dessen Argumente vorgesetzt:
+#
+#     python pruefe_pakete.py --paket Dimension
+#     -> ValueError: invalid literal for int(): 'Dimension'
+#
+# Gefunden, als die Suite zum ersten Mal `_kapitel93` gegen echte Daten
+# aufrief. Ohne `--paket` lief sie durch, mit `--paket` brach sie ab - ein
+# Pruefwerkzeug, das nur in einer seiner beiden Betriebsarten funktioniert.
+#
+# ⚠️ UND DER RUECKFALL DARF NICHT STILL SEIN. Argumente einfach zu ignorieren
+# waere "fail-soft ist fail-silent": ein Tippfehler im eigenen Aufruf
+# (`... 7z`) laege dann 72 Stunden zugrunde, ohne dass es jemand erfaehrt.
+# Deshalb die Unterscheidung: laeuft DIESE Datei als Programm, ist ein
+# unlesbares Argument ein Fehler. Wurde sie importiert, gehoeren die
+# Argumente jemand anderem und werden ignoriert.
+_EIGENER_AUFRUF = Path(sys.argv[0]).name == Path(__file__).name
+
+
+def _argument(nr: int, standard):
+    wert = sys.argv[nr] if len(sys.argv) > nr else None
+    if wert is None or not _EIGENER_AUFRUF:
+        return standard
+    if isinstance(standard, int):
+        if not wert.isdigit():
+            raise SystemExit(
+                f"Argument {nr} ist das Log-Fenster in Stunden und muss eine "
+                f"Zahl sein - bekommen: {wert!r}")
+        return int(wert)
+    return wert
+
+
+DEEP_DIVE_SYMBOL = _argument(1, "LINK")
+LOG_FENSTER_STUNDEN = _argument(2, 72)
 # Gate-Veto-Auswertung (2026-07-28-Fund, siehe _gate_veto_analyse() Docstring):
 # eigenes, kuerzeres Fenster als LOG_FENSTER_STUNDEN - signals/hebel_signals werden
 # komplett all-time geladen (kein Datumsfilter), ein 7-Tage-Fenster reicht um aktuelle
@@ -1493,7 +1526,26 @@ def _kapitel93(conn) -> dict:
 
     # 93 C: waechst die Reihe? Die Auswertung kommt spaeter, das Sammeln
     # muss JETZT nachweisbar sein.
+    # ⚠️ DREI LUECKEN, GEFUNDEN AM 22.08.2026 BEIM ERSTEN ECHTEN EXPORT.
+    # Die erste Fassung meldete WACHSTUM, nicht GESUNDHEIT - sie konnte
+    # "laeuft" nicht von "laeuft halb" unterscheiden:
+    #
+    #   1. WATCHLIST UND VORRAT VERMISCHT. "163 Symbole mit Wert" las sich
+    #      wie Abdeckung, war aber ~26 eigene plus den DefiLlama-Vorrat
+    #      (VORRAT_GROESSTE = 150, siehe Umbauplan 93.22). Die Zahl, auf die
+    #      es ankommt - wie viele UNSERER Werte je auswertbar werden - stand
+    #      nirgends.
+    #   2. NUR LEBENSZEITSUMMEN. Schreibt ein Lauf ploetzlich die Haelfte,
+    #      waechst die Summe weiter und nichts sieht falsch aus. Am 22.08.
+    #      standen 401 Zeilen auf 3 Tagen; ob das gesund war, liess sich
+    #      nur ueber den Umweg "der erste Lauf war noch ohne Vorrat"
+    #      erschliessen. `je_tag` beantwortet es direkt.
+    #   3. DER WOCHENTAKT WAR BLIND. `entwickler` laeuft nur montags. Am
+    #      22.08. fehlte er zu RECHT - die Sammlung begann an einem
+    #      Donnerstag. Im November faehlte er genauso unauffaellig.
     try:
+        import datetime as _dt
+
         n = conn.execute("SELECT COUNT(*) FROM lebendigkeit_beobachtung"
                          ).fetchone()[0]
         je = {f"{r[0]}/{r[1]}": r[2] for r in conn.execute(
@@ -1516,6 +1568,81 @@ def _kapitel93(conn) -> dict:
             aus["lebendigkeit"]["WARNUNG"] = (
                 "KEINE Zeile. Der Job `lebendigkeit` laeuft nicht - jeder "
                 "Tag ohne Sammeln verschiebt die Auswertung um einen Tag.")
+
+        # ---- 1. UNSERE SYMBOLE, GETRENNT VOM VORRAT --------------------
+        # `grund` traegt die Unterscheidung schon; sie wurde nur nie gelesen.
+        eigen = {f"{r[0]}/{r[1]}": r[2] for r in conn.execute(
+            "SELECT quelle, zustand, COUNT(*) FROM lebendigkeit_beobachtung "
+            "WHERE grund NOT LIKE 'Vorrat%' GROUP BY 1, 2")}
+        eigen_sym = conn.execute(
+            "SELECT COUNT(DISTINCT symbol) FROM lebendigkeit_beobachtung "
+            "WHERE zustand = 'wert' AND grund NOT LIKE 'Vorrat%'").fetchone()[0]
+        # ⚠️ DIE WICHTIGSTE ZAHL DES ABSCHNITTS: Symbole, die NUR
+        # `keine_quelle` gesehen haben, werden ueber TVL NIE auswertbar -
+        # fuer sie bleibt allein die Entwicklerquelle. Das ist kein Fehler
+        # (LINK etwa ist ein Orakel und hat kein hinterlegtes Kapital),
+        # aber es begrenzt, worueber 93 C je etwas sagen kann.
+        stumm = [r[0] for r in conn.execute(
+            "SELECT symbol FROM lebendigkeit_beobachtung "
+            "WHERE quelle = 'tvl' AND grund NOT LIKE 'Vorrat%' "
+            "GROUP BY symbol HAVING SUM(zustand = 'wert') = 0")]
+        aus["lebendigkeit"]["eigene_symbole"] = {
+            "je_quelle_und_zustand": eigen,
+            "mit_wert": eigen_sym,
+            "ohne_jeden_tvl_wert": len(stumm),
+            "stumme_symbole": sorted(stumm)[:60],
+            "hinweis": ("`symbole_mit_wert` oben enthaelt den DefiLlama-"
+                        "Vorrat - hier stehen nur die Werte der Watchlist")}
+
+        # ---- 2. DER LETZTE LAUF, NICHT DIE LEBENSZEITSUMME -------------
+        letzter_tag = (spanne[1] or "")[:10]
+        aus["lebendigkeit"]["letzter_lauf"] = {
+            "tag": letzter_tag,
+            "je_quelle_und_zustand": {f"{r[0]}/{r[1]}": r[2] for r in
+                                      conn.execute(
+                "SELECT quelle, zustand, COUNT(*) FROM "
+                "lebendigkeit_beobachtung WHERE substr(erfasst_am,1,10) = ? "
+                "GROUP BY 1, 2", (letzter_tag,))},
+            "davon_eigene": {f"{r[0]}/{r[1]}": r[2] for r in conn.execute(
+                "SELECT quelle, zustand, COUNT(*) FROM "
+                "lebendigkeit_beobachtung WHERE substr(erfasst_am,1,10) = ? "
+                "AND grund NOT LIKE 'Vorrat%' GROUP BY 1, 2",
+                (letzter_tag,))},
+            "je_tag": {r[0]: r[1] for r in conn.execute(
+                "SELECT substr(erfasst_am,1,10), COUNT(*) FROM "
+                "lebendigkeit_beobachtung GROUP BY 1 ORDER BY 1 DESC "
+                "LIMIT 14")},
+            "hinweis": ("schwankt `je_tag` stark, hat ein Lauf nur die "
+                        "Haelfte geschrieben - an der Lebenszeitsumme "
+                        "waere das unsichtbar")}
+
+        # ---- 3. DER WOCHENTAKT BRAUCHT EINEN FAELLIGKEITSTERMIN --------
+        erster = (spanne[0] or "")[:10]
+        if erster:
+            _tage = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+            _start = _dt.date.fromisoformat(erster)
+            d = _start
+            while d.weekday() != 0:          # 0 = Montag, der Entwicklertag
+                d += _dt.timedelta(days=1)
+            hat_e = any(k.startswith("entwickler/") for k in je)
+            heute = _dt.datetime.now(_dt.timezone.utc).date()
+            faellig = {"erste_faellige_montagsmessung": d.isoformat(),
+                       "bisher_erhoben": hat_e,
+                       "zwoelfte_und_damit_auswertbar":
+                           (d + _dt.timedelta(weeks=11)).isoformat()}
+            if not hat_e and heute >= d:
+                faellig["WARNUNG"] = (
+                    f"Seit {d.isoformat()} waere die Entwicklerquelle "
+                    f"faellig - es steht KEINE Zeile da. `mit_entwickler` "
+                    f"haengt am Montag (scheduler/background."
+                    f"lebendigkeit_job); faellt der Montagslauf aus, faellt "
+                    f"die Quelle GANZ aus.")
+            elif not hat_e:
+                faellig["hinweis"] = (
+                    f"Noch nichts erhoben, und das ist RICHTIG: die Sammlung "
+                    f"begann am {erster} ({_tage[_start.weekday()]}), der "
+                    f"erste Montag ist der {d.isoformat()}.")
+            aus["lebendigkeit"]["entwickler_takt"] = faellig
     except Exception as exc:                                 # noqa: BLE001
         aus["lebendigkeit"] = {
             "nicht_verfuegbar": str(exc),

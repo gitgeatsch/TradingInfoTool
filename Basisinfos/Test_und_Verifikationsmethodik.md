@@ -2720,54 +2720,54 @@ geantwortet*. Alle mit `●` (grau), nicht `▼` (rot):
 
 > **Ein Ausfall unserer Technik ist kein Befund über den Handel.** Ihn rot zu
 > setzen hieße, dem Leser eine Warnung über sein Geschäft zu geben, wo eine
-> über unser Werkzeug gemeint ist.
-
-## 2.40 Eine Pruefung, die den eigenen Leser nicht kennt (neu 2026-08-18)
-
-`_quelltext()` entfernt Kommentarzeilen - richtig, weil dieses Projekt
-Entferntes ausfuehrlich im Kommentar festhaelt und ein `grep` die geloeschte
-Zeile sonst in ihrer eigenen Grabinschrift wiederfindet.
-
-**Genau deshalb kann er einen Geltungsvermerk nicht sehen.** Die erste
-Fassung von `paket_dimension` suchte den Vermerk
-*"GILT NUR FUER DIE ALTEN PIPELINES"* in `config.yaml` ueber `_quelltext`
-und schlug fehl - obwohl der Vermerk dastand.
-
-> **Regel: wer Kommentare oder Dokumentation prueft, liest ROH.**
-> `_quelltext` ist fuer aktiven Code da. Ein Vermerk ist kein Code.
-
----
-
-## 2.41 `_quelltext` entfernt Kommentare - keine Docstrings (neu 2026-08-18)
-
-Methodik 2.40 hielt fest: **wer Dokumentation prueft, liest roh.** Einen Tag
-spaeter dieselbe Klasse in der Gegenrichtung.
-
-Eine Pruefung sollte sicherstellen, dass die Kette `rechne(widerstand=...)`
-NICHT fuellt - sonst waere der verworfene Widerstandsdeckel wieder scharf.
-Sie suchte `"widerstand="` im Quelltext und schlug fehl. Gefunden hatte sie
-**ihren eigenen Warnhinweis im Docstring** der Funktion, die den Weg
-vermeidet.
-
-> `_quelltext` entfernt Zeilen, die mit `#` beginnen. **Ein Docstring ist
-> kein Kommentar.** In einem Projekt, das Verworfenes ausfuehrlich
-> beschreibt, steht der gesuchte Text deshalb regelmaessig in seiner eigenen
-> Grabinschrift - nur eine Etage tiefer als am 12.08.
-
-### Die Regel
-
-**Wer prueft, ob ein Aufruf ein Schluesselwort uebergibt, prueft am
-Syntaxbaum, nicht am Text:**
-
-```python
-baum = ast.parse(io.open(pfad, encoding="utf-8").read())
-treffer = [k for n in ast.walk(baum) if isinstance(n, ast.Call)
-           for k in (n.keywords or []) if k.arg == "widerstand"]
-```
-
-Textsuche bleibt richtig fuer Konstanten und Vermerke. Fuer **Aufrufe** ist
-sie zu grob - sie kann Beschreibung nicht von Ausfuehrung unterscheiden.
-
+> über unser Werkzeug gemeint ist.
+
+## 2.40 Eine Pruefung, die den eigenen Leser nicht kennt (neu 2026-08-18)
+
+`_quelltext()` entfernt Kommentarzeilen - richtig, weil dieses Projekt
+Entferntes ausfuehrlich im Kommentar festhaelt und ein `grep` die geloeschte
+Zeile sonst in ihrer eigenen Grabinschrift wiederfindet.
+
+**Genau deshalb kann er einen Geltungsvermerk nicht sehen.** Die erste
+Fassung von `paket_dimension` suchte den Vermerk
+*"GILT NUR FUER DIE ALTEN PIPELINES"* in `config.yaml` ueber `_quelltext`
+und schlug fehl - obwohl der Vermerk dastand.
+
+> **Regel: wer Kommentare oder Dokumentation prueft, liest ROH.**
+> `_quelltext` ist fuer aktiven Code da. Ein Vermerk ist kein Code.
+
+---
+
+## 2.41 `_quelltext` entfernt Kommentare - keine Docstrings (neu 2026-08-18)
+
+Methodik 2.40 hielt fest: **wer Dokumentation prueft, liest roh.** Einen Tag
+spaeter dieselbe Klasse in der Gegenrichtung.
+
+Eine Pruefung sollte sicherstellen, dass die Kette `rechne(widerstand=...)`
+NICHT fuellt - sonst waere der verworfene Widerstandsdeckel wieder scharf.
+Sie suchte `"widerstand="` im Quelltext und schlug fehl. Gefunden hatte sie
+**ihren eigenen Warnhinweis im Docstring** der Funktion, die den Weg
+vermeidet.
+
+> `_quelltext` entfernt Zeilen, die mit `#` beginnen. **Ein Docstring ist
+> kein Kommentar.** In einem Projekt, das Verworfenes ausfuehrlich
+> beschreibt, steht der gesuchte Text deshalb regelmaessig in seiner eigenen
+> Grabinschrift - nur eine Etage tiefer als am 12.08.
+
+### Die Regel
+
+**Wer prueft, ob ein Aufruf ein Schluesselwort uebergibt, prueft am
+Syntaxbaum, nicht am Text:**
+
+```python
+baum = ast.parse(io.open(pfad, encoding="utf-8").read())
+treffer = [k for n in ast.walk(baum) if isinstance(n, ast.Call)
+           for k in (n.keywords or []) if k.arg == "widerstand"]
+```
+
+Textsuche bleibt richtig fuer Konstanten und Vermerke. Fuer **Aufrufe** ist
+sie zu grob - sie kann Beschreibung nicht von Ausfuehrung unterscheiden.
+
 ---
 
 ## 2.42 Ein Abbruch darf nie zu einem Messwert werden (neu 2026-08-19)
@@ -3208,3 +3208,242 @@ Zahl über ein Urteil entscheiden durfte.**
 
 **Umgesetzt in:** `pruefe_strukturstop.py` (`RELEVANZ = 0.01`). Bei jedem
 neuen Vergleichswerkzeug mitzubauen.
+
+
+### 2.57 Ein Diagnosewerkzeug muss GESUNDHEIT melden, nicht WACHSTUM
+
+**Anlass (22.08.2026):** Der NB-Export meldete zur Lebendigkeitsreihe „401
+Zeilen, 3 Tage, 163 Symbole mit Wert". Alle drei Zahlen waren richtig. **Keine
+beantwortete die Frage, die der Abschnitt beantworten sollte.**
+
+Der Abschnitt war eigens gebaut worden, damit ein Ausbleiben *sofort*
+auffällt. Er hätte einen halbierten Lauf, eine ganz fehlende Quelle und einen
+falsch verstandenen Abdeckungsgrad **alle drei durchgehen lassen**.
+
+**Drei Bauarten, an denen man das erkennt:**
+
+| Muster | warum es blind macht | was stattdessen gehört |
+|---|---|---|
+| **Lebenszeitsumme** | sie wächst weiter, auch wenn ein Lauf die Hälfte schreibt | der **letzte Lauf** und eine Reihe je Tag |
+| **Vermischte Grundgesamtheit** | „163 Symbole" las sich wie Abdeckung, enthielt aber den Vorrat | der Schnitt, auf den es ankommt, **getrennt** |
+| **Takt ohne Fälligkeitstermin** | eine Wochenquelle fehlt am Anfang **zu Recht** und später **zu Unrecht** — gleiches Bild | das **Datum**, ab dem Fehlen ein Fehler ist |
+
+⚠️ **Der dritte ist der gefährlichste**, weil er zeitverzögert zuschlägt. Am
+22.08. fehlte die Entwicklerquelle richtigerweise (Sammlungsbeginn Donnerstag,
+erster Montag 24.08.). Im November hätte dasselbe Bild einen Totalausfall
+bedeutet — **und genauso ausgesehen**.
+
+**Die Prüffrage vor jedem Diagnosefeld:**
+
+> *Gibt es einen Defekt, bei dem dieses Feld unverändert aussieht?*
+
+Lautet die Antwort ja, ist das Feld eine Beruhigung, keine Diagnose.
+
+⚠️ **Und geprüft wird gegen DATEN, nicht gegen Quelltext.** Die neun
+Dauerprüfungen dazu bauen eine SQLite-Datenbank im Speicher und rufen die
+Exportfunktion auf. Eine Textprüfung hätte nichts gefunden: der Fehler lag
+nicht in einem fehlenden Wort, sondern in **einer Zahl, die zu viel
+enthielt**. Geprüft werden beide Urteile — „noch nicht fällig" **und**
+„überfällig" — denn ein Werkzeug, das nur warnen kann, warnt bald immer.
+
+**Umgesetzt in:** `extract_notebook_diagnose._kapitel93` (`eigene_symbole`,
+`letzter_lauf.je_tag`, `entwickler_takt`), Prüfungen in `pruefe_pakete.py`.
+
+
+### Die Messkette zu H — Kapitel 99 bis 124 (Nachtrag 22.08.2026)
+
+⚠️ **Dieser Abschnitt schließt eine Lücke, die dem eigenen Anspruch
+widerspricht.** 2.13 wurde gebaut, weil drei Mess-Funktionen ohne Aufrufer
+dalagen. Beim Nachziehen am 22.08. gezählt: **116 Skripte im Projektstamm, 69
+in diesem Werkzeugkasten.** Die Messkette der letzten drei Wochen war
+vollständig **nicht** verzeichnet — dieselbe Falle in neuer Auflage.
+
+**Die Grundlage — hier fängt jede Messung an:**
+
+| Skript | Beantwortet | Auslöser |
+|---|---|---|
+| `lade_messreihen.py` | Baut `data/messdaten.db` (523 Reihen, 770.873 Kerzen, Binance-USDT). **Die Basis aller Kapitel ab 107.** | einmalig; erneut nur, wenn die Reihen altern |
+| `messe_marken.py` | **Der Ankergenerator.** Erzeugt je Anker Hochabstand, Drift, Umsatz, Marken (frei/gedeckt/Berührungen/Alter/gefegt), Marktphase, Ausgang, Tage, Stopabstand. Acht Werkzeuge bauen darauf auf. | wenn ein neues Merkmal je Anker gebraucht wird |
+| `simuliere_bremse.py` | Trägt die gemeinsame Infrastruktur: `gebuehr_je_seite()`, `SAETZE_ZUM_BERICHTEN`, `_reihen_roh()`, `_marktphase()` | nie direkt — wird importiert |
+
+**Die Befunde, nach Frage sortiert:**
+
+| Skript | Beantwortet |
+|---|---|
+| `messe_umschlag_kontext.py` | Heißt hoher Umschlag nach einem Anstieg etwas anderes als in der Ruhe? (98) |
+| `messe_geometrie.py` | Welche Geometrie trägt sich — und hängt sie an der Lage? (101) |
+| `messe_drift_absolut.py` | Trägt die **absolute** Drift das Barrierensystem? (102) |
+| `messe_zeitteilung.py` | Wird aus dem Muster eine Regel? (109) — Zeitteilung |
+| `messe_kollinearitaet.py` | Sind zwei Hebel dasselbe? (103) |
+| `messe_struktur_bereinigt.py` | Trägt H über den Hochabstand hinaus? (108) |
+| `messe_spiegel.py` | Ist H eine Richtungsbedingung? (110) — Spiegelbedingung |
+| `messe_zerlegung.py` | Wie viel von H erklärt Momentum? (111) — **Zerlegung, nicht Ja/Nein** (2.51) |
+| `messe_anreicherung.py` | Wissen Marken mehr (Berührungen, Alter, gefegt)? (112) |
+| `messe_drift_zerlegt.py` | Ist der Drift der ATR-Kanal? (113) |
+| `messe_phase_invers.py` | Wirkt die Marktphase invers? (114) |
+| `messe_wann.py` | Hat H einen Anwendungszeitpunkt? (115) |
+| `messe_liquiditaet.py` | Braucht H Liquidität? (116) |
+| `messe_dosis.py` / `messe_dosis_sauber.py` | Braucht H eine eigene Geometrie? (117/118) |
+| `bewerte_neu.py` | Rechnet alle Kapitel auf **zwei Gebührensätze** um (119) |
+| `messe_klassen.py` | Trägt H je Kategorie und je Strategie? (120) |
+| `messe_ueberleben.py` | Wie stark verzerrt die Überlebensauswahl? (121) |
+| `pruefe_watchlist.py` | Wirkt H auf der **echten** Auswahl? (122) |
+| `messe_ausstieg.py` | Tragen Teilverkauf und Einstandstop? (123) |
+| `pruefe_strukturstop.py` | Schadet der Strukturboden im Stop? (124) — ruft die **Produktionsfunktion** |
+| `pruefe_phasenindex.py` | Hält der Phasenindex, was er misst? (114, Gegenprobe) |
+
+> ⚠️ **Alle bis auf eines tragen `⚠️ DIESER KOPF IST DIE VORABFESTLEGUNG`** —
+> die Frage und ihre Abbruchregel stehen dort, **bevor** gerechnet wurde. Wer
+> eines davon wiederverwendet, muss den Kopf neu schreiben, nicht nur die
+> Parameter.
+>
+> **Die Ausnahme ist `pruefe_watchlist.py`, und sie bleibt eine.** Sie
+> nachträglich zu schreiben wäre genau das, was die Regel verbietet: eine
+> Frage „vorab" zu formulieren, nachdem die Antwort bekannt ist. Das Skript
+> trägt seit dem 22.08. stattdessen den ehrlichen Vermerk, **warum** es keine
+> braucht — es wendet die seit 108/119 feststehende Regel unverändert auf eine
+> Teilmenge an, ohne einen einzigen gesuchten Parameter.
+
+
+## 2.58 Das Messsystem — wie in diesem Projekt eine Messung gebaut wird
+
+⚠️ **Warum dieser Abschnitt existiert (Nutzerhinweis 22.08.2026: „es sollte
+auch ein Regelwerk oder Messsystem-Doku geben").** Die Bausteine standen
+verstreut: Regeln in 2.47–2.57, Werkzeuge in 2.13, Ergebnisse in der
+Befundkarte, Herleitungen in den Umbauplan-Kapiteln. **Wer eine neue Messung
+aufsetzt, musste vier Dokumente zusammensuchen.** Hier steht das Gerüst an
+einer Stelle. *Kein neues Dokument* — dieselbe Datei ist laut Landkarte für
+„WIE getestet wird" zuständig.
+
+### 2.58.1 Die sechs Teile, die jede Messung hat
+
+| Teil | verbindlich | wo geregelt |
+|---|---|---|
+| **1 Vorabfestlegung** | Frage, Erwartung und **Abbruchregel** im Docstring, **bevor** gerechnet wird | 2.51 |
+| **2 Grundgesamtheit** | dieselbe für Regel und Kontrolle — nie die Regel auf Teilmenge, die Kontrolle auf alles | **2.50** |
+| **3 Kontrolle** | Block-Permutation bei überlappenden Ankern · **Block-Bootstrap** bei deterministischen Umrechnungen | 2.47 · **2.55** |
+| **4 Schwelle** | ist selbst eine Schätzung; Läufe erhöhen, wenn der Messwert nahe liegt. **Preis des Absuchens** ausweisen | 2.48 · **2.49** |
+| **5 Urteil** | **Relevanz vor Vertrauensintervall** · „trägt" nur mit Breakeven-Abstand · beide Lesarten bei Horizonten | **2.56** · 2.53 · 2.54 |
+| **6 Ablage** | Nullbefund als **Zerlegung mit Rest**, Kontrollgröße selbst als Kandidat | 2.51 |
+
+### 2.58.2 Die feststehenden Größen
+
+| Größe | Wert | Herkunft |
+|---|---|---|
+| Messbasis | **523 Reihen**, 770.873 Kerzen, Binance-USDT | `lade_messreihen.py`; 347 handelnd + 176 eingestellt (121) |
+| Referenzgebühr | **0,30 % je Seite** | Mischsatz üblicher Krypto-Broker — „ist das ein guter Trade" |
+| Betriebsgebühr | **1,50 % je Seite** | Bitpanda-Brokerspread — „rechnet es sich für mich" |
+| Kostenformel | `Kosten_R = 2 × Gebühr / Stopabstand` | 119 |
+| Breakeven | `(1 + Kosten_R) / (1 + CRV)` | Basisrate ist `1/(1+CRV)` — die Hürde liegt bei Kosten > 0 **immer** darüber |
+| Positivkontrolle | **Pflicht bei jedem Nullbefund** | 93 B — sonst heißt „nichts gefunden" nur „nicht hingesehen" |
+
+> ⚠️ **Beide Gebührensätze werden IMMER nebeneinander berichtet.** Ein
+> einzelner Satz beantwortet je nur eine der beiden Fragen, und achtzehn
+> Kapitel lang beantwortete das Projekt unbemerkt die falsche.
+
+### 2.58.3 Die drei Fehlerarten, die dieses Projekt wiederholt getroffen haben
+
+| Art | Beispiel | Gegenmittel |
+|---|---|---|
+| **Blick in die Zukunft** | `_gefegt` las die ganze Restreihe → 79,0 % statt 67,3 % (112) | Reihe **am Anker abschneiden**, gegen die Produktion gegenrechnen |
+| **Ungleiche Arme** | H in zwei Phasen gegen alle Anker in allen Phasen (109) — 4,6 Punkte Geschenk | 2.50 |
+| **Entartete Kontrolle** | Schwelle gleich dem Messwert auf drei Stellen — es gab nichts zu permutieren (123) | 2.55; Zahl der brauchbaren Reihen **immer** ausdrucken (2.52) |
+
+### 2.58.4 Und die Regel über allen anderen
+
+> **Was gemessen wird, muss auch das sein, was analysiert wird** — und ein
+> Werkzeug, das Fehlalarme gibt, wird nicht mehr aufgerufen.
+
+Beides ist teuer bezahlt: eine Rollenanalyse („LLM wegen Sprache, NICHT wegen
+Zahlen") und Minuten später eine Zahlen-Schätzung gemessen; und fünf
+Fehlmeldungen aus einem Prüfwerkzeug, nach denen niemand es mehr startete.
+
+
+### Der Restbestand — 52 Werkzeuge, die nie verzeichnet waren (22.08.2026)
+
+⚠️ **Auf Nutzerhinweis geprüft** („offenbar nicht immer alle Punkte und
+Umsetzungen dokumentiert"). Gezählt: **116 Skripte im Projektstamm, 64 in
+diesem Werkzeugkasten** — auch nach dem Nachtrag zur H-Kette weiter oben.
+
+**Und die erste Fassung dieses Nachtrags war selbst unvollständig**: sie ließ
+die Kapitel 98, 101, 102 und 109 aus, obwohl sie zur beschriebenen Kette
+gehören. Genau das Muster, das der Nutzer benannt hat.
+
+⚠️ **Was hier folgt, ist ein INDEX, keine Bewertung.** Jede Zeile ist die
+erste Zeile des jeweiligen Docstrings, maschinell übernommen. Ob ein Werkzeug
+noch läuft, ob sein Befund noch gilt und ob es einen Aufrufer hat, steht damit
+**nicht** fest — das ist bei jedem einzelnen an der Quelle zu prüfen. Ein
+Index verhindert nur das eine: dass ein fertiges Werkzeug unsichtbar bleibt
+und die Arbeit ein zweites Mal gemacht wird. **Genau dafür wurde 2.13
+angelegt.**
+
+#### LLM-Ebene, Prompts und Konfidenz (04.–10.08.)
+
+| Skript | Erste Zeile des Docstrings |
+|---|---|
+| `messe_llm1_positionsbias.py` | Ist LLM1 positionsempfindlich wie LLM2? |
+| `messe_prompt_verbesserungen.py` | Messen, BEVOR gebaut wird: zwei Prompt-Änderungen an LLM1 |
+| `messe_regime_empfindlichkeit.py` | Reagiert das LLM überhaupt auf die Marktphase? |
+| `messe_konfidenz_kalibrierung_neu.py` | Sagt Konfidenz etwas vorher — und müssen die Schwellen neu? |
+| `messe_abstand_zum_zufall.py` | Schlägt die LLM-Ebene den Zufall? Größtmögliche Stichprobe |
+| `messe_llm_gegen_regel.py` | Die Nullmessung: schlägt das LLM eine deterministische Regel? |
+| `messe_einordnung_wirkung.py` | Wirkt das KLARTEXT-Urteil oder der Zahlenvergleich? |
+| `messe_umbau_wirkung.py` | Wirkt der Umbau? Alt gegen neu, je Fakt, gepaart |
+| `messe_abgleich_alt_neu.py` | Hebt der Umbau den Deadloop auf? Alt gegen neu, dieselben Fälle |
+| `messe_zai_ohne_regime.py` | Leitet Z.ai LONG ab, wenn `regime` NICHT im Faktensatz steht? |
+| `messe_regimeflag_sauber.py` | Der Regime-Flag, sauber: 2×2 aus Trigger-Richtung und Flag |
+| `messe_namensanker.py` | Trägt der TICKERNAME das Urteil? |
+| `messe_faktorzahl.py` | Steigt die Handlungsquote mit der Zahl unabhängiger Faktoren? |
+| `messe_dritter_faktor.py` | Der kausale Test: hebt ein DRITTER Faktor die Handlungsquote? |
+| `messe_szenario_stufe1.py` / `pruefe_szenario_stufe0.py` | Szenario-Schätzer, Stufe 0 und 1 |
+| `pruefe_gemini_verhalten.py` | Was Gemini tatsächlich begrenzt — gemessen, nicht behauptet |
+| `pruefe_gegenpruefung_trefferquote.py` | Erkennt der Konsistenzprüfer echte Widersprüche? |
+| `pruefe_belege_gegen_fakten.py` | Nennt das Modell ein Perzentil, wo es keines gibt? |
+
+#### Ausstieg, Halten und Positionsgröße (04.–06.08.)
+
+| Skript | Erste Zeile des Docstrings |
+|---|---|
+| `messe_halte_kriterium.py` | Taugt das `halte_kriterium` etwas? 1.747 Zielpreise, nie ausgewertet |
+| `messe_halten_ursache2.py` | Zweite Ablationsrunde: trägt einer der SIEBEN fehlenden Blöcke? |
+| `messe_halten_ursache3.py` | Welcher Fakt trägt das HALTEN — **abbauend** statt aufbauend |
+| `messe_zeitschranke.py` | Was passiert wirklich mit Trades, die die Zeitschranke erreichen? |
+| `messe_planungshorizont.py` | Wann wird die Kante real? Der Planungshorizont, gemessen statt gesetzt |
+| `bewerte_dynamisch.py` | Ergebnis unter der LIVE gefahrenen Ausstiegsregel statt starrer Barrieren |
+| `pruefe_regel_je_marktphase.py` | Hält die Ausstiegsregel in ALLEN Marktphasen? |
+| `pruefe_crv_positionsgroesse.py` | E2E-Prüfung der stufenlosen CRV-Abstufung, Spot |
+| `messe_akkumulation.py` / `messe_akkumulation_az4.py` | Schlägt antizyklische Akkumulation (AZ-4) das stumpfe DCA? |
+| `messe_allocator_gegen_zufall.py` | Ist die Budget-Allocator-Auswahl besser als Zufall? |
+| `messe_short_und_einbruch.py` | SHORT als VERGLEICH messen — und was dabei auffiel |
+| `messe_kostenhebel.py` | Gibt es diesen Aufbau überhaupt in einer tragfähigen Variante? |
+
+#### Lagebild, Regime und Marktphase (06.–20.08.)
+
+| Skript | Erste Zeile des Docstrings |
+|---|---|
+| `pruefe_marktlage.py` | Prüft das Lagebild (L2 Volatilität, L3 Trend, L4 Liquidität) an echten Daten |
+| `pruefe_regime_glaettung.py` | Gegenprüfung der Regime-Glättung und des Divergenz-Fakts |
+| `messe_marktphasen.py` | Verhält sich die Kette in verschiedenen Marktphasen unterschiedlich? |
+| `messe_konstellationen.py` | Wo sitzt der Unterschied — Phase, Asset, oder in der Zahl selbst? |
+| `messe_zellen_ausgang.py` | Unterscheiden sich die vier Struktur-Zellen im AUSGANG? |
+| `messe_basislinie.py` / `messe_basislinie_aufloesung.py` | Die Basislinie vor dem glatten Schnitt |
+| `messe_filterschaden.py` | **Schadet** der Anlassfilter? — gemessen, nicht geschätzt |
+| `messe_trichter_treffer.py` | Hält der Trichter, was er sagt? (93 A, Fallstrick A2) |
+| `messe_strukturstop.py` | Trägt die Struktur den Stop? — Vorläufer von `pruefe_strukturstop.py` (124) |
+| `messe_dimensionierung.py` | Was ändert sich, wenn der Hebel **anfällt** statt gewählt zu werden |
+
+#### Datenbeschaffung und Betrieb
+
+| Skript | Erste Zeile des Docstrings |
+|---|---|
+| `lade_fear_greed_nach.py` | Fear-&-Greed-Historie nachladen |
+| `lade_makro_historie_nach.py` | Makro-Historie: Netto-Liquidität und Zinskurve |
+| `pruefe_produktion_nb.py` | **Rauchtest für die Produktion auf dem Notebook** — nach dem Deployment |
+| `pruefe_auswertbarkeit.py` | Kann die Messung ihre Frage überhaupt noch beantworten? |
+| `pruefe_ausschuss_suche.py` | Prüfstand für die Ausschuss-Suche |
+
+> ⚠️ **Zwei davon gehören in die Routine, nicht in ein Archiv:**
+> `pruefe_produktion_nb.py` nach **jedem** Deployment auf das Notebook, und
+> `pruefe_auswertbarkeit.py`, **bevor** eine Messung gestartet wird — sie
+> beantwortet genau die Frage, an der die Läufe vom 10.08. gescheitert sind
+> („Messung VOR dem Start prüfen, nicht das Ergebnis").

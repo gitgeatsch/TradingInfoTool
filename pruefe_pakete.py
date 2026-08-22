@@ -10372,6 +10372,145 @@ def paket_dimension() -> None:
            "die Auswertung kommt erst in Wochen - ein Ausbleiben des "
            "Sammelns muss SOFORT auffallen, nicht in Wochen")
 
+    # ---- UND ER MUSS GESUNDHEIT MELDEN, NICHT NUR WACHSTUM (22.08.2026) --
+    # ⚠️ ANLASS: der erste echte Export. Er sagte "401 Zeilen, 3 Tage, 163
+    # Symbole mit Wert" - und keine dieser Zahlen beantwortete die Frage, ob
+    # die Sammlung gesund ist. 163 mischte 26 eigene Werte mit dem
+    # DefiLlama-Vorrat; die Lebenszeitsumme haette einen halbierten Lauf
+    # verdeckt; und die Entwicklerquelle fehlte voellig, was am 22.08.
+    # RICHTIG war (Start an einem Donnerstag) und im November eine
+    # Katastrophe gewesen waere - ununterscheidbar.
+    #
+    # Diese Pruefungen rufen `_kapitel93` GEGEN ECHTE SQLITE-DATEN auf.
+    # Textpruefungen haetten hier nichts genuetzt: der Fehler lag nicht in
+    # einem fehlenden Wort, sondern in einer Zahl, die zu viel enthielt.
+    import datetime as _dt
+    import sqlite3 as _sq
+
+    from extract_notebook_diagnose import _kapitel93 as _k93
+
+    def _leb_db(start, laeufe, entwickler_ab=None):
+        """44 Watchlist-Werte (18 davon ohne TVL) + 136 Vorrat je Lauf.
+        Der ERSTE Lauf bleibt ohne Vorrat - so war es am 20.08. wirklich."""
+        c = _sq.connect(":memory:")
+        c.execute("CREATE TABLE lebendigkeit_beobachtung (id INTEGER PRIMARY "
+                  "KEY, erfasst_am TEXT NOT NULL, symbol TEXT, quelle TEXT, "
+                  "zustand TEXT, wert REAL, kennzahlen_json TEXT, grund TEXT)")
+        for n in range(laeufe):
+            tag = start + _dt.timedelta(days=n)
+            wann = f"{tag.isoformat()}T01:20:00+00:00"
+            for i in range(44):
+                zu = "keine_quelle" if i < 18 else "wert"
+                c.execute("INSERT INTO lebendigkeit_beobachtung (erfasst_am, "
+                          "symbol, quelle, zustand, wert, grund) VALUES "
+                          "(?,?,?,?,?,?)", (wann, f"SYM{i:02d}", "tvl", zu,
+                                            1e6 if zu == "wert" else None, ""))
+            if n:
+                for i in range(136):
+                    c.execute("INSERT INTO lebendigkeit_beobachtung "
+                              "(erfasst_am, symbol, quelle, zustand, wert, "
+                              "grund) VALUES (?,?,?,?,?,?)",
+                              (wann, f"V{i:03d}", "tvl", "wert", 9e9,
+                               "Vorrat, nicht auf der Watchlist"))
+            if entwickler_ab and tag >= entwickler_ab and tag.weekday() == 0:
+                c.execute("INSERT INTO lebendigkeit_beobachtung (erfasst_am, "
+                          "symbol, quelle, zustand, wert, grund) VALUES "
+                          "(?,?,?,?,?,?)", (wann, "SYM20", "entwickler",
+                                            "wert", 12, ""))
+        c.commit()
+        return c
+
+    _heute = _dt.datetime.now(_dt.timezone.utc).date()
+    # Fall A - genau der Zustand vom 22.08.2026: Start Donnerstag 20.08.
+    _a = _k93(_leb_db(_dt.date(2026, 8, 20), 3))["lebendigkeit"]
+
+    pruefe(P, "die eigenen Symbole stehen getrennt vom Vorrat",
+           _a["eigene_symbole"]["mit_wert"] == 26
+           and _a["symbole_mit_wert"] > 100,
+           "26 eigene Werte gegen 162 gesamt - die grosse Zahl las sich wie "
+           "Abdeckung und war der DefiLlama-Vorrat (Umbauplan 93.22)")
+    pruefe(P, "und die ueber TVL NIE auswertbaren werden benannt",
+           _a["eigene_symbole"]["ohne_jeden_tvl_wert"] == 18
+           and len(_a["eigene_symbole"]["stumme_symbole"]) == 18,
+           "fuer sie bleibt allein die Entwicklerquelle - das begrenzt, "
+           "worueber 93 C je etwas sagen kann")
+
+    # ⚠️ DIE ZAHL, DIE AM 22.08. GEFEHLT HAT.
+    pruefe(P, "ein kleinerer Lauf ist an je_tag ablesbar",
+           _a["letzter_lauf"]["je_tag"]["2026-08-20"] == 44
+           and _a["letzter_lauf"]["je_tag"]["2026-08-21"] == 180,
+           "an der Lebenszeitsumme waere ein halbierter Lauf unsichtbar - "
+           "sie waechst ja weiter")
+
+    # ⚠️ DER WOCHENTAKT: dieselbe Beobachtung, zwei entgegengesetzte Urteile.
+    pruefe(P, "ein noch nicht faelliger Montag ist KEINE Warnung",
+           not _a["entwickler_takt"].get("WARNUNG")
+           and "RICHTIG" in _a["entwickler_takt"]["hinweis"]
+           and _a["entwickler_takt"]["erste_faellige_montagsmessung"]
+           == "2026-08-24",
+           "die Sammlung begann an einem Donnerstag - am 22.08. FEHLTE die "
+           "Entwicklerquelle zu Recht")
+    pruefe(P, "und die Auswertbarkeit steht als Datum da",
+           _a["entwickler_takt"]["zwoelfte_und_damit_auswertbar"]
+           == "2026-11-09",
+           "12 Wochenmessungen ab dem 24.08. - MINDESTREIHE['entwickler']")
+
+    _b = _k93(_leb_db(_heute - _dt.timedelta(days=30), 30))["lebendigkeit"]
+    pruefe(P, "ein vergangener Montag OHNE Zeile ist eine Warnung",
+           "faellig" in (_b["entwickler_takt"].get("WARNUNG") or "")
+           and not _b["entwickler_takt"].get("hinweis"),
+           "faellt der Montagslauf aus, faellt die Quelle GANZ aus - und "
+           "das darf nicht wie der Normalzustand aussehen")
+
+    _cst = _heute - _dt.timedelta(days=30)
+    _c = _k93(_leb_db(_cst, 30, entwickler_ab=_cst))["lebendigkeit"]
+    pruefe(P, "und mit Entwicklerzeilen schweigt die Warnung",
+           _c["entwickler_takt"]["bisher_erhoben"] is True
+           and not _c["entwickler_takt"].get("WARNUNG"),
+           "eine Pruefung mit Fehlalarmen wird nicht mehr aufgerufen")
+
+    # ⚠️ ERST DURCH DIESE PRUEFUNGEN AUFGEFALLEN: der Export las `sys.argv`
+    # beim IMPORT. `pruefe_pakete.py --paket Dimension` brach damit ab -
+    # ohne `--paket` lief dieselbe Suite durch. Ein Pruefwerkzeug, das nur
+    # in einer seiner beiden Betriebsarten funktioniert, ist keins.
+    # ⚠️ DER WERKZEUGKASTEN DARF NICHT WIEDER ZURUECKFALLEN (22.08.2026).
+    # 2.13 wurde gebaut, weil drei fertige Mess-Funktionen ohne Aufrufer
+    # dalagen und von Hand nachgerechnet wurde, was im Code fertig war. Am
+    # 22.08. gezaehlt: 116 Werkzeuge im Stamm, 64 verzeichnet. Ein Index, der
+    # nur beim Anlegen stimmt, hat genau einen guten Tag.
+    #
+    # Diese Pruefung ist absichtlich SCHWACH: sie verlangt nur, dass der Name
+    # irgendwo im Dokument steht. Ob die Beschreibung stimmt, kann sie nicht
+    # wissen - aber sie verhindert das, was wirklich passiert ist: dass ein
+    # fertiges Werkzeug unsichtbar bleibt und die Arbeit zweimal gemacht wird.
+    import subprocess as _sub
+
+    _kasten = io.open("Basisinfos/Test_und_Verifikationsmethodik.md",
+                      encoding="utf-8").read()
+    _stamm = [x for x in _sub.run(["git", "ls-files", "*.py"],
+                                  capture_output=True, text=True,
+                                  encoding="utf-8").stdout.split()
+              if "/" not in x and x.split("_")[0] in
+              ("messe", "pruefe", "bewerte", "lade", "simuliere")]
+    _ohne = sorted(x for x in _stamm if x[:-3] not in _kasten)
+    pruefe(P, "jedes Messwerkzeug steht im Werkzeugkasten 2.13",
+           not _ohne,
+           f"{len(_stamm)} im Stamm, {len(_stamm) - len(_ohne)} verzeichnet"
+           + (f" - FEHLEN: {', '.join(_ohne[:8])}" if _ohne else ""))
+
+    pruefe(P, "der Export nimmt Argumente nur bei EIGENEM Aufruf",
+           "_EIGENER_AUFRUF" in _nb and "not _EIGENER_AUFRUF" in _nb,
+           "importiert gehoeren die Argumente jemand anderem")
+    pruefe(P, "und meldet ein unlesbares eigenes Argument LAUT",
+           # ⚠️ NUR ZUSAMMENHAENGENDE AUSSCHNITTE. "muss eine Zahl sein"
+           # steht im Quelltext ueber zwei Zeichenkettenteile verteilt und
+           # ist dort nie am Stueck zu finden - derselbe Fallstrick wie bei
+           # "NICHTS ZU PERMUTIEREN" in Kapitel 123.
+           "ist das Log-Fenster in Stunden" in _nb
+           and "raise SystemExit" in _nb,
+           "still auf 72 zurueckzufallen waere fail-soft ist fail-silent - "
+           "ein Tippfehler laege dann drei Tagen Log zugrunde")
+
     # ---- DER TERMINKALENDER: ANZEIGE, KEIN GATE (93 D, 20.08.2026) ----
     from agent import anlass_kalender as _AK
 

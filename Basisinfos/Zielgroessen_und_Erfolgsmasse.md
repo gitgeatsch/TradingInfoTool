@@ -1445,3 +1445,58 @@ nur „nein" sagen — die Basisrate liegt per Konstruktion unter dem Breakeven.
 zu sammeln.** Erst mit echten Ausgängen kann eine Konstellation je über den
 Breakeven kommen. Das ist der Meta-Labeling-Weg, und er braucht Zeit, nicht
 Code.
+
+
+---
+
+## 6.8 ⚠️ Standvermerk: Abschnitt 6.7 und alle R-Zahlen davor stehen auf 04.08.2026
+
+**Geprüft am 22.08.2026 auf Nutzerhinweis.** Dieses Dokument ist laut
+Doku-Landkarte „bei Änderungen an Messung/Zielgrößen" fortzuschreiben.
+**Kapitel 119 hat genau das geändert — und das Dokument wusste nichts davon.**
+
+### Was seit dem 04.08. gilt
+
+**Erstens: es gibt zwei Gebührensätze, nicht einen.**
+
+| | Satz je Seite | beantwortet |
+|---|---:|---|
+| **Referenz** | **0,30 %** | „ist das ein **guter Trade**" — börsenunabhängig, Mischsatz üblicher Krypto-Broker |
+| **Betrieb** | **1,50 %** | „rechnet es sich **für mich**" — Bitpanda-Brokerspread |
+
+⚠️ **Alle Urteile der Kapitel 99–118 liefen über den Betriebssatz allein.**
+Damit beantworteten sie unbemerkt die zweite Frage, während gefragt war: trägt
+das Verfahren überhaupt? `Kosten_R = 2 × Gebühr / Stopabstand` — beide Sätze
+werden seit 119 **immer nebeneinander** berichtet.
+
+**Zweitens: Abschnitt 6.7 („Kostenrahmen, an der App verifiziert") bleibt
+richtig** — er beschreibt den Betriebssatz. Er ist seit 119 aber **nicht mehr
+der einzige Maßstab**, und wer nur ihn liest, hält ein tragfähiges Verfahren
+für untragfähig.
+
+### Die Zielgröße, die dieses Dokument bisher nicht kennt
+
+Die Regel **H** (kein ≥2-Berührungs-Widerstand bis zum Ziel **und** eine
+Unterstützung über dem Stop) ist der erste gemessene Kandidat, der die
+Zufallsschwelle nimmt — **+4,5 Punkte** auf 523 Reihen gegen Schwelle +2,6.
+
+| Nettoerwartungswert je Trade | ohne Filter | **mit H** |
+|---|---:|---:|
+| **Referenz 0,30 %** | −0,031 R | **+0,114 R** |
+| **Betrieb 1,50 %** | −0,182 R | **−0,036 R** |
+
+> **H verbessert den Erwartungswert um rund 0,15 R je Trade — an beiden
+> Sätzen gleich. Zum Betriebssatz reicht das nicht bis über null.**
+>
+> ⚠️ **Damit ist die bindende Größe für die Zielerreichung nicht mehr das
+> Verfahren, sondern die Handelsgebühr.** H schließt etwa vier Fünftel der
+> Lücke; das letzte Fünftel schließt nur der Handelsplatz. Das ist die
+> wichtigste Änderung an den Zielgrößen seit dem 04.08. und gehört in jede
+> Aussage über Erreichbarkeit.
+
+**Bei 6 % Verlustanteil je Trade:** +0,68 % Kapital je Trade zur Referenz,
+**−0,22 %** im Betrieb.
+
+**Vollständige Herleitung:** `Umbauplan_Gesamtsystem_12_08.md`, Kapitel
+119–124. **Befundübersicht:** `Befundkarte.md`. **Wie gemessen wird:**
+`Test_und_Verifikationsmethodik.md` 2.58.

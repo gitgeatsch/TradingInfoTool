@@ -113,6 +113,7 @@ es sich für mich", beide immer nebeneinander.**
 |---|---|---|
 | Konjunktion mehrerer Trichterwerte | 103 | Effekt +17,8 unter Schwelle +20,5 bei 26 Reihen |
 | H bei gleichen Kosten (schmale Basis) | 105 | +7,1 gegen +10,0 bei 24 Reihen |
+| **Lebendigkeit für ~18 der 44 Kryptowerte** | **93 C** | über TVL nur `keine_quelle` — DefiLlama kennt sie, hat aber kein hinterlegtes Kapital. **Dauerhaft**, nicht datenbedingt |
 
 **Beide wurden durch Kapitel 107 aufgelöst** — 347 statt 39 Reihen. *Nicht
 entscheidbar* ist ein Datenproblem, kein Erkenntnisstand.
