@@ -19825,3 +19825,52 @@ KEINE DIESER LUECKEN IST HEUTE DRINGEND (24,1 % Hebel), aber sie werden es,
 sobald an k oder am Verlustanteil gedreht wird. Die Reihenfolge ist damit
 umgekehrt zur urspruenglichen Annahme: erst L2 schliessen, dann ueber die
 Regler reden.
+
+
+[2026-08-22] KAPITEL 131: DIE HEBEL-THEMATIK, VOLLSTAENDIG DURCHGESEHEN
+
+Nutzerauftrag, zweimal gestellt: die Doku und den Code zur Hebelthematik im
+DETAIL durchgehen. Meine bisherigen Antworten waren Teilbefunde.
+
+131.1 DER KERN: DER UMBAU IST BEI 5 VON 6 SCHRITTEN STEHENGEBLIEBEN. Kapitel
+88 entschied "Hebel als Ergebnis statt als Kategorie", Kapitel 90.3 plante
+sechs Schritte. S1-S5 gebaut, S6 (Laeufe zusammenlegen) NIE - nur ein Teil
+wurde vorgezogen (1cea12a). Deshalb steht INSTRUMENTE_JE_GRUPPE weiterhin auf
+("spot", "hebel") fuer Krypto, und jedes Symbol bekommt zwei Urteile. Im
+Datenmaterial sichtbar: dasselbe Symbol um 07:24:04 (Hebel None) und 07:25:30
+(Hebel 6.0). Seit S5 produziert der Hebel-Lauf in 76 % der Faelle Spot-Trades.
+
+131.2 ⚠️ ZWOELF VON SECHZEHN HEBEL-REGLERN SIND IN DER ROLLEN-KETTE
+WIRKUNGSLOS - darunter FUENF Risikodeckel: max_hebel,
+regime_konflikt_hebel_deckel, retail_konsens_hebel_deckel,
+technischer_konflikt_hebel_deckel, gegenszenario_hebel_deckel,
+crv_knapp_hebel_deckel. Der Hoechsthebel steht in der neuen Kette als
+Modulkonstante GRENZEN["hebel_max"]=10.0; der Konfigurationsschluessel tut
+nichts. Und hebel_mindestbeobachtung_stunden_einmal_trade wird von KEINER
+Kette gelesen - ein toter Schluessel.
+
+131.3 WAS NOCH GREIFT: RM-11 Liquidationsabstand (max_safe_hebel) laeuft. Der
+Verlustanteil laeuft, aber IDENTISCH fuer Spot und Hebel. AZ-7 Krisendeckel,
+Regime-/Retail-/Technikdeckel: nur in der alten Kette. Gap-Risiko: nirgends.
+
+131.4 ⚠️ DIE KANDIDATENKETTE LAEUFT LEER. hebel_screening_job laeuft weiterhin
+alle 15 Minuten und schreibt in hebel_triggers. Die Rollen-Kette liest die
+Tabelle NICHT (0 Treffer in entscheidungsrechnung, rollen_lauf, rollen_job,
+betraege, signal_abbildung). Das Screening produziert seit dem Vollumstieg
+Kandidaten fuer einen Abnehmer, den es nicht mehr gibt.
+
+131.5 DIE DOKU WIDERSPRICHT DEM CODE. Regelwerksmanual fuehrt RM-10/RM-11 als
+"max. 10x, eigenes Risiko-pro-Trade von 1 % (statt 2 % bei Spot), AKTIV
+automatisch im 15-Min-Takt". Wirklichkeit: derselbe Verlustanteil wie Spot,
+Hoechsthebel als Modulkonstante, Abnehmer laeuft nicht, AZ-7 laeuft nicht.
+
+131.6 BILANZ: DER HEBEL IST NICHT KAPUTT, ER IST VERWAIST. Die Rechnung, die
+ihn ableitet, ist gebaut und gemessen richtig (130). Alles, was ihn UMGAB,
+haengt noch an der alten Kette.
+
+131.7 ZWEI WEGE: S6 fertigbauen (echter Rueckbau plus fuenf Deckel) oder
+Hebel abschalten (INSTRUMENTE_JE_GRUPPE auf ("spot",), Screening stilllegen -
+halbiert sofort die Modellaufrufe fuer Krypto). Gegen Abschalten spricht genau
+ein Punkt: SHORT geht bei Bitpanda nur mit Hebel. Dafuer spricht Kapitel 130 -
+die bessere Stopregel erzeugt breite Stops, und breite Stops brauchen keinen
+Hebel. Beide Wege sind Nutzerentscheidungen.

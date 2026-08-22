@@ -10822,6 +10822,55 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- KAPITEL 131: DER HEBEL IST VERWAIST, NICHT KAPUTT ------------
+    # ⚠️ Diese Pruefungen HALTEN DEN ZUSTAND FEST, sie beheben ihn nicht.
+    # Solange die Entscheidung (S6 fertigbauen oder Hebel abschalten) offen
+    # ist, soll wenigstens niemand glauben, es sei schon geregelt.
+    import subprocess as _sub2
+
+    _cfg2 = io.open("Basisinfos/config.yaml", encoding="utf-8").read()
+
+    def _text(dateien):
+        s = ""
+        for f in dateien:
+            try:
+                s += io.open(f, encoding="utf-8").read()
+            except Exception:                                # noqa: BLE001
+                pass
+        return s
+
+    _neu2 = _text(["agent/entscheidungsrechnung.py", "agent/rollen_lauf.py",
+                   "agent/betraege.py", "scheduler/rollen_job.py",
+                   "agent/signal_abbildung.py", "agent/assetklassen.py"])
+    _deckel = ("regime_konflikt_hebel_deckel", "retail_konsens_hebel_deckel",
+               "technischer_konflikt_hebel_deckel",
+               "gegenszenario_hebel_deckel", "crv_knapp_hebel_deckel",
+               "max_hebel")
+    _fehlend = [k for k in _deckel if k in _cfg2 and k not in _neu2]
+    pruefe(P, "die wirkungslosen Hebeldeckel sind BEKANNT und dokumentiert",
+           len(_fehlend) == 6
+           and "Zwölf von sechzehn" in io.open(
+               "Basisinfos/Umbauplan_Gesamtsystem_12_08.md",
+               encoding="utf-8").read(),
+           f"in der Rollen-Kette wirkungslos: {', '.join(_fehlend)} - "
+           f"aendert sich die Zahl, ist Kapitel 131 nachzuziehen")
+
+    pruefe(P, "S6 ist NICHT gebaut, und der Zustand steht fest",
+           '"krypto": ("spot", "hebel")' in _quelltext("agent/assetklassen.py"),
+           "jedes Krypto-Symbol bekommt weiterhin ZWEI Urteile; seit S5 "
+           "produziert der Hebel-Lauf in 76 % der Faelle Spot-Trades")
+
+    pruefe(P, "die Rollen-Kette liest hebel_triggers NICHT",
+           "hebel_trigger" not in _neu2,
+           "das Screening laeuft alle 15 Minuten und schreibt Kandidaten "
+           "fuer einen Abnehmer, den es nicht mehr gibt")
+
+    pruefe(P, "das Regelwerksmanual traegt den Standvermerk",
+           "STANDVERMERK 22.08.2026" in io.open(
+               "Basisinfos/Regelwerksmanual.md", encoding="utf-8").read(),
+           "es fuehrt RM-10/RM-11 als aktiv mit eigenem Risikomass - beides "
+           "gilt in der neuen Kette nicht mehr")
+
     # ---- KAPITEL 130: DIE STOPQUELLE + DIE HEBEL-LUECKEN --------------
     _sqq = _quelltext("messe_stopquelle.py")
     _sqroh = io.open("messe_stopquelle.py", encoding="utf-8").read()

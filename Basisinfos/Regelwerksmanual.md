@@ -3824,3 +3824,25 @@ R-T9 was zuerst steht, wiegt schwerer.
 > steht, wiegt schwerer — dieselbe Mechanik über eine andere Achse. Am 17.08.
 > an der 60-Tage-Bewegung gefunden: sie stand in zwei Blöcken, bitgleich
 > gerechnet, in **42 von 42** Reihen.
+
+
+---
+
+# ⚠️ STANDVERMERK 22.08.2026 — RM-10/RM-11 (Hebel) beschreiben die ALTE Kette
+
+**Der Eintrag oben führt Hebel als „AKTIV, automatisch im 15-Min-Takt" mit
+„eigenem Risiko-pro-Trade von 1 % (statt 2 % bei Spot)" und „max. 10x".
+Für die Rollen-Kette, die seit dem 15.08.2026 alle Gruppen bedient, stimmt
+davon Punkt für Punkt Folgendes NICHT:**
+
+| Behauptung | Wirklichkeit |
+|---|---|
+| eigenes Risiko-pro-Trade 1 % | **derselbe Verlustanteil (6 %) wie Spot** — die Unterscheidung existiert nicht mehr |
+| max. 10x aus der Konfiguration | `max_hebel` ist wirkungslos; es gilt die Modulkonstante `GRENZEN["hebel_max"]` |
+| AKTIV im 15-Min-Takt | das **Screening** läuft, der **Abnehmer** nicht — `hebel_triggers` wird von der Rollen-Kette nicht gelesen |
+| AZ-7 „im Extrem-Krise-Regime komplett aus" | **läuft nicht** — `pre_check_hebel` steht nur in der alten Kette |
+
+**Was weiterhin gilt:** RM-11 (Liquidationsabstand, `max_safe_hebel`) läuft
+auch in der neuen Kette.
+
+**Volle Herleitung:** `Umbauplan_Gesamtsystem_12_08.md`, Kapitel 131.

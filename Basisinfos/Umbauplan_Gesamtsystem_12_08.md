@@ -17366,3 +17366,142 @@ Verlustanteil gedreht wird**, und genau das stand als Option zur Debatte.
 > **Die Reihenfolge ist damit umgekehrt zur ursprünglichen Annahme:** erst
 > L2 schließen (der Krisendeckel ist ein Sicherheitsnetz, kein Feintuning),
 > dann über die Regler reden.
+
+
+---
+
+## Kapitel 131 — Die Hebel-Thematik, vollständig durchgesehen (22.08.2026)
+
+**Nutzerauftrag, und er war schon zweimal gestellt:** *„gehe die doku und den
+code hinsichtlich der hebel thematik durch"* — im Detail. Meine bisherigen
+Antworten waren Teilbefunde. **Das hier ist die Durchsicht.**
+
+### 131.1 Der Kern: der Umbau ist bei 5 von 6 Schritten stehengeblieben
+
+Kapitel 88 entschied: **„Hebel als Ergebnis statt als Kategorie."** Der Plan
+(Kapitel 90.3) hatte sechs Schritte.
+
+| | | gebaut? |
+|---|---|---|
+| S1 | k wird ein Regler | ✔ |
+| S2 | Marken durchreichen | ✔ |
+| S3 | Vertrag umbauen | ✔ |
+| S4 | Prompt und Schema vereinheitlichen | ✔ |
+| S5 | `dimensioniere()`, k = 2,0, Verlustanteil 6 % | ✔ |
+| **S6** | **Läufe zusammenlegen** | ⚠️ **NEIN** |
+
+**Nur ein Teil von S6 wurde vorgezogen** (Commit `1cea12a`, „Hebelzeile immer,
+Betreff folgt der Zahl — vorgezogen aus S6"). Der Rest nie.
+
+**Die Folge steht unverändert im Code:**
+
+```
+INSTRUMENTE_JE_GRUPPE = {"krypto": ("spot", "hebel"), ...}
+```
+
+**Für jedes Krypto-Symbol laufen weiterhin zwei getrennte Urteile.** Im
+Datenmaterial sichtbar — dasselbe Symbol, eine Minute Abstand:
+
+```
+07:24:04  HALTEN   Hebel None
+07:25:30  HALTEN   Hebel 6.0
+```
+
+Seit S5 produziert der „Hebel"-Lauf in **76 %** der Fälle Spot-Trades. **Ein
+Etikett ohne Inhalt.**
+
+### 131.2 ⚠️ Zwölf von sechzehn Hebel-Reglern sind wirkungslos
+
+Systematisch geprüft: welcher `config.yaml`-Schlüssel wird von der
+**Rollen-Kette** gelesen, welcher nur von der **alten** Kette?
+
+| Schlüssel | neue Kette | alte Kette |
+|---|:--:|:--:|
+| `hebel` (Verlustanteil-Block) | ✔ | ✔ |
+| `hebel_richtung_modus` | ✔ | ✔ |
+| `risiko_pro_trade_prozent_hebel` | ✔ | ✔ |
+| **`max_hebel`** | ✘ | ✔ |
+| **`regime_konflikt_hebel_deckel`** | ✘ | ✔ |
+| **`retail_konsens_hebel_deckel`** | ✘ | ✔ |
+| **`technischer_konflikt_hebel_deckel`** | ✘ | ✔ |
+| **`gegenszenario_hebel_deckel`** | ✘ | ✔ |
+| **`crv_knapp_hebel_deckel`** | ✘ | ✔ |
+| `hebel_position_cooldown_stunden` | ✘ | ✔ |
+| `hebel_kandidat_sla_stunden` | ✘ | ✔ |
+| `hebel_kandidat_verfall_stunden` | ✘ | ✔ |
+| `hebel_kandidat_luecken_toleranz_stunden` | ✘ | ✔ |
+| `hebel_cooldown_stunden_ausgemustert` | ✘ | ✔ |
+| `hebel_wartezeit_lookback_tage_cap` | ✘ | ✔ |
+| ⚠️ `hebel_mindestbeobachtung_stunden_einmal_trade` | ✘ | ✘ |
+
+> **12 von 16 wirkungslos — darunter FÜNF Risikodeckel.** Der Höchsthebel
+> steht in der neuen Kette als Modulkonstante `GRENZEN["hebel_max"] = 10.0`;
+> der Konfigurationsschlüssel daneben tut nichts.
+>
+> ⚠️ **Einer wird von KEINER Kette gelesen** — ein toter Schlüssel.
+
+### 131.3 Was in der neuen Kette noch greift — und was nicht
+
+| Schutz | Zustand |
+|---|---|
+| **RM-11 Liquidationsabstand** (`max_safe_hebel`) | ✔ läuft — deckelt den Hebel gegen Zwangsliquidation |
+| Verlustanteil (Risiko je Trade) | ✔ läuft, aber **identisch für Spot und Hebel** |
+| **AZ-7 Krisendeckel** (`pre_check_hebel`) | ✘ **nur in der alten Kette** |
+| Regime-/Retail-/Technikdeckel | ✘ nur in der alten Kette |
+| Gap-Risiko | ✘ **nirgends** |
+
+### 131.4 ⚠️ Und die Kandidatenkette läuft leer
+
+`hebel_screening_job` läuft **weiterhin alle 15 Minuten** und schreibt
+Kandidaten in `hebel_triggers`. **Die Rollen-Kette liest diese Tabelle nicht:**
+
+| liest `hebel_triggers` | |
+|---|---|
+| `budget_allocator` · `hebel_pipeline` · `hebel_screening` · `warteschlange` · `ui/hebel_view` | **alte Kette und Anzeige** |
+| `entscheidungsrechnung` · `rollen_lauf` · `rollen_job` · `betraege` · `signal_abbildung` | **0 Treffer** |
+
+**Das Screening produziert seit dem Vollumstieg Kandidaten für einen Abnehmer,
+den es nicht mehr gibt** — alle 15 Minuten, mit Kursabrufen.
+
+### 131.5 Die Doku widerspricht dem Code
+
+`Regelwerksmanual.md` führt **RM-10/RM-11** als:
+
+> *„max. **10x**, eigenes Risiko-pro-Trade von **1 %** (statt 2 % bei Spot) …
+> **AKTIV, automatisch im 15-Min-Takt**"*
+
+| Behauptung | Wirklichkeit in der Rollen-Kette |
+|---|---|
+| eigenes Risiko-pro-Trade 1 % | ✘ **derselbe Verlustanteil (6 %) wie Spot** |
+| max. 10x aus der Konfiguration | ✘ Modulkonstante, Schlüssel wirkungslos |
+| „AKTIV im 15-Min-Takt" | teilweise — das Screening läuft, **der Abnehmer nicht** |
+| **AZ-7 „im Extrem-Krise-Regime komplett aus"** | ✘ **läuft nicht** |
+
+### 131.6 Die Bilanz
+
+**Der Hebel ist nicht kaputt — er ist verwaist.** Die Rechnung, die ihn
+ableitet, ist gebaut und gemessen richtig (Kapitel 130). Alles, was ihn
+*umgab* — Deckel, Kandidatenkette, eigenes Risikomaß —, hängt noch an der
+alten Kette und wirkt nicht mehr.
+
+**Und ihn heute zurückzuholen hieße, fünf Deckel neu zu bauen**, bevor der
+erste echte Hebeltrade wieder abgesichert wäre.
+
+### 131.7 Die zwei Wege, und was sie kosten
+
+| | | Umfang |
+|---|---|---|
+| **S6 fertigbauen** | ein Lauf je Symbol; das Instrument fällt aus der Rechnung an; die fünf Deckel in die neue Kette ziehen | ⚠️ laut Plan *„die einzige Stufe, die einen echten Rückbau bräuchte"* — plus fünf Deckel |
+| **Hebel abschalten** | `INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot",)`, Screening-Job stilllegen | wenige Zeilen — **halbiert sofort die Modellaufrufe für Krypto** und beendet das Leerlaufen |
+
+⚠️ **Was gegen Abschalten spricht, ist genau ein Punkt:** SHORT geht bei
+Bitpanda nur mit Hebel. Heute wird SHORT ohnehin nicht versendet
+(`nur_long`) — aber die Tür wäre zu.
+
+⚠️ **Was dafür spricht:** nach Kapitel 130 erzeugt die *bessere* Stopregel
+breite Stops, und breite Stops brauchen keinen Hebel. **Der Hebel war nie eine
+Entscheidung, sondern ein Nebenprodukt der alten, schlechteren Stopregel.**
+
+**Beide Wege sind Nutzerentscheidungen.** Was sie gemeinsam haben: sie beenden
+einen Zustand, in dem die Hälfte der Krypto-Modellaufrufe ein Etikett erzeugt,
+das nichts bedeutet.
