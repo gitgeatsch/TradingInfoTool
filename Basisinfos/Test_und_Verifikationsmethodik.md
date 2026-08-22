@@ -3525,3 +3525,10 @@ selben Morgen hat sich am selben Tag bezahlt gemacht.
 | Skript | Beantwortet |
 |---|---|
 | `pruefe_einstiegsnachweis.py` | Wurde der Einstieg je erreicht? (127) - **21,1 % nicht**, und der Rest ist Marktrichtung |
+
+
+### Nachtrag 22.08.2026 - die Stopquelle
+
+| Skript | Beantwortet |
+|---|---|
+| `messe_stopquelle.py` | Darf der Rauschboden das Modellurteil ueberstimmen? (130) - **ja**, -0,609 R fuer die These |

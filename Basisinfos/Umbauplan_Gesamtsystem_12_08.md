@@ -17228,3 +17228,141 @@ Symptom.
 ⚠️ **Bis dahin gilt Kapitel 128:** die Hebelmessung wird **ausgesetzt**, nicht
 repariert. Die Aufteilung spot/hebel in 120, 126 und 127 ist bei Hebel 1,0
 keine Trennung.
+
+
+---
+
+## Kapitel 130 — Der Rauschboden trägt besser als das Modellurteil (22.08.2026)
+
+**Die vorgelagerte Frage aus Kapitel 129, gemessen.** Nicht: ist k = 2,0
+richtig — sondern: *darf der Rauschboden die These des Modells überstimmen?*
+
+### 130.1 Der Aufbau
+
+**Gepaart auf denselben Ankern.** Beide Varianten laufen über **denselben
+Kurspfad desselben Signals** — der einzige Weg, den Markt aus dem Vergleich
+herauszuhalten. Und er ist hier zwingend: der Messzeitraum ist eine
+Aufwärtsphase von **+15,8 %** Median (Kapitel 127).
+
+| Arm | Stop |
+|---|---|
+| **A Betrieb** | wie gesetzt — der weiteste Boden gewinnt |
+| **B These** | auf dem Widerlegungspreis des Modells |
+
+⚠️ **Das CRV bleibt in beiden Armen gleich** — das Ziel wandert mit dem Stop.
+Sonst verglichen wir zwei Geometrien statt zweier Stopquellen, und Kapitel 101
+hat gemessen, dass die Geometrie allein reine Kostenarithmetik ist.
+
+⚠️ **Und der Einstieg muss erreicht sein** (E1, Kapitel 128). Ohne diese Regel
+zählte ein Ziel, das nie gekauft wurde.
+
+### 130.2 Das Ergebnis
+
+**547 Kauf-Signale ab dem 18.08.**
+
+| Arm | Stop | Hebel | Ziel | Stop | offen | Quote |
+|---|---:|---:|---:|---:|---:|---:|
+| **A Betrieb** | 7,77 % | 1,00 | 197 | **25** | 325 | 88,7 % |
+| **B These** | 3,44 % | 1,74 | 247 | **102** | 198 | 70,8 % |
+
+| Erwartungswert je Trade | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|
+| A Betrieb | **+1,371** | **+0,852** |
+| B These | +0,743 | −0,174 |
+
+**Block-Bootstrap, 222 Paare in 51 Blöcken je (Symbol, Tag):**
+
+| | |
+|---|---:|
+| These gegen Betrieb | **−0,609 R** |
+| 95-%-Intervall | [−0,901; −0,338] |
+
+> **Der Rauschboden trägt besser.** Der enge Stop der These wird **viermal so
+> oft** ausgestoppt (102 gegen 25) — genau das, was Kapitel 89 als
+> Rauschtreffer gemessen hatte.
+
+⚠️ **Die absoluten Quoten trägt die Aufwärtsphase mit.** +1,371 R je Trade ist
+kein Dauerzustand. Die **Paarung** hält den Markt aus dem *Vergleich* heraus,
+nicht aus den Einzelwerten.
+
+### 130.3 ⚠️ Damit korrigiert sich meine eigene Rahmung
+
+Kapitel 88.1 nannte es einen **Defekt**, dass „in 10 von 12 Fällen die Klemme
+entscheidet, nicht das Urteil". Kapitel 129 hat das wiederholt.
+
+**Gemessen ist es kein Defekt, sondern die bessere Wahl.** Das Modellurteil
+setzt den Stop zu eng; die Klemme rettet den Trade vor dem eigenen Vorschlag.
+
+**Was daraus für den Hebel folgt:** er ist nicht deshalb verschwunden, weil
+etwas kaputt wäre, sondern weil die **richtige** Stopregel breite Stops
+erzeugt — und breite Stops brauchen keinen Hebel. **Der Hebelverlust ist der
+Preis einer Verbesserung, kein Nebenschaden.**
+
+---
+
+## Kapitel 130b — Spot gegen Hebel: was durchdacht ist und was fehlt (22.08.2026)
+
+**Nutzereinschätzung:** *„wir haben das Thema spot gegen hebel bereits sehr gut
+aufgearbeitet — aber offenbar nicht vollständig durchgedacht oder umgesetzt."*
+**Sie trifft. Die Durchsicht ergibt drei Lücken.**
+
+### Zuerst eine Klarstellung zum Risiko
+
+Der Nutzer schreibt, ein Hebel trage *„von Natur aus ein höheres Risiko als
+ein Spot-Kauf, und das muss durch das Chance-Risiko-Verhältnis"* abgebildet
+werden. **Die Richtung stimmt, die Begründung ist zu präzisieren:**
+
+```
+hebel = verlustanteil / stop_rel
+```
+
+**Bei gleichem Verlustanteil ist das Risiko je Trade identisch** — mit oder
+ohne Hebel. Der Hebel ist genau der Faktor, der einen engeren Stop auf
+denselben Euro-Verlust bringt. Er erhöht nicht das geplante Risiko.
+
+**Was der Hebel zusätzlich trägt, sind drei ANDERE Risikoarten:**
+
+| Risikoart | abgebildet? |
+|---|---|
+| **Liquidation** vor dem eigenen Stop | ✔ RM-11 `max_safe_hebel`, wird von der neuen Kette aufgerufen |
+| **Finanzierung** 0,03 %/Tag | ✔ in den Messungen gerechnet, wächst mit der Haltedauer |
+| ⚠️ **Kurslücke über den Stop hinaus** | ✘ **nirgends** — bei Spot verliert man den Buchwert, bei Hebel kann der Verlust den Einsatz übersteigen |
+
+> **Das CRV höher zu setzen wäre also nicht falsch, aber es wäre die falsche
+> Begründung.** Das Mehrrisiko des Hebels ist kein Chance-Risiko-Thema,
+> sondern ein Ausfallrisiko — und Ausfallrisiken gehören gedeckelt, nicht
+> weggerechnet.
+
+### Die drei Lücken
+
+**L1 — `crv_minimum` gilt für beide.** `config.yaml` führt genau einen Wert
+(2,0) für Spot **und** Hebel. Eine Unterscheidung ist nie getroffen worden —
+dieselbe Bauart wie beim Verlustanteil, der bis zum 18.08. für beide bei 15 %
+stand („vermutlich nie so entschieden, sondern nie unterschieden").
+
+**L2 — ⚠️ `pre_check_hebel` läuft in der neuen Kette NICHT.** Er steht nur in
+`hebel_pipeline.py`, also in der **alten** Kette. Damit fehlt in der
+Rollen-Kette:
+
+| | |
+|---|---|
+| **AZ-7** | kompletter Hebeldeckel auf **0** bei Extrem-Krise-Regime |
+| Kontra-Konservativfaktor | der zusätzliche Deckel im antizyklischen Zweig |
+
+Kapitel 88.1 hatte es bereits benannt (*„Hebel-Eignungskriterium existiert
+nicht"*) — **gebaut wurde es nicht.** `max_safe_hebel` (Liquidationsabstand)
+läuft, der Krisendeckel nicht.
+
+**L3 — das Gap-Risiko ist nirgends gerechnet.** Weder in der Dimensionierung
+noch in einer Messung. Bei Spot ist der Verlust auf den Einsatz begrenzt, bei
+Hebel nicht.
+
+### Was daraus folgt
+
+⚠️ **Keine dieser Lücken ist heute dringend** — es gibt faktisch kaum Hebel
+(24,1 %, Kapitel 129). **Aber sie werden dringend, sobald an k oder am
+Verlustanteil gedreht wird**, und genau das stand als Option zur Debatte.
+
+> **Die Reihenfolge ist damit umgekehrt zur ursprünglichen Annahme:** erst
+> L2 schließen (der Krisendeckel ist ein Sicherheitsnetz, kein Feintuning),
+> dann über die Regler reden.

@@ -10822,6 +10822,38 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- KAPITEL 130: DIE STOPQUELLE + DIE HEBEL-LUECKEN --------------
+    _sqq = _quelltext("messe_stopquelle.py")
+    _sqroh = io.open("messe_stopquelle.py", encoding="utf-8").read()
+
+    pruefe(P, "die Stopquellen-Messung traegt die Vorabfestlegung",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _sqroh)
+    pruefe(P, "sie ist GEPAART auf denselben Ankern",
+           "denselben Kurspfad" in _sqroh or "GEPAART" in _sqroh,
+           "der Messzeitraum ist eine Aufwaertsphase von +15,8 % - ohne "
+           "Paarung misst man den Markt")
+    pruefe(P, "und das CRV bleibt in beiden Armen gleich",
+           'f["e"] + f["crv"] * (f["e"] - stop)' in _sqq,
+           "sonst vergleicht man zwei Geometrien statt zweier Stopquellen")
+    pruefe(P, "der Einstieg muss auch hier erreicht sein",
+           "eingestiegen" in _sqq and "e_bis" in _sqq)
+    pruefe(P, "die Bloecke folgen (Symbol, Tag), nicht dem Signal",
+           '(f["sym"], f["tag"])' in _sqq,
+           "Methodik 2.60 - fuenf Bewertungen desselben Symbols am selben "
+           "Tag sind EINE Beobachtung")
+
+    # ⚠️ DIE LUECKE, DIE BEIM DURCHSEHEN AUFFIEL (130b, L2).
+    _hpq = _quelltext("agent/krypto/hebel_pipeline.py")
+    _erq = _quelltext("agent/entscheidungsrechnung.py")
+    pruefe(P, "der Liquidationsdeckel RM-11 laeuft in der NEUEN Kette",
+           "max_safe_hebel" in _erq,
+           "ohne ihn koennte Bitpanda zwangsliquidieren, bevor der eigene "
+           "Stop ausloest")
+    pruefe(P, "⚠️ der Krisendeckel AZ-7 laeuft dort NICHT - als Luecke vermerkt",
+           "pre_check_hebel" in _hpq and "pre_check_hebel" not in _erq,
+           "pre_check_hebel steht nur in der ALTEN Kette. Diese Pruefung "
+           "haelt den Zustand fest, sie behebt ihn nicht - siehe 130b L2")
+
     # ---- E1 GEBAUT: DIE AUFLOESUNG VERLANGT DEN EINSTIEG (128) --------
     # ⚠️ EIN EINGRIFF IN DIE PRODUKTION. Geprueft wird deshalb an ECHTEN
     # SQLite-Daten mit echten Kerzen, nicht am Quelltext.

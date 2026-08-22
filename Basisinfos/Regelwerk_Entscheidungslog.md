@@ -19770,3 +19770,58 @@ Rauschboden das Modellurteil in 86,8 % ueberstimmt, ist der Hebel ein
 NEBENPRODUKT DER STOPREGEL, keine Strategieentscheidung. Die vorgelagerte
 Frage lautet: soll der Rauschboden das Modellurteil ueberstimmen duerfen? Sie
 ist messbar - die Bauform liegt in pruefe_strukturstop.py vor.
+
+
+[2026-08-22] KAPITEL 130: DER RAUSCHBODEN TRAEGT BESSER ALS DAS MODELLURTEIL
+
+Die vorgelagerte Frage aus 129 gemessen - gepaart auf denselben Ankern, weil
+der Messzeitraum eine Aufwaertsphase von +15,8 % ist.
+
+547 Kauf-Signale ab dem 18.08.:
+    A Betrieb (Rauschboden)  Stop 7,77 %  Hebel 1,00  197 Ziel / 25 Stop
+    B These (Modell)         Stop 3,44 %  Hebel 1,74  247 Ziel / 102 Stop
+
+Erwartungswert je Trade zum Referenzsatz: A +1,371 R, B +0,743 R.
+Block-Bootstrap ueber 222 Paare in 51 Bloecken je (Symbol, Tag):
+These gegen Betrieb -0,609 R, Intervall [-0,901; -0,338].
+
+DER RAUSCHBODEN TRAEGT BESSER. Der enge Stop der These wird VIERMAL so oft
+ausgestoppt - genau die Rauschtreffer aus Kapitel 89.
+
+⚠️ DAMIT KORRIGIERT SICH MEINE EIGENE RAHMUNG. Kapitel 88.1 nannte es einen
+DEFEKT, dass die Klemme entscheidet und nicht das Urteil; 129 hat das
+wiederholt. Gemessen ist es KEIN Defekt, sondern die bessere Wahl - das
+Modellurteil setzt den Stop zu eng. Der Hebelverlust ist damit der PREIS
+EINER VERBESSERUNG, kein Nebenschaden.
+
+⚠️ Die absoluten Quoten (88,7 % / +1,371 R) traegt die Aufwaertsphase mit.
+Die Paarung haelt den Markt aus dem VERGLEICH heraus, nicht aus den
+Einzelwerten.
+
+[2026-08-22] SPOT GEGEN HEBEL: DREI LUECKEN
+
+Nutzereinschaetzung: "wir haben das Thema bereits sehr gut aufgearbeitet -
+aber offenbar nicht vollstaendig durchgedacht oder umgesetzt." Sie trifft.
+
+KLARSTELLUNG ZUM RISIKO: hebel = verlustanteil / stop_rel. BEI GLEICHEM
+VERLUSTANTEIL IST DAS RISIKO JE TRADE IDENTISCH, mit oder ohne Hebel - der
+Hebel bringt nur einen engeren Stop auf denselben Euro-Verlust. Was der Hebel
+ZUSAETZLICH traegt, sind drei andere Risikoarten: Liquidation (abgebildet,
+RM-11 max_safe_hebel), Finanzierung (abgebildet, 0,03 %/Tag) und das
+GAP-RISIKO (nirgends). Das CRV hoeher zu setzen waere nicht falsch, aber die
+falsche Begruendung - ein Ausfallrisiko gehoert gedeckelt, nicht weggerechnet.
+
+DIE DREI LUECKEN:
+L1 crv_minimum 2,0 gilt fuer Spot UND Hebel - eine Unterscheidung ist nie
+   getroffen worden. Dieselbe Bauart wie beim Verlustanteil vor dem 18.08.
+L2 ⚠️ pre_check_hebel laeuft in der NEUEN Kette NICHT - er steht nur in
+   hebel_pipeline.py (alte Kette). Damit fehlt AZ-7, der komplette
+   Hebeldeckel auf 0 bei Extrem-Krise-Regime, und der
+   Kontra-Konservativfaktor. Kapitel 88.1 hatte es benannt, gebaut wurde es
+   nicht. max_safe_hebel laeuft, der Krisendeckel nicht.
+L3 das Gap-Risiko ist nirgends gerechnet.
+
+KEINE DIESER LUECKEN IST HEUTE DRINGEND (24,1 % Hebel), aber sie werden es,
+sobald an k oder am Verlustanteil gedreht wird. Die Reihenfolge ist damit
+umgekehrt zur urspruenglichen Annahme: erst L2 schliessen, dann ueber die
+Regler reden.
