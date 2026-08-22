@@ -18201,3 +18201,101 @@ Das ist ein Eingriff in das Risikomodell und keine Verdrahtung.
 
 **Der Zustand ist damit nicht mehr „vergessen", sondern „vermessen und
 begründet offen".** Suite 1.526.
+
+
+---
+
+## Kapitel 137 — S6d gebaut: fünf Deckel weg, eine Zahl endlich an ihrer Quelle (22.08.2026)
+
+**Nutzerentscheidung nach dem Vermessen aus Kapitel 136.** Die Frage lautete:
+*„u. U. benötigen wir den Deckel nicht oder nicht mehr."* Die Daten haben sie
+beantwortet.
+
+### 137.1 Die Zahl, die entschieden hat
+
+Über **202 Signale mit Hebelvorschlag** (14.07.–10.08.2026):
+
+| Deckel | gegriffen | Anteil |
+|---|---:|---:|
+| Regime-Richtungs-Konflikt | **0** | 0,0 % |
+| Retail-Konsens | **0** | 0,0 % |
+| Gegenszenario | **0** | 0,0 % |
+| Technische Konfluenz | 4 | 2,0 % |
+| CRV knapp am Minimum | 2 | 1,0 % |
+| *RM-11 (läuft weiter)* | *3* | *1,5 %* |
+
+**Drei der vier Konfliktdeckel haben in der gesamten Historie kein einziges
+Mal gegriffen.** Die beiden, die griffen, sind genau die beiden, deren
+Eingabe die neue Kette **aus begründeter Entscheidung** nicht hat.
+
+⚠️ **Der Vorbehalt steht im Protokoll:** „nie gegriffen" kann auch „Schwelle
+zu hoch" heißen statt „Lage trat nie ein". Das wurde **nicht** nachgemessen —
+bewusst, weil der Regler in der neuen Rechnung ohnehin am falschen Punkt
+ansetzt. Wer die Frage später aufnimmt, findet sie hier.
+
+### 137.2 Was gebaut wurde
+
+**Fünf Schlüssel samt ihrer beiden Schwellen sind aus `config.yaml`
+verschwunden** — mit einem Vermerk an ihrer Stelle, der die drei Gründe trägt
+(nie gegriffen · keine Eingabe · wirkt verkehrt herum).
+
+⚠️ **Die alte Kette läuft unverändert weiter.** `hebel_risk_gate.py` las mit
+direktem Zugriff (`hebel_cfg["..."]`) — ein entfernter Schlüssel wäre dort ein
+**KeyError im Betrieb** gewesen. Sie liest jetzt mit Vorgabe, und die
+Vorgaben sind bitgleich die alten Werte (je 3,0; Schwellen 35 und 0,2). **Das
+Verhalten dort ändert sich um keinen Wert.** Was sich ändert: in der
+Konfiguration steht kein Regler mehr, der nur einen toten Pfad steuert und
+beim Lesen wie eine lebende Einstellung aussieht.
+
+⚠️ **Zwei der Namen stehen auch im Spot-Block** (`crv_knapp_schwelle_relativ`,
+`gegenszenario_wahrscheinlichkeit_schwelle_prozent`) und werden dort von
+`risk_gate.py` gelesen. **Die blieben unberührt** — geprüft, nicht
+angenommen.
+
+### 137.3 ⚠️ Und die Prüfung, die gar nicht prüfte
+
+```python
+pruefe(P, "die Stop-Untergrenzen stimmen mit der config ueberein",
+       ER.GRENZEN["stop_min_relativ"] == 0.025 ...,
+       "RM-1b/RM-1c - wer die config aendert, muss hier mitziehen")
+```
+
+**Sie vergleicht gegen Literale, nicht gegen die config.** Wer die
+Konfiguration ändert, merkt hier nichts — der Kommentar sagte es selbst: „muss
+hier mitziehen", also von Hand. Das ist die Sorte Zusage, die beim ersten Mal
+gebrochen wird.
+
+**Jetzt wird die Datei gelesen und verglichen**, für alle drei Werte:
+
+| `GRENZEN` | config |
+|---|---|
+| `stop_min_relativ` | `risiko.sl_abstand_eng_schwelle_relativ` |
+| `stop_min_atr` | `risiko.sl_abstand_min_atr_faktor` |
+| **`hebel_max`** | **`risiko.hebel.max_hebel`** |
+
+`hebel_max` war der **einzige Wert in `GRENZEN` ohne genannte Quelle**. Er ist
+jetzt gebunden — und die Positivkontrolle bestätigt die Bindung: config auf 7
+gesetzt → Prüfung fällt durch; zurückgebaut → grün.
+
+### 137.4 Was damit erledigt ist und was bleibt
+
+**S6 ist abgeschlossen:**
+
+| | |
+|---|---|
+| S6a | ein Aktionsvokabular für beide Instrumente (Kapitel 133) |
+| S6b | ein Lauf je Asset (Kapitel 134) |
+| S6c | `REDUZIEREN` erreicht jede lesende Stelle (Kapitel 135) |
+| **S6d** | **fünf Deckel weg, `max_hebel` an der Quelle** |
+
+**Was jetzt schützt:** RM-11 Liquidationsabstand und der Verlustanteil je
+Trade. Beide laufen, beide sind in der Suite festgenagelt.
+
+**Offen und bewusst offen:** Wenn wir je „bei einem Konflikt weniger
+riskieren" wollen, gehört das an den **`verlustanteil`** — und dann gemessen,
+nicht geraten. Rechnerisch belegt (Kapitel 136): ein niedrigerer
+Verlustanteil senkt das Risiko je Trade in jedem Schritt (60 → 45 → 30 → 15 €)
+und macht die Nominale nie schlechter. ⚠️ Sie **sinkt** allerdings erst, wenn
+der Hebel bei 1,0 aufsetzt — bis dahin fällt nur der Hebel.
+
+**Suite 1.534.**

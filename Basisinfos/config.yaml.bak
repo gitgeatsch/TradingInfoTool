@@ -522,53 +522,42 @@ risiko:
                                     # gilt NICHT fuer Zweig 1 (Trendfolge), siehe
                                     # docs/hebel_positionsformel.md Sanity-Check-Korrektur
                                     # vom 2026-07-14
+    # --- DIE FUENF KONFLIKTDECKEL SIND ENTFALLEN (S6d, 22.08.2026) ------
+    #
+    # Hier standen `regime_konflikt_hebel_deckel`, `gegenszenario_hebel_deckel`,
+    # `technischer_konflikt_hebel_deckel`, `crv_knapp_hebel_deckel` und
+    # `retail_konsens_hebel_deckel` (je 3.0) samt ihrer beiden Schwellen.
+    #
+    # WARUM SIE WEG SIND - drei Gruende, jeder fuer sich ausreichend:
+    #
+    #   1  GEMESSEN: ueber 202 Signale mit Hebelvorschlag (14.07.-10.08.)
+    #      haben Regime-Konflikt, Retail-Konsens und Gegenszenario KEIN
+    #      EINZIGES Mal gegriffen. Technische Konfluenz 4x, CRV knapp 2x.
+    #
+    #   2  KEINE EINGABE MEHR: die neue Kette liefert weder "gemischt"
+    #      (szenario_fakten schreibt die Zaehlung - "gemischt waere ein
+    #      Urteil") noch eine Gegenszenario-Wahrscheinlichkeit (das hiesse,
+    #      wieder eine Zahl vom Modell zu verlangen), und das geplante CRV
+    #      ist fest 2,0 - "knapp darueber" hat keinen Spielraum.
+    #
+    #   3  ⚠️ EIN HEBELDECKEL SENKT DAS RISIKO NICHT MEHR. Der Verlust je
+    #      Trade steht mit verlustanteil x einsatz VOR dem Hebel fest; ein
+    #      niedrigerer Deckel vergroessert nur die Nominale (1.000 -> 1.600
+    #      EUR bei gleichbleibenden 60 EUR Risiko) und damit den Schaden bei
+    #      einem Sprung ueber den Stop. Siehe Umbauplan Kapitel 136.
+    #
+    # WAS STATTDESSEN SCHUETZT: RM-11 (Liquidationsabstand, griff 3x und
+    # laeuft weiter) und der Verlustanteil je Trade.
+    #
+    # WOLLEN WIR JE WIEDER "bei Konflikt weniger riskieren", gehoert das an
+    # den VERLUSTANTEIL, nicht an den Hebel - und dann gemessen, nicht
+    # geraten. Die alte Kette behaelt ihre Werte als Vorgabe im Code
+    # (hebel_risk_gate.py), ihr Verhalten aendert sich dadurch nicht.
     # --- Regelwerk-Nachtrag 2026-07-17 (echter LINK-Fall: 5x-LONG-Eroeffnung
     # WAEHREND bereits erkanntem baer-Regime, 80% Konfidenz reichte damals
     # aus, keine dieser beiden Bremsen existierte) - siehe Memory
     # project_hebel_rahmenbedingungen.md fuer die volle Herleitung. [OFFEN],
     # noch nicht ueber laengeren echten Betrieb kalibriert.
-    regime_konflikt_hebel_deckel: 3.0  # gilt, wenn die Positions-Richtung dem
-                                        # Regime entgegensteht (bär+LONG oder
-                                        # bulle+SHORT) - Hebel wird zusaetzlich
-                                        # zu Config-Maximum/RM-11 auf diesen
-                                        # Wert gedeckelt, unabhaengig von der
-                                        # Konfidenz (Gegen-Trend + Hebel ist
-                                        # strukturell riskanter als beides
-                                        # einzeln).
-    gegenszenario_wahrscheinlichkeit_schwelle_prozent: 35  # ab dieser vom
-                                        # Modell selbst geschaetzten Gegen-
-                                        # szenario-Wahrscheinlichkeit (bear_prob
-                                        # bei LONG, bull_prob bei SHORT) greift
-                                        # der Deckel unten - nutzt die ohnehin
-                                        # vom Modell erzeugte forecast-
-                                        # Wahrscheinlichkeit statt nur die
-                                        # Konfidenz zu betrachten.
-    gegenszenario_hebel_deckel: 3.0     # wie regime_konflikt_hebel_deckel,
-                                        # aber ausgeloest durch die Forecast-
-                                        # Wahrscheinlichkeit (siehe oben) -
-                                        # beide Deckel koennen gleichzeitig
-                                        # greifen, es zaehlt immer der
-                                        # niedrigste bindende Wert.
-    technischer_konflikt_hebel_deckel: 3.0  # NEU (2026-07-18, Spot-Pendant siehe
-                                        # risiko.technischer_konflikt_deckel_anteil) -
-                                        # greift, wenn summarize_confluence() "gemischt"
-                                        # liefert (weder bullish noch bearish dominiert).
-                                        # Wie regime_konflikt_hebel_deckel ein Hebel-
-                                        # Deckel (kein Anteil wie bei Spot), da Hebel
-                                        # ueber min() aus mehreren Deckel-Kandidaten
-                                        # bestimmt wird, siehe hebel_risk_gate.py::
-                                        # _hebel_deckel_kandidaten().
-    crv_knapp_schwelle_relativ: 0.2     # NEU (2026-07-18) - identische Definition wie
-                                        # risiko.crv_knapp_schwelle_relativ (Spot).
-    crv_knapp_hebel_deckel: 3.0         # NEU (2026-07-18) - Hebel-Deckel-Kandidat, wenn
-                                        # das CRV nur knapp ueber CRV_MINIMUM liegt.
-    retail_konsens_hebel_deckel: 3.0    # NEU (2026-07-19, echter AVAX-Fund) - greift, wenn
-                                        # die empfohlene Richtung mit der extremen Retail-
-                                        # Mehrheitspositionierung uebereinstimmt (>65%/<35%
-                                        # Long-Konten-Anteil, siehe anticyclic.py::
-                                        # LONG_BIAS_EXTREME_THRESHOLD_PCT), statt (antizyklisch
-                                        # korrekt) dagegen zu wetten - siehe hebel_risk_gate.py::
-                                        # retail_konsens_risiko().
     # sl_abstand_eng_schwelle_relativ wurde 2026-08-02 eine Ebene hoeher nach
     # `risiko:` verschoben - die Regel gilt seither fuer alle Assetklassen,
     # nicht mehr nur fuer Hebel. Begruendung und Kalibrierung stehen dort.

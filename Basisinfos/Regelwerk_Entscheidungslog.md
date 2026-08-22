@@ -20161,3 +20161,55 @@ Hebel. Das ist ein Eingriff ins Risikomodell, keine Verdrahtung.
 
 Der Zustand ist damit nicht mehr "vergessen", sondern "vermessen und
 begruendet offen". Suite 1526.
+
+
+[2026-08-22] KAPITEL 137: S6d GEBAUT - FUENF DECKEL WEG, EINE ZAHL AN IHRER QUELLE
+
+Nutzerentscheidung nach dem Vermessen aus Kapitel 136. Die Frage lautete
+"u. U. benoetigen wir den Deckel nicht oder nicht mehr" - die Daten haben sie
+beantwortet.
+
+DIE ZAHL, DIE ENTSCHIEDEN HAT: ueber 202 Signale mit Hebelvorschlag
+(14.07.-10.08.) haben Regime-Richtungs-Konflikt, Retail-Konsens und
+Gegenszenario KEIN EINZIGES Mal gegriffen. Technische Konfluenz 4x (2,0 %),
+CRV knapp 2x (1,0 %), RM-11 3x (1,5 %). Die beiden, die griffen, sind genau
+die beiden, deren Eingabe die neue Kette aus begruendeter Entscheidung nicht
+hat.
+
+⚠️ VORBEHALT IM PROTOKOLL: "nie gegriffen" kann auch "Schwelle zu hoch"
+heissen statt "Lage trat nie ein". NICHT nachgemessen - bewusst, weil der
+Regler in der neuen Rechnung ohnehin am falschen Punkt ansetzt. Wer die Frage
+spaeter aufnimmt, findet sie hier.
+
+GEBAUT: fuenf Schluessel samt ihrer beiden Schwellen aus config.yaml entfernt,
+mit einem Vermerk an ihrer Stelle, der die drei Gruende traegt.
+
+⚠️ DIE ALTE KETTE LAEUFT UNVERAENDERT WEITER. hebel_risk_gate.py las mit
+direktem Zugriff (hebel_cfg["..."]) - ein entfernter Schluessel waere dort ein
+KeyError IM BETRIEB gewesen. Sie liest jetzt mit Vorgabe, bitgleich die alten
+Werte (je 3.0, Schwellen 35 und 0.2). Das Verhalten dort aendert sich um
+keinen Wert.
+
+⚠️ ZWEI DER NAMEN STEHEN AUCH IM SPOT-BLOCK (crv_knapp_schwelle_relativ,
+gegenszenario_wahrscheinlichkeit_schwelle_prozent) und werden dort von
+risk_gate.py gelesen. Die blieben unberuehrt - geprueft, nicht angenommen.
+
+⚠️ UND DIE PRUEFUNG, DIE GAR NICHT PRUEFTE: "die Stop-Untergrenzen stimmen mit
+der config ueberein" verglich gegen LITERALE, nicht gegen die config. Wer die
+Konfiguration aendert, merkte hier nichts - der Kommentar sagte es selbst
+("muss hier mitziehen", also von Hand). Jetzt wird die Datei gelesen und
+verglichen, fuer stop_min_relativ, stop_min_atr und hebel_max. Letzterer war
+der EINZIGE Wert in GRENZEN ohne genannte Quelle. Positivkontrolle: config auf
+7 gesetzt -> Pruefung faellt durch; zurueckgebaut -> gruen.
+
+S6 IST DAMIT ABGESCHLOSSEN (a/b/c/d, Kapitel 133-137). Was schuetzt: RM-11
+Liquidationsabstand und der Verlustanteil je Trade, beide in der Suite
+festgenagelt.
+
+BEWUSST OFFEN: wenn wir je "bei Konflikt weniger riskieren" wollen, gehoert
+das an den VERLUSTANTEIL - und dann gemessen, nicht geraten. Rechnerisch
+belegt: ein niedrigerer Verlustanteil senkt das Risiko je Trade in jedem
+Schritt (60 -> 45 -> 30 -> 15 EUR) und macht die Nominale nie schlechter.
+⚠️ Sie SINKT allerdings erst, wenn der Hebel bei 1,0 aufsetzt.
+
+Suite 1534.

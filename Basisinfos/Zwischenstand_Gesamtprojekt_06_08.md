@@ -586,21 +586,20 @@ Regel. Alles hier als **ein** Deployment-Paket, nicht einzeln.
 | **S6a** | ein Aktionsvokabular für Spot und Hebel | **gebaut** (Kapitel 133) |
 | **S6b** | ein Lauf je Asset, Instrument fällt aus der Rechnung an | **gebaut** (Kapitel 134) |
 | **S6c** | das neue Wort `REDUZIEREN` erreicht jede lesende Stelle | **gebaut** (Kapitel 135) |
-| **S6d** | die fünf verwaisten Risikodeckel | ⚠️ **vermessen** (Kapitel 136) — ein Hebeldeckel senkt das Risiko nicht mehr; Entscheidung offen |
+| **S6d** | fünf Deckel gestrichen, `max_hebel` an der Quelle | **gebaut** (Kapitel 137) |
 
-⚠️ **S6d ist der einzige mit Sicherheitsbezug — und Kapitel 136 hat ihn
-umgedreht.** Die fünf Schlüssel laufen weiterhin ins Leere, aber sie einfach
-zurückzuholen wäre falsch: **ein Hebeldeckel senkt in der neuen Rechnung das
-Risiko nicht.** Der Verlust je Trade steht mit `verlustanteil × einsatz` vor
-dem Hebel fest; ein niedrigerer Deckel vergrößert nur die Nominale (1.000 €
-→ 1.600 € bei gleichbleibenden 60 € Risiko) und damit den Schaden bei einem
-Sprung über den Stop.
+✔ **S6 ist abgeschlossen (Kapitel 133–137).** Die fünf Konfliktdeckel sind
+**gestrichen**, nicht verdrahtet — und das war die richtige Entscheidung:
+über 202 Signale mit Hebelvorschlag haben drei von ihnen **kein einziges Mal**
+gegriffen, und ein *Hebel*-Deckel senkt in der neuen Rechnung das Risiko
+ohnehin nicht (er vergrößert die Nominale, Kapitel 136).
 
-**Was sie meinten — „bei einem Konflikt weniger riskieren" — müsste am
-`verlustanteil` greifen.** Das ist ein Eingriff ins Risikomodell und braucht
-eine Entscheidung, keine Verdrahtung. Zwei der vier Konfliktdeckel haben in
-der neuen Kette zudem **keine Eingabe** (Gegenszenario bräuchte eine
-Prozentzahl vom Modell; „gemischt" ist bewusst nicht gebaut).
+**Was schützt:** RM-11 Liquidationsabstand und der Verlustanteil je Trade.
+**`max_hebel`** kommt jetzt nachweislich aus der `config` — er war der einzige
+Wert in `GRENZEN` ohne Quelle.
+
+⚠️ **Bewusst offen:** „bei einem Konflikt weniger riskieren" gehört an den
+`verlustanteil`, nicht an den Hebel — und dann gemessen, nicht geraten.
 
 ---
 

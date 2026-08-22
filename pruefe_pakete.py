@@ -2625,10 +2625,57 @@ def gesamtpruefung() -> None:
            ER.GRENZEN["crv"] == TB.CRV)
     pruefe(P, "die Ausstiegsschwelle ist importiert, nicht kopiert",
            AR.AUSLOESE_R is AUSLOESE_R)
-    pruefe(P, "die Stop-Untergrenzen stimmen mit der config ueberein",
-           ER.GRENZEN["stop_min_relativ"] == 0.025
-           and ER.GRENZEN["stop_min_atr"] == 0.75,
-           "RM-1b/RM-1c - wer die config aendert, muss hier mitziehen")
+    # ⚠️ HIER STAND EIN VERGLEICH GEGEN LITERALE (bis 22.08.2026).
+    #
+    # `GRENZEN["stop_min_relativ"] == 0.025` prueft NICHT gegen die config -
+    # es nagelt nur die Konstante fest. Wer die config aendert, merkt hier
+    # nichts; der Kommentar sagte "muss hier mitziehen", also von Hand. Das
+    # ist genau die Sorte Zusage, die beim ersten Mal gebrochen wird.
+    #
+    # JETZT AN DER QUELLE: die Datei wird gelesen und verglichen.
+    import yaml as _YAML
+
+    _cfg_roh = _YAML.safe_load(
+        io.open("Basisinfos/config.yaml", encoding="utf-8").read())
+    _risiko = (_cfg_roh or {}).get("risiko") or {}
+    _hebel_cfg = _risiko.get("hebel") or {}
+    for _schluessel, _grenze, _wo in (
+            ("sl_abstand_eng_schwelle_relativ", "stop_min_relativ", _risiko),
+            ("sl_abstand_min_atr_faktor", "stop_min_atr", _risiko),
+            ("max_hebel", "hebel_max", _hebel_cfg)):
+        _wert = _wo.get(_schluessel)
+        pruefe(P, f"GRENZEN['{_grenze}'] stimmt mit der config ueberein",
+               _wert is not None
+               and abs(float(_wert) - float(ER.GRENZEN[_grenze])) < 1e-9,
+               f"config {_schluessel}={_wert!r}, "
+               f"GRENZEN['{_grenze}']={ER.GRENZEN[_grenze]!r} - wer eine "
+               f"Zahl aendert, muss die andere mitziehen; genau dafuer ist "
+               f"diese Pruefung da")
+
+    # ---- S6d: DIE FUENF KONFLIKTDECKEL SIND WEG (22.08.2026) -------------
+    #
+    # Gemessen ueber 202 Signale mit Hebelvorschlag: Regime-Konflikt,
+    # Retail-Konsens und Gegenszenario haben KEIN EINZIGES Mal gegriffen.
+    # Und ein Hebeldeckel senkt in der neuen Rechnung das Risiko ohnehin
+    # nicht (Kapitel 136). Sie stehen nicht mehr in der config.
+    for _tot in ("regime_konflikt_hebel_deckel", "gegenszenario_hebel_deckel",
+                 "technischer_konflikt_hebel_deckel",
+                 "crv_knapp_hebel_deckel", "retail_konsens_hebel_deckel"):
+        pruefe(P, f"{_tot} steht nicht mehr in der config",
+               _tot not in _hebel_cfg,
+               "ein Regler, der nur einen toten Pfad steuert, sieht beim "
+               "Lesen aus wie eine lebende Einstellung")
+    # ⚠️ UND DIE ALTE KETTE LAEUFT UNVERAENDERT WEITER. Ihre Werte stehen
+    # jetzt als Vorgabe im Code - ein fehlender Schluessel darf dort kein
+    # KeyError sein.
+    _hrg = _quelltext("agent/krypto/hebel_risk_gate.py")
+    pruefe(P, "die alte Kette liest die Deckel mit Vorgabe, nicht hart",
+           all(f'hebel_cfg["{k}"]' not in _hrg for k in (
+               "regime_konflikt_hebel_deckel", "gegenszenario_hebel_deckel",
+               "technischer_konflikt_hebel_deckel",
+               "crv_knapp_hebel_deckel", "retail_konsens_hebel_deckel")),
+           "ein direkter Zugriff waere nach dem Entfernen ein KeyError - "
+           "und zwar erst im Betrieb")
 
     # --- EINHEITEN: eine Waehrung, eine Schreibweise? ---
     # ⚠️ GEMESSEN STATT IM QUELLTEXT GESUCHT (17.08.2026). Hier stand

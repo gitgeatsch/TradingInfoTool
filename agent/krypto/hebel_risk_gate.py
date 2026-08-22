@@ -57,6 +57,21 @@ _HEBEL_ACTIONS_MIT_HEBEL = ("ERÖFFNEN", "NACHKAUFEN", "HEBEL_ERHÖHEN")
 _ALT_LONG_SKEPSIS_BTC_MATRIX_STATES = ("btc_season", "baer_flucht")
 
 
+# ⚠️ DIE FUENF KONFLIKTDECKEL STEHEN SEIT S6d (22.08.2026) NICHT MEHR IN DER
+# CONFIG - ihre Werte sind hier als Vorgabe hinterlegt.
+#
+# GRUND: sie wirken nur in DIESER Kette. Die Rollen-Kette rechnet den Hebel
+# aus Verlustanteil und Stopabstand; ein Hebeldeckel senkt dort das Risiko
+# nicht, er vergroessert die Nominale (Umbauplan Kapitel 136). Und ueber 202
+# Signale mit Hebelvorschlag haben Regime-Konflikt, Retail-Konsens und
+# Gegenszenario KEIN EINZIGES Mal gegriffen.
+#
+# ⚠️ DAS VERHALTEN DIESER DATEI AENDERT SICH DADURCH NICHT. Die Vorgaben sind
+# bitgleich die alten config-Werte (je 3.0, Schwellen 35 und 0.2). Was sich
+# aendert: in der config steht kein Regler mehr, der nur einen toten Pfad
+# steuert und beim Lesen wie eine lebende Einstellung aussieht.
+_DECKEL_VORGABEN_AUS_CONFIG_ENTFERNT = ['crv_knapp_hebel_deckel', 'gegenszenario_hebel_deckel', 'gegenszenario_wahrscheinlichkeit_schwelle_prozent', 'regime_konflikt_hebel_deckel', 'retail_konsens_hebel_deckel', 'technischer_konflikt_hebel_deckel']
+
 def regime_konflikt_hebel(regime: str, richtung: str) -> bool:
     """Position widerspricht dem aktuellen Regime (z.B. LONG im baer-Regime).
     Als eigene Funktion extrahiert (2026-07-19), damit sowohl der Hebel-Deckel
@@ -1047,35 +1062,35 @@ def post_check_hebel(
 
         regime_konflikt = regime_konflikt_hebel(regime_result.regime, richtung)
         if regime_konflikt:
-            kandidaten.append(("Regime-Richtungs-Konflikt", hebel_cfg["regime_konflikt_hebel_deckel"]))
+            kandidaten.append(("Regime-Richtungs-Konflikt", hebel_cfg.get("regime_konflikt_hebel_deckel", 3.0)))
 
         forecast = result.get("forecast") or {}
         gegenszenario_feld = "bear" if richtung == RICHTUNG_LONG else "bull"
         gegenszenario_pct = (forecast.get(gegenszenario_feld) or {}).get("probability_pct")
         gegenszenario_hoch = (
             gegenszenario_pct is not None
-            and gegenszenario_pct >= hebel_cfg["gegenszenario_wahrscheinlichkeit_schwelle_prozent"]
+            and gegenszenario_pct >= hebel_cfg.get("gegenszenario_wahrscheinlichkeit_schwelle_prozent", 35)
         )
         if gegenszenario_hoch:
             kandidaten.append(
-                (f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", hebel_cfg["gegenszenario_hebel_deckel"])
+                (f"Gegenszenario-Wahrscheinlichkeit {gegenszenario_pct:.0f}%", hebel_cfg.get("gegenszenario_hebel_deckel", 3.0))
             )
 
         # Nachtrag 2026-07-18 (echter CAT-Fall, Spot-Pendant siehe risk_gate.py::
         # post_check()): widerspruechliche technische Konfluenz - deterministisch,
         # unabhaengig davon ob das Modell den Widerspruch selbst benennt.
         if confluence is not None and confluence.overall_bias == "gemischt":
-            kandidaten.append(("Widerspruechliche technische Konfluenz", hebel_cfg["technischer_konflikt_hebel_deckel"]))
+            kandidaten.append(("Widerspruechliche technische Konfluenz", hebel_cfg.get("technischer_konflikt_hebel_deckel", 3.0)))
 
         # Nachtrag 2026-07-18 (gleicher Fund): CRV knapp am Minimum - CRV_MINIMUM
         # war bisher ein binaeres Gate, 2,01 und 4,0 wurden identisch behandelt.
-        crv_knapp_schwelle_relativ = hebel_cfg.get("crv_knapp_schwelle_relativ")
+        crv_knapp_schwelle_relativ = hebel_cfg.get("crv_knapp_schwelle_relativ", 0.2)
         if (
             crv is not None
             and crv_knapp_schwelle_relativ is not None
             and crv < CRV_MINIMUM * (1 + crv_knapp_schwelle_relativ)
         ):
-            kandidaten.append((f"CRV knapp am Minimum ({crv:.2f})", hebel_cfg["crv_knapp_hebel_deckel"]))
+            kandidaten.append((f"CRV knapp am Minimum ({crv:.2f})", hebel_cfg.get("crv_knapp_hebel_deckel", 3.0)))
 
         # Nachtrag 2026-07-19 (echter AVAX-Fund): Retail-Konsens-Risiko - die
         # empfohlene Richtung stimmt mit der extremen Mehrheitspositionierung
@@ -1084,7 +1099,7 @@ def post_check_hebel(
         # LONG_BIAS_EXTREME_THRESHOLD_PCT (65%) - bei SHORT ist die Crowd
         # "im Konsens", wenn <= 35% der Konten long sind (also >= 65% short).
         if retail_konsens_risiko(retail_long_bias_extreme, long_account_pct, richtung):
-            kandidaten.append(("Retail-Konsens-Risiko", hebel_cfg["retail_konsens_hebel_deckel"]))
+            kandidaten.append(("Retail-Konsens-Risiko", hebel_cfg.get("retail_konsens_hebel_deckel", 3.0)))
 
         return kandidaten
 
@@ -1371,7 +1386,7 @@ def post_check_hebel(
         confluence=confluence,
         gegenszenario_pct=gegenszenario_pct,
         gegenszenario_schwelle=hebel_cfg.get("gegenszenario_wahrscheinlichkeit_schwelle_prozent"),
-        crv_knapp_schwelle_relativ=hebel_cfg.get("crv_knapp_schwelle_relativ"),
+        crv_knapp_schwelle_relativ=hebel_cfg.get("crv_knapp_schwelle_relativ", 0.2),
         retail_long_bias_extreme=retail_long_bias_extreme,
         long_account_pct=long_account_pct,
         trade_thesis_typ=result.get("trade_thesis_typ"),
