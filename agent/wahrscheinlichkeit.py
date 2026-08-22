@@ -105,12 +105,23 @@ BEITRAEGE = (
         quelle="Kapitel 108-122, 523 Reihen, Schwelle +2,6",
         warum="der einzige gemessene Kandidat, der die Zufallsschwelle nimmt",
         klassen=("krypto",)),
+    # ⚠️ NICHT "TRAEGT NICHTS", SONDERN "TRAEGT NEGATIV" (Kapitel 125,
+    # 22.08.2026). Auf Nutzerwunsch wurde gefragt, ob sich der Rangplatz so
+    # bauen laesst, dass er beitraegt - die Antwort ist deutlicher als
+    # erwartet: INNERHALB von H schneidet das beste Fuenftel um 5,8 Punkte
+    # SCHLECHTER ab (14.238 Anker, Schwelle +1,8, stabil ueber die Deckel
+    # 20/60/120 Tage). Netto je Trade zum Referenzsatz: -0,000 R gegen
+    # +0,172 R fuer das uebrige Feld.
+    #
+    # Ihn als positiven Beitrag zu fuehren waere also nicht nur wirkungslos,
+    # sondern schaedlich. Er bleibt `null` - und der Grund steht daneben.
     Beitrag(
         name="Rangplatz in der Anlageklasse",
         zustand="null", punkte=0.0,
-        quelle="messe_drift.py, 40 Reihen, 3.290 Termine",
-        warum=("+0,51 % Vorteil auf fuenf Tage gegen 0,60 % Rundenkosten "
-               "zum Referenzsatz - verfehlt um 0,10 Punkte"),
+        quelle="Kapitel 125, 14.238 H-Anker mit Rangplatz",
+        warum=("innerhalb von H sogar 5,8 Punkte SCHLECHTER (Schwelle "
+               "+1,8) - als Zusatzbedingung wuerde er H's Vorteil "
+               "aufheben"),
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",

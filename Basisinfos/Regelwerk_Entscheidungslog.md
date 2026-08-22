@@ -19434,3 +19434,69 @@ das Sechsfache. Das Urteil kippt nicht, aber es wandert von "aussichtslos" zu
 SONST STEHT NICHTS AUF DER ALTEN BASIS - geprueft: die Fixgebuehren bei
 Rohstoffen und Themen-ETF (1 EUR je Seite) sind ein eigenes, korrektes Modell
 und vom Krypto-Referenzsatz unberuehrt.
+
+
+[2026-08-22] KAPITEL 125: DIE REIHUNG TRAEGT NEGATIV
+
+Nutzerfrage: "wenn dieser nichts beitraegt sollte man die Frage stellen WARUM
+und so bauen dass er etwas beitraegt." Plus der Kostenhinweis, der den Befund
+verschoben hatte (Runde zum Betriebssatz statt Referenzsatz).
+
+EINE vorab festgelegte Frage: schlaegt "H UND bestes Fuenftel" das blosse H?
+Gegen H gemessen, nicht gegen alles (2.50). Rueckblick 250 und bestes Fuenftel
+stammen aus der PRODUKTION - kein Freiheitsgrad.
+
+ERGEBNIS: H + bestes Fuenftel 34,2 % (4.798), H uebriges Feld 40,0 % (9.440),
+Vorsprung -5,8 gegen Block-Permutationsschwelle +1,8. Netto zum Referenzsatz:
+-0,000 R gegen +0,172 R. DIE REIHUNG ALS ZUSATZBEDINGUNG WUERDE H'S VORTEIL
+VOLLSTAENDIG AUFHEBEN. Stabil ueber die Deckel 20/60/120 Tage (-6,2/-6,9/-5,8).
+
+⚠️ EIGENER FEHLER, DER FAST EINEN NULLBEFUND GEKOSTET HAETTE: die
+Positivkontrolle war falsch konstruiert. Sie pflanzte 300 Treffer ein und
+verglich das ERGEBNIS mit der Schwelle (+0,4 gegen +2,5) - ich haette
+geschlossen, das Werkzeug sei stumpf. Falsch: die Verschiebung war +6,3 bei
+erwarteten +6,3, nur lag der Ausgangswert bei -5,8. EINE POSITIVKONTROLLE
+FRAGT NICHT "IST DAS ERGEBNIS GROSS GENUG", SONDERN "SEHE ICH DIE AENDERUNG,
+DIE ICH SELBST VERURSACHT HABE".
+
+ERKLAERUNG: H waehlt ohnehin Werte nahe ihrem Hoch (111: Momentum erklaert
+44 % von H). Wer INNERHALB von H zusaetzlich nach Momentum auswaehlt, bekommt
+die am weitesten gelaufenen Werte - und die tragen schlechter.
+
+⚠️ DIE FOLGEFRAGE "TRAEGT ER INVERS?" IST AUF DIESEN DATEN NICHT
+BEANTWORTBAR - sie ist aus dem Ergebnis geboren, und sie auf derselben
+Stichprobe zu pruefen waere das Absuchen aus 2.49. Vorab festlegen, auf
+frischer Zeit pruefen.
+
+[2026-08-22] KAPITEL 126: WAS UNSERE ECHTEN SIGNALE GEBRACHT HABEN
+
+Nutzerfrage: "eigentlich sollten wir auch eine Messung der bisherigen Signale
+durchfuehren inkl. der LLM Bewertungen ... also auch die Schatten inkl. Rolle
+G ZAI." Alle Kapitel 99-125 lagen auf FREMDEN Reihen; hier zum ersten Mal
+unsere eigenen Signale, mit demselben Massstab.
+
+F1 ANBIETER: gemini/hebel 311 Faelle, 21,2 % - SCHLECHTER, -13,1 Punkte zum
+Referenzbreakeven, realisiert -0,51 R. mistral/hebel 494 Faelle, 40,3 % ueber
+dem Breakeven ABER realisiert -0,02 R. mistral/krypto 407 Faelle, 41,0 %,
+realisiert +0,03 R.
+
+⚠️ DER WICHTIGSTE BEFUND IST DER WIDERSPRUCH: eine Quote ueber dem Breakeven
+bei einem realisierten R um null heisst, DASS DIE TREFFER DAS UNTERSTELLTE
+CRV NICHT ZAHLEN. Wo Quote und R sich widersprechen, gilt das R. Das Werkzeug
+meldet den Fall jetzt ausdruecklich.
+
+F2/F3 ROLLE G IST NICHT AUSWERTBAR: von 1.118 Gegenpruefungen tragen nur 50
+einen Ausgang, die Gruppe "widerspruch" hat 5 Faelle. Die Urteile werden
+erhoben und NIE MIT DEM ERGEBNIS VERBUNDEN. Nach ueber tausend Aufrufen ist
+die Frage, ob Z.ai etwas vorhersagt, schlicht nicht beantwortbar - ein
+BETRIEBSBEFUND, keine Messung, und er kostet seit Wochen Kontingent ohne
+Erkenntnis.
+
+⚠️ EIGENER FEHLER: die erste Fassung nahm avg_realisiertes_crv als Nenner der
+Basisrate - fuer mistral/krypto stand dort 0,03, also "Basisrate" 97 % und
+"noetig 100,1 %". Das realisierte CRV ist das ERGEBNIS, die Basisrate haengt
+an der GEOMETRIE. Korrigiert auf das geplante CRV.
+
+VIER VORBEHALTE: grossteils alte Kette (Rollen-Kette erst seit 15.08.) -
+Regime durchgehend baer - nur_long filtert seit 05.08. nur den Versand (davor
+313 SHORT als HALTEN gebucht) - Ueberlebensverzerrung der Aufloesung.

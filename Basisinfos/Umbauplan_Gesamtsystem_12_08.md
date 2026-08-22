@@ -16562,3 +16562,142 @@ gestern die Kosten für die Börsen angepasst."*
 **Sonst steht nichts auf der alten Basis.** Geprüft: die Fixgebühren bei
 Rohstoffen und Themen-ETF (1 EUR je Seite) sind ein eigenes, korrektes Modell
 und vom Krypto-Referenzsatz unberührt.
+
+
+---
+
+## Kapitel 125 — Die Reihung trägt nicht nichts, sie trägt NEGATIV (22.08.2026)
+
+### Die Frage kam vom Nutzer
+
+> *„Rangplatz finde ich spannend — wenn dieser nichts beiträgt sollte man die
+> Frage stellen WARUM und so bauen dass er etwas beiträgt."*
+
+Dazu ein zweiter Hinweis, der einen Befund verschoben hat: *„wir haben gestern
+die Kosten für die Börsen angepasst"* — die im Modul hinterlegten 3 % waren die
+**Runde zum Betriebssatz**. Zum Referenzsatz sind es 0,60 %, und der Rangplatz
+verfehlte damit nur noch um **0,10 Punkte** statt um das Sechsfache.
+
+**Eine vorab festgelegte Frage, genau eine:** schlägt *„H UND bestes Fünftel"*
+das bloße H?
+
+⚠️ **Gegen H, nicht gegen alles** (Methodik 2.50). Gegen alle Anker gemessen
+hätte ich zum dritten Mal H nachgewiesen und es der Reihung gutgeschrieben.
+
+⚠️ **Rückblick (250 Tage) und Quantilsgrenze (bestes Fünftel) stammen aus der
+PRODUKTION**, nicht aus dieser Messung — damit gibt es keinen Freiheitsgrad,
+den ich günstig hätte setzen können.
+
+### Das Ergebnis
+
+| Arm | Fälle | Quote |
+|---|---:|---:|
+| H + bestes Fünftel | 4.798 | **34,2 %** |
+| H, übriges Feld | 9.440 | **40,0 %** |
+| **Vorsprung** | | **−5,8** |
+
+**Block-Permutation, 40 Läufe: Schwelle +1,8.** Gemessen −5,8.
+
+| netto je Trade | Referenz 0,30 % | Betrieb 1,50 % |
+|---|---:|---:|
+| H + bestes Fünftel (spot) | **−0,000** | −0,106 |
+| H, übriges Feld (spot) | **+0,172** | +0,053 |
+
+> **Die Reihung als Zusatzbedingung würde H's Vorteil vollständig aufheben.**
+
+**Stabil über alle drei Haltedauer-Deckel** (Suche, kein Nachweis):
+20 Tage −6,2 · 60 Tage −6,9 · 120 Tage −5,8.
+
+### ⚠️ Und ein eigener Fehler, der mich fast einen Nullbefund gekostet hätte
+
+Die **Positivkontrolle war falsch konstruiert.** Sie pflanzte 300 Treffer ein
+und verglich das **Ergebnis** mit der Zufallsschwelle: +0,4 gegen +2,5. Ich
+hätte geschlossen, das Werkzeug sei stumpf — und einen echten Befund als
+„nicht messbar" abgelegt.
+
+**Falsch.** Der eingepflanzte Effekt wirkte exakt: **Verschiebung +6,3,
+erwartet +6,3.** Nur lag der Ausgangswert bei −5,8, also blieb die Summe tief.
+
+> **Eine Positivkontrolle fragt nicht „ist das Ergebnis groß genug", sondern
+> „sehe ich die Änderung, die ich selbst verursacht habe".**
+
+### Was daraus folgt
+
+**Nach Methodik 2.51 ist das kein Nullbefund, sondern ein Befund mit
+umgekehrtem Vorzeichen** — und er hat eine plausible Erklärung: H wählt
+ohnehin Werte nahe ihrem Hoch (Kapitel 111: Momentum erklärt 44 % von H).
+Wer **innerhalb** von H zusätzlich nach Momentum auswählt, bekommt die am
+weitesten gelaufenen Werte — und die tragen schlechter.
+
+⚠️ **Die naheliegende Folgefrage — trägt der Rangplatz INVERS? — ist auf
+diesen Daten nicht beantwortbar.** Sie ist aus dem Ergebnis geboren; sie auf
+derselben Stichprobe zu prüfen wäre genau das Absuchen, dessen Preis
+Methodik 2.49 beziffert. Sie gehört vorab festgelegt und auf frischer Zeit
+geprüft.
+
+**In `wahrscheinlichkeit.py` bleibt der Rangplatz `null`** — mit dem
+gemessenen Grund daneben statt der freundlichen Umschreibung „trägt nichts".
+
+---
+
+## Kapitel 126 — Was unsere ECHTEN Signale gebracht haben (22.08.2026)
+
+### Auch diese Frage kam vom Nutzer
+
+> *„eigentlich sollten wir auch eine Messung der bisherigen Signale
+> durchführen inkl. der LLM Bewertungen … also auch die Schatten meine ich
+> inkl. der Rolle G ZAI."*
+
+**Alle Kapitel 99–125 haben auf FREMDEN Binance-Reihen gemessen.** Hier wird
+zum ersten Mal gefragt, was **unser** System an **unseren** Signalen erreicht
+hat. Maßstab ist derselbe wie überall: Trefferquote gegen `1/(1+CRV)`, plus
+Breakeven-Abstand bei beiden Sätzen.
+
+### F1 — die Anbieter
+
+| Gruppe / Anbieter | n | Quote | 95 % | realisiert | Urteil |
+|---|---:|---:|---|---:|---|
+| hebel / **gemini** | 311 | **21,2 %** | [17,0; 26,1] | −0,51 R | **SCHLECHTER**, −13,1 Punkte |
+| hebel / mistral | 494 | 40,3 % | [36,0; 44,7] | **−0,02 R** | ⚠️ **Widerspruch** |
+| krypto / mistral | 407 | 41,0 % | [36,4; 45,9] | +0,03 R | +6,7 Punkte |
+| krypto / „unbekannt" | 111 | 84,7 % | [76,8; 90,2] | +1,35 R | ⚠️ Anbieter unklar |
+
+⚠️ **Der wichtigste Befund ist der Widerspruch.** Mistral/Hebel liegt mit
+40,3 % **über** dem Breakeven und realisiert **−0,02 R**. Das heißt: **die
+Treffer zahlen das unterstellte CRV 2,0 nicht.** Die Quote ist schön, das
+Ergebnis ist null.
+
+> **Wo Quote und realisiertes R sich widersprechen, gilt das R.** Das Werkzeug
+> meldet diesen Fall ausdrücklich — sonst liest man die Quote und übersieht
+> das Ergebnis.
+
+### F2/F3 — Rolle G ist NICHT auswertbar, und das ist ein Betriebsbefund
+
+| | |
+|---|---:|
+| Gegenprüfungen insgesamt | **1.118** |
+| davon **mit Ausgang** | **50** |
+| davon Gruppe „widerspruch" | **5** |
+
+⚠️ **Die Urteile werden erhoben und nie mit dem Ergebnis verbunden.** Damit
+ist die Frage, ob Z.ai etwas vorhersagt, nach über tausend Aufrufen **schlicht
+nicht beantwortbar**. Das ist kein Messergebnis, sondern eine Lücke im
+Betrieb — und sie kostet seit Wochen Kontingent ohne Erkenntnis.
+
+### ⚠️ Ein eigener Fehler, gefunden beim ersten Lauf
+
+Die erste Fassung nahm `avg_realisiertes_crv` als **Nenner der Basisrate**.
+Für mistral/krypto stand dort 0,03 → „Basisrate" 97 %, „nötig 100,1 %".
+**Der realisierte CRV ist das ERGEBNIS, die Basisrate hängt an der
+GEOMETRIE.** Korrigiert auf das geplante CRV; der realisierte steht als eigene
+Spalte daneben — dort, wo er den Widerspruch oben sichtbar macht.
+
+### Vier Vorbehalte, die zum Ergebnis gehören
+
+1. **Größtenteils ALTE KETTE** — die Rollen-Kette läuft erst seit 15.08.
+2. **Das Regime war durchgehend „bär"** — ein überwiegend-LONG-Anbieter misst
+   die Marktrichtung mit.
+3. **`nur_long` filtert seit 05.08. nur den Versand** — davor wurden 313
+   SHORT-Vorschläge als HALTEN gebucht.
+4. **Überlebensverzerrung der Auflösung** — offene Verlierer laufen länger als
+   offene Gewinner.

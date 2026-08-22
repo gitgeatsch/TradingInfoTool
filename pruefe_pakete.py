@@ -10822,6 +10822,65 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- KAPITEL 125/126: REIHUNG x H UND DIE SIGNALBILANZ ------------
+    _rxq = _quelltext("messe_reihung_x_h.py")
+    _rxroh = io.open("messe_reihung_x_h.py", encoding="utf-8").read()
+    _sbq = _quelltext("messe_signalbilanz.py")
+    _sbroh = io.open("messe_signalbilanz.py", encoding="utf-8").read()
+
+    pruefe(P, "beide neuen Messungen tragen die Vorabfestlegung",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _rxroh
+           and "DIESER KOPF IST DIE VORABFESTLEGUNG" in _sbroh)
+    pruefe(P, "die Reihung wird gegen H gemessen, nicht gegen alles",
+           "eigenen Grundgesamtheit" in _rxroh and "2.50" in _rxroh,
+           "gegen alle Anker gemessen wuerde ich zum dritten Mal H "
+           "nachweisen und es der Reihung gutschreiben")
+    pruefe(P, "Rueckblick und Quantilsgrenze stammen aus der PRODUKTION",
+           "from agent.drift import RUECKBLICK_TAGE" in _rxq
+           and "BESTES_FUENFTEL = 0.20" in _rxq,
+           "damit gibt es keinen Freiheitsgrad, den ich haette guenstig "
+           "setzen koennen")
+
+    # ⚠️ DIE LEHRE, DIE MICH HEUTE FAST EINEN NULLBEFUND GEKOSTET HAETTE.
+    pruefe(P, "die Positivkontrolle misst die VERSCHIEBUNG, nicht den Wert",
+           "erwartet {erwartet:+.1f}" in _rxq and "vorher" in _rxq
+           and "nachher" in _rxq,
+           "die erste Fassung verglich das ERGEBNIS mit der Schwelle - der "
+           "eingepflanzte Effekt wirkte korrekt, aber der echte Effekt war "
+           "so negativ, dass die Summe darunter blieb")
+    pruefe(P, "ein negativer Vorsprung wird als BEFUND gemeldet",
+           "IST NEGATIV" in _rxq,
+           "Methodik 2.51 - ein invertierter Befund ist kein Nullbefund")
+
+    # ⚠️ UND DER FEHLER AUS DER SIGNALBILANZ.
+    pruefe(P, "die Bilanz rechnet mit dem GEPLANTEN CRV",
+           "CRV_GEPLANT = 2.0" in _sbq
+           and "avg_realisiertes_crv" in _sbq,
+           "meine erste Fassung nahm das realisierte CRV als Nenner - das "
+           "ergab 'noetig 100,1 %'. Das realisierte ist das ERGEBNIS")
+    pruefe(P, "und meldet den Widerspruch Quote gegen realisiertes R",
+           "WIDERSPRUCH" in _sbq and "Es gilt das R" in _sbq,
+           "Mistral/Hebel liegt mit 40,3 % ueber dem Breakeven und "
+           "realisiert -0,02 R - die Treffer zahlen das CRV nicht")
+    pruefe(P, "unter 30 aufgeloesten Faellen gibt es KEINE Zahl",
+           "MINDEST_FAELLE = 30" in _sbq
+           and "nicht entscheidbar" in _sbq)
+    pruefe(P, "das Vertrauensintervall ist Wilson, nicht die Normalnaeherung",
+           "def _wilson" in _sbq,
+           "bei Quoten nahe 0 oder 1 liefert die Naeherung Grenzen "
+           "ausserhalb [0,1] - genau der Bereich, in dem hier gemessen wird")
+
+    # ⚠️ DER GRUND IN DER REGISTRIERUNG MUSS DER GEMESSENE SEIN.
+    # (Eigener Import - `_WK` entsteht erst im naechsten Block, und ein
+    # freier Name waere hier genau die Falle aus `finde_freie_namen.py`.)
+    from agent import wahrscheinlichkeit as _WK0
+
+    pruefe(P, "der Rangplatz traegt NEGATIV, und das steht so da",
+           any(b.name.startswith("Rangplatz") and b.zustand == "null"
+               and "SCHLECHTER" in b.warum for b in _WK0.BEITRAEGE),
+           "'traegt nichts' waere zu freundlich - als Zusatzbedingung "
+           "wuerde er H's Vorteil aufheben")
+
     # ---- DIE ZUSAMMENFUEHRUNG: EINE ZAHL STATT EINER STRICHLISTE -------
     # ⚠️ ANLASS, Nutzereinwand 22.08.2026: "das System kann diese
     # Informationen nicht SELBST in Zusammenhang bringen und eine Bewertung
