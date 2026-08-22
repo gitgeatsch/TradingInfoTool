@@ -19721,3 +19721,52 @@ AUSZUSETZEN, solange kein Hebel gefahren wird.
 OFFEN: warum steht der Hebel auf 1,0? entscheidungsrechnung leitet ihn aus
 Risikobudget und Stopabstand ab; ob 1,0 gewollt ist oder ein Nebeneffekt der
 Betragslogik, ist NICHT geprueft.
+
+
+[2026-08-22] KAPITEL 129: WARUM DER HEBEL AUF 1,0 STEHT
+
+Nutzerauftrag: pruefen, warum der Hebel auf 1,0 steht, ob kuerzlich ein
+Parameter angepasst wurde, und die Doku und den Code zur Hebelthematik
+durchgehen.
+
+DIE FORMEL: hebel_noetig = verlustanteil / stop_rel. Hebel > 1 nur, wenn der
+Stop UNTER dem Verlustanteil liegt. Bei VA 6 % also unter 6 %.
+
+DER SCHNITT LIEGT EXAKT AM 18.08., DEM TAG VON S5:
+    Stopabstand Median   3,66 %  ->  7,92 %
+    Hebel Median          4,00   ->   1,00
+    Anteil echter Hebel  92,3 %  ->  24,1 %
+    Risiko je Trade      74,7 €  ->  45,0 €
+
+S5 HAT ZWEI REGLER GEDREHT, BEIDE HEBELSENKEND: stop_min_atr 0,75 -> 2,0 und
+verlustanteil 15 % -> 6 %. Kapitel 90.1 hat sie einzeln begruendet; die
+GEMEINSAME Wirkung auf den Hebelanteil steht dort nicht.
+
+⚠️ DER PLAN HAT SICH VERSCHAETZT: 90.1 sagte "ergibt 45 % Hebel". Gemessen
+24,1 %. Die eigene Matrix aus Kapitel 89 sagt bei k=2,0/VA=5 % nur 29 % - die
+45 % stammen nicht aus dieser Tabelle. Der Plan hat seine eigene Messung
+nicht benutzt.
+
+⚠️ DER EIGENTLICHE BEFUND: 99,9 % der Kauf-Signale tragen einen
+Widerlegungspreis vom Modell, aber nur 13,2 % haben den Stop dort. In 86,8 %
+gewinnt der Rauschboden oder die Struktur. Wo die These bindet: Stop 4,81 %
+(Hebel). Wo nicht: 8,04 % (kein Hebel).
+
+KAPITEL 88.1 HATTE GENAU DAS ALS DEFEKT BENANNT ("in 10 von 12 Faellen die
+Klemme, nicht das Urteil"). NACH S5 IST ES DASSELBE BILD. Der Defekt wurde
+nicht behoben, sondern die Klemme durch eine andere ersetzt.
+
+DIE DREI WEGE, BEZIFFERT: (A) k auf 1,5 -> Hebelanteil ~50 %, aber
+Rauschtreffer 15,9 % -> 27,5 %. (B) VA anheben -> fuehrt VOM Literaturwert
+WEG; 6 % sind bereits das obere Ende (2 % des Hebeltopfes), und 90.1 nennt
+VA 3 % als naechsten geplanten Schritt, also die Gegenrichtung. (C) Hebel
+aussetzen.
+
+⚠️ BEIDE REGLER BRECHEN DIE MESSREIHE (90.2 woertlich). Seit dem 18.08. gibt
+es neun Tage Daten unter den heutigen Werten.
+
+EMPFEHLUNG: keine der drei Optionen ist heute entscheidungsreif. Solange der
+Rauschboden das Modellurteil in 86,8 % ueberstimmt, ist der Hebel ein
+NEBENPRODUKT DER STOPREGEL, keine Strategieentscheidung. Die vorgelagerte
+Frage lautet: soll der Rauschboden das Modellurteil ueberstimmen duerfen? Sie
+ist messbar - die Bauform liegt in pruefe_strukturstop.py vor.

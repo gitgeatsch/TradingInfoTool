@@ -17099,3 +17099,132 @@ Kostenposten**.
 `entscheidungsrechnung` leitet ihn aus Risikobudget und Stopabstand ab — bei
 engem Stop und kleinem Betrag kommt 1,0 heraus. Ob das gewollt ist oder ein
 Nebeneffekt der Betragslogik, ist **nicht geprüft**.
+
+
+---
+
+## Kapitel 129 — Warum der Hebel auf 1,0 steht: S5 hat zwei Regler gleichzeitig gedreht (22.08.2026)
+
+**Nutzerauftrag:** *„prüf warum der hebel auf 1,0 steht bzw. haben wir erst
+vor kurzem einen Wert bzw. Parameter angenommen und angepasst der im
+zusammenhang stehen könnte … gehe die doku und den code hinsichtlich der
+hebel thematik durch."*
+
+### 129.1 Die Formel — eine Zeile entscheidet alles
+
+```
+hebel_noetig = verlustanteil / stop_rel        Hebel > 1  ⟺  Stop < Verlustanteil
+```
+
+**Die Spot/Hebel-Grenze IST der Verlustanteil** (Kapitel 88.2). Bei
+`verlustanteil = 6 %` entsteht Hebel nur, wenn der Stop **unter 6 %** liegt.
+
+### 129.2 Der Schnitt liegt exakt am 18.08. — dem Tag von S5
+
+| | **vor 18.08.** | **ab 18.08.** |
+|---|---:|---:|
+| Stopabstand Median | **3,66 %** | **7,92 %** |
+| Hebel Median | **4,00** | **1,00** |
+| **Anteil mit echtem Hebel (> 1,1)** | **92,3 %** | **24,1 %** |
+| Risiko je Trade (Median) | **74,7 €** | **45,0 €** |
+
+An den Signalen bestätigt, Bandweise:
+
+| Stopabstand | n | Hebel Median |
+|---|---:|---:|
+| 0–3 % | 132 | 6,00 |
+| 3–6 % | 307 | 3,30 |
+| **≥ 6 %** | **582** | **1,00** |
+
+**Median-Stopabstand 6,81 % — knapp über der Kippkante.**
+
+### 129.3 ⚠️ S5 hat ZWEI Regler gedreht, beide in dieselbe Richtung
+
+| Regler | vorher | nachher | Wirkung auf den Hebel |
+|---|---:|---:|---|
+| `stop_min_atr` (k) | 0,75 | **2,0** | Stop weiter → Hebel kleiner |
+| `verlustanteil` | 15 % | **6 %** | Schwelle tiefer → Hebel kleiner |
+
+**Beide Änderungen senken den Hebel, und sie kamen zusammen.** Kapitel 90.1
+hat sie einzeln begründet — die *gemeinsame* Wirkung auf den Hebelanteil steht
+dort nicht.
+
+### 129.4 ⚠️ Und der Plan hat sich verschätzt
+
+Kapitel 90.1 sagte: *„Verlustanteil 6 % … Ergibt **45 % Hebel** statt 98 %."*
+
+**Gemessen: 24,1 %.** Die gemessene Matrix aus Kapitel 89 sagt bei k = 2,0 und
+VA = 5 % ebenfalls nur **29 %** — die 45 % im Plan stammen also nicht aus
+dieser Tabelle. **Der Plan hat seine eigene Messung nicht benutzt.**
+
+### 129.5 Der eigentliche Befund: der Rauschboden überstimmt das Modell
+
+| | |
+|---|---:|
+| Kauf-Signale ab 18.08. **mit** Widerlegungspreis vom Modell | **99,9 %** |
+| davon: Stop liegt **auf** der These | **13,2 %** |
+| **Rauschboden oder Struktur gewinnt** | **86,8 %** |
+| Stopabstand wenn die These bindet | **4,81 %** → Hebel |
+| Stopabstand sonst | **8,04 %** → kein Hebel |
+
+> ⚠️ **Kapitel 88.1 hatte genau das als Defekt benannt:** *„Stopquelle: in 10
+> von 12 echten Fällen die Klemme RM-1b/1c, nicht das Urteil."* **Nach S5 ist
+> es dasselbe Bild** — in 86,8 % entscheidet nicht das Urteil. Der Defekt
+> wurde nicht behoben, sondern die Klemme durch eine andere ersetzt.
+
+### 129.6 Die Entscheidungslage, mit den gemessenen Zahlen
+
+**Hebelanteil je Kombination** (Kapitel 89, gemessen):
+
+| k \ VA | 2 % | 5 % | 10 % | 15 % |
+|---|---:|---:|---:|---:|
+| 0,75 | 33 % | 91 % | 97 % | 98 % |
+| 1,50 | 9 % | 48 % | 91 % | 93 % |
+| **2,00 (heute)** | 0 % | **29 %** | 78 % | 91 % |
+| 2,50 | 0 % | 21 % | 64 % | 90 % |
+
+**Rauschtreffer je k** (Anteil, den das bloße Zappeln binnen fünf Tagen
+ausstoppt):
+
+| k | Rauschtreffer |
+|---|---:|
+| 0,75 | 57,3 % |
+| 1,00 | 45,5 % |
+| 1,50 | 27,5 % |
+| **2,00 (heute)** | **15,9 %** |
+| 2,50 | 9,4 % |
+
+**Damit die drei Wege, ehrlich beziffert:**
+
+| | Weg | Hebelanteil | Preis |
+|---|---|---:|---|
+| **A** | k auf 1,5 senken | ~50 % | Rauschtreffer **15,9 % → 27,5 %** |
+| **B** | Verlustanteil anheben | 10 % VA → 78 % | ⚠️ **über dem Literaturwert** — 6 % sind bereits 2 % des Hebeltopfes, das *obere* Ende von 1–2 % |
+| **C** | Hebel aussetzen | 0 % | ehrlich, ändert am Verhalten nichts |
+
+⚠️ **Zur Nutzereinschätzung „eigentlich kommt nur B in Frage":** B führt vom
+Literaturwert **weg**, nicht hin. Und Kapitel 90.1 nennt als nächsten
+geplanten Schritt ausdrücklich **VA 3 %**, also die *Gegenrichtung*.
+
+⚠️ **Und beide Regler brechen die Messreihe.** Kapitel 90.2, wörtlich: *„jede
+Änderung an VA verschiebt die Population zwischen den Schubladen und bricht
+damit die Messreihe (F9). Der Code kostet nichts, die Vergleichbarkeit
+schon."* Wir haben seit dem 18.08. **neun Tage** Daten unter den heutigen
+Werten — eine weitere Drehung setzt diese Reihe zurück.
+
+### 129.7 Was daraus als Empfehlung folgt
+
+**Keine der drei Optionen ist heute entscheidungsreif**, und der Grund ist
+129.5: solange der Rauschboden die Modellthese in 86,8 % der Fälle
+überstimmt, ist der Hebel ein **Nebenprodukt der Stopregel**, nicht eine
+Strategieentscheidung. Ihn über den Verlustanteil zurückzuholen behandelt das
+Symptom.
+
+**Die vorgelagerte Frage lautet: soll der Rauschboden das Modellurteil
+überstimmen dürfen?** Sie ist messbar — der gepaarte Vergleich
+„Stop nach These" gegen „Stop nach Rauschboden" auf denselben Ankern liegt in
+`pruefe_strukturstop.py` bereits als Bauform vor.
+
+⚠️ **Bis dahin gilt Kapitel 128:** die Hebelmessung wird **ausgesetzt**, nicht
+repariert. Die Aufteilung spot/hebel in 120, 126 und 127 ist bei Hebel 1,0
+keine Trennung.
