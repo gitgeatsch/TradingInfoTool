@@ -16989,3 +16989,113 @@ Minuten.** Das ist die unabhängige Bestätigung der Häufung aus Methodik 2.60.
 schlechteren gewesen wären. Dafür müsste `anlass_beobachtung` mit dem Ausgang
 verbunden werden — der Export liefert nur Summen. **Das ist dieselbe Lücke
 wie bei Rolle G**, und sie ist derselbe Handgriff.
+
+
+---
+
+## Kapitel 128 — E1 gebaut: die Auflösung verlangt jetzt den Einstieg (22.08.2026)
+
+**Der Defekt aus Kapitel 127, behoben.** `check_signal_outcome` begann bei
+`entry_mid` und wartete auf Ziel oder Stop — **auch wenn der Kurs die
+Einstiegszone nie berührt hat**. 24 von 114 aufgelösten Signalen (21,1 %)
+standen so in der Datenbank.
+
+### Was gebaut wurde
+
+| Stelle | |
+|---|---|
+| `OUTCOME_EINSTIEG_NIE` | eigener Status, **nicht** `nicht_anwendbar` und **nicht** `abgelaufen` |
+| `einstiegszone()` · `einstieg_beruehrt()` | **eine** Stelle für alle Auflöser |
+| `check_signal_outcome` | Ziel und Stop zählen erst **nach** der Berührung |
+| `BackwardTrackingResult.einstieg_nie_erreicht` | eigener Zähler |
+| `signals.einstieg_erreicht` · `hebel_signals.einstieg_erreicht` | additive, idempotente Migration |
+
+### Drei Entwurfsentscheidungen, die begründet sind
+
+**1. Ein eigener Status, kein `nicht_anwendbar`.** Der Trade *war* anwendbar
+— er ist nur nie zustande gekommen. Ihn unter `nicht_anwendbar` zu buchen
+würfe ihn mit HALTEN zusammen; ihn als `abgelaufen_unentschieden` zu führen
+behauptete, er habe gelaufen und sich nicht entschieden.
+
+**2. `None` ist nicht `0`.** Die bestehenden Zeilen tragen zur Frage keine
+Aussage. Sie als „Einstieg nicht erreicht" zu lesen wäre eine **erfundene
+Tatsache** über tausende Signale. Deshalb drei Werte: `1` erreicht, `0` nicht
+erreicht, `None` nicht geprüft — und `COALESCE` im Update, damit ein späterer
+Lauf ohne Zonenkenntnis eine festgestellte Tatsache nicht löscht.
+
+**3. Die Historie wird NICHT umgeschrieben.** Alte Zeilen behalten ihren
+Status; die neue Spalte trennt sie von den neuen. Eine Neuberechnung würde
+Ergebnisse ändern, die anderswo bereits zitiert sind.
+
+⚠️ **`max_realisiertes_crv` und `mindestziel_erreicht_am` laufen weiterhin ab
+dem ersten Tag mit.** Sie beschreiben die Bewegung des *Wertes*, nicht die
+eines Trades — und werden anderswo so gelesen.
+
+### Zwei eigene Fehler, beide von den Prüfungen gefangen
+
+| | |
+|---|---|
+| **Ohne Zone meldete es `1`** statt `None` | genau die „erfundene Tatsache", vor der mein eigener Kommentar warnte |
+| **Der Aufrufer behandelte den neuen Status nicht** | ein früherer Patch-Abbruch hatte den Block nie geschrieben. Ohne ihn wäre der Status in den `offen`-Zweig gefallen und am Ende als `abgelaufen_unentschieden` gelandet — **als Fehlschlag eines Trades, den es nie gab** |
+
+**Elf Prüfungen gegen echte SQLite-Daten mit echten Kerzen**, davon sieben als
+Dauerprüfung in der Suite. Geprüft werden ausdrücklich auch die Randfälle:
+ohne Zone kein Rückschritt, die Migration idempotent, der bestehende Wert
+nicht überschreibbar.
+
+### ⚠️ Was E1 NICHT behebt
+
+**Der Rest der Lücke bleibt.** Kapitel 127: die zwei Fehler erklären
+14 der 46 Punkte; **der größere Teil ist Marktrichtung** (+15,8 % Median in
+neun Tagen). E1 macht die Messung ehrlich — es macht sie nicht aussagekräftig,
+solange eine Marktphase die Quote trägt.
+
+**E2 (die Kerze des Erstellungstags) ist bewusst noch nicht angefasst.** Sie
+erklärt gemessen 2,4 Punkte, und ihre Behebung verschiebt jede bestehende
+Auflösung um einen Tag — das gehört getrennt entschieden.
+
+---
+
+## ⚠️ Es gibt faktisch keinen Hebel mehr — also ist er nicht messbar (22.08.2026)
+
+**Nutzerhinweis, wörtlich:** *„sehe keine echten hebel mehr, 1,1 hebel ist
+kein hebel … Nachkaufen und ‚Eröffnen' ohne hebel ist eigentlich ident ein und
+derselbe spot kauf. Hinweis — wenn wir eigentlich keine Strategie hebel mehr
+führen ist dieser auch nicht messbar."*
+
+**An den Daten bestätigt:**
+
+| Quelle | Median | |
+|---|---:|---|
+| alte Kette `hebel_final` | **3,00** | 173× 3,0 · 26× 5,0 |
+| **Rollen-Kette `hebel`** | **1,10** | ⚠️ **510 von 1.024 = 49,8 % auf genau 1,0** |
+
+| Schwelle | Anteil |
+|---|---:|
+| ≤ 1,0 | **49,8 %** |
+| ≤ 1,1 | **50,8 %** |
+| ≤ 2,0 | 63,3 % |
+
+**Was das für die bestehenden Kapitel heißt:**
+
+⚠️ **Die Aufteilung „spot gegen hebel" ist bei Hebel 1,0 keine Trennung.** Sie
+steht so in Kapitel 120 (Unterschied 0,017 R), in `messe_reihung_x_h.py` und
+in `messe_signalbilanz.py`. Die dort berichteten Hebel-Zahlen sind **zur
+Hälfte Spot-Zahlen**.
+
+⚠️ **NACHKAUFEN und ERÖFFNEN ohne Hebel sind derselbe Vorgang.** Sie als
+verschiedene Aktionen zu zählen — wie in 127 geschehen (NACHKAUFEN 90 %,
+KAUFEN 77 %) — trennt zwei Etiketten, nicht zwei Sachverhalte.
+
+⚠️ **Und die Finanzierung von 0,03 %/Tag** wird im Hebel-Arm von
+`messe_reihung_x_h.py` gerechnet. Bei Hebel 1,0 ist das ein **erfundener
+Kostenposten**.
+
+> **Die Konsequenz ist nicht, die Hebelmessung zu reparieren, sondern sie
+> auszusetzen, solange kein Hebel gefahren wird.** Eine Messung ohne
+> Grundgesamtheit ist keine.
+
+**Offen, und vor jeder Änderung zu klären:** warum steht der Hebel auf 1,0?
+`entscheidungsrechnung` leitet ihn aus Risikobudget und Stopabstand ab — bei
+engem Stop und kleinem Betrag kommt 1,0 heraus. Ob das gewollt ist oder ein
+Nebeneffekt der Betragslogik, ist **nicht geprüft**.

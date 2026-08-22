@@ -974,6 +974,29 @@ def _migrate_hebel_signal_llm_halten_column(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+# E1 (22.08.2026, Umbauplan 128). Additiv und idempotent wie jede Migration
+# hier - fuer `signals` UND `hebel_signals`, damit keine der beiden Familien
+# still ohne die Angabe bleibt.
+_SIGNAL_EINSTIEG_NEW_COLUMNS = {"einstieg_erreicht": "INTEGER"}
+
+
+def _migrate_signal_einstieg_columns(conn: sqlite3.Connection) -> None:
+    """Die Spalte, die sagt, ob der Trade ueberhaupt zustande kam."""
+    for tabelle in ("signals", "hebel_signals"):
+        try:
+            vorhanden = {r["name"] for r in
+                         conn.execute(f"PRAGMA table_info({tabelle})")}
+        except sqlite3.Error:
+            continue
+        if not vorhanden:
+            continue
+        for spalte, typ in _SIGNAL_EINSTIEG_NEW_COLUMNS.items():
+            if spalte not in vorhanden:
+                conn.execute(
+                    f"ALTER TABLE {tabelle} ADD COLUMN {spalte} {typ}")
+    conn.commit()
+
+
 _SIGNAL_SELBST_HALTEN_NEW_COLUMNS = {
     "selbst_halten_outcome_status": "TEXT",
     "selbst_halten_outcome_geprueft_am": "TEXT",
@@ -1365,6 +1388,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_llm_halten_column(conn)
     _migrate_signal_re_evaluierung_faellig_column(conn)
     _migrate_signal_selbst_halten_columns(conn)
+    _migrate_signal_einstieg_columns(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
     _migrate_hebel_signal_angefragte_richtung_column(conn)
@@ -2701,6 +2725,12 @@ def update_signal_outcome(
     datenquelle: str | None = None,
     max_realisiertes_crv: float | None = None,
     mindestziel_erreicht_am: str | None = None,
+    # E1 (22.08.2026): wurde die Einstiegszone je beruehrt?
+    # 1 = ja, 0 = nein, None = nicht geprueft (Altzeilen und Signale ohne
+    # Zone). ⚠️ None IST NICHT 0 - die bestehenden Zeilen tragen dazu keine
+    # Aussage, und sie als "nicht erreicht" zu lesen waere eine erfundene
+    # Tatsache. Jede Auswertung muss die drei Werte trennen.
+    einstieg_erreicht: int | None = None,
 ) -> None:
     """Backward-Tracking-Ergebnis (2026-07-10, Selbstverifikations-Vision Schritt 2,
     siehe agent/krypto/backward_tracking.py) - wie update_signal_umsetzung() ein
@@ -2716,10 +2746,16 @@ def update_signal_outcome(
         "UPDATE signals SET outcome_status = ?, outcome_geprueft_am = ?, "
         "outcome_entschieden_am = ?, outcome_realisiertes_crv = ?, "
         "outcome_datenquelle = ?, outcome_max_realisiertes_crv = ?, "
-        "outcome_mindestziel_erreicht_am = ? WHERE id = ?",
+        "outcome_mindestziel_erreicht_am = ?, "
+        # ⚠️ NUR SETZEN, WENN ETWAS BEKANNT IST. COALESCE laesst den
+        # bestehenden Wert stehen, wenn None uebergeben wird - sonst
+        # loeschte ein spaeterer Lauf ohne Zonenkenntnis eine bereits
+        # festgestellte Tatsache.
+        "einstieg_erreicht = COALESCE(?, einstieg_erreicht) WHERE id = ?",
         (
             status, _now_iso(), entschieden_am, realisiertes_crv, datenquelle,
-            max_realisiertes_crv, mindestziel_erreicht_am, signal_id,
+            max_realisiertes_crv, mindestziel_erreicht_am, einstieg_erreicht,
+            signal_id,
         ),
     )
     conn.commit()

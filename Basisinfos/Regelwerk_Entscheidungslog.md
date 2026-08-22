@@ -19660,3 +19660,64 @@ Treiber - jetzt ist es umschlag.)
 WAS ER NICHT SAGT: ob die gesperrten Signale die schlechteren gewesen waeren.
 Dafuer muesste anlass_beobachtung mit dem Ausgang verbunden werden - dieselbe
 Luecke wie bei Rolle G, und derselbe Handgriff.
+
+
+[2026-08-22] KAPITEL 128: E1 GEBAUT - DIE AUFLOESUNG VERLANGT DEN EINSTIEG
+
+Der Defekt aus 127 behoben: check_signal_outcome begann bei entry_mid und
+wartete auf Ziel oder Stop, auch wenn der Kurs die Einstiegszone nie beruehrt
+hatte (21,1 % der aufgeloesten Signale).
+
+GEBAUT: OUTCOME_EINSTIEG_NIE als eigener Status, einstiegszone() und
+einstieg_beruehrt() als EINE Stelle fuer alle Aufloeser, eigener Zaehler in
+BackwardTrackingResult, Spalte einstieg_erreicht fuer signals UND
+hebel_signals (additiv, idempotent).
+
+DREI ENTWURFSENTSCHEIDUNGEN: (1) eigener Status, weil der Trade anwendbar WAR
+und nur nie zustande kam. (2) None ist NICHT 0 - bestehende Zeilen tragen
+keine Aussage, und sie als "nicht erreicht" zu lesen waere eine erfundene
+Tatsache; COALESCE im Update schuetzt einen bereits gesetzten Wert. (3) die
+Historie wird NICHT umgeschrieben.
+
+max_realisiertes_crv und mindestziel_erreicht_am laufen weiterhin ab dem
+ersten Tag mit - sie beschreiben die Bewegung des WERTES, nicht die eines
+Trades.
+
+ZWEI EIGENE FEHLER, BEIDE VON DEN PRUEFUNGEN GEFANGEN: (a) ohne Zone meldete
+es einstieg_erreicht=1 statt None - genau die erfundene Tatsache, vor der
+mein eigener Kommentar warnte. (b) der Aufrufer behandelte den neuen Status
+nicht, weil ein frueherer Patch-Abbruch den Block nie geschrieben hatte; ohne
+ihn waere der Status in den offen-Zweig gefallen und als
+"abgelaufen_unentschieden" gelandet - als Fehlschlag eines Trades, den es nie
+gab.
+
+11 Pruefungen gegen echte SQLite-Daten, sieben davon als Dauerpruefung.
+
+⚠️ WAS E1 NICHT BEHEBT: die zwei Fehler aus 127 erklaeren 14 der 46 Punkte;
+der groessere Teil ist MARKTRICHTUNG. E1 macht die Messung ehrlich, nicht
+aussagekraeftig. E2 (Kerze des Erstellungstags) ist bewusst offen - sie
+erklaert 2,4 Punkte und verschiebt jede bestehende Aufloesung um einen Tag.
+
+[2026-08-22] ES GIBT FAKTISCH KEINEN HEBEL MEHR - ALSO IST ER NICHT MESSBAR
+
+Nutzerhinweis: "1,1 hebel ist kein hebel ... Nachkaufen und 'Eroeffnen' ohne
+hebel ist eigentlich ident ein und derselbe spot kauf ... wenn wir eigentlich
+keine Strategie hebel mehr fuehren ist dieser auch nicht messbar."
+
+AN DEN DATEN BESTAETIGT: alte Kette hebel_final Median 3,00 (173x 3,0, 26x
+5,0). Rollen-Kette hebel Median 1,10 - und 510 von 1.024 = 49,8 % stehen auf
+GENAU 1,0. Bei <= 1,1 sind es 50,8 %, bei <= 2,0 sind es 63,3 %.
+
+FOLGEN: Die Aufteilung spot/hebel in 120, 126 und 127 ist keine Trennung -
+die Hebelzahlen sind zur Haelfte Spotzahlen. NACHKAUFEN und EROEFFNEN ohne
+Hebel sind derselbe Vorgang; sie als verschiedene Aktionen zu zaehlen (127:
+90 % gegen 77 %) trennt Etiketten, nicht Sachverhalte. Und die Finanzierung
+von 0,03 %/Tag im Hebel-Arm von messe_reihung_x_h.py ist bei Hebel 1,0 ein
+erfundener Kostenposten.
+
+DIE KONSEQUENZ IST NICHT, DIE HEBELMESSUNG ZU REPARIEREN, SONDERN SIE
+AUSZUSETZEN, solange kein Hebel gefahren wird.
+
+OFFEN: warum steht der Hebel auf 1,0? entscheidungsrechnung leitet ihn aus
+Risikobudget und Stopabstand ab; ob 1,0 gewollt ist oder ein Nebeneffekt der
+Betragslogik, ist NICHT geprueft.

@@ -40,6 +40,15 @@ OUTCOME_UEBERHOLT = "ueberholt_durch_neuere_analyse"
 # tracking.py importiert die OUTCOME_*-Konstanten bereits von hier).
 OUTCOME_LIQUIDATION = "liquidation_wahrscheinlich"
 
+# E1 (22.08.2026, Umbauplan 128): der Einstieg wurde nie erreicht.
+#
+# ⚠️ WARUM DAS EIN EIGENER STATUS IST UND KEIN "nicht_anwendbar". Der Trade
+# war anwendbar - er ist nur nie zustande gekommen. Ihn unter
+# `nicht_anwendbar` zu buchen wuerde ihn mit HALTEN in einen Topf werfen; ihn
+# als `abgelaufen_unentschieden` zu fuehren wuerde behaupten, er habe
+# gelaufen und sich nicht entschieden. Beides waere falsch.
+OUTCOME_EINSTIEG_NIE = "einstieg_nie_erreicht"
+
 logger = logging.getLogger(__name__)
 
 # --- Tier-Schluessel der Aggregationen (2026-08-02, Task #561) --------------
@@ -228,6 +237,11 @@ class BackwardTrackingResult:
     expired: int = 0
     superseded: int = 0
     still_open: int = 0
+    # E1 (22.08.2026): Signale, deren Einstiegszone nie beruehrt wurde.
+    # ⚠️ EIGENER ZAEHLER, ausdruecklich NICHT in take_profit/stop_loss. Der
+    # Trade ist nicht zustande gekommen - ihn in eine der beiden Quoten zu
+    # buchen war der Defekt, den E1 behebt (Umbauplan 127: 21,1 %).
+    einstieg_nie_erreicht: int = 0
     warnings: list[str] = field(default_factory=list)
     # Veto-Schatten-Tracking (2026-07-28, siehe check_signal_veto_shadow_outcome()
     # Docstring) - separater Zaehlerblock, damit dieser zweite Durchlauf nicht
@@ -509,7 +523,8 @@ def check_signal_outcome(
         if mindestziel_erreicht_am is None and favorable_crv >= richtungstreffer_mindest_crv:
             mindestziel_erreicht_am = day_value
 
-    def resolve(exit_price: float, hit_take: bool) -> tuple[str, dict]:
+    def resolve(exit_price: float, hit_take: bool,
+                einstieg_am: str | None = None) -> tuple[str, dict]:
         status = OUTCOME_TAKE_PROFIT if hit_take else OUTCOME_STOP_LOSS
         realized_crv = None
         if entry_mid is not None and entry_mid != stop_loss_threshold:
@@ -523,6 +538,9 @@ def check_signal_outcome(
             "datenquelle": datenquelle,
             "max_realisiertes_crv": max_favorable_crv,
             "mindestziel_erreicht_am": mindestziel_erreicht_am,
+            # E1: 1 = die Zone wurde beruehrt, None = es gab keine Zone.
+            "einstieg_erreicht": 1 if einstieg_am is not None else None,
+            "einstieg_am": einstieg_am,
         }
 
     def _check_preis(high: float, low: float) -> tuple[bool, bool]:
@@ -534,6 +552,25 @@ def check_signal_outcome(
             return low <= take_profit_threshold, high >= stop_loss_threshold
         return high >= take_profit_threshold, low <= stop_loss_threshold
 
+    # ---- E1: ERST DER EINSTIEG, DANN DAS ERGEBNIS (22.08.2026) --------
+    #
+    # ⚠️ DER DEFEKT, DEN DAS BEHEBT (Umbauplan 127, an 114 echten Signalen
+    # gemessen): diese Funktion begann bei `entry_mid` und wartete auf Ziel
+    # oder Stop - AUCH WENN DER KURS DIE EINSTIEGSZONE NIE BERUEHRT HAT.
+    #
+    # 24 von 114 aufgeloesten Signalen (21,1 %) hatten nie einen Einstieg und
+    # standen trotzdem als aufgeloest in der Datenbank. Bei NACHKAUFEN, wo
+    # die Zone typisch UNTER dem Markt liegt, meldete der Tracker 90 %
+    # Trefferquote: der Kurs stieg, das Ziel galt als erreicht, gekauft
+    # wurde nie.
+    #
+    # `mindestziel_erreicht_am` und `max_realisiertes_crv` werden weiterhin
+    # AB DEM ERSTEN TAG erfasst - sie beschreiben die Bewegung des Wertes,
+    # nicht die eines Trades, und werden anderswo so gelesen.
+    zone = einstiegszone(signal)
+    eingestiegen = False
+    einstieg_am = None
+
     ohlc_rows = lade_ohlc_auf_signal_skala(
         conn, signal.symbol, entry_mid, min_date)
     if len(ohlc_rows) >= 1:
@@ -542,6 +579,14 @@ def check_signal_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
+            if not eingestiegen:
+                if not einstieg_beruehrt(row.high, row.low, zone):
+                    continue
+                eingestiegen = True
+                # ⚠️ NUR MIT ZONE IST DAS EINE AUSSAGE (Testfund 22.08.):
+                # ohne Zone laeuft die Aufloesung weiter wie bisher, aber
+                # `einstieg_erreicht` bleibt None statt 1.
+                einstieg_am = day if zone is not None else None
             hit_take, hit_stop = _check_preis(row.high, row.low)
             if hit_stop:
                 # Konservativ (Z-1: Kapitalerhalt vor Gewinn): trifft ein Tag beide
@@ -549,11 +594,11 @@ def check_signal_outcome(
                 # Reihenfolge ohne Tick-Daten.
                 return resolve(gap_bewusster_fill(
                     stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,
-                ), hit_take=False)
+                ), hit_take=False, einstieg_am=einstieg_am)
             if hit_take:
                 return resolve(gap_bewusster_fill(
                     take_profit_threshold, row.open, ist_stop=False, ist_short=ist_short,
-                ), hit_take=True)
+                ), hit_take=True, einstieg_am=einstieg_am)
     else:
         datenquelle = "proxy"
         price_rows = db.get_price_history(conn, asset.coingecko_id, min_date=min_date) if asset.coingecko_id else []
@@ -562,17 +607,69 @@ def check_signal_outcome(
                 continue
             day = row.date
             _erfasse_mfe(row.price_usd, day)
+            if not eingestiegen:
+                if not einstieg_beruehrt(row.price_usd, row.price_usd, zone):
+                    continue
+                eingestiegen = True
+                einstieg_am = day if zone is not None else None
             hit_take, hit_stop = _check_preis(row.price_usd, row.price_usd)
             if hit_stop:
-                return resolve(stop_loss_threshold, hit_take=False)
+                return resolve(stop_loss_threshold, hit_take=False,
+                               einstieg_am=einstieg_am)
             if hit_take:
-                return resolve(take_profit_threshold, hit_take=True)
+                return resolve(take_profit_threshold, hit_take=True,
+                               einstieg_am=einstieg_am)
+
+    # ⚠️ NIE EINGESTIEGEN IST EIN ENDZUSTAND, KEIN OFFEN. Ein Signal, dessen
+    # Zone nach der ganzen vorliegenden Historie nie beruehrt wurde, wartet
+    # nicht mehr - es ist nicht zustande gekommen. Es weiter als `offen` zu
+    # fuehren hiesse, es bei jedem Lauf erneut zu pruefen und am Ende doch
+    # als "abgelaufen_unentschieden" zu buchen, also als Fehlschlag eines
+    # Trades, den es nie gab.
+    if zone is not None and not eingestiegen and (
+            len(ohlc_rows) >= 1 or datenquelle == "proxy"):
+        return OUTCOME_EINSTIEG_NIE, {
+            "max_realisiertes_crv": max_favorable_crv,
+            "mindestziel_erreicht_am": mindestziel_erreicht_am,
+            "einstieg_erreicht": 0,
+        }
 
     # Kein Treffer gefunden - offen oder abgelaufen, je nach Alter.
     return OUTCOME_OFFEN, {
         "max_realisiertes_crv": max_favorable_crv,
         "mindestziel_erreicht_am": mindestziel_erreicht_am,
+        "einstieg_erreicht": (1 if (eingestiegen and zone is not None)
+                              else None),
     }
+
+
+def einstiegszone(signal) -> tuple | None:
+    """(von, bis) der Einstiegszone in USD - oder None, wenn es sie nicht gibt.
+
+    EINE STELLE FUER ALLE VIER AUFLOESER. Die Lehre vom 18.08.2026: vier
+    Kopien derselben Stopzeile haben zwei Vormittage gekostet."""
+    von, bis = signal.entry_usd_von, signal.entry_usd_bis
+    if von is None and bis is None:
+        punkt = getattr(signal, "entry_usd", None)
+        return (float(punkt), float(punkt)) if punkt else None
+    von = float(von if von is not None else bis)
+    bis = float(bis if bis is not None else von)
+    return (min(von, bis), max(von, bis))
+
+
+def einstieg_beruehrt(hoch: float, tief: float, zone: tuple | None) -> bool:
+    """Schneidet die Tagesspanne die Einstiegszone?
+
+    ⚠️ GROSSZUEGIG ZUGUNSTEN DES BETRIEBS. Eine Beruehrung genuegt; es wird
+    nicht verlangt, dass der Kurs in der Zone schliesst. Eine strengere
+    Lesart wuerde den Befund aus Kapitel 127 nur verstaerken, und bei einem
+    Eingriff in die Produktion ist die mildere die richtige.
+
+    Ohne Zone gilt der Einstieg als erreicht - fehlende Daten duerfen kein
+    Ergebnis erfinden, in keine der beiden Richtungen."""
+    if zone is None:
+        return True
+    return float(tief) <= zone[1] and float(hoch) >= zone[0]
 
 
 def gap_bewusster_fill(schwelle: float, open_preis: float | None,
@@ -1092,6 +1189,27 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
             db.update_signal_outcome(conn, signal.id, status)
             continue
 
+        # E1 (22.08.2026): der Einstieg wurde nie erreicht - ENDZUSTAND.
+        #
+        # ⚠️ WEDER TREFFER NOCH FEHLSCHLAG. Der Trade ist nicht zustande
+        # gekommen; ihn in eine der beiden Quoten zu buchen war genau der
+        # Defekt aus Umbauplan 127 (21,1 % der aufgeloesten Signale).
+        #
+        # ⚠️ UND AUCH KEIN `offen`. Ohne diesen Zweig fiele der Status in
+        # die Ueberholt-/Ablaufpruefung darunter und landete am Ende als
+        # "abgelaufen_unentschieden" - also als Fehlschlag eines Trades, den
+        # es nie gab. (Genau das ist beim Bauen zuerst passiert und von der
+        # Paketpruefung gefangen worden.)
+        if status == OUTCOME_EINSTIEG_NIE:
+            db.update_signal_outcome(
+                conn, signal.id, status,
+                max_realisiertes_crv=extra.get("max_realisiertes_crv"),
+                mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+                einstieg_erreicht=0,
+            )
+            result.einstieg_nie_erreicht += 1
+            continue
+
         if status in (OUTCOME_TAKE_PROFIT, OUTCOME_STOP_LOSS):
             db.update_signal_outcome(
                 conn, signal.id, status,
@@ -1100,6 +1218,10 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
                 datenquelle=extra.get("datenquelle"),
                 max_realisiertes_crv=extra.get("max_realisiertes_crv"),
                 mindestziel_erreicht_am=extra.get("mindestziel_erreicht_am"),
+                # E1: festhalten, DASS der Einstieg beruehrt wurde - sonst
+                # laesst sich spaeter nicht unterscheiden, ob eine Zeile
+                # nach der neuen oder der alten Regel entstand.
+                einstieg_erreicht=extra.get("einstieg_erreicht"),
             )
             if status == OUTCOME_TAKE_PROFIT:
                 result.resolved_take_profit += 1

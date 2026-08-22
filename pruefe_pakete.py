@@ -10822,6 +10822,110 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- E1 GEBAUT: DIE AUFLOESUNG VERLANGT DEN EINSTIEG (128) --------
+    # ⚠️ EIN EINGRIFF IN DIE PRODUKTION. Geprueft wird deshalb an ECHTEN
+    # SQLite-Daten mit echten Kerzen, nicht am Quelltext.
+    import sqlite3 as _sq4
+
+    from agent.krypto import backward_tracking as _BT
+
+    class _Asset0:
+        def __init__(self, s):
+            self.symbol = s
+            self.coingecko_id = None
+
+    class _Sig0:
+        def __init__(self, **kw):
+            self.id, self.symbol, self.action = 1, "TEST", "KAUFEN"
+            self.created_at = "2026-08-01T00:00:00+00:00"
+            for f in ("entry_usd", "entry_usd_von", "entry_usd_bis",
+                      "stop_loss_usd", "stop_loss_usd_von",
+                      "stop_loss_usd_bis", "take_profit_usd",
+                      "take_profit_usd_von", "take_profit_usd_bis"):
+                setattr(self, f, None)
+            for k, v in kw.items():
+                setattr(self, k, v)
+
+    def _kerzen_db(kerzen):
+        c = _sq4.connect(":memory:")
+        c.row_factory = _sq4.Row
+        c.execute("CREATE TABLE price_history_ohlc (symbol TEXT, currency "
+                  "TEXT, date TEXT, open REAL, high REAL, low REAL, close "
+                  "REAL, volume REAL, quelle TEXT, fetched_at TEXT)")
+        for d0, o, h0, l0, cl in kerzen:
+            c.execute("INSERT INTO price_history_ohlc VALUES "
+                      "(?,?,?,?,?,?,?,?,?,?)",
+                      ("TEST", "USD", d0, o, h0, l0, cl, 1.0, "t", d0))
+        c.commit()
+        return c
+
+    _Z = dict(entry_usd_von=100.0, entry_usd_bis=102.0,
+              stop_loss_usd_von=96.0, stop_loss_usd_bis=97.0,
+              take_profit_usd_von=110.0, take_profit_usd_bis=111.0)
+
+    # ⚠️ DER KERNFALL: der Kurs startet UEBER der Zone und laeuft zum Ziel -
+    # genau die Lage bei NACHKAUFEN, wo die Zone unter dem Markt liegt.
+    _st1, _ex1 = _BT.check_signal_outcome(
+        _kerzen_db([("2026-08-01", 105, 107, 104, 106),
+                    ("2026-08-02", 107, 112, 106, 111)]),
+        _Sig0(**_Z), [_Asset0("TEST")], 1.0)
+    pruefe(P, "ein nie erreichter Einstieg ist KEIN Treffer",
+           _st1 == _BT.OUTCOME_EINSTIEG_NIE
+           and _ex1.get("einstieg_erreicht") == 0,
+           f"gemessen {_st1!r} - vor E1 stand hier take_profit_erreicht, "
+           f"und das betraf 21,1 % der aufgeloesten Signale")
+
+    _st2, _ex2 = _BT.check_signal_outcome(
+        _kerzen_db([("2026-08-01", 101, 103, 100, 102),
+                    ("2026-08-02", 102, 112, 101, 111)]),
+        _Sig0(**_Z), [_Asset0("TEST")], 1.0)
+    pruefe(P, "ein erreichter Einstieg loest normal auf",
+           _st2 == _BT.OUTCOME_TAKE_PROFIT
+           and _ex2.get("einstieg_erreicht") == 1)
+
+    # ⚠️ UND OHNE ZONE DARF KEINE TATSACHE ERFUNDEN WERDEN.
+    _ohne = dict(_Z, entry_usd_von=None, entry_usd_bis=None)
+    _st3, _ex3 = _BT.check_signal_outcome(
+        _kerzen_db([("2026-08-01", 105, 112, 104, 111)]),
+        _Sig0(**_ohne), [_Asset0("TEST")], 1.0)
+    pruefe(P, "ohne Zone bleibt einstieg_erreicht None, nicht 0 oder 1",
+           _st3 == _BT.OUTCOME_TAKE_PROFIT
+           and _ex3.get("einstieg_erreicht") is None,
+           "None heisst 'nicht geprueft' - die bestehenden Zeilen tragen "
+           "dazu keine Aussage, und 0 waere eine erfundene Tatsache")
+
+    # ⚠️ DER NEUE STATUS DARF IN KEINE DER BEIDEN QUOTEN.
+    _btq = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "der neue Status hat einen EIGENEN Zaehler",
+           "einstieg_nie_erreicht: int = 0" in _btq
+           and "result.einstieg_nie_erreicht += 1" in _btq,
+           "ihn in take_profit oder stop_loss zu buchen waere genau der "
+           "Defekt, den E1 behebt")
+    pruefe(P, "und es gibt EINE Stelle fuer die Zonenpruefung",
+           _btq.count("def einstieg_beruehrt") == 1
+           and _btq.count("def einstiegszone") == 1,
+           "vier Kopien derselben Stopzeile haben am 18.08. zwei "
+           "Vormittage gekostet")
+
+    # ⚠️ DIE SPALTE MUSS ENTSTEHEN, IDEMPOTENT, FUER BEIDE FAMILIEN.
+    import database.db as _db0
+
+    _c0 = _sq4.connect(":memory:")
+    _c0.row_factory = _sq4.Row
+    for _tab in ("signals", "hebel_signals"):
+        _c0.execute(f"CREATE TABLE {_tab} (id INTEGER PRIMARY KEY, "
+                    f"symbol TEXT)")
+    _db0._migrate_signal_einstieg_columns(_c0)
+    _db0._migrate_signal_einstieg_columns(_c0)      # zweimal = idempotent
+    pruefe(P, "die Spalte einstieg_erreicht entsteht in BEIDEN Tabellen",
+           all("einstieg_erreicht" in
+               {r["name"] for r in _c0.execute(f"PRAGMA table_info({t0})")}
+               for t0 in ("signals", "hebel_signals")))
+    pruefe(P, "und der bestehende Wert wird nicht ueberschrieben",
+           "COALESCE(?, einstieg_erreicht)" in _quelltext("database/db.py"),
+           "ein spaeterer Lauf ohne Zonenkenntnis wuerde sonst eine bereits "
+           "festgestellte Tatsache loeschen")
+
     # ---- KAPITEL 127: DER EINSTIEGSNACHWEIS ---------------------------
     # ⚠️ ANLASS, Nutzerfrage: "machen wir etwas falsch oder es gibt noch
     # Fehler in der Umsetzung, bevor wir das Modell als Begruendung sehen."
