@@ -16848,3 +16848,144 @@ damit die unveränderte Zahl 50 nicht wie ein gescheiterter Fix aussieht.
 Fälle jetzt auswertbar werden, bleibt die Frage, ob eine Gegenprüfung auf
 einem Nicht-Handeln denselben Wert hat wie auf einem Einstieg — und ob sie
 das Kontingent wert ist, das sie kostet.
+
+
+---
+
+## Kapitel 127 — Der Einstiegsnachweis: zwei Fehler, und der Markt hat gedreht (22.08.2026)
+
+### Die Frage kam vom Nutzer, und sie war die richtige
+
+> *„eigentlich sollten die ‚LLM optimierten' Ergebnisse auch eine bessere
+> Trefferquote bieten und wenn nicht — was der Trend aktuell sagt — machen wir
+> etwas falsch oder es gibt noch Fehler in der Umsetzung, **bevor wir das
+> Modell als Begründung sehen**."*
+
+**Der Trend sagte etwas Unmögliches:** die Rollen-Kette meldete über 116
+aufgelöste Signale eine Trefferquote von **82,8 %**.
+
+| | |
+|---|---:|
+| CRV geplant (Zonenmitten) | 2,00 → Basisrate **33,3 %** |
+| CRV wie der Tracker rechnet | 1,75 → Basisrate 36,4 % |
+| **gemessen** | **82,8 %** |
+| **unerklärte Lücke** | **+46 Punkte** |
+
+**Kein Modell erzeugt +46 Punkte.**
+
+### Was zuerst ausgeschlossen wurde
+
+| Verdacht | Ergebnis |
+|---|---|
+| Zonenkanten-Konvention (der Fehler vom 09.08.) | ⚠️ existiert, erklärt **3 Punkte** |
+| Stop und Ziel in derselben Kerze | **korrekt** — der Stop gewinnt |
+| Gap-bewusster Ausführungspreis | vorhanden und richtig |
+| Auflösung am selben Tag | **kein Unterschied** (83,3 % gegen 82,3 %) |
+
+### Die Prüfung: vier Arme, damit sich die Ursachen trennen
+
+`pruefe_einstiegsnachweis.py` rechnet jedes aufgelöste Signal auf den
+**echten Kursen des Betriebs** (USD, aus dem NB-Export) noch einmal durch:
+
+| Arm | Quote | offen | |
+|---|---:|---:|---|
+| **DATENBANK (Betrieb)** | **84,2 %** | 0 | |
+| A wie der Betrieb | **84,2 %** | 0 | ✔ Nachbau |
+| B ab dem Folgetag | 81,8 % | 15 | ohne die Kerze des Erstellungstags |
+| C Einstieg verlangt | 80,0 % | 24 | Zone muss berührt sein |
+| **D beides** | **70,0 %** | 54 | |
+
+⚠️ **Arm A reproduziert den Betrieb zu 100 % (114 von 114).** Das ist die
+wichtigste Prüfung des ganzen Werkzeugs — erst damit sind B, C und D lesbar.
+Ein Nachbau, der den Betrieb nicht trifft, misst sich selbst.
+
+### Zwei bestätigte Umsetzungsfehler
+
+**E1 — der Einstieg wird nie geprüft.** `check_signal_outcome` beginnt bei
+`entry_mid` und wartet auf Ziel oder Stop, **auch wenn der Kurs die
+Einstiegszone nie berührt hat**.
+
+> **21,1 % der aufgelösten Signale (24 von 114) haben ihre Einstiegszone nie
+> erreicht.** Sie stehen trotzdem als aufgelöst in der Datenbank.
+
+Bei **NACHKAUFEN** (90 % Trefferquote) liegt die Zone typisch *unter* dem
+Markt — steigt der Kurs, gilt das Ziel als erreicht, ohne dass je gekauft
+worden wäre.
+
+**E2 — die Kerze des Erstellungstags zählt mit.** `min_date =
+signal.created_at[:10]` nimmt die ganze Tageskerze, samt Hoch und Tief, die
+**vor** dem Signal lagen.
+
+### ⚠️ Aber die zwei Fehler erklären nur ein Drittel
+
+**84,2 % → 70,0 %.** Es bleiben **+34 Punkte** über der Basisrate. Der Rest
+hat eine andere Ursache — und sie ist der eigentliche Befund des Tages.
+
+### ⚠️ DER MARKT HAT GEDREHT
+
+Im Messzeitraum (14.–22.08.2026), gerechnet auf denselben Kursen:
+
+| | 14.08. | 21.08. | |
+|---|---:|---:|---:|
+| BTC | 62.979 | 77.546 | **+23,1 %** |
+| ETH | 1.880 | 2.418 | **+28,6 %** |
+| LINK | 8,96 | 11,53 | **+28,7 %** |
+
+**Median über 49 Symbole: +15,8 %. 46 von 49 positiv.**
+
+> **Ein LONG-Ziel bei rund +1,9 % wird in einem Markt, der in neun Tagen
+> zweistellig steigt, fast zwangsläufig erreicht. Das ist Marktrichtung,
+> keine Modellleistung.**
+
+⚠️ **Und damit fällt eine Grundannahme des Projekts.** Das Memory führte
+*„Regime war IMMER bär — nie ‚Modell oder Markt?' fragen, das ist
+unbeantwortbar"*. **Das gilt nicht mehr.** Zum ersten Mal seit Projektbeginn
+gibt es eine zweite Marktphase — und Kapitel 109 hat gemessen, dass H sich
+über einen Regimewechsel **nicht** überträgt.
+
+### Die Antwort auf die Nutzerfrage
+
+| | |
+|---|---|
+| Machen wir etwas falsch? | **Ja — zwei bestätigte Umsetzungsfehler** |
+| Erklären die den Trend? | **Nein, nur ein Drittel** |
+| Ist der Rest Modellleistung? | **Nein — Marktrichtung** |
+| Ist gemini besser als mistral? | **Mit diesen Daten nicht beantwortbar** — verschiedene Ketten, verschiedene Zeiträume, verschiedene Marktphasen |
+
+**Der Nutzer hatte in jedem Punkt recht:** erst die Umsetzung prüfen, dann das
+Modell. Wer hier „gemini ist besser" gelesen hätte, hätte einen steigenden
+Markt für ein Modellverdienst gehalten.
+
+---
+
+## Der Anlass-Schatten — er misst seit Wochen mit (22.08.2026)
+
+⚠️ **Zwei eigene Lesefehler zuerst.** Ich hatte gemeldet, der Abschnitt stehe
+auf `0` bzw. `null`. Beides war falsch: `anlass` liegt **verschachtelt unter
+`rollen_kette`**, nicht auf der obersten Ebene, und mein Auslesen griff den
+erstbesten gleichnamigen Schlüssel im Baum.
+
+**Er ist vollständig da: 44.443 Beobachtungen.**
+
+| Instrument | n | würde sperren (`asset`) | |
+|---|---:|---:|---|
+| spot | 29.616 | 9.377 | **31,7 %** |
+| hebel | 13.725 | 3.165 | **23,1 %** |
+| **absicherung** | 1.102 | 1.071 | ⚠️ **97,2 %** |
+
+**Median-Abstand zwischen zwei Bewertungen desselben Symbols: 0,25 h — 15
+Minuten.** Das ist die unabhängige Bestätigung der Häufung aus Methodik 2.60.
+
+**Die Treiber der Blockänderung:**
+
+| Block | Änderungen |
+|---|---:|
+| `umschlag` | 24.085 |
+| `marken` | 16.653 |
+| `bestand` | 4.074 |
+| alle übrigen | < 400 je |
+
+⚠️ **Was der Schatten NICHT sagt:** ob die gesperrten Signale die
+schlechteren gewesen wären. Dafür müsste `anlass_beobachtung` mit dem Ausgang
+verbunden werden — der Export liefert nur Summen. **Das ist dieselbe Lücke
+wie bei Rolle G**, und sie ist derselbe Handgriff.

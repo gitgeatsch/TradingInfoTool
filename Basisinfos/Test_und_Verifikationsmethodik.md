@@ -3518,3 +3518,10 @@ in keinem Werkzeug umgesetzt war.
 ⚠️ Beide wurden von der Dauerpruefung "jedes Messwerkzeug steht im
 Werkzeugkasten" gefangen, bevor sie hier fehlen konnten - die Pruefung vom
 selben Morgen hat sich am selben Tag bezahlt gemacht.
+
+
+### Nachtrag 22.08.2026 (spaet) - der Einstiegsnachweis
+
+| Skript | Beantwortet |
+|---|---|
+| `pruefe_einstiegsnachweis.py` | Wurde der Einstieg je erreicht? (127) - **21,1 % nicht**, und der Rest ist Marktrichtung |

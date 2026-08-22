@@ -10822,6 +10822,34 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- KAPITEL 127: DER EINSTIEGSNACHWEIS ---------------------------
+    # ⚠️ ANLASS, Nutzerfrage: "machen wir etwas falsch oder es gibt noch
+    # Fehler in der Umsetzung, bevor wir das Modell als Begruendung sehen."
+    # Die Rollen-Kette meldete 82,8 % Trefferquote bei einer Basisrate von
+    # 33,3 % - +46 Punkte, die kein Modell erzeugt.
+    _enq = _quelltext("pruefe_einstiegsnachweis.py")
+    _enroh = io.open("pruefe_einstiegsnachweis.py", encoding="utf-8").read()
+
+    pruefe(P, "der Einstiegsnachweis steht als Vorabfestlegung im Kopf",
+           "DIESER KOPF IST DIE VORABFESTLEGUNG" in _enroh)
+    pruefe(P, "er trennt die zwei Ursachen in VIER Arme",
+           all(x in _enq for x in ("A wie der Betrieb", "B ab dem Folgetag",
+                                   "C Einstieg verlangt", "D beides")),
+           "sonst laesst sich nicht sagen, welcher Defekt wieviel beitraegt")
+
+    # ⚠️ DIE WICHTIGSTE PRUEFUNG DES WERKZEUGS IST DIE AN SICH SELBST.
+    pruefe(P, "Arm A muss den Betrieb reproduzieren, sonst gilt nichts",
+           "REPRODUZIERT ARM A DEN BETRIEB" in _enq
+           and "MEIN NACHBAU verdaechtig" in _enq,
+           "gemessen 114 von 114 gleich - erst damit sind B/C/D lesbar")
+    pruefe(P, "gerechnet wird NUR in USD",
+           'str(z.get("currency")).upper() == "USD"' in _enq,
+           "die Zonen des Trackers stehen in USD; die Historie traegt beide "
+           "Waehrungen als getrennte Zeilen")
+    pruefe(P, "und mit der vorsichtigen Lesart wie im Betrieb",
+           _enq.index('if tief <= stop:') < _enq.index('if hoch >= ziel:'),
+           "faellt beides in eine Kerze, gilt der Stop")
+
     # ---- KAPITEL 125/126: REIHUNG x H UND DIE SIGNALBILANZ ------------
     _rxq = _quelltext("messe_reihung_x_h.py")
     _rxroh = io.open("messe_reihung_x_h.py", encoding="utf-8").read()

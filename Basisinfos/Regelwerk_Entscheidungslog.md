@@ -19591,3 +19591,72 @@ WAS BESTEHEN BLEIBT: der Kontingentpunkt. Rolle G laeuft zu 93,9 % auf
 HALTEN. Auch wenn diese Faelle auswertbar werden, bleibt die Frage, ob eine
 Gegenpruefung auf einem Nicht-Handeln denselben Wert hat wie auf einem
 Einstieg - und ob sie das Kontingent wert ist.
+
+
+[2026-08-22] KAPITEL 127: EINSTIEGSNACHWEIS - ZWEI FEHLER, UND DER MARKT HAT
+GEDREHT
+
+NUTZERFRAGE, und sie war die richtige: "machen wir etwas falsch oder es gibt
+noch Fehler in der Umsetzung, bevor wir das Modell als Begruendung sehen."
+
+DER TREND SAGTE ETWAS UNMOEGLICHES: 82,8 % Trefferquote bei einer Basisrate
+von 33,3 % - +46 Punkte, die kein Modell erzeugt.
+
+AUSGESCHLOSSEN: Zonenkanten-Konvention (erklaert 3 Punkte), Stop-vor-Ziel in
+derselben Kerze (korrekt), gap-bewusster Fill (richtig), Aufloesung am selben
+Tag (kein Unterschied, 83,3 % gegen 82,3 %).
+
+VIER ARME auf den ECHTEN Kursen des Betriebs (USD, NB-Export):
+    DATENBANK              84,2 %
+    A wie der Betrieb      84,2 %   <- reproduziert 114 von 114
+    B ab dem Folgetag      81,8 %
+    C Einstieg verlangt    80,0 %
+    D beides               70,0 %
+
+⚠️ ARM A REPRODUZIERT DEN BETRIEB ZU 100 %. Das ist die wichtigste Pruefung
+des Werkzeugs - erst damit sind B/C/D lesbar.
+
+ZWEI BESTAETIGTE UMSETZUNGSFEHLER:
+E1 check_signal_outcome prueft NIE, ob der Einstieg erreicht wurde. 21,1 %
+   der aufgeloesten Signale (24 von 114) haben ihre Einstiegszone NIE
+   beruehrt und stehen trotzdem als aufgeloest in der Datenbank. Bei
+   NACHKAUFEN (90 % Quote) liegt die Zone typisch unter dem Markt.
+E2 min_date = created_at[:10] nimmt die ganze Tageskerze des Erstellungstags,
+   samt Hoch und Tief, die VOR dem Signal lagen.
+
+⚠️ SIE ERKLAEREN NUR EIN DRITTEL: 84,2 % -> 70,0 %, es bleiben +34 Punkte.
+
+⚠️ DER EIGENTLICHE BEFUND: DER MARKT HAT GEDREHT. Im Messzeitraum 14.-22.08.
+stiegen BTC +23,1 %, ETH +28,6 %, LINK +28,7 %; Median ueber 49 Symbole
++15,8 %, 46 von 49 positiv. Ein LONG-Ziel bei rund +1,9 % wird da fast
+zwangslaeufig erreicht - Marktrichtung, keine Modellleistung.
+
+DAMIT FAELLT EINE GRUNDANNAHME: das Memory fuehrte "Regime war IMMER baer -
+nie 'Modell oder Markt?' fragen". Das gilt nicht mehr. Zum ersten Mal seit
+Projektbeginn gibt es eine zweite Marktphase - und Kapitel 109 hat gemessen,
+dass H sich ueber einen Regimewechsel NICHT uebertraegt.
+
+ANTWORT AUF DIE NUTZERFRAGE: ja, zwei Umsetzungsfehler. Nein, sie erklaeren
+den Trend nicht. Der Rest ist Marktrichtung. Ob gemini besser ist als
+mistral, ist mit diesen Daten NICHT beantwortbar - verschiedene Ketten,
+Zeitraeume und Marktphasen.
+
+[2026-08-22] DER ANLASS-SCHATTEN MISST SEIT WOCHEN MIT
+
+⚠️ ZWEI EIGENE LESEFEHLER ZUERST: ich meldete den Abschnitt als "0" bzw.
+"null". Beides falsch - `anlass` liegt VERSCHACHTELT unter `rollen_kette`,
+und mein Auslesen griff den erstbesten gleichnamigen Schluessel im Baum.
+
+VOLLSTAENDIG DA: 44.443 Beobachtungen. spot 29.616 mit 31,7 % wuerde-sperren,
+hebel 13.725 mit 23,1 %, absicherung 1.102 mit ⚠️ 97,2 %.
+
+MEDIAN-ABSTAND ZWISCHEN ZWEI BEWERTUNGEN DESSELBEN SYMBOLS: 0,25 h = 15
+MINUTEN - die unabhaengige Bestaetigung der Haeufung aus Methodik 2.60.
+
+TREIBER: umschlag 24.085, marken 16.653, bestand 4.074, alle uebrigen unter
+400. (Der Memory-Eintrag vom 17.08. nannte marken mit 59,3 % als groessten
+Treiber - jetzt ist es umschlag.)
+
+WAS ER NICHT SAGT: ob die gesperrten Signale die schlechteren gewesen waeren.
+Dafuer muesste anlass_beobachtung mit dem Ausgang verbunden werden - dieselbe
+Luecke wie bei Rolle G, und derselbe Handgriff.
