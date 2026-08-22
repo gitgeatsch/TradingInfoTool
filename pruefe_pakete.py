@@ -10822,6 +10822,43 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- KAPITEL 132: WER ENTSCHEIDET UEBER SPOT ODER HEBEL? ----------
+    # ⚠️ Die Regel steht im Regelwerksmanual A: das Modell nennt KEINE
+    # Risikoparameter. Diese Pruefungen halten fest, dass der Code sie
+    # einhaelt - und dass die EINE Ausnahme (SHORT => Hebel) bekannt ist.
+    _evq = _quelltext("agent/empfehlung_vertrag.py")
+    _lsq = _quelltext("agent/llm_schema.py")
+
+    pruefe(P, "der Hebelfaktor kommt NICHT aus dem Schema",
+           '"hebel"' not in _lsq.split("def baue_befund")[-1][:3000]
+           if "def baue_befund" in _lsq else "hebel_faktor" not in _lsq,
+           "er folgt aus Risikobudget und Liquidationsabstand - "
+           "Regelwerksmanual A")
+    pruefe(P, "die Richtung DARF vom Modell kommen",
+           'RICHTUNGEN = ("LONG", "SHORT")' in _evq,
+           "sie ist ein Urteil, kein Risikoparameter - die Trennlinie liegt "
+           "bei der FRAGE, nicht bei 'Zahl oder nicht'")
+    # ⚠️ AUF DEN SCHEMA-SCHLUESSEL PRUEFEN, nicht auf das Wort: die Namen
+    # stehen weiterhin in Kommentar und Docstring, die ihre Entfernung
+    # begruenden. Meine erste Fassung schlug genau daran fehl - und hat
+    # dabei einen veralteten Docstring gefunden, der sie noch als vorhanden
+    # beschrieb (korrigiert 22.08.).
+    pruefe(P, "und Einstieg und Stop sind aus dem Schema RAUS",
+           '"einstieg_eur":' not in _lsq and '"stop_eur":' not in _lsq,
+           "S3, 18.08.: sie wurden verlangt, nie gelesen - und konnten den "
+           "Trade trotzdem toeten")
+
+    # ⚠️ SHORT LAEUFT VOLL MIT, NUR VERSAND UND GUI SIND GEFILTERT.
+    pruefe(P, "SHORT wird erzeugt und verfolgt, nur der Versand ist gefiltert",
+           "mail_richtung_erlaubt" in _rlq
+           and "mail_richtung_erlaubt" not in _quelltext(
+               "agent/entscheidungsrechnung.py"),
+           "bis zum 05.08. lagen 313 SHORT-Vorschlaege als HALTEN in der "
+           "Datenbank und haben jede Richtungsauswertung verzerrt")
+    pruefe(P, "und die GUI filtert die Richtung ebenfalls",
+           "Richtungsfilter" in io.open("ui/hebel_view.py",
+                                        encoding="utf-8").read())
+
     # ---- KAPITEL 131: DER HEBEL IST VERWAIST, NICHT KAPUTT ------------
     # ⚠️ Diese Pruefungen HALTEN DEN ZUSTAND FEST, sie beheben ihn nicht.
     # Solange die Entscheidung (S6 fertigbauen oder Hebel abschalten) offen

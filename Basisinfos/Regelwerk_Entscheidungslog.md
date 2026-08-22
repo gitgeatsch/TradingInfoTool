@@ -19874,3 +19874,63 @@ halbiert sofort die Modellaufrufe fuer Krypto). Gegen Abschalten spricht genau
 ein Punkt: SHORT geht bei Bitpanda nur mit Hebel. Dafuer spricht Kapitel 130 -
 die bessere Stopregel erzeugt breite Stops, und breite Stops brauchen keinen
 Hebel. Beide Wege sind Nutzerentscheidungen.
+
+
+[2026-08-22] KAPITEL 132: DARF DAS MODELL UEBER SPOT ODER HEBEL ENTSCHEIDEN?
+
+Nutzerfrage: "finde ich es eigenartig dass hebel oder spot oder short vom
+modell kommen soll - entspricht das den LLM Regeln?"
+
+DIE REGEL (Regelwerksmanual A, Umbauplan 88.4): das Sprachmodell nennt KEINE
+Risikoparameter. Es liefert Lage, Belege, RICHTUNG, Aktion und zwei Zahlen
+(umgeworfen_preis_eur, umgeworfen_bis). Alles andere rechnet das System -
+Einstiegszone, Stop, Ziel, Haltedauer, Betrag, HEBEL, Etikett.
+
+DREIMAL GETRENNT BEANTWORTET:
+  Spot oder Hebel   kommt NICHT vom Modell    regelkonform
+  Hebelfaktor       kommt NICHT vom Modell    regelkonform
+  Richtung          kommt vom Modell          regelkonform (Urteil, kein
+                                              Risikoparameter)
+
+⚠️ ABER DER UMWEG IST DER EIGENTLICHE FUND: Umbauplan 88.3 fuehrt "SHORT =>
+Hebel" als harte Zusatzbedingung. Damit bestimmt die Modellrichtung INDIREKT
+doch das Instrument. Kein Regelbruch, aber genau die Abhaengigkeit, die
+Kapitel 88 beenden sollte.
+
+⚠️ UND SIE BRICHT MEINE S6-KONSTRUKTION VON HEUTE. Ich hatte vorgeschlagen,
+das Instrument VOR dem Modellaufruf aus dem Rauschboden zu bestimmen, weil die
+These den Stop nur verbreitern kann - monoton, damit sicher. Das gilt fuer die
+These, NICHT fuer die Richtung: antwortet das Modell SHORT, springt das
+Etikett von "spot" zurueck auf "hebel". Mein Vorschlag war unvollstaendig.
+
+DIE KONSTRUKTION, DIE TRAEGT: nicht vorab entscheiden, sondern mit dem
+VOLLSTAENDIGEN (Hebel-)Vokabular fragen - ein Lauf je Asset, sieben Aktionen
+plus Richtungsfeld. Dann rechnet das System Stop -> Hebel -> Etikett, und wo
+"spot" herauskommt, werden die Hebelaktionen abgebildet
+(signal_abbildung.UMBENENNUNG tut genau das bereits). Damit braucht niemand
+die Richtung vorab, der Zirkelbezug ist auf, und die Regel bleibt unberuehrt.
+Preis: ein Spot-Kauf heisst im Modelltext "EROEFFNEN" statt "KAUFEN" - eine
+Abbildungsfrage, keine inhaltliche.
+
+SHORT HEUTE - BEREITS SO, WIE ES SEIN SOLL (Nutzervorgabe: im GUI und Mail
+gefiltert, aber voll verdrahtet mitlaufend). Geprueft an fuenf Stellen: Signal
+wird erzeugt und geschrieben, Ausgang wird verfolgt, Mailversand gefiltert
+(asset_schalter.mail_richtung_erlaubt), GUI gefiltert (ui/hebel_view.py),
+Schalter vorhanden. Der Grund ist Messhygiene: bis zum 05.08. lagen 313
+SHORT-Vorschlaege als "HALTEN" in der Datenbank.
+
+EINBETTUNG IN DEN PLAN - S6 ist der letzte offene Schritt von 90.3, und seine
+Bauform steht jetzt fest:
+  S6a Frage vereinheitlichen (ein Vokabular, Schema, Faktensatz) - kein
+      Verhaltenswechsel
+  S6b INSTRUMENTE_JE_GRUPPE auf EINEN Eintrag, hebel_handelbar aus der
+      Handelbarkeit - JA, die Doppellaeufe enden, Modellaufrufe halbieren sich
+  S6c Abbildung der Hebelaktionen auf Spot
+  S6d die fuenf verwaisten Deckel (131.2) in die neue Kette - JA, nicht
+      optional
+
+⚠️ NICHT ANGEFASST: verlustanteil und k (jede Drehung bricht die Messreihe),
+die Stopregel (130 hat sie gemessen), die Richtung als Modellausgabe. DER
+HEBELANTEIL AENDERT SICH DURCH S6 NICHT - er haengt an verlustanteil/stop_rel,
+nicht an der Zahl der Laeufe. S6 beendet die Doppelfrage, nicht die
+Hebelknappheit; das ist eine getrennte Entscheidung aus Kapitel 129.

@@ -476,10 +476,12 @@ KEIN `tranche_eur` (Umbau 10.08. abends): der Betrag wird aus der Zahl
     unabhaengiger Faktoren abgeleitet, nicht erfragt. Ein Feld im Schema waere
     eine Einladung, ihn doch zu nennen.
 
-    `einstieg_eur` und `stop_eur` sind nur bei einer Handlung noetig - bei
-    NICHTS_TUN waeren sie sinnlos. Diese Bedingung ("Pflicht, WENN aktion nicht
-    NICHTS_TUN ist") laesst sich in einem Schema nicht ausdruecken; sie steht
-    im Validator.
+    ⚠️ `einstieg_eur` UND `stop_eur` GIBT ES NICHT MEHR (S3, 18.08.2026) -
+    dieser Absatz beschrieb sie bis zum 22.08. weiter als vorhanden, vier
+    Zeilen ueber dem Kommentar, der ihre Entfernung festhaelt. Sie wurden vom
+    Modell verlangt, von `rechne()` nie gelesen, und konnten den Trade
+    trotzdem toeten: der Vertrag nahm die Aktion auf NICHTS_TUN zurueck, wenn
+    sie fehlten. Wo Zahlen gerechnet werden, soll das Modell keine nennen.
 
     Dasselbe gilt fuer alles Uebrige, was der Validator prueft und das Schema
     nicht kann: Stop unter Einstieg, unabhaengige Faktoren nicht mehr als

@@ -17505,3 +17505,153 @@ Entscheidung, sondern ein Nebenprodukt der alten, schlechteren Stopregel.**
 **Beide Wege sind Nutzerentscheidungen.** Was sie gemeinsam haben: sie beenden
 einen Zustand, in dem die Hälfte der Krypto-Modellaufrufe ein Etikett erzeugt,
 das nichts bedeutet.
+
+
+---
+
+## Kapitel 132 — Darf das Modell über Spot oder Hebel entscheiden? (22.08.2026)
+
+**Nutzerfrage:** *„vor allem finde ich es eigenartig dass hebel oder spot oder
+short vom modell kommen soll — entspricht das den LLM Regeln?"*
+
+**Die Frage trifft eine Stelle, die ich in meinem S6-Vorschlag übersehen
+hatte.** Die Antwort ist zweiteilig.
+
+### 132.1 Die Regel, wörtlich aus zwei Dokumenten
+
+`Regelwerksmanual.md`, Abschnitt A:
+
+> **Das Sprachmodell nennt keine Risikoparameter.** Es liefert ein Urteil in
+> Worten — **Richtung**, Begründung, Gegengrund — und **zwei** Zahlen …
+> **Alles andere rechnet das System:** Einstiegszone, Stop, Ziel, Haltedauer,
+> Betrag, **Hebel**.
+
+`Umbauplan` 88.4 dasselbe als Tabelle:
+
+| | Modell | Rechnung |
+|---|:--:|:--:|
+| Lage, Belege, **Richtung**, Aktion | ✓ | |
+| `umgeworfen_durch` + `umgeworfen_preis_eur` | ✓ | |
+| Stop, Zone, Ziel, Haltedauer, Betrag, **Hebel, Etikett** | | ✓ |
+
+> **Die Trennlinie verläuft nicht bei „Zahl / keine Zahl", sondern bei der
+> Frage:** *„wo setzt du den Stop"* ist ein Risikoparameter — *„wo stirbt
+> deine Begründung"* ist ein Urteil über den eigenen Text.
+
+### 132.2 Damit zur Frage — dreimal getrennt beantwortet
+
+| | kommt vom Modell? | regelkonform? |
+|---|---|---|
+| **Spot oder Hebel** | **nein** — `dimensioniere()` rechnet es aus Verlustanteil und Stopabstand | ✔ **entspricht der Regel** |
+| **Hebelfaktor** | **nein** — folgt aus Risikobudget und Liquidationsabstand | ✔ |
+| **Richtung LONG/SHORT** | **ja** | ✔ — sie ist ein **Urteil**, kein Risikoparameter |
+
+**Spot/Hebel kommt also nicht vom Modell.** Die Sorge ist an dieser Stelle
+unbegründet — der Code hält die Regel ein.
+
+### 132.3 ⚠️ ABER: es gibt einen Umweg, und er ist der eigentliche Fund
+
+`Umbauplan` 88.3 führt als **harte Zusatzbedingung**:
+
+> **SHORT ⇒ Hebel.** Spot kann bei Bitpanda nicht short. Die Richtung ist
+> damit selbst ein Hebelkriterium, und zwar ein zwingendes.
+
+**Damit bestimmt die Modellrichtung indirekt doch das Instrument.** Nicht als
+Risikoparameter — aber als Bedingung, die das Ergebnis der Rechnung
+überschreibt.
+
+> **Das ist die Stelle, die der Nutzer instinktiv als falsch empfindet.** Sie
+> ist kein Regelbruch (die Richtung darf vom Modell kommen), aber sie macht
+> das Instrument von einer Modellausgabe abhängig — und genau das sollte
+> Kapitel 88 beenden.
+
+### 132.4 ⚠️ Und sie bricht meine S6-Konstruktion von heute
+
+Ich hatte vorgeschlagen: das Instrument **vor** dem Modellaufruf aus dem
+Rauschboden bestimmen, weil die Modellthese den Stop nur **verbreitern** kann
+— also den Hebel nur senken, das Etikett nur von „hebel" nach „spot"
+bewegen. **Monoton, damit sicher.**
+
+**Das gilt für die These. Für die Richtung nicht.**
+
+```
+vorab (ohne Modell):   Rauschboden breit  →  „spot"
+Modell antwortet:      SHORT
+SHORT ⇒ Hebel:         Etikett springt zurück auf „hebel"   ← Gegenrichtung
+```
+
+**Die Monotonie ist verletzt, sobald SHORT möglich ist** — und der Nutzer hat
+entschieden, dass SHORT **voll verdrahtet mitlaufen** soll. Mein Vorschlag war
+also unvollständig.
+
+### 132.5 Die Konstruktion, die trägt
+
+**Nicht vorab entscheiden, sondern mit dem vollständigen Vokabular fragen.**
+
+| | |
+|---|---|
+| **ein** Lauf je Asset | mit dem **Hebel-Vokabular** (sieben Aktionen) und dem Richtungsfeld |
+| das Modell antwortet | Aktion, Richtung, Begründung, Widerlegungspreis |
+| **dann** rechnet das System | Stop → Hebel → **Etikett** |
+| ist das Etikett „spot" | die Hebelaktionen werden abgebildet — `signal_abbildung.UMBENENNUNG` tut genau das bereits (`NICHTS_TUN → HALTEN`) |
+
+**Damit braucht niemand die Richtung vorab zu kennen**, der Zirkelbezug ist
+aufgelöst, und die Regel aus 132.1 bleibt unangetastet: das Modell urteilt,
+das System rechnet.
+
+⚠️ **Der Preis:** das Spot-Vokabular verschwindet aus der Frage. Ein Spot-Kauf
+heißt dann im Modelltext „ERÖFFNEN" statt „KAUFEN". Das ist eine
+Abbildungsfrage, keine inhaltliche — und die Abbildung existiert.
+
+### 132.6 SHORT heute — bereits so, wie es sein soll
+
+**Nutzervorgabe:** *„die Strategie soll zwar im GUI und E-Mail gefiltert
+werden, aber parallel normal mitlaufen, voll verdrahtet und mit dem
+bestehenden Switch einschaltbar."*
+
+**Das ist der Zustand seit dem 05.08.**, und er ist an drei Stellen geprüft:
+
+| | |
+|---|---|
+| Signal wird **erzeugt und geschrieben** | ✔ `rollen_lauf` kennt keinen Richtungsfilter vor der Rechnung |
+| Ausgang wird **verfolgt** | ✔ Backward-Tracking läuft über die echte `richtung` |
+| **Mailversand** gefiltert | ✔ `asset_schalter.mail_richtung_erlaubt`, `rollen_lauf.py:1592` |
+| **GUI** gefiltert | ✔ `ui/hebel_view.py` Richtungsfilter |
+| Schalter | ✔ `budget_allocator.hebel_richtung_modus` |
+
+⚠️ **Und der Grund dafür ist Messhygiene, nicht Ertrag** — wörtlich aus
+`asset_schalter.py`: bis zum 05.08. warfen zwei Vorfilter SHORT-Kandidaten vor
+dem Modellaufruf weg, **313 SHORT-Vorschläge lagen als „HALTEN" in der
+Datenbank** und haben jede Auswertung über Richtungen verzerrt.
+
+### 132.7 Wie das in den Gesamtplan passt
+
+**S6 ist der letzte offene Schritt von Kapitel 90.3** — und mit 132.5 ist
+seine Bauform jetzt bestimmt. Die Reihenfolge, in der er sauber abläuft:
+
+| | Schritt | ändert Verhalten |
+|---|---|---|
+| **S6a** | Frage vereinheitlichen: ein Vokabular, ein Schema, ein Faktensatz | **nein** — beide Läufe bekämen dieselbe Frage |
+| **S6b** | `INSTRUMENTE_JE_GRUPPE["krypto"]` auf **einen** Eintrag; `hebel_handelbar` aus der Handelbarkeit statt aus dem Lauf | **JA** — die Doppelläufe enden |
+| **S6c** | Abbildung der Hebelaktionen auf Spot, wo das Etikett „spot" ergibt | nein |
+| **S6d** | die fünf verwaisten Deckel (131.2) in die neue Kette ziehen | **JA** — Schutz kehrt zurück |
+
+⚠️ **S6b halbiert die Modellaufrufe für Krypto.** Das ist keine Nebenwirkung,
+sondern der Zweck: dieselbe Frage wurde zweimal gestellt.
+
+⚠️ **S6d ist nicht optional.** Solange der Hebel wieder entstehen soll, müssen
+die fünf Deckel greifen — sonst hat das System einen Hebel ohne
+Krisenbremse, Regimekonflikt-Deckel und Höchstwert aus der Konfiguration.
+
+### 132.8 Was dabei NICHT angefasst wird
+
+| | |
+|---|---|
+| `verlustanteil` und `k` | die Regler bleiben, wo sie sind — Kapitel 129 hat gezeigt, dass jede Drehung die Messreihe bricht |
+| die Stopregel | Kapitel 130 hat sie gemessen; sie trägt besser als die Alternative |
+| die Richtung als Modellausgabe | regelkonform, und ohne sie gäbe es kein SHORT |
+
+**Der Hebelanteil wird sich durch S6 NICHT ändern** — er hängt an
+`verlustanteil / stop_rel`, nicht an der Zahl der Läufe. **S6 beendet die
+Doppelfrage, nicht die Hebelknappheit.** Das ist eine getrennte Entscheidung
+und gehört nach Kapitel 129.
