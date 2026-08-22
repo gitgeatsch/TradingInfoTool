@@ -17796,3 +17796,116 @@ ohne Gegenwert."* **Der Anlass ist jetzt da.**
 | die alte Kette anfassen | sie läuft für Krypto nicht mehr |
 
 **Suite: 1.504 Prüfungen. Gegenprüfung über alle Rollen: 25, alle bestanden.**
+
+
+---
+
+## Kapitel 134 — S6b gebaut: ein Lauf je Asset (22.08.2026)
+
+**Der Schritt, der das Verhalten ändert.** Seit S6a stellten beide Läufe
+wörtlich dieselbe Frage — zwei identische Fragen sind eine zu viel.
+
+### 134.1 Was geändert wurde
+
+| Stelle | vorher | nachher |
+|---|---|---|
+| `INSTRUMENTE_JE_GRUPPE["krypto"]` | `("spot", "hebel")` | **`("spot",)`** |
+| `hebel_handelbar` | `instrument == "hebel"` | **`AK.hebel_handelbar(gruppe)`** |
+| `_topf_instrument` | Rücknahme des Lauf-Etiketts | folgt **nur** dem Ergebnis |
+| Bestand | Spot **oder** Hebelposition, je Lauf | **beide**, Hebelposition hat Vorrang |
+
+**Neu: `assetklassen.hebel_handelbar(gruppe)`.** Bis S6b stand diese Frage
+nirgends — sie steckte in `instrument == "hebel"`, also in der Frage, welcher
+**Lauf** gerade dran ist. ⚠️ **Mit dem Wegfall des zweiten Laufs wäre die
+Handelbarkeit ersatzlos verschwunden**, und der Hebel still mit ihr.
+
+### 134.2 Warum es keinen Zirkelbezug gibt
+
+```
+hebel_noetig = verlustanteil / stop_rel        ← kein Einsatz, kein Topf
+```
+
+Der Einsatz unterscheidet sich (Spot 800 €, Hebel 1.000 €), **aber er geht in
+diese Zeile nicht ein.** Das Etikett steht fest, bevor ein Topf gebraucht
+wird; `rollen_lauf` leitet ihn danach daraus ab. Genau das hält Kapitel 90.3
+fest: *„F3 und F4 entfallen ersatzlos, weil der Verlustanteil für Spot und
+Hebel derselbe ist."*
+
+### 134.3 Der Bestand — ein echter Grund für zwei Läufe, und wie er entfällt
+
+Ein Symbol kann **beides** tragen: einen Spot-Bestand und eine offene
+Hebelposition. Bis S6b sah jeder Lauf nur seinen Teil.
+
+⚠️ **Heute ist das theoretisch:** alle **188** Hebelpositionen sind
+geschlossen, die letzte wurde am **22.07.2026** eröffnet. Aber es kehrt
+zurück, sobald wieder eine offen ist.
+
+**Der eine Lauf sieht jetzt beides**, und die **Hebelposition hat Vorrang** —
+sie trägt ein Ausfallrisiko (Liquidation), der Spot-Bestand nicht.
+
+### 134.4 ⚠️ Und die Falle der freien Namen, zum vierten Mal
+
+Meine erste Fassung schrieb `hebel_handelbar=_AK.hebel_handelbar(...)`.
+
+> **`_AK` gehört in `_ein_asset` bereits `anlass_kalender`** — und mein Aufruf
+> steht **davor**. Das wäre ein `UnboundLocalError` gewesen, den der breite
+> Fehlerfang darunter **still geschluckt** hätte: die Vorabrechnung fiele aus,
+> der Topf käme aus dem Lauf statt aus der Zahl, und im Log stünde eine Zeile,
+> die niemand liest.
+
+**Und der zweite Anlauf war auch falsch:** ich setzte den Import *innerhalb*
+der Funktion — **nach** der Verwendung. Derselbe Fehler in Grün.
+
+**Jetzt steht er auf Modulebene, mit eindeutigem Kürzel `_AKL`.**
+`assetklassen` ist ein Blattmodul ohne Rückbezug; ein Import dort ist
+gefahrlos.
+
+⚠️ **`finde_freie_namen.py` hat beides NICHT gefangen** — es sucht Namen ohne
+Zuweisung im Gültigkeitsbereich, und `_AK` *wird* zugewiesen, nur später. Das
+ist eine Lücke des Werkzeugs, keine des Befunds.
+
+### 134.5 Die Gegenprüfung
+
+| | |
+|---|---:|
+| Symbole in der Watchlist | 56 |
+| **mit mehr als einem Lauf** | **0** |
+| Kombinationen | **5** statt 6 |
+
+**Das Etikett fällt aus der Rechnung an** — geprüft über vier Stopabstände:
+
+| Stop | krypto | aktien |
+|---:|---|---|
+| 2,5 % | **hebel 2,40** | spot 1,00 |
+| 4,0 % | **hebel 1,50** | spot 1,00 |
+| 8,0 % | spot 1,00 | spot 1,00 |
+| 16,0 % | spot 1,00 | spot 1,00 |
+
+Die Handelbarkeit greift: **Aktien bekommen nie ein Hebel-Etikett**, auch wo
+die Formel einen Hebel ergäbe — dort wirkt sie als Betragsbegrenzung
+(Umbauplan 88.3).
+
+**Suite 1.506 · Rollen-Gegenprüfung 25 · `finde_freie_namen` 0.**
+
+### 134.6 Vier Prüfungen, die auf dem Gegenteil standen
+
+| bisher | jetzt |
+|---|---|
+| „nur Krypto läuft mit zwei Instrumenten" | **keine Gruppe** — plus neu: die Handelbarkeit steht bei der Gruppe |
+| „der Umlauf fährt sechs Kombinationen" | **fünf, eine je Gruppe** |
+| „nimmt beim Hebel die Positionsmenge" | dieselbe Absicht, neuer Variablenname — **plus neu: Hebelposition hat Vorrang** |
+| ⚠️ **„S6 ist NICHT gebaut, und der Zustand steht fest"** | **„S6b ist gebaut: ein Lauf je Symbol"** |
+
+Die letzte war **meine eigene aus Kapitel 131**, angelegt, um den offenen
+Zustand festzuhalten. Sie hat ihren Zweck erfüllt und ist jetzt umgedreht.
+
+### 134.7 Was danach noch offen ist
+
+| | |
+|---|---|
+| **S6c** | Abbildung der Hebelaktionen auf Spot bei bestehenden Zeilen |
+| **S6d** | die fünf verwaisten Deckel (131.2) in die neue Kette — **nicht optional** |
+
+⚠️ **Der Hebelanteil ändert sich durch S6b NICHT.** Er hängt an
+`verlustanteil / stop_rel`. Was sich ändert: **die Modellaufrufe für Krypto
+halbieren sich**, weil dieselbe Frage nicht mehr zweimal gestellt wird.

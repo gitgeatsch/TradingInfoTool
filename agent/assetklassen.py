@@ -40,13 +40,50 @@ ASSETKLASSEN = ("krypto", "aktien", "rohstoffe", "etf")
 
 # Welches Instrument fuer welche Gruppe sinnvoll ist. Krypto ist die einzige
 # Klasse mit zwei - Hebel gibt es bei Bitpanda nur dort.
+# ⚠️ S6b (22.08.2026): EIN LAUF JE ASSET, NICHT ZWEI.
+#
+# Bis heute bekam Krypto zwei Urteile je Symbol - eines mit Spot-Etikett,
+# eines mit Hebel-Etikett. Seit S5 produzierte der Hebel-Lauf in 76 % der
+# Faelle Spot-Trades (Kapitel 129), und seit S6a stellten beide Laeufe
+# WOERTLICH DIESELBE FRAGE. Zwei identische Fragen sind eine zu viel.
+#
+# DAS INSTRUMENT IST SEIT KAPITEL 88 EIN ERGEBNIS, KEINE KATEGORIE:
+#
+#     hebel = verlustanteil / stop_rel     Etikett "hebel", wenn > 1
+#
+# ⚠️ UND ES GIBT KEINEN ZIRKELBEZUG. `hebel_noetig` haengt an Verlustanteil
+# und Stopabstand - nicht am Einsatz, nicht am Topf. Der Verlustanteil ist
+# fuer Spot und Hebel derselbe (6 %). Das Etikett steht also fest, BEVOR ein
+# Topf gebraucht wird; `rollen_lauf` leitet ihn danach daraus ab.
+#
+# DIE HANDELBARKEIT BLEIBT EINE EIGENSCHAFT DER GRUPPE - siehe
+# `hebel_handelbar()` darunter. Sie war bis heute im Lauf-Etikett versteckt.
 INSTRUMENTE_JE_GRUPPE = {
-    "krypto": ("spot", "hebel"),
+    "krypto": ("spot",),
     "aktien": ("spot",),
     "rohstoffe": ("spot",),
     "themen_etf": ("spot",),
     "hedge": ("absicherung",),
 }
+
+# Wo laesst sich ein Hebel ueberhaupt handeln? Bei Bitpanda nur Krypto.
+#
+# ⚠️ FUER DIE UEBRIGEN RECHNET DIE FORMEL ZWAR EINEN HEBEL AUS, handelbar ist
+# er nicht (Umbauplan 88.3). Dort wirkt das Ergebnis als Betragsbegrenzung,
+# nicht als Etikett - genau das tut `dimensioniere(hebel_handelbar=False)`.
+HEBEL_HANDELBAR_JE_GRUPPE = {"krypto": True}
+
+
+def hebel_handelbar(gruppe: str) -> bool:
+    """Darf diese Gruppe gehebelt handeln?
+
+    ⚠️ BIS S6b STAND DIESE FRAGE NIRGENDS. Sie steckte in
+    `hebel_handelbar=(instrument == "hebel")` - also in der Frage, welcher
+    LAUF gerade dran ist. Damit war die Handelbarkeit eine Eigenschaft des
+    Ablaufs statt des Assets, und mit dem Wegfall des zweiten Laufs waere sie
+    ersatzlos verschwunden."""
+    return bool(HEBEL_HANDELBAR_JE_GRUPPE.get(
+        str(gruppe or "").strip().lower(), False))
 
 
 def gruppe(asset) -> str:

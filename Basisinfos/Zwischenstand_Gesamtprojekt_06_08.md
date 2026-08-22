@@ -579,7 +579,25 @@ Regel. Alles hier als **ein** Deployment-Paket, nicht einzeln.
 | K3 | **`agent/waechter_zuspitzung.py`** prüft die Zwischenausgabe auf unbelegte Zuspitzung | gebaut, Ist-Zustand gemessen (1 von 8), noch nicht in der Kette |
 | K4 | Granularitätswarnung erscheint im Log — die **Messskripte** sollten sie in ihrem Kopf mitausgeben | sonst liest man sie leicht über |
 
-### 8c.3 Offene Messungen — je mit vorab festgelegter Abbruchregel
+#### 8c.2b ⚠️ S6 — der letzte offene Schritt des Hebel-Umbaus (Stand 22.08.2026)
+
+| | | |
+|---|---|---|
+| **S6a** | ein Aktionsvokabular für Spot und Hebel | **gebaut** (Kapitel 133) |
+| **S6b** | ein Lauf je Asset, Instrument fällt aus der Rechnung an | **gebaut** (Kapitel 134) |
+| **S6c** | Abbildung der Hebelaktionen auf Spot bei bestehenden Zeilen | offen |
+| **S6d** | die **fünf verwaisten Risikodeckel** in die neue Kette | ⚠️ **offen, nicht optional** |
+
+⚠️ **S6d ist der einzige mit Sicherheitsbezug.** Solange er offen ist, laufen
+`max_hebel`, `regime_konflikt_hebel_deckel`, `retail_konsens_hebel_deckel`,
+`technischer_konflikt_hebel_deckel` und `gegenszenario_hebel_deckel` ins
+Leere — die Herleitung steht in Kapitel 131.2. Heute wenig dringend (24 %
+Hebelanteil), dringend ab dem Moment, in dem an `k` oder `verlustanteil`
+gedreht wird.
+
+---
+
+## 8c.3 Offene Messungen — je mit vorab festgelegter Abbruchregel
 
 | # | Hypothese | Umfang |
 |---|---|---|

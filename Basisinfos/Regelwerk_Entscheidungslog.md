@@ -19987,3 +19987,54 @@ WAS S6a NICHT TUT: die Doppellaeufe beenden (das ist S6b), den Hebelanteil
 aendern (der haengt an verlustanteil/stop_rel), die alte Kette anfassen.
 
 Suite 1504 Pruefungen, Gegenpruefung ueber alle Rollen 25 - alle bestanden.
+
+
+[2026-08-22] KAPITEL 134: S6b GEBAUT - EIN LAUF JE ASSET
+
+Der Schritt, der das Verhalten aendert. Seit S6a stellten beide Laeufe
+woertlich dieselbe Frage.
+
+GEAENDERT: INSTRUMENTE_JE_GRUPPE["krypto"] von ("spot","hebel") auf ("spot",),
+hebel_handelbar kommt aus der neuen Funktion assetklassen.hebel_handelbar()
+statt aus (instrument == "hebel"), _topf_instrument folgt nur noch dem
+Ergebnis, und der Bestand liest BEIDE Quellen mit Vorrang fuer die
+Hebelposition.
+
+⚠️ DIE HANDELBARKEIT STAND BIS S6b NIRGENDS. Sie steckte in
+`instrument == "hebel"`, also in der Frage, welcher LAUF dran ist - mit dem
+Wegfall des zweiten Laufs waere sie ersatzlos verschwunden und der Hebel
+still mit ihr.
+
+KEIN ZIRKELBEZUG: hebel_noetig = verlustanteil / stop_rel braucht keinen
+Einsatz. Der Einsatz unterscheidet sich zwar (spot 800, hebel 1.000), geht
+aber in diese Zeile nicht ein - das Etikett steht fest, bevor ein Topf
+gebraucht wird.
+
+DER BESTAND war ein echter Grund fuer zwei Laeufe: ein Symbol kann Spot UND
+Hebelposition tragen. Heute theoretisch - alle 188 Positionen geschlossen, die
+letzte am 22.07. eroeffnet -, aber es kehrt zurueck. Der eine Lauf sieht jetzt
+beides, die Hebelposition hat Vorrang (Ausfallrisiko).
+
+⚠️ DIE FALLE DER FREIEN NAMEN, ZUM VIERTEN MAL. Meine erste Fassung nahm
+`_AK` - der Name gehoert in _ein_asset bereits `anlass_kalender`, und mein
+Aufruf steht DAVOR. UnboundLocalError, still geschluckt vom breiten
+Fehlerfang: die Vorabrechnung fiele aus, der Topf kaeme aus dem Lauf statt aus
+der Zahl. Der ZWEITE Anlauf war auch falsch - Import innerhalb der Funktion,
+NACH der Verwendung. Jetzt auf Modulebene mit eindeutigem `_AKL`.
+⚠️ finde_freie_namen.py hat beides NICHT gefangen - es sucht Namen ohne
+Zuweisung, und _AK WIRD zugewiesen, nur spaeter. Luecke des Werkzeugs.
+
+GEGENPRUEFUNG: 56 Symbole, 0 mit mehr als einem Lauf, 5 Kombinationen statt 6.
+Das Etikett faellt aus der Rechnung an - Stop 2,5 % ergibt Hebel 2,40 bei
+Krypto und spot bei Aktien; ab 8 % Stop ist beides spot. Die Handelbarkeit
+greift: Aktien bekommen nie ein Hebel-Etikett.
+
+VIER PRUEFUNGEN standen auf dem Gegenteil, darunter MEINE EIGENE aus Kapitel
+131 ("S6 ist NICHT gebaut, und der Zustand steht fest"). Sie hat ihren Zweck
+erfuellt und ist jetzt umgedreht.
+
+OFFEN: S6c (Abbildung bestehender Zeilen) und S6d (die fuenf verwaisten
+Deckel - nicht optional). ⚠️ Der Hebelanteil aendert sich durch S6b NICHT; was
+sich aendert, sind die Modellaufrufe fuer Krypto - sie halbieren sich.
+
+Suite 1506, Rollen-Gegenpruefung 25, finde_freie_namen 0.

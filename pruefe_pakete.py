@@ -4936,9 +4936,20 @@ def paket_15() -> None:
            all(RL2._bereich(g, i) in FB.ZUSATZ_JE_BEREICH
                for g, i, _ in AK.laeufe()),
            str([RL2._bereich(g, i) for g, i, _ in AK.laeufe()]))
-    pruefe(P, "nur Krypto laeuft mit zwei Instrumenten",
-           [g for g, i, _ in AK.laeufe() if i == "hebel"] == ["krypto"],
-           "Hebel gibt es bei Bitpanda nur dort")
+    # ⚠️ S6b (22.08.2026): KEINE GRUPPE LAEUFT MEHR MIT ZWEI INSTRUMENTEN.
+    # Die Aussage "Hebel gibt es bei Bitpanda nur bei Krypto" gilt weiter -
+    # sie steht jetzt in `hebel_handelbar()` statt in der Laufliste.
+    pruefe(P, "keine Gruppe laeuft mehr mit zwei Instrumenten",
+           not [g for g, i, _ in AK.laeufe() if i == "hebel"],
+           "das Instrument ist seit Kapitel 88 ein ERGEBNIS, keine "
+           "Kategorie - S6b hat den zweiten Lauf gestrichen")
+    pruefe(P, "und die Handelbarkeit steht bei der GRUPPE",
+           AK.hebel_handelbar("krypto")
+           and not any(AK.hebel_handelbar(g) for g in
+                       ("aktien", "rohstoffe", "themen_etf", "hedge")),
+           "sie steckte bis S6b in `instrument == \"hebel\"` - also in der "
+           "Frage, welcher LAUF dran ist. Mit dem Wegfall des zweiten Laufs "
+           "waere sie ersatzlos verschwunden")
     pruefe(P, "die Absicherung laeuft als `absicherung`, nicht als spot",
            [i for g, i, _ in AK.laeufe() if g == "hedge"] == ["absicherung"])
     _alle = {s for _, _, ss in AK.laeufe() for s in ss}
@@ -5058,8 +5069,11 @@ def paket_15() -> None:
            "die Signalerzeugung darf stillgelegt werden, diese Funktion NICHT")
 
     # W3 DER UMLAUF SELBST.
-    pruefe(P, "der Umlauf faehrt sechs Kombinationen",
-           len(AK3.laeufe()) == 6, str([(g, i) for g, i, _ in AK3.laeufe()]))
+    # ⚠️ S6b: FUENF STATT SECHS - Krypto hat den zweiten Lauf verloren.
+    pruefe(P, "der Umlauf faehrt fuenf Kombinationen, eine je Gruppe",
+           len(AK3.laeufe()) == 5
+           and len({g for g, _i, _ in AK3.laeufe()}) == 5,
+           str([(g, i) for g, i, _ in AK3.laeufe()]))
     pruefe(P, "und ueberspringt, was nicht umgestellt ist",
            "if not bedient_neue_kette(gruppe, config):" in _quelltext(
                "scheduler/rollen_job.py"),
@@ -7085,9 +7099,15 @@ def paket_15() -> None:
            "offene Position - EINE Regel auf zwei Wirklichkeiten angewandt, "
            "derselbe Fehler wie beim Cooldown und beim CRV-Faktor")
     pruefe(P, "und nimmt beim Hebel die Positionsmenge",
-           'getattr(pos, "positionsmenge", None)' in _q9,
+           'getattr(_hebelpos, "positionsmenge", None)' in _q9,
            "`quantity` gibt es dort nicht - die Abfrage haette still 0 "
-           "geliefert und jedes SCHLIESSEN zum Schatten gemacht")
+           "geliefert und jedes VERKAUFEN zum Schatten gemacht")
+    # ⚠️ S6b: EIN LAUF MUSS BEIDE BESTAENDE SEHEN.
+    pruefe(P, "die Hebelposition hat Vorrang vor dem Spot-Bestand",
+           _q9.index("get_open_hebel_positions(conn)")
+           < _q9.index("get_all_holdings(conn)"),
+           "sie traegt ein Ausfallrisiko (Liquidation), der Spot-Bestand "
+           "nicht - und mit EINEM Lauf muss dieser eine beides kennen")
     # VERHALTEN PRUEFEN, NICHT DEN KOMMENTAR. `_quelltext()` wirft
     # Kommentarzeilen bewusst weg - das ist heute schon einmal aufgefallen.
     _ohne = VK4.rechne(aktion="SCHLIESSEN", menge=100.0, kurs_eur=2.0)
@@ -10975,10 +10995,12 @@ def paket_dimension() -> None:
            f"in der Rollen-Kette wirkungslos: {', '.join(_fehlend)} - "
            f"aendert sich die Zahl, ist Kapitel 131 nachzuziehen")
 
-    pruefe(P, "S6 ist NICHT gebaut, und der Zustand steht fest",
-           '"krypto": ("spot", "hebel")' in _quelltext("agent/assetklassen.py"),
-           "jedes Krypto-Symbol bekommt weiterhin ZWEI Urteile; seit S5 "
-           "produziert der Hebel-Lauf in 76 % der Faelle Spot-Trades")
+    # ⚠️ DIESE PRUEFUNG HIELT BIS S6b DEN OFFENEN ZUSTAND FEST. Sie ist
+    # jetzt umgedreht - S6b ist gebaut, und das darf nicht zurueckfallen.
+    pruefe(P, "S6b ist gebaut: ein Lauf je Symbol",
+           '"krypto": ("spot",)' in _quelltext("agent/assetklassen.py"),
+           "bis zum 22.08. bekam jedes Krypto-Symbol ZWEI Urteile, und seit "
+           "S5 produzierte der Hebel-Lauf in 76 % der Faelle Spot-Trades")
 
     pruefe(P, "die Rollen-Kette liest hebel_triggers NICHT",
            "hebel_trigger" not in _neu2,

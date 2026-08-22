@@ -3846,3 +3846,25 @@ davon Punkt für Punkt Folgendes NICHT:**
 auch in der neuen Kette.
 
 **Volle Herleitung:** `Umbauplan_Gesamtsystem_12_08.md`, Kapitel 131.
+
+
+---
+
+# ⚠️ NACHTRAG 22.08.2026 (S6a/S6b) — ein Vokabular, ein Lauf
+
+**Ergänzt den Standvermerk oben.** Zwei weitere Punkte des Hebel-Eintrags
+sind überholt:
+
+| | |
+|---|---|
+| **sieben Hebel-Aktionen** | ✘ **fünf, für beide Instrumente** (S6a). `HEBEL_ERHÖHEN`/`HEBEL_SENKEN` entfallen — sie ließen das Modell den Hebelfaktor setzen, was Abschnitt A verbietet |
+| **zwei Läufe je Krypto-Symbol** | ✘ **einer** (S6b). Das Instrument fällt aus `dimensioniere()` an |
+
+**Neu und verbindlich:** `assetklassen.hebel_handelbar(gruppe)` — die
+Handelbarkeit ist eine Eigenschaft der **Gruppe**, nicht des Laufs. Bei
+Bitpanda nur Krypto.
+
+**Was unverändert gilt:** die Richtung kommt vom Modell (ein Urteil), der
+Hebelfaktor nicht (ein Risikoparameter). RM-11 Liquidationsabstand läuft.
+
+**Herleitung:** `Umbauplan_Gesamtsystem_12_08.md`, Kapitel 132–134.

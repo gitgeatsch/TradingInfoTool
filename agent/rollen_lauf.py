@@ -36,6 +36,19 @@ import json as _json
 import logging
 from datetime import datetime, timezone
 
+# ⚠️ AUF MODULEBENE, UND ZWAR MIT EINDEUTIGEM NAMEN (S6b, 22.08.2026).
+#
+# `assetklassen` ist ein Blattmodul ohne Rueckbezug auf diese Datei - ein
+# Import hier ist gefahrlos. Er steht auf Modulebene, weil ein Import INNEN
+# nach der Verwendung stehen kann, ohne dass es auffaellt: genau das ist mir
+# beim Bauen von S6b zweimal passiert.
+#
+# ⚠️ UND NICHT `_AK`. Der Name gehoert in `_ein_asset` bereits
+# `anlass_kalender`; ein zweiter Traeger desselben Kuerzels waere die Falle
+# aus dem Memory ("dreimal in zwei Tagen"), und der breite Fehlerfang haette
+# den UnboundLocalError still geschluckt.
+from agent import assetklassen as _AKL
+
 logger = logging.getLogger(__name__)
 
 TROCKEN, PROBE, SCHARF = "trocken", "probe", "scharf"
@@ -969,19 +982,30 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         bestand_row = None
         menge = einstand = gestakt = None
         try:
-            if instrument == "hebel":
-                pos = next((p for p in DBM.get_open_hebel_positions(conn)
-                            if str(p.symbol).upper() == str(symbol).upper()),
-                           None)
-                if pos is not None:
-                    # Eine Hebelposition fuehrt keine Stueckzahl im Sinne des
-                    # Spot-Bestands - `positionsmenge` ist das Gegenstueck.
-                    menge = getattr(pos, "positionsmenge", None)
-                    # Und keinen Einstandspreis je Stueck: der Buchwert steckt
-                    # im Positionswert. Ohne Einstand rechnet
-                    # `verkaufsrechnung` das Ergebnis schlicht nicht aus,
-                    # statt eine Zahl zu erfinden.
-                    bestand_row = pos
+            # ⚠️ S6b: BEIDE BESTAENDE, NICHT EINER JE LAUF.
+            #
+            # Vorher las der Spot-Lauf den Spot-Bestand und der Hebel-Lauf
+            # die offene Hebelposition. Mit EINEM Lauf muss dieser eine
+            # beides sehen - sonst urteilte er ueber ein Asset, dessen
+            # Hebelposition er nicht kennt.
+            #
+            # DIE HEBELPOSITION HAT VORRANG, wenn es sie gibt: sie traegt ein
+            # Ausfallrisiko (Liquidation), der Spot-Bestand nicht. Heute ist
+            # das theoretisch - alle 188 Positionen sind geschlossen, die
+            # letzte wurde am 22.07.2026 eroeffnet -, aber es kehrt zurueck,
+            # sobald wieder eine offen ist.
+            _hebelpos = next(
+                (p for p in DBM.get_open_hebel_positions(conn)
+                 if str(p.symbol).upper() == str(symbol).upper()), None)
+            if _hebelpos is not None:
+                # Eine Hebelposition fuehrt keine Stueckzahl im Sinne des
+                # Spot-Bestands - `positionsmenge` ist das Gegenstueck.
+                menge = getattr(_hebelpos, "positionsmenge", None)
+                # Und keinen Einstandspreis je Stueck: der Buchwert steckt
+                # im Positionswert. Ohne Einstand rechnet
+                # `verkaufsrechnung` das Ergebnis schlicht nicht aus,
+                # statt eine Zahl zu erfinden.
+                bestand_row = _hebelpos
             else:
                 h = next((x for x in DBM.get_all_holdings(conn)
                           if str(x.symbol).upper() == str(symbol).upper()),
@@ -1163,10 +1187,22 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                        befund.get("richtung") == "SHORT"),
             umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
             ist_short=(befund.get("richtung") == "SHORT"),
-            hebel_handelbar=(instrument == "hebel"))
+            # ⚠️ S6b: DIE HANDELBARKEIT KOMMT AUS DER GRUPPE, NICHT AUS
+            # DEM LAUF. Vorher stand hier `(instrument == "hebel")` - mit
+            # dem Wegfall des zweiten Laufs waere daraus dauerhaft False
+            # geworden, und der Hebel waere still verschwunden.
+            # ⚠️ NICHT `_AK` - DER NAME GEHOERT `anlass_kalender` (Zeile
+            # 1348). Meine erste Fassung nahm ihn, und weil dieser Aufruf
+            # DAVOR steht, waere es ein UnboundLocalError gewesen - den der
+            # breite Fehlerfang darunter still geschluckt haette. Dieselbe
+            # Falle wie `_LB` am 20.08. und `assetklasse` am 14.08.
+            hebel_handelbar=_AKL.hebel_handelbar(assetklasse))
+        # ⚠️ S6b: DER TOPF FOLGT DEM ERGEBNIS, NICHT DEM LAUF. Der zweite
+        # Zweig (`"spot" if instrument == "hebel"`) war die Ruecknahme des
+        # Lauf-Etiketts, wenn die Rechnung keinen Hebel ergab - es gibt
+        # keinen Hebel-Lauf mehr, den man zuruecknehmen muesste.
         _topf_instrument = ("hebel" if _vor["etikett"] == "hebel"
-                            else ("spot" if instrument == "hebel"
-                                  else instrument))
+                            else instrument)
     except Exception as exc:                                 # noqa: BLE001
         # FAIL-SOFT MIT VERMERK. Faellt die Vorabrechnung aus, gilt das alte
         # Verhalten - aber es steht im Lauf, statt still zu passieren.
