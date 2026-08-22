@@ -16251,3 +16251,72 @@ einer Zahl, die zu viel enthielt. Geprüft werden alle drei Fälle:
 
 ⚠️ **Der Export läuft auf dem Notebook.** Diese Felder erscheinen erst im
 **nächsten** Export nach einem Pull.
+
+
+---
+
+## 93 C Nachtrag — die Tendenz ist sichtbar, die Schwelle wartet auf Daten (22.08.2026)
+
+### Was der Nutzer sehen wollte
+
+> *„für mich als Info wäre hilfreich die Tendenz bereits zu sehen mit Hinweis"*
+
+Bis dahin zeigte die Mail bei kurzer Reihe **nur den Pegel** und den Satz
+„noch keine Bewertung möglich" — die gemessene Bewegung stand zwar in
+`richtung()`, wurde aber unterschlagen.
+
+**Jetzt in der Mail, ab der zweiten Messung:**
+
+```
+   Im Protokoll hinterlegtes Kapital: 495.600.000 USD
+   Zu lesen: über Wochen STEIGEND wäre gut, FALLEND schlecht. …
+   Tendenz bisher: 18 % im Mittel der zweiten gegen die erste Hälfte,
+                   aus erst 3 Messungen - bei so kurzen Reihen
+                   schwankt dieser Wert stark.
+⚠️ NOCH KEINE BEWERTUNG MÖGLICH - erst 3 von 30 nötigen Messungen.
+```
+
+⚠️ **Ohne Urteilsvokabel.** Kein GUT, kein SCHLECHT, kein NEUTRAL, solange
+die Reihe zu kurz ist — eine Prozentzahl liest sich von selbst wie ein
+Befund, und das Gegengewicht muss in derselben Mail stehen. Geprüft an echten
+Daten, nicht am Quelltext.
+
+**Die Umschaltung bleibt automatisch:** bei 29 Messungen `tragfaehig=False`,
+bei 30 `tragfaehig=True`. Kein Schalter, kein Datum im Code.
+
+### ⚠️ Der Fund beim Vorführen: die Beschriftung war falsch
+
+Die Zeile sagte **„X % gegenüber dem Beginn"**. Verglichen werden aber die
+**Mittel beider Reihenhälften** — absichtlich, damit ein Ausreißer am Rand
+nicht die Richtung bestimmt. Das ist rund die **Hälfte** der Bewegung vom
+ersten zum letzten Wert:
+
+| reale Änderung | gemeldet | Urteil |
+|---:|---:|---|
+| +10 % | 5,1 % | unverändert |
+| +15 % | 7,5 % | unverändert |
+| **+20 %** | **9,9 %** | **unverändert** |
+| +25 % | 12,2 % | stärker |
+
+**Die Zahl stimmt, die Beschriftung stimmte nicht.** Korrigiert auf „im
+Mittel der zweiten gegen die erste Hälfte der Reihe".
+
+### Und die Schwelle ist damit anders begründet als sie wirkt
+
+Der Kommentar sagt: *„unter zehn Prozent ist bei TVL das tägliche Rauschen
+des Kurses selbst"* — das ist eine Aussage über die **echte** Änderung.
+Angewendet wird die 0,10 aber auf den Halbmittel-Vergleich. **Faktisch liegt
+die Hürde bei ~20 %.**
+
+**Nutzerentscheidung 22.08.: die Kalibrierung ist ohnehin sinnvoll und wird
+vertagt** — auf den **18.09.2026**, wenn 30 echte Tagesmessungen über rund 26
+Symbole vorliegen und die Streuung **gemessen** statt geschätzt werden kann.
+
+⚠️ **Bis dahin wirkt die Schwelle gar nicht** — es erscheint keine Bewertung,
+egal wie sie steht. Es geht also nichts verloren, und eine geratene Zahl wird
+vermieden. Der Termin steht als `KALIBRIERUNG_FAELLIG` **im Code**, nicht nur
+im Plan, und zusätzlich in Zwischenstand 8b.4.
+
+> **Das ist derselbe Fehlertyp wie in Methodik 2.48:** eine Schwelle ist
+> selbst eine Schätzung. Neu ist hier, dass sie auf eine **andere Größe**
+> angewendet wurde als die, mit der sie begründet wurde.

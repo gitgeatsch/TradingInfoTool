@@ -500,6 +500,7 @@ funktioniert), und er schaltet zwei Punkte auf einmal frei (W1 → W2).
 | Tageswert-Neuschreibung mit ≥ 80 % Abdeckung | morgen 06:30 | erster Lauf nach dem Fix |
 | **93 C · Lebendigkeit über TVL** | **ca. 18.09.2026** | 30 Tagesmessungen ab 20.08. — **läuft nachweislich**, 401 Zeilen am 22.08. |
 | **93 C · Lebendigkeit über Entwicklerdaten** | **09.11.2026** | 12 Wochenmessungen ab Montag **24.08.** — Wochentakt, ein Abruf je Symbol |
+| **93 C · Schwelle `SCHWELLE_RELATIV` kalibrieren** | **18.09.2026** | ⚠️ **Nutzerentscheidung 22.08.: bewusst vertagt.** Die 0,10 wurde mit der *echten* Änderung begründet, wirkt aber auf den Halbmittel-Vergleich — faktisch **~20 %**. Kalibriert wird am gemessenen Rauschen der eigenen Reihe, nicht am Schreibtisch. Vermerk steht in `agent/lebendigkeit.KALIBRIERUNG_FAELLIG` |
 
 > ⚠️ **Beide Termine stehen seit dem 22.08. im NB-Export selbst**
 > (`kapitel93.lebendigkeit.entwickler_takt`), samt Warnung, sobald ein

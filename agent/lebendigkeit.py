@@ -76,6 +76,27 @@ MINDESTREIHE = {"tvl": 30, "entwickler": 12}
 # Ab welcher Aenderung heisst es "staerker" statt "unveraendert"? Unter zehn
 # Prozent ist bei TVL das taegliche Rauschen des Kurses selbst, nicht die
 # Nutzung - und bei Commits sind es einzelne Arbeitstage.
+#
+# ⚠️ OFFEN: DIESE SCHWELLE IST ZU KALIBRIEREN, FRUEHESTENS AM 18.09.2026.
+# Die Begruendung oben spricht von der ECHTEN Aenderung. Angewendet wird sie
+# aber auf den Vergleich der HALBMITTEL in `richtung()` - und der betraegt
+# bei einem gleichmaessigen Verlauf rund die HAELFTE der Bewegung vom ersten
+# zum letzten Wert:
+#
+#     real +10 %  ->  gemeldet  5,1 %  ->  "unveraendert"
+#     real +20 %  ->  gemeldet  9,9 %  ->  "unveraendert"
+#     real +25 %  ->  gemeldet 12,2 %  ->  "staerker"
+#
+# Faktisch liegt die Huerde also bei ~20 %, nicht bei 10 %. Ob das zu streng
+# ist, laesst sich HEUTE nicht entscheiden - dafuer braucht es das gemessene
+# Rauschen der eigenen Reihe, und die ist ab dem 18.09.2026 lang genug
+# (30 Tagesmessungen ueber rund 26 Symbole).
+#
+# ⚠️ NICHT VORHER AM SCHREIBTISCH DREHEN. Eine Schwelle zu setzen, bevor die
+# Streuung bekannt ist, ist genau das Raten, gegen das `tragfaehig` gebaut
+# wurde. Bis dahin erscheint ohnehin keine Bewertung - die Schwelle wirkt
+# also noch gar nicht. Vermerkt in Zwischenstand 8b.4.
+KALIBRIERUNG_FAELLIG = "2026-09-18"
 SCHWELLE_RELATIV = 0.10
 
 # ⚠️ WIR SAMMELN BREITER ALS DIE WATCHLIST (Nutzerfrage 20.08.2026):
@@ -232,15 +253,39 @@ def saetze(conn, symbol: str, assetklasse: str = "") -> list[str]:
                    "unveraendert": ("   NEUTRAL: ", "bewegt sich nicht - "
                                     "weder Zerfall noch Zulauf.")}[
                                         r["richtung"]]
+            # ⚠️ "GEGENUEBER DEM BEGINN" WAR FALSCH (korrigiert 22.08.2026,
+            # aufgefallen beim Vorfuehren der Mailzeile). Verglichen werden
+            # die MITTEL der ersten und zweiten Haelfte - absichtlich, damit
+            # ein Ausreisser am Rand nicht die Richtung bestimmt. Das ist
+            # aber rund die HAELFTE der Bewegung vom ersten zum letzten Wert:
+            # eine Reihe, die real um 20 % steigt, ergibt hier 9,9 %.
+            # Die Zahl stimmt, die Beschriftung stimmte nicht.
             teile.append(
                 f"{gut[0]}{r['richtung']} ({de(100 * r['aenderung_relativ'], 0)}"
-                f" % gegenueber dem Beginn, {de(r['beobachtungen'], 0)} "
-                f"Messungen) - das Projekt {gut[1]}")
+                f" % im Mittel der zweiten gegen die erste Haelfte der Reihe, "
+                f"{de(r['beobachtungen'], 0)} Messungen) - das Projekt "
+                f"{gut[1]}")
         else:
             teile.append(
                 "   Zu lesen: ueber Wochen STEIGEND waere gut (das Projekt "
                 "wird genutzt), FALLEND schlecht. Der Pegel allein sagt "
                 "wenig - er haengt an der Groesse des Projekts.")
+            # ⚠️ DIE TENDENZ SCHON ZEIGEN (Nutzervorgabe 22.08.2026), aber
+            # NIE als Urteil. Kein GUT/SCHLECHT, keine Richtungsvokabel -
+            # nur die gemessene Zahl mit ihrer Beobachtungszahl daneben.
+            #
+            # Der Unterschied ist nicht kosmetisch: bei drei Messungen
+            # schwankt dieser Wert von Tag zu Tag um ein Vielfaches dessen,
+            # was er spaeter aussagt. Wer ihn ohne die Zahl der Messungen
+            # liest, haelt Rauschen fuer eine Entwicklung - genau der Fehler,
+            # gegen den `tragfaehig` gebaut wurde.
+            if r["aenderung_relativ"] is not None:
+                teile.append(
+                    f"   Tendenz bisher: "
+                    f"{de(100 * r['aenderung_relativ'], 0)} % im Mittel der "
+                    f"zweiten gegen die erste Haelfte, aus erst "
+                    f"{de(r['beobachtungen'], 0)} Messungen - bei so kurzen "
+                    f"Reihen schwankt dieser Wert stark.")
             teile.append(
                 f"⚠️ NOCH KEINE BEWERTUNG MOEGLICH - die eigene Reihe hat "
                 f"erst {de(r['beobachtungen'], 0)} von {de(r['noetig'], 0)} "

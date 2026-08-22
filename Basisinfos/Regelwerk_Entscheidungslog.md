@@ -19277,3 +19277,42 @@ faellig / ueberfaellig / laeuft).
 
 ⚠️ DER EXPORT LAEUFT AUF DEM NOTEBOOK - die neuen Felder erscheinen erst im
 naechsten Export nach einem Pull.
+
+
+[2026-08-22] 93 C: TENDENZ SICHTBAR, SCHWELLE VERTAGT
+
+NUTZERVORGABE: "fuer mich als Info waere hilfreich die Tendenz bereits zu
+sehen mit Hinweis." Gebaut: die Mail zeigt ab der zweiten Messung "Tendenz
+bisher: X % im Mittel der zweiten gegen die erste Haelfte, aus erst N
+Messungen - bei so kurzen Reihen schwankt dieser Wert stark." OHNE
+Urteilsvokabel (kein GUT/SCHLECHT/NEUTRAL), solange die Reihe zu kurz ist -
+eine Prozentzahl liest sich von selbst wie ein Befund. Geprueft an ECHTEN
+Daten: 3 Messungen -> Tendenz + Warnhinweis, 40 Messungen -> Urteil, kein
+Warnhinweis. Umschaltung bleibt automatisch (29 nicht tragfaehig, 30
+tragfaehig).
+
+⚠️ FUND BEIM VORFUEHREN: die Zeile sagte "X % gegenueber dem Beginn".
+Verglichen werden aber die MITTEL beider Reihenhaelften - absichtlich, damit
+ein Ausreisser am Rand nicht die Richtung bestimmt. Das ist rund die HAELFTE
+der Bewegung vom ersten zum letzten Wert: real +20 % ergibt 9,9 % und damit
+"unveraendert". Die Zahl stimmt, die Beschriftung nicht. Korrigiert.
+
+DAMIT IST DIE SCHWELLE ANDERS BEGRUENDET ALS SIE WIRKT: der Kommentar spricht
+von der echten Aenderung ("unter zehn Prozent ist das taegliche Rauschen"),
+angewendet wird die 0,10 auf den Halbmittel-Vergleich. Faktisch ~20 %.
+
+NUTZERENTSCHEIDUNG: Kalibrierung ist ohnehin sinnvoll, vertagt auf den
+18.09.2026 - dann liegen 30 echte Tagesmessungen ueber rund 26 Symbole vor
+und die Streuung ist MESSBAR statt geschaetzt. Bis dahin wirkt die Schwelle
+gar nicht (es erscheint keine Bewertung), es geht also nichts verloren. Der
+Termin steht als KALIBRIERUNG_FAELLIG IM CODE, nicht nur im Plan, plus
+Zwischenstand 8b.4 und eine Dauerpruefung darauf.
+
+Derselbe Fehlertyp wie Methodik 2.48 (eine Schwelle ist selbst eine
+Schaetzung) - neu ist, dass sie auf eine ANDERE GROESSE angewendet wurde als
+die, mit der sie begruendet wurde.
+
+Zwei eigene Pruefungen fielen dabei durch und wurden korrigiert: die
+Testdaten liefen im Datum um (i % 28, ab 29 Messungen ueberschrieben sie
+sich), und die Termin-Pruefung suchte ein Datum, das nur im KOMMENTAR steht -
+`_quelltext` entfernt Kommentare. Jetzt geprueft wird die Konstante.

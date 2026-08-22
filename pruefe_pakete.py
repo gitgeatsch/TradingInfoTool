@@ -10789,6 +10789,62 @@ def paket_dimension() -> None:
            "kein Urteil" in _lq and "sperren nichts" in _lq,
            "ein statisches Gate auf 'tot' haette den wertvollsten Fall blockiert: den Coin, der stirbt und dreht")
 
+    # ---- DIE TENDENZ SCHON SEHEN, ABER NICHT ALS URTEIL (22.08.2026) ----
+    # ⚠️ Nutzervorgabe: "fuer mich als Info waere hilfreich die Tendenz
+    # bereits zu sehen mit Hinweis." Die Gefahr dabei ist offensichtlich -
+    # eine Prozentzahl liest sich wie ein Befund. Deshalb wird hier an
+    # ECHTEN Daten geprueft, dass die Zahl kommt UND die Urteilsvokabeln
+    # ausbleiben, solange die Reihe zu kurz ist.
+    import datetime as _dt
+    import sqlite3 as _sq3
+
+    def _leb_reihe(n, wachstum, quelle="tvl"):
+        c = _sq3.connect(":memory:")
+        for i in range(n):
+            _LB.schreibe(c, symbol="PRUEF", quelle=quelle, zustand="wert",
+                         wert=100.0 * (1 + wachstum * i / max(1, n - 1)),
+                         jetzt=(_dt.date(2026, 1, 1) + _dt.timedelta(days=i)).isoformat() + "T01:20:00+00:00")
+        return c
+
+    _z_kurz = _LB.saetze(_leb_reihe(3, 0.18), "PRUEF", "krypto")
+    _z_lang = _LB.saetze(_leb_reihe(40, 0.40), "PRUEF", "krypto")
+
+    pruefe(P, "die Tendenz steht schon in der Mail, bevor sie tragfaehig ist",
+           any("Tendenz bisher" in z for z in _z_kurz)
+           and any("erst 3 Messungen" in z for z in _z_kurz),
+           "der Nutzer will sie sehen - aber nie ohne die Zahl der "
+           "Messungen daneben, sonst liest sich Rauschen wie Entwicklung")
+    pruefe(P, "und sie traegt KEINE Urteilsvokabel",
+           not any("GUT:" in z or "SCHLECHT:" in z or "NEUTRAL:" in z
+                   for z in _z_kurz)
+           and any("NOCH KEINE BEWERTUNG MOEGLICH" in z for z in _z_kurz),
+           "eine Prozentzahl liest sich von selbst wie ein Befund - das "
+           "Gegengewicht muss in derselben Mail stehen")
+    pruefe(P, "ist die Reihe lang genug, wird aus der Tendenz ein Urteil",
+           any("GUT:" in z for z in _z_lang)
+           and not any("Tendenz bisher" in z for z in _z_lang)
+           and not any("NOCH KEINE BEWERTUNG" in z for z in _z_lang),
+           "derselbe Wert, andere Rolle - und der Uebergang haengt allein "
+           "an der Reihenlaenge")
+
+    # ⚠️ DIE BESCHRIFTUNG WAR FALSCH (gefunden 22.08. beim Vorfuehren).
+    # Verglichen werden die MITTEL beider Haelften - rund die HAELFTE der
+    # Bewegung vom ersten zum letzten Wert. Eine real um 20 % steigende
+    # Reihe ergibt hier 9,9 % und damit "unveraendert".
+    _real20 = _LB.richtung([("t%d" % i, 100.0 * (1 + 0.20 * i / 29))
+                            for i in range(30)], "tvl")
+    pruefe(P, "die Zeile behauptet NICHT 'gegenueber dem Beginn'",
+           "gegenueber dem Beginn, " not in _lq
+           and "im Mittel der zweiten gegen die erste Haelfte" in _lq,
+           f"eine real um 20 % steigende Reihe meldet hier "
+           f"{100 * _real20['aenderung_relativ']:.1f} % - die Zahl stimmt, "
+           f"die alte Beschriftung nicht")
+    pruefe(P, "und der Kalibrierungsbedarf steht im Code, nicht nur im Plan",
+           'KALIBRIERUNG_FAELLIG = "2026-09-18"' in _lq,
+           "die Schwelle 0,10 wurde mit der ECHTEN Aenderung begruendet, "
+           "wirkt aber auf den Halbmittel-Vergleich - faktisch ~20 %. "
+           "Entschieden wird das an Daten, nicht am Schreibtisch")
+
     # ⚠️ DAS KONTINGENT ENTSCHEIDET DEN TAKT.
     _bq = _quelltext("scheduler/background.py")
     pruefe(P, "TVL laeuft taeglich, die Entwicklerdaten nur montags",
