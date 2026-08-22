@@ -574,7 +574,7 @@ Regel. Alles hier als **ein** Deployment-Paket, nicht einzeln.
 
 | # | Was | warum es zählt |
 |---|---|---|
-| K1 | **Die gesamte Rollen-Ebene** (Lagebild · Befund · Entscheidung) läuft nicht in der Produktion | dort läuft weiter das Altsystem mit 34.611 Zeichen |
+| ~~K1~~ **ERLEDIGT (nachgeprüft 22.08.2026)** | Die Rollen-Ebene **läuft in der Produktion**, seit dem Vollumstieg am 15.08. `rollen_kette.aktiv_fuer` steht auf allen fünf Gruppen, `betriebsart: scharf`. Im NB-Export vom 22.08.: **39 Signale über die Rollen-Kette** (25 Hebel, 14 Spot), **alte Kette 0**. Der Eintrag stammte vom 11.08. und stand elf Tage zu Unrecht — Musterfall für „erst offen, wenn der Code das bestätigt" |
 | K2 | **`umgeworfen_durch` wird erzeugt und nie ausgewertet** | das ist das thesenbasierte **Ausstiegskriterium**. Live geprüft: die Texte sind maschinell prüfbar („Tagesschlusskurs über 2218,75 EUR bei steigendem Volumen") |
 | K3 | **`agent/waechter_zuspitzung.py`** prüft die Zwischenausgabe auf unbelegte Zuspitzung | gebaut, Ist-Zustand gemessen (1 von 8), noch nicht in der Kette |
 | K4 | Granularitätswarnung erscheint im Log — die **Messskripte** sollten sie in ihrem Kopf mitausgeben | sonst liest man sie leicht über |
