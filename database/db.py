@@ -1062,6 +1062,71 @@ def _migrate_reduzieren_nachoeffnen(conn: sqlite3.Connection) -> int:
 
 
 
+# ---------------------------------------------------------------------------
+# ⚠️ EINMALIGE NACHOEFFNUNG FUER E2 (22.08.2026)
+#
+# WARUM SIE NOETIG IST. E2 aendert die Aufloesungsregel: am Erstellungstag
+# zaehlt nur noch der Schlusskurs, nicht mehr die ganze Tageskerze. Aber
+# METHODIK 2.62 GILT AUCH HIER - wer eine Regel aendert, ruehrt damit KEINE
+# Zeile an, die die alte Regel bereits endgueltig abgelegt hat.
+#
+# GEMESSEN an der Notebook-Datenbank vom 19.08.: 35 Endzustaende fallen unter
+# E2 anders aus, davon 16, die heute als `take_profit_erreicht` gezaehlt
+# werden. Ohne Nachoeffnung mischt jede kuenftige Messung zwei Regeln - und
+# zwar dauerhaft, weil ein Endzustand nie wieder angefasst wird.
+#
+# ⚠️ ENG GEFASST. Nur die beiden Zustaende, die AUS KERZEN GERECHNET wurden:
+# `take_profit_erreicht` und `stop_loss_erreicht` - 43 Zeilen. Nicht
+# angefasst werden:
+#
+#   `nicht_anwendbar` (1.723 Zeilen) - HALTEN und Verwandtes, nie aus Kerzen
+#                     gerechnet; die REDUZIEREN-Faelle darin hat bereits
+#                     `_migrate_reduzieren_nachoeffnen()` geoeffnet
+#   `ueberholt_durch_neuere_analyse` - dieser Zustand kommt aus einem SPAETEREN
+#                     Signal, nicht aus der Kerze des Erstellungstags
+#
+# ⚠️ EIGENE MARKE, nicht dieselbe wie die REDUZIEREN-Nachoeffnung: die beiden
+# haben verschiedene Anlaesse und muessen einzeln nachvollziehbar bleiben.
+_E2_NACHOEFFNUNG_MARKE = "e2_nachgeoeffnet_am"
+
+_E2_AUS_KERZEN_GERECHNET = ("take_profit_erreicht", "stop_loss_erreicht")
+
+
+def _migrate_e2_nachoeffnen(conn: sqlite3.Connection) -> int:
+    """Aus Kerzen gerechnete Ergebnisse zur Neubewertung freigeben."""
+    try:
+        schon = conn.execute(
+            "SELECT value FROM meta WHERE key = ?",
+            (_E2_NACHOEFFNUNG_MARKE,)).fetchone()
+    except sqlite3.Error:
+        return 0
+    if schon is not None:
+        return 0
+    platz = ", ".join("?" for _ in _E2_AUS_KERZEN_GERECHNET)
+    try:
+        cur = conn.execute(
+            f"UPDATE signals SET outcome_status = NULL "
+            f"WHERE outcome_status IN ({platz}) "
+            f"  AND COALESCE(take_profit_usd_von, take_profit_usd_bis, "
+            f"               take_profit_usd) IS NOT NULL",
+            _E2_AUS_KERZEN_GERECHNET)
+        anzahl = int(cur.rowcount or 0)
+    except sqlite3.Error:
+        return 0
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES (?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (_E2_NACHOEFFNUNG_MARKE, datetime.now(timezone.utc).isoformat()))
+    conn.commit()
+    if anzahl:
+        logger.info(
+            "E2-Nachoeffnung: %d aus Kerzen gerechnete Ergebnisse zur "
+            "Neubewertung freigegeben - die alte Regel hat die Kerze des "
+            "Erstellungstags mitgezaehlt", anzahl)
+    return anzahl
+
+
+
 _SIGNAL_SELBST_HALTEN_NEW_COLUMNS = {
     "selbst_halten_outcome_status": "TEXT",
     "selbst_halten_outcome_geprueft_am": "TEXT",
@@ -1455,6 +1520,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_selbst_halten_columns(conn)
     _migrate_signal_einstieg_columns(conn)
     _migrate_reduzieren_nachoeffnen(conn)
+    _migrate_e2_nachoeffnen(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
     _migrate_hebel_signal_angefragte_richtung_column(conn)

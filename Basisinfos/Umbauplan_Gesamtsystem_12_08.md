@@ -18584,3 +18584,65 @@ den Markt, sondern die Korrektur einer Messung, die zu freundlich war.
 Aussage über Güte — nur über die Richtung des Messfehlers.
 
 **Suite 1.548 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+
+---
+
+## Kapitel 141 — E2 wirkt nicht rückwirkend, also musste es nachgeholt werden (22.08.2026)
+
+**Methodik 2.62, am selben Tag zum zweiten Mal.** Die Regel entstand aus dem
+`REDUZIEREN`-Fall; sie gilt genauso für eine **geänderte** Regel, nicht nur
+für einen erweiterten Filter.
+
+### 141.1 Der Befund
+
+E2 rechnet den Erstellungstag anders — aber ein **Endzustand wird nie wieder
+angefasst**. Gemessen an der Notebook-Datenbank:
+
+| | |
+|---|---:|
+| Endzustände, die unter E2 **anders** ausfallen | **35** |
+| davon heute als `take_profit_erreicht` gezählt | **16** |
+
+**Ohne Nachöffnung mischt jede künftige Messung zwei Regeln** — dauerhaft.
+
+### 141.2 Eng gefasst, nicht großzügig
+
+Von 1.798 Endzuständen mit Zonen sind **1.723 `nicht_anwendbar`** (HALTEN und
+Verwandtes — nie aus Kerzen gerechnet). Nachgeöffnet werden nur die **43**,
+die es waren:
+
+| Zustand | | |
+|---|---:|---|
+| `take_profit_erreicht` | 20 | ✔ nachgeöffnet |
+| `stop_loss_erreicht` | 23 | ✔ nachgeöffnet |
+| `nicht_anwendbar` | 1.723 | ✘ nie aus einer Kerze gerechnet |
+| `ueberholt_durch_neuere_analyse` | 32 | ✘ kommt aus einem **späteren** Signal |
+
+⚠️ **Eigene Marke**, nicht dieselbe wie bei `REDUZIEREN`: zwei Anlässe, zwei
+Nachweise.
+
+### 141.3 ⚠️ Was die Neubewertung ergibt
+
+| | vorher | nach E2 |
+|---|---:|---:|
+| `take_profit_erreicht` | 20 | **5** |
+| `stop_loss_erreicht` | 23 | **13** |
+| `einstieg_nie_erreicht` | – | **38** |
+| **Trefferquote** | **46,5 %** | **27,8 %** |
+
+**64 % der nachgerechneten Signale haben ihre Einstiegszone nie erreicht** —
+gegen 21,1 %, die Kapitel 127 gemessen hatte. Der Unterschied ist genau der
+Anteil, den vorher die Kerze des Erstellungstags „getroffen" hat.
+
+⚠️ **Zwei Vorbehalte gehören daneben:**
+
+1. **Der Zeitraum trägt mit.** Die Signale stammen aus dem Fenster, in dem der
+   Markt **+15,8 %** gestiegen ist (Kapitel 127). Bei einer Long-Zone am oder
+   unter dem Kurs läuft ein steigender Markt davon — „nie erreicht" ist dort
+   erwartbar, nicht überraschend.
+2. **Die Zahlen sind klein.** 18 aufgelöste Signale tragen keine Aussage über
+   Güte. Was sie tragen, ist die **Richtung des Messfehlers**: die alte
+   Messung war zu freundlich.
+
+**Suite 1.551 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**

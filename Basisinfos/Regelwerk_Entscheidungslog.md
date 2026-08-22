@@ -20351,3 +20351,35 @@ aufgeloeste Signale tragen keine Aussage ueber Guete, nur ueber die Richtung
 des Messfehlers.
 
 Suite 1548, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-22] KAPITEL 141: E2 WIRKT NICHT RUECKWIRKEND - NACHGEHOLT
+
+Methodik 2.62 am selben Tag zum zweiten Mal. Die Regel entstand aus dem
+REDUZIEREN-Fall; sie gilt genauso fuer eine GEAENDERTE Regel, nicht nur fuer
+einen erweiterten Filter.
+
+BEFUND: E2 rechnet den Erstellungstag anders, aber ein Endzustand wird nie
+wieder angefasst. Gemessen: 35 Endzustaende fallen unter E2 anders aus, 16
+davon gelten heute als take_profit_erreicht. Ohne Nachoeffnung mischt jede
+kuenftige Messung zwei Regeln - dauerhaft.
+
+ENG GEFASST: von 1.798 Endzustaenden mit Zonen sind 1.723 'nicht_anwendbar'
+(HALTEN und Verwandtes, nie aus Kerzen gerechnet). Nachgeoeffnet werden nur
+die 43, die es waren - 20 take_profit_erreicht und 23 stop_loss_erreicht.
+NICHT angefasst: nicht_anwendbar (nie aus einer Kerze) und
+ueberholt_durch_neuere_analyse (kommt aus einem SPAETEREN Signal). ⚠️ Eigene
+Marke, nicht dieselbe wie bei REDUZIEREN - zwei Anlaesse, zwei Nachweise.
+
+⚠️ NEUBEWERTUNG: take_profit 20 -> 5, stop_loss 23 -> 13, dazu 38
+einstieg_nie_erreicht. Trefferquote 46,5 % -> 27,8 %. 64 % der nachgerechneten
+Signale haben ihre Einstiegszone nie erreicht, gegen 21,1 % in Kapitel 127 -
+der Unterschied ist genau der Anteil, den vorher die Kerze des
+Erstellungstags "getroffen" hat.
+
+ZWEI VORBEHALTE: (1) die Signale stammen aus dem Fenster mit +15,8 %
+Marktanstieg - bei einer Long-Zone am oder unter dem Kurs ist "nie erreicht"
+dort erwartbar; (2) 18 aufgeloeste Signale tragen keine Aussage ueber Guete,
+nur ueber die RICHTUNG des Messfehlers: die alte Messung war zu freundlich.
+
+Suite 1551, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

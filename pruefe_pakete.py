@@ -10530,6 +10530,42 @@ def paket_dimension() -> None:
     pruefe(P, "die Marke steht in `meta`",
            _mem_no.execute("SELECT COUNT(*) n FROM meta WHERE key = ?",
                            (_dbn._NACHOEFFNUNG_MARKE,)).fetchone()["n"] == 1)
+
+    # ---- UND DASSELBE FUER E2 (22.08.2026) -----------------------------
+    #
+    # ⚠️ METHODIK 2.62 GILT AUCH FUER EINE GEAENDERTE REGEL, nicht nur fuer
+    # einen erweiterten Filter. E2 rechnet den Erstellungstag anders - aber
+    # ein Endzustand wird nie wieder angefasst. Gemessen: 35 Endzustaende
+    # fallen unter E2 anders aus, 16 davon gelten heute als Treffer.
+    _mem_no.execute("DELETE FROM meta WHERE key = ?",
+                    (_dbn._E2_NACHOEFFNUNG_MARKE,))
+    for _sym, _zust, _tp in (("TREFFER", "take_profit_erreicht", 10.0),
+                             ("STOP", "stop_loss_erreicht", 10.0),
+                             ("OHNEZONE", "take_profit_erreicht", None),
+                             ("NICHTKERZE", "nicht_anwendbar", 10.0),
+                             ("UEBERHOLT", "ueberholt_durch_neuere_analyse",
+                              10.0)):
+        _mem_no.execute(
+            "INSERT INTO signals (symbol, created_at, action, gate_passed, "
+            "risk_veto, pipeline_version, facts_json, outcome_status, "
+            "take_profit_usd_von, stop_loss_usd_von) "
+            "VALUES (?, ?, 'KAUFEN', 1, 0, 'x', '{}', ?, ?, 5.0)",
+            (_sym, "2026-08-20T00:00:00+00:00", _zust, _tp))
+    _mem_no.commit()
+    _e1 = _dbn._migrate_e2_nachoeffnen(_mem_no)
+    _auf = {r["symbol"] for r in _mem_no.execute(
+        "SELECT symbol FROM signals WHERE outcome_status IS NULL "
+        "AND symbol IN ('TREFFER','STOP','OHNEZONE','NICHTKERZE','UEBERHOLT')")}
+    pruefe(P, "E2 oeffnet die AUS KERZEN gerechneten Ergebnisse",
+           _auf == {"TREFFER", "STOP"} and _e1 == 2,
+           f"geoeffnet: {sorted(_auf)}, Anzahl {_e1} - `nicht_anwendbar` kam "
+           f"nie aus einer Kerze, `ueberholt` aus einem SPAETEREN Signal, und "
+           f"ohne Zonen gibt es nichts nachzurechnen")
+    pruefe(P, "und auch sie laeuft nur EINMAL",
+           _dbn._migrate_e2_nachoeffnen(_mem_no) == 0)
+    pruefe(P, "die beiden Nachoeffnungen haben GETRENNTE Marken",
+           _dbn._E2_NACHOEFFNUNG_MARKE != _dbn._NACHOEFFNUNG_MARKE,
+           "verschiedene Anlaesse muessen einzeln nachvollziehbar bleiben")
     _mem_no.close()
 
     # ---- JEDE MIGRIERTE SPALTE MUSS LESBAR BLEIBEN (22.08.2026) ---------
