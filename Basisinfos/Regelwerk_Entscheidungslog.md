@@ -20307,3 +20307,47 @@ halbieren sich die Modellaufrufe messbar; und warum traegt die Verkaufsseite
 so selten Zonen (REDUZIEREN 16 %, KAUFEN 100 %).
 
 Suite 1543.
+
+
+[2026-08-22] KAPITEL 140: E2 GEBAUT - AM ERSTELLUNGSTAG ZAEHLT NUR DER SCHLUSSKURS
+
+Der Fehler war bekannt, die Groesse nicht. Die Doku fuehrte E2 mit "erklaert
+gemessen 2,4 Punkte". Nachgemessen sind es 34,6 % aller Signale - und die
+Haelfte aller verzeichneten Einstiege.
+
+WAS SCHIEFGING: `min_date = signal.created_at[:10]` nahm die GANZE Tageskerze
+in die Aufloesung, samt Hoch und Tief, die VOR dem Signal lagen. Ein Signal
+von 18:00 bekam das Tageshoch von 10:00 gutgeschrieben. ⚠️ Und es verfaelschte
+E1 gleich mit: einstieg_beruehrt() laeuft auf denselben Kerzen, eine Zone vor
+dem Signal zaehlte als Einstieg.
+
+DREI VARIANTEN, GEMESSEN STATT GEWAEHLT (104 Rollen-Signale mit Zonen):
+  A ganze Tageskerze:   Ziel 9, Stop 13, Einstieg erreicht 71
+  B Tag 0 faellt weg:   Ziel 3, Stop  7, Einstieg erreicht 37, 36 anders
+  C Tag 0 nur Schluss:  Ziel 3, Stop  7, Einstieg erreicht 51, 22 anders
+
+⚠️ B UND C LIEFERN DIESELBEN ZIEL- UND STOP-TREFFER. B verwirft nur
+zusaetzlich 14 Einstiege, die nachweislich NACH dem Signal lagen - DER
+SCHLUSSKURS EINES TAGES LIEGT HINTER JEDEM SIGNAL DIESES TAGES. Ein Signal von
+07:16 verliert unter B siebzehn GUELTIGE Stunden. C ist die treue Umsetzung,
+B eine Ueberkorrektur. Gebaut wurde C.
+
+WAS C NICHT LEISTET: eine Zone, die zwischen Signal und Tagesschluss beruehrt
+und wieder verlassen wurde, bleibt unentdeckt. Grenze der Datenlage - beide
+Kurstabellen sind TAGESGENAU. C erfindet nichts, es findet nur nicht alles.
+
+⚠️ DIE MFE BLEIBT UNBERUEHRT, mit Absicht: sie beschreibt laut eigener Doku
+"die Bewegung des Wertes, nicht die eines Trades". Die Suite nagelt fest, dass
+_erfasse_mfe() VOR der Einschraenkung steht.
+
+DIE HEBEL-KETTE IST STRENGER: dort geht kein Schlusskurs in _check_day() ein,
+der einzige Zusatzwert ist open_preis - der liegt am Tagesanfang, also VOR dem
+Signal. Der Erstellungstag entfaellt dort ganz.
+
+⚠️ FOLGE FUER DIE TREFFERQUOTE: 40,9 % -> 30,0 %, erstmals UNTER der Basisrate
+von 33,3 % bei CRV 2,0. Kein neuer Befund ueber den Markt, sondern die
+Korrektur einer zu freundlichen Messung. Und die Zahlen sind klein - 10
+aufgeloeste Signale tragen keine Aussage ueber Guete, nur ueber die Richtung
+des Messfehlers.
+
+Suite 1548, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

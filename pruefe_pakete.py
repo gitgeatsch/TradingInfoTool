@@ -10436,6 +10436,45 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- E2: AM ERSTELLUNGSTAG ZAEHLT NUR DER SCHLUSSKURS (22.08.2026) --
+    #
+    # ⚠️ WAS SCHIEFGING. `min_date = signal.created_at[:10]` nahm die GANZE
+    # Tageskerze - samt Hoch und Tief, die VOR dem Signal lagen. Ein Signal
+    # von 18:00 bekam das Tageshoch von 10:00 gutgeschrieben, und
+    # `einstieg_beruehrt()` zaehlte eine Zone als getroffen, die der Kurs vor
+    # dem Signal beruehrt hatte.
+    from agent.krypto import backward_tracking as _BTE
+
+    # Der Tag NACH dem Signal: volle Kerze.
+    pruefe(P, "ab dem Folgetag zaehlt die volle Kerze",
+           _BTE.handelsspanne(110, 90, 100, "2026-08-23",
+                              "2026-08-22T18:00:00+00:00") == (110, 90))
+    # Der Erstellungstag selbst: nur der Schlusskurs, weil nur er
+    # nachweislich NACH dem Signal liegt.
+    pruefe(P, "am Erstellungstag zaehlt nur der Schlusskurs",
+           _BTE.handelsspanne(110, 90, 100, "2026-08-22",
+                              "2026-08-22T18:00:00+00:00") == (100, 100),
+           "das Tageshoch kann Stunden VOR dem Signal gelegen haben - der "
+           "Schlusskurs kann das nicht")
+    pruefe(P, "ohne Schlusskurs gibt es fuer den Tag keine Aussage",
+           _BTE.handelsspanne(110, 90, None, "2026-08-22",
+                              "2026-08-22T18:00:00+00:00") == (None, None),
+           "eine erfundene Zuordnung waere schlimmer als eine fehlende")
+    # ⚠️ UND DER TAG DAVOR AUCH NICHT - ein nachgeladener aelterer Tag darf
+    # dem Trade genauso wenig zugerechnet werden.
+    pruefe(P, "ein Tag VOR dem Signal zaehlt ebenfalls nicht voll",
+           _BTE.handelsspanne(110, 90, 100, "2026-08-21",
+                              "2026-08-22T18:00:00+00:00") == (100, 100))
+    # DIE MFE BLEIBT DAVON UNBERUEHRT - sie beschreibt die Bewegung des
+    # WERTES, nicht die eines Trades, und wird anderswo so gelesen.
+    _quelle_bt = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "die MFE sieht weiterhin die volle Kerze",
+           "_erfasse_mfe(guenstigster_tagespreis, day)" in _quelle_bt
+           and _quelle_bt.index("_erfasse_mfe(guenstigster_tagespreis, day)")
+           < _quelle_bt.index("_hoch, _tief = handelsspanne("),
+           "sie muss VOR der Einschraenkung stehen - sonst wird still eine "
+           "Groesse umgedeutet, die andere Auswertungen anders lesen")
+
     # ⚠️ `sqlite3` IST IN DIESER FUNKTION NICHT GEBUNDEN. Der Name existiert
     # auf Modulebene, aber die erste Fassung dieses Blocks stand VOR dem
     # Import und lief prompt in einen NameError - dieselbe Falle, die

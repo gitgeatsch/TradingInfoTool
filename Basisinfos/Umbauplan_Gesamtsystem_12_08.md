@@ -17054,6 +17054,12 @@ solange eine Marktphase die Quote trägt.
 erklärt gemessen 2,4 Punkte, und ihre Behebung verschiebt jede bestehende
 Auflösung um einen Tag — das gehört getrennt entschieden.
 
+> ⚠️ **ÜBERHOLT am 22.08. (Kapitel 140): E2 ist gebaut.** Und die „2,4 Punkte"
+> waren zu klein gegriffen — nachgemessen ändern sich **34,6 % aller
+> Signale**. Die Behebung verschiebt auch **nicht** jede Auflösung um einen
+> Tag: gebaut wurde nicht „Tag 0 weg", sondern „Tag 0 nur mit dem
+> Schlusskurs", weil der nachweislich hinter dem Signal liegt.
+
 ---
 
 ## ⚠️ Es gibt faktisch keinen Hebel mehr — also ist er nicht messbar (22.08.2026)
@@ -18489,3 +18495,92 @@ keine Kunst. Die belastbare Zahl kommt aus dem nächsten vollen Umlauf.
 | Nachöffnung | sind die 10–11 Zeilen jetzt wirklich aufgelöst? |
 | S6b | halbieren sich die Modellaufrufe für Krypto messbar? |
 | offen aus 135 | **warum trägt die Verkaufsseite so selten Zonen** (REDUZIEREN 16 %, KAUFEN 100 %) |
+
+
+---
+
+## Kapitel 140 — E2 gebaut: am Erstellungstag zählt nur der Schlusskurs (22.08.2026)
+
+**Der Fehler war bekannt, die Größe nicht.** Die Doku führte E2 mit
+*„erklärt gemessen 2,4 Punkte"*. Nachgemessen sind es **34,6 % aller
+Signale** — und die Hälfte aller verzeichneten Einstiege.
+
+### 140.1 Was schiefging
+
+```python
+min_date = signal.created_at[:10]        # laedt AB dem Erstellungstag
+```
+
+Damit ging die **ganze Tageskerze** in die Auflösung — samt Hoch und Tief,
+die **vor** dem Signal lagen. Ein Signal von 18:00 bekam das Tageshoch von
+10:00 gutgeschrieben.
+
+⚠️ **Und es verfälschte E1 gleich mit.** `einstieg_beruehrt()` läuft auf
+denselben Kerzen: eine Zone, die der Kurs **vor** dem Signal berührt hat,
+zählte als Einstieg. Ein Fix, zwei Wirkungen.
+
+### 140.2 Drei Varianten, gemessen statt gewählt
+
+Über **104 Rollen-Signale** mit Zonen:
+
+| | Ziel | Stop | Einstieg erreicht | anders als heute |
+|---|---:|---:|---:|---:|
+| **A** ganze Tageskerze (bisher) | 9 | 13 | 71 | – |
+| **B** Tag 0 fällt ganz weg | 3 | 7 | 37 | 36 |
+| **C** Tag 0 nur Schlusskurs | **3** | **7** | **51** | **22** |
+
+⚠️ **B und C liefern dieselben Ziel- und Stop-Treffer.** B verwirft nur
+zusätzlich **14 Einstiege, die nachweislich nach dem Signal lagen** — denn:
+
+> **Der Schlusskurs eines Tages liegt hinter jedem Signal dieses Tages.**
+
+Ein Signal von 07:16 verliert unter B siebzehn **gültige** Stunden. **C ist
+die treue Umsetzung von E2, B eine Überkorrektur.** Gebaut wurde C.
+
+### 140.3 Was C nicht leistet — und warum das so bleibt
+
+Eine Zone, die zwischen Signal und Tagesschluss berührt und bis zum Schluss
+wieder verlassen wurde, bleibt unentdeckt.
+
+**Das ist die Grenze der Datenlage, keine Nachlässigkeit:**
+`price_history_ohlc` und `price_history` sind **tagesgenau** — eine Zeile je
+Symbol und Tag. Es gibt nichts, woraus sich der Teil der Kerze nach dem
+Signal rekonstruieren ließe.
+
+**C ist konservativ: es erfindet nichts, es findet nur nicht alles.**
+
+### 140.4 ⚠️ Die MFE bleibt unberührt — mit Absicht
+
+`max_realisiertes_crv` und `mindestziel_erreicht_am` werden weiterhin aus der
+**vollen** Kerze erfasst. Ihre eigene Doku sagt warum: sie beschreiben *„die
+Bewegung des Wertes, nicht die eines Trades"* und werden anderswo so gelesen.
+**Sie hier still umzudeuten wäre ein zweiter Fehler.**
+
+Die Suite nagelt die Reihenfolge fest: `_erfasse_mfe()` steht **vor** der
+Einschränkung, nicht dahinter.
+
+### 140.5 Die Hebel-Kette ist strenger — und das ist begründet
+
+Dort geht in `_check_day()` kein Schlusskurs ein; der einzige zusätzliche
+Wert ist `open_preis`, und der liegt am **Tagesanfang**, also vor dem Signal.
+**Der Erstellungstag entfällt dort ganz.** Eine erfundene Zuordnung wäre
+schlimmer als eine fehlende, und die Kette läuft für Krypto ohnehin nicht
+mehr (Kapitel 131).
+
+### 140.6 Was das für die Trefferquote heißt
+
+| | vorher | nachher |
+|---|---:|---:|
+| aufgelöst mit Ziel | 9 | **3** |
+| aufgelöst mit Stop | 13 | **7** |
+| Trefferquote der aufgelösten | 40,9 % | **30,0 %** |
+| „Einstieg nie erreicht" | 33 | **53** |
+
+⚠️ **Die Trefferquote fällt von 40,9 % auf 30,0 %** — und liegt damit erstmals
+**unter** der Basisrate von 33,3 % bei CRV 2,0. Das ist kein neuer Befund über
+den Markt, sondern die Korrektur einer Messung, die zu freundlich war.
+
+⚠️ **Und die Zahlen sind klein**: 10 aufgelöste Signale. Sie tragen keine
+Aussage über Güte — nur über die Richtung des Messfehlers.
+
+**Suite 1.548 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**

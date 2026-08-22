@@ -190,6 +190,53 @@ def _tier_fuer_spot_symbol(symbol: str, assetklasse_by_symbol: dict[str, str]) -
 # CRV-Pflicht/Zonen-Richtungs-Garantie fuer irgendeine Richtung) zuverlaessig
 # bearisch orientiert sind (Take-Profit UNTER, Stop-Loss UEBER dem Entry).
 # HALTEN bleibt weiterhin nicht trackbar (keine Handlung, keine Zonen-These).
+# ---------------------------------------------------------------------------
+# E2 (22.08.2026): AM ERSTELLUNGSTAG ZAEHLT NUR DER SCHLUSSKURS.
+#
+# WAS SCHIEFGING. `min_date = signal.created_at[:10]` laedt die Kurse ab dem
+# Erstellungstag - und nimmt damit die GANZE Tageskerze, samt Hoch und Tief,
+# die VOR dem Signal lagen. Ein Signal von 18:00 bekam das Tageshoch von
+# 10:00 gutgeschrieben.
+#
+# ⚠️ ES VERFAELSCHT AUCH DEN EINSTIEGSNACHWEIS (E1). `einstieg_beruehrt()`
+# laeuft auf denselben Kerzen: eine Zone, die der Kurs VOR dem Signal beruehrt
+# hat, zaehlte als Einstieg. Ein Fix, zwei Wirkungen.
+#
+# WARUM NICHT EINFACH DEN TAG WEGLASSEN. Das war die erste Fassung, und sie
+# schiesst ueber das Ziel hinaus: ein Signal von 07:16 verliert damit siebzehn
+# GUELTIGE Stunden. Gemessen an 104 Rollen-Signalen:
+#
+#     Variante                     Ziel   Stop   Einstieg erreicht
+#     A  ganze Tageskerze (bisher)    9     13          71
+#     B  Tag 0 faellt ganz weg        3      7          37
+#     C  Tag 0 nur Schlusskurs        3      7          51
+#
+# ⚠️ B UND C LIEFERN DIESELBEN ZIEL- UND STOP-TREFFER. B verwirft nur
+# zusaetzlich 14 Einstiege, die nachweislich NACH dem Signal lagen - denn der
+# SCHLUSSKURS EINES TAGES LIEGT HINTER JEDEM SIGNAL DIESES TAGES. C ist damit
+# die treue Umsetzung von E2, B eine Ueberkorrektur.
+#
+# WAS C NICHT LEISTET. Eine Zone, die zwischen Signal und Tagesschluss beruehrt
+# und bis zum Schluss wieder verlassen wurde, bleibt unentdeckt. Das ist die
+# Grenze der Datenlage: `price_history_ohlc` und `price_history` sind
+# TAGESGENAU, es gibt keine Intratag-Aufloesung. C ist konservativ - es
+# erfindet nichts, es findet nur nicht alles.
+#
+# ⚠️ DIE MFE BLEIBT UNBERUEHRT. `max_realisiertes_crv` und
+# `mindestziel_erreicht_am` werden weiterhin aus der VOLLEN Tageskerze
+# erfasst - sie beschreiben laut ihrer eigenen Doku "die Bewegung des Wertes,
+# nicht die eines Trades" und werden anderswo so gelesen. Sie hier still
+# umzudeuten waere ein zweiter Fehler.
+def handelsspanne(hoch, tief, schluss, tag: str, created_at: str):
+    """Welche Spanne dieses Tages darf dem TRADE zugerechnet werden?
+
+    Ab dem Folgetag die ganze Kerze; am Erstellungstag nur der Schlusskurs.
+    Fehlt der Schlusskurs, gibt es fuer diesen Tag keine Aussage - dann
+    (None, None), und der Aufrufer ueberspringt ihn."""
+    if str(tag or "")[:10] > str(created_at or "")[:10]:
+        return hoch, tief
+    return (schluss, schluss) if schluss is not None else (None, None)
+
 # ⚠️ S6c (22.08.2026): REDUZIEREN FEHLTE - UND DAMIT WURDE ES NIE AUFGELOEST.
 #
 # REDUZIEREN ist die einzige Aktion der neuen Kette, die WOERTLICH in der
@@ -617,15 +664,21 @@ def check_signal_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
+            # E2: am Erstellungstag zaehlt nur der Schlusskurs - die MFE oben
+            # hat die volle Kerze bereits gesehen, der TRADE darf sie nicht.
+            _hoch, _tief = handelsspanne(row.high, row.low, row.close,
+                                         day, signal.created_at)
+            if _hoch is None:
+                continue
             if not eingestiegen:
-                if not einstieg_beruehrt(row.high, row.low, zone):
+                if not einstieg_beruehrt(_hoch, _tief, zone):
                     continue
                 eingestiegen = True
                 # ⚠️ NUR MIT ZONE IST DAS EINE AUSSAGE (Testfund 22.08.):
                 # ohne Zone laeuft die Aufloesung weiter wie bisher, aber
                 # `einstieg_erreicht` bleibt None statt 1.
                 einstieg_am = day if zone is not None else None
-            hit_take, hit_stop = _check_preis(row.high, row.low)
+            hit_take, hit_stop = _check_preis(_hoch, _tief)
             if hit_stop:
                 # Konservativ (Z-1: Kapitalerhalt vor Gewinn): trifft ein Tag beide
                 # Zonen, gewinnt Stop-Loss - keine Annahme ueber die Intraday-
@@ -887,7 +940,12 @@ def check_signal_veto_shadow_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
-            hit_take, hit_stop = _check_preis(row.high, row.low)
+            # E2: am Erstellungstag zaehlt nur der Schlusskurs.
+            _hoch, _tief = handelsspanne(row.high, row.low, row.close,
+                                         day, signal.created_at)
+            if _hoch is None:
+                continue
+            hit_take, hit_stop = _check_preis(_hoch, _tief)
             if hit_stop:
                 return resolve(gap_bewusster_fill(
                     stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,
@@ -995,7 +1053,12 @@ def check_signal_selbst_halten_outcome(
             day = row.date
             guenstigster_tagespreis = row.low if ist_short else row.high
             _erfasse_mfe(guenstigster_tagespreis, day)
-            hit_take, hit_stop = _check_preis(row.high, row.low)
+            # E2: am Erstellungstag zaehlt nur der Schlusskurs.
+            _hoch, _tief = handelsspanne(row.high, row.low, row.close,
+                                         day, signal.created_at)
+            if _hoch is None:
+                continue
+            hit_take, hit_stop = _check_preis(_hoch, _tief)
             if hit_stop:
                 return resolve(gap_bewusster_fill(
                     stop_loss_threshold, row.open, ist_stop=True, ist_short=ist_short,

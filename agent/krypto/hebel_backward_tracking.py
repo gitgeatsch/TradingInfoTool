@@ -233,6 +233,17 @@ def check_hebel_signal_outcome(
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
+        # E2: am Erstellungstag zaehlt nur der Schlusskurs. Hier gibt es
+        # keinen eigenen Schlusskurs im Aufruf - `open_preis` ist der einzige
+        # zusaetzliche Wert, und er taugt dafuer NICHT (er liegt am
+        # Tagesanfang, also VOR dem Signal). Der Erstellungstag entfaellt
+        # deshalb in dieser Kette ganz.
+        #
+        # ⚠️ DAS IST STRENGER ALS IN DER SPOT-KETTE, und zwar bewusst: eine
+        # erfundene Zuordnung waere schlimmer als eine fehlende. Die Kette
+        # laeuft fuer Krypto ohnehin nicht mehr (Kapitel 131).
+        if not (str(day_value or "")[:10] > str(signal.created_at or "")[:10]):
+            return None
         if ist_short:
             hit_liquidation = liquidation_threshold is not None and high >= liquidation_threshold
             hit_stop = high >= stop_loss_threshold
@@ -405,6 +416,17 @@ def check_hebel_signal_selbst_halten_outcome(
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
+        # E2: am Erstellungstag zaehlt nur der Schlusskurs. Hier gibt es
+        # keinen eigenen Schlusskurs im Aufruf - `open_preis` ist der einzige
+        # zusaetzliche Wert, und er taugt dafuer NICHT (er liegt am
+        # Tagesanfang, also VOR dem Signal). Der Erstellungstag entfaellt
+        # deshalb in dieser Kette ganz.
+        #
+        # ⚠️ DAS IST STRENGER ALS IN DER SPOT-KETTE, und zwar bewusst: eine
+        # erfundene Zuordnung waere schlimmer als eine fehlende. Die Kette
+        # laeuft fuer Krypto ohnehin nicht mehr (Kapitel 131).
+        if not (str(day_value or "")[:10] > str(signal.created_at or "")[:10]):
+            return None
         if ist_short:
             hit_liquidation = liquidation_threshold is not None and high >= liquidation_threshold
             hit_stop = high >= stop_loss_threshold
@@ -538,6 +560,17 @@ def check_hebel_signal_veto_shadow_outcome(
         nonlocal day
         day = day_value
         _erfasse_mfe(high, low, day_value)
+        # E2: am Erstellungstag zaehlt nur der Schlusskurs. Hier gibt es
+        # keinen eigenen Schlusskurs im Aufruf - `open_preis` ist der einzige
+        # zusaetzliche Wert, und er taugt dafuer NICHT (er liegt am
+        # Tagesanfang, also VOR dem Signal). Der Erstellungstag entfaellt
+        # deshalb in dieser Kette ganz.
+        #
+        # ⚠️ DAS IST STRENGER ALS IN DER SPOT-KETTE, und zwar bewusst: eine
+        # erfundene Zuordnung waere schlimmer als eine fehlende. Die Kette
+        # laeuft fuer Krypto ohnehin nicht mehr (Kapitel 131).
+        if not (str(day_value or "")[:10] > str(signal.created_at or "")[:10]):
+            return None
         if ist_short:
             hit_liquidation = liquidation_threshold is not None and high >= liquidation_threshold
             hit_stop = high >= stop_loss_threshold
