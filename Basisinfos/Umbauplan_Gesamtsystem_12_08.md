@@ -18746,3 +18746,112 @@ war in der Funktion noch nicht gebunden. Immer dasselbe Muster: ein Block, der
 vor seinen Import gerät.
 
 **Suite 1.557 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+
+---
+
+## Kapitel 143 — Die fünf S6b-Nebenwirkungen, einzeln geprüft (23.08.2026)
+
+**Nutzervorgabe:** *„die weggefallenen Parameter müssen wieder in den Hebel —
+dachte wir haben das damals geprüft bzw. gab es einen Auftrag dazu, die
+Nebenwirkung in den LLM-Prompts zu prüfen."*
+
+⚠️ **Der Vorwurf sitzt.** Die S6a-Gegenprüfung (`pruefe_s6a_rollen.py`) prüft
+den **Prompt der Rolle BC** und das **Schema** — sie prüft **nicht den Inhalt
+des Lagebilds**. Genau dort sind zwei Fakten verschwunden.
+
+### 143.1 Erst die Abgrenzung: drei der fünf waren keine
+
+⚠️ **Ein Zählstand ist keine Befundmenge** — dieselbe Regel wie in Kapitel
+135, und sie schlägt hier gegen meine eigene Liste aus Kapitel 142.
+
+| Punkt | geprüft | Urteil |
+|---|---|---|
+| **`_hebelgeometrie`** | Liquidationsabstand erreichte niemanden | ⚠️ **echte Nebenwirkung** |
+| **`_finanzierung`** | Finanzierungsrate erreichte niemanden | ⚠️ **echte Nebenwirkung** |
+| `handelsauftrag` „swing" | `rollen_job.py` fährt durchgehend `strategie="einstieg"` | **keine** — swing lief **nie** in Produktion, auch vor S6b nicht |
+| `positionierung` Meldung | der Spot-Lauf meldete die Lücke **schon immer** | **keine** — unverändert |
+| `betraege` Einsatz | 800 € statt 1.000 € | **echt, aber eine Geldentscheidung** — siehe 143.4 |
+
+### 143.2 Was zurückgeholt wurde, und mit welchem Unterscheider
+
+Beide Bausteine standen auf `if str(instrument) != "hebel": return []`.
+
+**Das war richtig, solange es zwei Läufe gab.** Seit S6b läuft Krypto nur mit
+`instrument="spot"` — die Bedingung war nie wieder wahr.
+
+> **Die Frage lautet jetzt: *kann* dieses Asset gehebelt werden?** Nicht: ist
+> gerade der Hebel-Lauf dran. Dieselbe Umstellung wie `hebel_handelbar()` in
+> S6b.
+
+Dafür musste `assetklasse` durch drei Ebenen gereicht werden —
+`baue_befund_eingabe` (hatte sie) → `beschreibe_lage` → `geteilt` → die zwei
+Bausteine.
+
+**Nachgewiesen, und zwar durch die ganze Naht, nicht am Baustein:**
+
+| | Liquidationsabstand im Faktensatz |
+|---|---|
+| `baue_fall(assetklasse="krypto", instrument="spot")` | ✔ *„Falls ein Hebel nötig wird … bei 3-fach 33 %, also 4,2 Schwankungsbreiten"* |
+| `baue_fall(assetklasse="aktien", instrument="spot")` | ✘ (richtig — hier ist kein Hebel handelbar) |
+
+### 143.3 ⚠️ Warum `_hebelgeometrie` schwerer wiegt als `_finanzierung`
+
+**Der Liquidationsabstand** sagt, wie weit der Kurs bis zur Zwangsauflösung
+hat — in Schwankungsbreiten. Seit S6a rechnet das System den Hebel **aus der
+Antwort des Modells** (`verlustanteil / stop_rel`). Ohne diesen Satz beurteilt
+das Modell einen Stop, **ohne zu wissen, wie nah die Liquidation dahinter
+liegt.**
+
+**Die Finanzierungsrate** ist der schwierigere Fall, und der Preis gehört
+benannt: bei Spot wurde sie im August **bewusst und gemessen** aus BC
+entfernt — *„in 63 % der Spot-Urteile zitiert, obwohl ein Spot-Käufer keine
+Finanzierung zahlt."* Sie kehrt jetzt für **alle** Krypto-Urteile zurück, auch
+für die, deren Ergebnis ein Spot-Kauf wird.
+
+⚠️ **Das ist der Zustand des Hebel-Laufs von vor S6b, ausgedehnt auf alle
+Krypto-Urteile.** Nachmessbar: der Anteil der Urteile, die sie zitieren, steht
+in `belege_gegen_fakten`.
+
+### 143.4 ⚠️ Der Einsatz bleibt offen — er ist eine Geldentscheidung
+
+| Lauf | Einsatz je Einstieg |
+|---|---:|
+| `spot` | **800 €** |
+| `hebel` | **1.000 €** |
+
+Vor S6b bekam ein gehebeltes Signal 1.000 €, ein Spot-Signal 800 €. **Jetzt
+bekommt alles 800 €.**
+
+⚠️ **Und es lässt sich nicht am Hebel festmachen:** der Einsatz geht in
+`dimensioniere()` **hinein**, der Hebel fällt **daraus** an. Zum Zeitpunkt der
+Entscheidung ist er unbekannt. Es kann also nur **eine** Zahl je Gruppe geben.
+
+`risiko_eur = verlustanteil × einsatz_eur` — 800 statt 1.000 heißt **20 %
+kleinere Position und 20 % weniger Risiko je Trade.** Ob das so bleiben soll,
+ist eine Entscheidung des Nutzers, keine Reparatur.
+
+### 143.5 Ein Fund nebenbei: `None` im Prompt
+
+```python
+return [f"Am Terminmarkt war die Finanzierungsrate in {pos} % ..."]
+```
+
+Der Satz wurde **ungeprüft** gebaut. Fehlte einer der beiden Werte, stand im
+Modelltext *„in None % der letzten 40 Perioden positiv"* — eine Zeile, die
+aussieht wie ein Fakt und keiner ist. **Fail-soft ist fail-silent.** Jetzt
+entfällt der Satz, statt mit einer Lücke darin zu stehen.
+
+### 143.6 Drei Prüfungen standen auf dem alten Stand
+
+| bisher | jetzt |
+|---|---|
+| „Finanzierung steht **NUR im Hebel-Faktensatz**" | „…nur, **wo ein Hebel handelbar ist**" — Probe Krypto gegen Aktien, gleicher Lauf |
+| „der Liquidationsabstand steht **NUR im Hebel-Faktensatz**" | dito |
+| `_hebelgeometrie(…, "hebel")` direkt gerufen | mit `assetklasse="krypto"` — sonst prüften die drei Folgeprüfungen **nichts** |
+
+**Und die Gegenprüfung ist erweitert:** sie prüft jetzt für beide Bausteine,
+dass sie Krypto **auch im Spot-Lauf** erreichen, bei Aktien wegbleiben, und
+**nicht mehr am Lauf hängen**.
+
+**Suite 1.564 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**

@@ -20428,3 +20428,62 @@ viel") und die falsche nicht: was haengt sonst noch an diesem Etikett?
 ⚠️ Und die Falle der freien Namen zum fuenften Mal an zwei Tagen (`_YAML`).
 
 Suite 1557, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 143: DIE FUENF S6b-NEBENWIRKUNGEN, EINZELN GEPRUEFT
+
+Nutzervorgabe: "die weggefallenen Parameter muessen wieder in den Hebel -
+dachte wir haben das damals geprueft bzw. gab es einen Auftrag dazu, die
+Nebenwirkung in den LLM-Prompts zu pruefen."
+
+⚠️ DER VORWURF SITZT. pruefe_s6a_rollen.py prueft den Prompt der Rolle BC und
+das Schema - NICHT den Inhalt des Lagebilds. Genau dort sind zwei Fakten
+verschwunden.
+
+ERST DIE ABGRENZUNG - DREI DER FUENF WAREN KEINE NEBENWIRKUNG:
+  _hebelgeometrie   ⚠️ echt - Liquidationsabstand erreichte niemanden
+  _finanzierung     ⚠️ echt - Finanzierungsrate erreichte niemanden
+  "swing"           KEINE - rollen_job.py faehrt durchgehend
+                    strategie="einstieg"; swing lief NIE in Produktion
+  positionierung    KEINE - der Spot-Lauf meldete die Luecke schon immer
+  betraege Einsatz  echt, aber eine GELDENTSCHEIDUNG (siehe unten)
+
+ZURUECKGEHOLT mit neuem Unterscheider: beide Bausteine standen auf
+`instrument != "hebel"` - richtig, solange es zwei Laeufe gab. Die Frage
+lautet jetzt: KANN dieses Asset gehebelt werden? Dieselbe Umstellung wie
+hebel_handelbar() in S6b. Dafuer musste `assetklasse` durch drei Ebenen -
+baue_befund_eingabe (hatte sie) -> beschreibe_lage -> geteilt -> Bausteine.
+
+NACHGEWIESEN DURCH DIE GANZE NAHT, nicht am Baustein: baue_fall mit
+assetklasse="krypto" liefert "Falls ein Hebel noetig wird ... bei 3-fach 33 %,
+also 4,2 Schwankungsbreiten"; mit "aktien" bleibt er weg.
+
+⚠️ WARUM _hebelgeometrie SCHWERER WIEGT: seit S6a rechnet das System den Hebel
+AUS DER ANTWORT des Modells. Ohne den Satz beurteilt es einen Stop, ohne zu
+wissen, wie nah die Liquidation dahinter liegt.
+
+⚠️ UND DER PREIS BEI _finanzierung IST BENANNT: bei Spot wurde sie im August
+BEWUSST UND GEMESSEN aus BC entfernt ("in 63 % der Spot-Urteile zitiert,
+obwohl ein Spot-Kaeufer keine Finanzierung zahlt"). Sie kehrt jetzt fuer ALLE
+Krypto-Urteile zurueck. Nachmessbar in `belege_gegen_fakten`.
+
+⚠️ DER EINSATZ BLEIBT OFFEN: spot 800 EUR, hebel 1.000 EUR. Vor S6b bekam ein
+gehebeltes Signal 1.000, jetzt bekommt alles 800. Es laesst sich NICHT am
+Hebel festmachen - der Einsatz geht in dimensioniere() hinein, der Hebel faellt
+daraus an. Es kann nur EINE Zahl je Gruppe geben. risiko_eur = verlustanteil x
+einsatz_eur, also 20 % kleinere Position und 20 % weniger Risiko je Trade.
+Entscheidung des Nutzers, keine Reparatur.
+
+FUND NEBENBEI: der Finanzierungssatz wurde UNGEPRUEFT gebaut - fehlte ein
+Wert, stand "in None % der letzten 40 Perioden positiv" im Modelltext. Eine
+Zeile, die aussieht wie ein Fakt und keiner ist. Jetzt entfaellt der Satz.
+
+DREI PRUEFUNGEN STANDEN AUF DEM ALTEN STAND und sind nachgezogen; zwei
+kodierten "NUR im Hebel-Faktensatz", eine rief _hebelgeometrie direkt mit dem
+Lauf - ohne Gruppe haetten die drei Folgepruefungen NICHTS geprueft.
+
+DIE GEGENPRUEFUNG IST ERWEITERT: sie prueft jetzt fuer beide Bausteine, dass
+sie Krypto AUCH IM SPOT-LAUF erreichen, bei Aktien wegbleiben und nicht mehr
+am Lauf haengen.
+
+Suite 1564, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

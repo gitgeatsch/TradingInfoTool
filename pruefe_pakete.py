@@ -5487,15 +5487,28 @@ def paket_15() -> None:
     # hier nicht nur, DASS die Saetze da sind, sondern auch, dass sie keine
     # Handlungsanweisung tragen.
     _fin = {"beobachtungen": 100, "anteil_positiv_pct": 61, "perzentil": 72}
+    # ⚠️ DER UNTERSCHEIDER IST SEIT DEM 23.08.2026 DIE GRUPPE, NICHT DER LAUF.
+    #
+    # Hier stand `instrument="spot"` gegen `instrument="hebel"`. Das war
+    # richtig, solange es zwei Laeufe gab. Seit S6b laeuft Krypto NUR mit
+    # `instrument="spot"` - beide Bausteine erreichten damit niemanden mehr,
+    # obwohl der Hebel seit S6a als ERGEBNIS der Rechnung weiterhin
+    # entstehen kann.
+    #
+    # DIE FRAGE LAUTET JETZT: kann diese GRUPPE gehebelt werden? Die Probe
+    # stellt deshalb Krypto (kann) gegen Aktien (kann nicht) - der Lauf ist
+    # bei beiden derselbe.
     _spot = LB3.geteilt(symbol="TST", reihe=_reihe, index=89, kurs_eur=144.5,
                         atr=1.2, menge=3.0, einstand_eur=100.0,
-                        finanzierung=_fin, instrument="spot")
+                        finanzierung=_fin, instrument="spot",
+                        assetklasse="aktien")
     _heb = LB3.geteilt(symbol="TST", reihe=_reihe, index=89, kurs_eur=144.5,
                        atr=1.2, menge=3.0, einstand_eur=100.0,
-                       finanzierung=_fin, instrument="hebel")
+                       finanzierung=_fin, instrument="spot",
+                       assetklasse="krypto")
 
-    # SCHRITT 2 - die Finanzierung verlaesst den Spot-Prompt.
-    pruefe(P, "Finanzierung steht NUR noch im Hebel-Faktensatz",
+    # SCHRITT 2 - die Finanzierung steht nur, wo ein Hebel moeglich ist.
+    pruefe(P, "Finanzierung steht nur, wo ein Hebel handelbar ist",
            not _spot["finanzierung"] and len(_heb["finanzierung"]) == 1,
            "ein Spot-Kaeufer leistet und erhaelt keine Finanzierung - und "
            "zitiert wurde sie trotzdem in 63 % der Spot-Urteile (O-34)")
@@ -5515,10 +5528,11 @@ def paket_15() -> None:
     # dieses Projekt mehrfach bezahlt hat.
     from agent import entscheidungsrechnung as ER5
 
-    pruefe(P, "der Liquidationsabstand steht NUR im Hebel-Faktensatz",
+    pruefe(P, "der Liquidationsabstand steht nur, wo ein Hebel handelbar ist",
            not _spot["hebelgeometrie"] and len(_heb["hebelgeometrie"]) == 2,
-           "ein Spot-Kauf kann nicht zwangsaufgeloest werden - der Satz waere "
-           "dort schlicht falsch")
+           "eine Aktie laesst sich hier nicht hebeln - der Satz waere dort "
+           "schlicht falsch. Bei Krypto MUSS er stehen, auch im Spot-Lauf: "
+           "der Hebel faellt seit S6a aus der Rechnung an, nicht aus dem Lauf")
     _kurs5, _hebel5 = 100.0, 10.0
     pruefe(P, "und er benutzt dieselbe Formel wie die spaetere Rechnung",
            abs((_kurs5 - _kurs5 * (1 - 1 / _hebel5)) / _kurs5
@@ -8122,7 +8136,11 @@ def paket_btcmail() -> None:
            "1 eigener Fall verschiebt sie noch nicht" in _btc, _btc[-90:])
 
     # --- C: keine Anrede an das Modell im Nutzertext.
-    _hg = " ".join(_LB._hebelgeometrie(900.0, 54266.0, "hebel"))
+    # ⚠️ MIT GRUPPE (23.08.2026): der Baustein haengt nicht mehr am Lauf,
+    # sondern an der Handelbarkeit. Ohne sie kaeme hier eine leere Liste, und
+    # die drei Pruefungen darunter pruefen dann nichts.
+    _hg = " ".join(_LB._hebelgeometrie(900.0, 54266.0, "spot",
+                                       assetklasse="krypto"))
     pruefe(P, "C: kein 'du' im Faktentext",
            " du " not in f" {_hg} " and "deiner" not in _hg,
            "Faktentexte gehen an BEIDE Leser - wer einen anspricht, "
@@ -10441,6 +10459,60 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- WAS DAS MODELL LIEST, HAENGT AN DER GRUPPE (23.08.2026) -------
+    #
+    # ⚠️ DIESE LUECKE HAT DIE S6a-GEGENPRUEFUNG NICHT GEFUNDEN. Sie prueft
+    # den Prompt der Rolle BC und das Schema - nicht den INHALT des
+    # Lagebilds. Dort standen zwei Bausteine auf `instrument != "hebel"`,
+    # und seit S6b erreichten sie niemanden mehr:
+    #
+    #   `_finanzierung`    was die Finanzierung am Terminmarkt kostet
+    #   `_hebelgeometrie`  wie weit es bis zur Zwangsaufloesung ist
+    #
+    # Der Hebel ist seit S6a ein ERGEBNIS der Rechnung. Ergibt sie eine
+    # gehebelte Position, hatte das Modell beide Zahlen nie gesehen.
+    from agent import lagebeschreibung as _LB2
+
+    class _K2:
+        def __init__(s, d, c):
+            s.date, s.open, s.high, s.low, s.close, s.volume = (
+                d, 100.0, 104.0, 96.0, c, 1.0)
+
+    _reihe2 = [_K2(f"2026-07-{i % 28 + 1:02d}", 100.0 + (i % 7))
+               for i in range(300)]
+    _fin2 = {"beobachtungen": 40, "anteil_positiv_pct": 62, "perzentil": 71}
+
+    def _bloecke2(gruppe, instrument="spot"):
+        return _LB2.geteilt(symbol="X", reihe=_reihe2, index=299,
+                            kurs_eur=100.0, atr=3.0, finanzierung=_fin2,
+                            instrument=instrument, assetklasse=gruppe)
+
+    for _feld, _was in (("finanzierung", "die Finanzierungsrate"),
+                        ("hebelgeometrie", "der Liquidationsabstand")):
+        pruefe(P, f"{_was} erreicht Krypto - auch im Spot-Lauf",
+               bool(_bloecke2("krypto", "spot").get(_feld)),
+               "seit S6b gibt es fuer Krypto NUR den Spot-Lauf - haengt der "
+               "Baustein am Lauf, erreicht er niemanden mehr")
+        pruefe(P, f"{_was} bleibt bei Aktien weg",
+               not _bloecke2("aktien", "spot").get(_feld),
+               "eine Aktie laesst sich hier nicht hebeln - der Satz waere "
+               "ein konstantes Feld ohne Aussage")
+        pruefe(P, f"{_was} haengt NICHT mehr am Lauf",
+               (bool(_bloecke2("krypto", "spot").get(_feld))
+                == bool(_bloecke2("krypto", "hebel").get(_feld))),
+               "die Frage ist die HANDELBARKEIT der Gruppe, nicht welcher "
+               "Lauf gerade dran ist")
+    # ⚠️ UND KEIN `None` IM PROMPT. Der Satz wurde bisher ungeprueft gebaut -
+    # fehlte ein Wert, stand "in None % der letzten 40 Perioden" im
+    # Modelltext. Fail-soft ist fail-silent.
+    _luecke2 = dict(_fin2, anteil_positiv_pct=None)
+    pruefe(P, "eine Luecke erzeugt KEINEN Satz mit `None` darin",
+           not _LB2.geteilt(symbol="X", reihe=_reihe2, index=299,
+                            kurs_eur=100.0, atr=3.0, finanzierung=_luecke2,
+                            instrument="spot",
+                            assetklasse="krypto").get("finanzierung"),
+           "lieber kein Satz als ein Satz mit einer Luecke darin")
+
     # ---- DER COOLDOWN JE GRUPPE (23.08.2026) ---------------------------
     #
     # ⚠️ S6b HAT NICHT NUR DEN ZWEITEN LAUF ENTFERNT, SONDERN AUCH SEINEN

@@ -477,7 +477,8 @@ def _volumen(c: np.ndarray, v: np.ndarray, i: int,
 
 
 def _finanzierung(zusammenfassung: dict | None,
-                  instrument: str = "spot") -> list[str]:
+                  instrument: str = "spot",
+                  assetklasse: str | None = None) -> list[str]:
     """Block 6 - die Positionierung am Terminmarkt (11.08.2026).
 
     NUR NOCH BEIM HEBEL (Phase I, Schritt 2, 16.08.2026). Bis heute stand
@@ -519,7 +520,33 @@ def _finanzierung(zusammenfassung: dict | None,
     KEINE ZEILE, WENN KEINE DATEN. Ein Satz "keine Finanzierungsdaten" waere
     fuer alle Aktien, ETF und Rohstoffe identisch - ein konstantes Feld im Sinne
     von B10, das Platz kostet und nichts unterscheidet."""
-    if str(instrument) != "hebel":
+    # ⚠️ HIER STAND `str(instrument) != "hebel"` (bis 23.08.2026).
+    #
+    # DAS WAR RICHTIG, SOLANGE ES ZWEI LAEUFE GAB. Der Hebel-Lauf bekam die
+    # Finanzierungsrate, der Spot-Lauf nicht - und das war eine gemessene
+    # Entscheidung: bei Spot wurde sie im August bewusst aus BC entfernt,
+    # weil sie in 63 % der Spot-Urteile zitiert wurde, obwohl ein
+    # Spot-Kaeufer keine Finanzierung zahlt.
+    #
+    # ⚠️ SEIT S6b GIBT ES DEN HEBEL-LAUF NICHT MEHR, und damit erreichte die
+    # Rate NIEMANDEN. Das ist keine Entscheidung gewesen, sondern ein
+    # Nebenprodukt: der Hebel ist seit S6a ein ERGEBNIS der Rechnung, nicht
+    # eine Wahl des Modells. Ergibt sie eine gehebelte Position, hat das
+    # Modell die Finanzierung nie gesehen - und die zahlt es dann.
+    #
+    # DIE FRAGE LAUTET JETZT: KANN dieses Asset gehebelt werden? Nicht: ist
+    # gerade der Hebel-Lauf dran. Dieselbe Umstellung wie bei
+    # `hebel_handelbar` in S6b.
+    #
+    # ⚠️ DER PREIS IST BENANNT: bei Krypto sieht das Modell die Rate jetzt
+    # auch dort, wo das Ergebnis ein Spot-Kauf wird. Das ist der Zustand des
+    # Hebel-Laufs von vor S6b, auf alle Krypto-Urteile ausgedehnt - der Grund
+    # fuer die Entfernung bei Spot (ein Spot-Kaeufer zahlt keine
+    # Finanzierung) gilt fuer den Spot-AUSGANG weiter. Wer das messen will:
+    # der Anteil der Urteile, die sie zitieren, steht in `belege_gegen_fakten`.
+    from agent.assetklassen import hebel_handelbar as _hb
+
+    if not _hb(assetklasse):
         return []
     if not zusammenfassung:
         return []
@@ -528,6 +555,15 @@ def _finanzierung(zusammenfassung: dict | None,
         return []
     pos = zusammenfassung.get("anteil_positiv_pct")
     p = zusammenfassung.get("perzentil")
+    # ⚠️ KEIN `None` IN DEN PROMPT (23.08.2026, beim Zurueckholen gefunden).
+    #
+    # Der Satz wurde bisher ungeprueft gebaut. Fehlte einer der beiden Werte,
+    # stand im Modelltext "in None % der letzten 40 Perioden positiv" - eine
+    # Zeile, die aussieht wie ein Fakt und keiner ist. Genau die Klasse, gegen
+    # die "Fail-soft ist fail-silent" steht: lieber kein Satz als ein Satz
+    # mit einer Luecke darin.
+    if pos is None or p is None:
+        return []
     return [f"Am Terminmarkt war die Finanzierungsrate in {pos} % der letzten "
             f"{n} Perioden positiv - dann zahlen die Long-Positionen an die "
             f"Short-Positionen. Die aktuelle Rate liegt im {p}. Perzentil "
@@ -543,7 +579,8 @@ GRENZHEBEL = (3.0, 6.0, 10.0)
 
 
 def _hebelgeometrie(atr: float, close: float,
-                    instrument: str = "spot") -> list[str]:
+                    instrument: str = "spot",
+                    assetklasse: str | None = None) -> list[str]:
     """Wie weit die Zwangsaufloesung entfernt liegt - je Grenzhebel.
 
     DIE GROESSTE LUECKE DES HEBEL-KORBS (Bestandserhebung 16.08., Kapitel
@@ -577,7 +614,15 @@ def _hebelgeometrie(atr: float, close: float,
     sonst waere das Verhaeltnis zum ATR um den Wechselkurs verfaelscht.
     Derselbe Fehler ist am 12.08. in `leite_zonen_ab()` schon einmal
     passiert (Spanne 14,4 % zu breit)."""
-    if str(instrument) != "hebel":
+    # ⚠️ WIE BEI `_finanzierung`: die Frage ist die HANDELBARKEIT, nicht der
+    # Lauf (23.08.2026). Hier wiegt es schwerer - dieser Baustein sagt, wie
+    # weit der Kurs bis zur Zwangsliquidation hat, in Schwankungsbreiten.
+    # Seit S6a rechnet das System den Hebel AUS DER ANTWORT des Modells
+    # (`verlustanteil / stop_rel`); ohne diesen Satz beurteilt es einen Stop,
+    # ohne zu wissen, wie nah die Liquidation dahinter liegt.
+    from agent.assetklassen import hebel_handelbar as _hb
+
+    if not _hb(assetklasse):
         return []
     if not close or close <= 0 or not atr or atr <= 0:
         return []
@@ -929,7 +974,8 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
                     referenz: dict | None = None,
                     fundamentaldaten: dict | None = None,
                     umschlag: dict | None = None,
-                    bloecke_ziel: dict | None = None) -> list[str]:
+                    bloecke_ziel: dict | None = None,
+                    assetklasse: str | None = None) -> list[str]:
     """Die Lage als Aussagen - der EINZIGE Weg von Kursdaten zur Beschreibung.
 
     `bloecke_ziel` (15.08.2026) ist ein AUSGANG, kein Eingang: wird ein dict
@@ -966,7 +1012,8 @@ def beschreibe_lage(*, symbol: str, reihe: list, index: int,
     # draussen: der Anlassfilter braucht die Bloecke einzeln und darf sie
     # nicht neu rechnen, weil die Finanzierung dafuer wieder an die Boerse
     # muesste.
-    bloecke = geteilt(symbol=symbol, reihe=reihe, index=index,
+    bloecke = geteilt(assetklasse=assetklasse,
+                      symbol=symbol, reihe=reihe, index=index,
                       kurs_eur=kurs_eur, atr=atr, menge=menge,
                       einstand_eur=einstand_eur, finanzierung=finanzierung,
                       instrument=instrument, gegenseite=gegenseite,
@@ -1022,7 +1069,8 @@ def geteilt(*, symbol: str, reihe: list, index: int,
             gegenseite: str | None = None,
             referenz: dict | None = None,
             fundamentaldaten: dict | None = None,
-            umschlag: dict | None = None) -> dict:
+            umschlag: dict | None = None,
+            assetklasse: str | None = None) -> dict:
     """Dieselben Saetze, aber nach Bloecken getrennt (14.08.2026).
 
     WOFUER. Die Kaufmail kann Bestand, Marken und Coin-Fakten getrennt
@@ -1064,12 +1112,14 @@ def geteilt(*, symbol: str, reihe: list, index: int,
         # den Verlauf statt zweier, die sich gemeinsam bewegen.
         "verlauf": _struktur(c, h, l, i) + _bewegung(c, i),
         "marken": marken,
-        "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument),
+        "hebelgeometrie": _hebelgeometrie(atr, float(c[i]), instrument,
+                                          assetklasse),
         "fundamental": _fundamental(fundamentaldaten),
         "umschlag": _umschlag(umschlag),
         "referenz": _referenz(referenz),
         "volumen": volumen,
-        "finanzierung": _finanzierung(finanzierung, instrument),
+        "finanzierung": _finanzierung(finanzierung, instrument,
+                                      assetklasse),
         # DIE LUECKEN STEHEN AUF DEN FERTIGEN BLOECKEN, nicht auf den Rohdaten.
         # Sonst gaebe es eine zweite Definition von "kein Volumen" - eine im
         # Block und eine im Luecken-Satz -, und sie koennten auseinanderlaufen,
