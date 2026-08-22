@@ -20213,3 +20213,50 @@ Schritt (60 -> 45 -> 30 -> 15 EUR) und macht die Nominale nie schlechter.
 ⚠️ Sie SINKT allerdings erst, wenn der Hebel bei 1,0 aufsetzt.
 
 Suite 1534.
+
+
+[2026-08-22] KAPITEL 138: DIE APP STARTETE AM NOTEBOOK NICHT MEHR
+
+Mein Fehler aus E1, und er lag vier Tage. Meldung vom Notebook: "Schema
+mismatch - HebelSignal class missing einstieg_erreicht field."
+
+WAS PASSIERT IST: E1 legte `einstieg_erreicht` per Migration auf BEIDE
+Tabellen - mit der ausdruecklichen Begruendung "damit keine der beiden
+Familien still ohne die Angabe bleibt". Das war richtig. Falsch war, was
+fehlte: das Feld stand in KEINER der beiden Klassen, und der Lesepfad war nur
+bei `signals` gehaertet. `_row_to_signal()` filtert seit dem 19.08. auf die
+Felder der Klasse; `_row_to_hebel_signal()` gab die Zeile ungefiltert als
+`HebelSignal(**data)` in den Konstruktor - und eine unbekannte Spalte ist dort
+ein TypeError.
+
+⚠️ DIE HAERTUNG VOM 19.08. WAR NUR ZUR HAELFTE GEMACHT. Ihr eigener Kommentar
+beschreibt den Fehler woertlich ("eine NEUE Spalte in der Tabelle liess damit
+den LESEPFAD abstuerzen"). Sie wurde auf Signal angewandt und auf HebelSignal
+nicht - genau die stehende Vorgabe "bei Funden ALLE Asset-Varianten pruefen",
+gebrochen damals, aufgeflogen heute.
+
+⚠️ WARUM MEINE PRUEFUNGEN ES NICHT FANDEN: am Desktop laeuft main.py nie
+(stehende Vorgabe), also lief die Migration nie, also hatte die Tabelle die
+Spalte nie, also konnte keine Pruefung ueber sie stolpern. 1.534 gruene
+Pruefungen und simuliere_kette mit 6 Signalen - und die App startete nicht.
+Der blinde Fleck sass nicht im Code, sondern im ZUSTAND DER DATENBANK, gegen
+die geprueft wurde.
+
+GEBAUT: _row_to_hebel_signal() filtert jetzt auf die Felder der Klasse;
+Signal und HebelSignal tragen einstieg_erreicht; NEUE DAUERPRUEFUNG legt die
+Datenbank frisch an, MIGRIERT sie, schreibt eine Zeile mit allen
+Pflichtfeldern und liest sie durch BEIDE Umwandler.
+
+⚠️ NEBENBEFUND: das Feld war bis heute nur beschreibbar, nicht lesbar. E1
+schreibt es ueber update_signal_outcome(); gelesen wurde es nie, weil
+_row_to_signal() es still wegfilterte. Jede spaetere Auswertung haette an der
+Modellschicht vorbeigreifen muessen.
+
+POSITIVKONTROLLE mit dem Zustand des Notebooks: "signals ... laesst sich
+lesen" OK, "hebel_signals ... laesst sich lesen" FEHL - genau die eine, die
+gebrochen war. Nach Rueckbau 1540 Pruefungen, alle bestanden.
+
+NEUE REGEL - METHODIK 2.61: WER EINE SPALTE ANLEGT, MUSS EINE ZEILE DARAUS
+LESEN. Eine Migration ist erst geprueft, wenn eine Zeile aus der MIGRIERTEN
+Tabelle durch den LESEPFAD gegangen ist. Ein Schreibtest genuegt nicht - das
+Schreiben nennt seine Spalten einzeln, das Lesen bekommt sie alle auf einmal.

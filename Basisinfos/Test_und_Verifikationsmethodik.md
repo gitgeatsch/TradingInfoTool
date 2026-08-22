@@ -3567,3 +3567,29 @@ der Grund vorhanden und nicht leer ist — eine Ausnahme ohne Begründung ist
 ein Schalter, keine Aussage.
 
 **Läuft in der Suite mit.** Einzeln: `python pruefe_aktionsvokabular.py`.
+
+
+### 2.61 Wer eine Spalte anlegt, muss eine Zeile daraus lesen (22.08.2026)
+
+**Anlass:** Die App startete am Notebook nicht mehr. E1 hatte
+`einstieg_erreicht` per Migration auf `signals` **und** `hebel_signals`
+gelegt; `_row_to_hebel_signal()` gab die Zeile ungefiltert in den Konstruktor,
+und eine unbekannte Spalte ist dort ein `TypeError`.
+
+**Die Regel.** Eine Migration ist erst geprüft, wenn eine Zeile aus der
+**migrierten** Tabelle durch den **Lesepfad** gegangen ist.
+
+⚠️ **Ein Schreibtest genügt nicht.** Das Schreiben nennt seine Spalten
+einzeln — eine neue fällt dort nicht auf. Das Lesen bekommt sie alle auf
+einmal.
+
+⚠️ **Und der blinde Fleck des Desktops.** Hier läuft `main.py` nie (stehende
+Vorgabe: nie gegen die Produktiv-Datenbank). Also läuft die Migration nie,
+also hat die Tabelle die Spalte nie, also ist **jede** Prüfung gegen diese
+Datenbank strukturell blind für Migrationsfolgen. **Die Prüfung muss die
+Migration selbst auslösen** — frische Datenbank, `init_db()`, Zeile schreiben,
+Zeile lesen.
+
+**Umgesetzt** in `pruefe_pakete.py` (Paket Dimension): für `signals` und
+`hebel_signals` je eine Zeile mit allen Pflichtfeldern durch `_row_to_signal()`
+bzw. `_row_to_hebel_signal()`. Positivkontrolle bestanden.

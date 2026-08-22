@@ -477,6 +477,15 @@ class Signal:
                                                # Unterscheider, siehe
                                                # toepfe.sql_bedingung()
     modell: str | None = None
+    # ⚠️ E1 (18.08.2026): kam der Trade ueberhaupt zustande?
+    #
+    # 1 = die Einstiegszone wurde beruehrt, 0 = nicht, None = nicht ermittelt.
+    # Die Spalte lag seit E1 auf `signals` UND `hebel_signals`, stand aber in
+    # KEINER der beiden Klassen - sie war damit nur beschreibbar, nicht
+    # lesbar. Am 22.08. hat genau das die App am Notebook nicht mehr starten
+    # lassen: `_row_to_hebel_signal()` gab die Zeile ungefiltert in den
+    # Konstruktor, und eine unbekannte Spalte ist dort ein TypeError.
+    einstieg_erreicht: int | None = None
 
 
 @dataclass
@@ -880,6 +889,15 @@ class HebelSignal:
     zai_eigene_richtung: str | None = None  # 'LONG'|'SHORT'|'NEUTRAL'
     zai_uebereinstimmung: str | None = None  # 'ja'|'nein'
     zai_richtung_kurzbegruendung: str | None = None
+    # ⚠️ E1 (18.08.2026): kam der Trade ueberhaupt zustande?
+    #
+    # 1 = die Einstiegszone wurde beruehrt, 0 = nicht, None = nicht ermittelt.
+    # Die Spalte lag seit E1 auf `signals` UND `hebel_signals`, stand aber in
+    # KEINER der beiden Klassen - sie war damit nur beschreibbar, nicht
+    # lesbar. Am 22.08. hat genau das die App am Notebook nicht mehr starten
+    # lassen: `_row_to_hebel_signal()` gab die Zeile ungefiltert in den
+    # Konstruktor, und eine unbekannte Spalte ist dort ein TypeError.
+    einstieg_erreicht: int | None = None
 
 
 @dataclass

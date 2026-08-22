@@ -3880,7 +3880,25 @@ def _row_to_hebel_signal(row: sqlite3.Row) -> HebelSignal:
     data["risk_veto"] = bool(data["risk_veto"])
     data["kontrathese_zu_position"] = bool(data.get("kontrathese_zu_position") or False)
     data["ist_reines_llm_halten"] = bool(data.get("ist_reines_llm_halten") or False)
-    return HebelSignal(**data)
+    # ⚠️ NUR FELDER, DIE `HebelSignal` KENNT (22.08.2026).
+    #
+    # DIE HAERTUNG VOM 19.08. WAR NUR ZUR HAELFTE GEMACHT. `_row_to_signal()`
+    # bekam sie damals, diese Funktion nicht - und zwar aus demselben Grund,
+    # aus dem der Fehler damals gefunden wurde: es fiel niemandem auf.
+    #
+    # AUFGEFLOGEN AM NOTEBOOK: E1 legte `einstieg_erreicht` per Migration auf
+    # BEIDE Tabellen ("damit keine der beiden Familien still ohne die Angabe
+    # bleibt"). Auf `signals` fing der Filter die neue Spalte ab; auf
+    # `hebel_signals` ging sie ungefiltert in den Konstruktor - und die App
+    # startete nicht mehr.
+    #
+    # ⚠️ AM DESKTOP WAR ES NICHT ZU SEHEN: dort laeuft `main.py` nie, also
+    # lief die Migration nie, also hatte die Tabelle die Spalte nie. Eine
+    # Pruefung gegen eine unmigrierte Datenbank prueft die Migration nicht.
+    import dataclasses as _dc
+
+    _bekannt = {f.name for f in _dc.fields(HebelSignal)}
+    return HebelSignal(**{k: v for k, v in data.items() if k in _bekannt})
 
 
 def get_latest_hebel_signal_per_symbol(conn: sqlite3.Connection) -> dict[str, HebelSignal]:

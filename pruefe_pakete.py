@@ -10431,6 +10431,84 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- JEDE MIGRIERTE SPALTE MUSS LESBAR BLEIBEN (22.08.2026) ---------
+    #
+    # ⚠️ DIESER FEHLER HAT DIE APP AM NOTEBOOK NICHT MEHR STARTEN LASSEN.
+    #
+    # E1 legte `einstieg_erreicht` per Migration auf `signals` UND
+    # `hebel_signals`. `_row_to_signal()` filtert seit dem 19.08. auf die
+    # Felder der Klasse - `_row_to_hebel_signal()` NICHT: dort ging die Zeile
+    # ungefiltert als `HebelSignal(**data)` in den Konstruktor, und eine
+    # unbekannte Spalte ist dort ein TypeError.
+    #
+    # ⚠️ WARUM ES AM DESKTOP NICHT ZU SEHEN WAR: dort laeuft `main.py` nie,
+    # also lief die Migration nie, also hatte die Tabelle die Spalte nie.
+    # EINE PRUEFUNG GEGEN EINE UNMIGRIERTE DATENBANK PRUEFT DIE MIGRATION
+    # NICHT. Deshalb legt diese hier die Datenbank frisch an und migriert sie.
+    import dataclasses as _dc2
+    import sqlite3 as _sq3          # ⚠️ NICHT `sqlite3` - der Name ist in
+                                    # dieser Funktion nicht gebunden, und der
+                                    # NameError kam prompt. Dieselbe Falle,
+                                    # die `finde_freie_namen.py` sucht.
+
+    from database.models import HebelSignal as _HS
+    from database.models import Signal as _SG
+
+    _mem_mig = _sq3.connect(":memory:")
+    _mem_mig.row_factory = _sq3.Row
+    _dbm = __import__("database.db", fromlist=["db"])
+    _dbm.init_db(_mem_mig)
+    for _tab, _klasse in (("signals", _SG), ("hebel_signals", _HS)):
+        _spalten = {r["name"] for r in
+                    _mem_mig.execute(f"PRAGMA table_info({_tab})")}
+        _felder = {f.name for f in _dc2.fields(_klasse)}
+        pruefe(P, f"{_tab}: die Tabelle hat ueberhaupt Spalten",
+               len(_spalten) > 20, f"{len(_spalten)} - init_db hat nicht "
+                                   f"durchgelaufen, die Pruefung waere leer")
+        # Die Klasse MUSS nicht jede Spalte kennen - eine Spalte darf einer
+        # anderen Auswertung gehoeren. Sie darf die Zeile nur nicht zerreissen.
+        _unbekannt = _spalten - _felder
+        pruefe(P, f"{_tab}: unbekannte Spalten sind benannt, nicht ueberraschend",
+               True, f"{len(_unbekannt)} Spalten kennt {_klasse.__name__} "
+                     f"nicht - das ist erlaubt, solange der Lesepfad sie "
+                     f"filtert (naechste Pruefung)")
+    # DER EIGENTLICHE NACHWEIS: eine Zeile mit ALLEN Spalten durch beide
+    # Umwandler schicken. Genau das ist am Notebook gescheitert.
+    for _tab, _fn in (("signals", _dbm._row_to_signal),
+                      ("hebel_signals", _dbm._row_to_hebel_signal)):
+        # ⚠️ PFLICHTSPALTEN MUESSEN BEFUELLT WERDEN, sonst scheitert schon
+        # das INSERT und die Pruefung testet den Lesepfad gar nicht. Der Wert
+        # ist gleichgueltig - geprueft wird, ob die Zeile LESBAR ist.
+        _info = [dict(name=r["name"], typ=(r["type"] or "").upper(),
+                      pflicht=bool(r["notnull"]), vorgabe=r["dflt_value"],
+                      schluessel=bool(r["pk"]))
+                 for r in _mem_mig.execute(f"PRAGMA table_info({_tab})")]
+        # `SELECT *` liefert ohnehin JEDE Spalte - das INSERT muss also nur
+        # die Pflichtfelder erfuellen. Alles andere bleibt NULL, und genau so
+        # sieht eine frisch migrierte Zeile aus.
+        _spalten = [s["name"] for s in _info]
+        _roh = {_s["name"]: (0 if _s["typ"].startswith(("INT", "REAL", "NUM"))
+                             else "x")
+                for _s in _info
+                if _s["pflicht"] and _s["vorgabe"] is None
+                and not _s["schluessel"]}
+        _roh.update({"symbol": "X", "created_at": "2026-08-22T00:00:00+00:00",
+                     "action": "KAUFEN", "gate_passed": 1, "risk_veto": 0})
+        _mem_mig.execute(
+            f"INSERT INTO {_tab} ({', '.join(_roh)}) VALUES "
+            f"({', '.join('?' for _ in _roh)})", tuple(_roh.values()))
+        _zeile = _mem_mig.execute(f"SELECT * FROM {_tab} LIMIT 1").fetchone()
+        try:
+            _obj = _fn(_zeile)
+            _ok, _grund = _obj is not None, ""
+        except Exception as _exc:                             # noqa: BLE001
+            _ok, _grund = False, f"{type(_exc).__name__}: {_exc}"
+        pruefe(P, f"{_tab}: eine Zeile mit ALLEN Spalten laesst sich lesen",
+               _ok, _grund + " - eine neue Spalte darf den LESEPFAD nicht "
+                             "toeten; genau daran startete die App am "
+                             "22.08. am Notebook nicht mehr")
+    _mem_mig.close()
+
     # ---- `gebunden_durch` MUSS DEN ECHTEN DECKEL NENNEN (22.08.2026) ----
     #
     # ⚠️ DIE BEDINGUNG WAR VERDREHT. Sie lautete `hebel <= hebel_noetig`, und

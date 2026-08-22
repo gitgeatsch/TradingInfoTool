@@ -18299,3 +18299,84 @@ und macht die Nominale nie schlechter. ⚠️ Sie **sinkt** allerdings erst, wen
 der Hebel bei 1,0 aufsetzt — bis dahin fällt nur der Hebel.
 
 **Suite 1.534.**
+
+
+---
+
+## Kapitel 138 — ⚠️ Die App startete am Notebook nicht mehr (22.08.2026)
+
+**Mein Fehler aus E1, und er lag vier Tage.** Gemeldet vom Notebook:
+
+> *Schema mismatch — `HebelSignal` class missing `einstieg_erreicht` field.*
+
+### 138.1 Was passiert ist
+
+E1 legte die Spalte `einstieg_erreicht` per Migration auf **beide** Tabellen —
+mit der ausdrücklichen Begründung *„damit keine der beiden Familien still ohne
+die Angabe bleibt"*. Das war richtig. Falsch war, was danach fehlte:
+
+| | `signals` | `hebel_signals` |
+|---|---|---|
+| Spalte angelegt | ✔ | ✔ |
+| Feld in der Klasse | ✘ | ✘ |
+| Lesepfad gefiltert | ✔ (19.08.) | ✘ |
+
+`_row_to_signal()` filtert seit dem 19.08. auf die Felder der Klasse und ließ
+die neue Spalte einfach fallen. `_row_to_hebel_signal()` gab die Zeile
+ungefiltert als `HebelSignal(**data)` in den Konstruktor — **und eine
+unbekannte Spalte ist dort ein `TypeError`.**
+
+⚠️ **Die Härtung vom 19.08. war nur zur Hälfte gemacht.** Ihr eigener
+Kommentar beschreibt den Fehler wörtlich: *„eine NEUE Spalte in der Tabelle
+liess damit den LESEPFAD abstuerzen, nicht das Schreiben."* Sie wurde auf
+`Signal` angewandt und auf `HebelSignal` nicht. Das ist genau die stehende
+Vorgabe „bei Funden ALLE Asset-Varianten prüfen" — und sie wurde damals
+gebrochen, nicht heute.
+
+### 138.2 ⚠️ Warum meine Prüfungen es nicht gefunden haben
+
+**Am Desktop läuft `main.py` nie** (stehende Vorgabe: nie gegen die
+Produktiv-Datenbank). Also lief die **Migration** nie. Also hatte die Tabelle
+die Spalte nie. Also konnte keine Prüfung über sie stolpern.
+
+> **Eine Prüfung gegen eine unmigrierte Datenbank prüft die Migration nicht.**
+
+1.534 grüne Prüfungen, `simuliere_kette` mit 6 Signalen und 0 Fehlern — und
+die App startete trotzdem nicht. Der blinde Fleck saß nicht im Code, sondern
+im **Zustand der Datenbank, gegen die geprüft wurde**.
+
+### 138.3 Was gebaut wurde
+
+| | |
+|---|---|
+| `_row_to_hebel_signal()` | filtert jetzt auf die Felder der Klasse — dieselbe Härtung wie `_row_to_signal()` |
+| `Signal` und `HebelSignal` | tragen `einstieg_erreicht` |
+| **Neue Dauerprüfung** | legt die Datenbank **frisch an, migriert sie**, schreibt eine Zeile mit allen Pflichtfeldern und liest sie durch **beide** Umwandler |
+
+⚠️ **Das Feld war bis heute nur beschreibbar, nicht lesbar.** E1 schreibt
+`einstieg_erreicht` über `update_signal_outcome()`; gelesen wurde es nie —
+`_row_to_signal()` filterte es still weg. Jede spätere Auswertung hätte an der
+Modellschicht vorbeigreifen müssen.
+
+**Positivkontrolle** — mit dem Zustand des Notebooks (Härtung zurückgebaut,
+Feld entfernt):
+
+```
+OK    signals: eine Zeile mit ALLEN Spalten laesst sich lesen
+FEHL  hebel_signals: eine Zeile mit ALLEN Spalten laesst sich lesen
+```
+
+Genau die eine, die gebrochen war. Nach dem Rückbau: **1.540 Prüfungen, alle
+bestanden.**
+
+### 138.4 Die Lehre, als Regel
+
+**Methodik 2.61: Wer eine Spalte anlegt, muss eine Zeile daraus lesen.**
+
+Eine Migration ist erst geprüft, wenn eine Zeile aus der **migrierten**
+Tabelle durch den **Lesepfad** gegangen ist. Ein Schreibtest genügt nicht: das
+Schreiben nennt seine Spalten einzeln, das Lesen bekommt sie alle auf einmal.
+
+⚠️ Und der Nebeneffekt der Desktop-Regel: weil hier nie migriert wird, ist
+jede Prüfung gegen eine Datenbank ohne die neue Spalte **strukturell blind**.
+Die Prüfung muss die Migration selbst auslösen.
