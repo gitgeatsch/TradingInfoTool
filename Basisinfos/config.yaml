@@ -2003,6 +2003,33 @@ gegenpruefung:
 # also keine zweite Meinung zum selben Asset geben. Ziel ist, das Ergebnis
 # an echten Mails zu sehen und danach zu optimieren.
 rollen_kette:
+  # ⚠️ DER COOLDOWN JE GRUPPE (23.08.2026) - REPARATUR EINER S6b-FOLGE.
+  #
+  # WAS PASSIERT IST. Bis S6b lief Krypto mit ZWEI Laeufen, und jeder hatte
+  # seinen eigenen Cooldown-Topf: spot 15 h, hebel 3,5 h. Der Hebel-Lauf trug
+  # damit den Takt - gemessen 134/149/150 Urteile je Tag (19.-21.08.) gegen
+  # 95/69/85 aus dem Spot-Lauf, also rund zwei Drittel.
+  #
+  # S6b hat den zweiten Lauf entfernt - richtig, weil er woertlich dieselbe
+  # Frage stellte. ⚠️ ABER DAMIT FIEL AUCH SEIN COOLDOWN-TOPF WEG. Seither
+  # gilt fuer Krypto nur noch 15 h: ein Symbol wird hoechstens alle 15
+  # Stunden beurteilt statt alle 3,5. Am 22.08. kam nach 21:12 Uhr acht
+  # Laeufe lang NICHTS mehr durch, und es gab keine Signalmails mehr.
+  #
+  # WARUM 3,5 UND NICHT 15. Das ist der Takt, der VORHER faktisch galt - und
+  # er ist BILLIGER als der Zustand vor S6b, nicht teurer:
+  #
+  #     vor S6b:   1/15 + 1/3,5 = 0,352 Fragen je Symbol und Stunde
+  #     jetzt:            1/3,5 = 0,286 Fragen je Symbol und Stunde
+  #
+  # Ein Lauf statt zwei, und der kurze Takt - das ist weniger als beides
+  # zusammen und mehr als der lange allein.
+  #
+  # ⚠️ NUR KRYPTO. Aktien, Rohstoffe, Themen-ETF und Absicherung behalten
+  # ihre 24 h aus der Handelstagslogik - sie hatten nie einen Hebel-Lauf,
+  # bei ihnen ist nichts weggefallen.
+  cooldown_stunden_je_gruppe:
+    krypto: 3.5
   # ===================================================================
   # S5 DES UMBAUPLANS KAPITEL 90 (18.08.2026) - HIER DREHT SICH ALLES.
   # ===================================================================

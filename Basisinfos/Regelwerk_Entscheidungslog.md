@@ -20383,3 +20383,48 @@ dort erwartbar; (2) 18 aufgeloeste Signale tragen keine Aussage ueber Guete,
 nur ueber die RICHTUNG des Messfehlers: die alte Messung war zu freundlich.
 
 Suite 1551, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 142: S6b HAT MEHR ENTFERNT ALS DEN ZWEITEN LAUF
+
+Nutzermeldung: "seit dem Fehler bzw. dessen Korrektur sind keine Signale per
+E-Mail gekommen." Die Ursache ist meine - eine Nebenwirkung von S6b, beim
+Bauen nicht bedacht.
+
+DER FUND: wiederholung.gesperrt_bis() sperrt getrennt je Instrument - hebel
+3,5 h, spot 15,0 h. Bis S6b lief Krypto mit ZWEI Laeufen, jeder mit eigenem
+Topf. Der Hebel-Lauf trug rund zwei Drittel der Urteile (134/149/150 je Tag
+gegen 95/69/85 aus dem Spot-Lauf). Seither gilt nur noch der 15-Stunden-Takt.
+Im Log: nach dem Lauf um 21:12 kam in ACHT Laeufen in Folge kein Symbol mehr
+durch die Stufe `wiederholung` - (0,30), (0,36), (0,31).
+
+⚠️ AUSSCHLUSSPRUEFUNG: die Richtungspflicht aus S6c war NICHT die Ursache -
+0 Ablehnungen "ohne Richtung", 0 EmpfehlungUngueltig im ganzen Logfenster.
+
+REPARATUR ohne Codeeingriff: rollen_kette.cooldown_stunden_je_gruppe.krypto
+= 3.5. Der Mechanismus existierte seit dem 15.08.
+
+⚠️ UND SIE IST KEINE LOCKERUNG: vor S6b 1/15 + 1/3,5 = 0,352 Fragen je Symbol
+und Stunde, jetzt 1/3,5 = 0,286. Ein Lauf statt zwei, und der kurze Takt -
+weniger als beides zusammen, mehr als der lange allein. NUR Krypto; die
+uebrigen Gruppen hatten nie einen Hebel-Lauf.
+
+⚠️ UND ES WAR NICHT DER EINZIGE FALL. Neun Stellen fragen
+`instrument == "hebel"`, was fuer Krypto nie mehr wahr ist. Behoben: der
+Cooldown. OFFEN: lagebeschreibung._finanzierung (Finanzierungsrate fehlt im
+Lagebild), lagebeschreibung._hebelgeometrie (Liquidationsabstand fehlt),
+handelsauftrag (Strategie "swing" entfaellt), betraege (Einsatz 800 statt
+1.000), positionierung (meldet jetzt "Finanzierungsrate fehlt").
+
+DIE BEIDEN LAGEBILD-VERLUSTE WIEGEN AM SCHWERSTEN: seit S6a/S6b ist der Hebel
+ein ERGEBNIS der Rechnung. Ergibt sie eine gehebelte Position, hat das Modell
+den Liquidationsabstand NIE gesehen. Die Reparatur braucht die Assetklasse in
+lagebeschreibung.geteilt(), die dort heute nicht ankommt - eigener Schritt.
+
+DIE LEHRE: WER EINEN LAUF ENTFERNT, ENTFERNT ALLES, WAS AN SEINEM ETIKETT
+HING. S6b stellte die richtige Frage ("zwei identische Fragen sind eine zu
+viel") und die falsche nicht: was haengt sonst noch an diesem Etikett?
+
+⚠️ Und die Falle der freien Namen zum fuenften Mal an zwei Tagen (`_YAML`).
+
+Suite 1557, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

@@ -18646,3 +18646,103 @@ Anteil, den vorher die Kerze des Erstellungstags „getroffen" hat.
    Messung war zu freundlich.
 
 **Suite 1.551 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+
+---
+
+## Kapitel 142 — ⚠️ S6b hat mehr entfernt als den zweiten Lauf (23.08.2026)
+
+**Nutzermeldung:** *„seit dem Fehler bzw. dessen Korrektur sind keine Signale
+per E-Mail gekommen."* Die Ursache ist meine, und sie ist eine Nebenwirkung
+von S6b, die ich beim Bauen nicht bedacht habe.
+
+### 142.1 Der Fund
+
+`wiederholung.gesperrt_bis()` sperrt ein Symbol nach einem Urteil — **getrennt
+je Instrument**:
+
+| Instrument | Cooldown |
+|---|---:|
+| `hebel` | **3,5 h** |
+| `spot` | **15,0 h** |
+
+Bis S6b lief Krypto mit **zwei** Läufen, und jeder hatte seinen **eigenen
+Topf**. Der Hebel-Lauf trug damit den Takt:
+
+| Tag | HEBEL-Lauf | SPOT-Lauf |
+|---|---:|---:|
+| 19.08. | 134 | 95 |
+| 20.08. | 149 | 69 |
+| 21.08. | 150 | 85 |
+
+**Rund zwei Drittel aller Urteile kamen aus dem Lauf, den S6b entfernt hat.**
+Seither gilt für Krypto nur noch der 15-Stunden-Takt.
+
+**Im Log nachweisbar:** nach dem Lauf um 21:12 (13 Symbole durch) kam in
+**acht** aufeinanderfolgenden Läufen kein einziges Symbol mehr durch die Stufe
+`wiederholung` — `(0, 30)`, `(0, 36)`, `(0, 31)`.
+
+⚠️ **Und die Ausschlussprüfung gehört daneben:** die Richtungspflicht aus S6c
+war **nicht** die Ursache — **0 Ablehnungen „ohne Richtung", 0
+`EmpfehlungUngueltig`** im gesamten Logfenster.
+
+### 142.2 Die Reparatur, und warum sie keine Lockerung ist
+
+```yaml
+rollen_kette:
+  cooldown_stunden_je_gruppe:
+    krypto: 3.5
+```
+
+Der Mechanismus existierte bereits (`stunden()` fragt die Gruppe **vor** dem
+Instrument, seit der Korrektur vom 15.08.). **Kein Codeeingriff.**
+
+⚠️ **Und der neue Takt kostet WENIGER als der Zustand vor S6b:**
+
+| | Fragen je Symbol und Stunde |
+|---|---:|
+| vor S6b (zwei Läufe) | 1/15 + 1/3,5 = **0,352** |
+| jetzt (ein Lauf, 3,5 h) | 1/3,5 = **0,286** |
+
+Ein Lauf statt zwei, und der kurze Takt — das ist weniger als beides zusammen
+und mehr als der lange allein. **Eine Reparatur, keine Lockerung.**
+
+⚠️ **Nur Krypto.** Aktien, Rohstoffe, Themen-ETF und Absicherung behalten ihre
+24 h: sie hatten nie einen Hebel-Lauf, bei ihnen ist nichts weggefallen.
+
+### 142.3 ⚠️ Und es war nicht der einzige Fall
+
+Systematisch gesucht: **neun Stellen** fragen `instrument == "hebel"` — und
+das ist für Krypto seit S6b nie mehr wahr.
+
+| Stelle | Wirkung seit S6b | |
+|---|---|---|
+| `wiederholung` Cooldown | 15 h statt 3,5 h | **behoben** |
+| `lagebeschreibung._finanzierung` | **Finanzierungsrate fehlt im Lagebild** | ⚠️ offen |
+| `lagebeschreibung._hebelgeometrie` | **Liquidationsabstand fehlt im Lagebild** | ⚠️ offen |
+| `handelsauftrag` Strategien | „swing" entfällt für Krypto | offen |
+| `betraege` Einsatz | 800 € statt 1.000 € | offen |
+| `positionierung` | meldet jetzt „Finanzierungsrate fehlt" | offen |
+
+⚠️ **Die beiden Lagebild-Verluste wiegen am schwersten.** Seit S6a/S6b ist der
+Hebel ein **Ergebnis** der Rechnung, nicht eine Wahl des Modells. Ergibt die
+Rechnung eine gehebelte Position, hat das Modell den **Liquidationsabstand nie
+gesehen** — vorher stand er im Hebel-Lauf im Lagebild.
+
+Die Reparatur braucht die Assetklasse in `lagebeschreibung.geteilt()`, die
+dort heute nicht ankommt. Eigener Schritt.
+
+### 142.4 Die Lehre
+
+> **Wer einen Lauf entfernt, entfernt alles, was an seinem Etikett hing.**
+
+S6b hat die richtige Frage gestellt (*„zwei identische Fragen sind eine zu
+viel"*) und die falsche nicht: *was hängt sonst noch an diesem Etikett?* Die
+Antwort waren ein Cooldown-Topf, zwei Faktenblöcke, eine Strategie und ein
+Einsatzbetrag.
+
+⚠️ **Und die Falle der freien Namen zum fünften Mal an zwei Tagen** — `_YAML`
+war in der Funktion noch nicht gebunden. Immer dasselbe Muster: ein Block, der
+vor seinen Import gerät.
+
+**Suite 1.557 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**

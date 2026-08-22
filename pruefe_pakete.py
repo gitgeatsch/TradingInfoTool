@@ -7504,12 +7504,17 @@ def paket_15() -> None:
     # Stunden, am 14.08. mit der Handelstagslogik begruendet, kamen nie zum
     # Zug. Im Krypto-Betrieb unsichtbar, weil Krypto ohnehin 15 h hat.
     from agent import wiederholung as WH13
+    # ⚠️ HIER STAND `krypto == 15.0` (bis 23.08.2026). Das war der Zustand,
+    # als Krypto seinen Wert noch aus dem INSTRUMENT bezog. Seit die
+    # config einen Gruppenwert traegt (3,5 h, Reparatur der S6b-Folge),
+    # gewinnt er - und belegt dieselbe Aussage staerker: die Gruppe schlaegt
+    # das Instrument jetzt an BEIDEN Gruppen, nicht nur an einer.
     pruefe(P, "eine GRUPPE ist spezifischer als ein INSTRUMENT",
            WH13.stunden("spot", _cfg13, "aktien") == 24.0
-           and WH13.stunden("spot", _cfg13, "krypto") == 15.0,
-           f"aktien {WH13.stunden('spot', _cfg13, 'aktien')} h - eine Aktie "
-           "handelt nicht rund um die Uhr; ein 15-Stunden-Takt fragt dort "
-           "mehrfach am selben Handelstag dasselbe")
+           and WH13.stunden("spot", _cfg13, "krypto") == 3.5,
+           f"aktien {WH13.stunden('spot', _cfg13, 'aktien')} h, krypto "
+           f"{WH13.stunden('spot', _cfg13, 'krypto')} h - beide muessen aus "
+           f"der GRUPPE kommen, nicht aus `spot_cooldown_stunden` (15)")
     pruefe(P, "und die Konfiguration schlaegt den Code weiterhin",
            WH13.stunden("spot", {"rollen_kette": {
                "cooldown_stunden_je_gruppe": {"aktien": 6}}}, "aktien") == 6.0,
@@ -10436,6 +10441,42 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- DER COOLDOWN JE GRUPPE (23.08.2026) ---------------------------
+    #
+    # ⚠️ S6b HAT NICHT NUR DEN ZWEITEN LAUF ENTFERNT, SONDERN AUCH SEINEN
+    # COOLDOWN-TOPF. spot 15 h, hebel 3,5 h - der Hebel-Lauf trug rund zwei
+    # Drittel der Urteile (134/149/150 gegen 95/69/85 je Tag). Ohne ihn wurde
+    # jedes Krypto-Symbol nur noch alle 15 Stunden beurteilt; am 22.08. kam
+    # nach 21:12 acht Laeufe lang nichts mehr durch, und es gab keine
+    # Signalmails mehr.
+    # ⚠️ EIGENER IMPORT, NICHT `_YAML` VON WEITER UNTEN. Der Name wird in
+    # dieser Funktion erst spaeter gebunden - und der NameError kam prompt.
+    # Fuenftes Mal an zwei Tagen, immer dasselbe Muster.
+    import yaml as _YAML2
+
+    from agent import wiederholung as _WH2
+
+    _cfg_wh = _YAML2.safe_load(
+        io.open("Basisinfos/config.yaml", encoding="utf-8").read())
+    pruefe(P, "Krypto wird wieder im kurzen Takt beurteilt",
+           abs(_WH2.stunden("spot", _cfg_wh, "krypto") - 3.5) < 1e-9,
+           f"{_WH2.stunden('spot', _cfg_wh, 'krypto')} h - mit 15 h steht die "
+           f"Produktion still, das war der Zustand vom 22.08.")
+    for _g in ("aktien", "rohstoffe", "themen_etf", "hedge"):
+        pruefe(P, f"{_g} behaelt seine 24 h",
+               abs(_WH2.stunden("spot", _cfg_wh, _g) - 24.0) < 1e-9,
+               "diese Gruppen hatten nie einen Hebel-Lauf - bei ihnen ist "
+               "nichts weggefallen, also gibt es nichts zu reparieren")
+    # ⚠️ UND DER NEUE TAKT IST BILLIGER ALS DER ZUSTAND VOR S6b, nicht
+    # teurer: 1/15 + 1/3,5 = 0,352 Fragen je Symbol und Stunde gegen
+    # 1/3,5 = 0,286. Ein Lauf statt zwei, und der kurze Takt.
+    _vorher = 1.0 / 15.0 + 1.0 / 3.5
+    _jetzt = 1.0 / _WH2.stunden("spot", _cfg_wh, "krypto")
+    pruefe(P, "und er kostet weniger Aufrufe als vor S6b",
+           _jetzt < _vorher,
+           f"{_jetzt:.3f} gegen {_vorher:.3f} Fragen je Symbol und Stunde - "
+           f"waere er teurer, waere es eine Lockerung und keine Reparatur")
+
     # ---- E2: AM ERSTELLUNGSTAG ZAEHLT NUR DER SCHLUSSKURS (22.08.2026) --
     #
     # ⚠️ WAS SCHIEFGING. `min_date = signal.created_at[:10]` nahm die GANZE
