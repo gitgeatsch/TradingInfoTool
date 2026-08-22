@@ -17964,7 +17964,14 @@ Ergänzung löse die Zeilen rückwirkend auf. Sie tut das — aber nur für die
 
 Die übrigen 47 bleiben zu Recht `nicht_anwendbar` — `_zonen_schwelle()`
 liefert `None`, und die Funktion steigt sauber aus. **Kein Absturz, kein
-falsches Ergebnis.** Dass die Verkaufsseite so viel seltener Zonen trägt, ist
+falsches Ergebnis.**
+
+> ⚠️ **KORREKTUR (22.08. abends, Kapitel 139).** Ich schrieb hier, die zehn
+> Zeilen mit Zonen bekämen ihr Ergebnis „beim nächsten Lauf nachträglich".
+> **Das war falsch.** Die Auswertung holt nur Zeilen mit `outcome_status IS
+> NULL OR = 'offen'`; `nicht_anwendbar` ist ein **Endzustand**. Am Export vom
+> selben Abend nachgemessen: **11 von 12 standen unverändert da.** Es brauchte
+> eine eigene, einmalige Nachöffnung — siehe Kapitel 139. Dass die Verkaufsseite so viel seltener Zonen trägt, ist
 ein **eigener offener Punkt** und gehört zu O-29.
 
 Fünf weitere Stellen kannten `REDUZIEREN` ebenfalls nicht: die
@@ -18380,3 +18387,105 @@ Schreiben nennt seine Spalten einzeln, das Lesen bekommt sie alle auf einmal.
 ⚠️ Und der Nebeneffekt der Desktop-Regel: weil hier nie migriert wird, ist
 jede Prüfung gegen eine Datenbank ohne die neue Spalte **strukturell blind**.
 Die Prüfung muss die Migration selbst auslösen.
+
+
+---
+
+## Kapitel 139 — Kontrollauswertung am laufenden System (22.08.2026, abends)
+
+**Erster Export nach dem Umbau** (21:11 UTC). Drei Fragen waren vorab
+festgelegt — das ist wichtig, weil danach nicht mehr gesucht werden darf, was
+gerade gut aussieht.
+
+### 139.1 ⚠️ Zuerst: die Basis ist dünn, und das gehört vorneweg
+
+Die Kette lief heute in **zwei Fassungen**:
+
+| Zeit (UTC) | Vokabular | |
+|---|---|---|
+| 00:00–11:29 | `ERÖFFNEN` **neben** `KAUFEN` | der alte Doppellauf, 98 Signale |
+| 19:00 | nur neues Vokabular | **3 Signale** |
+
+**Die Kontrollauswertung steht damit auf drei Signalen aus einem Umlauf.**
+Alles, was daraus folgt, ist ein *Hinweis*, kein Befund. Die zweite Auswertung
+nach ein paar vollen Umläufen muss folgen.
+
+⚠️ Der Vormittag ist trotzdem aufschlussreich: `ERÖFFNEN` **und** `KAUFEN` in
+derselben Stunde — genau der Doppellauf, den S6b beseitigt hat, hier zum
+letzten Mal in den Daten sichtbar.
+
+### 139.2 Frage 1 — hält die Richtungspflicht, ohne Signale zu kosten?
+
+| | |
+|---|---:|
+| Ablehnungen „ohne Richtung" | **0** |
+| `EmpfehlungUngueltig` insgesamt | **0** |
+
+Und die drei Signale zeigen die Regel im Betrieb, jede Zeile anders:
+
+| Symbol | Aktion | `richtung` | |
+|---|---|---|---|
+| PLTR | NACHKAUFEN | **`LONG`** | Einstieg → Pflicht erfüllt, gespeichert |
+| VST | VERKAUFEN | `None` | kein Einstieg → S6c verwirft das Feld |
+| BRETT | HALTEN | `None` | kein Einstieg → verworfen |
+
+**Genau das entworfene Verhalten, an echten Daten.** ⚠️ Bei *einer*
+Einstiegsaktion — die Aussage trägt noch nicht.
+
+### 139.3 Frage 2 — ⚠️ die Nachauflösung ist ausgeblieben
+
+| | |
+|---|---:|
+| REDUZIEREN gesamt | 75 |
+| davon mit Zonen | 12 |
+| **davon weiterhin `nicht_anwendbar`** | **11** |
+
+**Meine Aussage aus Kapitel 135 war falsch.** Ich schrieb, die Zeilen bekämen
+ihr Ergebnis „beim nächsten Lauf nachträglich". Der Grund, warum nicht, steht
+in einer einzigen Zeile:
+
+```python
+"SELECT id FROM signals WHERE outcome_status IS NULL OR outcome_status = ?",
+(OUTCOME_OFFEN,),
+```
+
+> **Wer einen Filter erweitert, öffnet damit keine Zeile, die der alte Filter
+> bereits endgültig abgelegt hat.**
+
+`nicht_anwendbar` ist ein Endzustand. Der erweiterte `_TRACKABLE_ACTIONS`
+wirkt für **neue** Signale — die alten bleiben liegen, wo sie liegen.
+
+**Gebaut:** eine einmalige Nachöffnung (`_migrate_reduzieren_nachoeffnen`).
+Sie setzt genau die Zeilen auf `NULL` zurück, die der alte Wortschatz
+ausgeschlossen hat: **Aktion REDUZIEREN, Zustand `nicht_anwendbar`, beide
+Zonen vorhanden.** Ohne Zonen bliebe das Ergebnis dasselbe — dort wäre ein
+Rücksetzen nur Unruhe.
+
+⚠️ **Einmalig, mit Marke in `meta`.** Ohne sie öffnete jeder Start die Zeilen
+erneut, die die Auswertung zu Recht wieder ablegt — eine Schleife ohne Ende.
+An einer Kopie der Notebook-Datenbank geprüft: **10 freigegeben, zweiter Lauf
+0, Marke gesetzt.**
+
+### 139.4 Frage 3 — ein Lauf je Asset
+
+**3 Signale, kein Symbol doppelt.** ✔ — bei drei Symbolen allerdings auch
+keine Kunst. Die belastbare Zahl kommt aus dem nächsten vollen Umlauf.
+
+### 139.5 Drei Prüfungen, die beim Bauen selbst fehlschlugen
+
+| | |
+|---|---|
+| ⚠️ `_sq3` nicht gebunden | **die Falle der freien Namen, zum vierten Mal an einem Tag** — mein Block stand vor dem Import |
+| „Geradeziehung läuft VOR dem ersten Kettenlauf" | suchte in den **ersten 2.000 Zeichen** von `init_db`; mein neuer Aufruf schob die Zeile heraus. **Der Code war richtig, das Fenster zu klein** — jetzt gegen die Funktionsgrenze statt gegen eine Zeichenzahl |
+| mein eigener Testaufbau | `init_db()` hatte die Nachöffnung **schon** laufen lassen und die Marke gesetzt; der Test prüfte einen No-Op und meldete es sofort |
+
+**Suite 1.543.**
+
+### 139.6 Was die zweite Auswertung beantworten muss
+
+| | |
+|---|---|
+| Richtungspflicht | über **viele** Einstiegsaktionen, je Anbieter |
+| Nachöffnung | sind die 10–11 Zeilen jetzt wirklich aufgelöst? |
+| S6b | halbieren sich die Modellaufrufe für Krypto messbar? |
+| offen aus 135 | **warum trägt die Verkaufsseite so selten Zonen** (REDUZIEREN 16 %, KAUFEN 100 %) |

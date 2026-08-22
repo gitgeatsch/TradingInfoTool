@@ -997,6 +997,71 @@ def _migrate_signal_einstieg_columns(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+# ---------------------------------------------------------------------------
+# ⚠️ EINMALIGE NACHOEFFNUNG (S6c-Nachtrag, 22.08.2026)
+#
+# WAS SCHIEFGING. Bis S6c kannte `_TRACKABLE_ACTIONS` das Wort `REDUZIEREN`
+# nicht. `check_signal_outcome()` stieg deshalb in der ersten Zeile aus und
+# legte den Endzustand `nicht_anwendbar` ab - fuer 55 von 57 Signalen.
+#
+# ⚠️ UND MEINE ANNAHME IN KAPITEL 135 WAR FALSCH. Dort steht, die Zeilen
+# bekaemen ihr Ergebnis "beim naechsten Lauf nachtraeglich". Das tun sie
+# NICHT: `aktualisiere_signal_ergebnisse()` holt nur Zeilen mit
+# `outcome_status IS NULL OR = 'offen'`. `nicht_anwendbar` ist ein
+# ENDZUSTAND - einmal gesetzt, nie wieder angefasst. Nachgemessen am Export
+# vom 22.08. um 21:11: 11 von 12 REDUZIEREN-Zeilen mit Zonen standen
+# unveraendert auf `nicht_anwendbar`, obwohl der Fix laengst lief.
+#
+# DIE REGEL DAHINTER: wer einen Filter erweitert, oeffnet damit KEINE Zeile,
+# die der alte Filter bereits endgueltig abgelegt hat.
+#
+# WAS HIER PASSIERT. Genau die Zeilen werden auf NULL zurueckgesetzt, die der
+# alte Wortschatz ausgeschlossen hat: Aktion REDUZIEREN, Zustand
+# `nicht_anwendbar` UND beide Zonen vorhanden. Ohne Zonen bliebe das Ergebnis
+# dasselbe - dort waere ein Ruecksetzen nur Unruhe.
+#
+# ⚠️ EINMALIG, MIT MARKE IN `meta`. Ohne sie oeffnete jeder Start die Zeilen
+# erneut, die die Auswertung zu Recht wieder auf `nicht_anwendbar` setzt -
+# eine Schleife, die nie zur Ruhe kommt.
+_NACHOEFFNUNG_MARKE = "reduzieren_nachgeoeffnet_am"
+
+
+def _migrate_reduzieren_nachoeffnen(conn: sqlite3.Connection) -> int:
+    """Zeilen freigeben, die der alte Wortschatz faelschlich abgelegt hat."""
+    try:
+        schon = conn.execute(
+            "SELECT value FROM meta WHERE key = ?",
+            (_NACHOEFFNUNG_MARKE,)).fetchone()
+    except sqlite3.Error:
+        return 0
+    if schon is not None:
+        return 0
+    try:
+        cur = conn.execute(
+            "UPDATE signals SET outcome_status = NULL "
+            "WHERE outcome_status = 'nicht_anwendbar' "
+            "  AND action = 'REDUZIEREN' "
+            "  AND COALESCE(take_profit_usd_von, take_profit_usd_bis, "
+            "               take_profit_usd) IS NOT NULL "
+            "  AND COALESCE(stop_loss_usd_von, stop_loss_usd_bis, "
+            "               stop_loss_usd) IS NOT NULL")
+        anzahl = int(cur.rowcount or 0)
+    except sqlite3.Error:
+        return 0
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES (?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (_NACHOEFFNUNG_MARKE, datetime.now(timezone.utc).isoformat()))
+    conn.commit()
+    if anzahl:
+        logger.info(
+            "S6c-Nachoeffnung: %d REDUZIEREN-Signale wieder zur Auswertung "
+            "freigegeben - der alte Wortschatz hatte sie als "
+            "'nicht_anwendbar' abgelegt", anzahl)
+    return anzahl
+
+
+
 _SIGNAL_SELBST_HALTEN_NEW_COLUMNS = {
     "selbst_halten_outcome_status": "TEXT",
     "selbst_halten_outcome_geprueft_am": "TEXT",
@@ -1389,6 +1454,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_re_evaluierung_faellig_column(conn)
     _migrate_signal_selbst_halten_columns(conn)
     _migrate_signal_einstieg_columns(conn)
+    _migrate_reduzieren_nachoeffnen(conn)
     _migrate_hebel_signal_selbst_halten_columns(conn)
     _migrate_hebel_signal_atr_column(conn)
     _migrate_hebel_signal_angefragte_richtung_column(conn)

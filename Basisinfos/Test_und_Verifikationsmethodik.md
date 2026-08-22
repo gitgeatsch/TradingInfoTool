@@ -3593,3 +3593,29 @@ Zeile lesen.
 **Umgesetzt** in `pruefe_pakete.py` (Paket Dimension): für `signals` und
 `hebel_signals` je eine Zeile mit allen Pflichtfeldern durch `_row_to_signal()`
 bzw. `_row_to_hebel_signal()`. Positivkontrolle bestanden.
+
+
+### 2.62 Ein erweiterter Filter öffnet keine abgelegte Zeile (22.08.2026)
+
+**Anlass:** S6c erweiterte `_TRACKABLE_ACTIONS` um `REDUZIEREN`. Ich schrieb,
+die betroffenen Zeilen bekämen ihr Ergebnis „beim nächsten Lauf
+nachträglich". **Am Export desselben Abends standen 11 von 12 unverändert
+da.**
+
+**Die Regel.** Wer einen Auswahlfilter erweitert, ändert damit nur, was
+**künftig** hineinläuft. Zeilen, die der alte Filter in einen **Endzustand**
+geschrieben hat (`nicht_anwendbar`, `abgelaufen`, …), werden nie wieder
+angefasst — die Auswertung holt sich typischerweise nur `NULL` oder `offen`.
+
+**Was zu tun ist.** Zu jeder Filtererweiterung gehört die Frage: *gibt es
+Zeilen, die der alte Filter endgültig abgelegt hat?* Wenn ja, braucht es eine
+**eigene, einmalige Nachöffnung** —
+
+1. **eng gefasst**: nur die Zeilen, die der alte Filter ausgeschlossen hat,
+   nicht alle mit demselben Endzustand;
+2. **mit Marke** (hier: `meta`-Schlüssel), sonst öffnet jeder Start erneut,
+   was die Auswertung zu Recht wieder ablegt — eine Schleife ohne Ende;
+3. **an einer Kopie der echten Datenbank geprüft**, nicht nur an einer leeren.
+
+⚠️ **Und die Erwartung gehört gemessen, nicht angenommen.** Meine Aussage
+stand vier Tage unwidersprochen in der Doku, weil niemand nachgesehen hat.

@@ -20260,3 +20260,50 @@ NEUE REGEL - METHODIK 2.61: WER EINE SPALTE ANLEGT, MUSS EINE ZEILE DARAUS
 LESEN. Eine Migration ist erst geprueft, wenn eine Zeile aus der MIGRIERTEN
 Tabelle durch den LESEPFAD gegangen ist. Ein Schreibtest genuegt nicht - das
 Schreiben nennt seine Spalten einzeln, das Lesen bekommt sie alle auf einmal.
+
+
+[2026-08-22] KAPITEL 139: KONTROLLAUSWERTUNG AM LAUFENDEN SYSTEM
+
+Erster Export nach dem Umbau (21:11 UTC), drei vorab festgelegte Fragen.
+
+⚠️ ZUERST: DIE BASIS IST DUENN. Die Kette lief heute in zwei Fassungen -
+00:00 bis 11:29 der alte Doppellauf (ERÖFFNEN NEBEN KAUFEN, 98 Signale), um
+19:00 nur noch das neue Vokabular mit DREI Signalen. Alles daraus ist ein
+Hinweis, kein Befund. Der Vormittag zeigt dafuer den Doppellauf zum letzten
+Mal in den Daten.
+
+FRAGE 1 - RICHTUNGSPFLICHT: 0 Ablehnungen "ohne Richtung", 0
+EmpfehlungUngueltig insgesamt. Die drei Signale zeigen die Regel im Betrieb:
+PLTR NACHKAUFEN mit richtung=LONG gespeichert; VST VERKAUFEN und BRETT HALTEN
+ohne Richtung, weil S6c das Feld dort verwirft. Genau das entworfene
+Verhalten - ⚠️ bei EINER Einstiegsaktion, die Aussage traegt noch nicht.
+
+⚠️ FRAGE 2 - DIE NACHAUFLOESUNG IST AUSGEBLIEBEN, UND MEINE AUSSAGE AUS
+KAPITEL 135 WAR FALSCH. 75 REDUZIEREN, 12 mit Zonen, 11 davon weiterhin
+'nicht_anwendbar'. Grund in einer Zeile: die Auswertung holt nur
+"outcome_status IS NULL OR = 'offen'". nicht_anwendbar ist ein ENDZUSTAND.
+WER EINEN FILTER ERWEITERT, OEFFNET KEINE ZEILE, DIE DER ALTE FILTER BEREITS
+ENDGUELTIG ABGELEGT HAT.
+
+GEBAUT: einmalige Nachoeffnung (_migrate_reduzieren_nachoeffnen). Setzt genau
+die Zeilen auf NULL zurueck, die der alte Wortschatz ausschloss - REDUZIEREN,
+nicht_anwendbar, beide Zonen vorhanden. Ohne Zonen bliebe das Ergebnis
+dasselbe. ⚠️ Einmalig, mit Marke in `meta`, sonst eine Schleife ohne Ende. An
+einer Kopie der Notebook-DB geprueft: 10 freigegeben, zweiter Lauf 0.
+
+FRAGE 3 - EIN LAUF JE ASSET: 3 Signale, kein Symbol doppelt. Bei drei
+Symbolen allerdings keine Kunst.
+
+DREI PRUEFUNGEN SCHLUGEN BEIM BAUEN SELBST FEHL: (1) `_sq3` nicht gebunden -
+die Falle der freien Namen, zum VIERTEN Mal an einem Tag; (2) "Geradeziehung
+laeuft VOR dem ersten Kettenlauf" suchte in den ersten 2.000 ZEICHEN von
+init_db, mein neuer Aufruf schob die Zeile heraus - der Code war richtig, das
+Fenster zu klein, jetzt gegen die Funktionsgrenze; (3) mein eigener
+Testaufbau prueft einen No-Op, weil init_db die Marke schon gesetzt hatte.
+
+OFFEN FUER DIE ZWEITE AUSWERTUNG: Richtungspflicht ueber viele
+Einstiegsaktionen je Anbieter; sind die Zeilen jetzt wirklich aufgeloest;
+halbieren sich die Modellaufrufe messbar; und warum traegt die Verkaufsseite
+so selten Zonen (REDUZIEREN 16 %, KAUFEN 100 %).
+
+Suite 1543.

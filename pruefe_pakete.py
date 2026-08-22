@@ -4645,9 +4645,14 @@ def paket_15() -> None:
                _nur_code("database/db.py").split(
                    "def get_hebel_pruefung_erlaubt")[1][:400].split()),
            "keine Zeile ist keine Zustimmung")
+    # ⚠️ NICHT MEHR AUF DIE ERSTEN 2000 ZEICHEN. Diese Pruefung schlug am
+    # 22.08. fehl, weil ein NEUER Migrationsaufruf die gesuchte Zeile aus dem
+    # Fenster geschoben hat - der Code war richtig, das Fenster zu klein.
+    # Ein Zeichenfenster ist keine Funktionsgrenze.
+    _init_db_rumpf = _nur_code("database/db.py").split("def init_db")[1]
+    _init_db_rumpf = _init_db_rumpf.split(" def ")[0]
     pruefe(P, "und die Geradeziehung laeuft VOR dem ersten Kettenlauf",
-           "_migrate_hebel_schalter_geradeziehen ( conn )" in _nur_code(
-               "database/db.py").split("def init_db")[1][:2000],
+           "_migrate_hebel_schalter_geradeziehen ( conn )" in _init_db_rumpf,
            "init_db() laeuft beim App-Start, also vor dem Scheduler - sonst "
            "griffe die neue Vorgabe auf noch unentschiedene Symbole")
     pruefe(P, "sie ruehrt bestehende Zeilen NICHT an",
@@ -10431,6 +10436,63 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ⚠️ `sqlite3` IST IN DIESER FUNKTION NICHT GEBUNDEN. Der Name existiert
+    # auf Modulebene, aber die erste Fassung dieses Blocks stand VOR dem
+    # Import und lief prompt in einen NameError - dieselbe Falle, die
+    # `finde_freie_namen.py` sucht, heute zum vierten Mal. Der Import gehoert
+    # VOR den ersten Gebrauch, nicht irgendwohin in dieselbe Funktion.
+    import sqlite3 as _sq3
+
+    # ---- DIE NACHOEFFNUNG TRIFFT GENAU DIE ZEILEN, DIE SIE SOLL --------
+    #
+    # ⚠️ WARUM ES SIE GIBT. S6c erweiterte `_TRACKABLE_ACTIONS` um
+    # REDUZIEREN - und ich schrieb in Kapitel 135, die Zeilen bekaemen ihr
+    # Ergebnis "beim naechsten Lauf nachtraeglich". FALSCH: die Auswertung
+    # holt nur Zeilen mit `outcome_status IS NULL OR = 'offen'`.
+    # `nicht_anwendbar` ist ein ENDZUSTAND. Am Export vom 22.08. 21:11
+    # nachgemessen: 11 von 12 standen unveraendert da.
+    #
+    # WER EINEN FILTER ERWEITERT, OEFFNET KEINE ZEILE, DIE DER ALTE FILTER
+    # ENDGUELTIG ABGELEGT HAT.
+    _mem_no = _sq3.connect(":memory:")
+    _mem_no.row_factory = _sq3.Row
+    _dbn = __import__("database.db", fromlist=["db"])
+    _dbn.init_db(_mem_no)
+    # ⚠️ `init_db()` HAT DIE NACHOEFFNUNG SCHON LAUFEN LASSEN und die Marke
+    # gesetzt - auf einer leeren Datenbank ohne Wirkung. Fuer den Test muss
+    # sie weg, sonst prueft er einen No-Op. (Genau das meldete die Suite beim
+    # ersten Anlauf: "geoeffnet: [], Anzahl 0".)
+    _mem_no.execute("DELETE FROM meta WHERE key = ?",
+                    (_dbn._NACHOEFFNUNG_MARKE,))
+    # Drei Faelle: der zu oeffnende, einer ohne Zonen, einer mit anderer
+    # Aktion. Nur der erste darf angefasst werden.
+    for _sym, _akt, _tp in (("MITZONE", "REDUZIEREN", 10.0),
+                            ("OHNEZONE", "REDUZIEREN", None),
+                            ("ANDERE", "TAUSCHEN", 10.0)):
+        _mem_no.execute(
+            "INSERT INTO signals (symbol, created_at, action, gate_passed, "
+            "risk_veto, pipeline_version, facts_json, outcome_status, "
+            "take_profit_usd_von, stop_loss_usd_von) "
+            "VALUES (?, ?, ?, 1, 0, 'x', '{}', 'nicht_anwendbar', ?, ?)",
+            (_sym, "2026-08-20T00:00:00+00:00", _akt, _tp,
+             (5.0 if _tp is not None else None)))
+    _mem_no.commit()
+    _n1 = _dbn._migrate_reduzieren_nachoeffnen(_mem_no)
+    _offen = {r["symbol"] for r in _mem_no.execute(
+        "SELECT symbol FROM signals WHERE outcome_status IS NULL")}
+    pruefe(P, "die Nachoeffnung trifft NUR REDUZIEREN mit Zonen",
+           _offen == {"MITZONE"} and _n1 == 1,
+           f"geoeffnet: {sorted(_offen)}, Anzahl {_n1} - ohne Zonen bliebe "
+           f"das Ergebnis dasselbe, eine andere Aktion war nie betroffen")
+    _n2 = _dbn._migrate_reduzieren_nachoeffnen(_mem_no)
+    pruefe(P, "und sie laeuft nur EINMAL", _n2 == 0,
+           "ohne Marke oeffnete jeder Start die Zeilen erneut, die die "
+           "Auswertung zu Recht wieder ablegt - eine Schleife ohne Ende")
+    pruefe(P, "die Marke steht in `meta`",
+           _mem_no.execute("SELECT COUNT(*) n FROM meta WHERE key = ?",
+                           (_dbn._NACHOEFFNUNG_MARKE,)).fetchone()["n"] == 1)
+    _mem_no.close()
+
     # ---- JEDE MIGRIERTE SPALTE MUSS LESBAR BLEIBEN (22.08.2026) ---------
     #
     # ⚠️ DIESER FEHLER HAT DIE APP AM NOTEBOOK NICHT MEHR STARTEN LASSEN.
@@ -10446,10 +10508,6 @@ def paket_dimension() -> None:
     # EINE PRUEFUNG GEGEN EINE UNMIGRIERTE DATENBANK PRUEFT DIE MIGRATION
     # NICHT. Deshalb legt diese hier die Datenbank frisch an und migriert sie.
     import dataclasses as _dc2
-    import sqlite3 as _sq3          # ⚠️ NICHT `sqlite3` - der Name ist in
-                                    # dieser Funktion nicht gebunden, und der
-                                    # NameError kam prompt. Dieselbe Falle,
-                                    # die `finde_freie_namen.py` sucht.
 
     from database.models import HebelSignal as _HS
     from database.models import Signal as _SG
