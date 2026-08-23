@@ -3435,6 +3435,7 @@ angelegt.**
 | `messe_querschnitt_umkehr.py` | Trennt die Umkehr-Bedingung die Assets **am selben Tag**? Querschnitt statt innerhalb eines Werts (23.08.) |
 | `messe_auswahl.py` | Wie ist die **Auswahl** zu dimensionieren — k, Trendfilter, Marktzustand, Kosten der Drehung? (A1, 23.08.) |
 | `messe_auswahl_historie.py` | Was hätte die Auswahl über die Historie ergeben? Signalzahl, Trefferquote, je Assetstufe und Marktlage (A1, 23.08.) |
+| `messe_auswahl_kriterium.py` | **Quote oder Kriterium?** Wie viele kommen durch, wie oft keiner, und was das kostet (23.08.) |
 | `messe_strukturstop.py` | Trägt die Struktur den Stop? — Vorläufer von `pruefe_strukturstop.py` (124) |
 | `messe_dimensionierung.py` | Was ändert sich, wenn der Hebel **anfällt** statt gewählt zu werden |
 

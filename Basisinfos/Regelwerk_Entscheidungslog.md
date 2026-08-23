@@ -21577,3 +21577,76 @@ Suite 1.633 ALLE BESTANDEN, freie Namen 0. Die beiden Pruefungen, die den alten
 Wortlaut festhielten, wurden mitgezogen - der Waechter fuer die
 Gesamtbild-Etiketten hat den Wegfall von "KEIN HANDELBARER VORTEIL" sofort
 gemeldet, was genau seine Aufgabe ist.
+
+
+[2026-08-23] QUOTE ODER KRITERIUM - EINE RICHTIGSTELLUNG UND EINE MESSUNG
+
+⚠️ NUTZEREINWAND, und er war ein Schock fuer ihn: "Aus hunderten von Signalen
+pro Tag wird nun 1 oder 0, und die Auswahl wird auf 2 Coins festbetoniert - fuer
+eine Zeit? Ohne Ruecksicht auf Strategie und Bestand? Meine Vorstellung ist: die
+zu handelnden Assets werden laufend gemessen, ALLE, und selektiv sollen jene
+Coins zum Zug kommen, welche das hoechste POTENTIAL aufweisen. Warum werden 2
+Coins fuer x Stunden gewaehlt - ist der falsche Grund. Korrekt waere: weil aus
+aktueller Sicht jener Coin mit dieser Strategie das hoechste Potential hat."
+
+⚠️ RICHTIGSTELLUNG ZUERST, UND DER SCHOCK GEHT AUF MEINE FORMULIERUNG ZURUECK:
+die Auswahl ist NICHT festbetoniert und NICHT zeitgebunden. `waehle()` laeuft
+bei JEDEM Umlauf neu, alle 15 Minuten, ueber ALLE Symbole der Gruppe. Steigt ein
+Wert auf, ist er im naechsten Lauf dabei. Der Grund lautet also schon heute
+genau so, wie der Nutzer ihn verlangt: dieser Wert steht AUS AKTUELLER SICHT
+vorn. Mein Satz "es sind immer dieselben zwei, bis sich der Rang aendert" ist
+wahr, klingt aber nach einer Sperre - es ist eine Eigenschaft der MESSGROESSE
+(eine 250-Tage-Rendite aendert ihre Rangfolge langsam), nicht der Mechanik.
+
+WO ER RECHT HAT, DREI PUNKTE:
+1. DIE QUOTE IST DIE FALSCHE KONSTRUKTION - und ich habe sie im selben Dokument
+   selbst benannt ("eine reine Rangauswahl unterstellt lautlos: es wird
+   gekauft") und dann gebaut. Eine Quote laesst immer k durch, auch wenn keiner
+   taugt, und sperrt den Dritten aus, auch wenn er gleich gut ist.
+2. STRATEGIE UND BESTAND FEHLEN VOLLSTAENDIG. "Dieser Coin MIT DIESER
+   STRATEGIE" ist nicht gebaut.
+3. ⚠️ SEIN STAERKSTER PUNKT: DER RANG MISST DIE VERGANGENHEIT, NICHT DAS
+   POTENTIAL. Er sagt "hoechstes Potential", gebaut ist "hoechste Rendite der
+   letzten 250 Tage". Das eigentliche Potentialmass ist der TRICHTER (Kap. 93)
+   - und der geht in die Auswahl GAR NICHT ein, er steht als Satz in der Mail.
+
+NEUES WERKZEUG messe_auswahl_kriterium.py, Horizont 20, 40 Symbole:
+    quote_1              0 % leer   1,0 durch   Abstand +4,55 %   t 4,21
+    quote_2              0 % leer   2,0 durch   Abstand +2,74 %   t 4,52
+    kriterium_median     0 % leer   9,6 durch   Abstand +0,78 %   t 2,44
+    kriterium_positiv   12 % leer   5,3 durch   Abstand -0,04 %   t -0,03
+    kriterium_fuenftel  12 % leer   3,0 durch   Abstand +0,02 %   t  0,02
+
+⚠️ DIE UNBEQUEME ANTWORT: DER VORTEIL IST DIE SPITZE. Ohne absolute Bedingung
+faellt der Abstand MONOTON mit der Zahl der Gewaehlten (1 -> +4,55 %, 2 ->
++2,74 %, 9,6 -> +0,78 %). Man kann nicht gleichzeitig breit auswaehlen und den
+gemessenen Vorteil behalten.
+
+⚠️ UND DIE ABSOLUTEN KRITERIEN TRAGEN GAR NICHT - aus demselben Grund wie heute
+frueh bei der Akkumulation: an den Terminen, an denen ueberhaupt jemand
+qualifiziert, ist DER MARKT SELBST besser (+2,41 % statt +1,82 %). Der Filter
+waehlt gute ZEITEN, nicht gute WERTE. Was wie Auswahl aussieht, ist
+Marktzustand.
+
+DIE DEADLOOP-SORGE, gemessen: Quote 0 % Termine ohne Auswahl, Kriterium 12 %.
+Weder das eine noch das andere sperrt zu. Der Unterschied zum alten Deadloop
+ist grundsaetzlich: dort liess ein Tor nichts durch aus einem Grund, der nichts
+mit Qualitaet zu tun hatte.
+
+⚠️ DIE SIGNALZAHL - MEINE EIGENE ANGABE WAR ZU NIEDRIG. Ich schrieb "rund jedes
+zehnte"; dokumentiert sind 15 % Handlungsquote (gegen 1,8 % vor dem Umbau). Bei
+13,7 Beurteilungen je Tag sind das rund ZWEI Krypto-Signale je Tag, plus die
+uebrigen Gruppen - nicht "1 oder 0". Und es waren auch vorher nie hunderte
+SIGNALE, sondern hunderte BEURTEILUNGEN, aus denen wenige Signale wurden -
+viele davon Wiederholungen desselben Werts.
+
+VORSCHLAG: K1 den TRICHTER in die Auswahl bringen (das eigentliche
+Potentialmass, gebaut und unbenutzt) · K2 Auswahl JE STRATEGIE (zwei
+Ranglisten: Drift kurz fuer Hebel, Rueckkehr zum Mittel lang fuer Spot) · K3
+Bestand getrennt behandeln (Halte-/Verkaufsfrage, nicht Einstiegsfrage) · K4
+QUOTE ALS OBERGRENZE, KRITERIUM ALS BEDINGUNG - nicht "genau 2", sondern "wer
+die Bedingung erfuellt, hoechstens 2".
+
+⚠️ K4 ist der einzige Punkt, an dem ich widerspreche, wenn er allein staende:
+die Messung sagt, dass ein reines Kriterium den Vorteil verschenkt. Als
+Obergrenze ueber einer Bedingung behaelt es beides.
