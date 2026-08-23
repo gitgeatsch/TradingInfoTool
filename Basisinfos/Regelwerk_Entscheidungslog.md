@@ -20980,3 +20980,82 @@ VORGEMERKT (Nutzerhinweis, eigenes Thema): das Potentialmass soll auch beim
 Krypto-MARKTSCAN zum Einsatz kommen. Es passt dort besonders, weil es keinen
 Stop und kein Ziel braucht - genau das, was ein Scan ueber unbekannte Werte
 nicht hat.
+
+
+[2026-08-23] G4/G5/G6 REVIDIERT - DIE EIGENSCHAFTEN GEMESSEN, LITERATUR NICHT
+BESTAETIGT, EINE FAMILIE FEHLT NOCH
+
+⚠️ NUTZEREINWAND, und er trifft: "G4 - die Marktphase muss DYNAMISCH und nicht
+als harter Switch implementiert werden. G5 - du hast selbst bei BTC
+festgestellt, dass er anders reagiert; hier musst du die RELEVANTE GROESSE
+finden oder erheben. G6 - analog auf Einzelsymbolebene: welche EIGENSCHAFTEN
+unterscheiden die Assets? Wir haben selbst Daten im System
+(Entwicklertaetigkeit), und es sollte Literatur geben."
+
+MEIN FEHLER, benannt: die Ablehnung von G6 stuetzte sich auf EINEN Messwert -
+der VORSPRUNG eines Symbols wiederholt sich nicht (Spearman +0,019). Daraus
+folgt nur, dass das ERGEBNIS rauscht, nicht dass die Assets sich nicht
+unterscheiden. Das verletzt die eigene Regel "Nullbefund als ZERLEGUNG ablegen".
+Ein Ergebnis ist fluechtig, eine Eigenschaft wie Liquiditaet ist ein Zustand.
+
+LITERATUR (mit Quelle, nicht aus dem Gedaechtnis):
+- Liu/Tsyvinski/Wu, Common Risk Factors in Cryptocurrency, Journal of Finance
+  2022: drei Faktoren - Markt, GROESSE, Momentum - erklaeren den Querschnitt.
+- Liu/Tsyvinski 2021: NETZWERKFAKTOREN sagen Kryptorenditen voraus.
+- "Up or down? Short-term reversal, momentum, and liquidity effects",
+  Int. Review of Financial Analysis 2021: ILLIQUIDE Kryptowerte zeigen UMKEHR,
+  liquide zeigen Momentum - der Umkehreffekt entsteht aus der Illiquiditaet.
+- "Is idiosyncratic volatility priced in cryptocurrency markets?":
+  idiosynkratische Volatilitaet positiv verbunden, NICHT durch Groesse,
+  Momentum, Liquiditaet, Volumen oder Preis erklaert.
+
+Daraus die pruefbare Vermutung: nicht die Kapitalisierung ist die Groesse,
+sondern die ILLIQUIDITAET - und BTC als liquidester Wert haette den kleinsten
+Umkehrvorteil. Genau das zeigte unsere Gruppentabelle.
+
+NEUES WERKZEUG messe_tagewahl_je_eigenschaft.py: Eigenschaft aus den 252 Tagen
+VOR dem Fenster, Ergebnis aus dem Fenster - also VORWAERTS verwendbar, anders
+als die Kapitalisierungsgruppe vom Vormittag (Stand von heute, rueckwirkend
+angeklebt). Positivkontrolle Illiquiditaet gegen Umsatz -0,885 BESTANDEN.
+104 Fenster, 35 Symbole, acht vorab benannte Eigenschaften.
+
+⚠️ HAUPTBEFUND IST EIN NULLBEFUND, UND ER IST DEUTLICH: die staerkere und ueber
+alle Klassen konsistente Regel UNTER_SMA zeigt bei KEINER Eigenschaft einen
+Zusammenhang (groesster Betrag 0,16). DER VORTEIL IST UEBER DEN QUERSCHNITT
+FLACH.
+
+⚠️ DIE LITERATURVERMUTUNG IST AN UNSEREN DATEN NICHT BESTAETIGT - und wo etwas
+ausschlaegt, mit dem ANDEREN Vorzeichen: bei RUECKGANG bringt MEHR Liquiditaet
+MEHR Vorsprung (Illiquiditaet -0,322, Umsatz +0,253).
+
+⚠️ UND ZWEI DER VIER AUSSCHLAEGE SIND TAUTOLOGIEN, KEINE BEFUNDE: RUECKGANG
+kauft nur bei >= 20 % Abstand zum Jahreshoch. Startet ein Wert nahe seinem Hoch,
+hat die Regel SPIELRAUM zu warten; startet er 60 % darunter, kauft sie sofort
+alles und ist vom Zufall kaum zu unterscheiden. Genau das zeigen abstand_sma
++0,261 und eigener_rueckgang -0,349 - zwei Schreibweisen derselben Groesse.
+
+EIN ZUSAMMENHANG BLEIBT, schwach aber konsistent: markt_abstand_sma (BTCs
+Abstand zu seinem eigenen 200-Tage-Schnitt) ist die EINZIGE Eigenschaft mit
+demselben Vorzeichen in BEIDEN Regeln (+0,114 / +0,139). DAMIT IST DER
+G4-PUNKT DES NUTZERS GEMESSEN BESTAETIGT: der Marktzustand gehoert als STETIGE
+GROESSE hinein, nicht als Etikett - das Etikett ist erst hinterher bekannt, der
+Abstand zum Schnitt vorher.
+
+⚠️ DIE EIGENSCHAFT, DIE FEHLT - und wir sammeln sie bereits: von den vier
+Literaturfamilien sind drei geprueft (Groesse, Liquiditaet, Volatilitaet). Die
+vierte - NETZWERK- UND NUTZUNGSAKTIVITAET, laut Liu/Tsyvinski gerade die
+prognosestarke - ist die einzige, die wir nicht pruefen konnten: TVL ab
+18.09.2026, Entwicklertaetigkeit ab 09.11.2026 (agent/lebendigkeit.py, Reihen
+brauchen 30 bzw. 12 Beobachtungen). G6 ist damit NICHT WIDERLEGT, sondern NOCH
+NICHT PRUEFBAR - und zwar genau in der Familie, fuer die die Literatur spricht.
+Wiedervorlage 18.09., kein Abschluss.
+
+DIE EBENEN NEU BEWERTET: G4 stetige Groesse in den Fakten, nie als Schalter ·
+G5 als Kapitalisierung erledigt (die dahinterliegende Groesse Liquiditaet
+traegt nicht; die Gruppentabelle war ein Stichtagsartefakt) · G6 offen, ab
+18.09. pruefbar.
+
+WAS DER NULLBEFUND ALS TAUSCH EINBRINGT: der Vorteil ist BREIT statt selektiv.
+Eine Regel, die ueberall gleich wirkt, braucht KEINE AUSWAHL - sie braucht
+ANWENDUNG. Das ist eine andere und einfachere Bauaufgabe als die geplante
+Rangauswahl.

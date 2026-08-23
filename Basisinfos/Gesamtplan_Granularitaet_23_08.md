@@ -172,3 +172,122 @@ Einsatz kommen, aber das ist ein eigenes Thema."*
 Das Potentialmaß ist dort anwendbar, weil es **keinen Stop und kein Ziel
 braucht** — genau das, was ein Scan über unbekannte Werte nicht hat.
 **Nicht in dieser Reihe, aber nicht vergessen.**
+
+
+---
+
+## 8. ⚠️ REVISION 23.08. abends — G4, G5 und G6 waren zu früh abgeräumt
+
+*Nutzereinwand: „G4 — die Marktphase ist ein Kernelement, das **dynamisch** und
+nicht als harter Switch implementiert werden muss. G5 — hast du selbst bei BTC
+festgestellt, reagiert anders; hier musst du die **relevante Größe finden oder
+erheben**. G6 — analog auf Einzelsymbolebene: welche **Eigenschaften**
+unterscheiden die Assets? Auch hier haben wir selbst Daten im System
+(Entwicklertätigkeit), und im Kryptobereich sollte es Literatur geben."*
+
+**Der Einwand trifft, und zwar an einer benannten Stelle.** Meine Ablehnung von
+G6 stützte sich auf *einen* Messwert: der **Vorsprung** eines Symbols
+wiederholt sich nicht (Spearman +0,019). Daraus folgt aber nur, dass das
+**Ergebnis** rauscht — nicht, dass die Assets sich nicht unterscheiden.
+
+> ⚠️ **Das ist genau der Fehler, den die eigene Regel verbietet:** *„einen
+> Nullbefund als ZERLEGUNG ablegen, nicht als erledigt"*. Ein Ergebnis ist
+> flüchtig, eine **Eigenschaft** wie Liquidität ist ein Zustand und träge.
+
+### 8.1 Was die Literatur sagt — und sie sagt es deutlich
+
+| Quelle | Aussage |
+|---|---|
+| **Liu, Tsyvinski, Wu**, *Common Risk Factors in Cryptocurrency*, Journal of Finance 2022 | **Drei Faktoren — Markt, Größe, Momentum — erklären den Querschnitt** der Kryptorenditen; zehn Merkmale bilden erfolgreiche Long-Short-Strategien, die das Dreifaktorenmodell auffängt |
+| **Liu & Tsyvinski 2021** | **Netzwerkfaktoren** (Nutzung, Aktivität) sagen Kryptorenditen voraus |
+| *Up or down? Short-term reversal, momentum, and liquidity effects*, Int. Review of Financial Analysis 2021 | **Illiquide Kryptowerte zeigen Umkehr, liquide zeigen Momentum** — der Umkehreffekt entsteht aus der Illiquidität |
+| *Is idiosyncratic volatility priced in cryptocurrency markets?* | idiosynkratische Volatilität ist positiv mit der erwarteten Rendite verbunden und **nicht** durch Größe, Momentum, Liquidität, Volumen oder Preis erklärt |
+
+**Daraus die prüfbare Vermutung:** nicht die Marktkapitalisierung ist die
+relevante Größe, sondern die **Illiquidität** — und BTC als liquidester Wert
+hätte den kleinsten Umkehrvorteil. **Genau das zeigt unsere Gruppentabelle.**
+
+### 8.2 Also gemessen — `messe_tagewahl_je_eigenschaft.py`
+
+**Der Aufbau, der ihn ehrlich hält:** die Eigenschaft stammt aus den **252
+Tagen vor** dem Fenster, das Ergebnis aus dem Fenster. ⚠️ Das ist der
+Unterschied zur Kapitalisierungsgruppe: jene war der Stand von *heute*,
+rückwirkend angeklebt. Diese ist **vorwärts verwendbar**.
+
+**Positivkontrolle bestanden:** Illiquidität gegen Umsatz **−0,885**.
+
+**104 Fenster, 35 Krypto-Symbole, acht vorab benannte Eigenschaften:**
+
+| Eigenschaft | UNTER_SMA | RUECKGANG |
+|---|---:|---:|
+| illiquiditaet (Amihud) | −0,056 | **−0,322** |
+| umsatz | −0,002 | **+0,253** |
+| volatilitaet | −0,073 | −0,207 |
+| alter | +0,035 | +0,220 |
+| beta_btc | −0,159 | −0,058 |
+| abstand_sma (eigener) | +0,039 | **+0,261** |
+| eigener_rueckgang | −0,068 | **−0,349** |
+| **markt_abstand_sma** (BTC) | **+0,114** | **+0,139** |
+
+### 8.3 ⚠️ Was daraus folgt — und was ausdrücklich NICHT
+
+**Der Hauptbefund ist ein Nullbefund, und er ist deutlich:** die stärkere und
+über alle Klassen konsistente Regel **UNTER_SMA zeigt bei keiner einzigen
+Eigenschaft einen Zusammenhang** (größter Betrag 0,16). **Der Vorteil ist über
+den Querschnitt flach.**
+
+⚠️ **Die Literaturvermutung ist damit an unseren Daten NICHT bestätigt — und wo
+etwas ausschlägt, zeigt es sogar das andere Vorzeichen:** bei RUECKGANG bringt
+**mehr** Liquidität **mehr** Vorsprung (−0,322 auf Illiquidität, +0,253 auf
+Umsatz), nicht weniger.
+
+**Und zwei der vier Ausschläge sind keine Markteigenschaft, sondern die
+Bauform der Regel:**
+
+> `RUECKGANG` kauft nur bei ≥ 20 % Abstand zum Jahreshoch. Startet ein Wert
+> nahe seinem Hoch, hat die Regel **Spielraum**, auf Rücksetzer zu warten.
+> Startet er bereits 60 % darunter, **kauft sie sofort alles** — und ist damit
+> vom Zufall kaum noch zu unterscheiden.
+
+Genau das zeigen `abstand_sma` **+0,261** und `eigener_rueckgang` **−0,349** —
+zwei Schreibweisen derselben Größe, beide erwartbar. **Das sieht aus wie ein
+Befund und ist eine Tautologie.**
+
+**Ein Zusammenhang bleibt schwach, aber konsistent:** `markt_abstand_sma`
+(BTCs Abstand zu seinem eigenen 200-Tage-Schnitt) hat als **einzige**
+Eigenschaft in **beiden** Regeln dasselbe Vorzeichen (+0,114 / +0,139).
+
+> **Damit ist Ihr G4-Punkt gemessen bestätigt:** der Marktzustand gehört als
+> **stetige Größe** hinein — nicht als Etikett „steigend/fallend". Das Etikett
+> ist erst hinterher bekannt, der Abstand zum Schnitt vorher.
+
+### 8.4 ⚠️ Die Eigenschaft, die fehlt — und wir sammeln sie bereits
+
+Von den vier Literaturfamilien haben wir drei geprüft: **Größe** (Umsatz),
+**Liquidität** (Amihud), **Volatilität**. Die vierte — **Netzwerk- und
+Nutzungsaktivität**, laut Liu & Tsyvinski gerade die prognosestarke — ist die
+**einzige, die wir nicht prüfen konnten**:
+
+| Quelle | Modul | auswertbar ab |
+|---|---|---|
+| **TVL** (DefiLlama) | `agent/lebendigkeit.py` | **18.09.2026** |
+| **Entwicklertätigkeit** | `agent/lebendigkeit.py` | **09.11.2026** |
+
+**Das ist kein Versäumnis, sondern eine Wartezeit** — die Reihen brauchen 30
+bzw. 12 Beobachtungen. ⚠️ **Aber es ändert die Bewertung von G6:** die Ebene
+ist nicht widerlegt, sie ist **noch nicht prüfbar** — und zwar genau in der
+Familie, für die die Literatur spricht.
+
+### 8.5 Die Ebenen, neu bewertet
+
+| # | Ebene | vorher | **jetzt** |
+|---|---|---|---|
+| **G4** Marktphase | „nur Schichtung" | ✔ **stetige Größe in den Fakten** — `markt_abstand_sma`, einziger in beiden Regeln gleichgerichteter Zusammenhang. **Nie als Schalter** |
+| **G5** Kapitalisierung | „später" | ⚠️ **als Kapitalisierung erledigt** — die dahinterliegende Größe (Liquidität) ist gemessen und trägt nicht. Die Gruppentabelle war ein Stichtagsartefakt |
+| **G6** Einzelsymbol | „nicht ranggeeignet" | ⚠️ **offen, nicht widerlegt** — sieben Eigenschaften geprüft und flach; die achte (Netzwerkaktivität) ist ab **18.09.** prüfbar. **Wiedervorlage, kein Abschluss** |
+
+**Was der Nullbefund als Tausch einbringt** (Regel: ein Nullbefund ist ein
+Tausch, kein Ende): der Vorteil ist **breit** statt selektiv. Eine Regel, die
+überall gleich wirkt, braucht **keine Auswahl** — sie braucht **Anwendung**.
+Das ist eine andere Bauaufgabe als die geplante Rangauswahl, und eine
+einfachere.
