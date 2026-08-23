@@ -20909,3 +20909,74 @@ Fenster starten gestaffelt (36 verschiedene Startmonate), und alle drei Klassen
 zeigen dasselbe Vorzeichen - das ist die Stuetze, nicht die Fensterzahl. Aktien
 n=2, ETF n=4. Kaufkosten enthalten, Steuern und Slippage nicht. Reihen enden am
 19.08. (Desktop-Bestand, nicht Produktion).
+
+
+[2026-08-23] VORSPRUNG JE SYMBOL GEMESSEN - ER GEHOERT DER REGEL, NICHT DEM WERT
+
+Nutzerauftrag: "setz das auf - Vorsprung je Symbol messen" und "kannst du mir
+deinen Gesamtplan je Asset und Granularitaet vorlegen? ... ob und wie wir mit
+der Abgrenzung BTC als eigene virtuelle Klasse in Krypto sowie Highcaps,
+Midcaps, Smallcaps umgehen - soll das einfliessen oder erst spaeter?"
+
+WERKZEUG messe_tagewahl_je_symbol.py: 41 Symbole, JAHRESfenster (52 Termine
+statt 104), Vorsprung gegen den quotengleichen Zufall, dazu die
+Bestaendigkeitsfrage. Vier Gruppen VORAB benannt: btc allein, gross >= 10 Mrd,
+mittel 1-10 Mrd, klein < 1 Mrd.
+
+✔ ROBUSTHEITSPROBE BESTANDEN: der Befund vom selben Tag haelt auch bei
+Jahresfenstern - er war keine Eigenschaft der Zweijahresfenster. UNTER_SMA ist
+in 86-91 % der Fenster jeder Gruppe positiv.
+
+    mittel   8 Symbole  29 Fenster   UNTER_SMA +0,1531 (90 %)  RUECKGANG +0,1027
+    gross    3          20                     +0,1123 (90 %)            +0,1140
+    klein   21          43                     +0,0819 (86 %)            +0,0314 (60 %)
+    btc      1           7                     +0,0517 (86 %)            +0,0306
+    etf      4          22                     +0,0142 (91 %)            +0,0275 (100 %)
+    aktien   2           8                     +0,0266 (75 %)            +0,0310
+
+⚠️⚠️ DER ENTSCHEIDENDE BEFUND - DIE BESTAENDIGKEIT FEHLT. Rangkorrelation
+zwischen Fenster t und t+1 desselben Symbols: UNTER_SMA Spearman +0,019 (93
+Paare), RUECKGANG -0,147 (79 Paare). Gleiches Vorzeichen in 81 % der Paare - ein
+reiner Basisratenwurf ergaebe 76 %. DIE HOEHE DES VORSPRUNGS IM NAECHSTEN
+FENSTER IST NICHT VORHERSAGBAR.
+
+    DER VORTEIL GEHOERT DER REGEL, NICHT DEM WERT. Er sagt WIE gekauft wird,
+    nicht WAS. Eine Auswahl unter Symbolen laesst sich darauf heute NICHT
+    gruenden - Konzept 12 Stufe S3 (Rangauswahl) ist damit vorerst ohne
+    Massstab.
+
+ANTWORT AUF DIE BTC-/CAPS-FRAGE (als Fachexperte, nicht als Meinung):
+JA, aber als SCHICHTUNG und erst auf Stufe 3 - nicht als Klasse und nicht
+jetzt. Gruende: (1) es gibt nichts zu ranggeordnen, solange nichts bleibt;
+(2) die Kapitalisierung ist die von HEUTE und die gestorbenen Kleinen fehlen -
+"klein +0,0819" ist eine Obergrenze, kein Messwert; (3) der eigene Suchpreis:
+G1 x G2 x G4 x G5 sind 120 Zellen, 300 Zellen kosten +20,5 Punkte Huerde.
+SOFORT dagegen: BTC als BEZUGSGROESSE fuer Krypto - das ist keine neue Klasse,
+sondern ein Massstab.
+
+⚠️ UND EIN ECHTER BEFUND ZU BTC: er hat den KLEINSTEN Vorsprung aller
+Krypto-Gruppen (+0,052 gegen +0,153 bei mittel) und liegt damit naeher an ETF
+und Aktien als an seinem eigenen Markt. n=1 Symbol, 7 Fenster - als Hinweis
+brauchbar, als Beleg nicht.
+
+DER PLAN (Basisinfos/Gesamtplan_Granularitaet_23_08.md), sechs Ebenen mit
+Belegstand: G1 Anlageklasse (gemessen, traegt) · G2 Vorteilsquelle (eine
+gemessen) · G3 Instrument (Ergebnis der Geometrie) · G4 Marktphase (nur
+Schichtung, Etikett beschreibend) · G5 Kapitalisierung (verzerrt, spaeter) ·
+G6 Einzelsymbol (nicht ranggeeignet). G1 und G2 tragen den Bau.
+
+⚠️ DIE UNBEQUEME FOLGERUNG ZU KRYPTO: die einzige gemessene Vorteilsquelle
+(Rueckkehr zum Mittel) passt zur AKKUMULATION - der Ausfuehrungsform, die die
+Kette heute NICHT traegt (S-1) und die den HEBEL ausschliesst
+(ERLAUBTE_PAARE, weil die Finanzierung jeden Tag kostet). Die Drift passt zum
+Einstieg mit Stop, ist dort aber zu klein fuer die Kosten (+1,01 % gegen 3 %).
+
+⚠️ n = 2 IST KEINE KLASSE: die Aktienseite hat zwei Titel. Der Aktienmarkt hat
+die laengste Historie und die dichteste Literatur - die Information ist da,
+unsere Stichprobe nicht. Aktien-/ETF-Liste verbreitern ist Stufe 1 und kostet
+keinen Modellaufruf.
+
+VORGEMERKT (Nutzerhinweis, eigenes Thema): das Potentialmass soll auch beim
+Krypto-MARKTSCAN zum Einsatz kommen. Es passt dort besonders, weil es keinen
+Stop und kein Ziel braucht - genau das, was ein Scan ueber unbekannte Werte
+nicht hat.
