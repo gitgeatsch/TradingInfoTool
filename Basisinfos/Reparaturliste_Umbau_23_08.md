@@ -21,7 +21,7 @@
 | **A6** | Mail-Betreff und -Abschnitt hängen am Lauf | ⚠️ offen | leicht |
 | **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ✔ **repariert** 23.08. — 17 → 1.421 Zeichen, an einem Probelauf nachgewiesen | – |
 | **B2** | Verkaufsseite: `familien=None` in `_sende_ausstieg` | ✔ **repariert** 23.08. — Merkmale aus derselben Funktion wie die Nein-Seite | – |
-| **B3** | Verkaufsseite: **keine** Z.ai-Zweitmeinung (0 von 561) | ⚠️ offen | mittel |
+| **B3** | Verkaufsseite: **keine** Z.ai-Zweitmeinung (0 von 561) | ✔ **repariert** 24.08. — für die **Ausstiege**; die Nein-Zeilen bleiben bewusst ohne (⚠️ ~21 je Umlauf gegen 2 gleichzeitige Z.ai-Aufrufe = halber Takt) | – |
 | **C1** | Einsatz 800 € statt 1.000 € | ⚠️ **Entscheidung**, dokumentiert | mittel |
 | **C2** | Risiko je Trade schwankt um Faktor 9 | ⚠️ **Entscheidung** | **schwer** |
 | **C3** | `crv_spreizung`: config 5,0, Code 1,0 | ⚠️ **vermessen** (Kapitel 146): nicht die Abstufung ist falsch, sondern ihre **Eichung** (2,0–6,0 gegen eine Verteilung 1,6–3,0). Vermerk gesetzt, Entscheidung offen | mittel |

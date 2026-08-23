@@ -12834,8 +12834,11 @@ def paket_verkaufsseite() -> None:
            _q.count('fakten={"asset": symbol}') == 0,
            "zwei Pfade schrieben `{\"asset\": symbol}` statt des "
            "Faktensatzes, der in den Prompt ging")
+    # ⚠️ DREI STELLEN, NICHT ZWEI: die beiden Schreibpfade und - seit B3 -
+    # die Gegenpruefung, die denselben Faktensatz bekommt wie die Zeile.
+    # Ein Rueckfall an jeder Stelle, an der `fakten` benutzt wird.
     pruefe(P, "der Rueckfall bleibt, falls doch nichts ankommt",
-           _q.count('fakten or {"asset": symbol}') == 2,
+           _q.count('fakten or {"asset": symbol}') == 3,
            "eine Zeile OHNE Fakten waere schlimmer als eine mit einem "
            "Stummel - dann faehlt der Bezug ganz")
 
@@ -12879,6 +12882,35 @@ def paket_verkaufsseite() -> None:
            + _q.count("_FB2.werte_aus_reihe("),
            f"{_rufe} Aufrufe - jeder muss aus dem Faktenblock kommen, "
            "sonst gibt es zwei Definitionen derselben Groesse")
+
+    # ---- B3: DIE GEGENPRUEFUNG AUF DER VERKAUFSSEITE ----
+    #
+    # ⚠️ GEMESSEN WAR 0 VON 561. Die Verkaufsseite lief ohne jedes zweite
+    # Urteil - und ist zugleich die Seite, ueber die am wenigsten bekannt ist
+    # (O-29: kein Merkmal trennt Verkaufen von Halten).
+    _aus2 = _q.split("def _sende_ausstieg(")[1][:6000]
+    pruefe(P, "der Ausstiegspfad holt eine zweite Meinung",
+           "ZM2.hole(" in _aus2 and "zai_client is not None" in _aus2,
+           "ohne sie bleibt die Verkaufsseite die einzige ohne Gegenpruefung")
+    pruefe(P, "sie laeuft in einem eigenen Faden",
+           "threading.Thread(" in _aus2,
+           "Z.ai braucht rund 34 s je Aufruf - elf Ausstiege nacheinander "
+           "waeren mehr als ein ganzer Takt")
+    pruefe(P, "und wird ueber DIESELBE Sammelstelle geschrieben wie beim Einstieg",
+           '_faeden' in _aus2,
+           "ein zweiter Schreibweg waere die naechste Stelle, an der einer "
+           "von beiden vergessen wird")
+    pruefe(P, "sie begrenzt die Gleichzeitigkeit NICHT selbst",
+           "Semaphore" not in _aus2 and "MAX_GLEICHZEITIG" not in _aus2,
+           "der Deckel sitzt in `zweite_meinung` - zwei Bremsen fuer dieselbe "
+           "Leitung waeren eine zu viel")
+
+    # ⚠️ UND SIE MAILT NICHT - das ist eine ENTSCHEIDUNG, keine Luecke.
+    pruefe(P, "die Verkaufsmail wartet NICHT auf die Gegenpruefung",
+           _q.index("VK2.sammel_mail(") < _q.index('ergebnis.pop("_faeden"'),
+           "die Sammelmail wird bewusst vor dem Warten gebaut; wer aufnaehme, "
+           "was zufaellig fertig ist, haette dasselbe Signal in zwei "
+           "Darstellungen")
 
     # ---- UND DIE ABBILDUNG NIMMT SIE AUCH AUF ----
     _voll = _SA.felder_aus_entscheidung(

@@ -21822,3 +21822,61 @@ Suite 1.650 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.
 ohne Merkmale - nicht nachruestbar. Die Auswertung der Verkaufsseite beginnt
 mit den Zeilen ab heute. Und B3 (keine Z.ai-Zweitmeinung auf der
 Verkaufsseite, 0 von 561) ist weiter offen.
+
+
+[2026-08-24] B3 ERLEDIGT - DIE VERKAUFSSEITE IST ABGESCHLOSSEN
+
+Nutzerauftrag: "mach B3 auch noch fertig - dann die Verkaufsseite abschliessen."
+
+DER BEFUND: 0 von 561 Verkaufszeilen trugen eine Z.ai-Gegenpruefung. Und
+ausgerechnet die Verkaufsseite ist die, ueber die am wenigsten bekannt ist -
+O-29 hat gemessen, dass KEIN Merkmal Verkaufen von Halten trennt.
+
+⚠️ ZUERST GEPRUEFT, OB ES UEBERHAUPT OFFEN IST. Im Code stand ein Verweis:
+"Sie braucht kein zweites Modell (siehe verkaufsrechnung.sammel_mail)".
+Nachgesehen: der Docstring dort begruendet die BUENDELUNG (eine Mail statt elf),
+nicht den Verzicht auf ein zweites Urteil. Der Verweis zeigte auf eine
+Begruendung, die es nicht gibt - B3 war zu Recht offen. Was er tatsaechlich
+enthaelt, ist ein ZEITARGUMENT: die Sammelmail wird vor dem Warten auf Z.ai
+gebaut, damit sie nicht bis zu vier Minuten dahinter steht.
+
+GEBAUT, und das Zeitargument bleibt gewahrt: `_sende_ausstieg` startet nach dem
+Schreiben der Zeile einen eigenen Faden, holt die zweite Meinung und gibt sie an
+DIESELBE Sammelstelle (`_faeden`) wie der Einstiegspfad. Geschrieben wird im
+Hauptfaden - eine sqlite3-Verbindung ist nicht zwischen Threads teilbar.
+
+⚠️ SIE SCHREIBT, SIE MAILT NICHT - und das ist eine Entscheidung, keine Luecke.
+Wuerde die Sammelmail aufnehmen, was zufaellig schon fertig ist, staende in ihr
+mal eine Gegenpruefung und mal keine: dasselbe Signal, zwei Darstellungen. Das
+ist schlimmer als keine. Dafuer steht sie in der ZEILE - und genau die fehlte.
+
+Der Gleichzeitigkeitsdeckel bleibt, wo er hingehoert: `zweite_meinung`
+begrenzt auf zwei parallele Aufrufe. Hier wird nichts zusaetzlich gebremst -
+zwei Bremsen fuer dieselbe Leitung waeren eine zu viel.
+
+NACHGEWIESEN an einem Probelauf gegen eine Kopie der Produktions-DB, mit einem
+Z.ai-Doppel: 6 REDUZIEREN-Zeilen, davon 2 ueber den Ausstiegspfad - und genau
+diese 2 tragen `zai_gegenpruefung_urteil`. Die uebrigen 4 sind Nein-Zeilen
+("REDUZIEREN ohne Bestand") und gehen einen anderen Weg.
+
+⚠️ WAS AUSDRUECKLICH NICHT GEBAUT IST - UND WARUM: die 475 HALTEN- und die
+Nein-Zeilen bekommen KEINE Gegenpruefung. Die Rechnung dazu: nach A1 und der
+Bestandsausnahme entstehen rund 21 Nein-Zeilen je Umlauf. Z.ai laesst ZWEI
+Aufrufe gleichzeitig zu und braucht 34 bis 110 s je Aufruf - 21 Aufrufe sind
+damit rund sieben Minuten bei einem Takt von fuenfzehn. Rechnerisch moeglich,
+aber es verbraucht den halben Takt und konkurriert mit der Einstiegsseite um
+dieselben zwei Plaetze - und die Einstiegsseite ist die mit dem gemessenen
+Vorteil. DAS IST EINE ENTSCHEIDUNG DES NUTZERS, keine technische Grenze; die
+Zahl steht hier, damit sie getroffen werden kann.
+
+Fuenf neue Dauerpruefungen im Paket "Verkauf": der Ausstiegspfad holt eine
+zweite Meinung · sie laeuft in einem eigenen Faden · sie geht ueber DIESELBE
+Sammelstelle wie der Einstieg · sie begrenzt die Gleichzeitigkeit NICHT selbst
+· die Verkaufsmail wartet NICHT auf sie.
+
+Suite 1.655 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.
+
+DAMIT IST DIE VERKAUFSSEITE ABGESCHLOSSEN: B1 (Faktenstummel), B2
+(Merkmalsfamilien) und B3 (Gegenpruefung) sind erledigt. ⚠️ Die 561 bereits
+geschriebenen Zeilen bleiben ohne all das - nicht nachruestbar. Die Auswertung
+der Verkaufsseite beginnt mit den Zeilen ab heute.

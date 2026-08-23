@@ -1245,7 +1245,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             betriebsart=betriebsart, versand=versand, ergebnis=ergebnis,
             # B1/B2 (23.08.2026): der Faktensatz, der in den Prompt ging,
             # und die Reihe fuer die Merkmalsfamilien.
-            fakten=bc_ein, reihe=reihe, idx=idx)
+            fakten=bc_ein, reihe=reihe, idx=idx,
+            # B3 (23.08.2026): die Gegenpruefung gehoert auch hierher.
+            zai_client=zai_client, config=config,
+            assetklasse=assetklasse)
         return
 
     if aktion not in SM.AKTIONEN_MIT_EINSTIEG:
@@ -1898,7 +1901,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
                     tag, lagebild_id, modell, conn, db, betriebsart, versand,
                     ergebnis, fakten=None, familien=None,
-                    reihe=None, idx=None) -> None:
+                    reihe=None, idx=None, zai_client=None,
+                    config=None, assetklasse="krypto") -> None:
     """Einen Ausstieg VORMERKEN und seine Zeile schreiben - nicht mailen.
 
     NUTZEREINWAND 14.08., waehrend dieser Umbau lief: *"45 Signale sind
@@ -1989,7 +1993,55 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
         # Nein-Buchung, die eine Messung ist.
         felder["gate_passed"] = 1
         felder["position_size_eur"] = round(float(verkauf["gegenwert_eur"]), 2)
-        SA2.schreibe_signal(conn, felder, symbol=symbol)
+        _kennung = SA2.schreibe_signal(conn, felder, symbol=symbol)
+
+        # B3 (23.08.2026): DIE GEGENPRUEFUNG AUCH AUF DER
+        # VERKAUFSSEITE - gemessen 0 von 561.
+        #
+        # ⚠️ SIE SCHREIBT, SIE MAILT NICHT. Die Verkaufsmail wird
+        # bewusst VOR dem Warten auf Z.ai gebaut ("soll deshalb nicht
+        # bis zu vier Minuten dahinter warten muessen"). Wuerde man
+        # aufnehmen, was zufaellig schon fertig ist, staende in der
+        # Mail mal eine Gegenpruefung und mal keine - dasselbe Signal,
+        # zwei Darstellungen. Das ist schlimmer als keine.
+        #
+        # DAFUER STEHT SIE IN DER ZEILE, und genau die fehlt: O-29 hat
+        # gemessen, dass KEIN Merkmal Verkaufen von Halten trennt -
+        # mit B1/B2 gibt es jetzt Merkmale, mit B3 auch ein zweites
+        # Urteil daneben.
+        #
+        # DERSELBE FADEN-AUFBAU WIE BEIM EINSTIEG, und aus demselben
+        # Grund: Z.ai braucht rund 34 s je Aufruf, und elf Ausstiege
+        # nacheinander waeren mehr als ein ganzer Takt. Der Deckel von
+        # zwei gleichzeitigen Aufrufen sitzt in `zweite_meinung`
+        # selbst - hier wird nichts zusaetzlich begrenzt, sonst gaebe
+        # es zwei Bremsen fuer dieselbe Leitung.
+        if _kennung and zai_client is not None:
+            import threading
+
+            from agent import zweite_meinung as ZM2
+
+            _eintrag = {}
+
+            def _gegenpruefung() -> None:
+                try:
+                    _z = ZM2.hole(
+                        faktentext=(fakten or {"asset": symbol}),
+                        urteil=befund, symbol=symbol,
+                        assetklasse=assetklasse, instrument=instrument,
+                        zai_client=zai_client, config=config)
+                    if _z:
+                        _eintrag["zweite_meinung"] = _z
+                except Exception as exc:                # noqa: BLE001
+                    ergebnis.setdefault("fehler", []).append(
+                        f"{symbol}: zweite Meinung (Ausstieg): {exc}")
+
+            _faden = threading.Thread(
+                target=_gegenpruefung, daemon=True,
+                name=f"zweite-meinung-ausstieg-{symbol}")
+            ergebnis.setdefault("_faeden", []).append(
+                (_faden, _kennung, _eintrag))
+            _faden.start()
     except Exception as exc:                                 # noqa: BLE001
         ergebnis.setdefault("fehler", []).append(
             f"{symbol}: Ausstiegszeile nicht geschrieben: {exc}")
