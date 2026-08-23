@@ -635,3 +635,102 @@ gelaufen und zurückgeblieben ist.
 die *Wirkung* über **66 aufgelöste Fälle** nicht belegbar. **Selektivität ist
 zuerst eine Konstruktionsentscheidung; ihr Nachweis kommt später.** Wer das
 umdreht, wartet auf einen Beleg, den er ohne die Konstruktion nie bekommt.
+
+
+---
+
+## 13. ⚠️ GEMESSEN 23.08. — die Tagewahl trägt. Der alte Nullbefund war eine Quotenmessung
+
+*Schritt 1 der Machbarkeitsliste, ausgeführt: `messe_akkumulation.py` erneut,
+danach zerlegt.*
+
+### 13.1 Der Wiederholungslauf bestätigt den alten Befund — und kann die Frage nicht beantworten
+
+| Klasse | n | DCA | **HALBE_QUOTE** | UNTER_SMA | RUECKGANG | GESTAFFELT |
+|---|---:|---:|---:|---:|---:|---:|
+| aktien | 2 | **6,434** | 3,685 | 3,775 | 4,033 | 6,399 |
+| etf | 4 | **1,461** | 1,223 | 1,206 | 1,154 | 1,387 |
+| krypto | 39 | 0,639 | **0,820** | 0,787 | 0,672 | 0,639 |
+| **gesamt** | **45** | 0,702 | **0,851** | 0,833 | 0,745 | 0,702 |
+
+Unverändert: die Kontrolle, die nicht hinsieht, gewinnt.
+
+⚠️ **Aber der Lauf integriert über die ganze Reihe** — Krypto liegt seit 2017
+vor. Acht zusätzliche Tage einer neuen Marktphase bewegen ein Neunjahresmittel
+nicht. **Die Phasenfrage ist mit diesem Maß nicht stellbar.**
+
+### 13.2 Deshalb zerlegt: 76 nicht überlappende Zweijahresfenster
+
+`messe_akkumulation_phasen.py` — Fenster à 104 Kauftermine, Etikett aus der
+Fensterrendite (**beschreibend, keine Handelsregel**), Maß wie oben, aber
+**innerhalb** des Fensters.
+
+| Klasse | Phase | k | DCA | HALBE_QUOTE | UNTER_SMA | RUECKGANG | GESTAFFELT |
+|---|---|---:|---:|---:|---:|---:|---:|
+| krypto | fallend | 35 | 0,644 | **0,822** | 0,762 | 0,676 | 0,644 |
+| krypto | steigend | 24 | **1,971** | 1,486 | 1,489 | 1,674 | 1,956 |
+| etf | fallend | 4 | 0,987 | 0,988 | 0,996 | **1,022** | 0,991 |
+| etf | steigend | 8 | **1,175** | 1,082 | 1,059 | 1,032 | 1,134 |
+| aktien | fallend | 1 | 0,826 | 0,909 | 0,956 | **0,988** | 0,859 |
+| aktien | steigend | 4 | **1,781** | 1,381 | 1,308 | 1,394 | 1,703 |
+
+**Die Rangfolge kippt vollständig mit der Richtung.** HALBE_QUOTE schlägt DCA
+in **91 %** der fallenden Krypto-Fenster und in **21 %** der steigenden.
+
+> **Damit ist die Behauptung von 7.27 belegt** — sie stand dort auf zwei
+> Aktien, jetzt auf 76 Fenstern. ⚠️ **Und Krypto war nicht durchgehend ein
+> Bärenmarkt: 24 von 59 Fenstern steigen.**
+
+**Positivkontrolle bestanden in allen drei Klassen:** das Vorzeichen der
+Kontrolle dreht (krypto +0,178 fallend gegen −0,486 steigend).
+
+### 13.3 ⚠️ Und dann die Frage, die nie gestellt wurde: Quote festhalten, nur die TAGE würfeln
+
+Jeder Vergleich gegen DCA oder gegen die halbe Quote vermischt zwei Dinge —
+**wieviel** investiert wird und **wann**. Die saubere Kontrolle hält die Quote
+fest: **dieselben Beträge, dieselbe Anzahl Kauftage, zufällig platziert**
+(20 Ziehungen, feste Saat).
+
+**Schlägt die Regel ihren eigenen quotengleichen Zufall?**
+
+| Klasse | Phase | DCA | HALBE_QUOTE | **UNTER_SMA** | **RUECKGANG** | GESTAFFELT |
+|---|---|---:|---:|---:|---:|---:|
+| krypto | fallend | 29 % | 31 % | **91 %** `+0,045` | 69 % `+0,015` | 34 % |
+| krypto | steigend | 33 % | 50 % | **83 %** `+0,111` | **88 %** `+0,042` | 17 % |
+| etf | fallend | 25 % | 0 % | 50 % `+0,010` | **100 %** `+0,025` | 25 % |
+| etf | steigend | 25 % | 38 % | **75 %** `+0,020` | **100 %** `+0,035` | 25 % |
+| aktien | fallend | 0 % | 0 % | **100 %** `+0,018` | **100 %** `+0,024` | 0 % |
+| aktien | steigend | 0 % | 25 % | 50 % `+0,027` | 50 % `+0,023` | 0 % |
+
+> ⚠️ **UNTER_SMA und RUECKGANG schlagen ihren quotengleichen Zufall — in
+> steigenden wie in fallenden Fenstern, in allen drei Anlageklassen.**
+
+**Die eingebaute Gegenprobe stimmt:** DCA, HALBE_QUOTE und GESTAFFELT kaufen an
+**jedem** Termin, haben also gar keine Tagewahl — ihr Vorsprung ist `±0,000`.
+Wäre er es nicht, wäre das Werkzeug kaputt.
+
+### 13.4 Was das ändert
+
+| bisher | jetzt |
+|---|---|
+| *„Der antizyklische Vorteil ist vollständig durch die Investitionsquote erklärt"* | ⚠️ **Nur der Vorsprung gegen DCA war Quote.** Die Tagewahl trägt zusätzlich — sie war unter der Quote begraben |
+| „kein Verfahren schlägt die Basisrate" (8.441 Fälle) | gemessen wurde **Ziel vor Stop**. Hier wird **barrierenfrei und brutto** gemessen — genau der Wechsel aus §11 |
+| Rückkehr zum Mittel = Hypothese | **gemessen, mit Vorzeichen und Größe**, in beiden Phasen |
+
+> **Das ist der erste Befund der Einstiegsseite, der nicht durch etwas anderes
+> erklärt ist.** Und er ist genau die Sorte, die §11 verlangt: eine bedingte
+> Aussage über die **Bewegung**, ohne Zielregel, ohne Stop, ohne Kostenhürde
+> davor.
+
+### 13.5 Die Grenzen, ausdrücklich
+
+- **Keine Signifikanzaussage.** Krypto bewegt sich gemeinsam; 59 Fenster sind
+  keine 59 unabhängigen Ziehungen. Entlastend: die Fenster starten **gestaffelt**
+  (36 verschiedene Startmonate), und **alle drei Klassen zeigen dasselbe
+  Vorzeichen** — das ist die eigentliche Stütze, nicht die Fensterzahl.
+- **Aktien n = 2, ETF n = 4.** Als Richtungsprobe brauchbar, nicht als Beleg.
+- **Kaufkosten sind enthalten**, Steuern und Slippage nicht.
+- ⚠️ **Das Phasen-Etikett ist beschreibend** — es benutzt die Fensterrendite.
+  Wer daraus eine Handelsregel macht, hat Lookahead gebaut. Die Timing-Zeile
+  in 13.3 braucht es **nicht**: sie gilt in beiden Phasen.
+- **Die Reihen enden am 19.08.** — der Desktop-Bestand, nicht die Produktion.

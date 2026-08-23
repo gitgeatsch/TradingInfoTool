@@ -20846,3 +20846,66 @@ und 8d nachziehen · 3. Feld vorteilsquelle speichern · 4. H barrierenfrei
 fassen · 5. Kette fuer akkumulation tragfaehig machen · 6. ERST DANN S1.
 
 Vollstaendig: Basisinfos/Machbarkeit_S1_Gegenpruefung_23_08.md
+
+
+[2026-08-23] SCHRITT 1 AUSGEFUEHRT: DIE TAGEWAHL TRAEGT - DER ALTE NULLBEFUND
+WAR EINE QUOTENMESSUNG
+
+Nutzerfreigabe: "ja lass schritt 1 laufen". Ausgefuehrt gegen eine
+Connection.backup()-Kopie der Produktions-DB, Reihen bis 19.08.
+
+WIEDERHOLUNGSLAUF (messe_akkumulation.py, 45 Symbole): unveraendert. HALBE_QUOTE
+0,851 gegen DCA 0,702; krypto 0,820 gegen 0,639. Die Kontrolle, die nicht
+hinsieht, gewinnt weiterhin.
+
+⚠️ ABER DER LAUF KANN DIE PHASENFRAGE NICHT BEANTWORTEN: er integriert ueber
+die ganze Reihe, und Krypto liegt seit 2017 vor. Acht zusaetzliche Tage
+bewegen kein Neunjahresmittel. Deshalb zerlegt.
+
+NEUES WERKZEUG messe_akkumulation_phasen.py: 76 NICHT UEBERLAPPENDE
+Zweijahresfenster, Etikett aus der Fensterrendite (beschreibend, keine
+Handelsregel), Mass innerhalb des Fensters. Eine Regeldefinition fuer beide
+Werkzeuge - anteil_der_regel() wurde dafuer aus simuliere() herausgeloest, der
+Gesamtlauf liefert danach bitgleiche Zahlen.
+
+DIE RANGFOLGE KIPPT VOLLSTAENDIG MIT DER RICHTUNG. HALBE_QUOTE schlaegt DCA in
+91 % der fallenden Krypto-Fenster und in 21 % der steigenden. Damit ist die
+Behauptung von 7.27 belegt - sie stand dort auf ZWEI Aktien, jetzt auf 76
+Fenstern. Positivkontrolle in allen drei Klassen bestanden.
+
+⚠️ UND KRYPTO WAR NICHT DURCHGEHEND BAERENMARKT: 24 von 59 Fenstern steigen.
+Der Satz "Regime war immer baer" stammt aus der Zeit, als BTC nur EIN Jahr
+Historie hatte; seit dem Nachladen am 19.08. sind es neun.
+
+⚠️⚠️ DER EIGENTLICHE FUND - DIE FRAGE, DIE NIE GESTELLT WURDE. Jeder Vergleich
+gegen DCA oder gegen die halbe Quote vermischt WIEVIEL und WANN. Die saubere
+Kontrolle haelt die Quote FEST: dieselben Betraege, dieselbe Anzahl Kauftage,
+ZUFAELLIG platziert (20 Ziehungen, feste Saat).
+
+    Schlaegt die Regel ihren eigenen quotengleichen Zufall?
+
+    krypto fallend    UNTER_SMA 91 % (+0,045)   RUECKGANG 69 % (+0,015)
+    krypto steigend   UNTER_SMA 83 % (+0,111)   RUECKGANG 88 % (+0,042)
+    etf    fallend    UNTER_SMA 50 % (+0,010)   RUECKGANG 100 % (+0,025)
+    etf    steigend   UNTER_SMA 75 % (+0,020)   RUECKGANG 100 % (+0,035)
+    aktien fallend    UNTER_SMA 100 % (+0,018)  RUECKGANG 100 % (+0,024)
+    aktien steigend   UNTER_SMA 50 % (+0,027)   RUECKGANG 50 % (+0,023)
+
+UNTER_SMA UND RUECKGANG SCHLAGEN IHREN QUOTENGLEICHEN ZUFALL - in steigenden
+wie in fallenden Fenstern, in allen drei Anlageklassen. Die eingebaute
+Gegenprobe stimmt: DCA, HALBE_QUOTE und GESTAFFELT kaufen an JEDEM Termin,
+haben also keine Tagewahl - ihr Vorsprung ist ±0,000. Waere er es nicht, waere
+das Werkzeug kaputt.
+
+WAS SICH AENDERT: nur der Vorsprung GEGEN DCA war Quote. Die Tagewahl traegt
+zusaetzlich und war unter der Quote begraben. Das ist der erste Befund der
+Einstiegsseite, der nicht durch etwas anderes erklaert ist - und genau die
+Sorte, die Konzept 11 verlangt: eine bedingte Aussage ueber die BEWEGUNG, ohne
+Zielregel, ohne Stop, ohne Kostenhuerde davor.
+
+GRENZEN, ausdruecklich: keine Signifikanzaussage - Krypto bewegt sich
+gemeinsam, 59 Fenster sind keine 59 unabhaengigen Ziehungen. Entlastend: die
+Fenster starten gestaffelt (36 verschiedene Startmonate), und alle drei Klassen
+zeigen dasselbe Vorzeichen - das ist die Stuetze, nicht die Fensterzahl. Aktien
+n=2, ETF n=4. Kaufkosten enthalten, Steuern und Slippage nicht. Reihen enden am
+19.08. (Desktop-Bestand, nicht Produktion).

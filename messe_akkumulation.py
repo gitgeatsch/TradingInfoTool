@@ -61,40 +61,60 @@ def _kosten(klasse: str, betrag: float) -> float:
     return BOERSE_FIX_EUR + betrag * BOERSE_SPREAD
 
 
-def simuliere(c: np.ndarray, klasse: str, regel: str, schwelle: float = 0.20):
-    """Gibt (Endwert, investiert, Kaeufe, Durchschnittspreis) zurueck."""
-    stuecke = bar = investiert = 0.0
-    kaeufe = 0
-    for i in range(VORLAUF, len(c), PERIODE):
-        bar += BUDGET
-        fenster = c[max(0, i - 251):i + 1]        # nur Vergangenheit
-        sma = float(fenster[-200:].mean())
-        hoch = float(fenster.max())
-        rueckgang = 1.0 - c[i] / hoch if hoch > 0 else 0.0
+def anteil_der_regel(c: np.ndarray, i: int, regel: str,
+                     schwelle: float = 0.20) -> float:
+    """Wieviel Budget setzt die Regel am Tag `i` ein? (herausgeloest 23.08.2026)
 
+    EINE Definition, zwei Aufrufer: `simuliere()` hier und die
+    Phasenzerlegung in `messe_akkumulation_phasen.py`. Zwei Kopien einer
+    Regel laufen auseinander - dann misst die Zerlegung etwas anderes als
+    der Gesamtlauf, und der Unterschied saehe aus wie ein Befund.
+
+    Liest ausschliesslich `c[:i+1]` - kein Lookahead."""
+    fenster = c[max(0, i - 251):i + 1]            # nur Vergangenheit
+    sma = float(fenster[-200:].mean())
+    hoch = float(fenster.max())
+    rueckgang = 1.0 - c[i] / hoch if hoch > 0 else 0.0
+    return _anteil(regel, c[i], sma, rueckgang, schwelle)
+
+
+def _anteil(regel, kurs, sma, rueckgang, schwelle):
+    if True:
         if regel == "DCA":
-            anteil = 1.0
+            return 1.0
         elif regel == "UNTER_SMA":
-            anteil = 1.0 if c[i] < sma else 0.0
+            return 1.0 if kurs < sma else 0.0
         elif regel == "RUECKGANG":
-            anteil = 1.0 if rueckgang >= schwelle else 0.0
+            return 1.0 if rueckgang >= schwelle else 0.0
         elif regel == "GESTAFFELT":
             # AZ-4-Tranchenlogik MIT Reserve (korrigiert 11.08.): in normalen
             # Zeiten wird nur die Haelfte eingesetzt, damit ueberhaupt eine
             # Reserve entsteht - erst dann kann bei Rueckgang mehr fliessen.
             # Die erste Fassung setzte immer mindestens das volle Budget ein
             # und war damit rechnerisch IDENTISCH zu DCA (0 von 43 besser).
-            anteil = min(4.0, 0.5 + 5.0 * rueckgang)
+            return min(4.0, 0.5 + 5.0 * rueckgang)
         elif regel == "HALBE_QUOTE":
             # KONTROLLE (11.08.): investiert konstant die Haelfte, ohne jedes
             # Timing. Wer in einem fallenden Markt weniger investiert, steht
             # allein dadurch besser da. Schlaegt eine antizyklische Regel diese
             # Kontrolle NICHT, misst sie Quotenreduktion statt Timing.
-            anteil = 0.5
-        else:
-            raise ValueError(regel)
+            return 0.5
+        raise ValueError(regel)
 
-        einsatz = min(bar, BUDGET * anteil)
+
+def simuliere(c: np.ndarray, klasse: str, regel: str, schwelle: float = 0.20,
+              von: int = VORLAUF, bis: int | None = None):
+    """Gibt (Endwert, investiert, Kaeufe, Durchschnittspreis) zurueck.
+
+    `von`/`bis` grenzen NUR die Kauftage ein, nicht die Historie: die Regel
+    sieht weiterhin die ganze Vergangenheit (200-Tage-Schnitt,
+    1-Jahres-Hoch). Voreinstellung = ganze Reihe, also unveraendert."""
+    ende = len(c) if bis is None else min(bis, len(c))
+    stuecke = bar = investiert = 0.0
+    kaeufe = 0
+    for i in range(max(von, VORLAUF), ende, PERIODE):
+        bar += BUDGET
+        einsatz = min(bar, BUDGET * anteil_der_regel(c, i, regel, schwelle))
         if einsatz <= 0:
             continue
         netto = einsatz - _kosten(klasse, einsatz)
@@ -104,7 +124,7 @@ def simuliere(c: np.ndarray, klasse: str, regel: str, schwelle: float = 0.20):
         bar -= einsatz
         investiert += einsatz
         kaeufe += 1
-    endwert = stuecke * float(c[-1]) + bar
+    endwert = stuecke * float(c[ende - 1]) + bar
     schnitt = (investiert / stuecke) if stuecke else float("nan")
     return endwert, investiert, kaeufe, schnitt
 
