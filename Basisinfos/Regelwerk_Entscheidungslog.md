@@ -21187,3 +21187,81 @@ genau dort, wo etwas LAUFEND gebraucht wird, das deterministisch nicht geht -
 und das ist bisher genau eine Sache: NACHRICHTEN LESEN UND EINORDNEN.
 
 Vollstaendig: Basisinfos/Option_Claude_Agent_Anbindung_23_08.md
+
+
+[2026-08-23] A1 DIMENSIONIERT: k=2, Horizont 20 - und was das Wort "AUSWAHL"
+alles verdeckt hat
+
+⚠️ NUTZERFRAGE, berechtigt: "Was meinst du konkret mit Auswahl? Hier versteckst
+du gerne Fakten, die erst spaeter in der Diskussion genannt werden." Auftrag
+dazu: pruefen, messen, recherchieren - notfalls neu dimensionieren.
+
+ZEHN ENTSCHEIDUNGEN steckten in dem Wort, ich hatte EINE genannt: wieviele (k) ·
+woraus · wofuer (vor oder nach der Kette) · was mit den nicht Gewaehlten · wie
+oft · was mit Bestand · ersetzt sie Cooldown und Fingerabdruck · welche
+Ranggroesse · duenne Gruppen · UND WENN ALLE SCHLECHT SIND.
+
+⚠️ DER LETZTE PUNKT WAR DIE VERSTECKTESTE ANNAHME: eine Rangliste hat IMMER
+einen Sieger, eine reine Auswahl unterstellt also lautlos, dass gekauft wird.
+Die Literatur kennt genau das: Antonacci (2014), DUAL MOMENTUM - relativ
+entscheidet WELCHEN, absolut entscheidet OB.
+https://www.optimalmomentum.com/dual-relative-absolute-momentum/
+
+NEUES WERKZEUG messe_auswahl.py, 40 Symbole, 3.290 Tage, Mass barrierenfrei und
+brutto, Newey-West ueber 1.874 Termine.
+
+k-EMPFINDLICHKEIT - der Vorteil zerfaellt schnell:
+    k=1  H5 +0,73 % (t 1,93)   H20 +4,55 % (t 4,21)
+    k=2  H5 +0,79 % (t 3,29)   H20 +2,74 % (t 4,52)   <- beste Stelle
+    k=3  H5 +0,43 % (t 2,22)   H20 +1,11 % (t 2,37)
+    k=5  H5 +0,17 % (t 1,22)   H20 +0,46 % (t 1,15)
+    k=8  H5 +0,15 % (t 1,58)   H20 +0,37 % (t 1,29)
+⚠️ AB k=5 IST NICHTS MEHR DA. Mein urspruenglicher Vorschlag "die besten k" mit
+einem Fuenftel (8 von 40) haette GENAU NICHTS ausgewaehlt.
+
+DER ABSOLUTE TRENDFILTER AM EINZELWERT BRINGT NICHTS: k=2/H5 mit Filter +0,71 %
+(t 2,62) gegen +0,79 % (t 3,29) ohne, und er sperrt 228 von 1.874 Terminen.
+NICHT BAUEN.
+
+⚠️ DER MARKTZUSTAND ENTSCHEIDET ALLES (k=3, H5):
+    BTC ueber seinem 200-Schnitt   Auswahl +1,45 %  Markt +0,53 %  t  3,58
+    BTC unter seinem 200-Schnitt   Auswahl +0,08 %  Markt +0,17 %  t -0,46
+Nicht der Einzelwert, sondern DER MARKT sagt, ob ueberhaupt gekauft wird - genau
+der G4-Punkt des Nutzers, als STETIGE Groesse.
+
+⚠️ DER FAKT, DEN ICH FAST WIEDER VERDECKT HAETTE - DIE KOSTEN DER DREHUNG. Fuer
+die AUSWAHL ist die Huerde bezahlt, fuer die DREHUNG nicht:
+    k=2 H5   brutto +1,14 %  ->  Referenz 0,30 % +0,54 %  Bitpanda 1,50 % -1,86 %
+    k=2 H20  brutto +4,57 %  ->  Referenz +3,97 %          Bitpanda +1,57 %
+DER FUENFTAGESRHYTHMUS TRAEGT SEINE BETRIEBSKOSTEN NICHT, der Zwanzigtages-
+rhythmus schon - auch zum Bitpanda-Satz. Soweit ich sehe die ERSTE
+Konfiguration dieses Projekts, die ihre Kostenhuerde brutto UND netto nimmt.
+
+DIE VORAB BENANNTE PRUEFUNG (k=2, H20, nur bei offener Schranke), je Jahr:
+    2021  +15,95 % gegen +7,20 %   Abstand +8,75 %   ja
+    2023  +12,48 % gegen +5,61 %   Abstand +6,87 %   ja
+    2024   +6,12 % gegen +6,13 %   Abstand -0,01 %   NEIN
+    2025   -2,56 % gegen -6,22 %   Abstand +3,66 %   ja (aber absolut negativ)
+3 von 4 auswertbaren Jahren. ⚠️ KEINE SAUBERE BESTAETIGUNG: 2024 trennt nicht,
+2025 trennt und verliert trotzdem - ein offenes Tor ist keine Gewinngarantie.
+Und nur VIER Jahre sind ueberhaupt auswertbar, in den uebrigen fuenf stand BTC
+unter seinem Schnitt.
+
+EMPFEHLUNG, nach Belegstaerke getrennt. Die Frage ist NICHT, ob die Rangauswahl
+gut ist, sondern ob sie besser ist als das, was HEUTE auswaehlt - und das ist
+die UHR, mit null Beleg.
+    A1a  Rangplatz ersetzt den Cooldown, k=2 je Gruppe        HART
+    A1b  Marktzustand (BTC zum 200-Schnitt)                   WEICH/Schatten
+    A1c  Takt ~20 Handelstage                                 (Kosten)
+    A1d  Begruendung "Rang 2 von 40" statt "Cooldown abgelaufen"
+    A1e  absoluter Trendfilter am Einzelwert                  NICHT BAUEN
+
+VORBEHALTE: 24 angesehene Zellen gegen eine Placebo-Schwelle von |t| >= 3,05;
+Ueberlebensverzerrung macht die Auswahlrendite nach oben verzerrt; die
+B3-Auflage (andere Anlageklasse) ist mit 2 Aktien und 4 ETF NICHT ERFUELLBAR;
+neun Jahre sind rund zwei Zyklen; die 200-Tage-Grenze ist eine Konvention.
+
+A1 gilt zunaechst NUR FUER KRYPTO - bei Aktien (2), ETF (4) und Rohstoffen (3)
+waere "die besten 2" keine Auswahl, sondern eine Umbenennung.
+
+Vollstaendig: Basisinfos/A1_Auswahl_Dimensionierung_23_08.md
