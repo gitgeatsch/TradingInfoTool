@@ -242,3 +242,226 @@ Instrument** — und das ist kein Sonderfall, sondern eine gemessene Eigenschaft
 | die CRV-Abstufung einschalten | geeicht, aber das Einschalten ändert Positionsgrößen — Ihre Entscheidung |
 | den Cooldown abschaffen | Ihre Vorgabe: er **steuert**, er entscheidet nur nicht |
 | einen zweiten Filter bauen | ⚠️ **es gibt ihn** — er ist nur unterernährt |
+
+
+---
+
+## 7. ⚠️ Der Score in seiner heutigen Form — gemessen
+
+**Nutzereinwand:** *„Die starre Geometrie wird mit H statisch aufgewertet —
+ich zähle 1 und 1 zusammen, das ist keine Leistung."*
+
+**Er hat recht, und die Messung ist eindeutig.** Über 1.323 auswertbare
+Signale, Referenz 0,30 %:
+
+| | trägt | trägt NICHT |
+|---|---:|---:|
+| **ohne H** | **0** | **1.323** |
+| **mit H** | **948** | 375 |
+
+> **H ist der einzige Schalter.** Der Rest ist Arithmetik aus zwei Zahlen,
+> die das System sich selbst gesetzt hat:
+>
+> ```
+> quote = 1/(1+CRV)  +  4,5 wenn H
+> ```
+
+⚠️ **Und es ist schwächer, als es aussieht: das CRV wählt das System selbst**
+(Ziel = CRV × Stopabstand). Die „Basisrate aus der Geometrie" ist damit eine
+Folge unserer eigenen Zielregel, keine Beobachtung am Markt. **Ein
+ehrgeizigeres Ziel senkt die Quote rechnerisch** — nicht, weil der Trade
+schlechter wäre.
+
+**Der Score enthält über das einzelne Signal genau ein Bit: H ja oder nein.**
+
+⚠️ **Das ist kein Darstellungsfehler, sondern eine Zustandsbeschreibung:** von
+allen Größen der Kette ist H die einzige, die je gegen den Zufall gemessen
+wurde. **Es gibt nichts Weiteres zum Zusammenzählen.**
+
+**Was daraus folgt:**
+
+| | |
+|---|---|
+| **nicht** mehr Beiträge einrechnen | ungemessene Beiträge machen den Score nicht besser, nur schwerer zu widerlegen |
+| **wohl** die Zahl ehrlich zerlegen | *Ausgangslage der Gruppe* (Arithmetik) getrennt von *was dieses Signal daran ändert* (heute: nur H) |
+| **und** die Kandidatenliste behalten | „nicht eingerechnet, und warum" ist die stärkste Stelle des Blocks |
+
+---
+
+## 8. Hart oder weich — die Einordnung
+
+**Das Kriterium steht schon im Projekt:**
+
+> *„ZÄHLEN, NICHT VERWERFEN — dieselbe Begründung wie beim Entscheider und
+> beim Gate. **Ein Wächter, der selbst verwirft, macht seine eigene Wirkung
+> unsichtbar.**"*
+
+**Daraus die Linie:**
+
+| | beantwortet | darf blockieren, weil |
+|---|---|---|
+| **HART** | **„kann / darf"** | die Alternative **unmöglich** oder **verboten** ist — Machbarkeit, Sicherheit, Kosten |
+| **WEICH** | **„soll"** | Qualitätsaussagen müssen **messbar** bleiben, und messen heißt durchlassen |
+
+### 8.1 Der Ist-Zustand, eingeordnet
+
+| Stufe | heute | Einordnung | |
+|---|---|---|---|
+| `auftrag` (Instrument × Strategie) | hart | **hart** ✔ | Machbarkeit |
+| `fakten` (Mindestgrundlage) | hart | **hart** ✔ | ohne Fakten kein Urteil |
+| `lagebild` | hart | **hart** ✔ | dito |
+| **`anlass`** (Fingerabdruck) | hart | **hart** ✔ | Kosten — dieselbe Frage zweimal zu stellen ist verschwendet |
+| ⚠️ **`wiederholung`** (Cooldown) | **hart** | ⚠️ **beantwortet „soll"** | siehe 8.2 |
+| `urteil` (Vertrag) | hart | **hart** ✔ | eine Antwort ohne Richtung ist keine Antwort |
+| `aktion` (Bestand) | hart | **hart** ✔ | man kann nicht verkaufen, was man nicht hält |
+| Mindestgröße, Töpfe, RM-11 | hart | **hart** ✔ | Kosten und Sicherheit |
+| **Z1** (Treue zur Eingabe) | weich | **weich** ✔ | zählt, verwirft nicht |
+| **Z.ai** (Zweitmeinung) | weich | **weich** ✔ | dito |
+| **Vorfilter H** | Schatten | **weich** ✔ | wirkt noch nicht |
+| **Wahrscheinlichkeit** | Anzeige | **weich** ✔ | dito |
+
+### 8.2 ⚠️ Der Cooldown steht auf der falschen Seite
+
+**Nutzervorgabe:** *„Ohne Uhr werden wir nicht auskommen, sie ist sinnvoll zur
+**Steuerung** — aber nicht als **Entscheidung**."*
+
+**Gemessen: er blockiert 30 von 30.** Damit ist er keine Schranke mehr,
+sondern die Entscheidung.
+
+> **Vorschlag für eine messbare Grenze:** eine harte Stufe, die dauerhaft
+> nahezu alles blockiert, hat aufgehört, eine Schranke zu sein. **Wenn eine
+> harte Stufe über einen vollen Umlauf mehr als 90 % verwirft, gehört sie
+> geprüft** — entweder ist ihre Zahl falsch, oder sie beantwortet die falsche
+> Frage.
+
+---
+
+## 9. ⚠️ Was ein guter Trade ist — auf dem Papier, vor der nächsten Messung
+
+**Nutzervorgabe:** *„Wenn wir jetzt in der Planung und am Papier nicht wissen,
+was ein guter Trade für ein Asset ist oder ein schlechter — bauen wir wieder
+ein Luftschloss aus Messungen und Blockaden."*
+
+**Der Einwand ist berechtigt.** Bisher misst das Projekt sein eigenes System.
+Was fehlt, ist die Festlegung, **wonach** gesucht wird.
+
+### 9.1 Es gibt vier Quellen eines Vorteils — und nur vier
+
+**Etablierter Stand des Fachs.** Ein Trade hat nur dann einen
+Erwartungswert über null, wenn mindestens eine davon zutrifft:
+
+| | Quelle | die Aussage dahinter |
+|---|---|---|
+| **1** | **Drift / Trend** | der Wert steigt über den Haltezeitraum im Mittel — Momentum, Trendfolge |
+| **2** | **Rückkehr zum Mittel** | der Preis ist von einem Niveau entfernt, zu dem er zurückkehrt — Bodenbildung, Unterstützung |
+| **3** | **Information** | man weiß etwas, das im Preis noch nicht steht — Nachrichten, Flüsse, Fundamentaldaten |
+| **4** | **Struktur / Prämie** | man wird für eine Leistung bezahlt — Spread, Finanzierung, Volatilitätsprämie |
+
+⚠️ **Das Projekt hat drei davon selbst benannt** — *„Drift statt Timing ·
+Nachrichten · Kosten"*. **Die Rückkehr zum Mittel fehlt in dieser Liste.**
+
+### 9.2 ⚠️ Und genau sie ist die einzige, die bei uns misst
+
+**H ist eine Rückkehr-zum-Mittel-Bedingung:** *kein mehrfach berührter
+Widerstand unter dem Ziel* **und** *ein Träger über dem Stop*. Das ist eine
+Aussage über **Struktur und Niveaus**, nicht über Richtung.
+
+**Der Rangplatz ist eine Drift-Bedingung** — 250-Tage-Entwicklung im
+Klassenvergleich.
+
+**Und die Messung sagt, was passiert, wenn man beide mischt:**
+
+| | |
+|---|---:|
+| H allein (523 Reihen, Referenz) | **+0,15 R je Trade** |
+| Rangplatz **innerhalb** von H | **−5,8 Punkte** |
+
+> ⚠️ **Zwei Vorteilsquellen, die einander aufheben.** Das ist kein
+> Messartefakt — es ist der Normalfall: Momentum und Rückkehr zum Mittel sind
+> **gegenläufige** Thesen. Wer beide gleichzeitig verlangt, sucht einen Wert,
+> der zugleich gelaufen und zurückgeblieben ist.
+
+**Und damit trifft die Formulierung des Nutzers den Kern exakt:**
+
+| | Vorteilsquelle | Stop | Hebel | Horizont |
+|---|---|---|---|---|
+| **SPOT — „Bodenbildung oder Tod"** | **Rückkehr zum Mittel** | weit | 1,0 | lang |
+| **HEBEL — „kurzfristige Chance"** | **Drift / Momentum** | eng | > 1 | kurz |
+
+⚠️ **Das System stellt heute EINE Frage für beide.** Es fragt weder nach der
+einen noch nach der anderen These — es fragt „kaufen oder nicht".
+
+### 9.3 Was daraus als Festlegung folgt
+
+**Ein guter Trade ist einer, dessen These benannt ist und dessen Bedingungen
+zu dieser These passen.** Auf dem Papier:
+
+| | **SPOT — Rückkehr zum Mittel** | **HEBEL — Drift** |
+|---|---|---|
+| **einschließend** | Träger über dem Stop (mehrfach berührt) · freier Weg zum Ziel · weiter Stop · Kostenhürde +0,8 Punkte | Rangplatz vorn in der Klasse · enger Stop, den die Struktur trägt · Liquidationsabstand ausreichend |
+| **ausschließend** | ⚠️ **vorderer Rangplatz** (−5,8) · Widerstand unter dem Ziel · Stop ohne Träger | ⚠️ **weiter Stop** (Kostenhürde +8,0) · Finanzierung im oberen Perzentil · bekannter Termin im Fenster |
+| **gemessen?** | **ja: +0,15 R** (523 Reihen) | ⚠️ **nein — nie gemessen** (S2) |
+
+⚠️ **Die rechte Spalte ist Hypothese, die linke ist gemessen.** Das ist der
+ehrliche Stand, und er sagt zugleich, wo die nächste Messung hingehört.
+
+### 9.4 Die Nachricht — was man kann und was nicht
+
+**Nutzervorgabe:** *„eine Nachricht kann den gesamten Markt bewegen, ABER dies
+können wir nicht abfangen und auch nicht sauber mit einer Wahrscheinlichkeit
+bewerten."*
+
+**Richtig — und der Fachstandard verlangt das auch nicht.** Er unterscheidet:
+
+| | | bei uns |
+|---|---|---|
+| **die Nachricht vorhersagen** | ✘ nicht möglich | – |
+| **die Aussetzung messen** (Event-Risiko) | ✔ üblich | ⚠️ `anlass_kalender` **gebaut, nie gemessen** |
+| **durch bekannte Termine nicht halten** | ✔ üblich | offen |
+| **die Reaktion messen, nicht die Nachricht** | ✔ üblich | offen |
+
+> **Man bewertet nicht die Nachricht, sondern die Aussetzung ihr gegenüber.**
+> Ein Trade über einen bekannten Termin hinweg ist ein anderer Trade als
+> derselbe daneben — unabhängig davon, was die Nachricht sagen wird.
+
+⚠️ **`cycles.py` (FOMC-Kalender) ist gebaut und ausdrücklich „noch NICHT in
+Facts/Pipeline verdrahtet".** Das ist keine neue Baustelle, sondern eine
+angefangene.
+
+### 9.5 Was das für die Marktphase heißt
+
+⚠️ **Vorsicht ist hier geboten, und zwar aus eigener Erfahrung:** bis zum
+22.08. lief jede Phasenmessung des Projekts auf einem einzigen Regime
+(„Regime war IMMER bär"). Seit dem Drehen des Marktes (+15,8 % Median in neun
+Tagen) gibt es **die erste zweite Phase**.
+
+**Deshalb als Festlegung, nicht als Messung:**
+
+| Phase | welche Vorteilsquelle trägt eher | Begründung |
+|---|---|---|
+| Aufwärts, breit | **Drift** | Trends halten länger, Rücksetzer sind flach |
+| Abwärts, breit | **keine** — Kosten dominieren | die Basisrate ist driftfrei, die Hürde bleibt |
+| Seitwärts / Boden | **Rückkehr zum Mittel** | Niveaus halten, Ausbrüche scheitern |
+
+⚠️ **Das ist Lehrbuchwissen, nicht unsere Messung.** Es taugt als
+**Hypothese, die man prüfen kann**, sobald es zwei Phasen in den Daten gibt —
+und die gibt es seit neun Tagen.
+
+---
+
+## 10. Was ich als nächsten Schritt vorschlage
+
+**Nicht mehr messen, sondern zuerst festlegen** — genau Ihr Einwand:
+
+| | | |
+|---|---|---|
+| **1** | **Die These wird Teil des Signals.** Jedes Signal trägt, welche der vier Quellen es beansprucht | ohne sie ist „gut" nicht definierbar |
+| **2** | **Die Rolle BC bekommt die These als Auftrag**, nicht als freie Wahl — so wie sie heute Instrument und Strategie bekommt | `handelsauftrag` ist die vorhandene Stelle |
+| **3** | **Erst dann messen**, ob eine These trägt — je These getrennt | eine Messung über gemischte Thesen misst nichts |
+
+⚠️ **Punkt 2 ist der Punkt, an dem die Strategien `swing` und `akkumulation`
+aufhören, toter Code zu sein.** Sie sind bereits die Namen für „Drift kurz"
+und „Rückkehr zum Mittel lang" — sie werden nur nie vergeben.
+
+> **Das ist keine neue Baustelle. Es ist die angefangene, die nie zu Ende
+> gebaut wurde.**
