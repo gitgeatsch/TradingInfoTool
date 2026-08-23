@@ -7239,10 +7239,24 @@ def paket_15() -> None:
            isinstance(RL9.LEERLAUF_ABBRUCH, int) and 3 <= RL9.LEERLAUF_ABBRUCH <= 20,
            f"{RL9.LEERLAUF_ABBRUCH} - grosszuegig genug fuer eine Handvoll "
            "Fehlschlaege, streng genug gegen einen Zustand")
+    # ⚠️ ERWEITERT AM 23.08.2026 (L1): gezaehlt wird nur, wo ein Aufruf
+    # stattfand UND kein Bestand vorlag. Ein HALTEN auf einer gehaltenen
+    # Position ist die erwartete Antwort, kein Leerlauf - sonst hielten
+    # acht Bestandsurteile den Lauf an, bevor die AUSGEWAEHLTEN
+    # Kandidaten gefragt sind.
     pruefe(P, "gezaehlt wird NUR, wo ein Aufruf stattfand",
-           'if ergebnis["aufrufe"] > _vor_aufrufe:' in _q9,
+           'ergebnis["aufrufe"] > _vor_aufrufe' in _q9,
            "ein gesperrtes Symbol kostet nichts und darf die Wache nicht "
            "ausloesen - sonst hielte ausgerechnet der sparsame Fall den Lauf an")
+    pruefe(P, "und der Bestand zaehlt nicht mit (L1)",
+           "not _war_bestand(" in _q9,
+           "ein HALTEN auf einer gehaltenen Position ist ein Ergebnis, "
+           "kein Leerlauf")
+    pruefe(P, "der Ersatz ist LAUFUEBERGREIFEND und eine MELDUNG",
+           "stumme_laeufe" in _q9 and "logger.warning" in _q9,
+           "der Zaehler in `ergebnis` entsteht je Lauf neu und ist nach "
+           "A1 unerreichbar; ein laufuebergreifender ABBRUCH waere eine "
+           "Falle - keine Signale, Bremse an, keine Aufrufe")
     pruefe(P, "ein Ergebnis setzt den Zaehler zurueck",
            'ergebnis["leerlauf"] = 0' in _q9,
            "acht IN FOLGE sind ein Zustand, acht verteilte sind Zufall")
@@ -12658,13 +12672,65 @@ def paket_auswahl() -> None:
            any("sperrt nichts" in x for x in _s),
            "A1b ist Schatten: je Jahr gemischt (2024 trennt nicht, 2025 "
            "trennt und verliert trotzdem)")
+    import sqlite3 as _sq
+    # ---- L1: GREIFT DIE BREMSE NOCH? (Nutzerfrage 23.08.) ----
+    #
+    # ⚠️ DIE ANTWORT WAR NEIN, UND ZWAR GEMESSEN: nach A1 und der
+    # Bestandsausnahme bleibt EIN zaehlender Aufruf je Lauf uebrig, und der
+    # Leerlaufzaehler entsteht je Lauf neu - acht in Folge INNERHALB eines
+    # Laufs kann es nicht mehr geben. Ersatz ist der laufuebergreifende
+    # Zaehler, und diese Pruefungen sichern ihn ab.
+    _c3 = _sq.connect(":memory:")
+    _AW.schreibe_lauf(_c3, auswahl={"aktiv": True, "k": 1,
+                                    "platz": {"A": (1, 3)},
+                                    "gewaehlt": {"A"}, "entwicklung": {"A": 0.5}},
+                      gruppe="krypto", symbole=["A"], jetzt="2026-08-23T10:00:00")
+    _AW.vermerke_aktion(_c3, lauf="2026-08-23T10:00:00", gruppe="krypto",
+                        symbol="A", aktion="NICHTS_TUN")
+    pruefe(P, "ein stummer Lauf wird gezaehlt",
+           _AW.stumme_laeufe(_c3, "krypto")["laeufe"] == 1)
+    for _i in range(2, 10):
+        _l = f"2026-08-23T{10+_i:02d}:00:00"
+        _AW.schreibe_lauf(_c3, auswahl={"aktiv": True, "k": 1,
+                                        "platz": {"A": (1, 3)},
+                                        "gewaehlt": {"A"},
+                                        "entwicklung": {"A": 0.5}},
+                          gruppe="krypto", symbole=["A"], jetzt=_l)
+        _AW.vermerke_aktion(_c3, lauf=_l, gruppe="krypto", symbol="A",
+                            aktion="NICHTS_TUN")
+    _s = _AW.stumme_laeufe(_c3, "krypto")
+    pruefe(P, "ab acht stummen Laeufen in Folge schlaegt der Zaehler an",
+           _s["laeufe"] == 9 and _s["stumm"] is True, str(_s))
+    _AW.schreibe_lauf(_c3, auswahl={"aktiv": True, "k": 1,
+                                    "platz": {"A": (1, 3)}, "gewaehlt": {"A"},
+                                    "entwicklung": {"A": 0.5}},
+                      gruppe="krypto", symbole=["A"], jetzt="2026-08-24T10:00:00")
+    _AW.vermerke_aktion(_c3, lauf="2026-08-24T10:00:00", gruppe="krypto",
+                        symbol="A", aktion="KAUFEN")
+    pruefe(P, "ein einziger Einstieg setzt den Zaehler zurueck",
+           _AW.stumme_laeufe(_c3, "krypto")["laeufe"] == 0,
+           "sonst bliebe die Meldung stehen, obwohl die Kette wieder laeuft")
+    pruefe(P, "eine andere Gruppe wird getrennt gezaehlt",
+           _AW.stumme_laeufe(_c3, "aktien")["laeufe"] == 0,
+           "eine stumme Aktienseite darf keine Krypto-Meldung ausloesen")
+    _c3.close()
+
+    # ---- L1: ein BESTAND zaehlt nicht als Leerlauf ----
+    _q2 = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "die Leerlaufwache nimmt den Bestand aus",
+           "not _war_bestand(" in _q2,
+           "ein HALTEN auf einer gehaltenen Position ist die erwartete "
+           "Antwort, kein Leerlauf")
+    pruefe(P, "und der Rueckfall der Bestandspruefung geht zur SICHEREN Seite",
+           "return False" in _q2.split("def _war_bestand")[1][:900],
+           "faellt sie aus, zaehlt die Wache MIT - die Bremse bleibt scharf")
+
     # ---- S-2: DER AUFTRAG GEHOERT AN DAS SIGNAL (23.08.2026) ----
     #
     # ⚠️ NACH METHODIK 2.61 wird die Spalte auch GELESEN, und zwar ueber den
     # LESEPFAD DES MODELLS - nicht nur mit einem SELECT. Genau dort hat am
     # 22.08. eine neue Spalte die App angehalten: geschrieben wurde sie,
     # gelesen nie, und der Konstruktor kannte sie nicht.
-    import sqlite3 as _sq
     from agent import signal_abbildung as _SA
     import database.db as _DB
     from database.models import Signal as _Sig

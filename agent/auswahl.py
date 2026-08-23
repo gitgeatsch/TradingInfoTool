@@ -324,3 +324,58 @@ def stand(conn) -> dict:
         return {"zeilen": 0, "laeufe": 0, "gewaehlt": 0, "mit_aktion": 0}
     return {"zeilen": n or 0, "laeufe": laeufe or 0,
             "gewaehlt": gewaehlt or 0, "mit_aktion": mit_aktion or 0}
+
+
+# EINSTIEGSSEITE STUMM? - der laufuebergreifende Zaehler (23.08.2026)
+#
+# ⚠️ WARUM ES DEN BRAUCHT. `rollen_lauf.LEERLAUF_ABBRUCH = 8` haelt einen Lauf
+# an, wenn acht Modellaufrufe IN FOLGE kein Signal ergeben - gebaut gegen den
+# Deadloop und richtig so. Der Zaehler steht aber in `ergebnis`, und `ergebnis`
+# entsteht JE LAUF neu.
+#
+# GEMESSEN: nach A1 und der Bestandsausnahme bleibt genau EIN zaehlender Aufruf
+# je Umlauf uebrig (krypto: HYPE gewaehlt und nicht im Bestand; etf und aktien:
+# null, weil die Gewaehlten gehalten werden). Acht in Folge INNERHALB eines
+# Laufs kann es damit nie geben - die Bremse ist nicht geschwaecht, sie ist
+# UNERREICHBAR.
+#
+# ⚠️ UND EIN LAUFUEBERGREIFENDER ABBRUCH WAERE EINE FALLE: keine Signale ->
+# Bremse an -> keine Aufrufe -> keine Signale. Ein Zustand, aus dem das System
+# von selbst nicht mehr herauskommt. Deshalb MELDUNG statt Abbruch: der Abbruch
+# sparte ohnehin nichts mehr, wo nur noch ein Aufruf je Lauf stattfindet.
+#
+# GEZAEHLT WIRD AUS `auswahl_schatten` - dieselbe Zeile, die ohnehin
+# mitgeschrieben wird. Ein eigener Zaehler waere ein zweiter Zustand, der einen
+# Neustart nicht ueberlebt.
+EINSTIEGSAKTIONEN = ("KAUFEN", "NACHKAUFEN", "EROEFFNEN")
+STUMM_AB = 8
+
+
+def stumme_laeufe(conn, gruppe: str, grenze: int = STUMM_AB) -> dict:
+    """Wie viele Laeufe in Folge hat kein GEWAEHLTER Wert zu einem Einstieg
+    gefuehrt?
+
+    Zaehlt nur Zeilen mit `gewaehlt = 1` UND einer Aktion - also nur dort, wo
+    tatsaechlich gefragt wurde. Ein Lauf ohne jede Frage ist keine Antwort und
+    darf den Zaehler weder erhoehen noch zuruecksetzen."""
+    import sqlite3
+    try:
+        zeilen = conn.execute(
+            f"SELECT lauf, aktion FROM {_TABELLE} "
+            f"WHERE gruppe = ? AND gewaehlt = 1 AND aktion IS NOT NULL "
+            f"ORDER BY lauf DESC", (str(gruppe),)).fetchall()
+    except sqlite3.Error:
+        return {"laeufe": 0, "stumm": False, "geprueft": 0}
+    gesehen, stumm = set(), 0
+    for lauf, aktion in zeilen:
+        if lauf in gesehen:
+            # Mehrere Gewaehlte im selben Lauf: EIN Einstieg genuegt, damit der
+            # Lauf nicht stumm war - deshalb wird er beim ersten Treffer
+            # abgeraeumt, nicht beim ersten Nein.
+            continue
+        if str(aktion or "").strip().upper() in EINSTIEGSAKTIONEN:
+            break
+        gesehen.add(lauf)
+        stumm += 1
+    return {"laeufe": stumm, "stumm": stumm >= grenze,
+            "geprueft": len(zeilen)}

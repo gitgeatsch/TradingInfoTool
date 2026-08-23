@@ -21710,3 +21710,57 @@ Suite 1.633 ALLE BESTANDEN, freie Namen 0, simuliere_kette 3 Gruppen, 5
 Signale, 6 Mails, 0 Fehler. Paket B1 mitgezogen: es erwartete, dass nur die
 Gewaehlten zum Urteil kommen - seit der Bestandsausnahme stimmt das
 absichtlich nicht mehr.
+
+
+[2026-08-23] L1 GEBAUT - UND DIE ANTWORT AUF "GREIFT DIE BREMSE DANN NOCH?"
+LAUTET NEIN
+
+Nutzerentscheidung: "L1 - aber pruefe vorher ob die Bremse dann noch greift."
+
+⚠️ DIE PRUEFUNG ERGAB NEIN, UND ZWAR GEMESSEN. `LEERLAUF_ABBRUCH = 8` zaehlt
+acht Modellaufrufe IN FOLGE ohne Signal - aber der Zaehler steht in `ergebnis`,
+und `ergebnis` entsteht JE LAUF neu. Nach A1 und der Bestandsausnahme bleibt
+uebrig:
+
+    krypto   gewaehlt HYPE, MORPHO - davon OHNE Bestand: HYPE  -> 1 Aufruf
+    etf      gewaehlt CEBS         - im Bestand           -> 0 Aufrufe
+    aktien   gewaehlt PLTR         - im Bestand           -> 0 Aufrufe
+    ZUSAMMEN 1 zaehlender Aufruf je Umlauf.
+
+Acht in Folge INNERHALB eines Laufs kann es damit nie geben. ⚠️ Die Bremse ist
+nicht geschwaecht, sie ist UNERREICHBAR - und das gilt durch L1, nicht durch A1
+allein: ohne L1 zaehlten die Bestandsurteile mit und die Bremse loeste sogar zu
+FRUEH aus (Probelauf: 8 von 41).
+
+DESHALB ZWEI TEILE STATT EINEM:
+  L1  die Wache nimmt den Bestand aus (`_war_bestand`). Ein HALTEN auf einer
+      gehaltenen Position ist die ERWARTETE Antwort, kein Leerlauf.
+      ⚠️ Der Rueckfall geht zur SICHEREN Seite: faellt die Bestandspruefung
+      aus, gilt "kein Bestand", die Wache zaehlt MIT, die Bremse bleibt scharf.
+  L1b `auswahl.stumme_laeufe()` - LAUFUEBERGREIFEND aus `auswahl_schatten`:
+      wie viele Laeufe in Folge hat kein GEWAEHLTER Wert zu einem Einstieg
+      gefuehrt?
+
+⚠️ ALS MELDUNG, NICHT ALS ABBRUCH - und das ist der Kern der Entscheidung. Ein
+laufuebergreifender Abbruch waere eine FALLE: keine Signale -> Bremse an ->
+keine Aufrufe -> keine Signale. Ein Zustand, aus dem das System von selbst nicht
+mehr herauskommt. Und ein Abbruch sparte ohnehin nichts mehr, wo nur noch ein
+Aufruf je Lauf stattfindet.
+
+NACHGEWIESEN am echten Probelauf gegen eine Kopie der Produktions-DB:
+    vorher   hinein 8 von 41, "8 Aufrufe in Folge ohne Ergebnis - angehalten"
+    nachher  hinein 41 von 41, abgebrochen NEIN, 21 Urteile
+
+⚠️ UND EINE ZAHL, DIE DAZUGEHOERT: 21 von 41 passieren die Auswahl - nicht 2.
+Der Grund ist der Bestand: wer haelt, wird immer beurteilt. DIE ERSPARNIS AN
+MODELLAUFRUFEN IST ALSO 41 -> 21, NICHT 41 -> 2, solange 15 Positionen gehalten
+werden. Die Auswahl verengt die EINSTIEGSSEITE; die Bestandsseite regelt
+weiterhin der Cooldown. ⚠️ Damit liegt das Volumen jetzt auf der
+VERKAUFSSEITE - genau dort, wo `facts_json` ein 17-Zeichen-Stummel ist (B1/B2).
+
+Sechs neue Dauerpruefungen: ein stummer Lauf wird gezaehlt · ab acht in Folge
+schlaegt der Zaehler an · ein einziger Einstieg setzt ihn zurueck · Gruppen
+werden getrennt gezaehlt · die Wache nimmt den Bestand aus · ihr Rueckfall geht
+zur sicheren Seite. Zwei bestehende Pruefungen mitgezogen.
+
+Suite 1.641 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.

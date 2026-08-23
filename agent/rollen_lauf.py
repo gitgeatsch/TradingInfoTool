@@ -598,7 +598,26 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         # GEZAEHLT WIRD NUR, WO EIN AUFRUF STATTFAND. Ein gesperrtes Symbol
         # kostet nichts und darf die Wache nicht ausloesen - sonst wuerde
         # ausgerechnet der sparsame Fall den Lauf anhalten.
-        if ergebnis["aufrufe"] > _vor_aufrufe:
+        # L1 (23.08.2026, Nutzerentscheidung): EIN BESTAND ZAEHLT NICHT.
+        #
+        # ⚠️ DER GRUND: bei einer gehaltenen Position lautet die Frage
+        # "halten oder verkaufen". Ein HALTEN ist dort die ERWARTETE
+        # Antwort und erzeugt kein Signal - es ist ein Ergebnis, kein
+        # Leerlauf. Seit die Bestandsausnahme in der Auswahl-Stufe alle
+        # gehaltenen Werte durchlaesst, stellt die Warteschlange sie
+        # nach vorn, und acht HALTEN in Folge hielten den Lauf an -
+        # BEVOR die zwei ausgewaehlten Kandidaten gefragt wurden. Genau
+        # die Einstiegsseite, fuer die A1 gebaut ist, waere verstummt.
+        #
+        # ⚠️ WAS DAS KOSTET, steht in `auswahl.stumme_laeufe`: mit dieser
+        # Ausnahme bleibt EIN zaehlender Aufruf je Lauf uebrig, und der
+        # Zaehler hier entsteht je Lauf neu - die Bremse ist damit
+        # unerreichbar. Ersatz ist der LAUFUEBERGREIFENDE Zaehler am
+        # Ende dieses Laufs, als MELDUNG statt Abbruch (ein
+        # laufuebergreifender Abbruch waere eine Falle: keine Signale ->
+        # Bremse an -> keine Aufrufe -> keine Signale).
+        if ergebnis["aufrufe"] > _vor_aufrufe and not _war_bestand(
+                symbol, db, instrument):
             if len(ergebnis.get("signale") or []) > _vor_signale:
                 ergebnis["leerlauf"] = 0
             else:
@@ -662,9 +681,47 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         if zweite:
             ZM.schreibe(conn, kennung, zweite)
 
+    # DER ERSATZ FUER DIE BREMSE, LAUFUEBERGREIFEND (23.08.2026).
+    #
+    # ⚠️ ALS MELDUNG, NICHT ALS ABBRUCH. Ein laufuebergreifender
+    # Abbruch waere eine Falle: keine Signale -> Bremse an -> keine
+    # Aufrufe -> keine Signale. Und ein Abbruch sparte nichts mehr, wo
+    # nach A1 nur noch ein zaehlender Aufruf je Lauf stattfindet.
+    #
+    # DIE ZAHL STEHT IM ERGEBNIS UND IM LOG, damit sie in der
+    # Diagnose auftaucht - eine Meldung, die niemand sieht, ist keine.
     if betriebsart != TROCKEN:
+        try:
+            _stumm = _AW.stumme_laeufe(conn, assetklasse)
+            ergebnis["stumme_laeufe"] = _stumm
+            if _stumm.get("stumm"):
+                logger.warning(
+                    "Einstiegsseite %s: %d Laeufe in Folge ohne "
+                    "Einstieg bei einem GEWAEHLTEN Wert. Die Auswahl "
+                    "liefert Kandidaten, die Kette nimmt keinen - das "
+                    "ist die Stelle, an der nachzusehen ist.",
+                    assetklasse, _stumm["laeufe"])
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Stummzaehler fuer %s", assetklasse)
         RG.schreibe(conn, durchlauf, _jetzt())
     return ergebnis
+
+
+def _war_bestand(symbol, db, instrument) -> bool:
+    """Haelt der Nutzer diesen Wert? Fuer die Leerlaufwache (L1).
+
+    ⚠️ EIGENE FUNKTION, KEINE ZWEITE ABFRAGE: die Auswahl-Stufe
+    stellt dieselbe Frage, und zwei Kopien liefen auseinander. Faellt
+    sie aus, gilt "kein Bestand" - dann zaehlt die Wache im Zweifel
+    MIT, und die Bremse bleibt scharf. Der Rueckfall geht also zur
+    sicheren Seite."""
+    from agent import rollen_eingabe as _RE
+    try:
+        menge, _einstand = _RE.bestand(symbol, db, instrument)
+        return bool(menge and float(menge) > 0)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Bestandspruefung (Wache) fuer %s", symbol)
+        return False
 
 
 def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
