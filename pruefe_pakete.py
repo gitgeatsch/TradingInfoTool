@@ -10502,6 +10502,28 @@ def paket_dimension() -> None:
                 == bool(_bloecke2("krypto", "hebel").get(_feld))),
                "die Frage ist die HANDELBARKEIT der Gruppe, nicht welcher "
                "Lauf gerade dran ist")
+    # ⚠️ UND DER SATZ IST BEDINGT, NICHT FESTSTELLEND (23.08.2026).
+    #
+    # NUTZERFRAGE: "bei Spot keine, aber bei Hebel schon". Ueber die AUSWAHL
+    # geht das nicht - der Faktenblock entsteht, bevor das Modell antwortet,
+    # und der Hebel faellt AUS der Antwort an. Also sagt es der Satz selbst,
+    # genau wie `_hebelgeometrie` es seit dem 19.08. tut.
+    _fin_satz = " ".join(_bloecke2("krypto", "spot").get("finanzierung") or [])
+    pruefe(P, "der Finanzierungssatz nennt die Bedingung",
+           _fin_satz.startswith("Falls ein Hebel noetig wird"),
+           "er behauptete sonst eine Zahlung, die bei einem Spot-Kauf nie "
+           "stattfindet - und wurde gemessen in 63 % der Spot-Urteile zitiert")
+    pruefe(P, "und er sagt ausdruecklich, wann sie NICHT anfaellt",
+           "Spot-Kauf faellt sie nicht an" in _fin_satz,
+           "das Modell soll es nicht raten muessen")
+    pruefe(P, "beide Hebel-Bausteine sind bedingt formuliert",
+           _fin_satz.startswith("Falls ein Hebel")
+           and " ".join(_bloecke2("krypto", "spot").get("hebelgeometrie")
+                        or []).startswith("Falls ein Hebel"),
+           "seit S6a faellt der Hebel aus der RECHNUNG an - ein Faktenblock, "
+           "der ein Hebelgeschaeft unterstellt, widerspricht in vier von "
+           "fuenf Mails der eigenen Rechnung")
+
     # ⚠️ UND KEIN `None` IM PROMPT. Der Satz wurde bisher ungeprueft gebaut -
     # fehlte ein Wert, stand "in None % der letzten 40 Perioden" im
     # Modelltext. Fail-soft ist fail-silent.

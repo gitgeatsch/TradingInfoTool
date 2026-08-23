@@ -564,10 +564,33 @@ def _finanzierung(zusammenfassung: dict | None,
     # mit einer Luecke darin.
     if pos is None or p is None:
         return []
-    return [f"Am Terminmarkt war die Finanzierungsrate in {pos} % der letzten "
-            f"{n} Perioden positiv - dann zahlen die Long-Positionen an die "
+    # ⚠️ BEDINGT FORMULIERT, NICHT FESTSTELLEND (23.08.2026).
+    #
+    # NUTZERFRAGE: "bei Spot keine, aber bei Hebel schon" - und genau das
+    # ging technisch NICHT ueber die Auswahl: der Faktenblock entsteht,
+    # BEVOR das Modell antwortet, und der Hebel faellt AUS der Antwort an
+    # (`verlustanteil / stop_rel`). Zum Zeitpunkt des Lagebilds weiss
+    # niemand, ob Spot oder Hebel herauskommt.
+    #
+    # DIE LOESUNG STAND SCHON IM NACHBARBAUSTEIN. `_hebelgeometrie` hat
+    # dasselbe Problem und loest es sprachlich: "Falls ein Hebel noetig
+    # wird ... Faellt dort 1,0 an, ist es kein Hebelgeschaeft." Der Satz
+    # hier war als EINZIGER feststellend - er behauptete eine Zahlung, die
+    # bei einem Spot-Kauf nie stattfindet.
+    #
+    # DAMIT GILT DIE ALTE MESSUNG WEITER: sie wurde im August aus dem
+    # Spot-Prompt entfernt, weil sie "in 63 % der Spot-Urteile zitiert
+    # wurde, obwohl ein Spot-Kaeufer keine Finanzierung zahlt". Jetzt steht
+    # im Satz selbst, wann sie zaehlt - das Modell muss es nicht raten.
+    #
+    # KEINE BEWERTUNG (R-T3): "dann zahlen die Long-Positionen an die
+    # Short-Positionen" loest die Richtung sachlich auf, statt "hohe Rate"
+    # oder "teuer" zu sagen.
+    return [f"Falls ein Hebel noetig wird, kommt die Finanzierung des "
+            f"Terminmarkts dazu: sie war in {pos} % der letzten {n} Perioden "
+            f"positiv - dann zahlen die Long-Positionen an die "
             f"Short-Positionen. Die aktuelle Rate liegt im {p}. Perzentil "
-            f"dieser {n} Perioden."]
+            f"dieser {n} Perioden. Bei einem Spot-Kauf faellt sie nicht an."]
 
 
 # Die drei Faktoren, an denen der Abstand zur Zwangsaufloesung abgelesen wird.

@@ -18855,3 +18855,62 @@ dass sie Krypto **auch im Spot-Lauf** erreichen, bei Aktien wegbleiben, und
 **nicht mehr am Lauf hängen**.
 
 **Suite 1.564 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+
+### 143.7 Nachtrag — der Finanzierungssatz ist jetzt bedingt (23.08.2026)
+
+**Nutzerfrage:** *„bei Spot keine, aber bei Hebel schon — hast du das
+korrigieren können?"*
+
+⚠️ **Über die Auswahl geht es nicht, und das gehört klar gesagt.** Der
+Faktenblock entsteht, **bevor** das Modell antwortet; der Hebel fällt **aus**
+der Antwort an (`verlustanteil / stop_rel`). Zum Zeitpunkt des Lagebilds weiß
+niemand, ob Spot oder Hebel herauskommt. „Bei Spot weglassen" ist technisch
+nicht entscheidbar.
+
+**Die Lösung stand schon im Nachbarbaustein.** `_hebelgeometrie` hat dasselbe
+Problem und löst es **sprachlich** — sie war seit dem 19.08. bedingt
+formuliert, `_finanzierung` als einzige nicht:
+
+| | vorher | jetzt |
+|---|---|---|
+| `_hebelgeometrie` | *„**Falls ein Hebel nötig wird** … Fällt dort 1,0 an, ist es kein Hebelgeschäft."* | unverändert |
+| `_finanzierung` | *„Am Terminmarkt war die Finanzierungsrate in 62 %…"* | *„**Falls ein Hebel nötig wird**, kommt die Finanzierung des Terminmarkts dazu: … **Bei einem Spot-Kauf fällt sie nicht an.**"* |
+
+**Damit gilt die Messung vom August weiter**, ohne den Fakt zu verlieren: sie
+wurde entfernt, weil sie *„in 63 % der Spot-Urteile zitiert wurde, obwohl ein
+Spot-Käufer keine Finanzierung zahlt."* Jetzt steht **im Satz selbst**, wann
+sie zählt — das Modell muss es nicht raten.
+
+⚠️ **Was das nicht leistet:** ob das Modell die Bedingung auch befolgt, ist
+eine Messfrage, keine Bauzusage. Nachzusehen in `belege_gegen_fakten` — der
+Anteil der **Spot**-Urteile, die sie trotzdem zitieren.
+
+### 143.8 ⚠️ Und der Einsatz: 1.000 war die Obergrenze, nicht der Standard
+
+**Nutzerkorrektur:** *„Die 1000 hätte ich als aktuelles Max für einen Hebel
+gesehen, also kein Standardwert."*
+
+**An der Quelle bestätigt:**
+
+```python
+"betrag_max_eur": 1000.0,   # Nutzer 12.08.: "500 - max 1000 aktuell"
+```
+
+Die 1.000 ist die **harte Obergrenze** in `GRENZEN` — und der Hebel-Pfad hat
+sie als **Zielgröße** benutzt. Gemessen über fünf Stopabstände: die Nominale
+trifft `einsatz_eur` exakt, sie unterschreitet ihn nicht.
+
+**Und ja — es braucht jetzt genau eine Zahl.** `einsatz_eur` geht in
+`dimensioniere()` **hinein**, der Hebel fällt **daraus** an; er kann nicht vom
+Ergebnis abhängen. Damit gilt für Krypto **ein** Wert, gleich ob Spot oder
+Hebel herauskommt:
+
+| | |
+|---|---:|
+| heute (Spot-Wert) | **800 €** |
+| Obergrenze | 1.000 € |
+
+⚠️ **Offen und beim Nutzer:** bleibt es bei 800 €, oder soll die Zielgröße
+höher? `risiko_eur = verlustanteil × einsatz_eur` — die Zahl bestimmt Position
+**und** Risiko je Trade in einem.
