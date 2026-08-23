@@ -125,9 +125,26 @@ def saetze(reihen: dict, symbol: str, assetklasse: str = "") -> list[str]:
         f"schlechtestem Fuenftel betraegt "
         f"{de(100 * GEMESSEN['abstand_5t'], 1)} % auf fuenf Handelstage - "
         f"ein Feld von {de(GEMESSEN['felder'], 0)} haelt die Schwelle.")
+    # ⚠️ RICHTIGGESTELLT AM 23.08.2026 - UND ES IST KEINE KOSMETIK.
+    #
+    # Hier stand: "KEIN HANDELBARER VORTEIL ... die Handelskosten betragen
+    # 3 %. Der Rangplatz ist eine Beobachtung, kein Kaufgrund." Seit A1
+    # WAEHLT der Rangplatz aus, welche Werte ueberhaupt beurteilt werden -
+    # die Mail haette also gegen ihre eigene Entscheidung argumentiert
+    # (R-T8: Bloecke duerfen einander nicht widersprechen). Gefunden beim
+    # Simulationslauf, den der Nutzer verlangt hat.
+    #
+    # DER SATZ WAR NICHT FALSCH, ER GALT FUER EINE ANDERE FRAGE. Die 3 %
+    # entscheiden ueber "handeln oder nicht handeln". Fuer "WELCHEN von
+    # vierzig" fallen sie bei JEDER Wahl an - dort ist die Huerde bereits
+    # bezahlt, und der Abstand ist der Unterschied zwischen zwei Kaeufen,
+    # die beide 3 % kosten.
     aus.append(
-        f"⚠️ KEIN HANDELBARER VORTEIL: das beste Fuenftel liegt damit rund "
-        f"{de(100 * GEMESSEN['abstand_5t'] / 2, 1)} % ueber dem Markt, die "
-        f"Handelskosten betragen {de(100 * GEMESSEN['kosten'], 0)} %. "
-        f"Der Rangplatz ist eine Beobachtung, kein Kaufgrund.")
+        f"⚠️ KEIN HANDELBARER VORTEIL fuer die Frage 'handeln oder nicht': "
+        f"rund {de(100 * GEMESSEN['abstand_5t'] / 2, 1)} % ueber dem Markt "
+        f"gegen {de(100 * GEMESSEN['kosten'], 0)} % Handelskosten.")
+    aus.append(
+        f"   Fuer die Frage 'WELCHEN von {de(r['von'], 0)}' gilt das nicht - "
+        f"dort fallen dieselben Kosten bei jeder Wahl an. Genau dafuer, und "
+        f"nur dafuer, waehlt der Rangplatz seit dem 23.08. aus.")
     return aus

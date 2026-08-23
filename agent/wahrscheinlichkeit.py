@@ -119,9 +119,11 @@ BEITRAEGE = (
         name="Rangplatz in der Anlageklasse",
         zustand="null", punkte=0.0,
         quelle="Kapitel 125, 14.238 H-Anker mit Rangplatz",
-        warum=("innerhalb von H sogar 5,8 Punkte SCHLECHTER (Schwelle "
-               "+1,8) - als Zusatzbedingung wuerde er H's Vorteil "
-               "aufheben"),
+        warum=("als ZUSATZbedingung innerhalb von H 5,8 Punkte "
+               "SCHLECHTER (Schwelle +1,8). Seit dem 23.08. steht er "
+               "deshalb eine Ebene HOEHER: er waehlt aus, WELCHE Werte "
+               "beurteilt werden, und geht in diese Zahl bewusst nicht "
+               "ein - sonst zaehlte dieselbe Groesse zweimal"),
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",

@@ -371,7 +371,18 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
             f"Kurs {preis(kurs_eur)} EUR"
             + (f" · {zeitpunkt}" if zeitpunkt else "")
             + (f" · Modell {modell}" if modell else ""),
-            f"{instrument.capitalize()} / {strategie.capitalize()}",
+            # ⚠️ A6, TEIL 1 (23.08.2026): DAS ERGEBNIS-ETIKETT, NICHT DAS
+            # DES LAUFS. Im Simulationslauf stand im Betreff "(Hebel)"
+            # und zwei Zeilen darunter "Spot / Einstieg" - fuer dasselbe
+            # Signal. Der Betreff hatte recht: seit A1/A2 faellt der
+            # Hebel aus der RECHNUNG an (verlustanteil / stop_rel), und
+            # diese Zeile druckte weiter das Etikett des LAUFS.
+            #
+            # DIESELBE QUELLE WIE DER BETREFF, damit beide nicht wieder
+            # auseinanderlaufen koennen.
+            f"{('Hebel' if float((rechnung or {}).get('hebel') or 1.0)
+                > 1.0 else instrument.capitalize())}"
+            f" / {strategie.capitalize()}",
             ""]
 
     # 1. DER WERT. Was er gerade tut - ohne Empfehlung, ohne Wertung.

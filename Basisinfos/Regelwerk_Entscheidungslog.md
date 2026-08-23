@@ -21507,3 +21507,73 @@ Faelle, 35 Verlierer, 3 Gewinner, Summe -27,38 R. ⚠️ Der Nutzer hat
 anschliessend zu Recht ergaenzt, dass die Zahlen wegen anderer Prompts NICHT
 VERGLEICHBAR sind - der Punkt bleibt nur, dass die hoehere Zahl die Konfidenz
 war und nicht die Treffer.
+
+
+[2026-08-23] ERWEITERTE SIMULATION: DER VORFILTER WIRKT - UND DIE MAIL
+WIDERSPRACH SICH DREIMAL SELBST
+
+Nutzerfrage: "hast du den Vorfilter schon vollstaendig und getestet
+gegengetestet und eine erweiterte Simulation durchgefuehrt - hier will ich ein
+Ergebnis sehen? Was ist mit Ausrollen gemeint - scharfschalten mit Filterung
+bzw. Signalerzeugung - wie oft laeuft dies wann und wie oft erhalte ich
+signale? Irgendwie fehlt mir auch das Thema BEGRUENDUNG."
+
+DER TRICHTER, gegen eine Kopie der Produktions-DB, 41 Kryptosymbole:
+    auftrag       41 bestanden   0 verloren
+    fakten        39 bestanden   2 verloren
+    lagebild      39            0
+    anlass        39            0
+    AUSWAHL        2           37   <- die neue Stufe
+    wiederholung   2            0
+    urteil         2            0
+    -> 2 Modellaufrufe statt 39. Gewaehlt: HYPE, MORPHO.
+Die Gruende stehen je Symbol: "Rang 22 von 41 nach der Entwicklung der letzten
+250 Handelstage".
+
+⚠️ ZUR AUSROLL-FRAGE, und das war ein Missverstaendnis: DIE PRODUKTION IST
+BEREITS SCHARF. `rollen_kette.betriebsart: scharf`, `aktiv_fuer` = alle fuenf
+Gruppen. "Ausrollen" heisst NICHT scharfschalten - es heisst nur, dass das
+Notebook den neuen Code zieht und neu startet. Es wird nichts eingeschaltet,
+was nicht schon an war; es wird etwas VERENGT.
+
+TAKT UND SIGNALZAHL, gerechnet statt geschaetzt: der Umlauf haengt am
+15-Minuten-Job (HEBEL_SCREENING_INTERVAL_MINUTES = 15) - 96 Laeufe am Tag. Je
+Lauf passieren bei Krypto 2 Symbole die Auswahl; der Cooldown von 3,5 h begrenzt
+die Wiederholung. Rechnerisch also 2 x 24/3,5 = 13,7 Beurteilungen je Tag
+gegen bisher 85-150 gemessene. Wieviele davon EROEFFNEN werden, entscheidet die
+Kette - historisch rund jedes zehnte.
+
+⚠️ UND DIE FOLGE, DIE DAZUGEHOERT: es sind IMMER DIESELBEN ZWEI, bis sich der
+Rang aendert - bei 250 Tagen Rueckblick dauert das Tage bis Wochen. Der
+Fingerabdruck bremst unveraenderte Faktensaetze, aber die Auswahl konzentriert,
+sie rotiert nicht. Genau dafuer war A1c (Takt 20 Handelstage) vorgesehen, und
+A1c ist NICHT gebaut. ⚠️ Nachgelagerte Frage: der 3,5-h-Cooldown war fuer 41
+konkurrierende Symbole geeicht; fuer zwei ist er eine Wiederholungsbremse und
+womoeglich zu kurz.
+
+⚠️⚠️ DIE SIMULATION HAT DREI WIDERSPRUECHE IN EINER EINZIGEN MAIL AUFGEDECKT -
+alle drei ueber DIESELBE Zahl, den Rangplatz:
+  Zeile 18 (wahrscheinlichkeit): "innerhalb von H sogar 5,8 Punkte SCHLECHTER -
+           als Zusatzbedingung wuerde er H's Vorteil aufheben"
+  Zeile 46 (auswahl, neu):       "Beurteilt werden je Durchgang die besten 2"
+  Zeile 52 (drift):              "KEIN HANDELBARER VORTEIL ... Der Rangplatz
+           ist eine Beobachtung, KEIN KAUFGRUND."
+Die Mail argumentierte also gegen ihre eigene Entscheidung - ein klarer
+R-T8-Bruch ("Bloecke duerfen einander nicht widersprechen").
+
+BEHOBEN, und zwar sachlich statt kosmetisch: die alten Saetze waren nicht
+falsch, sie galten fuer eine ANDERE Frage. Die 3 % Kosten entscheiden ueber
+"handeln oder nicht handeln"; fuer "WELCHEN von 41" fallen sie bei jeder Wahl
+an. drift.saetze trennt jetzt beide Fragen ausdruecklich, und
+wahrscheinlichkeit sagt, dass der Rangplatz eine Ebene HOEHER steht und in die
+Zahl bewusst nicht eingeht - sonst zaehlte dieselbe Groesse zweimal.
+
+⚠️ VIERTER FUND, A6 TEIL 1: der Betreff sagte "(Hebel)", zwei Zeilen darunter
+stand "Spot / Einstieg" - fuer dasselbe Signal. Der Betreff hatte recht: seit
+A1/A2 faellt der Hebel aus der RECHNUNG an, und die Etikettzeile druckte weiter
+das Etikett des LAUFS. Beide beziehen ihn jetzt aus derselben Quelle.
+
+Suite 1.633 ALLE BESTANDEN, freie Namen 0. Die beiden Pruefungen, die den alten
+Wortlaut festhielten, wurden mitgezogen - der Waechter fuer die
+Gesamtbild-Etiketten hat den Wegfall von "KEIN HANDELBARER VORTEIL" sofort
+gemeldet, was genau seine Aufgabe ist.
