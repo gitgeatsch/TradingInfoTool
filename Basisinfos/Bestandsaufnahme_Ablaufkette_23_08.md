@@ -319,3 +319,128 @@ bestätigbar** ist.
 ⚠️ **Was ich weiterhin NICHT vorschlage:** die Wahrscheinlichkeit an die
 Auswahl zu hängen. Sie fasst mehrere Beiträge zusammen, von denen bisher nur
 einer trägt — sie würde H verwässern, nicht verstärken.
+
+
+---
+
+## 9. Nachtrag — die drei Messungen an der Produktionsdatenbank (23.08.)
+
+*Grundlage: `tradinginfotool_2026-08-22_2209.db.gz` (265 MB entpackt), letzte
+Signalzeile 22.08. 19:10. ⚠️ **Vor** den Nachöffnungen von E2 und S6c — die
+liefen erst beim Neustart um 22:55.*
+
+### 9.1 ⚠️ Welche Fakten das Modell wirklich bekam — und was gespeichert wurde
+
+**Nicht aus dem Code gelesen, sondern aus `facts_json` der echten Signale.**
+
+| Aktion | Zeilen | mittlere Länge `facts_json` | Merkmalsfamilien |
+|---|---:|---:|---:|
+| ERÖFFNEN | 881 | **2.187 Zeichen** | 849 |
+| KAUFEN | 83 | 1.511 | 80 |
+| NACHKAUFEN | 131 | 1.423 | 115 |
+| **HALTEN** | 475 | **17 Zeichen** | 460 |
+| **REDUZIEREN** | 75 | **17 Zeichen** | **10** |
+| **VERKAUFEN** | 11 | **18 Zeichen** | **2** |
+
+> ⚠️ **Die gesamte Verkaufsseite wird mit einem Stummel gespeichert:**
+> `facts_json = {"asset": "IO"}`.
+
+**An der Quelle bestätigt — es sind zwei Schreibpfade, und beide verdrahten
+den Stummel fest:**
+
+| Stelle | was sie übergibt |
+|---|---|
+| `_ein_asset` (Hauptpfad, Einstieg) | `fakten=bc_ein` — der **echte** Faktensatz |
+| `_schreibe_nein` (die Nein-Zeile) | `fakten={"asset": symbol}` |
+| `_sende_ausstieg` (**die Verkaufsseite**) | `fakten={"asset": symbol}`, dazu `familien=None` |
+
+⚠️ **Die naheliegende Erklärung ist widerlegt.** „Kein Bestand" erklärt es
+nicht: **72 von 75 REDUZIEREN haben Bestand**, und alle 75 sind Stummel.
+Staking auch nicht — 1 von 34 Beständen ist voll gestakt.
+
+> **Das erklärt O-29.** Der Befund lautete: *„die Verkaufsseite ist durch
+> nichts erklärt — kein gemessenes Merkmal trennt Verkaufen von Halten (alle
+> p > 0,47)."* ⚠️ **Es gab keine Merkmale zu messen.** Bei REDUZIEREN sind
+> 10 von 75 gefüllt, bei VERKAUFEN 2 von 11.
+
+**Was das Modell beim Einstieg sah** (1.067 Faktensätze, vor S6b):
+
+| | |
+|---|---:|
+| Sätze je Faktensatz | 8–12, Schwerpunkt bei **11** |
+| Marktstruktur / Umsatz / Marken | je **100 %** |
+| Bestand | 90 % |
+| Finanzierung | 85 % |
+| Liquidation / Hebel | 81 % |
+
+⚠️ Die letzten beiden sind die **Hebel-Lauf**-Signale. Seit S6b und bis zur
+Reparatur von heute waren sie bei **0 %** (Kapitel 143).
+
+### 9.2 Rolle G — ⚠️ es sind zwei Prüfer, nicht einer
+
+**Korrektur meiner eigenen Angabe in Abschnitt 3.** Dort stand
+*„G — Gegenprüfung — `gegenpruefer_rollen.py` — läuft (Z.ai)"*. **Das
+verwechselt zwei Dinge**, und der Modulkopf sagt ausdrücklich, dass genau
+diese Verwechslung schon einmal passiert ist:
+
+| | Modul | was es prüft | Kosten |
+|---|---|---|---|
+| **Z1** | `gegenpruefer_rollen.py` | **Treue zur Eingabe**: Zahlendeckung, Richtungstreue, Zuspitzung, Leerlauf. Fragt **nicht**, ob das Urteil klug ist | **deterministisch, kostenlos** |
+| **Z.ai** | `zweite_meinung.py` | **ein zweites Modell** — fragt genau das | ein Aufruf je Signal |
+
+**Beide laufen.** Z.ai erreicht 668 von 881 ERÖFFNEN-Zeilen (76 %).
+⚠️ **Bei HALTEN, REDUZIEREN und VERKAUFEN: 0 von 561.**
+
+**Und was ein Verstoß auslöst, ist entschieden:** *zählen, nicht verwerfen* —
+dieselbe Begründung wie beim Gate. Ein Wächter, der selbst verwirft, macht
+seine eigene Wirkung unsichtbar.
+
+### 9.3 Welcher Schatten ist überhaupt auswertbar?
+
+| Schatten | Zeilen | davon aufgelöst |
+|---|---:|---:|
+| **`anlass_beobachtung`** (Fingerabdruck) | **45.479** | ⚠️ **13.898 hätten gesperrt** (31 %) |
+| `gate_durchlaessigkeit` (Trichter) | 3.799 | – |
+| Selbst-HALTEN | 506 | **8** |
+| **`vorfilter_schatten` (H)** | 51 | **0** |
+| Veto-Schatten (Rollen-Kette) | **0** | 0 |
+
+**Die Grundgesamtheit jeder Auswertung** (Rollen-Kette, Stand vor E2):
+
+| | |
+|---|---:|
+| `nicht_anwendbar` | 1.428 |
+| `einstieg_nie_erreicht` | 145 |
+| **`take_profit_erreicht`** | **42** |
+| **`stop_loss_erreicht`** | **24** |
+| `offen` | 17 |
+
+> ⚠️ **66 aufgelöste Signale tragen alles.** Und 1.428 stehen auf
+> `nicht_anwendbar` — der weitaus größte Teil davon HALTEN, die per
+> Definition keine Zonen haben.
+
+**Was daraus folgt, vorsichtig formuliert:**
+
+1. **Der Anlass-Schatten ist der einzige mit Masse** — 45.479 Beobachtungen,
+   und er sagt, dass **31 %** der Läufe redundant waren. Das ist die
+   belastbarste Zahl der ganzen Kette.
+2. **Der Vorfilter-Schatten ist noch nicht auswertbar** — 0 aufgelöste
+   Signale. Er sagt heute nur, *wie oft* H zutrifft, nicht *ob es hilft*.
+3. **Der Veto-Schatten der Rollen-Kette existiert nicht** (0 Zeilen). Die
+   719 Zeilen im Export stammen aus der **alten** Kette.
+
+### 9.4 ⚠️ Und der Vorbehalt, den der Nutzer benannt hat
+
+*„Durch unseren Umbau kann es sehr leicht sein, dass deine Messungen bzw.
+Vorhersagen durch die Fehler in der Umsetzung auseinanderlaufen."*
+
+**Das ist in dieser Messung dreimal eingetreten:**
+
+| | |
+|---|---|
+| Die Hebel-Fakten (81 %) | gelten nur **vor** S6b — danach 0 % |
+| Die 66 aufgelösten Signale | Stand **vor** E1/E2 — nach der Nachöffnung sind es andere |
+| Meine „drei Tabellen nie angefasst" | **Fehlalarm**, verworfen |
+
+**Jede Zahl hier trägt deshalb ihren Zeitraum.** Wo sie ihn nicht trägt, ist
+sie nicht belastbar.
