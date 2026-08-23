@@ -216,3 +216,112 @@ ist als das, was heute auswählt.**
 ⚠️ **A1b als Schatten ist kein Zögern, sondern die Konsequenz aus der
 Jahresprobe.** Genau so ist H seit dem 22.08. gebaut, und genau deshalb steht
 heute eine Zahl dazu da.
+
+
+---
+
+## 11. Der Simulationslauf über die Historie — und die Antwort auf „Vorfilter, Auslöser oder Info?"
+
+*Nutzerfrage: „Wie soll die Auswahl in der Praxis konkret angewendet werden und
+den erwarteten Nutzen bringen? 1. als Vorfilter 2. als Begründung für den
+Handel, also Auslöser 3. nur Info?" — und dazu: „wie oft gibt es Signale, sind
+diese meist gute Trades, je nach Spot oder Hebel, nach Assets, in
+unterschiedlichen Marktlagen."*
+
+`messe_auswahl_historie.py`, 40 Symbole, 2017-08-17 bis 2026-08-19, Auswahl
+alle 20 Handelstage, `k = 2`. Maß ist die Bewegung über den Takt —
+**barrierenfrei und brutto**, Kosten daneben.
+
+### 11.1 Wie oft
+
+> **184 Empfehlungen über sechs Jahre = 30,7 je Jahr**, also rund alle zwölf
+> Tage eine. Heute könnten es 41 **je Umlauf** sein.
+
+### 11.2 ⚠️ Sind es meist gute Trades? — Nein.
+
+| | Signale | Mittel | **Median** | Markt | >0 Ref | **>0 Betrieb** |
+|---|---:|---:|---:|---:|---:|---:|
+| **alle Empfehlungen** | 184 | +5,01 % | **−0,63 %** | +1,95 % | 48 % | **44 %** |
+| davon **Rang 1** | 92 | **+7,03 %** | **+2,83 %** | +1,95 % | 53 % | **48 %** |
+| davon Rang 2 | 92 | +3,00 % | −2,01 % | +1,95 % | 43 % | 40 % |
+
+> ⚠️ **Der Mittelwert ist positiv, der Median negativ.** Die Auswahl lebt von
+> wenigen großen Gewinnern — **die Mehrzahl der Empfehlungen verliert.** Nach
+> Betriebskosten sind **44 %** positiv.
+
+**Und ein neuer Befund, der k betrifft:** Rang 1 ist deutlich besser als
+Rang 2 — in Mittel, Median und Trefferquote. ⚠️ **Nach diesem Maß wäre `k = 1`
+besser als `k = 2`**, obwohl der t-Wert das Gegenteil nahelegte. Der
+Unterschied ist echt und erklärbar: der t-Wert misst den *Abstand zum Markt*
+bei geringerer Streuung, dieses Maß den **Trade selbst**.
+
+### 11.3 Je Assetstufe
+
+| Stufe | Signale | Mittel | Median | >0 Betrieb |
+|---|---:|---:|---:|---:|
+| **klein** (< 1 Mrd) | 50 | **+9,87 %** | +4,08 % | **54 %** |
+| **gross** (≥ 10 Mrd) | 61 | +7,33 % | +2,50 % | 48 % |
+| btc | 9 | +6,08 % | +1,43 % | 44 % |
+| mittel (1–10 Mrd) | 56 | −0,05 % | −6,63 % | 34 % |
+| **eth** | 8 | ⚠️ **−8,74 %** | −9,71 % | **25 %** |
+
+⚠️ **`klein` ist genau die Stufe, die die Überlebensverzerrung am härtesten
+trifft** — die gestorbenen Kleinen fehlen. Die +9,87 % sind eine **Obergrenze**.
+**ETH** wurde nur achtmal gewählt und war fast immer falsch.
+
+### 11.4 Je Marktlage
+
+| | Signale | Mittel | >0 Betrieb |
+|---|---:|---:|---:|
+| BTC über dem 200-Schnitt | 98 | **+7,73 %** | 45 % |
+| BTC unter dem 200-Schnitt | 86 | +1,92 % | 43 % |
+
+> ⚠️ **Der Marktzustand hebt den Mittelwert, nicht die Trefferquote.** Er macht
+> die Gewinner größer, nicht die Verlierer seltener. Das stützt A1b als
+> **Schatten** und spricht gegen eine harte Schranke.
+
+### 11.5 Je Jahr — drei gute, drei schlechte
+
+| 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---:|---:|---:|---:|---:|---:|
+| **+18,82 %** | −4,35 % | **+14,04 %** | **+9,53 %** | −1,21 % | −4,17 % |
+| 67 % | 39 % | 56 % | 63 % | 33 % | 35 % |
+
+⚠️ **Die beiden jüngsten Jahre sind negativ.**
+
+### 11.6 ⚠️ Hebel — eine Umrechnung, keine Messung
+
+| | Mittel | positiv | schlechtester Fall |
+|---|---:|---:|---:|
+| 2x | +3,43 % | 44 % | ⚠️ **−121 %** |
+| 3x | +4,84 % | 44 % | ⚠️ **−182 %** |
+
+Der Hebel ändert die **Trefferquote nicht** — er multipliziert beide Seiten.
+Rechnerisch übersteigt der schlechteste Fall den Einsatz; in der Praxis wird
+vorher liquidiert. **Das ist das Argument gegen Hebel auf dieser Auswahl:** bei
+44 % Trefferquote und einem Schwanz dieser Größe ist die Ruinwahrscheinlichkeit
+das bindende Problem, nicht der Erwartungswert.
+
+---
+
+## 12. Die Antwort auf die drei Möglichkeiten
+
+| | | Urteil |
+|---|---|---|
+| **1. Vorfilter** | bestimmt, **welche Werte überhaupt beurteilt werden** | ✔ **Ja — so ist es gebaut, und das ist die richtige Rolle** |
+| **2. Auslöser** | die Auswahl **ist** die Kaufentscheidung | ⚠️ **Nein.** 44 % Trefferquote, Median −0,63 % — das ist keine Entscheidung, das ist eine Vorauswahl |
+| **3. Nur Info** | eine Zahl in der Mail | ⚠️ **Zu wenig.** Genau das war der Zustand: der Rangplatz stand seit dem 20.08. in der Mail und hat nie etwas verändert |
+
+**Der erwartete Nutzen, ehrlich benannt — er liegt nicht in der Rendite:**
+
+| | |
+|---|---|
+| **Die Flut endet** | 41 Beurteilungen je Umlauf werden 2 |
+| **Jede Entscheidung hat einen Grund** | „Rang 2 von 41" statt „Cooldown abgelaufen" |
+| **Die Grundmenge ist besser als der Markt** | +5,01 % gegen +1,95 % über 20 Tage |
+| ⚠️ **Was sie NICHT leistet** | sie macht aus 44 % keine 60 %. **Das ist die Aufgabe der Kette danach** — und ob die Kette das schafft, ist bisher unbelegt |
+
+> **Daraus folgt der nächste Messschritt, und er ist billig:** je Umlauf
+> mitschreiben, was die mechanische Auswahl empfohlen hätte und was die Kette
+> daraus gemacht hat. **Erst dieser Vergleich sagt, ob die LLM-Ebene ihren
+> Platz verdient** — gegen eine Basislinie, die es vorher nicht gab.

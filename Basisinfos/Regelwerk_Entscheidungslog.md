@@ -21340,3 +21340,70 @@ Fehler. Werkzeugkasten 2.13 um fuenf neue Messwerkzeuge ergaenzt.
 
 Offen und benannt: A1c (Takt 20 Handelstage) ist NICHT gebaut - die Auswahl
 gilt derzeit je Umlauf; der Mindestabstand kommt weiter vom Cooldown.
+
+
+[2026-08-23] DIE AUSWAHL UEBER DIE HISTORIE NACHGESPIELT - 30,7 EMPFEHLUNGEN JE
+JAHR, ABER NUR 44 % DAVON TRAGEN
+
+Nutzerauftrag: "sauberer Simulationslauf ... wie oft gibt es Signale, sind
+diese meist gute Trades - je nachdem Spot oder Hebel, nach Assets (BTC, ETH,
+Highcap, Midcaps, Smallcaps), in unterschiedlichen Marktlagen." Dazu die
+Kernfrage: "wie soll die Auswahl konkret angewendet werden - 1. Vorfilter
+2. Ausloeser 3. nur Info?"
+
+NEUES WERKZEUG messe_auswahl_historie.py. Es spielt die AUSWAHL nach, NICHT die
+Kette - kein Modell, kein Urteil, kein Stop. Absicht: die Wirkung der Stufe muss
+ohne alles Nachgelagerte sichtbar sein. 40 Symbole, 2017-2026, Takt 20
+Handelstage, k=2, Mass barrierenfrei und brutto.
+
+WIE OFT: 184 Empfehlungen ueber sechs Jahre = 30,7 je Jahr, rund alle zwoelf
+Tage eine. Heute koennten es 41 JE UMLAUF sein.
+
+⚠️ SIND ES MEIST GUTE TRADES? NEIN. Mittel +5,01 %, MEDIAN -0,63 %, Markt
++1,95 %; nach Betriebskosten sind 44 % positiv. Der Mittelwert ist positiv, der
+Median negativ - die Auswahl lebt von wenigen grossen Gewinnern, die MEHRZAHL
+der Empfehlungen verliert.
+
+⚠️ NEUER BEFUND ZU k: Rang 1 (+7,03 %, Median +2,83 %, 48 % positiv) ist
+deutlich besser als Rang 2 (+3,00 %, Median -2,01 %, 40 %). Nach DIESEM Mass
+waere k=1 besser als k=2, obwohl der t-Wert das Gegenteil nahelegte. Beides ist
+richtig: der t-Wert misst den Abstand zum Markt bei geringerer Streuung, dieses
+Mass den Trade selbst.
+
+JE STUFE: klein +9,87 % (54 % positiv) · gross +7,33 % (48 %) · btc +6,08 %
+(44 %, n=9) · mittel -0,05 % (34 %) · ⚠️ eth -8,74 % (25 %, n=8 - achtmal
+gewaehlt und fast immer falsch). ⚠️ "klein" ist genau die Stufe, die die
+Ueberlebensverzerrung am haertesten trifft; die +9,87 % sind eine Obergrenze.
+
+JE MARKTLAGE: BTC ueber dem 200-Schnitt +7,73 % (45 % positiv), darunter
++1,92 % (43 %). ⚠️ DER MARKTZUSTAND HEBT DEN MITTELWERT, NICHT DIE
+TREFFERQUOTE - er macht die Gewinner groesser, nicht die Verlierer seltener.
+Das stuetzt A1b als SCHATTEN und spricht gegen eine harte Schranke.
+
+JE JAHR: 2021 +18,82 % (67 %) · 2022 -4,35 % (39 %) · 2023 +14,04 % (56 %) ·
+2024 +9,53 % (63 %) · 2025 -1,21 % (33 %) · 2026 -4,17 % (35 %). Drei gute,
+drei schlechte Jahre - ⚠️ die beiden juengsten sind negativ.
+
+⚠️ HEBEL - Umrechnung, keine Messung: 2x Mittel +3,43 %, schlechtester Fall
+-121 %; 3x +4,84 %, schlechtester Fall -182 %. Die Trefferquote aendert sich
+NICHT (44 %), der Hebel multipliziert beide Seiten. Bei 44 % Trefferquote und
+einem Schwanz dieser Groesse ist die RUINWAHRSCHEINLICHKEIT das bindende
+Problem, nicht der Erwartungswert.
+
+DIE ANTWORT AUF DIE DREI MOEGLICHKEITEN:
+    1. VORFILTER  JA - so ist es gebaut, und das ist die richtige Rolle.
+    2. AUSLOESER  NEIN. 44 % Trefferquote, Median -0,63 % - das ist eine
+                  Vorauswahl, keine Entscheidung.
+    3. NUR INFO   ZU WENIG. Genau das war der Zustand: der Rangplatz stand seit
+                  dem 20.08. in der Mail und hat nie etwas veraendert.
+
+DER NUTZEN, ehrlich benannt - er liegt NICHT in der Rendite: die Flut endet (41
+Beurteilungen je Umlauf werden 2), jede Entscheidung hat einen Grund ("Rang 2
+von 41"), und die Grundmenge ist besser als der Markt (+5,01 % gegen +1,95 %).
+⚠️ WAS SIE NICHT LEISTET: aus 44 % werden keine 60 %. Das ist die Aufgabe der
+Kette danach - und ob die Kette das schafft, ist bisher UNBELEGT.
+
+NAECHSTER MESSSCHRITT, billig: je Umlauf mitschreiben, was die mechanische
+Auswahl empfohlen haette und was die Kette daraus gemacht hat. Erst dieser
+Vergleich sagt, ob die LLM-Ebene ihren Platz verdient - gegen eine Basislinie,
+die es vorher nicht gab.
