@@ -2808,12 +2808,20 @@ def paket_b1() -> None:
                 **({"einstieg_eur": round(k, 2),
                     "stop_eur": round(k - 2.5 * a, 2)} if kauft else {})}
 
+    # ⚠️ A1 (23.08.2026): DER EINSTIEG GEHOERT AUF DEN GEWAEHLTEN WERT.
+    # Vorher stand hier fest "BTC". Seit die Auswahl-Stufe existiert,
+    # kommt nur noch der Rangbeste ueberhaupt zum Urteil - und wenn
+    # das nicht BTC ist, prueft dieser Test einen Einstieg, der nie
+    # stattfindet. Die AUFZEICHNUNG folgt der Auswahl, nicht umgekehrt.
+    from agent import auswahl as _AWT
+    _awt = _AWT.waehle(reihen, symbole)
+    _kauft = (sorted(_awt["gewaehlt"]) or ["BTC"])[0]
     antworten = {"lagebild": {"lage": "Die Maerkte zeigen eine Divergenz.",
                               "klassen": [{"klasse": "krypto",
                                            "einstufung": "unguenstig",
                                            "warum": "Bitcoin steht tief."}],
                               "belege": ["Bitcoin steht tief."]},
-                 "befund": {s: befund(s, s == "BTC") for s in symbole}}
+                 "befund": {s: befund(s, s == _kauft) for s in symbole}}
     def _inhalt(pfad):
         """Der INHALT aller Tabellen, nicht die Bytes der Datei.
 
@@ -2847,10 +2855,23 @@ def paket_b1() -> None:
            not erg["signale"],
            "trocken heisst: kein Modellaufruf, kein Schreiben, keine Mail")
     d = erg["durchlauf"]
-    pruefe(P, "jedes Symbol hat alle Stufen durchlaufen",
-           d.hinein == len(symbole) and d.bestanden_je_stufe["urteil"] == len(symbole))
+    # ⚠️ A1 (23.08.2026): NICHT MEHR ALLE SYMBOLE ERREICHEN DAS URTEIL.
+    # Genau das ist der Zweck der Auswahl - und der Trockenlauf muss sie
+    # mitmachen, sonst meldet er einen Durchsatz, den der scharfe
+    # Betrieb nie erreicht (dieselbe Lehre wie bei `asset_schalter`,
+    # O-38 am 16.08.).
+    _k = _awt["k"] if _awt["aktiv"] else len(symbole)
+    pruefe(P, "alle Symbole gehen hinein, nur die gewaehlten kommen zum Urteil",
+           d.hinein == len(symbole)
+           and d.bestanden_je_stufe["urteil"] == _k,
+           f"hinein {d.hinein}, Urteil {d.bestanden_je_stufe['urteil']}, "
+           f"gewaehlt {_k}")
+    pruefe(P, "der Trichter bleibt monoton: was die Auswahl nimmt, fehlt danach",
+           d.verloren_je_stufe["auswahl"] == len(symbole) - _k,
+           "eine Stufe, die verwirft und es nicht zaehlt, macht die "
+           "Summe unauffindbar")
     pruefe(P, "ein NICHTS_TUN faellt bei der Aktion heraus",
-           d.verloren_je_stufe["aktion"] == len(symbole) - 1)
+           d.verloren_je_stufe["aktion"] == _k - 1)
     pruefe(P, "fuer den Einstieg entsteht eine Mail", len(erg["mails"]) == 1)
     pruefe(P, "der Entscheider zaehlt, nimmt aber nichts heraus",
            d.heraus == 1 and d.verloren_je_stufe["entscheider"] >= 0)
@@ -3484,8 +3505,16 @@ def paket_15() -> None:
             if self.aufrufe == 1:
                 return _j.dumps(_lagebild, ensure_ascii=False)
             sym = next((s for s in symbole if s in inhalt), symbole[0])
-            return _j.dumps(_befund(sym, sym == "BTC"), ensure_ascii=False)
+            # ⚠️ A1 (23.08.2026): der Einstieg gehoert auf den
+            # GEWAEHLTEN Wert. Fest "BTC" hiesse, einen Einstieg zu
+            # pruefen, der seit der Auswahl-Stufe gar nicht mehr zum
+            # Urteil kommt - und dann faende der Test keine Mail.
+            return _j.dumps(_befund(sym, sym == _kauft15),
+                            ensure_ascii=False)
 
+    from agent import auswahl as _AW15
+    _a15 = _AW15.waehle(reihen, symbole)
+    _kauft15 = (sorted(_a15["gewaehlt"]) or ["BTC"])[0]
     klient = _Aufzeichnung()
     vor = c.execute("SELECT COUNT(*) FROM signals "
                     "WHERE quelle_kette='rollen'").fetchone()[0]
@@ -12495,11 +12524,142 @@ def paket_luecken() -> None:
            "stand schon da")
 
 
+def paket_auswahl() -> None:
+    """A1 - die Auswahl (23.08.2026, Nutzervorgabe "nie selektiv auf
+    Assetebene, der Handel passiert aber auf Assetebene").
+
+    ⚠️ DIESE STUFE VERWIRFT. Sie ist damit die erste seit dem Cooldown, die
+    ueber die Grundmenge entscheidet - und deshalb gehoert jede ihrer
+    Eigenschaften in eine Dauerpruefung, nicht in einen einmaligen Probelauf.
+    """
+    from agent import auswahl as _AW
+    from agent import drift as _DR
+    from agent import rollen_gate as _RG
+
+    P = "Auswahl"
+
+    class _K:
+        def __init__(self, close):
+            self.close = close
+            self.date = "2026-08-23"
+
+    def _reihe(faktor, n=300):
+        # Ein gleichmaessiger Anstieg: Endkurs / Kurs vor 250 Tagen = faktor
+        schritt = faktor ** (1.0 / 250.0)
+        return [_K(100.0 * schritt ** i) for i in range(n)]
+
+    # ---- k IST NIE n: sonst waere "Rang 2 von 2" eine Begruendung ----
+    for n in range(0, 60):
+        if _AW.k_fuer(n) >= n and n > 0:
+            pruefe(P, "k ist nie gleich der Zahl der Werte", False,
+                   f"bei n={n} kaeme k={_AW.k_fuer(n)} heraus")
+            break
+    else:
+        pruefe(P, "k ist nie gleich der Zahl der Werte", True,
+               "sonst stuende in der Mail eine Begruendung, die keine ist")
+
+    pruefe(P, "die gemessene Stelle k=2 gilt ab zehn Werten",
+           _AW.k_fuer(10) == 2 and _AW.k_fuer(9) == 1 and _AW.k_fuer(41) == 2,
+           "messe_auswahl 23.08.: k=2 traegt (t 3,29/4,52), ab k=5 nichts mehr")
+    pruefe(P, "ein einzelner Wert loest keine Auswahl aus",
+           _AW.k_fuer(1) == 0 and _AW.k_fuer(0) == 0)
+
+    # ---- WER ZU KURZ IST, RANGIERT NICHT MIT ----
+    reihen = {"A": _reihe(2.0), "B": _reihe(1.5), "C": _reihe(1.1),
+              "KURZ": _reihe(9.0, n=100)}
+    liste = _AW.rangliste(reihen)
+    pruefe(P, "wer keine Jahreshistorie hat, steht nicht in der Rangliste",
+           [s for s, _ in liste] == ["A", "B", "C"],
+           "KURZ hat 100 Kerzen und waere mit +800 % Erster - eine erfundene "
+           "Zahl, die die Auswahl uebernommen haette")
+
+    a = _AW.waehle(reihen, ["A", "B", "C", "KURZ"])
+    pruefe(P, "die Auswahl nennt die Werte ohne Historie ausdruecklich",
+           a["ohne_historie"] == ["KURZ"],
+           "eine Luecke ohne Vermerk sieht spaeter aus wie ein Wert, den es "
+           "nicht gab")
+    pruefe(P, "gewaehlt wird der Erste, nicht der Zufall",
+           a["gewaehlt"] == {"A"} and a["k"] == 1 and a["von"] == 3)
+
+    # ---- OHNE GRUNDMENGE WIRD NICHT GESPERRT ----
+    leer = _AW.waehle({}, [])
+    pruefe(P, "ohne Grundmenge waehlt die Stufe NICHT",
+           leer["aktiv"] is False and not leer["gewaehlt"],
+           "eine Stufe, die nichts entscheiden kann, darf nicht sperren - "
+           "dieselbe Linie wie beim Cooldown (fail-soft, nicht fail-shut)")
+
+    # ---- DIE BEGRUENDUNG NENNT IMMER BEIDE ZAHLEN ----
+    g = _AW.grund(a, "C")
+    pruefe(P, "die Begruendung nennt Platz UND Grundmenge",
+           "3" in g and "von 3" in g,
+           f"sonst ist 'Rang 3' keine Auskunft - {g!r}")
+    pruefe(P, "wer keine Historie hat, bekommt seinen eigenen Grund",
+           "Historie" in _AW.grund(a, "KURZ"),
+           "nicht 'Rang None' und nicht stillschweigend durchlassen")
+
+    # ---- ZWEI KOPIEN DERSELBEN RANGLISTE LAUFEN AUSEINANDER ----
+    #
+    # ⚠️ `drift.rang()` rechnet dieselbe Zahl fuer die Mail. Wuerden beide
+    # abweichen, stuenden in EINER Mail zwei verschiedene Raenge desselben
+    # Werts - genau die Kopierfalle, die dieses Projekt mehrfach getroffen hat.
+    import config as _C
+    _wl = {x.symbol: x.assetklasse for x in _C.get_watchlist()}
+    _kr = [s for s, k in _wl.items() if k == "krypto"]
+    if len(_kr) >= 10:
+        _r = {s: _reihe(1.0 + i / 100.0) for i, s in enumerate(_kr)}
+        _a2 = _AW.waehle(_r, _kr)
+        _abw = []
+        for s in _kr:
+            _d = _DR.rang(_r, s)
+            _p = (_a2.get("platz") or {}).get(s)
+            if _d and _p and (_d["platz"], _d["von"]) != _p:
+                _abw.append((s, _d["platz"], _p[0]))
+        pruefe(P, "Auswahl und drift.rang() liefern denselben Rangplatz",
+               not _abw, f"abweichend: {_abw[:3]}")
+
+    # ---- DIE STUFE IST IM TRICHTER ANGEMELDET ----
+    pruefe(P, "die Stufe 'auswahl' steht im Trichter",
+           "auswahl" in _RG.STUFEN_NAMEN,
+           "eine Stufe, die verwirft und nicht gezaehlt wird, macht den "
+           "Trichter unvollstaendig")
+    pruefe(P, "sie steht VOR der Wiederholung",
+           _RG.STUFEN_NAMEN.index("auswahl")
+           < _RG.STUFEN_NAMEN.index("wiederholung"),
+           "erst waehlen, dann den Mindestabstand pruefen - umgekehrt zaehlte "
+           "der Cooldown Werte, die ohnehin nicht drankommen")
+
+    # ---- BEIDE ZWEIGE BUCHEN DIE STUFE ----
+    # ⚠️ GENAU EINE BUCHUNG JE STUFE - und das ist keine Kosmetik.
+    # Beim Bau von A1 (23.08.) kam heraus, dass der Trockenlauf die
+    # Stufe `anlass` seit dem 16.08. DOPPELT buchte: der umschliessende
+    # Zweig war zu `if True` geworden, die Nachbuchung stand noch da.
+    # Gemessen: `anlass bestanden 4` bei `hinein 3`.
+    _q = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    for _stufe in ("anlass", "auswahl"):
+        pruefe(P, f"die Stufe {_stufe} wird genau einmal gebucht",
+               _q.count(f'durchlauf.bestanden(symbol, "{_stufe}")') == 1,
+               "eine zweite Buchung macht den Trichter groesser als "
+               "die Zahl der Symbole, die hineingegangen sind")
+
+    # ---- DER MARKTZUSTAND SPERRT NICHTS (A1b) ----
+    _z = {"symbol": "BTC", "name": "Bitcoin", "abstand": -0.12, "fenster": 200}
+    _s = _AW.saetze(a, "A", _z)
+    pruefe(P, "der Marktzustand steht in der Mail und sperrt nichts",
+           any("sperrt nichts" in x for x in _s),
+           "A1b ist Schatten: je Jahr gemischt (2024 trennt nicht, 2025 "
+           "trennt und verliert trotzdem)")
+    pruefe(P, "ein nicht gewaehlter Wert bekommt keine Werbezeile",
+           not any("besten" in x for x in _AW.saetze(a, "C", None)),
+           "die Begruendung des Gewaehlten gehoert nicht in die Mail eines "
+           "Abgelehnten")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
-          "Frische": paket_frische}
+          "Frische": paket_frische,
+          "Auswahl": paket_auswahl}
 
 
 def main() -> int:

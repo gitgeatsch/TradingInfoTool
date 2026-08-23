@@ -21265,3 +21265,78 @@ A1 gilt zunaechst NUR FUER KRYPTO - bei Aktien (2), ETF (4) und Rohstoffen (3)
 waere "die besten 2" keine Auswahl, sondern eine Umbenennung.
 
 Vollstaendig: Basisinfos/A1_Auswahl_Dimensionierung_23_08.md
+
+
+[2026-08-23] A1a-A1d GEBAUT: der Rangplatz waehlt aus, nicht mehr die Uhr - und
+dabei eine Doppelbuchung seit dem 16.08. gefunden
+
+Nutzerfreigabe: "ja bau A1a bis A1d - wie immer pruefen, Gegenpruefung und
+Doku. Zu Aktien und ETF: koennen wir vorlaeufig so anwenden, wichtig die Assets
+sollten dennoch handelbar sein und eine Auswahl ist zu finden."
+
+NEUES MODUL agent/auswahl.py - k_fuer(), rangliste(), waehle(), grund(),
+marktzustand(), saetze(). Verdrahtet als eigene TRICHTERSTUFE "auswahl" in
+rollen_gate.STUFEN, zwischen "anlass" und "wiederholung".
+
+WARUM ZWISCHEN BEIDEN: nach dem Anlass, damit die Anlassmessung ihre
+Beobachtung fuer ALLE Symbole weiterschreibt (eine Auswahl, die der Messung die
+Grundmenge nimmt, macht sich selbst unpruefbar); vor der Wiederholung, weil der
+Cooldown sonst Werte zaehlt, die ohnehin nicht drankommen.
+
+⚠️ DIE UHR IST NICHT ABGESCHAFFT, SONDERN ENTMACHTET. Der Cooldown bleibt als
+MINDESTABSTAND stehen - sonst wuerde dieselbe Auswahl alle 15 Minuten neu
+befragt, und aus einer Auswahl waere eine neue Flut. Er waehlt nur nicht mehr
+aus.
+
+GEGEN ECHTE DATEN GEMESSEN (Kopie der Produktions-DB):
+    krypto      44 Watchlist, 41 mit Jahreshistorie, k=2 -> HYPE, MORPHO
+    etf          7 Watchlist,  4 mit Historie,       k=1 -> CEBS
+    aktien       2 Watchlist,  2 mit Historie,       k=1 -> PLTR
+    rohstoffe    4 Watchlist,  0 mit Historie        -> waehlt NICHT
+Von 41 Krypto-Aufrufen je Umlauf werden 2. Das ist die Antwort auf "HYPE
+zehnmal kaufen am Tag, LINK zehnmal".
+
+⚠️ ROHSTOFFE HABEN GAR KEINE EIGENE KURSREIHE: OD7C/OD7H/OD7N/OD7L haben in der
+Desktop-Kopie NULL Kerzen; die langen Futures-Reihen liegen nur unter den
+internen Hilfsnamen _ROHSTOFF_FUTURES_*. Damit fehlt dort nicht nur die
+Auswahl, sondern die halbe Faktenbasis. AN DER PRODUKTION ZU PRUEFEN - die
+Desktop-Kopie ist nicht das Notebook.
+
+⚠️ DUENNE GRUPPEN, Nutzerentscheidung umgesetzt: MINDEST_FUER_AUSWAHL = 2, also
+"der bessere von beiden" bei Aktien. k ist NIE gleich n - "Rang 2 von 2" waere
+eine Begruendung, die keine ist. Bei n=2 ist der Rangplatz allerdings kaum mehr
+als ein Muenzwurf; er halbiert die Aufrufe und traegt keinen Beleg.
+
+⚠️⚠️ DABEI GEFUNDEN - EINE DOPPELBUCHUNG SEIT DEM 16.08.2026. Der Trockenlauf
+buchte die Stufe `anlass` ZWEIMAL: die Nachbuchung stammte aus der Zeit, als
+der umschliessende Zweig `if betriebsart != TROCKEN` hiess; O-38 machte ihn am
+16.08. zu `if True` (weil asset_schalter ein reiner Leser ist), seither laeuft
+die Messung auch trocken und bucht selbst.
+
+GEMESSEN, nicht geschlossen: ein Trockenlauf ueber drei Symbole meldete
+"anlass bestanden 4" bei "hinein 3". Der Trichter war an dieser Stelle NICHT
+MONOTON - und es ist niemandem aufgefallen, weil kein Test die Summe gegen
+`hinein` prueft. Behoben; nach der Reparatur: hinein 3 -> anlass 3 -> auswahl 1
+(2 verloren) -> wiederholung 1 -> urteil 1.
+
+NEUES PRUEFPAKET "Auswahl" mit 16 Dauerpruefungen, darunter:
+  - k ist nie gleich n (ueber n = 0..59 durchgeprueft)
+  - wer keine Jahreshistorie hat, rangiert NICHT mit (sonst waere ein Wert mit
+    100 Kerzen und +800 % Erster - eine erfundene Zahl)
+  - ohne Grundmenge waehlt die Stufe NICHT und sperrt nichts (fail-soft)
+  - ⚠️ Auswahl und drift.rang() liefern DENSELBEN Rangplatz - sonst stuenden in
+    EINER Mail zwei verschiedene Raenge desselben Werts (Kopierfalle)
+  - jede Stufe wird GENAU EINMAL gebucht (die neue Dauerpruefung gegen die
+    gefundene Doppelbuchung)
+  - der Marktzustand steht in der Mail und SPERRT NICHTS (A1b als Schatten)
+
+ZWEI BESTEHENDE PRUEFUNGEN ANGEPASST, weil sich das Verhalten absichtlich
+geaendert hat: Paket B1 und Paket 15 legten den aufgezeichneten Einstieg fest
+auf "BTC". Seit der Auswahl kommt nur der Rangbeste zum Urteil - die
+AUFZEICHNUNG folgt jetzt der Auswahl, nicht umgekehrt.
+
+Suite 1.623 ALLE BESTANDEN · freie Namen 0 · simuliere_kette 3 Gruppen, 0
+Fehler. Werkzeugkasten 2.13 um fuenf neue Messwerkzeuge ergaenzt.
+
+Offen und benannt: A1c (Takt 20 Handelstage) ist NICHT gebaut - die Auswahl
+gilt derzeit je Umlauf; der Mindestabstand kommt weiter vom Cooldown.

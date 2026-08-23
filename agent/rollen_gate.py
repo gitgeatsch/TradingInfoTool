@@ -76,6 +76,15 @@ STUFEN = (
     # Zeitregel oder ein identischer Faktensatz gebremst hat - und das sind
     # zwei verschiedene Aussagen ueber dieselbe Zahl.
     ("anlass", "Faktensatz hat sich geaendert"),
+    # EIGENE STUFE SEIT 23.08.2026 (A1) - und wieder aus demselben Grund:
+    # sie kostet KEINEN Modellaufruf. Vorher waehlte die UHR aus (der
+    # Cooldown), und zwar ohne jeden Beleg - von 41 Symbolen passierten 30
+    # den Fingerabdruck und NULL den Cooldown. Jetzt waehlt der Rangplatz
+    # aus, und der Cooldown verhindert nur noch die Wiederholung derselben
+    # Frage. Beides in einer Stufe zu zaehlen hiesse, den Unterschied
+    # zwischen "nicht ausgewaehlt" und "gerade erst gefragt" wieder
+    # unsichtbar zu machen.
+    ("auswahl", "gehoert zu den besten k der Gruppe"),
     ("wiederholung", "nicht kuerzlich schon gefragt"),
     ("urteil", "Urteil geliefert und vertragskonform"),
     ("aktion", "Aktion ist ein Einstieg"),

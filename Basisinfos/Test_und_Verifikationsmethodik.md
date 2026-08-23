@@ -3429,6 +3429,11 @@ angelegt.**
 | `messe_basislinie.py` / `messe_basislinie_aufloesung.py` | Die Basislinie vor dem glatten Schnitt |
 | `messe_filterschaden.py` | **Schadet** der Anlassfilter? — gemessen, nicht geschätzt |
 | `messe_trichter_treffer.py` | Hält der Trichter, was er sagt? (93 A, Fallstrick A2) |
+| `messe_akkumulation_phasen.py` | Hängt die Rangfolge der Kaufregeln an der Marktrichtung? Zerlegt in nicht überlappende Zweijahresfenster und misst gegen den **quotengleichen** Zufall (23.08.) |
+| `messe_tagewahl_je_symbol.py` | Trägt der Tagewahl-Vorsprung je Symbol — und **bleibt** er dort? (Beständigkeit, 23.08.) |
+| `messe_tagewahl_je_eigenschaft.py` | Welche **Eigenschaft** eines Assets erklärt den Vorsprung? Liquidität, Volatilität, Größe, Alter, Beta, Marktzustand (23.08.) |
+| `messe_querschnitt_umkehr.py` | Trennt die Umkehr-Bedingung die Assets **am selben Tag**? Querschnitt statt innerhalb eines Werts (23.08.) |
+| `messe_auswahl.py` | Wie ist die **Auswahl** zu dimensionieren — k, Trendfilter, Marktzustand, Kosten der Drehung? (A1, 23.08.) |
 | `messe_strukturstop.py` | Trägt die Struktur den Stop? — Vorläufer von `pruefe_strukturstop.py` (124) |
 | `messe_dimensionierung.py` | Was ändert sich, wenn der Hebel **anfällt** statt gewählt zu werden |
 

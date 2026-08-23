@@ -516,6 +516,30 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # am Cooldown scheitert, kostet nichts und darf den Deckel nicht verbrauchen
     # - sonst haette ein gesperrtes Asset dieselbe Wirkung wie ein bezahltes.
     ergebnis["aufrufe"] = 0
+    # A1 - DIE AUSWAHL, EINMAL JE LAUF (23.08.2026).
+    #
+    # ⚠️ NICHT JE ASSET. Die Rangliste ist eine Aussage ueber die GRUPPE;
+    # sie vierzigmal zu rechnen waere nicht nur teuer, sondern gefaehrlich:
+    # jede Wiederholung koennte eine andere Grundmenge sehen, und dann waere
+    # "Rang 2 von 40" in zwei Mails zweierlei.
+    #
+    # Faellt sie aus, waehlt sie NICHT - dann laufen alle durch wie bisher.
+    # Eine Stufe, die wegen eines Fehlers alles sperrt, waere schlimmer als
+    # keine (dieselbe Linie wie beim Cooldown).
+    try:
+        from agent import auswahl as _AW
+        _auswahl = _AW.waehle(reihen, symbole)
+        _markt = _AW.marktzustand(reihen, assetklasse)
+    except Exception as exc:                             # noqa: BLE001
+        logger.exception("Auswahl fuer %s ausgefallen", assetklasse)
+        ergebnis.setdefault("fehler", []).append(f"Auswahl: {exc}")
+        _auswahl, _markt = {"aktiv": False}, None
+    ergebnis["auswahl"] = {"aktiv": bool(_auswahl.get("aktiv")),
+                           "k": _auswahl.get("k"),
+                           "von": _auswahl.get("von"),
+                           "gewaehlt": sorted(_auswahl.get("gewaehlt") or ()),
+                           "marktzustand": (_markt or {}).get("abstand")}
+
     for symbol in symbole:
         if max_aufrufe is not None and ergebnis["aufrufe"] >= max_aufrufe:
             ergebnis.setdefault("budget_gestoppt", []).append(symbol)
@@ -532,6 +556,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        instrument=instrument, strategie=strategie,
                        ergebnis=ergebnis, versand=versand,
                        assetklasse=assetklasse, watchlist=_wl,
+                       auswahl=_auswahl, marktzustand=_markt,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
                                ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
@@ -633,7 +658,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
                pruefe_auftrag, zai_client=None, bilanz=None,
-               assetklasse="krypto", watchlist=None) -> None:
+               assetklasse="krypto", watchlist=None,
+               auswahl=None, marktzustand=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht.
 
     `watchlist` wird DURCHGEREICHT, nicht hier geladen (15.08.2026). Meine
@@ -852,6 +878,26 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # genau das, was die eigene Stufe verhindern sollte.
         durchlauf.bestanden(symbol, "anlass")
 
+        # --- Stufe: Auswahl (A1, 23.08.2026) ---
+        #
+        # ⚠️ HIER WIRD ENTSCHIEDEN, WELCHE WERTE UEBERHAUPT BEURTEILT
+        # WERDEN - vorher tat das der Cooldown, also die Uhr. Der Grund
+        # steht jetzt in der Zeile: "Rang 17 von 40" statt "Cooldown bis
+        # 22:14". Nutzergrundsatz: jede Entscheidung braucht eine
+        # Begruendung, und "das Asset ist in der Zeitschleife dran" ist
+        # keine.
+        #
+        # SIE STEHT NACH DER ANLASS-BUCHUNG, damit die Anlass-Messung ihre
+        # Beobachtung fuer ALLE Symbole weiterschreibt. Eine Auswahl, die
+        # der Messung die Grundmenge nimmt, macht sich selbst unpruefbar.
+        if (auswahl or {}).get("aktiv"):
+            if symbol not in (auswahl.get("gewaehlt") or set()):
+                from agent import auswahl as _AW2
+                durchlauf.verloren(symbol, "auswahl",
+                                   _AW2.grund(auswahl, symbol))
+                return
+        durchlauf.bestanden(symbol, "auswahl")
+
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
                                  gruppe=assetklasse)
         if sperre:
@@ -869,8 +915,22 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Mengen fuehre. Nachgesehen: `bestanden_je_stufe[stufe] += 1` ist ein
     # ZAEHLER. Ohne den Guard staende im scharfen Betrieb die doppelte Zahl -
     # und der Trichter waere wieder falsch, nur in die andere Richtung.
-    if betriebsart == TROCKEN:
-        durchlauf.bestanden(symbol, "anlass")
+    # ⚠️ HIER STAND EINE NACHBUCHUNG FUER DEN TROCKENLAUF - SIE ZAEHLTE
+    # SEIT DEM 16.08.2026 DOPPELT (gefunden 23.08. beim Bau von A1).
+    #
+    # Die Begruendung war richtig, als sie geschrieben wurde: "im
+    # Trockenlauf laeuft die Anlassmessung nicht, gebucht werden muss
+    # sie trotzdem". Am 16.08. wurde der umschliessende
+    # `if betriebsart != TROCKEN` zu `if True` (O-38, weil
+    # `asset_schalter` ein reiner Leser ist) - seither LAEUFT die
+    # Messung auch trocken und bucht selbst. Die Nachbuchung addierte
+    # ein zweites Mal.
+    #
+    # GEMESSEN, nicht geschlossen: ein Trockenlauf ueber drei Symbole
+    # meldete `anlass bestanden 4` bei `hinein 3`. Der Trichter war an
+    # dieser Stelle nicht monoton, sondern zu gross - und niemandem
+    # aufgefallen, weil kein Test die Summe gegen `hinein` prueft.
+    # Genau das tut jetzt die Dauerpruefung im Paket "Auswahl".
     durchlauf.bestanden(symbol, "wiederholung")
 
     # --- Stufe: Urteil ---
@@ -1394,6 +1454,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         _leben = _LEB.saetze(conn, symbol, assetklasse)
     except Exception:                                        # noqa: BLE001
         _leben = []
+    # A1d - DIE BEGRUENDUNG DER AUSWAHL, ganz oben in diesem Block
+    # (23.08.2026). Sie steht VOR dem Rangplatz, weil sie die
+    # Entscheidung traegt und er nur die Tatsache ist. Der
+    # Marktzustand haengt daran - als Angabe, die nichts sperrt.
+    try:
+        from agent import auswahl as _AW3
+        _aw_zeilen = _AW3.saetze(auswahl, symbol, marktzustand)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Auswahl-Saetze fuer %s uebersprungen", symbol)
+        _aw_zeilen = []
+    if _aw_zeilen:
+        _leben0 = _aw_zeilen + ([""] if _leben0 else []) + _leben0
+
     # Rangplatz zuerst, Lebendigkeit darunter - beide sind Merkmale ueber
     # den WERT, keine Rechnung; sie gehoeren nebeneinander.
     if _leben0:
