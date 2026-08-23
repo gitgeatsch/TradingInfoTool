@@ -1667,6 +1667,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         befund, fakten=bc_ein, lagebild_id=lagebild_id,
         prompt_stand=getattr(RT, "PROMPT_STAND", "?"), modell=modell,
         eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
+        # S-2 (23.08.2026): der AUFTRAG geht mit, nicht nur das Instrument.
+        strategie=strategie,
         # DIE RECHNUNG MIT - sie traegt den Hebelfaktor, den das Modell nicht
         # nennt und nicht nennen soll.
         rechnung=rechnung,
@@ -1859,7 +1861,7 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
         felder = SA2.felder_aus_entscheidung(
             befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
             prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
-            eur_je_usd=None, familien=None,
+            eur_je_usd=None, familien=None, strategie=strategie,
             rechnung=None, modell=modell)
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
@@ -1927,6 +1929,7 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
             prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
             eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
+            strategie=strategie,
             # UND DAS INSTRUMENT (15.08.2026, zweite Haelfte desselben Fundes).
             # Seit die Hebelspalte am INSTRUMENT haengt statt am Wert, bekam
             # eine Nein-Zeile aus dem Hebel-Lauf keine - sie galt als Spot.

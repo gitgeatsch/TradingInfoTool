@@ -450,6 +450,16 @@ class Signal:
     # das prueft jetzt `pruefe_pakete`, damit die naechste neue Spalte nicht
     # wieder still den Lesepfad kappt.
     quelle_kette: str | None = None            # 'rollen' | None (alte Kette)
+    # S-2 (23.08.2026): DER AUFTRAG GEHOERT AN DAS SIGNAL.
+    #
+    # ⚠️ Die Kette bekommt seit dem 12.08. Instrument UND Strategie
+    # uebergeben, prueft beides und baut den Prompt danach - und hat
+    # die Strategie beim Schreiben vergessen. Das Instrument steckt
+    # immerhin im Feld `hebel` (gefuellt = Hebel), die Strategie
+    # nirgends. Damit war 'je Strategie getrennt messen' dauerhaft
+    # unmoeglich: was nicht in der Zeile steht, rekonstruiert keine
+    # spaetere Auswertung.
+    strategie: str | None = None               # 'einstieg' | 'swing' | 'akkumulation'
     unabhaengige_faktoren: int | None = None
     # P1a (19.08.2026): die auffaelligen Perzentilzeilen der Mail, als JSON.
     # Sie entscheiden nichts - sie halten fest, WO ein Extrem vorlag, damit

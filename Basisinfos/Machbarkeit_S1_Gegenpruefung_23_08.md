@@ -74,7 +74,7 @@ genau diesen Stop **aufgelöst und bewertet**.
 **Folge:** S1 darf `akkumulation` **nicht zuweisen**, bevor die Kette dahinter
 das Paar trägt. Das ist keine Zeile, das sind vier Module.
 
-### S-2 ⚠️ **HART** — die Zuweisung wird nirgends gespeichert
+### S-2 ✔ **ERLEDIGT 23.08.** — die Zuweisung wird gespeichert
 
 `strategie` kommt in `database/db.py` und `database/models.py` **null Mal**
 vor. `signal_abbildung` gibt aus dem Auftrag nur `hebel` weiter.

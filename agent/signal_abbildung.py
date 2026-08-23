@@ -108,6 +108,25 @@ SPALTEN_SIGNAL = {
     "quelle_kette": "TEXT",                 # 'alt' oder 'rollen' - ohne diese
                                             # Spalte laesst sich spaeter keine
                                             # Messung nach Ketten trennen
+    # S-2 DER MACHBARKEITSPRUEFUNG (23.08.2026): DER AUFTRAG GEHOERT AN DAS
+    # SIGNAL.
+    #
+    # ⚠️ DER BEFUND: das Wort `strategie` kam in `database/db.py` und
+    # `database/models.py` NULL MAL vor. Die Kette bekommt seit dem 12.08.
+    # Instrument UND Strategie uebergeben, prueft beides
+    # (`handelsauftrag.pruefe`), baut den Prompt danach - und vergisst die
+    # Strategie beim Schreiben. Das Instrument steckt immerhin im Feld `hebel`
+    # (gefuellt = Hebel), die Strategie nirgends.
+    #
+    # WAS DAS DAUERHAFT KOSTET: "je Strategie getrennt messen" ist damit
+    # unmoeglich - und zwar rueckwirkend nicht nachruestbar. Was heute nicht in
+    # der Zeile steht, rekonstruiert keine spaetere Auswertung. Derselbe Fehler
+    # wie bei Z1, nur an anderer Stelle.
+    #
+    # ⚠️ HIER UND NICHT IN db.py: die Spalten der Rollen-Kette werden an genau
+    # dieser Stelle angelegt (`quelle_kette`, `belege_json`, ...). Eine zweite
+    # Migration in db.py waere eine zweite Definition derselben Spalte.
+    "strategie": "TEXT",
     "unabhaengige_faktoren": "INTEGER",
     # DIE BELEGE SELBST (14.08.2026) - bis heute ging nur ihre ANZAHL in die
     # Datenbank.
@@ -346,7 +365,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             familien: dict | None = None,
                             rechnung: dict | None = None,
                             modell: str | None = None,
-                            instrument: str | None = None) -> dict:
+                            instrument: str | None = None,
+                            strategie: str | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -369,6 +389,10 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     aus = {
         "action": UMBENENNUNG.get(aktion, aktion),
         "quelle_kette": "rollen",
+        # S-2 (23.08.2026): der AUFTRAG geht mit. Ohne ihn ist "je
+        # Strategie getrennt messen" dauerhaft unmoeglich.
+        "strategie": (str(strategie).strip().lower()
+                      if strategie else None),
         "prompt_stand": prompt_stand,
         "lagebild_id": lagebild_id,
         "short_reasoning": antwort.get("begruendung"),

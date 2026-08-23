@@ -21460,3 +21460,50 @@ Suite 1.628 ALLE BESTANDEN, freie Namen 0, simuliere_kette 0 Fehler.
 Empfehlungen je Jahr und k=2 dauert das - die ersten Aussagen sind Zaehlungen
 (wie oft folgt die Kette der Auswahl, wie oft nicht), die Wirkungsfrage kommt
 spaeter.
+
+
+[2026-08-23] S-2 ERLEDIGT: DER AUFTRAG STEHT JETZT AN DER SIGNALZEILE
+
+Nutzervorgabe: "zuerst die Reparaturliste S-1 und S-2, dann Schritt 1."
+
+DER BEFUND, den S-2 behebt: das Wort `strategie` kam in database/db.py und
+database/models.py NULL MAL vor. Die Kette bekommt seit dem 12.08. Instrument
+UND Strategie uebergeben, prueft beides (handelsauftrag.pruefe), baut den
+Prompt danach - und vergisst die Strategie beim Schreiben. Das Instrument
+steckt immerhin im Feld `hebel`, die Strategie nirgends. Damit war "je
+Strategie getrennt messen" dauerhaft unmoeglich und rueckwirkend nicht
+nachruestbar.
+
+GEBAUT: Spalte `strategie` in signal_abbildung.SPALTEN_SIGNAL (NICHT als
+zweite Migration in db.py - die Spalten der Rollen-Kette entstehen an genau
+einer Stelle), Feld in models.Signal, gefuellt in ALLEN DREI Schreibpfaden
+(Einstieg, Ausstieg, Nein-Zeile), und im NB-Export ergaenzt.
+
+⚠️ `vorteilsquelle` STEHT BEWUSST NOCH NICHT DA. Sie wird erst zugewiesen
+(S1, Stufe 2); eine Spalte anzulegen, die auf absehbare Zeit nur NULL enthaelt,
+waere genau die Sorte Vorrat, die dieses Projekt sich verbietet.
+
+LESEPROBE NACH METHODIK 2.61, und zwar ueber den LESEPFAD DES MODELLS, nicht
+nur mit einem SELECT: ein echter Probelauf gegen eine Kopie der Produktions-DB
+schrieb LINK/KAUFEN/strategie='einstieg'; db.get_latest_signal -> _row_to_signal
+liefert `strategie: 'einstieg'`. Genau dort hat am 22.08. eine neue Spalte die
+App angehalten - geschrieben wurde sie, gelesen nie.
+
+Fuenf neue Dauerpruefungen, darunter eine gegen das ECHTE Schema
+(db.init_db + signal_abbildung.migriere) statt gegen ein nachgebautes: ein
+handgeschriebenes CREATE TABLE haette funktioniert und nichts bewiesen.
+
+⚠️ UND DER EXPORT-WAECHTER HAT SOFORT ZUGESCHLAGEN: "keine signals-Spalte ist
+mehr unexportiert - offen: ['strategie']". Die Pruefung, die seit dem 14.08.
+existiert, hat die neue Spalte im selben Lauf gefunden, in dem sie entstand.
+
+Suite 1.633 ALLE BESTANDEN, freie Namen 0, simuliere_kette 0 Fehler.
+
+NEBENBEFUND ZUR MISTRAL-FRAGE (Nutzer: "nach den aktuellen Zahlen war die
+Trefferquote bei mistral hoeher"): an der Quelle nachgesehen. 55,4 % -> 68,0 %
+ist die KONFIDENZ (der Verhaltensbruch vom 31.07. bei bitgleichem Prompt),
+nicht die Trefferquote. Mistrals reale Bilanz im historischen Ruecktest: 38
+Faelle, 35 Verlierer, 3 Gewinner, Summe -27,38 R. ⚠️ Der Nutzer hat
+anschliessend zu Recht ergaenzt, dass die Zahlen wegen anderer Prompts NICHT
+VERGLEICHBAR sind - der Punkt bleibt nur, dass die hoehere Zahl die Konfidenz
+war und nicht die Treffer.

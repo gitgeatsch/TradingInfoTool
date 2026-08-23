@@ -12648,12 +12648,57 @@ def paket_auswahl() -> None:
            any("sperrt nichts" in x for x in _s),
            "A1b ist Schatten: je Jahr gemischt (2024 trennt nicht, 2025 "
            "trennt und verliert trotzdem)")
+    # ---- S-2: DER AUFTRAG GEHOERT AN DAS SIGNAL (23.08.2026) ----
+    #
+    # ⚠️ NACH METHODIK 2.61 wird die Spalte auch GELESEN, und zwar ueber den
+    # LESEPFAD DES MODELLS - nicht nur mit einem SELECT. Genau dort hat am
+    # 22.08. eine neue Spalte die App angehalten: geschrieben wurde sie,
+    # gelesen nie, und der Konstruktor kannte sie nicht.
+    import sqlite3 as _sq
+    from agent import signal_abbildung as _SA
+    import database.db as _DB
+    from database.models import Signal as _Sig
+    pruefe(P, "die Spalte strategie steht in SPALTEN_SIGNAL",
+           "strategie" in _SA.SPALTEN_SIGNAL,
+           "sonst wird sie nie angelegt")
+    pruefe(P, "und im Datenmodell",
+           "strategie" in getattr(_Sig, "__annotations__", {}),
+           "eine Spalte ohne Feld liest der Konstruktor nicht - "
+           "genau der Fund vom 22.08.")
+    _f = _SA.felder_aus_entscheidung(
+        {"aktion": "NICHTS_TUN"}, fakten={"asset": "X"}, strategie="AKKUMULATION")
+    pruefe(P, "die Strategie wird kleingeschrieben abgelegt",
+           _f.get("strategie") == "akkumulation",
+           f"gespeichert: {_f.get('strategie')!r}")
+    _f2 = _SA.felder_aus_entscheidung({"aktion": "NICHTS_TUN"},
+                                      fakten={"asset": "X"})
+    pruefe(P, "ohne Auftrag bleibt sie leer, statt zu raten",
+           _f2.get("strategie") is None,
+           "ein Vorgabewert waere eine Zahl, die niemand vergeben hat")
+    # ⚠️ GEGEN DAS ECHTE SCHEMA, nicht gegen ein nachgebautes. Ein
+    # handgeschriebenes CREATE TABLE haette hier zwar funktioniert -
+    # und genau deshalb nichts bewiesen: der Lesepfad erwartet ALLE
+    # Spalten, und die Frage ist ja, ob die neue dabei ist.
+    _c2 = _sq.connect(":memory:")
+    _c2.row_factory = _sq.Row
+    _DB.init_db(_c2)
+    _SA.migriere(_c2)
+    _c2.execute("INSERT INTO signals (symbol, created_at, action, "
+                "gate_passed, facts_json, strategie, quelle_kette) "
+                "VALUES ('X', '2026-08-23', 'KAUFEN', 1, '{}', "
+                "'akkumulation', 'rollen')")
+    _gelesen = _DB._row_to_signal(
+        _c2.execute("SELECT * FROM signals").fetchone())
+    pruefe(P, "der Lesepfad des Modells traegt die Strategie",
+           getattr(_gelesen, "strategie", None) == "akkumulation",
+           "Schreiben allein genuegt nicht - das Lesen bekommt ALLE Spalten")
+    _c2.close()
+
     # ---- DER SCHATTEN: eine Zeile je Symbol, nicht nur je Gewaehltem ----
     #
     # ⚠️ NACH METHODIK 2.61 wird hier auch GELESEN, nicht nur geschrieben.
     # Eine Tabelle, die angelegt und nie gelesen wird, ist strukturell blind -
     # genau der Fall, der am 22.08. die App am Notebook angehalten hat.
-    import sqlite3 as _sq
     _c = _sq.connect(":memory:")
     _lauf = _AW.schreibe_lauf(_c, auswahl=a, gruppe="krypto",
                               symbole=["A", "B", "C", "KURZ"],

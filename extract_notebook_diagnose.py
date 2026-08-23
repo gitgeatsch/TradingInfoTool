@@ -446,6 +446,10 @@ _SPOT_SIGNAL_SPALTEN = (
     # 10.08. als Erstes auf die eigenen Luecken. Ohne sie ist der gesamte
     # Umbau von aussen unsichtbar: eine Auswertung liefe auf den Altdaten
     # und kaeme zu den Schluessen der alten Kette.
+    # S-2 (23.08.2026): DIE STRATEGIE MIT. Ohne sie laesst sich am
+    # Notebook nicht nach Auftrag trennen - und genau das ist die
+    # Frage, fuer die die Spalte angelegt wurde.
+    "strategie, "
     "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
     "umgeworfen_bis, "
