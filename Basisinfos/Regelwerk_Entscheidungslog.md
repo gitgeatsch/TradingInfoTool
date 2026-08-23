@@ -21123,3 +21123,67 @@ Werkzeug schreibt seine eigene Auflage dazu (B3: dieselben Felder muessen auch
 auf einer anderen Anlageklasse und in einzelnen Jahren tragen) - OFFEN.
 Ueberlebensverzerrung macht den Abstand zu einer UNTERGRENZE. Horizont 5 Tage
 passt zur Auswahl, nicht zur Haltedauer einer Akkumulation.
+
+
+[2026-08-23] OPTION IN EVIDENZ: EINE CLAUDE-ANBINDUNG - FORM F2, FAKT STATT
+ENTSCHEIDUNG, STUFE 0 IST SAMMLUNG
+
+Nutzerauftrag: "Die Option als Erweiterung und auch als Loesung fuer bestimmte
+und wichtige Probleme IN EVIDENZ HALTEN. Deinem Vorschlag zu Stufe 0 stimme ich
+zu. Ich brauche Vorschlaege von dir und eine Diskussion, wie man eine solche
+Verbindung macht - es gibt ja auch autonome Agents, ohne dass die Software
+laeuft, in der wir gerade schreiben."
+
+VIER FORMEN, und die Antwort auf "wie machen das andere": das Chatfenster ist
+nur ein Client, darunter liegt eine gewoehnliche HTTP-Schnittstelle. Ein
+autonomer Agent ist derselbe Aufruf, von einem Skript statt von einem Menschen
+ausgeloest. F1 reiner Modellaufruf (wie api/gemini.py heute) · F2
+WERKZEUGNUTZUNG - das Modell antwortet mit "rufe hole_tvl('TAO') auf", UNSER
+Code fuehrt aus · F3 Agent-SDK kopflos, eigener Netzzugang (so laeuft diese
+Sitzung) · F4 Stapelverarbeitung.
+
+⚠️ EMPFEHLUNG F2, NICHT F3 - und das folgt aus den eigenen Regeln: ein Agent
+mit eigenem Netzzugang baut einen ZWEITEN DATENWEG neben api/coingecko,
+api/macro, lebendigkeit ("zwei Kopien laufen auseinander"); Datenstand und
+Abrufstand waeren nicht mehr trennbar; und eine Antwort auf einer nicht
+gespeicherten Websuche ist NICHT WIEDERHOLBAR und damit NICHT MESSBAR (dasselbe
+Modell dreht bei bitgleicher Eingabe rund 12 %). Bei F2 geht jeder Abruf durch
+UNSERE Module - mit Zeitstempel, Kontingentzaehlung, Fehlerzeile.
+
+⚠️ DIE WICHTIGSTE BAUREGEL: DER AGENT LIEFERT EINEN FAKT, KEINE ENTSCHEIDUNG.
+Die naheliegende Bauweise - Agent fragen, was er von TAO haelt, Antwort ins
+Signal - waere ein ZWEITER ENTSCHEIDER neben der Rollen-Kette, den die Kette
+nicht pruefen kann. Stattdessen die Bauform von lebendigkeit und dem
+vorfilter-Schatten: sammeln -> SPEICHERN (Quelle, Abrufstand, Text) -> spaeter
+bewerten -> erst dann entscheiden. Und zuerst als SCHATTEN, wie H seit 22.08.:
+rechnet mit, steht in Mail und DB, entscheidet nichts. Faellt er aus, fehlt
+eine Zeile - nie ein Signal.
+
+ANDOCKPUNKTE: B1 api/claude.py neben den anderen Anbietern · B2
+agent/nachrichten.py als Stufe 0 (Sammlung, schreibt nachricht_beobachtung,
+kein Modell) · B3 Werkzeugliste aus bestehenden Funktionen fuer F2 · B4
+Aufrufstelle rollen_lauf._ein_asset HINTER der letzten Abbruchstelle (wie
+anlass_kalender) · B5 Kostenzaehler mit HARTEM Tagesdeckel (api_call_kontingent
+existiert). B5 ist nicht optional - ein Agent, der selbst entscheidet, wie oft
+er nachfragt, hat keine natuerliche Obergrenze.
+
+VORHER ZU ENTSCHEIDEN: E1 KOSTEN - ein Claude-Aufruf ist kostenpflichtig und
+aendert die stehende Regel "nur kostenfreie LLMs", NUTZERENTSCHEIDUNG OFFEN ·
+E2 der Tokenbedarf ist an einem TROCKENLAUF zu messen, bevor ein Cent fliesst ·
+E3 Schluessel wie .env, nie geraeteuebergreifend · E4 selektiv auf den k
+Finalisten, nicht auf 41 Symbolen.
+
+⚠️ STUFE 0 IST SAMMLUNG, NICHT BEWERTUNG - und sie kostet nichts. Im ganzen
+Projekt gibt es KEIN Nachrichtenmodul (api/finnhub.py liefert nur
+Analystentrends). Damit gibt es nichts einzuordnen, weder fuer mich noch fuer
+ein freies Modell. Die Luecke ist nicht die Bewertung, sondern der BESTAND. Und
+wie bei TVL, wo 30 Beobachtungen den Termin 18.09. bestimmen: EIN AGENT KANN
+KEINE VERGANGENHEIT ERZEUGEN.
+
+DIE EINORDNUNG: alles Belastbare dieses Projekts ist AUSSERHALB der Produktion
+entstanden und laeuft dort kostenlos. Das beste Verhaeltnis hat nicht ein Agent
+IN der Schleife, sondern einer, der die Schleife BAUT. Eine Anbindung lohnt
+genau dort, wo etwas LAUFEND gebraucht wird, das deterministisch nicht geht -
+und das ist bisher genau eine Sache: NACHRICHTEN LESEN UND EINORDNEN.
+
+Vollstaendig: Basisinfos/Option_Claude_Agent_Anbindung_23_08.md
