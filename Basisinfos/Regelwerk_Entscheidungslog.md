@@ -21764,3 +21764,61 @@ werden getrennt gezaehlt · die Wache nimmt den Bestand aus · ihr Rueckfall geh
 zur sicheren Seite. Zwei bestehende Pruefungen mitgezogen.
 
 Suite 1.641 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.
+
+
+[2026-08-23] B1 UND B2 ERLEDIGT - DIE VERKAUFSSEITE BEKOMMT FAKTEN UND MERKMALE
+
+Nutzerauftrag: "ja mach B1/B2 - wie immer pruefen, Gegenpruefung und Doku."
+
+DER BEFUND, den das behebt, gemessen an den Produktionsdaten:
+    EROEFFNEN     881 Zeilen   facts_json 2.187 Zeichen
+    HALTEN        475 Zeilen   facts_json     17 Zeichen
+    REDUZIEREN     75 Zeilen   facts_json     17 Zeichen
+    VERKAUFEN      11 Zeilen   facts_json     18 Zeichen
+Der Text war `{"asset": "IO"}`. Und bei REDUZIEREN hatten 10 von 75 Zeilen
+ueberhaupt Merkmale.
+
+⚠️ DAS ERKLAERT O-29 ("die Verkaufsseite ist durch nichts erklaert, alle
+p > 0,47"): ES GAB KEINE MERKMALE ZU MESSEN. Kein Verfahren kann eine Frage
+beantworten, deren Daten nie geschrieben wurden.
+
+B1 GEBAUT: beide Schreibpfade (`_schreibe_nein` und `_sende_ausstieg`) nehmen
+jetzt einen Faktensatz entgegen und bekommen ihn an ALLEN VIER Aufrufstellen
+mitgegeben - es ist DERSELBE `bc_ein`, der in den Prompt ging, durchgereicht
+statt neu gebaut. Eine zweite Fassung waere die naechste Stelle, an der Mail und
+Datenbank auseinanderlaufen. Der Rueckfall auf den Stummel bleibt stehen: eine
+Zeile ganz OHNE Fakten waere schlimmer als eine mit einem duennen Bezug.
+
+B2 GEBAUT: `_sende_ausstieg` rechnet die Merkmalsfamilien aus derselben Reihe
+und mit derselben Funktion wie die Nein-Seite (`faktenblock.werte_aus_reihe`).
+Dort stand `familien=None` als EINZIGE der drei Schreibstellen.
+
+NACHGEWIESEN an einem echten Probelauf gegen eine Kopie der Produktions-DB,
+beide Pfade angesteuert (NICHTS_TUN und REDUZIEREN):
+    HALTEN       n=4   facts_json 1.421 .. 1.438 Zeichen   mit Merkmalen 4/4
+    REDUZIEREN   n=4   facts_json 1.417 .. 1.439 Zeichen   mit Merkmalen 4/4
+Vorher: 17 Zeichen und 10 von 75.
+
+NEUES PRUEFPAKET "Verkauf" mit 9 Dauerpruefungen: kein Schreibpfad verdrahtet
+den Stummel mehr fest · der Rueckfall bleibt · beide Helfer nehmen Fakten an ·
+JEDE Aufrufstelle gibt sie mit (ein Parameter, den niemand fuellt, ist
+schlimmer als keiner - er sieht nach Vollstaendigkeit aus) · der Ausstiegspfad
+rechnet die Merkmale · alle Merkmalsrechnungen kommen aus dem Faktenblock · ein
+echter Faktensatz landet in der Zeile · die Merkmale ebenfalls.
+
+⚠️ ZWEI FALLEN BEIM PRUEFEN SELBST, beide beim ersten Lauf aufgefallen:
+1. Der Textvergleich fand den Stummel im eigenen KOMMENTAR wieder - die
+   Begruendung des Umbaus zitiert ihn ja woertlich. Umgestellt auf
+   `_quelltext()`, das Kommentare entfernt.
+2. Die Pruefung "dieselbe Funktion" zaehlte die AUFRUFE (erwartet 2, gefunden
+   3). Falsch gedacht: es gibt drei Stellen (Entscheidung, Nein-Zeile,
+   Ausstieg) an verschiedenen Punkten des Ablaufs, die einander nicht ersetzen
+   koennen. Gefaehrlich waere nicht ihre Zahl, sondern eine ZWEITE
+   IMPLEMENTIERUNG - darauf prueft sie jetzt.
+
+Suite 1.650 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.
+
+⚠️ WAS DAS NICHT LEISTET: die 561 bereits geschriebenen Nein-Zeilen bleiben
+ohne Merkmale - nicht nachruestbar. Die Auswertung der Verkaufsseite beginnt
+mit den Zeilen ab heute. Und B3 (keine Z.ai-Zweitmeinung auf der
+Verkaufsseite, 0 von 561) ist weiter offen.

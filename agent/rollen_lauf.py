@@ -1235,14 +1235,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                strategie=strategie, conn=conn, db=db,
                                config=config, modell=modell,
                                ergebnis=ergebnis, module=module,
-                               assetklasse=assetklasse)
+                               assetklasse=assetklasse, fakten=bc_ein)
             return
         durchlauf.bestanden(symbol, "aktion")
         _sende_ausstieg(
             symbol=symbol, befund=befund, verkauf=verkauf, kurs_e=kurs_e,
             instrument=instrument, strategie=strategie, tag=tag,
             lagebild_id=lagebild_id, modell=modell, conn=conn, db=db,
-            betriebsart=betriebsart, versand=versand, ergebnis=ergebnis)
+            betriebsart=betriebsart, versand=versand, ergebnis=ergebnis,
+            # B1/B2 (23.08.2026): der Faktensatz, der in den Prompt ging,
+            # und die Reihe fuer die Merkmalsfamilien.
+            fakten=bc_ein, reihe=reihe, idx=idx)
         return
 
     if aktion not in SM.AKTIONEN_MIT_EINSTIEG:
@@ -1272,7 +1275,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            lagebild_id=lagebild_id, instrument=instrument,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
-                           module=module, assetklasse=assetklasse)
+                           module=module, assetklasse=assetklasse,
+                           fakten=bc_ein)
         return
 
     # KEIN EINSTIEG, WO DER AUSSTIEG SCHON FAELLIG IST (O-37, 15.08.2026).
@@ -1316,7 +1320,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            lagebild_id=lagebild_id, instrument=instrument,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
-                           module=module, assetklasse=assetklasse)
+                           module=module, assetklasse=assetklasse,
+                           fakten=bc_ein)
         return
     durchlauf.bestanden(symbol, "aktion")
 
@@ -1892,7 +1897,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
 def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
                     tag, lagebild_id, modell, conn, db, betriebsart, versand,
-                    ergebnis) -> None:
+                    ergebnis, fakten=None, familien=None,
+                    reihe=None, idx=None) -> None:
     """Einen Ausstieg VORMERKEN und seine Zeile schreiben - nicht mailen.
 
     NUTZEREINWAND 14.08., waehrend dieser Umbau lief: *"45 Signale sind
@@ -1941,11 +1947,44 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
         # Stand waere hier eine Erfindung.
         from agent import rolle_trader as RT2
 
+        # B2 (23.08.2026): DIE MERKMALSFAMILIEN, aus derselben Reihe
+        # und mit derselben Funktion wie auf der Nein-Seite.
+        #
+        # ⚠️ HIER STAND `familien=None`, und zwar als EINZIGE der drei
+        # Schreibstellen. Gemessen: bei REDUZIEREN hatten 10 von 75
+        # Zeilen ueberhaupt Merkmale. Eine Verkaufsseite ohne Merkmale
+        # laesst sich nicht auswerten - egal wie viele Faelle sie
+        # ansammelt.
+        if familien is None and reihe is not None and idx is not None:
+            try:
+                from agent import faktenblock as _FB2
+                familien = _FB2.werte_aus_reihe(
+                    [k.high for k in reihe], [k.low for k in reihe],
+                    [k.close for k in reihe],
+                    [getattr(k, "volume", 0) or 0 for k in reihe],
+                    i=idx, tag_vollstaendig=(idx < len(reihe) - 1))
+            except Exception:                                # noqa: BLE001
+                logger.exception("Merkmale fuer %s nicht rechenbar", symbol)
+
+        # B1/B2 (23.08.2026): DER ECHTE FAKTENSATZ UND DIE ECHTEN
+        # MERKMALE - statt eines 17-Zeichen-Stummels.
+        #
+        # ⚠️ WAS HIER STAND: `fakten={"asset": symbol}` und
+        # `familien=None`. Gemessen ueber die Produktionsdaten:
+        # EROEFFNEN 2.187 Zeichen, HALTEN/REDUZIEREN/VERKAUFEN 17.
+        # Das erklaert O-29 ("die Verkaufsseite ist durch nichts
+        # erklaert, alle p > 0,47"): ES GAB KEINE MERKMALE ZU MESSEN.
+        #
+        # Der Faktensatz ist DERSELBE, der in den Prompt ging - er
+        # wird durchgereicht, nicht neu gebaut. Eine zweite Fassung
+        # waere die naechste Stelle, an der Mail und Datenbank
+        # auseinanderlaufen.
         felder = SA2.felder_aus_entscheidung(
-            befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
+            befund, fakten=(fakten or {"asset": symbol}),
+            lagebild_id=lagebild_id,
             prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
-            eur_je_usd=None, familien=None, strategie=strategie,
-            rechnung=None, modell=modell)
+            eur_je_usd=None, familien=familien, strategie=strategie,
+            instrument=instrument, rechnung=None, modell=modell)
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
         felder["gate_passed"] = 1
@@ -1958,7 +1997,8 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
 
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
                    lagebild_id, instrument, strategie, conn, db, config,
-                   modell, ergebnis, module, assetklasse="krypto") -> None:
+                   modell, ergebnis, module, assetklasse="krypto",
+                   fakten=None) -> None:
     """Ein NICHTS_TUN als auflösbare Zeile - der Kontrollarm der Messung.
 
     `assetklasse` IST PFLICHT UND STAND HIER NICHT (gefunden 15.08.2026, an
@@ -2008,8 +2048,12 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             [k.close for k in reihe],
             [getattr(k, "volume", 0) or 0 for k in reihe],
             i=idx, tag_vollstaendig=(idx < len(reihe) - 1))
+        # B1 (23.08.2026): der ECHTE Faktensatz statt des Stummels -
+        # dieselbe Begruendung wie im Ausstiegspfad. `familien` war
+        # hier schon richtig (`kern`), nur die Fakten fehlten.
         felder = SA.felder_aus_entscheidung(
-            befund, fakten={"asset": symbol}, lagebild_id=lagebild_id,
+            befund, fakten=(fakten or {"asset": symbol}),
+            lagebild_id=lagebild_id,
             prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
             eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
             strategie=strategie,

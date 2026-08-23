@@ -19,8 +19,8 @@
 | **A4** | Hebel-Cooldown greift wieder | ✔ **geprüft und repariert** 23.08. (Kapitel 146) — kein Doppeln, aber ein neuer Defekt aus A1/A2 | – |
 | **A5** | `_crv_faktor` unterscheidet Spot/Hebel nicht mehr | ✔ **repariert** 23.08. (Kapitel 147) | – |
 | **A6** | Mail-Betreff und -Abschnitt hängen am Lauf | ⚠️ offen | leicht |
-| **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ⚠️ **offen** | **schwer** |
-| **B2** | Verkaufsseite: `familien=None` in `_sende_ausstieg` | ⚠️ offen | schwer |
+| **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ✔ **repariert** 23.08. — 17 → 1.421 Zeichen, an einem Probelauf nachgewiesen | – |
+| **B2** | Verkaufsseite: `familien=None` in `_sende_ausstieg` | ✔ **repariert** 23.08. — Merkmale aus derselben Funktion wie die Nein-Seite | – |
 | **B3** | Verkaufsseite: **keine** Z.ai-Zweitmeinung (0 von 561) | ⚠️ offen | mittel |
 | **C1** | Einsatz 800 € statt 1.000 € | ⚠️ **Entscheidung**, dokumentiert | mittel |
 | **C2** | Risiko je Trade schwankt um Faktor 9 | ⚠️ **Entscheidung** | **schwer** |

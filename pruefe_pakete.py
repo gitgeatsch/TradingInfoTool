@@ -12809,12 +12809,98 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_verkaufsseite() -> None:
+    """B1/B2 - die Verkaufsseite bekommt Fakten und Merkmale (23.08.2026).
+
+    ⚠️ DER BEFUND, DEN DAS BEHEBT, und er ist gemessen: `facts_json` war bei
+    EROEFFNEN 2.187 Zeichen lang und bei HALTEN, REDUZIEREN und VERKAUFEN
+    genau 17 - der Text `{"asset": "IO"}`. Bei REDUZIEREN hatten 10 von 75
+    Zeilen ueberhaupt Merkmale.
+
+    DAS ERKLAERT O-29 ("die Verkaufsseite ist durch nichts erklaert, alle
+    p > 0,47"): es gab keine Merkmale zu messen. Kein Verfahren kann eine
+    Frage beantworten, deren Daten nie geschrieben wurden."""
+    from agent import signal_abbildung as _SA
+
+    P = "Verkauf"
+    # ⚠️ OHNE KOMMENTARE. Die Begruendung dieses Umbaus ZITIERT den
+    # alten Stummel woertlich - ein Textvergleich ueber den Rohtext
+    # faende ihn im Kommentar wieder und meldete einen Fehler, den es
+    # nicht gibt. Genau dafuer gibt es `_quelltext`.
+    _q = _quelltext("agent/rollen_lauf.py")
+
+    # ---- KEIN STUMMEL MEHR IN DEN SCHREIBPFADEN ----
+    pruefe(P, "kein Schreibpfad verdrahtet den Faktenstummel mehr fest",
+           _q.count('fakten={"asset": symbol}') == 0,
+           "zwei Pfade schrieben `{\"asset\": symbol}` statt des "
+           "Faktensatzes, der in den Prompt ging")
+    pruefe(P, "der Rueckfall bleibt, falls doch nichts ankommt",
+           _q.count('fakten or {"asset": symbol}') == 2,
+           "eine Zeile OHNE Fakten waere schlimmer als eine mit einem "
+           "Stummel - dann faehlt der Bezug ganz")
+
+    # ---- BEIDE HELFER NEHMEN DIE FAKTEN AN ----
+    for _f in ("_schreibe_nein", "_sende_ausstieg"):
+        _kopf = _q.split(f"def {_f}(")[1][:400]
+        pruefe(P, f"{_f} nimmt einen Faktensatz entgegen",
+               "fakten=None" in _kopf,
+               "sonst kann der Aufrufer ihn gar nicht durchreichen")
+
+    # ---- JEDE AUFRUFSTELLE GIBT IHN AUCH MIT ----
+    #
+    # ⚠️ EIN PARAMETER, DEN NIEMAND FUELLT, IST SCHLIMMER ALS KEINER: er sieht
+    # im Code nach Vollstaendigkeit aus und schreibt trotzdem den Rueckfall.
+    import re as _re
+    _offen = []
+    for _name in ("_schreibe_nein(", "_sende_ausstieg("):
+        for _m in _re.finditer(_re.escape(_name), _q):
+            _i = _m.start()
+            if _q[max(0, _i - 4):_i].strip().startswith("def"):
+                continue
+            if "fakten=" not in _q[_i:_i + 900]:
+                _offen.append((_name, _q[:_i].count(chr(10)) + 1))
+    pruefe(P, "jede Aufrufstelle gibt den Faktensatz mit",
+           not _offen, f"ohne Fakten: {_offen}")
+
+    # ---- B2: DIE MERKMALSFAMILIEN AUF DER AUSSTIEGSSEITE ----
+    _aus = _q.split("def _sende_ausstieg(")[1][:4000]
+    pruefe(P, "der Ausstiegspfad rechnet die Merkmale, statt None zu schicken",
+           "familien is None and reihe is not None" in _aus
+           and "werte_aus_reihe" in _aus,
+           "hier stand `familien=None` als EINZIGE der drei Schreibstellen")
+    # ⚠️ NICHT DIE ZAHL DER AUFRUFE PRUEFEN, SONDERN DIE QUELLE. Es gibt
+    # DREI Stellen, an denen die Merkmale gerechnet werden (Entscheidung,
+    # Nein-Zeile, Ausstieg) - sie liegen an verschiedenen Punkten des
+    # Ablaufs und koennen einander nicht ersetzen. Gefaehrlich waere
+    # nicht ihre Zahl, sondern eine ZWEITE IMPLEMENTIERUNG.
+    _rufe = _q.count("werte_aus_reihe(")
+    pruefe(P, "alle Merkmalsrechnungen kommen aus faktenblock",
+           _rufe == _q.count("FB.werte_aus_reihe(")
+           + _q.count("_FB2.werte_aus_reihe("),
+           f"{_rufe} Aufrufe - jeder muss aus dem Faktenblock kommen, "
+           "sonst gibt es zwei Definitionen derselben Groesse")
+
+    # ---- UND DIE ABBILDUNG NIMMT SIE AUCH AUF ----
+    _voll = _SA.felder_aus_entscheidung(
+        {"aktion": "REDUZIEREN"},
+        fakten={"asset": "X", "kurs": "1 EUR", "marken": "eine Marke"},
+        familien={"volumen_perzentil": 42})
+    pruefe(P, "ein echter Faktensatz landet auch wirklich in der Zeile",
+           len(_voll.get("facts_json") or "") > 40,
+           f"{len(_voll.get('facts_json') or '')} Zeichen - der Stummel hatte 17")
+    pruefe(P, "und die Merkmale ebenfalls",
+           _voll.get("volumen_perzentil") == 42,
+           "ohne sie ist die Verkaufsseite nicht auswertbar - genau der "
+           "Befund O-29")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
-          "Auswahl": paket_auswahl}
+          "Auswahl": paket_auswahl,
+          "Verkauf": paket_verkaufsseite}
 
 
 def main() -> int:
