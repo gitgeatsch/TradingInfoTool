@@ -20698,3 +20698,65 @@ voll_ab 6,0 erreicht kein Signal die volle Groesse (Faktor-Median 26 %); mit
 
 Suite 1606, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot),
 simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KONZEPT 11+12: DAS ERFOLGSMASS IST DAS POTENTIAL, NICHT DIE
+ZIELERREICHUNG - UND 30 ASSETS SIND NICHT 30 SIGNALE
+
+⚠️ NUTZERVORGABE, an der Wurzel: "Wichtig fuer den 'guten Trade' ist das
+POTENTIAL - also hohe Wahrscheinlichkeit, dass etwas unter bestimmten
+Bedingungen eintritt - und NICHT die reelle Zielerreichung; diese ist immer
+ausser Reichweite." Und: "bei 30 Assets Spot sollen eben nicht alle heute ein
+Signal ausloesen, sondern aufgrund der von uns bestimmten, recherchierten,
+gemessenen Gruende."
+
+⚠️ WARUM DAS ALLE BISHERIGEN NULLBEFUNDE ERKLAERT: der Grundbefund lautet, ein
+Barrierensystem auf driftfreiem Pfad hat brutto Erwartungswert null fuer JEDE
+Geometrie (theoretisch 33,3 % bei 3/1,5 ATR, gemessen 34,0 % ueber 19.891
+Anker). Damit faellt "Ziel vor Stop" PER KONSTRUKTION auf die Basisrate
+1/(1+CRV) - das Ziel ist CRV x Stopabstand, die Trefferquote steht fest, bevor
+der Markt etwas tut. Wer dieses Mass misst, misst UNSERE EIGENE ZIELREGEL
+zurueck. Die 8.441 Faelle, zwei Verfahren, beide Merkmalsfamilien wurden gegen
+ein Mass geprueft, das nicht antworten KANN.
+
+DIE TRENNUNG: Marktfrage (Potential) = tritt unter Bedingung X die Bewegung
+ein, gemessen als Verteilung ueber einen festen Horizont in %, ATR,
+Trichterbreite - barrierenfrei. Erntefrage = faengt unsere Geometrie plus
+Kosten sie ein - barrierenabhaengig. Nur die erste sagt etwas ueber den Markt.
+
+KEIN WIDERSPRUCH ZU "MFE >= 1R IST KEIN ERFOLGSMASS": R ist unser Stop, ein
+Potentialmass in R waere derselbe Fehler in anderer Schreibweise. Das Potential
+wird in barrierenfreien Einheiten gemessen - und BRUTTO; die Kostenhuerde
+gehoert in die Erntefrage danach.
+
+⚠️ DAS WERKZEUG IST GEBAUT: der Trichter aus Kapitel 93 misst genau das - "wie
+weit, nicht wohin", 81 % innerhalb 1 ATR. Er wird vom Anzeigewert zum MASSSTAB.
+Neue Messfrage: nicht "schlaegt Merkmal M die Basisrate", sondern "VERSCHIEBT
+Merkmal M den Trichter". Positivkontrolle bleibt Pflicht.
+
+SELEKTIVITAET, gemessener Ist-Zustand: Fingerabdruck laesst 30 von 41 durch
+(ein Grund), der Cooldown 0 von 30 (kein Grund). DIE AUSWAHL TRIFFT HEUTE DIE
+UHR. Und der Fingerabdruck beantwortet nur die halbe Frage - "etwas hat sich
+geaendert", nicht "etwas ist besser als die anderen 29".
+
+SPERRE GEGEN RANGAUSWAHL: eine Sperre fragt "ist X schlecht genug" und braucht
+eine absolute Schwelle (selbst eine Schaetzung); eine Rangauswahl fragt "ist X
+besser als Y" und braucht nur eine Ordnung. Weniger Signale sind bei der Sperre
+das ZIEL, bei der Rangauswahl die NEBENWIRKUNG - damit steht sie NICHT im
+Widerspruch zu "aufgemacht um besser zu werden". Und sie liefert die
+Begruendung mit: "Rang 2 von 30 in seiner These".
+
+⚠️ WARUM DER VORHANDENE RANGPLATZ HEUTE NICHTS TRAEGT: 0,0 Punkte im Score,
+-5,8 Punkte INNERHALB von H. Kein Argument gegen die Rangauswahl, sondern ihr
+Beleg - der Rangplatz ordnet nach DRIFT, H waehlt nach RUECKKEHR ZUM MITTEL.
+Ranggeordnet wird INNERHALB einer These, nie ueber alle.
+
+REIHENFOLGE: S1 These je Signal (swing/akkumulation - Namen da, nie
+zugewiesen), S2 Massstab je These = Potentialmass (Trichter gebaut), S3
+Rangauswahl innerhalb der These (drift.py da, falsch verdrahtet), S4 erst
+danach Geometrie und Kosten.
+
+⚠️ GRENZE AUSDRUECKLICH: die WIRKUNG einer Auswahl "beste k" ist ueber 66
+aufgeloeste Faelle nicht belegbar. Selektivitaet ist zuerst eine
+KONSTRUKTIONSENTSCHEIDUNG, ihr Nachweis kommt spaeter. Wer das umdreht, wartet
+auf einen Beleg, den er ohne die Konstruktion nie bekommt.

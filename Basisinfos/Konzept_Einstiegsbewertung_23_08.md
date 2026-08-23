@@ -465,3 +465,145 @@ und „Rückkehr zum Mittel lang" — sie werden nur nie vergeben.
 
 > **Das ist keine neue Baustelle. Es ist die angefangene, die nie zu Ende
 > gebaut wurde.**
+
+
+---
+
+## 11. ⚠️ Das Erfolgsmaß: **Potential**, nicht Zielerreichung
+
+*Nutzervorgabe 23.08.: „Wichtig für den ‚guten Trade' ist das **Potential** —
+also hohe Wahrscheinlichkeit, dass etwas unter bestimmten Bedingungen eintritt
+— und **nicht die reelle Zielerreichung**; diese ist immer außer Reichweite,
+soweit mir bekannt."*
+
+**Das ist keine Feinheit, sondern die Korrektur an der Wurzel aller bisherigen
+Nullbefunde.**
+
+### 11.1 Warum die Zielerreichung als Maß nichts finden *kann*
+
+Der Grundbefund des Projekts lautet:
+
+> **Ein Barrierensystem auf einem driftfreien Pfad hat brutto den
+> Erwartungswert null — für jede Geometrie.** Theoretisch 33,3 % bei 3/1,5 ATR,
+> gemessen **34,0 % über 19.891 Anker**.
+
+⚠️ **Daraus folgt zwingend:** „Ziel vor Stop" ist ein Maß, das **per
+Konstruktion** auf die Basisrate `1/(1+CRV)` fällt. Wer es misst, misst
+**unsere eigene Zielregel zurück** — das Ziel ist `CRV × Stopabstand`, also
+steht die Trefferquote schon fest, bevor der Markt etwas tut.
+
+**Alle Nullbefunde des Projekts sind Messungen an dieser Größe.** Das erklärt,
+warum kein Verfahren die Basisrate schlägt (8.441 Fälle, zwei Verfahren, beide
+Merkmalsfamilien): sie wurden gegen ein Maß geprüft, das nicht antworten kann.
+
+### 11.2 Die Trennung in zwei verschiedene Fragen
+
+| | Frage | Maß | barrierenabhängig? |
+|---|---|---|---|
+| **Marktfrage** *(Potential)* | Tritt unter Bedingung X die **Bewegung** ein? | Verteilung der Bewegung über einen **festen Horizont** — in %, ATR, Trichterbreite | **nein** |
+| **Erntefrage** | Fängt **unsere Geometrie + Kosten** sie ein? | Ziel vor Stop, R, Breakeven | ja |
+
+> **Die Marktfrage ist die einzige, die über den Markt etwas aussagt. Die
+> Erntefrage ist eine Aussage über uns.**
+
+⚠️ Bisher wurden beide in einer Zahl vermischt — und weil die zweite den
+Erwartungswert null hat, hat sie die erste jedes Mal zugedeckt.
+
+### 11.3 Abgrenzung zur bestehenden Regel — **kein Widerspruch**
+
+Im Projekt steht: *„MFE ≥ 1R ist KEIN Erfolgsmaß bei variablem Stop."* Das
+bleibt richtig und wird hier **präzisiert**, nicht aufgehoben:
+
+> **R ist unser Stop.** Ein Potentialmaß in R-Einheiten ist wieder
+> barrierenabhängig — derselbe Fehler in anderer Schreibweise. **Das Potential
+> muss in barrierenfreien Einheiten gemessen werden: Prozent, ATR,
+> Trichterbreite.**
+
+### 11.4 ⚠️ Das Werkzeug ist gebaut — es ist der Trichter
+
+**Kapitel 93** misst bereits genau das: **„wie weit, nicht wohin"** — die
+Spanne, die ein Wert über einen festen Horizont zurücklegt, ohne jede Barriere.
+Gemessen: **81 % innerhalb 1 ATR** (nicht 68 %, weil ATR die Tagesspanne misst
+und der Trichter Schluss zu Schluss).
+
+> **Keine neue Baustelle. Der Trichter wird vom Anzeigewert zum Maßstab.**
+
+**Was das für die Messreihenfolge heißt:**
+
+| | statt | neu |
+|---|---|---|
+| Frage | „schlägt Merkmal M die Basisrate?" | „**verschiebt Merkmal M den Trichter?**" |
+| Antwort bisher | nein — bei jedem Merkmal | offen — **nie so gemessen** |
+| Positivkontrolle | Pflicht (ein eingepflanzter 3-%-Effekt muss gefunden werden) | Pflicht, unverändert |
+
+⚠️ **Und die Kosten bleiben, wo sie hingehören:** das Potential wird **brutto**
+gemessen. Ob es die Kostenhürde trägt, ist die *Erntefrage* und wird **danach**
+gerechnet — sonst verdeckt die Hürde wieder das Signal.
+
+---
+
+## 12. ⚠️ Selektivität: 30 Assets sind nicht 30 Signale
+
+*Nutzervorgabe 23.08.: „bei 30 Assets Spot sollen eben **nicht alle heute ein
+Signal auslösen**, sondern eben aufgrund der von uns **bestimmten,
+recherchierten, gemessenen Gründe**."*
+
+### 12.1 Was heute stattdessen auswählt — gemessen
+
+| Stufe | von | durch | Auswahlgrund |
+|---|---:|---:|---|
+| Fingerabdruck (*eine Änderung*) | 41 | **30** | ein Grund ✔ |
+| Cooldown (*die Uhr*) | 30 | **0** | **kein Grund** ⚠️ |
+
+> **Die Auswahl trifft heute die Uhr.** Genau der Fall, den Ihr Grundsatz
+> ausschließt — *„ohne Uhr werden wir nicht auskommen, sie ist sinnvoll zur
+> Steuerung, aber nicht als Entscheidung."*
+
+**Und der Fingerabdruck beantwortet nur die halbe Frage:** er sagt *„etwas hat
+sich geändert"*, nicht *„etwas ist besser als die anderen 29"*.
+
+### 12.2 Der Unterschied zwischen Auswahl und Sperre
+
+⚠️ Das Projekt hat dazu eine stehende Vorgabe: *„AUFGEMACHT um besser zu
+werden — nicht einschränken, damit es weniger wird."* Eine Rangauswahl steht
+dazu **nicht** im Widerspruch:
+
+| | Sperre | **Rangauswahl** |
+|---|---|---|
+| Frage | „ist X schlecht genug zum Verwerfen?" | „**ist X besser als Y?**" |
+| braucht | eine absolute Schwelle *(selbst eine Schätzung)* | nur eine **Ordnung** |
+| weniger Signale | ist das **Ziel** | ist die **Nebenwirkung** |
+| Begründung je Signal | „Schwelle gerissen" | „**Rang 2 von 30 in seiner These**" |
+
+> **Eine Rangauswahl liefert die Begründung mit, die Sie verlangen — und zwar
+> eine, die das Signal von den anderen 29 unterscheidet.**
+
+### 12.3 Warum der vorhandene Rangplatz heute nichts trägt
+
+`drift.py` rechnet bereits einen Rangplatz. Gemessen:
+
+| | |
+|---:|---|
+| **0,0 Punkte** | Beitrag im Score |
+| **−5,8 Punkte** | Wirkung **innerhalb** von H |
+
+⚠️ **Das ist kein Argument gegen die Rangauswahl, sondern ihr Beleg:** der
+Rangplatz ordnet nach **Drift**, H wählt nach **Rückkehr zum Mittel** (§9).
+Beide zugleich zu verlangen heißt, einen Wert zu suchen, der gleichzeitig
+gelaufen und zurückgeblieben ist.
+
+> **Ranggeordnet wird innerhalb einer These, nie über alle.**
+
+### 12.4 Die Reihenfolge — und was daran heute schon steht
+
+| | Schritt | Zustand |
+|---|---|---|
+| **S1** | **These je Signal** (§10) — Drift kurz (`swing`) / Rückkehr zum Mittel lang (`akkumulation`) | Namen da, **nie zugewiesen** |
+| **S2** | **Maßstab je These** = Potentialmaß aus §11, barrierenfrei | Trichter gebaut (Kap. 93) |
+| **S3** | **Rangauswahl innerhalb der These** — die besten k passieren | `drift.py` da, falsch verdrahtet |
+| **S4** | **Erst danach** Geometrie und Kosten rechnen | steht, unverändert |
+
+⚠️ **Grenze, ausdrücklich:** bei 30 Assets und einer Auswahl „die besten k" ist
+die *Wirkung* über **66 aufgelöste Fälle** nicht belegbar. **Selektivität ist
+zuerst eine Konstruktionsentscheidung; ihr Nachweis kommt später.** Wer das
+umdreht, wartet auf einen Beleg, den er ohne die Konstruktion nie bekommt.
