@@ -21059,3 +21059,67 @@ WAS DER NULLBEFUND ALS TAUSCH EINBRINGT: der Vorteil ist BREIT statt selektiv.
 Eine Regel, die ueberall gleich wirkt, braucht KEINE AUSWAHL - sie braucht
 ANWENDUNG. Das ist eine andere und einfachere Bauaufgabe als die geplante
 Rangauswahl.
+
+
+[2026-08-23] QUERSCHNITT GEMESSEN: AUSWAHL QUER, TIMING INNERHALB - UND MEIN
+MESSAUFBAU KONNTE DIE ASSETEBENE GAR NICHT FINDEN
+
+⚠️ NUTZERKORREKTUR, angenommen: "Diesen Nullbefund haben wir seit zwei Monaten -
+es ist kein Tausch, sondern ein IST-ZUSTAND, der sofort geaendert werden muss.
+Wir messen immer im breiten Bereich und die Signale kommen im breiten Bereich -
+HYPE zehnmal kaufen am Tag, LINK zehnmal - aber NIE SELEKTIV AUF ASSETEBENE.
+Der HANDEL passiert aber auf Assetebene. Das ist der Auftrag und das Ziel."
+
+Mein Satz "der Vorteil ist breit, also braucht er keine Auswahl" war falsch
+herum gedacht - er beschreibt den Defekt und macht daraus ein Ergebnis.
+
+⚠️ UND DER SCHWERERE PUNKT: MEIN MESSAUFBAU KONNTE NICHTS FINDEN. Der Vorsprung
+gegen den quotengleichen Zufall HAELT DAS SYMBOL FEST und wuerfelt nur die
+Tage - symbolneutral durch Konstruktion. Gemessen wurde "wann kaufe ich
+innerhalb eines Wertes", gebraucht wird "welchen Wert kaufe ich heute". Der
+Nullbefund auf Assetebene war zum Teil eine Eigenschaft des Aufbaus, nicht des
+Marktes.
+
+NEUES WERKZEUG messe_querschnitt_umkehr.py - die richtige Bauform stand seit
+19.08. im Projekt (messe_drift misst quer ueber die Symbole am selben Tag), sie
+wurde nur nie auf die Umkehr angewandt. 40 Symbole, 3.290 Tage, Erfolgsmass ist
+das POTENTIAL (Vorwaertsrendite ueber festen Horizont, barrierenfrei, brutto),
+Signifikanz ueber Termine mit Newey-West.
+
+⚠️ DIE UMKEHR TRENNT DIE ASSETS NICHT - und wo etwas zu sehen ist, in die
+ANDERE Richtung: unter_sma/5 Tage -0,73 % (t -2,05), unter_sma/20 -1,41 %,
+rueckgang/5 -0,19 %. Die Werte, die am tiefsten unter ihrem Schnitt stehen,
+laufen SCHLECHTER.
+
+✔ ABER DIE GEGENRICHTUNG TRENNT. messe_drift.py auf DENSELBEN Daten erneut
+gelaufen: Rueckblick 250 / Horizont 5 = +1,01 % Abstand, t = +3,20 ueber 1.874
+Termine, 56 % der Termine positiv. Ein Feld von neun.
+
+BEIDE MESSUNGEN FUEGEN SICH:
+    quer ueber die Assets (welchen kaufe ich)  -> DRIFT/Rangplatz, +1,01 %
+    innerhalb eines Assets (an welchem Tag)    -> UMKEHR, bis +0,111
+    "Die starken Werte waehlen, sie an ihren schwachen Tagen kaufen."
+
+⚠️ DAS LOEST DEN WIDERSPRUCH VOM VORMITTAG AUF: dort kostete der Rangplatz
+INNERHALB von H -5,8 Punkte, und ich schloss, die Quellen hoeben einander auf.
+Sie heben einander nur auf, wenn man sie auf DERSELBEN Ebene verlangt. Auf
+verschiedenen Ebenen ergaenzen sie sich.
+
+⚠️ KORREKTUR AN DER EIGENEN KOSTENRECHNUNG: der Rangplatz wurde verworfen mit
+"+1,01 % gegen 3 % Handelskosten". Das vermischt zwei Entscheidungen. HANDELN
+ODER NICHT zahlt die 3 %. WELCHEN VON DREISSIG zahlt sie NICHT - sie fallen bei
+jeder Wahl gleich an. Fuer die AUSWAHL ist die Kostenhuerde bereits bezahlt,
+und der Abstand ist der Unterschied zwischen zwei Kaeufen, die beide 3 % kosten.
+Genau das ist die Entscheidung, die der Nutzer meint.
+
+BAUAUFTRAG: A1 der Rangplatz wird zur AUSWAHL statt zur Anzeige - je Umlauf und
+Gruppe passieren die besten k statt "wer ist an der Reihe"; A2 die Begruendung
+je Signal lautet "Rang 3 von 30" statt "Cooldown abgelaufen"; A3 die Umkehr
+bleibt, aber als Zeitpunktfrage innerhalb des gewaehlten Werts.
+
+GRENZEN, ausdruecklich - der Beleg ist duenn: ein Feld von neun; die empirische
+Placebo-Schwelle lag bei |t| >= 3,05, gemessen sind 3,20 - es traegt knapp. Das
+Werkzeug schreibt seine eigene Auflage dazu (B3: dieselben Felder muessen auch
+auf einer anderen Anlageklasse und in einzelnen Jahren tragen) - OFFEN.
+Ueberlebensverzerrung macht den Abstand zu einer UNTERGRENZE. Horizont 5 Tage
+passt zur Auswahl, nicht zur Haltedauer einer Akkumulation.

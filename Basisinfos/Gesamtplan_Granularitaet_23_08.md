@@ -286,8 +286,120 @@ Familie, für die die Literatur spricht.
 | **G5** Kapitalisierung | „später" | ⚠️ **als Kapitalisierung erledigt** — die dahinterliegende Größe (Liquidität) ist gemessen und trägt nicht. Die Gruppentabelle war ein Stichtagsartefakt |
 | **G6** Einzelsymbol | „nicht ranggeeignet" | ⚠️ **offen, nicht widerlegt** — sieben Eigenschaften geprüft und flach; die achte (Netzwerkaktivität) ist ab **18.09.** prüfbar. **Wiedervorlage, kein Abschluss** |
 
-**Was der Nullbefund als Tausch einbringt** (Regel: ein Nullbefund ist ein
-Tausch, kein Ende): der Vorteil ist **breit** statt selektiv. Eine Regel, die
-überall gleich wirkt, braucht **keine Auswahl** — sie braucht **Anwendung**.
-Das ist eine andere Bauaufgabe als die geplante Rangauswahl, und eine
-einfachere.
+⚠️ **RICHTIGGESTELLT am selben Abend (siehe Abschnitt 9):** hier stand
+*„der Vorteil ist breit statt selektiv — eine Regel, die überall gleich
+wirkt, braucht keine Auswahl"*. **Das war falsch herum gedacht.** Breit statt
+selektiv ist der **Defekt**, nicht das Ergebnis — der Handel findet auf
+Assetebene statt. Und der Messaufbau dieses Abschnitts **konnte** die
+Assetebene gar nicht finden: er hält das Symbol fest.
+
+
+---
+
+## 9. ⚠️ KORREKTUR 23.08. spät — „breit statt selektiv" ist kein Tausch, sondern der Defekt
+
+*Nutzerkorrektur: „Diesen Nullbefund haben wir seit zwei Monaten — es ist kein
+Tausch, sondern ein **IST-Zustand, der sofort geändert werden muss**. Wir
+messen immer im breiten Bereich, und die Signale kommen im breiten Bereich —
+HYPE zehnmal kaufen am Tag, LINK zehnmal — aber **nie selektiv auf
+Assetebene**. Der **Handel** passiert aber auf Assetebene. Das ist der Auftrag
+und das Ziel."*
+
+**Angenommen. Der Satz „der Vorteil ist breit, also braucht er keine Auswahl"
+war falsch herum gedacht** — er beschreibt den Defekt und macht daraus ein
+Ergebnis.
+
+### 9.1 ⚠️ Und der zweite, schwerere Punkt: mein Messaufbau KONNTE nichts finden
+
+Der Vorsprung gegen den quotengleichen Zufall **hält das Symbol fest** und
+würfelt nur die Tage. Diese Bauform ist symbolneutral **durch Konstruktion**:
+
+| | |
+|---|---|
+| **gemessen wurde** | „**wann** kaufe ich innerhalb eines Wertes" |
+| **gebraucht wird** | „**welchen** Wert kaufe ich heute" |
+
+> **Der Nullbefund auf Assetebene war zum Teil eine Eigenschaft des Aufbaus,
+> nicht des Marktes.** Das gehört benannt, nicht weggeredet.
+
+**Die richtige Bauform steht seit dem 19.08. im Projekt** — `messe_drift.py`
+misst eine Rangliste **quer über die Symbole am selben Tag**. Sie wurde nur nie
+auf die Umkehr angewandt.
+
+### 9.2 Also quer gemessen — `messe_querschnitt_umkehr.py`
+
+40 Krypto-Symbole, 3.290 Tage (2017-08-17 bis 2026-08-19). Erfolgsmaß ist das
+**Potential**: Vorwärtsrendite über einen festen Horizont, **barrierenfrei und
+brutto**. Signifikanz über Termine, Newey-West gegen die Überlappung.
+
+| Merkmal | Horizont | Termine | tiefstes Fünftel | höchstes | Abstand | t |
+|---|---:|---:|---:|---:|---:|---:|
+| unter_sma | 5 | 1.873 | +0,18 % | +0,91 % | **−0,73 %** | −2,05 |
+| unter_sma | 20 | 1.858 | +1,92 % | +3,33 % | −1,41 % | −0,82 |
+| unter_sma | 60 | 1.818 | +9,73 % | +10,49 % | −0,76 % | −0,14 |
+| rueckgang | 5 | 1.873 | +0,35 % | +0,54 % | −0,19 % | −0,58 |
+| rueckgang | 20 | 1.858 | +1,45 % | +1,89 % | −0,44 % | −0,31 |
+| rueckgang | 60 | 1.818 | +8,55 % | +7,32 % | +1,23 % | +0,25 |
+
+⚠️ **Die Umkehr trennt die Assets NICHT — und wo etwas zu sehen ist, zeigt es
+in die andere Richtung:** die Werte, die am tiefsten unter ihrem eigenen
+Schnitt stehen, laufen **schlechter**, nicht besser.
+
+### 9.3 ✔ Aber die Gegenrichtung trennt — und sie ist gemessen
+
+`messe_drift.py` auf **denselben Daten**, erneut gelaufen:
+
+> **Rückblick 250 / Horizont 5: +1,01 % Abstand zwischen bestem und
+> schlechtestem Fünftel, t = +3,20 über 1.874 Termine, 56 % der Termine
+> positiv.** Ein Feld von neun.
+
+**Damit fügen sich beide Messungen zu einem Bild, das sich nicht widerspricht:**
+
+| Ebene | was trägt | Beleg |
+|---|---|---|
+| **quer über die Assets** — welchen kaufe ich | **Drift / Rangplatz** | +1,01 %, t = 3,20 |
+| **innerhalb eines Assets** — an welchem Tag | **Umkehr** (unter dem Schnitt) | bis +0,111 gegen den quotengleichen Zufall |
+
+> **Die starken Werte wählen, sie an ihren schwachen Tagen kaufen.**
+
+⚠️ **Und das löst den Widerspruch vom Vormittag auf.** Dort hatte ich gemessen,
+dass der Rangplatz **innerhalb** von H −5,8 Punkte kostet, und daraus
+geschlossen, die beiden Quellen hoben einander auf. **Sie heben einander nur
+auf, wenn man sie auf DERSELBEN Ebene verlangt.** Auf verschiedenen Ebenen
+ergänzen sie sich.
+
+### 9.4 ⚠️ Und eine Korrektur an der eigenen Kostenrechnung
+
+Der Rangplatz wurde verworfen mit: *„+1,01 % Vorteil, die Handelskosten
+betragen 3 %."* **Das vermischt zwei verschiedene Entscheidungen:**
+
+| Entscheidung | zahlt die 3 %? |
+|---|---|
+| **handeln oder nicht handeln** | **ja** — die Kosten sind das Hindernis |
+| **welchen von dreißig kaufe ich** | ⚠️ **nein** — sie fallen bei jeder Wahl gleich an |
+
+> **Für die Auswahl ist die Kostenhürde bereits bezahlt.** Der Abstand von
+> +1,01 % ist der Unterschied zwischen zwei Käufen, die **beide** 3 % kosten.
+> **Genau das ist die Entscheidung, die der Nutzer meint** — er handelt
+> ohnehin auf Assetebene; die Frage ist nur, welches Asset.
+
+### 9.5 Was daraus als Bauauftrag folgt
+
+| | was | Grundlage |
+|---|---|---|
+| **A1** | **Der Rangplatz wird zur Auswahl**, nicht zur Anzeige: je Umlauf und Gruppe passieren die **besten k** — statt „wer ist an der Reihe" | `drift.rang()` ist gebaut und liefert die Zahl |
+| **A2** | Die Begründung je Signal lautet dann **„Rang 3 von 30"** und nicht „Cooldown abgelaufen" | Nutzergrundsatz: jede Entscheidung braucht eine Begründung |
+| **A3** | Die **Umkehr bleibt** — aber als Zeitpunktfrage innerhalb des gewählten Werts | 23.08., gegen den quotengleichen Zufall |
+
+**Die Grenzen, ausdrücklich — es ist ein dünner Beleg:**
+
+- **Ein Feld von neun.** Die empirische Placebo-Schwelle von `messe_drift` lag
+  bei **|t| ≥ 3,05**, gemessen sind **3,20**. Es trägt knapp.
+- ⚠️ Das Werkzeug schreibt seine eigene Auflage dazu: *„dieselben Felder müssen
+  auch auf einer anderen Anlageklasse und in einzelnen Jahren tragen — ein
+  Zyklus ist kein Gesetz (B3)."* **Das ist offen.**
+- **Überlebensverzerrung:** die gestorbenen Werte fehlen und wären im
+  schlechtesten Fünftel gewesen — der gemessene Abstand ist eine
+  **Untergrenze**.
+- **Horizont 5 Tage** — das ist kurz und passt zur Auswahl, nicht zur
+  Haltedauer einer Akkumulation.
