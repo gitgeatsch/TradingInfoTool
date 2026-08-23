@@ -20661,3 +20661,40 @@ die Eichung, nicht die alte Zahl.
 
 Suite 1599, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot),
 Vokabular 16, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 147: A5 UND DIE EICHUNG VON voll_ab
+
+⚠️ NUTZERGRUNDSATZ VORAB, als stehende Vorgabe aufgenommen: "SPOT-Trades sind
+nicht 'frei' in dem Sinn, dass jede Pruefung einen Spot-Handel zulaessig
+macht. JEDE Entscheidung zu einem Trade soll eine BEGRUENDUNG haben - je nach
+Rolle in der Kette. Der Grund 'das Asset ist in der Zeitschleife dran' ist
+keine - eine Aenderung der Indikatoren oder Marktbedingungen schon." Und:
+"Ohne Uhr werden wir nicht auskommen, sie ist sinnvoll zur STEUERUNG - aber
+nicht als ENTSCHEIDUNG."
+
+Gemessener Ist-Zustand: von 41 Symbolen passieren 30 den Fingerabdruck und 0
+den Cooldown. HEUTE ENTSCHEIDET DIE UHR - das gehoert in die Planung.
+
+A5 WAR VORBEDINGUNG: _crv_faktor gilt ausdruecklich nur fuer Spot (Messung
+03.08.: beim Hebel gegenlaeufig, Gate SQN +3,25 gegen +1,25), fragte aber das
+LAUF-Etikett - seit S6b immer "spot". Eingeschaltet haette die Abstufung jedes
+Hebel-Signal gekuerzt, gegen ihre eigene Messung. Jetzt fragt sie das
+ERGEBNIS-Etikett.
+
+⚠️ UND DABEI FIEL EINE RUECKKOPPLUNG AUF: hebel_noetig rechnet mit dem
+GEDECKELTEN Betrag. Kuerzt die Abstufung ihn (800 -> 320 EUR), steigt er von
+0,60 auf 1,50 - aus einem SPOT-Trade wird ein HEBEL-Trade, allein weil die
+Position kleiner wurde. Behoben: das Etikett haengt am WUNSCHBETRAG.
+Nachgewiesen: bei Spreizung 1,0 und 5,0 dasselbe Etikett bei jedem
+Stopabstand. Der Fehler waere erst beim Einschalten aufgetreten.
+
+DIE EICHUNG, GEMESSEN: alte Kette Median 2,25, 90 % 4,00, max 15,50, 3 % ueber
+CRV 6,0. Rollen-Kette Median 2,29, 90 % 2,79, max 3,00, NULL ueber 6,0. Mit
+voll_ab 6,0 erreicht kein Signal die volle Groesse (Faktor-Median 26 %); mit
+3,0 sind es 5 % bei Faktor-Median 43 %. Gewaehlt: 3,0.
+
+⚠️ NICHT GETAN: crv_spreizung steht weiter auf 1,0, die Abstufung ist AUS.
+
+Suite 1606, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot),
+simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

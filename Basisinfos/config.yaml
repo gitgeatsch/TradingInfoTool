@@ -337,7 +337,12 @@ risiko:
   # Wiederinbetriebnahme braucht deshalb ein neues `voll_ab`, keine neue
   # Mechanik - und eine Messung, keine Meinung.
   crv_positionsgroesse_spreizung: 5.0   # Verhaeltnis groesste zu kleinster Position
-  crv_positionsgroesse_voll_ab: 6.0     # ab diesem CRV volle (RM-1-)Groesse
+  # ⚠️ NEU GEEICHT AUF 3,0 (23.08.2026, Kapitel 147). Gemessen an der
+  # Produktionsdatenbank: die alte Kette hatte 3 % der Signale bei CRV
+  # >= 6,0 (max 15,50), die Rollen-Kette hat NULL (max 3,00). Mit 6,0
+  # erreichte kein Signal mehr die volle Groesse. 3,0 bildet die
+  # urspruengliche Absicht nach - dort sind es 5 %.
+  crv_positionsgroesse_voll_ab: 3.0     # ab diesem CRV volle (RM-1-)Groesse
   cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -
                                         # gaengige Hausnummer als Overtrading-Bremse/Liquiditaets-
                                         # puffer, in der Praxis bewaehrt (Nutzer haelt bewusst

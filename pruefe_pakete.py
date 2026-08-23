@@ -10499,6 +10499,59 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- A5 + DIE EICHUNG VON `voll_ab` (23.08.2026) ------------------
+    #
+    # ⚠️ A5: DIE CRV-ABSTUFUNG GILT NUR FUER SPOT - die Messung vom 03.08.
+    # fand beim Hebel die GEGENLAEUFIGE Antwort (Gate SQN +3,25 gegen +1,25).
+    # Sie fragte aber das LAUF-Etikett, das seit S6b immer "spot" ist:
+    # eingeschaltet haette sie jedes Hebel-Signal gekuerzt.
+    from agent import entscheidungsrechnung as _ER5
+
+    def _r5(stop_rel, spreizung):
+        _echt = _ER5.GRENZEN["crv_spreizung"]
+        try:
+            _ER5.GRENZEN["crv_spreizung"] = spreizung
+            return _ER5.rechne(kurs=100.0, atr=stop_rel * 100.0 / 2.5,
+                               risiko_eur=48.0, instrument="spot",
+                               betrag_wunsch_eur=800.0, hebel_handelbar=True)
+        finally:
+            _ER5.GRENZEN["crv_spreizung"] = _echt
+
+    # ⚠️ DAS ETIKETT DARF NICHT VON DER ABSTUFUNG ABHAENGEN.
+    #
+    # DER FEHLER, DEN DAS FAENGT: `hebel_noetig` rechnet mit dem GEDECKELTEN
+    # Betrag. Kuerzt die Abstufung ihn (800 -> 320 EUR), steigt er von 0,6 auf
+    # 1,5 - und aus einem SPOT-Trade wird ein HEBEL-Trade, allein weil die
+    # Position kleiner wurde. Eine Rueckkopplung, kein Befund.
+    for _s5 in (0.025, 0.054, 0.10, 0.22):
+        pruefe(P, f"Stop {_s5*100:.1f} %: das Etikett haengt nicht an der "
+                  f"Abstufung",
+               _r5(_s5, 1.0)["etikett"] == _r5(_s5, 5.0)["etikett"],
+               f"aus {_r5(_s5, 1.0)['etikett']} wird {_r5(_s5, 5.0)['etikett']}"
+               f" - ob ein Trade gehebelt ist, ist eine Eigenschaft seiner "
+               f"GEOMETRIE (Verlustanteil gegen Stopabstand), nicht seines "
+               f"Deckels")
+    # UND SIE TRIFFT NUR DAS SPOT-ERGEBNIS.
+    pruefe(P, "die Abstufung kuerzt ein HEBEL-Ergebnis nicht",
+           abs(_r5(0.025, 5.0)["betrag_eur"] - 800.0) < 1e-6,
+           "die Messung vom 03.08. fand beim Hebel die gegenlaeufige Antwort "
+           "- sie dort anzuwenden hiesse, eine Messung gegen ihr eigenes "
+           "Ergebnis zu uebertragen")
+    # ⚠️ DIE EICHUNG: `voll_ab` muss die Verteilung TREFFEN.
+    #
+    # Gemessen an der Produktionsdatenbank: alte Kette max CRV 15,50 mit 3 %
+    # ueber 6,0; Rollen-Kette max 3,00 mit NULL ueber 6,0. Mit 6,0 erreichte
+    # kein Signal mehr die volle Groesse.
+    pruefe(P, "`voll_ab` liegt innerhalb der gemessenen CRV-Verteilung",
+           2.0 < _ER5.GRENZEN["crv_voll_ab"] <= 3.0,
+           f"{_ER5.GRENZEN['crv_voll_ab']} - die Rollen-Kette hat ein Maximum "
+           f"von 3,00. Ein `voll_ab` darueber macht die volle Groesse "
+           f"unerreichbar und kuerzt JEDE Empfehlung")
+    pruefe(P, "und die Abstufung ist weiterhin AUS",
+           abs(_ER5.GRENZEN["crv_spreizung"] - 1.0) < 1e-9,
+           "die Eichung ist die Vorbereitung, nicht die Inbetriebnahme - "
+           "das Einschalten ist eine Entscheidung des Nutzers")
+
     # ---- TRAEGT DAS CRV DURCH DIE GANZE KETTE? (23.08.2026) -----------
     #
     # Nutzervorgabe: "Sicherstellung, dass die CRV-Thematik durch den ganzen

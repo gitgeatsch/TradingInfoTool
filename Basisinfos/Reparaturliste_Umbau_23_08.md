@@ -17,7 +17,7 @@
 | **A2** | `hebel`-Spalte folgt dem Lauf → nie gefüllt | ✔ **repariert** 23.08. (Kapitel 145) | – |
 | **A3** | Hebel-Topf (3.000 €) ohne Gegenstand | ✔ **greift wieder** durch A2 | – |
 | **A4** | Hebel-Cooldown greift wieder | ✔ **geprüft und repariert** 23.08. (Kapitel 146) — kein Doppeln, aber ein neuer Defekt aus A1/A2 | – |
-| **A5** | `_crv_faktor` unterscheidet Spot/Hebel nicht mehr | ⚠️ offen | mittel |
+| **A5** | `_crv_faktor` unterscheidet Spot/Hebel nicht mehr | ✔ **repariert** 23.08. (Kapitel 147) | – |
 | **A6** | Mail-Betreff und -Abschnitt hängen am Lauf | ⚠️ offen | leicht |
 | **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ⚠️ **offen** | **schwer** |
 | **B2** | Verkaufsseite: `familien=None` in `_sende_ausstieg` | ⚠️ offen | schwer |

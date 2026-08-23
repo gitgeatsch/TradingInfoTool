@@ -75,7 +75,31 @@ GRENZEN = {
                                # (12.08.) faellt das CRV aus dem Chart, und die
                                # Abstufung kuerzte damit fast jede Empfehlung
                                # pauschal auf ein Fuenftel. 1.0 = ohne Wirkung.
-    "crv_voll_ab": 6.0,
+    # ⚠️ NEU GEEICHT AUF 3,0 (23.08.2026) - vorher 6,0.
+    #
+    # DIE 6,0 WAR FUER DIE ALTE VERTEILUNG RICHTIG. Gemessen an der
+    # Produktionsdatenbank:
+    #
+    #     alte Kette   Median 2,25   90 % 4,00   max 15,50   >= 6,0: 3 %
+    #     Rollen-Kette Median 2,29   90 % 2,79   max  3,00   >= 6,0: 0 %
+    #
+    # Die MEDIANE sind fast gleich - die SPITZE fehlt. Seit dem Struktur-Ziel
+    # (12.08.) faellt das CRV aus dem Chart statt mechanisch bei 2,0 zu
+    # liegen, und die Zone ist begrenzt: die Verteilung endet bei 3,0.
+    #
+    # ⚠️ MIT voll_ab = 6,0 ERREICHT KEIN EINZIGES SIGNAL DIE VOLLE GROESSE.
+    # Beim Median-CRV waeren es rund 26 % - genau das "kuerzte fast jede
+    # Empfehlung pauschal auf ein Fuenftel", das am 15.08. zur Stilllegung
+    # gefuehrt hat.
+    #
+    # 3,0 BILDET DIE URSPRUENGLICHE ABSICHT NACH: dort erreichen 5 % die volle
+    # Groesse, damals waren es 3 %. Nicht die Abstufung war falsch, sondern
+    # ihre Eichung.
+    #
+    # ⚠️ WIRKUNGSLOS, SOLANGE `crv_spreizung` auf 1,0 steht. Die Eichung ist
+    # die Vorbereitung, nicht die Inbetriebnahme - das ist eine eigene
+    # Entscheidung des Nutzers.
+    "crv_voll_ab": 3.0,
 
     "hebel_max": 10.0,              # Bitpanda Margin: 2x-10x
     "liquidations_marge": 0.09,     # RM-11, config risiko.hebel.*_sicherheitsmarge_relativ
@@ -553,7 +577,27 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # DIE CRV-ABSTUFUNG ZUERST, dann die Deckel. Sie beschreibt, wieviel der
     # Aufbau VERDIENT; Topf und Hoechstbetrag, wieviel er BEKOMMEN darf. Zwei
     # verschiedene Fragen, und die zweite gehoert nach der ersten.
-    _faktor = _crv_faktor(crv, instrument, kostenklasse)
+    # ⚠️ A5 (23.08.2026): DIE ABSTUFUNG FRAGT DAS ERGEBNIS, NICHT DEN LAUF.
+    #
+    # `_crv_faktor` gilt ausdruecklich NUR FUER SPOT - die Messung vom 03.08.
+    # fand beim Hebel die GEGENLAEUFIGE Antwort (Gate SQN +3,25 gegen +1,25
+    # fuer jede Groessen-Variante). Sie fragte aber `instrument`, und das
+    # heisst fuer Krypto seit S6b immer "spot": eingeschaltet wuerde sie
+    # damit auch jedes Hebel-Signal kuerzen - gegen ihre eigene Messung.
+    #
+    # DAS ETIKETT VORAB, aus dem WUNSCHBETRAG. An dieser Stelle traegt
+    # `betrag` noch den Wunsch, keinen Deckel - damit ist die Groesse
+    # dieselbe wie in `dimensioniere()`, wo `hebel_noetig = verlustanteil /
+    # stop_rel` gar keinen Betrag kennt. Das endgueltige Etikett faellt
+    # weiter unten nach allen Deckeln an; hier geht es nur um die Frage
+    # "Spot oder Hebel", und die haengt am Stopabstand, nicht am Deckel.
+    _handelbar = (bool(hebel_handelbar) if hebel_handelbar is not None
+                  else instrument == "hebel")
+    _noetig_vorab = (risiko_eur / (betrag * stop_rel)
+                     if betrag and stop_rel else 0.0)
+    _etikett_vorab = ("hebel" if _handelbar
+                      and (_noetig_vorab > 1.0 or ist_short) else "spot")
+    _faktor = _crv_faktor(crv, _etikett_vorab, kostenklasse)
     if _faktor < 1.0:
         betrag, grund = betrag * _faktor, f"CRV-Abstufung ({crv:.2f})"
     e["crv_groessenfaktor"] = round(_faktor, 3)
@@ -640,14 +684,31 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # RUECKFALL FUER DIE ALTEN KETTEN: ohne Angabe gilt weiter das Instrument.
     # `hebel_analyst` und Verwandte rufen unveraendert - dort gibt es beide
     # Laeufe noch, und dort ist das Instrument weiterhin eindeutig.
-    _handelbar = (bool(hebel_handelbar) if hebel_handelbar is not None
-                  else instrument == "hebel")
+    # `_handelbar` steht schon oben (A5) - eine zweite Rechnung waere eine
+    # zweite Wahrheit ueber dieselbe Frage.
     hebel_noetig = risiko_eur / (betrag * stop_rel) if betrag and stop_rel else 0.0
     e["hebel_noetig"] = round(hebel_noetig, 2)
     e["hebel_handelbar"] = _handelbar
     # ⚠️ SHORT IST IMMER GEHEBELT - Spot kann nicht leerverkauft werden.
-    e["etikett"] = ("hebel" if _handelbar and (hebel_noetig > 1.0 or ist_short)
-                    else "spot")
+    # ⚠️ DAS ETIKETT HAENGT AM WUNSCH, NICHT AM DECKEL (23.08.2026).
+    #
+    # DER FEHLER, DEN DAS VERHINDERT - sichtbar geworden, als die Eichung von
+    # `voll_ab` geprueft wurde: `hebel_noetig` rechnet mit dem GEDECKELTEN
+    # Betrag. Kuerzt die CRV-Abstufung ihn (800 -> 320 EUR), steigt
+    # `hebel_noetig` von 0,6 auf 1,5 - und aus einem SPOT-Trade wird ein
+    # HEBEL-Trade, allein weil die Position kleiner wurde. Das ist eine
+    # Rueckkopplung, kein Befund.
+    #
+    # ⚠️ SIE TRITT ERST AUF, WENN DIE ABSTUFUNG EINGESCHALTET WIRD (heute
+    # steht `crv_spreizung` auf 1,0). Deshalb faellt sie jetzt auf, nicht
+    # spaeter im Betrieb.
+    #
+    # OB EIN TRADE GEHEBELT IST, ist eine Eigenschaft seiner GEOMETRIE -
+    # Verlustanteil gegen Stopabstand. Genau das rechnet `dimensioniere()`
+    # als `verlustanteil / stop_rel`, ganz ohne Betrag. `_noetig_vorab` oben
+    # ist dieselbe Groesse, aus dem Wunschbetrag.
+    e["etikett"] = ("hebel" if _handelbar
+                    and (_noetig_vorab > 1.0 or ist_short) else "spot")
     if e["etikett"] == "hebel":
         sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
         # DER BETRAG FOLGT DEM RISIKOBUDGET, NICHT DER HEBEL DEM BETRAG

@@ -19322,3 +19322,99 @@ Nutzerentscheidung und braucht die Eichung, nicht die alte Zahl.
 
 **Suite 1.599 · Rollen-Gegenprüfung 25 · Instrument-Verzweigungen 15 (9 tot)
 · Vokabular 16 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+
+---
+
+## Kapitel 147 — A5 und die Eichung von `voll_ab` (23.08.2026)
+
+**Nutzervorgabe:** *„mach die Eichung von voll_ab"* — und der Grundsatz davor:
+
+> ⚠️ *„SPOT-Trades sind nicht ‚frei' in dem Sinn, dass jede Prüfung einen
+> Spot-Handel zulässig macht. **JEDE Entscheidung zu einem Trade soll eine
+> Begründung haben** — je nach Rolle in der Kette. Der Grund ‚das Asset ist in
+> der Zeitschleife dran' ist keine — eine Änderung der Indikatoren oder
+> Marktbedingungen schon."*
+>
+> *„Ohne Uhr werden wir nicht auskommen, sie ist sinnvoll zur **Steuerung** —
+> aber nicht als **Entscheidung**."*
+
+**Als stehende Vorgabe aufgenommen.** Gemessener Ist-Zustand: von 41 Symbolen
+passieren 30 den Fingerabdruck (*eine Änderung*) und **0** den Cooldown (*die
+Uhr*). **Heute entscheidet die Uhr** — das widerspricht dem Grundsatz und
+gehört in die Planung, nicht in diesen Schritt.
+
+### 147.1 ⚠️ A5 war Vorbedingung, nicht Beiwerk
+
+`_crv_faktor` gilt ausdrücklich **nur für Spot**. Die Messung vom 03.08. fand
+beim Hebel die **gegenläufige** Antwort:
+
+| | Gate | größenbasiert |
+|---|---|---|
+| **Hebel** | **SQN +3,25** | +1,25 |
+| **Spot** | +0,63 | **+1,36** |
+
+Sie fragte aber `instrument` — das **Lauf**-Etikett, seit S6b immer „spot".
+⚠️ **Eingeschaltet hätte die Abstufung damit jedes Hebel-Signal gekürzt —
+gegen ihre eigene Messung.**
+
+**Behoben:** sie fragt jetzt das **Ergebnis**-Etikett, vorab aus dem
+Wunschbetrag bestimmt.
+
+### 147.2 ⚠️ Und dabei fiel eine Rückkopplung auf
+
+| Stop | `hebel_noetig` vor der Abstufung | nach der Kürzung |
+|---:|---:|---:|
+| 10 % | 0,60 → **spot** | 1,50 → **hebel** |
+
+**Die Abstufung kürzt den Betrag (800 → 320 €), dadurch steigt `hebel_noetig`,
+und aus einem Spot-Trade wird ein Hebel-Trade — allein weil die Position
+kleiner wurde.** Eine Rückkopplung, kein Befund.
+
+> **Ob ein Trade gehebelt ist, ist eine Eigenschaft seiner GEOMETRIE** —
+> Verlustanteil gegen Stopabstand. Genau das rechnet `dimensioniere()` als
+> `verlustanteil / stop_rel`, ganz ohne Betrag.
+
+**Behoben:** das Etikett hängt am **Wunschbetrag**. Nachgewiesen: bei
+Spreizung 1,0 und 5,0 liefert jeder Stopabstand **dasselbe** Etikett.
+
+⚠️ **Der Fehler wäre erst beim Einschalten aufgetreten** — er fiel nur auf,
+weil die Eichung geprüft wurde.
+
+### 147.3 Die Eichung — gemessen, nicht gewählt
+
+| | alte Kette (n = 944) | Rollen-Kette (n = 1.570) |
+|---|---:|---:|
+| Median | 2,25 | 2,29 |
+| 90 % | **4,00** | **2,79** |
+| Maximum | **15,50** | **3,00** |
+| ≥ 3,0 | 25 % | 3 % |
+| **≥ 6,0** | **3 %** | **0 %** |
+
+> **Die Mediane sind fast gleich — die Spitze fehlt.**
+
+**Was die Abstufung bei welcher Eichung täte** (über 1.570 Signale):
+
+| `voll_ab` | Faktor Median (Spreizung 5) | volle Größe |
+|---:|---:|---:|
+| 6,0 *(alt)* | 26 % | **0 %** |
+| **3,0 *(neu)*** | **43 %** | **5 %** |
+| 2,8 | 49 % | 10 % |
+| 2,5 | 66 % | 18 % |
+
+**Gewählt: 3,0** — es bildet die ursprüngliche Absicht am genauesten nach
+(5 % volle Größe gegen damals 3 %).
+
+⚠️ **Nicht die Abstufung war falsch, sondern ihre Eichung.**
+
+### 147.4 ⚠️ Was ausdrücklich NICHT getan wurde
+
+**`crv_spreizung` steht weiter auf 1,0 — die Abstufung ist AUS.**
+
+> **Die Eichung ist die Vorbereitung, nicht die Inbetriebnahme.** Das
+> Einschalten ist eine Entscheidung des Nutzers und ändert Positionsgrößen.
+
+Zwei Dauerprüfungen halten beides fest.
+
+**Suite 1.606 · Rollen-Gegenprüfung 25 · Instrument-Verzweigungen 15 (9 tot)
+· `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
