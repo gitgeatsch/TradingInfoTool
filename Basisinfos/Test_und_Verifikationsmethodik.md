@@ -3619,3 +3619,29 @@ Zeilen, die der alte Filter endgültig abgelegt hat?* Wenn ja, braucht es eine
 
 ⚠️ **Und die Erwartung gehört gemessen, nicht angenommen.** Meine Aussage
 stand vier Tage unwidersprochen in der Doku, weil niemand nachgesehen hat.
+
+
+### `pruefe_instrument_verzweigungen.py` — jede Verzweigung am Instrument
+
+**Auslöser:** ein Lauf wird entfernt, hinzugefügt oder umbenannt; oder eine
+neue Bedingung `instrument == …` wird gebaut.
+
+**Was es prüft.** Über den Syntaxbaum aller Module der neuen Kette: jede
+Verzweigung am `instrument` muss ein **Urteil** tragen — `lebt` (bekommt das
+Ergebnis-Etikett) oder `tot` (bekommt das Lauf-Etikett). Eine Stelle ohne
+Urteil lässt die Prüfung durchfallen.
+
+**Warum es das gibt (23.08.2026).** S6b hat den zweiten Lauf entfernt: Krypto
+läuft nur noch mit `instrument="spot"`. Jede Bedingung `instrument == "hebel"`
+ist damit **toter Code** — und **keine davon wird rot**, sie tut einfach nichts
+mehr. Gefunden wurden sie einzeln und zu spät:
+
+| | |
+|---|---|
+| Cooldown-Topf des Hebel-Laufs | Produktion drei Stunden stumm |
+| Finanzierungsrate, Liquidationsabstand | fehlten im Lagebild |
+| ⚠️ `rechne()` | rechnet den Hebel aus dem Lauf — seit S6b **immer 1,0** |
+| ⚠️ `felder_aus_entscheidung()` | schreibt die `hebel`-Spalte nie — Topf und Cooldown tot |
+
+**Stand:** 14 Stellen, 11 für Krypto tot. Einzeln:
+`python pruefe_instrument_verzweigungen.py`.

@@ -14,7 +14,7 @@ Fleckerlteppich."*
 | | |
 |---|---|
 | **Was filtert heute wirklich** | eine **Uhr** (Cooldown), nicht eine Aussage |
-| **Was der Vorfilter H leistet** | in 51 Beobachtungen **null** H-Urteile — als Filter würde er alles blockieren |
+| **Was der Vorfilter H leistet** | ⚠️ **gemessen +0,15 R je Trade** über 523 Reihen (Kapitel 119–124). Der Schatten zeigt an einem Tag 0 von 51 — das ist ein Tag, keine Widerlegung |
 | **Was den Hebel entscheidet** | seit S6b **nichts** — er ist immer 1,0 |
 | **Was das System an Auswahl kann** | Trefferquote **27,8 %** gegen Basisrate **33,3 %** |
 | **Fleckerlteppich, gemessen** | **5 Module** laufen nirgends, **8** nur außerhalb der Kette, **27 config-Schlüssel** liest niemand |
@@ -153,15 +153,27 @@ verlangt relative Zahlen ausdrücklich (Kapitel 144).
 
 | Schatten | Zeilen | was er sagt |
 |---|---:|---|
-| **`vorfilter_schatten` (V1/H)** | 51 | ⚠️ **49× „nicht_h", 2× unbestimmbar, 0× „h"** |
+| **`vorfilter_schatten` (V1/H)** | 51 | 49× „nicht_h", 2× unbestimmbar, 0× „h" — ⚠️ **ein Tag, und der Grund fehlte im Export** |
 | `veto_schatten_performance` | 719 (Hebel, alte Kette) | Vetos nach Grund |
 | `selbst_gewaehltes_halten` | 42 | HALTEN-Entscheidungen |
 | `zai_richtung_performance_schatten` | 127 | Rolle G, alte Kette |
 | `kapitel93.rangplatz` | 27 Felder | t = 3,2 bei Schwelle 3,11 — **knapp** |
 
-> ⚠️ **Der Vorfilter H hat in einem vollen Tag kein einziges Mal gegriffen.**
-> Als Filter eingeschaltet würde er **alles** blockieren. Das ist kein Fehler
-> im Code — H ist schlicht fast nie erfüllt.
+> ⚠️ **KORREKTUR (Nutzereinwand, 23.08.).** Ich hatte daraus geschlossen, H
+> würde „die Kette schließen". **Das war falsch, und zwar dreifach:**
+>
+> 1. **`h = True` ist erreichbar** — auf echten Markenstrukturen nachgeprüft
+>    (frei ✔, gedeckt ✔). Mein Gegentest war falsch aufgebaut: er benutzte
+>    `widerstand`/`unterstuetzung`, `bewerte()` liest `oben`/`unten`.
+> 2. **H ist gemessen WIRKSAM:** +0,15 R je Trade über **523 Reihen /
+>    19.891 Anker**. Bei Referenz 0,30 %: ohne Filter −0,031 R, **mit H
+>    +0,114 R** (Kapitel 119–124).
+> 3. **51 Zeilen aus EINEM Tag** — und ausgerechnet dem, an dem der Cooldown
+>    fast alles blockiert hat. Gegen 523 Reihen ist das kein Gegenbeweis.
+>
+> **Der echte Mangel war der Export:** `stand()` meldete nur *wieviele*, nicht
+> *warum*. Seit 23.08. meldet er `je_haelfte` (fehlte A oder B?), `je_grund`
+> und `je_instrument`. **Eine Zahl ohne ihr Warum ist kein Befund.**
 
 ### 4.3 Was nicht gemessen wird
 
@@ -222,7 +234,21 @@ hebel_noetig = verlustanteil / stop_rel          Kosten_R = 2 × Gebühr / stop_
 
 **Der Stopabstand entscheidet beides zugleich — in entgegengesetzte Richtung:**
 
-| Stop | Hebel nötig | Kosten in R (0,30 %) | Breakeven | Hürde über Basisrate |
+> ⚠️ **DIE GEBÜHR DES HANDELSPLATZES GEHÖRT NICHT IN DIE BEWERTUNG**
+> (Nutzervorgabe 22.08.). Ein Trade wird **neutral** beurteilt — mit der
+> **Referenz 0,30 %**. Der Bitpanda-Satz von 1,50 % gehört ausschließlich in
+> die **Geldrechnung der Mail**, wo der Nutzer sieht, was ihn ein Trade
+> tatsächlich kostet.
+>
+> **Warum die Trennung trägt:** *„Es gibt den besseren Trade. Ob er sich
+> rechnet, entscheidet allein der Handelsplatz."* (Kapitel 119.3). Wer den
+> Betriebssatz in die Bewertung mischt, verwirft gute Trades wegen einer
+> Eigenschaft, die nichts mit ihnen zu tun hat — und macht den Handelsplatz
+> unsichtbar, statt ihn zur Entscheidung zu machen.
+
+**Alle Zahlen hier zur Referenz 0,30 %:**
+
+| Stop | Hebel nötig | Kosten in R | Breakeven | Hürde über Basisrate |
 |---:|---:|---:|---:|---:|
 | 2,5 % | 2,40 | 24,0 % | 41,3 % | **+8,0 Punkte** |
 | 6,0 % | 1,00 | 10,0 % | 36,7 % | +3,4 Punkte |
@@ -239,8 +265,9 @@ hebel_noetig = verlustanteil / stop_rel          Kosten_R = 2 × Gebühr / stop_
 | **SPOT — „Bodenbildung oder Tod"** | weit | 1,0 | **+0,8 Punkte** |
 | **HEBEL — „kurzfristige Chance"** | eng | > 1 | **+8,0 Punkte** |
 
-⚠️ **Bei Bitpanda-Gebühr (1,50 %) ist der enge Stop nicht handelbar:**
-Kosten_R = 120 %.
+⚠️ **Das ist eine Aussage über den TRADE, nicht über den Handelsplatz.** Was
+ein enger Stop beim Betriebssatz kostet, gehört in die Mail — nicht in die
+Frage, ob der Trade gut ist.
 
 **Die daraus folgende, nie gestellte Messfrage:** ist die Trefferquote über
 die Stopklassen **gleich**? Wenn ja, sind weite Stops arithmetisch überlegen,
@@ -271,6 +298,24 @@ die Stopklassen **gleich**? Wenn ja, sind weite Stops arithmetisch überlegen,
 | **4** | **Stopklassen-Messung** | die aussichtsreichste offene Frage — braucht Fälle |
 | **5** | **E-2** (Risikofrage) | Geldfrage |
 
-⚠️ **Was ich NICHT vorschlage:** die Wahrscheinlichkeit jetzt an die Auswahl
-hängen, oder den Vorfilter H scharf schalten. **H hat in 51 Beobachtungen
-null Treffer** — er würde die Kette schließen, nicht schärfen.
+⚠️ **KORRIGIERTE EMPFEHLUNG (Nutzereinwand 23.08.).**
+
+Hier stand: *„den Vorfilter H nicht scharf schalten, er hat null Treffer."*
+**Das war falsch** — und es hätte die einzige Größe stillgelegt, die im
+ganzen Projekt den Zufall messbar schlägt:
+
+| über 523 Reihen / 19.891 Anker, Referenz 0,30 % | |
+|---|---:|
+| ohne Filter | −0,031 R |
+| **mit H** | **+0,114 R** |
+| Vorsprung | **+0,15 R je Trade** |
+
+**H gehört damit auf die Liste — an welcher Stelle, ist die offene Frage.**
+Der Schatten muss erst zeigen, wie oft H auf der *Watchlist* zutrifft; die
+Messung lief auf 523 Reihen, die Watchlist hat 57 Symbole, und Kapitel 124
+hält ausdrücklich fest, dass der Nachweis auf 29 Symbolen **nicht
+bestätigbar** ist.
+
+⚠️ **Was ich weiterhin NICHT vorschlage:** die Wahrscheinlichkeit an die
+Auswahl zu hängen. Sie fasst mehrere Beiträge zusammen, von denen bisher nur
+einer trägt — sie würde H verwässern, nicht verstärken.

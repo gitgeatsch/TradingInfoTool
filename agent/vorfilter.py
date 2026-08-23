@@ -280,6 +280,34 @@ def stand(conn) -> dict:
                "hinweis": ("V1 schreibt nur mit. Die Auswertung braucht "
                            "aufgeloeste Signale - ohne signal_id ist eine "
                            "Zeile fuer den Vergleich verloren.")}
+        # ⚠️ WARUM NICHT, NICHT NUR WIEVIELE (23.08.2026).
+        #
+        # DER ANLASS WAR EINE FALSCHE AUSSAGE VON MIR. Der Export meldete
+        # "51 Zeilen, 49 nicht_h, 0 h", und ich habe daraus geschlossen, H
+        # wuerde "die Kette schliessen". Der Nutzer hat widersprochen, und er
+        # hatte recht: `h=True` ist auf echten Marken problemlos erreichbar -
+        # nachgeprueft. Die Zahl allein sagt nichts darueber, WORAN es lag.
+        #
+        # H = A und B. Faellt es aus, gehoert dazu, WELCHE der beiden Haelften
+        # fehlte - "kein freier Weg" ist etwas anderes als "kein Traeger ueber
+        # dem Stop", und beides etwas anderes als "keine Marken ermittelt".
+        aus["je_haelfte"] = {r[0]: r[1] for r in conn.execute(
+            f"SELECT CASE WHEN h = 1 THEN 'H erfuellt' "
+            f"            WHEN frei = 1 AND gedeckt = 0 THEN 'nur A: Weg frei,"
+            f" kein Traeger ueber dem Stop' "
+            f"            WHEN frei = 0 AND gedeckt = 1 THEN 'nur B: Traeger "
+            f"da, Widerstand unter dem Ziel' "
+            f"            WHEN frei = 0 AND gedeckt = 0 THEN 'weder noch' "
+            f"            ELSE 'nicht bestimmbar' END, COUNT(*) "
+            f"FROM {_TABELLE} GROUP BY 1 ORDER BY 2 DESC")}
+        aus["je_grund"] = {(r[0] or "(ohne Grund)"): r[1] for r in
+                           conn.execute(
+            f"SELECT grund, COUNT(*) FROM {_TABELLE} "
+            f"WHERE h IS NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8")}
+        aus["je_instrument"] = {f"{r[0] or '?'}/{r[1] or '?'}": r[2]
+                                for r in conn.execute(
+            f"SELECT assetklasse, instrument, COUNT(*) FROM {_TABELLE} "
+            f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 8")}
         if not n:
             aus["WARNUNG"] = (
                 "KEINE Zeile. Der Vorfilter-Schatten schreibt nicht - jeder "

@@ -144,15 +144,27 @@ auf volle Auslastung zu kommen.
 
 `Kosten_R = 2 × Gebühr / Stopabstand`. Der Stopabstand steht im **Nenner**:
 
-| Stop | Hebel nötig | Kosten in R (0,30 %) | Kosten in R (1,50 %) | Breakeven-Trefferquote¹ |
-|---:|---:|---:|---:|---:|
-| 2,5 % | 2,40 | **24,0 %** | **120,0 %** | **41,3 %** |
-| 4,0 % | 1,50 | 15,0 % | 75,0 % | 38,3 % |
-| 6,0 % | 1,00 | 10,0 % | 50,0 % | 36,7 % |
-| 12,0 % | 0,50 | 5,0 % | 25,0 % | 35,0 % |
-| 25,0 % | 0,24 | **2,4 %** | **12,0 %** | **34,1 %** |
+> ⚠️ **DIE GEBÜHR DES HANDELSPLATZES GEHÖRT NICHT IN DIE BEWERTUNG**
+> (Nutzervorgabe 22.08.). Ein Trade wird **neutral** beurteilt — mit der
+> **Referenz 0,30 %**. Der Bitpanda-Satz von 1,50 % gehört ausschließlich in
+> die **Geldrechnung der Mail**, wo der Nutzer sieht, was ihn ein Trade
+> tatsächlich kostet.
+>
+> **Warum die Trennung trägt:** *„Es gibt den besseren Trade. Ob er sich
+> rechnet, entscheidet allein der Handelsplatz."* (Kapitel 119.3). Wer den
+> Betriebssatz in die Bewertung mischt, verwirft gute Trades wegen einer
+> Eigenschaft, die nichts mit ihnen zu tun hat — und macht den Handelsplatz
+> unsichtbar, statt ihn zur Entscheidung zu machen.
 
-*¹ bei Referenzgebühr 0,30 %, CRV 2,0. Basisrate ohne Kosten: **33,3 %**.*
+**Deshalb steht hier nur die Referenz** (CRV 2,0, Basisrate 33,3 %):
+
+| Stop | Hebel nötig | Kosten in R | Breakeven-Trefferquote |
+|---:|---:|---:|---:|
+| 2,5 % | 2,40 | **24,0 %** | **41,3 %** |
+| 4,0 % | 1,50 | 15,0 % | 38,3 % |
+| 6,0 % | 1,00 | 10,0 % | 36,7 % |
+| 12,0 % | 0,50 | 5,0 % | 35,0 % |
+| 25,0 % | 0,24 | **2,4 %** | **34,1 %** |
 
 > **Ein enger Stop braucht den Hebel UND kostet in R am meisten.**
 
@@ -180,8 +192,9 @@ schon stehen:**
 3. **Er braucht eine eigene Rechtfertigung**: einen Anlass, der den engen Stop
    trägt. Genau das ist die Rolle eines Vorfilters, der etwas *aussagt* —
    nicht einer Uhr.
-4. ⚠️ **Und er braucht die Referenzgebühr.** Bei 1,50 % ist die Frage
-   akademisch.
+4. ⚠️ **Die Gebühr ist keine Eigenschaft des Trades.** Ob sich ein guter
+   Trade beim eigenen Handelsplatz rechnet, ist eine zweite, getrennte
+   Frage — sie gehört in die Mail, nicht in die Bewertung.
 
 **Wo das in der Kette landet:** die Strategie (`einstieg` / `swing` /
 `akkumulation`) ist die vorhandene, aber **tote** Stelle dafür —
@@ -253,8 +266,12 @@ seit dem 16.08.
 | Rangplatz | trägt **negativ** (−5,8 Punkte innerhalb H) |
 
 ⚠️ **Die Anforderung ist damit nicht „das System besser machen", sondern
-zuerst: eine Größe finden, die überhaupt trennt.** Bisher trennt nur das
-Momentum Einstieg von Halten, und auch das nicht über die Kosten hinweg.
+zuerst: eine Größe finden, die überhaupt trennt.**
+
+**Und eine gibt es bereits: H.** Über 523 Reihen und 19.891 Anker gemessen —
+zur Referenz **−0,031 R ohne Filter gegen +0,114 R mit H**, also **+0,15 R je
+Trade**. ⚠️ Das ist die einzige Größe des Projekts, die den Zufall messbar
+schlägt. Sie ist gebaut (`vorfilter.py`) und **entscheidet nichts**.
 
 **Was sich aus Teil B ergibt und noch nie geprüft wurde:**
 
