@@ -2860,7 +2860,16 @@ def paket_b1() -> None:
     # mitmachen, sonst meldet er einen Durchsatz, den der scharfe
     # Betrieb nie erreicht (dieselbe Lehre wie bei `asset_schalter`,
     # O-38 am 16.08.).
-    _k = _awt["k"] if _awt["aktiv"] else len(symbole)
+    # ⚠️ DER BESTAND PASSIERT DIE AUSWAHL IMMER (23.08.2026). Bei einem
+    # gehaltenen Wert lautet die Frage "halten oder verkaufen" - die
+    # stellt sich unabhaengig vom Rangplatz. BTC, ETH und LINK sind hier
+    # im Bestand, also kommen alle drei zum Urteil; die Auswahl verwirft
+    # niemanden. Genau das ist gewollt, und die Erwartung folgt ihm.
+    _durch = {s for s in symbole
+              if s in (_awt.get("gewaehlt") or set())
+              or (RE.bestand(s, "data/tradinginfotool.db", "spot")
+                  or (0,))[0]}
+    _k = len(_durch) if _awt["aktiv"] else len(symbole)
     pruefe(P, "alle Symbole gehen hinein, nur die gewaehlten kommen zum Urteil",
            d.hinein == len(symbole)
            and d.bestanden_je_stufe["urteil"] == _k,
@@ -2871,7 +2880,8 @@ def paket_b1() -> None:
            "eine Stufe, die verwirft und es nicht zaehlt, macht die "
            "Summe unauffindbar")
     pruefe(P, "ein NICHTS_TUN faellt bei der Aktion heraus",
-           d.verloren_je_stufe["aktion"] == _k - 1)
+           d.verloren_je_stufe["aktion"] == _k - 1,
+           f"{_k} kamen zum Urteil, einer davon kauft")
     pruefe(P, "fuer den Einstieg entsteht eine Mail", len(erg["mails"]) == 1)
     pruefe(P, "der Entscheider zaehlt, nimmt aber nichts heraus",
            d.heraus == 1 and d.verloren_je_stufe["entscheider"] >= 0)

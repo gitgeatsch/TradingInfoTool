@@ -21650,3 +21650,63 @@ die Bedingung erfuellt, hoechstens 2".
 ⚠️ K4 ist der einzige Punkt, an dem ich widerspreche, wenn er allein staende:
 die Messung sagt, dass ein reines Kriterium den Vorteil verschenkt. Als
 Obergrenze ueber einer Bedingung behaelt es beides.
+
+
+[2026-08-23] ABHAENGIGKEITSPRUEFUNG VOR K1-K4 - ZWEI DEFEKTE AN A1 GEFUNDEN
+
+⚠️ NUTZERVORGABE, und sie hat sich sofort bezahlt gemacht: "bevor wir hier
+bauen - sind das Teile des urspruenglichen Plans? Wenn nein, muss dies mit
+diesem abgeglichen sein und VORAB ueber alle Aktionen und Abhaengigkeiten
+geprueft sowie die Auswirkungen bewertet werden."
+
+⚠️⚠️ FUND 1: A1 NAHM DEN GESAMTEN BESTAND AUS DER KETTE. `_sende_ausstieg`
+haengt INNERHALB von `_ein_asset` hinter dem Urteil - wer die Auswahl nicht
+passiert, kommt nie zum Urteil, und damit haette die gesamte VERKAUFSSEITE
+geschwiegen. GEMESSEN: von 24 Bestandspositionen waeren 21 nicht mehr beurteilt
+worden (krypto 14 von 15, etf 6 von 7, aktien 1 von 2).
+
+⚠️ UND ES STAND IM EIGENEN DOKUMENT: "Bestand ist nicht Teil von A1 - das ist
+die Verkaufsfrage." Die Konsequenz habe ich beim Bau nicht gezogen: WAS NICHT
+TEIL DER AUSWAHL IST, DARF VON IHR AUCH NICHT GESPERRT WERDEN.
+BEHOBEN: wer Bestand hat, passiert die Auswahl-Stufe immer.
+
+⚠️⚠️ FUND 2: DIE LEERLAUFWACHE UND A1 ARBEITEN GEGENEINANDER. LEERLAUF_ABBRUCH
+= 8 haelt den Lauf nach acht Aufrufen ohne Signal an (Deadloop-Bremse). Die
+Warteschlange stellt den BESTAND NACH VORN (Nutzerentscheidung). Ein HALTEN
+erzeugt KEIN Signal - also zaehlt jede gehaltene Position als Leerlauf. Sind
+acht faellig, haelt der Lauf an, BEVOR die zwei ausgewaehlten Kandidaten
+ueberhaupt gefragt werden. Im Probelauf genau so passiert: "8 Aufrufe in Folge
+ohne Ergebnis - Lauf angehalten", hinein 8 von 41.
+
+Das ist die UMKEHRUNG dessen, wofuer A1 gebaut ist: die Einstiegsseite
+verstummt. Vor A1 fiel es nicht auf, weil der Bestand demselben Cooldown
+unterlag - erst die Bestandsausnahme aus Fund 1 macht die Haeufung moeglich.
+
+⚠️ DIE BEHEBUNG IST EINE ENTSCHEIDUNG, KEINE REPARATUR - eine
+Sicherheitsmechanik aendere ich nicht im Vorbeigehen. L1: die Wache zaehlt nur
+Nicht-Bestand (ein HALTEN auf einer gehaltenen Position ist eine GUELTIGE
+Antwort, kein Leerlauf) · L2: Kandidaten vor den Bestand stellen (widerspricht
+der Nutzerentscheidung "Bestand zuerst") · L3: die Zahl anheben (verschiebt das
+Problem). EMPFEHLUNG L1, ENTSCHEIDUNG BEIM NUTZER.
+
+ABGLEICH MIT DEM PLAN, je Punkt:
+  K1 Trichter in die Auswahl - NICHT im Plan. ⚠️ Und die eigene Messung spricht
+     dagegen: der Trichter misst die SCHWANKUNGSBREITE, "Rang nach
+     Trichterbreite" ist fast "Rang nach Volatilitaet" - und volatilitaet trug
+     heute frueh nicht (-0,073 / -0,207). VOR JEDEM BAU ZU MESSEN.
+  K2 Auswahl je Strategie - IM PLAN (Konzept 10, Reparaturliste D1, Gesamtplan
+     G2), aber blockiert durch S-1 und beim Hebel ohne Gegenstand.
+  K3 Bestand getrennt - im Plan als B1/B2/B3, nicht als Teil der Auswahl. War
+     der Fund oben, ist behoben; offen bleibt die Verkaufsseite selbst.
+  K4 Quote als Obergrenze - nicht im Plan, aber eine Korrektur INNERHALB von
+     A1, klein und ohne Abhaengigkeiten.
+
+REIHENFOLGE DARAUS: 1. L1 entscheiden (ohne sie ist A1 NICHT AUSROLLBAR) ·
+2. B1/B2 Verkaufsseite (durch Fund 1 bestaetigt: der Bestand ist jetzt IMMER in
+der Kette, und dort steht ein 17-Zeichen-Stummel) · 3. K4 · 4. K1 MESSEN, nicht
+bauen · 5. K2 nach S-1.
+
+Suite 1.633 ALLE BESTANDEN, freie Namen 0, simuliere_kette 3 Gruppen, 5
+Signale, 6 Mails, 0 Fehler. Paket B1 mitgezogen: es erwartete, dass nur die
+Gewaehlten zum Urteil kommen - seit der Bestandsausnahme stimmt das
+absichtlich nicht mehr.

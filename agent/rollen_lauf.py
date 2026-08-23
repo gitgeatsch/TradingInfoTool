@@ -905,7 +905,33 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # SIE STEHT NACH DER ANLASS-BUCHUNG, damit die Anlass-Messung ihre
         # Beobachtung fuer ALLE Symbole weiterschreibt. Eine Auswahl, die
         # der Messung die Grundmenge nimmt, macht sich selbst unpruefbar.
-        if (auswahl or {}).get("aktiv"):
+        # ⚠️ DER BESTAND PASSIERT IMMER (23.08.2026, gefunden bei der
+        # Abhaengigkeitspruefung, die der Nutzer VOR dem Weiterbauen
+        # verlangt hat).
+        #
+        # DER FEHLER, DEN DAS BEHEBT: die Auswahl beantwortet die
+        # Frage "welchen soll ich KAUFEN". Bei einem gehaltenen Wert
+        # lautet die Frage aber "halten oder verkaufen" - und die
+        # stellt sich unabhaengig davon, ob er heute unter den besten
+        # zwei ist. Ohne diese Ausnahme faellt die gesamte
+        # Verkaufsseite aus der Kette.
+        #
+        # GEMESSEN, nicht befuerchtet: von 24 Bestandspositionen ueber
+        # alle Gruppen waeren 21 nicht mehr beurteilt worden - 14 von
+        # 15 bei Krypto, 6 von 7 bei ETF, 1 von 2 bei Aktien.
+        #
+        # ⚠️ UND ES STAND SCHON IM EIGENEN DOKUMENT: "Bestand ist
+        # nicht Teil von A1 - das ist die Verkaufsfrage." Die
+        # Konsequenz daraus habe ich beim Bau nicht gezogen: was nicht
+        # Teil der Auswahl ist, darf von ihr auch nicht gesperrt
+        # werden.
+        _hat_bestand = False
+        try:
+            _m, _e = RE.bestand(symbol, db, instrument)
+            _hat_bestand = bool(_m and float(_m) > 0)
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Bestandspruefung fuer %s ausgefallen", symbol)
+        if (auswahl or {}).get("aktiv") and not _hat_bestand:
             if symbol not in (auswahl.get("gewaehlt") or set()):
                 from agent import auswahl as _AW2
                 durchlauf.verloren(symbol, "auswahl",
