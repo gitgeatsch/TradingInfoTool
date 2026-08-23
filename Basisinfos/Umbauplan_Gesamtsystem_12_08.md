@@ -18162,6 +18162,13 @@ Kommentar dort sagt warum: *„gemischt wäre ein Urteil."* Das ist eine
 getroffene Entscheidung, kein Versäumnis — die Zählung ist der zulässige
 Ersatz.
 
+> ⚠️ **KORREKTUR (23.08., Bestandsaufnahme).** Die Folgerung stimmt, die
+> Begründung war falsch: **`szenario_fakten` läuft überhaupt nicht.** Das
+> Modul ist von `main.py` aus nicht erreichbar — zusammen mit
+> `szenario_analyst`, `szenario_entscheidung` und `szenario_gegenpruefer` eine
+> Vier-Modul-Familie ohne Aufrufer. Der Deckel hat keine Eingabe, weil es die
+> Quelle im Betrieb **gar nicht gibt**, nicht weil sie anders formuliert.
+
 **Gegenszenario.** `_FORECAST` mit `probability_pct` gehört zu
 `baue_signal_schema()`, dem Schema der **alten** Kette. Die neue fragt keine
 Prozentzahl ab, und das ist die stehende Vorgabe („keine Zahlen in die
