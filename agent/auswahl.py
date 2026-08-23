@@ -209,3 +209,118 @@ def saetze(auswahl: dict, symbol: str, zustand: dict | None = None) -> list:
             f"Handelstage. Diese Angabe sperrt nichts - sie wird "
             f"mitgeschrieben, um sie spaeter an Ergebnissen zu pruefen.")
     return zeilen
+
+
+# ===========================================================================
+# DER SCHATTEN: was die Auswahl empfohlen haette - und was die Kette daraus
+# gemacht hat (23.08.2026, Nutzerauftrag "Auswahl gegen Kette mitschreiben").
+# ===========================================================================
+#
+# ⚠️ WARUM DAS DIE WICHTIGERE HAELFTE IST. Die Auswahl ist ueber die Historie
+# gemessen (30,7 Empfehlungen je Jahr, 44 % nach Kosten positiv). Was FEHLT,
+# ist die Gegenprobe: macht die Kette daraus etwas Besseres oder etwas
+# Schlechteres? Ohne diese Zeile gibt es dafuer keine Basislinie - und dann
+# laesst sich nie sagen, ob die LLM-Ebene ihren Platz verdient.
+#
+# ⚠️ EINE ZEILE JE SYMBOL, NICHT NUR JE GEWAEHLTEM. Eine Luecke ohne Eintrag
+# sieht spaeter aus wie ein Tag, an dem es das Symbol nicht gab - dieselbe
+# Lehre wie bei `lebendigkeit`, wo ein Ausfall als `fehler` geschrieben wird
+# statt als Nichts.
+_TABELLE = "auswahl_schatten"
+
+
+def _tabelle(conn) -> bool:
+    import sqlite3
+    try:
+        conn.execute(
+            f"""CREATE TABLE IF NOT EXISTS {_TABELLE} (
+                    id INTEGER PRIMARY KEY,
+                    lauf TEXT NOT NULL,
+                    gruppe TEXT NOT NULL,
+                    symbol TEXT NOT NULL,
+                    platz INTEGER,
+                    von INTEGER,
+                    k INTEGER,
+                    gewaehlt INTEGER NOT NULL,
+                    entwicklung REAL,
+                    marktzustand REAL,
+                    aktion TEXT,
+                    UNIQUE (lauf, gruppe, symbol))""")
+        conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{_TABELLE}_lauf "
+                     f"ON {_TABELLE}(lauf, gruppe)")
+        conn.commit()
+        return True
+    except sqlite3.Error as exc:
+        logger.info("Auswahl-Schattentabelle nicht anlegbar: %s", exc)
+        return False
+
+
+def schreibe_lauf(conn, *, auswahl: dict, gruppe: str, symbole,
+                  zustand: dict | None = None, jetzt: str | None = None):
+    """Eine Zeile je Symbol dieses Laufs. Gibt die Laufkennung zurueck.
+
+    Faellt sie aus, fehlt ein Messpunkt - NIE ein Signal. Deshalb faengt sie
+    breit ab und meldet nur."""
+    import sqlite3
+    from datetime import datetime, timezone
+
+    if conn is None or not _tabelle(conn):
+        return None
+    lauf = jetzt or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    platz = (auswahl or {}).get("platz") or {}
+    gewaehlt = (auswahl or {}).get("gewaehlt") or set()
+    entw = (auswahl or {}).get("entwicklung") or {}
+    try:
+        conn.executemany(
+            f"INSERT OR IGNORE INTO {_TABELLE} (lauf, gruppe, symbol, platz, "
+            f"von, k, gewaehlt, entwicklung, marktzustand) "
+            f"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [(lauf, str(gruppe), str(s).upper(),
+              (platz.get(s) or (None, None))[0],
+              (platz.get(s) or (None, None))[1],
+              (auswahl or {}).get("k"), 1 if s in gewaehlt else 0,
+              entw.get(s), (zustand or {}).get("abstand"))
+             for s in (symbole or [])])
+        conn.commit()
+        return lauf
+    except sqlite3.Error as exc:
+        logger.info("Auswahl-Schatten fuer %s nicht schreibbar: %s",
+                    gruppe, exc)
+        return None
+
+
+def vermerke_aktion(conn, *, lauf: str, gruppe: str, symbol: str,
+                    aktion: str) -> bool:
+    """Was die Kette aus dem gewaehlten Wert gemacht hat.
+
+    ⚠️ NUR DIE GEWAEHLTEN KOENNEN EINE AKTION HABEN - die uebrigen sind gar
+    nicht erst befragt worden. `aktion IS NULL` heisst deshalb "nicht
+    gefragt", nicht "keine Antwort". Der Unterschied ist genau der, den das
+    Projekt am 14.08. beim Cooldown gelernt hat."""
+    import sqlite3
+    if conn is None or not lauf:
+        return False
+    try:
+        conn.execute(f"UPDATE {_TABELLE} SET aktion = ? "
+                     f"WHERE lauf = ? AND gruppe = ? AND symbol = ?",
+                     (str(aktion or ""), lauf, str(gruppe),
+                      str(symbol).upper()))
+        conn.commit()
+        return True
+    except sqlite3.Error as exc:
+        logger.info("Auswahl-Schatten %s nicht ergaenzbar: %s", symbol, exc)
+        return False
+
+
+def stand(conn) -> dict:
+    """Wieviel liegt vor? Fuer die Diagnose - und um zu sehen, ab wann der
+    Vergleich ueberhaupt auswertbar ist."""
+    import sqlite3
+    try:
+        n, laeufe, gewaehlt, mit_aktion = conn.execute(
+            f"SELECT COUNT(*), COUNT(DISTINCT lauf), SUM(gewaehlt), "
+            f"SUM(aktion IS NOT NULL) FROM {_TABELLE}").fetchone()
+    except sqlite3.Error:
+        return {"zeilen": 0, "laeufe": 0, "gewaehlt": 0, "mit_aktion": 0}
+    return {"zeilen": n or 0, "laeufe": laeufe or 0,
+            "gewaehlt": gewaehlt or 0, "mit_aktion": mit_aktion or 0}

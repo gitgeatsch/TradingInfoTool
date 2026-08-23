@@ -21407,3 +21407,56 @@ NAECHSTER MESSSCHRITT, billig: je Umlauf mitschreiben, was die mechanische
 Auswahl empfohlen haette und was die Kette daraus gemacht hat. Erst dieser
 Vergleich sagt, ob die LLM-Ebene ihren Platz verdient - gegen eine Basislinie,
 die es vorher nicht gab.
+
+
+[2026-08-23] SCHATTEN GEBAUT: AUSWAHL GEGEN KETTE - und die Klaerung, wie die
+LLM-Ebene ueberhaupt pruefbar ist
+
+Nutzerauftrag: "mach den Vergleich - Auswahl gegen Kette mitschreiben."
+Rueckfrage danach: "wie willst du dann die LLM-Ebene pruefen bzw. simulieren -
+offensichtlich gar nicht?"
+
+⚠️ DIE RUECKFRAGE IST BERECHTIGT UND DIE ANTWORT GEHOERT FESTGEHALTEN. Es gibt
+DREI verschiedene Dinge, die im Wort "simulieren" zusammenfallen:
+
+  1. MECHANIK SIMULIEREN (simuliere_kette.py): aufgezeichnete Antworten,
+     deterministisch. Beweist die VERDRAHTUNG - dass jede Stufe laeuft und
+     jede Zahl in der Mail ankommt. Prueft das MODELL NICHT.
+  2. DAS MODELL PRUEFEN: nur mit echten Aufrufen. Gepaarte Messung auf
+     denselben Ankern, zwei Arme, mehrere Wiederholungen - so misst man die
+     WIRKUNG EINER EINGABEAENDERUNG und mittelt das Rauschen weg. Kostet
+     Kontingent und Stunden, kein Geld (freie Anbieter).
+  3. DAS MODELL GEGEN EINE BASISLINIE MESSEN: der Schatten. Die Produktion
+     ruft ohnehin auf; mitgeschrieben wird, was die mechanische Auswahl
+     empfohlen haette und was die Kette daraus machte. KOSTET NICHTS EXTRA.
+
+⚠️ WAS NICHT GEHT: ein Modell deterministisch nachspielen. Bei bitgleicher
+Eingabe dreht es rund 12 % der Faelle. "Die LLM-Ebene simulieren" im Sinne von
+"ihre Entscheidungen offline reproduzieren" ist unmoeglich - deshalb Weg 2 und
+3 statt eines Nachspielens.
+
+⚠️ UND DARAUS FOLGT ZUR PRODUKTION: sie darf NICHT gestoppt bleiben, sie muss
+LAUFEN - nur mit dem neuen Stand. Der Schatten fuellt sich ausschliesslich aus
+echten Laeufen. Kurz stoppen fuer das Ausrollen, dann weiterlaufen lassen.
+
+GEBAUT: Tabelle `auswahl_schatten` in agent/auswahl.py mit schreibe_lauf(),
+vermerke_aktion(), stand(). EINE ZEILE JE SYMBOL, nicht nur je gewaehltem -
+eine Luecke ohne Eintrag saehe spaeter aus wie ein Tag, an dem es das Symbol
+nicht gab (Lehre aus lebendigkeit). `aktion IS NULL` heisst "nicht gefragt",
+nicht "keine Antwort" - derselbe Unterschied wie beim Cooldown am 14.08.
+
+LESEPROBE NACH METHODIK 2.61 an einem echten Probelauf (Kopie der
+Produktions-DB, 5 Symbole): 5 Zeilen, 1 Lauf, 1 gewaehlt, 1 mit Aktion.
+Gelesen: LINK Rang 1 von 5, gewaehlt, KAUFEN; BTC Rang 2, nicht gewaehlt,
+aktion NULL. Die Tabelle wird also nicht nur angelegt, sondern auch gelesen.
+
+Fuenf neue Dauerpruefungen im Paket "Auswahl", darunter die Leseprobe selbst
+und der Schutz gegen Doppelzaehlung bei einem wiederholten Lauf (UNIQUE ueber
+lauf/gruppe/symbol).
+
+Suite 1.628 ALLE BESTANDEN, freie Namen 0, simuliere_kette 0 Fehler.
+
+⚠️ WANN AUSWERTBAR: der Vergleich braucht aufgeloeste Faelle. Bei 30,7
+Empfehlungen je Jahr und k=2 dauert das - die ersten Aussagen sind Zaehlungen
+(wie oft folgt die Kette der Auswahl, wie oft nicht), die Wirkungsfrage kommt
+spaeter.

@@ -534,6 +534,19 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         logger.exception("Auswahl fuer %s ausgefallen", assetklasse)
         ergebnis.setdefault("fehler", []).append(f"Auswahl: {exc}")
         _auswahl, _markt = {"aktiv": False}, None
+    # DER SCHATTEN (23.08.2026): eine Zeile je Symbol - was die Auswahl
+    # empfohlen haette. Die Aktion der Kette wird spaeter nachgetragen.
+    # ⚠️ NICHT IM TROCKENLAUF: er schreibt grundsaetzlich nichts.
+    _auswahl_lauf = None
+    if betriebsart != TROCKEN:
+        try:
+            _auswahl_lauf = _AW.schreibe_lauf(
+                conn, auswahl=_auswahl, gruppe=assetklasse,
+                symbole=symbole, zustand=_markt)
+        except Exception as exc:                         # noqa: BLE001
+            logger.exception("Auswahl-Schatten nicht geschrieben")
+            ergebnis.setdefault("fehler", []).append(
+                f"Auswahl-Schatten: {exc}")
     ergebnis["auswahl"] = {"aktiv": bool(_auswahl.get("aktiv")),
                            "k": _auswahl.get("k"),
                            "von": _auswahl.get("von"),
@@ -557,6 +570,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        ergebnis=ergebnis, versand=versand,
                        assetklasse=assetklasse, watchlist=_wl,
                        auswahl=_auswahl, marktzustand=_markt,
+                       auswahl_lauf=_auswahl_lauf,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
                                ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
@@ -659,7 +673,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
                pruefe_auftrag, zai_client=None, bilanz=None,
                assetklasse="krypto", watchlist=None,
-               auswahl=None, marktzustand=None) -> None:
+               auswahl=None, marktzustand=None,
+               auswahl_lauf=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht.
 
     `watchlist` wird DURCHGEREICHT, nicht hier geladen (15.08.2026). Meine
@@ -980,6 +995,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
     # --- Stufe: Aktion ---
     aktion = befund.get("aktion")
+    # DER SCHATTEN BEKOMMT SEINE ANTWORT (23.08.2026). Hier steht fest, was
+    # die Kette aus dem gewaehlten Wert gemacht hat - und erst der Vergleich
+    # mit der mechanischen Auswahl sagt, ob die LLM-Ebene etwas beitraegt.
+    if auswahl_lauf:
+        try:
+            from agent import auswahl as _AW4
+            _AW4.vermerke_aktion(conn, lauf=auswahl_lauf,
+                                 gruppe=assetklasse, symbol=symbol,
+                                 aktion=aktion or "")
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Auswahl-Schatten fuer %s nicht ergaenzt", symbol)
 
     # --- Stufe: Ausstieg - DIE VERKAUFSSEITE (14.08.2026) ---------------
     #

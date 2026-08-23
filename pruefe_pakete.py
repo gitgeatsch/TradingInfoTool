@@ -12648,6 +12648,40 @@ def paket_auswahl() -> None:
            any("sperrt nichts" in x for x in _s),
            "A1b ist Schatten: je Jahr gemischt (2024 trennt nicht, 2025 "
            "trennt und verliert trotzdem)")
+    # ---- DER SCHATTEN: eine Zeile je Symbol, nicht nur je Gewaehltem ----
+    #
+    # ⚠️ NACH METHODIK 2.61 wird hier auch GELESEN, nicht nur geschrieben.
+    # Eine Tabelle, die angelegt und nie gelesen wird, ist strukturell blind -
+    # genau der Fall, der am 22.08. die App am Notebook angehalten hat.
+    import sqlite3 as _sq
+    _c = _sq.connect(":memory:")
+    _lauf = _AW.schreibe_lauf(_c, auswahl=a, gruppe="krypto",
+                              symbole=["A", "B", "C", "KURZ"],
+                              zustand={"abstand": -0.12})
+    pruefe(P, "der Schatten schreibt eine Zeile je Symbol",
+           _AW.stand(_c)["zeilen"] == 4,
+           "eine Luecke ohne Eintrag sieht spaeter aus wie ein Tag, an dem es "
+           "das Symbol nicht gab")
+    pruefe(P, "genau die gewaehlten sind als gewaehlt vermerkt",
+           _AW.stand(_c)["gewaehlt"] == 1)
+    _AW.vermerke_aktion(_c, lauf=_lauf, gruppe="krypto", symbol="A",
+                        aktion="KAUFEN")
+    _st = _AW.stand(_c)
+    pruefe(P, "die Aktion der Kette wird nachgetragen und ist LESBAR",
+           _st["mit_aktion"] == 1 and _st["laeufe"] == 1,
+           f"gelesen: {_st}")
+    _zeile = _c.execute("SELECT symbol, platz, gewaehlt, aktion FROM "
+                        "auswahl_schatten WHERE aktion IS NOT NULL").fetchone()
+    pruefe(P, "die gelesene Zeile traegt Rang UND Aktion",
+           _zeile == ("A", 1, 1, "KAUFEN"), str(_zeile))
+    pruefe(P, "ein zweiter Schreibvorgang desselben Laufs verdoppelt nicht",
+           (_AW.schreibe_lauf(_c, auswahl=a, gruppe="krypto",
+                              symbole=["A", "B", "C", "KURZ"],
+                              jetzt=_lauf) or True)
+           and _AW.stand(_c)["zeilen"] == 4,
+           "sonst zaehlt ein wiederholter Lauf dieselbe Empfehlung mehrfach")
+    _c.close()
+
     pruefe(P, "ein nicht gewaehlter Wert bekommt keine Werbezeile",
            not any("besten" in x for x in _AW.saetze(a, "C", None)),
            "die Begruendung des Gewaehlten gehoert nicht in die Mail eines "
