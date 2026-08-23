@@ -586,11 +586,23 @@ def _finanzierung(zusammenfassung: dict | None,
     # KEINE BEWERTUNG (R-T3): "dann zahlen die Long-Positionen an die
     # Short-Positionen" loest die Richtung sachlich auf, statt "hohe Rate"
     # oder "teuer" zu sagen.
+    # ⚠️ R-T11: EIN PERZENTIL OHNE EINORDNUNG IST EINE HALBE ANGABE
+    # (23.08.2026). "Das 71. Perzentil" verlangt vom Leser die Entscheidung,
+    # ob das viel ist - und dieser Leser ist ein Sprachmodell. Jeder andere
+    # Perzentilsatz im Faktentext traegt sein Wort seit dem 17.08.; dieser
+    # war der einzige ohne. Aus DENSELBEN Grenzen, siehe `_umschlag`.
+    from agent.positionierung import EXTREM_OBEN as _OBEN
+    from agent.positionierung import EXTREM_UNTEN as _UNTEN
+
+    wie = ("aussergewoehnlich hoch" if p >= _OBEN else
+           "aussergewoehnlich niedrig" if p <= _UNTEN else
+           "im gewohnten Bereich")
     return [f"Falls ein Hebel noetig wird, kommt die Finanzierung des "
             f"Terminmarkts dazu: sie war in {pos} % der letzten {n} Perioden "
             f"positiv - dann zahlen die Long-Positionen an die "
             f"Short-Positionen. Die aktuelle Rate liegt im {p}. Perzentil "
-            f"dieser {n} Perioden. Bei einem Spot-Kauf faellt sie nicht an."]
+            f"dieser {n} Perioden - {wie}. Bei einem Spot-Kauf faellt sie "
+            f"nicht an."]
 
 
 # Die drei Faktoren, an denen der Abstand zur Zwangsaufloesung abgelesen wird.
@@ -903,10 +915,22 @@ def _umschlag(umschlag: dict | None) -> list[str]:
     anteil, p = u.get("anteil_pct"), u.get("perzentil")
     if anteil is None or p is None:
         return []
-    # DIESELBEN GRENZEN WIE UEBERALL (90/10) - zwei Massstaebe nebeneinander
-    # waeren schlimmer als keiner.
-    wie = ("aussergewoehnlich lebhaft" if p >= 90 else
-           "aussergewoehnlich ruhig" if p <= 10 else "im gewohnten Bereich")
+    # DIESELBEN GRENZEN WIE UEBERALL - zwei Massstaebe nebeneinander waeren
+    # schlimmer als keiner (R-T11).
+    #
+    # ⚠️ IMPORTIERT STATT ABGESCHRIEBEN (23.08.2026). Hier standen die Zahlen
+    # 90 und 10 direkt im Code, mit dem Kommentar "dieselben Grenzen wie
+    # ueberall" - und "ueberall" hiess `positionierung.EXTREM_OBEN/UNTEN`.
+    # Zwei Orte, dieselben Zahlen, keine Verbindung: genau die Kopierfalle,
+    # die dieses Projekt schon bei den Kostensaetzen und beim Aktions-
+    # vokabular bezahlt hat. Wer die Grenze dort verschiebt, verschiebt sie
+    # jetzt auch hier. `positionierung` importiert diese Datei NICHT - kein
+    # Kreisimport.
+    from agent.positionierung import EXTREM_OBEN as _OBEN
+    from agent.positionierung import EXTREM_UNTEN as _UNTEN
+
+    wie = ("aussergewoehnlich lebhaft" if p >= _OBEN else
+           "aussergewoehnlich ruhig" if p <= _UNTEN else "im gewohnten Bereich")
     # ⚠️ DER UMSCHLAG MUSS SICH SELBST BENENNEN (17.08.2026).
     #
     # Hier stand ein Satz OHNE eigenes Hauptwort: "Vom gesamten

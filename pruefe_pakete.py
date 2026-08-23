@@ -10524,6 +10524,30 @@ def paket_dimension() -> None:
            "der ein Hebelgeschaeft unterstellt, widerspricht in vier von "
            "fuenf Mails der eigenen Rechnung")
 
+    # ⚠️ R-T11: JEDES PERZENTIL TRAEGT SEIN WORT (23.08.2026).
+    #
+    # "Das 71. Perzentil" verlangt vom Leser die Entscheidung, ob das viel
+    # ist - und dieser Leser ist ein Sprachmodell. Der Finanzierungssatz war
+    # der EINZIGE im Faktentext ohne Einordnung; alle anderen tragen sie seit
+    # dem 17.08.
+    for _p, _erw in ((95, "aussergewoehnlich hoch"),
+                     (71, "im gewohnten Bereich"),
+                     (5, "aussergewoehnlich niedrig")):
+        _s = " ".join(_LB2._finanzierung(
+            {"beobachtungen": 40, "anteil_positiv_pct": 62, "perzentil": _p},
+            "spot", assetklasse="krypto"))
+        pruefe(P, f"Perzentil {_p} wird als '{_erw}' eingeordnet",
+               _erw in _s, _s[-90:])
+    # ⚠️ UND AUS DENSELBEN GRENZEN. Hier standen 90 und 10 direkt im Code,
+    # mit dem Kommentar "dieselben Grenzen wie ueberall" - und "ueberall"
+    # hiess `positionierung.EXTREM_OBEN/UNTEN`. Zwei Orte, keine Verbindung.
+    pruefe(P, "die Perzentil-Grenzen sind importiert, nicht abgeschrieben",
+           "from agent.positionierung import EXTREM_OBEN"
+           in _quelltext("agent/lagebeschreibung.py")
+           and "if p >= 90" not in _quelltext("agent/lagebeschreibung.py"),
+           "zwei Massstaebe nebeneinander waeren schlimmer als keiner - "
+           "wer die Grenze dort verschiebt, muss sie hier mitverschieben")
+
     # ⚠️ UND KEIN `None` IM PROMPT. Der Satz wurde bisher ungeprueft gebaut -
     # fehlte ein Wert, stand "in None % der letzten 40 Perioden" im
     # Modelltext. Fail-soft ist fail-silent.

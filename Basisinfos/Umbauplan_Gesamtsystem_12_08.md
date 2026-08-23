@@ -18914,3 +18914,125 @@ Hebel herauskommt:
 ⚠️ **Offen und beim Nutzer:** bleibt es bei 800 €, oder soll die Zielgröße
 höher? `risiko_eur = verlustanteil × einsatz_eur` — die Zahl bestimmt Position
 **und** Risiko je Trade in einem.
+
+
+---
+
+## Kapitel 144 — „Keine Zahlen im Prompt"? Die Regel sagt etwas anderes (23.08.2026)
+
+**Nutzerfrage:** *„sollte in den LLM-Prompts eigentlich keine Zahlen stehen —
+prüfe das gegen unsere LLM-Regeln."*
+
+**Berechtigte Frage, und die Antwort ist ein Nein mit Bedingungen.**
+
+### 144.1 Was der Nutzer damals wirklich gesagt hat
+
+Umbauplan 12.1, im Wortlaut:
+
+> *„ganz wichtig — nein, es sollen keine Zahlen in die Ablaufkette bzw. LLM —
+> **aber als Info bzw. wo als Fakt vorhanden und sinnvoll ergänzen**
+> (deterministische Schiene kombiniert)."*
+
+Der Anlass war **mein** Vorschlag, die Faktenlage zu verbreitern (MACD, RSI,
+Funding, Optionsmarkt **roh** zurück in den Prompt). Daraus wurden **zwei
+Schienen**:
+
+| | wer liest es | welche Regeln |
+|---|---|---|
+| **Faktentext** | das Sprachmodell | R-T1…R-T11 |
+| **Faktenblock** | der Nutzer | absolut zuerst, Etikett statt Perzentil |
+
+⚠️ **R-T5 verlangt Zahlen sogar ausdrücklich** — nur relative:
+*„Relative Einheiten statt absoluter. ATR-Vielfache, Prozent vom Durchschnitt
+— das macht Fälle über Assets hinweg vergleichbar."*
+
+**Die Regel ist also nicht „keine Zahlen", sondern:**
+
+| verboten | verlangt |
+|---|---|
+| rohe Zahlenreihen (R-T7) | benanntes Fenster (R-T1) |
+| absolute Etiketten (R-T2) | relative Einheiten (R-T5) |
+| Werturteile (R-T3) | Perzentil **mit** Einordnung (R-T11) |
+| Vorrechnen (R-T10) | kein konstantes Feld (R-T6) |
+
+### 144.2 Und die Prüfung fand einen Verstoß — meinen eigenen
+
+Alle Perzentil-Sätze des Faktentexts durchgegangen: **18 Fundstellen, 14
+tragen ihr einordnendes Wort.** Von den vier ohne sind zwei Legenden **für den
+Nutzer** (`signal_mail`, `schreibweise`) — die andere Schiene, dort gilt R-T11
+nicht.
+
+⚠️ **Es bleibt genau einer, und es ist der Satz, den ich gestern angefasst
+habe:**
+
+> vorher: *„Die aktuelle Rate liegt im 71. Perzentil dieser 40 Perioden."*
+> jetzt: *„… im 71. Perzentil dieser 40 Perioden — **im gewohnten Bereich**."*
+
+R-T11 im Wortlaut: *„Das 92. Perzentil verlangt vom Leser die Entscheidung, ob
+das viel ist."* **Dieser Leser ist ein Sprachmodell.**
+
+### 144.3 ⚠️ Nebenfund: die Grenzen standen zweimal da
+
+```python
+wie = ("aussergewoehnlich lebhaft" if p >= 90 else ...)   # lagebeschreibung
+EXTREM_OBEN, EXTREM_UNTEN = 90, 10                        # positionierung
+```
+
+Der Kommentar daneben sagte *„dieselben Grenzen wie überall"* — und „überall"
+war eine **Handkopie**. R-T11 verlangt ausdrücklich *„aus **denselben**
+Grenzen — zwei Maßstäbe nebeneinander wären schlimmer als keiner."*
+
+Jetzt importiert. `positionierung` importiert `lagebeschreibung` nicht — kein
+Kreisimport.
+
+### 144.4 Was die zwei Hebel-Bausteine gegen die Regeln halten
+
+| Regel | `_hebelgeometrie` | `_finanzierung` |
+|---|---|---|
+| R-T1 Fenster | – (keine Zeitaussage) | ✔ „der letzten 40 Perioden" |
+| R-T2 kein Etikett | ✔ | ✔ |
+| R-T3 keine Bewertung | ✔ | ✔ „dann zahlen die Long an die Short" |
+| R-T5 relativ | ✔ % und ATR-Vielfache | ✔ Anteil und Perzentil |
+| R-T7 keine rohen Reihen | ✔ drei Stützpunkte, keine Reihe | ✔ |
+| **R-T11 Einordnung** | – (kein Perzentil) | ✔ **neu** |
+
+⚠️ **Eine Spannung bleibt benannt:** `_hebelgeometrie` trägt neun Zahlen in
+einem Satz (drei Faktoren × drei Werte). Das ist nah an R-T7. Der Grund steht
+seit dem 19.08. daneben: die Prozentwerte allein wären ein **konstantes Feld**
+(R-T6), erst der ATR-Bezug macht daraus eine Aussage über *dieses* Asset.
+Beides zusammen ist der Kompromiss, und er ist bewusst.
+
+**Suite 1.571 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+### 144.5 Der Einsatz von 800 € ist ein VORLÄUFIGER Wert
+
+**Nutzervorgabe:** *„Dokumentiere, dass die 800 ein vorläufiger Wert ist und
+bei funktionierendem System auch höher werden könnte."*
+
+| | |
+|---|---:|
+| heute für Krypto | **800 €** — der alte **Spot**-Wert |
+| harte Obergrenze | 1.000 € (`GRENZEN["betrag_max_eur"]`, *„500 – max 1000 aktuell"*) |
+| Risiko je Trade daraus | **120 €** (15 % Verlustanteil) |
+
+**Warum es genau eine Zahl sein muss:** `einsatz_eur` geht in
+`dimensioniere()` **hinein**, der Hebel fällt **daraus** an
+(`verlustanteil / stop_rel`). Er kann nicht vom Ergebnis abhängen — die
+Aufteilung 800/1.000 nach Instrument ist mit einem Lauf technisch nicht mehr
+darstellbar.
+
+⚠️ **Die 1.000 war nie ein Standardwert**, sondern die Obergrenze — der
+Hebel-Pfad hat sie nur als Zielgröße benutzt. Das ist der Grund, warum 800 der
+richtige Ausgangspunkt ist und nicht 1.000.
+
+> **Vorläufig, nicht endgültig.** Die 800 € stehen, solange das System seine
+> Auswahl nicht besser trifft als die Basisrate. Sie sind kein Urteil über die
+> richtige Positionsgröße, sondern die vorsichtige Zahl, während die
+> Trefferquote (aktuell **27,8 %** gegen eine Basisrate von 33,3 %, Kapitel
+> 141) noch nichts trägt. **Trägt die Auswahl, gehört die Zahl nach oben
+> geprüft — bis zur Obergrenze und danach über die Obergrenze hinaus.**
+
+**Die Bedingung ist benannt und messbar**, nicht ein Gefühl: erst wenn die
+Trefferquote den Breakeven `(1 + Kosten) / (1 + CRV)` über eine belastbare Zahl
+von Fällen schlägt, ist eine größere Position eine Verbesserung statt eines
+größeren Fehlers.

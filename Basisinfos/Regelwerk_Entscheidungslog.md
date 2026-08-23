@@ -20487,3 +20487,57 @@ sie Krypto AUCH IM SPOT-LAUF erreichen, bei Aktien wegbleiben und nicht mehr
 am Lauf haengen.
 
 Suite 1564, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 144: "KEINE ZAHLEN IM PROMPT"? DIE REGEL SAGT ETWAS ANDERES
+
+Nutzerfrage: "sollte in den LLM-Prompts eigentlich keine Zahlen stehen - pruefe
+das gegen unsere LLM-Regeln." Berechtigt, und die Antwort ist ein Nein mit
+Bedingungen.
+
+WAS DER NUTZER DAMALS WIRKLICH SAGTE (Umbauplan 12.1): "keine Zahlen in die
+Ablaufkette bzw. LLM - ABER als Info bzw. wo als Fakt vorhanden und sinnvoll
+ergaenzen (deterministische Schiene kombiniert)." Anlass war MEIN Vorschlag,
+MACD/RSI/Funding/Optionsmarkt ROH in den Prompt zu nehmen. Daraus wurden ZWEI
+SCHIENEN: Faktentext (Modell, R-T1..R-T11) und Faktenblock (Nutzer).
+
+⚠️ R-T5 VERLANGT ZAHLEN SOGAR AUSDRUECKLICH - nur relative: "Relative Einheiten
+statt absoluter. ATR-Vielfache, Prozent vom Durchschnitt." Verboten sind rohe
+Zahlenreihen (R-T7), absolute Etiketten (R-T2), Werturteile (R-T3) und
+Vorrechnen (R-T10).
+
+UND DIE PRUEFUNG FAND EINEN VERSTOSS - MEINEN EIGENEN. Alle 18 Perzentil-Saetze
+durchgegangen: 14 tragen ihr einordnendes Wort, zwei der uebrigen sind
+Legenden fuer den NUTZER (andere Schiene). Es blieb genau einer: der
+Finanzierungssatz, den ich gestern angefasst habe. R-T11: "Das 92. Perzentil
+verlangt vom Leser die Entscheidung, ob das viel ist" - und dieser Leser ist
+ein Sprachmodell. Jetzt: "im 71. Perzentil dieser 40 Perioden - im gewohnten
+Bereich."
+
+⚠️ NEBENFUND: die Grenzen 90/10 standen ZWEIMAL da - hart in lagebeschreibung
+mit dem Kommentar "dieselben Grenzen wie ueberall", und als EXTREM_OBEN/UNTEN
+in positionierung. "Ueberall" war eine Handkopie. R-T11 verlangt ausdruecklich
+DIESELBEN Grenzen. Jetzt importiert; kein Kreisimport.
+
+SPANNUNG BENANNT: _hebelgeometrie traegt neun Zahlen in einem Satz (drei
+Faktoren x drei Werte), nah an R-T7. Der Grund steht seit dem 19.08. daneben:
+die Prozentwerte allein waeren ein konstantes Feld (R-T6), erst der ATR-Bezug
+macht daraus eine Aussage ueber DIESES Asset. Bewusster Kompromiss.
+
+DER EINSATZ VON 800 EUR IST VORLAEUFIG (Nutzervorgabe): es ist der alte
+SPOT-Wert, die Obergrenze liegt bei 1.000 (GRENZEN["betrag_max_eur"], "500 -
+max 1000 aktuell"), das Risiko je Trade betraegt daraus 120 EUR. Es MUSS genau
+eine Zahl sein - einsatz_eur geht in dimensioniere() hinein, der Hebel faellt
+daraus an; die Aufteilung 800/1.000 nach Instrument ist mit EINEM Lauf
+technisch nicht mehr darstellbar. ⚠️ Die 1.000 war nie ein Standardwert,
+sondern die Obergrenze - deshalb ist 800 der richtige Ausgangspunkt.
+
+VORLAEUFIG, NICHT ENDGUELTIG: die 800 stehen, solange das System seine Auswahl
+nicht besser trifft als die Basisrate. Sie sind kein Urteil ueber die richtige
+Positionsgroesse, sondern die vorsichtige Zahl, waehrend die Trefferquote
+(27,8 % gegen 33,3 % Basisrate, Kapitel 141) noch nichts traegt. Traegt die
+Auswahl, gehoert die Zahl nach oben geprueft. DIE BEDINGUNG IST MESSBAR: erst
+wenn die Trefferquote den Breakeven (1+Kosten)/(1+CRV) ueber eine belastbare
+Zahl von Faellen schlaegt.
+
+Suite 1571, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

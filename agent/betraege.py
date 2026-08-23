@@ -58,6 +58,26 @@ VORGABE_EINSATZ_EUR: dict[str, dict[str, float]] = {
     # nachgezogenen Stop definiert ist und der Nutzer Spot ohne Stop haelt.
     # Ein Betrag fuer ein unmoegliches Paar waere eine Zahl ohne Bedeutung -
     # und ausgerechnet die einzige, die ich geraten hatte.
+    # ⚠️ 800 IST EIN VORLAEUFIGER WERT (Nutzervorgabe 23.08.2026).
+    #
+    # Seit S6b laeuft Krypto mit EINEM Lauf, und `einsatz_eur` geht in
+    # `dimensioniere()` HINEIN, waehrend der Hebel DARAUS anfaellt
+    # (`verlustanteil / stop_rel`). Er kann also nicht vom Ergebnis abhaengen:
+    # die alte Aufteilung 800 (spot) / 1.000 (hebel) ist technisch nicht mehr
+    # darstellbar, es gibt genau eine Zahl je Gruppe und Strategie.
+    #
+    # ⚠️ UND DIE 1.000 WAR NIE EIN STANDARDWERT, sondern die Obergrenze -
+    # `entscheidungsrechnung.GRENZEN["betrag_max_eur"]`, hergeleitet aus
+    # *"500 - max 1000 aktuell"*. Der Hebel-Pfad hat sie nur als Zielgroesse
+    # benutzt. Deshalb ist 800 der Ausgangspunkt und nicht 1.000.
+    #
+    # WANN SIE STEIGEN DARF - und das ist eine MESSBARE Bedingung, kein
+    # Gefuehl: erst wenn die Trefferquote den Breakeven
+    # `(1 + Kosten) / (1 + CRV)` ueber eine belastbare Zahl von Faellen
+    # schlaegt. Heute liegt sie bei 27,8 % gegen eine Basisrate von 33,3 %
+    # (Kapitel 141) - eine groessere Position waere dort ein groesserer
+    # Fehler, keine Verbesserung. Traegt die Auswahl, gehoert die Zahl nach
+    # oben geprueft, bis zur Obergrenze und danach ueber sie hinaus.
     "spot": {"einstieg": 800.0, "akkumulation": 250.0},
     "hebel": {"einstieg": 1000.0, "swing": 1000.0, "akkumulation": 1000.0},
     # Die Absicherung bemisst sich am abzusichernden Exposure, nicht an einem
