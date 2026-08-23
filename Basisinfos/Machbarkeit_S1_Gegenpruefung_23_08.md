@@ -76,15 +76,21 @@ das Paar trägt. Das ist keine Zeile, das sind vier Module.
 
 ### S-2 ✔ **ERLEDIGT 23.08.** — die Zuweisung wird gespeichert
 
-`strategie` kommt in `database/db.py` und `database/models.py` **null Mal**
-vor. `signal_abbildung` gibt aus dem Auftrag nur `hebel` weiter.
+**Der Befund war:** `strategie` kam in `database/db.py` und
+`database/models.py` **null Mal** vor — der Z1-Fehler an anderer Stelle.
 
-> **Ohne Speicherung ist der Zweck der Übung weg:** „je These getrennt messen"
-> ist danach nicht möglich. Es wäre exakt der Z1-Fehler — läuft, geht in die
-> Mail, landet nicht in der Signalzeile, kann nie gegen Ergebnisse gemessen
-> werden.
+**Behoben am 23.08.:** Spalte in `signal_abbildung.SPALTEN_SIGNAL`
+(nicht als zweite Migration in `db.py` — die Spalten der Rollen-Kette
+entstehen an genau einer Stelle), Feld in `models.Signal`, gefüllt in
+**allen drei** Schreibpfaden, im NB-Export ergänzt.
 
-**Aufwand: klein.** Aber ohne ihn ist S1 sinnlos, nicht nur unvollständig.
+**Leseprobe nach Methodik 2.61 über den Lesepfad des Modells**, nicht nur
+per SELECT: ein echter Probelauf schrieb `LINK / KAUFEN /
+strategie='einstieg'`, und `_row_to_signal` gibt es zurück.
+
+⚠️ **`vorteilsquelle` steht bewusst noch nicht da** — sie wird erst
+zugewiesen (S1, Stufe 2). Eine Spalte, die auf absehbare Zeit nur NULL
+enthält, ist Vorrat.
 
 ### S-3 ⚠️ Das Wort „These" ist im Projekt **dreifach** belegt
 
