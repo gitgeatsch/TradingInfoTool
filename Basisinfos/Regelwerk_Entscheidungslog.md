@@ -20541,3 +20541,61 @@ wenn die Trefferquote den Breakeven (1+Kosten)/(1+CRV) ueber eine belastbare
 Zahl von Faellen schlaegt.
 
 Suite 1571, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 145: A1 + A2 - DER HEBEL FAELLT WIEDER AUS DER ZAHL AN
+
+Nutzervorgabe: "ja mach A1+A2 gemeinsam" - und ausdruecklich "bei jedem
+Schritt auch unsere Doku und Messungen hinzuziehen und was das fuer
+Auswirkungen hat".
+
+WAS DIE UNTERLAGEN SAGEN: die Entscheidung vom 15.08. lautete "die Spalte
+entscheidet sich am INSTRUMENT statt am Wert". Anlass waren KAITO (9,9 % Stop)
+und CAT (17,4 %), wo max_safe_hebel() den Faktor auf 1,0 drueckte und der
+Filter `hebel > 1.0` beide als SPOT schrieb - ausserhalb von Hebel-Cooldown
+und Hebel-Topf, mit dem Mailbetreff "EROEFFNEN (Hebel)". Das Instrument war
+der verlaessliche Marker, WEIL ES ZWEI LAEUFE GAB.
+
+DER HEBEL-TOPF IST KEINE BUCHHALTUNG: Nutzerentscheidung 13.08. ("gesamt 3000
+EUR, eine Position vorerst 1000"), und der Modulkopf begruendet ihn - "HEBEL
+BEHAELT ALS EINZIGER EINEN DECKEL: er ist die einzige Position, die MEHR
+verlieren kann als ihr Einsatz."
+
+⚠️ DARAUS DIE BINDUNG: A1 ohne A2 waere die gefaehrliche Variante - der Hebel
+entstuende wieder, ohne in den gedeckelten Topf gebucht zu werden.
+
+DER NEUE MARKER stand schon in dimensioniere(): etikett = "hebel", wenn ein
+Hebel NOETIG ist (oder es ein SHORT ist). ⚠️ Damit waere der KAITO/CAT-Fall
+heute SPOT - die Entscheidung vom 15.08. ist durch S6b UEBERHOLT, nicht von
+mir umgestossen. Benannt, nicht stillschweigend.
+
+⚠️ GEMESSEN, BEVOR GEBAUT WURDE: 901 auswertbare Einstiegssignale,
+Stopabstand Median 5,4 %. 479 (53 %) bekaemen ein Hebel-Etikett, 422 (47 %)
+bleiben spot. UND DER FUND, DER DEN ZUSCHNITT ENTSCHIED: der Hebel-Zweig
+verkleinert den BETRAG, wenn das Risikobudget sonst ueberschritten wuerde -
+bei den 422 liegt der Verlust heute im Median bei 67 EUR gegen 48 EUR Budget.
+Das ist KEIN Defekt, sondern die dokumentierte Spot-Konvention ("bei einer
+Position OHNE Stop-Order ist es eine Rechengroesse, keine Order"). Deshalb ist
+A1 so zugeschnitten, dass es die Spot-Seite nicht anfasst - C2 BLEIBT OFFEN.
+
+GEBAUT: rechne() bekommt hebel_handelbar und leitet etikett/hebel_noetig aus
+den Zahlen ab; signal_abbildung schreibt die Spalte nach dem ETIKETT; beide
+mit Rueckfall auf das Instrument fuer die alten Ketten. Nebenbei: hebel_grenze
+trug DIESELBE verdrehte Bedingung wie gebunden_durch in dimensioniere.
+
+NACHGEWIESEN: Stop 2,5 % -> hebel 2,40 und Verlust exakt 48 EUR = Budget;
+Stop 22 % -> spot, Betrag 800, Verlust 176 EUR (unveraendert, C2 unberuehrt);
+Aktien bei jedem Stopabstand spot.
+
+AUSWIRKUNGEN: R-Vielfache unveraendert. ⚠️ Hebelanteil - DRITTER Regimewechsel
+in einer Reihe (55/97 vor S6b, 0 dazwischen, ~53 % ab jetzt). Hebel-Topf und
+Hebel-Cooldown greifen wieder - ⚠️ die Cooldown-Reparatur aus Kapitel 142 muss
+nachgeprueft werden, Gruppen- und Instrumentwert duerfen sich nicht doppeln.
+NICHT RUECKRECHENBAR: der Hebel eines vergangenen Signals wurde nie
+geschrieben. Die Reihe bekommt einen SCHNITT, keine Korrektur.
+
+NICHT GEBAUT: C2 (Geldfrage), C3 crv_spreizung (Stilllegung hat eine eigene
+Begruendung und braucht eine neue Eichung), A5, A6.
+
+Suite 1582, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot statt
+11), simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

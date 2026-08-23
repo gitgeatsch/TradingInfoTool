@@ -452,7 +452,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            assetklasse: str = "",
            ist_short: bool = False,
            stop_min_atr: float | None = None,
-           marke_stop_eur: float | None = None) -> dict:
+           marke_stop_eur: float | None = None,
+           hebel_handelbar: bool | None = None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -615,8 +616,39 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
             f"Betrag {betrag:.0f} EUR unter der Mindestgroesse {_min:.0f} EUR "
             f"fuer die Kostenklasse {kostenklasse!r}")
 
-    if instrument == "hebel":
-        hebel_noetig = risiko_eur / (betrag * stop_rel)
+    # ⚠️ A1 (23.08.2026): DIE HANDELBARKEIT ENTSCHEIDET, NICHT DER LAUF.
+    #
+    # Hier stand `if instrument == "hebel"`. Seit S6b laeuft Krypto nur noch
+    # mit `instrument="spot"` - die Bedingung war nie wieder wahr, und damit
+    # ergab JEDE Rechnung Hebel 1,0. Gemessen am Export: 22.08. bis 11:30
+    # (zwei Laeufe) 97 Signale mit 55 Hebelspalten, ab 11:30 (ein Lauf) 16
+    # Signale mit NULL.
+    #
+    # ⚠️ UND DAS ETIKETT KOMMT AUS DER ZAHL, wie in `dimensioniere()`:
+    #
+    #     etikett = "hebel", wenn ein Hebel NOETIG ist (oder es ein SHORT ist)
+    #
+    # DAMIT AENDERT SICH EINE ENTSCHEIDUNG VOM 15.08., und das gehoert
+    # benannt. Damals galt: "die Spalte entscheidet sich am Instrument statt
+    # am Wert" - weil ein echter Hebel-Trade, dessen sicherer Faktor auf 1,0
+    # faellt (KAITO 9,9 %, CAT 17,4 % Stop), sonst als Spot in der Datenbank
+    # landete. Das Instrument war der verlaessliche Marker, WEIL ES ZWEI
+    # LAEUFE GAB. Mit einem Lauf gibt es diesen Marker nicht mehr, und ein
+    # Signal, das keinen Hebel BRAUCHT, ist auch keines. Die Entscheidung ist
+    # damit durch S6b ueberholt, nicht durch mich umgestossen.
+    #
+    # RUECKFALL FUER DIE ALTEN KETTEN: ohne Angabe gilt weiter das Instrument.
+    # `hebel_analyst` und Verwandte rufen unveraendert - dort gibt es beide
+    # Laeufe noch, und dort ist das Instrument weiterhin eindeutig.
+    _handelbar = (bool(hebel_handelbar) if hebel_handelbar is not None
+                  else instrument == "hebel")
+    hebel_noetig = risiko_eur / (betrag * stop_rel) if betrag and stop_rel else 0.0
+    e["hebel_noetig"] = round(hebel_noetig, 2)
+    e["hebel_handelbar"] = _handelbar
+    # ⚠️ SHORT IST IMMER GEHEBELT - Spot kann nicht leerverkauft werden.
+    e["etikett"] = ("hebel" if _handelbar and (hebel_noetig > 1.0 or ist_short)
+                    else "spot")
+    if e["etikett"] == "hebel":
         sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
         # DER BETRAG FOLGT DEM RISIKOBUDGET, NICHT DER HEBEL DEM BETRAG
         # (15.08.2026).
@@ -652,10 +684,16 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
             hebel_noetig = 1.0
         hebel = max(1.0, min(hebel_noetig, sicher, GRENZEN["hebel_max"]))
         e["hebel"] = round(hebel, 1)
-        e["hebel_grenze"] = (
-            "Risikobudget" if hebel <= hebel_noetig + 1e-9
-            else ("RM-11 Liquidationsabstand" if sicher < GRENZEN["hebel_max"]
-                  else "Hoechsthebel"))
+        # ⚠️ DIESELBE VERDREHUNG WIE IN `dimensioniere` (dort am 22.08.
+        # gefunden): `hebel <= hebel_noetig` ist bei LONG immer wahr, weil
+        # `hebel` aus einem min() ueber `hebel_noetig` kommt - die beiden
+        # anderen Zweige waren toter Code.
+        if hebel >= hebel_noetig - 1e-9:
+            e["hebel_grenze"] = "Risikobudget"
+        elif sicher <= GRENZEN["hebel_max"] + 1e-9 and hebel <= sicher + 1e-9:
+            e["hebel_grenze"] = "RM-11 Liquidationsabstand"
+        else:
+            e["hebel_grenze"] = "Hoechsthebel"
         # Bei SHORT liegt die Liquidation UEBER dem Einstieg.
         e["liquidation_etwa_eur"] = round(
             kurs * (1 + 1 / hebel) if ist_short else kurs * (1 - 1 / hebel), 2)

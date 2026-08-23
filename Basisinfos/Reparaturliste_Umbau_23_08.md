@@ -13,10 +13,10 @@
 
 | # | was | Zustand | Gewicht |
 |---|---|---|---|
-| **A1** | `rechne()` rechnet den Hebel aus dem **Lauf** → immer 1,0 | ⚠️ **offen** | **schwer** |
-| **A2** | `hebel`-Spalte folgt dem Lauf → nie gefüllt | ⚠️ **offen** | **schwer** |
-| **A3** | Hebel-Topf (3.000 €) ohne Gegenstand | Folge aus A2 | **schwer** |
-| **A4** | Hebel-Cooldown (3,5 h) ohne Gegenstand | Folge aus A2 | mittel |
+| **A1** | `rechne()` rechnet den Hebel aus dem **Lauf** → immer 1,0 | ✔ **repariert** 23.08. (Kapitel 145) | – |
+| **A2** | `hebel`-Spalte folgt dem Lauf → nie gefüllt | ✔ **repariert** 23.08. (Kapitel 145) | – |
+| **A3** | Hebel-Topf (3.000 €) ohne Gegenstand | ✔ **greift wieder** durch A2 | – |
+| **A4** | Hebel-Cooldown greift wieder | ⚠️ **nachprüfen**: Gruppen- und Instrumentwert dürfen sich nicht doppeln | mittel |
 | **A5** | `_crv_faktor` unterscheidet Spot/Hebel nicht mehr | ⚠️ offen | mittel |
 | **A6** | Mail-Betreff und -Abschnitt hängen am Lauf | ⚠️ offen | leicht |
 | **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ⚠️ **offen** | **schwer** |

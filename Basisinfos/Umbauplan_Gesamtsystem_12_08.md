@@ -19043,3 +19043,127 @@ richtige Ausgangspunkt ist und nicht 1.000.
 Trefferquote den Breakeven `(1 + Kosten) / (1 + CRV)` über eine belastbare Zahl
 von Fällen schlägt, ist eine größere Position eine Verbesserung statt eines
 größeren Fehlers.
+
+
+---
+
+## Kapitel 145 — A1 + A2: der Hebel fällt wieder aus der Zahl an (23.08.2026)
+
+**Nutzervorgabe:** *„ja mach A1+A2 gemeinsam"* — und ausdrücklich: *„bei jedem
+Schritt auch unsere Doku und Messungen hinzuziehen und was das für
+Auswirkungen hat."*
+
+### 145.1 Was die Unterlagen sagen — und warum A1 und A2 zusammengehören
+
+**Die Entscheidung vom 15.08.** (Kapitel 26.4) lautete: *„die Spalte
+entscheidet sich am **Instrument** statt am Wert."* Ihr Anlass war KAITO
+(9,9 % Stop) und CAT (17,4 %): dort drückte `max_safe_hebel()` den Faktor auf
+1,0, und der damalige Filter `hebel > 1.0` schrieb beide als **Spot** in die
+Datenbank — außerhalb von Hebel-Cooldown und Hebel-Topf, mit dem Mailbetreff
+*„ERÖFFNEN (Hebel)"*.
+
+> **Das Instrument war der verlässliche Marker — weil es zwei Läufe gab.**
+
+**Der Hebel-Topf ist keine Buchhaltung.** Nutzerentscheidung vom 13.08.:
+*„Hebeltopf gesamt kann 3000 Euro sein, eine Hebelposition vorerst 1000"* —
+und der Modulkopf begründet ihn:
+
+> **„HEBEL BEHÄLT ALS EINZIGER EINEN DECKEL: er ist die einzige Position, die
+> MEHR verlieren kann als ihr Einsatz."**
+
+⚠️ **Daraus folgt die Bindung:**
+
+> **A1 ohne A2 wäre die gefährliche Variante.** Der Hebel entstünde wieder,
+> würde aber nicht in den gedeckelten Topf gebucht — `sql_bedingung("hebel")`
+> ist `hebel IS NOT NULL`. Eine 3.000-€-Grenze, die nichts sieht.
+
+### 145.2 Der neue Marker — und eine Entscheidung, die S6b überholt hat
+
+Mit **einem** Lauf gibt es das Instrument als Marker nicht mehr. Der Ersatz
+stand bereits in `dimensioniere()`:
+
+```python
+etikett = "hebel" if hebel_handelbar and (hebel_noetig > 1.0 or ist_short)
+```
+
+**Der *nötige* Faktor, nicht der gedeckelte** — genau der KAITO/CAT-Fall wäre
+damit heute **spot**, weil er keinen Hebel *braucht*.
+
+⚠️ **Das ändert die Entscheidung vom 15.08., und das gehört benannt.** Sie
+existierte, um die Absicht des **Laufs** mit der Datenbank in Einklang zu
+halten. Diese Absicht gibt es nicht mehr. **Überholt durch S6b, nicht von mir
+umgestoßen.**
+
+### 145.3 ⚠️ Was gemessen wurde, BEVOR gebaut wurde
+
+**901 auswertbare Einstiegssignale der Rollen-Kette**, Stopabstand Median
+5,4 % (min 0,9 %, max 24,4 %):
+
+| | | |
+|---|---:|---:|
+| bekämen ein **Hebel-Etikett** (`hebel_noetig > 1`) | **479** | **53 %** |
+| bleiben spot | 422 | 47 % |
+
+**Und der Fund, der den Zuschnitt entschieden hat:** der Hebel-Zweig enthält
+mehr als die Hebelrechnung — er **verkleinert den Betrag**, wenn das
+Risikobudget sonst überschritten würde. Bei den 422 spot-Fällen liegt der
+Verlust am Stop heute im Median bei **67 €** gegen ein Budget von 48 €,
+maximal 195 €.
+
+⚠️ **Das ist trotzdem kein Defekt, sondern die dokumentierte
+Spot-Konvention:**
+
+> *„DAS RISIKO FOLGT JETZT UMGEKEHRT: Betrag × Stopabstand. Bei einer Position
+> **ohne Stop-Order** ist es ohnehin eine Rechengröße, keine Order."*
+
+Der Nutzer hält Spot ohne Stop-Loss. **Deshalb ist A1 so zugeschnitten, dass
+es die Spot-Seite nicht anfasst — C2 bleibt offen.**
+
+### 145.4 Was gebaut wurde
+
+| | |
+|---|---|
+| **A1** | `rechne()` bekommt `hebel_handelbar`, leitet `etikett` und `hebel_noetig` aus den Zahlen ab |
+| **A2** | `signal_abbildung` schreibt die `hebel`-Spalte nach dem **Etikett** der Rechnung |
+| beide | **Rückfall auf das Instrument**, wenn nichts angegeben ist — die alten Ketten haben beide Läufe noch |
+| nebenbei | `hebel_grenze` war **dieselbe verdrehte Bedingung** wie `gebunden_durch` in `dimensioniere` (am 22.08. dort gefunden) — jetzt auch hier richtig |
+
+**Nachgewiesen** (Verlustanteil 6 %, Einsatz 800 €, Budget 48 €):
+
+| Stop | nötig | Etikett | Hebel | Betrag | Verlust am Stop |
+|---:|---:|---|---:|---:|---:|
+| 2,5 % | 2,40 | **hebel** | 2,40 | 800 € | **48 €** |
+| 5,4 % *(Median)* | 1,11 | **hebel** | 1,10 | 800 € | **48 €** |
+| 6,0 % | 1,00 | spot | 1,00 | 800 € | 48 € |
+| 22 % | 0,27 | spot | 1,00 | **800 €** | **176 €** |
+
+⚠️ **Die letzte Zeile ist der Beweis, dass C2 unberührt bleibt.** Ein Aktien-
+oder ETF-Signal bleibt bei jedem Stopabstand spot.
+
+### 145.5 Auswirkungen auf die Messungen
+
+| Messung | Wirkung |
+|---|---|
+| **R-Vielfache** (Trefferquote, MFE) | **unverändert** — R ist der Stopabstand |
+| **Hebelanteil** | ⚠️ **dritter Regimewechsel in einer Reihe**: vor S6b 55/97, zwischen S6b und heute 0, ab jetzt erwartbar ~53 % der Einstiege |
+| **Hebel-Topf** | füllt sich wieder — der 3.000-€-Deckel greift wieder |
+| **Hebel-Cooldown** | ⚠️ greift wieder. **Die Reparatur von Kapitel 142** (Krypto 3,5 h je Gruppe) steht daneben und muss nachgeprüft werden: Gruppenwert und Instrumentwert dürfen sich nicht doppeln |
+| **Euro-P&L** | unverändert — der Betrag ändert sich nicht |
+| **Backward-Tracking** | unverändert — es liest Zonen |
+
+⚠️ **Nicht rückrechenbar.** Anders als bei E2 lässt sich der Hebel eines
+vergangenen Signals nicht rekonstruieren — er wurde nie geschrieben. **Die
+Reihe bekommt einen Schnitt, keine Korrektur**, und der Schnitt heißt
+`created_at` vor/nach dem 23.08.
+
+**Suite 1.582 · Rollen-Gegenprüfung 25 · Instrument-Verzweigungen 15 (davon
+9 tot, vorher 11) · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+### 145.6 Was ausdrücklich NICHT gebaut wurde
+
+| | |
+|---|---|
+| **C2** — festes Risiko oder fester Betrag | offen, Geldfrage |
+| **C3** — `crv_spreizung` wieder einschalten | ⚠️ **nicht angefasst**; die Stilllegung vom 15.08. hat eine eigene Begründung und muss erst nachgelesen und neu geeicht werden |
+| **A5** `_crv_faktor` | wirkungslos, solange C3 stillgelegt ist |
+| **A6** Mail-Betreff | benannt, wartet |

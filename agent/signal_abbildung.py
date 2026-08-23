@@ -411,7 +411,34 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     # Hebel-Topf - und trugen trotzdem den Mailbetreff "EROEFFNEN (Hebel)".
     #
     # Das Instrument ist bekannt und eindeutig; der Wert ist es nicht.
-    if str(instrument) == "hebel" and rechnung and rechnung.get("hebel"):
+    # ⚠️ A2 (23.08.2026): DIE SPALTE FOLGT DEM ERGEBNIS, NICHT DEM LAUF.
+    #
+    # Hier stand `str(instrument) == "hebel"`. Seit S6b ist das fuer Krypto
+    # nie wieder wahr - die Spalte blieb leer, und daran haengen ZWEI Dinge,
+    # die keine Buchhaltung sind:
+    #
+    #   `toepfe.sql_bedingung()`  trennt die Toepfe an `hebel IS NOT NULL`.
+    #                             Der Hebel-Topf ist eine Nutzerentscheidung
+    #                             vom 13.08. ("gesamt 3000 EUR, eine Position
+    #                             vorerst 1000") und ein RISIKODECKEL: der
+    #                             Hebel ist die einzige Position, die mehr
+    #                             verlieren kann als ihren Einsatz.
+    #   `wiederholung`            der eigene Cooldown-Topf des Hebels.
+    #
+    # ⚠️ DESHALB GEHOEREN A1 UND A2 ZUSAMMEN. A1 allein liesse den Hebel
+    # wieder entstehen, ohne ihn in den gedeckelten Topf zu buchen - eine
+    # 3.000-EUR-Obergrenze, die nichts sieht.
+    #
+    # WARUM DAS ETIKETT UND NICHT DER WERT. Der Kommentar von damals bleibt
+    # richtig: `hebel > 1.0` traf einen echten Hebel-Trade nicht, dessen
+    # sicherer Faktor auf 1,0 faellt. Das Etikett aus `rechne()` trifft ihn,
+    # denn es fragt den NOETIGEN Faktor, nicht den gedeckelten.
+    #
+    # RUECKFALL: kein Etikett in der Rechnung (alte Ketten) -> das Instrument.
+    _etikett = (rechnung or {}).get("etikett")
+    _ist_hebel = (_etikett == "hebel" if _etikett
+                  else str(instrument) == "hebel")
+    if _ist_hebel and rechnung and rechnung.get("hebel"):
         aus["hebel"] = float(rechnung["hebel"])
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand

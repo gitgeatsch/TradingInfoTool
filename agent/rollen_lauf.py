@@ -1233,6 +1233,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # S1, Kapitel 90: der Rauschboden aus der
                              # Konfiguration. Ohne Eintrag None - dann
                              # gilt die Vorgabe und nichts aendert sich.
+                             # ⚠️ A1: DIE HANDELBARKEIT DER GRUPPE, NICHT
+                             # DER LAUF. Seit S6b heisst `instrument` fuer
+                             # Krypto immer "spot" - ohne diese Zeile ergibt
+                             # die Rechnung nie wieder einen Hebel.
+                             hebel_handelbar=_AKL.hebel_handelbar(assetklasse),
                              stop_min_atr=BE.stop_min_atr(config),
                              # S2, Kapitel 90: die Marke auf der
                              # STOPSEITE. Sie liegt vorerst ungenutzt im
@@ -1810,6 +1815,9 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
             ist_short=(befund.get("richtung") == "SHORT"),
             kostenklasse=_kostenklasse(assetklasse),
+            # ⚠️ A1: auch die Nein-Zeile - sonst truege sie ein anderes
+            # Etikett als dasselbe Symbol im Hauptpfad.
+            hebel_handelbar=_AKL.hebel_handelbar(assetklasse),
             umgeworfen_tage=_tage_bis(befund.get("umgeworfen_bis"), tag))
         kern = FB.werte_aus_reihe(
             [k.high for k in reihe], [k.low for k in reihe],

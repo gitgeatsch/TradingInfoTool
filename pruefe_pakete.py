@@ -10459,6 +10459,72 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- A1/A2: DER HEBEL FAELLT WIEDER AUS DER ZAHL AN (23.08.2026) ---
+    #
+    # ⚠️ SEIT S6b WAR ER AUS. `rechne()` fragte `instrument == "hebel"`, und
+    # das ist fuer Krypto nie wieder wahr - jede Rechnung ergab Hebel 1,0,
+    # die `hebel`-Spalte blieb leer, und daran haengen Hebel-Topf (3.000 EUR,
+    # Nutzerentscheidung 13.08.) und Hebel-Cooldown.
+    from agent import entscheidungsrechnung as _ERA
+    from agent import signal_abbildung as _SAA
+
+    def _r(stop_rel, handelbar=True, short=False):
+        return _ERA.rechne(kurs=100.0, atr=stop_rel * 100.0 / 2.5,
+                           risiko_eur=48.0, instrument="spot",
+                           betrag_wunsch_eur=800.0, ist_short=short,
+                           hebel_handelbar=handelbar)
+
+    pruefe(P, "ein enger Stop ergibt wieder einen Hebel",
+           _r(0.025)["etikett"] == "hebel" and _r(0.025)["hebel"] > 1.0,
+           f"{_r(0.025)['etikett']}, Hebel {_r(0.025)['hebel']} - seit S6b "
+           f"war das ausnahmslos spot/1,0")
+    pruefe(P, "ein weiter Stop bleibt spot",
+           _r(0.10)["etikett"] == "spot" and _r(0.10)["hebel"] == 1.0)
+    pruefe(P, "ohne Handelbarkeit gibt es keinen Hebel",
+           _r(0.025, handelbar=False)["etikett"] == "spot",
+           "eine Aktie laesst sich hier nicht hebeln")
+    # ⚠️ SHORT IST IMMER GEHEBELT - Spot kann nicht leerverkauft werden.
+    pruefe(P, "ein SHORT ist auch bei weitem Stop gehebelt",
+           _r(0.10, short=True)["etikett"] == "hebel")
+    # ⚠️ UND DIE SPOT-KONVENTION BLEIBT UNBERUEHRT (C2 ist NICHT entschieden).
+    pruefe(P, "oberhalb der Schwelle bleibt der Betrag wie bisher",
+           abs(_r(0.22)["betrag_eur"] - 800.0) < 1e-6,
+           "der Betrag folgt bei Spot weiter dem Wunsch, das Risiko dem "
+           "Stopabstand - `risiko_quelle` sagt das ausdruecklich. Wer das "
+           "aendert, entscheidet C2, und das ist eine eigene Frage")
+    # RUECKFALL FUER DIE ALTEN KETTEN: ohne Angabe gilt das Instrument.
+    for _instr, _erw in (("hebel", "hebel"), ("spot", "spot")):
+        _alt = _ERA.rechne(kurs=100.0, atr=1.0, risiko_eur=48.0,
+                           instrument=_instr, betrag_wunsch_eur=800.0)
+        pruefe(P, f"alte Kette ohne Angabe: instrument={_instr} -> {_erw}",
+               _alt["etikett"] == _erw,
+               "hebel_analyst und Verwandte rufen unveraendert - dort gibt es "
+               "beide Laeufe noch")
+    # A2: die Spalte folgt dem ERGEBNIS.
+    for _et, _h, _erw in (("hebel", 2.4, 2.4), ("spot", 1.0, None)):
+        _f = _SAA.felder_aus_entscheidung(
+            {"aktion": "KAUFEN", "richtung": "LONG"}, fakten={},
+            rechnung={"etikett": _et, "hebel": _h}, instrument="spot")
+        pruefe(P, f"Rechnung sagt {_et} -> Hebelspalte "
+                  f"{'gefuellt' if _erw else 'leer'}",
+               _f.get("hebel") == _erw,
+               "`toepfe.sql_bedingung()` trennt die Toepfe an genau dieser "
+               "Spalte - der Hebel-Topf ist ein RISIKODECKEL, kein Konto")
+    # ⚠️ UND A1 OHNE A2 WAERE DIE GEFAEHRLICHE KOMBINATION.
+    pruefe(P, "die Spalte haengt NICHT mehr am Lauf",
+           _SAA.felder_aus_entscheidung(
+               {"aktion": "KAUFEN", "richtung": "LONG"}, fakten={},
+               rechnung={"etikett": "hebel", "hebel": 2.4},
+               instrument="spot").get("hebel") == 2.4,
+           "sonst entstuende der Hebel wieder, ohne in den gedeckelten Topf "
+           "gebucht zu werden - eine 3.000-EUR-Grenze, die nichts sieht")
+    # Und die verdrehte Grenze, dieselbe wie in `dimensioniere`.
+    pruefe(P, "hebel_grenze nennt den echten Deckel",
+           _ERA.rechne(kurs=100.0, atr=1.0, risiko_eur=240.0,
+                       instrument="spot", betrag_wunsch_eur=800.0,
+                       hebel_handelbar=True).get("hebel_grenze")
+           in ("Risikobudget", "RM-11 Liquidationsabstand", "Hoechsthebel"))
+
     # ---- WAS DAS MODELL LIEST, HAENGT AN DER GRUPPE (23.08.2026) -------
     #
     # ⚠️ DIESE LUECKE HAT DIE S6a-GEGENPRUEFUNG NICHT GEFUNDEN. Sie prueft

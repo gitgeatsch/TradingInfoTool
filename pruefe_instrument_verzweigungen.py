@@ -45,10 +45,10 @@ URTEIL = {
         "tot", "bekommt das Lauf-Etikett aus `rechne()` - die CRV-Abstufung "
                "unterscheidet Spot und Hebel seit S6b nicht mehr"),
     ("entscheidungsrechnung.py", "rechne"): (
-        "tot", "⚠️ DER GROSSE: `rechne()` rechnet den Hebel aus dem LAUF. "
-               "Seit S6b immer 'spot', also IMMER Hebel 1,0. "
-               "`dimensioniere()` wurde umgestellt, `rechne()` nicht - und "
-               "die Produktion ruft `rechne()`"),
+        "lebt", "✔ A1 (23.08.): fragt jetzt `hebel_handelbar` und leitet das "
+                "Etikett aus `hebel_noetig` ab. Das verbliebene "
+                "`instrument`-Muster ist der RUECKFALL fuer die alten Ketten, "
+                "die beide Laeufe noch haben"),
     ("entscheidungsrechnung.py", "saetze"): (
         "lebt", "liest `e['instrument']` aus der fertigen Rechnung"),
     ("lagebeschreibung.py", "_bestand"): (
@@ -68,9 +68,9 @@ URTEIL = {
         "tot", "der Satz 'daneben liegt auch ...' - der spot-Zweig nennt die "
                "Hebelposition, also unveraendert richtig"),
     ("signal_abbildung.py", "felder_aus_entscheidung"): (
-        "tot", "⚠️ ENTSCHEIDET UEBER DIE `hebel`-SPALTE. Seit S6b nie "
-               "gefuellt - `toepfe.sql_bedingung()` trennt die Toepfe an "
-               "genau dieser Spalte, und der Hebel-Cooldown haengt daran"),
+        "lebt", "✔ A2 (23.08.): die Spalte folgt dem `etikett` aus der "
+                "Rechnung. Das `instrument` bleibt als Rueckfall fuer "
+                "Rechnungen ohne Etikett - alte Ketten"),
     ("signal_mail.py", "baue_mail"): (
         "tot", "Betreff und Abschnitt der Mail - kosmetisch, aber falsch, "
                "solange die Rechnung einen Hebel ergeben kann"),
@@ -83,6 +83,10 @@ URTEIL = {
                "dieselben zwei Groessen, nur vertauscht"),
     ("warteschlange.py", "erklaere"): (
         "tot", "nur Text zur Reihenfolge"),
+    ("vorfilter.py", "stand"): (
+        "lebt", "kein Zweig, sondern eine GROUP-BY-Spalte im Export - sie "
+                "zeigt, fuer welche Gruppe und welchen Lauf der "
+                "Vorfilter-Schatten geschrieben wurde"),
 }
 
 
