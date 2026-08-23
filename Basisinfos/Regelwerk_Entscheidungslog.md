@@ -20760,3 +20760,89 @@ danach Geometrie und Kosten.
 aufgeloeste Faelle nicht belegbar. Selektivitaet ist zuerst eine
 KONSTRUKTIONSENTSCHEIDUNG, ihr Nachweis kommt spaeter. Wer das umdreht, wartet
 auf einen Beleg, den er ohne die Konstruktion nie bekommt.
+
+
+[2026-08-23] MACHBARKEITSPRUEFUNG VOR S1 - FUENF SHOWSTOPPER, ZWEI HARTE
+
+⚠️ NUTZERVORGABE: "bitte vorab noch einmal den erweiterten Ansatz ueber alle
+Plaene & Baustellen, Zentraldokumente, Regelwerke und den Code gegenpruefen -
+wir muessen vorher schon potentielle Showstopper und fehlende Informationen
+identifizieren." Und: "wir haben mehrere Rahmenbedingungen, die je Asset und
+Klasse, Markt, Indikatoren unterschiedlich zu bewerten sind - du musst sehr
+praezise arbeiten, Schritt fuer Schritt, keine Schnellschuesse ueber die
+gesamte Ablaufkette."
+
+ERGEBNIS: die Werkzeuge sind ueberwiegend da (handelsauftrag, trichter.spanne,
+drift.rang, vorfilter.bewerte, messe_drift als Messrahmen, Methodik 2.58-2.63)
+- meist als ANZEIGE verdrahtet, nicht als Entscheidung. Aber fuenf Punkte
+stehen vor S1.
+
+⚠️ S-1 HART: DIE KETTE HINTER ROLLE BC KENNT `akkumulation` NICHT. Gebaut ist
+der Auftrag (handelsauftrag._MIT_KURSEN, rolle_trader._KURSSATZ, Kursentfernung
+bei Rueckgabe), nicht seine Folge: `mit_kursen` und `akkumulation` kommen in
+rollen_lauf, signal_abbildung, entscheidungsrechnung, backward_tracking,
+wiederholung und toepfe NULL MAL vor. Und es stuerzt nicht ab - ER.rechne()
+leitet den Stop SELBST aus dem ATR ab. Ein Akkumulationssignal bekaeme also im
+Stillen einen Stop, den seine Strategie ausdruecklich nicht hat, und wuerde
+ueber genau diesen Stop aufgeloest. Fail-soft ist fail-silent, in Reinform.
+
+⚠️ S-2 HART: DIE ZUWEISUNG WIRD NIRGENDS GESPEICHERT. `strategie` kommt in
+database/db.py und database/models.py null Mal vor; signal_abbildung gibt aus
+dem Auftrag nur `hebel` weiter. Ohne Speicherung ist "je These getrennt messen"
+danach nicht moeglich - exakt der Z1-Fehler.
+
+S-3: "These" ist DREIFACH belegt - models.These/these_id/kategorie_thesen
+(Kategorie-These), hebel_analyst.trade_thesis_typ mit GUI-Spalte "These"
+(Manual Kap. 19), und neu die Vorteilsquelle. ⚠️ Und Nummer 2 ist die Warnung
+selbst: das Manual sagt woertlich, das Feld aendere "NICHTS an der
+Ausfuehrung". Ein Thesen-Etikett ohne Folge gab es hier schon. Vorschlag: das
+neue Feld heisst `vorteilsquelle`.
+
+S-4: H IST BARRIERENABHAENGIG DEFINIERT - A = keine Marke unter dem ZIEL, B =
+eine Marke ueber dem STOP; ohne beide gibt es h=None. Die einzige Groesse, die
+je gegen den Zufall gewonnen hat, ist ueber genau die Geometrie definiert, die
+Konzept 11 aus dem Mass herausnehmen will. H braucht eine barrierenfreie
+Fassung (freier Weg ueber X %, Traeger unter Y %) - das ist der Kern der
+Messumstellung, kein Nebenpunkt.
+
+⚠️ S-5, DER SCHWERSTE FUND UND EINE KORREKTUR AN MIR SELBST: die Drift-Seite
+ist NICHT unerforscht. Konzept 9.3 fuehrte sie als "nie gemessen (S2)". Falsch
+- sie ist ZWEIMAL gemessen: messe_drift.py (1 von 27 Feldern haelt, 250/5 mit
++1,01 % bei 3 % Handelskosten) und messe_akkumulation.py am 11.08. (Arbeitsstand
+7.27): 43 Symbole, woechentlich, 100 EUR je Periode je Regel, Kaufkosten
+enthalten. HALBE_QUOTE 0,877 · UNTER_SMA 0,841 · RUECKGANG 0,755 · GESTAFFELT
+0,755 · DCA 0,754 - DIE KONTROLLE, DIE ueberhaupt NICHT HINSIEHT, SCHLAEGT
+JEDE REGEL. Der antizyklische Vorteil ist vollstaendig Investitionsquote, kein
+Timing; bei den zwei gestiegenen Aktien gewinnt DCA 7,123 gegen 4,025.
+
+⚠️ ABER BEIDE BEFUNDE SIND REGIMEGEBUNDEN und sagen das selbst. Der Markt hat
+am 22.08. gedreht (BTC +23,1 %, Median ueber 49 Symbole +15,8 % in neun Tagen).
+Damit ist die erste Messung keine neue, sondern eine WIEDERHOLUNG - derselbe
+Akkumulationslauf in der neuen Phase, ohne einen einzigen Modellaufruf.
+
+WARUM EINE REGELTABELLE JE ASSET NICHT FUELLBAR IST (Nutzerwarnung, in Zahlen):
+Trichterfaktor je Klasse ist gemessen (krypto 0,79 / aktien 0,91 / etf 1,18),
+H aber nur auf KRYPTO (Kap. 106: 2 Aktien- und 4 ETF-Reihen reichen nicht),
+Marktphase deckt eineinhalb Phasen ab (H uebertraegt sich laut 109 nicht ueber
+Regimewechsel), von 27 Driftfeldern haelt 1, Marktbreite wirkt invers. Dazu der
+eigene Suchpreis: 300 Zellen = +20,5 Punkte Huerde, EINE vorab benannte = +10,2.
+Eine Tabelle Klasse x Phase x Merkmal x Strategie hat 150 Zellen bei 66
+aufgeloesten Faellen. ⚠️ Die Nutzervorgabe folgt daraus zwingend: eine
+Vorteilsquelle, eine Klasse, ein Horizont, eine Positivkontrolle - dann die
+naechste.
+
+PLANLAGE: 8d Rang 1 ("S2 - Drift statt Timing") ist DASSELBE Thema, steht dort
+aber als OFFEN, obwohl es am 11.08. abgearbeitet wurde - der Plan ist nicht
+nachgezogen. Reparaturliste D1 ist woertlich S1. Zielgroessen_und_Erfolgsmasse
+kennt auf Trade-Ebene nur Expectancy(R) und SQN, beide barrierenabhaengig - fuer
+das Potentialmass gibt es dort KEINE EBENE, sie muss ergaenzt werden; zugleich
+zitiert dasselbe Dokument bereits "No stop loss placement or profit target
+selection will transform random entries into a profitable system". Manual Kap.
+10 fuehrt einen ZWEITEN, aelteren Strategiebegriff (S-1..S-6), den die
+Rollen-Kette nicht benutzt.
+
+REIHENFOLGE: 1. messe_akkumulation erneut (0 Modellaufrufe) · 2. Konzept 9.3b
+und 8d nachziehen · 3. Feld vorteilsquelle speichern · 4. H barrierenfrei
+fassen · 5. Kette fuer akkumulation tragfaehig machen · 6. ERST DANN S1.
+
+Vollstaendig: Basisinfos/Machbarkeit_S1_Gegenpruefung_23_08.md

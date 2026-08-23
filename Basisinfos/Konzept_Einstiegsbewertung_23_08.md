@@ -400,10 +400,38 @@ zu dieser These passen.** Auf dem Papier:
 |---|---|---|
 | **einschließend** | Träger über dem Stop (mehrfach berührt) · freier Weg zum Ziel · weiter Stop · Kostenhürde +0,8 Punkte | Rangplatz vorn in der Klasse · enger Stop, den die Struktur trägt · Liquidationsabstand ausreichend |
 | **ausschließend** | ⚠️ **vorderer Rangplatz** (−5,8) · Widerstand unter dem Ziel · Stop ohne Träger | ⚠️ **weiter Stop** (Kostenhürde +8,0) · Finanzierung im oberen Perzentil · bekannter Termin im Fenster |
-| **gemessen?** | **ja: +0,15 R** (523 Reihen) | ⚠️ **nein — nie gemessen** (S2) |
+| **gemessen?** | **ja: +0,15 R** (523 Reihen) | ⚠️ **ja — und sie trägt nicht** (siehe 9.3b) |
 
-⚠️ **Die rechte Spalte ist Hypothese, die linke ist gemessen.** Das ist der
-ehrliche Stand, und er sagt zugleich, wo die nächste Messung hingehört.
+### 9.3b ⚠️ KORREKTUR 23.08. — die Drift-Seite ist NICHT unerforscht
+
+Hier stand zuerst *„nie gemessen (S2)"*. **Das ist falsch, und die Berichtigung
+ist wichtiger als der Fehler** — die Drift-Seite ist **zweimal** gemessen
+worden, und beide Male mit demselben Ausgang:
+
+| Messung | Aufbau | Ergebnis |
+|---|---|---|
+| **Rangplatz** (`messe_drift.py`, Kap. 93 B) | 40 Reihen, 3.290 Termine, Newey-West, Placebo-Schwelle | **1 von 27** Feldern hält: 250/5 mit +1,01 % Abstand, t = 3,20 bei Schwelle 3,11. ⚠️ **Die Handelskosten betragen 3 %** |
+| **Akkumulation gegen DCA** (`messe_akkumulation.py`, Arbeitsstand 7.27) | 43 Symbole, wöchentlich, 100 € je Periode für jede Regel, Kaufkosten enthalten | **Die Kontrolle schlägt alles:** HALBE_QUOTE 0,877 · UNTER_SMA 0,841 · RUECKGANG 0,755 · GESTAFFELT 0,755 · DCA 0,754 |
+
+> **Der antizyklische Vorteil ist vollständig durch die Investitionsquote
+> erklärt** — weniger investiert sein in einem fallenden Markt ist keine
+> Timing-Leistung. Und die Gegenprobe steht daneben: bei den zwei gestiegenen
+> Aktien gewinnt DCA mit **7,123 gegen 4,025**.
+
+⚠️ **Beide Befunde sind regimegebunden**, und beide sagen das selbst: die
+Drift-Messung lebt in der auswahlverzerrten nachgeladenen Zeit, die
+Akkumulationsmessung in *„rund zwei Jahren, überwiegend fallend"*. **Der Markt
+hat am 22.08. gedreht** (BTC +23,1 %, Median über 49 Symbole +15,8 % in neun
+Tagen).
+
+> **Damit ist die erste Messung keine neue, sondern eine Wiederholung** —
+> derselbe Akkumulationslauf in der neuen Marktphase. Er kostet **keinen
+> Modellaufruf** und entscheidet, ob die zweite Vorteilsquelle überhaupt eine
+> ist, **bevor** irgendetwas gebaut wird.
+
+**Was das für die Tabelle darüber heißt:** keine Spalte ist Hypothese. Die
+linke ist gemessen und trägt knapp, die rechte ist gemessen und trägt nicht —
+**in einem Regime, das es so nicht mehr gibt.**
 
 ### 9.4 Die Nachricht — was man kann und was nicht
 

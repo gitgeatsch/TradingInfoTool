@@ -688,6 +688,28 @@ Rollen-Ebene, die dabei entstanden ist, ist die Voraussetzung für Weg 2.
 ---
 
 
+### 8d — NACHTRAG 23.08.2026: Rang 1 ist ABGEARBEITET, nicht offen
+
+⚠️ **S2 wurde am 11.08. gemessen** (`Arbeitsstand_Deadloop_09_08.md` 7.27,
+Werkzeug `messe_akkumulation.py`, kein Modellaufruf). Dieser Abschnitt führte
+ihn danach weiter als offenen Rang 1 — **der Plan war nicht nachgezogen**, und
+das hat die Reihenfolge zweimal verschoben.
+
+**Das Ergebnis:** über 43 Symbole schlägt die Kontrolle `HALBE_QUOTE` (0,877)
+jede antizyklische Regel und den Maßstab DCA (0,754). Der Vorteil ist
+**vollständig Investitionsquote**, kein Timing.
+
+⚠️ **Und der Befund ist regimegebunden — er sagt es selbst:** *„Der Zeitraum
+dominiert. Krypto umfasst rund zwei Jahre, überwiegend fallend."* **Der Markt
+hat am 22.08. gedreht.**
+
+> **Rang 1 lautet damit neu: denselben Lauf in der neuen Marktphase
+> wiederholen.** Er kostet keinen Modellaufruf und ist die Voraussetzung dafür,
+> dass die Vorteilsquellen-Zuweisung (S1) überhaupt einen Gegenstand hat.
+> Vollständig: `Machbarkeit_S1_Gegenpruefung_23_08.md`.
+
+---
+
 ## 8e. UMSETZUNGSPLAN PRODUKTION — laufend fortzuschreiben
 
 > **Nutzervorgabe 12.08.:** *„die noch offenen Punkte und Detailänderungen zum
