@@ -19167,3 +19167,158 @@ Reihe bekommt einen Schnitt, keine Korrektur**, und der Schnitt heißt
 | **C3** — `crv_spreizung` wieder einschalten | ⚠️ **nicht angefasst**; die Stilllegung vom 15.08. hat eine eigene Begründung und muss erst nachgelesen und neu geeicht werden |
 | **A5** `_crv_faktor` | wirkungslos, solange C3 stillgelegt ist |
 | **A6** Mail-Betreff | benannt, wartet |
+
+
+---
+
+## Kapitel 146 — A4: ein Defekt, den A1/A2 erst erzeugt haben (23.08.2026)
+
+**Nutzervorgabe:** *„hier mehrere Gegenprüfungen und Sicherstellung, dass die
+CRV-Thematik durch den ganzen Plan trägt … vor einer selektiven Umsetzung
+IMMER prüfen, ob dies umsetzbar und für die anderen Bereiche über die Kette
+gültig ist."*
+
+### 146.1 Die eigentliche A4-Frage: nein, es doppelt nicht
+
+**Gemessen über alle fünf Gruppen:**
+
+| Gruppe | spot | hebel | |
+|---|---:|---:|---|
+| krypto | 3,5 h | 3,5 h | identisch |
+| aktien / rohstoffe / themen_etf / hedge | 24 h | 24 h | identisch |
+
+**Der Gruppenwert überschreibt den Instrumentwert — für *alle* Gruppen und
+schon seit dem 15.08.** („das Spezifischere gewinnt"). Meine Krypto-Ergänzung
+von heute früh hat nur den **Wert** geändert, nicht die Struktur.
+
+### 146.2 ⚠️ Aber die Gegenprüfung fand einen neuen Defekt
+
+```python
+sql_bedingung("spot")  ->  hebel IS NULL
+```
+
+Der Cooldown fragt mit dem **Lauf**-Etikett. **Seit A2 wieder Hebelwerte
+geschrieben werden, fallen Hebel-Signale aus der Abfrage heraus.**
+
+**Nachgestellt, bevor eine Zeile geändert wurde:**
+
+| letztes Signal vor 1 Stunde (Cooldown 3,5 h) | gesperrt? |
+|---|---|
+| SPOT (`hebel = NULL`) | ja, bis 14:30 |
+| **HEBEL (`hebel = 2.4`)** | ⚠️ **nein — frei** |
+
+Ein Symbol mit Hebel-Signal wäre **alle 15 Minuten neu beurteilt** worden.
+
+> **Das ist die Sorte Fehler, die der Nutzer beschreibt:** *„deine Vorschläge
+> sind meist sehr gut, aber bei der Umsetzung bleiben wir immer an einer
+> Stelle hängen."*
+
+### 146.3 Die Reparatur — und die Kettengültigkeit VOR dem Bauen
+
+**Zwei Fragen zuerst, beide gemessen:**
+
+| | |
+|---|---|
+| Wer ruft `gesperrt_bis()`? | **genau ein Aufrufer** (`rollen_lauf:855`) |
+| Welche Gruppe hat noch zwei Läufe? | ⚠️ **keine** — `INSTRUMENTE_JE_GRUPPE` hat überall genau einen |
+
+**Deshalb keine Krypto-Sonderregel, sondern:**
+
+```python
+_mehrere_laeufe = len(INSTRUMENTE_JE_GRUPPE.get(gruppe, ("spot",))) > 1
+bedingung = TP.sql_bedingung(instrument) if (... and _mehrere_laeufe) else "1=1"
+```
+
+> **Ein Lauf stellt eine Frage, und die Sperre gilt der Frage — nicht dem
+> Topf, in dem die Antwort landet.**
+
+⚠️ **Der Zweig bleibt stehen**, obwohl er heute nie greift: er kehrt von
+selbst zurück, sobald eine Gruppe wieder zwei Läufe bekommt. **Ein gelöschter
+Zweig wäre eine Entscheidung über etwas, das nicht entschieden ist.**
+
+**Nachgewiesen über alle fünf Gruppen und beide Signalarten** — und die
+Gegenprobe: nach acht Stunden bei 3,5 h Cooldown wieder frei.
+
+### 146.4 ⚠️ Zwei Prüfungen standen auf der O-28-Welt
+
+| bisher | jetzt |
+|---|---|
+| „ein Spot-Urteil sperrt den Hebel **NICHT**" | **beide Welten geprüft**: ein Lauf → sperrt unabhängig vom Topf; **zwei Läufe → die Trennung kehrt zurück** (simuliert) |
+| „und der Cooldown trennt sie ebenfalls" (Absicherung) | „der Cooldown der Absicherung greift" — der alte Fall (`DBPK` als *spot*) **kann gar nicht eintreten** |
+
+⚠️ **Die O-28-Begründung bleibt richtig** — *„soll ich BTC mit Hebel handeln"
+ist eine andere Frage als *„soll ich eine Spot-Tranche nachlegen"*. **Nur ihre
+Prämisse ist entfallen:** der Kommentar nennt sie selbst — *„`laeufe()` fährt
+krypto/spot VOR krypto/hebel über dieselben 43 Symbole"*. Seit S6b gibt es
+diesen zweiten Durchgang nicht.
+
+**Deshalb wurde die Erkenntnis nicht gelöscht, sondern zur bedingten Prüfung
+gemacht.**
+
+### 146.5 ⚠️ Und die Falle der freien Namen, zum sechsten und siebten Mal
+
+| | |
+|---|---|
+| `g` in `gesperrt_bis` | in `stunden()` heißt sie so, hier nicht — **der breite Fehlerfang schluckte den NameError, und JEDE Gruppe galt als frei** |
+| `_YAML2` in der Suite | mein Block stand **vor** dem Import |
+
+⚠️ **`finde_freie_namen.py` hat den ersten gefunden** — ich habe es nur zu
+spät laufen lassen. **Kein Werkzeuggap, ein Ablauffehler:**
+
+> **Das Werkzeug gehört direkt nach dem Bearbeiten, vor den Funktionstest.**
+
+Den zweiten sieht es weiterhin nicht (der Name *wird* zugewiesen, nur später —
+dokumentierte Lücke aus Kapitel 134).
+
+---
+
+## 146.6 Trägt die CRV-Thematik durch die ganze Kette?
+
+**Gemessen an allen Stellen, die ein CRV führen:**
+
+| | Rechnung | config | |
+|---|---:|---:|---|
+| CRV-Minimum | 2,0 | `ziele.crv_minimum` = 2,0 | ✔ |
+| Bilanz (`trefferbilanz.CRV`) | 2,0 | — | ✔ |
+| `voll_ab` | 6,0 | `risiko.…_voll_ab` = 6,0 | ✔ |
+| **Größenspreizung** | **1,0** | `risiko.…_spreizung` = **5,0** | ⚠️ **zwei Wahrheiten** |
+
+**Die Spreizung wird nur von `agent/krypto/risk_gate.py` gelesen — der alten
+Kette.** Die Rollen-Kette nimmt `GRENZEN["crv_spreizung"] = 1,0`. Und die
+config trägt sogar den Hinweis *„Abschalten mit spreizung: 1.0"* — **wer nur
+dort liest, glaubt, die Abstufung sei aktiv.**
+
+### 146.7 ⚠️ Warum sie stillgelegt wurde — jetzt mit Zahlen
+
+**CRV-Verteilung der Rollen-Kette (1.570 Signale):**
+
+| | |
+|---|---:|
+| Median | **2,29** |
+| 10 % / 90 % | 1,61 / 2,79 |
+| **Maximum** | **3,00** |
+| über `voll_ab` = 6,0 | **0 %** |
+
+Die Abstufung skaliert von 1/5 (bei CRV 2,0) auf volle Größe **erst bei 6,0** —
+und **kein einziges Signal erreicht 6,0**. Beim Median-CRV ergäbe das rund
+**26 % der Größe für jede Empfehlung**.
+
+> **Das bestätigt und quantifiziert den Kommentar vom 15.08.** („kürzte fast
+> jede Empfehlung pauschal auf ein Fünftel").
+
+⚠️ **Und es benennt die eigentliche Ursache:**
+
+> **Nicht die Abstufung ist falsch, sondern ihre Eichung.** Sie ist auf die
+> Spanne 2,0–6,0 geeicht; die Verteilung liegt bei 1,6–3,0. Eine
+> Wiederinbetriebnahme braucht ein neues `voll_ab`, **keine neue Mechanik**.
+
+**Was getan wurde:** ein Vermerk an der config — **keine Wertänderung**. Er
+beseitigt eine falsche Auskunft, er trifft keine Entscheidung. Eine
+Dauerprüfung hält fest, dass die zwei Werte bewusst auseinanderstehen **und
+dass der Vermerk daneben steht**.
+
+**Was NICHT getan wurde:** die Abstufung einschalten. Das ist eine
+Nutzerentscheidung und braucht die Eichung, nicht die alte Zahl.
+
+**Suite 1.599 · Rollen-Gegenprüfung 25 · Instrument-Verzweigungen 15 (9 tot)
+· Vokabular 16 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**

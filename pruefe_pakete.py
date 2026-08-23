@@ -5257,12 +5257,46 @@ def paket_15() -> None:
     _c4.execute("INSERT INTO signals VALUES ('BTC', ?, 'rollen', NULL)",
                 ("2026-08-14T07:14:00+00:00",))
     _jetzt = "2026-08-14T07:30:00+00:00"
-    pruefe(P, "ein Spot-Urteil sperrt den Hebel NICHT",
-           WH4.gesperrt_bis(_c4, "BTC", "spot", jetzt=_jetzt) is not None
-           and WH4.gesperrt_bis(_c4, "BTC", "hebel", jetzt=_jetzt) is None,
-           "'soll ich BTC mit Hebel handeln' ist eine andere Frage als 'soll "
-           "ich eine Spot-Tranche nachlegen' - andere Geometrie, andere "
-           "Kosten, andere Haltedauer")
+    # ⚠️ HIER STAND "ein Spot-Urteil sperrt den Hebel NICHT" (bis 23.08.2026).
+    #
+    # DIE BEGRUENDUNG WAR UND BLEIBT RICHTIG: "soll ich BTC mit Hebel handeln"
+    # ist eine andere Frage als "soll ich eine Spot-Tranche nachlegen" -
+    # andere Geometrie, andere Kosten, andere Haltedauer.
+    #
+    # ⚠️ ABER DIE PRAEMISSE IST ENTFALLEN. Der Kommentar oben nennt sie selbst:
+    # "assetklassen.laeufe() faehrt krypto/spot VOR krypto/hebel ueber
+    # DIESELBEN 43 Symbole". Seit S6b hat JEDE Gruppe genau EINEN Lauf - es
+    # gibt keine zweite Frage mehr, die geschuetzt werden muesste.
+    #
+    # DESHALB PRUEFT DIESE STELLE JETZT BEIDE WELTEN: heute sperrt ein Urteil
+    # unabhaengig vom Topf, und die Trennung KEHRT ZURUECK, sobald eine Gruppe
+    # wieder zwei Laeufe hat. Die O-28-Erkenntnis bleibt damit gepruefter
+    # Bestand statt einer geloeschten Zeile.
+    from agent import assetklassen as _AK28
+
+    pruefe(P, "EIN Lauf je Gruppe: das Urteil sperrt, egal in welchem Topf",
+           WH4.gesperrt_bis(_c4, "BTC", "spot", gruppe="krypto",
+                            jetzt=_jetzt) is not None
+           and WH4.gesperrt_bis(_c4, "BTC", "hebel", gruppe="krypto",
+                                jetzt=_jetzt) is not None,
+           "seit S6b stellt die Kette EINE Frage - der Hebel faellt aus der "
+           "Antwort an. Eine Sperre, die nur den halben Topf sieht, laesst "
+           "dasselbe Symbol alle 15 Minuten neu fragen")
+    _echt28 = dict(_AK28.INSTRUMENTE_JE_GRUPPE)
+    try:
+        _AK28.INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot", "hebel")
+        pruefe(P, "ZWEI Laeufe: die Toepfe trennen sich wieder von selbst",
+               WH4.gesperrt_bis(_c4, "BTC", "spot", gruppe="krypto",
+                                jetzt=_jetzt) is not None
+               and WH4.gesperrt_bis(_c4, "BTC", "hebel", gruppe="krypto",
+                                    jetzt=_jetzt) is None,
+               "O-28 (14.08.): der erste Echtbetrieb erzeugte 45 Urteile und "
+               "KEIN Hebel-Signal, weil der Spot-Durchgang jedes Symbol "
+               "gesperrt hatte. Die Trennung muss zurueckkehren, sobald es "
+               "wieder zwei Durchgaenge gibt")
+    finally:
+        _AK28.INSTRUMENTE_JE_GRUPPE.clear()
+        _AK28.INSTRUMENTE_JE_GRUPPE.update(_echt28)
     _c4.execute("INSERT INTO signals VALUES ('BTC', ?, 'rollen', 3.0)",
                 ("2026-08-14T07:20:00+00:00",))
     pruefe(P, "und umgekehrt sperrt der Hebel sich selbst",
@@ -6767,11 +6801,17 @@ def paket_15() -> None:
                "Der hat einen Deckel, die Absicherung nicht - eine gehaltene "
                "Hedge-Position hat also stillschweigend Spot-Budget belegt")
         _j = "2026-08-14T08:00:00+00:00"
-        pruefe(P, "und der Cooldown trennt sie ebenfalls",
-               WH6.gesperrt_bis(_c6, "DBPK", "absicherung", jetzt=_j) is not None
-               and WH6.gesperrt_bis(_c6, "DBPK", "spot", jetzt=_j) is None,
-               "dieselbe Funktion, also automatisch dieselbe Trennung - das "
-               "ist der Gewinn daraus, dass es sie nur einmal gibt")
+        # ⚠️ HIER STAND "und der Cooldown trennt sie ebenfalls" (bis 23.08.).
+        #
+        # DIE TOPFTRENNUNG DER BUDGETS bleibt und wird oben geprueft. Beim
+        # COOLDOWN ist sie seit S6b gegenstandslos: `hedge` hat genau EINEN
+        # Lauf, und DBPK laeuft nie im Spot-Durchgang - der gepruefte Fall
+        # konnte gar nicht eintreten.
+        pruefe(P, "der Cooldown der Absicherung greift",
+               WH6.gesperrt_bis(_c6, "DBPK", "absicherung", gruppe="hedge",
+                                jetzt=_j) is not None,
+               "eine Absicherung, die alle 15 Minuten neu gefragt wird, "
+               "kostet Aufrufe ohne neue Information")
 
     # AC2 O-17: DIE 800 SIND UEBERNOMMEN, NICHT ENTSCHIEDEN.
     # KEIN CHECK AUF DEN KOMMENTAR. `_quelltext()` wirft Kommentarzeilen
@@ -10459,6 +10499,128 @@ def paket_dimension() -> None:
            _av_geprueft >= 5,
            f"{_av_geprueft} Stellen - findet es fast nichts, ist das Werkzeug "
            f"kaputt und nicht der Code sauber")
+    # ---- TRAEGT DAS CRV DURCH DIE GANZE KETTE? (23.08.2026) -----------
+    #
+    # Nutzervorgabe: "Sicherstellung, dass die CRV-Thematik durch den ganzen
+    # Plan traegt." Gemessen an allen Stellen, die ein CRV fuehren.
+    import yaml as _YAMLC
+
+    from agent import entscheidungsrechnung as _ERC
+    from agent import trefferbilanz as _TBC
+
+    _cfgc = _YAMLC.safe_load(
+        io.open("Basisinfos/config.yaml", encoding="utf-8").read())
+    _ziele = (_cfgc or {}).get("ziele") or {}
+    _risikoc = (_cfgc or {}).get("risiko") or {}
+    pruefe(P, "CRV-Minimum: Rechnung und `ziele.crv_minimum` stimmen ueberein",
+           abs(float(_ERC.GRENZEN["crv"])
+               - float(_ziele.get("crv_minimum", -1))) < 1e-9,
+           f"GRENZEN {_ERC.GRENZEN['crv']} gegen config "
+           f"{_ziele.get('crv_minimum')} - zwei Wahrheiten ueber dasselbe")
+    pruefe(P, "und die Bilanz rechnet mit demselben CRV",
+           abs(float(_ERC.GRENZEN["crv"]) - float(_TBC.CRV)) < 1e-9,
+           "sonst misst die Trefferbilanz gegen ein anderes Ziel, als die "
+           "Rechnung setzt")
+    pruefe(P, "`voll_ab` stimmt mit der config ueberein",
+           abs(float(_ERC.GRENZEN["crv_voll_ab"])
+               - float(_risikoc.get("crv_positionsgroesse_voll_ab", -1))) < 1e-9)
+    # ⚠️ UND DIE EINE STELLE, AN DER ES NICHT TRAEGT - benannt statt behoben.
+    #
+    # `risiko.crv_positionsgroesse_spreizung` steht auf 5.0 und wird NUR von
+    # `agent/krypto/risk_gate.py` gelesen - der alten Kette. Die Rollen-Kette
+    # nimmt GRENZEN["crv_spreizung"], und dort steht seit dem 15.08. 1.0.
+    # Wer nur die config liest, glaubt, die Abstufung sei aktiv.
+    #
+    # DIESE PRUEFUNG BEHEBT DAS NICHT - sie haelt fest, dass es so IST und
+    # dass der Vermerk daneben steht. Ob die Abstufung zurueckkommt, ist eine
+    # Entscheidung des Nutzers und braucht eine neue Eichung (gemessen:
+    # CRV-Median 2,29, Maximum 3,00 - `voll_ab` steht auf 6,0 und wird von
+    # KEINEM Signal erreicht).
+    pruefe(P, "die Spreizung steht bewusst auf zwei Werten - und es steht dabei",
+           abs(float(_ERC.GRENZEN["crv_spreizung"]) - 1.0) < 1e-9
+           and float(_risikoc.get("crv_positionsgroesse_spreizung", 0)) > 1.0
+           and "GILT NUR FUER DIE ALTE KETTE" in io.open(
+               "Basisinfos/config.yaml", encoding="utf-8").read(),
+           "der Vermerk in der config ist die einzige Stelle, an der ein "
+           "Leser erfaehrt, dass die 5.0 die Rollen-Kette nicht betrifft")
+
+    # ---- A4: DER COOLDOWN SIEHT AUCH HEBEL-SIGNALE (23.08.2026) -------
+    #
+    # ⚠️ DIESEN FEHLER HABEN A1/A2 ERST ERZEUGT. `sql_bedingung("spot")`
+    # lautet `hebel IS NULL`. Seit die Rechnung wieder Hebelwerte schreibt,
+    # fielen Hebel-Signale aus der Cooldown-Abfrage: ein Symbol mit einem
+    # Hebel-Signal von vor einer Stunde galt als frei und waere alle 15
+    # Minuten neu beurteilt worden.
+    #
+    # DIE TOPFTRENNUNG GILT NUR, WO ES ZWEI LAEUFE GIBT - und das ist seit
+    # S6b bei KEINER Gruppe der Fall. Geprueft ueber `INSTRUMENTE_JE_GRUPPE`,
+    # nicht fuer Krypto angenommen.
+    # ⚠️ EIGENE IMPORTE, NICHT `_sq3`/`_YAML2` VON WEITER UNTEN. Beide werden
+    # in dieser Funktion erst SPAETER gebunden - genau die Unterart der
+    # Namensfalle, die `finde_freie_namen.py` NICHT sieht (der Name wird ja
+    # zugewiesen, nur zu spaet; siehe Kapitel 134). Siebtes Mal in drei Tagen.
+    import sqlite3 as _sq4
+    import yaml as _YAML4
+
+    from agent import wiederholung as _WH4
+    from agent import signal_abbildung as _SA4
+
+    _mem4 = _sq4.connect(":memory:")
+    _mem4.row_factory = _sq4.Row
+    _db4 = __import__("database.db", fromlist=["db"])
+    _db4.init_db(_mem4)
+    _vorh4 = {r[1] for r in _mem4.execute("PRAGMA table_info(signals)")}
+    for _n4, _t4 in _SA4.SPALTEN_SIGNAL.items():
+        if _n4 not in _vorh4:
+            _mem4.execute(f"ALTER TABLE signals ADD COLUMN {_n4} {_t4}")
+    _mem4.commit()
+    _cfg4 = _YAML4.safe_load(
+        io.open("Basisinfos/config.yaml", encoding="utf-8").read())
+
+    def _sperre4(gruppe, instrument, hebel, symbol="TSTA"):
+        _mem4.execute("DELETE FROM signals")
+        _mem4.execute(
+            "INSERT INTO signals (symbol, created_at, action, gate_passed, "
+            "risk_veto, pipeline_version, facts_json, quelle_kette, hebel) "
+            "VALUES (?, '2026-08-23T11:00:00+00:00', 'KAUFEN', 1, 0, 'x', "
+            "'{}', 'rollen', ?)", (symbol, hebel))
+        _mem4.commit()
+        return _WH4.gesperrt_bis(_mem4, symbol, instrument, config=_cfg4,
+                                 gruppe=gruppe,
+                                 jetzt="2026-08-23T12:00:00+00:00")
+
+    from agent import assetklassen as _AK4
+    for _g4 in _AK4.INSTRUMENTE_JE_GRUPPE:
+        _i4 = _AK4.INSTRUMENTE_JE_GRUPPE[_g4][0]
+        _sym4 = "3QSS" if _g4 == "hedge" else "TSTA"
+        for _h4, _wie in ((None, "Spot"), (2.4, "Hebel")):
+            pruefe(P, f"{_g4}: ein {_wie}-Signal sperrt den naechsten Lauf",
+                   _sperre4(_g4, _i4, _h4, _sym4) is not None,
+                   f"`sql_bedingung('{_i4}')` filtert nach dem Topf - seit "
+                   f"A1/A2 fielen Hebel-Signale heraus und das Symbol waere "
+                   f"alle 15 Minuten neu gefragt worden")
+    # UND DIE GEGENPROBE: nach Ablauf muss es wieder frei sein.
+    _mem4.execute("DELETE FROM signals")
+    _mem4.execute(
+        "INSERT INTO signals (symbol, created_at, action, gate_passed, "
+        "risk_veto, pipeline_version, facts_json, quelle_kette, hebel) "
+        "VALUES ('TSTA', '2026-08-23T04:00:00+00:00', 'KAUFEN', 1, 0, 'x', "
+        "'{}', 'rollen', 2.4)")
+    _mem4.commit()
+    pruefe(P, "und nach Ablauf des Cooldowns ist es wieder frei",
+           _WH4.gesperrt_bis(_mem4, "TSTA", "spot", config=_cfg4,
+                             gruppe="krypto",
+                             jetzt="2026-08-23T12:00:00+00:00") is None,
+           "acht Stunden bei 3,5 h Cooldown - eine Sperre, die nicht "
+           "abläuft, waere eine Abschaltung")
+    # ⚠️ UND DIE TRENNUNG KEHRT ZURUECK, sobald eine Gruppe zwei Laeufe hat.
+    pruefe(P, "die Topftrennung haengt an der Zahl der Laeufe",
+           "_mehrere_laeufe" in _quelltext("agent/wiederholung.py")
+           and "INSTRUMENTE_JE_GRUPPE" in _quelltext("agent/wiederholung.py"),
+           "ein geloeschter Zweig waere eine Entscheidung ueber etwas, das "
+           "noch nicht entschieden ist")
+    _mem4.close()
+
     # ---- A1/A2: DER HEBEL FAELLT WIEDER AUS DER ZAHL AN (23.08.2026) ---
     #
     # ⚠️ SEIT S6b WAR ER AUS. `rechne()` fragte `instrument == "hebel"`, und

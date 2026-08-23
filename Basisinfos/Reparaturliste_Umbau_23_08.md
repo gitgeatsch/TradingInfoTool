@@ -16,7 +16,7 @@
 | **A1** | `rechne()` rechnet den Hebel aus dem **Lauf** → immer 1,0 | ✔ **repariert** 23.08. (Kapitel 145) | – |
 | **A2** | `hebel`-Spalte folgt dem Lauf → nie gefüllt | ✔ **repariert** 23.08. (Kapitel 145) | – |
 | **A3** | Hebel-Topf (3.000 €) ohne Gegenstand | ✔ **greift wieder** durch A2 | – |
-| **A4** | Hebel-Cooldown greift wieder | ⚠️ **nachprüfen**: Gruppen- und Instrumentwert dürfen sich nicht doppeln | mittel |
+| **A4** | Hebel-Cooldown greift wieder | ✔ **geprüft und repariert** 23.08. (Kapitel 146) — kein Doppeln, aber ein neuer Defekt aus A1/A2 | – |
 | **A5** | `_crv_faktor` unterscheidet Spot/Hebel nicht mehr | ⚠️ offen | mittel |
 | **A6** | Mail-Betreff und -Abschnitt hängen am Lauf | ⚠️ offen | leicht |
 | **B1** | Verkaufsseite: `facts_json` = Stummel, **zwei** Schreibpfade | ⚠️ **offen** | **schwer** |
@@ -24,7 +24,7 @@
 | **B3** | Verkaufsseite: **keine** Z.ai-Zweitmeinung (0 von 561) | ⚠️ offen | mittel |
 | **C1** | Einsatz 800 € statt 1.000 € | ⚠️ **Entscheidung**, dokumentiert | mittel |
 | **C2** | Risiko je Trade schwankt um Faktor 9 | ⚠️ **Entscheidung** | **schwer** |
-| **C3** | `crv_spreizung` = 1,0 → Größenabstufung ohne Wirkung | **bewusst stillgelegt** 15.08. | mittel |
+| **C3** | `crv_spreizung`: config 5,0, Code 1,0 | ⚠️ **vermessen** (Kapitel 146): nicht die Abstufung ist falsch, sondern ihre **Eichung** (2,0–6,0 gegen eine Verteilung 1,6–3,0). Vermerk gesetzt, Entscheidung offen | mittel |
 | **D1** | Strategien `swing`/`akkumulation` nie benutzt | seit jeher, **kein** Umbaufolge | offen |
 | **D2** | 5 Module ohne Aufrufer (`szenario_*`, `marktbreite`) | ⚠️ zu klären | leicht |
 | **D3** | 27 config-Schlüssel liest niemand | ⚠️ zu klären | leicht |

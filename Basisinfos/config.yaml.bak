@@ -316,6 +316,26 @@ risiko:
   # min() ueber die Deckel-Kandidaten ein. Ein weiterer Kandidat kann eine
   # Position nur VERKLEINERN, nie vergroessern - die Aenderung kann also keine
   # Ueberexposition erzeugen. Abschalten mit spreizung: 1.0.
+  # ⚠️ DIESER WERT GILT NUR FUER DIE ALTE KETTE (Vermerk 23.08.2026).
+  #
+  # Gelesen wird er ausschliesslich von `agent/krypto/risk_gate.py`. Die
+  # ROLLEN-KETTE nimmt `entscheidungsrechnung.GRENZEN["crv_spreizung"]`, und
+  # dort steht seit dem 15.08. eine 1.0 - die Abstufung ist dort ABGESCHALTET.
+  #
+  # WER NUR HIER LIEST, GLAUBT DAS GEGENTEIL. Deshalb dieser Vermerk; er
+  # aendert nichts, er sagt nur, was gilt.
+  #
+  # ⚠️ WARUM SIE ABGESCHALTET WURDE - jetzt mit Zahlen (23.08.2026,
+  # 1.570 Signale der Rollen-Kette): das CRV liegt im Median bei 2,29, im
+  # 90. Perzentil bei 2,79, im MAXIMUM bei 3,00. Die Abstufung skaliert aber
+  # von 1/5 (bei CRV 2,0) auf volle Groesse erst bei `voll_ab` = 6,0 - und
+  # DIESE 6,0 ERREICHT KEIN EINZIGES SIGNAL. Beim Median-CRV ergaebe das rund
+  # 26 % der Groesse fuer JEDE Empfehlung.
+  #
+  # NICHT DIE ABSTUFUNG IST FALSCH, SONDERN IHRE EICHUNG: sie ist auf die
+  # Spanne 2,0-6,0 geeicht, die Verteilung liegt bei 1,6-3,0. Eine
+  # Wiederinbetriebnahme braucht deshalb ein neues `voll_ab`, keine neue
+  # Mechanik - und eine Messung, keine Meinung.
   crv_positionsgroesse_spreizung: 5.0   # Verhaeltnis groesste zu kleinster Position
   crv_positionsgroesse_voll_ab: 6.0     # ab diesem CRV volle (RM-1-)Groesse
   cash_reserve_min_prozent: 10         # RM-4: bestaetigter Wert (2026-07-17, nicht mehr [OFFEN]) -

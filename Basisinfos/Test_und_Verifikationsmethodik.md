@@ -3645,3 +3645,24 @@ mehr. Gefunden wurden sie einzeln und zu spät:
 
 **Stand:** 14 Stellen, 11 für Krypto tot. Einzeln:
 `python pruefe_instrument_verzweigungen.py`.
+
+
+### 2.63 `finde_freie_namen` gehört VOR den Funktionstest (23.08.2026)
+
+**Anlass:** In `gesperrt_bis()` habe ich `g` benutzt — den Namen, den es nur
+in `stunden()` gibt. Der breite Fehlerfang schluckte den `NameError`, und
+**jede Gruppe galt als frei**: der Cooldown war komplett aus.
+
+⚠️ **Das Werkzeug hätte es gefunden** — nachgestellt: mit eingebautem Fehler
+meldet `finde_freie_namen.py` genau eine Fundstelle. **Ich habe es zu spät
+laufen lassen.** Kein Werkzeuggap, ein Ablauffehler.
+
+**Die Regel:** nach jeder Bearbeitung einer Betriebsdatei **zuerst**
+`python finde_freie_namen.py`, **dann** der Funktionstest. Ein freier Name
+verfälscht den Funktionstest, statt ihn scheitern zu lassen — der Test läuft,
+er misst nur etwas anderes.
+
+⚠️ **Die zweite Unterart sieht das Werkzeug weiterhin nicht:** ein Name, der
+in derselben Funktion **später** gebunden wird (`_YAML2`, `_sq3`, `_AK`).
+Dagegen hilft nur die Regel *„der Import gehört vor den ersten Gebrauch"* —
+siebtes Vorkommen in drei Tagen.

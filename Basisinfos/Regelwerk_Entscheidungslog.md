@@ -20599,3 +20599,65 @@ Begruendung und braucht eine neue Eichung), A5, A6.
 
 Suite 1582, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot statt
 11), simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.
+
+
+[2026-08-23] KAPITEL 146: A4 - EIN DEFEKT, DEN A1/A2 ERST ERZEUGT HABEN
+
+Nutzervorgabe: "mehrere Gegenpruefungen und Sicherstellung, dass die
+CRV-Thematik durch den ganzen Plan traegt ... vor einer selektiven Umsetzung
+IMMER pruefen, ob dies umsetzbar und fuer die anderen Bereiche ueber die Kette
+gueltig ist."
+
+DIE EIGENTLICHE A4-FRAGE: nein, es doppelt nicht. Der Gruppenwert
+ueberschreibt den Instrumentwert - fuer ALLE fuenf Gruppen und schon seit dem
+15.08. Meine Krypto-Ergaenzung hat nur den Wert geaendert, nicht die Struktur.
+
+⚠️ ABER DIE GEGENPRUEFUNG FAND EINEN NEUEN DEFEKT. sql_bedingung("spot") ist
+`hebel IS NULL` - seit A2 wieder Hebelwerte schreibt, fielen Hebel-Signale aus
+der Cooldown-Abfrage. Nachgestellt VOR jeder Aenderung: ein Symbol mit
+Hebel-Signal von vor einer Stunde galt als FREI und waere alle 15 Minuten neu
+beurteilt worden. Genau die Sorte Fehler, die der Nutzer beschreibt ("bei der
+Umsetzung bleiben wir immer an einer Stelle haengen").
+
+KETTENGUELTIGKEIT VOR DEM BAUEN, beide Fragen gemessen: genau EIN Aufrufer
+(rollen_lauf:855), und KEINE Gruppe hat noch zwei Laeufe. Deshalb keine
+Krypto-Sonderregel, sondern eine Bedingung an `INSTRUMENTE_JE_GRUPPE`: die
+Topftrennung gilt nur, wo es zwei Laeufe gibt. Ein Lauf stellt eine Frage, und
+die Sperre gilt der Frage, nicht dem Topf. ⚠️ Der Zweig BLEIBT stehen - er
+kehrt von selbst zurueck, sobald eine Gruppe wieder zwei Laeufe bekommt.
+
+⚠️ ZWEI PRUEFUNGEN STANDEN AUF DER O-28-WELT ("ein Spot-Urteil sperrt den
+Hebel NICHT"). Die BEGRUENDUNG bleibt richtig - "soll ich BTC mit Hebel
+handeln" ist eine andere Frage als "soll ich eine Spot-Tranche nachlegen".
+Entfallen ist nur die PRAEMISSE, die der Kommentar selbst nennt: "laeufe()
+faehrt krypto/spot VOR krypto/hebel ueber dieselben 43 Symbole". Die
+Erkenntnis wurde deshalb nicht geloescht, sondern zur BEDINGTEN Pruefung
+gemacht, die beide Welten testet.
+
+⚠️ FALLE DER FREIEN NAMEN, SECHSTES UND SIEBTES MAL: `g` in gesperrt_bis (der
+breite Fehlerfang schluckte den NameError, JEDE Gruppe galt als frei) und
+`_YAML2` in der Suite. finde_freie_namen.py hat den ersten GEFUNDEN - ich habe
+es zu spaet laufen lassen. Kein Werkzeuggap, ein Ablauffehler: DAS WERKZEUG
+GEHOERT DIREKT NACH DEM BEARBEITEN, VOR DEN FUNKTIONSTEST.
+
+TRAEGT DAS CRV DURCH DIE KETTE? An allen Stellen gemessen: CRV-Minimum 2,0 =
+ziele.crv_minimum ✔, Bilanz 2,0 ✔, voll_ab 6,0 = config ✔. ⚠️ EINE Stelle
+traegt nicht: die Groessenspreizung steht in der config auf 5.0 und im Code
+auf 1.0. Die 5.0 liest NUR agent/krypto/risk_gate.py - die alte Kette.
+
+⚠️ WARUM SIE STILLGELEGT WURDE, JETZT MIT ZAHLEN: die CRV-Verteilung der
+Rollen-Kette (1.570 Signale) hat Median 2,29, 90. Perzentil 2,79 und MAXIMUM
+3,00. Die Abstufung skaliert auf volle Groesse erst bei voll_ab = 6,0 - das
+erreicht KEIN Signal. Beim Median ergaebe das rund 26 % der Groesse fuer jede
+Empfehlung. Das bestaetigt den Kommentar vom 15.08. und benennt die Ursache:
+NICHT DIE ABSTUFUNG IST FALSCH, SONDERN IHRE EICHUNG (2,0-6,0 gegen eine
+Verteilung von 1,6-3,0).
+
+GETAN: ein Vermerk an der config, KEINE Wertaenderung - er beseitigt eine
+falsche Auskunft, er trifft keine Entscheidung. Dauerpruefung haelt fest, dass
+die zwei Werte bewusst auseinanderstehen UND dass der Vermerk daneben steht.
+NICHT GETAN: die Abstufung einschalten - Nutzerentscheidung, und sie braucht
+die Eichung, nicht die alte Zahl.
+
+Suite 1599, Rollen-Gegenpruefung 25, Instrument-Verzweigungen 15 (9 tot),
+Vokabular 16, simuliere_kette 6 Signale / 0 Fehler, freie Namen 0.

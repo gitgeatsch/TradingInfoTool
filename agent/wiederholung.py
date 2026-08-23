@@ -151,8 +151,38 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
         # `hebel IS NOT NULL`. Eine zweite Definition waere die Kopierfalle.
         from agent import toepfe as TP
 
+        # ⚠️ DIE TOPFTRENNUNG GILT NUR, WO ES ZWEI LAEUFE GIBT (23.08.2026).
+        #
+        # DER FEHLER, DEN DAS BEHEBT - und er entstand erst durch A1/A2 von
+        # heute. `sql_bedingung("spot")` lautet `hebel IS NULL`. Seit die
+        # Rechnung wieder Hebelwerte schreibt, FALLEN HEBEL-SIGNALE AUS DER
+        # ABFRAGE HERAUS: ein Symbol, das vor einer Stunde ein Hebel-Signal
+        # erzeugt hat, gilt als frei und wird alle 15 Minuten neu beurteilt.
+        # Nachgestellt und bestaetigt, bevor diese Zeile entstand.
+        #
+        # WARUM DIE TRENNUNG UEBERHAUPT DA WAR: bis S6b lief Krypto mit ZWEI
+        # Laeufen, und der Hebel-Lauf brauchte einen eigenen Topf - sonst
+        # sperrte der Spot-Durchgang ihn mit (O-28, 14.08.).
+        #
+        # ⚠️ SEIT S6b HAT JEDE GRUPPE GENAU EINEN LAUF - geprueft ueber
+        # `INSTRUMENTE_JE_GRUPPE`, nicht fuer Krypto angenommen. Ein Lauf
+        # stellt eine Frage, und die Sperre gilt der Frage, nicht dem Topf,
+        # in dem die Antwort landet.
+        #
+        # DIE BEDINGUNG BLEIBT STEHEN, NICHT WEIL SIE HEUTE GREIFT, sondern
+        # weil sie von selbst zurueckkehrt, sobald eine Gruppe wieder zwei
+        # Laeufe bekommt. Ein geloeschter Zweig waere eine Entscheidung ueber
+        # etwas, das noch nicht entschieden ist.
+        from agent.assetklassen import INSTRUMENTE_JE_GRUPPE as _IJG
+
+        # ⚠️ `gruppe`, NICHT `g`. In `stunden()` heisst die kleingeschriebene
+        # Fassung `g`; hier gibt es sie nicht - und der breite Fehlerfang
+        # darunter schluckte den NameError, sodass JEDE Gruppe als frei galt.
+        # Sechstes Mal dieselbe Falle in zwei Tagen, und wieder still.
+        _mehrere_laeufe = len(_IJG.get(
+            str(gruppe or "").strip().lower(), ("spot",))) > 1
         bedingung = (TP.sql_bedingung(instrument)
-                     if "hebel" in spalten else "1=1")
+                     if ("hebel" in spalten and _mehrere_laeufe) else "1=1")
         zeile = conn.execute(
             "SELECT MAX(created_at) FROM signals WHERE symbol = ? "
             f"AND quelle_kette = 'rollen' AND {bedingung}",
