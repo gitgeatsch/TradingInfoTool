@@ -22078,3 +22078,59 @@ Suite 1.669 ALLE BESTANDEN, freie Namen 0.
 
 OFFEN UND ECHT: welche zwei Symbole haben keine Kursreihe? Das sagt der
 naechste Lauf des Werkzeugs am Notebook.
+
+
+[2026-08-24] P1 ERLEDIGT - DAS URTEIL VON Z1 STEHT AN DER ZEILE
+
+Nutzerauftrag: "mach P1 - Z1 Urteil speichern, wie immer pruefen, gegenpruefen
+und Doku."
+
+DER BEFUND: Z1 (`gegenpruefer_rollen`) ist die einzige DETERMINISTISCHE und
+KOSTENLOSE Pruefung der Kette - Zahlendeckung (Z-1), Richtungstreue (Z-2),
+Zuspitzung (Z-3). Sie LAEUFT, sie geht in die MAIL, sie geht in die ZAEHLUNG des
+Trichters - und sie landete NICHT in der Signalzeile. Damit war sie nie gegen
+Ergebnisse messbar: die Frage "laufen Signale mit einem Treuebruch schlechter
+als saubere" war unbeantwortbar, und zwar dauerhaft.
+
+DIESELBE FEHLERART WIE S-2 VOM VORTAG, an anderer Stelle.
+
+⚠️ ZWEI SPALTEN, NICHT EINE - UND DAS IST DER PUNKT:
+    z1_verletzt         NULL  = Z1 lief nicht
+                        ""    = Z1 lief und fand NICHTS
+                        "Z-1" = Z1 lief und schlug an
+    z1_zahlen_geprueft  wie viele Zahlen ueberhaupt geprueft wurden
+
+OHNE DIE ZWEITE SPALTE SAEHE "sauber" IMMER GLEICH AUS - egal ob dreissig
+Zahlen geprueft wurden oder keine einzige. Genau die Verwechslung "Abwesenheit
+sieht aus wie Bestehen", die dieses Projekt mehrfach getroffen hat.
+
+UND DER PROBELAUF ZEIGT SIE SOFORT, gegen eine Kopie der Produktions-DB:
+    SUI   HALTEN  verletzt=''     geprueft=0   <- sauber, weil NICHTS zu pruefen war
+    NEAR  HALTEN  verletzt='Z-1'  geprueft=2   <- zwei Zahlen, beide ohne Deckung
+Ohne die zweite Spalte waeren beide "sauber oder nicht" - mit ihr ist die erste
+Zeile eine Nicht-Aussage und die zweite ein Befund.
+
+DURCHGEREICHT AN ALLEN VIER SCHREIBSTELLEN (Einstieg, Ausstieg, zwei
+Nein-Pfade), im NB-Export ergaenzt.
+
+LESEPROBE NACH METHODIK 2.61 ueber den LESEPFAD DES MODELLS:
+    NEAR: z1_verletzt='Z-1' z1_zahlen_geprueft=2
+    SUI:  z1_verletzt=''    z1_zahlen_geprueft=0
+
+⚠️ EINE FALLE BEIM BAU, benannt: die Zahl der geprueften Zahlen steht in
+`einzeln` unter der Regel "Z-1", NICHT auf oberster Ebene des Z1-Ergebnisses.
+Wer sie oben suchte, bekaeme None und schriebe fuer JEDE Zeile 0 - "sauber bei
+null geprueften Zahlen", und zwar immer. Eine eigene Dauerpruefung haelt das
+fest.
+
+⚠️ UND EINE BEIM PRUEFEN: `felder_aus_entscheidung` filtert am Ende alle
+None-Werte heraus. Die erste Fassung der Pruefung testete auf `is None` und
+scheiterte an einem KeyError - richtig ist ABWESEND. In der Zeile steht dann
+NULL, dasselbe Ergebnis auf anderem Weg.
+
+Sieben neue Dauerpruefungen. Suite 1.676 ALLE BESTANDEN, freie Namen 0,
+simuliere_kette 0 Fehler.
+
+⚠️ WAS DAS NICHT LEISTET: die bereits geschriebenen Zeilen bleiben ohne das
+Urteil - nicht nachruestbar. Die Frage "traegt ein Treuebruch" wird mit den
+Zeilen ab heute beantwortbar, nicht rueckwirkend.

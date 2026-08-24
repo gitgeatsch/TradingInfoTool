@@ -163,7 +163,7 @@ aufgelösten Signalen** (42 Ziel, 24 Stop — Stand vor E1/E2; danach weniger).
 
 | | was | Aufwand |
 |---|---|---|
-| **P1** | **Z1-Urteil je Signal speichern** — Zahlendeckung, Richtungstreue, Zuspitzung, Leerlauf | klein |
+| **P1** | ✔ **erledigt 24.08.** — `z1_verletzt` und `z1_zahlen_geprueft`; die zweite Spalte trennt „sauber geprüft“ von „nichts zu prüfen“ | – |
 | **P2** | **Verkaufsseite: den Faktenstummel ersetzen** (B1/B2) — beide Schreibpfade, `familien` mit | klein |
 | **P3** | **NICHTS_TUN bekommt seinen Grund** — N1/N2/N3 **deterministisch abgeleitet**, nicht vom Modell erfragt | mittel |
 

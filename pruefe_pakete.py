@@ -12947,6 +12947,59 @@ def paket_auswahl() -> None:
            "Schreiben allein genuegt nicht - das Lesen bekommt ALLE Spalten")
     _c2.close()
 
+    # ---- P1: DAS URTEIL VON Z1 AN DER ZEILE (24.08.2026) ----
+    #
+    # ⚠️ Z1 lief, ging in die Mail und in die Zaehlung - und landete NICHT in
+    # der Signalzeile. Damit war die einzige deterministische, kostenlose
+    # Pruefung der Kette nie gegen Ergebnisse messbar.
+    from agent import gegenpruefer_rollen as _Z1
+    pruefe(P, "die Spalten z1_verletzt und z1_zahlen_geprueft stehen bereit",
+           "z1_verletzt" in _SA.SPALTEN_SIGNAL
+           and "z1_zahlen_geprueft" in _SA.SPALTEN_SIGNAL)
+    pruefe(P, "und beide im Datenmodell",
+           {"z1_verletzt", "z1_zahlen_geprueft"}
+           <= set(getattr(_Sig, "__annotations__", {})),
+           "eine Spalte ohne Feld liest der Konstruktor nicht")
+
+    # ⚠️ DREI ZUSTAENDE, UND DER MITTLERE IST DER WICHTIGE.
+    _ein = {"kurs": "Der Kurs liegt bei 100 EUR.", "atr": "Die Spanne ist 4 %."}
+    _sauber = _Z1.pruefe({"lage": "Die Lage ist ruhig.", "belege": []}, _ein)
+    _f1 = _SA.felder_aus_entscheidung({"aktion": "NICHTS_TUN"},
+                                      fakten=_ein, z1=_sauber)
+    pruefe(P, "Z1 gelaufen und sauber ergibt eine LEERE Zeichenkette",
+           _f1["z1_verletzt"] == "",
+           "None hiesse 'nicht gelaufen' - das ist etwas anderes")
+    _f0 = _SA.felder_aus_entscheidung({"aktion": "NICHTS_TUN"}, fakten=_ein)
+    # ⚠️ ABWESEND, NICHT None: `felder_aus_entscheidung` filtert am Ende
+    # alle None-Werte heraus. In der Zeile steht dann NULL - dasselbe
+    # Ergebnis, anderer Weg. Wer hier auf `is None` prueft, prueft an
+    # der Funktion vorbei.
+    pruefe(P, "ohne Z1 bleibt die Spalte leer, statt 'sauber' zu behaupten",
+           "z1_verletzt" not in _f0 and "z1_zahlen_geprueft" not in _f0,
+           "eine nicht gelaufene Pruefung darf nicht wie eine bestandene "
+           "aussehen")
+
+    # ⚠️ UND DIE ZAHL, DIE 'SAUBER' ERST ZU EINER AUSSAGE MACHT.
+    _bruch = _Z1.pruefe(
+        {"lage": "Der Kurs stieg um 47,3 Prozent.", "belege": []}, _ein)
+    _f2 = _SA.felder_aus_entscheidung({"aktion": "NICHTS_TUN"},
+                                      fakten=_ein, z1=_bruch)
+    pruefe(P, "ein Treuebruch steht mit seiner Regel da",
+           "Z-1" in (_f2["z1_verletzt"] or ""),
+           f"gespeichert: {_f2['z1_verletzt']!r}")
+    pruefe(P, "und die Zahl der geprueften Zahlen unterscheidet die Faelle",
+           _f2["z1_zahlen_geprueft"] >= 1
+           and _f1["z1_zahlen_geprueft"] == 0,
+           f"sauber bei {_f1['z1_zahlen_geprueft']} geprueften Zahlen ist "
+           f"KEINE Aussage - ohne diese Spalte saehen beide gleich aus")
+
+    # ⚠️ DIE ZAHL STECKT IN `einzeln`, NICHT OBEN. Wer sie oben suchte,
+    # bekaeme None und schriebe fuer jede Zeile 0.
+    pruefe(P, "die geprueften Zahlen kommen aus der Z-1-Teilpruefung",
+           any(e.get("regel") == "Z-1" and "geprueft" in e
+               for e in (_bruch.get("einzeln") or [])),
+           "auf oberster Ebene steht sie nicht")
+
     # ---- DER SCHATTEN: eine Zeile je Symbol, nicht nur je Gewaehltem ----
     #
     # ⚠️ NACH METHODIK 2.61 wird hier auch GELESEN, nicht nur geschrieben.

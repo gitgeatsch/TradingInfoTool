@@ -460,6 +460,20 @@ class Signal:
     # unmoeglich: was nicht in der Zeile steht, rekonstruiert keine
     # spaetere Auswertung.
     strategie: str | None = None               # 'einstieg' | 'swing' | 'akkumulation'
+    # P1 (24.08.2026): DAS URTEIL VON Z1 AN DER ZEILE.
+    #
+    # ⚠️ Z1 lief, ging in die Mail und in die Zaehlung - und nicht in
+    # die Zeile. Damit war die einzige deterministische Pruefung der
+    # Kette nie gegen Ergebnisse messbar.
+    #
+    # DREI ZUSTAENDE, und der mittlere ist der wichtige:
+    #   None  Z1 lief nicht
+    #   ''    Z1 lief und fand nichts
+    #   'Z-1' Z1 lief und schlug an
+    z1_verletzt: str | None = None
+    # ⚠️ OHNE DIESE ZAHL SIEHT 'sauber' IMMER GLEICH AUS - egal ob
+    # dreissig Zahlen geprueft wurden oder keine einzige.
+    z1_zahlen_geprueft: int | None = None
     unabhaengige_faktoren: int | None = None
     # P1a (19.08.2026): die auffaelligen Perzentilzeilen der Mail, als JSON.
     # Sie entscheiden nichts - sie halten fest, WO ein Extrem vorlag, damit

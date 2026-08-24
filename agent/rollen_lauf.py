@@ -1235,7 +1235,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                strategie=strategie, conn=conn, db=db,
                                config=config, modell=modell,
                                ergebnis=ergebnis, module=module,
-                               assetklasse=assetklasse, fakten=bc_ein)
+                               assetklasse=assetklasse, fakten=bc_ein,
+                               z1=z1)
             return
         durchlauf.bestanden(symbol, "aktion")
         _sende_ausstieg(
@@ -1245,7 +1246,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             betriebsart=betriebsart, versand=versand, ergebnis=ergebnis,
             # B1/B2 (23.08.2026): der Faktensatz, der in den Prompt ging,
             # und die Reihe fuer die Merkmalsfamilien.
-            fakten=bc_ein, reihe=reihe, idx=idx,
+            fakten=bc_ein, reihe=reihe, idx=idx, z1=z1,
             # B3 (23.08.2026): die Gegenpruefung gehoert auch hierher.
             zai_client=zai_client, config=config,
             assetklasse=assetklasse)
@@ -1279,7 +1280,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
                            module=module, assetklasse=assetklasse,
-                           fakten=bc_ein)
+                           fakten=bc_ein, z1=z1)
         return
 
     # KEIN EINSTIEG, WO DER AUSSTIEG SCHON FAELLIG IST (O-37, 15.08.2026).
@@ -1324,7 +1325,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
                            module=module, assetklasse=assetklasse,
-                           fakten=bc_ein)
+                           fakten=bc_ein, z1=z1)
         return
     durchlauf.bestanden(symbol, "aktion")
 
@@ -1760,6 +1761,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
         # S-2 (23.08.2026): der AUFTRAG geht mit, nicht nur das Instrument.
         strategie=strategie,
+        # P1 (24.08.2026): das Urteil von Z1 auch - es lief bisher,
+        # ging in die Mail und war trotzdem nie messbar.
+        z1=z1,
         # DIE RECHNUNG MIT - sie traegt den Hebelfaktor, den das Modell nicht
         # nennt und nicht nennen soll.
         rechnung=rechnung,
@@ -1902,7 +1906,8 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
                     tag, lagebild_id, modell, conn, db, betriebsart, versand,
                     ergebnis, fakten=None, familien=None,
                     reihe=None, idx=None, zai_client=None,
-                    config=None, assetklasse="krypto") -> None:
+                    config=None, assetklasse="krypto",
+                    z1=None) -> None:
     """Einen Ausstieg VORMERKEN und seine Zeile schreiben - nicht mailen.
 
     NUTZEREINWAND 14.08., waehrend dieser Umbau lief: *"45 Signale sind
@@ -1988,7 +1993,8 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
             lagebild_id=lagebild_id,
             prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
             eur_je_usd=None, familien=familien, strategie=strategie,
-            instrument=instrument, rechnung=None, modell=modell)
+            instrument=instrument, rechnung=None, modell=modell,
+            z1=z1)
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
         felder["gate_passed"] = 1
@@ -2050,7 +2056,7 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
                    lagebild_id, instrument, strategie, conn, db, config,
                    modell, ergebnis, module, assetklasse="krypto",
-                   fakten=None) -> None:
+                   fakten=None, z1=None) -> None:
     """Ein NICHTS_TUN als auflösbare Zeile - der Kontrollarm der Messung.
 
     `assetklasse` IST PFLICHT UND STAND HIER NICHT (gefunden 15.08.2026, an
@@ -2108,7 +2114,7 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             lagebild_id=lagebild_id,
             prompt_stand=getattr(RT, "PROMPT_STAND", "?"),
             eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
-            strategie=strategie,
+            strategie=strategie, z1=z1,
             # UND DAS INSTRUMENT (15.08.2026, zweite Haelfte desselben Fundes).
             # Seit die Hebelspalte am INSTRUMENT haengt statt am Wert, bekam
             # eine Nein-Zeile aus dem Hebel-Lauf keine - sie galt als Spot.

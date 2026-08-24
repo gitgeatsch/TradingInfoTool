@@ -127,6 +127,28 @@ SPALTEN_SIGNAL = {
     # dieser Stelle angelegt (`quelle_kette`, `belege_json`, ...). Eine zweite
     # Migration in db.py waere eine zweite Definition derselben Spalte.
     "strategie": "TEXT",
+    # P1 (24.08.2026): DAS URTEIL VON Z1 GEHOERT AN DIE ZEILE.
+    #
+    # ⚠️ DER BEFUND: Z1 (`gegenpruefer_rollen`) ist die einzige
+    # deterministische, kostenlose Pruefung der Kette - Zahlendeckung,
+    # Richtungstreue, Zuspitzung. Sie LAEUFT, sie geht in die MAIL, sie geht in
+    # die ZAEHLUNG des Trichters - und sie landete NICHT in der Signalzeile.
+    # Damit war sie nie gegen Ergebnisse messbar: man konnte nicht fragen, ob
+    # Signale mit einem Treuebruch schlechter laufen als saubere.
+    #
+    # ZWEI SPALTEN, NICHT EINE, UND DAS IST DER PUNKT:
+    #
+    #   z1_verletzt         NULL  = Z1 lief nicht (aeltere Zeile, anderer Pfad)
+    #                       ""    = Z1 lief und fand NICHTS
+    #                       "Z-1" = Z1 lief und schlug an
+    #   z1_zahlen_geprueft  wie viele Zahlen ueberhaupt geprueft wurden
+    #
+    # ⚠️ OHNE DIE ZWEITE SPALTE SAEHE "sauber" IMMER GLEICH AUS - egal ob
+    # dreissig Zahlen geprueft wurden oder keine einzige. Genau diese
+    # Verwechslung ("Abwesenheit sieht aus wie Bestehen") hat dieses Projekt
+    # mehrfach getroffen.
+    "z1_verletzt": "TEXT",
+    "z1_zahlen_geprueft": "INTEGER",
     "unabhaengige_faktoren": "INTEGER",
     # DIE BELEGE SELBST (14.08.2026) - bis heute ging nur ihre ANZAHL in die
     # Datenbank.
@@ -358,6 +380,18 @@ def _frist_oder_nichts(datum_text, heute=None):
     return ziel.isoformat() if ziel > vergleich else None
 
 
+def _z1_zahlen(z1: dict) -> int:
+    """Wie viele Zahlen hat Z-1 geprueft?
+
+    ⚠️ DIE ZAHL STECKT IN `einzeln`, NICHT AUF OBERSTER EBENE - dieselbe
+    Stelle, an der `pruefe_und_zaehle()` sie holt. Wer sie oben suchte, bekaeme
+    None und schriebe "0 geprueft" fuer jede Zeile."""
+    for e in (z1.get("einzeln") or []):
+        if isinstance(e, dict) and e.get("regel") == "Z-1":
+            return int(e.get("geprueft") or 0)
+    return 0
+
+
 def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             lagebild_id: int | None = None,
                             prompt_stand: str | None = None,
@@ -366,7 +400,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             rechnung: dict | None = None,
                             modell: str | None = None,
                             instrument: str | None = None,
-                            strategie: str | None = None) -> dict:
+                            strategie: str | None = None,
+                            z1: dict | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -393,6 +428,13 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         # Strategie getrennt messen" dauerhaft unmoeglich.
         "strategie": (str(strategie).strip().lower()
                       if strategie else None),
+        # P1: leere Zeichenkette heisst "geprueft und sauber", None
+        # heisst "nicht gelaufen". Der Unterschied ist die halbe
+        # Aussage.
+        "z1_verletzt": (",".join(z1.get("verletzt") or [])
+                        if isinstance(z1, dict) else None),
+        "z1_zahlen_geprueft": (_z1_zahlen(z1)
+                               if isinstance(z1, dict) else None),
         "prompt_stand": prompt_stand,
         "lagebild_id": lagebild_id,
         "short_reasoning": antwort.get("begruendung"),
