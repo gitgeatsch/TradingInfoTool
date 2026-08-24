@@ -3203,6 +3203,17 @@ def paket_15() -> None:
     # A. DAS SCHREIBEN - die Luecke, an der die ganze Kette haengt.
     q = sqlite3.connect("data/tradinginfotool.db")
     c = sqlite3.connect(":memory:"); q.backup(c); q.close()
+    # ⚠️ ROW_FACTORY FEHLTE HIER (24.08.2026-Fund am Notebook): ohne sie liest
+    # `compute_ausstiegs_empfehlungen()` weiter unten `row["symbol"]` von
+    # einer Verbindung, die nur Tupel liefert - "TypeError: tuple indices
+    # must be integers or slices, not str", abgefangen und als
+    # "Ausstiegsfuehrung nicht lesbar" in `erg['fehler']` gemeldet. Am
+    # Desktop blieb das unentdeckt: der Trockenlauf davor findet dort nie
+    # eine Position, die diesen Zweig ueberhaupt betritt. Am Notebook, mit
+    # echten Positionen im Bestand, greift der Zweig - und deckte damit
+    # zugleich auf, dass die Funktion selbst vom `row_factory` des Aufrufers
+    # abhing (jetzt in `backward_tracking.py` behoben).
+    c.row_factory = sqlite3.Row
     SA.migriere(c); RG.migriere(c)
 
     NEUE = ("quelle_kette", "lagebild_id", "prompt_stand", "fx_eur_je_usd",

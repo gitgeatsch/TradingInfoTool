@@ -22258,3 +22258,80 @@ Volle Suite danach erneut gelaufen: 1.679 Pruefungen, ALLE BESTANDEN - die
 "Test Failures" aus dem abgeschnittenen Screenshot vom selben Tag waren damit
 endgueltig als Fehldeutung der externen Zusammenfassung bestaetigt, nicht als
 echter Fund. `finde_freie_namen.py`: 0 Kandidaten.
+
+⚠️ KORREKTUR ZUM VORIGEN ABSATZ (24.08.2026, wenige Stunden spaeter): DIESE
+SCHLUSSFOLGERUNG WAR VERFRUEHT. Sie stand auf dem DESKTOP-Lauf allein - der
+echte Notebook-Lauf war zu dem Zeitpunkt noch nicht eingetroffen. Als er kam
+(ueber genau den neuen Google-Drive-Export oben), zeigte er 15 ECHTE FEHL,
+0 davon auf dem Desktop reproduzierbar. Die Lehre bleibt richtig ("Rohzeilen
+zaehlen"), nur war die Rohzeile vom Desktop nicht die vollstaendige Menge an
+Rohzeilen. Siehe den folgenden Eintrag fuer die Untersuchung aller 15.
+
+
+[2026-08-24] 15 ECHTE FEHL AM NOTEBOOK - EIN ZWEITER ROW_FACTORY-DEFEKT, ZWEI
+NB-EXPORT-LUECKEN, UND EINE NEUE FEHLERKLASSE
+
+NUTZERVORGABE: "beides ist gelaufen prüfe alles" - der volle Text lag jetzt
+ueber den neuen Google-Drive-Export vor (239 KB, `pruefe_pakete_ausgabe.txt`,
+geschrieben vom NOTEBOOK, nicht vom Desktop). 15 FEHL bei 1.679 Pruefungen,
+alle VOR dem Ende - kein Absturz, Methodik 2.66 haelt.
+
+JEDE EINZELN AN DER QUELLE GEPRUEFT, nicht der Sammelzahl vertraut:
+
+ECHTER FUND 1 (behoben): `compute_ausstiegs_empfehlungen()` in
+backward_tracking.py las `row["symbol"]` etc. aus einer eigenen SELECT-Abfrage
+OHNE eigene `row_factory`-Einstellung - derselbe Fehler, der `get_latest_
+prices()` Stunden zuvor gehaertet hatte, an einer zweiten, ungeprueften
+Stelle in DERSELBEN Datei. Am Desktop unsichtbar, weil die Testverbindung
+dort nie eine Position erreicht, die den Zweig betritt; am Notebook, mit
+echtem Bestand, griff er - "Ausstiegsfuehrung nicht lesbar: tuple indices
+must be integers or slices, not str", vier Folgepruefungen in `paket_15`
+fielen mit. BEHOBEN: die Funktion setzt `row_factory` jetzt selbst
+(Save/Restore). NEBENFUND: `paket_15`s eigene Testverbindung hatte ebenfalls
+kein `row_factory` gesetzt, anders als ihre Nachbarbloecke - auch behoben.
+Als Methodik 2.67 festgehalten.
+
+ECHTER FUND 2 (behoben): der eigene Drift-Waechter (`paket_export`) meldete
+`auswahl_schatten` als nicht erwaehnte Tabelle und `einstieg_erreicht` als
+nicht exportierte signals-Spalte im NB-Export. Beide echte Luecken, keine
+Absicht: `auswahl_schatten` (A1-Schatten) fehlte komplett in
+`extract_notebook_diagnose.py`, `einstieg_erreicht` (E1, 22.08.) fehlte in
+BEIDEN Spaltenlisten (Spot UND Hebel - der Drift-Waechter prueft nur die
+Spot-Seite, die Hebel-Seite war ebenso blind). BEHOBEN: neuer Abschnitt
+`auswahl` in `_rollen_kette()`, `einstieg_erreicht` in beiden Spaltenlisten.
+
+NEUE FEHLERKLASSE (offen, Methodik 2.68): drei Pruefungen lesen eine Zahl aus
+der ECHTEN, wachsenden Produktions-DB und vergleichen sie gegen einen zum
+Schreibzeitpunkt abgeschriebenen Wert, statt wie ihre Nachbarn eine Kopie zu
+leeren und synthetisch zu befuellen - "78 statt 416" (Abweisungen wachsen mit
+dem Betrieb), "[] / []" statt "True / False" (Migration ist am Notebook
+laengst gelaufen, am Desktop nicht), Perzentilband 0 statt 2 (die
+Merkmalsverteilung der echten Population hat sich verschoben). Auf dem
+Desktop hielten alle drei zufaellig, weil dessen DB seit dem Schreiben der
+Pruefung nicht gewachsen ist. NICHT BEHOBEN - die Umstellung auf isolierte
+Daten ist mehr als eine Randkorrektur, siehe Methodik 2.68.
+
+ZWEI BEFUNDE NOCH OFFEN, NICHT ABSCHLIESSEND GEKLAERT:
+
+  * "und schreibt KEINE Zeile in die Produktivdatenbank" (Hash der ganzen DB
+    vor/nach einem Trockenlauf) schlug an. Ursache ungeklaert: entweder
+    schreibt der Trockenlauf doch etwas, oder - wahrscheinlicher, da das
+    Notebook 24/7 als echter Server laeuft - der LIVE-SCHEDULER hat
+    zwischen den beiden Hash-Berechnungen selbst in die DB geschrieben und
+    die Pruefung damit einen falschen Alarm gegeben, der nichts mit dem
+    gepruften Code zu tun hat. NAECHSTER SCHRITT: denselben Testlauf bei
+    GESTOPPTEM Scheduler wiederholen, um Konkurrenzschreiben als Ursache
+    auszuschliessen oder zu bestaetigen.
+  * "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber" schlug an
+    mit `LONG 1977.19 / SHORT 1916.0 bei 2076` - der SHORT-Stop lag UNTER
+    dem damaligen Kurs, geometrisch falschherum. Auf dem Desktop mit
+    anderen Marktdaten lief dieselbe Pruefung sauber (LONG 1929,90 / SHORT
+    2124,27 bei 1964 - dort korrekt ueber dem Kurs). Nicht reproduzierbar
+    ohne die echten Notebook-Marktdaten zum Laufzeitpunkt. Die Pruefung
+    stuetzt sich auf einen fragilen Text-Regex (`_marken()`), der die erste
+    Zahl hinter "Stop " aus der Mail liest - ob das ein Rechenfehler in der
+    Hebel-Geometrie oder ein Parsing-Fehler des Regex ist, ist OHNE den
+    tatsaechlichen Mailtext beider Laeufe nicht zu entscheiden.
+
+Suite danach: 1.679 Pruefungen, ALLE BESTANDEN (Desktop). `finde_freie_namen.
+py`: 0 Kandidaten.

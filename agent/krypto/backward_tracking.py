@@ -5038,185 +5038,202 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
             "SELECT symbol FROM hebel_positions WHERE status = 'offen'")}
     except Exception:
         gehalten_hebel = set()
-    for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
-        spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
-        if "outcome_max_realisiertes_crv" not in spalten:
-            continue
-        zonen_spalten = [c for c in (
-            "entry_usd_von", "entry_usd_bis", "entry_usd",
-            "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_usd",
-            "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
-        ) if c in spalten]
-        # DIE ID MUSS MIT (14.08.2026). Ohne sie kann die Ausstiegsmail nicht
-        # sagen, WELCHES Signal meldet - und mehrere offene Signale je Symbol
-        # sind der Normalfall, nicht die Ausnahme: am 14.08. hatten DBPK und
-        # OD7L je fuenf, 3QSS vier, MON und OD7C drei.
-        #
-        # DAS IST SO GEWOLLT. `_is_superseded()` raeumt aeltere Signale ab,
-        # aber erst nach der Mindestbeobachtung - sonst waere ein Signal tot,
-        # bevor es messbar wird. Solange beide offen sind, muss der Leser sie
-        # auseinanderhalten koennen.
-        felder = ("id, symbol, created_at, action, outcome_status, "
-                  "outcome_max_realisiertes_crv"
-                  + "".join(f", {c}" for c in zonen_spalten)
-                  + "".join(f", {c}" for c in
-                            ("umgeworfen_preis_eur", "umgeworfen_bis",
-                             "umgeworfen_durch") if c in spalten))
-        rows = conn.execute(
-            f"SELECT {felder} FROM {tabelle} "
-            f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
-            f"AND take_profit_usd_von IS NOT NULL",
-            (OUTCOME_OFFEN,),
-        ).fetchall()
-        for row in rows:
-            ergebnis["geprueft"] += 1
-            z = _zonen_absolut(row)
-            if z is None:
+    # ⚠️ UNABHAENGIG VON `row_factory` DES AUFRUFERS (24.08.2026, dieselbe
+    # Lehre wie bei `database.db.get_latest_prices()`). Die beiden Schleifen
+    # unten - hier und bei "ZIEL ERREICHT" weiter unten - lesen `row["spalte"]`.
+    # Ohne eigene Einstellung haengt das vom Aufrufer ab: eine Verbindung ohne
+    # `row_factory = sqlite3.Row` wirft "TypeError: tuple indices must be
+    # integers or slices, not str". In der Produktion setzt
+    # `database.db.get_connection()` das immer - gefunden hat den Defekt
+    # trotzdem eine Pruefung mit einer Verbindung ohne diese Einstellung, und
+    # ein kuenftiger Aufrufer koennte denselben stillen Ausfall wiederholen,
+    # den `get_latest_prices()` schon einmal hatte. Save/restore, damit die
+    # Einstellung des Aufrufers hinterher unveraendert weitergilt.
+    import sqlite3
+    _alt_row_factory = conn.row_factory
+    conn.row_factory = sqlite3.Row
+    try:
+        for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
+            spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
+            if "outcome_max_realisiertes_crv" not in spalten:
                 continue
-            # VOLLE AUSSTIEGSPRUEFUNG FUER JEDE OFFENE POSITION (13.08.2026).
+            zonen_spalten = [c for c in (
+                "entry_usd_von", "entry_usd_bis", "entry_usd",
+                "stop_loss_usd_von", "stop_loss_usd_bis", "stop_loss_usd",
+                "take_profit_usd_von", "take_profit_usd_bis", "take_profit_usd",
+            ) if c in spalten]
+            # DIE ID MUSS MIT (14.08.2026). Ohne sie kann die Ausstiegsmail nicht
+            # sagen, WELCHES Signal meldet - und mehrere offene Signale je Symbol
+            # sind der Normalfall, nicht die Ausnahme: am 14.08. hatten DBPK und
+            # OD7L je fuenf, 3QSS vier, MON und OD7C drei.
             #
-            # Bisher stand hier nur der Trailing-Stop, und darunter ein
-            # `continue` fuer alles, was ihn nicht ausgeloest hat. Damit wurde
-            # eine Position unter +1 R NIE geprueft - auch nicht darauf, ob der
-            # Kurs den Preis erreicht hat, bei dem das Modell seine eigene
-            # Begruendung fuer widerlegt erklaerte. Genau dort ist die Pruefung
-            # aber am wichtigsten: eine Position im Minus hat den Trailing-Stop
-            # per Definition nicht ausgeloest.
-            #
-            # WAEHRUNG: die Zonen stehen in USD (`entry_usd_*`), die Mail
-            # spricht EUR. Umgerechnet wird HIER, mit demselben Kurs fuer alle
-            # Werte einer Zeile - zwei Waehrungen nebeneinander sind der
-            # dokumentierte Fehler aus Umbauplan 12.5.
-            from agent import ausstiegsrechnung as _AR
+            # DAS IST SO GEWOLLT. `_is_superseded()` raeumt aeltere Signale ab,
+            # aber erst nach der Mindestbeobachtung - sonst waere ein Signal tot,
+            # bevor es messbar wird. Solange beide offen sind, muss der Leser sie
+            # auseinanderhalten koennen.
+            felder = ("id, symbol, created_at, action, outcome_status, "
+                      "outcome_max_realisiertes_crv"
+                      + "".join(f", {c}" for c in zonen_spalten)
+                      + "".join(f", {c}" for c in
+                                ("umgeworfen_preis_eur", "umgeworfen_bis",
+                                 "umgeworfen_durch") if c in spalten))
+            rows = conn.execute(
+                f"SELECT {felder} FROM {tabelle} "
+                f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
+                f"AND take_profit_usd_von IS NOT NULL",
+                (OUTCOME_OFFEN,),
+            ).fetchall()
+            for row in rows:
+                ergebnis["geprueft"] += 1
+                z = _zonen_absolut(row)
+                if z is None:
+                    continue
+                # VOLLE AUSSTIEGSPRUEFUNG FUER JEDE OFFENE POSITION (13.08.2026).
+                #
+                # Bisher stand hier nur der Trailing-Stop, und darunter ein
+                # `continue` fuer alles, was ihn nicht ausgeloest hat. Damit wurde
+                # eine Position unter +1 R NIE geprueft - auch nicht darauf, ob der
+                # Kurs den Preis erreicht hat, bei dem das Modell seine eigene
+                # Begruendung fuer widerlegt erklaerte. Genau dort ist die Pruefung
+                # aber am wichtigsten: eine Position im Minus hat den Trailing-Stop
+                # per Definition nicht ausgeloest.
+                #
+                # WAEHRUNG: die Zonen stehen in USD (`entry_usd_*`), die Mail
+                # spricht EUR. Umgerechnet wird HIER, mit demselben Kurs fuer alle
+                # Werte einer Zeile - zwei Waehrungen nebeneinander sind der
+                # dokumentierte Fehler aus Umbauplan 12.5.
+                from agent import ausstiegsrechnung as _AR
 
-            kurs_usd = (preise.get(row["symbol"]).price_usd
-                        if preise.get(row["symbol"]) else None)
-            # ⚠️ DER WIDERLEGUNGSPREIS STEHT IN EUR - ALLES ANDERE HIER IN USD
-            # (gefunden 20.08.2026, Kapitel 94).
-            #
-            # `bewerte()` vergleicht ihn direkt mit `kurs_aktuell`, und der ist
-            # USD. Die Spalte `umgeworfen_preis_eur` kommt dagegen aus der
-            # Modellantwort, und dort ist sie EUR: `entscheidungsrechnung`
-            # prueft denselben Wert gegen den EUR-Kurs. Beide Enden
-            # nachverfolgt, nicht geraten.
-            #
-            # Die Folge war KEIN Anzeigefehler, sondern eine falsche
-            # Entscheidung: EUR liegt rund 14 % unter USD, also loeste die
-            # Widerlegung bei LONG zu spaet aus und bei SHORT zu frueh - und
-            # sie fuehrt zur Empfehlung SCHLIESSEN.
-            _fx = _eur_je_usd(preise.get(row["symbol"]))
-            _umg_eur = (row["umgeworfen_preis_eur"]
-                        if "umgeworfen_preis_eur" in spalten else None)
-            # Ohne Faktor lieber KEINE Widerlegungspruefung als eine in der
-            # falschen Waehrung - dieselbe Regel wie in `_in_eur`.
-            _umg_usd = (float(_umg_eur) / float(_fx)
-                        if _umg_eur and _fx else None)
-            voll = _AR.bewerte(
-                einstieg=z["entry"], stop_original=z["stop"],
-                kurs_aktuell=kurs_usd, ziel=z.get("ziel"),
-                mfe_r=row["outcome_max_realisiertes_crv"],
-                ist_short=z["ist_short"],
-                umgeworfen_preis=_umg_usd,
-                umgeworfen_bis=(row["umgeworfen_bis"]
-                                if "umgeworfen_bis" in spalten else None),
-                umgeworfen_durch=(row["umgeworfen_durch"]
-                                  if "umgeworfen_durch" in spalten else None),
-                ausloese_r=ausloese, abstand_r=abstand)
-            if voll:
-                ergebnis["alle"].append({
-                    "symbol": row["symbol"], "seit": str(row["created_at"])[:10],
-                "signal_id": row["id"], "ist_hebel": ist_hebel,
-                "ur_aktion": row["action"],
-                    "richtung": "SHORT" if z["ist_short"] else "LONG",
+                kurs_usd = (preise.get(row["symbol"]).price_usd
+                            if preise.get(row["symbol"]) else None)
+                # ⚠️ DER WIDERLEGUNGSPREIS STEHT IN EUR - ALLES ANDERE HIER IN USD
+                # (gefunden 20.08.2026, Kapitel 94).
+                #
+                # `bewerte()` vergleicht ihn direkt mit `kurs_aktuell`, und der ist
+                # USD. Die Spalte `umgeworfen_preis_eur` kommt dagegen aus der
+                # Modellantwort, und dort ist sie EUR: `entscheidungsrechnung`
+                # prueft denselben Wert gegen den EUR-Kurs. Beide Enden
+                # nachverfolgt, nicht geraten.
+                #
+                # Die Folge war KEIN Anzeigefehler, sondern eine falsche
+                # Entscheidung: EUR liegt rund 14 % unter USD, also loeste die
+                # Widerlegung bei LONG zu spaet aus und bei SHORT zu frueh - und
+                # sie fuehrt zur Empfehlung SCHLIESSEN.
+                _fx = _eur_je_usd(preise.get(row["symbol"]))
+                _umg_eur = (row["umgeworfen_preis_eur"]
+                            if "umgeworfen_preis_eur" in spalten else None)
+                # Ohne Faktor lieber KEINE Widerlegungspruefung als eine in der
+                # falschen Waehrung - dieselbe Regel wie in `_in_eur`.
+                _umg_usd = (float(_umg_eur) / float(_fx)
+                            if _umg_eur and _fx else None)
+                voll = _AR.bewerte(
+                    einstieg=z["entry"], stop_original=z["stop"],
+                    kurs_aktuell=kurs_usd, ziel=z.get("ziel"),
+                    mfe_r=row["outcome_max_realisiertes_crv"],
+                    ist_short=z["ist_short"],
+                    umgeworfen_preis=_umg_usd,
+                    umgeworfen_bis=(row["umgeworfen_bis"]
+                                    if "umgeworfen_bis" in spalten else None),
+                    umgeworfen_durch=(row["umgeworfen_durch"]
+                                      if "umgeworfen_durch" in spalten else None),
+                    ausloese_r=ausloese, abstand_r=abstand)
+                if voll:
+                    ergebnis["alle"].append({
+                        "symbol": row["symbol"], "seit": str(row["created_at"])[:10],
+                    "signal_id": row["id"], "ist_hebel": ist_hebel,
+                    "ur_aktion": row["action"],
+                        "richtung": "SHORT" if z["ist_short"] else "LONG",
+                        "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                            row["symbol"], assetklasse_by_symbol),
+                        "kurs_usd": kurs_usd,
+                        # EUR ist die Waehrung des Nutzers. Der Faktor kommt aus
+                        # DERSELBEN Zeile des Preis-Caches (price_eur/price_usd) -
+                        # eine zweite Umrechnungsquelle waere eine zweite Wahrheit.
+                        "eur_je_usd": _eur_je_usd(preise.get(row["symbol"])),
+                        # DAS EIGENE INSTRUMENT entscheidet, ob es eine
+                        # Position ist. Die andere Seite wird BENANNT statt
+                        # verschwiegen - sie gehoert dem Leser, nur eben
+                        # nicht unter dieser Ueberschrift.
+                        "ist_bestand": row["symbol"] in (
+                            gehalten_hebel if ist_hebel else gehalten_spot),
+                        "ist_bestand_gegenseite": row["symbol"] in (
+                            gehalten_spot if ist_hebel else gehalten_hebel),
+                        **voll})
+
+                e = stopempfehlung_aus_mfe(
+                    z["entry"], z["stop"], row["outcome_max_realisiertes_crv"],
+                    ist_short=z["ist_short"], ausloese_r=ausloese, abstand_r=abstand)
+                if e is None or not e.aktiv:
+                    continue
+                ergebnis["empfehlungen"].append({
                     "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
                         row["symbol"], assetklasse_by_symbol),
-                    "kurs_usd": kurs_usd,
-                    # EUR ist die Waehrung des Nutzers. Der Faktor kommt aus
-                    # DERSELBEN Zeile des Preis-Caches (price_eur/price_usd) -
-                    # eine zweite Umrechnungsquelle waere eine zweite Wahrheit.
-                    "eur_je_usd": _eur_je_usd(preise.get(row["symbol"])),
-                    # DAS EIGENE INSTRUMENT entscheidet, ob es eine
-                    # Position ist. Die andere Seite wird BENANNT statt
-                    # verschwiegen - sie gehoert dem Leser, nur eben
-                    # nicht unter dieser Ueberschrift.
-                    "ist_bestand": row["symbol"] in (
-                        gehalten_hebel if ist_hebel else gehalten_spot),
-                    "ist_bestand_gegenseite": row["symbol"] in (
-                        gehalten_spot if ist_hebel else gehalten_hebel),
-                    **voll})
-
-            e = stopempfehlung_aus_mfe(
-                z["entry"], z["stop"], row["outcome_max_realisiertes_crv"],
-                ist_short=z["ist_short"], ausloese_r=ausloese, abstand_r=abstand)
-            if e is None or not e.aktiv:
+                    "symbol": row["symbol"],
+                    "signal_id": row["id"], "ist_hebel": ist_hebel,
+                    "ur_aktion": row["action"],
+                    "seit": str(row["created_at"])[:10],
+                    "richtung": "SHORT" if z["ist_short"] else "LONG",
+                    "mfe_r": round(e.mfe_r, 3),
+                    "entry": z["entry"],
+                    "stop_bisher": z["stop"],
+                    "stop_empfohlen": e.stop_empfohlen,
+                    "sichert_r": round(e.gesicherte_r, 3),
+                    "begruendung": e.begruendung,
+                })
+        # ---- ZIEL ERREICHT, ABER NOCH IM BESTAND (Nutzerfund 13.08.) ----
+        #
+        # DIE LUECKE: *"Take-Profit steht nicht mehr hier, wenn im Bestand - ok,
+        # aber zuvor sollte ich doch informiert werden, dass eine Aktion - Verkauf
+        # - ansteht, oder?"* Genau. Bisher passierte beim Zielerreichen dies:
+        #
+        #     logger.info("Backward-Tracking: %d Take-Profit, ...")
+        #
+        # Ein Logeintrag. Keine Nachricht. Das Tracking verbucht "gewonnen" - und
+        # der Wert liegt weiter im Depot, waehrend der Kurs zurueckkommen kann.
+        # Das ist dieselbe Luecke wie die 50/17,6-Prozent-Zahl, nur an ihrem
+        # oberen Ende: dort geben Positionen Gewinne zurueck, hier wird der
+        # Gewinn nicht einmal gemeldet.
+        #
+        # DAS TRACKING LAEUFT UM 6:00, DIESER JOB UM 7:15 - zum Zeitpunkt der Mail
+        # ist das Signal also nicht mehr `offen` und faellt aus der Schleife oben
+        # heraus. Deshalb wird hier ein zweites Mal nachgesehen, nach Ausgang
+        # statt nach Zustand.
+        ergebnis["ziel_erreicht"] = []
+        for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
+            spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
+            if not {"outcome_status", "outcome_entschieden_am"} <= spalten:
                 continue
-            ergebnis["empfehlungen"].append({
-                "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
-                    row["symbol"], assetklasse_by_symbol),
-                "symbol": row["symbol"],
-                "signal_id": row["id"], "ist_hebel": ist_hebel,
-                "ur_aktion": row["action"],
-                "seit": str(row["created_at"])[:10],
-                "richtung": "SHORT" if z["ist_short"] else "LONG",
-                "mfe_r": round(e.mfe_r, 3),
-                "entry": z["entry"],
-                "stop_bisher": z["stop"],
-                "stop_empfohlen": e.stop_empfohlen,
-                "sichert_r": round(e.gesicherte_r, 3),
-                "begruendung": e.begruendung,
-            })
-    # ---- ZIEL ERREICHT, ABER NOCH IM BESTAND (Nutzerfund 13.08.) ----
-    #
-    # DIE LUECKE: *"Take-Profit steht nicht mehr hier, wenn im Bestand - ok,
-    # aber zuvor sollte ich doch informiert werden, dass eine Aktion - Verkauf
-    # - ansteht, oder?"* Genau. Bisher passierte beim Zielerreichen dies:
-    #
-    #     logger.info("Backward-Tracking: %d Take-Profit, ...")
-    #
-    # Ein Logeintrag. Keine Nachricht. Das Tracking verbucht "gewonnen" - und
-    # der Wert liegt weiter im Depot, waehrend der Kurs zurueckkommen kann.
-    # Das ist dieselbe Luecke wie die 50/17,6-Prozent-Zahl, nur an ihrem
-    # oberen Ende: dort geben Positionen Gewinne zurueck, hier wird der
-    # Gewinn nicht einmal gemeldet.
-    #
-    # DAS TRACKING LAEUFT UM 6:00, DIESER JOB UM 7:15 - zum Zeitpunkt der Mail
-    # ist das Signal also nicht mehr `offen` und faellt aus der Schleife oben
-    # heraus. Deshalb wird hier ein zweites Mal nachgesehen, nach Ausgang
-    # statt nach Zustand.
-    ergebnis["ziel_erreicht"] = []
-    for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
-        spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
-        if not {"outcome_status", "outcome_entschieden_am"} <= spalten:
-            continue
-        try:
-            rows = conn.execute(
-                f"SELECT symbol, outcome_entschieden_am, outcome_realisiertes_crv "
-                f"FROM {tabelle} WHERE outcome_status = ? "
-                f"AND outcome_entschieden_am >= ?",
-                (OUTCOME_TAKE_PROFIT, seit_tag)).fetchall()
-        except Exception:
-            logger.exception("Take-Profit-Nachlese fuer %s fehlgeschlagen", tabelle)
-            continue
-        for row in rows:
-            # NUR WAS WIRKLICH IM DEPOT LIEGT. Ein erreichtes Ziel auf einem
-            # nie gekauften Signal ist ein Messpunkt, kein Verkaufsauftrag.
-            #
-            # ⚠️ UND ZWAR IM PASSENDEN INSTRUMENT (17.08.2026). Hier stand
-            # das verschmolzene `gehalten` - ein Spot-Bestand haette einen
-            # Verkaufshinweis fuer eine Hebelposition erzeugt, die es nicht
-            # gibt. `finde_freie_namen.py` hat diese Zeile gefunden,
-            # nachdem die Menge oben aufgeteilt war; ohne das Werkzeug waere
-            # sie ein NameError hinter einem breiten Fang gewesen.
-            if row["symbol"] not in (gehalten_hebel if ist_hebel
-                                     else gehalten_spot):
+            try:
+                rows = conn.execute(
+                    f"SELECT symbol, outcome_entschieden_am, outcome_realisiertes_crv "
+                    f"FROM {tabelle} WHERE outcome_status = ? "
+                    f"AND outcome_entschieden_am >= ?",
+                    (OUTCOME_TAKE_PROFIT, seit_tag)).fetchall()
+            except Exception:
+                logger.exception("Take-Profit-Nachlese fuer %s fehlgeschlagen", tabelle)
                 continue
-            ergebnis["ziel_erreicht"].append({
-                "symbol": row["symbol"],
-                "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
-                    row["symbol"], assetklasse_by_symbol),
-                "am": str(row["outcome_entschieden_am"])[:10],
-                "crv": row["outcome_realisiertes_crv"],
-                "ist_bestand": True})
+            for row in rows:
+                # NUR WAS WIRKLICH IM DEPOT LIEGT. Ein erreichtes Ziel auf einem
+                # nie gekauften Signal ist ein Messpunkt, kein Verkaufsauftrag.
+                #
+                # ⚠️ UND ZWAR IM PASSENDEN INSTRUMENT (17.08.2026). Hier stand
+                # das verschmolzene `gehalten` - ein Spot-Bestand haette einen
+                # Verkaufshinweis fuer eine Hebelposition erzeugt, die es nicht
+                # gibt. `finde_freie_namen.py` hat diese Zeile gefunden,
+                # nachdem die Menge oben aufgeteilt war; ohne das Werkzeug waere
+                # sie ein NameError hinter einem breiten Fang gewesen.
+                if row["symbol"] not in (gehalten_hebel if ist_hebel
+                                         else gehalten_spot):
+                    continue
+                ergebnis["ziel_erreicht"].append({
+                    "symbol": row["symbol"],
+                    "tier": TIER_HEBEL if ist_hebel else _tier_fuer_spot_symbol(
+                        row["symbol"], assetklasse_by_symbol),
+                    "am": str(row["outcome_entschieden_am"])[:10],
+                    "crv": row["outcome_realisiertes_crv"],
+                    "ist_bestand": True})
+    finally:
+        conn.row_factory = _alt_row_factory
 
     ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
     # Dringlichstes zuerst: SCHLIESSEN, dann STOP NACHZIEHEN, dann der Rest -

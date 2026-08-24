@@ -406,6 +406,12 @@ _HEBEL_SIGNAL_SPALTEN = (
     # (LLM-eigene Antwort) und `angefragte_richtung` (Kandidat/Screening)
     # auseinanderlaufen.
     "angefragte_richtung, "
+    # E1 (2026-08-22): ob die Einstiegszone tatsaechlich erreicht wurde -
+    # ohne die Spalte laesst sich am Notebook nicht trennen, welche Signale
+    # real gefuellt und welche nur eine Empfehlung geblieben sind. Von
+    # `paket_export`s eigenem Drift-Waechter am 24.08. auf der Spot-Seite
+    # gemeldet; hier auf der Hebel-Seite fehlte sie ebenso.
+    "einstieg_erreicht, "
     + _VOLLSTAENDIGKEITS_SPALTEN
     # HIER STAND EIN FEHLVERSUCH (2026-08-07) - bewusst als Warnung dokumentiert.
     # Der Plan war, `umgesetzt, umgesetzt_am, umgesetzt_menge,
@@ -509,6 +515,10 @@ _SPOT_SIGNAL_SPALTEN = (
     # _HEBEL_SIGNAL_SPALTEN.
     "zai_gegenpruefung_urteil, zai_gegenpruefung_kurzbegruendung, "
     "zai_eigene_richtung, zai_uebereinstimmung, zai_richtung_kurzbegruendung, "
+    # E1 (2026-08-22): ob die Einstiegszone tatsaechlich erreicht wurde -
+    # von `paket_export`s eigenem Drift-Waechter am 24.08. gemeldet, siehe
+    # gleichlautender Kommentar bei _HEBEL_SIGNAL_SPALTEN.
+    "einstieg_erreicht, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 
@@ -1862,6 +1872,38 @@ def _rollen_kette(conn) -> dict:
     else:
         aus["gate_durchlaessigkeit"] = {
             "nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
+
+    # --- DER AUSWAHL-SCHATTEN (A1, 23.08.2026) -----------------------------
+    #
+    # `paket_export`s eigener Drift-Waechter meldete diese Tabelle am
+    # 24.08. als `nicht_erwaehnt` - dieselbe Lehre wie bei
+    # `gate_durchlaessigkeit` oben, nur eine Stufe juenger: was `auswahl.
+    # waehle()` empfohlen haette, gegen das, was die Kette daraus gemacht
+    # hat (`agent/auswahl.py::schreibe_lauf()`/`vermerke_aktion()`).
+    if "auswahl_schatten" in vorhanden:
+        n, laeufe, gewaehlt, mit_aktion = conn.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT lauf), SUM(gewaehlt), "
+            "SUM(aktion IS NOT NULL) FROM auswahl_schatten").fetchone()
+        zeilen = [dict(r) for r in conn.execute(
+            "SELECT lauf, gruppe, symbol, platz, von, k, gewaehlt, "
+            "entwicklung, marktzustand, aktion FROM auswahl_schatten "
+            "ORDER BY id DESC LIMIT 60")]
+        je_gruppe = {r[0]: {"zeilen": r[1], "gewaehlt": r[2]} for r in
+                     conn.execute(
+                         "SELECT gruppe, COUNT(*), SUM(gewaehlt) "
+                         "FROM auswahl_schatten GROUP BY gruppe")}
+        aus["auswahl"] = {
+            "zeilen": n or 0, "laeufe": laeufe or 0,
+            "gewaehlt": gewaehlt or 0, "mit_aktion": mit_aktion or 0,
+            "je_gruppe": je_gruppe,
+            "juengste": zeilen,
+            "hinweis": ("`gewaehlt=1, aktion=NULL` heisst 'ausgewaehlt, aber "
+                        "der Bestand kam zuerst dran' oder 'noch nicht "
+                        "beurteilt' - nicht 'abgelehnt'. Nur die Gewaehlten "
+                        "koennen ueberhaupt eine Aktion haben."),
+        }
+    else:
+        aus["auswahl"] = {"nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
 
     # --- DIE ANLASSMESSUNG (16.08.2026) -----------------------------------
     #

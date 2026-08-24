@@ -3817,3 +3817,58 @@ keine Mail → `["mails"][0]` fliegt.
 **Behoben:** `_OHNE_BREMSEN` gilt für **alle drei** Läufe des Pakets, und der
 Mailzugriff geht über einen Helfer, der eine leere Liste als Befund meldet
 statt als Ausnahme.
+
+### 2.67 Eine Verbindung ohne `row_factory` ist derselbe Fehler an einer zweiten Stelle (24.08.2026)
+
+**Der Fund:** `database.db.get_latest_prices()` wurde am selben Tag gehärtet,
+weil sie `row["symbol"]` bei einer Verbindung ohne `row_factory = sqlite3.Row`
+mit `TypeError: tuple indices must be integers or slices, not str` sterben
+ließ. Wenige Stunden später, am Notebook: derselbe Fehler, andere Funktion —
+`agent.krypto.backward_tracking.compute_ausstiegs_empfehlungen()` liest ihre
+eigene SELECT-Abfrage genauso ungeschützt.
+
+⚠️ **Am Desktop unsichtbar, weil die Testverbindung dort nie eine Position
+erreicht, die diesen Zweig betritt.** Am Notebook, mit echtem Bestand, griff
+der Zweig — und legte offen, dass `paket_15`s eigene Testverbindung
+(`c = sqlite3.connect(":memory:"); q.backup(c)`) selbst kein `row_factory`
+gesetzt hatte, anders als die Nachbarblöcke in derselben Datei.
+
+**Die Regel:** *ein* gefundener `row_factory`-Fehler ist ein Hinweis, keine
+Erledigung. Wer ihn an einer Funktion behebt, sollte **dieselbe Datei nach der
+Geschwisterfunktion durchsuchen** — dieselbe Unachtsamkeit tritt selten genau
+einmal auf. Behoben durch dasselbe Muster wie bei 2.61: die Funktion setzt
+`row_factory` jetzt selbst (mit Save/Restore, damit die Einstellung des
+Aufrufers hinterher unverändert gilt), statt sich auf den Aufrufer zu
+verlassen.
+
+### 2.68 Eine Zahl aus der lebenden Produktions-DB veraltet mit deren Wachstum (24.08.2026)
+
+**Drei Prüfungen fielen am Notebook, obwohl der Code unverändert war:**
+
+| Prüfung | erwartet | Notebook | Desktop |
+|---|---:|---:|---:|
+| „die leeren sind alle Abweisungen" | 78 | 416 | 78 |
+| „die Migration legt die Tabelle an und ist idempotent" | `True / False` | `[] / []` | `True / False` |
+| „12. Perzentil ins unterste Band, 74. ins dritte von vier" | Band 0/2 | Band 0/0 | Band 0/2 |
+
+**Der gemeinsame Fehler:** alle drei lesen eine Zahl **aus der echten,
+wachsenden Produktions-DB** und vergleichen sie gegen einen zum Schreibzeitpunkt
+abgeschriebenen Wert — statt, wie die meisten Nachbarprüfungen im selben
+Paket, eine **Kopie zu leeren und mit bekannten synthetischen Zeilen zu
+füllen**. Auf einer Desktop-DB, die seit dem Schreiben der Prüfung nicht mehr
+gewachsen ist, hält der Wert zufällig. Auf einer 24/7 laufenden
+Produktions-DB nicht — die Abweisungen wachsen, die Migration ist längst
+gelaufen, die Merkmalsverteilung verschiebt sich.
+
+⚠️ **Das ist dieselbe Fehlerklasse wie 2.66, nur ohne Absturz.** Dort hing eine
+Prüfung am *Zustand* der Produktion (gesperrt/nicht gesperrt), hier hängt sie
+an einer *Zahl* der Produktion (Zeilenzahl, Bereits-migriert-Status,
+Perzentilverteilung). Beides ist „was die Prüfung messen will" nicht sauber
+von „was sie nicht messen will" getrennt.
+
+**Noch NICHT behoben — offen für eine bewusste Entscheidung**, weil die
+Umstellung auf isolierte synthetische Daten (wie in den Nachbarprüfungen)
+mehr als eine Randkorrektur ist: sie ändert, WAS die Prüfung eigentlich
+beweist. Bis dahin gilt: **eine dieser drei Prüfungen rot zu sehen ist am
+Notebook allein kein Alarmsignal** — nachsehen, ob die Zahl gewachsen ist,
+nicht den Code verdächtigen.
