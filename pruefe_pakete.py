@@ -751,8 +751,27 @@ def paket_7() -> None:
     # in USD - `kurs_eur` liefert dagegen EUR.
     from backtest_llm1_historisch import lade_reihen_aus_db, waehrung_je_symbol
     w = waehrung_je_symbol("data/tradinginfotool.db")
-    pruefe(P, "alle Reihen liegen in USD - der ATR also auch",
-           set(w.values()) == {"USD"}, str(set(w.values())))
+    # ⚠️ NUR KRYPTO, NICHT DIE GANZE DATENBANK (24.08.2026-Fund am Notebook).
+    # Die Pruefung stammt von vor dem Multi-Asset-Umbau, wo ALLE Reihen USD
+    # waren. Seither sind ETF/Aktien/Rohstoffe live - und `lade_reihen_aus_
+    # db()`s eigener Docstring haelt fest: ein reiner USD-Filter "machte die
+    # ETF-Klasse unsichtbar" - EUR bei einem Nicht-Krypto-Symbol ist also der
+    # ERWARTETE Zustand, kein Defekt. Was diese Pruefung eigentlich sichern
+    # will (die USD->EUR-Umrechnung fuer `atr_eur`), gilt nur fuer Krypto -
+    # `atr_bis`/`kurs_eur` werden weiter unten nur an BTC gepruft.
+    import config as _cfg7
+    try:
+        _krypto_symbole = {a.symbol for a in _cfg7.get_watchlist()
+                           if a.assetklasse == "krypto"}
+    except Exception:                                          # noqa: BLE001
+        _krypto_symbole = set()
+    _w_krypto = {s: c for s, c in w.items()
+                if not _krypto_symbole or s in _krypto_symbole}
+    pruefe(P, "Krypto-Reihen liegen in USD - der ATR also auch",
+           set(_w_krypto.values()) <= {"USD"},
+           f"{ {s: c for s, c in _w_krypto.items() if c != 'USD'} } von "
+           f"{len(_w_krypto)} Krypto-Symbolen - alle Symbole: "
+           f"{ {s: c for s, c in w.items() if c != 'USD'} }")
     r = lade_reihen_aus_db()["BTC"]
     i = len(r) - 1
     fx = RE.fx_eur_je_usd("BTC", r, i)
@@ -1447,14 +1466,28 @@ def paket_12() -> None:
     leer_ohne_gate = con3.execute(
         "SELECT COUNT(*) FROM signals WHERE gate_passed=0 AND LENGTH(facts_json)<=2"
     ).fetchone()[0]
+    # ⚠️ NICHT GEGEN EINE ABGESCHRIEBENE ZAHL, SONDERN GEGEN DIE GESAMTMENGE
+    # (Methodik 2.68, 24.08.2026-Fund). Bis heute stand hier `leer_ohne_gate
+    # == 78` - eine Momentaufnahme der Produktions-DB zum Schreibzeitpunkt,
+    # die mit jeder echten Abweisung veraltet (416 am Notebook, wenige Wochen
+    # spaeter). Die eigentliche Aussage, die der Name der Pruefung verspricht
+    # ("die leeren sind ALLE Abweisungen"), ist umgebungsunabhaengig: JEDE
+    # Zeile mit leeren Fakten muss eine Abweisung sein, unabhaengig davon,
+    # wie viele es gerade gibt.
+    gesamt_leer = con3.execute(
+        "SELECT COUNT(*) FROM signals WHERE LENGTH(facts_json)<=2"
+    ).fetchone()[0]
     con3.close()
     pruefe(P, "jedes Signal MIT Gate traegt seine Fakten",
            verletzt == 0,
-           "die 78 leeren sind Abweisungen VOR der Analyse - dort gab es nie "
+           "die leeren sind Abweisungen VOR der Analyse - dort gab es nie "
            "Fakten. Meine erste Meldung ('Defekt') war eine Zahl ohne ihre "
            "Schichtung")
     pruefe(P, "und die leeren sind alle Abweisungen",
-           leer_ohne_gate == 78, f"{leer_ohne_gate} statt 78")
+           leer_ohne_gate == gesamt_leer,
+           f"{leer_ohne_gate} von {gesamt_leer} leeren Zeilen sind "
+           "Abweisungen - der Rest waere weder Gate-bestanden noch "
+           "-abgewiesen, also ein dritter, unerwarteter Zustand")
 
     # ---- DER CHART ----
     from ui.signal_chart import render_signal_chart
@@ -1718,18 +1751,32 @@ def paket_14() -> None:
     _r = _sammle(_c, [], {})
     _nach = {a["symbol"]: a for a in _r["alle"]}
 
+    # ⚠️ MEHR ALS EIN STATISCHER HINWEISTEXT (24.08.2026): diese drei
+    # Pruefungen laufen auf einer vollstaendig ISOLIERTEN, gewipten und
+    # synthetisch befuellten Kopie - trotzdem waren sie am Notebook rot und
+    # am Desktop gruen, obwohl der Code identisch ist. Ohne die tatsaechlich
+    # gelesenen Werte laesst sich nicht sagen, WELCHE Zeile fehlt oder WELCHER
+    # mfe_r abweicht - der alte Detailtext erklaerte nur die Absicht der
+    # Pruefung, nicht ihren Befund.
+    _mfe_diag = (f"gelesen: {len(_r['alle'])} von 5 Zeilen, Symbole "
+                 f"{sorted(_nach)} | " + ", ".join(
+                     f"{s}={_nach[s].get('mfe_r')}" for s in
+                     ("BTC", "ETH", "SOL", "APT", "INJ") if s in _nach))
     pruefe(P, "der MFE kommt aus dem Backward-Tracking",
            len(_r["alle"]) == 5
            and abs(_nach["BTC"]["mfe_r"] - 1.8) < 1e-9,
            "`outcome_max_realisiertes_crv` wird seit 02.08. auch fuer OFFENE "
-           "Signale fortgeschrieben - er muss nicht neu gerechnet werden")
+           "Signale fortgeschrieben - er muss nicht neu gerechnet werden | "
+           + _mfe_diag)
     pruefe(P, "auch Positionen UNTER der Ausloeseschwelle werden geprueft",
            "ETH" in _nach and _nach["ETH"]["mfe_r"] < 1.0,
            "vorher stand dort ein `continue` - eine Position im Minus loest "
            "den Trailing-Stop per Definition nicht aus, und genau dort ist "
-           "der Widerlegungspreis am wichtigsten")
+           "der Widerlegungspreis am wichtigsten | " + _mfe_diag)
     pruefe(P, "und ihr Widerlegungspreis greift",
-           _nach["ETH"]["empfehlung"] == AR.SCHLIESSEN)
+           _nach["ETH"]["empfehlung"] == AR.SCHLIESSEN,
+           f"empfehlung={_nach['ETH'].get('empfehlung')!r} statt "
+           f"{AR.SCHLIESSEN!r} | " + _mfe_diag)
     pruefe(P, "die Reihenfolge ist Dringlichkeit, nicht Buchgewinn",
            [a["symbol"] for a in _r["alle"][:2]] == ["BTC", "ETH"]
            and _nach["SOL"]["mfe_r"] > _nach["ETH"]["mfe_r"],
@@ -2132,6 +2179,16 @@ def paket_12c() -> None:
     # PERSISTENZ: additiv und idempotent.
     _q = sqlite3.connect("data/tradinginfotool.db")
     _c = sqlite3.connect(":memory:"); _q.backup(_c); _q.close()
+    # ⚠️ ERST DEN AUSGANGSZUSTAND HERSTELLEN, DEN DIE PRUEFUNG BRAUCHT
+    # (Methodik 2.68, 24.08.2026-Fund). `_q.backup(_c)` kopiert die ECHTE
+    # Produktions-DB - dort ist die Tabelle laengst migriert, seit die Kette
+    # im Betrieb laeuft. "Erster Aufruf legt an, zweiter tut nichts" laesst
+    # sich an einer bereits migrierten Kopie gar nicht pruefen: beide Aufrufe
+    # kommen dort gleich ("[] / []") heraus, egal ob die Idempotenz stimmt.
+    # Deshalb die Tabelle in der KOPIE explizit entfernen, bevor der erste
+    # Aufruf stattfindet - dieselbe Isolation, die die Nachbarpruefungen in
+    # diesem Paket schon fuer `signals`/`price_cache` benutzen.
+    _c.execute(f"DROP TABLE IF EXISTS {RG.TABELLE}")
     erst = RG.migriere(_c)
     zweit = RG.migriere(_c)
     pruefe(P, "die Migration legt die Tabelle an und ist idempotent",
@@ -3033,17 +3090,30 @@ def paket_b1() -> None:
     # passiert. Eine Pruefung, die stirbt, prueft nichts mehr.
     def _erste_mail(*a):
         _m = _lauf(*a).get("mails") or []
-        return _marken(_m[0]["text"]) if _m else {}
+        _text = _m[0]["text"] if _m else ""
+        return _marken(_text), _text
 
-    lang = _erste_mail("hebel", "KAUFEN", "LONG")
-    kurz = _erste_mail("hebel", "KAUFEN", "SHORT")
+    lang, _lang_text = _erste_mail("hebel", "KAUFEN", "LONG")
+    kurz, _kurz_text = _erste_mail("hebel", "KAUFEN", "SHORT")
     pruefe(P, "beide Richtungsläufe erzeugen ueberhaupt eine Mail",
            bool(lang) and bool(kurz),
            "ohne Mail sind die folgenden Richtungspruefungen leer - "
            "und ein Zugriff auf mails[0] wuerde die Suite abbrechen")
+    # ⚠️ MEHR ALS DIE ZWEI ZAHLEN (24.08.2026): am Notebook lag der
+    # SHORT-Stop wiederholt UNTER dem Kurs, aber weder `entscheidungsrechnung.
+    # rechne()` noch ein voller lokaler Mail-Nachbau liessen sich dazu
+    # bringen, dasselbe zu zeigen - die Geometrie spiegelt bei jedem
+    # Desktop-Versuch korrekt. `_marken()` ist ein naiver Text-Regex (nimmt
+    # die erste Zeile mit "Stop "); OHNE die tatsaechlichen Zeilen laesst
+    # sich nicht unterscheiden, ob die RECHNUNG falsch ist oder der Regex
+    # eine falsche Zeile trifft. Alle Zeilen mit "Stop " (nicht nur die
+    # erste) gehen deshalb mit in die Detailzeile.
+    _kurz_stop_zeilen = [z.strip() for z in _kurz_text.split(chr(10))
+                         if "Stop " in z]
     pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
            lang["stop"] < kurs_eth < kurz["stop"],
-           f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei {kurs_eth:.0f}")
+           f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei "
+           f"{kurs_eth:.0f} | SHORT-Zeilen mit 'Stop ': {_kurz_stop_zeilen}")
     pruefe(P, "das Ziel dreht mit",
            lang["ziel"] > kurs_eth > kurz["ziel"])
     pruefe(P, "und die Liquidation auch",
@@ -3283,15 +3353,27 @@ def paket_15() -> None:
               (TB.TREFFER[0], sid))
     c.commit()
     bilanz = TB.zaehle(c, quelle_kette="rollen")
+    # ⚠️ NICHT DEN ERSTEN SCHLUESSEL NEHMEN, DEN ERWARTETEN NACHSCHLAGEN
+    # (Methodik 2.68, 24.08.2026-Fund). `c` ist eine Kopie der echten
+    # Produktions-DB, NICHT von `signals` befreit - `next(iter(bilanz))`
+    # liefert also, welcher Schluessel in der DICT-REIHENFOLGE zuerst kommt,
+    # und das haengt an der Menge und Reihenfolge der ECHTEN, laengst
+    # aufgeloesten Signale. Auf dem Desktop (kaum echte "rollen"-Signale mit
+    # Ausgang) war das zufaellig der TESTX-Schluessel; am Notebook (tausende
+    # echte Faelle) ein voellig anderer. Die drei Baender sind reine
+    # Funktionen der EINGABE (`merkmale()`/`_prozent()`/`_band_grob()`, ohne
+    # jeden Bezug zur Population) - der erwartete Schluessel laesst sich
+    # deshalb exakt vorausberechnen, statt ihn zu erraten.
+    schluessel = TB.merkmale(vola_perzentil=TB._prozent(0.12),
+                             spanne_perzentil=TB._prozent(0.74),
+                             gleichlauf=TB._band_grob(0.81))
+    _gefunden = schluessel in bilanz
     pruefe(P, "das geschriebene Signal erscheint in der Trefferbilanz",
-           sum(e["faelle"] for e in bilanz.values()) >= 1,
-           "vor dem 13.08. lieferte zaehle() dauerhaft {} - der Entscheider "
-           "rechnete nicht mit wenig Daten, sondern mit null")
-    schluessel = next(iter(bilanz), None)
-    if schluessel is None:
-        pruefe(P, "ohne Bilanz sind die folgenden Pruefungen nicht pruefbar",
-               False, "abgebrochen statt gruen gemeldet")
-        c.close(); return
+           _gefunden and bilanz[schluessel]["faelle"] >= 1,
+           (f"gefunden, {bilanz[schluessel]['faelle']} Fall/Faelle" if _gefunden
+            else f"erwarteter Schluessel {schluessel} fehlt unter "
+                 f"{len(bilanz)} vorhandenen") +
+           " - vor dem 13.08. lieferte zaehle() dauerhaft {}")
     pruefe(P, "der Schluessel hat mehr als ein gefuelltes Merkmal",
            sum(1 for x in schluessel if x is not None) >= 3,
            f"Schluessel {schluessel} - die Faktorzahl allein wiederholt nur "

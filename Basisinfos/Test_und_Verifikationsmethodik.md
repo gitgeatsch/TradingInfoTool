@@ -3866,9 +3866,36 @@ an einer *Zahl* der Produktion (Zeilenzahl, Bereits-migriert-Status,
 Perzentilverteilung). Beides ist „was die Prüfung messen will" nicht sauber
 von „was sie nicht messen will" getrennt.
 
-**Noch NICHT behoben — offen für eine bewusste Entscheidung**, weil die
-Umstellung auf isolierte synthetische Daten (wie in den Nachbarprüfungen)
-mehr als eine Randkorrektur ist: sie ändert, WAS die Prüfung eigentlich
-beweist. Bis dahin gilt: **eine dieser drei Prüfungen rot zu sehen ist am
-Notebook allein kein Alarmsignal** — nachsehen, ob die Zahl gewachsen ist,
-nicht den Code verdächtigen.
+**BEHOBEN (24.08.2026, selbes Datum):**
+
+| Prüfung | Fix |
+|---|---|
+| „die leeren sind alle Abweisungen" | Vergleich gegen die **Gesamtmenge** leerer Zeilen statt gegen `78` — die Aussage „die leeren sind ALLE Abweisungen" ist umgebungsunabhängig prüfbar, ihre absolute Zahl nicht |
+| „die Migration legt die Tabelle an" | `DROP TABLE IF EXISTS` auf der Kopie **vor** dem ersten Aufruf — stellt den Ausgangszustand her, den die Prüfung voraussetzt, statt ihn anzunehmen |
+| „12. Perzentil ins unterste Band" | ⚠️ **Korrektur an der eigenen Diagnose**: die Bandbildung selbst ist rein deterministisch (`merkmale()`/`_prozent()`/`_band_grob()` hängen an KEINER Population) — nicht die Zahl war die Ursache, sondern `next(iter(bilanz))`, das den erstbesten Schlüssel aus tausenden echten Konstellationen nahm statt den erwarteten nachzuschlagen. Behoben: der erwartete Schlüssel wird vorausberechnet und gezielt in `bilanz` gesucht |
+
+**Lehre aus der dritten Zeile:** eine plausible Diagnose („die Population hat
+sich verschoben") kann falsch sein, obwohl das SYMPTOM zur Fehlerklasse
+passt. Die Korrektur kam erst durch Lesen der tatsächlichen Bandfunktion,
+nicht durch das Muster der ersten beiden Funde auf den dritten zu
+übertragen.
+
+### 2.69 Eine Prüfung veraltet auch, wenn nur das PROJEKT wächst — nicht nur seine DB (24.08.2026)
+
+**„alle Reihen liegen in USD" fiel am Notebook** mit `{'USD', 'EUR'}` statt
+`{'USD'}`. Anders als 2.68: hier wuchs keine Zeilenzahl — der PROJEKTUMFANG
+wuchs. Die Prüfung stammt von vor dem Multi-Asset-Umbau, als jede Kursreihe
+Krypto und damit USD war. Seither sind ETF/Aktien/Rohstoffe live, und
+`lade_reihen_aus_db()`s eigener Docstring hält fest: ein reiner USD-Filter
+„machte die ETF-Klasse unsichtbar" — **EUR bei einem Nicht-Krypto-Symbol ist
+der erwartete Zustand, kein Defekt.**
+
+**Behoben:** die Prüfung filtert jetzt auf die Krypto-Symbole der Watchlist
+(`assetklasse == "krypto"`), bevor sie „alles USD" verlangt — genau der
+Ausschnitt, den die nachfolgenden Prüfungen (USD→EUR-Umrechnung für `atr_eur`)
+tatsächlich brauchen.
+
+**Die Regel:** eine Prüfung, die „ALLE X haben Eigenschaft Y" behauptet, ist
+nur so lange richtig, wie die Menge X nicht wächst. Ein Umbau, der eine neue
+Anlageklasse einführt, kann eine Jahre alte, nie geänderte Prüfung stillschweigend
+falsch machen — ohne dass an der Prüfung selbst etwas „kaputtgegangen" wäre.

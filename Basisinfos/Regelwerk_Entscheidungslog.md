@@ -22505,3 +22505,60 @@ dem einen Geraet zufaellig stimmt und auf dem anderen strukturell nicht.
 
 Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
 0 Kandidaten. Naechster Notebook-Lauf sollte 9 statt 10 FEHL zeigen.
+
+
+[2026-08-24] NOTEBOOK BESTAETIGT 8 STATT 9 - UND DIE VERBLEIBENDEN
+BEHOBEN, EIN LONG/SHORT-DIAGNOSTIKUM NACHGEZOGEN
+
+Notebook-Lauf (T440, 14:49 Uhr): 1.679 Pruefungen, 8 FEHLGESCHLAGEN - sogar
+besser als erwartet, "schreibt KEINE Zeile in die Produktivdatenbank" war
+diesmal ebenfalls gruen (bestaetigt: intermittierend durch den laufenden
+Scheduler, kein deterministischer Fehler). NUTZERVORGABE: "ja bevor wir nach
+plan weitermachen sind die fehler zu beheben" - alle verbleibenden acht
+einzeln angegangen.
+
+LONG/SHORT-STOP (dritter/vierter reproduzierter Fund, noch NICHT geloest):
+lokale Rekonstruktion mit `entscheidungsrechnung.rechne()` direkt (mehrere
+Szenarien: ATR-Fallback, falschseitige Struktur-Marke, falschseitiger
+Widerlegungspreis) UND ein voller Mail-Nachbau ueber die echte
+`fuehre_lauf()`-Kette zeigen DURCHGEHEND korrekt gespiegelte SHORT-Geometrie
+- der Fehler liess sich auf dem Desktop nicht herstellen. Da ohne die
+tatsaechlichen Notebook-Mailzeilen keine sichere Diagnose moeglich ist,
+wurde `_marken()`s Detailzeile um ALLE Zeilen mit "Stop " aus dem SHORT-Text
+erweitert (nicht nur die erste) - naechster Notebook-Lauf soll zeigen, ob
+eine fruehere Zeile mit Zahl den naiven Regex in die Irre fuehrt oder die
+Rechnung selbst betroffen ist.
+
+MFE-CLUSTER (drei Pruefungen): dieselbe Massnahme - die drei `pruefe()`-Rufe
+trugen bisher nur einen statischen Erklaerungstext, keinen Messwert. Jetzt
+liefern sie `len(_r['alle'])`, alle fuenf `mfe_r`-Werte und die tatsaechliche
+`empfehlung` mit. Lokal (Desktop) lesen alle fuenf Werte exakt wie
+eingefuegt - die Ursache bleibt notebook-seitig zu sehen.
+
+METHODIK 2.68 (drei Pruefungen) BEHOBEN:
+  * "die leeren sind alle Abweisungen": Vergleich gegen die GESAMTMENGE
+    leerer Zeilen statt gegen die abgeschriebene Zahl 78 - die eigentliche,
+    umgebungsunabhaengige Aussage.
+  * "Migration ist idempotent": `DROP TABLE IF EXISTS` auf der Kopie vor
+    dem ersten Aufruf - stellt den vorausgesetzten Ausgangszustand her.
+  * "12. Perzentil ins unterste Band": ⚠️ KORREKTUR AN DER EIGENEN DIAGNOSE
+    vom vorigen Log-Eintrag. Die Bandbildung ist rein deterministisch, KEINE
+    Populationsabhaengigkeit - der eigentliche Fehler war `next(iter(bilanz))`,
+    das aus tausenden echten Konstellationsschluesseln irgendeinen nahm statt
+    des erwarteten. Behoben: der erwartete Schluessel wird vorausberechnet
+    (`TB.merkmale()`/`TB._prozent()`/`TB._band_grob()`) und gezielt
+    nachgeschlagen.
+
+VIERTER, EIGENSTAENDIGER FUND UND BEHOBEN (Methodik 2.69): "alle Reihen
+liegen in USD" ist keine DB-Wachstums-Frage, sondern eine PROJEKTUMFANG-
+Frage - seit dem Multi-Asset-Umbau sind ETF/Aktien/Rohstoffe live, und
+`lade_reihen_aus_db()`s eigener Docstring haelt fest, dass ein reiner
+USD-Filter die ETF-Klasse unsichtbar machte. EUR bei einem Nicht-Krypto-
+Symbol ist der ERWARTETE Zustand. Behoben: Pruefung filtert auf
+`assetklasse == "krypto"` aus der Watchlist, bevor sie Einheitlichkeit
+verlangt.
+
+Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
+0 Kandidaten. Erwartung fuer den naechsten Notebook-Lauf: die drei
+2.68-Faelle und der USD/EUR-Fall sollten gruen sein; MFE-Cluster und
+LONG/SHORT liefern jetzt Diagnosedaten statt eines weiteren blinden Flecks.
