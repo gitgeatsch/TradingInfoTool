@@ -3899,3 +3899,38 @@ tatsächlich brauchen.
 nur so lange richtig, wie die Menge X nicht wächst. Ein Umbau, der eine neue
 Anlageklasse einführt, kann eine Jahre alte, nie geänderte Prüfung stillschweigend
 falsch machen — ohne dass an der Prüfung selbst etwas „kaputtgegangen" wäre.
+
+### 2.70 Ein Text-Regex, der auf ein Schlüsselwort statt auf die Zeilenform prüft, findet die falsche Zeile (24.08.2026)
+
+**Der Befund:** eine Prüfung verglich den geparsten SHORT-Stop gegen den
+Kurs und schlug am Notebook wiederholt fehl. Die eigentliche Rechnung war
+die ganze Zeit korrekt — bestätigt unabhängig über den NB-Export (73 von 73
+echten SHORT-Einstiegssignalen haben Stop > Einstieg). Der Fehler lag im
+**Test-Parser** `_marken()`: er suchte nach der ersten Zeile, die die
+Zeichenkette `"Stop "` enthält. Bei einer Bestandsposition erzeugt die
+Mail vor der eigentlichen Rechnung einen eigenen Absatz mit einer
+Trailing-Stop-Empfehlung („Stop         auf 1.918 EUR nachziehen…") — die
+enthält dasselbe Schlüsselwort und stand textlich zuerst.
+
+**Die Regel:** ein Substring-Test auf ein Schlüsselwort ist nicht dasselbe
+wie ein Test auf eine Zeilen-FORM. „Enthält das Wort" matcht jede Erwähnung;
+„beginnt mit dem Wort, gefolgt von der Zahl" matcht nur die eine Zeile, die
+gemeint war. Behoben: `_marken()` verlangt jetzt, dass die Zeile mit dem
+Schlüsselwort beginnt UND das nächste Wort eine Zahl ist.
+
+### 2.71 Wer eine Tabelle wipt, muss ALLE Tabellen wipen, die dieselbe Funktion liest (24.08.2026)
+
+**Der Befund:** eine isolierte MFE-Prüfung (Kopie geleert, fünf synthetische
+Zeilen eingefügt) fiel am Notebook mit „7 statt 5 Zeilen" und einem
+verfälschten `mfe_r`-Wert. Ursache: die geprüfte Funktion
+(`compute_ausstiegs_empfehlungen()`) liest zwei Tabellen, `signals` UND
+`hebel_signals` — gewiped wurde nur die erste. Die Kopie war sonst die
+volle Produktions-DB; am Notebook lag darin eine echte offene Position, die
+sich unter demselben Symbol in das Ergebnis mischte.
+
+**Die Regel:** „isolierte Testdaten" heißt: isoliert von JEDER Tabelle, die
+der Code unter Test liest — nicht nur von der naheliegendsten. Bei einer
+Funktion, die mehrere Tabellen zusammenführt, muss die Isolation ALLE
+davon abdecken, sonst bleibt eine stille Hintertür zur echten Produktions-DB
+offen, die erst auffällt, wenn dort zufällig ein passender echter Datensatz
+liegt.

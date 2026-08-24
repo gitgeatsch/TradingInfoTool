@@ -22562,3 +22562,53 @@ Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
 0 Kandidaten. Erwartung fuer den naechsten Notebook-Lauf: die drei
 2.68-Faelle und der USD/EUR-Fall sollten gruen sein; MFE-Cluster und
 LONG/SHORT liefern jetzt Diagnosedaten statt eines weiteren blinden Flecks.
+
+
+[2026-08-24] NOTEBOOK AUF 4 FEHL - BEIDE LETZTEN BEFUNDE GELOEST, DANK DER
+NEUEN DIAGNOSEZEILEN
+
+Notebook-Lauf (T440, 18:12 Uhr) nach dem 2.68/2.69-Fix: 1.679 Pruefungen,
+4 FEHLGESCHLAGEN - die vier behobenen Faelle bestaetigt gruen, die zwei
+verbleibenden Cluster (MFE, LONG/SHORT) zeigten diesmal echte Werte statt
+statischer Texte. NUTZERVORGABE zwischendurch: Hinweis, dass auch ein
+frisches DB-Backup vorliegt (`DB_Backups/tradinginfotool_2026-08-24_1615.
+db.gz`) - nicht gebraucht, die Diagnosezeilen reichten.
+
+LONG/SHORT ENDGUELTIG GELOEST - reiner Regex-Fehler, keine Rechnung:
+die neue Detailzeile zeigte DREI Zeilen mit "Stop " im SHORT-Text:
+
+    'Stop         auf 1.918 EUR nachziehen - sichert +1,05 R'
+    'Position stand bei 2,05 R - Stop auf 2.237,6400 nachziehen ...'
+    'Stop            2.262,98 EUR  (8,9 % - 2,5 x ATR)'
+
+Die ERSTE ist eine Trailing-Stop-EMPFEHLUNG aus der Ausstiegsfuehrung fuer
+die reale ETH-Bestandsposition - sie steht im Mailtext VOR der eigentlichen
+Rechnungszeile und enthaelt "Stop " genauso. `_marken()`s alter Regex nahm
+die erste Zeile mit "Stop " ueberhaupt und damit 1.918 statt der echten
+2.262,98 EUR (die korrekt UEBER dem Kurs 2.078 liegt). Bestaetigt auch
+unabhaengig ueber den NB-Export: 73 von 73 echten frischen SHORT-
+Einstiegssignalen haben Stop > Einstieg, 0 Ausreisser.
+
+BEHOBEN: `_marken()` verlangt jetzt fuer "stop"/"ziel", dass die Zeile MIT
+dem Schluesselwort BEGINNT und das zweite Wort schon die Zahl ist ("Stop" +
+Leerzeichen + Preis) - die Nachziehen-Zeile beginnt zwar auch mit "Stop",
+ihr zweites Wort ist aber "auf", keine Zahl, und faellt damit durch.
+"Liquidation etwa" unveraendert (steht eingebettet, hatte nie einen
+Fehlalarm).
+
+MFE-CLUSTER ENDGUELTIG GELOEST - Tabellen-Isolation unvollstaendig: die
+Detailzeile zeigte "7 von 5 Zeilen" und `ETH=1.9722213473591377` statt der
+eingefuegten `0.3`. `compute_ausstiegs_empfehlungen()` liest BEIDE Tabellen,
+`signals` UND `hebel_signals` - der Test wipte nur `signals`. Die Kopie
+`_c` ist sonst die volle Produktions-DB, und darin lag am Notebook eine
+ECHTE offene ETH-Hebelposition, die dieselbe WHERE-Bedingung erfuellte und
+sich in `_r['alle']` mischte - zwei Zeilen mehr, und `_nach['ETH']` zeigte
+die reale Position (der letzte Treffer im Dict gewinnt), nicht die
+synthetische. Auf dem Desktop unsichtbar, weil dort keine reale offene
+ETH-Hebelposition in der Kopie lag.
+
+BEHOBEN: `DELETE FROM hebel_signals` an beiden Wipe-Stellen dieses Pakets
+ergaenzt, symmetrisch zu `signals`/`price_cache`/`holdings`.
+
+Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
+0 Kandidaten. Erwartung fuer den naechsten Notebook-Lauf: 0 FEHL.

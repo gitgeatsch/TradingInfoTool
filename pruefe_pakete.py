@@ -1723,7 +1723,18 @@ def paket_14() -> None:
     # sich dort nicht pruefen, und "geprueft 0" haette wie Erfolg ausgesehen.
     _q = _sq.connect("data/tradinginfotool.db")
     _c = _sq.connect(":memory:"); _q.backup(_c); _q.close(); _c.row_factory = _sq.Row
+    # ⚠️ AUCH hebel_signals LEEREN (24.08.2026-Fund am Notebook). `_sammle()`
+    # (compute_ausstiegs_empfehlungen) liest BEIDE Tabellen, `signals` UND
+    # `hebel_signals` - nur `signals` wurde gewiped. Auf der echten
+    # Produktions-Kopie stehen in `hebel_signals` weiterhin ECHTE offene
+    # Positionen (am Notebook u.a. ETH), die dieselbe WHERE-Bedingung
+    # erfuellen und sich in `_r["alle"]` MISCHEN: 7 statt 5 Zeilen, und
+    # `_nach["ETH"]` zeigte die reale Position (mfe_r 1,97) statt der
+    # synthetischen (0,3), weil der letzte Treffer im Dict gewinnt. Auf dem
+    # Desktop blieb es unentdeckt, weil dort keine reale offene ETH-
+    # Hebelposition in der Kopie lag.
     _c.execute("DELETE FROM signals"); _c.execute("DELETE FROM price_cache")
+    _c.execute("DELETE FROM hebel_signals")
     _f = ("symbol, created_at, action, gate_passed, risk_veto, facts_json, "
           "outcome_status, outcome_max_realisiertes_crv, entry_usd_von, "
           "entry_usd_bis, stop_loss_usd_von, stop_loss_usd_bis, "
@@ -1915,8 +1926,13 @@ def paket_14() -> None:
 
     # JEDE POSITION GENAU EINMAL. Erste Fassung: LINK stand unter "Ziel in
     # Reichweite" UND unter "Stop nachziehen".
+    #
+    # ⚠️ hebel_signals BLEIBT AUCH HIER LEER (24.08.2026) - dieselbe Kopie
+    # `_c` wird weiterverwendet, die Tabelle also bereits vom vorigen Wipe
+    # leer sein, aber ein Wipe hier ist die guenstige Absicherung gegen eine
+    # spaetere Umstellung auf eine frische Kopie an dieser Stelle.
     _c.execute("DELETE FROM signals"); _c.execute("DELETE FROM price_cache")
-    _c.execute("DELETE FROM holdings")
+    _c.execute("DELETE FROM holdings"); _c.execute("DELETE FROM hebel_signals")
     _fz = ("symbol, created_at, action, gate_passed, risk_veto, facts_json, "
            "outcome_status, outcome_max_realisiertes_crv, entry_usd_von, "
            "entry_usd_bis, stop_loss_usd_von, stop_loss_usd_bis, take_profit_usd_von")
@@ -3070,16 +3086,38 @@ def paket_b1() -> None:
 
     # DIE RICHTUNG DREHT DURCH DIE GANZE KETTE - alle drei Groessen.
     def _marken(text):
+        # ⚠️ "Stop " ALLEIN GENUEGT NICHT (24.08.2026-Fund am Notebook). Eine
+        # Bestandsposition erzeugt VOR "DIE RECHNUNG" einen eigenen Absatz mit
+        # Zeilen wie "Stop         auf 1.918 EUR nachziehen - sichert +1,05 R"
+        # (Trailing-Stop-Empfehlung der Ausstiegsfuehrung) - die enthaelt
+        # "Stop " genauso und stand im Text VOR der echten Rechnungszeile
+        # "Stop            2.262,98 EUR  (8,9 % - 2,5 x ATR)". Der alte Regex
+        # nahm die erste Zeile mit "Stop " und damit die falsche - die echte
+        # Geometrie war die ganze Zeit korrekt (bestaetigt: 73 von 73 echten
+        # SHORT-Einstiegssignalen im NB-Export haben Stop > Einstieg).
+        #
+        # DIE ECHTE ZEILE BEGINNT MIT "Stop" UND DAS ZWEITE WORT IST SCHON
+        # DIE ZAHL ("Stop" + viele Leerzeichen + Preis + " EUR"). Die
+        # Nachziehen-Zeile beginnt zwar auch mit "Stop", aber das zweite Wort
+        # ist "auf" - ein Wort, keine Zahl. Dieselbe Form gilt fuer
+        # "Take-Profit". "Liquidation etwa" bleibt beim alten, einfachen
+        # Substring-Test - sie steht eingebettet in der Hebel-Zeile, nicht am
+        # Zeilenanfang, und hatte bisher keinen Fehlalarm.
         aus = {}
         for zeile in text.split(chr(10)):
             z = zeile.strip()
-            for name, wort in (("stop", "Stop "), ("ziel", "Take-Profit"),
-                               ("liq", "Liquidation etwa")):
-                if wort in z and name not in aus:
-                    zahlen = [t for t in z.replace("(", " ").replace(")", " ").split()
-                              if t.replace(".", "").replace(",", "").isdigit()]
-                    if zahlen:
-                        aus[name] = float(zahlen[0].replace(".", "").replace(",", "."))
+            woerter = z.split()
+            for name, wort in (("stop", "Stop"), ("ziel", "Take-Profit")):
+                if (name not in aus and woerter and woerter[0] == wort
+                        and len(woerter) > 1
+                        and woerter[1].replace(".", "").replace(",", "").isdigit()):
+                    aus[name] = float(
+                        woerter[1].replace(".", "").replace(",", "."))
+            if "liq" not in aus and "Liquidation etwa" in z:
+                zahlen = [t for t in z.replace("(", " ").replace(")", " ").split()
+                          if t.replace(".", "").replace(",", "").isdigit()]
+                if zahlen:
+                    aus["liq"] = float(zahlen[0].replace(".", "").replace(",", "."))
         return aus
 
     kurs_eth = RE.kurs_eur("ETH", reihen["ETH"], len(reihen["ETH"]) - 1,
