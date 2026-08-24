@@ -12732,23 +12732,59 @@ def paket_auswahl() -> None:
     # noch", waehrend die Stufe seit Stunden lief. Ein FEHLALARM im
     # Pruefwerkzeug - und eine Pruefung mit Fehlalarmen wird nicht mehr
     # aufgerufen.
-    import json as _js
+    # ⚠️ GEGEN EINE ZEILE, DIE `rollen_gate.schreibe()` WIRKLICH GESCHRIEBEN
+    # HAT - nicht gegen eine Annahme darueber. Genau die Annahme war der Fehler.
+    import sqlite3 as _sq2
 
-    _d = _RG.Durchlauf("krypto")
-    _d.beginne("X")
-    _d.bestanden("X", "auswahl")
-    _schluessel = set(_js.loads(_d.als_json()))
-    _aus = _quelltext("pruefe_ausrollen.py")
-    for _s in ("bestanden", "verloren"):
-        pruefe(P, f"das Ausrollwerkzeug liest den Schluessel `{_s}`",
-               _s in _schluessel and f'd.get("{_s}")' in _aus,
-               f"`als_json` schreibt {sorted(_schluessel)[:5]} - wer andere "
-               f"Namen liest, bekommt ein leeres dict und meldet einen Fehler, "
-               f"den es nicht gibt")
-    pruefe(P, "und meldet es als EIGENEN Fehler, wenn es nichts findet",
-           "das ist ein Fehler" in _aus and "DIESER Pruefung" in _aus,
-           "ein leeres Ergebnis darf nicht wie ein Befund ueber die Kette "
-           "aussehen")
+    from pruefe_ausrollen import trichterzeilen as _tz
+
+    _cg = _sq2.connect(":memory:")
+    _cg.row_factory = _sq2.Row
+    _dg = _RG.Durchlauf("krypto")
+    for _s in ("A", "B", "C"):
+        _dg.beginne(_s)
+        _dg.bestanden(_s, "auftrag")
+        _dg.bestanden(_s, "fakten")
+        _dg.bestanden(_s, "lagebild")
+        _dg.bestanden(_s, "anlass")
+    _dg.bestanden("A", "auswahl")
+    _dg.verloren("B", "auswahl", "Rang 17 von 41")
+    _dg.verloren("C", "auswahl", "Rang 22 von 41")
+    _RG.schreibe(_cg, _dg, "2026-08-24T01:00:00")
+    _zeilen = _tz(_cg)
+    pruefe(P, "das Ausrollwerkzeug liest den Trichter, den die Kette schreibt",
+           len(_zeilen) == 1 and _zeilen[0][0].strip() == "OK",
+           f"gelesen: {_zeilen}")
+    pruefe(P, "und zeigt die GANZE Kette, nicht nur eine Stufe",
+           "auftrag:3/0" in _zeilen[0][2] and "auswahl:1/2" in _zeilen[0][2],
+           f"Detail: {_zeilen[0][2][:120]}")
+    pruefe(P, "samt dem haeufigsten Grund der groessten Verlustquelle",
+           "Rang" in _zeilen[0][2],
+           "ohne ihn wirft die Zeile eine Frage auf, die sie beantworten "
+           "koennte")
+
+    # ---- UND EIN LAUF, DER DIE AUSWAHL NIE ERREICHT ----
+    #
+    # ⚠️ GENAU DIESER FALL STAND AM 24.08. AM NOTEBOOK: "2 hinein, auswahl
+    # 0/0, 0 heraus". Er darf nicht gruen aussehen und er muss sagen, WO die
+    # Symbole geblieben sind.
+    _cg2 = _sq2.connect(":memory:")
+    _cg2.row_factory = _sq2.Row
+    _dg2 = _RG.Durchlauf("aktien")
+    for _s in ("P", "V"):
+        _dg2.beginne(_s)
+        _dg2.bestanden(_s, "auftrag")
+        _dg2.verloren(_s, "fakten", "keine Kursreihe")
+    _RG.schreibe(_cg2, _dg2, "2026-08-24T01:00:00")
+    _z2 = _tz(_cg2)
+    pruefe(P, "ein Lauf ohne erreichte Auswahl ist NICHT gruen",
+           _z2[0][0].strip() != "OK",
+           f"gelesen: {_z2[0][0]!r}")
+    pruefe(P, "und er nennt die Stelle, an der die Symbole fielen",
+           "keine Kursreihe" in _z2[0][2] and "fakten" in _z2[0][2],
+           f"Detail: {_z2[0][2][:140]}")
+    _cg.close()
+    _cg2.close()
 
     # ---- L1: GREIFT DIE BREMSE NOCH? (Nutzerfrage 23.08.) ----
     #

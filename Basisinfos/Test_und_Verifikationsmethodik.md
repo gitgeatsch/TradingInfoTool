@@ -3712,3 +3712,44 @@ einer Konstante. Dasselbe für die Tagesschlüssel in `je_tag`.
 Zeile IST eine Warnung") war schon immer relativ gebaut und ist unverändert
 grün. Beide Zustände werden weiterhin geprüft — nur hängt keiner mehr am
 Wochentag.
+
+
+### 2.65 Ein Prüfwerkzeug, das dreimal falsch lag — und was daran allgemein ist (24.08.2026)
+
+`pruefe_ausrollen.py` sollte den Ausrollstand am Notebook bestätigen. Es hat in
+drei aufeinanderfolgenden Läufen **drei verschiedene falsche Aussagen** über die
+Kette gemacht — die Kette war jedes Mal in Ordnung.
+
+| # | was es meldete | was wirklich war |
+|---|---|---|
+| **1** | „die Stufe `auswahl` fehlt noch — alter Codepfad" | Es las `bestanden_je_stufe`, also die Namen der **Python-Attribute**. `als_json()` schreibt `bestanden`. Ein leeres dict wurde zur Aussage |
+| **2** | „2 hinein → auswahl 0/0 → 0 heraus" | stimmte, **beantwortete aber die Frage nicht**, die es aufwarf: wo blieben die zwei? Es zeigte nur *eine* Stufe |
+| **3** | dieser Lauf sei grün | `Durchlauf` legt **alle** Stufen mit 0 an — `"auswahl" in best` ist deshalb **immer wahr** und sagt nichts darüber, ob die Stufe erreicht wurde |
+
+**Drei Fehler, ein Muster:**
+
+> ⚠️ **Das Werkzeug hat seine Quelle vermutet, statt sie zu lesen** — einmal die
+> Schlüsselnamen, einmal den Umfang, einmal die Semantik eines Vorgabewerts.
+
+**Und der Grund, warum es dreimal passieren konnte:** der Code stand **inline in
+`main()`** und war damit **nicht prüfbar**. Jede Korrektur war ein neuer Blindflug.
+
+**Die Regeln daraus:**
+
+1. **Ein Prüfwerkzeug wird gegen das geprüft, was das Produkt WIRKLICH
+   schreibt** — nicht gegen eine Annahme darüber. Konkret: die Dauerprüfung
+   ruft jetzt `rollen_gate.schreibe()` auf und liest das Ergebnis mit derselben
+   Funktion, die auch im Betrieb liest.
+2. **Was ein Werkzeug behauptet, muss als Funktion vorliegen, nicht in `main()`.**
+   Inline heißt unprüfbar, und unprüfbar heißt: der nächste Fehler fällt wieder
+   erst dem Nutzer auf.
+3. **Findet ein Werkzeug nicht, was es sucht, meldet es das als EIGENEN
+   Fehler** — nicht als Befund über das Geprüfte. „erwartet `bestanden`,
+   gefunden […] — das ist ein Fehler DIESER Prüfung, nicht der Kette."
+4. ⚠️ **Ein Vorgabewert ist kein Fehlen.** Wer auf `"x" in d` prüft, wo `d` alle
+   Schlüssel mit 0 vorbelegt, prüft nichts. Auf den **Wert** prüfen.
+
+**Was es gekostet hätte:** die Zusammenfassung am Notebook las Punkt 4 als grün
+(„Selection stage is now live"). Er war es nicht — und beim nächsten Mal hätte
+niemand mehr hingesehen, denn *eine Prüfung mit Fehlalarmen wird nicht mehr
+aufgerufen* (2.x).

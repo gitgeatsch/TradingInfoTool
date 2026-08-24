@@ -39,6 +39,73 @@ def _sag(zeichen: str, text: str, detail: str = "") -> None:
         print(f"        {detail}")
 
 
+def trichterzeilen(conn) -> list:
+    """Je Gruppe die juengste Trichterzeile, als (zeichen, text, detail).
+
+    ⚠️ EIGENE FUNKTION, WEIL DIESES STUECK ZWEIMAL FALSCH WAR (24.08.2026):
+    einmal las es `bestanden_je_stufe` statt `bestanden` - die Namen der
+    Python-Attribute statt der JSON-Schluessel -, und einmal zeigte es nur die
+    Auswahl-Stufe, sodass "2 hinein, 0 heraus" dastand, ohne zu sagen, WO die
+    zwei geblieben sind.
+
+    Inline in `main()` war es nicht pruefbar. Als Funktion prueft
+    `pruefe_pakete` es gegen eine Zeile, die `rollen_gate.schreibe()` WIRKLICH
+    geschrieben hat - nicht gegen eine Annahme darueber."""
+    import json as _json
+
+    from agent.rollen_gate import STUFEN_NAMEN as _ST
+    from agent.rollen_gate import TABELLE as _TAB
+
+    aus = []
+    laeufe = [r[0] for r in conn.execute(
+        f"SELECT DISTINCT lauf FROM {_TAB} ORDER BY lauf")]
+    if not laeufe:
+        return [(GELB, "noch kein Durchlauf verzeichnet", "")]
+    for lauf in laeufe:
+        zeile = conn.execute(
+            f"SELECT erfasst_am, hinein, heraus, daten_json FROM {_TAB} "
+            f"WHERE lauf = ? ORDER BY rowid DESC LIMIT 1", (lauf,)).fetchone()
+        d = _json.loads(zeile["daten_json"] or "{}")
+        best = d.get("bestanden") or {}
+        verl = d.get("verloren") or {}
+        if not best and not verl:
+            aus.append((ROT, f"{lauf}: Trichter nicht lesbar",
+                        f"erwartet `bestanden`/`verloren`, gefunden "
+                        f"{sorted(d)[:6]} - Fehler DIESER Pruefung"))
+            continue
+        hinein = zeile["hinein"] or 0
+        kette = " ".join(f"{s}:{best.get(s, 0)}/{verl.get(s, 0)}"
+                         for s in _ST if best.get(s) or verl.get(s))
+        # ⚠️ ZWEI VERSCHIEDENE FEHLER, die beide "0 heraus" ergeben:
+        #    NICHT MONOTON  eine Stufe zaehlt mehr, als hineingegangen sind
+        #    LOCH           die Summe aus bestanden und verloren geht nicht auf
+        zuviel = [s for s, n in best.items() if n > hinein]
+        groesster = max(verl.items(), key=lambda p: p[1], default=(None, 0))
+        grund = ""
+        if groesster[0]:
+            gr = (d.get("gruende") or {}).get(groesster[0]) or {}
+            if gr:
+                top = max(gr.items(), key=lambda p: p[1])
+                grund = f"groesster Verlust bei `{groesster[0]}`: {top[0]}"
+        if zuviel:
+            zeichen, detail = ROT, f"⚠️ NICHT MONOTON: {zuviel}"
+        # ⚠️ AUF DEN WERT PRUEFEN, NICHT AUF DEN SCHLUESSEL (dritter
+        # Fehler in diesem Werkzeug, 24.08.2026). `Durchlauf` legt
+        # ALLE Stufen mit 0 an - `"auswahl" in best` ist deshalb immer
+        # wahr und sagt nichts darueber, ob die Stufe erreicht wurde.
+        elif hinein and not (best.get("auswahl") or verl.get("auswahl")):
+            zeichen = GELB
+            detail = ("die Auswahl-Stufe wurde NICHT erreicht - "
+                      + (grund or "die Symbole fielen vorher")
+                      + f"  |  {kette}")
+        else:
+            zeichen, detail = GRUEN, kette + ("  |  " + grund if grund else "")
+        aus.append((zeichen,
+                    f"{lauf:12} {str(zeile['erfasst_am'])[:16]} · hinein "
+                    f"{hinein} -> heraus {zeile['heraus']}", detail))
+    return aus
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--db", default="data/tradinginfotool.db")
@@ -112,53 +179,11 @@ def main() -> int:
         _sag(GELB, "Schatten noch nicht lesbar", str(exc))
 
     # ---- 4 TRICHTER ----------------------------------------------------
-    print("\n4. TRICHTER - passiert die neue Stufe, und bleibt er monoton?")
+    print("")
+    print("4. TRICHTER - je Gruppe die juengste Zeile, ganze Kette")
     try:
-        import json as _json
-
-        from agent.rollen_gate import TABELLE as _TAB
-
-        zeile = c.execute(
-            f"SELECT lauf, hinein, heraus, daten_json FROM {_TAB} "
-            f"ORDER BY rowid DESC LIMIT 1").fetchone()
-        if zeile is None:
-            _sag(GELB, "noch kein Durchlauf verzeichnet")
-        else:
-            d = _json.loads(zeile["daten_json"] or "{}")
-            # ⚠️ DIE SCHLUESSEL HEISSEN `bestanden` UND `verloren`, NICHT
-            # `bestanden_je_stufe` (24.08.2026 - mein eigener Fehlalarm).
-            #
-            # Die erste Fassung las die Namen der PYTHON-ATTRIBUTE statt
-            # der JSON-Schluessel aus `Durchlauf.als_json()`. Ergebnis:
-            # ein leeres dict, daraus "die Stufe auswahl fehlt noch" -
-            # und die Stufe lief seit Stunden. Eine Pruefung mit
-            # Fehlalarmen wird nicht mehr aufgerufen; deshalb prueft sie
-            # jetzt ZUERST, ob sie ueberhaupt gefunden hat, was sie sucht.
-            best = (d.get("bestanden") or {})
-            verl = (d.get("verloren") or {})
-            hinein = zeile["hinein"] or 0
-            if not best:
-                _sag(ROT, "der Trichter ist nicht lesbar",
-                     f"erwartete Schluessel `bestanden`/`verloren`, "
-                     f"gefunden: {sorted(d)[:6]} - das ist ein Fehler "
-                     f"DIESER Pruefung, nicht der Kette")
-            elif "auswahl" not in best:
-                _sag(GELB, f"{zeile['lauf']}: die Stufe `auswahl` fehlt noch",
-                     "dieser Durchlauf stammt vom alten Code - nach dem "
-                     "naechsten Umlauf wiederholen")
-            else:
-                # ⚠️ MONOTON: keine Stufe darf mehr bestanden haben, als
-                # ueberhaupt hineingegangen sind. Genau das war am 23.08.
-                # verletzt (anlass 4 bei hinein 3).
-                zuviel = [s for s, n in best.items() if n > hinein]
-                _sag(GRUEN if not zuviel else ROT,
-                     f"{zeile['lauf']}: hinein {hinein} · auswahl "
-                     f"{best['auswahl']} bestanden / "
-                     f"{verl.get('auswahl', 0)} verloren · heraus "
-                     f"{zeile['heraus']}",
-                     "" if not zuviel
-                     else f"⚠️ NICHT MONOTON: {zuviel} zaehlen mehr "
-                          f"als hinein - eine Doppelbuchung")
+        for zeichen, text, detail in trichterzeilen(c):
+            _sag(zeichen, text, detail)
     except Exception as exc:                                 # noqa: BLE001
         _sag(GELB, "Trichter nicht lesbar", str(exc))
 
