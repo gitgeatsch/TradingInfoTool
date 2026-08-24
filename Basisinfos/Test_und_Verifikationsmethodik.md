@@ -3436,6 +3436,7 @@ angelegt.**
 | `messe_auswahl.py` | Wie ist die **Auswahl** zu dimensionieren — k, Trendfilter, Marktzustand, Kosten der Drehung? (A1, 23.08.) |
 | `messe_auswahl_historie.py` | Was hätte die Auswahl über die Historie ergeben? Signalzahl, Trefferquote, je Assetstufe und Marktlage (A1, 23.08.) |
 | `messe_auswahl_kriterium.py` | **Quote oder Kriterium?** Wie viele kommen durch, wie oft keiner, und was das kostet (23.08.) |
+| `pruefe_ausrollen.py` | **Nach jedem Ausrollen:** Schema, Leseprobe ueber den Modell-Lesepfad, Auswahl-Schatten, Trichter-Monotonie, Verkaufsseite, Rohstoff-Kerzen. Liest nur (24.08.) |
 | `messe_strukturstop.py` | Trägt die Struktur den Stop? — Vorläufer von `pruefe_strukturstop.py` (124) |
 | `messe_dimensionierung.py` | Was ändert sich, wenn der Hebel **anfällt** statt gewählt zu werden |
 
