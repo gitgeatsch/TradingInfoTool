@@ -178,6 +178,55 @@ def main() -> int:
     except Exception as exc:                                 # noqa: BLE001
         _sag(GELB, "Watchlist nicht lesbar", str(exc))
 
+    # ---- 7 LAEUFT DIE KETTE UEBERHAUPT? --------------------------------
+    #
+    # ⚠️ DIE MELDUNG "Alle LLM-Toepfe erschoepft - kein Lauf" HAT ZWEI
+    # SEHR VERSCHIEDENE URSACHEN, und `waehle_client` unterscheidet sie nicht:
+    #
+    #     (a) das Kontingent ist wirklich aufgebraucht
+    #     (b) es ist GAR KEIN Client uebergeben - `clients.get(quelle)` gibt
+    #         None, die Schleife ueberspringt den Topf, und am Ende steht
+    #         dieselbe Zeile. Das passiert, wenn die Schluessel fehlen.
+    #
+    # (b) ist nach einem Neustart der wahrscheinlichere Fall - und der
+    # gefaehrlichere, weil er wie ein Kontingentproblem aussieht und keines
+    # ist.
+    print("")
+    print("7. LAEUFT DIE KETTE - und woran es sonst liegt")
+    try:
+        from api.llm_basis import verbrauch_heute
+        from scheduler.rollen_job import KETTE
+        for quelle, modell, budget in KETTE:
+            try:
+                if quelle == "gemini" and modell:
+                    from api.gemini import _kontingent_tag
+                    v = verbrauch_heute(f"gemini:{modell}", _kontingent_tag())
+                else:
+                    v = verbrauch_heute(quelle)
+            except Exception:                                # noqa: BLE001
+                v = None
+            name = f"{quelle}/{modell or chr(45)}"
+            if v is None:
+                _sag(GELB, f"{name:34} Verbrauch nicht lesbar")
+            elif v >= budget * 0.85:
+                _sag(GELB, f"{name:34} {v} von {budget} - Topf fast leer")
+            else:
+                _sag(GRUEN, f"{name:34} {v} von {budget}")
+    except Exception as exc:                                 # noqa: BLE001
+        _sag(GELB, "Kontingent nicht lesbar", str(exc))
+
+    # Und die einfachste Frage von allen: kam seit dem Neustart ueberhaupt
+    # ein Urteil an?
+    try:
+        letzte = c.execute(
+            "SELECT MAX(created_at) FROM signals WHERE quelle_kette='rollen'"
+        ).fetchone()[0]
+        _sag(GRUEN if letzte else GELB,
+             f"juengste Zeile der Rollen-Kette: {letzte or 'KEINE'}",
+             "" if letzte else "die Kette hat noch nie geschrieben")
+    except sqlite3.Error as exc:
+        _sag(GELB, "Signaltabelle nicht lesbar", str(exc))
+
     c.close()
     print("\n" + "=" * 68)
     print("ALLES GRUEN" if not schlecht else f"{schlecht} PUNKT(E) OFFEN")
