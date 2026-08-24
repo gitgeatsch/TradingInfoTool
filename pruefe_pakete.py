@@ -11431,8 +11431,25 @@ def paket_dimension() -> None:
         return c
 
     _heute = _dt.datetime.now(_dt.timezone.utc).date()
-    # Fall A - genau der Zustand vom 22.08.2026: Start Donnerstag 20.08.
-    _a = _k93(_leb_db(_dt.date(2026, 8, 20), 3))["lebendigkeit"]
+    # Fall A - "die Sammlung hat begonnen, der erste Montag kommt erst".
+    #
+    # ⚠️ DAS STARTDATUM IST RELATIV, UND ZWAR SEIT DEM 24.08.2026.
+    # Vorher stand hier fest der 20.08. (ein Donnerstag) - der Zustand,
+    # wie er am 22.08. wirklich war. Am 24.08. war genau dieser erste
+    # Montag da, die Warnung sprang zu Recht an, und die Pruefung fiel
+    # um: sie hielt ein FESTES Datum gegen ein LAUFENDES "heute".
+    #
+    # DAS PRODUKT HATTE RECHT, die Pruefung war gealtert. Ein Testfall,
+    # der vom Wochentag abhaengt, meldet irgendwann einen Fehler, den es
+    # nicht gibt - und eine Pruefung mit Fehlalarmen wird nicht mehr
+    # aufgerufen.
+    _start_a = _heute + _dt.timedelta(days=1)
+    while _start_a.weekday() != 3:            # 3 = Donnerstag
+        _start_a += _dt.timedelta(days=1)
+    _montag_a = _start_a
+    while _montag_a.weekday() != 0:
+        _montag_a += _dt.timedelta(days=1)
+    _a = _k93(_leb_db(_start_a, 3))["lebendigkeit"]
 
     pruefe(P, "die eigenen Symbole stehen getrennt vom Vorrat",
            _a["eigene_symbole"]["mit_wert"] == 26
@@ -11446,9 +11463,13 @@ def paket_dimension() -> None:
            "worueber 93 C je etwas sagen kann")
 
     # ⚠️ DIE ZAHL, DIE AM 22.08. GEFEHLT HAT.
+    # ⚠️ AUCH HIER RELATIV (24.08.2026): der erste Lauf schreibt nur die
+    # 44 Watchlist-Werte, der zweite zusaetzlich den Vorrat. Das Datum
+    # folgt dem Startdatum, nicht dem Kalender.
     pruefe(P, "ein kleinerer Lauf ist an je_tag ablesbar",
-           _a["letzter_lauf"]["je_tag"]["2026-08-20"] == 44
-           and _a["letzter_lauf"]["je_tag"]["2026-08-21"] == 180,
+           _a["letzter_lauf"]["je_tag"][_start_a.isoformat()] == 44
+           and _a["letzter_lauf"]["je_tag"][
+               (_start_a + _dt.timedelta(days=1)).isoformat()] == 180,
            "an der Lebenszeitsumme waere ein halbierter Lauf unsichtbar - "
            "sie waechst ja weiter")
 
@@ -11457,13 +11478,14 @@ def paket_dimension() -> None:
            not _a["entwickler_takt"].get("WARNUNG")
            and "RICHTIG" in _a["entwickler_takt"]["hinweis"]
            and _a["entwickler_takt"]["erste_faellige_montagsmessung"]
-           == "2026-08-24",
-           "die Sammlung begann an einem Donnerstag - am 22.08. FEHLTE die "
-           "Entwicklerquelle zu Recht")
+           == _montag_a.isoformat(),
+           "die Sammlung begann an einem Donnerstag - solange der erste "
+           "Montag noch aussteht, FEHLT die Entwicklerquelle zu Recht")
     pruefe(P, "und die Auswertbarkeit steht als Datum da",
            _a["entwickler_takt"]["zwoelfte_und_damit_auswertbar"]
-           == "2026-11-09",
-           "12 Wochenmessungen ab dem 24.08. - MINDESTREIHE['entwickler']")
+           == (_montag_a + _dt.timedelta(weeks=11)).isoformat(),
+           "12 Wochenmessungen ab dem ersten Montag - "
+           "MINDESTREIHE['entwickler']")
 
     _b = _k93(_leb_db(_heute - _dt.timedelta(days=30), 30))["lebendigkeit"]
     pruefe(P, "ein vergangener Montag OHNE Zeile ist eine Warnung",

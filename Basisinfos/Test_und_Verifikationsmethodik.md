@@ -3674,3 +3674,41 @@ er misst nur etwas anderes.
 in derselben Funktion **später** gebunden wird (`_YAML2`, `_sq3`, `_AK`).
 Dagegen hilft nur die Regel *„der Import gehört vor den ersten Gebrauch"* —
 siebtes Vorkommen in drei Tagen.
+
+
+### 2.64 Ein Testfall, der vom Kalender abhängt, meldet irgendwann einen Fehler, den es nicht gibt (24.08.2026)
+
+**Gefunden beim Ausrollen.** Die Suite fiel um — an einer Prüfung, die mit dem
+Umbau nichts zu tun hatte:
+
+> `ein noch nicht faelliger Montag ist KEINE Warnung` — FEHL
+
+**Die Prüfung hielt ein FESTES Datum gegen ein LAUFENDES „heute".** Sie baute
+eine Datenbank mit Start am **20.08.** (Donnerstag), rechnete daraus den ersten
+fälligen Montag — den **24.08.** — und erwartete, dass er **noch nicht** da ist.
+
+⚠️ **Am 24.08. war er da. Das Produkt hat richtig gewarnt, die Prüfung war
+gealtert.**
+
+**Die Regel:**
+
+> **Ein Testfall darf sein Szenario festlegen, aber nicht seinen Kalendertag.**
+> Wo eine Prüfung „noch nicht fällig" oder „schon fällig" behauptet, muss das
+> Datum **relativ zu heute** entstehen — sonst wandert der Testfall irgendwann
+> in den anderen Zustand, und die Prüfung meldet einen Fehler, den es nicht
+> gibt.
+
+**Warum das teuer ist:** eine Prüfung mit Fehlalarmen wird nicht mehr
+aufgerufen (2.x, Währungsprüfung). Und sie kam ausgerechnet an dem Tag, an dem
+38 Commits ausgerollt wurden — die erste Frage war „habe ich etwas kaputt
+gemacht", und die Antwort lag drei Ebenen entfernt.
+
+**Behoben:** das Startdatum wird auf den **nächsten Donnerstag nach heute**
+gelegt, der erste Montag daraus gerechnet. Beide Erwartungen — der Montag und
+der Auswertungstermin zwölf Wochen später — folgen jetzt der Rechnung statt
+einer Konstante. Dasselbe für die Tagesschlüssel in `je_tag`.
+
+⚠️ **Und die Gegenprobe bleibt:** der zweite Fall („ein vergangener Montag OHNE
+Zeile IST eine Warnung") war schon immer relativ gebaut und ist unverändert
+grün. Beide Zustände werden weiterhin geprüft — nur hängt keiner mehr am
+Wochentag.
