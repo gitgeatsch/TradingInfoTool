@@ -3934,3 +3934,40 @@ Funktion, die mehrere Tabellen zusammenführt, muss die Isolation ALLE
 davon abdecken, sonst bleibt eine stille Hintertür zur echten Produktions-DB
 offen, die erst auffällt, wenn dort zufällig ein passender echter Datensatz
 liegt.
+
+### 2.72 Ein „hat sich etwas geändert?"-Test misst jeden Schreiber, nicht nur den geprüften (24.08.2026)
+
+**Der Befund:** eine Prüfung hashte die Produktionsdatei vor und nach einem
+Trockenlauf, um zu belegen, dass er nichts schreibt. Sie war an einem Tag
+**dreimal rot und zweimal grün — ohne jede Codeänderung.** Am Notebook
+schreibt der 24/7 laufende Scheduler in dieselbe Datei; ob der Test anschlug,
+hing davon ab, ob dessen 15-Minuten-Takt zufällig ins Messfenster fiel.
+
+⚠️ **Der geprüfte Code konnte den Fehler gar nicht verursachen:** die
+übergebene Verbindung war längst eine In-Memory-Kopie. Die Prüfung maß etwas,
+das sie nie messen wollte.
+
+**Die dritte Spielart der 2.66-Familie:**
+
+| | was von der Produktion abhing |
+|---|---|
+| 2.66 | ihr **Zustand** (Symbol gesperrt oder frei) |
+| 2.68 | eine **Zahl** (Zeilenzahl, Migrationsstatus) |
+| **2.72** | die **Zeitgleichheit** eines fremden Schreibers auf derselben Datei |
+
+**Die Regel:** ein Vorher/Nachher-Vergleich beweist nur dann etwas über den
+geprüften Code, wenn **niemand sonst** das Verglichene anfassen kann. Wo ein
+fremder Prozess dieselbe Datei beschreibt, ist die Frage nicht entscheidbar
+— egal wie sorgfältig gehasht wird.
+
+**Die Lösung ist Isolation, nicht Toleranz:** den geprüften Code auf eine
+**eigene Kopie** zeigen lassen (hier über den ohnehin vorhandenen
+`db=`-Parameter, der bis zu allen Fakten-Modulen durchgereicht wird — am Code
+nachgesehen, nicht angenommen). Das macht den Test **stärker** als vorher:
+eine Änderung dort kann nur vom Lauf kommen. Die Alternative — den Test bei
+erkanntem Fremdschreiben „durchwinken" — hätte ihn zu einem Test gemacht, der
+sich selbst abschaltet.
+
+⚠️ **Und die Positivkontrolle gehört dazu:** ein grüner „nichts geändert"-Test
+ist ein Nullbefund. Verifiziert wurde deshalb beides — der Hash bleibt bei
+Nichtstun gleich UND schlägt nach einem einzigen `INSERT` an.

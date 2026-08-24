@@ -22612,3 +22612,53 @@ ergaenzt, symmetrisch zu `signals`/`price_cache`/`holdings`.
 
 Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
 0 Kandidaten. Erwartung fuer den naechsten Notebook-Lauf: 0 FEHL.
+
+
+[2026-08-24] DER LETZTE FUND: DER TROCKENLAUF-TEST MASS DEN SCHEDULER,
+NICHT DEN TROCKENLAUF - AUF 0 FEHL
+
+Notebook-Lauf (T440, 18:38 Uhr): 1.679 Pruefungen, **1 FEHLGESCHLAGEN** -
+beide Fixes des Vor-Commits bestaetigt (LONG/SHORT und der ganze
+MFE-Cluster gruen). Uebrig blieb der eine Fall, der ueber den Tag dreimal
+rot und zweimal gruen war: "und schreibt KEINE Zeile in die
+Produktivdatenbank".
+
+⚠️ ER WAR NIE EIN FEHLER DES GEPRUEFTEN CODES. An der Quelle nachgesehen:
+`con` ist in diesem Paket laengst eine IN-MEMORY-Kopie
+(`sqlite3.connect(":memory:")` + `backup`) - ueber sie kann der Trockenlauf
+die Produktivdatei ueberhaupt nicht erreichen. Gehasht wurde aber
+`data/tradinginfotool.db` SELBST, und dort schreibt am Notebook der 24/7
+laufende Scheduler parallel. Die Pruefung mass die Produktion, nicht den
+Trockenlauf - deshalb das Wechselspiel rot/gruen ohne jede Codeaenderung.
+
+Dieselbe Familie wie 2.66/2.68, aber die dritte Spielart: nicht der
+ZUSTAND (gesperrt/frei) und nicht eine ZAHL (Zeilenzahl), sondern die
+ZEITGLEICHHEIT eines fremden Schreibers auf derselben Datei.
+
+BEHOBEN - und zwar STAERKER als vorher, nicht schwaecher: `fuehre_lauf(db=)`
+reicht den Pfad an ALLE Fakten-Module durch (`RE.kurs_eur`, `RE.atr_eur`,
+`RE.bestand`, `RE.fx_eur_je_usd`, nachgesehen statt angenommen). Der Test
+legt jetzt ueber `Connection.backup()` eine eigene Dateikopie an, laesst den
+Trockenlauf auf DIESE zeigen und hasht sie vorher/nachher. Eine Aenderung
+dort kann nur vom Lauf kommen - der Scheduler fasst sie nie an. Aufraeumen
+im `finally`.
+
+POSITIVKONTROLLE GEMACHT (Projektregel: ein Nullbefund ohne sie zaehlt
+nicht): der Hash bleibt bei Nichtstun gleich UND schlaegt nach einem
+einzigen INSERT an. Der gruene Punkt bedeutet also wirklich etwas.
+
+⚠️ `Connection.backup()` statt Dateikopie - unter WAL stehen die juengsten
+Aenderungen in `-wal`, eine blosse Kopie waere nicht in sich stimmig
+(dieselbe Regel wie beim NB-Export).
+
+Als Methodik 2.72 festgehalten.
+
+DAMIT IST DIE SERIE ABGESCHLOSSEN: 15 -> 11 -> 10 -> 8 -> 4 -> 1 -> 0.
+Neun echte Funde in einem Tag, KEINER davon im Produktivcode der
+Handelskette - acht in den Pruefungen selbst (Isolation, Annahmen ueber
+Reihenfolge, Text-Parsing, veraltete Zahlen) und zwei echte Codefehler
+(`row_factory` zweimal, NB-Export-Luecken). Die Handelslogik selbst hat
+ueber alle acht Notebook-Laeufe hinweg NICHT EINEN Fehler gezeigt.
+
+Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
+0 Kandidaten.

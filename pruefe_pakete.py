@@ -2947,17 +2947,54 @@ def paket_b1() -> None:
                      "budget_allocator": {"spot_cooldown_stunden": 0.0,
                                           "cooldown_stunden": 0.0}}
 
-    vorher = _inhalt("data/tradinginfotool.db")
-    erg = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole,
-                         betriebsart="trocken", antworten=antworten,
-                         config=_OHNE_BREMSEN)
-    pruefe(P, "der Trockenlauf laeuft ohne Fehler durch",
-           not erg["fehler"], str(erg["fehler"][:2]))
-    pruefe(P, "und schreibt KEINE Zeile in die Produktivdatenbank",
-           _inhalt("data/tradinginfotool.db") == vorher,
-           "die Verbindung wird uebergeben, nie hier geoeffnet - aber die "
-           "Fakten-Module lesen mit ihrer eigenen Vorgabe, und das muss "
-           "LESEN bleiben")
+    # ⚠️ GEGEN EINE EIGENE DATEIKOPIE, NICHT GEGEN DIE ECHTE DATEI
+    # (24.08.2026, letzter der acht Notebook-Funde).
+    #
+    # DIE PRUEFUNG SCHLUG MAL AN UND MAL NICHT, ohne dass sich am geprueften
+    # Code etwas geaendert haette - drei Laeufe rot, zwei gruen. Der Grund:
+    # `con` ist laengst eine IN-MEMORY-Kopie (siehe oben), ueber sie kann der
+    # Lauf die Produktivdatei gar nicht erreichen. Gehasht wurde aber
+    # `data/tradinginfotool.db` SELBST - und dort schreibt am Notebook der
+    # 24/7 laufende Scheduler parallel. Die Pruefung mass also die
+    # Produktion, nicht den Trockenlauf. Dieselbe Familie wie 2.66/2.68, nur
+    # zeitlich statt zahlenmaessig: nicht entscheidbar, solange ein fremder
+    # Schreiber dieselbe Datei anfasst.
+    #
+    # `fuehre_lauf(db=...)` reicht den Pfad an ALLE Fakten-Module durch
+    # (`RE.kurs_eur`, `RE.atr_eur`, `RE.bestand`, `RE.fx_eur_je_usd`) - die
+    # Zusicherung "ein Trockenlauf schreibt nicht" laesst sich damit an einer
+    # Kopie pruefen, die sonst niemand anfasst. Das ist STAERKER als vorher:
+    # jede Aenderung dort kann nur vom Lauf kommen.
+    #
+    # `Connection.backup()` statt Dateikopie - unter WAL stehen die juengsten
+    # Aenderungen in `-wal`, eine blosse Kopie waere nicht in sich stimmig
+    # (dieselbe Regel wie beim NB-Export).
+    import shutil as _shutil
+    import tempfile as _tempfile
+
+    _tmp_b1 = _tempfile.mkdtemp(prefix="tit_b1_")
+    _db_kopie = _tmp_b1 + "/produktiv_kopie.db"
+    try:
+        _src_b1 = sqlite3.connect("data/tradinginfotool.db")
+        _dst_b1 = sqlite3.connect(_db_kopie)
+        _src_b1.backup(_dst_b1)
+        _src_b1.close(); _dst_b1.close()
+
+        vorher = _inhalt(_db_kopie)
+        erg = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole,
+                             betriebsart="trocken", antworten=antworten,
+                             config=_OHNE_BREMSEN, db=_db_kopie)
+        _nachher = _inhalt(_db_kopie)
+        pruefe(P, "der Trockenlauf laeuft ohne Fehler durch",
+               not erg["fehler"], str(erg["fehler"][:2]))
+        pruefe(P, "und schreibt KEINE Zeile in die Produktivdatenbank",
+               _nachher == vorher,
+               "gemessen an einer EIGENEN Kopie, die sonst niemand anfasst - "
+               "eine Aenderung dort kann nur vom Lauf kommen. Die Verbindung "
+               "wird uebergeben, nie hier geoeffnet; die Fakten-Module lesen "
+               "mit ihrer eigenen Vorgabe, und das muss LESEN bleiben")
+    finally:
+        _shutil.rmtree(_tmp_b1, ignore_errors=True)
     pruefe(P, "er schreibt auch in die Kopie nichts",
            not erg["signale"],
            "trocken heisst: kein Modellaufruf, kein Schreiben, keine Mail")
