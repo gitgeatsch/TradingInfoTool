@@ -3449,7 +3449,25 @@ def pruefe_signal_kriterien(conn: sqlite3.Connection) -> list[str]:
 
 
 def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
-    rows = conn.execute(
+    """Der juengste Kurs je Symbol.
+
+    ⚠️ UNABHAENGIG VON `row_factory` (24.08.2026). Bis heute stand hier
+    `row["symbol"]` - das setzt `conn.row_factory = sqlite3.Row` beim AUFRUFER
+    voraus. Wer eine gewoehnliche Verbindung uebergab, bekam
+
+        TypeError: tuple indices must be integers or slices, not str
+
+    UND DAS WAR EIN STILLER AUSFALL, kein lauter: der einzige Aufrufer in der
+    Rollen-Kette (`compute_ausstiegs_empfehlungen`) faengt breit ab, loggt
+    "Kurse fuer die Ausstiegspruefung nicht ladbar" und rechnet mit einem
+    LEEREN Kursbuch weiter. Der Widerlegungspreis fehlt dann - ohne dass ein
+    Signal ausfaellt und ohne dass es jemandem auffaellt.
+
+    Die Spaltennamen kommen jetzt aus `cursor.description`. Damit ist die
+    Funktion von der Einstellung des Aufrufers unabhaengig - und der Fehler
+    kann nicht wiederkehren, wenn irgendwo eine Verbindung ohne `row_factory`
+    entsteht."""
+    cur = conn.execute(
         """
         SELECT p.symbol, p.coingecko_id, p.price_usd, p.price_eur, p.market_cap_usd,
                p.volume_24h_usd, p.change_24h_pct, p.fetched_at
@@ -3461,8 +3479,13 @@ def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
         ) latest
         ON p.symbol = latest.symbol AND p.fetched_at = latest.max_fetched_at
         """
-    ).fetchall()
-    return {row["symbol"]: PriceSnapshot(**dict(row)) for row in rows}
+    )
+    namen = [s[0] for s in cur.description]
+    aus = {}
+    for row in cur.fetchall():
+        werte = dict(zip(namen, tuple(row)))
+        aus[werte["symbol"]] = PriceSnapshot(**werte)
+    return aus
 
 
 # --- Hebel-Screening (2026-07-14, siehe docs/hebel_positionsformel.md) ---

@@ -22134,3 +22134,50 @@ simuliere_kette 0 Fehler.
 ⚠️ WAS DAS NICHT LEISTET: die bereits geschriebenen Zeilen bleiben ohne das
 Urteil - nicht nachruestbar. Die Frage "traegt ein Treuebruch" wird mit den
 Zeilen ab heute beantwortbar, nicht rueckwirkend.
+
+
+[2026-08-24] EIN STILLER AUSFALL IM KURSLADER - UND DIE FRAGE NACH DEM NB-EXPORT
+
+Der Nutzer schickte eine Teilausgabe: `pruefe_pakete.py` wurde nach ZWEI
+MINUTEN abgebrochen. ⚠️ DAMIT LIEGT KEIN ERGEBNIS VOR - was zu sehen war, sind
+Logzeilen aus Tests, die vorher liefen. Die Suite braucht laenger als zwei
+Minuten; hier laeuft sie mit einem Deckel von 900 Sekunden.
+
+ERNEUT ALS ABSICHTLICH BESTAETIGT (zum zweiten Mal): 'halbscharf' ist der
+Testeingabewert aus pruefe_pakete Zeile 2756 ("eine unbekannte Betriebsart wird
+abgewiesen"), nicht ein Konfigurationsfehler. "Alle LLM-Toepfe erschoepft"
+entsteht in Tests ohne Client. "Rolle G/A: Mindestgrundlage unvollstaendig" ist
+eine Warnung, in synthetischen Laeufen der Normalfall.
+
+⚠️⚠️ ABER EINE MELDUNG WAR ECHT, UND SIE STAND SEIT DREI RUNDEN DA:
+    TypeError: tuple indices must be integers or slices, not str
+    database/db.py:3465 in get_latest_prices
+
+`get_latest_prices` las `row["symbol"]` und setzte damit
+`conn.row_factory = sqlite3.Row` beim AUFRUFER voraus. Wer eine gewoehnliche
+Verbindung uebergab, bekam den TypeError.
+
+UND DAS WAR EIN STILLER AUSFALL, KEIN LAUTER: der Aufrufer in der Rollen-Kette
+(`compute_ausstiegs_empfehlungen`) faengt breit ab, loggt "Kurse fuer die
+Ausstiegspruefung nicht ladbar" und rechnet mit einem LEEREN Kursbuch weiter.
+Der Widerlegungspreis fehlt dann - ohne dass ein Signal ausfaellt und ohne dass
+es jemandem auffaellt. Genau "fail-soft ist fail-silent".
+
+BEHOBEN: die Spaltennamen kommen jetzt aus `cursor.description`. Die Funktion
+ist damit unabhaengig von der Einstellung des Aufrufers - nachgewiesen mit und
+ohne row_factory, beide Male 55 Kurse. Zwei Dauerpruefungen dagegen.
+
+⚠️ NEBENBEFUND: `db.init_db` braucht die row_factory ebenfalls. Das ist der
+Bootstrap der App, der sie immer setzt - unveraendert gelassen, aber benannt.
+
+DIE FRAGE NACH DEM NB-EXPORT: doch, wir machen ihn - aber er ist ein MANUELLES
+Skript. Nichts im Scheduler ruft `extract_notebook_diagnose.py` auf; er wird von
+Hand gestartet. Der letzte Export stammt vom 16.08. und misst damit den Stand
+VOR dem gesamten Umbau.
+
+⚠️ UND ER TRAEGT JETZT DREI NEUE SPALTEN: `strategie` (S-2), `z1_verletzt` und
+`z1_zahlen_geprueft` (P1). Ein Lauf jetzt ist als GRUNDLINIE sinnvoll - die
+neuen Spalten sind darin fast leer, weil sie erst seit dem Ausrollen gefuellt
+werden. Der zweite Lauf in einigen Tagen ist der, der etwas zeigt.
+
+Suite 1.678 ALLE BESTANDEN, freie Namen 0.

@@ -12947,6 +12947,32 @@ def paket_auswahl() -> None:
            "Schreiben allein genuegt nicht - das Lesen bekommt ALLE Spalten")
     _c2.close()
 
+    # ---- DER KURSLADER DARF NICHT AN EINER EINSTELLUNG HAENGEN ----
+    #
+    # ⚠️ `get_latest_prices` las `row["symbol"]` und setzte damit
+    # `conn.row_factory = sqlite3.Row` beim AUFRUFER voraus. Ohne sie:
+    # "TypeError: tuple indices must be integers or slices, not str".
+    #
+    # UND DAS WAR EIN STILLER AUSFALL: `compute_ausstiegs_empfehlungen` faengt
+    # breit ab und rechnet mit einem LEEREN Kursbuch weiter - der
+    # Widerlegungspreis fehlt, ohne dass ein Signal ausfaellt.
+    _cp = _sq.connect(":memory:")
+    _cp.row_factory = _sq.Row               # `init_db` braucht sie
+    _DB.init_db(_cp)
+    _cp.row_factory = None                  # ... der Kurslader NICHT
+    _cp.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, "
+                "price_eur, fetched_at) VALUES ('X','x',1.0,0.9,'2026-08-24')")
+    _preise = _DB.get_latest_prices(_cp)
+    pruefe(P, "der Kurslader kommt OHNE row_factory aus",
+           "X" in _preise and abs(_preise["X"].price_eur - 0.9) < 1e-9,
+           "eine Funktion, die eine Einstellung des Aufrufers voraussetzt, "
+           "faellt still aus, sobald sie jemand vergisst")
+    _cp.row_factory = _sq.Row
+    pruefe(P, "und mit row_factory liefert er dasselbe",
+           set(_DB.get_latest_prices(_cp)) == set(_preise),
+           "sonst haengt das Ergebnis daran, wer ihn ruft")
+    _cp.close()
+
     # ---- P1: DAS URTEIL VON Z1 AN DER ZEILE (24.08.2026) ----
     #
     # ⚠️ Z1 lief, ging in die Mail und in die Zaehlung - und landete NICHT in
