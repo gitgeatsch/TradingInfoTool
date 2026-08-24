@@ -12777,12 +12777,41 @@ def paket_auswahl() -> None:
         _dg2.verloren(_s, "fakten", "keine Kursreihe")
     _RG.schreibe(_cg2, _dg2, "2026-08-24T01:00:00")
     _z2 = _tz(_cg2)
-    pruefe(P, "ein Lauf ohne erreichte Auswahl ist NICHT gruen",
+    pruefe(P, "ein Lauf, den eine LUECKE stoppt, ist NICHT gruen",
            _z2[0][0].strip() != "OK",
            f"gelesen: {_z2[0][0]!r}")
     pruefe(P, "und er nennt die Stelle, an der die Symbole fielen",
-           "keine Kursreihe" in _z2[0][2] and "fakten" in _z2[0][2],
+           "keine Kursreihe" in _z2[0][2] and "fakten" in _z2[0][2]
+           and "LUECKE" in _z2[0][2],
            f"Detail: {_z2[0][2][:140]}")
+
+    # ---- UND EIN LAUF, DEN NUR DIE BREMSE STOPPT ----
+    #
+    # ⚠️ GENAU DER FALL VOM 24.08.: drei Symbole fielen bei `anlass`,
+    # weil sich der Faktensatz nicht geaendert hatte - und eine
+    # Zusammenfassung machte daraus "STALLED, der LLM-Generator haengt".
+    # `anlass` ist ein HASH DES FAKTENTEXTES, kein Modell. Ein Verlust
+    # dort ist der ZWECK der Stufe, kein Fehler.
+    _cg3 = _sq2.connect(":memory:")
+    _cg3.row_factory = _sq2.Row
+    _dg3 = _RG.Durchlauf("themen_etf")
+    for _s in ("A", "B", "C"):
+        _dg3.beginne(_s)
+        _dg3.bestanden(_s, "auftrag")
+        _dg3.bestanden(_s, "fakten")
+        _dg3.bestanden(_s, "lagebild")
+        _dg3.verloren(_s, "anlass", "Faktensatz unveraendert seit 0,6 h")
+    _RG.schreibe(_cg3, _dg3, "2026-08-24T00:48:00")
+    _z3 = _tz(_cg3)
+    pruefe(P, "eine BREMSE vor der Auswahl ist kein Fehler",
+           _z3[0][0].strip() == "OK",
+           f"gelesen: {_z3[0][0]!r} - `anlass` ist ein Hash, kein "
+           f"Modell; ein Verlust dort ist gewollt")
+    pruefe(P, "und die Zeile sagt AUSDRUECKLICH, dass es gewollt ist",
+           "BREMSE" in _z3[0][2] and "Zweck der Bremse" in _z3[0][2],
+           "sonst liest jemand `groesster Verlust bei anlass` als "
+           "Ausfall - genau so ist es am 24.08. passiert")
+    _cg3.close()
     _cg.close()
     _cg2.close()
 

@@ -21983,3 +21983,55 @@ Drei neue Dauerpruefungen: das Ausrollwerkzeug liest die Schluessel, die
 eine Annahme) - und es meldet ein leeres Ergebnis als EIGENEN Fehler.
 
 Suite 1.662 ALLE BESTANDEN, freie Namen 0.
+
+
+[2026-08-24] DER TRICHTER IST LESBAR - UND DIE ERSTE DIAGNOSE DARAUS WAR FALSCH
+
+Der Trichterpunkt zeigt jetzt die ganze Kette je Gruppe. Der erste echte Fall am
+Notebook:
+
+    rollen (2026-08-24T00:48): 5 hinein -> 0 heraus
+      auftrag   5/0
+      fakten    3/2
+      lagebild  3/0
+      anlass    0/3   <- hier fielen alle drei
+    Grund: "Faktensatz unveraendert seit 0,6 h"
+
+⚠️ DIE ZUSAMMENFASSUNG MACHTE DARAUS: "STALLED - der LLM-Generator fuer
+motivation/reasoning haengt, gleicher Faktensatz seit 36 Minuten". BEIDES
+FALSCH, und zwar an der Wurzel:
+
+  1. `anlass` IST KEIN MODELL. Es ist ein HASH DES FAKTENTEXTES
+     (`anlass.fingerabdruecke`). Es kann nicht "haengen".
+  2. EIN VERLUST DORT IST DER ZWECK DER STUFE, kein Ausfall. Sie sagt: "an
+     diesen Fakten hat sich nichts geaendert, also nicht noch einmal fragen".
+     Genau dafuer ist sie gebaut, `anlass.aktiv: true` steht ausdruecklich in
+     der config, und `hoechstalter_stunden: 24` ist das Ventil - laenger als
+     einen Tag sperrt sie nie.
+
+DAS SYSTEM HAT ALSO RICHTIG GEHANDELT: nach 0,6 Stunden ohne jede Aenderung
+wurde kein Modellaufruf verbrannt. Dass die Auswahl-Stufe dabei nicht drankam,
+ist die Folge und kein Problem - es gab nichts Neues auszuwaehlen.
+
+⚠️ ABER DIE FEHLLESUNG IST MEINE SCHULD. Meine Zeile lautete "groesster Verlust
+bei `anlass`: ..." - neutral, und damit offen fuer die schlimmste Deutung. Das
+Projekt kennt die noetige Unterscheidung laengst ("drei Arten von 'nicht
+jetzt'"), nur stand sie nicht in der Zeile.
+
+BEHOBEN: das Werkzeug trennt jetzt BREMSE von LUECKE.
+    BREMSEN  anlass, auswahl, wiederholung  -> gewollt, spart einen Aufruf
+    LUECKEN  auftrag, fakten, lagebild      -> hier fehlt etwas
+    URTEIL   aktion, geometrie, ...         -> gefragt und verworfen
+Und: ein Lauf, den nur eine BREMSE stoppt, ist GRUEN mit dem Zusatz "die
+Auswahl kam nicht dran, weil vorher gebremst wurde - das ist der Zweck der
+Bremse". Nur eine LUECKE faerbt gelb.
+
+Vier neue Dauerpruefungen, gegen echte `rollen_gate.schreibe()`-Zeilen: eine
+Luecke ist nicht gruen und nennt ihre Stelle · eine Bremse vor der Auswahl ist
+KEIN Fehler · und die Zeile sagt ausdruecklich, dass es gewollt ist.
+
+⚠️ DAMIT LAG DAS WERKZEUG VIERMAL FALSCH, und der vierte war kein Lesefehler,
+sondern ein Formulierungsfehler - eine Zahl ohne ihre Bedeutung. Methodik 2.65
+bekommt diesen Punkt dazu.
+
+Suite 1.666 ALLE BESTANDEN, freie Namen 0.

@@ -39,6 +39,30 @@ def _sag(zeichen: str, text: str, detail: str = "") -> None:
         print(f"        {detail}")
 
 
+# ⚠️ NICHT JEDER VERLUST IST EIN FEHLER - und die Unterscheidung gehoert in
+# die Zeile, nicht in den Kopf des Lesers (24.08.2026).
+#
+# DER ANLASS: das Werkzeug meldete "groesster Verlust bei `anlass`" und eine
+# Zusammenfassung machte daraus "STALLED - der LLM-Generator haengt". Beides
+# falsch: `anlass` ist ein HASH DES FAKTENTEXTES, kein Modell, und ein Verlust
+# dort heisst "nichts hat sich geaendert, also nicht noch einmal fragen" - der
+# Zweck der Stufe.
+#
+# DAS PROJEKT KENNT DIE UNTERSCHEIDUNG SCHON ("drei Arten von 'nicht jetzt'"):
+# ein gesparter Aufruf ist etwas anderes als ein verworfenes Urteil.
+BREMSEN = {
+    "anlass": "Faktensatz unveraendert - gewollt, spart einen Aufruf",
+    "auswahl": "nicht unter den besten k - gewollt, spart einen Aufruf",
+    "wiederholung": "Mindestabstand - gewollt, spart einen Aufruf",
+}
+LUECKEN = {
+    "auftrag": "Instrument/Strategie unzulaessig",
+    "fakten": "Datenluecke - hier fehlt etwas",
+    "lagebild": "kein Lagebild",
+    "urteil": "das Modell wurde GEFRAGT und die Antwort verworfen",
+}
+
+
 def trichterzeilen(conn) -> list:
     """Je Gruppe die juengste Trichterzeile, als (zeichen, text, detail).
 
@@ -82,11 +106,16 @@ def trichterzeilen(conn) -> list:
         zuviel = [s for s, n in best.items() if n > hinein]
         groesster = max(verl.items(), key=lambda p: p[1], default=(None, 0))
         grund = ""
-        if groesster[0]:
+        if groesster[0] and groesster[1]:
             gr = (d.get("gruende") or {}).get(groesster[0]) or {}
-            if gr:
-                top = max(gr.items(), key=lambda p: p[1])
-                grund = f"groesster Verlust bei `{groesster[0]}`: {top[0]}"
+            art = (BREMSEN.get(groesster[0]) or LUECKEN.get(groesster[0])
+                   or "Urteil")
+            wo = ("BREMSE" if groesster[0] in BREMSEN else
+                  "LUECKE" if groesster[0] in LUECKEN else "URTEIL")
+            top = max(gr.items(), key=lambda p: p[1])[0] if gr else ""
+            grund = (f"groesster Verlust: `{groesster[0]}` "
+                     f"{groesster[1]}x [{wo}: {art}]"
+                     + (f" - {top}" if top else ""))
         if zuviel:
             zeichen, detail = ROT, f"⚠️ NICHT MONOTON: {zuviel}"
         # ⚠️ AUF DEN WERT PRUEFEN, NICHT AUF DEN SCHLUESSEL (dritter
@@ -95,7 +124,15 @@ def trichterzeilen(conn) -> list:
         # wahr und sagt nichts darueber, ob die Stufe erreicht wurde.
         elif hinein and not (best.get("auswahl") or verl.get("auswahl")):
             zeichen = GELB
-            detail = ("die Auswahl-Stufe wurde NICHT erreicht - "
+            # ⚠️ NUR DANN GELB, WENN EINE LUECKE SCHULD IST. Haben die
+            # BREMSEN alles abgefangen, ist die Auswahl zu Recht nicht
+            # drangekommen - es gab nichts Neues zu fragen.
+            _bremse = groesster[0] in BREMSEN
+            zeichen = GRUEN if _bremse else GELB
+            detail = (("die Auswahl kam nicht dran, weil vorher gebremst "
+                       "wurde - das ist der Zweck der Bremse. "
+                       if _bremse
+                       else "die Auswahl-Stufe wurde NICHT erreicht - ")
                       + (grund or "die Symbole fielen vorher")
                       + f"  |  {kette}")
         else:

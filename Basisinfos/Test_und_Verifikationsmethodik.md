@@ -3753,3 +3753,16 @@ Kette gemacht — die Kette war jedes Mal in Ordnung.
 („Selection stage is now live"). Er war es nicht — und beim nächsten Mal hätte
 niemand mehr hingesehen, denn *eine Prüfung mit Fehlalarmen wird nicht mehr
 aufgerufen* (2.x).
+
+
+**Nachtrag am selben Tag — der vierte Fehler war keiner im Lesen, sondern im
+Sagen.** Das Werkzeug meldete korrekt *„größter Verlust bei `anlass`"* — und
+eine Zusammenfassung machte daraus *„STALLED, der LLM-Generator hängt"*.
+`anlass` ist ein **Hash des Faktentextes**, und ein Verlust dort ist der
+**Zweck** der Stufe.
+
+> ⚠️ **Fünfte Regel: eine Zahl ohne ihre Bedeutung ist eine Einladung zur
+> schlimmsten Deutung.** Wo eine Prüfung einen Verlust meldet, muss dabeistehen,
+> ob er eine **Bremse** (gewollt, spart einen Aufruf), eine **Lücke** (hier
+> fehlt etwas) oder ein **Urteil** (gefragt und verworfen) ist. Das Projekt
+> unterscheidet das seit dem 14.08. im Trichter — die Prüfausgabe tat es nicht.
