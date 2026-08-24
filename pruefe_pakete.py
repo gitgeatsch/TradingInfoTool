@@ -2841,9 +2841,37 @@ def paket_b1() -> None:
         c.close()
         return h.hexdigest()
 
+    # ⚠️ DIE BREMSEN WERDEN FUER DIESE PRUEFUNGEN ABGESCHALTET (24.08.2026).
+    #
+    # DER FEHLER, DEN DAS BEHEBT - und er hat die ganze Suite zum ABSTURZ
+    # gebracht, nicht nur zu einem roten Punkt:
+    #
+    #     IndexError: list index out of range
+    #     lang = _marken(_lauf("hebel","KAUFEN","LONG")["mails"][0]["text"])
+    #
+    # `_lauf` laeuft gegen die ECHTE Produktionsdatenbank. Cooldown und
+    # Anlass-Fingerabdruck lesen daraus, WANN ETH zuletzt beurteilt wurde. Auf
+    # einem Rechner, auf dem die Produktion gerade laeuft, ist ETH gesperrt -
+    # dann entsteht keine Mail, und `["mails"][0]` fliegt.
+    #
+    # ⚠️ DER TEST HAENGT ALSO AM ZUSTAND DER PRODUKTION. Dieselbe Fehlerklasse
+    # wie Methodik 2.64 (Kalender), nur mit Daten statt Datum - und sie faellt
+    # erst auf, seit die Kette wirklich laeuft.
+    #
+    # WAS DIESE PRUEFUNGEN MESSEN WOLLEN, ist die GEOMETRIE der Richtung -
+    # nicht, ob eine Bremse gerade greift. Also werden beide Bremsen
+    # ausgeschaltet, statt das Ergebnis dem Zufall des Zeitpunkts zu
+    # ueberlassen. Die Bremsen haben ihre eigenen Pruefungen.
+    _OHNE_BREMSEN = {"anlass": {"aktiv": False},
+                     "rollen_kette": {"cooldown_stunden_je_gruppe":
+                                      {"krypto": 0.0}},
+                     "budget_allocator": {"spot_cooldown_stunden": 0.0,
+                                          "cooldown_stunden": 0.0}}
+
     vorher = _inhalt("data/tradinginfotool.db")
     erg = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole,
-                         betriebsart="trocken", antworten=antworten)
+                         betriebsart="trocken", antworten=antworten,
+                         config=_OHNE_BREMSEN)
     pruefe(P, "der Trockenlauf laeuft ohne Fehler durch",
            not erg["fehler"], str(erg["fehler"][:2]))
     pruefe(P, "und schreibt KEINE Zeile in die Produktivdatenbank",
@@ -2888,7 +2916,8 @@ def paket_b1() -> None:
 
     # EIN FEHLENDES SYMBOL WIRD GEZAEHLT, NICHT UEBERSPRUNGEN.
     erg2 = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole + ["GIBTSNICHT"],
-                          betriebsart="trocken", antworten=antworten)
+                          betriebsart="trocken", antworten=antworten,
+                          config=_OHNE_BREMSEN)
     pruefe(P, "ein Symbol ohne Kursreihe wird als Verlust gezaehlt",
            erg2["durchlauf"].verloren_je_stufe["fakten"] == 1,
            "stilles Ueberspringen waere derselbe Fehler wie ein Filter, der "
@@ -2938,7 +2967,8 @@ def paket_b1() -> None:
                "befund": {sym: _antwort(sym, aktion, richtung)}}
         return RL.fuehre_lauf(conn=con, reihen=reihen, symbole=[sym],
                               betriebsart="trocken", instrument=inst,
-                              strategie="einstieg", antworten=ant)
+                              strategie="einstieg", antworten=ant,
+                              config=_OHNE_BREMSEN)
 
     pruefe(P, "ein Spot-Lauf erzeugt eine Mail",
            len(_lauf("spot", "KAUFEN")["mails"]) == 1)
@@ -2991,8 +3021,20 @@ def paket_b1() -> None:
 
     kurs_eth = RE.kurs_eur("ETH", reihen["ETH"], len(reihen["ETH"]) - 1,
                            "data/tradinginfotool.db")
-    lang = _marken(_lauf("hebel", "KAUFEN", "LONG")["mails"][0]["text"])
-    kurz = _marken(_lauf("hebel", "KAUFEN", "SHORT")["mails"][0]["text"])
+    # ⚠️ UND WENN DOCH KEINE MAIL ENTSTEHT, IST DAS EIN ROTER PUNKT -
+    # kein Absturz. Ein IndexError beendet die GANZE Suite und nimmt
+    # allen folgenden Paketen ihr Ergebnis; genau das ist am 24.08.
+    # passiert. Eine Pruefung, die stirbt, prueft nichts mehr.
+    def _erste_mail(*a):
+        _m = _lauf(*a).get("mails") or []
+        return _marken(_m[0]["text"]) if _m else {}
+
+    lang = _erste_mail("hebel", "KAUFEN", "LONG")
+    kurz = _erste_mail("hebel", "KAUFEN", "SHORT")
+    pruefe(P, "beide Richtungsläufe erzeugen ueberhaupt eine Mail",
+           bool(lang) and bool(kurz),
+           "ohne Mail sind die folgenden Richtungspruefungen leer - "
+           "und ein Zugriff auf mails[0] wuerde die Suite abbrechen")
     pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
            lang["stop"] < kurs_eth < kurz["stop"],
            f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei {kurs_eth:.0f}")

@@ -22181,3 +22181,41 @@ neuen Spalten sind darin fast leer, weil sie erst seit dem Ausrollen gefuellt
 werden. Der zweite Lauf in einigen Tagen ist der, der etwas zeigt.
 
 Suite 1.678 ALLE BESTANDEN, freie Namen 0.
+
+
+[2026-08-24] DIE SUITE STUERZTE AB - UND ZWAR NUR AM NOTEBOOK
+
+⚠️ DER NUTZER SAH NIE EINE SCHLUSSZEILE, und der Grund war kein roter Punkt,
+sondern ein ABSTURZ:
+
+    File "pruefe_pakete.py", line 2994, in paket_b1
+      lang = _marken(_lauf("hebel","KAUFEN","LONG")["mails"][0]["text"])
+    IndexError: list index out of range
+
+BEI IDENTISCHEM CODE: auf dem Desktop gruen, am Notebook ein Absturz. Der
+Unterschied war die DATENBANK. `_lauf` laeuft gegen die echte Produktions-DB,
+und Cooldown wie Anlass-Fingerabdruck lesen daraus, wann ETH zuletzt beurteilt
+wurde. Wo die Produktion gerade laeuft, ist ETH gesperrt - keine Mail, und
+`["mails"][0]` fliegt.
+
+ZWEI FEHLER, und der zweite ist der schlimmere:
+  1. Die Pruefung hing am ZUSTAND DER PRODUKTION - dieselbe Klasse wie Methodik
+     2.64 (Kalender), nur mit Daten statt Datum. Sie faellt erst auf, seit die
+     Kette wirklich laeuft.
+  2. ⚠️ Sie STARB, statt rot zu werden. Ein IndexError beendet die GANZE Suite
+     und nimmt allen folgenden Paketen ihr Ergebnis - auch den 1.678
+     bestandenen Pruefungen davor.
+
+BEHOBEN, zweifach: `_OHNE_BREMSEN` (anlass aus, Cooldown 0) gilt fuer ALLE DREI
+Laeufe des Pakets - was diese Pruefungen messen wollen, ist die GEOMETRIE der
+Richtung, nicht ob eine Bremse gerade greift; die Bremsen haben ihre eigenen
+Pruefungen. Und der Mailzugriff geht ueber einen Helfer, der eine leere Liste
+als BEFUND meldet statt als Ausnahme.
+
+Als Methodik 2.66 festgehalten. Suite 1.679 ALLE BESTANDEN, freie Namen 0.
+
+⚠️ WAS DAS UEBER DIE UEBRIGEN MELDUNGEN SAGT: sie standen alle VOR dem Absturz
+und sind dasselbe Testrauschen wie an den Vortagen - 'halbscharf' aus Zeile
+2756, "Alle LLM-Toepfe erschoepft" aus einem Test ohne Client, Rolle G mit
+absichtlich geworfenen Transportfehlern aus Zeile 8717/8817. Der TypeError im
+Kurslader war die Ausnahme und ist behoben.

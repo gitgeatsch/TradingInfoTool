@@ -3776,3 +3776,44 @@ nannte nur die **größte** Verlustquelle. Am 24.08. waren das 3 Symbole an der
 > „Am meisten" ist die falsche Rangfolge für eine Diagnose; „am schlimmsten"
 > ist die richtige. Wer nach Häufigkeit sortiert, zeigt zuverlässig das, was
 > gewollt ist, und verbirgt das, was fehlt.
+
+
+### 2.66 Eine Prüfung, die vom Zustand der Produktion abhängt — und die ganze Suite mitreißt (24.08.2026)
+
+**Der Absturz:**
+
+```
+File "pruefe_pakete.py", line 2994, in paket_b1
+  lang = _marken(_lauf("hebel", "KAUFEN", "LONG")["mails"][0]["text"])
+IndexError: list index out of range
+```
+
+⚠️ **Auf meinem Rechner grün, auf dem Notebook ein Absturz — bei identischem
+Code.** Der Unterschied war die **Datenbank**: `_lauf` läuft gegen die echte
+Produktions-DB, und **Cooldown** wie **Anlass-Fingerabdruck** lesen daraus, wann
+ETH zuletzt beurteilt wurde. Wo die Produktion gerade läuft, ist ETH gesperrt →
+keine Mail → `["mails"][0]` fliegt.
+
+**Zwei getrennte Fehler, und der zweite ist der schlimmere:**
+
+| | |
+|---|---|
+| **1** | Die Prüfung **hing am Zustand der Produktion**. Dieselbe Klasse wie 2.64 (Kalender), nur mit **Daten statt Datum** — und sie fällt erst auf, seit die Kette wirklich läuft |
+| **2** | ⚠️ Sie **stürzte ab, statt rot zu werden**. Ein `IndexError` beendet die **ganze Suite** und nimmt **allen folgenden Paketen** ihr Ergebnis. Der Nutzer sah nie eine Schlusszeile — und damit auch nicht die 1.678 bestandenen Prüfungen davor |
+
+**Die Regeln:**
+
+> **Was eine Prüfung messen will, muss sie von dem trennen, was sie nicht
+> messen will.** Diese hier prüft die **Geometrie der Richtung** — nicht, ob
+> eine Bremse gerade greift. Also werden die Bremsen für sie **abgeschaltet**
+> (`anlass.aktiv: False`, Cooldown 0), statt das Ergebnis dem Zufall des
+> Zeitpunkts zu überlassen. Die Bremsen haben ihre eigenen Prüfungen.
+
+> ⚠️ **Und keine Prüfung darf sterben.** `mails[0]` ohne vorherige
+> Längenprüfung ist kein Test, sondern eine Wette. Wo ein Ergebnis fehlen
+> **kann**, wird es als **roter Punkt** gemeldet — eine Prüfung, die stirbt,
+> prüft nichts mehr, und sie nimmt alle anderen mit.
+
+**Behoben:** `_OHNE_BREMSEN` gilt für **alle drei** Läufe des Pakets, und der
+Mailzugriff geht über einen Helfer, der eine leere Liste als Befund meldet
+statt als Ausnahme.
