@@ -93,8 +93,17 @@ def main() -> int:
             for g in {r[0] for r in c.execute(
                     "SELECT DISTINCT gruppe FROM auswahl_schatten")}:
                 s2 = AW.stumme_laeufe(c, g)
-                _sag(GRUEN if not s2["stumm"] else GELB,
-                     f"{g}: {s2['laeufe']} Laeufe in Folge ohne Einstieg"
+                # ⚠️ NULL HEISST ZWEIERLEI: "der letzte Gewaehlte hat
+                # gekauft" ODER "es gibt gar nichts zu zaehlen". Das
+                # muss dastehen, sonst liest sich eine leere Gruppe wie
+                # eine gesunde.
+                _wie = (f"{s2['laeufe']} Laeufe in Folge ohne Einstieg"
+                        if s2["geprueft"] else
+                        "noch KEIN gewaehlter Wert mit Aktion - nichts "
+                        "zu zaehlen")
+                _sag(GELB if (s2["stumm"] or not s2["geprueft"])
+                     else GRUEN,
+                     f"{g}: {_wie}"
                      + ("  ⚠️ die Auswahl liefert, die Kette nimmt keinen"
                         if s2["stumm"] else ""))
         else:
@@ -116,10 +125,24 @@ def main() -> int:
             _sag(GELB, "noch kein Durchlauf verzeichnet")
         else:
             d = _json.loads(zeile["daten_json"] or "{}")
-            best = (d.get("bestanden_je_stufe") or {})
-            verl = (d.get("verloren_je_stufe") or {})
+            # ⚠️ DIE SCHLUESSEL HEISSEN `bestanden` UND `verloren`, NICHT
+            # `bestanden_je_stufe` (24.08.2026 - mein eigener Fehlalarm).
+            #
+            # Die erste Fassung las die Namen der PYTHON-ATTRIBUTE statt
+            # der JSON-Schluessel aus `Durchlauf.als_json()`. Ergebnis:
+            # ein leeres dict, daraus "die Stufe auswahl fehlt noch" -
+            # und die Stufe lief seit Stunden. Eine Pruefung mit
+            # Fehlalarmen wird nicht mehr aufgerufen; deshalb prueft sie
+            # jetzt ZUERST, ob sie ueberhaupt gefunden hat, was sie sucht.
+            best = (d.get("bestanden") or {})
+            verl = (d.get("verloren") or {})
             hinein = zeile["hinein"] or 0
-            if "auswahl" not in best:
+            if not best:
+                _sag(ROT, "der Trichter ist nicht lesbar",
+                     f"erwartete Schluessel `bestanden`/`verloren`, "
+                     f"gefunden: {sorted(d)[:6]} - das ist ein Fehler "
+                     f"DIESER Pruefung, nicht der Kette")
+            elif "auswahl" not in best:
                 _sag(GELB, f"{zeile['lauf']}: die Stufe `auswahl` fehlt noch",
                      "dieser Durchlauf stammt vom alten Code - nach dem "
                      "naechsten Umlauf wiederholen")

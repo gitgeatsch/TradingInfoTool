@@ -12724,6 +12724,32 @@ def paket_auswahl() -> None:
            "A1b ist Schatten: je Jahr gemischt (2024 trennt nicht, 2025 "
            "trennt und verliert trotzdem)")
     import sqlite3 as _sq
+    # ---- DAS AUSROLLWERKZEUG LIEST DIE SCHLUESSEL, DIE ES GIBT ----
+    #
+    # ⚠️ AM 24.08. LAS ES `bestanden_je_stufe` - die Namen der PYTHON-
+    # ATTRIBUTE statt der JSON-Schluessel aus `Durchlauf.als_json()`. Ergebnis
+    # war ein leeres dict und daraus die Meldung "die Stufe auswahl fehlt
+    # noch", waehrend die Stufe seit Stunden lief. Ein FEHLALARM im
+    # Pruefwerkzeug - und eine Pruefung mit Fehlalarmen wird nicht mehr
+    # aufgerufen.
+    import json as _js
+
+    _d = _RG.Durchlauf("krypto")
+    _d.beginne("X")
+    _d.bestanden("X", "auswahl")
+    _schluessel = set(_js.loads(_d.als_json()))
+    _aus = _quelltext("pruefe_ausrollen.py")
+    for _s in ("bestanden", "verloren"):
+        pruefe(P, f"das Ausrollwerkzeug liest den Schluessel `{_s}`",
+               _s in _schluessel and f'd.get("{_s}")' in _aus,
+               f"`als_json` schreibt {sorted(_schluessel)[:5]} - wer andere "
+               f"Namen liest, bekommt ein leeres dict und meldet einen Fehler, "
+               f"den es nicht gibt")
+    pruefe(P, "und meldet es als EIGENEN Fehler, wenn es nichts findet",
+           "das ist ein Fehler" in _aus and "DIESER Pruefung" in _aus,
+           "ein leeres Ergebnis darf nicht wie ein Befund ueber die Kette "
+           "aussehen")
+
     # ---- L1: GREIFT DIE BREMSE NOCH? (Nutzerfrage 23.08.) ----
     #
     # ⚠️ DIE ANTWORT WAR NEIN, UND ZWAR GEMESSEN: nach A1 und der

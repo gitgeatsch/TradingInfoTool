@@ -21928,3 +21928,58 @@ gleichauf liegt, kommt mit · der klar Schlechtere bleibt draussen · ohne
 Gleichstand bleibt es bei der Quote (die Ausnahme darf nicht zur Regel werden).
 
 Suite 1.659 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.
+
+
+[2026-08-24] AUSGEROLLT UND NACHGEMESSEN - PLUS EIN FEHLALARM IM EIGENEN
+PRUEFWERKZEUG
+
+Der Nutzer hat gezogen, neu gestartet und `pruefe_ausrollen.py` laufen lassen.
+DER STAND AM NOTEBOOK, gelesen statt vermutet:
+
+  SCHEMA        signals.strategie und auswahl_schatten sind da
+  LESEPROBE     BTC NACHKAUFEN, strategie='einstieg' - ueber den Lesepfad des
+                Modells, nicht per SELECT
+  SCHATTEN      2.106 Zeilen aus 195 Laeufen, 234 gewaehlt, 31 mit Aktion
+  VERKAUFSSEITE HALTEN n=531 (14 .. 2.051 Zeichen) · REDUZIEREN n=104
+                (16 .. 2.056) · VERKAUFEN n=24 (16 .. 2.065)
+  ROHSTOFFE     OD7N/OD7H/OD7C je 524 Kerzen, OD7L 141
+  KONTINGENT    gemini-3.1 131/500, uebrige Toepfe unberuehrt
+  JUENGSTE ZEILE 2026-08-24T00:11:41
+
+DIE ZAHLEN HAENGEN ZUSAMMEN, nachgerechnet: 2.106/195 = 10,8 Zeilen je Lauf -
+das ist der Schnitt aus krypto 41 und den kleinen Gruppen. 234 von 2.106 = 11 %
+gewaehlt - genau k=2 bei Krypto und k=1 sonst. Und 31 von 234 mit Aktion: die
+Auswahl waehlt bei jedem Umlauf, der Cooldown laesst nur alle 3,5 h durch.
+
+⚠️ ROHSTOFFE: AM NOTEBOOK HABEN SIE KERZEN. Mein roter Punkt vom 23.08. galt
+der DESKTOP-Kopie und stand ausdruecklich unter "am Notebook zu pruefen" -
+geprueft, entkraeftet. OD7L bleibt mit 141 Kerzen unter der Rangschwelle von
+250, die drei uebrigen tragen sie.
+
+⚠️⚠️ UND EIN FEHLALARM IN MEINEM EIGENEN WERKZEUG. Punkt 4 meldete "die Stufe
+`auswahl` fehlt noch - alter Codepfad". Falsch: die Stufe lief seit Stunden.
+`pruefe_ausrollen` las `bestanden_je_stufe` und `verloren_je_stufe` - das sind
+die Namen der PYTHON-ATTRIBUTE. `Durchlauf.als_json()` schreibt sie als
+`bestanden` und `verloren`. Ergebnis war ein leeres dict, und daraus eine
+Aussage ueber die Kette.
+
+DAS IST DIESELBE FEHLERART WIE METHODIK 2.64 VOM VORTAG, nur eine Ebene tiefer:
+nicht ein gealterter Testfall, sondern ein Werkzeug, das seine eigene Quelle nur
+vermutet hat. Und es ist genau das, wovor die Waehrungspruefung warnt: EINE
+PRUEFUNG MIT FEHLALARMEN WIRD NICHT MEHR AUFGERUFEN.
+
+BEHOBEN, und zwar zweifach: die richtigen Schluessel, UND eine Vorpruefung -
+findet das Werkzeug nichts, meldet es das als EIGENEN Fehler ("das ist ein
+Fehler DIESER Pruefung, nicht der Kette") statt als Befund ueber die Kette.
+
+ZWEITE KORREKTUR AM WERKZEUG: `stumme_laeufe` gibt 0 zurueck, wenn der letzte
+Gewaehlte gekauft hat - UND wenn es gar nichts zu zaehlen gibt. Vier Gruppen
+standen deshalb auf "0 Laeufe ohne Einstieg" und sahen gesund aus, obwohl dort
+noch kein gewaehlter Wert je eine Aktion hatte. Das Werkzeug unterscheidet
+beides jetzt ueber `geprueft`.
+
+Drei neue Dauerpruefungen: das Ausrollwerkzeug liest die Schluessel, die
+`als_json` wirklich schreibt (gegen ein echtes Durchlauf-Objekt, nicht gegen
+eine Annahme) - und es meldet ein leeres Ergebnis als EIGENEN Fehler.
+
+Suite 1.662 ALLE BESTANDEN, freie Namen 0.
