@@ -12756,8 +12756,17 @@ def paket_auswahl() -> None:
            len(_zeilen) == 1 and _zeilen[0][0].strip() == "OK",
            f"gelesen: {_zeilen}")
     pruefe(P, "und zeigt die GANZE Kette, nicht nur eine Stufe",
-           "auftrag:3/0" in _zeilen[0][2] and "auswahl:1/2" in _zeilen[0][2],
+           "auftrag 3 durch" in _zeilen[0][2]
+           and "auswahl 1 durch / 2 raus" in _zeilen[0][2],
            f"Detail: {_zeilen[0][2][:120]}")
+    # ⚠️ AUSGESCHRIEBEN, NICHT MIT SCHRAEGSTRICH. "fakten:3/2" wurde
+    # am 24.08. als "3 hinein, 2 fertig" gelesen - es heisst "3 durch,
+    # 2 raus". Zwei Zahlen mit einem Strich dazwischen sagen nicht, was
+    # sie bedeuten.
+    pruefe(P, "und die Zahlen tragen ihre Bedeutung mit",
+           "durch" in _zeilen[0][2] and "raus" in _zeilen[0][2]
+           and "auswahl:1/2" not in _zeilen[0][2],
+           "ein Schraegstrich laedt zum Raten ein")
     pruefe(P, "samt dem haeufigsten Grund der groessten Verlustquelle",
            "Rang" in _zeilen[0][2],
            "ohne ihn wirft die Zeile eine Frage auf, die sie beantworten "
@@ -12811,6 +12820,32 @@ def paket_auswahl() -> None:
            "BREMSE" in _z3[0][2] and "Zweck der Bremse" in _z3[0][2],
            "sonst liest jemand `groesster Verlust bei anlass` als "
            "Ausfall - genau so ist es am 24.08. passiert")
+    # ---- UND EINE BREMSE, DIE EINE DATENLUECKE VERDECKT ----
+    #
+    # ⚠️ GENAU DER FALL VOM 24.08.: 3 Symbole fielen an der BREMSE, 2 an einer
+    # DATENLUECKE. Die Bremse war groesser und verdeckte die Luecke - dabei
+    # wiegt eine Luecke schwerer: die eine ist ein Mangel, die andere der Zweck.
+    _cg4 = _sq2.connect(":memory:")
+    _cg4.row_factory = _sq2.Row
+    _dg4 = _RG.Durchlauf("rollen")
+    for _s in ("A", "B", "C", "D", "E"):
+        _dg4.beginne(_s)
+        _dg4.bestanden(_s, "auftrag")
+    for _s in ("D", "E"):
+        _dg4.verloren(_s, "fakten", "keine Kursreihe")
+    for _s in ("A", "B", "C"):
+        _dg4.bestanden(_s, "fakten")
+        _dg4.bestanden(_s, "lagebild")
+        _dg4.verloren(_s, "anlass", "Faktensatz unveraendert seit 0,6 h")
+    _RG.schreibe(_cg4, _dg4, "2026-08-24T00:48:00")
+    _z4 = _tz(_cg4)
+    pruefe(P, "eine Datenluecke wird genannt, auch wenn die Bremse groesser ist",
+           "DATENLUECKE" in _z4[0][2] and "fakten 2x" in _z4[0][2],
+           f"Detail: {_z4[0][2][:200]}")
+    pruefe(P, "und sie faerbt die Zeile, obwohl nur gebremst wurde",
+           _z4[0][0].strip() != "OK",
+           "eine Luecke von 2 wiegt schwerer als eine Bremse von 3")
+    _cg4.close()
     _cg3.close()
     _cg.close()
     _cg2.close()

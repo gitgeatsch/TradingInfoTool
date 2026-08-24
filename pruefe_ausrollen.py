@@ -98,13 +98,30 @@ def trichterzeilen(conn) -> list:
                         f"{sorted(d)[:6]} - Fehler DIESER Pruefung"))
             continue
         hinein = zeile["hinein"] or 0
-        kette = " ".join(f"{s}:{best.get(s, 0)}/{verl.get(s, 0)}"
-                         for s in _ST if best.get(s) or verl.get(s))
+        # ⚠️ AUSGESCHRIEBEN, NICHT MIT SCHRAEGSTRICH (24.08.2026, fuenfte
+        # Fehllesung). "fakten:3/2" wurde als "3 hinein, 2 fertig" gelesen -
+        # es heisst "3 durch, 2 raus". Ein Schraegstrich zwischen zwei Zahlen
+        # sagt nicht, was sie bedeuten, und der Leser raet.
+        kette = " · ".join(
+            f"{s} {best.get(s, 0)} durch"
+            + (f" / {verl.get(s, 0)} raus" if verl.get(s) else "")
+            for s in _ST if best.get(s) or verl.get(s))
         # ⚠️ ZWEI VERSCHIEDENE FEHLER, die beide "0 heraus" ergeben:
         #    NICHT MONOTON  eine Stufe zaehlt mehr, als hineingegangen sind
         #    LOCH           die Summe aus bestanden und verloren geht nicht auf
         zuviel = [s for s, n in best.items() if n > hinein]
         groesster = max(verl.items(), key=lambda p: p[1], default=(None, 0))
+        # ⚠️ JEDE LUECKE WIRD GENANNT, nicht nur die groesste Verlustquelle.
+        # Am 24.08. fielen 3 Symbole an der BREMSE und 2 an einer DATENLUECKE -
+        # die Bremse war groesser und verdeckte die Luecke. Eine Luecke von 2
+        # wiegt schwerer als eine Bremse von 3: die eine ist ein Mangel, die
+        # andere der Zweck.
+        luecken = []
+        for _s, _n in verl.items():
+            if _s in LUECKEN and _n:
+                _gr = (d.get("gruende") or {}).get(_s) or {}
+                _top = max(_gr.items(), key=lambda p: p[1])[0] if _gr else ""
+                luecken.append(f"{_s} {_n}x" + (f" ({_top})" if _top else ""))
         grund = ""
         if groesster[0] and groesster[1]:
             gr = (d.get("gruende") or {}).get(groesster[0]) or {}
@@ -127,7 +144,7 @@ def trichterzeilen(conn) -> list:
             # ⚠️ NUR DANN GELB, WENN EINE LUECKE SCHULD IST. Haben die
             # BREMSEN alles abgefangen, ist die Auswahl zu Recht nicht
             # drangekommen - es gab nichts Neues zu fragen.
-            _bremse = groesster[0] in BREMSEN
+            _bremse = groesster[0] in BREMSEN and not luecken
             zeichen = GRUEN if _bremse else GELB
             detail = (("die Auswahl kam nicht dran, weil vorher gebremst "
                        "wurde - das ist der Zweck der Bremse. "
@@ -136,7 +153,10 @@ def trichterzeilen(conn) -> list:
                       + (grund or "die Symbole fielen vorher")
                       + f"  |  {kette}")
         else:
-            zeichen, detail = GRUEN, kette + ("  |  " + grund if grund else "")
+            zeichen = GELB if luecken else GRUEN
+            detail = kette + ("  |  " + grund if grund else "")
+        if luecken:
+            detail += "  |  ⚠️ DATENLUECKE: " + ", ".join(luecken)
         aus.append((zeichen,
                     f"{lauf:12} {str(zeile['erfasst_am'])[:16]} · hinein "
                     f"{hinein} -> heraus {zeile['heraus']}", detail))

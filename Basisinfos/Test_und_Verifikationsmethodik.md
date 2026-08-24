@@ -3766,3 +3766,13 @@ eine Zusammenfassung machte daraus *„STALLED, der LLM-Generator hängt"*.
 > ob er eine **Bremse** (gewollt, spart einen Aufruf), eine **Lücke** (hier
 > fehlt etwas) oder ein **Urteil** (gefragt und verworfen) ist. Das Projekt
 > unterscheidet das seit dem 14.08. im Trichter — die Prüfausgabe tat es nicht.
+
+
+**Und eine sechste Regel, am selben Tag aus derselben Quelle:** das Werkzeug
+nannte nur die **größte** Verlustquelle. Am 24.08. waren das 3 Symbole an der
+**Bremse** — und sie verdeckte 2 Symbole an einer **Datenlücke**.
+
+> ⚠️ **Eine Lücke wiegt schwerer als eine Bremse, auch wenn sie kleiner ist.**
+> „Am meisten" ist die falsche Rangfolge für eine Diagnose; „am schlimmsten"
+> ist die richtige. Wer nach Häufigkeit sortiert, zeigt zuverlässig das, was
+> gewollt ist, und verbirgt das, was fehlt.

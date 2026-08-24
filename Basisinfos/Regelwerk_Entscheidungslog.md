@@ -22035,3 +22035,46 @@ sondern ein Formulierungsfehler - eine Zahl ohne ihre Bedeutung. Methodik 2.65
 bekommt diesen Punkt dazu.
 
 Suite 1.666 ALLE BESTANDEN, freie Namen 0.
+
+
+[2026-08-24] DIE FUENFTE FEHLLESUNG - UND SIE LAG WIEDER AN MEINEM FORMAT
+
+Der Trichter wird jetzt richtig gelesen, die Bremse ist als solche
+gekennzeichnet. Trotzdem las die Zusammenfassung DREI Zeilen falsch:
+
+    "fakten:   3/2"   gelesen als "3 hinein, 2 mit Fakten erzeugt"
+    "lagebild: 3/0"   gelesen als "0 mit Lagebild - optional, OK"
+    "auftrag:  5/0"   gelesen als "5 Kandidaten warten auf Verarbeitung"
+
+⚠️ ALLE DREI FALSCH. Das Format war `stufe:bestanden/verloren` - also 3 DURCH
+und 2 RAUS, nicht "3 hinein, 2 fertig". Ein Schraegstrich zwischen zwei Zahlen
+sagt nicht, was sie bedeuten, und der Leser raet.
+
+BEHOBEN: die Kette steht ausgeschrieben da.
+    auftrag 5 durch · fakten 3 durch / 2 raus · lagebild 3 durch ·
+    anlass 0 durch / 3 raus
+
+⚠️ UND DABEI FIEL EINE ECHTE LUECKE AUF, die meine eigene Zeile verdeckt hatte:
+`fakten 3 durch / 2 raus` - ZWEI SYMBOLE HABEN KEINE KURSREIHE. Mein Werkzeug
+nannte nur die GROESSTE Verlustquelle, und das war die Bremse mit 3. Die Luecke
+mit 2 stand zwar in der Kette, aber ohne Hinweis und ohne Grund.
+
+DAS IST DIE FALSCHE RANGFOLGE. Eine Bremse ist der Zweck der Stufe, eine
+Datenluecke ist ein Mangel - die Luecke wiegt schwerer, auch wenn sie kleiner
+ist. Das Werkzeug nennt jetzt JEDE Luecke mit ihrem Grund und faerbt danach:
+
+    ⚠️ DATENLUECKE: fakten 2x (keine Kursreihe)
+
+Drei neue Dauerpruefungen: die Zahlen tragen ihre Bedeutung mit (kein
+Schraegstrich mehr) · eine Datenluecke wird genannt, auch wenn die Bremse
+groesser ist · und sie faerbt die Zeile, obwohl nur gebremst wurde.
+
+⚠️ FUENF FEHLLESUNGEN AN EINEM WERKZEUG, und nur die ersten drei waren
+Programmierfehler. Vier und fuenf waren AUSGABEFEHLER: eine Zahl ohne ihre
+Bedeutung, und eine Rangfolge, die das Wichtigere verdeckt. Methodik 2.65 haelt
+beides fest.
+
+Suite 1.669 ALLE BESTANDEN, freie Namen 0.
+
+OFFEN UND ECHT: welche zwei Symbole haben keine Kursreihe? Das sagt der
+naechste Lauf des Werkzeugs am Notebook.
