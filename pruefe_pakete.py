@@ -25,8 +25,13 @@ REGEL FUER NEUE PAKETE: Wer ein Paket baut, haengt seine Pruefungen hier an -
 und laesst die ALTEN mitlaufen. Eine Pruefung, die nur am Tag ihrer Entstehung
 lief, ist eine Notiz, kein Netz.
 
-Kein LLM-Aufruf, kein Netzwerk, keine Schreibzugriffe. Diese Datei darf jederzeit
-laufen.
+Kein LLM-Aufruf, kein Netzwerk. Diese Datei darf jederzeit laufen.
+
+⚠️ EINE AUSNAHME (24.08.2026): `main()` schreibt den vollstaendigen
+Konsolentext zusaetzlich nach `Claude_Austauschordner/Pruefungen/` auf Google
+Drive - best effort, bricht bei fehlendem Laufwerk nicht ab. Anlass: externe
+Zusammenfassungen der Ausgabe haben wiederholt gekuerzt oder falsch gedeutet;
+der Volltext an einem festen Ort macht das ueberfluessig.
 """
 from __future__ import annotations
 
@@ -36,6 +41,7 @@ import subprocess as _SUB
 import ast as _AST
 import re
 import sys
+from pathlib import Path
 
 sys.path.insert(0, ".")
 
@@ -13233,6 +13239,50 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Verkauf": paket_verkaufsseite}
 
 
+class _Mitschnitt:
+    """Schreibt jede Ausgabe an die echte Konsole UND in einen Puffer.
+
+    ⚠️ NUR DESHALB, WEIL EINE EXTERNE ZUSAMMENFASSUNG SCHON ZWEIMAL DEN
+    VOLLTEXT VERLOR (24.08.2026): einmal bei 20.010 Zeichen abgeschnitten
+    (die '1678'-Kennzahl fehlte), einmal beim Zeitdeckel nach zwei Minuten.
+    Die Konsole bleibt unveraendert - der Puffer geht zusaetzlich nach
+    Google Drive, siehe `_schreibe_ausgabe_ins_austauschordner()`."""
+
+    def __init__(self, original, puffer: io.StringIO) -> None:
+        self._original = original
+        self._puffer = puffer
+
+    def write(self, s: str) -> int:
+        self._puffer.write(s)
+        return self._original.write(s)
+
+    def flush(self) -> None:
+        self._original.flush()
+
+
+def _schreibe_ausgabe_ins_austauschordner(text: str) -> None:
+    """Volltext nach Google Drive, damit niemand ihn mehr abtippen oder aus
+    einer gekuerzten Zusammenfassung zurueckdeuten muss.
+
+    ⚠️ BEST EFFORT. Der Laufwerksbuchstabe unterscheidet sich je Geraet
+    (`extract_notebook_diagnose._google_drive_wurzel()` sucht ihn) - und ist
+    Google Drive gerade nicht gemountet (z.B. auf einem dritten Rechner),
+    darf DAS die Suite nicht zu Fall bringen. Deshalb ein eigener, getrennter
+    Ordner `Pruefungen`, NICHT `Notebook_Analysedaten` - Testergebnisse sind
+    Code-Korrektheit, kein Produktionszustand, und beides in dieselbe Datei
+    zu schreiben wuerde genau die Verwechslung wieder einfuehren, die beim
+    NB-Export schon einmal Verwirrung gestiftet hat."""
+    try:
+        from extract_notebook_diagnose import _google_drive_wurzel
+        ziel = _google_drive_wurzel() / "Claude_Austauschordner" / "Pruefungen"
+        ziel.mkdir(parents=True, exist_ok=True)
+        pfad = ziel / "pruefe_pakete_ausgabe.txt"
+        pfad.write_text(text, encoding="utf-8")
+        print(f"\n(Volltext geschrieben nach {pfad})")
+    except Exception as exc:                                   # noqa: BLE001
+        print(f"\n(Konnte Ausgabe nicht auf Google Drive schreiben: {exc})")
+
+
 def main() -> int:
     # ⚠️ DIE KONSOLE MUSS DIE ZEICHEN AUSHALTEN, DIE DAS PRODUKT BENUTZT
     # (17.08.2026). Seit die Mail wieder ▲/●/▼ verwendet, stehen diese
@@ -13251,30 +13301,38 @@ def main() -> int:
     ap.add_argument("--paket", default=None, help="nur dieses Paket pruefen")
     a = ap.parse_args()
     laufen = [a.paket] if a.paket else sorted(PAKETE)
-    for p in laufen:
-        if p not in PAKETE:
-            print(f"[FEHLER] Paket {p} kennt diese Datei nicht - "
-                  f"bekannt: {sorted(PAKETE)}")
-            return 2
-        PAKETE[p]()
 
-    letztes = None
-    schlecht = 0
-    for paket, name, ok, detail in _ERGEBNISSE:
-        if paket != letztes:
-            print(f"\n--- PAKET {paket} " + "-" * 56)
-            letztes = paket
-        print(f"  {'OK  ' if ok else 'FEHL'}  {name}")
-        if detail and not ok:
-            print(f"        {detail}")
-        elif detail and ok:
-            print(f"        ({detail})")
-        schlecht += 0 if ok else 1
+    _original_stdout = sys.stdout
+    _puffer = io.StringIO()
+    sys.stdout = _Mitschnitt(_original_stdout, _puffer)
+    try:
+        for p in laufen:
+            if p not in PAKETE:
+                print(f"[FEHLER] Paket {p} kennt diese Datei nicht - "
+                      f"bekannt: {sorted(PAKETE)}")
+                return 2
+            PAKETE[p]()
 
-    print("\n" + "=" * 68)
-    print(f"{len(_ERGEBNISSE)} Pruefungen, "
-          + ("ALLE BESTANDEN" if not schlecht else f"{schlecht} FEHLGESCHLAGEN"))
-    return 1 if schlecht else 0
+        letztes = None
+        schlecht = 0
+        for paket, name, ok, detail in _ERGEBNISSE:
+            if paket != letztes:
+                print(f"\n--- PAKET {paket} " + "-" * 56)
+                letztes = paket
+            print(f"  {'OK  ' if ok else 'FEHL'}  {name}")
+            if detail and not ok:
+                print(f"        {detail}")
+            elif detail and ok:
+                print(f"        ({detail})")
+            schlecht += 0 if ok else 1
+
+        print("\n" + "=" * 68)
+        print(f"{len(_ERGEBNISSE)} Pruefungen, "
+              + ("ALLE BESTANDEN" if not schlecht else f"{schlecht} FEHLGESCHLAGEN"))
+        return 1 if schlecht else 0
+    finally:
+        sys.stdout = _original_stdout
+        _schreibe_ausgabe_ins_austauschordner(_puffer.getvalue())
 
 
 if __name__ == "__main__":

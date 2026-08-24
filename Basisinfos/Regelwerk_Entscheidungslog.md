@@ -22219,3 +22219,42 @@ und sind dasselbe Testrauschen wie an den Vortagen - 'halbscharf' aus Zeile
 2756, "Alle LLM-Toepfe erschoepft" aus einem Test ohne Client, Rolle G mit
 absichtlich geworfenen Transportfehlern aus Zeile 8717/8817. Der TypeError im
 Kurslader war die Ausnahme und ist behoben.
+
+
+[2026-08-24] PRUEFE_PAKETE.PY SCHREIBT DEN VOLLTEXT NACH GOOGLE DRIVE
+
+NUTZERVORGABE: "prüfe pakete jetzt immer durchführen ... lässt du den output
+auf den Austauschordner Google Drive schreiben, sonst wird es mühsam."
+
+ANTWORT AUF TEIL EINS: `pruefe_pakete.py` ist bereits Pflicht vor jedem
+Ausrollen (`Ausrollen_24_08.md`) - das bleibt so, gilt aber als
+VORLAUF-Prüfung, nicht als Dauerprozess neben dem Scheduler. Die Datei
+verbindet sich an mehreren Stellen ohne `mode=ro` zur echten Produktions-DB
+(Fund beim Nachsehen: Zeilen 86/610/846/1278/1383/1437/1685/2127/2747/3080/
+3198/3654) - genau das war die Ursache des Absturzes vom selben Tag (ETH im
+echten Cooldown). Sie neben der laufenden Produktion dauerhaft mitlaufen zu
+lassen waere unvorsichtig; vor jeder Aenderung/jedem Rollout ist der richtige
+Ort.
+
+ANTWORT AUF TEIL ZWEI (NB-Export): NICHT in `extract_notebook_diagnose.py`
+aufgenommen. Der NB-Export ist eine Zustands-Momentaufnahme der PRODUKTION
+(Kapitel-93-Felder, Datenfrische) - `pruefe_pakete.py` prueft CODE-
+Korrektheit. Beides in dieselbe Datei zu schreiben wuerde "stimmt der Code"
+mit "laeuft der Betrieb gerade gut" vermischen - dieselbe Verwechslung, die
+schon bei den externen Zusammenfassungen mehrfach Fehldeutungen erzeugt hat
+(Methodik 2.65).
+
+GEBAUT: `main()` spiegelt die komplette Konsolenausgabe zusaetzlich (Klasse
+`_Mitschnitt`) in einen Puffer und schreibt ihn am Ende nach
+`Claude_Austauschordner/Pruefungen/pruefe_pakete_ausgabe.txt` - EIGENER
+Ordner, nicht `Notebook_Analysedaten`, aus demselben Trenngrund. Der
+Laufwerksbuchstabe kommt aus der bestehenden `extract_notebook_diagnose.
+_google_drive_wurzel()` (lazy importiert, damit ein fehlendes Laufwerk die
+Suite nicht zu Fall bringt - best effort, Fehler landet nur als Konsolenzeile).
+
+GEGENGEPRUEFT: `python pruefe_pakete.py --paket 0` schreibt die Datei
+tatsaechlich (`K:\...\Pruefungen\pruefe_pakete_ausgabe.txt`, Inhalt geprueft).
+Volle Suite danach erneut gelaufen: 1.679 Pruefungen, ALLE BESTANDEN - die
+"Test Failures" aus dem abgeschnittenen Screenshot vom selben Tag waren damit
+endgueltig als Fehldeutung der externen Zusammenfassung bestaetigt, nicht als
+echter Fund. `finde_freie_namen.py`: 0 Kandidaten.
