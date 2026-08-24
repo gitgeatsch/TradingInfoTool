@@ -22368,3 +22368,35 @@ statt lesbarer Werte (Nebenwirkung des row_factory-Fixes aus dem Vor-Commit).
 
 Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
 0 Kandidaten.
+
+
+[2026-08-24] EIGENER DESKTOP-LAUF FUER DEN FRISCHEN NOTEBOOK-LAUF GEHALTEN -
+DER EXPORT BRAUCHT EIN GERAETE-KENNZEICHEN
+
+NUTZERVORGABE: "ok Skript ist gelaufen" (Notebook). Beim Nachsehen in der
+Google-Drive-Datei: "0 FEHL", scheinbar alles gruen. ⚠️ WAR ES NICHT - die
+Zahlen (u.a. "LONG 1929,90 / SHORT 2124,27 bei 1964") waren BITGLEICH mit
+meinem EIGENEN Desktop-Verifikationslauf von wenigen Minuten zuvor. Beide
+Geraete schrieben unter demselben Dateinamen `pruefe_pakete_ausgabe.txt` -
+wer zuletzt schrieb, gewann, ohne jede Kennzeichnung. Mein eigener
+Nachlauf (zur Verifikation des vorigen Fixes) hat den echten Notebook-Lauf
+kommentarlos ueberschrieben, und ich haette beinahe "0 FEHL" gemeldet, ohne
+den Notebook-Befund je gesehen zu haben.
+
+⚠️ DIESELBE FEHLERKLASSE WIE DIE, DIE DIESEN EXPORT UEBERHAUPT AUSGELOEST
+HAT (externe Zusammenfassungen kuerzen/verwechseln) - nur diesmal war ICH
+die Quelle der Verwechslung, nicht ein Drittwerkzeug.
+
+BEHOBEN: der Dateiname traegt jetzt `platform.node()` - am Desktop
+`pruefe_pakete_ausgabe_9900K.txt`, am Notebook entsprechend sein eigener
+Rechnername. Kopfzeile im Text nennt Geraet und Zeitstempel zusaetzlich.
+Die alte, geraeteneutrale Datei geloescht, damit sie nicht als Drittes
+verwechselbares Ergebnis liegen bleibt.
+
+LEHRE: bei jedem kuenftigen "das Skript ist gelaufen" den DATEINAMEN pruefen,
+nicht nur den Zeitstempel - zwei Geraete koennen binnen Minuten schreiben.
+
+Suite (Desktop, nach dem Fix): 1.679 Pruefungen, ALLE BESTANDEN.
+`finde_freie_namen.py`: 0 Kandidaten. Der ECHTE Notebook-Befund (11 FEHL,
+Stand vor diesem Fix) ist damit NICHT erneut bestaetigt - offen bis zum
+naechsten Notebook-Lauf unter dem neuen Dateinamen.

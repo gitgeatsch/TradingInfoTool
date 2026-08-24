@@ -13296,13 +13296,28 @@ def _schreibe_ausgabe_ins_austauschordner(text: str) -> None:
     Ordner `Pruefungen`, NICHT `Notebook_Analysedaten` - Testergebnisse sind
     Code-Korrektheit, kein Produktionszustand, und beides in dieselbe Datei
     zu schreiben wuerde genau die Verwechslung wieder einfuehren, die beim
-    NB-Export schon einmal Verwirrung gestiftet hat."""
+    NB-Export schon einmal Verwirrung gestiftet hat.
+
+    ⚠️ DER DATEINAME TRAEGT DAS GERAET (24.08.2026-Fund, noch am selben Tag
+    wie der Ordner selbst): ohne das ueberschreibt ein Desktop-Testlauf, der
+    zur Verifikation eines Fixes laeuft, kommentarlos das Ergebnis vom
+    Notebook - und umgekehrt. Genau das ist passiert: eine Auswertung hielt
+    einen eigenen Desktop-Lauf faelschlich fuer den frischen Notebook-Lauf,
+    weil beide unter demselben Namen landeten. `platform.node()` statt eines
+    Zeitstempels, weil ZWEI GERAETE unterscheidbar sein muessen - nicht zwei
+    Zeitpunkte desselben Geraets."""
     try:
+        import platform
+        from datetime import datetime, timezone
         from extract_notebook_diagnose import _google_drive_wurzel
         ziel = _google_drive_wurzel() / "Claude_Austauschordner" / "Pruefungen"
         ziel.mkdir(parents=True, exist_ok=True)
-        pfad = ziel / "pruefe_pakete_ausgabe.txt"
-        pfad.write_text(text, encoding="utf-8")
+        geraet = (platform.node() or "unbekannt").strip() or "unbekannt"
+        pfad = ziel / f"pruefe_pakete_ausgabe_{geraet}.txt"
+        kopf = (f"# Geraet: {geraet}\n"
+                f"# Geschrieben: "
+                f"{datetime.now(timezone.utc).isoformat(timespec='seconds')}\n\n")
+        pfad.write_text(kopf + text, encoding="utf-8")
         print(f"\n(Volltext geschrieben nach {pfad})")
     except Exception as exc:                                   # noqa: BLE001
         print(f"\n(Konnte Ausgabe nicht auf Google Drive schreiben: {exc})")
