@@ -21880,3 +21880,51 @@ DAMIT IST DIE VERKAUFSSEITE ABGESCHLOSSEN: B1 (Faktenstummel), B2
 (Merkmalsfamilien) und B3 (Gegenpruefung) sind erledigt. ⚠️ Die 561 bereits
 geschriebenen Zeilen bleiben ohne all das - nicht nachruestbar. Die Auswertung
 der Verkaufsseite beginnt mit den Zeilen ab heute.
+
+
+[2026-08-24] K4 - DIE QUOTE WIRD EINE OBERGRENZE. UND DIE ZWEITE HAELFTE HAT
+KEINE BELEGTE GROESSE
+
+Nutzerauftrag: "mach K4 - dann ausrollen." K4 hatte zwei Haelften, und der
+Nutzereinwand nannte beide:
+  (a) "der Dritte bleibt draussen, auch wenn er genauso gut ist"  -> GLEICHSTAND
+  (b) "die Quote laesst immer genau k durch, auch wenn keiner taugt" -> BEDINGUNG
+
+(a) GEBAUT. ⚠️ UND DIE TOLERANZ IST GEMESSEN, NICHT GEWAEHLT - in Anteilen der
+Spannweite zwischen bestem und schlechtestem Wert des Tages:
+
+    Toleranz   im Schnitt   Abstand H5    t      Abstand H20    t
+      0 %         2,00       +0,79 %    3,29      +2,74 %     4,52
+      1 %         2,07       +0,79 %    3,32      +2,68 %     4,48
+      2 %         2,13       +0,77 %    3,27      +2,57 %     4,38
+      5 %         2,38       +0,67 %    2,95      +2,09 %     3,70
+
+EIN PROZENT IST KOSTENFREI, FUENF SIND TEUER. Gewaehlt: 1 %. Und die Regel
+greift oft genug, um etwas zu heissen: in 6,9 % der Termine liegen Platz 2 und
+3 naeher als ein Prozent der Spannweite beieinander (bei 2 % sind es 11,3 %).
+
+⚠️ SIE VERBESSERT NICHTS, UND DAS GEHOERT DAZU. Ihre Begruendung ist nicht ein
+hoeherer Vorsprung, sondern der Wegfall einer willkuerlichen Grenze - und
+willkuerliche Schnitte sind das, was dieses Projekt immer wieder als Defekt
+findet.
+
+⚠️⚠️ (b) NICHT GEBAUT - ES GIBT KEINE GEMESSENE BEDINGUNG DAFUER. Nachgesehen
+statt gebaut:
+  - Absoluter Trendfilter am Einzelwert (Lehrbuch-Dual-Momentum): GEMESSEN und
+    er VERSCHLECHTERT - k=2 mit Filter +0,71 % (t 2,62) gegen +0,79 % (t 3,29)
+    ohne, und er sperrt 228 von 1.874 Terminen.
+  - Kriterium statt Quote: gemessen, der Vorteil faellt monoton mit der Zahl
+    der Gewaehlten (1 -> +4,55 %, 2 -> +2,74 %, 9,6 -> +0,78 %).
+  - Marktzustand: gemessen, im Mittel stark (t 3,58 gegen -0,46), je Jahr aber
+    gemischt - laeuft deshalb seit A1b als SCHATTEN.
+
+Eine Bedingung ohne gemessene Groesse waere genau die Vermutung, die dieses
+Projekt sich verbietet. Die Haelfte (b) bleibt offen und wartet auf eine
+Groesse, die traegt - der naechste Kandidat ist die Netzwerkaktivitaet
+(auswertbar ab 18.09.).
+
+Vier neue Dauerpruefungen: die Toleranz ist klein und begruendet · wer
+gleichauf liegt, kommt mit · der klar Schlechtere bleibt draussen · ohne
+Gleichstand bleibt es bei der Quote (die Ausnahme darf nicht zur Regel werden).
+
+Suite 1.659 ALLE BESTANDEN, freie Namen 0, simuliere_kette 5 Signale / 0 Fehler.

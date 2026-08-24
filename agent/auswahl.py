@@ -80,6 +80,30 @@ MINDEST_FUER_AUSWAHL = 2    # bei einem einzigen Wert gibt es nichts zu
                             # kaum mehr als ein Muenzwurf - er halbiert
                             # die Aufrufe und traegt keinen Beleg.
 
+# K4a - GLEICHSTAND (24.08.2026, Nutzereinwand "der Dritte bleibt draussen,
+# auch wenn er genauso gut ist").
+#
+# ⚠️ WER PRAKTISCH GLEICHAUF MIT DEM LETZTEN LIEGT, KOMMT MIT. Zwischen zwei
+# fast gleichen Werten zu schneiden ist willkuerlich - und willkuerliche
+# Schnitte sind das, was dieses Projekt immer wieder als Defekt findet.
+#
+# DIE TOLERANZ IST GEMESSEN, NICHT GEWAEHLT (in Anteilen der Spannweite
+# zwischen bestem und schlechtestem Wert des Tages):
+#
+#     Toleranz   im Schnitt durch   Abstand H5   t      Abstand H20   t
+#       0 %          2,00            +0,79 %   3,29      +2,74 %    4,52
+#       1 %          2,07            +0,79 %   3,32      +2,68 %    4,48
+#       2 %          2,13            +0,77 %   3,27      +2,57 %    4,38
+#       5 %          2,38            +0,67 %   2,95      +2,09 %    3,70
+#
+# ⚠️ EIN PROZENT IST KOSTENFREI, fuenf sind teuer. Und die Regel greift oft
+# genug, um etwas zu heissen: in 6,9 % der Termine liegen Platz 2 und 3 naeher
+# als ein Prozent der Spannweite beieinander.
+#
+# ⚠️ SIE VERBESSERT NICHTS - das gehoert dazu. Ihre Begruendung ist nicht ein
+# hoeherer Vorsprung, sondern der Wegfall einer willkuerlichen Grenze.
+GLEICHSTAND_ANTEIL = 0.01
+
 SMA_MARKT = 200             # fuer den Marktzustand (Schatten)
 
 GEMESSEN = {"k": 2, "abstand_h5": 0.0079, "t_h5": 3.29,
@@ -139,12 +163,26 @@ def waehle(reihen: dict, symbole=None,
     n = len(liste)
     k = k_fuer(n)
     platz = {sym: (i + 1, n) for i, (sym, _e) in enumerate(liste)}
+    # K4a: WER GLEICHAUF LIEGT, KOMMT MIT. Die Quote ist damit eine
+    # OBERGRENZE mit einer Ausnahme fuer Gleichstand - kein harter
+    # Schnitt mitten durch zwei gleiche Werte.
+    gewaehlt = [sym for sym, _e in liste[:k]]
+    if k and n > k:
+        spanne = liste[0][1] - liste[-1][1]
+        if spanne > 0:
+            grenze = liste[k - 1][1]
+            for sym, wert in liste[k:]:
+                if (grenze - wert) / spanne <= GLEICHSTAND_ANTEIL:
+                    gewaehlt.append(sym)
+                else:
+                    break
     ohne = []
     if symbole is not None:
         haben = {s for s, _ in liste}
         ohne = [s for s in symbole if s not in haben]
     return {"aktiv": k > 0, "k": k, "von": n,
-            "gewaehlt": {sym for sym, _e in liste[:k]},
+            "gewaehlt": set(gewaehlt),
+            "gleichstand": len(gewaehlt) - k if k else 0,
             "platz": platz, "entwicklung": dict(liste), "ohne_historie": ohne}
 
 

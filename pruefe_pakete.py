@@ -12588,6 +12588,35 @@ def paket_auswahl() -> None:
     pruefe(P, "ein einzelner Wert loest keine Auswahl aus",
            _AW.k_fuer(1) == 0 and _AW.k_fuer(0) == 0)
 
+    # ---- K4a: GLEICHSTAND (24.08.2026) ----
+    #
+    # ⚠️ DIE QUOTE IST EINE OBERGRENZE, KEIN ZWANG NACH UNTEN. Zwischen zwei
+    # praktisch gleichen Werten zu schneiden ist willkuerlich - und
+    # willkuerliche Schnitte sind das, was dieses Projekt immer wieder als
+    # Defekt findet. Gemessen: 1 % Toleranz kostet nichts (t 3,29 -> 3,32 auf
+    # fuenf Tagen), 5 % kosten deutlich (t 2,95).
+    pruefe(P, "die Toleranz ist klein und begruendet",
+           0 < _AW.GLEICHSTAND_ANTEIL <= 0.02,
+           f"{_AW.GLEICHSTAND_ANTEIL} - ab 5 % faellt der gemessene Vorsprung "
+           "von +2,74 auf +2,09 Prozentpunkte")
+    # Drei Werte, bei denen Platz 2 und 3 praktisch gleichauf liegen.
+    _gl = {"A": _reihe(2.00), "B": _reihe(1.50), "C": _reihe(1.4999),
+           "D": _reihe(1.10), "E": _reihe(1.05), "F": _reihe(1.02),
+           "G": _reihe(1.01), "H": _reihe(1.005), "I": _reihe(1.004),
+           "J": _reihe(1.003), "K": _reihe(1.002)}
+    _a3 = _AW.waehle(_gl, list(_gl))
+    pruefe(P, "wer gleichauf mit dem Letzten liegt, kommt mit",
+           "C" in _a3["gewaehlt"] and _a3["gleichstand"] == 1,
+           f"gewaehlt: {sorted(_a3['gewaehlt'])} bei k={_a3['k']}")
+    pruefe(P, "und der klar Schlechtere bleibt draussen",
+           "D" not in _a3["gewaehlt"],
+           "sonst waere die Obergrenze keine")
+    _a4 = _AW.waehle({"A": _reihe(2.0), "B": _reihe(1.5), "C": _reihe(1.1)},
+                     ["A", "B", "C"])
+    pruefe(P, "ohne Gleichstand bleibt es bei der Quote",
+           _a4["gleichstand"] == 0 and len(_a4["gewaehlt"]) == _a4["k"],
+           "die Ausnahme darf nicht zur Regel werden")
+
     # ---- WER ZU KURZ IST, RANGIERT NICHT MIT ----
     reihen = {"A": _reihe(2.0), "B": _reihe(1.5), "C": _reihe(1.1),
               "KURZ": _reihe(9.0, n=100)}
