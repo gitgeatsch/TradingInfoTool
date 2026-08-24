@@ -3571,7 +3571,21 @@ def paket_15() -> None:
             import json as _j
             self.aufrufe += 1
             inhalt = messages[-1]["content"]
-            if self.aufrufe == 1:
+            # ⚠️ NACH INHALT ENTSCHEIDEN, NICHT NACH ZAEHLER (24.08.2026,
+            # Notebook-Fund "ETH: kein einziger brauchbarer Beleg"). Die
+            # Annahme "erster Aufruf = Lagebild" gilt nur, wenn `fuehre_lauf`
+            # das Lagebild ueberhaupt neu erfragt - bei `betriebsart="probe"`
+            # wird ein bereits vorhandenes, noch frisches Lagebild aus der DB
+            # WIEDERVERWENDET (siehe rollen_lauf.py, `LAGEBILD_HALTBAR_
+            # STUNDEN`). Auf der echten Notebook-DB liegt praktisch immer
+            # eines vor (Produktion laeuft alle 15 Minuten) - dann ist der
+            # erste Aufruf schon eine Asset-Frage, bekam aber bisher die
+            # Lagebild-Antwort samt ihrer `belege`-Liste aus reinen STRINGS
+            # statt Objekten, und `rolle_trader.validiere()` verwarf jeden
+            # Eintrag ohne "fakt" - Ergebnis: "kein einziger brauchbarer
+            # Beleg". Ein Aufruf ist am INHALT erkennbar: die Lagebild-Frage
+            # nennt kein einzelnes Symbol, eine Asset-Frage immer genau eines.
+            if not any(s in inhalt for s in symbole):
                 return _j.dumps(_lagebild, ensure_ascii=False)
             sym = next((s for s in symbole if s in inhalt), symbole[0])
             # ⚠️ A1 (23.08.2026): der Einstieg gehoert auf den

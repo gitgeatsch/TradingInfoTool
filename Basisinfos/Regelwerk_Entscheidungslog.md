@@ -22453,3 +22453,55 @@ priorisierter Kandidat fuer eine gezielte Untersuchung.
 
 Suite (Desktop, nach dem Cooldown-Fix): 1.679 Pruefungen, ALLE BESTANDEN.
 `finde_freie_namen.py`: 0 Kandidaten.
+
+
+[2026-08-24] SECHSTER DEFEKT: DER TEST-CLIENT ERKANNTE DAS LAGEBILD AM
+ZAEHLER, NICHT AM INHALT - "ETH: kein einziger brauchbarer Beleg" GELOEST
+
+Nach dem Cooldown-Fix (f71a10f) neuer Notebook-Lauf (T440, 13:23 Uhr):
+10 statt 11 FEHL - die drei Cooldown-Folgefehler weg, LINK wird jetzt
+geschrieben. NB-Export gegengeprueft (Nutzervorgabe "schau dir auch den
+nb Export an"): `spaltendrift` zeigt `nicht_erwaehnt: []` und beide
+Spaltenlisten `nicht_exportiert: []` - beide Luecken bestaetigt zu. Der
+neue `auswahl`-Abschnitt liefert echte Zahlen (3.807 Zeilen, 349 Laeufe,
+420 Gewaehlte, aufgeschluesselt je Gruppe).
+
+ABER: "der Probelauf laeuft ohne Fehler durch" tauchte NEU auf mit
+`['ETH: ETH: kein einziger brauchbarer Beleg']` - ein Fund, den der
+Cooldown-Fix selbst freigelegt hat (ETH kam vorher nie bis zur
+Beleg-Pruefung, weil der Cooldown es abfing).
+
+ERSTE VERMUTUNG (Threading-Race im `self.aufrufe`-Zaehler des Test-Clients)
+GEPRUEFT UND VERWORFEN: `_sende_ausstieg`/die Z.ai-Nacharbeit spawnt einen
+Thread nur, wenn `zai_client` gesetzt ist - der Probelauf uebergibt
+`zai_client=None`, also KEIN Thread, alles sequenziell.
+
+⚠️ ECHTE URSACHE, an der Quelle gefunden (rollen_lauf.py Zeile 467ff):
+`betriebsart="probe"` (anders als `"trocken"`) prueft VOR dem Lagebild-
+Aufruf, ob bereits ein FRISCHES Lagebild in der DB liegt
+(`SA.juengstes_lagebild(conn, LAGEBILD_HALTBAR_STUNDEN)`, Haltbarkeit
+3 Stunden) - und WIEDERVERWENDET es, wenn ja. Auf der echten,
+alle 15 Minuten laufenden Notebook-Produktion liegt praktisch IMMER eines
+vor; auf der Desktop-Testkopie nie. Damit ist am Notebook der ERSTE
+`client.chat()`-Aufruf schon eine Asset-Frage (ETH) - aber der
+aufgezeichnete Test-Client in `pruefe_pakete.py` erkannte "Lagebild" am
+ZAEHLER (`self.aufrufe == 1`), nicht am Inhalt, und lieferte ETH die
+Lagebild-Antwort aus. Deren `belege`-Feld ist eine Liste aus reinen
+STRINGS (`["Bitcoin steht tief."]`), nicht aus Objekten mit `fakt` - und
+`rolle_trader.validiere()` verwirft jeden Beleg ohne `fakt`, bis nichts
+mehr uebrig ist: "kein einziger brauchbarer Beleg".
+
+BEHOBEN: der Test-Client erkennt die Lagebild-Anfrage jetzt AM INHALT
+(kein Symbolname aus `symbole` im Anfrage-Text) statt am Aufrufzaehler -
+robust unabhaengig davon, ob das Lagebild neu erfragt oder wiederverwendet
+wird.
+
+LEHRE: der Zaehler war nicht per se falsch (kein Threading beteiligt) -
+er war eine Annahme ueber die REIHENFOLGE der Aufrufe, und die Annahme
+galt nur unter einer Bedingung (`betriebsart != probe` ODER kein frisches
+Lagebild vorhanden), die auf dem Desktop immer und auf dem Notebook fast
+nie zutrifft. Dieselbe Familie wie 2.66/2.68: eine Testannahme, die auf
+dem einen Geraet zufaellig stimmt und auf dem anderen strukturell nicht.
+
+Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
+0 Kandidaten. Naechster Notebook-Lauf sollte 9 statt 10 FEHL zeigen.
