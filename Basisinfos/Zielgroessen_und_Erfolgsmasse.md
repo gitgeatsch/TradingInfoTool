@@ -115,6 +115,17 @@ gemessen haben (Anteil echter Aktionen je Tag), ist keine Hilfsgröße, sondern
 **die etablierte Kennzahl** für genau diese Frage — belastbarer als jede
 `confidence_pct`. Sie sollte dauerhaft mitgeführt werden.
 
+> ⚠️ **BRUCH IM NENNER AM 23.08.2026 — Werte davor und danach sind NICHT
+> vergleichbar.** Bis dahin war der Nenner „alle Symbole, die der Cooldown
+> durchließ"; seit `R-A9` ist er „die besten k je Gruppe **plus Bestand**",
+> also eine **vorselektierte** Menge. Dieselbe Quote bedeutet damit etwas
+> anderes: aus einer Auswahl heraus zu handeln ist ein schwächeres Signal für
+> Entscheidungsfreudigkeit als aus dem vollen Feld heraus.
+>
+> **Wer die Reihe fortschreibt, muss am 23.08. schneiden** — oder den Nenner
+> mitschreiben. Die Rohdaten dafür liegen in `auswahl_schatten` (wer wurde
+> gewählt) und `gate_durchlaessigkeit` (wer kam durch).
+
 ---
 
 ## 4. Zielvorgabe für dieses System
@@ -324,6 +335,21 @@ Ohne diese Phase wiederholt sich alles.
 Ziel: von 10 auf 30+ handelbare Hebel-Signale pro Woche, **ohne Filter zu
 lockern**.
 
+> ⚠️ **RICHTUNG UMGEKEHRT SEIT 23.08.2026 (A1).** Diese Zielgröße gilt so
+> nicht mehr. Die Auswahl-Stufe `R-A9` ist ausdrücklich eine **Verengung** —
+> aus 41 Krypto-Symbolen werden 2 Einstiegskandidaten, historisch nachgespielt
+> **30,7 Empfehlungen je JAHR** statt 30+ je Woche.
+>
+> **Der Grund ist gemessen:** der Vorsprung *ist* die Spitze. Ohne absolute
+> Bedingung fällt der Abstand monoton mit der Zahl der Gewählten — k=1
+> +4,55 %, k=2 +2,74 %, k≈10 +0,78 %. **Breit auswählen und den Vorteil
+> behalten geht nicht.**
+>
+> ⚠️ **Damit ist „Durchsatz" keine Zielgröße mehr, sondern eine
+> ABWÄGUNG:** mehr Fälle für die lernenden Stufen gegen weniger Vorsprung je
+> Fall. Diese Abwägung ist **nicht getroffen** — siehe den Zielkonflikt im
+> Nachtrag 24.08. in `Zwischenstand_Gesamtprojekt_06_08.md`.
+
 | | Maßnahme | Erwartung | Risiko |
 |---|---|---|---|
 | **2.1** | **Die 23,9 % ohne Zonen untersuchen** — warum erarbeitet das LLM keine These? | unbekannt, **größter nie untersuchter Posten** | keins, reine Messung |
@@ -386,10 +412,10 @@ dem die letzten drei Anläufe hängengeblieben sind.
 | # | Stufe | was heute gemessen wird | **was fehlt** | Weg dorthin |
 |---|---|---|---|---|
 | 1 | **Screening** erzeugt Kandidaten | `score_gesamt`, `trigger_zweig` | Score **diskriminiert nicht** (Event-Study 04.08.); Einzelkomponenten (`score_details_json`) nicht im Export | Komponenten exportieren, dann simulativ prüfen welche trägt |
-| 2 | **Auswahl** (Budget-Allocator) | nichts über die 5.170 nie aufgerufenen Kandidaten | ob die Auswahl **besser als Zufall** ist — nie gemessen | mechanische Simulation ab `screened_at`, ausgewählt gegen nicht ausgewählt |
+| 2 | **Auswahl** (seit 23.08. `agent/auswahl.py`, Regel `R-A9` — **nicht mehr der Budget-Allocator**) | ✔ **GEMESSEN** (`messe_auswahl.py`, 40 Symbole, 3.290 Tage, barrierenfrei/brutto, Newey-West über 1.874 Termine): Rang nach **250-Tage-Entwicklung**, k=2 → **+0,79 %** über 5 Tage (t **3,29**), **+2,74 %** über 20 (t **4,52**). ⚠️ **Ab k=5 ist nichts mehr da** | ⚠️ **Neu offen: der Zielkonflikt zur Fallsammlung** — A1 verengt auf ~30,7 Empfehlungen/Jahr, während die Trefferbilanz **50 Fälle je Zelle** braucht. Ohne diese Zielgröße ist `k=2` nicht begründbar | Beurteilungen/Jahr als eigene Zielgröße festlegen und gegen den Vorsprung rechnen |
 | 3 | **LLM1** setzt Zonen + action | outcome, Zonen, Konfidenz | **23,9 % erarbeiten gar keine Zonen** — Ursache unbekannt; Zonen*qualität* nie bewertet. **Konfidenz trägt keine Information** (05.08., siehe unten) | Begründungskategorien auswerten; Zonen gegen ATR/Struktur prüfen |
 | 4 | **Gate/Veto** entscheidet | Beitrag je Gruppe (durchgelassen +0,784 / Veto +0,235) | **die Ausschuss-Hypothese**: gibt es im Geblockten eine identifizierbare gute Teilmenge? | synthetische Validierung + Holdout (unten) |
-| 5 | **LLM2** (Z.ai) prüft gegen | Übereinstimmungsquote | ob die Übereinstimmung **prädiktiven Wert** hat — nie gemessen; nur 24 % Abdeckung | Beitrag getrennt nach Übereinstimmung/Abweichung |
+| 5 | **LLM2** (Z.ai) prüft gegen | Übereinstimmungsquote | ob die Übereinstimmung **prädiktiven Wert** hat — nie gemessen. Abdeckung: 24 % war der Stand vor dem 24.08.; **die Ausstiege sind seit B3 abgedeckt** (vorher 0 von 561), ⚠️ **Nein-Zeilen bewusst nicht** (Taktgrenze) | Beitrag getrennt nach Übereinstimmung/Abweichung |
 | 6 | **Laufzeit** | `outcome_status`, Überholung | `halte_kriterium` wird **gesetzt, aber nie gegen den Verlauf ausgewertet** (941 Zielpreise, 57 Mindestziel-Treffer) | Auswertung nachrüsten |
 | 7 | **Ausstieg** | R-Multiple aus Zonen | **Kosten fehlen vollständig** — siehe unten | Kostenmodell in die R-Rechnung |
 | 8 | **Messung** | Systemgüte, Bänder, Basislinie | steht seit 04.08. | — |

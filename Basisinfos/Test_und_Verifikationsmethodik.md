@@ -2009,7 +2009,7 @@ Ergänzt 2.13. Drei neue Skripte, und eine geänderte Arbeitsweise.
 
 | Skript | Auslöser | was es beantwortet |
 |---|---|---|
-| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines, `--paket gesamt` für den Abgleich *zwischen* den Paketen, `--paket B1` für den Orchestrator, `--paket Export` für den Notebook-Export. Stand 13.08. abends: **404 Prüfungen** |
+| `pruefe_pakete.py` | **nach jedem Paket, immer kumulativ** | Hält alles Gebaute noch? `--paket N` für eines, `--paket gesamt` für den Abgleich *zwischen* den Paketen, `--paket B1` für den Orchestrator, `--paket Export` für den Notebook-Export. Stand 13.08. abends: **404 Prüfungen** — ⚠️ **Stand 24.08. abends: 1.679**, und die Ausgabe geht zusätzlich nach Google Drive (siehe 2.72 unten) |
 | `messe_sentiment_je_horizont.py` | einmalig, bei Fragen zur Stimmung | Wirkt Fear & Greed je Horizont verschieden? BTC, 3.087 Tage |
 | `messe_top_fakten.py` | einmalig, bei Fragen „welcher Fakt trägt?" | 12 Merkmale gegen die Geometrie der App, 37 Symbole, 20.494 Anker |
 | `pruefe_rollenkette.py` | vor jedem Live-Lauf | die Kette an echten Ankern, mit Wortlaut |
@@ -3971,3 +3971,45 @@ sich selbst abschaltet.
 ⚠️ **Und die Positivkontrolle gehört dazu:** ein grüner „nichts geändert"-Test
 ist ein Nullbefund. Verifiziert wurde deshalb beides — der Hash bleibt bei
 Nichtstun gleich UND schlägt nach einem einzigen `INSERT` an.
+
+### 2.73 Wo die Prüfausgabe landet — und warum der Dateiname das Gerät trägt (24.08.2026)
+
+`pruefe_pakete.py` schreibt seinen **vollständigen** Konsolentext zusätzlich
+nach Google Drive:
+
+```
+Claude_Austauschordner\Pruefungen\pruefe_pakete_ausgabe_<GERAET>.txt
+```
+
+**Warum überhaupt:** die Ausgabe ist ~240 KB. Externe Zusammenfassungen davon
+haben sie an einem Tag zweimal unbrauchbar gemacht — einmal bei 20.010 Zeichen
+abgeschnitten (die Schlusszeile mit der Prüfzahl fehlte), einmal an einem
+Zeitdeckel. Mehrfach wurden dabei **absichtliche Testfehler und normale
+Betriebsmeldungen als kritische Systemfehler gedeutet**. Der Volltext an einem
+festen Ort macht die Deutungsschicht überflüssig: **Rohzeilen zählen.**
+
+**Warum mit Gerätenamen** (`platform.node()` — Desktop `9900K`, Notebook
+`T440`): ohne ihn schreiben beide Geräte in dieselbe Datei, und wer zuletzt
+schreibt, gewinnt — ohne jede Kennzeichnung. Genau das ist passiert: ein
+eigener Desktop-Verifikationslauf überschrieb das frische Notebook-Ergebnis,
+und um ein Haar wäre „0 FEHL" gemeldet worden, ohne den echten Befund je
+gesehen zu haben. Eine Kopfzeile im Text nennt Gerät und Zeitstempel
+zusätzlich.
+
+**How to apply — beim Auswerten:**
+
+| | |
+|---|---|
+| **1** | **Den DATEINAMEN prüfen, nicht nur den Zeitstempel.** Zwei Geräte können binnen Minuten schreiben |
+| **2** | **Die Schlusszeile lesen** (`N Pruefungen, …`). Fehlt sie, ist der Lauf abgebrochen — der `finally`-Block schreibt trotzdem, die Datei ist dann nur unvollständig (erkennbar auch an der Größe: ~240 KB vollständig) |
+| **3** | `grep -c "^  FEHL"` gegen die Schlusszeile gegenprüfen |
+
+⚠️ **Best effort, nie blockierend:** fehlt das Laufwerk, scheitert nur der
+Schreibversuch (eine Konsolenzeile), nicht die Suite. Der Laufwerksbuchstabe
+kommt aus `extract_notebook_diagnose._google_drive_wurzel()` — **nie raten**,
+er ist je Gerät verschieden.
+
+⚠️ **Eigener Ordner, NICHT `Notebook_Analysedaten`:** Testergebnisse sind
+**Code-Korrektheit**, der NB-Export ist **Produktionszustand**. Beides in
+dieselbe Ablage zu legen wäre genau die Verwechslung, die schon einmal
+Fehldeutungen erzeugt hat.

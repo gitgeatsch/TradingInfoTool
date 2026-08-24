@@ -371,6 +371,18 @@ Symbole. Acht Selektionsmechanismen wurden gemessen, keiner trug nachweisbar —
 die Grenze liegt derzeit nicht bei der Auswahl, sondern bei **Ausstieg,
 Kostendeckung und Maßstab**.
 
+> ⚠️ **TEILWEISE WIDERLEGT, 23.08.2026.** Der **neunte** Mechanismus trägt: die
+> Auswahl nach **250-Tage-Entwicklung** (+0,79 % über fünf Tage, t 3,29;
+> +2,74 % über zwanzig, t 4,52 — Newey-West über 1.874 Termine). Gebaut als
+> `A1` / Regel `R-A9`.
+>
+> **Und die Kostenrechnung dreht sich mit:** für die Frage *„welchen von 41"*
+> fallen dieselben 3 % bei jeder Wahl an — die Hürde ist dort **bereits
+> bezahlt**. Sie gilt nur für *„handeln oder nicht"*.
+>
+> Der Rest des Satzes bleibt richtig: Ausstieg, Kostendeckung und Maßstab sind
+> weiter die Engpässe.
+
 ---
 
 ---
@@ -940,7 +952,7 @@ wirkt sofort nach dem Ausrollen.*
 | # | Was | Stand |
 |---|---|---|
 | G1 | **Gate mit der neuen Kette zusammen testen** | **nie geschehen.** Alle Messungen liefen ohne Gate |
-| G2 | **Durchlässigkeit je Stufe messen** | nicht gebaut. Ohne sie versteckt sich der Deadloop eine Ebene tiefer |
+| G2 | **Durchlässigkeit je Stufe messen** | ✔ **ERLEDIGT** — `rollen_gate.py`, Tabelle `gate_durchlaessigkeit`, seit 13.08. im Betrieb. Stand 24.08.: **elf** Stufen, davon drei Bremsen (`anlass`/`auswahl`/`wiederholung`), im NB-Export entfaltet |
 | G3 | Vorfilter oder Nachfilter? | offen. Ein Vorfilter ist unsichtbar — was er wegschneidet, sieht das Modell nie |
 | G4 | Veto-Schatten für die Rollen-Ebene | existiert für Hebel, für die neue Kette ungeprüft |
 
@@ -963,7 +975,7 @@ wirkt sofort nach dem Ausrollen.*
 |---|---|---|
 | E1 | **Finanzierungsrate anschließen** | **ERLEDIGT 12.08.** — im Faktensatz sichtbar, Vergleichsarm über `mit_finanzierung=False` |
 | E2 | **Relative Stärke zum Klassen-Benchmark** | fehlt für Aktien/ETF/Rohstoffe |
-| E3 | **Rang unter den Kandidaten** | seit 10.08. benannt, nicht gebaut |
+| E3 | **Rang unter den Kandidaten** | ✔ **ERLEDIGT 23.08. als A1** — `agent/auswahl.py`, Regel `R-A9`. Der Rang **wählt aus** (beste k nach 250-Tage-Entwicklung, k=2), er zeigt nicht nur an. Gemessen: +0,79 % H5 (t 3,29), +2,74 % H20 (t 4,52); ab k=5 nichts mehr. Mit Schattentabelle `auswahl_schatten` |
 | E4 | Insider · Short Interest · COT · Fundamentaldaten | **Module fertig**, nie angeschlossen |
 | E5 | Befund und Entscheidung trennen? | offen — Argument ist der Bestandsblock |
 | E6 | Persona im Prompt behalten? | offen, schaltbar gebaut, nie gemessen |
@@ -982,7 +994,7 @@ wirkt sofort nach dem Ausrollen.*
 
 | # | Was | Stand |
 |---|---|---|
-| Z1 | **Gegenprüfer für die neue Kette** | **existiert nicht.** Alte Kette hat Z.ai, neue nichts |
+| Z1 | **Gegenprüfer für die neue Kette** | ✔ **ERLEDIGT, zweifach.** Treueprüfer `agent/gegenpruefer_rollen.py` seit 12./13.08. verdrahtet; seit **P1 (24.08.)** steht sein Urteil an der Signalzeile (`z1_verletzt`, `z1_zahlen_geprueft`, dreiwertig: NULL ≠ "" ≠ "Z-1") und reist im NB-Export mit. Und seit **B3 (24.08.)** bekommen die **Ausstiege** die Z.ai-Zweitmeinung — vorher 0 von 561. ⚠️ Nein-Zeilen bewusst ohne (Taktgrenze) |
 | Z2 | Falls gebaut: eigener Aufruf | R-A8, entschieden |
 
 ### STUFE 6 — AUSGABE
@@ -1075,6 +1087,10 @@ Symbole. Acht Selektionsmechanismen wurden gemessen, **keiner trug nachweisbar**
 — die Grenze liegt nicht bei der Auswahl, sondern bei Ausstieg, Kostendeckung
 und Maßstab. Diese Aussage aus dem Zwischenstand hat die heutige Prüfung
 bestätigt, nicht widerlegt.
+
+> ⚠️ **23.08.2026: der neunte Mechanismus trägt doch** — die Auswahl nach
+> 250-Tage-Entwicklung (A1 / `R-A9`). Ausführlich beim gleichlautenden Satz
+> weiter oben in diesem Dokument. Der Rest gilt unverändert.
 
 ---
 
@@ -1844,3 +1860,56 @@ Die MESSUNG laeuft weiter - sie kostet nichts. Umbauplan Kapitel 47.
 |---|---|
 | D-1 | **Die drei `.docx`-Pendants sind vom 02.08.** — `Fakten_Entscheidungsmappe`, `Regelwerksmanual`, `Test_und_Verifikationsmethodik` liegen als `.md` auf dem 17.08. Zwei Wochen Rückstand, nicht heute entstanden |
 | D-2 | `Regler_Signal_Pipeline_Abhaengigkeiten.md` **kennt die Rollen-Kette nicht** — kein Treffer für `lagebeschreibung`, `rollen_eingabe`, Rolle A/BC. Die Regel „vor jeder Prompt-Änderung prüfen" läuft dort ins Leere |
+
+---
+
+# Nachtrag 2026-08-24: was A1 geschlossen hat — und der Zielkonflikt, den es aufmacht
+
+*Anlass: Nutzervorgabe „zentrale Dokumente, Regelwerke oder Messkriterien
+anpassen wenn erforderlich", nachdem A1/K4/L1/P1/B1–B3 ausgerollt und die
+Prüfsuite auf 1.679 Prüfungen bei 0 Fehlern stand.*
+
+## Was in diesem Dokument zugegangen ist
+
+| Punkt | war | ist |
+|---|---|---|
+| **E3** Rang unter den Kandidaten | „seit 10.08. benannt, nicht gebaut" | ✔ als **A1** gebaut, Regel `R-A9` |
+| **G2** Durchlässigkeit je Stufe | „nicht gebaut" | ✔ seit 13.08. im Betrieb, jetzt **elf** Stufen |
+| **Z1** Gegenprüfer neue Kette | „existiert nicht" | ✔ Treueprüfer + **P1** (Urteil an der Zeile) + **B3** (Ausstiege) |
+| **8e.0 C** kein Gegenprüfer | offen | ✔ mit Z1/B3 erledigt |
+| **QW3** AZ-4-Messung ausführen | Quick Win | ✔ am 11.08. gelaufen — die Zeile widersprach dem eigenen Nachtrag in 8d |
+
+## ⚠️ Der Zielkonflikt, der dabei entstanden ist — und nirgends steht
+
+**A1 verengt bewusst.** Von 41 Krypto-Symbolen kommen noch **2** als
+Einstiegskandidaten durch (plus Bestand, plus Gleichstand). Historisch
+nachgespielt: **30,7 Empfehlungen je Jahr**.
+
+**Gleichzeitig führt dieses Dokument den Engpass an mehreren Stellen als „zu
+wenige Fälle":**
+
+> *„Der Produktivgang lohnt sich deshalb nicht, um zu handeln, sondern um
+> Fälle zu sammeln. Erst mit echten Ausgängen kann eine Konstellation je über
+> den Breakeven kommen."* (`Zielgroessen_und_Erfolgsmasse.md`)
+
+**Beides zusammen ist ein Widerspruch, und er ist nicht aufgelöst:** A1
+halbiert bis drittelt die Rate, mit der Fälle entstehen — während jede
+lernende Stufe (Meta-Labeling, Score-Kalibrierung, Konstellationsbilanz) ein
+**Vielfaches** der heutigen Fallzahl braucht.
+
+⚠️ **Was fehlt, ist eine Zielgröße:** *wie viele Beurteilungen je Umlauf und
+je Jahr braucht das System, damit die Trefferbilanz je belastbar wird* (die
+eigene Schwelle dort ist **50 Fälle je Zelle**)? Ohne diese Zahl ist **nicht
+entscheidbar, ob `k = 2` richtig ist** — sie ist heute allein aus der
+Vorsprungsmessung gewählt, ohne die Kosten auf der Lernseite gegenzurechnen.
+
+**Das ist der wichtigste offene Punkt aus dieser Runde.**
+
+## Kleinere offene Punkte, in 8/8b/8c/8d nicht gespiegelt
+
+| # | offen | woher |
+|---|---|---|
+| **N-1** | **Nein-Zeilen ohne Gegenprüfung** — bewusste Kapazitätsentscheidung (~21 je Umlauf gegen 2 gleichzeitige Z.ai-Aufrufe = halber Takt), steht bisher nur in `Reparaturliste_Umbau_23_08.md` | B3 |
+| **N-2** | **A1 bei dünnen Gruppen** — für 4 von 6 Gruppen (2 Aktien, 4 Rohstoffe, 2 Absicherung) greift `k=1` auf einer Basis **ohne Messrückhalt**. Der Modulkopf sagt es selbst: *„Bei n=2 ist der Rangplatz kaum mehr als ein Münzwurf"* | A1 |
+| **N-3** | **Die Prüfsuite-Ausgabe auf Google Drive** gehört in die Ausroll-Checkliste 8e.3 — Dateiname trägt `platform.node()`, weil ein Desktop-Lauf am 24.08. das Notebook-Ergebnis überschrieb | 24.08. |
+| **N-4** | Restliche Punkte der **Reparaturliste** (A6, C1, C2, C3, D1, D2, D3) sind hier nicht gespiegelt — C2 (*Risiko je Trade schwankt um Faktor 9*) ist dort als „schwer" gewichtet | 23.08. |

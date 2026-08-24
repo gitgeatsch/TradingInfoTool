@@ -27,7 +27,22 @@ der Schatten füllt sich ausschließlich aus echten Läufen.
 ```bash
 python pruefe_pakete.py
 ```
-Muss **1.659 bestanden** melden. Bricht sie ab, nicht starten.
+Muss **1.679 bestanden** melden (Stand 24.08. abends; war 1.659 vor der
+Fehlerrunde dieses Tages). Bricht sie ab, nicht starten.
+
+⚠️ **Die Ausgabe landet zusätzlich auf Google Drive**, seit externe
+Zusammenfassungen sie wiederholt gekürzt oder falsch gedeutet haben:
+
+```
+Claude_Austauschordner\Pruefungen\pruefe_pakete_ausgabe_<GERAET>.txt
+```
+
+**Der Dateiname trägt das Gerät** (`platform.node()` — Desktop `9900K`,
+Notebook `T440`), weil sonst ein Desktop-Testlauf das Notebook-Ergebnis
+kommentarlos überschreibt. Genau das ist am 24.08. passiert. **Beim Prüfen
+den DATEINAMEN ansehen, nicht nur den Zeitstempel** — und die Schlusszeile
+lesen: fehlt sie, ist der Lauf abgebrochen (der `finally`-Block schreibt
+trotzdem).
 
 ```bash
 python finde_freie_namen.py

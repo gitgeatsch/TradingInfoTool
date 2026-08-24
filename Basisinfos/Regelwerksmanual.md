@@ -3265,10 +3265,23 @@ Partition**, nicht als Umsortierung nach Trendstärke. Letzteres täte das
 Gegenteil von antizyklisch, und genau dagegen war der Schwerpunkt gedacht.
 Wirkt nur auf die Reihenfolge, nicht auf die Auswahl.
 
+> ⚠️ **Überholt seit 23.08.2026 (A1).** Der Satz stammt aus der Zeit, als es
+> keine Auswahl gab und die Reihenfolge das Einzige war, was sich steuern
+> ließ. **Heute gibt es eine Auswahl-Stufe** — siehe `R-A9` unten.
+
 ## Die Rollen-Ebene — Regeln des neuen LLM-Aufbaus (2026-08-11)
 
-*Geprüft, aber noch nicht verdrahtet. Die produktive Pipeline arbeitet
-unverändert nach den Regeln oben; diese hier gelten für `agent/rolle_*.py`.*
+> ⚠️ **STANDKORREKTUR 24.08.2026.** Hier stand: *„Geprüft, aber noch nicht
+> verdrahtet. Die produktive Pipeline arbeitet unverändert nach den Regeln
+> oben."* **Das ist seit dem 15.08. falsch und entwertete diesen ganzen
+> Block:** die Rollen-Kette ist der produktive Weg und bedient **alle sechs
+> Gruppen**. Die Regeln unten sind **geltender IST-Zustand**, nicht Papier.
+>
+> Umgekehrt gilt: die Kapitel **oben** beschreiben die **alte** Krypto-
+> Pipeline. Wo sie der Rollen-Kette widersprechen (etwa der
+> Zwei-Stufen-Cooldown der Spot-Rotation in Kap. 6, oder „am längsten nicht
+> analysiert zuerst"), **gilt diese Ebene hier** — die Uhr wählt seit `R-A9`
+> nicht mehr aus.
 
 **R-A1 — Rolle A kennt kein Asset.** Sie beurteilt ausschließlich die Marktlage
 und läuft ein- bis zweimal täglich, nicht je Asset. Damit kann sie eine
@@ -3320,6 +3333,75 @@ nicht — der Nutzer sieht die Belege und den Grund.
 
 **R-A8 — Ein Gegenprüfer läuft niemals im selben Aufruf.** Dort greift die
 Selbstvalidierung: ein Modell bestätigt, was es gerade geschrieben hat.
+
+**R-A9 — Der Rangplatz wählt aus, nicht die Uhr** (A1, 23.08.2026,
+`agent/auswahl.py`). Eine eigene Trichterstufe `auswahl` bestimmt je Gruppe,
+**welche Werte überhaupt beurteilt werden**: die besten `k` nach der
+Entwicklung über **250 Handelstage** (`RUECKBLICK_TAGE`). `k = 2` ab zehn
+Symbolen, `k = 1` darunter — und **`k` ist nie gleich `n`**: „Rang 2 von 2"
+wäre eine Begründung, die keine ist.
+
+> **Der Anlass war Ihre Vorgabe:** *„Jede Entscheidung zu einem Trade soll eine
+> Begründung haben. Der Grund ‚das Asset ist in der Zeitschleife dran' ist
+> keine."* Bis dahin wählte der Cooldown: von 41 Symbolen passierten 30 den
+> Fingerabdruck und **null** den Cooldown — die einzige wirksame Auswahl war
+> eine Zeitregel ohne jeden Beleg.
+
+⚠️ **Die Uhr ist nicht abgeschafft, sie ist entmachtet.** Der Cooldown bleibt
+als **Mindestabstand** (Stufe `wiederholung`) — sonst würde dieselbe Auswahl
+alle fünfzehn Minuten neu befragt. Er wählt nur nicht mehr aus.
+
+⚠️ **Bestand passiert die Auswahl IMMER.** Bei einem gehaltenen Wert lautet die
+Frage nicht „kaufen?", sondern „halten oder verkaufen?" — die stellt sich
+unabhängig vom Rangplatz. Ohne diese Ausnahme hätte die gesamte Verkaufsseite
+geschwiegen (gemessen: 21 von 24 Beständen wären stumm geblieben).
+
+⚠️ **Der Marktzustand ist hier Schatten, keine Schranke.** BTCs Abstand zum
+eigenen 200-Schnitt rechnet mit, steht in der Mail und **sperrt nichts** — ein
+Wächter, der selbst verwirft, macht seine eigene Wirkung unsichtbar.
+Herleitung: `A1_Auswahl_Dimensionierung_23_08.md`.
+
+**R-A10 — Wer praktisch gleichauf liegt, kommt mit** (K4, 24.08.2026,
+`GLEICHSTAND_ANTEIL = 0.01`). Liegt ein weiterer Wert innerhalb **1 % der
+Tagesspannweite** an der Grenze, passiert er ebenfalls. Zwischen zwei fast
+gleichen Werten zu schneiden ist willkürlich.
+
+⚠️ **Die Regel verbessert nichts — das gehört dazu.** Gemessen ist sie bei 1 %
+kostenfrei (Abstand H5 +0,79 %, t 3,32 gegen 3,29) und ab 5 % teuer. Ihre
+Begründung ist nicht ein höherer Vorsprung, sondern **der Wegfall einer
+willkürlichen Grenze**.
+
+**R-A11 — Ein HALTEN auf einer gehaltenen Position ist keine Leerlauf-Runde**
+(L1, 23.08.2026). Die Deadloop-Bremse `LEERLAUF_ABBRUCH` zählt nur noch
+**Nicht-Bestand**. Grund: seit `R-A9` steht der Bestand vorn in der
+Warteschlange, und ein HALTEN erzeugt kein Signal — acht gehaltene Positionen
+hätten den Lauf angehalten, **bevor die ausgewählten Kandidaten überhaupt
+gefragt werden**. Genau die Umkehrung dessen, wofür A1 gebaut ist.
+
+Ersatz ist der laufübergreifende Zähler `auswahl.stumme_laeufe()`: er
+**meldet**, statt abzubrechen — die Einstiegsseite darf auffallen, ohne den
+Lauf zu töten.
+
+⚠️ **Nicht zu verwechseln mit dem „Leerlauf" der Z1-Wächterregeln** weiter
+unten. Zwei verschiedene Dinge, gleiches Wort: hier eine Abbruchbremse, dort
+eine Prüfung auf inhaltsleere Modellantworten.
+
+**R-A12 — Der Ausstieg schreibt seine Fakten mit, auch wenn er nicht mailt**
+(B1–B3, 23./24.08.2026). Bis dahin trug die Verkaufsseite einen **17-Zeichen-
+Stummel** in `facts_json`, während die Einstiegsseite ~2.000 Zeichen schrieb.
+Damit war der Befund **O-29** („kein Merkmal trennt Verkaufen von Halten, alle
+p > 0,47") nicht auflösbar — es gab schlicht nichts zu messen.
+
+Jetzt gilt: Faktensatz **und** Merkmalsfamilien stehen an der Ausstiegszeile,
+und jeder Ausstieg bekommt eine Z.ai-Gegenprüfung.
+
+⚠️ **Nein-Zeilen ausdrücklich NICHT** — bei ~21 Beurteilungen je Umlauf gegen
+zwei gleichzeitige Z.ai-Aufrufe wäre das der halbe Takt. Eine bewusste
+Kapazitätsentscheidung, keine Lücke.
+
+⚠️ **Und sie mailt weiterhin nicht sofort:** die Zeile wird geschrieben, die
+Mail baut `verkaufsrechnung.sammel_mail()` **einmal je Lauf**. Elf Einzelmails
+neben zehn Kaufmails wären genau die Flut, die der Nutzer am 14.08. gerügt hat.
 
 ---
 
@@ -3542,8 +3624,9 @@ Kosten-Breakeven. Eine Mechanik statt zwei.
 der Messung keinen Effekt.
 
 **Neu: die Durchlässigkeit wird je Stufe gezählt** (`agent/rollen_gate.py`,
-Tabelle `gate_durchlaessigkeit`). Acht Stufen, und die letzte zählt nur.
-Damit ist erstmals beantwortbar, *wo* die Kette Signale verliert.
+Tabelle `gate_durchlaessigkeit`). **Elf Stufen** (Stand 24.08.2026; bis zum
+22.08. acht), und die letzte zählt nur. Damit ist erstmals beantwortbar, *wo*
+die Kette Signale verliert.
 
 **Die RM-Schicht bleibt unangetastet** (RM-1…RM-7, Cash-Reserve,
 Positionsgrößen-Deckel).
@@ -3604,9 +3687,30 @@ Finanzierungsrate, und jeder externe Aufruf bucht seinen Gesundheitsstand in
 
 ## Das Gate zählt, es filtert nicht
 
-Acht Stufen: Auftrag · Fakten · Lagebild · Urteil · Aktion · Geometrie ·
-Risikoschicht · Entscheider. **Die letzte zählt nur** — sie meldet, dass sich
-ein Trade rechnerisch nicht trägt, und nimmt ihn nicht heraus.
+**Elf Stufen** (Stand 24.08.2026, `agent/rollen_gate.py::STUFEN_NAMEN` — dort
+nachsehen, nicht hier abschreiben):
+
+Auftrag · Fakten · Lagebild · **Anlass** · **Auswahl** · **Wiederholung** ·
+Urteil · Aktion · Geometrie · Risikoschicht · Entscheider
+
+**Die letzte zählt nur** — sie meldet, dass sich ein Trade rechnerisch nicht
+trägt, und nimmt ihn nicht heraus.
+
+⚠️ **Drei der elf sind BREMSEN, keine Mängel** — der Unterschied gehört in
+jede Auswertung, sonst liest sich ein gesparter Aufruf wie ein verworfenes
+Urteil:
+
+| Stufe | ein Verlust dort heißt |
+|---|---|
+| `anlass` | Faktensatz unverändert — **gewollt**, spart einen Aufruf |
+| `auswahl` | nicht unter den besten k (`R-A9`) — **gewollt** |
+| `wiederholung` | Mindestabstand (Cooldown) — **gewollt** |
+| `fakten` · `lagebild` · `auftrag` | ⚠️ **Datenlücke — hier fehlt etwas** |
+| `urteil` | das Modell wurde **gefragt** und die Antwort verworfen |
+
+Am 24.08. hat eine Zusammenfassung „größter Verlust bei `anlass`" als
+*„der LLM-Generator hängt"* gelesen. `anlass` ist ein **Hash des
+Faktentextes**, kein Modell.
 
 **Die Konfidenz-Schwelle ist ersatzlos entfallen.** Ihr Ersatz ist der
 Entscheider selbst, nicht eine neue Schwelle.
@@ -3632,7 +3736,27 @@ stillste: läge sie unter dem Einstieg, könnte sie nie greifen.
 
 Vier Regeln (Zahlendeckung · Richtungstreue · Zuspitzung · Leerlauf). Ein
 Verstoß wird in der Durchlässigkeit vermerkt und steht in der Mail — er nimmt
-nichts aus dem Lauf. Über 20 echte Antworten: **null Verstöße.**
+nichts aus dem Lauf. Über 20 echte Antworten (Stand **13.08.**):
+**null Verstöße.**
+
+⚠️ **Der „Leerlauf" hier ist NICHT `LEERLAUF_ABBRUCH`** aus `R-A11`. Gleiches
+Wort, zwei Dinge: hier eine Prüfung auf inhaltsleere Antworten, dort eine
+Abbruchbremse gegen den Deadloop.
+
+**Seit P1 (24.08.2026) steht das Urteil auch an der SIGNALZEILE** — bis dahin
+gab es es nur in der Durchlässigkeit (aggregiert je Lauf) und in der Mail
+(flüchtig). Damit ist erstmals fragbar, ob Signale **mit** einem Treuebruch
+anders laufen als saubere:
+
+| Spalte | Bedeutung |
+|---|---|
+| `z1_verletzt` | `NULL` = **nicht gelaufen** · `""` = geprüft und **sauber** · `"Z-1"` = verletzt |
+| `z1_zahlen_geprueft` | wie viele Zahlen die Prüfung tatsächlich gegengelesen hat |
+
+⚠️ **Die Dreiwertigkeit ist der Punkt.** `NULL` und `""` dürfen nie
+zusammenfallen — „nicht geprüft" ist etwas anderes als „geprüft und in
+Ordnung". Genau diese Verwechslung hat das Projekt beim Cooldown am 14.08.
+schon einmal Zeit gekostet. Beide Spalten reisen im NB-Export mit.
 
 ---
 
