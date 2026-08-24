@@ -22333,5 +22333,38 @@ ZWEI BEFUNDE NOCH OFFEN, NICHT ABSCHLIESSEND GEKLAERT:
     Hebel-Geometrie oder ein Parsing-Fehler des Regex ist, ist OHNE den
     tatsaechlichen Mailtext beider Laeufe nicht zu entscheiden.
 
-Suite danach: 1.679 Pruefungen, ALLE BESTANDEN (Desktop). `finde_freie_namen.
-py`: 0 Kandidaten.
+[2026-08-24] ZWEITER NOTEBOOK-LAUF: 15 -> 11 FEHL, EIN VERDECKTER DRITTER
+BEFUND WIRD SICHTBAR
+
+NUTZERVORGABE: "so beides durchgeführt nb export und Skript" - Nutzer hat
+nach dem Fix-Commit (401ad32) `git pull` und beide Skripte erneut am
+Notebook laufen lassen. Neuer Export ueber Google Drive geprueft (09:04 Uhr,
+239 KB).
+
+BESTAETIGT: 15 -> 11 FEHL. Beide behobenen Funde bleiben behoben - "der
+Probelauf laeuft ohne Fehler durch" und "und schreibt KEINE Zeile in die
+Produktivdatenbank" sind jetzt GRUEN. Die drei Methodik-2.68-Faelle (78/416,
+Migration, Perzentilband) und der LONG/SHORT-Befund stehen unveraendert -
+erwartungsgemaess, siehe 2.68.
+
+⚠️ EIN VIERTER, BISHER VERDECKTER BEFUND WIRD JETZT SICHTBAR: "und schreibt
+eine Signalzeile - erstmals ueberhaupt" (weiterhin "1924 -> 1924") und ihre
+zwei Folgepruefungen bleiben ROT, OBWOHL der Probelauf jetzt fehlerfrei
+durchlaeuft. Vorher stand das im selben Fehlerbild wie der Crash und wurde
+dafuer gehalten - jetzt zeigt sich: es ist ein EIGENSTAENDIGER, zweiter
+Defekt. Der Trockenlauf beendet sich sauber, schreibt aber am Notebook trotzdem
+keine neue Zeile - waehrend derselbe Test am Desktop zuverlaessig schreibt.
+VERMUTUNG (nicht bestaetigt): `_kauft15` haengt an `auswahl.waehle()`s
+echtem `gewaehlt`-Ergebnis auf der echten Notebook-Kursreihe; ist die Menge
+dort leer oder faellt `_kauft15` nicht unter `symbole`, antwortet der
+aufgezeichnete Test-Client nie mit KAUFEN. Die Pruefzeile liefert das jetzt
+mit (`gewaehlt=... kauft15=... in symbole=...` plus `durchlauf.bericht()`),
+noch OHNE den naechsten Notebook-Lauf gesehen zu haben, der das entscheidet.
+
+NEBENBEI BEHOBEN: `tuple(neu)` statt `neu` in der Detailzeile "die drei
+Familien und das Lagebild stehen an der Zeile" - seit `c.row_factory`
+gesetzt ist, druckte die Zeile nur noch `<sqlite3.Row object at 0x...>`
+statt lesbarer Werte (Nebenwirkung des row_factory-Fixes aus dem Vor-Commit).
+
+Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
+0 Kandidaten.

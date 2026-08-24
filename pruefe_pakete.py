@@ -3595,7 +3595,17 @@ def paket_15() -> None:
     nach = c.execute("SELECT COUNT(*) FROM signals "
                      "WHERE quelle_kette='rollen'").fetchone()[0]
     pruefe(P, "und schreibt eine Signalzeile - erstmals ueberhaupt",
-           nach > vor, f"{vor} -> {nach}")
+           nach > vor,
+           # ⚠️ MEHR ALS "vor -> nach" (24.08.2026): am Notebook blieb die
+           # Zahl gleich, ohne dass `erg["fehler"]` etwas zeigte - die
+           # Ursache war damit NICHT aus dieser einen Zeile zu erschliessen.
+           # `_kauft15` haengt an der ECHTEN Auswahl (`_a15["gewaehlt"]`);
+           # ist es dort leer oder liegt `_kauft15` nicht in `symbole`,
+           # antwortet der aufgezeichnete Client nie mit KAUFEN, und die
+           # Ursache liegt in der Auswahl, nicht im Trockenlauf.
+           f"{vor} -> {nach} | gewaehlt={sorted(_a15['gewaehlt'])} "
+           f"kauft15={_kauft15} (in symbole: {_kauft15 in symbole}) | "
+           + " · ".join(erg["durchlauf"].bericht()))
     pruefe(P, "die Mail traegt die Kennung des geschriebenen Signals",
            any(m.get("signal_id") for m in erg["mails"]),
            "ohne sie liesse sich eine verschickte Mail spaeter keinem "
@@ -3605,7 +3615,11 @@ def paket_15() -> None:
         "lagebild_id FROM signals WHERE quelle_kette='rollen' "
         "ORDER BY id DESC LIMIT 1").fetchone()
     pruefe(P, "die drei Familien und das Lagebild stehen an der Zeile",
-           all(w is not None for w in neu), f"gespeichert: {neu}")
+           all(w is not None for w in neu),
+           # `tuple(neu)`, nicht `neu` direkt (24.08.2026): seit `c` ein
+           # row_factory hat, druckte diese Zeile sonst nur noch
+           # "<sqlite3.Row object at 0x...>" statt der Werte.
+           f"gespeichert: {tuple(neu)}")
     pruefe(P, "ohne Z.ai-Client bleibt die Mail ohne Gegenpruefungszeilen",
            not any("zweite_meinung" in m for m in erg["mails"]),
            "P-8 - kein Client heisst kein Abschnitt, nicht ein leerer")
