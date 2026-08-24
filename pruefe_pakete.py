@@ -3587,9 +3587,23 @@ def paket_15() -> None:
     klient = _Aufzeichnung()
     vor = c.execute("SELECT COUNT(*) FROM signals "
                     "WHERE quelle_kette='rollen'").fetchone()[0]
+    # ⚠️ DERSELBE FUND WIE METHODIK 2.66/2.68, NUR OHNE ABSTURZ (24.08.2026,
+    # Notebook-Lauf): `c` ist eine Kopie der ECHTEN Produktions-DB, und der
+    # Cooldown liest daraus, wann jedes Symbol zuletzt beurteilt wurde. Lief
+    # die Produktion kurz zuvor, sind alle drei Kandidaten gesperrt - "3x
+    # Cooldown" statt eines Einstiegs, und der Rest der Kette hat nichts
+    # mehr zu urteilen. Diese Pruefung will die SCHREIBMECHANIK des
+    # Probelaufs testen, nicht ob der Cooldown gerade greift - der hat seine
+    # eigenen Pruefungen (siehe paket_b1). Also dieselbe `_OHNE_BREMSEN`-
+    # Konfiguration wie dort.
+    _OHNE_BREMSEN15 = {"anlass": {"aktiv": False},
+                       "rollen_kette": {"cooldown_stunden_je_gruppe":
+                                        {"krypto": 0.0}},
+                       "budget_allocator": {"spot_cooldown_stunden": 0.0,
+                                            "cooldown_stunden": 0.0}}
     erg = RL.fuehre_lauf(conn=c, reihen=reihen, symbole=symbole,
                          betriebsart="probe", client=klient, modell="test",
-                         zai_client=None)
+                         zai_client=None, config=_OHNE_BREMSEN15)
     pruefe(P, "der Probelauf laeuft ohne Fehler durch",
            not erg["fehler"], str(erg["fehler"][:2]))
     nach = c.execute("SELECT COUNT(*) FROM signals "

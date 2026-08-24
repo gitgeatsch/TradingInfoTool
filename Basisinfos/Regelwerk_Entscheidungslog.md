@@ -22400,3 +22400,56 @@ Suite (Desktop, nach dem Fix): 1.679 Pruefungen, ALLE BESTANDEN.
 `finde_freie_namen.py`: 0 Kandidaten. Der ECHTE Notebook-Befund (11 FEHL,
 Stand vor diesem Fix) ist damit NICHT erneut bestaetigt - offen bis zum
 naechsten Notebook-Lauf unter dem neuen Dateinamen.
+
+
+[2026-08-24] ECHTER NOTEBOOK-LAUF UNTER DEM NEUEN NAMEN - EIN ERSTER LAUF
+UNVOLLSTAENDIG, EIN ZWEITER VOLLSTAENDIG UND EIN FUENFTER DEFEKT DAMIT GELOEST
+
+Der erste Lauf nach dem Geraete-Fix (`pruefe_pakete_ausgabe_T440.txt`,
+11:26 Uhr) war NUR 74 KB statt der erwarteten ~240 KB und endete OHNE
+Schlusszeile mitten in den Pruefungen (Zeile 1030, keine "X Pruefungen, Y
+FEHLGESCHLAGEN"). Nutzer auf Nachfrage: kein eigener Eingriff (kein
+Strg+C, kein Terminal geschlossen) - der Lauf erfolgt immer ueber eine
+eigene Claude-Session am Notebook. Ursache des unvollstaendigen ersten
+Laufs bleibt UNGEKLAERT (die `finally`-Absicherung hat sicher gegriffen,
+sonst gaebe es die 74 KB gar nicht - ein harter Prozess-Kill haette gar
+nichts geschrieben). Nutzer hat das Skript daraufhin einfach neu gestartet.
+
+ZWEITER LAUF (13:01 Uhr) VOLLSTAENDIG: 1.679 Pruefungen, 11 FEHLGESCHLAGEN,
+mit Schlusszeile. Alle elf einzeln mit dem ERSTEN Notebook-Lauf von heute
+Vormittag abgeglichen - IDENTISCHE ELF, keine neuen, keine verschwundenen
+(ausser dass die Zaehlung jetzt zuverlaessig ist statt durch meinen
+eigenen Ueberschreib-Fehler verunklart).
+
+⚠️ FUENFTER DEFEKT GELOEST, DANK DER NEUEN DETAILZEILE: "und schreibt eine
+Signalzeile" zeigte diesmal `gewaehlt=['LINK'] kauft15=LINK (in symbole:
+True) | ... nicht kuerzlich schon gefragt 0 (3 verloren) <- hier · 3x
+Cooldown bis 2026-08-24T23:14`. A1 waehlte korrekt, aber alle drei
+Kandidaten wurden vom ECHTEN, LAUFENDEN Cooldown der Produktion gesperrt -
+DIESELBE Fehlerklasse wie der Absturz in Methodik 2.66 (`paket_b1`), nur
+ohne Absturz: `c` ist eine ungewipte Kopie der echten Produktions-DB, der
+Cooldown liest daraus. BEHOBEN: `_OHNE_BREMSEN15` (identische Konfiguration
+wie `paket_b1`s `_OHNE_BREMSEN`) an `RL.fuehre_lauf()` uebergeben - diese
+Pruefung testet die Schreibmechanik des Probelaufs, nicht ob der Cooldown
+gerade greift.
+
+DIE UEBRIGEN ZEHN UNVERAENDERT WIE ERWARTET (78/416, Migration,
+Perzentilband = Methodik 2.68; USD/EUR-Mischung; LONG/SHORT-Stop). ⚠️ EINE
+PRAEZISIERUNG zum MFE/Widerlegungspreis-Cluster (drei Pruefungen um "der
+MFE kommt aus dem Backward-Tracking"): DIESE laufen entgegen meiner
+bisherigen Einordnung NICHT gegen die live wachsende DB, sondern gegen
+eine VOLLSTAENDIG GEWIPTE, synthetisch befuellte Kopie (`DELETE FROM
+signals` vor fuenf definierten Testzeilen) - und schlagen trotzdem NUR am
+Notebook fehl, nie am Desktop. Das widerspricht der "DB waechst"-Erklaerung
+und ist NICHT durch Methodik 2.68 erklaert. Eigene, noch offene Ursache -
+vermutlich etwas Umgebungsabhaengiges (Zeitzone, SQLite-Version, Locale),
+nicht DB-Wachstum. NICHT weiter untersucht in dieser Runde.
+
+Der LONG/SHORT-Befund reproduziert sich jetzt zum DRITTEN Mal in Folge
+(SHORT-Stop 1916-1919, immer unter dem jeweiligen Kurs) - das spricht
+gegen einen einmaligen Parsing-Zufall und fuer eine echte, reproduzierbare
+Ursache in der Hebel-Geometrie oder ihrer Testauswertung. Naechster
+priorisierter Kandidat fuer eine gezielte Untersuchung.
+
+Suite (Desktop, nach dem Cooldown-Fix): 1.679 Pruefungen, ALLE BESTANDEN.
+`finde_freie_namen.py`: 0 Kandidaten.
