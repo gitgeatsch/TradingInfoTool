@@ -363,3 +363,155 @@ Befundstand korrigiert — vor jeder neuen Suche.
 Verwandt: `Befundkarte.md` §3/§5b · `Umbauplan_Gesamtsystem_12_08.md` Kap.
 104–125 · `Test_und_Verifikationsmethodik.md` 2.47/2.48/2.51/2.53/2.55 ·
 `Messkonzept_LLM_Standard_25_08.md`
+
+---
+---
+
+# NACHTRAG (1) — S3 GEMESSEN, 25.08.2026
+
+**Alles oberhalb dieser Linie stand vor dem Lauf und ist unverändert.**
+
+## Was lief
+
+Zwei Werkzeuge, je drei Varianten, je **200 Läufe**, alle auf
+`data/messdaten.db` (Stand 21.08., 523 Reihen). Neue Schalter
+`--blockgrenzen {fest,wandernd}` und `--blockverfahren {greedy,raster}`,
+Vorgabe jeweils der Altzustand.
+
+⚠️ **Ein zweiter Unterschied, der in der Vorabfestlegung fehlte.** Beim Lesen
+der ersten Zahlen zeigte sich, dass „wandernde Grenzen" zwei Dinge zugleich
+ändern: die **Lage** der Schnitte *und* das **Verfahren**. Die alte Fassung
+schneidet *greedy* — ab dem ersten Anker der Reihe weiter, sobald 250 Einheiten
+vergangen sind. Wandernde Grenzen brauchen dagegen ein **Raster**. Bei dichten
+Ankern sollte beides gleich sein; es ist es nicht (477 gegen 484 Reihen mit
+zwei Blöcken). Deshalb wurde ein dritter Lauf ergänzt, der das Verfahren allein
+umstellt. **Ohne ihn hätte S3 zwei Effekte vermischt und wäre nicht
+interpretierbar gewesen.**
+
+## Ergebnis 1 — der Messwert ist stabil, die Schwelle ist es nicht
+
+**Kap. 119, volle Stichprobe (631.117 Anker, 13.768 in H):**
+
+| Variante | Reihen mit 2 Blöcken | Schwelle (95 %) | gemessen | Abstand | Urteil |
+|---|---:|---:|---:|---:|---|
+| **greedy + fest** — Altzustand | 477 | **+3,11** | +3,78 | 0,67 | **TRÄGT** |
+| raster + fest — Verfahren allein | 484 | **+4,00** | +3,78 | −0,22 | **trägt nicht** |
+| raster + wandernd — 2.47-konform | 523 | **+3,36** | +3,78 | 0,42 | **TRÄGT** |
+
+**Kap. 121, Schwelle „aus acht" je Kategorie:**
+
+| Variante | Large (+5,9) | Mid (+2,5) | Small (+7,9) |
+|---|---:|---:|---:|
+| **greedy + fest** — Altzustand | **+5,3** → TRÄGT | +5,3 → fällt | **+5,3** → TRÄGT |
+| raster + fest | +5,7 → TRÄGT (knapp) | +5,7 → fällt | +5,7 → TRÄGT |
+| raster + wandernd | ⚠️ **+6,2 → ZU KNAPP** | +6,2 → fällt | +6,2 → **TRÄGT** |
+
+**Der Vorsprung selbst ist in allen Varianten bitgleich** — +3,78 gesamt,
+Large +5,9 · Mid +2,5 · Small +7,9. Die Blockbildung berührt **nur die
+Schwelle**. Das ist die erwartete Mechanik und bestätigt, dass der Umbau
+gemessen hat, was er messen sollte.
+
+## Ergebnis 2 — der Altzustand ist in BEIDEN Kapiteln die niedrigste Schwelle
+
+| | greedy+fest | raster+fest | raster+wandernd | Spanne |
+|---|---:|---:|---:|---:|
+| Kap. 119 gesamt | **+3,11** | +4,00 | +3,36 | **0,89** |
+| Kap. 121 Large | **+5,3** | +5,7 | +6,2 | **0,9** |
+
+⚠️ **Die heute verdrahtete Variante liefert von drei geprüften die
+freundlichste Schwelle — in beiden Kapiteln.** Das ist genau die Richtung, die
+Regel 2.47 vorhersagt (feste Grenzen verschmälern die Verteilung). In 2.48 war
+es umgekehrt gemessen worden; dort dominierte die Läufezahl bei nur 20 Läufen.
+Mit 200 Läufen und 2×Streufehler von **0,17 bis 0,19 Punkten** ist die Spanne
+von 0,9 Punkten **kein Rauschen**.
+
+Die Richtung des Grenzeneffekts allein ist dagegen **nicht** einheitlich: bei
+Kap. 121 hebt er die Schwelle (+5,7 → +6,2), bei Kap. 119 senkt er sie
+(+4,00 → +3,36). Dort ändert der Versatz zusätzlich die Reihenmenge
+(484 → 523). **Als gesichert gilt nur die Gesamtspanne, nicht die Zerlegung.**
+
+## Ergebnis 3 — ein Urteil kippt: **Large**
+
+Large stand mit *„TRÄGT, auch aus acht"* in der Befundkarte. Mit
+2.47-konformen Grenzen liegt die Schwelle bei **+6,2** über dem Messwert
+**+5,9** → Urteil **ZU KNAPP (2.48)**, und nach der eigenen Regel heißt das:
+**es gilt gar nichts.**
+
+**Small hält** — +7,9 gegen +6,2, in allen drei Varianten. **Mid** fiel schon
+vorher und fällt weiter. **Die Gesamtaussage von Kap. 119 hält** in der
+2.47-konformen Variante (+3,78 gegen +3,36), aber mit einem Abstand von nur
+noch **0,42 Punkten** bei 2×Streu 0,19.
+
+## ⚠️ Ergebnis 4 — Kap. 119 ist auf heutiger Basis nicht mehr +4,5 gegen +2,6
+
+| | Kap. 119 (20.08.) | heute, **identischer Code** |
+|---|---:|---:|
+| Anker | 446.509 | **631.117** |
+| Fälle in H | 9.405 | **13.768** |
+| Reihen | 312 | **523** |
+| Vorsprung | **+4,5** | **+3,78** |
+| Schwelle (greedy+fest) | +2,6 | **+3,11** |
+| Abstand | **1,9** | **0,67** |
+
+Das ist **kein Fehler und kein Widerspruch**: Kap. 121 hat 176 eingestellte
+Paare nachgeladen (+231.824 Kerzen). Die Basis ist breiter und ehrlicher — und
+der Vorsprung darauf **kleiner**. Es ist Methodik 2.68 in Reinform: eine Zahl
+aus einer wachsenden Datenlage veraltet, ohne dass jemand etwas falsch macht.
+
+⚠️ **Die Befundkarte führte bis heute die 312-Reihen-Zahlen als aktuellen
+Stand.** Der Abstand zur Schwelle ist in Wahrheit von 1,9 auf **0,42** Punkte
+geschrumpft (breitere Basis **und** korrekte Grenzen zusammen) — ein Faktor
+von mehr als vier.
+
+## Ergebnis 5 — ein Nebenbefund über das Werkzeug: die Symbolteilung ist nicht reproduzierbar
+
+Beide ersten Läufe meldeten für die **volle** Stichprobe exakt dieselben Zahlen
+(13.768 H-Fälle), für die **halbe** aber verschiedene (7.474 gegen 7.069).
+Nachgeprüft: `_reihen_roh` liefert die Symbole **je Prozess in anderer
+Reihenfolge** — zweimal aufgerufen, zwei Ordnungen:
+
+```
+Lauf 1:  BNB, BIO, NEAR, RENDER, ETH, XLM, SUI, XNO
+Lauf 2:  ETH, XNO, RENDER, S, TAO, BIO, INJ, IMX
+```
+
+Die SQL ist sortiert (`order by symbol, currency, date`); die Permutation
+entsteht danach, über eine Menge, deren Iterationsreihenfolge am
+String-Hash hängt. Da `r` die **Position** in dieser Reihenfolge ist, wählt
+`(r % 2) == 1` bei **jedem Start eine andere Hälfte**.
+
+⚠️ **Folge:** die Zeile *„halbe Stichprobe: +2,8 gegen Schwelle +3,3, nicht
+bestätigbar"* aus Kap. 119 ist **eine Ziehung unter vielen möglichen** — kein
+reproduzierbarer Befund. Dasselbe gilt für die entsprechenden Zeilen dieses
+Nachtrags. Als „Auflösungsgrenze" darf das nicht mehr zitiert werden, solange
+nicht über viele Teilungen gemittelt wird. → Methodik **2.76**.
+
+## Was die Vorabfestlegung richtig vorhergesagt hat — und wo sie zu grob war
+
+Vorab stand: *„Urteil kippt bei irgendeinem Kapitel → der einzige tragende
+Befund des Projekts ist ein Schwellenartefakt → dann fällt H, und die Suche
+nach Hx beginnt bei null."*
+
+**Die Bedingung ist eingetreten (Large kippt). Die Folgerung war zu grob.**
+Sie unterschied nicht zwischen *ein Teilurteil kippt* und *der Hauptbefund
+kippt*. Gemessen ist beides zugleich: Large fällt, Small hält deutlich, die
+Gesamtaussage hält knapp. **H fällt also nicht** — aber es steht erheblich
+dünner da als in der Befundkarte.
+
+Das wird hier festgehalten, statt die Lesart nachträglich passend zu machen.
+Für S1, S2 und S4 gilt die Lehre: Ergebnis**muster** vorab benennen, nicht nur
+Ergebnis**richtungen**.
+
+## Was daraus folgt
+
+1. **S1, S2 und S4 sind nicht gegenstandslos** — der Hauptbefund hält, also
+   lohnt die weitere Prüfung. Reihenfolge unverändert: S1 → S4 → S2.
+2. **Alle künftigen S-Läufe laufen 2.47-konform** (`--blockgrenzen wandernd
+   --blockverfahren raster`) und berichten den Altzustand daneben.
+3. **Die Befundkarte ist nachzuziehen**: Large verliert sein „trägt", die
+   Gesamtzahlen sind auf 523 Reihen zu aktualisieren.
+4. **Die beiden verbleibenden Werkzeuge mit festen Grenzen** (`messe_klassen`,
+   `messe_dosis`) sind noch nicht umgestellt — ihre Befunde (Kap. 117, 120)
+   stehen unter demselben Vorbehalt.
+5. **Die Symbolteilung** braucht eine stabile Reihen-ID, bevor sie wieder
+   zitiert wird.

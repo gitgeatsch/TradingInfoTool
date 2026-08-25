@@ -72,9 +72,9 @@ Bitpandas Brokerspread von 1,5 %. Seit 119 gilt: **Referenzsatz 0,30 % je
 Seite für die Frage „ist das ein guter Trade", Betriebssatz 1,50 % für „rechnet
 es sich für mich", beide immer nebeneinander.**
 
-| **H trägt — gebührenfrei** | **119** | Vorsprung **+4,5** gegen Schwelle +2,6, volle Stichprobe | 9.405 Fälle, 312 Reihen |
+| **H trägt — gebührenfrei** | **119** | ⚠️ **heute +3,78 gegen +3,36** (S3, 25.08.) — früher +4,5 gegen +2,6 | **13.768 Fälle, 523 Reihen** |
 | H über dem Breakeven bei Referenzgebühr | 119 | **+3,1** (Betrieb: −1,0) | +0,086 R je Trade |
-| **H trägt je Kategorie** | **120/121** | auf **523 Reihen** (mit den Ausfällen): Large **+5,9** · Small **+7,9**, beide gegen die Schwelle aus acht (+5,1) | Mid +2,5 trägt nicht |
+| **H trägt je Kategorie** | **120/121** | auf **523 Reihen**: **Small +7,9 trägt** gegen Schwelle aus acht +6,2. ⚠️ **Large +5,9 KIPPT** (S3, 25.08.) | Mid +2,5 trägt nicht |
 | Spot gegen Hebel | 120 | Unterschied 0,017 R — **dreht kein Vorzeichen** | Finanzierung 0,03 %/Tag |
 | **Strukturboden im Stop schadet nicht** | **124** | −0,0008 R über 631.755 Anker, greift bei 1,1 % | gemessen mit der Produktionsfunktion |
 
@@ -85,6 +85,29 @@ es sich für mich", beide immer nebeneinander.**
 | **kein Momentum-Ersatz** | 111 | +2,3 gegen +1,8 bei gleichem Hochabstand | 120 Läufe, stabil ab 40 |
 | **keine Liquiditätsfolge** | 116 | +5,3 gegen +2,4 bei gleichem Umsatz | Bereinigung vergrößert ihn |
 | **Geometrie ist reine Kostenarithmetik** | 101 | −6,0 → +0,1 über 20 Felder, monoton | vollständig erklärt |
+
+> ⚠⚠ **S3 GEMESSEN AM 25.08.2026 — zwei Korrekturen an diesem Abschnitt.**
+>
+> **(1) Die Basis ist gewachsen, der Vorsprung geschrumpft.** Kapitel 119 lief
+> auf 312 Reihen und 446.509 Ankern; Kapitel 121 hat 176 eingestellte Paare
+> nachgeladen. Mit **identischem Code** auf der heutigen Basis (523 Reihen,
+> 631.117 Anker) ergibt sich **+3,78 statt +4,5**, bei einer Schwelle von
+> **+3,11 statt +2,6**. Der Abstand fällt von **1,9 auf 0,67** Punkte — und
+> mit 2.47-konformen Blockgrenzen auf **0,42**. Kein Fehler, sondern
+> Methodik 2.68: eine Zahl aus wachsender Datenlage veraltet.
+>
+> **(2) Large trägt nicht mehr.** Die Schwelle „aus acht“ hängt vom
+> Blockbildungsverfahren ab: **+5,3** (Altzustand) · +5,7 · **+6,2**
+> (2.47-konform). Der Messwert **+5,9** liegt darunter, sobald korrekt
+> gerechnet wird → **ZU KNAPP (2.48)**, also gilt nichts. **Small hält in
+> allen drei Varianten** (+7,9 gegen max. +6,2).
+>
+> ⚠️ **Der Altzustand liefert in BEIDEN Kapiteln die niedrigste von drei
+> geprüften Schwellen.** Spanne je 0,9 Punkte bei 2×Streufehler 0,17–0,19 —
+> kein Rauschen. Kapitel 117 und 120 (`messe_dosis`, `messe_klassen`) sind
+> **noch nicht umgestellt** und stehen unter demselben Vorbehalt.
+>
+> Vollständig: `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`, Nachtrag (1).
 
 ### 3.2 Was fiel — und woran
 

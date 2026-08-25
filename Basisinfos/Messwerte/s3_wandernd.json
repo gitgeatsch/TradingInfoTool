@@ -1,0 +1,54 @@
+{
+ "atr_kanal": {
+  "Referenz 0,30 %": {
+   "je_k": [
+    -0.006008672942156235,
+    -0.0024445743369705397,
+    -0.004146420998690559,
+    -0.012297587087699624,
+    -0.037572713205944575
+   ],
+   "spanne": 0.035128138868974035
+  },
+  "Betrieb 1,50 %": {
+   "je_k": [
+    -0.0739702398305524,
+    -0.053430233658411486,
+    -0.044957418383992254,
+    -0.04634191097852691,
+    -0.06321890258238799
+   ],
+   "spanne": 0.029012821446560144
+  }
+ },
+ "betrieb": {
+  "quote_alle": 0.3436351738267231,
+  "quote_h": 0.38059267867518887,
+  "quote_rest": 0.3428109545816062,
+  "vorsprung": 0.03778172409358266
+ },
+ "symbolteilung": {
+  "halbe Stichprobe (jede zweite Reihe)": {
+   "vorsprung": 0.03733183905884363,
+   "schwelle": 0.04412881889777959,
+   "urteil": "traegt nicht",
+   "n_h": 7069,
+   "n_rest": 317071,
+   "bloecke": 262,
+   "blockgrenzen": "wandernd",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0011115330337403027
+  },
+  "VOLLE Stichprobe (nichts wurde gewaehlt)": {
+   "vorsprung": 0.03778172409358266,
+   "schwelle": 0.03356420936387293,
+   "urteil": "TRAEGT",
+   "n_h": 13768,
+   "n_rest": 617349,
+   "bloecke": 523,
+   "blockgrenzen": "wandernd",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0009496080891865305
+  }
+ }
+}

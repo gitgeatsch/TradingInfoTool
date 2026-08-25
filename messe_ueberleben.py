@@ -86,12 +86,47 @@ def _status(db: str) -> dict:
     return aus
 
 
+def _schneide(sortiert: dict, versatz: int, laenge: int,
+              verfahren: str = "greedy") -> list:
+    """Bloecke je Reihe. `versatz` verschiebt ALLE Grenzen (Methodik 2.47).
+
+    `versatz = 0` liefert exakt die alte, feste Einteilung: neuer Block,
+    sobald `laenge` Einheiten seit dem letzten Blockbeginn vergangen sind.
+    Sonst liegen die Schnitte auf dem Raster `versatz + n * laenge` -
+    dieselbe Blocklaenge, andere Lage.
+    """
+    aus = []
+    for vv in sortiert.values():
+        gr: list = []
+        for ii, pos in vv:
+            if verfahren == "raster" or versatz:
+                schl = (ii - versatz) // laenge
+                if not gr or gr[-1][0] != schl:
+                    gr.append([schl, []])
+            elif not gr or ii - gr[-1][0] >= laenge:
+                gr.append([ii, []])
+            gr[-1][1].append(pos)
+        if len(gr) >= 2:
+            aus.append([np.array(g[1]) for g in gr])
+    return aus
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/messdaten.db")
     ap.add_argument("--klasse", default="krypto")
     ap.add_argument("--blockplacebo", type=int, default=200)
     ap.add_argument("--blocklaenge", type=int, default=250)
+    # S3 (25.08.2026, Methodik 2.75): siehe bewerte_neu.py. Regel 2.47
+    # verlangt wandernde Grenzen; dieses Werkzeug setzte sie fest und
+    # hat damit die Kategorienurteile aus Kapitel 121 erzeugt.
+    ap.add_argument("--blockgrenzen", choices=("fest", "wandernd"),
+                    default="fest")
+    # Siehe bewerte_neu.py: "greedy" schneidet ab dem ersten Anker weiter,
+    # "raster" auf festen Linien. Getrennt schaltbar, damit der Vergleich
+    # nicht zwei Aenderungen zugleich enthaelt.
+    ap.add_argument("--blockverfahren", choices=("greedy", "raster"),
+                    default="greedy")
     ap.add_argument("--datei", default="messwerte_ueberleben.json")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -187,21 +222,22 @@ def main() -> int:
         ordn: dict = {}
         for pos, f in enumerate(teil):
             ordn.setdefault(f["sym"], []).append((f["i"], pos))
-        bl = []
-        for vv in ordn.values():
-            gr: list = []
-            for ii, pos in sorted(vv):
-                if not gr or ii - gr[-1][0] >= a.blocklaenge:
-                    gr.append([ii, []])
-                gr[-1][1].append(pos)
-            if len(gr) >= 2:
-                bl.append([np.array(g[1]) for g in gr])
-        vorbereitet[kat] = (ziel, istH, bl)
+        srt = {s: sorted(vv) for s, vv in ordn.items()}
+        bl = _schneide(srt, 0, a.blocklaenge, a.blockverfahren)
+        vorbereitet[kat] = (ziel, istH, srt, bl)
         je_kat[kat] = []
         print(f"  {kat:10}{len(bl):5} Reihen mit mindestens zwei Bloecken")
+    # ⚠️ Eigener Zufallsstrom fuer den Versatz - liefe er aus `rng`, haetten
+    # die beiden Varianten verschiedene Permutationsfolgen, und der Vergleich
+    # mischte zwei Aenderungen (siehe bewerte_neu.py).
+    rngv = np.random.default_rng(20260909)
     for _lauf in range(a.blockplacebo):
         beste = -9.9
-        for kat, (ziel, istH, bl) in vorbereitet.items():
+        versatz = (int(rngv.integers(1, a.blocklaenge + 1))
+                   if a.blockgrenzen == "wandernd" else 0)
+        for kat, (ziel, istH, srt, bl_fest) in vorbereitet.items():
+            bl = (_schneide(srt, versatz, a.blocklaenge, a.blockverfahren)
+                  if versatz else bl_fest)
             gew = ziel.copy()
             for gr in bl:
                 alle = np.concatenate(gr)

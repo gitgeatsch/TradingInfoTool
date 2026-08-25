@@ -4089,3 +4089,70 @@ steht und nicht in einer Prüfung.
 **Maßnahme:** Dauerprüfung analog `finde_freie_namen.py` — ein Skript, das alle
 `messe_*.py` / `bewerte_*.py` auf die Blockbildung absucht und meldet, wo
 Grenzen fest gesetzt werden. Sonst wiederholt sich das beim nächsten Werkzeug.
+
+---
+
+### 2.75 Nachtrag — S3 gemessen: die Regel hatte recht (25.08.2026)
+
+Die Wirkung ist gemessen (Vorabfestlegung S1–S4, Nachtrag 1). Ergebnis:
+
+| | greedy+fest (Altzustand) | raster+fest | raster+wandernd |
+|---|---:|---:|---:|
+| Kap. 119 gesamt | **+3,11** | +4,00 | +3,36 |
+| Kap. 121 Large | **+5,3** | +5,7 | +6,2 |
+
+**Der Altzustand liefert in beiden Kapiteln die niedrigste von drei geprüften
+Schwellen** — die Richtung, die 2.47 vorhersagt. Spanne je **0,9 Punkte** bei
+2×Streufehler 0,17–0,19: kein Rauschen. **Ein Urteil kippt** (Large: „trägt
+auch aus acht" → „ZU KNAPP"). Der Messwert selbst ist in allen Varianten
+bitgleich — die Blockbildung berührt **nur** die Schwelle.
+
+⚠️ **Und eine Lehre über den Vergleich selbst.** „Wandernde Grenzen" ändern
+zwei Dinge zugleich: die **Lage** der Schnitte und das **Verfahren** (greedy
+schneidet ab dem ersten Anker weiter, ein Raster auf festen Linien). Bei
+dichten Ankern sollte das gleich sein; es war es nicht (477 gegen 484 Reihen
+mit zwei Blöcken). Erst ein dritter Lauf, der das Verfahren allein umstellt,
+machte die Zahlen interpretierbar. **Wer zwei Dinge zugleich umstellt, misst
+ihre Summe** — auch dann, wenn beide „dasselbe" zu tun scheinen.
+
+Offen: `messe_klassen` und `messe_dosis` sind noch nicht umgestellt; Kapitel
+117 und 120 stehen unter demselben Vorbehalt.
+
+---
+
+### 2.76 Eine Teilung, deren Nummerierung aus einer MENGE stammt, teilt bei jedem Start anders (25.08.2026)
+
+Zwei S3-Läufe desselben Werkzeugs meldeten für die **volle** Stichprobe exakt
+dieselben Zahlen (13.768 H-Fälle) — für die **halbe** aber verschiedene
+(7.474 gegen 7.069). Die Ankermenge war also identisch, ihre **Nummerierung**
+nicht.
+
+Nachgeprüft: `_reihen_roh` liefert die Symbole je Prozess in anderer
+Reihenfolge. Zweimal aufgerufen:
+
+```
+Lauf 1:  BNB, BIO, NEAR, RENDER, ETH, XLM, SUI, XNO
+Lauf 2:  ETH, XNO, RENDER, S, TAO, BIO, INJ, IMX
+```
+
+Die SQL ist sortiert (`order by symbol, currency, date`) — die Permutation
+entsteht **danach**, über eine Menge, deren Iterationsreihenfolge am
+String-Hash hängt (in Python je Prozess randomisiert). Da die Reihen-ID `r`
+die **Position** in dieser Reihenfolge ist, wählt `(r % 2) == 1` bei jedem
+Start eine andere Hälfte.
+
+⚠️ **Folge für einen bestehenden Befund:** die Zeile *„halbe Stichprobe: +2,8
+gegen Schwelle +3,3, nicht bestätigbar"* aus Kapitel 119 ist **eine Ziehung
+unter vielen möglichen**, kein reproduzierbarer Befund. Sie darf als
+„Auflösungsgrenze" nicht mehr zitiert werden, solange nicht über viele
+Teilungen gemittelt wird.
+
+**Die Regel:** Eine Teilung (Symbolhälften, Zeithälften, Faltungen) braucht
+eine **inhaltliche, stabile** Kennung — das Symbol selbst, ein Datum, ein
+Hash über den Namen mit festem Startwert. Eine **Position** in einer
+Datenstruktur ist keine Kennung, solange nicht bewiesen ist, dass die
+Reihenfolge über Prozessgrenzen hinweg gleich bleibt.
+
+**Der Prüfsatz:** Wenn dasselbe Werkzeug zweimal gestartet dieselbe Teilung
+liefern muss, dann prüfe genau das — einmal, mit zwei Aufrufen. Das kostet
+weniger als der Befund, den es rettet.

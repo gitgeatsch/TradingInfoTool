@@ -90,6 +90,20 @@ def main() -> int:
     ap.add_argument("--db", default="data/messdaten.db")
     ap.add_argument("--klasse", default="krypto")
     ap.add_argument("--blockplacebo", type=int, default=200)
+    # S3 (25.08.2026, Methodik 2.75): Regel 2.47 verlangt WANDERNDE
+    # Blockgrenzen. Dieses Werkzeug setzt sie fest - und es ist eines
+    # der vier, die die H-Urteile 117/119/120/121 erzeugt haben.
+    # "fest" bleibt Vorgabe, damit der Altbefund reproduzierbar ist.
+    ap.add_argument("--blockgrenzen", choices=("fest", "wandernd"),
+                    default="fest")
+    # ⚠️ ZWEITER, UNABHAENGIGER UNTERSCHIED - beim Lesen der ersten S3-Zahlen
+    # bemerkt. "greedy" schneidet ab dem ERSTEN Anker der Reihe weiter, sobald
+    # 250 Einheiten vergangen sind; "raster" schneidet auf festen Linien.
+    # Bei dichten Ankern sollte das gleich sein - ist es NICHT: greedy ergab
+    # 477 Reihen mit zwei Bloecken, raster 523. Wer nur `--blockgrenzen`
+    # umstellt, aendert also ZWEI Dinge zugleich. Deshalb getrennt schaltbar.
+    ap.add_argument("--blockverfahren", choices=("greedy", "raster"),
+                    default="greedy")
     ap.add_argument("--datei", default="messwerte_neubewertung.json")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -171,7 +185,9 @@ def main() -> int:
                         ("VOLLE Stichprobe (nichts wurde gewaehlt)",
                          np.ones(len(rz["r"]), bool))):
         print(f"\n  {name}")
-        ergebnisse[name] = _pruefe(rz, pruef, hz, a.blockplacebo)
+        ergebnisse[name] = _pruefe(rz, pruef, hz, a.blockplacebo,
+                                   grenzen=a.blockgrenzen,
+                                   verfahren=a.blockverfahren)
     print("\n" + "=" * 78)
     if a.datei:
         io.open(a.datei, "w", encoding="utf-8").write(json.dumps({
@@ -183,7 +199,8 @@ def main() -> int:
     return 0
 
 
-def _pruefe(rz, pruef, hz, laeufe) -> dict:
+def _pruefe(rz, pruef, hz, laeufe, grenzen: str = "fest",
+            verfahren: str = "greedy") -> dict:
     """Quotendifferenz H gegen Nicht-H auf der Pruefmenge, mit Schwelle."""
     n_hp, q_hp = _quote(rz, pruef & rz["h"], hz)
     n_rp, q_rp = _quote(rz, pruef & ~rz["h"], hz)
@@ -198,18 +215,43 @@ def _pruefe(rz, pruef, hz, laeufe) -> dict:
     for pos in np.flatnonzero(pruef):
         ordn.setdefault(int(rz["r"][pos]), []).append((int(rz["i"][pos]),
                                                        int(pos)))
-    bloecke = []
-    for vv in ordn.values():
-        gr: list = []
-        for ii, pos in sorted(vv):
-            if not gr or ii - gr[-1][0] >= 250:
-                gr.append([ii, []])
-            gr[-1][1].append(pos)
-        if len(gr) >= 2:
-            bloecke.append([np.array(g[1]) for g in gr])
+    sortiert = {r: sorted(vv) for r, vv in ordn.items()}
+
+    def _schneide(versatz: int) -> list:
+        """Bloecke je Reihe. `versatz` verschiebt ALLE Grenzen (2.47).
+
+        Bei `versatz = 0` entsteht exakt die alte, feste Einteilung: neuer
+        Block, sobald 250 Einheiten seit dem letzten Blockbeginn vergangen
+        sind. Bei wandernden Grenzen liegen die Schnitte stattdessen auf dem
+        festen Raster `versatz + n * 250` - dieselbe Blocklaenge, andere
+        Lage. Das ist die Uebertragung von `messe_marken.py:413` auf diese
+        Datenstruktur, in der ein Block Kalenderabstand ist, nicht Ankerzahl.
+        """
+        aus_ = []
+        for vv in sortiert.values():
+            gr: list = []
+            for ii, pos in vv:
+                if verfahren == "raster" or versatz:
+                    schl = (ii - versatz) // 250
+                    if not gr or gr[-1][0] != schl:
+                        gr.append([schl, []])
+                elif not gr or ii - gr[-1][0] >= 250:
+                    gr.append([ii, []])
+                gr[-1][1].append(pos)
+            if len(gr) >= 2:
+                aus_.append([np.array(g[1]) for g in gr])
+        return aus_
+
+    bloecke = _schneide(0)
     rng = np.random.default_rng(20260906)
+    # ⚠️ EIGENER Zufallsstrom fuer den Versatz. Liefe er aus `rng`, haetten
+    # die beiden Varianten verschiedene Permutationsfolgen, und der Vergleich
+    # mischte zwei Aenderungen.
+    rngv = np.random.default_rng(20260907)
     zieh = []
     for _lauf in range(laeufe):
+        if grenzen == "wandernd":
+            bloecke = _schneide(int(rngv.integers(1, 251)))
         aus, tg = rz["aus"].copy(), rz["tg"].copy()
         for gr in bloecke:
             al = np.concatenate(gr)
@@ -222,7 +264,9 @@ def _pruefe(rz, pruef, hz, laeufe) -> dict:
                     / int(mr.sum()))
     s = float(np.quantile(zieh, 0.95))
     streu = float(np.std(zieh)) / math.sqrt(len(zieh))
-    print(f"  {len(bloecke)} Reihen mit zwei Bloecken, {laeufe} Laeufe")
+    print(f"  {len(bloecke)} Reihen mit zwei Bloecken, {laeufe} Laeufe"
+          f", Blockgrenzen {grenzen.upper()}"
+          f", Verfahren {verfahren.upper()}")
     print(f"  SCHWELLE (95 %)  {100 * s:+.1f} Punkte")
     print(f"  gemessen         {100 * vorsprung:+.1f} Punkte")
     urteil = ("ZU KNAPP (2.48)" if abs(vorsprung - s) < 2 * streu
@@ -233,7 +277,10 @@ def _pruefe(rz, pruef, hz, laeufe) -> dict:
               "Wahrscheinlichkeit.")
         print("     Ob er sich RECHNET, entscheidet die Gebuehr (N2/N3).")
     return {"vorsprung": vorsprung, "schwelle": s, "urteil": urteil,
-            "n_h": n_hp, "n_rest": n_rp, "bloecke": len(bloecke)}
+            "n_h": n_hp, "n_rest": n_rp, "bloecke": len(bloecke),
+            "blockgrenzen": grenzen, "blockverfahren": verfahren,
+            "laeufe": laeufe,
+            "streufehler_schwelle": streu}
 
 
 if __name__ == "__main__":
