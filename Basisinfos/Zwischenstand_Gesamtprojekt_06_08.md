@@ -1913,3 +1913,103 @@ Vorsprungsmessung gewählt, ohne die Kosten auf der Lernseite gegenzurechnen.
 | **N-2** | **A1 bei dünnen Gruppen** — für 4 von 6 Gruppen (2 Aktien, 4 Rohstoffe, 2 Absicherung) greift `k=1` auf einer Basis **ohne Messrückhalt**. Der Modulkopf sagt es selbst: *„Bei n=2 ist der Rangplatz kaum mehr als ein Münzwurf"* | A1 |
 | **N-3** | **Die Prüfsuite-Ausgabe auf Google Drive** gehört in die Ausroll-Checkliste 8e.3 — Dateiname trägt `platform.node()`, weil ein Desktop-Lauf am 24.08. das Notebook-Ergebnis überschrieb | 24.08. |
 | **N-4** | Restliche Punkte der **Reparaturliste** (A6, C1, C2, C3, D1, D2, D3) sind hier nicht gespiegelt — C2 (*Risiko je Trade schwankt um Faktor 9*) ist dort als „schwer" gewichtet | 23.08. |
+
+---
+
+# Nachtrag 2026-08-25: drei offene Punkte, die vor jedem Eingriff stehen
+
+*Nutzervorgaben vom 25.08.2026, wörtlich. Sie korrigieren eine Fehlannahme in
+meiner Beratung und legen die Reihenfolge fest.*
+
+## ⚠️ N-5 — Die Definition eines guten Trades. KORREKTUR einer Fehlannahme
+
+> **„Ein guter Trade ist dann gegeben, wenn für dieses Asset eine bestimmte
+> Handlungsempfehlung — Grund — eintritt. NICHT ob der Trade oder Handel bei
+> einer Börse wirtschaftlich ist — also Fokus auf das Asset und das
+> Potential."**
+
+**Das ist bindend und stellt richtig, was ich am 25.08. falsch gerahmt habe.**
+Ich hatte die Breakeven-Rechnung (`quote` gegen `breakeven`, also
+Gebührendeckung) zum Maßstab dafür gemacht, ob ein Trade gut ist, und daraus
+eine Gebührenfrage als vordringlich abgeleitet.
+
+⚠️ **Das widerspricht der stehenden Vorgabe**, dass Börsengebühren **nicht in
+die Handelsbewertung** einfließen, sondern **nur in die Geldrechnung der
+Mail** — und der Regel *„Erfolgsmaß ist das POTENTIAL, nicht die
+Zielerreichung"* (23.08.).
+
+**Was daraus folgt:**
+
+| | |
+|---|---|
+| **Maßstab** | Potential des **Assets** und Eintreten des **Grundes** |
+| **Gebühren** | gehören in die **Geldrechnung der Mail**, nicht in die Frage „guter Trade?" |
+| ⚠️ **`wahrscheinlichkeit.rechne()`** | mischt heute beides: `abstand_punkte = quote − breakeven` enthält den Gebührensatz. Als **Anzeige** richtig, als **Filterkriterium** wäre es die verworfene Definition |
+
+**Zu klären, bevor `entscheider` scharf geschaltet wird:** ob der Filter auf
+das **Potential** wirkt (regelkonform) oder auf die **Gebührendeckung**
+(verworfen). Das ist keine Feinheit — es entscheidet, welche Signale wegfallen.
+
+## N-6 — Kein Scharfschalten ohne Wirkungsnachweis
+
+> **„Bevor wir etwas scharf schalten, brauchen wir Information zur Auswirkung
+> — existierendes Wissen und selbst messen und simulieren, z. B. historisch
+> oder eigene Daten. Ein Eingriff in die Ablaufkette ist sorgsam
+> durchzuführen — wo kann was optimal eingesetzt werden für die erforderliche
+> Wirkung."**
+
+Betrifft konkret alle vier Vorschläge aus der Beratung vom 25.08.:
+
+| Vorschlag | Wirkung bekannt? |
+|---|---|
+| `entscheider` scharf schalten (`rollen_gate.py:100`) | ⚠️ **nein** — Zahl der wegfallenden Signale nie simuliert |
+| H in den Prompt geben (`rollen_lauf.py:1600` liegt hinter dem Urteil in `:1066`) | ⚠️ **nein** — H ist als *Vorfilter* gemessen (+0,15 R), als *Prompt-Fakt* nicht |
+| `hebel_triggers` als Auslöser lesen | ⚠️ **nein** |
+| Termine an das Modell geben | ⚠️ **nein** — steht auf `nie` in `wahrscheinlichkeit.BEITRAEGE` |
+
+**Regel:** erst historische Simulation oder eigene Daten, dann Eingriff. Die
+Reihenfolge ist nicht verhandelbar, weil ein Eingriff in die Ablaufkette
+rückwirkend nicht mehr sauber messbar ist.
+
+## ⚠️ N-7 — Funktioniert die BESTEHENDE LLM-Implementation überhaupt?
+
+> **„Bei LLM haben wir diese Info nicht bzw. müssen wir erst feststellen, ob
+> die bestehende LLM-Implementation funktioniert — auch ein offener Punkt,
+> sollte aber bereits getrackt werden."**
+
+**Was gemessen ist — und vernichtend aussieht** (`Arbeitsstand_Deadloop_09_08.md:795-807`):
+
+| Verfahren | 3 Kerzen | 7 Kerzen | 14 Kerzen |
+|---|---|---|---|
+| **LLM** | **29,8 %** | **27,7 %** | **25,0 %** |
+| Konfluenz-Mehrheit | 52,0 % | 40,7 % | 40,2 % |
+| Kurs vs. EMA-200 | 61,8 % | 61,7 % | 63,5 % |
+| **immer SHORT** | 74,0 % | 80,9 % | 87,5 % |
+
+> **„Das LLM liegt hinter JEDER Regel, über alle Horizonte."** 27,7 % ist keine
+> Zufallsquote (die wäre 50 %) — die Ausgabe ist **systematisch mit falschem
+> Vorzeichen**.
+
+Dazu: Z.ai als Gegenprüfer **17× LONG in 2.469 Prüfungen**; Konfidenz 77,5 %
+vorhergesagt gegen 33,3 % eingetreten (r = +0,073 zum realisierten CRV).
+
+⚠️ **ABER: alle diese Zahlen stammen vom 09.08. — VOR dem Rollenumbau.**
+Seither: Prompt von 34.611 auf 3.183 Zeichen, zwei Rollen statt einer,
+Z1-Treueprüfer, neue Faktenschicht. **Für die heutige Kette existiert keine
+vergleichbare Messung.**
+
+**Damit ist offen — und das ist der Punkt:**
+
+| Frage | Stand |
+|---|---|
+| Schlägt die heutige LLM-Ebene den Zufall? | **ungemessen** |
+| Schlägt sie eine einfache Regel (EMA-200)? | **ungemessen** |
+| Trägt das LLM-Urteil überhaupt zum Ergebnis bei? | **ungemessen** |
+
+⚠️ **Solange das offen ist, steht jede Aussage über die Kette auf einer
+Annahme.** Die stehende Vorgabe *„Die LLM-Ebene muss den Zufall messbar
+schlagen"* ist damit **nicht erfüllt, sondern unbeantwortet** — und für die
+alte Kette war die Antwort nachweislich nein.
+
+**Vorrang:** N-7 steht **vor** N-6. Ob ein Eingriff in die Kette sich lohnt,
+hängt davon ab, ob die Kette selbst trägt.
