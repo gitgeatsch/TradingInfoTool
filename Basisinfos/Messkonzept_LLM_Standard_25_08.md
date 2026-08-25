@@ -517,3 +517,115 @@ sein — und aus der Kursreihe kommt keiner mehr.
 Befundkarte verweist auf „2.47–2.55" und meint die zweite Gruppe. Wer die
 erste nachschlägt, liest die falsche Regel. **Als eigener offener Punkt zu
 beheben, nicht nebenbei.**
+
+---
+
+# Nachtrag 25.08. (3): Werkzeugprüfung und die H-Lücke
+
+*Nutzervorgaben: „erst die Werkzeugprüfung" · „alle Werkzeuge werden veraltet
+sein, also Vorsicht" · „Ob es eine Lücke bei H gibt, solltest du bewerten
+können — eine sollte sein, wann H welche Auswirkung hat, also aktuell nicht in
+allen Marktphasen gleich, soweit mir bekannt."*
+
+## A. Werkzeugprüfung — die Warnung war berechtigt
+
+**89 Messwerkzeuge geprüft** (Datum der letzten Änderung, Datenquelle,
+Kettenbezug). Die Rollen-Kette entstand am **12.–15.08.** — alles davor kennt
+sie nicht.
+
+### ⚠️ A1 — Das Werkzeug für Stufe 1 ist unbrauchbar
+
+`messe_abstand_zum_zufall.py` (Stand **09.08.**) sollte F1 beantworten
+(„schlägt die Kette den Zufall?"). Es liest `signals` **und**
+`hebel_signals` — und filtert **nicht** nach `quelle_kette` (0 Treffer im
+Quelltext).
+
+**Die Verzerrung wäre massiv:**
+
+| | Zeilen |
+|---|---:|
+| `signals`, alte Kette / NULL | **2.983** |
+| `signals`, `quelle_kette='rollen'` | 1.997 |
+| `hebel_signals` (Spalte existiert dort **gar nicht**) | **1.998** |
+
+> **4.981 alte gegen 1.997 neue Signale.** Eine ungefilterte Messung misst
+> überwiegend die **alte** Kette — und tut genau das, wovor `trefferbilanz.py`
+> selbst warnt: *„Sie in einen Topf zu werfen wäre der klassische Fehler: die
+> alte Kette hatte andere Fakten, andere Prompts und ein anderes
+> Aktionsvokabular — ihre Quote sagt nichts über diese."*
+
+**Zum Zeitpunkt seiner Entstehung war das Werkzeug richtig** — da gab es nur
+eine Kette. Es ist still verfallen, genau wie `_hebel_faktensaetze()` am 06.08.
+
+### A2 — Die Trennlinie verläuft nicht nach Datum, sondern nach Datenquelle
+
+| Art | Beispiele | veraltet? |
+|---|---|---|
+| **kursbasiert** — misst OHLC-Reihen, kennt keine Signale | `messe_marken` (H) · `messe_auswahl` · `messe_drift` · `messe_spiegel` · `messe_zeitteilung` | **nein** — vom Kettenumbau unberührt |
+| **signalbasiert** — liest `signals`/`hebel_signals` | `messe_abstand_zum_zufall` · `messe_verkaufsseite` · `backtest_llm1_historisch` | ⚠️ **prüfen**, ob `quelle_kette` gefiltert wird |
+
+⚠️ **Das ist die brauchbare Regel für künftige Prüfungen:** Ein Werkzeug, das
+nur Kursreihen liest, kann vom Kettenumbau nicht veraltet sein. Eines, das
+Signale liest, ist verdächtig, bis der Kettenfilter nachgewiesen ist.
+
+**Für Methode ② (Historie simulieren) ist das die gute Nachricht:** die
+kursbasierten Werkzeuge sind die, die wir dafür brauchen.
+
+## B. ⚠️ Die H-Lücke — bestätigt, und größer als „nicht gleich"
+
+**Kapitel 108.4, zwei unabhängig gerechnete Maße:**
+
+| Phase | 104-Maß | 105-Maß (bereinigt) |
+|---|---:|---:|
+| **bulle** | +8,5 | **+7,6** |
+| seitwärts | +5,7 | **+6,0** |
+| **bär** | **−6,4** | **−6,5** |
+
+> **„Die Regel hilft in steigenden und seitwärts laufenden Märkten und schadet
+> in fallenden."**
+
+**Das Vorzeichen dreht.** Der Mittelwert **+4,5**, auf dem die ganze
+H-Empfehlung ruht, ist ein Mittel über Phasen, in denen H **entgegengesetzt**
+wirkt.
+
+### B1 — Und die Erklärung dafür ist widerlegt
+
+| Kapitel | Versuch | Ergebnis |
+|---|---|---|
+| 108 | H sei eine **Richtungsbedingung** („kein Halt nach unten") | 110: **widerlegt** — H' spiegelt nicht, es hilft ebenfalls im Bullen (+1,7) und schadet im Bär (−7,4) |
+| 109 | H **überträgt** sich über den Regimewechsel | **nein** — +2,7 außerhalb gegen Schwelle −5,3 |
+| 115 | H hat einen erkennbaren **Anwendungszeitpunkt** | **nein** — Beharrung +3,9 gegen Schwelle +7,9; über Breakeven in **2 von 20** Fenstern |
+
+> **Wir wissen, DASS H phasenabhängig ist, und nach vier gescheiterten
+> Erklärungsversuchen nicht, WARUM.**
+
+### B2 — ⚠️ Der ungelöste Widerspruch, der daraus folgt
+
+| | |
+|---|---|
+| **H braucht die Phase** | sonst dreht das Vorzeichen (−6,5 im Bär) |
+| **Die Phase darf nicht schalten** | Befundkarte §7.5: *„wir schalten bewusst NICHTS um"* — ein binäres Phasenetikett hat den Deadloop gebaut |
+| **Die Phase ist nicht rechtzeitig erkennbar** | Kapitel 115: keine Beharrung |
+
+**Das ist die Lücke in einem Satz:** H ist nur dann nutzbar, wenn man die
+Marktphase kennt — und das Projekt hat aus gutem Grund entschieden, die
+Marktphase nicht als Schalter zu verwenden, weil sie **im Voraus** nicht
+verlässlich bestimmbar ist.
+
+### B3 — Was das für die aktuelle Lage bedeutet
+
+⚠️ **Der Markt hat am 22.08. gedreht** (BTC +23,1 %, Median über 49 Symbole
++15,8 % in neun Tagen). Nach 108.4 wäre H **jetzt** in seiner günstigen Phase.
+
+**Aber Kapitel 109 sagt ausdrücklich, dass H sich über einen Regimewechsel
+NICHT überträgt.** Ob der Bullen-Befund nach diesem Wechsel noch gilt, ist
+**offen** — und genau das macht die kommenden Wochen zum ersten echten Test.
+
+## C. Was daraus für die Messplanung folgt
+
+| | |
+|---|---|
+| **1** | ⚠️ **Jede H-Messung muss nach Phase geschichtet werden.** Ein Gesamtmittel verdeckt einen Vorzeichenwechsel — das ist keine Feinheit, sondern der Kernbefund |
+| **2** | `messe_abstand_zum_zufall.py` braucht einen **Kettenfilter**, bevor es für Stufe 1 taugt |
+| **3** | Die **kursbasierten** Werkzeuge sind brauchbar — sie tragen Methode ② |
+| **4** | Die Frage *„wann wirkt H"* ist **die** offene H-Frage, und sie ist mit Kursdaten viermal vergeblich angegangen worden (109/110/111/115). ⚠️ **Sie ist damit ein Kandidat für einen Kanal AUSSERHALB der Kursreihe** — also für genau das, was in der Abhängigkeitskarte als *„der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert"* steht |
