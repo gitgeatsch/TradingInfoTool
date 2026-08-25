@@ -404,3 +404,116 @@ Die Zerlegung beantwortet direkt, **welche Beiträge es für die Zusammenführun
 dort mehrere unabhängige Beiträge stehen, kann die Zusammenführung das leisten,
 was das Zielbild verlangt: **den Moment aus der Bewertung selbst bestimmen,
 statt ihn von der Uhr zu nehmen.**
+
+---
+
+# Nachtrag 25.08. (2): Nach dem Einlesen in die Zentraldokumente — zwei Korrekturen
+
+*Nutzervorgabe: „falls noch nicht getan, lese dich in die Zentraldokumente
+ein." Getan — `Befundkarte.md` vollständig, `Test_und_Verifikationsmethodik.md`
+2.47–2.56, `Regelwerksmanual.md` (Rollenebene), `Zielgroessen_und_Erfolgsmasse.md`
+(Stufenmodell). Das korrigiert dieses Konzept an zwei Stellen.*
+
+## ⚠️ Korrektur 1 — Die Prüfkette existiert bereits, vierzehnstufig
+
+`Befundkarte.md` §2 führt eine **verbindliche Kette, die jeder Kandidat
+durchlaufen muss** (Methodik 2.47–2.55). Mein Konzept hat sie teilweise
+nacherfunden und dabei **fünf Stufen ausgelassen**:
+
+| # | Stufe | in meinem Konzept |
+|---|---|---|
+| 2 | **Reifeprobe** — erste 250 Tage je Reihe weg | ⚠️ **fehlte** — verhindert, dass ein *Datenzustand* als Marktzustand gilt |
+| 3 | **Block-Permutation** statt freiem Placebo | ⚠️ **fehlte** — ich hatte nur Cluster-Bootstrap. Bei überlappenden Ankern ist der freie Placebo **zu schmal** und die Schwelle zu niedrig (2.47) |
+| 4 | Blöcke in **Kalenderzeit** | ⚠️ **fehlte** (2.52) |
+| 10 | **Zeitteilung** — hält es in beiden Hälften? | ⚠️ **fehlte** |
+| 13 | **Zwei Lesarten** für Unentschiedene | ⚠️ **fehlte** (2.54) |
+
+**Stufe 3 ist die wichtigste Auslassung.** Unsere 1.292 Einstiege liegen auf
+54 Symbolen über 10 Tage — massiv überlappend. Ein freier Placebo würde die
+Zufallsverteilung zu schmal machen und **einen Fund vortäuschen**. Genau daran
+ist Kapitel 103 gefallen (+17,8 gegen Schwelle +20,5).
+
+> **Das Konzept wird deshalb nicht neu gebaut, sondern an die bestehende Kette
+> angeschlossen.** Sie ist der Ertrag der Kapitel 99–113 und erledigt einen
+> Kandidaten „in Stunden statt Wochen".
+
+## ⚠️ Korrektur 2 — Meine N-5-Auslegung war zu absolut
+
+Ich hatte geschrieben, Gebühren gehörten **gar nicht** in die Bewertung. Das
+ist schärfer, als Ihre Vorgabe verlangt — und es widerspricht zwei bestehenden
+Festlegungen.
+
+**Methodik 2.53:**
+
+> „Jedes Urteil *trägt / trägt nicht* wird zusammen mit dem **ABSOLUTEN Abstand
+> zum Breakeven** berichtet. Die Schwelle beantwortet, ob ein Effekt **echt**
+> ist; sie beantwortet nicht, ob er **reicht**."
+
+**Und `Befundkarte.md` §3.1 hat die Trennung bereits gebaut:**
+
+> „**Referenzsatz 0,30 % je Seite für die Frage ‚ist das ein guter Trade',
+> Betriebssatz 1,50 % für ‚rechnet es sich für mich', beide immer
+> nebeneinander.**"
+
+**Damit löst sich der scheinbare Widerspruch:**
+
+| | Satz | Frage |
+|---|---|---|
+| **Qualität** (Ihr Maßstab, N-5) | **Referenz 0,30 %** | *„ist das ein guter Trade?"* — praktisch gebührenneutral |
+| **Geldrechnung** (Mail) | **Betrieb 1,50 %** | *„rechnet es sich für mich?"* |
+
+⚠️ **Das System macht es also bereits richtig** — die Mail zeigt beide Sätze
+nebeneinander. Mein Vorwurf, `wahrscheinlichkeit.rechne()` mische unzulässig,
+war falsch: es **trennt** über den Gebührenparameter, und der Aufrufer gibt
+beide Sätze.
+
+**Was von N-5 bleibt — und es bleibt das Entscheidende:**
+
+> Wenn der `entscheider` je scharf geschaltet wird, muss er am **Referenzsatz**
+> filtern, nicht am Betriebssatz. Sonst sortiert er nach *Bitpandas Spread*
+> statt nach der Qualität des Trades — und genau das wäre die von Ihnen
+> verworfene Definition.
+
+**Die Zahlen dazu stehen bereits in `Befundkarte.md` §6:**
+
+| | ohne Filter | mit H |
+|---|---:|---:|
+| **Referenz 0,30 %** | −0,031 R | **+0,114 R** |
+| Betrieb 1,50 % | −0,182 R | −0,036 R |
+
+Und das Urteil dort, wörtlich:
+
+| | |
+|---|---|
+| H als **Vorfilter** (Signalzahl, LLM-Budget) | **zulässig** — „er nimmt nachweislich die schlechteren weg" |
+| H als **Freigabe zum Handeln** | **nein**, solange 1,50 % gilt |
+
+> **Damit ist meine Frage von vorhin — „entscheider scharf schalten?" — bereits
+> beantwortet, und zwar differenzierter, als ich sie gestellt habe.**
+
+## Was das Einlesen sonst ergeben hat
+
+**1. V2 ist bereits geplant und überschneidet sich mit Stufe 1.**
+`Befundkarte.md` §7.8 führt als Schritt 2: *„V2: waren die von H aussortierten
+Signale die schlechteren?"* — Voraussetzung ~4 Wochen aufgelöste Signale,
+frühestens **~20.09.** Der Vorfilter-Schatten läuft seit 22.08. über **alle**
+Klassen. **Stufe 1 dieses Konzepts ist im Kern eine vorgezogene, breitere V2.**
+
+**2. Das stärkste Argument für Nachrichten steht in der Abhängigkeitskarte:**
+
+> „Nachrichten … einziger Kanal außerhalb der Kursreihe — und damit **der
+> einzige mögliche Partner für H, der nicht per Konstruktion mit ihm
+> korreliert**."
+
+Das ist ein **anderes** Argument als „letzte unerprobte Kategorie": Alle
+bisherigen Kandidaten stammen aus der Kursreihe, der ATR-Kanal trat *fünfmal
+unter neuem Namen* auf, H und Drift überlappen zu **92 %**. Ein zweiter
+Beitrag für die Zusammenführung (Zielbild, Abschnitt A) muss **unabhängig**
+sein — und aus der Kursreihe kommt keiner mehr.
+
+**3. Ein Doku-Defekt, gefunden beim Nachschlagen:**
+`Test_und_Verifikationsmethodik.md` führt die Nummern **2.47 bis 2.50 zweimal**
+(Zeilen 2877–2919 und 2954–3002) mit **verschiedenen Inhalten**. Die
+Befundkarte verweist auf „2.47–2.55" und meint die zweite Gruppe. Wer die
+erste nachschlägt, liest die falsche Regel. **Als eigener offener Punkt zu
+beheben, nicht nebenbei.**
