@@ -4013,3 +4013,79 @@ er ist je Gerät verschieden.
 **Code-Korrektheit**, der NB-Export ist **Produktionszustand**. Beides in
 dieselbe Ablage zu legen wäre genau die Verwechslung, die schon einmal
 Fehldeutungen erzeugt hat.
+
+
+---
+
+### 2.74 Eine Betriebskonstante, die in die Messgröße eingeht, ist eine Annahme DER MESSUNG (25.08.2026)
+
+`messe_marken.py:43-46` schreibt über die Totzone `NIVEAU_MIN_ABSTAND_ATR = 0.5`:
+
+> *„Das ist eine Eigenschaft des Betriebs, keine Annahme dieser Messung, und
+> sie bleibt unangetastet.“*
+
+Der Satz klingt sauber und ist falsch. Der Vorfilter H prüft **A** = kein
+Widerstand in [+0,5 ATR, +4,0 ATR) und **B** = eine Unterstützung in
+(−2,0 ATR, −0,5 ATR]. **Beide Bänder beginnen an der Totzone.** Die Zahl 0,5
+ist damit keine Anzeigeeinstellung neben der Messung, sondern eine
+**Bandgrenze in der Messgröße selbst**.
+
+⚠️ **Dieselbe Denkfigur hat achtzehn Kapitel gekostet.** Der Betriebssatz
+1,50 % stand ebenso da — als Gegebenheit des Betriebs, nicht als Annahme — und
+war der falsche Maßstab für die Frage „ist das ein guter Trade" (Kap. 119).
+Und die Herkunft macht es nicht besser, sondern schlechter: 0,5 ATR entstand
+am 10.08. als Reparatur einer **Anzeigepanne** („Widerstand 0,0
+Schwankungsbreiten höher" für jeden Prüffall).
+
+**Die Regel:** Bevor eine Konstante als „Betrieb, bleibt unangetastet“ aus der
+Prüfung genommen wird, ist eine Frage zu beantworten: **geht sie in die
+Definition der gemessenen Größe ein?** Wenn ja, ist sie ein Parameter der
+Messung und gehört in die Sensitivitätsprüfung — unabhängig davon, wo sie im
+Code steht und warum sie einmal eingeführt wurde.
+
+**Der Prüfsatz:** „Betrieb“ ist eine Aussage über den **Ort** einer Zahl, nie
+über ihre **Rolle**. Nur die Rolle entscheidet, ob sie geprüft werden muss.
+
+Angewandt in `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md` (S1).
+
+---
+
+### 2.75 Eine Methodikregel gilt erst, wenn das NÄCHSTE Werkzeug sie auch befolgt (25.08.2026)
+
+Regel **2.47** verlangt seit dem 20.08. wandernde Blockgrenzen:
+
+> *„Blockgrenzen wandern je Lauf — feste Grenzen lassen immer dieselben Anker
+> gemeinsam reisen und verschmälern die Verteilung.“*
+
+An der Quelle geprüft, wer sie befolgt:
+
+| Werkzeug | Blockgrenzen | Code |
+|---|---|---|
+| `messe_marken.py` | ✔ wandernd | `v = int(rngb.integers(0, a.blocklaenge))` (:413) |
+| `messe_struktur_bereinigt.py` | ✔ wandernd | ebenso (:265) |
+| `bewerte_neu.py` | ✘ **fest** | `if not gr or ii - gr[-1][0] >= 250:` (:205) |
+| `messe_klassen.py` | ✘ **fest** | (:191) |
+| `messe_ueberleben.py` | ✘ **fest** | (:194) |
+| `messe_dosis.py` | ✘ **fest** | (:298) |
+
+⚠️ **Die vier mit festen Grenzen sind genau die, die die heute gültigen
+H-Urteile erzeugt haben** — Kap. 117 (Dosis), 119 (H trägt, +4,5 gegen +2,6),
+120 (je Kategorie), 121 (Überlebensverzerrung, 523 Reihen). Die Regel wurde
+geschrieben, nachdem die alten Werkzeuge sie befolgten, und die **neuen** haben
+sie nie übernommen. Niemand hat es bemerkt, weil eine Methodikregel im Text
+steht und nicht in einer Prüfung.
+
+**Was daraus folgt — zwei Dinge, und das zweite ist das wichtigere:**
+
+1. Die Wirkung ist zu messen (S3 der Vorabfestlegung). Die **Richtung ist nicht
+   vorhersagbar**: 2.47 sagt „feste Grenzen verschmälern, also Schwelle zu
+   niedrig“, 2.48 maß bei gleicher Läufezahl das Gegenteil (+18,4 fest gegen
+   +16,8 wandernd) — dort dominierte die **Läufezahl**, nicht die Grenzenart.
+2. **Eine Methodikregel ohne Prüfung ist eine Absichtserklärung.** Dies ist
+   dieselbe Lehre wie „Naht statt Absichtserklärung“ und „eine Stufe gilt erst
+   als gebaut, wenn das Werkzeug sie in der fertigen Ausgabe nachweist“ — nur
+   eine Ebene höher: sie trifft die **Messmethodik selbst**.
+
+**Maßnahme:** Dauerprüfung analog `finde_freie_namen.py` — ein Skript, das alle
+`messe_*.py` / `bewerte_*.py` auf die Blockbildung absucht und meldet, wo
+Grenzen fest gesetzt werden. Sonst wiederholt sich das beim nächsten Werkzeug.

@@ -748,6 +748,17 @@ und `marktbreite` haben **je null** Importe aus `scheduler/`, `ui/`, `main.py`,
 
 In der Produktion läuft weiter das Altsystem mit 34.611 Zeichen Prompt.
 
+> ⚠⚠ **ÜBERHOLT — Stand 25.08.2026.** Der Absatz oben beschreibt den
+> **12.08.** und wurde nie nachgezogen. Heute gilt das Gegenteil:
+> `Basisinfos/config.yaml:2100` führt `aktiv_fuer: ["krypto","aktien",
+> "rohstoffe","themen_etf","hedge"]` bei `betriebsart: scharf` — **alle fünf
+> Gruppen stehen auf der Rollen-Kette** (seit 15.08.).
+> `scheduler/background.py:3373-3392` überspringt den Allocator,
+> `:3535-3542` den Multi-Asset-Batch. Die **alten** `build_facts()` sind im
+> Automatikbetrieb **stillgelegt** — erreichbar nur noch über die manuellen
+> GUI-Knöpfe und den weiterlaufenden `marktscan_job`. Der Absatz bleibt als
+> Zeitmarke stehen; maßgeblich ist dieser Kasten.
+
 ---
 
 
@@ -2013,3 +2024,100 @@ alte Kette war die Antwort nachweislich nein.
 
 **Vorrang:** N-7 steht **vor** N-6. Ob ein Eingriff in die Kette sich lohnt,
 hängt davon ab, ob die Kette selbst trägt.
+
+
+---
+
+## N-8 — Der Anlass braucht getrennte Fristen für Spot und Hebel
+
+**Nutzervorgabe 25.08.2026:**
+
+> „Zum Anlass — wir müssen unterscheiden können, damit es funktioniert. **SPOT
+> und Hebel sind zwei unterschiedliche Varianten**, welche auch unterschiedlich
+> zu behandeln sind — längerfristig vs. kurzfristig, langsam vs. schnelle hohe
+> bzw. tiefe Bewegungen.“
+
+**Der Stand:** heute läuft **eine** Anlass-Frist für beide Instrumente. Die
+Messlage sagt, dass das nicht passt:
+
+| | gemessen | Quelle |
+|---|---|---|
+| Haltedauer Hebel (gehandelte Positionen, n=188) | Median **0,30 Tage**, 75 % unter 1 Tag | `Zielgroessen` 788-796 |
+| Haltedauer aus Signalauflösung (n=86/62) | Median **2,57 Tage** | ebenda |
+| Anlass-Sperrquote spot | 9.377 von 29.616 = **31,7 %** | Umbauplan 16970-16990 |
+| Anlass-Sperrquote hebel | 3.165 von 13.725 = **23,1 %** | ebenda |
+| Anlass-Sperrquote absicherung | 1.071 von 1.102 = ⚠️ **97,2 %** | ebenda |
+| Median-Abstand zweier Bewertungen | **0,25 h** | ebenda |
+
+⚠️ **Die 97,2 % bei der Absicherung sind der schärfste Hinweis:** dort ist der
+Anlassfilter praktisch eine Totalsperre — dieselbe Frist, völlig andere
+Wirkung. Das ist kein Feinschliff, sondern ein Instrument, das faktisch
+abgeschaltet ist, ohne dass es je so entschieden wurde.
+
+**Was N-8 NICHT ist:** eine Messfrage nach der besten Frist. Der Anlassfilter
+ist eine **Bremse ohne Potentialaussage** — er sagt „schon gefragt“, nicht
+„lohnt sich nicht“. Nach N-5 gehört er damit in dieselbe Kategorie wie der
+Cooldown: **Mittel zum Zweck**, nicht Begründung. N-8 ist deshalb dem
+GRUND-Thema **nachgeordnet** und nur so lange relevant, wie die Uhr den Takt
+gibt.
+
+**Abhängigkeit:** ohne diese Trennung ist auch die Trichtermessung schief —
+`anlass` und `wiederholung` verlieren zusammen **1.697 von 2.160 Fällen
+(79 %)**, und die beiden Instrumente sind darin nicht getrennt ausgewiesen.
+
+---
+
+## ⚠️ N-9 — `fakten_roh` existiert nicht: elf Zusatzfakten und das Lagebild erreichen KEINE Mail
+
+**Gefunden und an der Quelle bestätigt am 25.08.2026.** Zwei Lesestellen in
+`agent/rollen_lauf.py` greifen auf einen Schlüssel zu, den **niemand setzt**:
+
+```
+:1487   zusatz, _fehlt = FQ.abbilden(bc_ein.get("fakten_roh"), ...)
+:1537   _mb = (bc_ein.get("fakten_roh") or {}).get("marktlage_beurteilung") or {}
+```
+
+`grep -rn "fakten_roh" --include=*.py .` findet **projektweit genau diese zwei
+Zeilen** — beides Lesezugriffe, kein einziger Schreibzugriff. `bc_ein` entsteht
+in `rollen_eingabe.baue_befund_eingabe` und wird später nur um
+`marktlage_beurteilung` (`:1035`) und `absicherungslage` (`:1054`) ergänzt.
+
+**Folge 1 — elf Zusatzfakten erscheinen in keiner Mail.**
+`faktenblock_quellen.abbilden` gibt bei `None` sofort `({}, alles)` zurück.
+Betroffen (`faktenblock.py:111-119`): `funding_eur_tag`, `put_skew`,
+`retail_long_pct`, `btc_relativwert_pct`, `kgv`, `insider_saldo`,
+`short_interest_pct`, `analysten_trend`, `lagerbestand_trend`, `cot_netto_pct`,
+`portfolio_exposure_eur`. Bestand seit `6b31647` (13.08.).
+
+**Folge 2 — das Lagebild von Rolle A steht in keiner Mail.**
+`marktlage_beurteilung` liegt direkt in `bc_ein`, nicht darunter. Die Zeile
+sucht eine Ebene zu tief. Der Kommentar unmittelbar darüber kündigt genau die
+Reparatur an, die dadurch nie greift: *„Es ging bisher NUR ins Modell; der
+Leser sah das Urteil, nicht die Lage."*
+
+**Folge 3 — sechs der elf Pfade träfen auch mit korrekter Eingabe nie.**
+`faktenblock_quellen.PFADE:32-55` behauptet, die Pfade stammten „aus echten
+gespeicherten Fakten“. Sechs davon (`netto_meldungen`,
+`anteil_streubesitz_prozent`, `short_interest_prozent`, `netto_long_prozent`,
+`summe_eur`, `lagerbestaende.tendenz`) kommen **projektweit nur in dieser Datei
+selbst** vor. Die echten Schlüssel heißen `anzahl_kaeufe`/`anzahl_verkaeufe`
+(`sec_edgar.py:252`), `days_to_cover` (`finra.py:116`),
+`managed_money_long_anteil_oi_prozent` (`rohstoff/pipeline.py:394`),
+`ungesichertes_long_exposure_usd` (`hedge/pipeline.py:299`).
+
+⚠️ **Warum keine Prüfung anschlug:** `pruefe_pakete.py:1404-1417` füttert
+`FQ.abbilden` **direkt** mit `facts_json` aus `hebel_signals` — also mit Fakten
+der **alten** Kette. Der Test prüft die Funktion, **nie die Naht**. Das ist die
+Familie 2.66/2.68 in ihrer reinsten Form und zugleich der Beleg für die
+stehende Vorgabe *„eine Stufe gilt erst als gebaut, wenn das Werkzeug sie in der
+fertigen Ausgabe nachweist“*.
+
+**Einordnung, damit die Erwartung stimmt:** der Faktenblock ist die
+**Nutzer**-Schiene. Das Modell sieht ihn nicht. Eine Reparatur ändert **nichts**
+an der Urteilsqualität — sie stellt die Informationslage des Nutzers her.
+Solange der Bruch steht, ist allerdings **jede Aussage darüber, was der Nutzer
+sieht, falsch**, und jede Messung an der Mail misst etwas anderes als gedacht.
+
+**Aufwand:** Folge 2 ist eine Zeile. Folge 1 und 3 brauchen den Rohfaktensatz
+unter dem Schlüssel plus sechs Pfadkorrekturen. Kein neuer Anbieter, kein
+Kontingent, keine Sammelzeit — alles ist gebaut und wird verworfen.

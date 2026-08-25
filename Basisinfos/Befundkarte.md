@@ -237,6 +237,40 @@ auf 523 Reihen; die Watchlist kann ihn weder bestätigen noch widerlegen.
 
 ---
 
+## 5d. ⚠️ H steht auf VIER ungeprüften Annahmen (25.08.2026)
+
+H ist der einzige tragende Befund des Projekts. Umso wichtiger ist, worauf er
+steht. Vier Zahlen gehen in **jedes** H-Urteil ein und sind **nie** geprüft
+worden — alle vier an der Quelle verifiziert, nicht aus Plänen abgeschrieben:
+
+| | Annahme | Quelle | was kippt, wenn sie fällt |
+|---|---|---|---|
+| **K1** | Totzone **0,5 ATR** — nähere Marken zählen nicht | `lagebeschreibung.py:215-220` | **H selbst** — sie ist die untere Kante *beider* Bänder |
+| **K2** | Phasenindex = Mittel aus `c[j]/c[0]` je Reihe | `simuliere_bremse.py:230-233` | die **Phasenabhängigkeit** (+7,6/+6,0/−6,5) |
+| **K3** | Blockgrenzen liegen **fest** statt zu wandern | `bewerte_neu.py:205` u. a. | die **Schwellen aller H-Urteile seit Kap. 119** |
+| **K4** | Reifeschnitt **250 Handelstage** | `messe_struktur_bereinigt.py` | die Trennung **Phase gegen Reihenalter** |
+
+**K1 ist der Gebührenfehler in neuer Form.** `messe_marken.py:43-46` schreibt
+wörtlich, die Totzone sei *„eine Eigenschaft des Betriebs, keine Annahme dieser
+Messung, und sie bleibt unangetastet“*. Genau so stand achtzehn Kapitel lang
+der Betriebssatz 1,50 % da: als gegeben, nicht als Annahme — und war der
+falsche Maßstab.
+
+**K3 ist die schwerste.** Die eigene Methodikregel 2.47 verlangt wandernde
+Blockgrenzen (*„feste Grenzen lassen immer dieselben Anker gemeinsam reisen"*).
+Die vier Werkzeuge, die die heute gültigen H-Urteile erzeugt haben —
+`bewerte_neu`, `messe_klassen`, `messe_ueberleben`, `messe_dosis` — setzen
+sie **fest**. Die älteren (`messe_marken`, `messe_struktur_bereinigt`) ließen
+sie wandern. Die Richtung des Fehlers ist **nicht vorhersagbar**: Regel 2.47
+sagt „Schwelle zu niedrig“, die Messung in 2.48 zeigte das Gegenteil — dort
+dominierte die Läufezahl.
+
+⚠️ **Bis S1–S4 gelaufen sind, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
+Vorabfestlegung mit Messplan, Schwellen und vorab benannter Lesart:
+`Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`.
+
+---
+
 ## 6. Was für den Betrieb gilt
 
 ⚠️ **Dieser Abschnitt stand bis Kapitel 124 auf dem Stand von 118** („nichts
@@ -494,10 +528,20 @@ sieht das, statt ein Etikett zu bekommen.
 | | Trichter | Rangplatz | Lebendigkeit | Rolle G | **H gemessen** |
 |---|---|---|---|---|---|
 | **krypto** | eigener Faktor (34 Reihen) | ✔ | ✔ | **2 Quellen** | **✔ 523 Reihen** |
-| aktien | eigener Faktor ⚠️ **2 Reihen** | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+| aktien | eigener Faktor ⚠️ **2 Reihen** | ✘ | ✘ | **2 Quellen** | ✘ **nie** |
 | etf | eigener Faktor ⚠️ 4 Reihen | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
-| rohstoffe | *Rückfall* | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+| rohstoffe | *Rückfall* | ✘ | ✘ | **2 Quellen** | ✘ **nie** |
 | hedge | *Rückfall* | ✘ | ✘ | **0 Quellen** | ✘ **nie** |
+
+> ⚠️ **KORREKTUR 25.08.2026.** Diese Spalte stand bis heute mit
+> „0 Quellen“ für **vier** Klassen. An der Quelle geprüft ist das für
+> **zwei** falsch: `positionierung.py:709` führt seit dem 17.08. den
+> Aktien-Zweig (Eindeckungsdauer FINRA + Insidergesäfte SEC),
+> `:728` den Rohstoff-Zweig (COT-Perzentil + physische ETF-Metallmenge);
+> `mindestkriterien.QUELLEN_G:114-128` führt beide Paare, `MINDEST_QUELLEN_G`
+> ist 2. **Richtig bleibt es für ETF und Hedge** — für die gibt es in
+> `positionierung.lage` überhaupt keinen Zweig. Der Befund darunter
+> „vier Klassen nicht verdrahtet“ war also zur Hälfte veraltet.
 
 **Zwei verschiedene Ursachen, und nur eine ist lösbar:**
 
@@ -508,11 +552,13 @@ eine auswertbare Stichprobe** — unabhängig davon, wie gut der Code wird. Das
 steht als **C1** im Zwischenstand: *Nutzerentscheidung, Code kann das nicht
 lösen.*
 
-**(2) Rolle G ist für vier Klassen nicht verdrahtet** — und das **ist**
-lösbar: die Clients liegen **fertig** in `api/` (`finra`, `sec_edgar`,
-`cftc_cot`) und sind nicht angeschlossen. Deshalb steht dort 0 von 2 Quellen,
-und deshalb bleibt `sperren: []` leer — ein scharfes Kriterium hätte Rolle G
-für diese Klassen sofort stillgelegt.
+**(2) Rolle G ist für ZWEI Klassen nicht verdrahtet** (Stand 25.08.) — und
+das **ist** lösbar. Für Aktien und Rohstoffe wurde es am 17.08. nachgeholt
+(`finra`, `sec_edgar`, `cftc_cot`, ETF-Metallbestand). Offen sind **Themen-ETF
+und Hedge**: dort gibt es in `positionierung.lage` keinen Zweig, `saetze()`
+bleibt leer, `zweite_meinung.py:549-550` bricht ab. Deshalb steht dort 0 von 2
+Quellen, und deshalb bleibt `sperren: []` leer — ein scharfes Kriterium hätte
+Rolle G für diese beiden Klassen sofort stillgelegt.
 
 ⚠️ **Der Vorfilter-Schatten läuft ab dem 22.08. über ALLE Klassen** — mit dem
 Vermerk „auf dieser Klasse nie gemessen". Sonst hätten wir in vier Wochen
