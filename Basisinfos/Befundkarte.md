@@ -223,6 +223,10 @@ Reihen). Beide erledigen den nächsten Kandidaten in Stunden statt Wochen.
 > **H verbessert um rund 0,15 R je Trade — an beiden Sätzen gleich. Zum
 > Betriebssatz reicht das nicht bis über null.**
 
+⚠️ **KORRIGIERT 25.08. — siehe 6.0.** Der folgende Satz gilt als
+**Geldrechnung**, nicht als Qualitätsurteil: für „ist das ein guter Trade"
+zählt der **Referenzsatz**, und dort trägt H (+0,114 R).
+
 ⚠️ **Die bindende Größe ist nicht der Filter, sondern die Handelsgebühr.** H
 schließt vier Fünftel der Lücke; das letzte Fünftel schließt nur der
 Handelsplatz.
@@ -254,12 +258,73 @@ Handelsplatz, nicht der Filter.
 | | |
 |---|---|
 | H als **Vorfilter** (Signalzahl, LLM-Budget) | zulässig — er nimmt nachweislich die schlechteren weg |
-| H als **Freigabe zum Handeln** | **nein**, solange 1,50 % gilt |
+| H als **Freigabe zum Handeln** | ⚠️ **nein — aber NICHT wegen der Gebühr**, siehe Korrektur 25.08. unten |
 | Nachweis auf 29 Watchlist-Symbolen | Punktschätzer **+4,8**, stimmig, **nicht unabhängig bestätigbar** (122.3) |
 | Handelbarkeit im dünnsten Band | ⚠️ **mit Kursdaten unprüfbar** (121.5) — 18 von 29 liegen dort |
 
 **Die Überlebensverzerrung** ist seit 121 **korrigiert**: 523 Reihen inklusive
 der 176 eingestellten Paare. H trägt dort **stärker**, nicht schwächer.
+
+### ⚠️ 6.0 KORREKTUR 25.08.2026 — dieser Abschnitt fiel hinter Kapitel 119 zurück
+
+**Nutzerhinweis 25.08.:** *„H sehe ich etwas anders bei der Freigabe — wieder
+der Hinweis: **nicht der Handelsplatz oder die Gebühr entscheidet.** Wenn,
+dann sollte der Standardsatz zur Anwendung kommen."*
+
+**Er hat recht, und es ist kein Sonderfall, sondern ein Rückfall.** Kapitel 119
+hat genau diesen Fehler bereits behoben:
+
+> ⚠️ **„Der Fehler, der achtzehn Kapitel durchzogen hat."** Jedes Urteil der
+> Kapitel 99–118 lief über den Abstand zum Breakeven — gerechnet wurde mit
+> **1,5 %, also Bitpandas Brokerspread**.
+>
+> **Nutzer, 20.08.:** *„Die Kalkulation SOLL und MUSS börsenunabhängig
+> passieren. Ich rede die ganze Zeit von einem GUTEN TRADE = Kurs &
+> Wahrscheinlichkeit — das Gebührenthema ist NICHT das Thema eines NEUTRALEN
+> Trades."*
+
+**Die beiden Sätze oben blieben stehen und tun genau das wieder:**
+
+| Satz | warum er so nicht gilt |
+|---|---|
+| *„zum Betriebssatz trotzdem nicht profitabel"* | richtig als **Geldrechnung**, falsch als **Qualitätsurteil** |
+| *„Die bindende Größe ist der Handelsplatz, nicht der Filter"* | ⚠️ macht **Bitpandas Spread zum Maßstab für einen guten Trade** — genau das, was 119 verworfen hat |
+
+**Was stattdessen gilt:**
+
+> **H's Vorsprung ist gebührenfrei +4,5 Punkte** (Block-Permutation: Schwelle
+> +2,6 → **TRÄGT**). Am **Referenzsatz 0,30 %**: +3,1 Punkte, **+0,114 R** je
+> Trade. **Diese Zahl hängt an keinem Gebührensatz** — sie ist die Antwort auf
+> *Kurs & Wahrscheinlichkeit*.
+
+⚠️ **Damit ist H als Freigabe NICHT durch die Gebühr ausgeschlossen.** Nach
+`Vollumstieg 15.08.` gilt ohnehin: *„System bemisst den Trade, Nutzer das
+Portfolio."* Der Betriebssatz gehört in die **Geldrechnung der Mail**, nicht
+in die Freigabeentscheidung.
+
+### ⚠️ 6.0b Der ECHTE Grund, warum H noch nicht freigibt
+
+Er steht in `agent/vorfilter.py` und hat mit Gebühren nichts zu tun:
+
+> **„Der Befund steht auf fremden Reihen, nicht auf unseren."** Gemessen auf
+> **523 Binance-USDT-Reihen**. Auf der echten Watchlist stimmt der
+> Punktschätzer (**+4,8**) — aber **27 Reihen tragen die nötige Schwelle
+> (+9,2) NICHT.**
+>
+> „Ein Schnitt dieser Größe wird nicht auf einen Befund von fremden Reihen
+> gebaut. Deshalb erst der Schatten: vier Wochen mitschreiben, dann prüfen, ob
+> die von H aussortierten Signale WIRKLICH die schlechteren waren — auf
+> unseren eigenen."
+
+**Dazu zwei Eigenschaften von H, die jede Freigabeentscheidung mitbestimmen:**
+
+| | |
+|---|---|
+| **Seltenheit** | H trifft auf **3,3 % der Ankertage** zu — „aus 24 Eröffnungen würde ungefähr eine" |
+| ⚠️ **nur LONG** | Kapitel 110: die Spiegelbedingung H' **spiegelt nicht**. Für SHORT ist H **unbelegt** → `h = None`, nicht `h = False` |
+
+**Die Freigabeentscheidung hängt also an V2** (~20.09., vier Wochen Schatten),
+**nicht am Gebührensatz.**
 
 ### 6.1 Was in der Produktion nachgeprüft wurde
 
