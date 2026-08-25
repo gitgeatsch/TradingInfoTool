@@ -254,3 +254,153 @@ welcher Teil trägt nicht: die Auswahl, das Urteil, oder beides?
 ⚠️ **Schritt 3 ist ein echter Haltepunkt.** Zeigt Stufe 1, dass die Kette den
 Zufall nicht schlägt, wäre es falsch, danach einen Messstandard für sie zu
 bauen — dann steht eine andere Frage an.
+
+---
+
+# Nachtrag 25.08.: Das Zielbild — und warum die Teile einzeln gemessen werden müssen
+
+*Nutzervorgabe, wörtlich: „**Nicht die Uhr soll der Auslöser werden**, sondern
+bei der Bewertung eines Assets sollen die Informationen **in Zusammenhang
+gebracht** werden, um eben nur einen Trade vorzuschlagen, der ‚wahrscheinlich'
+gut ist — die Kunst dabei ist, dies umzusetzen. […] wir benötigen ein
+Messkonzept, welches die **gesamte Kette und auch deren Teile unabhängig**
+messen kann und muss, sonst werden die Ergebnisse verzerrt."*
+
+## A. Das Zielbild — der Auslöser ist kein zusätzliches Signal
+
+**Die Praxis (CSTI) trennt „der Aufbau liegt vor" von „jetzt ist der Moment"**,
+und dem Projekt fehlt der zweite Teil: *„Unsere Kette kennt nur den Aufbau; den
+Moment gibt die Uhr vor."*
+
+⚠️ **Die naheliegende Antwort wäre ein separater Trigger. Die Nutzervorgabe
+sagt etwas Besseres:**
+
+> **Der Auslöser soll aus der ZUSAMMENFÜHRUNG entstehen, nicht daneben stehen.**
+> Wenn die Bewertung eines Assets hoch genug ausfällt, *ist* das der Moment.
+
+**Das ist genau, wofür `agent/wahrscheinlichkeit.py` gebaut wurde** — und der
+Grund, warum es heute nicht trägt, lässt sich beziffern:
+
+| | |
+|---|---|
+| Basisrate (CRV 2,0) | 33,3 % |
+| **tragende Beiträge** | **genau einer** — Vorfilter H, +4,5 Punkte |
+| Summe | 37,8 % |
+
+Ein einzelner Beitrag von 4,5 Punkten kann nicht zwischen „jetzt" und „nicht
+jetzt" trennen. **Die „Kunst der Umsetzung" ist deshalb keine Programmierfrage,
+sondern eine Messfrage:** es braucht *mehrere* Beiträge, die (a) einzeln
+tragen und (b) **voneinander unabhängig** sind.
+
+⚠️ **Punkt (b) ist der, an dem so etwas scheitert.** Drei Größen, die
+dasselbe messen, addieren sich zu einer Scheinsicherheit. Das Projekt hat den
+Fall bereits gehabt: Marktphase, Driftband und Geometrie standen im Verdacht,
+„dieselbe Größe unter drei Namen" zu sein (alle über den ATR) — geprüft in
+Kapitel 103, und der Verdacht traf dort nicht zu. **Bei jedem neuen Beitrag ist
+diese Prüfung zu wiederholen.**
+
+## B. Warum Gesamtmessung allein verzerrt
+
+Die Kette hat elf Stufen. Misst man nur das Endergebnis, ist **nicht
+unterscheidbar**, ob ein Effekt der Auswahl, dem Lagebild, dem Urteil oder der
+Geometrie gehört.
+
+**Konkret und aktuell:** Seit A1 wählt der Rangplatz die Kandidaten aus, und
+der Rangplatz **ist gemessen tragend** (+0,79 %, t 3,29). Ein gutes
+Gesamtergebnis wäre also erklärbar, **ohne dass das LLM irgendetwas
+beigetragen hat**. Wer das nicht trennt, schreibt dem Modell die Leistung der
+Auswahl gut.
+
+> **Das ist die Verzerrung, die Sie meinen — und sie geht in beide Richtungen:**
+> ein schlechtes Gesamtergebnis könnte ein gutes Urteil verdecken, das von
+> einer schlechten Geometrie zunichtegemacht wird.
+
+## C. Zwei Arten von Teilmessung
+
+### C1 — Zerlegung auf Altdaten *(kostenlos, sofort)*
+
+**Prinzip: schichten statt weglassen.** Der Effekt eines Teils wird sichtbar,
+indem man *innerhalb* konstanter anderer Teile vergleicht.
+
+| Teil | wie isoliert | in der DB vorhanden |
+|---|---|---|
+| **Auswahl (A1)** | Vergleich **innerhalb desselben Rangplatzes** — trägt das Urteil noch, wenn der Rang konstant gehalten wird? | ✔ `auswahl_schatten` |
+| **Urteil (Rolle BC)** | ERÖFFNEN gegen NICHTS_TUN **bei gleichem Rang und gleicher Marktphase** | ✔ `action` |
+| **Geometrie** | dieselbe Aktion, verschiedene Stopabstände → trägt die Zonenwahl? | ✔ `entry/stop/take_profit` |
+| **Z1-Treue** | Signale **mit** gegen **ohne** Zahlenverstoß | ✔ seit P1 (`z1_verletzt`) |
+| **Z.ai-Gegenprüfung** | Übereinstimmung gegen Abweichung | ✔ `zai_stimmen` |
+| **Entscheider** | „trägt sich" gegen „trägt sich nicht" — er zählt bereits, filtert nicht | ✔ Trichter |
+
+⚠️ **Das ist der eigentliche Gewinn dieser Datenlage:** Fünf der sechs Teile
+sind **ohne einen einzigen Modellaufruf** trennbar, weil die neue Kette ihre
+Zwischenergebnisse mitschreibt. Genau dafür wurden `auswahl_schatten`,
+`z1_verletzt` und die Trichterzählung gebaut.
+
+### C2 — Ablation mit neuen Läufen *(kostet Kontingent)*
+
+Für die Teile, die **vor** dem Urteil liegen und keine Spur hinterlassen —
+einzelne **Faktenblöcke** und das **Lagebild**. Hier hilft nur: denselben Anker
+einmal **mit** und einmal **ohne** den Block fragen.
+
+⚠️ **Und hier die schwerste Warnung aus der eigenen Geschichte:**
+
+| Ablationslauf | Einzeleffekte |
+|---|---|
+| bei **12** Ankern | **+0,281 / +0,182** |
+| bei **28** Ankern | **+0,014 / −0,013** |
+
+> **„Kleine Stichproben erzeugen zuverlässig Scheinbefunde in der erwarteten
+> Richtung."** Der Effekt verschwand beim bloßen Verdoppeln.
+
+**Konsequenz:** Ablation unter ~200 gepaarten Ankern je Arm ist nicht
+interpretierbar. Bei 2 Rollen × 2 Armen × 200 Ankern sind das **800 Aufrufe**
+je untersuchtem Block — das ist der Preis, und er muss vorab bekannt sein.
+**Deshalb steht C2 hinter C1 und wird nur für Blöcke gefahren, die C1 als
+verdächtig ausweist.**
+
+## D. Die Unabhängigkeitsprüfung — Pflicht bei jedem neuen Beitrag
+
+Bevor ein Beitrag in `wahrscheinlichkeit.BEITRAEGE` aufgenommen wird:
+
+| Prüfung | Frage |
+|---|---|
+| **1 — Einzelwirkung** | Trägt er allein, über der Placebo-Schwelle? |
+| **2 — Zusatzwirkung** | Trägt er **zusätzlich zu H**, oder nur, wo H ohnehin gilt? |
+| **3 — Kollinearität** | Korreliert er mit einem bestehenden Beitrag? Sind es zwei Namen für dieselbe Größe? |
+| **4 — Vorzeichenstabilität** | Gleiches Vorzeichen in beiden Marktphasen? |
+
+⚠️ **Prüfung 2 hat schon einmal ein Vorzeichen gedreht:** Der Rangplatz trägt
+*für sich* (+0,79 %, t 3,29), aber **innerhalb von H** schneidet das beste
+Fünftel **5,8 Punkte schlechter** ab. Er steht deshalb zu Recht auf `null` —
+und eine Ebene höher, als Auswahl. **Ohne Prüfung 2 wäre er als positiver
+Beitrag eingebaut worden und hätte geschadet.**
+
+## E. Was das für die Reihenfolge bedeutet
+
+| Schritt | | Kosten |
+|---|---|---|
+| **1** | Gesamtkette: F1/F2 (Zufall, EMA-200) | keine |
+| **2** | **Zerlegung C1** — sechs Teile einzeln, geschichtet | keine |
+| **3** | Positivkontrolle für beide | keine |
+| **4** | Bewertung: **wem gehört der Effekt?** | — |
+| **5** | C2 nur für Teile, die Schritt 4 als unklar ausweist | ⚠️ ~800 Aufrufe je Block |
+
+> ⚠️ **Schritt 2 ist der eigentliche Kern und war in der ersten Fassung dieses
+> Konzepts zu schwach.** Dort stand die Teilfrage nur als „F3, eine Näherung".
+> Sie ist keine Näherung, sondern mit den vorhandenen Daten sauber
+> durchführbar — und ohne sie ist das Gesamtergebnis, wie Sie sagen, verzerrt.
+
+## F. Und der Bezug zum Zielbild
+
+Die Zerlegung beantwortet direkt, **welche Beiträge es für die Zusammenführung
+überhaupt gibt**:
+
+- Trägt das **Urteil** bei konstantem Rang? → dann ist es ein Beitrag
+- Trägt die **Z1-Treue**? → dann ist sie ein Beitrag
+- Trägt die **Z.ai-Übereinstimmung**? → dann ist sie ein Beitrag
+
+**Jeder Teil, der die vier Prüfungen aus D besteht, wird ein Eintrag in
+`wahrscheinlichkeit.BEITRAEGE` — mit Punkten statt mit `nie`.** Und erst wenn
+dort mehrere unabhängige Beiträge stehen, kann die Zusammenführung das leisten,
+was das Zielbild verlangt: **den Moment aus der Bewertung selbst bestimmen,
+statt ihn von der Uhr zu nehmen.**
