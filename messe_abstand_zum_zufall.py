@@ -67,14 +67,54 @@ _POPULATIONEN = (("real", "outcome_"), ("veto_schatten", "veto_outcome_"),
                  ("halten_schatten", "selbst_halten_outcome_"))
 
 
-def _sammle(conn, horizont: int) -> list[dict]:
+def _sammle(conn, horizont: int, kette: str = "rollen") -> list[dict]:
+    """Signale einsammeln - AUF EINE KETTE BESCHRAENKT.
+
+    ⚠️ DER FILTER FEHLTE BIS ZUM 25.08.2026, UND ER IST NICHT OPTIONAL.
+    Dieses Skript entstand am 09.08., als es nur EINE Kette gab. Die
+    Rollen-Kette kam am 12.-15.08. dazu - seither liegen in `signals` zwei
+    Populationen nebeneinander:
+
+        alte Kette / NULL   2.983
+        quelle_kette=rollen 1.997
+        hebel_signals       1.998   <- kennt die Spalte GAR NICHT, also alt
+
+    Ungefiltert misst dieses Skript 4.981 alte gegen 1.997 neue Signale -
+    also ueberwiegend die ALTE Kette, und das Ergebnis traegt trotzdem den
+    Namen der neuen. Genau davor warnt `trefferbilanz.zaehle()` im eigenen
+    Docstring: *"Sie in einen Topf zu werfen waere der klassische Fehler: die
+    alte Kette hatte andere Fakten, andere Prompts und ein anderes
+    Aktionsvokabular - ihre Quote sagt nichts ueber diese."*
+
+    `kette`:
+        "rollen"  nur die neue Kette (Vorgabe)
+        "alt"     nur Zeilen ohne `quelle_kette` - inkl. aller hebel_signals
+        "alle"    ausdruecklich beides, fuer einen bewussten Vergleich
+
+    ⚠️ KEIN STILLER RUECKFALL. Eine Tabelle ohne die Spalte `quelle_kette`
+    gehoert zur ALTEN Kette; bei `kette="rollen"` wird sie deshalb ganz
+    uebersprungen und das GEMELDET, statt sie kommentarlos mitzunehmen."""
     reihen = lade_kursreihen(conn)
     from config import get_watchlist
     idx = _assetklasse_index(get_watchlist(), "messe_abstand_zum_zufall()")
     zeilen = []
     for tabelle, ist_hebel in (("signals", False), ("hebel_signals", True)):
         spalten = {r[1] for r in conn.execute(f"PRAGMA table_info({tabelle})")}
-        for row in conn.execute(f"SELECT * FROM {tabelle}"):
+        hat_kette = "quelle_kette" in spalten
+        if kette == "rollen" and not hat_kette:
+            print(f"  [uebersprungen] {tabelle}: keine Spalte `quelle_kette` "
+                  f"-> gehoert zur alten Kette")
+            continue
+        if kette == "alt" and hat_kette:
+            wo = "WHERE quelle_kette IS NULL"
+        elif kette == "rollen":
+            wo = "WHERE quelle_kette = 'rollen'"
+        else:
+            wo = ""
+        n_tab = conn.execute(
+            f"SELECT COUNT(*) FROM {tabelle} {wo}").fetchone()[0]
+        print(f"  [{tabelle}] {n_tab} Zeilen fuer Kette '{kette}'")
+        for row in conn.execute(f"SELECT * FROM {tabelle} {wo}"):
             z = _zonen_absolut(row)
             if z is None:
                 continue
@@ -174,11 +214,19 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--db", required=True)
     p.add_argument("--horizont", type=int, default=14)
+    # ⚠️ VORGABE IST DIE NEUE KETTE (25.08.2026). Wer die alte messen will,
+    # sagt es ausdruecklich - nicht umgekehrt. Der stille Mischtopf war der
+    # Zustand bis heute und haette die neue Kette mit 4.981 alten gegen 1.997
+    # neue Signale gemessen.
+    p.add_argument("--kette", choices=("rollen", "alt", "alle"),
+                   default="rollen",
+                   help="welche Signalkette gemessen wird (Vorgabe: rollen)")
     args = p.parse_args()
 
     conn = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-    zeilen = _sammle(conn, args.horizont)
+    print(f"KETTE: {args.kette}")
+    zeilen = _sammle(conn, args.horizont, args.kette)
     print(f"Bewertbare Zeilen: {len(zeilen)} (Horizont {args.horizont})")
     print(f"Verteilung: {dict(Counter(z['population'] for z in zeilen))}")
     print()

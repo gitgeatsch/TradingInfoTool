@@ -629,3 +629,107 @@ NICHT überträgt.** Ob der Bullen-Befund nach diesem Wechsel noch gilt, ist
 | **2** | `messe_abstand_zum_zufall.py` braucht einen **Kettenfilter**, bevor es für Stufe 1 taugt |
 | **3** | Die **kursbasierten** Werkzeuge sind brauchbar — sie tragen Methode ② |
 | **4** | Die Frage *„wann wirkt H"* ist **die** offene H-Frage, und sie ist mit Kursdaten viermal vergeblich angegangen worden (109/110/111/115). ⚠️ **Sie ist damit ein Kandidat für einen Kanal AUSSERHALB der Kursreihe** — also für genau das, was in der Abhängigkeitskarte als *„der einzige mögliche Partner für H, der nicht per Konstruktion mit ihm korreliert"* steht |
+
+---
+
+# Nachtrag 25.08. (4): Schritt 1 und 2 ausgeführt — Ergebnis und ein Scheinbefund
+
+## A. Schritt 1 erledigt — der Kettenfilter
+
+`messe_abstand_zum_zufall.py` hat jetzt `--kette {rollen|alt|alle}`, **Vorgabe
+`rollen`**. Tabellen ohne die Spalte `quelle_kette` (also `hebel_signals`)
+werden bei `rollen` **übersprungen und das gemeldet**, statt still mitgenommen
+zu werden.
+
+## B. ⚠️ Schritt 2 — die Machbarkeitsprüfung hat einen Scheinbefund abgefangen
+
+**Der erste Lauf meldete Traumzahlen:** Zielquote **85,0 %**, Abstand zum
+Breakeven **+49,0 Punkte**, „SCHLÄGT den Zufall" in jeder Gruppe.
+
+**Das ist falsch, und zwar vollständig:**
+
+| Marktentwicklung im Messfenster (13.–23.08.) | |
+|---|---|
+| Median über 49 Kryptowerte | **+15,2 %** |
+| Anteil gestiegener Werte | **94 %** |
+
+> **Die 85 % messen den Marktanstieg, nicht die Kette.** In einem Markt, in
+> dem 94 % der Werte steigen, trifft fast jedes Long-Ziel.
+
+⚠️ **Und der methodische Kern dahinter:** Das Werkzeug misst trotz seines
+Namens den Abstand zum **CRV-Breakeven**, nicht den Abstand zu einer
+**Zufallsauswahl**. Ersteres ist marktabhängig, letzteres wäre marktneutral.
+**Für N-7 brauchen wir den zweiten Vergleich** — und der ist im Werkzeug nicht
+vorhanden.
+
+## C. Warum die marktneutrale Messung heute NICHT geht
+
+Die Daten dafür lägen in `auswahl_schatten` (alle Kandidaten je Lauf, mit
+`gewaehlt`-Kennzeichen und der späteren `aktion`). Aber:
+
+| | |
+|---|---|
+| `auswahl_schatten` läuft seit | **23.08. 14:42** — gut **ein Tag** |
+| Zeilen / Läufe / gewählt / mit Aktion | 6.261 / 580 / 696 / **132** |
+| ⚠️ **ERÖFFNEN unter den Aktionen** | **null** |
+
+**Damit ist Stufe 1 heute nicht durchführbar** — nicht wegen der Werkzeuge,
+sondern wegen fehlender Daten. Das ist genau das Ergebnis, für das die
+Machbarkeitsprüfung da war.
+
+## D. ⚠️ Vier Befunde aus dem Trichter, die eigenständig wichtig sind
+
+**200 Läufe seit A1 scharf (23.08. 14:00): hinein 2.160 → heraus 37.**
+
+| Stufe | verloren | bestanden |
+|---|---:|---:|
+| `anlass` (Bremse) | 1.252 | — |
+| **`wiederholung`** (Cooldown) | **445** | 48 |
+| `auswahl` (A1) | 335 | **493** |
+| `fakten` | ⚠️ **80** | — |
+| `urteil` | 1 | 47 |
+| `aktion` | 10 | 37 |
+| `geometrie` | — | 25 |
+| **`entscheider`** | **25** | ⚠️ **0** |
+
+**D1 — Seit dem 23.08. gibt es kein einziges ERÖFFNEN mehr.** Nur noch
+Bestandsverwaltung: 74 NACHKAUFEN, 31 REDUZIEREN, 18 NICHTS_TUN, 9 VERKAUFEN.
+⚠️ **Zu prüfen, ob das Marktlage oder Mechanik ist** — ein Tag reicht für kein
+Urteil, aber es ist der Zustand, vor dem `auswahl.stumme_laeufe()` warnen soll.
+
+**D2 — A1 ist NICHT der Hauptfilter.** Die Auswahl lässt **493** durch, der
+**Cooldown** entfernt davon **445**. Die Uhr ist bei der *Auswahl* entmachtet
+(`R-A9`), beim *Takt* entscheidet sie unverändert.
+
+**D3 — `fakten` verliert 80 Symbole.** Das ist eine **Datenlücke**, keine
+Bremse, und gehört einzeln nachgesehen.
+
+**D4 — Der Entscheider lässt NICHTS durch: 0 von 25.**
+
+## E. ⚠️ Der wichtigste Befund — und er widerlegt meine eigene Hypothese
+
+Ich hatte vermutet, der Entscheider falle nur deshalb auf null, weil er mit
+**1,5 %** (Bitpandas Brokerspread) rechnet — nachgeprüft: **er tut das
+tatsächlich** (`trefferbilanz.KOSTEN_JE_SEITE['krypto'] = 0.015`), und nach
+Kapitel 119 wäre der Referenzsatz richtig.
+
+**Aber die Rechnung gegen die 107 echten Signale mit voller Geometrie zeigt:**
+
+| Gebührensatz | davon tragen sich |
+|---|---|
+| Betrieb 1,50 % (heute) | **0 von 107** |
+| **Referenz 0,30 %** | ⚠️ **0 von 107** |
+
+> **Der Gebührensatz ist NICHT die Ursache.** Die Ursache ist Arithmetik:
+> ohne einen tragenden Beitrag bleibt die Quote auf der **Basisrate
+> `1/(1+CRV)`**, und der Breakeven `(1+Kosten)/(1+CRV)` hat **denselben
+> Nenner** — er liegt bei Kosten > 0 **immer** darüber, bei jedem Satz.
+
+**Das bestätigt das Zielbild von der anderen Seite:** Es reicht nicht, den
+Gebührensatz zu korrigieren. **Es braucht tragende Beiträge in
+`wahrscheinlichkeit.BEITRAEGE`** — und heute gibt es genau einen (H, +4,5),
+der zudem selten ist (3,3 % der Ankertage) und dessen Vorzeichen mit der
+Marktphase dreht.
+
+⚠️ **Der Gebührensatz bleibt trotzdem zu korrigieren** (N-5, Kapitel 119) —
+aber als Frage der Richtigkeit, nicht als Hebel auf die Signalzahl.
