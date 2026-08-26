@@ -1368,8 +1368,29 @@ AUF, braucht sie eine **Phasen-Abschaltung**."*
 der Erwartungswert fällt trotzdem — mehr kleine Gewinne, abgeschnittene große.
 Im Aufwärtsmarkt ist das ein Verlustgeschäft.
 
-⚠️ **Zwei Einschränkungen, die dazugehören:**
-1. **Keine Signifikanzschwelle.** Das Werkzeug stammt vom 04.08., vor
+### ✔ BLOCK-BOOTSTRAP (26.08.) — der Schaden ist belegt
+
+⚠️ **Keine Permutation, sondern Bootstrap** (Methodik 2.55): „mit" und
+„ohne" sind deterministische Umrechnungen **desselben** Pfades an
+**denselben** Ankern — es gibt keine Zuordnung, die eine Permutation
+zerstören könnte. Genau daran ist Kapitel 123 gescheitert (Schwelle auf drei
+Stellen gleich dem Messwert). Gezogen werden **Blöcke von 30
+zusammenhängenden Ankern je Reihe**, weil benachbarte Anker sich Kerzen
+teilen (Horizont 14 T).
+
+| Phase | n | Blöcke | Delta | 95 %-Intervall | Urteil |
+|---|---:|---:|---:|---|---|
+| **AUF** | 9.864 | 359 | **−0,043** | **[−0,068; −0,018]** | ⚠️ **SCHADET** |
+| SEIT | 15.076 | 521 | +0,008 | [−0,014; +0,030] | nicht von null zu trennen |
+| **AB** | 8.252 | 304 | **+0,059** | **[+0,037; +0,080]** | **NÜTZT** |
+
+**Beide äußeren Intervalle schließen die Null nicht ein.** Die Regel ist
+damit **nachweislich phasenabhängig**: sie nützt im Bärmarkt und schadet in
+der Aufwärtsphase. Der Gesamtwert +0,005 R, mit dem sie am 05.08.
+scharfgeschaltet wurde, ist ein Mittelwert aus beidem.
+
+⚠️ **Eine Einschränkung bleibt:**
+1. **Mechanische Einstiege, keine echten Signale.** Das Werkzeug stammt vom 04.08., vor
    Methodik 2.47; es liefert Punktschätzer ohne Blockpermutation. Der
    gepaarte Aufbau kontrolliert den Markt, nicht den Zufall.
 2. **Mechanische Einstiege, keine echten Signale.** Das war Absicht (echte

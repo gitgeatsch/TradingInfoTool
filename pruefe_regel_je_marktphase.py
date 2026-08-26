@@ -15,6 +15,7 @@ aber die entscheidende Teilfrage: dreht sich das VORZEICHEN des Effekts?
 """
 import io
 import json
+import numpy as np
 import statistics
 import sys
 
@@ -63,6 +64,62 @@ def durchlauf(reihe, i, trailing: bool):
     return None if not letzter else (letzter - e) / risiko
 
 
+BLOCKLAENGE = 30          # >= Horizont (14) - benachbarte Anker teilen Kerzen
+ZIEHUNGEN = 1000
+
+
+def block_bootstrap(diffs, blocklaenge=BLOCKLAENGE, ziehungen=ZIEHUNGEN,
+                    saat=20260826):
+    """Vertrauensintervall der MITTLEREN paarweisen Differenz.
+
+    ⚠️ WARUM BOOTSTRAP UND KEINE PERMUTATION (Methodik 2.55). "Mit Trailing"
+    und "ohne" sind zwei deterministische Umrechnungen DESSELBEN Kurspfades
+    an DENSELBEN Ankern. Es gibt keine zufaellige Zuordnung, die eine
+    Permutation zerstoeren koennte - sie wuerde eine Schwelle liefern, die
+    dem Messwert entspricht (genau der Fehler von Kapitel 123).
+
+    Die Frage lautet deshalb nicht "ist der Unterschied echt", sondern "wie
+    genau ist er geschaetzt". Ein Intervall, das die Null nicht einschliesst,
+    ist die Antwort.
+
+    ⚠️ UND WARUM BLOECKE. Benachbarte Anker derselben Reihe teilen sich
+    Kerzen (Horizont 14 Tage) - ihre Differenzen sind abhaengig. Einzelwerte
+    zu ziehen wuerde diese Abhaengigkeit ignorieren und das Intervall zu eng
+    machen. Gezogen werden deshalb zusammenhaengende Bloecke JE REIHE.
+    """
+    if not diffs:
+        return None
+    # Bloecke: zusammenhaengende Laeufe je Symbol
+    je_sym = {}
+    for sym, i, d in diffs:
+        je_sym.setdefault(sym, []).append((i, d))
+    bloecke = []
+    for sym, werte in je_sym.items():
+        werte.sort()
+        w = [d for _i, d in werte]
+        for s in range(0, len(w), blocklaenge):
+            teil = w[s:s + blocklaenge]
+            if teil:
+                bloecke.append(teil)
+    if len(bloecke) < 10:
+        return None
+    rng = np.random.default_rng(saat)
+    n_ziel = sum(len(b) for b in bloecke)
+    mittel = []
+    for _z in range(ziehungen):
+        gezogen, anzahl = [], 0
+        while anzahl < n_ziel:
+            b = bloecke[int(rng.integers(0, len(bloecke)))]
+            gezogen.extend(b)
+            anzahl += len(b)
+        mittel.append(float(np.mean(gezogen[:n_ziel])))
+    mittel.sort()
+    return {"punkt": float(np.mean([d for _s, _i, d in diffs])),
+            "u": mittel[int(0.025 * len(mittel))],
+            "o": mittel[int(0.975 * len(mittel))],
+            "bloecke": len(bloecke), "n": len(diffs)}
+
+
 def main() -> int:
     """Laeuft nur beim direkten Aufruf - NICHT beim Import.
 
@@ -104,9 +161,12 @@ def main() -> int:
             mit = durchlauf(reihe, i, True)
             if ohne is None or mit is None:
                 continue
-            ergebnis.setdefault(ph, {"ohne": [], "mit": []})
+            ergebnis.setdefault(ph, {"ohne": [], "mit": [], "diff": []})
             ergebnis[ph]["ohne"].append(ohne)
             ergebnis[ph]["mit"].append(mit)
+            # Herkunft mit: die Bloecke des Bootstraps muessen
+            # ZUSAMMENHAENGENDE Anker derselben Reihe sein.
+            ergebnis[ph]["diff"].append((sym, i, mit - ohne))
 
     print("=" * 78)
     print("AUSSTIEGSREGEL JE MARKTPHASE - mechanische Einstiege, echte Kurse")
@@ -136,6 +196,35 @@ def main() -> int:
         print(f"{'GESAMT':7s} {len(alle_o):7d} {statistics.fmean(alle_o):+9.3f} "
               f"{statistics.fmean(alle_m):+9.3f} "
               f"{statistics.fmean(alle_m)-statistics.fmean(alle_o):+9.3f}")
+    # ---- BLOCK-BOOTSTRAP auf den paarweisen Differenzen (2.55) ----------
+    print()
+    print("=" * 78)
+    print(f"BLOCK-BOOTSTRAP der Differenz (mit - ohne), {ZIEHUNGEN} Ziehungen,")
+    print(f"Bloecke von {BLOCKLAENGE} zusammenhaengenden Ankern je Reihe")
+    print("=" * 78)
+    print(f"{'Phase':7s} {'n':>7s} {'Bloecke':>8s} {'Delta':>9s} "
+          f"{'95%-Intervall':>22s}   Urteil")
+    bs = {}
+    for ph in ("AUF", "SEIT", "AB"):
+        w = ergebnis.get(ph)
+        if not w:
+            continue
+        r = block_bootstrap(w["diff"])
+        if not r:
+            print(f"{ph:7s}   zu wenige Bloecke")
+            continue
+        bs[ph] = r
+        schliesst_null = r["u"] <= 0 <= r["o"]
+        urteil = ("nicht von null zu trennen" if schliesst_null
+                  else "SCHADET (Intervall unter null)" if r["o"] < 0
+                  else "NUETZT (Intervall ueber null)")
+        print(f"{ph:7s} {r['n']:7d} {r['bloecke']:8d} {r['punkt']:+9.3f} "
+              f"[{r['u']:+7.3f}, {r['o']:+7.3f}]   {urteil}")
+    print()
+    print("Lesart (2.55): die Frage ist nicht 'ist der Unterschied echt',")
+    print("sondern 'wie genau ist er geschaetzt'. Ein Intervall, das die")
+    print("Null NICHT einschliesst, ist die Antwort.")
+
     print()
     print("Lesart: bleibt Delta in ALLEN drei Phasen positiv, ist die Regel")
     print("phasenrobust. Dreht das Vorzeichen in AUF, braucht sie eine")
