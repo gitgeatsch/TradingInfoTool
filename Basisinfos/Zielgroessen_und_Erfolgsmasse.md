@@ -1405,6 +1405,52 @@ nicht vor. Repariert am 26.08. (Konstanten auf Modulebene, Werte unverändert).
 
 ---
 
+### ✔ FRAGE B GEMESSEN (26.08.) — beide profitieren, aber die Stichprobe ist EINE Phase
+
+`pruefe_trailing_je_instrument.py`, echte aufgelöste Signale,
+Block-Bootstrap auf den paarweisen Differenzen (Blöcke von 10, nach Zeit):
+
+| Instrument | n | Blöcke | EW ohne | EW mit | Delta | 95 %-Intervall | Urteil |
+|---|---:|---:|---:|---:|---:|---|---|
+| **SPOT** | 100 | 10 | +0,598 | +1,480 | **+0,882** | [+0,683; +1,072] | NÜTZT |
+| **HEBEL** | 127 | 13 | −0,263 | +0,368 | **+0,631** | [+0,451; +0,846] | NÜTZT |
+
+Berührt werden 46 % der Spot- und 34 % der Hebel-Signale.
+
+**Vorab festgelegte Lesart für diesen Fall:** *„beide Intervalle über null →
+die Regel trägt für beide; A's Phasenbefund bleibt die einzige
+Einschränkung."*
+
+⚠⚠ **UND GENAU DA LIEGT DIE GRENZE DIESER MESSUNG.** Die 227 Signale
+stammen aus **14.07.–23.08.** — sechs Wochen, **eine** Marktphase:
+
+| | B-Stichprobe | 04.08.-Messung |
+|---|---:|---:|
+| EW ohne Trailing | **+0,116 R** | **−0,176 R** |
+| Trefferquote | 36,6 % | 34 % |
+
+Die Trefferquote ist gleich, der Erwartungswert **deutlich besser** — die
+Gewinner sind größer. Das ist die Aufwärtsphase. **Der gemessene Effekt
+(+0,882 R gegen die +0,092 R vom 04.08., Faktor zehn) ist damit
+phasenspezifisch und nicht übertragbar.**
+
+**Was B beantwortet:** die Instrumentenfrage — es gibt **keinen** Beleg,
+dass die Regel nur für Hebel taugt. Beide profitieren in dieser Stichprobe.
+⚠️ Damit ist meine eigene Vermutung *„Trailing nur für den Hebel"* **nicht
+bestätigt**.
+
+**Was B NICHT beantwortet:** die Phasenfrage. Dafür bleibt **A** maßgeblich —
+und A sagt: in der Aufwärtsphase schadet die Regel (−0,043 R,
+[−0,068; −0,018]), im Bärmarkt nützt sie (+0,059 R, [+0,037; +0,080]).
+
+⚠️ **Die Rechnung wurde gegengeprüft**, weil der Effekt unplausibel groß
+war: `_erfasse_mfe` läuft nur bis zum Ausgang, `resolve()` friert den MFE
+dort ein — **kein Zukunftsblick**. Die Umrechnung
+`mit = max(ohne, MFE − Abstand)` ist korrekt; die Größe stammt aus der
+Stichprobe, nicht aus einem Fehler.
+
+---
+
 ### Was NICHT gemessen wird
 
 Ob ein Verlustverkauf steuerlich oder psychologisch sinnvoll ist. Das ist eine
