@@ -1346,6 +1346,44 @@ träfe eine seit dem 05.08. scharfgeschaltete Regel.
   nicht an einem Ausgang.
 - **Positivkontrolle bleibt Pflicht** (93 B).
 
+### ✔ FRAGE A GEMESSEN (26.08.) — das Vorzeichen dreht
+
+`pruefe_regel_je_marktphase.py`, 33.192 mechanische Einstiege über die volle
+Kurshistorie, **gepaart** (dieselben Anker mit und ohne Regel):
+
+| Phase | n | EW **ohne** | EW **mit** | Delta | Trefferq. ohne → mit |
+|---|---:|---:|---:|---:|---|
+| **AUF** | 9.864 | **+0,075** | **+0,032** | **−0,043** ⚠️ | 30,6 % → 42,2 % |
+| SEIT | 15.076 | +0,005 | +0,013 | +0,008 | 29,1 % → 42,8 % |
+| AB | 8.252 | −0,201 | −0,142 | **+0,059** | 23,0 % → 36,9 % |
+| GESAMT | 33.192 | −0,025 | −0,020 | +0,005 | |
+
+⚠️ **In der Aufwärtsphase kostet das Trailing 0,043 R je Trade.** Der
+Gesamtbefund (+0,005) ist ein Mittelwert, den die Bärphase trägt.
+
+**Die Lesart stand seit dem 04.08. im Werkzeug:** *„Dreht das Vorzeichen in
+AUF, braucht sie eine **Phasen-Abschaltung**."*
+
+**Das Muster ist typisch:** die Trefferquote steigt überall (30,6 → 42,2 %),
+der Erwartungswert fällt trotzdem — mehr kleine Gewinne, abgeschnittene große.
+Im Aufwärtsmarkt ist das ein Verlustgeschäft.
+
+⚠️ **Zwei Einschränkungen, die dazugehören:**
+1. **Keine Signifikanzschwelle.** Das Werkzeug stammt vom 04.08., vor
+   Methodik 2.47; es liefert Punktschätzer ohne Blockpermutation. Der
+   gepaarte Aufbau kontrolliert den Markt, nicht den Zufall.
+2. **Mechanische Einstiege, keine echten Signale.** Das war Absicht (echte
+   Signale decken nur drei Wochen ab), begrenzt die Übertragbarkeit aber.
+
+⚠️ **Und ein Werkzeugbefund:** `pruefe_regel_je_marktphase.py` **konnte nie
+gelaufen sein** — `STOP_REL` stand in `main()` lokal, wurde in `durchlauf()`
+global gelesen (`NameError`). Es stand seit dem 04.08. im Werkzeugkasten 2.13
+und galt als vorhanden. **Zwei Prüfungen haben es nicht gefangen:**
+`finde_freie_namen.py` meldet es nicht, und in `pruefe_pakete.py` kommt es gar
+nicht vor. Repariert am 26.08. (Konstanten auf Modulebene, Werte unverändert).
+
+---
+
 ### Was NICHT gemessen wird
 
 Ob ein Verlustverkauf steuerlich oder psychologisch sinnvoll ist. Das ist eine

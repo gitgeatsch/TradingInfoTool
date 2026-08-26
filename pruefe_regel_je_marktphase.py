@@ -23,6 +23,19 @@ sys.path.insert(0, r"D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool")
 from agent.krypto.backward_tracking import gap_bewusster_fill  # noqa: E402
 
 ORDNER = r"K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten"
+
+# Mechanische Einstiege: Median-Parameter der echten Signale.
+#
+# ⚠️ SIE STANDEN BIS ZUM 26.08.2026 IN `main()` - also LOKAL, waehrend
+# `durchlauf()` sie GLOBAL liest. Das Skript konnte damit nie laufen
+# (`NameError: STOP_REL`), stand aber seit dem 04.08. im Werkzeugkasten
+# 2.13 und galt als vorhanden. Gefunden erst, als es gebraucht wurde.
+#
+# ⚠️ UND ZWEI PRUEFUNGEN HABEN ES NICHT GEFANGEN: `finde_freie_namen.py`
+# meldet es nicht, und in `pruefe_pakete.py` kommt das Skript gar nicht
+# vor. Ein Werkzeug, das im Kasten steht und nicht laeuft, ist
+# schlechter als keines - man verlaesst sich darauf.
+STOP_REL, CRV, HORIZONT = 0.0394, 2.6, 14
 d = json.load(io.open(ORDNER + r"\notebook_diagnose.json", encoding="utf-8"))
 
 def durchlauf(reihe, i, trailing: bool):
@@ -78,10 +91,6 @@ def main() -> int:
         v = (b / a - 1) * 100
         phase_je_tag[str(btc[i]["date"])[:10]] = (
             "AUF" if v > SCHWELLE else ("AB" if v < -SCHWELLE else "SEIT"))
-
-    # --- Mechanische Einstiege: Median-Parameter der echten Signale ------------
-    STOP_REL, CRV, HORIZONT = 0.0394, 2.6, 14
-
 
 
     ergebnis: dict[str, dict[str, list[float]]] = {}
