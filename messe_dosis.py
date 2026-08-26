@@ -72,7 +72,8 @@ MIN_FAELLE = 300
 
 
 def sammle(db: str, klasse: str,
-           totzone: float | None = None) -> tuple[dict, dict, dict]:
+           totzone: float | None = None,
+           mindestalter: int | None = None) -> tuple[dict, dict, dict]:
     """Je Zelle (k, crv, horizont, gruppe): Treffer, Entschiedene, Stopweiten.
 
     ⚠️ KEINE ANKERLISTE IM SPEICHER. 533.000 Anker x 60 Zellen waeren
@@ -92,7 +93,11 @@ def sammle(db: str, klasse: str,
     for nr, (sym, (c, h, l, v, a, off, d)) in enumerate(roh.items(), 1):
         del v, sym
         sp = _SwingSpeicher(h, l)
-        start = off + 1 + MINDESTALTER
+        # S4 (25.08.2026): der Reifeschnitt ist pruefbar gemacht. `None`
+        # heisst unveraendert 250 (Kapitel 104.3) - jeder bestehende
+        # Aufrufer rechnet bitgleich weiter.
+        start = off + 1 + (MINDESTALTER if mindestalter is None
+                           else mindestalter)
         for i in range(start, len(c) - 1):
             atr, einstieg = a[i - off], c[i]
             if not (atr > 0 and einstieg > 0):

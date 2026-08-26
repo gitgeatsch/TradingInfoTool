@@ -67,7 +67,7 @@ import numpy as np
 sys.path.insert(0, ".")
 from agent import lagebeschreibung as LB                        # noqa: E402
 from agent import trefferbilanz as TB                           # noqa: E402
-from messe_dosis import (CRV_WERTE, K_WERTE,                     # noqa: E402
+from messe_dosis import (CRV_WERTE, K_WERTE, MINDESTALTER,       # noqa: E402
                          MIN_FAELLE, sammle)
 from simuliere_bremse import SAETZE_ZUM_BERICHTEN                # noqa: E402
 
@@ -113,6 +113,9 @@ def main() -> int:
     # die eingepflanzte Verschiebung nicht wieder, ist jeder Nullbefund
     # dieses Werkzeugs wertlos. 0 = aus.
     ap.add_argument("--positivkontrolle", type=int, default=0)
+    # S4: der Reifeschnitt (messe_dosis.MINDESTALTER, heute 250 HT).
+    # Ohne Angabe bleibt der Bestandswert aus Kapitel 104.3.
+    ap.add_argument("--mindestalter", type=int, default=None)
     ap.add_argument("--datei", default="messwerte_neubewertung.json")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -122,7 +125,7 @@ def main() -> int:
     print("  Ein Durchlauf, zwei Spalten. Die Zaehlung ist gebuehrenfrei;")
     print("  die Gebuehr geht erst in die Bewertung ein.")
     print("=" * 78)
-    _z, stops, roh = sammle(a.db, a.klasse, a.totzone)
+    _z, stops, roh = sammle(a.db, a.klasse, a.totzone, a.mindestalter)
     bel = roh[(K_WERTE[0], CRV_WERTE[0])]
     print(f"  {len(bel['r'])} Anker je Geometrie, "
           f"{int(bel['h'].sum())} davon in H")
@@ -226,6 +229,8 @@ def main() -> int:
         io.open(a.datei, "w", encoding="utf-8").write(json.dumps({
             "totzone": (a.totzone if a.totzone is not None
                         else LB.NIVEAU_MIN_ABSTAND_ATR),
+            "mindestalter": (a.mindestalter if a.mindestalter is not None
+                             else MINDESTALTER),
             "positivkontrolle": pk,
             "atr_kanal": n1,
             "betrieb": {"quote_alle": q_a, "quote_h": q_h,
