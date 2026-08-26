@@ -2121,3 +2121,50 @@ sieht, falsch**, und jede Messung an der Mail misst etwas anderes als gedacht.
 **Aufwand:** Folge 2 ist eine Zeile. Folge 1 und 3 brauchen den Rohfaktensatz
 unter dem Schlüssel plus sechs Pfadkorrekturen. Kein neuer Anbieter, kein
 Kontingent, keine Sammelzeit — alles ist gebaut und wird verworfen.
+
+
+---
+
+## ⚠⚠ N-10 — Der wichtigste Beschluss des Projekts ist versandet (26.08.2026)
+
+`Konzept_Einstiegsbewertung_23_08.md` §11 hält seit dem 23.08. fest:
+
+> **„Ziel vor Stop" ist ein Maß, das PER KONSTRUKTION auf die Basisrate
+> `1/(1+CRV)` fällt. Wer es misst, misst unsere eigene Zielregel zurück.**
+> **Alle Nullbefunde des Projekts sind Messungen an dieser Größe.**
+
+Und §11.4 zieht die Konsequenz:
+
+> **„Der Trichter wird vom Anzeigewert zum Maßstab."**
+> statt *„schlägt Merkmal M die Basisrate?"* → *„**verschiebt Merkmal M den
+> Trichter?**"* — Antwort bisher: nein, bei jedem Merkmal.
+> **Antwort neu: offen — nie so gemessen.**
+
+### ⚠️ Der Stand am 26.08.: nicht gebaut, nirgends nachverfolgt
+
+| | |
+|---|---|
+| Werkzeuge, die ein Merkmal **gegen den Trichter** messen | **keines** |
+| Werkzeuge, die `ausgang == ziel` messen | **12+** (`bewerte_neu`, `messe_dosis`, `messe_klassen`, `messe_marken`, `messe_kat_alter`, `messe_alter_vs_zeit`, …) |
+| Erwähnung in Umbauplan / Zwischenstand / Zielgrößen | **null Treffer** |
+
+**Der Beschluss steht in genau einem Konzeptdokument und in keiner offenen
+Liste.** Deshalb ist er nie ausgeführt worden — und deshalb liefen am
+25./26.08. **sieben weitere Messungen** (S1, S3, S4, Kategorie×Alter,
+Alter×Zeit) mit **genau dem Maß, von dem §11.1 sagt, dass es nichts finden
+kann.**
+
+### Was daraus folgt
+
+1. **Vor jeder weiteren Merkmalsmessung** ist das Erfolgsmaß umzustellen.
+   Sonst ist das Ergebnis vorhersagbar: „trägt nicht".
+2. **Das Werkzeug existiert** — `trichter.py`, je Klasse geeicht
+   (krypto 0,79 · aktien 0,91 · etf 1,18), Trefferquote 80,4 %.
+   Es fehlt die **Messfunktion**, die ein Merkmal dagegen hält.
+3. **Positivkontrolle bleibt Pflicht** (93 B), unverändert.
+4. ⚠️ **Das Potential wird BRUTTO gemessen** (§11.4). Ob es die Kostenhürde
+   trägt, ist die *Erntefrage* und wird danach gerechnet — sonst verdeckt die
+   Hürde wieder das Signal.
+
+**Einzuordnen als:** kein neues Konzept, sondern die **Ausführung eines
+Beschlusses vom 23.08.**

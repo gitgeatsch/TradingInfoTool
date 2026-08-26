@@ -1,3 +1,24 @@
+> ⚠⚠ **EINORDNUNG 26.08. — dieses Dokument ist größtenteils REDUNDANT.**
+>
+> Der Nutzer hat verlangt, vor einem weiteren Konzept die bestehenden zu
+> lesen. Das Ergebnis: **der Inhalt steht seit dem 23.08. in
+> `Konzept_Einstiegsbewertung_23_08.md` und `Auswahl_Quote_gegen_Kriterium_23_08.md`**,
+> dort ausführlicher und mit Messungen unterlegt (K1–K4, §9 vier
+> Vorteilsquellen, §11 Potential als Erfolgsmaß, §12 Selektivität).
+>
+> **Und zwei Punkte darin sind sachlich falsch:**
+> **(a)** „Bestand und Nicht-Bestand im selben Ranking" würde einen
+> **behobenen Defekt wieder einführen** — `Abhaengigkeitspruefung_K1_K4` Fund 1:
+> wer Bestand hat, muss die Auswahl **immer** passieren, sonst schweigt die
+> Verkaufsseite (21 von 24 Positionen fielen aus).
+> **(b)** „Alle über der ΔP-Schwelle" ist ein **absolutes Kriterium** — und
+> `Auswahl_Quote_gegen_Kriterium` hat gemessen, dass solche Kriterien **nicht
+> tragen** (t ≈ 0): sie wählen **gute Zeiten statt guter Werte**.
+>
+> **Was bleibt:** die Spot/Hebel-Trennung nach Horizont und die Feststellung,
+> dass die Hebel-Abschaltung von 19 Assets eine **Mengenbremse** ist. Beides
+> gehört zu §9.3 des Einstiegskonzepts, nicht in ein eigenes Dokument.
+
 # Das Potential als Auslöser — Konzept für Krypto (Spot und Hebel)
 
 **Angelegt 26.08.2026.** Ersetzt den zu knappen Entwurf
