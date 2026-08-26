@@ -109,6 +109,30 @@ es sich für mich", beide immer nebeneinander.**
 >
 > Vollständig: `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`, Nachtrag (1).
 
+### 3.1b ➔ Der erste Kandidat AUSSERHALB des ATR-Kanals (25.08.2026)
+
+Der ATR-Kanal trat fünfmal unter neuem Namen auf (Kap. 100/101/102/111/116)
+und hat jeden Befund verschluckt. Die **Terminmarkt-Positionierung** ist die
+erste Familie, die nachweislich woanders herkommt — Rangkorrelation zu ATR,
+Umsatz und Rendite, 585 (Symbol, Tag)-Punkte:
+
+| Größe | max \|ρ\| | Urteil |
+|---|---:|---|
+| `oi_aenderung` | **0,034** | **eigener Kanal** |
+| `oi_divergenz` | **0,195** | **eigener Kanal** |
+| `funding_rate` | **0,250** | **eigener Kanal** |
+| `long_anteil` | 0,561 | teilweise überlappend (ATR −0,561) |
+
+⚠️ **Das ist die VORBEDINGUNG, nicht der Nachweis.** Eine Wirkungsmessung
+ist heute **unmöglich**: die Sammlung läuft erst seit 14.07.2026, das ergibt
+**0 aufgelöste Anker** beim Betriebshorizont 120 und alle Anker in **einem**
+41-Tage-Fenster. Termine: Horizont 20 ab **22.10.2026**, Horizont 120 ab
+**11.03.2027** — wenn die Sammlung durchläuft.
+
+Vollständig: `Konzept_Positionierung_25_08.md`.
+
+---
+
 ### 3.2 Was fiel — und woran
 
 | Behauptung | Kapitel | woran sie fiel |
