@@ -185,6 +185,7 @@ Aufruf am Notebook: python extract_notebook_diagnose.py [SYMBOL] [LOG_STUNDEN]
 Schreibt nach K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/
 """
 import dataclasses
+import io
 import json
 import os
 import sqlite3
@@ -3030,7 +3031,34 @@ def main() -> None:
 
     ZIEL_ORDNER.mkdir(parents=True, exist_ok=True)
     ziel_datei = ZIEL_ORDNER / "notebook_diagnose.json"
-    ziel_datei.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    # ⚠️ STROEMEND UND ATOMAR SCHREIBEN (26.08.2026, MemoryError am Notebook).
+    #
+    # Vorher stand hier `write_text(json.dumps(...))`. Das haelt DREI grosse
+    # Objekte gleichzeitig im Speicher: das `payload`-dict, den vollstaendigen
+    # JSON-String (zuletzt 185 MB; ein Python-str belegt bei Umlauten bis zu
+    # 4 Byte je Zeichen) und dessen UTF-8-Bytes. Auf dem Notebook reichte das
+    # nicht mehr - `json.dump` auf ein offenes Handle schreibt stattdessen
+    # inkrementell und braucht keinen der beiden Zwischenpuffer.
+    #
+    # ⚠️ UND DER ZWEITE FEHLER WAR SCHLIMMER ALS DER ERSTE: `write_text`
+    # LEERT die Zieldatei beim Oeffnen. Der MemoryError kam danach - und
+    # damit war der 185-MB-Export des Vortags vernichtet, ohne dass jemand
+    # etwas geloescht haette. Deshalb wird jetzt in eine Nebendatei
+    # geschrieben und erst nach vollstaendigem Erfolg umbenannt. Ein
+    # Fehlschlag laesst den letzten guten Export unberuehrt.
+    ziel_tmp = ziel_datei.with_name(ziel_datei.name + ".tmp")
+    try:
+        with io.open(ziel_tmp, "w", encoding="utf-8") as _fh:
+            json.dump(payload, _fh, indent=2, ensure_ascii=False, default=str)
+        ziel_tmp.replace(ziel_datei)
+    except BaseException:
+        # Die halbe Datei ist wertlos und wuerde beim naechsten Lesen als
+        # gueltiger Export missverstanden.
+        try:
+            ziel_tmp.unlink()
+        except OSError:
+            pass
+        raise
 
     print(f"Geschrieben: {ziel_datei}")
     print(f"  Holdings: {len(holdings)}, Hebel-Signale: {len(hebel_rows)}, "
