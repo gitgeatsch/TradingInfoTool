@@ -1,0 +1,110 @@
+{
+ "horizont": 120,
+ "blocklaenge": 250,
+ "zellen": {
+  "Large 250-500": {
+   "vorsprung": 0.08801505626076161,
+   "schwelle": 0.1051869352233745,
+   "streu": 0.003894053777846001,
+   "urteil": "traegt nicht",
+   "n_h": 663
+  },
+  "Large 500-750": {
+   "vorsprung": 0.08180973420870633,
+   "schwelle": 0.1312478285025024,
+   "streu": 0.00446376740604242,
+   "urteil": "traegt nicht",
+   "n_h": 472
+  },
+  "Large 750-+": {
+   "vorsprung": 0.05400201108772201,
+   "schwelle": 0.09246577098803696,
+   "streu": 0.0029744304126432114,
+   "urteil": "traegt nicht",
+   "n_h": 1157
+  },
+  "Mid 250-500": {
+   "vorsprung": -0.002531506815688145,
+   "schwelle": 0.06884873483743269,
+   "streu": 0.002146803721209234,
+   "urteil": "traegt nicht",
+   "n_h": 1736
+  },
+  "Mid 500-750": {
+   "vorsprung": 0.021869833568688657,
+   "schwelle": 0.09265429156663198,
+   "streu": 0.0024461297065019615,
+   "urteil": "traegt nicht",
+   "n_h": 1700
+  },
+  "Mid 750-+": {
+   "vorsprung": 0.042140165556890596,
+   "schwelle": 0.09699865436279187,
+   "streu": 0.00281744966682231,
+   "urteil": "traegt nicht",
+   "n_h": 1298
+  },
+  "Small 250-500": {
+   "vorsprung": 0.07769797316387284,
+   "schwelle": 0.0653860276269624,
+   "streu": 0.0017889445166456434,
+   "urteil": "TRAEGT",
+   "n_h": 3517
+  },
+  "Small 500-750": {
+   "vorsprung": 0.060724756572723526,
+   "schwelle": 0.07326156177089015,
+   "streu": 0.0024946498211609767,
+   "urteil": "traegt nicht",
+   "n_h": 1394
+  },
+  "Small 750-+": {
+   "vorsprung": 0.0043807183050550424,
+   "schwelle": 0.03871326699532923,
+   "streu": 0.0018960361052203327,
+   "urteil": "traegt nicht",
+   "n_h": 1629
+  },
+  "Small* 250-500": {
+   "vorsprung": 0.07769797316387284,
+   "schwelle": 0.0653860276269624,
+   "streu": 0.0017889445166456434,
+   "urteil": "TRAEGT",
+   "n_h": 3517
+  },
+  "Small* 500-750": {
+   "vorsprung": 0.060724756572723526,
+   "schwelle": 0.07326156177089015,
+   "streu": 0.0024946498211609767,
+   "urteil": "traegt nicht",
+   "n_h": 1394
+  },
+  "Small* 750-+": {
+   "vorsprung": 0.0043807183050550424,
+   "schwelle": 0.03871326699532923,
+   "streu": 0.0018960361052203327,
+   "urteil": "traegt nicht",
+   "n_h": 1629
+  }
+ },
+ "V1": {
+  "vorsprung": 0.0043807183050550424,
+  "schwelle": 0.03871326699532923,
+  "streu": 0.0018960361052203327,
+  "urteil": "traegt nicht",
+  "n_h": 1629
+ },
+ "V2": {
+  "differenz": 0.07331725485881779,
+  "schwelle": 0.09036591063859974,
+  "streu": 0.0026087077908336603,
+  "urteil": "traegt nicht"
+ },
+ "positivkontrolle": {
+  "zelle": "Large 500-750",
+  "n": 300,
+  "erwartet": 0.635593220338983,
+  "gemessen": 0.635593220338983,
+  "bestanden": true
+ }
+}

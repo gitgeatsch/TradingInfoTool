@@ -781,3 +781,114 @@ kleiner als der bisher berichtete Befund** — und ihr Zuschnitt (junge, aber
 3. **S2 bleibt sinnvoll.** Der Phasenindex ist die letzte ungeprüfte Annahme,
    und nach drei Messungen ist klar: welche Konstante trägt, war jedes Mal
    nicht zu erraten.
+
+---
+---
+
+# NACHTRAG (4) — KATEGORIE × ANKERALTER, 25.08.2026
+
+**Folgeprüfung aus S4.** Vorabfestlegung im Kopf von `messe_kat_alter.py`,
+geschrieben vor dem Lauf.
+
+## Der Anlass
+
+S4 hat gezeigt: H trägt nur im Ankeralter 250–499. Kapitel 120/121 haben H je
+Umsatzkategorie beurteilt und das Ankeralter **nie herausgerechnet** — und
+**Small ist die Kategorie mit den jüngsten Reihen**. Nach S3 war Small der
+letzte Kategorienbefund, der noch stand (+7,9, hält in allen drei
+Blockvarianten). Die Frage war unausweichlich: *ist Smalls Vorsprung nur das
+Altersfenster?*
+
+## Zwei Gegenprüfungen vorab
+
+**(1) Misst das Werkzeug dieselbe Basis wie Kapitel 121?**
+
+| Kategorie | Kap. 121 („ALLE") | Summe meiner drei Bänder |
+|---|---:|---:|
+| Large | 2.292 | **2.292** |
+| Mid | 4.734 | **4.734** |
+| Small | 6.540 | **6.540** |
+
+**Identisch in allen drei Fällen** — die Zerlegung ist vollständig und
+verlustfrei, es geht kein Anker verloren und es kommt keiner hinzu.
+
+**(2) Eine stille Zuordnung, die genau die geprüfte Kategorie trifft.**
+`messe_klassen._kategorie` rechnet `u = f["umsatz"] or 0.0` — ein **fehlender**
+Umsatz wird zu 0 und landet damit in **Small**. Wer Small beurteilt, ohne das
+zu wissen, beurteilt teilweise die Datenlücke. Gemessen: **1,0 %** aller Anker
+ohne Umsatzangabe, **1,4 %** von Small. Die Zusatzzeile `Small*` (Small ohne
+diese Fälle) ist in **allen drei Bändern identisch** mit Small. **Die Sorge war
+berechtigt zu prüfen und hat sich nicht bestätigt.**
+
+**Positivkontrolle (93 B)** auf der dünnsten Zelle (Large 500–749, 472 Fälle):
+erwartet +63,56, gemessen +63,56, Abweichung 0,000 — **bestanden**.
+
+## Das Ergebnis
+
+| Zelle | H-Fälle | Quote H | Quote Rest | Vorsprung | Schwelle | Urteil |
+|---|---:|---:|---:|---:|---:|---|
+| Large 250–499 | 663 | 34,7 % | 25,9 % | +8,80 | +10,52 | trägt nicht |
+| Large 500–749 | 472 | 28,4 % | 20,2 % | +8,18 | +13,12 | trägt nicht |
+| Large ab 750 | 1.157 | 34,9 % | 29,5 % | +5,40 | +9,25 | trägt nicht |
+| Mid 250–499 | 1.736 | 29,6 % | 29,9 % | −0,25 | +6,88 | trägt nicht |
+| Mid 500–749 | 1.700 | 33,9 % | 31,8 % | +2,19 | +9,27 | trägt nicht |
+| Mid ab 750 | 1.298 | 33,1 % | 28,8 % | +4,21 | +9,70 | trägt nicht |
+| **Small 250–499** | 3.517 | 48,1 % | 40,3 % | **+7,77** | +6,54 | **TRÄGT** |
+| Small 500–749 | 1.394 | 46,5 % | 40,4 % | +6,07 | +7,33 | trägt nicht |
+| Small ab 750 | 1.629 | 34,7 % | 34,3 % | **+0,44** | +3,87 | trägt nicht |
+
+⚠️ **Eine von zwölf Zellen trägt** — und es ist dieselbe Ecke wie in S4: jung,
+und dort, wo H ohnehin am stärksten ist.
+
+## Die vorab benannten Größen
+
+| | | |
+|---|---|---|
+| **V1** | Small ab 750 gegen seine Schwelle | **+0,44 gegen +3,87 → trägt nicht** |
+| **V2** | Small 250–499 minus Small ab 750 | **+7,33 gegen +9,04 → trägt nicht** |
+
+**Die vorab festgelegte Lesart für genau diesen Fall lautet:**
+
+> *„V1 trägt nicht, V2 auch nicht → nicht entscheidbar auf dieser Basis; als
+> Zerlegung ablegen (2.51), **NICHT** als ‚Small ist widerlegt'."*
+
+**Daran halte ich mich.** Was gesagt werden darf und was nicht:
+
+**Was gilt:** Small hat **keinen nachweisbaren altersunabhängigen Kern**. Bei
+Ankeralter ab 750 liegt der Vorsprung bei **+0,44 Punkten** — praktisch null,
+und weit unter seiner Schwelle.
+
+**Was NICHT gilt:** „Smalls Befund ist widerlegt" oder „Smalls Befund *ist* das
+Reifeartefakt". Dafür hätte V2 seine Schwelle nehmen müssen (+7,33 gegen
++9,04 — verfehlt um 1,7 Punkte). Der Punktschätzerverlauf (**+7,77 → +6,07 →
++0,44**) zeigt in diese Richtung, ist aber **kein Nachweis**.
+
+**Der Unterschied ist keine Wortklauberei:** V1 sagt „dort ist nichts zu
+finden", V2 hätte gesagt „der Rückgang selbst ist überzufällig". Das Erste ist
+gemessen, das Zweite nicht.
+
+## Ein zweiter Befund, nicht vorab benannt
+
+**Large trägt in keinem einzigen Band** (+8,80 / +8,18 / +5,40 gegen Schwellen
++10,52 / +13,12 / +9,25). Das ist **konsistent mit S3**, wo Large bei
+2.47-konformen Blockgrenzen von „TRÄGT" auf „ZU KNAPP" kippte. Zwei
+unabhängige Zerlegungen kommen damit zum selben Schluss: **der Large-Befund
+aus Kapitel 121 hält nicht.**
+
+⚠️ Als *Beschreibung* zu lesen, nicht als Bestätigung — Large war hier nicht
+vorab benannt, und der Suchpreis für zwölf Zellen ist nicht bezahlt.
+
+## Was daraus folgt
+
+1. **Kapitel 121 ist zerlegt, nicht widerlegt.** Die Gesamtzahlen (Large +5,9,
+   Small +7,9) bleiben rechnerisch richtig. Die Zerlegung zeigt, **wo** sie
+   herkommen — und für Small ist das überwiegend das junge Band.
+2. **Es gibt keinen Kategorienbefund mehr, der eine altersunabhängige Aussage
+   trägt.** Large nicht (zwei Zerlegungen dagegen), Mid nie, Small nicht
+   außerhalb des jungen Bandes.
+3. **Der Betrieb ist unverändert betroffen:** `vorfilter.py` prüft H ohne
+   Alters- und ohne Kategorienkriterium.
+4. **Was messbar bliebe:** ob das junge Band selbst außerhalb seiner eigenen
+   Daten trägt (Zeit- oder Symbolteilung innerhalb von Small 250–499). Das
+   wäre die nächste ehrliche Frage — mit dem Vorbehalt, dass 3.517 H-Fälle
+   sich nicht beliebig oft teilen lassen.

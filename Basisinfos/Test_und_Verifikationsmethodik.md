@@ -4196,3 +4196,36 @@ nicht — sie landete auf einer Zelle mit 203 Fällen, unter `MIN_FAELLE = 300`,
 und lieferte `NaN`, was als „durchgefallen" ausgegeben wurde. **Ein `NaN` ist
 kein Nullbefund, sondern eine nicht gelaufene Messung.** Zellfilter müssen an
 die Mindestfallzahl des Werkzeugs gekoppelt sein, nicht an eine eigene Zahl.
+
+---
+
+### 2.78 Eine Zerlegung braucht den Nachweis, dass sie dieselbe Menge zerlegt (25.08.2026)
+
+Kapitel 120/121 wurden nach Ankeralter zerlegt. Bevor irgendeine Zahl gelesen
+wurde, war zu klären, ob das Werkzeug überhaupt dieselbe Grundmenge sieht wie
+das Kapitel, das es zerlegt:
+
+| Kategorie | Kap. 121 „ALLE" | Summe der drei Altersbänder |
+|---|---:|---:|
+| Large | 2.292 | 2.292 |
+| Mid | 4.734 | 4.734 |
+| Small | 6.540 | 6.540 |
+
+Identisch — kein Anker geht verloren, keiner kommt hinzu. **Erst damit ist die
+Zerlegung als Aussage über das Kapitel lesbar** und nicht bloß als eigene
+Messung, die zufällig ähnliche Namen benutzt.
+
+**Die Regel:** Wer eine bestehende Kennzahl aufteilt, weist die Summe der
+Teile gegen das Ganze aus. Stimmt sie nicht, ist die Zerlegung eine andere
+Messung — und darf nicht als Erklärung des Ursprungsbefunds auftreten.
+
+⚠️ **Zweiter Punkt derselben Runde: eine stille Zuordnung, die genau die
+geprüfte Gruppe trifft.** `messe_klassen._kategorie` rechnet
+`u = f["umsatz"] or 0.0` — ein **fehlender** Umsatz wird zu 0 und landet damit
+in der kleinsten Kategorie, „Small". Wer Small beurteilt, beurteilt also
+teilweise die Datenlücke. Hier war der Anteil klein (1,0 % aller Anker, 1,4 %
+von Small) und das Ergebnis unverändert; das war **vorher nicht bekannt**.
+
+**Der Prüfsatz:** Wohin fallen die Fälle, für die das Merkmal FEHLT? Landen
+sie in genau der Gruppe, über die geurteilt wird, ist das Urteil ohne diesen
+Ausweis nicht lesbar.

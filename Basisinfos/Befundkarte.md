@@ -74,7 +74,7 @@ es sich für mich", beide immer nebeneinander.**
 
 | **H trägt — gebührenfrei** | **119** | ⚠️ **heute +3,78 gegen +3,36** (S3, 25.08.) — früher +4,5 gegen +2,6 | **13.768 Fälle, 523 Reihen** |
 | H über dem Breakeven bei Referenzgebühr | 119 | **+3,1** (Betrieb: −1,0) | +0,086 R je Trade |
-| **H trägt je Kategorie** | **120/121** | auf **523 Reihen**: **Small +7,9 trägt** gegen Schwelle aus acht +6,2. ⚠️ **Large +5,9 KIPPT** (S3, 25.08.) | Mid +2,5 trägt nicht |
+| **H je Kategorie — ZERLEGT** | **120/121** | ⚠️ **kein Kategorienbefund trägt altersunabhängig** (25.08.). Small nur im Band 250–499 (+7,77 gegen +6,54); **ab 750 nur +0,44 gegen +3,87**. Large trägt in **keinem** Band | Mid nie · 1 von 12 Zellen trägt |
 | Spot gegen Hebel | 120 | Unterschied 0,017 R — **dreht kein Vorzeichen** | Finanzierung 0,03 %/Tag |
 | **Strukturboden im Stop schadet nicht** | **124** | −0,0008 R über 631.755 Anker, greift bei 1,1 % | gemessen mit der Produktionsfunktion |
 
@@ -319,6 +319,27 @@ nur **viel kleiner als der bisher berichtete Befund**.
 Alterskriterium. Und **Kap. 120/121 stehen unter Vorbehalt** — die
 Kategorienurteile wurden nie nach Ankeralter zerlegt; Small ist die Kategorie
 mit den jüngsten Reihen.
+
+**Kapitel 120/121 nach Ankeralter zerlegt (25.08.)** — die offene Rechnung aus
+S4. Verhaltenskontrolle: die Bändersummen sind **identisch** mit Kap. 121
+(2.292 / 4.734 / 6.540), die Zerlegung ist verlustfrei. Positivkontrolle
+punktgenau bestanden.
+
+| | 250–499 | 500–749 | ab 750 |
+|---|---:|---:|---:|
+| Large | +8,80 (S +10,52) | +8,18 (S +13,12) | +5,40 (S +9,25) |
+| Mid | −0,25 | +2,19 | +4,21 |
+| **Small** | **+7,77 (S +6,54) TRÄGT** | +6,07 (S +7,33) | **+0,44 (S +3,87)** |
+
+**V1 (vorab benannt): Small ab 750 trägt nicht.** Small hat damit **keinen
+nachweisbaren altersunabhängigen Kern**.
+⚠️ **V2 (Differenz 250–499 gegen ab 750) verfehlt seine Schwelle**
+(+7,33 gegen +9,04). Nach der Vorabfestlegung heißt das: **nicht entscheidbar,
+als Zerlegung ablegen — NICHT „Small ist widerlegt".** Der Verlauf
++7,77 → +6,07 → +0,44 zeigt in diese Richtung, ist aber kein Nachweis.
+
+**Large trägt in keinem Band** — konsistent mit S3, wo es bei korrekten
+Blockgrenzen kippte. Zwei unabhängige Zerlegungen, derselbe Schluss.
 
 ⚠️ **Bis S2 gelaufen ist, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
 Vorabfestlegung mit Messplan, Schwellen und vorab benannter Lesart:
