@@ -1212,6 +1212,147 @@ Wirkung: **kein Nachweis** (kombinierter Test, siehe
 
 ---
 
+---
+
+## 7a-N ⚠️ NACHTRAG 26.08.2026 — die vorhergesagte Nebenwirkung ist eingetreten
+
+**Nutzereinwand, der das ausgelöst hat:**
+
+> *„Vorsicht — die Ausstiegsregel hat hier einen Fehler, fast sicher. Warum
+> gibt es ein Signal zum Ausstieg bei einem **Spot**-Signal, welches **im
+> Verlust** ist und **langfristig gehalten** wird? Wer und wie bestimmt
+> fällig?"*
+
+**Er hat recht, und die Warnung stand seit dem 05.08. im Abschnitt darüber:**
+
+> *„Alle Kalibrierungszahlen stammen aus **einer** Marktphase (Bärenregime).
+> **In einer Aufwärtsphase könnte ein Trailing-Stop Gewinner zu früh
+> beenden.**"*
+
+**Der Markt hat am 22.08. gedreht** (BTC +23,1 %, Median über 49 Symbole
++15,8 % in neun Tagen). Die Nebenwirkung ist damit keine Vermutung mehr.
+
+### Was gemessen ist (NB-Export 26.08., 172 geprüfte Positionen)
+
+| Empfehlung | Anzahl |
+|---|---:|
+| HALTEN | 123 |
+| **SCHLIESSEN** | **35** |
+| STOP NACHZIEHEN | 14 |
+
+**Die 35 SCHLIESSEN im Detail:**
+
+| | |
+|---|---:|
+| davon **Spot** (`ist_hebel = False`) | **35 von 35** |
+| davon **aktuell im Verlust** (`stand_r < 0`) | **32** |
+| Auslöser „These widerlegt" (`falsifiziert`) | 23 |
+| Auslöser „nachgezogener Stop unterschritten" | 12 |
+| ⚠️ **war ≥ 1R im Gewinn, steht jetzt im Verlust** | **11** |
+
+```
+SUI    seit 22.08. | NACHKAUFEN | war +2,20 R  ->  jetzt −1,11 R
+NEAR   seit 22.08. | NACHKAUFEN | war +1,42 R  ->  jetzt −0,39 R
+BRETT  seit 23.08. | NACHKAUFEN | war +1,06 R  ->  jetzt −0,14 R
+```
+
+### ⚠️ Zwei Fehler, und sie sind verschieden
+
+**(1) Ein Stop, der nie ausgeführt wurde, wird rückwirkend zur Handlung.**
+
+Der Code benennt es selbst: *„Der nachgezogene Stop liegt BEREITS hinter dem
+aktuellen Kurs. Die Position hätte danach schließen müssen — **die Marke ist
+kein Vorschlag für morgen, sondern ein Ereignis von gestern.**"*
+
+Und genau daraus wird eine Empfehlung für **heute**: schließen — im Verlust,
+weil eine Gewinnmitnahme vor vier Tagen nicht stattgefunden hat.
+
+⚠️ **Der Unterschied zum gemessenen Fall ist grundsätzlich:** Die Messung vom
+04.08. lief an **Signalen mit Barrieren**, wo der Stop den Trade *beendet*.
+Bei einem Spot-Bestand liegt **kein Auftrag an der Börse** — „Stop
+unterschritten" heißt dort: **es ist nichts passiert**.
+
+| | Signal mit Barriere | Spot-Bestand |
+|---|---|---|
+| Stop | wird ausgeführt, Trade endet | ⚠️ **wird nicht ausgeführt** |
+| „unterschritten" bedeutet | Verlust begrenzt, fertig | die Marke war Text in einer Mail |
+| Lebensdauer | bis Ziel oder Stop | offen, langfristig |
+
+**(2) Gezählt werden SIGNALE, nicht POSITIONEN.**
+
+LINK erscheint **6×**, MON **5×**, GRIFFAIN **5×** — jedes NACHKAUFEN-Signal
+wird als eigene Position mit eigenem Trailing-Stop geführt. Bei Spot hat der
+Nutzer **eine** Position mit **einem** Einstand. Fünf Empfehlungen für
+denselben Bestand sind fünfmal dieselbe Aussage, oder fünf widersprüchliche.
+
+### Was NICHT der Fall ist — geprüft und entlastet
+
+- ⚠️ **Ein Spot, der nie +1R erreicht hat, bekommt über den Trailing-Pfad
+  KEIN SCHLIESSEN.** `stop_empfohlen` ist ohne aktives Trailing `None`, und
+  `stop_bereits_unterschritten` wird dann nie wahr
+  (`ausstiegsrechnung.py:165/201`). Der Verdacht „jeder Verlust löst aus" ist
+  damit ausgeräumt.
+- **Der Kill-Switch existiert und funktioniert.** `parameter_aus_config`
+  liefert `aktiv = ausloese > 0 and abstand > 0`
+  (`krypto/ausstiegsregel.py:143-156`); `ausstieg_trailing_ausloese_r = 0`
+  schaltet die Regel ab, ohne Codeänderung. ⚠️ In einer ersten Durchsicht
+  hatte ich das Gegenteil vermutet — die Prüfung an der Quelle hat es
+  widerlegt.
+
+### Der zweite Auslöser: `falsifiziert` (23 der 35 Fälle)
+
+Die These gilt als widerlegt, wenn der Kurs den **Widerlegungspreis** des
+Modells erreicht. Das ist für einen kurzfristigen Trade richtig. Bei einem
+langfristig gehaltenen Spot-Bestand ist zu klären:
+
+- Der Widerlegungspreis stammt aus **einem einzelnen Signal** zu einem
+  Zeitpunkt — meist einem **NACHKAUFEN**. Er beschreibt die These *dieses
+  Nachkaufs*, nicht die des Gesamtbestands.
+- ⚠️ **Das ist eine offene Frage, keine festgestellte Fehlfunktion.** Sie
+  gehört in die Simulation, nicht in eine sofortige Änderung.
+
+---
+
+## 7a-S VORABFESTLEGUNG der Simulation — vor jedem Eingriff
+
+⚠️ **Es wird nichts geändert, bevor das gerechnet ist** (N-6). Der Eingriff
+träfe eine seit dem 05.08. scharfgeschaltete Regel.
+
+### Was gemessen wird
+
+| | Frage | Aufbau |
+|---|---|---|
+| **A** | Trägt das Trailing **in der Aufwärtsphase** noch? | dieselbe Messung wie 04.08., aber **je Marktphase getrennt** |
+| **B** | Trägt es für **Spot** getrennt von **Hebel**? | die 04.08.-Messung lief über beide gemeinsam |
+| **C** | Was wäre aus den **35 aktuellen SCHLIESSEN** geworden? | Kurs am Empfehlungstag gegen Kurs heute |
+| **D** | Wie viele Empfehlungen fielen weg, wenn **je Symbol eine Position** statt je Signal gezählt würde? | reine Zählung |
+
+### Vorab festgelegt, was welches Ergebnis bedeutet
+
+| Ergebnis | Lesart |
+|---|---|
+| A trägt in beiden Phasen | die Warnung von 05.08. war unbegründet — Regel bleibt |
+| **A trägt nur im Bär** | ⚠️ die Regel ist **phasengebunden**; dann ist zu entscheiden, ob sie in Aufwärtsphasen ruht |
+| B: trägt bei Hebel, nicht bei Spot | die Regel gehört **nur an den Hebel** — dorthin, wo der Stop real hinterlegt wird |
+| C: die 35 wären besser gefahren | die Empfehlung ist richtig, der Eindruck täuscht |
+| **C: die 35 wären schlechter gefahren** | ⚠️ die rückwirkende Schließung **kostet Geld** |
+| D | reine Beschreibung — sie sagt, wie groß der Doppelzählungs-Effekt ist |
+
+⚠️ **Grenzen, die dazugehören:**
+- **C ist kein Beweis, sondern eine Nachrechnung an 35 Fällen** in einer
+  einzigen, sehr kurzen Marktphase. Ein Ergebnis in die eine oder andere
+  Richtung entscheidet **nichts allein**.
+- Die Positionen sind **offen** — „was wäre geworden" endet am heutigen Kurs,
+  nicht an einem Ausgang.
+- **Positivkontrolle bleibt Pflicht** (93 B).
+
+### Was NICHT gemessen wird
+
+Ob ein Verlustverkauf steuerlich oder psychologisch sinnvoll ist. Das ist eine
+Nutzerentscheidung und keine Messfrage.
+
+---
+
 ## 7b. Konfidenz trägt keine Information (05.08.2026) — die Schwellen-Frage ist damit beantwortet
 
 **Auslöser:** Mistral hat am 31.07. anbieterseitig sein Verhalten geändert

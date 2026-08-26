@@ -2168,3 +2168,39 @@ kann.**
 
 **Einzuordnen als:** kein neues Konzept, sondern die **Ausführung eines
 Beschlusses vom 23.08.**
+
+
+---
+
+## ⚠️ N-11 — Die Ausstiegsregel trifft Spot-Bestand, wofür sie nicht gemessen wurde (26.08.2026)
+
+**Nutzereinwand:** *„Warum gibt es ein Signal zum Ausstieg bei einem Spot-Signal,
+welches im Verlust ist und langfristig gehalten wird? Wer und wie bestimmt
+fällig?"*
+
+**Gemessen am NB-Export (172 geprüfte Positionen):** 35 SCHLIESSEN,
+**alle 35 Spot**, 32 davon aktuell im Verlust, **11 davon waren ≥ 1R im
+Gewinn** (SUI +2,20R → −1,11R).
+
+**Die Warnung stand seit dem 05.08. in `Zielgroessen` 7a:** *„Alle
+Kalibrierungszahlen stammen aus EINER Marktphase (Bärenregime). In einer
+Aufwärtsphase könnte ein Trailing-Stop Gewinner zu früh beenden."* Der Markt
+drehte am **22.08.** — die SCHLIESSEN-Fälle stammen aus dem 22./23.08.
+
+**Zwei verschiedene Fehler:**
+1. Ein **nie ausgeführter** Stop wird rückwirkend zur Handlungsempfehlung. Die
+   04.08.-Messung lief an **Signalen mit Barrieren**, wo der Stop den Trade
+   beendet; bei einem Spot-Bestand liegt **kein Auftrag an der Börse**.
+2. Gezählt werden **Signale statt Positionen** — LINK 6×, MON 5×, GRIFFAIN 5×.
+
+**Entlastet (geprüft, nicht vermutet):** ein Spot ohne je +1R bekommt über den
+Trailing-Pfad **kein** SCHLIESSEN; der Kill-Switch
+(`ausstieg_trailing_ausloese_r = 0`) **funktioniert**.
+
+**Vorabfestlegung der Simulation steht in `Zielgroessen` 7a-S** — vier Fragen
+(Phase · Spot gegen Hebel · die 35 Fälle nachgerechnet · Doppelzählung), mit
+vorab benannter Lesart. **Nichts wird geändert, bevor das gerechnet ist (N-6).**
+
+⚠️ **Warum das hier steht und nicht nur im Fachdokument:** N-10 hat gezeigt,
+dass ein Beschluss, der in genau einem Konzeptdokument steht und in keiner
+offenen Liste, **nie ausgeführt wird**.
