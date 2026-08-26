@@ -1,0 +1,58 @@
+{
+ "totzone": 1.0,
+ "positivkontrolle": null,
+ "atr_kanal": {
+  "Referenz 0,30 %": {
+   "je_k": [
+    -0.006008672942156235,
+    -0.0024445743369705397,
+    -0.004146420998690559,
+    -0.012297587087699624,
+    -0.037572713205944575
+   ],
+   "spanne": 0.035128138868974035
+  },
+  "Betrieb 1,50 %": {
+   "je_k": [
+    -0.0739702398305524,
+    -0.053430233658411486,
+    -0.044957418383992254,
+    -0.04634191097852691,
+    -0.06321890258238799
+   ],
+   "spanne": 0.029012821446560144
+  }
+ },
+ "betrieb": {
+  "quote_alle": 0.3436351738267231,
+  "quote_h": 0.38077974563176037,
+  "quote_rest": 0.3426177495682014,
+  "vorsprung": 0.03816199606355897
+ },
+ "symbolteilung": {
+  "halbe Stichprobe (jede zweite Reihe)": {
+   "vorsprung": 0.0409430121268155,
+   "schwelle": 0.03971400180508115,
+   "urteil": "ZU KNAPP (2.48)",
+   "n_h": 8222,
+   "n_rest": 317691,
+   "bloecke": 262,
+   "blockgrenzen": "wandernd",
+   "blockverfahren": "raster",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0011085082794999293
+  },
+  "VOLLE Stichprobe (nichts wurde gewaehlt)": {
+   "vorsprung": 0.03816199606355897,
+   "schwelle": 0.0323368983311528,
+   "urteil": "TRAEGT",
+   "n_h": 16826,
+   "n_rest": 614291,
+   "bloecke": 523,
+   "blockgrenzen": "wandernd",
+   "blockverfahren": "raster",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0008505511592507288
+  }
+ }
+}

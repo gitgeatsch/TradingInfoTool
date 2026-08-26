@@ -288,7 +288,13 @@ sie wandern. Die Richtung des Fehlers ist **nicht vorhersagbar**: Regel 2.47
 sagt „Schwelle zu niedrig“, die Messung in 2.48 zeigte das Gegenteil — dort
 dominierte die Läufezahl.
 
-⚠️ **Bis S1–S4 gelaufen sind, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
+**✔ S1 gemessen (25.08.): K1 trägt NICHT.** Totzone 0,25 / 0,5 / 1,0 ergeben
++3,92 / +3,78 / +3,82 — **Spanne 0,14 Punkte**, alle drei über ihrer Schwelle.
+Die Trefferzahl ändert sich dabei um **+36 %** (12.367 → 16.826), die Quote
+bleibt bei 38,1 %. **H lebt nicht von einer bestimmten Markenauswahl.**
+Positivkontrolle punktgenau bestanden (erwartet +2,18, gemessen +2,18).
+
+⚠️ **Bis S4 und S2 gelaufen sind, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
 Vorabfestlegung mit Messplan, Schwellen und vorab benannter Lesart:
 `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`.
 

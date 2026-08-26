@@ -515,3 +515,118 @@ Ergebnis**richtungen**.
    stehen unter demselben Vorbehalt.
 5. **Die Symbolteilung** braucht eine stabile Reihen-ID, bevor sie wieder
    zitiert wird.
+
+---
+---
+
+# NACHTRAG (2) — S1 GEMESSEN, 25.08.2026
+
+**Alles oberhalb der Nachtragslinie stand vor den Messungen und ist unverändert.**
+
+## Was lief
+
+Vier Läufe **sequenziell** (nie zwei Prozesse gleichzeitig), alle
+2.47-konform (`--blockgrenzen wandernd --blockverfahren raster`), je 200
+Läufe, auf `data/messdaten.db` (523 Reihen, 631.117 Anker).
+
+**Der Umbau, an genau einer Stelle.** Die Totzone wirkt für *alle*
+H-Messungen in `messe_marken._niveaus_schnell`:
+
+```python
+grenze = LB.NIVEAU_MIN_ABSTAND_ATR * atr
+if   e["preis"] - kurs >= grenze:  oben.append(satz)   # Widerstand
+elif kurs - e["preis"] >= grenze:  unten.append(satz)  # Unterstützung
+```
+
+Eine Marke näher als `grenze` fällt in **keine** der beiden Listen. Weil
+`frei`/`gedeckt` gegen `ziel`/`stop` prüfen, ziehen die Bandgrenzen
+automatisch mit — ein Parameter genügt. **`agent/lagebeschreibung.py`
+(Produktion) wurde nicht angefasst.**
+
+## Ergebnis 1 — die Positivkontrolle (93 B) ist punktgenau bestanden
+
+300 von 8.528 offenen H-Fällen auf „Ziel" gesetzt. Da der Nenner von
+`_quote` **alle** H-Fälle sind (vorsichtige Lesart, 2.54), ist die erwartete
+Verschiebung exakt `n/n_H` — also **vorab berechenbar**:
+
+| | Punkte |
+|---|---:|
+| erwartet (300 / 13.768) | **+2,18** |
+| gemessen (+5,96 gegen +3,78) | **+2,18** |
+| **Abweichung** | **0,000** |
+
+⚠️ **Damit ist ein Nullbefund dieses Werkzeugs aussagekräftig** — es ist nicht
+stumpf. Ohne diese Kontrolle wäre alles Folgende wertlos gewesen.
+
+## Ergebnis 2 — H ist gegen die Totzone robust
+
+| Totzone | H-Fälle | Quote H | Quote Rest | Vorsprung | Schwelle | Abstand | 2×Streu | Urteil |
+|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 0,25 | 12.367 | 38,2 % | 34,3 % | **+3,92** | +3,41 | +0,51 | 0,19 | **TRÄGT** |
+| **0,50** (heute) | 13.768 | 38,1 % | 34,3 % | **+3,78** | +3,42 | +0,36 | 0,18 | **TRÄGT** |
+| 1,00 | 16.826 | 38,1 % | 34,3 % | **+3,82** | +3,23 | +0,58 | 0,17 | **TRÄGT** |
+
+**Spanne des Vorsprungs: 0,14 Punkte.** Vorab festgelegt war: *„alle drei
+tragen, Spanne ≤ 2 Punkte → H ist robust, die Totzone ist eine
+Anzeigeentscheidung."* → **erfüllt, mit großem Abstand.**
+
+## Ergebnis 3 — das stärkere Argument steht nicht in der Spanne
+
+Die Totzone zu vervierfachen (0,25 → 1,0) ändert die **Trefferzahl um +36 %**
+(12.367 → 16.826) — die **Quote bleibt bei 38,1–38,2 %**, die Quote der
+Nicht-H-Fälle bei 34,3 %.
+
+Das ist mehr als „die Spanne ist klein": **H lebt nicht von einer bestimmten
+Markenauswahl.** Man kann die Grenze, ab der eine Marke als Marke zählt,
+vervierfachen, ein gutes Drittel mehr Fälle einsammeln — und die Trefferquote
+rührt sich nicht.
+
+⚠️ **Warum mehr Totzone MEHR H-Fälle ergibt** (das ist zunächst
+kontraintuitiv): H ist `A ∧ B`. Fallen Marken weg, wird **A** („kein
+Widerstand im Weg") *leichter* erfüllt und **B** („Unterstützung deckt den
+Stop") *schwerer*. Netto überwiegt A deutlich. Das ist eine
+Konstruktionseigenschaft von H, die vorher nirgends stand.
+
+## Was NICHT gezeigt ist
+
+1. **Die drei H-Mengen wurden nicht auf Überlappung geprüft.** Aus der
+   Konstruktion folgt, dass sie *keine* Teilmengen voneinander sind (ein Fall
+   kann bei größerer Totzone seine Deckung verlieren und aus H fallen, während
+   ein anderer hineinkommt). Wie stark sie sich unterscheiden, ist offen —
+   wäre der Überlappungsgrad klein, wäre die Robustheit noch stärker belegt.
+   **Als Behauptung steht das hier ausdrücklich nicht.**
+2. **Die Unterschiede zwischen den drei Einstellungen sind nicht belastbar.**
+   Der Abstand zur Schwelle ist bei 1,0 am größten (+0,58) und bei der heutigen
+   0,5 am kleinsten (+0,36) — die Differenz von 0,22 Punkten liegt aber kaum
+   über dem Streufehler (0,17–0,19). **Daraus folgt nicht, dass 1,0 die bessere
+   Einstellung wäre.** Wer das behaupten wollte, bräuchte einen eigenen,
+   vorab festgelegten Test.
+3. **Die Clustergrenze `NIVEAU_CLUSTER_ATR = 0.3` ist weiterhin ungeprüft.**
+   Sie stand schon in der Vorabfestlegung §5 als vorgemerkte, nicht geprüfte
+   Annahme und bleibt es.
+
+## Bilanz nach S3 und S1
+
+| | Annahme | Ergebnis |
+|---|---|---|
+| **K3** | feste Blockgrenzen | ⚠️ **wirkt** — Schwellenspanne 0,9 Punkte, **Large kippt** |
+| **K1** | Totzone 0,5 ATR | ✔ **wirkt nicht** — Spanne 0,14 Punkte, H robust |
+| K4 | Reifeschnitt 250 | offen |
+| K2 | Phasenindex | offen |
+
+**Das Muster ist aufschlussreich:** die Annahme, die *aussah* wie eine
+Willkür (0,5 aus einer Anzeigepanne), trägt nichts. Die Annahme, die
+*aussah* wie eine Formalie (wo die Blockgrenzen liegen), hat ein Urteil
+gekippt. **Welche Konstante gefährlich ist, war vorher nicht zu erraten** —
+das ist das Argument dafür, S4 und S2 ebenfalls zu messen statt zu schätzen.
+
+## Nebenbefund über das Werkzeug
+
+Der Lauf mit Totzone 0,50 war als **Gegenprüfung** angelegt: er musste die
+S3-Zahlen exakt reproduzieren. Er tat es — 13.768 H-Fälle, +3,78 gegen +3,36.
+Der Umbau hat am Bestandsverhalten nichts verändert.
+
+Beim Bauen fielen zwei eigene Fehler auf, beide erst durch Gegenprüfung:
+`LB` war in `bewerte_neu.py` **gar nicht importiert** (hätte erst am Ende
+eines 9-Minuten-Laufs beim JSON-Schreiben geknallt — die *Falle der freien
+Namen*), und ein Escape war als echter Zeilenumbruch in der Datei gelandet.
