@@ -630,3 +630,154 @@ Beim Bauen fielen zwei eigene Fehler auf, beide erst durch Gegenprüfung:
 `LB` war in `bewerte_neu.py` **gar nicht importiert** (hätte erst am Ende
 eines 9-Minuten-Laufs beim JSON-Schreiben geknallt — die *Falle der freien
 Namen*), und ein Escape war als echter Zeilenumbruch in der Datei gelandet.
+
+---
+---
+
+# NACHTRAG (3) — S4 GEMESSEN, 25.08.2026
+
+**Alles oberhalb der Nachtragslinie stand vor den Messungen und ist unverändert.**
+
+## Ergebnis 1 — H fällt mit dem Reifeschnitt, monoton
+
+Vier Läufe sequenziell, 2.47-konform, je 200 Läufe.
+
+| Mindestalter | H-Fälle | Quote H | Quote Rest | Vorsprung | Schwelle | Reihen | Urteil |
+|---:|---:|---:|---:|---:|---:|---:|---|
+| **250** (heute) | 13.768 | 38,1 % | 34,3 % | **+3,78** | +3,36 | 523 | **TRÄGT** |
+| **500** | 7.852 | 35,7 % | 33,7 % | **+2,0** | +3,7 | 470 | ⚠️ **trägt nicht** |
+| **750** | 4.284 | 33,8 % | 32,8 % | **+1,0** | +4,9 | 401 | ⚠️ **trägt nicht** |
+
+Das ist die vorab benannte Zeile: *„trägt bei 250, fällt bei 500 → H lebt vom
+Rand des Reifeartefakts, der Schnitt ist zu früh."*
+
+**Es ist nicht die dünnere Basis.** Wäre nur die Stichprobe geschrumpft, bliebe
+die Quote gleich und nur die Schwelle stiege. Hier fällt **die Quote selbst**:
+38,1 → 35,7 → 33,8 %. Bei 750 liegt H praktisch auf der Basisrate.
+
+**Positivkontrolle bei 750 punktgenau bestanden** (erwartet +7,00, gemessen
++7,00). ⚠️ **Der Nullbefund auf der dünnsten Basis ist echt, kein
+Auflösungsproblem.**
+
+## Ergebnis 2 — die Gegenprüfung: es ist das Artefakt, nicht die Auswahl
+
+Mit steigendem Mindestalter fallen nicht nur alte Anker weg, sondern **ganze
+Reihen** (523 → 470 → 401). Damit standen zwei Erklärungen offen:
+
+| | Erklärung | Konsequenz |
+|---|---|---|
+| **(a)** | Innerhalb derselben Reihen sind späte Anker schlechter | **Reifeartefakt** — H misst Datenlage |
+| **(b)** | Die herausfallenden kurzen Reihen tragen den Effekt | **Auswahleffekt** — H gilt bei jungen/kleinen Werten |
+
+`messe_reifeband.py` trennt beides: **dieselben Reihen, verschiedenes
+Ankeralter.** Nur Reihen, die bis 750 Handelstage reichen („LANG", 401 Reihen),
+werden nach Ankeralter gebändert.
+
+**Die vorab benannte Größe:**
+
+| | Punkte |
+|---|---:|
+| LANG 250–499 | **+5,24** |
+| LANG ab 750 | **+0,94** |
+| **Unterschied** | **+4,30** |
+| Schwelle (200 Läufe) | +3,18 |
+| 2×Streufehler | 0,40 |
+| | **TRÄGT** |
+
+⚠️ **Bei identischer Reihenmenge fällt der H-Vorsprung mit dem Ankeralter,
+stärker als der Zufall erlaubt. Das ist (a).**
+
+## Ergebnis 3 — nur EINE Zelle trägt überhaupt
+
+| Zelle | H-Fälle | Anteil | Quote H | Quote Rest | Vorsprung | Schwelle | Urteil |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **LANG 250–499** | 5.081 | **36,9 %** | 43,6 % | 38,4 % | **+5,24** | +4,06 | **TRÄGT** |
+| LANG 500–749 | 3.366 | 24,4 % | 38,9 % | 37,8 % | +1,13 | +7,16 | trägt nicht |
+| LANG ab 750 | 4.300 | 31,2 % | 33,7 % | 32,8 % | +0,94 | +5,43 | trägt nicht |
+| KURZ 250–499 | 818 | 5,9 % | 25,9 % | 30,4 % | **−4,48** | +3,98 | trägt nicht |
+| KURZ 500–749 | 203 | 1,5 % | — | — | — | — | unter `MIN_FAELLE` |
+
+⚠️ **Der Gesamtbefund +3,78 ist ein Mittelwert, den eine einzige Zelle trägt —
+und die deckt 36,9 % der H-Fälle ab. 63 % der Fälle liegen in Zellen, die
+nicht tragen.**
+
+**Positivkontrolle auf der dünnsten auswertbaren Zelle (KURZ 250–499, 818
+Fälle) punktgenau bestanden:** erwartet +36,67, gemessen +36,67.
+
+## Ergebnis 4 — die Auswahl-Erklärung (b) ist widerlegt, in die Gegenrichtung
+
+Bei **gleichem Ankeralter** 250–499:
+
+| | Quote H | Quote Rest | Vorsprung |
+|---|---:|---:|---:|
+| LANG (401 Reihen) | 43,6 % | 38,4 % | **+5,24** |
+| KURZ (122 Reihen) | 25,9 % | 30,4 % | **−4,48** |
+| | | **Unterschied** | **−9,73** |
+
+Die kurzen Reihen tragen den Effekt **nicht** — dort schadet H. Die
+naheliegende Vermutung („die jungen, kleinen Werte tragen H") ist damit
+widerlegt.
+
+⚠️ **ABER: diese Zeile ist beschreibend, nicht kausal.** Die Trennung
+LANG/KURZ nutzt **Zukunftsinformation** — ob eine Reihe bis 750 Handelstage
+reicht, weiß ein Anker im Jahr 2021 nicht. Wer daraus eine Handelsregel machen
+wollte („nur Werte mit langer Zukunft"), hätte einen Zukunftsblick eingebaut.
+**Die vorab benannte Frage (a) ist davon nicht betroffen**, weil dort die
+Reihenmenge in beiden Bändern dieselbe ist.
+
+## Zwei Fehler im eigenen Messaufbau, gefunden und behoben
+
+**(1) Die Blockbildung passte nicht zur Bandbreite.** Der erste Aufbau bildete
+Blöcke *innerhalb* jedes Altersbands. Bänder sind 250 Handelstage breit, die
+Blocklänge ist es auch — je Reihe und Band entstand also etwa **ein** Block,
+die Permutation konnte nichts mischen, und die Schwelle wurde künstlich breit
+(**+16,3** Punkte, wo der Messwert +5,2 beträgt). Das ist Methodik 2.52.
+
+**(2) Und es war nicht bloß zu grob, sondern die falsche Nullhypothese.** Die
+Frage lautet *„macht das Ankeralter einen Unterschied?"*. Unter der
+Nullhypothese darf ein Ausgang aus einem späten Band genauso gut in einem
+frühen stehen. Der korrigierte Aufbau permutiert deshalb **über die ganze
+Reihe**: die Bändergrenzen bleiben stehen, die Ausgänge wandern hindurch, die
+Blockstruktur hält die zeitliche Abhängigkeit fest. Erst damit sinken die
+Schwellen auf plausible +4,06 / +7,16 / +5,43. → Methodik **2.77**.
+
+**(3) Die Positivkontrolle lief beim ersten Versuch gar nicht** — sie landete
+auf einer Zelle mit 203 H-Fällen, unter `MIN_FAELLE = 300`, und lieferte `NaN`.
+Der Zellfilter stand auf 200 statt 300.
+
+## Bilanz nach S3, S1 und S4
+
+| | Annahme | Ergebnis |
+|---|---|---|
+| **K3** | feste Blockgrenzen | ⚠️ **wirkt** — Schwellenspanne 0,9 Punkte, **Large kippt** |
+| **K1** | Totzone 0,5 ATR | ✔ **wirkt nicht** — Spanne 0,14, H robust |
+| **K4** | Reifeschnitt 250 HT | ⚠️⚠️ **wirkt am stärksten** — H trägt nur im Band 250–499 |
+| K2 | Phasenindex | offen |
+
+**K4 ist der schwerste der drei gemessenen Befunde.** K3 hat ein
+Kategorienurteil gekippt; K4 zeigt, dass der **Hauptbefund selbst** auf einem
+schmalen Altersfenster steht.
+
+## Was das für H bedeutet — und was ausdrücklich NICHT
+
+**Was gilt:** H trägt in den Handelstagen 250–499 einer Reihe, die weiterläuft
+(+5,24 gegen Schwelle +4,06). Danach nicht mehr. Bei Reihen, die früh enden,
+gar nicht.
+
+**Was nicht gilt:** „H ist widerlegt." Die tragende Zelle ist real, mit
+bestandener Positivkontrolle und über ihrer Schwelle. Sie ist nur **viel
+kleiner als der bisher berichtete Befund** — und ihr Zuschnitt (junge, aber
+überlebende Reihen) enthält eine Achse, die im Betrieb nicht verfügbar ist.
+
+**Was daraus folgt:**
+1. **Der Betrieb ist betroffen.** `vorfilter.py` prüft H ohne Alterskriterium.
+   Ob ein Ankeralterfenster eingebaut werden soll, ist **keine Messfrage
+   mehr, sondern eine Entscheidung** — und sie braucht nach N-6 erst eine
+   Wirkungssimulation.
+2. **Kap. 120/121 stehen unter Vorbehalt.** Die Kategorienurteile (Large,
+   Mid, Small) wurden nie nach Ankeralter zerlegt. Small ist die Kategorie
+   mit den jüngsten Reihen — der Verdacht liegt nahe, dass dort dasselbe
+   Fenster wirkt.
+3. **S2 bleibt sinnvoll.** Der Phasenindex ist die letzte ungeprüfte Annahme,
+   und nach drei Messungen ist klar: welche Konstante trägt, war jedes Mal
+   nicht zu erraten.

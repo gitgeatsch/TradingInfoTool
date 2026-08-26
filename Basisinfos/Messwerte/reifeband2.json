@@ -1,0 +1,50 @@
+{
+ "schnitt": 250,
+ "lang_ab": 750,
+ "blocklaenge": 250,
+ "reihen_gesamt": 523,
+ "reihen_lang": 401,
+ "zellen": {
+  "LANG 250-500": {
+   "vorsprung": 0.052417741456569245,
+   "schwelle": 0.04056294274372284,
+   "streu": 0.0013432800366488058,
+   "urteil": "TRAEGT",
+   "n_h": 5081
+  },
+  "LANG 500-750": {
+   "vorsprung": 0.011279153452271484,
+   "schwelle": 0.07155037971297157,
+   "streu": 0.0019970400637337464,
+   "urteil": "traegt nicht",
+   "n_h": 3366
+  },
+  "LANG 750-+": {
+   "vorsprung": 0.009389683973227259,
+   "schwelle": 0.054255164167992184,
+   "streu": 0.0013885770395505198,
+   "urteil": "traegt nicht",
+   "n_h": 4300
+  },
+  "KURZ 250-500": {
+   "vorsprung": -0.04484771331640264,
+   "schwelle": 0.039774856479719366,
+   "streu": 0.0025040121278395553,
+   "urteil": "traegt nicht",
+   "n_h": 818
+  }
+ },
+ "vorab_benannt": {
+  "unterschied": 0.043028057483341986,
+  "schwelle": 0.03183866607859808,
+  "streu": 0.0020060795167750173,
+  "urteil": "TRAEGT"
+ },
+ "positivkontrolle": {
+  "zelle": "KURZ 250-500",
+  "n": 300,
+  "erwartet": 0.36674816625916873,
+  "gemessen": 0.36674816625916873,
+  "bestanden": true
+ }
+}

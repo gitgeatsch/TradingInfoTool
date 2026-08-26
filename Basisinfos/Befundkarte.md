@@ -294,7 +294,33 @@ Die Trefferzahl ändert sich dabei um **+36 %** (12.367 → 16.826), die Quote
 bleibt bei 38,1 %. **H lebt nicht von einer bestimmten Markenauswahl.**
 Positivkontrolle punktgenau bestanden (erwartet +2,18, gemessen +2,18).
 
-⚠️ **Bis S4 und S2 gelaufen sind, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
+⚠⚠ **S4 gemessen (25.08.): K4 wirkt am stärksten — H trägt nur in einem
+schmalen Altersfenster.** Mindestalter 250 / 500 / 750 ergibt +3,78 / +2,0 /
++1,0 bei Schwellen +3,4 / +3,7 / +4,9 — **nur der Bestandswert 250 trägt.**
+Die Quote selbst fällt monoton (38,1 → 35,7 → 33,8 %), es ist also nicht die
+dünnere Basis. Positivkontrolle bei 750 punktgenau bestanden.
+
+**Die Gegenprüfung trennt Artefakt von Auswahl** (`messe_reifeband.py`):
+bei **identischer Reihenmenge** fällt der Vorsprung von **+5,24** (Ankeralter
+250–499) auf **+0,94** (ab 750) — Unterschied **+4,30 gegen Schwelle +3,18,
+trägt**. Es ist das **Reifeartefakt**, nicht die Reihenauswahl.
+
+⚠️ **Nur EINE von fünf Zellen trägt überhaupt:** LANG 250–499 (+5,24 gegen
++4,06), und sie deckt **36,9 %** der H-Fälle ab. **63 % der Fälle liegen in
+Zellen, die nicht tragen.** Bei kurzen Reihen ist H sogar negativ (−4,48) —
+die Vermutung „die jungen, kleinen Werte tragen H" ist widerlegt, wenn auch
+nur beschreibend (die Trennung LANG/KURZ nutzt Zukunftsinformation).
+
+**Was gilt:** H trägt in den Handelstagen 250–499 einer weiterlaufenden Reihe.
+**Was nicht gilt:** „H ist widerlegt" — die tragende Zelle ist real. Sie ist
+nur **viel kleiner als der bisher berichtete Befund**.
+
+⚠️ **Folge für den Betrieb:** `vorfilter.py` prüft H **ohne**
+Alterskriterium. Und **Kap. 120/121 stehen unter Vorbehalt** — die
+Kategorienurteile wurden nie nach Ankeralter zerlegt; Small ist die Kategorie
+mit den jüngsten Reihen.
+
+⚠️ **Bis S2 gelaufen ist, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
 Vorabfestlegung mit Messplan, Schwellen und vorab benannter Lesart:
 `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`.
 

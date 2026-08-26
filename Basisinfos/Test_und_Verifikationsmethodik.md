@@ -4156,3 +4156,43 @@ Reihenfolge über Prozessgrenzen hinweg gleich bleibt.
 **Der Prüfsatz:** Wenn dasselbe Werkzeug zweimal gestartet dieselbe Teilung
 liefern muss, dann prüfe genau das — einmal, mit zwei Aufrufen. Das kostet
 weniger als der Befund, den es rettet.
+
+---
+
+### 2.77 Die Permutation muss die Grenze respektieren, die man befragt (25.08.2026)
+
+Die Frage lautete: *„Fällt H's Vorsprung mit dem Ankeralter?"* Der erste
+Aufbau bildete Permutationsblöcke **innerhalb** jedes Altersbands. Zwei
+Fehler auf einmal:
+
+**Zu grob.** Die Bänder sind 250 Handelstage breit, die Blocklänge ist es
+auch — je Reihe und Band entstand etwa **ein** Block. Die Permutation konnte
+nichts mischen, die Verteilung wurde künstlich breit: Schwelle **+16,3**
+Punkte, wo der Messwert +5,2 beträgt. Das allein ist schon Methodik 2.52.
+
+**Und die falsche Nullhypothese — das ist das Eigentliche.** Wer fragt, ob
+das Alter einen Unterschied macht, muss zulassen, dass unter der
+Nullhypothese ein Ausgang aus einem späten Band genauso gut in einem frühen
+stehen könnte. Blöcke innerhalb des Bands verbieten genau diese Bewegung —
+sie halten fest, was zur Disposition steht.
+
+**Der korrigierte Aufbau permutiert über die ganze Reihe:** die
+Bändergrenzen bleiben stehen, die Ausgänge wandern hindurch, die
+Blockstruktur hält die zeitliche Abhängigkeit fest. Die Schwellen sanken auf
+plausible +4,06 / +7,16 / +5,43, und die vorab benannte Differenz wurde
+messbar (+4,30 gegen Schwelle +3,18).
+
+**Die Regel:** Die Permutation muss genau die Struktur zerstören, deren
+Wirkung geprüft wird — und alles andere erhalten. Wird nach einer
+Gruppengrenze gefragt, muss das Gemischte **über** sie hinweg laufen.
+Blöcke, die innerhalb der befragten Gruppe bleiben, beantworten eine andere
+Frage.
+
+**Der Prüfsatz:** Kann unter meiner Permutation ein Wert die Grenze
+überschreiten, um die es geht? Wenn nein, misst der Placebo nicht die These.
+
+⚠️ **Nebenbefund derselben Runde:** die Positivkontrolle lief zunächst gar
+nicht — sie landete auf einer Zelle mit 203 Fällen, unter `MIN_FAELLE = 300`,
+und lieferte `NaN`, was als „durchgefallen" ausgegeben wurde. **Ein `NaN` ist
+kein Nullbefund, sondern eine nicht gelaufene Messung.** Zellfilter müssen an
+die Mindestfallzahl des Werkzeugs gekoppelt sein, nicht an eine eigene Zahl.

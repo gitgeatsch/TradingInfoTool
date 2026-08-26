@@ -1,0 +1,59 @@
+{
+ "totzone": 0.5,
+ "mindestalter": 750,
+ "positivkontrolle": null,
+ "atr_kanal": {
+  "Referenz 0,30 %": {
+   "je_k": [
+    -0.022409572389594845,
+    -0.01921463314133992,
+    -0.020257463537558584,
+    -0.02725705566947334,
+    -0.049049378804465804
+   ],
+   "spanne": 0.029834745663125883
+  },
+  "Betrieb 1,50 %": {
+   "je_k": [
+    -0.0956432023878479,
+    -0.07414874734338972,
+    -0.06422268092886296,
+    -0.06391982824058251,
+    -0.07662152103191222
+   ],
+   "spanne": 0.03172337414726539
+  }
+ },
+ "betrieb": {
+  "quote_alle": 0.32785222874250586,
+  "quote_h": 0.3377684407096172,
+  "quote_rest": 0.3277430759862175,
+  "vorsprung": 0.01002536472339971
+ },
+ "symbolteilung": {
+  "halbe Stichprobe (jede zweite Reihe)": {
+   "vorsprung": 0.008910860070094784,
+   "schwelle": 0.039585425975087345,
+   "urteil": "traegt nicht",
+   "n_h": 1921,
+   "n_rest": 194655,
+   "bloecke": 198,
+   "blockgrenzen": "wandernd",
+   "blockverfahren": "raster",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0019691858479153335
+  },
+  "VOLLE Stichprobe (nichts wurde gewaehlt)": {
+   "vorsprung": 0.01002536472339971,
+   "schwelle": 0.048964729425288955,
+   "urteil": "traegt nicht",
+   "n_h": 4284,
+   "n_rest": 389189,
+   "bloecke": 401,
+   "blockgrenzen": "wandernd",
+   "blockverfahren": "raster",
+   "laeufe": 200,
+   "streufehler_schwelle": 0.0013615348850936281
+  }
+ }
+}
