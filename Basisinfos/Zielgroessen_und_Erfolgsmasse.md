@@ -1451,6 +1451,57 @@ Stichprobe, nicht aus einem Fehler.
 
 ---
 
+### ✔ FRAGEN C UND D GEMESSEN (26.08.)
+
+#### C — hätte die Ausführung genutzt? ⚠️ **erst der Zirkelschluss, dann die Antwort**
+
+**Erste Rechnung, nur auf den 35 SCHLIESSEN:** Ausführung wäre in **14 von 14**
+Fällen besser gewesen (+0,545 R). ⚠️ **Das ist ein Zirkelschluss** — die 35
+SCHLIESSEN **sind** die Fälle, in denen der Kurs gefallen ist. Die Gestiegenen
+stehen auf HALTEN und tauchen gar nicht auf.
+
+**Unverzerrt, über alle 28 Positionen mit MFE ≥ 1R** (nur die berührt das
+Trailing überhaupt):
+
+| | |
+|---|---:|
+| ausgeführt | +0,367 R |
+| gehalten | +0,239 R |
+| **Differenz** | **+0,127 R Mittel · Median −0,012** |
+| **Ausführung besser** | **14 von 28 (50 %)** |
+| **Halten besser** | **14 von 28 (50 %)** |
+
+**Und die Aufschlüsselung macht den Zirkel sichtbar:**
+
+| Empfehlung | n | Differenz | Ausführung besser |
+|---|---:|---:|---:|
+| STOP NACHZIEHEN | 14 | **−0,291 R** | **0 %** |
+| SCHLIESSEN | 14 | **+0,545 R** | **100 %** |
+
+⚠️ **Die Empfehlung IST die Aufteilung in „gefallen" und „gestiegen".** Wo der
+Kurs fiel, heißt sie SCHLIESSEN; wo er stieg, STOP NACHZIEHEN. Perfekt
+symmetrisch. **Über alle Positionen ist es ein Münzwurf** — der Mittelwert
++0,127 wird von wenigen großen Fällen getragen (SUI +2,32 R), der Median liegt
+bei −0,012.
+
+**Damit bestätigt C den Befund A eher, als ihm zu widersprechen:** in der
+laufenden Aufwärtsphase bringt die Ausführung nichts Systematisches.
+
+#### D — Signale statt Positionen: die Doppelzählung
+
+| | |
+|---|---|
+| 35 SCHLIESSEN-Empfehlungen für | **15 verschiedene Symbole** → **57 % weniger** bei einer Position je Symbol |
+| 172 geprüfte Positionen für | **40 Symbole** → ⚠️ **77 % sind Doppelungen** |
+
+Mehrfache: LINK **6×**, MON **5×**, GRIFFAIN **5×**, BEAMX 3×, KAS 3×.
+
+**Das ist reine Beschreibung, aber die Zahl ist groß genug, um zu zählen:**
+drei Viertel aller Positionsprüfungen betreffen denselben Bestand mehrfach —
+mit je eigenem Trailing-Stop und teils widersprüchlicher Empfehlung.
+
+---
+
 ### Was NICHT gemessen wird
 
 Ob ein Verlustverkauf steuerlich oder psychologisch sinnvoll ist. Das ist eine
