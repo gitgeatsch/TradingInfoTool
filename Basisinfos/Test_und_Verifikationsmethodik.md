@@ -3291,6 +3291,10 @@ vollständig **nicht** verzeichnet — dieselbe Falle in neuer Auflage.
 | `messe_ausstieg.py` | Tragen Teilverkauf und Einstandstop? (123) |
 | `pruefe_strukturstop.py` | Schadet der Strukturboden im Stop? (124) — ruft die **Produktionsfunktion** |
 | `pruefe_phasenindex.py` | Hält der Phasenindex, was er misst? (114, Gegenprobe) |
+| `messe_reifeband.py` | Ist der Rückgang mit dem Ankeralter **Artefakt oder Auswahl**? (S4-Gegenprüfung, 25.08.) — dieselben Reihen, nach Ankeralter gebändert |
+| `messe_kat_alter.py` | Trägt ein Kategorienbefund **altersunabhängig**? (120/121 zerlegt, 25.08.) — ⚠️ weist die Bändersumme gegen das Ursprungskapitel aus (2.78) |
+| `messe_alter_vs_zeit.py` | **Asset-Alter oder Marktreife?** (25.08.) — beide Achsen gekreuzt; mit dem Ankeralter läuft immer die Kalenderzeit mit (2.79) |
+| `pruefe_positionierung_kanal.py` | Ist die Terminmarkt-Positionierung ein **eigener Kanal** — oder der ATR-Kanal zum sechsten Mal? (25.08.) — ⚠️ Vorbedingung, **keine** Wirkungsmessung |
 
 > ⚠️ **Alle bis auf eines tragen `⚠️ DIESER KOPF IST DIE VORABFESTLEGUNG`** —
 > die Frage und ihre Abbruchregel stehen dort, **bevor** gerechnet wurde. Wer
