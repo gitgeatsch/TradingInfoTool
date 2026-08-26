@@ -133,6 +133,61 @@ Vollständig: `Konzept_Positionierung_25_08.md`.
 
 ---
 
+### 3.1c ⚠️ DIE KLÄRUNG — warum dieselbe Frage siebenmal verschieden ausging
+
+*Nutzervorgabe 26.08.: „Bei Messungen und Bewertungen, welche unterschiedliche
+Ergebnisse gebracht haben, würde ich eine saubere Klärung durchführen."*
+
+**H wurde siebenmal gemessen, mit sechs verschiedenen Ergebnissen. Keines
+davon ist unerklärt — jede Änderung hat einen benennbaren Grund:**
+
+| # | Kapitel | Ergebnis | **was sich geändert hat** |
+|---|---|---|---|
+| 1 | **104 roh** | +1,3 gegen +0,2 → **trägt** | 39 Reihen, junge Reihen enthalten |
+| 2 | **104.3 reif** | +0,8 gegen +2,4 → **trägt nicht** | **Reifeschnitt 250 HT** eingeführt. *„Der Rohbefund war die Datenlage."* |
+| 3 | **105** | +7,1 gegen +10,0 → **nicht entscheidbar** | kostenbereinigt, aber nur 24 Reihen |
+| 4 | **108** | −0,3 gegen −2,1 → **trägt** | **Basis verbreitert**: 39 → 262 Reihen, 539.049 Kerzen |
+| 5 | **119** | **+4,5** gegen +2,6 → **trägt** | **Gebührenmaßstab korrigiert** (Betrieb 1,50 % → gebührenfrei) + vorsichtige Lesart |
+| 6 | **121** | Large +5,9 · Small +7,9 → **tragen** | **Überlebensverzerrung behoben**: +176 eingestellte Paare, 523 Reihen |
+| 7 | **S3/S4 (25.–26.08.)** | gesamt **+3,78** · Large **kippt** · nur 1 von 5 Zellen | **Blockgrenzen 2.47-konform** + Basis 312 → 523 + Altersband zerlegt |
+
+### Das Muster — und warum es beunruhigt und beruhigt zugleich
+
+⚠️ **Sechs von sieben Änderungen waren Methodenverbesserungen, und fünf davon
+haben den Befund verkleinert.** Der Abstand zur Schwelle fiel von **1,9** auf
+**0,42** Punkte.
+
+**Beruhigend:** Keine der Änderungen ist willkürlich. Jede entfernte eine
+**Überschätzung** — junge Reihen (2), zu schmale Basis (4), falscher
+Gebührenmaßstab (5), Überlebende (6), zu freundliche Schwellen (7). Das ist
+genau das, was Methodenarbeit tun soll.
+
+**Beunruhigend:** Wenn jede Verbesserung H verkleinert hat, ist die Frage
+berechtigt, was von ihm bleibt, wenn man weitersucht.
+
+⚠️ **Und genau hier liegt der Unterschied zur nächsten anstehenden Änderung.**
+Die sechs bisherigen entfernten **Überschätzungen**. Die nächste (**N-10**:
+Trichter statt Barrierenmaß) entfernt eine **Unterschätzung** — denn „Ziel vor
+Stop" fällt per Konstruktion auf die Basisrate und **kann** nichts finden.
+**Sie könnte deshalb erstmals in die andere Richtung wirken.** Vorhersagen
+lässt sich das nicht; festhalten schon, dass die bisherige Richtung **kein**
+Argument dafür ist, wohin die nächste geht.
+
+### Die übrigen Doppelmessungen — alle geklärt
+
+| Frage | erst | dann | **Klärung** |
+|---|---|---|---|
+| **Tagewahl** | Nullbefund | trägt in beiden Phasen | der alte Befund war eine **Quotenmessung**; erst der quotengleiche Zufall trennt Tagewahl von Investitionsquote |
+| **Drift/Rangplatz** | +1,01 % (t 3,20), trägt knapp | **−5,8** innerhalb H | **gegenläufige Thesen**: H ist Rückkehr zum Mittel, der Rang ist Momentum. Wer beide verlangt, sucht einen Wert, der zugleich gelaufen und zurückgeblieben ist (§9.2) |
+| **Marktphase** | größter Einzeleffekt (+14,3, t 24,36) | nicht invers, nicht vorhersagend | der Effekt ist der **Kostenkanal** (hoher ATR → weiter Stop in % → niedrigere Hürde), keine Prognose |
+| **Akkumulation** | antizyklisch schlägt DCA | die **Kontrolle** schlägt alles | der Vorteil ist die **Investitionsquote**, kein Timing |
+| **S4 Alter** | H trägt nur jung | diagonal: jung/früh **und** alt/spät | **Confounder Kalenderzeit** — mit dem Ankeralter läuft immer das Jahr mit (2.79) |
+
+**Kein offener Widerspruch.** Was bleibt, ist die Frage aus N-10: **wie viele
+dieser Befunde würden mit dem richtigen Erfolgsmaß anders ausfallen?**
+
+---
+
 ### 3.2 Was fiel — und woran
 
 | Behauptung | Kapitel | woran sie fiel |
