@@ -1,3 +1,17 @@
+> ⚠⚠ **ÜBERHOLT am 26.08.2026 — ersetzt durch
+> `Konzept_Potential_Krypto_26_08.md`.**
+>
+> Dieser Entwurf hat die **Handelsstrategie nicht berücksichtigt** und
+> Annahmen als Fakten geführt. Drei Fehler, vom Nutzer benannt:
+> **(1)** Bestand ohne gestakte Mengen gerechnet — 9 Assets fehlten;
+> **(2)** „20 eröffenbar" gilt nur für Spot, **für Hebel sind es 44**
+> (mit und ohne Bestand); **(3)** Spot (längerfristig) und Hebel (kurzfristig,
+> häufig kritisch) brauchen **getrennte Horizonte** — ein Potentialmaß mit
+> einem Horizont wäre für eine Seite immer falsch.
+>
+> Die Grundidee (Anlass = Potentialänderung statt Zeitablauf) bleibt und
+> steht ausgearbeitet in der Vollfassung.
+
 # Der GRUND je Asset — Konzept statt weiterer Messung
 
 **Angelegt 26.08.2026.** Nutzervorgabe, seit dem 25.08. mehrfach wiederholt:
