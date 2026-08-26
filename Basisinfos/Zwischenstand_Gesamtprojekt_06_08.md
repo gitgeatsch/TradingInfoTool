@@ -2204,3 +2204,44 @@ vorab benannter Lesart. **Nichts wird geändert, bevor das gerechnet ist (N-6).*
 ⚠️ **Warum das hier steht und nicht nur im Fachdokument:** N-10 hat gezeigt,
 dass ein Beschluss, der in genau einem Konzeptdokument steht und in keiner
 offenen Liste, **nie ausgeführt wird**.
+
+
+---
+
+## ⚠️ N-12 — Positionsführung: sieben Lücken über alle Assetklassen (26.08.2026)
+
+**Bestandsaufnahme** in `Bestandsaufnahme_Positionsfuehrung_26_08.md`,
+ausgelöst durch die Nutzervorgabe *„vorher prüfen, ob alles vorhanden ist —
+wie alle Anforderungen an Krypto, Hebel und Spot lauten, auch über andere
+Assets"*.
+
+**Der Bruch:** Die **Bestände sind real** (Bitpanda-Import: `holdings`,
+`hebel_positions`), die **Thesen stehen in den Signalen** — und **nichts
+verbindet beides zu einer Position**.
+
+| # | Lücke | Größe |
+|---|---|---|
+| **L1** | keine Position mit These (Stop/Ziel/MFE/Einstand) | 77 % Doppelungen |
+| **L2** | Akkumulation nie gesetzt | **0 von 7.294** Signalen |
+| **L3** | Trailing phasenabhängig, greift trotzdem immer | −0,043 R in AUF |
+| **L4** | keine Spot-Zeitskala (Handelshorizont = 0–5 Tage) | strukturell |
+| **L5** | Einstand nur teilweise (`tracked_qty` < Bestand) | 9 Assets nur gestakt |
+| **L6** | Rolle `taktisch`/`core` ohne erkennbare Wirkung | ungeprüft |
+| **L7** | Absicherung: 97,2 % Anlass-Sperrquote | faktisch aus |
+
+⚠️ **Der Grundsatz, der alles betrifft** (`betraege.py:94`, seit 13.08.):
+*„BEI SPOT OHNE STOP-ORDER IST DAS KEINE ORDER, SONDERN EINE RECHENGRÖSSE.
+Der Nutzer hält Spot ,aktuell auch ohne StopLoss'."* Damit ist „Stop
+unterschritten" bei Spot **kein Ereignis** — die Trailing-Regel wurde an
+Signalen mit echten Barrieren gemessen.
+
+**⚠️ VOR JEDEM UMBAU zu beantworten (Nutzerentscheidung, nicht messbar):**
+1. Woher kommt der **Stop einer gewachsenen Spot-Position**? Ohne Stop kein R,
+   ohne R keine Trefferbilanz.
+2. Was ist eine **Position bei Nachkauf** — ein neuer Durchschnittseinstand
+   oder mehrere Tranchen mit eigenen Thesen?
+3. Soll **`taktisch`/`core`** den Ablauf steuern?
+4. Gilt für **Core-Assets** dieselbe Logik wie für Spot-Krypto?
+
+**Die Wirkungssimulation für den Phasenschalter (N-11) wartet auf 1 und 2** —
+wenn Positionen anders geführt werden, ändert sich, worauf der Schalter wirkt.
