@@ -4229,3 +4229,38 @@ von Small) und das Ergebnis unverändert; das war **vorher nicht bekannt**.
 **Der Prüfsatz:** Wohin fallen die Fälle, für die das Merkmal FEHLT? Landen
 sie in genau der Gruppe, über die geurteilt wird, ist das Urteil ohne diesen
 Ausweis nicht lesbar.
+
+---
+
+### 2.79 Wer nach einer Achse zerlegt, muss prüfen, was mit ihr mitläuft (25.08.2026)
+
+S4 zerlegte H nach dem **Ankeralter** und fand einen monotonen Rückgang
+(+5,24 → +0,94) bei identischer Reihenmenge. Der Schluss lautete
+„Reifeartefakt". Er war zu schnell.
+
+⚠️ **Innerhalb derselben Reihe läuft mit dem Ankeralter zwangsläufig die
+Kalenderzeit mit.** Frühe Anker sind früher, späte später — immer. Gemessener
+Versatz: Median-Jahr 2022 gegen 2024. Und H ist phasenabhängig. „Der
+Vorsprung fällt mit dem Alter" und „der Vorsprung fällt mit dem Jahr" waren
+also **dieselbe Zahl, zweimal gelesen**.
+
+Gekreuzt gemessen sind beide Effekte etwa gleich groß (+9,26 gegen +8,84) und
+**keiner** übersteht die Kontrolle für den jeweils anderen. Zusätzlich liegen
+die tragenden Zellen **diagonal** (jung/früh und alt/spät) — ein Muster, das
+keine der beiden Achsen allein erzeugen kann.
+
+**Die Regel:** Vor der Deutung einer Zerlegung ist zu fragen, **welche zweite
+Größe mit der gewählten Achse zwangsläufig mitläuft**. Bei allem, was entlang
+einer Reihe fortschreitet — Alter, Position, laufende Nummer, Reifegrad —
+läuft die Kalenderzeit immer mit. Ist die gemessene Größe zeitabhängig, sind
+Achse und Zeit ohne Kreuzung nicht trennbar.
+
+**Der Prüfsatz:** Könnte ich meinen Befund erhalten, indem ich statt meiner
+Achse einfach „früher gegen später" sage? Wenn ja, ist er ohne Stratifizierung
+nicht interpretierbar.
+
+⚠️ **Und eine Lehre über Vorabfestlegungen:** die Lesart für diesen Fall war
+mit „beide klein" formuliert. Gemessen wurden **zwei große Effekte an hohen
+Schwellen**. Die Konsequenz war dieselbe, aber die Formulierung traf den Fall
+nicht. Vorab-Lesarten sollten über **Urteile** ("trägt / trägt nicht") laufen,
+nicht über Größenordnungen.

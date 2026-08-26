@@ -892,3 +892,119 @@ vorab benannt, und der Suchpreis für zwölf Zellen ist nicht bezahlt.
    Daten trägt (Zeit- oder Symbolteilung innerhalb von Small 250–499). Das
    wäre die nächste ehrliche Frage — mit dem Vorbehalt, dass 3.517 H-Fälle
    sich nicht beliebig oft teilen lassen.
+
+---
+---
+
+# NACHTRAG (5) — ALTER ODER MARKTREIFE? 25.08.2026
+
+## ⚠️ Dieser Nachtrag nimmt eine Deutung aus Nachtrag (3) zurück
+
+**Der Anlass war ein Nutzereinwand:**
+
+> *„Denke nicht, dass das Alter der Assets so relevant ist, sondern u. U. der
+> Reifegrad des Marktes — aber das musst du feststellen."*
+
+Er trifft einen Confounder, den die S4-Auswertung übersehen hat. **Innerhalb
+derselben Reihe liegt das Ankeralter 250–499 immer früher in der Kalenderzeit
+als das Band ab 750.** „Der Vorsprung fällt mit dem Ankeralter" ist damit nicht
+zu unterscheiden von „der Vorsprung fällt mit dem Kalenderjahr". Gemessener
+Schwerpunkt der Anker:
+
+| Ankeralter | Median-Jahr |
+|---|---|
+| 250–499 | **2022** |
+| 500–749 | 2023 |
+| ab 750 | **2024** |
+
+**Zwei Jahre Versatz.** Und H ist nachweislich phasenabhängig (bulle +7,6 /
+seitwärts +6,0 / bär −6,5, Kap. 108).
+
+## Die Messung
+
+Beide Achsen gekreuzt, Zeitgruppen vorab gesetzt (drei etwa gleich lange
+Abschnitte), nicht aus den Daten gewählt. Permutation über die ganze Reihe
+(2.77). Positivkontrolle punktgenau bestanden (+77,52, Abweichung 0,000).
+
+| Ankeralter | bis 2022 | 2023–2024 | ab 2025 |
+|---|---:|---:|---:|
+| **250–499** | **+5,36** *(n 4310)* **TRÄGT** | −3,98 *(n 901)* | −3,48 *(n 705)* |
+| 500–749 | +4,05 *(n 2754)* | −14,66 *(n 427)* | −9,79 *(n 387)* |
+| **ab 750** | −3,90 *(n 1565)* | −5,15 *(n 1070)* | **+11,22** *(n 1649)* **TRÄGT** |
+
+## Die vorab benannten Größen
+
+| | | |
+|---|---|---|
+| **Z1** — Alterseffekt bei fester Zeit (bis 2022) | +9,26 gegen Schwelle **+9,25** | **ZU KNAPP** |
+| **Z2** — Zeiteffekt bei festem Alter (Band 250–499) | +8,84 gegen Schwelle **+9,10** | **ZU KNAPP** |
+
+**Vorab festgelegte Lesart für diesen Fall:** *„der Rückgang zerfällt bei
+Stratifizierung — weder Alter noch Zeit, sondern Zusammensetzung; als
+Zerlegung ablegen (2.51)."*
+
+⚠️ **Eine Präzisierung zur Formulierung:** die Vorabfestlegung sprach von
+„beide klein". Gemessen sind beide **groß** (+9,26 und +8,84) — aber ihre
+Schwellen sind es auch (+9,25 / +9,10), weil die Zellen dünn werden. Das
+Ergebnis ist also nicht „kein Effekt", sondern **„zwei etwa gleich große
+Effekte, von denen keiner vom Zufall zu trennen ist"**. Sachlich führt es zur
+selben Konsequenz, aber der Unterschied gehört festgehalten.
+
+## ⚠️ Was daraus zurückgenommen werden muss
+
+**Nachtrag (3) schloss:** *„Bei identischer Reihenmenge fällt der H-Vorsprung
+mit dem Ankeralter → das ist das Reifeartefakt."* Und darauf baute die
+Anwendungsempfehlung: *„H gilt für junge Coins, die Watchlist ist zu alt."*
+
+**Beides ist nach dieser Messung nicht haltbar:**
+
+1. **Der Alterseffekt überlebt die Kontrolle für die Kalenderzeit nicht**
+   (Z1 zu knapp). Er ist genauso groß wie der Zeiteffekt — und der überlebt
+   die Kontrolle für das Alter ebenso wenig.
+2. **Das Zellmuster ist in keiner der beiden Achsen monoton.** Die beiden
+   tragenden Zellen liegen **diagonal**: junge Anker bis 2022 (+5,36) *und*
+   alte Anker ab 2025 (+11,22). Wäre das Alter die Ursache, dürfte die
+   zweite Zelle nicht existieren.
+3. ⚠️ **S4s Kernsatz „ab 750 trägt nicht" hält der Zerlegung nicht stand.**
+   Die +0,94 waren ein Mittelwert über alle Zeiten. Nach Zeit zerlegt ist
+   „ab 750, ab 2025" mit **+11,22 die stärkste Zelle der ganzen Messung.**
+
+**Was von S4 bleibt:** die Messung selbst (H trägt bei Mindestalter 250, nicht
+bei 500 oder 750). **Was fällt: ihre Deutung.** Der Rückgang ist real, seine
+Ursache ist nicht das Asset-Alter.
+
+## Was stattdessen gilt — und es ist nicht neu
+
+Das Muster passt zu einem Befund, den das Projekt seit Kapitel 115 hat und der
+nie ernst genug genommen wurde:
+
+> **H trägt selten viel, nicht durchgehend.** 20 Fenster à 120 Handelstage:
+> Median-Vorsprung −2,7, Spanne −21,1 bis +19,8, **positiv in 7 von 20**,
+> über Breakeven in **2 von 20**.
+
+Und die Beharrungsprüfung derselben Runde ergab: **nach einem positiven
+Fenster folgt kein positives** (W1 +3,9 gegen Schwelle +7,9; W2 zeigte sogar
+das Gegenteil).
+
+**H ist episodisch.** Es gibt Abschnitte, in denen es deutlich trägt, und
+solche, in denen es schadet — und **weder Ankeralter noch Kalenderzeit noch
+Marktphase sagen vorher, welcher gerade ist.** Diese Messung fügt dem eine
+vierte gescheiterte Erklärung hinzu.
+
+## Was das für die Anwendung heißt
+
+Die Empfehlung aus Nachtrag (4) — *„die Watchlist ist zu alt für H"* — ist
+**hinfällig**. Sie war auf die Altersdeutung gebaut.
+
+**Was bleibt, ist unbequemer:** H hat keinen bekannten Gültigkeitsbereich.
+Nicht das Alter, nicht die Kategorie (Nachtrag 4), nicht die Marktphase
+(Kap. 108/109), nicht die Zeit. Ein Filter, von dem niemand sagen kann, wann
+er gilt, ist im Betrieb nicht sinnvoll scharf zu schalten — und das ist keine
+Vorsicht, sondern das Messergebnis.
+
+⚠️ **Und eine Grenze dieser Messung, die dazugehört:** die Zellen sind dünn
+(387 bis 4.310 H-Fälle), die Schwellen entsprechend hoch (+4,75 bis +8,98).
+Nur sehr große Effekte wären hier nachweisbar. Dass zwei Zellen trotzdem
+tragen, ist bemerkenswert; dass die Differenzen es nicht tun, ist bei dieser
+Auflösung zu erwarten. **Eine feinere Antwort bräuchte mehr Daten, nicht mehr
+Rechnung.**

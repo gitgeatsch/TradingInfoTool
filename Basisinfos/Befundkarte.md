@@ -341,6 +341,36 @@ als Zerlegung ablegen — NICHT „Small ist widerlegt".** Der Verlauf
 **Large trägt in keinem Band** — konsistent mit S3, wo es bei korrekten
 Blockgrenzen kippte. Zwei unabhängige Zerlegungen, derselbe Schluss.
 
+⚠⚠ **KORREKTUR 25.08. abends — die Altersdeutung fällt.** Ein Nutzereinwand
+(*„nicht das Alter der Assets, sondern u. U. der Reifegrad des Marktes"*) hat
+einen Confounder aufgedeckt: **innerhalb derselben Reihe liegt das Band
+250–499 immer früher in der Kalenderzeit** als das Band ab 750 (Median-Jahr
+2022 gegen 2024). Beide Achsen gekreuzt gemessen:
+
+| Ankeralter | bis 2022 | 2023–2024 | ab 2025 |
+|---|---:|---:|---:|
+| 250–499 | **+5,36 TRÄGT** | −3,98 | −3,48 |
+| 500–749 | +4,05 | −14,66 | −9,79 |
+| ab 750 | −3,90 | −5,15 | **+11,22 TRÄGT** |
+
+**Alterseffekt +9,26 gegen Schwelle +9,25 → ZU KNAPP.
+Zeiteffekt +8,84 gegen +9,10 → ZU KNAPP.** Zwei etwa gleich große Effekte,
+keiner vom Zufall zu trennen. Positivkontrolle bestanden.
+
+⚠️ **Die tragenden Zellen liegen DIAGONAL** — jung/früh und alt/spät. Wäre
+das Alter die Ursache, dürfte die zweite nicht existieren. **S4s Satz „ab 750
+trägt nicht" hält der Zerlegung nicht stand:** die +0,94 waren ein Mittelwert;
+„ab 750, ab 2025" ist mit **+11,22 die stärkste Zelle der Messung**.
+
+**Was bleibt:** die S4-Messung (H trägt bei 250, nicht bei 500/750).
+**Was fällt:** ihre Deutung als Asset-Alter — und damit auch die Empfehlung
+„die Watchlist ist zu alt für H".
+
+**Was stattdessen gilt, und es ist nicht neu (Kap. 115):** *H trägt selten
+viel, nicht durchgehend* — positiv in 7 von 20 Fenstern, über Breakeven in 2
+von 20, ohne Beharrung. **H ist episodisch, und keine der vier geprüften
+Achsen (Alter, Kategorie, Marktphase, Kalenderzeit) sagt vorher, wann.**
+
 ⚠️ **Bis S2 gelaufen ist, gilt jede H-Zahl dieser Karte unter Vorbehalt.**
 Vorabfestlegung mit Messplan, Schwellen und vorab benannter Lesart:
 `Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`.
