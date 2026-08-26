@@ -71,7 +71,8 @@ MINDESTALTER = 250
 MIN_FAELLE = 300
 
 
-def sammle(db: str, klasse: str) -> tuple[dict, dict, dict]:
+def sammle(db: str, klasse: str,
+           totzone: float | None = None) -> tuple[dict, dict, dict]:
     """Je Zelle (k, crv, horizont, gruppe): Treffer, Entschiedene, Stopweiten.
 
     ⚠️ KEINE ANKERLISTE IM SPEICHER. 533.000 Anker x 60 Zellen waeren
@@ -96,7 +97,7 @@ def sammle(db: str, klasse: str) -> tuple[dict, dict, dict]:
             atr, einstieg = a[i - off], c[i]
             if not (atr > 0 and einstieg > 0):
                 continue
-            n = _niveaus_schnell(sp, c, h, l, i, atr)
+            n = _niveaus_schnell(sp, c, h, l, i, atr, totzone)
             oben = [m["preis"] for m in n["oben"]
                     if m["beruehrungen"] >= MIN_BERUEHRUNGEN]
             unten = [m["preis"] for m in n["unten"]

@@ -115,7 +115,8 @@ class _SwingSpeicher:
         return True
 
 
-def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
+def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr,
+                     totzone: float | None = None) -> dict:
     """`LB.niveaus_werte` mit vorberechneten Swings - Rest unveraendert.
 
     Der Code darunter ist Zeile fuer Zeile der der Produktion; nur die
@@ -136,7 +137,12 @@ def _niveaus_schnell(sp: _SwingSpeicher, c, h, l, i, atr) -> dict:
     if (not hi and not lo) or atr <= 0:
         return {"oben": [], "unten": []}
     kurs = float(c[i])
-    grenze = LB.NIVEAU_MIN_ABSTAND_ATR * atr
+    # S1 (25.08.2026): die Totzone ist pruefbar gemacht. `None` heisst
+    # unveraendert der Produktionswert - jeder bestehende Aufrufer
+    # rechnet damit bitgleich weiter. Sie ist KEIN Anzeigefilter,
+    # sondern die untere Kante BEIDER H-Baender (Methodik 2.74).
+    grenze = (LB.NIVEAU_MIN_ABSTAND_ATR if totzone is None
+              else totzone) * atr
     niveaus = LB._cluster_mit_art(
         [(float(h[j]), "hoch", j) for j in hi]
         + [(float(l[j]), "tief", j) for j in lo], atr)

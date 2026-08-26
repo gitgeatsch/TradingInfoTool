@@ -65,6 +65,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, ".")
+from agent import lagebeschreibung as LB                        # noqa: E402
 from agent import trefferbilanz as TB                           # noqa: E402
 from messe_dosis import (CRV_WERTE, K_WERTE,                     # noqa: E402
                          MIN_FAELLE, sammle)
@@ -104,6 +105,14 @@ def main() -> int:
     # umstellt, aendert also ZWEI Dinge zugleich. Deshalb getrennt schaltbar.
     ap.add_argument("--blockverfahren", choices=("greedy", "raster"),
                     default="greedy")
+    # S1: die Totzone (LB.NIVEAU_MIN_ABSTAND_ATR, heute 0,5). Ohne Angabe
+    # bleibt der Produktionswert - der Altbefund ist reproduzierbar.
+    ap.add_argument("--totzone", type=float, default=None)
+    # POSITIVKONTROLLE (93 B, Pflicht): N Faelle in H, die NICHT ihr Ziel
+    # erreicht haben, werden auf "Ziel" umgeschrieben. Findet die Messung
+    # die eingepflanzte Verschiebung nicht wieder, ist jeder Nullbefund
+    # dieses Werkzeugs wertlos. 0 = aus.
+    ap.add_argument("--positivkontrolle", type=int, default=0)
     ap.add_argument("--datei", default="messwerte_neubewertung.json")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -113,7 +122,7 @@ def main() -> int:
     print("  Ein Durchlauf, zwei Spalten. Die Zaehlung ist gebuehrenfrei;")
     print("  die Gebuehr geht erst in die Bewertung ein.")
     print("=" * 78)
-    _z, stops, roh = sammle(a.db, a.klasse)
+    _z, stops, roh = sammle(a.db, a.klasse, a.totzone)
     bel = roh[(K_WERTE[0], CRV_WERTE[0])]
     print(f"  {len(bel['r'])} Anker je Geometrie, "
           f"{int(bel['h'].sum())} davon in H")
@@ -140,6 +149,30 @@ def main() -> int:
     # ---- N2 + N3: DER BETRIEBSZUSTAND -----------------------------------
     k, crv, hz = BETRIEB
     rz = roh[(k, crv)]
+    pk = None
+    if a.positivkontrolle > 0:
+        # ⚠️ AUF EINER KOPIE - `roh` wird von N1 bereits gelesen und darf
+        # nicht nachtraeglich veraendert werden.
+        rz = dict(rz)
+        rz["aus"], rz["tg"] = rz["aus"].copy(), rz["tg"].copy()
+        offen = np.flatnonzero(rz["h"] & ~((rz["aus"] == 1) & (rz["tg"] <= hz)))
+        n_pk = min(a.positivkontrolle, len(offen))
+        wahl = np.random.default_rng(20260910).choice(offen, size=n_pk,
+                                                      replace=False)
+        rz["aus"][wahl] = 1
+        rz["tg"][wahl] = 1
+        # Der Nenner von `_quote` sind ALLE H-Faelle (vorsichtige Lesart,
+        # 2.54) - die Quote steigt deshalb um genau n_pk / n_H.
+        erwartet = n_pk / max(1, int(rz["h"].sum()))
+        pk = {"n": n_pk, "erwartet": erwartet}
+        print(chr(10) + "-" * 78)
+        print("POSITIVKONTROLLE (93 B) - eine bekannte Verschiebung "
+              "eingepflanzt")
+        print("-" * 78)
+        print(f"  {n_pk} von {len(offen)} offenen H-Faellen auf 'Ziel' "
+              f"gesetzt")
+        print(f"  ERWARTETE Verschiebung des Vorsprungs "
+              f"{100 * erwartet:+.2f} Punkte")
     alle = np.ones(len(rz["r"]), bool)
     n_a, q_a = _quote(rz, alle, hz)
     n_h, q_h = _quote(rz, rz["h"], hz)
@@ -191,6 +224,9 @@ def main() -> int:
     print("\n" + "=" * 78)
     if a.datei:
         io.open(a.datei, "w", encoding="utf-8").write(json.dumps({
+            "totzone": (a.totzone if a.totzone is not None
+                        else LB.NIVEAU_MIN_ABSTAND_ATR),
+            "positivkontrolle": pk,
             "atr_kanal": n1,
             "betrieb": {"quote_alle": q_a, "quote_h": q_h,
                         "quote_rest": q_r, "vorsprung": q_h - q_r},
