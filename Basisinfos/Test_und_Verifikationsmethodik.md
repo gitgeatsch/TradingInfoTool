@@ -3330,6 +3330,11 @@ einer Stelle. *Kein neues Dokument* — dieselbe Datei ist laut Landkarte für
 | **5 Urteil** | **Relevanz vor Vertrauensintervall** · „trägt" nur mit Breakeven-Abstand · beide Lesarten bei Horizonten | **2.56** · 2.53 · 2.54 |
 | **6 Ablage** | Nullbefund als **Zerlegung mit Rest**, Kontrollgröße selbst als Kandidat | 2.51 |
 
+> ⚠️ **Diese sechs Teile prüfen die KONSTRUKTION der Messung.**
+> Die **Deutung** des Ergebnisses hat eine eigene Liste: **2.80**.
+> Am 27.08. wurden alle sechs Teile hier befolgt — und vier von fünf
+> Befunden starben trotzdem, weil die Deutung ungeprüft blieb.
+
 ### 2.58.2 Die feststehenden Größen
 
 | Größe | Wert | Herkunft |
@@ -4268,3 +4273,69 @@ mit „beide klein" formuliert. Gemessen wurden **zwei große Effekte an hohen
 Schwellen**. Die Konsequenz war dieselbe, aber die Formulierung traf den Fall
 nicht. Vorab-Lesarten sollten über **Urteile** ("trägt / trägt nicht") laufen,
 nicht über Größenordnungen.
+
+### 2.80 Die Prüfliste ZWISCHEN Ergebnis und Deutung (27.08.2026)
+
+**Der Anlass:** An einem Tag starben **vier von fünf** Befunden an der
+Gegenprüfung — und **alle fünf Gegenprüfungen kamen auf Nutzeraufforderung**,
+nicht aus eigenem Antrieb. Nutzerfrage, die es aufdeckte: *„hältst du dich an
+unsere Mess- und Prüfregeln aus der Doku?"*
+
+⚠️ **Das Muster ist präzise benennbar:** Die Regeln wurden beim **Schreiben**
+der Messung befolgt (Vorabfestlegung im Docstring, Positivkontrolle,
+Suchpreis) und beim **Deuten des Ergebnisses** vergessen. Genau dort greifen
+2.58.3, 2.77 und 2.79.
+
+#### Die fünf Fälle
+
+| # | Befund | woran er starb | Regel, die es gesagt hätte |
+|---|---|---|---|
+| **1** | Lage-Staffelung trägt (+2,5…+6,7 %) | **ungleiche Arme** — gemessen gegen „100 % investiert", die Regel investiert 74,7 %. Gegen konstante 74,7 % ohne Timing: **−8,3 %** | **2.58.3** · und `messe_akkumulation.py` (11.08.) wörtlich: *„Schlägt eine antizyklische Regel diese Kontrolle nicht, misst sie Quotenreduktion statt Timing"* |
+| **2** | „Tief Gefallene fallen weiter" (−29,3 %) | **keine Basisrate** — ALLE Anker liegen bei −28,9 %, die nicht gefallenen bei −27,4 % | 2.50 |
+| **3** | „Umsatz trennt tot von lebendig" | **schlicht widerlegt** (30,4 / 27,8 / 27,3 %) — ✔ sauber gelaufen, als Zerlegung abgelegt | 2.51 |
+| **4** | „Buckel: leicht unter dem Schnitt am besten" | **Mitläufer Marktphase** — die Zellen liegen ungleich über die Jahre (−20…0 zu 38 % in 2023 mit 58,8 % im Plus; > +30 % zu 53 % in 2024 mit 18,6 %). Nach Jahresstratifizierung: **−1,6**, Vorzeichen wechselt | ⚠️ **2.79**, zwei Tage alt, im selben Gespräch zitiert |
+| **5** | „Weit über dem 200-Schnitt kaufen ist schlecht" | ✔ **hält** — −11,2 Punkte, stabil 3/3 Jahre | — |
+
+⚠️ **Und der Blockplacebo aus Fall 4 hat ihn nicht gefangen:** 17.186 Anker
+aus 277 Reihen sind **62 Anker je Reihe**; bei Blocklänge 30 also **zwei
+Blöcke**, die sich nicht mischen lassen. Das ist wörtlich der Fall aus
+**2.77** — *„je Reihe und Band entstand etwa ein Block"*.
+
+#### Verhältnis zu 2.58.1
+
+**2.58.1 prüft, ob die Messung richtig GEBAUT ist** — Vorabfestlegung,
+Grundgesamtheit, Kontrolle, Schwelle, Urteil, Ablage. **Diese Liste hier
+prüft, ob der SCHLUSS aus dem Ergebnis trägt.**
+
+⚠️ **Am 27.08. waren alle sechs Teile von 2.58.1 erfüllt** — Docstring
+mit Vorabfestlegung, Positivkontrolle, Suchpreis ausgewiesen. Die Befunde
+starben trotzdem. **Eine sauber gebaute Messung schützt nicht vor einer
+falschen Deutung; sie lässt sie nur glaubwürdiger aussehen.**
+
+Zwei der fünf Fälle waren nicht einmal neue Regeln: Fall 1 verletzt
+**2.50** (Teil 2 von 2.58.1 — dieselbe Grundgesamtheit für Regel und
+Kontrolle), Fall 4 verletzt **2.79**. Beide standen geschrieben.
+
+#### Die Prüfliste
+
+**Abzuarbeiten zwischen Ergebnis und Schlussfolgerung — nicht davor:**
+
+| | Frage | Regel |
+|---|---|---|
+| **1** | Was läuft mit meiner Achse **zwangsläufig mit**? Prüfsatz: *Könnte ich meinen Befund erhalten, indem ich statt der Achse „früher gegen später" sage?* | 2.79 |
+| **2** | Haben beide Arme **dieselben Bedingungen** — gleiche Quote, gleiche Phasen, gleiche Menge? | 2.58.3, 2.50, 2.78 |
+| **3** | Misst mein **Maß** das, was ich behaupte? Ein auf den Einsatz normiertes Maß beantwortet keine Frage, bei der der Einsatz zur Entscheidung gehört | 2.58.4 |
+| **4** | Kann meine Permutation **überhaupt mischen**? Zahl der Blöcke je Reihe ausdrucken | 2.77, 2.52 |
+| **5** | Wie sieht die **Basisrate ohne meinen Filter** aus? | 2.50 |
+| **6** | **Existiert die Messung schon?** Werkzeugkasten und `zeige_modulkarte.py` | 2.58.4-Nachtrag |
+
+⚠️ **Punkt 6 traf an diesem Tag dreimal zu:** `handelsauftrag.py` (12.08.,
+Strategien samt Paar-Matrix), die Spot-Verkaufs-Roadmap (01.08.), und
+`messe_akkumulation.py` (11.08., mit genau der fehlenden Kontrolle). Alle drei
+lagen im Verzeichnis, alle drei wurden neu erfunden.
+
+**Die Regel:** Eine Messung ist nicht fertig, wenn die Zahl dasteht, sondern
+wenn diese sechs Fragen beantwortet sind. **Wer die Vorabfestlegung schreibt
+und die Deutung nicht prüft, hat die halbe Methodik befolgt** — und die
+gefährlichere Hälfte ausgelassen, weil ein sauber gerechnetes Ergebnis
+vertrauenswürdig aussieht.
