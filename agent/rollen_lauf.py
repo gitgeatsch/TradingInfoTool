@@ -572,8 +572,24 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         #
         # Die Zuordnung kommt aus `asset_dca_settings` - dem Schalter, den der
         # Nutzer in der GUI setzt und den `asset_schalter` schon heute prueft.
+        # ⚠️ NUR KRYPTO (Nutzerentscheidung 27.08.2026, Korrektur am selben
+        # Tag). Der Vorgabewert `_DCA_ERLAUBT_DEFAULT_SYMBOLS` enthaelt neben
+        # BTC/ETH/SOL dreizehn Multi-Asset-Positionen - freigegeben am 09.08.
+        # fuer TRANCHEN-VORSCHLAEGE, also einen Text in der Mail. Sie auf eine
+        # Strategieumstellung zu uebertragen, die Stop und Trailing entfernt,
+        # waere eine stille Bedeutungsverschiebung.
+        #
+        # UND ES IST FACHLICH ETWAS ANDERES:
+        #   Handel      Krypto 24/7 ohne Gap; Aktien haben Handelszeiten und
+        #               Kursluecken ueber Nacht - ohne Stop unbegrenzt
+        #   Zyklik      -80 % ist bei Krypto ein Zyklus, bei einer Aktie meist
+        #               ein Fundamentalproblem
+        #   Regelbasis  AZ-1..AZ-8 sind FUER KRYPTO entwickelt (BTC-Regime,
+        #               Funding, Fear & Greed) und dort nie gemessen
+        #   Messbarkeit C1 - bei 2 bis 7 Symbolen je Klasse ist nichts pruefbar
         _strategie = HA_STRAT(symbol, instrument, conn=conn,
-                              vorgabe=strategie, assetklasse=assetklasse)
+                              vorgabe=strategie, assetklasse=assetklasse,
+                              nur_klassen={"krypto"})
         try:
             _ein_asset(symbol=symbol, reihen=reihen, tag=tag, lagebild=lagebild,
                        lagebild_id=lagebild_id, gleichlauf=gleichlauf,

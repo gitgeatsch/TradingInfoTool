@@ -68,8 +68,12 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
         "'Bitpanda-Override umschalten' setzbar."
     ),
     "tranchen": (
-        "AZ-4-Tranchen-Vorschläge (gestaffelte Kauf-/Verkaufszonen) an/aus - "
-        "nur für BTC/ETH/SOL verfügbar."
+        "Strategie AKKUMULATION an/aus - langfristig aufbauen ohne Stop und "
+        "ohne Trailing, einziger Ausstieg ist die widerlegte These. Nur für "
+        "Krypto (ohne Stablecoins); Aktien, ETFs und Rohstoffe behalten "
+        "`einstieg` mit Stop und Ziel. Hieß bis 27.08. 'AZ-4-Tranchen' - die "
+        "Rollen-Kette kennt Tranchen nicht mehr, der Schalter steuert seither "
+        "die Strategie."
     ),
     "hebel_pruefung": (
         "An = wird beim automatischen 15-Min-Hebel-Screening berücksichtigt (OI-Abruf, "
@@ -392,7 +396,7 @@ class TradingInfoToolApp(tk.Tk):
             side="left"
         )
         ttk.Button(
-            toolbar, text="Tranchen-Vorschläge umschalten (BTC/ETH/SOL)",
+            toolbar, text="Akkumulation umschalten (Krypto)",
             command=self._toggle_dca_erlaubt,
         ).pack(side="left", padx=(8, 0))
         ttk.Button(
@@ -436,7 +440,7 @@ class TradingInfoToolApp(tk.Tk):
             "schwerpunkt": "Schwerpunkt",
             "status": "Status",
             "bitpanda": "Bitpanda",
-            "tranchen": "AZ-4-Tranchen",
+            "tranchen": "Akkumulation",
             "hebel_pruefung": "Hebel-Prüfung",
             "price_usd": "Preis (USD)",
             "price_eur": "Preis (EUR)",
@@ -874,22 +878,43 @@ class TradingInfoToolApp(tk.Tk):
             self._bitpanda_non_crypto_assets = None
 
     def _toggle_dca_erlaubt(self) -> None:
-        """AZ-4-Tranchen-Toggle (2026-07-12, 2026-07-18 um SOL erweitert) - nur
-        fuer BTC/ETH/SOL sinnvoll (siehe agent/krypto/pipeline.py::
-        generate_signal()), operiert auf der aktuell in der Watchlist
-        ausgewaehlten Zeile."""
+        """Akkumulations-Toggle - fuer alle Krypto-Assets (27.08.2026).
+
+        WAS DIESER SCHALTER HEUTE STEUERT. Bis zum 27.08. hiess er
+        "Tranchen-Vorschlaege" und schaltete einen TEXT in der Mail - die
+        Rollen-Kette kennt Tranchen seit dem Umstieg gar nicht mehr. Seit
+        `handelsauftrag.strategie_fuer()` bestimmt er die STRATEGIE: ein Asset
+        mit gesetztem Schalter wird `akkumulation` statt `einstieg` - also
+        ohne Stop, ohne Trailing, mit `umgeworfen_durch` als einzigem
+        Ausstieg.
+
+        ⚠️ DIE SPERRE AUF BTC/ETH/SOL IST DAMIT FALSCH GEWORDEN. Sie stammte
+        aus der Tranchen-Zeit ("AZ-4 ist nur fuer BTC/ETH/SOL vorgesehen").
+        Eine Strategie-Zuordnung muss der Nutzer pflegen koennen - sonst
+        entscheidet eine Konstante im Code, was Kernbestand ist.
+
+        ⚠️ NUR KRYPTO, wie beim Hebel-Toggle. Fuer Aktien und ETFs ist
+        Akkumulation ohne Stop etwas anderes: dort gibt es Handelszeiten und
+        Kursluecken ueber Nacht, -80 % ist meist ein Fundamentalproblem statt
+        eines Zyklus, und AZ-1..AZ-8 sind fuer Krypto entwickelt und dort nie
+        gemessen (C1: 2 bis 7 Symbole je Klasse). Die Begrenzung sitzt
+        zusaetzlich in `rollen_lauf` (`nur_klassen={"krypto"}`) - hier ist sie
+        die Anzeige derselben Entscheidung, nicht ihre einzige Stelle."""
         tree = self._watchlist_frame.tree
         selected = tree.selection()
         if not selected:
             messagebox.showinfo(
-                "Tranchen-Vorschläge umschalten", "Bitte zuerst BTC, ETH oder SOL in der Watchlist auswählen."
+                "Akkumulation umschalten",
+                "Bitte zuerst ein Krypto-Asset in der Watchlist auswählen.",
             )
             return
         symbol = tree.item(selected[0], "values")[0]
-        if symbol not in ("BTC", "ETH", "SOL"):
+        asset = next((a for a in self._watchlist if a.symbol == symbol), None)
+        if asset is None or asset.assetklasse != "krypto" or asset.ist_cash_aequivalent:
             messagebox.showinfo(
-                "Tranchen-Vorschläge umschalten",
-                "AZ-4-Tranchen sind aktuell nur für BTC, ETH und SOL vorgesehen.",
+                "Akkumulation umschalten",
+                "Die Akkumulation ist nur für Krypto-Assets (ohne Stablecoins) "
+                "vorgesehen - Aktien, ETFs und Rohstoffe behalten `einstieg`.",
             )
             return
 
