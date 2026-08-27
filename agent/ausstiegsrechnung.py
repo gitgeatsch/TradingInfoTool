@@ -181,7 +181,14 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
     # am 20.08. eine Stunde Fehlersuche gekostet.
     #
     # Siehe pruefe_waehrungen.py und Test_und_Verifikationsmethodik 2.50.
-    e = {"risiko_quellwaehrung": risiko,
+    e = {# ⚠️ DIE STRATEGIE GEHOERT INS ERGEBNIS, NICHT NUR IN DIE RECHNUNG
+         # (27.08.2026). Wer die Empfehlung liest, muss wissen, unter welcher
+         # Annahme sie entstand - eine Akkumulation ohne Stop bewertet denselben
+         # Kurs anders als ein Einstieg. Und der Aufrufer braucht sie, um
+         # Positionen zusammenzufassen: ohne dieses Feld greift der
+         # Zusammenfassungsfilter in `backward_tracking` nie.
+         "strategie": str(strategie or "einstieg").strip().lower(),
+         "risiko_quellwaehrung": risiko,
          "stand_r": (((einstieg - kurs_aktuell) if ist_short else
                       (kurs_aktuell - einstieg)) / risiko)
                     if kurs_aktuell else None,
@@ -318,6 +325,23 @@ def saetze(e: dict) -> list[str]:
     if not e:
         return []
     z = [f"Empfehlung   {e['empfehlung']}"]
+    # B (27.08.2026): WIEVIELE SIGNALE HINTER DIESER EINEN ZEILE STEHEN.
+    #
+    # Bei `akkumulation` wird je Symbol nur das juengste Signal gemeldet - BTC
+    # hatte am 26.08. siebzehn offene, ETH zwoelf, SOL sechs. Ohne diese Zeile
+    # saehe der Leser eine Meldung und wuesste nicht, dass sie fuer eine
+    # gewachsene Position steht; die Reduktion saehe aus wie ein Rueckgang der
+    # Signalmenge. Eine stille Zusammenfassung ist dieselbe Klasse Fehler wie
+    # ein stiller Rueckfall auf einen Vorgabewert.
+    _zus = e.get("zusammengefasst")
+    if _zus and int(_zus) > 1:
+        z.append(f"             (eine Position aus {int(_zus)} Signalen - "
+                 f"gemeldet wird das juengste)")
+    # Und die Strategie, wenn sie das Verhalten aendert: eine Akkumulation
+    # ohne Stop bewertet denselben Kurs anders als ein Einstieg.
+    if str(e.get("strategie") or "") == "akkumulation":
+        z.append("             Strategie AKKUMULATION - kein Stop, kein "
+                 "Trailing; Ausstieg nur bei widerlegter These")
     # PROZENT STATT R (17.08.2026, Nutzervorgabe: *"Inhalte mit R-Werten und
     # Perzentil sollten fuer mich uebersetzt werden."*).
     #
@@ -378,7 +402,12 @@ def saetze(e: dict) -> list[str]:
         z.append(f"Stop         auf "
                  f"{_kurs(_in_eur(e, e['stop_empfohlen']), 'EUR')} nachziehen "
                  f"- sichert {_de(e['gesicherte_r'], 2, True)} R")
-    elif e.get("mfe_r") is not None and not e.get("trailing_aktiv"):
+    elif (e.get("mfe_r") is not None and not e.get("trailing_aktiv")
+          # ⚠️ NICHT BEI AKKUMULATION (27.08.2026). Dort steht drei Zeilen
+          # weiter oben "kein Trailing" - und hier stand daneben, wann der
+          # Trailing-Stop ausloest. Zwei Saetze, die sich widersprechen, in
+          # derselben Mail: der Leser glaubt dann keinem von beiden.
+          and str(e.get("strategie") or "") != "akkumulation"):
         z.append(f"Stop         unveraendert - der Trailing-Stop loest erst "
                  f"aus, wenn der Gewinn so gross ist wie das Risiko "
                  f"(+{_de(AUSLOESE_R, 1)} R)")

@@ -5254,6 +5254,45 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     finally:
         conn.row_factory = _alt_row_factory
 
+    # B (27.08.2026): BEI AKKUMULATION IST EINE POSITION EINE MELDUNG.
+    #
+    # Gemessen am Stand vom 26.08.: BTC hatte 17 offene Signale, ETH 12,
+    # SOL 6 - zusammen 35 Meldungen fuer DREI Positionen. Der Nutzer haelt
+    # dort EINEN Bestand mit EINEM Einstand; fuenfzehn Zeilen ueber dasselbe
+    # BTC sind fuenfzehnmal dieselbe Aussage.
+    #
+    # ⚠️ UND ZWAR NUR DORT. Bei `einstieg` ist jedes Signal ein EIGENER Trade
+    # mit eigenem Einstieg, Stop und Ziel - sie zusammenzufassen waere nicht
+    # sparsam, sondern falsch. Gemessen: 35 von 266 Signalen sind
+    # Akkumulation; B spart 32 Meldungen (12 %), nicht die 83 %, die eine
+    # Zusammenfassung ueber ALLE Symbole ergaebe.
+    #
+    # DAS JUENGSTE SIGNAL VERTRITT DIE POSITION. Es traegt die aktuellste
+    # These und damit den aktuellsten Widerlegungspreis - und der ist bei
+    # Akkumulation das einzige Ausstiegskriterium. Gemessen liegen die
+    # Widerlegungspreise einer Position ohnehin dicht beieinander (BIO Faktor
+    # 1,00 ueber 21 Signale, BTC 1,02 ueber 17): sie beschreiben eine
+    # STRUKTUR, keine Meinung.
+    #
+    # ⚠️ DIE UEBRIGEN WERDEN GEZAEHLT, NICHT VERSCHWIEGEN - `zusammengefasst`
+    # sagt, wie viele Signale hinter der einen Zeile stehen. Eine stille
+    # Reduktion saehe aus wie ein Rueckgang der Signalmenge.
+    _akk, _rest = [], []
+    for e in ergebnis["alle"]:
+        (_akk if str(e.get("strategie") or "").lower() == "akkumulation"
+         else _rest).append(e)
+    if _akk:
+        _je_symbol: dict = {}
+        for e in _akk:
+            vorher = _je_symbol.get(e["symbol"])
+            if vorher is None or str(e.get("seit") or "") >= str(vorher.get("seit") or ""):
+                e["zusammengefasst"] = (vorher or {}).get("zusammengefasst", 0) + 1
+                _je_symbol[e["symbol"]] = e
+            else:
+                vorher["zusammengefasst"] = vorher.get("zusammengefasst", 1) + 1
+        ergebnis["alle"] = _rest + list(_je_symbol.values())
+        ergebnis["zusammengefasst_akkumulation"] = len(_akk) - len(_je_symbol)
+
     ergebnis["empfehlungen"].sort(key=lambda x: -x["mfe_r"])
     # Dringlichstes zuerst: SCHLIESSEN, dann STOP NACHZIEHEN, dann der Rest -
     # nicht nach Buchgewinn. Der groesste ungesicherte Gewinn ist nicht
