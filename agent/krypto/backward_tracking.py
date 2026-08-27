@@ -5263,9 +5263,26 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
     #
     # ⚠️ UND ZWAR NUR DORT. Bei `einstieg` ist jedes Signal ein EIGENER Trade
     # mit eigenem Einstieg, Stop und Ziel - sie zusammenzufassen waere nicht
-    # sparsam, sondern falsch. Gemessen: 35 von 266 Signalen sind
-    # Akkumulation; B spart 32 Meldungen (12 %), nicht die 83 %, die eine
-    # Zusammenfassung ueber ALLE Symbole ergaebe.
+    # sparsam, sondern falsch.
+    #
+    # ⚠️⚠️ WAS DIESER FILTER NICHT TUT - KORREKTUR AM SELBEN TAG. Er spart
+    # KEINE Meldungen. `ergebnis["alle"]` wird ausschliesslich in
+    # `rollen_lauf:382` gelesen, und dort entsteht daraus `ergebnis["fuehrung"]`
+    # - ein dict je (Symbol, Instrument), also seit dem 15.08. ohnehin EINE
+    # Zeile je Position. Die zuerst berichteten "32 gesparten Meldungen" gab es
+    # nie; gemessen wurde die Liste VOR der Fuehrung statt der Mail danach.
+    #
+    # WAS ER TATSAECHLICH AENDERT: welches Signal die Position vertritt.
+    # Vorher gewann das ERSTE (ausser ein spaeteres trug `ist_bestand`), jetzt
+    # das JUENGSTE. Der Unterschied ist der Widerlegungspreis - bei
+    # Akkumulation das EINZIGE Ausstiegskriterium:
+    #
+    #     BTC  erstes 65.226 -> juengstes 65.388   +0,25 %
+    #     ETH  erstes  2.004 -> juengstes  2.048   +2,20 %
+    #     SOL  erstes  77,82 -> juengstes  80,58   +3,55 %
+    #
+    # Dazu zwei Felder, die es vorher nicht gab: `zusammengefasst` (wieviele
+    # Signale hinter der Zeile stehen) und `strategie` im Ergebnis.
     #
     # DAS JUENGSTE SIGNAL VERTRITT DIE POSITION. Es traegt die aktuellste
     # These und damit den aktuellsten Widerlegungspreis - und der ist bei
