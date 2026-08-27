@@ -1,3 +1,9 @@
+> ⚠⚠ **TEILWEISE ÜBERHOLT am 27.08.2026 — für den KERN nicht mehr nötig.**
+>
+> Der Nutzer hat entschieden, den Kern zu **staffeln** statt zu timen (*„Staffelung wie in akkumulation beschrieben, das passt zur Praxis“*). Damit entfällt die Ja/Nein-Frage „ist jetzt ein Boden?“, auf die G die Antwort war — die Staffelung fragt **wie viel**, nicht **ob**. Siehe `Entscheidung_Kern_Staffelung_27_08.md`.
+>
+> **Was bestehen bleibt:** (1) der gemessene Fear-Befund in Abschnitt 0 — Fear ist ein Dauerzustand (längste Phase **151 Tage**), Extreme Greed ein Ereignis (Median **1 Tag**); (2) die fachliche Herleitung aus Dow, Wyckoff und Charttechnik; (3) G als möglicher Baustein für die **taktische** Stufe, wo ein einzelner Einstiegszeitpunkt gesucht wird.
+
 # „Boden gehalten" — Definition, Abgrenzung zu H, Wirkung auf die Ablaufkette
 
 **Angelegt 27.08.2026.** Auftrag des Nutzers:
