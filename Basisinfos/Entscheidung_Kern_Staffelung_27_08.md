@@ -1,3 +1,34 @@
+> ⚠⚠ **WIDERRUFEN am 27.08.2026, noch am selben Tag — die Regel hält der
+> richtigen Kontrolle nicht stand.**
+>
+> **Nutzervorgabe, die das aufgedeckt hat:** *„vorher genau prüfen und
+> gegenprüfen und in den Messungen nachsehen."*
+>
+> **Zwei Fehler meiner Messung, beide in `messe_akkumulation.py` (11.08.)
+> bereits benannt:**
+> **(1) Falsche Kontrolle.** Verglichen wurde gegen einen festen Betrag, der
+> **100 %** investiert. Die Regel investiert im Mittel nur **74,7 %** — der
+> Vorteil war **Quotenreduktion, kein Timing**. Gegen eine Kontrolle, die
+> konstant 74,7 % investiert und **gar nicht hinsieht**, verliert sie:
+> **−9,8 %** bei den 88 % eingebrochenen Reihen, gewichtet **−8,3 %**.
+> **(2) Barmittel ignoriert** — *„Warten ist nicht gratis, es bindet Kapital"*.
+>
+> **Der Befund vom 11.08. gilt unverändert:** *„Der antizyklische Vorteil ist
+> **vollständig durch die Investitionsquote erklärt**. Die Kontrolle
+> HALBE\_QUOTE schlägt jede antizyklische Regel."*
+>
+> ⚠️ **UND DIE FORM WAR ZUSÄTZLICH FALSCH.** Die Blockprüfung vom 27.08.
+> (17.186 Anker, 277 Reihen, Schwelle 7,3 / gemessen 15,1 Punkte) zeigt einen
+> **Buckel, keine Gerade**: am besten **leicht** unter dem 200-Schnitt
+> (+5,6 Punkte), schlechter ganz tief unten (−4,4) und am schlechtesten weit
+> darüber (−9,4). `faktor = 1 − 2 × Lage` kauft **am meisten dort, wo es am
+> schlechtesten ist**.
+>
+> **Was bestehen bleibt:** die Kern-Auswahl BTC/ETH/SOL, die Strategie
+> `akkumulation`, der Nachweis dass V3 („nie teurer als zuletzt")
+> **verstummt**, und die Takt-Messung (Takt fachlich egal, nur Mindestgebühr
+> zählt). Siehe `Befund_Lage_27_08.md`.
+
 # Entscheidung: die Kern-Staffelung — Form, Bezug, Betrag
 
 **Angelegt 27.08.2026.** Ergebnis einer Kette von Messungen und
