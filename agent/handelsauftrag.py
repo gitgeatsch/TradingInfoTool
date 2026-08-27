@@ -216,6 +216,19 @@ def strategie_fuer(symbol: str, instrument: str, *, conn=None,
     `nur_klassen={"krypto"}` gilt Akkumulation nur dort. Ohne Angabe wirkt
     der Schalter wie vom Nutzer gesetzt.
 
+    ⚠️ ZWEI BEGRIFFE FUER "KERN" - UND SIE SIND NICHT DASSELBE (27.08.).
+
+        `rolle: core` (config.yaml)   13 Assets   steuert COOLDOWN (8 h statt
+                                                  15 h) und Budget-Allocator
+        `dca_erlaubt` (DB-Schalter)    3 Assets   steuert die STRATEGIE
+
+    Zehn Assets sind `core`, bekommen aber `einstieg`: AVAX, BNB, CANTON,
+    HYPE, LINK, MORPHO, NEAR, SEI, SUI, TAO. Das ist KEIN Fehler, sondern ein
+    Unterschied mit Bedeutung: sie werden langfristig GEHALTEN (fast alle sind
+    gestakt), aber nicht aktiv AUFGEBAUT. Wer die Strategie aus `rolle` ableiten
+    wollte, bekaeme dreizehn statt drei - und damit Positionen ohne Stop, die
+    der Nutzer nie dafuer vorgesehen hat.
+
     EIN LESEFEHLER HEISST "VORGABE", NICHT "AKKUMULATION". Dieselbe Linie wie
     in `asset_schalter`: ein nicht lesbarer Schalter darf keine Strategie
     einschalten, die der Nutzer nicht gewaehlt hat."""
