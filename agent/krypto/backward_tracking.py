@@ -5076,7 +5076,13 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                       + "".join(f", {c}" for c in zonen_spalten)
                       + "".join(f", {c}" for c in
                                 ("umgeworfen_preis_eur", "umgeworfen_bis",
-                                 "umgeworfen_durch") if c in spalten))
+                                 "umgeworfen_durch",
+                                 # C (27.08.2026): die Strategie entscheidet,
+                                 # ob es ueberhaupt einen Stop gibt. Sie steht
+                                 # in `spalten`, wurde aber nie GELESEN - und
+                                 # `row["strategie"]` warf deshalb IndexError.
+                                 # Gefunden von pruefe_pakete, nicht im Betrieb.
+                                 "strategie") if c in spalten))
             rows = conn.execute(
                 f"SELECT {felder} FROM {tabelle} "
                 f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
@@ -5136,6 +5142,19 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                                     if "umgeworfen_bis" in spalten else None),
                     umgeworfen_durch=(row["umgeworfen_durch"]
                                       if "umgeworfen_durch" in spalten else None),
+                    # C (27.08.2026): DIE STRATEGIE ENTSCHEIDET, OB ES EINEN
+                    # STOP GIBT. `akkumulation` hat keinen - dort entfaellt das
+                    # Trailing, und `umgeworfen_durch` bleibt das einzige
+                    # Ausstiegskriterium (handelsauftrag.py).
+                    #
+                    # ⚠️ EIN FEHLENDER WERT HEISST "einstieg", NICHT
+                    # "akkumulation". Alle Signale vor dem 27.08. tragen NULL
+                    # (0 von 7.294 gesetzt); sie wurden unter der alten Annahme
+                    # erzeugt und behalten sie. Ein stiller Wechsel wuerde
+                    # rueckwirkend Empfehlungen aendern, die schon in Mails
+                    # standen.
+                    strategie=((row["strategie"] if "strategie" in spalten
+                                else None) or "einstieg"),
                     ausloese_r=ausloese, abstand_r=abstand)
                 if voll:
                     ergebnis["alle"].append({

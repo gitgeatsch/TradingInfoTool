@@ -28,6 +28,10 @@ zugeordnet werden.
 """
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 INSTRUMENTE = ("spot", "hebel", "absicherung")
 
 # STRATEGIE heisst hier: wie wird eingestiegen und woran wird der Erfolg
@@ -173,3 +177,59 @@ def beschreibe(instrument: str, strategie: str) -> list[str]:
     """
     i, s = pruefe(instrument, strategie)
     return [_SATZ_INSTRUMENT[i], _SATZ_STRATEGIE[s]]
+
+
+def strategie_fuer(symbol: str, instrument: str, *, conn=None,
+                   vorgabe: str = "einstieg", assetklasse: str | None = None,
+                   nur_klassen=None) -> str:
+    """Welche Strategie gilt fuer DIESES Asset? (A, 27.08.2026)
+
+    DIE LUECKE, DIE DAS SCHLIESST. `strategie` wurde bisher LAUFWEIT vorgegeben
+    (`fuehre_umlauf(strategie="einstieg")`) und an jedes Asset unveraendert
+    weitergereicht. Gemessen ueber 7.294 Signale: `akkumulation` kam NULL Mal
+    vor. Damit lief die Paar-Matrix nie, der Nutzer-Schalter nie, und ein
+    langfristig gehaltener Spot-Bestand wurde wie ein Einzeltrade behandelt -
+    samt Trailing-Stop, den es dort nicht gibt (N-11).
+
+    DIE ZUORDNUNG KOMMT AUS DEM SCHALTER DES NUTZERS, nicht aus einer Liste
+    im Code. `asset_dca_settings.dca_erlaubt` ist der Schalter, den
+    `asset_schalter.py:119` schon heute fuer `strategie == "akkumulation"`
+    prueft - er lief nur nie an, weil die Strategie nie so hiess.
+
+    ⚠️ DAMIT AENDERT SICH DIE BEDEUTUNG DES SCHALTERS. In der GUI heisst er
+    "Tranchen-Vorschlaege umschalten (BTC/ETH/SOL)"; fachlich hat er immer
+    die Akkumulation gemeint (AZ-4: gestaffelt kaufen IST Akkumulation, und
+    `betraege.py` nennt 250 EUR ausdruecklich "eine Tranche"). Wer ihn setzt,
+    bekommt ab jetzt die Strategie - nicht nur einen Textvorschlag in der Mail.
+
+    ⚠️ NUR FUER SPOT. `hebel x akkumulation` ist ausgeschlossen (Finanzierung
+    kostet jeden Tag), `absicherung` kennt ohnehin nur `einstieg`. Bei jedem
+    anderen Instrument bleibt es bei der Vorgabe - ohne Nachfrage an die DB.
+
+    ⚠️ DER SCHALTER STEHT FUER 16 ASSETS AUF AN, NICHT FUER DREI. Der
+    Vorgabewert `_DCA_ERLAUBT_DEFAULT_SYMBOLS` (database/db.py:1857) enthaelt
+    neben BTC/ETH/SOL die am 09.08. GEHALTENEN Multi-Asset-Positionen - eine
+    Nutzerentscheidung ("an fuer die gehaltenen"). Fuer diese 13 Aktien und
+    ETFs bedeutet die Umstellung: kein Stop, kein Trailing, nur V1.
+
+    `nur_klassen` begrenzt das, ohne den Schalter anzufassen: mit
+    `nur_klassen={"krypto"}` gilt Akkumulation nur dort. Ohne Angabe wirkt
+    der Schalter wie vom Nutzer gesetzt.
+
+    EIN LESEFEHLER HEISST "VORGABE", NICHT "AKKUMULATION". Dieselbe Linie wie
+    in `asset_schalter`: ein nicht lesbarer Schalter darf keine Strategie
+    einschalten, die der Nutzer nicht gewaehlt hat."""
+    i = str(instrument or "").strip().lower()
+    if i != "spot" or conn is None:
+        return vorgabe
+    if nur_klassen is not None:
+        if str(assetklasse or "").strip().lower() not in nur_klassen:
+            return vorgabe
+    try:
+        import database.db as db
+        if db.get_dca_erlaubt(conn, str(symbol).upper()):
+            return "akkumulation"
+    except Exception as exc:                                 # noqa: BLE001
+        logger.warning("DCA-Schalter fuer %s nicht lesbar (%s) - Strategie "
+                       "bleibt %r", symbol, exc, vorgabe)
+    return vorgabe

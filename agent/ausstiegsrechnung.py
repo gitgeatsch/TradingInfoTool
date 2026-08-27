@@ -122,7 +122,8 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
             ziel: float | None = None,
             umgeworfen_bis=None, umgeworfen_durch: str | None = None,
             heute=None, ausloese_r: float = AUSLOESE_R,
-            abstand_r: float = ABSTAND_R) -> dict | None:
+            abstand_r: float = ABSTAND_R,
+            strategie: str = "einstieg") -> dict | None:
     """Alle drei Pruefungen fuer EINE gehaltene Position.
 
     Entweder `hoechstkurs` (guenstigster Kurs seit Eroeffnung) oder `mfe_r`
@@ -144,6 +145,30 @@ def bewerte(*, einstieg: float | None, stop_original: float | None,
         empf = stopempfehlung(einstieg, stop_original, hoechstkurs, ist_short,
                               stop_aktuell, ausloese_r, abstand_r)
     else:
+        empf = None
+
+    # C (27.08.2026): AKKUMULATION HAT KEINEN STOP - ALSO AUCH KEIN TRAILING.
+    #
+    # `handelsauftrag` beschreibt die Strategie so: *"ein fallender Kurs
+    # beendet die Position nicht, er verbilligt sie. Ein Stop wuerde die
+    # Strategie in ihrem besten Moment abbrechen. Deshalb kein Stop und kein
+    # einzelner Zeitpunkt ... `umgeworfen_durch` ist hier nicht ein Feld unter
+    # vielen, sondern das EINZIGE Ausstiegskriterium."*
+    #
+    # ⚠️ WAS OHNE DIESE ZEILEN GESCHAH (N-11, gemessen am 26.08.): von 172
+    # gepruesten Positionen standen 35 auf SCHLIESSEN, ALLE Spot, 32 davon im
+    # Verlust - und 11 waren zuvor ueber +1R gelaufen. Zwoelf dieser Faelle
+    # kamen aus einem nachgezogenen Stop, den es bei einem Spot-Bestand ohne
+    # Boersen-Stop gar nicht gibt: *"Stop unterschritten"* heisst dort, dass
+    # NICHTS passiert ist.
+    #
+    # Der Nutzer haelt Spot ausdruecklich ohne Stop-Loss; `spot x swing` ist
+    # deshalb seit dem 14.08. ausgeschlossen. Diese Zeilen setzen dieselbe
+    # Entscheidung auf der Ausstiegsseite durch.
+    #
+    # ⚠️ `falsifiziert` BLEIBT UNBERUEHRT - es ist der Ausstieg, den die
+    # Akkumulation hat. Was hier entfaellt, ist nur der Weg ueber den Stop.
+    if str(strategie or "").strip().lower() == "akkumulation":
         empf = None
 
     # ⚠️ NICHT "risiko_eur" - DER NAME WAERE EINE LUEGE (20.08.2026).

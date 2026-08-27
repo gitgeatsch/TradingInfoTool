@@ -304,7 +304,9 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        wiederholung as WH, zweite_meinung as ZM,
                        betraege as BE, verkaufsrechnung as VK2)
     from agent.empfehlung_vertrag import EmpfehlungUngueltig
-    from agent.handelsauftrag import AuftragUngueltig, pruefe as pruefe_auftrag
+    from agent.handelsauftrag import (AuftragUngueltig,
+                                     pruefe as pruefe_auftrag,
+                                     strategie_fuer as HA_STRAT)
 
     # DER AUFTRAG WIRD EINMAL GEPRUEFT, NICHT JE ASSET (13.08.). Vorher stand
     # hier fest `("spot", "einstieg")` - ein Hebel-Lauf war damit gar nicht
@@ -560,13 +562,25 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         durchlauf.beginne(symbol)
         _vor_aufrufe = ergebnis["aufrufe"]
         _vor_signale = len(ergebnis.get("signale") or [])
+        # A (27.08.2026): DIE STRATEGIE GEHOERT ZUM ASSET, NICHT ZUM LAUF.
+        #
+        # Bis hierher wurde `strategie` laufweit vorgegeben und unveraendert
+        # durchgereicht. Gemessen ueber 7.294 Signale: `akkumulation` kam NULL
+        # Mal vor - die Paar-Matrix lief nie, der Nutzerschalter nie, und ein
+        # langfristig gehaltener Spot-Bestand bekam einen Trailing-Stop, den es
+        # dort nicht gibt (N-11, 35 SCHLIESSEN am 26.08., 32 davon im Verlust).
+        #
+        # Die Zuordnung kommt aus `asset_dca_settings` - dem Schalter, den der
+        # Nutzer in der GUI setzt und den `asset_schalter` schon heute prueft.
+        _strategie = HA_STRAT(symbol, instrument, conn=conn,
+                              vorgabe=strategie, assetklasse=assetklasse)
         try:
             _ein_asset(symbol=symbol, reihen=reihen, tag=tag, lagebild=lagebild,
                        lagebild_id=lagebild_id, gleichlauf=gleichlauf,
                        durchlauf=durchlauf, betriebsart=betriebsart,
                        client=client, modell=modell, conn=conn, db=db,
                        config=config, aufgezeichnet=aufgezeichnet,
-                       instrument=instrument, strategie=strategie,
+                       instrument=instrument, strategie=_strategie,
                        ergebnis=ergebnis, versand=versand,
                        assetklasse=assetklasse, watchlist=_wl,
                        auswahl=_auswahl, marktzustand=_markt,

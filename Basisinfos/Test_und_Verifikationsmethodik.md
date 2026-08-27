@@ -3420,6 +3420,8 @@ angelegt.**
 | `messe_planungshorizont.py` | Wann wird die Kante real? Der Planungshorizont, gemessen statt gesetzt |
 | `bewerte_dynamisch.py` | Ergebnis unter der LIVE gefahrenen Ausstiegsregel statt starrer Barrieren |
 | `pruefe_regel_je_marktphase.py` | Hält die Ausstiegsregel in ALLEN Marktphasen? |
+| `pruefe_trailing_je_instrument.py` | Trägt das Trailing für **Spot und Hebel gleichermaßen**? (26.08., Frage B) — echte aufgelöste Signale, Block-Bootstrap auf paarweisen Differenzen (2.55); ⚠️ dünne Basis (~100 bzw. 127 Fälle) |
+| `simuliere_staffelung.py` | Welche **Staffelung** erzeugt den besseren Durchschnittseinstand? (27.08.) — Endvermögen je eingesetztem Euro, alle Startpunkte. ⚠⚠ **Die damit begründete Regel ist widerrufen**: gemessen gegen „fest, 100 % investiert“ statt gegen gleiche Quote (2.58.3/2.50) — gegen `messe_akkumulation.HALBE_QUOTE` verliert sie. Als **Beleg für den Messfehler** aufbewahrt, nicht als Werkzeug für neue Befunde |
 | `pruefe_crv_positionsgroesse.py` | E2E-Prüfung der stufenlosen CRV-Abstufung, Spot |
 | `messe_akkumulation.py` / `messe_akkumulation_az4.py` | Schlägt antizyklische Akkumulation (AZ-4) das stumpfe DCA? |
 | `messe_allocator_gegen_zufall.py` | Ist die Budget-Allocator-Auswahl besser als Zufall? |
