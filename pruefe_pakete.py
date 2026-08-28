@@ -13985,6 +13985,140 @@ def paket_l3() -> None:
            "Spalte fehlte" % (zeile,))
 
 
+
+def paket_instrument_reparatur() -> None:
+    """I-1 bis I-4 - die Folgen von S6b nachgezogen (28.08.2026).
+
+    ⚠️ DER GEMEINSAME KERN. Seit S6b ist `instrument` im Lauf immer "spot",
+    weil es nur noch EINEN Lauf je Asset gibt. Zwoelf Stellen fragten
+    weiterhin `instrument == "hebel"` - und bekamen seither immer nein."""
+    import sqlite3 as _sq
+    import ast as _ast
+    from agent.handelsauftrag import ist_hebelgeschaeft as _IH
+
+    P = "I-Reparatur"
+
+    # ---- I-1: EINE Stelle beantwortet die Sachfrage ----
+    pruefe(P, "das Ergebnis schlaegt den Lauf",
+           _IH({"etikett": "hebel"}, "spot") is True
+           and _IH({"etikett": "spot"}, "hebel") is False,
+           "die Sachfrage steht im Etikett der Rechnung, nicht im Lauf")
+    pruefe(P, "ohne Rechnung bleibt das Lauf-Etikett der Rueckfall",
+           _IH(None, "hebel") is True and _IH(None, "spot") is False,
+           "es gibt Aufrufer ohne Rechnung (Anzeige, Altdaten) - ein "
+           "Rueckfall, der still das Gegenteil behauptet, waere schlimmer "
+           "als keiner")
+    pruefe(P, "eine Rechnung ohne Etikett faellt ebenfalls zurueck",
+           _IH({}, "hebel") is True,
+           "sonst wuerde ein unvollstaendiges dict wie 'kein Hebel' wirken")
+
+    # ---- I-1a: der Kostenfehler ----
+    from agent import trefferbilanz as _TB
+    _k = lambda h: _TB.kosten_r_aus_stop(100.0, 95.0, "krypto",
+                                         position_eur=1000.0,
+                                         instrument="spot", hebel=h, tage=30.0)
+    pruefe(P, "ein gehebelter Trade rechnet mit Hebelkosten",
+           _k(3.0) is not None and _k(1.0) is not None and _k(3.0) > _k(1.0),
+           "gemessen: %s gegen %s. Vorher stand hier `instrument == "
+           "\"hebel\"` und das Tier wurde NIE vergeben - jedes Krypto-Signal "
+           "rechnete 0,60 R statt 0,76 R, also 21 %% zu wenig"
+           % (_k(3.0), _k(1.0)))
+    pruefe(P, "und ein ungehebelter nicht",
+           _k(1.0) == _k(None),
+           "Hebel 1,0 ist kein Hebel - die Finanzierung faellt nicht an")
+
+    # ---- I-3: die Positionsfuehrung liest BEIDE Quellen ----
+    import database.db as _dbm
+    from agent import positionsfuehrung as _PF
+
+    def _db_mit(hebelzeile: bool, hebeltabelle: bool = True):
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _dbm.init_db(c)
+        if not hebeltabelle:
+            c.execute("DROP TABLE hebel_signals")
+        c.execute("INSERT INTO signals (symbol, created_at, action, "
+                  "facts_json, gate_passed) VALUES "
+                  "('BTC','2026-08-01','KAUFEN','{}',1)")
+        if hebelzeile and hebeltabelle:
+            c.execute("INSERT INTO hebel_signals (symbol, created_at, action, "
+                      "richtung, gate_passed, facts_json) VALUES "
+                      "('BTC','2026-08-02','KAUFEN','LONG',1,'{}')")
+        c.commit()
+        return c
+
+    _mit = _PF.lade(_db_mit(True), symbole=["BTC"])
+    _ohne = _PF.lade(_db_mit(False), symbole=["BTC"])
+    pruefe(P, "Spot UND Hebel ergeben EINE Position",
+           len(_mit) == 1,
+           "das ist der Zweck des Moduls - eine Position je Symbol, nicht "
+           "je Tabelle. Bekommen: %d" % len(_mit))
+    pruefe(P, "und die Hebelzeile zaehlt dahinter mit",
+           len(getattr(_mit[0], "signale", []) or []) == 2
+           and len(getattr(_ohne[0], "signale", []) or []) == 1,
+           "vorher wurde `hebel_signals` nie gelesen: mit %d gegen ohne %d"
+           % (len(getattr(_mit[0], "signale", []) or []),
+              len(getattr(_ohne[0], "signale", []) or [])))
+    pruefe(P, "eine fehlende Hebeltabelle bricht nichts ab",
+           len(_PF.lade(_db_mit(False, hebeltabelle=False),
+                        symbole=["BTC"])) == 1,
+           "alte Datenbanken haben sie nicht - ein Absturz hier liesse den "
+           "Bestand still leer erscheinen")
+
+    # ---- I-4: kein H bei Akkumulation ----
+    _rl = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "H wird bei akkumulation uebersprungen",
+           "_ist_akkumulation = str(strategie" in _rl
+           and "raise _KeinHBeiAkkumulation" in _rl,
+           "H ist eine BARRIERENfrage (Ziel vor Stop, CRV 2,0). Die "
+           "Akkumulation hat keine Barriere - eine Zahl aus der falschen "
+           "Messung ist schlimmer als keine")
+    # ⚠️ KOMMENTARZEILEN AUSSCHLIESSEN. Die erste Fassung suchte
+    # "logger.exception" als Text und fand es im KOMMENTAR ("deshalb ohne
+    # `logger.exception`"). Drittes Mal an einem Tag, dass eine Textsuche das
+    # Reden ueber eine Sache mit ihrer Verwendung verwechselt.
+    # ⚠️ KOMMENTARZEILEN AUSSCHLIESSEN. Die erste Fassung suchte
+    # "logger.exception" als Text und fand es im KOMMENTAR ("deshalb ohne
+    # `logger.exception`"). Drittes Mal an einem Tag, dass eine Textsuche
+    # das Reden ueber eine Sache mit ihrer Verwendung verwechselt.
+    _zweig = _rl.split("except _KeinHBeiAkkumulation:")[1].split(
+        "except Exception:")[0]
+    _code = chr(10).join(z for z in _zweig.split(chr(10))
+                         if not z.strip().startswith("#"))
+    pruefe(P, "und das ist kein Fehlerfall",
+           "except _KeinHBeiAkkumulation:" in _rl
+           and "logger.exception" not in _code,
+           "uebersprungen und ausgefallen muessen im Log unterscheidbar "
+           "sein - im Zweig steht: %r" % _code.strip()[:80])
+
+    # ---- I-2: die Paarpruefung am Etikett ----
+    pruefe(P, "das Paar wird geprueft, wo das Etikett entsteht",
+           "pruefe_auftrag(_topf_instrument, strategie)" in _rl,
+           "`pruefe_auftrag` lief EINMAL am Lauf-Anfang mit der VORGABE - "
+           "`hebel x akkumulation` entsteht aber erst danach")
+    pruefe(P, "und es wird gemeldet, nicht gesperrt",
+           "paarkonflikt" in _rl and "ACHTUNG: %s laeuft als %s" in _rl,
+           "die Ursache liegt an der Stopweite, nicht am Asset - wer sperrt, "
+           "versteckt den Konflikt; wer meldet, macht ihn zaehlbar")
+
+    # ---- Und der Scope-Fehler, der beinahe passiert waere ----
+    baum = _ast.parse(_rl)
+    for f in _ast.walk(baum):
+        if isinstance(f, _ast.FunctionDef) and f.name == "_ein_asset":
+            lokal = set()
+            for k in _ast.walk(f):
+                if isinstance(k, (_ast.Import, _ast.ImportFrom)):
+                    for a in k.names:
+                        lokal.add(a.asname or a.name.split(".")[-1])
+            pruefe(P, "die Ausnahme ist in _ein_asset importiert",
+                   "_AU" in lokal,
+                   "⚠️ `AuftragUngueltig` wird in `fuehre_lauf` importiert, "
+                   "NICHT hier. Vor dem ersten Lauf per AST gefunden - der "
+                   "breite Fehlerfang haette den NameError geschluckt und die "
+                   "Meldung waere nie erschienen")
+            break
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -13996,7 +14130,8 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Abkapselung": paket_abkapselung,
           "Akkumulationslage": paket_akkumulationslage,
           "T4c": paket_namensschatten,
-          "L3": paket_l3}
+          "L3": paket_l3,
+          "I-Reparatur": paket_instrument_reparatur}
 
 
 class _Mitschnitt:

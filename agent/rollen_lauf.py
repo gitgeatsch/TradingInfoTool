@@ -51,6 +51,14 @@ from agent import assetklassen as _AKL
 
 logger = logging.getLogger(__name__)
 
+
+class _KeinHBeiAkkumulation(Exception):
+    """H wird bei `akkumulation` uebersprungen - kein Fehler, sondern die Regel.
+
+    Eine eigene Ausnahme statt eines `if`-Zweigs, damit der bestehende
+    Fehlerfang darunter unveraendert bleibt und die beiden Faelle im Log
+    unterscheidbar sind: uebersprungen gegen ausgefallen."""
+
 TROCKEN, PROBE, SCHARF = "trocken", "probe", "scharf"
 BETRIEBSARTEN = (TROCKEN, PROBE, SCHARF)
 
@@ -1415,6 +1423,85 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # keinen Hebel-Lauf mehr, den man zuruecknehmen muesste.
         _topf_instrument = ("hebel" if _vor["etikett"] == "hebel"
                             else instrument)
+        # I-2 (28.08.2026): DIE PAARPRUEFUNG DORT, WO DAS ETIKETT ENTSTEHT.
+        #
+        # ⚠️ `pruefe_auftrag` laeuft EINMAL am Lauf-Anfang - mit der VORGABE
+        # ("spot"/"einstieg"). Danach setzt `strategie_fuer` fuer den Kern
+        # `akkumulation`, und die Rechnung kann daraus `etikett = "hebel"`
+        # machen. Damit entsteht `hebel x akkumulation` - ein Paar, das
+        # `ERLAUBTE_PAARE` ausdruecklich ausschliesst, weil die Finanzierung
+        # JEDEN Tag kostet und eine Akkumulation bewusst lange laeuft.
+        #
+        # Gemessen, wie leicht das eintritt: bei Krypto ergibt die Rechnung
+        # das Hebel-Etikett schon ab einem Stop von 10 % - also praktisch
+        # immer. Der Topf folgte dem Etikett; Geld kam aus dem Hebeltopf fuer
+        # eine Strategie, die keinen Hebel haben darf.
+        #
+        # ⚠️ ES WIRD GEMELDET, NICHT GESPERRT. Ein Abbruch hier naehme dem
+        # Kern seine Meldung, und die Ursache liegt nicht am Asset, sondern
+        # an der Stopregel (Rauschboden gegen Modellurteil). Wer sperrt,
+        # versteckt den Konflikt; wer meldet, macht ihn zaehlbar.
+        if _topf_instrument == "hebel":
+            # I-1b (28.08.2026): DER HEBEL-SCHALTER GREIFT WIEDER - hier.
+            #
+            # ⚠️ `asset_schalter` prueft `if i == "hebel"`, und `instrument`
+            # ist seit S6b immer "spot". Der Schalter, mit dem der Nutzer je
+            # Asset entscheidet, ob es ueberhaupt gehebelt beurteilt werden
+            # darf, wurde damit NIE gefragt - die GUI zeigte eine Einstellung
+            # ohne Wirkung.
+            #
+            # ER KANN DORT AUCH NICHT MEHR GEFRAGT WERDEN: `asset_schalter`
+            # laeuft VOR der Rechnung, und vorher gibt es kein Etikett. Die
+            # Frage "darf dieses Asset gehebelt werden?" ist erst
+            # beantwortbar, wenn feststeht, dass es ein Hebelgeschaeft waere.
+            #
+            # ⚠️ MELDEN UND ZURUECKSTUFEN, NICHT VERWERFEN. Nutzervorgabe:
+            # "ueberall moeglich, aber nur dort Signale erzeugen, wo ich das
+            # selektiv moechte." Ein abgeschaltetes Asset soll kein
+            # HEBEL-Signal bekommen - aber sein Spot-Signal behalten. Der
+            # Topf faellt deshalb auf "spot" zurueck; verworfen wird nichts.
+            try:
+                # ⚠️ `db` IST HIER DER PFAD, NICHT DAS MODUL - der Docstring
+                # dieser Funktion sagt es ausdruecklich, und ich habe es
+                # trotzdem zuerst falsch geschrieben. `db.get_...` auf einem
+                # String wirft AttributeError; mein eigener Fehlerfang haette
+                # ihn gefangen und den Hebel dann fuer JEDES Asset
+                # abgeschaltet - fail-soft mit falschem Verhalten, still.
+                # Achte Namensfalle in drei Tagen.
+                import database.db as _dbmod
+                if not _dbmod.get_hebel_pruefung_erlaubt(conn, symbol):
+                    _topf_instrument = instrument
+                    ergebnis.setdefault("hebel_abgeschaltet", []).append(symbol)
+                    logger.info(
+                        "%s: Hebel fuer dieses Asset abgeschaltet - die "
+                        "Rechnung ergab das Hebel-Etikett, gefuehrt wird es "
+                        "als %s.", symbol, instrument)
+            except Exception as _hs:                         # noqa: BLE001
+                # EIN LESEFEHLER HEISST NICHT "ERLAUBT" - dieselbe Linie wie
+                # in `asset_schalter`. Aber auch nicht "verworfen": der
+                # sichere Zustand ist der ungehebelte.
+                _topf_instrument = instrument
+                logger.warning("Hebel-Schalter fuer %s nicht lesbar (%s) - "
+                               "als %s gefuehrt", symbol, _hs, instrument)
+
+        if _topf_instrument == "hebel":
+            try:
+                # ⚠️ `AuftragUngueltig` IST HIER NICHT IM SCOPE - sie wird in
+                # `fuehre_lauf` importiert, nicht in dieser Funktion. Vor dem
+                # ersten Lauf gefunden (AST-Probe), nicht im Betrieb: der
+                # breite Fehlerfang darunter haette den NameError geschluckt
+                # und die Meldung waere nie erschienen. Siebtes Mal dieselbe
+                # Falle in drei Tagen.
+                from agent.handelsauftrag import AuftragUngueltig as _AU
+                pruefe_auftrag(_topf_instrument, strategie)
+            except _AU as _pf:
+                ergebnis.setdefault("paarkonflikt", []).append(
+                    f"{symbol}: {strategie} + Etikett hebel - {_pf}")
+                logger.warning(
+                    "ACHTUNG: %s laeuft als %s, die Rechnung ergibt aber das "
+                    "Etikett 'hebel' - ein Paar, das die Matrix ausschliesst. "
+                    "Ursache ist die Stopweite, nicht das Asset.",
+                    symbol, strategie)
     except Exception as exc:                                 # noqa: BLE001
         # FAIL-SOFT MIT VERMERK. Faellt die Vorabrechnung aus, gilt das alte
         # Verhalten - aber es steht im Lauf, statt still zu passieren.
@@ -1630,13 +1717,35 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # in der Mail stehen, und aus dem ECHTEN Stop und Ziel dieses Signals.
     # ⚠️ SPERRT NICHTS - das Ergebnis geht in die Mail und in die Datenbank,
     # in keine Entscheidung. Faellt es aus, fehlt eine Zeile, nie ein Signal.
+    # I-4 (28.08.2026): KEIN H BEI AKKUMULATION.
+    #
+    # ⚠️ H IST EINE BARRIERENFRAGE. Es ist auf "Ziel vor Stop" bei CRV 2,0
+    # gemessen (`messe_marken.py`) und beantwortet: liegt zwischen Kurs und
+    # Ziel kein Widerstand, und traegt unterhalb eine Unterstuetzung?
+    #
+    # Die Akkumulation hat KEINE Barriere. `handelsauftrag` gibt ihr
+    # ausdruecklich ein anderes Erfolgsmass ("Durchschnittskurs und
+    # Endvermoegen statt Ziel vor Stop"), und `vorfilter.bewerte()` gibt
+    # deshalb `h = None` mit dem Grund "Stop oder Ziel fehlt".
+    #
+    # ⚠️ NUR: DIE RECHNUNG LIEFERT IMMER EINEN STOP. Damit bekam H Stop und
+    # Ziel und urteilte doch - ueber ein Signal, dessen Erfolgsmass ein
+    # anderes ist. Eine Zahl aus der falschen Messung ist schlimmer als
+    # keine; genau deshalb laeuft `akkumulationslage` nur bei akkumulation
+    # und H ab jetzt nur bei allem anderen.
+    _ist_akkumulation = str(strategie or "").strip().lower() == "akkumulation"
     try:
         from agent import vorfilter as _VF
+        if _ist_akkumulation:
+            raise _KeinHBeiAkkumulation
         _vf_bewertung = _VF.bewerte(
             _bloecke.get("_marken_werte"),
             rechnung.get("stop_eur"), rechnung.get("ziel_eur"),
             bool(rechnung.get("ist_short")), assetklasse)
         _vf_zeilen = _VF.saetze(_vf_bewertung)
+    except _KeinHBeiAkkumulation:
+        # KEIN FEHLER, SONDERN DIE REGEL - deshalb ohne `logger.exception`.
+        _vf_bewertung, _vf_zeilen = None, []
     except Exception:                                        # noqa: BLE001
         logger.exception("Vorfilter-Schatten fuer %s uebersprungen", symbol)
         _vf_bewertung, _vf_zeilen = None, []

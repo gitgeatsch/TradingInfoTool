@@ -58,6 +58,44 @@ INSTRUMENTE = ("spot", "hebel", "absicherung")
 #                 nicht mehr".
 STRATEGIEN = ("einstieg", "swing", "akkumulation")
 
+
+def ist_hebelgeschaeft(rechnung=None, instrument=None) -> bool:
+    """Ist DIESES Geschaeft ein Hebelgeschaeft? (I-1, 28.08.2026)
+
+    ⚠️ DIE FRAGE, DIE SEIT S6b NIRGENDS RICHTIG GESTELLT WURDE. Zwoelf Stellen
+    fragten `instrument == "hebel"` - und seit dem 22.08. ist `instrument` im
+    Lauf IMMER "spot", weil es nur noch einen Lauf je Asset gibt
+    (`INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot",)`). Die Antwort war dort also
+    immer nein, unabhaengig davon, was gerechnet wurde.
+
+    Was das kostete, an drei Beispielen:
+
+        asset_schalter       der Hebel-Schalter je Asset wurde nie gefragt
+        positionsfuehrung    `hebel_signals` wurde nie gelesen
+        trefferbilanz        Kosten mit Spot-Tier: 0,60 R statt 0,76 R
+
+    DIE SACHFRAGE STEHT IM ERGEBNIS, NICHT IM LAUF. `entscheidungsrechnung`
+    setzt `etikett` auf "hebel", wenn ein Hebel noetig ist oder es ein SHORT
+    ist - genau das ist die Antwort. S6b hat den Topf und die Handelbarkeit
+    bereits darauf umgestellt; diese Funktion macht daraus EINE Stelle, damit
+    die naechste Umstellung nicht wieder zwoelf Stellen sucht.
+
+    ⚠️ `instrument` BLEIBT ALS RUECKFALL - aber nur, wenn keine Rechnung
+    vorliegt. Es gibt Aufrufer ohne Rechnung (Anzeige, Altdaten, die alten
+    Ketten mit zwei Laeufen), und fuer die ist das Lauf-Etikett die einzige
+    Auskunft, die es gibt. Ein Rueckfall, der still das Gegenteil behauptet,
+    waere schlimmer als keiner - deshalb steht er hier sichtbar und nicht
+    verteilt an zwoelf Stellen."""
+    if rechnung:
+        etikett = None
+        try:
+            etikett = rechnung.get("etikett")
+        except AttributeError:
+            etikett = getattr(rechnung, "etikett", None)
+        if etikett is not None:
+            return str(etikett).strip().lower() == "hebel"
+    return str(instrument or "").strip().lower() == "hebel"
+
 # WELCHE PAARE SINNVOLL SIND, und warum die uebrigen fehlen:
 #
 #   hebel x akkumulation   Die Finanzierung kostet JEDEN Tag. Eine Strategie,

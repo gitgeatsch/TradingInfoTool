@@ -188,7 +188,22 @@ def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
         try:
             from agent.krypto.backward_tracking import kosten_in_r
 
-            tier = ("hebel" if instrument == "hebel"
+            # I-1a (28.08.2026): DER HEBEL SELBST ENTSCHEIDET, NICHT DER LAUF.
+            #
+            # ⚠️ Hier stand `instrument == "hebel"` - und seit S6b (22.08.) ist
+            # `instrument` im Lauf immer "spot". Das Tier "hebel" wurde damit
+            # NIE vergeben, und jedes Krypto-Signal rechnete mit den
+            # Spot-Kosten. Gemessen an einem Trade mit Stop 5 %, 30 Tagen und
+            # Hebel 3: 0,60 R statt 0,76 R - die Finanzierung fehlte genau
+            # dort, wo sie anfaellt.
+            #
+            # Die Sachfrage steht im `hebel`-Argument, das diese Funktion
+            # ohnehin bekommt: ein Geschaeft mit Hebel ueber 1 IST ein
+            # Hebelgeschaeft, unabhaengig davon, welcher Lauf es erzeugt hat.
+            # `instrument` bleibt als Rueckfall fuer Altdaten ohne Hebelwert.
+            _gehebelt = (float(hebel) > 1.0 if hebel is not None
+                         else instrument == "hebel")
+            tier = ("hebel" if _gehebelt
                     else "hedge" if instrument == "absicherung"
                     else "krypto" if klasse == "krypto" else "aktien")
             aus = kosten_in_r(stop_rel, tier, float(tage or 0.0),

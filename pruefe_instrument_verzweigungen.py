@@ -49,6 +49,11 @@ NEUE_KETTE = {
 # das ERGEBNIS-Etikett und kann weiterhin "hebel" sehen. `tot` heisst: sie
 # bekommt das LAUF-Etikett und ist fuer Krypto seit S6b wirkungslos.
 URTEIL = {
+    ("handelsauftrag.py", "ist_hebelgeschaeft"): (
+        "lebt", "✔ I-1 (28.08.2026): DIE Stelle, die diese Frage beantwortet. "
+                "Sie liest zuerst das ERGEBNIS-Etikett und faellt nur ohne "
+                "Rechnung auf `instrument` zurueck - das Muster hier ist der "
+                "Rueckfall selbst, nicht sein Opfer"),
     # ---- NACHGETRAGEN 28.08.2026, nachdem der Sammler Aliase mitzaehlt ----
     ("asset_schalter.py", "darf_analysiert_werden"): (
         "tot", "⚠️ DER HEBEL-SCHALTER DES NUTZERS HAENGT HIER. `if i == "
@@ -56,7 +61,11 @@ URTEIL = {
                "`instrument` immer \"spot\", die Bedingung trifft NIE zu und "
                "`get_hebel_pruefung_erlaubt` wird nie gefragt. Die GUI zeigt "
                "einen Schalter, der nichts bewirkt - dieselbe Klasse wie die "
-               "13 Aktien im DCA-Standard"),
+               "13 Aktien im DCA-Standard. ✔ I-1b (28.08.2026): der Schalter "
+               "wird jetzt in `rollen_lauf._ein_asset` gefragt, sobald das "
+               "Etikett feststeht - hier KANN er nicht gefragt werden, weil "
+               "diese Funktion VOR der Rechnung laeuft. Die Zeile bleibt fuer "
+               "die alten Ketten mit zwei Laeufen"),
     ("handelsauftrag.py", "strategie_fuer"): (
         "lebt", "✔ ABSICHTLICH die Lauf-Frage: `if i != \"spot\"` haelt den "
                 "Akkumulations-Schalter von der Hebel-Seite fern. Da es nur "
@@ -64,12 +73,10 @@ URTEIL = {
                 "(der Kern soll akkumulieren). ⚠️ ABER: die Rechnung kann "
                 "daraus `etikett=hebel` machen, und `hebel x akkumulation` "
                 "ist ein VERBOTENES Paar, das hier niemand mehr prueft"),
-    ("positionsfuehrung.py", "lade"): (
-        "tot", "⚠️ `tabelle = \"hebel_signals\" if instrument == \"hebel\"` - "
-               "seit S6b wird `hebel_signals` NIE gelesen. Ein Symbol mit "
-               "Hebelposition erscheint nur mit seinem Spot-Teil. S6b hatte "
-               "den Fall benannt (\"ein Symbol kann Spot UND Hebelposition "
-               "tragen\") und fuer `_vorabbestand` geloest - hier nicht"),
+    # ✔ positionsfuehrung.lade STEHT NICHT MEHR HIER (I-3, 28.08.2026):
+    #   die Verzweigung ist ersatzlos weg, sie liest jetzt BEIDE Tabellen.
+    #   Ein Urteil ohne Fundstelle meldet dieses Werkzeug selbst als Fehler -
+    #   genau so soll eine erledigte Stelle verschwinden.
     ("rollen_lauf.py", "_ein_asset"): (
         "lebt", "✔ S6b: `_topf_instrument` folgt dem ERGEBNIS-Etikett, nicht "
                 "dem Lauf. Genau die Umstellung, die die uebrigen Stellen "
@@ -78,7 +85,11 @@ URTEIL = {
         "lebt", "✔ bekommt `_topf_instrument` aus `_ein_asset` - also das "
                 "Etikett, nicht den Lauf"),
     ("trefferbilanz.py", "kosten_r_aus_stop"): (
-        "tot", "⚠️ KOSTENFEHLER, gemessen. `tier = \"hebel\" if instrument == "
+        "lebt", "✔ I-1a (28.08.2026): das Tier folgt jetzt dem HEBELWERT "
+                "(`hebel > 1.0`), den die Funktion ohnehin bekommt. Gemessen: "
+                "0,76 R bei Hebel 3 gegen 0,60 R bei Hebel 1. Das verbliebene "
+                "`instrument`-Muster ist der Rueckfall fuer Altdaten ohne "
+                "Hebelwert. VORHER:  `tier = \"hebel\" if instrument == "
                "\"hebel\"` wird nie wahr - jedes Krypto-Signal rechnet mit dem "
                "Spot-Tier. Bei Stop 5 %, 30 Tagen, Hebel 3: 0,60 R statt "
                "0,76 R, also 21 % zu wenig. Die Kosten fehlen genau dort, wo "

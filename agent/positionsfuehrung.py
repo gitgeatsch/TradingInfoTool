@@ -161,7 +161,25 @@ def lade(conn, symbole=None, instrument: str = "spot",
     `rollen_lauf` ("ohne Verbindung kein Lauf")."""
     from agent import rollen_eingabe as RE
 
-    tabelle = "hebel_signals" if instrument == "hebel" else "signals"
+    # I-3 (28.08.2026): BEIDE QUELLEN, NICHT EINE WAEHLEN.
+    #
+    # ⚠️ Hier stand `tabelle = "hebel_signals" if instrument == "hebel" else
+    # "signals"`. Seit S6b (22.08.) ist `instrument` im Lauf immer "spot" -
+    # `hebel_signals` wurde also NIE gelesen, und ein Symbol mit
+    # Hebelposition erschien nur mit seinem Spot-Teil.
+    #
+    # UND DAS WIDERSPRACH DEM ZWECK DIESES MODULS. Es fuehrt EINE Position je
+    # Symbol; ein Symbol kann aber Spot UND Hebel tragen - S6b hat den Fall
+    # ausdruecklich benannt ("es kehrt zurueck") und fuer `_vorabbestand`
+    # geloest. Wer hier eine Tabelle waehlt, fuehrt eine halbe Position.
+    #
+    # `hebel_signals` kann fehlen (alte Datenbanken, frische Testdatenbank) -
+    # deshalb wird jede Tabelle einzeln versucht und eine fehlende
+    # uebersprungen, nicht der ganze Aufruf abgebrochen.
+    tabellen = ["signals", "hebel_signals"]
+    vorhanden = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    tabellen = [x for x in tabellen if x in vorhanden]
     platzhalter = ""
     parameter: list = []
     if symbole:
@@ -172,10 +190,21 @@ def lade(conn, symbole=None, instrument: str = "spot",
     # sie sind die Vorgeschichte EINER Position.
     offen: dict = {}
     try:
-        for r in conn.execute(
-                f"SELECT symbol, action, created_at, strategie FROM {tabelle} "
+        zeilen = []
+        for tabelle in tabellen:
+            spalten = {r[1] for r in conn.execute(
+                f"PRAGMA table_info({tabelle})")}
+            # ⚠️ `strategie` gibt es nur in `signals`. In `hebel_signals`
+            # fehlt sie - dort ist die Strategie per Definition `einstieg`
+            # oder `swing`, niemals `akkumulation` (Paar-Matrix). Ein
+            # `SELECT` auf eine fehlende Spalte wuerde die ganze Abfrage
+            # werfen und den Bestand still leeren.
+            _strat = "strategie" if "strategie" in spalten else "'einstieg'"
+            zeilen += list(conn.execute(
+                f"SELECT symbol, action, created_at, {_strat} FROM {tabelle} "
                 f"WHERE (outcome_status IS NULL OR outcome_status='offen')"
-                f"{platzhalter} ORDER BY symbol, created_at", parameter):
+                f"{platzhalter} ORDER BY symbol, created_at", parameter))
+        for r in sorted(zeilen, key=lambda x: (str(x[0]), str(x[2]))):
             if str(r[1]) in AKTIONEN_MIT_BESTANDSWIRKUNG:
                 offen.setdefault(str(r[0]), []).append(
                     {"aktion": str(r[1]), "zeit": str(r[2]),

@@ -224,3 +224,51 @@ Zwei Stellen daraus standen im Verdacht, beide sind sauber:
 ⚠️ **Was ich dennoch zu verantworten habe:** `positionsfuehrung` nicht in die
 Werkzeugliste eingetragen — dadurch blieb sie ungeprüft, obwohl das Werkzeug
 sie gefunden hätte.
+
+---
+
+## 6. I-1 bis I-4 gebaut (28.08.2026 abends)
+
+| # | Was | Nachweis |
+|---|---|---|
+| **I-1** | `handelsauftrag.ist_hebelgeschaeft(rechnung, instrument)` — **eine** Stelle beantwortet die Sachfrage, Etikett schlägt Lauf | 3 Prüfungen |
+| **I-1a** | `trefferbilanz` folgt dem **Hebelwert** statt dem Lauf | ✔ **0,76 R bei Hebel 3 gegen 0,60 R bei Hebel 1** — der Kostenfehler ist weg |
+| **I-1b** | Der Hebel-Schalter wird gefragt, **sobald das Etikett feststeht** | in `_ein_asset`; `asset_schalter` läuft vor der Rechnung und *kann* ihn dort nicht fragen |
+| **I-2** | Paarprüfung dort, wo das Etikett entsteht | meldet `paarkonflikt`, **sperrt nicht** |
+| **I-3** | Positionsführung liest **beide** Quellen | ✔ Spot + Hebel → **eine** Position, zwei Signale dahinter |
+| **I-4** | Kein H bei `akkumulation` | eigene Ausnahme, damit *übersprungen* und *ausgefallen* im Log unterscheidbar bleiben |
+
+**Verzweigungswerkzeug: 12 tote Stellen → 10.** `positionsfuehrung` hat gar
+keine Fundstelle mehr — die Verzweigung ist ersatzlos verschwunden.
+
+### ⚠️ Der Paarkonflikt ist LATENT, nicht aktiv — und das ist die wichtigere Erkenntnis
+
+Die Simulation meldet **null** Paarkonflikte. Der Grund ist nicht, dass die
+Prüfung nicht greift, sondern **wo die Schwelle liegt**:
+
+| Stopabstand | Hebel | Etikett |
+|---|---|---|
+| 3,1 % | 1,9 | **hebel** |
+| 5,0 % | 1,2 | **hebel** |
+| **7,5 %** | 1,0 | **spot** |
+| 10,0 % | 1,0 | spot |
+
+**Das Etikett kippt bei rund 6 % Stopabstand.** Der heutige Median liegt bei
+**8,94 %** — also durchgehend darüber. Deshalb entsteht heute weder ein
+Hebel-Etikett noch der Konflikt.
+
+✔ **I-2 ist damit Vorsorge für genau den Moment, in dem `stop_min_atr`
+gesenkt wird.** Ohne sie entstünde `hebel × akkumulation` still, mit Geld aus
+dem Hebeltopf.
+
+### ⚠️ Und zwei eigene Fehler, beide vor dem ersten Lauf gefunden
+
+| | |
+|---|---|
+| `AuftragUngueltig` nicht im Scope von `_ein_asset` | per AST-Probe gefunden — der Fehlerfang hätte den NameError geschluckt |
+| `db.get_hebel_pruefung_erlaubt(...)` — **`db` ist der PFAD, nicht das Modul** | steht so im Docstring derselben Funktion. ⚠️ Der `AttributeError` wäre gefangen worden und hätte den Hebel für **jedes** Asset abgeschaltet — fail-soft mit falschem Verhalten |
+
+**Achte Namensfalle in drei Tagen.** Beide Male hat nicht der Betrieb sie
+gefunden, sondern eine Probe davor.
+
+**Suite: 1.745 Prüfungen, alle bestanden. Simulation: 3 Gruppen, 6 Mails, 0 Fehler.**
