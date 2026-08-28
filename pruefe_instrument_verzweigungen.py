@@ -35,12 +35,58 @@ NEUE_KETTE = {
     "signal_mail", "vorfilter", "wahrscheinlichkeit", "asset_schalter",
     "szenario_fakten", "faktenblock", "verkaufsrechnung", "ausstiegsrechnung",
     "marktlage", "mindestkriterien", "llm_schema",
+    # ⚠️ NACHGETRAGEN 28.08.2026 - beide fehlten, und beide tragen eine der
+    # WICHTIGSTEN Stellen:
+    #   positionsfuehrung  liest `hebel_signals` nur bei instrument=="hebel"
+    #                      -> sieht seit S6b NIE eine Hebelposition
+    #   trefferbilanz      vergibt das Kosten-Tier "hebel" nur dort
+    #                      -> rechnet fuer JEDES Krypto-Signal mit dem
+    #                         Spot-Tier: 0,60 R statt 0,76 R (-21 %)
+    "positionsfuehrung", "trefferbilanz",
 }
 
 # ⚠️ JEDE STELLE TRAEGT IHR URTEIL, keinen Haken. `lebt` heisst: sie bekommt
 # das ERGEBNIS-Etikett und kann weiterhin "hebel" sehen. `tot` heisst: sie
 # bekommt das LAUF-Etikett und ist fuer Krypto seit S6b wirkungslos.
 URTEIL = {
+    # ---- NACHGETRAGEN 28.08.2026, nachdem der Sammler Aliase mitzaehlt ----
+    ("asset_schalter.py", "darf_analysiert_werden"): (
+        "tot", "⚠️ DER HEBEL-SCHALTER DES NUTZERS HAENGT HIER. `if i == "
+               "\"hebel\"` mit `i = str(instrument...)` - seit S6b ist "
+               "`instrument` immer \"spot\", die Bedingung trifft NIE zu und "
+               "`get_hebel_pruefung_erlaubt` wird nie gefragt. Die GUI zeigt "
+               "einen Schalter, der nichts bewirkt - dieselbe Klasse wie die "
+               "13 Aktien im DCA-Standard"),
+    ("handelsauftrag.py", "strategie_fuer"): (
+        "lebt", "✔ ABSICHTLICH die Lauf-Frage: `if i != \"spot\"` haelt den "
+                "Akkumulations-Schalter von der Hebel-Seite fern. Da es nur "
+                "noch den Spot-Lauf gibt, greift er immer - genau so gewollt "
+                "(der Kern soll akkumulieren). ⚠️ ABER: die Rechnung kann "
+                "daraus `etikett=hebel` machen, und `hebel x akkumulation` "
+                "ist ein VERBOTENES Paar, das hier niemand mehr prueft"),
+    ("positionsfuehrung.py", "lade"): (
+        "tot", "⚠️ `tabelle = \"hebel_signals\" if instrument == \"hebel\"` - "
+               "seit S6b wird `hebel_signals` NIE gelesen. Ein Symbol mit "
+               "Hebelposition erscheint nur mit seinem Spot-Teil. S6b hatte "
+               "den Fall benannt (\"ein Symbol kann Spot UND Hebelposition "
+               "tragen\") und fuer `_vorabbestand` geloest - hier nicht"),
+    ("rollen_lauf.py", "_ein_asset"): (
+        "lebt", "✔ S6b: `_topf_instrument` folgt dem ERGEBNIS-Etikett, nicht "
+                "dem Lauf. Genau die Umstellung, die die uebrigen Stellen "
+                "noch brauchen"),
+    ("toepfe.py", "belegt_eur"): (
+        "lebt", "✔ bekommt `_topf_instrument` aus `_ein_asset` - also das "
+                "Etikett, nicht den Lauf"),
+    ("trefferbilanz.py", "kosten_r_aus_stop"): (
+        "tot", "⚠️ KOSTENFEHLER, gemessen. `tier = \"hebel\" if instrument == "
+               "\"hebel\"` wird nie wahr - jedes Krypto-Signal rechnet mit dem "
+               "Spot-Tier. Bei Stop 5 %, 30 Tagen, Hebel 3: 0,60 R statt "
+               "0,76 R, also 21 % zu wenig. Die Kosten fehlen genau dort, wo "
+               "gehebelt wird"),
+    ("wiederholung.py", "gesperrt_bis"): (
+        "lebt", "✔ fragt `INSTRUMENTE_JE_GRUPPE` statt das Instrument: bei "
+                "nur einem Lauf faellt der Filter auf `1=1`. S6b-bewusst "
+                "gebaut (L4/L5, 28.08.)"),
     ("entscheidungsrechnung.py", "_crv_faktor"): (
         "tot", "bekommt das Lauf-Etikett aus `rechne()` - die CRV-Abstufung "
                "unterscheidet Spot und Hebel seit S6b nicht mehr"),
@@ -93,10 +139,36 @@ URTEIL = {
 class Sammler(ast.NodeVisitor):
     def __init__(self) -> None:
         self.funde: list[tuple[int, str]] = []
+        self.aliase: set[str] = set()
+
+    def visit_Assign(self, knoten):
+        """Merkt sich Namen, die AUS `instrument` abgeleitet werden.
+
+        `i = str(instrument or "").strip().lower()` macht `i` zu einem
+        zweiten Namen fuer dieselbe Sache - und jede Bedingung auf `i` ist
+        dieselbe Verzweigung."""
+        try:
+            quelle = ast.unparse(knoten.value)
+        except Exception:                                    # noqa: BLE001
+            quelle = ""
+        if "instrument" in quelle:
+            for ziel in knoten.targets:
+                if isinstance(ziel, ast.Name):
+                    self.aliase.add(ziel.id)
+        self.generic_visit(knoten)
 
     def _pruefe(self, knoten) -> None:
         text = ast.unparse(knoten)
-        if "instrument" not in text or len(text) > 90:
+        # ⚠️ ALIASE MITZAEHLEN (28.08.2026). Die erste Fassung suchte den TEXT
+        # "instrument" - und fand `asset_schalter.py:89` deshalb NICHT, weil
+        # die Variable dort `i` heisst (`i = str(instrument or "")...`).
+        # Genau die Stelle, an der der Hebel-Schalter des Nutzers haengt.
+        #
+        # Textsuche kann einen Datenfluss nicht sehen; sie findet nur den
+        # Namen, den jemand zufaellig stehen liess. Deshalb sammelt der
+        # Sammler jetzt zuerst die Namen, die AUS `instrument` entstehen.
+        namen = ("instrument",) + tuple(self.aliase)
+        if not any(n in text for n in namen) or len(text) > 90:
             return
         if any(w in text for w in ('"hebel"', "'hebel'", '"spot"', "'spot'")):
             self.funde.append((knoten.lineno, text[:80]))

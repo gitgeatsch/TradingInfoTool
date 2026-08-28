@@ -2591,6 +2591,16 @@ für krypto genau einen Lauf: `spot`. Hebel entsteht ausschließlich über
 `hebel_screening_job` und dessen eigenen Schalter
 (`get_hebel_pruefung_erlaubt`) — nicht über den Umlauf.
 
+> ⚠️ **KORRIGIERT AM 28.08. ABENDS.** Dieser Satz war zur Hälfte falsch. Der
+> Hebel läuft **nicht** über das Screening, sondern fällt seit S6b (22.08.)
+> aus der **Rechnung** an — `hebel = verlustanteil / stop_rel`, Kapitel 88:
+> *„Hebel als Ergebnis statt als Kategorie"*.
+>
+> ⚠️ **Und `get_hebel_pruefung_erlaubt` wird gar nicht mehr gefragt:**
+> `asset_schalter.py:89` prüft `if i == "hebel"`, und `instrument` ist seit
+> S6b immer `"spot"`. **Der Schalter des Nutzers ist wirkungslos.**
+> Vollständig: `Befund_Instrument_nach_S6b_28_08.md`.
+
 ⚠️ **Das gehört zur offenen Nutzerfrage** *„haben wir nun echte Hebelsignale
 oder nur verkappte Spot?"* — und es ist **kein** Ergebnis von L2, sondern eine
 Struktureigenschaft, die vorher nirgends festgehalten war.
