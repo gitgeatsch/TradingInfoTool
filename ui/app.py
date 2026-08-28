@@ -612,12 +612,26 @@ class TradingInfoToolApp(tk.Tk):
             if bitpanda_fehlt:
                 tags.append("bitpanda_fehlt")  # zuletzt hinzugefuegt = hoehere Prioritaet bei ttk-Tag-Kollision
 
-            # Tranchen-Toggle (2026-07-12, seit 2026-08-09 fuer alle Klassen).
-            # Ob Tranchen dann TATSAECHLICH vorgeschlagen werden, entscheidet
-            # zusaetzlich die Regime-Bedingung je Klasse - Krypto ueber das
-            # BTC-Regime, Multi-Asset ueber Aktien-Baermarkt/VIX (siehe
-            # agent/tranchen.py). Dieser Schalter ist die Erlaubnis, nicht die
-            # Garantie.
+            # Spalte "Akkumulation" - reine ANZEIGE der Standardkonfiguration.
+            #
+            # ⚠️ HIER STAND BIS 28.08.2026 EINE ERKLAERUNG, DIE NICHT MEHR GALT:
+            # sie verwies auf `agent/tranchen.py` und auf eine "Regime-Bedingung
+            # je Klasse" (BTC-Regime bzw. Aktien-Baermarkt/VIX). Beide Wege sind
+            # abgekapselt - der Budget-Allocator und der Multi-Asset-Batch
+            # werden von ihren Gates uebersprungen, die Rollen-Kette kennt
+            # "tranchen" an keiner Stelle. Wer den alten Text las, suchte eine
+            # Mechanik, die es nicht mehr gibt.
+            #
+            # WAS DER SCHALTER HEUTE BEDEUTET: er entscheidet ueber die
+            # STRATEGIE, nicht ueber Kaufzonen. "An" heisst `akkumulation`
+            # statt `einstieg` - kein Stop, kein Trailing, Ausstieg nur ueber
+            # `umgeworfen_durch`. Gesetzt wird das in
+            # `handelsauftrag.strategie_fuer()`, geprueft ein zweites Mal in
+            # `agent/asset_schalter.py`.
+            #
+            # ⚠️ NUR KRYPTO. Fuer Aktien, ETFs und Rohstoffe steht hier seit dem
+            # 28.08. "Aus" - `strategie_fuer()` laeuft mit
+            # `nur_klassen={"krypto"}`, dort bleibt es bei `einstieg`.
             if asset.symbol in dca_erlaubt_by_symbol:
                 tranchen_text = "An" if dca_erlaubt_by_symbol[asset.symbol] else "Aus"
             else:

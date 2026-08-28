@@ -13559,6 +13559,123 @@ def paket_akkumass() -> None:
            "Unterschied saehe aus wie ein Befund")
 
 
+
+def paket_abkapselung() -> None:
+    """Der alte Weg ist STILLGELEGT - und bleibt es (28.08.2026).
+
+    ⚠️ NUTZERVORGABE, die dieses Paket ausgeloest hat: *"ist wieder ein
+    Stolperstein - pruefe wie kritisch es ist, und wenn wir das so lassen, muss
+    der Bereich sauber abgekapselt werden, damit nichts mitlaeuft, wo wir
+    spaeter wieder ein Problem haben."*
+
+    WIE KRITISCH ES IST, am Code gemessen: `agent/multi_asset_batch.py` und
+    `agent/krypto/budget_allocator.py` enthalten das Wort `strategie` NULL Mal.
+    Ein Rueckfall brauchte keinen Fehler - eine Gruppe aus `aktiv_fuer` zu
+    nehmen genuegt, und die Umbauten vom 27./28.08. waeren umgangen. Still.
+
+    DREI DINGE HALTEN DEN ZUSTAND, und alle drei werden hier geprueft:
+
+        Gate      beide Nahtstellen fragen `bedient_neue_kette`
+        Warnung   sie warnen LAUT, wenn der alte Weg doch anlaeuft
+        Sauberkeit die neue Kette kennt "tranchen" an keiner Stelle
+    """
+    import config as _cfgm
+    from agent import assetklassen as _AK
+    from scheduler import rollen_job as _RJ
+
+    P = "Abkapselung"
+    _cfg = _cfgm.load_config()
+
+    # ---- Der Zustand selbst ----
+    gruppen = sorted({g for g, _, _ in _AK.laeufe()})
+    offen = [g for g in gruppen if not _RJ.bedient_neue_kette(g, _cfg)]
+    pruefe(P, "jede Gruppe laeuft ueber die Rollen-Kette",
+           not offen,
+           "noch alt: %s - fuer diese Gruppen liefe der ABGEKAPSELTE Weg, "
+           "und er kennt weder Strategie noch Positionsfuehrung" % offen)
+
+    # ---- Die neue Kette RUFT keine Tranchen auf ----
+    #
+    # ⚠️ GEPRUEFT WIRD DER AUFRUF, NICHT DAS WORT. Die erste Fassung suchte
+    # "tranchen" im ganzen Quelltext - und schlug an meiner eigenen Warnzeile
+    # an, die das Wort nennen MUSS ("Tranchen (AZ-4) liefe wieder mit"). Eine
+    # Pruefung, die das Reden ueber eine Sache mit ihrer Verwendung
+    # verwechselt, meldet Fehlalarme - und ein Werkzeug mit Fehlalarmen wird
+    # nicht mehr aufgerufen.
+    #
+    # ⚠️ UND DIE ZWEITE FASSUNG WAR AUCH NOCH ZU GROB: sie suchte "tranchen."
+    # als Text und fand "agent/tranchen.py" in genau derselben Warnzeile.
+    # Textsuche kann Code nicht von Prosa unterscheiden - der Syntaxbaum kann
+    # es. Geprueft werden jetzt die IMPORTE, nichts sonst.
+    import ast as _ast
+
+    def _importiert(datei: str, modul: str) -> bool:
+        baum = _ast.parse(_quelltext(datei))
+        for k in _ast.walk(baum):
+            if isinstance(k, _ast.Import):
+                if any(a.name.split(".")[-1] == modul for a in k.names):
+                    return True
+            elif isinstance(k, _ast.ImportFrom):
+                if (k.module or "").split(".")[-1] == modul:
+                    return True
+                if any(a.name == modul for a in k.names):
+                    return True
+        return False
+
+    for datei in ("agent/rollen_lauf.py", "scheduler/rollen_job.py"):
+        pruefe(P, "%s importiert keine Tranchen" % datei.split("/")[-1],
+               not _importiert(datei, "tranchen"),
+               "Tranchen sind durch `akkumulation` ersetzt - liefen sie in der "
+               "neuen Kette mit, gaebe es zwei Verfahren nebeneinander")
+
+    # ---- Der alte Weg kennt die Umbauten NICHT: das ist der Schaden ----
+    for datei in ("agent/multi_asset_batch.py", "agent/krypto/budget_allocator.py"):
+        pruefe(P, "%s kennt `strategie` nicht" % datei.split("/")[-1],
+               "strategie" not in _quelltext(datei).lower(),
+               "⚠️ Diese Pruefung ist KEINE Forderung, sondern die Messung des "
+               "Schadens: solange der alte Weg die Strategie nicht kennt, ist "
+               "ein Rueckfall ein Rueckschritt - und genau deshalb muss die "
+               "Nahtstelle warnen. Faellt sie, ist der alte Weg nachgezogen "
+               "worden und die Warnung darf milder werden")
+
+    # ---- Beide Nahtstellen warnen LAUT, nicht auf info ----
+    _bg = _quelltext("scheduler/background.py")
+    pruefe(P, "es gibt EINE Warnfunktion, nicht zwei Texte",
+           hasattr(_RJ, "warne_alter_weg") and hasattr(_RJ, "VERLUST_IM_RUECKFALL"),
+           "zwei Kopien derselben Liste laufen auseinander - dann warnt die "
+           "eine Naht vor etwas anderem als die andere")
+    pruefe(P, "und beide Nahtstellen rufen sie auf",
+           _bg.count("warne_alter_weg") >= 2,
+           "gefunden: %d Aufrufe. Der Batch-Zweig UND der Allocator-Zweig "
+           "muessen warnen - der zweite hatte bis 28.08. gar keine Meldung"
+           % _bg.count("warne_alter_weg"))
+    pruefe(P, "die Warnung nennt, was im Rueckfall fehlt",
+           len(_RJ.VERLUST_IM_RUECKFALL) >= 4
+           and any("kkumulation" in z for z in _RJ.VERLUST_IM_RUECKFALL),
+           "eine Warnung ohne Folgen ist eine Zeile, die man wegklickt")
+    pruefe(P, "und sie ist ohne Emoji lesbar",
+           all(ord(c) < 128 for z in _RJ.VERLUST_IM_RUECKFALL for c in z),
+           "auf der Windows-Konsole kam das Warnzeichen als \u26a0\ufe0f an - "
+           "eine Warnung, die man entziffern muss, ist keine")
+
+    # ---- Das stillgelegte Modul sagt selbst, dass es stillgelegt ist ----
+    import agent.tranchen as _TR
+    pruefe(P, "agent/tranchen.py weist sich als abgekapselt aus",
+           "ABGEKAPSELT" in (_TR.__doc__ or ""),
+           "es steht NICHT in der Toten-Liste der Modulkarte, weil es noch "
+           "importiert wird - von Modulen, die selbst nie laufen. Die "
+           "Modulkarte findet Importe, keine toten Aufrufketten. Der Docstring "
+           "ist deshalb die einzige Stelle, an der es sichtbar wird")
+
+    # ---- Und der Kern ist wieder der Kern ----
+    import database.db as _db
+    pruefe(P, "die Akkumulations-Vorgabe umfasst nur BTC/ETH/SOL",
+           _db._DCA_ERLAUBT_DEFAULT_SYMBOLS == {"BTC", "ETH", "SOL"},
+           "bekommen: %s - die 13 Aktien/ETFs stammten aus der Tranchen-Zeit "
+           "und stellten die GUI-Spalte auf 'An', ohne zu wirken"
+           % sorted(_db._DCA_ERLAUBT_DEFAULT_SYMBOLS))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -13566,7 +13683,8 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Verkauf": paket_verkaufsseite,
-          "Akkumass": paket_akkumass}
+          "Akkumass": paket_akkumass,
+          "Abkapselung": paket_abkapselung}
 
 
 class _Mitschnitt:

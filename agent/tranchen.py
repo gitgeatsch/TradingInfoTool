@@ -1,4 +1,32 @@
-"""Gestaffelte Kauf-/Verkaufszonen (AZ-4) - gemeinsame Regel fuer alle Klassen.
+"""ABGEKAPSELT seit 28.08.2026 - kein aktiver Pfad erreicht dieses Modul.
+
+⚠️ WER HIER LANDET, SUCHT VERMUTLICH ETWAS, DAS ES NICHT MEHR GIBT. Tranchen
+sind durch die Strategie `akkumulation` ersetzt (Nutzerentscheidung 27.08.:
+"nachdem wir keine Tranchen mehr haben"). Der Code bleibt stehen, weil ein
+Rueckfall auf den alten Weg technisch moeglich ist - er ist nicht tot, sondern
+STILLGELEGT.
+
+DIE BEIDEN GATES, die ihn heute unerreichbar machen:
+
+    scheduler/background.py:3376   Budget-Allocator      -> Rollen-Kette
+    scheduler/background.py:3540   Multi-Asset-Batch     -> Rollen-Kette
+
+Beide fragen `rollen_job.bedient_neue_kette()`. Solange `rollen_kette.aktiv_fuer`
+alle Gruppen nennt, laeuft keiner der beiden - und `agent/rollen_lauf.py` kennt
+das Wort "tranchen" an keiner Stelle.
+
+⚠️ EIN RUECKFALL WAERE KEIN FEHLER, SONDERN EIN RUECKSCHRITT: der alte Weg kennt
+`strategie` NULL Mal, also auch keine Akkumulation, keine Positionsfuehrung je
+Symbol und keinen Cooldown je Strategie. Deshalb warnen beide Nahtstellen seit
+dem 28.08. LAUT statt auf `info` - siehe `rollen_job.warne_alter_weg()` und
+`VERLUST_IM_RUECKFALL`.
+
+Wer dieses Modul wieder verdrahten will, aendert zuerst die Dauerpruefung
+"Abkapselung" in `pruefe_pakete.py` - sie haelt den Zustand fest.
+
+---
+
+Gestaffelte Kauf-/Verkaufszonen (AZ-4) - gemeinsame Regel fuer alle Klassen.
 
 WOZU ZENTRAL: die Pruefung ist rund vierzig Zeilen und war bis zum 2026-08-09
 nur im Krypto-Spot-Analysten. Sie in vier weitere Dateien zu kopieren waeren

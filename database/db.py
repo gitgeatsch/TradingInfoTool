@@ -1854,11 +1854,28 @@ def set_cash_reserve_fiat_eur(conn: sqlite3.Connection, value_eur: float) -> Non
 # Krypto-Begruendung, nicht nur der Schalter. Eine explizite Zeile in
 # asset_dca_settings schlaegt diesen Vorgabewert jederzeit; der Schalter dafuer
 # steht seit 2026-08-09 fuer JEDES Watchlist-Asset in ui/app.py.
-_DCA_ERLAUBT_DEFAULT_SYMBOLS = {
-    "BTC", "ETH", "SOL",
-    "VST", "PLTR", "OD7N", "OD7H", "OD7C", "OD7L",
-    "VVMX", "X136", "EXH3", "CEBS", "ISOC", "3QSS", "DBPK",
-}
+# NUR DER KERN (gekuerzt 28.08.2026, Nutzerentscheidung "assets entfernen").
+#
+# ⚠️ HIER STANDEN 13 AKTIEN UND ETFs DAZU - VST, PLTR, OD7N/H/C/L, VVMX, X136,
+# EXH3, CEBS, ISOC, 3QSS, DBPK. Sie stammten aus der Tranchen-Zeit, in der
+# dieser Schalter gestaffelte Kaufzonen in den Multi-Asset-Pipelines steuerte.
+#
+# DIESER ZWECK IST ENTFALLEN. Seit dem Vollumstieg laufen alle fuenf Gruppen
+# ueber die Rollen-Kette; `multi_asset_batch_job` und der Budget-Allocator
+# werden von ihren eigenen Gates uebersprungen, und die Rollen-Kette kennt
+# "tranchen" an keiner Stelle. Auf die STRATEGIE schlagen die 13 ohnehin nicht
+# durch - `handelsauftrag.strategie_fuer()` laeuft mit `nur_klassen={"krypto"}`,
+# eine Aktie bleibt `einstieg`.
+#
+# ⚠️ WAS SIE TATSAECHLICH TATEN, war die GUI-Spalte "Akkumulation" bei 13
+# Werten auf "An" zu stellen, die keine Akkumulation haben. Eine Anzeige, die
+# eine Zugehoerigkeit behauptet, die es nicht gibt - dieselbe Klasse Fehler wie
+# eine stille Attrappe, nur in die andere Richtung.
+#
+# Die SPALTE bleibt (Nutzerentscheidung: "Spalte beibehalten ist nur Info bzw.
+# Standardkonfiguration") - sie zeigt jetzt fuer Aktien und ETFs "Aus", was der
+# Wirklichkeit entspricht.
+_DCA_ERLAUBT_DEFAULT_SYMBOLS = {"BTC", "ETH", "SOL"}
 
 
 def get_dca_erlaubt(conn: sqlite3.Connection, symbol: str) -> bool:

@@ -3401,6 +3401,12 @@ def hebel_screening_job(
                          "groq": groq_client},
                 zai_client=zai_client, betriebsart=art)
         elif any(c is not None for c in (mistral_client, gemini_client, zai_client, openrouter_client)):
+            # ⚠️ HIER GAB ES BIS ZUM 28.08.2026 GAR KEINE MELDUNG. Dieser Zweig
+            # laeuft genau dann, wenn KEINE Gruppe umgestellt ist - der
+            # vollstaendige Rueckfall auf den alten Weg, und er war im Log
+            # unsichtbar. Dieselbe Liste wie an der Batch-Naht.
+            from scheduler.rollen_job import warne_alter_weg as _warne2
+            _warne2(logger, "Budget-Allocator", ())
             from agent.krypto.budget_allocator import run_budget_allocator
 
             # E-Mail-Latenz-Fix (2026-07-23, echter Fund: ein einzelner Batch mit
@@ -3542,10 +3548,12 @@ def multi_asset_batch_job(
                 "Multi-Asset-Batch uebersprungen - alle vier Bereiche laufen "
                 "ueber die Rollen-Kette. Eine Klasse, eine Kette.")
             return True
-        if len(_offen) < len(_meine):
-            logger.info(
-                "Multi-Asset-Batch laeuft nur noch fuer %s - die uebrigen "
-                "sind auf die Rollen-Kette umgestellt.", ", ".join(_offen))
+        # ⚠️ WARNUNG, NICHT INFO (28.08.2026). Hier lief der alte Weg an, und
+        # die Meldung hatte dieselbe Stufe wie "uebersprungen" - im Log war ein
+        # Rueckfall vom Normalbetrieb nicht zu unterscheiden. Die Liste dessen,
+        # was dann fehlt, steht in `rollen_job.VERLUST_IM_RUECKFALL`.
+        from scheduler.rollen_job import warne_alter_weg as _warne
+        _warne(logger, "Multi-Asset-Batch", _offen)
         # 2026-08-09 (C4): openrouter_client gehoert mit ins Gate - sonst
         # stuende der Batch still, wenn OpenRouter der einzige konfigurierte
         # Analyst ist.

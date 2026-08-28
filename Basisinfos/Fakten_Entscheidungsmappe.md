@@ -2422,3 +2422,65 @@ Schnitt): mit −11,8 % bzw. −15,8 % das mit Abstand schlechteste Band.
 
 **Vollständig:** `Befund_Akkumulationsmass_28_08.md` · Werkzeug
 `messe_akkumulationsmass.py` · Dauerprüfung Paket **Akkumass**
+
+
+## F-159 Der alte Weg ist stillgelegt, nicht gelöscht — und das ist der Stolperstein (28.08.2026)
+
+**Nutzervorgabe:** *„ist wieder ein Stolperstein — prüfe wie kritisch es ist,
+und wenn wir das so lassen, muss der Bereich sauber abgekapselt werden, damit
+nichts mitläuft, wo wir später wieder ein Problem haben."*
+
+### Der Stand, am Code geprüft (nicht vermutet)
+
+| Weg | Gate | Status |
+|---|---|---|
+| **Rollen-Kette** `rollen_lauf.py` | — | ✔ **aktiv**, alle fünf Gruppen |
+| Budget-Allocator → `krypto/pipeline` → `tranchen_erlaubt` | `background.py:3376` | ✖ übersprungen |
+| Multi-Asset-Batch → `aktien/pipeline` u.a. → `tranchen_modul` | `background.py:3540` | ✖ übersprungen |
+
+Ausgeführt: alle fünf Gruppen `bedient_neue_kette = True`, `_offen` leer.
+✔ **Tranchen sind unerreichbar** — die Rollen-Kette importiert `agent/tranchen.py`
+an keiner Stelle.
+
+### ⚠️ Wie kritisch — die Messung des Schadens
+
+`agent/multi_asset_batch.py` und `agent/krypto/budget_allocator.py` enthalten
+das Wort `strategie` **null Mal**. Ein Rückfall braucht **keinen Fehler**: eine
+Gruppe aus `rollen_kette.aktiv_fuer` zu nehmen genügt. Dann fehlen:
+
+| | |
+|---|---|
+| **A** | `strategie` je Asset — alles wieder `einstieg`, **keine Akkumulation mehr** |
+| **B** | Positionsführung — jedes Signal zählt wieder einzeln statt je Symbol |
+| **C** | Akkumulation ohne Trailing — der Stop käme zurück |
+| **L4/L5** | Cooldown je Strategie — wieder der Instrumentwert |
+| **AZ-4** | Tranchen liefen wieder mit |
+
+⚠️ **Und er wäre still gewesen:** beide Nahtstellen meldeten auf `info` — im Log
+war ein Rückfall vom Normalbetrieb nicht zu unterscheiden. Der
+Allocator-Zweig hatte **gar keine** Meldung.
+
+### Die Abkapselung — vier Riegel
+
+| | |
+|---|---|
+| **Gate** | beide Nahtstellen fragen `bedient_neue_kette` *(bestand schon)* |
+| **Warnung** | `rollen_job.warne_alter_weg()` — **eine** Definition, zwei Aufrufer, auf `warning` statt `info`, mit `VERLUST_IM_RUECKFALL` als Folgenliste. Ohne Emoji: das Warnzeichen kam auf der Windows-Konsole als `⚠️` an |
+| **Sichtbarkeit** | `agent/tranchen.py` weist sich im Docstring als **ABGEKAPSELT** aus — es steht *nicht* in der Toten-Liste der Modulkarte, weil es noch importiert wird, von Modulen, die selbst nie laufen |
+| **Dauerprüfung** | Paket **Abkapselung** in `pruefe_pakete.py`, 11 Prüfungen |
+
+⚠️ **Eine Grenze der Modulkarte, benannt:** sie findet Importe, **keine toten
+Aufrufketten**. Ein Modul, das von einem nie laufenden Modul importiert wird,
+sieht für sie lebendig aus.
+
+### Nebenentscheidung: der Kern ist wieder der Kern
+
+`_DCA_ERLAUBT_DEFAULT_SYMBOLS` von **16 auf 3** gekürzt (BTC, ETH, SOL). Die 13
+Aktien/ETFs stammten aus der Tranchen-Zeit und stellten die GUI-Spalte auf
+„An", **ohne auf die Strategie durchzuschlagen**. Die Spalte bleibt als
+Anzeige der Standardkonfiguration — sie zeigt jetzt „Aus", was stimmt.
+
+⚠️ **Nicht umbenannt:** `dca_erlaubt` / `asset_dca_settings` heißen weiter so,
+obwohl DCA durch Akkumulation ersetzt ist. Nutzerentscheidung — eine
+Umbenennung berührt Schema, GUI und sechs Module, ohne Verhalten zu ändern.
+**Vorgemerkt, nicht offen.**

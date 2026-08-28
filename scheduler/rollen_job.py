@@ -63,6 +63,51 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
     return str(assetklasse or "").strip().lower() in aktiv_fuer(config)
 
 
+# WAS DER ALTE WEG NICHT KANN (28.08.2026) - die Liste ist die Abkapselung.
+#
+# ⚠️ NUTZERVORGABE, die diesen Block ausgeloest hat: *"wenn wir das so lassen,
+# muss der Bereich sauber abgekapselt werden, damit nichts mitlaeuft, wo wir
+# spaeter wieder ein Problem haben."*
+#
+# Der alte Weg (Budget-Allocator und Multi-Asset-Batch) ist heute an beiden
+# Nahtstellen abgeschaltet - `aktiv_fuer` deckt alle Gruppen ab. Er ist aber
+# NICHT geloescht, und ein Rueckfall waere still: eine Gruppe aus `aktiv_fuer`
+# zu nehmen genuegt, und der alte Weg uebernimmt sie wieder. Ohne Fehler, ohne
+# Meldung, ohne dass jemand es an den Signalen erkennen wuerde.
+#
+# GEPRUEFT AM CODE, nicht vermutet: `agent/multi_asset_batch.py` und
+# `agent/krypto/budget_allocator.py` enthalten das Wort `strategie` NULL Mal.
+VERLUST_IM_RUECKFALL = (
+    "strategie je Asset (A) - alles wird wieder `einstieg`, es gibt keine "
+    "Akkumulation mehr",
+    "Positionsfuehrung (B) - jedes Signal zaehlt wieder einzeln statt je Symbol",
+    "Akkumulation ohne Trailing (C) - der Stop kaeme zurueck",
+    "Cooldown je Strategie (L4/L5) - wieder der Instrumentwert",
+    "Tranchen (AZ-4) - `agent/tranchen.py` liefe wieder mit",
+)
+
+
+def warne_alter_weg(logger, name: str, gruppen) -> None:
+    """Sagt LAUT, dass ein abgekapselter Weg wieder anlaeuft - und was fehlt.
+
+    ⚠️ WARNUNG, NICHT INFO. Die Meldungen an diesen Nahtstellen standen alle
+    auf `info` - dieselbe Stufe wie "uebersprungen". Damit sah ein Rueckfall im
+    Log genauso aus wie der Normalbetrieb.
+
+    EINE Definition, zwei Aufrufer (`multi_asset_batch_job` und der
+    Allocator-Zweig). Zwei Kopien derselben Liste laufen auseinander - und dann
+    warnt die eine Naht vor etwas anderem als die andere."""
+    # KEIN EMOJI IN DER LOGZEILE: es kam auf der Windows-Konsole als
+    # "⚠️" an - eine Warnung, die man erst entziffern muss, ist
+    # keine. Das Wort tut es sicher, in jedem Encoding.
+    logger.warning(
+        "ACHTUNG: %s laeuft fuer %s - das ist der ALTE Weg. Er kennt die Umbauten "
+        "vom 27./28.08. nicht. Es fehlt: %s. Wer das nicht ausdruecklich "
+        "wollte, setzt `rollen_kette.aktiv_fuer` in der config.yaml zurueck.",
+        name, ", ".join(gruppen) or "alle Gruppen",
+        " | ".join(VERLUST_IM_RUECKFALL))
+
+
 # --- DIE RUECKFALLKETTE ---------------------------------------------------
 #
 # Nutzerentscheidung 14.08., als Fachfrage gestellt und so beantwortet:
