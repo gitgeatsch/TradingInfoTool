@@ -181,7 +181,81 @@ Verwandt: `Roter_Faden_27_08.md` · `Anforderungen_Umbau_28_08.md` ·
 
 # NACHTRAG 28.08. abends — der Stand nach B+C, L2 und L3
 
-## ⚠️ Der Befund, der alles andere überlagert: DER HEBEL IST STILLGELEGT
+## ⚠️⚠️ KORREKTUR AM 28.08. ABENDS — der Abschnitt unten war FALSCH
+
+> **Nutzerhinweis, der es aufdeckte:** *„dachte du hast die Hebel-Erzeugung
+> bereits bewertet und angepasst"* — und präzisiert: *„durch den Umbau des
+> Schedulers auf eine einzige Funktion"*.
+>
+> **Er hat recht, und ich lag doppelt daneben.**
+>
+> ⚠️ **Falsch war:** *„der Hebel hat keinen Erzeuger mehr"*, *„die Ursache
+> stand nirgends"*, *„Entscheidung: entweder zweiter Lauf oder stilllegen"*.
+>
+> ✔ **Richtig ist:** `INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot",)` ist
+> **S6b vom 22.08.**, ein bewusster Umbau mit eigenem Kapitel (134), eigener
+> Gegenprüfung (56 Symbole, 0 mit mehr als einem Lauf) und vier umgedrehten
+> Dauerprüfungen. **S6a–S6d sind alle gebaut** (Kapitel 133–137). Der Hebel
+> hat sehr wohl einen Erzeuger: die **Rechnung**
+> `hebel = verlustanteil / stop_rel`. Das ist genau die Entscheidung aus
+> Kapitel 88: *„Hebel als Ergebnis statt als Kategorie"*.
+>
+> ⚠️ **Und die eigentliche Bewertung stand längst da** — Nutzervorgabe vom
+> 22.08., wörtlich: *„sehe keine echten Hebel mehr, 1,1 Hebel ist kein Hebel
+> und auch nicht bewertet werden als Hebel. Nachkaufen und ‚Eröffnen' ohne
+> Hebel ist eigentlich ident ein und derselbe Spot-Kauf."*
+>
+> **Die Aufteilung spot/hebel ist bei Hebel 1,0 keine Trennung** — das steht
+> seit dem 22.08. im Memory und ich habe es heute nicht gelesen, sondern neu
+> gemessen und falsch gedeutet. Dieselbe Fehlerklasse wie am 27.08.
+> („siebenmal als fehlend gemeldet, was gebaut war") — und die Modulkarte
+> hilft dort nicht, weil der Befund in der **Doku** stand, nicht im Code.
+
+---
+
+## Was wirklich offen ist: DER RAUSCHBODEN ÜBERSTIMMT DAS MODELLURTEIL
+
+**Kapitel 129 nannte die Wurzel schon am 22.08.:** S5 drehte zwei Regler
+gleichzeitig — `stop_min_atr` von 0,75 auf **2,0** und `verlustanteil` von
+15 % auf **6 %**. Beide senken den Hebel. Seither ist er ein **Nebenprodukt
+der Stopregel, keine Strategieentscheidung**.
+
+**Am NB-Stand 26.08. nachgemessen — es ist schlimmer geworden:**
+
+| Zeitraum | Signale mit Widerlegungspreis | Stop **dort** |
+|---|---|---|
+| gesamt | 99,7 % | 15,4 % |
+| ab 18.08. (S5) | 99,8 % | 9,5 % |
+| **ab 22.08.** | 99,7 % | ⚠️ **6,0 %** |
+
+⚠️ **In 94 % der Fälle gewinnt der Rauschboden.** Das Modell nennt in 99,7 %
+einen Widerlegungspreis — und er landet in 6 % im Stop. Kapitel 88.1 hatte
+genau das als Defekt benannt (*„in 10 von 12 Fällen die Klemme, nicht das
+Urteil"*); nach S5 ist es dasselbe Bild, nur deutlicher.
+
+**Die Kette, die daraus folgt:**
+
+```
+Rauschboden max(2,5 %, k x ATR), k = 2,0
+  -> weiter Stop (Median 7,92 % statt 3,66 %)
+     -> hebel = verlustanteil / stop_rel wird klein
+        -> Median 1,10, ab 22.08. max 2,20, 34,6 % auf genau 1,0
+           -> "spot" und "hebel" sind dasselbe Signal mit zwei Etiketten
+```
+
+✔ **Deshalb ist „Spot ist auch Hebel" falsch** — nicht weil die Formel falsch
+rechnet, sondern weil der Hebel gar nicht mehr aus einer **Entscheidung**
+kommt. Er ist der Rest einer Klemme, die das Modellurteil in 94 % der Fälle
+überstimmt.
+
+⚠️ **Die vorgelagerte Frage ist deshalb nicht „welcher Hebel?", sondern:
+darf der Rauschboden das Modellurteil überstimmen?** Erst danach ist über k
+oder den Verlustanteil zu entscheiden — und jede Drehung bricht die Messreihe
+(Kapitel 90.2).
+
+---
+
+## ~~Der Befund, der alles andere überlagert: DER HEBEL IST STILLGELEGT~~ (widerrufen, siehe oben)
 
 **Gemessen am NB-Export vom 26.08.** (der Desktop-Bestand ist alt — 118
 Signale, jüngstes vom 21.07., keines aus der Rollen-Kette).
