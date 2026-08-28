@@ -2054,7 +2054,52 @@ rollen_kette:
   # ihre 24 h aus der Handelstagslogik - sie hatten nie einen Hebel-Lauf,
   # bei ihnen ist nichts weggefallen.
   cooldown_stunden_je_gruppe:
-    krypto: 3.5
+    # ⚠️ 28.08.2026: VON 3,5 AUF 12 STUNDEN (Nutzervorgabe).
+    #
+    # DER GRUND: gemessen ueber 8 Tage und 1.613 Krypto-Signale kamen 163
+    # Bewertungen JE TAG zustande - bei 43 Assets sind das rund vier je Asset
+    # und Tag, fuer Positionen, die ueber Wochen gehalten werden. Der Cooldown
+    # war die einzige Bremse, und er war zu kurz.
+    #
+    # 3,5 h stammte aus der Hebel-Welt (`budget_allocator.cooldown_stunden`)
+    # und galt seit S6b fuer ALLES, weil der zweite Lauf wegfiel und mit ihm
+    # sein eigener Topf. Der Wert war nie fuer Spot gedacht.
+    #
+    # GEMESSENE WIRKUNG (echte Mechanik, nicht nachgebaut):
+    #      8 h ->  86 Signale/Tag   -47 %
+    #     12 h ->  72 Signale/Tag   -56 %
+    #     15 h ->  68 Signale/Tag   -58 %
+    #
+    # ⚠️ ER BREMST NUR DIE MENGE, NICHT DIE QUALITAET - die schlechten Signale
+    # verschwinden im selben Verhaeltnis wie die guten. Das bleibt Aufgabe des
+    # Potentials.
+    #
+    # ⚠️ 3,5 h GILT WEITERHIN, wo das letzte Signal GEHEBELT war - siehe
+    # `cooldown_stunden_wenn_gehebelt`. Ein Hebel-Trade mit Median-Haltedauer
+    # 0,30 Tage darf nicht im Spot-Takt laufen.
+    krypto: 12
+
+  # L4 (28.08.2026): DER COOLDOWN FOLGT DER STRATEGIE.
+  #
+  # Eine Akkumulation hat einen Horizont in Jahren; sie alle 3,5 Stunden zu
+  # befragen erzeugt Meldungen ohne Entscheidung. Gemessen: der Kern
+  # (BTC/ETH/SOL) bekam 6,3 Bewertungen je Asset und Tag.
+  #
+  # ⚠️ 48 IST GESETZT, NICHT GEMESSEN. Und der Cooldown allein bringt bei drei
+  # von 43 Assets nur -9 % - der grosse Hebel ist der Gruppenwert darueber.
+  cooldown_stunden_je_strategie:
+    akkumulation: 48
+
+  # L5 (28.08.2026): DER COOLDOWN FOLGT DEM ERGEBNIS DES LETZTEN SIGNALS.
+  #
+  # 35 % der Spot-Signale tragen einen Hebel > 1,0 - sie laufen heute im
+  # Spot-Takt, obwohl die Median-Haltedauer einer Hebelposition 0,30 Tage
+  # betraegt und die Liquidation mitlaeuft.
+  #
+  # WARUM DAS ERGEBNIS UND NICHT DAS ETIKETT VORHER: das Instrument faellt aus
+  # `verlustanteil / stop_rel` an, steht also erst NACH der Bewertung fest.
+  # Der Cooldown misst ohnehin am LETZTEN Signal - dessen Hebel ist bekannt.
+  cooldown_stunden_wenn_gehebelt: 3.5
   # ===================================================================
   # S5 DES UMBAUPLANS KAPITEL 90 (18.08.2026) - HIER DREHT SICH ALLES.
   # ===================================================================

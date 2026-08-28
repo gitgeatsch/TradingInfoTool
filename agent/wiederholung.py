@@ -39,6 +39,34 @@ VORGABE_STUNDEN: dict[str, float] = {
 
 _SCHLUESSEL = {"spot": "spot_cooldown_stunden", "hebel": "cooldown_stunden"}
 
+# L4/L5 (28.08.2026): DER COOLDOWN FOLGT DER STRATEGIE UND DEM ERGEBNIS.
+#
+# DER FUND, der das ausgeloest hat - gemessen ueber 8 Tage, 1.613 Signale:
+# der Kern (BTC/ETH/SOL) bekam 6,3 Bewertungen JE ASSET UND TAG, bei einer
+# Strategie, deren Horizont Jahre betraegt. Und 35 % der Spot-Signale tragen
+# einen Hebel > 1,0 - sie laufen im Spot-Takt, obwohl die Median-Haltedauer
+# einer Hebelposition 0,30 TAGE betraegt.
+#
+# ⚠️ EIN EIGENER COOLDOWN FUER AKKUMULATION ALLEIN BRINGT FAST NICHTS (-9 %):
+# drei von 43 Assets sind Kern. Der grosse Hebel ist die Unterscheidung nach
+# dem ERGEBNIS des letzten Signals - gemessen -49 % Bewertungen zusammen.
+#
+# WARUM DAS ERGEBNIS UND NICHT DAS ETIKETT VORHER. Das Instrument faellt aus
+# `verlustanteil / stop_rel` an, steht also erst NACH der Bewertung fest. Der
+# Cooldown misst aber ohnehin am LETZTEN Signal - dessen Hebel ist bekannt.
+# Was zuletzt herauskam, bestimmt, wann wieder gefragt wird.
+VORGABE_JE_STRATEGIE: dict[str, float] = {
+    # Horizont Jahre, kein Stop, kein nahes Ziel - eine Frage alle zwei Tage
+    # ist fuer eine Akkumulation immer noch haeufig.
+    # ⚠️ GESETZT, NICHT GEMESSEN.
+    "akkumulation": 48.0,
+}
+
+# Wenn das LETZTE Signal gehebelt war: kuerzer, weil dort echtes Geld im
+# Risiko steht und die Liquidation mitlaeuft. 3,5 h ist der Wert der alten
+# Kette (`budget_allocator.cooldown_stunden`), also nicht neu erfunden.
+VORGABE_WENN_GEHEBELT: float = 3.5
+
 # Abweichungen je GRUPPE (14.08.). Boersengehandelte Werte bewegen sich
 # langsamer als Krypto und handeln nicht rund um die Uhr - ein 15-Stunden-Takt
 # fragt dort mehrfach am selben Handelstag dasselbe.
@@ -55,13 +83,39 @@ VORGABE_JE_GRUPPE: dict[str, float] = {
 
 
 def stunden(instrument: str, config: dict | None = None,
-            gruppe: str | None = None) -> float:
+            gruppe: str | None = None, strategie: str | None = None,
+            hebel_zuletzt: float | None = None) -> float:
     """Wie lange dasselbe Asset nach einem Signal gesperrt ist.
 
-    Das Spezifischere gewinnt: Konfiguration je Gruppe, dann Konfiguration je
-    Instrument, dann Gruppen-Vorgabe, dann Instrument-Vorgabe."""
+    Das Spezifischere gewinnt: Strategie, dann Ergebnis des letzten Signals,
+    dann Konfiguration je Gruppe, dann Konfiguration je Instrument, dann
+    Gruppen-Vorgabe, dann Instrument-Vorgabe.
+
+    ⚠️ STRATEGIE VOR ERGEBNIS (L4 vor L5). Eine Akkumulation bleibt eine
+    Akkumulation, auch wenn die Rechnung einmal einen Hebel ergeben haette -
+    und `hebel x akkumulation` ist ohnehin ausgeschlossen. Umgekehrt waere
+    ein gehebeltes Signal auf einem Kern-Asset alle 3,5 Stunden genau das,
+    was die 48 Stunden verhindern sollen.
+
+    ⚠️ BEIDE NEUEN PARAMETER SIND OPTIONAL. Ohne sie rechnet die Funktion
+    bitgleich wie vorher - jeder bestehende Aufrufer bleibt unveraendert
+    gueltig."""
     i = str(instrument or "").strip().lower()
     g = str(gruppe or "").strip().lower()
+    s = str(strategie or "").strip().lower()
+    # L4: die Strategie ist das Spezifischste - sie beschreibt den HORIZONT.
+    je_strategie = ((config or {}).get("rollen_kette") or {}).get(
+        "cooldown_stunden_je_strategie") or {}
+    if s in je_strategie:
+        return float(je_strategie[s])
+    if s in VORGABE_JE_STRATEGIE:
+        return float(VORGABE_JE_STRATEGIE[s])
+    # L5: was zuletzt herauskam. Ein gehebeltes Signal will frueher wieder
+    # angesehen werden als ein Spot-Signal.
+    if hebel_zuletzt is not None and float(hebel_zuletzt) > 1.0:
+        ueber = ((config or {}).get("rollen_kette") or {}).get(
+            "cooldown_stunden_wenn_gehebelt")
+        return float(ueber if ueber is not None else VORGABE_WENN_GEHEBELT)
     ba = (config or {}).get("budget_allocator") or {}
     je_gruppe = ((config or {}).get("rollen_kette") or {}).get(
         "cooldown_stunden_je_gruppe") or {}
@@ -97,7 +151,8 @@ def stunden(instrument: str, config: dict | None = None,
 
 def gesperrt_bis(conn, symbol: str, instrument: str, *,
                  config: dict | None = None, gruppe: str | None = None,
-                 jetzt: str | None = None) -> str | None:
+                 jetzt: str | None = None,
+                 strategie: str | None = None) -> str | None:
     """Bis wann ist `symbol` gesperrt? `None` heisst: frei.
 
     ZAEHLT NUR SIGNALE DER EIGENEN KETTE. Die Altsignale stammen aus einer
@@ -183,10 +238,24 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
             str(gruppe or "").strip().lower(), ("spot",))) > 1
         bedingung = (TP.sql_bedingung(instrument)
                      if ("hebel" in spalten and _mehrere_laeufe) else "1=1")
+        # L5 (28.08.): DER HEBEL DES LETZTEN SIGNALS ENTSCHEIDET MIT.
+        #
+        # `MAX(created_at)` allein sagt nur WANN - fuer den Cooldown braucht es
+        # auch, WAS herauskam. Ein gehebeltes Signal will frueher wieder
+        # angesehen werden (Median-Haltedauer 0,30 Tage) als ein Spot-Signal.
+        #
+        # ⚠️ NICHT `MAX(hebel)`, SONDERN DER HEBEL DES JUENGSTEN SIGNALS. Ein
+        # Maximum ueber alle Zeilen naehme einen Hebel von vor drei Wochen als
+        # Grund, heute frueher zu fragen.
+        _hat_hebel = "hebel" in spalten
+        _felder = "created_at" + (", hebel" if _hat_hebel else "")
         zeile = conn.execute(
-            "SELECT MAX(created_at) FROM signals WHERE symbol = ? "
-            f"AND quelle_kette = 'rollen' AND {bedingung}",
+            f"SELECT {_felder} FROM signals WHERE symbol = ? "
+            f"AND quelle_kette = 'rollen' AND {bedingung} "
+            f"ORDER BY created_at DESC LIMIT 1",
             (symbol,)).fetchone()
+        _hebel_zuletzt = (zeile[1] if (zeile and _hat_hebel and len(zeile) > 1)
+                          else None)
     except Exception:                                        # noqa: BLE001
         return None
     if not zeile or not zeile[0]:
@@ -195,7 +264,9 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
         zuletzt = datetime.fromisoformat(str(zeile[0]))
         if zuletzt.tzinfo is None:
             zuletzt = zuletzt.replace(tzinfo=timezone.utc)
-        frei_ab = zuletzt + timedelta(hours=stunden(instrument, config, gruppe))
+        frei_ab = zuletzt + timedelta(hours=stunden(
+            instrument, config, gruppe, strategie=strategie,
+            hebel_zuletzt=_hebel_zuletzt))
         nun = (datetime.fromisoformat(jetzt) if jetzt
                else datetime.now(timezone.utc))
         if nun.tzinfo is None:

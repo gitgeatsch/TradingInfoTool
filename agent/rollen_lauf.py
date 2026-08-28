@@ -1026,8 +1026,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                 return
         durchlauf.bestanden(symbol, "auswahl")
 
+        # L4/L5 (28.08.): die STRATEGIE geht mit in den Cooldown. Eine
+        # Akkumulation braucht keine Frage alle 3,5 Stunden - ihr Horizont ist
+        # in Jahren gemessen. Den Hebel des letzten Signals liest
+        # `gesperrt_bis` selbst aus der Zeile, die es ohnehin holt.
         sperre = WH.gesperrt_bis(conn, symbol, instrument, config=config,
-                                 gruppe=assetklasse)
+                                 gruppe=assetklasse, strategie=strategie)
         if sperre:
             # AUF DIE EIGENE STUFE, nicht auf "urteil" (14.08.). Hier wurde
             # NICHT gefragt - das ist ein gesparter Aufruf, kein verworfener.

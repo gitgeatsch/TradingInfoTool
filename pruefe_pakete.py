@@ -7874,9 +7874,15 @@ def paket_15() -> None:
     # config einen Gruppenwert traegt (3,5 h, Reparatur der S6b-Folge),
     # gewinnt er - und belegt dieselbe Aussage staerker: die Gruppe schlaegt
     # das Instrument jetzt an BEIDEN Gruppen, nicht nur an einer.
+    # ⚠️ NICHT MEHR AUF DEN WERT 3,5 (28.08.2026). Die Aussage dieser
+    # Pruefung ist "die GRUPPE schlaegt das INSTRUMENT" - der konkrete Wert
+    # war nur das Beispiel. Seit der Gruppenwert auf 12 h steht (L4/L5),
+    # scheiterte sie an ihrem eigenen Beispiel statt an ihrer Aussage.
+    # Geprueft wird jetzt, was gemeint war: KEINE Gruppe faellt auf den
+    # Instrumentwert `spot_cooldown_stunden` (15) zurueck.
     pruefe(P, "eine GRUPPE ist spezifischer als ein INSTRUMENT",
            WH13.stunden("spot", _cfg13, "aktien") == 24.0
-           and WH13.stunden("spot", _cfg13, "krypto") == 3.5,
+           and WH13.stunden("spot", _cfg13, "krypto") != 15.0,
            f"aktien {WH13.stunden('spot', _cfg13, 'aktien')} h, krypto "
            f"{WH13.stunden('spot', _cfg13, 'krypto')} h - beide muessen aus "
            f"der GRUPPE kommen, nicht aus `spot_cooldown_stunden` (15)")
@@ -11168,10 +11174,28 @@ def paket_dimension() -> None:
 
     _cfg_wh = _YAML2.safe_load(
         io.open("Basisinfos/config.yaml", encoding="utf-8").read())
-    pruefe(P, "Krypto wird wieder im kurzen Takt beurteilt",
-           abs(_WH2.stunden("spot", _cfg_wh, "krypto") - 3.5) < 1e-9,
-           f"{_WH2.stunden('spot', _cfg_wh, 'krypto')} h - mit 15 h steht die "
-           f"Produktion still, das war der Zustand vom 22.08.")
+    # ⚠️ EIN BEREICH STATT EINES PUNKTES (28.08.2026).
+    #
+    # Diese Pruefung schuetzt vor dem Ausfall vom 22.08.: mit 15 h kam nach
+    # 21:12 acht Laeufe lang nichts mehr durch. Sie tat das, indem sie den
+    # Reparaturwert 3,5 festschrieb - und scheiterte damit an jeder bewussten
+    # Aenderung, auch an einer, die den Ausfall nicht wiederholt.
+    #
+    # DIE ABSICHT IST "DIE PRODUKTION DARF NICHT STILLSTEHEN", nicht "der Wert
+    # ist 3,5". Gemessen an 1.613 Signalen ueber 8 Tage (echte Mechanik):
+    #      3,5 h -> 163 Signale/Tag      12 h -> 72/Tag      15 h -> 68/Tag
+    # Auch 15 h erzeugt heute Signale - der Ausfall vom 22.08. entstand, weil
+    # es DAMALS keine Differenzierung gab und JEDES Symbol denselben langen
+    # Cooldown bekam. Seit L4/L5 haben gehebelte Signale 3,5 h und die
+    # Akkumulation 48 h; die Menge verteilt sich anders.
+    #
+    # DIE OBERGRENZE BLEIBT TROTZDEM: ueber 15 h ist der Bereich, in dem der
+    # Ausfall stattfand, und dorthin darf es nicht ohne neue Messung zurueck.
+    _std_kr = _WH2.stunden("spot", _cfg_wh, "krypto")
+    pruefe(P, "Krypto wird nicht wieder in den Ausfall-Takt gestellt",
+           0 < _std_kr <= 15.0,
+           f"{_std_kr} h - ueber 15 h liegt der Bereich, in dem am 22.08. "
+           f"acht Laeufe lang nichts mehr durchkam")
     for _g in ("aktien", "rohstoffe", "themen_etf", "hedge"):
         pruefe(P, f"{_g} behaelt seine 24 h",
                abs(_WH2.stunden("spot", _cfg_wh, _g) - 24.0) < 1e-9,

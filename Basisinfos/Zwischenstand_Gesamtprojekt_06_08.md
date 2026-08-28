@@ -2245,3 +2245,52 @@ Signalen mit echten Barrieren gemessen.
 
 **Die Wirkungssimulation für den Phasenschalter (N-11) wartet auf 1 und 2** —
 wenn Positionen anders geführt werden, ändert sich, worauf der Schalter wirkt.
+
+---
+
+## N-13 — Der Cooldown folgt jetzt Strategie und Ergebnis (28.08.2026)
+
+**Nutzervorgabe:** *„Wir können nicht alles gleich behandeln, dazu ist es zu
+komplex."* Und zu den Zeiten: *„Hebel 3,5 lassen — Spot wäre mir alle 12
+Stunden lieber."*
+
+**Der Befund, der es ausgelöst hat** (8 Tage, 1.613 Krypto-Signale):
+
+| | |
+|---|---|
+| Krypto-Bewertungen je Tag | **163** über 43 Assets |
+| davon auf den Kern (BTC/ETH/SOL) | **6,3 je Asset und Tag** — bei Horizont Jahre |
+| Spot-Signale mit Hebel > 1,0 | **35 %** — im Spot-Takt, bei Median-Haltedauer **0,30 Tage** |
+
+**Drei Ebenen statt einer** (`wiederholung.stunden`):
+
+    STRATEGIE   akkumulation -> 48 h    (Horizont Jahre)
+    ERGEBNIS    Hebel > 1,0  -> 3,5 h   (Liquidation läuft mit)
+    GRUPPE      krypto       -> 12 h    (war 3,5 — der Hebel-Wert für alles)
+
+⚠️ **Warum das Ergebnis und nicht das Etikett vorher:** Das Instrument fällt
+aus `verlustanteil / stop_rel` an, steht also erst **nach** der Bewertung
+fest. Der Cooldown misst ohnehin am **letzten** Signal — dessen Hebel ist
+bekannt. *Was zuletzt herauskam, bestimmt, wann wieder gefragt wird.*
+
+**Gemessene Wirkung** (echte Mechanik, nicht nachgebaut):
+
+| Gruppenwert | Signale/Tag | gegen heute |
+|---:|---:|---:|
+| 3,5 h (vorher) | 163 | — |
+| 8 h | 86 | −47 % |
+| **12 h** | **72** | **−56 %** |
+| 15 h | 68 | −58 % |
+
+⚠️ **Ein eigener Cooldown für Akkumulation allein bringt −9 %** — drei von 43
+Assets. Der große Hebel ist der Gruppenwert.
+
+⚠️ **Und er bremst nur die MENGE, nicht die Qualität** — die schlechten
+Signale verschwinden im selben Verhältnis wie die guten. Das bleibt Aufgabe
+des Potentials (L6).
+
+**Zwei Prüfungen mussten mit** — beide zementierten den Wert 3,5 statt ihrer
+Aussage: *„Gruppe schlägt Instrument"* prüft jetzt `!= 15` statt `== 3,5`, und
+der Regressionsschutz gegen den 22.08.-Ausfall prüft einen **Bereich**
+(`0 < x <= 15`) statt eines Punktes. ⚠️ Die Obergrenze bleibt: über 15 h liegt
+der Bereich, in dem damals acht Läufe lang nichts durchkam.
