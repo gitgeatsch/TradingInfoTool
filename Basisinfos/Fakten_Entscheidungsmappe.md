@@ -2354,3 +2354,71 @@ auf einer anderen Anlageklasse.
 
 WERKZEUG: messe_drift.py (--ab/--bis fuer die Zeitaufteilung, --placebo fuer
 die Schwelle, --positivkontrolle fuer die Aussagekraft).
+
+
+## F-158 Akkumulations-Signalmaß: es trägt — aber NICHT bei BTC/ETH/SOL (28.08.2026)
+
+**Was gemessen wurde:** `V(t,H) = Mittel(Kurs[t+1..t+H]) / Kurs(t) − 1` —
+die **Verbilligung**, das Erfolgsmaß, das `handelsauftrag.py` der Akkumulation
+ausdrücklich gibt (*„Durchschnittskurs und Endvermögen statt Ziel vor Stop"*).
+505 lückenlose Krypto-Reihen, 2017-08-17 .. 2026-08-21.
+
+**Gemessen wird der Perzentilrang von V in der eigenen Reihe** — Basisrate
+exakt 0,500 per Konstruktion, damit kann der Drift nicht als Signal durchgehen.
+
+| Einordnung | |
+|---|---|
+| **Kategorie** | ✔ **gemessener Fakt** mit vollständigen Kontrollen |
+| Vorteilsquelle (§9.1) | **Rückkehr zum Mittel** — nicht Drift, nicht Information |
+| Gilt für | Krypto im Querschnitt (505 Reihen). Aktien/ETF **ungemessen** |
+| ⚠️ **Gilt NICHT für** | **BTC, ETH, SOL** — die einzigen drei Werte, für die `spot × akkumulation` heute freigeschaltet ist |
+
+⚠️⚠️ **DIE EINSCHRÄNKUNG IST DER KERN DES FAKTS.** Rang je Kernwert: BTC
+**−0,0251** (p 0,723) · ETH **−0,0308** (p 0,810) · SOL **−0,0291** (p 0,855).
+
+**Kein n=3-Rauschen:** Streuung je Symbol 0,0397, die Kernwerte liegen **2,39
+Standardfehler** unter dem Mittel; nur **14,3 %** aller Symbole sind negativ —
+alle drei Kernwerte darunter. **Nicht durch die Kursentwicklung erklärt:**
+nach Gesamtentwicklung gefünftelt ist der Vorsprung konstant (+0,024 · +0,026
+· +0,032 · +0,027 · +0,033, alle p < 0,005).
+
+**Die Kennlinie ist monoton über alle neun Bänder, auf beiden Horizonten:**
+
+| Abstand zum 200-Schnitt | Rang H=90 | Höhe H=90 | Rang H=365 | Höhe H=365 |
+|---|---|---|---|---|
+| **unter −40 %** | **+0,0960** | **+6,06 %** | **+0,0922** | **+5,39 %** |
+| −7,5 .. 0 % | −0,0651 | −4,64 % | −0,0446 | −2,40 % |
+| **über +30 %** | **−0,1508** | **−11,79 %** | **−0,1808** | **−15,77 %** |
+
+**Sieben Gegenprüfungen bestanden:** Negativkontrolle (−0,0008 bei Null
+±0,0007) · Positivkontrolle (+0,4242) · Rechenkontrolle (exakt 0) ·
+Überlebende (bei **gefallenen** Reihen **stärker**) · Marktphase (beide
+Hälften gleiches Vorzeichen) · Jensen/Log (identisch) · Saat (identisch).
+⚠️ **Die achte — die Anwendungsfrage — nicht.**
+
+⚠️ **Zwei eigene Konstruktionsfehler unterwegs, beide von den Kontrollen
+gefangen:** ein Ausreißer-Mittelwert (eine Reihe mit +10.732 %) und ein
+Verschub, der je Symbol ein anderer war. Nach der Korrektur wurde die
+Nullverteilung **2,7-mal breiter** — und **RUECKGANG starb daran** (H=90,
+p 0,000 → 0,060). Siehe Methodik **2.81**.
+
+⚠️ **Was es nicht ist:** kein Alpha-Nachweis. Es sagt, **wann** innerhalb
+einer Akkumulation gekauft wird — nicht, **ob** akkumuliert werden soll.
+
+**Was für den Kern bleibt — Empfehlung B+C, keine Messfrage mehr:** fester
+Takt **ohne** Verbilligungssatz in der Mail, plus die **Ausschlussseite**
+(> +30 % über dem 200-Schnitt). Die Bremse ist unabhängig belegt und bei den
+Kernwerten sogar am häufigsten gefordert (24,5 % ihrer Tage liegen in diesem
+Band). ⚠️ **Die Kaufseite auf 502 kleine Werte auszuweiten, wäre der Fehler:**
+Überlebensrisiko gegen Timing-Vorteil zu tauschen, bei Daten, in denen
+delistete Währungen vollständig fehlen.
+
+⚠️ **Es widerlegt den Buckel vom 27.08. in der Gegenrichtung** — dort war
+*leicht* unter dem Schnitt am besten, hier ist *ganz tief* am besten. Kein
+Widerspruch, sondern zwei Erfolgsmaße mit verschiedenen Kennlinien.
+
+✔ **Bestätigt unabhängig die bestehende Ausschlussregel** (> +30 % über dem
+Schnitt): mit −11,8 % bzw. −15,8 % das mit Abstand schlechteste Band.
+
+**Vollständig:** `Befund_Akkumulationsmass_28_08.md` · Werkzeug
+`messe_akkumulationsmass.py` · Dauerprüfung Paket **Akkumass**

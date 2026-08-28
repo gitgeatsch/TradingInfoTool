@@ -13464,13 +13464,109 @@ def paket_verkaufsseite() -> None:
            "Befund O-29")
 
 
+
+def paket_akkumass() -> None:
+    """Die Invarianten des Akkumulations-Signalmasses (28.08.2026).
+
+    ⚠️ WARUM EIN MESSWERKZEUG IN DIE DAUERPRUEFUNG GEHOERT. Der erste Lauf am
+    28.08. hat sich durch seine eigenen Kontrollen selbst widerlegt: die
+    Negativkontrolle stand bei -10,6 % statt 0, weil EINE Reihe mit +10.732 %
+    den gewichteten Mittelwert bestimmte. Ohne mitlaufende Kontrollen waere
+    das als Befund durchgegangen.
+
+    Geprueft werden die drei Groessen, die ARITHMETISCH feststehen und deren
+    Verletzung deshalb immer ein Rechenfehler ist - nie ein Marktbefund:
+
+        Rang        Mittelwert ueber die ganze Reihe ist exakt 0,5
+        DCA         kauft an jedem Tag, sein Vorsprung ist exakt 0
+        V           die schnelle Form stimmt mit der Schleifenform ueberein
+
+    Keine Datenbank noetig, Laufzeit unter einer Sekunde."""
+    import numpy as np
+    import messe_akkumulationsmass as _AM
+
+    P = "Akkumass"
+
+    # ---- Der Rang ist per Konstruktion auf 0,5 zentriert ----
+    for n in (7, 50, 501):
+        v = np.linspace(-3.0, 9.0, n)
+        pruefe(P, "Rangmittel ist 0,5 bei n=%d" % n,
+               abs(float(_AM.rang(v).mean()) - 0.5) < 1e-12,
+               "genau das nimmt dem Drift die Wirkung - eine steigende Reihe "
+               "darf keine Basisrate ueber 0,5 erzeugen")
+
+    v = np.array([5.0, 1.0, 9.0, 3.0])
+    pruefe(P, "der Rang ordnet richtig",
+           list(_AM.rang(v).argsort()) == [1, 3, 0, 2])
+    pruefe(P, "der Rang haengt nur an der Ordnung, nicht an der Hoehe",
+           bool((_AM.rang(v) == _AM.rang(v * 1000.0 + 7.0)).all()),
+           "sonst koennte eine einzelne Ausreisserreihe das Ergebnis "
+           "bestimmen - genau der Fehler des ersten Laufs")
+
+    # ---- V: schnelle Form gegen die Schleifenform ----
+    kurse = np.array([10., 9., 8., 12., 11., 10., 9., 14., 13., 12., 11., 10.])
+    for H in (2, 3, 5):
+        schnell = _AM.verbilligung(kurse, H)
+        langsam = np.array([kurse[t + 1:t + 1 + H].mean() / kurse[t] - 1.0
+                            for t in range(len(kurse) - H)])
+        pruefe(P, "V stimmt mit der Schleifenform bei H=%d" % H,
+               bool(np.allclose(schnell, langsam)),
+               "die kumulierte Summe ist eine Abkuerzung - laeuft sie aus dem "
+               "Takt, misst das Werkzeug einen anderen Horizont als es sagt")
+    pruefe(P, "V endet H Tage vor dem Reihenende",
+           len(_AM.verbilligung(kurse, 3)) == len(kurse) - 3,
+           "ein Tag ohne H Folgetage hat kein Ergebnis und darf nicht "
+           "stillschweigend mitgezaehlt werden")
+
+    # ---- Das Lookahead-Verbot: nur TIEFPUNKT darf nach vorne sehen ----
+    schnitt = kurse.copy()
+    schnitt[-1] = 999999.0                      # nur der LETZTE Tag aendert sich
+    for name in ("UNTER_SMA", "RUECKGANG", "DCA"):
+        a = _AM.zustand(kurse, name, 3, 5)
+        b = _AM.zustand(schnitt, name, 3, 5)
+        pruefe(P, "%s liest keine Zukunft" % name,
+               bool((a == b).all()),
+               "ein Zustand, der sich aendert, wenn ein SPAETERER Kurs sich "
+               "aendert, hat Lookahead - und jeder Befund damit ist wertlos")
+    # ⚠️ Hier muss ein Kurs INNERHALB des Vorausfensters geaendert werden.
+    # Der erste Anlauf aenderte den letzten Kurs der Reihe - der liegt bei
+    # H=3 gar nicht im Fenster der geprueften Tage, und die Pruefung schlug
+    # fehl, obwohl der Code stimmte.
+    voraus = kurse.copy()
+    voraus[1:4] = 999.0                         # macht Tag 0 zum Tiefpunkt
+    pruefe(P, "TIEFPUNKT sieht ABSICHTLICH nach vorne",
+           bool(_AM.zustand(voraus, "TIEFPUNKT", 3, 5)[0])
+           and not bool(_AM.zustand(kurse, "TIEFPUNKT", 3, 5)[0]),
+           "es ist die Positivkontrolle - saehe sie NICHT nach vorne, wuerde "
+           "sie nichts kontrollieren")
+
+    # ---- DCA ist die Rechenkontrolle ----
+    pruefe(P, "DCA kauft an jedem Tag",
+           bool(_AM.zustand(kurse, "DCA", 3, 9).all()),
+           "sein Vorsprung ist deshalb exakt 0 - jede Abweichung im Lauf ist "
+           "ein Rechenfehler und kein Ergebnis")
+    pruefe(P, "die Negativkontrolle traegt keine Information",
+           int(_AM.zustand(kurse, "WOCHENTAG", 3, 70).sum()) == 10,
+           "jeder siebte Tag, unabhaengig vom Kurs")
+
+    # ---- Die Regeldefinition ist EINE, nicht zwei ----
+    from messe_akkumulation import anteil_der_regel as _AR
+    pruefe(P, "die Zustaende nutzen die Regeldefinition des Gesamtlaufs",
+           _AM.zustand.__module__ == "messe_akkumulationsmass"
+           and _AR.__module__ == "messe_akkumulation",
+           "zwei Kopien einer Regel laufen auseinander - dann misst die "
+           "Tageszerlegung etwas anderes als der Gesamtlauf, und der "
+           "Unterschied saehe aus wie ein Befund")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
-          "Verkauf": paket_verkaufsseite}
+          "Verkauf": paket_verkaufsseite,
+          "Akkumass": paket_akkumass}
 
 
 class _Mitschnitt:

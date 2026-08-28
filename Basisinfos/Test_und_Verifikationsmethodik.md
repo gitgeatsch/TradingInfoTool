@@ -4341,3 +4341,40 @@ wenn diese sechs Fragen beantwortet sind. **Wer die Vorabfestlegung schreibt
 und die Deutung nicht prüft, hat die halbe Methodik befolgt** — und die
 gefährlichere Hälfte ausgelassen, weil ein sauber gerechnetes Ergebnis
 vertrauenswürdig aussieht.
+
+### 2.81 Die Kontrollen laufen MIT, nicht danach (28.08.2026)
+
+**Anlass:** Der erste Lauf von `messe_akkumulationsmass.py` lieferte ein
+plausibles Ergebnis — und war vollständig falsch. Sichtbar wurde es
+ausschließlich, weil zwei Kontrollen **im selben Lauf** mitliefen:
+
+| Kontrolle | Wert | musste sein |
+|---|---|---|
+| **WOCHENTAG** (Negativkontrolle) | −10,6 % | 0 |
+| **DCA** (Rechenkontrolle) | 0,000 | 0,000 ✔ |
+| Nullverteilung | ±47,5 % | eng |
+
+⚠️ **Die Negativkontrolle war der einzige Alarm.** Der eigentliche Befund sah
+in beiden Läufen ähnlich aus (+10,8 % bzw. +0,0283) — nur die *Kontrolle*
+verriet, dass der erste eine Ausreißerarithmetik war: eine einzelne Reihe mit
+**+10.732 %** bestimmte den gewichteten Mittelwert.
+
+**Die drei Kontrollarten, und was jede allein NICHT kann:**
+
+| Art | Beispiel | fängt | fängt NICHT |
+|---|---|---|---|
+| **Rechenkontrolle** | eine Zelle, deren Wert arithmetisch feststeht (DCA = 0) | Indexfehler | ein falsches Maß — DCA war in **beiden** Läufen korrekt 0 |
+| **Negativkontrolle** | ein Zustand ohne Information (Wochentag) | eine zu enge oder verzerrte Nullverteilung | ob das Maß die richtige Frage stellt |
+| **Positivkontrolle** | ein Zustand mit Lookahead, der tragen MUSS | eine tote Messmaschine | eine Verzerrung, die beide Seiten gleich trifft |
+
+✔ **Regel:** Jeder Messlauf führt **alle drei** mit und druckt sie in
+derselben Tabelle wie das Ergebnis. Eine Kontrolle, die man hinterher separat
+rechnet, wird nicht gerechnet.
+
+**Und die Verlängerung nach 2.80:** Eine Kontrolle, die den Fehler NICHT
+gefangen hätte, ist beim Berichten zu nennen. Hier: die Rechenkontrolle DCA
+war grün, während das Ergebnis Müll war. Wer nur sie zeigt, belegt nichts.
+
+**Beleg:** `Befund_Akkumulationsmass_28_08.md` Abschnitt 3 · Dauerprüfung
+`pruefe_pakete.py` Paket **Akkumass** (16 Prüfungen).
+
