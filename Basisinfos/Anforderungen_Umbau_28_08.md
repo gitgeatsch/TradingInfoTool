@@ -211,7 +211,7 @@ je Asset:
   1  Variante bestimmen        aus Assetklasse + Kern-Schalter   (steht fest)
   2  Fragen ableiten           1 oder 2, je Variante             (steht fest)
   3  je Frage: Cooldown        aus Strategie + letztem Ergebnis  (steht fest)
-  4  je Frage: bewerten        Potential mit 0,30 %
+  4  je Frage: bewerten        Potential GEBUEHRENFREI (N-5)
   5  Handlung                  wenn Auslöser UND Potential trägt
   6  Mail                      beide Gebührensätze nebeneinander
 ```
@@ -249,8 +249,8 @@ Aufwand in seine Verwaltung fließt.
 
 | | Schritt | Vorbedingung | Größe |
 |---|---|---|---|
-| **1** | Potentialmaß auf 0,30 % | — | eine Zeile |
-| **2** | ⚠️ **Messen: trägt ein enger Stop überhaupt?** | 1 | eine Messung |
+| ~~1~~ | ~~Potentialmaß auf 0,30 %~~ | ✔ **entfällt** — 0,00 % ist richtig (N-5) | — |
+| ~~2~~ | ~~Messen: trägt ein enger Stop?~~ | ✔ **war gemessen** (06.08.): unter 2 % zerstörerisch, und S5 hat den Boden am 18.08. eingebaut | — |
 | **3** | Kostenrechnung folgt dem Etikett (L3) | — | mittel |
 | **4** | Cooldown je Strategie und Ergebnis (L4/L5) | — | mittel |
 | **5** | Zweite Frage für V1 (L2) | 2, 3 | groß |

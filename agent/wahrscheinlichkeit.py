@@ -235,11 +235,25 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
     for name, satz in saetze_zum_berichten:
         r = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse, h=h,
                    gebuehr_je_seite=satz)
-        marke = "   " if r["abstand_punkte"] > 0 else "⚠️ "
-        aus.append(f"{marke}noetig bei {name}: "
-                   f"{de(100 * r['breakeven'], 1)} % -> "
-                   f"{de(r['abstand_punkte'], 1)} Punkte, "
-                   f"{'traegt' if r['abstand_punkte'] > 0 else 'traegt NICHT'}"
+        # ⚠️ DREI PROZENTZAHLEN OHNE BEZUG WAREN NICHT LESBAR (Nutzerfrage
+        # 28.08.: *"1,5 Prozent traegt sich nicht und 60 % - was bedeutet das,
+        # was sind die 60 %?"*).
+        #
+        # Hier stand: "noetig bei Betrieb 1,50 %: 66,7 % -> -28,8 Punkte".
+        # Der Gebuehrensatz, die NOETIGE Quote und die Luecke standen
+        # nebeneinander, ohne dass eine sagte, was sie ist - und die
+        # GESCHAETZTE Quote, gegen die verglichen wird, stand fuenf Zeilen
+        # weiter oben. Wer die Zeile allein las, konnte 66,7 % fuer das
+        # Ergebnis halten.
+        #
+        # Jetzt stehen NOETIG und GESCHAETZT in derselben Zeile nebeneinander,
+        # und das Urteil steht am Ende statt in der Mitte.
+        traegt = r["abstand_punkte"] > 0
+        marke = "   " if traegt else "⚠️ "
+        aus.append(f"{marke}{name}: noetig {de(100 * r['breakeven'], 1)} %, "
+                   f"geschaetzt {de(100 * r['quote'], 1)} % - "
+                   f"{de(abs(r['abstand_punkte']), 1)} Punkte "
+                   f"{'MEHR als noetig, TRAEGT' if traegt else 'ZU WENIG'}"
                    f" ({de(r['erwartungswert_r'], 3)} R je Trade)")
 
     # ⚠️ WAS NICHT DRINSTECKT, GEHOERT IN DIESELBE ZUSAMMENFASSUNG.
