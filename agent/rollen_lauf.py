@@ -1656,8 +1656,35 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         logger.exception("Wahrscheinlichkeit fuer %s uebersprungen", symbol)
         _wk_zeilen = []
 
+    # DIE LAGE-BEWERTUNG DER AKKUMULATION (28.08.2026, Entscheidung B+C).
+    #
+    # SPERRT NICHTS - wie der Vorfilter darueber. Sie geht in die Mail, in
+    # keine Entscheidung. Faellt sie aus, fehlt ein Absatz, nie ein Signal.
+    #
+    # NUR BEI `akkumulation`: fuer einen Einstieg ist die Verbilligung nicht
+    # das Erfolgsmass, und eine Zahl aus der falschen Messung waere schlimmer
+    # als keine.
+    _akl_zeilen = []
+    if str(strategie or "").strip().lower() == "akkumulation":
+        try:
+            # ⚠️ NICHT `_AKL` - DER NAME IST SEIT ZEILE 50 BELEGT
+            # (`assetklassen`). Ein Import unter diesem Namen HIER macht ihn
+            # zur lokalen Variable der ganzen Funktion - und die Zugriffe in
+            # Zeile 1412/1453, die VORHER laufen, greifen dann auf eine
+            # ungebundene Lokale. Genau die Falle aus
+            # `feedback_freie_namen_falle`: der breite Fehlerfang hat den
+            # UnboundLocalError geschluckt und als "Topfzuordnung aus dem Lauf
+            # statt aus der Zahl" protokolliert. Kein Signal, keine Mail,
+            # keine erkennbare Ursache.
+            from agent import akkumulationslage as _AKLAGE
+            _akl_zeilen = _AKLAGE.saetze(symbol, (reihen or {}).get(symbol))
+        except Exception:
+            logger.exception("Akkumulationslage fuer %s uebersprungen", symbol)
+            _akl_zeilen = []
+
     def baue(zweite_zeilen: list) -> tuple:
         return SM.baue_mail(
+            akkumulationslage=_akl_zeilen or None,
             wahrscheinlichkeit=_wk_zeilen or None,
             lebendigkeit=_leben or None,
             vorfilter=_vf_zeilen or None,

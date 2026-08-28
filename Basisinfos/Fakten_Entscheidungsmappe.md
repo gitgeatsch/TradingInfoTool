@@ -2484,3 +2484,78 @@ Anzeige der Standardkonfiguration — sie zeigt jetzt „Aus", was stimmt.
 obwohl DCA durch Akkumulation ersetzt ist. Nutzerentscheidung — eine
 Umbenennung berührt Schema, GUI und sechs Module, ohne Verhalten zu ändern.
 **Vorgemerkt, nicht offen.**
+
+
+## F-160 B+C umgesetzt — die Akkumulation bekommt eine Lage-Zeile, keine Regel (28.08.2026)
+
+**Nutzerauftrag:** *„B+C festlegen und umsetzen mit Prüfung und Gegenprüfung
+wie immer."*
+
+### ⚠️ C musste in der Gegenprüfung korrigiert werden, bevor es gebaut wurde
+
+Die erste Fassung lautete *„für den Kern nur die Ausschlussseite nutzen"* —
+begründet damit, dass die Bremse dort **am häufigsten greift** (24,5 % der
+Tage). **Häufigkeit ist kein Beleg.** Nachgemessen zeigt das Band über +30 %
+bei den Kernwerten teils die **Gegenrichtung**:
+
+| | Rang H=90 | Rang H=365 |
+|---|---|---|
+| BTC | **+0,0112** | −0,0604 |
+| ETH | **+0,0423** | +0,0284 |
+| SOL | **+0,0605** | +0,0150 |
+
+Eine Bremse darauf zu bauen wäre die *„Bremse ohne Potentialaussage"*, an der
+dieses Projekt schon **79 %** seines Trichters verloren hat.
+
+### ✔ Was die Gegenprüfung dafür geklärt hat — offene Frage 2 vom 27.08.
+
+`Befund_Lage_27_08.md` hatte die Ausschlussregel **nur innerhalb tief
+gefallener Assets** gemessen (Kurs ≤ 30 % des Hochs) und fragte, ob sie
+darüber hinaus gilt. **Sie gilt:**
+
+| Gruppe | Rang H=90 | Rang H=365 | Reihen |
+|---|---|---|---|
+| tief gefallen | −0,2063 | −0,0586 | 2 |
+| **NICHT tief gefallen** | **−0,0924** | **−0,1450** | **363 / 329** |
+
+Damit ist sie **breiter belegt als zuvor** — nur eben nicht für die drei
+Werte, auf die sie heute träfe.
+
+### Was gebaut wurde
+
+`agent/akkumulationslage.py` — **sperrt nichts**, dieselbe Bauform wie
+`agent/vorfilter.py`. Es schreibt zwei Zeilen in die Mail:
+
+```
+Lage         -40,8 % zum eigenen 200-Tage-Schnitt
+             Erwartung +6,1 % guenstiger als ein beliebiger Tag dieser Reihe
+             (Median ueber 90 Tage, 505 Reihen)
+```
+
+und für den Kern (**Entscheidung B**):
+
+```
+Lage         -40,8 % zum eigenen 200-Tage-Schnitt
+             ACHTUNG: fuer BTC ist die Verbilligung NICHT belegt
+             (Rang -0,03 bei p > 0,7) - dieser Wert wird gehalten, weil er
+             ueberleben soll, nicht weil der Zeitpunkt guenstig ist
+```
+
+⚠️ **`belegt=False` ist nicht `belegt=None`** — für BTC/ETH/SOL ist gemessen,
+dass es *nicht* trägt; das ist etwas anderes als „nie geprüft". Dieselbe
+Unterscheidung wie `h = None` gegen `h = False` im Vorfilter.
+
+**H=90 und nicht H=365**, obwohl der Vorsprung dort größer ist: der längere
+Horizont hat bei 3.292 Tagen Achse nur rund neun unabhängige Fenster, H=90 hat
+36. **Die vorsichtigere Zahl gehört in eine Mail.**
+
+### ⚠️ Der Bau kostete einen selbst gebauten Fehler — Methodik 2.82
+
+Der Import hieß `_AKL` — ein Name, der in `rollen_lauf.py` seit Zeile 50
+belegt ist. Damit wurde er **lokal**, und zwei frühere Zugriffe warfen
+`UnboundLocalError`, den der breite Fehlerfang schluckte: **keine Mail, kein
+Signal, keine erkennbare Ursache.** Neue Dauerprüfung **T4c**;
+`finde_freie_namen.py` findet diese Klasse **nicht**.
+
+**Suite: 1.726 Prüfungen, alle bestanden** (Paket `Akkumulationslage` mit
+Naht-Nachweis am **fertigen Mailtext**, Paket `T4c`).

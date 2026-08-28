@@ -4378,3 +4378,47 @@ war grün, während das Ergebnis Müll war. Wer nur sie zeigt, belegt nichts.
 **Beleg:** `Befund_Akkumulationsmass_28_08.md` Abschnitt 3 · Dauerprüfung
 `pruefe_pakete.py` Paket **Akkumass** (16 Prüfungen).
 
+
+
+### 2.82 Der Namensschatten — die Umkehrung der freien Namen (28.08.2026)
+
+**Selbst hineingebaut, teuer gefunden.** `agent/rollen_lauf.py` importiert in
+Zeile 50 modulweit `assetklassen as _AKL`. Ein zweiter Import unter
+**demselben Namen** mitten in `_ein_asset` machte `_AKL` zur **lokalen**
+Variable der ganzen Funktion — und damit die Zugriffe in Zeile 1412 und 1453,
+die *vorher* laufen, zu Zugriffen auf eine ungebundene Lokale.
+
+```
+UnboundLocalError: cannot access local variable '_AKL'
+  -> geschluckt vom breiten Fehlerfang
+  -> protokolliert als "Topfzuordnung aus dem Lauf statt aus der Zahl"
+  -> Ergebnis: KEINE Mail, KEIN Signal, keine erkennbare Ursache
+```
+
+⚠️ **Und `finde_freie_namen.py` findet das nicht — 0 Kandidaten.** Es sucht
+Namen, die **nirgends** definiert sind. Hier war der Name sehr wohl definiert,
+nur global und lokal überschattet. **Die Umkehrung derselben Falle, und sie
+braucht ein eigenes Werkzeug.**
+
+**Was die Suche gekostet hat, und was sie gelehrt hat:**
+
+| Schritt | Ergebnis |
+|---|---|
+| Suite lief rot mit `KeyError: 'stop'` | ⚠️ ein **Folgefehler** drei Ebenen entfernt |
+| Sonde in der Naht | feuerte nie — die Stelle wurde nicht erreicht |
+| Sonde am Funktionsanfang | feuerte auch nicht — irreführend |
+| **`fuehre_lauf` abgefangen und `ergebnis["fehler"]` gelesen** | ✔ **die echte Meldung**, im ersten Versuch |
+
+✔ **Die Lehre:** Wenn eine Kette mit breitem Fehlerfang keine Ausgabe liefert,
+ist der schnellste Weg **nicht** die Sonde im Code, sondern der **Rückgabewert
+der Kette** — dort sammelt der Fehlerfang, was er geschluckt hat. Sonden
+setzen kostet Minuten und beantwortet die falsche Frage.
+
+**Die Dauerprüfung: Paket `T4c`.** Sie meldet einen funktionsinternen Import
+nur, wenn in derselben Funktion **vor** der Importzeile auf den Namen
+zugegriffen wird — sonst meldete sie den halben Bestand (`re`, `datetime`,
+`timedelta`), und ein Werkzeug mit Fehlalarmen wird nicht mehr aufgerufen.
+
+✔ **Positivkontrolle bestanden:** mit dem alten Namen wieder eingebaut meldet
+sie `agent/rollen_lauf.py:878 _AKL in _ein_asset() - Zugriff schon in Zeile 752`.
+

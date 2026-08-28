@@ -13676,6 +13676,234 @@ def paket_abkapselung() -> None:
            % sorted(_db._DCA_ERLAUBT_DEFAULT_SYMBOLS))
 
 
+
+def paket_akkumulationslage() -> None:
+    """Entscheidung B+C - die Lage-Bewertung der Akkumulation (28.08.2026).
+
+    B  der Kern bekommt KEINEN Verbilligungssatz. Er wird gehalten, weil er
+       ueberleben soll, nicht weil der Zeitpunkt guenstig ist.
+    C  die Ausschlussseite wird GEZEIGT, nicht erzwungen - fuer den Kern ist
+       sie unbelegt.
+
+    ⚠️ C WURDE AM 28.08. IN DER GEGENPRUEFUNG KORRIGIERT. Die erste Fassung
+    wollte fuer den Kern sperren, begruendet mit "die Bremse greift dort am
+    haeufigsten (24,5 % der Tage)". Haeufigkeit ist kein Beleg: nachgemessen
+    zeigt das Band ueber +30 % bei den Kernwerten teils die GEGENRICHTUNG
+    (BTC +0,0112 / ETH +0,0423 / SOL +0,0605 auf H=90). Eine Bremse darauf
+    waere die "Bremse ohne Potentialaussage", an der dieses Projekt schon
+    79 % seines Trichters verloren hat."""
+    from agent import akkumulationslage as _AL
+
+    P = "Akkumulationslage"
+
+    class _K:
+        def __init__(self, close):
+            self.close = close
+
+    def _reihe(endkurs, n=250):
+        return [_K(100.0)] * (n - 50) + [_K(100.0 + (endkurs - 100.0) * i / 49)
+                                         for i in range(50)]
+
+    # ---- Die Kennlinie ist MONOTON - das ist ihre Aussage ----
+    raenge = [r for _, _, r, _ in _AL.BAENDER]
+    pruefe(P, "die Kennlinie faellt ueber alle neun Baender",
+           all(a > b for a, b in zip(raenge, raenge[1:])),
+           "gemessen wurde eine monotone Kennlinie - steht hier eine andere, "
+           "ist die Tabelle abgeschrieben und nicht uebertragen")
+    pruefe(P, "und die Baender decken jede Lage ab, ohne Luecke",
+           all(abs(_AL.BAENDER[i][1] - _AL.BAENDER[i + 1][0]) < 1e-9
+               for i in range(len(_AL.BAENDER) - 1)),
+           "eine Luecke gaebe stillschweigend `None` zurueck - und eine "
+           "fehlende Zeile sieht aus wie eine unauffaellige Lage")
+
+    # ---- B: der Kern bekommt KEINE Zahl ----
+    for sym in ("BTC", "ETH", "SOL"):
+        z = _AL.saetze(sym, _reihe(55.0))
+        pruefe(P, "%s bekommt keinen Verbilligungssatz" % sym,
+               z and not any("Erwartung" in s for s in z)
+               and any("NICHT belegt" in s for s in z),
+               "Entscheidung B: fuer diese drei ist der Befund gemessen "
+               "WIDERLEGT (Rang -0,03 bei p > 0,7), nicht ungeprueft")
+
+    # ---- und ein anderer Wert bekommt sie sehr wohl ----
+    z = _AL.saetze("ADA", _reihe(55.0))
+    pruefe(P, "ein Wert ausserhalb des Kerns bekommt die Zahl",
+           any("Erwartung" in s and "+6,1" in s for s in z),
+           "bekommen: %s" % z)
+    pruefe(P, "die Zahl steht NIE ohne ihren Vergleich",
+           all("beliebiger Tag dieser Reihe" in s
+               for s in z if "Erwartung" in s),
+           "eine Prozentzahl allein waere wieder der Drift - genau das, was "
+           "die Rangbildung herausrechnet")
+
+    # ---- C: die teure Lage wird GEZEIGT, aber sie sperrt nicht ----
+    z = _AL.saetze("ADA", _reihe(160.0))
+    pruefe(P, "eine teure Lage wird als TEURER ausgewiesen",
+           any("TEURER" in s for s in z) and any("-11,8" in s for s in z))
+    pruefe(P, "aber das Modul sperrt nichts",
+           not any(w in _quelltext("agent/akkumulationslage.py")
+                   for w in ("return False, ", "raise ValueError",
+                             "verwerfe", "sperre")),
+           "dieselbe Bauform wie der Vorfilter: markieren, nicht sperren")
+
+    # ---- Kein Lookahead, und beide Kursformate ----
+    pruefe(P, "der Schnitt liest nur die letzten 200 Werte",
+           abs(_AL.abstand_zum_schnitt([_K(100.0)] * 200 + [_K(150.0)])
+               - (150.0 / (100.0 * 199 / 200 + 150.0 / 200) - 1.0)) < 1e-9,
+           "das Fenster endet beim aktuellen Tag EINSCHLIESSLICH - wer weiter "
+           "greift, misst etwas anderes als gemessen wurde")
+    pruefe(P, "Kerzen und rohe Zahlen ergeben dasselbe",
+           _AL.abstand_zum_schnitt([_K(100.0)] * 200 + [_K(60.0)])
+           == _AL.abstand_zum_schnitt([100.0] * 200 + [60.0]),
+           "⚠️ In der Kette stehen KERZEN mit `.close`. Die erste Fassung las "
+           "`float(k)` und haette einen TypeError geworfen, den das try/except "
+           "an der Naht verschluckt haette - fail-soft ist fail-silent")
+    pruefe(P, "eine zu kurze Reihe gibt None, keine Notzahl",
+           _AL.abstand_zum_schnitt([_K(1.0)] * 199) is None
+           and _AL.saetze("ADA", [_K(1.0)] * 50) == [])
+
+    # ---- Die Mailzeilen sind ohne Sonderzeichen ----
+    alle = (_AL.saetze("ADA", _reihe(55.0)) + _AL.saetze("BTC", _reihe(55.0))
+            + _AL.saetze("ADA", _reihe(160.0)))
+    pruefe(P, "keine Mailzeile traegt ein Sonderzeichen",
+           all(ord(c) < 128 for s in alle for c in s),
+           "keine einzige Mailzeile dieses Projekts traegt eines (geprueft "
+           "ueber vier Module, 0 Treffer) - auf der Windows-Konsole kaeme es "
+           "als Escape-Folge an")
+
+    # ---- DIE NAHT: erreicht es die fertige Mail? ----
+    #
+    # ⚠️ "Eine Stufe gilt erst als gebaut, wenn sie in der FERTIGEN Mail
+    # nachweisbar ist" - die Lektion aus Rolle G, die nie lief, und aus N-9,
+    # wo elf Zusatzfakten keine Mail erreichten.
+    from agent import signal_mail as _SM
+    import inspect as _insp
+    pruefe(P, "baue_mail nimmt den Block an",
+           "akkumulationslage" in _insp.signature(_SM.baue_mail).parameters,
+           "ohne Parameter waere das Modul eine Absichtserklaerung")
+    _rl = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "und die Kette uebergibt ihn",
+           "akkumulationslage=_akl_zeilen" in _rl,
+           "N-9: elf Zusatzfakten erreichten die Mail nicht, weil die Naht "
+           "fehlte - die Pruefung fuetterte die Funktion direkt")
+    pruefe(P, "die Kette uebergibt die EIGENE Reihe, nicht das ganze Dict",
+           "(reihen or {}).get(symbol)" in _rl,
+           "`reihen` ist ein Dict ueber alle Symbole - wer es ganz uebergibt, "
+           "bekommt None und eine stumme Leerzeile")
+    pruefe(P, "und nur bei der Strategie akkumulation",
+           'if str(strategie or "").strip().lower() == "akkumulation":' in _rl,
+           "fuer einen Einstieg ist die Verbilligung nicht das Erfolgsmass - "
+           "eine Zahl aus der falschen Messung waere schlimmer als keine")
+
+    # ---- Und die fertige Mail traegt die Zeile wirklich ----
+    # ⚠️ DIE ECHTE RECHNUNG, KEINE ATTRAPPE. Mit einem handgebauten dict
+    # brach `entscheidungsrechnung.saetze()` an `einstieg_von_eur` - eine
+    # Pruefung, die eine Attrappe fuettert, prueft die Attrappe.
+    from agent import entscheidungsrechnung as _ER2
+    _r2 = _ER2.rechne(kurs=64797, atr=1750, risiko_eur=75, instrument="spot",
+                      betrag_wunsch_eur=500, topf_frei_eur=500)
+    _, _txt = _SM.baue_mail(
+        symbol="ADA", name="Cardano", kurs_eur=0.55, instrument="spot",
+        strategie="akkumulation",
+        rechnung=_r2,
+        urteil={"aktion": "KAUFEN", "begruendung": "Probe"},
+        akkumulationslage=_AL.saetze("ADA", _reihe(55.0)))
+    pruefe(P, "die FERTIGE Mail traegt die Lage-Zeile",
+           "200-Tage-Schnitt" in _txt and "Erwartung" in _txt,
+           "nicht die Funktion wurde gefuettert, sondern die Mail gebaut - "
+           "das ist der Unterschied, an dem Rolle G vier Wochen scheiterte")
+    _, _txt_kern = _SM.baue_mail(
+        symbol="BTC", name="Bitcoin", kurs_eur=64797.0, instrument="spot",
+        strategie="akkumulation",
+        rechnung=_r2,
+        urteil={"aktion": "KAUFEN", "begruendung": "Probe"},
+        akkumulationslage=_AL.saetze("BTC", _reihe(55.0)))
+    pruefe(P, "und die Kern-Mail traegt KEINE Erwartung",
+           "200-Tage-Schnitt" in _txt_kern
+           and "Erwartung" not in _txt_kern
+           and "NICHT belegt" in _txt_kern,
+           "Entscheidung B endet nicht im Modul, sondern in der Mail - hier "
+           "wird sie am fertigen Text nachgewiesen")
+
+
+
+def paket_namensschatten() -> None:
+    """T4c - ein Import IN einer Funktion darf keinen globalen Namen ueberschatten.
+
+    ⚠️ EINE NEUE FEHLERKLASSE, am 28.08.2026 selbst hineingebaut und teuer
+    gefunden. `agent/rollen_lauf.py` importiert in Zeile 50 modulweit
+    `assetklassen as _AKL`. Ein zweiter Import unter DEMSELBEN Namen mitten in
+    `_ein_asset` machte `_AKL` zur LOKALEN Variable der ganzen Funktion - und
+    damit die Zugriffe in Zeile 1412 und 1453, die VORHER laufen, zu Zugriffen
+    auf eine ungebundene Lokale.
+
+        UnboundLocalError: cannot access local variable '_AKL'
+        -> geschluckt vom breiten Fehlerfang, protokolliert als
+           "Topfzuordnung aus dem Lauf statt aus der Zahl"
+        -> Ergebnis: KEINE Mail, KEIN Signal, keine erkennbare Ursache
+
+    ⚠️ UND `finde_freie_namen.py` FINDET DAS NICHT - 0 Kandidaten. Es sucht
+    Namen, die NIRGENDS definiert sind; hier war der Name sehr wohl definiert,
+    nur eben global und lokal ueberschattet. Die Umkehrung derselben Falle,
+    und sie braucht ein eigenes Werkzeug.
+
+    Geprueft wird per Syntaxbaum, nicht per Textsuche."""
+    import ast as _ast
+    import os as _os
+
+    P = "T4c"
+    treffer = []
+    for wurzel, _, dateien in _os.walk("agent"):
+        for d in dateien:
+            if not d.endswith(".py"):
+                continue
+            pfad = _os.path.join(wurzel, d).replace("\\", "/")
+            try:
+                baum = _ast.parse(_quelltext(pfad))
+            except SyntaxError:
+                continue
+            # Modulweite Importnamen sammeln
+            global_namen = set()
+            for k in baum.body:
+                if isinstance(k, (_ast.Import, _ast.ImportFrom)):
+                    for a in k.names:
+                        global_namen.add(a.asname or a.name.split(".")[0])
+            # ⚠️ NUR WO DER ZUGRIFF VORHER STEHT. Ein funktionsinterner
+            # Import GLEICHEN Namens ist fuer sich harmlos, solange in
+            # derselben Funktion nicht VOR der Importzeile auf den Namen
+            # zugegriffen wird - dann und nur dann ist die Lokale ungebunden.
+            # Ohne diese Einschraenkung meldet die Pruefung den halben Bestand
+            # (re, datetime, timedelta ...), und ein Werkzeug mit Fehlalarmen
+            # wird nicht mehr aufgerufen.
+            for f in _ast.walk(baum):
+                if not isinstance(f, (_ast.FunctionDef, _ast.AsyncFunctionDef)):
+                    continue
+                for k in _ast.walk(f):
+                    if not isinstance(k, (_ast.Import, _ast.ImportFrom)):
+                        continue
+                    for a in k.names:
+                        name = a.asname or a.name.split(".")[0]
+                        if name not in global_namen:
+                            continue
+                        frueher = [
+                            n for n in _ast.walk(f)
+                            if isinstance(n, _ast.Name)
+                            and n.id == name
+                            and isinstance(n.ctx, _ast.Load)
+                            and n.lineno < k.lineno]
+                        if frueher:
+                            treffer.append(
+                                "%s:%d %s in %s() - Zugriff schon in Zeile %d"
+                                % (pfad, k.lineno, name, f.name,
+                                   min(n.lineno for n in frueher)))
+
+    pruefe(P, "kein funktionsinterner Import ueberschattet einen globalen",
+           not treffer,
+           "gefunden: %s - jeder dieser Namen wird in seiner Funktion LOKAL, "
+           "und jeder fruehere Zugriff darauf wirft UnboundLocalError, den der "
+           "breite Fehlerfang schluckt" % treffer[:5])
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -13684,7 +13912,9 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Auswahl": paket_auswahl,
           "Verkauf": paket_verkaufsseite,
           "Akkumass": paket_akkumass,
-          "Abkapselung": paket_abkapselung}
+          "Abkapselung": paket_abkapselung,
+          "Akkumulationslage": paket_akkumulationslage,
+          "T4c": paket_namensschatten}
 
 
 class _Mitschnitt:

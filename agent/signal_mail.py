@@ -311,6 +311,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               # Nutzer vier Wochen lang SIEHT, was ein spaeterer Filter
               # weggenommen haette, bevor er weggenommen wird.
               vorfilter: list[str] | None = None,
+              akkumulationslage: list[str] | None = None,
               # 22.08.2026: die ZUSAMMENFUEHRUNG. Sie gehoert VOR alles
               # andere - der Leser soll die Zahl sehen, bevor er die
               # Einzelteile liest, aus denen sie entsteht.
@@ -413,6 +414,13 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # die Marktmerkmale mischt, liest ihn als weiteren Marktfakt.
     if vorfilter:
         eins += ([""] if eins else []) + list(vorfilter)
+    # ⚠️ EIGENER ABSATZ, AUS DEMSELBEN GRUND WIE DER VORFILTER DARUEBER
+    # (28.08.2026, Entscheidung B+C). Die Lage-Bewertung sagt etwas ueber den
+    # ZEITPUNKT einer Akkumulation, nicht ueber den Wert - und fuer den Kern
+    # sagt sie ausdruecklich, dass sie nichts sagen kann. Zwischen die
+    # Marktmerkmale gemischt wuerde beides als Marktfakt gelesen.
+    if akkumulationslage:
+        eins += ([""] if eins else []) + list(akkumulationslage)
     if lage_fakten:
         eins += ["", "Umfeld:"] + [
             f"  {z}" for z in ohne_gewohntes(lage_fakten,
