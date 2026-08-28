@@ -272,3 +272,77 @@ dem Hebeltopf.
 gefunden, sondern eine Probe davor.
 
 **Suite: 1.745 Prüfungen, alle bestanden. Simulation: 3 Gruppen, 6 Mails, 0 Fehler.**
+
+
+---
+
+## 7. Durchgerechnet: was der Umbau für die Bestandssignale bedeutet hätte
+
+**Grundmenge:** 1.033 **Einstiegssignale** der Rollen-Kette **seit dem 19.08.**
+(nach S5), davon 1.030 mit Widerlegungspreis. ⚠️ Die 2.313 aus der ersten
+Zählung enthielten `HALTEN`/`REDUZIEREN` ohne echten Einstieg (Stop = Kurs,
+also 0,000 %) und den Altbestand vor S5 — beides verzerrt jede Stoprechnung.
+
+| Variante | Median L | L ≥ 2 | **L ≥ 3** | Median Stop | Kosten in R |
+|---|---|---|---|---|---|
+| **heute** — VA 6 %, Rauschboden | 0,75 | 3,5 % | **0,2 %** | 8,01 % | 0,292 |
+| **A** — VA 12 %, Rauschboden | 1,50 | 25,7 % | 12,5 % | 8,01 % | **0,052** |
+| **B** — VA 12 % + Widerlegungspreis | **4,48** | **91,4 %** | **76,4 %** | 2,68 % | 0,244 |
+| **C** — VA 6 % + Widerlegungspreis | 2,24 | 57,9 % | **0,0 %** | 2,68 % | 0,192 |
+
+**Die Stopbänder, und was M1 für sie sagt:**
+
+| Variante | 0–2 % | 2–3 % | 3–5 % | 5–8 % | 8–12 % | > 12 % | gewichteter EW |
+|---|---|---|---|---|---|---|---|
+| heute / A | 0,2 % | 3,3 % | 16,0 % | 30,4 % | **34,9 %** | 15,2 % | +0,080 R |
+| B / C | 0,0 % | **57,9 %** | 30,0 % | 6,0 % | 0,4 % | 5,7 % | +0,246 R |
+
+⚠️ **Der gewichtete EW nutzt die M1-Punktschätzer je Band. Nur 0–2 % ist
+belegt** — die übrigen Intervalle enthalten die Null. Die Zahl **ordnet** die
+Varianten, sie sagt kein Ergebnis voraus.
+
+### Was die Rechnung entscheidet
+
+| | |
+|---|---|
+| ✔ **C scheidet aus** | am Stop allein zu drehen erreicht **nie** L ≥ 3 — bei VA 6 % und der 2,5-%-Untergrenze liegt das Maximum bei 2,4 |
+| ✔ **A ist überraschend stark** | ohne den Stop anzufassen fallen die Kosten von **0,292 auf 0,052 R**, weil bei L > 1 die Hebelkosten statt der 3 % Spot-Roundtrip greifen |
+| ⚠️ **B liefert die Hebel, aber** | **57,9 % landen im Band 2–3 %** — dem mit dem breitesten Intervall ([−0,604; +1,801], n = 37). Und der Median-Stop von 2,68 % zeigt: es greift meist die **Untergrenze**, nicht der Widerlegungspreis |
+
+---
+
+## 8. ⚠️⚠️ Der schwerste Fund: das Risikobudget ist keine Grenze
+
+```
+risiko_quelle = "folgt aus Betrag und Stopabstand"     entscheidungsrechnung.py:576
+```
+
+Bei `instrument != "hebel"` ist das Risiko ein **Ergebnis**, keine Vorgabe.
+Und `instrument` ist seit S6b **immer** `"spot"` — also gilt das jetzt für
+jedes Signal, auch für die, die als Hebel gehandelt würden.
+
+**Was das im Bestand bedeutet:**
+
+| | |
+|---|---|
+| Signale mit rechnerischem L unter 1,0 | **768 von 1.033 = 74,3 %** |
+| Überschreitung des Budgets, Median | **+46 %** |
+| 75. Perzentil | **+83 %** |
+| Maximum | **+480 %** |
+
+**Nachgerechnet an einem Fall:** Stop 8 %, 500 € Einsatz. Das Budget wären
+6 % × 500 = **30 €**. Die Rechnung liefert `risiko_eur = 50,0` und
+`verlust_am_stop_eur = 50,0` — **67 % über Budget**.
+
+⚠️ **Die Formel sagt eigentlich das Richtige:** bei Stop 8 % dürfte nur
+0,75 × der Einsatz investiert werden. Der Deckel auf L ≥ 1 macht daraus
+„investiere voll und riskiere mehr".
+
+⚠️ **Das ist die 13. Stelle derselben Fehlerklasse** — und sie stand nicht in
+der Liste, weil sie **negiert** formuliert ist (`instrument != "hebel"`). Das
+Werkzeug führt Zeile 573 als „lebt"; das Urteil ist falsch.
+
+**Damit ändert sich die Reihenfolge der Entscheidung:** Bevor über Hebelhöhen
+geredet wird, gehört geklärt, ob das Risikobudget eine **Grenze** sein soll
+oder eine **Rechengröße**. Heute ist es eine Rechengröße — und wird in drei
+von vier Fällen überschritten.
