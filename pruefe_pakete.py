@@ -13904,6 +13904,87 @@ def paket_namensschatten() -> None:
            "breite Fehlerfang schluckt" % treffer[:5])
 
 
+
+def paket_l3() -> None:
+    """L3a - die Liquidation gehoert an das Signal (28.08.2026).
+
+    ⚠️ DER BEFUND. `entscheidungsrechnung` rechnet `liquidation_etwa_eur`
+    (Zeile 759) und die Mail nennt sie (Zeile 944) - gespeichert wurde sie
+    nie. In `signals` fehlte die Spalte, und `felder_aus_entscheidung` liess
+    das Feld deshalb STILLSCHWEIGEND fallen. Genau die Falle, die der eigene
+    Docstring dort fuer andere Felder beschreibt.
+
+    ⚠️ NUR BEIM HEBEL. Fuer Spot setzt `entscheidungsrechnung` `hebel = 1.0`
+    und rechnet gar keine Liquidation. Eine Null in der Spalte waere eine
+    erfundene Zahl - und sie saehe aus wie eine gemessene."""
+    import sqlite3 as _sq
+    from agent import entscheidungsrechnung as _ER
+    from agent import signal_abbildung as _SA
+
+    P = "L3"
+
+    # ---- Die Spalte entsteht durch Migration, additiv und idempotent ----
+    # ⚠️ DAS ECHTE SCHEMA, KEINE ATTRAPPE. Eine handgebaute Minimaltabelle
+    # brach an `gate_passed` - und eine Pruefung, die eine Attrappe fuettert,
+    # prueft die Attrappe. `init_db` legt dieselbe Tabelle an wie der Betrieb.
+    import database.db as _dbm
+    c = _sq.connect(":memory:")
+    c.row_factory = _sq.Row
+    _dbm.init_db(c)
+    neu = _SA.migriere(c)
+    pruefe(P, "die Migration legt liquidation_etwa_eur an",
+           "signals.liquidation_etwa_eur" in neu)
+    pruefe(P, "und ein zweiter Lauf legt nichts doppelt an",
+           _SA.migriere(c) == [] or "signals.liquidation_etwa_eur"
+           not in _SA.migriere(c),
+           "additiv UND idempotent - sonst bricht jeder Neustart")
+
+    # ---- Der Wert kommt aus der ECHTEN Rechnung, nicht aus einer Attrappe ----
+    r_hebel = _ER.rechne(kurs=64797, atr=1750, risiko_eur=75,
+                         instrument="hebel", betrag_wunsch_eur=500,
+                         topf_frei_eur=500)
+    pruefe(P, "die Rechnung liefert die Liquidation ueberhaupt",
+           r_hebel.get("liquidation_etwa_eur") is not None,
+           "ohne sie hat die Spalte nichts zu speichern")
+
+    def _felder(rechnung, instrument):
+        return _SA.felder_aus_entscheidung(
+            antwort={"aktion": "KAUFEN", "begruendung": "Probe"},
+            fakten={}, lagebild_id=None, prompt_stand="probe",
+            instrument=instrument, rechnung=rechnung, modell="probe")
+
+    f_h = _felder(r_hebel, "hebel")
+    pruefe(P, "ein Hebel-Signal traegt die Liquidation",
+           f_h.get("liquidation_etwa_eur") is not None
+           and abs(float(f_h["liquidation_etwa_eur"])
+                   - float(r_hebel["liquidation_etwa_eur"])) < 1e-6,
+           "bekommen: %s gegen %s in der Rechnung"
+           % (f_h.get("liquidation_etwa_eur"),
+              r_hebel.get("liquidation_etwa_eur")))
+
+    r_spot = _ER.rechne(kurs=64797, atr=1750, risiko_eur=75,
+                        instrument="spot", betrag_wunsch_eur=500,
+                        topf_frei_eur=500)
+    f_s = _felder(r_spot, "spot")
+    pruefe(P, "ein Spot-Signal traegt KEINE Liquidation",
+           f_s.get("liquidation_etwa_eur") is None,
+           "eine Null waere eine erfundene Zahl und saehe aus wie eine "
+           "gemessene - bekommen: %s" % f_s.get("liquidation_etwa_eur"))
+
+    # ---- DIE NAHT: kommt der Wert wirklich in der TABELLE an? ----
+    #
+    # ⚠️ Nicht die Funktion fuettern, sondern schreiben und zurueklesen. Genau
+    # hier fiel der Wert vorher lautlos heraus: `schreibe_signal` uebernimmt
+    # nur Felder, die als SPALTE existieren.
+    _SA.schreibe_signal(c, symbol="ETH", felder=f_h)
+    zeile = c.execute("SELECT liquidation_etwa_eur FROM signals "
+                      "WHERE symbol='ETH'").fetchone()
+    pruefe(P, "und sie steht danach in der TABELLE",
+           zeile is not None and zeile[0] is not None,
+           "gelesen: %s - vorher fiel das Feld hier lautlos heraus, weil die "
+           "Spalte fehlte" % (zeile,))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -13914,7 +13995,8 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Akkumass": paket_akkumass,
           "Abkapselung": paket_abkapselung,
           "Akkumulationslage": paket_akkumulationslage,
-          "T4c": paket_namensschatten}
+          "T4c": paket_namensschatten,
+          "L3": paket_l3}
 
 
 class _Mitschnitt:

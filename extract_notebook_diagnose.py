@@ -457,6 +457,12 @@ _SPOT_SIGNAL_SPALTEN = (
     # Notebook nicht nach Auftrag trennen - und genau das ist die
     # Frage, fuer die die Spalte angelegt wurde.
     "strategie, "
+    # L3a (28.08.2026): DIE LIQUIDATION MIT. Ohne sie laesst sich am Notebook
+    # nicht fragen, ob Hebel-Signale naeher an der Liquidation haeufiger
+    # scheitern - und genau dafuer wurde die Spalte angelegt. Sie steht zwar
+    # in `hebel_positions`, aber das ist die POSITION: ein Signal, das nie zur
+    # Position wurde, hinterlaesst dort nichts.
+    "liquidation_etwa_eur, "
     # P1 (24.08.2026): das Urteil von Z1 mit. Ohne es laesst sich am
     # Notebook nicht fragen, ob Signale mit einem Treuebruch anders
     # laufen als saubere - und genau dafuer wurde die Spalte angelegt.

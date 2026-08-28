@@ -460,6 +460,20 @@ class Signal:
     # unmoeglich: was nicht in der Zeile steht, rekonstruiert keine
     # spaetere Auswertung.
     strategie: str | None = None               # 'einstieg' | 'swing' | 'akkumulation'
+    # L3a (28.08.2026): DIE LIQUIDATION AN DER ZEILE.
+    #
+    # ⚠️ DERSELBE FEHLER WIE BEI `strategie` DARUEBER, eine Stufe spaeter.
+    # `entscheidungsrechnung` rechnet den Wert, die Mail nennt ihn - und
+    # gespeichert wurde er nie, weil `signals` keine Spalte dafuer hatte.
+    # `felder_aus_entscheidung` liess ihn deshalb STILLSCHWEIGEND fallen.
+    #
+    # NUR BEIM HEBEL gefuellt. Fuer Spot gibt es keine Liquidation; eine Null
+    # waere eine erfundene Zahl und saehe aus wie eine gemessene.
+    #
+    # ⚠️ DIESES FELD MUSS HIER STEHEN, auch wenn die alte Kette es nie setzt:
+    # `Signal` wird aus `SELECT *` gebaut, und eine Spalte ohne Feld kappt
+    # JEDEN Lesepfad. Genau das hat die Suite gefangen.
+    liquidation_etwa_eur: float | None = None  # nur Hebel, sonst None
     # P1 (24.08.2026): DAS URTEIL VON Z1 AN DER ZEILE.
     #
     # ⚠️ Z1 lief, ging in die Mail und in die Zaehlung - und nicht in

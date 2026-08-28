@@ -62,6 +62,9 @@ _ENG_ZAHL = _re.compile(r"(?<![\d.])\d+\.(\d+)")
 _DATUM = _re.compile(r"\b\d{1,2}\.\d{1,2}\.(?:\d{2,4})?")
 
 
+NUR_SYMBOLE: set = set()
+
+
 def _englische_zahlen(text: str) -> list[str]:
     """Zahlen in englischer Schreibweise. Genau drei Ziffern nach dem Punkt
     gelten als Tausendergruppe (1.234,5) und zaehlen nicht; Datumsangaben
@@ -329,10 +332,19 @@ def _verbindung(pfad: str) -> sqlite3.Connection:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--db", default="data/tradinginfotool.db")
+    p.add_argument("--symbole", default=None,
+                   help="nur diese Symbole (Komma), umgeht die Auswahlstufe")
     p.add_argument("--gruppe", default=None,
                    help="nur diese Gruppe, sonst alle")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+    global NUR_SYMBOLE
+    NUR_SYMBOLE = {s.strip().upper() for s in (a.symbole or "").split(",")
+                   if s.strip()}
+    if NUR_SYMBOLE:
+        print("NUR DIESE SYMBOLE: %s - die Auswahlstufe wird umgangen"
+              % ", ".join(sorted(NUR_SYMBOLE)))
 
     from agent import assetklassen as AK
     from agent import rollen_lauf as RL
@@ -388,7 +400,8 @@ def main() -> int:
     reihen = lade_reihen_aus_db(db)
     gesamt = {"gruppen": 0, "signale": 0, "mails": 0, "fehler": [],
               "luecken": [], "gruppen_gelaufen": [],
-              "lebendigkeit_gesehen": False,
+              "lebendigkeit_gesehen": False,
+
               "vorfilter_gesehen": False,
               "gruppen_uebersprungen": []}
 
@@ -404,6 +417,19 @@ def main() -> int:
             continue
         # Genug Symbole, damit die Attrappe JEDE Aktion einmal durchspielt.
         auswahl = vorhanden[:len(AKTIONEN_JE_INSTRUMENT.get(instrument, ()))]
+        # ⚠️ GEZIELT PRUEFBAR (28.08.2026). Ohne `--symbole` nimmt die
+        # Simulation die ersten Werte mit Kursreihe - und genau die Stufe
+        # "gehoert zu den besten k der Gruppe" warf am 28.08. BTC, ETH und SOL
+        # heraus. Damit lief die neue Akkumulations-Lagezeile in KEINER
+        # simulierten Mail, obwohl der Lauf grün meldete.
+        #
+        # Eine Simulation, die den geaenderten Pfad nicht betritt, weist ihn
+        # nicht nach - dieselbe Luecke wie bei Rolle G, die vier Wochen als
+        # gebaut galt und nie lief.
+        if NUR_SYMBOLE:
+            gewuenscht = [s for s in vorhanden if s.upper() in NUR_SYMBOLE]
+            if gewuenscht:
+                auswahl = gewuenscht
 
         # ⚠️ DEN HEBELSCHALTER IN DER KOPIE EINSCHALTEN.
         #

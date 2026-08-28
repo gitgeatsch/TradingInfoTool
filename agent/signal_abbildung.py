@@ -105,6 +105,25 @@ AKTIONEN = tuple(sorted(
 # Verwechslung mit einem Altfeld moeglich waere - `begruendung` gaebe es sonst
 # neben `short_reasoning` und niemand wuesste, welches gilt.
 SPALTEN_SIGNAL = {
+    # L3a (28.08.2026): DIE LIQUIDATION GEHOERT AN DAS SIGNAL.
+    #
+    # ⚠️ DERSELBE BEFUND WIE BEI `strategie` EINE ZEILE TIEFER, nur eine Stufe
+    # spaeter gefunden. `entscheidungsrechnung` rechnet `liquidation_etwa_eur`
+    # aus (Zeile 759) und die Mail nennt sie ("Liquidation etwa X EUR", Zeile
+    # 944) - gespeichert wurde sie nie. In `signals` gab es keine Spalte
+    # dafuer, und `felder_aus_entscheidung` liess das Feld deshalb
+    # STILLSCHWEIGEND fallen, genau wie dieser Docstring es fuer andere Felder
+    # beschreibt.
+    #
+    # WAS DAS KOSTET: die Frage "wie nah lagen unsere Hebel-Signale an der
+    # Liquidation, und traf es die naeher liegenden haeufiger?" ist heute nicht
+    # beantwortbar - und RUECKWIRKEND nicht nachruestbar. Was nicht in der
+    # Zeile steht, rekonstruiert keine spaetere Auswertung.
+    #
+    # Sie steht in `hebel_positions` (`liquidationspreis_geschaetzt_eur`) -
+    # aber das ist die POSITION, nicht das SIGNAL. Ein Signal, das nie zur
+    # Position wurde, hinterlaesst dort nichts.
+    "liquidation_etwa_eur": "REAL",
     "quelle_kette": "TEXT",                 # 'alt' oder 'rollen' - ohne diese
                                             # Spalte laesst sich spaeter keine
                                             # Messung nach Ketten trennen
@@ -552,6 +571,15 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
     # DAS MODELL BLEIBT RUECKFALL - fuer Zeilen ohne Rechnung. Und seine
     # Zahlen sind nicht verloren: `umgeworfen_preis_eur` steht daneben und
     # geht als EINGABE in genau diesen Stop ein.
+    # L3a: DIE LIQUIDATION MITSCHREIBEN - nur wo sie einen Sinn hat.
+    #
+    # ⚠️ NUR BEIM HEBEL. Fuer eine Spot-Position gibt es keine Liquidation;
+    # `entscheidungsrechnung` setzt dort `hebel = 1.0` und rechnet den Wert
+    # gar nicht erst. Eine Null in der Spalte waere eine erfundene Zahl - und
+    # sie saehe aus wie eine gemessene.
+    if _ist_hebel and rechnung and rechnung.get("liquidation_etwa_eur") is not None:
+        aus["liquidation_etwa_eur"] = float(rechnung["liquidation_etwa_eur"])
+
     _geo = {}
     if rechnung:
         _geo = {

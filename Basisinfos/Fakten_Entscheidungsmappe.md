@@ -2559,3 +2559,84 @@ Signal, keine erkennbare Ursache.** Neue Dauerprüfung **T4c**;
 
 **Suite: 1.726 Prüfungen, alle bestanden** (Paket `Akkumulationslage` mit
 Naht-Nachweis am **fertigen Mailtext**, Paket `T4c`).
+
+
+## F-161 L2 war längst erledigt, L3a war es nicht (28.08.2026)
+
+**Nutzerauftrag:** *„mach L2 und L3 — mit Prüfung und Gegenprüfung."* Die
+Pflichtprüfung *„ein Planschritt gilt erst als offen, wenn der Code das
+bestätigt"* hat einen der beiden erledigt, bevor er gebaut wurde.
+
+### ✔ L2 — „Kern-Assets können keinen Hebel bekommen": **geschlossen durch A**
+
+Am Code gemessen, nicht vermutet:
+
+| Symbol | Instrument | Strategie | Hebel-Prüfung |
+|---|---|---|---|
+| BTC / ETH / SOL | spot | `akkumulation` | — |
+| BTC / ETH / SOL | **hebel** | **`einstieg`** | **erlaubt (True)** |
+
+`strategie_fuer()` prüft `if i != "spot": return vorgabe` — der Kern-Schalter
+greift **nur** auf der Spot-Seite. `asset_schalter` sperrt den Kern nirgends
+explizit. **Die Trennung, die L2 forderte, ist seit dem 27.08. da.**
+
+### ⚠️ Der Nebenbefund, der schwerer wiegt als L2
+
+```
+INSTRUMENTE_JE_GRUPPE = { "krypto": ("spot",), ... }
+```
+
+**Die Rollen-Kette fährt Krypto überhaupt nicht als Hebel.** `laeufe()` liefert
+für krypto genau einen Lauf: `spot`. Hebel entsteht ausschließlich über
+`hebel_screening_job` und dessen eigenen Schalter
+(`get_hebel_pruefung_erlaubt`) — nicht über den Umlauf.
+
+⚠️ **Das gehört zur offenen Nutzerfrage** *„haben wir nun echte Hebelsignale
+oder nur verkappte Spot?"* — und es ist **kein** Ergebnis von L2, sondern eine
+Struktureigenschaft, die vorher nirgends festgehalten war.
+
+### ✔ L3a — die Liquidation gehört an das Signal: **gebaut**
+
+**Der Befund:** `entscheidungsrechnung` rechnet `liquidation_etwa_eur`
+(Zeile 759), die Mail nennt sie (Zeile 944) — **gespeichert wurde sie nie.**
+In `signals` fehlte die Spalte, und `felder_aus_entscheidung` ließ das Feld
+deshalb **stillschweigend** fallen. Genau die Falle, die der eigene Docstring
+dort für andere Felder beschreibt.
+
+⚠️ **Rückwirkend nicht nachrüstbar.** Die Frage *„lagen unsere Hebel-Signale
+näher an der Liquidation, wenn sie scheiterten?"* ist für alles Bisherige
+dauerhaft unbeantwortbar. `hebel_positions` hat den Wert — aber das ist die
+**Position**; ein Signal, das nie zur Position wurde, hinterlässt dort nichts.
+
+**Vier Stellen, die zusammen wachsen mussten** — die Suite hat drei davon
+erzwungen:
+
+| Stelle | |
+|---|---|
+| `signal_abbildung.SPALTEN_SIGNAL` | die Spalte, additiv und idempotent |
+| `felder_aus_entscheidung` | ⚠️ **nur bei Hebel** — für Spot wäre eine Null eine erfundene Zahl |
+| `models.Signal` | ✖ **von der Suite gefangen**: `Signal` wird aus `SELECT *` gebaut, eine Spalte ohne Feld **kappt jeden Lesepfad** |
+| `extract_notebook_diagnose` | ✖ **von der Suite gefangen**: sonst ist die Spalte am Notebook unsichtbar |
+
+**Nachgewiesen, nicht behauptet:** Paket `L3` (6 Prüfungen) schreibt gegen das
+**echte** Schema (`init_db`, nachdem eine Minimalattrappe an `gate_passed`
+brach) und **liest den Wert aus der Tabelle zurück**. Die Simulation bestätigt,
+dass die Migration im Betrieb greift.
+
+### ⚠️ L3b — Finanzierungskosten: **nicht gebaut, und zwar bewusst**
+
+Zwei Gründe, beide inhaltlich:
+
+1. **Es gibt keinen hinterlegten Satz.** Weder `config.yaml` noch der Code
+   kennen einen Finanzierungssatz für Hebelprodukte. Einen zu erfinden hieße,
+   eine Zahl zu bauen, die aussieht wie eine gemessene.
+2. **Die Nutzervorgabe spricht dagegen**, sie in die Bewertung zu nehmen:
+   *„Spot und Hebel haben beides Kosten für die Wirtschaftlichkeit und je nach
+   Haltedauer, aber diese können wir zum Zeitpunkt der Handelsentscheidung
+   nicht voraussagen — aber das wollen wir auch nicht mehr."*
+
+✔ **Was daraus folgt:** Finanzierungskosten gehören wie die 1,50 % in die
+**Mail**, nicht ins Potential — und dafür braucht es den echten Satz vom
+Nutzer oder von Bitpanda. **Offen, mit benanntem Grund.**
+
+**Suite: 1.732 Prüfungen, alle bestanden.**
