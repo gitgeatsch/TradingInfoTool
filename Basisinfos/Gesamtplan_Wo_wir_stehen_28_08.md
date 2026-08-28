@@ -175,3 +175,86 @@ ist teuer.* Mehr trägt nicht.
 
 Verwandt: `Roter_Faden_27_08.md` · `Anforderungen_Umbau_28_08.md` ·
 `Kombinationsmatrix_27_08.md` · `Befund_Lage_27_08.md`
+
+
+---
+
+# NACHTRAG 28.08. abends — der Stand nach B+C, L2 und L3
+
+## ⚠️ Der Befund, der alles andere überlagert: DER HEBEL IST STILLGELEGT
+
+**Gemessen am NB-Export vom 26.08.** (der Desktop-Bestand ist alt — 118
+Signale, jüngstes vom 21.07., keines aus der Rollen-Kette).
+
+| Tabelle | Zeilen | jüngstes Signal | aus der Rollen-Kette |
+|---|---|---|---|
+| `hebel_signals` (alte Kette) | 1.998 | ⚠️ **10.08.2026** | 0 |
+| `spot_signals` | 5.296 | 26.08.2026 | **2.313** |
+
+**Seit dem Vollumstieg am 15.08. ist kein einziges Hebel-Signal mehr
+entstanden.** Die Ursache ist strukturell und stand nirgends:
+
+```
+INSTRUMENTE_JE_GRUPPE = { "krypto": ("spot",), ... }
+```
+
+`laeufe()` liefert für Krypto genau **einen** Lauf: `spot`. Der alte Weg, der
+Hebel erzeugte (`budget_allocator`, `hebel_screening`), wird von seinen Gates
+übersprungen. **Beides zusammen heißt: der Hebel hat keinen Erzeuger mehr.**
+
+### Und die Antwort auf *„echte Hebelsignale oder verkappte Spot?"*
+
+**Verkappte Spot — belegt.** Die 2.313 Signale der Rollen-Kette tragen zu
+49,5 % einen `hebel`-Wert, aber:
+
+| Zeitraum | n | Median | max | über 3,0 |
+|---|---|---|---|---|
+| vor 18.08. | 365 | 3,70 | **10,00** | 67,1 % |
+| ab 18.08. (S5) | 781 | **1,00** | 6,00 | 10,0 % |
+| **ab 22.08.** | 153 | **1,10** | **2,20** | **0,0 %** |
+
+✔ **S5 hat gewirkt** — der Rauschboden hat den Hebel ohne Deckel auf
+höchstens 2,20 gebracht. Die Entscheidung vom 27.08., *keinen* festen Deckel
+bei 3,0 zu setzen, ist damit an Betriebsdaten bestätigt.
+
+⚠️ **Aber ein Hebel von 1,10 ist kein Hebel.** 34,6 % der jüngsten Signale
+stehen auf genau 1,0 oder darunter. Was das System heute erzeugt, sind
+Spot-Signale mit einem Dimensionierungsfaktor — **keine Hebelprodukte.**
+
+**Das ist keine Messfrage mehr, sondern eine Entscheidung:** entweder Krypto
+bekommt in `INSTRUMENTE_JE_GRUPPE` einen zweiten Lauf (`hebel`), oder das
+Instrument `hebel` wird als stillgelegt dokumentiert wie die Tranchen.
+⚠️ **Solange beides nicht entschieden ist, führt das System ein Instrument in
+Doku, Prüfungen und Paar-Matrix, das nichts erzeugt.**
+
+---
+
+## Was seit dem 27.08. erledigt ist
+
+| | | |
+|---|---|---|
+| **A** | `strategie` je Asset, auf Krypto begrenzt | ✔ |
+| **B** | Positionsführung — eine Position je Symbol | ✔ |
+| **C** | Akkumulation ohne Trailing | ✔ |
+| **L1** | Potentialmaß mit 0,30 % | ✔ **entfällt** — 0,00 % ist nach N-5 richtig |
+| **L2** | Kern-Assets ohne Hebel | ✔ **war schon durch A geschlossen** |
+| **L3a** | Liquidation am Signal | ✔ gebaut, 4 Stellen, Migration greift |
+| **L4/L5** | Cooldown je Strategie und Ergebnis | ✔ −56 % Meldungen |
+| **B+C** | Akkumulations-Lagezeile, Kern ohne Satz | ✔ in der simulierten Mail nachgewiesen |
+| — | Abkapselung des alten Wegs, 4 Riegel | ✔ |
+| — | Akkumulations-Signalmaß gemessen | ✔ trägt — **nicht** bei BTC/ETH/SOL |
+
+## Was offen ist — vor dem Primärthema
+
+| # | | Warum es offen ist |
+|---|---|---|
+| **H-1** | ⚠️ **Hebel hat keinen Erzeuger** | **Entscheidung, keine Messung** — siehe oben |
+| **L3b** | Finanzierungskosten | **kein Satz hinterlegt.** Einen zu erfinden hieße, eine Zahl zu bauen, die aussieht wie eine gemessene. Gehört wie die 1,50 % in die Mail, nicht ins Potential |
+| **N-9** | `fakten_roh` erreicht keine Mail | elf Zusatzfakten + Lagebild von Rolle A, seit 13.08. |
+| **NB** | Verifikation am Notebook | `git pull` + Neustart genügt (Migrationen laufen selbst) — **aber die Suite muss dort grün sein**, nicht nur hier |
+
+## Und dann: das Primärthema
+
+**L6 — nur ein tragender Beitrag im Potential.** Unverändert die einzige
+Lücke, die kein Umbau schließt. Die drei Wege stehen oben in Abschnitt 4:
+Fremdquellen (19.09. / 22.10.), Nachrichten, oder das Ziel neu fassen.
