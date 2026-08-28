@@ -346,3 +346,52 @@ Werkzeug führt Zeile 573 als „lebt"; das Urteil ist falsch.
 geredet wird, gehört geklärt, ob das Risikobudget eine **Grenze** sein soll
 oder eine **Rechengröße**. Heute ist es eine Rechengröße — und wird in drei
 von vier Fällen überschritten.
+
+
+---
+
+## 9. Ein hartes Budget — durchgerechnet an denselben 1.033 Signalen
+
+**Hart** heißt: der **Betrag** folgt dem Stop, statt den Hebel auf 1 zu decken.
+
+```
+heute   betrag = Wunsch,            L = max(1, VA/stop)   ->  Risiko = betrag x stop
+hart    L = max(1, VA/stop),        betrag = Budget / (L x stop)
+```
+
+| Variante | Median L | L ≥ 3 | Median Einsatz | über Budget |
+|---|---|---|---|---|
+| **heute** — VA 6 %, Rauschboden, weich | 1,00 | 0,2 % | 500 € | ⚠️ **74,3 %** |
+| **1** — VA 6 %, Rauschboden, **hart** | 1,00 | 0,2 % | **375 €** | ✔ **0,0 %** |
+| **2** — VA 12 %, Rauschboden, hart | 1,50 | 12,5 % | 500 € | ✔ 0,0 % |
+| **3** — VA 12 %, Widerlegungspreis, hart | **4,48** | **76,4 %** | 500 € | ✔ 0,0 % |
+
+✔ **Ein hartes Budget hält exakt** — Median = Maximum = Budget, in allen
+1.033 Fällen. Der Mindestbetrag von 25 € wird nie unterschritten (Minimum
+86 €). Bei VA 6 % sinkt der Einsatz auf 375 €, was **1,3-mal so viele
+gleichzeitige Positionen** erlaubt.
+
+⚠️ **Aber ein hartes Budget bringt keine Hebel.** Variante 1 hat denselben
+Median-Hebel wie heute (1,00). Es behebt die Überschreitung, nichts sonst.
+
+### Warum beide Probleme dieselbe Ursache haben
+
+```
+L = VA / stop     =>     L x stop = VA     =>     Risiko = Betrag x VA = Budget
+```
+
+**Solange L > 1 ist, hält das Budget von selbst** — die Formel ist in sich
+richtig. Das Problem entsteht **ausschließlich** dort, wo `L < 1` und der
+Deckel auf 1,0 greift. Und das ist genau dort, wo der Stop weiter ist als der
+Verlustanteil.
+
+✔ **Budgetüberschreitung und fehlender Hebel sind zwei Symptome eines
+Zustands: der Stop ist weiter als der Verlustanteil.** Wer das löst, löst
+beides — und wer nur das Budget hart macht, löst nur die Hälfte.
+
+### Was das für die Reihenfolge heißt
+
+| | |
+|---|---|
+| **sofort, ohne Entscheidung** | Das harte Budget ist eine **Korrektur**, keine Strategieänderung: das System hält damit ein Limit ein, das es sich selbst gegeben hat. 74,3 % → 0 % Überschreitung, ohne dass sich am Handel etwas ändert |
+| **danach, mit Entscheidung** | Verlustanteil und Stopquelle — sie bestimmen, ob es überhaupt Hebel gibt |

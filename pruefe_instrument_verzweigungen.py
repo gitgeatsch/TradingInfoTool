@@ -102,7 +102,19 @@ URTEIL = {
         "tot", "bekommt das Lauf-Etikett aus `rechne()` - die CRV-Abstufung "
                "unterscheidet Spot und Hebel seit S6b nicht mehr"),
     ("entscheidungsrechnung.py", "rechne"): (
-        "lebt", "✔ A1 (23.08.): fragt jetzt `hebel_handelbar` und leitet das "
+        "tot", "⚠️ URTEIL KORRIGIERT 28.08.2026 - es stand auf \"lebt\" und "
+               "war fuer EINE der drei Fundstellen falsch. Zeile 573 fragt "
+               "`if instrument != \"hebel\"` - NEGIERT, deshalb fiel sie beim "
+               "Durchsehen nicht auf. Seit S6b ist die Bedingung immer wahr, "
+               "und damit gilt `risiko_quelle = \"folgt aus Betrag und "
+               "Stopabstand\"` fuer JEDES Signal: das Risikobudget ist keine "
+               "Grenze mehr, sondern ein Ergebnis. Gemessen an 1.033 "
+               "Einstiegen seit dem 19.08.: 74,3 %% haben einen rechnerischen "
+               "Hebel unter 1,0, und der Deckel auf 1,0 ueberschreitet das "
+               "Budget im Median um 46 %%, im Maximum um 480 %%. "
+               "Die uebrigen Fundstellen (595, 773) sind weiterhin der "
+               "Rueckfall aus A1 (23.08.): dort fragt `rechne` "
+               "`hebel_handelbar` und leitet das "
                 "Etikett aus `hebel_noetig` ab. Das verbliebene "
                 "`instrument`-Muster ist der RUECKFALL fuer die alten Ketten, "
                 "die beide Laeufe noch haben"),
