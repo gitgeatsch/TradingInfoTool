@@ -477,7 +477,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            ist_short: bool = False,
            stop_min_atr: float | None = None,
            marke_stop_eur: float | None = None,
-           hebel_handelbar: bool | None = None) -> dict:
+           hebel_handelbar: bool | None = None,
+           risikobudget_hart: bool = False) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -760,6 +761,67 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
             kurs * (1 + 1 / hebel) if ist_short else kurs * (1 - 1 / hebel), 2)
     else:
         e["hebel"] = 1.0
+        # HARTES BUDGET AUCH OHNE HEBEL (28.08.2026).
+        #
+        # ⚠️ DIE KORREKTUR GAB ES SEIT DEM 15.08. - aber nur im Hebel-Zweig
+        # darueber, und der wird bei weitem Stop nie betreten. Ihre Begruendung
+        # gilt hier woertlich genauso: "faellt der noetige Faktor unter 1,
+        # heisst das, die UNGEHEBELTE Position riskiert schon mehr als das
+        # Budget hergibt. Die Untergrenze hat den Ueberschuss nicht beseitigt,
+        # sondern VERSCHWIEGEN."
+        #
+        # GEMESSEN, wie oft das eintritt: 768 von 1.033 Einstiegssignalen seit
+        # dem 19.08. (74,3 %) haben einen rechnerischen Faktor unter 1,0. Das
+        # Budget wurde im Median um 46 % ueberschritten, im Maximum um 480 %.
+        #
+        # ⚠️ WAS DAS NICHT LOEST: Hebel entstehen dadurch keine. Der Faktor
+        # bleibt 1,0; nur die Groesse wird kleiner. Beides - fehlender Hebel
+        # und Budgetueberschreitung - hat dieselbe Ursache (der Stop ist
+        # weiter als der Verlustanteil), aber nur die zweite ist eine
+        # Korrektur. Die erste waere eine Entscheidung.
+        #
+        # ⚠️ UND DER STOP BLEIBT EINE RECHENGROESSE, keine Order (siehe
+        # `risiko_quelle` oben): bei Spot gibt es bei Bitpanda keine
+        # Stop-Order. Der Betrag am Budget auszurichten macht das Budget
+        # trotzdem wieder zu einer Grenze - ohne diese Zeile ist es nur ein
+        # Etikett auf einer Zahl, die aus etwas anderem folgt.
+        # ⚠️⚠️ DAS IST C2, KEINE KORREKTUR - und ich hatte es als Korrektur
+        # ausgegeben. Die eigene Suite hat es gestoppt (Paket Q, 14.08.):
+        #
+        #     "Bei Spot OHNE Stop-Order gibt es keine Groesse, die aus dem
+        #      Stop folgen koennte."
+        #     "Tranche 800 -> Betrag 4.800. Dort stand 960, wo der Nutzer 800
+        #      gesagt hatte - der Betrag haette am Stopabstand gehangen statt
+        #      an seiner Entscheidung."
+        #
+        # `Umbauplan_Gesamtsystem_12_08.md` fuehrt C2 als "festes Risiko oder
+        # fester Betrag - offen, GELDFRAGE". Wer den Betrag aus dem Budget
+        # ableitet, entscheidet sie.
+        #
+        # DESHALB EIN SCHALTER, UND SEINE VORGABE AENDERT NICHTS. Eingeschaltet
+        # haelt das Budget bei jeder Stopweite (gemessen an 1.033 Einstiegen:
+        # 74,3 % ueberschreiten es heute, im Median um 46 %). Ausgeschaltet
+        # bleibt der Betrag die Entscheidung des Nutzers - und der Ueberschuss
+        # wird wenigstens BENANNT statt verschwiegen.
+        if hebel_noetig and 0.0 < hebel_noetig < 1.0 and not risikobudget_hart:
+            # NICHT STILL: der Ueberschuss steht in der Rechnung, auch wenn
+            # der Betrag unangetastet bleibt. Das war der eigentliche Fehler -
+            # nicht die Groesse, sondern das Schweigen darueber.
+            e["budget_ueberschritten_um"] = round(
+                (betrag * stop_rel) / risiko_eur - 1.0, 3)
+        if hebel_noetig and 0.0 < hebel_noetig < 1.0 and risikobudget_hart:
+            _knapp = risiko_eur / stop_rel
+            if _knapp < _min:
+                # KEIN ABBRUCH - dieselbe Linie wie im Hebel-Zweig, wo ein
+                # Prozent Ueberschuss "ein Rundungsrand, keine Pathologie"
+                # heisst. Unter der Mindestgroesse bleibt der alte Betrag
+                # stehen UND der Ueberschuss wird benannt, statt ihn
+                # stillschweigend zu tragen.
+                e["budget_ueberschritten_um"] = round(
+                    (betrag * stop_rel) / risiko_eur - 1.0, 3)
+            else:
+                betrag = _knapp
+                grund = "Risikobudget (ungehebelt zu gross)"
 
     e["betrag_eur"] = round(betrag, 0)
     e["betrag_gedeckelt_durch"] = grund
@@ -770,7 +832,13 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     # 25 %, und niemand haette gesehen, dass die Zahl zu einer Groesse gehoert,
     # die es nicht mehr gibt. `verlust_am_stop_eur` war die ganze Zeit richtig,
     # weil es den Endbetrag nimmt; die beiden haetten sich widersprochen.
-    if instrument != "hebel":
+    # ⚠️ DAS ETIKETT, NICHT DER LAUF (28.08.2026, I-1). Hier stand
+    # `instrument != "hebel"` - und `instrument` ist seit S6b immer "spot".
+    # Damit wurde `risiko_eur` AUCH bei Hebel-Signalen ueberschrieben, und
+    # zwar OHNE den Hebel: bei Hebel 1,6 und 500 EUR stand `risiko_eur` auf
+    # 18,75 waehrend `verlust_am_stop_eur` 30,00 sagte. Dieselbe Groesse,
+    # zwei Zahlen - genau der Fehler aus Umbauplan 12.5.
+    if e["etikett"] != "hebel":
         e["risiko_eur"] = round(betrag * stop_rel, 2)
     # Was der Handel WIRKLICH riskiert, nachdem die Deckel gegriffen haben -
     # nicht das Budget, das hineingegeben wurde.

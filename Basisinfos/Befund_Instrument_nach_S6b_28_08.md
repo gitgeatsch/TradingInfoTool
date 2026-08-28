@@ -395,3 +395,53 @@ beides — und wer nur das Budget hart macht, löst nur die Hälfte.
 |---|---|
 | **sofort, ohne Entscheidung** | Das harte Budget ist eine **Korrektur**, keine Strategieänderung: das System hält damit ein Limit ein, das es sich selbst gegeben hat. 74,3 % → 0 % Überschreitung, ohne dass sich am Handel etwas ändert |
 | **danach, mit Entscheidung** | Verlustanteil und Stopquelle — sie bestimmen, ob es überhaupt Hebel gibt |
+
+
+---
+
+## 10. ⚠️ Das harte Budget ist C2 — und die eigene Suite hat mich gestoppt
+
+**Ich hatte es als „Korrektur, keine Strategieänderung" ausgegeben.** Das war
+falsch, und zwei bestehende Prüfungen haben es beim ersten Lauf gefangen:
+
+```
+FEHL  der Spot-Betrag haengt NICHT mehr am Stopabstand
+FEHL  oberhalb der Schwelle bleibt der Betrag wie bisher
+      -> "Wer das aendert, entscheidet C2, und das ist eine eigene Frage"
+```
+
+**Paket Q vom 14.08. hält den Grund fest:**
+
+> *„Tranche 800 → Risiko 800 × 15 % = 120 → Betrag 120 / 2,5 % = **4.800**.
+> Dort stand 960, wo der Nutzer **800** gesagt hatte — der Betrag hätte am
+> Stopabstand gehangen statt an seiner Entscheidung. Bei Spot **ohne
+> Stop-Order** gibt es keine Größe, die aus dem Stop folgen könnte."*
+
+`Umbauplan_Gesamtsystem_12_08.md` führt **C2** als *„festes Risiko oder fester
+Betrag — offen, **Geldfrage**"*. Wer den Betrag aus dem Budget ableitet,
+entscheidet sie — und das ist Nutzersache, nicht meine.
+
+### Was daraus gebaut wurde
+
+| | |
+|---|---|
+| **Schalter** `risikobudget_hart` | Vorgabe **False** — ändert **nichts** am heutigen Verhalten |
+| ✔ **Was sich trotzdem ändert** | Der Überschuss wird **benannt**: `budget_ueberschritten_um`. Das war der eigentliche Fehler — nicht die Größe, sondern das Schweigen |
+| ✔ **Unabhängige Korrektur** | `risiko_eur` folgt jetzt dem **Etikett** statt `instrument`. Vorher stand bei Hebel 1,6 dort **18,75**, während `verlust_am_stop_eur` **30,00** sagte — dieselbe Größe, zwei Zahlen |
+
+**Verhalten im Vergleich** (Budget 30 €, Wunsch 500 €):
+
+| Stop | Schalter | Betrag | Verlust | gemeldet |
+|---|---|---|---|---|
+| 3 % | egal | 500 € | 30,00 € | — *(Hebel-Zweig, hält von selbst)* |
+| 8 % | **aus** | 500 € | 50,00 € | **+67 %** |
+| 8 % | an | 300 € | 30,00 € | — |
+| 15 % | **aus** | 500 € | 93,75 € | **+212 %** |
+| 15 % | an | 160 € | 30,00 € | — |
+
+⚠️ **Und ein eigener Fehler beim Bau:** `e["betrag_eur"] = round(betrag, 0)`
+war Teil des ersetzten Blocks und fiel dabei **ersatzlos heraus** — jede
+lesende Stelle hätte `None` bekommen. In der Probe gefunden, nicht im Betrieb;
+sechs neue Prüfungen halten es jetzt fest.
+
+**Suite: 1.765 Prüfungen, alle bestanden. Simulation: 3 Gruppen, 6 Mails, 0 Fehler.**

@@ -14119,6 +14119,110 @@ def paket_instrument_reparatur() -> None:
             break
 
 
+
+def paket_hartes_budget() -> None:
+    """C2 - das Risikobudget als GRENZE, hinter einem Schalter (28.08.2026).
+
+    ⚠️ ICH HATTE DAS ALS KORREKTUR AUSGEGEBEN. Es ist keine. Die eigene Suite
+    hat mich gestoppt (Paket Q, 14.08.):
+
+        "Bei Spot OHNE Stop-Order gibt es keine Groesse, die aus dem Stop
+         folgen koennte."
+        "Tranche 800 -> Betrag 4.800. Dort stand 960, wo der Nutzer 800 gesagt
+         hatte - der Betrag haette am Stopabstand gehangen statt an seiner
+         Entscheidung."
+
+    `Umbauplan_Gesamtsystem_12_08.md` fuehrt **C2** als "festes Risiko oder
+    fester Betrag - offen, GELDFRAGE". Wer den Betrag aus dem Budget ableitet,
+    entscheidet sie - und das ist Nutzersache.
+
+    DESHALB EIN SCHALTER, dessen Vorgabe nichts aendert. Was sich auch ohne
+    ihn aendert: der Ueberschuss wird BENANNT statt verschwiegen. Das war der
+    eigentliche Fehler - nicht die Groesse, sondern das Schweigen."""
+    from agent import entscheidungsrechnung as _ER
+
+    P = "Budget"
+    BUDGET = 30.0
+
+    def _r(stop_rel, hart=False, wunsch=500.0, risiko=BUDGET):
+        return _ER.rechne(kurs=100000, atr=100000 * stop_rel / 2.0,
+                          risiko_eur=risiko, instrument="spot",
+                          betrag_wunsch_eur=wunsch, topf_frei_eur=wunsch,
+                          hebel_handelbar=True, risikobudget_hart=hart)
+
+    # ---- DIE VORGABE AENDERT NICHTS ----
+    for stop in (0.03, 0.08, 0.15):
+        pruefe(P, "ohne Schalter bleibt der Betrag der Wunsch (%.0f %% Stop)"
+               % (100 * stop),
+               _r(stop).get("betrag_eur") == 500.0,
+               "C2 ist offen - `risiko_quelle` sagt ausdruecklich, dass der "
+               "Betrag bei Spot die Entscheidung des Nutzers ist. Bekommen: "
+               "%s" % _r(stop).get("betrag_eur"))
+
+    # ---- ABER DER UEBERSCHUSS WIRD BENANNT ----
+    pruefe(P, "die Budgetueberschreitung steht in der Rechnung",
+           _r(0.08).get("budget_ueberschritten_um") is not None
+           and _r(0.08)["budget_ueberschritten_um"] > 0.6,
+           "bei 8 %% Stop und 30 EUR Budget riskiert der volle Betrag 50 EUR "
+           "- das sind 67 %% darueber. Vorher stand davon NICHTS in der "
+           "Rechnung; die Untergrenze hat den Ueberschuss verschwiegen. "
+           "Bekommen: %s" % _r(0.08).get("budget_ueberschritten_um"))
+    pruefe(P, "und nur dort, wo er auftritt",
+           _r(0.03).get("budget_ueberschritten_um") is None,
+           "bei engem Stop gilt L x stop = verlustanteil, das Budget haelt "
+           "von selbst - eine Meldung waere ein Fehlalarm")
+
+    # ---- MIT SCHALTER HAELT DAS BUDGET ----
+    for stop in (0.03, 0.06, 0.08, 0.12, 0.20):
+        r = _r(stop, hart=True)
+        pruefe(P, "mit Schalter haelt das Budget bei %.0f %% Stop"
+               % (100 * stop),
+               r.get("verlust_am_stop_eur") is not None
+               and abs(r["verlust_am_stop_eur"] - BUDGET) < 0.51,
+               "Budget %.0f EUR, gerechnet %s" % (BUDGET,
+                                                  r.get("verlust_am_stop_eur")))
+    pruefe(P, "und der Betrag traegt die Anpassung",
+           _r(0.15, hart=True)["betrag_eur"] < _r(0.03, hart=True)["betrag_eur"],
+           "eng %s gegen weit %s EUR"
+           % (_r(0.03, hart=True).get("betrag_eur"),
+              _r(0.15, hart=True).get("betrag_eur")))
+    pruefe(P, "mit Deckelgrund",
+           "Risikobudget" in str(_r(0.15, hart=True).get(
+               "betrag_gedeckelt_durch") or ""),
+           "ein stiller Deckel ist ein verschwiegener Deckel")
+
+    # ---- ⚠️ betrag_eur darf NIE fehlen ----
+    #
+    # Beim Bau habe ich `e["betrag_eur"] = round(betrag, 0)` versehentlich
+    # MITERSETZT - der Schluessel fehlte danach vollstaendig. In der Probe
+    # gefunden, nicht im Betrieb; diese Zeile haelt es fest.
+    for stop in (0.03, 0.08, 0.20):
+        for hart in (False, True):
+            pruefe(P, "betrag_eur ist gesetzt (%.0f %%, hart=%s)"
+                   % (100 * stop, hart),
+                   _r(stop, hart=hart).get("betrag_eur") is not None,
+                   "der Schluessel fiel beim Umbau heraus - jede lesende "
+                   "Stelle haette None bekommen")
+
+    # ---- risiko_eur folgt dem ETIKETT, nicht dem Lauf (I-1) ----
+    r = _r(0.03)
+    pruefe(P, "bei Hebel widersprechen sich die Risikofelder nicht",
+           r.get("etikett") == "hebel"
+           and abs((r.get("risiko_eur") or 0)
+                   - (r.get("verlust_am_stop_eur") or 0)) < 0.51,
+           "Hier stand `instrument != \"hebel\"`, und `instrument` ist seit "
+           "S6b immer \"spot\": bei Hebel 1,6 stand risiko_eur auf 18,75 "
+           "waehrend verlust_am_stop_eur 30,00 sagte. Bekommen: %s gegen %s"
+           % (r.get("risiko_eur"), r.get("verlust_am_stop_eur")))
+
+    # ---- GEGENPROBE: der Hebel-Zweig bleibt unberuehrt ----
+    pruefe(P, "ein echter Hebel behaelt den vollen Betrag - mit und ohne",
+           _r(0.03).get("betrag_eur") == 500.0
+           and _r(0.03, hart=True).get("betrag_eur") == 500.0,
+           "bei L > 1 haelt das Budget von selbst; dort darf nichts gekuerzt "
+           "werden, egal wie der Schalter steht")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -14131,7 +14235,8 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Akkumulationslage": paket_akkumulationslage,
           "T4c": paket_namensschatten,
           "L3": paket_l3,
-          "I-Reparatur": paket_instrument_reparatur}
+          "I-Reparatur": paket_instrument_reparatur,
+          "Budget": paket_hartes_budget}
 
 
 class _Mitschnitt:
