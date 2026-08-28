@@ -445,3 +445,31 @@ lesende Stelle hätte `None` bekommen. In der Probe gefunden, nicht im Betrieb;
 sechs neue Prüfungen halten es jetzt fest.
 
 **Suite: 1.765 Prüfungen, alle bestanden. Simulation: 3 Gruppen, 6 Mails, 0 Fehler.**
+
+
+---
+
+## 11. ⚠️ Die Simulation prüfte nicht den Produktionsstand
+
+**Gefunden beim Verfolgen eines echten Rechenfalls durch die Kette.** Beide
+Läufe von `simuliere_kette.py` liefen ohne die echte Konfiguration — der
+zweite mit `config={"anlass": {"aktiv": True}}`, der erste mit **gar keiner**.
+Damit fielen Einsatz und Verlustanteil auf die **Code-Vorgaben** zurück:
+
+| | Verlustanteil | bei 5,23 % Stop |
+|---|---|---|
+| **Simulation** (Code-Vorgabe) | **15 %** | Hebel **2,87** |
+| **Produktion** (`config.yaml`) | **6 %** | Hebel **1,15** |
+
+⚠️ **Die Simulation zeigte einen echten Hebel, wo der Betrieb keinen erzeugt.**
+Sie prüft die Kette zuverlässig — aber sie prüfte nicht die **Beträge** des
+Produktionsstands, und genau die sind seit S5 die Frage.
+
+✔ **Behoben:** `_echte_config()` lädt `config.yaml` und setzt nur
+`anlass.aktiv` — der Zweck der ursprünglichen Zeile bleibt erhalten. Nach der
+Korrektur zeigt die Simulation: Budget 48 €, Stop 5,23 %, `hebel_noetig` 1,15,
+Hebel **1,1**, Verlust 46,04 € (unter dem Budget, weil L > 1).
+
+**Und es ist ein unfreiwilliger Beleg:** Bei 15 % Verlustanteil entsteht ein
+Hebel von 2,9 — bei 6 % einer von 1,1. Dieselbe Geometrie, dieselbe Kette,
+nur die eine Zahl unterschiedlich.

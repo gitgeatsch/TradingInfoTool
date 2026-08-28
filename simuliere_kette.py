@@ -65,6 +65,34 @@ _DATUM = _re.compile(r"\b\d{1,2}\.\d{1,2}\.(?:\d{2,4})?")
 NUR_SYMBOLE: set = set()
 
 
+def _echte_config() -> dict:
+    """Die Konfiguration des BETRIEBS, nicht eine Minimalattrappe.
+
+    ⚠️ GEFUNDEN AM 28.08.2026. Der zweite Lauf uebergab
+    `config={"anlass": {"aktiv": True}}`, der erste gar nichts - beide fielen
+    damit auf die CODE-Vorgaben zurueck statt auf `config.yaml`. Folge:
+
+        Simulation   verlustanteil 15 %  ->  bei 5,23 % Stop Hebel 2,87
+        Produktion   verlustanteil  6 %  ->  bei 5,23 % Stop Hebel 1,15
+
+    Die Simulation zeigte also einen echten Hebel, wo der Betrieb keinen
+    erzeugt. Sie prueft die KETTE zuverlaessig, aber sie prueft nicht die
+    BETRAEGE des Produktionsstands - und genau die sind seit S5 die Frage.
+
+    `anlass.aktiv` bleibt gesetzt: der Anlassfilter soll in der Simulation
+    laufen, das war der Zweck der ursprfuenglichen Zeile."""
+    import config as _C
+
+    cfg = dict(_C.load_config() or {})
+    cfg.setdefault("anlass", {})
+    if isinstance(cfg["anlass"], dict):
+        cfg["anlass"] = dict(cfg["anlass"])
+        cfg["anlass"]["aktiv"] = True
+    else:
+        cfg["anlass"] = {"aktiv": True}
+    return cfg
+
+
 def _englische_zahlen(text: str) -> list[str]:
     """Zahlen in englischer Schreibweise. Genau drei Ziffern nach dem Punkt
     gelten als Tausendergruppe (1.234,5) und zaehlen nicht; Datumsangaben
@@ -460,6 +488,7 @@ def main() -> int:
                 conn=conn, reihen=reihen, symbole=auswahl,
                 betriebsart="probe", instrument=instrument,
                 strategie="einstieg", client=modell, modell="attrappe",
+                config=_echte_config(),
                 db=db, zai_client=zai, assetklasse=gruppe, versand=None)
         except Exception as exc:                             # noqa: BLE001
             gesamt["fehler"].append(f"{gruppe}/{instrument}: "
@@ -642,7 +671,7 @@ def main() -> int:
                 betriebsart="probe", instrument=instrument,
                 strategie="einstieg", client=modell2, modell="attrappe",
                 db=db, zai_client=ZaiAttrappe(), assetklasse=gruppe,
-                versand=None, config={"anlass": {"aktiv": True}})
+                versand=None, config=_echte_config())
             conn.commit()
         finally:
             conn.close()
