@@ -3510,6 +3510,276 @@ Docstring — *„`regime` war auf allen 1.022 Fällen 'baer' … kam deshalb 1 
 (`enthaelt_werturteile`), Konstanten-Wächter (`finde_konstanten`),
 Kausalitätsprobe (Beschreibung aus voller Reihe gegen abgeschnittene, bitgleich).
 
+
+**R-A13 — Die Strategie gehört zum ASSET, nicht zum Lauf** (A, 27.08.2026,
+`handelsauftrag.strategie_fuer()`). Ein Krypto-Asset mit gesetztem
+Akkumulations-Schalter läuft als `akkumulation`, alle anderen als `einstieg`.
+
+⚠️ **Nur Krypto, und nur auf der Spot-Seite.** `nur_klassen={"krypto"}` hält
+den Schalter von Aktien und ETFs fern — dort ist Akkumulation ohne Stop etwas
+anderes (Handelszeiten, Kurslücken über Nacht, −80 % ist meist ein
+Fundamentalproblem statt eines Zyklus). Und `if i != "spot"` hält ihn von der
+Hebel-Seite fern.
+
+**Standard sind BTC, ETH, SOL** (`_DCA_ERLAUBT_DEFAULT_SYMBOLS`, gekürzt am
+28.08. von 16 auf 3). Die 13 zuvor enthaltenen Aktien/ETFs stammten aus der
+Tranchen-Zeit und stellten die GUI-Spalte auf „An", ohne zu wirken.
+
+---
+
+**R-A14 — Eine Position je Symbol, nicht je Signal** (B, 27.08.2026,
+`agent/positionsfuehrung.py`). Bei Akkumulation vertritt das **jüngste** Signal
+die Position; die Zahl dahinter steht in der Mail („eine Position aus 17
+Signalen"). BTC hatte am 26.08. siebzehn offene Signale, ETH zwölf, SOL sechs.
+
+⚠️ **Seit dem 28.08. liest die Führung BEIDE Quellen** (`signals` und
+`hebel_signals`). Vorher wählte sie eine Tabelle über `instrument == "hebel"` —
+und seit S6b ist `instrument` immer `"spot"`, also wurde `hebel_signals` nie
+gelesen. Ein Symbol mit Hebelposition erschien nur mit seinem Spot-Teil.
+
+⚠️ **Das Modul ist gebaut und geprüft, aber noch nicht verdrahtet** (offener
+Punkt B1). Es steht in der Toten-Liste der Modulkarte.
+
+---
+
+**R-A15 — Akkumulation hat keinen Stop und kein H** (C + I-4, 27./28.08.2026).
+`ausstiegsrechnung` gibt bei `strategie == "akkumulation"` keine
+Trailing-Empfehlung, und der Vorfilter H wird übersprungen.
+
+**Der Grund ist das Erfolgsmaß, nicht die Bequemlichkeit.** `handelsauftrag`
+gibt der Akkumulation ausdrücklich *„Durchschnittskurs und Endvermögen statt
+Ziel vor Stop"*. H ist eine **Barrierenfrage** (Ziel vor Stop, bei CRV 2,0
+gemessen) — auf eine Strategie ohne Barriere angewandt liefert es eine Zahl
+aus der falschen Messung.
+
+⚠️ **Die Rechnung liefert trotzdem einen Stop.** Ohne die ausdrückliche
+Ausnahme hätte H ihn genommen und geurteilt.
+
+---
+
+**R-A16 — Der Kern bekommt keinen Verbilligungssatz** (B+C, 28.08.2026,
+`agent/akkumulationslage.py`). Die Lage zum eigenen 200-Tage-Schnitt steht in
+der Mail; die daraus gemessene Verbilligungserwartung **nur bei Werten
+außerhalb von BTC/ETH/SOL**.
+
+**Gemessen** (`messe_akkumulationsmass.py`, 505 lückenlose Krypto-Reihen,
+sieben Kontrollen bestanden):
+
+| | Rang | p |
+|---|---|---|
+| 505 Reihen, UNTER_SMA, H=90 | **+0,0283** | 0,000 |
+| BTC | −0,0251 | 0,723 |
+| ETH | −0,0308 | 0,810 |
+| SOL | −0,0291 | 0,855 |
+
+Kein n=3-Rauschen: Streuung je Symbol 0,0397, die Kernwerte liegen **2,39
+Standardfehler** unter dem Mittel; nur 14,3 % aller Symbole sind negativ, alle
+drei darunter. ⚠️ **`spot × akkumulation` ist genau auf diese drei
+freigeschaltet** — der Befund hat damit keinen Anwendungsort, an dem er gilt.
+
+Die Mail sagt das ausdrücklich: *„für BTC ist die Verbilligung NICHT belegt —
+dieser Wert wird gehalten, weil er überleben soll, nicht weil der Zeitpunkt
+günstig ist."*
+
+---
+
+**R-A17 — Die Sachfrage „ist das ein Hebelgeschäft?" steht an EINER Stelle**
+(I-1, 28.08.2026, `handelsauftrag.ist_hebelgeschaeft()`). Sie liest das
+**Ergebnis-Etikett** der Rechnung; `instrument` bleibt Rückfall für Aufrufer
+ohne Rechnung.
+
+⚠️ **Warum das nötig wurde.** Seit S6b (22.08.) gibt es nur noch einen Lauf je
+Asset, `INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot",)`. Zwölf Stellen fragten
+weiter `instrument == "hebel"` und bekamen seither **immer nein**:
+
+| Stelle | Folge | Stand |
+|---|---|---|
+| `asset_schalter.py:89` | der Hebel-Schalter je Asset wurde **nie gefragt** | ✔ behoben (I-1b) |
+| `positionsfuehrung.py:164` | `hebel_signals` **nie gelesen** | ✔ behoben (I-3) |
+| `trefferbilanz.py:191` | Kosten mit Spot-Tier: **0,60 R statt 0,76 R** (21 % zu wenig) | ✔ behoben (I-1a) |
+| `entscheidungsrechnung.py:573` | ⚠️ **negiert formuliert** (`!= "hebel"`) — das Risikobudget ist dadurch keine Grenze | siehe R-A18 |
+
+**Dauerprüfung:** `pruefe_instrument_verzweigungen.py` führt alle 22 Stellen
+mit Urteil (11 weiterhin tot, jede begründet).
+
+---
+
+**R-A18 — Das Risikobudget ist heute eine Rechengröße, keine Grenze — und das
+Umlegen ist C2** (28.08.2026).
+
+```
+risiko_quelle = "folgt aus Betrag und Stopabstand"    entscheidungsrechnung.py:576
+```
+
+**Gemessen an 1.033 Einstiegssignalen seit dem 19.08.** (nach S5): **768 =
+74,3 %** haben einen rechnerischen Hebel unter 1,0. Der Deckel auf 1,0 lässt
+den vollen Betrag investieren — das Budget wird im **Median um 46 %**
+überschritten, im 75. Perzentil um 83 %, maximal um 480 %.
+
+⚠️ **Die Formel ist in sich richtig.** `L = VA/stop` heißt: bei 8 % Stop dürfte
+nur 0,75 × der Einsatz investiert werden. Solange **L > 1** ist, hält das
+Budget von selbst (`L × stop = VA`). Das Problem entsteht **ausschließlich**
+dort, wo L < 1 — also wo der Stop weiter ist als der Verlustanteil.
+
+**Was seit dem 28.08. gilt:**
+
+| | |
+|---|---|
+| **Vorgabe unverändert** | Der Betrag bleibt die Entscheidung des Nutzers. `risikobudget_hart = False` |
+| ✔ **Neu: der Überschuss wird benannt** | `budget_ueberschritten_um` steht in der Rechnung. Das war der eigentliche Fehler — nicht die Größe, sondern das Schweigen |
+| **Schalter liegt bereit** | `risikobudget_hart = True` lässt den **Betrag** dem Budget folgen: 0 Überschreitungen in allen 1.033 Fällen, Mindestgröße nie unterschritten |
+
+⚠️ **Das Umlegen ist C2, keine Korrektur.** `Umbauplan_Gesamtsystem_12_08.md`
+führt sie als *„festes Risiko oder fester Betrag — offen, Geldfrage"*. Paket Q
+(14.08.) hält den Grund fest: *„Bei Spot OHNE Stop-Order gibt es keine Größe,
+die aus dem Stop folgen könnte"* — und *„dort stand 960, wo der Nutzer 800
+gesagt hatte"*.
+
+---
+
+## Die sechs Stufen des Ablaufs — Bezeichnung, Aufgabe, Wirkung
+
+⚠️ **NACHGETRAGEN AM 29.08.2026 auf Nutzereinwand.** Der Ablauf war über R-A1
+bis R-A18 verteilt beschrieben, aber nirgends **als Ablauf**. Drei Stufen
+tragen zudem einen Namen, der ihre Aufgabe falsch beschreibt — das ist der
+Grund, warum sich das System nicht mehr einordnen ließ.
+
+⚠️ **Trichter ist nicht gleich Ablauf.** Die elf Trichterstufen sind eine
+**Zählung** („wo verlieren wir Signale"), keine Ablaufbeschreibung. Sie sind
+über die sechs Stufen unten verteilt.
+
+### 1 · Der Takt
+
+| | |
+|---|---|
+| **Was es ist** | ⚠️ **kein eigener Job.** `fuehre_umlauf` hängt im `hebel_screening_job` |
+| **Frequenz** | alle **15 Minuten** (`HEBEL_SCREENING_INTERVAL_MINUTES = 15`) |
+| **Aufgabe** | anstoßen — sonst nichts |
+| **Wirkung** | ⚠️ **er ist heute faktisch der Auslöser.** Läuft der Cooldown ab, wird gefragt |
+| **Nutzen** | Ohne Takt kein Betrieb. Als *Begründung* wertlos — Regel 1 des Ziels: „Der Takt ist nie Signalgeber" |
+
+⚠️ **Der Name ist historisch.** Der Job hieß so, als er Hebel screente; beim
+Vollumstieg wurde der Umlauf hineingehängt, statt einen eigenen zu bauen. Wer
+den Herzschlag der Rollen-Kette sucht, findet ihn unter „Hebel-Screening".
+
+### 2 · Die Vorstufe
+
+| | |
+|---|---|
+| **Korrekt** | **Faktenaufbau und Formprüfung** — `rollen_eingabe.baue_fall()` plus Trichterstufen 1–2 |
+| **Aufgabe** | aus Kursen, Beständen, Marktdaten **einen** Faktensatz bauen und prüfen, ob er zum Urteilen reicht |
+| **Was sie TUT** | Kurs und ATR aus der Reihe · Bestand aus beiden Quellen · Marken (Unterstützung, Widerstand) · das Lagebild von Rolle A einsetzen · Mindestkriterien prüfen (R-R1 bis R-R3) |
+| **Was sie NICHT tut** | ⚠️ **keine Bewertung.** Sie prüft *Vollständigkeit*, nicht *Güte*. „Faktenlage ausreichend" heißt „genug zum Fragen", nicht „gut genug zum Handeln" |
+| **Nutzen** | Hoch. Sie ist die „eine Stelle" gegen sechs Kopien — bis 12.08. baute jedes Messskript die Eingabe selbst |
+
+✔ **Aufgabe klar, eingehalten, sinnvoll integriert.** Hier ist nichts zu ändern.
+
+### 3 · LLM 1 · Rolle A
+
+| | |
+|---|---|
+| **Korrekt** | **Rolle A — die Marktlage** (`rolle_analyst`) |
+| **Aufgabe, wörtlich** | *„Wie viel Risiko ist heute angemessen?"* |
+| **Häufigkeit** | **ein** Aufruf je Durchgang, nicht je Asset. Bei 40 Coins: 1 statt 40 |
+| **Was sie NICHT tut** | kein Asset ansehen (R-A1) · keinen Betrag nennen (R-A2) · keine Konfidenz nennen (R-A3) |
+| **Nutzen** | Hoch, und die Abgrenzung *ist* der Nutzen: sie kann nicht vom Einzelfall her rationalisieren |
+
+### 4 · LLM 1 · Rolle BC
+
+| | |
+|---|---|
+| **Korrekt** | **Rolle BC — Aufbau beurteilen und daraus handeln** (`rolle_trader`) |
+| **Aufgabe** | zwei Rollen in **einem** Aufruf: bewerten *und* die Handlung folgern |
+| **Häufigkeit** | ein Aufruf **je Asset** |
+| **Warum zusammengelegt** | getrennt wären es rund 162 Aufrufe täglich statt 40 — Nutzerentscheidung 10.08.: „nicht tragbar". Anchoring ist hier **gewollt**: die Handlung soll auf den Belegen aufbauen |
+
+### 5 · Die Gegenprüfung — zwei verschiedene Dinge
+
+| | **Z1** | **Rolle G / Z.ai** |
+|---|---|---|
+| Modul | `gegenpruefer_rollen` | `zweite_meinung` |
+| Art | **deterministisch**, kostenlos | **zweites Modell** (LLM 2) |
+| Frage | *Ist die Antwort ihrer eigenen Faktenlage treu?* | *Ist das Urteil klug?* |
+| prüft | Zahlendeckung, Richtungstreue, Zuspitzung, Leerlauf | den Fall inhaltlich |
+| Wirkung | **zählt, verwirft nicht** | 49,8 % der Signale, jüngste 26.08. |
+| Zeitpunkt | in der Kette | ⚠️ **nach der Mail**, in einem Thread |
+
+⚠️ **`positionierung.py` ist NICHT Rolle G** — es liefert nur die Fakten, die
+Rolle G bekannt gemacht werden („die Fakten, die der Trader nicht sieht").
+
+⚠️ **Rolle Gs Aufgabe widerspricht ihrem Zeitpunkt:** eine Gegenprüfung nach
+dem Versand kann nichts mehr verhindern. Sie ist heute eine
+**Nachdokumentation**, keine Prüfung.
+
+### 6 · Der „Vorfilter" — ein **Nachmerkmal**
+
+| | |
+|---|---|
+| **Korrekt** | **Nachmerkmal H** — es filtert nicht, es beschreibt |
+| **Aufgabe heute** | zwei Mailzeilen schreiben, das Urteil speichern |
+| **Wirkung** | **keine.** Kein Signal wird verhindert, keine Reihenfolge geändert, kein Budget umgelenkt |
+| **Position** | Zeile 1741 — **nach** Rolle BC (1108), **nach** der Rechnung (1517), **nach** dem Entscheider (1592) |
+
+**Warum es nicht vorn stehen kann — technisch zwingend:**
+
+```
+vorfilter.bewerte(marken_werte, stop_eur, ziel_eur, ist_short, assetklasse)
+  -> Stop und Ziel entstehen in der Rechnung (Zeile 1517)
+     -> die Rechnung braucht das Urteil von Rolle BC (Zeile 1108)
+        -> H kann fruehestens ab Zeile 1517 laufen
+```
+
+⚠️ **Der Grund ist NICHT, Datenverlust zu vermeiden.** Der Docstring nennt die
+eigentliche Abwägung: *„Dort standen Stop und Ziel auf fester Geometrie
+(k × ATR, CRV 2,0); hier stehen die **echten** Werte des Signals."*
+
+**Ein echter Vorfilter würde also nicht Information abschneiden, sondern über
+eine FREMDE Geometrie urteilen** — über k × ATR statt über den Stop, den das
+Signal tatsächlich hat. Die Abwägung fiel zugunsten der echten Werte; die
+Folge ist, dass H nichts mehr sparen kann.
+
+**Drei mögliche Aufgaben, und keine ist entschieden:**
+
+| H steht … | braucht | kann | Preis |
+|---|---|---|---|
+| **vorn** | feste Geometrie (k × ATR, CRV 2,0) | Modellaufrufe **sparen** | urteilt über eine Geometrie, die nicht die gehandelte ist |
+| **hinten** *(heute)* | das fertige Signal | nur beschreiben | der Aufruf ist längst bezahlt |
+| **in Stufe 11** | das fertige Signal — *wie heute* | die Handlung **begründen** oder verwerfen | keiner: dieselbe Stelle, nur mit Wirkung |
+
+⚠️ **Nur die dritte Zeile passt zum Ziel, und sie kostet nichts.** Was fehlt,
+ist nicht die Position, sondern die **Wirkung**.
+
+### Wo Trichter und Quoten liegen
+
+**Der Trichter** ist über die Stufen 2 bis 6 verteilt und **zählt**, wo Signale
+verloren gehen. Elf Stufen, drei Arten von Aufgabe:
+
+| Art | Stufen | Was sie prüfen |
+|---|---|---|
+| **Form** (7) | auftrag · fakten · lagebild · urteil · aktion · geometrie · risikoschicht | ist die Eingabe brauchbar, die Ausgabe verwertbar? |
+| **Kosten** (2) | anlass · wiederholung | lohnt der Modellaufruf? |
+| **Inhalt** (2) | **auswahl** · **entscheider** | ist das ein guter Fall? |
+
+⚠️ **Nur zwei Stufen fragen nach Inhalt — und keine nach dem Potential.**
+`auswahl` fragt *relativ* („gehört er zu den besten k?"), `entscheider`
+**zählt nur** und hätte als Maßstab die Gebührendeckung.
+
+**Die Quoten** sind keine eigene Stufe, sondern Rechengrößen:
+
+| | |
+|---|---|
+| **Basisrate** | `1/(1+CRV)` — was ein Barrierensystem auf driftfreiem Pfad ohnehin trifft. Bei CRV 2,0 also 33,3 %. **Keine Leistung, Geometrie** |
+| **Quote** | Basisrate **plus** Beiträge. Heute trägt genau **einer** von fünf: Vorfilter H mit +4,5 Punkten |
+| **Breakeven** | `(1+Kosten)/(1+CRV)` — die Quote, ab der sich der Handel **nach Gebühren** trägt. Bei 3 % Spot-Kosten und CRV 2,0: **53,3 %** statt 33,3 % |
+| **Potential** | `quote × CRV − (1−quote)` — der Erwartungswert in R, **gebührenfrei** |
+
+⚠️ **Das Potential ist bei reiner Basisrate per Konstruktion NULL** — bei jedem
+CRV. Nur was die Quote über ihre Basisrate hebt, erzeugt Potential. Heute ist
+das ausschließlich H, und H läuft als Schatten bis etwa 19.09.2026.
+
+⚠️ **`potential.py` ist gebaut, geprüft — und an nichts angeschlossen.** Kein
+Modul importiert es.
+
 ---
 
 # Nachtrag 2026-08-13: Einstieg, Ausstieg und Gate der Rollen-Kette
