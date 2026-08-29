@@ -4035,6 +4035,100 @@ entscheiden, wo sich das Warten lohnt.
 
 ---
 
+## Die vollständige Matrix — jede Stufe, drei Prüffragen
+
+⚠️ **NACHGETRAGEN AM 29.08.2026, ZWEITER ANLAUF.** Der erste Versuch lieferte
+Fließtext mit Sammelurteilen („zehn von elf einwandfrei") statt der einzelnen
+Zeilen. Damit war das Gesamtbild nicht bewertbar. Hier steht **jede** Stufe
+einzeln.
+
+**Die drei Prüffragen:**
+
+| | |
+|---|---|
+| **F1** | Was ist die konkrete Aufgabe — heute bzw. laut Plan? |
+| **F2** | Erfüllt die Stufe ihren Zweck **für sich selbst**? |
+| **F3** | Erfüllt sie ihn **für die weiteren Abläufe** — also für alles, was danach kommt? |
+
+**Namenskonvention in diesem Abschnitt:** jede Stufe wird mit Nummer **und**
+Namen genannt. „Stufe 11" allein ist keine Auskunft.
+
+---
+
+### Teil A — Die elf Trichterstufen einzeln
+
+| Nr | Stufe | F1 · Aufgabe | F2 · für sich | F3 · für die weiteren Abläufe |
+|---|---|---|---|---|
+| **1** | **Auftrag**<br>„Instrument und Strategie erlaubt" | Prüft das Paar gegen `ERLAUBTE_PAARE`. Verhindert `hebel × akkumulation` und `absicherung × swing` | ✔ **ja** | ⚠️ **nein.** Sie läuft **einmal am Lauf-Anfang mit der Vorgabe**. Danach setzt R-A13 (Strategie gehoert zum Asset) die Asset-Strategie, und die Rechnung erzeugt das Etikett — beides ungeprüft. Seit I-2 wird der Konflikt wenigstens **gemeldet** |
+| **2** | **Fakten**<br>„Faktenlage ausreichend" | Mindestkriterien R-R1 bis R-R3: reicht die Datenlage zum Fragen? | ✔ **ja** | ⚠️ **teilweise.** Sie prüft, was **Rolle BC** braucht. Die elf Zusatzfakten (N-9) prüft sie nicht — die erreichen ohnehin keine Mail |
+| **3** | **Lagebild**<br>„Lagebild geliefert" | Hat **Rolle A** (Marktlage, erstes Modell, ein Aufruf je Umlauf) geantwortet? | ✔ **ja** | ✔ **ja.** Das Lagebild geht in jeden Faktensatz |
+| **4** | **Anlass**<br>„Faktensatz hat sich geändert" | Kostenfilter: lohnt der Modellaufruf, wenn sich nichts geändert hat? | ✔ **ja** — misst, sperrt nicht (O-36: Anlass misst statt zu sperren) | ✔ **ja.** Er spart genau dort, wo Kosten anfallen: **vor** dem Modellaufruf |
+| **5** | **Auswahl**<br>„gehört zu den besten k der Gruppe" | Wählt je Gruppe die besten `k` nach Entwicklung über 250 Handelstage (R-A9: der Rangplatz waehlt aus, nicht die Uhr) | ✔ **ja**, und **gemessen**: +1,01 %, t 3,20 | ⚠️ **teilweise.** Sie ist der größte Filter (3 von 4) und steht richtig — **vor** dem Modellaufruf. Aber sie sagt „besser als die anderen vier", nicht „lohnt sich". Eine **relative** Auswahl ersetzt keine Bewertung |
+| **6** | **Wiederholung**<br>„nicht kürzlich schon gefragt" | Cooldown je Strategie und Ergebnis (R-A13 Strategie je Asset, L4/L5 Cooldown je Strategie und Ergebnis): Spot 12 h, Akkumulation 48 h, nach Hebel 3,5 h | ✔ **ja** | ⚠️ **nein — und das ist der Kern des Zielproblems.** Sie ist die **letzte** Stufe vor dem Modellaufruf. Wer sie passiert, wird gefragt. Damit ist **der Takt der faktische Auslöser** |
+| **7** | **Urteil**<br>„Urteil geliefert und vertragskonform" | Hat **Rolle BC** (erstes Modell, ein Aufruf je Asset) geantwortet, und hält die Antwort den Vertrag? | ✔ **ja** | ✔ **ja.** Formfehler werden korrigiert, Sinnfehler abgelehnt (R-A5: Formfehler korrigieren, Sinnfehler ablehnen) |
+| **8** | **Aktion**<br>„Aktion ist ein Einstieg" | Trennt Einstiege von HALTEN/REDUZIEREN | ✔ **ja** | ✔ **ja.** Nur Einstiege brauchen Geometrie und Budget |
+| **9** | **Geometrie**<br>„Zonen rechenbar" | Lassen sich Einstieg, Stop und Ziel rechnen? | ✔ **ja** | ✔ **ja.** Ohne Zonen kein Signal |
+| **10** | **Risikoschicht**<br>„Töpfe, Cash, Positionsgröße" | Reichen Topf und Cash für die Position? | ✔ **ja** | ⚠️ **teilweise.** Sie prüft, ob **Geld da ist** — nicht, ob das Budget **eingehalten** wird. Nach R-A18 (Risikobudget ist heute eine Rechengroesse) wird es in 74,3 % der Fälle überschritten |
+| **11** | **Entscheider**<br>„Trefferquote schlägt den Breakeven" | Laut Plan **der** Filter: kalibrierte Trefferquote gegen Kosten-Breakeven | ⚠️ **rechnet richtig, wirkt nicht** — bucht „verloren", ohne zu verwerfen | ⚠️ **nein**, aus drei Gründen — siehe Teil C |
+
+---
+
+### Teil B — Die drei Stufen außerhalb des Trichters
+
+| Stufe | F1 · Aufgabe | F2 · für sich | F3 · für die weiteren Abläufe |
+|---|---|---|---|
+| **Vorstufe**<br>Faktenaufbau (`rollen_eingabe`) | Aus Kursen, Beständen, Marken und dem Lagebild **einen** Faktensatz bauen | ✔ **ja.** Die „eine Stelle" gegen sechs Kopien | ⚠️ **eine Luecke: N-9 (elf Zusatzfakten erreichen keine Mail).** `bc_ein["fakten_roh"]` wird gebaut, aber an der Naht nicht gelesen. Sie liefert korrekt, **der Abnehmer fehlt** — offen seit 13.08. |
+| **Nachmerkmal H**<br>(`vorfilter.py`, Zeile 1741) | Markieren, nicht sperren: vier Wochen mitschreiben, dann entscheiden | ✔ **ja.** Alle drei Wege verdrahtet: eigene Tabelle · +4,5 Punkte in die Quote · zwei Mailzeilen | ⚠️ **nein.** Er kann nichts sparen (steht nach dem Modellaufruf) und nichts verwerfen. Sein Beitrag fließt aber **schon** in die Quote — er ist faktisch Teil von Stufe 11 (Entscheider) ohne deren Wirkung |
+| **Rolle G**<br>(Z.ai, das **zweite Modell**) | Zweitmeinung auf **fremder** Faktengrundlage: Terminmarkt, Funding, Long-Anteil, Regime | ⚠️ **teilweise.** Erreicht **49,8 %** der Signale. Zwei von drei Aufrufen sind weggefallen (Richtungsabgleich 16.08., Konsistenzpruefung 17.08.) | ⚠️ **nein.** Sie läuft **nach** dem Versand — 354 Widersprüche betreffen Mails, die schon beim Nutzer waren |
+
+⚠️ **Nicht verwechseln:** `positionierung.py` ist **nicht** Rolle G. Es liefert
+nur die Fakten, die Rolle G bekommt. Und **Z1**
+(`gegenpruefer_rollen.py`) ist ein *deterministischer* Prüfer, **kein Modell** —
+er fragt nur, ob die Antwort ihrer eigenen Faktenlage treu ist.
+
+---
+
+### Teil C — Warum Stufe 11 (Entscheider) F3 nicht erfüllt
+
+Drei Gründe, jeder einzeln belegt:
+
+| | Befund | Beleg |
+|---|---|---|
+| **C1** | Sie steht **nach** dem Modellaufruf (Stufe 7, Urteil). Eine Bewertung nach der teuersten Stufe kann nichts sparen | Zeile 1592 gegen Zeile 1108 |
+| **C2** | Sie **verwirft nicht**. Die Begründung („das System hat monatelang nicht gekauft") ist entfallen — seit 19.08. über 1.000 Einstiegssignale | `gegenpruefer_rollen.py:240 ff.` |
+| **C3** | Ihr Maßstab ist die **Gebührendeckung** — `(1+Kosten)/(1+CRV)`, bei 3 % Spot-Kosten 53,3 % statt 33,3 % | `trefferbilanz.breakeven()` |
+
+✔ **Daraus folgt eine Reihenfolge, keine Liste:** Zuerst **C3** (der Maßstab
+muss das gebührenfreie Potential werden), dann **C2** (dann darf sie
+verwerfen), dann **C1** (dann lohnt es, sie nach vorn zu ziehen, soweit die
+Geometrie es zulässt). **Umgekehrt wäre jeder Schritt schädlich** — eine Stufe
+scharf zu schalten, die den falschen Maßstab hat, filtert nach
+Gebührendeckung.
+
+---
+
+### Teil D — Das Gesamtbild in einem Satz je Zeile
+
+| | Anzahl | Stufen |
+|---|---|---|
+| **F2 erfüllt** *(Zweck für sich selbst)* | **12 von 14** | alle außer Stufe 11 (Entscheider) und Rolle G |
+| **F3 erfüllt** *(Zweck für die weiteren Abläufe)* | **5 von 14** | 3 Lagebild · 4 Anlass · 7 Urteil · 8 Aktion · 9 Geometrie · **und sonst nichts** |
+| **F3 teilweise** | 4 | 2 Fakten · 5 Auswahl · 10 Risikoschicht · Vorstufe |
+| **F3 nicht erfüllt** | **5** | 1 Auftrag · 6 Wiederholung · 11 Entscheider · Nachmerkmal H · Rolle G |
+
+⚠️ **Das Muster ist eindeutig: Was Form prüft, funktioniert. Was Inhalt prüfen
+soll, wirkt nicht.** Die fünf Stufen mit vollem F3 sind ausnahmslos
+Formprüfungen (3 Lagebild · 7 Urteil · 8 Aktion · 9 Geometrie) und der Kostenfilter 4 Anlass. Keine einzige inhaltliche Stufe
+erfüllt F3.
+
+⚠️ **Und die Stufe, die heute faktisch auslöst, ist Nr. 6 (Wiederholung) —
+der Cooldown.** Sie ist die letzte vor dem Modellaufruf; wer sie passiert,
+wird gefragt. Genau das benennt die Zielvorgabe als das, was **nicht** sein
+soll.
+
+
+---
+
 # Nachtrag 2026-08-13: Einstieg, Ausstieg und Gate der Rollen-Kette
 
 Was hier steht, ist der **IST-Zustand der Regeln** für die neue Rollen-Kette.
