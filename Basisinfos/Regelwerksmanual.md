@@ -3782,6 +3782,259 @@ Modul importiert es.
 
 ---
 
+## Bewertung der drei Verdachtsstufen — Aufgabe, Wirkung, Nutzen
+
+⚠️ **NACHGETRAGEN AM 29.08.2026.** Nutzerauftrag: *„nicht nur was sie tut,
+sondern auch **ob und warum** sie das tut."* Die Abschnitte oben beschreiben,
+was passiert. Hier steht, ob es seinen Zweck erfüllt.
+
+**Drei Prüffragen je Stufe:**
+
+1. Was ist die **konkrete Aufgabe** — heute und laut Plan?
+2. Erfüllen die Unterpunkte ihren Zweck **für die Stufe selbst**?
+3. Erfüllen sie ihn **für die weiteren Abläufe**?
+
+---
+
+### Der Trichter
+
+**Aufgabe laut Plan — wörtlich aus `rollen_gate.py`:**
+
+> *„WOFÜR DIESES MODUL WIRKLICH DA IST: **DIE DURCHLÄSSIGKEIT ZU ZÄHLEN.**
+> Der Deadloop ist die Frage ‚warum kauft das System nie?', und die lässt sich
+> ohne Zahlen nicht beantworten. Bisher konnte man am Ende sehen, dass nichts
+> herauskam — aber nicht, an welcher Stufe es verschwand."*
+
+✔ **Der Trichter ist ein Messinstrument, kein Filter.** Das ist die
+ursprüngliche Aufgabe, und sie ist erfüllt: seit dem 13.08. ist sichtbar, wo
+Signale verschwinden.
+
+⚠️ **Aber er hat eine zweite Rolle bekommen, die nie beschlossen wurde.** Zehn
+seiner elf Stufen verwerfen tatsächlich. Aus dem Messinstrument ist nebenbei
+die Filterkette geworden — und niemand hat je entschieden, ob die Stufen, die
+gut *messen*, auch gut *filtern*.
+
+**Und der Plan sagt ausdrücklich etwas anderes:**
+
+> *„DER ERSATZ IST KEINE NEUE SCHWELLE, SONDERN DER ENTSCHEIDER. Die
+> kalibrierte Trefferquote gegen den Kosten-Breakeven **IST der Filter**."*
+
+⚠️⚠️ **Der Plan sieht Stufe 11 als den Filter vor. Sie zählt nur.** Damit
+filtern zehn Stufen, die es nicht sollen, und eine filtert nicht, die es soll.
+
+#### Prüffrage 2: erfüllen die Unterpunkte ihren Zweck für die Stufe selbst?
+
+| Stufe | Aufgabe | für sich selbst |
+|---|---|---|
+| 1 auftrag | Paar erlaubt? | ✔ ja |
+| 2 fakten | Datenlage reicht? | ✔ ja |
+| 3 lagebild | Rolle A geliefert? | ✔ ja |
+| 4 anlass | Faktensatz geändert? | ✔ ja — misst, sperrt nicht (O-36) |
+| 5 auswahl | beste k der Gruppe? | ✔ ja, **gemessen** (+1,01 %, t 3,20) |
+| 6 wiederholung | kürzlich gefragt? | ✔ ja |
+| 7 urteil | vertragskonform? | ✔ ja |
+| 8 aktion | ein Einstieg? | ✔ ja |
+| 9 geometrie | Zonen rechenbar? | ✔ ja |
+| 10 risikoschicht | Topf und Cash da? | ✔ ja |
+| **11 entscheider** | trägt sich der Handel? | ⚠️ **rechnet richtig, wirkt nicht** |
+
+✔ **Zehn von elf erfüllen ihren eigenen Zweck einwandfrei.** An den Form- und
+Kostenstufen ist nichts auszusetzen.
+
+#### Prüffrage 3: erfüllen sie ihn für die weiteren Abläufe?
+
+⚠️ **Hier bricht es.** Drei Befunde:
+
+**(a) Die Reihenfolge verbrennt Modellaufrufe.** Stufe 11 ist die einzige
+inhaltliche Bewertung — und sie steht **nach** dem Modellaufruf (Stufe 7).
+Wenn ein Fall sich nicht trägt, ist der Aufruf längst bezahlt. Eine Bewertung,
+die nach der teuersten Stufe steht, kann nichts sparen.
+
+**(b) „Zählen statt verwerfen" beruht auf einem Zustand, den es nicht mehr
+gibt.** Die Begründung steht in `gegenpruefer_rollen.py`:
+
+> *„Ein Wächter, der selbst verwirft, macht seine eigene Wirkung unsichtbar —
+> man sieht nur noch, was durchkam, nie was er weggenommen hat. **Und das
+> System hat monatelang nicht gekauft**; ein weiterer stiller Filter ist genau
+> das Risiko, das gerade beseitigt wurde."*
+
+⚠️ **Der zweite Halbsatz gilt nicht mehr.** Das System hat seit dem 19.08.
+über 1.000 Einstiegssignale erzeugt. Die Vorsichtsmaßnahme aus der
+Deadloop-Zeit läuft weiter, obwohl ihr Anlass entfallen ist.
+
+**(c) Der Maßstab von Stufe 11 ist der verworfene.** Sie rechnet
+`Breakeven = (1 + Kosten)/(1 + CRV)` — also **mit Gebühren**. Bei 3 %
+Spot-Kosten und CRV 2,0 verlangt sie 53,3 % statt 33,3 %. Als Filter wäre das
+genau die Definition, die am 25.08. verworfen wurde („guter Trade = Potential,
+nicht Gebührendeckung"). **Dass sie nur zählt, ist deshalb heute ein Glück —
+nicht ein Mangel.**
+
+⚠️ **Daraus folgt eine klare Reihenfolge:** Erst muss Stufe 11 den richtigen
+Maßstab bekommen (Potential statt Breakeven), **dann** darf sie verwerfen.
+Umgekehrt wäre es schädlich.
+
+---
+
+### Die Vorstufe
+
+**Übergeordnete Aufgabe:** aus verstreuten Quellen **einen** Faktensatz bauen
+und prüfen, ob er zum Fragen reicht.
+
+**Was im Detail passiert:**
+
+| Schritt | Was | Ergebnis geht an |
+|---|---|---|
+| Kursreihe lesen | Kurs, ATR über `rollen_eingabe.kurs_eur/atr_eur` | Rechnung (Stop), Rolle BC (Text) |
+| Bestand lesen | ⚠️ **beide** Quellen, Hebelposition hat Vorrang (S6b) | Rolle BC, Positionsführung |
+| Marken bestimmen | Unterstützung, Widerstand mit Berührungszahl | Rolle BC **und später H** |
+| Lagebild einsetzen | das Ergebnis von Rolle A | Rolle BC |
+| Zusatzfakten | Lebendigkeit, Termine, Positionierung (Rolle G) | Mail, teilweise Rolle BC |
+| Mindestkriterien | R-R1 bis R-R3 | Trichterstufe 2 |
+
+**Was sie NICHT tut, und warum das richtig ist:**
+
+⚠️ **Sie bewertet nicht.** „Faktenlage ausreichend" heißt *genug zum Fragen*,
+nicht *gut genug zum Handeln*. Das ist die saubere Trennung: eine Stufe, die
+Vollständigkeit prüft, darf nicht heimlich über Güte entscheiden.
+
+#### Bewertung
+
+| Prüffrage | Urteil |
+|---|---|
+| **1 Aufgabe klar?** | ✔ ja, und sie ist die „eine Stelle" — bis 12.08. baute jedes Messskript die Eingabe selbst, sechs Kopien |
+| **2 Zweck für sich?** | ✔ ja |
+| **3 Zweck für die weiteren Abläufe?** | ⚠️ **eine Lücke: N-9** |
+
+⚠️ **N-9 — elf Zusatzfakten erreichen keine Mail.** `bc_ein["fakten_roh"]`
+wird gebaut, aber an der Naht (`rollen_lauf.py:1487/1537`) nicht gelesen. Die
+Vorstufe liefert korrekt; der Abnehmer fehlt. **Seit dem 13.08. offen.**
+
+✔ **Ansonsten unverdächtig.** Die Vorstufe ist die sauberste Stufe des
+Systems: klare Aufgabe, keine Vermischung, ein Ort.
+
+---
+
+### Der „Vorfilter" — Nachmerkmal H
+
+**Übergeordnete Aufgabe laut Plan:** *markieren, nicht sperren* — vier Wochen
+mitschreiben, dann prüfen, ob die von H aussortierten Signale wirklich die
+schlechteren waren.
+
+**Was im Detail passiert:**
+
+| Schritt | Was |
+|---|---|
+| **A — frei** | keine Marke über dem Kurs mit ≥ 2 Berührungen unterhalb des **Ziels** |
+| **B — gedeckt** | eine Marke unter dem Kurs mit ≥ 2 Berührungen oberhalb des **Stops** |
+| **H = A und B** | nur LONG. Für SHORT `h = None`, nicht `h = False` |
+
+**Was mit den Ergebnissen geschieht — drei Wege, alle verdrahtet:**
+
+| Weg | Ziel | Zweck |
+|---|---|---|
+| **eigene Tabelle** | `vorfilter.schreibe()`, Zeile 1966 | die Schatten-Auswertung ab ~19.09. |
+| **Wahrscheinlichkeit** | `_WK.saetze(h=…)`, Zeile 1763 | +4,5 Punkte auf die Quote — **der einzige tragende Beitrag** |
+| **Mail** | zwei Zeilen | der Nutzer sieht, was ein späterer Filter wegnähme |
+
+✔ **Die Ergebnisverwertung ist vollständig und sauber.** Nichts fällt heraus.
+
+#### Bewertung
+
+| Prüffrage | Urteil |
+|---|---|
+| **1 Aufgabe klar?** | ✔ ja — „Schatten bis ~19.09., dann Entscheidung" |
+| **2 Zweck für sich?** | ✔ **ja.** Er schreibt mit, was er soll, und die Auswertung ist dadurch möglich |
+| **3 Zweck für die weiteren Abläufe?** | ⚠️ **nein — und der Grund ist der Name** |
+
+⚠️ **Warum er „Vorfilter" heißt und keiner ist.** Er braucht Stop und Ziel des
+Signals; die entstehen erst in der Rechnung (Zeile 1517), und die braucht das
+Urteil von Rolle BC (Zeile 1108). H kann frühestens ab 1517 laufen — heute
+läuft er bei 1741.
+
+**Die Abwägung dahinter ist dokumentiert und war bewusst:**
+
+> *„Ein Unterschied zur Messung bleibt, und er ist beabsichtigt. Dort standen
+> Stop und Ziel auf fester Geometrie (k × ATR, CRV 2,0); hier stehen die
+> **echten** Werte des Signals."*
+
+⚠️ **Damit ist die Vermutung „er steht hinten, damit keine Daten verloren
+gehen" nicht der Grund** — aber sie trifft etwas Verwandtes: Ein echter
+Vorfilter würde nicht Information *abschneiden*, sondern über eine **fremde
+Geometrie** urteilen. Er würde k × ATR bewerten statt den Stop, den das Signal
+wirklich bekommt.
+
+**Drei mögliche Aufgaben — keine ist beschlossen:**
+
+| H steht … | braucht | kann | Preis |
+|---|---|---|---|
+| **vorn** | feste Geometrie (k × ATR, CRV 2,0) | Modellaufrufe **sparen** | urteilt über eine Geometrie, die nicht die gehandelte ist |
+| **hinten** *(heute)* | das fertige Signal | nur beschreiben | der Aufruf ist längst bezahlt |
+| **in Stufe 11** | das fertige Signal — *wie heute* | die Handlung **begründen** oder verwerfen | keiner: dieselbe Stelle, nur mit Wirkung |
+
+✔ **Fachliche Einordnung:** H ist heute korrekt gebaut und falsch benannt. Sein
+Beitrag von +4,5 Punkten fließt bereits in die Quote — er ist damit faktisch
+schon **ein Teil von Stufe 11**, nur ohne deren Wirkung. Der Weg in die dritte
+Zeile ist deshalb kein Umbau, sondern eine Freischaltung.
+
+---
+
+### Rolle G — was und warum nach dem Versand geprüft wird
+
+**Was sie prüft:** den Fall auf **anderer** Faktengrundlage als Rolle BC —
+offene Kontrakte, Finanzierungsrate als Perzentil, Anteil der Long-Konten,
+Marktregime mit Dauer. *„Nichts davon steht im Faktentext von Rolle BC."*
+
+**Was sie ausdrücklich NICHT sieht, jeweils mit Grund:**
+
+| | |
+|---|---|
+| die gerechnete Geometrie | Stop, Ziel, Betrag, CRV liegen auf der deterministischen Schiene — das Modell hat sie nicht erzeugt und soll sie nicht beurteilen |
+| die Trefferbilanz | sie entsteht **aus** den Urteilen des Modells; sie zurückzugeben macht aus einer Messung eine Rückkopplung |
+| Aktion und Begründung | sonst echot das zweite Modell das erste — Anker-Effekt |
+
+⚠️ **Von drei Aufrufen sind zwei weggefallen:**
+
+| | |
+|---|---|
+| Richtungsabgleich | stillgelegt 16.08. — 17× LONG in 2.469 Prüfungen, **dieselben Fakten** wie Rolle BC (Homogeneous Debate) |
+| Konsistenzprüfung | entfernt 17.08. — vom Nutzer abgelehnt: *„war nie meine Anforderung"* |
+
+**Warum nach dem Versand:** Sie läuft in einem eigenen Thread
+(`threading.Thread(daemon=True)`, Zeile 715), *„damit ein hängender Aufruf
+nicht die ganze Reihe blockiert"*. Der Hauptfaden wartet
+`WARTE_MAX_SEKUNDEN`, dann geht die Mail — mit oder ohne Einwand.
+
+⚠️ **Der Grund ist Durchsatz, nicht Fachlichkeit.** Z.ai erlaubt 2
+gleichzeitige Aufrufe; ein Umlauf braucht 20–40. Ohne Nebenläufigkeit stünde
+die ganze Reihe.
+
+#### Bewertung
+
+| Prüffrage | Urteil |
+|---|---|
+| **1 Aufgabe klar?** | ✔ ja — unabhängige Zweitmeinung auf fremder Faktengrundlage. Die Abgrenzung (was sie nicht sieht) ist vorbildlich begründet |
+| **2 Zweck für sich?** | ⚠️ **teilweise** — sie erreicht nur **49,8 %** der Signale |
+| **3 Zweck für die weiteren Abläufe?** | ⚠️ **nein** |
+
+⚠️ **Eine Gegenprüfung nach dem Versand kann nichts mehr verhindern.** Sie ist
+heute eine **Nachdokumentation**: 1.151 Urteile, 749 konsistent, 354
+Widerspruch — und jeder dieser 354 Widersprüche betrifft eine Mail, die schon
+beim Nutzer war.
+
+**Das ist kein Baufehler, sondern ein ungelöster Zielkonflikt:**
+
+| Wenn Rolle G … | dann | Preis |
+|---|---|---|
+| **vor** der Mail läuft | kann sie **widersprechen** | die Mail wartet bis zu 9 Minuten, bei 2 gleichzeitigen Plätzen und 20–40 Fällen je Umlauf |
+| **nach** der Mail läuft *(heute)* | Durchsatz bleibt | ⚠️ ihr Widerspruch ändert nichts mehr |
+| **nur bei Grenzfällen** vorher | beides | ⚠️ „Grenzfall" ist nicht definiert — es bräuchte das Potential |
+
+⚠️ **Die dritte Zeile hängt am selben fehlenden Baustein wie alles andere.**
+Ohne eine Zahl, die sagt „dieser Fall ist knapp", lässt sich nicht
+entscheiden, wo sich das Warten lohnt.
+
+---
+
 # Nachtrag 2026-08-13: Einstieg, Ausstieg und Gate der Rollen-Kette
 
 Was hier steht, ist der **IST-Zustand der Regeln** für die neue Rollen-Kette.
