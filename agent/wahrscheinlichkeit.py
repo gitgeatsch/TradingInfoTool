@@ -110,6 +110,25 @@ class Beitrag:
     quelle: str           # woher die Zahl stammt
     warum: str            # warum sie so ist, in einem Satz
     klassen: tuple = ()    # leer = alle; sonst nur diese Anlageklassen
+    # ⚠️⚠️ LEER HEISST "UEBERALL GUELTIG" - UND DAS IST FAST NIE WAHR.
+    #
+    # Bis zum 31.08.2026 trugen alle drei tragenden Beitraege ein leeres
+    # `strategien` und galten damit auch fuer `akkumulation`. Gemessen
+    # wurden sie ausschliesslich auf der EINSTIEGS-Geometrie: Horizont 20
+    # Handelstage, CRV 2,0, ATR-Stop. Eine Akkumulation kauft ueber Wochen
+    # verteilt zu - anderer Horizont, anderes Erfolgsmass, kein einziger
+    # gemessener Anker.
+    #
+    # Das ist derselbe Fehlertyp wie bei H: die Anwendung reicht weiter
+    # als die Messung. `Potential.crv_extrapoliert` warnt bereits vor der
+    # CRV-Achse; die Strategie-Achse hatte diese Warnung nicht, weil ein
+    # leeres Feld wie eine Erlaubnis aussieht statt wie eine offene Frage.
+    #
+    # Seit 31.08. tragen alle drei `strategien=("einstieg",)`. Folge:
+    # `krypto x spot x akkumulation` gilt als NICHT VERMESSEN und wird
+    # durchgewunken statt entschieden - ehrlich statt bequem. Praktisch
+    # aendert es heute nichts (0 Signale mit dieser Strategie), fachlich
+    # alles: die Zelle steht jetzt sichtbar auf der Messliste.
     strategien: tuple = ()  # leer = alle; sonst einstieg | swing | akkumulation
     richtungen: tuple = ()  # leer = alle; sonst long | short
     stufen: tuple = ()     # abgestuft: Punkte je Fuenftel 0..4
@@ -327,6 +346,7 @@ BEITRAEGE = (
         warum=("Querschnittsrang: wer heute am wenigsten Finanzierung zahlt. "
                "Traegt in beiden Historienhaelften und beiden Marktphasen, "
                "monoton ueber fuenf Fuenftel, Momentum-Korrelation +0,002"),
+        strategien=("einstieg",),
         klassen=("krypto",)),
     Beitrag(
         name="Turnover-Rang im Markt",
@@ -337,6 +357,7 @@ BEITRAEGE = (
         warum=("Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst "
                "eher ueberbewertet. Zu 92 % additiv zu Funding "
                "(Korrelation -0,158), Survivorship ausgeraeumt"),
+        strategien=("einstieg",),
         klassen=("krypto",)),
     # ---- P3: DER BEITRAG, DER BEI ALLEN ASSETS WIRKT (31.08.2026) -------
     #
@@ -381,6 +402,7 @@ BEITRAEGE = (
                "aufwaerts als wer weit darueber steht - am selben Tag "
                "verglichen. Aus der Kursreihe, also fuer JEDEN Wert "
                "verfuegbar"),
+        strategien=("einstieg",),
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",

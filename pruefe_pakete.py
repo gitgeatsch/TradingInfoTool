@@ -2192,9 +2192,12 @@ def paket_12c() -> None:
            _p_krypto.vermessen and not _p_aktien.vermessen,
            "ohne diese Unterscheidung sperrt Stufe 11 vier von fuenf "
            "Assetklassen dauerhaft - gemessen am 31.08.: 0 Signale")
+    # ⚠️ MIT STRATEGIE FRAGEN. Seit die Beitraege `strategien=("einstieg",)`
+    # tragen, liefert ein Aufruf OHNE Strategie nichts - richtig so: ohne
+    # Strategie ist nicht entschieden, welche Geometrie gemeint ist.
     pruefe(P, "und `vermessen` fragt die REGISTRIERUNG, nicht eine Liste",
-           len(_WKx.vermessen("krypto")) == 3
-           and _WKx.vermessen("aktien") == [],
+           len(_WKx.vermessen("krypto", "einstieg")) == 3
+           and _WKx.vermessen("aktien", "einstieg") == [],
            "eine handgeschriebene Klassenliste veraltet still, sobald ein "
            "Beitrag dazukommt - genau der Fehler aus `pruefe_beitragsabdeckung`")
     pruefe(P, "⚠️ `vermessen` und `bewertbar` sind NICHT dasselbe",
@@ -2221,6 +2224,35 @@ def paket_12c() -> None:
     pruefe(P, "und sie steht in der Trichtertabelle",
            any("nicht beurteilt" in z for z in _d2.bericht()),
            "eine Notiz, die niemand sieht, ist keine Notiz")
+
+    # ------------------------------------------------------------------
+    # ⚠️⚠️ EIN BEITRAG GILT NUR, WO ER GEMESSEN WURDE (31.08.2026)
+    #
+    # Bis zum 31.08. trugen alle drei tragenden Beitraege ein LEERES
+    # `strategien` und galten damit auch fuer `akkumulation`. Gemessen
+    # wurden sie ausschliesslich auf der Einstiegs-Geometrie: Horizont 20
+    # Handelstage, CRV 2,0, ATR-Stop. Eine Akkumulation kauft ueber Wochen
+    # verteilt zu - anderer Horizont, anderes Erfolgsmass, kein einziger
+    # gemessener Anker.
+    #
+    # Ein leeres Feld sieht aus wie eine Erlaubnis und ist in Wahrheit eine
+    # offene Frage. Genau der H-Fehler: die Anwendung reicht weiter als die
+    # Messung.
+    # ------------------------------------------------------------------
+    for _b in _WKx.BEITRAEGE:
+        if _b.zustand != "traegt":
+            continue
+        pruefe(P, "%s nennt seine Strategien" % _b.name[:34],
+               bool(_b.strategien),
+               "leer heisst 'gilt ueberall' - und das ist bei einem auf "
+               "EINER Geometrie gemessenen Beitrag nie wahr. Die Messung "
+               "steht in: " + _b.quelle[:70])
+    pruefe(P, "⚠️ und akkumulation gilt daher als NICHT vermessen",
+           _WKx.vermessen("krypto", "einstieg")
+           and not _WKx.vermessen("krypto", "akkumulation"),
+           "wer hier Beitraege fuer akkumulation erwartet, prueft den Stand "
+           "vor dem 31.08. - dann wurde eine Einstiegsmessung auf eine "
+           "Strategie angewandt, fuer die es keinen einzigen Anker gibt")
 
     # WER RAUS IST, WIRD IN SPAETEREN STUFEN NICHT MEHR GEZAEHLT.
     d2 = RG.Durchlauf()
@@ -2895,18 +2927,46 @@ def gesamtpruefung() -> None:
     # Erreichbarkeit ist transitiv. Wer sie direkt prueft, misst die
     # Importtiefe statt des Betriebs.
     def _erreichbar_von_betrieb() -> set:
-        front = [q for q in quellen if q.startswith(("scheduler/", "ui/"))]
+        """⚠️ UEBER ECHTE IMPORTE, NICHT UEBER TEXTVORKOMMEN.
+
+        Die erste transitive Fassung (heute frueher) suchte den Modulnamen
+        im Quelltext. Sie meldete `positionsfuehrung` als verdrahtet -
+        der einzige Treffer war ein DOCSTRING in `handelsauftrag.py:74`
+        (*"positionsfuehrung  `hebel_signals` wurde nie gelesen"*).
+
+        Eine Erwaehnung ist kein Aufruf. Wer Text durchsucht, findet auch
+        jede Notiz ueber ein Modul - und macht aus einer offenen Luecke
+        eine grüne Zeile. `positionsfuehrung` steht seit dem 27.08. als
+        Punkt B im Roten Faden: gebaut, kein Aufrufer.
+        """
+        import ast as _ast
+        baum, kanten, namen = {}, {}, {}
+        for _p, _t in quellen.items():
+            try:
+                baum[_p] = _ast.parse(_t)
+            except Exception:                            # noqa: BLE001
+                continue
+            namen.setdefault(_p.rsplit("/", 1)[-1][:-3], []).append(_p)
+        for _p, _b in baum.items():
+            ziele = set()
+            for _n in _ast.walk(_b):
+                if isinstance(_n, _ast.Import):
+                    for _al in _n.names:
+                        ziele.add(_al.name.rsplit(".", 1)[-1])
+                elif isinstance(_n, _ast.ImportFrom):
+                    if _n.module:
+                        ziele.add(_n.module.rsplit(".", 1)[-1])
+                    for _al in _n.names:
+                        ziele.add(_al.name)
+            kanten[_p] = ziele
+        front = [x for x in baum if x.startswith(("scheduler/", "ui/"))]
         gesehen = set(front)
         while front:
-            akt = quellen.get(front.pop(), "")
-            for kand in quellen:
-                if kand in gesehen:
-                    continue
-                stamm = kand.rsplit("/", 1)[-1][:-3]
-                if _re.search(r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % stamm,
-                              akt):
-                    gesehen.add(kand)
-                    front.append(kand)
+            for _z in kanten.get(front.pop(), ()):
+                for _k in namen.get(_z, ()):
+                    if _k not in gesehen:
+                        gesehen.add(_k)
+                        front.append(_k)
         return gesehen
 
     _erreicht = _erreichbar_von_betrieb()
@@ -2923,6 +2983,16 @@ def gesamtpruefung() -> None:
     pruefe(P, "⚠️⚠️ und damit wirkt G-6 SOFORT nach dem Pull",
            not ohne_betrieb,
            "unerreichbar: " + ", ".join(sorted(ohne_betrieb)))
+    # ⚠️ DIE GEGENPROBE: die Pruefung muss eine ECHTE Luecke noch finden.
+    # Ohne sie waere "alles verdrahtet" auch dann gruen, wenn die Methode
+    # kaputt ist - und genau das war heute frueher der Fall.
+    pruefe(P, "⚠️ und sie findet die BEKANNTE Luecke weiterhin",
+           not any(x.endswith("/positionsfuehrung.py")
+                   for x in _erreicht),
+           "`positionsfuehrung` ist seit dem 27.08. Punkt B im Roten Faden: "
+           "gebaut, kein Aufrufer. Wenn diese Zeile faellt, ist entweder B "
+           "erledigt (dann hier nachziehen) - oder die Erreichbarkeits"
+           "rechnung zaehlt wieder Docstrings als Aufrufe")
 
 
 def paket_b1() -> None:
@@ -12641,10 +12711,13 @@ def paket_dimension() -> None:
     # WEITER - sie wird seit R1 nur an einem TRAGENDEN Beitrag geprueft.
     # An einem stillgelegten ist sie gegenstandslos: dort ist der
     # Eingabewert ohne Bedeutung, und beide Belegungen melden `null`.
+    # ⚠️ `strategie="einstieg"` ist seit dem 31.08. PFLICHT, sonst gilt kein
+    # Beitrag - die Beschraenkung ist der Punkt, nicht ein Nebeneffekt.
     _r_f0 = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
-                       klasse="krypto", merkmale={"funding_fuenftel": 0})
+                       klasse="krypto", strategie="einstieg",
+                       merkmale={"funding_fuenftel": 0})
     _r_fnix = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
-                         klasse="krypto")
+                         klasse="krypto", strategie="einstieg")
     _z_nix = [z for z in _r_fnix["beitraege"] if z["name"].startswith("Funding")]
     _z_0 = [z for z in _r_f0["beitraege"] if z["name"].startswith("Funding")]
     pruefe(P, "ein fehlender Merkmalswert heisst `nie`, nicht `null`",
