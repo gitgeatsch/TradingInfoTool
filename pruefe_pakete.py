@@ -2878,18 +2878,51 @@ def gesamtpruefung() -> None:
                 if d.endswith(".py"):
                     voll = os.path.join(pfad, d).replace(chr(92), "/")
                     quellen[voll] = _quelltext(voll)
-    ohne_betrieb = []
-    for m in module:
-        rufer = [p for p, t in quellen.items()
-                 if _re.search(rf"{m}", t) and not p.endswith(f"{m}.py")]
-        if not any(p.startswith(("scheduler/", "ui/")) for p in rufer):
-            ohne_betrieb.append(m)
-    pruefe(P, "die fehlende Verdrahtung ist VOLLSTAENDIG, nicht teilweise",
-           len(ohne_betrieb) == len(module),
-           f"{len(ohne_betrieb)} von {len(module)} ohne Betriebsaufrufer. "
-           f"Das ist der offene Punkt B1 und KEIN neuer Fund - aber solange "
-           f"es ALLE sind, gibt es keine halb verdrahtete Kette, in der "
-           f"unklar waere, welcher Weg gilt")
+    # ⚠️⚠️ TRANSITIV RECHNEN, NICHT DIREKT (31.08.2026).
+    #
+    # Die erste Fassung fragte nur nach DIREKTEN Nennungen aus
+    # `scheduler/` oder `ui/` und meldete daraufhin "15 von 15 ohne
+    # Betriebsaufrufer" - der offene Punkt B1. Das war falsch, und die
+    # falsche Sicherheit war teuer: sie liess G-6 folgenlos erscheinen
+    # ("wirkt erst mit der Verdrahtung"). Auf dieser Annahme stand auch
+    # der Kopf von `vorschau_g6_scharfschaltung.py`.
+    #
+    # Tatsaechlich haengen diese fuenfzehn Module an `rollen_lauf`, und
+    # `scheduler/rollen_job.py:444` ruft `RL.fuehre_lauf` auf. Die
+    # Notebook-Produktion belegt es: 119 bis 235 Signale mit
+    # `quelle_kette='rollen'` PRO TAG, durchgehend seit dem 14.08.2026.
+    #
+    # Erreichbarkeit ist transitiv. Wer sie direkt prueft, misst die
+    # Importtiefe statt des Betriebs.
+    def _erreichbar_von_betrieb() -> set:
+        front = [q for q in quellen if q.startswith(("scheduler/", "ui/"))]
+        gesehen = set(front)
+        while front:
+            akt = quellen.get(front.pop(), "")
+            for kand in quellen:
+                if kand in gesehen:
+                    continue
+                stamm = kand.rsplit("/", 1)[-1][:-3]
+                if _re.search(r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % stamm,
+                              akt):
+                    gesehen.add(kand)
+                    front.append(kand)
+        return gesehen
+
+    _erreicht = _erreichbar_von_betrieb()
+    ohne_betrieb = [m for m in module
+                    if not any(q.endswith("/%s.py" % m) for q in _erreicht)]
+    pruefe(P, "⚠️ die Erreichbarkeit wird TRANSITIV gerechnet",
+           any(q.endswith("/rollen_lauf.py") for q in _erreicht)
+           and "fuehre_lauf" in _quelltext("scheduler/rollen_job.py"),
+           "direkt gerechnet meldete diese Pruefung '15 von 15 ohne "
+           "Betriebsaufrufer' - waehrend die Notebook-Produktion 119 bis "
+           "235 Rollen-Signale PRO TAG schrieb. Eine Verdrahtungspruefung, "
+           "die den laufenden Betrieb uebersieht, laesst jede Aenderung am "
+           "Signalfluss folgenlos aussehen")
+    pruefe(P, "⚠️⚠️ und damit wirkt G-6 SOFORT nach dem Pull",
+           not ohne_betrieb,
+           "unerreichbar: " + ", ".join(sorted(ohne_betrieb)))
 
 
 def paket_b1() -> None:
