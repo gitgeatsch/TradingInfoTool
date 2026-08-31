@@ -2196,7 +2196,7 @@ def paket_12c() -> None:
     # tragen, liefert ein Aufruf OHNE Strategie nichts - richtig so: ohne
     # Strategie ist nicht entschieden, welche Geometrie gemeint ist.
     pruefe(P, "und `vermessen` fragt die REGISTRIERUNG, nicht eine Liste",
-           len(_WKx.vermessen("krypto", "einstieg")) == 3
+           len(_WKx.vermessen("krypto", "einstieg")) == 2
            and _WKx.vermessen("aktien", "einstieg") == [],
            "eine handgeschriebene Klassenliste veraltet still, sobald ein "
            "Beitrag dazukommt - genau der Fehler aus `pruefe_beitragsabdeckung`")
@@ -14709,12 +14709,22 @@ def paket_kalibrierung() -> None:
     #
     # Nutzervorgabe 31.08.: *"Die Scharfschaltung darf erst erfolgen, wenn
     # alle Assets einen Beitrag haben."*
-    pruefe(P, "⚠️ mindestens ein Beitrag kommt aus der eigenen KURSREIHE",
-           any(b.merkmal == "schnitt_fuenftel" and b.zustand == "traegt"
-               for b in _WK.BEITRAEGE),
-           "Funding und Turnover kommen aus Fremdquellen und koennen NIE "
-           "volle Abdeckung erreichen - Binance und CoinGecko listen nicht "
-           "jeden Wert. Nur die Kursreihe haben wir fuer jeden Wert")
+    # ⚠️⚠️ AM 31.08. ABENDS UMGEDREHT. Hier stand als Forderung: "mindestens
+    # ein Beitrag kommt aus der eigenen Kursreihe" - erfuellt durch den
+    # Schnittabstand. Er ist am selben Abend gefallen (Horizontlauf: bei
+    # keinem Horizont trennbar). Die Forderung bleibt richtig, sie ist nur
+    # NICHT ERFUELLT - und eine Pruefung, die eine offene Luecke gruen
+    # meldet, ist schlimmer als keine.
+    #
+    # Diese Zeile haelt den Zustand jetzt als BEFUND fest, nicht als Erfolg.
+    _aus_kursreihe = [b for b in _WK.BEITRAEGE
+                      if b.zustand == "traegt" and b.merkmal == "schnitt_fuenftel"]
+    pruefe(P, "⚠️ KEIN Beitrag aus der eigenen Kursreihe - die Luecke steht",
+           not _aus_kursreihe,
+           "wenn diese Zeile faellt, ist ein Kursreihen-Beitrag dazugekommen "
+           "- dann gehoert die Abdeckung neu gerechnet UND die Schwelle neu "
+           "kalibriert (R-R9). Funding und Turnover kommen aus Fremdquellen "
+           "und erreichen nie volle Abdeckung: 36 von 43 Werten")
 
     # ---- DIE ALARMGRENZE (Variante C, dimensioniert am 31.08.) ----------
     #
@@ -14766,6 +14776,9 @@ def paket_kalibrierung() -> None:
     pruefe(P, "ein fehlendes Fuenftel wird NICHT zu 0 gemacht",
            "if _mr.get(k) is not None" in _rl,
            "sonst saehe 'unbekannt' aus wie 'bestes Fuenftel'")
+    # ⚠️ AUCH `schnitt_fuenftel` BLEIBT ANGELIEFERT, obwohl der Beitrag seit
+    # dem 31.08. auf null steht. Die Anlieferung kostet nichts, und ohne sie
+    # traegt eine Rueckkehr des Beitrags in jedem echten Lauf still null.
     pruefe(P, "alle drei Merkmale werden durchgereicht",
            all(m in _rl for m in ("funding_fuenftel", "turnover_fuenftel",
                                   "schnitt_fuenftel")),

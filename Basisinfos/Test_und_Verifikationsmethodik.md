@@ -4081,6 +4081,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_schnittabstand_beitrag.py` | P2: der Abstand zum eigenen 200-Schnitt als Beitrag — der einzige der drei, der nur die eigene Kursreihe braucht (Abdeckung 43/43) |
 | `pruefe_beitragsabdeckung.py` | Fuer WIEVIELE Werte gilt jeder Beitrag ueberhaupt? Haette vor R1 laufen muessen |
 | `simuliere_rollout_gegen_nb.py` | Was macht der Rollout mit der ECHTEN Produktion? Nur lesend, gegen eine entpackte NB-Kopie |
+| `pruefe_assetklassen_datenlage.py` | Datenlage je Assetklasse — und seit 31.08. die Achse Klasse x Instrument x Strategie: welche Zelle traegt eine Bewertung, welche laeuft als Takt |
 
 ⚠️ **Die vier mit festen Grenzen sind genau die, die die heute gültigen
 H-Urteile erzeugt haben** — Kap. 117 (Dosis), 119 (H trägt, +4,5 gegen +2,6),

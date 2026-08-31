@@ -342,10 +342,34 @@ SCHWELLE_VORGABE = 0.010
 # ⚠️ R-R9 BEFUERCHTETE, dass jeder neue Beitrag den Filter durchlaessiger
 # macht. Gemessen wird er MINIMAL STRENGER (44,0 -> 43,2 %). Der Grund ist
 # derselbe wie bei 2e: Rangbeitraege sind SYMMETRISCH - ihre oberen
-# Fuenftel sperren (-1,82 beim Schnittabstand), sie heben nicht nur an.
-# Die Befuerchtung gilt fuer Beitraege, die nur addieren.
+# Fuenftel sperren, sie heben nicht nur an. Die Befuerchtung gilt fuer
+# Beitraege, die nur addieren.
+#
+# ⚠️ DIESE ZAHLEN (44,0 -> 43,2 %) STAMMEN AUS EINER SIMULATION MIT DEM
+# SCHNITTABSTAND und sind seit seinem Fall vom 31.08. abends historisch.
+# Sie bleiben als Beleg fuer die Symmetrie-Aussage stehen; der geltende
+# Durchlass steht in der Tabelle darueber.
+# ⚠️⚠️ KORRIGIERT AM 31.08.2026 ABENDS - UND ZWAR IN ZWEI SCHRITTEN.
+#
+# Hier stand der Schnittabstand mit drin. Das war aus zwei Gruenden falsch:
+#
+#   1 Er ist am selben Abend als Beitrag GEFALLEN (Horizontlauf: bei keinem
+#     Horizont trennbar, H20 -0,0221 R).
+#   2 ⚠️ ER WAR NIE TEIL DER KALIBRIERUNG. `messe_schwelle_kalibrierung.
+#     bewerte()` rechnet ausschliesslich mit FUNDING_STUFEN und
+#     TURNOVER_STUFEN - den Schnittabstand kennt es nicht. Ich hatte ihn
+#     mittags in diese Zeile geschrieben, weil er registriert war, nicht
+#     weil er kalibriert war.
+#
+# Punkt 2 ist der schwerere: die Zeile behauptete eine Kalibrierung, die
+# nie stattgefunden hat, und haette bei der naechsten R-R9-Pruefung
+# faelschlich "passt" gemeldet.
+#
+# ✔ DIE GUTE NACHRICHT: weil die Kalibrierung den Schnittabstand nie
+# enthielt, ist die Schwelle 0,010 R durch seinen Wegfall NICHT
+# ungueltig geworden. Sie gilt fuer genau die Beitragslage, die jetzt
+# wieder besteht.
 KALIBRIERT_FUER = ("funding_fuenftel:0.82/1.30/0.12/-0.54/-1.70 "
-                   "schnitt_fuenftel:1.27/1.59/0.24/-1.28/-1.82 "
                    "turnover_fuenftel:3.15/0.83/0.22/-1.79/-2.40")
 """Die Beitragslage, fuer die SCHWELLE_VORGABE kalibriert wurde.
 

@@ -393,16 +393,56 @@ BEITRAEGE = (
     # identische Fuenftel). `marktrang.schnitt_werte()` haelt das ein.
     Beitrag(
         name="Abstand zum eigenen 200-Tage-Schnitt",
-        zustand="traegt", punkte=0.0, merkmal="schnitt_fuenftel",
-        stufen=(+1.27, +1.59, +0.24, -1.28, -1.82), klammer="tag",
-        quelle=("messe_schnittabstand_beitrag.py, 655.813 Anker, "
-                "3.072 Kalendertage, 523 Reihen; Regelwirkung +0,0136 R"),
-        warum=("Wer heute tief unter seinem eigenen 200-Tage-Schnitt "
-               "steht, bewegt sich in den naechsten Wochen staerker "
-               "aufwaerts als wer weit darueber steht - am selben Tag "
-               "verglichen. Aus der Kursreihe, also fuer JEDEN Wert "
-               "verfuegbar"),
-        strategien=("einstieg",),
+        # ⚠️⚠️ AM 31.08.2026 ZURUECKGENOMMEN - noch am Tag der Registrierung.
+        #
+        # Registriert wurde er mittags als dritter tragender Beitrag; er war
+        # der einzige aus der EIGENEN Kursreihe und brachte die Abdeckung von
+        # 36 auf 43 von 43. Abends fiel er im Horizontlauf
+        # (`messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`), der ihn
+        # zum ersten Mal ueber DENSELBEN Massstab schickte wie Funding und
+        # Turnover:
+        #
+        #     H 1  +0,0000   H 2  +0,0000   H 3  -0,0005
+        #     H 5  -0,0069   H10  -0,0118   H20  -0,0221
+        #
+        # **Bei keinem Horizont trennbar** - und bei den langen mit
+        # negativem Vorzeichen. Im selben Lauf reproduzierte die Kontrolle
+        # Funding mit +0,0246 R (erwartet +0,0242), das Werkzeug ist also
+        # nicht der Grund.
+        #
+        # ⚠️ DREI FEHLER BEI DER REGISTRIERUNG, alle vermeidbar:
+        #
+        #   1 DIE TAGESKLAMMER, zum dritten Mal nach H. `messe_schnitt-
+        #     abstand_beitrag.py` rechnete die Regelwirkung GEPOOLT ueber
+        #     alle Anker; `messe_regel_wirksamkeit.wirkung()` rechnet sie
+        #     JE KALENDERTAG. Auf denselben Daten: gepoolt -0,0058,
+        #     je Tag +0,0000.
+        #   2 NICHT MONOTON. Die Stufen waren (+1,27 +1,59 +0,24 -1,28
+        #     -1,82) - Fuenftel 1 ueber Fuenftel 0. Die Vorabfestlegung im
+        #     Kopf desselben Messwerkzeugs verlangt "monoton ueber die
+        #     Fuenftel" als Bedingung fuer nutzbar. Ich habe gegen meine
+        #     eigene Festlegung registriert.
+        #   3 DIE ZAHL WAR FREMD. Eingetragen war "Regelwirkung +0,0136 R" -
+        #     das ist exakt der Wert von H3 TURNOVER aus demselben Lauf.
+        #
+        # ⚠️ DIE FOLGE, die benannt gehoert: die Abdeckung faellt von 43 auf
+        # 36 von 43 zurueck. Sieben Werte (AIOZ, CANTON, CAT, FLOKI, SUPRA,
+        # VSN, XNO) haben damit KEINEN Beitrag - und Stufe 11 ist seit G-6
+        # scharf. Der Zustand `vermessen` faengt das nicht ab: Krypto IST
+        # vermessen, diesen Werten fehlt nur der Wert. Sie werden gesperrt,
+        # und zwar zu Recht nach Datenlage - aber es ist eine Luecke, keine
+        # Bewertung.
+        #
+        # NICHT GELOESCHT, sondern auf null: die Groesse bleibt sichtbar,
+        # und wer sie wieder aufnehmen will, findet hier, was schiefging.
+        zustand="null", punkte=0.0, merkmal="schnitt_fuenftel",
+        stufen=None, klammer="gepoolt",
+        quelle=("messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20, "
+                "31.08.2026: bei keinem Horizont trennbar, H20 -0,0221 R"),
+        warum=("Als MERKMAL zeigt der Abstand zum eigenen 200-Tage-Schnitt "
+               "einen Zusammenhang - als REGEL traegt er nicht, auf keinem "
+               "Horizont. Die urspruengliche Zahl entstand aus einer "
+               "gepoolten Rechnung ohne Tagesklammer"),
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",
