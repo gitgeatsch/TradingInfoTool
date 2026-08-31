@@ -264,3 +264,203 @@ Reihenfolge, weil die Messung den größten Bauschritt erübrigen könnte.
 
 Verwandt: `Roter_Faden_27_08.md` · `Kombinationsmatrix_27_08.md` ·
 `agent/handelsauftrag.py` · `Test_und_Verifikationsmethodik.md` 2.58.2, 2.80
+
+
+---
+
+# UMSETZUNGSPLAN 31.08.2026 — der dritte Anlauf, und warum er anders ist
+
+**Nutzervorgabe 31.08., wörtlich:** *„Die Kette und Scheduler wurden nun
+bereits 2mal umgebaut — zuerst eigene Aufrufe je Strategie, dann ‚über Spot'
+pseudo-Hebel generiert. Jetzt im 3. Anlauf wäre meine Meinung: Asset z. B.
+LINK kommt in die Bewertung — entweder es kommt nur eine Strategie in Frage,
+weil dies die Bewertung ergibt, oder u. U. beides, Akkumulation und Hebel,
+aber nur wenn die Bewertung dies zulässt."*
+
+Und: *„Ich ersuche, alle deine Skills für diesen Umbau anzuwenden —
+Fachexperte, technischer Experte — damit wir eine stabile Basis erhalten,
+die funktioniert."*
+
+## 0. Warum die ersten beiden Anläufe gescheitert sind
+
+| | Anlauf | Was daran brach |
+|---|---|---|
+| **1** | eigene Aufrufe je Strategie | jede Strategie ein eigener Lauf → das teure Modellurteil mehrfach je Asset, Kosten und Takt explodieren |
+| **2** | „über Spot", Hebel als Etikett (S6b, Kapitel 88) | ⚠️ **die Hebelkette wurde dabei aufgelöst** — siehe Abschnitt 1 |
+| **3** | **eine Bewertung, mehrere zulässige Zellen** | dieser Plan |
+
+⚠️ **Anlauf 2 war fachlich richtig und technisch unvollständig.** Kapitel 88
+(*„Hebel als Ergebnis statt als Kategorie"*) bleibt gültig — der Hebel*faktor*
+wird nicht geraten, er fällt aus der Rechnung an. Der Fehler war, daraus zu
+schließen, dass auch die **Frage** „gehebelt handeln?" entfällt.
+
+---
+
+## 1. ⚠️⚠️ DER SCHADEN, DEN ANLAUF 2 ANGERICHTET HAT — lückenlos belegt
+
+**Nutzerbefund:** *„Vorsicht, du hast durch den Umbau die Hebelkette
+aufgelöst!!"* — Ursache, ebenfalls vom Nutzer: *„du hast im Produktivcode
+alles als SPOT geführt!!!"*
+
+Beides bestätigt, am Code und an den Produktionsdaten:
+
+    1  S6b setzt INSTRUMENTE_JE_GRUPPE["krypto"] = ("spot",)
+    2  assetklassen.laeufe() erzeugt fünf Läufe - KEINER mit `hebel`
+    3  rollen_job.bedient_neue_kette(g) ist für ALLE fünf Gruppen True
+    4  scheduler/background.py:3373
+         if any(bedient_neue_kette(g) for g in {g for g,_,_ in laeufe()}):
+             -> Budget-Allocator ÜBERSPRUNGEN
+    5  budget_allocator ist der EINZIGE Aufrufer von generate_hebel_signal()
+    6  Die neue Kette führt kein Hebel-Instrument
+       -> der Hebel existiert in KEINER der beiden Ketten
+
+### Das Screening läuft weiter — ins Leere
+
+    hebel_triggers        82.655 Zeilen, 1.872-2.664 PRO TAG
+    davon über Schwelle 70    60-619 Kandidaten PRO TAG
+    höchster Score seit 11.08.  100,0  (Schwelle 70)
+    hebel_signals         letztes Signal 10.08.2026
+    hebel_positions       188, alle geschlossen, letzte Eröffnung 22.07.
+
+⚠️ **Der Kommentar an `background.py:3373` sagt „Eine Klasse, eine Kette."**
+Die Bedingung ist aber `any(...)`, nicht je Klasse. **Eine einzige umgestellte
+Gruppe legt den gesamten alten Weg still.** Der Kommentar beschreibt die
+Absicht, der Code etwas anderes.
+
+---
+
+## 2. Die Architektur des dritten Anlaufs
+
+```
+Asset  →  EINE Faktenlage · EIN Lagebild · EIN Modellurteil    (teuer, einmal)
+              │
+              ├─ spot  × einstieg        immer zulässig
+              ├─ spot  × akkumulation    nur wenn dca_erlaubt  (BTC/ETH/SOL)
+              └─ hebel × einstieg        nur wenn hebel_pruefung_erlaubt (24)
+              │
+              ▼
+        je Zelle ein eigenes Potential  →  Signal, wenn es trägt
+        Ergebnis: keine, eine oder mehrere Handlungen je Asset
+```
+
+`hebel × swing` entfällt (Nutzerentscheidung 31.08.: *„nur Einstieg reicht,
+Swing aktuell kein Thema"*).
+
+### Die Schalter — erhoben, nicht angenommen
+
+    asset_hebel_settings.hebel_pruefung_erlaubt = 1   24 Assets
+                                                = 0   19 Assets
+    asset_dca_settings                          BTC explizit; Vorgabe
+                                                _DCA_ERLAUBT_DEFAULT_SYMBOLS
+                                                = {BTC, ETH, SOL} (db.py:1878)
+
+⚠️ **BTC, ETH und SOL dürfen beides** — genau der Fall, den A2 (28.08.)
+gefordert hat: *„V1 braucht ZWEI Bewertungen je Asset, mit VERSCHIEDENEN
+Fragen."*
+
+---
+
+## 3. Die zwei Ebenen — je Strategie getrennt
+
+**Nutzervorgabe 31.08.:** *„Du musst sauber unterscheiden zwischen Bewertungen
+(neutrale Signale nur durch Potential und Wahrscheinlichkeit) ohne Gebühren
+etc. und den Berechnungen im Mailtext mit den echten Werten. Ganz wichtig,
+sonst vermischt man zwei verschiedene Ebenen."* Ergänzt: *„für alle relevanten
+Strategien, wo Gebühren bzw. die Wirtschaftlichkeit ein Thema sind."*
+
+| Zelle | **BEWERTUNG** | **MAIL** |
+|---|---|---|
+| `spot × einstieg` | **0,00 %** | 0,30 / 1,50 % als **Text** |
+| `spot × akkumulation` | **0,00 %** | **gerechnet** — viele Tranchen à 250 €; die Gebühr summiert sich anders als bei einem Einmalkauf |
+| `hebel × einstieg` | **0,00 %** | **gerechnet** — 0,30 / 1,50 % **plus laufende Finanzierung** |
+
+⚠️ **Die Bewertung ist überall neutral — auch beim Hebel.** Begründung aus
+`Anforderungen_Umbau_28_08.md`: *„Die Finanzierung kostet JE TAG; um sie
+einzurechnen, müsste man wissen, wie lange die Position läuft. Das ist zum
+Entscheidungszeitpunkt unbekannt. Damit ist die gebührenfreie Bewertung nicht
+eine Wahl unter mehreren, sondern die einzige, die keine verdeckte PROGNOSE
+enthält."*
+
+---
+
+## 4. Die Messentscheidung — und der Fallstrick, in den ich gelaufen bin
+
+**Zu messen:** die Beiträge (Funding, Turnover, Schnittabstand) auf der
+Hebel-Geometrie. Heute sind sie auf **H20** gemessen — 20 Handelstage.
+
+### ⚠️ FALLSTRICK: die falsche Grundgesamtheit
+
+Ich hatte gemessen: *„Hebel hält Ø 1,14 Tage, 86 von 188 unter 6 Stunden —
+also brauchen wir Stundenkerzen."* **Das war falsch.**
+
+| Quelle | Haltedauer | was es ist |
+|---|---|---|
+| `hebel_positions` (188) | Median **0,29 Tage** | ⚠️ **realisiertes Nutzerverhalten**, 11 Symbole, TAO allein 84 |
+| `hebel_signals.mindestziel_zeitraum_tage_geschaetzt` | **1,2 – 2,1 Tage** | was das System **plante** |
+| Nutzervorgabe 31.08. | **1 – 20 Tage** | der Horizont, für den bewertet werden soll |
+
+**Die Messung bewertet die SYSTEMEMPFEHLUNG, nicht das Nutzerverhalten.**
+Wer die realisierte Haltedauer misst, misst, wann jemand ausgestiegen ist —
+nicht, ob die Empfehlung trug.
+
+✔ **Entscheidung: H1 bis H20 auf Tageskerzen. Keine Stundendaten.**
+Dieselben 523 Messreihen, nur andere Horizonte.
+
+⚠️ Dieselbe Fehlerklasse wie am 30.08. („H cross-sectional geprüft, obwohl
+`auswahl.py` die Auswahl macht") und wie die Tagesklammer bei H.
+**Prüffrage vor jeder Messung: messe ich die Empfehlung oder das Verhalten?**
+
+---
+
+## 5. Die Schritte
+
+| # | Schritt | Risiko | Nachweis |
+|---|---|---|---|
+| **1** | **Messung H1–H20** für die drei Beiträge | keins | Placebo-Band, beide Hälften, Survivorship, **Wirkung als Regel** |
+| **2** | **Spalte `instrument` in `signals`**, Altbestand → `'spot'` | ⚠️ Migration | die 5.772 Altsignale waren tatsächlich Spot — die Migration ist wahrheitsgemäß |
+| **3** | **`laeufe()` liefert Zellen je Asset** aus den Schaltern statt einer festen Gruppenliste | mittel | Trockenlauf: erwartete Zellenzahl je Asset |
+| **4** | **Bewertung je Zelle** in `_ein_asset`, EIN Modellurteil für alle Zellen | ⚠️ **hoch** | Kettensimulation über alle Gruppen, Signale je Zelle |
+| **5** | **`hebel_triggers` als Anlass einspeisen** | mittel | Nutzerbegründung: *„einspeisen, sonst haben wir ein Performance- und Datenbankproblem"* |
+| **6** | **I-2: Paarprüfung nach der Rechnung** — `hebel × akkumulation` darf nicht entstehen | klein | |
+| **7** | **Spot-Positionsführung verdrahten** + `instrument`-Filter reparieren | mittel | 268 Führungen → 43 Positionen |
+| **8** | **Altbestand abgrenzen** | klein | |
+
+### Zu Schritt 8 — Altbestand
+
+| | Zeilen | Umgang |
+|---|---|---|
+| `hebel_positions` | 188, alle geschlossen | ✔ **bleibt** — echte Positionsführung, Bitpanda-Import füllt weiter, `ui/hebel_view.py` zeigt sie |
+| `hebel_signals` | 1.998, letztes 10.08. | ✔ **bleibt lesbar**, wird nicht mehr geschrieben. **Kein Rückbau** — die GUI zeigt Historie |
+| `hebel_triggers` | 82.655, wächst | → **Schritt 5**, wird Anlass der neuen Kette |
+
+⚠️ **Keine offene Hebelposition** (Nutzer bestätigt 31.08.). Ein Umbau kann
+keine laufende Position beschädigen — das entschärft Schritt 2 und 4
+erheblich.
+
+---
+
+## 6. ⚠️ Die Fallstricke — für mich, beim Bauen
+
+| # | Fallstrick | Gegenmittel |
+|---|---|---|
+| **F1** | **Verdrahtung über Textsuche prüfen.** Am 31.08. meldete die Prüfung `positionsfuehrung` als verdrahtet — der Treffer war ein **Docstring** | Erreichbarkeit über echte `import`-Kanten (AST), mit Gegenprobe auf eine bekannte Lücke |
+| **F2** | **Grüne Suite als Wirkungsnachweis nehmen.** 1.828 Prüfungen grün, echte Produktion: **0 Signale** | `simuliere_kette.py` über ALLE Gruppen; „M = 0 Signale" ist immer ein Befund |
+| **F3** | **Reichweite nicht prüfen.** Beiträge auf `krypto` registriert → vier Klassen dauerhaft gesperrt | `pruefe_beitragsabdeckung.py` VOR jeder Scharfschaltung |
+| **F4** | **Leeres Feld als Erlaubnis lesen.** `strategien=()` hieß „gilt überall" — bei einer auf EINER Geometrie gemessenen Größe nie wahr | jeder Beitrag nennt seine Strategien explizit; Prüfung hält es fest |
+| **F5** | **Falsche Grundgesamtheit messen** (Abschnitt 4) | Prüffrage: messe ich die Empfehlung oder das Verhalten? |
+| **F6** | **Eigene Prüfungen frieren den alten Zustand ein.** Zwei Prüfungen schlugen fehl, weil sie Zahlen statt Eigenschaften festhielten | Eigenschaft prüfen, nie einen Zahlenwert |
+| **F7** | **Neues bauen, was es gibt.** `zeige_bewertungsabdeckung.py` gebaut, obwohl `pruefe_assetklassen_datenlage.py` existierte | ⚠️ **`zeige_modulkarte.py` VOR jeder Ausarbeitung** — die Regel steht seit 27.08. und wurde übersprungen |
+| **F8** | **Die Ebenen vermischen.** Bewertung neutral, Mail gerechnet — je Strategie verschieden | Abschnitt 3; keine Stelle, die filtert oder ordnet, sieht einen Gebührensatz |
+| **F9** | **`any(...)` statt je Gruppe.** Der Fehler, der die Hebelkette auflöste | jede Weiche je Gruppe UND Instrument, nie global |
+
+---
+
+## 7. Was NICHT gebaut wird — und warum
+
+| | |
+|---|---|
+| `hebel × swing` | Nutzerentscheidung 31.08. Bei 1–20 Tagen Horizont ist der praktische Unterschied zu `einstieg` klein, und Swing verlangt ein eigenes Ausstiegswerk |
+| Tabelle `positionen` | Die Position ist **ableitbar**. Eine zweite Fassung wäre die nächste Stelle, an der Mail und Datenbank auseinanderlaufen (`positionsfuehrung.py`-Modulkopf) |
+| Stundenkerzen | Abschnitt 4 — falsche Grundgesamtheit |
+| Rückbau `hebel_signals` | die GUI zeigt Historie; read-only genügt |
+| Akkumulations-Verbilligungssatz für den Kern | Befund 28.08.: das Maß trägt über 505 Reihen, **nicht für BTC/ETH/SOL**. Empfehlung B+C: Kern akkumulieren **ohne** Verbilligungssatz, **mit** Ausschlussbremse (> +30 % über dem Schnitt, −11,2 Punkte, 3/3 Jahre) |
