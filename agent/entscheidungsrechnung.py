@@ -53,7 +53,44 @@ GRENZEN = {
     # den der Backtest vom 28.07. als einzigen ueber der Gewinnschwelle ausweist
     # (5-10 %: 31,2 % Trefferquote, +0,31 CRV).
     "stop_ziel_atr": 2.5,
-    "stop_min_relativ": 0.025,      # RM-1b, config risiko.sl_abstand_eng_schwelle_relativ
+    # ⚠️⚠️ VON 0,025 AUF 0,050 ANGEHOBEN (31.08.2026, Nutzerentscheidung).
+    #
+    # Bei Stop 2,5 % und Bitpanda-Kosten von 1,5 % je Seite kostet die
+    # Runde 3,0 % - MEHR, als der Stop ueberhaupt verlieren darf. Der
+    # Trade ist ab der ersten Sekunde im Minus, der Breakeven springt auf
+    # 73,3 % gegen eine gemessene Trefferquote von 27,8 %.
+    #
+    # Und es war kein theoretischer Fall. Gemessen an 2.297 echten
+    # Rollen-Signalen der Notebook-Produktion:
+    #
+    #     Stops <= 2,6 % (an der Klemme)   233 Signale   10,1 %
+    #     Signale mit Hebel > 5            105
+    #     hoechster Hebel                  10,00  (= hebel_max)
+    #
+    # WIRKUNG DER ANHEBUNG, an denselben Daten gerechnet:
+    #
+    #     betroffen        698 von 2.297 (30,4 %) - KEINES faellt weg,
+    #                      sie bekommen einen weiteren Stop
+    #     Hebel > 5        105 -> 0
+    #     hoechster Hebel  10,00 -> 4,11
+    #     Breakeven (BP)   64,6 % -> 53,3 %
+    #     Etikett          110 Signale wechseln von hebel auf spot
+    #
+    # ⚠️ EIN HEBELDECKEL WAERE DER FALSCHE GRIFF (S6d, 22.08.): er senkt
+    # das Risiko nicht, er vergroessert die Nominale. Die Stopweite greift
+    # an der richtigen Stelle - `hebel = verlustanteil / stop_rel`.
+    #
+    # ⚠️ UND DIE EHRLICHE EINSCHRAENKUNG: auch bei 5 % traegt sich der
+    # Trade rechnerisch nicht (53,3 % noetig, 27,8 % gemessen). Die
+    # Untergrenze repariert die GEOMETRIE, nicht die Trefferquote.
+    #
+    # ⚠️ ZWEI GROESSEN, EIN WERT. `config risiko.sl_abstand_eng_schwelle_-
+    # relativ` ist fachlich etwas anderes - die WARNSCHWELLE der alten
+    # Hebel-Kette ("dieser Stop ist eng"). Sie zieht mit, damit beide nicht
+    # auseinanderlaufen; die Pruefung erzwingt das. Folge: die Warnung
+    # greift kuenftig strukturell nie mehr, weil kein Stop mehr darunter
+    # liegen kann - und das ist richtig so.
+    "stop_min_relativ": 0.05,       # RM-1b, config risiko.sl_abstand_eng_schwelle_relativ
     "stop_min_atr": 0.75,           # RM-1c, config risiko.sl_abstand_min_atr_faktor
     # OBERGRENZE - NEU, es gab bisher keine. Ein Stop von 40 % faellt durch
     # jede Untergrenze und ruiniert trotzdem die Rechnung: er macht die

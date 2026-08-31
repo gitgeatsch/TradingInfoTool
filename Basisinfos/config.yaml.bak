@@ -198,7 +198,7 @@ risiko:
                                         # den haeufigen Provider-Wechseln in diesem
                                         # Projekt kann das unbemerkt kippen; ein Gate
                                         # nicht.
-  sl_abstand_eng_schwelle_relativ: 0.025  # RM-1b: Mindest-Abstand Entry -> Stop-Loss.
+  sl_abstand_eng_schwelle_relativ: 0.05  # RM-1b: Mindest-Abstand Entry -> Stop-Loss.
                                         # Unterhalb dieser Schwelle wird die Empfehlung
                                         # deterministisch zu HALTEN zurueckgestuft (Veto).
                                         # Gilt fuer ALLE Assetklassen - Hebel wie Spot-Familie.

@@ -9500,8 +9500,18 @@ def paket_dimension() -> None:
            "S1 darf kein Verhalten aendern - der Wechsel kommt erst in S5")
     _r075 = _ER.rechne(**_e)
     _r20 = _ER.rechne(**_e, stop_min_atr=2.0)
+    # ⚠️ EIGENSCHAFT STATT FAKTOR (31.08.2026). Hier stand
+    # `> _r075["stop_relativ"] * 2.5`. Das galt, solange die Klemme bei
+    # 2,5 % lag: der Rueckfall landete auf 3 %, der Regler auf 8 %. Seit
+    # die Untergrenze auf 5 % steht, ist der Rueckfall selbst geklemmt
+    # (5 %), und das Verhaeltnis faellt auf 1,60 - die Pruefung schlug an,
+    # obwohl der Regler unveraendert wirkt.
+    #
+    # Geprueft wird jetzt, was gemeint war: ein groesserer Faktor macht den
+    # Stop WEITER und den Hebel KLEINER. Eine Pruefung, die einen
+    # Zahlenwert einfriert, bremst die naechste begruendete Aenderung aus.
     pruefe(P, "und mit Regler greift er auf dem Produktionspfad",
-           _r20["stop_relativ"] > _r075["stop_relativ"] * 2.5
+           _r20["stop_relativ"] > _r075["stop_relativ"]
            and _r20["hebel"] < _r075["hebel"],
            "in 10 von 12 echten Faellen bindet genau diese Klemme - der "
            "ATR-Rueckfall dagegen wird von ihr nicht beruehrt")
@@ -11647,8 +11657,18 @@ def paket_dimension() -> None:
             kurs=100.0, atr=stop_rel * 100.0 / 2.5, k=2.5, verlustanteil=va,
             einsatz_eur=1000.0, hebel_handelbar=True)
 
+    # ⚠️ DER MITTLERE FALL WURDE AM 31.08. NACHGEZOGEN. Er lautete
+    # (0,025 / 30 %) und traf den Hoechsthebel, weil hebel_noetig dort 12,0
+    # war. Seit die Stop-Untergrenze auf 5 % steht, wird dieser Stop auf
+    # 5 % angehoben, hebel_noetig faellt auf 6,0 - und gebunden ist wieder
+    # das Risikobudget.
+    #
+    # Der Fall muss bleiben, denn er prueft eine ECHTE Eigenschaft: dass
+    # alle drei Bindungsgruende erreichbar sind. Erreicht wird der
+    # Hoechsthebel jetzt ueber den Verlustanteil (0,55/0,05 = 11,0 > 10,0),
+    # nicht mehr ueber einen Stop, den es nicht mehr gibt.
     _faelle = ((0.05, 0.30, "Risikobudget"),
-               (0.025, 0.30, "Hoechsthebel"),
+               (0.05, 0.60, "Hoechsthebel"),
                (0.22, 0.95, "RM-11 Liquidationsabstand"))
     for _sr, _va, _erwartet in _faelle:
         _d = _gebunden(_sr, _va)
