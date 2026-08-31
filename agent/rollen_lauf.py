@@ -563,6 +563,92 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                            "gewaehlt": sorted(_auswahl.get("gewaehlt") or ()),
                            "marktzustand": (_markt or {}).get("abstand")}
 
+    # ---- 2e: DIE MARKTRAENGE, EINMAL JE LAUF (30.08.2026) ----------------
+    #
+    # ⚠️ EINMAL, NICHT JE SYMBOL - und das ist keine Sparmassnahme, sondern
+    # die Messung selbst. Gemessen wurde ein QUERSCHNITT: "wer hat HEUTE,
+    # verglichen mit den anderen, das niedrigste Funding". Die Je-Reihe-Sicht
+    # ("guenstig fuer seine eigenen Verhaeltnisse") wurde ebenfalls geprueft
+    # und traegt NICHT - marktbereinigt -0,0755 R, also reines Markt-Timing.
+    # Ein Rang je Symbol berechnet waere deshalb nicht dieselbe Groesse mit
+    # weniger Aufrufen, sondern eine andere Groesse ohne Befund.
+    #
+    # ⚠️ FAELLT ER AUS, SPERRT ER NICHTS. Die Merkmale fehlen dann, und
+    # `wahrscheinlichkeit.rechne()` traegt fuer sie null bei ("an diesem
+    # Anker nicht bestimmbar"). Kein fehlender Wert wird zur schlechtesten
+    # Stufe - das waere ein stiller Sperrgrund aus einem Netzwerkfehler.
+    #
+    # ⚠️ KONTINGENT: ein Aufruf Binance (frei) und einer CoinGecko
+    # (10.000/Monat, Grundverbrauch ~230/Tag) - je Lauf, nicht je Symbol.
+    # ⚠️ IM TROCKENLAUF WIRD NICHT ABGERUFEN (31.08.2026). Die erste Fassung
+    # rief `marktrang` in JEDER Betriebsart - auch in der Pruefsuite. Folge:
+    # die Suite verbrauchte CoinGecko-Kontingent und lief in HTTP 429. Ein
+    # Trockenlauf, der echte Quellen anfasst, ist keiner; dasselbe Muster
+    # gilt hier wie beim Lagebild, das aus `aufgezeichnet` kommt.
+    _raenge, _rang_fehler = {}, None
+    # ⚠️ IM TROCKENLAUF AUS `antworten`, NICHT AUS DEM NETZ (31.08.2026).
+    #
+    # Dasselbe Muster wie beim Lagebild: der Trockenlauf nimmt, was
+    # aufgezeichnet ist. Ohne diesen Weg gab es trocken NIE Raenge - und
+    # seit G-6 (Stufe 11 verwirft) hiess das: jeder Trockenlauf endet mit
+    # null Signalen, weil jedes Potential bei 0,000 liegt. Damit waeren
+    # alle Pruefungen, die eine Mail brauchen, wertlos geworden.
+    #
+    # ⚠️ WER NICHTS STELLT, BEKOMMT NICHTS. Ein Vorgabewert ("nimm Fuenftel
+    # 2") waere eine erfundene Zahl an genau der Stelle, an der das System
+    # entscheidet.
+    # ⚠️ GESTELLTE RAENGE HABEN VORRANG - in JEDER Betriebsart (31.08.2026).
+    # Die erste Fassung band das an TROCKEN; ein Probelauf rief dann doch
+    # die echte API, verbrauchte Kontingent und lieferte fuer Testsymbole
+    # keine Raenge - mit G-6 also keine Mail. Wer Raenge stellt, meint sie
+    # auch; wer keine stellt, bekommt sie aus dem Netz (ausser trocken).
+    _gestellt = dict((antworten or {}).get("marktraenge") or {})
+    if _gestellt:
+        _raenge = _gestellt
+    elif betriebsart == TROCKEN:
+        _raenge = {}
+    elif str(assetklasse or "").lower() == "krypto":
+        try:
+            from agent import marktrang as _MR
+            _raenge = _MR.raenge(symbole)
+        except Exception as exc:                         # noqa: BLE001
+            logger.exception("Marktraenge fuer %s nicht abrufbar", assetklasse)
+            _rang_fehler = str(exc)
+            ergebnis.setdefault("fehler", []).append(f"Marktrang: {exc}")
+            _raenge = {}
+    _mit_f = sum(1 for v in _raenge.values()
+                 if v.get("funding_fuenftel") is not None)
+    _mit_t = sum(1 for v in _raenge.values()
+                 if v.get("turnover_fuenftel") is not None)
+    ergebnis["marktrang"] = {
+        "abgerufen": bool(_raenge), "mit_funding": _mit_f,
+        "mit_turnover": _mit_t, "von": len(symbole or ()),
+        "uebersprungen": betriebsart == TROCKEN and not _raenge,
+        "gestellt": bool(_gestellt),
+        "fehler": _rang_fehler}
+
+    # ⚠️⚠️ EIN AUSFALL DARF NICHT STILL SEIN - und das ist seit R1 keine
+    # Vorsichtsmassnahme mehr, sondern eine Betriebsfrage. Funding und
+    # Turnover sind die EINZIGEN tragenden Beitraege; fehlen sie, liegt
+    # jedes Potential bei 0,000 und die Schwelle sperrt ALLES. Genau der
+    # Zustand, aus dem H gerade herausgefuehrt wurde - nur diesmal durch
+    # einen Netzwerkfehler statt durch eine Registrierung.
+    #
+    # Es wird NICHT durchgelassen ("keine Empfehlung ohne Grund" gilt
+    # weiter), aber es wird BENANNT. Ein Lauf ohne Signale wegen API-Ausfall
+    # sieht sonst genauso aus wie ein Lauf ohne Signale wegen schlechter
+    # Lage - und das sind zwei sehr verschiedene Aussagen.
+    if betriebsart != TROCKEN and str(assetklasse or "").lower() == "krypto"             and not _mit_f and not _mit_t:
+        _warnung = ("⚠️ MARKTRANG AUSGEFALLEN - Funding und Turnover fehlen "
+                    "fuer ALLE %d Symbole%s. Damit liegt jedes Potential bei "
+                    "0,000 und Stufe 11 sperrt den ganzen Lauf. Das ist ein "
+                    "Datenausfall, kein ruhiger Tag."
+                    % (len(symbole or ()),
+                       (": %s" % _rang_fehler) if _rang_fehler else ""))
+        logger.error(_warnung)
+        ergebnis.setdefault("warnungen", []).append(_warnung)
+        ergebnis["marktrang"]["totalausfall"] = True
+
     for symbol in symbole:
         if max_aufrufe is not None and ergebnis["aufrufe"] >= max_aufrufe:
             ergebnis.setdefault("budget_gestoppt", []).append(symbol)
@@ -608,7 +694,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        ergebnis=ergebnis, versand=versand,
                        assetklasse=assetklasse, watchlist=_wl,
                        auswahl=_auswahl, marktzustand=_markt,
-                       auswahl_lauf=_auswahl_lauf,
+                       auswahl_lauf=_auswahl_lauf, marktraenge=_raenge,
                        module=(AR, ER, FB, FQ, Z1, RT, RE, SA, SM, TO, TB,
                                ZM, BE, WH),
                        zai_client=zai_client, bilanz=bilanz,
@@ -769,7 +855,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                pruefe_auftrag, zai_client=None, bilanz=None,
                assetklasse="krypto", watchlist=None,
                auswahl=None, marktzustand=None,
-               auswahl_lauf=None) -> None:
+               auswahl_lauf=None, marktraenge=None) -> None:
     """Ein Asset durch alle Stufen. Wirft, wenn es nicht weitergeht.
 
     `watchlist` wird DURCHGEREICHT, nicht hier geladen (15.08.2026). Meine
@@ -1580,6 +1666,35 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Krypto-Gebuehren (1,5 % je Seite) statt Boersengebuehren (1 EUR fix
     # + 0,25 % Spread) gerechnet, und der Breakeven waere grob falsch
     # gewesen, ohne dass irgendetwas meldet.
+    # ---- DIE BEWERTUNG, VOR DER ENTSCHEIDUNG (U-1, 30.08.2026) ----
+    #
+    # ⚠️ H WURDE BIS HEUTE 145 ZEILEN SPAETER GERECHNET - also NACH Stufe 11.
+    # Die Entscheidungsstufe kannte damit den einzigen tragenden Beitrag des
+    # Systems nicht. Hier steht nur die BERECHNUNG; die Mailzeilen entstehen
+    # unveraendert an ihrer alten Stelle aus demselben Ergebnis.
+    #
+    # Die Eingaben liegen alle vor: `rechnung` seit Zeile 1517,
+    # `_bloecke_anlass` seit Zeile 822.
+    _ist_akkumulation = str(strategie or "").strip().lower() == "akkumulation"
+    _vf_bewertung = None
+    try:
+        from agent import vorfilter as _VF0
+        if _ist_akkumulation:
+            raise _KeinHBeiAkkumulation
+        _vf_bewertung = _VF0.bewerte(
+            (_bloecke_anlass or {}).get("_marken_werte"),
+            rechnung.get("stop_eur"), rechnung.get("ziel_eur"),
+            bool(rechnung.get("ist_short")), assetklasse,
+            # ⚠️ NUR FUER DIE MAIL (R2): ohne den Einstieg bleiben in der
+            # Mail Rohpreise stehen, und die sagen einem Leser nichts.
+            einstieg_eur=rechnung.get("einstieg_eur"))
+    except _KeinHBeiAkkumulation:
+        # KEIN FEHLER, SONDERN DIE REGEL - deshalb ohne `logger.exception`.
+        _vf_bewertung = None
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Vorfilter fuer %s uebersprungen", symbol)
+        _vf_bewertung = None
+
     kosten_r = TB.kosten_r_aus_stop(
         kurs_e, rechnung["stop_eur"], klasse=_kostenklasse(assetklasse),
         position_eur=rechnung["betrag_eur"],
@@ -1598,9 +1713,132 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         spanne_perzentil=TB._prozent((kern or {}).get("momentum_perzentil")),
         gleichlauf=TB._band_grob((kern or {}).get("volumen_perzentil"))),
         kosten_r=kosten_r or 0.0, crv=rechnung["crv"])
-    if not bewertung["traegt"]:
-        durchlauf.verloren(symbol, "entscheider", "traegt sich nicht")
+    # ---- STUFE 11 ENTSCHEIDET AB JETZT UEBER DAS POTENTIAL (U-1) ----
+    #
+    # ⚠️ VORHER: `bewertung["traegt"]` aus `trefferbilanz` - und die misst mit
+    # `(1 + kosten_r)/(1 + CRV)`, also MIT Bitpanda-Gebuehren. Bei 5 % Stop
+    # verlangte sie 53 % Trefferquote, wo die Geometrie 33 % hergibt. Sie sagte
+    # damit bei praktisch JEDEM Signal "traegt sich nicht" - was nur deshalb
+    # nicht auffiel, weil die Stufe ausschliesslich zaehlt.
+    #
+    # Nutzervorgabe 30.08.: *"die Bewertung soll ohne Wirtschaftlichkeit,
+    # Gebuehren usw. erfolgen - also neutral"*. `potential.rechne()` ruft
+    # `wahrscheinlichkeit` mit `gebuehr_je_seite=0.0`.
+    #
+    # ⚠️ DIE TREFFERBILANZ BLEIBT - als Auskunft in der Mail. Nur ENTSCHIEDEN
+    # wird nicht mehr mit ihr.
+    _potential = None
+    try:
+        from agent import potential as _PT
+        # ⚠️ DIE MERKMALE AUS DEM QUERSCHNITT (2e). Nur Schluessel, deren
+        # Wert tatsaechlich vorliegt - ein fehlendes Fuenftel darf NICHT als
+        # 0 ankommen, sonst saehe "unbekannt" aus wie "bestes Fuenftel".
+        # ⚠️ DURCHGEREICHT, NICHT GEGRIFFEN. Meine erste Fassung von 2e las
+        # hier `_raenge` - eine Variable aus `fuehre_lauf`, die diese
+        # Funktion nicht sieht. Exakt die Falle, die der Docstring oben seit
+        # dem 15.08. fuer `watchlist` beschreibt: im Betrieb ein NameError,
+        # den der breite Fehlerfang schluckt, und der Beitrag traegt still
+        # null. Gefunden hat es Paket "Kalibrierung", nicht ich.
+        _mr = (marktraenge or {}).get(symbol) or {}
+        _merkmale = {k: _mr[k] for k in ("funding_fuenftel",
+                                         "turnover_fuenftel",
+                                         "schnitt_fuenftel")
+                     if _mr.get(k) is not None}
+        _potential = _PT.rechne(
+            crv=rechnung["crv"], stop_relativ=rechnung.get("stop_relativ"),
+            klasse=assetklasse, instrument=instrument, strategie=strategie,
+            h=(_vf_bewertung or {}).get("h"),
+            merkmale=_merkmale or None)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Potential fuer %s nicht rechenbar", symbol)
+
+    if _potential is None:
+        # ⚠️ KEINE ZAHL HEISST NICHT "TRAEGT NICHT". Wer bei fehlender Rechnung
+        # verwirft, sperrt bei jedem Datenausfall den ganzen Lauf - genau der
+        # Deadloop, aus dem das System kommt.
+        durchlauf.bestanden(symbol, "entscheider")
     else:
+        from agent import potential as _PT2
+        # ⚠️⚠️ ZWEI VERSCHIEDENE GRUENDE, NICHT EINER (31.08.2026).
+        #
+        # Bis heute las Stufe 11 nur die Zahl - und ein Wert OHNE jedes
+        # Merkmal bekam dieselbe Behandlung wie einer mit gemessen
+        # schlechten Werten. Beide landen bei rund 0,000.
+        #
+        # Gemessen am 31.08. (`pruefe_beitragsabdeckung.py`): 29 von 56
+        # Werten der Watchlist haben KEINEN Beitrag - bei allen Klassen
+        # ausser Krypto sind es 100 %. Mit verwerfender Stufe 11 waere das
+        # ein Ausschluss nach DATENLAGE, nicht nach Qualitaet.
+        #
+        # ⚠️ VORFILTER H HATTE DIESES PROBLEM NIE: er wurde je Anker aus
+        # den Marken gerechnet und galt fuer jeden Wert. Wer ihn durch
+        # Merkmale mit Luecken ersetzt, muss die Luecke benennen - sonst
+        # verschwinden Werte lautlos aus dem System.
+        #
+        # Der Trichter bekommt deshalb ZWEI Gruende. Gesperrt wird in
+        # beiden Faellen (keine Empfehlung ohne Grund), aber in der
+        # Auswertung ist unterscheidbar, ob eine MESSUNG oder eine
+        # DATENLUECKE dahinterstand.
+        # ⚠️⚠️ DREI ZUSTAENDE, NICHT ZWEI (31.08.2026, gefunden von der
+        # Kettensimulation gegen die Notebook-Produktion).
+        #
+        # Die erste Fassung von G-6 kannte nur "bewertbar ja/nein" und
+        # sperrte alles ohne Beitrag. Ergebnis der Simulation gegen die
+        # echten Produktionsdaten: **null Signale ueber alle fuenf
+        # Gruppen.** Nicht wegen der Datenlage einzelner Werte, sondern
+        # eine Ebene darueber - vier von fuenf Assetklassen haben keinen
+        # einzigen registrierten Beitrag:
+        #
+        #     krypto      3 (Funding, Turnover, Schnittabstand)
+        #     aktien      0        themen_etf  0
+        #     rohstoffe   0        hedge       0
+        #
+        # Eine Sperre aus diesem Grund ist ein Verstoss gegen Regel 4:
+        # "fuer diese Klasse haben wir nie gemessen" ist ein FAKT ueber
+        # unseren Kenntnisstand, keine Aussage darueber, was kommt. Der
+        # Filter haette nach DATENLAGE gesperrt, nicht nach Qualitaet -
+        # derselbe Fehlertyp wie bei H, nur eine Ebene hoeher.
+        #
+        # Die Nutzervorgabe deckt beide Faelle mit einem Satz (31.08.):
+        # *"Die Scharfschaltung muss und darf erst erfolgen, wenn alle
+        # Assets einen Beitrag haben."* Fuer Krypto ist sie erfuellt
+        # (43 von 43 seit P2), fuer die vier anderen noch nicht.
+        if not _potential.vermessen:
+            # NICHT VERMESSEN - zaehlen, nicht sperren. Der Trichter
+            # weist es aus, damit die Luecke sichtbar bleibt und nicht
+            # als stilles Durchwinken verschwindet.
+            durchlauf.notiz(
+                symbol, "entscheider",
+                "Klasse %s ist nicht vermessen - Stufe 11 zaehlt nur"
+                % (assetklasse or "?"))
+        elif not _potential.bewertbar:
+            # VERMESSEN, ABER OHNE WERT - das ist ein Mangel DIESES
+            # Assets, und hier sperrt die Stufe zu Recht.
+            durchlauf.verloren(
+                symbol, "entscheider",
+                "keine Datengrundlage - kein Beitrag bestimmbar")
+            return
+        elif not _PT2.traegt(_potential.wert_r):
+            durchlauf.verloren(
+                symbol, "entscheider",
+                "Potential %.3f R unter der Schwelle %.3f R"
+                % (_potential.wert_r, _PT2.schwelle()))
+            # ⚠️⚠️ G-6, ZWEITER TEIL (31.08.2026) - UND DER WICHTIGERE.
+            #
+            # `rollen_gate.NUR_ZAEHLEN = ()` allein aendert nur die
+            # BUCHHALTUNG: der Trichter bucht den Verlust, und der Ablauf
+            # lief hier trotzdem weiter - Mail, Signal, DB-Zeile. Die
+            # Kettensimulation zeigte es unmittelbar: "0 bestanden (2
+            # verloren)" und daneben "5 Signale, 6 Mails".
+            #
+            # Ein Filter, der zaehlt und nicht abbricht, ist kein Filter.
+            # Genau das war der Zustand seit U-1.
+            #
+            # ⚠️ WAS DIESES `return` NICHT TUT: es unterdrueckt nichts
+            # still. Der Verlust steht mit Grund und Zahl im Trichter
+            # ("Potential -0,000 R unter der Schwelle 0,010 R"), und der
+            # Lauf meldet ihn wie jede andere Stufe.
+            return
         durchlauf.bestanden(symbol, "entscheider")
 
     # --- Die Mail ---
@@ -1733,22 +1971,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # anderes ist. Eine Zahl aus der falschen Messung ist schlimmer als
     # keine; genau deshalb laeuft `akkumulationslage` nur bei akkumulation
     # und H ab jetzt nur bei allem anderen.
-    _ist_akkumulation = str(strategie or "").strip().lower() == "akkumulation"
+    # ⚠️ DIE BERECHNUNG STEHT SEIT U-1 (30.08.2026) WEITER OBEN - vor Stufe 11,
+    # die sie braucht. Hier entstehen nur noch die MAILZEILEN, aus genau
+    # demselben Ergebnis. Eine Quelle, zwei Leser.
     try:
         from agent import vorfilter as _VF
-        if _ist_akkumulation:
-            raise _KeinHBeiAkkumulation
-        _vf_bewertung = _VF.bewerte(
-            _bloecke.get("_marken_werte"),
-            rechnung.get("stop_eur"), rechnung.get("ziel_eur"),
-            bool(rechnung.get("ist_short")), assetklasse)
-        _vf_zeilen = _VF.saetze(_vf_bewertung)
-    except _KeinHBeiAkkumulation:
-        # KEIN FEHLER, SONDERN DIE REGEL - deshalb ohne `logger.exception`.
-        _vf_bewertung, _vf_zeilen = None, []
+        _vf_zeilen = _VF.saetze(_vf_bewertung) if _vf_bewertung else []
     except Exception:                                        # noqa: BLE001
-        logger.exception("Vorfilter-Schatten fuer %s uebersprungen", symbol)
-        _vf_bewertung, _vf_zeilen = None, []
+        logger.exception("Vorfilter-Zeilen fuer %s uebersprungen", symbol)
+        _vf_zeilen = []
 
     # DIE ZUSAMMENFUEHRUNG (22.08.2026). Sie rechnet aus DERSELBEN
     # Geometrie, die weiter unten in der Mail steht, und aus demselben
@@ -1760,10 +1991,33 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             crv=rechnung.get("crv"),
             stop_relativ=rechnung.get("stop_relativ"),
             klasse=assetklasse,
-            h=(_vf_bewertung or {}).get("h"))
+            h=(_vf_bewertung or {}).get("h"),
+            # ⚠️ DIESELBEN MERKMALE WIE STUFE 11 (B-a, 31.08.2026). Ohne
+            # sie rechnete die Mail ohne Funding und Turnover und zeigte
+            # eine andere Quote als die, mit der entschieden wurde.
+            merkmale=_merkmale or None)
     except Exception:                                        # noqa: BLE001
         logger.exception("Wahrscheinlichkeit fuer %s uebersprungen", symbol)
         _wk_zeilen = []
+
+    # ---- DIE MARKTRAENGE IN DIE MAIL (31.08.2026) -----------------------
+    #
+    # ⚠️⚠️ `marktrang.saetze()` WAR GEBAUT UND WURDE VON NIEMANDEM AUFGERUFEN.
+    # Gefunden hat es `simuliere_kette.py`, nicht die Paketpruefung - genau
+    # der Grund, warum im Projekt gilt: *eine Stufe gilt erst als gebaut,
+    # wenn die Kettensimulation sie in der fertigen Mail nachweist.*
+    #
+    # Das wog schwer: Funding und Turnover sind seit R1 die EINZIGEN
+    # tragenden Beitraege. Sie bestimmen, ob ein Signal ueberhaupt
+    # entsteht - und standen in keiner Mail. Der Leser sah die Zahl, nie
+    # ihre Herkunft.
+    _mr_zeilen = []
+    try:
+        from agent import marktrang as _MR2
+        _mr_zeilen = _MR2.saetze(_mr) if _mr else []
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Marktrang-Zeilen fuer %s uebersprungen", symbol)
+        _mr_zeilen = []
 
     # DIE LAGE-BEWERTUNG DER AKKUMULATION (28.08.2026, Entscheidung B+C).
     #
@@ -1796,7 +2050,10 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             akkumulationslage=_akl_zeilen or None,
             wahrscheinlichkeit=_wk_zeilen or None,
             lebendigkeit=_leben or None,
-            vorfilter=_vf_zeilen or None,
+            # ⚠️ ZUSAMMEN MIT DEN VORFILTERZEILEN, aber davor: die
+            # Marktraenge tragen die Bewertung, die Marken nicht mehr.
+            vorfilter=((_mr_zeilen + ([""] if _mr_zeilen and _vf_zeilen else [])
+                        + _vf_zeilen) or None),
             # DER BESTAND GANZ OBEN - Nutzervorgabe 12.08.: "Das fuer mich
             # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
             bestand=(_bloecke.get("bestand") or [None])[0],

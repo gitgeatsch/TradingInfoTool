@@ -4,9 +4,9 @@
 erledigt gilt. Wer nur den Umbauplan liest, sieht Puzzleteile; hier steht,
 wie sie zusammenhängen und worauf sie zulaufen.
 
-Stand: 20.08.2026, Kapitel 123. Einzelheiten je Kapitel:
+Stand: **30.08.2026** (zuvor 20.08., Kapitel 123). Einzelheiten je Kapitel:
 `Umbauplan_Gesamtsystem_12_08.md`. Methodikregeln:
-`Test_und_Verifikationsmethodik.md` 2.47–2.53.
+`Test_und_Verifikationsmethodik.md` 2.47–2.53 **und 2.83–2.91** (30.08.).
 
 ---
 
@@ -54,11 +54,44 @@ ab jetzt nur noch Rechenzeit.
 | 12 | **Abstand zum Breakeven** neben jedem Urteil | dass ein belangloser Effekt als Fund gilt | **2.53** |
 | 13 | **Zwei Lesarten** für Unentschiedene | dass ein Auswahleffekt wie ein Befund aussieht | **2.54** |
 | 14 | **Bootstrap statt Permutation** bei deterministischen Umrechnungen | eine Kontrolle, die den Mittelwert gar nicht ändern kann | **2.55** |
+| **15** | **Die FORM der Größe vorab klären** | dass eine Rohgröße geprüft wird, wo die Praxis ein Verhältnis meint | **2.85** |
+| **16** | **Querschnitt oder Zeitreihe entscheiden** — Kalendertag als Klammer | dass ein Querschnittseffekt in einer Je-Reihe-Messung unsichtbar bleibt | **2.86** |
+| **17** | ⚠️ **WIRKSAMKEIT statt Merkmal** — als Regel rechnen | dass ein Merkmalsbefund als Empfehlung durchgeht | **2.87** |
+| **18** | **Positivkontrolle über ein künstliches Merkmal** | eine Kontrolle, die den eigenen Effekt frisst | **2.88** |
+| **19** | **Datenbrüche entfernen** (Token-Umstellungen) | dass 0,1 % der Anker 187 % eines Mittelwerts tragen | **2.89** |
+| **20** | **Historie-Endpunkt suchen, bevor man wartet** | Monate Wartezeit auf Daten, die es längst gibt | **2.90** |
 
 **Regel 2.51 wirkt rückwärts:** Befunde, die vor ihrer Einführung als
 „erledigt" abgelegt wurden, beantworten meist die *Handelsfrage* („erreicht es
 den Breakeven?") statt der *Informationsfrage* („trägt es Signal?"). Das ist
 der Grund, warum Kapitel 113 den Drift wieder aufmacht.
+
+⚠️⚠️ **Und Stufe 17 wirkt ebenso rückwärts — sie ist der Ertrag des
+30.08.2026.** Nutzerkorrektur wörtlich: *„du sollst nicht alte messungen
+wiederholen sondern diese auf **Wirksamkeit bei praktischer Anwendung**
+prüfen — sonst misst du wieder nur unser System."*
+
+| | Funding, dieselbe Größe |
+|---|---|
+| als **Merkmal** (unterstes gegen oberstes Fünftel) | +0,1320 R |
+| als **Regel** („kein Einstieg ab Rangplatz 80 %") | **+0,0242 R** |
+
+**Faktor 5,5**, arithmetisch zwingend: eine Regel, die 20 % sperrt, kann
+höchstens diesen Anteil des Merkmalsunterschieds heben.
+
+⚠️ **Die Häufigkeit gehört ab jetzt neben jede Wirkungszahl.** Sonst dreht
+sich die Rangfolge:
+
+| | Einzelwirkung | Häufigkeit | **effektiv je Signal** |
+|---|---|---|---|
+| Vorfilter H | +4,5 Punkte | **5,0 %** | ≈ 0,23 Punkte |
+| Funding-Regel | +0,8 Punkte | **100 %** | **≈ 0,80 Punkte** |
+
+**Der scheinbar kleinere Beitrag wirkt dreieinhalbmal so stark.** H stand zwei
+Wochen als „der tragende Beitrag" da, weil +4,5 neben +0,8 größer aussieht.
+
+**Die vollständige Checkliste zu allen zwanzig Stufen:**
+`Test_und_Verifikationsmethodik.md` **2.91**.
 
 ---
 
@@ -219,6 +252,148 @@ dieser Befunde würden mit dem richtigen Erfolgsmaß anders ausfallen?**
 
 **Beide wurden durch Kapitel 107 aufgelöst** — 347 statt 39 Reihen. *Nicht
 entscheidbar* ist ein Datenproblem, kein Erkenntnisstand.
+
+---
+
+### 3.9 Die Messserie vom 29./30.08.2026 — als REGEL gerechnet
+
+⚠️ **Alle Zahlen dieses Abschnitts sind Wirkungen von REGELN, keine
+Merkmalsvergleiche** (Kette Stufe 17). Aufbau durchgehend: Querschnitt je
+Kalendertag, Bewegung in R, Median, Bootstrap über Blöcke > Horizont,
+Negativ- und Positivkontrolle.
+
+| Kandidat | Symbole | gesperrt | **Netto-Wirkung** | Urteil |
+|---|---:|---:|---|---|
+| **Funding-Niveau** | 290 | 20,6 % | **+0,0244 R** [+0,008 .. +0,037] | ✔ **trägt** — beide Historienhälften, beide Marktphasen, monoton über fünf Fünftel, Momentum-Korrelation +0,002, kein Survivorship |
+| Turnover (Volumen/Umlaufmenge) | 66 | 21,2 % | +0,0616 R [+0,015 .. +0,114] | ⚠️ **Kandidat** — kein Mitläufer von Funding, aber **Survivorship: 71 % gegen 90 %** |
+| MC/TVL | 19 | — | +0,083 / +0,271 R | ⚠️ trägt, **12 Symbole je Tag** — zu schmal; verbreitern scheitert an CoinGecko (`days=max` → 401) |
+| Amihud-Illiquidität | 523 | 20,4 % | −0,0016 R | ✖ **null, belastbar** |
+| Momentum 12-1 | 523 | 20,2 % | −0,0008 R | ✖ **null, belastbar** |
+| TVL-Veränderung · aktive Adressen · NVM | 188 / 66 | — | — | ✖ **null, belastbar** (Grenze 0,10 R) |
+| Drift (S2 wiederholt) | 523 | — | Median gesichert **negativ** | ✖ trägt nicht — Befund vom 11.08. bestätigt |
+| Zielregel (K-2) | 523 | — | +0,227 R, getrimmt **−0,200** | ✖ null — 1 % der Anker trug 187 % |
+| Kombinationen (K-1) | 523 | — | +17,8 gegen Schwelle 20,5 | ✖ fällt; ⚠️ Werkzeug zu stumpf (Grenze 0,30 R) |
+
+**Trennschärfe der Regel-Messung** (künstliches Merkmal, Stufe 18): gefunden
+werden Korrelationen ab **0,08**. Amihud hat 0,0076, Momentum 0,0030 — **zehnmal
+weniger. Die Nullbefunde sind echt, nicht Blindheit.**
+
+#### 3.9a Was davon GEBAUT wurde — 2e, 30.08.2026
+
+Funding und Turnover sind seit 2e in `wahrscheinlichkeit.BEITRAEGE`
+registriert **und** in `rollen_lauf` verdrahtet.
+
+| Beitrag | Stufen (Fünftel 0→4, geschrumpft) | Spanne |
+|---|---|---|
+| Funding-Rang im Markt | +0,82 · +1,30 · +0,12 · −0,54 · −1,70 | +2,52 |
+| Turnover-Rang im Markt | +3,15 · +0,83 · +0,22 · −1,79 · −2,40 | **+5,55** |
+
+⚠️ **Turnover hatte keine Beitragstabelle.** `messe_schwelle_kalibrierung.py`
+rechnete mit einer **Kopie der Funding-Stufen** („dieselbe Form") — die echte
+Spanne ist mehr als doppelt so groß. `rechne_turnover_beitrag.py` liefert sie
+jetzt, und die Kalibrierung **liest** die Stufen aus der Registrierung, statt
+sie zu duplizieren.
+
+**Warum 2e nicht aufschiebbar war:** H war der einzige Beitrag —
+`h=True → +0,1350 R durch`, `h=False/None → −0,0000 R gesperrt`. Solange das
+galt, war H nicht prüfbar: jede Änderung hätte den Trichter stillgelegt.
+Heute lassen die Ränge **ohne H** durch (bestes Fünftel +0,1191 R, Mitte
++0,0102 R).
+
+**Neukalibrierung nach R-R9** (`messe_schwelle_kalibrierung.py`, 123.465
+Anker, H mit 2,1 % Häufigkeit eingerechnet):
+
+| Schwelle | Durchlass | Gewinn | je verworfenem |
+|---|---:|---|---|
+| 0,010 | 44,3 % | +0,0462 | +0,0829 ← **gilt** |
+| 0,080 | 17,7 % | +0,1238 | +0,1505 ← Optimum, **in-sample** |
+
+⚠️ **Die Befürchtung aus R-R9 ist gemessen nicht eingetreten.** Erwartet war
+ein Sprung auf 77 % Durchlass; gemessen sind 44,3 %, weil **Rangbeiträge
+symmetrisch** sind — ihre oberen Fünftel sperren. Ein Beitrag, der nur
+addiert, wäre die Gefahr; ein Rangbeitrag ist es nicht.
+
+**Offen:** ob 0,080 außerhalb der Stichprobe hält.
+
+#### 3.9c ⚠️⚠️ R1 — H IST ALS BEITRAG GEFALLEN (31.08.2026)
+
+**Der Originalbefund ist frisch reproduziert** — ohne Zwischenspeicher,
+609.527 Anker (`pruefe_h_original_reproduziert.py`):
+
+| Klammer | H | A | B |
+|---|---|---|---|
+| **gepoolt** (so wurde Kap. 104–121 gemessen) | **+3,57 Punkte** | +3,67 | −0,56 |
+| je 120-Tage-Block | −3,43 nicht trennbar | −0,05 | −5,65 umgekehrt |
+| **je Kalendertag** | **−1,02** [−2,18 .. +0,14] | −0,64 | −0,44 |
+
+⚠️ **Die Tagesmessung hätte +3,57 um das Dreifache ihrer Intervallbreite
+gefunden. Sie findet nichts.** Der Befund ist echt, beantwortet aber *an
+welchen Tagen tritt H auf* statt *welches Asset ist heute besser* — und nur
+die zweite Frage stellt Stufe 11.
+
+**Die Messkette ist validiert** (`pruefe_h_kette_von_grund_auf.py`): kein
+Lookahead (36 Vergleiche volle gegen gekürzte Reihe), Messung und
+`vorfilter.bewerte()` urteilen **36/36 identisch**, fünf Zwischenspeicher
+untereinander konsistent, Kursreihen gegen die DB geprüft.
+
+**Vier Formen, keine trägt unter der Tagesklammer:** H · A allein · B allein
+· stetiger Bodenabstand (U-förmig, Regel netto −0,0011 R).
+
+**Kosten des Wegfalls:** Durchlass 44,3 % → **43,0 %**, Ertrag −0,2098 →
+−0,2114 R. **Was bleibt:** die Marken tragen weiterhin den **Stop**
+(`_boeden`, Kap. 124: −0,0008 R).
+
+⚠️ **Strukturell abgesichert:** `Beitrag.klammer` ist Pflichtfeld;
+`zustand="traegt"` verlangt `klammer="tag"`, sonst wirft der Import.
+
+#### 3.9b ⚠️⚠️ H zerlegt: Komposition gegen Leistung (30.08.2026)
+
+Der gepoolte H-Vorsprung misst, **wann** H auftritt — nicht, **was** ein
+H-Anker leistet. Auf „Ziel vor Stop", 731.701 entschiedene Anker:
+
+```
+GEPOOLT      +3,04 Punkte
+INNERHALB    −7,14 Punkte     je 120-Tage-Block
+KOMPOSITION  +10,18 Punkte    Korrelation H-Anteil ↔ Blockniveau +0,524
+```
+
+`messe_h_produktionsgeometrie.py` (620.679 Anker, drei Geometrien, Bewegung
+in R, Placebo-Band aus 40 zirkulären Versätzen):
+
+| Geometrie | Wirkung | Band | Abstand zur Mitte |
+|---|---|---|---|
+| alt `K=2,0×ATR` — so wurde H **siebenmal** gemessen | −0,1477 | −0,060 .. +0,148 | −0,204 |
+| ohne Marke (ATR-Wechsel isoliert) | −0,1657 | −0,051 .. +0,138 | −0,227 |
+| **Produktion** (`_stop_abstand` mit Marke) | −0,1462 | −0,022 .. +0,205 | −0,207 |
+
+Positivkontrolle auf Nulldatensatz: findet **+0,05 R**.
+
+⚠️ **Die Doppelzählungs-These ist widerlegt** — der Strukturboden greift bei
+**1,05 %**, H ändert sich von 2,20 % auf 2,07 %, Überschneidung 80,7 %.
+
+**Zwei echte Konstruktionsfehler in H:**
+
+| | |
+|---|---|
+| **B ist wirkungslos** | zu **86,75 %** wahr; H und A stimmen bei **98,27 %** aller Anker überein |
+| **A misst Volatilität** | trifft bei weitem Stop 8,33 %, bei engem 1,80 % (Faktor 4,6) — die Totzone 0,5 ATR, also **K1** aus 5d |
+
+**Das war vorher bekannt und ist jetzt erklärt:** Kapitel 115 („real und
+nicht handelbar"), Kapitel 118 (hält außerhalb nicht).
+
+### 3.10 ⚠️ Zwei Befunde über den Messbetrieb selbst
+
+**(1) 32 von 54 Messwerkzeugen laufen gegen die Watchlist** (26–54 Reihen)
+statt gegen `messdaten.db` (523). Darunter die Kombinations-, Drift- und
+Tagewahl-Messungen. Kapitel 103.8 bezifferte die Trennschärfe dort: **nur
+Effekte ab ~20 Punkten** — Vorfilter H trägt +4,5. **Diese Nullbefunde sind
+untermächtig, nicht falsch.** Ursache: BTC hatte bis 19.08. nur ein Jahr
+Historie; die Daten wurden nachgezogen, die Werkzeuge nicht.
+
+**(2) Zwei Wartezeiten waren gegenstandslos** (Stufe 20). „TVL ab 18.09." und
+„Positionierung ab 22.10." beruhten darauf, dass die Module den
+Momentaufnahme-Endpunkt abrufen. DefiLlama liefert **6–8 Jahre**, Binance
+Funding **7,0 Jahre**. Echte Grenze nur bei Binance Open Interest: **30 Tage**.
 
 ---
 
@@ -771,3 +946,47 @@ wieder nur Krypto-Daten.
 ⚠️ **Schritt 4 ändert die Datenlage, nicht das Universum.** Er macht Rolle G
 für die anderen Klassen überhaupt erst urteilsfähig — die Stichprobengröße
 (C1) bleibt davon unberührt.
+
+---
+
+## 3.11 ⚠️⚠️ DER MARKT HAT SICH STRUKTURELL VERÄNDERT (30.08.2026)
+
+**Nutzerhinweis:** *„der Kryptomarkt hat sich vor allem im Bereich BTC
+geändert, er ist abgeflachter, geringere Anstiege als vor 2024."*
+
+**Gemessen — und der Befund ist stärker als die Formulierung:**
+
+| | 2018–2020 | 2021–2023 | **2024–2026** |
+|---|---|---|---|
+| BTC Volatilität p. a. | 63,2 % | 53,9 % | **39,3 %** |
+| BTC Tagesspanne | 4,35 % | 4,15 % | **3,26 %** |
+| alle 523 Reihen: Rendite p. a. | −11,7 % | −16,1 % | **−50,1 %** |
+| alle 523 Reihen: Volatilität | 111,1 % | 107,5 % | 93,1 % |
+| ⚠️ **Bewegung in R, Median 20 Tage** | **+0,1397** | −0,2469 | **−0,6251** |
+
+### Warum die letzte Zeile alles betrifft
+
+**Das ist unser Messmaß.** Jede Zahl dieses Projekts — H, Funding, Turnover,
+Drift, die Zielregel — ist in dieser Einheit gerechnet. Sie ist von **+0,14 auf
+−0,63** gefallen.
+
+⚠️⚠️ **Das ist kein Regimewechsel, sondern ein Struktureinbruch.** Ein
+Regimewechsel dreht die Richtung; hier hat sich die **Bewegungsgröße selbst**
+verändert — bei BTC nach unten (Volatilität −38 %), beim breiten Markt
+katastrophal (Rendite p. a. **−50 %** seit 2024).
+
+### Was das für die bestehenden Befunde heißt
+
+| Befund | gemessen über | Folge |
+|---|---|---|
+| **Vorfilter H, +4,5 Punkte** | 2018–2026, Schwerpunkt in den alten Abschnitten | ⚠️⚠️ **neu zu messen** — läuft am 30.08. |
+| Funding, +0,0246 R | 2019–2026 | ⚠️ je Abschnitt zu prüfen |
+| Turnover, +0,0616 R | 2018–2026 | ⚠️ dito |
+| Drift „trägt nicht" | alle Abschnitte | ✔ unberührt — der Befund ist ein Nullbefund |
+
+⚠️ **Und es erklärt ein Muster, das an diesem Tag dreimal auftrat:** Lage-Beitrag,
+K-1-Kombination und R-A starben alle **in der zweiten Hälfte der Historie**.
+Die zweite Hälfte ist genau der veränderte Markt.
+
+**Der Verdacht, den die H-Messung prüfen muss:** Nicht die Befunde waren
+falsch — **der Markt, auf dem sie gemessen wurden, ist ein anderer geworden.**

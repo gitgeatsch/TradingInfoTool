@@ -329,6 +329,375 @@ Doku, Prüfungen und Paar-Matrix, das nichts erzeugt.**
 
 ## Und dann: das Primärthema
 
-**L6 — nur ein tragender Beitrag im Potential.** Unverändert die einzige
-Lücke, die kein Umbau schließt. Die drei Wege stehen oben in Abschnitt 4:
-Fremdquellen (19.09. / 22.10.), Nachrichten, oder das Ziel neu fassen.
+~~**L6 — nur ein tragender Beitrag im Potential.**~~ **Erledigt am 30./31.08.
+— siehe den Nachtrag unten.** Es sind jetzt zwei, und der eine, der vorher
+dastand, war der falsche.
+
+---
+
+# NACHTRAG 31.08. — DIE ARCHITEKTUR NACH DEM H-FEHLER
+
+## Was passiert ist, in drei Sätzen
+
+**Vorfilter H stand elf Tage mit +4,5 Punkten im Betrieb und war der einzige
+tragende Beitrag.** Seine Zahl stammte aus einem **gepoolten** Vergleich über
+die ganze Historie (+3,57 Punkte, am 31.08. frisch reproduziert); unter der
+Klammer, die zur Frage von Stufe 11 passt — dem Vergleich gegen andere Werte
+**desselben Kalendertags** — liegt er bei **−1,02 [−2,18 .. +0,14]**, also
+bei null. **Der Befund war echt, beantwortete aber eine andere Frage:** *an
+welchen Tagen tritt H auf* statt *welches Asset ist heute besser*.
+
+## ⚠️ Die Regel, die das strukturell ausschließt
+
+`Beitrag.klammer` ist seit dem 31.08. Pflichtfeld. **`zustand="traegt"`
+verlangt `klammer="tag"`** — sonst wirft `__post_init__` beim Import.
+
+| Klammer | Vergleich | beantwortet | darf `traegt` sein |
+|---|---|---|---|
+| **`tag`** | gegen andere Werte **desselben Kalendertags** | „welches Asset ist heute besser" | ✔ **nur diese** |
+| `block` | gegen Anker desselben Zeitblocks (120 T.) | hält die Marktphase grob fest | ✖ |
+| `gepoolt` | gegen alle Anker der Historie | „an welchen Tagen tritt es auf" | ✖ |
+
+Der Unterschied ist nicht akademisch: bei H **4,6 Punkte** (+3,57 gepoolt
+gegen −1,02 je Tag), bei „Boden unten" **0,20 R** (−0,2023 je Block gegen
+−0,0019 je Tag).
+
+## Die vier Bereiche — wer wo entscheidet
+
+Die Kette hat vier Ebenen, und **jeder Beitrag gehört in genau eine**. Sie zu
+vermischen ist der Fehler, aus dem H entstanden ist.
+
+| # | Bereich | Frage | Wer entscheidet | Maßstab |
+|---|---|---|---|---|
+| **1** | **AUSWAHL** | *Welche Werte werden heute überhaupt beurteilt?* | `auswahl.py` (A1), k=2 nach Jahresentwicklung | Querschnitt über Symbole |
+| **2** | **VORFILTER** | *Ist das überhaupt eine neue Frage?* | `anlass`, `wiederholung`, Cooldown | kostet keinen Modellaufruf |
+| **3** | **BEWERTUNG** | *Wieviel ist bei DIESER Handlung zu holen?* | `potential.rechne()` ← **hier und nur hier wirken Beiträge** | ⚠️ **Klammer `tag`** |
+| **4** | **NACHFILTER** | *Reicht das?* | Stufe 11 `potential.traegt()`, Budget, Positionsführung | Schwelle 0,010 R |
+
+**Was in keinen dieser Bereiche gehört und trotzdem wirkt:** die Geometrie
+(`entscheidungsrechnung`) setzt Stop, Ziel und Größe. **Dort tragen die
+Marken weiter** — `_boeden()` legt den Stop jenseits der nächsten
+Unterstützung, gemessen unschädlich (Kapitel 124: −0,0008 R) und
+lehrbuchkonform. **H ist als Bewertungsbeitrag gefallen, nicht als
+Stopregel.**
+
+## Der Stand der Beiträge
+
+| Beitrag | Zustand | Klammer | Wert |
+|---|---|---|---|
+| **Funding-Rang im Markt** | ✔ `traegt` | `tag` | +0,82 / +1,30 / +0,12 / −0,54 / −1,70 |
+| **Turnover-Rang im Markt** | ✔ `traegt` | `tag` | +3,15 / +0,83 / +0,22 / −1,79 / −2,40 |
+| Vorfilter H | `null` | `gepoolt` | — gefallen am 31.08. |
+| Rangplatz in der Anlageklasse | `null` | — | misst schon Bereich 1 |
+| Lebendigkeit | `noch_nicht` | — | ab 18.09. |
+| Termine · Trichter | `nie` / `enthalten` | — | Anzeige / in der Basisrate |
+
+**Schwelle 0,010 R, Durchlass 43,0 %** (mit H waren es 44,3 %).
+
+## ⚠️ Das Betriebsrisiko, das dabei sichtbar wurde
+
+Beide tragenden Beiträge kommen aus **externen Quellen** (Binance-Funding,
+CoinGecko-Turnover), abgerufen einmal je Lauf. **Fällt der Abruf aus, liegt
+jedes Potential bei 0,000 und Stufe 11 sperrt den ganzen Lauf** — derselbe
+Stillstand wie vor 2e, nur durch einen Netzwerkfehler statt durch eine
+Registrierung. Gefunden, weil die Prüfsuite in HTTP 429 lief.
+
+**Gebaut am 31.08.:** Der Trockenlauf ruft gar nicht mehr ab (eine Suite, die
+echte Quellen anfasst, ist kein Trockenlauf), und ein Totalausfall wird als
+**Warnung** ausgewiesen statt still zu sperren — *„Das ist ein Datenausfall,
+kein ruhiger Tag."* Durchgelassen wird trotzdem nicht: keine Empfehlung ohne
+Grund.
+
+## Wie weitere Beiträge dazukommen — und wo sie hingehören
+
+**Von drei Kategorien hat genau eine je getragen:**
+
+| Kategorie | geprüft | Ergebnis |
+|---|---|---|
+| Eigenschaft (Liquidität, Größe, Volatilität, Alter, Beta, Amihud, Momentum) | 7 | **keine trägt** |
+| Lage (Marktbreite, Marktphase, 200-Schnitt) | 3 | invers oder Schatten |
+| **Bewertung** (Funding, Turnover) | 2 | ✔ **beide tragen** |
+
+> **Beide Treffer sind Bewertungsgrößen — „wie teuer ist dieser Wert gerade,
+> verglichen mit den anderen".** Dort weitersuchen.
+
+**Der nächste Kandidat liegt bereits gemessen im Bestand:** die **Tagewahl**
+(`UNTER_SMA` / `RÜCKGANG`, 23.08.) schlägt ihren *quotengleichen* Zufall in
+allen drei Anlageklassen und beiden Marktphasen.
+
+⚠️ **Und genau hier droht der H-Fehler ein zweites Mal:** Die Tagewahl ist
+über **Zweijahresfenster** gemessen, nicht je Kalendertag. Bevor sie ein
+Beitrag wird, muss sie in die **Querschnittsform** gebracht werden — *„welches
+Asset steht heute am weitesten unter seinem eigenen Schnitt"* — und unter der
+Tagesklammer gemessen. Ohne diesen Schritt wäre sie H mit anderem Namen.
+
+**Die Reihenfolge für jeden neuen Beitrag, ohne Ausnahme:**
+
+| | |
+|---|---|
+| **1** | Form klären: Querschnitt oder Zeitreihe? Rohwert, Veränderung, Verhältnis oder Niveau? |
+| **2** | **Je Kalendertag messen** — nicht gepoolt, nicht je Block |
+| **3** | Als **Regel** prüfen, nicht als Merkmal (bei Funding: Faktor 5,5) |
+| **4** | Survivorship · beide Historienhälften · Volatilitätsschichten |
+| **5** | Beitragstabelle rechnen, **geschrumpft** (halbiert, weil in-sample) |
+| **6** | Registrieren **mit `klammer="tag"`** → Neukalibrierung nach R-R9 |
+
+## Was offen bleibt
+
+| | |
+|---|---|
+| **R2** | Mailzeile zu H: **Fakt statt Wertung** — „nächste Unterstützung X ATR unter dem Kurs" statt „Stop gedeckt" |
+| **R3** | Tagewahl als dritten Beitrag — nach den sechs Schritten oben |
+| **Schwelle** | 0,080 misst besser (+0,1324 gegen +0,0470), ist aber in-sample und sperrt 83,5 %. Out-of-sample ungeprüft |
+| **N-9** | `fakten_roh` erreicht keine Mail — unverändert offen |
+| **NB** | Suite am Notebook grün |
+
+
+---
+
+# UMBAUPLAN 31.08. — DER ENTSCHEIDER, DER BEI ALLEN ASSETS WIRKT
+
+**Nutzervorgabe, die alles bestimmt:** *„Krypto muss und braucht einen
+Entscheider, der bei ALLEN Assets wirkt. Die Scharfschaltung darf erst
+erfolgen, wenn alle Assets einen Beitrag haben."*
+
+## Der Anlass — mein Fehler, benannt
+
+**Vorfilter H galt für jeden Wert** — er wurde je Anker aus den Marken
+gerechnet, Abdeckung 100 %. Seine Nachfolger kommen aus **Fremdquellen** und
+haben zwangsläufig Lücken:
+
+```
+Funding-Rang    27 von 43 Krypto        63 %
+Turnover-Rang    7 von 43                16 %
+aktien · hedge · rohstoffe · themen_etf  0 %
+──────────────────────────────────────────────
+29 von 56 Werten ohne jeden Beitrag
+```
+
+**Ich habe die Wirksamkeit gemessen und die Reichweite nicht.** Solange
+Stufe 11 nur zählte, war das folgenlos; mit G-6 entscheidet es über jeden
+Wert. `pruefe_beitragsabdeckung.py` prüft das seither.
+
+## 1. Die vier Ebenen — wo ein Beitrag wirken darf, und wo nicht
+
+| # | Ebene | Frage | Modul | Beiträge? |
+|---|---|---|---|---|
+| **1** | **AUSWAHL** | Welche Werte werden heute beurteilt? | `auswahl.py` (A1), k=2 nach Jahresentwicklung | ✖ eigene Messung |
+| **2** | **VORFILTER** | Ist das überhaupt eine neue Frage? | `anlass`, `wiederholung`, Cooldown | ✖ kosten keinen Modellaufruf |
+| **3** | **BEWERTUNG** | Wieviel ist zu holen? | `potential.rechne()` | ✔ **hier und nur hier** |
+| **4** | **NACHFILTER** | Reicht das? | Stufe 11, Budget, Positionsführung | ✖ liest nur Ebene 3 |
+
+**Daneben, in keiner dieser Ebenen:** die Geometrie (`entscheidungsrechnung`)
+setzt Stop, Ziel, Größe — **dort tragen die Marken weiter** (Strukturboden,
+Kapitel 124 unschädlich).
+
+⚠️ **Die Regel für jeden neuen Beitrag:** Ebene 3, `klammer="tag"`, und die
+Abdeckung ist Teil der Aufnahmeprüfung — nicht erst der Wirkungsnachweis.
+
+## 2. ⚠️ ABGRENZUNG: neutrale Empfehlung gegen Wirtschaftlichkeit
+
+**Drei Verwendungen, und nur eine rechnet.** (Nutzervorgabe 30.08., hier
+gegen den Code geprüft:)
+
+| Verwendung | Gebühren | Wo | Stand |
+|---|---|---|---|
+| **BEWERTUNG** — „ist das ein guter Trade" | ⚠️ **KEINE** (0,0 %) | `potential.rechne()` ruft `gebuehr_je_seite=0.0` | ✔ korrekt |
+| **MAIL** — „rechnet es sich für mich" | **als TEXT**: Referenz **0,30 %**, Betrieb **1,50 %** | `wahrscheinlichkeit.saetze()` zeigt beide Sätze | ✔ korrekt |
+| **HEBEL** — Finanzierung läuft täglich mit | **rechnerisch** | `entscheidungsrechnung`, Hebelzeile | ✔ eigene Ebene |
+
+**Eine neutrale Empfehlung ist die Aussage der Ebene 3: das Potential in R,
+ohne jede Gebühr.** Sie beantwortet „wieviel ist bei dieser Handlung zu
+holen", nicht „lohnt es sich nach Kosten". Die zweite Frage gehört in die
+Mail — als Auskunft, nie als Filter.
+
+✔ **Der alte Verstoß ist behoben:** `trefferbilanz.breakeven()` (rechnet mit
+1,50 %) speiste bis U-1 die Entscheidung. Heute liefert `trefferbilanz` nur
+noch Mailtext (`TB.satz`), entschieden wird mit `potential`.
+
+## 3. ⚠️ DIE BRUCHSTELLEN — geprüft, nicht vermutet
+
+| # | Bruchstelle | Stand |
+|---|---|---|
+| **B-a** | **Mail zeigt andere Zahlen als die Entscheidung.** `wahrscheinlichkeit.saetze()` bekommt `h=`, aber **kein `merkmale`** — die Mail nennt 33,3 % und „20,0 Punkte ZU WENIG", während Stufe 11 mit 37,0 % durchlässt | ⚠️ **offen, muss mit P1** |
+| **B-b** | **Trockenlauf ohne Ränge** → mit G-6 nie ein Signal, alle Prüfungen wertlos | ✔ gelöst: `antworten["marktraenge"]`, ohne Vorgabewert |
+| **B-c** | **`marktrang.saetze()` war nie verdrahtet** — die tragenden Beiträge standen in keiner Mail | ✔ gebaut, in der Kette nachgewiesen |
+| **B-d** | **Rang über die falsche Grundgesamtheit** (Watchlist statt Messbasis) | ✔ gelöst: Rang über die Messbasis, unabhängig von der Assetzahl |
+| **B-e** | **Beitragstabelle bei wachsender Messbasis** | ✔ gemessen: +10 Symbole → 287/293 Fünftel unverändert, max. 1 Stufe. ⚠️ Bei Schrumpfung um die Hälfte nur 70 % — braucht eine Dauerprüfung |
+| **B-f** | **`bewertbar` gegen `traegt`** — ein Wert ohne Daten sah aus wie einer mit gemessen schwachen | ✔ gebaut (ungeprüft), kommt mit P3 in die Suite |
+| **B-g** | **Positionsführung** ändert die Assetzahl je Lauf | ⚠️ zu prüfen in P3 — der Rang ist seit B-d davon unabhängig, die Prüfung fehlt |
+
+## 4. Die Schritte
+
+| | Schritt | Abdeckung danach | Prüfung/Simulation |
+|---|---|---|---|
+| **P1** | **Funding-Historie für 10 nachladen** (AKT, ASTER, BRETT, CAT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME) + **B-a schließen** | 27 → **37 von 43** | Abdeckung vorher/nachher · Bitgleichheit der Mail · Kettensimulation |
+| **P2** | **R3: Tagewahl als dritter Beitrag** — aus der **Kursreihe**, also 100 % verfügbar. Querschnittsform, Tagesklammer, als Regel, Beitragstabelle geschrumpft | **43 von 43** | die sechs Pflichtschritte aus dem Nachtrag 31.08. |
+| **P3** | **Dauerprüfungen**: Abdeckung ≥ 100 % je Klasse · Messbasis-Größe · `bewertbar` · Positionsführung (B-g) | hält es | Paket in `pruefe_pakete.py` |
+| **P4** | **G-6 bleibt scharf** (kein Rückbau) — wirkt erst mit B1 | — | Vorschau + Kettensimulation |
+| **P5** | **B1: Kette verdrahten** = in Produktion | — | ⚠️ erst wenn P1–P3 grün |
+| **P6** | **Andere Klassen**: eigene Messbasis (Index-Universum), dieselbe Logik | — | ⚠️ Portfolio ≠ Messbasis |
+
+⚠️ **Warum P2 der Kern ist:** Ein Beitrag aus einer **Fremdquelle** kann nie
+volle Abdeckung garantieren — Binance und CoinGecko listen nicht jeden Wert.
+**Nur ein Beitrag aus der eigenen Kursreihe erreicht 100 %.** Genau das war
+H's Eigenschaft, und sie ist der Grund, warum sein Wegfall eine Lücke
+hinterlässt, die Funding und Turnover nicht schließen können.
+
+⚠️ **Kein Rückbau von G-6.** Es ist korrekt gebaut und wirkungslos, solange
+B1 offen ist. Der Schaden entstünde erst beim Verdrahten — und davor stehen
+P1 bis P3.
+
+---
+
+# ⚠️⚠️ NACHTRAG 31.08. ABENDS — DER TEILUMBAU UND SEIN VERFALLSDATUM
+
+## Was die Kettensimulation gefunden hat
+
+G-6 war gebaut, die Paketprüfung grün (1828 von 1828). Dann lief
+`simuliere_kette.py` gegen die **echte Notebook-Produktion** und lieferte:
+
+    5 Gruppen durchlaufen, 0 Signale, 2 Mails
+
+**Null Signale über alle fünf Assetklassen.** Nicht wegen der Datenlage
+einzelner Werte — eine Ebene darüber:
+
+| Klasse | tragende Beiträge |
+|---|---|
+| krypto | **3** — Funding, Turnover, Schnittabstand |
+| aktien | 0 |
+| themen_etf | 0 |
+| rohstoffe | 0 |
+| hedge | 0 |
+
+Alle drei Beiträge tragen `klassen=("krypto",)`. Für die anderen vier hat
+nie jemand gemessen — und Stufe 11 sperrte sie deshalb **nach Datenlage
+statt nach Qualität**. Das ist derselbe Fehlertyp wie bei H, nur eine
+Ebene höher: die Wirksamkeit war geprüft, die **Reichweite** nicht.
+
+⚠️ **Am übergeordneten Ziel gemessen ist es ein Regelverstoß.** „Für diese
+Klasse haben wir nie gemessen" ist ein **Fakt** über unseren
+Kenntnisstand — keine Aussage darüber, was kommt. Regel 4: *Ein Fakt ist
+keine Begründung.* Wer daraus eine Sperre macht, hat die Frage nicht
+beantwortet, sondern umformuliert.
+
+## Die Reparatur: drei Zustände statt zwei
+
+`potential.vermessen` (neu) fragt die **Registrierung**, nicht eine
+handgeschriebene Liste — sonst veraltet sie still, sobald ein Beitrag
+dazukommt.
+
+| Zustand | Bedeutung | Stufe 11 |
+|---|---|---|
+| **nicht vermessen** | für diese Klasse gibt es keine Messung | **Notiz, nicht sperren** |
+| **vermessen, kein Wert** | Mangel dieses Assets | **sperrt** |
+| **vermessen, Wert da** | echte Bewertung | **entscheidet** |
+
+Das Durchlassen ist **sichtbar**: `durchlauf.notiz()` schreibt eine eigene
+Zeile in die Trichtertabelle (`⚠️ … [nicht beurteilt]`). Ein wortloses
+Durchwinken sähe aus, als hätte der Entscheider zugestimmt.
+
+    vorher:  5 Gruppen, 0 Signale
+    nachher: 5 Gruppen, 8 Signale — Krypto entscheidet scharf,
+             vier Klassen laufen mit sichtbarer Notiz weiter
+
+## ⚠️ DAS IST EIN TEILUMBAU — und nur legitim mit Verfallsdatum
+
+**Nutzervorgabe 31.08., wörtlich:** *„Wenn wir für die anderen
+Assetklassen eine Bewertung erhalten, wäre Krypto nur ein Teilumbau — ja,
+du hast recht, dies ist nur legitim, wenn wir diese sofort nachziehen,
+aber dazu benötigen wir vorher eine tragende Basis und einen konkreten
+Plan."*
+
+Die Notiz ist die **Übergangsform**, nicht der Zielzustand. Sie hält die
+Lücke offen und sichtbar, statt sie durch eine unbegründete Sperre zu
+verdecken. Sie fällt weg, sobald die Klasse vermessen ist.
+
+## Die Basis — erhoben, nicht vermutet (31.08.)
+
+    data/messdaten.db      523 Reihen, ALLE assetklasse='krypto'
+                           485 mit >= 500 Handelstagen
+                           347 Symbole am letzten Kalendertag
+
+    Portfolio              aktien 2 · themen_etf 5 · rohstoffe 4 · hedge 2
+
+⚠️⚠️ **Für die anderen vier Klassen existiert keine Messbasis — und das
+Portfolio kann sie nicht ersetzen.** Der Querschnittsrang braucht
+mindestens 15 Symbole je Kalendertag (`MIND_JE_TAG`). Mit zwei Aktien
+gibt es keinen Querschnitt, egal wie lang ihre Historie ist.
+
+Genau dieselbe Trennung gilt bei Krypto schon: 523 Messreihen gegen 43
+Watchlist-Werte. Die Messbasis ist **breiter als das Portfolio und muss
+es sein** — sonst misst man seine eigene Auswahl.
+
+## Der konkrete Plan — P6 bis P8
+
+### P6 — Messbasis je Klasse aufbauen
+
+Vorlage ist `lade_messreihen.py`: lädt breit, schreibt in
+`data/messdaten.db`, bringt die Klassenzuordnung selbst mit, **fasst die
+Produktionsdatenbank nicht an**. Für Nicht-Krypto ist die Quelle
+`yfinance` — im Projekt bereits im Einsatz (`agent/aktien/screener.py`).
+
+| | Klasse | Ziel | Machbarkeit |
+|---|---|---|---|
+| **P6a** | aktien | 300–500 Reihen aus einem breiten Index | ✔ Querschnitt trägt |
+| **P6b** | themen_etf | 150–300 ETF-Reihen | ✔ Querschnitt trägt |
+| **P6c** | rohstoffe | 20–40 Reihen (ETC/Futures) | ⚠️ grenzwertig |
+| **P6d** | hedge | — | ⚠️⚠️ **kein Querschnitt möglich** |
+
+### ⚠️ P6d ist ein Konstruktionsproblem, keine Fleißaufgabe
+
+Es gibt keine „vielen Hedge-Werte" — Hedge ist eine **Rolle im Portfolio**,
+keine Anlageklasse mit hunderten Vertretern. Der Querschnittsrang ist dort
+nicht knapp, sondern **nicht definiert**.
+
+Für P6c und P6d braucht es deshalb die **andere Form der Größe** (stehende
+Regel 30.08.: *Rohwert · Veränderung · Verhältnis · Niveau — und:
+Querschnitt oder Zeitreihe?*):
+
+    Querschnitt   "wo steht dieser Wert HEUTE gegen alle anderen?"
+                  -> braucht viele Werte
+    Zeitreihe     "wo steht dieser Wert heute gegen SEINE EIGENE
+                  Geschichte?" -> braucht eine lange Reihe
+
+Der Schnittabstand lässt sich in **beiden** Formen bilden. Die
+Zeitreihenform ist für P6c/P6d der einzige Weg — und sie ist **eigenständig
+zu messen**, nicht aus der Querschnittsmessung abzuleiten.
+
+### P7 — Der Schnittabstand je Klasse messen
+
+⚠️ **Nur einer der drei Beiträge ist überhaupt übertragbar.**
+
+| Beitrag | übertragbar? | warum |
+|---|---|---|
+| Schnittabstand | ✔ **ja** | braucht nur die eigene Kursreihe |
+| Funding | ✗ nein | existiert nur bei Krypto-Perpetuals |
+| Turnover | ✗ nein | Umlaufmenge ist Krypto-Mechanik; ein Aktien-Äquivalent (Volumen/Streubesitz) wäre eine **eigene** Messung |
+
+Methodik unverändert `messe_schnittabstand_beitrag.py`: Tagesklammer,
+Placebo-Band aus 40 Versätzen, beide Historienhälften, Survivorship,
+**und die Wirkung als REGEL** (bei Funding war der Unterschied Faktor 5,5).
+
+⚠️ **Kein Übertragen des Krypto-Ergebnisses.** Eine Klasse gilt erst als
+vermessen, wenn ihre **eigene** Messung durchläuft — sonst steht in der
+Registrierung eine Zahl, hinter der keine Messung dieser Klasse steht.
+Das war der H-Fehler.
+
+### P8 — Klassenspezifische Kandidaten
+
+Erst nach P7 und nur, wenn P7 zu dünn ausfällt. Kandidaten stehen in der
+Fakten-Entscheidungsmappe; jeder braucht die volle Prüfliste 2.80.
+
+## Reihenfolge und Abbruchbedingung
+
+    JETZT   Krypto in Produktion — die Basis trägt (43/43, 523 Messreihen)
+    P6a/P6b Messbasis aktien + themen_etf     <- der Engpass, alles Weitere hängt daran
+    P7      Schnittabstand dort messen        <- entscheidet, ob die Notiz fällt
+    P6c/P6d Zeitreihenform für rohstoffe + hedge
+    P8      nur falls P7 zu dünn
+
+⚠️ **Abbruchbedingung, vorab festgelegt:** Fällt P7 für eine Klasse als
+Nullbefund aus, wird dort **nicht** scharf geschaltet — die Notiz bleibt.
+Ein Filter ohne tragende Messung ist genau das, was dieser Nachtrag
+verhindert.

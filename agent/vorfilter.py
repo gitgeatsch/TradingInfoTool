@@ -105,7 +105,8 @@ GEMESSEN_AUF = "krypto"
 
 
 def bewerte(marken_werte: dict | None, stop_eur, ziel_eur,
-            ist_short: bool = False, assetklasse: str = "") -> dict:
+            ist_short: bool = False, assetklasse: str = "",
+            einstieg_eur=None) -> dict:
     """A, B, H - und die Zutaten. Urteilt ueber das Signal NICHT.
 
     Gibt `h=None` zurueck, wenn die Frage hier nicht beantwortbar ist:
@@ -116,6 +117,11 @@ def bewerte(marken_werte: dict | None, stop_eur, ziel_eur,
            "widerstand_eur": None, "widerstand_beruehrungen": None,
            "traeger_eur": None, "traeger_beruehrungen": None,
            "stop_eur": stop_eur, "ziel_eur": ziel_eur,
+           # ⚠️ NUR FUER DIE MAIL (R2, 31.08.2026). Ohne den Einstieg
+           # laesst sich kein ABSTAND angeben, und dann bleiben nur
+           # Rohpreise - "Marke bei 0,0234 EUR" sagt einem Leser nichts.
+           # Optional, damit kein bestehender Aufrufer bricht.
+           "einstieg_eur": einstieg_eur,
            "assetklasse": str(assetklasse or "").lower(),
            "in_gemessener_klasse":
                str(assetklasse or "").lower() == GEMESSEN_AUF}
@@ -166,55 +172,91 @@ def bewerte(marken_werte: dict | None, stop_eur, ziel_eur,
 
 
 def saetze(b: dict | None) -> list[str]:
-    """Die Zeilen fuer die Mail. SPERREN NICHTS - das steht auch da."""
+    """Die Zeilen fuer die Mail. FAKTEN, keine Bewertung.
+
+    ⚠️ NEU GEFASST AM 31.08.2026 (R2). Die alte Fassung hatte drei Fehler,
+    und der erste ist der schwerste:
+
+      1. SIE WERTETE - und zwar mit einer Aussage, die seither widerlegt
+         ist: *"auf 523 fremden Reihen hatten solche Einstiege 4,5 Punkte
+         mehr Treffer."* Der Befund war gepoolt gemessen; je Kalendertag
+         liegt er bei -1,02 [-2,18 .. +0,14], also bei null (R1).
+      2. SIE SPRACH FACHJARGON - "Vorfilter H (Schattenmessung)", "A", "B".
+         Der Leser dieser Mail ist der Nutzer, nicht der Messcode.
+      3. SIE NANNTE ROHPREISE - "Marke bei 0,0234 EUR (3-mal beruehrt)".
+         Nutzervorgabe 31.08.: *"wenn Mailtext, auch fuer mich lesbar
+         machen, keine Rohzahlen."* Ein Preis ohne Bezug ist keine
+         Information; der ABSTAND ist eine.
+
+    Was bleibt: die Lage der Marken ist eine Tatsache ueber die Gegenwart
+    und gehoert in die Mail. Sie ist nur kein Argument fuer oder gegen den
+    Trade - genau die Unterscheidung aus CLAUDE.md ("ein Fakt ist keine
+    Begruendung").
+    """
     if not b:
         return []
     from agent.schreibweise import de
 
-    kopf = "Vorfilter H (Schattenmessung, sperrt nichts):"
+    kopf = "Kursmarken rund um diesen Einstieg"
     if b.get("h") is None:
-        return [kopf, f"   Hier nicht bestimmbar: {b.get('grund') or '?'}"]
+        return [kopf, "   Hier nicht bestimmbar: %s" % (b.get("grund") or "?")]
 
-    # ⚠️ DIE BEIDEN TEILE EINZELN NENNEN, nicht nur das Ergebnis. Faellt H
-    # aus, will man wissen WORAN - sonst ist die Zeile eine Note ohne
-    # Begruendung, und niemand kann ihr widersprechen.
+    def _abstand(preis) -> str:
+        """'3,2 % hoeher' - oder der Preis, wenn der Einstieg fehlt."""
+        ein = b.get("einstieg_eur")
+        try:
+            ein = float(ein)
+            preis = float(preis)
+        except (TypeError, ValueError):
+            return "bei %s EUR" % de(preis, 4)
+        if ein <= 0:
+            return "bei %s EUR" % de(preis, 4)
+        p = 100.0 * (preis - ein) / ein
+        return "%s %% %s" % (de(abs(p), 1), "hoeher" if p >= 0 else "tiefer")
+
+    def _mal(n) -> str:
+        """'dreimal' statt '(3-mal)' - Zahlwoerter bis zehn."""
+        worte = ("null", "ein", "zwei", "drei", "vier", "fuenf", "sechs",
+                 "sieben", "acht", "neun", "zehn")
+        n = int(n or 0)
+        return ("%smal" % worte[n]) if 0 <= n <= 10 else "%d-mal" % n
+
     if b["frei"]:
-        a_zeile = "   A Weg zum Ziel frei: ja - keine mehrfach beruehrte Marke darunter"
+        oben = ("   Nach oben ist der Weg bis zum Ziel frei - keine Marke, "
+                "die der Kurs schon mehrfach angelaufen hat.")
     else:
-        a_zeile = (f"   A Weg zum Ziel frei: NEIN - Marke bei "
-                   f"{de(b['widerstand_eur'], 4)} EUR "
-                   f"({b['widerstand_beruehrungen']}-mal beruehrt) liegt "
-                   f"vor dem Ziel")
+        oben = ("   Nach oben liegt eine Marke %s, die der Kurs schon %s "
+                "angelaufen hat - noch vor dem Ziel."
+                % (_abstand(b["widerstand_eur"]),
+                   _mal(b["widerstand_beruehrungen"])))
     if b["gedeckt"]:
-        b_zeile = (f"   B Stop gedeckt: ja - Marke bei "
-                   f"{de(b['traeger_eur'], 4)} EUR "
-                   f"({b['traeger_beruehrungen']}-mal beruehrt) liegt "
-                   f"ueber dem Stop")
+        unten = ("   Nach unten liegt eine solche Marke %s - zwischen "
+                 "Einstieg und Stop."
+                 % _abstand(b["traeger_eur"]))
     else:
-        b_zeile = "   B Stop gedeckt: NEIN - keine mehrfach beruehrte Marke ueber dem Stop"
+        unten = ("   Nach unten liegt bis zum Stop keine solche Marke.")
 
-    if b["h"]:
-        urteil = ("   TRIFFT ZU (A und B) - auf 523 fremden Reihen hatten "
-                  "solche Einstiege 4,5 Punkte mehr Treffer.")
-    else:
-        urteil = ("   trifft NICHT zu - auf 523 fremden Reihen waren solche "
-                  "Einstiege die schlechtere Haelfte.")
+    # ⚠️ DER SCHLUSSSATZ IST DER KERN VON R2. Er sagt, WOFUER die Zeilen da
+    # sind - und wofuer nicht. Ohne ihn liest sie jeder als Argument.
+    # ⚠️ "bestimmt den Stop" WAERE ZU STARK. Der Strukturboden ist eine
+    # UNTERGRENZE und greift gemessen bei 1,05 % der Anker
+    # (`pruefe_strukturstop.py`); sonst gewinnt der Rausch- oder
+    # ATR-Boden. "Nie enger als" ist die genaue Aussage.
+    schluss = ("   Das ist eine Beobachtung, keine Bewertung: gemessen ueber "
+               "609.527 Einstiege sagt die Lage dieser Marken nichts darueber, "
+               "wie der Handel ausgeht. In die Stopsetzung geht sie ein - der "
+               "Stop wird nie enger gesetzt als die naechste Marke darunter.")
+    zeilen = [kopf, oben, unten, schluss]
     # ⚠️ AUSSERHALB VON KRYPTO IST DAS KEINE SCHWAECHERE AUSSAGE, SONDERN
-    # GAR KEINE. Die 523 Reihen sind Binance-USDT; fuer Aktien, Rohstoffe,
-    # ETF und Hedge wurde H nie gemessen. Wer die Zeile dort liest wie bei
-    # Krypto, uebertraegt einen Befund auf eine Grundgesamtheit, die ihn nie
-    # gesehen hat - derselbe Fehler wie in Kapitel 109.
-    if b.get("in_gemessener_klasse"):
-        schluss = ("⚠️ NUR MITGESCHRIEBEN, NICHT ANGEWENDET - der Befund "
-                   "steht auf fremden Reihen und ist auf unseren 29 "
-                   "Symbolen noch nicht bestaetigt. Diese Zeilen sperren "
-                   "nichts.")
-    else:
-        schluss = (f"⚠️ AUF {(b.get('assetklasse') or '?').upper()} NIE "
-                   f"GEMESSEN - die 523 Reihen sind Krypto. Hier wird das "
-                   f"Merkmal nur MITGESCHRIEBEN, damit es spaeter ueberhaupt "
-                   f"pruefbar wird. Es sagt fuer diese Klasse bisher nichts.")
-    return [kopf, a_zeile, b_zeile, urteil, schluss]
+    # GAR KEINE. Die gemessenen Reihen sind Binance-USDT. Der Satz oben
+    # ("sagt nichts") stammt von dort und darf nicht als geprueftes Urteil
+    # ueber Aktien oder ETF gelesen werden - derselbe Fehler wie Kap. 109.
+    if not b.get("in_gemessener_klasse"):
+        zeilen.append(
+            "   Auf %s wurde das nie gemessen - hier ist es nur eine "
+            "Beschreibung der Lage, ohne jeden Befund dahinter."
+            % ((b.get("assetklasse") or "dieser anlageklasse").capitalize()))
+    return zeilen
 
 
 def schreibe(conn, *, symbol: str, bewertung: dict,

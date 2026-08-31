@@ -4609,3 +4609,126 @@ Bitpanda nur Krypto.
 Hebelfaktor nicht (ein Risikoparameter). RM-11 Liquidationsabstand läuft.
 
 **Herleitung:** `Umbauplan_Gesamtsystem_12_08.md`, Kapitel 132–134.
+
+---
+
+# ⚠️ R-R8 Aufnahme eines BEWERTUNGSBEITRAGS — die Wirksamkeitskette (30.08.2026)
+
+**R-R4 regelt die Aufnahme eines Parameters in einen Rollen-Prompt.** Für einen
+**Bewertungsbeitrag** — eine Größe, die in `wahrscheinlichkeit.BEITRAEGE`
+Punkte trägt und damit die Empfehlung beeinflusst — fehlte das Gegenstück.
+Diese Regel schließt die Lücke.
+
+**Anlass:** Nutzerkorrektur vom 30.08.2026, wörtlich: *„du sollst nicht alte
+messungen wiederholen sondern diese auf **Wirksamkeit bei praktischer
+Anwendung** prüfen — halte dich daran, sonst misst du wieder nur unser
+System."*
+
+## Die sechs Bedingungen
+
+| | Bedingung | fällt durch, wenn |
+|---|---|---|
+| **B1** | **Richtige FORM** | die Rohgröße geprüft wurde, wo die Praxis ein **Verhältnis** oder ein **Niveau** meint (Methodik 2.85) |
+| **B2** | **Richtige EBENE** | Querschnitt und Zeitreihe verwechselt; ein Querschnittsvergleich ohne **Kalendertag als Klammer** (2.86) |
+| **B3** | ⚠️ **Als REGEL gerechnet** | nur als Merkmal gemessen. **Drei Zahlen sind Pflicht: wie viele Fälle · waren die schlechter · was bleibt netto** (2.87) |
+| **B4** | **Häufigkeit ausgewiesen** | eine Wirkungszahl ohne die Angabe, auf welchem Anteil der Fälle sie anfällt |
+| **B5** | **Trennschärfe belegt** | keine Positivkontrolle über ein **künstliches Merkmal**; eine Pflanzung ins Ergebnis genügt nicht (2.88) |
+| **B6** | **Beide Historienhälften** | der Befund trägt nur in der ersten Hälfte |
+
+## Warum B4 eine eigene Bedingung ist
+
+**Ohne die Häufigkeit dreht sich die Rangfolge:**
+
+| | Einzelwirkung | Häufigkeit | **effektiv je Signal** |
+|---|---|---|---|
+| Vorfilter H | +4,5 Punkte | **5,0 %** | ≈ 0,23 Punkte |
+| Funding-Regel | +0,8 Punkte | **100 %** | **≈ 0,80 Punkte** |
+
+**Der scheinbar kleinere Beitrag wirkt dreieinhalbmal so stark.** H galt zwei
+Wochen als *der* tragende Beitrag, weil +4,5 neben +0,8 größer aussieht.
+
+## Warum B3 die schwerste ist
+
+Dieselbe Größe, zwei Zahlen:
+
+```
+Funding als MERKMAL  (unterstes gegen oberstes Fuenftel)   +0,1320 R
+Funding als REGEL    ("kein Einstieg ab Rangplatz 80 %")   +0,0242 R
+```
+
+**Faktor 5,5**, und arithmetisch zwingend: Eine Regel, die 20 % der Fälle
+sperrt, kann höchstens diesen Anteil des Merkmalsunterschieds heben — und nur,
+wenn die Gesperrten wirklich die schlechteren waren.
+
+⚠️ **Ein Beitrag wird mit der WIRKSAMKEITSzahl kalibriert, nie mit der
+Merkmalszahl.** Sonst behauptet das System eine Wirkung, die es nicht hat.
+
+## Stand der Kandidaten nach dieser Regel (30.08.2026)
+
+| Beitrag | B1 | B2 | B3 | B4 | B5 | B6 | Urteil |
+|---|---|---|---|---|---|---|---|
+| **Funding-Niveau** | ✔ | ✔ | ✔ +0,0244 R | ✔ 20,6 % | ✔ | ✔ | ✔ **aufnahmefähig** |
+| Turnover | ✔ | ✔ | ✔ +0,0616 R | ✔ 21,2 % | ✔ | ✔ | ⚠️ **Survivorship offen** (71 % gegen 90 %) |
+| MC/TVL | ✔ | ✔ | — | — | — | ✔ | ⚠️ **zu schmal** (12 Symbole/Tag) |
+| **Vorfilter H** *(im System)* | ✔ | ✔ | ✖ **nie als Regel gerechnet** | ✔ 5,0 % | ✔ | ⚠️ episodisch | ⚠️ **B3 offen** |
+| Amihud · Momentum 12-1 · TVL · Adressen · NVM | ✔ | ✔ | ✔ | ✔ | ✔ | — | ✖ **null, belastbar** |
+
+**Vollständige Prüfliste:** `Test_und_Verifikationsmethodik.md` **2.91**
+(zwanzig Stufen). **Befundstand:** `Befundkarte.md` 3.9/3.10.
+
+---
+
+# ⚠️ R-R9 Die Schwelle wird bei JEDER Beitragsänderung neu kalibriert (30.08.2026)
+
+**Nutzervorgabe, wörtlich:** *„deine Anmerkung — mehr Beiträge, andere
+Kalibrierung bzw. Quote — muss eigentlich eine feste Regel sein, sonst kippt
+das System."*
+
+## Warum das System sonst kippt
+
+Die Potentialschwelle trennt „genug Grund" von „kein Grund". **Jeder neue
+tragende Beitrag verschiebt aber alle Potentialwerte nach oben** — bei
+gleicher Schwelle kommen dadurch mehr Signale durch, ohne dass sich ihre
+Qualität geändert hätte.
+
+**Gerechnet, bei Schwelle 0,010 und den heutigen zwei Beiträgen:**
+
+| zusätzlicher Beitrag | Durchlass |
+|---|---:|
+| — *(heute)* | **39 %** |
+| +0,5 Punkte | 54 % |
+| +1,0 Punkte | 77 % |
+| +2,0 Punkte | **89 %** |
+
+⚠️⚠️ **Ein Filter, der mit jedem Fortschritt durchlässiger wird, hebt sich
+selbst auf.** Nach drei bis vier weiteren Beiträgen ließe er praktisch alles
+durch — und das Ziel *„keine Empfehlung ohne Potential"* wäre wieder verloren,
+ohne dass jemand etwas falsch gemacht hätte.
+
+## Die Regel
+
+> **Wird ein Beitrag aufgenommen, entfernt oder in seinem Wert geändert, wird
+> die Schwelle im selben Schritt neu kalibriert.** Ein Beitragswechsel ohne
+> Kalibrierung ist unvollständig — wie eine Waage, der man Gewichte hinzufügt,
+> ohne sie zu tarieren.
+
+**Wie kalibriert wird** (Methodik 2.93):
+
+| # | |
+|---|---|
+| 1 | Schwellen von 0,000 aufwärts durchrechnen |
+| 2 | Jede gegen den **quotengleichen Zufall** — nie gegen die Gesamtmenge |
+| 3 | **Durchlassquote** neben jede Zahl schreiben |
+| 4 | ⚠️ Nicht das Maximum wählen — der Effekt wächst **linear** mit der Sperrquote, es gibt kein Optimum. Die Wahl ist eine Abwägung Signalzahl gegen Qualität |
+| 5 | Ergebnis in `config.yaml` → `bewertung: potential_schwelle_r` |
+
+## Die Zielgröße, an der kalibriert wird
+
+**Nicht die Wirkung, sondern die Durchlassquote.** Die Wirkung wächst mit
+jedem Beitrag — die Frage ist, wie viele Empfehlungen das System liefern soll.
+
+⚠️ **Diese Zahl ist eine Nutzerentscheidung** und gehört neben die Schwelle
+dokumentiert. Ohne sie ist jede Kalibrierung willkürlich.
+
+Verwandt: **R-R8** (Aufnahme eines Bewertungsbeitrags) — R-R9 ist ihr
+Pflichtanhang: **B7. Nach der Aufnahme wird kalibriert.**

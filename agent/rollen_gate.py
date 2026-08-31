@@ -94,10 +94,42 @@ STUFEN = (
 )
 STUFEN_NAMEN = tuple(s for s, _ in STUFEN)
 
-# Die LETZTE Stufe zaehlt nur - sie verwirft nicht. Siehe trefferbilanz.py:
-# "Was diese Datei nicht tut: sie verwirft nichts." Ein Waechter, der selbst
-# verwirft, macht seine eigene Wirkung unsichtbar.
-NUR_ZAEHLEN = ("entscheider",)
+# ---------------------------------------------------------------------------
+# G-6: DIE ENTSCHEIDERSTUFE VERWIRFT (31.08.2026)
+# ---------------------------------------------------------------------------
+#
+# ⚠️ HIER STAND `("entscheider",)`, und die Begruendung war ueberholt:
+# *"Siehe trefferbilanz.py - was diese Datei nicht tut: sie verwirft
+# nichts."* Seit U-1 (30.08.2026) entscheidet Stufe 11 nicht mehr mit
+# `trefferbilanz`, sondern mit `potential.traegt()`. Die alte Begruendung
+# galt einem Modul, das an dieser Stelle nicht mehr steht.
+#
+# WAS DAS VORHER BEDEUTETE: die gesamte Bewertungsarbeit - Basisrate,
+# Funding, Turnover, die Schwelle 0,010 R - wurde gerechnet, gebucht und
+# dann verworfen. Kein Signal wurde je verhindert. Nutzervorgabe 30.08.:
+# *"Der Filter muss gleich nach dem Umbau scharf sein und funktionieren."*
+#
+# ⚠️ DER WIRKUNGSNACHWEIS LAG VOR DER AENDERUNG VOR
+# (`vorschau_g6_scharfschaltung.py`, 623.000 Anker mit Funding-Rang):
+#
+#     Schwelle 0,010   Durchlass 40,0 %
+#     bleibt           -0,2518 R
+#     gesperrt         -0,2749 R
+#     Unterschied      +0,0231 R  -> die Sperre trifft die SCHLECHTEREN
+#
+# Ueber den Takt: aus rund 30,7 Empfehlungen/Jahr (A1-Schaetzung) wuerden
+# ~12,3 - achtzehn weniger. Das ist eine grosse Verengung und war dem
+# Nutzer vor der Umsetzung vorgelegt.
+#
+# ⚠️ ES WIRKT ERST MIT B1. Die Rollen-Kette hat bis heute keinen
+# Betriebsaufrufer (15 von 15 Modulen); das letzte Signal in `signals`
+# stammt vom 21.07.2026 aus der alten Kette. Diese Zeile legt fest, was
+# beim Verdrahten gilt - sie aendert fuer sich genommen nichts.
+#
+# ZURUECKNEHMEN ist eine Zeile: `NUR_ZAEHLEN = ("entscheider",)`. Wer das
+# tut, sollte den Grund danebenschreiben - sonst steht in einem Jahr wieder
+# eine Bewertung im Code, die nichts bewirkt.
+NUR_ZAEHLEN: tuple = ()
 
 
 class Durchlauf:
@@ -126,6 +158,11 @@ class Durchlauf:
         self.z1_zahlen_geprueft = 0
         self.z1_ausgaben_ohne_zahl = 0
         self._offen: set = set()
+        # NOTIZEN JE STUFE (31.08.2026): ein Symbol kam durch, aber nicht
+        # weil die Stufe geurteilt haette - sie konnte es nicht. Das ist
+        # weder "bestanden" noch "verloren", und ohne eigene Zeile waere
+        # es ein stilles Durchwinken.
+        self.notizen: dict[str, dict[str, int]] = {}
 
     def beginne(self, symbol: str) -> None:
         self.hinein += 1
@@ -153,6 +190,29 @@ class Durchlauf:
         # Filter und misst danach seine eigene Wirkung.
         if stufe not in NUR_ZAEHLEN:
             self._offen.discard(symbol)
+
+    def notiz(self, symbol: str, stufe: str, text: str) -> None:
+        """Durchgelassen, aber NICHT beurteilt - und das muss man sehen.
+
+        ⚠️ GEBAUT AM 31.08.2026, weil Stufe 11 einen dritten Zustand hat.
+
+            bestanden  die Stufe hat geprueft und durchgelassen
+            verloren   die Stufe hat geprueft und verworfen
+            notiz      die Stufe KONNTE NICHT PRUEFEN
+
+        Der dritte Fall entstand mit G-6: fuer vier der fuenf Assetklassen
+        ist kein einziger Beitrag registriert. Sie zu sperren waere eine
+        Sperre nach Datenlage statt nach Qualitaet (Regel 4). Sie
+        wortlos durchzulassen waere schlimmer - dann sieht die Tabelle
+        aus, als haette der Entscheider zugestimmt.
+
+        Eine Notiz nimmt NICHTS aus dem Lauf und faelscht keine Bilanz.
+        Sie steht in der Trichtertabelle als eigene Zeile.
+        """
+        if symbol not in self._offen or not text:
+            return
+        self.notizen.setdefault(stufe, {})
+        self.notizen[stufe][text] = self.notizen[stufe].get(text, 0) + 1
 
     def faktorzahl(self, anzahl: int | None) -> None:
         """Nur mitschreiben (E3). Die Faktorzahl zeigte in der Messung KEINEN
@@ -217,6 +277,9 @@ class Durchlauf:
             for grund, n in sorted(self.gruende[stufe].items(),
                                    key=lambda x: -x[1])[:3]:
                 z.append(f"        {n}x {grund}")
+            for text, n in sorted((self.notizen.get(stufe) or {}).items(),
+                                  key=lambda x: -x[1])[:3]:
+                z.append(f"        {n}x ⚠️ {text} [nicht beurteilt]")
         z.append(f"heraus          {self.heraus:>4}")
         if self.z1_verstoesse:
             von = len(self.z1_verstoesse)

@@ -4422,3 +4422,279 @@ zugegriffen wird — sonst meldete sie den halben Bestand (`re`, `datetime`,
 ✔ **Positivkontrolle bestanden:** mit dem alten Namen wieder eingebaut meldet
 sie `agent/rollen_lauf.py:878 _AKL in _ein_asset() - Zugriff schon in Zeile 752`.
 
+
+---
+
+## 2.83 Die Kontrolle muss aus DEMSELBEN Zeitfenster ziehen
+
+**Anlass:** V-0 / N-7 am 29.08.2026.
+
+Der Zufallsarm zog aus der ganzen Reihe (2017–2026), die Kette wählte nur Tage
+im August 2026. Ergebnis: +0,1371 bei t 7,71 — überzeugend aussehend, und zu
+etwa 60 % schlicht der Zeitraum:
+
+```
+Median-Tagesbewegung im Signalzeitraum : +0,546 %
+Median-Tagesbewegung ganze Historie    : -0,158 %
+                             Differenz : +0,704 Punkte
+```
+
+**Regel:** Jeder Kontrollarm zieht aus **derselben Zeitspanne**, in der der
+Prüfarm gewählt hat. Ein Arm, der über einen anderen Zeitraum mittelt, misst
+den Zeitraum mit.
+
+**Die Warnlampe, die es vorher zeigt:** eine Negativkontrolle, die **nicht
+neutral** ausfällt. Hier lieferte „erste Tage des Fensters" −0,0752 bei t −3,01
+— ein klarer Zeittrend im Fenster. Eine Negativkontrolle weit weg von null ist
+kein Schönheitsfehler, sondern der Hinweis, dass eine Störgröße noch im Spiel
+ist.
+
+## 2.84 Bei gemeinsam feuernden Signalen ist die ehrliche Einheit der Kalendertag
+
+**Anlass:** derselbe Lauf.
+
+Auch nach 2.83 blieb ein Vorsprung: +0,0539 bei t 4,68 über 20 Symbole. Der
+t-Wert war **Scheingenauigkeit** — Krypto läuft synchron, und die Kette feuert
+bei allen Symbolen an denselben Tagen. Zwanzig Symbole an sieben gemeinsamen
+Tagen sind keine zwanzig unabhängigen Ziehungen.
+
+**Der Kontrollarm, der es aufdeckt — „fremde Signaltage":**
+
+> Stelle die eigenen Signaltage eines Symbols gegen die Signaltage **aller
+> anderen** Symbole, im selben Fenster, auf derselben Kursreihe.
+
+Das hält den Kalendertag exakt fest und lässt nur übrig, was **asset-eigen**
+ist. Hier:
+
+```
+eigene Signaltage      +0,0538
+fremde Signaltage      +0,0525
+ASSET-EIGENER Anteil   +0,0013   t = +0,12   7 von 20 positiv
+```
+
+⚠️ **Fällt dieser Arm fast so hoch aus wie der Prüfarm, gibt es keine
+Auswahlleistung** — nur einen geteilten Zeitpunkt.
+
+**Und für den Zeitpunkt gilt dann:** die Stichprobe ist die Zahl der
+**Kalendertage**, nicht die der Signale. Bei n = 7 wäre erst r > 0,73
+nachweisbar gewesen; gemessen wurden r = +0,383 bei p = 0,387 — nichts.
+
+**Anwendbar auf jede Messung, in der viele Einheiten gleichzeitig ausgelöst
+werden.** Betrifft rückwirkend jeden Befund über die Rollen-Kette, der Symbole
+als unabhängige Einheiten gezählt hat.
+
+---
+
+# ⚠️ DIE SAUBERE AUSGANGSBASIS FÜR MESSUNGEN (30.08.2026)
+
+**Nutzervorgabe:** *„Wenn wir eine saubere Ausgangsbasis für Messungen bzw. die
+praktische Anwendung haben, sollte dies in unser Regelwerk und Messdokumente
+aufgenommen werden, damit wir nicht wieder dieselben Fehler machen."*
+
+**Grundlage sind zwölf Fehler aus zwei Messtagen (29./30.08.2026)** — jeder
+davon hat einen Befund erzeugt, der nicht haltbar war, oder einen Nullbefund,
+der nichts bedeutete. Sie stehen unten als 2.85 bis 2.90; die Kurzfassung ist
+die Checkliste in 2.91.
+
+## 2.85 Die FORM der Größe wird VOR der Messung geklärt
+
+**Drei Nullbefunde entstanden allein aus der falschen Form.**
+
+| Größe | ✖ gemessen | ✔ Form der Praxis |
+|---|---|---|
+| TVL | Veränderung | **MC/TVL** — Verhältnis |
+| Aktive Adressen | Veränderung | **NVM** — MC / Adressen² |
+| Funding | Veränderung *(fast)* | **Niveau** — hoch = überhitzt |
+| Momentum | 20 Tage | 12 Monate **ohne den letzten** |
+
+**Die Ursache war eine fehlende Kategorie.** Das Projekt kannte zwei:
+
+| Kategorie | Frage | Stand |
+|---|---|---|
+| Eigenschaft | „was **ist** das Asset" | 7 geprüft, keine trägt |
+| Lage | „wo **steht** es gerade" | 3 geprüft, alle zeigten etwas |
+| **Bewertung** | „ist es **teuer oder billig**" | ⚠️ war nie geprüft |
+
+**Regel:** Vor jeder Messung einer neuen Größe wird kurz recherchiert, in
+welcher Form sie tatsächlich verwendet wird — Rohwert · Veränderung ·
+**Verhältnis** · **Niveau gegen die eigene Historie**. Für die gängigen
+Kennzahlen gibt es benannte Standardformen und Literatur.
+
+## 2.86 Querschnitt oder Zeitreihe — und der Kalendertag als Klammer
+
+**Zwei verschiedene Fragen, die verschiedene Aufbauten brauchen:**
+
+| | Frage | Aufbau |
+|---|---|---|
+| **Querschnitt** | „welches Asset heute" | Rangplatz **je Kalendertag**, dann über Tage mitteln |
+| **Zeitreihe** | „dieses Asset wann" | Rangplatz in der **eigenen Historie**, dann über Symbole mitteln |
+
+⚠️ **Eine Je-Reihe-Messung ist für Querschnittseffekte blind.** Bei MC/TVL
+blieben von 19 Symbolen **4** übrig — eine je Symbol stabile Kennzahl wechselt
+das Terzil nie.
+
+⚠️⚠️ **Und ein Querschnittsvergleich braucht den Kalendertag als Klammer.**
+Gepoolt über alle Anker mischen sich Marktphasen: dieselbe Größe (Funding)
+zeigte gepoolt **keinen** Verlauf und je Tag einen **sauber monotonen**.
+
+⚠️ **Die Gegenprobe gehört dazu:** Trägt eine Zeitreihen-Messung nur ohne
+Marktkontrolle, ist sie **Markt-Timing**, keine Asset-Bewertung. Funding je
+Reihe: roh **+0,169 R**, marktbereinigt **−0,076 R**.
+
+## 2.87 WIRKSAMKEIT statt Merkmalsmessung
+
+**Der größte Fehler der Serie, vom Nutzer aufgedeckt:** *„sonst misst du wieder
+nur unser System."*
+
+| | Funding |
+|---|---|
+| **Merkmal** — unterstes gegen oberstes Fünftel | +0,1320 R |
+| **Regel** — „kein Einstieg ab Rangplatz 80 %" | **+0,0242 R** |
+
+**Faktor 5,5**, und arithmetisch zwingend: Eine Regel, die 20 % sperrt, kann
+höchstens diesen Anteil des Merkmalsunterschieds heben.
+
+**Regel:** Kein Merkmalsbefund wird zur Empfehlung, bevor er als Regel
+gerechnet ist. **Drei Zahlen, und nur die dritte ist die Wirkung:**
+
+```
+WIEVIELE     Anteil der Faelle, den die Regel betrifft
+SCHLECHTER   waren die Betroffenen wirklich die schlechteren
+NETTO        was bleibt - gepaart auf denselben Ankern
+```
+
+⚠️ **Und die Häufigkeit gehört immer dazu.** „+4,5 Punkte" ohne „auf 5 % der
+Fälle" ist irreführend:
+
+| | Einzelwirkung | Häufigkeit | **effektiv** |
+|---|---|---|---|
+| Vorfilter H | +4,5 Punkte | 5,0 % | ≈ 0,23 Punkte |
+| Funding-Regel | +0,8 Punkte | 100 % | **≈ 0,80 Punkte** |
+
+## 2.88 Die Positivkontrolle, die den eigenen Effekt frisst
+
+**Zweimal falsch gebaut, bevor sie funktionierte:**
+
+| Anlauf | Konstruktion | warum sie nichts belegte |
+|---|---|---|
+| 1 | Effekt auf die **Behaltenen** | die sind 80 % des Vergleichsmedians — der Effekt hebt sich auf |
+| 2 | Effekt auf die **Gesperrten** | der Median reagiert kaum, wenn die äußeren 20 % weiter nach außen rutschen |
+| **3 ✔** | **Merkmal bekannter Güte** `−Ziel + Rauschen·k` | misst, welche Merkmalsgüte die Regel findet |
+
+**Regel:** Bei einer Regel-Messung wird die Trennschärfe über ein **künstliches
+Merkmal** bestimmt, nicht über eine Pflanzung ins Ergebnis. Die Ausgabe ist
+eine Kurve *Merkmalsgüte → Wirkung*, gegen die der echte Wert gehalten wird.
+
+## 2.89 Datenqualität: Token-Umstellungen sehen aus wie Kurssprünge
+
+**In `messdaten.db`:** LUNA **Faktor 177.400**, COCOS 1.295, DREP 108 — alles
+Neuausgaben und Redenominierungen. **14 von 523 Reihen** haben einen
+Tagessprung über Faktor 5.
+
+⚠️ **0,1 % der Anker trugen 187 % eines Mittelwerts.** Betroffen ist jede
+Messung auf Mittelwerten; Median-Messungen sind robust.
+
+**Regel:** Vor jeder Messung auf Kursreihen werden Anker verworfen, deren
+**Vorwärtsfenster** einen Tagessprung über Faktor 5 enthält — chirurgisch, nicht
+reihenweise. Vorlage: `messe_zielregel.ergebnisse(bereinigt=True)`.
+
+## 2.90 Bevor eine Wartezeit behauptet wird: den Historie-Endpunkt suchen
+
+**Zwei Projektannahmen fielen an einem Tag:** „TVL ab 18.09." und
+„Positionierung ab 22.10." — beide beruhten darauf, dass die Module den
+**Momentaufnahme**-Endpunkt abrufen.
+
+```
+DefiLlama /protocol/{slug}      6-8 Jahre
+Binance   /fapi/v1/fundingRate  7,0 Jahre
+Binance   /futures/data/openInterestHist   nur 30 Tage  <- echte Grenze
+```
+
+**Regel:** Eine Wartezeit ist erst dann eine Tatsache, wenn ein Abruf sie
+belegt.
+
+## 2.91 ⚠️ DIE CHECKLISTE — vor jeder Messung durchgehen
+
+| # | Frage | Fundstelle |
+|---|---|---|
+| 1 | **Welche FORM** hat die Größe in der Praxis? | 2.85 |
+| 2 | **Querschnitt oder Zeitreihe** — und ist der Kalendertag die Klammer? | 2.86 |
+| 3 | Messe ich das **Merkmal** oder die **Regel**? | 2.87 |
+| 4 | Sind **Datenbrüche** entfernt? | 2.89 |
+| 5 | Zieht die **Kontrolle aus demselben Zeitfenster**? | 2.83 |
+| 6 | Ist die **Einheit** richtig — Kalendertag statt Symbol? | 2.84 |
+| 7 | Ist die **Blocklänge größer als der Horizont**? | Kap. 103.6 |
+| 8 | Ist die Effektgröße **Median in R** — nicht Korrelation, nicht Mittel? | Kap. 103.9 |
+| 9 | **Positivkontrolle über ein künstliches Merkmal** gelaufen? | 2.88 |
+| 10 | **Beide Hälften** der Historie geprüft? | 30.08. — dreimal starb ein Befund genau hier |
+| 11 | **Survivorship**: unterscheidet sich die Stichprobe vom Rest? | Turnover: 71 % gegen 90 % |
+| 12 | Ist der **Suchpreis** bezahlt — wie viele Zellen wurden abgesucht? | 2.79 |
+| 13 | Liegt die **Datenbasis** vor, oder wird auf eine Wartezeit verwiesen? | 2.90 |
+| 14 | Läuft die Messung gegen **`messdaten.db`** (523) statt die Watchlist (26–54)? | 30.08. — 32 von 54 Werkzeugen |
+
+## 2.92 ⚠️ Der Bytecode-Cache verfälscht Prüfungen nach einem Rücksetzen
+
+**Anlass: 30.08.2026, beim Bau des Bitgleichheitstests.** Eine Änderung wurde
+eingeschleust, geprüft, **zurückgesetzt** — und die Prüfung meldete weiter
+**300 FEHL**. `git diff` war leer, die Quelldatei enthielt den alten Wert.
+
+**Ursache:** `agent/__pycache__/wahrscheinlichkeit.cpython-313.pyc` enthielt
+noch den gepatchten Stand. Python prüft Größe und Zeitstempel; wird eine Datei
+mit gleicher Länge zurückgeschrieben, kann der Cache gültig erscheinen.
+
+⚠️ **Die Gefahr ist nicht der falsche FEHL, sondern der falsche OK.** Wer eine
+Änderung einbaut und der Cache liefert den alten Stand, meldet die Prüfung
+Erfolg für Code, der nie gelaufen ist.
+
+**Regel:** Jede Prüfung, die Quelldateien verändert oder zurücksetzt, löscht
+vorher **alle** `__pycache__`-Verzeichnisse:
+
+```python
+for w, d, f in os.walk("."):
+    if "__pycache__" in d:
+        shutil.rmtree(os.path.join(w, "__pycache__"), ignore_errors=True)
+```
+
+**Und jeder Bitgleichheitstest belegt seine eigene Wirksamkeit**, bevor er als
+Absicherung gilt: eine Änderung einschleusen, Anschlag prüfen, zurücksetzen,
+Sauberkeit prüfen. Am 30.08. erkannte er einen geänderten **Punktwert** und
+einen geänderten **Satzteil** mit je 36 von 432 Fällen.
+
+## 2.93 ⚠️ Eine Schwelle wird gegen den QUOTENGLEICHEN Zufall gemessen
+
+**Anlass: 30.08.2026, Kalibrierung der Potentialschwelle.**
+
+**Der erste Anlauf verglich** den Median der Verbliebenen mit dem Median
+**aller** Anker. Ergebnis: das Optimum bei Schwelle 0,020 mit +0,0853 R.
+
+⚠️ **Die Zufallsprobe kippte es:** Vertauscht man das Potential innerhalb jedes
+Tages und nimmt dann die beste von neun Schwellen, ergibt sich
+
+```
+bester Zufallswert aus 200 Laeufen  +0,3416
+Schwelle (95 %)                     +0,2793
+gemessen                            +0,2104   ->  TRAEGT NICHT
+```
+
+**Der Grund ist ein Selektionsartefakt:** Wer aus einer Gruppe einen Teil
+entfernt, verschiebt den Median der Verbliebenen — **auch bei reiner
+Zufallsauswahl**, und umso stärker, je mehr entfernt wird. Die Messung mischte
+also **Auswahlleistung und Sperrquote**.
+
+**Das Warnzeichen war da und wurde übersehen:** +0,21 R stand neben einer
+sauber gemessenen Regelwirkung von **+0,024 R** — ein Faktor 9. **Wenn eine
+neue Zahl ein Vielfaches einer bereits belegten ist, ist die Konstruktion
+verdächtig, nicht der Befund groß.**
+
+**Die richtige Konstruktion — dieselbe wie beim Tagewahl-Befund vom 23.08.:**
+
+```
+echt     Median der Anker ueber der Schwelle
+zufall   Median GLEICH VIELER, zufaellig gezogener Anker DESSELBEN Tages
+         (mehrfach gezogen und gemittelt)
+-> Differenz = Auswahlleistung ohne Selektionseffekt
+```
+
+**Regel:** Jede Schwelle, jeder Filter, jede Auswahl wird gegen eine
+**quotengleiche** Zufallsauswahl gemessen — nie gegen die Gesamtmenge. Und
+⚠️ **der Suchpreis über alle geprüften Schwellen gehört dazu** (2.79).

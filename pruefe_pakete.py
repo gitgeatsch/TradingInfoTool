@@ -2141,12 +2141,86 @@ def paket_12c() -> None:
                       "risikoschicht"):
             d.bestanden(sym, stufe)
         d.verloren(sym, "entscheider", "traegt sich nicht")
-    pruefe(P, "der Entscheider zaehlt, aber nimmt nichts heraus",
-           d.verloren_je_stufe["entscheider"] == 7 and d.heraus == 7,
-           "'Was diese Datei nicht tut: sie verwirft nichts' - ein Waechter, "
-           "der selbst verwirft, macht seine eigene Wirkung unsichtbar")
+    # ⚠️ G-6 (31.08.2026): DER ENTSCHEIDER VERWIRFT JETZT.
+    # Hier stand "zaehlt, aber nimmt nichts heraus" - richtig bis U-1, als
+    # die Stufe noch mit `trefferbilanz` rechnete. Seit sie mit
+    # `potential.traegt()` entscheidet und der Wirkungsnachweis vorliegt
+    # (Gesperrte -0,2749 R gegen bleibende -0,2518 R), waere ein blosses
+    # Zaehlen eine Bewertung ohne Folge.
+    pruefe(P, "⚠️ der Entscheider VERWIRFT (G-6)",
+           d.verloren_je_stufe["entscheider"] == 7 and d.heraus == 0,
+           "wer hier 7 heraus erwartet, prueft den Stand vor dem 31.08. - "
+           "dann war die gesamte Bewertung ohne Wirkung auf den Signalfluss")
+    pruefe(P, "und NUR_ZAEHLEN ist leer, mit Begruendung im Modul",
+           RG.NUR_ZAEHLEN == ()
+           and "G-6" in io.open("agent/rollen_gate.py",
+                                encoding="utf-8").read(),
+           "eine leere Liste ohne Begruendung sieht in einem Jahr aus wie "
+           "ein Versehen")
     pruefe(P, "eine echte Stufe nimmt sehr wohl heraus",
            d.verloren_je_stufe["fakten"] == 3 and d.hinein == 10)
+
+    # ------------------------------------------------------------------
+    # ⚠️⚠️ DIE DREI ZUSTAENDE VON STUFE 11 (31.08.2026)
+    #
+    # DIESE PRUEFUNG HAT GEFEHLT, und ihr Fehlen kostete den Rollout.
+    # G-6 schaltete Stufe 11 scharf; die Paketpruefung war gruen. Erst
+    # `simuliere_kette.py` gegen die Notebook-Produktion zeigte, was das
+    # in Wirklichkeit tat: **null Signale ueber alle fuenf Gruppen.**
+    #
+    # Grund: alle drei tragenden Beitraege stehen auf `klassen=("krypto",)`.
+    # Fuer aktien, themen_etf, rohstoffe und hedge gibt es keine Messung -
+    # und ein Filter ohne Messgrundlage sperrt nach DATENLAGE statt nach
+    # Qualitaet. Regel 4: ein Fakt ist keine Begruendung.
+    #
+    # Die Pruefung haelt drei Dinge fest, damit weder Richtung wieder
+    # verrutscht:
+    #   1  eine NICHT VERMESSENE Klasse wird nicht gesperrt
+    #   2  eine VERMESSENE Klasse ohne Wert wird sehr wohl gesperrt
+    #   3  das Durchlassen ist SICHTBAR, nicht still
+    # ------------------------------------------------------------------
+    import agent.potential as _PTx
+    import agent.wahrscheinlichkeit as _WKx
+    _p_krypto = _PTx.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                            instrument="spot", strategie="einstieg",
+                            h=None, merkmale=None)
+    _p_aktien = _PTx.rechne(crv=2.0, stop_relativ=0.05, klasse="aktien",
+                            instrument="spot", strategie="einstieg",
+                            h=None, merkmale=None)
+    pruefe(P, "⚠️ eine vermessene Klasse ist von einer unvermessenen "
+              "unterscheidbar",
+           _p_krypto.vermessen and not _p_aktien.vermessen,
+           "ohne diese Unterscheidung sperrt Stufe 11 vier von fuenf "
+           "Assetklassen dauerhaft - gemessen am 31.08.: 0 Signale")
+    pruefe(P, "und `vermessen` fragt die REGISTRIERUNG, nicht eine Liste",
+           len(_WKx.vermessen("krypto")) == 3
+           and _WKx.vermessen("aktien") == [],
+           "eine handgeschriebene Klassenliste veraltet still, sobald ein "
+           "Beitrag dazukommt - genau der Fehler aus `pruefe_beitragsabdeckung`")
+    pruefe(P, "⚠️ `vermessen` und `bewertbar` sind NICHT dasselbe",
+           (not _p_krypto.bewertbar) and _p_krypto.vermessen,
+           "krypto ist vermessen, dieser Aufruf hat aber keine Merkmale - "
+           "wer beides gleichsetzt, sperrt entweder zu viel oder zu wenig")
+    _q = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "der Ablauf prueft `vermessen` VOR `bewertbar`",
+           _q.find("not _potential.vermessen") > 0
+           and _q.find("not _potential.vermessen")
+               < _q.find("not _potential.bewertbar"),
+           "in der anderen Reihenfolge greift die Datenlueckensperre zuerst "
+           "und die Unterscheidung ist wirkungslos")
+    pruefe(P, "⚠️ und das Durchlassen ist SICHTBAR (`notiz`), nicht still",
+           "durchlauf.notiz(" in _q and hasattr(RG.Durchlauf, "notiz"),
+           "ein wortloses Durchwinken sieht in der Trichtertabelle aus, als "
+           "haette der Entscheider zugestimmt")
+    _d2 = RG.Durchlauf()
+    _d2.beginne("XX")
+    _d2.notiz("XX", "entscheider", "Klasse aktien ist nicht vermessen")
+    pruefe(P, "eine Notiz nimmt NICHTS aus dem Lauf",
+           _d2.heraus == 1 and _d2.verloren_je_stufe["entscheider"] == 0,
+           "sonst waere sie eine Sperre mit anderem Namen")
+    pruefe(P, "und sie steht in der Trichtertabelle",
+           any("nicht beurteilt" in z for z in _d2.bericht()),
+           "eine Notiz, die niemand sieht, ist keine Notiz")
 
     # WER RAUS IST, WIRD IN SPAETEREN STUFEN NICHT MEHR GEZAEHLT.
     d2 = RG.Durchlauf()
@@ -2212,7 +2286,9 @@ def paket_12c() -> None:
     kennung = RG.schreibe(_c, d, "2026-08-13T07:00:00+00:00")
     zeile = _c.execute(f"SELECT hinein, heraus FROM {RG.TABELLE} WHERE id=?",
                        (kennung,)).fetchone()
-    pruefe(P, "und der Lauf laesst sich nachlesen", zeile == (10, 7), str(zeile))
+    # ⚠️ G-6: `heraus` ist jetzt 0 - die sieben scheitern am Entscheider,
+    # der seit dem 31.08. verwirft. Vorher stand hier (10, 7).
+    pruefe(P, "und der Lauf laesst sich nachlesen", zeile == (10, 0), str(zeile))
     _c.close()
 
 
@@ -2900,7 +2976,15 @@ def paket_b1() -> None:
                                            "einstufung": "unguenstig",
                                            "warum": "Bitcoin steht tief."}],
                               "belege": ["Bitcoin steht tief."]},
-                 "befund": {s: befund(s, s == _kauft) for s in symbole}}
+                 "befund": {s: befund(s, s == _kauft) for s in symbole},
+                 # ⚠️ SEIT G-6 (31.08.2026): ohne gestellte Raenge liegt jedes
+                 # Potential bei 0,000, Stufe 11 verwirft, und dieser
+                 # Trockenlauf koennte keinen Einstieg mehr zeigen. Gestellt
+                 # wird das beste Fuenftel - geprueft wird hier die KETTE,
+                 # nicht die Bewertung.
+                 "marktraenge": {s: {"funding_fuenftel": 0,
+                                     "turnover_fuenftel": 0}
+                                 for s in symbole}}
     def _inhalt(pfad):
         """Der INHALT aller Tabellen, nicht die Bytes der Datei.
 
@@ -3027,8 +3111,18 @@ def paket_b1() -> None:
            d.verloren_je_stufe["aktion"] == _k - 1,
            f"{_k} kamen zum Urteil, einer davon kauft")
     pruefe(P, "fuer den Einstieg entsteht eine Mail", len(erg["mails"]) == 1)
-    pruefe(P, "der Entscheider zaehlt, nimmt aber nichts heraus",
-           d.heraus == 1 and d.verloren_je_stufe["entscheider"] >= 0)
+    # ⚠️ G-6 (31.08.2026): der Entscheider verwirft. Ob am Ende einer
+    # herauskommt, haengt jetzt am Potential - und genau das ist der Zweck.
+    # Geprueft wird deshalb die BEZIEHUNG, nicht die feste Zahl: was der
+    # Entscheider verliert, darf nicht mehr herauskommen.
+    _e_verloren = d.verloren_je_stufe["entscheider"]
+    pruefe(P, "⚠️ was der Entscheider verwirft, kommt nicht heraus (G-6)",
+           d.heraus == max(0, 1 - _e_verloren),
+           "heraus=%d, Entscheider verlor %d - die Summe muss aufgehen"
+           % (d.heraus, _e_verloren))
+    pruefe(P, "und die Mail entsteht nur fuer das, was durchkommt",
+           len(erg["mails"]) >= d.heraus,
+           "eine Mail ohne Signal waere eine Empfehlung ohne Grundlage")
 
     # EIN FEHLENDES SYMBOL WIRD GEZAEHLT, NICHT UEBERSPRUNGEN.
     erg2 = RL.fuehre_lauf(conn=con, reihen=reihen, symbole=symbole + ["GIBTSNICHT"],
@@ -3079,8 +3173,15 @@ def paket_b1() -> None:
     _db_mod.set_dca_erlaubt(con, "ETH", True)
 
     def _lauf(inst, aktion, richtung=None, sym="ETH"):
+        # ⚠️ SEIT G-6 (31.08.2026) BRAUCHT EIN TROCKENLAUF GESTELLTE RAENGE.
+        # Stufe 11 verwirft jetzt; ohne Beitraege liegt jedes Potential bei
+        # 0,000 und es entstuende NIE eine Mail. Gestellt wird das BESTE
+        # Fuenftel - damit prueft dieser Lauf die Geometrie und die Mail,
+        # nicht die Bewertung. Die Bewertung hat ihre eigenen Pakete.
         ant = {"lagebild": antworten["lagebild"],
-               "befund": {sym: _antwort(sym, aktion, richtung)}}
+               "befund": {sym: _antwort(sym, aktion, richtung)},
+               "marktraenge": {sym: {"funding_fuenftel": 0,
+                                     "turnover_fuenftel": 0}}}
         return RL.fuehre_lauf(conn=con, reihen=reihen, symbole=[sym],
                               betriebsart="trocken", instrument=inst,
                               strategie="einstieg", antworten=ant,
@@ -3774,7 +3875,16 @@ def paket_15() -> None:
                                             "cooldown_stunden": 0.0}}
     erg = RL.fuehre_lauf(conn=c, reihen=reihen, symbole=symbole,
                          betriebsart="probe", client=klient, modell="test",
-                         zai_client=None, config=_OHNE_BREMSEN15)
+                         zai_client=None, config=_OHNE_BREMSEN15,
+                         # ⚠️ SEIT G-6 (31.08.): ohne Raenge liegt jedes
+                         # Potential bei 0,000 und Stufe 11 verwirft - es
+                         # entstuende keine Mail, und dieser Test pruefte
+                         # nichts mehr. Gestellt statt abgerufen, damit die
+                         # Suite kein Kontingent verbraucht.
+                         antworten={"marktraenge": {
+                             s_: {"funding_fuenftel": 0,
+                                  "turnover_fuenftel": 0,
+                                  "schnitt_fuenftel": 0} for s_ in symbole}})
     pruefe(P, "der Probelauf laeuft ohne Fehler durch",
            not erg["fehler"], str(erg["fehler"][:2]))
     nach = c.execute("SELECT COUNT(*) FROM signals "
@@ -4914,6 +5024,7 @@ def paket_15() -> None:
     # breite Fehlerfang schluckt den NameError, und JEDES Symbol landet im
     # Fehlerzweig.
     import inspect as _i5
+    from agent import marktrang as _MR_MOD
     from agent import rollen_lauf as _RL5
 
     pruefe(P, "die Watchlist wird an `_ein_asset` durchgereicht",
@@ -8063,6 +8174,7 @@ def paket_mail() -> None:
     from agent import ausstiegsrechnung as _AR
     from agent import entscheidungsrechnung as _ER
     from agent import lagebeschreibung as _LB
+    from agent import marktrang as _MR_MOD
     from agent import rollen_lauf as _RL
     from agent import signal_mail as _SM
     from agent import trefferbilanz as _TB
@@ -9296,6 +9408,7 @@ def paket_dimension() -> None:
            "ein Regler, der die Aufrufstelle nicht erreicht, ist Dekoration")
 
     # ---- S2: DIE MARKE AUF DER STOPSEITE (Kapitel 90) ----
+    from agent import marktrang as _MR_MOD
     from agent import rollen_lauf as _RL
 
     _B = {"_marken_werte": {"unterstuetzung": {"preis_eur": 92.0},
@@ -12476,17 +12589,39 @@ def paket_dimension() -> None:
            and _WK.BASISRATE_GEMESSEN == 0.340,
            "gemessen sind 34,0 % - die 0,7 Punkte sind Drift, und ihn "
            "einzurechnen hiesse den guenstigeren der beiden Werte nehmen")
-    pruefe(P, "H hebt die Quote um genau die gemessenen 4,5 Punkte",
-           abs(100 * (_r_h["quote"] - _r_ohne["quote"]) - 4.5) < 1e-9)
+    # ⚠️ R1 (31.08.2026): H STEHT AUF `null` UND HEBT NICHTS MEHR.
+    # Hier stand bis dahin "H hebt die Quote um genau die gemessenen 4,5
+    # Punkte" - eine Pruefung, die einen Zahlenwert einfriert und damit zur
+    # Bremse gegen die eigene Korrektur wird. Geprueft wird jetzt, dass H
+    # in KEINER Belegung mehr etwas bewegt; das WARUM steht im Paket
+    # "Kalibrierung" und in `wahrscheinlichkeit.BEITRAEGE`.
+    pruefe(P, "⚠️ H bewegt die Quote in KEINER Belegung mehr",
+           abs(_r_h["quote"] - _r_ohne["quote"]) < 1e-12
+           and abs(_r_h["quote"] - _r_unbek["quote"]) < 1e-12,
+           "H war gepoolt gemessen (+3,57) und ist je Kalendertag nicht von "
+           "null zu trennen (-1,02 [-2,18 .. +0,14])")
     pruefe(P, "trifft H nicht zu, traegt es NICHTS - kein Abzug",
            abs(_r_ohne["quote"] - _r_ohne["basisrate"]) < 1e-12,
            "ein Merkmal, das nicht zutrifft, ist kein Gegenargument")
-    pruefe(P, "unbekanntes H wirkt wie nicht zutreffend, heisst aber anders",
-           abs(_r_unbek["quote"] - _r_ohne["quote"]) < 1e-12
-           and any(z["zustand"] == "nie" and z["name"].startswith("Vorfilter")
-                   for z in _r_unbek["beitraege"]),
-           "in der Zahl gleich, im Text verschieden - sonst sieht "
-           "'unbekannt' aus wie 'geprueft und nein'")
+
+    # ⚠️ DIE UNTERSCHEIDUNG "unbekannt" GEGEN "geprueft und nein" GILT
+    # WEITER - sie wird seit R1 nur an einem TRAGENDEN Beitrag geprueft.
+    # An einem stillgelegten ist sie gegenstandslos: dort ist der
+    # Eingabewert ohne Bedeutung, und beide Belegungen melden `null`.
+    _r_f0 = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
+                       klasse="krypto", merkmale={"funding_fuenftel": 0})
+    _r_fnix = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
+                         klasse="krypto")
+    _z_nix = [z for z in _r_fnix["beitraege"] if z["name"].startswith("Funding")]
+    _z_0 = [z for z in _r_f0["beitraege"] if z["name"].startswith("Funding")]
+    pruefe(P, "ein fehlender Merkmalswert heisst `nie`, nicht `null`",
+           _z_nix and _z_nix[0]["zustand"] == "nie"
+           and _z_nix[0]["punkte"] == 0.0,
+           "sonst sieht 'unbekannt' aus wie 'geprueft und nein' - der "
+           "Unterschied sagt, wo sich Arbeit lohnt")
+    pruefe(P, "und ein vorhandener Wert traegt seine Stufe",
+           _z_0 and _z_0[0]["zustand"] == "traegt" and _z_0[0]["punkte"] > 0,
+           "Fuenftel 0 ist bei Funding das beste - es muss Punkte bringen")
     pruefe(P, "auf anderen Klassen traegt H NICHT bei",
            abs(_r_aktie["quote"] - _r_aktie["basisrate"]) < 1e-12,
            "die 523 Reihen sind Binance-USDT - der Vorsprung dort gilt "
@@ -12631,7 +12766,7 @@ def paket_dimension() -> None:
     # SONDERN GAR KEINE - die 523 Reihen sind Binance-USDT.
     pruefe(P, "auf anderen Anlageklassen sagt die Mail, dass nie gemessen wurde",
            _h_aktie["in_gemessener_klasse"] is False
-           and any("NIE" in z and "GEMESSEN" in z
+           and any("nie gemessen" in z.lower()
                    for z in _VF.saetze(_h_aktie))
            and _h_ja["in_gemessener_klasse"] is True,
            "der Schatten laeuft trotzdem ueber alle Klassen - sonst haben "
@@ -12640,11 +12775,48 @@ def paket_dimension() -> None:
     # ⚠️ DER SCHATTEN MUSS SICHTBAR UND STUMM ZUGLEICH SEIN.
     _vfq = _quelltext("agent/vorfilter.py")
     _vfroh = io.open("agent/vorfilter.py", encoding="utf-8").read()
-    pruefe(P, "jede Zeile sagt selbst, dass sie nichts sperrt",
-           all("sperrt nichts" in z or "NICHT ANGEWENDET" in z
-               or "NIE\nGEMESSEN" in z or "NIE " in z or z.startswith("   ")
-               for z in _VF.saetze(_h_ja)[:1])
-           and "sperrt nichts" in _VF.saetze(_h_ja)[0])
+    # ⚠️ R2 (31.08.2026): DIE ABSICHT BLEIBT, DIE FORMULIERUNG NICHT.
+    # Hier stand "sperrt nichts" als woertliche Suche im KOPF der Zeilen -
+    # also Fachjargon, den der Leser dieser Mail nicht braucht. Geprueft
+    # wird jetzt, dass der BLOCK die Zeilen als Beobachtung ausweist.
+    _z_ja = _VF.saetze(_h_ja)
+    pruefe(P, "der Block weist sich selbst als Beobachtung aus",
+           any("keine Bewertung" in x for x in _z_ja),
+           "ohne diesen Satz liest jeder die Marken als Argument fuer oder "
+           "gegen den Trade - genau die Verwechslung aus CLAUDE.md")
+
+    # ---- R2: FAKT STATT WERTUNG, UND LESBAR -----------------------------
+    #
+    # ⚠️ DIE ALTE FASSUNG BEHAUPTETE: "auf 523 fremden Reihen hatten solche
+    # Einstiege 4,5 Punkte mehr Treffer." Diese Aussage ist seit R1
+    # widerlegt (gepoolt gemessen; je Kalendertag -1,02 [-2,18 .. +0,14]).
+    # Eine Mail, die sie weitertraegt, ist schlimmer als eine ohne Zeile.
+    _verboten = ("4,5 Punkte", "mehr Treffer", "schlechtere Haelfte",
+                 "Vorfilter H", "Schattenmessung")
+    _gefunden = sorted({w for w in _verboten
+                        for x in _z_ja + _VF.saetze(_h_aktie) if w in x})
+    pruefe(P, "⚠️ die Mail wertet NICHT und nennt keinen widerlegten Befund",
+           not _gefunden,
+           "gefunden: %s. Die Lage der Marken ist ein FAKT ueber die "
+           "Gegenwart; was sie fuer den Ausgang bedeutet, ist gemessen "
+           "nichts" % ", ".join(_gefunden))
+
+    # Nutzervorgabe 31.08.: "wenn Mailtext, auch fuer mich lesbar machen,
+    # keine Rohzahlen." Mit Einstieg muss ein ABSTAND dastehen.
+    _z_ein = _VF.saetze(_VF.bewerte(_mw([(110.0, 3)], [(95.0, 2)]), 90.0,
+                                    120.0, False, "krypto",
+                                    einstieg_eur=100.0))
+    pruefe(P, "mit Einstieg stehen ABSTAENDE in der Mail, keine Rohpreise",
+           any("%" in x for x in _z_ein) and not any("EUR" in x for x in _z_ein),
+           "bekommen: %s" % " | ".join(_z_ein[1:3]))
+    pruefe(P, "ohne Einstieg faellt sie auf den Preis zurueck, statt zu raten",
+           any("EUR" in x for x in _VF.saetze(
+               _VF.bewerte(_mw([(110.0, 3)], [(95.0, 2)]), 90.0, 120.0,
+                           False, "krypto"))),
+           "ein fehlender Einstieg darf keinen erfundenen Abstand ergeben")
+    pruefe(P, "Beruehrungen stehen als Wort, nicht als Ziffernkuerzel",
+           any("dreimal" in x for x in _z_ein)
+           and not any("3-mal" in x for x in _z_ein))
     pruefe(P, "und das Modul trifft keine Entscheidung",
            "return" in _vfq and "aktion" not in _vfq
            and "veto" not in _vfq.lower(),
@@ -14120,6 +14292,403 @@ def paket_instrument_reparatur() -> None:
 
 
 
+
+def paket_beitrag_stufen() -> None:
+    """G-2' Schritt 2b - `Beitrag` kann abgestuft sein (30.08.2026).
+
+    ⚠️ WARUM DIESE STRUKTUR NOETIG WAR. Bis zum 30.08. kannte `Beitrag` genau
+    einen Punktwert, und Vorfilter H hing im Code am NAMEN:
+
+        if b.zustand == "traegt" and b.name.startswith("Vorfilter H"):
+
+    Das traegt genau einen Sonderfall. Der zweite - Funding, gemessen als
+    Regel mit +0,0246 R - ist aber nicht ja/nein, sondern ein Rangplatz von
+    fuenf Stufen. Ein zweiter Namensvergleich daneben haette die Struktur
+    zerfallen lassen.
+
+    DESHALB: `stufen` (fuenf Werte) und `merkmal` (der Schluessel, unter dem
+    der Wert ankommt). Schritt 2b legt sie an, OHNE dass `rechne()` sie liest -
+    der Bitgleichheitstest `pruefe_wahrscheinlichkeit_bitgleich.py` muss
+    unveraendert 0 FEHL liefern.
+
+    Diese Pruefungen halten die Widerspruchsfreiheit fest: Ein Beitrag, der
+    `punkte` UND `stufen` traegt, waere zweideutig - und zwar still, weil
+    `rechne()` sich fuer einen der beiden entscheiden muesste."""
+    from agent.wahrscheinlichkeit import Beitrag, BEITRAEGE
+
+    P = "Stufen"
+    # ⚠️ `klammer="tag"` ist seit dem 31.08. Pflicht bei zustand="traegt"
+    # (R1). Die Testdaten ziehen die Regel nach - die Regel weicht NICHT
+    # den Testdaten. Geprueft wird sie eigenstaendig im Paket
+    # "Kalibrierung".
+    grund = dict(name="t", zustand="traegt", quelle="q", warum="w",
+                 klammer="tag")
+
+    # ---- DIE BESTEHENDE BAUFORM BLEIBT ----
+    alt = Beitrag(punkte=4.5, **grund)
+    pruefe(P, "die bestehende Bauform funktioniert unveraendert",
+           alt.punkte == 4.5 and alt.stufen == () and alt.merkmal == "",
+           "Schritt 2b ist additiv - jeder heutige Beitrag muss so bleiben")
+    pruefe(P, "alle registrierten Beitraege sind weiter erzeugbar",
+           len(BEITRAEGE) >= 5 and all(b.name for b in BEITRAEGE),
+           "wenn __post_init__ zu streng ist, faellt der Import - und zwar "
+           "beim Start, nicht im Betrieb")
+
+    # ---- DIE NEUE BAUFORM ----
+    neu = Beitrag(punkte=0.0, stufen=(1.0, 0.5, 0.0, -0.5, -1.0),
+                  merkmal="funding_fuenftel", **grund)
+    pruefe(P, "abgestufte Beitraege sind moeglich",
+           len(neu.stufen) == 5 and neu.merkmal == "funding_fuenftel")
+
+    # ---- WIDERSPRUECHE FALLEN BEIM IMPORT AUF ----
+    for name, bau, erwartet in (
+            ("vier Stufen statt fuenf werden abgelehnt",
+             dict(punkte=0.0, stufen=(1.0, 2.0, 3.0, 4.0), merkmal="x"),
+             "genau 5"),
+            ("punkte UND stufen werden abgelehnt",
+             dict(punkte=4.5, stufen=(1, 2, 3, 4, 5), merkmal="x"),
+             "unklar"),
+            ("stufen ohne merkmal werden abgelehnt",
+             dict(punkte=0.0, stufen=(1, 2, 3, 4, 5)),
+             "kaeme nie an")):
+        argumente = dict(grund)
+        argumente.update(bau)
+        try:
+            Beitrag(**argumente)
+            getroffen, warum = False, "kein Fehler geworfen"
+        except ValueError as exc:
+            getroffen, warum = erwartet in str(exc), "Begruendung: %s" % exc
+        pruefe(P, name, getroffen, warum)
+
+    # ---- DIE BAUFORM VON H BLEIBT EIN SCHALTER ----
+    #
+    # ⚠️ DIESE PRUEFUNG STAND BIS ZUM 31.08. AUF "H traegt unveraendert 4,5
+    # Punkte". Sie hat damit den Zahlenwert festgeschrieben - und wurde
+    # mit R1 zur Bremse gegen die eigene Korrektur. Geprueft wird jetzt die
+    # BAUFORM (Schalter, nicht abgestuft); der Zustand und die Punkte
+    # gehoeren ins Paket "Kalibrierung", wo die Begruendung danebensteht.
+    h = [b for b in BEITRAEGE if b.name.startswith("Vorfilter H")]
+    pruefe(P, "Vorfilter H ist ein SCHALTER, kein abgestufter Beitrag",
+           len(h) == 1 and h[0].stufen == () and h[0].merkmal == "h",
+           "H trifft zu oder nicht - Funding und Turnover sind die "
+           "abgestuften Faelle")
+
+    # ---- SCHRITT 2c: H HAENGT NICHT MEHR AM NAMEN ----
+    from agent import wahrscheinlichkeit as _WK
+
+    pruefe(P, "H wird ueber `merkmal` angesprochen, nicht ueber den Namen",
+           h[0].merkmal == "h",
+           "bis zum 30.08. stand im Code `b.name.startswith('Vorfilter H')`. "
+           "Ein zweiter Beitrag daneben haette einen zweiten Namensvergleich "
+           "gebraucht - und die Registrierung waere zur Attrappe geworden")
+    pruefe(P, "kein Beitrag wird mehr ueber seinen Namen erkannt",
+           "startswith" not in _WK.rechne.__doc__ if _WK.rechne.__doc__ else True)
+
+    def _q(**kw):
+        kw.setdefault("crv", 2.0)
+        kw.setdefault("stop_relativ", 0.05)
+        kw.setdefault("gebuehr_je_seite", 0.0)
+        kw.setdefault("klasse", "krypto")
+        return _WK.rechne(**kw)
+
+    # ⚠️ AEQUIVALENZ, NICHT ZAHLENWERT (31.08.2026). Die alte Fassung
+    # verlangte "== 4.5" und wurde mit R1 falsch - obwohl die Eigenschaft,
+    # die sie sichern soll, unveraendert gilt: beide Wege muessen dasselbe
+    # tun, egal welchen Wert H gerade hat.
+    pruefe(P, "der neue Weg `merkmale` liefert dasselbe wie `h=`",
+           _q(merkmale={"h": True})["beitraege"] == _q(h=True)["beitraege"]
+           and _q(merkmale={"h": False})["beitraege"] == _q(h=False)["beitraege"],
+           "der alte Parameter muss bleiben - drei Aufrufer haengen daran")
+    pruefe(P, "und beide Wege unterscheiden True von False",
+           _q(h=True)["beitraege"] != _q(h=False)["beitraege"]
+           or h[0].zustand != "traegt",
+           "traegt H, muessen sich die Zeilen unterscheiden; steht er auf "
+           "`null`, duerfen sie gleich sein - beides ist richtig, aber nicht "
+           "dasselbe")
+
+    # ---- DIE DREI ACHSEN ----
+    lang = Beitrag(name="t", zustand="traegt", punkte=1.0, quelle="q",
+                   klammer="tag",
+                   warum="w", merkmal="x", richtungen=("long",))
+    passt, grund = _WK._gilt(lang, "krypto", "einstieg", "short")
+    pruefe(P, "ein Long-Beitrag gilt bei SHORT nicht", not passt,
+           "Kapitel 110: H' spiegelt NICHT. Was fuer long gemessen ist, gilt "
+           "nicht automatisch fuer short - und `None` ist die richtige "
+           "Antwort, nicht das Gegenteil")
+    pruefe(P, "und der Grund nennt die Richtung", "short" in grund, grund)
+    pruefe(P, "bei long gilt er", _WK._gilt(lang, "krypto", "einstieg", "long")[0])
+
+    nur_einstieg = Beitrag(name="t", zustand="traegt", punkte=1.0, quelle="q",
+                           klammer="tag",
+                           warum="w", merkmal="x",
+                           strategien=("einstieg", "swing"))
+    passt, grund = _WK._gilt(nur_einstieg, "krypto", "akkumulation", "long")
+    pruefe(P, "Akkumulation wird ausgeschlossen, wenn nicht deklariert",
+           not passt,
+           "eine Staffelung hat keinen einzelnen Einstiegszeitpunkt - ein "
+           "Tagesrang bewertet aber genau einen")
+    pruefe(P, "und der Grund nennt die Strategie", "akkumulation" in grund, grund)
+
+    # ---- ABGESTUFTE BEITRAEGE RECHNEN ----
+    stufig = Beitrag(name="Stufig", zustand="traegt", punkte=0.0, quelle="q",
+                     klammer="tag",
+                     warum="w", stufen=(2.0, 1.0, 0.0, -1.0, -2.0),
+                     merkmal="rang")
+    echte = _WK.BEITRAEGE
+    _WK.BEITRAEGE = (stufig,)
+    try:
+        for stufe, erwartet in ((0, 2.0), (2, 0.0), (4, -2.0)):
+            pruefe(P, "Fuenftel %d ergibt %+.1f Punkte" % (stufe, erwartet),
+                   abs(_q(merkmale={"rang": stufe})["zuschlag_punkte"]
+                       - erwartet) < 1e-9)
+        pruefe(P, "ein fehlender Wert wird 'nie', nicht 0 als Nein",
+               _q(merkmale={})["beitraege"][0]["zustand"] == "nie",
+               "der Unterschied zwischen 'geprueft und trifft nicht zu' und "
+               "'wir wissen es nicht' ist die wichtigste Information")
+    finally:
+        _WK.BEITRAEGE = echte
+
+
+
+def paket_kalibrierung() -> None:
+    """Laufen die kalibrierten Zahlen auseinander? (R-R9, 30.08.2026)
+
+    ⚠️ WARUM DIESE PRUEFUNG UND KEINE ZUSAMMENFUEHRUNG. Nutzerfrage: *"kann
+    man das an eine Stelle legen?"* Technisch ja - fachlich nein. Die drei
+    Zahlen bedeuten Verschiedenes:
+
+        vorfilter.GEMESSEN          was GEMESSEN wurde        (+4,5)
+        wahrscheinlichkeit.punkte   was wir ANSETZEN          (darf kleiner sein)
+        potential.SCHWELLE_VORGABE  ab wann es REICHT
+
+    Waere der angesetzte Wert an den gemessenen gekettet, koennte man einen
+    episodischen Befund nicht vorsichtig ansetzen - und genau das steht bei H
+    an (Messung 30.08.: traegt nur ausserhalb des Baermarkts).
+
+    Diese Pruefung haelt deshalb die BEZIEHUNG fest, nicht die Gleichheit:
+    der angesetzte Wert darf nie GROESSER sein als der gemessene, und jede
+    Aenderung der Beitragslage verlangt eine neue Kalibrierung."""
+    from agent import potential as _PT
+    from agent import marktrang as _MR_MOD
+    from agent import rollen_lauf as _RL
+    from agent import vorfilter as _VF
+    from agent import wahrscheinlichkeit as _WK
+
+    P = "Kalibrierung"
+
+    h = [b for b in _WK.BEITRAEGE if b.merkmal == "h"]
+    pruefe(P, "H ist ueber sein Merkmal auffindbar", len(h) == 1,
+           "seit Schritt 2c haengt kein Beitrag mehr am Namen")
+    if h:
+        gemessen = float(_VF.GEMESSEN["vorsprung_punkte"])
+        angesetzt = float(h[0].punkte)
+        pruefe(P, "der angesetzte Wert uebersteigt den gemessenen nicht",
+               angesetzt <= gemessen + 1e-9,
+               "angesetzt %.2f, gemessen %.2f - wer mehr ansetzt als gemessen "
+               "wurde, behauptet eine Wirkung, die niemand belegt hat"
+               % (angesetzt, gemessen))
+        # ---- R1 (31.08.2026): H IST WEG, UND DAS BLEIBT SO -------------
+        pruefe(P, "⚠️ H steht auf `null` und traegt 0,0 Punkte",
+               h[0].zustand == "null" and h[0].punkte == 0.0,
+               "H war gepoolt gemessen (+3,57 Punkte) und ist je Kalendertag "
+               "nicht von null zu trennen (-1,02 [-2,18 .. +0,14], 791 "
+               "Einheiten). Das ist eine LAGE-Aussage, keine Asset-Aussage. "
+               "Wer ihn zurueckstellt, braucht eine Messung UNTER DER "
+               "TAGESKLAMMER - `pruefe_h_original_reproduziert.py`")
+        pruefe(P, "und seine Klammer ist als `gepoolt` vermerkt",
+               h[0].klammer == "gepoolt",
+               "ohne den Vermerk waere in einem Jahr nicht mehr erkennbar, "
+               "WARUM er weg ist")
+
+    # ---- DIE REGEL, DIE DEN H-FEHLER STRUKTURELL AUSSCHLIESST ----------
+    #
+    # ⚠️ DAS IST DIE WICHTIGSTE PRUEFUNG DIESES PAKETS. H stand elf Tage im
+    # Betrieb, weil niemand fragte, unter WELCHEM Vergleich seine +4,5
+    # Punkte entstanden waren. Seit dem 31.08. erzwingt `Beitrag.__post_init__`
+    # die Antwort; hier wird geprueft, dass die Regel auch wirkt.
+    ohne_klammer = [b.name for b in _WK.BEITRAEGE
+                    if b.zustand == "traegt" and b.klammer != "tag"]
+    pruefe(P, "⚠️ JEDER tragende Beitrag ist je KALENDERTAG gemessen",
+           not ohne_klammer,
+           "ohne Tagesklammer: %s. Ein gepoolt oder je Zeitblock gemessener "
+           "Vorsprung beschreibt die LAGE, in der ein Merkmal auftritt - "
+           "nicht die Guete der Anker, die es auswaehlt. Bei H betrug der "
+           "Unterschied 4,6 Punkte, bei 'Boden unten' 0,20 R"
+           % ", ".join(ohne_klammer))
+    try:
+        _WK.Beitrag(name="Probe", zustand="traegt", punkte=1.0,
+                    quelle="x", warum="y", merkmal="z", klammer="gepoolt")
+        gewirft = False
+    except ValueError:
+        gewirft = True
+    pruefe(P, "und die Regel wirft beim Import, nicht erst im Betrieb",
+           gewirft,
+           "`Beitrag(zustand='traegt', klammer='gepoolt')` muss ein "
+           "ValueError sein - sonst ist die Absicherung eine Attrappe")
+    pruefe(P, "unbekannte Klammern werden abgewiesen",
+           all(b.klammer in ("",) + _WK.KLAMMERN for b in _WK.BEITRAEGE))
+
+    gilt, lage = _PT.kalibrierung_gilt()
+    pruefe(P, "die Schwelle passt zur heutigen Beitragslage (R-R9)", gilt,
+           "Beitragslage ist %r, kalibriert wurde fuer %r. Jeder neue "
+           "tragende Beitrag hebt ALLE Potentialwerte - bei gleicher Schwelle "
+           "kommen mehr Signale durch, ohne dass sich ihre Qualitaet geaendert "
+           "haette. GEMESSEN am 30.08. nach 2e: 44,3 %% Durchlass bei "
+           "Schwelle 0,010 (123.465 Anker) - die vorher befuerchteten 77 %% "
+           "traten NICHT ein, weil Rangbeitraege symmetrisch sind und ihre "
+           "oberen Fuenftel sperren. Nachzuziehen: (1) die Schwelle neu "
+           "kalibrieren (Methodik 2.93), (2) KALIBRIERT_FUER setzen, "
+           "(3) Befundkarte 3.9." % (lage, _PT.KALIBRIERT_FUER))
+
+    pruefe(P, "die Schwelle liegt ueber null",
+           _PT.SCHWELLE_VORGABE > 0.0,
+           "Nutzervorgabe 30.08.: bei Potential null traegt KEIN Beitrag - "
+           "eine Empfehlung ohne Grund waere genau das, was das Ziel "
+           "ausschliesst")
+    pruefe(P, "und `traegt` vergleicht STRIKT groesser",
+           not _PT.traegt(_PT.schwelle()),
+           "genau auf der Schwelle heisst noch nicht darueber")
+
+    # ---- 2e: DIE ABGESTUFTEN BEITRAEGE (30.08.2026) ---------------------
+    #
+    # ⚠️ WARUM DAS HIER UND NICHT IN EINEM EIGENEN PAKET: 2e ist keine neue
+    # Baustelle, sondern die Aufloesung der GEFAEHRLICHSTEN Eigenschaft der
+    # alten Lage - dass H der einzige Beitrag war. Solange das galt, konnte
+    # H nicht geprueft werden: jede Aenderung an ihm legte den Trichter
+    # still (gemessen: h=False -> Potential -0,0000 R -> gesperrt).
+    for merkmal, klar in (("funding_fuenftel", "Funding"),
+                          ("turnover_fuenftel", "Turnover")):
+        b = [x for x in _WK.BEITRAEGE if x.merkmal == merkmal]
+        pruefe(P, "%s ist als Beitrag registriert" % klar, len(b) == 1)
+        if not b:
+            continue
+        pruefe(P, "%s hat genau fuenf Stufen" % klar, len(b[0].stufen) == 5)
+        pruefe(P, "%s: das unterste Fuenftel traegt mehr als das oberste" % klar,
+               b[0].stufen[0] > b[0].stufen[-1],
+               "`marktrang._rang` sortiert AUFSTEIGEND - Fuenftel 0 ist der "
+               "niedrigste Rohwert, und bei beiden Groessen ist niedrig das "
+               "Gute. Waere die Reihe andersherum, zeigte das Vorzeichen ins "
+               "Gegenteil, ohne dass irgendetwas anschluege")
+        pruefe(P, "%s traegt NICHTS, wenn der Wert fehlt" % klar,
+               all(z["punkte"] == 0.0 for z in _WK.rechne(
+                   crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.0,
+                   klasse="krypto", h=None)["beitraege"]
+                   if z["name"].startswith(klar)),
+               "ein fehlender Wert darf nie aussehen wie ein gemessener - "
+               "dieselbe Regel wie bei H (`h=None`, nicht `h=False`)")
+
+    # ⚠️ DIE EIGENTLICHE ZUSICHERUNG VON 2e: das System haengt nicht mehr an H.
+    ohne_alles = _PT.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                            h=False).wert_r
+    nur_raenge = _PT.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                            h=False, merkmale={"funding_fuenftel": 0,
+                                               "turnover_fuenftel": 0}).wert_r
+    pruefe(P, "ohne jeden Beitrag bleibt es gesperrt",
+           not _PT.traegt(ohne_alles),
+           "Potential %.4f R - eine Empfehlung ohne Grund" % ohne_alles)
+    pruefe(P, "⚠️ die Raenge allein lassen durch - OHNE H",
+           _PT.traegt(nur_raenge),
+           "Potential %.4f R. Solange nur H durchlaesst, ist H nicht "
+           "pruefbar: jede Aenderung an ihm legt den Trichter still. Genau "
+           "das war der Zustand bis zum 30.08." % nur_raenge)
+
+    # ---- P3: DIE ABDECKUNG (31.08.2026) --------------------------------
+    #
+    # ⚠️⚠️ DIESE PRUEFUNG HAETTE VOR R1 EXISTIEREN MUESSEN. Vorfilter H galt
+    # fuer JEDEN Wert (je Anker aus den Marken gerechnet). Seine Nachfolger
+    # kommen aus Fremdquellen und haben Luecken - gemessen am 31.08. hatten
+    # 29 von 56 Werten der Watchlist KEINEN einzigen Beitrag. Mit
+    # verwerfender Stufe 11 (G-6) heisst das: sie bekommen nie ein Signal,
+    # nach Datenlage statt nach Qualitaet.
+    #
+    # Nutzervorgabe 31.08.: *"Die Scharfschaltung darf erst erfolgen, wenn
+    # alle Assets einen Beitrag haben."*
+    pruefe(P, "⚠️ mindestens ein Beitrag kommt aus der eigenen KURSREIHE",
+           any(b.merkmal == "schnitt_fuenftel" and b.zustand == "traegt"
+               for b in _WK.BEITRAEGE),
+           "Funding und Turnover kommen aus Fremdquellen und koennen NIE "
+           "volle Abdeckung erreichen - Binance und CoinGecko listen nicht "
+           "jeden Wert. Nur die Kursreihe haben wir fuer jeden Wert")
+
+    # ---- DIE ALARMGRENZE (Variante C, dimensioniert am 31.08.) ----------
+    #
+    # Ein Beitrag wirkt nur, solange sein BESTES Fuenftel ueber der Grenze
+    # liegt, die aus der Schwelle folgt:
+    #
+    #     noetige Punkte = 100 * Schwelle / (1 + CRV) = +0,333 bei 0,010
+    #
+    # Darunter kommt durch ihn allein nichts mehr durch - er ist dann
+    # wirkungslos, ohne dass es auffiele. Die Grenze ist NICHT gegriffen,
+    # sie folgt aus der Rechnung.
+    _noetig = 100.0 * _PT.schwelle() / (1.0 + 2.0)
+    for b in [x for x in _WK.BEITRAEGE if x.stufen and x.zustand == "traegt"]:
+        pruefe(P, "%s: bestes Fuenftel ueber +%.3f Punkten"
+               % (b.name[:34], _noetig),
+               max(b.stufen) > _noetig,
+               "bestes Fuenftel %+.2f - darunter wirkt der Beitrag nicht "
+               "mehr, weil er die Schwelle allein nicht nimmt"
+               % max(b.stufen))
+        pruefe(P, "%s: Richtung stimmt (Fuenftel 0 > Fuenftel 4)"
+               % b.name[:34],
+               b.stufen[0] > b.stufen[-1],
+               "%+.2f gegen %+.2f - dreht das Vorzeichen, wirkt der Beitrag "
+               "genau falsch herum" % (b.stufen[0], b.stufen[-1]))
+
+    # ⚠️ UND DIE NAHT - ohne sie waere die Registrierung eine Attrappe
+    # (stehende Regel: 'Naht statt Absichtserklaerung').
+    import inspect
+    # ⚠️ BEIDE FUNKTIONEN. Die erste Fassung dieser Pruefung sah nur
+    # `fuehre_lauf` - und haette damit genau den Fehler durchgelassen, den
+    # sie dann doch fand: der Abruf steht in `fuehre_lauf`, die Verwendung
+    # in `_ein_asset`. Wer nur eine Seite prueft, prueft die Naht nicht.
+    _rl = (inspect.getsource(_RL.fuehre_lauf)
+           + inspect.getsource(_RL._ein_asset))
+    pruefe(P, "`rollen_lauf` holt die Marktraenge EINMAL je Lauf",
+           "_MR.raenge(symbole)" in _rl,
+           "der Rang ist ein QUERSCHNITT ueber alle heute bewerteten Werte. "
+           "Je Symbol gerechnet waere er eine andere Groesse ohne Befund - "
+           "die Je-Reihe-Sicht wurde gemessen und traegt nicht (-0,0755 R)")
+    pruefe(P, "`_ein_asset` bekommt die Raenge als PARAMETER",
+           "marktraenge=_raenge" in _rl and "marktraenge=None" in _rl,
+           "`_ein_asset` sieht die Variablen von `fuehre_lauf` NICHT. Ein "
+           "direkter Zugriff waere im Betrieb ein NameError, den der breite "
+           "Fehlerfang schluckt - dieselbe Falle wie `_wl` am 15.08.")
+    pruefe(P, "und reicht sie an `potential.rechne` durch",
+           "merkmale=_merkmale" in _rl,
+           "registriert, aber nie geliefert - dann traegt der Beitrag in "
+           "jedem echten Lauf null, und keine Pruefung merkt es")
+    pruefe(P, "ein fehlendes Fuenftel wird NICHT zu 0 gemacht",
+           "if _mr.get(k) is not None" in _rl,
+           "sonst saehe 'unbekannt' aus wie 'bestes Fuenftel'")
+    pruefe(P, "alle drei Merkmale werden durchgereicht",
+           all(m in _rl for m in ("funding_fuenftel", "turnover_fuenftel",
+                                  "schnitt_fuenftel")),
+           "ein registrierter Beitrag ohne Anlieferung traegt in jedem "
+           "echten Lauf null - und keine Pruefung merkt es")
+
+    # ---- P3: DIE MAIL ZEIGT, WOMIT ENTSCHIEDEN WURDE (B-a) -------------
+    _saetze_q = inspect.getsource(_WK.saetze)
+    pruefe(P, "⚠️ `saetze()` rechnet MIT den Merkmalen",
+           "merkmale=merkmale" in _saetze_q,
+           "bis zum 31.08. rechnete die Mail ohne sie: Stufe 11 entschied "
+           "mit 37,0 %, die Mail zeigte 33,3 % und '20,0 Punkte ZU WENIG'. "
+           "Eine Begruendung, die der Empfehlung widerspricht, kann niemand "
+           "pruefen")
+    pruefe(P, "und `rollen_lauf` uebergibt sie auch",
+           "merkmale=_merkmale or None" in _rl)
+
+    # ---- P3: DER RANG LAEUFT UEBER DIE MESSBASIS ------------------------
+    _mr_q = inspect.getsource(_MR_MOD.raenge)
+    pruefe(P, "⚠️ der Rang wird ueber die MESSBASIS gebildet",
+           "messbasis(name)" in _mr_q and "holen()" in _mr_q,
+           "ueber die Watchlist gerangt DREHT das Vorzeichen: beim "
+           "Schnittabstand +3,43 gegen -3,10, nur 54 % identische "
+           "Fuenftel (gemessen 31.08.)")
+    pruefe(P, "ohne lesbare Messbasis gibt es KEINEN Rang",
+           "if not basis:" in _mr_q,
+           "ein Rang ueber die falsche Menge saehe aus wie ein richtiger")
+
+
 def paket_hartes_budget() -> None:
     """C2 - das Risikobudget als GRENZE, hinter einem Schalter (28.08.2026).
 
@@ -14236,7 +14805,9 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "T4c": paket_namensschatten,
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
-          "Budget": paket_hartes_budget}
+          "Budget": paket_hartes_budget,
+          "Stufen": paket_beitrag_stufen,
+          "Kalibrierung": paket_kalibrierung}
 
 
 class _Mitschnitt:
