@@ -779,6 +779,74 @@ _SIGNAL_OUTCOME_NEW_COLUMNS = {
 }
 
 
+_SIGNAL_INSTRUMENT_COLUMN = {"instrument": "TEXT"}
+
+
+def _migrate_signal_instrument(conn: sqlite3.Connection) -> None:
+    """⚠️⚠️ DIE SPALTE, DIE DAS ZELLENMODELL BRAUCHT (31.08.2026).
+
+    DAS PROBLEM. `signals` kennt `strategie`, aber kein `instrument`.
+    Bekommt BTC am selben Tag ein Spot- und ein Hebel-Signal, sind sie in
+    der Datenbank nicht unterscheidbar: `hebel` ist der FAKTOR aus der
+    Rechnung, und ein Hebel-Signal mit Faktor 1,0 saehe aus wie Spot.
+
+    ⚠️ DER ALTBESTAND IST WAHRHEITSGEMAESS AUF 'spot' ZU SETZEN, nicht
+    auf NULL. Seit S6b (22.08.2026) gibt `assetklassen.INSTRUMENTE_JE_GRUPPE`
+    fuer Krypto nur `("spot",)` - jedes Signal der Rollen-Kette IST ein
+    Spot-Signal. Es als "unbekannt" zu fuehren waere eine Luecke, wo keine
+    ist, und jede spaetere Auswertung muesste raten.
+
+    ⚠️ AUSGENOMMEN BLEIBT DIE ABSICHERUNG. `hedge` laeuft mit
+    `instrument='absicherung'` - sie als Spot zu fuehren waere falsch.
+    Die Zuordnung kommt aus `assetklassen.INSTRUMENTE_JE_GRUPPE`, nicht
+    aus einer zweiten Liste hier (dieselbe Regel wie bei `laeufe()`).
+
+    ⚠️ NUR DIE ROLLEN-KETTE. Altsignale mit `quelle_kette IS NULL` stammen
+    aus der alten Kette mit anderem Vokabular; sie zu etikettieren hiesse,
+    ihnen eine Eigenschaft zuzuschreiben, die sie nie hatten.
+
+    Idempotent: laeuft bei jedem Start, aendert nach dem ersten Mal nichts.
+    """
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
+    if not existing:
+        return                       # keine Tabelle - nichts zu migrieren
+    if "instrument" not in existing:
+        conn.execute("ALTER TABLE signals ADD COLUMN instrument TEXT")
+    # ⚠️ OHNE `quelle_kette` KEINE ZUORDNUNG (31.08., von der Suite gefunden).
+    #
+    # Die erste Fassung fragte `WHERE quelle_kette='rollen'` ohne zu pruefen,
+    # ob es die Spalte gibt - und brach mit OperationalError ab. Eine
+    # Migration, die beim Start laeuft, darf an einer aelteren Tabelle nicht
+    # scheitern; sie wuerde den ganzen Start mitnehmen.
+    #
+    # Ohne `quelle_kette` laesst sich die alte von der neuen Kette nicht
+    # trennen - dann wird NICHTS etikettiert. Das ist die vorsichtige
+    # Richtung: lieber keine Angabe als eine falsche.
+    if "quelle_kette" not in existing:
+        conn.commit()
+        return
+    # Nachziehen: alles ohne Etikett bekommt das seiner Gruppe.
+    try:
+        from agent import assetklassen as _AK
+        je_symbol = {}
+        for gruppe, symbole in (_AK.gruppiere() or {}).items():
+            inst = (_AK.INSTRUMENTE_JE_GRUPPE.get(gruppe) or ("spot",))[0]
+            for s in symbole:
+                je_symbol[str(s).upper()] = inst
+    except Exception:                                        # noqa: BLE001
+        je_symbol = {}
+    offen = list(conn.execute(
+        "SELECT id, symbol FROM signals WHERE quelle_kette='rollen' "
+        "AND (instrument IS NULL OR instrument='')"))
+    for zeile in offen:
+        sym = str(zeile["symbol"] if not isinstance(zeile, tuple)
+                  else zeile[1]).upper()
+        kennung = zeile["id"] if not isinstance(zeile, tuple) else zeile[0]
+        conn.execute("UPDATE signals SET instrument=? WHERE id=?",
+                     (je_symbol.get(sym, "spot"), kennung))
+    conn.commit()
+
+
 def _migrate_signal_outcome_columns(conn: sqlite3.Connection) -> None:
     """Wie _migrate_signal_range_kriterium_columns(): signals existierte bereits vor
     dem Backward-Tracking (2026-07-10, Selbstverifikations-Vision Schritt 2 - siehe
@@ -1495,6 +1563,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_range_kriterium_columns(conn)
     _migrate_price_cache_nullable_coingecko_id(conn)
     _migrate_signal_outcome_columns(conn)
+    _migrate_signal_instrument(conn)
     _migrate_holdings_avg_cost_columns(conn)
     _migrate_signal_tranchen_columns(conn)
     _migrate_signal_cash_reserve_ziel_columns(conn)

@@ -2298,6 +2298,54 @@ def paket_12c() -> None:
     _sim_aufrufe = {
         n2.func.attr for n2 in _ast2.walk(_sim_baum)
         if isinstance(n2, _ast2.Call) and isinstance(n2.func, _ast2.Attribute)}
+    # ------------------------------------------------------------------
+    # ⚠️ DIE SPALTE `instrument` IN `signals` (Zellenmodell Schritt 2)
+    #
+    # Ohne sie sind ein Spot- und ein Hebel-Signal desselben Assets am
+    # selben Tag nicht unterscheidbar: `hebel` ist der FAKTOR aus der
+    # Rechnung, und ein Hebel-Signal mit Faktor 1,0 saehe aus wie Spot.
+    # ------------------------------------------------------------------
+    import sqlite3 as _sq3
+    _mig = _sq3.connect(":memory:")
+    _mig.row_factory = _sq3.Row
+    _mig.execute("CREATE TABLE signals (id INTEGER PRIMARY KEY, "
+                 "symbol TEXT, quelle_kette TEXT)")
+    _mig.executemany("INSERT INTO signals (symbol, quelle_kette) VALUES (?,?)",
+                     [("BTC", "rollen"), ("3QSS", "rollen"),
+                      ("BTC", None)])
+    import database.db as _DBm
+    _DBm._migrate_signal_instrument(_mig)
+    _sp = {r[1] for r in _mig.execute("PRAGMA table_info(signals)")}
+    pruefe(P, "⚠️ `signals` bekommt die Spalte `instrument`",
+           "instrument" in _sp,
+           "ohne sie sind Spot- und Hebelsignal desselben Assets nicht "
+           "unterscheidbar")
+    _btc = _mig.execute("SELECT instrument FROM signals WHERE symbol='BTC' "
+                        "AND quelle_kette='rollen'").fetchone()[0]
+    _hed = _mig.execute("SELECT instrument FROM signals WHERE symbol='3QSS'"
+                        ).fetchone()[0]
+    _alt = _mig.execute("SELECT instrument FROM signals WHERE "
+                        "quelle_kette IS NULL").fetchone()[0]
+    pruefe(P, "der Altbestand bekommt das Etikett SEINER Gruppe",
+           _btc == "spot" and _hed == "absicherung",
+           "BTC=%r, 3QSS=%r - die Zuordnung kommt aus "
+           "`assetklassen.INSTRUMENTE_JE_GRUPPE`, nicht aus einer zweiten "
+           "Liste" % (_btc, _hed))
+    pruefe(P, "⚠️ und die ALTE Kette bleibt unberuehrt",
+           _alt is None,
+           "Altsignale mit `quelle_kette IS NULL` stammen aus einer anderen "
+           "Logik; sie zu etikettieren hiesse, ihnen eine Eigenschaft "
+           "zuzuschreiben, die sie nie hatten")
+    _vor = _mig.execute("SELECT COUNT(*) FROM signals WHERE "
+                        "instrument IS NOT NULL").fetchone()[0]
+    _DBm._migrate_signal_instrument(_mig)
+    pruefe(P, "die Migration ist idempotent",
+           _mig.execute("SELECT COUNT(*) FROM signals WHERE instrument IS "
+                        "NOT NULL").fetchone()[0] == _vor,
+           "sie laeuft bei JEDEM Start - ein zweiter Lauf darf nichts "
+           "aendern")
+    _mig.close()
+
     pruefe(P, "⚠️ und die Rollout-Vorschau rechnet wie die Produktion",
            "traegt_hier" in _sim_attr and "traegt" not in _sim_aufrufe,
            "sonst misst die Vorschau eine Nachbildung, die still veraltet - "
