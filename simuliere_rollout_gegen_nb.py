@@ -322,6 +322,40 @@ def f8_was_aendert_der_entscheider(conn, mit_potential):
     print("    davon der Entscheider allein:        %.1f %%"
           % (100 * heute / ges))
 
+    # ------------------------------------------------------------------
+    # ⚠️⚠️ DIE ZAHL, DIE DIE GANZE SIMULATION TRAEGT (31.08.2026)
+    #
+    # In der Notebook-Produktion steht `NUR_ZAEHLEN = ("entscheider",)`:
+    # die Stufe rechnet, bucht ihr Urteil in den Trichter - und laesst das
+    # Signal trotzdem durch. Die 1.385 Verwerfungen sind PROTOKOLLIERT,
+    # aber nicht vollzogen.
+    #
+    # Damit steht die Wirkung von G-6 nicht als Schaetzung da, sondern als
+    # Abzug: was die Stufe gebucht hat, faellt kuenftig wirklich weg.
+    #
+    # ⚠️ Eine Einschraenkung gehoert dazu: gebucht wurde mit der
+    # BEITRAGSLAGE VOM NOTEBOOK. Seit dem 31.08. ist der Schnittabstand
+    # gefallen (36 statt 43 von 43 Werten abgedeckt) - die Groessenordnung
+    # bleibt, die Zahl verschiebt sich.
+    # ------------------------------------------------------------------
+    ohne_stufe11 = t["heraus"] - erreicht          # Ausstiegsseite
+    neu = t["bestanden"].get("entscheider", 0) + ohne_stufe11
+    tage = 16
+    print()
+    print("  ➔ WAS AM ENDE HERAUSKOMMT — mit und ohne scharfe Stufe 11:")
+    print("      heute (Entscheider zaehlt nur) %6d  = %5.1f je Tag"
+          % (t["heraus"], t["heraus"] / tage))
+    print("      nach G-6 (Entscheider sperrt)  %6d  = %5.1f je Tag"
+          % (neu, neu / tage))
+    print("      davon Ausstiegsseite (ohne Stufe 11) %5d" % ohne_stufe11)
+    print("      -> %.0f %% weniger Empfehlungen"
+          % (100 * (1 - neu / max(t["heraus"], 1))))
+    print()
+    print("      je Asset und Tag (43 Werte): %.2f  ->  %.2f"
+          % (t["heraus"] / tage / 43, neu / tage / 43))
+    print("      also rund alle %.1f Tage eine Meldung je Asset"
+          % (43 * tage / max(neu, 1)))
+
 
 def f2_vorschau(sig, mit, kurse, c_ak, schnitt_am_tag):
     """F2 als eigene Funktion (31.08.2026).
