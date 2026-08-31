@@ -338,130 +338,190 @@ def f8_was_aendert_der_entscheider(conn, mit_potential):
     # gefallen (36 statt 43 von 43 Werten abgedeckt) - die Groessenordnung
     # bleibt, die Zahl verschiebt sich.
     # ------------------------------------------------------------------
-    ohne_stufe11 = t["heraus"] - erreicht          # Ausstiegsseite
-    neu = t["bestanden"].get("entscheider", 0) + ohne_stufe11
-    tage = 16
+    # ⚠️⚠️ HIER STAND EINE FALSCHE RECHNUNG (31.08. abends korrigiert).
+    #
+    # Sie nahm die 1.385 im Trichter gebuchten Verwerfungen als Abzug fuer
+    # G-6 und kam auf "74 % weniger". Das war falsch: gebucht hat der ALTE
+    # Entscheider (`TB.bewerte`, Trefferbilanz mit 1,50 % Gebuehren), die
+    # neue Stufe rechnet das Potential gebuehrenfrei mit Beitraegen. Zwei
+    # verschiedene Filter - die Wirkung des einen sagt nichts ueber den
+    # anderen.
+    #
+    # Gerechnet wird jetzt mit F2, das je Signal die ECHTEN Merkmale
+    # heranzieht und dieselbe Produktionsfunktion aufruft.
     print()
-    print("  ➔ WAS AM ENDE HERAUSKOMMT — mit und ohne scharfe Stufe 11:")
-    print("      heute (Entscheider zaehlt nur) %6d  = %5.1f je Tag"
-          % (t["heraus"], t["heraus"] / tage))
-    print("      nach G-6 (Entscheider sperrt)  %6d  = %5.1f je Tag"
-          % (neu, neu / tage))
-    print("      davon Ausstiegsseite (ohne Stufe 11) %5d" % ohne_stufe11)
-    print("      -> %.0f %% weniger Empfehlungen"
-          % (100 * (1 - neu / max(t["heraus"], 1))))
+    print("  ➔ WAS AM ENDE HERAUSKOMMT (gerechnet in F2, nicht abgeleitet):")
+    print("      %s" % mit_potential)
     print()
-    print("      je Asset und Tag (43 Werte): %.2f  ->  %.2f"
-          % (t["heraus"] / tage / 43, neu / tage / 43))
-    print("      also rund alle %.1f Tage eine Meldung je Asset"
-          % (43 * tage / max(neu, 1)))
+    print("  ⚠️ Die frueher hier stehende Rechnung (1.385 gebuchte")
+    print("     Verwerfungen als Abzug, '74 % weniger') galt dem ALTEN")
+    print("     Massstab und ist zurueckgenommen.")
 
 
 def f2_vorschau(sig, mit, kurse, c_ak, schnitt_am_tag):
-    """F2 als eigene Funktion (31.08.2026).
+    """Was verwirft die NEUE Stufe 11 wirklich? (neu gebaut 31.08. abends)
 
-    ⚠️ SIE STAND IM RUMPF VON `main`, und ihr `return` bei fehlendem
-    Beitrag nahm den ganzen Lauf mit - samt F5 bis F8, die den
-    Beitrag gar nicht brauchen. Ein Abschnitt, der seine Grundlage
-    verliert, darf die uebrigen nicht mitnehmen.
+    ⚠️⚠️ DIE ERSTE FASSUNG HAT DIE FALSCHE FRAGE BEANTWORTET.
+
+    Sie rechnete den Durchlass aus dem Schnittabstand - und der ist am
+    31.08. als Beitrag gefallen. Schlimmer: eine spaetere Rechnung nahm
+    die 1.385 im Trichter gebuchten Verwerfungen als Abzug fuer G-6 und
+    kam auf "74 % weniger Empfehlungen". **Auch das war falsch.**
+
+    `Basisinfos/Konzept_Bewertungsstufe_29_08.md` sagt, warum: es gibt ZWEI
+    Bewertungen, die nichts voneinander wissen.
+
+        Stufe 11 (Zeile 1596)   Trefferbilanz + Gebuehren-Breakeven, 1,50 %
+        Wahrscheinlichkeit      Basisrate + Beitraege, gebuehrenfrei
+                                - und sie laeuft NACH dem Mailbau
+
+    Am Code bestaetigt: der NB-Stand rechnet `TB.bewerte(bilanz or {}, ...)`,
+    der neue `_PT2.traegt(_potential.wert_r)`. Die gebuchten 1.385 stammen
+    vom ALTEN Massstab - aus einer fast leeren Trefferbilanz (96 von 2.313),
+    Grund in 1.369 Faellen "traegt sich nicht".
+
+    ⚠️ Nutzerklaerung 31.08.: *"Der Grund [fuer das reine Zaehlen] ist die
+    fehlende Bewertung gewesen - jetzt nach dem Umbau soll alles scharf
+    sein."* Genau deshalb muss die neue Wirkung EIGENS gerechnet werden,
+    statt die alte zu uebernehmen.
+
+    ## Was hier gerechnet wird
+
+    Fuer jedes einstiegsfaehige Signal der echten Produktion:
+
+        Funding-Rang   je Kalendertag ueber `data/funding_historie.db`
+        Turnover-Rang  je Kalendertag, Volumen / Umlaufmenge
+        -> potential.rechne(merkmale=...) -> ueber der Schwelle?
+
+    Also mit DENSELBEN Beitraegen und DERSELBEN Produktionsfunktion, die
+    Stufe 11 nach dem Umbau benutzt.
     """
-    # ---------------------------------------------------------------- F2
-    print()
-    print("-" * 96)
-    print("F2 — G-6: was haette die scharfe Stufe 11 verworfen?")
-    print("-" * 96)
+    import sqlite3 as _sq
     from agent import potential as PT
     from agent import wahrscheinlichkeit as WK
-    # ⚠️⚠️ SEIT DEM 31.08. ABENDS STEHT DER SCHNITTABSTAND AUF `null`.
-    # Er fiel im Horizontlauf (bei keinem Horizont trennbar). F2 rechnete
-    # den Durchlass allein aus ihm - diese Rechnung gibt es damit nicht
-    # mehr.
-    #
-    # Hier stand `return`. Das brach den GANZEN Lauf ab, samt F5 bis F8 -
-    # und genau die brauchen den Beitrag gar nicht: sie lesen die echten
-    # Trichterzahlen aus `gate_durchlaessigkeit`. Ein Abschnitt, der seine
-    # Grundlage verliert, darf die uebrigen nicht mitnehmen (dieselbe
-    # Regel wie "jede Gruppe einzeln geschuetzt" in `fuehre_umlauf`).
-    stufen = next((b.stufen for b in WK.BEITRAEGE
-                   if b.merkmal == "schnitt_fuenftel" and b.stufen), None)
-    if not stufen:
-        print("  ⚠️ Der Schnittabstand steht auf `null` (31.08.) - diese")
-        print("     Vorschau rechnete allein mit ihm und entfaellt damit.")
-        print("     Die WIRKLICHE Filterwirkung steht in F5 bis F8: sie")
-        print("     liest die protokollierten Laeufe statt zu rechnen.")
-        return "entfaellt - Schnittabstand auf null"
-    # Rang je Kalendertag ueber ALLE Reihen mit Wert - wie in der Produktion
-    je_tag = {}
-    for s in mit:
-        je_tag.setdefault(s["tag"], []).append(s)
-    alle_tage = sorted(je_tag)
-    for tag in alle_tage:
-        # Querschnitt: alle Symbole mit Kursreihe an diesem Tag
-        werte = {}
-        for sym in kurse:
-            w = schnitt_am_tag(sym, tag)
-            if w is not None:
-                werte[sym] = w
-        if len(werte) < 15:
-            for s in je_tag[tag]:
-                s["f5"] = None
-            continue
-        srt = sorted(werte.items(), key=lambda x: x[1])
-        rang = {sy: i / max(len(srt) - 1, 1) for i, (sy, _v) in enumerate(srt)}
-        for s in je_tag[tag]:
-            q = rang.get(s["symbol"])
-            s["f5"] = None if q is None else min(int(q * 5), 4)
-    # ⚠️ NUR EINSTIEGSFAEHIGE AKTIONEN ERREICHEN STUFE 11 (31.08.2026).
-    # Die erste Fassung rechnete das Potential fuer ALLE Signale - auch
-    # fuer VERKAUFEN, REDUZIEREN und HALTEN. Das ergab den Fehlalarm
-    # "Stufe 11 sperrt Verkaeufe". Tatsaechlich scheitern die schon an
-    # `rollen_lauf.py:1384` (`aktion not in AKTIONEN_MIT_EINSTIEG`), rund
-    # 400 Zeilen VOR dem Entscheider - sie erreichen ihn nie.
-    #
-    # Das System ist an dieser Stelle richtig gebaut: das Potential ist
-    # eine EINSTIEGSbewertung und darf keine Ausstiegsentscheidung
-    # verwerfen.
     from agent.signal_mail import AKTIONEN_MIT_EINSTIEG
-    durch, gesperrt, unbestimmt = [], [], []
+
+    print()
+    print("-" * 96)
+    print("F2 — WAS VERWIRFT DIE NEUE STUFE 11? (Potential, gebuehrenfrei)")
+    print("-" * 96)
+
+    tragend = [b.merkmal for b in WK.BEITRAEGE if b.zustand == "traegt"]
+    print("  registrierte Beitraege: %s" % (", ".join(tragend) or "KEINE"))
+    if not tragend:
+        print("  ⚠️ ohne Beitrag ist keine Vorschau moeglich")
+        return "keine Beitraege registriert"
+
+    # ---- die Rohreihen ------------------------------------------------
+    def reihe(db, tab, spalte="wert"):
+        c = _sq.connect("file:%s?mode=ro" % db, uri=True)
+        aus = {}
+        for sym, tag, w in c.execute(
+                "SELECT symbol, datum, %s FROM %s WHERE datum>='2026-08-01'"
+                % (spalte, tab)):
+            if w is not None:
+                aus.setdefault(str(sym).upper(), {})[str(tag)[:10]] = float(w)
+        c.close()
+        return aus
+
+    funding = reihe("data/funding_historie.db", "funding")
+    menge = reihe("data/onchain_historie.db", "splycur")
+    print("  Funding %d Symbole, Umlaufmenge %d Symbole"
+          % (len(funding), len(menge)))
+
+    # ---- Turnover je Symbol und Tag: Volumen / Umlaufmenge ------------
+    # ⚠️ Das Volumen kommt aus derselben Kursreihe, die auch die Produktion
+    # liest - nicht aus einer zweiten Quelle.
+    volumen = {}
+    for sym, reihen in (kurse or {}).items():
+        for eintrag in reihen:
+            if len(eintrag) >= 2:
+                volumen.setdefault(sym, {})[eintrag[0]] = eintrag[1]
+
+    def fuenftel_je_tag(werte_je_tag):
+        """Rang in Fuenfteln, je Kalendertag - wie `marktrang`."""
+        aus = {}
+        for tag, paare in werte_je_tag.items():
+            if len(paare) < 15:            # kein Querschnitt
+                continue
+            srt = sorted(paare.items(), key=lambda x: x[1])
+            for i, (sym, _w) in enumerate(srt):
+                q = i / max(len(srt) - 1, 1)
+                aus.setdefault(tag, {})[sym] = min(int(q * 5), 4)
+        return aus
+
+    f_tag = {}
+    for sym, je in funding.items():
+        for tag, w in je.items():
+            f_tag.setdefault(tag, {})[sym] = w
+    t_tag = {}
+    for sym, je in menge.items():
+        for tag, m in je.items():
+            v = (volumen.get(sym) or {}).get(tag)
+            if v and m > 0:
+                t_tag.setdefault(tag, {})[sym] = v / m
+    f5 = fuenftel_je_tag(f_tag)
+    t5 = fuenftel_je_tag(t_tag)
+    print("  Fuenftel gebildet: Funding an %d Tagen, Turnover an %d Tagen"
+          % (len(f5), len(t5)))
+    if not t5:
+        # ⚠️ EHRLICH BENENNEN STATT STILL WEGLASSEN. `lade_kurse` liefert
+        # (Tag, Schlusskurs) - kein Volumen. Der Turnover-Rang braucht
+        # aber Volumen/Umlaufmenge und ist damit hier nicht rechenbar.
+        #
+        # Folge: diese Vorschau rechnet NUR MIT FUNDING. Da Turnover in der
+        # Produktion ohnehin nur 7 von 43 Werten abdeckt, ist die
+        # Verzerrung klein - aber sie gehoert genannt, nicht verschwiegen.
+        print("  ⚠️⚠️ TURNOVER FEHLT: `lade_kurse` liefert kein Volumen.")
+        print("     Diese Vorschau rechnet NUR MIT FUNDING. In der")
+        print("     Produktion deckt Turnover 7 von 43 Werten ab - die")
+        print("     Verzerrung ist klein, aber vorhanden.")
+
+    # ---- je Signal das Potential --------------------------------------
+    durch, gesperrt, ohne = [], [], []
     for s in sig:
         if s["aktion"] not in AKTIONEN_MIT_EINSTIEG:
             continue
-        f5 = s.get("f5")
-        if f5 is None:
-            unbestimmt.append(s)
+        sym, tag = s["symbol"], s["tag"]
+        m = {}
+        if (f5.get(tag) or {}).get(sym) is not None:
+            m["funding_fuenftel"] = f5[tag][sym]
+        if (t5.get(tag) or {}).get(sym) is not None:
+            m["turnover_fuenftel"] = t5[tag][sym]
+        if not m:
+            ohne.append(s)
             continue
         p = PT.rechne(crv=CRV, stop_relativ=0.05, klasse="krypto",
                       instrument="spot", strategie="einstieg", h=None,
-                      merkmale={"schnitt_fuenftel": f5})
+                      merkmale=m)
         (durch if PT.traegt(p.wert_r) else gesperrt).append(s)
-    n = len(durch) + len(gesperrt) + len(unbestimmt)
-    print("  ⚠️ Nur einstiegsfaehige Aktionen erreichen Stufe 11:")
-    print("     %s" % ", ".join(AKTIONEN_MIT_EINSTIEG))
-    print("     %d von %d Signalen (%.0f %%); der Rest scheitert vorher"
-          % (n, len(sig), 100 * n / len(sig)))
+
+    n = len(durch) + len(gesperrt) + len(ohne)
+    if not n:
+        return "keine einstiegsfaehigen Signale"
     print()
     print("  von %d einstiegsfaehigen Signalen:" % n)
-    print("    kaemen durch:        %5d (%.0f %%)" % (len(durch), 100 * len(durch) / n))
-    print("    wuerden gesperrt:    %5d (%.0f %%)" % (len(gesperrt), 100 * len(gesperrt) / n))
-    print("    ⚠️ ohne Datengrundlage: %4d (%.0f %%)"
-          % (len(unbestimmt), 100 * len(unbestimmt) / n))
+    print("    kaemen durch:            %5d (%.0f %%)"
+          % (len(durch), 100 * len(durch) / n))
+    print("    wuerden gesperrt:        %5d (%.0f %%)"
+          % (len(gesperrt), 100 * len(gesperrt) / n))
+    print("    ⚠️ ohne Datengrundlage:  %5d (%.0f %%)"
+          % (len(ohne), 100 * len(ohne) / n))
     print()
-    print("  ⚠️ NUR DER SCHNITTABSTAND ist hier gerechnet - Funding und")
-    print("     Turnover kommen in der Produktion dazu und verschieben das")
-    print("     Bild. Diese Zahl ist die UNTERGRENZE des Durchlasses.")
+    print("  ⚠️ 'ohne Datengrundlage' wird mit scharfer Stufe 11 GESPERRT -")
+    print("     `vermessen` faengt nur unvermessene KLASSEN ab, nicht")
+    print("     einzelne Werte ohne Merkmal. Krypto ist vermessen.")
     print()
-    _durchlass = "%d von %d einstiegsfaehigen kaemen durch (%.0f %%)" % (
-        len(durch), n, 100 * len(durch) / max(n, 1))
-    print("  je Aktion (nur einstiegsfaehige):")
+    print("  je Aktion:")
     for a in sorted(x for x in c_ak if x in AKTIONEN_MIT_EINSTIEG):
-        d = sum(1 for s in durch if s["aktion"] == a)
-        g = sum(1 for s in gesperrt if s["aktion"] == a)
-        u = sum(1 for s in unbestimmt if s["aktion"] == a)
+        d = sum(1 for x in durch if x["aktion"] == a)
+        g = sum(1 for x in gesperrt if x["aktion"] == a)
+        o = sum(1 for x in ohne if x["aktion"] == a)
         print("    %-14s durch %4d  gesperrt %4d  ohne Grundlage %4d"
-              % (a, d, g, u))
-
-
-    return _durchlass
+              % (a, d, g, o))
+    return ("%d von %d einstiegsfaehigen kaemen durch (%.0f %%), "
+            "%d ohne Datengrundlage"
+            % (len(durch), n, 100 * len(durch) / n, len(ohne)))
 
 
 def main():
