@@ -4080,7 +4080,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_dosis.py` | ✘ **fest** | (:298) |
 | `messe_schnittabstand_beitrag.py` | P2: der Abstand zum eigenen 200-Schnitt als Beitrag — der einzige der drei, der nur die eigene Kursreihe braucht (Abdeckung 43/43) |
 | `pruefe_beitragsabdeckung.py` | Fuer WIEVIELE Werte gilt jeder Beitrag ueberhaupt? Haette vor R1 laufen muessen |
-| `simuliere_rollout_gegen_nb.py` | Was macht der Rollout mit der ECHTEN Produktion? Nur lesend, gegen eine entpackte NB-Kopie |
+| `simuliere_rollout_gegen_nb.py` | Was macht der Rollout mit der ECHTEN Produktion? Nur lesend. Seit 31.08. mit F5–F8: die **echte Filterwirkung** aus `gate_durchlaessigkeit` (7.169 Laeufe), Empfehlungen je Tag/Asset/Strategie, und die Warnung, dass Trend- und Codewechsel am 22./23.08. nicht trennbar sind |
 | `pruefe_assetklassen_datenlage.py` | Datenlage je Assetklasse — und seit 31.08. die Achse Klasse x Instrument x Strategie: welche Zelle traegt eine Bewertung, welche laeuft als Takt |
 | `messe_kandidaten_als_regel.py` | Die Kandidaten als REGEL ueber einen gemeinsamen Massstab — seit 31.08. mit `--horizonte` (H1..H20, die Hebel-Geometrie) und dem Schnittabstand als Kandidat |
 
