@@ -267,6 +267,8 @@ Negativ- und Positivkontrolle.
 | **Funding-Niveau** | 290 | 20,6 % | **+0,0244 R** [+0,008 .. +0,037] | ✔ **trägt** — beide Historienhälften, beide Marktphasen, monoton über fünf Fünftel, Momentum-Korrelation +0,002, kein Survivorship |
 | Turnover (Volumen/Umlaufmenge) | 66 | 21,2 % | +0,0616 R [+0,015 .. +0,114] | ⚠️ **Kandidat** — kein Mitläufer von Funding, aber **Survivorship: 71 % gegen 90 %** |
 | MC/TVL | 19 | — | +0,083 / +0,271 R | ⚠️ trägt, **12 Symbole je Tag** — zu schmal; verbreitern scheitert an CoinGecko (`days=max` → 401) |
+| **Abstand zum 50-Tage-Schnitt** | 578 | 20,8 % | **+0,0029 R** [−0,0005 .. +0,0065] | ✖ **null** (H2, Messung mächtig) — der **beste** Kursreihen-Kandidat, ⚠️ bei H20 kein Urteil (Positivkontrolle versagt) |
+| Abstand zum 200-Tage-Schnitt | 578 | 20,8 % | −0,0060 R (gleiche Anker) | ✖ **null** — 31.08. als Beitrag zurückgenommen (Tagesklammer) |
 | Amihud-Illiquidität | 523 | 20,4 % | −0,0016 R | ✖ **null, belastbar** |
 | Momentum 12-1 | 523 | 20,2 % | −0,0008 R | ✖ **null, belastbar** |
 | TVL-Veränderung · aktive Adressen · NVM | 188 / 66 | — | — | ✖ **null, belastbar** (Grenze 0,10 R) |

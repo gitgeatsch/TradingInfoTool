@@ -158,6 +158,30 @@ def baue(reihen, art, zusatz=None, horizont=None):
                     wert = float(v[i] / menge)
             elif art == "funding":
                 wert = (extra or {}).get(tage[i])
+            elif art == "schnitt50":
+                # ⚠️ NUTZERIDEE 31.08.: *"Was ist mit dem 50-Schnitt bzw.
+                # Abstand - haben wir diesen gemessen?"* Nein. Gemessen
+                # wurde der 200er (am 31.08. gefallen, bei keinem Horizont
+                # trennbar). Der 50er kommt im System nur als MARKTBREITE
+                # vor ("18 von 51 Coins ueber ihrer 50-Tage-Linie"), nie
+                # als eigener Abstand je Asset.
+                #
+                # ⚠️ VORAB BENANNT, warum gerade 50 und keine freie Suche
+                # ueber 20/50/100: der Handelshorizont liegt bei 1 bis 20
+                # Tagen, der 200er misst die Lage im Jahrestrend. Der 50er
+                # ist die naechstliegende Skala OBERHALB des Horizonts -
+                # nah genug fuer die Lage, weit genug gegen das
+                # Tagesrauschen. EINE Zelle, vorab benannt (Suchpreis 2.49).
+                #
+                # ⚠️ UND DIE EHRLICHE ERWARTUNG: der 200er traegt nicht,
+                # Amihud nicht, Momentum nicht - alle drei aus derselben
+                # Quelle. Der Grundbefund vom 10.08. lautet "die
+                # Information steckt nicht in den Kursdaten". Ein
+                # Nullbefund waere die Regel, kein Ausreisser.
+                if i >= 50:
+                    _m50 = c[i - 50:i].mean()
+                    if _m50 > 0:
+                        wert = float(c[i] / _m50 - 1.0)
             elif art == "schnitt":
                 # ⚠️ DER DRITTE TRAGENDE BEITRAG HAT HIER GEFEHLT
                 # (31.08.2026). Er wurde in `messe_schnittabstand_beitrag.py`
@@ -193,7 +217,8 @@ def horizontlauf(reihen, menge, funding, horizonte):
         print("#" * 92)
         for art, klar, oben in (("funding", "FUNDING-Rang", True),
                                 ("turnover", "TURNOVER-Rang", True),
-                                ("schnitt", "ABSTAND ZUM 200-SCHNITT", True)):
+                                ("schnitt", "ABSTAND ZUM 200-SCHNITT", True),
+                                ("schnitt50", "ABSTAND ZUM 50-SCHNITT", True)):
             extra = {"funding": funding, "turnover": menge}.get(art)
             je_tag = baue(reihen, art, extra, horizont=h)
             if not je_tag:
