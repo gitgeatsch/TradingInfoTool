@@ -325,3 +325,146 @@ das bindende Problem, nicht der Erwartungswert.
 > mitschreiben, was die mechanische Auswahl empfohlen hätte und was die Kette
 > daraus gemacht hat. **Erst dieser Vergleich sagt, ob die LLM-Ebene ihren
 > Platz verdient** — gegen eine Basislinie, die es vorher nicht gab.
+
+
+---
+
+# RECHERCHE 31.08.2026 — warum A1 im Betrieb nicht bremst
+
+**Nutzerauftrag:** *„Kläre zuerst, warum A1 nicht greift. Vorher recherchieren,
+ob es einen Grund gibt und u. U. kein Fehler vorliegt — der Grund für den
+Lauftakt sollte dokumentiert sein und wie es funktionieren soll."*
+
+**Beobachtung, die den Auftrag ausgelöst hat:** `K_GROSS = 2`, aber in der
+Notebook-Produktion bekommen **28–32 von 43 Assets täglich** ein Signal,
+4,2–5,6 Signale je Asset und Tag.
+
+Drei Ursachen, geprüft. **Zwei davon sind kein Fehler.**
+
+---
+
+## 1. Der Lauftakt — begründet, dokumentiert, KEIN Fehler
+
+    HEBEL_SCREENING_INTERVAL_MINUTES = 15   ->  96 Läufe pro Tag
+    A1 wählt k=2 je Lauf                    ->  192 gewählte Assets pro Tag
+
+**Der Grund steht in `docs/budget_queue_design.md`** (14.07.2026, Phase 5):
+
+> *„Ohne gemeinsame Logik entsteht ein Burst-Problem: mehrere gleichzeitig
+> getriggerte Kandidaten können an einem Tag locker [das Tagesbudget
+> verbrauchen]."*
+
+Der 15-Minuten-Takt ist die **Granularität einer Budgetverteilung** — er
+verteilt ein knappes LLM-Kontingent gleichmäßig über den Tag. Er war nie als
+Signalfrequenz gedacht. Drei Verbraucher teilten sich dasselbe Budget:
+Spot-Rotation, Marktscan-Kaufkandidaten, Hebel-Empfehlungen.
+
+**Beim Schnitt am 14.08.** (`background.py:3373`) trat `fuehre_umlauf` an die
+Stelle des Budget-Allocators — im selben Takt. ✔ **Die Budgetbremse kam mit:**
+
+    KETTE = gemini 500 + gemini 500 + openrouter 1000 + groq 83 = 2.083/Tag
+    RESERVE_ANTEIL = 0,1                              -> ~1.875 nutzbar
+
+⚠️ **Aber sie bremst bei 174 Signalen/Tag nicht** — sie ist zehnmal so groß.
+Und sie ist eine **technische** Grenze (LLM-Kontingent), keine fachliche.
+
+### Die Lücke, die daraus folgt
+
+> **Es gibt im ganzen System keine Stelle, die sagt: „so viele Empfehlungen
+> sind fachlich sinnvoll."**
+
+Der Takt folgt dem Kontingent, nicht dem Bedarf. Nutzervorgabe 31.08.:
+*„Der Takt darf nur mit dem Bedarf nach der Frequenz folgen."* Diese Vorgabe
+ist nirgends umgesetzt — nicht weil sie verletzt wurde, sondern weil die
+Größe „Bedarf" nie definiert wurde.
+
+**Das ist die eigentliche offene Entscheidung**, und sie ist keine Messfrage.
+
+---
+
+## 2. Die Bestandsausnahme — Absicht und Umsetzung weichen ab
+
+`rollen_lauf.py:1115`:
+
+```python
+if (auswahl or {}).get("aktiv") and not _hat_bestand:
+    if symbol not in auswahl["gewaehlt"]:
+        durchlauf.verloren(symbol, "auswahl", ...)
+        return
+```
+
+**Wer Bestand hat, wird von A1 nicht gefiltert.** Die Begründung im Code ist
+richtig und gemessen:
+
+> *„Die Auswahl beantwortet die Frage ‚welchen soll ich KAUFEN'. Bei einem
+> gehaltenen Wert lautet die Frage aber ‚halten oder verkaufen' — und die
+> stellt sich unabhängig davon, ob er heute unter den besten zwei ist. Ohne
+> diese Ausnahme fällt die gesamte Verkaufsseite aus der Kette."*
+>
+> Gemessen: von 24 Bestandspositionen wären **21 nicht mehr beurteilt worden**.
+
+Und dieselbe Absicht steht in diesem Dokument, Abschnitt oben:
+
+> **Bestand** — **nicht Teil von A1**: ein gehaltener Wert, der im Rang fällt,
+> ist die **Verkaufsfrage**.
+
+### ⚠️ Die Umsetzung ist breiter als die Absicht
+
+Die Ausnahme lässt das Asset **für JEDE Aktion** durch, nicht nur für die
+Verkaufsseite. Gemessen an 1.854 einstiegsfähigen Signalen der
+NB-Produktion:
+
+| Aktion | mit Bestand (A1 umgangen) | ohne Bestand | Anteil umgangen |
+|---|---:|---:|---:|
+| NACHKAUFEN | **595** | 232 | **72 %** |
+| ERÖFFNEN | 332 | 549 | 38 % |
+| KAUFEN | 7 | 139 | 5 % |
+| **gesamt** | **934** | 920 | **50 %** |
+
+**Die Hälfte aller Einstiegssignale umgeht die Auswahl über den Bestand.**
+Ein Nachkauf ist aber keine Verkaufsfrage — er kostet Geld und braucht eine
+Begründung wie jeder andere Einstieg.
+
+⚠️ **Das ist ein echter Befund, aber es ist eine ENTSCHEIDUNG, kein Bug.**
+Zwei vertretbare Lesarten:
+
+| | Lesart | Argument |
+|---|---|---|
+| **A** | Bestand umgeht A1 nur für **Ausstiegsaktionen** | ein Nachkauf ist ein Einstieg; A1 wurde genau dafür gebaut |
+| **B** | Bestand umgeht A1 wie heute, für alles | wer investiert ist, kennt den Wert; die Positionsfrage steht über der Auswahlfrage |
+
+Für A spricht der Wortlaut der eigenen Festlegung (*„das ist die
+Verkaufsfrage"*), für B die Sorge, eine bestehende Position nicht mehr
+aufstocken zu können, wenn sie im 250-Tage-Rang zurückfällt.
+
+---
+
+## 3. Der Umlaut in `auswahl.EINSTIEGSAKTIONEN` — unkritisch, aber real
+
+    agent/auswahl.py:388      EINSTIEGSAKTIONEN     = (..., "EROEFFNEN")   ohne Umlaut
+    agent/signal_mail.py:91   AKTIONEN_MIT_EINSTIEG = (..., "ERÖFFNEN")    mit Umlaut
+
+Die Produktion schreibt **`ERÖFFNEN`** (881 Signale). `auswahl.py:414` prüft
+`aktion in EINSTIEGSAKTIONEN` — das trifft nie zu.
+
+**Wirkung, geprüft:** Die Stelle sitzt in `stumme_laeufe()`, und die ist
+**ausdrücklich eine Meldung, kein Abbruch** (`rollen_lauf.py:736`: *„als
+MELDUNG statt Abbruch — ein laufübergreifender Abbruch wäre eine Falle"*).
+
+    ✔ kein Abbruch, kein verändertes Signal
+    ⚠️ aber eine FALSCHE Warnung: der Zähler meldet „8 Läufe ohne Einstieg
+       bei einem gewählten Wert", während 881 Eröffnungen entstanden sind
+
+⚠️ **Und die Prüfung, die genau das fangen soll, deckt `auswahl.py` nicht ab.**
+`pruefe_pakete.py:2803` (*„das Vokabular wird importiert, nicht
+abgeschrieben"*) prüft nur `signal_abbildung.py`.
+
+---
+
+## Zusammenfassung
+
+| # | Befund | Urteil |
+|---|---|---|
+| **1** | 15-Min-Takt × k=2 = 192 gewählte Assets/Tag | ✔ **kein Fehler** — Budgetgranularität, dokumentiert. ⚠️ Aber die Bremse ist ein LLM-Kontingent (2.083/Tag), keine fachliche Frequenz |
+| **2** | 50 % der Einstiege umgehen A1 über den Bestand | ⚠️ **Entscheidung offen** — die Absicht war die Verkaufsseite, die Umsetzung deckt alles ab |
+| **3** | Umlaut in `EINSTIEGSAKTIONEN` | ⚠️ **echter Fehler, folgenlos** — falsche Warnung, kein verändertes Verhalten. Prüfungslücke |
