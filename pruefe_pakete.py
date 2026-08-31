@@ -2280,6 +2280,29 @@ def paket_12c() -> None:
            "_potential.traegt_hier" in _q2,
            "eine Schwelle, die die Aufrufstelle nicht erreicht, ist "
            "Dekoration")
+    # ⚠️ UND DIE MESSWERKZEUGE AUCH. Am 31.08. meldete
+    # `simuliere_rollout_gegen_nb.py` "0 von 1.854 kaemen durch" - ein
+    # Artefakt: es rechnete noch `PT.traegt()` mit der FESTEN Schwelle,
+    # waehrend die Produktion `traegt_hier` benutzt. Eine Vorschau, die
+    # etwas anderes rechnet als der Betrieb, warnt vor der falschen Sache.
+    # ⚠️ UEBER DEN AST, NICHT UEBER TEXT. Die erste Fassung suchte
+    # "PT.traegt(p.wert_r)" im Quelltext - und fand es im KOMMENTAR, der
+    # die Korrektur erklaert. Genau der Fehler, den die
+    # Verdrahtungspruefung heute frueher gemacht hat (Docstring als
+    # Aufruf gezaehlt). Ein Kommentar ist kein Aufruf.
+    import ast as _ast2
+    _sim_baum = _ast2.parse(
+        io.open("simuliere_rollout_gegen_nb.py", encoding="utf-8").read())
+    _sim_attr = {n2.attr for n2 in _ast2.walk(_sim_baum)
+                 if isinstance(n2, _ast2.Attribute)}
+    _sim_aufrufe = {
+        n2.func.attr for n2 in _ast2.walk(_sim_baum)
+        if isinstance(n2, _ast2.Call) and isinstance(n2.func, _ast2.Attribute)}
+    pruefe(P, "⚠️ und die Rollout-Vorschau rechnet wie die Produktion",
+           "traegt_hier" in _sim_attr and "traegt" not in _sim_aufrufe,
+           "sonst misst die Vorschau eine Nachbildung, die still veraltet - "
+           "sie rief `PT.traegt()` mit der FESTEN Schwelle und meldete "
+           "daraufhin 0 von 1.854")
 
     pruefe(P, "⚠️ und akkumulation gilt daher als NICHT vermessen",
            _WKx.vermessen("krypto", "einstieg")
@@ -14790,14 +14813,35 @@ def paket_kalibrierung() -> None:
     # Darunter kommt durch ihn allein nichts mehr durch - er ist dann
     # wirkungslos, ohne dass es auffiele. Die Grenze ist NICHT gegriffen,
     # sie folgt aus der Rechnung.
-    _noetig = 100.0 * _PT.schwelle() / (1.0 + 2.0)
+    # ⚠️⚠️ NACHGEZOGEN AM 31.08. ABENDS, als die Vorgabe auf 0,080 stieg.
+    #
+    # Die Pruefung schlug an - und sie hatte RECHT fuer die Welt, fuer die
+    # sie gebaut war: bei einer FESTEN Schwelle von 0,080 braeuchte ein
+    # Beitrag +2,667 Punkte, und Funding hat nur +1,30. Er waere allein
+    # wirkungslos.
+    #
+    # Seit derselben Runde gibt es aber die SCHWELLE JE DATENLAGE
+    # (`Potential.schwelle`): sie rechnet die Vorgabe auf die bei dieser
+    # Datenlage erreichbare Spanne um. Fuer einen Wert, bei dem nur Funding
+    # vorliegt, entspricht 0,080 dann 0,0234 R - und +1,30 Punkte ergeben
+    # +0,039 R. Der Beitrag traegt sehr wohl.
+    #
+    # Geprueft wird deshalb, was gemeint war: **nimmt das beste Fuenftel
+    # dieses Beitrags die Schwelle SEINER eigenen Datenlage?**
     for b in [x for x in _WK.BEITRAEGE if x.stufen and x.zustand == "traegt"]:
-        pruefe(P, "%s: bestes Fuenftel ueber +%.3f Punkten"
-               % (b.name[:34], _noetig),
-               max(b.stufen) > _noetig,
-               "bestes Fuenftel %+.2f - darunter wirkt der Beitrag nicht "
-               "mehr, weil er die Schwelle allein nicht nimmt"
-               % max(b.stufen))
+        _p_allein = _PT.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                               instrument="spot", strategie="einstieg",
+                               h=None,
+                               merkmale={b.merkmal: int(
+                                   max(range(len(b.stufen)),
+                                       key=lambda i: b.stufen[i]))})
+        pruefe(P, "%s: bestes Fuenftel nimmt seine eigene Schwelle"
+               % b.name[:34],
+               _p_allein.traegt_hier,
+               "bestes Fuenftel %+.2f Punkte = %+.4f R gegen Schwelle "
+               "%.4f R - darunter wirkt der Beitrag nicht mehr, auch nicht "
+               "mit der Schwelle je Datenlage"
+               % (max(b.stufen), _p_allein.wert_r, _p_allein.schwelle))
         pruefe(P, "%s: Richtung stimmt (Fuenftel 0 > Fuenftel 4)"
                % b.name[:34],
                b.stufen[0] > b.stufen[-1],

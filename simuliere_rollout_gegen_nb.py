@@ -494,7 +494,21 @@ def f2_vorschau(sig, mit, kurse, c_ak, schnitt_am_tag):
         p = PT.rechne(crv=CRV, stop_relativ=0.05, klasse="krypto",
                       instrument="spot", strategie="einstieg", h=None,
                       merkmale=m)
-        (durch if PT.traegt(p.wert_r) else gesperrt).append(s)
+        # ⚠️⚠️ `traegt_hier`, NICHT `PT.traegt` (31.08. abends korrigiert).
+        #
+        # Hier stand `PT.traegt(p.wert_r)` - die FESTE Schwelle. Solange die
+        # Vorgabe bei 0,010 lag, war der Unterschied unsichtbar. Mit der
+        # Anhebung auf 0,080 meldete diese Vorschau **0 von 1.854** - und
+        # das war ein Artefakt des Werkzeugs, nicht die Wirkung der
+        # Aenderung: `rollen_lauf.py:1821` rechnet `_potential.traegt_hier`,
+        # also die Schwelle JE DATENLAGE.
+        #
+        # Damit misst diese Zeile jetzt dasselbe wie die Produktion. Es ist
+        # genau der Fehlertyp, vor dem der Kopf von
+        # `vorschau_g6_scharfschaltung.py` warnt: *"gerechnet wird mit der
+        # PRODUKTIONSFUNKTION, nicht mit einer Kopie - sonst misst man eine
+        # Nachbildung, die still veraltet."*
+        (durch if p.traegt_hier else gesperrt).append(s)
 
     n = len(durch) + len(gesperrt) + len(ohne)
     if not n:

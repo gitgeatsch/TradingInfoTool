@@ -362,7 +362,48 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # muessen mindestens mittelmaessig sein. Mit H kommen alle durch.
 #
 # KALIBRIERBAR: `Basisinfos/config.yaml` -> `bewertung: potential_schwelle_r`.
-SCHWELLE_VORGABE = 0.010
+# ---- AUF 0,080 ANGEHOBEN AM 31.08.2026 (Nutzerentscheidung) --------------
+#
+# Die Zahl 0,010 stammte vom Nutzer (30.08.) und stand seither, obwohl die
+# Kalibrierung schon damals 0,080 als Optimum auswies (+0,1324 gegen
+# +0,0470). Drei Gruende hielten sie zurueck; alle drei sind inzwischen
+# beantwortet:
+#
+#   1 "Das Optimum ist IN-SAMPLE gefunden."   -> gilt weiter, siehe unten
+#   2 "0,080 sperrt 83,5 % der Signale."      -> ⚠️ DAS WAR DER IRRTUM.
+#     Die Zahl stammt aus einer Simulation ueber alle Rangkombinationen
+#     GLEICHVERTEILT. An den ECHTEN Signalen gemessen (31.08.) kostet der
+#     Sprung von 0,010 auf 0,080 nur **7,6 Mails je Tag**:
+#
+#         Vorgabe   Mails/Tag  Assets stumm  Stille (Median)  Gewinn
+#          0,010      55,7       10 von 36      8 von 16     +0,0470
+#          0,020      48,1       10             8            +0,0552
+#          **0,080    48,1       10             8            +0,1324**
+#          0,120      17,9       14            12            **-0,0040**
+#
+#     0,020 und 0,080 liefern DIESELBE Mailzahl - mit nur einem Beitrag
+#     liegt zwischen ihnen keine Stufe. Der dreifache Gewinn ist umsonst
+#     zu haben.
+#   3 "Die Vorgabe 0,010 stammt vom Nutzer."  -> am 31.08. ersetzt durch
+#     die Vorgabe 0,080, nach Vorlage dieser Zahlen.
+#
+# ⚠️ WARUM NICHT 0,120: dort schweigen 14 von 36 Werten, die mittlere
+# Stille steigt von 8 auf 12 von 16 Tagen - und der gemessene Gewinn wird
+# NEGATIV (-0,0040). Nutzervorgabe 31.08.: *"Hier muessen wir u.U. in
+# Richtung mehr Signale als weniger kalibrieren, damit wir kein Schweigen
+# erzeugen."*
+#
+# ⚠️ DIE IN-SAMPLE-EINSCHRAENKUNG BLEIBT. Das Optimum wurde aus denselben
+# Daten gefunden wie die Beitragsstufen; neun geprueste Schwellen sind ein
+# echter Suchpreis (Methodik 2.57). Was dagegen NICHT in-sample ist: die
+# Mail- und Schweigezahlen oben - sie stammen aus der echten
+# Notebook-Produktion (2.789 Signale, 16 Tage).
+#
+# ⚠️ UND SIE WIRKT NUR MIT DER SCHWELLE JE DATENLAGE. Als feste Zahl haette
+# 0,080 alles gesperrt, was nur einen Beitrag hat (max +0,039 R) - also 36
+# von 43 Werten. `Potential.schwelle` rechnet sie auf die erreichbare
+# Spanne um: bei nur Funding entspricht 0,080 dann 0,0234 R.
+SCHWELLE_VORGABE = 0.080
 
 # ---------------------------------------------------------------------------
 # R-R9: DIE SCHWELLE GEHOERT ZU EINER BEITRAGSLAGE (30.08.2026)
