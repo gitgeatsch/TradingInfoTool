@@ -4083,6 +4083,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `simuliere_rollout_gegen_nb.py` | Was macht der Rollout mit der ECHTEN Produktion? Nur lesend. Seit 31.08. mit F5–F8: die **echte Filterwirkung** aus `gate_durchlaessigkeit` (7.169 Laeufe), Empfehlungen je Tag/Asset/Strategie, und die Warnung, dass Trend- und Codewechsel am 22./23.08. nicht trennbar sind |
 | `pruefe_assetklassen_datenlage.py` | Datenlage je Assetklasse — und seit 31.08. die Achse Klasse x Instrument x Strategie: welche Zelle traegt eine Bewertung, welche laeuft als Takt |
 | `messe_kandidaten_als_regel.py` | Die Kandidaten als REGEL ueber einen gemeinsamen Massstab — seit 31.08. mit `--horizonte` (H1..H20, die Hebel-Geometrie) und dem Schnittabstand als Kandidat |
+| `messe_summe_gegen_mittel.py` | B: traegt der MITTELWERT der Beitraege besser als ihre SUMME? Ergebnis 31.08.: **widerlegt** — das Mittel benachteiligt die dichtere Datenlage. ⚠️ Die Regelwirkung ist dort nicht messbar (Positivkontrolle versagt, Kennzahl mit 5 Stufen zu grob) |
 
 ⚠️ **Die vier mit festen Grenzen sind genau die, die die heute gültigen
 H-Urteile erzeugt haben** — Kap. 117 (Dosis), 119 (H trägt, +4,5 gegen +2,6),

@@ -446,7 +446,27 @@ BEITRAEGE = (
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",
-        zustand="noch_nicht", punkte=0.0,
+        # ⚠️⚠️ AM 31.08. NACHGEZOGEN - der Eintrag war VERALTET.
+        #
+        # Hier stand `zustand="noch_nicht"` mit dem Vermerk "auswertbar ab
+        # 18.09.2026, 30 Tagesmessungen noetig". Beides ist ueberholt:
+        #
+        #   1 DER TERMIN WAR GEGENSTANDSLOS (30.08.). Er beruhte darauf,
+        #     dass das Modul den MOMENTAUFNAHME-Endpunkt von DefiLlama
+        #     abruft. Die Historie liegt vor - 6 bis 8 Jahre, 188 von 523
+        #     Reihen (`Befundkarte.md`, Stufe 20).
+        #   2 UND DIE GROESSE IST GEMESSEN, mit dieser Historie:
+        #     "TVL-Veraenderung · aktive Adressen · NVM | 188/66 |
+        #     ✖ null, belastbar (Grenze 0,10 R)".
+        #
+        # Ein Beitrag, der auf "noch_nicht" steht, obwohl er gemessen und
+        # gefallen ist, laesst eine erledigte Frage offen aussehen - und
+        # bindet Aufmerksamkeit an ein Datum, das nicht mehr gilt.
+        #
+        # ⚠️ NICHT BETROFFEN ist der ZWEITE Teil von 93 C: die
+        # ENTWICKLERAKTIVITAET (12 Wochenmessungen, ab 09.11.2026). Sie
+        # sammelt weiter und ist eine andere Groesse.
+        zustand="null", punkte=0.0,
         quelle="93 C, sammelt seit 20.08.2026",
         warum="30 Tagesmessungen noetig, auswertbar ab 18.09.2026",
         klassen=("krypto",)),
