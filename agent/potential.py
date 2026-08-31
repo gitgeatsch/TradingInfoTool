@@ -143,6 +143,94 @@ class Potential:
                    if z.get("zustand") == "traegt")
 
     @property
+    def erreichbar_max(self) -> float:
+        """Das hoechste Potential, das bei DIESER Datenlage moeglich waere.
+
+        ⚠️ Nur die Beitraege, die hier tatsaechlich einen Wert geliefert
+        haben. Wer keinen Funding-Rang hat, kann dessen +1,30 Punkte auch
+        nicht erreichen - und darf nicht daran gemessen werden.
+        """
+        from agent import wahrscheinlichkeit as _wk
+        namen = {z.get("name") for z in (self.beitraege or [])
+                 if z.get("zustand") == "traegt"}
+        punkte = sum(max(b.stufen) for b in _wk.BEITRAEGE
+                     if b.name in namen and b.stufen)
+        q = self.basisrate + punkte / 100.0
+        return q * self.crv - (1.0 - q)
+
+    @property
+    def erreichbar_voll(self) -> float:
+        """Das hoechste Potential bei VOLLER Datenlage - der Bezugswert."""
+        from agent import wahrscheinlichkeit as _wk
+        punkte = sum(max(b.stufen) for b in _wk.BEITRAEGE
+                     if b.zustand == "traegt" and b.stufen
+                     and _wk._gilt(b, self.klasse, self.strategie)[0])
+        q = self.basisrate + punkte / 100.0
+        return q * self.crv - (1.0 - q)
+
+    @property
+    def schwelle(self) -> float:
+        """⚠️⚠️ DIE SCHWELLE JE DATENLAGE (31.08.2026, Nutzerentscheidung).
+
+        Nutzerfrage: *„Die Schwelle kann man ja vorher sauber kalibrieren je
+        Beitrag bzw. Anzahl der Beitraege wird eine korrekte Schwelle
+        angewendet."*
+
+        DAS PROBLEM, das sie loest. Das Potential ist die SUMME der
+        Beitragspunkte. Liegt bei einem Wert nur Funding vor und bei einem
+        anderen Funding UND Turnover, summiert man ueber verschieden viele
+        Summanden - und eine feste Schwelle trifft zwei verschiedene Skalen:
+
+            nur Funding    max +0,0390 R    (36 von 43 Werten)
+            beide          max +0,1335 R    ( 7 von 43 Werten)
+
+        Eine Schwelle von 0,080 R waere fuer 36 von 43 Werten UNERREICHBAR -
+        sie waeren dauerhaft gesperrt, egal wie gut ihr Funding steht. Das
+        ist eine Sperre nach DATENLAGE, nicht nach Qualitaet (Regel 4).
+
+        ⚠️ DER MITTELWERT WAR DIE FALSCHE ANTWORT und ist gemessen
+        widerlegt (`messe_summe_gegen_mittel.py`, 31.08.): er benachteiligt
+        die DICHTE Datenlage. Ein Wert im besten Turnover-Fuenftel (+3,15)
+        und mittleren Funding (+0,12) kaeme auf +1,64 - schlechter als
+        einer, der NUR Turnover hat (+3,15). Mehr Information wuerde den
+        Wert senken.
+
+        DIE KONSTRUKTION: die Schwelle ist ein ANTEIL der bei dieser
+        Datenlage erreichbaren Spanne.
+
+            schwelle = Vorgabe x (erreichbar_max / erreichbar_voll)
+
+        Wer nur einen Beitrag hat, muss denselben ANTEIL seiner Spanne
+        schaffen wie einer mit zweien. Gerechnet am Stand 31.08.:
+
+            funding           max +0,0390 R  ->  Schwelle 0,0029 R
+            turnover          max +0,0945 R  ->  Schwelle 0,0071 R
+            funding+turnover  max +0,1335 R  ->  Schwelle 0,0100 R  (Vorgabe)
+
+        ⚠️ DIE VOLLE DATENLAGE BEHAELT DIE VORGABE - sie ist der Bezug, und
+        damit bleibt die Kalibrierung von `messe_schwelle_kalibrierung.py`
+        gueltig.
+
+        ⚠️ UND DER PREIS, offen benannt: ein Wert mit einem Beitrag bekommt
+        dieselbe Durchlasschance wie einer mit zweien, obwohl weniger ueber
+        ihn bekannt ist. Das ist eine Entscheidung fuer Erreichbarkeit und
+        gegen die Gewichtung von Sicherheit - Nutzervorgabe 31.08.: *„Wir
+        duerfen nicht davon ausgehen, dass wir eine 100-Prozent-Abdeckung
+        der Daten haben. Das System muss genauso mit 1, 2, 3 oder mehreren
+        Beitraegen arbeiten koennen."*
+        """
+        voll = self.erreichbar_voll
+        if voll <= 0:
+            return schwelle()
+        anteil = max(0.0, min(1.0, self.erreichbar_max / voll))
+        return schwelle() * anteil
+
+    @property
+    def traegt_hier(self) -> bool:
+        """Traegt dieses Potential gegen die Schwelle SEINER Datenlage?"""
+        return self.wert_r > self.schwelle
+
+    @property
     def vermessen(self) -> bool:
         """Ist diese ASSETKLASSE ueberhaupt vermessen worden?
 

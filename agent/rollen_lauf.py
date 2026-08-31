@@ -1818,11 +1818,30 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                 symbol, "entscheider",
                 "keine Datengrundlage - kein Beitrag bestimmbar")
             return
-        elif not _PT2.traegt(_potential.wert_r):
+        elif not _potential.traegt_hier:
+            # ⚠️⚠️ DIE SCHWELLE JE DATENLAGE (31.08.2026, Nutzerentscheidung).
+            #
+            # Hier stand `_PT2.traegt(_potential.wert_r)` - eine FESTE
+            # Schwelle fuer alle. Das Potential ist aber die SUMME der
+            # Beitragspunkte, und die Datenlage ist ungleich:
+            #
+            #     nur Funding    max +0,0390 R    36 von 43 Werten
+            #     beide          max +0,1335 R     7 von 43 Werten
+            #
+            # Eine feste Schwelle ueber 0,039 R waere fuer 36 von 43 Werten
+            # UNERREICHBAR gewesen - eine Sperre nach Datenlage statt nach
+            # Qualitaet (Regel 4). Gemessen an den echten Signalen: ab
+            # 0,040 R kam NICHTS mehr durch.
+            #
+            # `Potential.traegt_hier` misst gegen die Schwelle SEINER
+            # Datenlage - denselben ANTEIL der erreichbaren Spanne. Die
+            # volle Datenlage behaelt die Vorgabe als Bezug.
             durchlauf.verloren(
                 symbol, "entscheider",
-                "Potential %.3f R unter der Schwelle %.3f R"
-                % (_potential.wert_r, _PT2.schwelle()))
+                "Potential %.3f R unter der Schwelle %.3f R (Datenlage: "
+                "max %.3f R erreichbar)"
+                % (_potential.wert_r, _potential.schwelle,
+                   _potential.erreichbar_max))
             # ⚠️⚠️ G-6, ZWEITER TEIL (31.08.2026) - UND DER WICHTIGERE.
             #
             # `rollen_gate.NUR_ZAEHLEN = ()` allein aendert nur die

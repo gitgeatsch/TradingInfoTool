@@ -2247,6 +2247,40 @@ def paket_12c() -> None:
                "leer heisst 'gilt ueberall' - und das ist bei einem auf "
                "EINER Geometrie gemessenen Beitrag nie wahr. Die Messung "
                "steht in: " + _b.quelle[:70])
+    # ------------------------------------------------------------------
+    # ⚠️⚠️ DIE SCHWELLE JE DATENLAGE (31.08.2026)
+    #
+    # Das Potential ist die SUMME der Beitragspunkte. Wer nur einen Beitrag
+    # hat, erreicht hoechstens +0,039 R; wer beide hat, +0,1335 R. Eine
+    # feste Schwelle ueber 0,039 sperrt die duenne Datenlage DAUERHAFT -
+    # nach Datenlage statt nach Qualitaet.
+    # ------------------------------------------------------------------
+    _p_ein = _PTx.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                         instrument="spot", strategie="einstieg", h=None,
+                         merkmale={"funding_fuenftel": 1})
+    _p_zwei = _PTx.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                          instrument="spot", strategie="einstieg", h=None,
+                          merkmale={"funding_fuenftel": 1,
+                                    "turnover_fuenftel": 0})
+    pruefe(P, "⚠️ die Schwelle richtet sich nach der Datenlage",
+           _p_ein.schwelle < _p_zwei.schwelle,
+           "wer weniger Beitraege hat, kann weniger erreichen - und darf "
+           "nicht an derselben Zahl gemessen werden (%.4f gegen %.4f)"
+           % (_p_ein.schwelle, _p_zwei.schwelle))
+    pruefe(P, "und die VOLLE Datenlage behaelt die Vorgabe",
+           abs(_p_zwei.schwelle - _PTx.schwelle()) < 1e-9,
+           "sie ist der Bezug - sonst waere die Kalibrierung von "
+           "`messe_schwelle_kalibrierung.py` hinfaellig")
+    pruefe(P, "⚠️ das beste Fuenftel ist bei JEDER Datenlage erreichbar",
+           _p_ein.wert_r > _p_ein.schwelle and _p_zwei.wert_r > _p_zwei.schwelle,
+           "sonst waere die Sperre eine Aussage ueber unsere Datenlage, "
+           "nicht ueber den Wert (Regel 4)")
+    _q2 = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "und der Ablauf benutzt sie auch",
+           "_potential.traegt_hier" in _q2,
+           "eine Schwelle, die die Aufrufstelle nicht erreicht, ist "
+           "Dekoration")
+
     pruefe(P, "⚠️ und akkumulation gilt daher als NICHT vermessen",
            _WKx.vermessen("krypto", "einstieg")
            and not _WKx.vermessen("krypto", "akkumulation"),

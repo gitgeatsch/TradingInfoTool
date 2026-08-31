@@ -4084,6 +4084,96 @@ An der Quelle geprüft, wer sie befolgt:
 | `pruefe_assetklassen_datenlage.py` | Datenlage je Assetklasse — und seit 31.08. die Achse Klasse x Instrument x Strategie: welche Zelle traegt eine Bewertung, welche laeuft als Takt |
 | `messe_kandidaten_als_regel.py` | Die Kandidaten als REGEL ueber einen gemeinsamen Massstab — seit 31.08. mit `--horizonte` (H1..H20, die Hebel-Geometrie) und dem Schnittabstand als Kandidat |
 | `messe_summe_gegen_mittel.py` | B: traegt der MITTELWERT der Beitraege besser als ihre SUMME? Ergebnis 31.08.: **widerlegt** — das Mittel benachteiligt die dichtere Datenlage. ⚠️ Die Regelwirkung ist dort nicht messbar (Positivkontrolle versagt, Kennzahl mit 5 Stufen zu grob) |
+| `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
+| `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
+| `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |
+| `analyse_signal_blockade.py` | Wo bleiben die Signale haengen? - wiederverwendbares Analyse-Skript. |
+| `analyse_zonen_erwartungswert.py` | Welche Zonen-Charakteristik hatte tatsaechlich positive Erwartungswerte? |
+| `backtest_budget_allocator_sla.py` | Historischer Backtest (2026-07-21, Nutzer-Vorgabe "umfangreich testen vor |
+| `backtest_coingecko_marktscan_kosten.py` | Backtest (2026-08-01, Nutzer-Fund "CoinGecko-Tagesverbrauch zu hoch, |
+| `backtest_fakt_ablation.py` | Fakt-Ablation ueber die VOLLE Kurshistorie - die Replikation zu Stufe 4. |
+| `backtest_liquiditaetszonen.py` | Phase A (2026-07-24): validiert das Liquiditaetszonen-Konzept (Stufe 1, |
+| `backtest_regeln_29_07.py` | Die Regelwerksaenderungen vom 28./29.07. EINZELN gegen den Backtest (05.08.). |
+| `messe_b2_unabhaengigkeit.py` | B-2: WO sitzt der B-Schaden, und ist er eigenstaendig? (31.08.2026) |
+| `messe_bewertungskennzahl.py` | Die dritte Kategorie: traegt eine BEWERTUNGSkennzahl? (30.08.2026) |
+| `messe_bodenabstand.py` | Der ABSTAND ZUR NAECHSTEN UNTERSTUETZUNG als Beitrag (31.08.2026) |
+| `messe_drift_wiederholung.py` | S2 wiederholt: gibt es eine DRIFT? (29.08.2026) |
+| `messe_eigenschaft_beitrag.py` | Tragen Volumen und Groesse als EIGENSTAENDIGER Beitrag? (29.08.2026) |
+| `messe_fensterlaenge_selbstjustierung.py` | Wie traege soll die Selbstjustierung sein? (2026-08-04) |
+| `messe_fremdgroesse.py` | R-B: Traegt eine NICHT-KURS-Groesse als Bewertungsbeitrag? (30.08.2026) |
+| `messe_funding_niveau.py` | Funding in der RICHTIGEN Form: Niveau statt Veraenderung (30.08.2026). |
+| `messe_h3_totzone_und_kombination.py` | H-3: die Totzone — UND die Suche nach einer tragenden H-Nutzung (30.08.2026) |
+| `messe_h_als_filter.py` | Verwendung 4 — traegt H als KONDITIONALER FILTER? (30.08.2026) |
+| `messe_h_als_marktmerkmal.py` | Verwendung 3 — traegt H als MARKTMERKMAL? (30.08.2026) |
+| `messe_h_als_regel.py` | H als REGEL — die fehlende Prüfung (30.08.2026) |
+| `messe_h_anteil_vorlauf.py` | Sagt der H-ANTEIL voraus - oder beschreibt er nur? (30.08.2026) |
+| `messe_h_je_asset.py` | H als ZEITPUNKT-Merkmal je Asset — Verwendung 2 (30.08.2026) |
+| `messe_h_je_zeitabschnitt.py` | Traegt H im HEUTIGEN Markt noch? (30.08.2026) |
+| `messe_h_lagenregel.py` | Traegt die Regel "H nur ausserhalb des Baermarkts"? (30.08.2026) |
+| `messe_h_neu.py` | H-1 und H-2: traegt der RAUM NACH OBEN, stetig und in ATR? (30.08.2026) |
+| `messe_h_produktionsgeometrie.py` | Traegt H auf der PRODUKTIONS-Geometrie? (30.08.2026, Schritt 2) |
+| `messe_halten_ursache.py` | Welcher Fakt traegt das HALTEN? (2026-08-05, Punkt 1) |
+| `messe_konjunktion.py` | K-1: Traegt eine KOMBINATION, wo die Einzelteile nicht tragen? (29.08.2026) |
+| `messe_konjunktion_positivkontrolle.py` | Positivkontrolle zu K-1: WIE GROSS muss ein Effekt sein, damit wir ihn finden? |
+| `messe_lage_beitrag.py` | G-2': Traegt die LAGE des Assets als Einzeltrade-Beitrag? (29.08.2026) |
+| `messe_momentum_12_1.py` | Momentum in der STANDARDFORM: 12 Monate minus letzter Monat (30.08.2026). |
+| `messe_n7_kette.py` | V-0 / N-7: Traegt die heutige Rollen-Kette? (29.08.2026) |
+| `messe_n7_kette_korrigiert.py` | V-0 / N-7 KORRIGIERT: Traegt die heutige Rollen-Kette? |
+| `messe_regel_wirksamkeit.py` | Die fuenf Kandidaten als REGEL, nicht als Merkmal (30.08.2026). |
+| `messe_schwelle_kalibrierung.py` | Welche Potentialschwelle ist die richtige? (30.08.2026, U-1 Kalibrierung) |
+| `messe_schwelle_quotengleich.py` | Schwellen-Kalibrierung, richtig: gegen den QUOTENGLEICHEN Zufall. |
+| `messe_zielregel.py` | K-2: Schneidet die ZIELREGEL den Ertrag ab? (29.08.2026) |
+| `pruefe_abdeckung_watchlist.py` | Schritt 1, Machbarkeit: decken Funding und Turnover unsere Watchlist ab? |
+| `pruefe_assetdaten.py` | Gibt es ASSET-spezifische Nicht-Kurs-Daten - und liefern die Quellen Historie? |
+| `pruefe_bruchschwelle.py` | Wieviele Reihen sind betroffen - je nach Schwelle? |
+| `pruefe_btc_abflachung.py` | Ist der Kryptomarkt abgeflacht? (30.08.2026) |
+| `pruefe_coingecko_stand.py` | Wie steht das CoinGecko-Kontingent diesen Monat wirklich? |
+| `pruefe_coinmetrics_umfang.py` | Welche Coin-Metrics-Metriken sind frei, fuer wieviele UNSERER Symbole? |
+| `pruefe_datenqualitaet.py` | Sind die Extremwerte in messdaten.db echt oder Datenfehler? (29.08.2026) |
+| `pruefe_defillama_historie.py` | Liefert DefiLlama die TVL-HISTORIE mit - oder nur den Tagesstand? |
+| `pruefe_funding_befund.py` | Gegenpruefung zum Funding-Befund (30.08.2026). |
+| `pruefe_funding_historie.py` | Liefert Binance die FUNDING-Historie rueckwirkend? |
+| `pruefe_funding_je_reihe.py` | Funding in der JE-REIHE-Sicht (30.08.2026). |
+| `pruefe_funding_marktphase.py` | Haelt der QUERSCHNITTS-Befund auch je Marktphase? (30.08.2026) |
+| `pruefe_funding_monoton.py` | V4 richtig gerechnet: die Fuenftel JE TAG, nicht gepoolt. |
+| `pruefe_funding_survivorship.py` | V3: ist der Funding-Befund ein Auswahleffekt? |
+| `pruefe_funding_wirksamkeit.py` | WIRKSAMKEIT statt Merkmalsmessung (30.08.2026). |
+| `pruefe_h_kette_von_grund_auf.py` | Stimmt die H-Messkette ueberhaupt? Von Grund auf (31.08.2026) |
+| `pruefe_h_original_reproduziert.py` | Die ORIGINALMESSUNG von H, frisch gerechnet - und mit Klammer (31.08.2026) |
+| `pruefe_h_tageseffekt.py` | Ist H ein TAGES-Signal statt eines Asset-Signals? (30.08.2026) |
+| `pruefe_konjunktion_befund.py` | Stufe 2: die Gegenpruefungen zum K-1-Befund (29.08.2026). |
+| `pruefe_makro_bestand.py` | Was steht in macro_snapshot - und ist es messbar? |
+| `pruefe_marktrang.py` | Pruefung fuer agent/marktrang.py (30.08.2026, G-2' Schritt 1). |
+| `pruefe_massstab_unterschied.py` | Warum +0,18 R gegen +0,024 R? Die Klaerung. (30.08.2026) |
+| `pruefe_mctvl_befund.py` | Gegenpruefung zum MC/TVL-Befund (30.08.2026). |
+| `pruefe_messwerkzeug_bodenabstand.py` | Prueft `messe_bodenabstand.py` gegen kuenstliche Daten (31.08.2026) |
+| `pruefe_messwerkzeug_h3.py` | Prueft `messe_h3_totzone_und_kombination.py` (30.08.2026) |
+| `pruefe_messwerkzeug_h_neu.py` | Prueft `messe_h_neu.py` gegen KUENSTLICHE Daten (30.08.2026) |
+| `pruefe_messwerkzeug_h_produktion.py` | Prueft das MESSWERKZEUG, nicht die Daten (30.08.2026) |
+| `pruefe_momentum_trennschaerfe.py` | Wie scharf ist die Momentum-Messung? Ohne diese Zahl ist der Nullbefund wertlos. |
+| `pruefe_nb_betrieb.py` | Was sagt der NB-Export zu den offenen Betriebsfragen? (30.08.2026) |
+| `pruefe_nb_details.py` | Die Details zu TVL-Sammlung, Funding-Sammlung und Kontingent. |
+| `pruefe_nichtkurs_bestand.py` | R-B Schritt 1: welche NICHT-Kurs-Daten sammelt das System wirklich? |
+| `pruefe_ohne_widerstand.py` | Ist "kein Widerstand oberhalb" ein Befund - oder nur Volatilitaet? (30.08.2026) |
+| `pruefe_quellen2.py` | Zweiter Anlauf: der richtige Community-Endpunkt, und Historie bei Gebuehren. |
+| `pruefe_quellen_optionen.py` | R-B Schritt 1b: welche weiteren Quellen liefern ASSET-Daten mit Historie? |
+| `pruefe_regel_trennschaerfe.py` | Die Trennschaerfe der Regel-Messung, richtig gebaut (30.08.2026). |
+| `pruefe_schwelle_gegenpruefung.py` | Gegenpruefung zur Schwellen-Kalibrierung (30.08.2026). |
+| `pruefe_short_ursache.py` | Warum empfiehlt LLM1 seit dem 31.07. mehrheitlich SHORT? (05.08.) |
+| `pruefe_sperrquote_wirkung.py` | Woher kommt der Faktor 8? Die vollstaendige Klaerung. (30.08.2026) |
+| `pruefe_turnover_befund.py` | Gegenpruefung zum Turnover-Befund (30.08.2026). |
+| `pruefe_turnover_und_kombination.py` | Turnover: Survivorship aufloesen, und wirkt er ZUSAETZLICH zu Funding? |
+| `pruefe_tvl_abdeckung.py` | Wieviele UNSERER Symbole haben ueberhaupt TVL bei DefiLlama? |
+| `pruefe_u1_wirkung.py` | Was aendert U-1 an der DURCHLASSQUOTE? Eindeutig gerechnet. (30.08.2026) |
+| `pruefe_wahrscheinlichkeit_bitgleich.py` | Bitgleichheitstest fuer wahrscheinlichkeit.py (30.08.2026, G-2' Schritt 2a). |
+| `pruefe_zielregel_befund.py` | Gegenpruefung zu K-2 — zwei Verdachtsmomente in der eigenen Messung. |
+| `pruefe_zielregel_robust.py` | K-2 nach der Bereinigung: ist der Rest robust? (29.08.2026) |
+| `pruefe_zielweite.py` | R-A: Traegt ein WEITERES Ziel? (30.08.2026) |
+| `rechne_funding_beitrag.py` | G-2': wieviele PUNKTE traegt Funding je Fuenftel? (30.08.2026) |
+| `rechne_turnover_beitrag.py` | G-2': wieviele PUNKTE traegt Turnover je Fuenftel? (30.08.2026, 2e) |
+| `simuliere_h_varianten.py` | Was passiert im SYSTEM, wenn H sich aendert? (30.08.2026, H-1/H-2) |
+| `zerlege_h_widerspruch.py` | Warum ist H gepoolt POSITIV und je Zeitblock NEGATIV? (30.08.2026) |
+| `zerlege_verlustquellen.py` | Wo sitzt der Verlust? Zerlegung nach Ebenen, ohne einen LLM-Aufruf. |
 
 ⚠️ **Die vier mit festen Grenzen sind genau die, die die heute gültigen
 H-Urteile erzeugt haben** — Kap. 117 (Dosis), 119 (H trägt, +4,5 gegen +2,6),
