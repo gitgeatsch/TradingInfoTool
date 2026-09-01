@@ -15682,6 +15682,61 @@ def paket_zellen() -> None:
                                 and isinstance(c.func, _ast.Attribute)
                                 and c.func.attr == "verloren"
                                 for c in _ast.walk(_k)))
+    # ---- SCHRITT 6 / I-2: `hebel x akkumulation` ENTSTEHT NICHT MEHR ----
+    #
+    # ⚠️ Bis zum 01.09. wurde der Konflikt HINTERHER gemeldet: der Lauf
+    # schrieb *„ACHTUNG: ETH laeuft als akkumulation, die Rechnung ergibt
+    # aber das Etikett 'hebel'"*. Die Begruendung fuer Melden statt Sperren
+    # lautete: *„Ein Abbruch naehme dem Kern seine Meldung."*
+    #
+    # Seit Schritt 3+4 ist das hinfaellig: der Kern hat eine ZWEITE Zelle
+    # (die taktische), und dorthin gehoert der Hebel. Die Akkumulation
+    # verliert nichts, wenn sie ihn nicht bekommt - also entsteht das Paar
+    # gar nicht erst.
+    from agent.handelsauftrag import (hebel_erlaubt_fuer as _HEB,
+                                      ERLAUBTE_PAARE as _EP)
+    pruefe(P, "`hebel_erlaubt_fuer` liest die Paar-Matrix, keine zweite Liste",
+           _HEB("einstieg") and _HEB("swing")
+           and not _HEB("akkumulation")
+           and set(_EP["hebel"]) == {s for s in ("einstieg", "swing",
+                                                 "akkumulation")
+                                     if _HEB(s)},
+           "die Antwort MUSS deckungsgleich mit `ERLAUBTE_PAARE['hebel']` "
+           "sein - eine eigene Aufzaehlung waere die naechste Stelle zum "
+           "Auseinanderlaufen. Matrix: %s" % (_EP["hebel"],))
+    pruefe(P, "ein unlesbarer Wert heisst NICHT erlaubt",
+           not _HEB("") and not _HEB(None) and not _HEB("unbekannt"),
+           "dieselbe Linie wie in `asset_schalter`: ein Lesefehler darf "
+           "nichts einschalten, was nicht vorgesehen ist")
+    # ⚠️ DIE WIRKUNG, nicht nur die Verdrahtung: dieselbe Lage, einmal mit
+    # und einmal ohne Hebelerlaubnis.
+    from agent import entscheidungsrechnung as _ER6
+    _mit = _ER6.dimensioniere(kurs=100.0, atr=6.0, k=0.75, verlustanteil=0.25,
+                              einsatz_eur=800.0, hebel_handelbar=True)
+    _ohne = _ER6.dimensioniere(kurs=100.0, atr=6.0, k=0.75, verlustanteil=0.25,
+                               einsatz_eur=800.0, hebel_handelbar=False)
+    pruefe(P, "ohne Hebelerlaubnis entsteht kein Hebel-Etikett",
+           _mit["etikett"] == "hebel" and _mit["hebel"] > 1.0
+           and _ohne["etikett"] == "spot" and _ohne["hebel"] == 1.0,
+           "dieselbe Lage: mit Erlaubnis %s/%.2f, ohne %s/%.2f. Waere die "
+           "Zeile wirkungslos, saehe man hier zweimal dasselbe"
+           % (_mit["etikett"], _mit["hebel"], _ohne["etikett"], _ohne["hebel"]))
+    # ⚠️ UND BEIDE RECHNUNGEN MUESSEN DIESELBE ANNAHME HABEN. Bekaeme die
+    # VORABrechnung keinen Hebel und die ECHTE doch, liefen sie auseinander -
+    # der Trichter zeigte auf eine Zelle, die die Mail anders rechnet.
+    _stellen = _quelle.count("_HA_HEBEL_OK(strategie)")
+    pruefe(P, "beide Rechnungen fragen die Strategie - `dimensioniere` UND "
+              "`rechne`",
+           _stellen == 2,
+           "gefunden an %d Stellen, erwartet 2. Eine Rechnung mit und eine "
+           "ohne Hebelerlaubnis waeren zwei verschiedene Trades unter einem "
+           "Namen" % _stellen)
+    pruefe(P, "die alte I-2-MELDUNG bleibt als Waechter stehen",
+           "ein Paar, das die Matrix ausschliesst" in _quelle,
+           "sie ist ab jetzt strukturell unerreichbar - schlaegt sie doch "
+           "noch an, ist etwas anderes kaputt. Eine Meldung zu loeschen, "
+           "weil ihr Fall behoben ist, nimmt dem naechsten Fehler den Melder")
+
     pruefe(P, "und sie faellt heraus, wenn die Rechnung keinen Hebel ergibt",
            _hat_abbruch,
            "Nutzerentscheidung 01.09.: 'nur wenn die Rechnung tatsaechlich "

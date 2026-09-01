@@ -48,6 +48,9 @@ from datetime import datetime, timezone
 # aus dem Memory ("dreimal in zwei Tagen"), und der breite Fehlerfang haette
 # den UnboundLocalError still geschluckt.
 from agent import assetklassen as _AKL
+# ⚠️ EIGENER NAME, keine Abkuerzung, die woanders belegt ist - der
+# Namensschatten aus T4c hat dieses Projekt schon achtmal gekostet.
+from agent.handelsauftrag import hebel_erlaubt_fuer as _HA_HEBEL_OK
 
 logger = logging.getLogger(__name__)
 
@@ -1639,7 +1642,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # DAVOR steht, waere es ein UnboundLocalError gewesen - den der
             # breite Fehlerfang darunter still geschluckt haette. Dieselbe
             # Falle wie `_LB` am 20.08. und `assetklasse` am 14.08.
-            hebel_handelbar=_AKL.hebel_handelbar(assetklasse))
+            # ⚠️⚠️ SCHRITT 6 / I-2 (01.09.2026): DIE STRATEGIE ENTSCHEIDET
+            # MIT. `hebel_handelbar(assetklasse)` beantwortet nur die halbe
+            # Frage - *„ist Hebel bei Krypto handelbar?"*. Die andere Haelfte
+            # ist *„und passt er zu DIESER Strategie?"*, und fuer
+            # `akkumulation` lautet sie NEIN (Finanzierung kostet jeden Tag,
+            # die Strategie laeuft bewusst lange).
+            #
+            # Bis hierher entstand `hebel x akkumulation` und wurde HINTERHER
+            # gemeldet. Jetzt entsteht es nicht mehr.
+            hebel_handelbar=(_AKL.hebel_handelbar(assetklasse)
+                             and _HA_HEBEL_OK(strategie)))
         # ⚠️ S6b: DER TOPF FOLGT DEM ERGEBNIS, NICHT DEM LAUF. Der zweite
         # Zweig (`"spot" if instrument == "hebel"`) war die Ruecknahme des
         # Lauf-Etiketts, wenn die Rechnung keinen Hebel ergab - es gibt
@@ -1785,7 +1798,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # DER LAUF. Seit S6b heisst `instrument` fuer
                              # Krypto immer "spot" - ohne diese Zeile ergibt
                              # die Rechnung nie wieder einen Hebel.
-                             hebel_handelbar=_AKL.hebel_handelbar(assetklasse),
+                             # ⚠️ SCHRITT 6 / I-2: dieselbe Bedingung wie
+                             # oben in `dimensioniere` - sonst ergaebe die
+                             # VORABrechnung keinen Hebel und die ECHTE
+                             # doch. Zwei Rechnungen mit verschiedenen
+                             # Annahmen sind die naechste Stelle zum
+                             # Auseinanderlaufen.
+                             hebel_handelbar=(
+                                 _AKL.hebel_handelbar(assetklasse)
+                                 and _HA_HEBEL_OK(strategie)),
                              stop_min_atr=BE.stop_min_atr(config),
                              # S2, Kapitel 90: die Marke auf der
                              # STOPSEITE. Sie liegt vorerst ungenutzt im

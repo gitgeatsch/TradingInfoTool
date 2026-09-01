@@ -159,6 +159,45 @@ def pruefe(instrument: str, strategie: str) -> tuple[str, str]:
     return i, s
 
 
+def hebel_erlaubt_fuer(strategie: str) -> bool:
+    """Darf DIESE Strategie ueberhaupt gehebelt werden? (I-2, 01.09.2026)
+
+    ⚠️ AUS DER PAAR-MATRIX, NICHT AUS EINER ZWEITEN LISTE. `ERLAUBTE_PAARE`
+    ist die eine Quelle; wer hier eine eigene Aufzaehlung baute, haette die
+    naechste Stelle geschaffen, an der beide auseinanderlaufen.
+
+    ## Wozu es gebraucht wird
+
+    `entscheidungsrechnung` bekommt bisher `hebel_handelbar` aus der GRUPPE
+    (`assetklassen.hebel_handelbar`) - also die Antwort auf *„ist Hebel bei
+    Krypto ueberhaupt handelbar?"*. Die zweite Haelfte der Frage fehlte:
+    *„und passt er zu dieser Strategie?"*
+
+    Fuer `akkumulation` ist die Antwort NEIN, und zwar aus einem Grund, der
+    im Kopf von `ERLAUBTE_PAARE` steht: die Finanzierung kostet JEDEN Tag,
+    und eine Strategie, die bewusst lange laeuft, zahlt genau diese Kosten
+    am laengsten.
+
+    ## ⚠️ Warum das der richtige Ort ist - und die Meldung nicht reichte
+
+    Seit dem 28.08. wurde der Konflikt GEMELDET (I-2): der Lauf schrieb
+    *„ACHTUNG: ETH laeuft als akkumulation, die Rechnung ergibt aber das
+    Etikett 'hebel'"*. Die Begruendung fuer Melden statt Sperren lautete
+    damals: *„Ein Abbruch naehme dem Kern seine Meldung."*
+
+    **Diese Begruendung ist seit Schritt 3+4 (01.09.) hinfaellig.** Ein
+    Kern-Asset hat jetzt ZWEI Zellen: die Akkumulation und die taktische.
+    Der Hebel gehoert in die taktische; die Akkumulation verliert nichts,
+    wenn sie ihn nicht bekommt. Das verbotene Paar muss deshalb nicht mehr
+    hinterher gemeldet werden - es kann von vornherein nicht ENTSTEHEN.
+
+    ⚠️ Die Meldung bleibt trotzdem stehen. Sie ist ab jetzt ein WAECHTER:
+    schlaegt sie noch einmal an, ist etwas anderes kaputt.
+    """
+    return str(strategie or "").strip().lower() in ERLAUBTE_PAARE.get(
+        "hebel", ())
+
+
 def mit_kursen(instrument: str, strategie: str) -> bool:
     """Werden Einstiegskurs und Stop ueberhaupt gebraucht?"""
     return _MIT_KURSEN.get((instrument, strategie), True)
