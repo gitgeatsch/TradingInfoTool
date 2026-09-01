@@ -557,6 +557,28 @@ def main() -> int:
                          or {}).items():
             if len(_st or ()) > 1:
                 gesamt["mehrzellig_gesehen"] = True
+        # ⚠️ SCHRITT 7 NACHWEISEN - JE LAUF, NICHT JE MAIL.
+        #
+        # Mein erster Anlauf zaehlte die gefuehrten Positionen INNERHALB der
+        # Mail-Schleife. Produziert eine Gruppe keine Mail (der Krypto-Lauf
+        # der Simulation liefert 0 Signale), laeuft die Schleife nie - und
+        # die Simulation meldete "KEINE Position gefuehrt", obwohl der Lauf
+        # welche gefuehrt hatte. Die Meldung war richtig formuliert und zeigte
+        # auf die falsche Ursache.
+        #
+        # ⚠️ Zweite Instanz derselben Falle an einem Tag: die Zellen hatte ich
+        # zuerst genauso falsch gezaehlt. Ein Zaehler gehoert dorthin, wo die
+        # gezaehlte Sache ENTSTEHT - nicht dorthin, wo sie angezeigt wird.
+        _pf = e.get("positionsfuehrung") or {}
+        print("    Positionsfuehrung: %s gefuehrt, %s im Bestand · "
+              "Ausstiege %d · Sammelmail %s"
+              % (_pf.get("gefuehrt", "-"), _pf.get("im_bestand", "-"),
+                 len(e.get("ausstiege") or []),
+                 "ja" if any(m.get("symbol") == "(Sammel)"
+                             for m in (e.get("mails") or [])) else "NEIN"))
+        if _pf.get("im_bestand"):
+            gesamt["positionen_gefuehrt"] = (
+                gesamt.get("positionen_gefuehrt", 0) + _pf["im_bestand"])
         print(f"    Signale {len(e.get('signale') or [])}  "
               f"Mails {len(e.get('mails') or [])}  "
               f"Fehler {len(e.get('fehler') or [])}")
@@ -582,6 +604,31 @@ def main() -> int:
             # zusammen; ein Verlauf- oder Gegenpruefungsblock waere dort
             # sinnlos. Meine erste Fassung hat sie mitgezaehlt und zwei
             # Luecken gemeldet, die keine sind.
+            # ⚠️⚠️ SCHRITT 7 WIRD HIER GEPRUEFT - VOR DEM UEBERSPRINGEN.
+            #
+            # Die Positionsfuehrung steht ausschliesslich in der SAMMELMAIL,
+            # und die wird zwei Zeilen weiter uebersprungen ("Sammelmails
+            # haben keine Asset-Bloecke"). Mein erster Haken sass DAHINTER
+            # und sah die Sammelmail nie - die Simulation meldete deshalb
+            # "keine Mail nennt sie", obwohl die Mail sie nannte.
+            #
+            # ⚠️ DRITTE INSTANZ DERSELBEN FALLE AN EINEM TAG: der Zaehler
+            # stand erst in der Mail-Schleife statt am Lauf, die Zellen
+            # ebenso, und jetzt dieser Haken hinter einem `continue`.
+            # Merksatz: bevor eine Pruefung "nicht gefunden" meldet, ist zu
+            # klaeren, ob sie ueberhaupt HINSEHEN konnte.
+            if "WAS SIE HALTEN" in text:
+                gesamt["positionen_gesehen"] = True
+                if not gesamt.get("_pf_gezeigt"):
+                    # ⚠️ DER BELEG, EINMAL JE LAUF: der Abschnitt so, wie er in der
+                    # fertigen Mail steht. Eine Pruefung, die nur "gefunden" meldet,
+                    # laesst offen, WAS sie gefunden hat.
+                    gesamt["_pf_gezeigt"] = True
+                    _ab = text[text.index("WAS SIE HALTEN"):]
+                    print("")
+                    print("    --- SCHRITT 7 IN DER FERTIGEN MAIL ---")
+                    for _z in _ab.split(chr(10))[:9]:
+                        print("    " + _z)
             if str(eintrag.get("symbol") or "").lower().startswith("(sammel"):
                 continue
             # ⚠️ JEDE MAIL, NICHT NUR DIE, DIE ICH GEBAUT HABE
