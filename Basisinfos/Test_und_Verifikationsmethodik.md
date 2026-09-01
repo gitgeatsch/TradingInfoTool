@@ -4088,6 +4088,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_form_kurz_gegen_lang.py` | **H-1**: trennt eine Groesse STEIL-KURZ (H3) von FLACH-LANG (H20)? Wahl-Regel gegen quotengleichen Zufall, Tagesklammer, bruchbereinigt, mit `--selbsttest` gegen Kunstdaten. Ergebnis 01.09.: **kein Kursreihen-Kandidat trennt** — ⚠️ Aufloesung nur fuer Effekte ab ~0,5 R |
 | `messe_form_kurz_gegen_lang.py --ziel=frontloading` | **H-4a/H-4b**: welcher Anteil der Bewegung faellt in die ersten 3 Tage? VorzeichenLOSE Zielgroesse `|R_kurz|/(|R_kurz|+|R_rest|)` — die praxiskonforme Frage, weil der Terminmarkt Ausmass und Tempo vorhersagt, nicht die Richtung. Ergebnis 01.09.: **vier Groessen tragen** (turnover, vola, momentum_kurz, funding_extrem), ⚠️ **aber nur +1,0 bis +3,2 Punkte** — zu klein fuer eine Instrumentwahl |
 | `messe_form_kurz_gegen_lang.py --ziel=seitwaerts` | **S-1**: sagt ein etabliertes Trend/Range-Mass die kommende Effizienz-Ratio (Kaufman) voraus? Kandidaten: ER rueckwaerts, ADX (Wilder), Choppiness, Varianzverhaeltnis (Lo/MacKinlay). Ergebnis 01.09.: **keiner traegt** (max +1,5 Punkte). ⚠️ Der BEFUND ist die Basisrate: **65,5 % aller 20-Tage-Fenster sind seitwaertser als ein Zufallspfad**, und nur 20,9 % liefern netto +2,0 R |
+| `hole_terminmarkt_historie.py` | Holt die Terminmarkt-Kennzahlen aus dem **oeffentlichen Binance-Archiv** (`data.binance.vision`): Open Interest, OI-Wert und **vier Long/Short-Verhaeltnisse**, ab 2021, 5-Minuten-Raster. Verdichtet auf **1 Stunde** (letzter Wert je Stunde - OI ist ein BESTAND) in eine **eigene** Datei `data/terminmarkt_historie.db`. Wiederaufnehmbar; 404 heisst 'vor der Listung', nicht 'Fehler'. ⚠️ **Damit ist H-4c JETZT messbar statt 2028** |
 | `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
 | `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
 | `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |
@@ -4712,6 +4713,36 @@ Binance   /futures/data/openInterestHist   nur 30 Tage  <- echte Grenze
 
 **Regel:** Eine Wartezeit ist erst dann eine Tatsache, wenn ein Abruf sie
 belegt.
+
+### ⚠️⚠️ DRITTE INSTANZ AM 01.09.2026 — und diesmal war es teurer
+
+Am 01.09. hiess es: *„H-4c (OI als Beitrag) ist vor 2028 nicht belastbar
+messbar."* Die Rechnung dahinter stimmte — unsere EIGENE Sammlung laeuft
+seit dem 14.07. und braeuchte rund 600 Kalendertage fuer 20 Bloecke.
+
+**Die Rechnung war richtig und die Schlussfolgerung falsch.** Der Nutzer
+fragte nach (*„kannst du den OI-Beitrag nicht anderweitig beschaffen bzw.
+recherchieren, was wir machen koennen"*), und eine einzige HEAD-Anfrage
+zeigte: Binance veroeffentlicht die Kennzahlen als oeffentliches Archiv,
+**ab 2021, im 5-Minuten-Raster, kostenlos** — inklusive vier Long/Short-
+Verhaeltnissen, die wir noch nie hatten.
+
+| Datum | Behauptete Wartezeit | Tatsaechlich verfuegbar |
+|---|---|---|
+| 30.08. | TVL „ab 18.09." | DefiLlama: 6–8 Jahre |
+| 30.08. | Funding „ab 22.10." | Binance: 7,0 Jahre |
+| **01.09.** | **OI „ab 2028"** | **Binance-Archiv: ab 2021** |
+
+⚠️ **Die Regel stand seit dem 30.08. im Dokument und wurde beim dritten Mal
+wieder nicht angewandt.** Deshalb jetzt als Handgriff, nicht als Vorsatz:
+
+> **Bevor eine Wartezeit in einen Plan geschrieben wird, wird EINE Anfrage
+> an ein mögliches Archiv gestellt.** Der eigene Sammelbeginn ist kein
+> Historie-Endpunkt — er ist nur der Beginn der eigenen Sammlung.
+
+⚠️ **Und die zweite Haelfte:** Es ist ein Unterschied, ob eine Quelle einen
+MOMENTAUFNAHME-Endpunkt hat (den unsere Module abrufen) oder ein ARCHIV
+(das niemand abgerufen hat). Alle drei Faelle waren von dieser Art.
 
 ## 2.91 ⚠️ DIE CHECKLISTE — vor jeder Messung durchgehen
 
