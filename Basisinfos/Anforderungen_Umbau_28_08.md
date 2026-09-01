@@ -425,6 +425,81 @@ Dieselben 523 Messreihen, nur andere Horizonte.
 | **7** | **Spot-Positionsführung verdrahten** + `instrument`-Filter reparieren | mittel | 268 Führungen → 43 Positionen |
 | **8** | **Altbestand abgrenzen** | klein | |
 
+## ⚠️⚠️ N-13: EIN NEU AUFGENOMMENER WERT IST NICHT BEWERTBAR (01.09.2026)
+
+**Nutzerauftrag, der es aufdeckte:** *„Prüfe, wenn wir neue Assets
+hinzufügen, muss das System auch funktionieren — also prüfe, wie das System
+funktioniert und ob für neue Werte die Bewertungen ebenfalls geladen werden
+oder vorgeladen sind."*
+
+**Am Code geprüft. Was ein neu aufgenommener Wert automatisch bekommt:**
+
+| | Quelle | automatisch? |
+|---|---|---|
+| Kursreihe | `refresh_prices_job`, `refresh_ohlc_job` | ✔ **ja** |
+| **Funding** | `hole_fremdreihen.py` | ✖ **nur von Hand** |
+| **Umlaufmenge** | `hole_umlaufmenge.py` | ✖ **nur von Hand** |
+| Historie rückwärts | `lade_historie_nach.py` | ✖ nur von Hand |
+
+⚠️ **Funding und Turnover sind die EINZIGEN zwei tragenden Beiträge.** Fehlen
+beide, ist `potential.bewertbar` falsch, und Stufe 11 verwirft mit *„keine
+Datengrundlage"*. **Ein neu aufgenommener Wert erzeugt also nie ein Signal,
+bis jemand drei Skripte von Hand startet.**
+
+✔ **Immerhin nicht still:** der Trichter nennt den Grund, und die Modulkarte
+führt die drei Werkzeuge. Aber es steht nirgends, dass sie beim Aufnehmen
+eines Werts zu laufen haben.
+
+### N-13a — Der Turnover-Engpass, und er ist gelöst
+
+**Gemessen:** Turnover ist heute für **6 von 43** Krypto-Werten bestimmbar.
+Ursache: `api/onchain.py` liest die **CoinMetrics Community-API**, und die
+deckt einen festen Bestand von **66 überwiegend älteren** Werten ab
+(1INCH, AAVE, ADA, …). TAO, SUI, SEI, KAS, ONDO, RENDER stehen nicht darin.
+
+⚠️ **Damit steht bei 86 % der Krypto-Werte das Potential auf EINEM Beitrag.**
+
+**An der Quelle geprüft — CoinGecko liefert es vollständig:**
+
+    /coins/markets?ids=…  ->  43 von 43 mit `circulating_supply`
+                              EINE Anfrage, `total_volume` kommt mit
+    /coins/{id}/market_chart  ->  Umlaufmenge = Marktkap. / Preis,
+                              365 Tage (länger nur mit Schlüssel: HTTP 401)
+
+**Alle 43 Watchlist-Werte haben bereits eine CoinGecko-ID** — die Quelle ist
+schon im System.
+
+⚠️ **Die Unterscheidung, auf die es ankommt:** Zum ANWENDEN des Beitrags
+genügt der HEUTIGE Wert (`turnover_fuenftel` ist ein Querschnittsrang). Zum
+MESSEN braucht es Historie — und die ist bereits erledigt, auf
+`messdaten.db` und den 66 CoinMetrics-Reihen. **Der Engpass ist also die
+Anwendung, nicht die Messung**, und eine einzige Anfrage je Tag behebt ihn.
+
+### N-13b — Und die Bauform künftiger Beiträge
+
+**Gemessen am 01.09.:** Die elf Werte ohne Binance-Perpetual sind die
+**jüngeren** — Median-Alter der Kursreihe **496 gegen 1.113 Tage**.
+
+| Ein morgen aufgenommener Wert | Querschnitt | Zeitreihe |
+|---|---|---|
+| mit Perpetual | ✔ **ab Tag 1** | ✖ ab Tag 250 |
+| ohne Perpetual | ✖ nie | ✖ nie |
+
+⚠️ **Folge: der OI-Beitrag gehört als QUERSCHNITTSRANG gebaut**, nicht als
+Zeitreihen-Extremum — sonst ist er bei neuen Werten doppelt blind. Das
+trifft rückwirkend auch `funding_extrem` aus H-4b (250 Tage nachlaufend,
+und mit +1,0 Punkten ohnehin der schwächste der vier Kandidaten).
+
+### Die Schritte
+
+| # | | Größe |
+|---|---|---|
+| **N-13-1** | **Umlaufmenge aus CoinGecko** statt CoinMetrics — eine Anfrage je Tag, 43 von 43 | klein |
+| **N-13-2** | **Ein Job für neue Werte**: erkennt einen Wert ohne Beitragsdaten und holt Funding + Menge nach, statt auf einen Handgriff zu warten | mittel |
+| **N-13-3** | Beim Bau jedes neuen Beitrags: **Querschnitt vor Zeitreihe**, sonst begründen | Regel |
+
+---
+
 ### ✔ STAND 01.09.2026 — SIEBEN VON ACHT SCHRITTEN SIND GEBAUT
 
 | # | Schritt | Stand | Nachweis |

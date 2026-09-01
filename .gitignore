@@ -127,3 +127,4 @@ messwerte_ausstieg.json
 
 # Terminmarkt-Historie: eigene Datei wie die uebrigen Messreihen, nicht ins Repo
 data/terminmarkt_historie.db
+data/terminmarkt_historie.db-journal
