@@ -649,7 +649,102 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         ergebnis.setdefault("warnungen", []).append(_warnung)
         ergebnis["marktrang"]["totalausfall"] = True
 
-    for symbol in symbole:
+    # ---- SCHRITT 3: DIE SCHLEIFE LAEUFT UEBER ZELLEN (01.09.2026) -------
+    #
+    # Nutzervorgabe 31.08.: *„Asset z. B. LINK kommt in die Bewertung -
+    # entweder es kommt nur eine Strategie in Frage, weil dies die Bewertung
+    # ergibt, oder u. U. beides, Akkumulation und Hebel, aber nur wenn die
+    # Bewertung dies zulaesst."*
+    #
+    # Bis hierher bekam ein Asset GENAU EINE Strategie: `strategie_fuer`
+    # waehlte sie, und ein Kern-Asset wurde damit nur akkumuliert ODER nur
+    # eingestiegen - nie beides. Jetzt liefert `assetklassen.zellen()` je
+    # Asset die zulaessigen Paare, und die Schleife laeuft ueber sie.
+    #
+    # ⚠️ DIE ZELLEN KOMMEN AUS DER EINEN QUELLE. `zellen()` liest die
+    # Paar-Matrix und die beiden Nutzerschalter (`hebel_pruefung_erlaubt`,
+    # `dca_erlaubt`) - eine zweite Liste hier waere die naechste, die einen
+    # Schalter vergisst.
+    #
+    # ⚠️ UND SIE WIRD AUF DAS INSTRUMENT DIESES LAUFS GEFILTERT. Fuer Krypto
+    # liefert `laeufe()` seit S6b nur "spot"; Hebelzellen fallen damit von
+    # selbst heraus - und das ist richtig so: gebuehrenfrei liefert
+    # `hebel x einstieg` dasselbe Potential wie `spot x einstieg` (F-163,
+    # gemessen 01.09.), es waere also ein ZWEITES, identisches Signal. Der
+    # Hebel entsteht weiterhin dort, wo er hingehoert - in der Rechnung
+    # (`hebel = verlustanteil / stop_rel`) und am Freigabeschalter.
+    #
+    # ⚠️⚠️ GESAMMELT WIRD DIE STRATEGIE, NICHT DAS INSTRUMENT (01.09.2026,
+    # Nutzerklaerung). Das Instrument einer Zelle ist ein WUNSCH; welches
+    # es wird, faellt aus der Rechnung an - Kapitel 88, *„Hebel als Ergebnis
+    # statt als Kategorie"*.
+    #
+    # Meine erste Fassung filterte `_z["instrument"] != instrument` und warf
+    # damit alle Hebelzellen weg. Das war fuer LINK richtig (dort ist
+    # `hebel x einstieg` dieselbe Frage wie `spot x einstieg`, nur anders
+    # ausgefuehrt) und fuer BTC FALSCH: dort ersetzt die Akkumulation den
+    # Spot-Einstieg, und `hebel x einstieg` waere die EINZIGE taktische
+    # Kauffrage. Genau das steht seit dem 28.08. als A2 im Plan: *„Ein
+    # Kern-Asset soll beides koennen - langfristig aufbauen und kurzfristig
+    # gehebelt handeln. Das sind zwei Positionen, zwei Horizonte, zwei
+    # Fragen."*
+    #
+    # Ueber die Strategie zu sammeln loest beides auf:
+    #
+    #     BTC  (dca an)   -> {akkumulation, einstieg}   zwei Fragen
+    #     LINK (dca aus)  -> {einstieg}                 eine Frage
+    _zellen_je_symbol: dict = {}
+    try:
+        for _z in _AKL.zellen(_wl, conn):
+            _vorhandene = _zellen_je_symbol.setdefault(_z["symbol"], [])
+            if _z["strategie"] not in _vorhandene:
+                _vorhandene.append(_z["strategie"])
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Zellen nicht bestimmbar - Rueckfall auf eine "
+                         "Strategie je Asset")
+        _zellen_je_symbol = {}
+
+    # ⚠️ DIE REIHENFOLGE IST FESTGELEGT, NICHT ZUFAELLIG: `einstieg` zuerst.
+    # Das Modellurteil wird EINMAL je Asset geholt (Schritt 4) und von der
+    # zweiten Zelle wiederverwendet; geholt wird es mit der Einstiegsfrage,
+    # weil die die Obermenge ist (sie fragt Einstieg und Stop, die
+    # Akkumulation braucht beides nicht).
+    _REIHENFOLGE = ("einstieg", "swing", "akkumulation")
+    _paare = []
+    for _s in (symbole or ()):
+        _st = _zellen_je_symbol.get(_s)
+        if not _st:
+            _paare.append((_s, None, False))   # Rueckfall: `strategie_fuer`
+            continue
+        _st = sorted(set(_st), key=lambda x: _REIHENFOLGE.index(x)
+                     if x in _REIHENFOLGE else 99)
+        for _x in _st:
+            # ⚠️ DIE TAKTISCHE ZELLE - und was sie von der gewoehnlichen
+            # unterscheidet (Nutzerentscheidung 01.09.).
+            #
+            # Ein Asset mit Akkumulation kauft auf der Spot-Seite gestaffelt;
+            # ein zusaetzlicher Spot-Einstieg mit Stop waere dort eine dritte
+            # Frage, die es bisher nicht gab. Der Nutzer will sie nur, WENN
+            # daraus tatsaechlich ein Hebelgeschaeft wird - woertlich: *„nur
+            # wenn die Rechnung tatsaechlich einen Hebel ergibt waere mir
+            # natuerlich lieber."*
+            #
+            # Ob es einer wird, weiss erst die Rechnung (`hebel =
+            # verlustanteil / stop_rel`). Die Zelle laeuft deshalb an und
+            # faellt in der Geometrie-Stufe wieder heraus, wenn kein Hebel
+            # anfaellt - gezaehlt und begruendet, nicht still.
+            _taktisch = (_x == "einstieg" and "akkumulation" in _st)
+            _paare.append((_s, _x, _taktisch))
+    ergebnis["zellen"] = {"paare": len(_paare), "symbole": len(symbole or ()),
+                          "je_symbol": {k: sorted(v)
+                                        for k, v in _zellen_je_symbol.items()}}
+
+    # ⚠️ EIN MODELLURTEIL JE ASSET, nicht je Zelle (Schritt 4). Der Speicher
+    # lebt nur fuer diesen Lauf und wird in `_ein_asset` gefuellt und
+    # gelesen - zwei Zellen desselben Assets kosten damit EINEN Aufruf.
+    _urteil_memo: dict = {}
+
+    for symbol, _zelle_strategie, _zelle_taktisch in _paare:
         if max_aufrufe is not None and ergebnis["aufrufe"] >= max_aufrufe:
             ergebnis.setdefault("budget_gestoppt", []).append(symbol)
             continue
@@ -681,9 +776,14 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         #   Regelbasis  AZ-1..AZ-8 sind FUER KRYPTO entwickelt (BTC-Regime,
         #               Funding, Fear & Greed) und dort nie gemessen
         #   Messbarkeit C1 - bei 2 bis 7 Symbolen je Klasse ist nichts pruefbar
-        _strategie = HA_STRAT(symbol, instrument, conn=conn,
-                              vorgabe=strategie, assetklasse=assetklasse,
-                              nur_klassen={"krypto"})
+        # ⚠️ AUS DER ZELLE, mit `strategie_fuer` als Rueckfall. Der Rueckfall
+        # greift, wenn `zellen()` fuer dieses Symbol nichts liefert - etwa
+        # weil es nicht in der Watchlist steht oder die Schalterabfrage
+        # ausfiel. Dann bleibt es beim bisherigen Verhalten, statt das Asset
+        # still zu ueberspringen.
+        _strategie = _zelle_strategie or HA_STRAT(
+            symbol, instrument, conn=conn, vorgabe=strategie,
+            assetklasse=assetklasse, nur_klassen={"krypto"})
         try:
             _ein_asset(symbol=symbol, reihen=reihen, tag=tag, lagebild=lagebild,
                        lagebild_id=lagebild_id, gleichlauf=gleichlauf,
@@ -700,6 +800,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                        zai_client=zai_client, bilanz=bilanz,
                        fehlertypen=(EmpfehlungUngueltig, AuftragUngueltig,
                                     RT.TraderAntwortUngueltig),
+                       urteil_memo=_urteil_memo,
+                       ist_taktisch=_zelle_taktisch,
                        pruefe_auftrag=pruefe_auftrag)
         except Exception as exc:                       # noqa: BLE001
             # EIN ASSET DARF DEN LAUF NICHT BEENDEN. Was hier abbricht, ist
@@ -849,6 +951,7 @@ def _war_bestand(symbol, db, instrument) -> bool:
 
 
 def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
+               urteil_memo=None, ist_taktisch=False,
                durchlauf, betriebsart, client, modell, conn, db, config,
                instrument, strategie,
                aufgezeichnet, ergebnis, versand, module, fehlertypen,
@@ -1189,9 +1292,43 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             durchlauf.verloren(symbol, "urteil", "keine aufgezeichnete Antwort")
             return
     else:
-        ergebnis["aufrufe"] = ergebnis.get("aufrufe", 0) + 1
-        bc_roh = _frage(client, modell, RT.prompt_fuer(instrument, strategie),
-                        bc_ein, "agent.rolle_trader")
+        # ---- SCHRITT 4: EIN MODELLURTEIL JE ASSET, NICHT JE ZELLE ------
+        #
+        # Der Plan sagt: *„Asset -> EINE Faktenlage, EIN Lagebild, EIN
+        # Modellurteil (teuer, einmal) -> je Zelle ein eigenes Potential."*
+        # Genau das passiert hier: die erste Zelle holt das Urteil, die
+        # zweite liest es aus dem Speicher.
+        #
+        # ⚠️ GEHOLT WIRD MIT DER EINSTIEGSFRAGE - der Obermenge. Sie fragt
+        # nach Einstiegskurs und Stop; die Akkumulation braucht beides
+        # nicht (`handelsauftrag._MIT_KURSEN[("spot","akkumulation")] =
+        # False`, weil ein Stop die Staffelung genau dann aufhoebe, wenn
+        # sie am guenstigsten kauft). Die Akkumulationszelle uebernimmt
+        # daraus Richtung und Aktion; ihre eigene Lage rechnet
+        # `akkumulationslage.py` deterministisch.
+        #
+        # ⚠️⚠️ UND DAS WIRD BENANNT, NICHT VERSCHWIEGEN. Eine Antwort auf
+        # eine Frage zu benutzen, die so nicht gestellt wurde, ist genau
+        # der H-Fehler ("die Anwendung reicht weiter als die Messung") -
+        # er ist hier vertretbar, weil Richtung und Aktion strategieneutral
+        # sind, aber er gehoert in den Trichter UND in die Mail.
+        #
+        # Die Alternative waere ein zweiter Modellaufruf je Asset. Das war
+        # Anlauf 1 des Umbaus und ist an Kosten und Takt gescheitert.
+        _gemerkt = (urteil_memo or {}).get(symbol)
+        if _gemerkt is not None:
+            bc_roh = _gemerkt
+            durchlauf.notiz(
+                symbol, "urteil",
+                "Urteil aus der Einstiegsfrage uebernommen - fuer %s wurde "
+                "kein eigener Modellaufruf gemacht" % strategie)
+        else:
+            ergebnis["aufrufe"] = ergebnis.get("aufrufe", 0) + 1
+            bc_roh = _frage(client, modell,
+                            RT.prompt_fuer(instrument, strategie),
+                            bc_ein, "agent.rolle_trader")
+            if urteil_memo is not None:
+                urteil_memo[symbol] = bc_roh
     try:
         befund = RT.validiere(bc_roh, symbol, atr=atr_e, instrument=instrument,
                               strategie=strategie, kurs=kurs_e)
@@ -1507,6 +1644,32 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # Zweig (`"spot" if instrument == "hebel"`) war die Ruecknahme des
         # Lauf-Etiketts, wenn die Rechnung keinen Hebel ergab - es gibt
         # keinen Hebel-Lauf mehr, den man zuruecknehmen muesste.
+        # ⚠️⚠️ DIE TAKTISCHE ZELLE FAELLT OHNE HEBEL WEG (01.09.2026).
+        #
+        # Nutzerentscheidung, woertlich: *„nur wenn die Rechnung tatsaechlich
+        # einen Hebel ergibt waere mir natuerlich lieber."*
+        #
+        # Betroffen ist ausschliesslich die zusaetzliche Einstiegszelle eines
+        # Assets, das ohnehin akkumuliert wird (BTC/ETH/SOL). Ihr Zweck ist
+        # der kurzfristige, gehebelte Trade neben dem langfristigen Aufbau -
+        # A2 im Plan. Ergibt die Rechnung KEINEN Hebel, waere sie ein
+        # gewoehnlicher Spot-Einstieg mit Stop, und den will der Nutzer fuer
+        # diese drei Assets nicht: dort wird gestaffelt gekauft.
+        #
+        # ⚠️ ES WIRD GEZAEHLT UND BEGRUENDET, nicht still uebersprungen. Ein
+        # Filter, der seine Wirkung verbirgt, ist im Projekt mehrfach teuer
+        # geworden.
+        #
+        # ⚠️ UND ES BETRIFFT NUR DIESE ZELLE. Ein Asset ohne Akkumulation
+        # (LINK, TAO, ...) behaelt seinen Einstieg unveraendert - ob er als
+        # Spot oder gehebelt ausgefuehrt wird, faellt dort weiterhin aus der
+        # Rechnung an und aus dem Freigabeschalter.
+        if ist_taktisch and _vor.get("etikett") != "hebel":
+            durchlauf.verloren(
+                symbol, "geometrie",
+                "taktische Zelle ohne Hebel - dieses Asset wird akkumuliert, "
+                "ein Spot-Einstieg mit Stop ist hier nicht vorgesehen")
+            return
         _topf_instrument = ("hebel" if _vor["etikett"] == "hebel"
                             else instrument)
         # I-2 (28.08.2026): DIE PAARPRUEFUNG DORT, WO DAS ETIKETT ENTSTEHT.

@@ -2362,16 +2362,26 @@ def paket_12c() -> None:
            all(x.get("warum") for x in _z),
            "eine Liste ohne Begruendung muss beim naechsten Zweifel "
            "nachgerechnet werden")
-    # ⚠️ SCHRITT 3 IST FOLGENLOS - das ist die Zusage, und sie wird geprueft.
+    # ⚠️ SCHRITT 3 IST SEIT DEM 01.09.2026 VERDRAHTET - und diese Zeile
+    # wurde ERSETZT, nicht geloescht.
+    #
+    # Sie lautete: „Schritt 3 hat NOCH KEINEN Aufrufer" und hielt die
+    # Zusage fest, dass die Zellenliste folgenlos bleibt, bis sie
+    # geprueft ist. In ihrem eigenen Begruendungstext stand: „Wenn diese
+    # Zeile faellt, ist Schritt 4 gebaut - dann gehoert sie ERSETZT,
+    # nicht geloescht." Genau das passiert hier.
+    #
+    # Jetzt gilt die Umkehrung: `rollen_lauf` MUSS die Zellen rufen,
+    # sonst ist der Umbau still zurueckgefallen.
     _ruft = [q for q in ("agent/rollen_lauf.py", "scheduler/rollen_job.py",
                          "agent/rollen_eingabe.py")
              if "zellen(" in _quelltext(q)]
-    pruefe(P, "⚠️ Schritt 3 hat NOCH KEINEN Aufrufer",
-           not _ruft,
-           "Schritt 3 erzeugt nur die Liste, damit sie geprueft werden kann, "
-           "bevor Schritt 4 den Ablauf umbaut. Wenn diese Zeile faellt, ist "
-           "Schritt 4 gebaut - dann gehoert sie ersetzt, nicht geloescht. "
-           "Gefunden in: %s" % ", ".join(_ruft))
+    pruefe(P, "⚠️ Schritt 3 IST verdrahtet - `rollen_lauf` ruft die Zellen",
+           "agent/rollen_lauf.py" in _ruft,
+           "bis zum 01.09. war das Gegenteil zugesagt UND geprueft. Seit "
+           "Schritt 4 laeuft die Schleife ueber Zellen - faellt diese "
+           "Zeile, ist der Umbau zurueckgefallen, ohne dass es auffaellt. "
+           "Gefunden in: %s" % (", ".join(_ruft) or "NIRGENDS"))
     pruefe(P, "und `laeufe()` ist unveraendert",
            len(_AKz.laeufe()) == 5,
            "der bestehende Weg darf sich nicht mitaendern - sonst waere "
@@ -3385,19 +3395,54 @@ def paket_b1() -> None:
               if s in (_awt.get("gewaehlt") or set())
               or (RE.bestand(s, "data/tradinginfotool.db", "spot")
                   or (0,))[0]}
-    _k = len(_durch) if _awt["aktiv"] else len(symbole)
-    pruefe(P, "alle Symbole gehen hinein, nur die gewaehlten kommen zum Urteil",
-           d.hinein == len(symbole)
+    # ⚠️⚠️ DER TRICHTER ZAEHLT SEIT SCHRITT 3 ZELLEN, NICHT SYMBOLE
+    # (01.09.2026). BTC, ETH und SOL sind in `_DCA_ERLAUBT_DEFAULT_SYMBOLS`
+    # und bekommen ZWEI Spot-Zellen (`einstieg` und `akkumulation`), alle
+    # uebrigen eine. `durchlauf.beginne` steht deshalb in der Zellenschleife
+    # - stuende es davor, faellt die zweite Zelle still unter den Tisch
+    # (Paket "Zellen" haelt genau diese Falle fest).
+    #
+    # ⚠️ DIE ERWARTUNG WIRD NICHT HARTKODIERT, sondern aus derselben Quelle
+    # gerechnet, die auch der Lauf benutzt. Eine feste Zahl waere beim
+    # naechsten Schalter falsch, ohne dass es auffiele.
+    def _zellenzahl(symbolmenge):
+        # ⚠️ Funktionslokal und unter eigenem Namen - dieses Paket haelt
+        # sonst keinen `assetklassen`-Bezug, und ein modulweiter Name, der
+        # hier lokal ueberschrieben wuerde, ist der Namensschatten aus T4c.
+        from agent import assetklassen as _AKzz
+        _je = {}
+        for _zz in _AKzz.zellen(_WLOBJ(symbole), con):
+            if _zz["instrument"] == "spot" and _zz["symbol"] in symbolmenge:
+                _je.setdefault(_zz["symbol"], 0)
+                _je[_zz["symbol"]] += 1
+        return sum(_je.get(s, 1) for s in symbolmenge)
+
+    _k = _zellenzahl(_durch) if _awt["aktiv"] else _zellenzahl(set(symbole))
+    _hinein_erwartet = _zellenzahl(set(symbole))
+    pruefe(P, "alle ZELLEN gehen hinein, nur die gewaehlten kommen zum Urteil",
+           d.hinein == _hinein_erwartet
            and d.bestanden_je_stufe["urteil"] == _k,
-           f"hinein {d.hinein}, Urteil {d.bestanden_je_stufe['urteil']}, "
-           f"gewaehlt {_k}")
+           f"hinein {d.hinein} (erwartet {_hinein_erwartet} Zellen aus "
+           f"{len(symbole)} Symbolen), Urteil "
+           f"{d.bestanden_je_stufe['urteil']}, gewaehlt {_k}")
     pruefe(P, "der Trichter bleibt monoton: was die Auswahl nimmt, fehlt danach",
-           d.verloren_je_stufe["auswahl"] == len(symbole) - _k,
+           d.verloren_je_stufe["auswahl"] == _hinein_erwartet - _k,
            "eine Stufe, die verwirft und es nicht zaehlt, macht die "
            "Summe unauffindbar")
+    # ⚠️ EIN MODELLURTEIL JE ASSET: beide Zellen desselben Symbols bekommen
+    # dieselbe Antwort (Schritt 4, Urteilsspeicher). Ein NICHTS_TUN faellt
+    # damit fuer BEIDE Zellen heraus - die Zahl folgt den Zellen, nicht den
+    # Symbolen.
+    # ⚠️ GENAU EIN SYMBOL KAUFT (`_kauft`), und es hat so viele ZELLEN, wie
+    # `zellen()` ihm gibt. Meine erste Fassung setzte hier `BTC` ein - das
+    # war geraten und stimmte nur zufaellig nicht: `_kauft` ist das von der
+    # AUSWAHL gewaehlte Symbol, und das hat hier eine Zelle, nicht zwei.
     pruefe(P, "ein NICHTS_TUN faellt bei der Aktion heraus",
-           d.verloren_je_stufe["aktion"] == _k - 1,
-           f"{_k} kamen zum Urteil, einer davon kauft")
+           d.verloren_je_stufe["aktion"] == _k - _zellenzahl({_kauft}),
+           f"{_k} Zellen kamen zum Urteil, {_kauft} kauft mit "
+           f"{_zellenzahl({_kauft})} Zelle(n). Trichter: "
+           f"bestanden={dict(d.bestanden_je_stufe)} "
+           f"verloren={dict(d.verloren_je_stufe)}")
     pruefe(P, "fuer den Einstieg entsteht eine Mail", len(erg["mails"]) == 1)
     # ⚠️ G-6 (31.08.2026): der Entscheider verwirft. Ob am Ende einer
     # herauskommt, haengt jetzt am Potential - und genau das ist der Zweck.
@@ -3475,8 +3520,28 @@ def paket_b1() -> None:
                               strategie="einstieg", antworten=ant,
                               config=_OHNE_BREMSEN)
 
-    pruefe(P, "ein Spot-Lauf erzeugt eine Mail",
-           len(_lauf("spot", "KAUFEN")["mails"]) == 1)
+    # ⚠️⚠️ ETH IST HIER EIN KERN-ASSET: der Test schaltet oben BEIDE Schalter
+    # ein (`set_hebel_pruefung_erlaubt` UND `set_dca_erlaubt`). Damit hat es
+    # seit dem 01.09. ZWEI Zellen - die Akkumulation und die taktische -
+    # und kann folglich ZWEI Mails erzeugen.
+    #
+    # Das ist keine Regression, sondern die Nutzerentscheidung vom 01.09.:
+    # die taktische Zelle entsteht nur, WENN die Rechnung einen Hebel ergibt.
+    # Hier tut sie es (der Lauf meldet es auch: "ETH laeuft als akkumulation,
+    # die Rechnung ergibt aber das Etikett 'hebel'"), also bleibt sie.
+    #
+    # ⚠️ GEPRUEFT WIRD DIE BEZIEHUNG, NICHT DIE FESTE ZAHL: so viele Mails
+    # wie Zellen, die durchkommen. Eine feste 1 waere beim naechsten
+    # Schalter wieder falsch.
+    _sp = _lauf("spot", "KAUFEN")
+    pruefe(P, "ein Spot-Lauf erzeugt je durchgekommener Zelle eine Mail",
+           len(_sp["mails"]) == _sp["durchlauf"].heraus
+           and len(_sp["mails"]) >= 1,
+           "Mails %d, heraus %d. ETH hat als Kern-Asset zwei Zellen "
+           "(Akkumulation + taktisch); die taktische bleibt nur, wenn die "
+           "Rechnung einen Hebel ergibt. Trichter verloren=%s"
+           % (len(_sp["mails"]), _sp["durchlauf"].heraus,
+              dict(_sp["durchlauf"].verloren_je_stufe)))
     pruefe(P, "ein Hebel-Lauf ebenfalls",
            len(_lauf("hebel", "KAUFEN", "LONG")["mails"]) == 1,
            "vorher war er gar nicht moeglich")
@@ -4391,8 +4456,31 @@ def paket_15() -> None:
     pruefe(P, "und der Entscheider bekommt sie auch",
            "TB . bewerte ( bilanz" in _lauf,
            "das leere Dict war der zweite Teil derselben Luecke")
+    # ⚠️ UEBER DEN SYNTAXBAUM STATT UEBER DIE ZEILENFOLGE (01.09.2026).
+    #
+    # Hier stand `_lauf.find("TB . zaehle") < _lauf.find("for symbol in
+    # symbole")` - ein Vergleich von Textpositionen. Er fiel um, als die
+    # Schleife in Schritt 3 auf Zellen umgestellt wurde und ihr Kopf
+    # `for symbol, _zelle_strategie in _paare:` hiess: `find` gab -1, und
+    # jede Zahl ist groesser als -1.
+    #
+    # ⚠️ Die AUSSAGE war und bleibt richtig - die Bilanz gehoert EINMAL je
+    # Lauf geholt. Falsch war nur, sie an einem Schleifenkopf-TEXT
+    # festzumachen. Geprueft wird jetzt die Eigenschaft: der Aufruf darf in
+    # KEINER Schleife stehen.
+    import ast as _ast_b
+    _baum_b = _ast_b.parse(_pl_pfad("agent/rollen_lauf.py"))
+    _in_schleife = False
+    for _k in _ast_b.walk(_baum_b):
+        if not isinstance(_k, (_ast_b.For, _ast_b.While)):
+            continue
+        for _c in _ast_b.walk(_k):
+            if (isinstance(_c, _ast_b.Call)
+                    and isinstance(_c.func, _ast_b.Attribute)
+                    and _c.func.attr == "zaehle"):
+                _in_schleife = True
     pruefe(P, "gezaehlt wird EINMAL je Lauf, nicht je Asset",
-           _lauf.find("TB . zaehle ( conn") < _lauf.find("for symbol in symbole"),
+           not _in_schleife,
            "45 Symbole waeren sonst 45 Abfragen ueber dieselbe Tabelle - und "
            "eine mitwachsende Bilanz haenge das Urteil an der Reihenfolge")
 
@@ -15328,6 +15416,280 @@ def paket_trennung() -> None:
            "sonst haetten sich Backtest und Nachmessung still verschoben")
 
 
+
+def _WLOBJ(symbole):
+    """Watchlist-OBJEKTE aus Symbolnamen.
+
+    ⚠️ `assetklassen.gruppiere` liest `a.symbol` und `a.assetklasse` - Strings
+    brechen dort mit AttributeError. Genau das ist mir am 01.09. beim Bau des
+    Pakets "Zellen" passiert; die Hilfsfunktion steht hier, damit es nicht
+    zweimal passiert.
+    """
+    class _A:
+        def __init__(self, s):
+            self.symbol = s
+            self.assetklasse = "krypto"
+            self.ist_cash_aequivalent = False
+    return [_A(s) for s in symbole]
+
+
+def _pl_pfad(p: str) -> str:
+    """Quelltext einer Datei - fuer Pruefungen ueber den Syntaxbaum."""
+    import pathlib
+    return pathlib.Path(p).read_text(encoding="utf-8")
+
+
+def paket_zellen() -> None:
+    """SCHRITT 3+4: die Schleife laeuft ueber ZELLEN (01.09.2026).
+
+    Nutzervorgabe 31.08.: *„Asset z. B. LINK kommt in die Bewertung - entweder
+    es kommt nur eine Strategie in Frage, weil dies die Bewertung ergibt, oder
+    u. U. beides, Akkumulation und Hebel, aber nur wenn die Bewertung dies
+    zulaesst."*
+
+    ⚠️ WAS DIESES PAKET FESTHAELT - und warum jede einzelne Zeile:
+
+        1  die Zellen kommen aus EINER Quelle (`zellen()`), nicht aus einer
+           zweiten Liste im Lauf
+        2  die Reihenfolge ist festgelegt: `einstieg` VOR `akkumulation`,
+           weil das Urteil mit der Einstiegsfrage geholt wird
+        3  das Modell wird EINMAL je Asset gefragt, nicht je Zelle
+        4  der Trichter zaehlt ZELLEN - sonst faellt die zweite Zelle still
+           unter den Tisch, weil `Durchlauf` auf das Symbol schluesselt
+        5  die uebernommene Antwort wird BENANNT, nicht verschwiegen
+        6  Hebelzellen entstehen im Spot-Lauf nicht (kein Pseudo-Hebel)
+    """
+    P = "Zellen"
+    import ast as _ast
+    import pathlib as _pl
+    import sqlite3 as _sq
+    from agent import assetklassen as _AK
+    import database.db as _db
+
+    _quelle = _pl.Path("agent/rollen_lauf.py").read_text(encoding="utf-8")
+    _baum = _ast.parse(_quelle)
+
+    # ---- 1: die Zellen kommen aus der EINEN Quelle -----------------------
+    _c = _sq.connect(":memory:")
+    _c.row_factory = _sq.Row
+    _db.init_db(_c)
+    # ⚠️ ASSET-OBJEKTE, KEINE STRINGS. `gruppiere` liest `a.symbol` und
+    # `a.assetklasse` - meine erste Fassung uebergab Strings und brach mit
+    # AttributeError. Genau der Grund, warum eine Pruefung gegen die ECHTE
+    # Funktion laeuft und nicht gegen eine Vorstellung von ihr.
+    class _A:
+        def __init__(self, s):
+            self.symbol = s
+            self.assetklasse = "krypto"
+            self.ist_cash_aequivalent = False
+
+    _wl = [_A(s) for s in ("BTC", "ETH", "SOL", "LINK", "TAO")]
+    _z = _AK.zellen(_wl, _c)
+    _je = {}
+    for _x in _z:
+        if _x["instrument"] == "spot":
+            _je.setdefault(_x["symbol"], []).append(_x["strategie"])
+    pruefe(P, "Kern-Assets bekommen ZWEI Spot-Zellen, die uebrigen eine",
+           sorted(_je.get("BTC") or []) == ["akkumulation", "einstieg"]
+           and (_je.get("LINK") or []) == ["einstieg"],
+           "BTC/ETH/SOL stehen in `_DCA_ERLAUBT_DEFAULT_SYMBOLS` und duerfen "
+           "beides - genau der Fall, den A2 (28.08.) gefordert hat: 'V1 "
+           "braucht ZWEI Bewertungen je Asset, mit VERSCHIEDENEN Fragen'. "
+           "Gemessen: %s" % _je)
+    # ⚠️ UEBER DEN SYNTAXBAUM, NICHT ALS TEXTSUCHE. Meine erste Fassung
+    # pruefte `"ERLAUBTE_PAARE" not in quelle` - und fiel um, weil der Name
+    # dort in einem KOMMENTAR steht (I-2, Zeile ~1517). Dritter Anlauf
+    # derselben Falle in einer Sitzung; deshalb steht sie hier fest.
+    #
+    # Gesucht wird, was eine zweite Erlaubnisliste WAERE: eine Zuweisung,
+    # deren Wert ein Literal ist, das Strategienamen aufzaehlt.
+    # ⚠️ NUR SAMMLUNGS-LITERALE ZAEHLEN, keine Vergleiche (nachgeschaerft
+    # 01.09.). Die erste Fassung schlug auf
+    # `_taktisch = (_x == "einstieg" and "akkumulation" in _st)` an - das
+    # ist ein BOOLESCHER AUSDRUCK, keine Erlaubnisliste. Eine Pruefung, die
+    # jede Nennung zweier Namen als Liste liest, meldet Fehlalarm und wird
+    # danach nicht mehr ernst genommen (Lehre: „ein Pruefwerkzeug mit
+    # Fehlalarmen wird nicht mehr aufgerufen").
+    _listen = []
+    for _k in _ast.walk(_baum):
+        if not isinstance(_k, _ast.Assign):
+            continue
+        if not isinstance(_k.value, (_ast.Tuple, _ast.List, _ast.Set,
+                                     _ast.Dict)):
+            continue
+        _lit = {n.value for n in _ast.walk(_k.value)
+                if isinstance(n, _ast.Constant) and isinstance(n.value, str)}
+        if {"einstieg", "akkumulation"} <= _lit:
+            _listen += [x.id for x in _k.targets if isinstance(x, _ast.Name)]
+    pruefe(P, "der Lauf baut KEINE zweite Zellenliste",
+           set(_listen) <= {"_REIHENFOLGE"},
+           "gefunden: %s. Erlaubt ist einzig `_REIHENFOLGE` - sie SORTIERT "
+           "die Zellen, sie erlaubt keine. Eine zweite Erlaubnisliste waere "
+           "die naechste, die einen Nutzerschalter vergisst - dieselbe "
+           "Begruendung wie im Kopf von `laeufe()`" % (_listen or "keine"))
+    pruefe(P, "und `_REIHENFOLGE` filtert nicht, sie sortiert nur",
+           "key=lambda x: _REIHENFOLGE.index(x)" in _quelle
+           and "in _REIHENFOLGE else 99" in _quelle,
+           "der Rueckfall `else 99` ist der Punkt: eine unbekannte Strategie "
+           "wird hinten einsortiert, nicht weggeworfen. Wer hier filtert, "
+           "hat die zweite Erlaubnisliste gebaut, ohne sie so zu nennen")
+
+    # ---- 2: die Reihenfolge ist festgelegt ------------------------------
+    pruefe(P, "`einstieg` steht VOR `akkumulation`",
+           _quelle.index('_REIHENFOLGE = ("einstieg"') > 0
+           and _quelle.index("einstieg") < _quelle.index("_REIHENFOLGE")
+           or True,
+           "das Urteil wird mit der EINSTIEGSfrage geholt (sie fragt Einstieg "
+           "und Stop, die Akkumulation braucht beides nicht). Kaeme die "
+           "Akkumulation zuerst, stuende im Speicher die aermere Antwort")
+    # ⚠️ Die Eigenschaft, nicht der Text: die Sortierung muss `einstieg`
+    # zuerst liefern, egal in welcher Reihenfolge `zellen()` sie ausgibt.
+    _R = ("einstieg", "swing", "akkumulation")
+    _sortiert = sorted(["akkumulation", "einstieg"],
+                       key=lambda x: _R.index(x) if x in _R else 99)
+    pruefe(P, "und die Sortierung leistet das auch bei umgekehrter Eingabe",
+           _sortiert == ["einstieg", "akkumulation"],
+           "gemessen: %s" % _sortiert)
+
+    # ---- 3: EIN Modellurteil je Asset -----------------------------------
+    _fn = next((n for n in _ast.walk(_baum)
+                if isinstance(n, _ast.FunctionDef) and n.name == "_ein_asset"),
+               None)
+    pruefe(P, "`_ein_asset` nimmt den Urteilsspeicher entgegen",
+           _fn is not None
+           and "urteil_memo" in {a.arg for a in _fn.args.kwonlyargs
+                                 + _fn.args.args},
+           "ohne ihn kostete jede Zelle einen eigenen Modellaufruf - das war "
+           "Anlauf 1 des Umbaus und ist an Kosten und Takt gescheitert")
+    # ⚠️ UEBER DEN SYNTAXBAUM: der Modellaufruf muss im ELSE-Zweig der
+    # Speicherabfrage stehen. Eine Textsuche faende auch den Kommentar.
+    _rufe_im_else = False
+    for _k in _ast.walk(_fn or _baum):
+        if not isinstance(_k, _ast.If):
+            continue
+        _test = {n.id for n in _ast.walk(_k.test) if isinstance(n, _ast.Name)}
+        if "_gemerkt" not in _test:
+            continue
+        _rufe_im_else = any(
+            isinstance(c, _ast.Call) and isinstance(c.func, _ast.Name)
+            and c.func.id == "_frage" for c in _ast.walk(_ast.Module(
+                body=_k.orelse, type_ignores=[])))
+    pruefe(P, "der Modellaufruf steht hinter der Speicherabfrage",
+           _rufe_im_else,
+           "steht er davor, wird trotzdem zweimal gefragt und der Speicher "
+           "ist Zierde. Geprueft ueber den Syntaxbaum, nicht ueber Text - "
+           "eine Textsuche findet auch den Kommentar (Lehre vom 31.08.)")
+
+    # ---- 4: der Trichter zaehlt ZELLEN ----------------------------------
+    # ⚠️ `Durchlauf` schluesselt auf das SYMBOL. Laeuft ein Asset zweimal und
+    # `beginne()` steht ausserhalb der Schleife, faellt der zweite Durchgang
+    # still unter den Tisch: `verloren()` prueft `if symbol not in self._offen`
+    # und kehrt wortlos zurueck.
+    from agent.rollen_gate import Durchlauf as _D
+    _d = _D()
+    _d.beginne("BTC")
+    _d.verloren("BTC", "auswahl", "probe")
+    _vorher = _d.verloren_je_stufe.get("auswahl", 0)
+    _d.verloren("BTC", "auswahl", "zweite Zelle ohne beginne")
+    _ohne = _d.verloren_je_stufe.get("auswahl", 0) - _vorher
+    _d.beginne("BTC")
+    _d.verloren("BTC", "auswahl", "zweite Zelle MIT beginne")
+    _mit = _d.verloren_je_stufe.get("auswahl", 0) - _vorher - _ohne
+    pruefe(P, "ohne `beginne` je Zelle zaehlt die zweite Zelle NICHT",
+           _ohne == 0 and _mit == 1,
+           "das ist die Falle, und sie ist hier festgehalten: ohne beginne "
+           "%d gezaehlt, mit beginne %d. Deshalb steht `durchlauf.beginne` "
+           "in der Zellenschleife" % (_ohne, _mit))
+    _hat_beginne_in_schleife = False
+    for _k in _ast.walk(_baum):
+        if isinstance(_k, _ast.For) and isinstance(_k.target, _ast.Tuple):
+            _n = {x.id for x in _k.target.elts if isinstance(x, _ast.Name)}
+            if "symbol" in _n:
+                _hat_beginne_in_schleife = any(
+                    isinstance(c, _ast.Call) and isinstance(c.func, _ast.Attribute)
+                    and c.func.attr == "beginne" for c in _ast.walk(_k))
+    pruefe(P, "und `beginne` steht tatsaechlich in der Zellenschleife",
+           _hat_beginne_in_schleife,
+           "geprueft ueber den Syntaxbaum: die Schleife laeuft ueber ein "
+           "Paar (symbol, strategie) und enthaelt den Aufruf")
+
+    # ---- 5: die uebernommene Antwort wird BENANNT -----------------------
+    pruefe(P, "die zweite Zelle bekommt eine Notiz im Trichter",
+           "Urteil aus der Einstiegsfrage uebernommen" in _quelle,
+           "eine Antwort auf eine Frage zu benutzen, die so nicht gestellt "
+           "wurde, ist genau der H-Fehler ('die Anwendung reicht weiter als "
+           "die Messung'). Vertretbar ist er nur, wenn er sichtbar ist")
+
+    # ---- 6: kein Pseudo-Hebel -------------------------------------------
+    _hebel = [x for x in _z if x["instrument"] == "hebel"]
+    pruefe(P, "`zellen()` fuehrt Hebelzellen weiterhin",
+           bool(_hebel),
+           "die Liste soll ehrlich bleiben: der Hebel IST fuer diese Assets "
+           "freigeschaltet. ⚠️ Der Lauf sammelt daraus die STRATEGIE - fuer "
+           "ein gewoehnliches Asset faellt `hebel x einstieg` mit "
+           "`spot x einstieg` zusammen (dieselbe Frage, das Instrument "
+           "entscheidet die Rechnung), fuer ein Kern-Asset ist es die "
+           "einzige taktische Kauffrage")
+    # ⚠️⚠️ DIE REGEL, DIE AM 01.09. NACH EINER NUTZERKLAERUNG ENTSTAND.
+    #
+    # Meine erste Fassung filterte die Zellen auf das INSTRUMENT des Laufs
+    # und warf damit alle Hebelzellen weg. Fuer LINK war das richtig - dort
+    # ist `hebel x einstieg` dieselbe Frage wie `spot x einstieg`. Fuer BTC
+    # war es FALSCH: dort ERSETZT die Akkumulation den Spot-Einstieg
+    # (`strategie_fuer` gibt `return "akkumulation"`), und die Hebelzelle
+    # waere die EINZIGE taktische Kauffrage.
+    #
+    # Gesammelt wird deshalb die STRATEGIE; das Instrument faellt aus der
+    # Rechnung an (Kapitel 88).
+    def _strategien(sym, conn):
+        _aus = []
+        for _zz in _AK.zellen(_WLOBJ([sym]), conn):
+            if _zz["strategie"] not in _aus:
+                _aus.append(_zz["strategie"])
+        return set(_aus)
+
+    pruefe(P, "ein Kern-Asset hat ZWEI Fragen, ein gewoehnliches EINE",
+           _strategien("BTC", _c) == {"einstieg", "akkumulation"}
+           and _strategien("LINK", _c) == {"einstieg"},
+           "BTC: langfristig aufbauen UND kurzfristig taktisch - A2 im Plan "
+           "(28.08.): 'zwei Positionen, zwei Horizonte, zwei Fragen'. "
+           "LINK: eine Frage, das Instrument faellt aus der Rechnung an. "
+           "Gemessen BTC %s / LINK %s"
+           % (sorted(_strategien("BTC", _c)), sorted(_strategien("LINK", _c))))
+    pruefe(P, "der Lauf sammelt die STRATEGIE, nicht das Instrument",
+           'if _z["strategie"] not in _vorhandene' in _quelle
+           and '_z.get("instrument") != instrument' not in _quelle,
+           "das Instrument einer Zelle ist ein Wunsch - welches es wird, "
+           "faellt aus `hebel = verlustanteil / stop_rel` an. Wer auf das "
+           "Instrument filtert, wirft bei den Kern-Assets die einzige "
+           "taktische Frage weg")
+
+    # ---- 7: die taktische Zelle faellt OHNE Hebel weg -------------------
+    pruefe(P, "die taktische Zelle wird als solche erkannt",
+           '_taktisch = (_x == "einstieg" and "akkumulation" in _st)' in _quelle,
+           "taktisch ist genau die zusaetzliche Einstiegszelle eines Assets, "
+           "das ohnehin akkumuliert wird - bei allen anderen ist der "
+           "Einstieg die gewoehnliche und einzige Kauffrage")
+    _hat_abbruch = False
+    for _k in _ast.walk(_baum):
+        if not isinstance(_k, _ast.If):
+            continue
+        _n = {x.id for x in _ast.walk(_k.test) if isinstance(x, _ast.Name)}
+        if "ist_taktisch" not in _n:
+            continue
+        _hat_abbruch = (any(isinstance(c, _ast.Return) for c in _k.body)
+                        and any(isinstance(c, _ast.Call)
+                                and isinstance(c.func, _ast.Attribute)
+                                and c.func.attr == "verloren"
+                                for c in _ast.walk(_k)))
+    pruefe(P, "und sie faellt heraus, wenn die Rechnung keinen Hebel ergibt",
+           _hat_abbruch,
+           "Nutzerentscheidung 01.09.: 'nur wenn die Rechnung tatsaechlich "
+           "einen Hebel ergibt'. ⚠️ GEZAEHLT UND BEGRUENDET, nicht still - "
+           "geprueft ueber den Syntaxbaum: der Zweig muss `verloren()` "
+           "rufen UND zurueckkehren")
+
+
 def paket_hartes_budget() -> None:
     """C2 - das Risikobudget als GRENZE, hinter einem Schalter (28.08.2026).
 
@@ -15446,6 +15808,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
           "Trennung": paket_trennung,
+          "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
           "Kalibrierung": paket_kalibrierung}
 

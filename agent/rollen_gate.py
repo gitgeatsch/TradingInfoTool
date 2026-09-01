@@ -255,7 +255,27 @@ class Durchlauf:
 
     @property
     def heraus(self) -> int:
-        return len(self._offen)
+        """Wieviele PRUEFUNGEN sind durchgekommen - nicht wieviele Symbole.
+
+        ⚠️⚠️ HIER STAND `len(self._offen)` - UND `_offen` IST EINE MENGE VON
+        SYMBOLEN (01.09.2026).
+
+        Solange ein Asset genau einmal durch die Kette lief, war das
+        dasselbe. Seit Schritt 3 laeuft es je ZELLE durch: ein Kern-Asset
+        hat zwei (Akkumulation und die taktische), und beide koennen
+        herauskommen. Die Menge kannte das Symbol dann trotzdem nur einmal.
+
+        Gefunden hat es die Suite mit einer Zahl, die nicht aufging:
+        **Mails 2, heraus 1.** Eine Mail ohne Signal waere die
+        Gegenrichtung und faellt sofort auf - dieser Fall lag anders herum
+        und haette einen zu engen Trichter gemeldet, dauerhaft und leise.
+
+        `hinein` zaehlt die `beginne`-Aufrufe, also die Zellen; jedes
+        `verloren` nimmt genau eine davon heraus. Die Differenz ist die
+        richtige Zahl - und sie ist im Einzelzellen-Fall dieselbe wie
+        vorher, weshalb sich fuer bestehende Laeufe nichts aendert.
+        """
+        return max(0, self.hinein - sum(self.verloren_je_stufe.values()))
 
     def bericht(self) -> list[str]:
         """Die Tabelle, die sagt, WO die Kette verliert."""

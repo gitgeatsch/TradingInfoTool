@@ -404,6 +404,46 @@ def main() -> int:
             except sqlite3.Error:
                 pass
         c0.commit()
+    # ---- SCHRITT 3+4: EIN KERN-ASSET MUSS DABEI SEIN (01.09.2026) -------
+    #
+    # ⚠️ OHNE DAS BEWEIST DIESE SIMULATION DEN UMBAU NICHT. Der erste Lauf
+    # nach Schritt 3 meldete "krypto/spot 5 Symbole, hinein 5" - also fuenf
+    # Zellen aus fuenf Symbolen. Kein Asset hatte zwei Zellen, und damit lief
+    # der neue Pfad ueberhaupt nicht durch.
+    #
+    # Die Projektregel dazu ist unmissverstaendlich: *eine Stufe gilt erst
+    # als gebaut, wenn `simuliere_kette.py` sie in der fertigen Mail
+    # nachweist.* Eine gruene Suite ist kein Wirkungsnachweis.
+    #
+    # Geschaltet wird ausschliesslich in der KOPIE, wie das Zurueckdatieren
+    # darueber - die Produktionsdatenbank wird nicht angefasst.
+    _kern = None
+    with _verbindung(db) as c0:
+        try:
+            import database.db as _dbk
+            # ⚠️ `price_history_ohlc`, nicht `ohlc_daily` - meine erste
+            # Fassung riet den Tabellennamen und bekam einen
+            # OperationalError, den der Fehlerfang als "kein Kern-Asset"
+            # meldete. Die Simulation sagte daraufhin brav, sie weise den
+            # Pfad nicht nach - richtig gemeldet, falsche Ursache.
+            _tab = "price_history_ohlc"
+            for _s in [r[0] for r in c0.execute(
+                    "SELECT DISTINCT symbol FROM %s ORDER BY symbol" % _tab)]:
+                if str(_s).upper() in ("BTC", "ETH", "SOL"):
+                    _dbk.set_dca_erlaubt(c0, str(_s).upper(), True)
+                    _kern = str(_s).upper()
+                    break
+            c0.commit()
+        except Exception as _exc:                            # noqa: BLE001
+            print("⚠️ Kern-Asset nicht schaltbar (%s) - der Zellen-Pfad "
+                  "wird in diesem Lauf NICHT nachgewiesen" % type(_exc).__name__)
+    if _kern:
+        print("Kern-Asset %s in der Kopie auf Akkumulation geschaltet - es "
+              "bekommt damit ZWEI Zellen (Akkumulation + taktisch)." % _kern)
+    else:
+        print("⚠️ KEIN Kern-Asset im Bestand - der Zellen-Pfad laeuft in "
+              "diesem Lauf nicht durch.")
+
     print("Cooldown in der Kopie um 30 Tage zurueckdatiert - sonst prueft "
           "die Simulation einen Produktionsstand statt der Kette.")
 
@@ -428,7 +468,7 @@ def main() -> int:
     reihen = lade_reihen_aus_db(db)
     gesamt = {"gruppen": 0, "signale": 0, "mails": 0, "fehler": [],
               "luecken": [], "gruppen_gelaufen": [],
-              "lebendigkeit_gesehen": False,
+              "lebendigkeit_gesehen": False, "mehrzellig_gesehen": False,
 
               "vorfilter_gesehen": False,
               "gruppen_uebersprungen": []}
@@ -507,6 +547,16 @@ def main() -> int:
                              for f in (e.get("fehler") or [])]
         print(f"\n### {gruppe}/{instrument}   {len(auswahl)} Symbole, "
               f"{modell.aufrufe} Modellaufrufe, {zai.aufrufe} Rolle-G-Aufrufe")
+        # ⚠️ SCHRITT 3+4 NACHWEISEN: der Lauf meldet seine Zellen in
+        # `ergebnis["zellen"]["je_symbol"]`. Sobald ein Symbol dort mehr
+        # als eine Strategie hat, ist der neue Pfad wirklich gelaufen -
+        # nicht nur in der Suite. ⚠️ Meine erste Fassung las das aus
+        # einem MAIL-Eintrag; dort steht es nicht, und die Simulation
+        # meldete zu Recht "nicht nachgewiesen".
+        for _sy, _st in ((e.get("zellen") or {}).get("je_symbol")
+                         or {}).items():
+            if len(_st or ()) > 1:
+                gesamt["mehrzellig_gesehen"] = True
         print(f"    Signale {len(e.get('signale') or [])}  "
               f"Mails {len(e.get('mails') or [])}  "
               f"Fehler {len(e.get('fehler') or [])}")
@@ -714,6 +764,14 @@ def main() -> int:
     print("\n" + "=" * 76)
     print("WAS IN DER DATENBANK ANGEKOMMEN IST")
     # 93 C: gesammelt UND angekommen? Beides, sonst ist es halb gebaut.
+    # ⚠️ SCHRITT 3+4: hat ein Asset ueberhaupt ZWEI Zellen durchlaufen?
+    # Ohne diesen Nachweis ist der Umbau nur in der Suite belegt, nicht im
+    # Betrieb - genau die Unterscheidung, die das Projekt seit Rolle G macht.
+    if _kern and not gesamt.get("mehrzellig_gesehen"):
+        gesamt["luecken"].append(
+            "Schritt 3+4: KEIN Asset lief mit zwei Zellen durch - der "
+            "Zellen-Pfad ist in dieser Simulation nicht nachgewiesen "
+            "(Kern-Asset war %s)" % _kern)
     if not gesamt["lebendigkeit_gesehen"]:
         gesamt["luecken"].append(
             "Lebendigkeit (93 C): in KEINER Kryptomail angekommen - "
