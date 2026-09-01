@@ -148,18 +148,112 @@ CREATE TABLE IF NOT EXISTS terminmarkt (
     taker_verh REAL,                   -- sum_taker_long_short_vol_ratio
     punkte INTEGER NOT NULL,           -- wieviele 5-Minuten-Werte
     PRIMARY KEY (symbol, stunde));
+CREATE TABLE IF NOT EXISTS terminmarkt_tag (
+    symbol TEXT NOT NULL,
+    tag TEXT NOT NULL,                 -- 'YYYY-MM-DD'
+    oi REAL, oi_wert REAL,
+    top_konten_verh REAL, top_summe_verh REAL,
+    konten_verh REAL, taker_verh REAL,
+    punkte INTEGER NOT NULL,
+    PRIMARY KEY (symbol, tag));
 CREATE TABLE IF NOT EXISTS abruf_status (
     symbol TEXT NOT NULL, tag TEXT NOT NULL,
     stand TEXT NOT NULL,               -- 'ok' | 'fehlt'
     zeilen INTEGER NOT NULL DEFAULT 0,
-    PRIMARY KEY (symbol, tag));
+    aufloesung TEXT NOT NULL DEFAULT 'stunde',
+    PRIMARY KEY (symbol, tag, aufloesung));
+CREATE TABLE IF NOT EXISTS messbasis (
+    symbol TEXT PRIMARY KEY, gezogen_am TEXT NOT NULL, saat INTEGER NOT NULL);
 """
+
+# ⚠️ DIE MESSBASIS IST EINE STICHPROBE MIT FESTER SAAT (01.09.2026).
+#
+# Der erste Import nahm die 32 WATCHLIST-Werte - und H-4c war damit
+# untermaechtig (F-167: zwei von fuenf Negativkontrollen trugen). Die Lehre
+# steht seit P6 im Gesamtplan: *„Die Messbasis ist breiter als das
+# Portfolio und muss es sein - sonst misst man seine eigene Auswahl."*
+#
+# ⚠️ WARUM EINE ZUFALLSSTICHPROBE UND NICHT „DIE GROESSTEN 100":
+# eine Auswahl nach heutiger Groesse waere Survivorship in Reinform - die
+# Werte, die es heute gross gibt, sind die, die ueberlebt haben. Eine
+# Stichprobe mit fester Saat ist unverzerrt und wiederholbar; sie wird in
+# `messbasis` festgehalten, damit ein spaeterer Lauf dieselbe zieht.
+#
+# ⚠️ 100 statt 293 ist eine ZEITfrage, keine Messfrage: die Blockzahl haengt
+# an den TAGEN (Methodik 2.98), 100 Anker je Tag liegen weit ueber dem
+# Mindestquerschnitt von 15. Eine spaetere Erweiterung auf 293 macht die
+# Baender enger, nicht die Bloecke mehr.
+MESSBASIS_SAAT = 20260901
+MESSBASIS_N = 100
 
 # ⚠️ Gemessen am 01.09.2026 mit je einer HEAD-Anfrage - nicht geraten.
 # Wer die Liste erweitert, prueft ZUERST, ob es das Paar gibt: ein Symbol
 # ohne Perpetual erzeugt sonst 1.095 vergebliche Anfragen.
 OHNE_PERPETUAL = ("AIOZ", "ASTER", "CANTON", "CAT", "FLOKI", "HYPE", "MON",
                   "PLUME", "SUPRA", "VSN", "XNO")
+
+
+def migriere(conn) -> None:
+    """⚠️ `CREATE TABLE IF NOT EXISTS` aendert eine BESTEHENDE Tabelle nicht.
+
+    Der erste Lauf legte `abruf_status` mit dem Schluessel (symbol, tag) an.
+    Mit zwei Aufloesungen braucht es (symbol, tag, aufloesung) - sonst
+    gaelte ein stuendlich geholter Tag als auch taeglich erledigt, und der
+    Nachlauf uebersaehe genau die Symbole, fuer die er laeuft.
+
+    ⚠️ SQLite kann keinen Primaerschluessel aendern. Also: neue Tabelle,
+    kopieren, umbenennen - in EINER Transaktion, damit ein Abbruch nicht
+    auf halbem Weg stehenbleibt. Gefunden VOR dem 8-Stunden-Lauf, nicht
+    darin.
+    """
+    spalten = {r[1] for r in conn.execute("PRAGMA table_info(abruf_status)")}
+    if "aufloesung" in spalten:
+        return
+    conn.executescript("""
+        BEGIN;
+        CREATE TABLE abruf_status_neu (
+            symbol TEXT NOT NULL, tag TEXT NOT NULL,
+            stand TEXT NOT NULL, zeilen INTEGER NOT NULL DEFAULT 0,
+            aufloesung TEXT NOT NULL DEFAULT 'stunde',
+            PRIMARY KEY (symbol, tag, aufloesung));
+        INSERT INTO abruf_status_neu (symbol, tag, stand, zeilen, aufloesung)
+            SELECT symbol, tag, stand, zeilen, 'stunde' FROM abruf_status;
+        DROP TABLE abruf_status;
+        ALTER TABLE abruf_status_neu RENAME TO abruf_status;
+        COMMIT;""")
+    print("  abruf_status migriert: Aufloesung ist jetzt Teil des Schluessels")
+
+
+def messbasis_symbole(conn, n: int = MESSBASIS_N) -> list[str]:
+    """Die Messbasis - Zufallsstichprobe aus den Perpetuals in `messdaten.db`.
+
+    ⚠️ EINMAL GEZOGEN, DANN FESTGEHALTEN. Ein zweiter Lauf mit anderer
+    Stichprobe waere eine andere Messung unter demselben Namen.
+    """
+    import random
+    import sqlite3
+    da = [r[0] for r in conn.execute("SELECT symbol FROM messbasis ORDER BY symbol")]
+    if da:
+        return da
+    r = requests.get("https://fapi.binance.com/fapi/v1/exchangeInfo", timeout=30)
+    perp = {s["symbol"][:-4] for s in r.json().get("symbols", [])
+            if s.get("quoteAsset") == "USDT" and s.get("status") == "TRADING"
+            and s.get("contractType") == "PERPETUAL"}
+    md = sqlite3.connect("file:data/messdaten.db?mode=ro", uri=True)
+    mess = {str(x[0]).upper() for x in md.execute(
+        "SELECT DISTINCT symbol FROM price_history_ohlc WHERE currency='USD'")}
+    md.close()
+    kand = sorted(perp & mess)
+    rng = random.Random(MESSBASIS_SAAT)
+    aus = sorted(rng.sample(kand, min(n, len(kand))))
+    import datetime as _d
+    conn.executemany("INSERT OR REPLACE INTO messbasis VALUES (?,?,?)",
+                     [(s, _d.date.today().isoformat(), MESSBASIS_SAAT)
+                      for s in aus])
+    conn.commit()
+    print("  Messbasis gezogen: %d von %d moeglichen (Saat %d) - festgehalten"
+          % (len(aus), len(kand), MESSBASIS_SAAT))
+    return aus
 
 
 def watchlist_krypto() -> list[str]:
@@ -205,7 +299,32 @@ def verdichte(roh: list) -> dict:
     return aus
 
 
-def hole_tag(sitzung, symbol: str, tag: str) -> tuple:
+def verdichte_tag(roh: list) -> tuple | None:
+    """Ein ganzer Tag zu EINER Zeile - letzter Wert des Tages.
+
+    ⚠️ Dieselbe Begruendung wie bei der Stunde: Open Interest ist ein
+    BESTAND. Der Wert um 23:55 ist der Zustand des Tages.
+    """
+    if not roh:
+        return None
+    letzte = sorted(roh, key=lambda z: str(z.get("create_time")))[-1]
+
+    def _f(x):
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            return None
+
+    return (_f(letzte.get("sum_open_interest")),
+            _f(letzte.get("sum_open_interest_value")),
+            _f(letzte.get("count_toptrader_long_short_ratio")),
+            _f(letzte.get("sum_toptrader_long_short_ratio")),
+            _f(letzte.get("count_long_short_ratio")),
+            _f(letzte.get("sum_taker_long_short_vol_ratio")),
+            len(roh))
+
+
+def hole_tag(sitzung, symbol: str, tag: str, aufloesung: str = "stunde") -> tuple:
     """(stand, {stunde: werte}) fuer EINEN Symbol-Tag.
 
     ⚠️ 404 heisst 'fehlt', nicht 'Fehler': vor der Listung eines Paares gibt
@@ -228,6 +347,9 @@ def hole_tag(sitzung, symbol: str, tag: str) -> tuple:
             io.StringIO(z.read(z.namelist()[0]).decode("utf-8", "replace"))))
     except Exception:
         return "netz", {}
+    if aufloesung == "tag":
+        w = verdichte_tag(roh)
+        return "ok", ({tag: w} if w else {})
     return "ok", verdichte(roh)
 
 
@@ -239,10 +361,19 @@ def main() -> int:
     p.add_argument("--parallel", type=int, default=PARALLEL)
     p.add_argument("--probe", action="store_true",
                    help="2 Symbole, 3 Tage - fuer die Pruefung vor dem Lauf")
+    p.add_argument("--aufloesung", choices=("stunde", "tag"), default="stunde")
+    p.add_argument("--messbasis", action="store_true",
+                   help="die Zufallsstichprobe statt der Watchlist")
     a = p.parse_args()
 
+    conn0 = sqlite3.connect(a.db)
+    conn0.executescript(SCHEMA)
+    migriere(conn0)
+    conn0.commit()
     symbole = ([s.strip().upper() for s in a.symbole.split(",") if s.strip()]
-               or watchlist_krypto())
+               or (messbasis_symbole(conn0) if a.messbasis
+                   else watchlist_krypto()))
+    conn0.close()
     heute = date.today()
     tage_n = int(a.jahre * 365)
     if a.probe:
@@ -251,10 +382,9 @@ def main() -> int:
             for i in range(tage_n)]
 
     conn = sqlite3.connect(a.db)
-    conn.executescript(SCHEMA)
-    conn.commit()
     fertig = {(r[0], r[1]) for r in conn.execute(
-        "SELECT symbol, tag FROM abruf_status")}
+        "SELECT symbol, tag FROM abruf_status WHERE aufloesung=?",
+        (a.aufloesung,))}
     auftrag = [(s, t) for s in symbole for t in tage if (s, t) not in fertig]
 
     print("=" * 78)
@@ -263,7 +393,8 @@ def main() -> int:
     print("  %d Symbole x %d Tage = %d Kombinationen" %
           (len(symbole), len(tage), len(symbole) * len(tage)))
     print("  davon schon geholt: %d, offen: %d" % (len(fertig), len(auftrag)))
-    print("  Ziel: %s  ·  %d parallel" % (a.db, a.parallel))
+    print("  Ziel: %s  ·  %d parallel  ·  Aufloesung %s"
+          % (a.db, a.parallel, a.aufloesung))
     if not auftrag:
         print("\n  Nichts zu tun.")
         return 0
@@ -275,22 +406,23 @@ def main() -> int:
     ok = fehlt = netz = zeilen = 0
 
     def _arbeit(x):
-        return x, hole_tag(sitzung, x[0], x[1])
+        return x, hole_tag(sitzung, x[0], x[1], a.aufloesung)
 
     with ThreadPoolExecutor(max_workers=a.parallel) as ex:
         for i, ((sym, tag), (stand, werte)) in enumerate(
                 ex.map(_arbeit, auftrag), 1):
+            ziel = "terminmarkt_tag" if a.aufloesung == "tag" else "terminmarkt"
             if stand == "ok":
                 conn.executemany(
-                    "INSERT OR REPLACE INTO terminmarkt VALUES (?,?,?,?,?,?,?,?,?)",
+                    "INSERT OR REPLACE INTO %s VALUES (?,?,?,?,?,?,?,?,?)" % ziel,
                     [(sym, st) + w for st, w in sorted(werte.items())])
-                conn.execute("INSERT OR REPLACE INTO abruf_status VALUES (?,?,?,?)",
-                             (sym, tag, "ok", len(werte)))
+                conn.execute("INSERT OR REPLACE INTO abruf_status VALUES (?,?,?,?,?)",
+                             (sym, tag, "ok", len(werte), a.aufloesung))
                 ok += 1
                 zeilen += len(werte)
             elif stand == "fehlt":
-                conn.execute("INSERT OR REPLACE INTO abruf_status VALUES (?,?,?,?)",
-                             (sym, tag, "fehlt", 0))
+                conn.execute("INSERT OR REPLACE INTO abruf_status VALUES (?,?,?,?,?)",
+                             (sym, tag, "fehlt", 0, a.aufloesung))
                 fehlt += 1
             else:
                 # ⚠️ NICHT VERMERKEN - ein Netzfehler soll beim naechsten
@@ -310,8 +442,10 @@ def main() -> int:
     print("  %d ok · %d ohne Datei (vor der Listung) · %d Netzfehler"
           % (ok, fehlt, netz))
     print("  %d Stundenzeilen geschrieben" % zeilen)
+    _z = "terminmarkt_tag" if a.aufloesung == "tag" else "terminmarkt"
+    _s = "tag" if a.aufloesung == "tag" else "stunde"
     g = conn.execute("SELECT COUNT(*), COUNT(DISTINCT symbol), "
-                     "MIN(stunde), MAX(stunde) FROM terminmarkt").fetchone()
+                     "MIN(%s), MAX(%s) FROM %s" % (_s, _s, _z)).fetchone()
     print("  Bestand: %d Zeilen, %d Symbole, %s .. %s" % g)
     if netz:
         print("  ⚠️ %d Netzfehler wurden NICHT vermerkt - ein erneuter Lauf "
