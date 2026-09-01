@@ -13,6 +13,40 @@ Bei CRV 2,0 ist der Faktor also 1/3.
 ⚠️ IN-SAMPLE. Diese Zahlen stammen aus derselben Messung, die den Befund
 ergeben hat. Das ist fuer eine erste Kalibrierung ueblich, aber es gehoert
 benannt - und es ist der Grund fuer die Schrumpfung unten.
+
+
+---
+
+# ERWEITERUNG 01.09.2026 — DIE TABELLE JE HORIZONT
+
+⚠️ DIESER ABSCHNITT IST DIE VORABFESTLEGUNG.
+
+Die Stufen dieser Tabelle stammen aus einer Messung auf **H20** - zwanzig
+Handelstagen. Das ist die SPOT-Geometrie. Fuer die Hebel-Zellen des
+Zellenmodells (24 Assets, Schritt 3) ist sie die falsche: das System plante
+`mindestziel_zeitraum_tage_geschaetzt` = **1,2 bis 2,1 Tage**.
+
+Die WIRKUNG auf kurzem Horizont ist am 31.08. bereits gemessen
+(`messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`):
+
+    H2   Funding  +0,0026 R  [+0,0011 .. +0,0043]  TRAEGT
+    H2   Turnover +0,0107 R  [+0,0068 .. +0,0147]  TRAEGT
+
+**Was fehlt, ist die Umrechnung in Beitragspunkte** - dieselbe Rechnung wie
+unten, nur mit einem anderen Horizont.
+
+## Vorab festgelegt
+
+  nutzbar        die Stufen sind MONOTON ueber die Fuenftel und die Spanne
+                 ist groesser als null
+  nicht nutzbar  sonst - dann bekommt die Hebel-Zelle KEINEN Beitrag und
+                 laeuft mit der Notiz "nicht vermessen" durch
+
+⚠️ Die Monotonie ist die Bedingung, an der der Schnittabstand am 31.08.
+gescheitert ist (+1,27 / +1,59 / ...) - und ich hatte ihn trotzdem
+registriert. Sie steht hier, damit das nicht noch einmal passiert.
+
+    python rechne_funding_beitrag.py --horizont 2
 """
 import statistics as st, sys
 import numpy as np
@@ -20,7 +54,12 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 import messe_funding_niveau as F
 import messe_eigenschaft_beitrag as B
 
-HOR, CRV = 20, 2.0
+import argparse as _ap
+_a = _ap.ArgumentParser()
+_a.add_argument("--horizont", type=int, default=20)
+HOR = _a.parse_known_args()[0].horizont
+CRV = 2.0
+print("HORIZONT H%d" % HOR)
 reihen = B.lade(); funding = F.lade_funding()
 je_tag = {}
 for sym, roh in reihen.items():

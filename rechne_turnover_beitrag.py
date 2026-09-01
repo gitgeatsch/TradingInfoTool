@@ -24,6 +24,40 @@ Grund fuer die Halbierung ("geschrumpft"), dieselbe Vorsicht wie bei
 `trefferbilanz.geschrumpft()`.
 
     python rechne_turnover_beitrag.py
+
+
+---
+
+# ERWEITERUNG 01.09.2026 — DIE TABELLE JE HORIZONT
+
+⚠️ DIESER ABSCHNITT IST DIE VORABFESTLEGUNG.
+
+Die Stufen dieser Tabelle stammen aus einer Messung auf **H20** - zwanzig
+Handelstagen. Das ist die SPOT-Geometrie. Fuer die Hebel-Zellen des
+Zellenmodells (24 Assets, Schritt 3) ist sie die falsche: das System plante
+`mindestziel_zeitraum_tage_geschaetzt` = **1,2 bis 2,1 Tage**.
+
+Die WIRKUNG auf kurzem Horizont ist am 31.08. bereits gemessen
+(`messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`):
+
+    H2   Funding  +0,0026 R  [+0,0011 .. +0,0043]  TRAEGT
+    H2   Turnover +0,0107 R  [+0,0068 .. +0,0147]  TRAEGT
+
+**Was fehlt, ist die Umrechnung in Beitragspunkte** - dieselbe Rechnung wie
+unten, nur mit einem anderen Horizont.
+
+## Vorab festgelegt
+
+  nutzbar        die Stufen sind MONOTON ueber die Fuenftel und die Spanne
+                 ist groesser als null
+  nicht nutzbar  sonst - dann bekommt die Hebel-Zelle KEINEN Beitrag und
+                 laeuft mit der Notiz "nicht vermessen" durch
+
+⚠️ Die Monotonie ist die Bedingung, an der der Schnittabstand am 31.08.
+gescheitert ist (+1,27 / +1,59 / ...) - und ich hatte ihn trotzdem
+registriert. Sie steht hier, damit das nicht noch einmal passiert.
+
+    python rechne_turnover_beitrag.py --horizont 2
 """
 import statistics as st
 import sys
@@ -36,11 +70,16 @@ import messe_bewertungskennzahl as MB
 import messe_eigenschaft_beitrag as B
 import messe_kandidaten_als_regel as K
 
-HOR, CRV = 20, 2.0
+import argparse as _ap
+_a = _ap.ArgumentParser()
+_a.add_argument("--horizont", type=int, default=20)
+HOR = _a.parse_known_args()[0].horizont
+CRV = 2.0
+print("HORIZONT H%d" % HOR)
 
 reihen = B.lade()
 menge = MB.reihe("data/onchain_historie.db", "splycur")
-je_tag = K.baue(reihen, "turnover", menge)
+je_tag = K.baue(reihen, "turnover", menge, horizont=HOR)
 
 sammel = {k: [] for k in range(5)}
 for z in je_tag.values():
