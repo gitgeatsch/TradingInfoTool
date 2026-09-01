@@ -12786,10 +12786,47 @@ def paket_dimension() -> None:
            "bis zum 22.08. bekam jedes Krypto-Symbol ZWEI Urteile, und seit "
            "S5 produzierte der Hebel-Lauf in 76 % der Faelle Spot-Trades")
 
-    pruefe(P, "die Rollen-Kette liest hebel_triggers NICHT",
-           "hebel_trigger" not in _neu2,
-           "das Screening laeuft alle 15 Minuten und schreibt Kandidaten "
-           "fuer einen Abnehmer, den es nicht mehr gibt")
+    # ⚠️⚠️ NACHGEZOGEN AM 01.09.2026 (Schritt 5) - UND PRAEZISIERT.
+    #
+    # Sie lautete "die Rollen-Kette liest hebel_triggers NICHT" mit der
+    # Begruendung: *„das Screening laeuft alle 15 Minuten und schreibt
+    # Kandidaten fuer einen Abnehmer, den es nicht mehr gibt."* Das war der
+    # offene Zustand; Schritt 5 hebt ihn auf.
+    #
+    # ⚠️ ABER NUR ZUR HAELFTE, UND DAS IST DER PUNKT. Das Screening schreibt
+    # ZWEI Dinge:
+    #
+    #     open_interest_snapshot   ROHDATEN (OI, Funding, Long-Anteil)
+    #     hebel_triggers           der SCORE (0-100, Schwelle 70)
+    #
+    # Der Score ist Altbestand und wurde NIE gegen den Zufall gemessen
+    # (F-163, 01.09.). Ihn zu lesen hiesse, ein altes Kriterium in die neue
+    # Bewertung zu heben - genau die Vermischung, vor der der Nutzer am
+    # 01.09. gewarnt hat. Die Rohdaten dagegen sind Messwerte und
+    # verwendbar.
+    #
+    # ⚠️ UND DIE TEXTSUCHE WIRD STRUKTURELL: die alte Fassung fiel ueber
+    # einen KOMMENTAR, der `hebel_triggers` nur erwaehnt. Geprueft wird
+    # jetzt der Code ohne Kommentare.
+    # ⚠️ UEBER DEN SYNTAXBAUM. `_nur_code` entfernt String-Literale
+    # vollstaendig - `bc_ein["terminmarkt"]` verliert dort seinen Schluessel,
+    # und die Pruefung meldete Fehlalarm. Im Baum stehen die Literale, und
+    # Kommentare stehen NICHT darin: beides genau richtig herum.
+    import ast as _ast5
+    _baum5 = _ast5.parse(_pl_pfad("agent/rollen_lauf.py"))
+    _texte5 = {n.value for n in _ast5.walk(_baum5)
+               if isinstance(n, _ast5.Constant) and isinstance(n.value, str)}
+    pruefe(P, "die Kette liest den SCORE weiterhin nicht",
+           not any("hebel_trigger" in x for x in _texte5),
+           "`hebel_triggers.score` ist Altbestand mit eigener Schwelle (70) "
+           "und nie validiert. Ihn zu lesen waere die Vermischung von Alt- "
+           "und Neubestand")
+    pruefe(P, "⚠️ aber die ROHDATEN haben jetzt einen Abnehmer (Schritt 5)",
+           "terminmarkt" in _texte5,
+           "bis zum 01.09. schrieb das Screening alle 15 Minuten 1.872 bis "
+           "2.664 Zeilen fuer einen Abnehmer, den es nicht gab - "
+           "Nutzerbegruendung: 'einspeisen, sonst haben wir ein Performance- "
+           "und Datenbankproblem'. Jetzt speisen die Rohdaten den ANLASS")
 
     pruefe(P, "das Regelwerksmanual traegt den Standvermerk",
            "STANDVERMERK 22.08.2026" in io.open(
@@ -15809,6 +15846,68 @@ def paket_zellen() -> None:
            "eine Spot-Position hat nach Nutzerangabe keinen Stop - ohne Stop "
            "gibt es kein R und keinen sinnvollen MFE. Was sie hat, ist ein "
            "Einstand, und daraus Euro und Prozent")
+
+    # ---- SCHRITT 5: DER TERMINMARKT IN DER FAKTENLAGE -------------------
+    from agent import positionierung as _PO5p
+    from agent import anlass as _AN5
+    _lage = {"symbol": "LINK", "fehlt": [], "oi_aenderung_pct": -1.54,
+             "oi_fenster_stunden": 0.8,
+             "boersenfluss": {"datum": "2026-08-31", "netto": 327.0,
+                              "perzentil": 62, "n": 730},
+             "fehlt_rahmen": ["Boersenzu- und -abfluesse"]}
+    _mit_rahmen = _PO5p.saetze(_lage)
+    _nur_eigen = _PO5p.saetze(_lage, nur_eigen=True)
+    # ⚠️ G2: der Boersenfluss misst BITCOIN fuer den ganzen Markt. Ungefiltert
+    # stuende er in der Faktenlage von LINK - ein bekannter Defekt, in einen
+    # zweiten Kanal getragen.
+    pruefe(P, "der Rahmen bleibt aus der Faktenlage des Assets draussen",
+           any("Bitcoin" in z for z in _mit_rahmen)
+           and not any("Bitcoin" in z for z in _nur_eigen)
+           and not any("Gesamtmarkt" in z for z in _nur_eigen),
+           "`positionierung` mischt Asset und Rahmen und sagt das selbst "
+           "(`fehlt` gegen `fehlt_rahmen`). Rolle G braucht den Rahmen - die "
+           "Faktenlage eines einzelnen Assets nicht. Mit Rahmen: %s"
+           % _mit_rahmen[-2:])
+    pruefe(P, "⚠️ und Rolle G behaelt ihn - sie wird nicht mitgeaendert",
+           any("Bitcoin" in z for z in _mit_rahmen),
+           "sie beurteilt die LAGE; ihr den Rahmen zu nehmen waere ein "
+           "zweiter Umbau ohne Anlass")
+    # ⚠️ DIE AUFLOESUNG: fein wechselt der Satz bei 68-74 % der Messungen
+    # (gemessen an 2.988 Punkten je Symbol), grob bei 5-7,5 %.
+    # ⚠️ ALLE VIER STUFEN, nicht eine Stichprobe - meine erste Fassung
+    # erwartete "deutlich" bei -1,54 % und lag damit selbst daneben.
+    def _stufe(pct):
+        _l = dict(_lage, oi_aenderung_pct=pct)
+        return _PO5p.saetze(_l, nur_eigen=True)[0]
+
+    _erw = ((0.4, "praktisch unveraendert"), (-1.54, "leicht gefallen"),
+            (5.0, "deutlich gestiegen"), (-12.0, "stark gefallen"))
+    pruefe(P, "die Faktenlage nennt STUFEN - alle vier, an ihren Grenzen",
+           all(w in _stufe(x) for x, w in _erw),
+           "Grenzen 1/3/8 %%. Gemessen: " + " | ".join(
+               "%.2f -> %s" % (x, _stufe(x)[-30:]) for x, _w in _erw))
+    pruefe(P, "und Rolle G behaelt die genaue Zahl",
+           "1,5 %" in " ".join(_mit_rahmen),
+           "eine Prozentzahl auf eine Nachkommastelle wechselt bei 68-74 %% "
+           "der Messungen - in der Faktenlage waere damit JEDE Frage neu und "
+           "die Anlass-Sperre wirkungslos. Mit Stufen sind es 5-7,5 %%. "
+           "Gemessen an 2.988 Punkten je Symbol, nicht geschaetzt")
+    # ⚠️ DIE WIRKUNG: aendert sich der Fingerabdruck ueberhaupt?
+    _b = {"kurs": "1.093 EUR wert"}
+    _f0 = _AN5.fingerabdruecke(_b)[1]
+    _f1 = _AN5.fingerabdruecke(dict(_b, terminmarkt=["OI leicht gefallen."]))[1]
+    _f2 = _AN5.fingerabdruecke(dict(_b, terminmarkt=["OI stark gestiegen."]))[1]
+    pruefe(P, "eine Terminmarkt-Aenderung erzeugt eine NEUE Frage",
+           _f0 != _f1 != _f2 and _f0 != _f2,
+           "vorher war das unmoeglich: der Terminmarkt stand in KEINEM "
+           "Faktensatz, also konnte er keine Frage ausloesen - der Takt "
+           "entschied, wann hingesehen wird. Genau das verbietet Regel 1")
+    _lauf5 = _pl_pfad("agent/rollen_lauf.py")
+    pruefe(P, "der Lauf speist ihn nur bei Krypto ein",
+           'bc_ein["terminmarkt"]' in _lauf5
+           and 'nur_eigen=True' in _lauf5,
+           "Aktien und ETFs haben keinen Perpetual-Terminmarkt; dort waere "
+           "der Block eine Zeile ueber etwas, das es nicht gibt")
 
     pruefe(P, "die alte I-2-MELDUNG bleibt als Waechter stehen",
            "ein Paar, das die Matrix ausschliesst" in _quelle,

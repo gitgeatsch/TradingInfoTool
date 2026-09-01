@@ -1306,6 +1306,53 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # SIE STEHT VOR DEM URTEIL, nicht danach - ein Faktum, das erst in der Mail
     # auftaucht, hat die Entscheidung nicht beeinflusst.
     _abs_lage = {}
+    # ---- SCHRITT 5: DER TERMINMARKT KOMMT IN DIE FAKTENLAGE (01.09.2026) --
+    #
+    # Umbauplan Schritt 5: *„`hebel_triggers` als Anlass einspeisen"*.
+    # Nutzerbegruendung: *„einspeisen, sonst haben wir ein Performance- und
+    # Datenbankproblem."*
+    #
+    # DAS SCREENING LIEF INS LEERE. `hebel_screening_job` schreibt alle 15
+    # Minuten in `hebel_triggers` und `open_interest_snapshot` - 82.655
+    # Zeilen, 1.872 bis 2.664 PRO TAG. Gelesen wurde davon bisher NUR von
+    # Rolle G (`zweite_meinung` ruft `positionierung.lage`); die Faktenlage
+    # des Assets kannte den Terminmarkt nicht.
+    #
+    # ⚠️ UND DAMIT AUCH DER ANLASS NICHT. `anlass.fingerabdruecke` bildet
+    # den Abdruck ueber GENAU DEN FAKTENSATZ, DEN DAS MODELL BEKOMMT - das
+    # steht so in seinem Kopf. Eine Groesse, die dort nicht steht, kann
+    # keine neue Frage ausloesen. Der Terminmarkt konnte sich also beliebig
+    # bewegen, ohne dass das System hinsah: der Takt entschied, nicht der
+    # Anlass. Genau das verbietet Regel 1.
+    #
+    # ⚠️⚠️ NUR DIE ASSET-EIGENEN SAETZE (`nur_eigen=True`). `positionierung`
+    # mischt Asset und Rahmen - der Boersenfluss misst BITCOIN fuer den
+    # ganzen Markt. Ungefiltert stuende in der Faktenlage von LINK woertlich
+    # *„Am 2026-08-31 flossen mehr Bitcoin auf die Boersen"*. Das ist der
+    # bekannte Punkt G2, den `simuliere_kette` seit dem 31.08. meldet - ihn
+    # beim Einspeisen mitzunehmen haette einen bekannten Defekt in einen
+    # zweiten Kanal getragen.
+    #
+    # ⚠️ ROLLE G BLEIBT UNVERAENDERT. Sie beurteilt die LAGE und braucht den
+    # Rahmen; nur die Faktenlage eines einzelnen Assets braucht ihn nicht.
+    #
+    # ⚠️ FAIL-SOFT MIT VERMERK: fehlt der Terminmarkt, laeuft der Rest
+    # weiter - aber der Ausfall steht im Lauf. Ein stiller Ausfall saehe
+    # aus wie "keine Bewegung am Terminmarkt", und das ist etwas anderes.
+    if str(assetklasse or "").lower() == "krypto":
+        try:
+            from agent import positionierung as _PO5
+
+            _tm = _PO5.lage(conn, symbol, assetklasse=assetklasse,
+                            instrument=instrument)
+            _tm_saetze = _PO5.saetze(_tm, nur_eigen=True) if _tm else []
+            if _tm_saetze:
+                bc_ein["terminmarkt"] = _tm_saetze
+                ergebnis.setdefault("terminmarkt", []).append(symbol)
+        except Exception as _tmx:                            # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Terminmarkt-Fakten: {type(_tmx).__name__}: {_tmx}")
+
     if instrument == "absicherung":
         try:
             from agent import absicherung_fakten as AB

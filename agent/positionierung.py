@@ -806,8 +806,25 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
     return aus
 
 
-def saetze(e: dict) -> list[str]:
+def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
     """Die Positionierung als Aussagen - fuer Rolle G.
+
+    ⚠️ `nur_eigen=True` LAESST DEN RAHMEN WEG (Schritt 5, 01.09.2026).
+
+    Dieses Modul mischt zwei Dinge, und es sagt das selbst: `fehlt` nennt,
+    was diesem ASSET fehlt, `fehlt_rahmen` nennt, was dem UMFELD fehlt. Der
+    Boersenfluss ist Rahmen - er misst Bitcoin-Zu- und -Abfluesse und gilt
+    fuer den ganzen Markt.
+
+    Fuer Rolle G ist das richtig: sie beurteilt die Lage. Fuer die
+    FAKTENLAGE EINES ASSETS ist es falsch - dort stuende dann bei LINK und
+    TAO woertlich *„Am 2026-08-31 flossen mehr Bitcoin auf die Boersen"*.
+    Genau diesen Zustand meldet `simuliere_kette` seit dem 31.08. als
+    bekannten Punkt G2: *„Rolle G urteilt auf BTC-weiter Grundlage."*
+
+    ⚠️ Ihn beim Einspeisen mitzunehmen, haette einen bekannten Defekt in
+    einen zweiten Kanal getragen. Deshalb dieser Schalter - und deshalb
+    bleibt G unveraendert: der Rahmen gehoert dort hin, nur nicht hierher.
 
     JEDE ZAHL MIT IHREM MASSSTAB. "Die Finanzierungsrate liegt im 96.
     Perzentil der letzten 400 Messungen" traegt; "0.0312 %" traegt nicht."""
@@ -826,7 +843,43 @@ def saetze(e: dict) -> list[str]:
         # Satz, der Boersen beim Namen nennt - und eine unbeschriftete Zahl
         # daneben laesst offen, welche der drei gemeint ist. Genau die Sorte
         # Mehrdeutigkeit, die R-T1 mit "das Fenster nennen" ausschliesst.
-        if richtung:
+        if nur_eigen:
+            # ⚠️⚠️ GROEBER FUER DIE FAKTENLAGE - UND DAS IST GEMESSEN,
+            # NICHT GESCHAETZT (Schritt 5, 01.09.2026).
+            #
+            # `anlass.fingerabdruecke` bildet den Abdruck ueber den
+            # Faktentext. Steht dort eine Prozentzahl auf eine
+            # Nachkommastelle, wechselt sie fast bei jedem Lauf - und
+            # damit waere JEDE Frage eine neue. Genau davor warnt der Kopf
+            # von `anlass.py` beim Lagebild: *„naehme man es mit, waere
+            # fast jede Frage neu und der Filter wirkungslos."*
+            #
+            # Gemessen an 2.988 Messpunkten je Symbol aus
+            # `open_interest_snapshot` (NB-Stand 29.08.), Wechselrate des
+            # Satzes zwischen aufeinanderfolgenden Messungen:
+            #
+            #     Auflösung            BTC     ETH    LINK     TAO
+            #     0,1 % (fein)        68,2 %  71,1 %  74,3 %  73,7 %   <- unbrauchbar
+            #     Stufen 1/3/8 %       5,0 %   7,5 %   7,3 %   6,7 %   <- gewaehlt
+            #     nur 3 % (grob)       0,2 %   0,4 %   0,6 %   0,6 %   <- fast nie
+            #
+            # Mit den Stufen wird etwa jeder fuenfzehnte Lauf durch den
+            # Terminmarkt zu einer neuen Frage. Das ist ein Anlass; 70 %
+            # waeren Rauschen und 0,4 % waere kein Melder.
+            #
+            # ⚠️ ROLLE G BEHAELT DIE FEINE ZAHL. Sie beurteilt die Lage und
+            # bildet keinen Fingerabdruck; ihre Messreihe bliebe sonst
+            # ohne Not gebrochen.
+            _a = abs(e["oi_aenderung_pct"])
+            _n = ("praktisch unveraendert" if _a < 1.0
+                  else "leicht " + richtung if _a < 3.0
+                  else "deutlich " + richtung if _a < 8.0
+                  else "stark " + richtung)
+            z.append(
+                f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
+                f"den letzten {S.de(e['oi_fenster_stunden'], 0)} Stunden "
+                f"{_n}.")
+        elif richtung:
             z.append(
                 f"Die offenen Kontrakte am Terminmarkt sind auf Binance in "
                 f"den letzten {S.de(e['oi_fenster_stunden'], 0)} Stunden um "
@@ -1008,7 +1061,9 @@ def saetze(e: dict) -> list[str]:
             f"Im Bericht vom {ct['datum']} steht dieser Anteil im {pc}. "
             f"Perzentil der letzten {ct['n']} Wochenberichte - {wie}.")
 
-    f = e.get("boersenfluss")
+    # ⚠️ RAHMEN, NICHT ASSET: der Boersenfluss misst Bitcoin fuer den ganzen
+    # Markt. Bei `nur_eigen` faellt er weg - siehe Kopf.
+    f = None if nur_eigen else e.get("boersenfluss")
     if f and f.get("perzentil") is not None:
         pf = f["perzentil"]
         richtung = ("flossen mehr Bitcoin auf die Boersen als von ihnen herunter"
@@ -1076,7 +1131,10 @@ def saetze(e: dict) -> list[str]:
             f"Dabei ist {seite} die teurere Seite; wie deutlich, steht im "
             f"{p_}. Perzentil der letzten {skew['n']} Messungen - {wie}.")
 
-    for f in (e.get("fehlt_rahmen") or []):
+    # ⚠️ AUCH DIE LUECKENMELDUNG ZUM RAHMEN faellt bei `nur_eigen` weg -
+    # sie sagt etwas ueber den MARKT, nicht ueber dieses Asset. Sie stehen
+    # zu lassen waere dieselbe Vermischung in kleiner Form.
+    for f in ([] if nur_eigen else (e.get("fehlt_rahmen") or [])):
         # ANDERER WORTLAUT ALS BEI `fehlt`: es fehlt nichts ZU DIESEM WERT,
         # sondern eine Angabe ueber den Markt. Verschwiegen wird trotzdem
         # nichts - "fail-soft ist fail-silent".
