@@ -7380,11 +7380,33 @@ def paket_15() -> None:
            "1 EUR fix + 0,25 % Spread")
     _hebel_kurz = _k(klasse="krypto", instrument="hebel", hebel=3.0, tage=2.0)
     _hebel_lang = _k(klasse="krypto", instrument="hebel", hebel=3.0, tage=30.0)
+    # ⚠️ DIE SCHWELLE WAR EIN FAKTOR 2 - UND DAS WAR EIN PROXY (01.09.2026).
+    #
+    # Er hielt nur, solange die Hebelkosten AUSSCHLIESSLICH aus Finanzierung
+    # bestanden. Seit die Handelsgebuehr dazukommt (sie fehlte bis zum
+    # 01.09.), teilen sich kurze und lange Haltedauer einen gemeinsamen
+    # Sockel von 0,60 R, und das Verhaeltnis faellt auf 1,98 - die Pruefung
+    # fiel um, obwohl die Aussage stimmte. Eine Schwelle auf einem
+    # Verhaeltnis misst hier die falsche Groesse.
+    #
+    # Geprueft wird jetzt, was der Satz behauptet: der ZEITABHAENGIGE Anteil
+    # waechst mit der Haltedauer, der Handelsanteil nicht.
+    from agent.krypto.backward_tracking import kosten_in_r as _kir7
+    _f = lambda tg: _kir7(0.05, "hebel", tg, hebel=3.0)
+    _kurz7, _lang7 = _f(2.0), _f(30.0)
     pruefe(P, "beim Hebel kostet die HALTEDAUER, nicht nur der Trade",
-           _hebel_lang > _hebel_kurz * 2,
-           f"2 Tage {_hebel_kurz:.3f} R gegen 30 Tage {_hebel_lang:.3f} R - "
-           "die Tagesstaffel auf geliehenes Kapital fehlte der neuen Kette "
-           "vollstaendig; sie rechnete pauschal mit dem Krypto-Satz")
+           _hebel_lang > _hebel_kurz
+           and _lang7["finanzierung_rel"] > 2 * _kurz7["finanzierung_rel"],
+           f"2 Tage {_hebel_kurz:.3f} R gegen 30 Tage {_hebel_lang:.3f} R, "
+           f"davon Finanzierung {_kurz7['finanzierung_rel']:.5f} gegen "
+           f"{_lang7['finanzierung_rel']:.5f} - die Tagesstaffel auf "
+           "geliehenes Kapital fehlte der neuen Kette vollstaendig; sie "
+           "rechnete pauschal mit dem Krypto-Satz")
+    pruefe(P, "und der Handelsanteil waechst dabei NICHT mit",
+           abs(_lang7["handel_rel"] - _kurz7["handel_rel"]) < 1e-12,
+           "Kauf und Verkauf fallen einmal an, egal wie lange die Position "
+           "offen ist. Waeren beide Anteile zeitabhaengig, waere die "
+           "Aufteilung nur kosmetisch")
     _hedge_kurz = _k(klasse="boerse", instrument="absicherung", tage=2.0)
     _hedge_lang = _k(klasse="boerse", instrument="absicherung", tage=180.0)
     pruefe(P, "die Absicherung traegt ihre laufende ETP-Gebuehr",
@@ -12960,9 +12982,21 @@ def paket_dimension() -> None:
 
     # ⚠️ WAS NICHT DRINSTECKT, MUSS IN DERSELBEN ZUSAMMENFASSUNG STEHEN.
     _wz = _WK.saetze(crv=2.0, stop_relativ=0.20, klasse="krypto", h=True)
+    # ⚠️ DIE ETIKETTEN KOMMEN AUS DER QUELLE, NICHT AUS DIESER ZEILE
+    # (01.09.2026). Hier stand "Referenz"/"Betrieb" als Literal - genau die
+    # Namen, die `wahrscheinlichkeit` fuehrte, waehrend `trefferbilanz` in
+    # DERSELBEN Mail "Standard"/"Bitpanda" schrieb. Eine Pruefung, die den
+    # einen Namen festnagelt, zementiert die Abweichung, statt sie zu
+    # finden. Jetzt liest sie aus `SAETZE_JE_SEITE_MAILTEXT` - derselben
+    # Stelle, aus der beide Mailbloecke lesen.
+    from agent.krypto.backward_tracking import (
+        SAETZE_JE_SEITE_MAILTEXT as _SAETZE12)
     pruefe(P, "die Mail nennt beide Gebuehrensaetze",
-           any("Referenz" in z for z in _wz)
-           and any("Betrieb" in z for z in _wz))
+           all(any(s[0] in z for z in _wz) for s in _SAETZE12),
+           "Nutzervorgabe 01.09.: getrennt fuer 0,30 %% Standard und "
+           "1,50 %% Bitpanda. Erwartet %s, Zeilen: %s"
+           % ([s[0] for s in _SAETZE12],
+              [z for z in _wz if "noetig" in z]))
     pruefe(P, "und benennt jedes NICHT eingerechnete Merkmal",
            all(any(b.name.split(" (")[0] in z for z in _wz)
                for b in _WK.BEITRAEGE),
@@ -14509,18 +14543,42 @@ def paket_instrument_reparatur() -> None:
 
     # ---- I-1a: der Kostenfehler ----
     from agent import trefferbilanz as _TB
-    _k = lambda h: _TB.kosten_r_aus_stop(100.0, 95.0, "krypto",
-                                         position_eur=1000.0,
-                                         instrument="spot", hebel=h, tage=30.0)
-    pruefe(P, "ein gehebelter Trade rechnet mit Hebelkosten",
-           _k(3.0) is not None and _k(1.0) is not None and _k(3.0) > _k(1.0),
-           "gemessen: %s gegen %s. Vorher stand hier `instrument == "
-           "\"hebel\"` und das Tier wurde NIE vergeben - jedes Krypto-Signal "
-           "rechnete 0,60 R statt 0,76 R, also 21 %% zu wenig"
-           % (_k(3.0), _k(1.0)))
-    pruefe(P, "und ein ungehebelter nicht",
-           _k(1.0) == _k(None),
-           "Hebel 1,0 ist kein Hebel - die Finanzierung faellt nicht an")
+    _k = lambda h, t=30.0: _TB.kosten_r_aus_stop(
+        100.0, 95.0, "krypto", position_eur=1000.0,
+        instrument="spot", hebel=h, tage=t)
+    # ⚠️⚠️ DIESE PRUEFUNG STAND AUF 30 TAGEN - UND WAR NUR DESHALB GRUEN.
+    #
+    # Am 01.09.2026 nachgerechnet: bei 1, 3, 7 und 14 Tagen war
+    # `_k(3.0) < _k(1.0)`, also GENAU DAS GEGENTEIL der Behauptung. Grund
+    # war die im Hebel-Tier fehlende Handelsgebuehr (siehe
+    # `backward_tracking.kosten_in_r`); erst nach 30 Tagen uebersteigt die
+    # aufgelaufene Finanzierung diese Luecke.
+    #
+    # Die geplante Hebel-Haltedauer liegt bei 1 bis 3 Tagen. Die Pruefung
+    # stand also ausgerechnet auf der einzigen Stufe, bei der der Fehler
+    # unsichtbar war. Deshalb gilt sie jetzt fuer JEDE Haltedauer - eine
+    # Aussage, die nur bei einem Parameterwert haelt, ist keine.
+    _tage_stufen = (0.0, 1.0, 3.0, 7.0, 14.0, 30.0)
+    _je_tag = [(t, _k(3.0, t), _k(1.0, t)) for t in _tage_stufen]
+    pruefe(P, "ein gehebelter Trade kostet mehr als derselbe ungehebelte - "
+              "bei JEDER Haltedauer",
+           all(a is not None and b is not None and a > b
+               for _t, a, b in _je_tag),
+           "gemessen: " + ", ".join("%.0f Tage %.4f gegen %.4f" % z
+                                    for z in _je_tag)
+           + ". Bis 01.09. fehlte im Hebel-Tier die Handelsgebuehr auf das "
+             "Nominal - der Hebel erschien SIEBENMAL billiger als Spot")
+    pruefe(P, "und die Finanzierung waechst mit der Haltedauer",
+           all(_je_tag[i][1] < _je_tag[i + 1][1]
+               for i in range(len(_je_tag) - 1)),
+           "sonst rechnet die Mail eine Position, die laenger offen ist, "
+           "nicht teurer - und der Hebel verliert seine einzige "
+           "zeitabhaengige Kostenart")
+    pruefe(P, "und ein ungehebelter Trade traegt keine Finanzierung",
+           all(_k(1.0, t) == _k(None, t) for t in _tage_stufen)
+           and len({round(_k(1.0, t), 12) for t in _tage_stufen}) == 1,
+           "Hebel 1,0 ist kein Hebel - die Finanzierung faellt nicht an, "
+           "und die Haltedauer darf die Spot-Kosten nicht beruehren")
 
     # ---- I-3: die Positionsfuehrung liest BEIDE Quellen ----
     import database.db as _dbm
@@ -15046,6 +15104,230 @@ def paket_kalibrierung() -> None:
            "ein Rang ueber die falsche Menge saehe aus wie ein richtiger")
 
 
+
+def paket_trennung() -> None:
+    """DIE TRENNUNG: neutrale Bewertung gegen Wirtschaftlichkeit (01.09.2026).
+
+    ⚠️ NUTZERHINWEIS, DER DIESES PAKET AUSGELOEST HAT:
+
+        "Vorsicht - wir sind in der Bewertung des Signals keine
+         Wirtschaftlichkeit - nur im eMail-Text merken. Du musst sauber
+         zwischen der neutralen Bewertung und der Rechnung im eMail
+         trennen - zwei verschiedene Bereiche."
+
+    Die Trennung ist die Grundlage des ganzen Bewertungskonzepts, und sie war
+    bisher NUR als Kommentar dokumentiert. Ein Kommentar haelt keine
+    Regression auf. Dieses Paket macht sie pruefbar - in beide Richtungen:
+
+        A  die Bewertung darf KEINE Kostengroesse sehen
+        B  die Mail MUSS beide Saetze zeigen und richtig rechnen
+
+    ⚠️ WARUM BEIDE RICHTUNGEN. Eine Bewertung ohne Gebuehren ist leicht
+    herzustellen, indem man die Kostenrechnung ganz weglaesst - dann ist die
+    Mail falsch. Und eine richtige Mail ist leicht herzustellen, indem man
+    die Kosten ueberall einspeist - dann ist die Bewertung falsch. Nur beide
+    Haelften zusammen beschreiben den Zustand, den der Nutzer gesetzt hat.
+    """
+    P = "Trennung"
+    import ast as _ast
+    import pathlib as _pl
+    from agent import potential as _PT
+    from agent import trefferbilanz as _TB2
+    from agent import wahrscheinlichkeit as _WK2
+    from agent.krypto.backward_tracking import (
+        SAETZE_JE_SEITE_MAILTEXT as _SAETZE, kosten_in_r as _kir)
+
+    # ---- A: DIE BEWERTUNG SIEHT KEINE KOSTEN ------------------------------
+    #
+    # ⚠️ DIE SCHAERFSTE FORM DIESER PRUEFUNG IST DIE INVARIANZ, nicht die
+    # Suche nach dem Wort "Gebuehr" im Code. Wenn das Potential sich nicht
+    # bewegt, waehrend sich JEDE kostenrelevante Groesse bewegt, kann keine
+    # von ihnen darin stecken - unabhaengig davon, wie der Code aussieht.
+    def _pot(**kw):
+        vor = dict(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                   instrument="spot", strategie="einstieg", h=None,
+                   merkmale={"funding_fuenftel": 0, "turnover_fuenftel": 0})
+        vor.update(kw)
+        return _PT.rechne(**vor).wert_r
+
+    _basis = _pot()
+    pruefe(P, "die Stopweite verschiebt das Potential nicht",
+           all(abs(_pot(stop_relativ=s) - _basis) < 1e-12
+               for s in (0.025, 0.05, 0.10, 0.20)),
+           "gebuehrenfrei ist der Breakeven 1/(1+CRV) und damit von der "
+           "Stopweite unabhaengig. Waere er es nicht, stecke eine "
+           "Kostengroesse in der Bewertung - denn NUR ueber die Kosten "
+           "wirkt der Stop auf die Wirtschaftlichkeit")
+    pruefe(P, "das Instrument verschiebt das Potential nicht",
+           all(abs(_pot(instrument=i) - _basis) < 1e-12
+               for i in ("spot", "hebel", "absicherung")),
+           "ein Hebeltrade traegt Finanzierung, ein Spot-Trade nicht - "
+           "wenn das Instrument die Bewertung bewegt, ist sie es, die "
+           "hier durchschlaegt")
+
+    # ⚠️ UND DIE GEGENPROBE: die Groessen MUESSEN wirken, sobald Gebuehren
+    # im Spiel sind. Ohne sie waere die Invarianz oben auch dann gruen,
+    # wenn die Kostenrechnung ueberhaupt nicht mehr funktioniert - eine
+    # Positivkontrolle, wie sie das Projekt seit Kapitel 93 B verlangt.
+    def _be(s, g):
+        return _WK2.rechne(crv=2.0, stop_relativ=s, klasse="krypto",
+                           gebuehr_je_seite=g)["breakeven"]
+
+    pruefe(P, "POSITIVKONTROLLE: mit Gebuehren wirkt die Stopweite sehr wohl",
+           _be(0.025, 0.015) > _be(0.05, 0.015) > _be(0.20, 0.015),
+           "gemessen %.4f / %.4f / %.4f. Waere auch das flach, wuerde die "
+           "Invarianz oben nur beweisen, dass die Rechnung kaputt ist"
+           % (_be(0.025, 0.015), _be(0.05, 0.015), _be(0.20, 0.015)))
+    pruefe(P, "und ohne Gebuehren ist sie flach - fuer JEDE Stopweite gleich",
+           len({round(_be(s, 0.0), 12)
+                for s in (0.025, 0.05, 0.10, 0.20)}) == 1,
+           "das ist die Zahl, auf der die Bewertung steht: 1/(1+CRV)")
+
+    # ---- A2: KEINE TRICHTERSTUFE VERWIRFT MIT EINER GEBUEHR ---------------
+    #
+    # ⚠️ UEBER DEN SYNTAXBAUM, NICHT UEBER TEXTSUCHE. Eine Textsuche findet
+    # die eigenen Kommentare - genau daran ist die Verdrahtungspruefung am
+    # 31.08. zweimal gescheitert. Gesucht werden `if`-Zweige, die
+    # `durchlauf.verloren(...)` enthalten und deren BEDINGUNG eine
+    # Kostengroesse nennt.
+    _quelle = _pl.Path("agent/rollen_lauf.py").read_text(encoding="utf-8")
+    _baum = _ast.parse(_quelle)
+    _KOSTENNAMEN = {"kosten_r", "breakeven", "kosten_in_r",
+                    "kosten_r_aus_stop", "KOSTEN_JE_SEITE"}
+
+    def _namen(knoten):
+        aus = {n.id for n in _ast.walk(knoten) if isinstance(n, _ast.Name)}
+        aus |= {n.attr for n in _ast.walk(knoten)
+                if isinstance(n, _ast.Attribute)}
+        return aus
+
+    _verdaechtig = []
+    for _k in _ast.walk(_baum):
+        if not isinstance(_k, _ast.If):
+            continue
+        _wirft = any(isinstance(c, _ast.Call)
+                     and isinstance(c.func, _ast.Attribute)
+                     and c.func.attr == "verloren"
+                     for c in _ast.walk(_k))
+        if _wirft and (_namen(_k.test) & _KOSTENNAMEN):
+            _verdaechtig.append(getattr(_k, "lineno", 0))
+    pruefe(P, "keine Verwerfung in der Kette haengt an einer Kostengroesse",
+           not _verdaechtig,
+           "Fundstellen in rollen_lauf.py: %s. Bis zum Umbau U-1 entschied "
+           "Stufe 11 ueber `bewertung['traegt']` - also mit 1,50 %% "
+           "Bitpanda-Gebuehren gegen eine Geometrie, die 33 %% hergibt"
+           % (_verdaechtig or "keine"))
+
+    # ---- B: DIE MAIL ZEIGT BEIDE SAETZE UND RECHNET SIE RICHTIG ----------
+    pruefe(P, "die zwei Saetze stehen an genau EINER Stelle",
+           len(_SAETZE) == 2
+           and abs(_SAETZE[0][1] - 0.003) < 1e-12
+           and abs(_SAETZE[1][1] - 0.015) < 1e-12,
+           "Nutzervorgabe: getrennt fuer 0,30 %% Standard und 1,50 %% "
+           "Bitpanda. Sie standen vorher zweimal im Code, mit "
+           "verschiedenen Namen in derselben Mail: %s" % (_SAETZE,))
+
+    _b = _TB2.bewerte({}, _TB2.merkmale(), kosten_r=0.6, crv=2.0)
+
+    def _mail(**kw):
+        return _TB2.satz(_b, einstieg=100.0, stop=95.0, einsatz_eur=800.0,
+                         **kw)
+
+    _spot = _mail(klasse="krypto", instrument="spot", hebel=1.0, tage=3.0)
+    _heb = _mail(klasse="krypto", instrument="hebel", hebel=3.0, tage=3.0)
+    _boerse = _mail(klasse="boerse", instrument="spot", hebel=1.0, tage=10.0)
+
+    for _name, _zeilen in (("Krypto-Spot", _spot), ("Hebel", _heb)):
+        pruefe(P, "der Mailtext nennt bei %s BEIDE Saetze" % _name,
+               all(any(s[0] in z for z in _zeilen) for s in _SAETZE),
+               "sonst sieht der Leser nur eine Zahl und kann nicht "
+               "erkennen, wieviel davon Markt und wieviel Anbieter ist. "
+               "Zeilen: %s" % _zeilen[:4])
+    pruefe(P, "und die beiden Zahlen sind dort verschieden",
+           len({z for z in _spot if "des Einsatzes" in z}) == 2,
+           "zwei gleiche Zahlen unter zwei Etiketten lesen sich wie 'der "
+           "Satz ist egal' - das waere die Aussage, die gerade NICHT gilt")
+    pruefe(P, "bei Fixgebuehr-Klassen steht dagegen NUR eine Zeile",
+           len([z for z in _boerse if "des Einsatzes" in z]) == 1
+           and not any(_SAETZE[0][0] in z for z in _boerse),
+           "Aktien, ETF und Absicherung rechnen fix plus Spread - ein "
+           "Prozentsatz geht dort nicht in die Formel ein, und zweimal "
+           "dieselbe Zahl waere irrefuehrend. Zeilen: %s" % _boerse[:4])
+    # ⚠️ NICHT NUR "die Woerter stehen da". Die Negativkontrolle vom
+    # 01.09. hat gezeigt, dass eine reine Wortpruefung auch am ALTEN Stand
+    # gruen bleibt - dort stand dann "davon Handel 0,0 %". Geprueft wird
+    # deshalb der WERT: der Handelsanteil eines Hebeltrades muss genau so
+    # gross sein wie die Kosten desselben Trades in Spot.
+    _handel_zeilen = [z for z in _heb if "davon Handel" in z]
+    _spot_pct = {z.split(":")[1].split("%")[0].strip()
+                 for z in _spot if "des Einsatzes" in z}
+    pruefe(P, "der Hebel weist Handel und Finanzierung getrennt aus - "
+              "und der Handelsanteil ist nicht null",
+           len(_handel_zeilen) == 2
+           and all("Handel 0,0 %" not in z for z in _handel_zeilen)
+           and all(any("Handel %s %%" % w in z for z in _handel_zeilen)
+                   for w in _spot_pct),
+           "der Handelsanteil faellt EINMAL an, die Finanzierung laeuft "
+           "JEDEN TAG weiter - ohne die Trennung kann der Leser nicht "
+           "erkennen, dass die Haltedauer den Preis treibt. Und der "
+           "Handelsanteil MUSS dem Spot-Wert entsprechen, sonst kuerzt "
+           "sich der Hebel nicht heraus. Zeilen: %s | Spot: %s"
+           % (_handel_zeilen, sorted(_spot_pct)))
+    pruefe(P, "und Spot weist keine Finanzierung aus",
+           not any("Finanzierung" in z for z in _spot),
+           "ein Spot-Trade leiht kein Kapital - eine Finanzierungszeile "
+           "dort waere eine erfundene Kostenart")
+
+    # ---- B2: DIE AUFTEILUNG IST VOLLSTAENDIG ------------------------------
+    _k3 = _kir(0.05, "hebel", 3.0, hebel=3.0, satz_je_seite=0.015)
+    pruefe(P, "Handel plus Finanzierung ergibt die Gesamtkosten",
+           abs(_k3["handel_rel"] + _k3["finanzierung_rel"]
+               - _k3["kosten_rel"]) < 1e-12,
+           "eine Aufteilung, die sich nicht zur Summe addiert, ist eine "
+           "zweite Rechnung - gemessen %.6f + %.6f gegen %.6f"
+           % (_k3["handel_rel"], _k3["finanzierung_rel"], _k3["kosten_rel"]))
+    pruefe(P, "die Handelsgebuehr in R haengt NICHT am Hebel",
+           len({round(_kir(0.05, "hebel", 3.0, hebel=L,
+                           satz_je_seite=0.015)["handel_rel"], 12)
+                for L in (2.0, 3.0, 5.0, 10.0)}) == 1,
+           "Gebuehr und Risiko skalieren beide mit dem Nominal, der Hebel "
+           "kuerzt sich heraus. Waere das anders, waere die Herleitung im "
+           "Kopf von `kosten_in_r` falsch")
+    pruefe(P, "die zusammengesetzte Hebelzahl gilt nicht mehr als belegt",
+           _k3["belegt"] is False,
+           "die Finanzierung ist an 104 Positionen belegt, die "
+           "Handelsgebuehr ist geschaetzt - eine Summe darf nicht das "
+           "Siegel ihres besseren Teils tragen")
+
+    # ---- B3: DIE FINANZIERUNG ERREICHT DIE HUERDE IN DER MAIL -------------
+    _ohne = _WK2.saetze(crv=2.0, stop_relativ=0.05, klasse="krypto")
+    _mit = _WK2.saetze(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                       hebel=3.0, tage=3.0)
+
+    def _noetig(zeilen):
+        return [z for z in zeilen if "noetig" in z]
+
+    pruefe(P, "die noetige Quote steigt beim Hebel gegenueber Spot",
+           _noetig(_ohne) != _noetig(_mit) and len(_noetig(_mit)) == 2,
+           "bis 01.09. rechnete `wahrscheinlichkeit` nur 2 x Gebuehr / "
+           "Stop - die Finanzierung fehlte, und die Mail nannte fuer einen "
+           "Hebeltrade eine zu niedrige Huerde. Spot: %s | Hebel: %s"
+           % (_noetig(_ohne), _noetig(_mit)))
+    pruefe(P, "beide Mailbloecke benutzen dieselben zwei Etiketten",
+           all(any(s[0] in z for z in _mit) for s in _SAETZE),
+           "`trefferbilanz.satz()` und `wahrscheinlichkeit.saetze()` "
+           "stehen in DERSELBEN Mail. Vorher hiessen die Saetze dort "
+           "'Referenz'/'Betrieb' und hier 'Standard'/'Bitpanda'")
+
+    # ---- B4: KEIN BESTANDSAUFRUFER AENDERT SICH STILL ---------------------
+    pruefe(P, "ohne `satz_je_seite` bleibt der bisherige Klassensatz",
+           abs(_kir(0.05, "krypto", 0.0)["kosten_rel"] - 2 * 0.015) < 1e-12
+           and abs(_kir(0.05, "aktien", 10.0,
+                        position_eur=1000.0)["kosten_r"] - 0.14) < 1e-9,
+           "das neue Argument ist eine Erweiterung, keine Aenderung - "
+           "sonst haetten sich Backtest und Nachmessung still verschoben")
+
+
 def paket_hartes_budget() -> None:
     """C2 - das Risikobudget als GRENZE, hinter einem Schalter (28.08.2026).
 
@@ -15163,6 +15445,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Trennung": paket_trennung,
           "Stufen": paket_beitrag_stufen,
           "Kalibrierung": paket_kalibrierung}
 

@@ -71,7 +71,8 @@ CRV = 2.0                       # 3,0 ATR Ziel / 1,5 ATR Stop, = risiko.crv_mini
 # gefunden, und das haette wie "noch keine Daten" ausgesehen statt wie ein
 # Fehler. Genau die Sorte U-Boot, die dieses Projekt mehrfach bezahlt hat.
 from agent.krypto.backward_tracking import (          # noqa: E402
-    OUTCOME_ABGELAUFEN, OUTCOME_TAKE_PROFIT, _RESOLVED_OUTCOMES)
+    OUTCOME_ABGELAUFEN, OUTCOME_TAKE_PROFIT, _RESOLVED_OUTCOMES
+)
 
 TREFFER = (OUTCOME_TAKE_PROFIT,)
 AUFGELOEST = _RESOLVED_OUTCOMES
@@ -99,7 +100,17 @@ AUFGELOEST = _RESOLVED_OUTCOMES
 # und Nachmessung mit verschiedenen Gebuehren rechnen.
 from agent.krypto.backward_tracking import (          # noqa: E402
     _KOSTEN_KRYPTO_JE_SEITE, _KOSTEN_BOERSE_FIX_EUR,
-    _KOSTEN_BOERSE_SPREAD_JE_SEITE)
+    _KOSTEN_BOERSE_SPREAD_JE_SEITE,
+    # ⚠️ DIE ZWEI SAETZE FUER DEN MAILTEXT - importiert, nicht kopiert.
+    # Eine zweite Liste waere die naechste stille Abweichung.
+    SAETZE_JE_SEITE_MAILTEXT,
+    # ⚠️ MODULWEIT, NICHT FUNKTIONSLOKAL (01.09.2026). `kosten_r_aus_stop`
+    # importiert diese Funktion in ihrem Rumpf; `satz()` braucht sie
+    # ebenfalls. Ein zweiter funktionslokaler Import haette den Namen
+    # dort LOKAL gemacht - und der breite Fehlerfang in `satz()` haette
+    # den NameError geschluckt, sodass die Kostenzeilen still aus der
+    # Mail verschwinden. Genau der Namensschatten aus Dauerpruefung T4c.
+    kosten_in_r)
 
 KOSTEN_JE_SEITE = {"krypto": _KOSTEN_KRYPTO_JE_SEITE,
                    "boerse_fix_eur": _KOSTEN_BOERSE_FIX_EUR,
@@ -457,7 +468,9 @@ def _herkunft_der_quote(b: dict) -> str:
 
 
 def satz(bewertung: dict, einstieg=None, stop=None,
-         einsatz_eur=None, klasse: str = "krypto") -> list[str]:
+         einsatz_eur=None, klasse: str = "krypto",
+         instrument: str | None = None, hebel: float | None = None,
+         tage: float | None = None) -> list[str]:
     """Der Entscheider-Block fuer die E-Mail.
 
     IN EURO UND PROZENT, NICHT IN R. Nutzereinwand 12.08.: *"Kosten in 2,77 R -
@@ -480,23 +493,84 @@ def satz(bewertung: dict, einstieg=None, stop=None,
     # Zuerst das Konkrete, wenn wir es haben: was kostet der Trade, gemessen
     # an dem, was er riskiert.
     if einstieg and stop and einstieg > stop > 0:
+        # ⚠️⚠️ AB HIER BEGINNT DIE ZWEITE EBENE (01.09.2026, Nutzervorgabe:
+        # *"sauber trennen nach neutraler Begruendung und rechnerischen
+        # Kosten im eMail-Text, getrennt fuer 0,3 Standard und 1,5 BP"*).
+        #
+        # Alles ueber diesem Block gehoert zur Bewertung und rechnet
+        # gebuehrenfrei. Alles ab hier ist WIRTSCHAFTLICHKEIT - sie steht
+        # in der Mail, damit der Nutzer sie sieht, und sie entscheidet
+        # NICHTS. Kein Filter, keine Rangfolge, keine Schwelle liest diese
+        # Zahlen (systemweit geprueft 01.09.).
+        #
+        # ZWEI SAETZE STATT EINEM. Vorher stand hier nur der
+        # Bitpanda-Satz; damit war nicht sichtbar, wieviel davon Markt und
+        # wieviel Anbieter ist. Beide Zahlen kommen aus
+        # `SAETZE_JE_SEITE_MAILTEXT` - derselben Quelle, aus der auch
+        # `wahrscheinlichkeit.saetze()` liest.
         stop_pct = 100.0 * (einstieg - stop) / einstieg
-        gebuehr_pct = (100.0 * 2 * KOSTEN_JE_SEITE["krypto"] if klasse == "krypto"
-                       else 100.0 * (2 * KOSTEN_JE_SEITE["boerse_fix_eur"]
-                                     / float(einsatz_eur or 500.0)
-                                     + 2 * KOSTEN_JE_SEITE["boerse_spread"]))
+        stop_rel = (einstieg - stop) / einstieg
         zeilen.append(f"Ihr Stop liegt {_de(stop_pct)} % unter dem Einstieg - "
                       f"so viel riskieren Sie.")
-        zeilen.append(f"Kauf und Verkauf zusammen kosten {_de(gebuehr_pct)} % "
-                      f"des Einsatzes"
-                      + (f", bei {einsatz_eur:.0f} EUR also rund "
-                         f"{gebuehr_pct / 100 * float(einsatz_eur):.0f} EUR."
-                         if einsatz_eur else "."))
-        verhaeltnis = gebuehr_pct / stop_pct
-        zeilen.append(
-            f"Die Gebuehren sind damit {_de(verhaeltnis)}-mal so gross wie Ihr "
-            f"Risiko." if verhaeltnis >= 1 else
-            f"Die Gebuehren fressen {100 * verhaeltnis:.0f} % Ihres Risikos auf.")
+
+        # ⚠️ DER HEBEL ENTSCHEIDET UEBER DAS TIER, NICHT DER LAUF (I-1a).
+        # Dieselbe Weiche wie in `kosten_r_aus_stop`, aus demselben Grund:
+        # seit S6b ist `instrument` im Lauf immer "spot".
+        _gehebelt = (float(hebel) > 1.0 if hebel is not None
+                     else instrument == "hebel")
+        _tier = ("hebel" if _gehebelt
+                 else "hedge" if instrument == "absicherung"
+                 else "krypto" if klasse == "krypto" else "aktien")
+
+        # ⚠️ ZWEI SAETZE NUR DORT, WO EIN SATZ UEBERHAUPT WIRKT.
+        #
+        # Krypto und Hebel rechnen PROZENTUAL - dort ist der Unterschied
+        # zwischen 0,30 % und 1,50 % die ganze Aussage. Aktien, ETF und
+        # Absicherung rechnen FIX plus Spread; ein Prozentsatz geht dort
+        # nicht in die Formel ein. Beide Zeilen zu drucken ergaebe zweimal
+        # dieselbe Zahl unter verschiedenen Etiketten - das liest sich wie
+        # "der Satz ist egal", und das waere falsch: er gilt dort schlicht
+        # nicht. Stattdessen EINE Zeile, die die echte Struktur nennt.
+        _prozentual = _tier in ("krypto", "hebel")
+        _saetze = (SAETZE_JE_SEITE_MAILTEXT if _prozentual
+                   else ((None, None),))
+        zeilen.append("Was der Handel kostet - zu zwei Saetzen gerechnet:"
+                      if _prozentual else
+                      "Was der Handel kostet (Fixgebuehr je Trade plus "
+                      "Spread - kein Prozentsatz):")
+        for name, s in _saetze:
+            try:
+                k = kosten_in_r(stop_rel, _tier, float(tage or 0.0),
+                                hebel=hebel, position_eur=einsatz_eur,
+                                satz_je_seite=s)
+            except Exception:                                # noqa: BLE001
+                continue
+            if not k or k.get("kosten_rel") is None:
+                continue
+            pct = 100.0 * k["kosten_rel"]
+            zeile = ((f"   {name}: " if name else "   ")
+                     + f"{_de(pct)} % des Einsatzes")
+            if einsatz_eur:
+                zeile += f" (rund {pct / 100 * float(einsatz_eur):.0f} EUR)"
+            # ⚠️ BEIM HEBEL DIE AUFTEILUNG DAZU. Ohne sie sieht der Leser
+            # eine Zahl, die zwei ganz verschiedene Dinge mischt: der
+            # Handelsanteil faellt einmal an, die Finanzierung laeuft JEDEN
+            # TAG weiter. Wer das nicht trennt, kann nicht erkennen, dass
+            # ein Hebeltrade mit der Haltedauer teurer wird.
+            if _tier == "hebel" and k.get("finanzierung_rel"):
+                zeile += (f" - davon Handel {_de(100 * k['handel_rel'])} %, "
+                          f"Finanzierung {_de(100 * k['finanzierung_rel'])} %"
+                          + (f" fuer {float(tage):.0f} Tage" if tage else ""))
+            zeilen.append(zeile)
+            verhaeltnis = pct / stop_pct if stop_pct else None
+            if verhaeltnis is not None:
+                zeilen.append(
+                    f"      -> {_de(verhaeltnis)}-mal so gross wie Ihr Risiko"
+                    if verhaeltnis >= 1 else
+                    f"      -> frisst {100 * verhaeltnis:.0f} % Ihres Risikos")
+        if _tier == "hebel":
+            zeilen.append("   ⚠️ Die Finanzierung laeuft weiter, solange die "
+                          "Position offen ist.")
         zeilen.append("")
 
     zeilen.append(f"Von hundert solchen Einstiegen erreichen erfahrungsgemaess "

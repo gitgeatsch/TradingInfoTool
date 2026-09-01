@@ -2014,7 +2014,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # ⚠️ DIESELBEN MERKMALE WIE STUFE 11 (B-a, 31.08.2026). Ohne
             # sie rechnete die Mail ohne Funding und Turnover und zeigte
             # eine andere Quote als die, mit der entschieden wurde.
-            merkmale=_merkmale or None)
+            merkmale=_merkmale or None,
+            # ⚠️ HEBEL UND HALTEDAUER (01.09.2026). Ohne sie fehlte in der
+            # Zeile "noetig X %" die Finanzierung - die Mail nannte fuer
+            # einen Hebeltrade eine zu niedrige Huerde.
+            hebel=rechnung.get("hebel"),
+            tage=rechnung.get("haltedauer_tage"))
     except Exception:                                        # noqa: BLE001
         logger.exception("Wahrscheinlichkeit fuer %s uebersprungen", symbol)
         _wk_zeilen = []
@@ -2151,11 +2156,21 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Risikos" waren mit der Zonenmitte 62 %.
             #
             # `einstieg_eur` IST die Mitte und liegt in derselben Rechnung.
+            # ⚠️ INSTRUMENT, HEBEL UND HALTEDAUER GEHEN MIT (01.09.2026).
+            # Ohne sie rechnete `satz()` jeden Trade als Spot - ein
+            # Hebeltrade zeigte in der Mail weder seine Finanzierung noch
+            # ihr Anwachsen mit der Haltedauer. Dieselben drei Groessen,
+            # die schon `kosten_r_aus_stop` oben bekommt; sie stehen in
+            # derselben `rechnung`, es fehlte nur die Weitergabe.
             einordnung=TB.satz(bewertung,
                                einstieg=rechnung.get("einstieg_eur")
                                or kurs_e,
                                stop=rechnung["stop_eur"],
-                               einsatz_eur=rechnung["betrag_eur"])
+                               einsatz_eur=rechnung["betrag_eur"],
+                               klasse=_kostenklasse(assetklasse),
+                               instrument=instrument,
+                               hebel=rechnung.get("hebel"),
+                               tage=rechnung.get("haltedauer_tage"))
             + Z1.satz(z1),
             # DIE ZWEITE STUFE IN IHREN EIGENEN ABSCHNITT.
             gegenpruefung=list(zweite_zeilen))

@@ -55,13 +55,52 @@ GRENZEN = {
     "stop_ziel_atr": 2.5,
     # ⚠️⚠️ VON 0,025 AUF 0,050 ANGEHOBEN (31.08.2026, Nutzerentscheidung).
     #
-    # Bei Stop 2,5 % und Bitpanda-Kosten von 1,5 % je Seite kostet die
-    # Runde 3,0 % - MEHR, als der Stop ueberhaupt verlieren darf. Der
-    # Trade ist ab der ersten Sekunde im Minus, der Breakeven springt auf
-    # 73,3 % gegen eine gemessene Trefferquote von 27,8 %.
+    # ⚠️ DIE BEGRUENDUNG IST NEU GEORDNET (01.09.2026, Nutzerhinweis:
+    # *"Du musst sauber zwischen der neutralen Bewertung und der Rechnung
+    # im eMail trennen - zwei verschiedene Bereiche."*). Sie stand vorher
+    # vollstaendig in Gebuehrensprache - Bitpanda-Satz, Breakeven,
+    # Wirtschaftlichkeit. Das las sich, als sei die Kostenrechnung das
+    # Kriterium fuer eine GEOMETRIEgrenze gewesen. Der tragende Grund ist
+    # ein anderer, und er kommt jetzt zuerst.
     #
-    # Und es war kein theoretischer Fall. Gemessen an 2.297 echten
-    # Rollen-Signalen der Notebook-Produktion:
+    # ---- DER NEUTRALE GRUND: ein Stop im Rauschen misst nichts ----
+    #
+    # Ein Stop hat genau eine Aufgabe: er soll sagen, dass die Annahme
+    # falsch war. Liegt er innerhalb der normalen Tagesspanne, sagt sein
+    # Ausloesen nichts ueber die Annahme - er wird von einem beliebigen
+    # Tick getroffen. Der Ausstieg ist dann ein Zufall, kein Befund.
+    #
+    # Krypto-Werte der Watchlist tragen eine mittlere Tagesspanne um 5 %.
+    # Ein Stop bei 2,5 % liegt damit bei rund 0,5 ATR - INNERHALB dessen,
+    # was ein ereignisloser Tag ohnehin durchlaeuft. Genau diese Grenze
+    # zieht `stop_min_atr` (0,75 ATR) bereits relativ; `stop_min_relativ`
+    # ist ihr absoluter Zwilling fuer Werte mit ungewoehnlich enger ATR,
+    # bei denen der relative Boden allein zu tief laege.
+    #
+    # ⚠️ Das ist eine Aussage ueber die KONSTRUKTION des Trades, nicht
+    # ueber sein Potential. Sie bewertet nicht, ob dieser Einstieg gut
+    # ist - sie sorgt dafuer, dass sein Ausgang ueberhaupt eine Aussage
+    # traegt. Die Bewertung selbst bleibt davon unberuehrt: bei
+    # `gebuehr_je_seite=0.0` ist der Breakeven `1/(1+CRV)` und damit fuer
+    # JEDE Stopweite gleich (gemessen 01.09.: 0,3333 bei 2,5 / 5 / 20 %,
+    # Potential identisch +0,1191 R). Die Stopweite kann das Potential
+    # also gar nicht verschieben.
+    #
+    # ---- NACHRANGIG, UND NUR FUER DEN MAILTEXT: die Wirtschaftlichkeit --
+    #
+    # ⚠️ Was jetzt folgt, ist KEIN Grund fuer diese Grenze, sondern eine
+    # Folge davon - und sie gehoert auf die Mailebene, wo mit echten
+    # Saetzen gerechnet wird. Sie steht hier, weil sie die Groessenordnung
+    # anschaulich macht, nicht weil sie die Zahl bestimmt haette.
+    #
+    # Bei Stop 2,5 % und Bitpanda 1,5 % je Seite kostet die Runde 3,0 % -
+    # mehr, als der Stop ueberhaupt verlieren darf. Der Breakeven im
+    # Mailtext springt damit auf 73,3 %. Beim Standardsatz 0,30 % je Seite
+    # sind es 0,6 % Runde und 36,0 % Breakeven - dieselbe Geometrie, eine
+    # ganz andere Wirtschaftlichkeit. Genau deshalb darf diese Rechnung
+    # die Grenze nicht setzen: sie haengt am Anbieter, die Geometrie nicht.
+    #
+    # ---- DIE WIRKUNG, gemessen an 2.297 echten Rollen-Signalen ----
     #
     #     Stops <= 2,6 % (an der Klemme)   233 Signale   10,1 %
     #     Signale mit Hebel > 5            105

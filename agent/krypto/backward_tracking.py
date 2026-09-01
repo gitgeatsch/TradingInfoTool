@@ -2476,6 +2476,25 @@ _KOSTEN_REFERENZ_POSITION_EUR = 400.0
 # eine ueber Monate gehaltene Absicherung billiger als sie ist.
 _KOSTEN_HEDGE_TER_P_A = 0.008
 
+# ⚠️ DIE ZWEI SAETZE FUER DEN MAILTEXT - AN GENAU EINER STELLE (01.09.2026).
+#
+# Nutzervorgabe: *"getrennt fuer 0,3 Standard und 1,5 BP"*. Beide Zahlen
+# standen bisher als Literale in `wahrscheinlichkeit.saetze()`; `trefferbilanz.
+# satz()` kannte nur die 1,5 %. Zwei Mailabschnitte mit verschiedenen Saetzen
+# in derselben Mail waeren die naechste stille Abweichung gewesen - deshalb
+# EINE Quelle, aus der beide lesen.
+#
+#   Standard 0,30 %   was ein gewoehnlicher Handelsplatz je Seite nimmt -
+#                     die Referenz, gegen die sich Bitpanda messen lassen muss
+#   Bitpanda 1,50 %   der Satz, zu dem der Nutzer tatsaechlich handelt
+#                     (0,99 % BTC bis 2,49 % Altcoins, im Spread enthalten)
+#
+# ⚠️ BEIDE GELTEN AUSSCHLIESSLICH FUER DEN MAILTEXT. Die Signalbewertung
+# rechnet mit 0,00 % (siehe `potential.rechne`) und darf keine dieser Zahlen
+# sehen - das ist die Trennung, auf der das ganze Bewertungskonzept steht.
+SAETZE_JE_SEITE_MAILTEXT = (("Standard 0,30 %", 0.003),
+                            ("Bitpanda 1,50 %", _KOSTEN_KRYPTO_JE_SEITE))
+
 
 def _tagesgebuehr_rel(tage: float) -> float:
     """Aufgelaufene Tagesgebuehr ueber `tage`, ueber die Staffel integriert."""
@@ -2491,10 +2510,26 @@ def _tagesgebuehr_rel(tage: float) -> float:
     return summe
 
 
+def _de_zahl(wert: float, stellen: int = 2) -> str:
+    """Deutsche Schreibweise - aus der EINEN Funktion, nicht nachgebaut.
+
+    ⚠️ Funktionslokaler Import unter eigenem Namen: dieses Modul haelt
+    sonst keinen `agent.schreibweise`-Bezug, und ein modulweiter Name, der
+    hier lokal ueberschrieben wuerde, waere der Namensschatten aus T4c.
+    Der Rueckfall schreibt notfalls selbst um, statt englisch zu bleiben.
+    """
+    try:
+        from agent.schreibweise import de as _de
+        return _de(wert, stellen)
+    except Exception:                                        # noqa: BLE001
+        return ("%.*f" % (stellen, wert)).replace(".", ",")
+
+
 def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
                 hebel: float | None = None,
                 ist_liquidation: bool = False,
-                position_eur: float | None = None) -> dict:
+                position_eur: float | None = None,
+                satz_je_seite: float | None = None) -> dict:
     """Handelskosten eines Trades, ausgedrueckt in R (Vielfachen des Risikos).
 
     HERLEITUNG. Einsatz E, Hebel L, damit Nominal N = E x L und geliehenes
@@ -2534,13 +2569,76 @@ def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
                 "tage": tage, "belegt": False, "basis": "kein Stop-Abstand"}
 
     groesse = None
+    # ⚠️ DER HANDELSSATZ IST AB HIER EIN ARGUMENT (01.09.2026, Nutzervorgabe).
+    #
+    # *"Getrennt fuer 0,3 Standard und 1,5 BP"* - die Mail soll BEIDE Saetze
+    # zeigen. Vorher war der Satz eine Konstante, und die Mail konnte nur
+    # eine Zahl nennen. Ohne Angabe bleibt der bisherige Klassensatz, damit
+    # kein Bestandsaufrufer sich still aendert.
+    #
+    # ⚠️ DAS AENDERT NICHTS AN DER BEWERTUNG. Die Signalbewertung rechnet
+    # ueber `potential.rechne()` mit `gebuehr_je_seite=0.0` und beruehrt
+    # diese Funktion nicht. Hier geht es ausschliesslich um die Zahlen im
+    # Mailtext.
+    _satz = (float(satz_je_seite) if satz_je_seite is not None
+             else _KOSTEN_KRYPTO_JE_SEITE)
+    handel_rel = finanzierung_rel = 0.0
     if tier == TIER_HEBEL:
         L = float(hebel) if hebel and hebel > 1 else _KOSTEN_HEBEL_FALLBACK
         satz = _KOSTEN_HEBEL_SCHLIESSUNG + _tagesgebuehr_rel(tage)
         if ist_liquidation:
             satz += _KOSTEN_HEBEL_LIQUIDATION
-        kosten_rel = (L - 1.0) / L * satz
-        belegt, basis = True, "geliehenes Kapital, an 104 Positionen belegt"
+        finanzierung_rel = (L - 1.0) / L * satz
+        # ⚠️⚠️ DIE HANDELSGEBUEHR HAT HIER GEFEHLT (01.09.2026).
+        #
+        # Bis heute rechnete das Hebel-Tier AUSSCHLIESSLICH die Finanzierung
+        # auf das geliehene Kapital. Die Folge in der Mail, bei Stop 5 %:
+        #
+        #     Spot (Hebel 1)   0,6000 R      Hebel 3 nach 3 Tagen   0,1120 R
+        #
+        # Ein Hebeltrade erschien SIEBENMAL BILLIGER als derselbe Trade in
+        # Spot. Er ist es nicht: ein gehebeltes Geschaeft kauft und verkauft
+        # eine Position vom Nominal N = E x L, und darauf faellt derselbe
+        # Handelssatz an wie bei Spot.
+        #
+        #     Risiko            1 R = N x stop_rel
+        #     Handelsgebuehr        = N x 2 x satz
+        #     in R                  = 2 x satz / stop_rel
+        #
+        # ⚠️ DER HEBEL KUERZT SICH DABEI HERAUS - Gebuehr und Risiko skalieren
+        # beide mit dem Nominal. Die Handelsgebuehr in R ist bei einem
+        # Hebeltrade EXAKT so gross wie bei Spot; der Hebel wirkt allein
+        # ueber die Finanzierung, und die ist es, die mit L waechst.
+        #
+        # WARUM DIE MESSUNG DAS NICHT GEFUNDEN HAT: die 104 Positionen sind
+        # ueber `margin_trading.fee` belegt, und diese Buchung fuehrt genau
+        # den Kreditanteil. Der Spread steckt - wie bei Spot - im
+        # ausgefuehrten Preis und ist ohne Marktmitte nicht messbar (siehe
+        # `_KOSTEN_SPOT_JE_SEITE`). Es war keine falsche Messung, sondern
+        # eine ASYMMETRIE: Spot trug den geschaetzten Spread, Hebel nicht.
+        #
+        # ⚠️ UND DIE PRUEFUNG HAT ES VERDECKT. `pruefe_pakete` stellte
+        # "Hebel kostet mehr als Spot" bei 30 TAGEN Haltedauer - der
+        # einzigen Stufe, bei der die Finanzierung die fehlende
+        # Handelsgebuehr uebersteigt. Bei der geplanten Hebel-Haltedauer
+        # von 1-3 Tagen waere sie rot gewesen (0,112 R gegen 0,600 R).
+        handel_rel = 2.0 * _satz
+        kosten_rel = handel_rel + finanzierung_rel
+        # ⚠️ `belegt` FAELLT DAMIT AUF FALSE. Die Finanzierung ist belegt,
+        # die Handelsgebuehr ist es nicht - eine zusammengesetzte Zahl darf
+        # sich nicht mit dem Siegel ihres besseren Teils schmuecken. Wer nur
+        # den belegten Teil braucht, nimmt `finanzierung_rel`.
+        belegt = False
+        # ⚠️ DEUTSCHE SCHREIBWEISE (01.09.2026). Meine erste Fassung
+        # formatierte mit `%.2f` und schrieb "0.30 %" - `simuliere_kette`
+        # hat es in der ASTER-Mail als englische Zahl gemeldet. `basis`
+        # geht ueber `kosten_basis` in die Auswertung und damit in Text,
+        # den der Nutzer liest. Eine eigene Komma-Ersetzung waere die
+        # fuenfte Kopie derselben Zeile - deshalb `schreibweise.de`.
+        basis = ("Finanzierung auf geliehenes Kapital (an 104 Positionen "
+                 "belegt) + Handel %s %% je Seite auf das Nominal "
+                 "(geschaetzt wie bei Spot, steckt im Spread)"
+                 % _de_zahl(100 * _satz, 2))
     elif _KOSTEN_ART_JE_TIER.get(tier) == "fix_plus_spread":
         # BOERSE: 1 EUR fix je Trade plus Spread. Die Fixgebuehr macht die
         # Kosten in R positionsgroessen-ABHAENGIG - der Einsatz kuerzt sich
@@ -2561,11 +2659,20 @@ def kosten_in_r(stop_rel: float | None, tier: str, tage: float,
     else:
         # KRYPTO ueber Bitpanda: prozentual, im Kurs enthalten.
         L = None
-        kosten_rel = 2.0 * _KOSTEN_KRYPTO_JE_SEITE
+        kosten_rel = handel_rel = 2.0 * _satz
         belegt = False
-        basis = "Bitpanda-Krypto: 1,5 % je Seite (Mitte 0,99-2,49 %), im Kurs enthalten"
+        basis = ("Bitpanda-Krypto: %s %% je Seite (Mitte 0,99-2,49 %%), "
+                 "im Kurs enthalten" % _de_zahl(100 * _satz, 2))
 
     return {"kosten_r": kosten_rel / stop_rel, "kosten_rel": kosten_rel,
+            # DIE AUFTEILUNG, damit die Mail beide Teile getrennt nennen kann
+            # und niemand sie nachrechnen muss. Bei den Tiers ohne
+            # Finanzierung ist `finanzierung_rel` null und `handel_rel` die
+            # ganze Zahl - keine Sonderfaelle beim Leser.
+            "handel_rel": handel_rel or kosten_rel,
+            "finanzierung_rel": finanzierung_rel,
+            "satz_je_seite": (_satz if _KOSTEN_ART_JE_TIER.get(tier)
+                              != "fix_plus_spread" else None),
             "hebel": L, "tage": tage, "belegt": belegt, "basis": basis,
             # NUR melden, wo die Groesse tatsaechlich in die Rechnung eingeht.
             # Bei Krypto und Hebel waere ein Wert hier irrefuehrend - dort

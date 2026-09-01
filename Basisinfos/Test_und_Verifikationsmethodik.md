@@ -4084,6 +4084,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `pruefe_assetklassen_datenlage.py` | Datenlage je Assetklasse — und seit 31.08. die Achse Klasse x Instrument x Strategie: welche Zelle traegt eine Bewertung, welche laeuft als Takt |
 | `messe_kandidaten_als_regel.py` | Die Kandidaten als REGEL ueber einen gemeinsamen Massstab — seit 31.08. mit `--horizonte` (H1..H20, die Hebel-Geometrie) und dem Schnittabstand als Kandidat |
 | `messe_summe_gegen_mittel.py` | B: traegt der MITTELWERT der Beitraege besser als ihre SUMME? Ergebnis 31.08.: **widerlegt** — das Mittel benachteiligt die dichtere Datenlage. ⚠️ Die Regelwirkung ist dort nicht messbar (Positivkontrolle versagt, Kennzahl mit 5 Stufen zu grob) |
+| `messe_rascher_anstieg.py` | Hebel-Vorbedingung: schlaegt eine Lage haeufiger als der Zufall in **3 Tagen ueber +1,0 R** aus? Binaere Zielgroesse (Quote statt Median), Volatilitaet als Mitlaeufer kontrolliert. Ergebnis 01.09.: **kein Kursreihen-Merkmal traegt** — ⚠️ gemessen wurden nur KURSDATEN; die Hebel-Bewertung des Screenings laeuft ueber den Terminmarkt (OI, Funding-Extrema, Long-Bias) und ist damit NICHT widerlegt |
 | `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
 | `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
 | `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |

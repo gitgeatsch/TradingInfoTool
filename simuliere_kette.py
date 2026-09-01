@@ -539,6 +539,27 @@ def main() -> int:
             # Die Paketpruefung baut EINE Beispielrechnung; hier laufen die
             # echten Mails aller Gruppen durch - Spot wie Hebel, Einstieg
             # wie Bestand.
+            # ⚠️ DIE ZWEI GEBUEHRENSAETZE MUESSEN IN JEDER EINSTIEGSMAIL
+            # STEHEN (01.09.2026, Nutzervorgabe: *"getrennt fuer 0,3
+            # Standard und 1,5 BP"*).
+            #
+            # Geprueft wird hier und nicht nur in `pruefe_pakete`, weil die
+            # Paketpruefung `trefferbilanz.satz()` DIREKT aufruft. Ob die
+            # Zeilen auch in der zusammengesetzten Mail ankommen, entscheidet
+            # die Naht in `rollen_lauf` - und genau solche Nahtstellen sind
+            # im Projekt schon zweimal still ausgefallen (Rolle G, marktrang).
+            #
+            # ⚠️ NUR BEI EINSTIEGEN. Eine Ausstiegsmail fuehrt keinen neuen
+            # Stop und keine neue Position - dort waere die Kostenrechnung
+            # eine Zahl ohne Bezug.
+            from agent.krypto.backward_tracking import (
+                SAETZE_JE_SEITE_MAILTEXT as _saetze_pflicht)
+            if "Ihr Stop liegt" in text:
+                _fehlende = [s[0] for s in _saetze_pflicht if s[0] not in text]
+                if _fehlende:
+                    gesamt["luecken"].append(
+                        f"{gruppe}/{instrument} {eintrag.get('symbol','?')}: "
+                        f"Gebuehrensatz fehlt in der Mail: {_fehlende}")
             _punkt = _englische_zahlen(text)
             if _punkt:
                 gesamt["luecken"].append(

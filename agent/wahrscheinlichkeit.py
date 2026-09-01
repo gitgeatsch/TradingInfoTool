@@ -467,8 +467,14 @@ BEITRAEGE = (
         # ENTWICKLERAKTIVITAET (12 Wochenmessungen, ab 09.11.2026). Sie
         # sammelt weiter und ist eine andere Groesse.
         zustand="null", punkte=0.0,
-        quelle="93 C, sammelt seit 20.08.2026",
-        warum="30 Tagesmessungen noetig, auswertbar ab 18.09.2026",
+        quelle="93 C, gemessen 30.08.2026 auf 188 Reihen",
+        # ⚠️ DER TEXT WAR MITGESCHLEPPT (01.09.2026). `zustand` stand seit
+        # dem 31.08. richtig auf "null", aber `warum` trug weiter den
+        # widerlegten Satz - und DIESER Text ist es, der in die Mail geht.
+        # Der Leser bekam also die gestrichene Behauptung zu sehen, waehrend
+        # der Code sie bereits verworfen hatte.
+        warum="gemessen und gefallen: TVL-Veraenderung, aktive Adressen "
+              "und NVM trennen nicht (188 Reihen, Grenze 0,10 R)",
         klassen=("krypto",)),
     Beitrag(
         name="Bekannte Termine",
@@ -561,6 +567,7 @@ def vermessen(klasse: str = "", strategie: str = "",
 
 
 def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
+           finanzierung_r: float = 0.0,
            klasse: str = "", h: bool | None = None, strategie: str = "",
            richtung: str = "", merkmale: dict | None = None) -> dict:
     """Die vollstaendige Rechnung. WIRFT, statt zu raten.
@@ -610,7 +617,20 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
                        "punkte": punkte, "warum": warum})
 
     quote = basis + zuschlag / 100.0
-    kosten_r = 2.0 * float(gebuehr_je_seite) / float(stop_relativ)
+    # ⚠️ DIE FINANZIERUNG KOMMT DAZU (01.09.2026).
+    #
+    # Hier stand nur `2 x Gebuehr / Stop` - die reine Handelsgebuehr. Fuer
+    # einen SPOT-Trade ist das vollstaendig; fuer einen HEBEL-Trade fehlte
+    # die taegliche Finanzierung auf das geliehene Kapital, und die Mail
+    # nannte eine zu niedrige Huerde. Bei Hebel 3, Stop 5 %, 3 Tagen sind
+    # das 0,112 R, die unter den Tisch fielen.
+    #
+    # ⚠️ DIE VORGABE 0,0 IST DIE NEUTRALE BEWERTUNG. `potential.rechne()`
+    # ruft diese Funktion mit `gebuehr_je_seite=0.0` und OHNE Finanzierung
+    # - dort darf keine Kostenart ankommen, sonst waere die Trennung
+    # zwischen Bewertung und Wirtschaftlichkeit wieder aufgehoben.
+    kosten_r = (2.0 * float(gebuehr_je_seite) / float(stop_relativ)
+                + max(0.0, float(finanzierung_r or 0.0)))
     breakeven = (1.0 + kosten_r) / (1.0 + float(crv))
     return {"crv": float(crv), "basisrate": basis, "zuschlag_punkte": zuschlag,
             "quote": quote, "kosten_r": kosten_r, "breakeven": breakeven,
@@ -621,7 +641,8 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
 
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
            h: bool | None = None, saetze_zum_berichten=None,
-           merkmale: dict | None = None) -> list[str]:
+           merkmale: dict | None = None,
+           hebel: float | None = None, tage: float | None = None) -> list[str]:
     """Die Zeilen fuer den Kopf der Mail.
 
     ⚠️ SIE SPERREN NICHTS. Auch "traegt nicht" ist kein Veto - es ist die
@@ -641,8 +662,20 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
     from agent.schreibweise import de
 
     if saetze_zum_berichten is None:
-        saetze_zum_berichten = (("Referenz 0,30 %", 0.003),
-                                ("Betrieb 1,50 %", 0.015))
+        # ⚠️ AUS DER EINEN QUELLE, NICHT ALS LITERAL (01.09.2026).
+        #
+        # Hier standen die beiden Saetze als eigene Zahlen mit eigenen
+        # Namen ("Referenz"/"Betrieb"), waehrend `trefferbilanz.satz()` in
+        # DERSELBEN MAIL andere Namen fuehrte. Zwei Etiketten fuer dieselbe
+        # Sache, ein paar Zeilen auseinander. Jetzt lesen beide aus
+        # `backward_tracking.SAETZE_JE_SEITE_MAILTEXT`.
+        #
+        # ⚠️ Funktionslokal und unter EIGENEM Namen - dieses Modul haelt
+        # sonst keine `agent`-Importe, und ein modulweiter Name, der hier
+        # lokal ueberschrieben wuerde, ist der Namensschatten aus T4c.
+        from agent.krypto.backward_tracking import (
+            SAETZE_JE_SEITE_MAILTEXT as _saetze_quelle)
+        saetze_zum_berichten = _saetze_quelle
     try:
         erste = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse,
                        h=h, gebuehr_je_seite=saetze_zum_berichten[0][1],
@@ -669,9 +702,24 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
 
     # ⚠️ BEIDE SAETZE NEBENEINANDER - seit Kapitel 119 die Vorgabe. Ein
     # einzelner Satz beantwortet je nur eine der beiden Fragen.
+    # ⚠️ DIE FINANZIERUNG JE SATZ, aus derselben Funktion wie der Mailtext
+    # in `trefferbilanz.satz()`. Sie haengt NICHT am Gebuehrensatz - sie
+    # laeuft auf das geliehene Kapital - deshalb einmal gerechnet und in
+    # beide Zeilen gegeben.
+    _fin_r = 0.0
+    if hebel is not None and float(hebel) > 1.0 and stop_relativ:
+        try:
+            from agent.krypto.backward_tracking import (
+                kosten_in_r as _kir)
+            _k = _kir(float(stop_relativ), "hebel", float(tage or 0.0),
+                      hebel=float(hebel))
+            _fin_r = (_k.get("finanzierung_rel") or 0.0) / float(stop_relativ)
+        except Exception:                                    # noqa: BLE001
+            _fin_r = 0.0
     for name, satz in saetze_zum_berichten:
         r = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse, h=h,
-                   gebuehr_je_seite=satz, merkmale=merkmale)
+                   gebuehr_je_seite=satz, finanzierung_r=_fin_r,
+                   merkmale=merkmale)
         # ⚠️ DREI PROZENTZAHLEN OHNE BEZUG WAREN NICHT LESBAR (Nutzerfrage
         # 28.08.: *"1,5 Prozent traegt sich nicht und 60 % - was bedeutet das,
         # was sind die 60 %?"*).
