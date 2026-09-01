@@ -475,6 +475,76 @@ MESSEN braucht es Historie — und die ist bereits erledigt, auf
 `messdaten.db` und den 66 CoinMetrics-Reihen. **Der Engpass ist also die
 Anwendung, nicht die Messung**, und eine einzige Anfrage je Tag behebt ihn.
 
+### ⚠️⚠️ N-13-1 GEPRÜFT — UND ES IST NICHT DER QUELLENTAUSCH, DEN ICH ANGEKÜNDIGT HATTE
+
+**Ich hatte N-13-1 als „klein" eingestuft: Umlaufmenge aus CoinGecko statt
+CoinMetrics, 6 → 43. Das war zweimal falsch.**
+
+**Erstens: die Laufzeit holt die Menge SCHON von CoinGecko** (`marktrang.py`
+Zeile 47 und 436). Der Engpass sitzt woanders — bei `messbasis()`,
+Zeile 483:
+
+> *„AUF DIE MESSBASIS EINGRENZEN … Ein Rang über die falsche Menge sähe aus
+> wie ein richtiger."*
+
+⚠️ **Das ist ein SCHUTZ, kein Loch.** Turnover wurde auf den 66
+CoinMetrics-Werten gemessen; ihn auf TAO anzuwenden wäre genau der
+H-Fehler — die Anwendung reicht weiter als die Messung. Die Basis zu
+weiten verlangt also eine **neue Messung**, und die braucht Mengen-
+HISTORIE, nicht den heutigen Wert.
+
+**Zweitens: es gibt keine freie Mengen-Historie über 365 Tage.**
+An der Quelle geprüft:
+
+| Quelle | Ergebnis |
+|---|---|
+| CoinGecko `market_chart` | **365 Tage**, darüber HTTP 401 |
+| CoinGecko `market_chart/range` | dieselbe Grenze (`error_code 10012`) |
+| CoinPaprika `tickers/historical` | **HTTP 402** — kostenpflichtig |
+| CryptoCompare `histoday` | **Schlüssel erforderlich** |
+| Messari `sply.circ` | nicht erreichbar |
+| CoinCap | Verbindung scheitert |
+
+365 Tage ergeben bei Horizont H20 (Block = 60 Tage) **6 Blöcke** — nötig
+sind 20 (Methodik 2.95). **Untermächtig.**
+
+**Drittens: die naheliegende Näherung versagt — gemessen, nicht vermutet.**
+„Heutige Menge rückwärts anwenden", geprüft an 53.714 Ankern über 63 Werte
+mit echter Historie:
+
+| Mengenwachstum | Symbole | Fünftel wechselt |
+|---|---|---|
+| < 1 % | 27 | 6,3 % |
+| 1–5 % | 5 | 5,2 % |
+| 5–20 % | 12 | 7,3 % |
+| **> 20 %** | 5 | **39,3 %** |
+
+Insgesamt 89,2 % Übereinstimmung — ⚠️ **aber der Gesamtwert täuscht:** die
+63 Testwerte sind das alte CoinMetrics-Universum mit träger Menge. **Bei
+wachsender Menge versagt die Näherung, und das sind genau die jungen
+Werte, für die wir sie bräuchten.**
+
+### N-13-1' — was stattdessen möglich ist
+
+**Ein Beitrag, der die Menge gar nicht braucht.** Turnover misst
+Aufmerksamkeit: viel Umschlag je Bestand. Dieselbe Idee ohne den fehlenden
+Nenner:
+
+> **Anteil dieses Werts am GESAMTVOLUMEN des Tages** — ein reiner
+> Querschnitt, nur aus dem Volumen, das für alle **578** Messreihen
+> vorliegt.
+
+| | Turnover (heute) | Volumenanteil (Vorschlag) |
+|---|---|---|
+| Nenner | Umlaufmenge | Gesamtvolumen des Tages |
+| Messbasis | 66 Werte | **578** |
+| Anwendbar auf | 6 von 43 | **alle, ab Tag 1** |
+| Form | Querschnitt | Querschnitt ✔ (N-13b) |
+
+⚠️ **Es ist ein NEUER Kandidat und braucht seine eigene Messung** — mit
+Tagesklammer, Placebo-Band, beiden Hälften und Wirkung als Regel. Er ist
+nicht dasselbe wie Turnover und darf dessen Zahlen nicht erben.
+
 ### N-13b — Und die Bauform künftiger Beiträge
 
 **Gemessen am 01.09.:** Die elf Werte ohne Binance-Perpetual sind die
