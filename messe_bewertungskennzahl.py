@@ -146,7 +146,7 @@ def urteil_tage(titel, werte, rng, block=30):
     """Bootstrap ueber BLOECKE von Kalendertagen - benachbarte Tage haengen zusammen."""
     if len(werte) < 60:
         print("    %-34s zu wenige Tage (%d)" % (titel, len(werte)))
-        return
+        return None
     tage = sorted(werte)
     bl = [np.array([werte[t] for t in tage[i:i + block]])
           for i in range(0, len(tage), block)]
@@ -155,9 +155,43 @@ def urteil_tage(titel, werte, rng, block=30):
     boot = np.array([mittel[rng.integers(0, n, n)].mean() for _ in range(20000)])
     u, o = np.quantile(boot, [0.025, 0.975])
     w = np.array(list(werte.values()))
+    urteil = "TRAEGT" if u > 0 else ("UMGEKEHRT" if o < 0 else "nicht trennbar")
+    # ⚠️⚠️ ZU WENIGE BLOECKE - DAS BAND DECKT DANN NICHT (01.09.2026).
+    #
+    # Gemessen an reinem Rauschen, 200 Wiederholungen je Zeile:
+    #
+    #      5 Bloecke  ->  19,5 %  Fehlalarme      (nominal 5 %)
+    #     12 Bloecke  ->  10,0 %
+    #     14 Bloecke  ->   6,5 %
+    #     34 Bloecke  ->   2,5 %
+    #
+    # Der Bootstrap zieht `n` Blockmittel aus `n` Blockmitteln. Bei n=5 ist
+    # die Bootstrap-Verteilung so grob, dass das 95-%-Band systematisch zu
+    # eng ausfaellt - jede vierte reine Rauschgroesse erscheint dann als
+    # Befund. Gefunden hat es der Selbsttest von `messe_form_kurz_gegen_-
+    # lang.py`, nicht eine Ueberlegung: dort feuerten 5 von 20 Rauschgroessen.
+    #
+    # ⚠️ Die Blockgroesse darf NICHT einfach verkleinert werden, um mehr
+    # Bloecke zu bekommen - sie muss laenger sein als die Abhaengigkeit im
+    # Ertrag (Vorgabe: 3 x Horizont). Wer zu kleine Bloecke nimmt, tauscht
+    # ein zu enges Band gegen ein zu enges Band aus anderem Grund. Der
+    # richtige Weg ist mehr Kalendertage - oder die Zahl ehrlich als
+    # untermaechtig auszuweisen.
+    if n < 20:
+        print("    %-34s ⚠️ NUR %d BLOECKE - das Band deckt nicht "
+              "(bei 5 Bloecken 19,5 %% Fehlalarme statt 5 %%). "
+              "Dieses Urteil ist untermaechtig." % ("", n))
     print("    %-34s %+.4f R  [%+.4f .. %+.4f]  %3d/%3d Tage +  %s"
-          % (titel, w.mean(), u, o, int((w > 0).sum()), len(w),
-             "TRAEGT" if u > 0 else ("UMGEKEHRT" if o < 0 else "nicht trennbar")))
+          % (titel, w.mean(), u, o, int((w > 0).sum()), len(w), urteil))
+    # ⚠️ GIBT DAS URTEIL JETZT AUCH ZURUECK (01.09.2026). Bis hierher hat
+    # diese Funktion es nur GEDRUCKT - wer es weiterverarbeiten wollte,
+    # musste die Zahlen ein zweites Mal rechnen, und damit haette es zwei
+    # Bootstrap-Implementierungen gegeben, die auseinanderlaufen koennen.
+    # Bestehende Aufrufer ignorieren den Rueckgabewert und aendern sich
+    # nicht.
+    return {"mittel": float(w.mean()), "unten": float(u), "oben": float(o),
+            "tage": len(w), "tage_positiv": int((w > 0).sum()),
+            "urteil": urteil, "traegt": bool(u > 0)}
 
 
 def urteil(titel, werte, rng):

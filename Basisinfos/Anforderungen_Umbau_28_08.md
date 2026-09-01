@@ -636,6 +636,34 @@ Kettensimulation weist es in der fertigen Mail nach.
 
 | # | | Vorbedingung | Größe |
 |---|---|---|---|
+
+⚠️⚠️ **H-1 IST GELAUFEN — UND DIE FRAGE WAR UMZUSTELLEN (01.09.2026).**
+Vollstaendig: `Fakten_Entscheidungsmappe.md` **F-164**.
+
+Die oben notierte Fassung (*„traegt sich ein gehebelter Trade mit engem
+Stop?"*) ist **erstens beantwortet** — die Kopplung Stopabstand/
+Tragfaehigkeit steht seit dem 22.08. je Signal in der Mail — und
+**zweitens eine WIRTSCHAFTLICHKEITSfrage**, die die Bewertung nach
+stehender Vorgabe nicht entscheiden darf.
+
+**Nutzerkorrektur:** *„Hebel steil-kurz, Spot flach-lang."* Gemessen wurde
+deshalb: trennt eine Groesse zum Bewertungszeitpunkt, ob der Ertrag auf
+H3 hoeher ist als auf H20? **916.021 Anker, 7.269 Kalendertage, sechs
+vorab benannte Kandidaten: KEINER trennt.**
+
+⚠️ **Aufloesungsgrenze:** die Kunstgroesse wird gefunden (+0,8330 R),
+ein aufgepflanzter Effekt von +0,05 R nicht. **Grosse Effekte sind
+ausgeschlossen, kleine nicht.**
+
+**Und der Kern, arithmetisch:** R ist `Nominal x stop_rel`, der Hebel
+kuerzt sich heraus. **Gebuehrenfrei sind Hebel und Spot dasselbe
+Geschaeft.** Nur ueber den HORIZONT kann die Bewertung das Instrument
+ueberhaupt waehlen — und dort trennt nichts.
+
+**Folge fuer H-3:** nicht begruendbar. Es gaebe nichts zu hinterlegen.
+**5.2 steht damit vorerst als endgueltige Antwort, nicht als Kompromiss.**
+**H-4 (Terminmarkt) ist der naechste und aussichtsreichste Weg.**
+
 | **H-1** | ⚠️ **Die Messung nachholen, die 5.2 selbst verlangt hat:** *„Bei einem Stop von 2 % kostet allein die Referenzgebühr 0,30 R — mehr als der gesamte gemessene Vorsprung. Ein gehebelter Trade mit engem Stop trägt sich rechnerisch nicht, bevor er begonnen hat. **Das wäre zu messen, bevor Aufwand in seine Verwaltung fließt.**"* | ✔ L3 jetzt korrekt | klein |
 | **H-2** | **Entscheiden, ob die Bewertung eine Instrument-Achse bekommt** — oder ob der Hebel eine reine **Ausführungsfrage** bleibt (dann ist 5.2 die endgültige Antwort, nicht ein Kompromiss) | H-1 | ⚠️ **Nutzerentscheidung** |
 | **H-3** | Falls ja: **`Beitrag` um `horizonte` erweitern**, die H1–H20-Messung je Horizont eintragen, `potential.rechne` einen Horizont annehmen lassen | H-2 | groß |

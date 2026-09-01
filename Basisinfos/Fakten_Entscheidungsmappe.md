@@ -2733,3 +2733,125 @@ durchgeführt und kann **H-3 (Instrument-Achse) überflüssig machen**.
 
 Verwandt: F-159 · F-161 · `Befund_Instrument_nach_S6b_28_08.md` 6 ·
 Methodik 2.94 · Regelwerk R-R10
+
+
+---
+
+## F-164 H-1 gemessen: kein Kursreihen-Merkmal trennt STEIL-KURZ von FLACH-LANG (01.09.2026)
+
+**Nutzerkorrektur, die die Frage erst richtig gestellt hat:** *„Den Hebel
+haben wir erst wieder aufgenommen als Strategie mit einem klaren Ziel,
+welches unterscheiden soll, ob zum Zeitpunkt der Bewertung und
+Signalgenerierung die bessere Wahl ist… **Hebel steil-kurz, Spot
+flach-lang**."*
+
+### ⚠️ Zuerst: H-1 aus 5.2 war die falsche Frage
+
+5.2 formulierte H-1 als *„trägt sich ein gehebelter Trade mit engem Stop?"*.
+Das ist **erstens beantwortet** (Kopplung Stopabstand/Tragfähigkeit steht
+seit 22.08. je Signal in der Mail; dazu 06.08., Kapitel 104/105, S5, RM-1b)
+und **zweitens eine WIRTSCHAFTLICHKEITSfrage** — sie darf die Bewertung nach
+stehender Vorgabe gar nicht entscheiden.
+
+### Der Kern: warum der Horizont der einzige legitime Unterschied ist
+
+R ist `Nominal × stop_rel`, der Ertrag in R also `Bewegung / stop_rel` —
+**der Hebel kürzt sich heraus:**
+
+| Hebel | Nominal | Risiko (1 R) | Gewinn bei +4 % | in R |
+|---|---|---|---|---|
+| 1 | 1.000 | 50 | 40 | **0,800** |
+| 3 | 3.000 | 150 | 120 | **0,800** |
+| 5 | 5.000 | 250 | 200 | **0,800** |
+
+**Gebührenfrei sind Hebel und Spot dasselbe Geschäft.** Dass
+`potential.rechne` für beide dieselbe Zahl liefert, ist kein Fehler, sondern
+Arithmetik. Es bleiben drei mögliche Unterschiede — Gebühren (per Regel
+ausgeschlossen), **Horizont** (die Nutzeraussage), Kapitalbindung
+(Portfoliofrage). **Nur über den Horizont kann die Bewertung das Instrument
+wählen.**
+
+### Die Messung
+
+`messe_form_kurz_gegen_lang.py`, 916.021 Anker, 7.269 Kalendertage, 578
+Reihen. Zielgröße: `R_kurz (H3) − R_lang (H20)`, ohne Barriere, ohne
+Gebühr. Regel: oberstes Fünftel je Kalendertag → kurz, sonst lang. Gemessen
+gegen den **quotengleichen Zufall** (2.93), Tagesklammer, beide Hälften,
+Negativ- und Positivkontrolle.
+
+| Kandidat | Wirkung | Band | Urteil |
+|---|---|---|---|
+| vola | −0,2240 R | [−1,4203 .. +0,7505] | ✖ null |
+| momentum_kurz | −0,0035 R | [−0,0336 .. +0,0264] | ✖ null |
+| spanne_aus | +0,0719 R | [−0,1144 .. +0,3547] | ✖ null |
+| schnitt50 | −0,3787 R | [−1,1064 .. +0,0008] | ✖ null |
+| funding | +0,0512 R | [−0,0106 .. +0,1345] | ✖ null |
+| turnover | +0,0490 R | [−0,0657 .. +0,1630] | ✖ null |
+| *zufall* (Kontrolle) | −0,0378 R | [−0,1850 .. +0,0706] | ✖ null ✔ |
+
+**Kein Kandidat trennt.** ✔ Die Kontrollgröße trägt ebenfalls nicht — das
+Verfahren erzeugt keinen Vorteil aus dem Nichts.
+
+⚠️ **AUFLÖSUNGSGRENZE, ehrlich benannt.** Die Kunstgröße, die die Antwort
+kennt, wird gefunden (**+0,8330 R, TRÄGT**) — das Verfahren ist nicht blind.
+Aber ein aufgepflanzter Effekt von **+0,05 R feuert nie**. **Diese Messung
+schließt große Effekte aus (≥ ~0,5 R), nicht kleine.** Ein Nullbefund hier
+ist also „nichts Großes", nicht „nichts".
+
+### Die Grundlagenzahlen — sie sagen mehr als die Kandidaten
+
+    kurzer Horizont besser als langer:   53,4 % aller Anker
+    je Kalendertag:  Median 46,9 %, Spanne 0,0 .. 100,0 %
+    je Asset (>=200 Anker, 551 Symbole): Median 57,6 %, Spanne 35,1 .. 85,9 %
+
+**Streuungszerlegung der Frage „ist kurz besser?":**
+
+| | Anteil |
+|---|---|
+| ZWISCHEN den Tagen (Marktlage) | **32,2 %** |
+| INNERHALB der Tage (Asset) | **67,8 %** |
+
+⚠️ **Zwei Drittel liegen beim Asset** — dort, wo das Zellenmodell sucht. Der
+Weg ist also nicht durch die Datenlage verbaut; die sechs geprüften
+Kursreihen-Kandidaten finden ihn nur nicht.
+
+⚠️ **UNBESTÄTIGT und ausdrücklich KEIN Befund:** Die Spanne je Asset
+(35,1 .. 85,9 %) sieht nach persistenten Asset-Unterschieden aus. Bei
+**überlappenden Ankern** ist die wirksame Fallzahl aber weit kleiner als
+200 (je 20 Tage Fenster), und dann ist diese Spanne mit reinem Zufall
+verträglich. **Das ist die nächste Messung, nicht ein Ergebnis dieser.**
+
+### ⚠️ Drei Fehler in der eigenen Messanlage — alle von den Kontrollen gefunden
+
+| | Was | Wie gefunden |
+|---|---|---|
+| **1** | **Gegen NULL statt gegen den quotengleichen Zufall gemessen.** `mean(R_kurz−R_lang)` ist −0,50 R; jede beliebige 20-%-Auswahl bringt 0,2 × (−0,50). Gegen null sah damit jede Regel schlecht aus — gemessen wurde die Marktphase | die **Negativkontrolle** lag systematisch bei −0,10 bis −0,14 statt bei null |
+| **2** | **Der Nenner war der Kandidat.** `vola = spanne[i]/Median` stand im NENNER von R. Großer Nenner staucht die Differenz gegen null, und da der Mittelwert negativ ist, sieht Stauchung wie Gewinn aus. Der erste Befund *„vola trägt +0,0960 R"* war **mechanisch** | die **Mitläuferprüfung** (2.80): `median|d|` fiel monoton 1,82 → 1,42, Streuung im untersten Fünftel **220 R** |
+| **3** | **Datenbrüche nicht entfernt** — Punkt 4 der eigenen Checkliste 2.91 übersprungen. Signatur war sichtbar: `mean −1,02` gegen `median +0,16` | Checkliste, nachträglich angewandt |
+
+**Und ein vierter, in einem geteilten Werkzeug:** `messe_bewertungskennzahl.
+urteil_tage` deckt nicht, wenn zu wenige Blöcke vorliegen — gemessen an
+reinem Rauschen **19,5 % Fehlalarme bei 5 Blöcken** gegen nominal 5 %.
+✔ Warnung eingebaut; der echte Lauf hat 163 Blöcke und ist nicht betroffen.
+Gefunden hat es der **Selbsttest gegen Kunstdaten**, der vor dem teuren Lauf
+lief — die stehende Vorgabe hat sich hier direkt bezahlt gemacht.
+
+### Was daraus folgt
+
+1. **H-3 (Instrument-Achse in der Bewertung) ist nicht begründbar** — es gibt
+   nichts zu hinterlegen. Ein zweiter Bewertungsweg für den Hebel hätte
+   dieselbe Zahl wie der erste.
+2. **Damit steht 5.2 vorerst als endgültige Antwort, nicht als Kompromiss:**
+   der Hebel ist heute eine **Ausführungsfrage** (`hebel = verlustanteil /
+   stop_rel`), keine Bewertungsfrage.
+3. **H-4 bleibt offen und ist jetzt der aussichtsreichste Weg:** die
+   Terminmarkt-Rohgrößen (OI, OI-Veränderung, OI-Divergenz, Funding-Extrema)
+   sind hier **nicht** geprüft worden — Funding nur als Niveau, nicht als
+   Extremum. Historie liegt auf dem Notebook.
+4. ⚠️ **Und eine Nutzerentscheidung wird fällig:** Solange nichts trennt,
+   ist jede Hebel-Empfehlung eine Wette auf den Zeitpunkt ohne Begründung —
+   Regel 4. Entweder der Hebel bleibt aus, bis H-4 etwas findet, oder er
+   wird bewusst als Ausführungsvariante ohne eigene Begründung geführt.
+
+Verwandt: F-163 · `Anforderungen_Umbau_28_08.md` 9.5 ·
+Methodik 2.94, 2.95 · `messe_form_kurz_gegen_lang.py`

@@ -4085,6 +4085,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kandidaten_als_regel.py` | Die Kandidaten als REGEL ueber einen gemeinsamen Massstab — seit 31.08. mit `--horizonte` (H1..H20, die Hebel-Geometrie) und dem Schnittabstand als Kandidat |
 | `messe_summe_gegen_mittel.py` | B: traegt der MITTELWERT der Beitraege besser als ihre SUMME? Ergebnis 31.08.: **widerlegt** — das Mittel benachteiligt die dichtere Datenlage. ⚠️ Die Regelwirkung ist dort nicht messbar (Positivkontrolle versagt, Kennzahl mit 5 Stufen zu grob) |
 | `messe_rascher_anstieg.py` | Hebel-Vorbedingung: schlaegt eine Lage haeufiger als der Zufall in **3 Tagen ueber +1,0 R** aus? Binaere Zielgroesse (Quote statt Median), Volatilitaet als Mitlaeufer kontrolliert. Ergebnis 01.09.: **kein Kursreihen-Merkmal traegt** — ⚠️ gemessen wurden nur KURSDATEN; die Hebel-Bewertung des Screenings laeuft ueber den Terminmarkt (OI, Funding-Extrema, Long-Bias) und ist damit NICHT widerlegt |
+| `messe_form_kurz_gegen_lang.py` | **H-1**: trennt eine Groesse STEIL-KURZ (H3) von FLACH-LANG (H20)? Wahl-Regel gegen quotengleichen Zufall, Tagesklammer, bruchbereinigt, mit `--selbsttest` gegen Kunstdaten. Ergebnis 01.09.: **kein Kursreihen-Kandidat trennt** — ⚠️ Aufloesung nur fuer Effekte ab ~0,5 R |
 | `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
 | `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
 | `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |
@@ -4887,3 +4888,41 @@ bei der Handelsgebühr heraus).
 
 **Merksatz:** *Eine grüne Prüfung sagt „bei diesen Werten stimmt es". Ob
 das die Werte sind, die vorkommen, sagt sie nicht.*
+
+---
+
+## 2.95 ⚠️ Der Block-Bootstrap deckt nicht, wenn es zu wenige BLOECKE gibt
+
+**Anlass: 01.09.2026**, Selbsttest von `messe_form_kurz_gegen_lang.py`.
+Fünf von zwanzig **reinen Rauschgrößen** wurden als Befund gemeldet.
+
+`urteil_tage` zieht `n` Blockmittel aus `n` Blockmitteln. Bei kleinem `n`
+ist die Bootstrap-Verteilung so grob, dass das 95-%-Band systematisch zu
+eng ausfällt. Gemessen an reinem Rauschen, 200 Wiederholungen je Zeile:
+
+| Blöcke | Fehlalarme | nominal |
+|---|---|---|
+| **5** | **19,5 %** | 5 % |
+| 12 | 10,0 % | 5 % |
+| 14 | 6,5 % | 5 % |
+| 23 | 8,0 % | 5 % |
+| 34 | 2,5 % | 5 % |
+| 67 | 3,5 % | 5 % |
+
+**Regel:** Unter **20 Blöcken** ist das Urteil untermächtig und wird als
+solches ausgewiesen. ✔ `urteil_tage` warnt seit dem 01.09. selbst.
+
+⚠️ **Die Blockgröße darf NICHT verkleinert werden, um mehr Blöcke zu
+bekommen.** Sie muss länger sein als die Abhängigkeit im Ertrag (Vorgabe:
+3 × Horizont); kleinere Blöcke tauschen ein zu enges Band gegen ein zu
+enges Band aus anderem Grund. Der richtige Weg ist **mehr Kalendertage** —
+oder die Zahl ehrlich als untermächtig zu führen.
+
+⚠️ **Und die zweite Lehre:** Gefunden hat es der **Selbsttest gegen
+Kunstdaten**, der vor dem teuren Lauf lief — nicht der Lauf selbst. Der
+Selbsttest maß dabei zunächst seine eigene zu dünne Kunstwelt (400 Tage =
+5 Blöcke), nicht das Verfahren. **Auch die Kunstdaten brauchen die
+Größenordnung der echten.**
+
+Verwandt: 2.88 (Positivkontrolle) · 2.93 (quotengleicher Zufall) ·
+2.94 (Prüfung auf einem Parameterwert)
