@@ -118,6 +118,58 @@ MIND_JE_TAG = 12
 SCHNITT_FENSTER = 200          # wie in `messe_schnittabstand_beitrag.py`
 
 
+def lade_terminmarkt(db: str = "data/terminmarkt_historie.db") -> dict:
+    """Die Terminmarkt-Tagesreihen aus dem Binance-Archiv (H-4c, 01.09.2026).
+
+    ⚠️ DER STAND AM TAGESENDE, nicht der Mittelwert. Open Interest ist ein
+    BESTAND; der Wert um 23:00 ist der Zustand des Tages. Dieselbe
+    Begruendung wie beim Import (Methodik 2.85, die Form der Groesse).
+
+    Rueckgabe: {kandidat: {SYMBOL: {datum: wert}}} - die Form, die `baue`
+    als `zusatz` erwartet.
+
+    ⚠️ ALLE KANDIDATEN SIND QUERSCHNITTSGROESSEN. Das ist keine Bequem-
+    lichkeit, sondern N-13b (01.09.2026): die elf Werte ohne Binance-
+    Perpetual sind die JUENGEREN (Median-Alter 496 gegen 1.113 Tage), und
+    eine Zeitreihen-Groesse waere bei einem neu aufgenommenen Wert 250 Tage
+    lang blind. Ein Querschnittsrang traegt ab Tag 1.
+    """
+    import sqlite3
+    c = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
+    # letzter Stundenwert je Symbol und Tag
+    roh: dict = {}
+    for sym, stunde, oi, oiw, topk, _tops, konten, taker in c.execute(
+            "SELECT symbol, stunde, oi, oi_wert, top_konten_verh, "
+            "top_summe_verh, konten_verh, taker_verh FROM terminmarkt "
+            "ORDER BY symbol, stunde"):
+        roh.setdefault(str(sym).upper(), {})[str(stunde)[:10]] = (
+            oi, oiw, topk, konten, taker)
+    c.close()
+
+    aus = {k: {} for k in ("oi_aenderung", "oi_wert", "long_bias",
+                           "top_bias", "taker_bias")}
+    for sym, je_tag in roh.items():
+        tage = sorted(je_tag)
+        for i, d in enumerate(tage):
+            oi, oiw, topk, konten, taker = je_tag[d]
+            # ⚠️ VERAENDERUNG, nicht Rohwert: der OI-Betrag ist zwischen
+            # Assets nicht vergleichbar (BTC gegen BIO), seine relative
+            # Aenderung schon. Form der Groesse, 2.85.
+            if i and oi and je_tag[tage[i - 1]][0]:
+                v = je_tag[tage[i - 1]][0]
+                if v > 0:
+                    aus["oi_aenderung"].setdefault(sym, {})[d] = oi / v - 1.0
+            if oiw:
+                aus["oi_wert"].setdefault(sym, {})[d] = float(oiw)
+            # ⚠️ ROHWERT bei den Verhaeltnissen - sie SIND schon ein
+            # Verhaeltnis und damit ueber Assets vergleichbar.
+            for name, w in (("long_bias", konten), ("top_bias", topk),
+                            ("taker_bias", taker)):
+                if w is not None:
+                    aus[name].setdefault(sym, {})[d] = float(w)
+    return aus
+
+
 def baue(reihen, art, zusatz=None, horizont=None):
     """Anker je Kalendertag mit dem gewuenschten Merkmal."""
     je_tag = {}
@@ -158,6 +210,19 @@ def baue(reihen, art, zusatz=None, horizont=None):
                     wert = float(v[i] / menge)
             elif art == "funding":
                 wert = (extra or {}).get(tage[i])
+            elif art in ("oi_aenderung", "long_bias", "top_bias",
+                         "taker_bias"):
+                # H-4c: die Terminmarkt-Groessen, alle als Querschnitt
+                wert = (extra or {}).get(tage[i])
+            elif art == "oi_je_umsatz":
+                # ⚠️ VERHAELTNIS: Hebelaufbau JE LIQUIDITAET. Der reine
+                # OI-Betrag ist zwischen Assets nicht vergleichbar; sein
+                # Verhaeltnis zum Tagesumsatz schon - und genau das nennt
+                # die Praxisliteratur als Mass fuer Ueberhebelung.
+                _oiw = (extra or {}).get(tage[i])
+                _umsatz = float(v[i]) * float(c[i]) if c[i] else 0.0
+                if _oiw and _umsatz > 0:
+                    wert = float(_oiw) / _umsatz
             elif art == "schnitt50":
                 # ⚠️ NUTZERIDEE 31.08.: *"Was ist mit dem 50-Schnitt bzw.
                 # Abstand - haben wir diesen gemessen?"* Nein. Gemessen
@@ -233,6 +298,8 @@ def horizontlauf(reihen, menge, funding, horizonte):
 def main():
     import argparse
     ap = argparse.ArgumentParser()
+    ap.add_argument("--terminmarkt", action="store_true",
+                    help="H-4c: die fuenf Terminmarkt-Kandidaten")
     ap.add_argument("--horizonte", default="",
                     help="z.B. 1,2,3,5,10,20 - loest den Horizontlauf aus")
     a = ap.parse_args()
@@ -241,6 +308,43 @@ def main():
     rng = np.random.default_rng(20260830)
     menge = MB.reihe("data/onchain_historie.db", "splycur")
     funding = F.lade_funding()
+
+    if getattr(a, "terminmarkt", False):
+        # ---- H-4c: DIE TERMINMARKT-GROESSEN (01.09.2026) ---------------
+        #
+        # ⚠️ VORABFESTLEGUNG. Fuenf Kandidaten, vorab benannt, alle als
+        # QUERSCHNITT (N-13b - eine Zeitreihen-Groesse waere bei neu
+        # aufgenommenen Werten 250 Tage blind):
+        #
+        #   oi_aenderung   Veraenderung des Open Interest zum Vortag
+        #   oi_je_umsatz   OI-Wert je Tagesumsatz - Hebelaufbau je
+        #                  Liquiditaet, das Mass der Praxisliteratur
+        #   long_bias      count_long_short_ratio - alle Konten
+        #   top_bias       count_toptrader_long_short_ratio - die Grossen
+        #   taker_bias     sum_taker_long_short_vol_ratio - das Volumen
+        #
+        # Suchpreis 2.49: FUENF Zellen, vorab benannt. Ein sechster
+        # Kandidat aendert den Preis.
+        #
+        # ⚠️ Basis: 27 der 32 Terminmarkt-Symbole liegen in `messdaten.db`.
+        # Das ist knapp ueber dem Mindestquerschnitt von 15 - die Baender
+        # werden entsprechend breit sein, und ein Nullbefund ist hier eher
+        # untermaechtig als widerlegend.
+        tm = lade_terminmarkt()
+        print("#" * 92)
+        print("# KONTROLLE ZUERST — Funding bei H20 muss +0,0242 R reproduzieren")
+        print("#" * 92)
+        W.bericht("KONTROLLE FUNDING H20",
+                  baue(reihen, "funding", funding, horizont=20),
+                  True, rng, mit_positivkontrolle=False)
+        for art, quelle in (("oi_aenderung", tm["oi_aenderung"]),
+                            ("oi_je_umsatz", tm["oi_wert"]),
+                            ("long_bias", tm["long_bias"]),
+                            ("top_bias", tm["top_bias"]),
+                            ("taker_bias", tm["taker_bias"])):
+            W.bericht("H-4c %s" % art,
+                      baue(reihen, art, quelle, horizont=20), True, rng)
+        return
 
     if a.horizonte:
         hs = [int(x) for x in a.horizonte.split(",") if x.strip()]

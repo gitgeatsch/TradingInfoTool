@@ -3100,3 +3100,74 @@ steil-kurz von flach-lang) bleibt für den Hebel keine begründbare Lage
 
 Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=seitwaerts`
 Verwandt: F-163 · F-164 · F-165 · Methodik 2.95
+
+---
+
+## F-167 ⚠️ H-4c gemessen — und es ist KEIN Nullbefund, sondern eine untermächtige Messung (01.09.2026)
+
+**Die Kontrolle hält, die Messung nicht.**
+
+| | Anker | Symbole | Tage | Blöcke |
+|---|---|---|---|---|
+| **Kontrolle Funding H20** | 344.634 | 292 | 2.371 | 26 ✔ |
+| **H-4c Terminmarkt** | 23.360 | **27** | **1.066** | **12 ⚠️** |
+
+✔ Die Kontrolle reproduziert: **+0,0246 R [+0,0094 .. +0,0371]** gegen den
+hinterlegten Wert +0,0242 R. **Die Messanlage ist intakt.**
+
+### Die fünf Kandidaten — alle vorab benannt, alle Querschnitt (N-13b)
+
+| Kandidat | Wirkung | Band | Negativkontrolle |
+|---|---|---|---|
+| oi_aenderung | +0,0036 R | [−0,0081 .. +0,0145] | ok |
+| oi_je_umsatz | −0,0124 R | [−0,0587 .. +0,0304] | ok |
+| long_bias | −0,0180 R | [−0,0707 .. +0,0323] | ok |
+| **top_bias** | −0,0236 R | [−0,0765 .. +0,0255] | ⚠️ **TRÄGT** (+0,0153) |
+| **taker_bias** | +0,0315 R | [−0,0038 .. +0,0787] | ⚠️ **TRÄGT** (+0,0274) |
+
+⚠️⚠️ **Bei zwei von fünf Kandidaten trägt die NEGATIVKONTROLLE** — die
+gemischte Kennzahl erzeugt einen Befund. Und die Positivkontrolle +0,05 R
+feuert nur bei zwei von fünf. **Damit ist hier kein Urteil möglich, weder
+positiv noch negativ** (Methodik 2.88).
+
+Die von mir am selben Tag eingebaute Blockwarnung meldet es im Klartext:
+*„NUR 12 BLÖCKE — das Band deckt nicht."*
+
+### ⚠️ Der Fehler ist meiner: Watchlist statt Messbasis
+
+Ich habe **32 Watchlist-Werte** importiert, wo eine **Messbasis** nötig war.
+Das Projekt kennt die Lehre seit P6: *„Die Messbasis ist breiter als das
+Portfolio und muss es sein — sonst misst man seine eigene Auswahl."*
+
+**Und die bindende Größe ist nicht die Symbolzahl, sondern die ZEIT.**
+`urteil_tage` nutzt Blockgröße 90; die Blockzahl ist Tage ÷ 90:
+
+    1.066 Tage (3 Jahre)  ->  12 Blöcke   ⚠️
+    1.800 Tage (5 Jahre)  ->  20 Blöcke   ✔ Mindestmaß
+    2.070 Tage (Archiv ab 2021) -> 23 Blöcke
+
+**Mehr Symbole machen die Bänder enger, aber nicht die Blöcke mehr.**
+
+### Was der Nachlauf kostet — gemessen
+
+    Binance USDT-Perpetuals, handelnd        526
+    davon in `messdaten.db`                  293
+
+    293 Symbole x 5 Jahre  = 606.510 Anfragen ~ 25 h
+    100 Symbole x 5 Jahre  = 207.000 Anfragen ~  8,5 h   <- reicht
+                             (100 Anker je Tag, Mindestquerschnitt ist 15)
+
+⚠️ **In TAGESauflösung gespeichert** sind das rund 35 MB statt 700 MB. Die
+Stundenauflösung wird nur für Variante B (Intraday-Ereignisse) gebraucht,
+und dafür genügen die bereits importierten 32 Watchlist-Werte.
+
+### Was bestehen bleibt
+
+* Der Import selbst ist sauber — 700.943 Zeilen, gegen die Rohdatei geprüft.
+* Die fünf Kandidaten sind **nicht widerlegt**, nur **nicht entscheidbar**.
+* ⚠️ **Ein Nullbefund darf hieraus NICHT abgeleitet werden.** Genau davor
+  steht Methodik 2.88: eine Positivkontrolle, die den eigenen Effekt frisst,
+  macht jeden Nullbefund untermächtig statt widerlegend.
+
+Werkzeug: `messe_kandidaten_als_regel.py --terminmarkt`
+Verwandt: F-165 · F-166 · N-13b · Methodik 2.88, 2.95

@@ -4089,6 +4089,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_form_kurz_gegen_lang.py --ziel=frontloading` | **H-4a/H-4b**: welcher Anteil der Bewegung faellt in die ersten 3 Tage? VorzeichenLOSE Zielgroesse `|R_kurz|/(|R_kurz|+|R_rest|)` — die praxiskonforme Frage, weil der Terminmarkt Ausmass und Tempo vorhersagt, nicht die Richtung. Ergebnis 01.09.: **vier Groessen tragen** (turnover, vola, momentum_kurz, funding_extrem), ⚠️ **aber nur +1,0 bis +3,2 Punkte** — zu klein fuer eine Instrumentwahl |
 | `messe_form_kurz_gegen_lang.py --ziel=seitwaerts` | **S-1**: sagt ein etabliertes Trend/Range-Mass die kommende Effizienz-Ratio (Kaufman) voraus? Kandidaten: ER rueckwaerts, ADX (Wilder), Choppiness, Varianzverhaeltnis (Lo/MacKinlay). Ergebnis 01.09.: **keiner traegt** (max +1,5 Punkte). ⚠️ Der BEFUND ist die Basisrate: **65,5 % aller 20-Tage-Fenster sind seitwaertser als ein Zufallspfad**, und nur 20,9 % liefern netto +2,0 R |
 | `hole_terminmarkt_historie.py` | Holt die Terminmarkt-Kennzahlen aus dem **oeffentlichen Binance-Archiv** (`data.binance.vision`): Open Interest, OI-Wert und **vier Long/Short-Verhaeltnisse**, ab 2021, 5-Minuten-Raster. Verdichtet auf **1 Stunde** (letzter Wert je Stunde - OI ist ein BESTAND) in eine **eigene** Datei `data/terminmarkt_historie.db`. Wiederaufnehmbar; 404 heisst 'vor der Listung', nicht 'Fehler'. ⚠️ **Damit ist H-4c JETZT messbar statt 2028** |
+| `messe_kandidaten_als_regel.py --terminmarkt` | **H-4c**: die fuenf Terminmarkt-Kandidaten (OI-Aenderung, OI je Umsatz, Long-Bias, Top-Bias, Taker-Bias), alle als QUERSCHNITT. ⚠️ Ergebnis 01.09.: **kein Urteil moeglich** - bei zwei von fuenf traegt die NEGATIVkontrolle, nur 12 Bloecke statt 20. Die Funding-Kontrolle reproduziert dabei (+0,0246 gegen +0,0242 R): die Anlage ist intakt, die BASIS zu schmal |
 | `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
 | `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
 | `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |
@@ -5016,3 +5017,37 @@ Größe, die im Hintergrund gröber gerechnet wird als sie dasteht, wäre eine
 zweite, unsichtbare Definition.
 
 Verwandt: 2.85 (die Form der Größe) · 2.94 · `agent/anlass.py`
+
+---
+
+## 2.98 ⚠️ Die Blockzahl hängt an den TAGEN, nicht an den Symbolen
+
+**Anlass: 01.09.2026, H-4c.** Ich hatte 32 Watchlist-Werte importiert und
+erwartet, damit messen zu können. Die Messung lief, und **zwei von fünf
+Negativkontrollen trugen** — das Verfahren erzeugte Befunde aus gemischten
+Daten.
+
+**Die Ursache steht in `urteil_tage`:** der Block-Bootstrap zieht über
+Blöcke von Kalendertagen, Blockgröße `max(90, 3 × Horizont)`. Die Blockzahl
+ist damit **Tage ÷ 90** — und völlig unabhängig davon, wie viele Symbole
+je Tag beitragen.
+
+| Zeitraum | Tage | Blöcke |
+|---|---|---|
+| 3 Jahre | 1.066 | **12** ⚠️ |
+| 5 Jahre | 1.800 | **20** ✔ |
+
+**Mehr Symbole machen die Bänder enger. Mehr Blöcke machen sie ehrlich.**
+Das sind zwei verschiedene Dinge, und nur das zweite entscheidet, ob das
+Band deckt (2.95).
+
+**Regel:** Vor dem Beschaffen von Daten für eine Messung wird gerechnet,
+**wie viele Kalendertage** nötig sind — nicht wie viele Werte. Die
+Symbolzahl folgt danach aus dem Mindestquerschnitt (15).
+
+⚠️ **Und die zweite Hälfte:** Es war eine **Watchlist**, keine Messbasis.
+Die Lehre steht seit P6 im Gesamtplan — *„Die Messbasis ist breiter als das
+Portfolio und muss es sein — sonst misst man seine eigene Auswahl."* Ich
+habe sie beim Beschaffen nicht angewandt.
+
+Verwandt: 2.88 (Positivkontrolle) · 2.95 (Blockdeckung) · F-167
