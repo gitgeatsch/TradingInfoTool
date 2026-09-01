@@ -266,7 +266,8 @@ def _rang(p: dict) -> tuple:
 
 
 def sammel_mail(alle: list, modell: str | None = None,
-                zeitpunkt: str | None = None) -> tuple | None:
+                zeitpunkt: str | None = None,
+                positionen: list | None = None) -> tuple | None:
     """EINE Mail fuer alle Ausstiege eines Laufs. `None`, wenn keiner anfiel.
 
     NUTZEREINWAND 14.08., NOCH WAEHREND DIESER UMBAU LIEF: *"45 Signale sind
@@ -368,6 +369,38 @@ def sammel_mail(alle: list, modell: str | None = None,
                 teil.append(f"Stop nachziehen auf {preis(f['stop_neu'])}")
             if teil:
                 zeilen.append("           " + " · ".join(teil))
+
+    # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG (01.09.2026) ------------------
+    #
+    # ⚠️ `agent/positionsfuehrung.py` war seit dem 27.08. gebaut und stand
+    # in der Toten-Liste der Modulkarte - kein Betriebsaufrufer. Damit war
+    # die Nutzerfestlegung vom 26.08. nie erfuellt:
+    #
+    #     *„eine Position bleibt eine Position - hier sollte auch der
+    #      Verlust sichtbar sein und somit ein Break-even"*
+    #
+    # DIE LUECKE, DIE SIE SCHLIESST. Am NB-Stand vom 26.08.: 266 offene
+    # Signale auf 44 Symbole, 37 Symbole MEHRFACH gefuehrt, 222
+    # ueberzaehlige Fuehrungen (83 %). BIO stand 21x, BTC 17x. Vierzehn
+    # Symbole trugen am selben Tag verschiedene Handlungen - HYPE gleich-
+    # zeitig NACHKAUFEN und REDUZIEREN. Das ist kein Meinungsstreit des
+    # Modells, sondern eine Buchhaltungsfrage: die Ausstiegspruefung laeuft
+    # ueber SIGNALE, der Nutzer haelt aber EINE Position mit EINEM Einstand.
+    #
+    # ⚠️ SIE STEHT NEBEN DEN VORSCHLAEGEN, NICHT AN IHRER STELLE. Die
+    # Vorschlaege sagen, was zu TUN ist; die Fuehrung sagt, was man HAT.
+    # Dieselbe Begruendung wie bei der zweiten Ebene oben ("getrennt
+    # gelesen sehen sie aus wie zwei Meinungen, zusammen sind sie zwei
+    # Befunde").
+    #
+    # ⚠️ UND SIE ERFINDET KEIN R. Eine Spot-Position hat nach Nutzerangabe
+    # keinen Stop, also kein R und keinen sinnvollen MFE. Was sie hat, ist
+    # ein Einstand - und daraus Gewinn/Verlust in Euro und Prozent. Genau
+    # das steht hier und nichts darueber hinaus (N-11).
+    if positionen:
+        zeilen += ["", "--- WAS SIE HALTEN (eine Zeile je Position) ---"]
+        for _pz in positionen:
+            zeilen += list(_pz)
 
     zeilen += ["", "--- WARUM ---"]
     for p in posten:

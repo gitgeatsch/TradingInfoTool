@@ -871,8 +871,35 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # DIE EINE VERKAUFSMAIL - nach den Einstiegen, vor dem Warten auf Z.ai.
     # Sie braucht kein zweites Modell (siehe verkaufsrechnung.sammel_mail) und
     # soll deshalb nicht bis zu vier Minuten dahinter warten muessen.
+    # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG VERDRAHTEN (01.09.2026) -------
+    #
+    # ⚠️ `agent/positionsfuehrung.py` stand seit dem 27.08. gebaut und ohne
+    # Aufrufer in der Toten-Liste. Hier bekommt es einen - und zwar an der
+    # EINEN Stelle, an der es hingehoert: in die Sammelmail, die ohnehin vom
+    # Bestand handelt.
+    #
+    # ⚠️ NUR FUER DIE SYMBOLE DIESES LAUFS. `lade(symbole=...)` begrenzt es
+    # auf die Gruppe; sonst stuende in der Krypto-Mail der Aktienbestand.
+    #
+    # ⚠️ UND FAIL-SOFT MIT VERMERK: faellt die Fuehrung aus, geht die
+    # Sammelmail trotzdem raus - aber der Ausfall steht im Lauf, statt still
+    # zu passieren. Eine Verkaufsmail zurueckzuhalten, weil eine ANZEIGE
+    # fehlt, waere die falsche Richtung.
+    _positionen = None
+    try:
+        from agent import positionsfuehrung as _PF
+        _pos = _PF.lade(conn, symbole=list(symbole or ()), db=db)
+        _positionen = [_PF.zeilen(x) for x in _pos if x.im_bestand]
+        ergebnis["positionsfuehrung"] = {
+            "gefuehrt": len(_pos), "im_bestand": len(_positionen)}
+    except Exception as _pfx:                                # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(
+            f"Positionsfuehrung uebersprungen: {type(_pfx).__name__}: {_pfx}")
+        logger.exception("Positionsfuehrung fuer %s uebersprungen", assetklasse)
+
     _sammel = VK2.sammel_mail(ergebnis.get("ausstiege") or [],
-                              modell=modell, zeitpunkt=tag)
+                              modell=modell, zeitpunkt=tag,
+                              positionen=_positionen)
     if _sammel:
         ergebnis.setdefault("mails", []).append(
             {"symbol": "(Sammel)", "betreff": _sammel[0], "text": _sammel[1],

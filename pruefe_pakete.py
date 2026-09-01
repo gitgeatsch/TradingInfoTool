@@ -3181,13 +3181,39 @@ def gesamtpruefung() -> None:
     # ⚠️ DIE GEGENPROBE: die Pruefung muss eine ECHTE Luecke noch finden.
     # Ohne sie waere "alles verdrahtet" auch dann gruen, wenn die Methode
     # kaputt ist - und genau das war heute frueher der Fall.
-    pruefe(P, "⚠️ und sie findet die BEKANNTE Luecke weiterhin",
-           not any(x.endswith("/positionsfuehrung.py")
+    # ⚠️ DIE GEGENPROBE WURDE AM 01.09.2026 NACHGEZOGEN - so wie ihr eigener
+    # Begruendungstext es verlangte.
+    #
+    # Sie stand auf `positionsfuehrung` ("Punkt B im Roten Faden: gebaut,
+    # kein Aufrufer") und lautete: *„Wenn diese Zeile faellt, ist entweder B
+    # erledigt (dann hier nachziehen) - oder die Erreichbarkeitsrechnung
+    # zaehlt wieder Docstrings als Aufrufe."* B IST mit Schritt 7 erledigt,
+    # also wird die Kontrollgroesse getauscht, nicht die Pruefung geloescht.
+    #
+    # ⚠️ EINE VERDRAHTUNGSPRUEFUNG BRAUCHT IMMER EINE ECHTE LUECKE als
+    # Gegenprobe. Ohne sie waere "alles verdrahtet" auch dann gruen, wenn
+    # die Methode kaputt ist - und genau das war am 31.08. der Fall
+    # (Textsuche fand `positionsfuehrung` im Docstring von
+    # `handelsauftrag.py:74`).
+    #
+    # Neue Kontrollgroesse: `szenario_entscheidung` - Stufe 2 des Umbaus vom
+    # 10.08., gebaut und seither ohne Betriebsaufrufer. Sie steht in
+    # `zeige_modulkarte.py --tot`; faellt DIESE Zeile, gilt dasselbe wie
+    # vorher: entweder ist sie verdrahtet (dann hier nachziehen) oder die
+    # Rechnung zaehlt wieder Docstrings.
+    pruefe(P, "⚠️ und sie findet eine BEKANNTE Luecke weiterhin",
+           not any(x.endswith("/szenario_entscheidung.py")
                    for x in _erreicht),
-           "`positionsfuehrung` ist seit dem 27.08. Punkt B im Roten Faden: "
-           "gebaut, kein Aufrufer. Wenn diese Zeile faellt, ist entweder B "
-           "erledigt (dann hier nachziehen) - oder die Erreichbarkeits"
-           "rechnung zaehlt wieder Docstrings als Aufrufe")
+           "`szenario_entscheidung` ist seit dem 10.08. gebaut und ohne "
+           "Betriebsaufrufer (Modulkarte --tot). Wenn diese Zeile faellt, "
+           "ist sie entweder verdrahtet (dann hier nachziehen) - oder die "
+           "Erreichbarkeitsrechnung zaehlt wieder Docstrings als Aufrufe")
+    pruefe(P, "⚠️ und `positionsfuehrung` ist jetzt ERREICHBAR (Schritt 7)",
+           any(x.endswith("/positionsfuehrung.py") for x in _erreicht),
+           "sie war die vorige Kontrollgroesse und ist seit dem 01.09. "
+           "verdrahtet - `rollen_lauf` gibt ihre Zeilen an "
+           "`verkaufsrechnung.sammel_mail`. Faellt diese Zeile, ist Schritt 7 "
+           "still zurueckgefallen")
 
 
 def paket_b1() -> None:
@@ -15731,6 +15757,59 @@ def paket_zellen() -> None:
            "gefunden an %d Stellen, erwartet 2. Eine Rechnung mit und eine "
            "ohne Hebelerlaubnis waeren zwei verschiedene Trades unter einem "
            "Namen" % _stellen)
+    # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG IST VERDRAHTET ---------------
+    #
+    # ⚠️ `positionsfuehrung` stand seit dem 27.08. GEBAUT und ohne Aufrufer
+    # in der Toten-Liste der Modulkarte - Punkt B im Roten Faden. Die
+    # Nutzerfestlegung vom 26.08. war damit nie erfuellt: *„eine Position
+    # bleibt eine Position - hier sollte auch der Verlust sichtbar sein und
+    # somit ein Break-even."*
+    from agent import verkaufsrechnung as _VK7
+    from agent import positionsfuehrung as _PF7
+    pruefe(P, "der Lauf ruft die Positionsfuehrung",
+           "positionsfuehrung as _PF" in _quelle
+           and "_PF.zeilen(" in _quelle,
+           "gebaut und nicht gerufen ist im Projekt die haeufigste Luecke - "
+           "`marktrang.saetze()` und `zellen()` waren dieselbe Klasse")
+    pruefe(P, "und `sammel_mail` nimmt sie entgegen",
+           "positionen" in _VK7.sammel_mail.__code__.co_varnames,
+           "ohne den Parameter waere der Aufruf oben wirkungslos - und "
+           "genau so sehen halbe Verdrahtungen aus")
+
+    # ⚠️ DIE WIRKUNG AM TEXT, nicht an der Verdrahtung: der Abschnitt muss
+    # in der fertigen Mail stehen, und ohne Positionen darf er FEHLEN.
+    _posten = [{"symbol": "BTC", "verkauf": {"aktion": "VERKAUFEN",
+                                             "anteil": 1.0,
+                                             "gegenwert_eur": 500.0},
+                "begruendung": "Probe"}]
+    _ohne = _VK7.sammel_mail(_posten)
+    _mit = _VK7.sammel_mail(_posten, positionen=[["BTC - eine Position",
+                                                  "   Break-even   100 EUR"]])
+    pruefe(P, "die Positionsfuehrung steht in der fertigen Sammelmail",
+           _mit and "WAS SIE HALTEN" in _mit[1]
+           and "Break-even" in _mit[1],
+           "der Break-even ist der Punkt der ganzen Uebung - er war die "
+           "woertliche Nutzerforderung")
+    pruefe(P, "und der Abschnitt fehlt, wenn nichts gehalten wird",
+           _ohne and "WAS SIE HALTEN" not in _ohne[1],
+           "eine leere Ueberschrift ist eine Zeile, die etwas verspricht "
+           "und nichts haelt")
+    pruefe(P, "die Vorschlaege bleiben daneben stehen, nicht darunter",
+           _mit and _mit[1].index("WAS ZU TUN IST")
+           < _mit[1].index("WAS SIE HALTEN") < _mit[1].index("WARUM"),
+           "was zu TUN ist und was man HAT sind zwei Befunde, keine zwei "
+           "Meinungen - sie gehoeren nebeneinander und in dieser Reihenfolge")
+    # ⚠️ UND SIE ERFINDET KEIN R (N-11). Eine Spot-Position hat keinen Stop,
+    # also kein R. Wer hier eines erfaende, baute genau den Fehler ein, den
+    # N-11 aufgedeckt hat.
+    pruefe(P, "die Fuehrung erfindet kein R fuer eine Position ohne Stop",
+           " R" not in chr(10).join(_PF7.zeilen(_PF7.Position(
+               symbol="BTC", instrument="spot", menge_frei=1.0,
+               menge_gestakt=0.0, einstand_eur=100.0, kurs_eur=110.0))),
+           "eine Spot-Position hat nach Nutzerangabe keinen Stop - ohne Stop "
+           "gibt es kein R und keinen sinnvollen MFE. Was sie hat, ist ein "
+           "Einstand, und daraus Euro und Prozent")
+
     pruefe(P, "die alte I-2-MELDUNG bleibt als Waechter stehen",
            "ein Paar, das die Matrix ausschliesst" in _quelle,
            "sie ist ab jetzt strukturell unerreichbar - schlaegt sie doch "

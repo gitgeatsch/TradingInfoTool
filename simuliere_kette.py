@@ -767,6 +767,17 @@ def main() -> int:
     # ⚠️ SCHRITT 3+4: hat ein Asset ueberhaupt ZWEI Zellen durchlaufen?
     # Ohne diesen Nachweis ist der Umbau nur in der Suite belegt, nicht im
     # Betrieb - genau die Unterscheidung, die das Projekt seit Rolle G macht.
+    # ⚠️ SCHRITT 7: gefuehrt, aber nicht gezeigt = die halbe Verdrahtung.
+    if gesamt.get("positionen_gefuehrt") and not gesamt.get("positionen_gesehen"):
+        gesamt["luecken"].append(
+            "Schritt 7: %d Positionen gefuehrt, aber KEINE Mail nennt sie - "
+            "die Positionsfuehrung erreicht den Leser nicht"
+            % gesamt["positionen_gefuehrt"])
+    elif not gesamt.get("positionen_gefuehrt"):
+        gesamt["luecken"].append(
+            "Schritt 7: in diesem Lauf wurde KEINE Position gefuehrt - der "
+            "Nachweis steht aus (kein Bestand in der Kopie, oder keine "
+            "Sammelmail, weil keine Ausstiege anfielen)")
     if _kern and not gesamt.get("mehrzellig_gesehen"):
         gesamt["luecken"].append(
             "Schritt 3+4: KEIN Asset lief mit zwei Zellen durch - der "
