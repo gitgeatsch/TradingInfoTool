@@ -36,6 +36,7 @@ der Volltext an einem festen Ort macht das ueberfluessig.
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import io
 import subprocess as _SUB
 import ast as _AST
@@ -2299,6 +2300,85 @@ def paket_12c() -> None:
         n2.func.attr for n2 in _ast2.walk(_sim_baum)
         if isinstance(n2, _ast2.Call) and isinstance(n2.func, _ast2.Attribute)}
     # ------------------------------------------------------------------
+    # ⚠️⚠️ DAS ZELLENMODELL (Schritt 3, 01.09.2026) — NOCH OHNE AUFRUFER
+    #
+    # Eine Zelle ist (Asset, Instrument, Strategie). Sie sagt, welche Fragen
+    # fuer ein Asset ueberhaupt gestellt werden duerfen - nicht, ob es ein
+    # Signal bekommt. Das ist Stufe 11 und kommt in Schritt 4.
+    # ------------------------------------------------------------------
+    import sqlite3 as _sqz
+    from agent import assetklassen as _AKz
+    from agent import handelsauftrag as _HAz
+    _zc = _sqz.connect(":memory:")
+    _zc.execute("CREATE TABLE asset_hebel_settings (symbol TEXT, "
+                "hebel_pruefung_erlaubt INTEGER)")
+    _zc.execute("CREATE TABLE asset_dca_settings (symbol TEXT, "
+                "dca_erlaubt INTEGER)")
+    _zc.executemany("INSERT INTO asset_hebel_settings VALUES (?,?)",
+                    [("BTC", 1), ("LINK", 1), ("XLM", 0)])
+    _zc.executemany("INSERT INTO asset_dca_settings VALUES (?,?)",
+                    [("BTC", 1)])
+    _z = _AKz.zellen(conn=_zc)
+    _je = {}
+    for x in _z:
+        _je.setdefault(x["symbol"], set()).add(
+            (x["instrument"], x["strategie"]))
+
+    pruefe(P, "⚠️ eine VERBOTENE Kombination entsteht nicht",
+           all((i, st) in
+               [(i2, s2) for i2, ss in _HAz.ERLAUBTE_PAARE.items()
+                for s2 in ss]
+               for paare in _je.values() for i, st in paare),
+           "die Paar-Matrix ist die einzige Quelle - `hebel x akkumulation` "
+           "ist ausgeschlossen, weil die Finanzierung JEDEN Tag kostet")
+    pruefe(P, "und `swing` kommt nicht vor",
+           not any(st == "swing" for paare in _je.values()
+                   for _i, st in paare),
+           "Nutzerentscheidung 31.08.: 'nur Einstieg reicht, Swing aktuell "
+           "kein Thema'. Die Paar-Matrix kennt es weiter - hier faellt es "
+           "an EINER Stelle raus")
+    pruefe(P, "⚠️ der HEBEL-Schalter des Nutzers wirkt",
+           ("hebel", "einstieg") in _je.get("BTC", set())
+           and ("hebel", "einstieg") in _je.get("LINK", set())
+           and ("hebel", "einstieg") not in _je.get("XLM", set()),
+           "BTC und LINK stehen auf 1, XLM auf 0 - wer den Schalter nicht "
+           "fragt, baut einen, der etwas verspricht, was nicht passiert")
+    pruefe(P, "und der AKKUMULATIONS-Schalter ebenso",
+           ("spot", "akkumulation") in _je.get("BTC", set())
+           and ("spot", "akkumulation") not in _je.get("LINK", set()),
+           "nur BTC hat `dca_erlaubt=1` in dieser Probe")
+    pruefe(P, "⚠️ JEDES Asset hat mindestens die Grundzelle",
+           all(("spot", "einstieg") in p or
+               ("absicherung", "einstieg") in p for p in _je.values()),
+           "ein Asset ohne Zelle koennte NIE ein Signal bekommen - und zwar "
+           "still")
+    # ⚠️ OHNE VERBINDUNG die vorsichtige Richtung
+    _z0 = _AKz.zellen(conn=None)
+    pruefe(P, "⚠️ ohne Datenbank entsteht KEINE Hebelzelle",
+           not any(x["instrument"] == "hebel" for x in _z0),
+           "der Hebelschalter hat keine Vorgabe - ohne Datenbank waere jede "
+           "Hebelzelle erfunden")
+    pruefe(P, "und jede Zelle nennt ihren Grund",
+           all(x.get("warum") for x in _z),
+           "eine Liste ohne Begruendung muss beim naechsten Zweifel "
+           "nachgerechnet werden")
+    # ⚠️ SCHRITT 3 IST FOLGENLOS - das ist die Zusage, und sie wird geprueft.
+    _ruft = [q for q in ("agent/rollen_lauf.py", "scheduler/rollen_job.py",
+                         "agent/rollen_eingabe.py")
+             if "zellen(" in _quelltext(q)]
+    pruefe(P, "⚠️ Schritt 3 hat NOCH KEINEN Aufrufer",
+           not _ruft,
+           "Schritt 3 erzeugt nur die Liste, damit sie geprueft werden kann, "
+           "bevor Schritt 4 den Ablauf umbaut. Wenn diese Zeile faellt, ist "
+           "Schritt 4 gebaut - dann gehoert sie ersetzt, nicht geloescht. "
+           "Gefunden in: %s" % ", ".join(_ruft))
+    pruefe(P, "und `laeufe()` ist unveraendert",
+           len(_AKz.laeufe()) == 5,
+           "der bestehende Weg darf sich nicht mitaendern - sonst waere "
+           "Schritt 3 nicht folgenlos")
+    _zc.close()
+
+    # ------------------------------------------------------------------
     # ⚠️ DIE SPALTE `instrument` IN `signals` (Zellenmodell Schritt 2)
     #
     # Ohne sie sind ein Spot- und ein Hebel-Signal desselben Assets am
@@ -3686,7 +3766,19 @@ def paket_15() -> None:
     antwort = {"aktion": "KAUFEN", "begruendung": "Bodenbildung",
                "was_dagegen": "duenner Umsatz", "unabhaengige_faktoren": 3,
                "umgeworfen_durch": "Bruch der Marke",
-               "umgeworfen_preis_eur": 90.0, "umgeworfen_bis": "2026-09-01",
+               "umgeworfen_preis_eur": 90.0,
+               # ⚠️ EIN TEST DARF NICHT AM KALENDER HAENGEN (01.09.2026).
+               #
+               # Hier stand fest "2026-09-01". `_frist_oder_nichts` verwirft
+               # jede Frist, die nicht in der ZUKUNFT liegt - also war diese
+               # Pruefung am 31.08. gruen und am 01.09. rot, ohne dass sich
+               # eine Zeile Code geaendert haette. Wer dann sucht,
+               # verdaechtigt die letzte Aenderung, nicht den Kalender: ich
+               # habe zuerst die Migration von heute geprueft.
+               #
+               # Jetzt ein Datum, das immer in der Zukunft liegt.
+               "umgeworfen_bis": (
+                   _dt.date.today() + _dt.timedelta(days=90)).isoformat(),
                "einstieg_eur_von": 100.0, "stop_eur_von": 90.0,
                "ziel_eur_von": 130.0, "tranche_eur": 500.0}
     familien = {"schwankung_perzentil": 0.12, "momentum_perzentil": 0.74,

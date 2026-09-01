@@ -138,6 +138,142 @@ def laeufe(watchlist=None) -> list[tuple[str, str, list[str]]]:
     return aus
 
 
+def zellen(watchlist=None, conn=None) -> list[dict]:
+    """⚠️⚠️ DAS ZELLENMODELL — Schritt 3, 01.09.2026. NOCH OHNE AUFRUFER.
+
+    Nutzervorgabe 31.08., woertlich: *„Asset z. B. LINK kommt in die
+    Bewertung - entweder es kommt nur eine Strategie in Frage, weil dies die
+    Bewertung ergibt, oder u. U. beides, Akkumulation und Hebel, aber nur
+    wenn die Bewertung dies zulaesst."*
+
+    ## Was eine ZELLE ist
+
+    Eine Zelle ist ein Paar aus Instrument und Strategie fuer EIN Asset:
+
+        (BTC, spot,  einstieg)      immer zulaessig
+        (BTC, spot,  akkumulation)  nur wenn `dca_erlaubt`
+        (BTC, hebel, einstieg)      nur wenn `hebel_pruefung_erlaubt`
+
+    `laeufe()` liefert dagegen (Gruppe, Instrument, alle Symbole) - eine
+    Zeile je Gruppe, und die Strategie kommt laufweit von aussen. Genau das
+    war der zweite gescheiterte Anlauf: *„zuerst eigene Aufrufe je Strategie,
+    dann ueber Spot pseudo-Hebel generiert"*.
+
+    ## ⚠️ DREI QUELLEN, KEINE ZWEITE LISTE
+
+        INSTRUMENTE_JE_GRUPPE      welche Instrumente die Gruppe fuehrt
+        handelsauftrag.ERLAUBTE_PAARE   welche Strategie zu welchem
+                                        Instrument passt (spot x swing ist
+                                        seit 14.08. gestrichen)
+        die Schalter des Nutzers   `asset_hebel_settings.hebel_pruefung_-
+                                   erlaubt` (24 Assets) und
+                                   `asset_dca_settings.dca_erlaubt`
+                                   (Vorgabe BTC/ETH/SOL)
+
+    Wer hier eine eigene Liste baute, baute die naechste, die einen Schalter
+    vergisst - dieselbe Begruendung wie im Kopf von `laeufe()`.
+
+    ## ⚠️ WAS DIESE FUNKTION NICHT TUT
+
+    Sie entscheidet NICHT, ob eine Zelle ein Signal bekommt. Das ist die
+    Bewertung (Stufe 11), und sie kommt in Schritt 4. Diese Funktion sagt
+    nur, welche Fragen fuer ein Asset ueberhaupt GESTELLT werden duerfen.
+
+    ⚠️ UND SIE HAT NOCH KEINEN AUFRUFER. Schritt 3 ist bewusst folgenlos:
+    er erzeugt die Liste, damit sie geprueft werden kann, bevor Schritt 4
+    den Ablauf umbaut. Ein Umbau, dessen Grundlage nicht geprueft ist, ist
+    der dritte Anlauf, der scheitert.
+
+    Rueckgabe: je Zelle ein dict mit `symbol`, `gruppe`, `instrument`,
+    `strategie` und `warum` - der Grund, warum sie zulaessig ist. Der Grund
+    steht dabei, weil eine Liste ohne Begruendung beim naechsten Zweifel
+    nachgerechnet werden muss.
+    """
+    from agent import handelsauftrag as HA
+
+    nach_gruppe = gruppiere(watchlist)
+    hebel_erlaubt, dca_erlaubt = _schalter(conn)
+    aus = []
+    for gruppe, symbole in nach_gruppe.items():
+        gefuehrt = INSTRUMENTE_JE_GRUPPE.get(gruppe, ("spot",))
+        # ⚠️ HEBEL IST EIN INSTRUMENT DER GRUPPE, AUCH WENN `laeufe()` es
+        # nicht fuehrt. S6b hat ihn aus dem LAUF genommen (Kapitel 88,
+        # "Hebel als Ergebnis statt als Kategorie") - nicht aus der Frage,
+        # ob er handelbar ist. Dafuer gibt es HEBEL_HANDELBAR_JE_GRUPPE.
+        moeglich = set(gefuehrt)
+        if HEBEL_HANDELBAR_JE_GRUPPE.get(gruppe):
+            moeglich.add("hebel")
+        for symbol in symbole:
+            sym = str(symbol).upper()
+            for instrument in sorted(moeglich):
+                if instrument == "hebel" and sym not in hebel_erlaubt:
+                    continue
+                for strategie in HA.ERLAUBTE_PAARE.get(instrument, ()):
+                    if strategie == "akkumulation" and sym not in dca_erlaubt:
+                        continue
+                    # ⚠️ SWING IST AKTUELL KEIN THEMA (Nutzerentscheidung
+                    # 31.08.: *"nur Einstieg reicht, Swing aktuell kein
+                    # Thema"*). Die Paar-Matrix kennt es weiter - hier
+                    # faellt es raus, an EINER Stelle und mit Begruendung.
+                    if strategie == "swing":
+                        continue
+                    aus.append({
+                        "symbol": sym, "gruppe": gruppe,
+                        "instrument": instrument, "strategie": strategie,
+                        "warum": _warum(instrument, strategie, gefuehrt)})
+    return aus
+
+
+def _warum(instrument: str, strategie: str, gefuehrt) -> str:
+    """Warum ist diese Zelle zulaessig? Steht in der Liste, nicht im Kopf."""
+    if instrument == "hebel" and instrument not in gefuehrt:
+        return ("Hebel ist fuer diese Gruppe handelbar und fuer dieses Asset "
+                "freigeschaltet - `laeufe()` fuehrt ihn seit S6b nicht mehr")
+    if strategie == "akkumulation":
+        return "Akkumulation ist fuer dieses Asset freigeschaltet (dca_erlaubt)"
+    return "Grundfall: das Instrument der Gruppe mit Einstieg"
+
+
+def _schalter(conn=None) -> tuple[set, set]:
+    """Die beiden Schalter des Nutzers - aus der Datenbank, nicht geraten.
+
+    ⚠️ OHNE VERBINDUNG DIE VORGABEN. `database.db.get_dca_erlaubt` faellt
+    ohne Zeile auf `{BTC, ETH, SOL}` zurueck; der Hebelschalter hat keine
+    Vorgabe - ohne Datenbank ist er fuer NIEMANDEN an. Das ist die
+    vorsichtige Richtung: lieber keine Hebelzelle als eine erfundene.
+    """
+    hebel, dca = set(), set()
+    if conn is None:
+        try:
+            import database.db as _db
+            return set(), set(getattr(_db, "_DCA_ERLAUBT_DEFAULT_SYMBOLS",
+                                      {"BTC", "ETH", "SOL"}))
+        except Exception:                                    # noqa: BLE001
+            return set(), {"BTC", "ETH", "SOL"}
+    try:
+        for zeile in conn.execute(
+                "SELECT symbol FROM asset_hebel_settings "
+                "WHERE hebel_pruefung_erlaubt=1"):
+            hebel.add(str(zeile[0]).upper())
+    except Exception:                                        # noqa: BLE001
+        pass
+    try:
+        import database.db as _db
+        vorgabe = set(getattr(_db, "_DCA_ERLAUBT_DEFAULT_SYMBOLS",
+                              {"BTC", "ETH", "SOL"}))
+        gesetzt = {str(s).upper(): int(w or 0) for s, w in conn.execute(
+            "SELECT symbol, dca_erlaubt FROM asset_dca_settings")}
+        for sym in vorgabe:
+            if gesetzt.get(sym, 1):
+                dca.add(sym)
+        for sym, wert in gesetzt.items():
+            if wert:
+                dca.add(sym)
+    except Exception:                                        # noqa: BLE001
+        dca = {"BTC", "ETH", "SOL"}
+    return hebel, dca
+
+
 def kern_symbole(watchlist=None) -> set:
     """Die `core`-Assets der Watchlist - der Vorrang in der Warteschlange.
 
