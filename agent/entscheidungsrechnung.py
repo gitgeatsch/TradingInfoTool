@@ -70,12 +70,36 @@ GRENZEN = {
     # Ausloesen nichts ueber die Annahme - er wird von einem beliebigen
     # Tick getroffen. Der Ausstieg ist dann ein Zufall, kein Befund.
     #
-    # Krypto-Werte der Watchlist tragen eine mittlere Tagesspanne um 5 %.
-    # Ein Stop bei 2,5 % liegt damit bei rund 0,5 ATR - INNERHALB dessen,
-    # was ein ereignisloser Tag ohnehin durchlaeuft. Genau diese Grenze
-    # zieht `stop_min_atr` (0,75 ATR) bereits relativ; `stop_min_relativ`
-    # ist ihr absoluter Zwilling fuer Werte mit ungewoehnlich enger ATR,
-    # bei denen der relative Boden allein zu tief laege.
+    # ⚠️⚠️ JETZT GEMESSEN, NICHT GESCHAETZT (01.09.2026 abends).
+    #
+    # Nutzerkorrektur: *„Rechne und miss NICHT die Wirtschaftlichkeit."*
+    # Ich hatte die Reihenfolge der Begruendung umgestellt, aber die ZAHL
+    # stammte weiter aus einer Gebuehrenrechnung. Nachgeholt an 1.115.257
+    # Messwerten aus 578 Reihen - ohne jede Gebuehr:
+    #
+    #     mittlere Tagesspanne relativ zum Kurs
+    #        10. Perzentil    1,51 %
+    #        25. Perzentil    2,97 %
+    #        50. Perzentil    6,38 %
+    #        75. Perzentil    9,68 %
+    #        90. Perzentil   13,64 %
+    #
+    #     0,50 x Spanne = 3,19 %
+    #     0,75 x Spanne = 4,78 %   <- RM-1c `stop_min_atr`
+    #     1,00 x Spanne = 6,38 %
+    #
+    # ✔ **5,0 % entsprechen 0,78 Tagesspannen im Median** - praktisch genau
+    # der relative Boden `stop_min_atr = 0,75`. Die beiden Grenzen sagen
+    # damit dasselbe, einmal relativ und einmal absolut, und die absolute
+    # greift nur dort, wo die eigene Spanne ungewoehnlich eng ist (bei
+    # 47,5 % der Anker liegt 5,0 % unter 0,75 Spannen - dort fuehrt
+    # ohnehin `stop_min_atr`).
+    #
+    # ⚠️ Die Zahl aendert sich dadurch NICHT. Was sich aendert, ist ihre
+    # Herleitung: sie steht jetzt auf einer Messung der Tagesspanne statt
+    # auf einer Gebuehrenrechnung. Ein Stop innerhalb der Tagesspanne wird
+    # vom Zufall getroffen, nicht von einer Information - und das gilt bei
+    # jedem Gebuehrensatz, auch bei null.
     #
     # ⚠️ Das ist eine Aussage ueber die KONSTRUKTION des Trades, nicht
     # ueber sein Potential. Sie bewertet nicht, ob dieser Einstieg gut
