@@ -463,6 +463,7 @@ erheblich.
 | Tabelle `positionen` | Die Position ist **ableitbar**. Eine zweite Fassung wäre die nächste Stelle, an der Mail und Datenbank auseinanderlaufen (`positionsfuehrung.py`-Modulkopf) |
 | Stundenkerzen | Abschnitt 4 — falsche Grundgesamtheit |
 | Rückbau `hebel_signals` | die GUI zeigt Historie; read-only genügt |
+| **Basis-/Cash-and-Carry-Handel** | ⚠️ **VERWORFEN 01.09.2026, Nutzerentscheidung.** In der Literatur die dominante institutionelle Krypto-Strategie (long Spot + short Perpetual, um positives Funding einzusammeln) und die **einzige** der fünf Praxisbegründungen für Hebel, bei der ein Ertrag entsteht, den Spot strukturell nicht haben kann. Wörtlich: *„Basis-Handel ist noch kein Thema gewesen und aus aktueller Sicht keine Option, keine Short und zu teuer."* — **Zwei Gründe, beide tragend:** (1) Die Short-Seite ist seit dem Nur-Long-Umbau (05.08.) nicht im System; sie wieder aufzumachen wäre ein eigener Umbau. (2) Der Ertrag ist die Funding-Differenz, typisch im niedrigen einstelligen Prozentbereich p. a. — bei **1,50 % je Seite** bleibt davon nichts. ⚠️ **Bei einem Wechsel des Handelsplatzes (Standardsatz 0,30 %) wäre Punkt 2 neu zu rechnen; Punkt 1 bliebe.**
 | Akkumulations-Verbilligungssatz für den Kern | Befund 28.08.: das Maß trägt über 505 Reihen, **nicht für BTC/ETH/SOL**. Empfehlung B+C: Kern akkumulieren **ohne** Verbilligungssatz, **mit** Ausschlussbremse (> +30 % über dem Schnitt, −11,2 Punkte, 3/3 Jahre) |
 
 ---

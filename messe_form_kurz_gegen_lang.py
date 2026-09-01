@@ -154,9 +154,43 @@ MIN_JE_TAG = 15
 BRUCH = 5.0
 SAAT = 20260901
 
-# ⚠️ Vorab benannt. Ein siebter Kandidat aendert den Suchpreis (2.49).
+# ⚠️ Vorab benannt. Jeder zusaetzliche Kandidat aendert den Suchpreis (2.49).
+#
+# H-4b ergaenzt drei FUNDING-EXTREMA (01.09.2026). Nutzervorgabe: *„Bevor
+# wir wieder nur das eigene System messen, sollte eigentlich schon bekannt
+# sein, was wir suchen."* Was die Literatur zum Krypto-Terminmarkt als
+# kurzfristig aussagekraeftig fuehrt, ist nicht das NIVEAU des Funding,
+# sondern sein EXTREM: eine ueberfuellte Positionierung, die sich
+# aufloesen muss. Genau das misst `funding` heute NICHT - dort steht der
+# Querschnittsrang gegen die anderen Werte desselben Tages.
 KANDIDATEN = ("vola", "momentum_kurz", "spanne_aus", "schnitt50",
-              "funding", "turnover", "zufall")
+              "funding", "turnover",
+              # H-4b: das Extrem gegen die EIGENE Geschichte
+              "funding_extrem", "funding_perzentil", "funding_persistenz",
+              "zufall")
+
+# ⚠️ DIE ZIELGROESSE IST WAEHLBAR (H-4a, 01.09.2026).
+#
+#   signiert       R_kurz - R_lang       (H-1, gemessen: kein Befund)
+#   frontloading   |R_kurz| / (|R_kurz| + |R_rest|)
+#
+# Die Umformulierung kommt aus der Praxis, nicht aus einer Vermutung:
+# **alles, was der Terminmarkt zuverlaessig vorhersagt, ist AUSMASS und
+# TEMPO - nicht die Richtung.** Funding-Extrema, OI-Aufbau und
+# Volatilitaets-Clustering sagen etwas darueber, WIE GROSS und WIE SCHNELL
+# eine Bewegung wird; keines davon sagt, WOHIN.
+#
+# ⚠️ H-1 hat beides vermischt. `R_kurz - R_lang` ist vorzeichenbehaftet und
+# beantwortet damit die Richtungsfrage mit - die niemand beantworten kann.
+# Die literaturkonforme Frage lautet: **welcher Anteil der Bewegung faellt
+# in die ersten Tage?** Die Richtung liefert weiterhin die bestehende
+# Bewertung; der Hebel-Schalter liefert nur das Tempo.
+#
+# Die Form ist bewusst ein ANTEIL, kein Quotient `|R_kurz|/|R_lang|`:
+# der waere unbrauchbar, sobald `R_lang` nahe null liegt. Der Anteil ist
+# auf [0,1] beschraenkt und hat nur dann keinen Nenner, wenn sich
+# ueberhaupt nichts bewegt hat.
+ZIEL = "signiert"
 
 
 def lade_zusatz():
@@ -255,6 +289,13 @@ def baue(reihen, zusatz):
             e = {"sym": sym,
                  "r_kurz": float((c[i + KURZ] - c[i]) / nenner),
                  "r_lang": float((c[i + LANG] - c[i]) / nenner)}
+            # ⚠️ DER REST DES WEGES, nicht der Gesamtweg: `r_rest` ist die
+            # Bewegung NACH dem kurzen Fenster. Sonst stuende `r_kurz` in
+            # Zaehler UND Nenner, und der Anteil waere per Konstruktion
+            # nach oben verzerrt - dieselbe Falle wie der Nenner oben.
+            e["r_rest"] = float((c[i + LANG] - c[i + KURZ]) / nenner)
+            _weg = abs(e["r_kurz"]) + abs(e["r_rest"])
+            e["frontloading"] = float(abs(e["r_kurz"]) / _weg) if _weg > 1e-9 else None
             # ---- die Kandidaten -------------------------------------
             # ⚠️ `vola` ist jetzt echt unabhaengig vom Nenner: sie
             # vergleicht die HEUTIGE Spanne mit demselben nachlaufenden
@@ -272,12 +313,47 @@ def baue(reihen, zusatz):
             fw = f_je.get(tage[i])
             if fw is not None:
                 e["funding"] = float(fw)
+                # ---- H-4b: das Extrem gegen die EIGENE Geschichte ----
+                # ⚠️ NACHLAUFEND, nie ueber die ganze Reihe. Ein Perzentil
+                # ueber alles kennt die Zukunft.
+                hist = [f_je.get(d) for d in tage[max(0, i - 250):i]]
+                hist = [x for x in hist if x is not None]
+                if len(hist) >= 100:
+                    ha = np.array(hist, float)
+                    med = float(np.median(ha))
+                    mad = float(np.median(np.abs(ha - med)))
+                    if mad > 1e-12:
+                        # ABSTAND VOM EIGENEN NORMALZUSTAND, vorzeichenlos:
+                        # ueberfuellt ist ueberfuellt, in beide Richtungen.
+                        e["funding_extrem"] = float(abs(fw - med) / mad)
+                    e["funding_perzentil"] = float((ha < fw).mean())
+                # WIE LANGE steht das Vorzeichen schon? Eine Positionierung,
+                # die seit Wochen einseitig ist, ist der Lehrbuchfall.
+                lauf = 0
+                for d in reversed(tage[max(0, i - 60):i + 1]):
+                    x = f_je.get(d)
+                    if x is None or (x > 0) != (fw > 0):
+                        break
+                    lauf += 1
+                e["funding_persistenz"] = float(lauf)
             mw = m_je.get(tage[i])
             if mw and mw > 0:
                 e["turnover"] = float(v[i] / mw)
             e["zufall"] = float(rng.random())
             je_tag.setdefault(tage[i], []).append(e)
     return {t: z for t, z in je_tag.items() if len(z) >= MIN_JE_TAG}
+
+
+def _ziel(x):
+    """Die Zielgroesse eines Ankers - je nach `ZIEL`.
+
+    ⚠️ EINE Stelle. Waere sie an zwei Stellen gerechnet, liefen die
+    Kandidatenmessung und die Positivkontrolle auf verschiedenen Groessen -
+    und die Kontrolle pruefte etwas anderes als das Ergebnis.
+    """
+    if ZIEL == "frontloading":
+        return x.get("frontloading")
+    return x["r_kurz"] - x["r_lang"]
 
 
 ANTEIL = 0.20     # oberstes Fuenftel - dieselbe Quote wie `messe_regel_wirksamkeit`
@@ -308,11 +384,12 @@ def wahl_je_tag(je_tag, kandidat, mische=None, pflanze=None):
     """
     aus = {}
     for tag, z in je_tag.items():
-        zeilen = [x for x in z if kandidat in x]
+        zeilen = [x for x in z if kandidat in x and x.get(kandidat) is not None
+                  and _ziel(x) is not None]
         if len(zeilen) < MIN_JE_TAG:
             continue
         kz = np.array([float(x[kandidat]) for x in zeilen])
-        d = np.array([x["r_kurz"] - x["r_lang"] for x in zeilen])
+        d = np.array([_ziel(x) for x in zeilen])
         if mische is not None:
             kz = kz[mische.permutation(len(kz))]
         k = max(1, int(round(len(zeilen) * ANTEIL)))
@@ -384,6 +461,30 @@ def bericht_wahl(name, je_tag, kandidat, rng, mit_positivkontrolle=True):
 def grundlage(je_tag):
     """Wie oft ist der kurze Horizont ueberhaupt besser? Die Basisrate."""
     alle = [x for z in je_tag.values() for x in z]
+    if ZIEL == "frontloading":
+        fl = np.array([x["frontloading"] for x in alle
+                       if x.get("frontloading") is not None])
+        print()
+        print("=" * 96)
+        print("DIE GRUNDLAGE — wieviel der Bewegung faellt in die ersten %d Tage?"
+              % KURZ)
+        print("=" * 96)
+        print()
+        print("  %d Anker mit Frontloading, %d Kalendertage" % (len(fl), len(je_tag)))
+        print("  Anteil |R_kurz| / (|R_kurz| + |R_rest|):")
+        print("     Median %.3f   Mittel %.3f" % (np.median(fl), fl.mean()))
+        # ⚠️ DIE ERWARTUNG BEI EINEM ZUFALLSPFAD, damit die Zahl einen
+        # Massstab hat: |Weg| waechst mit der Wurzel der Zeit, also
+        # sqrt(3)/(sqrt(3)+sqrt(17)) = 0,296.
+        erw = np.sqrt(KURZ) / (np.sqrt(KURZ) + np.sqrt(LANG - KURZ))
+        print("     Erwartung auf einem reinen Zufallspfad: %.3f" % erw)
+        print("     Anteil der Anker ueber dieser Erwartung: %.1f %%"
+              % (100 * (fl > erw).mean()))
+        print()
+        print("  ⚠️ Ein Wert ueber der Erwartung heisst: die Bewegung war")
+        print("     FRONTLASTIG - genau die Lage, in der ein kurzer Horizont")
+        print("     (und damit der Hebel) ueberhaupt Sinn ergibt.")
+        return float((fl > erw).mean())
     besser = sum(1 for x in alle if x["r_kurz"] > x["r_lang"])
     d = np.array([x["r_kurz"] - x["r_lang"] for x in alle])
     print()
@@ -435,7 +536,9 @@ def positivkontrolle(je_tag, rng):
     # pruefte sie Code, den die echten nie durchlaufen.
     for z in je_tag.values():
         for x in z:
-            wahr = x["r_kurz"] - x["r_lang"]
+            wahr = _ziel(x)
+            if wahr is None:
+                continue
             # 50 % Signal, 50 % Rauschen: stark genug zum Finden, nicht so
             # stark, dass auch eine kaputte Rechnung es faende.
             x["_kunst"] = wahr + rng.normal(0.0, max(abs(wahr), 1e-9))
@@ -461,23 +564,36 @@ def selbsttest():
     """
     rng = np.random.default_rng(4711)
     je_tag = {}
-    # ⚠️ 2.000 TAGE, NICHT 400 (01.09.2026). Der erste Anlauf nahm 400 -
-    # bei Blockgroesse 90 sind das FUENF Bloecke, und dort deckt das Band
-    # nicht (19,5 % Fehlalarme statt 5 %). Der Selbsttest hat damit nicht
-    # das Verfahren geprueft, sondern seine eigene zu duenne Kunstwelt.
-    # Die echte Basis hat 163 Bloecke.
     for tg in range(2000):
         tag = "T%05d" % tg
         z = []
         for s in range(30):
             d = float(rng.normal(0.0, 1.0))      # der wahre Vorteil in R
             z.append({"sym": "S%02d" % s,
-                      "r_kurz": d, "r_lang": 0.0,
-                      # 60 % Signal, 40 % Rauschen
-                      "gut": d + rng.normal(0.0, 0.8),
-                      "blind": float(rng.normal()),
-                      "invers": -d + rng.normal(0.0, 0.8)})
+                      "r_kurz": d, "r_lang": 0.0, "r_rest": -d,
+                      "frontloading": float(abs(d) / (abs(d) + 1.0))})
         je_tag[tag] = z
+
+    # ⚠️⚠️ DIE KUNSTGROESSEN WERDEN AUS DER TATSAECHLICHEN ZIELGROESSE
+    # GEBAUT (01.09.2026) - nicht aus `d`.
+    #
+    # Der erste Anlauf setzte `invers = -d + Rauschen`. Bei ZIEL=signiert
+    # ist das richtig. Bei ZIEL=frontloading ist es FALSCH: dort waechst
+    # die Zielgroesse mit |d|, und eine Groesse, die mit -d korreliert,
+    # waehlt genauso grosse |d| aus wie eine, die mit +d korreliert -
+    # beide erscheinen als TRAEGT. Der Selbsttest meldete prompt
+    # "invers erwartet UMGEKEHRT, bekommen TRAEGT".
+    #
+    # Das war kein Fehler des Verfahrens, sondern meiner Kunstwelt. Jetzt
+    # sind die drei Groessen per Konstruktion richtig, egal welches Ziel
+    # gewaehlt ist - sie haengen an `_ziel(x)` selbst.
+    for z in je_tag.values():
+        for x in z:
+            y = _ziel(x)
+            rausch = max(abs(y), 1e-9) * 0.8
+            x["gut"] = y + rng.normal(0.0, rausch)
+            x["invers"] = -y + rng.normal(0.0, rausch)
+            x["blind"] = float(rng.normal())
 
     print("=" * 96)
     print("SELBSTTEST DES MESSWERKZEUGS — Kunstdaten mit bekannter Antwort")
@@ -545,6 +661,13 @@ def selbsttest():
 
 
 def main():
+    global ZIEL
+    for a in sys.argv[1:]:
+        if a.startswith("--ziel="):
+            ZIEL = a.split("=", 1)[1]
+    if ZIEL not in ("signiert", "frontloading"):
+        raise SystemExit("--ziel muss signiert oder frontloading sein")
+    print("ZIELGROESSE: %s" % ZIEL)
     if "--selbsttest" in sys.argv:
         raise SystemExit(0 if selbsttest() else 1)
     print("Lade Reihen...", flush=True)

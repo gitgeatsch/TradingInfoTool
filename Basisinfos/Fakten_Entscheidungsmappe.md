@@ -2855,3 +2855,126 @@ lief — die stehende Vorgabe hat sich hier direkt bezahlt gemacht.
 
 Verwandt: F-163 · `Anforderungen_Umbau_28_08.md` 9.5 ·
 Methodik 2.94, 2.95 · `messe_form_kurz_gegen_lang.py`
+
+
+---
+
+## F-165 H-4a/H-4b: Front-Loading ist messbar — aber zu klein für eine Instrumentwahl (01.09.2026)
+
+**Nutzervorgabe, die diese Messung erst richtig gestellt hat:** *„Es gibt
+auch die Vorgabe… wann und warum werden in der Praxis und Literatur
+Hebelinstrumente für Krypto eingesetzt — wir wollen ja nichts erfinden oder
+finden, sondern auch auf bestehende Standards aufbauen. Bevor wir wieder nur
+das eigene System messen, sollte eigentlich schon bekannt sein, was wir
+suchen."*
+
+### Was die Praxis sagt — und was daraus folgt
+
+Fünf etablierte Gründe für Hebel im Kryptohandel:
+
+| # | Grund | für uns |
+|---|---|---|
+| 1 | Kapitaleffizienz | Portfoliofrage, nicht Tradebewertung |
+| 2 | Short-Exposure (Spot kann nicht short) | seit Nur-Long-Umbau 05.08. nicht im System |
+| 3 | **Basis-/Cash-and-Carry** (long Spot + short Perp, Funding einsammeln) | ⚠️ **verworfen 01.09.** — keine Shorts, und bei 1,50 % je Seite bleibt vom Funding-Ertrag nichts |
+| 4 | **Kurzfristige, katalysatorgetriebene Positionierung** — weil die Finanzierung TÄGLICH anfällt | ✔ **das ist „steil-kurz"** |
+| 5 | Volatilitäts-Targeting | spricht bei Krypto **gegen** Hebel |
+
+Und der Lehrbuchsatz, der alles einordnet: **Hebel verbessert die
+risikoadjustierte Rendite einer Position nicht.** Er skaliert Ertrag und
+Risiko gleich. Das ist keine Eigenheit unseres Systems, sondern der Stand
+der Sache — und es erklärt, warum `potential.rechne` für spot und hebel
+dieselbe Zahl liefert.
+
+### ⚠️⚠️ Die Umformulierung, die daraus folgt
+
+**Alles, was der Terminmarkt zuverlässig vorhersagt, ist AUSMASS und TEMPO —
+nicht die Richtung.** Funding-Extrema, OI-Aufbau, Volatilitäts-Clustering
+sagen, wie groß und wie schnell; keines sagt, wohin.
+
+⚠️ **H-1 hat beides vermischt.** `R_kurz − R_lang` ist vorzeichenbehaftet
+und beantwortet die Richtungsfrage mit. Die praxiskonforme Zielgröße ist
+vorzeichenlos:
+
+    Frontloading = |R_kurz| / (|R_kurz| + |R_rest|)
+
+`R_rest` ist bewusst die Bewegung NACH dem kurzen Fenster — stünde `R_kurz`
+in Zähler und Nenner, wäre der Anteil per Konstruktion verzerrt. Der
+Nenner der R-Rechnung kürzt sich in diesem Quotienten heraus; die
+Mitläuferfalle aus F-164 ist damit strukturell ausgeschlossen.
+
+### Das Ergebnis
+
+916.021 Anker, 7.269 Kalendertage, zehn vorab benannte Kandidaten.
+
+| Kandidat | Wirkung | Band | Urteil |
+|---|---|---|---|
+| turnover | +0,0041 R | [+0,0026 .. +0,0071] | ✔ trägt |
+| vola | +0,0013 R | [+0,0006 .. +0,0021] | ✔ trägt |
+| momentum_kurz | +0,0011 R | [+0,0006 .. +0,0016] | ✔ trägt |
+| **funding_extrem** (H-4b) | +0,0011 R | [+0,0003 .. +0,0017] | ✔ trägt |
+| schnitt50 | +0,0010 R | [+0,0003 .. +0,0017] | ✔ trägt |
+| funding (Rang) | −0,0001 R | [−0,0011 .. +0,0005] | ✖ null |
+| funding_perzentil | +0,0002 R | [−0,0003 .. +0,0008] | ✖ null |
+| funding_persistenz | −0,0001 R | [−0,0007 .. +0,0005] | ✖ null |
+| *zufall* | +0,0001 R | [−0,0002 .. +0,0004] | ✖ null ✔ |
+
+✔ **Diesmal hat die Messung Auflösung:** die Positivkontrolle +0,02 R feuert
+bei jedem Kandidaten (bei H-1 nie). Grund: Frontloading ist auf [0,1]
+beschränkt und hat keine schweren Ränder.
+
+**Zwei Gegenprüfungen bestanden:**
+
+1. **Die Kandidaten messen nicht dasselbe.** Höchste Rangkorrelation je Tag
+   ρ = 0,364 (momentum_kurz/schnitt50, beide Trendmaße), alle übrigen
+   ≤ 0,09. Insbesondere `turnover`/`vola` nur ρ = 0,05.
+2. **`turnover` trägt auch bei festgehaltener Volatilität:** innerhalb der
+   vola-Fünftel +0,0073 Frontloading. ⚠️ Das dortige Band unterstellt
+   unabhängige Zellen, was bei überlappenden Ankern nicht gilt —
+   **Richtungsbestätigung, kein Beweis.**
+
+### ⚠️⚠️ Aber: die Größe entscheidet, nicht die Signifikanz
+
+Was die Regel praktisch ändert — Anteil der Anker, deren Bewegung
+frontlastiger ist als ein reiner Zufallspfad (Erwartung 0,296):
+
+| Kandidat | gewählt | frontlastig | Basis | **Unterschied** |
+|---|---|---|---|---|
+| turnover | 21.825 | 52,0 % | 48,9 % | **+3,2 Punkte** |
+| vola | 183.045 | 50,2 % | 48,0 % | +2,2 |
+| schnitt50 | 183.045 | 50,1 % | 48,0 % | +2,1 |
+| momentum_kurz | 183.045 | 49,8 % | 48,0 % | +1,8 |
+| funding_extrem | 48.585 | 49,5 % | 48,5 % | +1,0 |
+| *zufall* | 183.045 | 48,1 % | 48,0 % | +0,1 ✔ |
+
+**Die beste Regel verschiebt die Quote von 49 % auf 52 %.** Das ist real,
+sauber belegt und **zu klein, um eine Instrumentwahl darauf zu gründen** —
+zumal „frontlastig" nur das Ausmaß beschreibt und die Richtung weiter offen
+lässt.
+
+### Was das für den Hebel heißt
+
+1. **Der Weg ist begehbar, aber schmal.** Erstmals gibt es überhaupt
+   Größen, die die FORM der Bewegung trennen — vier davon unabhängig
+   voneinander. Vorher gab es gar nichts.
+2. **Für eine Instrumentwahl reicht es nicht.** Ein Schalter, der bei
+   52 statt 49 von hundert richtig liegt, ist keine Begründung im Sinne des
+   übergeordneten Ziels — er wäre ein Fakt mit Fehlerbalken, kein Potential.
+3. ⚠️ **`funding_extrem` trägt, `funding` als Rang nicht.** Genau die
+   Unterscheidung, die die Literatur macht: nicht das Niveau, sondern das
+   Extrem gegen die eigene Geschichte. Der Effekt ist mit +1,0 Punkten aber
+   der schwächste der vier.
+4. **H-4c (OI) bleibt offen und ist vor 2028 nicht belastbar messbar** —
+   42 Kalendertage seit dem 14.07., das ist bei H3 **ein** Block; nach
+   Methodik 2.95 sind 20 nötig.
+
+### Der Beleg dafür, dass hier nichts erfunden wurde
+
+Die vier tragenden Größen sind genau die, die die Praxisliteratur nennt:
+Volatilitäts-Clustering (`vola`), Umschlag/Liquidität (`turnover`),
+Trendlage (`schnitt50`, `momentum_kurz`) und Positionierungs-Extreme
+(`funding_extrem`). **Nichts davon ist eine eigene Erfindung** — gemessen
+wurde, ob das Bekannte bei uns trägt. Es trägt, aber schwach.
+
+Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading`
+Verwandt: F-163 · F-164 · `Anforderungen_Umbau_28_08.md` 9.5 · Methodik 2.95
