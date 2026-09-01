@@ -701,3 +701,35 @@ Fakten-Entscheidungsmappe; jeder braucht die volle Prüfliste 2.80.
 Nullbefund aus, wird dort **nicht** scharf geschaltet — die Notiz bleibt.
 Ein Filter ohne tragende Messung ist genau das, was dieser Nachtrag
 verhindert.
+
+---
+
+# ⚠️⚠️ NACHTRAG 01.09.2026 — der Hebel hat keine eigene Bewertung
+
+**Kurz, weil die Ausarbeitung woanders steht.** Vollständig:
+`Anforderungen_Umbau_28_08.md` Abschnitt 9 · `Fakten_Entscheidungsmappe.md`
+F-163 · `Befund_Instrument_nach_S6b_28_08.md` Abschnitt 6.
+
+**Der Befund:** Die Bewertung kennt drei Achsen — Klasse, Strategie,
+Richtung. **Keine Instrument-Achse, keine Horizont-Achse.** `spot ×
+einstieg` und `hebel × einstieg` liefern bei gleicher Lage exakt dieselbe
+Zahl (+0,119100 R). Der Hebel ist heute eine **Ausführungsfrage**
+(`hebel = verlustanteil / stop_rel`), keine Bewertungsfrage.
+
+**Das war notiert** — Abschnitt 5.2 des Umbauplans führt es als bewussten
+Kompromiss, unter der Bedingung *„vertretbar, wenn die Kostenrechnung dem
+Etikett folgt (L3)"*. ⚠️ **Diese Bedingung war vier Tage lang nicht
+erfüllt:** dem Hebel-Tier fehlte die Handelsgebühr auf das Nominal, ein
+Hebeltrade erschien siebenmal billiger als Spot. Repariert 01.09.
+
+**Zur Abgrenzung des Nachtrags 31.08. (P6–P8):** Der Teilumbau dort betrifft
+die **Klassen**-Abdeckung der Beiträge. Der Hebel-Befund betrifft die
+**Instrument**-Achse — eine andere Achse desselben Modells. ⚠️ **P6–P8
+schließen die Hebel-Lücke nicht**, auch wenn beide „fehlende Abdeckung"
+heißen.
+
+**Nächster Schritt ist H-1**, nicht H-3: die Messung, die 5.2 selbst
+verlangt hat (*„ein gehebelter Trade mit engem Stop trägt sich rechnerisch
+nicht, bevor er begonnen hat — das wäre zu messen, bevor Aufwand in seine
+Verwaltung fließt"*). Sie kann den ganzen Umbau der Instrument-Achse
+überflüssig machen.

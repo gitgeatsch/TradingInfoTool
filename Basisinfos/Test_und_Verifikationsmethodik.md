@@ -4795,3 +4795,95 @@ zufall   Median GLEICH VIELER, zufaellig gezogener Anker DESSELBEN Tages
 **Regel:** Jede Schwelle, jeder Filter, jede Auswahl wird gegen eine
 **quotengleiche** Zufallsauswahl gemessen — nie gegen die Gesamtmenge. Und
 ⚠️ **der Suchpreis über alle geprüften Schwellen gehört dazu** (2.79).
+
+
+---
+
+## 2.94 ⚠️⚠️ Eine Prüfung, die auf EINEM Parameterwert steht, ist kein Nachweis
+
+**Anlass: 01.09.2026.** Die Prüfung *„ein gehebelter Trade rechnet mit
+Hebelkosten"* stand seit dem 28.08. grün. Sie prüfte:
+
+```python
+_k = lambda h: TB.kosten_r_aus_stop(100.0, 95.0, "krypto",
+                                    position_eur=1000.0,
+                                    instrument="spot", hebel=h, tage=30.0)
+pruefe(P, "...", _k(3.0) > _k(1.0))
+```
+
+**Am 01.09. über alle Haltedauern nachgerechnet:**
+
+| Tage | Hebel 3 | Hebel 1 (Spot) | Prüfung |
+|---|---|---|---|
+| 1 | 0,0640 R | 0,6000 R | ⚠️ **wäre ROT** |
+| 3 | 0,1120 R | 0,6000 R | ⚠️ **wäre ROT** |
+| 7 | 0,2080 R | 0,6000 R | ⚠️ **wäre ROT** |
+| 14 | 0,3760 R | 0,6000 R | ⚠️ **wäre ROT** |
+| **30** | 0,7600 R | 0,6000 R | ✔ grün |
+
+**Die Prüfung stand auf der einzigen Stufe, bei der der Fehler unsichtbar
+war** — und ausgerechnet nicht auf der, die zählt: die geplante
+Hebel-Haltedauer liegt bei **1 bis 3 Tagen**.
+
+### Was der Fehler wirklich war
+
+Dem Hebel-Tier fehlte die **Handelsgebühr auf das Nominal**. Erst nach rund
+30 Tagen übersteigt die aufgelaufene Finanzierung diese Lücke. Die Prüfung
+maß also nicht die Behauptung, sondern einen Punkt, an dem ein zweiter
+Effekt den Fehler zufällig überdeckte.
+
+### Die Regel
+
+**Wenn eine Prüfung einen Parameter setzt, muss sie ihn variieren** — über
+den Bereich, in dem die Größe im Betrieb tatsächlich vorkommt. Die
+Prüffragen:
+
+1. **Welche Parameter setzt diese Prüfung?** (hier: Haltedauer, Stopweite,
+   Positionsgröße)
+2. **Welchen Bereich nimmt jeder im Betrieb an?** (hier: 1–20 Tage laut
+   Nutzervorgabe — geprüft wurde bei 30)
+3. **Hält die Aussage über den ganzen Bereich?**
+4. ⚠️ **Steht der Prüfwert am Rand oder in der Mitte des Bereichs?** Ein
+   Wert außerhalb des Betriebsbereichs ist ein Warnzeichen für sich.
+
+### ⚠️ Die schärfere Form: auf die Aussage prüfen, nicht auf ein Verhältnis
+
+Die reparierte Prüfung stieß auf ein Folgeproblem. Die Nachbarprüfung
+*„beim Hebel kostet die Haltedauer"* verlangte `lang > kurz * 2` — ein
+**Proxy**, der nur hielt, solange die Hebelkosten ausschließlich aus
+Finanzierung bestanden. Mit der ergänzten Handelsgebühr teilen sich kurze
+und lange Haltedauer einen Sockel von 0,60 R, das Verhältnis fällt auf
+**1,98**, und die Prüfung fiel um — **obwohl die Aussage stimmte**.
+
+**Ein Schwellenwert auf einem Verhältnis misst fast nie das, was der
+Prüfsatz behauptet.** Richtig ist die Zerlegung:
+
+```python
+# der ZEITABHÄNGIGE Anteil wächst
+_lang["finanzierung_rel"] > 2 * _kurz["finanzierung_rel"]
+# der Handelsanteil wächst NICHT mit
+abs(_lang["handel_rel"] - _kurz["handel_rel"]) < 1e-12
+```
+
+### ⚠️ Und die dritte Falle: die Wortprüfung
+
+Die Negativkontrolle zeigte, dass eine Prüfung *„der Hebel weist Handel und
+Finanzierung getrennt aus"* auch am **alten, fehlerhaften** Stand grün
+blieb — dort stand dann schlicht *„davon Handel **0,0 %**"*. Die Wörter
+waren da, die Zahl war null.
+
+**Geprüft wird der Wert, nicht das Vorkommen des Wortes.** Die reparierte
+Fassung verlangt zusätzlich, dass der Handelsanteil dem Spot-Wert
+entspricht — was zugleich die Herleitung absichert (der Hebel kürzt sich
+bei der Handelsgebühr heraus).
+
+### Verbindung
+
+| | |
+|---|---|
+| **2.80** | die Prüfliste zwischen Ergebnis und Deutung |
+| **2.88** | die Positivkontrolle, die den eigenen Effekt frisst |
+| **R-R10** | Dokumente öffnen statt greppen — der Kompromiss, den diese Prüfung absichern sollte, stand in Prosa |
+
+**Merksatz:** *Eine grüne Prüfung sagt „bei diesen Werten stimmt es". Ob
+das die Werte sind, die vorkommen, sagt sie nicht.*

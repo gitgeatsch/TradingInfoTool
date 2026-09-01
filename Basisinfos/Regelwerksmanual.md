@@ -4732,3 +4732,83 @@ dokumentiert. Ohne sie ist jede Kalibrierung willkürlich.
 
 Verwandt: **R-R8** (Aufnahme eines Bewertungsbeitrags) — R-R9 ist ihr
 Pflichtanhang: **B7. Nach der Aufnahme wird kalibriert.**
+
+
+---
+
+# ⚠️ R-R10 Die Dokumente zum Thema werden GEÖFFNET, nicht gegrept (01.09.2026)
+
+**Anlass, wörtlich vom Nutzer:** *„Dieses Loch müsste dir doch aufgefallen
+sein, und wenn nicht, dann begründe das — wir reden schon seit drei Tagen,
+wie wir Hebel umsetzen wollen, und dann fehlt das Wichtigste."*
+
+## Die Regel
+
+**Vor jeder Ausarbeitung zu einem Thema:**
+
+1. **Auflisten**, welche Dokumente das Thema führen — nach Trefferdichte,
+   nicht nach Erinnerung:
+   `for f in Basisinfos/*.md; do echo "$(grep -ci THEMA $f) $f"; done | sort -rn`
+2. **Die drei dichtesten öffnen und lesen** — ganz, nicht die Fundstelle.
+3. **Erst danach** einen Vorschlag formulieren.
+
+## Warum `grep` dafür nicht genügt
+
+**`grep` findet, was man schon vermutet.** Ein Befunddokument, dessen
+Kernsatz man nicht erwartet, findet es nie — man müsste den Satz kennen,
+um nach ihm zu suchen.
+
+**Der Fall, der die Regel erzwungen hat:** Drei Tage Arbeit an der
+Hebel-Umsetzung. Der tragende Satz stand seit dem **28.08.** in
+`Befund_Instrument_nach_S6b_28_08.md`:
+
+> *„…daraus, dass **‚spot' und ‚hebel' dasselbe Signal mit zwei Etiketten
+> sind**."*
+
+Das Dokument wurde in diesen drei Tagen **nie geöffnet**. Gesucht wurde
+nach `hebel`, `instrument`, `bewertung` — alle drei kommen darin vor, aber
+die Fundstellen führten in Abschnitte, die die Frage nicht beantworten.
+
+## ⚠️ Und die zweite Hälfte: Tabellen sind keine Dokumente
+
+Der zweite Satz, der die Lücke bereits benannte, stand in einem Dokument,
+das **sehr wohl offen war** — `Anforderungen_Umbau_28_08.md`, Abschnitt 5.2:
+
+> *„Das Instrument fällt weiterhin aus dem Stopabstand an… Der Stop
+> bestimmt, ob es ein Hebel-Trade wird. Das ist vertretbar, **wenn die
+> Kostenrechnung dem Etikett folgt (L3)**."*
+
+**Gelesen wurde die Übersichtstabelle darunter, nicht der Fließtext
+darüber.** Die Tabelle nennt nur *„Kostenrechnung folgt dem Etikett (L3)"*
+— die **Bedingung**, an der ein ganzer Kompromiss hängt, steht in Prosa.
+
+**Ein Plan wird nicht an seiner Übersicht gelesen.** Wo eine Tabelle einen
+Schritt nennt, ist der Absatz darüber die Begründung — und die Begründung
+trägt die Bedingungen.
+
+## Die Verbindung zu den bestehenden Regeln
+
+| Regel | Ebene |
+|---|---|
+| **F7** / *„`zeige_modulkarte.py` vor jeder Ausarbeitung"* | **Module** — was ist gebaut? |
+| **Werkzeugkasten 2.13** | **Messwerkzeuge** — was ist gemessen? |
+| **R-R10** *(neu)* | **Dokumente** — was ist entschieden und begründet? |
+
+Die dritte Landkarte hat gefehlt. Alle drei beantworten dieselbe Frage in
+verschiedenen Beständen: **existiert das schon, und was steht dazu fest?**
+
+## Was der Verstoß gekostet hat
+
+Vier Tage. Der Kompromiss aus 5.2 stand unter der Bedingung L3; L3 galt
+seit dem 28.08. als erledigt, war es aber nur zur Hälfte — dem Hebel-Tier
+fehlte die Handelsgebühr auf das Nominal, wodurch ein Hebeltrade in der
+Mail **siebenmal billiger** erschien als derselbe Trade in Spot.
+
+⚠️ **Verschärfend:** Die eigene Prüfsuite bestätigte die falsche Antwort,
+weil sie auf **einem einzigen Parameterwert** stand (30 Tage Haltedauer).
+Siehe dazu `Test_und_Verifikationsmethodik.md` — *eine Aussage, die nur bei
+einem Parameterwert hält, ist keine.*
+
+Verwandt: **R-R9** (Neukalibrierung bei Beitragswechsel) ·
+`Anforderungen_Umbau_28_08.md` Nachtrag Abschnitt 9 ·
+`Befund_Instrument_nach_S6b_28_08.md` Abschnitt 6

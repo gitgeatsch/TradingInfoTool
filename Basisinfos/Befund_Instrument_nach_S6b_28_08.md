@@ -60,7 +60,7 @@ weiter** — und dort ist die Antwort seit dem 22.08. **immer nein**.
 | `lagebeschreibung.py` | 90 | Hebel-Block im Prompt entfällt |
 | `rollen_eingabe.py` | 557, 628, 766 | drei Fakten entfallen, u.a. Finanzierung |
 | `signal_mail.py` | 479, 626 | zwei Formulierungen greifen nicht |
-| `trefferbilanz.py` | 191 | ⚠️ **Hebel-Tier nie vergeben — Kosten 21 % zu niedrig** |
+| `trefferbilanz.py` | 191 | ✔ **erledigt 28.08. (I-1a)** — ⚠️ aber nur die WEICHE. Siehe Nachtrag unten: die **21 % waren selbst zu niedrig gegriffen** |
 | `entscheidungsrechnung.py` | 595 | ✔ nur Rückfall, Etikett gewinnt |
 | `signal_abbildung.py` | 525 | ✔ nur Rückfall, Etikett gewinnt |
 | `toepfe.py` | 92 | ✔ bekommt `_topf_instrument` |
@@ -473,3 +473,53 @@ Hebel **1,1**, Verlust 46,04 € (unter dem Budget, weil L > 1).
 **Und es ist ein unfreiwilliger Beleg:** Bei 15 % Verlustanteil entsteht ein
 Hebel von 2,9 — bei 6 % einer von 1,1. Dieselbe Geometrie, dieselbe Kette,
 nur die eine Zahl unterschiedlich.
+
+
+---
+
+## 6. ⚠️⚠️ NACHTRAG 01.09.2026 — die Zeile `trefferbilanz.py:191` war nur zur Hälfte erledigt
+
+**Am 28.08. galt sie als behoben (I-1a):** das Tier folgt seither dem
+Hebel*wert* statt dem Lauf-Etikett, gemessen *„0,76 R bei Hebel 3 gegen
+0,60 R bei Hebel 1"*. **Die Weiche war richtig. Das Ziel-Tier nicht.**
+
+Dem Hebel-Tier fehlte die **Handelsgebühr auf das Nominal** vollständig —
+es rechnete ausschließlich die Finanzierung auf das geliehene Kapital:
+
+| Stop 5 %, 3 Tage | bis 01.09. | richtig | Faktor |
+|---|---|---|---|
+| Spot (Hebel 1) | 0,6000 R | 0,6000 R | — |
+| Hebel 3 | **0,1120 R** | **0,7120 R** | ⚠️ **6,4** |
+
+**Der Satz „21 % zu niedrig" galt für 30 Tage Haltedauer.** Bei der
+geplanten Hebel-Haltedauer von 1–3 Tagen war der Fehler **um ein
+Vielfaches größer** — und er drehte das Vorzeichen der Aussage um: ein
+Hebeltrade erschien **billiger** als derselbe Trade in Spot.
+
+### Warum die Messung das nicht gefunden hat
+
+Die Sätze sind **an 104 eigenen geschlossenen Positionen belegt** — über
+`margin_trading.fee`, und diese Buchung führt genau den **Kreditanteil**.
+Der Spread steckt, wie bei Spot, im ausgeführten Preis und ist ohne
+Marktmitte nicht messbar (`_KOSTEN_SPOT_JE_SEITE` sagt das ausdrücklich).
+
+⚠️ **Es war keine falsche Messung, sondern eine ASYMMETRIE:** Spot trug den
+geschätzten Spread, Hebel trug ihn nicht. Die Zahl war „belegt" — aber
+unvollständig, und die Vollständigkeit hat niemand geprüft. Seit 01.09.
+fällt `belegt` für die zusammengesetzte Hebelzahl auf `False`.
+
+### Und die Prüfung hat es gedeckt
+
+`pruefe_pakete` stellte *„beim Hebel kostet die Haltedauer"* bei **30 Tagen**
+— der einzigen Stufe, bei der die aufgelaufene Finanzierung die fehlende
+Handelsgebühr übersteigt. Bei 1, 3, 7 und 14 Tagen war die Aussage falsch,
+die Prüfung aber grün. **Sie prüft seit 01.09. jede Haltedauer.**
+
+### Was daran hängt
+
+⚠️ Der Kompromiss in `Anforderungen_Umbau_28_08.md` Abschnitt 5.2 —
+*„der Stop bestimmt, ob es ein Hebel-Trade wird"* — steht ausdrücklich
+unter der Bedingung *„vertretbar, **wenn die Kostenrechnung dem Etikett
+folgt (L3)**"*. Diese Bedingung war **vier Tage lang nicht erfüllt**, und
+zwar in die gefährliche Richtung. Vollständige Aufarbeitung: dort,
+Nachtrag Abschnitt 9.

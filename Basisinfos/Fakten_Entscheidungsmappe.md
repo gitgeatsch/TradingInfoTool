@@ -2650,3 +2650,86 @@ Zwei Gründe, beide inhaltlich:
 Nutzer oder von Bitpanda. **Offen, mit benanntem Grund.**
 
 **Suite: 1.732 Prüfungen, alle bestanden.**
+
+
+---
+
+## F-163 Die Bewertung hat keine Instrument-Achse — und L3 war nur zur Hälfte erledigt (01.09.2026)
+
+> ⚠️ **Zur Nummer:** `F-162` ist im Fakten-KATALOG (Kapitel 13) bereits
+> als Fakt-ID vergeben. Die Kapitel dieses Nachtragsteils und die
+> Fakt-IDs teilen sich versehentlich einen Namensraum; dieses Kapitel
+> heisst deshalb **F-163**.
+
+**Nutzerfrage:** *„Wir reden schon seit drei Tagen, wie wir Hebel umsetzen
+wollen, und dann fehlt das Wichtigste."* — Sie hat recht, und der Befund ist
+zweiteilig.
+
+### ⚠️ Teil 1 — die Achse fehlt, am Code belegt
+
+    _gilt(b, klasse, strategie, richtung)      DREI Achsen
+    Beitrag(klassen, strategien, richtungen)   kein `instrumente`, kein `horizont`
+    basisrate(crv) = 1/(1+CRV)                 kennt keinen Horizont
+    potential.rechne(..., instrument=...)      reicht es an HA.pruefe und an die
+                                               ANZEIGE weiter - nie an _gilt
+
+**Gemessen:** `spot × einstieg` und `hebel × einstieg` liefern bei gleicher
+Lage **exakt dieselbe Zahl** (+0,119100 R). Die zweite Zelle kann sich von
+der ersten nicht unterscheiden — **nicht weil die Messung fehlt, sondern
+weil es keinen Ort gibt, an dem ein zellen-eigener Wert stünde.**
+
+⚠️ **Derselbe Fehlertyp wie S6b eine Ebene höher** (F-159, F-161):
+`instrument` wird mitgeführt, aber an der entscheidenden Stelle nicht
+gefragt.
+
+### ⚠️⚠️ Teil 2 — der Kompromiss stand auf einer unerfüllten Bedingung
+
+`Anforderungen_Umbau_28_08.md` **5.2** hält den Zustand ausdrücklich als
+Kompromiss fest: *„Der Stop bestimmt, ob es ein Hebel-Trade wird. Das ist
+vertretbar, **wenn die Kostenrechnung dem Etikett folgt (L3)**."*
+
+**L3 galt seit dem 28.08. als erledigt (I-1a). Die Weiche war richtig, das
+Ziel-Tier nicht.** Dem Hebel-Tier fehlte die Handelsgebühr auf das Nominal:
+
+| Stop 5 %, 3 Tage | bis 01.09. | richtig |
+|---|---|---|
+| Spot | 0,6000 R | 0,6000 R |
+| Hebel 3 | **0,1120 R** | **0,7120 R** |
+
+**Vier Tage lang erschien ein Hebeltrade siebenmal billiger als derselbe
+Trade in Spot** — in die gefährliche Richtung. ✔ Repariert 01.09.
+
+### Warum es nicht auffiel — drei Ursachen, alle in der Kontrolle
+
+1. **Die Prüfung stand auf 30 Tagen Haltedauer** — der einzigen Stufe, bei
+   der die Finanzierung die Lücke überdeckt. Bei 1–3 Tagen (der geplanten
+   Hebel-Haltedauer) wäre sie rot gewesen → Methodik **2.94**.
+2. **Gefragt wurde „ist es gebaut?", nicht „stimmt die Zahl?"** — die
+   stehende Vorgabe *„gebaut heißt nicht geprüft"* wurde übersprungen.
+3. **`Befund_Instrument_nach_S6b_28_08.md` wurde nie geöffnet.** Dort steht
+   seit dem 28.08.: *„‚spot' und ‚hebel' sind dasselbe Signal mit zwei
+   Etiketten."* Gesucht wurde mit `grep` → neue Regel **R-R10**.
+
+### ⚠️ Alt und Neu nicht vermischen
+
+Das **Screening** (`hebel_triggers`, Score, Schwelle 70) ist **Altbestand**
+und läuft alle 15 Minuten weiter, während seine Verwertung
+(`budget_allocator` → `generate_hebel_signal`) seit dem 22.08. übersprungen
+wird. **Seine Rohdaten sind verwendbar, sein Score als Kriterium nicht** —
+er wurde nie gegen den Zufall gemessen. Vollständige Abgrenzung:
+`Anforderungen_Umbau_28_08.md` **9.6**.
+
+⚠️ **Die Gefahrenstelle ist `backward_tracking.kosten_in_r`** — von beiden
+Ketten benutzt. Genau dort saß der Fehler. **Änderungen an gemeinsamen
+Modulen sind gegen beide Ketten zu prüfen.**
+
+### Offen
+
+**H-1 bis H-4** in `Anforderungen_Umbau_28_08.md` **9.5**. ⚠️ **H-1 zuerst:**
+die Messung, die 5.2 selbst verlangt hat — *„ein gehebelter Trade mit engem
+Stop trägt sich rechnerisch nicht, bevor er begonnen hat. Das wäre zu
+messen, bevor Aufwand in seine Verwaltung fließt."* Sie wurde nie
+durchgeführt und kann **H-3 (Instrument-Achse) überflüssig machen**.
+
+Verwandt: F-159 · F-161 · `Befund_Instrument_nach_S6b_28_08.md` 6 ·
+Methodik 2.94 · Regelwerk R-R10

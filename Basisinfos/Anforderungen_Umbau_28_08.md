@@ -464,3 +464,269 @@ erheblich.
 | Stundenkerzen | Abschnitt 4 — falsche Grundgesamtheit |
 | Rückbau `hebel_signals` | die GUI zeigt Historie; read-only genügt |
 | Akkumulations-Verbilligungssatz für den Kern | Befund 28.08.: das Maß trägt über 505 Reihen, **nicht für BTC/ETH/SOL**. Empfehlung B+C: Kern akkumulieren **ohne** Verbilligungssatz, **mit** Ausschlussbremse (> +30 % über dem Schnitt, −11,2 Punkte, 3/3 Jahre) |
+
+---
+
+# NACHTRAG 01.09.2026 — zwei Themen, die getrennt bleiben müssen
+
+**Nutzerauftrag:** *„Nimm die erforderlichen Änderungen für G in den Plan
+auf"* — und, nach dem Hebel-Befund: *„die Inkonsistenz zum Hebel sauber in
+der Historie, Messdokumenten, Dokumentation, Zentraldokumenten, Regelwerken
+etc. nachschlagen — dieses Loch müsste dir doch aufgefallen sein."*
+
+⚠️ **Die beiden Themen sind getrennt zu halten.** Nutzervorgabe 31.08.:
+*„G ist eine LLM-Bewertung ‚als Gegenprüfung', aber nicht als
+Signalbewertung… wenn es eine Lücke bei LLM G ist, müssen wir das bei der
+Rolle G berücksichtigen, aber das ist von unserer Signalbewertung zu
+trennen."*
+
+---
+
+## 8. Rolle G — was sie ist, und was an ihr zu ändern ist
+
+### 8.1 Was Rolle G in der Kette genau ist
+
+| | |
+|---|---|
+| **Modul** | `agent/zweite_meinung.py` |
+| **Rolle** | zweiter LLM (Z.ai), **Gegenprüfung** des Urteils von Rolle BC |
+| **Stellung** | läuft **NACH** dem Mailbau, steht in **keiner** Trichterstufe |
+| **Ausgabe** | ein eigener Mailabschnitt (`gegenpruefung=`) |
+| **Besonderheit** | ⚠️ **sie sieht als einzige Rolle den Terminmarkt** — die OI-Fakten kommen bei ihr an (geprüft 01.09.: BTC +0,91 %, LINK +0,08 %, TAO −0,42 %, `fehlt: []`) |
+
+### 8.2 Der Befund — 725 Widersprüche ohne Folge
+
+Gemessen an der Notebook-Produktion (2.789 Signale):
+
+    urteilt bei          1.352 Signalen (48 %)
+    sagt "nein" in         725 Fällen (54 % ihrer Urteile)
+    davon gesperrt           0
+    -> rund 45 Widersprüche je Tag, alle versendet
+
+**Die Mail sagt „kaufen" und zwei Absätze weiter „ich würde nicht".** Das ist
+kein Fehler in G, sondern eine fehlende Festlegung: **was soll ein
+Widerspruch bewirken?**
+
+### 8.3 ⚠️ Was NICHT gemacht wird
+
+**Rolle G wird keine Trichterstufe.** Mein erster Vorschlag am 31.08. war
+genau das — er ist zurückgezogen. Begründung des Nutzers, und sie trägt:
+
+* Eine **Gegenprüfung** prüft ein fertiges Ergebnis. Wer sie in die Kette
+  hängt, macht sie zum **Erzeuger** des Ergebnisses — dann prüft sie sich
+  selbst.
+* Das Potential ist die Signalbewertung (Stufe 11). Ein LLM-Votum daneben
+  wäre eine **zweite, konkurrierende** Bewertung — genau die Vermischung,
+  die dieser Umbau beseitigen soll.
+* Ein LLM-Nein ist eine **Prognose**, kein gemessener Beitrag. Es dürfte
+  nach Regel 4 ohnehin nichts auslösen, solange es nicht gegen den Zufall
+  gemessen ist (Regelwerk: *„Die LLM-Ebene muss den Zufall messbar
+  schlagen"*).
+
+### 8.4 Die drei Änderungen, die aufgenommen werden
+
+| # | Änderung | Größe | Warum |
+|---|---|---|---|
+| **G-a** | **Das Vokabular vereinheitlichen.** G liefert heute `ja` / `nein` / `konsistent` / `unklar` durcheinander | klein | ⚠️ **Vorbedingung für alles Weitere.** Solange vier Wörter zwei Bedeutungen tragen, ist jede Auswertung ihrer Quote eine Schätzung. Kein Filter, keine Messung, kein Bericht darf vorher gebaut werden |
+| **G-b** | **Den Widerspruch sichtbar machen, nicht wirksam.** Ein Widerspruch bekommt eine eigene, benannte Zeile am Kopf des Gegenprüfungsblocks — nicht am Ende, wo er heute untergeht | klein | Der Nutzer soll ihn sehen und selbst entscheiden. Das ist die Rolle einer Gegenprüfung |
+| **G-c** | **Die Trefferbilanz von G führen.** Je Widerspruch wird der Ausgang mitgeschrieben: hatte G recht? | mittel | ⚠️ **Erst danach ist die Frage „soll G sperren dürfen?" überhaupt beantwortbar.** Vorher wäre jede Sperre eine Vermutung. Maßstab: der quotengleiche Zufall, nicht das Bauchgefühl |
+
+⚠️ **G-c ist ausdrücklich KEIN Vorgriff auf eine Sperre.** Es ist die
+Messung, die eine spätere Entscheidung erst erlaubt — und sie kann genauso
+gut ergeben, dass G nichts sperren darf.
+
+### 8.5 Der offene Punkt daneben (G2)
+
+`simuliere_kette.py` meldet ihn seit dem 31.08. als **bekannten Zustand,
+nicht als Fehler:** *„Rolle G urteilt auf BTC-weiter Grundlage."* G bekommt
+das Marktlagebild, aber nicht immer die asset-eigene Faktenlage. Das gehört
+zu G-a/G-b, nicht zur Signalbewertung.
+
+---
+
+## 9. ⚠️⚠️ DER HEBEL — die Inkonsistenz, nachgeschlagen
+
+**Nutzerfrage 01.09.:** *„Wir reden schon seit drei Tagen, wie wir Hebel
+umsetzen wollen, und dann fehlt das Wichtigste."*
+
+### 9.1 Der Befund, in einem Satz
+
+**Die Bewertung hat keine Instrument-Achse und keine Horizont-Achse.** Am
+Code belegt (01.09.):
+
+    _gilt(b, klasse, strategie, richtung)      DREI Achsen
+    Beitrag(klassen, strategien, richtungen)   kein `instrumente`
+                                               kein `horizont`
+    basisrate(crv) = 1/(1+CRV)                 kennt keinen Horizont
+    potential.rechne(..., instrument=...)      reicht es an HA.pruefe und
+                                               an die ANZEIGE - nie an _gilt
+
+**Folge, gemessen:** `spot × einstieg` und `hebel × einstieg` liefern bei
+gleicher Lage **exakt dieselbe Zahl** (+0,119100 R). Die zweite Zelle kann
+sich von der ersten **nicht unterscheiden** — nicht weil die Messung fehlt,
+sondern weil es keinen Ort gibt, an dem ein zellen-eigener Wert stünde.
+
+⚠️ **Das ist derselbe Fehlertyp wie S6b eine Ebene tiefer:** `instrument`
+wird mitgeführt, aber an der entscheidenden Stelle nicht gefragt.
+
+### 9.2 ⚠️ Es stand längst da — an drei Stellen
+
+| Wo | Wann | Was dort steht |
+|---|---|---|
+| `Befund_Instrument_nach_S6b_28_08.md` Abschnitt 4 | **28.08.** | *„…daraus der kleine Hebel (Median 1,10) — und daraus, dass **‚spot' und ‚hebel' dasselbe Signal mit zwei Etiketten sind**."* |
+| dieser Plan, Abschnitt **5.2** | **28.08.** | *„Das Instrument fällt weiterhin aus dem Stopabstand an… Für die 40 taktischen Krypto-Assets bleibt es dabei: **Der Stop bestimmt, ob es ein Hebel-Trade wird**."* |
+| dieser Plan, Abschnitt **6** | **28.08.** | Schritt **5 „Zweite Frage für V1 (L2)"** — *groß*, Vorbedingung Schritte 2 und 3, **bis heute offen** |
+
+**Die Lücke war also nicht unbekannt — sie war als bewusster Kompromiss
+notiert, mit einer Bedingung daran:**
+
+> *„Das ist vertretbar, **wenn die Kostenrechnung dem Etikett folgt (L3)**.
+> Es ist **nicht** vertretbar, solange 35 % der Signale ohne
+> Finanzierungskosten bewertet werden."*
+
+### 9.3 ⚠️⚠️ Und genau diese Bedingung war NICHT erfüllt
+
+**L3 galt seit dem 28.08. als erledigt (I-1a).** Am 01.09. nachgerechnet:
+Die Weiche funktionierte, das Ziel-Tier nicht. Dem Hebel-Tier fehlte die
+**Handelsgebühr auf das Nominal** vollständig:
+
+| Stop 5 %, 3 Tage | gerechnet bis 01.09. | richtig |
+|---|---|---|
+| Spot | 0,6000 R | 0,6000 R |
+| Hebel 3 | **0,1120 R** | **0,7120 R** |
+
+**Ein Hebeltrade erschien siebenmal billiger als derselbe Trade in Spot.**
+Der Kompromiss aus 5.2 stand damit **vier Tage lang auf einer Bedingung, die
+er nicht erfüllte** — und zwar in die gefährliche Richtung: die
+Wirtschaftlichkeit des Hebels wurde systematisch zu gut dargestellt.
+
+✔ **Repariert 01.09.** (Commit „Trennung Bewertung/Wirtschaftlichkeit"):
+Handel + Finanzierung, beide Gebührensätze getrennt, Suite 1.876 grün,
+Kettensimulation weist es in der fertigen Mail nach.
+
+### 9.4 Warum es mir nicht aufgefallen ist — die ehrliche Auskunft
+
+**Vier Gründe, keiner davon eine Entschuldigung:**
+
+1. **Ich habe die Tabelle gelesen, nicht den Fließtext darüber.** Am 31.08.
+   habe ich Abschnitt 6 zitiert (Schritte 3/4/5) und Schritt 3 = L3
+   geprüft. Der Kompromiss und seine **Bedingung** stehen in 5.2, in Prosa,
+   direkt über der Tabelle. Ein Plan wird nicht an seiner Übersicht gelesen.
+
+2. **Ich habe gefragt „ist es gebaut?" statt „stimmt die Zahl?".** Die
+   Antwort auf L3 lautete *„erledigt, I-1a"* — nach einem Blick auf die
+   Weiche. Mein Verifikationsaufruf lief in einen Signaturfehler, und ich
+   bin zur nächsten Frage übergegangen, statt ihn zu Ende zu bringen.
+   ⚠️ **Genau die stehende Vorgabe: *„gebaut" heißt nicht „geprüft".***
+
+3. **Die eigene Suite hat die falsche Antwort bestätigt.** Die Prüfung
+   „Hebel kostet mehr als Spot" stand auf **30 Tagen** — der einzigen
+   Stufe, bei der die aufgelaufene Finanzierung die fehlende
+   Handelsgebühr übersteigt. Bei der geplanten Hebel-Haltedauer von 1–3
+   Tagen wäre sie rot gewesen. Ein grüner Haken auf einem einzigen
+   Parameterwert ist kein Nachweis.
+
+4. **`Befund_Instrument_nach_S6b_28_08.md` habe ich in drei Tagen
+   Hebel-Arbeit nie geöffnet.** Ich habe mit `grep` gesucht — und `grep`
+   findet, was man schon vermutet. ⚠️ Es gibt eine stehende Regel
+   *„`zeige_modulkarte.py` vor jeder Ausarbeitung"* für **Module**. Für
+   **Dokumente** gibt es keine. Daraus folgt Regel **R-R10** unten.
+
+### 9.5 Was zu tun ist — und in welcher Reihenfolge
+
+| # | | Vorbedingung | Größe |
+|---|---|---|---|
+| **H-1** | ⚠️ **Die Messung nachholen, die 5.2 selbst verlangt hat:** *„Bei einem Stop von 2 % kostet allein die Referenzgebühr 0,30 R — mehr als der gesamte gemessene Vorsprung. Ein gehebelter Trade mit engem Stop trägt sich rechnerisch nicht, bevor er begonnen hat. **Das wäre zu messen, bevor Aufwand in seine Verwaltung fließt.**"* | ✔ L3 jetzt korrekt | klein |
+| **H-2** | **Entscheiden, ob die Bewertung eine Instrument-Achse bekommt** — oder ob der Hebel eine reine **Ausführungsfrage** bleibt (dann ist 5.2 die endgültige Antwort, nicht ein Kompromiss) | H-1 | ⚠️ **Nutzerentscheidung** |
+| **H-3** | Falls ja: **`Beitrag` um `horizonte` erweitern**, die H1–H20-Messung je Horizont eintragen, `potential.rechne` einen Horizont annehmen lassen | H-2 | groß |
+| **H-4** | ⚠️ **KORRIGIERT — siehe 9.6.** Die Terminmarkt-**Rohgrößen** als Beitragskandidaten messen (OI, OI-Veränderung, OI-Divergenz, Funding-Extrema). Meine erste Fassung wollte den **Screening-Score validieren** — das wäre die Vermischung von Alt- und Neubestand | H-2 | mittel |
+
+⚠️ **H-1 kann H-3 überflüssig machen** — dieselbe Logik, mit der Abschnitt 6
+schon Schritt 2 vor Schritt 5 gestellt hat. **Erst messen, dann bauen.**
+
+⚠️ **Zur Datenlage:** Die Terminmarkt-Historie für H-4 liegt auf dem
+**Notebook**, nicht am Desktop. Lokal geprüft 01.09.:
+`open_interest_snapshot` **227 Zeilen**, `hebel_triggers` **49**. Die Zahlen
+82.655 / 227.395 stammen aus der NB-Produktion. **H-4 braucht einen Pull
+oder läuft am NB.**
+
+### 9.6 ⚠️⚠️ ALT UND NEU — die Grenze, bevor irgendetwas gemessen wird
+
+**Nutzervorgabe 01.09., während dieser Recherche:** *„Ganz wichtig zu deiner
+Recherche — genau trennen, was Alt- und Neubestand ist, damit keine
+Vermischung erfolgt."*
+
+**Die Grenze, am Code festgestellt (01.09.):**
+
+| | ALTBESTAND | NEUBESTAND |
+|---|---|---|
+| **Erzeugung** | `hebel_screening.py` → `hebel_triggers` | `rollen_lauf.fuehre_lauf` → die elf Trichterstufen |
+| **Bewertung** | Score 0–100, Schwelle **70** | `potential.rechne` → Schwelle **0,080 R** |
+| **Signalbau** | `hebel_pipeline.generate_hebel_signal` | `rollen_lauf` → `signals` |
+| **Aufrufer** | `budget_allocator` (der **einzige**) | `rollen_job.fuehre_umlauf` |
+| **Tabellen** | `hebel_signals`, `hebel_positions`, `hebel_triggers` | `signals` (mit `instrument` seit 31.08.) |
+| **Anzeige** | `ui/hebel_view` (Historie, read-only) | `signals_view` |
+
+**Der Laufzeitzustand — und er ist NICHT „alles tot":**
+
+    hebel_screening_job     laeuft ALLE 15 MINUTEN eigenstaendig weiter
+                            (background.py:3983) -> hebel_triggers waechst
+    budget_allocator        UEBERSPRUNGEN seit 22.08. (background.py:3373),
+                            sobald EINE Gruppe die neue Kette bedient
+    generate_hebel_signal   damit unerreichbar - letztes Signal 10.08.
+
+⚠️ **Das Screening ist also lebendig, seine Verwertung tot.** Die Module
+stehen deshalb **nicht** in `zeige_modulkarte.py --tot` — sie haben
+Aufrufer, der Pfad wird nur zur Laufzeit übersprungen. **Eine Modulkarte
+beantwortet „hat es einen Aufrufer", nicht „läuft es".**
+
+#### ⚠️ Die Korrektur an meinem eigenen Vorschlag H-4
+
+**H-4 lautete zuerst:** *„Die Terminmarkt-Größen validieren, die das
+Screening bereits benutzt (OI, Funding-Extrema, Long-Bias)."*
+
+**Das ist genau die Vermischung, vor der der Nutzer warnt.** Der
+Screening-Score ist **Altbestand**: eine nie gegen den Zufall gemessene
+Konstruktion mit einer eigenen Schwelle (70), aus einer Kette, die es nicht
+mehr gibt. Ihn zu „validieren" hieße, ein altes Kriterium zu adeln und in
+die neue Bewertung zu heben — und dann wäre die Frage nicht mehr *„trägt
+diese Größe?"*, sondern *„war unsere alte Formel gut?"*. Das ist die
+Umkehrung der Regel *„Wir messen UNSERE Qualität, nicht den Markt"* in ihre
+schlechte Richtung.
+
+**H-4 lautet daher neu:**
+
+> **Die Terminmarkt-ROHGRÖSSEN als Beitragskandidaten messen** — Open
+> Interest, seine Veränderung, die OI-Divergenz, Funding-Extrema — nach dem
+> Verfahren, mit dem Funding und Turnover aufgenommen wurden: Tagesklammer,
+> Placebo-Band, beide Historienhälften, Positivkontrolle **je Horizont**,
+> Wirkung als **Regel** (R-R9 anschließend).
+>
+> ⚠️ **Der Screening-Score ist dabei Hypothesenquelle, nicht Maßstab.** Er
+> darf sagen, *welche* Rohgrößen einen Blick wert sind. Er darf nicht
+> vorgeben, *wie* sie verrechnet werden, und sein Ergebnis ist kein
+> Vergleichswert.
+
+#### Was aus dem Altbestand übernommen werden darf — und was nicht
+
+| | Umgang |
+|---|---|
+| `hebel_triggers` als **Rohdaten** (OI-Reihen, Funding) | ✔ **verwendbar** — es sind Messwerte, keine Urteile |
+| `hebel_triggers.score` und die Schwelle 70 | ✖ **nicht verwendbar** als Kriterium — nie validiert |
+| `hebel_positions` (188, alle geschlossen) | ⚠️ **nur als Nutzerverhalten** — nicht als Systemempfehlung (Abschnitt 4, Fallstrick F5) |
+| `hebel_signals` (letztes 10.08.) | ✔ Historie, read-only (Abschnitt 7) |
+| Die Kostensätze `_KOSTEN_HEBEL_*` | ✔ **gemeinsam genutzt** — an 104 Positionen belegt, gilt für beide Ketten |
+
+⚠️ **Die letzte Zeile ist die eigentliche Gefahrenstelle.**
+`backward_tracking.kosten_in_r` wird von **beiden** Ketten benutzt. Genau
+dort saß der Fehler vom 01.09. — eine Änderung dort wirkt in Altbestand und
+Neubestand zugleich. **Jede Änderung an gemeinsamen Modulen ist gegen beide
+Ketten zu prüfen**, nicht nur gegen die neue.
+
+### 9.7 ⚠️ Eine neue stehende Regel
+
+| | |
+|---|---|
+| **R-R10** | **Vor jeder Ausarbeitung zu einem Thema: die Dokumente zum Thema AUFLISTEN und die drei dichtesten ÖFFNEN — nicht greppen.** `grep` findet nur die eigene Vermutung; ein Befunddokument, dessen Kernsatz man nicht erwartet, findet es nie. Der Hebel-Fall hat vier Tage gekostet: der Satz *„spot und hebel sind dasselbe Signal mit zwei Etiketten"* stand seit dem 28.08. da. **Das ist die Doku-Entsprechung zu `zeige_modulkarte.py` (F7).** |
+
+---
