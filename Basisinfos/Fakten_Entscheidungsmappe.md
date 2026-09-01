@@ -2978,3 +2978,125 @@ wurde, ob das Bekannte bei uns trägt. Es trägt, aber schwach.
 
 Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading`
 Verwandt: F-163 · F-164 · `Anforderungen_Umbau_28_08.md` 9.5 · Methodik 2.95
+
+
+---
+
+## F-166 ⚠️⚠️ Der Markt ist zu 65,5 % seitwärtser als ein Zufallspfad — und niemand sagt vorher, wann (01.09.2026)
+
+**Nutzerauftrag:** *„Setz die Seitwärts-Erkennung auf… die Seitwärtsphase
+hilft uns u. U. bei allen Strategien? Wenn das der Fall ist, gehe in
+Detailrecherche, wie wir das für unser Ziel anwenden können und nicht nur
+in unserem System ‚messen'."*
+
+### Warum Seitwärts alle Strategien betrifft — mit verschiedenen Vorzeichen
+
+| Zelle | Was Seitwärts dort bedeutet |
+|---|---|
+| `spot × einstieg` | ✖ nicht einsteigen — das Ziel wird im Horizont nicht erreicht |
+| `spot × akkumulation` | ✔ **gut** — genau dort baut sich der Durchschnittskurs auf |
+| `hebel × einstieg` | ✖✖ am schlimmsten — Finanzierung läuft täglich, Bewegung nicht |
+| Ausstieg / Halten | ⚠️ offen — These spielt nicht, Kapital gebunden |
+
+⚠️ **Das wäre der erste echte Inhalt für das Zellenmodell:** eine gemessene
+Größe, aus der je Zelle eine **verschiedene** Folge entsteht. Heute liefert
+jede Zelle dieselbe Zahl (F-163).
+
+### Das Maß — aus der Literatur, nicht erfunden
+
+**Effizienz-Ratio (Kaufman 1995, Adaptive Moving Average):**
+
+    ER = |Kurs(t+N) − Kurs(t)| / Summe der täglichen |Änderungen|
+
+1 = der ganze Weg ging in eine Richtung; 0 = der Kurs steht am Ende dort,
+wo er begann. ⚠️ Der Maßstab ist **nicht null, sondern der Zufallspfad**:
+`1/(0,798·√N)` = **0,280** bei N = 20.
+
+**Als Prädiktoren geprüft, alle aus der Standardliteratur:** ER rückwärts
+(Kaufman) · ADX (Wilder 1978) · Choppiness Index · Varianzverhältnis
+(Lo/MacKinlay 1988) — dazu die bereits bekannten vola, turnover, funding.
+**Beide Richtungen** (nach Audit 4).
+
+### ⚠️⚠️ Der Befund: die Basisrate ist die Nachricht
+
+916.016 Anker, 7.269 Kalendertage.
+
+    ER vorwaerts   Median 0,203   Mittel 0,232
+    Zufallspfad    0,280
+
+| | Anteil |
+|---|---|
+| ER < 0,150 — praktisch reines Hin und Her | **38,0 %** |
+| **ER < 0,280 — seitwärtser als ein Zufallspfad** | **65,5 %** |
+| ER > 0,400 — erkennbarer Trend | 16,7 % |
+| ER > 0,600 — starker Trend | 2,9 % |
+
+**In zwei von drei 20-Tage-Fenstern bewegt sich der Kurs seitwärtser als
+ein Zufallspfad.** Das ist keine Marktphase, das ist der Normalzustand.
+
+### Und der Preis, den eine Vorhersage wert wäre
+
+| ER-Fünftel (Zukunft) | ER Median | Anteil mit Netto ≥ +2,0 R |
+|---|---|---|
+| 0 | 0,038 | **1,1 %** |
+| 1 | 0,117 | 8,4 % |
+| 2 | 0,203 | 21,8 % |
+| 3 | 0,306 | 31,3 % |
+| 4 | 0,467 | **41,8 %** |
+
+**Faktor 38 zwischen dem seitwärtsesten und dem trendendsten Fünftel.**
+Wer den Trendzustand vorhersagen könnte, hätte den größten Hebel im ganzen
+System — größer als jeder Beitrag, den wir je gemessen haben.
+
+### ✖ Aber niemand sagt ihn vorher
+
+| Kandidat | Richtung | seitwärts | Basis | Unterschied |
+|---|---|---|---|---|
+| adx | hoher ADX | 67,0 % | 65,5 % | **+1,5** |
+| vola | hoch | 66,7 % | 65,5 % | +1,3 |
+| choppiness | niedrig | 66,3 % | 65,5 % | +0,8 |
+| varianzverh | niedrig | 66,4 % | 65,5 % | +0,9 |
+| **er_rueck** | — | 65,5 % | 65,5 % | **+0,1** |
+| *zufall* | — | 65,5 % | 65,5 % | +0,1 ✔ |
+
+⚠️ **Die Persistenz-Annahme fällt.** `er_rueck` — die kanonische Frage *„sagt
+der Trendzustand der letzten 20 Tage den der nächsten 20?"* — trägt **so
+viel wie der Zufall**. Die drei übrigen Maße zeigen übereinstimmend das
+**Gegenteil von Persistenz**: hoher ADX, hohe Volatilität und niedrige
+Choppiness sagen **mehr** Seitwärts voraus, nicht weniger. Milde
+Rückkehr zum Mittel — und mit 1,5 Punkten praktisch bedeutungslos.
+
+### ⚠️ Was daraus ANWENDBAR folgt — ohne Vorhersage
+
+Der Nutzerauftrag lautete ausdrücklich *„anwenden, nicht nur messen"*. Die
+Basisrate ist auch ohne Prognose anwendbar:
+
+**1. Die Zielgeometrie passt nicht zu den Pfaden.**
+Nur **20,9 %** der 20-Tage-Fenster liefern überhaupt eine Nettobewegung von
++2,0 R — das ist unser Ziel bei CRV 2,0. Die Basisrate der Geometrie sagt
+33,3 %; die Pfade liefern die Bewegung in einem Fünftel der Fälle. **Das
+ist kein Prognoseproblem, sondern ein Konstruktionsproblem.**
+
+**2. Es ist ein Argument für die Akkumulation — belegt, nicht gefühlt.**
+In einem Markt, der zu zwei Dritteln seitwärtser läuft als ein Zufallspfad,
+passt ein **mittelndes** Verfahren strukturell besser als ein
+**Barrieren**verfahren. Die Akkumulation braucht keine Trendphase; der
+Einstieg mit Ziel und Stop braucht sie zwingend.
+
+**3. Und gegen den Hebel.** Die Finanzierung fällt täglich an, in einem
+Zustand, der der Normalfall ist. Zusammen mit F-165 (kein Merkmal trennt
+steil-kurz von flach-lang) bleibt für den Hebel keine begründbare Lage
+übrig.
+
+### Was NICHT behauptet wird
+
+* **Kein Filter.** Mit +1,5 Punkten lässt sich keine Trichterstufe bauen.
+* **Kein Nullbefund für alle Zeiten** — die Positivkontrolle zeigt, dass das
+  Verfahren einen starken Effekt fände; ein schwacher (< ~0,05 R) bliebe
+  unsichtbar.
+* ⚠️ **Und der Marktphasenanteil ist nicht kausal:** dass 65,5 % der Fenster
+  seitwärts sind, sagt nichts darüber, ob unsere Auswahl darin besser oder
+  schlechter liegt als der Durchschnitt.
+
+Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=seitwaerts`
+Verwandt: F-163 · F-164 · F-165 · Methodik 2.95

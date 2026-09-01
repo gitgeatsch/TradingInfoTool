@@ -4087,6 +4087,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_rascher_anstieg.py` | Hebel-Vorbedingung: schlaegt eine Lage haeufiger als der Zufall in **3 Tagen ueber +1,0 R** aus? Binaere Zielgroesse (Quote statt Median), Volatilitaet als Mitlaeufer kontrolliert. Ergebnis 01.09.: **kein Kursreihen-Merkmal traegt** — ⚠️ gemessen wurden nur KURSDATEN; die Hebel-Bewertung des Screenings laeuft ueber den Terminmarkt (OI, Funding-Extrema, Long-Bias) und ist damit NICHT widerlegt |
 | `messe_form_kurz_gegen_lang.py` | **H-1**: trennt eine Groesse STEIL-KURZ (H3) von FLACH-LANG (H20)? Wahl-Regel gegen quotengleichen Zufall, Tagesklammer, bruchbereinigt, mit `--selbsttest` gegen Kunstdaten. Ergebnis 01.09.: **kein Kursreihen-Kandidat trennt** — ⚠️ Aufloesung nur fuer Effekte ab ~0,5 R |
 | `messe_form_kurz_gegen_lang.py --ziel=frontloading` | **H-4a/H-4b**: welcher Anteil der Bewegung faellt in die ersten 3 Tage? VorzeichenLOSE Zielgroesse `|R_kurz|/(|R_kurz|+|R_rest|)` — die praxiskonforme Frage, weil der Terminmarkt Ausmass und Tempo vorhersagt, nicht die Richtung. Ergebnis 01.09.: **vier Groessen tragen** (turnover, vola, momentum_kurz, funding_extrem), ⚠️ **aber nur +1,0 bis +3,2 Punkte** — zu klein fuer eine Instrumentwahl |
+| `messe_form_kurz_gegen_lang.py --ziel=seitwaerts` | **S-1**: sagt ein etabliertes Trend/Range-Mass die kommende Effizienz-Ratio (Kaufman) voraus? Kandidaten: ER rueckwaerts, ADX (Wilder), Choppiness, Varianzverhaeltnis (Lo/MacKinlay). Ergebnis 01.09.: **keiner traegt** (max +1,5 Punkte). ⚠️ Der BEFUND ist die Basisrate: **65,5 % aller 20-Tage-Fenster sind seitwaertser als ein Zufallspfad**, und nur 20,9 % liefern netto +2,0 R |
 | `analyse_ausschuss_12.py` | Phase 1.2: die Ausschuss-Hypothese an echten Daten, erste Haelfte. |
 | `analyse_positionsgroessen_modell.py` | Welche Komponente der Positionsgroesse traegt was? (Task #605) |
 | `analyse_score_komponenten.py` | Welche Score-Komponente traegt? (2026-08-04, Phase 0.1 Auswertung) |
@@ -4927,3 +4928,27 @@ Größenordnung der echten.**
 
 Verwandt: 2.88 (Positivkontrolle) · 2.93 (quotengleicher Zufall) ·
 2.94 (Prüfung auf einem Parameterwert)
+
+---
+
+## 2.96 ⚠️ Eine Auswahlregel wird in BEIDE Richtungen geprüft
+
+**Anlass: 01.09.2026, Audit der Hebel-Messungen.** Sämtliche Messungen mit
+`messe_regel_wirksamkeit` und `messe_form_kurz_gegen_lang` wählten das
+**oberste** Fünftel der Kennzahl. Ein Kandidat, dessen Aussage am **unteren**
+Rand sitzt, war damit strukturell unsichtbar.
+
+**Gefunden hat es nicht die Suite, sondern eine Nutzerfrage:** ein
+Bollinger-**Squeeze** ist *niedrige* Volatilität. Er hätte im untersten
+Fünftel gestanden — dort, wo nie gemessen wurde.
+
+⚠️ **Der Fehler ist nicht, dass das Ergebnis falsch war** (nachgeholt:
+das unterste Fünftel trägt ebenfalls nicht). Der Fehler ist, dass der
+Schluss *„kein Kandidat trennt"* auf einer **ungeprüften Annahme** stand —
+nämlich dass jeder Effekt am oberen Rand liegt.
+
+**Regel:** Jede Auswahlregel wird für `oben` **und** `unten` berichtet. Wo
+das Vorzeichen einer Größe eine Konvention ist (ADX niedrig = trendlos),
+ist die Konvention keine Begründung, nur eine Richtung zu prüfen.
+
+Verwandt: 2.80 (die Prüfliste) · 2.88 · 2.94

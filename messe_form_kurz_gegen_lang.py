@@ -167,6 +167,24 @@ KANDIDATEN = ("vola", "momentum_kurz", "spanne_aus", "schnitt50",
               "funding", "turnover",
               # H-4b: das Extrem gegen die EIGENE Geschichte
               "funding_extrem", "funding_perzentil", "funding_persistenz",
+              # ---- S-1: die etablierten TREND/RANGE-Masse (01.09.2026) ----
+              # ⚠️ Nutzervorgabe: *„Wir wollen ja nichts erfinden, sondern
+              # auf bestehende Standards aufbauen."* Alle vier stammen aus
+              # der Standardliteratur, keines ist eine eigene Konstruktion:
+              #
+              #   er_rueck    Effizienz-Ratio rueckwaerts (Kaufman 1995) -
+              #               DIE Persistenzfrage: sagt der Trendzustand
+              #               der letzten 20 Tage den der naechsten 20?
+              #   adx         Average Directional Index (Wilder 1978) -
+              #               das kanonische "gibt es ueberhaupt einen
+              #               Trend"; unter 20-25 gilt als trendlos
+              #   choppiness  Choppiness Index - Weg gegen Spanne, in dB
+              #   varianzverh Varianzverhaeltnis (Lo/MacKinlay 1988) - die
+              #               akademisch strenge Form: waechst die Varianz
+              #               linear mit der Zeit (Zufallspfad), langsamer
+              #               (rueckkehrend = seitwaerts) oder schneller
+              #               (trendend)?
+              "er_rueck", "adx", "choppiness", "varianzverh",
               "zufall")
 
 # ⚠️ DIE ZIELGROESSE IST WAEHLBAR (H-4a, 01.09.2026).
@@ -190,6 +208,27 @@ KANDIDATEN = ("vola", "momentum_kurz", "spanne_aus", "schnitt50",
 # der waere unbrauchbar, sobald `R_lang` nahe null liegt. Der Anteil ist
 # auf [0,1] beschraenkt und hat nur dann keinen Nenner, wenn sich
 # ueberhaupt nichts bewegt hat.
+#   seitwaerts     -ER_vor  =  - |Netto| / Summe(|Tagesbewegungen|)
+#
+# ⚠️ DAS SEITWAERTS-MASS IST NICHT ERFUNDEN. Es ist die
+# EFFIZIENZ-RATIO nach Kaufman (Adaptive Moving Average, 1995) - das
+# etablierteste parameterarme Mass fuer "Trend oder Seitwaerts":
+#
+#     ER = |Kurs(t+N) - Kurs(t)| / Summe der taeglichen |Aenderungen|
+#
+# Sie liegt zwischen 0 und 1. **1 heisst: der ganze zurueckgelegte Weg
+# ging in EINE Richtung** (reiner Trend). **0 heisst: der Kurs steht am
+# Ende dort, wo er begann** - der ganze Weg war Hin und Her. Genau das
+# ist Seitwaerts.
+#
+# ⚠️ Der Massstab dafuer ist NICHT null, sondern der Zufallspfad. Bei
+# einem reinen Zufallspfad ist E|Netto| ~ sigma*sqrt(N) und die Summe der
+# Betraege ~ N*sigma*sqrt(2/pi), also ER ~ 1/(0,798*sqrt(N)) = 0,280 bei
+# N=20. Alles darunter ist SEITWAERTSER als der Zufall.
+#
+# Das Vorzeichen ist umgedreht (`-ER`), damit "oberstes Fuenftel" wie bei
+# den anderen Zielen "am meisten davon" heisst - hier also am meisten
+# Seitwaerts.
 ZIEL = "signiert"
 
 
@@ -250,6 +289,26 @@ def baue(reihen, zusatz):
         # die uebrige Historie derselben Reihe bleibt nutzbar.
         verh = c[1:] / np.maximum(c[:-1], 1e-12)
         bruch = (verh > BRUCH) | (verh < 1.0 / BRUCH)
+        # ---- S-1: die vier Trend/Range-Masse, alle NACHLAUFEND ----------
+        _d = np.abs(np.diff(c, prepend=c[0]))
+        _weg20 = np.convolve(_d, np.ones(20), "full")[:len(c)]
+        _rend = np.diff(np.log(np.maximum(c, 1e-12)), prepend=0.0)
+        # ADX nach Wilder: gerichtete Bewegung gegen die wahre Spanne
+        _uh = np.diff(h, prepend=h[0])
+        _dt = -np.diff(t_, prepend=t_[0])
+        _pdm = np.where((_uh > _dt) & (_uh > 0), _uh, 0.0)
+        _ndm = np.where((_dt > _uh) & (_dt > 0), _dt, 0.0)
+        _tr = np.maximum(h - t_, np.maximum(np.abs(h - np.roll(c, 1)),
+                                            np.abs(t_ - np.roll(c, 1))))
+        _tr[0] = h[0] - t_[0]
+        _k14 = np.ones(14)
+        _str = np.convolve(_tr, _k14, "full")[:len(c)]
+        _sp = np.convolve(_pdm, _k14, "full")[:len(c)]
+        _sn = np.convolve(_ndm, _k14, "full")[:len(c)]
+        _pdi = 100 * _sp / np.maximum(_str, 1e-12)
+        _ndi = 100 * _sn / np.maximum(_str, 1e-12)
+        _dx = 100 * np.abs(_pdi - _ndi) / np.maximum(_pdi + _ndi, 1e-12)
+        _adx = np.convolve(_dx, np.ones(14) / 14, "full")[:len(c)]
         # ⚠️⚠️ DER NENNER DARF NICHT DER KANDIDAT SEIN (01.09.2026).
         #
         # Die erste Fassung normierte mit `breite[i]` - der Tagesspanne AM
@@ -294,6 +353,16 @@ def baue(reihen, zusatz):
             # Zaehler UND Nenner, und der Anteil waere per Konstruktion
             # nach oben verzerrt - dieselbe Falle wie der Nenner oben.
             e["r_rest"] = float((c[i + LANG] - c[i + KURZ]) / nenner)
+            # ---- SEITWAERTS: die Effizienz-Ratio VORWAERTS ----------
+            # ⚠️ Sie ist die ZIELGROESSE, nicht der Kandidat: sie misst,
+            # was TATSAECHLICH passiert ist. Vorhergesagt werden soll sie
+            # von den Kandidaten weiter unten, die nur Vergangenes sehen.
+            _weg_ges = float(np.abs(np.diff(c[i:i + LANG + 1])).sum())
+            if _weg_ges > 1e-12:
+                _er = abs(float(c[i + LANG] - c[i])) / _weg_ges
+                # negativ, damit "oberstes Fuenftel" = "am seitwaertsesten"
+                e["seitwaerts"] = float(-_er)
+                e["er_vor"] = float(_er)
             _weg = abs(e["r_kurz"]) + abs(e["r_rest"])
             e["frontloading"] = float(abs(e["r_kurz"]) / _weg) if _weg > 1e-9 else None
             # ---- die Kandidaten -------------------------------------
@@ -302,6 +371,24 @@ def baue(reihen, zusatz):
             # Median, der den Nenner bildet - der Quotient steht also
             # NEBEN der Zielgroesse, nicht in ihr.
             e["vola"] = float(r / nenner)
+            # ---- S-1: die vier etablierten Masse, alle nur rueckwaerts --
+            _w = float(_weg20[i])
+            if _w > 1e-12:
+                e["er_rueck"] = float(-abs(c[i] - c[i - 20]) / _w)
+                # Choppiness: hoher Wert = viel Weg bei wenig Spanne
+                _sp20 = float(np.max(h[i - 20:i]) - np.min(t_[i - 20:i]))
+                if _sp20 > 1e-12:
+                    e["choppiness"] = float(np.log10(_w / _sp20)
+                                            / np.log10(20.0))
+            # ADX: NIEDRIG heisst trendlos - Vorzeichen umgedreht, damit
+            # "oberstes Fuenftel" auch hier "am seitwaertsesten" heisst.
+            if np.isfinite(_adx[i]):
+                e["adx"] = float(-_adx[i])
+            # Varianzverhaeltnis: <1 rueckkehrend/seitwaerts, >1 trendend.
+            _r1 = _rend[i - 100:i]
+            if len(_r1) == 100 and _r1.std() > 1e-12:
+                _r5 = _r1.reshape(20, 5).sum(axis=1)
+                e["varianzverh"] = float(-(_r5.var() / (5.0 * _r1.var())))
             if c[i - KURZ] > 0:
                 e["momentum_kurz"] = float(c[i] / c[i - KURZ] - 1.0)
             hoch = np.max(c[i - 20:i + 1])
@@ -353,13 +440,15 @@ def _ziel(x):
     """
     if ZIEL == "frontloading":
         return x.get("frontloading")
+    if ZIEL == "seitwaerts":
+        return x.get("seitwaerts")
     return x["r_kurz"] - x["r_lang"]
 
 
 ANTEIL = 0.20     # oberstes Fuenftel - dieselbe Quote wie `messe_regel_wirksamkeit`
 
 
-def wahl_je_tag(je_tag, kandidat, mische=None, pflanze=None):
+def wahl_je_tag(je_tag, kandidat, mische=None, pflanze=None, richtung="oben"):
     """⚠️ EINE WAHL-REGEL, KEINE SPERR-REGEL - und das ist der Unterschied.
 
     `messe_regel_wirksamkeit.bericht` misst *„kein Einstieg im obersten
@@ -394,7 +483,13 @@ def wahl_je_tag(je_tag, kandidat, mische=None, pflanze=None):
             kz = kz[mische.permutation(len(kz))]
         k = max(1, int(round(len(zeilen) * ANTEIL)))
         # oberstes Fuenftel der Kennzahl
-        gewaehlt = np.argsort(-kz)[:k]
+        # ⚠️ BEIDE RICHTUNGEN (Audit 4, 01.09.2026). Bis hierher wurde
+        # IMMER das oberste Fuenftel gewaehlt. Ein Kandidat, dessen Aussage
+        # am unteren Rand sitzt - ein Bollinger-Squeeze etwa ist NIEDRIGE
+        # Volatilitaet -, war damit strukturell unsichtbar. Gefunden hat es
+        # nicht die Suite, sondern die Faktorliste des Nutzers.
+        gewaehlt = (np.argsort(-kz)[:k] if richtung == "oben"
+                    else np.argsort(kz)[:k])
         vorteil = d[gewaehlt]
         if pflanze:
             vorteil = vorteil + float(pflanze)
@@ -424,23 +519,26 @@ def wahl_je_tag(je_tag, kandidat, mische=None, pflanze=None):
     return aus
 
 
-def bericht_wahl(name, je_tag, kandidat, rng, mit_positivkontrolle=True):
+def bericht_wahl(name, je_tag, kandidat, rng, mit_positivkontrolle=True,
+                 richtung="oben"):
     """Dieselbe Berichtsform wie das Schwestermodul - EIN Statistikkern."""
     zeilen = [x for z in je_tag.values() for x in z if kandidat in x]
     syms = len({x["sym"] for x in zeilen})
     print()
     print("=" * 92)
-    print("%s  —  REGEL: oberstes %d %% -> KURZ (H%d), sonst LANG (H%d)"
-          % (name, round(ANTEIL * 100), KURZ, LANG))
+    print("%s  —  REGEL: %s %d %% der Kennzahl gewaehlt  [Ziel %s]"
+          % (name, "oberstes" if richtung == "oben" else "unterstes",
+             round(ANTEIL * 100), ZIEL))
     print("=" * 92)
-    d = wahl_je_tag(je_tag, kandidat)
+    d = wahl_je_tag(je_tag, kandidat, richtung=richtung)
     if len(d) < 60:
         print("  zu wenige Tage (%d) - uebersprungen" % len(d))
         return None
     print("  %d Anker · %d Symbole · %d Kalendertage" % (len(zeilen), syms, len(d)))
     block = max(90, LANG * 3)
     echt = M.urteil_tage("  NETTO (die Wirkung)", d, rng, block)
-    M.urteil_tage("  Negativkontrolle", wahl_je_tag(je_tag, kandidat, mische=rng),
+    M.urteil_tage("  Negativkontrolle",
+                  wahl_je_tag(je_tag, kandidat, mische=rng, richtung=richtung),
                   rng, block)
     tage = sorted(d)
     mitte = tage[len(tage) // 2]
@@ -451,7 +549,8 @@ def bericht_wahl(name, je_tag, kandidat, rng, mit_positivkontrolle=True):
     if mit_positivkontrolle:
         for s in (0.02, 0.05):
             M.urteil_tage("  Positivkontrolle %+.2f R" % s,
-                          wahl_je_tag(je_tag, kandidat, pflanze=s), rng, block)
+                          wahl_je_tag(je_tag, kandidat, pflanze=s,
+                                      richtung=richtung), rng, block)
     # ⚠️ BEIDE HAELFTEN GLEICHES VORZEICHEN ist Teil der Vorabfestlegung.
     haelften_einig = (h1 and h2
                       and (h1["mittel"] > 0) == (h2["mittel"] > 0))
@@ -571,7 +670,8 @@ def selbsttest():
             d = float(rng.normal(0.0, 1.0))      # der wahre Vorteil in R
             z.append({"sym": "S%02d" % s,
                       "r_kurz": d, "r_lang": 0.0, "r_rest": -d,
-                      "frontloading": float(abs(d) / (abs(d) + 1.0))})
+                      "frontloading": float(abs(d) / (abs(d) + 1.0)),
+                      "seitwaerts": d})
         je_tag[tag] = z
 
     # ⚠️⚠️ DIE KUNSTGROESSEN WERDEN AUS DER TATSAECHLICHEN ZIELGROESSE
@@ -665,8 +765,9 @@ def main():
     for a in sys.argv[1:]:
         if a.startswith("--ziel="):
             ZIEL = a.split("=", 1)[1]
-    if ZIEL not in ("signiert", "frontloading"):
-        raise SystemExit("--ziel muss signiert oder frontloading sein")
+    if ZIEL not in ("signiert", "frontloading", "seitwaerts"):
+        raise SystemExit("--ziel muss signiert, frontloading oder "
+                         "seitwaerts sein")
     print("ZIELGROESSE: %s" % ZIEL)
     if "--selbsttest" in sys.argv:
         raise SystemExit(0 if selbsttest() else 1)
@@ -708,7 +809,10 @@ def main():
     ergebnisse = {}
     for k in KANDIDATEN:
         marke = " ⚠️ KONTROLLGROESSE" if k == "zufall" else ""
-        ergebnisse[k] = bericht_wahl(k + marke, je_tag, k, rng)
+        # ⚠️ BEIDE RICHTUNGEN - siehe Audit 4.
+        for wo in ("oben", "unten"):
+            ergebnisse[(k, wo)] = bericht_wahl(
+                "%s%s [%s]" % (k, marke, wo), je_tag, k, rng, richtung=wo)
 
     # ---- Zusammenfassung -----------------------------------------------
     print()
@@ -724,12 +828,12 @@ def main():
         print("     Damit ist JEDER Nullbefund unten untermaechtig, nicht")
         print("     widerlegend. Das Verfahren ist an dieser Geometrie blind.")
     print()
-    print("  Kandidat         Wirkung      Vertrauensband        Haelften  URTEIL")
+    print("  Kandidat            Rtg   Wirkung      Vertrauensband        Haelften  URTEIL")
     kontrolle_traegt = False
-    for k in KANDIDATEN:
-        e = ergebnisse.get(k)
+    for k, wo in [(a, b) for a in KANDIDATEN for b in ("oben", "unten")]:
+        e = ergebnisse.get((k, wo))
         if not e or not e.get("echt"):
-            print("  %-14s   —  zu duenn" % k)
+            print("  %-18s %-5s  —  zu duenn" % (k, wo))
             continue
         s = e["echt"]
         # ⚠️ DAS VORAB FESTGELEGTE URTEIL, nicht ein nachtraeglich
@@ -737,8 +841,8 @@ def main():
         traegt = s["traegt"] and e["haelften_einig"]
         if k == "zufall" and s["traegt"]:
             kontrolle_traegt = True
-        print("  %-14s %+.4f R  [%+.4f .. %+.4f]  %-8s %s"
-              % (k, s["mittel"], s["unten"], s["oben"],
+        print("  %-18s %-5s %+.4f  [%+.4f .. %+.4f]  %-8s %s"
+              % (k, wo, s["mittel"], s["unten"], s["oben"],
                  "einig" if e["haelften_einig"] else "uneins",
                  "✔ TRAEGT" if traegt else "✖ null"))
     print()
