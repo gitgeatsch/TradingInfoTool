@@ -498,6 +498,21 @@ def main() -> int:
             gewuenscht = [s for s in vorhanden if s.upper() in NUR_SYMBOLE]
             if gewuenscht:
                 auswahl = gewuenscht
+        # ⚠️⚠️ DAS KERN-ASSET MUSS IN DEN LAUF (Schritt 3+4, 01.09.2026).
+        #
+        # Ohne das betritt die Simulation den neuen Pfad nicht: die ersten
+        # fuenf Krypto-Werte mit Kursreihe sind alphabetisch AIOZ, AKT,
+        # ALGO, APT, ASTER - kein einziger mit `dca_erlaubt`. Der Lauf
+        # meldete "5 Symbole, hinein 5", also fuenf Zellen aus fuenf
+        # Symbolen, und der Zellen-Pfad lief GAR NICHT.
+        #
+        # ⚠️ Genau die Luecke, die der Kommentar zwei Absaetze weiter oben
+        # schon einmal beschrieben hat: *„Eine Simulation, die den
+        # geaenderten Pfad nicht betritt, weist ihn nicht nach."* Sie ist
+        # mir trotzdem noch einmal passiert - deshalb steht die Aufnahme
+        # jetzt im Code und nicht in der Hoffnung.
+        if not NUR_SYMBOLE and _kern and _kern in vorhanden                 and _kern not in auswahl:
+            auswahl = [_kern] + list(auswahl)[:-1] if auswahl else [_kern]
 
         # ⚠️ DEN HEBELSCHALTER IN DER KOPIE EINSCHALTEN.
         #
@@ -553,10 +568,22 @@ def main() -> int:
         # nicht nur in der Suite. ⚠️ Meine erste Fassung las das aus
         # einem MAIL-Eintrag; dort steht es nicht, und die Simulation
         # meldete zu Recht "nicht nachgewiesen".
-        for _sy, _st in ((e.get("zellen") or {}).get("je_symbol")
-                         or {}).items():
-            if len(_st or ()) > 1:
-                gesamt["mehrzellig_gesehen"] = True
+        # ⚠️⚠️ NACHGESCHAERFT (01.09.2026): `je_symbol` fuehrt ALLE Assets
+        # der Watchlist, nicht nur die des Laufs. Steht BTC dort mit zwei
+        # Strategien, war diese Zeile gruen - AUCH WENN BTC im Lauf gar
+        # nicht vorkam. Der Nachweis galt der LISTE, nicht dem LAUF.
+        #
+        # Aufgefallen an einer Zahl, die nicht zusammenpasste: "krypto/spot
+        # 5 Symbole, hinein 5" - fuenf Zellen aus fuenf Symbolen, also kein
+        # Mehrzellen-Asset, und trotzdem meldete die Simulation den
+        # Nachweis als erbracht.
+        #
+        # ⚠️ Jetzt zaehlt, was der Lauf WIRKLICH durchlaufen hat: mehr
+        # PAARE als Symbole heisst, dass mindestens ein Asset zwei Zellen
+        # bekam. Dieselbe Zahl steht im Trichter als `hinein`.
+        _z8 = e.get("zellen") or {}
+        if (_z8.get("paare") or 0) > (_z8.get("symbole") or 0):
+            gesamt["mehrzellig_gesehen"] = True
         # ⚠️ SCHRITT 7 NACHWEISEN - JE LAUF, NICHT JE MAIL.
         #
         # Mein erster Anlauf zaehlte die gefuehrten Positionen INNERHALB der
@@ -569,6 +596,18 @@ def main() -> int:
         # ⚠️ Zweite Instanz derselben Falle an einem Tag: die Zellen hatte ich
         # zuerst genauso falsch gezaehlt. Ein Zaehler gehoert dorthin, wo die
         # gezaehlte Sache ENTSTEHT - nicht dorthin, wo sie angezeigt wird.
+        # ⚠️ SCHRITT 5 SICHTBAR MACHEN. Ohne diese Zeile laesst sich nicht
+        # unterscheiden, ob der Terminmarkt ankommt oder ob die Kopie keine
+        # OI-Daten hat - beides sieht im Lauf gleich aus. Dieselbe Lehre wie
+        # bei Schritt 7: eine Verdrahtung, die man nicht sehen kann, ist
+        # nicht nachgewiesen.
+        _tm5 = e.get("terminmarkt") or []
+        if _tm5:
+            gesamt["terminmarkt_gesehen"] = (
+                gesamt.get("terminmarkt_gesehen", 0) + len(_tm5))
+        print("    Terminmarkt (Schritt 5): %d von %d Symbolen mit "
+              "Faktenlage%s" % (len(_tm5), len(auswahl),
+                                (" - " + ", ".join(_tm5[:4])) if _tm5 else ""))
         _pf = e.get("positionsfuehrung") or {}
         print("    Positionsfuehrung: %s gefuehrt, %s im Bestand · "
               "Ausstiege %d · Sammelmail %s"
@@ -814,6 +853,13 @@ def main() -> int:
     # ⚠️ SCHRITT 3+4: hat ein Asset ueberhaupt ZWEI Zellen durchlaufen?
     # Ohne diesen Nachweis ist der Umbau nur in der Suite belegt, nicht im
     # Betrieb - genau die Unterscheidung, die das Projekt seit Rolle G macht.
+    # ⚠️ SCHRITT 5: kam der Terminmarkt ueberhaupt irgendwo an?
+    if not gesamt.get("terminmarkt_gesehen"):
+        gesamt["luecken"].append(
+            "Schritt 5: KEIN Symbol bekam Terminmarkt-Fakten - entweder "
+            "fehlen die OI-Daten in der Kopie, oder die Einspeisung greift "
+            "nicht. Der Anlass kann sich dann nicht am Terminmarkt aendern")
+
     # ⚠️ SCHRITT 7: gefuehrt, aber nicht gezeigt = die halbe Verdrahtung.
     if gesamt.get("positionen_gefuehrt") and not gesamt.get("positionen_gesehen"):
         gesamt["luecken"].append(

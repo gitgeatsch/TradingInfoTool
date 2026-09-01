@@ -425,6 +425,42 @@ Dieselben 523 Messreihen, nur andere Horizonte.
 | **7** | **Spot-Positionsführung verdrahten** + `instrument`-Filter reparieren | mittel | 268 Führungen → 43 Positionen |
 | **8** | **Altbestand abgrenzen** | klein | |
 
+### ✔ STAND 01.09.2026 — SIEBEN VON ACHT SCHRITTEN SIND GEBAUT
+
+| # | Schritt | Stand | Nachweis |
+|---|---|---|---|
+| 1 | Messung H1–H20 | ✔ | Beiträge registriert |
+| 2 | Spalte `instrument` in `signals` | ✔ | `_migrate_signal_instrument` |
+| **3** | **`laeufe()` liefert Zellen je Asset** | ✔ **01.09.** | 57 Zellen über 54 Assets; BTC/ETH/SOL mit zweien |
+| **4** | **Bewertung je Zelle, EIN Modellurteil** | ✔ **01.09.** | Urteilsspeicher — zwei Zellen kosten **einen** Aufruf |
+| **5** | **`hebel_triggers` als Anlass einspeisen** | ✔ **01.09.** | Terminmarkt in `bc_ein["terminmarkt"]`; Fingerabdruck ändert sich |
+| **6** | **I-2: Paarprüfung nach der Rechnung** | ✔ **01.09.** | `hebel × akkumulation` **entsteht nicht mehr** (vorher 2× gemeldet, jetzt 0×) |
+| **7** | **Positionsführung verdrahten** | ✔ **01.09.** | Abschnitt „WAS SIE HALTEN" in der fertigen Mail |
+| **8** | **Altbestand abgrenzen** | ✔ **01.09.** | Wächter: die neue Kette schreibt **nichts** in den Altbestand |
+
+⚠️ **Was in den Zellen NICHT entsteht:** `hebel × einstieg` als eigene Zelle
+für gewöhnliche Assets — dort ist es dieselbe Frage wie `spot × einstieg`
+(gebührenfrei identisches Potential, F-163). Für **Kern-Assets** ist es die
+einzige taktische Kauffrage und entsteht sehr wohl — sie fällt aber weg,
+wenn die Rechnung keinen Hebel ergibt (Nutzerentscheidung 01.09.: *„nur wenn
+die Rechnung tatsächlich einen Hebel ergibt"*).
+
+⚠️ **OFFEN AUS SCHRITT 8: die Aufbewahrung.** Gemessen am NB-Stand 29.08.:
+
+| Tabelle | Zeilen | Anteil | Wachstum |
+|---|---|---|---|
+| `open_interest_snapshot` | 227.395 | 26,8 % | **1.804.330 / Jahr** |
+| `hebel_triggers` | 82.655 | 9,7 % | **655.849 / Jahr** |
+
+**Zusammen 36,5 % aller Zeilen der Produktionsdatenbank (331 MB), wachsend
+um rund 2,5 Mio Zeilen im Jahr.** Genau das Datenbankproblem, das der Nutzer
+benannt hat. Seit Schritt 5 haben die Rohdaten einen Abnehmer — aber der
+**Anlass braucht nur die jüngste Stunde**, die Perzentile ein begrenztes
+Fenster. ⚠️ **Eine Aufbewahrungsregel ist damit begründbar, aber sie löscht
+Daten — das ist eine Nutzerentscheidung und wurde NICHT ausgeführt.**
+
+---
+
 ### Zu Schritt 8 — Altbestand
 
 | | Zeilen | Umgang |

@@ -4952,3 +4952,36 @@ das Vorzeichen einer Größe eine Konvention ist (ADX niedrig = trendlos),
 ist die Konvention keine Begründung, nur eine Richtung zu prüfen.
 
 Verwandt: 2.80 (die Prüfliste) · 2.88 · 2.94
+
+---
+
+## 2.97 ⚠️ Die AUFLÖSUNG einer Größe entscheidet, ob ein Auslöser trägt
+
+**Anlass: 01.09.2026, Schritt 5** (Terminmarkt als Anlass einspeisen).
+
+`anlass.fingerabdruecke` bildet den Abdruck über den **Faktentext**. Steht
+dort eine Prozentzahl auf eine Nachkommastelle, wechselt sie fast bei jedem
+Lauf — und dann ist **jede** Frage eine neue, der Filter also wirkungslos.
+Genau davor warnt der Kopf von `anlass.py` beim Lagebild.
+
+**Gemessen an 2.988 Messpunkten je Symbol** (`open_interest_snapshot`,
+NB-Stand 29.08.) — Wechselrate des Satzes zwischen aufeinanderfolgenden
+Messungen:
+
+| Auflösung | BTC | ETH | LINK | TAO | |
+|---|---|---|---|---|---|
+| 0,1 % (fein) | 68,2 % | 71,1 % | 74,3 % | 73,7 % | ✖ unbrauchbar |
+| **Stufen 1/3/8 %** | **5,0 %** | **7,5 %** | **7,3 %** | **6,7 %** | ✔ gewählt |
+| nur 3 % (grob) | 0,2 % | 0,4 % | 0,6 % | 0,6 % | ✖ kein Melder |
+
+**Regel:** Bevor eine Größe einen Auslöser speist, wird ihre **Wechselrate
+gemessen**. Zu fein = der Auslöser feuert immer und sagt nichts; zu grob =
+er feuert nie. Beides sieht im Code gleich aus und ist erst an der Zahl
+unterscheidbar.
+
+⚠️ **Und die Auflösung gehört in den TEXT, nicht in eine versteckte
+Schwelle.** Der Faktentext bildet ab, was das Modell wirklich sieht — eine
+Größe, die im Hintergrund gröber gerechnet wird als sie dasteht, wäre eine
+zweite, unsichtbare Definition.
+
+Verwandt: 2.85 (die Form der Größe) · 2.94 · `agent/anlass.py`

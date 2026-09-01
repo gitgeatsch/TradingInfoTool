@@ -15909,6 +15909,52 @@ def paket_zellen() -> None:
            "Aktien und ETFs haben keinen Perpetual-Terminmarkt; dort waere "
            "der Block eine Zeile ueber etwas, das es nicht gibt")
 
+    # ---- SCHRITT 8: DER ALTBESTAND IST ABGEGRENZT -----------------------
+    #
+    # Umbauplan Schritt 8. Die Festlegung dort, Zeile fuer Zeile:
+    #
+    #   hebel_positions  188, alle geschlossen -> BLEIBT (echte
+    #                    Positionsfuehrung, Bitpanda-Import fuellt weiter,
+    #                    `ui/hebel_view.py` zeigt sie)
+    #   hebel_signals    1.998, letztes 10.08. -> BLEIBT LESBAR, wird nicht
+    #                    mehr geschrieben. KEIN Rueckbau, die GUI zeigt
+    #                    Historie
+    #   hebel_triggers   82.655, waechst -> Schritt 5 (erledigt 01.09.)
+    #
+    # ⚠️ GEPRUEFT WIRD DIE GRENZE, NICHT DIE ABSICHT. Ein Plan, der sagt
+    # "wird nicht mehr geschrieben", ist eine Absichtserklaerung; eine
+    # Pruefung, die es festhaelt, ist eine Naht.
+    _NEUE_KETTE = ("agent/rollen_lauf.py", "agent/rollen_gate.py",
+                   "scheduler/rollen_job.py", "agent/rollen_eingabe.py",
+                   "agent/signal_abbildung.py")
+    _schreibt = []
+    for _f8 in _NEUE_KETTE:
+        _lit8 = {n.value for n in _ast.walk(_ast.parse(_pl_pfad(_f8)))
+                 if isinstance(n, _ast.Constant) and isinstance(n.value, str)}
+        for _x in _lit8:
+            _o = _x.upper()
+            if any(k in _o for k in ("INSERT", "UPDATE ", "DELETE")) and any(
+                    tb in _x for tb in ("hebel_signals", "hebel_positions",
+                                        "hebel_triggers")):
+                _schreibt.append("%s: %s" % (_f8.split("/")[-1], _x[:60]))
+    pruefe(P, "die neue Kette SCHREIBT nicht in den Altbestand",
+           not _schreibt,
+           "gefunden: %s. `hebel_signals` fuehrt Historie (letztes Signal "
+           "10.08.), `hebel_positions` fuellt der Bitpanda-Import. Wer von "
+           "der neuen Kette dort hineinschreibt, vermischt zwei Bestaende, "
+           "die auseinandergehalten werden sollen" % (_schreibt or "nichts"))
+    # ⚠️ UND SIE DARF LESEN. Die Positionsfuehrung braucht beide Quellen
+    # (I-3, 28.08.: "beide Quellen, nicht eine waehlen") - ein Symbol kann
+    # Spot UND Hebel tragen.
+    _liest = {n.value for n in _ast.walk(
+        _ast.parse(_pl_pfad("agent/rollen_eingabe.py")))
+        if isinstance(n, _ast.Constant) and isinstance(n.value, str)}
+    pruefe(P, "aber sie DARF den Altbestand lesen",
+           any("hebel_positions" in x for x in _liest),
+           "der Bestand ist Bestand, egal wer ihn eingetragen hat. Ein "
+           "Symbol kann Spot UND Hebel tragen - `rollen_eingabe.bestand` "
+           "muss beide sehen, sonst fehlt dem Nutzer die halbe Position")
+
     pruefe(P, "die alte I-2-MELDUNG bleibt als Waechter stehen",
            "ein Paar, das die Matrix ausschliesst" in _quelle,
            "sie ist ab jetzt strukturell unerreichbar - schlaegt sie doch "
