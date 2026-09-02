@@ -3822,3 +3822,102 @@ nichts, was neu wäre. Was neu ist, geht sofort raus.
 
 Werkzeug: `rechne_redundanz_je_asset.py --db <backup>`
 Verwandt: F-172 · A1 Kap. 11.1 · Regel 1 · L4/L5
+
+---
+
+## F-174 ⚠️⚠️⚠️ Der Cooldown ist verdrahtet, würde sperren — und wird trotzdem übergangen (02.09.2026)
+
+**Auftrag:** die Ursache der 83,6 % Redundanz (F-173) messen, statt sie zu
+vermuten.
+
+### ⚠️ Meine erste Hypothese war falsch — und die Quelle sagt es
+
+Ich hatte vermutet, der Schlüssel sei unvollständig, weil `strategie` nur
+in 33 % der Signale steht. **`gesperrt_bis` kennt die Strategie in der
+Abfrage aber gar nicht:**
+
+    SELECT created_at FROM signals WHERE symbol = ?
+      AND quelle_kette = 'rollen' AND <hebel-bedingung>
+    ORDER BY created_at DESC LIMIT 1
+
+Geschlüsselt wird auf **(symbol, instrument)**; die Strategie bestimmt nur
+die **Dauer**. Die Hypothese ist damit gefallen.
+
+### Was gemessen wurde
+
+**Die geltende Dauer** (`config.yaml`, `rollen_kette`):
+`cooldown_stunden_je_gruppe = {krypto: 12}` · `je_strategie = {akkumulation:
+48}` · `wenn_gehebelt = 3,5`.
+
+**Die Abstände** (2.789 Signale, 14.–29.08.):
+
+| | Cooldown | Median-Abstand | näher als erlaubt |
+|---|---|---|---|
+| spot | 12,0 h | 4,1 h | **59,0 %** |
+| hebel | 12,0 h | 3,7 h | **97,4 %** |
+
+**Die Gegenprobe — die Funktion chronologisch nachgestellt:** eine leere
+Kopie, in die Signal für Signal eingefügt wird, und vor jedem Einfügen
+wird `gesperrt_bis` gefragt.
+
+> **1.820 von 2.789 Signalen (65,3 %) hätte der Cooldown gesperrt. Sie
+> sind trotzdem da.**
+
+⚠️ **Die erste Fassung dieser Gegenprobe war kaputt und meldete 100 %.**
+`gesperrt_bis` liest das jüngste Signal der Tabelle — in einer fertigen
+Historie oft eines, das *nach* dem betrachteten Zeitpunkt liegt. Die
+Funktion sah die Zukunft. Aufgefallen an einem Beispiel: *„Signal 16.08.,
+gesperrt bis 22.08."* — ein Sperrende nach dem Signal kann nicht dessen
+Ursache sein.
+
+### ⚠️⚠️ Die entscheidende Gegenprüfung: gilt das auch mit der heutigen Config?
+
+Am Cooldown wurde im Messzeitraum **dreimal** geändert — die Stufe kam am
+15.08., die 12-Stunden-Vorgabe am 23./24.08., die Strategie am 28.08. Mit
+heutigen Parametern gegen alte Signale zu rechnen wäre wertlos gewesen.
+Deshalb je Konfigurationsstand getrennt:
+
+| Zeitraum | Signale | Median | **< 12 h** | Signale/Tag |
+|---|---|---|---|---|
+| 14.–22.08. (vor der Vorgabe) | 1.697 | 3,8 h | 65,7 % | 188,6 |
+| 23.–27.08. (12 h aktiv) | 810 | 3,7 h | **94,2 %** | 162,0 |
+| 28.–29.08. (L4/L5 aktiv) | 282 | 3,7 h | **97,1 %** | 141,0 |
+
+> **Der Anteil steigt, statt zu sinken. Der Median bleibt bei 3,7 Stunden
+> — durch alle drei Konfigurationsstände hindurch.**
+
+Die Vorgabe hat **keine** Wirkung. Und die sinkende Signalzahl kommt nicht
+vom Cooldown: sonst müsste der Abstand wachsen.
+
+### Fünf Ursachen ausgeschlossen
+
+| | Prüfung | Ergebnis |
+|---|---|---|
+| 1 | Schlüssel unvollständig (Strategie) | ✖ die Abfrage kennt sie nicht |
+| 2 | zweiter Schreibpfad | ✖ **alle** Aktionen verletzen gleich (56–78 %) |
+| 3 | Groß-/Kleinschreibung der Symbole | ✖ alle 2.789 durchgehend GROSS, keine Dubletten |
+| 4 | Config galt damals nicht | ✖ nach jeder Änderung **schlimmer**, nicht besser |
+| 5 | Aufruf fehlt im Lauf | ✖ `rollen_lauf.py:1318`, im immer laufenden Zweig |
+
+### ⚠️ Was NICHT geklärt ist — und das ist der ehrliche Stand
+
+**Die Ursache ist eingegrenzt, nicht gefunden.** Die Stufe ist verdrahtet,
+die Funktion würde sperren, die Signale entstehen trotzdem. Was dazwischen
+liegt, ist mit dem **Datenbestand allein** nicht zu sehen.
+
+**Was fehlt, ist die Trichterausgabe der Produktion.** `durchlauf.bericht()`
+schreibt je Lauf, wie viele auf `wiederholung` verloren gehen — das steht
+im **Log**, nicht in der Datenbank. Steht dort „0 verloren", wird die Stufe
+nie erreicht; steht dort eine große Zahl, entstehen die Signale woanders.
+
+> **Nächster Schritt: ein aktuelles `tradinginfotool.log` vom Notebook.**
+> Ohne das bleibt jede weitere Erklärung eine Vermutung.
+
+### Der Nebenbefund: 9,3 Läufe am Tag
+
+Die Kette läuft in Schüben — 149 Bündel über 16 Tage, **alle 2,6
+Stunden**. Bei 12 h Cooldown dürfte jedes Asset höchstens **zweimal am
+Tag** ein Signal bekommen. HYPE bekommt 6,3.
+
+Werkzeuge: `pruefe_cooldown_wirkung.py --db <backup>`
+Verwandt: F-173 · L4/L5 · Methodik 2.94 (ein Parameterwert ist kein Nachweis)
