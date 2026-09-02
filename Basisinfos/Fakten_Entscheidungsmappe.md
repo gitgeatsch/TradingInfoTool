@@ -4123,3 +4123,86 @@ Kette weniger Urteile einholt.
 
 Werkzeug: `pruefe_nb_nach_umschaltung.py`
 Verwandt: F-175 · N-14 · `project_hebelkette_aufgeloest_zwischen_zwei_ketten`
+
+---
+
+## F-177 ✔ Die Messbasen werden fehlerfrei verarbeitet — und N-14 ist trotzdem fast wirkungslos (02.09.2026)
+
+**Nutzerfrage:** *„Kannst du prüfen, ob die Dateien, die wir kopiert
+haben, ok sind und vom System fehlerfrei verarbeitet werden?"*
+
+Geprüft auf drei Ebenen — die dritte war die aufschlussreichste.
+
+### 1. Die Dateien selbst ✔
+
+    funding_historie.db       integrity ok · 302 Symbole · 0 leer · 0 Dubletten
+    onchain_historie.db       integrity ok ·  66 Symbole · 0 leer · 0 Dubletten
+    terminmarkt_historie.db   integrity ok · 122 Symbole · 0 leer · 0 Dubletten
+
+Gegen die Originale am Desktop: **alle drei Symbolmengen identisch.** Jede
+Datei trägt ihre Selbstkennzeichnung `_nur_symbolliste`.
+
+### 2. Das Log ⚠️ belegt nur NEGATIV
+
+Seit der Umschaltung meldet `marktrang` ausschließlich `schnitt` —
+**keine einzige Meldung zu funding, turnover oder oi.**
+
+⚠️ Das ist aber kein Beweis, sondern eine Abwesenheit. **„Keine
+Fehlermeldung" ist nicht dasselbe wie „funktioniert".** Ein positiver
+Beleg fehlt im Log ganz, weil die Fünftel in die *Mails* gehen, nicht ins
+Log.
+
+### 3. Der Ende-zu-Ende-Test ✔ — die Paketdateien durch `raenge()`
+
+Die Dateien, die am Notebook liegen, durch dieselbe Produktionsfunktion:
+
+| | erwartet | gemessen |
+|---|---|---|
+| funding | 36 von 44 | **36** ✔ |
+| turnover | 7 von 44 | **7** ✔ |
+| oi | 32 von 44 | **32** ✔ |
+
+> **Die Verarbeitung ist einwandfrei.** Das 40-KB-Paket leistet exakt, was
+> die 176 MB geleistet hätten.
+
+⚠️ Nebenbefund: der **Turnover-Querschnitt beträgt nur 33**, nicht 66 —
+CoinGecko liefert für die Hälfte der Messbasis keinen aktuellen Wert. Über
+dem Mindestquerschnitt von 15, aber die Hälfte der gemessenen Grundlage
+fehlt im Betrieb.
+
+### ⚠️⚠️ Und dabei fiel die Antwort auf die offene N-14-Frage ab
+
+Neun Watchlist-Werte liegen heute im **obersten OI-Fünftel**:
+ALGO · INJ · ONDO · QNT · SEI · SUI · TAO · W · XLM
+
+Die Sperre hätte also Material. Davon haben **fünf Bestand** (QNT, SEI,
+SUI, TAO, XLM) und werden mit Notiz durchgelassen — das ist so gewollt.
+
+**Vier hätten gesperrt werden müssen: ALGO, INJ, ONDO, W.** Sie wurden es
+nicht.
+
+### Die strukturelle Erklärung
+
+`terminmarkt` steht **hinter** `auswahl`, und `auswahl` lässt von den
+bestandsfreien Werten nur **k = 2** durch (`auswahl.k_fuer`). Die vier
+müssten also unter den besten zwei der Gruppe sein, um die Sperre
+überhaupt zu erreichen.
+
+    auswahl       laesst 2 bestandsfreie durch (+ alle mit Bestand)
+    terminmarkt   nimmt Bestandswerte aus  -> Notiz
+                  -> es bleiben hoechstens 2 Kandidaten, und die
+                     muessen zusaetzlich im obersten Fuenftel liegen
+
+> **N-14 ist nicht kaputt — es ist an einer Stelle eingebaut, an der
+> kaum noch etwas ankommt, das es sperren dürfte.**
+
+Das bestätigt F-175 mit einem zweiten, unabhängigen Weg: die Sperre liegt
+falsch, nicht die Messung.
+
+⚠️ **Noch nicht bewiesen.** Der endgültige Beleg sind die Gründe je Stufe,
+die seit heute ins Log gehen. Bis dahin ist das die beste Erklärung, die
+zu allen Zahlen passt — nicht mehr.
+
+Werkzeug: der Test ist in dieser Datei beschrieben, nicht als Skript
+abgelegt (einmalige Prüfung, 124 API-Abrufe).
+Verwandt: F-175 · F-176 · N-14
