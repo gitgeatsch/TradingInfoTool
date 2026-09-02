@@ -318,3 +318,112 @@ mehr als eine Zelle haben kann.
     SOFORT MESSBAR (die Termine waren falsch)
       J   Lebendigkeit / TVL - 188 Reihen liegen da
       H   V3 Greed-Teilverkauf - Daten da, nie gemessen
+
+---
+
+# FORTSCHREIBUNG 02.09.2026 — Standortbestimmung vor dem Pull
+
+**Nutzerauftrag:** *„Wenn wir jetzt pullen, werden wir wieder lange
+fehlersuchen. Bin eher dafür, einen stabilen und möglichst fehlerfreien
+Codestand zu pullen. Prüfe und vergleiche, wo wir im Gesamtplan stehen —
+Bereiche und Details wie Remoteseite usw. sind noch offen."*
+
+⚠️ **Jede Zeile am Code geprüft**, mit echten Importkanten (AST) und gegen
+die Notebook-Produktion. Wo Doku und Code sich widersprechen, gilt der Code.
+
+## 0. ⚠️ Die Zahl, die alles andere einordnet
+
+`origin/main` steht auf dem **29.08.** Am Notebook zählt die Entscheider-
+stufe nur; lokal verwirft sie. Der echte Trichter (F-175) sagt:
+
+| | Signale in 4 Tagen |
+|---|---|
+| heute am Notebook | **113** (+147 Mails) |
+| nach einem Pull | **2** |
+
+> **Der Pull ist keine Übertragung, sondern eine Umschaltung des
+> Betriebszustands.** Die Sorge vor langer Fehlersuche ist berechtigt —
+> aber der Grund wäre nicht ein Fehler, sondern die Menge.
+
+## 1. Die vier Bausteine — Stand heute gegen den 31.08.
+
+| # | Baustein | 31.08. | **02.09.** |
+|---|---|---|---|
+| **1** | **Positionsführung** | ✘ kein Aufrufer | ✔ **verdrahtet** (Schritt 7). ⚠️ Tabelle `positionen` fehlt weiterhin |
+| **2** | **Strategie je Position** | ⚠️ nur `einstieg` (924/5.772) | ⚠️ **Zellenmodell setzt beide** — aber F-169: die zweite Zelle stirbt an `anlass` |
+| **3** | **Auslöser statt Takt** | ✘ nicht gebaut | ✘ **unverändert seit 27.08.** |
+| **4** | **Potential als Auswahl** | ✔ 3 Beiträge | ⚠️ **2 Beiträge** — der Schnittabstand ist am 31.08. gefallen |
+
+## 2. Der Umbauplan 28.08. — abgeschlossen
+
+Schritte **1–8** gebaut und in einem Lauf nachgewiesen. **N-13** gemessen,
+**N-14** gebaut (12. Trichterstufe), **N-13-1′** gemessen, nicht gebaut.
+
+⚠️ **Und der Trichter sagt, dass beide an der falschen Stelle liegen:**
+`anlass` + `auswahl` + `wiederholung` nehmen zusammen 97 %. Die neuen
+Sperren sitzen genau vor der schärfsten Stufe.
+
+## 3. ⚠️ Die Remoteseite — nicht begonnen
+
+| | Stand |
+|---|---|
+| `Tailscale-Setup-Anleitung.md` | ✔ Anleitung da — *„Tailscale selbst macht noch nichts an der App"* |
+| Steuer-Seite | ✘ **nicht gebaut.** Kein Modul mit `remote`/`steuer` in `agent/` oder `ui/` |
+| `Option_Claude_Agent_Anbindung_23_08.md` | ✔ Konzept da (Stufe 0 beschrieben), ✘ nichts umgesetzt |
+
+**Die Remoteseite ist ein eigener, unangetasteter Bereich.** Sie blockiert
+nichts und wird von nichts blockiert — aber sie steht in keinem der
+laufenden Pläne, und deshalb fiel sie bisher aus jeder Statuszeile heraus.
+
+## 4. Was seit dem 31.08. NICHT weitergekommen ist
+
+| | | warum es hier steht |
+|---|---|---|
+| **L1** Tabelle `positionen` | ✘ offen | Vorbedingung für „je Strategie" |
+| **L2–L7** N-12 | ✘ offen | unverändert seit 26.08. |
+| **Baustein 3** Auslöser statt Takt | ✘ offen | seit 27.08. nicht angefasst |
+| **D2** `marktbreite` ohne Aufrufer | ✘ offen | am Code bestätigt |
+| **A6, C1, C2, C3, D1, D3** | ⚠️ offen | Reparaturliste 23.08. |
+| **P6** Messbasis andere Klassen | ⚠️ krypto 523 · rohstoffe 35 · aktien 20 · ETF 0 | der Aktienlauf stürzte ab |
+| **H** V3 Greed-Teilverkauf | ✘ nie gemessen | Daten liegen seit Wochen |
+| **J** Lebendigkeit/TVL | ✘ nie gemessen | 188 Reihen liegen da |
+
+## 5. ⚠️ Was ein Pull HEUTE mitbrächte — und was daran wackelt
+
+**Stabil und geprüft:**
+Zellenmodell · Positionsführung · Gebührentrennung · Stop-Untergrenze ·
+I-2 (Paarprüfung) · die Messwerkzeuge · Suite **1928 bei 0 FEHL**
+
+**Wackelig:**
+
+| | Risiko |
+|---|---|
+| **G-6 scharf** | 113 → 2 Signale. **Die größte Einzeländerung des Jahres** |
+| **Schwelle 0,080** | in der Simulation 56,3 Mails/Tag, im echten Trichter 0,5 Signale/Tag — **Faktor 100 daneben** |
+| **N-14** | liegt vor der schärfsten Stufe; Wirkung im Betrieb ungemessen |
+| **F-169** | die zweite Zelle stirbt an `anlass` — Schritt 3+4 läuft weitgehend leer |
+
+## 6. Die Reihenfolge, die ich vorschlage
+
+    ZUERST — Stabilitaet herstellen, ohne die Menge zu aendern
+      1  G-6 und die Schwelle vom Pull ausnehmen (ein Schalter, kein Umbau)
+      2  F-169 klaeren: warum stirbt die zweite Zelle an `anlass`
+      3  Tabelle `positionen` (L1) - Vorbedingung fuer alles bei "je Strategie"
+
+    DANN — den Betriebszustand bewusst umschalten
+      4  G-6 scharf, mit einer vorher entschiedenen Zielmenge
+      5  N-14 an die richtige Stelle (nach `wiederholung`, nicht davor)
+
+    UNABHAENGIG, blockiert nichts
+      6  Remoteseite Stufe 0
+      7  P6 Messbasis aktien/ETF
+      8  J (TVL) und H (Greed) messen - Daten liegen seit Wochen
+
+## 7. Der ehrlichste Satz zum Stand
+
+**Die Mechanik ist so weit wie nie — und die Bewertung entscheidet über
+0,5 Signale am Tag.** Wir haben drei Tage an Sperren gearbeitet, während
+der Trichter sagt, dass 97 % längst vorher wegfallen.
+
+> **Ein stabiler Pull ist nicht der, bei dem alles gebaut ist, sondern
+> der, bei dem wir die Menge vorher kennen.** Die kennen wir seit heute.
