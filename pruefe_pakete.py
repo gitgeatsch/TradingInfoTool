@@ -15256,6 +15256,194 @@ def paket_kalibrierung() -> None:
 
 
 
+
+def paket_terminmarkt() -> None:
+    """N-14: DIE OI-SPERRE ALS TRICHTERSTUFE (02.09.2026).
+
+    Grundlage F-168: kein Einstieg im obersten Fuenftel des OI-Aufbaus,
+    +0,0145 R ueber 126.491 Anker. Was dieses Paket festhaelt:
+
+        1  die Stufe steht im Gate, an der richtigen Stelle
+        2  DREI Zustaende, nicht zwei - ein Wert ohne Rang wird NICHT
+           gesperrt (die Lehre aus G-6: erste Fassung, null Signale)
+        3  nur "einstieg" - die Messung ankert auf einem Einstieg
+        4  nicht bei Bestand - dort steht die Ausstiegsfrage an
+        5  der Rang kommt aus der MESSBASIS, nicht aus der Watchlist
+        6  die Mail sagt es in BEIDEN Faellen
+        7  der Trichter bleibt monoton
+    """
+    P = "Terminmarkt"
+    import ast as _ast
+    import pathlib as _pl
+    from agent.rollen_gate import STUFEN_NAMEN as _SN, Durchlauf as _D
+
+    # ---- 1: die Stufe steht im Gate, an der richtigen Stelle ------------
+    pruefe(P, "die Stufe 'terminmarkt' gibt es",
+           "terminmarkt" in _SN,
+           "ohne sie waere jeder Verlust auf einer FREMDEN Stufe gebucht - "
+           "und der Trichter zeigte 'auswahl' oder 'wiederholung', wo in "
+           "Wahrheit der Terminmarkt gesperrt hat")
+    pruefe(P, "sie steht ZWISCHEN Auswahl und Wiederholung",
+           _SN.index("auswahl") < _SN.index("terminmarkt") < _SN.index("wiederholung"),
+           "vor der Auswahl waere sie Verschwendung (sie liefe fuer Werte, "
+           "die ohnehin herausfallen), nach dem Urteil zu spaet - dann "
+           "waere der Modellaufruf schon bezahlt. Gemessen: %s"
+           % (list(_SN),))
+    pruefe(P, "und sie sperrt WIRKLICH - sie steht nicht in NUR_ZAEHLEN",
+           "terminmarkt" not in __import__(
+               "agent.rollen_gate", fromlist=["x"]).NUR_ZAEHLEN,
+           "genau das war der Zustand von Stufe 11 vor G-6: die ganze "
+           "Bewertungsarbeit wurde gerechnet, gebucht und dann verworfen")
+
+    # ---- 2: DREI Zustaende ---------------------------------------------
+    # Die Eigenschaft wird am ZAEHLWERK gemessen, nicht am Text.
+    _d = _D()
+    _d.beginne("OHNE")
+    _d.notiz("OHNE", "terminmarkt", "kein OI-Rang")
+    _d.bestanden("OHNE", "terminmarkt")
+    _d.beginne("HOCH")
+    _d.verloren("HOCH", "terminmarkt", "oberstes Fuenftel")
+    pruefe(P, "ein Wert OHNE Rang bleibt im Lauf",
+           _d.bestanden_je_stufe.get("terminmarkt", 0) == 1
+           and _d.verloren_je_stufe.get("terminmarkt", 0) == 1,
+           "das ist die Lehre aus G-6 (31.08.): die erste Fassung sperrte "
+           "nach Datenlage und erzeugte ueber alle fuenf Gruppen NULL "
+           "Signale. Ein Wert ohne OI-Rang ist nicht schlecht, sondern "
+           "unbekannt - und 12 von 44 Watchlist-Werten sind es. Gemessen: "
+           "bestanden %d, verloren %d"
+           % (_d.bestanden_je_stufe.get("terminmarkt", 0),
+              _d.verloren_je_stufe.get("terminmarkt", 0)))
+    pruefe(P, "und die Notiz steht als eigene Zeile im Trichter",
+           bool((_d.notizen.get("terminmarkt") or {})),
+           "wortlos durchlassen waere schlimmer als sperren - dann saehe "
+           "die Tabelle aus, als haette die Stufe zugestimmt")
+
+    # ---- 3 bis 5: die Bedingungen im Lauf, ueber den SYNTAXBAUM ---------
+    #
+    # Ueber den Baum und nicht ueber Text: eine Textsuche faende die
+    # Bedingung auch im Kommentar daneben (Lehre vom 31.08.).
+    _q = _pl.Path("agent/rollen_lauf.py").read_text(encoding="utf-8")
+    _baum = _ast.parse(_q)
+    _fn = next((n for n in _ast.walk(_baum)
+                if isinstance(n, _ast.FunctionDef) and n.name == "_ein_asset"),
+               None)
+    _kette = None
+    for _k in _ast.walk(_fn or _baum):
+        if not isinstance(_k, _ast.If):
+            continue
+        _txt = {n.id for n in _ast.walk(_k.test) if isinstance(n, _ast.Name)}
+        if "strategie" in _txt and _sperrt_terminmarkt(_k):
+            _kette = _k
+            break
+    pruefe(P, "der Lauf hat eine Bedingungskette, die auf `terminmarkt` bucht",
+           _kette is not None,
+           "geprueft ueber den Syntaxbaum - eine Textsuche faende auch den "
+           "Kommentar, der die Stufe beschreibt")
+    _zweige = _zweigtexte(_kette) if _kette is not None else []
+    pruefe(P, "nur `einstieg` kann ueberhaupt gesperrt werden",
+           any("einstieg" in z for z in _zweige),
+           "die Messung ankert auf einem EINSTIEG und misst den Ertrag ab "
+           "da. Ueber die Akkumulation sagt sie nichts - dort ist ein hoher "
+           "Preis sogar Teil des Verfahrens. Dieselbe Eingrenzung tragen "
+           "Funding und Turnover in wahrscheinlichkeit.BEITRAEGE")
+    pruefe(P, "und ein Wert MIT Bestand wird nicht gesperrt",
+           any("_hat_bestand" in z for z in _zweige),
+           "bei einem gehaltenen Wert steht die AUSSTIEGSfrage an, und die "
+           "hat die Messung nie beruehrt. Wer hier sperrt, unterdrueckt "
+           "Verkaufssignale - derselbe Grund, aus dem `auswahl` drei Zeilen "
+           "hoeher den Bestand ausnimmt")
+
+    # ---- 5: der Rang kommt aus der MESSBASIS ---------------------------
+    from agent import marktrang as _MR
+    pruefe(P, "es gibt eine Messbasis 'oi'",
+           "oi" in _MR.MESSBASIS,
+           "ohne sie liefe der Rang ueber die falsche Menge - und saehe "
+           "aus wie ein richtiger")
+    _frage = _MR.MESSBASIS["oi"][1]
+    # ueber die TABELLENNAMEN, nicht ueber Textstellen: meine erste
+    # Fassung suchte "FROM terminmarkt " MIT Leerzeichen und schlug fehl,
+    # weil die Abfrage genau darauf endet. Eine Wortpruefung, die am
+    # Leerzeichen haengt, prueft das Leerzeichen.
+    _tabellen = {w.strip().strip(";")
+                 for i, w in enumerate(_frage.split())
+                 if i and _frage.split()[i - 1].upper() == "FROM"}
+    pruefe(P, "und sie vereinigt BEIDE Terminmarkt-Tabellen",
+           _tabellen == {"terminmarkt", "terminmarkt_tag"}
+           and "UNION" in _frage.upper(),
+           "die Stundentabelle allein IST die Watchlist - genau daran ist "
+           "die erste H-4c-Messung als untermaechtig gescheitert (F-167). "
+           "Die Tagestabelle allein enthaelt nur zehn unserer Werte. "
+           "Gemessen wurde ueber die Vereinigung (117 Symbole). "
+           "Tabellen in der Abfrage: %s" % (sorted(_tabellen),))
+    _basis = _MR.messbasis("oi")
+    pruefe(P, "die Messbasis ist breiter als die Watchlist",
+           len(_basis) >= 100,
+           "gemessen %d Symbole - unter 100 waere es nicht mehr die Menge, "
+           "auf der F-168 steht" % len(_basis))
+    pruefe(P, "`raenge` fuehrt `oi` in derselben Schleife wie die anderen",
+           "(\"oi\", oi_werte, True)" in _quelltext("agent/marktrang.py"),
+           "ein eigener Pfad haette eine eigene Messbasis-Pruefung, eine "
+           "eigene Mindestquerschnitt-Pruefung und eine eigene Rangbildung "
+           "- drei Stellen, an denen er abweichen kann, ohne dass es "
+           "auffaellt")
+
+    # ---- 6: die Mail sagt es in BEIDEN Faellen -------------------------
+    _hoch = _MR.saetze({"oi_fuenftel": 4, "querschnitt_oi": 122})
+    _tief = _MR.saetze({"oi_fuenftel": 1, "querschnitt_oi": 122})
+    pruefe(P, "die Mail nennt den Terminmarkt in BEIDEN Faellen",
+           any("Terminmarkt" in z for z in _hoch)
+           and any("Terminmarkt" in z for z in _tief),
+           "schwiege sie im guten Fall, waere aus dem Text nicht zu "
+           "erkennen, ob die Stufe geprueft hat oder gar nicht lief")
+    pruefe(P, "und sie behauptet im guten Fall KEINE Guete",
+           any("keine" in z.lower() or "nicht" in z.lower() for z in _tief),
+           "belastbar ist allein das oberste Fuenftel (F-168); die uebrigen "
+           "vier sind einzeln nicht von null zu trennen. Wer dort 'gemessen "
+           "besser' schreibt, behauptet vier Aussagen, die es nicht gibt. "
+           "Gemessen: %s" % (_tief,))
+
+    # ---- 7: der Trichter bleibt monoton --------------------------------
+    _d2 = _D()
+    for _s in ("A", "B", "C"):
+        _d2.beginne(_s)
+        _d2.bestanden(_s, "auswahl")
+    _d2.verloren("A", "terminmarkt", "oberstes Fuenftel")
+    _d2.bestanden("B", "terminmarkt")
+    _d2.bestanden("C", "terminmarkt")
+    pruefe(P, "die Stufe kann nie mehr durchlassen als die vorige",
+           _d2.bestanden_je_stufe.get("terminmarkt", 0)
+           <= _d2.bestanden_je_stufe.get("auswahl", 0),
+           "ein nicht-monotoner Trichter ist kein Schoenheitsfehler - am "
+           "23.08. meldete er `anlass bestanden 4` bei `hinein 3`, und "
+           "niemandem war es aufgefallen. Gemessen: auswahl %d, "
+           "terminmarkt %d"
+           % (_d2.bestanden_je_stufe.get("auswahl", 0),
+              _d2.bestanden_je_stufe.get("terminmarkt", 0)))
+    pruefe(P, "und ein Gesperrter ist aus dem Lauf",
+           "A" not in _d2._offen and "B" in _d2._offen,
+           "sonst liefe er weiter und kostete den Modellaufruf, den die "
+           "Stufe gerade sparen soll")
+
+
+def _sperrt_terminmarkt(knoten) -> bool:
+    """Bucht dieser If-Baum irgendwo auf die Stufe `terminmarkt`?"""
+    import ast as _ast
+    for _c in _ast.walk(knoten):
+        if (isinstance(_c, _ast.Constant) and _c.value == "terminmarkt"):
+            return True
+    return False
+
+
+def _zweigtexte(knoten) -> list:
+    """Je Zweig der Bedingungskette der Quelltext seiner BEDINGUNG."""
+    import ast as _ast
+    aus, k = [], knoten
+    while isinstance(k, _ast.If):
+        aus.append(_ast.dump(k.test))
+        k = k.orelse[0] if len(k.orelse) == 1 else None
+    return aus
+
+
 def paket_trennung() -> None:
     """DIE TRENNUNG: neutrale Bewertung gegen Wirtschaftlichkeit (01.09.2026).
 
@@ -16086,6 +16274,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Terminmarkt": paket_terminmarkt,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

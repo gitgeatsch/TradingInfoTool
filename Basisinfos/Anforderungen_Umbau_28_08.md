@@ -1028,3 +1028,55 @@ belegt nichts über die neue.
    beide Positivkontrollen feuern.
 2. **Abdeckung 32 von 44 Watchlist-Werten** (72,7 %; Funding 36).
 3. **In-sample kalibriert.**
+
+### ✔ N-14 IST GEBAUT (02.09.2026) — und was dabei NICHT gezeigt werden konnte
+
+| | |
+|---|---|
+| **Stufe** | `terminmarkt` — „OI-Aufbau nicht im obersten Fünftel", zwischen `auswahl` und `wiederholung`. Der Trichter hat jetzt **zwölf** Stufen |
+| **Daten** | `marktrang.oi_werte()` — `openInterestHist period=1d limit=2`, **122 von 122 Symbolen in 35,8 s**, Gewicht 122 gegen 2400/min. Tagesspeicher, weil der Wert sich nur einmal je UTC-Tag ändert |
+| **Messbasis** | Vereinigung beider Terminmarkt-Tabellen = **122 Symbole**; davon 32 aus der Watchlist |
+| **Prüfungen** | Paket „Terminmarkt", **16 Prüfungen**; Suite **1928 bei 0 FEHL** |
+| **Wirkungsnachweis** | `simuliere_kette.py --nachweis-n14` — sechs Fälle, alle gezeigt |
+
+#### Die drei Zustände, im Lauf nachgewiesen
+
+    A  Fünftel 4, einstieg, kein Bestand   -> GESPERRT      ✔
+    B  Fünftel 1                           -> durch         ✔
+    C  kein Rang                           -> NOTIZ, durch  ✔
+    D  Fünftel 4 MIT Bestand               -> NOTIZ, durch  ✔
+    E  Akkumulationslauf                   -> keine Sperre  ✔
+    F  gesperrt wird nur, wer Fünftel 4 ohne Bestand hatte  ✔
+
+#### ⚠️ E2: der Strategie-Zweig selbst ist NICHT im Lauf gezeigt
+
+Fall E zeigt weniger, als sein Name verspricht. Die Notiz, die dabei
+erscheint, lautet **„Bestand vorhanden"** — es greift die
+**Bestands**ausnahme, nicht die Strategieausnahme. Zwei Gründe, beide
+strukturell:
+
+1. Kern-Assets sind genau die, die gehalten werden — ETH, SOL und BTC
+   haben alle Bestand, und diese Ausnahme steht in der Kette **vor** der
+   Strategieprüfung.
+2. Die zweite Zelle eines Assets fällt ohnehin an `anlass` (siehe F-169).
+
+Der Zweig ist **strukturell** über den Syntaxbaum geprüft (Suite-Paket
+„Terminmarkt": *„nur `einstieg` kann überhaupt gesperrt werden"*). Das ist
+weniger als ein Lauf-Nachweis, und es steht hier, statt als Haken verbucht
+zu werden.
+
+#### ⚠️ Ein echter Codefehler, den erst die Prüfung fand
+
+`marktrang.saetze()` kehrt früh zurück, wenn Funding, Turnover und
+Schnittabstand alle fehlen. Ein Wert, der **nur** einen OI-Rang hat, hätte
+die Zeile „für diesen Wert liegt keiner vor" bekommen — falsch, und
+womöglich neben einer Sperre, die genau dieser Rang gerade ausgelöst hat.
+Die Abfrage kennt jetzt vier Größen.
+
+#### Was NICHT gebaut wurde — und warum
+
+| | |
+|---|---|
+| ✖ ein abgestufter Beitrag in `wahrscheinlichkeit.BEITRAEGE` | die Monotonie ist gefallen (F-168); belastbar ist allein Fünftel 4 |
+| ✖ eine Neukalibrierung der Schwelle | R-R9 gilt für **Beiträge**. Eine Sperre ist kein Summand im Potential — sie macht das System strenger, nicht durchlässiger |
+| ✖ ein eigener Sammel-Job für OI | nicht nötig: `openInterestHist` liefert beide Tagespunkte in einem Abruf, eine gespeicherte Reihe wäre ein zweiter Bestand, der veralten kann |

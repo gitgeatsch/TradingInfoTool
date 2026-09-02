@@ -357,6 +357,212 @@ def _verbindung(pfad: str) -> sqlite3.Connection:
     return conn
 
 
+
+def nachweis_n14(db: str) -> int:
+    """N-14 NACHWEISEN: die OI-Sperre im ECHTEN Lauf, nicht in der Suite.
+
+    Stehende Regel: *eine Stufe gilt erst als gebaut, wenn die
+    Kettensimulation sie nachweist.* Die Suite prueft Eigenschaften des
+    Codes; ob die Stufe im Lauf ueberhaupt erreicht wird und ob sie dort
+    das Richtige tut, sagt sie nicht. Genau daran ist G-6 am 31.08.
+    vorbeigelaufen: 1828 Pruefungen gruen, echte Produktion 0 Signale.
+
+    SECHS FAELLE, jeder mit eigenem Haken:
+
+        A  Fuenftel 4, einstieg, kein Bestand   -> GESPERRT
+        B  Fuenftel 1, einstieg                 -> durch, ohne Notiz
+        C  kein Rang,  einstieg                 -> NOTIZ, durch
+        D  Fuenftel 4, MIT Bestand              -> NOTIZ, durch
+        E  Fuenftel 4, akkumulation             -> NOTIZ, durch
+        F  gesperrt wird NUR, wer Fuenftel 4 ohne Bestand hatte
+
+    ⚠️⚠️ JE FALL EIN EIGENER LAUF - und das ist die Lehre aus fuenf
+    verworfenen Fassungen.
+
+    Der Grund steht in `auswahl.k_fuer`: bei zehn und mehr Werten
+    passieren genau **zwei**. Werte MIT Bestand sind davon ausgenommen und
+    kommen immer durch. In einer Kopie, die ueberwiegend Bestand fuehrt,
+    erreichen die Stufe also fast nur Bestandswerte - und die Faelle A, B
+    und C, die alle einen BESTANDSFREIEN Wert brauchen, konkurrieren um
+    zwei Plaetze. Drei Rollen auf zwei Plaetzen: der Nachweis konnte in
+    einem gemeinsamen Lauf gar nicht vollstaendig werden.
+
+    Mit EINEM Symbol je Lauf ist `k_fuer(1) = 0` und die Auswahlstufe
+    entscheidet nicht (`aktiv=False`, "eine Stufe, die nichts entscheiden
+    kann, darf nicht sperren"). Damit erreicht jeder Fall die Stufe, die
+    er pruefen soll.
+
+    ⚠️ Was dieser Aufbau NICHT zeigt: das Zusammenspiel mit der
+    Auswahlstufe. Das ist Absicht - dafuer ist der normale Lauf der
+    Simulation da, und dort steht die Stufe seit heute in der
+    Trichtertabelle.
+    """
+    from agent import rollen_lauf as RL
+    from agent import rollen_eingabe as _RE_probe
+    from backtest_llm1_historisch import lade_reihen_aus_db
+
+    reihen = lade_reihen_aus_db(db)
+    kandidaten = [s for s in reihen
+                  if len(reihen.get(s) or ()) > 60 and not s.startswith("_")]
+    mit, ohne = [], []
+    for s in kandidaten:
+        try:
+            _m, _e = _RE_probe.bestand(s, db, "spot")
+            (mit if (_m and float(_m) > 0) else ohne).append(s)
+        except Exception:                                    # noqa: BLE001
+            ohne.append(s)
+    print()
+    print("=" * 76)
+    print("N-14 NACHWEIS — die OI-Sperre im Lauf")
+    print("=" * 76)
+    print("  %d Reihen in der Kopie: %d mit Bestand, %d ohne"
+          % (len(kandidaten), len(mit), len(ohne)))
+    if not ohne or not mit:
+        print("N-14: die Kopie hat nicht beide Sorten - Nachweis nicht "
+              "moeglich")
+        return 1
+
+    def _lauf(strategie, syms, raenge):
+        conn = _verbindung(db)
+        try:
+            e = RL.fuehre_lauf(
+                conn=conn, reihen=reihen, symbole=list(syms),
+                betriebsart="probe", instrument="spot",
+                strategie=strategie, client=Attrappe("spot"),
+                modell="attrappe", config=_echte_config(), db=db,
+                zai_client=ZaiAttrappe(), assetklasse="krypto",
+                versand=None, antworten={"marktraenge": raenge})
+        finally:
+            conn.commit()
+            conn.close()
+        tr = e.get("durchlauf")
+        return {"gruende": tr.gruende.get("terminmarkt") or {},
+                "notizen": tr.notizen.get("terminmarkt") or {},
+                "verloren": tr.verloren_je_stufe.get("terminmarkt", 0),
+                "bestanden": tr.bestanden_je_stufe.get("terminmarkt", 0),
+                "durchlauf": tr}
+
+    HOCH = {"oi_fuenftel": 4, "querschnitt_oi": 122,
+            "funding_fuenftel": 1, "turnover_fuenftel": 1}
+    TIEF = {"oi_fuenftel": 1, "querschnitt_oi": 122,
+            "funding_fuenftel": 1, "turnover_fuenftel": 1}
+    KEIN = {"funding_fuenftel": 1, "turnover_fuenftel": 1}
+
+    def _erster_der_ankommt(sorte, rang, strategie="einstieg", grenze=6):
+        """Der erste Wert dieser Sorte, der die Stufe wirklich erreicht.
+
+        ⚠️ NOETIG, WEIL EINZELNE REIHEN VORHER AUSSCHEIDEN - vier Werte
+        der Kopie haben keine Daten ab dem 19.08. und fallen an `fakten`.
+        Ein einzelner Bewerber machte den Nachweis von der Reihenfolge
+        des Zufalls abhaengig; hier wird bis zu `grenze` Mal versucht,
+        und wenn keiner ankommt, ist das ein ehrliches "nicht gezeigt".
+        """
+        for s in sorte[:grenze]:
+            # ⚠️ IMMER EIN GESTELLTER EINTRAG, auch fuer "kein Rang".
+            # Ein LEERES Woerterbuch gilt in `fuehre_lauf` als "nichts
+            # gestellt" (`if _gestellt:`) - dann holt der Lauf die echten
+            # Raenge aus dem Netz, und Fall C prueft, was Binance heute
+            # sagt, statt was gestellt war. Genau daran ist Fassung 7
+            # gescheitert: das Symbol kam mit einem echten Rang an und
+            # lief wortlos durch.
+            #
+            # "Kein Rang" heisst deshalb: ein Eintrag OHNE den Schluessel
+            # `oi_fuenftel`, nicht ein fehlender Eintrag.
+            r = _lauf(strategie, [s], {s: dict(rang)})
+            if r["verloren"] + r["bestanden"]:
+                r["symbol"] = s
+                return r
+        return None
+
+    a = _erster_der_ankommt(ohne, HOCH)
+    b = _erster_der_ankommt(ohne, TIEF)
+    c = _erster_der_ankommt(ohne, KEIN)
+    d = _erster_der_ankommt(mit, HOCH)
+    kern = [s for s in ("ETH", "SOL", "BTC") if s in reihen]
+    e_ = _erster_der_ankommt(kern or mit, HOCH, strategie="akkumulation")
+
+    for name, r in (("A", a), ("B", b), ("C", c), ("D", d), ("E", e_)):
+        if r is None:
+            print("  %s  kein Bewerber hat die Stufe erreicht" % name)
+            continue
+        print("  %s  %-10s gesperrt %d · durch %d%s"
+              % (name, r["symbol"], r["verloren"], r["bestanden"],
+                 "".join("\n         %s: %s" % ("gesperrt" if k == "g"
+                                                else "Notiz", t)
+                         for k, d2 in (("g", r["gruende"]),
+                                       ("n", r["notizen"]))
+                         for t in d2)))
+
+    faelle = [
+        ("A  Fuenftel 4 wird gesperrt",
+         bool(a) and any("hoechsten Fuenftel" in g for g in a["gruende"]),
+         "kein bestandsfreier Wert mit Fuenftel 4 hat die Stufe erreicht"),
+        ("B  darunter wird durchgelassen, ohne Notiz",
+         bool(b) and b["bestanden"] > 0 and b["verloren"] == 0
+         and not b["notizen"],
+         "erwartet: durch und wortlos"),
+        ("C  ohne Rang: Notiz statt Sperre",
+         bool(c) and c["verloren"] == 0
+         and any("kein OI-Rang" in g for g in c["notizen"]),
+         "erwartet: Notiz 'kein OI-Rang' und keine Sperre"),
+        ("D  mit Bestand: Notiz statt Sperre",
+         bool(d) and d["verloren"] == 0
+         and any("Bestand" in g for g in d["notizen"]),
+         "erwartet: Notiz 'Bestand' und keine Sperre - sonst wuerde die "
+         "Ausstiegsfrage unterdrueckt"),
+        ("E  Akkumulationslauf ohne Sperre",
+         bool(e_) and e_["verloren"] == 0,
+         "erwartet: keine Sperre - die Messung ankert auf einem EINSTIEG"),
+        ("F  nur Fuenftel 4 wird gesperrt",
+         all(r is None or r["verloren"] == 0 for r in (b, c, d, e_)),
+         "ein Wert ohne Fuenftel 4 wurde gesperrt"),
+    ]
+    print()
+    print("  " + "-" * 72)
+    offen = 0
+    for name, erfuellt, hinweis in faelle:
+        print("  %s  %s%s" % ("✔" if erfuellt else "✖", name,
+                              "" if erfuellt else "   <- %s" % hinweis))
+        offen += 0 if erfuellt else 1
+    # ---- E2: DER STRATEGIE-ZWEIG - und warum er hier NICHT faellt ------
+    #
+    # ⚠️ FALL E ZEIGT WENIGER, ALS SEIN NAME VERSPRICHT, und das gehoert
+    # gesagt. Gepruefte Eigenschaft ist "im Akkumulationslauf wird nicht
+    # gesperrt". Die Notiz, die dabei erscheint, lautet aber "Bestand
+    # vorhanden" - es greift also die BESTANDSausnahme, nicht die
+    # Strategieausnahme.
+    #
+    # Der Grund ist strukturell und in dieser Kopie nicht zu umgehen:
+    # Kern-Assets sind genau die, die gehalten werden (ETH, SOL, BTC
+    # haben alle Bestand). Und die zweite Zelle eines Assets faellt
+    # ohnehin an `anlass` - die Einstiegszelle hat denselben Faktensatz
+    # schon verbraucht ("nur 0 zaehlende Blockaenderungen"). Die
+    # Akkumulationszelle erreicht die Stufe damit gar nicht.
+    #
+    # Statt das als Erfolg zu buchen, wird es BENANNT. Den Zweig selbst
+    # deckt das Suite-Paket "Terminmarkt" ueber den Syntaxbaum ab.
+    _strategiezweig = bool(e_) and any(
+        "Messung gilt nur fuer den Einstieg" in g for g in e_["notizen"])
+    print("  %s  E2 der Strategie-Zweig selbst%s"
+          % ("✔" if _strategiezweig else "○",
+             "" if _strategiezweig else
+             "   <- in dieser Kopie nicht erreichbar: alle Kern-Assets "
+             "haben Bestand (die Bestandsausnahme greift zuerst), und die "
+             "zweite Zelle faellt an `anlass`. Strukturell geprueft im "
+             "Suite-Paket 'Terminmarkt'"))
+
+    print("  " + "-" * 72)
+    if offen:
+        print("  ✖ NICHT VOLLSTAENDIG NACHGEWIESEN - %d von 6 Faellen offen."
+              % offen)
+        print("    Ein offener Fall heisst NICHT 'falsch', sondern 'in "
+              "diesem Lauf nicht gezeigt'. Beides darf nicht verschwimmen.")
+        print("=" * 76)
+        return 1
+    print("  ✔ VOLLSTAENDIG NACHGEWIESEN - alle sechs Faelle gezeigt.")
+    print("=" * 76)
+    return 0
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--db", default="data/tradinginfotool.db")
@@ -364,6 +570,8 @@ def main() -> int:
                    help="nur diese Symbole (Komma), umgeht die Auswahlstufe")
     p.add_argument("--gruppe", default=None,
                    help="nur diese Gruppe, sonst alle")
+    p.add_argument("--nachweis-n14", action="store_true",
+                   help="nur den N-14-Nachweis (OI-Sperre), ohne Netzabruf")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -373,6 +581,9 @@ def main() -> int:
     if NUR_SYMBOLE:
         print("NUR DIESE SYMBOLE: %s - die Auswahlstufe wird umgangen"
               % ", ".join(sorted(NUR_SYMBOLE)))
+
+    if getattr(a, "nachweis_n14", False):
+        return nachweis_n14(a.db)
 
     from agent import assetklassen as AK
     from agent import rollen_lauf as RL

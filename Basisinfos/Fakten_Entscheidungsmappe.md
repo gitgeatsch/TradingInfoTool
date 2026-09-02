@@ -3287,3 +3287,58 @@ neben Funding wird also seit Wochen berechnet und **nirgends verwendet**.
 Werkzeuge: `messe_kandidaten_als_regel.py --terminmarkt` · `--mitlaeufer` ·
 `rechne_oi_beitrag.py`
 Verwandt: F-167 (die untermächtige Vorstufe) · Methodik 2.95 · 2.98 · 2.99
+
+---
+
+## F-169 ⚠️ Die ZWEITE Zelle eines Assets stirbt an `anlass` — Schritt 3+4 läuft weitgehend leer (02.09.2026)
+
+**Nebenbefund beim Bau von N-14**, gesehen im Trichter der
+Kettensimulation — nicht gesucht, sondern aufgefallen.
+
+Seit Schritt 3+4 (01.09.) läuft die Kette über **Zellen**: ein Kern-Asset
+bekommt zwei, `einstieg` und `akkumulation`. Der Trichter eines Laufs über
+ETH allein:
+
+    hinein             2
+      Instrument und Strategie erlaubt     2   (0 verloren)
+      Faktenlage ausreichend               2   (0 verloren)
+      Lagebild geliefert                   2   (0 verloren)
+      Faktensatz hat sich geaendert        1   (1 verloren)  <- hier
+            1x nur 0 zaehlende Blockaenderung(en) seit 0.0 h
+
+**Die zweite Zelle fällt an `anlass`** — die erste hat denselben
+Faktensatz bereits verbraucht, und der Fingerabdruck ist identisch. Im
+Krypto-Lauf der Simulation dasselbe Bild: `hinein 6` aus fünf Symbolen,
+davon einer an `anlass` verloren.
+
+### Warum das mehr ist als ein Schönheitsfehler
+
+Die Begründung für Schritt 3+4 lautete (A2, 28.08.): *„V1 braucht ZWEI
+Bewertungen je Asset, mit VERSCHIEDENEN Fragen."* Genau das findet nicht
+statt: die Akkumulationsfrage wird gestellt und sofort als Wiederholung
+verworfen — **weil `anlass` auf den Faktensatz schlüsselt, nicht auf die
+Zelle.**
+
+⚠️ **Die Reihenfolge macht es schlimmer, nicht besser.** `einstieg` läuft
+absichtlich zuerst (das Urteil wird mit der reicheren Frage geholt). Die
+Akkumulation ist damit systematisch die zweite — und damit systematisch
+die verworfene.
+
+### Was daraus NICHT folgt
+
+* **Kein Beleg, dass Signale verloren gehen.** Beobachtet in der
+  Simulationskopie, nicht in der Notebook-Produktion gemessen. Dort läuft
+  die Kette mehrmals täglich; ob die Akkumulationszelle jemals als erste
+  an der Reihe ist, ist offen.
+* **Kein Fehler in `anlass`.** Die Stufe tut, wofür sie gebaut wurde. Der
+  Schlüssel ist zu grob geworden, seit es Zellen gibt.
+
+### Der naheliegende Weg — nicht gebaut, nicht entschieden
+
+Der Fingerabdruck müsste die **Strategie** mitführen, so wie der Cooldown
+es seit L4/L5 (28.08.) tut: `gesperrt_bis(..., strategie=strategie)`.
+Dieselbe Änderung, eine Stufe früher. ⚠️ Das ändert den Takt und gehört
+gemessen, bevor es gebaut wird.
+
+Gesehen mit: `simuliere_kette.py --nachweis-n14` und `--gruppe krypto`
+Verwandt: N-14 (E2) · A2 · L4/L5

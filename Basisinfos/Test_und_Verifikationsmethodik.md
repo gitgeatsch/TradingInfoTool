@@ -5115,3 +5115,64 @@ dieselbe Zahl** — das ist der eigentliche Beleg.
 
 Werkzeug: `messe_kandidaten_als_regel.py --mitlaeufer`
 Verwandt: 2.80 (Prüfliste, Frage 1 „Mitläufer") · 2.87 · R-R9 · F-168
+
+## 2.100 ⚠️⚠️ Ein Nachweis, der nicht hinsehen KONNTE, ist kein Nachweis — sieben Fassungen für eine Stufe
+
+**Anlass 02.09.2026, N-14.** Der Wirkungsnachweis für eine einzige
+Trichterstufe brauchte **sieben Fassungen**. Sechs davon waren falsch, und
+alle sechs auf dieselbe Weise: die Prüfung hat etwas gemeldet, obwohl sie
+den Fall gar nicht sehen konnte.
+
+| # | Der Fehler | Was er meldete |
+|---|---|---|
+| 1 | nahm die ersten drei Reihen der Kopie — eine hatte Bestand, eine fiel an `fakten` | **Lücke**, die keine war |
+| 2 | druckte die fehlenden Fälle, zog sie aber nicht in den Abschluss | **„NACHGEWIESEN"** bei zwei ungezeigten Fällen |
+| 3 | gab jedem Fall genau einen Bewerber | Fall C unsichtbar, weil die Bestandsnotiz zuerst greift |
+| 4 | verteilte die Rollen über alle bestandsfreien Werte | zehn fielen an `auswahl` heraus |
+| 5 | fragte die Auswahl über eine **andere** Liste als der Lauf | die Rollen landeten wieder außerhalb |
+| 6 | drei Rollen auf **zwei** Plätzen (`k_fuer` lässt bei ≥10 Werten genau zwei durch) | strukturell unmöglich |
+| 7 | übergab für „kein Rang" ein **leeres** Wörterbuch | `if _gestellt:` ist dann falsch → der Lauf holte die **echten** Ränge aus dem Netz und prüfte, was Binance heute sagt |
+
+### Die drei Regeln, die daraus folgen
+
+**1. Jeder Fall bekommt einen eigenen Haken, und der Abschluss zählt die
+Haken.** Eine Zusammenfassung, die mehr behauptet als gezeigt wurde, ist
+schlimmer als gar keine — Fassung 2 hätte eine halb gebaute Stufe als
+fertig gemeldet.
+
+**2. „Nicht erreicht" ist ein dritter Ausgang, nicht ein Fehlschlag und
+nicht ein Erfolg.** Ein Symbol, das an `fakten` oder `auswahl`
+hängenbleibt, sagt über die zu prüfende Stufe nichts. Beides sichtbar zu
+trennen ist der ganze Zweck.
+
+**3. Der Trichter gehört in die Ausgabe.** Solange er fehlte, war „nur 2
+von 13 haben die Stufe erreicht" eine Zahl ohne Ursache — und die Ursache
+lag jedesmal auf einer **früheren** Stufe. Mit dem Trichter war sie in
+einem Lauf zu sehen (`gehoert zu den besten k <- hier`).
+
+### ⚠️ Und die Falle, die keine der drei Regeln gefunden hätte
+
+Fassung 7 scheiterte an einer Konvention der Produktion: ein **leeres**
+Wörterbuch heißt dort „nichts gestellt", nicht „ausdrücklich leer". Der
+Lauf holte daraufhin echte Daten, das Symbol kam mit einem echten Rang an
+und lief wortlos durch — die Prüfung war grün-fähig aus dem falschen
+Grund.
+
+> **Wer eine Abwesenheit stellen will, muss einen Eintrag OHNE den
+> Schlüssel stellen — nicht das Fehlen des Eintrags.**
+
+Das ist dieselbe Unterscheidung wie `null` gegen `nie`, nur eine Ebene
+tiefer: „geprüft und nichts gefunden" gegen „gar nicht erst gefragt".
+
+### Was der Aufbau am Ende leistet — und was nicht
+
+Ein **eigener kleiner Lauf je Fall** mit einem einzigen Symbol. Dann ist
+`k_fuer(1) = 0`, die Auswahlstufe entscheidet nicht, und jeder Fall
+erreicht die Stufe, die er prüfen soll.
+
+⚠️ **Der Preis, und er gehört genannt:** so geprüft wird das Zusammenspiel
+mit der Auswahlstufe **nicht**. Dafür ist der normale Lauf der Simulation
+da — und dort steht die Stufe seit dem 02.09. in der Trichtertabelle.
+
+Werkzeug: `simuliere_kette.py --nachweis-n14`
+Verwandt: 2.80 · „Eine grüne Suite ist kein Wirkungsnachweis" · N-14

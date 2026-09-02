@@ -85,6 +85,23 @@ STUFEN = (
     # zwischen "nicht ausgewaehlt" und "gerade erst gefragt" wieder
     # unsichtbar zu machen.
     ("auswahl", "gehoert zu den besten k der Gruppe"),
+    # EIGENE STUFE SEIT 02.09.2026 (N-14) - und zum dritten Mal aus
+    # demselben Grund wie "anlass" (16.08.) und "auswahl" (23.08.): sie
+    # kostet KEINEN Modellaufruf.
+    #
+    # WARUM SIE NICHT IN "auswahl" GEHOERT, obwohl beide auf einem
+    # Querschnittsrang stehen: "auswahl" sagt, WELCHE Werte heute beurteilt
+    # werden - eine Aussage ueber das Asset im Vergleich zu den anderen.
+    # Diese Stufe sagt etwas ueber den ZEITPUNKT: der Terminmarkt ist
+    # ueberhitzt. Zusammengelegt waere hinterher nicht mehr zu trennen, ob
+    # ein Wert nicht gut genug war oder ob der Moment schlecht war - und
+    # genau diese Trennung ist der Grund, aus dem beide Vorgaenger eigene
+    # Stufen bekommen haben.
+    #
+    # GRUNDLAGE F-168: kein Einstieg im obersten Fuenftel des OI-Aufbaus.
+    # +0,0145 R ueber 126.491 Anker, kein Mitlaeufer von Funding
+    # (Schichtentest +0,0136 R bei festgehaltenem Funding).
+    ("terminmarkt", "OI-Aufbau nicht im obersten Fuenftel"),
     ("wiederholung", "nicht kuerzlich schon gefragt"),
     ("urteil", "Urteil geliefert und vertragskonform"),
     ("aktion", "Aktion ist ein Einstieg"),

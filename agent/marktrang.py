@@ -68,6 +68,8 @@ import urllib.request
 logger = logging.getLogger(__name__)
 
 PREMIUM_INDEX = "https://fapi.binance.com/fapi/v1/premiumIndex"
+OI_HIST = ("https://fapi.binance.com/futures/data/openInterestHist"
+           "?symbol=%sUSDT&period=1d&limit=2")
 COINGECKO_MARKETS = ("https://api.coingecko.com/api/v3/coins/markets"
                      "?vs_currency=usd&order=market_cap_desc&per_page=250&page=1")
 KOPF = {"User-Agent": "TradingInfoTool/1.0"}
@@ -309,6 +311,19 @@ MESSBASIS = {"funding": ("data/funding_historie.db",
              # ⚠️ Der Schnittabstand kommt aus den KURSREIHEN selbst -
              # die Messbasis ist dieselbe Datei, aus der auch der
              # Schnitt stammt. Deshalb genuegt die Symbolliste.
+             # H-4c/F-168. Die Messbasis ist die VEREINIGUNG beider
+             # Tabellen: "terminmarkt" (32 Watchlist-Werte, stuendlich,
+             # erster Import) und "terminmarkt_tag" (100 Zufallssymbole mit
+             # fester Saat, Nachlauf). Genau ueber dieser Vereinigung lief
+             # die Messung - sie meldete 117 Symbole.
+             #
+             # WER NUR EINE DER BEIDEN NIMMT, misst etwas anderes: die
+             # Stundentabelle allein ist die Watchlist (und daran ist die
+             # erste H-4c-Messung als untermaechtig gescheitert, F-167),
+             # die Tagestabelle allein enthaelt nur zehn unserer Werte.
+             "oi": ("data/terminmarkt_historie.db",
+                    "SELECT DISTINCT symbol FROM terminmarkt_tag "
+                    "UNION SELECT DISTINCT symbol FROM terminmarkt"),
              "schnitt": (SCHNITT_MESSDB,
                          "SELECT DISTINCT symbol FROM price_history_ohlc "
                          "WHERE currency='USD'")}
@@ -396,6 +411,75 @@ def funding_werte(symbole=None) -> dict:
     return aus
 
 
+_OI_ZWISCHEN: dict = {}
+
+
+def oi_werte(symbole=None) -> dict:
+    """Taegliche Veraenderung des Open Interest, fuer die Messbasis.
+
+    WARUM DIESE GROESSE EINEN EIGENEN ABRUF BRAUCHT - und nicht aus
+    "open_interest_snapshot" kommt (02.09.2026).
+
+    Die Produktion fuehrt seit dem 14.07. eine OI-Tabelle; sie deckt aber
+    nur die WATCHLIST (38 Symbole). "oi_aenderung" ist ein
+    QUERSCHNITTSrang - er beantwortet die Frage "wo steht dieser Wert
+    heute gegenueber dem Markt". Ein Rang ueber 38 selbst gewaehlte Werte
+    ist eine andere Groesse als der gemessene ueber 117; derselbe
+    Fehlertyp, an dem H gescheitert ist und vor dem der Kommentar bei
+    "funding_werte" warnt.
+
+    DIE NAHT ZWISCHEN MESSUNG UND ANWENDUNG - sie gehoert benannt:
+
+        gemessen    OI am Tagesschluss gegen den Vortagsschluss, Anker ist
+                    derselbe Tagesschluss (Archiv data.binance.vision,
+                    letzter 5-Minuten-Wert des Tages)
+        angewandt   dieselbe Groesse aus openInterestHist period=1d -
+                    Binance stempelt den Tagesschluss auf 00:00 des
+                    Folgetages, die Differenz zweier aufeinanderfolgender
+                    Punkte ist also dieselbe Zahl
+
+    Der verbleibende Unterschied ist der ZEITPUNKT DER ANWENDUNG: die
+    Messung entscheidet am Tagesschluss, der Betrieb bis zu 24 Stunden
+    spaeter. Bei einem Horizont von 20 Tagen sind das 5 %. Das ist eine
+    Abweichung, keine Uebereinstimmung - sie steht hier, damit sie nicht
+    unbemerkt bleibt.
+
+    EIN ABRUF JE SYMBOL. Binance hat fuer Open Interest keinen
+    Sammelendpunkt (anders als Funding ueber premiumIndex). Gemessen:
+    122 Symbole in rund 36 Sekunden, Gewicht 1 je Abruf gegen ein
+    Kontingent von 2400 je Minute - rund 5 %. Deshalb der Tagesspeicher
+    unten: der Wert aendert sich nur einmal je UTC-Tag.
+    """
+    import datetime as _dt
+    heute = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
+    if _OI_ZWISCHEN.get("tag") == heute:
+        return dict(_OI_ZWISCHEN.get("werte") or {})
+    basis = messbasis("oi")
+    if not basis:
+        return {}
+    aus = {}
+    for sym in sorted(basis):
+        try:
+            reihe = _hole(OI_HIST % sym, zeitsperre=10)
+        except Exception:                                    # noqa: BLE001
+            # EINZELNE AUSFAELLE SIND NORMAL und duerfen den Rang nicht
+            # kippen - ein Symbol ohne Wert ist "nicht vermessen", und
+            # genau dafuer gibt es den dritten Zustand in der Trichterstufe.
+            continue
+        if not isinstance(reihe, list) or len(reihe) < 2:
+            continue
+        try:
+            alt = float(reihe[-2].get("sumOpenInterest"))
+            neu = float(reihe[-1].get("sumOpenInterest"))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if alt > 0:
+            aus[sym] = neu / alt - 1.0
+    _OI_ZWISCHEN["tag"] = heute
+    _OI_ZWISCHEN["werte"] = aus
+    return dict(aus)
+
+
 def _coingecko_namen() -> dict:
     """{coingecko_id: unser Symbol} - fuer Werte mit abweichendem Kuerzel.
 
@@ -461,16 +545,28 @@ def raenge(symbole, *, mit_turnover: bool = True) -> dict:
                     # ⚠️ NUR ANZEIGE, NIE BEWERTUNG - siehe unten.
                     "schnitt": None, "schnitt_rang": None,
                     "schnitt_fuenftel": None, "querschnitt_schnitt": 0,
+                    # H-4c/F-168: BEWERTUNGSRELEVANT, aber als SPERRE,
+                    # nicht als Beitrag - die Monotonie ueber die Fuenftel
+                    # ist gefallen, belastbar ist allein Fuenftel 4.
+                    "oi": None, "oi_rang": None, "oi_fuenftel": None,
+                    "querschnitt_oi": 0,
                     "funding_platz": None, "turnover_platz": None,
-                    "schnitt_platz": None, "platz_von": 0}
+                    "schnitt_platz": None, "oi_platz": None,
+                    "platz_von": 0}
                 for s in symbole}
 
     # ⚠️ FUENFTEL 0 IST BEI ALLEN DREI DAS "GUTE" ENDE - aber aus
     # verschiedenen Gruenden: wenig Funding = wenig Ueberhitzung, wenig
     # Umschlag = wenig Aufmerksamkeit, TIEF unter dem Schnitt = Rueckkehr
     # zum Mittel. `_rang` sortiert aufsteigend, das passt fuer alle drei.
+    # "oi" LAEUFT DURCH DIESELBE SCHLEIFE wie die drei anderen - und das
+    # ist Absicht. Ein eigener Pfad haette eine eigene Messbasis-Pruefung,
+    # eine eigene Mindestquerschnitt-Pruefung und eine eigene Rangbildung
+    # gebraucht; drei Stellen, an denen er von den anderen abweichen kann,
+    # ohne dass es jemandem auffaellt.
     for name, holen, an in (("funding", funding_werte, True),
                             ("turnover", turnover_werte, mit_turnover),
+                            ("oi", oi_werte, True),
                             ("schnitt", schnitt_werte, True)):
         if not an:
             continue
@@ -548,16 +644,26 @@ def saetze(eintrag: dict | None) -> list[str]:
     if not eintrag:
         return []
     zeilen = []
+    # DIE OI-LAGE GEHOERT IN DIESE ABFRAGE (02.09.2026, gefunden vom
+    # Pruefpaket "Terminmarkt", nicht von mir).
+    #
+    # Bis hierher pruefte die Frueh-Rueckgabe drei Groessen. Seit N-14 gibt
+    # es eine vierte - und ein Wert, der NUR einen OI-Rang hat, haette die
+    # Zeile "fuer diesen Wert liegt keiner vor" bekommen. Das waere nicht
+    # nur unvollstaendig, sondern falsch: es liegt einer vor, und er hat
+    # ihn womoeglich gerade gesperrt.
     if (eintrag.get("funding_fuenftel") is None
             and eintrag.get("turnover_fuenftel") is None
+            and eintrag.get("oi_fuenftel") is None
             and eintrag.get("schnitt_fuenftel") is None):
         return ["Marktvergleich: fuer diesen Wert liegt keiner vor - er "
-                "gehoert weder zur Funding- noch zur Umschlag-Messbasis "
-                "(%d bzw. %d Werte). Die beiden gemessenen Beitraege "
-                "tragen hier also NICHTS bei; die Bewertung steht allein "
-                "auf der Geometrie."
+                "gehoert weder zur Funding- noch zur Umschlag- noch zur "
+                "Terminmarkt-Messbasis (%d, %d bzw. %d Werte). Die "
+                "gemessenen Beitraege tragen hier also NICHTS bei; die "
+                "Bewertung steht allein auf der Geometrie."
                 % (eintrag.get("querschnitt_funding") or 0,
-                   eintrag.get("querschnitt_turnover") or 0)]
+                   eintrag.get("querschnitt_turnover") or 0,
+                   eintrag.get("querschnitt_oi") or 0)]
     f = eintrag.get("funding_fuenftel")
     if f is not None:
         lage = {0: "das niedrigste", 1: "ein niedriges", 2: "ein mittleres",
@@ -576,6 +682,29 @@ def saetze(eintrag: dict | None) -> list[str]:
             "(%d Werte). Gemessen liefen Werte tief unter ihrem Schnitt "
             "besser als solche weit darueber."
             % (lage, eintrag.get("querschnitt_schnitt") or 0))
+    oi = eintrag.get("oi_fuenftel")
+    if oi is not None:
+        # ANDERE SPRACHE ALS BEI DEN BEITRAEGEN - und mit Absicht. Bei
+        # Funding und Umschlag steht "gemessen liefen solche Werte
+        # schlechter", weil dort fuenf abgestufte Zahlen dahinterstehen.
+        # Bei OI ist NUR das oberste Fuenftel belastbar (F-168); die
+        # uebrigen vier sind einzeln nicht von null zu trennen. Wer hier
+        # dieselbe Formulierung verwendet, behauptet vier Aussagen, die
+        # nicht gemessen sind.
+        if oi == 4:
+            zeilen.append(
+                "Terminmarkt: der OI-Aufbau liegt heute im hoechsten "
+                "Fuenftel des Marktes (%d Werte). Gemessen an 126.491 "
+                "Ankern war das der einzige Bereich, in dem Einstiege "
+                "schlechter liefen - deshalb sperrt das System ihn."
+                % (eintrag.get("querschnitt_oi") or 0))
+        else:
+            zeilen.append(
+                "Terminmarkt: der OI-Aufbau liegt nicht im hoechsten "
+                "Fuenftel des Marktes (%d Werte) - die Sperre greift "
+                "nicht. Eine Aussage ueber die Guete des Zeitpunkts ist "
+                "das nicht: gemessen trennt sich nur das oberste Fuenftel."
+                % (eintrag.get("querschnitt_oi") or 0))
     t = eintrag.get("turnover_fuenftel")
     if t is not None:
         lage = {0: "das niedrigste", 1: "ein niedriges", 2: "ein mittleres",
@@ -597,6 +726,7 @@ def saetze(eintrag: dict | None) -> list[str]:
     # nicht an den Platz.
     plaetze = [("Finanzierung", eintrag.get("funding_platz")),
                ("Umschlag", eintrag.get("turnover_platz")),
+               ("OI-Aufbau", eintrag.get("oi_platz")),
                ("Abstand zum Schnitt", eintrag.get("schnitt_platz"))]
     teile = ["%s Platz %d" % (was, p) for was, p in plaetze if p]
     if teile and von >= 2:

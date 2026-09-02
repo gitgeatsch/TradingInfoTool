@@ -1253,6 +1253,64 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                 return
         durchlauf.bestanden(symbol, "auswahl")
 
+        # --- Stufe: Terminmarkt (N-14, 02.09.2026) ---------------------
+        #
+        # F-168: kein Einstieg im obersten Fuenftel des OI-Aufbaus.
+        # +0,0145 R ueber 126.491 Anker, 117 Symbole, 1.702 Kalendertage;
+        # kein Mitlaeufer von Funding (Schichtentest +0,0136 R bei
+        # festgehaltenem Funding, Gegenrechnung ueber die gemeinsame
+        # Sperrmenge +0,0139 R).
+        #
+        # DREI ZUSTAENDE, NICHT ZWEI - dieselbe Lehre wie bei G-6, wo die
+        # erste Fassung ueber alle fuenf Gruppen null Signale erzeugte:
+        #
+        #     kein Rang       nicht vermessen -> NOTIZ, nicht sperren
+        #     Fuenftel 4      gemessen schlecht -> sperren
+        #     Fuenftel 0-3    durchlassen
+        #
+        # Ein Wert ohne OI-Rang ist nicht schlecht, sondern unbekannt.
+        # Ihn zu sperren waere eine Sperre nach DATENLAGE (Regel 4);
+        # gemessen sind 32 von 44 Watchlist-Werten abgedeckt.
+        #
+        # ZWEI EINSCHRAENKUNGEN, und beide sind gemessen begruendet:
+        #
+        # 1. NUR "einstieg". Die Messung ankert auf einem EINSTIEG und
+        #    misst den Ertrag ab da. Ueber die Akkumulation sagt sie
+        #    nichts - dort ist ein hoher Preis sogar Teil des Verfahrens.
+        #    Dieselbe Eingrenzung tragen Funding und Turnover in
+        #    "wahrscheinlichkeit.BEITRAEGE" (strategien=("einstieg",)).
+        #
+        # 2. NICHT BEI BESTAND. Bei einem gehaltenen Wert steht die
+        #    AUSSTIEGSfrage an, und die hat die Messung nie beruehrt.
+        #    Wer hier sperrt, unterdrueckt Verkaufssignale - derselbe
+        #    Grund, aus dem "auswahl" drei Zeilen hoeher den Bestand
+        #    ausnimmt: "was nicht Teil der Auswahl ist, darf von ihr auch
+        #    nicht gesperrt werden."
+        _oi_rang = ((marktraenge or {}).get(symbol) or {})
+        _oi_f = _oi_rang.get("oi_fuenftel")
+        if str(strategie or "") != "einstieg":
+            durchlauf.notiz(
+                symbol, "terminmarkt",
+                "Strategie %s - die Messung gilt nur fuer den Einstieg"
+                % (strategie or "?"))
+        elif _hat_bestand:
+            durchlauf.notiz(
+                symbol, "terminmarkt",
+                "Bestand vorhanden - hier steht die Ausstiegsfrage an, "
+                "und dafuer ist die Sperre nicht gemessen")
+        elif _oi_f is None:
+            durchlauf.notiz(
+                symbol, "terminmarkt",
+                "kein OI-Rang - dieser Wert gehoert nicht zur Messbasis "
+                "(%d Werte)" % (_oi_rang.get("querschnitt_oi") or 0))
+        elif _oi_f >= 4:
+            durchlauf.verloren(
+                symbol, "terminmarkt",
+                "OI-Aufbau im hoechsten Fuenftel (%d Werte im Vergleich)"
+                % (_oi_rang.get("querschnitt_oi") or 0))
+            return
+        durchlauf.bestanden(symbol, "terminmarkt")
+
         # L4/L5 (28.08.): die STRATEGIE geht mit in den Cooldown. Eine
         # Akkumulation braucht keine Frage alle 3,5 Stunden - ihr Horizont ist
         # in Jahren gemessen. Den Hebel des letzten Signals liest
