@@ -1125,3 +1125,93 @@ nicht *wann*. Das ist keine Widerlegung, aber es heißt, dass ein Teil
 seiner Wirkung eine Ebene höher gehört, zur Auswahl (wie der Rangplatz
 seit dem 23.08.). **Nicht gemessen, nicht entschieden — und es betrifft
 den Bestand, nicht den Kandidaten.**
+
+---
+
+## ⚠️⚠️ N-15: DIE EINORDNUNG — „verglichen mit allem anderen" fehlt in der Mail (02.09.2026)
+
+**Nutzerfrage nach dem Lesen einer echten Mail:** *„Ich dachte, ich
+erhalte auch Informationen zu den Bewertungen — warum war dieses Signal
+besser als die anderen Assets? Wo liegt der Coin besonders gut, welche
+Bewertungen und Potential liegen gut, hoch, mittel, niedrig?"*
+
+**Die Frage trifft den Kern des übergeordneten Ziels**, wörtlich: *„wie
+viel ist hier zu holen, **verglichen mit allem anderen**."* Genau dieser
+Vergleich steht heute in keiner Mail.
+
+### Was die Mail heute sagt — und was jede Zeile wirklich bedeutet
+
+| Angabe | was sie ist |
+|---|---|
+| „Rang 28 von 41 nach der Entwicklung der letzten 250 Handelstage" | die **Auswahl**größe: *welche* Werte beurteilt werden |
+| „Finanzierung Platz 15, OI-Aufbau Platz 20 von 32" | ausdrücklich **„Auskunft, keine Bewertung"** |
+| „ein niedriges Fünftel im Marktvergleich (302 Werte)" | ein **Merkmal**, kein Vergleich der Gesamtbewertung |
+
+**Es fehlt der Rang der Bewertung selbst.**
+
+### ⚠️ Was NICHT geht, und warum
+
+Ein Rang des **Potentials** über alle Werte ist heute unmöglich: das
+Potential hängt an Stop und CRV, und die kommen aus dem Modellurteil. Eine
+Rangfolge über 44 Werte bräuchte 44 Urteile je Lauf, neunmal am Tag —
+genau der Deadloop, aus dem das System kommt.
+
+**Was geht, steht auf den Beiträgen.** Die sind vor jedem Urteil bekannt
+und kosten nichts.
+
+### Die vier Varianten, an AVAX vorgerechnet
+
+**A — Der Querschnitt: wo steht der Wert heute?**
+
+    Nach den gemessenen Beitraegen: Platz 26 von 36 — im unteren Mittelfeld.
+    Punkte -0,54 · bester Wert +4,45 (BTC) · schlechtester -1,70 (SEI)
+
+**B — Die eigene Lage: ist das für DIESEN Wert gut?**
+
+    Funding-Rang von AVAX heute: 0,23 (0 = guenstigstes Funding)
+    In 400 Tagen lag er 102 mal guenstiger -> Perzentil 26
+    Zuletzt guenstiger am 2026-08-29.
+
+**C — Die Zerlegung: woher kommt die Zahl?**
+
+    Funding-Rang im Markt   Fuenftel 3   -0,54 Punkte  (100 % der Bewegung)
+    ⚠️ ohne Wert und NICHT eingerechnet: Turnover-Rang im Markt
+
+**D — Die anderen: was war heute besser?**
+
+    25 Werte haben heute bessere Beitraege als AVAX:
+    BTC, XLM, BNB, QNT, ASTER, BIO, IO, MORPHO, ONDO, SUI, TURBO, W, …
+
+### ⚠️⚠️ Was die Vorrechnung nebenbei aufdeckt
+
+> **AVAX steht auf Platz 26 von 36. Fünfundzwanzig Werte hatten heute
+> bessere Beiträge — und die Kaufempfehlung ging für AVAX heraus.**
+
+Der Grund ist bekannt: AVAX hat Bestand und ist damit von der
+Auswahlstufe ausgenommen. **Die Mail sagt das nirgends.** Sie liest sich,
+als sei der Wert ausgewählt worden.
+
+Und **Variante C** zeigt die eigentliche Schwäche: die Bewertung steht auf
+**einem einzigen** Beitrag, und der ist **negativ**. Turnover fehlt, weil
+AVAX nicht in der Messbasis steht.
+
+### Die Empfehlung — was zuerst gebaut werden sollte
+
+| | Variante | warum |
+|---|---|---|
+| **1** | **C — Zerlegung** | deckt auf, wenn eine Bewertung auf einem einzigen Beitrag steht. Das ist heute bei 37 von 44 Werten der Fall und in keiner Mail sichtbar |
+| **2** | **A — Querschnitt** | beantwortet die Frage direkt, ein Satz, kostet nichts |
+| **3** | **D — die anderen** | beantwortet *„warum dieses"* ehrlich — braucht die Trichtergründe, die seit dem 02.09. im Log stehen |
+| **4** | **B — eigene Lage** | wertvoll, aber eine Zeitreihe: bei neuen Werten blind |
+
+⚠️ **Die Wörter müssen an Fünftel gebunden bleiben.** Eine Skala
+„hoch/mittel/niedrig" ohne gemessenen Bezug wäre eine erfundene Zahl —
+genau das, was Regel 4 verbietet.
+
+⚠️ **Und vor dem Bau ist zu messen, ob die Rangfolge selbst etwas taugt:**
+trennt ein hoher Beitragsrang tatsächlich bessere von schlechteren
+Einstiegen? Das ist dieselbe Frage wie bei jedem Beitrag — und sie ist für
+die **Summe** der Beiträge noch nie gestellt worden.
+
+Werkzeug: `rechne_einordnung_vorschau.py [SYMBOL]`
+Verwandt: F-178 · das übergeordnete Ziel in `CLAUDE.md`

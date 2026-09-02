@@ -5255,6 +5255,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `rechne_redundanz_je_asset.py` | dito | Wieviel vom Takt ist **Wiederholung** derselben Empfehlung? |
 | `rechne_sperren_zusammen.py` | vor jeder zusätzlichen Sperre | Wieviel lassen zwei Sperren **zusammen** durch — gegen die Randfälle deckungsgleich und unabhängig |
 | `pruefe_nb_nach_umschaltung.py` | **nach jedem NB-Export** | Trichter je Stufe, Signale und Mails je Tag, und die **stillen Ausfälle** (fehlende Messbasis). Liest die 234-MB-Datei streamend statt mit `json.load` |
+| `rechne_einordnung_vorschau.py` | vor N-15 | Rechnet die vier Einordnungs-Varianten an einem echten Wert vor: Querschnitt, eigene Lage, Zerlegung, die anderen |
 | `messe_volumenanteil.py` | — | `--form` klärt Asset-Maß gegen Zeitpunkt-Aussage, `--wirkung` die Regel, `--mitlaeufer` den Schichtentest |
 | `rechne_oi_beitrag.py` | — | Beitragstabelle für `oi_aenderung`, mit Monotonie als Vorabbedingung |
 
