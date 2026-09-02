@@ -3470,3 +3470,133 @@ Potential.
 
 Werkzeuge: `messe_volumenanteil.py --form | --wirkung | --mitlaeufer`
 Verwandt: F-168 (dieselbe Gestalt) · N-13a · N-13b · Methodik 2.99
+
+---
+
+## F-171 ⚠️ AUDIT der Messungen vom 01./02.09. — vier Prüfpunkte gerechnet, ein echter Fund (02.09.2026)
+
+**Nutzerauftrag:** *„Eine Gesamtprüfung der letzten Messungen, ob Fehler
+vorliegen — damit wir nicht nachträglich das Regelwerk anpassen müssen."*
+
+Geprüft wurde **rechnerisch**, nicht durch Durchlesen. Jeder Punkt unten
+ist ein Lauf, kein Argument.
+
+### Das Raster — alle sechs Fragen der Prüfliste 2.80, je Befund
+
+| | F-168 `oi_aenderung` | F-170 Volumenanteil |
+|---|---|---|
+| **1 Mitläufer?** | Schichtentest gegen Funding: **+0,0136 R**, trägt ✔ | gegen Vola **+0,0184 R** ✔ · gegen Turnover nicht trennbar, aber untermächtig |
+| **2 Gleiche Arme?** | 20,6 % gegen 20,6 % ✔ | 20,7 % gegen 21,1 % ✔ |
+| **3 Richtiges Maß?** | Regelwirkung, nicht Merkmal ✔ | dito ✔ |
+| **4 Permutation mischt?** | Negativkontrolle still ✔ | still; ein „UMGEKEHRT" als Fehlalarm geklärt ✔ |
+| **5 Basisrate?** | gesperrt −0,4586 gegen übrig −0,4154 ✔ | gesperrt +0,0325 gegen übrig +0,1032 ✔ |
+| **6 Gibt es die Messung schon?** | ja — F-167, als untermächtig zurückgezogen ✔ | nein ✔ |
+
+### Prüfpunkt 1 ⚠️ — die Turnover-Kontrolle reproduzierte NICHT
+
+**Der Fund.** `messe_volumenanteil.py --wirkung` startet mit der
+Pflichtkontrolle *„Turnover muss reproduzieren"*. Registriert sind
+**+0,0616 R**; der Lauf gab **+0,0481 R** — 22 % daneben. Nach der eigenen
+Regel gälte dann **kein Befund des Laufs**.
+
+**Nachgerechnet, beide Wege nebeneinander:**
+
+| | Anker | Symbole | Tage | Wirkung |
+|---|---|---|---|---|
+| registrierter Weg (`K.baue`) | 123.465 | 66 | 2.726 | **+0,0616 R** [+0,0203 .. +0,1111] |
+| mein Weg (`V.baue_anker`) | 122.387 | 65 | 2.637 | +0,0481 R [+0,0127 .. +0,0900] |
+
+Ursache: **verschiedene Startindizes** (`RUECKBLICK+40` gegen 60) → 0,9 %
+andere Anker. Der registrierte Wert reproduziert exakt; beide Bänder
+überlappen fast vollständig. **Kein Rechenfehler.**
+
+> ⚠️⚠️ **Aber der eigentliche Befund steht in der Bandbreite: eine um
+> 0,9 % verschobene Ankermenge bewegt die gemessene Wirkung um 22 %.**
+
+**Das Band von Turnover ist [+0,0203 .. +0,1111]** — die Zahl ist auf
+etwa ±80 % unsicher. Und aus genau dieser Zahl sind die **größten
+Beitragsstufen des Systems** kalibriert (+3,15 bis −2,40, gegen Funding
++0,82 bis −1,70). ⚠️ **Das ist kein Fehler, aber ein Risiko, das bisher
+nirgends stand.**
+
+### Prüfpunkt 2 ✔ — die Naht zwischen Messung und Produktion (OI)
+
+Die Messung rangt je Tag über die vorliegenden **Anker** (Median 70), die
+Produktion über die **Messbasis** (Median 81 an denselben Tagen). Wäre das
+eine andere Größe, fiele dasselbe Asset in ein anderes Fünftel — genau der
+Fehler, der bei Funding am 31.08. gefunden wurde.
+
+**Gemessen über 95.858 (Symbol, Tag)-Paare:**
+
+    gleiches Fuenftel        95,3 %
+    mittlere Verschiebung    -0,009 Fuenftel
+    GLEICHE Sperrentscheidung 98,8 %
+
+✔ **Unkritisch.**
+
+### Prüfpunkt 3 ✔ — verfälschen die Token-Umstellungen den Volumenanteil?
+
+Der Verdacht war ernst: der Nenner ist eine **Summe**, und Summen sind
+nicht robust. Bekannt sind 14 Bruchreihen (LUNA Faktor 177.400 u. a.).
+
+**Gegenprobe mit 564 bruchfreien Reihen gegen alle 578:**
+
+    gleiches Fuenftel          99,91 %
+    ANDERE Sperrentscheidung    0,01 %
+
+✔ **Entkräftet** — die Bruchreihen sind zu klein, um den Nenner zu bewegen.
+
+⚠️ Nebenbefund: der **größte** Wert macht im Median **26,2 %** des
+Tagesnenners aus (Q90 45,3 %, Max 88,3 %). Genau deshalb ist die rohe Form
+ein Größenmaß (F-170).
+
+### Prüfpunkt 4 ⚠️ — der Suchpreis von F-168
+
+Fünf Kandidaten wurden vorab benannt, **einer** trägt. Bei nominal 5 % je
+Zelle liegt die Wahrscheinlichkeit für **mindestens einen** Fehlalarm bei
+**22,6 %** — das Band allein genügt hier nicht.
+
+Was der Befund zusätzlich leistet: beide Historienhälften tragen
+**einzeln**; beide Positivkontrollen feuern; der Schichtentest gegen
+Funding hält; und eine **zweite, unabhängige Rechnung** (die gemeinsame
+Sperrmenge, 36,9 % gegen 36,8 % bei Unabhängigkeit) liefert denselben
+Zuwachs. ✔ **Der Suchpreis ist bezahlt** — aber er gehört genannt.
+
+### ⚠️⚠️ Der wichtigste Fund: die beiden Sperren sind KOMPLEMENTÄR, nicht additiv
+
+Auf der **gemeinsamen** Menge (117 Symbole mit Terminmarkt):
+
+| | Wirkung | |
+|---|---|---|
+| nur OI | +0,0144 R [+0,0098 .. +0,0192] | ✔ trägt |
+| **nur Volumenanteil** | **+0,0127 R [−0,0013 .. +0,0245]** | ⚠️ **nicht trennbar** |
+| beide zusammen | +0,0174 R [+0,0027 .. +0,0300] | ✔ trägt |
+
+**Der Volumenanteil trägt dort NICHT, wo OI verfügbar ist** — und OI gibt
+es nur für die größeren, älteren Werte. Auf der Zielmenge (512 Werte
+**ohne** Turnover) trägt er dagegen mit **+0,0246 R**.
+
+> **Die beiden Sperren decken verschiedene Teile des Marktes ab. Sie
+> ersetzen einander nicht, und sie addieren sich auch nicht.**
+
+⚠️ Diese Zeile fehlte in F-170 und ist hier nachgetragen.
+
+### Was NICHT geprüft werden konnte
+
+* **Die erste Historienhälfte** trägt weder bei Turnover noch beim
+  Volumenanteil. Das ist bei beiden so und bleibt offen.
+* **19 Blöcke** bei allen Messungen auf der Terminmarkt-Menge — das
+  Archiv beginnt für Altcoins am 2021-12-01, die Blockgröße wurde nicht
+  gesenkt.
+
+### ⚠️ Die Folge fürs Regelwerk — und sie ist klein
+
+**Keine Regel muss geändert werden.** Zwei Ergänzungen:
+
+| | |
+|---|---|
+| **R-R11 (neu)** | **Eine Pflichtkontrolle gilt als reproduziert, wenn der neue Wert im BAND des registrierten liegt — nicht, wenn die Zahlen gleich sind.** Verschiedene Ankermengen liefern verschiedene Punktschätzer; die bisherige Formulierung („muss +0,0242 R reproduzieren") lädt dazu ein, eine korrekte Messung zu verwerfen oder eine falsche zu glauben |
+| **Beim Registrieren** | Zu jeder Beitragszahl gehört ihr **Band**, nicht nur der Punktwert. Bei Turnover fehlt es und ist mit [+0,0203 .. +0,1111] erheblich |
+
+Werkzeuge: `rechne_sperren_zusammen.py` · `messe_volumenanteil.py`
+Verwandt: F-168 · F-170 · Methodik 2.99 · 2.101

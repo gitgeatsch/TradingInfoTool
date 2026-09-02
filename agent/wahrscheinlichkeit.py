@@ -353,10 +353,18 @@ BEITRAEGE = (
         zustand="traegt", punkte=0.0, merkmal="turnover_fuenftel",
         stufen=(+3.15, +0.83, +0.22, -1.79, -2.40), klammer="tag",
         quelle=("rechne_turnover_beitrag.py, 2.636 Kalendertage; "
-                "Regelwirkung +0,0616 R"),
+                "Regelwirkung +0,0616 R [+0,0203 .. +0,1111]"),
         warum=("Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst "
                "eher ueberbewertet. Zu 92 % additiv zu Funding "
-               "(Korrelation -0,158), Survivorship ausgeraeumt"),
+               "(Korrelation -0,158), Survivorship ausgeraeumt. "
+               "⚠️ AUDIT 02.09.2026 (F-171): das Band ist mit "
+               "[+0,0203 .. +0,1111] sehr breit - eine um 0,9 % "
+               "verschobene Ankermenge bewegt die Wirkung um 22 %. Die "
+               "GROESSTEN Stufen des Systems stehen damit auf der "
+               "unsichersten Zahl. Kein Fehler, aber beim naechsten "
+               "Nachrechnen zuerst hier hinsehen. ⚠️ Und F-170: der "
+               "Turnover-Rang ist zu 52 % eine ASSET-Eigenschaft - er "
+               "sagt zur Haelfte, WELCHES Asset, nicht WANN"),
         strategien=("einstieg",),
         klassen=("krypto",)),
     # ---- P3: DER BEITRAG, DER BEI ALLEN ASSETS WIRKT (31.08.2026) -------

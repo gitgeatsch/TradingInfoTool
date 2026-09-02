@@ -4812,3 +4812,29 @@ einem Parameterwert hält, ist keine.*
 Verwandt: **R-R9** (Neukalibrierung bei Beitragswechsel) ·
 `Anforderungen_Umbau_28_08.md` Nachtrag Abschnitt 9 ·
 `Befund_Instrument_nach_S6b_28_08.md` Abschnitt 6
+
+## R-R11 ⚠️ Eine Pflichtkontrolle reproduziert im BAND, nicht in der Zahl (02.09.2026)
+
+**Anlass F-171.** Jeder Messlauf beginnt mit einer Pflichtkontrolle —
+*„Funding muss +0,0242 R reproduzieren"*, *„Turnover muss +0,0616 R
+reproduzieren"*. Am 02.09. gab ein korrekter Lauf **+0,0481 R** statt
++0,0616 R, und nach dem Wortlaut hätte der ganze Befund verworfen werden
+müssen.
+
+**Nachgerechnet war beides richtig.** Die beiden Läufe unterschieden sich
+um **0,9 %** der Anker (verschiedene Startindizes) — und das bewegte die
+Wirkung um **22 %**. Beide Werte liegen im selben Band.
+
+> **Eine Kontrolle gilt als reproduziert, wenn der neue Wert im BAND des
+> registrierten liegt.** Gleiche Zahlen sind bei verschiedenen Ankermengen
+> nicht zu erwarten und auch nicht zu fordern.
+
+### ⚠️ Und die Umkehrung ist die wichtigere
+
+Wer nur den Punktwert vergleicht, verwirft eine korrekte Messung — oder,
+schlimmer, hält eine falsche für bestätigt, weil die Zahl zufällig passt.
+
+**Daraus folgt für das Registrieren:** zu jeder Beitragszahl gehört ihr
+**Band**. Bei Turnover fehlte es und ist mit **[+0,0203 .. +0,1111]**
+erheblich; die größten Stufen des Systems stehen auf der unsichersten
+Zahl. Seit dem 02.09. steht es in `wahrscheinlichkeit.BEITRAEGE`.
