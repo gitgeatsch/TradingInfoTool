@@ -649,7 +649,7 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
 
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
            h: bool | None = None, saetze_zum_berichten=None,
-           merkmale: dict | None = None,
+           merkmale: dict | None = None, strategie: str = "",
            hebel: float | None = None, tage: float | None = None) -> list[str]:
     """Die Zeilen fuer den Kopf der Mail.
 
@@ -685,7 +685,21 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
             SAETZE_JE_SEITE_MAILTEXT as _saetze_quelle)
         saetze_zum_berichten = _saetze_quelle
     try:
+        # ⚠️⚠️ `strategie` FEHLTE BIS ZUM 02.09.2026 - derselbe Bruch wie
+        # bei `merkmale`, nur eine Achse weiter.
+        #
+        # Beide tragenden Beitraege sind auf `strategien=("einstieg",)`
+        # eingeschraenkt. Ohne das Argument fielen sie mit der Begruendung
+        # "fuer die Strategie ? nie gemessen" aus - in JEDER Mail. Die Mail
+        # zeigte damit die nackte Basisrate, waehrend Stufe 11 mit Funding
+        # und Turnover entschieden hat.
+        #
+        # Gefunden beim Lesen einer echten Mail (AVAX, 02.09. 12:39): dort
+        # stand der Funding-Rang als Fakt ("ein niedriges Fuenftel im
+        # Marktvergleich (302 Werte)") - und zwei Zeilen darueber, er sei
+        # "fuer die Strategie ? nie gemessen". Beides in derselben Mail.
         erste = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse,
+                       strategie=strategie,
                        h=h, gebuehr_je_seite=saetze_zum_berichten[0][1],
                        merkmale=merkmale)
     except WahrscheinlichkeitUnbekannt as exc:

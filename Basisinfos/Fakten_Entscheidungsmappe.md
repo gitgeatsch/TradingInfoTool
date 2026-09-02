@@ -4206,3 +4206,90 @@ zu allen Zahlen passt — nicht mehr.
 Werkzeug: der Test ist in dieser Datei beschrieben, nicht als Skript
 abgelegt (einmalige Prüfung, 124 API-Abrufe).
 Verwandt: F-175 · F-176 · N-14
+
+---
+
+## F-178 ⚠️⚠️ Die Mail rechnete OHNE Strategie — und zeigte eine andere Quote als die Stufe, die entschied (02.09.2026)
+
+**Nutzerauftrag:** *„Es kommen Mails an, prüfe deren Inhalt auf
+Korrektheit, rechnerisch und fachlich."*
+
+Geprüft an neun echten Mails, im Detail an **AVAX – NACHKAUFEN** vom
+02.09. 12:39, also **nach** der Umschaltung.
+
+### ✔ Rechnerisch: alles korrekt
+
+| Angabe in der Mail | nachgerechnet |
+|---|---|
+| Stop 5,63 EUR = 9,7 % | (6,24 − 5,63)/6,24 = **9,78 %** ✔ |
+| Take-Profit-Mitte 7,455 bei CRV 2,0 | 6,24 + 2 × 0,61 = **7,46** ✔ |
+| Standard 0,30 %: nötig **35,4 %** | (1 + 0,60/9,78)/3 = **35,38 %** ✔ |
+| Bitpanda 1,50 %: nötig **43,6 %** | (1 + 3,00/9,78)/3 = **43,56 %** ✔ |
+| −0,062 R bzw. −0,309 R je Trade | 0,021 × 3 und 0,103 × 3 ✔ |
+
+**Beide Gebührensätze stehen als Text neben der Bewertung, nicht darin** —
+Regel 2 ist eingehalten.
+
+### ⚠️⚠️ Fachlich: ein Bruch mitten in derselben Mail
+
+Zwei Zeilen, sechzig Zeilen auseinander:
+
+> „Funding-Rang im Markt: **für die Strategie ? nie gemessen**"
+
+> „Finanzierung: **ein niedriges Fünftel im Marktvergleich (302 Werte)**.
+> Hohe Finanzierungskosten zeigen viele Long-Positionen an; gemessen
+> liefen solche Werte schlechter."
+
+**Die Mail nennt den Funding-Rang als Fakt und behauptet gleichzeitig, er
+sei für diese Strategie nie gemessen worden.**
+
+### Die Ursache
+
+`rollen_lauf.py` ruft **zwei** Rechnungen mit derselben Absicht:
+
+    _PT.rechne(... strategie=strategie ...)   entscheidet in Stufe 11
+    _WK.saetze(...)                            schreibt die Mailzeilen
+
+Der zweite Aufruf **kannte `strategie` gar nicht** — die Funktion hatte
+den Parameter nicht. Beide tragenden Beiträge sind auf
+`strategien=("einstieg",)` eingeschränkt und fielen deshalb aus.
+
+**Gemessen, was das ausmacht:**
+
+    saetze(strategie="")          -> 33,3 %   (nackte Basisrate)
+    saetze(strategie="einstieg")  -> 34,9 %
+    Stufe 11                      -> 34,9 %   Potential +0,0456 R
+
+> **Die Mail zeigte 1,6 Prozentpunkte zu wenig** — und ein Potential von
+> −0,001 R statt +0,046 R. Sie stellte den Trade schlechter dar, als er
+> nach der eigenen Rechnung ist.
+
+⚠️ **Und genau dieser Bruch war schon einmal da.** Am 31.08. fehlte
+`merkmale` im selben Aufruf; der Kommentar dort lautet: *„Ohne sie
+rechnete die Mail ohne Funding und Turnover und zeigte eine andere Quote
+als die, mit der entschieden wurde."* Die Strategie wurde dabei
+übersehen — **derselbe Fehler, eine Achse weiter.**
+
+### Die Regel und die Dauerprüfung T6
+
+> **Wer zwei Rechnungen mit derselben Absicht führt, muss ihre Argumente
+> GEMEINSAM pflegen** — sonst driften sie bei jedem neuen Parameter
+> erneut auseinander.
+
+T6 vergleicht über den Syntaxbaum die Argumente beider Aufrufe: **was
+beide Funktionen entgegennehmen, muss in beiden Aufrufen stehen.** Ein
+neuer gemeinsamer Parameter fällt damit sofort auf — nicht erst, wenn
+jemand eine Mail liest.
+
+### ⚠️ Zwei weitere Beobachtungen, nicht behoben
+
+1. **`NACHKAUFEN` wird mit der Einstiegsgeometrie bewertet** (CRV 2,0,
+   Stop 9,7 %). Der Kopf sagt „Spot / Einstieg", der Betreff „NACHKAUFEN",
+   und darunter steht eine bestehende Position mit „HALTEN". Das ist der
+   bekannte Befund L2/D1 — *jeder Nachkauf ist ein Einstieg* — hier zum
+   ersten Mal in einer echten Mail belegt.
+2. **Der Kurs ist einen Tag alt** (Mail 02.09. 12:39, Kurs „2026-09-01").
+   Das ist der Ankertag und vermutlich gewollt, aber nirgends erklärt.
+
+Werkzeug: die Mails liegen unter `Claude_Austauschordner/eMail_Beispiele`
+Verwandt: F-177 · R-R8 (Merkmale, 31.08.) · L2/D1

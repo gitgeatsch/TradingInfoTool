@@ -2331,6 +2331,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # sie rechnete die Mail ohne Funding und Turnover und zeigte
             # eine andere Quote als die, mit der entschieden wurde.
             merkmale=_merkmale or None,
+            # ⚠️⚠️ UND DIE STRATEGIE (02.09.2026) - sie fehlte hier, und
+            # damit fielen in der Mail BEIDE tragenden Beitraege aus. Die
+            # Zeile darueber hat am 31.08. dasselbe fuer `merkmale`
+            # behoben; die Strategie wurde dabei uebersehen.
+            #
+            # Merksatz daraus: wer zwei Rechnungen mit derselben Absicht
+            # fuehrt, muss ihre Argumente GEMEINSAM pflegen - sonst
+            # driften sie bei jedem neuen Parameter erneut auseinander.
+            # Die Dauerpruefung im Paket "Mailquote" haelt das jetzt fest.
+            strategie=strategie,
             # ⚠️ HEBEL UND HALTEDAUER (01.09.2026). Ohne sie fehlte in der
             # Zeile "noetig X %" die Finanzierung - die Mail nannte fuer
             # einen Hebeltrade eine zu niedrige Huerde.

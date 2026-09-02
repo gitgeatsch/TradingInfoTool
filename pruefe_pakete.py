@@ -15361,6 +15361,54 @@ def paket_terminmarkt() -> None:
         7  der Trichter bleibt monoton
     """
     P = "Terminmarkt"
+    import ast as _ast
+    import pathlib as _pl
+
+    # ---- DAUERPRUEFUNG T6: Mail und Stufe 11 rechnen GLEICH -------------
+    #
+    # ⚠️⚠️ ANLASS 02.09.2026, gefunden beim Lesen einer echten Mail. Der
+    # Lauf ruft ZWEI Rechnungen mit derselben Absicht:
+    #
+    #     _PT.rechne(...)   entscheidet in Stufe 11
+    #     _WK.saetze(...)   schreibt die Zeilen der Mail
+    #
+    # Beide muessen dieselbe Quote liefern. Am 31.08. fehlte `merkmale` im
+    # zweiten Aufruf - das wurde behoben. Am 02.09. fehlte `strategie`, und
+    # damit fielen in der Mail BEIDE tragenden Beitraege aus: sie zeigte
+    # 33,3 % statt 34,9 %, also die nackte Basisrate.
+    #
+    # In der AVAX-Mail vom 02.09. stand deshalb der Funding-Rang als Fakt
+    # ("ein niedriges Fuenftel im Marktvergleich") - und zwei Zeilen
+    # darueber, er sei "fuer die Strategie ? nie gemessen".
+    #
+    # ⚠️ Diese Pruefung vergleicht die ARGUMENTE beider Aufrufe ueber den
+    # Syntaxbaum: was BEIDE Funktionen entgegennehmen, muss in beiden
+    # Aufrufen stehen. Ein neuer gemeinsamer Parameter faellt damit sofort
+    # auf - und nicht erst, wenn jemand eine Mail liest.
+    import inspect as _insp
+    from agent import wahrscheinlichkeit as _WK6
+    from agent import potential as _PT6
+    _q6 = _pl.Path("agent/rollen_lauf.py").read_text(encoding="utf-8")
+    _b6 = _ast.parse(_q6)
+    _arg = {}
+    for _k in _ast.walk(_b6):
+        if not isinstance(_k, _ast.Call) or not isinstance(_k.func, _ast.Attribute):
+            continue
+        if _k.func.attr in ("rechne", "saetze"):
+            _mod = getattr(_k.func.value, "id", "")
+            if _mod in ("_PT", "_WK"):
+                _arg.setdefault(_mod, set()).update(
+                    kw.arg for kw in _k.keywords if kw.arg)
+    _gemeinsam = (set(_insp.signature(_WK6.saetze).parameters)
+                  & set(_insp.signature(_PT6.rechne).parameters))
+    _fehlt = {m: sorted(_gemeinsam - _arg.get(m, set())) for m in ("_PT", "_WK")}
+    pruefe(P, "T6: Mail und Stufe 11 bekommen dieselben Argumente",
+           not (_fehlt["_PT"] or _fehlt["_WK"]),
+           "beide Rechnungen haben dieselbe Absicht und muessen dieselbe "
+           "Quote liefern. Gemeinsame Parameter: %s · im rechne()-Aufruf "
+           "fehlen %s · im saetze()-Aufruf fehlen %s"
+           % (sorted(_gemeinsam), _fehlt["_PT"] or "keine",
+              _fehlt["_WK"] or "keine"))
 
     # ---- DAUERPRUEFUNG T5: die Testkonfiguration darf nicht veralten ----
     #
