@@ -5051,3 +5051,67 @@ Portfolio und muss es sein — sonst misst man seine eigene Auswahl."* Ich
 habe sie beim Beschaffen nicht angewandt.
 
 Verwandt: 2.88 (Positivkontrolle) · 2.95 (Blockdeckung) · F-167
+
+## 2.99 ⚠️⚠️ Der Schichtentest — eine niedrige Korrelation entlastet einen Kandidaten NICHT
+
+**Anlass 02.09.2026, H-4c.** `oi_aenderung` trug mit +0,0145 R. Neben ihm
+steht `funding`, das mit +0,0230 R bereits registriert ist — **beide vom
+Terminmarkt derselben Börse**. Die naheliegende Entlastung wäre die
+Rangkorrelation: sie lag je Tag bei Median +0,038, also praktisch null.
+
+**Diese Entlastung ist wertlos.** Eine niedrige Korrelation sagt, dass die
+**Rangfolgen** verschieden sind. Sie sagt nichts darüber, ob die **Wirkung**
+verschieden ist — und nur die zählt. Zwei Größen können bei ρ = 0,04
+denselben Ertragsunterschied einsammeln, wenn beide dieselbe kleine
+Teilmenge ans obere Ende sortieren.
+
+### Der Test: die zweite Größe FESTHALTEN
+
+Je Kalendertag werden die Werte zuerst nach der **Schicht** (der bereits
+bekannten Größe) in Fünftel sortiert. Die zu prüfende Regel sperrt dann ihr
+oberstes Fünftel **innerhalb jedes Faches**. Über alle Fächer hinweg haben
+Gesperrte und Behaltene damit dieselbe Schichtverteilung — was übrig
+bleibt, kann die Schicht nicht mehr erklären.
+
+    C   Kandidat | Bekanntes festgehalten
+    D   Bekanntes | Kandidat festgehalten     (die Gegenrichtung, immer mit)
+
+| Ausgang | Deutung |
+|---|---|
+| C trägt | eigener Beitrag |
+| C fällt, D trägt | **Mitläufer** — es war die bekannte Größe |
+| beide tragen | zwei Beiträge → R-R9 prüfen |
+| beide fallen | die gemeinsame Ursache liegt woanders |
+
+### ⚠️ Der Preis, und er gehört genannt
+
+Die Fächer sind klein (ein Fünftel eines Tages). Fächer mit weniger als
+drei Behaltenen werden übersprungen, sonst misst man Einzelwerte. **Ein
+Nullbefund im Schichtentest ist deshalb schwächer als ein Nullbefund in der
+rohen Messung** — er kann Auflösungsmangel sein.
+
+### ⚠️ Und der Test wurde VOR dem Einsatz gegen Kunstdaten geprüft
+
+Regel „die Kontrolle ist der erste Verdächtige". Zwei Welten mit bekannter
+Antwort, die Größen bewusst mit ρ = 0,35 korreliert:
+
+| Welt | erwartet | gemessen |
+|---|---|---|
+| Ertrag hängt NUR am Funding | C still, D trägt | ✔ C +0,0023 still · D +0,0527 trägt |
+| Ertrag hängt NUR am OI | C trägt, D still | ✔ C +0,0593 trägt · D −0,0022 still |
+
+⚠️ **Welt 1 zeigt genau die Falle:** dort trug `oi` roh mit +0,0101 R und
+wäre als Befund durchgegangen — obwohl der Ertrag allein am Funding hing.
+Der Schichtentest tötet ihn.
+
+### Die zweite, unabhängige Rechnung — immer dazu
+
+Der Schichtentest lässt sich gegenprüfen, ohne ihm zu glauben: **wieviel
+sperren beide Regeln zusammen?** Sind sie deckungsgleich, bleibt es bei
+20,6 %; sind sie unabhängig, ergibt sich 1 − 0,8² = 36,8 %. Gemessen wurden
+**36,9 %**, und die Wirkung stieg von +0,0230 auf +0,0369 R. Der Zuwachs
++0,0139 deckt sich mit den +0,0136 des Schichtentests. **Zwei Verfahren,
+dieselbe Zahl** — das ist der eigentliche Beleg.
+
+Werkzeug: `messe_kandidaten_als_regel.py --mitlaeufer`
+Verwandt: 2.80 (Prüfliste, Frage 1 „Mitläufer") · 2.87 · R-R9 · F-168

@@ -100,12 +100,14 @@ Befund dieses Laufs - unabhaengig davon, was die kurzen Horizonte zeigen.
 
     python messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20
 """
+import statistics as st
 import sys
 
 import numpy as np
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+import messe_bewertungskennzahl as M
 import messe_bewertungskennzahl as MB
 import messe_eigenschaft_beitrag as B
 import messe_funding_niveau as F
@@ -136,7 +138,14 @@ def lade_terminmarkt(db: str = "data/terminmarkt_historie.db") -> dict:
     """
     import sqlite3
     c = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
-    # letzter Stundenwert je Symbol und Tag
+    # ⚠️ DIE TAGESTABELLE ZUERST (01.09.2026 abends). `terminmarkt_tag`
+    # traegt die MESSBASIS - 100 Symbole ueber 1.733 Tage, davon nur zehn
+    # aus der Watchlist. `terminmarkt` (stuendlich) traegt dagegen die 32
+    # Watchlist-Werte, und genau darauf war H-4c untermaechtig (F-167:
+    # "Watchlist statt Messbasis").
+    #
+    # Beide werden gelesen und zusammengefuehrt; wo beide einen Tag haben,
+    # gewinnt die Tagestabelle - sie ist die breitere Grundlage.
     roh: dict = {}
     for sym, stunde, oi, oiw, topk, _tops, konten, taker in c.execute(
             "SELECT symbol, stunde, oi, oi_wert, top_konten_verh, "
@@ -144,6 +153,15 @@ def lade_terminmarkt(db: str = "data/terminmarkt_historie.db") -> dict:
             "ORDER BY symbol, stunde"):
         roh.setdefault(str(sym).upper(), {})[str(stunde)[:10]] = (
             oi, oiw, topk, konten, taker)
+    try:
+        for sym, tg, oi, oiw, topk, _tops, konten, taker in c.execute(
+                "SELECT symbol, tag, oi, oi_wert, top_konten_verh, "
+                "top_summe_verh, konten_verh, taker_verh FROM terminmarkt_tag "
+                "ORDER BY symbol, tag"):
+            roh.setdefault(str(sym).upper(), {})[str(tg)[:10]] = (
+                oi, oiw, topk, konten, taker)
+    except Exception:                                        # noqa: BLE001
+        pass
     c.close()
 
     aus = {k: {} for k in ("oi_aenderung", "oi_wert", "long_bias",
@@ -295,14 +313,173 @@ def horizontlauf(reihen, menge, funding, horizonte):
     return fertig
 
 
+def geschichtet(je_tag, schicht_je_tag, faecher=5, mische=None):
+    """Die Regel WITHIN den Faechern einer zweiten Groesse (02.09.2026).
+
+    ⚠️ WOFUER. Pruefliste 2.80, Frage 1: *ist der Kandidat ein Mitlaeufer?*
+    `oi_aenderung` und `funding` kommen beide vom Terminmarkt derselben
+    Boerse. Traegt die OI-Regel nur deshalb, weil sie nebenbei hohes Funding
+    aussortiert, ist sie kein eigener Beitrag - sie ist Funding mit Umweg.
+
+    Der Test haelt Funding fest: je Kalendertag werden die Werte zuerst nach
+    der SCHICHT in Fuenftel sortiert, und die OI-Regel sperrt dann das
+    oberste Fuenftel INNERHALB jedes Faches. Ueber alle Faecher hinweg ist
+    die Funding-Verteilung der Gesperrten damit dieselbe wie die der
+    Behaltenen. Was uebrig bleibt, kann Funding nicht mehr erklaeren.
+
+    ⚠️ Der Preis: die Faecher sind klein (ein Fuenftel eines Tages). Ein
+    Fach mit weniger als drei Behaltenen wird uebersprungen, sonst misst man
+    Einzelwerte. Das Band wird dadurch breiter - ein Nullbefund hier ist
+    schwaecher als ein Nullbefund oben.
+    """
+    aus = {}
+    for tag, z in je_tag.items():
+        s = schicht_je_tag.get(tag)
+        if not s:
+            continue
+        w = np.array([x["kennzahl"] for x in z], float)
+        y = np.array([x["in_r"] for x in z], float)
+        sw = np.array([s.get(x["sym"], np.nan) for x in z], float)
+        gut = np.isfinite(sw)
+        if gut.sum() < MIND_JE_TAG:
+            continue
+        w, y, sw = w[gut], y[gut], sw[gut]
+        fach = np.minimum((W.rang(sw) * faecher).astype(int), faecher - 1)
+        frei = np.ones(len(w), bool)
+        genutzt = np.zeros(len(w), bool)
+        for f in range(faecher):
+            m = fach == f
+            if m.sum() < 4:
+                continue
+            r = W.rang(w[m])
+            if mische is not None:
+                r = mische.permutation(r)
+            lok = r < W.GRENZE
+            if lok.sum() < 3 or (~lok).sum() < 1:
+                continue
+            idx = np.flatnonzero(m)
+            frei[idx] = lok
+            genutzt[idx] = True
+        if genutzt.sum() < MIND_JE_TAG or frei[genutzt].sum() < 3:
+            continue
+        aus[tag] = float(np.median(y[genutzt & frei]) - np.median(y[genutzt]))
+    return aus
+
+
+def mitlaeufer():
+    """H-4c Gegenpruefung: ist `oi_aenderung` nur Funding mit Umweg?"""
+    reihen = B.lade()
+    rng = np.random.default_rng(20260902)
+    funding = F.lade_funding()
+    tm = lade_terminmarkt()
+
+    oi = baue(reihen, "oi_aenderung", tm["oi_aenderung"], horizont=20)
+    fu = baue(reihen, "funding", funding, horizont=20)
+    # gemeinsame Anker: nur Tage und Symbole, die BEIDE Groessen haben
+    fu_je_tag = {t: {x["sym"]: x["kennzahl"] for x in z} for t, z in fu.items()}
+    oi_je_tag = {t: {x["sym"]: x["kennzahl"] for x in z} for t, z in oi.items()}
+    gem_oi, gem_fu = {}, {}
+    for t, z in oi.items():
+        s = fu_je_tag.get(t) or {}
+        a = [x for x in z if x["sym"] in s]
+        if len(a) >= MIND_JE_TAG:
+            gem_oi[t] = a
+            gem_fu[t] = [x for x in fu[t] if x["sym"] in {y["sym"] for y in a}]
+    n = sum(len(z) for z in gem_oi.values())
+    print("#" * 92)
+    print("# H-4c GEGENPRUEFUNG — ist `oi_aenderung` nur Funding mit Umweg?")
+    print("#" * 92)
+    print("  gemeinsame Basis: %d Anker · %d Symbole · %d Kalendertage"
+          % (n, len({x["sym"] for z in gem_oi.values() for x in z}),
+             len(gem_oi)))
+
+    # ---- 1: messen die beiden ueberhaupt Verschiedenes? -----------------
+    ks = []
+    for t, z in gem_oi.items():
+        s = fu_je_tag[t]
+        a = W.rang([x["kennzahl"] for x in z])
+        b = W.rang([s[x["sym"]] for x in z])
+        if len(a) > 3:
+            ks.append(float(np.corrcoef(a, b)[0, 1]))
+    print("  Rangkorrelation je Tag: Median %+.3f   Mittel %+.3f   "
+          "|rho| > 0,3 an %.1f %% der Tage"
+          % (np.median(ks), np.mean(ks),
+             100 * np.mean(np.abs(ks) > 0.3)))
+    print()
+    print("  ⚠️ Eine niedrige Korrelation allein entlastet NICHT - sie sagt")
+    print("     nur, dass die Rangfolgen verschieden sind, nicht dass die")
+    print("     WIRKUNG verschieden ist. Deshalb der Schichtentest:")
+
+    W.bericht("A  oi_aenderung auf der GEMEINSAMEN Basis", gem_oi, True, rng,
+              mit_positivkontrolle=False)
+    W.bericht("B  funding auf derselben Basis", gem_fu, True, rng,
+              mit_positivkontrolle=False)
+
+    block = max(90, W.HORIZONT * 3)
+    print()
+    print("=" * 92)
+    print("C  oi_aenderung INNERHALB der Funding-Fuenftel  —  Funding festgehalten")
+    print("=" * 92)
+    d = geschichtet(gem_oi, fu_je_tag)
+    M.urteil_tage("  NETTO (die Wirkung)", d, rng, block)
+    M.urteil_tage("  Negativkontrolle", geschichtet(gem_oi, fu_je_tag,
+                                                    mische=rng), rng, block)
+    print()
+    print("=" * 92)
+    print("D  UMGEKEHRT: funding INNERHALB der OI-Fuenftel  —  OI festgehalten")
+    print("=" * 92)
+    d2 = geschichtet(gem_fu, oi_je_tag)
+    M.urteil_tage("  NETTO (die Wirkung)", d2, rng, block)
+    M.urteil_tage("  Negativkontrolle", geschichtet(gem_fu, oi_je_tag,
+                                                    mische=rng), rng, block)
+    # ---- E: BEIDE REGELN ZUSAMMEN - die Zahl, an der die Entscheidung haengt
+    print()
+    print("=" * 92)
+    print("E  BEIDE REGELN ZUSAMMEN  —  gesperrt wird, wer in EINEM der beiden")
+    print("   obersten Fuenftel liegt")
+    print("=" * 92)
+    beide, allein_f, anteil_b, anteil_f = {}, {}, [], []
+    for tag, z in gem_oi.items():
+        s = fu_je_tag[tag]
+        y = np.array([x["in_r"] for x in z], float)
+        ro = W.rang([x["kennzahl"] for x in z])
+        rf = W.rang([s[x["sym"]] for x in z])
+        frei_b = (ro < W.GRENZE) & (rf < W.GRENZE)
+        frei_f = rf < W.GRENZE
+        if frei_b.sum() < 3 or (~frei_b).sum() < 1:
+            continue
+        beide[tag] = float(np.median(y[frei_b]) - np.median(y))
+        allein_f[tag] = float(np.median(y[frei_f]) - np.median(y))
+        anteil_b.append(float((~frei_b).mean()))
+        anteil_f.append(float((~frei_f).mean()))
+    print("  gesperrt: Funding allein %.1f %%   beide zusammen %.1f %%"
+          % (100 * st.mean(anteil_f), 100 * st.mean(anteil_b)))
+    print("  ⚠️ Waeren die Regeln deckungsgleich, blieben es 20,6 %; waeren sie")
+    print("     voellig unabhaengig, waeren es 36,8 %. Der Istwert sagt, wieviel")
+    print("     die zweite Regel ueberhaupt NEUES sperrt.")
+    M.urteil_tage("  Funding allein", allein_f, rng, block)
+    M.urteil_tage("  BEIDE zusammen", beide, rng, block)
+    print()
+    print("  LESART: traegt C, ist `oi_aenderung` ein EIGENER Beitrag und")
+    print("  kein Mitlaeufer. Faellt C und traegt D, war es Funding.")
+    print("  Tragen beide, sind es zwei Beitraege - dann verlangt R-R9 eine")
+    print("  Neukalibrierung der Schwelle, bevor irgendetwas eingebaut wird.")
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--terminmarkt", action="store_true",
                     help="H-4c: die fuenf Terminmarkt-Kandidaten")
+    ap.add_argument("--mitlaeufer", action="store_true",
+                    help="H-4c Gegenpruefung: oi_aenderung gegen funding")
     ap.add_argument("--horizonte", default="",
                     help="z.B. 1,2,3,5,10,20 - loest den Horizontlauf aus")
     a = ap.parse_args()
+
+    if getattr(a, "mitlaeufer", False):
+        mitlaeufer()
+        return
 
     reihen = B.lade()
     rng = np.random.default_rng(20260830)

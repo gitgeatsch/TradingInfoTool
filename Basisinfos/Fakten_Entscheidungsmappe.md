@@ -3171,3 +3171,119 @@ und dafür genügen die bereits importierten 32 Watchlist-Werte.
 
 Werkzeug: `messe_kandidaten_als_regel.py --terminmarkt`
 Verwandt: F-165 · F-166 · N-13b · Methodik 2.88, 2.95
+
+---
+
+## F-168 ⚠️⚠️ H-4c auf breiter Basis: `oi_aenderung` trägt — als SCHALTER, nicht als Regler (02.09.2026)
+
+**Vorgeschichte:** F-167 hatte H-4c als *untermächtig* zurückgestellt — 27
+Symbole, und die Negativkontrollen feuerten. Der Nachlauf hat die Basis
+verbreitert: **119.935 Tageszeilen, 100 Symbole, 2021-12-01 bis
+2026-08-31**, eine Zufallsstichprobe mit fester Saat (20260901), von der nur
+**zehn** Werte aus der Watchlist stammen — genau der Unterschied zum ersten
+Import.
+
+### Der Befund
+
+126.491 Anker · 117 Symbole · 1.702 Kalendertage · Horizont H20.
+Regel: **kein Einstieg im obersten Fünftel von `oi_aenderung`.**
+
+| | Wirkung | Band | Urteil |
+|---|---|---|---|
+| **NETTO** | **+0,0145 R** | [+0,0097 .. +0,0193] | ✔ trägt |
+| Negativkontrolle | +0,0009 R | [−0,0054 .. +0,0063] | ✔ still |
+| erste Hälfte | +0,0117 R | [+0,0003 .. +0,0197] | ✔ trägt |
+| zweite Hälfte | +0,0172 R | [+0,0121 .. +0,0228] | ✔ trägt |
+| Positivkontrolle +0,02 R | +0,0185 R | [+0,0139 .. +0,0234] | ✔ feuert |
+| Positivkontrolle +0,05 R | +0,0245 R | [+0,0198 .. +0,0293] | ✔ feuert |
+
+**Die vier übrigen Kandidaten tragen nicht** — `oi_je_umsatz` −0,0083,
+`long_bias` −0,0003, `top_bias` −0,0203, `taker_bias` −0,0009, alle „nicht
+trennbar". Bei allen fünf sind die Negativkontrollen jetzt still; das war
+in F-167 der Grund für die Zurückstellung.
+
+### ⚠️ Die Gegenprüfung, die den Befund erst trägt: ist es Funding mit Umweg?
+
+Prüfliste 2.80, Frage 1. `oi_aenderung` und `funding` kommen von derselben
+Börse und demselben Markt. Die Rangkorrelation je Tag ist mit **Median
++0,038** niedrig — *das entlastet aber nicht*, es sagt nur etwas über die
+Rangfolgen, nichts über die Wirkung. Deshalb der **Schichtentest**
+(Methodik 2.99): die OI-Regel sperrt das oberste Fünftel **innerhalb jedes
+Funding-Fünftels**, womit Funding festgehalten ist.
+
+| | Wirkung | Band | |
+|---|---|---|---|
+| A `oi_aenderung` roh | +0,0145 R | [+0,0097 .. +0,0193] | trägt |
+| B `funding` auf derselben Basis | +0,0230 R | [+0,0080 .. +0,0408] | trägt |
+| **C OI \| Funding festgehalten** | **+0,0136 R** | [+0,0094 .. +0,0183] | ✔ **trägt** |
+| **D Funding \| OI festgehalten** | **+0,0259 R** | [+0,0089 .. +0,0474] | ✔ **trägt** |
+
+**C fällt gegenüber A nur um 0,0009 R** — es gibt praktisch keine
+Überlappung. `oi_aenderung` ist ein **eigener, dritter Beitrag**, der erste
+vom Terminmarkt neben Funding.
+
+**Bestätigt durch eine zweite, unabhängige Rechnung:** beide Regeln
+zusammen sperren **36,9 %** — bei völliger Unabhängigkeit wären es 36,8 %,
+bei Deckungsgleichheit 20,6 %. Die Wirkung steigt von +0,0230 auf
+**+0,0369 R**; der Zuwachs von +0,0139 deckt sich mit den +0,0136 des
+Schichtentests.
+
+### ⚠️⚠️ Aber die Form ist ein SCHALTER, kein Regler — die vorab gesetzte Bedingung ist gefallen
+
+`rechne_oi_beitrag.py` hat **vor** der Rechnung festgelegt: nutzbar nur bei
+**Monotonie** über die fünf Fünftel. Genau die Bedingung, an der der
+Schnittabstand am 31.08. gescheitert ist — und die ich damals trotzdem
+übergangen hatte.
+
+| Fünftel | Punkte (geschrumpft) | Band | |
+|---|---|---|---|
+| 0 (wenigster OI-Aufbau) | −0,09 | [−0,86 .. +0,60] | nicht trennbar |
+| 1 | +0,22 | [−0,16 .. +0,56] | nicht trennbar |
+| 2 | +0,69 | [+0,21 .. +1,21] | getrennt |
+| 3 | +0,07 | [−0,33 .. +0,44] | nicht trennbar |
+| **4 (stärkster OI-Aufbau)** | **−0,89** | **[−1,32 .. −0,44]** | ✔ **getrennt** |
+
+**Nicht monoton → nicht als abgestufter Beitrag registrierbar.** Der Buckel
+bei Fünftel 2 ist zwar vom Nullpunkt getrennt, liegt aber im **Suchpreis von
+fünf Zellen** (2.49) und trägt daher nichts. Belastbar ist allein Fünftel 4:
+**Fünftel 0–3 gegen Fünftel 4 = +1,12 Punkte [+0,57 .. +1,64]**.
+
+⚠️ Das ist dieselbe Gestalt wie bei der Potentialschwelle: **ein Schalter,
+kein Regler.** Die Größe gehört damit in eine **Trichterstufe** (sperren),
+nicht in `wahrscheinlichkeit.BEITRAEGE` (abstufen).
+
+### Was das für R-R9 bedeutet — und es ist die gute Richtung
+
+R-R9 warnt, dass jeder neue Beitrag die Schwelle **durchlässiger** macht.
+Eine **Sperre** wirkt umgekehrt: sie ist kein Summand im Potential, sondern
+entfernt 16,3 Prozentpunkte zusätzliche Einstiege. Das System wird
+strenger, nicht laxer. **Eine Neukalibrierung der Schwelle ist deshalb hier
+nicht nötig** — wohl aber eine Messung der Durchlassmenge, bevor gebaut wird.
+
+### ⚠️ Die Einschränkungen, vollständig
+
+1. **19 Blöcke statt der geforderten 20** (2.95). Ursache an der Quelle
+   geprüft: das Binance-metrics-Archiv beginnt für **alle Altcoins am
+   2021-12-01**; nur BTC reicht weiter zurück und ist nicht in der
+   Stichprobe. Die Blockgröße 90 wurde **nicht** gesenkt — 2.95 verbietet
+   genau das. Entlastend: alle sechs Negativkontrollen sind still, beide
+   Historienhälften tragen einzeln, beide Positivkontrollen feuern.
+2. **Abdeckung 32 von 44 Watchlist-Werten (72,7 %).** Funding deckt 36.
+   Ohne OI-Historie: AIOZ, ASTER, CANTON, CAT, EURCV, FLOKI, HYPE, MON,
+   PLUME, SUPRA, VSN, XNO.
+3. **In-sample.** Die Stufen stammen aus derselben Messung wie der Befund.
+4. **Die Größe ist ein Querschnitt** (N-13b) — ein neu aufgenommener Wert
+   ist ab dem **zweiten** Tag abgedeckt, nicht erst nach 250.
+
+### ⚠️ Und der Punkt, der praktisch am meisten wiegt
+
+**Die Größe wird in der Produktion bereits gerechnet.**
+`hebel_screening.compute_oi_change_pct()` läuft im 15-Minuten-Takt und
+schreibt `hebel_triggers.oi_change_pct_lookback` — 49 Zeilen liegen vor.
+Sie fließt aber **ausschließlich in den Hebelzweig**, und der ist seit dem
+10.08. aufgelöst (siehe Kapitel 9). Der einzige gemessene Terminmarkt-Wert
+neben Funding wird also seit Wochen berechnet und **nirgends verwendet**.
+
+Werkzeuge: `messe_kandidaten_als_regel.py --terminmarkt` · `--mitlaeufer` ·
+`rechne_oi_beitrag.py`
+Verwandt: F-167 (die untermächtige Vorstufe) · Methodik 2.95 · 2.98 · 2.99

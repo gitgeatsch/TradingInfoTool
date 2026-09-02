@@ -940,3 +940,91 @@ Ketten zu prüfen**, nicht nur gegen die neue.
 | **R-R10** | **Vor jeder Ausarbeitung zu einem Thema: die Dokumente zum Thema AUFLISTEN und die drei dichtesten ÖFFNEN — nicht greppen.** `grep` findet nur die eigene Vermutung; ein Befunddokument, dessen Kernsatz man nicht erwartet, findet es nie. Der Hebel-Fall hat vier Tage gekostet: der Satz *„spot und hebel sind dasselbe Signal mit zwei Etiketten"* stand seit dem 28.08. da. **Das ist die Doku-Entsprechung zu `zeige_modulkarte.py` (F7).** |
 
 ---
+
+---
+
+## ⚠️⚠️ N-14: DIE OI-SPERRE — der erste Terminmarkt-Wert neben Funding (02.09.2026)
+
+**Grundlage:** F-168. `oi_aenderung` trägt auf breiter Basis (126.491 Anker,
+117 Symbole, 1.702 Tage) mit **+0,0145 R**, überlappt praktisch nicht mit
+Funding (Schichtentest +0,0136 R) und ist damit ein **eigener** Beitrag.
+
+### ⚠️ Die Form steht schon fest — und sie ist NICHT die erwartete
+
+Die vorab gesetzte Monotonie-Bedingung ist **gefallen**. Belastbar ist
+allein das oberste Fünftel (−0,89 Punkte, [−1,32 .. −0,44]); die vier
+übrigen sind einzeln nicht von null zu trennen.
+
+> **`oi_aenderung` gehört als SPERRE in eine Trichterstufe, nicht als
+> abgestufter Beitrag in `wahrscheinlichkeit.BEITRAEGE`.**
+
+Wer sie trotzdem als fünfstufigen Beitrag registriert, registriert drei
+Zahlen, die nichts bedeuten — derselbe Fehler wie beim Schnittabstand am
+31.08.
+
+### N-14a — Wo die Stufe hingehört
+
+Der Trichter kennt eine ausdrückliche Regel dafür: *eine Bremse, die
+**keinen** Modellaufruf kostet, bekommt eine **eigene** Stufe* — so sind
+`anlass` (16.08.) und `auswahl` (23.08.) entstanden. Die OI-Sperre kostet
+keinen Aufruf. Sie gehört damit **vor `urteil`**, neben `auswahl`:
+
+    auswahl  ->  positionierung  ->  wiederholung  ->  urteil
+                 (NEU)
+
+⚠️ **Nicht in `auswahl` hineinlegen.** Dort steht der Rangplatz, und der
+wählt aus, *welche* Werte beurteilt werden. Die OI-Sperre sagt etwas
+anderes: *dieser Zeitpunkt ist überhitzt*. Zusammengelegt wäre hinterher
+nicht mehr zu trennen, ob ein Wert nicht gut genug war oder ob der
+Zeitpunkt schlecht war — genau die Vermischung, für die `anlass` und
+`auswahl` eigene Stufen bekommen haben.
+
+### N-14b — Was vorher zu messen ist
+
+| | Frage | warum |
+|---|---|---|
+| 1 | **Wieviele Empfehlungen bleiben übrig?** | Die Regel sperrt 20,6 % der Anker. Was sie im **laufenden Trichter** sperrt, ist eine andere Zahl — dort sind schon zehn Stufen davor. `simuliere_kette.py` muss das zeigen, nicht die Messung. |
+| 2 | **Wieviel sperrt sie zusätzlich zu Funding?** | Gemessen: beide zusammen 36,9 % gegen 20,6 % allein — praktisch keine Überlappung (F-168, Abschnitt E). |
+| 3 | **Was passiert mit den 12 Werten ohne OI?** | Nach dem Muster von G-6: **drei Zustände** (`vermessen` / `bewertbar` / `trägt`). Ein Wert ohne OI-Daten darf nicht gesperrt werden — er ist *nicht vermessen*, und das ist keine Aussage über den Zeitpunkt. |
+
+⚠️ **Punkt 3 ist der, an dem G-6 am 31.08. schon einmal gescheitert ist:**
+die Stufe sperrte vier von fünf Assetklassen nach Datenlage, die Suite war
+grün, und die Produktion lieferte **0 Signale**.
+
+### N-14c — ⚠️ R-R9 gilt hier NICHT, und das ist zu begründen
+
+R-R9 verlangt bei jedem Beitragswechsel eine Neukalibrierung der Schwelle,
+*„sonst kippt das System"* — weil jeder zusätzliche positive Beitrag den
+Filter **durchlässiger** macht. Eine **Sperre** ist kein Summand im
+Potential. Sie verschiebt keine Schwelle, sondern entfernt Einstiege.
+Die Wirkrichtung ist umgekehrt: das System wird **strenger**.
+
+**Was trotzdem gemessen werden muss, ist die Durchlassmenge** (N-14b.1) —
+eine Stufe, die zu viel wegnimmt, ist genauso ein Fehler wie eine, die zu
+wenig nimmt.
+
+### N-14d — ⚠️ Die Größe wird BEREITS gerechnet und fließt nirgendwohin
+
+`hebel_screening.compute_oi_change_pct()` läuft im 15-Minuten-Takt und
+schreibt `hebel_triggers.oi_change_pct_lookback`. Sie geht ausschließlich in
+den Hebelzweig — und der ist seit dem 10.08. aufgelöst (Kapitel 9).
+
+| | |
+|---|---|
+| ✔ **verwendbar** | die **Rohgröße** `compute_oi_change_pct` — sie ist ein Messwert, kein Urteil (Kapitel 9.6, erste Zeile der Übernahmetabelle) |
+| ✖ **nicht verwendbar** | die Schwelle `schwelle_prozent` und `score_trendfolge` — nie validiert, und F-168 hat eine **andere** Form gemessen (Querschnittsrang je Tag, nicht absolute Prozentschwelle) |
+
+⚠️ **Die Form ist der Unterschied.** Das Screening fragt *„hat sich der OI um
+mehr als X % bewegt?"* — ein absoluter Wert ohne Tagesklammer. Gemessen
+wurde *„liegt der Wert heute im obersten Fünftel aller Werte"* — ein
+Querschnittsrang. Das sind zwei verschiedene Größen; die alte Schwelle
+belegt nichts über die neue.
+
+### N-14e — Die Einschränkungen, die mitzuführen sind
+
+1. **19 Blöcke statt 20** (Methodik 2.95). Das Archiv beginnt für alle
+   Altcoins am 2021-12-01; die Blockgröße wurde **nicht** gesenkt.
+   Entlastend: sechs stille Negativkontrollen, beide Hälften tragen,
+   beide Positivkontrollen feuern.
+2. **Abdeckung 32 von 44 Watchlist-Werten** (72,7 %; Funding 36).
+3. **In-sample kalibriert.**
