@@ -3600,3 +3600,116 @@ es nur für die größeren, älteren Werte. Auf der Zielmenge (512 Werte
 
 Werkzeuge: `rechne_sperren_zusammen.py` · `messe_volumenanteil.py`
 Verwandt: F-168 · F-170 · Methodik 2.99 · 2.101
+
+---
+
+## F-172 ⚠️⚠️ Der reale Takt: 133 Mails am Tag — und die Sperren nehmen davon 14 % (02.09.2026)
+
+**Nutzerauftrag:** *„Rechne die Durchlassmenge im echten Trichter und
+übersetze das in den reellen Takt — welche Assets bekommen wie oft welche
+Empfehlungen, bis zum Ende der Kette, E-Mail-Signale."*
+
+**Grundlage:** das Notebook-Backup vom **29.08.2026**, read-only —
+**2.789 Signale der Rollen-Kette über 16 Tage** (14.08.–29.08.), 56 Assets.
+⚠️ Dieser Bestand ist **vor G-6** (31.08.) und **vor N-14** (02.09.);
+genau deshalb lässt sich an ihm rechnen, was beide wegnehmen.
+
+### Der Ist-Takt
+
+| Aktion | gesamt | je Tag | Mail? |
+|---|---|---|---|
+| ERÖFFNEN | 881 | **55,1** | ✔ |
+| NACHKAUFEN | 827 | **51,7** | ✔ |
+| HALTEN | 657 | 41,1 | ✖ |
+| REDUZIEREN | 209 | 13,1 | ✔ |
+| KAUFEN | 146 | 9,1 | ✔ |
+| VERKAUFEN | 69 | 4,3 | ✔ |
+| **Mails** | **2.132** | **133,2** | |
+
+### ⚠️⚠️ Worauf die Sperren überhaupt greifen — und das ist der Kern
+
+Beide sperren „das oberste Fünftel", also je ~20 %. **Sie greifen aber nur
+auf Einstiege OHNE Bestand:**
+
+    Signale insgesamt                 174,3/Tag
+    davon Einstieg ohne Bestand        64,2/Tag   <- nur hier greift die Sperre
+    N-14 (OI) sperrt                   10,6/Tag
+    N-13-1' (Volumenanteil) sperrt      8,8/Tag
+    BEIDE zusammen                     18,4/Tag
+
+> **Mails 133,2 → 114,8 je Tag. Das sind −13,8 %, nicht −33,5 %.**
+
+NACHKAUFEN (51,7/Tag) hat Bestand und ist ausgenommen; Ausstiege ebenso;
+HALTEN erzeugt ohnehin keine Mail. **Eine Sperre auf ein Fünftel der
+Einstiege trifft ein Siebtel der Mails.**
+
+### Die Kette in Zahlen
+
+| | Mails/Tag |
+|---|---|
+| gemessen 14.–29.08. (vor G-6, vor N-14) | **133,2** |
+| nach G-6 + Schwelle 0,080 (gemessen 31.08.) | **56,3** |
+| + beide Sperren (−13,8 %) | **≈ 48,5** |
+
+**Bei 44 Watchlist-Werten sind das 1,1 Mails je Asset und Tag.**
+
+⚠️ Die letzte Zeile ist eine **Hochrechnung**: die −13,8 % sind auf dem
+Bestand *vor* G-6 gemessen. Ob sich G-6 (Potential) und die Sperren
+(OI/Volumen) überschneiden, ist **nicht gemessen**.
+
+### Je Asset — die Spitze der Liste (auf 30 Tage)
+
+| Asset | ERÖFF | NACHK | REDUZ | HALT | **Mails** | **danach** |
+|---|---|---|---|---|---|---|
+| HYPE | 86,2 | 56,2 | 41,2 | 5,6 | **189,4** | **189,4** |
+| LINK | 78,8 | 105,0 | 0,0 | 7,5 | 183,8 | 166,9 |
+| BTC | 75,0 | 97,5 | 5,6 | 11,2 | 178,1 | 150,0 |
+| TAO | 82,5 | 90,0 | 0,0 | 9,4 | 178,1 | 133,1 |
+| ETH | 78,8 | 91,9 | 0,0 | 16,9 | 170,6 | 135,0 |
+
+**HYPE bekommt 189 Mails in 30 Tagen — 6,3 am Tag für ein einziges
+Asset — und die Sperren ändern daran nichts.**
+
+### ⚠️⚠️ Der Grund, und er ist eine Lücke: 19 % der Mails erreicht KEINE Sperre
+
+**415 von 2.132 Mails** entfallen auf Assets, für die **weder** ein
+OI-Rang **noch** ein Volumenanteil vorliegt:
+
+    HYPE 101 · MON 49 · CAT 46 · ASTER 44 · SUPRA 40 · PLUME 12 · AIOZ 12
+
+**Es sind genau die Neuzugänge** — und genau die lautesten.
+
+### ⚠️ Richtigstellung: die Abdeckung des Volumenanteils
+
+Ich hatte den Volumenanteil mit **44/44** angegeben. **Das war falsch.**
+Er rangt über die Messbasis `messdaten.db`, und dort stehen **15 der 44
+Watchlist-Werte gar nicht**: AIOZ, AKT, ASTER, BRETT, CANTON, CAT, EURCV,
+GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN.
+
+| Beitrag | Abdeckung Watchlist |
+|---|---|
+| Funding | 36/44 |
+| `oi_aenderung` (Sperre) | 32/44 |
+| **Volumenanteil (Sperre)** | **29/44** — *nicht 44/44* |
+| Turnover | 7/44 |
+
+⚠️ Die Größe *selbst* wäre für jeden Wert ab Tag 1 berechenbar — die
+**Messbasis** ist die Grenze, nicht die Formel. Das ist behebbar
+(`messdaten.db` nachladen), aber es ist heute nicht so.
+
+### Was daraus folgt
+
+1. **Die Sperren lösen das Taktproblem nicht.** −14 % bei einem Ausgangswert
+   von 133 Mails am Tag.
+2. **Der Takt entsteht bei NACHKAUFEN und ERÖFFNEN** (107 von 133 Mails am
+   Tag) — und NACHKAUFEN ist von jeder Sperre ausgenommen, weil dort
+   Bestand liegt.
+3. **Die lautesten Assets sind unerfasst**, weil sie in keiner Messbasis
+   stehen. Jede weitere Sperre trifft sie ebenfalls nicht.
+
+⚠️ **Damit ist die Frage nicht mehr, ob eine dreizehnte Sperre gebaut
+wird.** Sie brächte rechnerisch weitere ~9 Mails am Tag weniger und würde
+die lauten Werte wieder nicht berühren.
+
+Werkzeug: `rechne_takt_je_asset.py --db <backup>`
+Verwandt: F-168 · F-170 · F-171 · N-13a
