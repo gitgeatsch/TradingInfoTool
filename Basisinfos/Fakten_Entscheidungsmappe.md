@@ -3905,13 +3905,31 @@ vom Cooldown: sonst müsste der Abstand wachsen.
 die Funktion würde sperren, die Signale entstehen trotzdem. Was dazwischen
 liegt, ist mit dem **Datenbestand allein** nicht zu sehen.
 
-**Was fehlt, ist die Trichterausgabe der Produktion.** `durchlauf.bericht()`
-schreibt je Lauf, wie viele auf `wiederholung` verloren gehen — das steht
-im **Log**, nicht in der Datenbank. Steht dort „0 verloren", wird die Stufe
-nie erreicht; steht dort eine große Zahl, entstehen die Signale woanders.
+**Was fehlt, ist der Trichter aus dem laufenden Betrieb.**
 
-> **Nächster Schritt: ein aktuelles `tradinginfotool.log` vom Notebook.**
-> Ohne das bleibt jede weitere Erklärung eine Vermutung.
+⚠️ **Und hier habe ich mich zweimal geirrt, in derselben Prüfung:**
+
+1. Ich suchte nach `durchlauf.bericht()` und fand nur Aufrufe in
+   Prüfwerkzeugen. Daraus schloss ich, der Trichter werde „gerechnet und
+   nie ausgegeben" — derselbe Fehlertyp wie Rolle G und N-9.
+2. **Das war falsch.** `scheduler/rollen_job.py:464` schreibt die
+   Durchlässigkeit je Stufe ins Log, seit dem **14.08.**, also seit dem
+   ersten Tag der Kette:
+
+       logger.info("Rollen-Kette Durchlaessigkeit: %s",
+                   {stufe: (bestanden, verloren) ...})
+
+   Ich hatte nach dem Funktionsnamen gesucht statt nach der Wirkung — und
+   die Zeile steht neun Zeilen darunter.
+
+> **Nächster Schritt: die gefilterten Log-Zeilen vom Notebook** — nicht
+> das ganze Log, nur `Durchlaessigkeit`. Steht dort bei `wiederholung`
+> eine 0 in der Verlustspalte, wird die Stufe nie erreicht; steht dort
+> eine große Zahl, entstehen die Signale woanders.
+
+⚠️ **Das Log rotiert bei 5 MB mit drei Sicherungen** (`main.py:39`) — bei
+9,3 Läufen am Tag deckt das Fenster nur wenige Tage ab. **Je früher
+geholt, desto mehr Historie.**
 
 ### Der Nebenbefund: 9,3 Läufe am Tag
 
