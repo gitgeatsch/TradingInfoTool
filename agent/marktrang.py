@@ -328,6 +328,8 @@ MESSBASIS = {"funding": ("data/funding_historie.db",
                          "SELECT DISTINCT symbol FROM price_history_ohlc "
                          "WHERE currency='USD'")}
 _MESSBASIS_ZWISCHEN: dict = {}
+# Welche Messbasis-Ausfaelle schon gemeldet wurden - siehe `messbasis()`.
+_SCHON_GEMELDET: set = set()
 
 
 def messbasis(name: str) -> set:
@@ -342,7 +344,22 @@ def messbasis(name: str) -> set:
         aus = {str(r[0]).upper() for r in c.execute(frage) if r[0]}
         c.close()
     except Exception:                                        # noqa: BLE001
-        logger.exception("Messbasis %s nicht lesbar (%s)", name, datei)
+        # ⚠️ NUR EINMAL JE PROZESS UND NAME (02.09.2026). Am Notebook
+        # standen nach einem Tag 29 identische ERROR-Zeilen zu `schnitt`
+        # im Log - und zwar fuer einen ZUGESTIMMTEN Zustand:
+        # `messdaten.db` (166 MB) wurde bewusst nicht uebertragen.
+        #
+        # Ein Fehler, der sich stuendlich wiederholt und nichts Neues
+        # sagt, verdeckt die Fehler, die etwas Neues sagen. Der erste
+        # Aufruf meldet weiterhin auf ERROR-Ebene, die folgenden nur noch
+        # auf DEBUG - der Cache unten sorgt ohnehin dafuer, dass es je
+        # Prozess selten wird.
+        if name in _SCHON_GEMELDET:
+            logger.debug("Messbasis %s weiterhin nicht lesbar (%s)",
+                         name, datei)
+        else:
+            _SCHON_GEMELDET.add(name)
+            logger.exception("Messbasis %s nicht lesbar (%s)", name, datei)
     _MESSBASIS_ZWISCHEN[name] = aus
     return aus
 

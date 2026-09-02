@@ -363,17 +363,46 @@ Schritte **1–8** gebaut und in einem Lauf nachgewiesen. **N-13** gemessen,
 `anlass` + `auswahl` + `wiederholung` nehmen zusammen 97 %. Die neuen
 Sperren sitzen genau vor der schärfsten Stufe.
 
-## 3. ⚠️ Die Remoteseite — nicht begonnen
+## 3. ⚠️⚠️ KORREKTUR AM ABEND DES 02.09.: die Remoteseite LÄUFT
+
+**Der Abschnitt, der hier stand, war falsch.** Ich hatte geschrieben, die
+Steuer-Seite sei „nicht gebaut — kein Modul mit `remote`/`steuer` in
+`agent/` oder `ui/`". Das stimmt, und es war trotzdem der falsche
+Schluss: **sie liegt in einem eigenen Verzeichnis `remote/`.**
 
 | | Stand |
 |---|---|
-| `Tailscale-Setup-Anleitung.md` | ✔ Anleitung da — *„Tailscale selbst macht noch nichts an der App"* |
-| Steuer-Seite | ✘ **nicht gebaut.** Kein Modul mit `remote`/`steuer` in `agent/` oder `ui/` |
-| `Option_Claude_Agent_Anbindung_23_08.md` | ✔ Konzept da (Stufe 0 beschrieben), ✘ nichts umgesetzt |
+| `remote/server.py`, `remote/status.py` | ✔ **gebaut und im Betrieb seit dem 14.08.** |
+| `Tailscale-Setup-Anleitung.md` | ✔ Anleitung da |
+| `Option_Claude_Agent_Anbindung_23_08.md` | ✔ Konzept (Stufe 0), ✘ nichts davon umgesetzt |
 
-**Die Remoteseite ist ein eigener, unangetasteter Bereich.** Sie blockiert
-nichts und wird von nichts blockiert — aber sie steht in keinem der
-laufenden Pläne, und deshalb fiel sie bisher aus jeder Statuszeile heraus.
+**Aufgefallen ist es im Betriebslog, nicht bei der Suche im Code:**
+`remote.status` meldet dort **3.235 Warnungen** in drei Tagen.
+
+⚠️ **Die Lehre ist dieselbe wie bei R-R10:** ich habe an zwei Orten
+gesucht und aus zwei leeren Ergebnissen auf „gibt es nicht" geschlossen.
+Ein `ls` auf der obersten Ebene hätte gereicht. **Eine Suche beweist
+Abwesenheit nur dort, wo sie gesucht hat.**
+
+### Der Befund aus den 3.235 Warnungen
+
+    Tag          Warnungen   Median      Q90      Max
+    2026-08-30         440     1,56     2,08     3,22 s
+    2026-08-31        1270     1,46     2,00     4,14 s
+    2026-09-01        1185     1,40     1,94     8,56 s
+    2026-09-02         340     1,48     2,07    11,18 s
+
+**Der Median ist über vier Tage stabil** — die Seite wird nicht
+langsamer. Die Warnschwelle liegt bei 1,00 s und wird praktisch immer
+überschritten; das ist kein Ereignis, sondern der Normalzustand.
+
+⚠️ **Was zählt, ist der Abruftakt von 5 s:** nur **9 von 3.235** Aufbauten
+liegen darüber. Dort überlappen die Anfragen — selten, aber es passiert,
+und die Ausreißer wachsen (3,2 → 11,2 s über vier Tage).
+
+**Offen, nicht dringend:** die Schwelle auf einen sinnvollen Wert setzen
+(sie erzeugt 1.000 Warnungen am Tag ohne Aussage) und den größten
+Ausreißern nachgehen.
 
 ## 4. Was seit dem 31.08. NICHT weitergekommen ist
 
