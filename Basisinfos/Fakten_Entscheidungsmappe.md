@@ -4293,3 +4293,90 @@ jemand eine Mail liest.
 
 Werkzeug: die Mails liegen unter `Claude_Austauschordner/eMail_Beispiele`
 Verwandt: F-177 · R-R8 (Merkmale, 31.08.) · L2/D1
+
+---
+
+## F-179 ⚠️⚠️ N-15a: die SUMME der Beiträge taugt nicht als Rangfolge — der Funding-Rang schon (03.09.2026)
+
+**Vorab gesetzte Bedingung** (vor dem Lauf in `messe_beitragssumme.py`
+festgeschrieben): *„Die Summe muss mindestens so gut trennen wie der
+BESTE Einzelbeitrag auf derselben Ankermenge."*
+
+Basis: **75.701 Anker · 41 Symbole · 2.358 Kalendertage**, Querschnitt mit
+Tagesklammer, Horizont 20, gesperrt wird das unterste Fünftel, eine Zelle.
+
+### Die Antwort: die Trennschärfe ist gleich — die ORDNUNG ist es nicht
+
+| Kennzahl | Fünftel 0 → 4 (Ertrag gegen den Tagesdurchschnitt) | monoton | von Null trennbar |
+|---|---|---|---|
+| **Funding-Rang allein** | −0,114 · −0,063 · +0,028 · +0,067 · +0,082 | **JA** | **alle fünf** |
+| Turnover-Rang allein | −0,130 · −0,048 · +0,045 · **−0,002** · +0,136 | NEIN | 0 und 2 |
+| **die Summe beider** | −0,124 · −0,048 · **−0,066** · +0,066 · +0,171 | NEIN | 0, 2, 3, 4 |
+
+Die Summe hat die **größte Spanne** (+0,295 gegen +0,196) und trennt
+oben am schärfsten (+0,171) — und ist trotzdem die schlechtere
+Rangfolge, weil das dritte Fünftel **unter** dem zweiten liegt. Eine
+Mailzeile, die einen Platz nennt, braucht keine große Spanne, sondern
+eine **wohlgeordnete** Größe.
+
+### ⚠️ Der Größenvergleich entschied gar nichts — erst der gepaarte Test
+
+Nebeneinandergestellt sahen die drei so aus:
+
+    A Funding allein   +0,0329  [+0,0148 .. +0,0500]
+    B Turnover allein  +0,0483  [+0,0209 .. +0,0841]
+    C die Summe        +0,0452  [+0,0187 .. +0,0791]
+
+Die Bänder überlappen **fast vollständig**. Ein Unterschied von 0,003 R
+bei einer Auflösung von ±0,03 R ist Rauschen, gleich in welche Richtung
+er fällt. Mein erster Lauf erklärte trotzdem die größte Zahl zum Sieger —
+zweimal hintereinander, mit **entgegengesetztem** Ergebnis, nur weil
+zwischendurch eine Zufallssaat wechselte.
+
+Der richtige Test ist **gepaart**: beide Regeln laufen auf denselben
+Ankern und denselben Kalendertagen, die Differenz je Tag kürzt Marktphase,
+Volatilität und die Maßverzerrung heraus.
+
+    Summe − Turnover                 -0,0031 R  [-0,0180 .. +0,0097]  nicht trennbar
+    Positivkontrolle +0,02 aufgeprägt +0,0169 R  [+0,0020 .. +0,0297]  TRAEGT
+    Positivkontrolle +0,01 aufgeprägt +0,0069 R  [-0,0080 .. +0,0197]  nicht trennbar
+
+**Die Anlage würde 0,02 R finden und findet nichts.** Das ist kein
+schwacher Nullbefund, sondern ein belegter: die Summierung bringt in
+dieser Größenordnung nichts.
+
+### ⚠️⚠️ Und die Ursache ist bekannt — es ist der Befund vom 31.08. gespiegelt
+
+Am 31.08. fiel mein Vorschlag, den **Mittelwert** statt der Summe zu
+nehmen: er benachteiligt Werte mit MEHR Beiträgen. Jetzt fällt die
+**Summe** aus dem umgekehrten Grund: sie bevorteilt Werte mit WENIGER.
+
+> Ein Wert mit Funding −0,54 und fehlendem Turnover hat Summe **−0,54**.
+> Ein Wert mit Funding −0,54 und Turnover +0,54 hat Summe **0,00** — und
+> steht in der Rangliste **höher**, ohne besser zu liegen.
+
+Beide Male dieselbe Ursache: **eine Kennzahl, deren Skala von der
+Datenlage abhängt.** Und in der Produktion ist die Datenlage der
+Normalfall — bei **37 von 44** Werten steht die Bewertung heute auf
+einem einzigen Beitrag.
+
+Nachgestellt (bei 84 % der Werte fehlt der zweite Beitrag, über **fünf**
+Ziehungen): **5/5 monoton, 5/5 trägt das oberste Fünftel.** Die Ordnung
+wird durch die Datenlücke nicht schlechter, sondern **besser** — weil die
+Größe dann faktisch der Funding-Rang allein ist.
+
+### Was daraus für N-15 folgt
+
+| | war geplant | ist gedeckt |
+|---|---|---|
+| Größe | Summe aller tragenden Beiträge | **der Funding-Rang** |
+| Sprache | „Platz 26 von 36 — im unteren Mittelfeld" | Fünftel, **jedes einzeln** von Null trennbar |
+| ⚠️ Grenze | — | Fünftel **3 und 4 sind untereinander nicht unterscheidbar** (+0,067 gegen +0,082) — „im besten Fünftel" ist nicht besser belegt als „im vierten" |
+
+⚠️ **Der Suchpreis ist bezahlt, aber knapp:** drei Kandidaten wurden auf
+Monotonie geprüft, einer bestand. Bei fünf Stufen liegt die Zufallschance
+je Kandidat bei 1/120, bei drei Kandidaten also rund 2,5 %. Das trägt —
+ein vierter Kandidat hätte es nicht mehr getan.
+
+Werkzeug: `messe_beitragssumme.py` (Blöcke A–F, `--selbsttest`)
+Verwandt: F-171 (Median-Bias) · F-178 · 2.104 · 2.105 · N-15

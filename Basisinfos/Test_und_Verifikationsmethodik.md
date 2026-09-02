@@ -5319,3 +5319,86 @@ eine Datenbank gefüllt ist** — der Desktop kann den Fehler damit sehen,
 ohne die Produktionsdaten zu haben.
 
 Verwandt: 2.66 · 2.68 · 2.69 · 2.72 · L4/L5
+
+---
+
+## 2.104 ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl
+
+**An einem Tag zweimal derselbe Fehler**, in zwei verschiedenen Rollen:
+
+| | die Ziehung | was ich daraus las |
+|---|---|---|
+| **Negativkontrolle** | eine Mischung je Größe | +0,0115 / +0,0069 / +0,0016 — und die bereinigten Zahlen sagten **„die Summe trägt besser"** |
+| **nachgestellte Datenlücke** | eine Auswahl, wer den zweiten Beitrag verliert | eine monotone Reihe — und fast die Deutung *„unter realer Datenlage ist die Ordnung sauberer"* |
+
+Beim ersten Fall war es sofort sichtbar, wenn man hinsah: **dieselbe
+Ankermenge, dieselbe Verteilung — und drei verschiedene Nullpunkte.**
+Wäre es die Maßverzerrung gewesen (F-171), hätte sie bei allen dreien
+gleich ausfallen müssen.
+
+Über **zehn** Mischungen gemittelt drehte sich das Urteil um:
+
+    A Funding allein   +0.0329    +0.0051 ± 0.0054     +0.0277 R
+    B Turnover allein  +0.0483    +0.0087 ± 0.0053     +0.0396 R
+    C die Summe        +0.0452    +0.0082 ± 0.0040     +0.0370 R
+
+⚠️ **Und die Streuung ist selbst ein Befund:** ±0,005 bei einem
+Unterschied von 0,003 heißt, dass die Bereinigung die Frage gar nicht
+entscheiden kann. Wer nur den Mittelwert druckt, sieht das nicht.
+
+### Die Regel
+
+> **Jede Kontrolle, die auf einer Zufallsziehung beruht — Mischung,
+> Lücke, Teilstichprobe — wird über mindestens fünf Ziehungen gemittelt,
+> und die Streuung wird MITGEDRUCKT.**
+
+Die Streuung ist die Auflösungsgrenze. Liegt der gesuchte Unterschied
+darunter, ist die Messung beendet, bevor sie beginnt.
+
+Verwandt: F-170 (acht Saaten) · F-171 · F-179 · 2.93 · 2.105
+
+---
+
+## 2.105 ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer
+
+Bei N-15a war zu entscheiden, ob die Summe zweier Beiträge besser trennt
+als der beste Einzelbeitrag. Nebeneinandergestellt:
+
+    A Funding allein   +0,0329  [+0,0148 .. +0,0500]
+    B Turnover allein  +0,0483  [+0,0209 .. +0,0841]
+    C die Summe        +0,0452  [+0,0187 .. +0,0791]
+
+Die Bänder überlappen fast vollständig. **Die Auflösung ist ±0,03 R, der
+gesuchte Unterschied 0,003 R** — zehnmal zu klein. Trotzdem ist die
+Versuchung groß, die größte Zahl zum Sieger zu erklären; ich habe es in
+zwei aufeinanderfolgenden Läufen getan, mit entgegengesetztem Ergebnis.
+
+**Der gepaarte Test nutzt aus, was der Vergleich wegwirft:** beide Regeln
+laufen auf denselben Ankern und denselben Kalendertagen. Die Differenz
+**je Tag** kürzt alles Gemeinsame heraus — Marktphase, Volatilität, die
+Maßverzerrung selbst:
+
+    Summe − Turnover   -0,0031 R  [-0,0180 .. +0,0097]   nicht trennbar
+
+Das Band ist dreimal enger als jedes Einzelband.
+
+### ⚠️ Und der gepaarte Test braucht seine eigene Positivkontrolle
+
+Ohne sie ist „nicht trennbar" nicht von „die Anlage kann es nicht sehen"
+zu unterscheiden — und genau das war hier die Frage:
+
+    +0,02 R aufgeprägt   +0,0169 R  [+0,0020 .. +0,0297]   TRAEGT
+    +0,01 R aufgeprägt   +0,0069 R  [-0,0080 .. +0,0197]   nicht trennbar
+
+**Die Anlage findet 0,02 R und findet nichts.** Damit ist der Nullbefund
+belegt statt nur behauptet — und zugleich seine Grenze benannt: unterhalb
+von etwa 0,015 R sagt diese Messung nichts.
+
+### Die Regel
+
+> **Wo zwei Regeln auf derselben Ankermenge laufen, wird die Differenz je
+> Klammer gebootstrappt, nicht zwei Bänder verglichen. Und die
+> Positivkontrolle wird auf die DIFFERENZ aufgeprägt, nicht auf die
+> Einzelreihen.**
+
+Verwandt: F-179 · 2.93 (Positivkontrolle) · 2.95 (Blockprobe) · 2.104

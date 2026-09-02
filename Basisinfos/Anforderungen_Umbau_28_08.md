@@ -1215,3 +1215,44 @@ die **Summe** der Beiträge noch nie gestellt worden.
 
 Werkzeug: `rechne_einordnung_vorschau.py [SYMBOL]`
 Verwandt: F-178 · das übergeordnete Ziel in `CLAUDE.md`
+
+### ✔ N-15a GEMESSEN (03.09.2026) — die Vorbedingung ist beantwortet, und sie ändert den Plan
+
+Die Frage oben („taugt die Rangfolge selbst etwas?") ist gestellt und
+beantwortet: **75.701 Anker · 41 Symbole · 2.358 Kalendertage.** Ergebnis
+vollständig in **F-179**.
+
+| | war geplant | ist gedeckt |
+|---|---|---|
+| **die Größe** | Summe aller tragenden Beiträge | ⚠️ **der Funding-Rang allein** — die Summe ist **nicht wohlgeordnet** (Fünftel 2 liegt unter Fünftel 1) |
+| **die Sprache** | „Platz 26 von 36 — im unteren Mittelfeld" | Fünftel-Sprache, aber ⚠️ **die obersten beiden sind untereinander nicht unterscheidbar** |
+| **der Gewinn** | „die Summe ist genauer" | ✖ **nicht nachweisbar** — gepaart −0,0031 R [−0,0180 .. +0,0097], während die Anlage 0,02 R fände |
+
+**Warum die Summe scheitert, ist kein Messproblem, sondern Arithmetik:**
+ihre Skala hängt an der Datenlage. Ein Wert mit Funding −0,54 und
+fehlendem Turnover hat Summe −0,54; ein Wert mit Funding −0,54 und
+Turnover +0,54 hat Summe 0,00 — und steht **höher**, ohne besser zu
+liegen. Bei **37 von 44** Werten ist genau das der Fall.
+
+### Die Reihenfolge des Baus — geändert
+
+| | Variante | Stand nach N-15a |
+|---|---|---|
+| **1** | **C — Zerlegung** | ✔ **unverändert gedeckt.** Sie behauptet keine Ordnung, sie zerlegt. Und sie deckt genau die Schwäche auf, die N-15a bestätigt hat: die Bewertung steht meist auf einem einzigen Beitrag |
+| **2** | **A — Querschnitt** | ⚠️ **nur über den Funding-Rang**, nicht über die Summe. Fünftel-Wörter zulässig, aber „im besten Fünftel" darf nicht schärfer klingen als „im vierten" |
+| **3** | **D — die anderen** | unverändert — braucht die Trichtergründe aus dem Log |
+| **4** | **B — eigene Lage** | unverändert — Zeitreihe, bei neuen Werten blind |
+
+⚠️ **Eine Folge, die über N-15 hinausgeht:** wenn die Summe als Rangfolge
+nicht taugt, ist zu prüfen, ob sie als **Potentialschwelle** taugt — dort
+wird sie heute verwendet (Stufe 11). Die Trennschärfe war gepaart
+gleichwertig, das spricht nicht dagegen; die fehlende Ordnung hingegen
+heißt, dass ein **Regler** dort nie funktionieren wird, ein **Schalter**
+schon. Das deckt sich mit dem Befund „die Schwelle ist ein Schalter, kein
+Regler" — jetzt mit einer zweiten, unabhängigen Begründung.
+
+**Neuer Prüfpunkt N-15b:** trägt die Summe an der Schwelle besser als der
+Funding-Rang allein? Gleiche Anlage, gepaarter Test, eine Zelle.
+
+Werkzeug: `messe_beitragssumme.py` · `rechne_einordnung_vorschau.py [SYMBOL]`
+Verwandt: **F-179** · F-171 · 2.104 · 2.105
