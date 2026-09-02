@@ -4026,3 +4026,100 @@ genommen hätte.
 Werkzeug: die Log-Zeile `Rollen-Kette Durchlaessigkeit`
 Verwandt: F-172 · F-173 · F-174 (überholt) · „eine grüne Suite ist kein
 Wirkungsnachweis"
+
+---
+
+## F-176 ✔ Die Umschaltung wirkt — vier Stunden ohne ein Signal, und kein einziger Systemfehler (02.09.2026)
+
+**Grundlage:** NB-Export vom 02.09. 18:06, ausgewertet mit
+`pruefe_nb_nach_umschaltung.py`.
+
+### Der Umschaltzeitpunkt ist im Log ablesbar: 12:00 Uhr
+
+| Stunde | Signale | Mails | `terminmarkt` erreicht |
+|---|---|---|---|
+| 09:00 | 7 | 8 | — |
+| 12:00 | 3 | 4 | **55** |
+| 13:00 | 2 | 2 | 101 |
+| **14:00** | **0** | **0** | 104 |
+| **15:00** | **0** | **0** | 98 |
+| **16:00** | **0** | 1 | 77 |
+| **17:00** | **0** | **0** | 67 |
+
+> **Seit 14 Uhr kein einziges Signal.** Das ist exakt der vorhergesagte
+> Zustand (F-175: 113 → 2), und er ist eingetreten wie berechnet.
+
+### ⚠️ Die neue Stufe läuft — und sperrt nie
+
+`terminmarkt` erreicht stündlich 67 bis 104 Zellen und hat **0 gesperrt**.
+Ob das an fehlenden OI-Rängen liegt, am Bestand oder an der Strategie,
+**ist aus dem Log nicht zu sehen** — die Gründe stehen nur in
+`durchlauf.bericht()`, und der wurde nie geschrieben. Seit dem 02.09.
+gehen sie mit ins Log; beim nächsten Export ist die Frage beantwortet.
+
+### Die 33 Job-Fehlschläge: alle extern, keiner im System
+
+| Quelle | Anzahl |
+|---|---|
+| `api.yfinance_client` | 14 |
+| `api.macro` (FRED) | 13 |
+| `scheduler.background` | 3 |
+| `api.email_notify` | 3 |
+
+**0 von 33 betreffen die LLM-Kette.**
+
+⚠️ **Die gemeinsame Wurzel steht in den Zeitstempeln:**
+
+    2026-09-01 10:41:23   Preis-Refresh fehlgeschlagen
+    2026-09-01 10:41:23   E-Mail-Benachrichtigung fehlgeschlagen
+    2026-09-02 07:56:23   Preis-Refresh + E-Mail
+    2026-09-02 07:56:58   Bitpanda-Abgleich + E-Mail
+
+Der Traceback zeigt `urllib3 create_connection` — **das Notebook hatte
+kurz keine Verbindung.** Der Job scheitert, das System will es per Mail
+melden, und das Melden scheitert an derselben Ursache. Dazu FRED mit
+502 Bad Gateway und Read-Timeouts: fremde Server, nicht unsere.
+
+### ⚠️ Die These des Notebooks ist widerlegt
+
+*„Die steigenden Job-Fehlschläge und die stehende 1.699 könnten dieselbe
+Wurzel haben."*
+
+**Nein.** Die 1.699 sind `hebel_triggers.llm_generiert` — LLM-erzeugte
+Hebel-Kandidaten, die niemand abarbeitet, weil die Hebelkette seit dem
+10.08. aufgelöst ist. Die Fehlschläge sind Netzausfälle und fremde APIs.
+**Keine gemeinsame Wurzel** — aber die Fehlschläge haben sehr wohl eine
+untereinander.
+
+### Der eigentliche Warteschlangen-Befund
+
+    hebel_triggers        78.091 neu · 11.385 verfallen · 1.699 llm_generiert
+    marktscan_candidates   3.426 neu
+
+**78.091 unbearbeitete Kandidaten.** Das ist die aufgelöste Hebelkette in
+Zahlen: das Screening läuft im 15-Minuten-Takt und erzeugt weiter, die
+Verarbeitung wird nie erreicht. Ein Datenwachstumsproblem und der
+deutlichste Beleg für den Befund vom 01.09.
+
+### LLM-Verbrauch: unauffällig
+
+    gemini 79 · zai 22 · mistral 0 · openrouter 0 · groq 0
+
+Weit unter dem Kontingent (500/Tag je Modell). ⚠️ Und ein Nebenbefund: die
+Zahlen sind **niedriger als vor der Umschaltung** — logisch, weil die
+Kette weniger Urteile einholt.
+
+### Was daraus folgt
+
+1. **Das System funktioniert sauber.** Kein einziger Fehler stammt aus der
+   eigenen Logik.
+2. **Die Stille ist gewollt** und war vorhergesagt. Sie ist jetzt zu
+   beobachten, nicht zu reparieren.
+3. ⚠️ **Offen:** warum `terminmarkt` nie sperrt. Das entscheidet der
+   nächste Export.
+4. ⚠️ **Und die Fehlerbenachrichtigung ist ein blinder Fleck:** scheitert
+   das Netz, scheitert auch die Meldung darüber. Wer nur auf Mails
+   schaut, erfährt von Ausfällen nichts.
+
+Werkzeug: `pruefe_nb_nach_umschaltung.py`
+Verwandt: F-175 · N-14 · `project_hebelkette_aufgeloest_zwischen_zwei_ketten`
