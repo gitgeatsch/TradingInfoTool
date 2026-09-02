@@ -3713,3 +3713,112 @@ die lauten Werte wieder nicht berühren.
 
 Werkzeug: `rechne_takt_je_asset.py --db <backup>`
 Verwandt: F-168 · F-170 · F-171 · N-13a
+
+---
+
+## F-173 ⚠️⚠️⚠️ 83,6 % der Mails sind Wiederholung — der Takt ist der Multiplikator (02.09.2026)
+
+**Nutzervorgabe:** *„1,1 Signale pro Asset ist besser — es muss ggf. auf
+Assetebene nachgeschärft werden, dass nicht 'gleiche oder ähnliche'
+Empfehlungen redundant sind."*
+
+Gemessen an denselben 2.132 Mails wie F-172, je Asset in der Zeit gelesen:
+
+| innerhalb von 24 h je Asset | Anzahl | Anteil | je Tag |
+|---|---|---|---|
+| **NEU** — andere Botschaft | 350 | **16,4 %** | **21,9** |
+| **WIEDERHOLUNG** — gleiches Wort | 1.538 | **72,1 %** | 96,1 |
+| **ÄHNLICH** — gleiche Klasse, anderes Wort | 244 | 11,4 % | 15,2 |
+
+> **Zusammengefasst blieben 21,9 statt 133,2 Mails am Tag — ohne eine
+> einzige Bewertung zu ändern.**
+
+### ⚠️⚠️ Der Abstand verrät die Ursache
+
+    Abstand zwischen zwei Mails DESSELBEN Assets:
+    Q10 3,4 h · Q25 3,6 h · Median 3,7 h · Q75 4,1 h
+
+**Die Spanne zwischen Q10 und Q75 beträgt 0,7 Stunden.** Das ist kein
+Anlass, das ist eine **Uhr**: die Kette läuft rund **6,5 mal am Tag** über
+jedes Asset, und jedes Mal fällt dieselbe Empfehlung.
+
+⚠️ **Das ist Regel 1** — *„Der Takt ist nie Signalgeber."* Er ist es hier
+nicht als Auslöser, aber als **Multiplikator**: eine einzige Bewertung
+wird 6,5 mal am Tag versendet.
+
+### Die Auflösung des Vergleichs mit A1
+
+| Messung | Datum | Zahl | Bezug |
+|---|---|---|---|
+| A1-Dimensionierung | 23.08. | **30,7 Empfehlungen/Jahr**, „alle zwölf Tage eine" | historische Rückrechnung, **ein** Umlauf |
+| G-6 gerechnet | 31.08. | 174 → 107 Signale/Tag | Signale |
+| B1 gemessen | 31.08. | 174 → 88 Signale/Tag | Signale |
+| Schwelle je Datenlage | 01.09. | 124,1 → 56,3 Mails/Tag | Mails |
+| **F-172, gemessen** | 02.09. | **174,3 Signale/Tag · 133,2 Mails/Tag** | Produktion 14.–29.08. |
+
+✔ **Die Signalzahl deckt sich exakt** — 174,3 gemessen gegen die 174 der
+G-6-Rechnungen. Auch 133,2 gegen 124,1 Mails ist konsistent (andere
+Fenster).
+
+⚠️ **Der scheinbare Widerspruch zu A1 löst sich in der Umlauffrequenz
+auf.** A1 rechnete *„184 Empfehlungen über sechs Jahre"* bei **einem**
+Umlauf je zwölf Tage — und schrieb selbst dazu: *„Heute könnten es 41 je
+Umlauf sein."* **A1 hat den Takt nie eingerechnet.** 41 je Umlauf × 6,5
+Umläufe = die Größenordnung, die heute gemessen wird.
+
+> **Die Dimensionierung von A1 gilt je Umlauf. Der Betrieb multipliziert
+> sie mit 6,5.**
+
+### Getrennt nach Bestand
+
+| | Assets | Mails/Tag | NEU |
+|---|---|---|---|
+| **mit Bestand** | 37 | 102,6 | 18,3 % |
+| **ohne Bestand** | 19 | 30,6 | **10,2 %** |
+
+⚠️ **Die bestandsfreien Werte sind die redundanteren** (89,8 %
+Wiederholung). Und genau auf sie greifen die beiden Sperren — sie sperren
+dort aber nach **OI-Rang**, nicht nach **Redundanz**.
+
+### Die lautesten Assets — und was davon neu war
+
+| Asset | Mails | **NEU** | Wdh | ähnl | Bestand |
+|---|---|---|---|---|---|
+| HYPE | 101 | 32 | 54 | 15 | − |
+| BNB | 99 | **1** | 74 | 24 | − |
+| LINK | 98 | **1** | 75 | 22 | − |
+| TAO | 95 | **1** | 78 | 16 | − |
+| ETH | 91 | **1** | 74 | 16 | − |
+| SUI | 81 | **1** | 75 | 5 | − |
+
+> **BNB, LINK, TAO, ETH und SUI haben in sechzehn Tagen jeweils GENAU EINE
+> neue Botschaft erzeugt — und dafür 81 bis 99 Mails.**
+
+### ⚠️ Warum der Cooldown das nicht abfängt
+
+`wiederholung.gesperrt_bis` schlüsselt auf **(symbol, instrument,
+strategie)**. Gemessen: **`strategie` ist nur in 924 von 2.789 Signalen
+gesetzt (33,1 %)**. Wo sie fehlt, ist der Schlüssel unvollständig.
+
+⚠️ Das ist die naheliegendste Erklärung, **aber nicht bewiesen** — der
+Cooldown könnte auch durch seine Dauer oder durch die Anlassmessung
+umgangen werden. **Zu messen, bevor daran gebaut wird.**
+
+### Was daraus folgt — und es ist eine Umkehrung
+
+Die letzten drei Tage galten der Frage, **welcher Beitrag** eine Sperre
+rechtfertigt. Diese Messung sagt: **das ist nicht der Engpass.**
+
+| Hebel | Wirkung auf die Mails |
+|---|---|
+| beide Sperren (N-14 + N-13-1′) | −13,8 % |
+| **Wiederholungen zusammenfassen** | **−83,6 %** |
+
+Eine Zusammenfassung ändert **keine einzige Bewertung** — sie sendet
+dieselbe Aussage nur einmal statt 6,5 mal am Tag.
+
+⚠️ **Und sie ist keine Bremse im Sinne von Regel 1**: sie unterdrückt
+nichts, was neu wäre. Was neu ist, geht sofort raus.
+
+Werkzeug: `rechne_redundanz_je_asset.py --db <backup>`
+Verwandt: F-172 · A1 Kap. 11.1 · Regel 1 · L4/L5
