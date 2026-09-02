@@ -1080,3 +1080,48 @@ Die Abfrage kennt jetzt vier Größen.
 | ✖ ein abgestufter Beitrag in `wahrscheinlichkeit.BEITRAEGE` | die Monotonie ist gefallen (F-168); belastbar ist allein Fünftel 4 |
 | ✖ eine Neukalibrierung der Schwelle | R-R9 gilt für **Beiträge**. Eine Sperre ist kein Summand im Potential — sie macht das System strenger, nicht durchlässiger |
 | ✖ ein eigener Sammel-Job für OI | nicht nötig: `openInterestHist` liefert beide Tagespunkte in einem Abruf, eine gespeicherte Reihe wäre ein zweiter Bestand, der veralten kann |
+
+### ✔ N-13-1′ IST GEMESSEN (02.09.2026) — und die Form entscheidet den Einbau
+
+**Vollständig in F-170.** Kurzfassung:
+
+| | |
+|---|---|
+| **Die rohe Form fällt** | 69,8 % Asset-Anteil gegen 49,7 % beim Maßstab — sie sagt „dieses Asset", nicht „dieser Zeitpunkt" (Regel 3). **Nicht** auf Wirkung gemessen |
+| **Die relative Form trägt** | +0,0231 R [+0,0093 .. +0,0368] über 1.026.279 Anker, 578 Symbole, 7.536 Tage, 84 Blöcke |
+| **Auf der Zielmenge** | +0,0246 R [+0,0103 .. +0,0393] — 512 Werte **ohne** Turnover |
+| **Kein Volatilitäts-Mitläufer** | +0,0184 R bei festgehaltener Volatilität |
+| **Die Form für den Einbau** | ⚠️ **SPERRE, kein Regler** — nicht monoton, belastbar allein Fünftel 4 |
+
+### N-13-1′a — Was das für den Einbau bedeutet
+
+Es wäre die **dreizehnte** Trichterstufe, gebaut wie N-14:
+
+    kein Rang     -> NOTIZ, nicht sperren (die drei Zustände)
+    Fuenftel 4    -> sperren
+    Fuenftel 0-3  -> durchlassen
+
+⚠️ **R-R9 gilt wieder nicht** — eine Sperre ist kein Summand im Potential.
+
+### ⚠️⚠️ N-13-1′b — Was VOR dem Bau zu rechnen ist
+
+**Zwei Sperren nacheinander verengen mehr als eine.** N-14 sperrt 20,6 %,
+diese Stufe 20,7 %. Wären sie unabhängig, blieben nach beiden noch 63 %.
+Was sie im **laufenden Trichter** wegnehmen, ist eine andere Zahl — dort
+stehen zwölf Stufen davor.
+
+> **Vor dem Bau ist die Durchlassmenge zu messen** (`simuliere_kette.py`),
+> und die Überlappung der beiden Sperren wie in F-168, Abschnitt E.
+
+⚠️ Das ist dieselbe Frage wie bei N-14b.1, und sie wird dringender: eine
+Kette, die an jeder Stelle ein Fünftel wegnimmt, schweigt am Ende.
+
+### ⚠️ N-13-1′c — Der Nebenbefund, der offen bleibt
+
+> **Turnover ist zu 52 % eine Asset-Eigenschaft.**
+
+Ein registrierter, tragender Beitrag sagt zur Hälfte, *welches* Asset —
+nicht *wann*. Das ist keine Widerlegung, aber es heißt, dass ein Teil
+seiner Wirkung eine Ebene höher gehört, zur Auswahl (wie der Rangplatz
+seit dem 23.08.). **Nicht gemessen, nicht entschieden — und es betrifft
+den Bestand, nicht den Kandidaten.**

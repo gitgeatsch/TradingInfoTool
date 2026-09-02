@@ -3342,3 +3342,131 @@ gemessen, bevor es gebaut wird.
 
 Gesehen mit: `simuliere_kette.py --nachweis-n14` und `--gruppe krypto`
 Verwandt: N-14 (E2) · A2 · L4/L5
+
+---
+
+## F-170 ✔✔ N-13-1′: der relative Volumenanteil trägt — der Beitrag für die Werte OHNE Turnover (02.09.2026)
+
+**Der Engpass, den er löst:** Turnover ist nur für **6 von 43**
+Krypto-Werten bestimmbar (N-13a). Bei 84 % der Watchlist steht das
+Potential damit auf **einem** Beitrag — und ein System mit einem Beitrag
+kann diesen Beitrag nicht mehr prüfen.
+
+### ⚠️⚠️ Die Formfrage kam VOR der Messung — und sie hat die erste Form getötet
+
+Der Vorschlag aus dem Plan lautete: **Anteil am Tagesgesamtvolumen**. Vor
+jeder Wirkungsmessung war zu klären, ob das überhaupt eine
+**Zeitpunkt**-Aussage ist — oder nur ein Größenmaß. BTC hat jeden Tag einen
+großen Anteil; eine Regel darauf sagte *„dieses Asset"*, nicht *„dieser
+Zeitpunkt"*, und das ist **Regel 3**.
+
+Gemessen wurde der Anteil der Rang-Streuung, der **zwischen** den Symbolen
+liegt — auf derselben Menge (66 Symbole, 2.728 Tage) und mit geeichter
+Skala:
+
+| | Asset-Anteil | auf der Skala |
+|---|---|---|
+| *Positivkontrolle: je Symbol fester Wert* | 95,9 % | 1,00 |
+| **Volumenanteil roh** | **69,8 %** | **0,73** ✖ |
+| Turnover (der registrierte Beitrag) | 49,7 % | 0,52 |
+| **Volumenanteil relativ** (gegen die eigenen 20 Tage) | **1,4 %** | **0,01** ✔ |
+| *Negativkontrolle: Zufall* | 0,1 % | 0,00 |
+
+⚠️ **Die rohe Form ist an der vorab gesetzten Bedingung gefallen** und
+wurde deshalb **nicht** auf Wirkung gemessen — eine gefallene Bedingung im
+Nachhinein zu übergehen war der Fehler vom 31.08. beim Schnittabstand.
+
+⚠️ **Mein erster Vergleich war falsch:** er stellte 578 Symbole gegen 65.
+Der Asset-Anteil hängt an der Zahl der Symbole — grobe Ränge springen
+stärker und lassen eine Größe zeitpunktartiger aussehen. Nach der Korrektur
+wuchs der Abstand von 6,2 auf **20,1 Punkte**; die falsche Rechnung hatte
+das Problem **kleiner** gezeigt.
+
+### ⚠️ Und der Nebenbefund wiegt schwerer als der Hauptbefund
+
+> **Turnover — ein registrierter, tragender Beitrag — ist zu 52 % eine
+> Asset-Eigenschaft.**
+
+Er sagt zur Hälfte, *welches* Asset, nicht *wann*. Das ist keine
+Widerlegung (er trägt), aber es heißt: ein Teil seiner Wirkung ist
+Asset-Auswahl, die eine Ebene höher gehört (wie der Rangplatz seit dem
+23.08.). **Offen, nicht entschieden.**
+
+### Das Ergebnis der zulässigen Form
+
+**1.026.279 Anker · 578 Symbole · 7.536 Kalendertage · H20 · 84 Blöcke.**
+Regel: kein Einstieg im obersten Fünftel.
+
+| | Wirkung | Band | |
+|---|---|---|---|
+| **NETTO** | **+0,0231 R** | [+0,0093 .. +0,0368] | ✔ trägt |
+| Negativkontrolle | +0,0037 R | [−0,0036 .. +0,0112] | ✔ still |
+| erste Hälfte | +0,0174 R | [−0,0061 .. +0,0414] | ⚠️ nicht trennbar |
+| zweite Hälfte | +0,0288 R | [+0,0145 .. +0,0450] | ✔ trägt |
+| Positivkontrolle +0,02 / +0,05 R | +0,0268 / +0,0324 | | ✔ feuern |
+
+⚠️ **Die erste Historienhälfte trägt nicht** — dieselbe Schwäche hat der
+Kontrolllauf von Turnover (+0,0419 [−0,0218 .. +0,1116]).
+
+### Die Gegenprüfung: Mitläufer?
+
+| Schicht festgehalten | Wirkung | |
+|---|---|---|
+| **Volatilität** | +0,0184 R [+0,0048 .. +0,0319] | ✔ **trägt weiter** |
+| **Turnover** | +0,0048 R [−0,0098 .. +0,0180] | ⚠️ nicht trennbar |
+
+⚠️ Der Turnover-Test **widerlegt nicht**: sein Band enthält den
+ungeschichteten Wert (+0,0178) am oberen Rand — es fehlt die Auflösung,
+genau wovor Methodik 2.99 warnt. **Und er ist auf der Zielmenge
+gegenstandslos**, denn die Schicht existiert nur für 65 Symbole.
+
+### ⚠️⚠️ Die entscheidende Menge: die Werte OHNE Turnover
+
+**891.903 Anker · 512 Symbole · 7.452 Tage** — genau die Menge, für die der
+Kandidat gebaut würde:
+
+    NETTO                     +0,0246 R  [+0,0103 .. +0,0393]  TRAEGT
+    Positivkontrolle +0,02 R  +0,0284 R                        feuert
+    Positivkontrolle +0,05 R  +0,0339 R                        feuert
+
+**Dort ist die Mitläuferfrage gegenstandslos** — es gibt nichts, dessen
+Mitläufer er sein könnte.
+
+### ⚠️ Ein Alarm, der geklärt wurde statt nur gemeldet zu werden
+
+Die Negativkontrolle dieser Teilmenge kam **„UMGEKEHRT"** heraus
+(−0,0070 [−0,0132 .. −0,0009]). Zwei Schritte:
+
+1. **Verdacht: Maßfehler.** `Median(behalten) − Median(alle)` könnte bei
+   schiefen Verteilungen verzerren. **Gegen Kunstdaten geprüft — widerlegt:**
+   bei Rechtsschiefe verzerrt das Maß nach **oben** (+0,0227 bei n=20),
+   nicht nach unten; bei symmetrischen Daten gar nicht.
+2. **Acht Mischungen mit verschiedenen Saaten:** Mittel **−0,0015**, Spanne
+   −0,0093 .. +0,0045, und nur **eine von acht** meldet „UMGEKEHRT". Bei
+   nominal 5 % ist das erwartbar.
+
+> **Es war ein Fehlalarm.** Der erste Lauf hatte zufällig eine
+> grenzwertige Mischung erwischt.
+
+### Die Form für den Einbau: SPERRE, kein Regler
+
+Vorab festgelegt: monoton → abgestufter Beitrag, sonst Sperre.
+
+| Fünftel | 0 | 1 | 2 | 3 | **4** |
+|---|---|---|---|---|---|
+| Punkte (geschrumpft) | −0,27 | +0,32 | +0,68 | +0,36 | **−1,09** |
+| vom Nullpunkt getrennt | ✖ | ✖ | ✖ | ✖ | **✔** |
+
+**Nicht monoton** — belastbar ist allein das oberste Fünftel. Spanne +0,82
+geschrumpft (Funding +2,52 · Turnover +5,55 · OI +1,60).
+
+⚠️⚠️ **Das ist jetzt das dritte Mal dieselbe Gestalt** — die
+Potentialschwelle, `oi_aenderung` und der Volumenanteil sind alle
+**Schalter, keine Regler**. Das ist ein Befund über die Daten, nicht über
+die Kandidaten.
+
+**Folge: R-R9 gilt auch hier nicht** — eine Sperre ist kein Summand im
+Potential.
+
+Werkzeuge: `messe_volumenanteil.py --form | --wirkung | --mitlaeufer`
+Verwandt: F-168 (dieselbe Gestalt) · N-13a · N-13b · Methodik 2.99

@@ -5176,3 +5176,70 @@ da — und dort steht die Stufe seit dem 02.09. in der Trichtertabelle.
 
 Werkzeug: `simuliere_kette.py --nachweis-n14`
 Verwandt: 2.80 · „Eine grüne Suite ist kein Wirkungsnachweis" · N-14
+
+## 2.101 ⚠️⚠️ Ist die Größe eine ZEITPUNKT-Aussage oder eine ASSET-Eigenschaft? — die Frage kommt VOR der Wirkungsmessung
+
+**Anlass 02.09.2026, N-13-1′.** Der Plan schlug den *Anteil am
+Tagesgesamtvolumen* als Ersatz für den Turnover vor. Die Größe ist ein
+sauberer Querschnitt, hat eine Tagesklammer und ist für alle 578
+Messreihen verfügbar — jede formale Prüfung hätte sie durchgelassen.
+
+**Und sie wäre trotzdem ein Verstoß gegen Regel 3 gewesen:** BTC hat jeden
+Tag einen großen Anteil, ein kleiner Altcoin jeden Tag einen kleinen. Eine
+Regel darauf sagt *„dieses Asset ist schlecht"*, nicht *„dieser Zeitpunkt
+ist schlecht"*.
+
+### Das Maß
+
+Je Kalendertag den Rang bilden (damit die Tagesklammer steht), dann die
+Streuung des Rangs zerlegen:
+
+    zwischen   Varianz der SYMBOLMITTEL          -> Asset-Eigenschaft
+    innerhalb  mittlere Varianz je Symbol        -> Zeitpunkt-Aussage
+
+    Asset-Anteil = zwischen / (zwischen + innerhalb)
+
+Dazu die **Autokorrelation** des Rangs (Lag 1 und Lag 20): sagt der Rang
+von gestern den von heute? Bei einem Asset-Maß liegt sie nahe 1.
+
+### ⚠️ Die Zahl allein sagt nichts — die Skala muss geeicht werden
+
+„69,8 %" ist ohne Maßstab bedeutungslos. Zwei Kontrollen, auf **derselben**
+Menge gerechnet, spannen die Skala auf:
+
+    Positivkontrolle   ein je Symbol FESTER Wert     -> 95,9 %
+    Negativkontrolle   reiner Zufall                 -> 0,1 %
+
+Erst davor werden die Kandidaten lesbar: roh 0,73 · relativ 0,01 ·
+Turnover 0,52.
+
+### ⚠️⚠️ UND BEIDE ARME AUF DERSELBEN MENGE — daran ist meine erste Fassung gescheitert
+
+Sie stellte den Kandidaten (578 Symbole) gegen den Maßstab (65). **Der
+Asset-Anteil hängt an der Zahl der Symbole:** bei 578 ist der Rang fein
+aufgelöst, bei 65 grob — und grobe Ränge springen stärker, was eine Größe
+**zeitpunktartiger** aussehen lässt, als sie ist.
+
+Der Vergleich war zugunsten des Maßstabs verzerrt. Nach der Korrektur
+wuchs der Abstand von 6,2 auf **20,1 Punkte**: die falsche Rechnung hatte
+das Problem **kleiner** gezeigt, nicht größer. Das ist die gefährlichere
+Richtung — ein zu großes Problem fällt auf, ein zu kleines nicht.
+
+> **Prüfliste 2.80, Frage 2 („gleiche Arme") gilt auch für die
+> VORprüfungen, nicht nur für die Wirkungsmessung.**
+
+### Der Ausweg, wenn die Form fällt
+
+Den festen Pegel herausteilen: `wert(i,t) / Median(wert(i, t−N .. t−1))`.
+Aus 69,8 % wurden so **1,4 %**. ⚠️ Der Preis ist eine Zeitreihe und damit
+Blindheit für neue Werte (N-13b) — bei N = 20 Tagen aber kurz und endlich,
+nicht 250.
+
+### Was diese Prüfung NICHT ersetzt
+
+Sie sagt nur, ob die Größe die **richtige Art** von Aussage macht. Ob sie
+trägt, sagt erst die Wirkungsmessung. Eine Größe kann eine einwandfreie
+Zeitpunkt-Aussage sein und trotzdem nichts leisten.
+
+Werkzeug: `messe_volumenanteil.py --form`
+Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
