@@ -3216,6 +3216,67 @@ def gesamtpruefung() -> None:
            "still zurueckgefallen")
 
 
+
+def _ohne_bremsen() -> dict:
+    """Eine Konfiguration, in der KEIN Cooldown greift - abgeleitet, nicht
+    abgeschrieben (02.09.2026).
+
+    ⚠️⚠️ WARUM ABGELEITET. Am 02.09. meldete das Notebook 13 rote Punkte,
+    alle aus einer Ursache: die Testkonfiguration setzte
+    `cooldown_stunden_je_gruppe` auf 0, aber L4/L5 hatte am 28.08. einen
+    ZWEITEN Schluessel eingefuehrt - `cooldown_stunden_je_strategie` mit
+    48 Stunden fuer die Akkumulation. Der stand nicht drin, und der
+    Cooldown der echten Produktion sperrte jeden Probelauf.
+
+    Im Trichter war es zu sehen: `Cooldown bis 2026-09-04T07:13` - genau
+    48 Stunden.
+
+    ⚠️ ES WAREN AUSSERDEM ZWEI KOPIEN (`_OHNE_BREMSEN` in paket_b1,
+    `_OHNE_BREMSEN15` in paket_15), obwohl der Kommentar dort schon sagte
+    "dieselbe Konfiguration wie dort". Zwei Kopien laufen auseinander -
+    das ist keine Vorhersage, das ist am 28.08. passiert.
+
+    ⚠️ AM DESKTOP FIEL NICHTS AUF, weil dort `data/tradinginfotool.db`
+    leer ist: kein Signalbestand, also kein Cooldown, also kein Problem.
+    Vierte Spielart von "Test haengt an der Produktion" (Methodik 2.66) -
+    die Pruefung ueberlebt nur, WEIL die Daten guenstig liegen.
+
+    DIE LOESUNG: die Schluessel werden aus `agent/wiederholung.py`
+    ABGELESEN, nicht aufgezaehlt. Kommt ein neuer dazu, ist er automatisch
+    dabei. Die Dauerpruefung unten stellt sicher, dass das Ablesen
+    funktioniert.
+    """
+    import ast as _ast
+    import io as _io
+    quelle = _io.open("agent/wiederholung.py", encoding="utf-8").read()
+    baum = _ast.parse(quelle)
+    fn = next((n for n in _ast.walk(baum)
+               if isinstance(n, _ast.FunctionDef) and n.name == "stunden"),
+              None)
+    rollen, budget = {}, {}
+    for k in _ast.walk(fn or baum):
+        # jedes `.get("cooldown...")` im Rumpf von `stunden()`
+        if (isinstance(k, _ast.Call) and isinstance(k.func, _ast.Attribute)
+                and k.func.attr == "get" and k.args
+                and isinstance(k.args[0], _ast.Constant)
+                and isinstance(k.args[0].value, str)
+                and "cooldown" in k.args[0].value):
+            rollen[k.args[0].value] = 0.0
+    # ⚠️ Die Gruppen- und Strategie-Schluessel sind WOERTERBUECHER, keine
+    # Zahlen - eine 0.0 dort waere wirkungslos, weil `.get(gruppe)` dann
+    # None liefert und die naechste Ebene greift.
+    for name in list(rollen):
+        if name.endswith(("_je_gruppe", "_je_strategie")):
+            rollen[name] = {k: 0.0 for k in
+                            ("krypto", "aktien", "rohstoffe", "themen_etf",
+                             "hedge", "einstieg", "akkumulation", "swing")}
+    from agent import wiederholung as _WH
+    for s in _WH._SCHLUESSEL.values():
+        budget[s] = 0.0
+    return {"anlass": {"aktiv": False}, "rollen_kette": rollen,
+            "budget_allocator": budget}
+
+
 def paket_b1() -> None:
     """B1 - der eine Ort, an dem die Kette zusammengesetzt wird."""
     P = "B1"
@@ -3349,11 +3410,7 @@ def paket_b1() -> None:
     # nicht, ob eine Bremse gerade greift. Also werden beide Bremsen
     # ausgeschaltet, statt das Ergebnis dem Zufall des Zeitpunkts zu
     # ueberlassen. Die Bremsen haben ihre eigenen Pruefungen.
-    _OHNE_BREMSEN = {"anlass": {"aktiv": False},
-                     "rollen_kette": {"cooldown_stunden_je_gruppe":
-                                      {"krypto": 0.0}},
-                     "budget_allocator": {"spot_cooldown_stunden": 0.0,
-                                          "cooldown_stunden": 0.0}}
+    _OHNE_BREMSEN = _ohne_bremsen()
 
     # ⚠️ GEGEN EINE EIGENE DATEIKOPIE, NICHT GEGEN DIE ECHTE DATEI
     # (24.08.2026, letzter der acht Notebook-Funde).
@@ -4294,11 +4351,7 @@ def paket_15() -> None:
     # Probelaufs testen, nicht ob der Cooldown gerade greift - der hat seine
     # eigenen Pruefungen (siehe paket_b1). Also dieselbe `_OHNE_BREMSEN`-
     # Konfiguration wie dort.
-    _OHNE_BREMSEN15 = {"anlass": {"aktiv": False},
-                       "rollen_kette": {"cooldown_stunden_je_gruppe":
-                                        {"krypto": 0.0}},
-                       "budget_allocator": {"spot_cooldown_stunden": 0.0,
-                                            "cooldown_stunden": 0.0}}
+    _OHNE_BREMSEN15 = _ohne_bremsen()
     erg = RL.fuehre_lauf(conn=c, reihen=reihen, symbole=symbole,
                          betriebsart="probe", client=klient, modell="test",
                          zai_client=None, config=_OHNE_BREMSEN15,
@@ -15308,6 +15361,31 @@ def paket_terminmarkt() -> None:
         7  der Trichter bleibt monoton
     """
     P = "Terminmarkt"
+
+    # ---- DAUERPRUEFUNG T5: die Testkonfiguration darf nicht veralten ----
+    #
+    # ⚠️ ANLASS 02.09.2026: 13 rote Punkte am Notebook, eine Ursache. Die
+    # Testkonfiguration setzte `cooldown_stunden_je_gruppe` auf 0, kannte
+    # aber `cooldown_stunden_je_strategie` nicht - eingefuehrt von L4/L5
+    # am 28.08. mit 48 Stunden fuer die Akkumulation. Der Cooldown der
+    # echten Produktion sperrte damit jeden Probelauf.
+    #
+    # Die Pruefung fragt die PRODUKTIONSFUNKTION, nicht die Konfiguration:
+    # ergibt `stunden()` fuer JEDE Kombination null, ist keine Bremse
+    # uebersehen worden. Ein neuer Schluessel faellt hier sofort auf.
+    from agent import wiederholung as _WH5
+    _cfg5 = _ohne_bremsen()
+    _nicht_null = [(i, s, _WH5.stunden(i, _cfg5, g, strategie=s))
+                   for i in ("spot", "hebel")
+                   for g in ("krypto", "aktien", "rohstoffe")
+                   for s in (None, "einstieg", "akkumulation", "swing")
+                   if _WH5.stunden(i, _cfg5, g, strategie=s) != 0.0]
+    pruefe(P, "T5: `_ohne_bremsen()` schaltet JEDE Cooldown-Variante ab",
+           not _nicht_null,
+           "sonst sperrt der Cooldown der echten Produktion die Probelaeufe "
+           "der Suite - am Desktop unsichtbar, weil dort kein Signalbestand "
+           "liegt. Nicht abgeschaltet: %s" % (_nicht_null[:4] or "-"))
+
     import ast as _ast
     import pathlib as _pl
     from agent.rollen_gate import STUFEN_NAMEN as _SN, Durchlauf as _D

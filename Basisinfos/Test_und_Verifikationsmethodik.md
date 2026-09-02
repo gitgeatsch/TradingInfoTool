@@ -5262,3 +5262,58 @@ Am 02.09. hätte ein Pull ohne sie die Kette stumm geschaltet: die
 Messbasen fehlen am Notebook, beide tragenden Beiträge hätten keinen Rang,
 das Potential läge bei 0,000 — und die scharfe Stufe 11 sperrte alles.
 **Lautlos**, weil `messbasis()` fail-soft eine leere Menge liefert.
+
+## 2.103 ⚠️⚠️ Fünfte Spielart von „Test hängt an der Produktion": eine Testkonfiguration, die AUFZÄHLT statt ABZULEITEN
+
+**Anlass 02.09.2026.** Nach dem Pull meldete das Notebook **13 rote
+Punkte** bei 1.928 Prüfungen — am Desktop **null**. Alle dreizehn hatten
+**eine** Ursache, und sie stand in der Detailzeile des Trichters:
+
+    nicht kuerzlich schon gefragt   0   (5 verloren)  <- hier
+          1x Cooldown bis 2026-09-04T07:13
+
+**Der Cooldown der echten Produktion sperrte die Probeläufe der Suite.**
+Alles danach war zwangsläufig leer: keine Mail, keine Kursmarken, kein
+Signal, kein Entscheider.
+
+### Warum die Vorsorge nicht half
+
+Es gab sie: `_OHNE_BREMSEN` setzt seit dem **24.08.**
+`cooldown_stunden_je_gruppe` auf 0 — damals aus genau diesem Grund
+eingeführt (Commit `f71a10f`).
+
+**Am 28.08. kam mit L4/L5 ein ZWEITER Schlüssel dazu:**
+`cooldown_stunden_je_strategie = {akkumulation: 48}`. Er stand nicht in
+der Testkonfiguration. Die 48 Stunden im Trichter sind genau er.
+
+⚠️ **Und es waren zwei Kopien** — `_OHNE_BREMSEN` in `paket_b1`,
+`_OHNE_BREMSEN15` in `paket_15` — obwohl der Kommentar dort bereits sagte
+*„dieselbe Konfiguration wie dort"*. Zwei Kopien laufen auseinander; das
+ist keine Vorhersage, sondern das, was passiert ist.
+
+### Die Regel
+
+> **Eine Testkonfiguration, die Schlüssel AUFZÄHLT, veraltet mit jedem
+> neuen Schlüssel — und zwar lautlos.** Sie muss sie aus dem
+> Produktionscode ABLEITEN.
+
+`_ohne_bremsen()` liest die Schlüssel jetzt über den Syntaxbaum aus
+`wiederholung.stunden()`. Kommt einer dazu, ist er automatisch dabei.
+
+### ⚠️ Und warum der Desktop blind war
+
+`data/tradinginfotool.db` ist dort **leer**. Kein Signalbestand → kein
+Cooldown → kein Problem. Die Prüfung überlebte nur, **weil die Daten
+günstig lagen** — dieselbe Wurzel wie 2.66/2.68/2.69/2.72, aber eine neue
+Spielart: nicht die Prüfung greift auf die Produktion zu, sondern die
+**Abwesenheit** von Produktionsdaten verdeckt den Fehler.
+
+### Die Dauerprüfung T5
+
+Sie fragt die **Produktionsfunktion**, nicht die Konfiguration: ergibt
+`stunden()` für jede Kombination aus Instrument, Gruppe und Strategie
+null, ist keine Bremse übersehen worden. **Das ist unabhängig davon, ob
+eine Datenbank gefüllt ist** — der Desktop kann den Fehler damit sehen,
+ohne die Produktionsdaten zu haben.
+
+Verwandt: 2.66 · 2.68 · 2.69 · 2.72 · L4/L5
