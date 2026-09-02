@@ -132,3 +132,116 @@ git log --oneline -1 && git revert --no-commit HEAD~38..HEAD
 ⚠️ **Aber die Daten bleiben:** `signals.strategie` und `auswahl_schatten` sind
 **additiv** — sie stören eine ältere Codeversion nicht. Ein Rückschritt kostet
 also keine Zeilen, nur die neuen Felder bleiben leer.
+
+---
+
+# AUSROLLEN 02.09.2026 — das Scharfschalten, und der Knoten, der fast übersehen wurde
+
+**Nutzerentscheidung:** *„Ich würde gerne umschalten und das scharf, danach
+messen. Du musst vorher prüfen, ob wir alle wichtigen Punkte und Knoten
+haben — z. B. was ist mit der neuen Datenbank, wie kommt die auf das NB?"*
+
+## ⚠️⚠️ Der Knoten: vier Datenbanken, die `git pull` NICHT mitbringt
+
+`*.db` steht in `.gitignore`. Der Produktionscode liest seit dem 31.08.
+vier Dateien, die es auf dem Notebook nicht gibt:
+
+    data/funding_historie.db       22 MB   -> messbasis("funding")
+    data/onchain_historie.db       22 MB   -> messbasis("turnover")
+    data/terminmarkt_historie.db  132 MB   -> messbasis("oi"), N-14
+    data/messdaten.db             166 MB   -> schnitte(), messbasis("schnitt")
+
+**Fehlen sie, bricht nichts ab — und genau das ist die Gefahr.**
+`messbasis()` liefert eine leere Menge, `raenge()` überspringt die Größe mit
+einem `logger.error`. Beide **tragenden** Beiträge (Funding, Turnover)
+hätten dann keinen Rang, das Potential läge bei **0,000**, und die scharf
+geschaltete Stufe 11 sperrte **alles**.
+
+> **Ein Pull ohne diese Dateien schaltet die Kette stumm — lautlos.**
+> Genau der Deadloop, aus dem das System gerade kommt.
+
+## Die Lösung: es sind gar nicht die Daten, die gebraucht werden
+
+Drei der vier werden **nur nach der Symbolliste** gefragt. Aus 176 MB
+werden **40 KB**:
+
+    python baue_messbasis_paket.py --ziel "K:/My Drive/Claude_Austauschordner/Messbasis"
+
+    funding_historie.db       302 Symbole  ->  12,0 KB
+    onchain_historie.db        66 Symbole  ->  12,0 KB
+    terminmarkt_historie.db   132 Symbole  ->  16,0 KB
+
+**Gegengeprüft:** `marktrang.messbasis()` liest aus dem Paket exakt
+dieselben Mengen wie aus den Originalen (302 / 66 / 122 — identisch).
+
+⚠️ **Jede Paketdatei kennzeichnet sich selbst** (Tabelle
+`_nur_symbolliste`): eine verkleinerte Datenbank, die aussieht wie eine
+echte, wäre sonst eine Falle für jede spätere Messung.
+
+⚠️ **`messdaten.db` ist NICHT im Paket** — sie wird wirklich ausgelesen.
+Ohne sie fällt der Schnittabstand weg; er ist am 31.08. als Beitrag
+gefallen und nur noch **Anzeige**. Wer ihn will: `lade_messreihen.py` am
+Notebook.
+
+## Die übrigen Knoten — alle geprüft
+
+| | Stand |
+|---|---|
+| **Schema** `signals.instrument` | ✔ `_migrate_signal_instrument` läuft in `init_db` automatisch |
+| **`config.yaml`** | ✔ liegt in `Basisinfos/` und **ist im Repo** — kommt mit dem Pull. Eine Änderung: Stop-Untergrenze 2,5 → 5,0 % |
+| **Neue Python-Pakete** | ✔ keine (`requirements.txt` unverändert) |
+| **Schwelle 0,080** | ✔ steht im **Code** (`agent/potential.py`), nicht in der config |
+| **Config-Schlüssel ohne Vorgabe** | ✔ keine |
+| **`.env`** | ✔ unverändert — wird ohnehin nie übertragen |
+
+## Die Reihenfolge
+
+```bash
+python baue_messbasis_paket.py --ziel "K:/My Drive/Claude_Austauschordner/Messbasis"
+```
+*(am Desktop, vor dem Push)*
+
+Dann am Notebook:
+
+```bash
+git fetch && git status
+```
+⚠️ **Zuerst `fetch`, nicht `pull`** — das Notebook hatte schon einmal eigene Commits.
+
+```bash
+git pull --ff-only
+```
+
+**Dann die drei Dateien aus `Claude_Austauschordner/Messbasis` nach `data/`
+kopieren** — vor dem Neustart, sonst läuft der erste Lauf blind.
+
+```bash
+python pruefe_pakete.py
+```
+Muss **1.928 bestanden** melden. Bricht sie ab: nicht starten.
+
+Dann Scheduler stoppen, starten.
+
+## ⚠️ Was danach zu erwarten ist — und zwar sofort
+
+| | vorher | nachher |
+|---|---|---|
+| Signale | ~28/Tag | **~0,5/Tag** |
+| Mails | ~37/Tag | entsprechend wenige |
+
+**Das ist kein Fehler, sondern die Umschaltung.** Wer am nächsten Morgen
+eine leere Mailbox sieht, hat den erwarteten Zustand.
+
+## Wie danach gemessen wird
+
+Die Zeile steht schon im Log, seit dem 14.08.:
+
+    grep "Durchlaessigkeit" data/tradinginfotool.log
+
+⚠️ **Das Log rotiert bei 5 MB mit drei Sicherungen.** Bei 9,3 Läufen am Tag
+deckt das Fenster nur wenige Tage ab — **nach zwei Tagen holen**, nicht
+nach zwei Wochen.
+
+**Die Frage, die der Trichter danach beantwortet:** greift Stufe 11 auf
+denselben Zellen wie vorher, oder verschiebt sich der Verlust? Und: was
+macht die neue Stufe `terminmarkt` (N-14)?
