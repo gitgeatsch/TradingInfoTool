@@ -3939,3 +3939,90 @@ Tag** ein Signal bekommen. HYPE bekommt 6,3.
 
 Werkzeuge: `pruefe_cooldown_wirkung.py --db <backup>`
 Verwandt: F-173 · L4/L5 · Methodik 2.94 (ein Parameterwert ist kein Nachweis)
+
+---
+
+## F-175 ⚠️⚠️⚠️ Der echte Trichter: ein Pull senkt 113 Signale auf 2 (02.09.2026)
+
+**Grundlage:** das Notebook-Log vom 30.08. bis 02.09. 08:44 — **1.286
+Läufe**, die Zeile `Rollen-Kette Durchlaessigkeit` aus
+`scheduler/rollen_job.py:464`.
+
+### Der Trichter, wie er wirklich läuft
+
+| Stufe | bestanden | verloren | Verlust |
+|---|---|---|---|
+| auftrag | 14.397 | 0 | 0,0 % |
+| fakten | 14.161 | 236 | 1,6 % |
+| lagebild | 14.161 | 0 | 0,0 % |
+| anlass | 10.244 | 3.917 | 27,7 % |
+| auswahl | 6.044 | 4.200 | 41,0 % |
+| **wiederholung** | **413** | **5.631** | **93,2 %** |
+| urteil | 407 | 6 | 1,5 % |
+| aktion | 156 | 251 | 61,7 % |
+| geometrie | 113 | 0 | 0,0 % |
+| risikoschicht | 113 | 0 | 0,0 % |
+| **entscheider** | **2** | **111** | **98,2 %** |
+
+### ✔ F-174 ist damit ÜBERHOLT — der Cooldown wirkt
+
+**Er ist die schärfste Stufe der Kette: 93,2 %.**
+
+Mein Befund vom selben Tag („der Cooldown wird übergangen", 97,1 % Verstoß)
+galt dem Bestand bis zum **29.08.** — und war für diesen Zeitraum richtig.
+**Die Ursache war der Sync:** L4/L5 wurde am 28.08. gebaut, das Notebook
+hat es offenbar am 30.08. gezogen. Das Backup vom 29.08. zeigt den Zustand
+davor.
+
+> **Ein Befund über die Produktion hat ein Verfallsdatum, und es heißt
+> Pull-Zeitpunkt.** Wer eine Datenbankkopie misst, misst den Codestand von
+> damals — nicht den von heute.
+
+### ⚠️⚠️ Und die Zahl, die vor jedem Pull auf dem Tisch liegen muss
+
+`origin/main` steht auf dem **29.08.** Am Notebook gilt daher:
+
+    NUR_ZAEHLEN = ("entscheider",)     <- die Stufe ZAEHLT nur
+    lokal:  NUR_ZAEHLEN = ()           <- sie VERWIRFT
+
+Der Trichter sagt: **113 Signale erreichten den Entscheider, 111 hätte er
+verworfen.** Am Notebook laufen sie weiter — deshalb kommen dort 113
+Signale und 147 Mails über vier Tage heraus (~28 bzw. ~37 am Tag).
+
+> **Nach einem Pull wären es 2 Signale in vier Tagen. Rund 0,5 am Tag.**
+
+### ⚠️⚠️ Damit ist eine frühere Zahl widerlegt
+
+Die Simulation zur Schwelle 0,080 meldete **56,3 Mails/Tag**. Der echte
+Trichter sagt **0,5 Signale/Tag** — Faktor 100.
+
+Der Grund ist derselbe wie immer: **die Simulation lief mit Attrappen
+gegen eine Kopie.** Sie konnte zeigen, dass die Stufe *wirkt*, nicht wie
+oft sie *greift*. Die stehende Regel *„eine grüne Suite ist kein
+Wirkungsnachweis"* gilt genauso für eine Simulation — und diesmal hätte
+sie eine Kette stumm geschaltet.
+
+### Der Trichter sagt auch, wo NICHT der Engpass ist
+
+| | |
+|---|---|
+| `anlass` + `auswahl` + `wiederholung` | nehmen zusammen **97 %** der Zellen |
+| die beiden neuen Sperren (N-14, N-13-1′) | griffen **nach** `auswahl` und **vor** `wiederholung` |
+
+⚠️ **Sie lägen genau vor der schärfsten Stufe.** Von den 6.044, die
+`auswahl` passieren, sperrt der Cooldown ohnehin 93 %. Eine zusätzliche
+Sperre auf dieselbe Menge nimmt fast nur weg, was der Cooldown auch
+genommen hätte.
+
+### Was daraus folgt
+
+1. **Der Pull ist nicht bereit** — nicht wegen eines Fehlers, sondern
+   wegen der Menge. 0,5 Signale am Tag ist eine Entscheidung, keine
+   Nebenwirkung.
+2. **N-14 ist an der falschen Stelle**, solange `wiederholung` 93 % nimmt.
+3. **Die eigentliche Frage ist die Reihenfolge der Stufen** — nicht,
+   welche Sperre noch dazukommt.
+
+Werkzeug: die Log-Zeile `Rollen-Kette Durchlaessigkeit`
+Verwandt: F-172 · F-173 · F-174 (überholt) · „eine grüne Suite ist kein
+Wirkungsnachweis"
