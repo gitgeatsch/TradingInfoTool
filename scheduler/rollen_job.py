@@ -465,6 +465,27 @@ def fuehre_bereich(
                     {st: (d.bestanden_je_stufe[st], d.verloren_je_stufe[st])
                      for st, _ in __import__(
                          "agent.rollen_gate", fromlist=["STUFEN"]).STUFEN})
+        # ⚠️ UND DIE GRUENDE DAZU (02.09.2026). Die Zahlen allein sagen,
+        # WO die Kette verliert - nicht WARUM. Beim ersten Lauf nach der
+        # Umschaltung stand da `terminmarkt: (307, 0)`: die neue Stufe war
+        # erreicht und hat nie gesperrt. Ob das an fehlenden Raengen lag,
+        # am Bestand oder an der Strategie, war aus dem Log NICHT zu
+        # sehen - die Notizen stehen nur in `bericht()`, und der wird
+        # nirgends geschrieben.
+        #
+        # Eine Diagnose, die man am fernen Geraet nicht lesen kann, ist
+        # keine. Deshalb gehen Gruende und Notizen jetzt mit - je Stufe
+        # die drei haeufigsten, damit die Zeile lesbar bleibt.
+        _kurz = {}
+        for _st in d.gruende:
+            _g = sorted(d.gruende[_st].items(), key=lambda x: -x[1])[:3]
+            _n = sorted((d.notizen.get(_st) or {}).items(),
+                        key=lambda x: -x[1])[:3]
+            if _g or _n:
+                _kurz[_st] = {"verloren": [(t_[:60], k) for t_, k in _g],
+                              "notiert": [(t_[:60], k) for t_, k in _n]}
+        if _kurz:
+            logger.info("Rollen-Kette Gruende: %s", _kurz)
     for fehler in ergebnis["fehler"][:5]:
         logger.warning("Rollen-Kette: %s", fehler)
     return ergebnis
