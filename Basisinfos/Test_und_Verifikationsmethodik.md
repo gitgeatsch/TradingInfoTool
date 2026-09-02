@@ -5243,3 +5243,22 @@ Zeitpunkt-Aussage sein und trotzdem nichts leisten.
 
 Werkzeug: `messe_volumenanteil.py --form`
 Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
+
+## 2.102 Werkzeugkasten-Nachtrag (02.09.2026) — die Ausroll- und Betriebswerkzeuge
+
+| Werkzeug | wann | wofür |
+|---|---|---|
+| `pruefe_ausrollbarkeit.py` | **vor jedem Pull aufs Notebook** | Welche Datendateien liest der Produktionscode, die `git pull` nicht mitbringt? Was passiert, wenn eine fehlt — Ausfall oder stilles Schweigen? Dazu Schema-Migrationen und neue config-Schlüssel |
+| `baue_messbasis_paket.py` | zusammen mit dem obigen | Baut aus den Messdatenbanken die **Symbollisten**, die der Betrieb wirklich braucht — 40 KB statt 176 MB. Gegengeprüft gegen `marktrang.MESSBASIS` |
+| `pruefe_cooldown_wirkung.py` | wenn der Takt auffällt | Greift der Cooldown? Vergleicht die geltende Dauer mit den echten Abständen und stellt `gesperrt_bis` **chronologisch** nach |
+| `rechne_takt_je_asset.py` | nach jeder Änderung an den Trichterstufen | Welches Asset bekommt wie oft welche Empfehlung, bis zur Mail — gerechnet an einem NB-Backup |
+| `rechne_redundanz_je_asset.py` | dito | Wieviel vom Takt ist **Wiederholung** derselben Empfehlung? |
+| `rechne_sperren_zusammen.py` | vor jeder zusätzlichen Sperre | Wieviel lassen zwei Sperren **zusammen** durch — gegen die Randfälle deckungsgleich und unabhängig |
+| `messe_volumenanteil.py` | — | `--form` klärt Asset-Maß gegen Zeitpunkt-Aussage, `--wirkung` die Regel, `--mitlaeufer` den Schichtentest |
+| `rechne_oi_beitrag.py` | — | Beitragstabelle für `oi_aenderung`, mit Monotonie als Vorabbedingung |
+
+⚠️ **Die ersten beiden gehören zusammen und sind Pflicht vor dem Pull.**
+Am 02.09. hätte ein Pull ohne sie die Kette stumm geschaltet: die
+Messbasen fehlen am Notebook, beide tragenden Beiträge hätten keinen Rang,
+das Potential läge bei 0,000 — und die scharfe Stufe 11 sperrte alles.
+**Lautlos**, weil `messbasis()` fail-soft eine leere Menge liefert.

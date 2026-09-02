@@ -3650,10 +3650,31 @@ def paket_b1() -> None:
 
     lang, _lang_text = _erste_mail("hebel", "KAUFEN", "LONG")
     kurz, _kurz_text = _erste_mail("hebel", "KAUFEN", "SHORT")
-    pruefe(P, "beide Richtungsläufe erzeugen ueberhaupt eine Mail",
-           bool(lang) and bool(kurz),
-           "ohne Mail sind die folgenden Richtungspruefungen leer - "
-           "und ein Zugriff auf mails[0] wuerde die Suite abbrechen")
+    # ⚠️⚠️ DER SCHUTZ WAR HALB - und das hat am 02.09. die Suite am
+    # NOTEBOOK abgebrochen (`KeyError: 'stop'`, Zeile 3669).
+    #
+    # `_erste_mail` faengt den IndexError ab und gibt bei fehlender Mail
+    # ein LEERES Woerterbuch zurueck. Genau das war die Absicht. Aber die
+    # drei folgenden Pruefungen greifen mit `lang["stop"]` darauf zu - und
+    # ein KeyError beendet die Suite ebenso gruendlich wie der IndexError,
+    # gegen den man sich gerade abgesichert hatte.
+    #
+    # Am Desktop faellt es nicht auf, weil dort eine Mail entsteht. Das ist
+    # die vierte Spielart von "Test haengt an der Produktion" (Methodik
+    # 2.66): die Pruefung ueberlebt nur, WEIL die Daten guenstig liegen.
+    #
+    # ⚠️ NICHT STILL UEBERSPRINGEN. Fehlen die Marken, ist das ein ROTER
+    # Punkt - aber einer, der die folgenden Pakete weiterlaufen laesst.
+    _noetig = ("stop", "ziel", "liq")
+    _fehlend = ([k for k in _noetig if k not in lang],
+                [k for k in _noetig if k not in kurz])
+    _marken_da = not (_fehlend[0] or _fehlend[1])
+    pruefe(P, "beide Richtungsläufe erzeugen eine Mail MIT Kursmarken",
+           _marken_da,
+           "ohne sie sind die folgenden Richtungspruefungen leer. "
+           "LONG fehlt %s, SHORT fehlt %s. Mail vorhanden: LONG %s, "
+           "SHORT %s" % (_fehlend[0] or "nichts", _fehlend[1] or "nichts",
+                         bool(_lang_text), bool(_kurz_text)))
     # ⚠️ MEHR ALS DIE ZWEI ZAHLEN (24.08.2026): am Notebook lag der
     # SHORT-Stop wiederholt UNTER dem Kurs, aber weder `entscheidungsrechnung.
     # rechne()` noch ein voller lokaler Mail-Nachbau liessen sich dazu
@@ -3665,16 +3686,30 @@ def paket_b1() -> None:
     # erste) gehen deshalb mit in die Detailzeile.
     _kurz_stop_zeilen = [z.strip() for z in _kurz_text.split(chr(10))
                          if "Stop " in z]
-    pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
-           lang["stop"] < kurs_eth < kurz["stop"],
-           f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei "
-           f"{kurs_eth:.0f} | SHORT-Zeilen mit 'Stop ': {_kurz_stop_zeilen}")
-    pruefe(P, "das Ziel dreht mit",
-           lang["ziel"] > kurs_eth > kurz["ziel"])
-    pruefe(P, "und die Liquidation auch",
-           lang["liq"] < kurs_eth < kurz["liq"],
-           "sonst stuende bei einem SHORT eine Liquidation unter dem "
-           "Einstieg - dort kann sie nie greifen")
+    if _marken_da:
+        pruefe(P, "bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber",
+               lang["stop"] < kurs_eth < kurz["stop"],
+               f"LONG {lang.get('stop')} / SHORT {kurz.get('stop')} bei "
+               f"{kurs_eth:.0f} | SHORT-Zeilen mit 'Stop ': {_kurz_stop_zeilen}")
+        pruefe(P, "das Ziel dreht mit",
+               lang["ziel"] > kurs_eth > kurz["ziel"])
+        pruefe(P, "und die Liquidation auch",
+               lang["liq"] < kurs_eth < kurz["liq"],
+               "sonst stuende bei einem SHORT eine Liquidation unter dem "
+               "Einstieg - dort kann sie nie greifen")
+    else:
+        # ⚠️ DREI ROTE PUNKTE, nicht ein stilles Ueberspringen. Waeren sie
+        # unsichtbar, saehe eine Suite mit fehlenden Mails genauso aus wie
+        # eine mit richtiger Geometrie - und die Zahl am Ende stimmte
+        # trotzdem.
+        for _was in ("Stop dreht mit der Richtung",
+                     "Ziel dreht mit der Richtung",
+                     "Liquidation dreht mit der Richtung"):
+            pruefe(P, _was, False,
+                   "NICHT GEPRUEFT - es entstand keine Mail mit Kursmarken. "
+                   "Der Grund steht in der Zeile darueber; diese drei "
+                   "Punkte sind rot, damit die Luecke sichtbar bleibt und "
+                   "die Gesamtzahl stimmt")
     con.close()
 
 
