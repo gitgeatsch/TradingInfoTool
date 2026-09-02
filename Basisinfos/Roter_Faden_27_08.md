@@ -456,3 +456,97 @@ der Trichter sagt, dass 97 % längst vorher wegfallen.
 
 > **Ein stabiler Pull ist nicht der, bei dem alles gebaut ist, sondern
 > der, bei dem wir die Menge vorher kennen.** Die kennen wir seit heute.
+
+---
+
+# FORTSCHREIBUNG 02.09.2026, abends — nach der Umschaltung
+
+**Der Zustand hat sich heute grundlegend geändert**, und zwar nicht durch
+eine Messung, sondern durch einen Schalter: `origin/main` stand morgens
+noch auf dem 29.08., jetzt läuft das Notebook auf dem Stand vom 02.09.,
+**mit scharfer Stufe 11**.
+
+## 1. Was heute tatsächlich passiert ist
+
+| Uhrzeit | |
+|---|---|
+| vormittags | Standortbestimmung, Messbasis-Paket (40 KB statt 176 MB) |
+| ~11:00 | Push — 47 Commits, nach einer Historie-Bereinigung (1,2 GB Anker-Dumps) |
+| **12:00** | **Pull am Notebook, Neustart** — ab hier erscheint `terminmarkt` im Trichter |
+| **seit 14:00** | **kein einziges Signal mehr** |
+| abends | zwei Prüfungsfehler behoben, Log vollständig geprüft |
+
+## 2. Die vier Bausteine — am Code geprüft
+
+| # | Baustein | 31.08. | **heute abend** |
+|---|---|---|---|
+| 1 | Positionsführung | ✘ kein Aufrufer | ✔ **verdrahtet** · ⚠️ Tabelle `positionen` fehlt weiter (L1) |
+| 2 | Strategie je Position | ⚠️ nur `einstieg` | ⚠️ Zellenmodell setzt beide · **F-169: die zweite Zelle stirbt an `anlass`** |
+| 3 | Auslöser statt Takt | ✘ nicht gebaut | ⚠️ **ungeprüft** — `anlass_kalender` ist erreichbar, aber das beweist den Baustein nicht |
+| 4 | Potential als Auswahl | ✔ 3 Beiträge | ⚠️ **2 Beiträge**, dafür **scharf**: Stufe 11 verwirft jetzt wirklich |
+
+**Stand der Mechanik:** 12 Trichterstufen · Entscheider scharf · alle vier
+Messbasen lesbar (302 / 66 / 122 / 578).
+
+## 3. Der Umbauplan 28.08. — abgeschlossen, aber am falschen Ort
+
+Schritte **1–8** gebaut und nachgewiesen. **N-13** gemessen, **N-14**
+gebaut, **N-13-1′** gemessen und nicht gebaut.
+
+⚠️⚠️ **Und der Trichter aus dem Betrieb sagt, dass diese Arbeit nicht am
+Engpass ansetzte:**
+
+    anlass         27,7 %
+    auswahl        41,1 %
+    wiederholung   93,3 %   <- die schaerfste Stufe
+    entscheider    94,4 %
+    terminmarkt     0,0 %   <- die NEUE Stufe, greift nie
+
+**Die neue Sperre liegt vor der schärfsten Stufe und hat in sieben
+Stunden Betrieb nichts gesperrt.** Warum, war nicht zu sehen — die Gründe
+gingen nicht ins Log. Seit heute tun sie es.
+
+## 4. ⚠️ Korrektur: die Remoteseite läuft
+
+Sie liegt in `remote/` (nicht in `agent/` oder `ui/`, wo ich mittags
+gesucht hatte) und ist seit dem **14.08.** im Betrieb — 3.235 Statusmeldungen
+in vier Tagen. Details in Abschnitt 3 der Mittagsfortschreibung, dort
+korrigiert.
+
+## 5. Was der Betrieb sonst zeigt
+
+| | |
+|---|---|
+| **Fehler in vier Tagen** | 66, davon **null aus der eigenen Logik** |
+| **LLM-Verbrauch** | gemini 79, zai 22 — weit unter Kontingent |
+| **`hebel_triggers`** | **78.091 unbearbeitet** — die aufgelöste Hebelkette in Zahlen |
+| **Netzausfälle** | zweimal; dabei scheitert auch die Meldung darüber |
+
+## 6. Was offen ist — nach Dringlichkeit
+
+    JETZT, weil der Betrieb darauf wartet
+      1  beobachten: pendelt sich der Takt bei ~0,5/Tag ein, oder
+         bleibt er bei NULL? Das entscheidet alles Weitere.
+      2  warum sperrt `terminmarkt` nie? (Gruende sind ab dem naechsten
+         Pull im Log)
+
+    DANACH, in dieser Reihenfolge
+      3  F-169: die zweite Zelle stirbt an `anlass` - Schritt 3+4 laeuft
+         weitgehend leer
+      4  Tabelle `positionen` (L1) - Vorbedingung fuer "je Strategie"
+      5  Baustein 3 ehrlich pruefen statt annehmen
+
+    UNABHAENGIG, blockiert nichts
+      6  78.091 hebel_triggers - Aufbewahrung oder Abarbeitung
+      7  Remoteseite: Warnschwelle 1,0 s erzeugt 1.000 Meldungen/Tag
+      8  P6 Messbasis aktien/ETF · J (TVL) · H (Greed) - Daten liegen da
+      9  D2 `marktbreite` ohne Aufrufer
+
+## 7. Der ehrlichste Satz zum Stand
+
+**Die Bauphase ist vorbei, die Beobachtungsphase hat heute um 14 Uhr
+begonnen.** Alles, was jetzt gebaut würde, wäre eine Entscheidung ohne
+Grundlage — der Betrieb hat seit sieben Stunden kein Signal erzeugt, und
+niemand weiß, ob das der Zielzustand ist oder eine Blockade.
+
+> **Die nächste sinnvolle Handlung ist ein Export, kein Commit.**
