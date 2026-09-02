@@ -128,3 +128,15 @@ messwerte_ausstieg.json
 # Terminmarkt-Historie: eigene Datei wie die uebrigen Messreihen, nicht ins Repo
 data/terminmarkt_historie.db
 data/terminmarkt_historie.db-journal
+
+# ---------------------------------------------------------------------------
+# ANKER-DUMPS AUS MESSLAEUFEN (02.09.2026)
+# ---------------------------------------------------------------------------
+# Am 31.08. sind vier davon in Commit 556d965 gelandet - zusammen 1,2 GB.
+# GitHub weist alles ueber 100 MB je Datei ab, und der Push scheiterte am
+# 02.09. genau daran. Die Dateien sind ZWISCHENERGEBNISSE einer Messung:
+# sie lassen sich jederzeit neu erzeugen und gehoeren nicht in die Historie.
+#
+# ⚠️ Ein `.gitignore`-Eintrag entfernt sie NICHT aus der bestehenden
+# Historie - er verhindert nur die Wiederholung.
+anker_*.json
