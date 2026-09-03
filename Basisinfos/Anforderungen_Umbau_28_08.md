@@ -1371,7 +1371,27 @@ Aufwärtsphase das Vorzeichen dreht**.
 | **N-16a** | die **Bestandshistorie** fehlt — wann wurde welcher Wert gehalten? | ⚠️ **Vorbedingung für alles andere.** Ohne sie ist die Ausstiegsfrage nicht messbar (F-183: von 37 Bestandssymbolen sind 5 in der Messbasis) |
 | **N-16b** | der Trailing-Stop als Auslöser | Schaden belegt (01.09.), Ersatz offen |
 | **N-16c** | die Ausstiegsprüfung läuft über **Signale**, nicht über Positionen | teilweise gelöst durch `positionsfuehrung` (27.08.), aber die greift **nicht ein** — sie ist eine Lesefunktion |
-| **N-16d** | eine **Ausstiegs**bewertung gibt es nicht | die Beiträge sind auf Einstiegen gemessen (F-183) |
+| **N-16d** | eine **Ausstiegs**bewertung gibt es nicht | ⚠️⚠️ **am 03.09. in PROD nachgewiesen (F-187):** der Ausstiegspfad verlässt die Kette bei Stufe 9 (`aktion`, Zeile 1642 `return`) und durchläuft **weder `geometrie` noch `risikoschicht` noch den `entscheider`**. `_sende_ausstieg` setzt `gate_passed = 1` selbst. Ergebnis: VERKAUFEN kommt zu **100 %** durch, REDUZIEREN zu 70,6 %, NACHKAUFEN nur zu 36,1 % |
+
+### ⚠️⚠️ PROD-MENGE GEMESSEN (03.09.) — die Erwartung war falsch gestellt
+
+Im scharfen Stand (02.09. 12:00 – 03.09. 04:17):
+
+    13,3 mailfaehige Signale je Tag
+       davon Einstieg   4,4
+       davon AUSSTIEG   8,8   <- zwei Drittel, ungefiltert
+
+Meine frühere Erwartung *„0,5 bis 1 je Tag"* betraf ausschließlich die
+**Einstiegsseite** („ein Pull senkt 113 Signale auf 2"). Die
+Ausstiegsseite kam in der Rechnung nicht vor — und stellt heute zwei
+Drittel des Aufkommens.
+
+⚠️ **Damit ist N-16 nicht nur ein Qualitätsthema, sondern das
+Mengenthema.** Wer die Signalflut senken will, muss dort ansetzen: auf
+der Einstiegsseite wirkt die Sperre bereits (28 NACHKAUFEN → 3).
+
+⚠️ Unsicherheit (2.107): neun Ereignisse in 16,3 Stunden, Poisson-Band
+rund ±9 je Tag. Die Größenordnung trägt, die Zahl nicht.
 
 ⚠️ **N-16a ist der Engpass und zugleich der billigste Schritt:** eine
 Tabelle, die täglich den Bestand fortschreibt. Sie kostet nichts, muss

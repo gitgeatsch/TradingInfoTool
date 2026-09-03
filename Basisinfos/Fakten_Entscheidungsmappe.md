@@ -5025,3 +5025,96 @@ messbar statt zu schätzen.
 
 Werkzeug: `pruefe_kette_horizonte.py`
 Verwandt: **F-185** · F-184 · N-17 · R-R9 · G-6
+
+---
+
+## F-187 ⚠️⚠️⚠️ PROD-PRÜFUNG: die Einstiegssperre wirkt — die Ausstiegsseite hat KEINE (03.09.2026)
+
+**Nutzerauftrag:** *„prüfe genau, ob und wie die Filter jetzt in der PROD
+funktionieren — also Empfehlungen, die eine E-Mail generieren oder NICHT
+generieren, da wir nun ca. 0,5 bis 1 Empfehlungen pro Tag kommen sollten
+(deine Aussage aufgrund von Messungen) — vor allem ob wir keine ‚Sperre
+in der Bewertung, Kette' irgendwo haben."*
+
+### ⚠️ Zuerst: der Trichter mischte zwei Codestände
+
+Der Log-Export (31.08.–03.09.) zeigte *„entscheider 118 hinein, 10
+bestanden"*, die Datenbank gleichzeitig 51–68 durchgelassene Signale pro
+Tag. **Kein Widerspruch, sondern ein Messfehler von mir:** das Notebook
+wurde erst am **02.09. mittags** scharf geschaltet. Alles davor ist der
+Stand vom 29.08., in dem der Entscheider nur zählte.
+
+Stundengenau ist der Umschlag sichtbar:
+
+    02.09. 03 Uhr   18 Einstiege, 8 durch
+    02.09. 07 Uhr   15 Einstiege, 7 durch
+    02.09. 14 Uhr    2 Einstiege, 0 durch
+    02.09. 22 Uhr    3 Einstiege, 0 durch
+
+### Der scharfe Stand allein (02.09. 12:00 – 03.09. 04:17, 16,3 h)
+
+| Aktion | gesamt | durch | Mail? |
+|---|---|---|---|
+| NACHKAUFEN | 28 | **3** | ja |
+| REDUZIEREN | 8 | **4** | ja |
+| VERKAUFEN | 2 | **2** | ja |
+| HALTEN | 4 | 0 | nein |
+
+> **13,3 mailfähige Signale je Tag** — davon **4,4 Einstieg** und
+> **8,8 Ausstieg**.
+
+⚠️ **Die Unsicherheit gehört dazu (2.107):** neun Ereignisse in 16,3
+Stunden. Das Poisson-Band liegt bei rund ±9 je Tag. Die Größenordnung ist
+belastbar, die Zahl nicht.
+
+### ⚠️ Meine Erwartung „0,5 bis 1 je Tag" war falsch — sie galt nur der Einstiegsseite
+
+Die Rechnung „ein Pull senkt 113 Signale auf 2" betraf ausschließlich
+Einstiege. **Die Ausstiegsseite kam darin nicht vor** — und sie stellt
+heute zwei Drittel des Aufkommens.
+
+### ⚠️⚠️⚠️ Der Befund: die Ausstiegsseite hat keine Bewertungssperre
+
+Am Code belegt — der Ausstiegspfad verlässt die Kette bei Stufe 9:
+
+    1641   durchlauf.bestanden(symbol, "aktion")
+    1642   _sende_ausstieg(...)          <- Mail und Signalzeile
+    1653   return                         <- HIER endet der Pfad
+    ...
+    1968   durchlauf.bestanden(symbol, "geometrie")
+    1969   durchlauf.bestanden(symbol, "risikoschicht")
+    2046   der Entscheider (Stufe 12)
+
+> **Ein Ausstieg durchläuft weder `geometrie` noch `risikoschicht` noch
+> den `entscheider`.** `_sende_ausstieg` setzt `gate_passed = 1` selbst,
+> mit der Begründung *„weil es eine HANDLUNG ist"*.
+
+Das erklärt die Verteilung: **VERKAUFEN kommt zu 100 % durch, REDUZIEREN
+zu 70,6 %, NACHKAUFEN nur zu 36,1 %.**
+
+### Ist das ein Fehler?
+
+**Nein — und doch das Problem.** Die Beiträge sind auf **Einstiegen**
+gemessen (F-183); der Entscheider *dürfte* Ausstiege gar nicht mit ihnen
+bewerten. Die Ausstiegsseite ist also nicht falsch gebaut — **es gibt für
+sie schlicht keine Bewertung.** Genau das ist **N-16d**.
+
+Damit ist die Frage des Nutzers beantwortet:
+
+| | |
+|---|---|
+| **Einstiegsseite** | ✔ die Sperre wirkt — von 28 NACHKAUFEN kommen 3 durch |
+| **Ausstiegsseite** | ⚠️⚠️ **keine Sperre vorhanden** — sie ist nicht umgangen, sie existiert nicht |
+| **Erwartung 0,5–1/Tag** | ✖ verfehlt: **13,3/Tag**, weil die Erwartung nur die Einstiege zählte |
+
+### ⚠️ Und ein überholter Kommentar, der genau das verdeckt
+
+`signal_abbildung.py:651` sagt: *„Der Entscheider zählt nur und nimmt
+nichts heraus — eine Zeile mit `gate_passed = 1` kann sich also trotzdem
+nicht tragen."* **Seit G-6 (31.08.) verwirft er.** Wer `gate_passed`
+heute anhand dieses Kommentars deutet, liest die Zahlen falsch — für die
+Einstiegsseite. Für die Ausstiegsseite stimmt er weiterhin, aus einem
+anderen Grund.
+
+Werkzeug: NB-Backup 03.09. 04:19 · `pruefe_kette_horizonte.py`
+Verwandt: **F-183** · F-186 · N-16d · G-6 · 2.107
