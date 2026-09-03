@@ -725,6 +725,72 @@ def hole(*, faktentext: dict, urteil: dict, zai_client,
     return aus
 
 
+# ---------------------------------------------------------------------------
+# G-a: EIN EINDEUTIGES FELD FUER DEN EINWAND (03.09.2026, N-18)
+# ---------------------------------------------------------------------------
+#
+# ⚠️⚠️ DIE URSPRUENGLICHE SORGE - "vier Woerter, zwei Bedeutungen,
+# gleichzeitig live" - war beim Nachpruefen NICHT die Lage. Belegt an den
+# echten Daten:
+#
+#     konsistent/widerspruch   14.08. - 16.08.   (dann abgeschaltet)
+#     ja/nein/unklar           17.08. - heute    (durchgehend, live)
+#
+# Seit dem 16.08. produziert die Rollen-Kette nur noch EINE Antwort: den
+# Einwand. Das echte, WEITERHIN aktuelle Problem ist etwas anderes: "ja"
+# heisst hier "es gibt einen Einwand" - nicht "ja, ich stimme zu". Wer
+# `zai_gegenpruefung_urteil == "ja"` liest, ohne diese Umkehrung zu
+# kennen, liest das Gegenteil dessen, was gemeint ist.
+#
+# ⚠️⚠️ WARUM DIE ALTEN FELDER (`zai_eigene_richtung`, `zai_uebereinstimmung`,
+# die Werte `konsistent`/`widerspruch`) NICHT ENTFERNT WERDEN - Nutzerfrage
+# 03.09.: "sauber entfernt oder stillgelegt". Geprueft, welches von beiden
+# sicher ist:
+#
+# `pruefe_pakete.py` haelt seit dem 16.08. AUSDRUECKLICH fest, dass diese
+# Konstanten/Funktionen lesbar STEHEN BLEIBEN MUESSEN: "und die alten
+# bleiben fuer die sechs alten Pipelines gueltig" - `agent/aktien/
+# pipeline.py`, `agent/hedge/pipeline.py`, `agent/krypto/pipeline.py`,
+# `agent/krypto/hebel_pipeline.py`, `agent/rohstoff/pipeline.py`,
+# `agent/themen_etf/pipeline.py` importieren `gegenpruefung.
+# fuehre_beide_calls_im_hintergrund`, das `pruefe_konsistenz()` und
+# `leite_eigene_richtung()` weiterhin aufruft. Diese sechs Pipelines sind
+# heute abgeschaltet (config.yaml `aktiv_fuer` deckt alle fuenf Klassen ab,
+# `multi_asset_batch_job` uebersprungen) - aber sie sind der DOKUMENTIERTE
+# RUECKFALLWEG, falls eine Klasse je von der neuen Kette zurueckgestuft
+# wird ("GEPRUEFT WIRD JE GRUPPE... solange EINE der vier noch auf der
+# alten Kette steht, laeuft der Batch fuer sie weiter").
+#
+# Ein Entfernen wuerde also nicht totes Gewebe wegschneiden, sondern den
+# einzigen Weg kappen, eine Klasse im Notfall zurueckzustufen - UND eine
+# bestehende Pruefung brechen. Deshalb: STILLGELEGT, nicht entfernt - mit
+# einem Kanarienvogel-Test (Paket "Terminmarkt", unten), der SOFORT
+# anschlaegt, wenn die alten Werte je wieder NEU geschrieben werden. Genau
+# diese Stille war das eigentliche Risiko: `extract_notebook_diagnose.py`
+# hat drei Wochen lang eine tote Kennzahl gezaehlt, ohne dass es auffiel.
+def einwand_liegt_vor(urteil: str | None) -> bool | None:
+    """DIE EINDEUTIGE FORM des rohen `zai_gegenpruefung_urteil`.
+
+    ⚠️ NUR fuer die live gestellte Frage (Einwand der Positionierung).
+    `konsistent`/`widerspruch` beantworten eine ANDERE Frage (widerspricht
+    der Begruendungstext den Fakten?) - sie hier hineinzurechnen waere
+    genau die Vermischung, die dieses Feld verhindern soll. Fuer sie gibt
+    es bewusst KEINE Abbildung: `None` heisst dann "diese Frage wurde
+    nicht gestellt", nicht "unklar beantwortet".
+
+        True    Einwand liegt vor       (roh: "ja")
+        False   kein Einwand            (roh: "nein")
+        None    unklar / nicht gestellt (roh: "unklar", "konsistent",
+                                          "widerspruch", None, alles andere)
+    """
+    w = str(urteil or "").strip().lower()
+    if w == "ja":
+        return True
+    if w == "nein":
+        return False
+    return None
+
+
 def schreibe(conn, signal_id: int, ergebnis: dict) -> bool:
     """Das Ergebnis auf die Signalzeile - durch die UEBERGEBENE Verbindung.
 

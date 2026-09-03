@@ -1602,13 +1602,25 @@ POTENTIAL — wie viel ist hier zu holen, verglichen mit allem anderen."*
 Für **Krypto** ist das gebaut (N-13…N-17 regeln, wie gut). Für die
 **anderen vier Klassen** existiert der Vergleichsmaßstab nicht.
 
-### N-18: Rolle G — drei beschlossene, nie gebaute Änderungen
+### N-18: Rolle G — drei beschlossene Änderungen
 
 **G-a, G-b, G-c** (01.09. beschlossen): Vokabular vereinheitlichen
 (ja/nein/konsistent/unklar) — ausdrücklich als *„Vorbedingung für alles
 Weitere, kein Filter/keine Messung/kein Bericht darf vorher gebaut
 werden"* markiert — Widerspruch sichtbar machen, Trefferbilanz von G
-führen. **Keines davon ist gebaut.**
+führen.
+
+✔ **G-a GEBAUT (03.09., F-195).** Beim Aufsetzen stellte sich heraus,
+dass das Vokabular seit dem 16.08. bereits eindeutig ist — live läuft
+nur noch der Einwand (`ja`/`nein`/`unklar`), die alten Werte
+(`konsistent`/`widerspruch`, `zai_eigene_richtung`,
+`zai_uebereinstimmung`) sind seit drei Wochen eingefroren. Gebaut:
+`einwand_liegt_vor()` (eindeutige Form), ein **Kanarienvogel** statt
+Löschung (die alten Werte sind ein **dokumentierter Rückfallweg** für
+die sechs alten Pipelines — Löschen hätte ihn gekappt und eine
+bestehende Prüfung gebrochen), und der NB-Export-Fehler behoben
+(zählte drei Wochen lang eine tote Kennzahl aus einer erstarrten
+Tabelle). **G-b und G-c noch offen.**
 
 ⚠️ **Und Rolle G hat für zwei von fünf Klassen gar keinen Zweig.** Am
 Code bestätigt (03.09.): `positionierung.lage()` kennt nur `aktien` und

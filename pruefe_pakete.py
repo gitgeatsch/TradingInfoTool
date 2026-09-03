@@ -15880,6 +15880,64 @@ def paket_terminmarkt() -> None:
            "sonst liefe er weiter und kostete den Modellaufruf, den die "
            "Stufe gerade sparen soll")
 
+    # ---- G-a: DAS EINDEUTIGE EINWAND-FELD (03.09.2026, N-18) -------------
+    from agent import zweite_meinung as _ZM9
+    pruefe(P, "G-a: 'ja' wird zu True (Einwand liegt vor)",
+           _ZM9.einwand_liegt_vor("ja") is True)
+    pruefe(P, "G-a: 'nein' wird zu False (kein Einwand)",
+           _ZM9.einwand_liegt_vor("nein") is False)
+    pruefe(P, "G-a: 'unklar' UND die tote Konsistenzpruefung werden zu None",
+           _ZM9.einwand_liegt_vor("unklar") is None
+           and _ZM9.einwand_liegt_vor("konsistent") is None
+           and _ZM9.einwand_liegt_vor("widerspruch") is None,
+           "'konsistent'/'widerspruch' beantworten eine ANDERE Frage - sie "
+           "hier hineinzurechnen waere die Vermischung, die dieses Feld "
+           "verhindern soll")
+    pruefe(P, "G-a: Grossschreibung und Leerraum sind egal",
+           _ZM9.einwand_liegt_vor(" JA ") is True)
+    pruefe(P, "G-a: None und leer werden zu None, nicht zu einem Fehler",
+           _ZM9.einwand_liegt_vor(None) is None
+           and _ZM9.einwand_liegt_vor("") is None)
+
+    # ---- G-a: DER KANARIENVOGEL — schlaegt SOFORT an, wenn der alte -----
+    # Weg je wieder frische Zeilen schreibt (03.09.2026).
+    #
+    # ⚠️⚠️ WARUM DAS NOETIG IST. Die alten Werte (`konsistent`/
+    # `widerspruch`, `zai_eigene_richtung`, `zai_uebereinstimmung`) sind
+    # NICHT entfernt - sie sind der dokumentierte Rueckfallweg, falls eine
+    # Klasse je von `config.yaml rollen_kette.aktiv_fuer` zurueckgestuft
+    # wird (sechs alte Pipelines, siehe `einwand_liegt_vor()`-Kopf). Genau
+    # diese Stille war das Risiko: `extract_notebook_diagnose.py` zaehlte
+    # drei Wochen lang eine tote Kennzahl, ohne dass es auffiel. Diese
+    # Pruefung stellt sicher, dass eine Reaktivierung SOFORT auffaellt,
+    # nicht erst beim naechsten zufaelligen Nachsehen.
+    #
+    # ⚠️ NUR EIN FENSTER, keine feste Grenze - "seit dem 17.08." waere in
+    # einem Jahr eine bedeutungslose Zahl. Das Fenster ist "die letzten 14
+    # Tage vor dem Pruefungslauf", also immer aktuell.
+    import sqlite3 as _sq9
+    from datetime import datetime as _dt9, timedelta as _td9
+    try:
+        _c9 = _sq9.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+        _grenze9 = (_dt9.now().astimezone() - _td9(days=14)).isoformat()
+        _n9 = _c9.execute(
+            "SELECT COUNT(*) FROM signals WHERE created_at >= ? AND "
+            "(zai_gegenpruefung_urteil IN ('konsistent','widerspruch') "
+            "OR zai_eigene_richtung IS NOT NULL "
+            "OR zai_uebereinstimmung IS NOT NULL)", (_grenze9,)).fetchone()[0]
+        pruefe(P, "G-a: der stillgelegte Weg hat in den letzten 14 Tagen "
+                  "NICHTS Neues geschrieben",
+               _n9 == 0,
+               "%d Zeile(n) mit altem Vokabular seit %s - eine der sechs "
+               "alten Pipelines laeuft wieder. Pruefen: config.yaml "
+               "rollen_kette.aktiv_fuer" % (_n9, _grenze9[:10]))
+        _c9.close()
+    except Exception as _exc9:                                # noqa: BLE001
+        pruefe(P, "G-a: der stillgelegte Weg hat in den letzten 14 Tagen "
+                  "NICHTS Neues geschrieben",
+               True, "Produktions-DB nicht lesbar (%s) - uebersprungen, "
+               "nicht als Fehlschlag gewertet" % _exc9)
+
 
 def _sperrt_terminmarkt(knoten) -> bool:
     """Bucht dieser If-Baum irgendwo auf die Stufe `terminmarkt`?"""

@@ -5632,3 +5632,72 @@ Weitere"* ist.
 
 Werkzeug: `agent/trefferbilanz.py` direkt befragt, NB-Backup 18:08
 Verwandt: F-182 · F-186 · F-188 · N-18 · N-22 (Plan korrigiert)
+
+---
+
+## F-195 ✔ G-a gebaut: additiv, mit Kanarienvogel statt Löschung — und warum „entfernen" unsicher gewesen wäre (03.09.2026)
+
+**Nutzerauftrag:** *„so bauen, dass du jederzeit damit umgehen kannst.
+Persönlich wäre mir lieber, dass sie sauber entfernt oder stillgelegt
+werden — prüfen und kritisch gegenprüfen."*
+
+### Die kritische Gegenprüfung: „entfernen" hätte zwei Dinge zerstört
+
+Vor dem Bau geprüft, wer `pruefe_konsistenz()`/`leite_eigene_richtung()`
+(die Quelle der toten Werte) noch referenziert:
+
+1. **Sechs alte Pipeline-Module** (`agent/aktien/pipeline.py`,
+   `agent/hedge/pipeline.py`, `agent/krypto/pipeline.py`,
+   `agent/krypto/hebel_pipeline.py`, `agent/rohstoff/pipeline.py`,
+   `agent/themen_etf/pipeline.py`) importieren sie über
+   `gegenpruefung.fuehre_beide_calls_im_hintergrund` — als **dokumentierter
+   Rückfallweg**, falls eine Klasse je von `config.yaml
+   rollen_kette.aktiv_fuer` zurückgestuft wird.
+2. **Eine bestehende Dauerprüfung** hält seit dem 16.08. ausdrücklich
+   fest: *„die alten bleiben für die sechs alten Pipelines gültig"* — sie
+   wäre bei einer Löschung rot geworden.
+
+> **Löschen hätte nicht totes Gewebe entfernt, sondern den einzigen Weg
+> gekappt, eine Klasse im Notfall zurückzustufen — und eine bestehende
+> Prüfung gebrochen.** Deshalb: **stillgelegt, nicht entfernt.**
+
+### Was „stillgelegt" hier konkret heißt — nicht nur eine Behauptung
+
+**Ein Kanarienvogel** statt einer bloßen Markierung: eine neue
+Dauerprüfung liest die Produktions-DB und schlägt **sofort** an, wenn in
+den letzten 14 Tagen irgendeine Zeile mit dem alten Vokabular geschrieben
+wurde. **Gegengeprüft, dass er wirklich funktioniert:** eine Kopie der
+Desktop-DB (per `Connection.backup()`) künstlich mit einer frischen
+`widerspruch`-Zeile versehen — die Kanarienvogel-Abfrage fand sie sofort.
+
+> **Genau diese Stille war das eigentliche Risiko:**
+> `extract_notebook_diagnose.py` hat drei Wochen lang eine tote Kennzahl
+> gezählt, ohne dass es auffiel. Ein Kanarienvogel verhindert, dass das
+> noch einmal passiert.
+
+### Was tatsächlich additiv gebaut wurde
+
+| | |
+|---|---|
+| **`zweite_meinung.einwand_liegt_vor()`** | wandelt das rohe, mehrdeutige Feld in ein eindeutiges `True`/`False`/`None` — **nur für die live gestellte Frage**. `konsistent`/`widerspruch` werden bewusst zu `None`, nicht in dieselbe Skala gepresst — sie beantworten eine andere Frage |
+| **Kanarienvogel-Prüfung** | 14-Tage-Fenster, meldet sofort, wenn der alte Weg reaktiviert |
+| **`extract_notebook_diagnose.py`** | Quelle von `hebel_signals` (tot seit 10.08.) auf `signals` umgestellt; neue Zähler `anzahl_einwand`/`anzahl_kein_einwand`/`anzahl_unklar` zusätzlich zu den alten — die jetzt **ehrlich Null** zeigen statt eine erstarrte Zahl |
+
+**Nichts Bestehendes wurde umbenannt oder gelöscht.** Der hartcodierte
+Test (*„der Einwand landet auf der Signalzeile"*, `_r7[0] == "ja"`) und
+alle 16 Leser des rohen Feldes funktionieren unverändert.
+
+### Gegengeprüft — an der echten Notebook-Kopie
+
+    anzahl_gesamt          2933
+    anzahl_konsistent      1280  (historisch, ehrlich — vorher an der
+    anzahl_widerspruch      199   falschen, toten Tabelle gezaehlt)
+    anzahl_einwand          596  (stimmt exakt mit der Rohdatenabfrage
+    anzahl_kein_einwand     804   von vorhin ueberein)
+    anzahl_unklar            35
+
+Suite **1960 bei 0 FEHL** (sechs neue G-a-Prüfungen).
+
+Werkzeug: `agent/zweite_meinung.py` · `pruefe_pakete.py` (Paket
+„Terminmarkt") · `extract_notebook_diagnose.py`
+Verwandt: N-18 · F-193 (Nachbar-Fund im selben Themenkomplex)

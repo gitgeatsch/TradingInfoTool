@@ -2251,11 +2251,25 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
         # zur Haelfte richtig: sie sind nicht auswertbar UEBER DIESE SPALTE.
         "selbst_halten_outcome_status, "
         "selbst_halten_outcome_realisiertes_crv, ist_reines_llm_halten "
-        "FROM hebel_signals WHERE zai_gegenpruefung_urteil IS NOT NULL "
+        # ⚠️⚠️ QUELLE UMGESTELLT VON `hebel_signals` AUF `signals`
+        # (03.09.2026, N-18/G-a). `hebel_signals` ist seit S6b (22.08.) tot
+        # - der Hebel faellt seither aus der EINEN Kette an, die in
+        # `signals` schreibt (Kapitel 88). Gegengeprueft: juengste Zeile in
+        # `hebel_signals` stammt vom 10.08. Diese Funktion zaehlte seither
+        # eine erstarrte Tabelle UND ein abgeschaltetes Vokabular
+        # (`konsistent`/`widerspruch`, tot seit 16.08.) - drei Wochen lang,
+        # ohne dass es auffiel.
+        "FROM signals WHERE zai_gegenpruefung_urteil IS NOT NULL "
         "OR zai_eigene_richtung IS NOT NULL "
         "ORDER BY created_at ASC"
     ).fetchall()
     eintraege = [row_to_dict(r) for r in rows]
+    # ⚠️ ALTE SCHLUESSEL BLEIBEN (additiv) - jetzt EHRLICH statt TOT: sie
+    # lesen aus derselben, jetzt lebendigen Tabelle und zeigen zurecht 0,
+    # weil niemand mehr `konsistent`/`widerspruch` schreibt. Wer sie im
+    # JSON-Export findet, bekommt keine falsche Zahl mehr, sondern eine
+    # wahre Null.
+    from agent.zweite_meinung import einwand_liegt_vor as _elv9
     return {
         "anzahl_gesamt": len(eintraege),
         "anzahl_konsistent": sum(1 for e in eintraege if e["zai_gegenpruefung_urteil"] == "konsistent"),
@@ -2263,6 +2277,15 @@ def _zai_gegenpruefung_verlauf(conn) -> dict:
         "anzahl_richtung_gesamt": sum(1 for e in eintraege if e["zai_eigene_richtung"] is not None),
         "anzahl_uebereinstimmung": sum(1 for e in eintraege if e["zai_uebereinstimmung"] == "ja"),
         "anzahl_abweichung": sum(1 for e in eintraege if e["zai_uebereinstimmung"] == "nein"),
+        # NEU (03.09.2026, G-a): das LEBENDIGE Vokabular seit dem 17.08. -
+        # "ja" heisst hier EINWAND, nicht Zustimmung (siehe
+        # `zweite_meinung.einwand_liegt_vor()`-Docstring).
+        "anzahl_einwand": sum(1 for e in eintraege
+                              if _elv9(e["zai_gegenpruefung_urteil"]) is True),
+        "anzahl_kein_einwand": sum(1 for e in eintraege
+                                   if _elv9(e["zai_gegenpruefung_urteil"]) is False),
+        "anzahl_unklar": sum(1 for e in eintraege
+                             if str(e["zai_gegenpruefung_urteil"] or "").strip().lower() == "unklar"),
         "eintraege": eintraege,
     }
 
@@ -3104,9 +3127,14 @@ def main() -> None:
     print(f"  Konfidenz-Kalibrierung: {konfidenz_kalibrierung}")
     print(f"  Deribit-Cross-Check: {deribit_cross_check_verlauf['anzahl_mit_optionsmarkt_fakt']} Signale mit "
           f"Optionsmarkt-Fakt, davon {deribit_cross_check_verlauf['anzahl_mit_gegenargument']} mit gegenargument")
+    # ⚠️ AUSGABE AUF DAS LEBENDIGE VOKABULAR UMGESTELLT (03.09.2026, G-a).
+    # "konsistent"/"widerspruch" ist seit dem 16.08. tot - die Zeile zeigte
+    # seither immer 0/0 und niemandem fiel es auf, weil 0/0 nach "alles
+    # ruhig" aussieht statt nach "diese Kennzahl misst nichts mehr".
     print(f"  Z.ai-Gegenpruefung: {zai_gegenpruefung_verlauf['anzahl_gesamt']} Signale mit Urteil "
-          f"({zai_gegenpruefung_verlauf['anzahl_konsistent']} konsistent, "
-          f"{zai_gegenpruefung_verlauf['anzahl_widerspruch']} widerspruch)")
+          f"({zai_gegenpruefung_verlauf['anzahl_einwand']} Einwand, "
+          f"{zai_gegenpruefung_verlauf['anzahl_kein_einwand']} kein Einwand, "
+          f"{zai_gegenpruefung_verlauf['anzahl_unklar']} unklar)")
     _wt = wartende_themen_vorschlaege
     if "nicht_verfuegbar" in _wt:
         print(f"  Wartende Themen-Vorschlaege: NICHT VERFUEGBAR ({_wt['nicht_verfuegbar']})")
