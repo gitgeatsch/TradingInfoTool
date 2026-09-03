@@ -5373,3 +5373,62 @@ das ganze Paket mit.*
 
 Suite **1954 bei 0 FEHL** (sechs neue S0-Prüfungen).
 Verwandt: F-183 (korrigiert) · F-180 · F-188 · Stufenplan S0/S1
+
+---
+
+## F-191 ✔ Die sieben roten Zeilen am Notebook: kein Codefehler, zwei Reparaturen (03.09.2026)
+
+**Anlass:** nach dem Pull meldete die Suite am Notebook **1954
+Prüfungen, 7 FEHLGESCHLAGEN** — am Desktop 0, bei identischem Code.
+
+### Ursache 1 (5 Zeilen) — die Signalhistorie
+
+Vollständig in **2.108**. Kurz: `paket_b1` lässt die Kette gegen eine
+Kopie der Produktions-DB laufen; die Stufe `aktion` sperrt einen
+Einstieg, wenn für dasselbe Symbol ein Ausstieg fällig ist. Am Notebook
+steht für LINK und ETH ein **NACHKAUFEN**, am Desktop ein **HALTEN**.
+
+✔ **Behoben:** `DELETE FROM signals` in der In-Memory-Kopie, direkt nach
+dem `backup()` — derselbe Weg wie `_ohne_bremsen()` beim Cooldown.
+
+### Ursache 2 (2 Zeilen) — die Spalte `instrument`
+
+`db.py:813` legt sie seit dem 23.08. per `ALTER TABLE` in `signals` an;
+die Klasse `Signal` kannte sie nicht. Am Notebook hat die Tabelle **135**
+Spalten, am Desktop **134** — die Prüfung konnte den Mangel dort gar
+nicht sehen.
+
+⚠️ **Der Prüftext war überholt:** *„eine unbekannte Spalte kappt JEDEN
+Lesepfad"* galt bis zum 22.08.; seither filtert `_row_to_signal` auf die
+bekannten Felder. Der **Wert** ging still verloren, mehr nicht.
+
+✔ **Behoben:** `instrument: str | None = None` in `Signal`. Additiv —
+die Klasse wird nur gelesen, nie zu einem INSERT umgeformt.
+
+### ⚠️ Der Pull war nicht die Ursache
+
+Betroffen sind `database/db.py` und `database/models.py` — beide habe ich
+nicht angefasst. Die Spalte liegt seit dem **23.08.** dort, die
+Signalhistorie ist gewachsen. Der Pull hat die Suite nur zum ersten Mal
+seit Tagen wieder am Notebook laufen lassen.
+
+### Gegengeprüft — und zwar auf der Datenlage, die es fand
+
+| | |
+|---|---|
+| `paket_b1` gegen die **Desktop**-DB | 28 Prüfungen, 0 FEHL |
+| `paket_b1` gegen die **Notebook**-DB | **28 Prüfungen, 0 FEHL** ✔ |
+| `Signal`-Felder gegen NB-Spalten | signals 135/135, hebel_signals 108/108 ✔ |
+| `_row_to_signal` mit einer künftigen Fremdspalte | baut weiter ✔ |
+| Desktop-DB nach dem Rücktausch | 55 / 118 / 134 — unverändert ✔ |
+
+⚠️ **Ein eigener Fehler dabei:** ich habe die Notebook-DB zuerst per `cp`
+an die Teststelle gelegt — bei 372 MB kam *„database disk image is
+malformed"*. **Die Projektregel „DB-Kopien nur per
+`Connection.backup()`" gibt es seit dem 13.08.**, ich habe sie im Eifer
+übergangen. Mit `backup()` lief es sofort.
+
+Suite am Desktop **1954 bei 0 FEHL**. Am Notebook erwartet: **ebenfalls
+0** — das ist die Probe, die noch aussteht.
+
+Verwandt: **2.108** · 2.66 · F-190

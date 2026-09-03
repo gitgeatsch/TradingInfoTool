@@ -3292,6 +3292,37 @@ def paket_b1() -> None:
     # Verbindung, die es im Betrieb nicht gibt.
     con = sqlite3.connect(":memory:"); q.backup(con); q.close()
     con.row_factory = sqlite3.Row
+    # ⚠️⚠️ DIE SIGNALHISTORIE NEUTRALISIEREN (03.09.2026). Sechste Spielart
+    # von "Test haengt an der Produktion" (2.66) - und die teuerste bisher,
+    # weil sie die Suite am NOTEBOOK mit SIEBEN roten Zeilen zurueckliess.
+    #
+    # WAS SCHIEFGING. `fuehre_lauf` baut seine Ausstiegsfuehrung aus
+    # `compute_ausstiegs_empfehlungen(conn, ...)` - also aus DIESER
+    # Verbindung, einer Kopie der Produktion. Die Stufe `aktion` sperrt
+    # daraufhin einen Einstieg, wenn fuer dasselbe Symbol ein Ausstieg
+    # faellig ist.
+    #
+    #     Desktop   LINK/ETH letztes Signal HALTEN      -> Stufe passiert
+    #     Notebook  LINK/ETH letztes Signal NACHKAUFEN  -> alle 5 verworfen
+    #
+    # Fuenf Folgefehler haengen daran ("fuer den Einstieg entsteht eine
+    # Mail", "was der Entscheider verwirft", "je Zelle eine Mail" ...) -
+    # alle nur, weil die Testsymbole auf dem einen Geraet eine Vorgeschichte
+    # haben und auf dem anderen nicht.
+    #
+    # ⚠️ WARUM LOESCHEN UND NICHT ANPASSEN. Ein Test, dessen Ergebnis vom
+    # Signalbestand des Geraets abhaengt, prueft nicht die Kette, sondern
+    # den Zufall der Datenlage. Der Ausgangszustand muss FESTSTEHEN -
+    # dieselbe Begruendung wie bei `_ohne_bremsen()` fuer den Cooldown.
+    #
+    # ⚠️ ES BLEIBT EINE KOPIE IM SPEICHER. Die Produktionsdatenbank wird
+    # nicht angefasst; `q` ist bereits geschlossen.
+    con.execute("DELETE FROM signals")
+    try:
+        con.execute("DELETE FROM hebel_signals")
+    except sqlite3.Error:
+        pass                    # die Tabelle gibt es nicht ueberall
+    con.commit()
     for name, kw, mit_conn in (
             ("eine unbekannte Betriebsart", {"betriebsart": "halbscharf"}, True),
             ("probe ohne Modell-Client", {"betriebsart": "probe"}, True),

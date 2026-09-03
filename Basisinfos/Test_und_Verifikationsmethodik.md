@@ -5483,3 +5483,59 @@ sollte es sich denn ändern?*
 
 Verwandt: F-180 · **F-182** · 2.104 (eine Ziehung ist kein Nullpunkt) ·
 2.95
+
+---
+
+## 2.108 ⚠️⚠️ Sechste Spielart von „Test hängt an der Produktion": die SIGNALHISTORIE
+
+Am 03.09. meldete die Suite am Notebook **7 Fehlschläge**, am Desktop
+**0** — bei identischem Code. Fünf davon hatten eine einzige Ursache.
+
+### Der Mechanismus
+
+`paket_b1` baut eine In-Memory-Kopie der Produktionsdatenbank und lässt
+die Kette darauf trocken laufen. `fuehre_lauf` holt seine
+Ausstiegsführung aus `compute_ausstiegs_empfehlungen(conn, ...)` — **aus
+genau dieser Kopie**. Die Stufe `aktion` sperrt einen Einstieg, wenn für
+dasselbe Symbol ein Ausstieg fällig ist.
+
+    Desktop    LINK/ETH letztes Signal HALTEN      -> Stufe passiert
+    Notebook   LINK/ETH letztes Signal NACHKAUFEN  -> alle 5 verworfen
+
+Fünf Folgefehler hingen daran („für den Einstieg entsteht eine Mail",
+„was der Entscheider verwirft", „je Zelle eine Mail" …) — **alle nur,
+weil die Testsymbole auf dem einen Gerät eine Vorgeschichte haben und auf
+dem anderen nicht.**
+
+### Die Regel
+
+> **Ein Test, dessen Ergebnis vom Signalbestand des Geräts abhängt, prüft
+> nicht die Kette, sondern den Zufall der Datenlage.** Der Ausgangszustand
+> muss feststehen.
+
+Behoben wie beim Cooldown (`_ohne_bremsen()`, 02.09.): `DELETE FROM
+signals` in der **Kopie**, direkt nach dem `backup()`. Die
+Produktionsdatenbank wird nicht angefasst.
+
+### ⚠️ Und die Gegenprobe muss auf der ANDEREN Datenlage laufen
+
+Ein Fix, der nur am Desktop grün ist, beweist nichts — der Desktop war ja
+schon grün. Belegt wurde er, indem die **Notebook-Datenbank an die Stelle
+der Desktop-Datenbank gelegt** und `paket_b1` erneut laufen gelassen
+wurde: **28 Prüfungen, 0 FEHL.** Danach zurückgetauscht und die
+Wiederherstellung an den Zeilenzahlen kontrolliert (55 / 118 / 134).
+
+⚠️ **Beide Richtungen per `Connection.backup()`, nicht per Dateikopie.**
+Mein erster Versuch nahm `cp` bei 372 MB und erzeugte ein *„database disk
+image is malformed"* — die Projektregel dazu gibt es seit dem 13.08., ich
+habe sie im Eifer übergangen.
+
+### Die sechs Spielarten bisher
+
+| | woran der Test hing |
+|---|---|
+| 1–4 | Konfiguration · leere DB · Cooldown je Gruppe · Cooldown je Strategie |
+| **5** | **Migrationsstand** — die Spalte `instrument` existiert am NB (135), am Desktop nicht (134) |
+| **6** | **Signalhistorie** — dieselben Symbole, andere Vorgeschichte |
+
+Verwandt: 2.66 · 2.103 · F-191

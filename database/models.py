@@ -525,6 +525,24 @@ class Signal:
     # Konstruktor, und eine unbekannte Spalte ist dort ein TypeError.
     einstieg_erreicht: int | None = None
 
+    # ⚠️ DERSELBE FALL, EIN JAHR SPAETER NOCH EINMAL (03.09.2026).
+    #
+    # `instrument` liegt seit dem 23.08. auf `signals` - angelegt von
+    # `db.py:813` per ALTER TABLE - und stand in KEINER Klasse. Gefunden
+    # hat es die Suite am NOTEBOOK, nicht am Desktop: dort ist die Spalte
+    # gar nicht erst migriert (134 Spalten gegen 135).
+    #
+    # ⚠️ HEUTE IST ES UNGEFAEHRLICH, und das ist der Unterschied zum
+    # 22.08.: `_row_to_signal` filtert seither auf die bekannten Felder
+    # (`Signal(**{k: v for k, v in data.items() if k in _bekannt})`). Die
+    # Spalte kappt also keinen Lesepfad mehr - ihr WERT ging nur still
+    # verloren, und niemand hat ihn vermisst.
+    #
+    # Aufgenommen wird sie trotzdem: eine Spalte, die geschrieben und nie
+    # gelesen werden kann, ist eine Falle fuer den naechsten, der sie
+    # braucht - und der Rollen-Lauf schreibt sie bei jedem Signal.
+    instrument: str | None = None
+
 
 @dataclass
 class MarktscanCandidate:
