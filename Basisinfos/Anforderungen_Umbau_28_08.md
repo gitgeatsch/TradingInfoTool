@@ -1578,3 +1578,144 @@ Abkürzung schadet**.
 | **wiederholung** nimmt **93,8 %** | der Cooldown ist die schärfste Stufe und **nie gegen Ergebnisse gemessen** | ⚠️ wer S3 baut, misst die Wirkung einer Bewertung **hinter** dieser Bremse |
 
 Verwandt: **F-183** · **F-186** · **F-187** · **F-188** · N-16 · N-17
+
+---
+
+# ⚠️⚠️⚠️ GESAMTSICHTUNG — vergessene und offene Punkte seit 27.08. (03.09.2026)
+
+**Nutzervorgabe, die das auslöst:** *„Wir müssen zukünftig alle
+anstehenden Themen in Pläne übernehmen, sonst vergessen wir diese —
+nimm die offenen Punkte auf in den Plan und gehe zuvor in alle
+Dokumente und Umbauarbeiten bis mindestens 27.08.26, um ‚vergessene'
+oder geplante, offene Punkte zu identifizieren."*
+
+**Methode:** systematische Durchsicht aller 16 seit 27.08. geänderten
+Basisinfos-Dokumente (99 Commits). Punkte aus der laufenden N-13…N-17-
+Linie von heute sind hier **nicht** wiederholt — die stehen bereits
+oben. Jeder Punkt unten wurde **stichprobenartig am heutigen Code
+gegengeprüft**, nicht nur aus der Doku übernommen.
+
+## ⚠️⚠️⚠️ A — das ÜBERGEORDNETE ZIEL für Krypto ist an EINER Stelle blockiert
+
+Das Ziel aus `CLAUDE.md`: *„eine neutrale, begründete Aussage über das
+POTENTIAL — wie viel ist hier zu holen, verglichen mit allem anderen."*
+Für **Krypto** ist das gebaut (N-13…N-17 regeln, wie gut). Für die
+**anderen vier Klassen** existiert der Vergleichsmaßstab nicht.
+
+### N-18: Rolle G — drei beschlossene, nie gebaute Änderungen
+
+**G-a, G-b, G-c** (01.09. beschlossen): Vokabular vereinheitlichen
+(ja/nein/konsistent/unklar) — ausdrücklich als *„Vorbedingung für alles
+Weitere, kein Filter/keine Messung/kein Bericht darf vorher gebaut
+werden"* markiert — Widerspruch sichtbar machen, Trefferbilanz von G
+führen. **Keines davon ist gebaut.**
+
+⚠️ **Und Rolle G hat für zwei von fünf Klassen gar keinen Zweig.** Am
+Code bestätigt (03.09.): `positionierung.lage()` kennt nur `aktien` und
+`rohstoffe`. **Themen-ETF und Hedge fehlen** — `saetze()` bleibt leer,
+`zweite_meinung.py` bricht dort ab.
+
+### N-19: Die Messbasis der vier Nicht-Krypto-Klassen (P6)
+
+**Am Code gemessen (03.09.), `data/messdaten.db`:**
+
+    krypto        523 Reihen   ✔
+    aktien         20 Reihen   ⚠️ Ziel 300-500, Lauf war abgestürzt
+    rohstoffe      35 Reihen   ⚠️ Ziel 20-40, grenzwertig erreicht
+    themen_etf      0 Reihen   ✖ nicht begonnen
+    hedge           —          ⚠️⚠️ kein Querschnitt MÖGLICH (Konstruktionsproblem, keine Fleißaufgabe — Hedge ist eine Rolle im Portfolio, keine Anlageklasse)
+
+Vorlage `lade_messreihen.py` existiert und trägt die Klassenzuordnung
+selbst. **P6a braucht nur einen Neustart**, P6b ist ein neuer Lauf, P6c/d
+brauchen die andere Größenform (Regel 30.08.: *Rohwert · Veränderung ·
+Verhältnis · Niveau — Querschnitt oder Zeitreihe?*).
+
+⚠️ **Ohne P6 bleibt „verglichen mit allem anderen" für 4 von 5 Klassen
+eine Notiz statt einer Aussage.** Das ist derselbe Befund wie **S6** im
+Stufenplan oben — hier mit den fehlenden Zahlen ergänzt.
+
+### N-20: `fakten_roh` erreicht seit dem 13.08. keine Mail — GEGENGEPRÜFT, unverändert
+
+Am Code bestätigt (03.09.): `rollen_lauf.py:2202` und `:2252` sind
+weiterhin die **einzigen** zwei Fundstellen für `fakten_roh` im ganzen
+Projekt — beide lesen, keine schreibt. Elf Zusatzfakten
+(`funding_eur_tag`, `kgv`, `analysten_trend`, `cot_netto_pct`, …) und
+das **Lagebild von Rolle A** erreichen seit **drei Wochen** keine Mail.
+
+> Das ist ein Baustein der neutralen Begründung, der im Kaufpfad fehlt
+> — nicht im Ausstiegspfad wie N-16, sondern in der Bewertung selbst.
+
+## ⚠️⚠️ B — die Verkaufsseite hängt zusätzlich TIEFER als N-16 bereits zeigt
+
+**Nutzerfrage 03.09.:** *„die Verkaufsseite hängt noch immer falsch im
+System oder?"* — Ja, und zwar auf zwei Ebenen:
+
+| Ebene | Befund | Status |
+|---|---|---|
+| **Bewertung** | Ausstiege durchlaufen weder Geometrie noch Entscheider (F-187) | ✔ heute erkannt, N-16 |
+| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7**, unverändert seit dem **26.08.**: Tabelle `positionen` fehlt ganz, Akkumulation wird nie gesetzt, Trailing ist nicht phasenabhängig, keine Spot-Zeitskala, Einstand nur teilweise bekannt | **neu gefunden, N-16e** |
+
+**N-16e (neu) — Vorbedingung für N-16d:** vier Grundsatzfragen zur
+Positionsdefinition sind nie beantwortet:
+
+    Woher kommt der Stop einer gewachsenen Spot-Position?
+    Was ist "eine Position" bei mehrfachem Nachkauf?
+    Soll taktisch/core den Ablauf steuern?
+    Gilt fuer Core-Assets dieselbe Logik wie fuer taktische?
+
+⚠️ **Eine Ausstiegsbewertung auf einer lückenhaften Positionsführung
+wäre nur scheinbar solide.** N-16e gehört deshalb **vor** N-16d in die
+Reihenfolge des Stufenplans: **S4 braucht jetzt auch N-16e, nicht nur
+S1 und S3.**
+
+## C — Hebel: ein Nebenpunkt, kein neuer Kernpunkt
+
+Die Kernfragen (Instrument-Achse, Horizont-Achse, Wegwahl) sind mit
+F-184/F-185/N-17 abgedeckt. Ein Punkt lag daneben und ist noch offen:
+
+**N-21: Aufbewahrungsregel für `hebel_triggers`/`open_interest_snapshot`**
+— beide Tabellen machen **36,5 % der Produktions-DB** aus (331 MB),
+wachsen um ~2,5 Mio Zeilen/Jahr. Eine Regel ist begründbar, **löscht
+aber Daten — Nutzerentscheidung, nicht getroffen.**
+
+## D — der wichtigste GRUNDSATZpunkt, seit dem 24.08. unbeantwortet
+
+**N-22: Die Zielgröße für die Fallzahl.** A1 verengt auf 2 von 41
+Kandidaten (30,7 Empfehlungen/Jahr) — **während jede lernende Stufe
+(Meta-Labeling, Score-Kalibrierung) ein Vielfaches der heutigen Fallzahl
+braucht** (eigene Schwelle: 50 Fälle je Zelle). Wörtlich im Dokument:
+*„Ohne diese Zahl ist nicht entscheidbar, ob k=2 richtig ist."*
+
+⚠️ **Das ist eine andere Frage als F-182 (heute geklärt: A1 verhält sich
+wie dimensioniert).** F-182 zeigt, dass A1 **tut, was es soll** — N-22
+fragt, ob das **Soll selbst** richtig ist. Nirgends seit dem 24.08.
+wieder aufgegriffen.
+
+## E — kleinere Punkte, gesammelt
+
+| # | Punkt | seit | Aufwand |
+|---|---|---|---|
+| **N-23** | Baustein „Auslöser statt Grund" (N-8 verwandt): 11 von 20 Zellen ungeprüft, seit 27.08. unangefasst | 27.08. | mittel |
+| **N-24** | `marktbreite`-Modul ohne Aufrufer — totes Modul | 23.08. | klein |
+| **N-25** | Reparaturliste-Reste: A6 (Mail-Betreff hängt am Lauf) · C1 (Einsatz 800€/1000€, Nutzerentscheidung) · C3 (`crv_spreizung` Config vs. Code) · D3 (27 Config-Schlüssel ohne Leser) | 23.08. | klein je Punkt |
+| **N-26** | V3 „Greed-Teilverkauf" — nie gemessen, Daten liegen seit Wochen | — | klein |
+| **N-27** | Lebendigkeit/TVL (J) — nie gemessen, 188 Reihen bereit | — | klein |
+| **N-28** | Nachrichten (C3) — *„die einzige nie erprobte Informationskategorie"*, Konzept existiert | 24.08. | groß |
+| **N-29** | Fehlerbenachrichtigung ist ein blinder Fleck: scheitert das Netz, scheitert auch die Meldung darüber | 02.09. | mittel |
+| **N-30** | Remote-Warnschwelle 1,0 s erzeugt ~1.000 Meldungen/Tag ohne Aussagekraft | 27.08. | klein |
+
+⚠️ **N-25 bis N-30 bewusst nicht weiter untersucht** — sie waren im
+Original bereits als „offen, nicht dringend" markiert und sind hier nur
+gesammelt, damit sie nicht erneut verloren gehen.
+
+## Die Reihenfolge — eingeordnet in den bestehenden Stufenplan
+
+| | | Verhältnis zu S0–S6 |
+|---|---|---|
+| **N-18/N-19/N-20** | Rolle G, Messbasis, `fakten_roh` | **parallel zu S2/S3** möglich — betreffen die Bewertung der 4 Nicht-Krypto-Klassen, nicht die Krypto-Kette |
+| **N-16e** | Positionsführungs-Grundsatzfragen | **vor S4** — neue Vorbedingung |
+| **N-21** | Aufbewahrungsregel | unabhängig, jederzeit |
+| **N-22** | Zielgröße Fallzahl | ⚠️ **sollte VOR jeder weiteren A1-Änderung entschieden werden** — auch wenn A1 aktuell nicht angefasst wird |
+| N-23–N-30 | kleinere Punkte | nach Bedarf, konkurrieren nicht mit S0–S6 |
+
+Verwandt: **S6** (Messbasis, jetzt mit Zahlen) · **N-16** (jetzt mit N-16e) · CLAUDE.md (übergeordnetes Ziel)
