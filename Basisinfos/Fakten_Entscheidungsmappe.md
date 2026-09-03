@@ -6070,3 +6070,86 @@ und wieder grün. Suite **1970/1970** (1967 + 3 neue Prüfungen in
 
 Werkzeug: `pruefe_pakete.py::paket_verkaufsseite`
 Verwandt: F-199 · F-200 · N-16e · L3 (Bestandsaufnahme 26.08.)
+
+## F-202 ✖ S2/N-17-0 GEMESSEN: weder Stop-Abstand noch Volatilität sagen die Dauer bis zur Entscheidung voraus (03.09.2026)
+
+**Nutzerauftrag:** *„ja S2 aufsetzen, prüfen und gegenprüfen"* — die
+Vorbedingung für N-17a/N-17b/S4/S5: „aus Stop und Volatilität die
+erwartete Zeit bis zur Barriere ableiten" (Stufenplan, S2).
+
+### Vorabfestlegung
+
+Frage: trennt der Stop-Abstand (und/oder das Volatilitätsperzentil)
+systematisch, wie lange ein Signal bis zur Barriere braucht? Erwartung:
+JA in Richtung — ein weiterer Stop sollte länger brauchen. Maßstab:
+Spearman-Rangkorrelation, 90-%-Band über Tage-Cluster-Bootstrap (2.109,
+dieselbe Methode wie G-c — die 239 Fälle verteilen sich ungleich auf 21
+Kalendertage).
+
+### Datengrundlage — NICHT die Desktop-DB
+
+Desktop hat 0 entschiedene Trades (`quelle_kette='rollen'` lief dort nie
+scharf). Gemessen gegen den frischesten NB-Export
+(`K:\...\DB_Backups\tradinginfotool_2026-09-03_1608.db.gz`,
+`PRAGMA integrity_check` ok, 6.414 Signale). ⚠️ `entry_usd`/
+`stop_loss_usd` sind für alle 239 Zeilen NULL — die echten Werte stehen
+in `entry_usd_von`/`stop_loss_usd_von` (0 fehlende Werte dort, an der
+Quelle geprüft statt angenommen).
+
+### Die Messung — Nullbefund, beide Prädiktoren
+
+    Stop-Abstand gegen Dauer:          r = -0,045   Band [-0,195 .. +0,098]
+      n=79  Stop 1,15–3,23 %    Median 2,0 Tage
+      n=79  Stop 3,23–5,00 %    Median 2,0 Tage
+      n=81  Stop 5,15–25,00 %   Median 2,0 Tage
+
+    Volatilitaetsperzentil gegen Dauer (214 von 239 Faellen):
+                                        r = -0,058   Band [-0,232 .. +0,121]
+      n=71  Perzentil 0,00–0,30  Median 2,0 Tage
+      n=71  Perzentil 0,30–0,70  Median 2,0 Tage
+      n=72  Perzentil 0,70–1,00  Median 2,0 Tage
+
+**Beide Bänder schließen Null bequem ein, beide Terzil-Tabellen zeigen
+in JEDER Gruppe dieselbe Median-Dauer.** Kein Zusammenhang in beiden
+Prädiktoren, unabhängig geprüft.
+
+### Gegenprobe gegen ein Messartefakt
+
+Vor der Annahme „kein Zusammenhang" geprüft, ob eine tägliche statt
+kontinuierliche Auswertung die Dauer künstlich glättet: die
+Tage-Verteilung ist glatt (0 bis 17 Tage, keine Häufung auf feste
+Intervalle) — kein Hinweis auf einen Batch-Artefakt. Der Nullbefund ist
+kein Messfehler.
+
+### Selbsttest — echter Gegentest, nicht nur behauptet
+
+Zwei synthetische Welten (echter Zusammenhang, kein Zusammenhang) —
+beide korrekt unterschieden (r=+0,464 gegen r=+0,037). Künstlicher
+Fehler in der Rangberechnung injiziert (Zähler auf 0 gesetzt) — beide
+Welten fielen korrekt auf r=0,000 zurück, der Selbsttest schlug korrekt
+fehl. Fix wiederhergestellt.
+
+### Was das für N-17/S2-S5 heißt
+
+**Die ANSPRUCHSVOLLE Version von S2 — ein individueller Horizont je
+Trade aus Stop/Volatilität — trägt nicht.** Die Daten geben das nicht
+her, mit den bisher erhobenen Feldern.
+
+⚠️ **Die EINFACHERE Version bleibt aber unberührt gültig:** F-186/F-189
+haben bereits mit der **empirischen Median-Dauer der ganzen Kette** (2,0
+Tage → nächster gemessener Horizont H2) gearbeitet, nicht mit einer
+Pro-Trade-Schätzung. Dieser gröbere, kettenweite Maßstab hängt nicht an
+S2s Erfolg — er ist unabhängig davon bereits gemessen und einsatzbereit.
+**N-17a kann mit dem kettenweiten H2-Maßstab weiterlaufen**, nur die
+feinere Pro-Trade-Auflösung (die S2 in seiner ursprünglichen Fassung
+versprach) entfällt.
+
+⚠️ Offen, nicht beantwortet: WARUM Stop und Volatilität die Dauer nicht
+vorhersagen. Eine Hypothese (nicht geprüft, keine Vorabfestlegung
+dafür): die deterministische Trailing-Führung (`backward_tracking`,
+täglich 7:15, siehe F-201) trifft eigene SCHLIESSEN-Entscheidungen
+unabhängig vom tatsächlichen Kursverlauf und könnte die gemessene
+„Dauer" stärker prägen als der Kurs selbst.
+
+Werkzeug: `messe_horizont_aus_stop.py` (`--selbsttest`)
+Verwandt: F-185 · F-186 · F-189 · N-17 · S2
