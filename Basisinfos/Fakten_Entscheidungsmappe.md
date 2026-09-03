@@ -5432,3 +5432,45 @@ Suite am Desktop **1954 bei 0 FEHL**. Am Notebook erwartet: **ebenfalls
 0** — das ist die Probe, die noch aussteht.
 
 Verwandt: **2.108** · 2.66 · F-190
+
+---
+
+## F-192 ✔ Der letzte Fehlschlag nach dem Pull: `instrument` fehlte auch im NB-Export (03.09.2026)
+
+**Anlass:** Notebook-Suite nach dem Pull, **1954 Prüfungen, 1
+FEHLGESCHLAGEN** — *„keine signals-Spalte ist mehr unexportiert, offen:
+['instrument']"*. Die sechs Fehlschläge aus F-191 waren behoben; dieser
+ist ein **dritter, unabhängiger Ort**, an dem dieselbe Spalte fehlte.
+
+### Drei Orte, eine Spalte
+
+| Ort | Rolle | Stand vor heute |
+|---|---|---|
+| `database/db.py:813` | legt `instrument` per `ALTER TABLE` an | ✔ seit 23.08. |
+| `database/models.py` (`Signal`) | liest die Spalte für den Code | ⚠️ fehlte — **behoben in F-191** |
+| `extract_notebook_diagnose.py` (`_SPOT_SIGNAL_SPALTEN`) | nimmt sie in den **NB-Export** auf | ⚠️ fehlte — **jetzt behoben** |
+
+Der eigene Drift-Wächter (`_spaltendrift`, gebaut 10.08. genau für diesen
+Fall: *„Gedriftet ist es trotzdem — nur gegen das SCHEMA statt gegen eine
+Zweitkopie"*) hat es gefunden, bevor es jemand vermisst hätte.
+
+### Aufnehmen statt ausschließen — begründet
+
+Der Docstring verlangt eine inhaltliche Entscheidung: exportieren oder in
+`_BEWUSST_OHNE` eintragen. `instrument` (spot/hebel je Signal) ist genau
+die Achse, die **F-184/F-185 heute als Kernthema** der Hebelarbeit
+belegt haben. Für die Fernanalyse nützlich — aufgenommen.
+
+### Gegengeprüft
+
+    Drift gegen die NOTEBOOK-DB (135 Spalten)   nicht exportiert: keine ✔
+    Drift gegen die DESKTOP-DB  (134 Spalten)   nicht exportiert: keine ✔
+    (am Desktop erwartet: die Spalte existiert dort noch nicht -
+     "keine" ist hier kein Beweis, nur konsistent)
+
+⚠️ **Die eigentliche Bestätigung steht noch aus:** die Suite am Desktop
+war zu diesem Punkt schon vorher grün (134 Spalten, keine Lücke
+sichtbar). Beweiskräftig ist erst ein erneuter Lauf **am Notebook**.
+
+Suite am Desktop **1954 bei 0 FEHL**.
+Verwandt: F-191 (dieselbe Spalte, zwei andere Orte)

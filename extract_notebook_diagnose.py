@@ -439,6 +439,12 @@ _SPOT_SIGNAL_SPALTEN = (
     # Haltedauer und Ueberholung.
     "pipeline_version, regime_source, holding_duration, holding_duration_reason, "
     "tauschen_target_symbol, war_re_evaluierung_faellig, "
+    # `instrument` (23.08., db.py:813 per ALTER TABLE) - GENAU DIE ACHSE,
+    # die F-184/F-185 als Kernthema der Hebelarbeit belegt haben (spot
+    # gegen hebel). Gefunden durch den eigenen Drift-Waechter, nicht durch
+    # Betrachten: die Spalte kannte nicht einmal die eigene `Signal`-
+    # Klasse (behoben 03.09., models.py).
+    "instrument, "
     "id, symbol, created_at, action, confidence_pct, short_reasoning, "
     "entry_eur_von, entry_eur_bis, stop_loss_eur_von, stop_loss_eur_bis, "
     "take_profit_eur_von, take_profit_eur_bis, "
