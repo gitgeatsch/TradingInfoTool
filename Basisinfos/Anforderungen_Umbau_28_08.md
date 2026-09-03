@@ -1335,3 +1335,64 @@ Suite **1943 bei 0 FEHL**, darunter T7 und neun neue C-Prüfungen.
 
 Werkzeug: `agent/wahrscheinlichkeit.py` · `agent/auswahl.py`
 Verwandt: **F-179** · **F-180** · **F-181** · 2.106
+
+---
+
+## ⚠️⚠️ N-16: DER AUSSTIEG — eigener Planpunkt, bewusst ZURÜCKGESTELLT (03.09.2026)
+
+**Nutzervorgabe, die das aufmacht:** *„auch der Ausstieg sollte
+grundsätzlich durch eine saubere Bewertung erfolgen und nicht durch einen
+Takt."*
+**Und die Priorisierung dazu:** *„wenn das Ausstiegsthema größer ist,
+müssen wir das u. U. eigenständig im Plan berücksichtigen und zuerst die
+offenen Einstiegs- bzw. Bewertungsfragen für Spot und Hebel reparieren."*
+
+**Es ist größer.** Deshalb hier nur der Umfang — gebaut wird nichts.
+
+### Warum es Regel 4 berührt
+
+Der Ausstieg wird heute vom **Trailing-Stop** ausgelöst.
+`positionsfuehrung.py` nennt die Quelle wörtlich: *„Offene SIGNALE, bei
+denen der Trailing-Stop nachgezogen gehört."*
+
+> **„Kurs unter der nachgezogenen Marke" ist ein FAKT über die Gegenwart,
+> keine Aussage über das, was kommt.** Nach der Prüffrage aus `CLAUDE.md`
+> ist das dieselbe Klasse wie „Kurs unter Einstand → kaufen" — Regel 4.
+
+Es ist zwar kein *Takt* im engeren Sinn (keine Uhr), aber es ist auch
+keine **Bewertung**. Und der Schaden ist bereits gemessen: der
+Block-Bootstrap vom 01.09. hat belegt, dass **das Trailing in der
+Aufwärtsphase das Vorzeichen dreht**.
+
+### Der Umfang — vier Baustellen, keine davon klein
+
+| | | Stand |
+|---|---|---|
+| **N-16a** | die **Bestandshistorie** fehlt — wann wurde welcher Wert gehalten? | ⚠️ **Vorbedingung für alles andere.** Ohne sie ist die Ausstiegsfrage nicht messbar (F-183: von 37 Bestandssymbolen sind 5 in der Messbasis) |
+| **N-16b** | der Trailing-Stop als Auslöser | Schaden belegt (01.09.), Ersatz offen |
+| **N-16c** | die Ausstiegsprüfung läuft über **Signale**, nicht über Positionen | teilweise gelöst durch `positionsfuehrung` (27.08.), aber die greift **nicht ein** — sie ist eine Lesefunktion |
+| **N-16d** | eine **Ausstiegs**bewertung gibt es nicht | die Beiträge sind auf Einstiegen gemessen (F-183) |
+
+⚠️ **N-16a ist der Engpass und zugleich der billigste Schritt:** eine
+Tabelle, die täglich den Bestand fortschreibt. Sie kostet nichts, muss
+aber ab jetzt laufen — jeder Tag ohne sie ist ein Tag, den die spätere
+Messung nicht hat.
+
+### Was ZUERST kommt — die offenen Einstiegs- und Bewertungsfragen
+
+Nach Nutzervorgabe vor N-16 zu erledigen:
+
+| | Punkt | Spot | Hebel | Stand |
+|---|---|---|---|---|
+| **1** | ⚠️⚠️ **Die Bewertung hat keine Instrument-Achse** (Abschnitt 9) | ✔ | ✔ | `spot × einstieg` und `hebel × einstieg` liefern **exakt dieselbe Zahl** (+0,119100 R). `instrument` wird mitgeführt, aber `_gilt()` fragt es nie |
+| **2** | ⚠️⚠️ **Die zweite Zelle läuft nicht** (F-169) | ✔ | ✔ | `strategie` war **nie** etwas anderes als `einstieg` (F-180). Damit ist auch **L4** (Cooldown 48 h) toter Code und N-14s Einschränkung „nur einstieg" folgenlos |
+| **3** | **Der Hebel existiert in keiner der beiden Ketten** | — | ✔ | die Hebelkette ist aufgelöst; heute wählt der **ATR** das Instrument, nicht die Begründung |
+| **4** | **Die Hebelbewertung wurde nie validiert** | — | ✔ | offen |
+| **5** | N-15 **Variante A** (Querschnitt) | ✔ | ✔ | nur über den **Funding-Rang** (F-179), gedeckt und klein |
+| **6** | ⚠️ **Turnover deckt nur 23 % des Krypto-Bestands** | ✔ | ✔ | F-183 — bei Ausstiegen steht die Bewertung fast immer auf **einem** Beitrag |
+
+**Punkt 1 und 2 sind dieselbe Wurzel:** eine Bewertung, die ihre eigenen
+Achsen nicht fragt. Wer sie behebt, macht N-16d überhaupt erst möglich —
+denn eine *Ausstiegs*bewertung ist genau eine weitere Achse.
+
+Verwandt: **F-183** · F-180 · F-169 · Abschnitt 9 · `Bestandsaufnahme_Positionsfuehrung_26_08.md`

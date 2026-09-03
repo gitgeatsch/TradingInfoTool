@@ -5258,6 +5258,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `rechne_einordnung_vorschau.py` | vor N-15 | Rechnet die vier Einordnungs-Varianten an einem echten Wert vor: Querschnitt, eigene Lage, Zerlegung, die anderen |
 | `messe_volumenanteil.py` | — | `--form` klärt Asset-Maß gegen Zeitpunkt-Aussage, `--wirkung` die Regel, `--mitlaeufer` den Schichtentest |
 | `rechne_oi_beitrag.py` | — | Beitragstabelle für `oi_aenderung`, mit Monotonie als Vorabbedingung |
+| `messe_ausstiegsbeitrag.py` | — | **F-183**: tragen die Beiträge auch auf einer Ankermenge, die einem BESTAND entspricht? Mengen A/B/C, gepaarter Vergleich, Positivkontrolle auf die Differenz. `--selbsttest` gegen zwei Welten |
 | `messe_beitragssumme.py` | — | **N-15a**: taugt die SUMME der Beiträge als Rangfolge? Blöcke A–C je Größe, **C2 der gepaarte Vergleich** (2.105), D die Monotonie, E die Datenlücke über fünf Ziehungen, F welche Größe wohlgeordnet ist. `--selbsttest` gegen zwei Welten mit bekannter Antwort |
 
 ⚠️ **Die ersten beiden gehören zusammen und sind Pflicht vor dem Pull.**

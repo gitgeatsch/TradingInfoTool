@@ -4671,3 +4671,76 @@ erwartbar wären rund 87 (oberstes Fünftel). Bevor daraus ein Befund wird,
 ist nach 2.107 zu klären, wie viele **unabhängige** Beobachtungen das
 sind: 18 Werte ohne Bestand über 10 Tage, davon nur ein Teil mit OI-Rang.
 **Nicht gemessen, nicht behauptet.**
+
+---
+
+## F-183 ⚠️ Tragen die Beiträge auch bei der AUSSTIEGSfrage? — halb beantwortet, und die Lücke liegt woanders als vermutet (03.09.2026)
+
+**Die Frage:** N-14 nimmt Bestand aus, *„weil bei einem gehaltenen Wert
+die Ausstiegsfrage ansteht, und die hat die Messung nie berührt"* — die
+Potentialschwelle wendet dieselben Beiträge auf genau diese Fragen an.
+230 der 1.491 Signale sind REDUZIEREN oder VERKAUFEN.
+
+### ⚠️ Die Form vorab geklärt — es ist NICHT dieselbe Messung
+
+Der Unterschied liegt nicht in der Kursprognose, sondern in der
+**Ankermenge**: beim Einstieg ist der Zeitpunkt frei wählbar, beim
+Ausstieg ist der Wert bereits **selektiert**. Eine Größe kann auf der
+freien Menge trennen und auf der selektierten nicht — bei F-170 ist für
+den Turnover-Rang belegt, dass er zu 52 % eine **Asset**-Eigenschaft ist.
+
+Zwei Näherungen, weil es **keine Bestandshistorie gibt** (`holdings` kennt
+nur den heutigen Stand):
+
+    B  die Symbole, die heute gehalten werden
+    C  Zeitpunkte nach einem Kursanstieg (60 Tage) - die zeitliche Selektion
+
+### Das Ergebnis
+
+| | Funding | Turnover |
+|---|---|---|
+| A freie Menge (75.701 Anker) | +0,0226 R **trägt** | +0,0380 R **trägt** |
+| **B Bestandssymbole** | ✖ **zu wenig Daten** | ✖ **zu wenig Daten** |
+| C nach Kursanstieg (26.409 Anker) | +0,0337 R, Band schließt 0 ein | +0,0470 R **trägt** |
+| gepaart C − A (fällt er ab?) | +0,0108 **kein Abfall** | −0,0065 **kein Abfall** |
+| ⚠️ Positivkontrolle auf die Differenz | **findet −0,02 R NICHT** | findet −0,02 R ✔ |
+
+**Belastbar ist nur eine Hälfte:** für den **Turnover**-Rang ist „kein
+Abfall auf der selektierten Menge" nachgewiesen — die Anlage hätte einen
+Abfall von 0,02 R gesehen und sah keinen. Für **Funding** ist dieselbe
+Aussage **nicht belastbar**: dort findet die Kontrolle den aufgeprägten
+Abfall selbst nicht, also sagt „nicht trennbar" hier nichts.
+
+### ⚠️⚠️ Der eigentliche Befund war ein anderer
+
+    Bestandssymbole: 37 · davon in der historischen Messbasis: 5
+
+Menge B fiel nicht durch Zufall aus. **Die Wirkung ist auf 41 Symbolen
+gemessen, von denen fünf im Bestand sind.** Und im **Betrieb** sieht es
+so aus (26 Krypto-Bestandswerte):
+
+    funding    22 von 26   85 %
+    oi         19 von 26   73 %
+    turnover    6 von 26   23 %   <- ohne: AVAX, SOL, SUI, MORPHO, HYPE, ...
+
+> **Bei einer Ausstiegsentscheidung steht die Bewertung fast immer auf dem
+> Funding-Rang allein** — und genau für ihn ist die Ausstiegsfrage nicht
+> belastbar beantwortet.
+
+Das ist dieselbe Lage, die **N-15 Variante C** seit heute in der Mail
+anzeigt („Die Bewertung steht auf EINEM Beitrag"). Die Anzeige war also
+richtig gebaut; sie trifft bei Ausstiegen den Normalfall.
+
+### Was daraus folgt — und was NICHT
+
+✔ **Keine der beiden Stellen ist als falsch erwiesen.** Weder ist N-14 zu
+korrigieren noch die Potentialschwelle. Der Widerspruch bleibt bestehen,
+ist aber kleiner als er aussah: er betrifft nur Ausstiege, und dort trägt
+in 77 % der Fälle ohnehin nur ein Beitrag.
+
+✖ **Nicht entscheidbar mit dieser Datenlage.** Eine echte Antwort
+bräuchte eine **Bestandshistorie** — wann welcher Wert gehalten wurde.
+Die führt das System nicht, und sie nachzubauen ist ein eigener Punkt.
+
+Werkzeug: `messe_ausstiegsbeitrag.py` (`--selbsttest` gegen zwei Welten)
+Verwandt: F-170 · F-179 · F-180 · N-15 C · **N-16**
