@@ -5701,3 +5701,54 @@ Suite **1960 bei 0 FEHL** (sechs neue G-a-Prüfungen).
 Werkzeug: `agent/zweite_meinung.py` · `pruefe_pakete.py` (Paket
 „Terminmarkt") · `extract_notebook_diagnose.py`
 Verwandt: N-18 · F-193 (Nachbar-Fund im selben Themenkomplex)
+
+---
+
+## F-196 ✔ G-b gebaut — und die eigene Prüfung zunächst blind, beim Gegentest gefunden (03.09.2026)
+
+**Nutzerauftrag:** *„ja mit G-b weitermachen, prüfen und gegenprüfen."*
+
+### Erster Befund: die Urteilszeile war schon am 17.08. an den Anfang gerückt
+
+Am Code und an sieben echten Mails aus dem Austauschordner geprüft: die
+Zeile *„▼ EINWAND — …"* steht bereits seit dem 17.08. als **erste** Zeile
+unter der Abschnittsüberschrift — nicht wie in der 01.09.-Notiz
+beschrieben am Ende. Der wörtliche Wortlaut von G-b war damit schon
+erledigt.
+
+**Was tatsächlich noch unterging:** Abschnitt 5 ist der **letzte** von
+fünf Abschnitten. Ein Leser, der nach Abschnitt 3 (dem Urteil) aufhört zu
+lesen, sieht den Widerspruch nie — genau das beschreibt der Befund 8.2
+(*„kaufen … zwei Absätze weiter ich würde nicht"*).
+
+### Die Lösung — und warum nicht die Betreffzeile
+
+Das Urteil wandert in die **Überschrift von Abschnitt 5 selbst**
+(`gegenpruefung_titel()`), sichtbar beim Überfliegen der Nummerierung
+1–5. **Nicht** die Betreffzeile: dort hat dieselbe Idee bereits zweimal
+Schaden angerichtet (O-37, S5/S6 — *„der Betreff darf nicht die
+Empfehlung einer anderen Rechnung tragen"*), und Rolle G darf nach der
+Nutzerentscheidung vom 31.08. keine mit Rolle BC **konkurrierende**
+Bewertung werden. Nur ein echter Einwand (▼) hebt die Überschrift hervor
+— „kein Einwand", „unklar" und „nicht gelaufen" bleiben unverändert, das
+ist der erwartete Normalfall.
+
+### ⚠️⚠️ Der Gegentest hat die eigene erste Prüfung durchfallen lassen
+
+Meine erste Fassung testete eine im Test **nachgebaute** Kopie der
+Logik, nicht den echten Code. Künstlich eingebauter Fehler (jeder Fall
+bekommt „WIDERSPRUCH"): **alle sieben Prüfungen blieben grün.** Dieselbe
+Fehlerklasse wie heute schon einmal bei T7/S0/G-a — diesmal selbst
+begangen, trotz der Lehre.
+
+**Behoben durch Auslagerung:** die Logik steht jetzt als eigenständige,
+importierbare Funktion `signal_mail.gegenpruefung_titel()`, und die
+Prüfung ruft **sie direkt**. Mit demselben künstlichen Fehler erneut
+getestet: **drei von fünf Fällen wurden korrekt rot.**
+
+Suite **1967 bei 0 FEHL** (sieben neue G-b-Prüfungen).
+
+Werkzeug: `agent/signal_mail.py` (`gegenpruefung_titel()`) ·
+`pruefe_pakete.py` (Paket „Terminmarkt")
+Verwandt: F-195 (G-a) · N-18 · 2.106 (dieselbe Lehre, heute zweimal
+gebraucht)

@@ -15938,6 +15938,49 @@ def paket_terminmarkt() -> None:
                True, "Produktions-DB nicht lesbar (%s) - uebersprungen, "
                "nicht als Fehlschlag gewertet" % _exc9)
 
+    # ---- G-b: DER WIDERSPRUCH IN DER UEBERSCHRIFT (03.09.2026) -----------
+    #
+    # ⚠️⚠️ DIE ECHTE FUNKTION AUFRUFEN, NICHT NACHBAUEN (03.09.2026).
+    # Meine erste Fassung baute die Logik hier im Test NACH statt
+    # `signal_mail.gegenpruefung_titel()` aufzurufen. Gegentest (Fehler
+    # kuenstlich eingebaut: jeder Fall bekommt WIDERSPRUCH): alle sieben
+    # Pruefungen blieben gruen - eine Kontrolle, die die eigene Kopie
+    # statt des echten Codes prueft, prueft sich selbst. Deshalb steht
+    # die Logik jetzt in `signal_mail.gegenpruefung_titel()`, und DIESE
+    # wird hier direkt gerufen.
+    from agent import signal_mail as _SM9
+    _g5_titel = _SM9.gegenpruefung_titel
+
+    _faelle_g5 = {
+        "Einwand": (_ZM9.zeilen({"einwand": "ja", "einwand_grund": "x",
+                              "grundlage": []}), True),
+        "kein Einwand": (_ZM9.zeilen({"einwand": "nein", "einwand_grund": "x",
+                                   "grundlage": []}), False),
+        "unklar": (_ZM9.zeilen({"einwand": "unklar", "einwand_grund": "x",
+                             "grundlage": []}), False),
+        "nicht gelaufen": (_ZM9.zeilen({"uebersprungen_art": "fehler"}), False),
+        "leer": (_ZM9.zeilen({}), False),
+    }
+    for _name, (_z, _erwartet) in _faelle_g5.items():
+        pruefe(P, "G-b: '%s' -> Ueberschrift traegt WIDERSPRUCH: %s"
+                  % (_name, _erwartet),
+               ("WIDERSPRUCH" in _g5_titel(_z)) == _erwartet,
+               "nur ein ECHTER Einwand (▼) darf die Ueberschrift aendern - "
+               "'kein Einwand'/'unklar'/'nicht gelaufen' sind der erwartete "
+               "Normalfall und brauchen keine Extra-Ankuendigung")
+    pruefe(P, "G-b: `baue_mail` ruft die echte Funktion, statt sie zu "
+              "kopieren",
+           "gegenpruefung_titel(gegenpruefung)" in _quelltext(
+               "agent/signal_mail.py"),
+           "sonst driften Mailbau und diese Pruefung wieder auseinander")
+    pruefe(P, "G-b: die Betreffzeile bleibt unangetastet",
+           "WIDERSPRUCH" not in _quelltext("agent/signal_mail.py").split(
+               "betreff = (")[1].split("\n\n")[0],
+           "Rolle G darf keine mit Rolle BC konkurrierende Bewertung "
+           "werden (Nutzerentscheidung 31.08., Abschnitt 8.3) - dieselbe "
+           "Idee hat im Betreff schon zweimal Schaden angerichtet (O-37, "
+           "S5/S6)")
+
 
 def _sperrt_terminmarkt(knoten) -> bool:
     """Bucht dieser If-Baum irgendwo auf die Stufe `terminmarkt`?"""

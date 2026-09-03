@@ -1620,7 +1620,16 @@ Löschung (die alten Werte sind ein **dokumentierter Rückfallweg** für
 die sechs alten Pipelines — Löschen hätte ihn gekappt und eine
 bestehende Prüfung gebrochen), und der NB-Export-Fehler behoben
 (zählte drei Wochen lang eine tote Kennzahl aus einer erstarrten
-Tabelle). **G-b und G-c noch offen.**
+Tabelle).
+
+✔ **G-b GEBAUT (03.09., F-196).** Die Urteilszeile stand bereits seit
+dem 17.08. am Anfang von Abschnitt 5 — was noch unterging: der Abschnitt
+ist der letzte von fünf. Das Urteil wandert jetzt zusätzlich in die
+**Überschrift** von Abschnitt 5 (nicht in den Betreff — dort hat dieselbe
+Idee schon zweimal Schaden angerichtet, O-37/S5/S6). ⚠️ Der Gegentest
+ließ die eigene erste Prüfung durchfallen (sie testete eine Kopie statt
+des echten Codes) — behoben durch Auslagerung in
+`signal_mail.gegenpruefung_titel()`. **G-c noch offen.**
 
 ⚠️ **Und Rolle G hat für zwei von fünf Klassen gar keinen Zweig.** Am
 Code bestätigt (03.09.): `positionierung.lage()` kennt nur `aktien` und

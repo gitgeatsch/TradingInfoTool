@@ -287,6 +287,27 @@ def _ueberschrift_wert(instrument: str | None) -> str:
     return UEBERSCHRIFT_WERT.get(str(instrument or ""), "1. DER WERT")
 
 
+def gegenpruefung_titel(gegenpruefung: list | None) -> str:
+    """G-b: die Ueberschrift von Abschnitt 5 - EIGENSTAENDIG, testbar.
+
+    ⚠️ URSPRUENGLICH INLINE IN `baue_mail()` (03.09.2026) - beim
+    Gegentest fiel auf, dass eine Dauerpruefung, die die Logik im Test
+    NACHBAUT statt die echte aufzurufen, jeden Fehler in der echten
+    Funktion durchwinkt. Kuenstlich eingebauter Fehler (jeder Fall
+    bekommt WIDERSPRUCH): alle sieben Pruefungen blieben gruen. Als
+    eigene Funktion ruft der Test die ECHTE Logik auf - derselbe Fehler
+    faellt jetzt sofort auf.
+
+    NUR DER ECHTE EINWAND (▼) hebt die Ueberschrift hervor - "kein
+    Einwand" (▲), "unklar"/"nicht gelaufen" (●) und der leere Fall
+    bleiben unveraendert. Genau die eine Zeile, die laut Befund
+    unterging (8.2: "45 Widersprueche je Tag, alle versendet")."""
+    titel = "5. GEGENPRUEFUNG (zweites Modell)"
+    if gegenpruefung and str(gegenpruefung[0]).startswith("▼"):
+        titel += " — ⚠ WIDERSPRUCH"
+    return titel
+
+
 def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               instrument: str, strategie: str,
               rechnung: dict, urteil: dict,
@@ -588,6 +609,31 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
             drei.append(f"  {zeichen.get(b.get('richtung'), '?')} "
                         f"{b.get('fakt', '')} [{b.get('gewicht', '?')}]")
 
+    # ---- G-b: DER WIDERSPRUCH GEHOERT IN DIE UEBERSCHRIFT (03.09.2026) ---
+    #
+    # Nutzervorgabe 01.09.: "ein Widerspruch bekommt eine eigene, benannte
+    # Zeile am Kopf des Gegenpruefungsblocks - nicht am Ende, wo er heute
+    # untergeht." Die URTEILSZEILE selbst steht bereits seit dem 17.08. als
+    # ERSTE Zeile IM Abschnitt (`zweite_meinung.zeilen()`, Marker vorn) -
+    # gegengeprueft an sieben echten Mails aus dem Austauschordner, in
+    # jeder steht "▼ EINWAND ..." direkt unter der Abschnittsueberschrift.
+    #
+    # Was daran noch untergeht: der Abschnitt ist Nummer 5 von 5, ganz am
+    # Ende der Mail - ein Leser, der nach Abschnitt 3 (dem Urteil) aufhoert
+    # zu lesen, sieht den Widerspruch nie. Deshalb WANDERT DAS URTEIL IN DIE
+    # UEBERSCHRIFT SELBST (siehe `gegenpruefung_titel()` oben): eine
+    # Ueberschrift wird beim Ueberfliegen von 1-5 eher gesehen als die
+    # erste Zeile eines Blocks, den man schon uebersprungen hat.
+    #
+    # ⚠️ NICHT DIE BETREFFZEILE. Dort hat dieselbe Idee 2026 schon zweimal
+    # Schaden angerichtet (O-37, S5/S6: "der Betreff darf nicht die
+    # Empfehlung einer ANDEREN Rechnung tragen") - und Rolle G darf nach
+    # der Nutzerentscheidung vom 31.08. keine mit Rolle BC KONKURRIERENDE
+    # Bewertung werden (Abschnitt 8.3). Die Ueberschrift von Abschnitt 5
+    # bleibt innerhalb von Gs eigenem Block - sie wertet nichts, sie
+    # kuendigt nur an, was ohnehin zwei Zeilen darunter steht.
+    _g5_titel = gegenpruefung_titel(gegenpruefung)
+
     text = "\n".join(
         kopf
         # ⚠️ NICHT MEHR FEST "DER COIN" (16.08.2026). Die Ueberschrift stand
@@ -617,7 +663,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         # (17.08.2026). Vier gleichlautende Zeilen "im gewohnten Bereich"
         # werden zu einer. Das MODELL hat sie alle bekommen - hier steht
         # nur, was der Nutzer liest.
-        + _abschnitt("5. GEGENPRUEFUNG (zweites Modell)",
+        + _abschnitt(_g5_titel,
                      ohne_gewohntes(gegenpruefung,
                                     "Angaben zur Positionierung"),
                      HERKUNFT["gegenpruefung"])
