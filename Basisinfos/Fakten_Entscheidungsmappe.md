@@ -4383,7 +4383,11 @@ Verwandt: F-171 (Median-Bias) · F-178 · 2.104 · 2.105 · N-15
 
 ---
 
-## F-180 ⚠️⚠️⚠️ Der Bestandsvorrang ist zum Monopol geworden — die Auswahl wählt seit zehn Tagen dieselben zwei Werte (03.09.2026)
+## F-180 ⚠️ Der Bestandsvorrang: sechs Orte geprüft — ⚠️⚠️ **TEILWEISE WIDERLEGT durch F-182** (03.09.2026)
+
+> ⚠️⚠️ **VOR DEM LESEN:** die Deutung „die Auswahl wählt seit zehn Tagen dieselben zwei — A1 ist eine feste Liste“ ist **falsch** und in **F-182** korrigiert. 985 Läufe sind **12 Kalendertage**; bei einer Erwartung von rund einem Wechsel je 12 Tage hat „0 Wechsel“ eine Wahrscheinlichkeit von **37 %**. A1 verhält sich wie dimensioniert.
+>
+> ✔ **Was hier gilt:** die Tabelle der sechs Orte, die Zahl „4 von 17.730“, der Warteschlangen-Fehler (sechs gestakte Werte) und der Befund, dass der **Cooldown** nie eine Bestandsausnahme bekommen hat.
 
 **Nutzerauftrag:** *„analysiere warum Bestand Vorrang hat und ob dies
 korrekt umgesetzt ist — welche Bewertungen und Filter ziehen bzw. nicht
@@ -4538,7 +4542,11 @@ Ein negativer Beitrag erschien als **`+-0,5`**. Das liest sich wie ein
 Tippfehler und verdeckt, dass der Beitrag **abzieht** — bei AVAX war das
 der einzige Beitrag der ganzen Bewertung.
 
-### 4 — ⚠️⚠️ die Terminmarkt-Stufe zählt Notizen als „bestanden"
+### 4 — ~~die Terminmarkt-Stufe zählt Notizen als bestanden~~ ⚠️ **KEIN SYSTEMFEHLER, siehe F-182**
+
+> ⚠️ `rollen_gate.notiz()` führt die Notizen **separat** und die Trichtertabelle gibt sie als eigene Zeile aus. Die Lücke lag in `pruefe_nb_nach_umschaltung.py`, das nur die `Durchlaessigkeit`-Zeile las — **mein Werkzeug, nicht das System.** Behoben.
+
+Der beschriebene Sachverhalt selbst stimmt und bleibt lesenswert:
 
 Trichter vom 31.08.–03.09. (1.417 Läufe):
 
@@ -4748,6 +4756,8 @@ Verwandt: F-170 · F-179 · F-180 · N-15 C · **N-16**
 ---
 
 ## F-184 ⚠️⚠️ Punkt 1 ist NICHT „der Bewertung fehlt eine Instrument-Achse" — sie fehlt zu Recht. Der echte Punkt ist ein anderer (03.09.2026)
+
+> ⚠️⚠️ **UNVOLLSTÄNDIG — Ergänzung in F-185.** Dieser Befund prüft nur die **Instrument**-Achse. Der Umbauplan nennt in 9.1 **zwei** fehlende Achsen; die zweite — der **Horizont** — ist die relevante und gemessen (Faktor 6–10). Was hier steht, bleibt richtig, reicht aber nicht.
 
 **Nutzerauftrag:** *„starte mit Punkt 1 — Vorsicht bei der Analyse,
 mehrfacher Umbau mit Altcode, Messdokumente berücksichtigen. Dein Punkt 3
@@ -4982,6 +4992,8 @@ sie sieht die Kette so aus:
 | Funding | +0,0026 | +0,0246 | **9,5** |
 | Turnover | +0,0107 | +0,0616 | **5,8** |
 
+⚠️ **Die H-Werte sind vom 31.08. ÜBERNOMMEN, nicht hier nachgerechnet** (`messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`, 523 Reihen). Sie stehen als Konstante in `pruefe_kette_horizonte.py`, mit Quellenangabe — wer sie neu misst, trägt sie dort nach. Der **Faktor** ist damit nur so gut wie jene Messung.
+
 > **Die Kette entscheidet ihre Signale auf einem Horizont, auf dem ihre
 > Bewertung ein Fünftel bis ein Zehntel der kalibrierten Wirkung hat — und
 > die Schwelle stammt aus der H20-Welt.**
@@ -5139,6 +5151,8 @@ Grundlage: NB-Backup 03.09. 04:19, **scharfer Stand** (ab 02.09. 12:00),
 
 Hochgerechnet: **Einstieg 4,4/Tag · Ausstieg 5,9/Tag.**
 
+⚠️ **Diese Hochrechnung steht auf DREI bzw. VIER Ereignissen** in 16,3 Stunden. Das Poisson-Band liegt bei rund ± 5 je Tag — die **Richtung** ist belastbar (die Ausstiegsseite liefert mehr als die Einstiegsseite), die **Zahl nicht**. Nach 2.107 gilt: erst mehrere Tage im scharfen Stand geben eine Menge, mit der man rechnen kann.
+
 ### Die sieben, die durchkommen — und woran man sie erkennt
 
 | Symbol | Bestand | ein | aus | Beiträge |
@@ -5147,11 +5161,17 @@ Hochgerechnet: **Einstieg 4,4/Tag · Ausstieg 5,9/Tag.**
 | ASTER, BNB, SEI | JA | — | 1 | F·· / FTO / F·O |
 | **SUPRA** | JA | — | 1 | ⚠️ **···** |
 
-> **SUPRA hat keinen einzigen Beitrag — und kommt trotzdem durch.** Für
-> Werte ohne Beitrag *zählt* Stufe 11 nur (richtig so: eine Sperre nach
-> Datenlage wäre Regel 4). Es ist ein **Ausstieg**, und die haben ohnehin
-> keine Bewertung (F-187). Beide Wege treffen sich hier: **das Signal ist
-> unbewertet hinausgegangen.**
+> **SUPRA hat keinen einzigen Beitrag — und kommt trotzdem durch.**
+> Nachgesehen: es ist ein **VERKAUFEN** (02.09., 18:16). Damit erreicht
+> es Stufe 11 **gar nicht** — der Ausstiegspfad endet bei Stufe 9
+> (F-187). **Das Signal ist unbewertet hinausgegangen, und zwar aus
+> genau einem Grund: es ist ein Ausstieg.**
+>
+> ⚠️ Meine erste Fassung schrieb hier „beide Wege treffen sich“ und
+> nannte zusätzlich, dass Stufe 11 für beitragslose Werte nur zählt.
+> Das stimmt als Regel, ist hier aber **wirkungslos** — die Stufe wird
+> nie erreicht. Zwei Gründe zu nennen, wo einer wirkt, lässt den Fall
+> robuster aussehen, als er ist.
 
 ### ⚠️ Was die Aufschlüsselung über die Filter sagt
 
