@@ -1629,7 +1629,18 @@ ist der letzte von fünf. Das Urteil wandert jetzt zusätzlich in die
 Idee schon zweimal Schaden angerichtet, O-37/S5/S6). ⚠️ Der Gegentest
 ließ die eigene erste Prüfung durchfallen (sie testete eine Kopie statt
 des echten Codes) — behoben durch Auslagerung in
-`signal_mail.gegenpruefung_titel()`. **G-c noch offen.**
+`signal_mail.gegenpruefung_titel()`.
+
+○ **G-c GEMESSEN, nicht entschieden (03.09., F-197).** Keine neue
+Tabelle nötig — Gs Einwand blockiert nichts, das Signal hat einen echten
+Ausgang auf derselben Zeile. Bei 55 aufgelösten Fällen: Richtung stimmt
+(Einwand → 45,8 % Trefferquote, kein Einwand → 54,8 %), aber das
+90-%-Band schließt die Null ein — **nicht nachweisbar, nicht widerlegt.**
+⚠️ Die Frage *„soll G sperren dürfen?"* bleibt offen, weil die Fallzahl
+noch nicht reicht, nicht weil G nachweislich nichts trägt. **G-c ist eine
+laufende Messung** — erneut ausführen, sobald mehr aufgelöste
+Einwand-Fälle vorliegen. Damit ist **N-18 vollständig aufgesetzt**: G-a
+und G-b gebaut, G-c gemessen und zur Wiederholung vorgemerkt.
 
 ⚠️ **Und Rolle G hat für zwei von fünf Klassen gar keinen Zweig.** Am
 Code bestätigt (03.09.): `positionierung.lage()` kennt nur `aktien` und

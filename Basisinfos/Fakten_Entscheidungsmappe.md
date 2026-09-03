@@ -5752,3 +5752,63 @@ Werkzeug: `agent/signal_mail.py` (`gegenpruefung_titel()`) ·
 `pruefe_pakete.py` (Paket „Terminmarkt")
 Verwandt: F-195 (G-a) · N-18 · 2.106 (dieselbe Lehre, heute zweimal
 gebraucht)
+
+---
+
+## F-197 ○ G-c gemessen: Richtung stimmt, Beleg noch nicht — bei n=55 (03.09.2026)
+
+**Nutzerauftrag:** *„ja mit G-c weitermachen, prüfen und gegenprüfen."*
+Aus dem Plan: *„Je Widerspruch wird der Ausgang mitgeschrieben: hatte G
+recht? Maßstab: der quotengleiche Zufall, nicht das Bauchgefühl."*
+
+### ⚠️ Keine neue Tabelle nötig — anders als bei anderen Vetos
+
+`risk_veto` verhindert ein Signal und braucht deshalb einen simulierten
+Schatten-Ausgang (`veto_outcome_status`). **Gs Einwand verhindert
+nichts** — das beurteilte Signal geht real hinaus und hat einen echten
+Ausgang auf **derselben** Zeile. G-c ist deshalb eine reine Messung auf
+vorhandenen Daten.
+
+### Die Messung
+
+    Grundlage: 55 aufgeloeste Einstiegssignale an 9 Kalendertagen
+      Einwand (ja)     n=24   TP-Quote 45,8 %
+      kein Einwand     n=31   TP-Quote 54,8 %
+
+    echte Differenz                          +0,0901
+    quotengleicher Zufall (10 Mischungen)    +0,0235 ± 0,1420
+    bereinigt                                +0,0665
+    90-%-Band (Cluster-Bootstrap ueber Tage) [-0,2460 .. +0,2331]
+
+**Die Richtung stimmt** — ein Einwand geht mit einer niedrigeren
+Trefferquote einher, wie es sein sollte, wenn G etwas beiträgt. **Das
+Band schließt die Null aber ein.** Bei der vorab gesetzten Bedingung
+(bereinigt > 0 UND Bandunterkante über dem Zufallsmittel) heißt das:
+**nicht nachweisbar**, nicht „G trägt nicht".
+
+### ⚠️⚠️ Zwei Fehler in der eigenen Messanlage — dieselbe Lehre wie heute schon zweimal
+
+1. **Die erste Zufallskontrolle war selbst verzerrt.** Nach Regel 2.93
+   sollte sie je Kalendertag mischen — aber ein Drittel der Tage hat nur
+   **einen** Fall, und eine Mischung an einer Einzelliste ändert nichts.
+   Ergebnis: die Kontrolle lag bei **+0,22**, obwohl sie nahe Null liegen
+   sollte. **Auf gepoolte Mischung umgestellt** (2.109) — im Selbsttest
+   danach nahe Null in beiden Welten (+0,003/+0,012).
+2. Bevor gebaut wurde: geprüft, ob eine zweite Vetoschatten-Tabelle nötig
+   ist (`veto_outcome_status`-Muster) — war es nicht, weil Gs Einwand im
+   Unterschied zu `risk_veto` nichts blockiert.
+
+### Was das für die eigentliche Frage heißt
+
+Die im Plan gestellte Vorfrage — *„soll G sperren dürfen?"* — bleibt
+**offen**, aber aus einem anderen Grund als erwartet: nicht weil G
+nachweislich nichts trägt, sondern weil **55 Fälle zu wenige sind, um es
+zu entscheiden.** G-c ist damit keine einmalige Antwort, sondern eine
+**laufende Messung** — sie sollte erneut laufen, sobald mehr aufgelöste
+Fälle mit Einwand-Urteil vorliegen.
+
+Suite unverändert **1967 bei 0 FEHL** (reines Messwerkzeug, kein
+Codeeingriff in die Kette).
+
+Werkzeug: `messe_g_trefferbilanz.py` (`--selbsttest`)
+Verwandt: F-195 (G-a) · F-196 (G-b) · 2.109 · 2.93 · 2.104

@@ -5259,6 +5259,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `messe_volumenanteil.py` | — | `--form` klärt Asset-Maß gegen Zeitpunkt-Aussage, `--wirkung` die Regel, `--mitlaeufer` den Schichtentest |
 | `rechne_oi_beitrag.py` | — | Beitragstabelle für `oi_aenderung`, mit Monotonie als Vorabbedingung |
 | `pruefe_kette_je_asset.py` | — | **wo im Trichter** ein Asset hängenbleibt: je Symbol im Lauf → gewählt → beurteilt → Signal → durchgelassen, getrennt nach Codestand, mit Beitragslage. ⚠️ **Nicht verwechseln** mit `rechne_takt_je_asset.py` — das beantwortet **wie oft** (Menge), für den Zustand vor G-6 |
+| `messe_g_trefferbilanz.py` | — | **G-c**: hat Rolle Gs Einwand recht? Gepoolte quotengleiche Zufallskontrolle (2.109), Cluster-Bootstrap über Tage, `--selbsttest` gegen zwei Welten |
 | `pruefe_kette_horizonte.py` | — | **Kettenprüfung 03.09.**: worauf jede der zwölf Stufen begründet ist, wie lange ein Signal wirklich bis TP/SL läuft, und der Abgleich gegen die H20-Kalibrierung |
 | `messe_ausstiegsbeitrag.py` | — | **F-183**: tragen die Beiträge auch auf einer Ankermenge, die einem BESTAND entspricht? Mengen A/B/C, gepaarter Vergleich, Positivkontrolle auf die Differenz. `--selbsttest` gegen zwei Welten |
 | `messe_beitragssumme.py` | — | **N-15a**: taugt die SUMME der Beiträge als Rangfolge? Blöcke A–C je Größe, **C2 der gepaarte Vergleich** (2.105), D die Monotonie, E die Datenlücke über fünf Ziehungen, F welche Größe wohlgeordnet ist. `--selbsttest` gegen zwei Welten mit bekannter Antwort |
@@ -5539,3 +5540,46 @@ habe sie im Eifer übergangen.
 | **6** | **Signalhistorie** — dieselben Symbole, andere Vorgeschichte |
 
 Verwandt: 2.66 · 2.103 · F-191
+
+---
+
+## 2.109 ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen
+
+**Anlass: 03.09.2026, G-c (Trefferbilanz für Rolle G).** Nach Regel 2.93
+sollte die Zufallskontrolle je Kalendertag mischen. Der Selbsttest deckte
+auf, dass das hier NICHT funktioniert: in Welt 1 (ein echter Effekt von
++0,50) lag die Kontrolle bei **+0,22** — weit von Null, obwohl sie ein
+Nullmodell sein soll.
+
+**Ursache:** bei G-c hat ein Drittel der Kalendertage nur **einen**
+Fall. `rng.shuffle` an einer Liste mit einem Element ändert nichts — an
+diesen Tagen reproduziert die „Mischung" exakt die echte Zuordnung, und
+die Kontrolle bleibt teilweise am echten Signal kleben.
+
+**Der Unterschied zu den R-Ertragsmessungen, für die 2.93 geschrieben
+wurde:** dort hat jeder Tag viele Assets — genug Auswahl zum Mischen.
+Bei G-c beurteilt Rolle G **jedes** eintreffende Signal, es gibt keinen
+größeren Pool, aus dem an einem dünnen Tag zusätzlich gezogen werden
+könnte.
+
+**Und die Tagesklammer wehrt hier auch nichts ab, was es abzuwehren
+gibt:** sie schützt davor, einen Wert gegen ANDERE Tage zu vergleichen.
+Bei G-c werden zwei Gruppen (Einwand/kein Einwand) **innerhalb**
+desselben Datensatzes verglichen — ein Tag mit gutem Marktumfeld hebt
+beide Gruppen anteilig gleich an.
+
+### Die Regel
+
+> **Vor jeder Zufallskontrolle prüfen, ob innerhalb der Klammer genug
+> Auswahl zum Mischen besteht.** Ist die typische Gruppengröße je Klammer
+> sehr klein (hier: 0–2 Fälle/Tag bei einem Drittel der Tage), mischt man
+> **gepoolt** (gleiche Gesamtzahl je Label, aber ohne Tagesbindung) — und
+> hält die Tagesstruktur stattdessen über einen **Cluster-Bootstrap**
+> (Tage mit Zurücklegen ziehen) für die Streuung fest, statt sie in eine
+> zu dünne Kontrolle zu zwingen.
+
+**Gegengeprüft:** derselbe Selbsttest mit der gepoolten Mischung liefert
+in beiden Welten eine Kontrolle nahe Null (+0,003 bzw. +0,012) — wie ein
+Nullmodell es soll.
+
+Verwandt: 2.93 · 2.104 (mehrere Mischungen, nicht eine) · F-197
