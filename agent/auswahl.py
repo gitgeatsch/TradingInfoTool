@@ -306,7 +306,15 @@ def _tabelle(conn) -> bool:
                     entwicklung REAL,
                     marktzustand REAL,
                     aktion TEXT,
+                    letzte_stufe TEXT,
                     UNIQUE (lauf, gruppe, symbol))""")
+        # ⚠️ FUER BESTEHENDE TABELLEN reicht CREATE IF NOT EXISTS nicht -
+        # sie behalten ihr altes Schema. Dieselbe Stelle wie
+        # `signal_abbildung.migriere`: PRAGMA lesen, fehlende Spalte
+        # nachziehen. Idempotent, laeuft bei jedem Start mit.
+        _da = {r[1] for r in conn.execute(f"PRAGMA table_info({_TABELLE})")}
+        if "letzte_stufe" not in _da:
+            conn.execute(f"ALTER TABLE {_TABELLE} ADD COLUMN letzte_stufe TEXT")
         conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{_TABELLE}_lauf "
                      f"ON {_TABELLE}(lauf, gruppe)")
         conn.commit()
@@ -348,6 +356,47 @@ def schreibe_lauf(conn, *, auswahl: dict, gruppe: str, symbole,
         logger.info("Auswahl-Schatten fuer %s nicht schreibbar: %s",
                     gruppe, exc)
         return None
+
+
+def vermerke_stufen(conn, *, lauf: str, gruppe: str, stufen: dict) -> int:
+    """S0: WIE WEIT jedes Symbol gekommen ist - je Lauf, je Symbol.
+
+    ⚠️⚠️ WARUM DAS FEHLTE UND WAS ES KOSTET (03.09.2026). `rollen_gate`
+    fuehrt `letzte_stufe[symbol]` seit dem 14.08. - aber nur IM SPEICHER.
+    Nach dem Lauf war sie weg. Der Trichter im Log zaehlt je STUFE, die
+    Schattentabelle kannte nur "beurteilt ja/nein".
+
+    Die Folge, am 03.09. gemessen: von 43 Krypto-Werten sind 18
+    vollstaendig still - und aus den Daten war NICHT zu sagen, an welcher
+    Stufe sie haengen. Jede Wirkungsmessung an der Kette blieb damit
+    blind fuer das Einzelasset.
+
+    ⚠️ SIE SCHREIBT NUR, WAS DAS GATE OHNEHIN WEISS. Keine zweite
+    Buchfuehrung, keine eigene Logik - `durchlauf.letzte_stufe` ist die
+    Quelle, hier wird sie nur haltbar gemacht.
+
+    ⚠️ UND SIE DARF NIE EIN SIGNAL VERHINDERN. Faellt sie aus, fehlt ein
+    Messpunkt - dieselbe Linie wie `schreibe_lauf`: breit abfangen, nur
+    melden. Gibt die Zahl der geschriebenen Zeilen zurueck.
+    """
+    import sqlite3
+    if conn is None or not lauf or not stufen:
+        return 0
+    n = 0
+    try:
+        for symbol, stufe in stufen.items():
+            if not symbol or not stufe:
+                continue
+            cur = conn.execute(
+                f"UPDATE {_TABELLE} SET letzte_stufe = ? "
+                f"WHERE lauf = ? AND gruppe = ? AND symbol = ?",
+                (str(stufe), lauf, str(gruppe), str(symbol)))
+            n += cur.rowcount or 0
+        conn.commit()
+    except sqlite3.Error as exc:
+        logger.info("Letzte Stufe nicht vermerkt: %s", exc)
+        return 0
+    return n
 
 
 def vermerke_aktion(conn, *, lauf: str, gruppe: str, symbol: str,

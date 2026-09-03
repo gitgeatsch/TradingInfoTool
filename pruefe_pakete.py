@@ -15585,6 +15585,76 @@ def paket_terminmarkt() -> None:
            "wert_r speist Stufe 11 - eine Kostengroesse darin waere eine "
            "Bewertung mit Gebuehren")
 
+    # ---- S0: DIE LETZTE STUFE JE ASSET WIRD GESCHRIEBEN -----------------
+    #
+    # ⚠️⚠️ EIN MESSPUNKT OHNE AUFRUFER IST KEINER. `rollen_gate` fuehrt
+    # `letzte_stufe[symbol]` seit dem 14.08. - aber nur im Speicher, und
+    # niemand hat es je gemerkt. Genau die Klasse, die dieses Projekt
+    # mehrfach gefunden hat (`positionsfuehrung` stand vier Tage gebaut
+    # und unverdrahtet, `szenario_entscheidung` steht es heute noch).
+    #
+    # Diese Pruefung haelt beide Haelften fest: die Funktion existiert UND
+    # der Betriebspfad ruft sie.
+    from agent import auswahl as _AW8
+    _q0 = _pl.Path("agent/rollen_lauf.py").read_text(encoding="utf-8")
+    pruefe(P, "S0: `vermerke_stufen` wird aus dem Lauf gerufen",
+           any(isinstance(k, _ast.Call)
+               and getattr(k.func, "attr", "") == "vermerke_stufen"
+               for k in _ast.walk(_ast.parse(_q0))),
+           "ohne Aufrufer bleibt die Stufe im Speicher und ist nach dem "
+           "Lauf weg - dann ist aus den Daten nicht zu sagen, an welcher "
+           "Stufe ein Asset haengt")
+    # ⚠️ `.index()` WIRFT, WENN DER STRING FEHLT - und dann stuerzt die
+    # Pruefung ab, statt rot zu werden. Beim Gegentest (Aufruf kuenstlich
+    # entfernt) kam ein Traceback statt eines FEHL. Eine Kontrolle, die
+    # beim Scheitern abstuerzt, meldet nichts - sie reisst das ganze Paket
+    # mit. `.find()` gibt -1 zurueck und laesst die Zeile rot werden.
+    _i_ruf, _i_schleife = _q0.find("vermerke_stufen"), _q0.find("Leerlaufwache")
+    pruefe(P, "S0: und der Aufruf steht NACH der Symbolschleife",
+           _i_ruf > 0 and _i_schleife > 0 and _i_ruf > _i_schleife,
+           "`durchlauf.letzte_stufe` ist erst vollstaendig, wenn alle "
+           "Symbole durch sind (Fundstellen: Aufruf %d, Schleife %d)"
+           % (_i_ruf, _i_schleife))
+    # ⚠️ AUF EINER WEGWERF-DB, nie gegen die Produktion (2.66).
+    import sqlite3 as _sq
+    _c8 = _sq.connect(":memory:")
+    _c8.execute("CREATE TABLE auswahl_schatten (id INTEGER PRIMARY KEY, "
+                "lauf TEXT NOT NULL, gruppe TEXT NOT NULL, symbol TEXT "
+                "NOT NULL, platz INTEGER, von INTEGER, k INTEGER, "
+                "gewaehlt INTEGER NOT NULL, entwicklung REAL, "
+                "marktzustand REAL, aktion TEXT, "
+                "UNIQUE (lauf, gruppe, symbol))")
+    _c8.execute("INSERT INTO auswahl_schatten (lauf, gruppe, symbol, "
+                "gewaehlt) VALUES ('L','krypto','BTC',1)")
+    _vor = {r[1] for r in _c8.execute("PRAGMA table_info(auswahl_schatten)")}
+    _AW8._tabelle(_c8)
+    _AW8._tabelle(_c8)          # zweimal - die Migration muss idempotent sein
+    _nach = {r[1] for r in _c8.execute("PRAGMA table_info(auswahl_schatten)")}
+    pruefe(P, "S0: die Migration zieht die Spalte in einer ALTEN Tabelle nach",
+           "letzte_stufe" not in _vor and "letzte_stufe" in _nach,
+           "`CREATE TABLE IF NOT EXISTS` allein reicht nicht - bestehende "
+           "Tabellen behalten ihr Schema. Am Notebook laeuft genau so eine")
+    _n8 = _AW8.vermerke_stufen(_c8, lauf="L", gruppe="krypto",
+                               stufen={"BTC": "entscheider"})
+    pruefe(P, "S0: und sie schreibt die Stufe an die richtige Zeile",
+           _n8 == 1 and _c8.execute(
+               "SELECT letzte_stufe FROM auswahl_schatten WHERE symbol='BTC'"
+           ).fetchone()[0] == "entscheider")
+    pruefe(P, "S0: ein unbekanntes Symbol legt KEINE Zeile an",
+           _AW8.vermerke_stufen(_c8, lauf="L", gruppe="krypto",
+                                stufen={"GIBTESNICHT": "urteil"}) == 0
+           and _c8.execute("SELECT COUNT(*) FROM auswahl_schatten"
+                           ).fetchone()[0] == 1,
+           "sie vermerkt, was der Lauf ohnehin gebucht hat - sie ist keine "
+           "zweite Buchfuehrung")
+    pruefe(P, "S0: sie faellt weich aus und verhindert nie ein Signal",
+           _AW8.vermerke_stufen(None, lauf="L", gruppe="k", stufen={"A": "b"})
+           == 0 and _AW8.vermerke_stufen(_c8, lauf="", gruppe="k",
+                                         stufen={"A": "b"}) == 0,
+           "ein fehlender Messpunkt ist ein Mangel, ein verhindertes Signal "
+           "ein Schaden")
+    _c8.close()
+
     # ---- N-15 C: der BESTANDSGRUND in der Mail --------------------------
     from agent import auswahl as _AW7
     _aw7 = {"aktiv": True, "k": 2, "von": 36, "gewaehlt": {"MORPHO"},

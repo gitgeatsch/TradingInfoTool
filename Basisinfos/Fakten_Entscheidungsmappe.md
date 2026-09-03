@@ -5294,3 +5294,82 @@ beim Umskalieren gleich, die Vorgabe 0,080 R ist **absolut**.
 
 Werkzeug: NB-Export 03.09. · `pruefe_kette_je_asset.py`
 Verwandt: F-186 (Warnung bestätigt) · F-187 · F-188 · N-17a
+
+---
+
+## F-190 ✔ S0 GEBAUT — und ⚠️⚠️ S1 gab es schon: die Bestandshistorie läuft seit dem 08.05., aber ohne Staking (03.09.2026)
+
+**Nutzerauftrag:** *„die dringenden Punkte umsetzen und prüfen und
+gegenprüfen."* Gemeint waren S0 und S1 aus dem Stufenplan. Die
+Redundanzprüfung vorweg hat die Lage geändert.
+
+### ⚠️⚠️ S1 war KEINE Lücke — mein Befund in F-183 war falsch
+
+Ich schrieb dort: *„Eine echte Bestandshistorie führt das System nicht —
+`holdings` kennt nur den heutigen Stand."*
+
+**Falsch.** `portfolio_wert_historie.mengen_json` führt die **Mengen je
+Symbol und Tag** — **91 Zeilen seit dem 08.05.2026**. Dieselbe Klasse wie
+am 01.09. und heute Vormittag: **ich habe nicht nachgesehen** (R-R10).
+
+### ⚠️ Aber sie ist unvollständig — zum dritten Mal dieselbe Zeile
+
+    agent/portfolio_historie.py:1005
+    holdings = {h.symbol: h.quantity for h in db.get_all_holdings(conn)
+                if h.quantity > 0}
+
+`quantity` ohne `staked_quantity`. Gemessen am Stand vom 03.09.:
+
+    Bestand laut rollen_eingabe (mit gestaktem)   38
+    in der Historie                               32
+    ⚠️ es fehlen: AVAX, HYPE, NEAR, SOL, SUI, TAO
+
+**Exakt dieselben sechs wie bei `warteschlange._bestand_spot()` (F-180).**
+Drei Stellen, dieselbe Frage, zwei verschiedene Antworten — und nur
+`rollen_eingabe.bestand()` zählt seit dem 17.08. richtig.
+
+### ⚠️⚠️ NICHT REPARIERT — und das ist eine Entscheidung, keine Faulheit
+
+`wert_eur` und `index_wert` werden **aus diesen Mengen gerechnet**, und
+die Tagesrendite bezieht sich auf die Mengen des Vortags. Ein Fix ließe
+die Zeitreihe an einem Tag **springen**: sechs Positionen kämen schlagartig
+dazu.
+
+    a) rueckwirkend neu rechnen   `befuelle_portfolio_historie.py` gibt es
+    b) ab heute korrigieren       Bruch in der Reihe, dokumentiert
+    c) nicht anfassen             der Fehler bleibt
+
+Alle drei sind vertretbar, keine ist offensichtlich richtig — **das ist
+eine Nutzerentscheidung**, so wie L1 am 23.08.
+
+⚠️ **Die Dringlichkeit ist damit weg:** die Historie sammelt seit vier
+Monaten, sie ist nur bei 6 von 38 Werten blind. Was in F-183 als
+*„jeder Tag ohne sie fehlt dauerhaft"* stand, gilt nicht mehr.
+
+### ✔ S0 ist gebaut: die letzte Stufe je Asset
+
+`rollen_gate` führt `letzte_stufe[symbol]` seit dem **14.08.** — aber nur
+**im Speicher**. Nach dem Lauf war sie weg. Genau deshalb war am 03.09.
+nicht zu sagen, an welcher Stufe die 18 stillen Werte hängen.
+
+| | |
+|---|---|
+| **Spalte** | `auswahl_schatten.letzte_stufe`, mit **idempotenter Migration** (`CREATE IF NOT EXISTS` allein reicht nicht — am Notebook läuft eine bestehende Tabelle) |
+| **Funktion** | `auswahl.vermerke_stufen()` — nur `UPDATE`, nie `INSERT`: sie vermerkt, was der Lauf ohnehin gebucht hat |
+| **Aufruf** | **nach** der Symbolschleife, auch bei abgebrochenen Läufen |
+| **Ausfall** | fällt weich aus — ein fehlender Messpunkt ist ein Mangel, ein verhindertes Signal ein Schaden |
+
+**Gegengeprüft an einer Kopie der Produktions-DB** (per `Connection.backup`,
+nie am Original): Migration greift bei alter Tabelle · dreimal laufen
+lassen schadet nicht · schreibt an die richtige Zeile · ein unbekanntes
+Symbol legt **keine** Zeile an · `conn=None` und leere Eingabe fallen
+weich.
+
+⚠️ **Und beim Gegentest fiel eine eigene Prüfung durch:** sie benutzte
+`.index()` und **stürzte ab**, statt rot zu werden — mit entfernter
+Verdrahtung kam ein Traceback statt eines FEHL. Auf `.find()` umgestellt.
+*Eine Kontrolle, die beim Scheitern abstürzt, meldet nichts — sie reißt
+das ganze Paket mit.*
+
+Suite **1954 bei 0 FEHL** (sechs neue S0-Prüfungen).
+Verwandt: F-183 (korrigiert) · F-180 · F-188 · Stufenplan S0/S1

@@ -871,6 +871,27 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     # DIE EINE VERKAUFSMAIL - nach den Einstiegen, vor dem Warten auf Z.ai.
     # Sie braucht kein zweites Modell (siehe verkaufsrechnung.sammel_mail) und
     # soll deshalb nicht bis zu vier Minuten dahinter warten muessen.
+    # ---- S0: WIE WEIT JEDES SYMBOL GEKOMMEN IST (03.09.2026) -----------
+    #
+    # ⚠️ HIER, NICHT JE ASSET. `durchlauf.letzte_stufe` ist erst vollstaendig,
+    # wenn alle Symbole durch sind - ein Vermerk je Asset haette denselben
+    # Wert n-mal geschrieben und den letzten Stand trotzdem verfehlt, wenn
+    # ein Symbol im Fehlerzweig endet.
+    #
+    # ⚠️ UND NACH DER SCHLEIFE HEISST: auch abgebrochene Laeufe werden
+    # gebucht. Gerade dort ist die Frage "wie weit kam es" am wichtigsten.
+    if _auswahl_lauf and betriebsart != TROCKEN:
+        try:
+            from agent import auswahl as _AW5
+            _n = _AW5.vermerke_stufen(
+                conn, lauf=_auswahl_lauf, gruppe=assetklasse,
+                stufen=dict(getattr(durchlauf, "letzte_stufe", {}) or {}))
+            ergebnis["stufen_vermerkt"] = _n
+        except Exception as exc:                             # noqa: BLE001
+            # EIN MESSPUNKT, KEIN SIGNAL - faellt er aus, laeuft der Lauf
+            # weiter. Dieselbe Linie wie `schreibe_lauf`.
+            logger.info("Stufen nicht vermerkt: %s", exc)
+
     # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG VERDRAHTEN (01.09.2026) -------
     #
     # ⚠️ `agent/positionsfuehrung.py` stand seit dem 27.08. gebaut und ohne
