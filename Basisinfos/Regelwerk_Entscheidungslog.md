@@ -22662,3 +22662,37 @@ ueber alle acht Notebook-Laeufe hinweg NICHT EINEN Fehler gezeigt.
 
 Suite (Desktop): 1.679 Pruefungen, ALLE BESTANDEN. `finde_freie_namen.py`:
 0 Kandidaten.
+
+
+---
+
+[2026-09-03] ⚠️ DIESES LOG IST SEIT DEM 24.08. STILL - und das ist eine
+Feststellung, kein Nachtrag
+
+Aufgefallen bei der Redundanzpruefung (Nutzerhinweis: *"wir haben
+Regelwerke und Basisdokumente zur Pruefung und Analyse - damit du nichts
+redundant und falsch baust"*).
+
+Die Doku-Landkarte fuehrt diese Datei als *"Chronologie ALLER Aenderungen,
+Untersuchungen, verworfenen Optionen - nach jedem Fix und jeder Messung"*.
+Der letzte Eintrag stammt vom 24.08.
+
+WAS STATTDESSEN PASSIERT IST: die Befunde seit dem 24.08. stehen als
+F-Nummern in `Fakten_Entscheidungsmappe.md` - F-164 bis F-187, dazu die
+Methodik 2.99 bis 2.107 und die Planpunkte N-13 bis N-17. Die Chronologie
+ist also gefuehrt, nur an anderer Stelle, und die Commit-Meldungen tragen
+sie ein zweites Mal.
+
+⚠️ ZWEI LOGS SIND SCHLIMMER ALS EINES. Rueckwirkend zehn Tage nachzutragen
+hiesse, dieselben Befunde ein drittes Mal zu schreiben - genau die
+Redundanz, vor der die Doku-Regel warnt. Diese Zeile haelt deshalb den
+Uebergang fest, statt ihn zu verwischen:
+
+    bis 24.08.   Chronologie hier
+    ab  24.08.   Befunde als F-Nummern in der Fakten-Entscheidungsmappe,
+                 Methodik in Test_und_Verifikationsmethodik,
+                 Vorhaben in Anforderungen_Umbau_28_08
+
+Wer die Chronologie eines Themas sucht, findet sie ueber die F-Nummern und
+ihre "Verwandt"-Zeilen. ENTSCHEIDUNG DARUEBER STEHT BEIM NUTZER - diese
+Zeile stellt nur fest, was ist.

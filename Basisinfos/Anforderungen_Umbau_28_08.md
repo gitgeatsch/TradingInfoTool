@@ -1514,3 +1514,67 @@ dokumentieren — und danach müssen wir zuerst die bestehende Kette prüfen,
 ob diese korrekt funktioniert."*
 
 Verwandt: **F-185** · F-184 · H-1 · R-R9 · Abschnitt 9
+
+---
+
+# ⚠️⚠️ DER STUFENPLAN — Schritt für Schritt, mit Abhängigkeiten (03.09.2026)
+
+**Nutzerauftrag:** *„dann brauchen wir einen Plan, um Schritt für Schritt
+die korrekten Anpassungen zu planen und durchzuführen."*
+
+Dieser Abschnitt fasst N-16, N-17 und die Befunde F-183 bis F-188 zu
+**einer** Reihenfolge zusammen. Er ersetzt keine der Einzelbeschreibungen
+— er sagt, **in welcher Reihenfolge** sie gebaut werden und **warum jede
+Abkürzung schadet**.
+
+## Der Ausgangszustand, gemessen
+
+    Krypto, scharfer Stand (65 Laeufe, 16,3 h):
+      25 Bestandswerte  -> 55 beurteilt -> 39 Signale -> 7 durch
+      18 ohne Bestand   ->  0 beurteilt ->  0 Signale -> 0 durch
+      Einstieg 4,4/Tag · Ausstieg 5,9/Tag
+
+    Die Einstiegsseite ist bewertet und gesperrt.      ✔
+    Die Ausstiegsseite ist WEDER bewertet NOCH gesperrt. ⚠️
+    Die Bewertung ist auf H20 kalibriert, entschieden
+      wird nach 2 Tagen (Faktor 6-10).                  ⚠️
+    Nur Krypto hat Beitraege; vier Klassen haben keine. ⚠️
+
+## Die Reihenfolge
+
+| # | Schritt | Größe | Vorbedingung | ⚠️ was passiert, wenn man ihn überspringt |
+|---|---|---|---|---|
+| **S0** | **Die Abbruchstelle je Asset schreiben.** `rollen_gate` führt `letzte_stufe[symbol]` bereits im Speicher — sie muss nur in den Lauf-Datensatz | **klein** | keine | jede Wirkungsmessung danach ist blind: man sieht, dass ein Asset still ist, nicht warum |
+| **S1** | **Bestandshistorie** (N-16a): täglich fortschreiben, welcher Wert gehalten wird | **klein** | keine | ⚠️ **zeitkritisch** — jeder Tag ohne sie fehlt der späteren Messung dauerhaft. Heute sind von 37 Bestandssymbolen **5** in der Messbasis (F-183) |
+| **S2** | **Den Horizont kennen** (N-17-0): aus Stop, Volatilität und den 239 entschiedenen Trades die erwartete Zeit bis zur Barriere ableiten | mittel | S0 | ohne diese Größe ist „Schwelle je Horizont" nicht implementierbar — man müsste sie raten |
+| **S3** | **Beiträge tragen ihren Horizont; Schwelle je Horizont** (N-17a, **R-R9**) | mittel | S2 | ⚠️ wer nur die Schwelle senkt, baut eine zweite Mengenbremse; wer nur die Beiträge umkalibriert, wiederholt **G-6** (Stufe 11 sperrt alles) |
+| **S4** | **Ausstiegsbewertung** (N-16d) | groß | **S1** (Historie), S3 | ohne S1 nicht messbar; ohne S3 gegen den falschen Maßstab gemessen |
+| **S5** | **Hebel-Screening messen** (N-17b): `hebel_triggers`, 82.655 Zeilen, Score 70 ist gesetzt statt gemessen | mittel | S3 | ⚠️ misst sonst gegen einen H20-Maßstab, den die Kette nie erreicht |
+| **S6** | **Die vier anderen Assetklassen** | groß | S3 | Stufe 11 zählt dort heute nur — eine Sperre ohne Beiträge wäre eine Sperre nach Datenlage (**Regel 4**) |
+
+## ⚠️ Drei Dinge, die NICHT auf dieser Liste stehen — und warum
+
+| | | |
+|---|---|---|
+| eine **Instrument-Achse** in `_gilt()` | ✖ | Arithmetik: gebührenfrei sind Hebel und Spot dasselbe Geschäft (F-184, H-1) |
+| die **Wegwahl über Kursmerkmale** | ✖ | H-1 hat sechs Kandidaten über 916.021 Anker gemessen — keiner trennt |
+| **A1 anfassen**, weil es „immer dieselben wählt" | ✖ | 12 Tage, 0 Wechsel bei einer Erwartung von ~1 — normal (F-182) |
+
+## ⚠️ Die Querschnittsregel für jeden Schritt
+
+> **Vor jedem Schritt die Ebene benennen:** bewertet er (dann
+> **gebührenfrei**, auch beim Hebel) oder berichtet er (dann dürfen
+> Gebühren vorkommen)? Dauerprüfung **T8** hält das fest.
+
+> **Nach jedem Schritt die Wirkung je Asset prüfen**, nicht nur die Suite:
+> `pruefe_kette_je_asset.py`. Eine grüne Suite ist kein Wirkungsnachweis,
+> und „0 Signale" ist immer ein Befund.
+
+## Zwei offene Punkte, die quer liegen
+
+| | | |
+|---|---|---|
+| **anlass** nimmt 28,2 % | die Regel ist *„Faktensatz unverändert seit N h"* — ein **Fakt**, keine Bewertung | dieselbe Familie wie N-16b |
+| **wiederholung** nimmt **93,8 %** | der Cooldown ist die schärfste Stufe und **nie gegen Ergebnisse gemessen** | ⚠️ wer S3 baut, misst die Wirkung einer Bewertung **hinter** dieser Bremse |
+
+Verwandt: **F-183** · **F-186** · **F-187** · **F-188** · N-16 · N-17

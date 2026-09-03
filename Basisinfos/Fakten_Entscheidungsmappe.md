@@ -5118,3 +5118,76 @@ anderen Grund.
 
 Werkzeug: NB-Backup 03.09. 04:19 · `pruefe_kette_horizonte.py`
 Verwandt: **F-183** · F-186 · N-16d · G-6 · 2.107
+
+---
+
+## F-188 ⚠️⚠️ DIE KETTE JE ASSET: 25 Bestandswerte tragen alles, 18 sind vollständig still (03.09.2026)
+
+**Nutzerauftrag:** *„schlüssle mir auf anhand der Produktionsdaten, ob
+und wie die Kette über die Filter je Asset (nur Krypto ist bisher
+angepasst) funktioniert aktuell."*
+
+Grundlage: NB-Backup 03.09. 04:19, **scharfer Stand** (ab 02.09. 12:00),
+65 Krypto-Läufe in 16,3 Stunden.
+
+### Das Bild in vier Zeilen
+
+    MIT Bestand    25 Werte · beurteilt 55 · Signale 39 · durch 7
+    OHNE Bestand   18 Werte · beurteilt  0 · Signale  0 · durch 0
+    von A1 gewaehlt (HYPE, MORPHO)                      durch 0
+    ohne JEDEN Beitrag: 7 Werte                         durch 1
+
+Hochgerechnet: **Einstieg 4,4/Tag · Ausstieg 5,9/Tag.**
+
+### Die sieben, die durchkommen — und woran man sie erkennt
+
+| Symbol | Bestand | ein | aus | Beiträge |
+|---|---|---|---|---|
+| AVAX, BEAMX, XLM | JA | 1 | — | F·O / F·O / FTO |
+| ASTER, BNB, SEI | JA | — | 1 | F·· / FTO / F·O |
+| **SUPRA** | JA | — | 1 | ⚠️ **···** |
+
+> **SUPRA hat keinen einzigen Beitrag — und kommt trotzdem durch.** Für
+> Werte ohne Beitrag *zählt* Stufe 11 nur (richtig so: eine Sperre nach
+> Datenlage wäre Regel 4). Es ist ein **Ausstieg**, und die haben ohnehin
+> keine Bewertung (F-187). Beide Wege treffen sich hier: **das Signal ist
+> unbewertet hinausgegangen.**
+
+### ⚠️ Was die Aufschlüsselung über die Filter sagt
+
+| Filter | wirkt er? | Beleg je Asset |
+|---|---|---|
+| **Auswahl (A1)** | ✔ und ✖ | wählt HYPE und MORPHO in 65 von 65 Läufen — beide kommen **nicht** durch. Ihr eigener Beitrag zur Durchlassmenge ist **null** (F-182) |
+| **Bestandsausnahme** | ✔✔ | die einzigen 25 Werte, die überhaupt beurteilt werden |
+| **Terminmarkt (N-14)** | ○ | greift nie — es gibt keine Nicht-Bestand-Einstiege |
+| **Cooldown** | ✔✔ | von 55 Beurteilungen bleiben 39 Signale |
+| **Entscheider** | ✔ | von 39 Signalen kommen 7 durch — ⚠️ aber nur auf der Einstiegsseite |
+
+### ⚠️ Die 18 stillen Werte sind kein Fehler, sondern die Summe dreier Regeln
+
+AIOZ, AKT, ALGO, APT, CAT, FLOKI, GRIFFAIN, IMX, INJ, IO, KAITO, ONDO,
+PLUME, RENDER, S, VIRTUAL, W, XNO — **kein Bestand, nie von A1 gewählt,
+also nie beurteilt.** Jede der drei Regeln ist begründet; zusammen
+ergeben sie eine Watchlist, von der 41 % nie betrachtet wird.
+
+### ⚠️ Und nur Krypto hat überhaupt Beiträge
+
+    krypto      3 registrierte Beitraege (Funding, Turnover, OI)
+    aktien      0        rohstoffe   0
+    themen_etf  0        hedge       0
+
+Für die vier anderen Klassen *zählt* Stufe 11 nur — sie ist dort ohne
+Wirkung. Das ist gewollt (G-6, Regel 4), heißt aber: **die Filterkette
+ist heute eine Krypto-Kette.**
+
+### Was die Daten NICHT hergeben
+
+Es gibt **keine** Spalte „an welcher Stufe ist dieses Symbol
+gescheitert". `rollen_gate` führt `letzte_stufe[symbol]` nur im Speicher.
+Rekonstruierbar sind die Durchgangspunkte, nicht die Abbruchstelle — das
+ist **Schritt 0** des Stufenplans.
+
+Werkzeug: `pruefe_kette_je_asset.py`
+⚠️ Nicht verwechseln mit `rechne_takt_je_asset.py` — das beantwortet
+**wie oft** (Menge, Zustand vor G-6), dieses **wo im Trichter**.
+Verwandt: F-187 · F-186 · F-182 · G-6
