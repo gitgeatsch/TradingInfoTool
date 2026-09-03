@@ -15521,6 +15521,70 @@ def paket_terminmarkt() -> None:
     pruefe(P, "C: der Anteil je Beitrag summiert sich auf 100 %",
            any("100 %" in z for z in _m1))
 
+    # ---- DAUERPRUEFUNG T8: DIE BEWERTUNG BLEIBT GEBUEHRENFREI ----------
+    #
+    # ⚠️⚠️ NUTZERVORGABE, mehrfach und woertlich (30.08. und 31.08.2026):
+    #
+    #   "die Bewertung soll ohne Wirtschaftlichkeit, Gebuehren usw.
+    #    erfolgen - also neutral! Im eMail und nur als Text - erst beim
+    #    Hebel braucht man die Standardrate 0,3 bzw. 1,5 Prozent
+    #    rechnerisch."
+    #   "Ganz wichtig, sonst vermischt man zwei verschiedene Ebenen."
+    #
+    # DIE DREI EBENEN:
+    #     1 BEWERTUNG   Potential, Rangfolge, jeder Filter   KEINE Gebuehr
+    #     2 AUSKUNFT    die Mail                             als TEXT
+    #     3 MECHANIK    nur Hebel, nur in der MAIL           gerechnet
+    #
+    # Die Trennung war bis heute nirgends abgesichert. Sie ist EINGEHALTEN
+    # (geprueft 03.09.: nur zwei Stellen setzen ueberhaupt einen
+    # Gebuehrensatz, beide in `saetze()` = Mail) - aber eine eingehaltene
+    # Trennung ohne Waechter ist eine, die beim naechsten Umbau faellt.
+    #
+    # ⚠️ Ein frueherer Verstoss ist belegt: `trefferbilanz.breakeven()`
+    # rechnete mit Kosten und speiste Stufe 11. Behoben durch U-1
+    # (30.08.), seither entscheidet `potential.traegt_hier`.
+    import ast as _a8
+    import io as _io8
+    _q8 = _io8.open("agent/potential.py", encoding="utf-8").read()
+    _fn8 = next((n for n in _a8.walk(_a8.parse(_q8))
+                 if isinstance(n, _a8.FunctionDef) and n.name == "rechne"), None)
+    _geb8 = [kw for k in _a8.walk(_fn8 or _a8.parse(""))
+             if isinstance(k, _a8.Call)
+             for kw in k.keywords if kw.arg == "gebuehr_je_seite"]
+    pruefe(P, "T8: `potential.rechne` ruft die Bewertung mit Gebuehr 0.0",
+           len(_geb8) == 1 and isinstance(_geb8[0].value, _a8.Constant)
+           and float(_geb8[0].value.value) == 0.0,
+           "die BEWERTUNG ist neutral - auch beim Hebel. Gefunden: %s"
+           % [getattr(g.value, "value", "?") for g in _geb8])
+    pruefe(P, "T8: und sie reicht KEINE Finanzierung durch",
+           not any(kw.arg == "finanzierung_r"
+                   for k in _a8.walk(_fn8 or _a8.parse(""))
+                   if isinstance(k, _a8.Call) for kw in k.keywords),
+           "die Finanzierung gehoert in die MAIL, nicht in die Bewertung - "
+           "sie braeuchte die Haltedauer, und die ist zum "
+           "Entscheidungszeitpunkt unbekannt (verdeckte Prognose)")
+    # ⚠️ UND DAS ERGEBNIS, nicht nur der Aufruf: die Quote darf sich nicht
+    # aendern, wenn man einen Gebuehrensatz setzt.
+    _o8 = _WK6.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.0,
+                      klasse="krypto", strategie="einstieg")
+    _m8 = _WK6.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.015,
+                      klasse="krypto", strategie="einstieg")
+    pruefe(P, "T8: die QUOTE haengt nicht am Gebuehrensatz",
+           abs(_o8["quote"] - _m8["quote"]) < 1e-12,
+           "sonst waere jede Rangfolge eine Wirtschaftlichkeitsaussage")
+    pruefe(P, "T8: der Breakeven dagegen SCHON",
+           _m8["breakeven"] > _o8["breakeven"],
+           "er ist die Wirtschaftlichkeitsseite - wenn er sich NICHT "
+           "aendert, kommen die Gebuehren in der Mail gar nicht an")
+    _pt8 = __import__("agent.potential", fromlist=["x"])
+    _p8 = _pt8.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                      instrument="spot", strategie="einstieg")
+    pruefe(P, "T8: `potential.wert_r` enthaelt keine Kostengroesse",
+           abs(_p8.wert_r - (_p8.quote * _p8.crv - (1.0 - _p8.quote))) < 1e-12,
+           "wert_r speist Stufe 11 - eine Kostengroesse darin waere eine "
+           "Bewertung mit Gebuehren")
+
     # ---- N-15 C: der BESTANDSGRUND in der Mail --------------------------
     from agent import auswahl as _AW7
     _aw7 = {"aktiv": True, "k": 2, "von": 36, "gewaehlt": {"MORPHO"},

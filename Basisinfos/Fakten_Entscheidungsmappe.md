@@ -4744,3 +4744,113 @@ Die führt das System nicht, und sie nachzubauen ist ein eigener Punkt.
 
 Werkzeug: `messe_ausstiegsbeitrag.py` (`--selbsttest` gegen zwei Welten)
 Verwandt: F-170 · F-179 · F-180 · N-15 C · **N-16**
+
+---
+
+## F-184 ⚠️⚠️ Punkt 1 ist NICHT „der Bewertung fehlt eine Instrument-Achse" — sie fehlt zu Recht. Der echte Punkt ist ein anderer (03.09.2026)
+
+**Nutzerauftrag:** *„starte mit Punkt 1 — Vorsicht bei der Analyse,
+mehrfacher Umbau mit Altcode, Messdokumente berücksichtigen. Dein Punkt 3
+ist u. U. nicht korrekt. Du musst IMMER unterscheiden zwischen den
+neutralen Bewertungen ohne Wirtschaftlichkeit und dem E-Mail-Test und der
+Berechnung mit Gebühren!! NIE vermischen — also vorher genau prüfen,
+bevor du eingreifst."*
+
+**Ich habe geprüft und nicht eingegriffen.** Das Ergebnis widerspricht
+meiner eigenen Punkteliste von heute Vormittag.
+
+### 1 — Die drei Ebenen: geprüft, sauber, ab jetzt bewacht
+
+Im ganzen Code setzen **genau zwei Stellen** einen Gebührensatz, beide in
+`wahrscheinlichkeit.saetze()` — also in der **Mail**:
+
+| Ebene | wo | Gebühren | Stand |
+|---|---|---|---|
+| **1 BEWERTUNG** | `potential.rechne()` | `gebuehr_je_seite=0.0`, keine Finanzierung | ✔ |
+| **2 AUSKUNFT** | `saetze()`, 0,30 % / 1,50 % | als Text | ✔ |
+| **3 MECHANIK** | `saetze()`, `finanzierung_r` | nur Hebel, nur Mail | ✔ |
+
+Strukturell abgesichert ist es zusätzlich dadurch, dass **`quote` gar
+nicht von `kosten_r` abhängt** — Kosten wirken nur auf `breakeven` und
+`erwartungswert_r`.
+
+✔ **Der früher gemeldete Verstoß ist behoben:** `trefferbilanz.breakeven()`
+speiste Stufe 11 mit einer Kostengröße. Seit U-1 (30.08.) entscheidet
+`potential.traegt_hier` über `wert_r`, und das ist gebührenfrei.
+
+⚠️ **Bewacht war das bis heute nirgends.** → neue Dauerprüfung **T8**
+(fünf Prüfungen, gegengeprüft durch künstliche Vermischung: erkannt).
+
+### 2 — ⚠️ „Der Bewertung fehlt eine Instrument-Achse" ist kein Fehler
+
+Die Beobachtung stimmt: `_gilt()` fragt Klasse, Strategie, Richtung — nie
+das Instrument, und `spot × einstieg` liefert dieselbe Zahl wie
+`hebel × einstieg`. **Die Deutung „Inkonsistenz" ist falsch.**
+
+**S6b (22.08.) hat `INSTRUMENTE_JE_GRUPPE["krypto"]` bewusst auf
+`("spot",)` gesetzt** — Kapitel 88, *„Hebel als Ergebnis statt als
+Kategorie"*. Es gibt im Betrieb keine zweite Zelle; der Hebel fällt aus
+der Geometrie an: `hebel = verlustanteil / stop_rel`, und **der
+Verlustanteil ist für Spot und Hebel derselbe (6 %)**.
+
+Damit ist ein Hebel-Trade **in R gerechnet identisch** mit einem
+Spot-Trade mit engerem Stop. Was bliebe, wäre die Liquidation — und die
+ist nie relevant:
+
+    max_safe_hebel = (1 - 0,09) / stop   ->   0,91 / stop   (RM-11)
+    tatsaechlicher Hebel                 ->   0,06 / stop
+    Faktor 15 Sicherheitsabstand, per Konstruktion
+
+> **Eine Instrument-Achse in die neutrale Bewertung einzubauen hieße, S6b
+> rückgängig zu machen.** Die Finanzierung, der einzige echte Unterschied,
+> gehört nach stehender Vorgabe ausdrücklich **nicht** dorthin — sie
+> bräuchte die Haltedauer, und die ist zum Entscheidungszeitpunkt
+> unbekannt (verdeckte Prognose).
+
+### 3 — ✔ Der Nutzer hatte recht: mein Punkt 3 war falsch
+
+Ich hatte notiert: *„der Hebel existiert in keiner der beiden Ketten."*
+Das ist genau die Lesart, die am 31.08. schon einmal widerlegt wurde. Der
+Hebel ist **nicht abgeschaltet**, er ist ein **Ergebnis**.
+
+### 4 — ⚠️⚠️ Der ECHTE offene Punkt, vom Nutzer benannt
+
+> *„Der Hebel, also die Berechnung für die E-Mail (Geometrie), sollte aus
+> der Bewertung kommen."*
+
+Wörtlich dieselbe Vorgabe wie am **31.08.**: *„Die Begründung (Potential
+und Wahrscheinlichkeit) muss entscheiden, ob der Trade SPOT,
+Akkumulation oder Hebel wird."*
+
+**Heute entscheidet das keine Begründung** (an der Quelle gemessen):
+
+    ATR  1,0  ->  Stop  2,50 %  Hebel 3,20  Etikett hebel
+    ATR  3,0  ->  Stop  7,50 %  Hebel 1,10  Etikett hebel
+    ATR  5,0  ->  Stop 12,50 %  Hebel 1,00  Etikett spot
+
+| Weg | was ihn heute wählt |
+|---|---|
+| **Hebel** | der **ATR** über den Stopabstand |
+| **Akkumulation** | der **GUI-Schalter** `dca_erlaubt` |
+| **Spot** | der Rest |
+
+**Das Potential entscheidet nur, OB gehandelt wird (Stufe 11) — nicht
+WIE.** Die Wahl des Wegs ist nirgends an die Bewertung angeschlossen.
+
+### Was daraus folgt
+
+| | | |
+|---|---|---|
+| ✖ | eine Instrument-Achse in `_gilt()` | **nicht bauen** — macht S6b rückgängig |
+| ✔ | T8 als Wächter der Ebenentrennung | **gebaut**, gegengeprüft |
+| ⚠️ | **die Wegwahl an die Bewertung anschließen** | der eigentliche Punkt 1 — **nicht begonnen**, braucht eine eigene Vorabfestlegung |
+
+⚠️ **Und die Wegwahl ist selbst eine Ebenenfrage:** „welcher Weg hat mehr
+Potential" ist neutral; „welcher Weg trägt sich nach Finanzierung" ist
+Wirtschaftlichkeit. Beim Hebel fallen sie auseinander, weil die
+Finanzierung täglich läuft. **Vor dem Bau ist zu klären, welche der beiden
+Fragen die Wegwahl beantworten soll** — sonst entsteht genau die
+Vermischung, vor der die Vorgabe warnt.
+
+Werkzeug: `pruefe_pakete.py` T8 · `Befund_Instrument_nach_S6b_28_08.md`
+Verwandt: F-183 · S6b/Kapitel 88 · RM-11 · Abschnitt 9 des Umbauplans

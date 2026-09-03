@@ -1384,9 +1384,9 @@ Nach Nutzervorgabe vor N-16 zu erledigen:
 
 | | Punkt | Spot | Hebel | Stand |
 |---|---|---|---|---|
-| **1** | ⚠️⚠️ **Die Bewertung hat keine Instrument-Achse** (Abschnitt 9) | ✔ | ✔ | `spot × einstieg` und `hebel × einstieg` liefern **exakt dieselbe Zahl** (+0,119100 R). `instrument` wird mitgeführt, aber `_gilt()` fragt es nie |
+| **1** | ⚠️⚠️ **KORRIGIERT 03.09. (F-184): die Wegwahl hängt nicht an der Bewertung** | ✔ | ✔ | ⚠️ Die frühere Fassung („der Bewertung fehlt eine Instrument-Achse") ist **widerlegt** — sie fehlt zu Recht (S6b/Kapitel 88, in R gerechnet identisch, Liquidation per RM-11 nie relevant). Der echte Punkt: **das Potential entscheidet nur OB, nicht WIE.** Den Weg wählt heute der **ATR** über den Stopabstand, die Akkumulation ein **GUI-Schalter** |
 | **2** | ⚠️⚠️ **Die zweite Zelle läuft nicht** (F-169) | ✔ | ✔ | `strategie` war **nie** etwas anderes als `einstieg` (F-180). Damit ist auch **L4** (Cooldown 48 h) toter Code und N-14s Einschränkung „nur einstieg" folgenlos |
-| **3** | **Der Hebel existiert in keiner der beiden Ketten** | — | ✔ | die Hebelkette ist aufgelöst; heute wählt der **ATR** das Instrument, nicht die Begründung |
+| **3** | ~~Der Hebel existiert in keiner der beiden Ketten~~ | — | — | ✖ **FALSCH, gestrichen (F-184).** Nutzerhinweis 03.09., bestätigt: der Hebel ist **nicht abgeschaltet**, er ist ein **Ergebnis** (Kapitel 88). Dieselbe Fehllesart wurde schon am 31.08. widerlegt. Was stimmt, steht jetzt in Punkt 1 |
 | **4** | **Die Hebelbewertung wurde nie validiert** | — | ✔ | offen |
 | **5** | N-15 **Variante A** (Querschnitt) | ✔ | ✔ | nur über den **Funding-Rang** (F-179), gedeckt und klein |
 | **6** | ⚠️ **Turnover deckt nur 23 % des Krypto-Bestands** | ✔ | ✔ | F-183 — bei Ausstiegen steht die Bewertung fast immer auf **einem** Beitrag |
