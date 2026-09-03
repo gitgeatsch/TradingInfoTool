@@ -5889,3 +5889,61 @@ eigener Messbasis. Das ist ein offener Punkt, keine Annahme.
 
 Werkzeug: `lade_messreihen.py`
 Verwandt: N-19 · P6/P6c
+
+## F-199 ⚠️ N-16e aufgesetzt: „unverändert seit 26.08." war FALSCH — L1 teilweise gebaut, Frage 2 bereits beantwortet, drei Grundsatzfragen bleiben offen (03.09.2026)
+
+**Nutzerauftrag:** *„ja N-16e aufsetzen, prüfen und gegenprüfen"* — die
+sieben Lücken der Positionsführung (`Bestandsaufnahme_Positionsfuehrung_26_08.md`)
+gegen den aktuellen Code prüfen, nicht die einwöchige Bestandsaufnahme
+ungeprüft übernehmen.
+
+### ⚠️ Die Gesamtsichtung vom 03.09. hatte unrecht
+
+Sie behauptete, die sieben Lücken seien „unverändert seit dem 26.08."
+(`Anforderungen_Umbau_28_08.md:1711`). Am Code geprüft: **falsch.**
+`agent/positionsfuehrung.py` wurde am **27.08. gebaut** und ist seit dem
+**01.09. verdrahtet** (Aufrufer in `rollen_lauf.py`, `verkaufsrechnung.py`,
+`handelsauftrag.py` — bestätigt über den Import-Grep, nicht nur behauptet).
+Es liefert **eine Position je Symbol** statt je Signal, mit Einstand
+(`rollen_eingabe.bestand()`, manuelle Spalte hat Vorrang), Wert, Ergebnis
+in Euro/Prozent und Break-even — und speist das bereits in die Verkaufsmail
+(Schritt 7).
+
+### Der Stand je Lücke, neu geprüft
+
+| # | Lücke (26.08.) | Stand jetzt |
+|---|---|---|
+| **L1** | Keine Position mit These — Stop/Ziel/MFE/Einstand fehlen | ⚠️ **teilweise gebaut**: Einstand/Ergebnis/Break-even jetzt live. Stop/Ziel/MFE bewusst NICHT gebaut — Nutzervorgabe „Spot ohne StopLoss" macht sie sinnlos, keine Lücke mehr, sondern Design |
+| **L2** | Akkumulation nie gesetzt | ✖ weiterhin offen — `Position.strategie` reicht nur durch, was in `signals` steht, und dort bleibt es leer |
+| **L3** | Trailing phasenabhängig, greift trotzdem immer | ✖ weiterhin offen — `positionsfuehrung.py` rechnet keine Phase |
+| **L4** | Keine Spot-Zeitskala | ✖ weiterhin offen — nicht Teil des Moduls |
+| **L5** | Einstand nur teilweise bekannt | ⚠️ **strukturell unverändert** — `bestand()` wählt jetzt sauber zwischen manueller und getrackter Spalte (Vorrangregel), aber wenn BEIDE fehlen, bleibt der Einstand `None`. Keine neue Information, nur eine definierte Auswahl unter der alten |
+| **L6** | Rolle `taktisch`/`core` ohne erkennbare Wirkung | ✖ ungeprüft, `Position` kennt kein Rollenfeld |
+| **L7** | Absicherung: 97,2 % Anlass-Sperrquote | ✖ unverändert, eigenes Thema, nicht Teil dieses Moduls |
+
+### Die eigentliche Blockade — drei von vier Grundsatzfragen, nicht Code
+
+`Bestandsaufnahme_Positionsfuehrung_26_08.md` Abschnitt 6 benennt vier
+Fragen explizit als **Fragen an den Nutzer**, nicht als Bauaufgaben. Beim
+Gegenprüfen: **Frage 2 ist bereits beantwortet und gebaut** —
+`positionsfuehrung.py` zitiert die Nutzerfestlegung vom 26.08. wörtlich:
+*„eine position bleibt eine Position — hier sollte auch der verlust
+sichtbar sein und somit ein break even"*. Das ist die Antwort: EINE
+Position mit einem gewichteten Durchschnittseinstand, keine Tranchen —
+und genau das rechnet das Modul bereits.
+
+Drei bleiben offen:
+
+    1. Woher kommt der Stop einer gewachsenen Spot-Position?
+    3. Soll taktisch/core den Ablauf steuern?
+    4. Gilt für Core-Assets dieselbe Logik wie für taktische?
+
+⚠️ **Ohne Antwort auf Frage 1 ist kein weiterer Umbau an L2/L3/L4 möglich,
+der nicht später wieder aufgemacht werden muss** — das war schon am 26.08.
+so festgehalten und bleibt der Grund, warum N-16e vor N-16d in den
+Stufenplan gehört.
+
+Suite unverändert 1967/1967 (reine Bestandsprüfung, kein Codeeingriff).
+
+Verwandt: N-16e · `Bestandsaufnahme_Positionsfuehrung_26_08.md` ·
+`Roter_Faden_27_08.md` Abschnitt 4

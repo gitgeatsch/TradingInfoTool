@@ -1708,20 +1708,25 @@ System oder?"* — Ja, und zwar auf zwei Ebenen:
 | Ebene | Befund | Status |
 |---|---|---|
 | **Bewertung** | Ausstiege durchlaufen weder Geometrie noch Entscheider (F-187) | ✔ heute erkannt, N-16 |
-| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7**, unverändert seit dem **26.08.**: Tabelle `positionen` fehlt ganz, Akkumulation wird nie gesetzt, Trailing ist nicht phasenabhängig, keine Spot-Zeitskala, Einstand nur teilweise bekannt | **neu gefunden, N-16e** |
+| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7** vom 26.08. — ⚠️ GEGENGEPRÜFT 03.09. (F-199): **nicht** unverändert, L1 ist teilweise gebaut (Einstand/Ergebnis/Break-even seit 27.08./01.09. live über `positionsfuehrung.py`). L2/L3/L4/L6/L7 weiterhin offen | **N-16e aufgesetzt, F-199** |
 
-**N-16e (neu) — Vorbedingung für N-16d:** vier Grundsatzfragen zur
-Positionsdefinition sind nie beantwortet:
+**N-16e — Vorbedingung für N-16d:** vier Grundsatzfragen zur
+Positionsdefinition (Bestandsaufnahme 26.08., Abschnitt 6 — explizit als
+Fragen AN DEN NUTZER benannt, nicht als Bauaufgabe). ⚠️ GEGENGEPRÜFT
+03.09. (F-199): **Frage 2 ist bereits beantwortet und gebaut** —
+`positionsfuehrung.py` setzt die Nutzerfestlegung vom 26.08. um (eine
+Position, ein gewichteter Durchschnittseinstand, kein Tranchenmodell).
+Drei bleiben offen:
 
-    Woher kommt der Stop einer gewachsenen Spot-Position?
-    Was ist "eine Position" bei mehrfachem Nachkauf?
-    Soll taktisch/core den Ablauf steuern?
-    Gilt fuer Core-Assets dieselbe Logik wie fuer taktische?
+    1. Woher kommt der Stop einer gewachsenen Spot-Position?
+    3. Soll taktisch/core den Ablauf steuern?
+    4. Gilt fuer Core-Assets dieselbe Logik wie fuer taktische?
 
 ⚠️ **Eine Ausstiegsbewertung auf einer lückenhaften Positionsführung
 wäre nur scheinbar solide.** N-16e gehört deshalb **vor** N-16d in die
 Reihenfolge des Stufenplans: **S4 braucht jetzt auch N-16e, nicht nur
-S1 und S3.**
+S1 und S3.** Ohne Antwort auf Frage 1 ist an L2/L3/L4 kein Umbau
+möglich, der nicht später wieder aufgemacht werden muss.
 
 ## C — Hebel: ein Nebenpunkt, kein neuer Kernpunkt
 
