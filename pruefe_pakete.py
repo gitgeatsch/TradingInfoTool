@@ -15410,6 +15410,136 @@ def paket_terminmarkt() -> None:
            % (sorted(_gemeinsam), _fehlt["_PT"] or "keine",
               _fehlt["_WK"] or "keine"))
 
+    # ---- DAUERPRUEFUNG T7: die ZWEI Rechnungen INNERHALB der Mail --------
+    #
+    # ⚠️⚠️ T6 HAT DEN FEHLER NICHT GEFANGEN, den sie fangen sollte
+    # (03.09.2026). Sie bewacht die Naht zwischen Mail und Stufe 11 - aber
+    # `wahrscheinlichkeit.saetze()` ruft `rechne()` ZWEIMAL:
+    #
+    #     erste = rechne(...)          fuer die Zeile "geschaetzte Quote"
+    #     for name, satz in ...:       je Gebuehrensatz noch einmal
+    #         r = rechne(...)          fuer "noetig X, geschaetzt Y"
+    #
+    # Am 02.09. habe ich `strategie` in den ERSTEN eingebaut und den
+    # zweiten uebersehen. Die Mail zeigte daraufhin in EINEM Block zwei
+    # verschiedene Trefferquoten:
+    #
+    #     = geschaetzte Trefferquote        32,8 %
+    #     Standard 0,30 %: ... geschaetzt   33,3 %
+    #
+    # Die Lehre ist allgemeiner als der Fall: eine Pruefung, die EINE Naht
+    # bewacht, sieht die zweite daneben nicht. Wer zwei Rechnungen mit
+    # derselben Absicht fuehrt, muss ihre Argumente gemeinsam pflegen -
+    # und zwar an JEDER Stelle, an der sie stehen.
+    _qw = _pl.Path("agent/wahrscheinlichkeit.py").read_text(encoding="utf-8")
+    _fn = next((n for n in _ast.walk(_ast.parse(_qw))
+                if isinstance(n, _ast.FunctionDef) and n.name == "saetze"),
+               None)
+    # ⚠️ DIESE ZWEI DUERFEN sich unterscheiden - dafuer gibt es die
+    # Schleife ueberhaupt. Alles andere nicht.
+    _egal = {"gebuehr_je_seite", "finanzierung_r"}
+    _aufrufe = [{kw.arg for kw in k.keywords if kw.arg} - _egal
+                for k in _ast.walk(_fn or _ast.parse(""))
+                if isinstance(k, _ast.Call)
+                and getattr(k.func, "id", "") == "rechne"]
+    pruefe(P, "T7: beide rechne()-Aufrufe in saetze() sind gleich bestueckt",
+           len(_aufrufe) >= 2 and all(x == _aufrufe[0] for x in _aufrufe),
+           "sonst zeigt DIESELBE Mail zwei verschiedene Trefferquoten. "
+           "Gefunden: %s" % (_aufrufe or "kein Aufruf - hat sich der Name "
+                             "geaendert?"))
+    # ⚠️ DIESE PRUEFUNG WAR IN IHRER ERSTEN FASSUNG BLIND. Sie sammelte
+    # alle Zeilen mit "geschaetzt " - und traf damit NUR die beiden
+    # Wirtschaftlichkeitszeilen, die naturgemaess uebereinstimmen. Die
+    # Zeile, um die es geht, heisst "= geschaetzte Trefferquote" und fiel
+    # durch das Suchmuster. Mit kuenstlich wieder eingebautem Fehler
+    # meldete sie OK.
+    #
+    # Gefunden, weil ich den Fehler zum Gegentest wieder eingebaut habe -
+    # eine Kontrolle, die man nicht scheitern sieht, ist keine.
+    _mz = _WK6.saetze(crv=2.0, stop_relativ=0.06, klasse="krypto",
+                      strategie="einstieg", merkmale={"funding_fuenftel": 3})
+    _oben = [z.split()[-2] for z in _mz if "geschaetzte Trefferquote" in z]
+    _unten = [z.split("geschaetzt ")[1].split(" ")[0]
+              for z in _mz if "geschaetzt " in z]
+    pruefe(P, "und die Mail nennt beide Male dieselbe Quote",
+           bool(_oben) and bool(_unten)
+           and len(set(_oben) | set(_unten)) == 1,
+           "die Wirtschaftlichkeitszeilen rechneten ohne die Beitraege und "
+           "nannten deshalb die nackte Basisrate. Oben %s, unten %s"
+           % (_oben or "nichts gefunden", _unten or "nichts gefunden"))
+
+    # ---- N-15 VARIANTE C: DIE ZERLEGUNG (03.09.2026) ---------------------
+    #
+    # ⚠️ WAS HIER BEWACHT WIRD, ist nicht der Text, sondern die
+    # UNTERSCHEIDUNG: ein Beitrag, der gemessen wurde und nicht traegt, und
+    # einer, der traegt aber HIER keinen Wert hat, sind zweierlei. N-15a
+    # hat am 03.09. gezeigt, dass eine Bewertung mit Datenluecke nicht mit
+    # einer vollstaendigen vergleichbar ist - ihre Skala haengt an der
+    # Datenlage. In der Mail stand beides in derselben Liste.
+    def _bt(**mm):
+        return _WK6.rechne(crv=2.0, stop_relativ=0.06, gebuehr_je_seite=0.003,
+                           klasse="krypto", strategie="einstieg",
+                           merkmale=mm)["beitraege"]
+    _nur_f = _bt(funding_fuenftel=3)
+    _beide = _bt(funding_fuenftel=3, turnover_fuenftel=2)
+    pruefe(P, "C: ein fehlender Wert wird als `luecke` markiert",
+           any(z.get("luecke") for z in _nur_f
+               if z["name"].startswith("Turnover")),
+           "sonst steht die Datenluecke in derselben Liste wie die "
+           "Beitraege, die gemessen und gefallen sind")
+    pruefe(P, "C: liegen alle Werte vor, gibt es KEINE Luecke",
+           not any(z.get("luecke") for z in _beide))
+    pruefe(P, "C: ein gemessen gefallener Beitrag ist KEINE Luecke",
+           not any(z.get("luecke") for z in _beide
+                   if z["name"].startswith("Lebendigkeit")),
+           "'gemessen und gefallen' ist erledigt, 'kein Wert da' ist eine "
+           "Aufgabe - die Mail muss das trennen")
+    pruefe(P, "C: `zustand` bleibt unveraendert `nie` (Bitgleichheit)",
+           all(z["zustand"] == "nie" for z in _nur_f
+               if z["name"].startswith("Turnover")),
+           "ein neuer Zustandswert haette "
+           "`pruefe_wahrscheinlichkeit_bitgleich.py` rot gemacht, obwohl "
+           "sich rechnerisch nichts aendert - ein Fehlalarm in einem "
+           "Bitgleichheitstest ist teurer als eine fehlende Unterscheidung")
+    _m1 = _WK6.saetze(crv=2.0, stop_relativ=0.06, klasse="krypto",
+                      strategie="einstieg", merkmale={"funding_fuenftel": 3})
+    _m2 = _WK6.saetze(crv=2.0, stop_relativ=0.06, klasse="krypto",
+                      strategie="einstieg",
+                      merkmale={"funding_fuenftel": 3, "turnover_fuenftel": 2})
+    pruefe(P, "C: steht die Bewertung auf EINEM Beitrag, warnt die Mail",
+           any("steht auf EINEM Beitrag" in z for z in _m1),
+           "das ist heute bei 37 von 44 Werten der Fall und war in keiner "
+           "Mail sichtbar")
+    pruefe(P, "C: bei zwei Beitraegen warnt sie NICHT",
+           not any("steht auf EINEM Beitrag" in z for z in _m2),
+           "eine Warnung, die immer kommt, wird beim dritten Mal ignoriert")
+    pruefe(P, "C: die Luecke steht GENAU EINMAL in der Mail",
+           sum(1 for z in _m1 if "Turnover-Rang im Markt" in z) == 1,
+           "sie stand vorher auch in der Liste 'Nicht eingerechnet' - "
+           "zweimal gelesen haelt man sie beim zweiten Mal fuer etwas "
+           "anderes")
+    pruefe(P, "C: der Anteil je Beitrag summiert sich auf 100 %",
+           any("100 %" in z for z in _m1))
+
+    # ---- N-15 C: der BESTANDSGRUND in der Mail --------------------------
+    from agent import auswahl as _AW7
+    _aw7 = {"aktiv": True, "k": 2, "von": 36, "gewaehlt": {"MORPHO"},
+            "platz": {"AVAX": (26, 36), "MORPHO": (1, 36)}}
+    pruefe(P, "C: ein gehaltener, NICHT gewaehlter Wert sagt das auch",
+           any("weil Sie ihn halten" in z
+               for z in _AW7.saetze(_aw7, "AVAX", None, hat_bestand=True)),
+           "die AVAX-Mail vom 02.09. las sich, als sei der Wert ausgewaehlt "
+           "worden - 25 Werte hatten bessere Beitraege")
+    pruefe(P, "C: ein GEWAEHLTER Wert bekommt den Satz nicht",
+           not any("weil Sie ihn halten" in z
+                   for z in _AW7.saetze(_aw7, "MORPHO", None,
+                                        hat_bestand=True)))
+    pruefe(P, "C: und ohne Bestand bleibt die Mail wie bisher",
+           not any("weil Sie ihn halten" in z
+                   for z in _AW7.saetze(_aw7, "AVAX", None)),
+           "der neue Parameter hat eine Vorgabe - jeder bestehende "
+           "Aufrufer bleibt unveraendert gueltig")
+
     # ---- DAUERPRUEFUNG T5: die Testkonfiguration darf nicht veralten ----
     #
     # ⚠️ ANLASS 02.09.2026: 13 rote Punkte am Notebook, eine Ursache. Die

@@ -1256,3 +1256,82 @@ Funding-Rang allein? Gleiche Anlage, gepaarter Test, eine Zelle.
 
 Werkzeug: `messe_beitragssumme.py` · `rechne_einordnung_vorschau.py [SYMBOL]`
 Verwandt: **F-179** · F-171 · 2.104 · 2.105
+
+### ✔ N-15 VARIANTE C GEBAUT (03.09.2026) — die Zerlegung steht in der Mail
+
+Gebaut wurde genau das, was N-15a deckt: **keine Rangfolge**, sondern die
+Auskunft, **worauf die Zahl steht**.
+
+**Was jetzt in der Mail steht** (Fall AVAX, ein Beitrag, negativ):
+
+    = geschaetzte Trefferquote                           32,8 %
+       Woher die Bewegung kommt:
+          Funding-Rang im Markt                           100 %
+    ⚠️ Die Bewertung steht auf EINEM Beitrag (Funding-Rang im Markt).
+       Faellt er weg, bleibt die nackte Basisrate.
+    ⚠️ Tragende Beitraege, die HIER keinen Wert haben - nicht gefallen,
+       sondern ohne Datenlage:
+          Turnover-Rang im Markt - an diesem Anker nicht bestimmbar
+       Deshalb ist diese Zahl NICHT mit der eines Werts vergleichbar, bei
+       dem alle Beitraege vorliegen.
+
+Und aus der Auswahl, wenn der Wert **gehalten** wird:
+
+    ⚠️ Dieser Wert wurde NICHT ausgewaehlt - er wird beurteilt, weil Sie
+       ihn halten. Bei einer gehaltenen Position lautet die Frage 'halten
+       oder verkaufen', und die stellt sich unabhaengig vom Rang.
+
+**Die drei Unterscheidungen, die C einführt:**
+
+| | vorher | jetzt |
+|---|---|---|
+| Anteil je Beitrag | fehlte | „100 %" / „50 % / 50 %" |
+| Bewertung auf **einem** Beitrag | unsichtbar (37 von 44 Werten!) | eigene Warnzeile |
+| „gefallen" gegen „kein Wert da" | **eine gemeinsame Liste** | getrennt, mit eigener Überschrift |
+| warum dieser Wert überhaupt da ist | verschwiegen | benannt, wenn Bestand |
+
+### ⚠️ Wie gebaut wurde — auf Nutzerhinweis geändert
+
+*„Vorsicht bei den Änderungen wegen Altbestand an Code und weil die
+Komplexität hoch ist."*
+
+Meine erste Fassung führte für „trägt, aber hier kein Wert" einen neuen
+**Zustandswert** `"fehlt"` ein. Das hätte funktioniert und trotzdem
+Schaden angerichtet: `pruefe_wahrscheinlichkeit_bitgleich.py` vergleicht
+`zustand` **wörtlich** gegen einen eingefrorenen Stand — der Test wäre rot
+geworden, obwohl sich rechnerisch nichts ändert.
+
+**Umgebaut auf additiv:** der Zustand bleibt `"nie"`, die neue Information
+kommt als Feld `luecke` daneben. Kein Leser der Struktur ändert sein
+Verhalten. Ebenso `hat_bestand` in `auswahl.saetze()` — neuer Parameter
+**mit Vorgabe**, jeder bestehende Aufrufer bleibt gültig.
+
+### Was dabei nebenbei gefunden wurde
+
+Drei Fehler und ein Zählproblem — vollständig in **F-181**:
+dieselbe Mail nannte **zwei verschiedene Trefferquoten** (F-178 eine Zeile
+tiefer, T6 sah es nicht) · das Vorzeichen stand doppelt (`+-0,5`) · meine
+eigene neue Prüfung war zunächst blind · die Terminmarkt-Stufe zählt
+Notizen als „bestanden".
+
+### Prüfung
+
+`pruefe_wahrscheinlichkeit_bitgleich.py` **432 Fälle, 0 FEHL** (neu
+aufgezeichnet — der alte Stand war seit dem 31.08. vollständig rot, und
+zwar zu Recht: 2e und R1 haben die Beiträge legitim geändert. **Geprüft,
+bevor neu aufgezeichnet wurde: keine einzige Zahl weicht ab**, nur ein
+Zustandswechsel bei einem 0,0-Punkte-Beitrag, ein neuer Beitrag und drei
+Audit-Texte).
+
+Suite **1943 bei 0 FEHL**, darunter T7 und neun neue C-Prüfungen.
+
+### Offen — die Reihenfolge nach C
+
+| | Variante | Stand |
+|---|---|---|
+| **2** | **A — Querschnitt** | ⚠️ nur über den **Funding-Rang** (F-179), nicht über die Summe |
+| **3** | **D — die anderen** | ⚠️ **hat durch F-180 eine andere Antwort bekommen**: die Auswahl wählt seit zehn Tagen dieselben zwei Werte. „Was war heute besser" hieße heute „dasselbe wie gestern" |
+| **4** | **B — eigene Lage** | unverändert |
+
+Werkzeug: `agent/wahrscheinlichkeit.py` · `agent/auswahl.py`
+Verwandt: **F-179** · **F-180** · **F-181** · 2.106

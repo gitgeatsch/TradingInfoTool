@@ -4380,3 +4380,184 @@ ein vierter Kandidat hätte es nicht mehr getan.
 
 Werkzeug: `messe_beitragssumme.py` (Blöcke A–F, `--selbsttest`)
 Verwandt: F-171 (Median-Bias) · F-178 · 2.104 · 2.105 · N-15
+
+---
+
+## F-180 ⚠️⚠️⚠️ Der Bestandsvorrang ist zum Monopol geworden — die Auswahl wählt seit zehn Tagen dieselben zwei Werte (03.09.2026)
+
+**Nutzerauftrag:** *„analysiere warum Bestand Vorrang hat und ob dies
+korrekt umgesetzt ist — welche Bewertungen und Filter ziehen bzw. nicht
+und ob der ‚Vorrang' der Bestandsassets noch erforderlich ist und
+funktioniert. Die ursprüngliche Absicht war, dass Krypto-Bestand Vorrang
+bei Scheduler und Cooldown hat, damit diese nicht durch die Reihenfolge
+der Bewertung ‚still' sind."*
+
+### Die sechs Orte, an denen Bestand wirkt — und was jeder tut
+
+| # | Ort | was er tut | umgesetzt | **wirkt er?** |
+|---|---|---|---|---|
+| 1 | **Warteschlange** (`warteschlange.py`) | Reihenfolge, schließt **nichts** aus | ✔ — aber ⚠️ sechs gestakte Werte sind für sie unsichtbar | ✖ **folgenlos** — gemessen |
+| 2 | **Auswahl-Stufe** (`rollen_lauf:1248`) | Ausnahme vom A1-Filter | ✔ | ✔✔ **der einzige Weg in die Bewertung** |
+| 3 | **Terminmarkt** (N-14) | Ausnahme von der OI-Sperre | ✔ | ○ **wirkungslos**, weil es keine Nicht-Bestand-Einstiege gibt |
+| 4 | **Leerlaufwache** (L1) | ein HALTEN zählt nicht als Leerlauf | ✔ | ✔ |
+| 5 | **Cooldown** (`wiederholung.py`) | — | ✖ **gar nicht** | die Absicht ist dort **nie umgesetzt worden** |
+| 6 | **Potentialschwelle** (Stufe 11) | keine Ausnahme, greift voll | ✔ | ✔ **die neue Bewertung wird angewendet** |
+
+### ⚠️⚠️⚠️ Der Befund, der alles andere überlagert
+
+Gemessen am NB-Backup (03.09., 04:19), Zeitraum 24.08.–03.09.:
+
+> **Die Auswahl wählte in 985 von 985 Krypto-Läufen dieselben zwei Werte:
+> MORPHO und HYPE. Beide haben Bestand.**
+
+Und über **alle fünf Gruppen** dasselbe Bild: aktien 1 Wert, hedge 1,
+rohstoffe 1, themen_etf 1, krypto 2 — **sechs verschiedene Werte in rund
+4.900 Läufen.** Die 250-Tage-Entwicklung ändert sich in zehn Tagen kaum,
+also liefert die Rangliste immer dasselbe Ergebnis. **A1 ist keine
+Auswahl, sondern eine feste Liste.**
+
+Die Folge in Zahlen (Krypto, `auswahl_schatten`):
+
+    Bestand, Warteschlange sieht ihn      19 Werte   1028 beurteilt   5,9 %
+    Bestand, Warteschlange BLIND           6 Werte    364 beurteilt   6,5 %
+    KEIN Bestand                          18 Werte      4 beurteilt   0,02 %
+
+**Vier von 17.730.** Die Einstiegsseite ist nicht schwach, sie ist
+geschlossen — und zwar nicht durch den Bestandsvorrang, sondern durch
+eine Auswahl, die keine ist. Der Vorrang ist nur der einzige Weg, der
+noch offen steht.
+
+### Zu Ort 1: die sechs unsichtbaren Werte — ein Fehler ohne Folgen
+
+`warteschlange._bestand_spot()` fragt `WHERE quantity > 0`;
+`rollen_eingabe.bestand()` zählt seit dem 17.08. **`staked_quantity` mit**
+(Nutzerfund an einer SOL-Mail). Ergebnis:
+
+    Bestand laut warteschlange : 32
+    Bestand laut rollen_eingabe: 38
+    ⚠️ nur fuer die Warteschlange unsichtbar: AVAX, HYPE, NEAR, SOL, SUI, TAO
+
+Dieselbe Frage, zwei Antworten — genau die Doppelung, gegen die
+`_war_bestand()` gebaut wurde. **Gemessen ist es trotzdem folgenlos:**
+die sechs werden mit 6,5 % sogar minimal häufiger beurteilt als die
+sichtbaren mit 5,9 %. Die Reihenfolge wirkt nur bei knappem Budget, und
+das Budget ist nicht knapp — jedes Symbol ist in jedem Lauf dabei.
+
+⚠️ **Trotzdem zu beheben**, aber als Aufräumarbeit, nicht als Notfall:
+Wird der Deckel je knapp, verlieren ausgerechnet SOL, SUI und NEAR ihren
+Vorrang, ohne dass jemand es merkt.
+
+### Zu Ort 5: die Absicht, die nie umgesetzt wurde
+
+`wiederholung.stunden()` staffelt nach **Strategie, Ergebnis, Gruppe,
+Instrument** — Bestand kommt nicht vor. Die Doku sagt dazu (23.08.):
+*„Vor A1 unterlag der Bestand demselben Cooldown wie alles andere"* — die
+Vergangenheitsform legt nahe, das habe sich geändert. **Hat es nicht.**
+Geändert hat sich allein die Auswahl-Stufe.
+
+⚠️ **Und heute wäre eine Bestandsausnahme im Cooldown schädlich:**
+`wiederholung` nimmt bereits **93,8 %** aller Werte (Trichter 31.08.–03.09.,
+1.417 Läufe) und ist damit die schärfste Stufe der Kette. Bestand davon
+auszunehmen hieße, den Takt für genau die Werte zu öffnen, die ohnehin
+als einzige durchkommen.
+
+### Ist der Vorrang noch erforderlich?
+
+**Ja — für die Verkaufsseite, und dort unverändert.** Ohne die
+Auswahl-Ausnahme fielen 21 von 24 Bestandspositionen aus der Beurteilung
+(gemessen 23.08.: 14 von 15 bei Krypto). Bei einer gehaltenen Position
+steht täglich eine echte Entscheidung an; die Auswahl beantwortet aber
+die Frage *„welchen kaufen"*.
+
+**Nein — als faktisches Monopol.** Er war als *Vorrang* gedacht („du
+zuerst"), nicht als *Alleinzugang* („nur du"). Zum Alleinzugang wurde er
+nicht durch sich selbst, sondern dadurch, dass A1 daneben nichts mehr
+liefert.
+
+### Wird die neue Bewertung angewendet?
+
+**Ja, zu 100 %.** Alle 1.491 Signale seit dem 23.08. tragen
+`strategie='einstieg'`, und die Beiträge (Funding, Turnover, OI) sind
+genau darauf eingeschränkt. Die Potentialschwelle kennt keine
+Bestandsausnahme.
+
+⚠️ **Zwei Nebenbefunde, die daran hängen:**
+
+1. **`strategie` war NIE etwas anderes als `einstieg`** — die zweite
+   Zelle (`akkumulation`) läuft nicht (F-169). Damit ist auch **L4
+   (Cooldown 48 h für Akkumulation) toter Code**, und N-14s Einschränkung
+   „nur einstieg" schließt nichts aus.
+2. **Eine Einstiegsmessung wird auf Ausstiegsfragen angewendet.** 230 der
+   Signale sind REDUZIEREN oder VERKAUFEN, tragen aber `einstieg` und
+   werden mit Beiträgen bewertet, die auf Einstiegen gemessen wurden. N-14
+   nimmt Bestand **genau deshalb** aus — *„bei einem gehaltenen Wert steht
+   die AUSSTIEGSfrage an, und die hat die Messung nie berührt."*
+   **Dieselbe Begründung, zwei verschiedene Konsequenzen.**
+
+Werkzeug: NB-Backups 02.09./03.09., `auswahl_schatten`, `holdings`
+Verwandt: F-169 · F-181 · A1-Dimensionierung 23.08. · L1
+
+---
+
+## F-181 ⚠️⚠️ Dieselbe Mail nannte zwei verschiedene Trefferquoten — und drei weitere Funde beim Bau von N-15 C (03.09.2026)
+
+### 1 — F-178 eine Zeile tiefer: `saetze()` rechnet ZWEIMAL
+
+`wahrscheinlichkeit.saetze()` ruft `rechne()` an zwei Stellen: einmal für
+die Zeile *„geschätzte Trefferquote"*, dann je Gebührensatz noch einmal
+für *„nötig X, geschätzt Y"*. Am 02.09. habe ich `strategie` in den
+**ersten** eingebaut und den zweiten übersehen. Was in der Mail stand:
+
+    = geschaetzte Trefferquote                    32,8 %
+    ⚠️ Standard 0,30 %: noetig 36,7 %, geschaetzt 33,3 %
+
+Zwei Zahlen für dieselbe Größe, fünf Zeilen auseinander. Die untere ist
+die nackte Basisrate.
+
+⚠️ **Und die Dauerprüfung T6, am 02.09. genau dafür gebaut, hat es nicht
+gefangen.** Sie bewacht die Naht zwischen Mail und Stufe 11 — nicht die
+beiden Rechnungen **innerhalb** der Mail. *Eine Prüfung, die eine Naht
+bewacht, sieht die zweite daneben nicht.* → neue Dauerprüfung **T7**, die
+die Argumente beider Aufrufe über den Syntaxbaum vergleicht; gegengeprüft
+durch künstliches Wiedereinbauen des Fehlers.
+
+### 2 — ⚠️ meine erste Fassung von T7s Partnerprüfung war blind
+
+Die Ergebnisprüfung daneben (*„nennt die Mail beide Male dieselbe
+Quote"*) sammelte alle Zeilen mit `"geschaetzt "` — und traf damit **nur
+die beiden Wirtschaftlichkeitszeilen**, die naturgemäß übereinstimmen.
+Die Zeile, um die es geht, heißt `"geschaetzte Trefferquote"` und fiel
+durch das Muster. Mit wieder eingebautem Fehler meldete sie **OK**.
+
+Gefunden nur, weil ich den Fehler zum Gegentest wieder eingebaut habe.
+**Eine Kontrolle, die man nicht scheitern sieht, ist keine.**
+
+### 3 — das Vorzeichen stand doppelt
+
+Ein negativer Beitrag erschien als **`+-0,5`**. Das liest sich wie ein
+Tippfehler und verdeckt, dass der Beitrag **abzieht** — bei AVAX war das
+der einzige Beitrag der ganzen Bewertung.
+
+### 4 — ⚠️⚠️ die Terminmarkt-Stufe zählt Notizen als „bestanden"
+
+Trichter vom 31.08.–03.09. (1.417 Läufe):
+
+    terminmarkt    1643 bestanden    0 verloren    0,0 %  <- NEU
+
+Das liest sich, als habe die Stufe 1.643 Werte geprüft und alle
+durchgelassen. Tatsächlich haben die drei `notiz()`-Zweige **kein
+`return`** und fallen auf `durchlauf.bestanden(...)` durch. Ein Wert, der
+gar nicht geprüft werden **konnte**, wird als geprüft gezählt.
+
+Bei 1.643 echten Prüfungen wären rund 330 im obersten OI-Fünftel zu
+erwarten. Es waren null — weil fast keine echte Prüfung stattfand: es
+gibt keine Nicht-Bestand-Einstiege (F-180).
+
+⚠️ **Die Wirkung ist richtig** (durchlassen ist gewollt), **die Anzeige
+ist falsch.** Der dritte Zustand aus dem N-14-Bau — *„konnte nicht
+prüfen"* — wird in der Trichterzeile wieder zum ersten. **Nicht
+repariert:** eine Änderung an der Zählung berührt jede
+Trichter-Auswertung und gehört entschieden, nicht nebenbei gemacht.
+
+Werkzeug: `pruefe_pakete.py` Paket „Terminmarkt" (T7 + neun C-Prüfungen)
+Verwandt: F-178 · F-180 · 2.106 · N-15 C

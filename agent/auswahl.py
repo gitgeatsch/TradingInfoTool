@@ -228,11 +228,34 @@ def marktzustand(reihen: dict, klasse: str) -> dict | None:
             "abstand": jetzt / mittel - 1.0, "fenster": SMA_MARKT}
 
 
-def saetze(auswahl: dict, symbol: str, zustand: dict | None = None) -> list:
-    """Die Zeilen fuer die Mail. SPERREN NICHTS - das steht auch da."""
+def saetze(auswahl: dict, symbol: str, zustand: dict | None = None,
+           hat_bestand: bool = False) -> list:
+    """Die Zeilen fuer die Mail. SPERREN NICHTS - das steht auch da.
+
+    ⚠️ `hat_bestand` IST NEU (N-15 C, 03.09.2026) und hat eine Vorgabe -
+    jeder bestehende Aufrufer bleibt unveraendert gueltig."""
     if not (auswahl or {}).get("aktiv"):
         return []
     zeilen = [grund(auswahl, symbol) + "."]
+    # ⚠️⚠️ DIE MAIL VERSCHWIEG, WARUM DIESER WERT UEBERHAUPT DA IST
+    # (Nutzerfrage 02.09., an einer echten AVAX-Mail).
+    #
+    # `grund()` sagt "Rang 26 von 36" - dieselbe Zeile fuer einen
+    # gewaehlten wie fuer einen gehaltenen Wert. Fuer AVAX ging eine
+    # Kaufempfehlung heraus, waehrend 25 Werte bessere Beitraege hatten;
+    # die Mail las sich, als sei er AUSGEWAEHLT worden. Er war es nicht -
+    # er ist durchgelassen worden, weil der Nutzer ihn haelt.
+    #
+    # Gemessen (02.09., ueber 934 Krypto-Laeufe): die Auswahl waehlte in
+    # JEDEM Lauf dieselben zwei Werte. Kein einziger Wert ohne Bestand
+    # wurde je beurteilt. Wer diese Zeile nicht liest, haelt den Rang fuer
+    # den Grund.
+    if hat_bestand and symbol not in (auswahl.get("gewaehlt") or set()):
+        zeilen.append(
+            "⚠️ Dieser Wert wurde NICHT ausgewaehlt - er wird beurteilt, "
+            "weil Sie ihn halten. Bei einer gehaltenen Position lautet die "
+            "Frage 'halten oder verkaufen', und die stellt sich unabhaengig "
+            "vom Rang. Der Rang oben ist deshalb eine Auskunft, kein Grund.")
     if symbol in (auswahl.get("gewaehlt") or set()):
         zeilen.append(
             f"Beurteilt werden je Durchgang die besten {auswahl['k']} dieser "

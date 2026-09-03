@@ -2272,7 +2272,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Marktzustand haengt daran - als Angabe, die nichts sperrt.
     try:
         from agent import auswahl as _AW3
-        _aw_zeilen = _AW3.saetze(auswahl, symbol, marktzustand)
+        # ⚠️ UEBER `_war_bestand`, NICHT ueber `_hat_bestand` aus der
+        # Auswahl-Stufe. Die Variable dort entsteht in einem Zweig, der
+        # uebersprungen werden kann - dann waere sie hier undefiniert und
+        # der breite Fehlerfang haette die GANZEN Auswahlzeilen
+        # geschluckt. `_war_bestand` ist die dafuer gebaute Funktion mit
+        # sicherem Rueckfall ("im Zweifel kein Bestand").
+        _aw_zeilen = _AW3.saetze(auswahl, symbol, marktzustand,
+                                 hat_bestand=_war_bestand(symbol, db,
+                                                          instrument))
     except Exception:                                        # noqa: BLE001
         logger.exception("Auswahl-Saetze fuer %s uebersprungen", symbol)
         _aw_zeilen = []

@@ -5258,6 +5258,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `rechne_einordnung_vorschau.py` | vor N-15 | Rechnet die vier Einordnungs-Varianten an einem echten Wert vor: Querschnitt, eigene Lage, Zerlegung, die anderen |
 | `messe_volumenanteil.py` | — | `--form` klärt Asset-Maß gegen Zeitpunkt-Aussage, `--wirkung` die Regel, `--mitlaeufer` den Schichtentest |
 | `rechne_oi_beitrag.py` | — | Beitragstabelle für `oi_aenderung`, mit Monotonie als Vorabbedingung |
+| `messe_beitragssumme.py` | — | **N-15a**: taugt die SUMME der Beiträge als Rangfolge? Blöcke A–C je Größe, **C2 der gepaarte Vergleich** (2.105), D die Monotonie, E die Datenlücke über fünf Ziehungen, F welche Größe wohlgeordnet ist. `--selbsttest` gegen zwei Welten mit bekannter Antwort |
 
 ⚠️ **Die ersten beiden gehören zusammen und sind Pflicht vor dem Pull.**
 Am 02.09. hätte ein Pull ohne sie die Kette stumm geschaltet: die
@@ -5402,3 +5403,42 @@ von etwa 0,015 R sagt diese Messung nichts.
 > Einzelreihen.**
 
 Verwandt: F-179 · 2.93 (Positivkontrolle) · 2.95 (Blockprobe) · 2.104
+
+---
+
+## 2.106 ⚠️⚠️ Eine Prüfung, die eine Naht bewacht, sieht die zweite daneben nicht
+
+Am 02.09. fiel auf, dass Mail und Stufe 11 verschiedene Quoten zeigten,
+weil dem Mail-Aufruf ein Argument fehlte. Die Behebung war richtig, und
+die Dauerprüfung **T6** dazu war es auch: sie vergleicht über den
+Syntaxbaum, ob beide Aufrufe in `rollen_lauf.py` dieselben Argumente
+bekommen.
+
+**Einen Tag später derselbe Fehler, sechs Zeilen entfernt** — und T6 sah
+ihn nicht. Denn `wahrscheinlichkeit.saetze()` ruft `rechne()` **selbst
+zweimal**, und diese Naht lag außerhalb ihres Blicks.
+
+### Die Regel
+
+> **Wer eine Prüfung gegen doppelte Rechenwege baut, zählt zuerst, wie
+> viele es gibt.** Eine Naht zu bewachen und dabei zu glauben, man habe
+> das Problem erledigt, ist gefährlicher als keine Prüfung — sie erzeugt
+> das Gefühl, die Klasse sei abgedeckt.
+
+Praktisch: der Syntaxbaum kann das selbst beantworten. `T7` sammelt
+**alle** `rechne()`-Aufrufe innerhalb von `saetze()` und verlangt, dass
+sie bis auf die bewusst verschiedenen Argumente gleich bestückt sind —
+egal wie viele es sind und wie viele noch dazukommen.
+
+### ⚠️ Und der Gegentest gehört dazu
+
+Die Ergebnisprüfung neben T7 war in ihrer ersten Fassung **blind**: sie
+suchte Zeilen mit `"geschaetzt "` und traf damit nur die beiden, die
+ohnehin übereinstimmen. Mit künstlich wieder eingebautem Fehler meldete
+sie OK.
+
+> **Jede neue Prüfung wird einmal mit dem Fehler laufen gelassen, den sie
+> fangen soll.** Sonst weiß niemand, ob sie ihn sieht — und eine grüne
+> Prüfung ist dann eine Behauptung, kein Nachweis.
+
+Verwandt: F-178 · F-181 · 2.66 · [grüne Suite ist kein Wirkungsnachweis]

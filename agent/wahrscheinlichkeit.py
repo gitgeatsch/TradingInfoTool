@@ -603,13 +603,29 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
         passt, grund = _gilt(b, klasse, strategie, richtung)
         if not passt:
             zeilen.append({"name": b.name, "zustand": "nie", "punkte": 0.0,
-                           "warum": grund})
+                           "warum": grund, "luecke": False})
             continue
         zustand, punkte, warum = b.zustand, 0.0, b.warum
+        luecke = False
         if b.zustand == "traegt" and b.merkmal:
             wert = werte.get(b.merkmal)
             if wert is None:
+                # ⚠️ EIGENER ZUSTAND (N-15 C, 03.09.2026). Bis hierher stand
+                # dieser Fall als "nie" in derselben Liste wie die Beitraege,
+                # die GEMESSEN UND GEFALLEN sind. Das sind zwei voellig
+                # verschiedene Dinge:
+                #
+                #     nie    geprueft, traegt nicht  -> erledigt
+                #     fehlt  traegt, aber HIER ist kein Wert da -> Luecke
+                #
+                # Die zweite Kategorie ist die gefaehrliche: N-15a hat am
+                # 03.09. gezeigt, dass eine Bewertung, der ein tragender
+                # Beitrag fehlt, nicht mit einer vollstaendigen vergleichbar
+                # ist - ihre Skala haengt dann an der Datenlage. Bei 37 von
+                # 44 Werten ist das der Fall, und in der Mail war es nicht
+                # zu sehen.
                 zustand, warum = "nie", "an diesem Anker nicht bestimmbar"
+                luecke = True
             elif b.stufen:
                 # abgestuft: der Wert IST der Rangplatz 0..4
                 stufe = max(0, min(int(wert), len(b.stufen) - 1))
@@ -622,7 +638,28 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
             punkte = b.punkte
         zuschlag += punkte
         zeilen.append({"name": b.name, "zustand": zustand,
-                       "punkte": punkte, "warum": warum})
+                       "punkte": punkte, "warum": warum,
+                       # ⚠️ ADDITIV, NICHT STATT `zustand` (03.09.2026).
+                       #
+                       # Meine erste Fassung fuehrte dafuer einen neuen
+                       # Zustandswert "fehlt" ein. Das haette funktioniert
+                       # und trotzdem Schaden angerichtet:
+                       # `pruefe_wahrscheinlichkeit_bitgleich.py` vergleicht
+                       # `zustand` WOERTLICH gegen einen eingefrorenen
+                       # Stand - der Test waere rot geworden, obwohl sich
+                       # rechnerisch nichts aendert. Ein Fehlalarm in einem
+                       # Bitgleichheitstest ist teurer als eine fehlende
+                       # Unterscheidung: beim naechsten Mal glaubt man ihm
+                       # nicht mehr.
+                       #
+                       # Nutzerhinweis 03.09.: *"Vorsicht bei den
+                       # Aenderungen wegen Altbestand an Code und weil die
+                       # Komplexitaet hoch ist."* Genau dieser Fall.
+                       #
+                       # `luecke` unterscheidet innerhalb von "nie":
+                       #     luecke=False  geprueft, traegt nicht -> erledigt
+                       #     luecke=True   traegt, aber HIER kein Wert
+                       "luecke": luecke})
 
     quote = basis + zuschlag / 100.0
     # ⚠️ DIE FINANZIERUNG KOMMT DAZU (01.09.2026).
@@ -717,10 +754,59 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
                   f"{de(100 * erste['basisrate'], 1)} %")]
     for z in erste["beitraege"]:
         if z["zustand"] == "traegt":
-            aus.append(_zeile(f"+ {z['name']}", f"+{de(z['punkte'], 1)}"))
+            # ⚠️ DAS VORZEICHEN GEHOERT AN DIE ZAHL, nicht davor. Ein
+            # negativer Beitrag stand als "+-0,5" da - das liest sich wie
+            # ein Tippfehler und verdeckt, dass der Beitrag ABZIEHT.
+            aus.append(_zeile(
+                ("+ " if z["punkte"] >= 0 else "− ") + z["name"],
+                "%s%s" % ("+" if z["punkte"] >= 0 else "−",
+                          de(abs(z["punkte"]), 1))))
             aus.append(f"     ({z['warum']})")
     aus.append(_zeile("= geschaetzte Trefferquote",
                       f"{de(100 * erste['quote'], 1)} %"))
+
+    # ---- N-15 VARIANTE C: DIE ZERLEGUNG (03.09.2026) -------------------
+    #
+    # NUTZERFRAGE nach dem Lesen einer echten Mail: *"warum war dieses
+    # Signal besser als die anderen Assets?"* Die vollstaendige Antwort
+    # braucht einen Querschnittsvergleich (Variante A); DIESER Teil
+    # beantwortet die Vorfrage, ohne die A irrefuehrend waere:
+    # **worauf steht die Zahl ueberhaupt?**
+    #
+    # ⚠️ WARUM DAS ZUERST KOMMT. Am 02.09. ging fuer AVAX eine
+    # Kaufempfehlung heraus. Die Bewertung stand auf EINEM Beitrag, und der
+    # war NEGATIV; der zweite tragende fehlte, weil AVAX nicht in der
+    # Turnover-Messbasis steht. In der Mail war weder das eine noch das
+    # andere zu sehen - sie las sich so souveraen wie eine Bewertung mit
+    # voller Datenlage.
+    _traegt = [z for z in erste["beitraege"] if z["zustand"] == "traegt"]
+    _fehlt = [z for z in erste["beitraege"] if z.get("luecke")]
+    _bewegung = sum(abs(z["punkte"]) for z in _traegt)
+    if _traegt and _bewegung > 0:
+        aus.append("   Woher die Bewegung kommt:")
+        for z in sorted(_traegt, key=lambda x: -abs(x["punkte"])):
+            aus.append(_zeile(
+                f"      {z['name']}",
+                f"{de(100 * abs(z['punkte']) / _bewegung, 0)} %"))
+    # ⚠️ DIE WARNUNG IST DER EIGENTLICHE ZWECK. Eine Bewertung auf einem
+    # einzigen Beitrag ist keine schlechtere Bewertung - sie ist eine
+    # ANDERE Groesse, und sie mit anderen zu vergleichen ist der Fehler,
+    # den N-15a nachgewiesen hat.
+    if len(_traegt) == 1:
+        aus.append(f"⚠️ Die Bewertung steht auf EINEM Beitrag "
+                   f"({_traegt[0]['name']}). Faellt er weg, bleibt die "
+                   f"nackte Basisrate.")
+    elif not _traegt:
+        aus.append("⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist "
+                   "die reine Basisrate aus der Geometrie.")
+    if _fehlt:
+        aus.append("⚠️ Tragende Beitraege, die HIER keinen Wert haben - "
+                   "nicht gefallen, sondern ohne Datenlage:")
+        for z in _fehlt:
+            aus.append(f"      {z['name']} - {z['warum']}")
+        aus.append("   Deshalb ist diese Zahl NICHT mit der eines Werts "
+                   "vergleichbar, bei dem alle Beitraege vorliegen "
+                   "(gemessen 03.09.: die Summe haengt an der Datenlage).")
 
     # ⚠️ BEIDE SAETZE NEBENEINANDER - seit Kapitel 119 die Vorgabe. Ein
     # einzelner Satz beantwortet je nur eine der beiden Fragen.
@@ -739,9 +825,26 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
         except Exception:                                    # noqa: BLE001
             _fin_r = 0.0
     for name, satz in saetze_zum_berichten:
+        # ⚠️⚠️ `strategie` FEHLTE AUCH HIER (03.09.2026) - und das ist
+        # derselbe Fehler wie oben, nur eine Ebene tiefer. Am 02.09. habe
+        # ich ihn im ERSTEN Aufruf behoben und diesen uebersehen.
+        #
+        # WAS DIE MAIL DADURCH ZEIGTE - beides im selben Block:
+        #
+        #     = geschaetzte Trefferquote            32,8 %   (mit Beitrag)
+        #     Standard 0,30 %: ... geschaetzt 33,3 %         (ohne)
+        #
+        # Zwei Zahlen fuer dieselbe Groesse, fuenf Zeilen auseinander. Wer
+        # die untere liest, sieht die nackte Basisrate und haelt sie fuer
+        # das Ergebnis der Bewertung.
+        #
+        # ⚠️ UND DIE DAUERPRUEFUNG HAT ES NICHT GEFANGEN, obwohl sie am
+        # 02.09. genau dafuer gebaut wurde: sie verglich Mail und Stufe 11,
+        # aber nicht die beiden Rechnungen INNERHALB der Mail. Eine Pruefung,
+        # die eine Naht bewacht, sieht die zweite daneben nicht.
         r = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse, h=h,
                    gebuehr_je_seite=satz, finanzierung_r=_fin_r,
-                   merkmale=merkmale)
+                   strategie=strategie, merkmale=merkmale)
         # ⚠️ DREI PROZENTZAHLEN OHNE BEZUG WAREN NICHT LESBAR (Nutzerfrage
         # 28.08.: *"1,5 Prozent traegt sich nicht und 60 % - was bedeutet das,
         # was sind die 60 %?"*).
@@ -770,8 +873,12 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
                  if z["zustand"] == "enthalten"]
     for z in enthalten:
         aus.append(f"   Bereits enthalten: {z['name']} - {z['warum']}")
+    # ⚠️ "fehlt" steht jetzt OBEN mit eigener Ueberschrift und darf hier
+    # nicht ein zweites Mal erscheinen - sonst liest man dieselbe Luecke
+    # zweimal und haelt sie beim zweiten Mal fuer etwas anderes.
     offen = [z for z in erste["beitraege"]
-             if z["zustand"] not in ("traegt", "enthalten")]
+             if z["zustand"] not in ("traegt", "enthalten")
+             and not z.get("luecke")]
     if offen:
         aus.append("   Nicht eingerechnet, und warum:")
         for z in offen:
