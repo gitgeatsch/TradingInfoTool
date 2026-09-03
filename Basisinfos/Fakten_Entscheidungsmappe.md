@@ -5947,3 +5947,79 @@ Suite unverändert 1967/1967 (reine Bestandsprüfung, kein Codeeingriff).
 
 Verwandt: N-16e · `Bestandsaufnahme_Positionsfuehrung_26_08.md` ·
 `Roter_Faden_27_08.md` Abschnitt 4
+
+## F-200 ⚠️ Frage 3/4 (Rolle core/Multiasset-Logik): die Bestandsaufnahme hatte `rolle` falsch zugeordnet — an der Quelle geklärt, nicht mehr offen (03.09.2026)
+
+**Nutzerauftrag:** Fragen 3 und 4 aus F-199 nicht per Auswahl entscheiden
+lassen, sondern *„fachlich als Experte"* an der Quelle klären — plus die
+Gegenfrage: *„haben wir bei multiassets eine rolle core?"*
+
+### Der Fehler in der Bestandsaufnahme vom 26.08.
+
+Sie ordnete `rolle: core` den **13 Nicht-Krypto-Assets** zu, `taktisch`
+den 44 Krypto-Werten. **Das ist falsch.** An `Basisinfos/config.yaml`
+direkt geprüft (per YAML-Parse, nicht grep — die Zeilennummern allein
+hatten mich beim ersten Versuch selbst in die Irre geführt):
+
+    rolle: core     → 13 Eintraege, ALLE Krypto (BTC, ETH, SOL, LINK,
+                      AVAX, SUI, TAO, NEAR, SEI, MORPHO, CANTON, HYPE, BNB)
+                      — "langfristige Kernposition" (Config-Kommentar)
+    rolle: taktisch → 44 Eintraege: die uebrigen Krypto-Werte UND
+                      ALLE 13 Multiasset-Eintraege (ETF/Rohstoffe/Aktien/
+                      Hedge) OHNE AUSNAHME
+
+**`rolle` core/taktisch ist eine rein krypto-interne Unterscheidung**
+(Kern-Krypto-Holdings vs. alles andere) — sie hat **keinen** Bezug zur
+Frage Krypto/Multiasset. Wirkt konkret zweimal: `kern_symbole()`
+(Warteschlangen-Vorrang) und `get_portfolio_prioritaets_bonus_je_symbol()`
+(6h SLA-Bonus, `database/db.py:3871`) — beides krypto-intern.
+
+### Frage 3 beantwortet: Multiassets haben KEINE core-Rolle
+
+Alle 13 Multiasset-Einträge tragen `rolle: taktisch`, **inklusive der
+beiden Hedge-ETFs** (`3QSS`, `DBPK`). Die Frage „soll core/taktisch den
+Ablauf steuern" stellt sich für Multiassets nicht — der Hebel existiert
+dort schlicht nicht.
+
+### Frage 4 beantwortet: Hedge ist BEREITS eigenständig — nicht über `rolle`
+
+Der Nutzerinstinkt (*„eigentlich sollten diese normal wie spot gehandelt
+werden, Ausnahme ist natürlich der hedge"*) trifft genau die tatsächliche
+Architektur — nur nicht über `rolle`, sondern über `instrument`/
+`hauptgruppe`. Hedge (`hauptgruppe: absicherung`) ist bereits ein
+**dritter, eigenständiger Instrument-Wert** neben `spot`/`hebel`
+(`agent/handelsauftrag.py:35`), mit:
+
+- eigenem Budget (500 €, `agent/betraege.py:86`)
+- **invertierter** These-Logik (Risk-off STÜTZT „aktiv" statt zu bremsen,
+  `agent/kategorie_thesen.py:321`)
+- eigenem Topf ohne Kelly-Deckel („Schutz wird nicht gedeckelt",
+  `agent/toepfe.py:161`)
+- eigener Trefferbilanz-Kategorie (`agent/trefferbilanz.py:218/522`)
+
+**Für Hedge ist nichts mehr zu klären — es läuft bereits getrennt.**
+
+### Fachliches Fazit zur eigentlichen Frage (ETF/Rohstoffe/Aktien ohne Hedge, 11 Symbole)
+
+**Empfehlung: dieselbe Logik wie Krypto-`taktisch`-Spot, keine eigene
+Kalibrierung.** Drei Gründe, nicht nur „einfacher":
+
+1. Es gibt **keinen bestehenden Mechanismus**, der sie von Krypto-Spot
+   trennen würde — `rolle` tut es nicht, eine neue Unterscheidung wäre
+   ein Neubau, kein Anschluss an Vorhandenes.
+2. **C1 (Bestandsaufnahme 26.08.):** 2–7 Symbole je Klasse sind zu wenige,
+   um eine eigene Kalibrierung je zu VALIDIEREN — eine „eigene" Regel
+   wäre geglaubt, nicht gemessen. Das widerspricht dem übergeordneten
+   Ziel aus CLAUDE.md unmittelbar: *„wir scheitern ausschließlich am
+   Potential, weil wir nur messen."*
+3. Die Rollen-Kette wurde bewusst zu **einer** gemeinsamen Kette über
+   alle fünf Klassen migriert (V-0/B1, abgeschlossen) — eine separate
+   Multiasset-Logik liefe dieser Richtung entgegen, ohne dass ein
+   gemessener Befund sie verlangt.
+
+⚠️ Das ist eine Einschätzung, keine Messung — falls du anders entscheidest,
+ändert das nichts an den Fakten oben, nur an der Konsequenz.
+
+Suite unverändert 1967/1967 (reine Bestandsprüfung, kein Codeeingriff).
+
+Verwandt: F-199 · N-16e · C1

@@ -1708,25 +1708,39 @@ System oder?"* — Ja, und zwar auf zwei Ebenen:
 | Ebene | Befund | Status |
 |---|---|---|
 | **Bewertung** | Ausstiege durchlaufen weder Geometrie noch Entscheider (F-187) | ✔ heute erkannt, N-16 |
-| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7** vom 26.08. — ⚠️ GEGENGEPRÜFT 03.09. (F-199): **nicht** unverändert, L1 ist teilweise gebaut (Einstand/Ergebnis/Break-even seit 27.08./01.09. live über `positionsfuehrung.py`). L2/L3/L4/L6/L7 weiterhin offen | **N-16e aufgesetzt, F-199** |
+| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7** vom 26.08. — ⚠️ GEGENGEPRÜFT 03.09. (F-199): **nicht** unverändert, L1 ist teilweise gebaut (Einstand/Ergebnis/Break-even seit 27.08./01.09. live über `positionsfuehrung.py`). L2/L3/L4/L6/L7 weiterhin ZU BAUEN, aber nicht mehr blockiert | **N-16e ✔ geklärt, F-199/F-200** |
 
 **N-16e — Vorbedingung für N-16d:** vier Grundsatzfragen zur
-Positionsdefinition (Bestandsaufnahme 26.08., Abschnitt 6 — explizit als
-Fragen AN DEN NUTZER benannt, nicht als Bauaufgabe). ⚠️ GEGENGEPRÜFT
-03.09. (F-199): **Frage 2 ist bereits beantwortet und gebaut** —
-`positionsfuehrung.py` setzt die Nutzerfestlegung vom 26.08. um (eine
-Position, ein gewichteter Durchschnittseinstand, kein Tranchenmodell).
-Drei bleiben offen:
+Positionsdefinition (Bestandsaufnahme 26.08., Abschnitt 6). ⚠️
+GEGENGEPRÜFT 03.09. (F-199/F-200) — **alle vier jetzt geklärt:**
 
-    1. Woher kommt der Stop einer gewachsenen Spot-Position?
+    1. Stop einer gewachsenen Spot-Position?
+       → Nutzerentscheidung 03.09.: KEIN Stop, rein bewertungsbasiert.
+    2. Was ist "eine Position" bei Nachkauf?
+       → bereits beantwortet und gebaut (positionsfuehrung.py, 27.08.):
+         eine Position, ein gewichteter Durchschnittseinstand
     3. Soll taktisch/core den Ablauf steuern?
+       → stellt sich fuer Multiassets nicht: alle 13 Eintraege (inkl.
+         beider Hedge-ETFs) tragen `taktisch`, KEINER `core`. Die
+         Bestandsaufnahme hatte core/taktisch faelschlich Nicht-Krypto/
+         Krypto zugeordnet - `rolle` ist eine rein krypto-interne
+         Unterscheidung (13 Krypto-Kernwerte vs. Rest), siehe F-200.
     4. Gilt fuer Core-Assets dieselbe Logik wie fuer taktische?
+       → Hedge ist BEREITS eigenstaendig (eigenes `instrument`, Budget,
+         invertierte These, kein Kelly-Deckel) - nicht ueber `rolle`,
+         sondern ueber `hauptgruppe: absicherung`. Fuer die uebrigen elf
+         ETF/Rohstoff/Aktien-Symbole: Empfehlung dieselbe Logik wie
+         Krypto-`taktisch` (kein bestehender Trennmechanismus, C1: 2-7
+         Symbole je Klasse validieren keine eigene Kalibrierung, die
+         Rollen-Kette ist bewusst auf EINE gemeinsame Kette migriert) -
+         Einschaetzung, keine Messung, siehe F-200.
 
-⚠️ **Eine Ausstiegsbewertung auf einer lückenhaften Positionsführung
-wäre nur scheinbar solide.** N-16e gehört deshalb **vor** N-16d in die
-Reihenfolge des Stufenplans: **S4 braucht jetzt auch N-16e, nicht nur
-S1 und S3.** Ohne Antwort auf Frage 1 ist an L2/L3/L4 kein Umbau
-möglich, der nicht später wieder aufgemacht werden muss.
+⚠️ **N-16e ist damit vollständig aufgesetzt.** Mit „kein Stop" (Frage 1)
+steht zugleich fest, dass **L2/L3/L4 kein R-/Trailing-Konzept** bekommen
+können — ein Ausstieg für Spot bleibt eine reine Potential-Bewertung
+(konsistent mit dem übergeordneten Ziel). Das ist die Vorbedingung für
+**N-16d**, die jetzt erfüllt ist: **S4 kann mit N-16e als Grundlage
+weiterlaufen.**
 
 ## C — Hebel: ein Nebenpunkt, kein neuer Kernpunkt
 
@@ -1792,7 +1806,7 @@ gesammelt, damit sie nicht erneut verloren gehen.
 | | | Verhältnis zu S0–S6 |
 |---|---|---|
 | **N-18/N-19/N-20** | Rolle G, Messbasis, `fakten_roh` | **parallel zu S2/S3** möglich — betreffen die Bewertung der 4 Nicht-Krypto-Klassen, nicht die Krypto-Kette |
-| **N-16e** | Positionsführungs-Grundsatzfragen | **vor S4** — neue Vorbedingung |
+| **N-16e** | Positionsführungs-Grundsatzfragen | ✔ **alle vier geklärt (F-199/F-200, 03.09.)** — Vorbedingung für S4/N-16d erfüllt |
 | **N-21** | Aufbewahrungsregel | unabhängig, jederzeit |
 | ~~N-22~~ | ~~Zielgröße Fallzahl~~ | ✖ **ZURÜCKGEZOGEN (F-194, 03.09.)** — Prämisse durch U-1 überholt, `k` ist nicht der begrenzende Hebel. Restfrage an **N-18** angehängt |
 | N-23–N-30 | kleinere Punkte | nach Bedarf, konkurrieren nicht mit S0–S6 |
