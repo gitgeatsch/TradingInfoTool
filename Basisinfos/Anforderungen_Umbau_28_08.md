@@ -1384,7 +1384,8 @@ Nach Nutzervorgabe vor N-16 zu erledigen:
 
 | | Punkt | Spot | Hebel | Stand |
 |---|---|---|---|---|
-| **1** | ⚠️⚠️ **KORRIGIERT 03.09. (F-184): die Wegwahl hängt nicht an der Bewertung** | ✔ | ✔ | ⚠️ Die frühere Fassung („der Bewertung fehlt eine Instrument-Achse") ist **widerlegt** — sie fehlt zu Recht (S6b/Kapitel 88, in R gerechnet identisch, Liquidation per RM-11 nie relevant). Der echte Punkt: **das Potential entscheidet nur OB, nicht WIE.** Den Weg wählt heute der **ATR** über den Stopabstand, die Akkumulation ein **GUI-Schalter** |
+| **1** | ⚠️⚠️ **ZWEIMAL KORRIGIERT 03.09. — gültig ist F-185: es fehlt die HORIZONT-Achse** | ✔ | ✔ | Die Beiträge sind auf **H20** kalibriert, ein Hebel-Trade läuft **1–3 Tage** — dort ist die Wirkung **6–7× kleiner** (gemessen 31.08.). `Beitrag` hat kein `horizont`-Feld, die Haltedauer geht nicht in die Bewertung, die Schwelle hängt nur an der Datenlage. **R-R9 ist notiert und nicht umgesetzt** |
+| ~~1a~~ | ~~KORRIGIERT 03.09. (F-184): die Wegwahl hängt nicht an der Bewertung~~ | ✔ | ✔ | ⚠️ Die frühere Fassung („der Bewertung fehlt eine Instrument-Achse") ist **widerlegt** — sie fehlt zu Recht (S6b/Kapitel 88, in R gerechnet identisch, Liquidation per RM-11 nie relevant). Der echte Punkt: **das Potential entscheidet nur OB, nicht WIE.** Den Weg wählt heute der **ATR** über den Stopabstand, die Akkumulation ein **GUI-Schalter** |
 | **2** | ⚠️⚠️ **Die zweite Zelle läuft nicht** (F-169) | ✔ | ✔ | `strategie` war **nie** etwas anderes als `einstieg` (F-180). Damit ist auch **L4** (Cooldown 48 h) toter Code und N-14s Einschränkung „nur einstieg" folgenlos |
 | **3** | ~~Der Hebel existiert in keiner der beiden Ketten~~ | — | — | ✖ **FALSCH, gestrichen (F-184).** Nutzerhinweis 03.09., bestätigt: der Hebel ist **nicht abgeschaltet**, er ist ein **Ergebnis** (Kapitel 88). Dieselbe Fehllesart wurde schon am 31.08. widerlegt. Was stimmt, steht jetzt in Punkt 1 |
 | **4** | **Die Hebelbewertung wurde nie validiert** | — | ✔ | offen |
@@ -1396,3 +1397,55 @@ Achsen nicht fragt. Wer sie behebt, macht N-16d überhaupt erst möglich —
 denn eine *Ausstiegs*bewertung ist genau eine weitere Achse.
 
 Verwandt: **F-183** · F-180 · F-169 · Abschnitt 9 · `Bestandsaufnahme_Positionsfuehrung_26_08.md`
+
+---
+
+## ⚠️⚠️ N-17: DIE HORIZONT-ACHSE — der eigentliche Punkt 1 (03.09.2026)
+
+**Bestandsaufnahme vollständig in F-185.** Kurzfassung: F-184 prüfte die
+Instrument-Achse (fehlt zu Recht — Arithmetik), der Plan nannte in 9.1
+aber **zwei** Achsen. Die zweite ist die relevante.
+
+### Der Befund in einer Zeile
+
+> **Die Beiträge sind auf H20 kalibriert. Ein Hebel-Trade läuft 1–3 Tage.
+> Dort ist ihre Wirkung 6–7× kleiner — und die Schwelle, gegen die
+> geprüft wird, ist für H20 gesetzt.**
+
+| Horizont | Funding | Turnover |
+|---|---|---|
+| H1 | +0,0019 | +0,0044 |
+| H2 | +0,0026 | +0,0107 |
+| **H20** | **+0,0246** | **+0,0616** |
+
+### Was NICHT der Weg ist — schon gemessen
+
+| | | |
+|---|---|---|
+| ✖ | eine **Instrument**-Achse in `_gilt()` | Arithmetik: gebührenfrei sind Hebel und Spot dasselbe Geschäft (H-1, F-184) |
+| ✖ | die Wegwahl über **Kursmerkmale** | H-1 hat sechs Kandidaten über **916.021 Anker** gemessen — keiner trennt steil-kurz von flach-lang |
+| ✖ | den Hebel über die **Wirtschaftlichkeit** wählen | verbotene Ebenenvermischung (stehende Vorgabe) |
+
+### Die zwei Wege, die offen sind
+
+| | | Größe | Vorbedingung |
+|---|---|---|---|
+| **N-17a** | **Die Beiträge tragen ihren Horizont** — `Beitrag` bekommt ein Feld `horizont`, und die Schwelle wird je Horizont kalibriert (**R-R9**, seit 31.08. notiert) | mittel | keine — die Messwerte je Horizont **liegen bereits vor** (31.08.) |
+| **N-17b** | **Das Hebel-Screening messen** — `hebel_triggers` (82.655 Zeilen, 42 Tage, 13.254 Kandidaten ≥ 70) gegen spätere Kursbewegungen. ⚠️ *„Der Score 70 ist gesetzt, nicht gemessen."* | mittel | keine — seit **42 Tagen** messbar |
+
+⚠️ **N-17b ist der aussichtsreichere Weg.** Das Screening arbeitet mit
+**Terminmarktdaten** (OI, Funding-Extrema, Long-Konten, RSI) — genau der
+Quelle, aus der die beiden einzigen tragenden Beiträge stammen. Wo
+Kursmerkmale gescheitert sind (H-1), ist der Terminmarkt **ungeprüft**.
+
+⚠️ **N-17a ist die ehrlichere Reihenfolge.** Solange die Schwelle für H20
+gilt und auf H2-Trades angewendet wird, misst jede weitere Hebelarbeit
+gegen einen falschen Maßstab.
+
+### ⚠️ Vor beidem: die bestehende Kette prüfen
+
+**Nutzervorgabe 03.09.:** *„Wenn wir wissen was zu tun ist, in den Plan,
+dokumentieren — und danach müssen wir zuerst die bestehende Kette prüfen,
+ob diese korrekt funktioniert."*
+
+Verwandt: **F-185** · F-184 · H-1 · R-R9 · Abschnitt 9

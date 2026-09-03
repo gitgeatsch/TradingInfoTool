@@ -4854,3 +4854,89 @@ Vermischung, vor der die Vorgabe warnt.
 
 Werkzeug: `pruefe_pakete.py` T8 · `Befund_Instrument_nach_S6b_28_08.md`
 Verwandt: F-183 · S6b/Kapitel 88 · RM-11 · Abschnitt 9 des Umbauplans
+
+---
+
+## F-185 ⚠️⚠️ BESTANDSAUFNAHME HEBEL — F-184 war unvollständig: nicht die Instrument-Achse fehlt, sondern die HORIZONT-Achse (03.09.2026)
+
+**Nutzereinwand:** *„Irgendwas passt nicht in deiner Bewertung — wir haben
+hier Messungen zur Wahrscheinlichkeit für Hebel, kurz und schnelle
+Bewegung, durchgeführt und Daten dazu aufgenommen. Du musst alles
+durchsehen der letzten Tage für eine Bestandsaufnahme."*
+
+**Er hat recht.** F-184 heute Vormittag prüfte nur die **Instrument**-Achse
+— der Umbauplan nennt in Abschnitt 9.1 aber ausdrücklich *„keine
+Instrument-Achse **und keine Horizont-Achse**"*. Die zweite ist die
+relevante, und sie ist **gemessen**.
+
+### Was in den letzten Tagen tatsächlich gemessen wurde
+
+| Datum | Messung | Befund |
+|---|---|---|
+| **31.08.** | Schritt 1, `messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`, 523 Reihen | ✔ **Der Hebel KANN bewertet werden** — Funding und Turnover tragen auch kurz. ⚠️ **Auf H2 ist die Wirkung 6–7× kleiner als auf H20** → *„`hebel × einstieg` braucht eine eigene Schwelle (R-R9)"* |
+| **31.08.** | Stop-Untergrenze 2,5 → 5,0 % | 698 von 2.297 Signalen betroffen, Hebel > 5: 105 → 0, Breakeven 64,6 → 53,3 % |
+| **01.09.** | Recherche Hebel | ⚠️ *„Ich habe die falschen Merkmale gemessen"* — das Screening bewertet mit **Terminmarktdaten** (OI, Funding-Extrema, Long-Konten, RSI), nicht mit Kursdaten |
+| **01.09.** | **H-1**, `messe_form_kurz_gegen_lang.py`, **916.021 Anker**, 7.269 Tage | ✖ **KEIN Kursreihen-Merkmal trennt STEIL-KURZ von FLACH-LANG** (vola, momentum, spanne, schnitt50, funding, turnover). ⚠️ Auflösungsgrenze ehrlich: große Effekte ausgeschlossen, +0,05 R nie gefunden |
+
+### ✔ Was H-1 schon am 01.09. festgehalten hat — wörtlich
+
+> *„R = Nominal × stop_rel, Ertrag in R = Bewegung / stop_rel. **Der Hebel
+> kürzt sich heraus** — bei +4 % und Stop 5 % sind es 0,800 R, ob Hebel 1,
+> 3 oder 5. Gebührenfrei sind Hebel und Spot **dasselbe Geschäft**. Dass
+> `potential.rechne` für beide dieselbe Zahl liefert, ist kein Fehler,
+> sondern Arithmetik. Es bleiben drei Unterschiede: Gebühren (per Regel
+> raus), **HORIZONT**, Kapitalbindung. **Nur über den Horizont KANN die
+> Bewertung wählen.**"*
+
+F-184 kommt zum selben Schluss — zwei Tage später und **ohne diese Arbeit
+zu kennen**. Das ist derselbe Fehler wie am 01.09. bei
+`Befund_Instrument_nach_S6b_28_08.md`: **ich habe die eigene Vorarbeit
+nicht gelesen** (R-R10).
+
+### ⚠️⚠️ Die Horizont-Achse fehlt — am Code belegt
+
+    Beitrag-Felder   name, zustand, punkte, quelle, warum, klassen,
+                     strategien, richtungen, stufen, merkmal, klammer
+                     -> KEIN `horizont`
+    potential.rechne -> die geschaetzte Haltedauer geht NICHT ein
+    schwelle()       -> haengt an der DATENLAGE (Zahl der Beitraege),
+                        nicht am Horizont
+
+**Die Folge, gemessen:** die Beiträge sind auf **H20** kalibriert, ein
+Hebel-Trade läuft **1–3 Tage**. Er wird also mit einer Wirkung bewertet,
+die auf seinem Horizont **6–7× kleiner** ist — und gegen eine Schwelle
+geprüft, die für H20 gesetzt wurde.
+
+> **Das ist die Vermischung, die zu suchen war.** Nicht Gebühren gegen
+> Bewertung — die Trennung ist sauber (F-184, T8) — sondern **ein
+> Horizont gegen einen anderen.**
+
+⚠️ **R-R9 ist notiert und nicht umgesetzt.** Der Commit vom 31.08. hat die
+Forderung gestellt; gebaut wurde die Schwelle je **Datenlage** (auch
+richtig, aber eine andere Achse).
+
+### ✖ Und die Wegwahl über Merkmale ist bereits gescheitert
+
+H-1 hat genau das gemessen, was ich heute als offenen Punkt vorgeschlagen
+habe: ob ein Merkmal *steil-kurz* von *flach-lang* trennt. **Sechs
+Kandidaten, 916.021 Anker, keiner trägt** — auch die Kontrollgröße
+`zufall` nicht. Ein Vorschlag „die Bewertung soll den Weg wählen" muss
+das berücksichtigen: **über Kursmerkmale geht es nicht.**
+
+### ⚠️⚠️ Die echte offene Lücke — seit 42 Tagen messbar
+
+Aus der Recherche vom 01.09., unverändert gültig:
+
+    open_interest_snapshot   227.395 Zeilen, 39 Symbole
+    hebel_triggers            82.655 Zeilen, 42 Tage, 13.254 Kandidaten >= 70
+
+> *„Ob das Screening TRIFFT, hat nie jemand geprüft. Kein Messwerkzeug im
+> Stamm wertet `hebel_triggers` gegen spätere Kursbewegungen aus. **Der
+> Score 70 ist gesetzt, nicht gemessen.**"*
+
+Und es passt zusammen: das Screening arbeitet mit **Terminmarktdaten** —
+genau der Datenquelle, aus der die beiden einzigen tragenden Beiträge
+stammen (Funding, OI). Wo Kursmerkmale gescheitert sind (H-1), ist der
+Terminmarkt ungeprüft.
+
+Verwandt: **F-184** (unvollständig) · F-164 · H-1 · R-R9 · R-R10
