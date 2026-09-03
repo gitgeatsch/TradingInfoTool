@@ -1442,7 +1442,52 @@ Kursmerkmale gescheitert sind (H-1), ist der Terminmarkt **ungeprüft**.
 gilt und auf H2-Trades angewendet wird, misst jede weitere Hebelarbeit
 gegen einen falschen Maßstab.
 
-### ⚠️ Vor beidem: die bestehende Kette prüfen
+### ✔ DIE KETTENPRÜFUNG IST GELAUFEN (03.09.) — vollständig in F-186
+
+**Ergebnis in einem Satz:** die Kette ist auf **H20** begründet und
+entscheidet ihre Signale im **Median nach 2 Tagen** (239 entschiedene
+Trades). Auf H2 ist die Wirkung der Beiträge um **Faktor 9,5** (Funding)
+bzw. **5,8** (Turnover) kleiner.
+
+⚠️ **Das erklärt die 48,2 % Trefferquote neu:** nicht die Beiträge taugen
+nichts — sie wirken auf einem Zeitraum, den die Kette nie erreicht.
+
+### ⚠️⚠️ Die Reihenfolge — und warum jede Abkürzung schadet
+
+Der Horizont ist **keine unabhängige Größe, sondern eine Folge der
+Geometrie**. Wer eine einzelne Stelle anfasst, verschiebt das Problem:
+
+| wer … | … erzeugt |
+|---|---|
+| nur die **Schwelle** senkt | mehr Signale bei gleicher Trennschärfe — eine zweite Mengenbremse |
+| nur die **Beiträge** auf H2 umkalibriert | eine Bewertung, die schwächer trennt, und eine Schwelle, die nicht mehr passt → **derselbe Fehler wie G-6** (vier Klassen nach Datenlage gesperrt) |
+| nur den **Stop** weitet | einen anderen Trade — das ist eine Strategieänderung, keine Kalibrierung |
+
+⚠️ **Quer dazu:** die Beitragsmessung ist **barrierefrei**, die Kette hat
+TP und SL. Wer die H2-Zahlen einsetzt, ohne das zu prüfen, tauscht einen
+bekannten Fehler gegen einen unbekannten.
+
+**Daraus die Reihenfolge für N-17:**
+
+| | Schritt | Stand |
+|---|---|---|
+| **N-17-0** | **Den Horizont kennen** — aus Stop und Volatilität die erwartete Zeit bis zur Barriere. Zum Zeitpunkt von Stufe 12 ist der Stop bekannt (urteil → aktion → geometrie → **entscheider**). ⚠️ Eine **Messung**, keine Formel: die 239 Trades tragen Stop, CRV und Dauer | **neu, Vorbedingung für alles** |
+| **N-17a** | die Beiträge tragen ihren Horizont; Schwelle je Horizont (**R-R9**) | Messwerte liegen seit 31.08. vor |
+| **N-17b** | das Hebel-Screening messen | ⚠️ **erst danach** — sonst gegen falschen Maßstab |
+
+### ⚠️ Zwei Stufen, die die Prüfung nebenbei aufgedeckt hat
+
+| | | |
+|---|---|---|
+| **anlass** | nimmt 28,2 % | die Regel ist *„Faktensatz unverändert seit N h"* — ein **Fakt über die Gegenwart**, keine Bewertung. Dieselbe Klasse wie der Trailing-Stop (N-16b) und Regel 4 |
+| **wiederholung** | nimmt **93,8 %** | der Cooldown ist die **schärfste Stufe der Kette** und **nie gegen Ergebnisse gemessen**. Am 27.08. bereits notiert: *„eine Mengenbremse ohne Qualitätsaussage — die schlechten Signale verschwinden im selben Verhältnis wie die guten"* |
+
+⚠️ **Beide gehören in dieselbe Familie wie N-16b:** Auslöser, die einen
+Zustand beschreiben statt etwas über das zu sagen, was kommt. Sie sind
+**nicht** Teil von N-17 — aber wer N-17 baut, ohne sie zu kennen, misst
+die Wirkung einer Bewertung hinter einer Bremse, die 93,8 % wegnimmt.
+
+### Der ursprüngliche Prüfauftrag
 
 **Nutzervorgabe 03.09.:** *„Wenn wir wissen was zu tun ist, in den Plan,
 dokumentieren — und danach müssen wir zuerst die bestehende Kette prüfen,

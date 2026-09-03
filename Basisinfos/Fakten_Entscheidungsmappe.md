@@ -4940,3 +4940,88 @@ stammen (Funding, OI). Wo Kursmerkmale gescheitert sind (H-1), ist der
 Terminmarkt ungeprüft.
 
 Verwandt: **F-184** (unvollständig) · F-164 · H-1 · R-R9 · R-R10
+
+---
+
+## F-186 ⚠️⚠️⚠️ KETTENPRÜFUNG: die Kette ist auf H20 begründet und entscheidet nach 2 Tagen (03.09.2026)
+
+**Nutzerauftrag:** *„prüfe die bestehende Kette — berücksichtige dabei
+deine Erkenntnisse, damit wir nicht einfach punktuell ändern und an
+anderer Stelle Fehler erzeugen."*
+
+Die Erkenntnis aus F-185 ist eine **Brille**, keine Einzelstelle. Durch
+sie sieht die Kette so aus:
+
+### 1 — Worauf jede Stufe begründet ist
+
+| Stufe | Größe | Horizont |
+|---|---|---|
+| auftrag, fakten, lagebild | Vorbedingungen | — |
+| **anlass** | Alter des Faktensatzes in Stunden | — ⚠️ Mengenregel, und ein **Fakt** statt einer Bewertung |
+| **auswahl** | Rang nach 250-Handelstage-Entwicklung | **H5 und H20** (`auswahl.GEMESSEN`) |
+| **terminmarkt** | OI-Aufbau, oberstes Fünftel | **H20** (F-168) — ⚠️ greift im Betrieb ohnehin nie |
+| **wiederholung** | Cooldown in Stunden | — ⚠️ **nie gegen Ergebnisse gemessen**, nimmt 93,8 % |
+| urteil, aktion, risikoschicht | Modell / Konsistenz / Kapital | — |
+| **geometrie** | Stop und CRV | — ⚠️ **bestimmt die Haltedauer** |
+| **entscheider** | Potential gegen Schwelle | **H20** ⚠️⚠️ |
+
+### 2 — Wie lange ein Signal wirklich läuft (239 entschiedene Trades)
+
+    Take Profit  n= 82 · Median 2,0 Tage · Mittel 2,8 · max  9
+    Stop Loss    n=157 · Median 2,0 Tage · Mittel 2,5 · max 17
+    ZUSAMMEN     n=239 · Median 2,0 Tage · Mittel 2,6
+
+    entschieden binnen  1 Tag :  35 %
+    entschieden binnen  3 Tagen: 72 %
+    entschieden binnen 20 Tagen: 100 %
+
+### 3 — Der Abgleich
+
+| | H2 | H20 | Faktor |
+|---|---|---|---|
+| Funding | +0,0026 | +0,0246 | **9,5** |
+| Turnover | +0,0107 | +0,0616 | **5,8** |
+
+> **Die Kette entscheidet ihre Signale auf einem Horizont, auf dem ihre
+> Bewertung ein Fünftel bis ein Zehntel der kalibrierten Wirkung hat — und
+> die Schwelle stammt aus der H20-Welt.**
+
+Das erklärt einen alten Befund neu: die Kette trifft **48,2 %** (67 TP /
+72 SL). Nicht weil die Beiträge nichts taugen — sondern weil sie auf
+einem Zeitraum wirken, den die Kette nie erreicht.
+
+### ⚠️⚠️ Warum eine punktuelle Änderung hier Schaden anrichtet
+
+**Der Horizont ist keine unabhängige Größe, sondern eine FOLGE der
+Geometrie:** ein enger Stop endet früher. Die Kette wählt über den Stop
+implizit ihren Horizont — und bewertet dann mit Größen von einem anderen.
+
+Daraus folgen drei Fallen:
+
+| | wer das ändert … | … erzeugt |
+|---|---|---|
+| **1** | nur die **Schwelle** senkt (damit auf H2 noch etwas durchkommt) | mehr Signale bei unveränderter Trennschärfe — die **Mengenbremse** ohne Qualitätsaussage, die der Cooldown schon ist |
+| **2** | nur die **Beiträge** auf H2 umkalibriert | eine Bewertung, die **weiter** trennt, aber schwächer — die Schwelle passt dann nicht mehr, und Stufe 11 sperrt alles (**derselbe Fehler wie G-6**, vier Klassen nach Datenlage gesperrt) |
+| **3** | nur den **Stop** weitet (damit H20 wieder stimmt) | einen anderen Trade — größeres R, kleineres CRV, andere Basisrate. Das ist keine Kalibrierung, sondern eine **Strategieänderung** |
+
+⚠️ **Und eine vierte Falle liegt quer dazu:** die Beitragsmessung ist
+**barrierefrei** (Ertrag nach H Tagen), die Kette hat **TP und SL**. Ein
+barrierefreier H2-Ertrag und ein Trade, der nach zwei Tagen an einer
+Barriere endet, sind nicht dasselbe. Wer die H2-Zahlen einsetzt, ohne das
+zu prüfen, tauscht einen bekannten Fehler gegen einen unbekannten.
+
+### Was daraus für die Reihenfolge folgt
+
+| | Schritt | warum zuerst |
+|---|---|---|
+| **1** | **Den Horizont überhaupt kennen** — aus Stop und Volatilität die erwartete Zeit bis zur Barriere ableiten. Zum Zeitpunkt von Stufe 12 ist der Stop **bekannt** (Reihenfolge: urteil → aktion → geometrie → **entscheider**) | ohne diese Größe ist „je Horizont" nicht implementierbar |
+| **2** | **Die Beiträge tragen ihren Horizont** — `Beitrag` bekommt ein Feld, die H1/H2/H20-Werte liegen seit 31.08. vor | Vorbedingung für 3 |
+| **3** | **Die Schwelle je Horizont** (R-R9) | erst jetzt ist sie gegen die richtige Wirkung kalibrierbar |
+| **4** | ⚠️ **Erst danach** N-17b (Screening messen) | sonst misst man gegen einen falschen Maßstab |
+
+⚠️ **Schritt 1 ist selbst eine Messung, keine Formel.** Die 239 Trades
+liegen vor und tragen Stop, CRV und Dauer — die Beziehung ist also
+messbar statt zu schätzen.
+
+Werkzeug: `pruefe_kette_horizonte.py`
+Verwandt: **F-185** · F-184 · N-17 · R-R9 · G-6
