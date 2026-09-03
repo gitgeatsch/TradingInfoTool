@@ -5442,3 +5442,41 @@ sie OK.
 > Prüfung ist dann eine Behauptung, kein Nachweis.
 
 Verwandt: F-178 · F-181 · 2.66 · [grüne Suite ist kein Wirkungsnachweis]
+
+---
+
+## 2.107 ⚠️⚠️ Wie viele Beobachtungen sind es wirklich? — 985 Läufe waren 12 Tage
+
+Ich schrieb einen Befund auf: *„die Auswahl wählte in **985 von 985**
+Läufen dieselben zwei Werte."* Die Zahl war richtig, die Aussage falsch.
+
+**Die Auswahl rankt über 250 Handelstage und wird 98× am Tag neu
+gerechnet.** Die Eingangsdaten ändern sich einmal täglich. 985 Läufe sind
+also **12 Beobachtungen**, nicht 985 — und A1 war auf 30,7 Empfehlungen
+je Jahr dimensioniert, also rund **1,0 Wechsel in 12 Tagen**. Null
+beobachtete Wechsel haben eine Wahrscheinlichkeit von **37 %**.
+
+Aus einem völlig normalen Ausgang war ein alarmierender Befund geworden,
+nur weil die Zähleinheit falsch war.
+
+### Die Regel
+
+> **Vor jeder Betriebsmessung: mit welcher Frequenz ändert sich die
+> GRÖSSE — nicht, wie oft sie abgefragt wird.** Die Zahl der Zeilen in
+> der Datenbank ist die Abfragefrequenz, nicht die Zahl der
+> Beobachtungen.
+
+Das ist die Tagesklammer, angewandt auf den Betrieb statt auf die
+Historie: dort verhindert sie, dass Werte desselben Tages als unabhängig
+gelten; hier, dass Wiederholungen derselben Berechnung als Belege zählen.
+
+### ⚠️ Und die Gegenprobe ist billig
+
+Es gibt fast immer eine Erwartung, gegen die man lesen kann — hier stand
+sie im eigenen Dimensionierungsdokument (30,7/Jahr). **Ein Befund ohne
+Erwartungswert ist eine Beobachtung, keine Auffälligkeit.** Bevor „immer
+dasselbe" als Defekt gilt, muss die Frage beantwortet sein: *wie oft
+sollte es sich denn ändern?*
+
+Verwandt: F-180 · **F-182** · 2.104 (eine Ziehung ist kein Nullpunkt) ·
+2.95

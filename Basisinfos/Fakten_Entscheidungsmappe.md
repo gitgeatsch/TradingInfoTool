@@ -4561,3 +4561,113 @@ Trichter-Auswertung und gehört entschieden, nicht nebenbei gemacht.
 
 Werkzeug: `pruefe_pakete.py` Paket „Terminmarkt" (T7 + neun C-Prüfungen)
 Verwandt: F-178 · F-180 · 2.106 · N-15 C
+
+---
+
+## F-182 ⚠️⚠️ KORREKTUR zu F-180 und F-181: beide „Entscheidungen" waren keine — ich hatte Wiederholungen für Belege gehalten (03.09.2026)
+
+**Nutzerfrage, die das ausgelöst hat:** *„gib mir Details zu den
+Entscheidungen und ob diese tatsächlich Entscheidungen sind."*
+
+Sie sind es nicht. Beide Male hatte ich einen normalen Zustand als Defekt
+gelesen.
+
+### Korrektur 1 — „A1 ist keine Auswahl, sondern eine feste Liste"
+
+Ich schrieb: *„die Auswahl wählte in 985 von 985 Krypto-Läufen dieselben
+zwei Werte."* Die Zahl stimmt und die Deutung ist falsch.
+
+**985 Läufe sind 12 Kalendertage.** A1 rankt über 250 Handelstage und
+wurde am 23.08. auf **30,7 Empfehlungen je Jahr** dimensioniert — das
+sind rund **1,0 Wechsel in 12 Tagen**. Beobachtet: **0**. Bei einer
+Poisson-Erwartung von 1,0 ist P(0) = **37 %**.
+
+> **Ein völlig normaler Ausgang. A1 tut, was es soll.**
+
+Der Fehler ist derselbe wie in 2.104, nur umgekehrt: dort habe ich EINE
+Ziehung für einen Nullpunkt gehalten, hier **985 Wiederholungen derselben
+Ziehung für 985 Belege.** Die Auswahl wird 98× am Tag auf Daten
+gerechnet, die sich einmal am Tag ändern. → 2.107
+
+### Korrektur 2 — „die Terminmarkt-Stufe zählt Notizen als bestanden"
+
+Auch das ist kein Systemfehler. `rollen_gate.notiz()` führt die Notizen
+**separat** und die Trichtertabelle gibt sie **als eigene Zeile** aus —
+der Docstring sagt es wörtlich: *„Eine Notiz nimmt NICHTS aus dem Lauf
+und fälscht keine Bilanz. Sie steht in der Trichtertabelle als eigene
+Zeile."*
+
+`bestanden` heißt dort **„hat die Stufe passiert"**, nicht „wurde
+geprüft" — und beide Angaben stehen nebeneinander zur Verfügung.
+
+> **Der Mangel liegt in `pruefe_nb_nach_umschaltung.py`**: es liest nur
+> die `Durchlaessigkeit`-Zeile und zeigt die vorhandenen Notizen nicht an.
+> Mein Werkzeug, nicht das System.
+
+### ✔ Was von F-180 bleibt — und es ist die härtere Zahl
+
+Der strukturelle Befund steht, und er hängt an keiner Zeitreihe:
+
+    Krypto-Werte im Lauf                43
+    davon mit Bestand                   25   passieren die Auswahl IMMER
+    von A1 gewaehlt                      2   HYPE, MORPHO
+    davon OHNE Bestand                   0
+    -> eigener Beitrag der Auswahl:      0 zusaetzliche Werte
+
+Gegenprobe am Trichter: `auswahl` lässt 59,1 % durch, 59,1 % von 43 =
+**25,4** — genau die 25 Bestandswerte.
+
+**Die Auswahl trägt derzeit null zusätzliche Werte bei.** Nicht weil sie
+defekt ist, sondern weil ihre zwei Gewählten ohnehin Bestand haben. Bei
+25 von 43 Werten mit Bestand ist P(beide) ≈ **33 %** — auch das ein
+normaler Zustand, kein Fehler.
+
+### ⚠️ Und der Engpass sitzt woanders, als ich behauptet habe
+
+    anlass         nimmt  28,2 %
+    auswahl        nimmt  40,9 %
+    wiederholung   nimmt  93,8 %   <- HIER
+    aktion         nimmt  60,3 %
+    entscheider    nimmt  91,5 %
+
+**Der Cooldown ist der Engpass, nicht der Bestandsvorrang und nicht A1.**
+Von 25 Werten, die die Auswahl passieren, nimmt `wiederholung` 93,8 %.
+
+Das macht auch die Frage aus F-180 („braucht der Cooldown eine
+Bestandsausnahme?") endgültig: **nein.** Eine Ausnahme dort würde den
+Takt für genau die Werte öffnen, die ohnehin als einzige durchkommen.
+
+### Was daraus als ECHTE offene Punkte bleibt
+
+| | | Art |
+|---|---|---|
+| die sechs gestakten Werte in `warteschlange._bestand_spot()` | **Reparatur**, keine Entscheidung — gemessen folgenlos, aber eine Frage mit zwei Antworten | klein |
+| `pruefe_nb_nach_umschaltung.py` zeigt die Notizen nicht | **Reparatur** an meinem Werkzeug | klein |
+| **230 Ausstiegssignale werden mit einer Einstiegsmessung bewertet** | ⚠️ **echte inhaltliche Frage** — N-14 nimmt Bestand genau deshalb aus, die Potentialschwelle nicht | offen |
+| die zweite Zelle läuft nicht (F-169), L4 ist toter Code | bekannter offener Punkt | offen |
+
+Verwandt: **F-180** (korrigiert) · **F-181** Punkt 4 (korrigiert) · 2.104 · 2.107
+
+### Nachtrag zu F-182 — die Notizen, jetzt sichtbar gemacht
+
+`pruefe_nb_nach_umschaltung.py` liest die Notizen jetzt strukturiert aus
+der `Gruende:`-Zeile (die `rollen_job` seit dem 02.09. schreibt). Damit
+zerfällt die Zeile „terminmarkt 1643 bestanden":
+
+    terminmarkt   1185x  Bestand vorhanden - hier steht die Ausstiegsfrage an
+    terminmarkt     23x  kein OI-Rang - dieser Wert gehoert nicht zur Messbasis
+    -> rund 435 ECHTE Pruefungen, davon 0 gesperrt
+
+⚠️ **Zwei Fehler in meiner eigenen Reparatur**, beide beim Gegenlesen
+gefunden: die erste Fassung suchte nach Stichworten und fing damit die
+ganze Gründe-Zeile ein (unlesbar, und der Zähler zählte Zeilen statt
+Notizen); die zweite verlangte `}` am **Zeilenende** — im Export stehen
+die Log-Zeilen aber als JSON-Strings mit Anführungszeichen dahinter, und
+die Auswertung meldete „keine Notizen". **Genau die Stille, gegen die der
+Block gebaut wurde.**
+
+⚠️ **Offener Punkt:** 435 echte Prüfungen und **null** Sperrungen —
+erwartbar wären rund 87 (oberstes Fünftel). Bevor daraus ein Befund wird,
+ist nach 2.107 zu klären, wie viele **unabhängige** Beobachtungen das
+sind: 18 Werte ohne Bestand über 10 Tage, davon nur ein Teil mit OI-Rang.
+**Nicht gemessen, nicht behauptet.**

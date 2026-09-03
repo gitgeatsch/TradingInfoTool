@@ -84,6 +84,7 @@ def main():
     laeufe = collections.Counter()
     signale = collections.defaultdict(lambda: [0, 0, 0])
     messbasis_fehler = collections.Counter()
+    notizen = collections.Counter()
     andere_fehler = collections.Counter()
 
     print("Lese %s ..." % PFAD, flush=True)
@@ -107,6 +108,40 @@ def main():
                 trichter[stufe][1] += v
                 je_tag[tag][stufe][0] += b
                 je_tag[tag][stufe][1] += v
+        elif "Rollen-Kette Gruende:" in z:
+            # ⚠️ DIE NOTIZEN FEHLTEN, und das hat mich am 03.09. zu einem
+            # falschen Befund gefuehrt (F-182).
+            #
+            # Die `Durchlaessigkeit`-Zeile kennt zwei Zahlen: bestanden und
+            # verloren. Das Gate kennt DREI Zustaende - der dritte ist
+            # `notiz` ("konnte nicht pruefen"). So sah "terminmarkt: 1643
+            # bestanden, 0 verloren" aus wie eine Stufe, die 1643 Werte
+            # geprueft und alle durchgelassen hat. Tatsaechlich hat sie
+            # fast keinen geprueft.
+            #
+            # Ich habe daraus zuerst einen Systemfehler gemacht. Es war
+            # eine Luecke in DIESER Auswertung: `rollen_job` schreibt die
+            # Notizen seit dem 02.09. mit, unter dem Schluessel `notiert`.
+            #
+            # ⚠️ STRUKTURIERT GELESEN, nicht gegrept: meine erste Fassung
+            # suchte nach Stichworten und fing damit die ganze
+            # Gruende-Zeile ein - unlesbar, und der Zaehler zaehlte Zeilen
+            # statt Notizen.
+            # ⚠️ KEIN `$` AM ENDE. Die Log-Zeilen stehen im Export als
+            # JSON-STRINGS - hinter der Klammer folgen noch
+            # Anfuehrungszeichen und Komma. Mit `\s*$` fand der Ausdruck
+            # nichts, und die Auswertung meldete "keine Notizen" - genau
+            # die Stille, gegen die dieser Block gebaut wurde.
+            m = re.search(r"Gruende: (\{.*\})", z)
+            if not m:
+                continue
+            try:
+                w = ast.literal_eval(m.group(1))
+            except Exception:                            # noqa: BLE001
+                continue
+            for stufe, teil in (w or {}).items():
+                for text, k in (teil or {}).get("notiert") or ():
+                    notizen[(stufe, str(text)[:58])] += int(k)
         elif "Signale," in z and "Rollen-Kette" in z:
             m = re.search(r"(\d+) Signale, (\d+) Mails, (\d+) Fehler", z)
             if m:
@@ -150,6 +185,20 @@ def main():
               % (tag, laeufe[tag], hin, w["auswahl"][1],
                  w["terminmarkt"][1], w["wiederholung"][1],
                  w["entscheider"][0]))
+
+    print()
+    print("=" * 84)
+    print("2b) ⚠️ DIE NOTIZEN — wo eine Stufe NICHT PRUEFEN KONNTE")
+    print("=" * 84)
+    if notizen:
+        print("  `bestanden` heisst 'hat die Stufe passiert', nicht 'wurde")
+        print("  geprueft'. Wer nur den Trichter liest, sieht den")
+        print("  Unterschied nicht:")
+        print("  %-14s %6s  %s" % ("Stufe", "Anzahl", "Notiz"))
+        for (stufe, text), n_ in notizen.most_common(10):
+            print("  %-14s %6d  %s" % (stufe, n_, text))
+    else:
+        print("  keine im Log-Fenster (es zeigt nur die haeufigsten je Stufe)")
 
     print()
     print("=" * 84)
