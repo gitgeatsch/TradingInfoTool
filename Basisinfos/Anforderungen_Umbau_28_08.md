@@ -1615,6 +1615,13 @@ Code bestätigt (03.09.): `positionierung.lage()` kennt nur `aktien` und
 `rohstoffe`. **Themen-ETF und Hedge fehlen** — `saetze()` bleibt leer,
 `zweite_meinung.py` bricht dort ab.
 
+⚠️ **Nachtrag 03.09. (aus F-194, zurückgezogenem N-22):** falls die
+Qualität von Rolle G / dem LLM-Urteil je über eine Fallzahl beurteilt
+werden soll (Meta-Labeling-Gedanke, `Test_und_Verifikationsmethodik.md`
+Abschnitt G, 09.08. — *„keine Entscheidung, gehört dem Nutzer
+vorgelegt"*, bis heute nicht entschieden), gehört die Zielgrößen-Frage
+**hierher**, nicht an A1. Noch nicht bearbeitet.
+
 ### N-19: Die Messbasis der vier Nicht-Krypto-Klassen (P6)
 
 **Am Code gemessen (03.09.), `data/messdaten.db`:**
@@ -1678,18 +1685,37 @@ F-184/F-185/N-17 abgedeckt. Ein Punkt lag daneben und ist noch offen:
 wachsen um ~2,5 Mio Zeilen/Jahr. Eine Regel ist begründbar, **löscht
 aber Daten — Nutzerentscheidung, nicht getroffen.**
 
-## D — der wichtigste GRUNDSATZpunkt, seit dem 24.08. unbeantwortet
+## D — ⚠️⚠️⚠️ N-22 GEPRÜFT UND KRITISCH GEGENGEPRÜFT (03.09.) — ZURÜCKGEZOGEN
 
-**N-22: Die Zielgröße für die Fallzahl.** A1 verengt auf 2 von 41
-Kandidaten (30,7 Empfehlungen/Jahr) — **während jede lernende Stufe
-(Meta-Labeling, Score-Kalibrierung) ein Vielfaches der heutigen Fallzahl
-braucht** (eigene Schwelle: 50 Fälle je Zelle). Wörtlich im Dokument:
-*„Ohne diese Zahl ist nicht entscheidbar, ob k=2 richtig ist."*
+**Vollständig in F-194.** Die Frage von 24.08. — *„braucht A1 mehr
+Fallzahl, ist k=2 richtig?"* — steht auf einer Prämisse, die **U-1
+(30./31.08.) bereits widerlegt hat**: Stufe 11 entscheidet seither über
+das **Potential** (historische Querschnitte), nicht mehr über die
+Trefferbilanz-Zellen. Die 50-Fälle-Schwelle gehört zu einem Mechanismus,
+der nicht mehr entscheidet — er läuft nur noch als Auskunftszeile in der
+Mail mit.
 
-⚠️ **Das ist eine andere Frage als F-182 (heute geklärt: A1 verhält sich
-wie dimensioniert).** F-182 zeigt, dass A1 **tut, was es soll** — N-22
-fragt, ob das **Soll selbst** richtig ist. Nirgends seit dem 24.08.
-wieder aufgegriffen.
+**Und selbst als reine Fallzahl-Frage gestellt, ist `k` der falsche
+Hebel:** A1 wählt seit 23.08. ausschließlich HYPE und MORPHO, beide mit
+Bestand — A1s eigener Beitrag zur Fallzahl ist **null** (F-182, F-188).
+Seit dem 01.09. ist kein einziger neuer Fall ohne Bestand entstanden. Die
+scheinbare Aufholrate der letzten 7 Tage (88 Fälle) ist zu **97 % ein
+Nachlauf** alter, vor der Umschaltung erstellter Signale — kein Maßstab.
+
+⚠️ **Auswirkungsprüfung der vier denkbaren Hebel** (Nutzervorgabe: *„jede
+Änderung kann zu zig Nebenwirkungen führen"*):
+
+| Hebel | Fallzahl-Wirkung | Nebenwirkung |
+|---|---|---|
+| k erhöhen | marginal, unsicher | verwässert A1s gemessenen Vorsprung (*„ab k=5 ist nichts mehr da"*), mehr Cooldown-Last |
+| Cooldown lockern | direkt | öffnet die Stufe, die heute 93,8 % nimmt — Risiko des alten 133-Mails/Tag-Takts |
+| Bestand vergrößern | direkt | keine Code-Frage — Kapitaleinsatz-Entscheidung |
+| Ausstiege als Fälle zählen | unklar | keine TP/SL-Struktur wie bei Einstiegen — eigenes Design nötig |
+
+**N-22 zurückgezogen.** Kein Eingriff an A1. Der einzige plausible
+Restzweck einer Fallzahl-Zielgröße — die Qualität von Rolle G / dem
+LLM-Urteil zu beurteilen (Meta-Labeling) — gehört an **N-18** und wird
+dort nachgetragen.
 
 ## E — kleinere Punkte, gesammelt
 
@@ -1715,7 +1741,7 @@ gesammelt, damit sie nicht erneut verloren gehen.
 | **N-18/N-19/N-20** | Rolle G, Messbasis, `fakten_roh` | **parallel zu S2/S3** möglich — betreffen die Bewertung der 4 Nicht-Krypto-Klassen, nicht die Krypto-Kette |
 | **N-16e** | Positionsführungs-Grundsatzfragen | **vor S4** — neue Vorbedingung |
 | **N-21** | Aufbewahrungsregel | unabhängig, jederzeit |
-| **N-22** | Zielgröße Fallzahl | ⚠️ **sollte VOR jeder weiteren A1-Änderung entschieden werden** — auch wenn A1 aktuell nicht angefasst wird |
+| ~~N-22~~ | ~~Zielgröße Fallzahl~~ | ✖ **ZURÜCKGEZOGEN (F-194, 03.09.)** — Prämisse durch U-1 überholt, `k` ist nicht der begrenzende Hebel. Restfrage an **N-18** angehängt |
 | N-23–N-30 | kleinere Punkte | nach Bedarf, konkurrieren nicht mit S0–S6 |
 
 Verwandt: **S6** (Messbasis, jetzt mit Zahlen) · **N-16** (jetzt mit N-16e) · CLAUDE.md (übergeordnetes Ziel)

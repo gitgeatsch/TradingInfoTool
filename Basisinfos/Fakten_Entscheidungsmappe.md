@@ -5533,3 +5533,102 @@ gerade jetzt beurteilt wird (das liefert N-15 Variante C — im Kaufpfad
 gebaut, für die Verkaufsmail noch offen).
 
 Verwandt: N-16b (Trailing-Stop) · N-15 C
+
+---
+
+## F-194 ⚠️⚠️⚠️ N-22 kritisch geprüft: die Frage von 24.08. steht auf einer Prämisse, die U-1 (30./31.08.) bereits widerlegt hat (03.09.2026)
+
+**Nutzerauftrag:** *„setz N-22 als nächstes Thema auf — prüfen und
+kritisch gegenprüfen"*, dazu: *„vergiss nicht, alle Punkte sind immer
+auch mit Auswirkung auf das System zu prüfen — eine Änderung kann zu zig
+Nebenwirkungen führen."*
+
+### Die ursprüngliche Frage (24.08.)
+
+*„A1 verengt auf ~30,7 Empfehlungen/Jahr, während die Trefferbilanz 50
+Fälle je Zelle braucht. Ohne diese Zahl ist nicht entscheidbar, ob k=2
+richtig ist."*
+
+### ⚠️⚠️ Erster Befund: die Prämisse ist seit U-1 überholt
+
+Am Code geprüft (`rollen_lauf.py:2065`): *„DIE TREFFERBILANZ BLEIBT — als
+Auskunft in der Mail. Nur ENTSCHIEDEN wird nicht mehr mit ihr."* Seit
+U-1 (30./31.08.) entscheidet Stufe 11 über **Potential** — gemessen auf
+großen **historischen Querschnitten** (75.701 Anker, Jahre an Daten),
+**nicht** über live akkumulierte Fälle je Zelle. Die 50-Fälle-Schwelle
+gehört zu einem Mechanismus, der nicht mehr entscheidet.
+
+⚠️ **Aber die Mailzeile lebt weiter** (`TB.satz()`, aufgerufen über
+`einordnung=` in Zeile 2520): *„Für genau diese Konstellation liegen
+erst N eigene Fälle vor — zu wenige für eine eigene Zahl."* Sie ist
+korrekt, informiert aber über einen Mechanismus, der keine Entscheidung
+mehr trägt.
+
+### Gemessen: 23 Zellen, 0 belastbar, größte Zelle 23 Fälle (Gesamthistorie)
+
+    Zellen insgesamt (Rollen-Kette, Spot): 23
+    davon belastbar (>= 50 Faelle): 0
+    groesste Zelle: 23 Faelle
+    Faelle gesamt ueber die GANZE Historie: 167
+
+### ⚠️⚠️ Zweiter Befund: die scheinbare Aufholrate ist zu 97 % ein Nachlauf
+
+Die letzten 7 Tage zeigten 88 neue Fälle — auf den ersten Blick eine
+Rate, die 50/Zelle in Wochen erreichbar machte. **Gegengeprüft, wann
+diese Signale ERSTELLT wurden:**
+
+    erstellt VOR der Umschaltung (02.09. 12:00), jetzt aufgeloest: 85
+    erstellt NACH der Umschaltung, jetzt aufgeloest:                3
+
+**97 % sind ein Nachlauf** — Signale aus dem alten, ungefilterten Stand,
+die jetzt erst ihre Barriere erreichen. Kein Maßstab für die künftige
+Rate. Die drei echten: **SOL und zweimal HYPE — beide Bestandswerte.**
+
+### ⚠️⚠️⚠️ Dritter Befund: A1s `k` ist NICHT der begrenzende Hebel
+
+**Seit dem 01.09. ist kein einziger neuer aufgelöster Krypto-Fall ohne
+Bestand entstanden.** Die 49 historischen Fälle ohne Bestand liegen alle
+zwischen dem 14. und 31.08. — vor bzw. am Rand der A1-Schärfung.
+
+A1 wählt seit 23.08. ausschließlich **HYPE und MORPHO** — beide haben
+Bestand (F-182, F-188 heute erneut bestätigt). **A1s eigener Beitrag zur
+Fallzahl ist damit heute null**, unabhängig von `k`.
+
+⚠️ **Kein Freibrief für „k erhöhen":** die eigene Messung
+(`Zielgroessen_und_Erfolgsmasse.md`) sagt selbst *„ab k=5 ist nichts mehr
+da"* — der Vorsprung (t 4,52 bei k=2) bricht bei höherem k zusammen. Eine
+Erhöhung würde die Fallzahl allenfalls **marginal** öffnen (58 % der
+Watchlist haben ohnehin schon Bestand) und dabei den einzigen gemessenen
+Vorsprung des Systems verwässern.
+
+### ⚠️ Auswirkungsprüfung der vier denkbaren Hebel — wie gefordert
+
+| Hebel | Wirkung auf Fallzahl | Nebenwirkung |
+|---|---|---|
+| **k erhöhen** | marginal, unsicher | verwässert A1s gemessenen Vorsprung; mehr Kandidaten = mehr Cooldown-Last, potenziell zurück zur 83,6-%-Redundanz |
+| **Cooldown lockern** | direkt wirksam | öffnet exakt die Stufe, die heute 93,8 % nimmt (F-186) — Risiko des alten 133-Mails/Tag-Takts |
+| **Bestand vergrößern** | direkt wirksam | **keine Code-Frage** — eine Kapitaleinsatz-Entscheidung, außerhalb des Systems |
+| **Ausstiege als eigene Fälle zählen** | unklar | Ausstiege haben keine TP/SL-Barriere-Struktur wie Einstiege — bräuchte ein eigenes Design |
+
+### Die Frage, wie sie tatsächlich beantwortbar ist
+
+**„Ist k=2 richtig?" ist die falsche Frage** — sie hängt an einem
+Mechanismus, der nicht mehr entscheidet, und am gemessen falschen Hebel.
+
+**Was noch offen ist:** ob eine Fallzahl-Zielgröße überhaupt noch
+gebraucht wird — und wenn ja, wofür. Der einzige plausible Zweck, der
+übrig bleibt: die **Qualität von Rolle G / dem LLM-Urteil** zu beurteilen
+(Meta-Labeling-Gedanke, `Test_und_Verifikationsmethodik.md` Abschnitt G,
+09.08. — *„keine Entscheidung dieses Nachtrags, gehört dem Nutzer
+vorgelegt"*, bis heute nicht entschieden). Das ist **N-18**, nicht A1.
+
+### Empfehlung
+
+**N-22 in der ursprünglichen Form zurückziehen.** Kein Eingriff an A1.
+Falls eine Fallzahl-Zielgröße gebraucht wird, gehört die Frage an **N-18**
+(Rolle G) angehängt — dort ist auch das gemessene Vokabular-Problem
+(G-a) bereits notiert, das laut eigener Notiz *„Vorbedingung für alles
+Weitere"* ist.
+
+Werkzeug: `agent/trefferbilanz.py` direkt befragt, NB-Backup 18:08
+Verwandt: F-182 · F-186 · F-188 · N-18 · N-22 (Plan korrigiert)
