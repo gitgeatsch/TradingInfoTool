@@ -14262,6 +14262,50 @@ def paket_verkaufsseite() -> None:
            "ohne sie ist die Verkaufsseite nicht auswertbar - genau der "
            "Befund O-29")
 
+    # ---- N-16e/F-201: KEIN STOP-TEXT MEHR FUER SPOT (03.09.2026) ----
+    #
+    # ⚠️ NUTZERENTSCHEIDUNG 03.09.: "kein Stop fuer Spot, Ausstieg bleibt
+    # rein bewertungsbasiert". Gefunden wurde dabei, dass die deterministische
+    # Fuehrung (`backward_tracking.compute_ausstiegs_empfehlungen`, taeglich
+    # 7:15) weiterhin einen Trailing-Stop FUER SPOT rechnete und "Stop
+    # nachziehen auf X" in ZWEI Mails zeigte - der Verkaufsmail
+    # (`verkaufsrechnung.sammel_mail`) und der Kaufmail (`signal_mail.
+    # baue_mail`, Abschnitt "2. DIE POSITION"). Beide Stellen haengen an
+    # `_fuehrung_zu()`, die selbst NICHT veraendert wurde (sie bedient noch
+    # einen dritten, bewusst unveraenderten Aufrufer: die Sperre gegen einen
+    # Einstieg auf faelligem Ausstieg, Zeile ~1737 - eine andere Frage, nicht
+    # Teil dieses Fixes).
+    #
+    # ECHTER FUNKTIONSAUFRUF, KEINE KOPIE - sonst prueft der Test sich selbst
+    # (Lehre vom selben Tag, siehe F-196/G-b).
+    from agent import rollen_lauf as _RL16
+    for _instr, _erwartet_none in (("spot", True), ("hebel", False)):
+        _ergebnis16 = {"fuehrung": {("BTC", _instr): {
+            "empfehlung": "HALTEN", "mfe_r": 0.8, "stop_neu": 45000.0,
+            "ist_bestand": True}}}
+        _RL16._sende_ausstieg(
+            symbol="BTC", befund={"begruendung": "Test"},
+            verkauf={"anteil": 1.0, "gegenwert_eur": 1000.0},
+            kurs_e=50000.0, instrument=_instr, strategie="einstieg",
+            tag="2026-09-03", lagebild_id=None, modell="test", conn=None,
+            db="data/tradinginfotool.db", betriebsart="trocken",
+            versand=None, ergebnis=_ergebnis16)
+        _f16 = _ergebnis16["ausstiege"][-1]["fuehrung"]
+        pruefe(P, f"die Verkaufsmail zeigt keine Stop-Fuehrung fuer {_instr}"
+                  if _erwartet_none else
+                  f"die Verkaufsmail zeigt die Stop-Fuehrung weiter fuer {_instr}",
+               (_f16 is None) == _erwartet_none,
+               "bekommen: %r - Spot bekam nach Nutzerentscheidung 03.09. "
+               "keinen Stop mehr, Hebel hat weiterhin einen echten" % (_f16,))
+
+    _q16 = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "und die Kaufmail zeigt dieselbe Fuehrung ebenfalls nur bei Hebel",
+           'ausstieg=((_fuehrung_zu(ergebnis, symbol, instrument) or None)'
+           in _q16 and 'if instrument == "hebel" else None),' in _q16,
+           "dieselbe deterministische Fuehrung geht auch in die Kaufmail "
+           "(Abschnitt 'DIE POSITION') - ohne dieselbe Sperre stuende dort "
+           "weiterhin ein Spot-Stop-Satz")
+
 
 
 def paket_akkumass() -> None:

@@ -6023,3 +6023,50 @@ Kalibrierung.** Drei Gründe, nicht nur „einfacher":
 Suite unverändert 1967/1967 (reine Bestandsprüfung, kein Codeeingriff).
 
 Verwandt: F-199 · N-16e · C1
+
+## F-201 ✔ Stop-Text für Spot aus Kauf- UND Verkaufsmail entfernt — Nutzerfrage deckte echten Widerspruch auf (03.09.2026)
+
+**Nutzerauftrag:** *„jetzt gleich mit beheben, prüfen und gegenprüfen"* —
+Anlass war die Nachfrage, ob „kein Stop für Spot" auch für Mailtext und
+Wirtschaftlichkeit gilt.
+
+### Der Befund
+
+Drei Stellen im System berühren „Stop" — zwei waren bereits sauber, eine
+widersprach der Entscheidung direkt:
+
+| Stelle | Bedeutung | Stand |
+|---|---|---|
+| Trailing/Führung auf offener Position | Order/Signal für Ausstieg | ⚠️ **widersprach** — behoben in diesem Fund |
+| CRV bei Einstieg | Rechengröße für die Chance-Risiko-Bewertung einer NEUEN Kaufchance | ✔ unberührt, kein Widerspruch |
+| Wirtschaftlichkeit/Gebühren | Nutzervorgabe 30.08.: neutral, nur Text | ✔ unberührt, kein Widerspruch |
+
+`backward_tracking.compute_ausstiegs_empfehlungen()` (täglich 7:15) rechnet
+weiterhin einen Trailing-Stop **für Spot-Signale** und speiste über
+`_fuehrung_zu()` (`agent/rollen_lauf.py:130`) „Stop nachziehen auf X EUR"
+in **zwei** Mails ein: die Verkaufsmail (`verkaufsrechnung.sammel_mail`,
+Zeile 2754) und die Kaufmail (`signal_mail.baue_mail`, Abschnitt „2. DIE
+POSITION", Zeile 2481 über `AR.saetze()`). Das ist exakt **L3** aus der
+Bestandsaufnahme 26.08. („Trailing greift trotzdem immer") — jetzt mit
+den zwei konkreten Fundstellen.
+
+### Der Fix
+
+An beiden Aufrufstellen wird die Führung nur noch bei `instrument ==
+"hebel"` weitergegeben, sonst `None`. `_fuehrung_zu()` selbst blieb
+unverändert — sie hat einen **dritten** Aufrufer (Zeile ~1737, die Sperre
+gegen einen Einstieg auf fälligem Ausstieg), der bewusst NICHT angefasst
+wurde: das ist eine andere, tiefere Frage (soll die alte deterministische
+Sperre für Spot überhaupt noch gelten?), nicht Teil dieses Auftrags.
+
+### Gegenprobe
+
+Echter Funktionsaufruf von `_sende_ausstieg()` (nicht nachgebaut), für
+`spot` und `hebel`: Spot liefert `fuehrung=None`, Hebel liefert die volle
+Führung unverändert. **Künstlicher Fehler injiziert** (die Gate-Bedingung
+entfernt) — die neue Prüfung wurde korrekt rot, dann Fix wiederhergestellt
+und wieder grün. Suite **1970/1970** (1967 + 3 neue Prüfungen in
+`paket_verkaufsseite`).
+
+Werkzeug: `pruefe_pakete.py::paket_verkaufsseite`
+Verwandt: F-199 · F-200 · N-16e · L3 (Bestandsaufnahme 26.08.)

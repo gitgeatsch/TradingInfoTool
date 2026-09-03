@@ -2473,12 +2473,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
             # der Entscheidung, das Umfeld nur ihr Hintergrund.
             lage_fakten=((bc_ein.get("absicherungslage") or []) + _lage) or None,
-            # DIE AUSSTIEGSFUEHRUNG ZU DIESEM SYMBOL. Sie wird ohnehin einmal
-            # je Lauf gelesen; hier kostet sie einen Nachschlag. Steht eine
-            # Position offen, gehoert ihre Behandlung VOR den Nachkauf -
-            # `baue_mail` ordnet das selbst (50 % standen bei +1 R, 17,6 %
-            # kamen an).
-            ausstieg=_fuehrung_zu(ergebnis, symbol, instrument) or None,
+            # DIE AUSSTIEGSFUEHRUNG ZU DIESEM SYMBOL - NUR BEI HEBEL
+            # (03.09.2026, N-16e/F-201, dieselbe Begruendung wie bei
+            # `_sende_ausstieg`: kein Stop fuer Spot, also keine R-/
+            # Stop-Saetze in der Mail). Sie wird ohnehin einmal je Lauf
+            # gelesen; hier kostet sie einen Nachschlag. Steht eine
+            # Hebel-Position offen, gehoert ihre Behandlung VOR den
+            # Nachkauf - `baue_mail` ordnet das selbst (50 % standen bei
+            # +1 R, 17,6 % kamen an).
+            ausstieg=((_fuehrung_zu(ergebnis, symbol, instrument) or None)
+                      if instrument == "hebel" else None),
             symbol=symbol, name=symbol, kurs_eur=kurs_e, instrument=instrument,
             strategie=strategie, rechnung=rechnung, urteil=befund,
             faktenblock=block, modell=modell, zeitpunkt=tag,
@@ -2747,11 +2751,18 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
     ergebnis.setdefault("ausstiege", []).append(
         {"symbol": symbol, "verkauf": verkauf,
          "begruendung": befund.get("begruendung"),
-         # DIE DETERMINISTISCHE FUEHRUNG ZU DIESEM SYMBOL, falls es eine gibt.
+         # DIE DETERMINISTISCHE FUEHRUNG ZU DIESEM SYMBOL, falls es eine gibt -
+         # NUR BEI HEBEL (03.09.2026, N-16e/F-201). Sie rechnet in R und
+         # zeigt "Stop nachziehen auf X" - das widerspricht der
+         # Nutzerentscheidung "kein Stop fuer Spot, Ausstieg bleibt rein
+         # bewertungsbasiert". Fuer Hebel bleibt sie unveraendert richtig:
+         # dort gibt es einen echten Stop.
+         #
          # Sie wird EINMAL je Lauf geholt (wie das Lagebild) und hier nur
          # nachgeschlagen - 45 Symbole waeren sonst 45 Abfragen ueber
          # dieselben Tabellen.
-         "fuehrung": _fuehrung_zu(ergebnis, symbol, instrument) or None})
+         "fuehrung": (_fuehrung_zu(ergebnis, symbol, instrument) or None)
+                     if instrument == "hebel" else None})
 
     if betriebsart == TROCKEN:
         return

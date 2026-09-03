@@ -1708,7 +1708,7 @@ System oder?"* — Ja, und zwar auf zwei Ebenen:
 | Ebene | Befund | Status |
 |---|---|---|
 | **Bewertung** | Ausstiege durchlaufen weder Geometrie noch Entscheider (F-187) | ✔ heute erkannt, N-16 |
-| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7** vom 26.08. — ⚠️ GEGENGEPRÜFT 03.09. (F-199): **nicht** unverändert, L1 ist teilweise gebaut (Einstand/Ergebnis/Break-even seit 27.08./01.09. live über `positionsfuehrung.py`). L2/L3/L4/L6/L7 weiterhin ZU BAUEN, aber nicht mehr blockiert | **N-16e ✔ geklärt, F-199/F-200** |
+| ⚠️⚠️ **Positionsführung selbst** | **sieben Lücken L1–L7** vom 26.08. — ⚠️ GEGENGEPRÜFT 03.09. (F-199): **nicht** unverändert, L1 teilweise gebaut. **L3 teilweise behoben (F-201):** Stop-Trailing-Text für Spot aus Kauf- UND Verkaufsmail entfernt. L2/L4/L6/L7 weiterhin ZU BAUEN, aber nicht mehr blockiert | **N-16e ✔ geklärt, F-199/F-200/F-201** |
 
 **N-16e — Vorbedingung für N-16d:** vier Grundsatzfragen zur
 Positionsdefinition (Bestandsaufnahme 26.08., Abschnitt 6). ⚠️
