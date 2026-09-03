@@ -1654,24 +1654,40 @@ Abschnitt G, 09.08. — *„keine Entscheidung, gehört dem Nutzer
 vorgelegt"*, bis heute nicht entschieden), gehört die Zielgrößen-Frage
 **hierher**, nicht an A1. Noch nicht bearbeitet.
 
-### N-19: Die Messbasis der vier Nicht-Krypto-Klassen (P6)
+### N-19: Die Messbasis der vier Nicht-Krypto-Klassen (P6) — ✔ aufgesetzt (03.09.)
 
-**Am Code gemessen (03.09.), `data/messdaten.db`:**
+**Am Code gemessen (03.09.), `data/messdaten.db`, nach drei Bugfixes und
+einer Schema-Migration (F-198):**
 
-    krypto        523 Reihen   ✔
-    aktien         20 Reihen   ⚠️ Ziel 300-500, Lauf war abgestürzt
-    rohstoffe      35 Reihen   ⚠️ Ziel 20-40, grenzwertig erreicht
-    themen_etf      0 Reihen   ✖ nicht begonnen
+    krypto        516 Reihen   ✔ unveraendert, nicht Teil von N-19
+    aktien        470 Reihen   ✔ Ziel 300-500 erreicht
+    themen_etf    293 Reihen   ✔ Ziel 150-300 erreicht
+    rohstoffe      35 Reihen   ✔ Ziel ~38 erreicht (Universum klein, kein Screening moeglich)
     hedge           —          ⚠️⚠️ kein Querschnitt MÖGLICH (Konstruktionsproblem, keine Fleißaufgabe — Hedge ist eine Rolle im Portfolio, keine Anlageklasse)
 
-Vorlage `lade_messreihen.py` existiert und trägt die Klassenzuordnung
-selbst. **P6a braucht nur einen Neustart**, P6b ist ein neuer Lauf, P6c/d
-brauchen die andere Größenform (Regel 30.08.: *Rohwert · Veränderung ·
-Verhältnis · Niveau — Querschnitt oder Zeitreihe?*).
+**Unterwegs gefunden (F-198):** `yf.EquityQuery` statt `yf.ETFQuery` für
+Themen-ETF, klassenspezifisches `sortField`, `pruefe()` außerhalb des
+try/except (ein Symbol riss den ganzen Lauf ab) — und, schwerer: `symbol`
+war über die Klassen hinweg keine eindeutige Kennung. `INSERT OR REPLACE`
+auf `messreihen` (nur `symbol` als Primary Key) hatte sieben Symbole
+(`DASH`, `STX`, `T`, `C`, `BOND`, `DIA`, `MDT`) stillschweigend mit
+Kursdaten eines völlig anderen Instruments überschrieben (Aktie ↔
+gleichnamiger Coin). Behoben: `price_history_ohlc` führt `assetklasse`
+jetzt im Primary Key, `messreihen`-Schreibzugriff meldet Kollisionen statt
+sie stumm auszuführen. Die sieben Symbole wurden bereinigt und sauber neu
+geladen. Suite 1967/1967.
 
-⚠️ **Ohne P6 bleibt „verglichen mit allem anderen" für 4 von 5 Klassen
+⚠️ Krypto absichtlich nicht neu geladen — falls unter den sieben
+bereinigten Symbolen echte Altcoin-Ticker steckten, fehlen sie
+möglicherweise in Kryptos eigener Messbasis. Offener Punkt.
+
+P6c/d (die andere Größenform — Regel 30.08.: *Rohwert · Veränderung ·
+Verhältnis · Niveau — Querschnitt oder Zeitreihe?*) sind mit der
+Messbasis noch nicht bearbeitet.
+
+⚠️ **Ohne P6c/d bleibt „verglichen mit allem anderen" für 4 von 5 Klassen
 eine Notiz statt einer Aussage.** Das ist derselbe Befund wie **S6** im
-Stufenplan oben — hier mit den fehlenden Zahlen ergänzt.
+Stufenplan oben — die Datengrundlage steht jetzt, die Auswertung noch nicht.
 
 ### N-20: `fakten_roh` erreicht seit dem 13.08. keine Mail — GEGENGEPRÜFT, unverändert
 

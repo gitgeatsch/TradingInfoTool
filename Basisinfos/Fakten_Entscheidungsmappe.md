@@ -5812,3 +5812,80 @@ Codeeingriff in die Kette).
 
 Werkzeug: `messe_g_trefferbilanz.py` (`--selbsttest`)
 Verwandt: F-195 (G-a) · F-196 (G-b) · 2.109 · 2.93 · 2.104
+
+## F-198 ✔ N-19 aufgesetzt: drei Fehler in `lade_messreihen.py`, einer davon echte Datenvermischung (03.09.2026)
+
+**Nutzerauftrag:** *„ja N-19 aufsetzen, prüfen und gegenprüfen"* — die
+Messbasis der vier Nicht-Krypto-Klassen (Aktien, Themen-ETF, Rohstoffe)
+in `data/messdaten.db` aufbauen (P6, yfinance).
+
+### Drei Fehler, in der Reihenfolge gefunden
+
+1. **`yf.EquityQuery` statt `yf.ETFQuery` für Themen-ETF** — yfinance
+   führt für ETF-Screening eine eigene Query-Klasse, auch wenn Feldnamen
+   wie `fundnetassets` gleich aussehen. `ValueError` beim ersten Probelauf.
+2. **`sortField` ist ebenfalls klassenspezifisch** — `intradaymarketcap`
+   (Aktien) ist für `ETFQuery` ungültig, gebraucht wird `fundnetassets`.
+   Beide Fixes direkt gegen die Schnittstelle getestet, vor dem Einbau.
+3. **⚠️⚠️ `pruefe()` stand AUSSERHALB des try/except in `main()`** — ein
+   einzelner kaputter Zeitstempel (`OSError` in `_tag()`, unter Windows
+   bei einer unplausiblen Kerze) riss den GESAMTEN Lauf ab, statt nur das
+   eine Symbol abzulehnen. Bei 500 Symbolen genügt eines. Fix: `pruefe()`
+   in denselben `try` gezogen wie den Abruf.
+
+### ⚠️⚠️⚠️ Der vierte Fund war keiner der drei erwarteten — echte Kursvermischung
+
+Beim Gegenprüfen der Ergebnisse fielen 33 statt 35 Rohstoff-Reihen auf.
+Ursache: `messreihen.symbol` ist alleiniger Primary Key, ohne Kopplung an
+`assetklasse`, und der Schreibcode nutzte `INSERT OR REPLACE` — ein
+späterer Ladelauf einer ANDEREN Klasse überschrieb also stillschweigend
+die Klassenzuordnung eines bereits geladenen Symbols. Betroffen: `GLD`/
+`SLV` (vom Themen-ETF-Screener aus `rohstoffe` gestohlen) und, schwerer,
+`price_history_ohlc` selbst — sieben Symbole (`C`, `DASH`, `STX`, `T`,
+`BOND`, `DIA`, `MDT`) hatten Kerzen aus ZWEI verschiedenen realen
+Instrumenten unter demselben Namen in einer Zeitreihe: `DASH` ist die
+DoorDash-Aktie UND die Kryptowährung Dash, `STX` Seagate UND Stacks.
+Binance-Kürzel sind bare Ticker ohne Suffix (`DASHUSDT` → `DASH`) — das
+kollidiert mit US-Börsentickern.
+
+**Fix, strukturell:**
+- `price_history_ohlc` bekommt eine `assetklasse`-Spalte, Primary Key
+  jetzt `(symbol, assetklasse, currency, date)` statt `(symbol, currency,
+  date)` — zwei Klassen desselben Symbol-Strings bekommen getrennte
+  Zeitreihen statt einer vermischten.
+- `messreihen`: `INSERT OR REPLACE` → `INSERT OR IGNORE` — die ERSTE
+  Klasse gewinnt, eine Kollision wird als Fund gezählt und ausgegeben
+  (`⚠️ N Symbol-Kollisionen ... bleibt X, wollte Y`), nicht mehr still
+  überschrieben.
+- Migration: Sicherung über `Connection.backup()`, dann die sieben
+  vermischten Symbole aus `price_history_ohlc`/`messreihen`/
+  `messreihen_status` entfernt (59.399 Kerzen, nicht mehr rückwirkend
+  trennbar) und über frische Ladeläufe sauber neu aufgebaut.
+- `GLD`/`SLV`: Nutzer bestätigt `rohstoffe` (Bitpanda-Zuordnung) — manuell
+  zurückgesetzt, da die Kollisionssperre nur künftige Fälle schützt,
+  keine vor dem Fix bereits falsch gesetzten.
+
+### Gegenprobe (echter Code, nicht nachgebaut)
+
+`python lade_messreihen.py --klasse aktien --nur "SI=F" --schreiben`
+gegen ein bereits als `rohstoffe` geführtes Symbol: Kollision wurde
+gemeldet, `messreihen` blieb bei `rohstoffe`, beide Kerzenreihen (`aktien`
+und `rohstoffe`) lagen sauber getrennt nebeneinander. Testinjektion
+danach entfernt.
+
+### Ergebnis der Messbasis (Zielband aus dem Plan eingehalten)
+
+    aktien       470 Reihen  (Ziel 300-500)
+    themen_etf   293 Reihen  (Ziel 150-300)
+    rohstoffe     35 Reihen  (Ziel ~38, Universum ist klein - kein Screening moeglich)
+    krypto       516 Reihen  (unveraendert, nicht Teil von N-19)
+
+Suite **1967 bei 0 FEHL** nach allen vier Fixes und der Migration.
+
+⚠️ Krypto absichtlich nicht angefasst — falls unter den sieben bereinigten
+Symbolen echte Altcoin-Ticker waren (BOND, DASH, MDT, STX, T sind alle
+plausible Kryptonamen), fehlen sie jetzt möglicherweise in Kryptos
+eigener Messbasis. Das ist ein offener Punkt, keine Annahme.
+
+Werkzeug: `lade_messreihen.py`
+Verwandt: N-19 · P6/P6c

@@ -56,13 +56,22 @@ MIN_KERZEN = 400
 PRODUKTION = "data/tradinginfotool.db"
 KLASSE = "krypto"          # Vorgabe; --klasse setzt sie um
 
+# ⚠️⚠️ `symbol` ist ueber die vier Klassen hinweg KEINE eindeutige Kennung
+# (03.09.2026, N-19). Binance-Kuerzel sind bare Ticker ohne Suffix ('DASH',
+# nicht 'DASHUSDT') - und kollidieren mit US-Boersentickern: DASH ist die
+# DoorDash-Aktie UND die Kryptowaehrung Dash, STX ist Seagate UND Stacks.
+# `assetklasse` gehoert deshalb in den Primary Key von `price_history_ohlc` -
+# sonst landen zwei verschiedene reale Instrumente unter demselben Symbol in
+# EINER Zeitreihe. Gefunden ueber sieben vermischte Symbole (C, DASH, STX, T,
+# BOND, DIA, MDT), nachdem ein Themen-ETF-Lauf stillschweigend Kerzen einer
+# frueher als 'rohstoffe'/'krypto' geladenen Reihe ueberschrieben hatte.
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS price_history_ohlc (
-    symbol TEXT NOT NULL, currency TEXT NOT NULL, date TEXT NOT NULL,
-    open REAL NOT NULL, high REAL NOT NULL, low REAL NOT NULL,
-    close REAL NOT NULL, volume REAL NOT NULL, fetched_at TEXT NOT NULL,
-    quelle TEXT NOT NULL DEFAULT 'binance_mess',
-    PRIMARY KEY (symbol, currency, date));
+    symbol TEXT NOT NULL, assetklasse TEXT NOT NULL, currency TEXT NOT NULL,
+    date TEXT NOT NULL, open REAL NOT NULL, high REAL NOT NULL,
+    low REAL NOT NULL, close REAL NOT NULL, volume REAL NOT NULL,
+    fetched_at TEXT NOT NULL, quelle TEXT NOT NULL DEFAULT 'binance_mess',
+    PRIMARY KEY (symbol, assetklasse, currency, date));
 CREATE TABLE IF NOT EXISTS messreihen (
     symbol TEXT PRIMARY KEY, assetklasse TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS messreihen_status (
@@ -177,16 +186,30 @@ def yf_universum(klasse: str, wieviele: int) -> list[str]:
         q = yf.EquityQuery("and", [
             yf.EquityQuery("gte", ["intradaymarketcap", YF_MIND_MARKTKAP]),
             yf.EquityQuery("eq", ["region", "us"])])
-        holen, aus, versatz = yf.screen, [], 0
+        sortfeld = "intradaymarketcap"
     else:                                    # themen_etf
-        q = yf.EquityQuery("and", [
-            yf.EquityQuery("gte", ["fundnetassets", 100_000_000]),
-            yf.EquityQuery("eq", ["region", "us"])])
-        holen, aus, versatz = yf.screen, [], 0
+        # ⚠️⚠️ ETFQuery, NICHT EquityQuery (03.09.2026, N-19). Der Lauf
+        # war deshalb abgestuerzt, nicht wegen der Datenlage: yfinance
+        # fuehrt fuer ETFs eine EIGENE Query-Klasse
+        # (`yfinance.screener.query.ETFQuery`), auch wenn das Feld
+        # `fundnetassets` in beiden Klassen denselben Namen traegt -
+        # `EquityQuery` kennt es schlicht nicht ("Invalid field").
+        #
+        # UND DER SORTFELD-FEHLER STAND DAHINTER, still: waere nur die
+        # Query-Klasse getauscht worden, haette `sortField=
+        # "intradaymarketcap"` (ein Aktienfeld) den naechsten Aufruf mit
+        # HTTP 400 abgebrochen - derselbe Fehlertyp, eine Zeile spaeter.
+        # Beide Felder gegen die echte Schnittstelle geprueft, nicht nur
+        # gegen die Dokumentation.
+        q = yf.ETFQuery("and", [
+            yf.ETFQuery("gte", ["fundnetassets", 100_000_000]),
+            yf.ETFQuery("eq", ["region", "us"])])
+        sortfeld = "fundnetassets"
+    holen, aus, versatz = yf.screen, [], 0
     while len(aus) < wieviele:
         try:
             r = holen(q, size=250, offset=versatz,
-                      sortField="intradaymarketcap", sortAsc=False)
+                      sortField=sortfeld, sortAsc=False)
         except Exception as exc:             # noqa: BLE001
             print("  ⚠️ Screening bei Versatz %d: %s" % (versatz, str(exc)[:90]))
             break
@@ -277,15 +300,26 @@ def main() -> int:
     jetzt = datetime.now(timezone.utc).isoformat()
     ok = zeilen = 0
     abgelehnt: list[tuple[str, str]] = []
+    kollisionen: list[tuple[str, str, str]] = []
     t0 = time.time()
     for i, paar in enumerate(liste):
         sym = paar if _yf else paar[:-4]     # 'BTCUSDT' -> 'BTC'
         try:
             rohe = yf_hole_alles(paar) if _yf else hole_alles(s, paar)
+            # ⚠️⚠️ `pruefe()` GEHOERT IN DENSELBEN VERSUCH (03.09.2026,
+            # N-19). Sie stand bisher AUSSERHALB des try/except - und war
+            # damit der eigentliche Grund fuer den fruehen Absturz des
+            # Aktien-Laufs. `_tag()` ruft `datetime.fromtimestamp()`; ein
+            # einzelner kaputter Zeitstempel von yfinance (ein Symbol mit
+            # unplausiblen Rohdaten, z.B. aus einer fehlerhaften Kerze vor
+            # dem Boersengang) wirft dort unter Windows ein OSError
+            # ("Invalid argument") - und das riss bisher den GESAMTEN Lauf
+            # ab, statt nur dieses eine Symbol abzulehnen. Bei hunderten
+            # Symbolen genuegt EINES mit einer schlechten Kerze.
+            gut, grund = pruefe(rohe, paar)
         except Exception as e:               # noqa: BLE001
             abgelehnt.append((sym, f"{type(e).__name__}"))
             continue
-        gut, grund = pruefe(rohe, paar)
         if not gut:
             abgelehnt.append((sym, grund))
             continue
@@ -294,17 +328,34 @@ def main() -> int:
         if conn is not None:
             conn.executemany(
                 "INSERT OR REPLACE INTO price_history_ohlc "
-                "(symbol,currency,date,open,high,low,close,volume,"
-                "fetched_at,quelle) VALUES (?,?,?,?,?,?,?,?,?,'binance_mess')",
-                [(sym, "USD", _tag(int(z[0])), float(z[1]), float(z[2]),
-                  float(z[3]), float(z[4]), float(z[5]), jetzt)
+                "(symbol,assetklasse,currency,date,open,high,low,close,"
+                "volume,fetched_at,quelle) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,'binance_mess')",
+                [(sym, a.klasse, "USD", _tag(int(z[0])), float(z[1]),
+                  float(z[2]), float(z[3]), float(z[4]), float(z[5]), jetzt)
                  for z in rohe])
-            conn.execute("INSERT OR REPLACE INTO messreihen VALUES (?,?)",
-                         (sym, a.klasse))
-            conn.execute("INSERT OR REPLACE INTO messreihen_status "
-                         "VALUES (?,?)",
-                         (sym, "eingestellt" if a.status == "BREAK"
-                          else "handelnd"))
+            # ⚠️⚠️ NIE STILLSCHWEIGEND UMKLASSIFIZIEREN (03.09.2026, N-19).
+            # `messreihen` bildet weiterhin symbol -> EINE Klasse ab (das
+            # lesen alle Verbraucher ueber `klassen_aus_db()` so). Frueher
+            # gewann per INSERT OR REPLACE stumm der LETZTE Lauf; jetzt
+            # gewinnt der ERSTE, und eine Kollision wird als Fund
+            # gezaehlt statt zu verschwinden.
+            _bisher = conn.execute(
+                "SELECT assetklasse FROM messreihen WHERE symbol=?",
+                (sym,)).fetchone()
+            if _bisher is None:
+                conn.execute("INSERT INTO messreihen VALUES (?,?)",
+                             (sym, a.klasse))
+                eigene_klasse = a.klasse
+            else:
+                eigene_klasse = _bisher[0]
+                if eigene_klasse != a.klasse:
+                    kollisionen.append((sym, eigene_klasse, a.klasse))
+            if eigene_klasse == a.klasse:
+                conn.execute("INSERT OR REPLACE INTO messreihen_status "
+                             "VALUES (?,?)",
+                             (sym, "eingestellt" if a.status == "BREAK"
+                              else "handelnd"))
             conn.commit()
         if (i + 1) % 100 == 0:
             print(f"  {i + 1}/{len(liste)} nach {time.time() - t0:.0f} s - "
@@ -320,6 +371,12 @@ def main() -> int:
             zaehl[schluessel] = zaehl.get(schluessel, 0) + 1
         for grund, n in sorted(zaehl.items(), key=lambda x: -x[1]):
             print(f"    {n:4}  {grund}")
+    if kollisionen:
+        print(f"\n  ⚠️ {len(kollisionen)} Symbol-Kollisionen - Klasse "
+              f"NICHT umgestellt (das Symbol gehoert bereits einer anderen "
+              f"Klasse, die Kerzen wurden trotzdem getrennt gespeichert):")
+        for sym, alt, neu in kollisionen:
+            print(f"    {sym}: bleibt {alt}, wollte {neu}")
     if conn is not None:
         conn.close()
         print(f"\n  geschrieben nach {a.db}")
