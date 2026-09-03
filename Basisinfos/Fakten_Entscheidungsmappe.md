@@ -5474,3 +5474,62 @@ sichtbar). Beweiskräftig ist erst ein erneuter Lauf **am Notebook**.
 
 Suite am Desktop **1954 bei 0 FEHL**.
 Verwandt: F-191 (dieselbe Spalte, zwei andere Orte)
+
+---
+
+## F-193 ✔ Wie eine Verkaufsmail zusammengesetzt ist — vier Blöcke, drei Quellen (03.09.2026)
+
+**Nutzerfrage:** *„die Zusammensetzung der Verkaufsmails ist mir nicht
+klar, bitte um Info dazu."*
+
+Am Beispiel `TradingInfoTool_ 2 Verkaufsvorschlaege (55 EUR).msg` — die
+Struktur ist über alle geprüften Beispiele stabil.
+
+### Die vier Blöcke
+
+| Block | Inhalt | Quelle | Zeile in `verkaufsrechnung.py` |
+|---|---|---|---|
+| **Kopf** | „2 Positionen … 54,77 EUR Gegenwert", Datum, Modell | Summe über die vorgeschlagenen Verkäufe | 302–312 |
+| **„WAS ZU TUN IST"** | die eigentliche Empfehlung — Symbol, Handlung, Anteil, Gegenwert, Stand, Führung | `sammel_mail(alle, …)` | 320 ff. |
+| **„WAS SIE HALTEN"** | **jede** gehaltene Position, unabhängig davon, ob sie empfohlen wird | `positionsfuehrung.py` (Schritt 7, verdrahtet 01.09.) | 400–403 |
+| **„WARUM"** | die Begründung je empfohlener Position | dieselbe Liste wie „WAS ZU TUN IST" | 405–407 |
+
+### ⚠️ Der Punkt, der es unklar macht: zwei verschiedene Listen
+
+**„WAS ZU TUN IST" enthält nur die empfohlenen Verkäufe** (hier: SEI,
+ASTER). **„WAS SIE HALTEN" enthält den gesamten Bestand** — in der
+Beispielmail 23 Positionen, obwohl nur 2 empfohlen sind. Das ist
+**gewollt**, aber ohne Erklärung in der Mail selbst leicht als
+Widerspruch zu lesen.
+
+> *„1 Positionen zum Verkauf vorgeschlagen"* im Kopf bezieht sich **nur**
+> auf den ersten Block. Der zweite ist eine vollständige Bestandsübersicht
+> — die Antwort auf eine andere Frage: *„wie stehe ich insgesamt?"*
+
+Grund laut Code: `positionsfuehrung.py` wurde separat gebaut (27.08.) und
+erst am 01.09. in **genau diese** Mail verdrahtet — *„die eine Stelle, an
+der es hingehört: in die Sammelmail, die ohnehin vom Bestand handelt."*
+
+### Warum eine Sammelmail statt elf Einzelmails
+
+Nutzereinwand vom 14.08.: *„45 Signale sind durchgekommen — das ist zu
+viel."* Erste Fassung (Einzelmails je Verkauf) hätte es verschlimmert.
+Seither: **eine** Mail je Lauf, nach Gegenwert sortiert — was am meisten
+Geld bewegt, steht oben.
+
+### Zwei Sonderformen — nicht dieselbe Mail
+
+| | Auslöser | Beispiel |
+|---|---|---|
+| **Hebeländerung** | keine Menge, kein Gegenwert — „Position bleibt bestehen" | eigene Zeilenform, nicht in der Verkaufssumme |
+| ⚠️ **„Stop-Nachzieh-Empfehlung(en)"** | der **Trailing-Stop** — *„54 von 441 offenen Signalen haben ihren Buchgewinn nicht abgesichert"* | eigene, dritte Mailart. **Genau der Mechanismus aus N-16b** — ein Fakt über den erreichten Stand, keine Bewertung. Führt nichts aus, ist reine Empfehlung |
+
+### Was NICHT in der Mail steht
+
+Keine Gebühren als Filter (Regel eingehalten — 0,30 %/1,50 % nur bei
+Hebel, gerechnet), keine Rangfolge über die Summe (N-15a, seit heute
+korrekt nur Fünftel-Sprache), kein Hinweis, warum ein gehaltener Wert
+gerade jetzt beurteilt wird (das liefert N-15 Variante C — im Kaufpfad
+gebaut, für die Verkaufsmail noch offen).
+
+Verwandt: N-16b (Trailing-Stop) · N-15 C
