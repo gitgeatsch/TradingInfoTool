@@ -205,7 +205,14 @@ class Potential:
 
             funding           max +0,0390 R  ->  Schwelle 0,0029 R
             turnover          max +0,0945 R  ->  Schwelle 0,0071 R
-            funding+turnover  max +0,1335 R  ->  Schwelle 0,0100 R  (Vorgabe)
+            funding+turnover  max +0,1335 R  ->  Schwelle 0,0800 R  (Vorgabe)
+
+        ⚠️ DIE ZAHL WAR HIER VERALTET (gefunden 03.09.2026). Der Text nannte
+        0,0100 R - das war die Vorgabe bis zur Neukalibrierung.
+        `SCHWELLE_VORGABE` steht seit dem 31.08. auf **0,080**, und die drei
+        Zeilen darueber rechnen mit ihr. Eine falsche Zahl im Docstring einer
+        Schwelle ist teurer als anderswo: sie wird beim naechsten Nachrechnen
+        als Sollwert gelesen.
 
         ⚠️ DIE VOLLE DATENLAGE BEHAELT DIE VORGABE - sie ist der Bezug, und
         damit bleibt die Kalibrierung von `messe_schwelle_kalibrierung.py`

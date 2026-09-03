@@ -5211,3 +5211,86 @@ Werkzeug: `pruefe_kette_je_asset.py`
 ⚠️ Nicht verwechseln mit `rechne_takt_je_asset.py` — das beantwortet
 **wie oft** (Menge, Zustand vor G-6), dieses **wo im Trichter**.
 Verwandt: F-187 · F-186 · F-182 · G-6
+
+---
+
+## F-189 ✔ GESUNDHEITSPRÜFUNG DER EINSTIEGSSEITE: sie ist gesund — und der Horizontfehler trifft sie NICHT dort, wo ich dachte (03.09.2026)
+
+**Nutzerfrage:** *„sag mir, ob die aktuelle Filterkette für die
+Bewertungen beim Einstieg gesund aussieht oder wir eingreifen müssen."*
+(Der Ausstieg ist bekannt unfertig und ausgeklammert.)
+
+Vier Kriterien, alle an Produktionsdaten geprüft.
+
+### ✔ 1 — Sperrt die Stufe aus QUALITÄT oder aus DATENLAGE?
+
+Alle Verwerfungen im Log tragen denselben Grund:
+
+    13x  Potential  0,004 R unter der Schwelle 0,023 R
+     3x  Potential -0,016 R unter der Schwelle 0,023 R
+     6x  Potential  0,049 R unter der Schwelle 0,080 R
+
+**Ausnahmslos Qualitätsgründe.** Keine einzige Verwerfung wegen fehlender
+Datengrundlage. Und **keine Notizen** bei `entscheider` — jeder Wert, der
+die Stufe erreichte, wurde auch bewertet.
+
+### ✔ 2 — Ist die Schwelle bei jeder Datenlage erreichbar?
+
+| Datenlage | max möglich | Schwelle | Abstand |
+|---|---|---|---|
+| nur Funding | +0,0390 | 0,0234 | **+0,0156** ✔ |
+| nur Turnover | +0,0945 | 0,0566 | **+0,0379** ✔ |
+| beide | +0,1335 | 0,0800 | **+0,0535** ✔ |
+| kein Beitrag | ±0,0000 | — | ⚠️ `bewertbar = False` |
+
+Zwei Schwellen sind im Log sichtbar (0,023 und 0,080) — **die Staffelung
+je Datenlage greift im Betrieb**, nicht nur im Test.
+
+### ✔✔ 3 — Der Horizontfehler trifft die TRENNUNG nicht
+
+Das war meine Sorge aus F-186, und sie ist **so nicht berechtigt**. Der
+Test (alle Beitragsstufen auf ein Sechstel, also H2 statt H20):
+
+    heute (H20)              nur Funding  wert +0,0246 · Schwelle 0,0234 · JA
+                             beide        wert +0,1191 · Schwelle 0,0800 · JA
+    auf H2 umkalibriert      nur Funding  wert +0,0041 · Schwelle 0,0234 · NEIN
+                             beide        wert +0,0198 · Schwelle 0,0800 · NEIN
+
+> **Beiträge und Schwelle stehen heute auf DEMSELBEN Maßstab (H20). Die
+> Kette trennt deshalb in der richtigen Ordnung.** Der Horizontfehler ist
+> ein **Interpretations**problem, kein Trennungsproblem: „+0,049 R" heißt
+> *über 20 Tage* — die Trades laufen zwei.
+
+⚠️ **Und der Test belegt die Warnung aus F-186 exakt:** wer die Beiträge
+allein umkalibriert, legt die Kette still — **auch bei bester
+Datenlage**. Denn `schwelle = Vorgabe × (max/voll)`: der *Anteil* bleibt
+beim Umskalieren gleich, die Vorgabe 0,080 R ist **absolut**.
+
+> **Damit ist N-17a keine Reparatur, sondern eine gemeinsame
+> Neukalibrierung von Beiträgen UND Vorgabe — oder gar nichts.**
+
+### ⚠️ 4 — Was nicht gesund ist, aber nicht die Bewertung betrifft
+
+| | | |
+|---|---|---|
+| **7 Werte ohne jeden Beitrag** | AIOZ, CANTON, CAT, FLOKI, SUPRA, VSN, XNO | `bewertbar = False` → für einen **Einstieg** dauerhaft gesperrt. Bewusst so (Kommentar: *„ein Mangel DIESES Assets"*), aber es ist eine Sperre nach Datenlage |
+| **18 Werte ohne Bestand** | werden nie beurteilt | Summe dreier begründeter Regeln (F-188) |
+| **Docstring** | nannte Vorgabe „0,0100 R" | **korrigiert** — seit 31.08. gilt 0,080. Eine falsche Zahl im Docstring einer Schwelle wird beim nächsten Nachrechnen als Sollwert gelesen |
+
+### Das Urteil
+
+> ✔ **Die Einstiegsseite ist gesund. Nicht eingreifen.**
+>
+> Sie verwirft aus Qualitätsgründen, ihre Schwelle ist bei jeder
+> Datenlage erreichbar, sie hat keine stillen Ausfälle, und ihr Maßstab
+> ist in sich konsistent.
+>
+> ⚠️ **Der stärkste Grund gegen einen Eingriff ist gemessen:** eine
+> Änderung an *einer* Stelle legt sie still.
+
+**Was stattdessen zu tun ist:** Daten sammeln. Die PROD-Zahlen stehen auf
+16 Stunden scharfem Betrieb und drei Einstiegen — für ein Urteil über die
+**Menge** (nicht über die Gesundheit) braucht es mehrere Tage.
+
+Werkzeug: NB-Export 03.09. · `pruefe_kette_je_asset.py`
+Verwandt: F-186 (Warnung bestätigt) · F-187 · F-188 · N-17a
