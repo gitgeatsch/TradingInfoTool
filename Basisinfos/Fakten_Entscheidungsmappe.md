@@ -6236,6 +6236,49 @@ Terminmarkt-Rohgrößen (OI, OI-Änderung, Funding-Extrema) bleiben der
 einzige noch ungeprüfte, aussichtsreiche Kandidat — jetzt mit stärkerer
 Begründung als zuvor.
 
+### Nachtrag 04.09. — Nutzerauftrag „nochmal auf Fehler prüfen, bevor abgehakt": Positivkontrolle nachgeholt
+
+Bisher fehlte der wichtigste Gegencheck: **kann das Werkzeug einen
+starken Zusammenhang überhaupt finden, oder ist die Flachheit eine
+Frage fehlender Prüfkraft?** Zwei Kontrollen nachgeholt:
+
+1. **H20-Stufen auf denselben H2-Ankern angewandt** — ebenfalls flach.
+   Zeigt: die Flachheit hängt an der ZIELGRÖSSE (2-Tage-Ertrag), nicht
+   an schwachen Stufen allein. War aber noch keine echte
+   Positivkontrolle, weil die H20-Stufen selbst nicht nachweislich mit
+   dem 2-Tage-Ertrag zusammenhängen — dieselbe Frage nur anders gestellt.
+2. **Sauberer Test: ein garantierter Zusammenhang künstlich eingepflanzt**
+   (`in_r_künstlich = 5 × Potential + Rauschen`, Rauschstärke wie in den
+   echten Daten), auf denselben 123.290 Ankern:
+
+       Schwelle   Ertrag    je verworfenem
+       0,000      +0,0428      +0,0821
+       0,003      +0,0502      +0,0716
+       0,008      +0,0630      +0,0717
+       0,015      +0,1000      +0,0969
+
+   **Durchgängig steigender Ertrag bei strengerer Schwelle — komplett
+   anderes Bild als bei den echten Daten.** Das Werkzeug findet einen
+   vorhandenen Zusammenhang zuverlässig, bei genau dieser Stichprobengröße
+   und diesem Rauschpegel.
+
+> **Damit ist der Nullbefund sauber belegt, kein Mess-Artefakt.** Die
+> Flachheit der echten H2-Messung ist keine Frage der Prüfkraft — das
+> Werkzeug kann trennen, wenn etwas zu trennen da ist. Bei den echten
+> Funding/Turnover-Beiträgen auf H2 ist einfach fast nichts mehr da.
+
+⚠️ **Eine methodische Einschränkung bleibt, ehrlich benannt:** die Anker
+überlappen (aufeinanderfolgende Kalendertage teilen sich Kursdaten im
+2-Tage-Vorwärtsfenster) — dieselbe Eigenschaft, die auch die
+ursprüngliche H20-Kalibrierung hat, hier nicht neu. Das Tage-Cluster-
+Bootstrap-Band [0,015 .. 0,024] behandelt Tage als unabhängig; bei
+überlappenden Fenstern könnte die wahre Unsicherheit etwas größer sein.
+Am **Vorzeichen und der Größenordnung** des Befunds (real, aber winzig)
+ändert das nichts.
+
+**N-17a ist damit sauber abgeschlossen: gemessen, gegengeprüft,
+Positivkontrolle bestanden, bewusst nicht live registriert.**
+
 Suite unverändert — reine Messwerkzeuge, kein Eingriff in
 `wahrscheinlichkeit.BEITRAEGE`/`potential.SCHWELLE_VORGABE`.
 

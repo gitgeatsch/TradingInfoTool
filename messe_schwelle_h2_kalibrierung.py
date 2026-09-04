@@ -138,7 +138,52 @@ def bewerte(je_tag):
     return je_tag
 
 
+def selbsttest() -> bool:
+    """Positivkontrolle (04.09.2026, nachgeholt auf Nutzerauftrag): kann
+    diese Schwellen-Suche einen Zusammenhang UEBERHAUPT finden, oder ist
+    die Flachheit der echten Messung nur fehlende Pruefkraft?
+
+    Pflanzt einen GARANTIERTEN Zusammenhang in dieselben echten Anker
+    (`in_r_kuenstlich = 5 x Potential + Rauschen`, Rauschstaerke wie die
+    echten Daten) und verlangt einen SAUBER STEIGENDEN Ertrag bei
+    strengerer Schwelle - das Gegenteil des flachen Bildes der echten
+    Messung."""
+    je_tag = bewerte(baue())
+    alle = [x for z in je_tag.values() for x in z]
+    n = len(alle)
+    rng = np.random.default_rng(42)
+    streuung = float(np.std([x["in_r"] for x in alle]))
+    for x in alle:
+        x["in_r_kuenstlich"] = 5.0 * x["potential"] + rng.normal(0, streuung)
+
+    proben = (0.000, 0.003, 0.008, 0.015)
+    ertraege = []
+    for s in proben:
+        bleibt = [x for x in alle if x["potential"] > s]
+        if len(bleibt) < 100:
+            print(f"  ✖ FEHLER: zu wenige Anker bei Schwelle {s}")
+            return False
+        ertraege.append(st.median(x["in_r_kuenstlich"] for x in bleibt))
+    print("  Positivkontrolle - Ertrag je Schwelle: "
+          + " -> ".join(f"{e:+.4f}" for e in ertraege))
+    steigend = all(b >= a - 1e-9 for a, b in zip(ertraege, ertraege[1:]))
+    if not steigend:
+        print("  ✖ FEHLER: ein garantierter Zusammenhang haette einen "
+              "durchgaengig steigenden Ertrag zeigen muessen")
+        return False
+    print("  ✔ Selbsttest bestanden - das Werkzeug findet einen "
+          "vorhandenen Zusammenhang; die Flachheit der echten Messung "
+          "ist kein Mess-Artefakt")
+    return True
+
+
 def main():
+    import argparse as _ap
+    _a = _ap.ArgumentParser()
+    _a.add_argument("--selbsttest", action="store_true")
+    if _a.parse_known_args()[0].selbsttest:
+        return 0 if selbsttest() else 1
+
     je_tag = bewerte(baue())
     alle = [x for z in je_tag.values() for x in z]
     n = len(alle)
@@ -183,4 +228,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
