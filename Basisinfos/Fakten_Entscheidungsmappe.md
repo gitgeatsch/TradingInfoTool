@@ -6774,3 +6774,116 @@ Werkzeugs, kein neuer Code.
 
 Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading` (unverändert)
 Verwandt: F-163 · F-164 · F-165 · F-204 · F-206 · F-208
+
+## F-210 ⚠️⚠️ N-17c: die Brücke ist gebaut — turnover trägt auf H3 genau 19 % dessen, was die Schwelle verlangt (04.09.2026)
+
+**Nutzerkorrektur, die diesen Schritt ausgelöst hat:** *„1. der Wert bringt
+etwas ok, wissen wir was die Aussage ist, gibt es Schwellen, etc. 2. du
+bist immer in der Messung, gehe in unsere Dokumente wie wir Bewertungen
+integriert haben."*
+
+Vorabfestlegung: `Anforderungen_Umbau_28_08.md` 9.6, Abschnitt **N-17c** —
+vor dem Lauf geschrieben, Commit `23c44ed`.
+
+### Die Lücke, die geschlossen wurde
+
+9.6 verlangt das dreistufige Verfahren (Wirkung → Beitragspunkte →
+Schwelle). Bei den Frontloading-Kandidaten war nur Schritt 1 gegangen —
+**und der Grund war inhaltlich:** die Umrechnung `d(quote) =
+d(Potential)/(1+CRV)` setzt eine Wirkung **in R** voraus, die
+Frontloading-Zielgröße liefert aber einen **Anteil** (0…1). Das „R" in
+F-165s und F-209s Tabellen ist eine mitgeschleppte Beschriftung aus der
+H-1-Fassung, **keine Einheit**.
+
+### Der Aufbau — die echte Builder-Funktion erweitert, nicht kopiert
+
+`messe_kandidaten_als_regel.baue()` speist alle registrierten
+Beitragstabellen und benutzt `breite[i]` als R-Nenner;
+`messe_form_kurz_gegen_lang.baue()` einen nachlaufenden 250-Tage-Median.
+**Verschiedene R-Definitionen** — eine Tabelle aus dem zweiten Modul wäre
+mit den registrierten Stufen nicht vergleichbar gewesen. Deshalb wurden
+`vola`, `momentum_kurz`, `rsi`, `funding_extrem` und `zufall` **additiv in
+`baue()` nachgezogen**; kein bestehendes `art` angefasst.
+
+### Das Ergebnis — 14 Zellen, EINE ist nutzbar
+
+Punkte geschrumpft (halbiert, in-sample), 516 F-204-bereinigte Reihen:
+
+| Kandidat | H2 Spanne | H3 Spanne | H3 Urteil |
+|---|---|---|---|
+| **turnover** | +0,75 ✖ | **+1,11** | ✔ **nutzbar (monoton)** |
+| momentum_kurz | +1,29 ✖ | +1,39 ✖ | nicht monoton |
+| schnitt50 | +0,68 ✖ | +0,69 ✖ | nicht monoton |
+| vola | +0,45 ✖ | +0,62 ✖ | nicht monoton |
+| rsi | +0,55 ✖ | +0,47 ✖ | nicht monoton |
+| oi_aenderung | +0,38 ✖ | +0,49 ✖ | nicht monoton |
+| funding_extrem | −0,00 ✖ | +0,02 ✖ | nicht monoton |
+| *zufall* (Kontrolle) | +0,16 ✖ | +0,20 ✖ | ✔ nicht nutzbar (erwartet) |
+
+`turnover` H3: **+0,51 / +0,21 / +0,21 / −0,33 / −0,60**
+
+### ✔ Beide Gegenprüfungen bestanden
+
+1. **Reproduktion:** dieselbe Datei rechnet `turnover` H2 als
+   +0,36/+0,09/+0,16/−0,22/−0,39 gegen F-203s
+   +0,34/+0,08/+0,15/−0,25/−0,32 — größte Abweichung **0,07 Punkte**. Die
+   Fünftel-Rechnung hier ist dieselbe wie in der produktiv verwendeten
+   Implementierung, gegen eine **unabhängige** Umsetzung geprüft.
+2. **Kontrollgröße:** `zufall` bleibt auf beiden Horizonten unter der
+   Bedingung — das Verfahren erzeugt keine nutzbare Tabelle aus dem Nichts.
+3. **Vorab-Gegentest der Rechenlogik** an Kunstdaten mit bekanntem
+   Zusammenhang: monotone Welt → +6,52 Spanne, nutzbar; reines Rauschen →
+   korrekt abgewiesen.
+
+### ⚠️⚠️ DIE ANTWORT AUF „GIBT ES SCHWELLEN" — und sie ist eindeutig
+
+Über die **echte** `wahrscheinlichkeit.basisrate()`/Potentialformel
+gerechnet, nicht nachgebaut:
+
+| Beitragspunkte | Potential | Schwelle 0,080 R? | |
+|---|---|---|---|
+| +0,51 | +0,0153 R | **nein** | turnover H3, bestes Fünftel (N-17c) |
+| +1,11 | +0,0333 R | **nein** | turnover H3, volle Spanne |
+| +0,82 | +0,0246 R | nein | funding H20, bestes Fünftel (registriert) |
+| +3,15 | +0,0945 R | **JA** | turnover H20, bestes Fünftel (registriert) |
+
+> **Für die Schwelle 0,080 R sind +2,67 Beitragspunkte nötig.
+> `turnover` auf H3 liefert +0,51 — 19 % davon.**
+
+**Das ist die konkrete Aussage, die bisher fehlte.** Nicht „trägt / trägt
+nicht", sondern: der beste Kandidat auf der Hebel-Geometrie erreicht ein
+Fünftel dessen, was die geltende Schwelle verlangt. Selbst seine volle
+Spanne (+1,11) bliebe bei 42 % — und die läge ohnehin nur an, wenn man
+bestes gegen schlechtestes Fünftel setzte, was keine Regel ist.
+
+### ⚠️ Der Suchpreis, ehrlich benannt
+
+**1 von 14 vorab benannten Zellen** erfüllt die Bedingung. Monotonie über
+fünf Fünftel hat bei reinem Zufall eine Wahrscheinlichkeit von 2/120 =
+1,7 % je Zelle — über 14 Zellen sind rund 0,2 Treffer zu erwarten. **Ein
+Treffer ist damit nicht außergewöhnlich.**
+
+Entlastend, aber nicht beweisend: `turnover` war **vorab** als der
+Kandidat benannt, an dem die Entscheidung hängt (stärkster und am
+wenigsten redundanter Fund, F-205); seine H2-Fassung verfehlt die
+Monotonie nur um **0,07 Punkte** an einer Stelle und hat mit +0,75/+1,11
+die **vier- bis fünffache Spanne der Kontrollgröße**. Die Form ist also
+plausibel — die Größe reicht trotzdem nicht.
+
+### Fazit
+
+**Schritt 3 (Schwelle kalibrieren) wird NICHT ausgeführt.** Er wäre
+gegenstandslos: eine Größe, die 19 % der Schwelle erreicht, kann keine
+Schwelle tragen. Damit ist H-4 für die aktuell verfügbaren Kandidaten
+**vollständig nach dem in 9.6 vorgeschriebenen Verfahren durchgemessen** —
+und zum ersten Mal mit einer Zahl statt eines Urteils.
+
+Der Gabelpunkt aus **F-164** (H-2: Hebel aussetzen oder als
+Ausführungsvariante ohne eigene Begründung führen) ist damit
+entscheidungsreif — die Datenlage dafür ist jetzt vollständig.
+
+Suite 1971/1971 (additive Erweiterung einer Messfunktion, keine Wirkung
+auf die Produktionskette).
+
+Werkzeug: `rechne_kandidaten_beitrag.py --horizonte 2,3`
+Verwandt: F-164 · F-165 · F-203 · F-206 · F-208 · F-209 · 9.6 N-17c

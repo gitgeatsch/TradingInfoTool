@@ -102,6 +102,7 @@ Befund dieses Laufs - unabhaengig davon, was die kurzen Horizonte zeigen.
 """
 import statistics as st
 import sys
+from zlib import crc32 as _crc32
 
 import numpy as np
 
@@ -207,7 +208,39 @@ def baue(reihen, art, zusatz=None, horizont=None):
         # Geometrie. Die Vorgabe bleibt W.HORIZONT, damit jeder bestehende
         # Aufruf unveraendert dasselbe rechnet.
         _h = int(horizont or W.HORIZONT)
-        start = 260 if art == "momentum" else RUECKBLICK + 40
+        # ---- N-17c: DIE FRONTLOADING-KANDIDATEN, HIER NACHGEZOGEN --------
+        #
+        # ⚠️ WARUM SIE HIER STEHEN UND NICHT IN `messe_form_kurz_gegen_lang`
+        # (04.09.2026). Beide Module bauen Anker, aber mit VERSCHIEDENEM
+        # R-Nenner: dort ein nachlaufender 250-Tage-Median der Breite, hier
+        # `breite[i]` selbst. Die registrierten Beitragstabellen (Funding,
+        # Turnover, OI) stehen alle auf DIESER Konvention - `rechne_*_
+        # beitrag.py` liest ausschliesslich aus `baue()`.
+        #
+        # Eine Beitragstabelle fuer die Frontloading-Kandidaten muesste also
+        # entweder hier gebaut werden oder in einer zweiten Kopie der
+        # Fuenftel-Rechnung mit fremdem Nenner enden - und waere dann mit
+        # den bestehenden Stufen NICHT vergleichbar. Additiv ergaenzt; kein
+        # bestehendes `art` ist angefasst.
+        _vorab_vola = _vorab_rsi = None
+        if art == "vola":
+            # dieselbe Form wie `messe_form_kurz_gegen_lang`: heutige Breite
+            # gegen den eigenen nachlaufenden Normalzustand
+            _vorab_vola = np.full(len(c), np.nan)
+            for _j in range(260, len(c)):
+                _f = breite[_j - 250:_j]
+                _f = _f[np.isfinite(_f) & (_f > 0)]
+                if len(_f) >= 100 and np.isfinite(breite[_j]):
+                    _vorab_vola[_j] = breite[_j] / float(np.median(_f))
+        elif art == "rsi":
+            # RSI(14) nach Wilder - dieselbe Convolve-Form wie dort
+            _d = np.diff(c, prepend=c[0])
+            _g = np.convolve(np.where(_d > 0, _d, 0.0), np.ones(14),
+                             "full")[:len(c)] / 14.0
+            _l = np.convolve(np.where(_d < 0, -_d, 0.0), np.ones(14),
+                             "full")[:len(c)] / 14.0
+            _vorab_rsi = 100.0 - 100.0 / (1.0 + _g / np.maximum(_l, 1e-12))
+        start = 260 if art in ("momentum", "vola") else RUECKBLICK + 40
         for i in range(start, len(c) - _h):
             r = breite[i]
             if not np.isfinite(r) or r <= 0:
@@ -241,6 +274,49 @@ def baue(reihen, art, zusatz=None, horizont=None):
                 _umsatz = float(v[i]) * float(c[i]) if c[i] else 0.0
                 if _oiw and _umsatz > 0:
                     wert = float(_oiw) / _umsatz
+            # ---- N-17c: die vier nachgezogenen Kandidaten ---------------
+            elif art == "vola":
+                _w = _vorab_vola[i]
+                if np.isfinite(_w):
+                    wert = float(_w)
+            elif art == "rsi":
+                _w = _vorab_rsi[i]
+                if np.isfinite(_w):
+                    wert = float(_w)
+            elif art == "momentum_kurz":
+                # ⚠️ DREI TAGE - dasselbe kurze Fenster wie `FL.KURZ`, nicht
+                # das 12-Monats-`momentum` oben. Zwei verschiedene Groessen
+                # mit aehnlichem Namen; die Verwechslung waere ein
+                # Namensschatten (T4c).
+                if c[i - 3] > 0:
+                    wert = float(c[i] / c[i - 3] - 1.0)
+            elif art == "funding_extrem":
+                # ⚠️ NACHLAUFEND, nie ueber die ganze Reihe - ein Perzentil
+                # ueber alles kennt die Zukunft. Identische Form wie in
+                # `messe_form_kurz_gegen_lang`: Abstand vom eigenen
+                # Normalzustand in MAD, VORZEICHENLOS.
+                _fw = (extra or {}).get(tage[i])
+                if _fw is not None:
+                    _hi = [(extra or {}).get(d) for d in tage[max(0, i - 250):i]]
+                    _hi = [x for x in _hi if x is not None]
+                    if len(_hi) >= 100:
+                        _ha = np.array(_hi, float)
+                        _med = float(np.median(_ha))
+                        _mad = float(np.median(np.abs(_ha - _med)))
+                        if _mad > 1e-12:
+                            wert = float(abs(_fw - _med) / _mad)
+            elif art == "zufall":
+                # ⚠️ DIE KONTROLLGROESSE. Sie MUSS eine flache Tabelle
+                # liefern; tut sie es nicht, traegt das VERFAHREN und kein
+                # Befund des Laufs gilt. Saat aus Symbol+Datum, damit der
+                # Wert reproduzierbar und nicht laufabhaengig ist.
+                #
+                # ⚠️ NICHT `hash()` - der ist fuer Strings pro Prozess
+                # randomisiert (PYTHONHASHSEED), die Kontrollgroesse waere
+                # dann bei jedem Lauf eine andere und ein Fehlalarm nicht
+                # nachvollziehbar. `crc32` ist stabil.
+                wert = float(np.random.default_rng(
+                    _crc32(("%s|%s" % (sym, tage[i])).encode())).random())
             elif art == "schnitt50":
                 # ⚠️ NUTZERIDEE 31.08.: *"Was ist mit dem 50-Schnitt bzw.
                 # Abstand - haben wir diesen gemessen?"* Nein. Gemessen
