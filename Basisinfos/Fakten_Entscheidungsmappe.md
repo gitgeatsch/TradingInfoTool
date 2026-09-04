@@ -6388,3 +6388,77 @@ Suite 1971/1971.
 Werkzeug: `rechne_funding_beitrag.py --horizont 2`,
 `rechne_turnover_beitrag.py --horizont 2`,
 `messe_schwelle_h2_kalibrierung.py --selbsttest`
+
+## F-205 ✔ N-17b: sechs neue Kandidaten gemessen (vier tragen), Redundanzprüfung vor der Kombination (04.09.2026)
+
+**Nach dem Fix (F-204) sauber neu gelaufen:** 612.048 Anker, **516
+Symbole** (reines Krypto), 2.713 Kalendertage. Zufallskontrolle trägt in
+keiner Richtung — der Lauf ist gültig.
+
+### Die sechs neuen Kandidaten
+
+| Kandidat | Richtung | Wirkung | Band | Urteil |
+|---|---|---|---|---|
+| `oi_aenderung` | oben **und** unten | +0,0015 / +0,0009 | beide außerhalb Null | ✔ trägt, einzige Größe in beiden Richtungen |
+| `oi_je_umsatz` | unten | +0,0021 | [+0,0011 .. +0,0031] | ✔ trägt |
+| `long_bias` | unten | +0,0019 | [+0,0009 .. +0,0029] | ✔ trägt |
+| `top_bias` | unten | +0,0019 | [+0,0008 .. +0,0029] | ✔ trägt |
+| `taker_bias` | — | — | — | ✖ trägt nicht |
+| `rsi` | oben | +0,0035 | [+0,0030 .. +0,0039] | ✔ trägt |
+
+**Vier von sechs tragen real.** `rsi` mit +0,0035 in der Größenordnung
+der bisher stärksten Kandidaten (Turnover +0,0040, Schnitt50 +0,0041).
+
+### Nebenbefund: die alten Kandidaten wirken nach dem Fix STÄRKER
+
+| Kandidat (oben) | Alt (kontaminiert) | Neu (rein Krypto) |
+|---|---|---|
+| momentum_kurz | +0,0009 | +0,0034 |
+| schnitt50 | +0,0011 | +0,0041 |
+| vola | +0,0014 | +0,0024 |
+| turnover | +0,0038 | +0,0040 (unverändert) |
+
+Die Vermischung mit Nicht-Krypto hatte das echte Signal **verwässert**,
+nicht nur verfälscht.
+
+### Die Redundanzprüfung — vor jeder Kombination Pflicht
+
+Neues Werkzeug `messe_kandidaten_redundanz.py` (Selbsttest + Gegentest
+bestanden): paarweise Spearman-Rangkorrelation aller tragenden
+Kandidaten, je Kalendertag berechnet, Median über die Tage. **21 von
+120 Paaren erreichen |ρ| ≥ 0,2:**
+
+    long_bias / top_bias      ρ=+0,955  praktisch identisch
+    schnitt50 / rsi           ρ=+0,643
+    spanne_aus / rsi          ρ=+0,591
+    spanne_aus / schnitt50    ρ=+0,512
+    vola / schnitt50          ρ=+0,510
+    momentum_kurz / spanne_aus ρ=+0,482
+    turnover / oi_je_umsatz   ρ=-0,279  (oi_je_umsatz hat turnover im Nenner)
+
+⚠️ **`rsi` ist kein unabhängiger Kandidat, sondern Teil der bestehenden
+Trend/Momentum-Familie** — es korreliert stark mit schnitt50, spanne_aus,
+momentum_kurz und vola. Sein Einzelbefund (+0,0035) ist real, aber keine
+NEUE, unabhängige Bestätigung.
+
+⚠️ **`long_bias` und `top_bias` sind faktisch dieselbe Größe** (ρ=0,955)
+— beide Long-Short-Verhältnisse, eines über alle Konten, eines nur über
+die Großen. Nur eine der beiden gehört in eine Kombination.
+
+✔ **`oi_aenderung`, `funding_extrem`, `adx`, `choppiness`, `varianzverh`
+bleiben überwiegend unabhängig** (|ρ| meist < 0,1 zu den anderen
+tragenden Größen) — die eigentlichen neuen, unabhängigen Signale.
+
+### Die zwei vorab vorgeschlagenen Kombinationen — Unabhängigkeit bestätigt
+
+    oi_aenderung / funding_extrem   ρ=+0,010  — unabhängig, gute Kombination
+    turnover / vola                 ρ=+0,046  — unabhängig, gute Kombination
+
+Beide ursprünglich vorgeschlagenen Paare sind damit methodisch sauber —
+keines der beiden ist eine versteckte Doppelmessung.
+
+Suite unverändert — reine Messwerkzeuge.
+
+Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading`,
+`messe_kandidaten_redundanz.py`
+Verwandt: F-165 · F-204 · N-17b
