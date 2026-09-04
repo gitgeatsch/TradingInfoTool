@@ -6538,3 +6538,64 @@ Suite unverändert — reine Messwerkzeuge.
 
 Werkzeug: `messe_kandidaten_kombination.py --selbsttest`
 Verwandt: F-165 · F-205 · N-17b
+
+## F-207 ✖ `funding_extrem` verbessert die LIVE terminmarkt-Sperre NICHT (04.09.2026)
+
+**Die Frage, sauber getrennt von F-206:** F-206 hat die Kombination auf
+**H2/Frontloading** gemessen — der Geometrie der Hebel-Wegwahl. Die
+**live laufende** `terminmarkt`-Sperre (`agent/rollen_gate.py` Stufe 9,
+N-14) ist aber auf **H20/R** kalibriert (F-168) — eine andere Zielgröße.
+Ob die Kombination dort etwas beiträgt, war unbeantwortet und ist eine
+eigene Frage, nicht dieselbe mit anderem Vorzeichen.
+
+**Positivkontrolle:** die Zusammenführung reproduziert F-168 exakt
+(+0,0142 R gegen +0,0145 R, 123.958 gegen 126.491 Anker — die kleine
+Differenz aus der breiteren, F-204-bereinigten Symbolbasis).
+
+| | Wirkung H20/R | Band | Urteil |
+|---|---|---|---|
+| A `oi_aenderung` allein (Status quo) | +0,0142 R | [+0,0090 .. +0,0193] | ✔ trägt |
+| B `funding_extrem` allein | +0,0056 R | [−0,0131 .. +0,0279] | nicht trennbar |
+| C oi \| funding_extrem festgehalten | +0,0147 R | [+0,0099 .. +0,0200] | ✔ trägt — unverändert gegen A |
+| D funding_extrem \| oi festgehalten | **−0,0124 R** | [−0,0243 .. −0,0015] | ⚠️ **UMGEKEHRT** |
+
+**Rangkorrelation** oi/funding_extrem: Median +0,010 — deckt sich mit
+F-205s +0,010 auf der ganz anderen H2/Frontloading-Basis, eine
+unabhängige Bestätigung derselben Unabhängigkeit.
+
+**D ist der auffällige Befund:** *innerhalb* der oi-Fünftel gehalten,
+zeigt das oberste Fünftel von `funding_extrem` **bessere**, nicht
+schlechtere Ergebnisse — das ist die falsche Richtung für ein
+Sperr-Kriterium (eine Sperre soll die schlechteren Anker treffen).
+
+**Die Sperre selbst, drei Varianten:**
+
+| Variante | gesperrt | Wirkung | Urteil |
+|---|---|---|---|
+| Status quo (oi allein) | 20,9 % | **+0,0147 R** [+0,0067 .. +0,0218] | ✔ trägt |
+| Lockern (oi UND funding_extrem beide oben) | 5,2 % | +0,0015 R [−0,0027 .. +0,0058] | nicht trennbar |
+| Verschärfen (oi ODER funding_extrem oben) | 36,6 % | +0,0017 R [−0,0147 .. +0,0182] | nicht trennbar |
+
+Die Durchlassanteile bestätigen die Konstruktion: 5,2 % ≈ 20 %×20 % und
+36,6 % ≈ 36,8 % (der in F-168 selbst genannte Unabhängigkeitswert) —
+beide passen zur gemessenen Rangkorrelation nahe null.
+
+**Urteil nach der vorab festgelegten Bedingung** (traegt = besser als
+Status quo UND außerhalb von dessen Band): **keine der beiden Varianten
+erfüllt das.** Die Sperre bleibt unverändert — `oi_aenderung` allein,
+wie seit N-14 gebaut.
+
+**Einordnung zu F-206:** kein Widerspruch. `oi_aenderung`+`funding_extrem`
+bleibt ein echter Befund für die H2/Frontloading-Wegwahlfrage (die dort
+gemessene Reinheit ändert sich durch dieses Ergebnis nicht) — er
+überträgt sich nur nicht auf die H20/R-Sperre, die eine andere Frage
+beantwortet. Genau die Horizont-Verwechslung, vor der N-17a bereits
+gewarnt hatte, wäre es gewesen, das eine für das andere zu halten.
+
+Kein Selbsttest mit synthetischen Daten — die Positivkontrolle
+(Reproduktion von F-168) übernimmt diese Rolle, siehe Docstring.
+
+Suite unverändert — einmaliges Messwerkzeug, keine Dauerprüfung.
+
+Werkzeug: `messe_sperre_kombi_h20.py`
+Verwandt: F-168 · F-205 · F-206 · N-14

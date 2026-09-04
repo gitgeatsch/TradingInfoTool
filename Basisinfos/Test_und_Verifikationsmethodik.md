@@ -5267,6 +5267,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `messe_kandidaten_kombination.py` | — | **N-17b**: trägt eine vorab benannte UND-Kombination zweier Kandidaten mehr als jede Größe einzeln? Zwei getrennte 80.-Perzentil-Schwellen (echtes UND), berichtet sowohl anteilgewichtete Wirkung als auch Reinheit (Überschuss je Ausgewähltem) — beide Maßstäbe können in verschiedene Richtungen zeigen (F-206) |
 | `messe_ausstiegsbeitrag.py` | — | **F-183**: tragen die Beiträge auch auf einer Ankermenge, die einem BESTAND entspricht? Mengen A/B/C, gepaarter Vergleich, Positivkontrolle auf die Differenz. `--selbsttest` gegen zwei Welten |
 | `messe_beitragssumme.py` | — | **N-15a**: taugt die SUMME der Beiträge als Rangfolge? Blöcke A–C je Größe, **C2 der gepaarte Vergleich** (2.105), D die Monotonie, E die Datenlücke über fünf Ziehungen, F welche Größe wohlgeordnet ist. `--selbsttest` gegen zwei Welten mit bekannter Antwort |
+| `messe_sperre_kombi_h20.py` | — | **F-207**: verbessert `funding_extrem` die LIVE `terminmarkt`-Sperre (H20/R, N-14) — auf DERSELBEN Zielgröße wie F-168, nicht der H2/Frontloading-Geometrie von F-206. Positivkontrolle statt Selbsttest: reproduziert F-168s Zahl aus derselben Zusammenführung. Prüft Lockern (UND) und Verschärfen (ODER) gegen den Status quo. Nullbefund — Sperre bleibt unverändert |
 
 ⚠️ **Die ersten beiden gehören zusammen und sind Pflicht vor dem Pull.**
 Am 02.09. hätte ein Pull ohne sie die Kette stumm geschaltet: die
