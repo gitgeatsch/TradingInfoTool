@@ -940,6 +940,113 @@ denselben Zustand aus verschiedenen Blickwinkeln; vor der Messung
 prüfen, ob sie stark korrelieren (wie es `momentum_kurz`/`schnitt50` in
 F-165 taten, ρ=0,364), sonst zählt ein Effekt doppelt.
 
+#### ⚠️⚠️ N-17c — DIE VORABFESTLEGUNG (04.09.2026), geschrieben BEVOR gerechnet wird
+
+**Nutzerkorrektur, die diesen Schritt ausgelöst hat:** *„1. der Wert bringt
+etwas ok, wissen wir was die Aussage ist, gibt es Schwellen, etc.
+2. du bist immer in der Messung, gehe in unsere Dokumente wie wir
+Bewertungen integriert haben."*
+
+##### Die Lücke, die geschlossen werden soll
+
+9.6 schreibt für H-4 *„das Verfahren, mit dem Funding und Turnover
+aufgenommen wurden"* vor. Dieses Verfahren hat **drei** Schritte; bei den
+Frontloading-Kandidaten (F-165, F-209) ist nur der erste gegangen:
+
+| Schritt | Werkzeug | Funding/Turnover | Frontloading-Kandidaten |
+|---|---|---|---|
+| 1 Wirkung als Regel | `messe_regel_wirksamkeit` | ✔ | ✔ (F-165/F-209) |
+| 2 Beitragspunkte je Fünftel | `rechne_*_beitrag.py` | ✔ | ✖ **fehlt** |
+| 3 Schwelle kalibrieren | `messe_schwelle_kalibrierung.py` | ✔ | ✖ **fehlt** |
+
+⚠️⚠️ **Der Grund, warum Schritt 2 fehlt, ist inhaltlich und nicht
+Bequemlichkeit:** die Umrechnungsformel `d(quote) = d(Potential)/(1+CRV)`
+setzt eine Wirkung **in R** voraus. `messe_form_kurz_gegen_lang._ziel()`
+liefert bei `ZIEL="frontloading"` aber den **Frontloading-Anteil** (0..1,
+„wie viel der Bewegung fällt in die ersten drei Tage"), nicht die
+Trade-Rendite. **Die Beschriftung „R" in F-165s und F-209s Tabellen ist
+ein Überbleibsel aus der H-1-Fassung (`R_kurz − R_lang`) und keine
+Einheit** — sie ist bei der Umstellung auf Frontloading nicht mitgezogen
+worden. Es gibt daher bis heute **keine Brücke** von „Frontloading trägt"
+zu einer Potential- oder Schwellenaussage.
+
+##### Die zwei Aussagen, die nicht dasselbe sind — und das ist der Kern
+
+| | sagt | taugt für |
+|---|---|---|
+| **Frontloading trägt** | die Bewegung ist früh konzentriert — *wie schnell*, nicht *wohin* | die **Horizontwahl** (kurz statt lang) |
+| **R-Beitrag trägt** | der Ausgang ist besser | das **Potential** und damit eine **Schwelle** |
+
+F-165/F-209 haben ausschließlich die erste gemessen. Für eine Bewertung
+im Sinne des übergeordneten Ziels wird die zweite gebraucht.
+
+##### Was gemessen wird
+
+Für **jeden Kandidaten, der auf Frontloading trägt**, die Beitragstabelle
+in **echten R** auf dem **Hebel-Horizont**, nach exakt dem Verfahren von
+`rechne_funding_beitrag.py` / `rechne_oi_beitrag.py` — Tagesklammer,
+Fünftel je Kalendertag, Median je Fünftel, Mittel über die Tage,
+`faktor = 1/(1+CRV)`, In-Sample-**Schrumpfung auf die Hälfte**.
+
+    Horizonte     H3 (das kurze Fenster aus F-165) UND H2 (die Geometrie,
+                  auf der N-17a/F-203 kalibriert hat) - zwei Zellen, damit
+                  die Zahl gegen die Horizontwahl robust ist
+    Kandidaten    turnover · vola · momentum_kurz · schnitt50 · rsi ·
+                  oi_aenderung · funding_extrem   (die auf Frontloading
+                  tragenden, `oben`-Richtung)
+    Kontrolle     `zufall` läuft mit - er MUSS eine flache Tabelle liefern
+
+⚠️ **Der Suchpreis ist benannt:** 7 Kandidaten × 2 Horizonte = **14 Zellen**
+(Methodik 2.49). Die Entscheidung hängt an **turnover** — dem stärksten und
+am wenigsten redundanten Fund; die übrigen laufen als Einordnung mit und
+dürfen den Befund nicht allein tragen.
+
+⚠️ **`turnover` und `funding_extrem` sind teilweise Wiederholung:**
+`rechne_turnover_beitrag.py --horizont 2` ist in F-203 bereits gelaufen
+(+0,34/+0,08/+0,15/−0,25/−0,32). Diese Zahl dient hier als **Kontrolle**:
+weicht sie ab, stimmt etwas am Aufbau, nicht am Befund.
+
+##### ⚠️ Vorab festgelegt — was als Befund gilt
+
+    NUTZBAR        die Stufen sind MONOTON über die fünf Fünftel
+                   UND die Spanne (Fünftel 0 gegen 4) ist größer als null
+                   UND die Kontrollgröße `zufall` bleibt flach
+    NICHT NUTZBAR  sonst - dann wird NICHT registriert und KEINE Schwelle
+                   gerechnet
+
+⚠️ Genau diese Monotonie-Bedingung ist am 31.08. beim Schnittabstand
+gefallen (+1,27/+1,59/…) und wurde damals **trotzdem** registriert. Sie
+steht hier, damit das nicht ein drittes Mal passiert.
+
+##### ⚠️ Und was diese Messung ausdrücklich NICHT entscheidet
+
+1. **Nicht, ob registriert wird.** R-R9 verlangt bei jedem Beitragswechsel
+   eine Neukalibrierung der Schwelle; die Vorgabe (heute 0,080) ist eine
+   **Nutzerentscheidung**. Diese Messung liefert nur die Zahlen dafür.
+2. **Nicht den Gabelpunkt aus F-164.** Selbst tragfähige Stufen machen den
+   Hebel nicht automatisch zu einer Bewertungsfrage — H-2 bleibt offen.
+3. **Nicht die Richtung.** Alle Kandidaten sagen Ausmaß/Tempo, keiner sagt
+   wohin (F-165, unverändert gültig).
+
+##### Die ehrliche Erwartung, vorab notiert
+
+F-203 hat für Funding/Turnover auf H2 bereits gezeigt: die Spannen sind
+dort **6–7× kleiner** als auf H20, und die gemeinsame Schwellenkalibrierung
+verlor jede Trennschärfe. **Ein ähnlich ernüchterndes Ergebnis ist der
+wahrscheinlichere Ausgang, kein Ausreißer.** Der Wert der Messung liegt
+darin, die Aussage *belegt* statt *vermutet* zu machen — und die
+Beitragstabelle ist die einzige Form, in der dieses Projekt eine
+Bewertung überhaupt aufnehmen kann.
+
+##### Betriebsrahmen
+
+Reine lokale SQLite-Lesevorgänge (`data/messdaten.db`,
+`data/funding_historie.db`, `data/onchain_historie.db`,
+`data/terminmarkt_historie.db`) — **keine API-Abrufe**, kein Kontingent
+betroffen. Werkzeug: bestehende `rechne_*_beitrag.py` wo vorhanden, sonst
+ein gemeinsames neues, das dieselbe Rechnung für die übrigen Kandidaten
+ausführt (keine zweite Kopie der Fünftel-Logik).
+
 #### Was aus dem Altbestand übernommen werden darf — und was nicht
 
 | | Umgang |
