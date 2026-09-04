@@ -73,12 +73,18 @@ import messe_funding_niveau as F
 import messe_kandidaten_als_regel as K
 
 HORIZONT = 2
+MISCHUNGEN = 10  # Ziehungen fuer den Selbsttest (2.104) - eine ist kein Nullpunkt
 CRV = 2.0
 
 # ⚠️ QUELLE: rechne_funding_beitrag.py / rechne_turnover_beitrag.py
-# --horizont 2, gemessen 04.09.2026 - siehe Modulkopf.
-FUNDING_STUFEN = (0.01, 0.18, 0.01, -0.08, -0.12)
-TURNOVER_STUFEN = (0.34, 0.08, 0.15, -0.25, -0.32)
+# --horizont 2, NEU gemessen 04.09.2026 nach F-204 (messe_eigenschaft_
+# beitrag.lade() filtert jetzt explizit auf Krypto - die erste Messung
+# lief mit demselben Datensatz, war aber praktisch unkontaminiert: nur
+# `DASH` von 66 Turnover-Ankern betraf die alte Fassung. Werte hier
+# bestaetigen das, Abweichung ist Rauschen (+0.12 gegen +0.13 Spanne
+# Funding, +0.75 gegen +0.66 Turnover).
+FUNDING_STUFEN = (0.00, 0.19, -0.02, -0.06, -0.12)
+TURNOVER_STUFEN = (0.36, 0.09, 0.16, -0.22, -0.39)
 
 # Feiner und tiefer als bei H20 (0,000 .. 0,120) - die Spanne der
 # H2-Beitraege ist selbst rund zehnmal kleiner.
@@ -147,24 +153,36 @@ def selbsttest() -> bool:
     (`in_r_kuenstlich = 5 x Potential + Rauschen`, Rauschstaerke wie die
     echten Daten) und verlangt einen SAUBER STEIGENDEN Ertrag bei
     strengerer Schwelle - das Gegenteil des flachen Bildes der echten
-    Messung."""
+    Messung.
+
+    ⚠️⚠️ UEBER MEHRERE ZIEHUNGEN GEMITTELT (04.09.2026, nachgebessert -
+    2.104/[[feedback_eine_ziehung_ist_kein_nullpunkt]]). Die erste Fassung
+    nutzte EINE feste Saat und fiel nach dem Krypto-Filter-Fix (F-204)
+    prompt durch: bei der strengsten Probe (Schwelle 0,015, nur ~2.500
+    Anker) kippte der Ertrag bei genau dieser einen Ziehung. Vier von fuenf
+    Saaten zeigten sauber steigende Werte - die fuenfte Saat war eine
+    Ausreisser-Ziehung am kleinsten Stichprobenpunkt, kein echter Fehler.
+    Jetzt: MISCHUNGEN unabhaengige Ziehungen, das Urteil haengt am
+    MITTEL, nicht an einer einzelnen."""
     je_tag = bewerte(baue())
     alle = [x for z in je_tag.values() for x in z]
-    n = len(alle)
-    rng = np.random.default_rng(42)
     streuung = float(np.std([x["in_r"] for x in alle]))
-    for x in alle:
-        x["in_r_kuenstlich"] = 5.0 * x["potential"] + rng.normal(0, streuung)
-
     proben = (0.000, 0.003, 0.008, 0.015)
-    ertraege = []
-    for s in proben:
-        bleibt = [x for x in alle if x["potential"] > s]
-        if len(bleibt) < 100:
-            print(f"  ✖ FEHLER: zu wenige Anker bei Schwelle {s}")
-            return False
-        ertraege.append(st.median(x["in_r_kuenstlich"] for x in bleibt))
-    print("  Positivkontrolle - Ertrag je Schwelle: "
+
+    mittel = [0.0] * len(proben)
+    for saat in range(MISCHUNGEN):
+        rng = np.random.default_rng(1000 + saat)
+        for x in alle:
+            x["in_r_kuenstlich"] = 5.0 * x["potential"] + rng.normal(0, streuung)
+        for i, s in enumerate(proben):
+            bleibt = [x for x in alle if x["potential"] > s]
+            if len(bleibt) < 100:
+                print(f"  ✖ FEHLER: zu wenige Anker bei Schwelle {s}")
+                return False
+            mittel[i] += st.median(x["in_r_kuenstlich"] for x in bleibt)
+    ertraege = [m / MISCHUNGEN for m in mittel]
+    print(f"  Positivkontrolle, Mittel ueber {MISCHUNGEN} Ziehungen - "
+          "Ertrag je Schwelle: "
           + " -> ".join(f"{e:+.4f}" for e in ertraege))
     steigend = all(b >= a - 1e-9 for a, b in zip(ertraege, ertraege[1:]))
     if not steigend:

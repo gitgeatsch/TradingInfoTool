@@ -6286,3 +6286,105 @@ Werkzeug: `rechne_funding_beitrag.py --horizont 2`,
 `rechne_turnover_beitrag.py --horizont 2`,
 `messe_schwelle_h2_kalibrierung.py`
 Verwandt: F-186 · F-189 · F-202 · N-17a · N-17b
+
+## F-204 ⚠️⚠️⚠️ NEBENWIRKUNG VON N-19: `messe_eigenschaft_beitrag.lade()` mischte seit gestern Aktien/ETF/Rohstoffe in jede Krypto-Messung (04.09.2026)
+
+**Gefunden, nicht vermutet — von der eigenen Zufallskontrolle.** Beim
+Anlauf von N-17b (Terminmarkt-Rohgrößen + RSI gegen Frontloading, sechs
+neue Kandidaten) meldete `messe_form_kurz_gegen_lang.py` am Ende:
+
+> *„DIE KONTROLLGRÖSSE `zufall` TRÄGT — dann trägt das VERFAHREN, nicht
+> der Kandidat. ALLE Befunde oben sind damit ungültig."*
+
+Genau die eingebaute Sicherung hat angeschlagen, wie sie soll — kein
+Befund aus diesem Lauf wurde übernommen.
+
+### Die Ursache — eine Nebenwirkung von gestern (N-19), nicht von heute
+
+`messe_eigenschaft_beitrag.lade()` liest `data/messdaten.db` **ohne
+Klassenfilter** — bis zum 03.09. war das richtig, weil die Tabelle
+ausschließlich Krypto enthielt. **Seit N-19 trägt dieselbe Tabelle
+zusätzlich 469 Aktien, 293 Themen-ETF und 35 Rohstoffe.** Ohne Filter
+mischte die Funktion ab sofort **798 von 1314 Symbolen als
+Nicht-Krypto** in jeden Tagesquerschnitt — eine US-Aktie und ein Coin
+landeten im selben Ranking.
+
+⚠️⚠️ **44 Skripte importieren diese eine Funktion** — jede Messung, die
+darauf aufsetzt (H-1, H-4, Funding-/Turnover-Kalibrierung, N-17a von
+gestern, N-17b heute), war seit N-19s Commit demselben Risiko
+ausgesetzt.
+
+### Wer war betroffen — geprüft, nicht angenommen
+
+| Messung | Kontamination | Warum |
+|---|---|---|
+| N-17b (dieser Lauf: vola, momentum, RSI, Terminmarktgrößen, …) | **798 von 1314 Symbolen** | keine der neuen Größen verlangt eine krypto-exklusive Zweitquelle |
+| N-17a/F-203 (Funding/Turnover-Kalibrierung, gestern) | **1 von 66** (`DASH`) | Funding (`funding_historie.db`) und Turnover-Nenner (`onchain_historie.db`, Umlaufmenge) sind faktisch krypto-exklusiv — nicht-krypto Symbole fielen beim Verknüpfen fast immer heraus |
+
+**F-203 bleibt damit in der Sache gültig** — der Nullbefund war nicht
+das Kontaminationsartefakt. Aber das war eine Eigenschaft der
+verwendeten Datenquellen, **kein Schutz durch Design**. `DASH` ist
+dieselbe Namenskollision (Aktie **und** Coin) wie in F-198/F-201.
+
+### Der Fix — additiv, an der Quelle
+
+`lade()` filtert jetzt explizit `WHERE assetklasse='krypto'` (die Spalte
+existiert auf `price_history_ohlc` seit der N-19-Migration direkt, kein
+Join nötig). Gegenprobe: vorher 1314 Symbole/798 fremd, nachher **516,
+null fremd** — exakt die bekannte Krypto-Zahl aus `messreihen`.
+Künstlicher Fehler injiziert (Filter entfernt) — neue Dauerprüfung wurde
+korrekt rot, Fix wiederhergestellt, wieder grün.
+
+**Neue Dauerprüfung** in `paket_kalibrierung`: `messe_eigenschaft_
+beitrag.lade()` liefert ausschließlich Symbole mit `assetklasse=
+'krypto'` — schlägt an, falls das je wieder passiert.
+
+Suite 1970/1970 (Fix in einer gemeinsam genutzten BASIS-Funktion, keine
+Wirkung auf die laufende Produktionskette — die liest nicht aus
+`data/messdaten.db`).
+
+Werkzeug: `messe_eigenschaft_beitrag.py::lade()`,
+`pruefe_pakete.py::paket_kalibrierung`
+Verwandt: N-19 · F-198 · F-203 · N-17b
+
+### Nachtrag — F-203 mit dem Fix nachgemessen, nicht nur abgeschätzt
+
+**Nutzerfrage:** *„was ist mit der erneuten Messung von 17a, ist diese
+nicht erforderlich?"* — berechtigt: meine erste Einschätzung („nur 1 von
+66 Symbolen betroffen, F-203 bleibt gültig") war eine Abschätzung, keine
+Nachmessung. Nachgeholt:
+
+    Funding H2   NEU (0,00/+0,19/-0,02/-0,06/-0,12)  Spanne 0,12
+                 ALT (+0,01/+0,18/+0,01/-0,08/-0,12)  Spanne 0,13
+    Turnover H2  NEU (+0,36/+0,09/+0,16/-0,22/-0,39)  Spanne 0,75
+                 ALT (+0,34/+0,08/+0,15/-0,25/-0,32)  Spanne 0,66
+
+    Gemeinsame Schwellenkalibrierung: identisches Bild - beste Schwelle
+    weiterhin 0,000, Ertrag bleibt bei +0,0000 R bis Schwelle 0,010
+
+    Spearman r = 0,0219 [0,0171 .. 0,0265] (vorher 0,0198 [0,0151 .. 0,0243])
+
+**F-203 ist damit nachgemessen bestätigt, nicht nur plausibilisiert.**
+
+### ⚠️ Dabei zwei weitere, kleinere Fehler gefunden und behoben
+
+1. **Absturz beim ersten Import aus `pruefe_pakete.py`:**
+   `messe_eigenschaft_beitrag.py`s `sys.stdout.reconfigure()` lief gegen
+   den `_Mitschnitt`-Tee-Wrapper der Suite (kein `.reconfigure()`) -
+   `AttributeError`. Jetzt in `try/except AttributeError` gefasst; nur
+   beim eigenständigen CLI-Aufruf relevant, nie beim Import als
+   Basis-Funktion.
+2. **⚠️⚠️ Der eigene Selbsttest von `messe_schwelle_h2_kalibrierung.py`
+   fiel nach dem Fix durch — Rauschen, kein echter Fehler.** Eine
+   Ziehung mit fester Saat, bei der strengsten Probe (Schwelle 0,015,
+   ~2.500 Anker) kippte der Ertrag. Fünf Saaten geprüft: vier zeigten
+   sauber steigende Werte, nur die verwendete war eine Ausreisser-Ziehung
+   am kleinsten Stichprobenpunkt. Auf **zehn gemittelte Ziehungen**
+   umgestellt (2.104) — dieselbe Lehre, die diese Session schon einmal
+   bei G-c gebraucht hat. Gegentest bestanden.
+
+Suite 1971/1971.
+
+Werkzeug: `rechne_funding_beitrag.py --horizont 2`,
+`rechne_turnover_beitrag.py --horizont 2`,
+`messe_schwelle_h2_kalibrierung.py --selbsttest`

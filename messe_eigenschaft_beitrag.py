@@ -51,7 +51,15 @@ import sys
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+# ⚠️ NUR BEIM EIGENEN CLI-AUFRUF (04.09.2026, gefunden beim ersten Import
+# dieser Datei aus pruefe_pakete.py, F-204). `_Mitschnitt` dort ersetzt
+# stdout durch einen Tee-Wrapper ohne `reconfigure()` - ein ungeschuetzter
+# Aufruf liesse jeden Import dieser BASIS-Funktion (44 abhaengige Skripte)
+# an einem fremden Betriebszweck scheitern.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except AttributeError:
+    pass
 
 DB = "file:data/messdaten.db?mode=ro"
 RUECKBLICK = 252          # Handelstage fuer die Eigenschaft
@@ -60,12 +68,34 @@ MIND_ASSETS = 15          # weniger als das ist kein Querschnitt
 
 
 def lade():
-    """Kursreihen je Symbol: Datum, Schluss, Volumen."""
+    """Kursreihen je Symbol: Datum, Schluss, Volumen - NUR KRYPTO.
+
+    ⚠️⚠️ GEFUNDEN 04.09.2026 (N-17b, Gegenprobe der Zufallskontrolle).
+    Bis N-19 (03.09.) enthielt `data/messdaten.db` ausschliesslich Krypto -
+    diese Funktion filterte deshalb nie explizit und war trotzdem richtig.
+    Seit N-19 traegt dieselbe Tabelle zusaetzlich Aktien/ETF/Rohstoffe
+    (469+293+35 von 1313 Symbolen). Ohne Filter mischte jede nachgelagerte
+    Messung (44 Skripte importieren diese Funktion) beide Welten - eine
+    US-Aktie und ein Coin landen im selben Tagesquerschnitt.
+
+    GEFUNDEN, NICHT VERMUTET: die Zufallskontrolle in
+    `messe_form_kurz_gegen_lang.py` schlug bei einem vollen Lauf an
+    (+0,0002 R, Band schliesst Null knapp aus) - das Werkzeug erklaerte
+    sich damit selbst fuer ungueltig, genau wie vorgesehen. Ursache
+    zurueckverfolgt: 798 von 1314 Symbolen waren Nicht-Krypto.
+
+    ⚠️ Frueher gelaufene Messungen, die zusaetzlich `funding` oder
+    `turnover` (Umlaufmenge) VERLANGEN, waren dabei kaum betroffen - beide
+    Datenquellen sind faktisch krypto-exklusiv (nur `DASH`, dieselbe alte
+    Namenskollision aus F-198/F-201, hatte einen Treffer). Das war aber
+    Zufall der Datenlage, kein Schutz durch Design - ab jetzt filtert
+    diese Funktion selbst."""
     c = sqlite3.connect(DB, uri=True)
     roh = {}
     for sym, tag, schluss, hoch, tief, vol in c.execute(
             "SELECT symbol, date, close, high, low, volume "
             "FROM price_history_ohlc WHERE currency='USD' "
+            "AND assetklasse='krypto' "
             "AND close IS NOT NULL AND close > 0 ORDER BY symbol, date"):
         roh.setdefault(sym, []).append(
             (tag[:10], float(schluss), float(hoch or schluss),

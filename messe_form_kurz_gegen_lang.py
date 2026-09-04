@@ -145,6 +145,7 @@ sys.path.insert(0, ".")
 
 import messe_eigenschaft_beitrag as B                          # noqa: E402
 import messe_bewertungskennzahl as M                           # noqa: E402
+import messe_kandidaten_als_regel as K                         # noqa: E402
 
 KURZ = 3
 LANG = 20
@@ -185,6 +186,16 @@ KANDIDATEN = ("vola", "momentum_kurz", "spanne_aus", "schnitt50",
               #               (rueckkehrend = seitwaerts) oder schneller
               #               (trendend)?
               "er_rueck", "adx", "choppiness", "varianzverh",
+              # ---- N-17b: TERMINMARKT-ROHGROESSEN + RSI (04.09.2026) ----
+              # ⚠️ Vorab benannt, VOR dem Lauf. `oi_aenderung` traegt
+              # bereits als Sperre gegen eine ANDERE Zielgroesse (N-14) -
+              # hier zum ersten Mal gegen Frontloading geprueft. Die
+              # uebrigen vier Terminmarkt-Groessen und RSI sind komplett
+              # neu. Der Screening-Score/Schwelle-70 aus dem Altbestand
+              # ist bewusst NICHT dabei (Hypothesenquelle, kein Massstab -
+              # 9.6 im Umbauplan).
+              "oi_aenderung", "oi_je_umsatz", "long_bias", "top_bias",
+              "taker_bias", "rsi",
               "zufall")
 
 # ⚠️ DIE ZIELGROESSE IST WAEHLBAR (H-4a, 01.09.2026).
@@ -250,6 +261,18 @@ def lade_zusatz():
         except Exception as exc:                             # noqa: BLE001
             print("  ⚠️ %s nicht ladbar (%s)" % (name, type(exc).__name__))
         aus[name] = je
+    # ---- N-17b: DIE TERMINMARKT-ROHGROESSEN (04.09.2026) -----------------
+    #
+    # ⚠️ ROHGROESSEN, NICHT DER ALTE SCREENING-SCORE. `K.lade_terminmarkt()`
+    # liefert dieselben fuenf Groessen, mit denen N-14 `oi_aenderung` schon
+    # einmal gemessen hat - dort aber gegen die DIREKTIONALE Zielgroesse
+    # (R_kurz-R_lang-Verwandte), nicht gegen Frontloading. Diese Datei
+    # prueft sie zum ersten Mal gegen die richtige Zielgroesse.
+    try:
+        aus["terminmarkt"] = K.lade_terminmarkt()
+    except Exception as exc:                                 # noqa: BLE001
+        print("  ⚠️ terminmarkt nicht ladbar (%s)" % type(exc).__name__)
+        aus["terminmarkt"] = {}
     return aus
 
 
@@ -271,6 +294,22 @@ def baue(reihen, zusatz):
         breite = B.spanne(h, t_, c, B.SCHWANKUNG)
         f_je = (zusatz.get("funding") or {}).get(sym.upper()) or {}
         m_je = (zusatz.get("menge") or {}).get(sym.upper()) or {}
+        # ---- N-17b: die Terminmarkt-Rohgroessen, je Symbol nachgeschlagen --
+        _tm = zusatz.get("terminmarkt") or {}
+        oi_je = (_tm.get("oi_aenderung") or {}).get(sym.upper()) or {}
+        oiw_je = (_tm.get("oi_wert") or {}).get(sym.upper()) or {}
+        long_je = (_tm.get("long_bias") or {}).get(sym.upper()) or {}
+        top_je = (_tm.get("top_bias") or {}).get(sym.upper()) or {}
+        taker_je = (_tm.get("taker_bias") or {}).get(sym.upper()) or {}
+        # ---- N-17b: RSI(14), Wilder 1978 - dieselbe Convolve-Form wie ADX
+        # oben, nachlaufend, keine Zukunft im Fenster.
+        _delta = np.diff(c, prepend=c[0])
+        _gain = np.where(_delta > 0, _delta, 0.0)
+        _loss = np.where(_delta < 0, -_delta, 0.0)
+        _k14b = np.ones(14)
+        _avg_gain = np.convolve(_gain, _k14b, "full")[:len(c)] / 14.0
+        _avg_loss = np.convolve(_loss, _k14b, "full")[:len(c)] / 14.0
+        _rsi = 100.0 - 100.0 / (1.0 + _avg_gain / np.maximum(_avg_loss, 1e-12))
         # ⚠️⚠️ DATENBRUECHE ENTFERNEN - Punkt 4 der Checkliste 2.91, und ich
         # habe ihn im ersten Anlauf uebersprungen (01.09.2026).
         #
@@ -426,6 +465,25 @@ def baue(reihen, zusatz):
             mw = m_je.get(tage[i])
             if mw and mw > 0:
                 e["turnover"] = float(v[i] / mw)
+            # ---- N-17b: die Terminmarkt-Rohgroessen -----------------
+            _oi = oi_je.get(tage[i])
+            if _oi is not None:
+                e["oi_aenderung"] = float(_oi)
+            _oiw = oiw_je.get(tage[i])
+            _umsatz = float(v[i]) * float(c[i]) if c[i] else 0.0
+            if _oiw and _umsatz > 0:
+                e["oi_je_umsatz"] = float(_oiw) / _umsatz
+            _lb = long_je.get(tage[i])
+            if _lb is not None:
+                e["long_bias"] = float(_lb)
+            _tb = top_je.get(tage[i])
+            if _tb is not None:
+                e["top_bias"] = float(_tb)
+            _kb = taker_je.get(tage[i])
+            if _kb is not None:
+                e["taker_bias"] = float(_kb)
+            if np.isfinite(_rsi[i]):
+                e["rsi"] = float(_rsi[i])
             e["zufall"] = float(rng.random())
             je_tag.setdefault(tage[i], []).append(e)
     return {t: z for t, z in je_tag.items() if len(z) >= MIN_JE_TAG}

@@ -15417,6 +15417,34 @@ def paket_kalibrierung() -> None:
            "if not basis:" in _mr_q,
            "ein Rang ueber die falsche Menge saehe aus wie ein richtiger")
 
+    # ---- N-17b/04.09.: messe_eigenschaft_beitrag.lade() bleibt KRYPTO-NUR --
+    #
+    # ⚠️⚠️ GEFUNDEN, NICHT VERMUTET. Seit N-19 (03.09.) traegt
+    # `data/messdaten.db` zusaetzlich Aktien/ETF/Rohstoffe. `lade()` filterte
+    # bis dahin nicht explizit - es musste nicht, die Tabelle war reiner
+    # Krypto. Ohne Filter mischten 44 abhaengige Skripte plötzlich 798
+    # Nicht-Krypto-Symbole in jede Tagesklammer. Gefunden hat es die
+    # eingebaute Zufallskontrolle in messe_form_kurz_gegen_lang.py - sie
+    # schlug an, wie vorgesehen (Regelwerk: eine Kontrollgroesse, die
+    # traegt, macht das VERFAHREN ungueltig, nicht den Kandidaten).
+    #
+    # ECHTER Funktionsaufruf, keine Kopie (Lehre vom selben Tag wie G-b).
+    import messe_eigenschaft_beitrag as _MEB
+    import sqlite3 as _sq3
+    _reihen17b = _MEB.lade()
+    _c17b = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
+    _kr17b = {r[0] for r in _c17b.execute(
+        "SELECT symbol FROM messreihen WHERE assetklasse='krypto'")}
+    _c17b.close()
+    _fremd17b = set(_reihen17b) - _kr17b
+    pruefe(P, "⚠️⚠️ messe_eigenschaft_beitrag.lade() liefert NUR Krypto",
+           not _fremd17b,
+           "gefunden: %d Nicht-Krypto-Symbole in %d insgesamt (%s) - "
+           "jede Messung, die darauf aufsetzt, mischt sonst Aktien/ETF/"
+           "Rohstoffe in denselben Tagesquerschnitt wie Krypto"
+           % (len(_fremd17b), len(_reihen17b),
+              ", ".join(sorted(_fremd17b)[:5])))
+
 
 
 
