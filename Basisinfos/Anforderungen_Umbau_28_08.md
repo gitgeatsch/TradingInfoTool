@@ -1047,6 +1047,144 @@ betroffen. Werkzeug: bestehende `rechne_*_beitrag.py` wo vorhanden, sonst
 ein gemeinsames neues, das dieselbe Rechnung für die übrigen Kandidaten
 ausführt (keine zweite Kopie der Fünftel-Logik).
 
+#### ⚠️⚠️ N-17d — TEMPO × TRENDRICHTUNG, die Vorabfestlegung (04.09.2026)
+
+**Nutzerfrage, die diesen Schritt ausgelöst hat:** *„1. haben wir eine
+Aussage über Tempo und Richtung, ja wollen wir, check. 2. in Kombination
+mit einer Trendrichtung hoch, seitwärts, runter ist das unser Ziel. haben
+wir, eigentlich ja? was ist das Problem hierbei genau?"* — und die
+Nachschärfung: *„für die kurzen Zeiträume sollten auch die Mess- und
+Analyseparameter sauber kalibriert werden, 0 bis 3 oder 5 Tage."*
+
+##### Warum die Frage bisher nicht beantwortet war
+
+Beide Hälften existieren, aber nicht als kombinierbare Teile:
+
+- **Tempo:** gemessen (F-165/F-209), aber **absichtlich richtungsblind** —
+  wir rechnen mit Beträgen, weil die vorzeichenbehaftete Fassung (H-1)
+  nichts fand. „Hohes Tempo" schließt „schneller Absturz" ein.
+- **Richtung:** Das System führt **kein Trendetikett mehr**. Es wurde am
+  16.08. entfernt (`lagebeschreibung._struktur`), weil „aufwärts" nur zu
+  **42 %** mit der 60-Tage-Bewegung übereinstimmte — *„kaum besser als ein
+  Münzwurf"*. Was bleibt, ist das Gesamturteil der Kette (48,2 %
+  Trefferquote), das sich nicht in einen Faktor zerlegen lässt.
+
+**Die Kombination ist also nie gemessen worden** — nicht aus Versäumnis,
+sondern weil eine der beiden Hälften als Faktor gar nicht existiert.
+
+##### ⚠️⚠️ Der Kalibrierungsfehler in N-17c, vom Nutzer gefunden
+
+Die tatsächliche Handelsdauer ist **gemessen** (F-202, 239 entschiedene
+Trades): **Median 2,0 Tage**, Mittel 2,6 — TP und SL identisch. Das System
+plante 1,2–2,1 Tage. Dagegen die Rückblicke, mit denen N-17c gemessen hat:
+
+| Größe | Rückblick | Verhältnis zur Handelsdauer |
+|---|---|---|
+| `vola` (Normierung) | 250 Tage | 125× |
+| Trendrichtung (60-Tage) | 60 Tage | **30×** |
+| `schnitt50` | 50 Tage | **25×** |
+| `rsi`, `adx` | 14 Tage | 7× |
+| `momentum_kurz` | 3 Tage | **1,5×** ✔ |
+
+⚠️ **Und der Kandidat mit der größten Wirkung war ausgerechnet der
+einzige, dessen Parameter passt** — `momentum_kurz`, Spanne 1,29 (H2) und
+1,39 (H3) gegen `turnover` 0,75/1,11. Er fiel in N-17c nur durch, weil ich
+ausschließlich auf die Monotonie-**Form** geschaut habe und nicht auf die
+**Größe**. Das war zu schematisch: seine Gestalt ist ein **Schalter**
+(oberstes Fünftel −1,07/−1,19, auf beiden Horizonten konsistent) — genau
+die Form, die bei `oi_aenderung` als Sperre gebaut wurde (F-168/N-14).
+
+##### ⚠️⚠️ Was die Fachrecherche ergeben hat — und sie widerspricht meiner Arbeitshypothese
+
+Externe Recherche 04.09. (Volltexte, peer-reviewed bevorzugt). Vier
+Befunde, die die Messung umsteuern:
+
+1. **Die Tempo-Hypothese steht GEGEN die Literatur.** Trend-/Momentum­
+   effekte sind **stärker in ruhigen, nicht in schnellen Phasen**. Für
+   Krypto direkt einschlägig (CTREND, *JFQA* 2025, >3.000 Coins):
+   Long-Short **5,46 %/Woche bei niedriger** gegen **2,27 % bei hoher**
+   Marktvolatilität. Ebenso Cooper/Gutierrez/Hameed (*JF* 2004),
+   Moreira/Muir (*JF* 2017). ⚠️ **Die Beweislast liegt damit bei uns**,
+   wenn wir „schnell = besser" behaupten.
+2. **Mein `momentum_kurz`-Nebenbefund IST der Lehrbuchbefund.**
+   Kurzfrist-Umkehr: Lehmann (1990), Jegadeesh (1990); in Krypto
+   repliziert (CTREND `sma_5d`: **−2,90 %/Woche**, t = −3,35). Was kurz
+   stark gestiegen ist, läuft kurz darauf schlechter. **Das ist keine
+   Zufallsfindung, sondern erwartbar** — und es erklärt die Schalterform.
+3. **DIE literaturgestützte Kombination ist Trend × TURNOVER, nicht Trend
+   × Volatilität.** Lee/Swaminathan (*JF* 2000, „Momentum Life Cycle"):
+   **bei hohem Turnover kippt Umkehr in Fortsetzung.** Dazu passt, dass
+   die Krypto-Tagesumkehr liquiditätsabhängig ist — die größten Coins
+   zeigen Momentum, das breite Feld Umkehr. **Und es passt zu unserem
+   eigenen Befund** (`n13_1_volumenanteil_traegt`, F-205).
+4. **Drei unserer Kandidaten haben KEINE Validierung.** Efficiency Ratio
+   (Kaufman), Choppiness Index und Varianzverhältnis sind Praktiker- bzw.
+   Testgrößen ohne Wirkungsnachweis als Renditeprädiktor; das
+   Varianzverhältnis (Lo/MacKinlay) ist ein **Random-Walk-Test, kein
+   Signal**. Sie waren in F-165 als „aus der Standardliteratur" geführt —
+   **das war für diese drei zu großzügig**.
+
+**Realistische Effektgröße laut Literatur: R² 1–3 %, also 1–3
+Prozentpunkte Trefferquote.** ⚠️ Damit ist unser N-17c-Ergebnis
+(turnover H3: +0,51 Punkte) **kein Messversagen, sondern der erwartete
+Größenbereich** — und die Schwelle 0,080 R verlangt mit +2,67 Punkten
+mehr, als die Literatur für einen Einzelfaktor überhaupt hergibt.
+
+5. **Für Hebel-Timing gibt es keine Literatur.** Kein peer-reviewed
+   Kriterium, wann ein *kurzfristiger gehebelter* Einstieg einem
+   ungehebelten überlegen ist. Hebel wird als Positionsgrößen- und
+   Kapitaleffizienzfrage behandelt (Vola-Targeting, Kelly), nicht als
+   Signal. ⚠️ Frazzini/Pedersen (*JFE* 2014) zeigen sogar die
+   Gegenrichtung: eingebauter Hebel kostet eine Prämie. **Wenn wir eine
+   Regel wollen, müssen wir sie selbst messen — es gibt nichts, worauf
+   man sich stützen könnte.**
+
+##### Was gemessen wird — EINE Haupthypothese, vorab benannt
+
+> **H-N17d:** Die Kurzfrist-Umkehr (oberstes Fünftel `momentum_kurz` →
+> schlechterer Ausgang) ist **bei niedrigem Turnover stark und kippt bei
+> hohem Turnover** — Lee/Swaminathans Momentum Life Cycle, auf unserem
+> Horizont.
+
+    Zielgroesse   R auf H2, VORZEICHENBEHAFTET  (nicht Frontloading -
+                  wir wollen "schnell UND richtig", nicht nur "schnell")
+    Horizont      H2 - die gemessene Median-Haltedauer (F-202), nicht H20
+    Achse A       momentum_kurz (3 Tage, horizontproportional)
+    Achse B       turnover  (die literaturgestuetzte Schicht)
+    Verfahren     Schichtentest `messe_kandidaten_als_regel.geschichtet` -
+                  dasselbe Werkzeug, mit dem H-4c geprueft wurde, ob
+                  `oi_aenderung` nur Funding mit Umweg ist
+    Kontrolle     `zufall` als Achse A; Negativkontrolle je Schicht
+
+⚠️ **Der Suchpreis: EINE Hypothese, EINE Zelle.** Nicht mehrere Trendmaße
+gegen mehrere Schichten — das wäre die Parametersuche, vor der 2.49 warnt,
+und bei erwarteten 1–3 Punkten Effekt würde sie zuverlässig Scheinbefunde
+liefern.
+
+##### ⚠️ Nachrangig und getrennt zu halten
+
+Die **Parameter-Neukalibrierung** (Trendkontext 10 statt 60 Tage, RSI
+kürzer) ist berechtigt, aber sie ist ein **zweiter Block** und wird
+getrennt ausgewiesen — sonst ist hinterher nicht zu trennen, ob ein
+Befund von der Hypothese oder von der neuen Parameterwahl kommt.
+
+##### Vorab festgelegt — was als Befund gilt
+
+    TRAEGT       die Umkehr ist in den Turnover-Schichten UNTERSCHIEDLICH
+                 stark, die Differenz ist ausserhalb ihres Bandes, UND
+                 die Kontrollgroesse bleibt still
+    TRAEGT NICHT sonst - dann ist Tempo x Richtung fuer uns erledigt, und
+                 der Gabelpunkt H-2 ist ohne diese Option zu entscheiden
+
+⚠️ **Erwartung, ehrlich vorab:** Bei 1–3 Punkten realistischer Effektgröße
+und einer Schwelle, die 2,67 verlangt, ist auch ein *positiver* Befund
+wahrscheinlich **zu klein für eine Auslösung**. Der Wert läge dann darin,
+ihn als **Sperre** (Schalterform) zu prüfen — nicht als Beitrag.
+
+##### Betriebsrahmen
+
+Nur lokale SQLite-Lesevorgänge, keine API-Abrufe.
+
 #### Was aus dem Altbestand übernommen werden darf — und was nicht
 
 | | Umgang |
