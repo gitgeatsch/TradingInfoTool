@@ -6462,3 +6462,79 @@ Suite unverändert — reine Messwerkzeuge.
 Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading`,
 `messe_kandidaten_redundanz.py`
 Verwandt: F-165 · F-204 · N-17b
+
+## F-206 ✔ N-17b: die zwei bestätigten Kombinationen gemessen — echtes UND, zwei verschiedene Maßstäbe nötig (04.09.2026)
+
+**Nutzerauftrag:** *„rechnen und immer prüfen und gegenprüfen ob
+allfällige Messfehler vorhanden sind"* — die zwei aus der
+Redundanzprüfung (F-205) bestätigten, unabhängigen Kombinationen gegen
+Frontloading messen.
+
+### ⚠️⚠️ Zwei Konstruktionsfehler im eigenen Werkzeug gefunden, beide vom Selbsttest gefangen
+
+**Fehler 1 — die erste Fassung wählte kein echtes UND.** Sie nahm das
+oberste Fünftel des RANG-MINIMUMS beider Größen. Bei zwei unabhängigen
+Größen liegt die Schwelle, die dabei genau 20 % übrig lässt, beim ~55.
+statt beim 80. Perzentil je Größe (`(1-t)² = 0,20 → t ≈ 0,553`) — die
+Kombination wählte damit ein LOCKERERES Kriterium je Einzelgröße als
+die Einzelmessung selbst. Der Selbsttest zeigte prompt: die
+Einzelgröße „a allein" wirkte stärker als die vermeintliche
+Kombination. **Fix:** zwei getrennte 80.-Perzentil-Schwellen, ein
+echtes UND (beide Größen je für sich im eigenen obersten Fünftel).
+
+**Fehler 2 — der eigene Gegentest griff zunächst nicht.** Die
+Reinheits-Prüfung (`_reinheit()`) hatte die UND-Auswahl anfangs
+**selbst nachgebaut**, statt die echte Auswahlfunktion aufzurufen —
+derselbe Fehlertyp wie bei G-b, am selben Tag ein zweites Mal begangen
+(siehe [[feedback_datenquelle_auf_aenderungen_pruefen]],
+Nutzerhinweis dazu). Ein künstlich eingebauter Fehler in der echten
+Auswahlfunktion fiel dem Gegentest deshalb nicht auf. **Fix:** beide
+Stellen (echte Messung UND Reinheits-Check) rufen jetzt dieselbe, EINE
+Auswahlfunktion `_auswahl_je_tag()`. Gegentest danach bestanden.
+
+### ⚠️⚠️ Wichtiger methodischer Fund, der beim Selbsttest-Bauen auffiel: zwei verschiedene Fragen, zwei verschiedene Maßstäbe
+
+Die anteilgewichtete „Wirkung" (`(Mittel Gewählte − Mittel alle) ×
+Anteil Gewählte`, 2.93) beantwortet *„wie viel Gesamtvorteil bringt
+dieser Filter"* — eine breite, aber verdünnte Auswahl kann damit
+rechnerisch mit einer schmalen, reinen Auswahl gleichziehen, WENN die
+breite Auswahl (fast) alle echten Treffer mit einschließt. Die
+**Reinheit** (Überschuss PRO ausgewähltem Anker, ohne die
+Anteils-Gewichtung) beantwortet die andere Frage: *„wie viel besser ist
+ein einzelner Treffer dieser Auswahl im Schnitt."* Beide sind legitim,
+beide gehören berichtet — nicht nur eine.
+
+### Die Messung
+
+**Kombination 1 — `oi_aenderung` UND `funding_extrem`** (93.461 Anker,
+108 Symbole, 1.611 Kalendertage):
+
+    NETTO (Wirkung)   +0,0007 R  [+0,0002 .. +0,0011]  ✔ trägt
+    Reinheit          +0,0148   (oi_aenderung allein +0,0064,
+                                  funding_extrem allein +0,0046)
+
+**Kombination 2 — `turnover` UND `vola`** (110.038 Anker, 65 Symbole,
+2.334 Kalendertage):
+
+    NETTO (Wirkung)   +0,0012 R  [+0,0004 .. +0,0020]  ✔ trägt
+    Reinheit          +0,0158   (turnover allein +0,0154,
+                                  vola allein +0,0123)
+
+### Die Deutung — zwei sehr unterschiedliche Bilder
+
+| | Reinheit Kombi vs. bester Einzelgröße | Deutung |
+|---|---|---|
+| oi_aenderung + funding_extrem | **+0,0148 gegen +0,0064 — 2,3× reiner** | echte Verstärkung durch das Zusammentreffen — der klassische Squeeze-Effekt zeigt sich |
+| turnover + vola | +0,0158 gegen +0,0154 — **praktisch identisch** | `vola` fügt kaum etwas hinzu, sobald `turnover` bekannt ist — `turnover` ist der eigentliche Treiber |
+
+⚠️ **Beide Kombinationen tragen weniger anteilgewichtete Wirkung als
+ihre stärkste Einzelgröße** — sie sind zu selektiv, um als eigenständiger
+Filter mehr Gesamtnutzen zu bringen als die breitere Einzelgröße. Für
+eine Wegwahl-Regel wäre die Reinheit die relevantere Größe (ein
+einzelnes, selteneres, aber klareres Signal); für eine Mengenfrage
+(wie oft lohnt sich der Blick) die Wirkung.
+
+Suite unverändert — reine Messwerkzeuge.
+
+Werkzeug: `messe_kandidaten_kombination.py --selbsttest`
+Verwandt: F-165 · F-205 · N-17b
