@@ -6599,3 +6599,86 @@ Suite unverändert — einmaliges Messwerkzeug, keine Dauerprüfung.
 
 Werkzeug: `messe_sperre_kombi_h20.py`
 Verwandt: F-168 · F-205 · F-206 · N-14
+
+## F-208 ✖ Die Kombination erreicht NICHT F-165s eigene Instrumentwahl-Schwelle — und schlägt `turnover` allein nicht (04.09.2026)
+
+**Nutzerkorrektur:** nicht möglichst viele Kandidaten durchmessen, sondern
+bei einem potentiell tragenden Fund intensiv prüfen, WO und in welcher
+FORM er wirken könnte, bevor weitergesucht wird.
+
+**Erste Korrektur der eigenen Annahme:** die naheliegende Form — ein
+neues „Wegwahl-Gate" als zweite Bewertungsachse Hebel/Spot — ist bereits
+geschlossen. F-163/F-164 zeigen arithmetisch: gebührenfrei liefern
+`hebel × einstieg` und `spot × einstieg` **dieselbe** Potentialzahl. Der
+**einzige** legitime Hebel für die Instrumentwahl ist der **Horizont**
+(`Anforderungen_Umbau_28_08.md` 9.5) — kein zweiter Bewertungsweg.
+
+**F-165 hat genau diesen Weg schon vermessen** und dabei den Maßstab
+gesetzt: *„Die beste Regel verschiebt die Quote von 49 % auf 52 %… zu
+klein, um eine Instrumentwahl darauf zu gründen."* Die offene Frage aus
+F-206 war, ob die Kombination DIESE Schwelle überschreitet — nicht ob sie
+auf der Reinheit oder der anteilgewichteten Wirkung gut aussieht, das
+sind andere Fragen.
+
+### Die Nachmessung, auf derselben Kennzahl wie F-165
+
+611.929 Anker mit Frontloading, 2.713 Kalendertage, Basis 47,7 %
+frontlastig (F-204-bereinigt, 516 Krypto-Symbole).
+
+| Kandidat | gewählt | frontlastig | Unterschied |
+|---|---|---|---|
+| **oi_aenderung+funding_extrem** | 4.808 | 51,1 % | **+3,4 Pkt** |
+| **turnover+vola** | 6.939 | 51,9 % | **+4,2 Pkt** |
+| turnover (allein) | 21.369 | 51,9 % | +4,2 Pkt |
+| schnitt50 (allein) | 122.355 | 51,1 % | +3,4 Pkt |
+| momentum_kurz (allein) | 122.355 | 50,6 % | +2,8 Pkt |
+| vola (allein) | 122.355 | 50,0 % | +2,3 Pkt |
+| funding_extrem (allein) | 47.882 | 49,5 % | +1,7 Pkt |
+| *zufall* (Kontrolle) | 122.355 | 47,7 % | −0,1 Pkt ✔ |
+
+### ⚠️⚠️ Der Befund, sauber gelesen
+
+1. **Keine Kombination schlägt `turnover` allein.** `turnover+vola` ist
+   auf den Punkt identisch mit `turnover` allein (+4,2 Pkt beide) — deckt
+   sich mit F-206s eigenem Befund, dass `vola` nichts Eigenes beiträgt.
+   `oi_aenderung+funding_extrem` (+3,4 Pkt) liegt sogar **unter**
+   `turnover` allein und gleichauf mit `schnitt50` allein.
+2. **Die „2,3× reiner"-Aussage aus F-206 gilt auf der Reinheits-Kennzahl
+   (Überschuss je Ausgewähltem), nicht auf DIESER — der tatsächlich
+   entscheidungsrelevanten Kennzahl.** Eine Auswahl kann pro Treffer
+   reiner sein und trotzdem nicht weiter von der 50/50-Grenze wegkommen
+   als eine breitere Einzelgröße, weil die AND-Verengung auch die
+   günstigsten Treffer der Einzelgrößen mit wegschneidet.
+3. ⚠️⚠️ **Nebenbefund, wichtiger als die Kombination selbst: F-165 lief
+   vor N-19/F-204, auf einer möglicherweise kontaminierten Basis.**
+   Frisch gemessen liegen ALLE Einzelkandidaten heute höher als F-165s
+   Originalzahlen (turnover +4,2 gegen damals +3,2, schnitt50 +3,4 gegen
+   +2,1, momentum_kurz +2,8 gegen +1,8, vola +2,3 gegen +2,2,
+   funding_extrem +1,7 gegen +1,0). Die Zufallskontrolle bleibt bei
+   −0,1 Pkt sauber, das Verfahren ist also nicht der Grund — die
+   zugrundeliegenden Daten haben sich seit F-165 verändert.
+
+### Was das für die Kombination heißt
+
+**Sie erreicht nicht mehr als die beste bereits geprüfte Einzelgröße —
+die Kombinationssuche liefert hier keinen zusätzlichen Fortschritt zur
+Instrumentwahl.** Der Gabelpunkt aus F-164 bleibt damit in derselben Lage
+wie zuvor: kein Terminmarkt-Fund (weder einzeln noch kombiniert) hebt den
+Horizont-Weg über die selbst gesetzte Schwelle.
+
+### ⚠️⚠️ Was das für F-165 selbst heißt — offene Frage, nicht entschieden
+
+F-165s eigenes Urteil („zu klein") stand auf Zahlen, die heute auf
+sauberer Basis alle höher liegen — `turnover` allein legt +1,0 Punkt zu.
+Ob das reicht, das Urteil zu kippen, ist NICHT hier entschieden — dafür
+bräuchte es F-165s volle Rüstung (Kontrollen, Zeithälften, Bänder), nicht
+nur die Punkte-Tabelle. Das ist die eigentlich offene Frage, keine neue
+Kombination.
+
+Kein Selbsttest — reine Kennzahlen-Nachrechnung über bereits geprüfte
+Auswahlfunktionen (`_auswahl_je_tag`, `FL.wahl_je_tag`s Top-k-Regel).
+
+Suite unverändert — einmaliges Messwerkzeug.
+
+Werkzeug: `messe_kombi_gegen_f165_bar.py`
+Verwandt: F-163 · F-164 · F-165 · F-204 · F-206 · F-207
