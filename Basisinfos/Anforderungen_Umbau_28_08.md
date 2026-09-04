@@ -2427,3 +2427,88 @@ Daten versorgt.
 | **Messbasis statt Watchlist** | P6/F-167 — sonst misst man die eigene Auswahl |
 | ⚠️⚠️ **Messung und Anwendung sind GETRENNT gebaut** | Die Produktion liest aus drei der vier Datenbanken **nur die Symbolliste**; `messdaten.db` ist am Notebook bewusst nicht vorhanden. Wer aus einer Konstante im Betriebscode auf Datenbedarf schließt, ohne diese Naht nachzuschlagen, erfindet Hürden (04.09., korrigiert unter N-35) |
 | ⚠️ **R-R10 gilt auch für die eigene Datenlage** | Die Stundendaten existierten, weil sie am 01.09. **bestellt** wurden. Ich habe sie am 04.09. als „Fund" präsentiert. **Vor jeder Aussage über vorhandene Daten: nachschlagen, warum sie da sind** |
+
+---
+
+# ⚠️⚠️⚠️ N-31 — DIE VORABFESTLEGUNG (04.09.2026)
+
+*Nutzervorgabe: „das entspricht unserer Regel — was wir nicht haben,
+simulieren wir."*
+
+## Warum simuliert wird, und nicht gemessen
+
+Aus dem NB-Export (9.474 Rollen-Läufe, bis 03.09.) abgelesen:
+
+    hinein            124.194
+    anlass verliert    29.461   (28,4 %)
+    auswahl verliert   17.666   (42,7 %)
+    wiederholung       58.729   (94,1 %)   <- der dominante Filter
+    ENTSCHEIDER         1.849 Anker gesehen, 1.576 verworfen (85,2 %)
+    heraus              2.115
+
+**Die Beiträge wirken auf 1.849 von 124.194 Ankern — 1,5 %.** Kalibriert
+wurden sie auf 612.000–724.000 rohen Ankern.
+
+⚠️ **Und die beitragsbasierte Entscheidung läuft erst seit dem 02.09.**
+Davor verwarf die Stufe mit „trägt sich nicht" (der alten
+Kostenprüfung); die Umschaltung ist im Log tagesgenau sichtbar
+(01.09.: 44/0 · 02.09.: 15/16 · 03.09.: 0/25). **Im Export sind das
+41 beitragsbasierte Entscheidungen** — nach eigenem Maßstab nichts.
+
+> **N-31 ist aus Produktionsdaten heute nicht beantwortbar. Die
+> Selektionsregel ist aber bekannt und auf der Historie nachbaubar.**
+
+## Die Selektionsregel — aus dem Betriebslog ABGELESEN, nicht geschätzt
+
+    Grund     "Rang N von 41 nach der Entwicklung der letzten
+               250 Handelstage"                  17.660 Verwerfungen
+    Rang 2    nur     11 mal verworfen
+    Rang 3    550 mal verworfen                  ->  k = 2
+    Feld      Median 41 Werte je Lauf
+
+**Selektionsstärke: 2 von 41 ≈ 5 % je Tag, nach 250-Tage-Momentum.**
+
+## Was gemessen wird
+
+    Frage       Tragen `funding_fuenftel` und `turnover_fuenftel` auch auf
+                der SELEKTIERTEN Menge - dem oberen Rand des
+                250-Tage-Momentum-Rangs?
+    Horizont    H20 - die Geometrie, auf der beide registriert sind
+    Rang        wie in der Produktion ueber die MESSBASIS gebildet, nicht
+                ueber die selektierte Teilmenge (`marktrang` tut genau das)
+    Stufen      5 % (die Produktion) · 10 % · 20 % · 100 % (keine Auswahl)
+                -> eine Dosis-Wirkungs-Kurve, keine freie Suche
+    ⚠️ Ent-     die Entscheidung haengt an der 5-%-Stufe. Die uebrigen
+    scheidung   sind Einordnung und duerfen den Befund nicht allein tragen.
+
+⚠️ **DIE TAGESKLAMMER TRAEGT HIER NICHT.** Bei 5 % je Tag bleiben zu
+wenige Werte für einen Vergleich innerhalb des Tages. Nach **Methodik
+2.109** wird deshalb **gepoolt gemessen und gepoolt gemischt** — die
+Kontrollgröße durchläuft dieselbe Verengung.
+
+⚠️ **GEPAARTER VERGLEICH (2.105):** gemessen wird die **Differenz**
+zwischen selektierter und freier Menge, nicht zwei Bänder nebeneinander.
+
+⚠️ **POSITIVKONTROLLE AUF DIE DIFFERENZ.** F-183 hat gezeigt, dass genau
+sie fehlen kann: dort fand die Anlage einen aufgeprägten Abfall von
+0,02 R bei Funding **nicht** — und damit war „kein Abfall" dort keine
+Aussage. Findet sie ihn hier nicht, gilt derselbe Vorbehalt.
+
+## Vorab festgelegt — was als Befund gilt
+
+    TRAEGT WEITER   der Beitrag traegt auf der 5-%-Menge, UND der gepaarte
+                    Abfall gegen die freie Menge ist nicht von null zu
+                    trennen, UND die Positivkontrolle auf die Differenz
+                    feuert
+    FAELLT AB       der Abfall ist von null zu trennen -> die Beitraege
+                    sind auf der Menge, auf der sie WIRKEN, schwaecher als
+                    dort, wo sie GEMESSEN wurden
+    NICHT ENTSCHEIDBAR  die Positivkontrolle feuert nicht (2.88)
+
+## ⚠️ Die Näherung, benannt statt versteckt
+
+Die Produktion wählt 2 aus ~41 **Watchlist**-Werten; die Historie kennt
+diese Watchlist nicht rückwirkend. Nachgebaut wird deshalb die
+**Selektionsstärke** (oberste 5 % je Tag), nicht die absolute Zahl. Das
+hält die Schärfe des Filters fest und gibt zugleich eine brauchbare
+Stichprobe — die absolute Zahl 2 wäre je Tag zu klein für jede Statistik.

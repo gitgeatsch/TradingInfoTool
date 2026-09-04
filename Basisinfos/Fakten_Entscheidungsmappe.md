@@ -7037,3 +7037,128 @@ Werkzeug: `messe_umkehr_je_turnover.py` (`--selbsttest` gegen zwei Welten,
 Gegentest mit zerstörter Fächerbildung bestanden),
 `rechne_kandidaten_beitrag.py --horizonte 20`
 Verwandt: F-164 · F-165 · F-168 · F-183 · F-203 · F-207 · F-210 · 9.6 N-17d
+
+
+## F-212 ✔ N-31: die Beiträge fallen auf der SELEKTIERTEN Menge NICHT ab — Funding trägt dort dreimal stärker (04.09.2026)
+
+Vorabfestlegung: `Anforderungen_Umbau_28_08.md`, Abschnitt **N-31**.
+Nutzervorgabe: *„das entspricht unserer Regel — was wir nicht haben,
+simulieren wir."*
+
+### Warum simuliert wurde — aus dem NB-Export abgelesen
+
+9.474 Rollen-Läufe (bis 03.09.), der echte Trichter:
+
+| Stufe | bestanden | verloren | % |
+|---|---|---|---|
+| auftrag | 124.194 | 10.790 | 8,0 % |
+| anlass | 74.348 | 29.461 | 28,4 % |
+| auswahl | 23.699 | 17.666 | 42,7 % |
+| **wiederholung** | 3.702 | **58.729** | **94,1 %** |
+| **entscheider** | 273 | 1.576 | 85,2 % |
+| heraus | 2.115 | | |
+
+**Die Beiträge wirken auf 1.849 von 124.194 Ankern — 1,5 %.** Kalibriert
+wurden sie auf 612.000–724.000 rohen Ankern.
+
+⚠️ **Und die beitragsbasierte Entscheidung läuft erst seit dem 02.09.**
+Davor verwarf die Stufe mit „trägt sich nicht" (der alten Kostenprüfung);
+tagesgenau sichtbar: 01.09. 44/0 · 02.09. 15/16 · 03.09. 0/25 — die
+Umschaltung aus F-176. **Im Export sind das 41 beitragsbasierte
+Entscheidungen** — nach eigenem Maßstab nichts. Aus Produktionsdaten ist
+N-31 heute nicht beantwortbar.
+
+### Die Selektionsregel — aus dem Betriebslog ABGELESEN, nicht geschätzt
+
+    "Rang N von 41 nach der Entwicklung der letzten 250 Handelstage"
+    Rang 2 nur 11x verworfen · Rang 3 550x   ->  k = 2 von ~41  ~  5 %
+
+Nachgebaut wurde die **Selektionsstärke** (oberste 5 % je Tag nach
+250-Tage-Momentum), nicht die absolute Zahl — die wäre je Tag zu klein.
+
+### ⚠️⚠️ Fünf eigene Fehler, alle von den Kontrollen gefunden
+
+| | Fehler | wie gefunden |
+|---|---|---|
+| 1 | Kontrolle bei „keine Auswahl" bitgleich mit der Messung | NETTO und Kontrolle exakt +0,0940 |
+| 2 | zehn Mischungen **aneinandergehängt** statt gemittelt → n×10, Band ×⅓ | Kontrollen meldeten „TRÄGT", wo nichts sein durfte |
+| 3 | Positivkontrolle testete die **falsche Richtung** | „Abfall aufgeprägt" ließ die Zahl *steigen* |
+| 4 | Tagesmediane aus **zwei** Ankern | +0,4469 R — das Achtzehnfache des registrierten Werts |
+| 5 | ⚠️⚠️ **falsche Kennzahl**: `median(frei) − median(gesperrt)` statt `median(frei) − median(ALLE)` | **Reproduktionskontrolle: Faktor 3,8 bei BEIDEN Beiträgen** |
+
+**Fehler 5 war der entscheidende**, und ihn hat genau die Kontrolle
+gefunden, die sich in F-207 und F-210 bewährt hat: *reproduziert das
+Werkzeug den bekannten Wert?* Ein bei Funding **und** Turnover identischer
+Faktor 3,8 ist die Signatur eines Definitionsunterschieds — Rauschen sieht
+anders aus. `messe_regel_wirksamkeit.wirkung()` rechnet
+`median(y2[frei]) − median(y2)`.
+
+**Nach der Korrektur reproduziert es:**
+
+    Funding    +0,0274 R   registriert +0,0246   ✔
+    Turnover   +0,0635 R   registriert +0,0616   ✔
+
+### Der Befund — zwei Statistiken, dieselbe Richtung
+
+**FUNDING, Tagesklammer (die registrierte Statistik):**
+
+| | Wirkung | Band | |
+|---|---|---|---|
+| frei (338.738 Anker) | +0,0274 R | [+0,0101 .. +0,0414] | ✔ trägt |
+| **5 % (die Produktion)** | **+0,0897 R** | [+0,0362 .. +0,1527] | ✔ trägt |
+| **gepaart 5 % − frei** | **+0,0720 R** | [+0,0230 .. +0,1283] | ✔ **ZUWACHS** |
+
+**FUNDING, gepoolt (2.109) — dieselbe Richtung, unabhängig gerechnet:**
+
+    frei    -0,0003 R [-0,0037 .. +0,0032]
+    5 %     +0,0282 R [+0,0082 .. +0,0540]
+    gepaart +0,0284 R [+0,0106 .. +0,0548]   ZUWACHS
+
+**Die Dosis-Wirkungs-Kurve ist monoton:** 5 % +0,0282 · 10 % +0,0172 ·
+20 % +0,0050 · frei −0,0003. **Je schärfer die Auswahl, desto stärker der
+Beitrag.** Alle Negativkontrollen liegen bei ±0,002.
+
+> **Die Sorge hinter N-31 bestätigt sich für Funding NICHT.** Der Beitrag
+> fällt auf der Menge, auf der er angewandt wird, nicht ab — er trägt dort
+> rund **dreimal stärker** als dort, wo er gemessen wurde.
+
+### ⚠️ TURNOVER bleibt NICHT ENTSCHEIDBAR
+
+    frei    +0,0144 R [+0,0053 .. +0,0262]  ✔ traegt
+    5 %     +0,0216 R [-0,0199 .. +0,0756]  nicht trennbar (nur 5.657 Anker)
+    gepaart +0,0071 R [-0,0396 .. +0,0566]  nicht trennbar
+
+Und die **Positivkontrolle auf die Differenz feuert nicht** — ein
+aufgeprägter Abfall von 0,02 R wird nicht gefunden. Nach **Methodik 2.88**
+ist „kein Abfall" hier damit **keine Aussage**, genau wie bei Funding in
+F-183. Grund: Turnover hat nur ~66 Symbole je Tag; 5 % davon sind drei
+Anker, unter der Tagesklammer gar nicht messbar (0 verwertbare Tage).
+
+### Einschränkungen, vollständig
+
+1. **Nur 14 Blöcke** auf der 5-%-Stufe — das Band deckt nicht vollständig
+   (2.95). Die Richtung ist über zwei unabhängige Statistiken konsistent,
+   die Zahl ist es nicht.
+2. **Die Positivkontrolle löst kleine Abfälle nicht auf** — sie bewegt
+   sich korrekt, aber gedämpft.
+3. **Näherung der Selektion:** Selektionsstärke nachgebaut, nicht die
+   Watchlist — die Historie kennt sie nicht rückwirkend.
+4. ⚠️ **Nicht nachgebaut sind `anlass` und `wiederholung`** — und
+   `wiederholung` ist mit 94,1 % der stärkste Filter überhaupt. Gemessen
+   ist damit die Wirkung der **Auswahl**, nicht die des ganzen Trichters.
+
+### Was folgt
+
+✔ **Für Funding ist die N-31-Sorge ausgeräumt** — mit Reproduktionskontrolle
+belegt und über zwei Statistiken konsistent.
+⚠️ **Für Turnover bleibt sie offen**, aus Datenlage, nicht aus Befund.
+⚠️⚠️ **Der stärkste Filter des Trichters (`wiederholung`, 94,1 %) ist nie
+gegen Ergebnisse gemessen worden** — er nimmt mehr als alle anderen Stufen
+zusammen. Das ist der nächste Punkt, nicht ein weiterer Kandidat.
+
+Suite unverändert — reine Messwerkzeuge.
+
+Werkzeuge: `messe_beitrag_auf_auswahl.py` (`--selbsttest` gegen zwei
+Welten, Gegentest mit zerstörter Auswahllogik bestanden),
+`pruefe_n31_tagesklammer.py` (Reproduktionskontrolle)
+Verwandt: F-176 · F-182 · F-183 · N-31 · Methodik 2.88, 2.95, 2.104, 2.105, 2.109
