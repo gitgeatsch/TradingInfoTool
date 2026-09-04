@@ -2080,3 +2080,102 @@ gesammelt, damit sie nicht erneut verloren gehen.
 | N-23–N-30 | kleinere Punkte | nach Bedarf, konkurrieren nicht mit S0–S6 |
 
 Verwandt: **S6** (Messbasis, jetzt mit Zahlen) · **N-16** (jetzt mit N-16e) · CLAUDE.md (übergeordnetes Ziel)
+
+---
+
+# ⚠️⚠️ STAND NACH DEM 04.09. — was heute abgeschlossen wurde und was OFFEN bleibt
+
+*Nutzervorgabe 03.09.: „Wir müssen zukünftig alle anstehenden Themen in
+Pläne übernehmen, sonst vergessen wir diese." Dieser Abschnitt hält den
+Stand nach dem Messtag fest.*
+
+## Was am 04.09. ABGESCHLOSSEN wurde
+
+| | Ergebnis | Fakt |
+|---|---|---|
+| **S2 / N-17-0** | ✖ Nullbefund — Stop/Volatilität sagen die Dauer nicht voraus | F-202 |
+| **N-17a** | ⚠️ H2-Kalibrierung ernüchternd — Schwelle ohne Trennschärfe | F-203 |
+| **N-17b** | ✔ vier neue Kandidaten, Redundanz geprüft, zwei Kombinationen gemessen | F-205, F-206 |
+| **N-17c** | ✔ die **Brücke** gebaut: Beitragspunkte statt „trägt/trägt nicht" | F-210 |
+| **N-17d** | ✖ Hypothese widerlegt (umgekehrtes Vorzeichen), `vola` fällt an der Validierung | F-211 |
+| Nebenprüfungen | Kombination verbessert die live Sperre nicht (F-207); F-165 auf sauberer Basis bestätigt (F-209) | F-207–F-209 |
+
+**Der harte Kern in einem Satz:** Für die Schwelle 0,080 R sind **+2,67
+Beitragspunkte** nötig; der beste Kandidat auf der Hebel-Geometrie liefert
+**+0,51**. Die Fachliteratur nennt **1–3 Punkte** als realistisch für
+einen Einzelfaktor — die Schwelle verlangt also mehr, als ein einzelner
+Faktor überhaupt hergeben kann.
+
+## ⚠️⚠️⚠️ N-31 — DIE OFFENE LÜCKE, die alles andere überwiegt
+
+> **Tragen die registrierten Beiträge auf der Ankermenge, die die AUSWAHL
+> übrig lässt — oder nur auf der freien Menge?**
+
+**Warum das der wichtigste offene Punkt ist:** Alle Beiträge — auch die
+**live registrierten** Funding und Turnover — sind auf **rohen** Ankern
+gemessen (516 Symbole × ~2.900 Tage). Die Kette bewertet aber nicht diese
+Menge, sondern was nach zwölf Trichterstufen übrig ist, und die Auswahl
+*„wählt immer dieselben"*.
+
+**F-183** (03.09.) hat die Frage gestellt — *„eine Größe kann auf der
+freien Menge trennen und auf der selektierten nicht"* — und nur für die
+**Ausstiegs**seite halb beantwortet. Für den Einstieg lautete die
+Begründung *„der Zeitpunkt ist frei wählbar"*: das verteidigt die
+**Zeit**achse, **nicht die Asset-Achse**.
+
+    Zeitachse    ✔ verteidigt (F-183)
+    Asset-Achse  ✖ fuer KEINEN Beitrag geprueft, auch nicht fuer die
+                   live registrierten
+
+⚠️ **Das ist ein Befund über das laufende System, nicht über einen
+Kandidaten** — und deshalb vorrangig vor jedem neuen Kandidaten.
+
+**Datenlage:** vorhanden. NB-Export mit den echten Trichterdurchläufen
+(`K:\My Drive\Claude_Austauschordner\DB_Backups\`, Stand 03.09.).
+**Werkzeuge:** `rechne_sperren_zusammen.py`, `pruefe_kette_je_asset.py`,
+`rechne_takt_je_asset.py` — alle vorhanden, keines dafür benutzt.
+
+## N-32 — die Schwelle selbst ist der Engpass, nicht die Kandidaten
+
+Aus F-210 + Literatur: Kein Einzelfaktor erreicht +2,67 Punkte. Entweder
+- die Schwelle 0,080 ist für die kurze Geometrie zu hoch angesetzt
+  (sie wurde auf **H20** kalibriert — R-R9), **oder**
+- es braucht mehrere Beiträge gemeinsam (dann ist N-31 die Vorfrage).
+
+⚠️ **Nutzerentscheidung**, nicht durch Messung zu ersetzen.
+
+## N-33 — H-2 (der Gabelpunkt) ist entscheidungsreif, aber NICHT entschieden
+
+Aus F-163/F-164: gebührenfrei liefern `hebel` und `spot` **dieselbe**
+Bewertungszahl; der einzige legitime Hebel ist der **Horizont**. Nach
+F-165/F-205–F-211 ist die verfügbare Kandidatenmenge dafür
+**vollständig durchgemessen**, mit konsistentem Nein.
+
+    Entweder  der Hebel bleibt ausgesetzt
+    oder      er wird bewusst als AUSFUEHRUNGSVARIANTE ohne eigene
+              Begruendung gefuehrt (Stop-Rechnung, wie heute)
+
+⚠️ **Nutzerentscheidung.** Die Datenlage dafür ist jetzt vollständig.
+
+## N-34 — stehende Vorgaben, heute ergänzt
+
+| | |
+|---|---|
+| **Keine Sperre in erster Instanz** | Ein Kandidat gehört zuerst als **Beitrag** geprüft. Der Trichter hält mit zwölf Stufen ohnehin fast alles; eine 13. Sperre geht gegen *„mehr Signale durch Qualität"* und *„aufmachen statt einschränken"* |
+| **Beitragstabelle ist KEIN Nachweis** | Erst die Regel-Validierung (Band, Hälften, Positivkontrolle) entscheidet. Bei `vola` zeigten beide in verschiedene Richtungen — F-211, dieselbe Falle wie der Schnittabstand am 31.08. |
+| **Parameter horizontproportional** | Gemessene Handelsdauer **2,0 Tage** (F-202). Rückblicke von 25–125× dieser Dauer messen etwas anderes als den Trade |
+| **Die Einzelmessung ist die Fingerübung** | Was zählt, ist die Wirkung **in der Kette** — siehe N-31 |
+
+## Die Reihenfolge von hier
+
+    1  N-31   die selektierte Ankermenge  <- VORRANG, betrifft das
+              laufende System
+    2  N-33   H-2 entscheiden (Nutzer)    <- Datenlage vollstaendig
+    3  N-32   Schwelle (Nutzer)           <- haengt an N-31
+    4  N-18/N-19/N-20   die 4 Nicht-Krypto-Klassen (unveraendert offen)
+    5  N-16d  Ausstiegsbewertung (Vorbedingung N-16e ist erfuellt)
+
+⚠️ **Nicht auf dieser Liste:** weitere Einzelkandidaten (BTC-Führung,
+Bodenbildung). Sie sind nicht falsch, aber nach F-211 nachrangig — solange
+N-31 offen ist, weiß niemand, ob ein neuer Kandidat in der Kette
+überhaupt ankommt.
