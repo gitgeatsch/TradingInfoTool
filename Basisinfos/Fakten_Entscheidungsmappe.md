@@ -6887,3 +6887,153 @@ auf die Produktionskette).
 
 Werkzeug: `rechne_kandidaten_beitrag.py --horizonte 2,3`
 Verwandt: F-164 · F-165 · F-203 · F-206 · F-208 · F-209 · 9.6 N-17c
+
+## F-211 ⚠️⚠️ N-17d/N-17e: die Hypothese fällt, drei eigene Fehler fallen mit — und `vola` läuft in die Schnittabstand-Falle (04.09.2026)
+
+Vorabfestlegung: 9.6 **N-17d** (Commit `2fcd9f8`). Nutzerhinweise während
+des Laufs: *„wir haben eine Bewertungskette und Trichter, die
+Einzelmessung ist nur die Fingerübung"* und *„es soll keine Sperre werden
+in erster Instanz"*.
+
+### 1 — Die vorab benannte Hypothese ist widerlegt, mit umgekehrtem Vorzeichen
+
+H-N17d (Lee/Swaminathan): die Kurzfrist-Umkehr sollte bei **niedrigem**
+Turnover stark sein und bei hohem kippen. Gemessen auf H2, gepaart
+(2.105), Kontrollgröße still:
+
+| | Wirkung |
+|---|---|
+| Fach 0, NIEDRIGER Turnover | +0,0067 R [+0,0031 .. +0,0098] ✔ trägt |
+| Fach 1, HOHER Turnover | +0,0128 R [+0,0080 .. +0,0175] ✔ trägt |
+| **gepaart NIEDRIG − HOCH** | **−0,0061 R [−0,0116 .. −0,0010]** ⚠️ **UMGEKEHRT** |
+
+Die Umkehr ist bei **hohem** Turnover fast doppelt so stark. Das Band
+schließt Null aus, beide Hälften einig, `zufall` in allen Feldern still.
+
+⚠️ **Eigener Fehler 1: Vorabfestlegung und Code widersprachen sich.** Die
+schriftliche Bedingung lautete *„das Band der DIFFERENZ schließt die Null
+aus"* — richtungsfrei. Der Code verlangte ein **positives** Band und gab
+„trägt nicht" aus. Nach dem geschriebenen Kriterium ist die Interaktion
+**bestätigt** — nur mit dem anderen Vorzeichen.
+
+**Praktisch bringt die Schichtung dennoch nichts:** ungeschichtet liegt
+`momentum_kurz` bei **+0,0132 R** — besser als jedes der beiden Fächer.
+Die Bedingung auf Turnover kostet 83 % der Anker für null Gewinn.
+
+### 2 — ⚠️ Eigener Fehler 2: mein Monotonie-Maßstab war strenger als der des laufenden Systems
+
+N-17c hatte `momentum_kurz` mit „nicht monoton → nicht nutzbar"
+verworfen. Nachgeprüft, was live registriert ist:
+
+    funding_fuenftel    +0.82 +1.30 +0.12 -0.54 -1.70   monoton: NEIN  <- LIVE
+    turnover_fuenftel   +3.15 +0.83 +0.22 -1.79 -2.40   monoton: JA
+
+**Der live registrierte Funding-Beitrag hat exakt dieselbe Form** — den
+Buckel bei Fünftel 1. Die Ablehnung war damit schematisch, nicht
+begründet.
+
+### 3 — Auf der Kettengeometrie H20 nachgerechnet
+
+| Kandidat | H20 Punkte je Fünftel | Spanne | |
+|---|---|---|---|
+| turnover | +3,40 +0,91 +0,31 −1,70 −2,92 | +6,32 | ✔ monoton |
+| **vola** | **+1,60 +0,84 +0,57 −0,67 −2,34** | **+3,95** | ✔ monoton |
+| momentum_kurz | −0,61 +0,84 +0,60 +0,79 −1,62 | +1,01 | ✖ |
+| *zufall* | −0,18 +0,09 +0,09 +0,09 −0,09 | −0,09 | ✔ flach |
+
+⚠️ **`momentum_kurz` ist über die Horizonte NICHT formstabil:** auf H2/H3
+fallend, auf H20 ein umgekehrtes U (beide Ränder schlecht). Als
+abgestufter Beitrag damit unbrauchbar — unabhängig von der Monotonie.
+
+⚠️ **Gegenprüfung turnover H20:** +3,40/+0,91/+0,31/−1,70/−2,92 gegen
+registriert +3,15/+0,83/+0,22/−1,79/−2,40 — größte Abweichung **0,52
+Punkte**. Deutlich mehr als die 0,07 der H2-Gegenprobe. Kein Fehler
+erkennbar (mehr Historie, F-204-bereinigte Basis), aber **beim nächsten
+Nachrechnen zuerst hier hinsehen**.
+
+### 4 — ⚠️⚠️ `vola` sah nach dem Fund aus — und fällt an der Regel-Validierung
+
+Die Tabelle ist monoton und mit Spanne 3,95 groß genug, um allein die
+Schwelle fast zu tragen. Zwei Prüfungen dazu:
+
+**a) Die Nenner-Falle (F-164) ausgeschlossen.** `vola` = `breite[i]` /
+250-Tage-Median, und `breite[i]` steht im **Nenner** der Zielgröße. Mit
+einem unabhängigen Nenner gerechnet, bleibt die Tabelle monoton und wird
+sogar **stärker** (Spanne 13,01). Der Befund ist also nicht vom Nenner
+erzeugt — die plausible Artefaktrichtung wäre ohnehin die umgekehrte.
+
+**b) Dieselbe Validierung, die Funding und Turnover bestanden haben —
+und hier scheitert sie:**
+
+| | |
+|---|---|
+| NETTO | +0,0268 R **[−0,0061 .. +0,0568]** ✖ nicht trennbar |
+| erste / zweite Hälfte | +0,0478 / +0,0057 — **uneins** |
+| ⚠️ Positivkontrolle **+0,02 R** | **feuert NICHT** |
+| Positivkontrolle +0,05 R | feuert |
+
+> **Die Messung findet einen aufgeprägten Effekt von 0,02 R nicht.**
+> Unterhalb von 0,05 R ist sie an dieser Geometrie blind — jede Aussage
+> über `vola` in diesem Bereich ist damit gegenstandslos.
+
+⚠️⚠️ **Das ist exakt die Schnittabstand-Falle vom 31.08.:** eine
+eindrucksvolle Beitragstabelle, die als **Regel** nicht trägt — und
+damals wurde sie trotzdem registriert. Diesmal nicht.
+
+**Methodische Lehre, allgemein:** Eine Beitragstabelle allein ist **kein**
+Nachweis. Sie zeigt einen Zusammenhang je Fünftel; erst die
+Regel-Validierung mit Band, Hälften und Positivkontrolle sagt, ob er
+trägt. Beide gehören zusammen — bei `vola` zeigen sie in verschiedene
+Richtungen, und die Validierung entscheidet.
+
+### 5 — ⚠️⚠️ Eigener Fehler 3, vom Nutzer benannt: alles auf ROHEN Ankern gemessen
+
+*„Wir haben eine Bewertungskette und Trichter, die Einzelmessung ist nur
+die Fingerübung."* Trifft zu — und zwar für **jeden** heutigen Befund:
+
+| Befund | Basis | Schwere |
+|---|---|---|
+| F-207 | 123.958 rohe Anker | Anspruch war die **live** Sperre → unterbelegt, aber negatives Ergebnis (konservative Richtung) |
+| F-208 | rohe Anker | Vergleich fair, **Deutung** beansprucht Kettenrelevanz |
+| F-209 | rohe Anker | als Reproduktion gültig, erbt F-165s Grenze |
+| F-210 | rohe Anker | Relativaussage gültig (registrierte Stufen genauso gemessen), **Absolutaussage unterbelegt** |
+| F-211 | 724.400 rohe Anker | voll betroffen |
+
+⚠️ **Der Fehler ist systemisch, nicht neu:** auch die registrierten
+Beiträge sind so gemessen. **F-183** (03.09.) hat die Frage bereits
+gestellt — *„eine Größe kann auf der freien Menge trennen und auf der
+selektierten nicht"* — und sie nur **halb** beantwortet, nur für die
+**Ausstiegs**seite. Für den Einstieg lautete die Begründung *„der
+Zeitpunkt ist frei wählbar"*; das verteidigt die **Zeit**achse, nicht die
+**Asset**-Achse — denn Stufe 8 wählt vorher aus, und die Auswahl wählt
+immer dieselben.
+
+**Die präzise offene Lücke: freie Zeitachse verteidigt, selektierte
+Asset-Achse für keinen einzigen Beitrag geprüft — auch nicht für die live
+registrierten.**
+
+### 6 — Nutzervorgabe für die Verwertung
+
+*„Es soll keine Sperre werden in erster Instanz."* Ich hatte dreimal
+„als Sperre prüfen" vorgeschlagen — gegen die stehenden Vorgaben *„mehr
+Signale durch Qualität"* und *„aufmachen statt einschränken"*, und bei
+einem Trichter, der mit zwölf Stufen ohnehin fast alles hält. Ein
+Kandidat gehört zuerst als **Beitrag** geprüft.
+
+### Fazit
+
+**Kein neuer verwendbarer Beitrag.** `momentum_kurz` ist nicht formstabil,
+`vola` besteht die Validierung nicht, die Turnover-Schichtung bringt
+nichts. Die Hypothese H-N17d ist mit umgekehrtem Vorzeichen bestätigt,
+aber praktisch wertlos.
+
+**Der eigentliche Ertrag sind die drei eigenen Fehler** — und die offene
+Lücke aus Punkt 5, die wichtiger ist als jeder neue Kandidat, weil an ihr
+die **bestehende** Bewertung hängt.
+
+Suite unverändert — reine Messwerkzeuge.
+
+Werkzeug: `messe_umkehr_je_turnover.py` (`--selbsttest` gegen zwei Welten,
+Gegentest mit zerstörter Fächerbildung bestanden),
+`rechne_kandidaten_beitrag.py --horizonte 20`
+Verwandt: F-164 · F-165 · F-168 · F-183 · F-203 · F-207 · F-210 · 9.6 N-17d
