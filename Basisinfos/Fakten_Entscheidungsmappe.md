@@ -2976,8 +2976,13 @@ Trendlage (`schnitt50`, `momentum_kurz`) und Positionierungs-Extreme
 (`funding_extrem`). **Nichts davon ist eine eigene Erfindung** — gemessen
 wurde, ob das Bekannte bei uns trägt. Es trägt, aber schwach.
 
+⚠️ **Diese Zahlen liefen vor N-19/F-204** und damit möglicherweise auf
+kontaminierter Basis (798 fremde Symbole in `messe_eigenschaft_beitrag.
+lade()`, siehe F-204) — siehe **F-209** für die vollständige Nachmessung
+auf sauberer Basis: das Urteil bleibt bestehen.
+
 Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading`
-Verwandt: F-163 · F-164 · `Anforderungen_Umbau_28_08.md` 9.5 · Methodik 2.95
+Verwandt: F-163 · F-164 · F-209 · `Anforderungen_Umbau_28_08.md` 9.5 · Methodik 2.95
 
 
 ---
@@ -6682,3 +6687,90 @@ Suite unverändert — einmaliges Messwerkzeug.
 
 Werkzeug: `messe_kombi_gegen_f165_bar.py`
 Verwandt: F-163 · F-164 · F-165 · F-204 · F-206 · F-207
+
+## F-209 ✔ F-165 auf sauberer Basis nachgemessen — das Urteil bleibt bestehen (04.09.2026)
+
+**Nutzervorgabe:** *„wenn wir hier erfolgreich sein wollen, müssen wir
+alles korrekt analysieren und auch bestehende Ergebnisse in Zusammenhang
+bringen und ggf. neu bewerten."* Direkte Antwort auf die in F-208
+aufgeworfene, offen gelassene Frage: gilt F-165s „zu klein für eine
+Instrumentwahl" noch, wenn man es auf der F-204-bereinigten Basis (516
+statt möglicherweise 1314 kontaminierte Symbole) mit derselben vollen
+Rüstung neu rechnet — Positivkontrolle, Vertrauensband, Zeithälften,
+Zufallskontrolle?
+
+**Keine neue Datei nötig** — `messe_form_kurz_gegen_lang.py --ziel=
+frontloading` ist unverändert dasselbe Werkzeug, das F-165 gemessen hat;
+es liest `reihen` bereits über das (seit F-204 gefixte)
+`messe_eigenschaft_beitrag.lade()`. Einfach neu ausgeführt.
+
+### Das Ergebnis: 612.048 Anker, 2.713 Kalendertage, 516 saubere Krypto-Symbole
+
+**Positivkontrolle feuert** (Kunstgröße +0,0402 R, beide Hälften einig).
+**Zufallskontrolle bleibt still** in beiden Richtungen — das Verfahren
+erzeugt keinen Vorteil aus dem Nichts.
+
+**Basisrate: 47,7 % frontlastig** (F-165 original: „Erwartung 0,296" auf
+anderer Symbolbasis, aber vergleichbare Größenordnung) — **die Marktlage
+selbst hat sich durch den Datenfix NICHT verschoben**, nur die
+Symbolzusammensetzung.
+
+**Die fünf Original-Kandidaten aus F-165 tragen weiterhin, alle im
+`oben`-Fall, beide Hälften einig:**
+
+| Kandidat | F-165 (01.09., vor F-204) | F-209 (04.09., sauber) | Urteil |
+|---|---|---|---|
+| turnover | +0,0041 R [+0,0026..+0,0071] | +0,0040 R [+0,0025..+0,0067] | ✔ **praktisch unverändert** |
+| funding_extrem | +0,0011 R [+0,0003..+0,0017] | +0,0010 R [+0,0003..+0,0016] | ✔ **praktisch unverändert** |
+| vola | +0,0013 R [+0,0006..+0,0021] | +0,0024 R [+0,0015..+0,0032] | ✔ höher, gleiches Vorzeichen |
+| momentum_kurz | +0,0011 R [+0,0006..+0,0016] | +0,0034 R [+0,0027..+0,0039] | ✔ höher, gleiches Vorzeichen |
+| schnitt50 | +0,0010 R [+0,0003..+0,0017] | +0,0041 R [+0,0032..+0,0050] | ✔ höher, gleiches Vorzeichen |
+
+⚠️ **Zwei der fünf (turnover, funding_extrem) sind praktisch identisch mit
+F-165 — genau die beiden, deren Quelldatenbank** (`funding_historie.db`,
+`onchain_historie.db`) **faktisch krypto-exklusiv ist** (dieselbe
+Beobachtung wie bei F-203/F-204: diese Quellen waren nie ernsthaft
+kontaminiert). Die drei reinen Kursreihen-Kandidaten (vola, momentum_kurz,
+schnitt50) liegen heute höher — plausibel, weil ihre Berechnung über
+`reihen` läuft und dort die 516-Symbol-Bereinigung tatsächlich griff.
+
+### ⚠️⚠️ Die entscheidende Frage: ändert das die GRÖSSENORDNUNG der Aussage?
+
+**Nein.** Die Basisrate bleibt bei rund 48 %, die tragenden Kandidaten
+verschieben sie auf rund 50–52 % — **dieselbe Größenordnung wie F-165**,
+nur mit engeren Bändern (mehr Auflösung, nicht mehr Wirkung). Die
+qualitative Aussage aus F-165 — *„ein Schalter, der bei 52 statt 49 von
+hundert richtig liegt, ist keine Begründung im Sinne des übergeordneten
+Ziels"* — **hält auf der sauberen Basis unverändert.**
+
+### Nebenbefund: `oi_aenderung` trägt als EINZIGER Kandidat in BEIDEN Richtungen
+
++0,0015 R oben, +0,0009 R unten, beide Hälften einig. Ein OI-Aufbau **in
+irgendeine Richtung** (nicht nur ein Squeeze nach oben) hängt schwach mit
+mehr Frontloading zusammen — ungewöhnliches Muster, aber in derselben
+kleinen Größenordnung wie alle anderen, kein eigener Anlass für eine
+neue Bewertung.
+
+### Was offen bleibt
+
+Die zwei Gegenprüfungen aus F-165 (Rangkorrelation-Unabhängigkeit der
+Kandidaten, Schichtentest turnover|vola) wurden hier NICHT wiederholt —
+sie beantworten „sind die Kandidaten unabhängig voneinander", nicht die
+hier geprüfte Frage „hat sich die Größenordnung verschoben". Kein
+Hinweis, dass sie betroffen wären, aber auch nicht erneut geprüft.
+
+### Fazit für die Gesamtlage
+
+**F-165 bleibt gültig — auf der sauberen Basis sogar mit etwas mehr
+Auflösung bestätigt, nicht widerlegt.** Der Gabelpunkt aus F-164 bleibt
+in derselben Lage: kein Kursreihen- oder Terminmarkt-Kandidat, einzeln
+oder kombiniert (F-206, F-208), hebt den Horizont-Weg über die selbst
+gesetzte Schwelle. Die in F-208 aufgeworfene Sorge — die alte Basis könnte
+das Urteil verzerrt haben — war berechtigt zu prüfen, trägt aber nicht:
+die Datenveränderung war real, ihre Wirkung auf das Urteil war es nicht.
+
+Suite unverändert — reiner Nachlauf eines bestehenden, ungeänderten
+Werkzeugs, kein neuer Code.
+
+Werkzeug: `messe_form_kurz_gegen_lang.py --ziel=frontloading` (unverändert)
+Verwandt: F-163 · F-164 · F-165 · F-204 · F-206 · F-208
