@@ -917,6 +917,29 @@ schlechte Richtung.
 > vorgeben, *wie* sie verrechnet werden, und sein Ergebnis ist kein
 > Vergleichswert.
 
+#### ⚠️ Nutzervorgabe 04.09.: das Thema bleibt zu lösen — weitere Kandidaten für die nächste N-17b-Runde
+
+**Nutzerauftrag:** *„Unabhängig davon ist und bleibt das Thema als zu
+lösen im Plan. Nur weil es schwierig ist, geben wir nicht auf — in der
+Realität werden auch dazu Entscheidungen getroffen. Es kommt auf die
+richtigen Indikatoren in der richtigen Lage an."* Vorgeschlagene
+Kandidaten, noch nicht gemessen, für N-17b zusätzlich zu den
+Terminmarkt-Rohgrößen zu prüfen:
+
+    RSI überverkauft/überkauft   klassisches Umkehr-Signal
+    Bodenbildung                 Musterkennung am Kursboden
+    BTC führt (Altcoin folgt)    Marktbreite/Leitwert-Verzögerung
+    Volumensänderung             Umschlag als Vorlauf-Indikator
+
+⚠️ **Vor der Messung zu klären (dieselbe Vorabfestlegung-Pflicht wie
+immer):** die Zielgröße bleibt **Frontloading** (H-4a/b, nicht die
+gescheiterte Richtungsgröße aus H-1) — die Frage ist „wie schnell/wie
+ausgeprägt", nicht „in welche Richtung". Und: `RSI überverkauft` und
+`Bodenbildung` sind KEINE unabhängigen Größen — beide beschreiben
+denselben Zustand aus verschiedenen Blickwinkeln; vor der Messung
+prüfen, ob sie stark korrelieren (wie es `momentum_kurz`/`schnitt50` in
+F-165 taten, ρ=0,364), sonst zählt ein Effekt doppelt.
+
 #### Was aus dem Altbestand übernommen werden darf — und was nicht
 
 | | Umgang |
@@ -1492,7 +1515,7 @@ bekannten Fehler gegen einen unbekannten.
 | | Schritt | Stand |
 |---|---|---|
 | **N-17-0** | **Den Horizont kennen** — aus Stop und Volatilität die erwartete Zeit bis zur Barriere. ⚠️ **GEMESSEN (F-202, 03.09.): Nullbefund** — weder Stop-Abstand noch Volatilität sagen die Dauer voraus (r=-0,05/-0,06, Bänder schließen Null ein). Pro-Trade-Schätzung entfällt; der kettenweite Maßstab (F-186/F-189, Median 2,0 Tage → H2) bleibt gültig | ✖ **abgeschlossen, negativ — kettenweiter Ersatz steht** |
-| **N-17a** | die Beiträge tragen ihren Horizont; Schwelle je Horizont (**R-R9**) | Messwerte liegen seit 31.08. vor |
+| **N-17a** | ⚠️⚠️ **GEMEINSAM gemessen (F-203, 04.09.): Ergebnis ist ernüchternd.** H2-Stufen für Funding/Turnover gerechnet, Schwelle mit derselben Methode wie H20 neu kalibriert — die beste Schwelle ist praktisch 0,000 (keine Trennschärfe mehr). Korrelation Potential↔Ertrag real, aber winzig (r=0,02, Band schließt Null aus, erklärt ~0,04 % der Varianz). **Nicht live registriert** — wäre eine Mengenbremse ohne Qualitätsaussage | Messwerte liegen seit 31.08./04.09. vor, Registrierung ausstehend (Nutzerentscheidung) |
 | **N-17b** | das Hebel-Screening messen | ⚠️ **erst danach** — sonst gegen falschen Maßstab |
 
 ### ⚠️ Zwei Stufen, die die Prüfung nebenbei aufgedeckt hat
@@ -1547,7 +1570,7 @@ Abkürzung schadet**.
 | **S0** | ✔ **GEBAUT 03.09. (F-190).** Die Abbruchstelle je Asset schreiben. `rollen_gate` führt `letzte_stufe[symbol]` bereits im Speicher — sie muss nur in den Lauf-Datensatz | **klein** | keine | jede Wirkungsmessung danach ist blind: man sieht, dass ein Asset still ist, nicht warum |
 | **S1** | ⚠️⚠️ **GAB ES SCHON (F-190).** `portfolio_wert_historie.mengen_json` läuft seit dem **08.05.**, 91 Zeilen. ⚠️ Sie zählt aber `quantity` ohne `staked_quantity` — sechs Werte fehlen (dieselben wie in F-180). **Nicht repariert:** ein Fix ließe `wert_eur`/`index_wert` springen → **Nutzerentscheidung**. Die Dringlichkeit ist weg | **klein** | keine | ⚠️ **zeitkritisch** — jeder Tag ohne sie fehlt der späteren Messung dauerhaft. Heute sind von 37 Bestandssymbolen **5** in der Messbasis (F-183) |
 | **S2** | ✖ **GEMESSEN (F-202), Nullbefund:** weder Stop-Abstand noch Volatilitätsperzentil sagen die Dauer bis zur Entscheidung voraus (Spearman r=-0,05/-0,06, beide Bänder schließen Null ein, jedes Terzil Median 2,0 Tage). Eine Pro-Trade-Horizontschätzung trägt mit diesen Feldern **nicht**. ⚠️ Unberührt bleibt der **kettenweite** Maßstab aus F-186/F-189 (Median 2,0 Tage → H2) — N-17a kann damit weiterlaufen, nur gröber als geplant | mittel | S0 | ohne diese Größe ist „Schwelle je Horizont" nicht implementierbar — man müsste sie raten |
-| **S3** | ⚠️⚠️ **GEMESSEN (F-189): keine Reparatur, sondern eine GEMEINSAME Neukalibrierung von Beiträgen UND Vorgabe.** Der Test zeigt: Beiträge allein auf H2 umskaliert → **alles gesperrt, auch bei bester Datenlage** (`schwelle = Vorgabe × max/voll` — der Anteil bleibt, die Vorgabe 0,080 R ist absolut). **Beiträge tragen ihren Horizont; Schwelle je Horizont** (N-17a, **R-R9**) | mittel | S2 | ⚠️ wer nur die Schwelle senkt, baut eine zweite Mengenbremse; wer nur die Beiträge umkalibriert, wiederholt **G-6** (Stufe 11 sperrt alles) |
+| **S3** | ⚠️⚠️ **GEMEINSAM kalibriert (F-189 + F-203, 04.09.): fertig gemessen, NICHT gebaut.** Beiträge und Schwelle zusammen auf H2 umgerechnet — die resultierende Schwelle hat praktisch keine Trennschärfe mehr (bestes Ergebnis bei Schwelle≈0). Funding/Turnover tragen auf H2 fast nichts (Korrelation real, aber r=0,02). **Registrierung bewusst zurückgestellt** — würde eine wirkungslose Mengenbremse einbauen | mittel | S2 | ⚠️ wer nur die Schwelle senkt, baut eine zweite Mengenbremse; wer nur die Beiträge umkalibriert, wiederholt **G-6** (Stufe 11 sperrt alles). Jetzt gemessen: selbst GEMEINSAM kalibriert bleibt kaum etwas übrig |
 | **S4** | **Ausstiegsbewertung** (N-16d) | groß | **S1** (Historie), S3 | ohne S1 nicht messbar; ohne S3 gegen den falschen Maßstab gemessen |
 | **S5** | **Hebel-Screening messen** (N-17b): `hebel_triggers`, 82.655 Zeilen, Score 70 ist gesetzt statt gemessen | mittel | S3 | ⚠️ misst sonst gegen einen H20-Maßstab, den die Kette nie erreicht |
 | **S6** | **Die vier anderen Assetklassen** | groß | S3 | Stufe 11 zählt dort heute nur — eine Sperre ohne Beiträge wäre eine Sperre nach Datenlage (**Regel 4**) |

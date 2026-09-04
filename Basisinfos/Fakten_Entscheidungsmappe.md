@@ -6153,3 +6153,93 @@ unabhängig vom tatsächlichen Kursverlauf und könnte die gemessene
 
 Werkzeug: `messe_horizont_aus_stop.py` (`--selbsttest`)
 Verwandt: F-185 · F-186 · F-189 · N-17 · S2
+
+## F-203 ⚠️⚠️ N-17a GEMEINSAM kalibriert (Beiträge UND Schwelle) — Ergebnis: die Schwelle verliert auf H2 praktisch jede Trennschärfe (04.09.2026)
+
+**Nutzerauftrag:** *„ja eintragen, aber die fachlich korrekte Bewertung
+muss gemeinsam erfolgen und strukturiert sein."* — Beiträge UND Schwelle
+zusammen auf H2 umkalibrieren, nicht getrennt (F-189 hatte gezeigt: nur
+die Beiträge umzuskalieren sperrt alles, weil die Vorgabe 0,080 R
+absolut ist).
+
+### Schritt 1 — die H2-Stufen messen
+
+Die Infrastruktur dafür stand bereits seit dem 01.09. bereit
+(`rechne_funding_beitrag.py --horizont 2`, `rechne_turnover_beitrag.py
+--horizont 2`), wurde aber nie ausgeführt. Nachgeholt, mit
+H20-Gegenprobe zuerst (reproduziert die live registrierten Werte auf
+±0,1 Punkt genau — Datenrefresh, kein Fehler):
+
+    Funding H2   +0,01 / +0,18 / +0,01 / -0,08 / -0,12   Spanne 0,13
+    Turnover H2  +0,34 / +0,08 / +0,15 / -0,25 / -0,32   Spanne 0,66
+
+⚠️ **Keine Reihe ist streng monoton.** Funding hat den Ausschlag an
+Fünftel 1 — dieselbe Form wie seine eigene H20-Fassung, dort bereits
+akzeptiert. Turnover hat den Ausschlag an ANDERER Stelle (Fünftel 2)
+als seine H20-Fassung, die sauber monoton ist — das ist eine neue,
+nicht durch Präzedenz gedeckte Unregelmäßigkeit.
+
+### Schritt 2 — die Schwelle GEMEINSAM mit diesen Stufen kalibriert
+
+Neues Werkzeug `messe_schwelle_h2_kalibrierung.py`, dieselbe Methode wie
+die ursprüngliche H20-Kalibrierung (30./31.08.), aber mit Horizont 2
+gebauten Ankern (123.290 Anker, 2.744 Kalendertage) und den H2-Stufen
+statt der H20-Stufen:
+
+    Schwelle   Durchlass   Ertrag    gegen ohne   je verworfenem
+    0,0000       54,1 %    +0,0000    +0,0063       +0,0137  <- bestes
+    0,0010       51,2 %    +0,0000    +0,0063       +0,0129
+    0,0050       26,1 %    +0,0000    +0,0063       +0,0085
+    0,0100       16,4 %    +0,0000    +0,0063       +0,0075
+    0,0150        2,0 %    -0,0222    -0,0159       -0,0163
+
+**Die beste Schwelle ist 0,000 — praktisch keine Schwelle.** Ab dort wird
+es NICHT besser (Ertrag bleibt bei +0,0000 R, egal wie streng gefiltert
+wird), bis es bei einer extremen Schwelle (1,5 % Durchlass) sogar
+negativ wird.
+
+### Gegenprobe gegen ein Rechen-/Rundungsartefakt
+
+Die Flachheit sah zunächst nach einem Fehler aus (Median exakt 0,0000
+über vier verschiedene Stichprobengrößen). Geprüft und ausgeschlossen:
+nur 1,1 % der Anker haben `in_r` exakt null (kein Masse-Artefakt), die
+Quantile um die Mitte (45 %: −0,088 … 55 %: +0,063) zeigen einen echten,
+steilen Übergang um Null — die Flachheit ist also ein Merkmal einer
+SCHWACHEN Trennung, kein Bug.
+
+**Direkte Rangkorrelation (Spearman) zwischen H2-Potential und
+tatsächlichem Ertrag:** r = 0,0198, 90-%-Band über Tage-Cluster-Bootstrap
+(dieselbe Methode wie S2/G-c) **[0,0151 .. 0,0243] — schließt Null aus.**
+
+> **Der Zusammenhang ist real, aber praktisch bedeutungslos.** r≈0,02
+> erklärt rund 0,04 % der Varianz im Ertrag. Statistisch von Null zu
+> unterscheiden heißt hier nicht: nützlich für eine Handelsentscheidung.
+
+### Fazit — keine Registrierung, ohne Rücksprache
+
+**Diese Beiträge NICHT wie gemessen live registrieren.** Eine „optimale"
+Schwelle von praktisch 0,000 wäre keine Qualitätsschwelle mehr, sondern
+eine reine Ja/Nein-Prüfung („ist die Summe positiv") ohne nennenswerte
+Trennschärfe — genau die Falle, vor der das Projekt wiederholt gewarnt
+hat: eine **Mengenbremse ohne Qualitätsaussage** (wie der Cooldown), nur
+in neuem Gewand.
+
+**Das bestätigt und verschärft F-202 (S2, Nullbefund für die
+Horizont-Vorhersage):** dieselben zwei Beiträge (Funding, Turnover), die
+auf H20 sauber trennen, tragen auf H2 fast nichts mehr. Zwei unabhängige
+Messungen (S2 und diese) zeigen dasselbe Bild aus verschiedenen
+Blickwinkeln.
+
+⚠️ **Was das für N-17b bedeutet:** Der Weg über Funding/Turnover auf
+kurzem Horizont ist damit ausführlich geprüft und schwach. Die
+Terminmarkt-Rohgrößen (OI, OI-Änderung, Funding-Extrema) bleiben der
+einzige noch ungeprüfte, aussichtsreiche Kandidat — jetzt mit stärkerer
+Begründung als zuvor.
+
+Suite unverändert — reine Messwerkzeuge, kein Eingriff in
+`wahrscheinlichkeit.BEITRAEGE`/`potential.SCHWELLE_VORGABE`.
+
+Werkzeug: `rechne_funding_beitrag.py --horizont 2`,
+`rechne_turnover_beitrag.py --horizont 2`,
+`messe_schwelle_h2_kalibrierung.py`
+Verwandt: F-186 · F-189 · F-202 · N-17a · N-17b
