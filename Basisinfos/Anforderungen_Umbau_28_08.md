@@ -2243,10 +2243,56 @@ derselbe Fehler ein zweites Mal.
 | **Live-OI der Produktion** | `openInterestHist **period=1d**` | ✖ **holt Tageswerte** |
 | **OHLC-Auffrischung** | alle **24 h** | ✖ die Kursreihe ist täglich |
 
-⚠️⚠️ **Der harte Befund: Die Produktion könnte ein Stundensignal heute gar
-nicht rechnen.** `marktrang.OI_HIST` steht auf `period=1d`, und die
-Kursreihe wird einmal täglich aufgefrischt. Ein Intraday-Beitrag verlangt
-**zwei Datenänderungen im Betrieb**, nicht nur eine Messung.
+⚠️⚠️ **KORREKTUR 04.09. — dieser Absatz stand hier FALSCH und wird nicht
+gelöscht, sondern richtiggestellt.**
+
+Ich hatte geschrieben: *„Die Produktion könnte ein Stundensignal heute gar
+nicht rechnen… ein Intraday-Beitrag verlangt zwei Datenänderungen im
+Betrieb."* **Beides ist falsch, und der Stand vom 02.09. sagt es genau
+umgekehrt.**
+
+**Nutzereinwand:** *„Warum benötigt die Produktion die vollständigen
+Marktdaten — das sollte doch nur bei der Kalibrierung erforderlich sein?"*
+— Richtig, und genau so ist es gebaut.
+
+`baue_messbasis_paket.py` (02.09.) hält fest: **drei der vier Datenbanken
+werden vom Produktionscode NUR nach der Symbolliste gefragt:**
+
+    funding    SELECT DISTINCT symbol FROM funding
+    turnover   SELECT DISTINCT symbol FROM splycur
+    oi         SELECT DISTINCT symbol FROM terminmarkt_tag
+               UNION SELECT DISTINCT symbol FROM terminmarkt
+
+*„Aus 176 MB werden damit wenige Kilobyte."* Und `messdaten.db` (1,5 GB)
+wird **bewusst nicht ans Notebook übertragen** — bestätigt in
+`marktrang.messbasis()`: *„`messdaten.db` (166 MB) wurde bewusst nicht
+übertragen"*, ein **zugestimmter** Zustand, kein Mangel.
+
+**Die Naht ist im Code selbst benannt** (`marktrang.oi_werte`):
+
+    gemessen    OI am Tagesschluss aus dem Archiv (data.binance.vision)
+    angewandt   dieselbe Groesse aus openInterestHist period=1d, limit=2
+                122 Symbole in ~36 s, Gewicht 122 gegen 2400/Minute
+
+**Was ein Stundensignal im Betrieb WIRKLICH kostet:**
+
+| | |
+|---|---|
+| OI-Abruf | `period=1d` → **`period=1h`** — derselbe Endpunkt, dieselbe Anfragenzahl |
+| Zwischenspeicher | Tages- → Stundenverfall: 122 × 24 = 2.928 Abrufe/Tag gegen **2.400 je Minute** — unkritisch |
+| Symbolliste | **unverändert** — die 100 Messbasis-Werte stehen bereits in `terminmarkt_tag` |
+| NB-Paket | **unverändert** — es enthält nur Symbollisten |
+| Stündliche Kursreihe | **NICHT nötig** für die drei vorab benannten Kandidaten (alle Terminmarkt, keine Kursgrößen). Die R-Geometrie bleibt tagesbasiert, passend zur gemessenen Haltedauer von 2,0 Tagen |
+
+⚠️ **Der Archivlauf (100 × 5 Jahre) ist damit reine MESSUNG, desktopseitig.
+Er verändert am Notebook nichts.**
+
+⚠️ **Meine Lehre daraus:** Ich hatte aus zwei Konstanten
+(`period=1d`, `OHLC_REFRESH_INTERVAL_HOURS=24`) auf einen Betriebsaufwand
+geschlossen, ohne die Trennung von Messung und Anwendung nachzuschlagen,
+die seit dem 02.09. dokumentiert und **gebaut** ist. Das ist derselbe
+Fehlertyp wie bei den Stundendaten selbst — siehe die stehende Vorgabe
+unten.
 
 ✔ **Aber die Absicht ist im System bereits angelegt:** der Cooldown für
 gehebelte Signale steht auf **3,5 Stunden** — das System ist für einen
@@ -2356,11 +2402,14 @@ auf Stundenbasis folgt, ist nicht der Jäger, sondern die Liquidität.
                ~182.500 Anfragen, ~7,5 h, wiederaufnehmbar,
                oeffentliches Archiv, KEIN Kontingent
 
-⚠️ **Und selbst danach ist ein Befund nicht einsetzbar, ohne zwei
-Betriebsänderungen:**
+⚠️ **KORRIGIERT 04.09.** — hier stand „zwei Betriebsänderungen". Richtig
+ist **eine**, und sie ist klein:
 
-    marktrang.OI_HIST     period=1d  ->  period=1h
-    OHLC_REFRESH_INTERVAL_HOURS = 24  ->  stuendliche Kursreihe
+    marktrang.OI_HIST   period=1d  ->  period=1h   (+ Stundenspeicher)
+
+Die stündliche Kursreihe wird NICHT gebraucht — die drei Kandidaten sind
+Terminmarktgrößen. Symbolliste und NB-Paket bleiben unverändert; der
+Archivlauf ist reine Messung, desktopseitig. Vollständig unter N-35.
 
 ✔ **Der Cooldown steht bereits richtig:** `VORGABE_WENN_GEHEBELT = 3,5 h`
 — das System ist für einen schnelleren Hebel-Takt gebaut, nur nicht mit
@@ -2376,4 +2425,5 @@ Daten versorgt.
 | **Die Einzelmessung ist die Fingerübung** | Was zählt, ist die Wirkung **in der Kette** (N-31) |
 | **Blockgröße nie senken** | 2.95 — sie zu senken erzeugt das Ergebnis, statt es zu prüfen |
 | **Messbasis statt Watchlist** | P6/F-167 — sonst misst man die eigene Auswahl |
+| ⚠️⚠️ **Messung und Anwendung sind GETRENNT gebaut** | Die Produktion liest aus drei der vier Datenbanken **nur die Symbolliste**; `messdaten.db` ist am Notebook bewusst nicht vorhanden. Wer aus einer Konstante im Betriebscode auf Datenbedarf schließt, ohne diese Naht nachzuschlagen, erfindet Hürden (04.09., korrigiert unter N-35) |
 | ⚠️ **R-R10 gilt auch für die eigene Datenlage** | Die Stundendaten existierten, weil sie am 01.09. **bestellt** wurden. Ich habe sie am 04.09. als „Fund" präsentiert. **Vor jeder Aussage über vorhandene Daten: nachschlagen, warum sie da sind** |
