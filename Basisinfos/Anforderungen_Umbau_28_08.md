@@ -2512,3 +2512,82 @@ diese Watchlist nicht rückwirkend. Nachgebaut wird deshalb die
 **Selektionsstärke** (oberste 5 % je Tag), nicht die absolute Zahl. Das
 hält die Schärfe des Filters fest und gibt zugleich eine brauchbare
 Stichprobe — die absolute Zahl 2 wäre je Tag zu klein für jede Statistik.
+
+
+---
+
+# ⚠️⚠️⚠️ STARTPUNKT FÜR DEN 05.09. — hier weitermachen
+
+*Stand nach dem Messtag 04.09. Alles darüber ist Historie; diese Liste ist
+der Einstieg.*
+
+## Der Satz, der den Tag zusammenfasst
+
+> **Die Bewertung ist besser als gedacht, der Takt ist schlechter als
+> gedacht.**
+
+Die Beiträge tragen auf der Menge, auf der sie wirken, sogar **stärker**
+als dort, wo sie gemessen wurden (F-212). Aber der stärkste Filter der
+ganzen Kette ist kein Bewerter, sondern eine **Uhr** — und die läuft
+anders, als sie soll (F-213).
+
+## ➊ ZUERST: F-213 zu Ende bringen (klein, konkret, ~30 min)
+
+    Zustand   Der Cooldown sperrt 94,1 % und ist damit der staerkste
+              Filter der Kette. Trotzdem stehen 67 % der Signale enger
+              zusammen, als er erlaubt - und zwar AUSSCHLIESSLICH im
+              15-Stunden-Zweig (85,5 % verletzt), waehrend der
+              3,5-Stunden-Zweig sauber ist (13,1 %).
+
+    Ausge-    zweiter Schreibpfad · quelle_kette · zeitliche Aenderung ·
+    schlossen Aufrufstelle · "3,5 h gilt fuer alles"
+
+    Schritt   `wiederholung.gesperrt_bis()` an ECHTEN Zeilen aufrufen und
+              den Rueckgabewert gegen den erwarteten halten - dieselbe
+              Datenlage, an der die Funktion im Betrieb entschieden hat.
+              Kein neues Werkzeug, ein gezielter Aufruf.
+
+⚠️ **Warum zuerst:** Regel 1 lautet *„Der Takt ist nie Signalgeber."* Was
+die Kette heute durchlässt, folgt einem Takt von **3,7 Stunden**. Solange
+das gilt, ist jede Bewertungsverbesserung nachgelagert.
+
+## ➋ DANN: N-35 (Intraday) — die Daten sollten über Nacht da sein
+
+    Vorabfestlegung  steht (9.6, Abschnitt N-35)
+    Probelauf        ✔ erfolgreich (144 Stundenzeilen, 0 Fehler)
+    Nachtlauf        100 Messbasis-Symbole x 5 Jahre, ~7 h
+    Danach pruefen   `terminmarkt` muss ~100 Symbole und ~1.825 Tage
+                     zeigen (heute: 34 Symbole, 1.095 Tage = 12 Bloecke)
+
+⚠️ **Vor der Messung nachzaehlen**, ob die 20 Blöcke wirklich erreicht
+sind. Werden sie es nicht, wird **nicht** gemessen.
+
+## ➌ OFFEN, unverändert
+
+| | | |
+|---|---|---|
+| **N-31 Turnover** | nicht entscheidbar aus Datenlage | Positivkontrolle feuert nicht (2.88) |
+| **N-32** Schwelle 0,080 auf kurzer Geometrie | **Nutzerentscheidung** | hängt an N-31 |
+| **N-33/N-36** Hebel als Sizing-Frage | **Nutzerentscheidung** | entscheidungsreif, Datenlage vollständig |
+| N-18/N-19/N-20 | Bau | die 4 Nicht-Krypto-Klassen |
+| N-16d | Bau | Vorbedingung erfüllt |
+
+## ➍ Was heute dazugelernt wurde — als stehende Vorgaben
+
+| | |
+|---|---|
+| **Keine Sperre in erster Instanz** | ein Kandidat gehört zuerst als **Beitrag** geprüft |
+| **Beitragstabelle ist kein Nachweis** | erst die Regel-Validierung entscheidet (F-211, `vola`) |
+| **Parameter horizontproportional** | gemessene Handelsdauer 2,0 Tage |
+| **Die Einzelmessung ist die Fingerübung** | was zählt, ist die Wirkung in der Kette |
+| **Messung und Anwendung sind getrennt gebaut** | die Produktion liest nur Symbollisten; wer aus einer Betriebskonstante auf Datenbedarf schließt, erfindet Hürden |
+| **R-R10 gilt auch für die eigene Datenlage** | vorhandene Daten sind fast nie Zufall — nachschlagen, warum sie da sind |
+| ⚠️⚠️ **Die Reproduktionskontrolle ist die wichtigste** | sie hat heute **dreimal** einen Befund gerettet oder gekippt (F-207, F-210, F-212). Ein bei zwei Größen **identischer Faktor** ist die Signatur eines Definitionsunterschieds, nie von Rauschen |
+
+## Die Bilanz des Tages, ehrlich
+
+**Kein einziger neuer Beitrag registriert.** Gefunden wurden: ein
+bestätigter Befund (F-212), eine geschlossene Kette (F-209/F-210), eine
+Neueinordnung des Hebels (N-36), ein eingegrenzter Betriebsfehler
+(F-213) — und **über ein Dutzend eigener Messfehler**, alle von den
+Kontrollen gefunden, keiner vom Zufall.
