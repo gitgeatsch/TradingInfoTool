@@ -2179,3 +2179,111 @@ F-165/F-205–F-211 ist die verfügbare Kandidatenmenge dafür
 Bodenbildung). Sie sind nicht falsch, aber nach F-211 nachrangig — solange
 N-31 offen ist, weiß niemand, ob ein neuer Kandidat in der Kette
 überhaupt ankommt.
+
+---
+
+# ⚠️⚠️ N-35 — „VARIANTE B" (Intraday): die Vorabfestlegung UND die Dimensionierung (04.09.2026)
+
+*Nutzerauftrag: Doku prüfen, was bereits geplant/gemessen/abgestimmt ist —
+dann die stündliche Auswertung, „versichere dich vorher, dass alles sauber
+dimensioniert ist: 1. für die Messung, 2. für unser System".*
+
+## 1 — Was bereits abgestimmt ist (Doku-Nachschau, R-R10 nachgeholt)
+
+**Die Stundenauflösung ist eine Nutzerentscheidung vom 01.09.2026**,
+dokumentiert in `hole_terminmarkt_historie.py`:
+
+> **„3 JAHRE, 1 STUNDE, EIGENE DATEI"**
+> `1 Stunde` — *„Sie passt zum **VERSANDTAKT**… ein 5-Minuten-Signal ist
+> veraltet, bevor es gelesen wird. Und die **Praxisquelle des Nutzers**
+> nennt für MACD ausdrücklich den 1-Stunden-Chart."*
+
+- Das Rohaarchiv liegt in **5 Minuten** vor; verdichtet wurde auf Stunden,
+  **letzter Wert statt Mittel** (OI ist ein Bestand, Methodik 2.85).
+- Ausdrücklich **reversibel**: *„Wenn sich zeigt, dass 5 Minuten nötig
+  sind, lädt man neu."*
+- **Zweck benannt, nie ausgeführt** — F-167: *„Die Stundenauflösung wird
+  nur für **Variante B (Intraday-Ereignisse)** gebraucht."*
+
+⚠️ Die Stundentabelle ist bisher **ausschließlich als Tages-Rückfallquelle**
+benutzt worden: `lade_terminmarkt()` führt beide zusammen, und die
+Tagestabelle gewinnt. In eigener Auflösung wurde sie nie ausgewertet.
+
+## 2 — Dimensionierung MESSUNG — ⚠️ sie reicht NICHT
+
+    STUENDLICH   2023-09-01 .. 2026-08-30 | 32 Symbole | 700.943 Zeilen
+      Kalendertage      1.095  ->  12,2 Bloecke      ⚠️ Mindestmass ist 20
+      Symbole je Stunde Median 32, min 15, 100 % der Stunden >= 15   ✔
+      Stunden je Tag    Median 24 von 24                             ✔
+
+    TAGESTABELLE 2021-12-01 .. 2026-08-31 | 100 Symbole | 1.735 Tage
+                                          ->  19,3 Bloecke
+
+⚠️⚠️ **12,2 Blöcke ist exakt die Lage, die F-167 zur Zurückstellung geführt
+hat** (*„1.066 Tage (3 Jahre) → 12 Blöcke ⚠️"*). Jetzt zu messen hieße,
+denselben Fehler **wissentlich** zu wiederholen.
+
+⚠️ **Die Blockgröße 90 wird NICHT gesenkt.** Methodik 2.95 verbietet genau
+das, und ein kürzerer Block wäre hier die selbstdienliche Anpassung, die
+das Ergebnis erzeugt statt es zu prüfen.
+
+⚠️ **Zweiter Mangel: 32 WATCHLIST-Werte, keine Messbasis.** F-167 hält das
+als **meinen eigenen** Fehler fest: *„Watchlist statt Messbasis… sonst
+misst man seine eigene Auswahl."* Für einen Querschnitt je Stunde wäre das
+derselbe Fehler ein zweites Mal.
+
+## 3 — Dimensionierung SYSTEM — teils ja, teils nein
+
+| | Wert | reicht für Stundensignale? |
+|---|---|---|
+| Kettentakt | **alle 15 Minuten** (`HEBEL_SCREENING_INTERVAL_MINUTES`) | ✔ schnell genug |
+| Cooldown Krypto Spot | 15 h | ✖ höchstens ~1,6 Signale/Tag/Asset |
+| **Cooldown wenn gehebelt** | **3,5 h** (`VORGABE_WENN_GEHEBELT`) | ✔ **sub-Tag ist vorgesehen** |
+| Cooldown Akkumulation | 48 h | ✖ |
+| **Live-OI der Produktion** | `openInterestHist **period=1d**` | ✖ **holt Tageswerte** |
+| **OHLC-Auffrischung** | alle **24 h** | ✖ die Kursreihe ist täglich |
+
+⚠️⚠️ **Der harte Befund: Die Produktion könnte ein Stundensignal heute gar
+nicht rechnen.** `marktrang.OI_HIST` steht auf `period=1d`, und die
+Kursreihe wird einmal täglich aufgefrischt. Ein Intraday-Beitrag verlangt
+**zwei Datenänderungen im Betrieb**, nicht nur eine Messung.
+
+✔ **Aber die Absicht ist im System bereits angelegt:** der Cooldown für
+gehebelte Signale steht auf **3,5 Stunden** — das System ist für einen
+schnelleren Hebel-Takt gebaut, nur nicht mit Daten versorgt.
+
+## 4 — Die Vorabfestlegung (gilt, sobald die Datenlage steht)
+
+    Frage        Sagt die Terminmarktlage einer STUNDE etwas ueber die
+                 naechsten Stunden - jenseits dessen, was der Tageswert
+                 schon sagt?
+    Zielgroesse  R ueber H+4 Stunden, vorzeichenbehaftet
+    Klammer      STUNDENKLAMMER (Querschnitt je Stunde, >=15 Symbole)
+    Kandidaten   oi_aenderung_1h · taker_verh · konten_verh   (vorab, 3)
+    Kontrolle    `zufall` mitlaufend
+    Block        ueber KALENDERTAGE (24 Stunden eines Tages sind nicht
+                 24 Beobachtungen - Methodik 2.107), Blockgroesse 90
+    ⚠️ Gegen     dieselbe Groesse auf TAGESbasis - traegt die Stunde NUR
+                 dann, wenn sie MEHR sagt als der Tageswert. Sonst haben
+                 wir Aufwand ohne Gewinn.
+
+    NUTZBAR      Band ueber null, Kontrolle still, UND besser als die
+                 Tagesfassung im gepaarten Vergleich (2.105)
+
+## 5 — Der Weg dorthin, mit Kosten
+
+`hole_terminmarkt_historie.py` ist **wiederaufnehmbar, ohne Kontingent**
+(öffentliches Archiv, kein Schlüssel). Gemessener Durchsatz: 6,8 Anfragen/s.
+
+    A  32 Symbole auf 5 Jahre     +23.360 Anfragen   ~  1 h   -> 20 Bloecke
+    B  100 Symbole auf 5 Jahre   ~182.500 Anfragen   ~7,5 h   -> 20 Bloecke
+                                                                + Messbasis
+                                                                statt Watchlist
+
+⚠️ **Nur B behebt BEIDE Mängel.** A repariert die Blockzahl, lässt aber die
+Watchlist-Verzerrung stehen — und die ist der Fehler, den F-167 bereits
+einmal gekostet hat.
+
+**Empfehlung: B, und erst danach messen.** Bis dahin ist N-35 blockiert —
+nicht aus Vorsicht, sondern weil das Ergebnis sonst nach unserem eigenen
+Maßstab nicht entscheidbar wäre.
