@@ -7162,3 +7162,98 @@ Werkzeuge: `messe_beitrag_auf_auswahl.py` (`--selbsttest` gegen zwei
 Welten, Gegentest mit zerstörter Auswahllogik bestanden),
 `pruefe_n31_tagesklammer.py` (Reproduktionskontrolle)
 Verwandt: F-176 · F-182 · F-183 · N-31 · Methodik 2.88, 2.95, 2.104, 2.105, 2.109
+
+
+## F-213 ⚠️ F-174 eingegrenzt, NICHT geschlossen — der Cooldown wirkt, und trotzdem stehen 67 % zu eng (04.09.2026)
+
+**Auftrag:** F-174 schließen. **Ergebnis: die dort genannte Blockade ist
+weg, der Widerspruch ist präzise lokalisiert — die Ursache steht aus.**
+
+### ✔ Der von F-174 geforderte nächste Schritt ist erledigt
+
+F-174 endete mit: *„Was fehlt, ist die Trichterausgabe der Produktion.
+`durchlauf.bericht()` schreibt je Lauf … **ins Log, nicht in die DB**.
+Nächster Schritt: ein aktuelles `tradinginfotool.log` vom Notebook."*
+
+⚠️ **Die Annahme ist überholt: die Trichterausgabe steht in der DB** —
+Tabelle `gate_durchlaessigkeit`, 9.474 Rollen-Läufe. Sie wurde heute für
+N-31 ausgewertet und beantwortet F-174s eigene Fallunterscheidung.
+
+### ✔ Befund 1 — der Cooldown wird erreicht und sperrt, durchgehend
+
+| Zeitraum | % gesperrt auf `wiederholung` |
+|---|---|
+| 15.–21.08. | 84,4 → 96,3 % |
+| 22.–31.08. | 90,8 → 93,6 % |
+| 01.–03.09. | 92,8 → 95,4 % |
+
+**Er hat nie ausgesetzt.** F-174s Fallunterscheidung („steht dort 0
+verloren, wird die Stufe nie erreicht") ist damit beantwortet: die Stufe
+wird erreicht, und sie ist mit **94,1 %** der stärkste Filter der ganzen
+Kette — mehr als alle elf anderen Stufen zusammen.
+
+### ✔ Befund 2 — F-174 rechnete gegen eine Dauer, die es nicht gibt
+
+F-174 prüfte gegen **pauschal 12 h**. Der Code kennt drei Dauern:
+
+    spot                    15,0 h
+    letztes Signal gehebelt  3,5 h
+    akkumulation            48,0 h
+
+Nachgerechnet über die **echte** Funktion `wiederholung.stunden()`
+(3.397 Paare aufeinanderfolgender Signale je Symbol/Instrument):
+
+    gegen pauschal 12 h (so F-174)   2.977 = 87,6 %
+    gegen die ECHTE Regel            2.275 = 67,0 %
+
+**Ein Fünftel des Befundes war ein Maßstabsfehler.** Der Rest nicht.
+
+### ⚠️ Befund 3 — der Rest sitzt punktgenau im 15-Stunden-Fall
+
+| Fall | Paare | verletzt | % |
+|---|---|---|---|
+| spot, soll 15,0 h | 2.530 | 2.163 | **85,5 %** |
+| spot, soll 3,5 h (letztes Signal gehebelt) | 858 | 112 | **13,1 %** |
+| absicherung, soll 15,0 h | 9 | 0 | 0 % |
+
+> **Wo 3,5 h gelten, wird eingehalten. Wo 15 h gelten, nicht.** Der
+> beobachtete Median-Abstand ist **3,7 h** — auffällig nahe an 3,5.
+
+### Ausgeschlossen — geprüft, nicht angenommen
+
+| Verdacht | Befund |
+|---|---|
+| zweiter Schreibpfad | ✖ nur **eine** `pipeline_version` (=1) über alle 3.455 Signale |
+| Filter `quelle_kette='rollen'` greift ins Leere | ✖ auf **3.431 von 3.455** gesetzt; auf der gefilterten Menge bleiben 66,7 % |
+| zeitliche Änderung (Config-Stände) | ✖ das Sperrverhalten ist über 20 Tage stabil |
+| Aufrufstelle fehlt/falsch | ✖ `rollen_lauf.py:1339` übergibt `gruppe` und `strategie` korrekt |
+| „3,5 h wird auf alles angewandt" | ✖ nur **24,9 %** der Signale tragen `hebel > 1,0`; 58,6 % haben `hebel IS NULL` |
+
+### Und die Zahl, die den Widerspruch am schärfsten stellt
+
+Die Tagessummen von `wiederholung` **bestanden** und die Zahl der
+geschriebenen Signale decken sich fast exakt — am 18.08. **225/225**, am
+21.08. **235/235**, am 01.09. 165/164.
+
+> **Die Signale SIND das, was den Cooldown passiert.** Er wirkt also als
+> Tor — und lässt trotzdem Abstände von 3,7 h durch, wo 15 h gelten
+> müssten. Beides ist gemessen, beides gilt, und zusammen ergibt es noch
+> keinen Sinn.
+
+### ⚠️ Der ehrliche Stand
+
+**Eingegrenzt, nicht geschlossen.** Fünf Verdächtige sind ausgeschlossen,
+der Fehler sitzt nachweislich im **15-Stunden-Zweig** und nirgends sonst.
+
+**Der nächste Schritt ist klein und konkret:** `gesperrt_bis()` an echten
+Zeilen aufrufen und den Rückgabewert gegen den erwarteten halten — die
+Funktion an derselben Datenlage prüfen, an der sie im Betrieb entschieden
+hat. Das ist kein neues Werkzeug, sondern ein gezielter Aufruf.
+
+⚠️ **Bis dahin gilt:** der Cooldown nimmt 94,1 % — und was er durchlässt,
+folgt einem **Takt von 3,7 Stunden**, nicht einer Bewertung. Das berührt
+Regel 1 (*„Der Takt ist nie Signalgeber"*) unmittelbar.
+
+Werkzeuge: Auswertung des NB-Exports (`gate_durchlaessigkeit`, `signals`)
+über die **echte** `agent.wiederholung.stunden()`
+Verwandt: F-174 · F-176 · F-182 · **F-212** · Regel 1
