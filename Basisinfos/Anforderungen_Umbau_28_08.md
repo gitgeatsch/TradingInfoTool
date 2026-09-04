@@ -2287,3 +2287,93 @@ einmal gekostet hat.
 **Empfehlung: B, und erst danach messen.** Bis dahin ist N-35 blockiert —
 nicht aus Vorsicht, sondern weil das Ergebnis sonst nach unserem eigenen
 Maßstab nicht entscheidbar wäre.
+
+---
+
+# ⚠️⚠️⚠️ KONSOLIDIERTE PLANUNG NACH DEM 04.09. — N-31 bis N-36
+
+*Diese Liste ersetzt die frühere Reihenfolge am Ende der GESAMTSICHTUNG.
+Nutzervorgabe: „damit nichts verloren geht".*
+
+## ⚠️ N-36 — DIE NEUEINORDNUNG DES HEBELS (aus der Nutzerrecherche 04.09.)
+
+**Nutzerrecherche zu algorithmischen Hebel-Entscheidungen**, Säule 3
+wörtlich: *„Der Bot wählt den Hebel **dynamisch basierend auf der
+Volatilität** (ATR)… um das Risiko pro Trade mathematisch immer exakt bei
+1 % zu halten."*
+
+⚠️⚠️ **Das ist keine Entscheidung „Hebel ODER Spot" — das ist
+Positionsgrößenrechnung. Der Hebel FÄLLT AN, er wird nicht gewählt.**
+
+Deckt sich mit der externen Fachrecherche (N-17d): kein peer-reviewed
+Kriterium für Hebel-**Timing**; Hebel wird durchgehend als Sizing- und
+Kapitaleffizienzfrage behandelt (Vola-Targeting, Kelly). Frazzini/Pedersen
+zeigen sogar die Gegenrichtung — eingebauter Hebel **kostet** eine Prämie.
+
+**Und wir haben alle drei Säulen des Regelwerks bereits:**
+
+| Recherche | bei uns |
+|---|---|
+| CRV-Prüfung, Ziel 2–3× Stop | ✔ CRV fest 2,0 (`potential.py`) |
+| Hebel dynamisch aus Volatilität | ✔ `hebel = verlustanteil / stop_rel` |
+| Funding Rate Check | ✔ `funding_fuenftel` registrierter Beitrag |
+
+> **Folge für H-2/N-33: die Frage „bekommt die Bewertung eine
+> Instrument-Achse?" ist eine Kategorienverwechslung.** Die Praxis stellt
+> sie nicht. Was seit 01.09. als „Kompromiss" geführt wird (5.2: der Hebel
+> ist eine Ausführungsfrage), **ist die branchenübliche Lösung** — nicht
+> ein Mangel.
+
+⚠️ **Zwei Kandidaten der Recherche sind bei uns bereits gemessen und
+gefallen:** EMA-200-Durchbruch = unser Schnittabstand (31.08. gefallen);
+CVD/Aggressive Market Orders = `taker_verh`/`taker_bias` (Nullbefund).
+Und der Bollinger-Squeeze prognostiziert **Volatilität, nicht Richtung** —
+derselbe Befund wie bei allen unseren Pfadmaßen.
+
+⚠️ **Was wir NICHT haben:** Orderbuchtiefe und Liquidations-Cluster. Beide
+nur als Momentaufnahme sammelbar, rückwirkend nicht verfügbar → nach 2.95
+ein Jahr Sammeln vor der ersten belastbaren Messung. **Und
+„Liquidations-Hunting" funktioniert mit Größe und Geschwindigkeit** — wer
+auf Stundenbasis folgt, ist nicht der Jäger, sondern die Liquidität.
+
+## Die Reihenfolge — verbindlich ab 04.09.
+
+| # | Punkt | Art | Status |
+|---|---|---|---|
+| **1** | **N-31** — tragen die Beiträge auf der **selektierten** Ankermenge? | Messung | **VORRANG** — betrifft das laufende System, Daten und Werkzeuge liegen bereit |
+| **2** | **N-36/N-33** — Hebel als Sizing-Frage neu einordnen | **Nutzerentscheidung** | entscheidungsreif, Datenlage vollständig |
+| **3** | **N-35** — Variante B (Intraday) | Messung | **blockiert** bis Archiv erweitert (siehe unten) |
+| **4** | **N-32** — Schwelle 0,080 auf kurzer Geometrie | **Nutzerentscheidung** | hängt an N-31 |
+| 5 | N-18/N-19/N-20 | Bau | unverändert offen (4 Nicht-Krypto-Klassen) |
+| 6 | N-16d | Bau | Vorbedingung N-16e erfüllt |
+
+## ⚠️ Was N-35 konkret blockiert — und was es kostet
+
+    Mangel 1   1.095 Tage = 12,2 Bloecke, Mindestmass 20   (F-167-Lage)
+    Mangel 2   32 WATCHLIST-Werte statt Messbasis          (F-167-Fehler)
+
+    Behebung   hole_terminmarkt_historie.py, 100 Symbole x 5 Jahre
+               ~182.500 Anfragen, ~7,5 h, wiederaufnehmbar,
+               oeffentliches Archiv, KEIN Kontingent
+
+⚠️ **Und selbst danach ist ein Befund nicht einsetzbar, ohne zwei
+Betriebsänderungen:**
+
+    marktrang.OI_HIST     period=1d  ->  period=1h
+    OHLC_REFRESH_INTERVAL_HOURS = 24  ->  stuendliche Kursreihe
+
+✔ **Der Cooldown steht bereits richtig:** `VORGABE_WENN_GEHEBELT = 3,5 h`
+— das System ist für einen schnelleren Hebel-Takt gebaut, nur nicht mit
+Daten versorgt.
+
+## Die stehenden Vorgaben aus diesem Tag (N-34, ergänzt)
+
+| | |
+|---|---|
+| **Keine Sperre in erster Instanz** | Ein Kandidat gehört zuerst als **Beitrag** geprüft |
+| **Beitragstabelle ist kein Nachweis** | Erst die Regel-Validierung entscheidet (F-211, `vola`) |
+| **Parameter horizontproportional** | Gemessene Handelsdauer 2,0 Tage (F-202) |
+| **Die Einzelmessung ist die Fingerübung** | Was zählt, ist die Wirkung **in der Kette** (N-31) |
+| **Blockgröße nie senken** | 2.95 — sie zu senken erzeugt das Ergebnis, statt es zu prüfen |
+| **Messbasis statt Watchlist** | P6/F-167 — sonst misst man die eigene Auswahl |
+| ⚠️ **R-R10 gilt auch für die eigene Datenlage** | Die Stundendaten existierten, weil sie am 01.09. **bestellt** wurden. Ich habe sie am 04.09. als „Fund" präsentiert. **Vor jeder Aussage über vorhandene Daten: nachschlagen, warum sie da sind** |
