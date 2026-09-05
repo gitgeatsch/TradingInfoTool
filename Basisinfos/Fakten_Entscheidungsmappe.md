@@ -7458,12 +7458,51 @@ nicht begründet.
     heutiger verlustanteil (fest)                        15,00 %
     halbes Kelly (Standard gegen Schaetzfehler)           0,34 %
 
-> **Gegenüber halbem Kelly ist der heutige feste Verlustanteil um den
-> Faktor 45 zu hoch.**
+### ⚠️⚠️ KORREKTUR 05.09. — „Faktor 45" war FALSCH gerechnet
 
-Am 04.09. hatte ich Faktor 4 gerechnet — auf dem **behaupteten**
-Potential. Mit der gemessenen Kalibrierung wird daraus 45. **Genau
-deshalb musste die Kalibrierung vor die Hebelleiter.**
+Hier stand: *„Gegenüber halbem Kelly ist der heutige feste Verlustanteil
+um den Faktor 45 zu hoch."* **Das ist ein Nennerfehler.** Ich habe
+`verlustanteil` (15 % **vom Einsatz**) gegen Kelly `f*` (0,34 % **vom
+Gesamtkapital**) gestellt — zwei verschiedene Bezugsgrößen.
+
+Über die echten Funktionen gegengeprüft (`einsatz_eur` = 800,
+`verlustanteil` = 0,150, `risiko_eur` = 120, `dimensioniere` → Hebel 3,0
+bei 5 % Stop) und gegen den echten Portfoliowert:
+
+    Portfolio (Gesamtkapital)          9.942 EUR
+    Einsatz je Trade (spot/einstieg)     800 EUR
+    Risiko je Trade = 15 % vom Einsatz   120 EUR  =  1,21 % des Kapitals
+
+    Kelly f* (mit dem KALIBRIERTEN Potential)      0,67 %  =  67 EUR
+    halbes Kelly (Standard gegen Schaetzfehler)    0,34 %  =  33 EUR
+
+> **Richtig ist: Faktor 1,8 gegenüber vollem Kelly, 3,6 gegenüber
+> halbem.** Nicht 45. Die Größenordnung ist damit eine völlig andere —
+> und sie hätte zu einer völlig anderen Entscheidung geführt.
+
+⚠️ **Zwei fachliche Annahmen, die dabei zu prüfen waren:**
+
+1. **Spot-Signale tragen KEINEN Stop — null von 3.455.** Kelly setzt
+   voraus, dass beim Verlieren der Einsatz verloren geht. Ohne Stop hat
+   eine Spot-Position keinen definierten Verlust; `verlustanteil` ist dort
+   eine **Größenkonvention**, kein Risikolimit. **Kelly gilt für die
+   Hebelseite, nicht für Spot** — konsistent mit N-36.
+2. **Kelly gilt für EINE wiederholte, unabhängige Wette.** Gemessen sind
+   **32 gleichzeitige Positionen**, 7.779 von 9.942 EUR investiert (78 %),
+   in einem stark korrelierten Markt. Die Einzeltrade-Zahl ist deshalb
+   nicht die entscheidende — das **Aggregat** ist es.
+
+⚠️ **Und die Trennung, die dabei fast verwischt wäre** (Nutzerhinweis,
+Regel 2): F-215 selbst gehört zur **Bewertung** (neutral, gebührenfrei)
+und bleibt unangetastet. `verlustanteil`, Einsatz, Kelly, Hebelhöhe
+gehören zur **Wirtschaftlichkeit**. Die einzige Brücke ist **eine Zahl**:
+das kalibrierte Potential als *Eingabe* in die Sizing-Rechnung. Es fließt
+nichts zurück — die Bewertung wird nicht verändert, weil eine
+Kelly-Rechnung etwas ergibt.
+
+**Was vom ursprünglichen Satz bleibt:** Die Kalibrierung musste trotzdem
+vor die Hebelleiter — nur eben, weil sie den **Eingabewert** liefert, und
+nicht wegen eines Faktors 45.
 
 ### Was diese Messung NICHT entscheidet
 
