@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import dataclasses
 import sys
+from binascii import crc32
 from collections import defaultdict
 
 import numpy as np
@@ -249,8 +250,16 @@ def baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=None,
             gruppen["_roh"][tag].append((treffer, round(p.wert_r, 3)))
             continue
         if pflanze is not None and wr >= pflanze[0]:
+            # ⚠️ crc32 STATT hash() (05.09.2026, F-218).
+            #
+            # `hash()` ist fuer Zeichenketten PROZESSWEISE zufaellig
+            # (PYTHONHASHSEED). Zwei Laeufe derselben Positivkontrolle
+            # pflanzten also auf verschiedenen Ankern - gemessen:
+            # -2554512668254146022 gegen -3417627769902381564 fuer
+            # denselben Schluessel. Eine Kontrolle, die sich nicht
+            # wiederholen laesst, ist keine.
             treffer = 1 if np.random.default_rng(
-                abs(hash((sym, tag))) % 2**31).random() < pflanze[1] else treffer
+                crc32(("%s|%s" % (sym, tag)).encode())).random() < pflanze[1]                 else treffer
         gruppen[wr][tag].append(treffer)
     if mische is None:
         return {k: dict(v) for k, v in gruppen.items()}
