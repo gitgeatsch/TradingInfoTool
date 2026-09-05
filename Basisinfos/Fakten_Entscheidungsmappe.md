@@ -7482,11 +7482,23 @@ bei 5 % Stop) und gegen den echten Portfoliowert:
 
 ⚠️ **Zwei fachliche Annahmen, die dabei zu prüfen waren:**
 
-1. **Spot-Signale tragen KEINEN Stop — null von 3.455.** Kelly setzt
-   voraus, dass beim Verlieren der Einsatz verloren geht. Ohne Stop hat
-   eine Spot-Position keinen definierten Verlust; `verlustanteil` ist dort
-   eine **Größenkonvention**, kein Risikolimit. **Kelly gilt für die
-   Hebelseite, nicht für Spot** — konsistent mit N-36.
+1. ⚠️⚠️ **KORRIGIERT 05.09. — hier stand eine falsche Behauptung.**
+   Ich hatte geschrieben: *„Spot-Signale tragen KEINEN Stop — null von
+   3.455."* **Das war ein Spaltenfehler:** `stop_loss_usd` ist ein leeres
+   Altfeld; der echte Wert steht in `stop_loss_usd_von` und ist bei
+   **ERÖFFNEN und NACHKAUFEN zu 100 %** gefüllt (3.122 von 3.455 gesamt).
+   In F-202 hatte ich selbst mit der richtigen Spalte gearbeitet.
+
+   **Richtig ist eine dreifache Abgrenzung, und sie steht längst fest:**
+
+   | | Stop | geregelt in |
+   |---|---|---|
+   | spot × **einstieg** | ✔ ja | Vorgabe in `handelsauftrag._MIT_KURSEN` |
+   | spot × **akkumulation** | ✖ nein, per Konstruktion | *„ein Stop würde die Staffelung genau dann aufheben, wenn sie am günstigsten kauft"* |
+   | **gewachsene Position** | ✖ nein | Nutzerentscheidung 03.09., N-16e Frage 1: *„KEIN Stop, rein bewertungsbasiert"* |
+
+   **Spot ist damit klar abgegrenzt** — die Frage war nicht offen, ich
+   hatte sie nur nicht nachgeschlagen (R-R10, zum wiederholten Mal).
 2. **Kelly gilt für EINE wiederholte, unabhängige Wette.** Gemessen sind
    **32 gleichzeitige Positionen**, 7.779 von 9.942 EUR investiert (78 %),
    in einem stark korrelierten Markt. Die Einzeltrade-Zahl ist deshalb

@@ -2874,6 +2874,39 @@ davon, egal wie sauber die Einzelrechnung ist.
     -  zurueckgestellt     Abstufung nach Potential (bis F-215 sie traegt)
 
 ⚠️ **Schritt 1 ist klein und betrifft EINE Funktion**
-(`betraege.verlustanteil` / `risiko_eur`) — aber er ändert die
-Positionsgröße jedes künftigen Hebeltrades. Vor dem Bau ist die Wirkung
+(`betraege.verlustanteil` / `risiko_eur`). Vor dem Bau ist die Wirkung
 zu rechnen (`simuliere_kette.py`), nicht danach.
+
+## ⚠️⚠️ SCOPE — KORRIGIERT 05.09.: der Umbau trifft den HEBEL, nicht den Betrag
+
+Ich hatte hier zunächst gefragt, ob der Ankerwechsel auch Spot treffen
+soll („Variante A oder B“). **Die Frage stand auf einer falschen
+Lesart der Kette.** Sie rechnet:
+
+    betrag       = einsatz_eur                       (800 EUR, der Wunschbetrag)
+    hebel_noetig = risiko_eur / (betrag x stop_rel)
+
+**`risiko_eur` bestimmt nicht den Betrag, sondern den HEBEL.** Gerechnet:
+
+| Stop | heute (120 €) | neu (99 €) | Änderung |
+|---|---|---|---|
+| 2,0 % | Hebel 7,50 | Hebel 6,21 | Hebel −17 % |
+| 3,0 % | Hebel 5,00 | Hebel 4,14 | Hebel −17 % |
+| 5,0 % | Hebel 3,00 | Hebel 2,49 | Hebel −17 % |
+| 8,0 % | Hebel 1,88 | Hebel 1,55 | Hebel −17 % |
+| 15,0 % | Hebel 1,00 | → SPOT 663 € | Betrag −17 % |
+
+> **Solange der Stop unter 15 % liegt — bei Krypto praktisch immer —
+> bleibt der Einsatz bei 800 EUR und es ändert sich ausschließlich der
+> Hebel.** Der Spot-Zweig (`betrag = risiko_eur / stop_rel`) wird erst bei
+> Stops über 15 % erreicht.
+
+✔ **Damit trifft der Umbau genau die Hebelseite. Spot bleibt unberührt,
+ohne dass zwei Regeln gebaut werden müssen.** Die Entscheidung „Variante A
+oder B“ entfällt.
+
+⚠️ **Und die Stop-Lage bei Spot ist geregelt, nicht offen** (Korrektur zu
+F-215): spot × einstieg **hat** einen Stop (`stop_loss_usd_von`, bei
+ERÖFFNEN/NACHKAUFEN zu 100 % gefüllt); spot × akkumulation hat per
+Konstruktion keinen; die gewachsene Position hat keinen (N-16e,
+Nutzerentscheidung 03.09.).
