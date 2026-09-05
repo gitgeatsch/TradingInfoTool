@@ -2591,3 +2591,143 @@ bestätigter Befund (F-212), eine geschlossene Kette (F-209/F-210), eine
 Neueinordnung des Hebels (N-36), ein eingegrenzter Betriebsfehler
 (F-213) — und **über ein Dutzend eigener Messfehler**, alle von den
 Kontrollen gefunden, keiner vom Zufall.
+
+
+---
+
+# ⚠️⚠️⚠️ N-37 — IST DIE BEWERTUNG KALIBRIERT? Die Vorabfestlegung (05.09.2026)
+
+*Nutzervorgabe: „was wir nicht haben, simulieren wir“ — und: „präzise
+aufsetzen, vorher genau in die Doku, um die bisherigen Fehler zu
+vermeiden.“*
+
+## Die Frage
+
+> **Liefert ein höheres Potential tatsächlich eine höhere Trefferquote?**
+
+Sie ist die **Vorbedingung für jede Hebelabstufung** (N-36/H-2): Kelly
+ohne kalibriertes µ ist eine Formel ohne Eingabe. Und sie beantwortet
+zugleich, ob eine Leiter überhaupt begründbar ist oder ob es beim Gate
+bleibt — die Architekturfrage folgt der Datenlage, nicht umgekehrt.
+
+## Warum simuliert wird — und nicht gesammelt
+
+Das Potential wird **nirgends gespeichert**: nicht in `signals`, in keinem
+der fünf JSON-Felder. Nur die 41 verworfenen Fälle stehen als Text im
+Ablehnungsgrund. Mein erster Reflex war „ab jetzt mitschreiben“ — das ist
+die **fünfte Variante derselben Ausrede**, vor der die stehende Vorgabe
+warnt (*„n reicht nicht“, „in X Wochen erneut prüfen“*).
+
+**Alle Eingaben sind historisch rekonstruierbar**, und die echte Funktion
+`potential.rechne()` kann sie verarbeiten.
+
+## ⚠️ Die vier Fallen dieser Messung — und ihre Behandlung
+
+### Falle 1: ZIRKULARITÄT — die größte
+
+Die Beitragsstufen sind **in-sample gefittet**: `rechne_*_beitrag.py`
+leitet sie aus dem Ergebnis je Fünftel ab. Auf denselben Ankern zu
+messen, ob ein höheres Fünftel ein besseres Ergebnis bringt, ist **per
+Konstruktion wahr** und beweist nichts.
+
+    Behandlung   Stufen auf der ERSTEN Haelfte fitten (echte
+                 `beitragstabelle()`), Kalibrierung auf der ZWEITEN
+                 Haelfte pruefen. Out-of-sample, kein Ueberlapp.
+
+### Falle 2: DIE FORM DER ZIELGRÖSSE (Methodik 2.85)
+
+Das Potential ist für ein **Barrierensystem** definiert:
+`quote × CRV − (1−quote)` mit `quote = P(Ziel vor Stop)`. Es ist **keine**
+Aussage über die Rendite nach festen 20 Tagen. Gegen `in_r` zu
+kalibrieren wäre exakt der Formfehler, vor dem 2.85 warnt.
+
+    Behandlung   Barrieren-Ausgang aus dem PFAD, ueber die bestehende,
+                 validierte `messe_zielregel.ergebnisse()`: Ziel = e+2r,
+                 Stop = e-r, Stop gewinnt bei Gleichstand, Datenbrueche
+                 entfernt. Gezaehlt werden nur ENTSCHIEDENE Anker
+                 (Ziel oder Stop getroffen) - dieselbe Konvention wie
+                 die 48,2-%-Trefferquote der Kette.
+
+### Falle 3: DIE ARITHMETIK STEHT SCHON DA
+
+`project_barrierensystem_erwartungswert_null`: auf driftfreiem Pfad ist
+`quote = 1/(1+CRV) = 33,3 %` **per Konstruktion** — gemessen 34,0 % über
+19.891 Anker. Die Bewertung behauptet also nicht „irgendeinen“ Vorteil,
+sondern eine **eng begrenzte Verschiebung**:
+
+    Potential 0,000  ->  vorhergesagte quote  33,3 %
+    Potential 0,080  ->                       36,0 %   (unsere Schwelle)
+    Potential 0,133  ->                       37,8 %   (das Maximum)
+
+    Die gesamte Behauptung ist ein Shift von 4,5 Prozentpunkten.
+
+⚠️ **Das ist die eigentliche Prüfgröße** — nicht „trägt/trägt nicht“,
+sondern: liegt die realisierte Quote je Potentialgruppe **da, wo die
+Bewertung sie hinsagt**?
+
+### Falle 4: AUFLÖSUNG UND MACHT — vorab gerechnet, nicht hinterher beklagt
+
+    Um 33,3 % von 37,8 % zu trennen (alpha 5 %, Macht 80 %):
+        rund 1.800 ENTSCHIEDENE Anker je Gruppe
+
+    Verfuegbar: 516 Reihen x ~2.700 Anker  ->  ueber 1 Mio Anker
+    Bindend ist NICHT die Ankerzahl, sondern die Blockzahl:
+        ~2.900 Kalendertage / 90  =  ~32 Bloecke        OK, ueber 20
+
+⚠️ Anker überlappen (Vorwärtsfenster 60 Tage) — die Inferenz läuft
+deshalb über **Block-Bootstrap über Kalendertage** (2.107), nicht über
+Anker.
+
+## Was gemessen wird
+
+    Zielgroesse   quote = Anteil "Ziel vor Stop" unter den ENTSCHIEDENEN
+    Geometrie     Ziel e+2r, Stop e-r  (CRV 2,0 - der registrierte Wert)
+    Gruppen       Potentialstufen, wie sie tatsaechlich anfallen
+                  (nicht vorab in Quantile gezwungen - die Aufloesung
+                  IST Teil des Ergebnisses)
+    Klammer       Block-Bootstrap ueber Kalendertage, Blockgroesse 90
+    Split         erste Haelfte fitten, zweite Haelfte pruefen
+
+## Die Kontrollen — jede aus einem früheren Fehler
+
+| | |
+|---|---|
+| **Reproduktion** | die auf der ersten Hälfte gefitteten Stufen müssen den registrierten Werten nahekommen. Weichen sie stark ab, ist der Split nicht repräsentativ — **dann gilt kein Befund**. Diese Kontrolle hat gestern dreimal getragen (F-207, F-210, F-212) |
+| **Zufallskontrolle** | Potentialwerte je Kalendertag mischen → die Kalibrierung muss verschwinden |
+| **Positivkontrolle** | eine künstliche Welt mit bekanntem Zusammenhang → muss gefunden werden. Findet sie ihn nicht, ist ein Nullbefund **untermächtig, nicht widerlegend** (2.88) |
+| **Basisraten-Anker** | die Gruppe mit Potential ≈ 0 muss bei ≈ 33,3 % landen. Tut sie das nicht, stimmt etwas an der Barrieren-Rechnung, nicht an der Bewertung |
+
+## Vorab festgelegt — was als Befund gilt
+
+    KALIBRIERT       die realisierte Quote steigt monoton ueber die
+                     Potentialgruppen UND die Steigung ist von null zu
+                     trennen UND die Zufallskontrolle ist still
+    NICHT KALIBRIERT die Steigung ist nicht von null zu trennen, obwohl
+                     die Positivkontrolle feuert
+    UNTERMAECHTIG    die Positivkontrolle feuert nicht (2.88)
+
+⚠️ **Und die Auflösung wird mitberichtet**, nicht nur die Kalibrierung:
+wie viele unterscheidbare Potentialstufen entstehen, und wie sind sie
+besetzt? **Ohne diese Zahl ist die Gate-gegen-Leiter-Frage nicht
+entscheidbar.**
+
+## ⚠️ Was diese Messung NICHT entscheidet
+
+1. **Nicht die Hebelhöhe.** Auch bei perfekter Kalibrierung folgt daraus
+   nur `f* = Potential/CRV` als Kelly-Anteil — die Frage nach Deckel,
+   Fraktionierung und Stufung ist Konstruktionsarbeit, keine Messung.
+2. **Nicht die Architektur.** Sie liefert die Auflösung, aus der Gate
+   oder Leiter folgt — die Entscheidung bleibt beim Nutzer.
+3. **Nicht die Positionsführung.** Spot ist ein Bestand, Hebel ein Trade
+   mit Lebenszyklus — ein eigener Punkt.
+
+## Suchpreis
+
+**EINE Frage, EINE Zielgröße, EIN Split.** Keine Variation von CRV,
+Horizont oder Gruppengrenzen — das wäre Parametersuche bei einem
+erwarteten Effekt von 4,5 Prozentpunkten und würde zuverlässig
+Scheinbefunde liefern (2.49).
+
+## Betriebsrahmen
+
+Nur lokale SQLite-Lesevorgänge, keine API-Abrufe.
