@@ -2910,3 +2910,134 @@ F-215): spot × einstieg **hat** einen Stop (`stop_loss_usd_von`, bei
 ERÖFFNEN/NACHKAUFEN zu 100 % gefüllt); spot × akkumulation hat per
 Konstruktion keinen; die gewachsene Position hat keinen (N-16e,
 Nutzerentscheidung 03.09.).
+
+
+---
+
+# ⚠️⚠️⚠️ N-39 — ZIELZUSTAND HEBELGEOMETRIE (Schritt 2, 05.09.2026)
+
+*Schritt 2 der vereinbarten Reihenfolge. Grundlinie aus Schritt 1 steht
+(`referenzlauf_hebelgeometrie.py`). Nutzerauftrag: „zuerst alle
+Erkenntnisse zur Hebeldimensionierung durchgehen und wo laut Literatur
+Fehler passieren können."*
+
+## 1. Was wir aus EIGENEN Messungen wissen
+
+| # | Befund | Quelle |
+|---|---|---|
+| **E1** | ⚠️⚠️ **Enger Stop ist schädlich — monoton.** `<2 %` → Ø CRV **−1,00** (n=9) · `2–5 %` → **−0,41** (n=36) · `5–10 %` → **+0,31** (n=16). Nur ab 5 % über der Gewinnschwelle | 28.07., 61 aufgelöste Hebel-Trades |
+| **E2** | ⚠️⚠️ **Ein Hebeldeckel senkt das Risiko NICHT** — er vergrößert die Nominale, weil `risiko_eur` **vor** dem Hebel feststeht. Deckel 10 → Nominale 1.000 €; Deckel 1,5 → Nominale **1.600 €**, gleiches Risiko | S6d, 22.08. |
+| **E3** | **87–88 % der Stop-Loss-Fälle hatten positiven MFE**, 23 % erreichten sogar das volle Ziel, bevor der Kurs drehte | 30./31.07., MFE-Analyse |
+| **E4** | ✖ **Naiver Breakeven-Lock WIDERLEGT** — OHLC-Pfad-Simulation: wirft **63 %** der echten Gewinner vorzeitig raus | 01.08., n=68 |
+| **E5** | **TP-ATR-Asymmetrie erklärt ~22 %** des Trefferquote-Einbruchs im CRV-Band 1,5–2,0 (reproduziert auf doppelter Stichprobe) | 31.07. |
+| **E6** | ✖ **CRV-Schwelle senken wäre falsch** — das Band 1,5–2,0 ist mit 30,4 % das **schlechteste**, nicht das Band darunter (67,3 %) | 31.07. |
+| **E7** | **Barrierensystem = Erwartungswert NULL** auf driftfreiem Pfad, `quote = 1/(1+CRV)` per Konstruktion | gemessen 34,0 % über 19.891 Anker |
+| **E8** | **Die Bewertung liefert 17 %** dessen, was sie behauptet (Steigung 0,056 gegen 0,333) | F-215, out-of-sample |
+| **E9** | **Heutiger Ist-Zustand:** Stop Median **7,73 %**, Hebel Median **1,20**, Risiko 30 € = 0,30 % des Kapitals, Einsatz 500 € | Schritt 1, Grundlinie |
+
+## 2. ⚠️⚠️ Der Befund, der die heutige Konstruktion umstürzt
+
+    heute:  hebel = verlustanteil / stop_rel
+
+**Ein enger Stop erzeugt einen HOHEN Hebel.** Und E1 sagt: genau die engen
+Stops sind die verlustträchtigen. **Die Formel gibt der schädlichsten Zone
+den größten Hebel — sie ist invers zur eigenen Evidenz.**
+
+Dazu E2: Ein Deckel repariert das nicht, er verschlimmert es (größere
+Nominale bei gleichem Risiko).
+
+> **Damit ist nicht der Deckel die Lösung und nicht der Verlustanteil,
+> sondern die ENTKOPPLUNG: Der Hebel darf nicht mehr aus dem Stopabstand
+> anfallen.** Genau das ist die Nutzervorgabe („der Hebel soll aus der
+> Wahrscheinlichkeit entstehen").
+
+## 3. Wo laut Literatur die Fehler passieren
+
+| # | Fehlerquelle | Konsequenz für uns |
+|---|---|---|
+| **L1** | **Kelly mit geschätztem µ überwettet.** Vorteil wächst linear mit dem Hebel, geometrischer Drag **quadratisch** | **fractional Kelly** (halb), und ein hartes Band — nie die rohe Formel |
+| **L2** | **Trailing-Backtests auf Tagesdaten sind optimistisch verzerrt** (man weiß hinterher, ob High oder Low zuerst kam) | jede Trailing-Idee nur mit **Pfad**-Simulation prüfen — hat E4 bereits gekippt |
+| **L3** | **Take-Profit zu weit relativ zum ATR** ignoriert die Marktmathematik | E5 bestätigt das bei uns mit 22 % Erklärungsanteil |
+| **L4** | **Pfadabhängigkeit gehebelter Positionen** (Avellaneda/Zhang): bei Mean Reversion frisst das tägliche Compounding den Hebel auf | Hebel nur dort, wo die Bewegung **gerichtet** erwartet wird — nicht pauschal |
+| **L5** | **Eingebauter Hebel kostet eine Prämie** (Frazzini/Pedersen): gehebelte Instrumente liefern systematisch schlechtere risikoadjustierte Renditen | selbst hebeln statt Hebelprodukte kaufen — bei uns erfüllt |
+| **L6** | **Kelly gilt für EINE Wette.** Bei korrelierten Gleichzeitigkeiten läuft das Aggregat davon | **Aggregat-Deckel** nötig — gemessen 32 gleichzeitige Positionen, 78 % investiert |
+| **L7** | **Vol-Targeting verbessert den Sharpe nur bei Leverage-Effekt-Assets**, senkt aber das **Tail-Risiko** über alle Klassen | als Risikobegrenzung ja, als Ertragsversprechen nein |
+
+## 4. DER ZIELZUSTAND
+
+    heute   hebel   = verlustanteil / stop_rel        (Stop erzeugt den Hebel)
+
+    Ziel    risiko  = r(q) x Kapital                  (Wahrscheinlichkeit erzeugt das Risiko)
+            nominal = risiko / stop_rel               (Stop bestimmt nur die GROESSE)
+            hebel   = nominal / einsatz               (faellt an, nicht gewaehlt)
+
+### Die vier Komponenten
+
+**K1 — `r(q)`: die Wahrscheinlichkeit erzeugt das Risiko.**
+Kelly, halbiert, **hart geklammert**:
+
+    r(q) = clamp( (q(1+CRV) - 1) / CRV / 2 ,  0,50 % ,  1,25 % )
+
+⚠️ Die Klammer ist **nicht** kosmetisch — sie ist die Antwort auf **L1**
+und **E8**. Bei CRV 2 liegt der Nullpunkt exakt bei q = 33,3 %; ein Fehler
+von einem Prozentpunkt in q verschiebt die Nominale um ~5.000 €. Solange
+die Bewertung nur 17 % liefert, **setzt das Band die Grenzen, nicht die
+Formel**. Wird die Bewertung besser, kann das Band geöffnet werden.
+
+**K2 — Mindest-Stopabstand 5 %.**
+Direkt aus **E1**: unter 5 % ist der Erwartungswert negativ, monoton. Ein
+Anker unter 5 % wird **nicht gehandelt** — er bekommt kein Signal, keinen
+kleineren Hebel. ⚠️ Das ist zugleich die Lösung für die inverse Kopplung:
+ohne enge Stops gibt es keine Hebelspitzen mehr.
+
+**K3 — Einsatz 500 € (Vertrauensgrenze), Aggregat-Deckel.**
+Der Einsatz bleibt, bis Belege ihn heben (N-38). Dazu **L6**: die Summe
+gleichzeitig offener Hebelrisiken wird gedeckelt — der Wert ist eine
+Nutzerentscheidung.
+
+**K4 — Kein Hebeldeckel als Risikoinstrument.**
+Aus **E2**: Ein Deckel senkt das Risiko nicht. `hebel_max = 10` bleibt als
+**Plausibilitätsgrenze** stehen (Schutz vor Rechenfehlern), nicht als
+Risikosteuerung. Die Steuerung liegt bei K1 und K2.
+
+### Was dabei herauskommt — gerechnet, Einsatz 500 €, Stop 5 %
+
+| r | Risiko | Nominal | **Hebel** | |
+|---|---|---|---|---|
+| 0,50 % | 50 € | 994 € | **2,0** | Untergrenze |
+| 0,75 % | 75 € | 1.491 € | **3,0** | |
+| 1,00 % | 99 € | 1.988 € | **4,0** | |
+| 1,25 % | 124 € | 2.485 € | **5,0** | Obergrenze |
+
+> **Die Zielzone 2–5× fällt aus dem Band 0,5–1,25 % von selbst an** — und
+> 0,5–1,25 % ist genau das Praxisband der Literatur. Keine gesetzten
+> Hebelstufen, keine Leiter: der Hebel ergibt sich aus der
+> Wahrscheinlichkeit, wie gefordert.
+
+⚠️ **Und die Nutzervorgabe „unter 2 ist kein Hebel" ist damit automatisch
+erfüllt** — die Untergrenze des Bandes ergibt exakt 2,0. Was darunter
+läge, wird Spot.
+
+## 5. ⚠️ Was der Zielzustand NICHT löst — ehrlich benannt
+
+1. **Die Bewertung bleibt der Engpass (E8).** Bei 17 % Kalibrierung
+   arbeitet `r(q)` fast durchgehend an einer Bandgrenze. Der Zielzustand
+   ist **robust gegen** die schwache Bewertung, aber er macht sie nicht
+   besser. **L6 im Plan bleibt der eigentliche Weg.**
+2. **Der Mindest-Stop von 5 % kostet Signale.** Heute liegt der
+   Stop-Median bei 7,73 %, P10 bei 4,11 % — rund 10–20 % der Anker fielen
+   weg. Die genaue Zahl gehört in Schritt 4.
+3. **E3/E4 bleiben offen.** 87 % der Stop-Fälle liefen zwischenzeitlich
+   ins Plus, aber die naive Gegenmaßnahme ist widerlegt. Kein Bestandteil
+   dieses Zielzustands.
+4. **Der Aggregat-Deckel braucht die Positionsführung für Hebel** — Spot
+   ist ein Bestand, Hebel ein Trade mit Lebenszyklus. Eigener Baustein.
+
+## 6. Die offenen Entscheidungen
+
+| | | |
+|---|---|---|
+| **r-Band** | 0,50 – 1,25 % | Vorschlag aus Literatur + Zielzone; **Nutzerentscheidung** |
+| **Mindest-Stop** | 5 % | aus E1 abgeleitet, aber die Signalzahl fällt — **Nutzerentscheidung** |
+| **Aggregat-Deckel** | offen | z. B. Summe offener Hebelrisiken ≤ 3 % des Kapitals |
+| **Einsatz / Vertrauensleiter** | 500 €, Stufen an Belege | N-38 |
