@@ -8119,3 +8119,87 @@ Werkzeuge: `pruefe_kandidaten_abdeckung_stabilitaet.py` (jetzt mit
 `--arten` und `--laengs`), `pruefe_kandidaten_untereinander.py` (neu)
 Verwandt: **F-217** · **F-218** · **F-221** · Regel 3 · Methodik 2.104
 
+
+
+## F-223 ⚠️⚠️⚠️ N-46: Die Tagesklammer fehlte — zum DRITTEN Mal (05.09.2026)
+
+**Die stehende Vorgabe seit 31.08.:** ein Beitrag muss je **Kalendertag**
+gemessen werden, nicht gepoolt. Bei Vorfilter H waren das 4,6 Punkte
+(gepoolt +3,57 · je Tag −1,02, nicht trennbar). Die Memory dazu vermerkt
+ausdrücklich *„Mir zweimal passiert: H und B."*
+
+⚠️ **`quote_je_fuenftel` — das Werkzeug, auf dem heute JEDE gemessene
+Spanne beruht (F-217, F-221, F-222) — poolt über die ganze Historie.**
+
+### Warum es die LÄNGS-Form zerlegt und die QUER-Form kaum berührt
+
+    QUER    Fuenftel je TAG ueber Symbole -> jeder Tag liefert per
+            Konstruktion gleich viele Anker je Fuenftel. Ausgeglichen.
+
+    LAENGS  Fuenftel je SYMBOL ueber seine Zeit -> ein Tag kann fast ALLE
+            Symbole im selben Fuenftel haben. Poolen vermengt die
+            Fuenftel-Aussage mit der TAGESRATE.
+
+### Der Selbsttest — eine Welt OHNE Fünftel-Effekt, nur mit Tagesunterschieden
+
+    gepoolt   +6,55 -5,87 -4,02 -5,83 -3,80   Spanne 12,42
+    TAG       -0,02 -0,74 +1,12 -0,70 +0,36   Spanne  1,86 · Rauschen 1,98
+
+**Gepoolt erfindet 12,4 Punkte auf einem gepflanzten Nulleffekt. Die
+Tagesklammer bleibt im Rauschen.**
+
+⚠️ Auch hier war meine erste Annahmeschwelle **geraten** (1,0) und ließ ein
+funktionierendes Verfahren durchfallen — derselbe Fehler wie am Morgen. Sie
+wird jetzt aus n hergeleitet, und das Werkzeug **weist seine eigene
+Genauigkeit aus**.
+
+### Das Ergebnis — die Erwartung stand vor dem Lauf im Skriptkopf
+
+| Form · Größe | gepoolt | Tagesklammer | |
+|---|---|---|---|
+| quer · vola | 3,96 | **3,77** | gleich |
+| quer · schnitt50 | 4,30 | **4,20** | gleich |
+| quer · amihud | 6,56 | **6,51** | gleich |
+| längs · vola | 5,37 | **1,19** | **−78 %** |
+| längs · schnitt50 | 5,06 | **0,88** | **−83 %** |
+| längs · amihud | 4,05 | **1,34** | **−67 %** |
+| `zufall` | 0,17–0,24 | **0,04–0,19** | ✔ unter beiden im Rauschen |
+
+> **Die Längs-Spannen waren zu rund 80 % ein Lage-Effekt.** Sie
+> verschwinden nicht ganz (0,88–1,34 gegen 0,3 Rauschen), sind aber viel
+> kleiner als behauptet. **Die Quer-Befunde bleiben gültig.**
+
+Damit ist auch die untaugliche Kontrolle aus **F-222** erklärt: bei
+`amihud` längs lieferte die Tagesmischung +0,620, weil sie die Tagesrate
+stehen ließ.
+
+### Zwei Korrekturen an F-221/F-222
+
+**1 — `vola` ist KEIN Schalter.** Quer unter der Tagesklammer ist sie streng
+monoton: **+1,88 · +0,63 · −0,10 · −0,54 · −1,89**. Die
+Schalter-Beschreibung stammte aus der Längs-Form, also aus genau der
+Messung, die sich als Lage-Effekt herausstellt.
+
+**2 — `amihud` ist der STÄRKSTE Kandidat, nicht der viertstärkste:**
+
+    amihud quer, Tagesklammer:  -2,79  -2,69  -0,36  +2,17  +3,72
+                                Spanne 6,51 Punkte, streng monoton
+
+Größer als `funding` (3,00 registriert) und als `turnover` (5,55, hält
+nicht). 100 % Abdeckung, unabhängig von allem (|r| < 0,20).
+
+### ⚠️ Der Vorbehalt bei `amihud` — vor jeder Registrierung zu klären
+
+Amihud misst **Illiquidität**. Das beste Fünftel ist das **illiquideste** —
+und dort ist die Barrieren-Simulation am wenigsten vertrauenswürdig: sie
+rechnet auf OHLC-Kursen und kennt weder Slippage noch dünne Bücher. Der
+Befund könnte ein Artefakt **nicht handelbarer Kurse** sein.
+
+⚠️ Das ist **keine Gebührenfrage** (Regel 2 bleibt unberührt), sondern die
+Frage, ob es den Kurs überhaupt gab. Sie gehört gemessen, nicht
+weggeschätzt.
+
+Werkzeug: `messe_fuenftel_mit_tagesklammer.py` (neu, mit Selbsttest)
+Verwandt: **F-217** · **F-221** · **F-222** · Tagesklammer-Vorgabe (31.08.)
+· Vorfilter H · „Boden unten"
+
