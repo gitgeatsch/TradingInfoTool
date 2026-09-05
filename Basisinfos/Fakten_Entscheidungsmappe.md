@@ -8265,3 +8265,161 @@ Werkzeuge: `pruefe_amihud_handelbarkeit.py` (neu),
 `messe_fuenftel_mit_tagesklammer.py` (jetzt mit `--arten` und `--nur`)
 Verwandt: **F-219** · **F-221** · **F-222** · **F-223**
 
+
+
+## F-225 ⚠️⚠️ D1/N-47: Der Horizont entscheidet — und die Rendite-Spalte fiel durch ihre Kontrolle (05.09.2026)
+
+**Der Anlass (Nutzerhinweis):** In der Kette standen **drei** Horizonte
+nebeneinander, ohne je verglichen worden zu sein — 60 Tage (worauf ich am
+05.09. alle Kandidaten mass, weil das Werkzeug das so hatte), 20 (worauf
+`funding`/`turnover` gefittet wurden), 3–5 (worauf gehandelt wird). Dazu
+**zwei** Zielgrößen, die vermischt wurden: **Rendite in R** und
+**Barrieren-Quote**.
+
+### ⚠️ Die RENDITE-Spalte wird NICHT berichtet — sie fällt durch die Kontrolle
+
+    zufall RENDITE   H5   Spanne 0,245 gegen Rauschgrenze 0,015   16×
+                    H20   Spanne 0,481 gegen 0,073               6,6×
+                    H60   Spanne 2,815 gegen 0,376               7,5×
+
+Eine Kunstgröße ohne Information zeigt große „Effekte". **Damit gilt keine
+Zahl dieser Zeilen** — auch nicht die schönen (vola +11,6 R bei H60).
+
+**Der Grund:** `in_r` ist extrem schiefverteilt (Median −0,41 R · Mittel
++0,74 R · 99-%-Quantil +13,7 R), und der Standardfehler unterstellt
+unabhängige Anker. Sie sind **überlappend**. Bei einer binären, beschränkten
+Größe wie der Barriere fällt das kaum ins Gewicht — bei einem schweren Rand
+voll.
+
+⚠️ **Das entwertet den Funding-Befund vom 30.08. NICHT.** Der maß die
+Rendite mit **Block-Bootstrap**, der die Überlappung korrekt behandelt.
+Meine Rendite-Spalte ist kaputt, seine nicht.
+
+### Die BARRIERE-Spalte — besteht die Kontrolle in allen neun Zellen
+
+| Größe | **H5** (57,3 % aufgelöst) | **H20** (92,7 %) | **H60** (99,3 %) |
+|---|---|---|---|
+| **amihud** | **7,09** ✔ monoton | **6,17** ✔ monoton | **6,51** ✔ monoton |
+| schnitt50 | 4,11 | 4,34 | 4,19 |
+| vola | **2,10** | 3,27 ✔ | 3,80 ✔ |
+| turnover | 3,27 ✔ | 3,03 | 2,74 |
+| **funding** | **0,50** *(Rauschen 0,49)* | 0,99 | 1,08 |
+| `zufall` | 0,28 ✔ | 0,21 ✔ | 0,20 ✔ |
+
+✔ **Reproduktionskontrolle bestanden:** H60 liefert amihud 6,51 ·
+schnitt50 4,19 · funding 1,08 — exakt die Werte aus F-224. Das
+Horizont-Umschalten über `messe_zielregel.HORIZONT` arbeitet korrekt.
+
+### Was der Horizont ändert
+
+| | |
+|---|---|
+| **amihud** | am **stärksten auf dem Betriebshorizont** (7,09 bei H5), monoton auf allen dreien |
+| **vola** | verliert kurz: 3,80 → 3,27 → **2,10**, bei H5 nicht mehr monoton — ein Langfrist-Signal |
+| **funding** | bei H5 **nicht vom Rauschen zu trennen** (0,50 gegen 0,49) |
+| schnitt50 · turnover | horizontstabil |
+
+### ⚠️ Die Einschränkung zur H5-Spalte
+
+Dort lösen sich nur **57,3 %** der Anker auf. Die Spanne gilt für die
+**großen Beweger**, nicht für alle Anker.
+
+### ⚠️ Eigener Fehler vor dem Lauf gefangen
+
+Die erste Fassung **baute die Fünftelbildung nach**, statt
+`_fuenftel_je_tag` zu rufen — und der Nachbau hatte einen anderen Nenner
+(`len` statt `len−1`). BARRIERE und RENDITE hätten **verschiedene Fünftel**
+verglichen, ohne dass etwas angeschlagen hätte. *Ein Test muss die echte
+Funktion rufen, nie eine Kopie.*
+
+Werkzeug: `messe_kandidaten_je_horizont.py` (neu, mit Selbsttest)
+Verwandt: **F-219** · **F-223** · **F-224** · Funding-Befund 30.08. ·
+Methodik 2.85
+
+
+
+## F-226 ⚠️⚠️⚠️ N-48: Der Nullpunkt war zu optimistisch — und `amihud` ist zu 95 % ein Asset-Etikett (05.09.2026)
+
+**Nutzerauftrag:** *„vorher nochmal detailliert auf Messfehler prüfen bei
+allen Werten und Messungen zuletzt."* Genau das hat einen gefunden.
+
+### Der Verdacht
+
+`zufall` zieht für jedes Symbol an **jedem Tag neu**. Die echten Größen sind
+**persistent** — ein illiquider Coin bleibt es monatelang. Die
+Barrieren-Ausgänge **überlappen**: dasselbe Symbol an aufeinanderfolgenden
+Tagen teilt weitgehend dieselbe Zukunft. Bei täglich neu gezogenen Größen
+mittelt sich das weg, bei persistenten **stapelt es sich**.
+
+⚠️ Dann wäre `zufall` **kein gültiger Nullpunkt für genau die Größen, um die
+es geht** — derselbe Fehlertyp wie bei der Längs-Form (F-223).
+
+### Die Persistenz, gemessen
+
+    amihud      95,4 %      turnover   65,9 %
+    vola        87,9 %      funding    47,9 %
+    schnitt50   75,8 %      zufall     20,0 %   ✔ das Mass stimmt
+
+### Der ehrliche Nullpunkt — Kunstgrößen mit ECHTER Persistenz
+
+Jedes Symbol bekommt **einen festen Zufallswert**, daraus die Tagesfünftel:
+maximal beständig, **null Information**.
+
+| Kunstgröße | Spanne | Persistenz |
+|---|---|---|
+| fest je Symbol | **0,98** | 99,9 % |
+| neu alle 250 Tage | **1,14** | 99,6 % |
+| neu alle 60 Tage | 0,41 | 98,5 % |
+
+> **Rund ein Punkt Spanne entsteht allein aus Persistenz plus überlappenden
+> Ausgängen** — gegen `zufall` mit 0,19 und meine gerechnete Grenze von
+> 0,27. **Meine Rauschgrenzen in F-224/F-225 waren um Faktor 4 zu klein.**
+
+`sqrt(p(1−p)/N)` unterstellt unabhängige Anker. Sie sind es nicht.
+
+### Was das an den Befunden ändert
+
+| Größe | Spanne | gegen 1,14 | Urteil |
+|---|---|---|---|
+| **amihud** | 6,51 | **5,7×** | trägt |
+| schnitt50 | 4,20 | 3,7× | trägt |
+| vola | 3,77 | 3,3× | trägt |
+| turnover | 2,83 | 2,5× | trägt, schwächer als es aussah |
+| **funding** | 1,08 | **0,95×** | ⚠️ **unter dem Nullpunkt** |
+| `zufall` | 0,19 | 0,17× | ✔ |
+
+> **`funding` liegt auf der Barriere UNTER dem ehrlichen Nullpunkt.** Seine
+> 1,08 Punkte sind vollständig durch Persistenz erklärbar.
+
+⚠️ **Das entwertet den Funding-Befund vom 30.08. nicht.** Der maß die
+**Rendite** mit **Block-Bootstrap**, der die Überlappung korrekt behandelt.
+Die Abgrenzung ist damit vollständig: **Funding trägt auf seiner Größe —
+auf der Barriere trägt es nichts.**
+
+### ⚠️⚠️ Die offene Grundsatzfrage: Persistenz gegen Regel 3
+
+`amihud` behält sein Fünftel zu **95,4 %**. Damit sagt die Größe
+überwiegend *„welches Asset"*, nicht *„welcher Zeitpunkt"*.
+
+**Die Spannung ist echt und nicht allein auflösbar:**
+
+| | |
+|---|---|
+| **dafür** | Die Vorgabe vom 31.08. definiert einen gültigen Beitrag ausdrücklich als *„welches Asset ist heute besser"* — Querschnitt je Kalendertag. Genau das ist `amihud`, und der persistente Nullpunkt zeigt, dass die Sortierung **nach Illiquidität** etwas erfasst, was eine zufällige Sortierung nicht erfasst |
+| **dagegen** | **Regel 3: wir bewerten Zeitpunkte, nicht Assets.** Bei 95 % Beständigkeit ist das „heute" faktisch ein Dauerurteil — ein illiquider Coin bekäme dauerhaft denselben Beitrag |
+
+⚠️ **Nutzerentscheidung.** Sie betrifft nicht nur `amihud`, sondern die
+Frage, wie beständig ein Beitrag sein darf.
+
+### ⚠️ Was hier NICHT geprüft ist
+
+Der persistente Nullpunkt wurde bei **Horizont 60** gemessen. Bei H5 ist die
+Auflösung niedriger und der Nullpunkt vermutlich größer. Die H5-Zahlen aus
+**F-225** (amihud 7,09) sind damit gegen eine **noch ungemessene** Grenze zu
+lesen — die Richtung ist eindeutig, die genaue Zahl nicht.
+
+Werkzeug: `pruefe_persistenz_und_nullpunkt.py` (neu, mit Vorabtest der
+Kunstgröße)
+Verwandt: **F-222** · **F-223** · **F-224** · **F-225** · Regel 3 ·
+Tagesklammer-Vorgabe · Methodik 2.104
+
