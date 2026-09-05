@@ -2731,3 +2731,149 @@ Scheinbefunde liefern (2.49).
 ## Betriebsrahmen
 
 Nur lokale SQLite-Lesevorgänge, keine API-Abrufe.
+
+
+---
+
+# ⚠️⚠️⚠️ N-38 — DIE HEBELGEOMETRIE: zwei Grenzen, die kleinere gewinnt (05.09.2026)
+
+*Nutzervorgaben: „nach Möglichkeit sollten wir nicht alles messen, sondern
+auch auf die Literatur setzen“ · „ich möchte nicht zu Beginn 1000 oder mehr
+Euro in einen Hebel investieren, erst wenn das System funktioniert“ ·
+„nicht vergessen: die Trennung zwischen Bewertung und Wirtschaftlichkeit“*
+
+## ⚠️ Die Trennung zuerst — sie gilt für diesen ganzen Punkt
+
+| | gehört wohin |
+|---|---|
+| Potential, Beiträge, Schwelle, Kalibrierung (F-215) | **BEWERTUNG** — neutral, gebührenfrei, bleibt unangetastet |
+| Einsatz, Risikoquote, Hebelhöhe, Funding-Kosten, Deckel | **WIRTSCHAFTLICHKEIT** — dieser Punkt |
+
+**Die einzige Brücke ist eine Zahl**: das kalibrierte Potential als
+*Eingabe*. Es fließt nichts zurück — die Bewertung wird nicht verändert,
+weil eine Sizing-Rechnung etwas ergibt.
+
+**Spot bleibt unberührt.** Ohne Stop gibt es dort kein definiertes
+Verlustrisiko; `verlustanteil` ist eine Größenkonvention, kein Limit.
+N-38 betrifft ausschließlich die Hebelseite.
+
+## ➊ Der Befund: unsere Formel IST bereits die Praxisregel
+
+Praxisquelle des Nutzers: *„Der Bot wählt den Hebel dynamisch basierend auf
+der Volatilität (ATR)… um das Risiko pro Trade mathematisch immer exakt bei
+z. B. 1 % des Gesamtkapitals zu halten.“*
+
+    Unsere Formel:   hebel = verlustanteil / stop_rel
+                             ^Konstante      ^aus der Schwankungsbreite
+
+    Stop 15 % (unruhig) -> Hebel  1,0x      Stop 3,0 %        -> Hebel  5,0x
+    Stop  5 %           -> Hebel  3,0x      Stop 1,5 % (ruhig) -> Hebel 10,0x
+
+**Strukturell identisch — und die Zahlen treffen die Beispiele des Textes
+(unruhig 3×, ruhig 10×).** Es ist Volatility-Targeting, nur anders
+geschrieben. ✔ **Kein Umbau nötig, die Ausgangslage ist fachlich in
+Ordnung.**
+
+Und das Niveau stimmt auch: 800 € × 15 % = 120 € Risiko = **1,21 % des
+Kapitals** (9.942 €). Der Praxistext nennt 1,0 %, das übliche Band der
+Literatur ist 0,5–2,0 %.
+
+## ➋ Der eine echte Konstruktionsfehler: der ANKER
+
+Das Risiko ist als Anteil eines **festen Einsatzes** definiert, nicht als
+Anteil des **Kapitals**. Es driftet deshalb — und es **ist** gedriftet:
+
+    Portfolio  5.567 EUR (Tiefstand)  ->  120 EUR = 2,16 %   ueber dem Band
+    Portfolio  9.942 EUR (heute)      ->  120 EUR = 1,21 %   im Band
+
+Nicht die Höhe ist falsch, sondern die Bezugsgröße.
+
+## ➌ Die Konstruktion: ZWEI Grenzen, die kleinere gewinnt
+
+    1  RISIKOREGEL      Risiko = r x Kapital          (r = 1,0 %)
+                        -> Einsatz = Risiko / verlustanteil
+    2  EINSATZDECKEL    Einsatz <= E_max              (heute 800 EUR)
+
+    Es gilt:            Einsatz = min(Regel, Deckel)
+
+| Kapital | Regel sagt | Deckel | → Einsatz | Risiko | % Kapital | bindet |
+|---|---|---|---|---|---|---|
+| 5.000 | 333 € | 800 € | **333 €** | 50 € | 1,00 % | Regel |
+| 9.942 | 663 € | 800 € | **663 €** | 99 € | 1,00 % | Regel |
+| 12.000 | 800 € | 800 € | **800 €** | 120 € | 1,00 % | Gleichstand |
+| 20.000 | 1.333 € | 800 € | **800 €** | 120 € | 0,60 % | **Deckel** |
+
+⚠️ **Warum das in BEIDE Richtungen richtig wirkt:**
+
+* **Kapital fällt** → die Regel bindet → der Einsatz sinkt automatisch mit.
+  Genau das fehlt heute (bei 5.567 € standen weiterhin 120 € im Risiko).
+* **Kapital steigt** → der Deckel bindet → die Position wächst **nicht**
+  mit, das relative Risiko sinkt sogar. **Das ist die Nutzervorgabe:
+  „nicht zu Beginn 1000 oder mehr Euro, erst wenn das System
+  funktioniert.“**
+
+✔ **Bei heutigem Kapital ergäbe die Regel 663 € statt 800 €** — also
+weniger als heute, und das Risiko fällt von 1,21 % auf exakt 1,00 %.
+
+## ➍ Die Vertrauensleiter — wann darf `E_max` steigen?
+
+Der Deckel ist kein Rechenwert, sondern eine **Vertrauensgrenze**. Er wird
+nicht geschätzt, sondern an Belege gebunden:
+
+    Stufe 0   E_max =   800 EUR   heute - noch KEIN Hebeltrade der neuen
+                                  Kette existiert (0 von 3.455 Signalen)
+    Stufe 1   E_max = 1.200 EUR   nach N entschiedenen Hebeltrades, deren
+                                  Trefferquote-Untergrenze den Breakeven
+                                  ueberschreitet
+    Stufe 2   ...                 dieselbe Bedingung, naechste Stufe
+
+⚠️ **N und der Breakeven sind Nutzerentscheidungen**, keine Ableitungen.
+Der Breakeven hängt am Ausführungsweg (Standardgebühr 37,3 % · Bitpanda
+53,3 %) — und damit an der Wirtschaftlichkeitsebene, nicht an der Bewertung.
+
+## ➎ ⚠️ Was BEWUSST zurückgestellt wird: die Abstufung nach Potential
+
+Naheliegend wäre, das Risiko mit dem Potential zu staffeln (Kelly:
+`f* = Potential / CRV`). **Die kalibrierte Datenlage trägt das heute
+nicht:**
+
+    Kalibrierungsfaktor (F-215)                     0,168
+    halbes Kelly ueber den GANZEN Potentialbereich  0,13 % .. 0,56 %
+    Praxis-Untergrenze der Literatur                0,50 %
+
+**Halbes Kelly liegt fast überall unter der Risikountergrenze.** Eine
+Abstufung würde an dieser Grenze kleben und täte nur so, als wüsste sie
+mehr, als sie weiß. **Sie bleibt vorgemerkt — für den Tag, an dem der
+gemessene Vorteil sie trägt.** Das ist kein Verzicht, sondern die
+Reihenfolge, die der Nutzer selbst gesetzt hat: erst die Bewertungsfaktoren,
+dann die Architektur.
+
+## ➏ Was aus dem Praxistext noch fehlt — ohne neue Messung machbar
+
+| | | Stand bei uns |
+|---|---|---|
+| **CRV-Prüfung** (Ziel 2–3× Stop) | ✔ vorhanden | CRV fest 2,0 |
+| **Hebel aus Volatilität** | ✔ vorhanden | `verlustanteil / stop_rel` |
+| **Funding-Check als SPERRE** | ✖ **fehlt** | Funding ist ein *Beitrag*, aber keine Blockade bei extremen Finanzierungskosten |
+| **Aggregat-Deckel** | ✖ **fehlt** | kein Limit für die Summe gleichzeitig offener Hebelrisiken |
+
+⚠️ **Der Aggregat-Deckel ist der wichtigere der beiden.** Kelly und
+Fixed-Fractional beantworten *„wie viel auf DIESEN Trade“* — nicht, was
+passiert, wenn mehrere gleichzeitig verlieren. Im Kryptomarkt ist der
+gemeinsame Abverkauf der Normalfall. Gemessen: **32 gleichzeitige
+Positionen, 78 % des Kapitals investiert.** Ohne Deckel läuft das Aggregat
+davon, egal wie sauber die Einzelrechnung ist.
+
+## Die Reihenfolge
+
+    1  Anker korrigieren   Risiko = r x Kapital statt Anteil eines festen
+                           Einsatzes; `min(Regel, Deckel)` als eine Stelle
+    2  Aggregat-Deckel     Summe der offenen Hebelrisiken <= R_max x Kapital
+    3  Funding-Sperre      Einstieg blockieren bei extremen Finanzierungskosten
+    4  Vertrauensleiter    E_max an Belege binden
+    -  zurueckgestellt     Abstufung nach Potential (bis F-215 sie traegt)
+
+⚠️ **Schritt 1 ist klein und betrifft EINE Funktion**
+(`betraege.verlustanteil` / `risiko_eur`) — aber er ändert die
+Positionsgröße jedes künftigen Hebeltrades. Vor dem Bau ist die Wirkung
+zu rechnen (`simuliere_kette.py`), nicht danach.
