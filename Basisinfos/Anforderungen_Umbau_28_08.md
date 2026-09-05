@@ -3346,3 +3346,43 @@ Prüfkriterium ist ab jetzt zweiteilig: **trägt er** UND **wie viel deckt er**.
 
 **Diese fünf sind die Voraussetzung dafür, dass ein neuer Beitrag nicht
 denselben Weg nimmt wie funding und turnover.**
+
+
+---
+
+# ✔ ENTSCHEIDUNG 05.09. — ERST DIE BEWERTUNG, DANN DER HEBELUMBAU
+
+**Nutzerentscheidung** zur Frage aus N-42 (*„geht die Quote kalibriert oder
+roh in die Kelly-Formel?"*):
+
+> **Weder noch — zuerst wird die Bewertung tragfaehig gemacht.**
+
+## Was das heisst
+
+| | |
+|---|---|
+| **O4 wird vorgezogen** | ein zweiter Beitrag, der **traegt UND breit deckt** |
+| **Der Hebelumbau wartet** | K1/K2/K3 bleiben stehen, bis `r(q)` etwas zu verteilen hat |
+| **Die heutige Formel bleibt** | `hebel = verlustanteil / stop_rel`, mit ihrem bekannten Mangel (invers zur Evidenz), aber ohne neuen Fehler |
+| **N-39 bleibt gueltig** | als Zielzustand; das r-Band wird erst hergeleitet, wenn die Kalibrierung feststeht |
+
+⚠️ **Der Grund:** Eine Kelly-Formel auf eine Eingabe zu setzen, die sie nicht
+tragen kann, ist in beiden Richtungen falsch — roh wird um Faktor 5
+ueberwettet (L1), kalibriert entsteht fast kein Hebel mehr. Die Formel ist
+nicht das Problem.
+
+## Der naechste Schritt — N-43
+
+Kandidaten aus **N-17b**, die bereits als tragend gemessen wurden:
+
+    vola             aus Kursdaten   -> volle Abdeckung erwartet
+    rsi              aus Kursdaten   -> volle Abdeckung erwartet
+    momentum_kurz    aus Kursdaten   -> volle Abdeckung erwartet
+    funding_extrem   aus Funding     -> 302 Symbole
+
+⚠️ **Bei keinem von ihnen wurde geprueft, ob die Ordnung ueber die Zeit
+haelt** — genau die Pruefung, an der turnover gefallen ist (F-217). Und
+keiner hat eine Abdeckungszahl.
+
+**Beide Kriterien werden jetzt gemeinsam erhoben**, bevor irgendeiner als
+Beitrag registriert wird.

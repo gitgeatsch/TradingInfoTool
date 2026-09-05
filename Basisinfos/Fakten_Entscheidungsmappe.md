@@ -7931,3 +7931,94 @@ Beide Kriterien, nicht eines.
 Verwandt: **F-217** · **F-218** · **F-219** · N-39 · N-40 · L1 (Kelly mit
 geschätztem µ überwettet) · Regel 3
 
+
+
+## F-221 ✔✔ N-43: `vola` erfüllt ALLE DREI Kriterien — der erste Kandidat, der das tut (05.09.2026)
+
+Nutzerentscheidung 05.09.: *erst die Bewertung, dann der Hebelumbau*. O4 ist
+damit der Blocker. Geprüft wurden die vier Kandidaten aus **N-17b**, gegen
+die beiden registrierten Beiträge als Maßstab und `zufall` als Kontrolle.
+
+### Kriterium 2 — ABDECKUNG (neu aus F-218)
+
+| Größe | Symbole | Anteil |
+|---|---|---|
+| **vola · rsi · momentum_kurz** | **516** | **100 %** |
+| funding_extrem | 278 | 53,9 % |
+| funding *(registriert)* | 287 | 55,6 % |
+| turnover *(registriert)* | 65 | 12,6 % |
+
+### Kriterium 1 — STABILITÄT über sechs Blöcke
+
+| Größe | Spearman | Urteil |
+|---|---|---|
+| **vola** | **+0,647** | **trägt stark — zwischen 2- und 4-Punkt-Pflanzung** |
+| rsi | +0,333 | trägt, unter 1 Punkt |
+| momentum_kurz | +0,080 | **nicht trennbar** |
+| funding_extrem | −0,000 | **nicht trennbar** |
+| funding | +0,180 | trägt schwach |
+| turnover | +0,113 | im Rauschen |
+| `zufall` *(Nullpunkt)* | **−0,013** | ✔ die Kontrolle sitzt |
+
+⚠️ **Eigener Fehler, korrigiert:** Die erste Urteilsregel verglich jede
+Größe nur mit ihrer eigenen Mischung und schrieb bei `momentum_kurz`
+„hält" — bei +0,080. Der belastbare Maßstab ist die Kunstgröße `zufall`;
+die Regel prüft jetzt gegen sie.
+
+⚠️ **`funding_extrem` wurde in N-17b als tragend gemessen, hält aber nicht.**
+Derselbe Befund wie bei turnover: **„trägt im Querschnitt" heißt nicht
+„hält über die Zeit".**
+
+### Kriterium 3 — UNABHÄNGIGKEIT (N-43b)
+
+    Ueberlappung der Fuenftel   -0,082   praktisch unabhaengig
+    gleiches Fuenftel           19,1 %   (Zufall waere 20 %)
+
+**Bedingt auf ein festes funding-Fünftel** — die eigentliche Frage:
+
+    vola      mittlere Spanne 2,73 Punkte
+    zufall    mittlere Spanne 0,90 Punkte
+
+Und die Richtung hält in **allen fünf** funding-Fünfteln: das höchste
+Vola-Fünftel hat jedes Mal die niedrigste Quote (28,5 · 30,2 · 29,7 · 30,7
+· 29,5).
+
+### ⚠️ Regel 3 — ZEITPUNKT oder ASSET? (N-43c)
+
+Volatilität ist zum Teil eine dauerhafte Asset-Eigenschaft. Eine über sechs
+Blöcke stabile Ordnung ist genau das, was eine solche erzeugen würde — und
+**F-218 hat am selben Tag gezeigt, dass die Bewertung genau so schon einmal
+verdeckt gegen Regel 3 verstoßen hat.**
+
+Fünftel deshalb **je Symbol aus seiner eigenen Vergangenheit**, nachlaufend
+(250 Tage Rückblick, nur Vergangenheit):
+
+| | Quote je eigenem Fünftel | Spanne |
+|---|---|---|
+| **vola längs** | **37,42** · 33,22 · 32,05 · 32,95 · 33,29 | **5,37 Punkte** |
+| `zufall` längs | 34,31 · 34,48 · 34,41 · 34,36 · 34,41 | **0,17 Punkte** |
+
+> **Faktor 31 gegen die Kontrolle. `vola` ist eine ZEITPUNKT-Aussage,
+> Regel 3 ist erfüllt.**
+
+Die Richtung ist in beiden Schnitten dieselbe: **niedrige Volatilität →
+höhere Trefferquote.**
+
+### ⚠️ Ein Schalter, kein Regler
+
+Längs hebt sich **nur das unterste Fünftel** ab (37,4 % gegen eine Basis von
+rund 34,4 %); die übrigen vier liegen flach bei 32–33 %. Eine fünfstufige
+Leiter wäre hier die falsche Form. Deckt sich mit dem registrierten Befund
+*„Die Schwelle ist ein Schalter, kein Regler"*.
+
+### Was noch NICHT geprüft ist
+
+Die **Längs**-Form hat die Stabilitätsprüfung nicht durchlaufen — F-217 lief
+auf der Quer-Form. Welche Form registriert wird, ist die nächste Frage und
+braucht diese Messung.
+
+Werkzeuge: `pruefe_kandidaten_abdeckung_stabilitaet.py`,
+`pruefe_vola_unabhaengig.py`, `pruefe_vola_zeitpunkt_oder_asset.py` (alle neu)
+Verwandt: **F-217** · **F-218** · **F-220** · Regel 3 · „Schalter, kein
+Regler" · Indikatoren auch in Kombination prüfen
+
