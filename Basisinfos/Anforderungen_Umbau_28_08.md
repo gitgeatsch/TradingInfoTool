@@ -3280,3 +3280,69 @@ Belege**. Live: 90 Signale mit 3 Faktoren, 29 mit 2. Keine geratene Zahl.
 Für den Zielzustand (`hebel = nominal / einsatz`) muss feststehen, **welcher
 der Nenner ist**. Fachlich ist es der tatsächlich eingesetzte Betrag — also
 die Tranche. ⚠️ **Nutzerentscheidung**, weil es den Hebel direkt skaliert.
+
+
+---
+
+# ⚠️⚠️⚠️ N-42 — DIE ANTWORT AUF DIE HEBELFRAGE (05.09.2026, abends)
+
+*Schritt 4 der Reihenfolge zu N-38 ist damit teilweise vorweggenommen: der
+Wirkungslauf gegen die Grundlinie ist nicht mehr die nächste Frage, weil die
+Voraussetzung fehlt.*
+
+## Die Kette der Befunde
+
+    F-217  funding haelt schwach, turnover haelt NICHT
+    F-218  die alte Kalibrierungszahl war ein Verfuegbarkeits-Artefakt
+    F-219  auf invarianter Form gemessen: die Bewertung liefert 19,5 %
+    F-220  damit erreicht nur EINE Kombination die Zielzone 2-5x
+
+## Die Antwort auf die Nutzerfrage
+
+> *„der Hebel soll aus der Wahrscheinlichkeit dynamisch entstehen"*
+
+**Der Entwurf trägt. Die Bewertung nicht.** Mit 19,5 % Kalibrierung und der
+heutigen Beitragslage erreicht genau ein Fall die Zielzone (2,60×) — und
+der braucht turnover, der weder trägt noch breit gedeckt ist.
+
+## ⚠️ Die Entscheidung, die daraus wird
+
+**Nicht** „welches r-Band?", sondern:
+
+> **Geht die Quote KALIBRIERT in die Kelly-Formel oder roh?**
+
+| | roh (heute) | kalibriert |
+|---|---|---|
+| bestes halbes Kelly | 3,34 % | 0,651 % |
+| Band 0,50–1,25 % wirkt als | **Deckel** | **Boden** |
+| Hebel in der Zielzone | breit | **ein einziger Fall** |
+| fachlich | überwettet (L1) | korrekt, aber fast immer Spot |
+
+⚠️ **Roh zu rechnen heißt, mit einem µ zu wetten, das um Faktor 5 zu hoch
+ist** — genau der Literaturfehler L1. Kalibriert zu rechnen heißt, dass
+vorerst kaum Hebel entsteht.
+
+**Der dritte Weg — und der einzige, der beides löst:** die Bewertung
+verbessern, bis sie eine Abstufung trägt. Dann fällt die Frage von selbst.
+
+## Der Bauplan verschiebt sich
+
+    ALT   Portfoliowert -> K1 -> Positionsfuehrung -> Aggregat-Deckel
+    NEU   O4 zuerst: ein zweiter Beitrag, der TRAEGT und BREIT DECKT
+          danach erst K1 - vorher hat r(q) nichts zu verteilen
+
+⚠️ **O4 ist damit keine Richtung mehr, sondern ein Blocker.** Und das
+Prüfkriterium ist ab jetzt zweiteilig: **trägt er** UND **wie viel deckt er**.
+
+## Was an Werkzeug jetzt steht
+
+| | |
+|---|---|
+| `messe_kalibrierung_je_datenlage.py` | die Kalibrierung auf invarianter Form, mit Abdeckungsausweis |
+| `pruefe_steigung_invarianz.py` | die Eigenschaftsprüfung, die F-215 zu Fall brachte |
+| `pruefe_stufen_stabilitaet.py` | Ordnungsstabilität gegen ZWEI Nullpunkte, mit Spannenreihe |
+| `pruefe_beitragszahl_sickert.py` | trennt Messgerät-Defekt von Bewertungs-Defekt |
+| `referenzlauf_hebelgeometrie.py` | die Grundlinie, jetzt mit Datums-Auswahl und Standausweis |
+
+**Diese fünf sind die Voraussetzung dafür, dass ein neuer Beitrag nicht
+denselben Weg nimmt wie funding und turnover.**

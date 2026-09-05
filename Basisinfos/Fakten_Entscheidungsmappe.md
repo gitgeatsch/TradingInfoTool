@@ -7786,3 +7786,148 @@ Werkzeuge: `pruefe_steigung_invarianz.py`, `pruefe_beitragszahl_sickert.py`,
 Verwandt: **F-215** (gefallen) · **F-217** · Regel 3 · „Die Summe der
 Beiträge taugt nicht als Rangfolge" · Methodik 2.88 · 2.100
 
+
+
+## F-219 ✔ N-42: die Kalibrierung, gemessen auf einer Form, die die Invarianz besteht (05.09.2026)
+
+**Vorabfestlegung im Skriptkopf, vor dem Lauf:** drei Formen treten an, die
+Eigenschaft entscheidet. *„Eine Form, die Kriterium 1 nicht besteht, wird
+NICHT berichtet — egal wie gut ihre Zahl aussieht."*
+
+### Warum eine neue Form nötig war
+
+**F-218:** die alte Messung schlüsselte nach dem rohen `wert_r`, gepoolt
+über alle Datenlagen. Deren erreichbare Spannen liegen um Faktor 3,4
+auseinander — „hohes Potential" hieß damit fast zwangsläufig „hat beide
+Beiträge".
+
+⚠️ **Die Lösung war nicht neu.** Die Nutzerentscheidung vom 31.08. —
+*die Schwelle je Datenlage* — ist genau die Konstruktion dagegen. Sie war
+nur nie auf die **Messung** angewandt worden, sondern nur auf die Sperre.
+
+### Die drei Formen und das Ergebnis
+
+| Form | x-Achse | Gruppen | c=0 | c=2 | Invarianz |
+|---|---|---|---|---|---|
+| **ROH** | `wert_r` in R | 34 | +0,0886 | +0,0520 | **fällt durch** (0,0366) |
+| **ANTEIL** | `wert_r / erreichbar_max` | 32 | +0,0032 | +0,0017 | OK (0,0015) |
+| **RANG** | Perzentil je Datenlage | 101 | **+0,0088** | **+0,0088** | **OK (0,0000)** |
+
+> **RANG ist die Bezugsform:** exakt invariant, feinste Auflösung (101
+> Gruppen), und das Intervall [+0,003 .. +0,015] schließt die Null aus.
+> **Es gibt eine echte Kalibrierung.**
+
+**Abdeckung, ausgewiesen statt gepoolt:** 259.575 entschiedene Anker,
+**82,4 % mit einem Beitrag, 17,6 % mit zweien** — deckt sich mit der
+Messung vom 31.08. (78,8 / 21,2).
+
+### ⚠️ Der Einheitenfehler, im letzten Moment gefangen
+
+Die Erwartung **+0,333** ist `dq/d(wert_r) = 1/(1+CRV)` — sie gilt **je R**.
+Bei ANTEIL ist x ein Anteil, bei RANG ein Perzentil. *„+0,0088 von +0,333
+sind 2,6 %"* wäre der Formfehler aus **Methodik 2.85** — genau der Fehler,
+der diese ganze Reihe ausgelöst hat, ein zweites Mal.
+
+**Die einheitenfreie Ersetzung:** dieselbe Gruppierung, dieselben Gewichte,
+dieselbe Rechnung — aber gefüttert mit der **behaupteten** Quote statt dem
+realisierten Treffer. Das Verhältnis beider Steigungen **ist** der
+Kalibrierungsfaktor, in jeder Form, ohne Umrechnung.
+
+### DAS ERGEBNIS — einheitenfrei
+
+| Form | Kalibrierung c=0 | c=2 | Urteil |
+|---|---|---|---|
+| ROH | 26,6 % | 15,6 % | fällt durch |
+| ANTEIL | 19,3 % | **4,6 %** | fällt durch (s. u.) |
+| **RANG** | **19,5 %** | **19,5 %** | **exakt invariant** |
+
+> **Die Bewertung liefert 19,5 % dessen, was sie behauptet.** Gemessen auf
+> der einzigen Form, die in Steigung, Erwartung UND Verhältnis invariant ist.
+
+**Die Erwartungsmaschinerie hat sich selbst geprüft:** Für ROH rechnet sie
+**+0,3331** — der analytische Wert ist 1/3 = 0,3333. Sie reproduziert eine
+bekannte Zahl, die nirgends eingetragen ist.
+
+### ⚠️ Mein Annahmekriterium war zu lasch
+
+ANTEIL bestand die Invarianz mit Abstand 0,0015 — aber nur, weil seine
+Steigungen selbst winzig sind (0,0032 gegen 0,0017). Als **Verhältnis**
+gelesen: 19,3 % gegen 4,6 %, Faktor 4. Eine **absolute** Toleranz taugt
+nicht, wenn die Größen um Zehnerpotenzen auseinanderliegen. Das Kriterium
+prüft jetzt den **Faktor**, relativ (< 10 %).
+
+⚠️ **Die Nähe zu F-215s „17 %" ist ein Zufall dieser Daten.** Die alte Zahl
+maß nicht dieselbe Größe — sie maß zu einem guten Teil die
+Datenverfügbarkeit. 19,5 % ersetzt sie nicht als Korrektur, sondern als
+erste Messung derselben Frage auf einer tragfähigen Form.
+
+Werkzeug: `messe_kalibrierung_je_datenlage.py` (neu)
+Verwandt: **F-215** (gefallen) · **F-218** · Schwelle je Datenlage (31.08.)
+· Mittelwert-statt-Summe (widerlegt 31.08.) · Methodik 2.85
+
+
+
+## F-220 ⚠️⚠️⚠️ Der Hebel lässt sich aus der Bewertung NICHT erzeugen — noch nicht (05.09.2026)
+
+**Die zentrale Nutzervorgabe:** *„die Wahrscheinlichkeit auf positives
+Chance-Risiko-Verhältnis soll den Hebel dynamisch erzeugen"*, Zielzone
+**2–5×**.
+
+Mit dem Kalibrierungsfaktor aus **F-219** durchgerechnet, an den echten
+Funktionen (`wahrscheinlichkeit.basisrate`, die registrierten Stufen).
+
+**Annahmen, ausgewiesen:** Kapital 10.000 € (aus F-216: Risiko 30 € =
+0,30 %) · Einsatz **500 €** (die Tranche, nicht der Wunsch von 800) ·
+Stop 5 % (der Mindest-Stop) · halbes Kelly.
+
+| Lage | halb-Kelly | Risiko | Nominal | **Hebel** |
+|---|---|---|---|---|
+| nur funding, bestes Fünftel | 0,190 % | 19 € | 380 € | **0,76×** |
+| nur funding, mittleres | 0,018 % | 2 € | 35 € | **0,07×** |
+| **beide, jeweils bestes Fünftel** | 0,651 % | 65 € | 1.302 € | **2,60×** |
+| beide, bestes funding + mittleres turnover | 0,222 % | 22 € | 445 € | **0,89×** |
+
+> **Nur die einzige beste Kombination erreicht die Zielzone.** Alles andere
+> fällt unter 1× — nicht einmal eine volle Spot-Position.
+
+### ⚠️ Und ausgerechnet dieser Fall steht auf dem schwächsten Bein
+
+Der einzige Fall über 2× braucht **turnover**. Und turnover:
+
+| | |
+|---|---|
+| **F-217** | die Fünftel-Ordnung hält über die Zeit **nicht** (+0,020 gegen Zufall −0,007; eine 2-Punkt-Ordnung wäre mit +0,347 sichtbar) |
+| **F-218** | deckt **42 von 302** Symbolen ab — 14 % des Universums |
+
+> **Die Hebelerzeugung aus der Bewertung ist nicht am Entwurf gescheitert,
+> sondern an der Bewertung.** Sie ist zu schwach (19,5 %) und zu dünn
+> gedeckt, um eine Abstufung über 2–5× zu tragen.
+
+### ⚠️ Das r-Band aus N-39 kehrt seine Wirkung um
+
+N-39 setzte **0,50 % – 1,25 %** als Klammer gegen Überhebelung. Gegen die
+**kalibrierte** Quote gerechnet:
+
+    Obergrenze 1,25 %   wird NIE erreicht (Maximum 0,651 %)
+    Untergrenze 0,50 %  liegt UEBER dem, was 82,4 % der Anker
+                        ueberhaupt erreichen koennen (max 0,190 %)
+
+**Die Klammer würde fast jeden Anker nach OBEN zwingen** — im typischen Fall
+um Faktor 2,6. Als Schutz gegen Überhebelung gebaut, wirkt sie gegen eine
+kalibrierte Quote als **Boden, der zur Überhebelung zwingt**.
+
+⚠️ Ohne Kalibrierung sieht es umgekehrt aus (bestes halbes Kelly 3,34 %,
+die Klammer deckelt). **Die Rolle des Bandes hängt vollständig daran, ob
+die Quote kalibriert in die Formel geht** — das ist die Entscheidung, nicht
+die Zahl des Bandes.
+
+### Was daraus folgt
+
+**O4 ist keine „eigentliche Richtung" mehr, sondern die BLOCKIERENDE
+Vorbedingung.** Bevor der Hebel aus der Bewertung entstehen kann, braucht
+sie mindestens einen zweiten Beitrag, der **trägt UND breit gedeckt ist**.
+Beide Kriterien, nicht eines.
+
+Verwandt: **F-217** · **F-218** · **F-219** · N-39 · N-40 · L1 (Kelly mit
+geschätztem µ überwettet) · Regel 3
+
