@@ -2984,11 +2984,35 @@ von einem Prozentpunkt in q verschiebt die Nominale um ~5.000 €. Solange
 die Bewertung nur 17 % liefert, **setzt das Band die Grenzen, nicht die
 Formel**. Wird die Bewertung besser, kann das Band geöffnet werden.
 
-**K2 — Mindest-Stopabstand 5 %.**
-Direkt aus **E1**: unter 5 % ist der Erwartungswert negativ, monoton. Ein
-Anker unter 5 % wird **nicht gehandelt** — er bekommt kein Signal, keinen
-kleineren Hebel. ⚠️ Das ist zugleich die Lösung für die inverse Kopplung:
-ohne enge Stops gibt es keine Hebelspitzen mehr.
+**K2 — Mindest-Stopabstand 5 % — ⚠️ EXISTIERT BEREITS, KORRIGIERT 05.09.**
+
+Ich hatte K2 als neue Komponente vorgeschlagen. **Sie ist gebaut:**
+`GRENZEN["stop_min_relativ"] = 0.05`, gespeist aus
+`config risiko.sl_abstand_eng_schwelle_relativ: 0.05` — **am 31.08. von
+2,5 % auf 5,0 % angehoben, Nutzerentscheidung.** Code und Config stimmen
+überein.
+
+Und sie hat eine dokumentierte Herleitung, die nicht auf E1 steht:
+*„5,0 % entsprechen 0,78 Tagesspannen im Median — praktisch genau der
+relative Boden `stop_min_atr = 0,75`."* Zwei Grenzen, die dasselbe sagen,
+einmal relativ und einmal absolut; die strengere gewinnt.
+
+⚠️ **Die Untergrenze gilt gegen den AKTUELLEN KURS, nicht gegen die
+Einstiegszone.** Meine Messung „14,7 % liegen unter 5 %" rechnete gegen
+die Einstiegsmitte und unterschätzt den Abstand deshalb systematisch —
+kein Befund, ein Messfehler.
+
+**Damit hat der Zielzustand DREI Komponenten, nicht vier.**
+
+⚠️ **Was offen bleibt, aber nicht mehr blockiert:** ob 5 % der richtige
+Wert ist. **Beide bisherigen Messungen sind unbrauchbar** — die alte
+(Juli, alte Kette, n=36/16) wegen Stichprobe, die neue wegen **Zensur**:
+Trades mit Stop über 12 % lösen nur zu **4,7 %** auf, mit Stop unter 3 %
+zu **19,8 %**. Was man bei weiten Stops sieht, sind die schnell
+gelaufenen — im Bärenregime überproportional Stop-Outs. Eine
+zensurfreie Barrieren-Simulation über die Kursreihen könnte es klären;
+sie ist aber **kein Blocker**, weil der Boden existiert und hergeleitet
+ist.
 
 **K3 — Einsatz 500 € (Vertrauensgrenze), Aggregat-Deckel.**
 Der Einsatz bleibt, bis Belege ihn heben (N-38). Dazu **L6**: die Summe
