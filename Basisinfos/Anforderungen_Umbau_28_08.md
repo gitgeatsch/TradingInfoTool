@@ -3065,3 +3065,126 @@ läge, wird Spot.
 | **Mindest-Stop** | 5 % | aus E1 abgeleitet, aber die Signalzahl fällt — **Nutzerentscheidung** |
 | **Aggregat-Deckel** | offen | z. B. Summe offener Hebelrisiken ≤ 3 % des Kapitals |
 | **Einsatz / Vertrauensleiter** | 500 €, Stufen an Belege | N-38 |
+
+
+---
+
+# ⚠️⚠️ N-40 — MACHBARKEIT JE KOMPONENTE (Schritt 3, 05.09.2026)
+
+*Schritt 3 der Reihenfolge zu N-38/N-39. Je Komponente: geht das, was
+kostet es, was hängt dran.*
+
+## K1 — `r(q)`: die Wahrscheinlichkeit erzeugt das Risiko
+
+**Der Eingriffspunkt ist genau eine Funktion:** `betraege.risiko_eur()`.
+Sie hat heute die Signatur `(instrument, strategie, config, gruppe)` und
+rechnet `einsatz_eur × verlustanteil`. Aufgerufen wird sie an **zwei**
+Stellen, beide in `rollen_lauf.py` (1936, 2921).
+
+### ⚠️ Die Reihenfolge — geprüft, und sie trägt
+
+    Zeile 1936   risiko_eur -> Groessenrechnung
+    Zeile 2084   potential.rechne()
+
+Die Größe wird **vor** dem Potential gerechnet. Das sah nach einem
+Zirkelbezug aus (`potential.rechne` nimmt `stop_relativ`, und der kommt aus
+der Größenrechnung).
+
+✔ **Kein Zirkel — an der echten Funktion geprüft:**
+
+    Stop  2 %  -> quote 0,377833      Stop 10 %  -> quote 0,377833
+    Stop  5 %  -> quote 0,377833      Stop 20 %  -> quote 0,377833
+
+**Die Quote hängt nicht vom Stopabstand ab.** `stop_relativ` wirkt nur auf
+die Kostenebene, und die ist im Potential gebührenfrei abgeschaltet
+(Regel 2). Die Quote braucht ausschließlich die `marktraenge`, und die
+liegen vor Zeile 1936 vor.
+
+**→ Machbar. Aufwand: klein.** Das Potential (bzw. seine Quote) wird
+vorgezogen und `risiko_eur` um einen Parameter erweitert.
+
+### ⚠️ Was daran hängt: die Kette kennt das Kapital NICHT
+
+`r × Kapital` braucht den Portfoliowert zur Laufzeit. Geprüft:
+**`portfolio_wert_historie` wird von `rollen_lauf`, `betraege` und
+`entscheidungsrechnung` NICHT gelesen** — die einzigen Leser sind die
+Module der **alten** Kette (`hebel_risk_gate`, `hebel_pipeline`).
+
+**→ Neuer Datenpfad nötig.** Klein, aber echt: eine Lesefunktion für den
+aktuellen Portfoliowert, mit Fallback. ⚠️ **Und der Fallback ist die
+Gefahrenstelle** — fehlt der Wert und wir fallen still auf einen
+Vorgabewert zurück, driftet das Risiko unbemerkt (fail-soft ist
+fail-silent). Der Rückfall muss **laut** sein.
+
+## K3 — Einsatz und Aggregat-Deckel
+
+**Einsatz:** `betraege.einsatz_eur()` existiert und wird bereits gelesen.
+⚠️ **Der Wert steht NICHT in der `config.yaml`** — gemessen 500 €, Code-
+Vorgabe für `spot/einstieg` 800 €. Woher die 500 kommen, ist **ungeklärt**
+und gehört vor dem Bau geklärt (offener Punkt, siehe unten).
+
+**Aggregat-Deckel:** setzt voraus, dass offene Hebelpositionen **geführt**
+werden. `positionsfuehrung.lade()` hat einen `instrument`-Parameter und
+liest inzwischen beide Tabellen — aber im Code steht: *„Seit S6b ist
+`instrument` im Lauf immer 'spot' — `hebel_signals` wurde also NIE
+gelesen."*
+
+⚠️ **Und Spot und Hebel sind nicht dasselbe Objekt:** Spot ist ein
+**Bestand** (gekauft, liegt da, endet beim Verkauf). Hebel ist ein
+**Trade** mit Lebenszyklus, Finanzierung und Liquidationspreis. Beide
+können gleichzeitig auf demselben Symbol bestehen (A2).
+
+**→ Eigener Baustein, mittlerer Aufwand.** Nicht Teil des Deckels, sondern
+seine Voraussetzung.
+
+## K4 — kein Hebeldeckel als Risikoinstrument
+
+**→ Ein Weglassen, kein Bau.** `hebel_max = 10` bleibt als
+Plausibilitätsgrenze stehen. Aufwand: null. ⚠️ Was dazugehört, ist die
+**Dokumentation**, warum er kein Risikoinstrument ist (E2/S6d) — sonst
+wird er beim nächsten Mal wieder als solches verwendet.
+
+## Die Reihenfolge, die daraus folgt
+
+    1  Portfoliowert lesbar machen   Vorbedingung fuer K1, klein, LAUTER Rueckfall
+    2  K1: r(q) statt fester Anteil  Potential vorziehen, risiko_eur erweitern
+    3  Positionsfuehrung fuer Hebel  Vorbedingung fuer den Aggregat-Deckel
+    4  Aggregat-Deckel               danach
+    -  K4                            nur dokumentieren
+
+---
+
+# ⚠️ OFFENE PUNKTE UND KORREKTUREN — Stand 05.09. abends
+
+*Damit nichts verlorengeht.*
+
+## Korrekturen an eigenen Aussagen dieses Tages
+
+| | war falsch | richtig |
+|---|---|---|
+| Cooldown | 15 h (Code-Vorgabe) | **3,5 h** — weil die Hebel-Regel in `stunden()` VOR der Gruppenregel steht und bei Hebel > 1,0 feuert. **Die 12-h-Vorgabe vom 28.08. ist dadurch wirkungslos** (F-214) |
+| `verlustanteil` | 15 % (Code), dann 4,2 % (Fehlmessung) | **6 %** — config, verifiziert über Mitte/Mitte der Bereiche |
+| Einsatz | 800 € (Code-Vorgabe) | **500 €** gemessen — Herkunft ungeklärt |
+| „Überhebelung Faktor 45" | Nennerfehler | Produktion läuft **konservativ**, ~60 % von halbem Kelly (F-216) |
+| „Spot hat keinen Stop" | Spaltenfehler | spot × einstieg **hat** einen; akkumulation nicht; gewachsene Position nicht |
+| „K2 Mindest-Stop bauen" | existiert bereits | `stop_min_relativ = 0.05`, seit 31.08. |
+| Stop-Bucket-Messung | zensiert | weite Stops lösen nur zu 4,7 % auf, enge zu 19,8 % — **beide Messungen unbrauchbar** |
+
+## Offen, benannt, nicht vergessen
+
+| # | Punkt | Art |
+|---|---|---|
+| **O1** | ⚠️⚠️ **Die 12-Stunden-Cooldown-Vorgabe vom 28.08. wirkt nicht.** Ursache: Vorrang der Hebel-Regel bei Hebel > 1,0. Die neue Regel „unter 2 ist kein Hebel" würde sie nebenbei beheben | **Nutzerentscheidung** |
+| **O2** | **Woher kommen die 500 € Einsatz?** Weder Code-Vorgabe (800) noch in der `config.yaml` gefunden | zu klären vor dem Bau |
+| **O3** | **Ist 5 % der richtige Mindest-Stop?** Beide Messungen unbrauchbar; zensurfreie Barrieren-Simulation möglich, aber kein Blocker | Messung, nachrangig |
+| **O4** | **L6: die Bewertung braucht mehr tragende Beiträge.** Bei 17 % Kalibrierung arbeitet `r(q)` an der Bandgrenze | der eigentliche Weg |
+| **O5** | **Positionsführung für Hebel** — Trade statt Bestand, eigener Lebenszyklus | Bau, Vorbedingung K3 |
+| **O6** | **N-35 (Intraday)** — Archivlauf fertig, 19,3 Blöcke statt 20; Datendecke, nicht behebbar | Nutzerentscheidung |
+| **O7** | **E3/E4** — 87 % der Stop-Fälle liefen zwischenzeitlich ins Plus, naive Gegenmaßnahme widerlegt | offen, unbearbeitet |
+
+## Die stehende Regel dieses Tages
+
+> **Die Code-Vorgabe ist nicht der laufende Wert.** Viermal an einem Tag
+> daneben (Cooldown, `verlustanteil`, Einsatz, Mindest-Stop). `config.yaml`
+> liegt unter **`Basisinfos/`** — nicht im Wurzelverzeichnis. Vor jeder
+> Aussage über Betriebsverhalten: an den Daten prüfen, nicht am Default.
