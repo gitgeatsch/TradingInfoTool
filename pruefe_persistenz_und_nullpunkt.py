@@ -90,7 +90,7 @@ def persistenz(f5: dict, tage_je_sym: dict) -> float:
     return gleich / ges if ges else float("nan")
 
 
-def kunst_fuenftel(gebaut: dict, block: int | None) -> dict:
+def kunst_fuenftel(gebaut: dict, block: int | None, salz: int = 0) -> dict:
     """{tag: {sym: fuenftel}} aus einem FESTEN Zufallswert je Symbol.
 
     ⚠️ Maximal persistent, null Information. `block=None` heisst: EIN Wert
@@ -108,7 +108,7 @@ def kunst_fuenftel(gebaut: dict, block: int | None) -> dict:
         kunst[tag] = [
             {"sym": e["sym"],
              "kennzahl": float(np.random.default_rng(
-                 crc32(("%s|%d" % (e["sym"], b)).encode())).random())}
+                 crc32(("%s|%d|%d" % (e["sym"], b, salz)).encode())).random())}
             for e in liste]
     return _fuenftel_je_tag(kunst)
 

@@ -71,6 +71,7 @@ from pruefe_persistenz_und_nullpunkt import (               # noqa: E402
     persistenz, kunst_fuenftel)
 
 ARTEN = ("amihud", "vola", "schnitt50")
+ZIEHUNGEN = 5
 DIFFERENZ_TAGE = 20
 
 
@@ -120,15 +121,33 @@ def main() -> int:
     print("1. NULLPUNKT-KURVE — Kunstgroessen ohne Information, je Blocklaenge")
     print("=" * 96)
     print("  %-22s %10s %8s" % ("Kunstgroesse", "Persistenz", "Spanne"))
+    # ⚠️ MEHRERE ZIEHUNGEN JE BLOCKLAENGE (05.09., eigener Fehler).
+    #
+    # Die erste Fassung zog EINMAL je Blocklaenge - und die Kurve fiel und
+    # stieg wieder (95,9 % -> 0,49 · 98,5 % -> 0,41 · 99,6 % -> 1,14),
+    # obwohl sie monoton wachsen muss. Das war Streuung einer Einzelziehung,
+    # kein Verlauf. EINE ZIEHUNG IST KEIN NULLPUNKT - derselbe Fehler wie
+    # heute frueh in F-215, dort mit einer Mischung statt zehn.
+    #
+    # Berichtet wird der MITTELWERT und das MAXIMUM; als Grenze gilt das
+    # Maximum, damit der Nullpunkt nie zu freundlich ausfaellt.
+    print("  %-22s %10s %8s %8s %8s"
+          % ("", "Persistenz", "Mittel", "max", "Ziehungen"))
     kurve = []
     for name, block in (("neu je Tag", 1), ("neu alle 5 Tage", 5),
                         ("neu alle 20 Tage", 20), ("neu alle 60 Tage", 60),
                         ("neu alle 250 Tage", 250), ("fest je Symbol", None)):
-        kf = kunst_fuenftel(gebaut["amihud"], block)
-        p = persistenz(kf, tage_je_sym)
-        _tg, sp = _messe(zeilen, tage_je_sym, kf)
-        kurve.append((p, sp))
-        print("  %-22s %9.1f %% %7.2f" % (name, 100 * p, sp))
+        spannen, pers = [], []
+        for z in range(ZIEHUNGEN):
+            kf = kunst_fuenftel(gebaut["amihud"], block, salz=z)
+            pers.append(persistenz(kf, tage_je_sym))
+            _tg, sp = _messe(zeilen, tage_je_sym, kf)
+            spannen.append(sp)
+        pm = float(np.mean(pers))
+        kurve.append((pm, float(np.max(spannen))))
+        print("  %-22s %9.1f %% %7.2f %8.2f %8d"
+              % (name, 100 * pm, float(np.mean(spannen)),
+                 float(np.max(spannen)), ZIEHUNGEN))
     kurve.sort()
 
     def nullpunkt(p: float) -> float:

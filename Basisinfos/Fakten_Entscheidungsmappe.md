@@ -8503,3 +8503,88 @@ Korrektur — Nutzerentscheidung, nicht eigenmächtig geändert:**
 Verwandt: **F-218** · **F-226** · **N-49** · Tagesklammer-Vorgabe 31.08. ·
 `Befund_Lage_27_08.md` · übergeordnetes Ziel in `CLAUDE.md`
 
+
+
+## F-228 ✔✔ N-49: Die VERÄNDERUNG von `amihud` ist der Kandidat für den Hebel (05.09.2026)
+
+**Die Frage aus F-227:** nicht *ob* `amihud` registriert wird, sondern
+**welcher Anteil seiner Wirkung über den MOMENT spricht** statt über das
+Asset. Fachliche Frage, also gemessen.
+
+### Die Nullpunkt-KURVE statt eines Nullpunkts
+
+N-48 zeigte: die Spanne wächst mit der Beständigkeit, auch ohne jede
+Information. Ein einziger Nullpunkt taugt deshalb nicht, wenn die Formen
+verschieden beständig sind.
+
+⚠️ **Erster Anlauf war falsch:** eine Ziehung je Blocklänge, und die Kurve
+fiel und stieg wieder (95,9 % → 0,49 · 98,5 % → 0,41 · 99,6 % → 1,14),
+obwohl sie monoton wachsen muss. **Eine Ziehung ist kein Nullpunkt** —
+derselbe Fehler wie am Morgen in F-215. Mit **fünf** Ziehungen je Blocklänge:
+
+| Kunstgröße (null Information) | Beständigkeit | Mittel | **max** |
+|---|---|---|---|
+| neu je Tag | 20,0 % | 0,28 | **0,46** |
+| neu alle 5 Tage | 83,9 % | 0,53 | **0,59** |
+| neu alle 20 Tage | 95,9 % | 0,58 | **0,84** |
+| neu alle 60 Tage | 98,6 % | 0,70 | **1,09** |
+| neu alle 250 Tage | 99,6 % | 0,75 | **1,24** |
+| fest je Symbol | 99,9 % | 1,06 | **1,41** |
+
+✔ Monoton. Als Grenze gilt das Maximum, damit der Nullpunkt nie zu
+freundlich ausfällt.
+
+### Das Ergebnis — das Verhältnis ist die einzige vergleichbare Zahl
+
+| Größe | Form | Spanne | Pers. | Null | **Verhältnis** |
+|---|---|---|---|---|---|
+| **amihud** | NIVEAU quer | 6,51 | 95,4 % | 0,84 | **7,8×** |
+| **amihud** | **VERÄNDERUNG** | **3,76** | **82,4 %** | 0,59 | **6,4×** |
+| amihud | NIVEAU längs | 1,34 | 88,6 % | 0,59 | 2,3× |
+| vola | NIVEAU quer | 3,77 | 87,9 % | 0,59 | 6,4× |
+| vola | VERÄNDERUNG | 1,12 | 81,2 % | 0,46 | 2,4× |
+| vola | NIVEAU längs | 1,19 | 87,8 % | 0,59 | 2,0× |
+| schnitt50 | NIVEAU quer | 4,20 | 75,8 % | 0,46 | 9,1× |
+| schnitt50 | VERÄNDERUNG | 2,66 | 69,0 % | 0,46 | 5,7× |
+| schnitt50 | NIVEAU längs | 0,88 | 76,3 % | 0,46 | **1,9× — trägt nicht** |
+
+> **Die VERÄNDERUNG von `amihud` ist der Kandidat für die
+> Hebelerzeugung:** 3,76 Punkte, **6,4×** über dem ehrlichen Nullpunkt, und
+> mit 82,4 % Beständigkeit deutlich weniger assetgebunden als das Niveau.
+> Sie sagt *„dieser Wert ist gerade illiquider als er war"*, nicht *„dieser
+> Coin ist illiquide"*.
+
+### ⚠️ Zwei Korrekturen an eigenen Aussagen
+
+**1 — Die LÄNGS-Form ist tot.** Bei allen drei Größen (2,3× / 2,0× / 1,9×).
+In **F-223** hatte ich sie gegen `zufall` gelesen (amihud 1,34 gegen 0,17 =
+7,9×). Gegen den **richtigen** Nullpunkt bleibt fast nichts. Meine
+Empfehlung *„längs ist die Regel-3-reine Form"* stand auf einem zu
+freundlichen Nullpunkt.
+
+**2 — `amihud` VERÄNDERUNG ist U-FÖRMIG**, nicht monoton:
+
+    +0,97   -0,88   -1,53   -0,78   +2,23
+
+Beide Extreme — stark fallende **und** stark steigende Illiquidität —
+treffen häufiger, die Mitte am seltensten. Inhaltlich plausibel (eine
+Veränderung in beide Richtungen zeigt an, dass etwas geschieht), aber
+**keine Leiter**. `schnitt50` VERÄNDERUNG ist spiegelbildlich ein Buckel
+(−0,59 +1,05 +0,88 +0,19 −1,60).
+
+⚠️ Für eine Hebelabstufung 2–5× heißt das: die Stufen sind **zweiseitig**,
+nicht geordnet. Als Beitrag ist das zulässig (die registrierten
+Funding-Stufen sind ebenfalls nicht monoton) — für eine geordnete Leiter
+aber nicht ausreichend.
+
+### Was daraus folgt
+
+    NIVEAU quer      -> in die MAIL, als Einordnung samt Begruendung
+                        ("wie gut steht dieses Asset")
+    VERAENDERUNG     -> darf den HEBEL treiben (amihud 6,4x, schnitt50 5,7x)
+    NIVEAU laengs    -> faellt, bei allen drei Groessen
+
+Werkzeug: `messe_form_und_nullpunktkurve.py` (neu, mit Selbsttest der
+Veränderungsform)
+Verwandt: **F-223** (korrigiert) · **F-226** · **F-227** · Methodik 2.104
+
