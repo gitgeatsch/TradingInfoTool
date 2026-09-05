@@ -7530,3 +7530,91 @@ Suite unverändert — reines Messwerkzeug.
 Werkzeug: `messe_bewertung_kalibrierung.py` (`--selbsttest`: zwei Welten
 plus Kettenprüfung mit entkoppelter Wahrheit; zwei Gegentests bestanden)
 Verwandt: F-203 · F-210 · F-212 · N-36 · N-37 · Methodik 2.85, 2.88, 2.104, 2.107
+
+
+## F-216 ⚠️⚠️ Der verifizierte Ist-Zustand der Hebelgeometrie — und drei eigene Fehlschlüsse aus Code-Vorgaben (05.09.2026)
+
+**Anlass:** Ich hatte den ganzen Tag mit Werten aus dem **Code** gerechnet
+statt aus den **Daten** — und lag dreimal daneben. Der Nutzer hat einen
+frischen NB-Export bereitgestellt (05.09. 11:10, 6.507 Signale, aktuell bis
+11:01), an dem sich alles nachprüfen lässt.
+
+### Der verifizierte Ist-Zustand (395 Signale mit Hebel seit 23.08.)
+
+    Einsatz            Median  500 EUR   (min 300, max 500)
+    verlustanteil               4,2 %    (= Risiko / Einsatz, gemessen)
+    Risiko je Trade            21 EUR    = 0,21 % des Kapitals (9.942 EUR)
+    Hebel              Median   1,20     (min 1,00, max 2,40)
+    hebel_max                  10,0      hat EINMAL gebunden, vor S5
+    liquidations_marge          9 %      bindet nie (erlaubt 18-45x)
+
+### ⚠️⚠️ Meine drei Fehlschlüsse — alle aus derselben Quelle
+
+| | ich sagte (Code) | tatsächlich (Daten) | Faktor |
+|---|---|---|---|
+| **Cooldown** | 15 h (`VORGABE_STUNDEN`) | **3,5 h** (F-214, aus der Abstandsverteilung) | 4,3× |
+| **verlustanteil** | 15 % (`VORGABE_VERLUSTANTEIL`) | **4,2 %** | 3,6× |
+| **Einsatz** | 800 € (`VORGABE_EINSATZ_EUR`) | **500 €** | 1,6× |
+
+**Alle drei stammen aus `config.yaml`, die gerätespezifisch ist und am
+Desktop nicht vorliegt.** Ich habe jedes Mal die Code-Vorgabe als laufenden
+Wert gelesen. Und `simuliere_kette.py` warnt im eigenen Docstring seit dem
+28.08. genau davor — ich hatte den Kopf nicht gelesen, bevor ich das
+Werkzeug benutzen wollte.
+
+### Was daraus für die Bewertung der Lage folgt — das Gegenteil meiner Behauptung
+
+    tatsaechliches Risiko je Trade         0,21 % des Kapitals
+    halbes Kelly (kalibriert, F-215)       0,34 %
+    Praxisband der Literatur          0,5 - 2,0 %
+
+> **Die Produktion läuft KONSERVATIV — bei rund 60 % von halbem Kelly und
+> deutlich unter der Praxis-Untergrenze.** Meine „Überhebelung“-Erzählung
+> (erst Faktor 45, dann Faktor 3,6, dann 1,8) war in jeder Fassung falsch.
+
+Und der Hebel ist faktisch kaum vorhanden: **Median 1,20, Maximum 2,40**
+seit S5 (18.08.). Der Deckel bei 10 hat vor S5 genau einmal gebunden und
+ist heute weit weg. ⚠️ Damit bestätigt sich auch **L3** im Plan (*„seit S5
+kein Hebel über 3,0 mehr"*) an den Daten — die Zahl 10,0, die ich am
+04.09. als Widerspruch angeführt hatte, stammte aus der Zeit **davor**.
+
+### ⚠️ Die Nutzererinnerung war jedes Mal genauer als meine Codelektüre
+
+Drei Punkte, bei denen der Nutzer korrigiert hat und recht behielt:
+
+1. *„Spot hat heute kein Stop oder?"* → differenziert richtig: spot ×
+   einstieg **hat** einen Stop, spot × akkumulation nicht, die gewachsene
+   Position nicht. Meine Behauptung „null von 3.455" war ein Spaltenfehler.
+2. *„ich war der Meinung, wir haben mit geringerem Risiko gerechnet und es
+   kamen nur niedrige bzw. keine Hebel zustande"* → exakt richtig
+   (0,21 %, Hebel 1,20).
+3. *„Du hast irgendwo ab Hebel 10 abgeschnitten"* → richtig,
+   `GRENZEN["hebel_max"] = 10.0`.
+
+### Die stehende Regel, die daraus folgt
+
+> **Die Code-Vorgabe ist nicht der laufende Wert.** Jeder Betriebsparameter
+> (`VORGABE_*`, `GRENZEN`) kann durch `config.yaml` überschrieben sein — und
+> die ist gerätespezifisch. Vor jeder Aussage über das Betriebsverhalten:
+> **an den Daten prüfen, nicht am Default.**
+
+Das ist die Schwesterregel zu R-R10 (*Dokumente öffnen statt greppen*) und
+zu *„R-R10 gilt auch für die eigene Datenlage"* (04.09.).
+
+### Was das für N-38 ändert
+
+* **Der Anker bleibt der richtige Punkt** — 21 € sind fest, also driftet
+  der Anteil weiterhin mit dem Kapital (bei 5.000 € wären es 0,42 %).
+* **Die Dringlichkeit sinkt deutlich.** Es wird nicht zu viel riskiert,
+  sondern eher zu wenig. Der Umbau ist eine Strukturverbesserung, keine
+  Gefahrenabwehr.
+* **Die Hebelfrage stellt sich praktisch kaum** — bei Median 1,20 ist der
+  „Hebel" fast durchgehend ein Spot-Trade mit Etikett.
+
+⚠️ **Offen bleibt der Blick in die `config.yaml`** — die drei gemessenen
+Werte (3,5 h · 4,2 % · 500 €) sollten dort als bewusste Einstellungen
+wiederzufinden sein. Sind sie es nicht, ist eine davon ein Nebeneffekt.
+
+Werkzeug: Auswertung des NB-Exports 05.09. über `signals`
+(`position_size_eur`, `hebel`, `entry_usd_von`, `stop_loss_usd_von`)
+Verwandt: F-214 · F-215 · N-38 · L3 · `config.yaml`-Sync-Konflikt
