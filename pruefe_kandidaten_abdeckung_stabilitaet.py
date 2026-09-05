@@ -65,10 +65,24 @@ SAAT = 20260905
 KANDIDATEN = ("vola", "rsi", "momentum_kurz", "funding_extrem")
 REGISTRIERT = ("funding", "turnover")
 
+# Welche Zusatzquelle braucht welche Art? Wer hier fehlt, kommt aus den
+# reinen Kursdaten und braucht keine.
+BRAUCHT_FUNDING = ("funding", "funding_extrem")
+BRAUCHT_TURNOVER = ("turnover",)
+BRAUCHT_TERMIN = ("oi_aenderung", "long_bias", "top_bias", "oi_je_umsatz")
+
 
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--bloecke", type=int, default=6)
+    p.add_argument("--laengs", action="store_true",
+                   help="Fuenftel je SYMBOL aus der eigenen Vergangenheit "
+                        "statt je Tag quer - die Regel-3-reine Form. Die "
+                        "Stabilitaetspruefung lief bisher NUR quer; fuer "
+                        "einen Bau auf der Laengs-Form fehlte sie (N-43c).")
+    p.add_argument("--arten", default=None,
+                   help="Kommaliste; Vorgabe sind die vier aus N-17b. "
+                        "`zufall` wird immer ergaenzt - es ist der Nullpunkt.")
     a = p.parse_args()
 
     print("Lade Reihen...", flush=True)
@@ -77,19 +91,38 @@ def main() -> int:
     zeilen = ZR.ergebnisse(reihen)
     print("  %d Anker · %d Reihen" % (len(zeilen), len(reihen)))
 
-    funding = F.lade_funding()
-    quellen = {"funding": funding,
-               "funding_extrem": funding,
-               "turnover": MB.reihe("data/onchain_historie.db", "splycur"),
-               "vola": None, "rsi": None, "momentum_kurz": None,
-               "zufall": None}
+    if a.arten:
+        arten = [x.strip() for x in a.arten.split(",") if x.strip()]
+    else:
+        arten = list(KANDIDATEN) + list(REGISTRIERT)
+    if "zufall" not in arten:
+        arten.append("zufall")
 
-    arten = list(KANDIDATEN) + list(REGISTRIERT) + ["zufall"]
+    # ⚠️ Quellen NUR laden, wo sie gebraucht werden - `lade_funding()` und
+    # die Onchain-Reihe kosten Zeit und werden sonst umsonst geholt.
+    quellen = {}
+    if any(x in BRAUCHT_FUNDING for x in arten):
+        print("  lade funding ...", flush=True)
+        fu = F.lade_funding()
+        for x in BRAUCHT_FUNDING:
+            quellen[x] = fu
+    if any(x in BRAUCHT_TURNOVER for x in arten):
+        print("  lade turnover ...", flush=True)
+        quellen["turnover"] = MB.reihe("data/onchain_historie.db", "splycur")
     f5 = {}
     for art in arten:
-        print("  baue %s ..." % art, flush=True)
-        f5[art] = _fuenftel_je_tag(K.baue(reihen, art, quellen.get(art),
-                                          horizont=20))
+        print("  baue %s%s ..." % (art, " (laengs)" if a.laengs else ""),
+              flush=True)
+        gebaut = K.baue(reihen, art, quellen.get(art), horizont=20)
+        if a.laengs:
+            # ⚠️ IMPORTIERT, NICHT NACHGEBAUT - dieselben Funktionen wie in
+            # N-43c, damit quer und laengs wirklich vergleichbar sind.
+            from pruefe_vola_zeitpunkt_oder_asset import (
+                laengs_fuenftel, _als_reihen)
+            f5[art] = laengs_fuenftel(_als_reihen(gebaut, tage_je_sym),
+                                      tage_je_sym)
+        else:
+            f5[art] = _fuenftel_je_tag(gebaut)
 
     alle = sorted({t for d in f5.values() for t in d})
     gr = len(alle) // a.bloecke
@@ -181,8 +214,28 @@ def main() -> int:
             print("  -> NULLPUNKT gesetzt: alles unter %+.3f ist Rauschen"
                   % rauschen)
             continue
+        # ⚠️ BEIDE KONTROLLEN MUESSEN GREIFEN (05.09., zweiter eigener
+        # Fehler an dieser Regel).
+        #
+        # Bei `amihud` in der LAENGS-Form lag die EIGENE Mischung bei
+        # +0,620 gegen einen echten Wert von +0,713 - die Kontrolle
+        # reproduzierte den Befund fast vollstaendig. Die Regel verglich
+        # aber nur gegen den globalen Nullpunkt (+0,267) und schrieb
+        # "haelt". Der Grund ist strukturell: Laengs-Fuenftel tragen eine
+        # MARKTWEITE Gemeinsamkeit (in einer ruhigen Phase sind viele
+        # Symbole gleichzeitig in ihrem eigenen niedrigen Fuenftel), und
+        # eine Mischung INNERHALB des Tages laesst die unberuehrt.
+        #
+        # Wo die eigene Mischung den echten Wert fast erreicht, ist nicht
+        # der Befund stark, sondern die Kontrolle untauglich - und dann
+        # gilt gar nichts.
         grenze = rauschen if rauschen is not None else zufall + 0.10
-        if echt <= grenze:
+        if echt - zufall < 0.15:
+            print("  -> ⚠️ KONTROLLE UNTAUGLICH: die eigene Mischung liefert"
+                  " %+.3f gegen %+.3f." % (zufall, echt))
+            print("     Der Nullpunkt zerstoert die Struktur nicht - es gilt"
+                  " kein Befund.")
+        elif echt <= grenze:
             print("  -> ⚠️ NICHT trennbar (%+.3f gegen den Nullpunkt %+.3f)"
                   % (echt, grenze))
         elif erreicht is None:

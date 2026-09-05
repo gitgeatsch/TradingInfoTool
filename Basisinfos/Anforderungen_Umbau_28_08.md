@@ -3386,3 +3386,128 @@ keiner hat eine Abdeckungszahl.
 
 **Beide Kriterien werden jetzt gemeinsam erhoben**, bevor irgendeiner als
 Beitrag registriert wird.
+
+
+---
+
+# ✔ ENTSCHEIDUNG 05.09. — `vola` NOCH NICHT REGISTRIEREN
+
+**Nutzerentscheidung** zu N-43: nicht einzeln registrieren, sondern erst
+weitere Kandidaten durch denselben Dreifachtest, dann gemeinsam entscheiden.
+
+**Begruendung:** keine Teilentscheidung, die spaeter wieder aufgemacht wird.
+
+## Der Test, der jetzt der Massstab ist
+
+    1  ABDECKUNG      fuer wie viele Symbole liegt die Groesse vor?     (F-218)
+    2  STABILITAET    haelt die Ordnung ueber die Bloecke?              (F-217)
+    3  UNABHAENGIG    traegt sie noch, wenn funding festgehalten wird?
+    4  REGEL 3        trennt sie auch LAENGS, im eigenen Symbol?        (N-43c)
+
+⚠️ **Alle vier, nicht eines.** `funding` traegt schwach und deckt 55 % ·
+`turnover` traegt nicht und deckt 13 % · `funding_extrem` und
+`momentum_kurz` sind nicht vom Zufall trennbar, obwohl N-17b sie als
+tragend gemessen hatte.
+
+## N-44 — die naechsten Kandidaten
+
+⚠️ **Mehrere Groessen sind FRUEHER GEFALLEN, und der Fall ist nicht
+belastbar:** `amihud`, `momentum`, der 50er- und der 200er-Schnitt wurden
+verworfen, **bevor** der N-19-Fix lief — bei dem sich Nicht-Krypto-Werte in
+jede Krypto-Messung gemischt hatten (44 Skripte betroffen). Und keiner von
+ihnen wurde je auf Abdeckung, Stabilitaet oder Regel 3 geprueft; damals gab
+es diese Kriterien noch nicht.
+
+    amihud      aus Kursdaten   keine Zusatzquelle -> volle Abdeckung moeglich
+    momentum    aus Kursdaten   keine Zusatzquelle
+    schnitt50   aus Kursdaten   keine Zusatzquelle
+    schnitt     aus Kursdaten   keine Zusatzquelle
+
+**Zurueckgestellt, weil die Abdeckung dort ohnehin begrenzt ist:**
+`oi_aenderung`, `oi_je_umsatz`, `long_bias`, `top_bias` — alle aus
+Terminmarktdaten, also derselben duennen Quelle wie funding.
+
+## Stand von `vola` — nicht verworfen, nur nicht registriert
+
+    Abdeckung     516 von 516 = 100 %
+    Stabilitaet   +0,647 gegen den Nullpunkt -0,013
+    Unabhaengig   Ueberlappung -0,082 · bedingt 2,73 gegen 0,90 Punkte
+    Regel 3       laengs 5,37 gegen 0,17 Punkte - Faktor 31
+
+    Form          ein SCHALTER, kein Regler: nur das unterste eigene
+                  Fuenftel hebt sich ab (37,4 % gegen 32,6 % im Rest)
+
+⚠️ **Offen und vor jedem Bau zu messen:** die LAENGS-Form hat die
+Stabilitaetspruefung nicht durchlaufen — F-217 lief auf der Quer-Form.
+
+
+---
+
+# ⚠️⚠️⚠️ STAND 05.09. ABENDS — DIE EINE GÜLTIGE OFFENE-PUNKTE-LISTE
+
+*Ersetzt die Liste O1–O7 vom Nachmittag. Wer dort nachschlägt, findet
+überholte Einträge — hier steht der Stand.*
+
+## Wo wir stehen
+
+Der Hebelumbau ist **bewusst angehalten** (Nutzerentscheidung 05.09.):
+erst die Bewertung, dann der Umbau. Die Kette läuft unverändert weiter.
+
+    F-215 gefallen   die "17 % Kalibrierung" war ein Verfuegbarkeits-Artefakt
+    F-219 Ersatz     19,5 %, auf invarianter Form gemessen
+    F-220 Folge      nur EINE Lage erreicht die Zielzone 2-5x
+    F-221 Fund       vola erfuellt alle vier Kriterien
+    F-222 Fund       drei verworfene Kandidaten stehen wieder auf -
+                     aber sie sind eine Familie, nicht vier Beitraege,
+                     und die Regel-3-reine Form haelt nicht
+
+## Der EINE nächste Schritt
+
+| | |
+|---|---|
+| **N-46** | **Ein gültiger Nullpunkt für die LÄNGS-Form.** Die Tagesmischung taugt dort nicht: sie lässt die marktweite Gemeinsamkeit stehen (bei `amihud` lieferte die Kontrolle +0,620 gegen einen echten Wert von +0,713). Zu bauen ist eine Mischung **über die Zeit innerhalb eines Symbols**. |
+
+⚠️ **Ohne diesen Nullpunkt ist keine Form baureif** — quer hält, ist aber
+Regel-3-indirekt; längs ist Regel-3-rein, aber ihre Stabilität ist nicht
+messbar. Das ist die einzige Frage, die den Weg blockiert.
+
+## Danach, in dieser Reihenfolge
+
+| # | | Art |
+|---|---|---|
+| 1 | **Form entscheiden** — quer oder längs, Schalter oder Regler | **Nutzerentscheidung**, nach N-46 |
+| 2 | **Vertreterin aus Gruppe 1** — `vola` (Schalter, quer stärker) oder `schnitt50` (einzige monotone) | **Nutzerentscheidung** |
+| 3 | **`amihud` als zweite Gruppe?** — unabhängig von allem, aber längs nicht messbar | **Nutzerentscheidung** |
+| 4 | **Kalibrierung neu** mit den neuen Beiträgen (`messe_kalibrierung_je_datenlage.py`, Form RANG) | Messung |
+| 5 | **F-220 neu rechnen** — erreicht der Hebel dann die Zone 2–5? | Messung |
+| 6 | erst danach **K1** und der Rest des Bauplans aus N-40 | Bau |
+
+## Weiter offen, unverändert
+
+| # | Punkt | Art |
+|---|---|---|
+| **O1** | Die 12-Stunden-Cooldown-Vorgabe vom 28.08. wirkt nicht (Vorrang der Hebel-Regel bei Hebel > 1,0) | **Nutzerentscheidung** |
+| **O3** | Ist 5 % der richtige Mindest-Stop? Beide Messungen zensiert | Messung, nachrangig |
+| **O5** | Positionsführung für Hebel — Trade statt Bestand | Bau, Vorbedingung K3 |
+| **O6** | N-35 Intraday: 19,3 Blöcke statt 20, Datendecke | **Nutzerentscheidung** |
+| **O7** | E3/E4: 87 % der Stop-Fälle liefen ins Plus, naive Gegenmaßnahme widerlegt | offen |
+
+## ✔ ERLEDIGT seit der alten Liste
+
+| | |
+|---|---|
+| **O2** | Die 500 € kommen aus `TRANCHE_JE_FAKTOREN = ((3,500),(2,300),(1,100))` — der Betrag folgt der Zahl unabhängiger Belege. ⚠️ Offen bleibt daraus: **welcher der beiden Beträge ist der Hebelnenner** — `einsatz_eur` 800 € (Wunsch) oder `tranche_eur` 500 € (zugeteilt)? Fachlich die Tranche. **Nutzerentscheidung** |
+| **O4** | war „der eigentliche Weg", ist jetzt **der Blocker** — und mit F-221/F-222 zum ersten Mal mit Kandidaten unterlegt |
+| **P2** | war als offene Frage notiert und war es nie: die Nutzerentscheidung vom 31.08. („Schwelle je Datenlage") ist genau die Konstruktion dafür. Sie war nur nie auf die **Messung** angewandt |
+
+## ⚠️ Vier eigene Fehler dieses Nachmittags — alle im Code vermerkt
+
+| | |
+|---|---|
+| Toleranz **geraten** statt hergeleitet | jetzt zwei Standardfehler aus n |
+| Filter je **Tag** statt je **Anker** | der Test mass dieselbe Stichprobe wie zuvor |
+| Invarianzkriterium **absolut** statt relativ | liess ANTEIL durch, dessen Faktor um das Vierfache sprang |
+| Urteilsregel prüfte **eine** Kontrolle statt beider | schrieb bei `momentum_kurz` und `amihud` fälschlich „hält" |
+
+**Alle vier hätten einen Befund erzeugt, den die Daten nicht hergeben.**
+Drei davon hat erst die jeweils nächste Gegenprüfung gefangen.

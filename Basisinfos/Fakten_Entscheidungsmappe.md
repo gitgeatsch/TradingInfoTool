@@ -8022,3 +8022,100 @@ Werkzeuge: `pruefe_kandidaten_abdeckung_stabilitaet.py`,
 Verwandt: **F-217** · **F-218** · **F-220** · Regel 3 · „Schalter, kein
 Regler" · Indikatoren auch in Kombination prüfen
 
+
+
+## F-222 ⚠️⚠️ N-44/N-45: drei gefallene Kandidaten stehen wieder auf — aber die Form ist ungeklärt (05.09.2026)
+
+### N-44 — die früher verworfenen Größen, neu geprüft
+
+⚠️ `amihud`, `momentum`, `schnitt50` und `schnitt` wurden **vor dem
+N-19-Fix** verworfen — als sich Nicht-Krypto-Werte in jede Krypto-Messung
+mischten (44 Skripte betroffen). Und keine wurde je auf Abdeckung,
+Stabilität oder Regel 3 geprüft; die Kriterien gab es damals nicht.
+
+| Größe | Abdeckung | Stabilität (quer) | stabile Spanne |
+|---|---|---|---|
+| **vola** | 100 % | **+0,647** | 2–4 Punkte |
+| **schnitt** | 100 % | **+0,613** | ~4 Punkte |
+| **schnitt50** | 100 % | **+0,553** | ~2 Punkte |
+| **amihud** | 100 % | **+0,473** | ~2 Punkte |
+| rsi | 100 % | +0,333 | <1 Punkt |
+| *funding (registriert)* | 55,6 % | *+0,180* | — |
+| **Nullpunkt `zufall`** | | **+0,160** | Rauschgrenze |
+| *turnover (registriert)* | 12,6 % | *+0,113* | — |
+| momentum | 100 % | +0,093 | **nicht trennbar** |
+
+> **Vier aus Kursdaten gerechnete Größen mit voller Abdeckung schlagen
+> beide registrierten Beiträge.** Drei davon waren verworfen.
+
+### N-45 — sie sind aber nicht VIER Beiträge
+
+Überlappung der Fünftel, paarweise:
+
+|  | vola | schnitt | schnitt50 | amihud | rsi | funding |
+|---|---|---|---|---|---|---|
+| **vola** | – | **0,703** | 0,463 | −0,180 | 0,250 | −0,082 |
+| **schnitt** | 0,703 | – | **0,564** | −0,197 | 0,296 | −0,075 |
+| **schnitt50** | 0,463 | 0,564 | – | −0,084 | **0,593** | −0,075 |
+| **amihud** | −0,180 | −0,197 | −0,084 | – | −0,017 | 0,133 |
+| **funding** | −0,082 | −0,075 | −0,075 | 0,133 | −0,052 | – |
+| `zufall` | 0,000 | 0,001 | 0,001 | −0,001 | 0,002 | −0,002 |
+
+**Drei unabhängige Gruppen:**
+
+    1  vola · schnitt · schnitt50 · rsi     eine Familie (0,25 bis 0,70)
+    2  amihud                               zu allem unter 0,20
+    3  funding                               der bestehende
+
+Aus Gruppe 1 gehört **eine** Vertreterin in die Bewertung, nicht vier.
+
+### Regel 3 — alle bestehen, aber nur eine ist monoton
+
+| Größe | Quote je eigenem Fünftel | Spanne | monoton |
+|---|---|---|---|
+| vola | 37,4 · 33,2 · 32,1 · 32,9 · 33,3 | 5,37 | nein — **Schalter** |
+| schnitt | 36,1 · 34,2 · 30,9 · 33,9 · 34,9 | 5,23 | nein |
+| **schnitt50** | **31,8 · 33,2 · 34,9 · 35,0 · 36,9** | **5,06** | **ja — Regler** |
+| amihud | 33,0 · 32,7 · 33,3 · 33,8 · 36,8 | 4,05 | nein |
+| rsi | 34,0 · 31,8 · 34,0 · 35,3 · 36,8 | 5,03 | nein |
+| `zufall` | 34,3 · 34,5 · 34,4 · 34,4 · 34,4 | **0,17** | ✔ |
+
+### ⚠️⚠️ N-45b — UND DIE LÄNGS-FORM HÄLT NICHT
+
+Die Stabilitätsprüfung lief bisher nur **quer**. Auf der **Längs**-Form:
+
+| Größe (längs) | ECHT | eigene Mischung | Urteil |
+|---|---|---|---|
+| `zufall` | −0,127 | −0,167 | setzt die Rauschgrenze **+0,267** |
+| schnitt50 | +0,147 | +0,113 | **nicht trennbar** |
+| vola | +0,067 | +0,033 | **nicht trennbar** |
+| amihud | +0,713 | **+0,620** | ⚠️ **Kontrolle untauglich** |
+
+> **Regel 3 spricht für die Längs-Form, die Stabilität spricht dagegen.**
+
+⚠️ **Bei `amihud` gilt gar nichts:** die eigene Mischung liefert +0,620
+gegen +0,713. Der Grund ist strukturell — Längs-Fünftel tragen eine
+**marktweite Gemeinsamkeit** (in einer ruhigen Phase sind viele Symbole
+gleichzeitig in ihrem eigenen niedrigen Fünftel), und eine Mischung
+*innerhalb des Tages* lässt die unberührt. **Die Tagesmischung ist für die
+Längs-Form kein gültiger Nullpunkt.**
+
+⚠️ Zweiter eigener Fehler an derselben Urteilsregel: sie verglich nur gegen
+den globalen Nullpunkt und schrieb bei amihud „hält". Sie verlangt jetzt,
+dass **beide** Kontrollen greifen.
+
+### Der Widerspruch, der jetzt zu lösen ist
+
+    QUER    Ordnung haelt (+0,647 / +0,553)  ·  Regel-3-Bezug indirekt
+    LAENGS  Regel 3 sauber (5,4 / 5,1 Pkt)   ·  Ordnung haelt NICHT
+                                                (und die Kontrolle taugt nicht)
+
+**Keine der beiden Formen ist heute baureif.** Was fehlt, ist ein Nullpunkt
+für die Längs-Form, der die marktweite Gemeinsamkeit mitzerstört — z. B.
+eine Mischung über die ZEIT innerhalb eines Symbols statt über Symbole
+innerhalb eines Tages.
+
+Werkzeuge: `pruefe_kandidaten_abdeckung_stabilitaet.py` (jetzt mit
+`--arten` und `--laengs`), `pruefe_kandidaten_untereinander.py` (neu)
+Verwandt: **F-217** · **F-218** · **F-221** · Regel 3 · Methodik 2.104
+
