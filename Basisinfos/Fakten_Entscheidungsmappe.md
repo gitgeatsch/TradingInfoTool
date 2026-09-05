@@ -8203,3 +8203,65 @@ Werkzeug: `messe_fuenftel_mit_tagesklammer.py` (neu, mit Selbsttest)
 Verwandt: **F-217** · **F-221** · **F-222** · Tagesklammer-Vorgabe (31.08.)
 · Vorfilter H · „Boden unten"
 
+
+
+## F-224 ✔✔ N-46b/c: Die vollständige Kandidatenlage — und die registrierten Beiträge sind überzeichnet (05.09.2026)
+
+### Der `amihud`-Vorbehalt ist ausgeräumt
+
+Sorge aus F-223: das beste Fünftel ist das **illiquideste**, und dort ist
+die OHLC-Barrierensimulation am wenigsten vertrauenswürdig. Eingeschränkt
+auf handelbare Werte — **über das Symbol, nicht über den Tag** (sonst
+Survivorship), und die Fünftel je Schicht **neu** gebildet:
+
+| Schicht | Symbole | **amihud** | vola | schnitt50 | `zufall` |
+|---|---|---|---|---|---|
+| alle | 516 | **6,51** | 3,77 | 4,20 | 0,19 ✔ |
+| obere Hälfte | 258 | **7,16** | 3,47 | 5,31 | 0,30 ✔ |
+| oberes Drittel | 172 | **7,24** | 3,31 | 4,79 | 0,31 ✔ |
+
+> **`amihud` wird mit der Liquidität STÄRKER, nicht schwächer.** Streng
+> monoton in allen drei Schichten. Kein Dünnbuch-Artefakt — das Gegenteil.
+
+### ⚠️ Der Vergleich mit den registrierten Beiträgen war unzulässig
+
+Die registrierten Spannen (funding 3,00 · turnover 5,55) stammen aus dem
+Fit auf `in_r` — der Einheit, die **F-218/F-219** als falsch nachgewiesen
+haben. Beide unter derselben Tagesklammer neu gemessen:
+
+| Größe | Tagesklammer | registriert | Faktor | monoton |
+|---|---|---|---|---|
+| **amihud** | **6,51** | — | — | **ja** |
+| **schnitt50** | **4,20** | — | — | fast |
+| **vola** | **3,77** | — | — | **ja** |
+| turnover | **2,83** | *5,55* | **2,0×** | fast |
+| funding | **1,08** | *3,00* | **2,8×** | **nein** |
+| `zufall` | 0,19 | — | — | ✔ |
+
+> **Beide registrierten Beiträge behaupten das Zwei- bis Dreifache dessen,
+> was die Barriere hergibt.**
+
+⚠️ **Das bestätigt F-219 auf einem völlig anderen Weg.** Die
+Steigungsmessung sagte *„die Bewertung liefert 19,5 %"*, diese
+Direktmessung sagt *„die Stufen sind um Faktor 2–3 überzeichnet"*.
+Verschiedene Verfahren, gleiche Richtung — die Größenordnungen decken sich
+nicht exakt (2,8× gegen 5×), die Aussage schon.
+
+### Die vollständige Lage — alles unter derselben Klammer
+
+| Größe | Spanne | monoton | Abdeckung | Stabilität | Gruppe | liquide |
+|---|---|---|---|---|---|---|
+| **amihud** | **6,51** | ja | 100 % | +0,473 | **eigen** | **7,24** ↑ |
+| **schnitt50** | **4,20** | fast | 100 % | +0,553 | Familie 1 | 4,79 ↑ |
+| **vola** | **3,77** | ja | 100 % | +0,647 | Familie 1 | 3,31 |
+| *turnover* | *2,83* | fast | *12,6 %* | *+0,113 fällt* | eigen | — |
+| *funding* | *1,08* | **nein** | *55,6 %* | *+0,180* | eigen | — |
+| `zufall` | 0,19 | — | — | −0,013 | — | 0,31 |
+
+⚠️ `vola` und `schnitt50` gehören derselben Familie an (r = 0,463) — aus
+ihr gehört **eine** Vertreterin in die Bewertung, nicht beide.
+
+Werkzeuge: `pruefe_amihud_handelbarkeit.py` (neu),
+`messe_fuenftel_mit_tagesklammer.py` (jetzt mit `--arten` und `--nur`)
+Verwandt: **F-219** · **F-221** · **F-222** · **F-223**
+

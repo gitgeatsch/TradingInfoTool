@@ -64,7 +64,10 @@ import numpy as np
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+import argparse                                             # noqa: E402
+import messe_bewertungskennzahl as MB                       # noqa: E402
 import messe_eigenschaft_beitrag as B                       # noqa: E402
+import messe_funding_niveau as F                            # noqa: E402
 import messe_kandidaten_als_regel as K                      # noqa: E402
 import messe_zielregel as ZR                                # noqa: E402
 from messe_bewertung_kalibrierung import _fuenftel_je_tag   # noqa: E402
@@ -153,18 +156,38 @@ def _spanne(w: list) -> float:
 
 
 def main() -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--arten", default=None)
+    p.add_argument("--nur", default=None,
+                   help="QUER oder LAENGS - Vorgabe: beide")
+    a = p.parse_args()
+    arten = ([x.strip() for x in a.arten.split(",")] if a.arten
+             else list(ARTEN))
+    if "zufall" not in arten:
+        arten.append("zufall")
+    formen = ((a.nur.upper(),) if a.nur else ("QUER", "LAENGS"))
     print("Lade Reihen...", flush=True)
     reihen = B.lade()
     tage_je_sym = {s: [z[0] for z in roh] for s, roh in reihen.items()}
     zeilen = ZR.ergebnisse(reihen)
     print("  %d Anker · %d Reihen" % (len(zeilen), len(reihen)))
 
+    # ⚠️ Quellen nur laden, wo sie gebraucht werden.
+    quellen = {}
+    if any(x in ("funding", "funding_extrem") for x in arten):
+        print("  lade funding ...", flush=True)
+        fu = F.lade_funding()
+        quellen["funding"] = fu
+        quellen["funding_extrem"] = fu
+    if "turnover" in arten:
+        print("  lade turnover ...", flush=True)
+        quellen["turnover"] = MB.reihe("data/onchain_historie.db", "splycur")
     gebaut = {}
-    for art in ARTEN:
+    for art in arten:
         print("  baue %s ..." % art, flush=True)
-        gebaut[art] = K.baue(reihen, art, None, horizont=20)
+        gebaut[art] = K.baue(reihen, art, quellen.get(art), horizont=20)
 
-    for form in ("QUER", "LAENGS"):
+    for form in formen:
         print()
         print("=" * 92)
         print("%s — gepoolt gegen Tagesklammer" % form)
@@ -172,7 +195,7 @@ def main() -> int:
         print("  %-11s %-9s %-34s %8s" % ("Groesse", "Klammer",
                                           "Abweichung je Fuenftel (Punkte)",
                                           "Spanne"))
-        for art in ARTEN:
+        for art in arten:
             if form == "QUER":
                 f5 = _fuenftel_je_tag(gebaut[art])
             else:
