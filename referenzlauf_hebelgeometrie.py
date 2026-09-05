@@ -171,11 +171,28 @@ def main() -> int:
     a = p.parse_args()
     db = a.db
     if not db:
+        # ⚠️ NACH DATUM, NICHT NACH NAMEN (05.09.2026, eigener Fehler).
+        #
+        # `sorted(glob)[-1]` waehlte alphabetisch - und das ist
+        # `nb_produktion.db`, weil "p" hinter jeder Ziffer sortiert. Der
+        # Referenzlauf mass damit auf dem AELTESTEN Export (31.08.) statt
+        # auf dem frischesten (05.09.), ohne dass es irgendwo auffiel.
+        # Genau die Klasse Fehler, die eine Grundlinie unbrauchbar macht:
+        # sie wandert, ohne dass jemand es bemerkt.
         import glob
-        kand = sorted(glob.glob(
-            "C:/Users/Geatsch/AppData/Local/Temp/claude/*/*/scratchpad/nb_*.db"))
+        import os
+        kand = glob.glob(
+            "C:/Users/Geatsch/AppData/Local/Temp/claude/*/*/scratchpad/nb_*.db")
+        kand.sort(key=os.path.getmtime)
         db = kand[-1] if kand else "data/tradinginfotool.db"
+    import datetime as _dt
+    import os as _os
+    try:
+        stand = _dt.datetime.fromtimestamp(_os.path.getmtime(db)).strftime("%Y-%m-%d %H:%M")
+    except OSError:
+        stand = "unbekannt"
     print("Datenbank: %s" % db)
+    print("Stand:     %s   <- die Grundlinie gilt fuer DIESEN Export" % stand)
     bericht(lade(db, a.seit), "heutiger Stand, seit %s" % a.seit)
     return 0
 

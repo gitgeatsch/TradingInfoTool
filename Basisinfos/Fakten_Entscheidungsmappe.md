@@ -7618,3 +7618,171 @@ wiederzufinden sein. Sind sie es nicht, ist eine davon ein Nebeneffekt.
 Werkzeug: Auswertung des NB-Exports 05.09. über `signals`
 (`position_size_eur`, `hebel`, `entry_usd_von`, `stop_loss_usd_von`)
 Verwandt: F-214 · F-215 · N-38 · L3 · `config.yaml`-Sync-Konflikt
+
+
+## F-217 ⚠️⚠️ N-41b: Funding hält, Turnover hält NICHT — gegen zwei Nullpunkte (05.09.2026)
+
+**Die Frage:** Halten die Fünftel-Ordnungen der registrierten Beiträge über
+die Zeit? Ohne das ist jede Stufe eine Momentaufnahme.
+
+**Warum eine Gegenprüfung nötig war.** Ein erster Anlauf (N-41) verglich nur
+zwei Hälften und zählte *gleiche Rangplätze*. Dieses Maß hat unter reinem
+Zufall den Erwartungswert **1,0 von 5** — Turnover erreichte exakt 1, Funding
+2. Das Maß konnte Ordnung von Zufall gar nicht trennen; der Schluss „hält bei
+beiden nicht" war unbegründet.
+
+### Der Aufbau
+
+    Spearman-Rangkorrelation statt Rangplatzgleichheit
+    6 Blöcke á ~454 Tage, ALLE Paare, blockeigene Basisrate
+    UNTERER Nullpunkt   Fünftel je Tag gemischt (Tagesklammer bleibt)
+    OBERER  Nullpunkt   Spannenreihe 1 / 2 / 4 / 10 Punkte gepflanzt
+
+⚠️ **Die Spannenreihe war der eigentliche Fix.** Die erste Positivkontrolle
+pflanzte 10 Punkte Spanne, während die echten Spannen bei 2–4 liegen. Sie
+prüfte damit „erkennen wir eine *starke* Ordnung" und ließ offen, ob ein
+Nullbefund echt oder nur untermächtig ist (Methodik 2.88).
+
+### Das Ergebnis
+
+| gepflanzte Spanne | FUNDING (n≈3.758) | TURNOVER (n≈1.142) |
+|---|---|---|
+| Zufall | +0,030 | −0,007 |
+| 1,0 Punkt | +0,420 | +0,060 |
+| 2,0 Punkte | +0,720 | +0,347 |
+| 4,0 Punkte | +0,940 | +0,740 |
+| 10,0 Punkte | +1,000 | +1,000 |
+| **ECHT** | **+0,330** | **+0,020** |
+
+> **FUNDING hält — aber die stabile Ordnung ist unter 1 Punkt Spanne wert.
+> Registriert sind 3,00.**
+>
+> **TURNOVER hält NICHT.** Und das ist ein **echter** Nullbefund, kein
+> untermächtiger: eine 2-Punkt-Ordnung wäre bei diesem n mit +0,347 klar
+> sichtbar. Registriert sind **5,55**.
+
+### ⚠️ Was das für die registrierten Stufen heißt
+
+Beide Beiträge behaupten eine Spreizung, die die Barriere über die Zeit
+nicht hergibt — Funding um rund das Vierfache, Turnover vollständig.
+
+### ⚠️ Was hier NICHT bewiesen ist
+
+Die Steigungszahlen aus N-41/N-41d (+0,138 / +0,067 / +0,089) stehen
+**nicht** — siehe **F-218**. Sie stammen aus `baue_gruppen()`/`_steigung()`,
+und dieses Werkzeug ist nicht invariant gegen einen additiven Versatz.
+Die Stabilitätsmessung hier benutzt es **nicht** und ist davon unberührt.
+
+Werkzeuge: `pruefe_stufen_stabilitaet.py` (neu), `messe_stufen_aus_quote.py` (neu)
+Verwandt: **F-215** · **F-218** · F-179 · N-13-1' · Methodik 2.88 · 2.104
+
+
+
+## F-218 ⚠️⚠️⚠️ N-41f/g: Die Kalibrierungszahl war ein Artefakt der DATENVERFÜGBARKEIT (05.09.2026)
+
+**Der Anlass:** Dieselbe Größe, dreimal gemessen, drei Antworten —
+N-37 **+0,056**, N-41 **+0,138**, N-41d **+0,067**. Der einzige Unterschied
+zwischen den letzten beiden war die Basis, gegen die die Stufen gefittet
+wurden: die theoretische (1/3) oder die gemessene. Das ist eine **additive
+Konstante**, und `wahrscheinlichkeit.rechne()` bildet die Quote streng
+linear (`quote = basis + zuschlag/100`, kein Deckel). Eine
+Regressionssteigung darf sich davon nicht ändern.
+
+### Die Invarianzprüfung — eine EIGENSCHAFT, keine Zahl
+
+Alle Stufen um denselben Betrag c verschoben, Rangfolge unberührt:
+
+| c | Gruppen | Steigung |
+|---|---|---|
+| +0,0 | 34 | **+0,089** |
+| +0,5 | 33 | +0,081 |
+| +1,0 | 31 | +0,072 |
+| +2,0 | 34 | **+0,052** |
+
+> **Die geforderte Eigenschaft hält nicht.** Damit ist keine der drei Zahlen
+> oben eine Eigenschaft der Bewertung.
+
+### Die Ursache — zwei Kandidaten, sauber getrennt
+
+    A  Gruppierung nach round(wert_r, 3) schneidet bei jedem Versatz anders
+    B  Der Versatz ist nicht konstant JE ANKER: wo beide Beiträge greifen,
+       wandert das Potential um 2c, wo nur einer greift, um c
+
+**Beitragsabdeckung, zweite Hälfte, 440.354 Anker:**
+
+| Beiträge je Anker | Anteil |
+|---|---|
+| **0** | **40,6 %** |
+| 1 | 48,9 % |
+| **2** | **10,5 %** |
+
+**Auf den 70.227 VOLLSTÄNDIGEN Ankern:**
+
+    c = +0,0   ->   +0,018  [-0,042 .. +0,090]
+    c = +2,0   ->   +0,018  [-0,042 .. +0,090]     identisch
+
+> **Ursache B bestätigt, A ausgeschieden.** Wo jeder Anker beide Beiträge
+> hat, ist die Steigung exakt invariant. Das Messgerät ist in Ordnung.
+
+### ⚠️ Was daraus folgt — und es trifft Regel 3
+
+Auf dem vollen Satz **+0,089**, auf den vollständigen Ankern **+0,018**. Die
+Differenz stammt aus der **Mischung** von Ankern mit 0, 1 und 2 Beiträgen.
+Ein Teil der gemessenen Kalibrierung kam also nicht aus der Ordnung der
+Beiträge, sondern daraus, **ob ein Symbol überhaupt Daten hat**.
+
+Symbole mit Funding-Daten sind andere Symbole — größer, liquider, an
+Perpetual-Märkten gelistet. Das Potential kodierte teilweise *„hat dieses
+Asset Daten"*. Das ist eine Aussage über das **Asset**, nicht über den
+**Zeitpunkt** — **Regel 3 verletzt**, auf einem Weg, den niemand gebaut hat.
+
+### ⚠️ Was hier NICHT behauptet wird
+
+Dass die Kalibrierung auf vollständigen Ankern null ist. Das Intervall
+[−0,042 .. +0,090] schließt die +0,089 nicht aus — dort ist die Messung
+**untermächtig**. Und mehr vollständige Anker sind nicht zu beschaffen:
+
+    funding   302 Symbole    turnover   66 Symbole    BEIDE  42
+
+Das ist eine **Datendecke**, kein Messfehler.
+
+### Der zweite Fund im selben Modul
+
+`baue_gruppen()` benutzt im `pflanze`-Zweig `abs(hash((sym, tag)))`.
+`hash()` ist für Zeichenketten **prozessweise zufällig** — in zwei
+Prozessen gemessen: `-2554512668254146022` gegen `-3417627769902381564`.
+Die Positivkontrolle ist damit nicht reproduzierbar. Derselbe Fehler war
+zwei Tage zuvor an anderer Stelle gefangen worden.
+
+### Eigener Fehler im ersten Anlauf
+
+Der Trenntest filterte zunächst nach **Tagen**, an denen *irgendein* Anker
+vollständig ist — 1.323 von 1.363, also praktisch alles. Er maß dieselbe
+Stichprobe und konnte nichts unterscheiden. Der Filter muss je **Anker**
+greifen. Erst danach kam die eindeutige Antwort.
+
+### Was FÄLLT
+
+| | |
+|---|---|
+| **F-215** | die Steigung +0,056, der Kalibrierungsfaktor **0,168**, die Aussage *„die Bewertung liefert 17 %"* |
+| **N-41** | die Steigung +0,138 und der Schluss, der Umrechnungsfehler sei die Ursache |
+| **N-39** | die *Begründung* des r-Bands über die 17 % — **nicht das Band selbst** |
+
+⚠️ Der Zielzustand N-39 überlebt: die harte Klammer war die Antwort auf eine
+**unsichere** Kalibrierung. Sie ist jetzt unsicherer als gedacht, und genau
+dafür war sie gebaut.
+
+### Was STEHT
+
+**Ein neues Prüfkriterium für jeden Beitrag: nicht nur *trägt er*, sondern
+*wie viel des Universums deckt er ab*.** „Trägt auf 42 Symbolen" ist etwas
+anderes als „trägt auf 302". Turnover steht damit aus zwei unabhängigen
+Gründen schlecht: die Ordnung hält nicht (**F-217**), und er ist für 14 %
+des Universums verfügbar.
+
+Werkzeuge: `pruefe_steigung_invarianz.py`, `pruefe_beitragszahl_sickert.py`,
+`pruefe_turnover_weglassen.py` (alle neu)
+Verwandt: **F-215** (gefallen) · **F-217** · Regel 3 · „Die Summe der
+Beiträge taugt nicht als Rangfolge" · Methodik 2.88 · 2.100
+

@@ -3188,3 +3188,95 @@ wird er beim nächsten Mal wieder als solches verwendet.
 > daneben (Cooldown, `verlustanteil`, Einsatz, Mindest-Stop). `config.yaml`
 > liegt unter **`Basisinfos/`** — nicht im Wurzelverzeichnis. Vor jeder
 > Aussage über Betriebsverhalten: an den Daten prüfen, nicht am Default.
+
+
+---
+
+# ⚠️⚠️⚠️ N-41 — WAS AM 05.09. NACHMITTAGS GEFALLEN IST
+
+*Die Reihe N-41 bis N-41g war als Verbesserung der Bewertung geplant. Sie
+endete mit dem Nachweis, dass die Messgrundlage nicht trug. Beides gehört
+in den Plan, sonst wird derselbe Weg wieder gegangen.*
+
+## Der Verlauf
+
+| # | Frage | Ergebnis |
+|---|---|---|
+| **N-41** | Stufen direkt aus der Barrieren-Quote statt aus `in_r` | Steigung +0,138 statt +0,056 — **später widerlegt** |
+| **N-41b** | Hält die Fünftel-Ordnung über die Zeit? | **funding hält (<1 Punkt), turnover NICHT** — F-217 |
+| **N-41d** | Trägt turnover etwas? Weglassen als Vorhersage | Zahlen reproduzierten nicht → Verdacht auf das Messgerät |
+| **N-41f** | Invarianz gegen einen additiven Versatz | **fällt durch** — F-218 |
+| **N-41g** | Welche Ursache? | **Ursache B**: die Zahl der Beiträge je Anker schwankt |
+
+## Die drei Punkte, die daraus in den Bau gehen
+
+### P1 — Ein Beitrag braucht ABDECKUNG, nicht nur Wirkung
+
+    funding   302 Symbole      turnover   66 Symbole      BEIDE  42
+
+Ein Beitrag, der für 14 % des Universums vorliegt, macht die Bewertung
+**zwischen Ankern unvergleichbar** — und genau daraus entstand die
+Scheinkalibrierung. **Jeder künftige Beitragstest bekommt eine
+Abdeckungszahl neben die Wirkungszahl.**
+
+### P2 — Die Bewertung muss bei fehlendem Beitrag definiert sein
+
+Heute wird ein fehlender Beitrag stillschweigend übersprungen; der Anker
+bekommt eine niedrigere Summe und wandert im Ranking nach unten. Das ist
+keine Bewertung, sondern eine Bestrafung für fehlende Daten. Zu klären
+ist die **Form**: entweder je Anker auf die vorhandenen Beiträge
+normieren, oder nur Anker mit gleicher Beitragslage miteinander
+vergleichen. ⚠️ **Nutzerentscheidung** — die beiden Formen bedeuten
+Verschiedenes.
+
+### P3 — Turnover als Beitrag steht zur Disposition
+
+Zwei unabhängige Gründe: die Ordnung hält nicht (F-217), und die
+Abdeckung liegt bei 14 % (F-218). ⚠️ **Kein Ausbau ohne Nutzerfreigabe**
+— und der Wirkungsnachweis muss auf einem Messgerät laufen, das die
+Invarianzprüfung besteht.
+
+## Was am Messgerät zu reparieren ist
+
+| | |
+|---|---|
+| `baue_gruppen()` `hash()` | prozessweise zufällig → Positivkontrolle nicht reproduzierbar. **Muss** auf `crc32` o. ä. |
+| Invarianzprüfung | gehört als **Dauertest** neben die Zufallskontrolle: eine Konstante darf die Steigung nicht ändern |
+| Abdeckungsausweis | jede Kalibrierungsmessung meldet, wie viele Anker 0/1/2/… Beiträge hatten |
+
+## Was NICHT gefallen ist
+
+- **Der Zielzustand N-39.** Die harte Klammer des r-Bands war die Antwort
+  auf eine unsichere Kalibrierung — sie ist jetzt unsicherer, und dafür
+  war sie gebaut. Was fällt, ist die *Begründung über die 17 %*.
+- **Die Grundlinie** (Schritt 1), jetzt auf dem frischen Export vom 05.09.:
+  746 Signale über 8 Tage, Stop-Median 7,73 %, Hebel-Median 1,20,
+  Risiko 30 €. **71,1 % der Hebelsignale liegen zwischen 1,0 und 2,0**,
+  16,5 % in der Zielzone 2–5, Maximum **2,40**.
+- **F-217** (Stabilität) — benutzt das defekte Werkzeug nicht.
+
+## ⚠️ Ein stiller Fehler, gefunden und behoben
+
+`referenzlauf_hebelgeometrie.py` wählte die Datenbank mit
+`sorted(glob)[-1]` — **alphabetisch**. Das ist `nb_produktion.db`, weil „p"
+hinter jeder Ziffer sortiert; gemessen wurde also auf dem **ältesten**
+Export (31.08.) statt auf dem frischesten. Behoben: Auswahl nach
+Änderungsdatum, und der **Stand wird ausgewiesen**. Eine Grundlinie, die
+unbemerkt wandert, ist keine.
+
+## O2 ist ERLEDIGT
+
+Die 500 € kommen aus `empfehlung_vertrag.TRANCHE_JE_FAKTOREN =
+((3, 500), (2, 300), (1, 100))` — der Betrag folgt der Zahl **unabhängiger
+Belege**. Live: 90 Signale mit 3 Faktoren, 29 mit 2. Keine geratene Zahl.
+
+⚠️ **Aber es gibt zwei Beträge in der Kette:**
+
+| | Wert | wohin |
+|---|---|---|
+| `betrag_wunsch_eur` = `betraege.einsatz_eur()` | **800 €** | in die Größenrechnung |
+| `tranche_eur` aus den Faktoren | **500 €** | in `position_size_eur` |
+
+Für den Zielzustand (`hebel = nominal / einsatz`) muss feststehen, **welcher
+der Nenner ist**. Fachlich ist es der tatsächlich eingesetzte Betrag — also
+die Tranche. ⚠️ **Nutzerentscheidung**, weil es den Hebel direkt skaliert.
