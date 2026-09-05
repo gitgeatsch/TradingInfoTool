@@ -7356,3 +7356,126 @@ ganzen Anlage.
 Werkzeug: `pruefe_cooldown_nachgestellt.py` (chronologische Nachstellung
 über die **echte** `gesperrt_bis()`, leere Kopie im Speicher)
 Verwandt: **F-174** · **F-213** · F-176 · Regel 1 · `config.yaml`-Sync-Konflikt
+
+
+## F-215 ⚠️⚠️ N-37: Die Bewertung trägt — und liefert 17 % dessen, was sie behauptet (05.09.2026)
+
+Vorabfestlegung: `Anforderungen_Umbau_28_08.md`, Abschnitt **N-37**,
+geschrieben vor dem Lauf (Commit `bf09878`).
+
+**Die Frage:** Liefert ein höheres Potential tatsächlich eine höhere
+Trefferquote? Sie ist die Vorbedingung für jede Hebelabstufung — Kelly
+ohne kalibriertes µ ist eine Formel ohne Eingabe.
+
+**Warum simuliert:** Das Potential wird nirgends gespeichert (nicht in
+`signals`, in keinem JSON-Feld); nur die 41 verworfenen Fälle stehen als
+Text im Ablehnungsgrund. Mein erster Reflex war „ab jetzt mitschreiben“ —
+die fünfte Variante der Ausrede, vor der die stehende Vorgabe warnt.
+Rückwirkend rekonstruiert, mit den echten Funktionen.
+
+### Der Aufbau — vier vorab benannte Fallen, alle behandelt
+
+| Falle | Behandlung |
+|---|---|
+| **Zirkularität** — die Stufen sind in-sample gefittet | Stufen auf der **ersten** Hälfte gefittet, Kalibrierung auf der **zweiten** geprüft (Split 2022-11-08, je 1.363 Tage) |
+| **Form (2.85)** — das Potential gilt für ein Barrierensystem, nicht für eine Rendite nach festen Tagen | Barrieren-Ausgang über die bestehende `messe_zielregel.ergebnisse()`; nur **entschiedene** Anker gezählt |
+| **Arithmetik** — `quote = 1/(1+CRV) = 33,3 %` steht per Konstruktion | Prüfgröße ist die **Steigung** der Quote über das Potential, erwartet +0,333 |
+| **Macht** — vorab gerechnet | ~1.800 entschiedene Anker je Gruppe nötig; 623.380 Anker verfügbar |
+
+### Das Ergebnis — out-of-sample
+
+    Steigung          +0,056  [+0,008 .. +0,098]   erwartet +0,333
+    Zufallskontrolle  -0,003  (Spanne -0,026 .. +0,018, 10 Mischungen)
+    Der echte Wert liegt AUSSERHALB der Kontrollspanne.
+    Aufloesung: 32 unterscheidbare Potentialstufen
+
+> **Die Bewertung trägt — und liefert 17 % dessen, was sie behauptet.**
+> Der Zusammenhang ist real und vom Zufall zu trennen; seine Größe ist ein
+> Sechstel der versprochenen.
+
+⚠️ **Die Auflösung ist besser als befürchtet: 32 Stufen, nicht 5.** Die
+fünf Werte aus dem Betriebslog waren ein Drei-Tage-Ausschnitt, nicht die
+Auflösung des Verfahrens. Damit ist die Gate-gegen-Leiter-Frage
+grundsätzlich entscheidbar.
+
+### ⚠️ Was NICHT erfüllt ist — die Monotonie
+
+Die realisierte Quote wandert **nicht geordnet** mit dem Potential. Sie
+liegt fast durchgehend bei 30–31 %, mit vier Ausreißergruppen bei
+37–39 %, die keinem Muster folgen (−0,076 R → 37,3 % · +0,020 R → 38,3 %
+· +0,055 R → 39,5 % · +0,057 R → 39,3 %).
+
+Nach der strikt geschriebenen Vorabfestlegung („monoton UND trennbar UND
+Kontrolle still“) wäre das **nicht kalibriert**. Ehrlicher: bei 32 Stufen
+mit teils nur ~1.000 Ankern ist strikte Monotonie ein unerfüllbarer
+Anspruch — **die Richtung ist belegt, die Ordnung nicht.** Das Kriterium
+war zu scharf formuliert; das gehört benannt, nicht stillschweigend
+umgangen.
+
+### Die Basisrate liegt bei ~31 %, nicht 33,3 % — und das ist erklärbar
+
+Alle Gruppen liegen systematisch rund 2 Punkte unter der theoretischen
+Marke. Ursache ist keine Fehlrechnung, sondern die Tageskerze: der Stop
+kann vom **Tief** berührt werden, während der Schluss darüber liegt, und
+`messe_zielregel` lässt bei Gleichstand bewusst den **Stop** gewinnen.
+Beides drückt die Quote nach unten. ⚠️ Meine Kontrolle hat das mit „OK“
+durchgewinkt, weil ich die Toleranz auf 4 Punkte gesetzt hatte — die
+Abweichung ist aber **systematisch**, nicht zufällig.
+
+### ⚠️⚠️ Zwei eigene Fehler, beide von den Kontrollen gefunden
+
+**1. Die Zufallskontrolle lief mit EINER Mischung** und meldete −0,055
+„UMGEKEHRT“ — fast das Spiegelbild des echten +0,056. Über zehn Mischungen
+liegt sie bei −0,003. **Methodik 2.104: eine einzelne Ziehung ist kein
+Nullpunkt, sondern eine Zufallszahl.** Ohne die Korrektur wäre der Befund
+als „Kontrolle feuert, nicht verwertbar“ verworfen worden.
+
+**2. Der Selbsttest erzeugte die Wahrheit mit der geprüften Funktion.**
+Bei einem Fehler wären Wahrheit und Messung gleich falsch gewesen, und der
+Test hätte bestanden — derselbe Zirkel wie in F-206 und F-212. Behoben:
+die Wahrheit kommt jetzt direkt aus der Stufentabelle. Danach fingen zwei
+Gegentests ihre injizierten Fehler eindeutig (Fünftel gedreht → −0,322
+UMGEKEHRT; Merkmale verloren → nur 1 Stufe).
+
+### ⚠️ Ein Vorbehalt zur Reproduktionskontrolle
+
+Die Turnover-Stufen der ersten Hälfte (+1,82 / +1,91 / +0,66 / −2,53 /
+−1,87) haben eine **andere Form** als die registrierten (+3,15 / +0,83 /
++0,22 / −1,79 / −2,40) — sie sind nicht monoton. **Die erste Hälfte ist
+nicht dieselbe Marktwelt.** Das schwächt die Übertragbarkeit; es kippt den
+Befund nicht, weil die Richtung out-of-sample bestätigt wurde. Meine
+Toleranzschwelle von 1,5 Punkten hat das durchgelassen — sie war gesetzt,
+nicht begründet.
+
+### Was daraus für den HEBEL folgt — die Zahl, auf die es ankommt
+
+    Kalibrierungsfaktor   0,056 / 0,333  =  0,168
+
+                                behauptet      WAHR     Kelly f*
+    Potential 0,080 (Schwelle)      0,080    0,0134       0,67 %
+    Potential 0,133 (Maximum)       0,133    0,0223       1,12 %
+
+    heutiger verlustanteil (fest)                        15,00 %
+    halbes Kelly (Standard gegen Schaetzfehler)           0,34 %
+
+> **Gegenüber halbem Kelly ist der heutige feste Verlustanteil um den
+> Faktor 45 zu hoch.**
+
+Am 04.09. hatte ich Faktor 4 gerechnet — auf dem **behaupteten**
+Potential. Mit der gemessenen Kalibrierung wird daraus 45. **Genau
+deshalb musste die Kalibrierung vor die Hebelleiter.**
+
+### Was diese Messung NICHT entscheidet
+
+1. **Nicht die Hebelhöhe.** `f* = Potential/CRV` ist die Ableitung; Deckel,
+   Fraktionierung und Stufung sind Konstruktionsarbeit.
+2. **Nicht die Architektur** (Gate gegen Leiter) — sie liefert nur die
+   Auflösung, aus der beides begründbar wird.
+3. **Nicht die Positionsführung.** Spot ist ein Bestand, Hebel ein Trade
+   mit Lebenszyklus.
+
+Suite unverändert — reines Messwerkzeug.
+
+Werkzeug: `messe_bewertung_kalibrierung.py` (`--selbsttest`: zwei Welten
+plus Kettenprüfung mit entkoppelter Wahrheit; zwei Gegentests bestanden)
+Verwandt: F-203 · F-210 · F-212 · N-36 · N-37 · Methodik 2.85, 2.88, 2.104, 2.107
