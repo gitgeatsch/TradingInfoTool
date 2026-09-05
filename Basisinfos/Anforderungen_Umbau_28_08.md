@@ -3577,3 +3577,119 @@ gehört in die Positionsführung (**O5**).
 ⚠️ Nebeneffekt, der die Dringlichkeit senkt: „unter 2 ist kein Hebel" würde
 71,1 % der Hebelsignale auf 1,0 zurücksetzen — die fielen automatisch auf
 den Gruppenwert.
+
+
+---
+
+# ⚠️⚠️⚠️ DIE GÜLTIGE OFFENE-PUNKTE-LISTE — Stand 06.09.2026, früh
+
+*Ersetzt alle vorherigen Listen in diesem Dokument. Wer weiter oben
+nachschlägt, findet überholte Einträge.*
+
+## Wo das Projekt steht
+
+Der **Hebelumbau ist angehalten** (Nutzerentscheidung 05.09.: erst die
+Bewertung). Die Kette läuft unverändert weiter. Was am 05./06.09. geschah,
+war kein Bau, sondern der **Neuaufbau der Messgrundlage** — und dabei sind
+mehrere registrierte Befunde gefallen.
+
+    F-215 gefallen   "die Bewertung liefert 17 %" war ein Artefakt der
+                     Datenverfuegbarkeit
+    F-219            Ersatz: 19,5 %, auf invarianter Form gemessen
+    F-220            damit erreicht nur EINE Lage die Zielzone 2-5x
+    F-223            die Tagesklammer fehlte - zum DRITTEN Mal
+    F-226            der Nullpunkt war um Faktor 4 zu klein
+    F-227            Regel 3 in CLAUDE.md war eine quellenlose Verkuerzung
+    F-229            ALLE Veraenderungsformen sind nur Faerbungen ihres
+                     Niveaus -> es gibt derzeit KEINE Groesse, die ueber
+                     den Moment spricht und traegt
+
+## ✔ ENTSCHIEDEN am 05./06.09.
+
+| | | |
+|---|---|---|
+| **Reihenfolge** | erst die Bewertung, dann der Hebelumbau | K1/K2/K3 stehen still |
+| **Regel 3** | in `CLAUDE.md` berichtigt, Originalzitat mit Quelle | F-227 |
+| **Hebelnenner** | **500 € FEST**, Bandbreite 300–1000, 1000 erst wenn das System trägt | die Tranche ist in 91,2 % ohnehin 500 |
+| **`vola`** | nicht einzeln registrieren — erst alle Kandidaten gemeinsam | |
+
+## ⏳ LÄUFT GERADE
+
+| | |
+|---|---|
+| **N-51** | Alle sechzehn Größen neu, beide Formen, mit Tagesklammer, Nullpunkt bei **eigener** Persistenz **und eigener Abdeckung**, Tageszahl je Zelle, bedingte Prüfung für alles über 2,5× |
+
+**Gegenprüfung danach, vorab festgelegt:** Reproduktion (amihud 6,51 ·
+schnitt50 4,20 · funding 1,08) · `zufall` unter dem Nullpunkt · die Kurve
+muss monoton sein · **`funding` und `turnover` müssen einen GRÖSSEREN
+Nullpunkt bekommen als die kursbasierten** — das ist der eigentliche Test
+der Korrektur vom 06.09.
+
+## ⚠️ NEUE OFFENE PUNKTE aus dem 05./06.09.
+
+| # | Punkt | Art |
+|---|---|---|
+| **N1** | **Es gibt keine Moment-Größe, die trägt.** Alle Veränderungsformen fallen gegen ihr eigenes Niveau (0,7× · 1,7× · 1,1×). Ohne eine solche Größe ist der Hebel aus der heutigen Datenlage nicht zu erzeugen | **Blocker**, N-51 sucht |
+| **N2** | ⚠️ **Terminmarkt-Daten reichen nur 122 Tage** gegen 2.884 der Barrierenbasis. `oi_aenderung` ist als **Live-Sperre** registriert (H-4c) und auf eben diesen 122 Tagen validiert | zu prüfen |
+| **N3** | **Die registrierten Stufen sind in der falschen Einheit.** funding 3,00 und turnover 5,55 stammen aus dem Fit auf `in_r`; gemessen sind 1,08 und 2,83. Sie müssen neu abgeleitet werden — unabhängig davon, welche Beiträge dazukommen | Bau |
+| **N4** | **`turnover` als Beitrag steht zur Disposition** — hält über die Zeit nicht (F-217), deckt 12,6 %, und liegt mit 2,83 nur 2,5× über dem ehrlichen Nullpunkt | **Nutzerentscheidung** |
+| **N5** | **Die H5-Zahlen aus F-225** (amihud 7,09) sind gegen einen **noch ungemessenen** persistenten Nullpunkt zu lesen. Die Richtung ist eindeutig, die genaue Zahl nicht | Messung, nachrangig |
+| **N6** | **Die RENDITE-Größe braucht Block-Bootstrap**, wenn sie je gemessen werden soll. Der einfache Standardfehler versagt bei `in_r` (Kontrolle 6–16× daneben) | Messung, nur bei Bedarf |
+| **N7** | ⚠️ **Methodische Lehre:** eine Korrelationsmatrix reicht als Unabhängigkeitsprüfung **nicht**. `amihud VER` gegen `amihud NIV` korreliert mit 0,177 — unauffällig — und trägt bedingt trotzdem null | gilt ab sofort |
+
+## ⏳ COOLDOWN — messen, simulieren, kalibrieren
+
+Nutzerentscheidung: *„zuerst messen und dann im Detail simulieren und
+kalibrieren — 12 Stunden finde ich etwas zu weit, ob 1 h oder 3,4 reichen,
+wird sich zeigen."*
+
+    Ist-Zustand   letztes Signal Hebel 1,0  ->  12,0 h
+                  letztes Signal Hebel >1,0 ->   3,5 h   (34 % der Signale)
+
+    1  MESSEN      wieviele Mails verursacht die 3,5-Stunden-Regel wirklich
+    2  SIMULIEREN  Signalzahl und Mailtakt bei 1 h · 3,5 h · 6 h · 12 h
+    3  KALIBRIEREN den Wert aus der Simulation waehlen
+
+⚠️ Der Cooldown steuert die **Signalausgabe**; das Bedürfnis, offene
+Hebelpositionen häufiger anzusehen, ist **Positionsführung** (O5). Zwei
+Dinge in einem Regler.
+
+## Weiter offen, unverändert
+
+| # | Punkt | Art |
+|---|---|---|
+| **O3** | Ist 5 % der richtige Mindest-Stop? Beide früheren Messungen zensiert | Messung, nachrangig |
+| **O5** | **Positionsführung für Hebel** — Trade mit Lebenszyklus statt Bestand | Bau, Vorbedingung für den Aggregat-Deckel |
+| **O6** | N-35 Intraday: 19,3 Blöcke statt 20, Datendecke | **Nutzerentscheidung** |
+| **O7** | E3/E4: 87 % der Stop-Fälle liefen ins Plus, naive Gegenmaßnahme widerlegt | offen |
+
+## Der Bauplan, wenn eine tragende Größe gefunden ist
+
+    1  Beitraege entscheiden          Nutzerentscheidung, nach N-51
+    2  Stufen neu ableiten            alle, in der richtigen Einheit (N3)
+    3  Kalibrierung neu               ersetzt die 19,5 % aus F-219
+    4  F-220 neu rechnen              erreicht der Hebel jetzt 2-5x?
+    5  Portfoliowert lesbar machen    Vorbedingung fuer K1, LAUTER Rueckfall
+    6  K1: r(q) statt fester Anteil
+    7  Positionsfuehrung Hebel (O5)   Vorbedingung fuer den Deckel
+    8  Aggregat-Deckel
+    -  K4                             nur dokumentieren
+
+## ⚠️ Die Werkzeuge, die seit dem 05.09. stehen
+
+**Ohne sie nimmt ein neuer Beitrag denselben Weg wie funding und turnover.**
+
+| | |
+|---|---|
+| `messe_fuenftel_mit_tagesklammer.py` | Tagesklammer, mit Selbsttest (gepoolt erfindet 12,4 Punkte auf einem Nulleffekt) |
+| `pruefe_steigung_invarianz.py` | die Eigenschaftsprüfung, die F-215 zu Fall brachte |
+| `pruefe_persistenz_und_nullpunkt.py` | der ehrliche Nullpunkt für persistente Größen |
+| `messe_form_und_nullpunktkurve.py` | die Nullpunkt-**Kurve** über die Beständigkeit |
+| `pruefe_veraenderungsformen_unabhaengig.py` | die bedingte Prüfung gegen das eigene Niveau |
+| `messe_alle_groessen_neu.py` | alle Größen, alle Kontrollen, Nullpunkt je Abdeckung |
+| `messe_kandidaten_je_horizont.py` | drei Horizonte, zwei Zielgrößen |
+| `referenzlauf_hebelgeometrie.py` | die Grundlinie, mit Datums-Auswahl und Standausweis |
+
+⚠️ **Stehende Vorgabe seit 06.09.:** vor jedem langen Lauf ein Vorabtest auf
+Kunstdaten — inklusive des Grenzfalls, den die jeweilige Korrektur betrifft.
+Ein reiner Durchlauftest fängt zu wenig.

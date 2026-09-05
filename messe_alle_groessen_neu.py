@@ -119,7 +119,7 @@ def main() -> int:
           % ZIEHUNGEN)
     print("=" * 104)
     basis = K.baue(reihen, "amihud", None, horizont=20)
-    kurve = []
+    kurve, bloecke = [], []
     for block in (1, 5, 20, 60, 250, None):
         sp, pe = [], []
         for z in range(ZIEHUNGEN):
@@ -129,13 +129,53 @@ def main() -> int:
                 je_tag_und_fuenftel(zeilen, tage_je_sym, kf))
             sp.append(_spanne(tg))
         kurve.append((float(np.mean(pe)), float(np.max(sp))))
+        bloecke.append((float(np.mean(pe)), block))
         print("  Block %-6s Persistenz %5.1f %% · Nullpunkt (max) %5.2f"
               % (str(block), 100 * kurve[-1][0], kurve[-1][1]))
     kurve.sort()
 
-    def nullpunkt(p: float) -> float:
-        w = [s for pp, s in kurve if pp <= p + 0.02]
-        return max(w) if w else max(s for _p, s in kurve)
+    # ⚠️ DIE GETEILTE KURVE TAUGT NUR ALS BLOCK-ZUORDNUNG (06.09.,
+    # vor dem Lauf gefunden).
+    #
+    # Sie ist auf der Struktur von `amihud` gebaut - 516 Symbole je Tag.
+    # `funding` hat 287, `turnover` nur 65. Bei weniger Symbolen je Tag
+    # sind die Fuenftel duenner besetzt und verrauschter, der wahre
+    # Nullpunkt also GROESSER. Die geteilte Kurve haette Groessen mit
+    # duenner Abdeckung besser aussehen lassen, als sie sind - genau der
+    # Fehler, der bei turnover schon einmal getaeuscht hat.
+    #
+    # Deshalb: die Kurve liefert nur noch, WELCHE Blocklaenge zu einer
+    # gemessenen Persistenz gehoert. Der Nullpunkt selbst wird je Groesse
+    # auf IHRER EIGENEN Struktur gezogen.
+    def block_zu_persistenz(p: float):
+        return min(bloecke, key=lambda b: abs(b[0] - p))[1]
+
+    def _syms(g: dict) -> int:
+        return len({e["sym"] for liste in g.values() for e in liste})
+
+    syms_basis = _syms(basis)
+
+    def nullpunkt_eigen(gebaut_art: dict, p: float) -> float:
+        # ⚠️ NUR ZIEHEN, WO DIE ABDECKUNG ABWEICHT (06.09., vor dem Lauf).
+        #
+        # Die Kurve ist auf `amihud` gebaut. Fuer die acht kursbasierten
+        # Arten mit denselben 516 Symbolen IST sie richtig - dort nochmal
+        # zu ziehen kostet nur Zeit. Gezogen wird, wenn die Symbolzahl um
+        # mehr als 10 % abweicht.
+        n = _syms(gebaut_art)
+        if abs(n - syms_basis) <= 0.10 * syms_basis:
+            w = [sp for pp, sp in kurve if pp <= p + 0.02]
+            return max(w) if w else max(sp for _p, sp in kurve)
+        block = block_zu_persistenz(p)
+        w = []
+        for z in range(ZIEHUNGEN):
+            kf = kunst_fuenftel(gebaut_art, block, salz=z)
+            tg, _n, _f = abweichung_je_fuenftel(
+                je_tag_und_fuenftel(zeilen, tage_je_sym, kf))
+            sp = _spanne(tg)
+            if sp == sp:
+                w.append(sp)
+        return float(np.max(w)) if w else float("nan")
 
     # ---- alle Groessen, beide Formen --------------------------------
     print()
@@ -169,7 +209,7 @@ def main() -> int:
             sp = _spanne(tg)
             if sp != sp:
                 continue
-            null = nullpunkt(p)
+            null = nullpunkt_eigen(gebaut, p)
             v = sp / null if null > 0 else float("nan")
             warn = ""
             if n_tage < 400:
@@ -191,8 +231,12 @@ def main() -> int:
     for art, form, f5, sp, v in kandidaten:
         if form != "VERAEND":
             continue
-        niv = _fuenftel_je_tag(K.baue(reihen, art, quelle.get(art),
-                                      horizont=20))
+        # ⚠️ EINMAL BAUEN, NICHT IN DER SCHLEIFE (06.09., vor dem Lauf).
+        # Die erste Fassung rief `K.baue` INNERHALB der Ziehungsschleife -
+        # fuenfmal je Fuenftel je Art, also 25 unnoetige Aufbauten je
+        # Kandidat.
+        gebaut_art = K.baue(reihen, art, quelle.get(art), horizont=20)
+        niv = _fuenftel_je_tag(gebaut_art)
         echte, nulls = [], []
         for g in range(5):
             fz = bedingt(f5, niv, g)
@@ -202,7 +246,8 @@ def main() -> int:
                 je_tag_und_fuenftel(zeilen, tage_je_sym, fz))[0]))
             kk = []
             for z in range(ZIEHUNGEN):
-                kb = bedingt(kunst_fuenftel(basis, 5, salz=z), niv, g)
+                kb = bedingt(kunst_fuenftel(
+                    gebaut_art, block_zu_persistenz(0.82), salz=z), niv, g)
                 if len(kb) >= 200:
                     kk.append(_spanne(abweichung_je_fuenftel(
                         je_tag_und_fuenftel(zeilen, tage_je_sym, kb))[0]))
