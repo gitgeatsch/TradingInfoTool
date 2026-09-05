@@ -8423,3 +8423,83 @@ Kunstgröße)
 Verwandt: **F-222** · **F-223** · **F-224** · **F-225** · Regel 3 ·
 Tagesklammer-Vorgabe · Methodik 2.104
 
+
+
+## F-227 ⚠️⚠️⚠️ Regel 3 in `CLAUDE.md` ist eine VERKÜRZUNG — und sie hat mich in die Irre geführt (05.09.2026)
+
+**Nutzerhinweis:** *„zu Regel 3 — diese sollte nicht als Regel stehen, da ein
+falsch verstandenes Zitat."* An der Quelle nachgelesen (R-R10), und der
+Hinweis stimmt.
+
+### Was in `CLAUDE.md` steht
+
+| # | Regel | Verstoß sieht so aus |
+|---|---|---|
+| **3** | Wir bewerten Zeitpunkte, nicht Assets | „SUPRA ist Schrott" |
+
+⚠️ **Diese Formulierung steht in KEINEM Quelldokument.** Weder
+`Gesamtplan_Wo_wir_stehen_28_08.md` (das `CLAUDE.md` als Beleg nennt) noch
+sonst in `Basisinfos/` findet sich „Zeitpunkte, nicht Assets", „SUPRA ist
+Schrott" oder „tief Gefallene fallen weiter" als Regelaussage.
+
+### Der Wortlaut — `Befund_Lage_27_08.md`
+
+> *„Wir bewerten **nicht Assets**, sondern suchen unabhängig davon, **wann
+> ein Handeln begründet ist**. Auch ein Shitcoin/Altcoin hat Potential."*
+
+Und das Dokument zieht daraus selbst:
+
+> *„Das ist eine **Handlungs**aussage, keine Asset-Aussage. Sie gilt
+> innerhalb tief gefallener Werte — also genau dort, wo die Frage ‚lohnt ein
+> Einstieg?' schwer ist. Sie sagt **nicht**, ob ein Asset gut ist."*
+
+### Die Präzisierung des Nutzers (05.09.)
+
+| | |
+|---|---|
+| **Der Takt darf nicht entscheiden** | *„der Takt bzw. Messzeitpunkt soll nicht entscheiden"* — das ist Regel 1, nicht Regel 3 |
+| **Kein Asset-Vorurteil** | *„auch ein Shitcoin hat Potential"* — kein Wert wird dauerhaft abgeurteilt |
+| **Beim HEBEL kein Asset-Rang** | *„es soll bei Hebel nicht die Assets verglichen werden als Reihenfolge bzw. Rang — das ist bei der Hebelfrage falsch"* |
+| **In der MAIL erwünscht** | *„im Email hätte ich gerne schon die Information wie gut das Asset steht und die Bewertungsgründe"* |
+
+### ⚠️ Was meine Fehllesart angerichtet hat
+
+Ich habe aus Regel 3 ein **Verbot des Querschnittsvergleichs** gemacht. Das
+war nie gemeint — und es widerspricht der Tagesklammer-Vorgabe vom 31.08.,
+die einen gültigen Beitrag ausdrücklich als *„welches Asset ist heute
+besser"* definiert, sowie dem übergeordneten Ziel (*„wie viel ist hier zu
+holen, **verglichen mit allem anderen**"*).
+
+**Betroffene Aussagen dieses Tages:**
+
+| | |
+|---|---|
+| **F-218** | *„das Potential kodierte ‚hat dieses Asset Daten' — Regel 3 verletzt"*. Der **Befund bleibt** (Datenverfügbarkeit sickerte in die Bewertung), die **Einordnung war schief**: es ist ein Asset-Vorurteil nach Datenlage, nicht ein Takt-Problem |
+| **F-226** | Die Frage *„amihud registrieren, obwohl 95,4 % beständig?"* war **falsch gestellt**. Nicht ob, sondern **WO** — siehe unten |
+
+### Die richtige Trennung — nach ORT der Wirkung
+
+    NIVEAU quer (95,4 % bestaendig)   sagt ueberwiegend "welches ASSET"
+      -> gehoert in die MAIL als Einordnung samt Begruendung
+      -> darf NICHT die Groesse sein, die den Hebel erzeugt
+
+    LAENGS / VERAENDERUNG             sagt "wie steht dieser Wert GERADE"
+      -> nur diese duerfen den Hebel treiben
+
+> **Damit ist es eine fachliche Frage, keine Entscheidung** — zu messen ist,
+> wie groß der Moment-Anteil wirklich ist. Das geschieht in **N-49**.
+
+### ⚠️ Offen: `CLAUDE.md` selbst
+
+Die Regeltabelle dort führt eine Formulierung, die keine Quelle hat, und der
+Beispielverstoß („SUPRA ist Schrott") ist erfunden. **Vorschlag zur
+Korrektur — Nutzerentscheidung, nicht eigenmächtig geändert:**
+
+    3  Kein Asset-Vorurteil, und beim HEBEL kein Asset-Rang
+       Verstoss: einen Wert dauerhaft aburteilen; oder den Hebel aus
+       einer Rangliste der Assets erzeugen statt aus der
+       Wahrscheinlichkeit DIESES Trades
+
+Verwandt: **F-218** · **F-226** · **N-49** · Tagesklammer-Vorgabe 31.08. ·
+`Befund_Lage_27_08.md` · übergeordnetes Ziel in `CLAUDE.md`
+
