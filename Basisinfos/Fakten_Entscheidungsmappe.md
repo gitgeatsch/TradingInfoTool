@@ -7257,3 +7257,102 @@ Regel 1 (*„Der Takt ist nie Signalgeber"*) unmittelbar.
 Werkzeuge: Auswertung des NB-Exports (`gate_durchlaessigkeit`, `signals`)
 über die **echte** `agent.wiederholung.stunden()`
 Verwandt: F-174 · F-176 · F-182 · **F-212** · Regel 1
+
+
+## F-214 ✔ F-174 GESCHLOSSEN — die Sperre ist nicht kaputt, sie ist anders konfiguriert (05.09.2026)
+
+Fortsetzung von F-213. **Ergebnis: es gibt keinen Fehler in der
+Cooldown-Logik.** Die Funktion arbeitet korrekt; was läuft, ist ein
+anderer Wert als der, den Code-Kommentare und F-174 unterstellt haben.
+
+### ➊ Die Funktion ist richtig — chronologisch nachgestellt
+
+3.455 Signale wurden in eine **leere Kopie** eingefügt, und **vor** jedem
+Einfügen wurde die echte `wiederholung.gesperrt_bis()` gefragt, mit
+`jetzt=` auf den Zeitpunkt dieses Signals.
+
+⚠️ Genau daran war F-174s erste Fassung gescheitert (*„liest das jüngste
+Signal der Tabelle, oft eines NACH dem betrachteten Zeitpunkt"*). Die
+leere Kopie plus `jetzt=` schließt das aus.
+
+| `gesperrt_bis()` sagt | Abstand | Anzahl |
+|---|---|---|
+| **GESPERRT** | zu eng | **2.255** |
+| frei | weit genug | 1.122 |
+| frei | erstes Signal | 58 |
+| frei | zu eng | **20** (0,6 %) |
+
+> **In 2.255 Fällen meldete die Funktion korrekt „gesperrt" — und das
+> Signal entstand trotzdem.** Nur 20 echte Fehlfreigaben. Der Fehler liegt
+> also **nicht in der Sperrlogik**.
+
+Über alle Aktionen gleichmäßig (NACHKAUFEN 99,5 % · ERÖFFNEN 100 % ·
+HALTEN 98,2 % · REDUZIEREN 96,6 % · KAUFEN 100 % · VERKAUFEN 98,6 %) —
+also **kein** Bestands-Sonderweg.
+
+### ➋ Die Datenform verrät den tatsächlich geltenden Wert
+
+Verteilung der Abstände zwischen aufeinanderfolgenden Signalen
+(3.397 Paare):
+
+    P1   0,04 h      P25  3,52 h      P50  3,74 h      P75  3,83 h
+    unter 3,5 h: 13,6 %     79 % aller zu engen Abstaende: Band 2-4 h
+
+⚠️⚠️ **Das ist die Signatur einer durchgesetzten 3,5-Stunden-Sperre** —
+eine Sperre von X erzeugt Abstände dicht **oberhalb** von X, und P25 liegt
+exakt bei 3,52. Kein Mehrfachschreiben je Lauf (das wären Minuten; nur
+1,9 % liegen unter 6 min).
+
+Und sie gilt für **beide** Gruppen gleich: dort, wo 15 h erwartet wurden,
+liegen 85,5 % darunter; dort, wo 3,5 h gelten, nur 13,1 %. Beide
+Verteilungen sind mit **3,5 h** verträglich.
+
+### ➌ Warum die Nachstellung trotzdem „gesperrt" sagte — der eine Unterschied
+
+Meine Nachstellung übergibt `config=None`, die Produktion die echte
+`config`. Die Fallback-Kette in `wiederholung.stunden()`:
+
+    1  config.rollen_kette.cooldown_stunden_je_strategie
+    2  VORGABE_JE_STRATEGIE          akkumulation 48 h
+    3  hebel_zuletzt > 1.0  ->  cooldown_stunden_wenn_gehebelt / 3,5 h
+    4  config.rollen_kette.cooldown_stunden_je_gruppe        <- HIER
+    5  VORGABE_JE_GRUPPE             ⚠️ krypto steht NICHT drin
+    6  config.budget_allocator.spot_cooldown_stunden         <- ODER HIER
+    7  VORGABE_STUNDEN["spot"]       15 h
+
+Für `krypto` + `spot` ohne Hebel gibt es **genau zwei** Stellen, an denen
+3,5 h herkommen kann: **Schritt 4** (`cooldown_stunden_je_gruppe.krypto`)
+oder **Schritt 6** (`budget_allocator.spot_cooldown_stunden`).
+
+⚠️ `config.yaml` ist **gerätespezifisch** und liegt am Desktop nicht vor
+(bekannter Sync-Konflikt). Die Bestätigung ist ein Einzeiler am Notebook.
+
+### Das Fazit — F-174 ist damit erledigt
+
+**Es gibt keinen Bug.** F-174s Befund („65 % stehen enger, als der
+Cooldown erlaubt") entstand aus einem Vergleich gegen **12 h**, die es
+nirgends gibt; F-213 korrigierte auf die Code-Vorgaben (15/3,5/48) und kam
+auf 67 %. Beide Maßstäbe waren falsch: **es gilt offenbar 3,5 h**, und
+gegen diesen Wert ist das Verhalten korrekt.
+
+⚠️⚠️ **Was bleibt, ist keine Fehlfunktion, sondern eine Frage:**
+
+> Der stärkste Filter der ganzen Kette (94,1 %, mehr als alle elf anderen
+> Stufen zusammen) lässt alle **3,5 Stunden** eine neue Frage zu — und das
+> ist eine **Uhr**, keine Bewertung. Regel 1 lautet *„Der Takt ist nie
+> Signalgeber."*
+
+Bei 3,5 h bekommt jedes Asset **4,1 Signale je Tag** (gemessen: Median 4,
+max 9). Bei den dokumentierten 15 h wären es **1,6**. Ob 3,5 oder 15 gelten
+soll, ist eine **Nutzerentscheidung** — und sie entscheidet den Takt der
+ganzen Anlage.
+
+### Zu prüfen am Notebook (ein Blick, keine Messung)
+
+    config.yaml:
+      rollen_kette.cooldown_stunden_je_gruppe.krypto   -> gesetzt? welcher Wert?
+      budget_allocator.spot_cooldown_stunden           -> 15 oder 3,5?
+
+Werkzeug: `pruefe_cooldown_nachgestellt.py` (chronologische Nachstellung
+über die **echte** `gesperrt_bis()`, leere Kopie im Speicher)
+Verwandt: **F-174** · **F-213** · F-176 · Regel 1 · `config.yaml`-Sync-Konflikt
