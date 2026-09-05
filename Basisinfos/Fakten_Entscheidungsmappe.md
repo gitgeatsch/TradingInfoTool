@@ -8657,3 +8657,105 @@ je Zelle ausgewiesen, damit diese Dünne nicht wieder unsichtbar bleibt.
 Werkzeug: `pruefe_veraenderungsformen_unabhaengig.py` (neu)
 Verwandt: **F-226** · **F-227** · **F-228** · N-51
 
+
+
+## F-230 ⚠️⚠️⚠️ N-51: Alle sechzehn Größen neu — und SECHS von sechs Veränderungsformen fallen (06.09.2026)
+
+**Nutzerauftrag:** *„auch bisher gefallene Messungen prüfen, wenn wir keine
+tragende Größe mehr haben."* Alle Größen mit allen Kontrollen dieses Tages:
+Tagesklammer, Nullpunkt bei eigener Beständigkeit und eigener Abdeckung,
+Tageszahl je Zelle, bedingte Prüfung für alles über 2,5×.
+
+### Die vier vorab festgelegten Gegenprüfungen
+
+| | Ergebnis |
+|---|---|
+| **Reproduktion** | amihud 6,51 (7,8×) · schnitt50 4,20 (9,1×) · funding 1,08 — **exakt** ✔ |
+| **Kontrolle** | `zufall` NIVEAU 0,19 (0,4×) · VERÄND 0,22 (0,5×) ✔ |
+| **Kurve monoton** | 0,46 → 0,59 → 0,84 → 1,09 → 1,24 ✔ |
+| **Dünne Arten größerer Nullpunkt** | turnover ✔ (1,85) · **funding ✖** (0,31 statt >0,46) |
+
+⚠️ Das vierte Kriterium hat einen **eigenen Fehler** gefunden — siehe unten.
+
+### Das Ergebnis, kursbasierte Größen (alle 516 Symbole, ~2.880 Tage)
+
+| Größe | NIVEAU | | VERÄNDERUNG | |
+|---|---|---|---|---|
+| **amihud** | 6,51 | **7,8×** ✔monoton | 3,76 | 6,4× |
+| **schnitt** | 4,56 | **7,7×** ✔monoton | 3,14 | 6,8× |
+| **schnitt50** | 4,20 | **9,1×** | 2,66 | 5,7× |
+| **rsi** | 2,81 | 6,1× | 1,92 | 4,1× |
+| **momentum_kurz** | 2,71 | 5,9× | 2,39 | 5,2× |
+| **momentum** | 2,36 | 4,0× ✔monoton | 2,66 | 5,7× |
+| **vola** | 3,77 | 6,4× ✔monoton | 1,12 | 2,4× ✖ |
+| `zufall` | 0,19 | 0,4× ✔ | 0,22 | 0,5× ✔ |
+
+⚠️ **`momentum` galt als gefallen** und trägt mit 4,0× — allerdings war es
+in **N-44** an der Stabilität gescheitert (+0,093 gegen die Rauschgrenze
++0,160). Spanne und Stabilität sind zwei verschiedene Prüfungen; hier hält
+nur die erste.
+
+### ⚠️⚠️ SECHS von sechs Veränderungsformen sind Färbungen ihres Niveaus
+
+Bedingt auf das **eigene** Niveau, mit einem Nullpunkt, der dieselbe
+Bedingung durchläuft:
+
+    amihud          unbedingt 3,76 (6,4x)  ->  bedingt 0,7x
+    schnitt         unbedingt 3,14 (6,8x)  ->  bedingt 1,3x
+    schnitt50       unbedingt 2,66 (5,7x)  ->  bedingt 1,7x
+    rsi             unbedingt 1,92 (4,1x)  ->  bedingt 1,7x
+    momentum        unbedingt 2,66 (5,7x)  ->  bedingt 1,2x
+    momentum_kurz   unbedingt 2,39 (5,2x)  ->  bedingt 1,0x
+
+> **Das ist kein Zufall mehr, sondern strukturell.** Keine
+> Veränderungsform trägt eigenständig.
+
+⚠️ **Aber die Deutung ist noch nicht vollständig.** Methodik **2.99**
+verlangt **beide** Richtungen des Schichtentests — hier wurde nur C
+(`Veränderung | Niveau`) gemessen, nicht D (`Niveau | Veränderung`). Ohne D
+ist *„Mitläufer"* nicht von *„die gemeinsame Ursache liegt woanders"* zu
+unterscheiden. Nachgeholt in **N-52**.
+
+### ⚠️ Befund für den LAUFENDEN Betrieb: die Terminmarkt-Größen tragen nicht
+
+| Größe | Symbole | Tage | NIVEAU | VERÄNDERUNG |
+|---|---|---|---|---|
+| **`oi_aenderung`** | 115 | 1.662 | **1,2×** | 1,2× |
+| `long_bias` | 115 | 1.645 | 0,8× | 1,6× |
+| `top_bias` | 115 | 1.345 | 0,7× | 1,4× |
+| `taker_bias` | 115 | 1.535 | 0,9× | 0,8× |
+| `funding_extrem` | 278 | 2.227 | 1,5× | 0,4× |
+| `turnover` | 65 | 2.686 | 1,5× | 1,1× |
+| `funding` | 287 | 2.331 | 3,5× | 1,3× |
+
+⚠️⚠️ **`oi_aenderung` ist als Live-Sperre registriert** (H-4c, *„trägt als
+Schalter"*) und misst hier **1,2×** — nicht vom Nullpunkt zu trennen.
+
+⚠️ Die Zahlen für funding, turnover und die Terminmarkt-Größen stehen
+**unter Vorbehalt** — ihre Nullpunkte sind von dem Rasterfehler betroffen
+(siehe unten) und werden in **N-51b** neu gezogen.
+
+### ⚠️ Der eigene Fehler, den das vierte Kriterium fand
+
+Die Beständigkeit einer Kunstgröße mit Blocklänge b ist `p(b) = 1 − 0,8/b`
+— nachgemessen und exakt bestätigt (b=2 → 60,0 % · b=3 → 73,4 % · b=5 →
+84,0 %). Das benutzte Raster war **1 · 5 · 20 · 60 · 250 · ∞**, also klafft
+zwischen 20 % und 84 % eine Lücke von **64 Punkten**. Und beide dünn
+gedeckten Größen fallen hinein:
+
+    funding   47,9 % Bestaendigkeit  ->  auf b=1 (20 %) geschnappt
+                                         Nullpunkt 0,31 - ZU KLEIN
+    turnover  65,9 %                 ->  auf b=5 (84 %) geschnappt
+                                         Nullpunkt 1,85 - ZU GROSS
+
+**Sie landen an entgegengesetzten Enden derselben Lücke.** Korrektur in
+**N-51b**: Raster um b=2 und b=3 ergänzt, und statt auf den nächsten Block
+zu schnappen wird zwischen den Nachbarn **interpoliert**. Nachgerechnet:
+funding bekäme 0,63 statt 0,31, turnover 0,67 statt 1,85.
+
+⚠️ **Die Spannen werden dabei nicht neu gemessen** — sie hängen nicht vom
+Nullpunkt ab. Nur die Nulllinie wird neu gezogen.
+
+Werkzeuge: `messe_alle_groessen_neu.py`, `rechne_nullpunkte_feiner.py` (neu)
+Verwandt: **F-226** · **F-229** · Methodik 2.99 · 2.101
+
