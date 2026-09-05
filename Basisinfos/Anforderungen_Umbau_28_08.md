@@ -3511,3 +3511,69 @@ messbar. Das ist die einzige Frage, die den Weg blockiert.
 
 **Alle vier hätten einen Befund erzeugt, den die Daten nicht hergeben.**
 Drei davon hat erst die jeweils nächste Gegenprüfung gefangen.
+
+
+---
+
+# ENTSCHEIDUNGEN 05./06.09. — Stand nach den Einzelvorlagen
+
+## ✔ Punkt 1 — Regel 3 in `CLAUDE.md`: ERLEDIGT
+
+Nutzerentscheidung: *„eine Mischung aus 1 und 2 wäre optimal, da 2
+verständlicher ist."* Umgesetzt — scharfe Tabellenzeile plus Originalzitat
+mit Quelle und die Präzisierung vom 05.09. Der erfundene Verstoß („SUPRA ist
+Schrott") und die quellenlose Zeile („tief Gefallene fallen weiter") sind
+entfernt. Details: **F-227**.
+
+## ✔ Punkt 2 — Hebelnenner: 500 € FEST
+
+Nutzerentscheidung nach der Messung: *„sonst wären 500 ok denke ich als
+Basiswert (hatte bereits gesagt, dass ein Hebel zwischen 300 und 1000
+realistisch wäre — wobei 1000 erst, wenn das System funktioniert)."*
+
+**Die Messung hat den Einwand entkräftet:**
+
+| Belege | Betrag | n | Anteil |
+|---|---|---|---|
+| 3 | **500 €** | 538 | **91,2 %** |
+| 2 | 300 € | 52 | 8,8 % |
+| 1 | 100 € | 0 | — |
+
+Die Tranche ist faktisch schon konstant. Mein Einwand („der Hebel trüge zwei
+gegenläufige Signale") ist theoretisch richtig, praktisch klein.
+
+    Hebel-Einsatz    500 EUR FEST
+    Bandbreite       300-1000, 1000 erst wenn das System traegt
+    Spot             die Belegzahl steuert die Tranche weiterhin
+
+## ⏳ Punkt 3 — Cooldown: ZUERST MESSEN UND SIMULIEREN
+
+Nutzerentscheidung: *„zuerst messen und dann im Detail simulieren und
+kalibrieren — 12 Stunden finde ich etwas zu weit, ob 1 h oder 3,4 reichen,
+wird sich zeigen."*
+
+**Der Sachverhalt, an der echten Funktion gemessen:**
+
+    letztes Signal Hebel 1,0 (Spot)   ->  12,0 h   die Vorgabe greift
+    letztes Signal Hebel > 1,0        ->   3,5 h   die Hebel-Regel gewinnt
+
+Reihenfolge in `wiederholung.stunden()`: **Strategie → Hebel → Gruppe**. Die
+Vorgabe steht unter `cooldown_stunden_je_gruppe` und damit an dritter Stelle.
+Betroffen sind rund **34 %** aller Signale.
+
+⚠️ **Es ist kein Fehler, sondern eine bewusste Regel** — aber ihre
+Begründung (*„ein gehebeltes Signal will früher wieder angesehen werden"*)
+beschreibt ein **Überwachungs**bedürfnis, während der Cooldown die
+**Signalausgabe** steuert. Zwei Dinge in einem Regler; die Überwachung
+gehört in die Positionsführung (**O5**).
+
+**Was zu tun ist, bevor entschieden wird:**
+
+    1  MESSEN      wieviele Mails verursacht die 3,5-Stunden-Regel wirklich,
+                   gegen die bekannten 133 Mails/Tag und 83,6 % Wiederholung
+    2  SIMULIEREN  Signalzahl und Mailtakt bei 1 h · 3,5 h · 6 h · 12 h
+    3  KALIBRIEREN den Wert aus der Simulation waehlen, nicht schaetzen
+
+⚠️ Nebeneffekt, der die Dringlichkeit senkt: „unter 2 ist kein Hebel" würde
+71,1 % der Hebelsignale auf 1,0 zurücksetzen — die fielen automatisch auf
+den Gruppenwert.

@@ -8588,3 +8588,72 @@ Werkzeug: `messe_form_und_nullpunktkurve.py` (neu, mit Selbsttest der
 Veränderungsform)
 Verwandt: **F-223** (korrigiert) · **F-226** · **F-227** · Methodik 2.104
 
+
+
+## F-229 ⚠️⚠️⚠️ N-50: ALLE Veränderungsformen sind nur Färbungen ihres Niveaus (05./06.09.2026)
+
+**Die Frage:** N-49 fand die Veränderungsformen als die Größen, die über den
+**Moment** sprechen und damit laut korrigierter Regel 3 (F-227) den Hebel
+treiben dürfen. Sind sie voneinander — und von ihrem eigenen Niveau —
+unabhängig?
+
+### Überlappung: unauffällig
+
+|  | amihud VER | schn50 VER | vola VER | amihud NIV | funding NIV |
+|---|---|---|---|---|---|
+| **amihud VER** | – | −0,114 | −0,180 | **0,177** | 0,052 |
+| **schn50 VER** | −0,114 | – | **0,434** | 0,039 | −0,026 |
+| **vola VER** | −0,180 | 0,434 | – | 0,024 | −0,029 |
+
+`amihud VER` und `amihud NIV` korrelieren nur mit **0,177** — nach dem
+üblichen Maßstab unabhängig.
+
+### ⚠️ Die bedingte Messung sagt das Gegenteil
+
+Wird das **eigene Niveau** festgehalten, mit einem Nullpunkt, der dieselbe
+Bedingung durchläuft:
+
+| Veränderungsform | bedingt auf ihr eigenes Niveau | |
+|---|---|---|
+| `amihud VER` | **0,7×** | trägt nicht |
+| `schnitt50 VER` | **1,7×** | trägt nicht |
+| `vola VER` | **1,1×** | trägt nicht |
+
+> **Alle drei Veränderungsformen sind nur Färbungen ihres eigenen Niveaus.**
+
+⚠️ **Die Korrelation hat das nicht verraten.** 0,177 sieht harmlos aus; erst
+die bedingte Messung zeigt, dass nichts Eigenständiges übrig bleibt. Eine
+Korrelationsmatrix ist als Unabhängigkeitsprüfung **nicht ausreichend** —
+das ist eine methodische Lehre über diesen Fall hinaus.
+
+Gegenprobe, die zeigt dass der Test nicht generell alles tötet:
+`amihud VER` bedingt auf `schnitt50 VER` ergibt **2,6×** — dort bleibt
+etwas. Nur gegen das eigene Niveau nicht.
+
+### ⚠️ Was das für den Hebel heißt
+
+    NIVEAU-Formen        traegen stark (7,8x / 9,1x / 6,4x), sind aber zu
+                         76-95 % Asset-Etiketten -> in die MAIL
+    VERAENDERUNGS-Formen sprechen ueber den Moment, tragen aber nicht
+                         eigenstaendig -> nichts fuer den Hebel
+
+> **Es gibt derzeit KEINE Größe, die über den Moment spricht und trägt.**
+> Der Hebel ist aus der heutigen Datenlage nicht zu erzeugen.
+
+**Nutzerauftrag daraufhin:** *„auch bisher gefallene Messungen prüfen, wenn
+wir keine tragende Größe mehr haben."* → **N-51**, vollständige Neuprüfung
+aller Größen mit allen Kontrollen dieses Tages.
+
+### ⚠️ Nebenbefund: die Terminmarkt-Daten reichen 122 Tage
+
+`lade_terminmarkt()` liefert **122 Tage** gegen 2.884 Tage der
+Barrierenbasis. Damit sind `oi_aenderung`, `long_bias`, `top_bias`,
+`taker_bias` und `oi_je_umsatz` auf dieser Basis **nicht validierbar**.
+
+⚠️ **`oi_aenderung` ist als Live-Sperre registriert** (H-4c, *„trägt als
+Schalter"*) — geprüft auf eben diesen 122 Tagen. Die Tageszahl wird in N-51
+je Zelle ausgewiesen, damit diese Dünne nicht wieder unsichtbar bleibt.
+
+Werkzeug: `pruefe_veraenderungsformen_unabhaengig.py` (neu)
+Verwandt: **F-226** · **F-227** · **F-228** · N-51
+

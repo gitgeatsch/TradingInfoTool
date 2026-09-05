@@ -140,8 +140,19 @@ def main() -> int:
     print("  ⚠️ |r| ueber 0,35 heisst: die beiden messen weitgehend dasselbe.")
 
     # ---- 2./3. Bedingt, mit passendem Nullpunkt ---------------------
-    ziel = "amihud VER"
-    for bed in ("schn50 VER", "amihud NIV"):
+    # ⚠️ JEDE VERAENDERUNG GEGEN IHR EIGENES NIVEAU (05.09., nachgezogen).
+    #
+    # Der erste Lauf prueft nur amihud VER gegen amihud NIV - und dort fiel
+    # sie durch (0,7x). Genau diese Pruefung fehlte fuer schnitt50 und vola:
+    # ohne sie waere "schnitt50 VER traegt" auf demselben Weg falsch, auf dem
+    # "amihud VER traegt" falsch war.
+    paare = [("amihud VER", "schn50 VER"),
+             ("amihud VER", "amihud NIV"),
+             ("schn50 VER", "schn50 NIV"),
+             ("vola VER", "vola NIV")]
+    formen["schn50 NIV"] = _fuenftel_je_tag(roh["schnitt50"])
+    formen["vola NIV"] = _fuenftel_je_tag(roh["vola"])
+    for ziel, bed in paare:
         print()
         print("=" * 96)
         print("2. BEDINGT — traegt %s noch INNERHALB eines festen %s-Fuenftels?"
