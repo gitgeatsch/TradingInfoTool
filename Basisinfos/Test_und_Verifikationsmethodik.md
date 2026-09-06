@@ -4132,6 +4132,34 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_konjunktion_positivkontrolle.py` | Positivkontrolle zu K-1: WIE GROSS muss ein Effekt sein, damit wir ihn finden? |
 | `messe_lage_beitrag.py` | G-2': Traegt die LAGE des Assets als Einzeltrade-Beitrag? (29.08.2026) |
 | `messe_momentum_12_1.py` | Momentum in der STANDARDFORM: 12 Monate minus letzter Monat (30.08.2026). |
+| `messe_alle_groessen_neu.py` | Alle Kandidatengroessen in einem Lauf, gemeinsame Basis (06.09.2026) |
+| `messe_asset_anteil_und_relativform.py` | Welcher Anteil des Universums traegt - und in welcher relativen Form? |
+| `messe_beitrag_auf_auswahl.py` | Wirkt ein Beitrag NACH der Momentum-Auswahl noch? (⚠️ Grundmenge beachten, 2.134) |
+| `messe_bewertung_kalibrierung.py` | Die Bewertung gegen die realisierte Quote - ist sie kalibriert? |
+| `messe_form_und_nullpunktkurve.py` | Welche FORM hat der Beitrag - Schalter, Regler, U? |
+| `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
+| `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
+| `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `n24_vola_geometrieprobe.py` | ⚠️⚠️ N24: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
+| `pruefe_kalibrierung_trocken.py` | Was eine geplante Beitragsaenderung an Schwelle, Durchlass und Suite anrichtet - VOR der Aenderung |
+| `messe_degradierung.py` | Sind die NICHTS_TUN der acht Anker Urteile - oder degradierte Kaeufe? |
+| `messe_drift.py` | Traegt die Drift je Asset? |
+| `messe_stufen_aus_quote.py` | N-41: Beitragsstufen DIREKT aus der Barrieren-Quote (05.09.2026) |
+| `pruefe_amihud_handelbarkeit.py` | N-46b: Ist der `amihud`-Befund ein Artefakt nicht handelbarer Kurse? |
+| `pruefe_beitragszahl_sickert.py` | N-41g: welche der beiden Ursachen? Additiver Beitrag gegen Invarianz |
+| `pruefe_cooldown_nachgestellt.py` | F-213: was sagt `gesperrt_bis` im nachgestellten Lauf? |
+| `pruefe_kandidaten_abdeckung_stabilitaet.py` | N-43: TRAEGT er UND DECKT er? - beide Kriterien gemeinsam |
+| `pruefe_kandidaten_untereinander.py` | N-45: Sind die vier Kandidaten UNTEREINANDER unabhaengig? |
+| `pruefe_konsistenz_06_09.py` | Konsistenzpruefung aller Befunde des 06.09.2026 gegeneinander |
+| `pruefe_n31_tagesklammer.py` | N-31 Gegenpruefung: dieselbe Frage unter der TAGESKLAMMER |
+| `pruefe_persistenz_und_nullpunkt.py` | N-48: Ist `zufall` ein gueltiger Nullpunkt fuer PERSISTENTE Groessen? |
+| `pruefe_steigung_invarianz.py` | N-41f: TAUGT das Messgeraet? - Invarianzpruefung |
+| `pruefe_stufen_gegen_quote.py` | Gegenpruefung zu F-215: sind die Beitragsstufen in der falschen Einheit? |
+| `pruefe_stufen_stabilitaet.py` | N-41b: HAELT die Fuenftel-Ordnung? - gegen einen echten Nullpunkt |
+| `pruefe_turnover_weglassen.py` | N-41c: die pruefbare VORHERSAGE aus N-41b |
+| `pruefe_veraenderungsformen_unabhaengig.py` | N-50: Sind die beiden VERAENDERUNGSFORMEN unabhaengig? |
+| `pruefe_vola_unabhaengig.py` | N-43b: Ist `vola` unabhaengig von `funding`? |
+| `pruefe_vola_zeitpunkt_oder_asset.py` | N-43c: Ist `vola` eine ZEITPUNKT- oder eine ASSET-Aussage? |
 | `messe_n7_kette.py` | V-0 / N-7: Traegt die heutige Rollen-Kette? (29.08.2026) |
 | `messe_n7_kette_korrigiert.py` | V-0 / N-7 KORRIGIERT: Traegt die heutige Rollen-Kette? |
 | `messe_regel_wirksamkeit.py` | Die fuenf Kandidaten als REGEL, nicht als Merkmal (30.08.2026). |
@@ -8104,3 +8132,134 @@ der Messbasis.**
 Werkzeug: `pruefe_auswahl_produktion.py` · `pruefe_auswahl_schaedlich.py`
 (letzteres nur noch als Beleg des Fehlers)
 
+
+
+---
+
+## 2.135 ✖✖✖ N24 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometrie (06.09.2026)
+
+### Warum überhaupt geprüft wurde
+
+Nach 2.133 war `vola` die einzige Größe mit belegter Stufenordnung über
+beide Historienhälften. Der Plan sah vor, sie zu registrieren — sie hätte
+danach **88 % des Beitragsgewichts** getragen.
+
+⚠️ Genau deshalb wurde sie geprüft. Und der Verdacht stand im Code selbst:
+
+> `Beitrag(name="Trichter (uebliche Kursbewegung)", zustand="enthalten",`
+> `warum="er BESTIMMT die Geometrie und damit die Basisrate — er ist schon`
+> `drin und darf nicht zweimal zaehlen")`
+
+`vola` ist `ATR / eigener 250-Tage-Median` — formal nicht der Trichter
+(der ist die *absolute* ATR), aber eine Aussage über dieselbe Größe.
+
+### ⚠️⚠️ Der Vorabtest hat den Test zweimal gestoppt
+
+**Erster Anlauf** — Gegenprobe über Barrieren, die sich *nicht* mit `vola`
+bewegen (fester ATR-Median, fester Prozentsatz). Beide Welten kamen
+negativ heraus, auch die mit echter Drift. **Grund:** ein ruhiges Asset
+erreicht eine *feste* Barriere seltener — ein Größeneffekt mit umgekehrtem
+Vorzeichen, der alles erschlägt. Der Test maß nicht, was er messen sollte.
+
+**Zweiter Anlauf** — in einer Kunstwelt mit Volatilitätsclustern und
+**null Richtungsinformation** feuerten **drei von vier Maßstäben**:
+
+| Maßstab | Welt A (nichts zu finden) | |
+|---|---|---|
+| G0 CRV 2 auf heutiger ATR | +0,01084 [+0,00658 .. +0,01521] | ⚠️ feuert |
+| **GS symmetrisch, nur aufgelöst** | **+0,00279 [−0,00141 .. +0,00701]** | ✔ **sauber** |
+| VZ Vorzeichen der Rendite | +0,00610 [+0,00071 .. +0,01081] | ⚠️ feuert |
+| B `bewegung_r` | +0,04050 [+0,00526 .. +0,07099] | ⚠️ feuert |
+
+**Die Gründe sind herleitbar und gelten für echte Daten genauso:**
+
+- **VZ** — bei lognormalen Kursen liegt der Median unter dem Mittel, und
+  zwar umso weiter, je höher die Volatilität. `P(Rendite > 0)` sinkt mit
+  Sigma, ganz ohne Richtung. Wer die ruhigen behält, hebt die Quote.
+- **B** — erbt dieselbe Schiefe über das Tagesmittel.
+- **G0** — die Auflösungsquote (siehe unten).
+
+### ⚠️⚠️⚠️ DIE LEHRE — ein Nullpunkt muss HERLEITBAR sein, nicht plausibel
+
+**GS** hat als einziger einen Nullpunkt, der *vorab* bei 0,5 liegt,
+unabhängig von der Volatilität: symmetrische Barrieren (±1 × heutige ATR),
+und gezählt wird nur unter den **aufgelösten** Ankern. Die Größe kürzt sich
+heraus, die Auflösungsquote ist herausbedingt.
+
+> **Ein Maßstab, dessen Nullpunkt man nicht vor der Messung herleiten kann,
+> ist kein Maßstab, sondern eine Hoffnung.** Die Zufallskontrolle fängt das
+> NICHT — sie mischt die Zuordnung, nicht die Mechanik. Alle vier Maßstäbe
+> hatten 0 von 5 in der Kontrolle. Drei von ihnen waren trotzdem falsch.
+
+⚠️ Das ist die Ergänzung zu 2.109 (*Zufallskontrolle fängt auch
+Kontamination*): sie fängt Kontamination der **Daten**, nicht Kontamination
+des **Maßstabs**.
+
+### Das Ergebnis auf den echten Daten (2.538 Tage, 614.549 Anker)
+
+| Maßstab | Wirkung | Kontrolle | Drittel |
+|---|---|---|---|
+| G0 CRV 2 auf heutiger ATR | +0,01350 [+0,01072 .. +0,01651] | 0/5 | +0,0294 · −0,0026 · −0,0267 |
+| **GS richtungsrein** | **−0,00041 [−0,00287 .. +0,00194]** | **2/5** | **+0,0012 · −0,0022 · +0,0010** |
+| VZ (kontaminiert) | +0,00830 | 0/5 | +0,0123 · +0,0043 · −0,0164 |
+| B (kontaminiert) | −0,12840 [−1,29825 .. +0,92606] | 2/5 | — |
+| **AUF Auflösungsquote** | **+0,03088 [+0,02753 .. +0,03436]** | **0/5** | **+0,0535 · +0,0080 · −0,0613** |
+| G0R Treffer\|aufgelöst | +0,00760 [+0,00464 .. +0,01047] | 0/5 | +0,0108 · +0,0044 · −0,0147 |
+
+**`vola` trägt keine Richtung.** Unter GS ist nicht nur das Band über null —
+es gibt **keine Ordnung der Drittel mehr**, wo G0 eine saubere monotone
+Reihe zeigt.
+
+### Die Zerlegung — der Befund geht restlos in zwei Größenkanäle auf
+
+1. **Auflösungsquote (+0,03088).** Ist ein Asset ruhiger als sonst, kehrt
+   seine Volatilität nach oben zurück. Dann wird eine Barriere *überhaupt
+   erreicht*, statt dass der Anker flach ausläuft. Ein flacher Auslauf
+   zählt als 0 — **genau wie ein Stop**. Und eine Auflösung ist bei CRV 2
+   zu etwa ⅓ ein Treffer: 0,03088 ÷ 3 ≈ 0,0103 gegen gemessene 0,0135.
+
+2. **Der Rest (G0R +0,00760)** — und ⚠️ er wird **gegen den Artefakt
+   geprüft, nicht gegen null**. G0R hat *asymmetrische* Barrieren (+2/−1);
+   dort kommt der Größenkanal auch nach dem Bedingen zurück, weil sich das
+   *ferne* Ziel nur mit mehr Bewegung erreichen lässt. In den
+   richtungsfreien Kunstwelten ergab G0R **+0,00770** und **+0,00731** —
+   **zahlengleich mit dem echten Wert.**
+
+> **Es bleibt nichts übrig, was man als Marktbefund lesen könnte.**
+
+### ✔✔ Was das POSITIV heißt — kein Nullbefund, sondern ein Ortswechsel
+
+Die Auflösungsquote ist mit **+3,1 Prozentpunkten der größte saubere
+Effekt, der heute gemessen wurde** — größer als alles, was je als Beitrag
+registriert war. Er sagt nur etwas anderes, als wir gefragt hatten:
+
+> **`vola` sagt nicht, WOHIN sich ein Asset bewegt, sondern OB unsere
+> Geometrie in der gesetzten Frist überhaupt eine Antwort bekommt.**
+
+Damit gehört `vola` nicht in `BEITRAEGE`, sondern in die **Geometrie- und
+Horizontwahl** — und über `hebel = verlustanteil / stop_rel` fällt daraus
+der **Hebel**. Das ist genau die Achse, die die Befundlage als fehlend
+führt (*„Nicht die Instrument- sondern die HORIZONT-Achse fehlt"*), und es
+ist die Bauform, die das übergeordnete Ziel verlangt: der Hebel wird nicht
+gewählt, er fällt aus der Bewertung.
+
+### ⚠️⚠️ Und was das für die Kalibrierung heißt
+
+Der Plan „`funding` auf die Zweiteilung, `turnover` still, `vola` neu" ist
+in seinem tragenden Teil hinfällig. Bliebe es bei einer ehrlichen
+Kalibrierung **heute**, hätte das System **genau einen Beitrag** — und der
+Code sagt selbst, warum das nicht geht:
+
+> *„Ein System mit genau einem Beitrag kann diesen Beitrag nicht mehr
+> prüfen."*
+
+Dazu bräche die Suite-Prüfung `_p_ein.schwelle < _p_zwei.schwelle`, die
+zwei tragende Beiträge voraussetzt (Trockenlauf
+`pruefe_kalibrierung_trocken.py`: `erreichbar_max` fiele um Faktor 22,5,
+der Durchlass stiege von 12 % auf 40–60 %).
+
+**Die Reihenfolge steht damit fest, und sie ist nicht verhandelbar:**
+erst muss etwas anderes tragen, dann wird kalibriert. Nicht umgekehrt.
+
+Werkzeug: `n24_vola_geometrieprobe.py` (mit `--probe` gegen zwei
+richtungsfreie Kunstwelten) · `pruefe_kalibrierung_trocken.py`

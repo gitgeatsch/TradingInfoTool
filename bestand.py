@@ -182,8 +182,36 @@ KANDIDATEN = (
                        "aber bei 516 statt 65 Symbolen Abdeckung"),
             ("06.09.", "N13: beim Frontloading +1,5 Punkte (20 %) - traegt, "
                        "aber deutlich schwaecher als turnover (+4,0)"),
+            ("06.09.", "N23-E1: einzige belegte DREITEILUNG, beide Haelften, "
+                       "2/2 Nachbarn getrennt"),
+            ("06.09.", "✖✖✖ N24: KEINE RICHTUNG. Richtungsrein (GS) "
+                       "-0,00041 [-0,00287 .. +0,00194], 2/5 - und die "
+                       "Drittel haben KEINE Ordnung mehr"),
+            ("06.09.", "N24: der Befund geht restlos in Groessenkanaele auf "
+                       "- Aufloesungsquote +0,03088, Rest G0R +0,00760 "
+                       "gegen Kunstwelt-Artefakt +0,00770 / +0,00731"),
         ),
-        warnung="⚠️ STAND NACH N12: `vola` ist die einzige der beiden "
+        warnung="⚠️⚠️⚠️ STAND NACH N24 (06.09.): `vola` GEHOERT NICHT IN "
+                "`BEITRAEGE`. Richtungsrein gemessen traegt es nichts "
+                "(GS -0,00041, 2/5, keine Ordnung der Drittel). Der starke "
+                "Befund war unsere eigene Geometrie: ruhige Assets loesen "
+                "ihre Barrieren oefter auf (+0,03088), und eine Aufloesung "
+                "ist bei CRV 2 zu einem Drittel ein Treffer. Der Rest ist "
+                "zahlengleich mit dem Artefakt aus zwei richtungsfreien "
+                "Kunstwelten. "
+                "✔✔ ABER KEIN NULLBEFUND: +3,1 Punkte auf die "
+                "AUFLOESUNGSQUOTE sind der groesste saubere Effekt des "
+                "Tages. `vola` gehoert in die GEOMETRIE- und HORIZONTWAHL - "
+                "und ueber `hebel = verlustanteil / stop_rel` faellt daraus "
+                "der Hebel. Das ist die als fehlend gefuehrte Horizont-"
+                "Achse. "
+                "⚠️ OFFEN (R-R11): N1-V2 fand am RANDMASS einen "
+                "spiegelbildlichen Richtungseffekt (-0,00345). Das ist "
+                "durch N24 NICHT widerlegt - andere Zielgroesse -, steht "
+                "aber unter Verdacht, weil das Randmass sich den "
+                "Schiefe-Kanal mit `bewegung_r` teilt. Richtungsreine "
+                "Nachmessung am Rand steht aus. "
+                "--- FRUEHERER STAND (N12): `vola` ist die einzige der beiden "
                 "Groessen, die im Betrieb UEBERALL wirkt (516 von 516 "
                 "Symbolen). Allein bei 40 % Sperrmenge erreicht sie 83 % "
                 "der Kombinationswirkung - der Kompromiss kostet 17 % "
@@ -308,6 +336,21 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.135", "`vola` traegt KEINE Richtung - richtungsrein "
+               "(symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 "
+               "[-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. "
+               "Der Befund geht restlos in zwei GROESSENkanaele auf",
+               "gilt", "Methodik 2.135 / n24_vola_geometrieprobe.py"),
+    Befundlage("2.135-AUF", "Die AUFLOESUNGSQUOTE traegt +0,03088 "
+               "[+0,02753 .. +0,03436], monoton ueber die Drittel - ruhige "
+               "Assets loesen ihre Barrieren nachweisbar oefter auf. "
+               "Groesster sauberer Effekt des Tages, aber ueber die "
+               "GEOMETRIE, nicht ueber den Markt", "gilt", "Methodik 2.135"),
+    Befundlage("2.133-vola", "„`vola` ist die einzige Groesse mit belegter "
+               "Stufenordnung und gehoert registriert\"", "abgeloest",
+               "Methodik 2.133", abgeloest_durch="2.135",
+               warum="an der Barrieren-Quote gemessen, die Aufloesung und "
+                     "Richtung mischt. Richtungsrein bleibt nichts uebrig"),
     Befundlage("2.112", "Der MITTELWERT ist der falsche Massstab - der "
                "Ertrag liegt im oberen Rand (p50 -0,19 R, aber 6,65 % der "
                "Asset-Tage ueber +2 R)", "gilt", "Methodik 2.112"),

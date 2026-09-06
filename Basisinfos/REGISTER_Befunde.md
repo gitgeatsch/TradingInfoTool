@@ -6,6 +6,14 @@
 
 ## ✔ WAS GILT
 
+**2.135** — `vola` traegt KEINE Richtung - richtungsrein (symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 [-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. Der Befund geht restlos in zwei GROESSENkanaele auf
+
+- Quelle: Methodik 2.135 / n24_vola_geometrieprobe.py
+
+**2.135-AUF** — Die AUFLOESUNGSQUOTE traegt +0,03088 [+0,02753 .. +0,03436], monoton ueber die Drittel - ruhige Assets loesen ihre Barrieren nachweisbar oefter auf. Groesster sauberer Effekt des Tages, aber ueber die GEOMETRIE, nicht ueber den Markt
+
+- Quelle: Methodik 2.135
+
 **2.112** — Der MITTELWERT ist der falsche Massstab - der Ertrag liegt im oberen Rand (p50 -0,19 R, aber 6,65 % der Asset-Tage ueber +2 R)
 
 - Quelle: Methodik 2.112
@@ -118,6 +126,12 @@
 - Quelle: Schritt 4a
 
 ## ↩ WAS ABGELOEST IST
+
+**2.133-vola** — „`vola` ist die einzige Groesse mit belegter Stufenordnung und gehoert registriert"
+
+- Quelle: Methodik 2.133
+- **Abgeloest durch: 2.135**
+- Warum: an der Barrieren-Quote gemessen, die Aufloesung und Richtung mischt. Richtungsrein bleibt nichts uebrig
 
 **2.113-M4** — „tief im Rang = mehr Chance ist widerlegt - in R wird nach unten alles schlechter"
 
