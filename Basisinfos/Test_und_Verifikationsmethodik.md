@@ -6015,3 +6015,87 @@ Werkzeuge: `messe_alltagsmarkt.py` · `pruefe_alltagsmarkt.py`
 Positivkontrolle je Größe entscheidet, ob der Maßstab hält — **nicht die
 Plausibilität.**
 
+
+
+## 2.113 ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026)
+
+**Nutzerannahme:** *„BTC ist das führende Asset, danach kommen bestimmte
+Altcoins (ETH etc.), welche überleben dürften, danach wird es komplexer —
+einige verschwinden und verlieren massiv 90 %, andere kommen nach oben in
+die Top 100."*
+
+### ✔ S1 — die Verschwundenen sind IN den Daten
+
+    Reihen, die im letzten Monat noch laufen :  348
+    Reihen, die FRUEHER enden (delistet/tot) :  168   = 32,6 %
+
+    Abstand zum eigenen Hoechststand, alle 516 Reihen:
+      schlechter als -80 %   453   87,8 %
+      schlechter als -90 %   404   78,3 %
+      schlechter als -99 %   124   24,0 %
+
+> **Die Annahme trifft härter zu als formuliert: 78 % aller Reihen stehen
+> mehr als 90 % unter ihrem eigenen Hoch.** Und weil die Toten mitlaufen,
+> ist **kein Überlebensfehler** in unseren Messungen.
+
+⚠️ **Eine Einschränkung bleibt:** enthalten sind die, die *während* unserer
+Erfassung starben. Wer vorher verschwand, fehlt. Für den Abschnitt ab 2024
+ist das unerheblich, für 2018–2020 nicht.
+
+### ⚠️⚠️ S2 — die Hierarchie ist echt, aber sie zahlt UMGEKEHRT
+
+Horizont 5, in R, Anteil der Asset-Tage mit mehr als **+2 R**:
+
+| Schicht | 2018–2020 | 2021–2023 | **2024–2026** | p50 (2024+) | Streuung |
+|---|---|---|---|---|---|
+| **BTC** | 17,39 % | 9,95 % | **9,28 %** | **+0,11** | — |
+| Rang 2–20 | 10,03 % | 8,27 % | 7,45 % | −0,11 | 1,18 |
+| Rang 21–100 | 10,15 % | 8,21 % | 7,16 % | −0,19 | 1,10 |
+| ab Rang 101 | — | 6,60 % | **6,47 %** | −0,19 | 1,03 |
+
+> **BTC hat die HÖCHSTE Rate großer Bewegungen und als einzige Schicht einen
+> positiven Median.** Nach unten wird alles schlechter — Median, Randrate
+> *und* Streuung.
+
+⚠️⚠️ **Das dreht die naheliegende Erwartung um.** Kleine Coins bewegen sich
+in *Prozent* stärker, aber **nicht in R** — ihre Schwankungsbreite wächst
+mindestens so schnell wie ihr Ertrag. Wer im tiefen Rang nach dem nächsten
+100-fachen sucht, kauft mehr Risiko für weniger Bewegung.
+
+*(BTCs p90/p99 sind hier ohne Aussage — eine Reihe hat keine Perzentile. Die
+Randrate über die Tage ist aussagefähig und vergleichbar.)*
+
+### ⚠️⚠️⚠️ S3 — die AUFSTEIGER sind die schwächste Gruppe
+
+Rang heute gegen Rang vor 60 Tagen, anschließende 5 Tage in R:
+
+| Gruppe | Fälle | Mittel | > +2 R |
+|---|---|---|---|
+| **neu in Top 100** | 10.843 | **−0,062** | **5,99 %** |
+| **in Top 100 geblieben** | 197.923 | **+0,040** | **8,08 %** |
+| aus Top 100 gefallen | 21.047 | −0,010 | 6,71 % |
+| außerhalb geblieben | 352.110 | −0,030 | 6,33 % |
+
+> **Wer gerade aufgestiegen ist, hat die Bewegung hinter sich.** Die
+> *dauerhaften* Top-100-Werte sind die beste Gruppe, die frisch
+> Aufgestiegenen die schlechteste.
+
+⚠️ **Der Abstand ist 0,102 R — größer als unser bester gemessener Beitrag
+(turnover, 0,0635 R).** Wenn er die Norm übersteht, ist die
+**Rangzugehörigkeit** der stärkste Kandidat, den wir hätten.
+
+⚠️ **Noch KEIN Befund.** Überlappende Fenster, derselbe Tag mehrfach — das
+ist ein Lagebild. Es braucht Tagesklammer, Blockbootstrap, Trennschärfe und
+Positivkontrolle wie jeder andere Kandidat.
+
+### Was daraus für den Bau folgt
+
+| # | | Art |
+|---|---|---|
+| **M1** | **`rangzugehoerigkeit`** (dauerhaft Top 100 / neu / gefallen / außen) als Kandidat durch die Norm | Messung |
+| **M2** | Die Schicht ist **Kontext, kein Asset-Vorurteil** — gemessen wird der Zeitpunkt innerhalb der Schicht (CLAUDE.md Regel 3) | Regel |
+| **M3** | Kein Überlebensfehler ab 2024. Für 2018–2020 als Vorbehalt mitführen | Vorbehalt |
+| **M4** | „Tief im Rang = mehr Chance" ist **widerlegt** — in R wird nach unten alles schlechter | Befund |
+
+Werkzeug: `messe_rangschichtung.py`
+
