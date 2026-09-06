@@ -4363,3 +4363,107 @@ BTC-Phasen ist deshalb zu **messen**, bevor sie benutzt wird.
 ⚠️ **Die Datengrundlage-Tabelle von heute Nachmittag ist damit überholt** —
 sie zählte Blöcke bei H20/Block 90 über die volle Historie. Sie wird unter
 der Basislösung neu erhoben.
+
+
+---
+
+# ⚠️⚠️⚠️ DER PLAN NACH DEM 06.09. — die Dimensionierung steht, EINE Größe fehlt
+
+**Nutzerfrage:** *„wenn du der Meinung bist, dass die bestehende
+Dimensionierung passt, müssen wir in eine konkrete Richtung gehen. Wie
+gehen wir jetzt im Gesamtplan vor?"*
+
+## Die Dimensionierung — festgeschrieben
+
+| Größe | Wert | Woher |
+|---|---|---|
+| **Horizont** | **5 Tage** | 2.111 — Abhängigkeit reicht genau so weit wie der Horizont; und es ist der Betriebshorizont |
+| **Block** | **15** (3 × Horizont), je Messung belegt | 2.111 · `pruefe_block()`, Grenze 0,15 |
+| **Abschnitt** | **ab 2024** | 3.11 — davor ein anderer Markt. 63 Blöcke |
+| **Menge** | **frei + 20 % messen**, 10 %/5 % fortschreiben | Datengrundlage · als Fortschreibung kennzeichnen |
+| **Universum** | **breit und neutral, kein Qualitätsfilter** | 2.117 — der Filter kostet den Beleg |
+| **Klammer** | **Tag** | 2.86 · in `messnorm.Befund` erzwungen |
+| **Kosten** | **0,00** | Regel 2 · in `messnorm.Befund` erzwungen |
+| **Kategorien** | **keine** | 2.116 — 1,2 Prozentpunkte über das ganze Universum |
+| ⚠️ **MASSSTAB** | **OFFEN** | 2.112/2.115 — er entscheidet das Vorzeichen |
+
+> **Alles ist gesetzt außer dem Maßstab. Und der Maßstab entscheidet jedes
+> weitere Ergebnis.** Deshalb steht er als nächstes, nicht als Nebenpunkt.
+
+## ⚠️ Warum der Maßstab vor allem anderen kommt
+
+    05.09.  in_r gegen barriere   -> TRAEGT gegen traegt nicht
+    06.09.  Mittel gegen Rand     -> "schlechter" gegen "BESSER"
+
+Beide registrierten Beiträge (funding +0,0274 · turnover +0,0635) sind am
+**Mittelwert** gemessen. Jedes „trägt nicht" der letzten Wochen ebenso.
+
+⚠️ **Jede Messung, die vor der Maßstabsentscheidung läuft, ist danach zu
+wiederholen.** Das ist der Grund für die Reihenfolge, nicht Vorsicht.
+
+## SCHRITT 3 — die Trennschärfe je Maßstab (das Tor)
+
+**Was:** Effekt bekannter Größe pflanzen, kleinstes erkennbares suchen —
+getrennt für beide Maßstäbe, je Menge.
+
+    Massstab A   bewegung_r, Mittelwertverschiebung   (bisher)
+    Massstab B   Randanteil > +2 R und > +3 R         (2.112)
+
+**Warum:** Ein Randmaß hat weniger Ereignisse (6,65 % der Anker) und
+womöglich weniger Trennschärfe. **Das entscheidet die Messung, nicht die
+Plausibilität.**
+
+**Ergebnis ist eine Entscheidung, keine Zahl:**
+
+    B hat Trennschaerfe   -> zweite Zielgroesse, Schritt 4a laeuft auf BEIDEN
+    B hat keine           -> wir bleiben beim Mittel, und 2.112 wird als
+                             benannte Grenze gefuehrt statt als Loesung
+
+**Nebenertrag:** jedes künftige „trägt nicht" wird zu **„trägt nicht bis
+X"** — genau das, was `messnorm` als vollständiges Urteil verlangt.
+
+## SCHRITT 4a — die Durchmessung, spot × einstieg
+
+Alle Kandidaten auf dem entschiedenen Maßstab, in der festgeschriebenen
+Dimensionierung. **Erst hier wird wieder gemessen, was trägt.**
+
+## SCHRITT 4b — die Lagen ohne Signale
+
+`hebel` · `short` · `akkumulation` haben null Signale. Dort fehlen nicht
+die Daten, sondern die **Lage** — aus Marktdaten rekonstruierbar (D4).
+
+## SCHRITT 5 — der NACHLAUF über die Phasen
+
+**Nutzerfassung, und sie ist die richtige:** *„hätte unser System in der
+Historie bei steigenden, seitwärts oder fallenden Phasen die gewünschten
+Ergebnisse geliefert?"*
+
+Das ist **kein Kunstdaten-Problem**, sondern ein historischer Nachlauf auf
+Marktdaten. Vorhanden:
+
+    BTC-Trendphasen        BULL 109 / BAER  81 Bloecke
+    Streuungsphasen        HOCH  49 / niedrig 38 Bloecke
+
+⚠️ **Was fehlt: die SEITWÄRTS-Klasse.** Beide Einteilungen sind heute
+zweiwertig. Sie ist vor dem Nachlauf zu bauen — und nach 2.111 zu
+**messen**, bevor sie benutzt wird.
+
+⚠️ **Grenze des Nachlaufs:** nachspielbar ist der **deterministische** Teil
+der Kette (Trichter, Sperren). Die LLM-Synthese ist nicht reproduzierbar.
+Das ist kein Verlust — die Bewertung sitzt im Trichter.
+
+## Was NICHT gebaut wird — und warum
+
+| | |
+|---|---|
+| Qualitätsfilter / „ohne Shitcoins" | ✖ 2.117 — zerstört den einzigen tragenden Befund |
+| Größenkategorien als Messschnitt | ✖ 2.116 — 1,2 Prozentpunkte, kein Bruch |
+| Horizont je Rangschicht | ✖ 2.116 — die Zufallskontrolle reproduziert das Muster |
+| Schichtung nach BTC-Dominanz | ✖ Nachtrag 2.111 — eine Phase in neun Jahren |
+
+## Offene Nutzerentscheidungen — laufen nebenher, blockieren nicht
+
+**D3** `oi_aenderung` als nicht validierbare Live-Sperre · **O1** Cooldown ·
+**O3** Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday ·
+**O7** MFE · die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
+
