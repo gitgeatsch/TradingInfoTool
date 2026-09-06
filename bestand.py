@@ -122,7 +122,7 @@ KANDIDATEN = (
                        "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
                        "durchgehend ohne Null. Der Tempo-Anzeiger"),
         ),
-        warnung="Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
+        warnung="✔✔ REHABILITIERT 06.09. (N25): `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei Groessen, zweieinhalbmal `funding`. Auf der registrierten Barrieren-Quote traegt es NICHT (+0,00168, Band mit Null), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft und den Effekt verdeckt. Der Vorschlag vom Vormittag (2.133: stilllegen) ist damit ueberholt - er stand auf dem gemischten Massstab. ⚠️ R-R9 OFFEN: auf welcher Zielgroesse die Stufen kalibriert werden. `q` ist ,Ziel vor Stop' (= G0); dort ist turnover schwach, weil die GEOMETRIE es daempft - das ist eine Aussage ueber die Geometrie, nicht ueber den Beitrag. --- FRUEHER: Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
                 "breit wie bei den anderen, das Urteil wandert mit der Saat. "
                 "⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab "
                 "(+0,01389 bei H20, 2.119) - registriert ist er nur am "
@@ -336,6 +336,30 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.136", "`turnover` traegt RICHTUNG +0,00512 "
+               "[+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE "
+               "der drei. Auf der registrierten Barrieren-Quote traegt es "
+               "nicht (+0,00168 ns), weil sein Aufloesungskanal (-0,00218) "
+               "gegen die Richtung laeuft", "gilt",
+               "Methodik 2.136 / n25_richtungsprobe_alle_drei.py"),
+    Befundlage("2.136-f", "`funding` traegt RICHTUNG +0,00197 "
+               "[+0,00024 .. +0,00376], 0/5, und reitet den "
+               "Aufloesungskanal NICHT (AUF ns) - sein G0-Befund war "
+               "sauber, nur unguenstig gemessen", "gilt", "Methodik 2.136"),
+    Befundlage("2.136-EWR", "Auch der Erwartungswert in R ist kontaminiert: "
+               "er feuert in der richtungsfreien Kunstwelt (+0,01363). Vier "
+               "von sechs Massstaeben sind es - sauber ist allein GS",
+               "gilt", "Methodik 2.136"),
+    Befundlage("2.133-turnover", "„`turnover` ist in keiner Form belegt und "
+               "gehoert stillgelegt\"", "abgeloest", "Methodik 2.133",
+               abgeloest_durch="2.136",
+               warum="auf der Barrieren-Quote gemessen, die Aufloesung und "
+                     "Richtung mischt. Richtungsrein ist turnover der "
+                     "staerkste der drei"),
+    Befundlage("2.137", "Die zwei Ebenen spielen NICHT zusammen - funding "
+               "und turnover wirken nicht staerker im guten vola-Drittel "
+               "(Baender ueberlappen). `vola` ist ein UNABHAENGIGER "
+               "Geometriehebel", "gilt", "Methodik 2.137"),
     Befundlage("2.135", "`vola` traegt KEINE Richtung - richtungsrein "
                "(symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 "
                "[-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. "

@@ -138,7 +138,21 @@ MASSSTAEBE = (("g0", "G0 CRV 2 auf heutiger ATR", False),
               # ⚠️ DIE ZERLEGUNGSPROBE: G0 = AUF x (Gewinnanteil unter den
               # Aufgeloesten). Ist G0R null, ist G0 VOLLSTAENDIG die
               # Aufloesungsquote - dann bleibt kein Rest zu erklaeren.
-              ("g0r", "G0R Treffer|aufgeloest", False))
+              ("g0r", "G0R Treffer|aufgeloest", False),
+              # ⚠️⚠️ DIE ENTSCHEIDENDE GEGENPROBE (06.09., N25).
+              # Die Trefferquote behandelt einen FLACHEN AUSLAUF wie einen
+              # Stop - beides zaehlt 0. Wirtschaftlich ist das falsch: ein
+              # flacher Auslauf kostet fast nichts, ein Stop kostet 1 R.
+              #
+              # Wer nur die AUFLOESUNGSQUOTE hebt, wandelt flache Auslaeufe
+              # in Aufloesungen um. Bei CRV 2 und richtungsneutraler
+              # Aufloesung ist deren Erwartungswert
+              #     1/3 x (+2 R)  +  2/3 x (-1 R)  =  0
+              # Er hebt also die QUOTE, ohne den ERTRAG zu heben.
+              #
+              # Ein Beitrag, der hier nichts bringt, gehoert nicht in die
+              # Bewertung - egal wie gut er in der Quote aussieht.
+              ("ewr", "EWR Erwartungswert in R", False))
 
 
 def _kz_und_geometrie(c, h, t, br, i):
@@ -192,6 +206,9 @@ def baue(reihen):
             sym = _ausgang(c, h, t, i, heute, 1.0)
             roh = _ausgang(c, h, t, i, heute, CRV)
             e = {"kennzahl": kz,
+                 # flach = zum Marktpreis geschlossen, nicht 0 gesetzt
+                 "ewr": (CRV if roh > 0 else -1.0 if roh < 0
+                         else float((c[i + HORIZONT] - c[i]) / heute)),
                  "g0": 1.0 if roh > 0 else 0.0,
                  "auf": 0.0 if roh == 0 else 1.0,
                  "g0r": None if roh == 0 else (1.0 if roh > 0 else 0.0),
@@ -245,6 +262,21 @@ def regel(je_tag, feld, mische=None):
             continue
         aus[tag] = float(y[frei].mean()) - float(y.mean())
     return aus
+
+
+def traegt(b, k):
+    """⚠️ ZWEISEITIG. Ein Band, das ganz im MINUS liegt, ist genauso ein
+    Befund wie eines ganz im Plus - nur mit umgekehrtem Vorzeichen.
+
+    06.09.2026, vom N25-Vorabtest gefangen: bei `vola` (ATR / eigener
+    Median) heisst NIEDRIG "gleich steigt die Vola" -> MEHR Aufloesung.
+    Bei roher Volatilitaet heisst NIEDRIG schlicht "ruhig" -> WENIGER.
+    Derselbe Kanal, umgekehrtes Vorzeichen. Ein einseitiges Kriterium
+    haette den zweiten Fall fuer einen Nullbefund gehalten.
+    """
+    if b is None:
+        return False
+    return (b[1] > 0 or b[2] < 0) and k == 0
 
 
 def band(d, zieh=2000, saat=20260906):
@@ -321,11 +353,11 @@ def zeige(je_tag, titel):
             print("     %-28s   zu wenige Tage" % lab)
             continue
         k = kontrolle(je_tag, feld, b[0])
-        traegt = (b[1] > 0) and k == 0
+        tr = traegt(b, k)
         print("     %-28s %+9.5f [%+.5f .. %+.5f]  %d von %d %s"
               % (lab, b[0], b[1], b[2], k, MISCHUNGEN,
-                 "✔ TRAEGT" if traegt else ""), flush=True)
-        erg[feld] = (b[0], b[1], traegt)
+                 "✔ TRAEGT" if tr else ""), flush=True)
+        erg[feld] = (b[0], b[1], tr)
     for feld, lab, _bed in MASSSTAEBE:
         d = drittel(je_tag, feld)
         print("     %-28s %s" % ("Drittel " + lab.split()[0], "  ".join(

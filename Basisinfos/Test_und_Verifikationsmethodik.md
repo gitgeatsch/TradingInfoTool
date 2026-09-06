@@ -4142,6 +4142,8 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
 | `n24_vola_geometrieprobe.py` | ⚠️⚠️ N24: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
 | `pruefe_kalibrierung_trocken.py` | Was eine geplante Beitragsaenderung an Schwelle, Durchlass und Suite anrichtet - VOR der Aenderung |
+| `n25_richtungsprobe_alle_drei.py` | ⚠️⚠️ N25: tragen funding/turnover RICHTUNG? Alle drei durch dasselbe richtungsreine Verfahren (2.136) |
+| `n26_zwei_ebenen.py` | N26: spielen Geometrie- und Richtungsebene zusammen? (2.137) |
 | `messe_degradierung.py` | Sind die NICHTS_TUN der acht Anker Urteile - oder degradierte Kaeufe? |
 | `messe_drift.py` | Traegt die Drift je Asset? |
 | `messe_stufen_aus_quote.py` | N-41: Beitragsstufen DIREKT aus der Barrieren-Quote (05.09.2026) |
@@ -8263,3 +8265,134 @@ erst muss etwas anderes tragen, dann wird kalibriert. Nicht umgekehrt.
 
 Werkzeug: `n24_vola_geometrieprobe.py` (mit `--probe` gegen zwei
 richtungsfreie Kunstwelten) · `pruefe_kalibrierung_trocken.py`
+
+
+---
+
+## 2.136 ✔✔✔ N25 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026)
+
+### Der Punkt, den ich nicht zu Ende gedacht hatte
+
+N24 (2.135) zeigte: die Barrieren-Quote mischt **Auflösung** und
+**Richtung**. Bei `vola` war der ganze Befund der erste Kanal.
+
+⚠️⚠️ **`funding` und `turnover` sind auf DERSELBEN Barrieren-Quote gemessen
+und registriert worden.** Ob ihr Befund richtungsrein ist, wurde nie
+geprüft — sie standen auf einem Maßstab, der bei der dritten Größe
+nachweislich getäuscht hat. `wahrscheinlichkeit.BEITRAEGE` beantwortete
+diese Frage live, ohne dass jemand sie gestellt hatte.
+
+### Alle drei durch dasselbe Verfahren (Blockbootstrap, 5 Mischungen)
+
+| Größe | G0 (registriert) | **GS (Richtung)** | AUF (Kanal) | Anker |
+|---|---|---|---|---|
+| `funding` | +0,00257 ✔ | **+0,00197 [+0,00024 .. +0,00376] ✔** | +0,00143 (1/5, ns) | 350.450 |
+| `turnover` | +0,00168 **ns** | **+0,00512 [+0,00212 .. +0,00831] ✔** | −0,00218 (ns) | 120.662 |
+| `vola` | +0,01350 ✔ | **−0,00041 (2/5) ✖** | +0,03088 ✔ | 614.549 |
+
+> **`turnover` ist richtungsrein der STÄRKSTE der drei — zweieinhalbmal
+> `funding`. Auf der registrierten Barrieren-Quote trägt es nicht.**
+
+**Der Mechanismus ist benennbar:** `turnover`s Auflösungskanal läuft mit
+−0,00218 leicht *gegen* die Richtung und hat den Richtungseffekt in der
+Barrieren-Quote verdeckt. Bei `funding` ist der Kanal nicht signifikant,
+sein G0-Befund war also von Anfang an sauber — nur unglücklich gemessen.
+
+**Die drei liegen damit sauber getrennt:** funding und turnover tragen
+Richtung und reiten den Kanal nicht. `vola` ist genau umgekehrt.
+
+### ⚠️ Zwei Fehler, die der Vorabtest gefangen hat
+
+**1 — Das einseitige Kriterium.** Mein `traegt`-Test prüfte nur
+`Band > 0`. In der Kunstwelt, in der die Kennzahl die Volatilität *abbildet*,
+lag AUF bei **−0,01554**, Band komplett im Minus, 0/5 — der Kanal war da,
+mein Urteil sah ihn nicht.
+
+> Bei `vola` (ATR ÷ eigener Median) heißt NIEDRIG „gleich steigt die Vola"
+> → **mehr** Auflösung. Bei roher Volatilität heißt NIEDRIG schlicht
+> „ruhig" → **weniger**. **Derselbe Kanal, umgekehrtes Vorzeichen.**
+
+Ein einseitiges Kriterium sieht nur die halbe Welt. `n24.traegt()` ist
+jetzt zweiseitig, und beide Skripte benutzen dieselbe Funktion.
+
+**2 — Der Erwartungswert in R ist AUCH kontaminiert.** Die Hoffnung war,
+mit EWR eine wirtschaftliche Probe zu haben: wer nur die Auflösung hebt,
+wandelt flache Ausläufe in Auflösungen um, und deren Erwartungswert ist bei
+CRV 2 ohne Richtung null (⅓·(+2 R) + ⅔·(−1 R)). Auf den echten Daten trägt
+`vola` dort aber **+0,01788** — am stärksten von allen.
+
+⚠️ Die Gegenprobe gegen die richtungsfreie Kunstwelt: **EWR feuert dort
+ebenfalls (+0,01363 [+0,00224 .. +0,02587], TRÄGT).** Der echte Wert liegt
+in der Größenordnung des Artefakts. Der Grund ist die **Asymmetrie**: bei
++2/−1 erreicht das ferne Ziel nur, wer sich mehr bewegt — derselbe
+Größenkanal wie bei G0R.
+
+> **Vier von sechs Maßstäben sind kontaminiert (G0, VZ, `bewegung_r`, EWR).
+> Sauber ist allein GS** — symmetrische Barrieren, nur aufgelöste Anker,
+> Nullpunkt vorab herleitbar bei 0,5.
+
+### Was daraus folgt
+
+1. **Zwei tragende Beiträge, nicht einer.** Die Kalibrierung ist nicht mehr
+   blockiert — die Warnung „ein System mit genau einem Beitrag kann diesen
+   nicht mehr prüfen" ist abgewendet.
+2. **`turnover` bleibt registriert** und wird nicht stillgelegt. Der
+   Vorschlag vom Vormittag (2.133: „turnover in keiner Form belegt") ist
+   damit überholt — er stand auf dem gemischten Maßstab.
+3. ⚠️ **R-R9 offen:** auf welcher Zielgröße die Stufen kalibriert werden,
+   ist damit eine neue Frage. `q` in der Potentialformel ist „Ziel vor
+   Stop" — also G0. Ein Beitrag, dessen Wirkung dort von der Geometrie
+   gedämpft wird, ist in der laufenden Kette schwächer als sein
+   Richtungssignal. Das ist eine Aussage über die GEOMETRIE, nicht über
+   den Beitrag.
+
+Werkzeug: `n25_richtungsprobe_alle_drei.py` (mit `--probe` gegen zwei
+Kunstwelten: reines Rauschen und reines Volatilitätsabbild)
+
+---
+
+## 2.137 ✖ N26 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026)
+
+### Die Vorhersage, die geprüft wurde
+
+Aus 2.136 fiel eine Bauform ab, die nicht erfunden, sondern abgelesen war:
+
+> `vola` sorgt dafür, dass ein Anker in der Frist überhaupt **entschieden**
+> wird — `funding` und `turnover` sagen dann, nach welcher **Seite**.
+
+⚠️ Wenn das stimmt, müssen funding und turnover **im guten vola-Drittel
+stärker wirken**. Die Gegenrichtung war vorab benannt: überlappen die
+Bänder, sind die Ebenen unabhängig.
+
+Geprüft wurde an **GS**, nicht an G0 — im guten Drittel löst mehr auf, und
+eine höhere G0-Wirkung käme allein daher.
+
+### Das Ergebnis — die Vorhersage ist widerlegt
+
+| GS je vola-Drittel | ruhig (löst oft auf) | mittel | lebhaft (löst selten auf) |
+|---|---|---|---|
+| `funding` | +0,00116 (2/5) | +0,00006 (5/5) | **+0,00347 (0/5) ✔** |
+| `turnover` | −0,00077 (4/5) | +0,00027 (4/5) | +0,00523 (0/5, Band berührt null) |
+
+**Beide wirken am stärksten im LEBHAFTEN Drittel — der Gegenrichtung
+meiner Vorhersage.** Die Bänder überlappen jedoch deutlich, also ist auch
+das nicht belegt.
+
+> **Urteil: kein Zusammenspiel. Die Ebenen sind unabhängig.**
+
+### ✔ Warum das die bessere Nachricht ist
+
+Ein unabhängiger Geometriehebel ist der **einfachere** Entwurf:
+
+- `vola` darf in die Geometrie, ohne die Beiträge zu verzerren
+- `funding`/`turnover` können ohne Bedingung auf `vola` kalibriert werden
+- und die Frage *„kommt `vola` zusätzlich dazu?"* ist beantwortet: **nein,
+  nicht als Summand in `BEITRAEGE`** — es ist eine andere Ebene, und sie
+  greift nicht in die Bewertung hinein
+
+⚠️ **Offener Punkt, nicht weggeredet:** beide Größen zeigen ihr sauberes
+Signal ausgerechnet dort, wo am wenigsten aufgelöst wird. In den Dritteln
+ist die Streuung dreifach, die Unterschiede liegen im Rauschen — aber das
+Muster ist bei beiden Größen gleichgerichtet und gehört im Auge behalten.
+
+Werkzeug: `n26_zwei_ebenen.py`

@@ -6,6 +6,22 @@
 
 ## ✔ WAS GILT
 
+**2.136** — `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei. Auf der registrierten Barrieren-Quote traegt es nicht (+0,00168 ns), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft
+
+- Quelle: Methodik 2.136 / n25_richtungsprobe_alle_drei.py
+
+**2.136-f** — `funding` traegt RICHTUNG +0,00197 [+0,00024 .. +0,00376], 0/5, und reitet den Aufloesungskanal NICHT (AUF ns) - sein G0-Befund war sauber, nur unguenstig gemessen
+
+- Quelle: Methodik 2.136
+
+**2.136-EWR** — Auch der Erwartungswert in R ist kontaminiert: er feuert in der richtungsfreien Kunstwelt (+0,01363). Vier von sechs Massstaeben sind es - sauber ist allein GS
+
+- Quelle: Methodik 2.136
+
+**2.137** — Die zwei Ebenen spielen NICHT zusammen - funding und turnover wirken nicht staerker im guten vola-Drittel (Baender ueberlappen). `vola` ist ein UNABHAENGIGER Geometriehebel
+
+- Quelle: Methodik 2.137
+
 **2.135** — `vola` traegt KEINE Richtung - richtungsrein (symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 [-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. Der Befund geht restlos in zwei GROESSENkanaele auf
 
 - Quelle: Methodik 2.135 / n24_vola_geometrieprobe.py
@@ -126,6 +142,12 @@
 - Quelle: Schritt 4a
 
 ## ↩ WAS ABGELOEST IST
+
+**2.133-turnover** — „`turnover` ist in keiner Form belegt und gehoert stillgelegt"
+
+- Quelle: Methodik 2.133
+- **Abgeloest durch: 2.136**
+- Warum: auf der Barrieren-Quote gemessen, die Aufloesung und Richtung mischt. Richtungsrein ist turnover der staerkste der drei
 
 **2.133-vola** — „`vola` ist die einzige Groesse mit belegter Stufenordnung und gehoert registriert"
 
