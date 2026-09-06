@@ -34,6 +34,15 @@
 
 - Quelle: Methodik 2.120
 
+**2.121** — `vola ODER turnover` traegt am Randmassstab mehr als jede Einzelgroesse - mengenkontrolliert, in beiden Historienhaelften, ueber drei Saaten
+
+- Quelle: Methodik 2.121
+
+**2.121-UND** — Werte mit BEIDEN Extremen sind WENIGER schlecht als Werte mit EINEM Extrem (UND-Reinheit +0,01267 gegen +0,01590 / +0,01678 einzeln)
+
+- Quelle: Methodik 2.121
+- Warum: unerklaert. Kein Messfehler - die Symmetrieprobe ist bitgenau. Es erklaert, warum UND versagt und ODER gewinnt
+
 ## ○ WAS OFFEN IST
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
@@ -41,10 +50,17 @@
 - Quelle: Methodik 2.119
 - Warum: ENTWURFSfrage, keine Messfrage - Nutzerentscheidung
 
-**N5** — Traegt die KOMBINATION `vola` UND `turnover` am Randmassstab mehr als jede Groesse einzeln?
+**N8** — `turnover` ist bereits als Regler am Mittel registriert - eine Sperre mit `turnover` wendet ihn ZWEIMAL an
 
-- Quelle: Methodik 2.120
-- Warum: beide tragen dort etwas, und 82 % von vola sind unabhaengig - das ist die naheliegende Frage
+- Quelle: Methodik 2.121
+
+**N9** — 36 % Sperrmenge bei zwoelf bestehenden Trichterstufen - welche Durchlassmenge bleibt?
+
+- Quelle: Methodik 2.121
+
+**N10** — Die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote
+
+- Quelle: Methodik 2.121
 
 **N6** — `turnover` traegt auch am RAND (+0,01389 bei H20), registriert ist er nur am Mittel
 
@@ -102,4 +118,10 @@
 - Quelle: eigene Anfuehrung 06.09.
 - **Abgeloest durch: 2.120**
 - Warum: F-206 wurde auf H2/Frontloading gemessen; F-207 haelt fest, dass sich das nicht auf H20/R uebertraegt. Die Anfuehrung war eine Horizontverwechslung
+
+**N5** — Traegt die KOMBINATION `vola` UND `turnover` am Randmassstab mehr als jede Groesse einzeln?
+
+- Quelle: Methodik 2.120
+- **Abgeloest durch: 2.121**
+- Warum: beantwortet: ODER traegt (+0,00777), mengenkontrolliert +26 % bis +34 % ueber der besten Einzelgroesse, beide Haelften, drei Saaten. UND traegt NICHT
 

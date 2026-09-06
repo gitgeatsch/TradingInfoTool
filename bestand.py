@@ -170,6 +170,10 @@ KANDIDATEN = (
             ("06.09.", "N1-Rangtest, 39 Mischungen: funding erklaert 3 % "
                        "(p=0,325), turnover erklaert 18 % (Rang 1 von 40, "
                        "p=0,025)"),
+            ("06.09.", "N5: die Kombination `vola ODER turnover` traegt "
+                       "+0,00777 - mengenkontrolliert +26 % bis +34 % ueber "
+                       "der besten Einzelgroesse, beide Haelften, drei "
+                       "Saaten"),
         ),
         warnung="⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. "
                 "`vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover "
@@ -178,6 +182,40 @@ KANDIDATEN = (
                 "belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. "
                 "Naechster Schritt ist nicht mehr Messung von vola allein, "
                 "sondern die KOMBINATION vola UND turnover am Rand (N5)."),
+    Kandidat(
+        name="vola ODER turnover",
+        hypothese=("Zwei weitgehend unabhaengige Ausschlussgruende: hohe "
+                   "Volatilitaet ODER hoher Umschlag. Wer in EINER der "
+                   "beiden Groessen im obersten Fuenftel liegt, wird "
+                   "gesperrt."),
+        form="schalter",
+        basis="H5 · volle Historie · Rand > +2 R · Menge frei · 167 Bloecke",
+        wert="+0,00777 [+0,00480 .. +0,01153] · Reinheit +0,02143 · "
+             "36,1 % gesperrt",
+        live="- NICHT gebaut (siehe Warnung)",
+        zustand="offen",
+        kette=(
+            ("06.09.", "N5: fuenf Formen geprueft. UND traegt nicht "
+                       "(6,8 % gesperrt, Reinheit sogar NIEDRIGER als "
+                       "einzeln), SUMME traegt (+0,00392), ODER traegt am "
+                       "staerksten"),
+            ("06.09.", "mengenkontrolliert: bei 20 % +26 %, bei 36 % +34 % "
+                       "ueber der besten Einzelgroesse. 43 % des rohen "
+                       "Vorsprungs waren MENGE"),
+            ("06.09.", "beide Historienhaelften tragen einzeln "
+                       "(+0,01045 / +0,00554), drei Saaten stabil"),
+            ("06.09.", "zwei Konstruktionsfehler von den eigenen Kontrollen "
+                       "gefangen: asymmetrische Rangbildung, fehlende "
+                       "Symmetrieprobe im Vorabtest"),
+        ),
+        warnung="⚠️⚠️ BELEGT, ABER NICHT BAUREIF. Drei Punkte stehen davor: "
+                "(N8) `turnover` ist bereits als Regler am Mittel "
+                "registriert - eine Sperre damit wendet ihn ZWEIMAL an. "
+                "(N9) 36 % Sperrmenge ist eine erhebliche Verschaerfung bei "
+                "zwoelf bestehenden Trichterstufen. (N10) die Potentialformel "
+                "meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote. "
+                "⚠️ Der Effekt halbiert sich ueber die Zeit "
+                "(+0,01045 -> +0,00554)."),
     Kandidat(
         name="schnitt50",
         hypothese="Abstand zum eigenen 50-Tage-Schnitt als Trendlage.",
@@ -322,10 +360,29 @@ BEFUNDE = (
                      "fest, dass sich das nicht auf H20/R uebertraegt. Die "
                      "Anfuehrung war eine Horizontverwechslung"),
     Befundlage("N5", "Traegt die KOMBINATION `vola` UND `turnover` am "
-               "Randmassstab mehr als jede Groesse einzeln?", "offen",
-               "Methodik 2.120",
-               warum="beide tragen dort etwas, und 82 % von vola sind "
-                     "unabhaengig - das ist die naheliegende Frage"),
+               "Randmassstab mehr als jede Groesse einzeln?", "abgeloest",
+               "Methodik 2.120", abgeloest_durch="2.121",
+               warum="beantwortet: ODER traegt (+0,00777), "
+                     "mengenkontrolliert +26 % bis +34 % ueber der besten "
+                     "Einzelgroesse, beide Haelften, drei Saaten. UND traegt "
+                     "NICHT"),
+    Befundlage("2.121", "`vola ODER turnover` traegt am Randmassstab mehr "
+               "als jede Einzelgroesse - mengenkontrolliert, in beiden "
+               "Historienhaelften, ueber drei Saaten", "gilt",
+               "Methodik 2.121"),
+    Befundlage("2.121-UND", "Werte mit BEIDEN Extremen sind WENIGER schlecht "
+               "als Werte mit EINEM Extrem (UND-Reinheit +0,01267 gegen "
+               "+0,01590 / +0,01678 einzeln)", "gilt", "Methodik 2.121",
+               warum="unerklaert. Kein Messfehler - die Symmetrieprobe ist "
+                     "bitgenau. Es erklaert, warum UND versagt und ODER "
+                     "gewinnt"),
+    Befundlage("N8", "`turnover` ist bereits als Regler am Mittel "
+               "registriert - eine Sperre mit `turnover` wendet ihn ZWEIMAL "
+               "an", "offen", "Methodik 2.121"),
+    Befundlage("N9", "36 % Sperrmenge bei zwoelf bestehenden Trichterstufen "
+               "- welche Durchlassmenge bleibt?", "offen", "Methodik 2.121"),
+    Befundlage("N10", "Die Potentialformel meint eine BARRIEREN-Quote, das "
+               "Randmass eine HORIZONT-Quote", "offen", "Methodik 2.121"),
     Befundlage("N6", "`turnover` traegt auch am RAND (+0,01389 bei H20), "
                "registriert ist er nur am Mittel", "offen",
                "Methodik 2.119"),

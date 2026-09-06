@@ -83,14 +83,37 @@ for _m in MARKEN:
 
 
 def wirkung_rand(je_tag: dict, oben_sperren: bool = True, mische=None,
-                 pflanze: float = 0.0, marke: float = 2.0) -> tuple:
+                 pflanze: float = 0.0, marke: float = 2.0,
+                 zweit: dict | None = None, modus: str = "einzeln",
+                 grenze: float | None = None) -> tuple:
     """Je Kalendertag: Randanteil MIT Regel minus Randanteil OHNE.
 
     Exakt die Bauform von `messe_regel_wirksamkeit.wirkung`, nur die
     Kennzahl des Tages ist eine andere: statt des Medians der Anteil ueber
     der Marke. Rang, Sperrgrenze und Pflanzrichtung sind DIESELBEN - sie
     werden aus `W` bezogen, nicht nachgebaut.
+
+    ## Die KOMBINATION (N5, 06.09.2026)
+
+    `zweit` ist eine zweite Kennzahl je Symbol und Tag, `modus` sagt, wie
+    kombiniert wird:
+
+        einzeln   nur die erste Kennzahl - das bisherige Verhalten
+        und       gesperrt nur, wenn BEIDE im obersten Fuenftel sind
+        oder      gesperrt, wenn EINE im obersten Fuenftel ist
+        summe     gesperrt das oberste Fuenftel der RANGSUMME
+
+    ⚠️ `und` benutzt ZWEI getrennte 80.-Perzentil-Schwellen, nicht das
+    oberste Fuenftel eines Minimums. Der Unterschied ist der Fehler aus
+    F-206: bei zwei unabhaengigen Groessen entspricht das oberste Fuenftel
+    des Rang-Minimums einer LOCKEREREN Schwelle je Einzelgroesse (~55.
+    statt 80. Perzentil) - also gar keinem UND.
     """
+    # ⚠️ `grenze` NUR fuer den mengenkontrollierten Vergleich (N5, 06.09.):
+    # sperrt ODER 36 % statt 20 %, muss die Einzelgroesse auf DERSELBEN
+    # Menge dagegengehalten werden. Sonst misst man die Menge, nicht die
+    # Guete. Ohne Angabe gilt W.GRENZE - das Verhalten aendert sich nicht.
+    g = W.GRENZE if grenze is None else float(grenze)
     aus, anteil, gesperrt, uebrig = {}, [], [], []
     for tag, z in je_tag.items():
         w = np.array([x["kennzahl"] for x in z])
@@ -98,7 +121,45 @@ def wirkung_rand(je_tag: dict, oben_sperren: bool = True, mische=None,
         r = W.rang(w)
         if mische is not None:
             r = mische.permutation(r)
-        frei = (r < W.GRENZE) if oben_sperren else (r >= 1.0 - W.GRENZE)
+        if modus == "einzeln" or zweit is None:
+            frei = (r < g) if oben_sperren else (r >= 1.0 - g)
+        else:
+            # ⚠️⚠️ BEIDE RAENGE AUF DERSELBEN TEILMENGE (06.09., von der
+            # Gegenprobe gefunden).
+            #
+            # Erste Fassung rangte die BASIS-Kennzahl ueber alle Werte des
+            # Tages und die ZWEIT-Kennzahl nur ueber die, wo beide
+            # vorliegen. Zwei verschiedene Grundmengen - und damit war
+            # "beide im obersten Fuenftel" NICHT symmetrisch: dieselbe
+            # UND-Auswahl von der anderen Seite gebaut gab +0,00086 statt
+            # +0,00117 und sperrte 6,96 % statt 7,39 %.
+            #
+            # Eine symmetrische Bedingung muss symmetrische Zahlen geben.
+            # Deshalb wird ZUERST auf die gemeinsame Menge eingeschraenkt,
+            # DANN werden beide Raenge dort gebildet.
+            z2 = zweit.get(tag)
+            if not z2:
+                continue
+            w2 = np.array([z2.get(x["sym"], np.nan) for x in z], float)
+            da = np.isfinite(w2) & np.isfinite(w)
+            if da.sum() < 12:
+                continue
+            y = y[da]
+            r1 = W.rang(w[da])
+            r2 = W.rang(w2[da])
+            if mische is not None:
+                r1 = mische.permutation(r1)
+                r2 = mische.permutation(r2)
+            o1 = r1 >= g
+            o2 = r2 >= g
+            if modus == "und":
+                frei = ~(o1 & o2)
+            elif modus == "oder":
+                frei = ~(o1 | o2)
+            elif modus == "summe":
+                frei = ~(W.rang(r1 + r2) >= g)
+            else:
+                raise ValueError("unbekannter modus: %r" % modus)
         if frei.sum() < 3 or (~frei).sum() < 1:
             continue
         # Pflanzung auf die GESPERRTEN - wie im Original, und aus demselben
@@ -118,7 +179,8 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
                 marke: float = 2.0, horizont: int = 5,
                 staerken: tuple = (0.02, 0.05, 0.10, 0.20),
                 hypothesen: int = 1, oben_sperren: bool = True,
-                still: bool = True) -> Befund:
+                zweit: dict | None = None, modus: str = "einzeln",
+                grenze: float | None = None, still: bool = True) -> Befund:
     """Dieselbe Pruefung wie `messnorm.pruefe`, am Randmass.
 
     Rueckgabe ist ein echter `Befund` - er durchlaeuft dieselben
@@ -135,7 +197,8 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
                 return M.urteil_tage(titel, d, rng, block)
         return M.urteil_tage(titel, d, rng, block)
 
-    d, _a, _g, _u = wirkung_rand(je_tag, oben_sperren, marke=marke)
+    d, _a, _g, _u = wirkung_rand(je_tag, oben_sperren, marke=marke,
+                                 zweit=zweit, modus=modus, grenze=grenze)
     haupt = _band(d, kandidat)
     if haupt is None:
         raise ValueError("zu wenige Tage fuer ein Band (%d)" % len(d))
@@ -145,7 +208,7 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
     for z in range(ZIEHUNGEN):
         n0, _a2, _g2, _u2 = wirkung_rand(
             je_tag, oben_sperren, mische=np.random.default_rng(SAAT + z),
-            marke=marke)
+            marke=marke, zweit=zweit, modus=modus, grenze=grenze)
         nb = _band(n0, "null %d" % z)
         if nb:
             nullwerte.append(nb["mittel"])
@@ -172,7 +235,8 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
         for z in range(ZIEHUNGEN):
             misch = np.random.default_rng(SAAT + 1000 * z + int(s * 1000))
             p, _a3, _g3, _u3 = wirkung_rand(
-                je_tag, oben_sperren, mische=misch, pflanze=s, marke=marke)
+                je_tag, oben_sperren, mische=misch, pflanze=s, marke=marke,
+                zweit=zweit, modus=modus, grenze=grenze)
             pb = _band(p, "pflanze %.2f/%d" % (s, z))
             if pb:
                 werte.append(pb["mittel"])
@@ -196,8 +260,8 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
         n_bloecke=max(1, haupt["tage"] // block), abdeckung_symbole=syms,
         hypothesen=hypothesen,
         protokoll=Protokoll(
-            wirkung_funktion=("messnorm_rand.wirkung_rand (Marke +%g R)"
-                              % marke),
+            wirkung_funktion=("messnorm_rand.wirkung_rand (Marke +%g R, "
+                              "Modus %s)" % (marke, modus)),
             band_funktion="messe_bewertungskennzahl.urteil_tage",
             null_konstruktion="Raenge je Tag gemischt",
             null_ziehungen=ZIEHUNGEN,

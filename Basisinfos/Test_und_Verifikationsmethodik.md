@@ -6860,3 +6860,119 @@ Werkzeuge: `n1_vola_redundanz.py` · `pruefe_n1_vorbedingungen.py` ·
 `pruefe_n1_schichtung_gegen_partner.py` · `pruefe_n1_mehrfachmischung.py` ·
 `pruefe_n1_rangtest.py`
 
+
+
+## 2.121 ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026)
+
+**Nutzervorgabe, die den Zuschnitt bestimmt hat:** *„wir werden nicht wieder
+alles an einer einzigen Messung aufhängen, dazu steht zu viel auf dem Spiel
+… wenn etwas aus einem bestimmten Grund nicht trägt, ist zu prüfen, ob ein
+Fehler vorliegt oder der Nutzen falsch angenommen worden ist."*
+
+Deshalb: **fünf Formen, zwei Erfolgsmaße, drei Diagnosegrößen** — und sechs
+Kontrollen.
+
+### ⚠️ Zuerst: der Nutzen wurde GEPRÜFT, nicht angenommen
+
+Vor dem Messen wurde nachgesehen, wohin ein Randbefund überhaupt gehen
+könnte. Meine erste Annahme war falsch:
+
+    q      = basisrate + punkte / 100.0
+    wert_r = q * CRV - (1 - q)
+
+> **Die Bewertung rechnet in QUOTEN, nicht in R.** Die heutigen Stufen sind
+> R-Wirkungen, über `d(quote) = d(Potential)/(1+CRV)` mit einem
+> **angenommenen** CRV von 2,0 umgerechnet. Ein Randmaß misst die
+> Quotenänderung **direkt** — es ist die nähere Größe, nicht die fremdere.
+
+⚠️ **Die verbleibende Lücke, benannt statt übergangen:** die Quote der
+Potentialformel ist eine **Barrieren**-Quote (Ziel vor Stop), unser Randmaß
+eine **Horizont**-Quote ohne Barriere. Verwandt, nicht identisch.
+
+### Das Ergebnis
+
+Rand > +2 R · H5 · volle Historie · Menge frei:
+
+| Form | WIRKUNG | Reinheit | gesperrt | Trennsch. | Urteil |
+|---|---|---|---|---|---|
+| `vola` allein | +0,00327 | +0,01590 | 20,44 % | 0,05 | TRÄGT |
+| `turnover` allein | +0,00362 | +0,01678 | 21,25 % | 0,05 | TRÄGT |
+| **UND** | +0,00110 | **+0,01267** | 6,80 % | 0,40 | ✖ trägt nicht |
+| **ODER** | **+0,00777** | **+0,02143** | 36,10 % | 0,05 | ✔ **TRÄGT** |
+| SUMME | +0,00392 | +0,01816 | 21,24 % | 0,10 | ✔ TRÄGT |
+
+### ⚠️⚠️ Der mengenkontrollierte Vergleich — er entscheidet
+
+ODER sperrt 36 % statt 20 %. Die anteilgewichtete Wirkung steigt
+mechanisch, wenn mehr gesperrt wird. **Also die Einzelgrößen auf dieselbe
+Menge aufgezogen:**
+
+| Sperrmenge | beste Einzelgröße | **ODER** | Vorsprung Wirkung | Vorsprung Reinheit |
+|---|---|---|---|---|
+| **~20 %** | +0,00362 | **+0,00456** | **+26 %** | **+39 %** |
+| **~36 %** | +0,00582 | **+0,00777** | **+34 %** | **+35 %** |
+
+> **Rund 43 % von ODERs rohem Vorsprung waren schlicht die größere
+> Sperrmenge.** Der Rest ist echter Kombinationsgewinn — und er hält in
+> beiden Mengen und beiden Erfolgsmaßen.
+
+⚠️ Ohne diesen Vergleich wären die 43 % als Kombinationsgewinn
+durchgegangen.
+
+### ✔ Sechs Kontrollen, alle bestanden
+
+| | |
+|---|---|
+| **Kunstdaten** | `und` sperrt 4,12 % — ein echtes UND, nicht die F-206-Falle · Ordnung `und < einzeln < oder` · trägt nur EINE Größe, verwässert die Kombination · tragen BEIDE, nutzt `oder` beide |
+| **Symmetrie** | dieselbe Auswahl von der anderen Seite gebaut: **bitgenau identisch** |
+| **Mengenkontrolle** | bei 20 % **und** 36 % vorn |
+| **Beide Hälften** | erste +0,01045 · zweite +0,00554 — **beide TRAGEN einzeln** |
+| **Drei Saaten** | +0,00777 durchgehend, alle TRÄGT |
+| **Norm** | Nullpunkt aus 5 Ziehungen · Trennschärfe 0,05 R · Block-AK −0,0088 ✔ |
+
+⚠️ **Der Effekt halbiert sich über die Zeit** (+0,01045 → +0,00554). Der
+heute geltende Wert ist der zweite. Konsistent mit dem Struktureinbruch
+(3.11).
+
+⚠️ **Suchpreis (2.49):** fünf Formen geprüft. Bei fünf Zellen ist ein
+Zufallstreffer in rund 23 % der Fälle zu erwarten — deshalb waren die
+Hälften- und Saatprüfung Pflicht, nicht Kür.
+
+### ⚠️⚠️ EIN NEBENBEFUND, der nicht erklärt ist
+
+`UND` hat die **niedrigste** Reinheit aller Formen (+0,01267 gegen +0,01590
+und +0,01678 der Einzelgrößen).
+
+> **Werte, die in BEIDEN Größen extrem sind, sind WENIGER schlecht als
+> Werte mit nur EINEM Extrem.**
+
+Das ist kein Messfehler — die Symmetrieprobe ist bitgenau, die Kunstwelt
+verhält sich richtig. Es ist eine Aussage über den Markt, und sie erklärt,
+warum UND versagt und ODER gewinnt. **Eine Erklärung dafür gibt es
+nicht.** Die naheliegende Annahme, eine Schnittmenge sei die „reinste"
+Auswahl, ist für diesen Fall widerlegt.
+
+### ⚠️ Zwei Konstruktionsfehler, von den eigenen Kontrollen gefangen
+
+**1 — Asymmetrische Rangbildung.** Die Basisgröße wurde über alle Werte des
+Tages gerangt, die Zweitgröße nur über die gemeinsamen. `UND` gab von der
+einen Seite +0,00117, von der anderen +0,00086. Behoben; die Korrektur
+senkte `SUMME`s Reinheit von +0,02046 auf +0,01816 — **der Fehler war nicht
+kosmetisch.**
+
+**2 — Die Symmetrieprobe fehlte im Vorabtest.** Der Fehler wurde erst im
+Echtlauf sichtbar. Als **K5** nachgetragen.
+
+### ⚠️⚠️⚠️ WAS DARAUS NOCH NICHT FOLGT
+
+**Der Befund ist belegt. Er ist NICHT baureif.** Drei Punkte stehen davor:
+
+| # | | |
+|---|---|---|
+| **N8** | ⚠️ **`turnover` ist bereits als Regler am Mittel registriert.** Eine Sperre, die `turnover` benutzt, wendet ihn ein **zweites Mal** an | zu klären |
+| **N9** | **36 % Sperrmenge ist eine erhebliche Verschärfung.** Der Trichter hat zwölf Stufen, und ein Pull senkte 113 Signale auf 2 | zu messen |
+| **N10** | **Barrieren-Quote gegen Horizont-Quote** — die Lücke aus dem Kopf dieses Abschnitts | zu klären |
+
+Werkzeuge: `n5_kombination_rand.py` · `pruefe_n5_modi.py` ·
+`pruefe_n5_mengenkontrolle.py` · `pruefe_n5_haelften_saaten.py`
+

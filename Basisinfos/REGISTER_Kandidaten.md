@@ -12,6 +12,7 @@
 | ✔ | **`turnover`** | regler | traegt | H20 · 2.636 Kalendertage |
 | ✔ | **`oi_aenderung`** | schalter | traegt | H20 · 1.702 Kalendertage · 117 Symbole · 126.491 Anker |
 | ○ | **`vola`** | regler | offen | H5/H20 · volle Historie · Massstab RAND > +2 R |
+| ○ | **`vola ODER turnover`** | schalter | offen | H5 · volle Historie · Rand > +2 R · Menge frei · 167 Bloecke |
 | ○ | **`schnitt50`** | regler | offen | 31.08. bei H2 und H20 gemessen - H5 NIE |
 | ↩ | **`schnitt`** | regler | zurueck | H1..H20 Horizontlauf 31.08. |
 | ✖ | **`amihud`** | regler | traegt nicht | H20 volle Historie, beide Richtungen geprueft |
@@ -115,8 +116,32 @@
 - **06.09.** — N1-C: in funding +0,00309 TRAEGT · in turnover +0,00281 nicht trennbar
 - **06.09.** — N1-D: turnover in vola +0,02217 TRAEGT - wird sogar staerker
 - **06.09.** — N1-Rangtest, 39 Mischungen: funding erklaert 3 % (p=0,325), turnover erklaert 18 % (Rang 1 von 40, p=0,025)
+- **06.09.** — N5: die Kombination `vola ODER turnover` traegt +0,00777 - mengenkontrolliert +26 % bis +34 % ueber der besten Einzelgroesse, beide Haelften, drei Saaten
 
 ⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. `vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover festgehalten wird, und funding erklaert nachweislich nichts. Aber die 18 % Ueberlappung mit turnover sind belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. Naechster Schritt ist nicht mehr Messung von vola allein, sondern die KOMBINATION vola UND turnover am Rand (N5).
+
+---
+
+## ○ `vola ODER turnover`
+
+**Hypothese:** Zwei weitgehend unabhaengige Ausschlussgruende: hohe Volatilitaet ODER hoher Umschlag. Wer in EINER der beiden Groessen im obersten Fuenftel liegt, wird gesperrt.
+
+| | |
+|---|---|
+| **Form** | schalter |
+| **Registrierungsbasis** | H5 · volle Historie · Rand > +2 R · Menge frei · 167 Bloecke |
+| **Wert** | +0,00777 [+0,00480 .. +0,01153] · Reinheit +0,02143 · 36,1 % gesperrt |
+| **Live** | - NICHT gebaut (siehe Warnung) |
+| **Zustand** | **offen** |
+
+**Die Messkette:**
+
+- **06.09.** — N5: fuenf Formen geprueft. UND traegt nicht (6,8 % gesperrt, Reinheit sogar NIEDRIGER als einzeln), SUMME traegt (+0,00392), ODER traegt am staerksten
+- **06.09.** — mengenkontrolliert: bei 20 % +26 %, bei 36 % +34 % ueber der besten Einzelgroesse. 43 % des rohen Vorsprungs waren MENGE
+- **06.09.** — beide Historienhaelften tragen einzeln (+0,01045 / +0,00554), drei Saaten stabil
+- **06.09.** — zwei Konstruktionsfehler von den eigenen Kontrollen gefangen: asymmetrische Rangbildung, fehlende Symmetrieprobe im Vorabtest
+
+⚠️⚠️ BELEGT, ABER NICHT BAUREIF. Drei Punkte stehen davor: (N8) `turnover` ist bereits als Regler am Mittel registriert - eine Sperre damit wendet ihn ZWEIMAL an. (N9) 36 % Sperrmenge ist eine erhebliche Verschaerfung bei zwoelf bestehenden Trichterstufen. (N10) die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote. ⚠️ Der Effekt halbiert sich ueber die Zeit (+0,01045 -> +0,00554).
 
 ---
 
