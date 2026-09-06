@@ -65,6 +65,7 @@
 - **06.09.** — Schritt 4a A: H20 voll +0,06352 REPRODUZIERT
 - **06.09.** — Schritt 4a B: H5 voll  +0,02059 TRAEGT
 - **06.09.** — G2: juengere Epoche STAERKER (+0,0172 gegen +0,0137)
+- **06.09.** — N13: verschiebt die FRONTLOADING-Quote um +4,0 bis +4,5 Punkte - bei JEDER Breite (20/10/5 %), Band durchgehend ohne Null. Der Tempo-Anzeiger
 
 ⚠️ Nur 65 Symbole Abdeckung - das Nullband ist dreimal so breit wie bei den anderen, das Urteil wandert mit der Saat. ⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab (+0,01389 bei H20, 2.119) - registriert ist er nur am Mittel. Und er erklaert 18 % von `vola` (N1, p=0,025).
 
@@ -117,8 +118,10 @@
 - **06.09.** — N1-D: turnover in vola +0,02217 TRAEGT - wird sogar staerker
 - **06.09.** — N1-Rangtest, 39 Mischungen: funding erklaert 3 % (p=0,325), turnover erklaert 18 % (Rang 1 von 40, p=0,025)
 - **06.09.** — N5: die Kombination `vola ODER turnover` traegt +0,00777 - mengenkontrolliert +26 % bis +34 % ueber der besten Einzelgroesse, beide Haelften, drei Saaten
+- **06.09.** — N12: allein bei 10/20/30/40 % Sperrmenge - ALLE tragen. Bei 40 % +0,00647 = 83 % der Kombination, aber bei 516 statt 65 Symbolen Abdeckung
+- **06.09.** — N13: beim Frontloading +1,5 Punkte (20 %) - traegt, aber deutlich schwaecher als turnover (+4,0)
 
-⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. `vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover festgehalten wird, und funding erklaert nachweislich nichts. Aber die 18 % Ueberlappung mit turnover sind belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. Naechster Schritt ist nicht mehr Messung von vola allein, sondern die KOMBINATION vola UND turnover am Rand (N5).
+⚠️ STAND NACH N12: `vola` ist die einzige der beiden Groessen, die im Betrieb UEBERALL wirkt (516 von 516 Symbolen). Allein bei 40 % Sperrmenge erreicht sie 83 % der Kombinationswirkung - der Kompromiss kostet 17 % Wirkung und bringt die achtfache Abdeckung. ⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. `vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover festgehalten wird, und funding erklaert nachweislich nichts. Aber die 18 % Ueberlappung mit turnover sind belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. Naechster Schritt ist nicht mehr Messung von vola allein, sondern die KOMBINATION vola UND turnover am Rand (N5).
 
 ---
 

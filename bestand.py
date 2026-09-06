@@ -118,6 +118,9 @@ KANDIDATEN = (
             ("06.09.", "Schritt 4a A: H20 voll +0,06352 REPRODUZIERT"),
             ("06.09.", "Schritt 4a B: H5 voll  +0,02059 TRAEGT"),
             ("06.09.", "G2: juengere Epoche STAERKER (+0,0172 gegen +0,0137)"),
+            ("06.09.", "N13: verschiebt die FRONTLOADING-Quote um +4,0 bis "
+                       "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
+                       "durchgehend ohne Null. Der Tempo-Anzeiger"),
         ),
         warnung="Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
                 "breit wie bei den anderen, das Urteil wandert mit der Saat. "
@@ -174,8 +177,18 @@ KANDIDATEN = (
                        "+0,00777 - mengenkontrolliert +26 % bis +34 % ueber "
                        "der besten Einzelgroesse, beide Haelften, drei "
                        "Saaten"),
+            ("06.09.", "N12: allein bei 10/20/30/40 % Sperrmenge - ALLE "
+                       "tragen. Bei 40 % +0,00647 = 83 % der Kombination, "
+                       "aber bei 516 statt 65 Symbolen Abdeckung"),
+            ("06.09.", "N13: beim Frontloading +1,5 Punkte (20 %) - traegt, "
+                       "aber deutlich schwaecher als turnover (+4,0)"),
         ),
-        warnung="⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. "
+        warnung="⚠️ STAND NACH N12: `vola` ist die einzige der beiden "
+                "Groessen, die im Betrieb UEBERALL wirkt (516 von 516 "
+                "Symbolen). Allein bei 40 % Sperrmenge erreicht sie 83 % "
+                "der Kombinationswirkung - der Kompromiss kostet 17 % "
+                "Wirkung und bringt die achtfache Abdeckung. "
+                "⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. "
                 "`vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover "
                 "festgehalten wird, und funding erklaert nachweislich "
                 "nichts. Aber die 18 % Ueberlappung mit turnover sind "
@@ -407,12 +420,45 @@ BEFUNDE = (
                warum="turnovers Maximum (+3,15) steht allein, der Zweite "
                      "(+0,83) liegt bei 26 % davon. Bei funding liegt der "
                      "Zweite (+0,82) bei 63 % des Maximums (+1,30)"),
-    Befundlage("N12", "Traegt `vola` ALLEIN als Sperre genug? Es ist die "
-               "einzige der beiden Groessen, die im Betrieb ueberall wirken "
-               "kann", "offen", "Methodik 2.122",
-               warum="vola kommt aus der Kursreihe und deckt alle Werte ab; "
-                     "turnover liegt bei 12 % vor. Der N5-Kombinationsvorteil "
-                     "ist im Betrieb weitgehend nicht abrufbar"),
+    Befundlage("N12", "Traegt `vola` ALLEIN als Sperre genug?",
+               "abgeloest", "Methodik 2.122", abgeloest_durch="2.123",
+               warum="JA - bei allen vier Sperrmengen (10/20/30/40 %). Bei "
+                     "40 % erreicht sie 83 % der Kombinationswirkung bei "
+                     "516 statt 65 Symbolen. Der Kompromiss kostet 17 % "
+                     "Wirkung fuer die achtfache Abdeckung"),
+    Befundlage("2.123", "`vola` allein traegt bei jeder Sperrmenge; der "
+               "Abdeckungskompromiss kostet 17 % Wirkung", "gilt",
+               "Methodik 2.123"),
+    Befundlage("2.124", "`turnover` verschiebt die Frontloading-Quote um "
+               "+4,0 bis +4,5 Punkte - bei JEDER Breite, Band ohne Null. "
+               "Die Horizontwahl aus der Kursreihe ist belegbar und klein",
+               "gilt", "Methodik 2.124"),
+    Befundlage("Breite-Hebel", "Eine engere Auswahl verbessert die "
+               "Frontloading-Verschiebung um 40 %", "abgeloest",
+               "eigene Lesart 06.09.", abgeloest_durch="2.124",
+               warum="Punktschaetzer-Vergleich ohne Deckung. Die Baender "
+                     "ueberlappen vollstaendig: +4,0 [+2,8 .. +5,2] gegen "
+                     "+4,5 [+2,8 .. +6,2]"),
+    Befundlage("Kursreihe-Nullaussage", "Die Kursreihe liefert die "
+               "Instrumentwahl nicht", "abgeloest", "eigene Formulierung "
+               "2.123", abgeloest_durch="2.124",
+               warum="Kapitulationsformel statt Analyse. Der richtige "
+                     "Vergleich ist nicht ein perfekter Waehler, sondern der "
+                     "TAKT - und der hat null gemessenen Vorteil (Regel 1)"),
+    Befundlage("N14", "Traegt das HEBEL-SCREENING als zweite, von der "
+               "Kursreihe UNABHAENGIGE Quelle fuer die Horizontwahl?",
+               "offen", "Methodik 2.124 · F-185",
+               warum="227.395 OI-Zeilen, 13.254 Kandidaten. Der einzige "
+                     "verbliebene Hebel fuer mehr Trennschaerfe - alle "
+                     "Kursreihengroessen sind ausgemessen"),
+    Befundlage("N15", "`UND @ 10 %` zeigt 58,3 % frontlastig (+7,1 Punkte, "
+               "Band [+2,8 .. +13,0]) bei nur 6,1 % der Anker", "offen",
+               "Methodik 2.124",
+               warum="Band ohne Null, aber die anteilgewichtete Wirkung "
+                     "traegt nicht - zu wenige Anker. Mit mehr "
+                     "Terminmarkt-Historie pruefbar. Zurueckgestellt, nicht "
+                     "verworfen"),
+
     Befundlage("N9", "36 % Sperrmenge bei zwoelf bestehenden Trichterstufen "
                "- welche Durchlassmenge bleibt?", "offen", "Methodik 2.121"),
     Befundlage("N10", "Die Potentialformel meint eine BARRIEREN-Quote, das "

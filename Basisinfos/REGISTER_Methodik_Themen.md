@@ -2,7 +2,7 @@
 
 *Erzeugt aus `bestand.py`. **Nicht von Hand aendern.***
 
-⚠️ **Wofuer:** die Methodik hat **88** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
+⚠️ **Wofuer:** die Methodik hat **90** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
 
 Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`.
 
@@ -29,7 +29,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6113 |
 | **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6486 |
 
-## Block, Bootstrap und Abhaengigkeit (29)
+## Block, Bootstrap und Abhaengigkeit (30)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -62,6 +62,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5763 |
 | **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6113 |
 | **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6636 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7183 |
 
 ## Trennschaerfe und Positivkontrolle (9)
 
@@ -77,7 +78,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6401 |
 | **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6486 |
 
-## Zielgroesse und MASSSTAB (28)
+## Zielgroesse und MASSSTAB (29)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -109,8 +110,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6771 |
 | **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 6865 |
 | **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 6981 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7067 |
 
-## Auswahl, Menge und Universum (29)
+## Auswahl, Menge und Universum (31)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -143,8 +145,10 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6270 |
 | **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6401 |
 | **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 6865 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7067 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7183 |
 
-## Kombination, Schichtung, Redundanz (12)
+## Kombination, Schichtung, Redundanz (14)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -160,6 +164,8 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6771 |
 | **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 6865 |
 | **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 6981 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7067 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7183 |
 
 ## Datenlage, Simulation, zu wenig Daten (19)
 

@@ -4590,3 +4590,80 @@ Nullbefunde** sind betroffen.
 Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday · **O7**
 MFE · die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
 
+
+
+---
+
+# ⚠️⚠️⚠️ STAND NACH DEM 06.09.2026 — was der Tag gebracht hat
+
+**Acht Methodikabschnitte (2.117–2.124), vier Register, ein neuer Befund.**
+Diese Seite fasst zusammen, was gilt — die Belege stehen in der Methodik,
+der aktuelle Zustand je Größe in `Basisinfos/REGISTER_Kandidaten.md`.
+
+## Die drei Befunde, die den Tag tragen
+
+| | |
+|---|---|
+| **DER MASSSTAB ENTSCHEIDET DAS VORZEICHEN** (2.112 · 2.115) | Derselbe Schnitt, am Mittelwert „schlechter", am Randmaß „besser". Zweimal in zwei Tagen. Der Rand ist seit 2.118 **zweite Zielgröße** |
+| **DIE REPRODUKTIONSPFLICHT** (R-R11 · 2.119) | Ein registrierter Befund darf nur von einer Messung umgestoßen werden, die ihn **zuerst reproduziert**. Alle drei Registrierungen reproduzieren — **nichts ist gefallen** |
+| **DIE KOMBINATION TRÄGT** (2.121) | `vola ODER turnover` am Rand: +26 bis +34 % über der besten Einzelgröße, mengenkontrolliert, beide Hälften, drei Saaten |
+
+## Der Stand je Größe
+
+| Größe | Zustand | Kernzahl |
+|---|---|---|
+| `funding` | ✔ trägt | +0,0274 R (H20 voll) — reproduziert |
+| `turnover` | ✔ trägt | +0,0635 R (H20 voll) — reproduziert · **+4,0 bis +4,5 Punkte Frontloading** |
+| `oi_aenderung` | ✔ trägt, Geltungsbereich **H20** | +0,0142 R — reproduziert |
+| **`vola`** | ○ **offen, nicht registriert** | trägt am **Rand** auf allen Läufen · 18 % Überlappung mit `turnover` belegt · Rest nicht trennbar |
+| `vola ODER turnover` | ○ offen | +0,00777 — ⚠️ im Betrieb weitgehend **nicht abrufbar** (turnover bei 12 % der Werte) |
+| `schnitt50` | ○ offen | trägt bei H5, bei H2 und H20 nicht |
+| `amihud` · `schnitt` · `H` | ✖ | trägt nicht bzw. zurückgenommen |
+
+## Die Dimensionierung — festgeschrieben
+
+    Horizont 5 · Block 15 (im Code erzwungen) · VOLLE Historie primaer
+    Menge frei + 20 % · Universum breit, kein Filter · Klammer Tag
+    Kosten 0,00 · Massstaebe MITTEL und RAND > +2 R
+
+## Was heute verworfen wurde — und warum das Fortschritt ist
+
+| Idee | Urteil |
+|---|---|
+| Größenkategorien als Messschnitt | ✖ 1,2 Prozentpunkte über das ganze Universum (2.116) |
+| Qualitätsfilter „ohne Shitcoins" | ✖ zerstört den Beleg, entfernt kein Rauschen (2.117) |
+| Horizont je Rangschicht | ✖ die Zufallskontrolle reproduziert das Muster (2.116) |
+| Schichtung nach BTC-Dominanz | ✖ eine Phase in neun Jahren (Nachtrag 2.111) |
+| Abschnitt „ab 2024" als Basis | ✖ Datenmenge, nicht Epoche (2.119) |
+| Engere Auswahl beim Frontloading | ✖ Bänder überlappen vollständig (2.124) |
+
+## ⚠️ Die offene Kette — in dieser Reihenfolge
+
+| # | Frage | Warum jetzt |
+|---|---|---|
+| **N14** | **Trägt das HEBEL-SCREENING als zweite, kursreihen-UNABHÄNGIGE Quelle?** 227.395 OI-Zeilen, 13.254 Kandidaten | ⚠️ **Alle Kursreihengrößen sind ausgemessen.** Das ist der einzige verbliebene Hebel für mehr Trennschärfe |
+| **N9** | 36 % Sperrmenge bei zwölf Trichterstufen — welche Durchlassmenge bleibt? | vor jedem Bau |
+| **N10** | Barrieren-Quote gegen Horizont-Quote | Begriffsklärung |
+| **N11** | Die Durchlassquote hängt an der **Schiefe** der Stufen, nicht am Asset | Konstruktionsfrage |
+| **N15** | `UND @ 10 %`: 58,3 % frontlastig bei 6,1 % der Anker | braucht mehr Terminmarkt-Historie |
+| **N2** | `schnitt50` bei H5 gegenprüfen | offener Widerspruch |
+| **N3** | Alle Kandidaten auf Menge 20 % | bisher nur „frei" |
+| **N7** | Schichtentest-Nullbefunde rückwirkend beziffern | Altbestand |
+| **4b** | `hebel` · `short` · `akkumulation` aus Marktdaten | die Lagen ohne Signale |
+| **5** | Nachlauf über die Phasen | es fehlt die Seitwärtsklasse |
+
+## Die Register — Einstieg statt Suche
+
+    REGISTER_Kandidaten.md        Hypothese · Form · Basis · Live · Kette
+    REGISTER_Befunde.md           was gilt, was abgeloest ist - mit GRUND
+    REGISTER_Werkzeuge.md         Altbestand (72 %) gegen Neubestand
+    REGISTER_Methodik_Themen.md   Zugang nach Thema statt Nummer
+
+Erzeugt aus `bestand.py`, geprüft von `pruefe_pakete.py --paket Register`.
+
+## Offene Nutzerentscheidungen — unverändert
+
+**D3** Horizont der OI-Sperre (Entwurfsfrage) · **O1** Cooldown · **O3**
+Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday · **O7** MFE
+· die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
+

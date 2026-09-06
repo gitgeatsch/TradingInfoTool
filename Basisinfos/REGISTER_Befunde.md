@@ -47,6 +47,14 @@
 
 - Quelle: Methodik 2.122
 
+**2.123** — `vola` allein traegt bei jeder Sperrmenge; der Abdeckungskompromiss kostet 17 % Wirkung
+
+- Quelle: Methodik 2.123
+
+**2.124** — `turnover` verschiebt die Frontloading-Quote um +4,0 bis +4,5 Punkte - bei JEDER Breite, Band ohne Null. Die Horizontwahl aus der Kursreihe ist belegbar und klein
+
+- Quelle: Methodik 2.124
+
 ## ○ WAS OFFEN IST
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
@@ -59,10 +67,15 @@
 - Quelle: Methodik 2.122
 - Warum: turnovers Maximum (+3,15) steht allein, der Zweite (+0,83) liegt bei 26 % davon. Bei funding liegt der Zweite (+0,82) bei 63 % des Maximums (+1,30)
 
-**N12** — Traegt `vola` ALLEIN als Sperre genug? Es ist die einzige der beiden Groessen, die im Betrieb ueberall wirken kann
+**N14** — Traegt das HEBEL-SCREENING als zweite, von der Kursreihe UNABHAENGIGE Quelle fuer die Horizontwahl?
 
-- Quelle: Methodik 2.122
-- Warum: vola kommt aus der Kursreihe und deckt alle Werte ab; turnover liegt bei 12 % vor. Der N5-Kombinationsvorteil ist im Betrieb weitgehend nicht abrufbar
+- Quelle: Methodik 2.124 · F-185
+- Warum: 227.395 OI-Zeilen, 13.254 Kandidaten. Der einzige verbliebene Hebel fuer mehr Trennschaerfe - alle Kursreihengroessen sind ausgemessen
+
+**N15** — `UND @ 10 %` zeigt 58,3 % frontlastig (+7,1 Punkte, Band [+2,8 .. +13,0]) bei nur 6,1 % der Anker
+
+- Quelle: Methodik 2.124
+- Warum: Band ohne Null, aber die anteilgewichtete Wirkung traegt nicht - zu wenige Anker. Mit mehr Terminmarkt-Historie pruefbar. Zurueckgestellt, nicht verworfen
 
 **N9** — 36 % Sperrmenge bei zwoelf bestehenden Trichterstufen - welche Durchlassmenge bleibt?
 
@@ -146,4 +159,22 @@
 - Quelle: eigene Rechnung 06.09.
 - **Abgeloest durch: 2.122**
 - Warum: gegen die FESTE Vorgabe 0,080 gerechnet statt gegen `Potential.schwelle` je Datenlage. Das Projekt hatte genau diesen Fehler am 31.08. selbst gemacht und behoben - ich habe ihn nachgebaut
+
+**N12** — Traegt `vola` ALLEIN als Sperre genug?
+
+- Quelle: Methodik 2.122
+- **Abgeloest durch: 2.123**
+- Warum: JA - bei allen vier Sperrmengen (10/20/30/40 %). Bei 40 % erreicht sie 83 % der Kombinationswirkung bei 516 statt 65 Symbolen. Der Kompromiss kostet 17 % Wirkung fuer die achtfache Abdeckung
+
+**Breite-Hebel** — Eine engere Auswahl verbessert die Frontloading-Verschiebung um 40 %
+
+- Quelle: eigene Lesart 06.09.
+- **Abgeloest durch: 2.124**
+- Warum: Punktschaetzer-Vergleich ohne Deckung. Die Baender ueberlappen vollstaendig: +4,0 [+2,8 .. +5,2] gegen +4,5 [+2,8 .. +6,2]
+
+**Kursreihe-Nullaussage** — Die Kursreihe liefert die Instrumentwahl nicht
+
+- Quelle: eigene Formulierung 2.123
+- **Abgeloest durch: 2.124**
+- Warum: Kapitulationsformel statt Analyse. Der richtige Vergleich ist nicht ein perfekter Waehler, sondern der TAKT - und der hat null gemessenen Vorteil (Regel 1)
 
