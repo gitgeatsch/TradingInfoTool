@@ -7062,3 +7062,199 @@ Als **N12** aufgenommen — und sie ist die praktisch wichtigere.
 Werkzeuge: `pruefe_n8_schwellenarithmetik.py` · `pruefe_n8_gegenpruefung.py`
 · `pruefe_n8_live_abdeckung.py` · `pruefe_n8_schwelle_je_datenlage.py`
 
+
+
+## 2.123 ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026)
+
+**Nutzervorgabe:** *„allgemein betrachtet suchen wir eine optimale
+Abdeckung, wenn wir diese nicht erreichen, müssen wir ggf. mit Kompromissen
+leben … Vergiss nicht, die Ausgangsbasis ist noch immer: der Takt
+entscheidet heute oftmals, nicht die Frage — ist jetzt für dieses eine
+Asset z. B. Hebel wahrscheinlich die bessere Strategie."*
+
+### ✔ A/B — der Kompromiss ist billig
+
+`vola` deckt **516 Symbole** ab (Kursreihe), `turnover` nur 65.
+Rand > +2 R, H5, volle Historie:
+
+| Sperrmenge | WIRKUNG | Reinheit | Urteil |
+|---|---|---|---|
+| 10 % | +0,00196 | **+0,01890** | ✔ TRÄGT |
+| 20 % | +0,00327 | +0,01590 | ✔ TRÄGT |
+| 30 % | +0,00489 | +0,01617 | ✔ TRÄGT |
+| **40 %** | **+0,00647** | +0,01601 | ✔ TRÄGT |
+
+> **`vola` allein bei 40 % erreicht +0,00647 — das sind 83 % der
+> Kombination `vola ODER turnover` (+0,00777) bei 36 %.** Bei **voller**
+> Abdeckung statt 12 %.
+
+⚠️ **Der Kompromiss kostet 17 % Wirkung und bringt die achtfache
+Abdeckung.** Das ist die praktisch bessere Wahl — und damit die Antwort auf
+die Abdeckungsfrage.
+
+⚠️ Die Reinheit ist bei **10 %** am höchsten (+0,01890) und fällt danach auf
+ein Plateau (~+0,016): die schlechtesten Werte stecken in den ersten zehn
+Prozent, danach wird es gleichmäßig.
+
+### ✖✖ C — die Strategiefrage war seit dem 01.09. beantwortet
+
+Ich habe sie neu gemessen, statt sie nachzuschlagen. **Zwei Fehler:**
+
+**1 — Die falsche Zielgröße.** Ich nahm `R_kurz − R_lang` — vorzeichen­
+behaftet, also die **Richtungsfrage** mitbeantwortend. Genau der Fehler, den
+**H-4a am 01.09. behoben** hat: *„H-1 hat beides vermischt … alles, was der
+Terminmarkt zuverlässig vorhersagt, ist Ausmaß und Tempo, nicht die
+Richtung."* Die richtige Größe ist vorzeichenlos:
+
+    Frontloading = |R_kurz| / (|R_kurz| + |R_rest|)
+
+Folge: meine Messung hatte eine Trennschärfe von **2,0 R** — sie hätte nur
+absurd große Effekte gefunden. Der konstante Horizontversatz (Nullpunkt
+[−0,031 .. −0,020]) beherrschte sie.
+
+**2 — Ich hätte F-165 vor dem Bauen öffnen müssen.** Stehende Vorgabe
+(R-R10, *„vor dem Bau eines Maßes in die Methodik sehen"*), verletzt.
+
+### Was F-165 (01.09.) bereits gemessen hat — 916.021 Anker
+
+| Kandidat | Wirkung | Band | Urteil |
+|---|---|---|---|
+| turnover | +0,0041 R | [+0,0026 .. +0,0071] | ✔ trägt |
+| **vola** | **+0,0013 R** | **[+0,0006 .. +0,0021]** | ✔ **trägt** |
+| *zufall* | +0,0001 R | [−0,0002 .. +0,0004] | ✖ null ✔ |
+
+**Praktisch:** `vola` verschiebt die Frontloading-Quote von **48,0 % auf
+50,2 %** — +2,2 Punkte. `turnover` +3,2 Punkte.
+
+> **Die Bewertung KANN etwas über das Tempo sagen. Die beste Regel
+> verschiebt die Quote von 49 % auf 52 %** — das Urteil vom 01.09. lautete
+> *„zu klein für eine Instrumentwahl"*, und es hält.
+
+### ⚠️ Die Grenze meines eigenen Arguments aus 2.112
+
+Der Maßstabswechsel Mittel → Rand hat heute zweimal ein Vorzeichen
+gedreht. **Bei Frontloading greift er nicht:** die Größe ist auf **[0,1]
+beschränkt und hat keine schweren Ränder** — genau deshalb hatte die
+Mittelwertmessung dort Auflösung (F-165: *„die Positivkontrolle +0,02 R
+feuert bei jedem Kandidaten, bei H-1 nie"*).
+
+> **2.112 gilt für `bewegung_r`, nicht für beschränkte Größen.** Eine
+> Randmessung des Frontloadings wäre keine bessere Frage, sondern
+> dieselbe mit weniger Auflösung.
+
+### ⚠️⚠️ KORREKTUR DER SCHLUSSFOLGERUNG (Nutzereinwand, 06.09.)
+
+*„ich möchte nicht, dass wir aufgrund einer Feststellung das Gesamtkonzept
+scheitern lassen — löse die Probleme lösungsorientiert und präzise."*
+
+Die erste Fassung schloss: *„die Kursreihe liefert die Instrumentwahl
+nicht."* **Das ist eine Kapitulationsformel, keine Analyse.** Zwei Dinge
+waren falsch gewichtet:
+
+**1 — Der Vergleichsmaßstab war falsch.** Die Frage ist nicht „+3,2 Punkte
+gegen einen perfekten Wähler", sondern **„+3,2 Punkte gegen den TAKT"** —
+und der hat **null** gemessenen Vorteil. Nach Regel 1 darf der Takt nie
+Signalgeber sein. **Jeder gemessene Vorsprung ist damit eine Verbesserung
+gegenüber dem Ist-Zustand**, auch ein kleiner.
+
+**2 — In F-165 stehen ZWEI ungenutzte Hebel:**
+
+| Hebel | Warum er offen ist |
+|---|---|
+| **Die KOMBINATION** | F-165 mass `turnover` (+3,2) und `vola` (+2,2) **einzeln**, bei ρ = 0,05 — praktisch unabhängig. Die ODER-Kombination wurde für Frontloading **nie** gemessen. N5 hat für den Randmaßstab +26 bis +34 % über der besten Einzelgröße gezeigt |
+| **Die AUSWAHLBREITE** | F-165 mass alle Kandidaten mit festen **20 %**. In seiner eigenen Tabelle wählte `turnover` nur **21.825** Anker (gegen 183.045 bei `vola`) und erzielte den **größten** Ausschlag. ⚠️ **Die engste Auswahl war die beste** — und N12-A/B bestätigt: die Reinheit ist bei 10 % am höchsten. Für eine **Wegwahl** ist genau das der richtige Zuschnitt |
+
+> **Der Befund lautet also nicht „zu klein", sondern „nicht ausgereizt".**
+
+### Der Stand für den Gesamtplan
+
+| | |
+|---|---|
+| **Abdeckung** | ✔ gelöst — `vola` allein, 516 von 516 Symbolen |
+| **Kompromiss** | ✔ beziffert — 17 % Wirkung für die achtfache Abdeckung |
+| **Strategiefrage (Tempo)** | ✔ messbar (`vola` +2,2 · `turnover` +3,2 Punkte) — **und zwei Hebel ungenutzt** |
+| **N13** | **Frontloading × Kombination × Auswahlbreite** — die nächste Messung | 
+| **N14** | Das **Hebel-Screening** als zweite Quelle (F-185: 227.395 OI-Zeilen) — unabhängig von der Kursreihe |
+
+Werkzeuge: `n12_vola_allein.py` · F-165 in der Fakten-Entscheidungsmappe
+
+
+
+## 2.124 ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026)
+
+**Nutzervorgabe:** *„ich möchte nicht, dass wir aufgrund einer Feststellung
+oder Messung das Gesamtkonzept scheitern lassen — darum ist es mir wichtig,
+dass du die Erkenntnisse nicht einfach in ‚damit ist das Ziel nicht
+erreichbar' überführst, sondern lösungsorientiert und präzise die Probleme
+behebst."*
+
+Der Einwand traf 2.123, wo ich schrieb *„die Kursreihe liefert die
+Instrumentwahl nicht"*. Das war eine Kapitulationsformel. Zwei vermutete
+Hebel wurden daraufhin geprüft.
+
+### Das Ergebnis — mit Band auf der ZITIERTEN Zahl
+
+⚠️ Erste Fassung bänderte nur die anteilgewichtete Wirkung. Die Zahl, mit
+der argumentiert wird, ist aber die **Quotenverschiebung** — und die hatte
+keins. Nachgeholt (Blockbootstrap auf die Tagesreihe der Verschiebung).
+
+| Form | Breite | gewählt | frontlastig | **Verschiebung** | trägt |
+|---|---|---|---|---|---|
+| `vola` | 20 % | 21,2 % | 50,2 % | +1,5 [+0,4 .. +2,5] | ✔ |
+| `vola` | 5 % | 6,1 % | 53,2 % | +4,0 [+1,8 .. +6,1] | |
+| **`turnover`** | **20 %** | 21,2 % | 52,7 % | **+4,0 [+2,8 .. +5,2]** | ✔ |
+| **`turnover`** | **10 %** | 11,2 % | 53,4 % | **+4,3 [+3,0 .. +5,8]** | ✔ |
+| **`turnover`** | **5 %** | 6,1 % | 53,6 % | **+4,5 [+2,8 .. +6,2]** | ✔ |
+| ODER | 5 % | 11,6 % | 53,5 % | +4,4 [+3,0 .. +5,8] | ✔ |
+| UND | 20 % | 8,0 % | 52,7 % | +4,2 [+2,2 .. +6,2] | ✔ |
+| UND | 10 % | 6,1 % | **58,3 %** | +7,1 [+2,8 .. +13,0] | |
+
+### ✖✖ BEIDE vermuteten Hebel existieren NICHT
+
+**1 — Die Auswahlbreite bringt nichts.** Ich hatte aus den Punktschätzern
+*„+40 % durch engere Auswahl"* gelesen. **Die Bänder überlappen
+vollständig:** +4,0 [+2,8 .. +5,2] gegen +4,5 [+2,8 .. +6,2]. Die Breite
+verändert den Ausschlag **nicht nachweisbar**.
+
+**2 — Die Kombination bringt nichts.** `ODER @ 5 %` (+4,4) liegt gleichauf
+mit `turnover` allein (+4,5). Anders als am Randmaßstab (N5, +26 bis +34 %)
+gibt es hier **keinen** Kombinationsgewinn.
+
+⚠️ **Und eine eigene Zahl war irreführend:** mein +4,0 bei 20 % gegen
+F-165s +3,2 ist **keine Verbesserung**, sondern eine andere Grundmenge —
+ich filtere auf Symbole mit **beiden** Größen (für die Kombinationsformen
+nötig), F-165 je Kandidat auf dessen eigene Verfügbarkeit.
+
+### ✔ Was hält — und es ist mehr, als F-165s Urteil nahelegte
+
+> **`turnover` verschiebt die Frontloading-Quote bei JEDER geprüften Breite
+> belegbar um +4,0 bis +4,5 Punkte**, Band durchgehend ohne Null.
+
+Nicht weil die Zahl größer wäre als F-165s +3,2 — sondern weil sie **über
+alle Breiten stabil trägt**. Das war dort nicht sichtbar, weil nur eine
+Breite gemessen wurde. **Ein Befund an einem Punkt ist schwächer als
+derselbe Befund über eine Kurve.**
+
+### ⚠️ Die richtige Einordnung — gegen was wird verglichen?
+
+    ein perfekter Waehler      -> +4 Punkte sind wenig
+    der TAKT (Ist-Zustand)     -> +4 Punkte sind der ERSTE messbare
+                                  Anhaltspunkt ueberhaupt
+
+Nach **Regel 1** darf der Takt nie Signalgeber sein. Er hat **null**
+gemessenen Vorteil. Damit ist eine belegte Verschiebung von 48,7 % auf
+53,6 % keine „zu kleine" Größe, sondern die **einzige vorhandene**.
+
+> **Der Befund lautet: die Horizontwahl aus der Kursreihe ist belegbar und
+> klein. Nicht: sie ist unmöglich.**
+
+### Was daraus folgt
+
+| # | | |
+|---|---|---|
+| **N13-E** | `turnover` als **Tempo-Anzeiger** ist belegt (+4,0 bis +4,5 Punkte, alle Breiten). Breite und Kombination sind ausgereizt und bringen nichts | Befund |
+| **N14** | Das **Hebel-Screening** als zweite, kursreihen-unabhängige Quelle (F-185: 227.395 OI-Zeilen, 13.254 Kandidaten) — der einzige verbliebene Hebel für mehr Trennschärfe | Messung |
+| ⚠️ **N15** | `UND @ 10 %` zeigt **58,3 %** frontlastig (+7,1 [+2,8 .. +13,0]) bei 6,1 % der Anker. Band ohne Null, aber die anteilgewichtete Wirkung trägt nicht — zu wenige Anker. **Mit mehr Terminmarkt-Historie wäre das prüfbar** | zurückgestellt |
+
+Werkzeug: `n13_frontloading_ausreizen.py`
+
