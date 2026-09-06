@@ -4168,3 +4168,59 @@ haben, simulieren wir."*
 
 ⚠️ **4a und 4b sind zwei Messungen, nicht eine.** Sie teilen die Norm, aber
 nicht die Zielgröße und nicht die Menge.
+
+
+---
+
+# ⚠️ TRENNUNG ALT / NEU — durchgeführt am 06.09.2026
+
+**Nutzervorgabe:** *„ganz wichtig — Trennung der alten Codeteile und Doku,
+damit keine unsaubere Vermischung erfolgt."*
+
+Die Gefahr war konkret: In einer späteren Sitzung wird
+`messe_alle_groessen_neu.py` geöffnet, läuft sauber durch — und liefert
+wieder Zahlen auf der falschen Zielgröße und der falschen Menge.
+
+## Im CODE — 20 Werkzeuge tragen jetzt einen Sperrkopf
+
+    ⛔⛔ UEBERHOLT AM 06.09.2026 - NICHT MEHR BENUTZEN
+
+Er nennt die Ursache (Zielgröße bzw. Menge), die Quelle des Nachweises und
+den Ersatz. **Aufgehoben statt gelöscht**, weil die Docstrings die Fehler
+beschreiben, die dabei gefunden wurden.
+
+| bleibt gültig | warum |
+|---|---|
+| `messnorm.py` | die neue Grundlage |
+| `referenzlauf_hebelgeometrie.py` | Betriebszahlen, keine Beitragsmessung |
+| `pruefe_cooldown_nachgestellt.py` | Betriebsverhalten |
+| `messe_bewertung_kalibrierung.py` | liefert Bausteine (`_fuenftel_je_tag`) |
+| `messe_regel_wirksamkeit.py` · `messe_bewertungskennzahl.py` · `messe_volumenanteil.py` | das Fundament, älter und unberührt |
+
+## In der DOKU — 15 Fakten sind eingeordnet
+
+F-215 · F-217 bis F-226 · F-228 bis F-231 tragen einen Kasten direkt unter
+der Überschrift: **was nicht gilt** und **was bleibt**, je Eintrag
+verschieden.
+
+⚠️ Das war der gefährlichere Teil: Die Fakten-Mappe ist das
+Nachschlagewerk. Wer F-231 dort einzeln las, nahm es als Fakt — die
+Einordnung stand nur im Plan.
+
+**Bei sechs Einträgen bleibt ein METHODEN-Befund ausdrücklich stehen:**
+
+| | was steht |
+|---|---|
+| F-218 | die Invarianzprüfung und der `hash()`-Fehler |
+| F-223 | die Tagesklammer-Lehre (gepoolt erfindet 12,4 Punkte) |
+| F-225 | dass die Rendite-Spalte ihre Kontrolle nicht bestand |
+| F-226 | der Persistenz-Befund (überlappende Anker, Nullpunkt ~1 Punkt) |
+| F-229 | eine Korrelationsmatrix reicht nicht als Unabhängigkeitsprüfung |
+| F-217 | die Spannenreihe als Positivkontrolle |
+
+## Neu aufgenommen: F-232 — die Mail
+
+Die Zahl, mit der entschieden wird (**+0,1335 R** bei 0,00 %), steht in
+**keiner** Mailzeile. Die Mail zeigt +0,0335 R und **−0,3665 R**. Regel 2
+ist im Entscheidungspfad eingehalten, aber die Entscheidungszahl ist nicht
+nachvollziehbar. **Nutzerentscheidung**, weil es den Mailtext ändert.

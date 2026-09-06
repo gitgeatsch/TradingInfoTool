@@ -1,4 +1,28 @@
 # -*- coding: utf-8 -*-
+# ⛔⛔ UEBERHOLT AM 06.09.2026 — NICHT MEHR BENUTZEN
+#
+# Dieses Werkzeug misst auf der ZIELGROESSE "Ziel vor Stop" und/oder auf der
+# FREIEN statt der SELEKTIERTEN Menge. Beides ist als falsch nachgewiesen:
+#
+#   Zielgroesse  `Konzept_Bewertungsstufe_29_08.md` Abschnitt 1, seit 23.08.:
+#                "Wer 'Ziel vor Stop' misst, misst die eigene Zielregel
+#                zurueck. Nicht der Markt war leer - das Mass war blind."
+#
+#   Menge        F-212 vom 04.09.: die Beitraege wirken auf 1,5 % der Anker.
+#                Auf der selektierten Menge traegt funding DREIMAL staerker;
+#                auf der freien liegt es bei -0,0003 R, also bei null.
+#
+# ⚠️ DIE RECHNUNGEN SIND KORREKT. Sie beantworten eine Frage, die laut
+# eigener Dokumentation nichts ueber das Potential sagt. Wer sie erneut
+# laufen laesst, bekommt wieder plausible Zahlen - und wieder die falschen.
+#
+# ERSATZ: `messnorm.py` (Methodik 2.110). Sie erzwingt Zielgroesse, Menge,
+# Klammer, Kosten, Bootstrap und BEIDE Kontrollen - und lehnt sechs bekannte
+# Irrwege ab, statt sie zu dokumentieren.
+#
+# Aufgehoben statt geloescht, weil die Herleitungen in den Docstrings die
+# Fehler beschreiben, die dabei gefunden wurden (F-217 bis F-231).
+#
 """N-46b: Ist der `amihud`-Befund ein Artefakt nicht handelbarer Kurse? (05.09.2026)
 
 ## Der Vorbehalt

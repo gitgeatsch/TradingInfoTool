@@ -7360,6 +7360,22 @@ Verwandt: **F-174** · **F-213** · F-176 · Regel 1 · `config.yaml`-Sync-Konfl
 
 ## F-215 ⚠️⚠️ N-37: Die Bewertung trägt — und liefert 17 % dessen, was sie behauptet (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Zahlen: Steigung +0,056, Faktor 0,168, die 17 Prozent
+>
+> **Es bleibt:** die Beschreibung der vier Fallen und die Vorabfestlegung
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 Vorabfestlegung: `Anforderungen_Umbau_28_08.md`, Abschnitt **N-37**,
 geschrieben vor dem Lauf (Commit `bf09878`).
 
@@ -7622,6 +7638,22 @@ Verwandt: F-214 · F-215 · N-38 · L3 · `config.yaml`-Sync-Konflikt
 
 ## F-217 ⚠️⚠️ N-41b: Funding hält, Turnover hält NICHT — gegen zwei Nullpunkte (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Stabilitaetswerte als Beitragsurteil
+>
+> **Es bleibt:** die METHODE - Spannenreihe als Positivkontrolle, zwei Nullpunkte
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Die Frage:** Halten die Fünftel-Ordnungen der registrierten Beiträge über
 die Zeit? Ohne das ist jede Stufe eine Momentaufnahme.
 
@@ -7679,6 +7711,22 @@ Verwandt: **F-215** · **F-218** · F-179 · N-13-1' · Methodik 2.88 · 2.104
 
 
 ## F-218 ⚠️⚠️⚠️ N-41f/g: Die Kalibrierungszahl war ein Artefakt der DATENVERFÜGBARKEIT (05.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Zahlen +0,089 / +0,052 / 19,5 Prozent als Beitragsurteil
+>
+> **Es bleibt:** der METHODEN-Befund STEHT: die Invarianzpruefung, die Abdeckungszahlen und der hash-Fehler
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 **Der Anlass:** Dieselbe Größe, dreimal gemessen, drei Antworten —
 N-37 **+0,056**, N-41 **+0,138**, N-41d **+0,067**. Der einzige Unterschied
@@ -7790,6 +7838,22 @@ Beiträge taugt nicht als Rangfolge" · Methodik 2.88 · 2.100
 
 ## F-219 ✔ N-42: die Kalibrierung, gemessen auf einer Form, die die Invarianz besteht (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** der Kalibrierungsfaktor 19,5 Prozent
+>
+> **Es bleibt:** die Invarianz als Annahmekriterium und der Einheitenfehler
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Vorabfestlegung im Skriptkopf, vor dem Lauf:** drei Formen treten an, die
 Eigenschaft entscheidet. *„Eine Form, die Kriterium 1 nicht besteht, wird
 NICHT berichtet — egal wie gut ihre Zahl aussieht."*
@@ -7869,6 +7933,22 @@ Verwandt: **F-215** (gefallen) · **F-218** · Schwelle je Datenlage (31.08.)
 
 ## F-220 ⚠️⚠️⚠️ Der Hebel lässt sich aus der Bewertung NICHT erzeugen — noch nicht (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Hebeltabelle und die Aussage, nur eine Lage erreiche 2-5x
+>
+> **Es bleibt:** die Feststellung, dass das r-Band seine Wirkung umkehren kann
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Die zentrale Nutzervorgabe:** *„die Wahrscheinlichkeit auf positives
 Chance-Risiko-Verhältnis soll den Hebel dynamisch erzeugen"*, Zielzone
 **2–5×**.
@@ -7934,6 +8014,22 @@ geschätztem µ überwettet) · Regel 3
 
 
 ## F-221 ✔✔ N-43: `vola` erfüllt ALLE DREI Kriterien — der erste Kandidat, der das tut (05.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Aussage, vola erfuelle alle drei Kriterien
+>
+> **Es bleibt:** die Abdeckungszahlen und die Kriterienliste
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 Nutzerentscheidung 05.09.: *erst die Bewertung, dann der Hebelumbau*. O4 ist
 damit der Blocker. Geprüft wurden die vier Kandidaten aus **N-17b**, gegen
@@ -8025,6 +8121,22 @@ Regler" · Indikatoren auch in Kombination prüfen
 
 
 ## F-222 ⚠️⚠️ N-44/N-45: drei gefallene Kandidaten stehen wieder auf — aber die Form ist ungeklärt (05.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Spannen und Verhaeltnisse
+>
+> **Es bleibt:** die Ueberlappungsmatrix und die Persistenzwerte
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 ### N-44 — die früher verworfenen Größen, neu geprüft
 
@@ -8123,6 +8235,22 @@ Verwandt: **F-217** · **F-218** · **F-221** · Regel 3 · Methodik 2.104
 
 ## F-223 ⚠️⚠️⚠️ N-46: Die Tagesklammer fehlte — zum DRITTEN Mal (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Spannen-Vergleiche
+>
+> **Es bleibt:** die TAGESKLAMMER-Lehre STEHT: gepoolt erfindet 12,4 Punkte auf einem Nulleffekt
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Die stehende Vorgabe seit 31.08.:** ein Beitrag muss je **Kalendertag**
 gemessen werden, nicht gepoolt. Bei Vorfilter H waren das 4,6 Punkte
 (gepoolt +3,57 · je Tag −1,02, nicht trennbar). Die Memory dazu vermerkt
@@ -8207,6 +8335,22 @@ Verwandt: **F-217** · **F-221** · **F-222** · Tagesklammer-Vorgabe (31.08.)
 
 ## F-224 ✔✔ N-46b/c: Die vollständige Kandidatenlage — und die registrierten Beiträge sind überzeichnet (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Aussage, beide registrierten Beitraege seien ueberzeichnet
+>
+> **Es bleibt:** die Liquiditaetsschichtung von amihud als Methode
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 ### Der `amihud`-Vorbehalt ist ausgeräumt
 
 Sorge aus F-223: das beste Fünftel ist das **illiquideste**, und dort ist
@@ -8268,6 +8412,22 @@ Verwandt: **F-219** · **F-221** · **F-222** · **F-223**
 
 
 ## F-225 ⚠️⚠️ D1/N-47: Der Horizont entscheidet — und die Rendite-Spalte fiel durch ihre Kontrolle (05.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Horizont-Tabelle
+>
+> **Es bleibt:** dass die RENDITE-Spalte ihre Kontrolle nicht bestand - das war der erste Hinweis auf den fehlenden Block-Bootstrap
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 **Der Anlass (Nutzerhinweis):** In der Kette standen **drei** Horizonte
 nebeneinander, ohne je verglichen worden zu sein — 60 Tage (worauf ich am
@@ -8339,6 +8499,22 @@ Methodik 2.85
 
 
 ## F-226 ⚠️⚠️⚠️ N-48: Der Nullpunkt war zu optimistisch — und `amihud` ist zu 95 % ein Asset-Etikett (05.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Verhaeltniszahlen
+>
+> **Es bleibt:** der PERSISTENZ-Befund STEHT: ueberlappende Anker bei persistenten Groessen erzeugen einen Nullpunkt von rund einem Punkt
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 **Nutzerauftrag:** *„vorher nochmal detailliert auf Messfehler prüfen bei
 allen Werten und Messungen zuletzt."* Genau das hat einen gefunden.
@@ -8507,6 +8683,22 @@ Verwandt: **F-218** · **F-226** · **N-49** · Tagesklammer-Vorgabe 31.08. ·
 
 ## F-228 ✔✔ N-49: Die VERÄNDERUNG von `amihud` ist der Kandidat für den Hebel (05.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Aussage, die Veraenderung von amihud sei der Hebel-Kandidat
+>
+> **Es bleibt:** die Nullpunkt-KURVE ueber die Bestaendigkeit als Methode
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Die Frage aus F-227:** nicht *ob* `amihud` registriert wird, sondern
 **welcher Anteil seiner Wirkung über den MOMENT spricht** statt über das
 Asset. Fachliche Frage, also gemessen.
@@ -8592,6 +8784,22 @@ Verwandt: **F-223** (korrigiert) · **F-226** · **F-227** · Methodik 2.104
 
 ## F-229 ⚠️⚠️⚠️ N-50: ALLE Veränderungsformen sind nur Färbungen ihres Niveaus (05./06.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Aussage, alle Veraenderungsformen seien Faerbungen
+>
+> **Es bleibt:** die Lehre STEHT: eine Korrelationsmatrix reicht als Unabhaengigkeitspruefung nicht
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Die Frage:** N-49 fand die Veränderungsformen als die Größen, die über den
 **Moment** sprechen und damit laut korrigierter Regel 3 (F-227) den Hebel
 treiben dürfen. Sind sie voneinander — und von ihrem eigenen Niveau —
@@ -8660,6 +8868,22 @@ Verwandt: **F-226** · **F-227** · **F-228** · N-51
 
 
 ## F-230 ⚠️⚠️⚠️ N-51: Alle sechzehn Größen neu — und SECHS von sechs Veränderungsformen fallen (06.09.2026)
+
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Tabelle aller sechzehn Groessen
+>
+> **Es bleibt:** der Nebenbefund: Terminmarkt reicht nur 122 Tage
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
 
 **Nutzerauftrag:** *„auch bisher gefallene Messungen prüfen, wenn wir keine
 tragende Größe mehr haben."* Alle Größen mit allen Kontrollen dieses Tages:
@@ -8763,6 +8987,22 @@ Verwandt: **F-226** · **F-229** · Methodik 2.99 · 2.101
 
 ## F-231 ⚠️⚠️⚠️ N-51d: BEIDE registrierten Beiträge fallen — sieben kursbasierte Größen tragen (06.09.2026)
 
+> ⛔⛔ **EINGEORDNET AM 06.09.2026 — DIESER BEFUND GILT NICHT ALS
+> BEITRAGSURTEIL.**
+>
+> Gemessen auf der Zielgröße *Ziel vor Stop* und/oder auf der **freien**
+> statt der **selektierten** Menge. Beides ist als falsch nachgewiesen:
+> `Konzept_Bewertungsstufe_29_08.md` §1 — *wer Ziel vor Stop misst, misst
+> die eigene Zielregel zurück* (seit **23.08.**) — und **F-212** vom 04.09.:
+> *die Beiträge wirken auf 1,5 % der Anker*.
+>
+> **Nicht gültig:** die Aussage, beide registrierten Beitraege fielen
+>
+> **Es bleibt:** die vier Nullpunkt-Fassungen und ihre Fehler
+>
+> Ersatz: `messnorm.py`, Methodik **2.110**.
+
+
 **Der Nullpunkt in seiner vierten Fassung.** Drei Fehler mussten dafür
 nacheinander behoben werden, jeder davon echt:
 
@@ -8841,4 +9081,74 @@ Nachzuholen in **N-52**, zusammen mit dem geeichten Asset-Anteil aus 2.101.
 
 Werkzeuge: `messe_alle_groessen_neu.py`, `rechne_nullpunkte_feiner.py`
 Verwandt: **F-226** · **F-229** · **F-230** · Methodik 2.99 · 2.101 · 2.104
+
+
+
+## F-232 ⚠️⚠️ Die Zahl, mit der entschieden wird, steht in keiner Mailzeile (06.09.2026)
+
+**Nutzerhinweis:** *„falls noch nicht erfolgt — Trennung der Bewertung von
+der Wirtschaftlichkeit im E-Mail, auch eine Fehlerquelle, bitte
+festhalten."*
+
+### Gemessen an den echten Funktionen — dieselbe Lage, drei Zahlen
+
+| Ebene | Quote | Breakeven | Erwartungswert | wo sie steht |
+|---|---|---|---|---|
+| **0,00 %** | 37,78 % | 33,33 % | **+0,1335 R** | ⚠️ **die ENTSCHEIDUNG — in KEINER Mailzeile** |
+| 0,30 % | 37,78 % | 36,67 % | +0,0335 R | Mail-Kopfzeile |
+| 1,50 % | 37,78 % | 50,00 % | **−0,3665 R** | Mail, Bitpanda-Satz |
+
+`SAETZE_JE_SEITE_MAILTEXT` führt **nur** 0,30 % und 1,50 %. Die neutrale
+Ebene, mit der `Potential.traegt_hier` entscheidet, ist dort nicht
+enthalten.
+
+> **Der Leser sieht für ein gerade ausgelöstes Signal einen
+> Erwartungswert von −0,37 R** — während die Kette es mit +0,1335 R gegen
+> eine Schwelle von 0,0800 freigegeben hat.
+
+### ⚠️ Derselbe Fehlertyp ist in diesem Modul schon ZWEIMAL aufgetreten
+
+Der Code dokumentiert es selbst:
+
+> *„= geschätzte Trefferquote 32,8 % (mit Beitrag) · Standard 0,30 %: …
+> geschätzt 33,3 % (ohne). **Zwei Zahlen für dieselbe Größe, fünf Zeilen
+> auseinander.** Wer die untere liest, sieht die nackte Basisrate und hält
+> sie für das Ergebnis der Bewertung."*
+
+Ursache beide Male: `strategie` fehlte im Aufruf, und beide tragenden
+Beiträge fielen damit aus — am **02.09.** im ersten Aufruf behoben, am
+**03.09.** im zweiten nachgezogen.
+
+> ⚠️ *„Und die Dauerprüfung hat es nicht gefangen, obwohl sie am 02.09.
+> genau dafür gebaut wurde: sie verglich Mail und Stufe 11, aber nicht die
+> beiden Rechnungen **innerhalb** der Mail."* — Methodik **2.106**.
+
+### Die Einordnung — was RICHTIG ist und was fehlt
+
+✔ **Regel 2 ist im Entscheidungspfad eingehalten.** Seit dem 02./03.09.
+entscheidet ausschließlich das neutrale Potential; die Trefferbilanz mit
+Gebühren zählt nur noch. Konzept §4 verlangt genau das:
+
+    Potential 0,00 %        Stufe 11 · Vorfilter · Auswahl · jede Rangfolge
+    Messreferenz 0,30 %     Vergleiche zwischen Signalen, Messlaeufe
+    Wirtschaftlichkeit 1,50 %   ausschliesslich die MAIL - Ihre Auskunft
+
+✖ **Was fehlt, ist die Kennzeichnung in der Mail.** Drei Zahlen zur selben
+Lage, ohne dass erkennbar ist, welche entschieden hat. Die Vorgabe *„1,50 %
+ausschließlich in der Mail"* ist erfüllt — die Vorgabe, dass die
+**Entscheidungszahl** nachvollziehbar sein muss, nicht.
+
+### Was zu tun ist — offener Punkt, nicht eigenmächtig geändert
+
+    1  Die neutrale Ebene (0,00 %) in die Mail aufnehmen und als DIE
+       Entscheidungszahl kennzeichnen
+    2  Die beiden Kostenebenen sichtbar als AUSKUNFT abgrenzen, nicht als
+       konkurrierende Bewertung
+    3  Eine Dauerpruefung, die die Zahlen INNERHALB der Mail vergleicht -
+       nicht nur Mail gegen Stufe 11 (Methodik 2.106)
+
+⚠️ **Nutzerentscheidung**, weil es den Mailtext ändert.
+
+Verwandt: **F-176** (die Umschaltung) · Konzept Bewertungsstufe §4 ·
+Regel 2 · Methodik 2.106
 
