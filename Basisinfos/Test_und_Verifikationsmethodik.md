@@ -7349,3 +7349,102 @@ weiterhin offene Nutzerentscheidung).
 
 Werkzeug: `bestand.py` → `Basisinfos/REGISTER_Fakten.md`
 
+
+
+## 2.126 ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026)
+
+### Die Frage, umformuliert
+
+N9 stand als *„36 % Sperrmenge bei zwölf Trichterstufen"*. Nach N8 (die
+Kombination ist im Betrieb nicht abrufbar) und N12 (`vola` allein trägt
+überall) lautet sie richtig: **was kostet eine `vola`-Sperre an Durchlass —
+zusätzlich zu dem, was der Trichter ohnehin aussortiert?**
+
+### A/B — die Überschneidung, und sie ist kein Befund über `vola`
+
+| Auswahl | Sperre | getroffen | erwartet | Durchlass |
+|---|---|---|---|---|
+| **100 %** | 20 % | **20,3 %** | 20,0 % | 79,72 % — unabhängig |
+| 20 % | 20 % | 55,2 % | 20,0 % | 8,96 % |
+| 10 % | 20 % | 67,0 % | 20,0 % | 3,30 % |
+| **5 %** (Produktion) | 20 % | **74,8 %** | 20,0 % | **1,26 %** |
+| 5 % | 40 % | 89,3 % | 40,0 % | **0,53 %** |
+
+> **Auf der freien Menge sind `vola` und die Auswahl unabhängig. Auf der
+> 5-%-Menge trifft eine 20-%-Sperre 74,8 % der Ausgewählten** — das
+> 3,7-Fache des Erwartungswerts.
+
+⚠️ **Das ist ein Befund über die AUSWAHL:** der 250-Tage-Momentum-Rang
+selektiert systematisch **hochvolatile** Werte. Plausibel — was stark
+gestiegen ist, ist meist volatil — aber nirgends dokumentiert.
+
+### C — und die Sperre trägt trotzdem
+
+| Auswahl | Sperre | Wirkung | Band | |
+|---|---|---|---|---|
+| 100 % | 20 % | +0,00352 | [+0,00195 .. +0,00537] | ✔ TRÄGT |
+| 100 % | 40 % | +0,00681 | [+0,00440 .. +0,00959] | ✔ TRÄGT |
+| **20 %** | 20 % | **+0,00394** | [+0,00194 .. +0,00621] | ✔ TRÄGT |
+| 20 % | 40 % | +0,00676 | [+0,00368 .. +0,01045] | ✔ TRÄGT |
+
+Auf der ausgewählten Menge trägt sie sogar **etwas stärker** als frei —
+kein Wirkungsverlust. ⚠️ Für die Produktionsmenge 5 % reichten die Tage
+für ein Band nicht.
+
+### ⚠️⚠️⚠️ ABER: MEINE DURCHLASSRECHNUNG BILDET DEN BETRIEB NICHT AB
+
+F-180/F-182 (03.09.), am NB-Backup gemessen:
+
+    Krypto-Werte im Lauf                43
+    davon mit Bestand                   25   passieren die Auswahl IMMER
+    von A1 zusaetzlich gewaehlt          2   beide ebenfalls mit Bestand
+    -> eigener Beitrag der Auswahl:      0 zusaetzliche Werte
+    Engpass:  Cooldown 93,8 %  -  NICHT die Auswahl
+
+> **Die Werte passieren die Auswahl über den BESTANDSVORRANG, nicht über
+> den Momentum-Rang.** Meine Rechnung „5 % → 1,26 %" gilt für ein System,
+> das nach Momentum auswählt. Das laufende wählt faktisch nach Bestand.
+
+### Und der Satz, der N9 entscheidet
+
+Aus derselben Quelle:
+
+> ⚠️ *„die N-14-Terminmarktsperre ist **wirkungslos** — nur Einstieg OHNE
+> Bestand, und den gibt es nicht."*
+
+**Eine `vola`-Sperre stünde vor genau derselben Gabel:**
+
+| Bauform | Folge |
+|---|---|
+| **mit** Bestandsausnahme (wie N-14) | ✖ **wirkungslos** — es gibt keine Einstiege ohne Bestand |
+| **ohne** Bestandsausnahme | ⚠️ trifft **genau die Werte, die als einzige durchkommen** |
+
+### ✔ DIE LÖSUNGSORIENTIERTE KONSEQUENZ
+
+Die Frage *„soll eine `vola`-Sperre gebaut werden"* ist die falsche.
+`vola` trägt — gemessen, mehrfach, über Hälften und Saaten. **Die
+Anwendungsform „Sperre" trifft nur auf eine Kette, in der Sperren
+entweder wirkungslos oder schädlich sind.**
+
+> **Der offene Weg ist `vola` als BEITRAG, nicht als Sperre.**
+
+| | Sperre | Beitrag |
+|---|---|---|
+| Bestandsausnahme | ⚠️ ja (N-14-Bauform) → wirkungslos | **nein** → wirkt bei allen |
+| Wirkform | hart, alles oder nichts | Quotenpunkte, abgestuft |
+| Passt zur Architektur? | — | ✔ **`q = basisrate + punkte/100`** — die Bewertung rechnet ohnehin in Quoten, und ein Randmaß **ist** eine Quote (N5) |
+
+⚠️ **Was N9 wirklich beigetragen hat, ist keine Durchlasszahl, sondern die
+Erkenntnis, dass die Sperrform für diesen Kandidaten der falsche Weg
+ist — und warum.**
+
+### Was daraus folgt
+
+| # | | Art |
+|---|---|---|
+| **N16** | **`vola` als Beitrag verdrahten** — Quotenpunkte je Fünftel aus der Randwirkung, R-R9 (Neukalibrierung) beachten | Bau |
+| **N17** | ⚠️ **Die Auswahl selektiert hochvolatile Werte** (74,8 % Überschneidung bei 5 %). Das ist neu und nicht dokumentiert — trägt der Momentum-Rang überhaupt etwas über `vola` hinaus? | Messung |
+| **N18** | ⚠️ **Der Engpass ist der Cooldown (93,8 %)**, nicht die Auswahl und nicht eine fehlende Sperre. Jede weitere Sperre verschärft ein System, dessen Problem nicht Durchlässigkeit ist | Vorbehalt |
+
+Werkzeug: `n9_durchlass_vola_sperre.py`
+

@@ -55,6 +55,15 @@
 
 - Quelle: Methodik 2.124
 
+**2.126** — Die SPERRFORM ist fuer `vola` der falsche Weg - er gehoert als BEITRAG. Ein Beitrag unterliegt nicht der Bestandsausnahme und passt zur Quoten-Architektur
+
+- Quelle: Methodik 2.126
+
+**2.126-Auswahl** — Die 250-Tage-Momentum-Auswahl selektiert systematisch HOCHVOLATILE Werte: bei 5 % Auswahl trifft eine 20-%-vola-Sperre 74,8 % statt der erwarteten 20 %
+
+- Quelle: Methodik 2.126
+- Warum: auf der FREIEN Menge sind beide unabhaengig (20,3 % gegen 20,0 %) - die Ueberschneidung entsteht ausschliesslich durch die Auswahl
+
 ## ○ WAS OFFEN IST
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
@@ -77,9 +86,19 @@
 - Quelle: Methodik 2.124
 - Warum: Band ohne Null, aber die anteilgewichtete Wirkung traegt nicht - zu wenige Anker. Mit mehr Terminmarkt-Historie pruefbar. Zurueckgestellt, nicht verworfen
 
-**N9** — 36 % Sperrmenge bei zwoelf bestehenden Trichterstufen - welche Durchlassmenge bleibt?
+**N16** — `vola` als BEITRAG verdrahten - Quotenpunkte je Fuenftel aus der Randwirkung
 
-- Quelle: Methodik 2.121
+- Quelle: Methodik 2.126
+- Warum: R-R9 beachten: Beitragswechsel = Neukalibrierung der Schwelle plus Nachzug von KALIBRIERT_FUER
+
+**N17** — Traegt der Momentum-Rang etwas ueber `vola` hinaus? 74,8 % Ueberschneidung bei 5 % Auswahl
+
+- Quelle: Methodik 2.126
+
+**N18** — Der Engpass ist der COOLDOWN (93,8 %), nicht die Auswahl und nicht eine fehlende Sperre
+
+- Quelle: F-180/F-182 · Methodik 2.126
+- Warum: jede weitere Sperre verschaerft ein System, dessen Problem nicht Durchlaessigkeit ist
 
 **N10** — Die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote
 
@@ -177,4 +196,10 @@
 - Quelle: eigene Formulierung 2.123
 - **Abgeloest durch: 2.124**
 - Warum: Kapitulationsformel statt Analyse. Der richtige Vergleich ist nicht ein perfekter Waehler, sondern der TAKT - und der hat null gemessenen Vorteil (Regel 1)
+
+**N9** — 36 % Sperrmenge bei zwoelf bestehenden Trichterstufen - welche Durchlassmenge bleibt?
+
+- Quelle: Methodik 2.121
+- **Abgeloest durch: 2.126**
+- Warum: Die Frage war falsch gestellt. Die Werte passieren die Auswahl ueber den BESTANDSVORRANG, nicht ueber den Momentum-Rang (F-180/F-182) - eine Durchlassrechnung auf der Momentum-Auswahl bildet den Betrieb nicht ab. Und eine vola-Sperre stuende vor derselben Gabel wie N-14: mit Bestandsausnahme wirkungslos, ohne sie trifft sie genau die Werte, die als einzige durchkommen
 

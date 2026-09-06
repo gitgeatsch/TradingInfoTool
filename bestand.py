@@ -460,7 +460,38 @@ BEFUNDE = (
                      "verworfen"),
 
     Befundlage("N9", "36 % Sperrmenge bei zwoelf bestehenden Trichterstufen "
-               "- welche Durchlassmenge bleibt?", "offen", "Methodik 2.121"),
+               "- welche Durchlassmenge bleibt?", "abgeloest",
+               "Methodik 2.121", abgeloest_durch="2.126",
+               warum="Die Frage war falsch gestellt. Die Werte passieren die "
+                     "Auswahl ueber den BESTANDSVORRANG, nicht ueber den "
+                     "Momentum-Rang (F-180/F-182) - eine Durchlassrechnung "
+                     "auf der Momentum-Auswahl bildet den Betrieb nicht ab. "
+                     "Und eine vola-Sperre stuende vor derselben Gabel wie "
+                     "N-14: mit Bestandsausnahme wirkungslos, ohne sie "
+                     "trifft sie genau die Werte, die als einzige durchkommen"),
+    Befundlage("2.126", "Die SPERRFORM ist fuer `vola` der falsche Weg - er "
+               "gehoert als BEITRAG. Ein Beitrag unterliegt nicht der "
+               "Bestandsausnahme und passt zur Quoten-Architektur", "gilt",
+               "Methodik 2.126"),
+    Befundlage("2.126-Auswahl", "Die 250-Tage-Momentum-Auswahl selektiert "
+               "systematisch HOCHVOLATILE Werte: bei 5 % Auswahl trifft eine "
+               "20-%-vola-Sperre 74,8 % statt der erwarteten 20 %", "gilt",
+               "Methodik 2.126",
+               warum="auf der FREIEN Menge sind beide unabhaengig (20,3 % "
+                     "gegen 20,0 %) - die Ueberschneidung entsteht "
+                     "ausschliesslich durch die Auswahl"),
+    Befundlage("N16", "`vola` als BEITRAG verdrahten - Quotenpunkte je "
+               "Fuenftel aus der Randwirkung", "offen", "Methodik 2.126",
+               warum="R-R9 beachten: Beitragswechsel = Neukalibrierung der "
+                     "Schwelle plus Nachzug von KALIBRIERT_FUER"),
+    Befundlage("N17", "Traegt der Momentum-Rang etwas ueber `vola` hinaus? "
+               "74,8 % Ueberschneidung bei 5 % Auswahl", "offen",
+               "Methodik 2.126"),
+    Befundlage("N18", "Der Engpass ist der COOLDOWN (93,8 %), nicht die "
+               "Auswahl und nicht eine fehlende Sperre", "offen",
+               "F-180/F-182 · Methodik 2.126",
+               warum="jede weitere Sperre verschaerft ein System, dessen "
+                     "Problem nicht Durchlaessigkeit ist"),
     Befundlage("N10", "Die Potentialformel meint eine BARRIEREN-Quote, das "
                "Randmass eine HORIZONT-Quote", "offen", "Methodik 2.121"),
     Befundlage("N6", "`turnover` traegt auch am RAND (+0,01389 bei H20), "
