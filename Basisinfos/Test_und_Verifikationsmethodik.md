@@ -7617,3 +7617,75 @@ und bleibt als **N19** offen.
 
 Werkzeug: `n10_barriere_gegen_horizont.py`
 
+
+
+## 2.129 ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026)
+
+### Die Frage
+
+`d(quote) = d(Potential)/(1+CRV)` ist **algebraisch exakt** — die Ableitung
+der Potentialformel. ⚠️ **Die Annahme steckt im EINGANG:** eingesetzt wurde
+als `d(Potential)` die gemessene **R-Wirkung** (barrierenfreie
+Bewegungsdifferenz), gemeint ist die Änderung des Erwartungswerts eines
+**Barrieren**systems. Diese Gleichsetzung war nie geprüft — und sie trägt
+die Stufen von `funding` und `turnover` im laufenden System.
+
+### Das Ergebnis — dieselben Anker, H20, CRV 2,0
+
+| | Anker | vorhergesagt | tatsächlich | **Faktor** | Korrelation | im Band |
+|---|---|---|---|---|---|---|
+| `funding` | 346.253 | 5,744 Pkt | 1,715 Pkt | **0,30** | +0,606 | **1 von 5** |
+| `turnover` | 122.851 | 8,643 Pkt | 3,000 Pkt | **0,35** | +0,744 | **1 von 5** |
+| **`vola`** | 612.048 | 7,968 Pkt | 7,185 Pkt | **0,90** | **+0,994** | **3 von 5** |
+
+### ✖✖ Bei `funding` und `turnover` trägt die Umrechnung NICHT
+
+**Sie überschätzt die tatsächliche Quotenverschiebung um rund Faktor 3.**
+Vier von fünf Vorhersagen liegen **außerhalb** des gemessenen Bandes. Und
+bei zwei Fünfteln stimmt nicht einmal das Vorzeichen:
+
+    funding  Fuenftel 0   vorhergesagt +2,53   gemessen -0,66
+    turnover Fuenftel 4   vorhergesagt +3,06   gemessen -1,31
+
+⚠️ *(Die gemessenen Bänder sind dort breit und schließen die Null ein — die
+belastbare Aussage ist „die Vorhersage liegt außerhalb", nicht „der Wert
+ist negativ".)*
+
+### ⚠️ Was das für die REGISTRIERTEN Stufen heißt
+
+Sie wurden bereits halbiert. Gegen die direkt gemessene Spanne:
+
+| | registrierte Spanne | gemessen | **Überhang** |
+|---|---|---|---|
+| `funding` (+0,82 … −1,70) | 2,52 Pkt | 1,715 Pkt | **1,47×** |
+| `turnover` (+3,15 … −2,40) | 5,55 Pkt | 3,000 Pkt | **1,85×** |
+
+> **Auch nach der Halbierung sind die Stufen 1,5- bis 1,9-fach zu groß —
+> und die Ordnung stimmt teilweise nicht.**
+
+### ✔✔ Bei `vola` trägt sie
+
+Faktor **0,90**, Korrelation **+0,994**, **3 von 5** im Band, alle
+Vorzeichen richtig.
+
+Eine Erklärung liegt nahe — die Barriere ist in Einheiten der
+Schwankungsbreite definiert, und `vola` misst genau diese. ⚠️ **Das ist
+eine Vermutung, keine Messung**, und wird nur als solche geführt.
+
+> **Der neue Beitrag stünde auf einer geprüften Umrechnung. Die beiden
+> alten stehen es nicht.**
+
+### Was daraus folgt
+
+| # | | Art |
+|---|---|---|
+| **N19-E** | ⚠️ **Die Stufen von `funding` und `turnover` sind neu zu kalibrieren** — direkt gegen die gemessene Barrieren-Quote, nicht über die Umrechnung | ⚠️ **Nutzerentscheidung** (R-R9: Neukalibrierung der Schwelle, `KALIBRIERT_FUER`, Befundkarte 3.9) |
+| **K1-b** | Für `vola` ist der Faktor mit 0,90 gemessen — die Leiter kann darauf gebaut werden | ✔ frei |
+| **N21** | Warum trägt die Umrechnung nur bei `vola`? Die Barriere-in-Spanne-Vermutung ist zu prüfen | Messung, nachrangig |
+
+⚠️ **Reihenfolge:** N19-E ist eine Änderung am laufenden System und braucht
+eine Entscheidung. K1-b ist davon **unabhängig** — `vola` ist geprüft und
+blockiert nicht.
+
+Werkzeug: `n19_umrechnung_geprueft.py`
+
