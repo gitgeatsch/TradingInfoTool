@@ -7258,3 +7258,94 @@ gemessenen Vorteil. Damit ist eine belegte Verschiebung von 48,7 % auf
 
 Werkzeug: `n13_frontloading_ausreizen.py`
 
+
+
+## 2.125 ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026)
+
+### Die Datenlage widerlegt die Prämisse
+
+    hebel_triggers            49 Zeilen - alle vom 14.07.2026, in 0,4 Sekunden
+    open_interest_snapshot   227 Zeilen
+
+F-185 nannte 82.655 Zeilen über 42 Tage und 13.254 Kandidaten. **Das
+Screening-Archiv existiert nicht mehr** — es ist ein einziger Lauf.
+
+Die eigentliche Quelle liegt woanders und ist groß: **`terminmarkt_tag`,
+119.935 Zeilen, 1.735 Tage, 100 Symbole** ab 2021-12.
+
+### ⚠️⚠️ Und sie ist bereits vermessen — die Kette F-205 bis F-210
+
+**F-205** (04.09., 612.048 Anker, 516 Symbole, saubere Basis nach F-204):
+Terminmarkt-Rohgrößen gegen Frontloading — `oi_je_umsatz` +0,0021,
+`long_bias` +0,0019, `top_bias` +0,0019, `oi_aenderung` +0,0015 tragen;
+`taker_bias` nicht. ⚠️ `long_bias`/`top_bias` mit ρ = **+0,955** praktisch
+dieselbe Größe.
+
+**F-208:** keine davon und **keine Kombination schlägt `turnover` allein**.
+
+| Kandidat | gewählt | frontlastig | Unterschied |
+|---|---|---|---|
+| `turnover` allein | 21.369 | 51,9 % | **+4,2** |
+| `turnover`+`vola` | 6.939 | 51,9 % | +4,2 |
+| `oi_aenderung`+`funding_extrem` | 4.808 | 51,1 % | +3,4 |
+| *zufall* | 122.355 | 47,7 % | −0,1 ✔ |
+
+**F-209:** F-165 mit voller Rüstung auf sauberer Basis nachgemessen — das
+Urteil bleibt.
+
+**F-210:** die Brücke zur Schwelle, 14 Zellen, **eine nutzbar**:
+`turnover` auf H3 erreicht **+1,11 Punkte Spanne = 19 % dessen, was die
+Schwelle verlangt.** Alle übrigen Kandidaten sind nicht einmal monoton.
+
+> **N14 ist damit abgeschlossen: der Terminmarkt-Weg ist gemessen und
+> reicht nicht. `turnover` auf H3 steht bei 19 % der nötigen Schwelle.**
+
+### ✖✖✖ DER EIGENTLICHE BEFUND: DREIMAL AN EINEM TAG GEMESSEN, WAS DASTAND
+
+| # | | |
+|---|---|---|
+| 1 | **F-206 falsch angeführt** | als Vorbefund für N1 zitiert — gemessen war es auf H2/Frontloading, nicht auf H20/R |
+| 2 | **F-165 nicht geöffnet** | N12-C neu gebaut, mit der falschen Zielgröße (`R_kurz − R_lang`), die H-4a bereits verworfen hatte |
+| 3 | **F-205 bis F-210 übersehen** | **N13 war eine Wiederholung von F-208** — bis auf die Breitenvariation, die nachweislich nichts brachte. N14 war durch F-210 abgeschlossen |
+
+⚠️ Und der Befund, den ich in N13 als Fortschritt meldete — *„alle Werte
+liegen heute höher als F-165s Originalzahlen"* — steht seit dem **04.09.**
+wörtlich in F-208.
+
+### ⚠️ Die strukturelle Ursache — und die Abhilfe
+
+Ein Vorsatz hilft gegen R-R10 nicht. **Die Ursache ist, dass die
+Fakten-Entscheidungsmappe nicht erschlossen war:** 9.154 Zeilen, über 230
+F-Nummern, chronologisch. Das heute gebaute Register hatte Kandidaten,
+Befunde, Werkzeuge und Methodik — **aber nicht die Fakten.**
+
+**Gebaut:** `REGISTER_Fakten.md` — 148 Einträge, nach sechs Themen
+erschlossen, **0 unzugeordnet**, erzeugt durch Scan.
+
+    Frontloading und Horizontwahl        25
+    Beitraege: Funding, Turnover, OI     36
+    Kombination und Redundanz             6
+    Schwelle, Kalibrierung, Potential    27
+    Messfehler und Kontamination         25
+    Kette, Trichter, Sperren             29
+
+> **Ein Blick auf „Frontloading und Horizontwahl" hätte F-163, F-164,
+> F-165, F-184 und F-185 gezeigt — und damit alle drei Fehler verhindert.**
+
+### Was für die Horizontwahl bleibt
+
+| | |
+|---|---|
+| Kursreihe | ✔ ausgemessen — `turnover` +4,2 Punkte, 19 % der Schwelle |
+| Terminmarkt | ✔ ausgemessen (F-205/F-208) — schlägt `turnover` nicht |
+| Kombination | ✔ ausgemessen (F-206/F-208/N13) — bringt nichts |
+| Auswahlbreite | ✔ ausgemessen (N13) — Bänder überlappen |
+
+⚠️ **Alle vier Wege sind gegangen.** Der Horizont-Weg steht bei 19 % der
+selbst gesetzten Schwelle. **Das ist keine Sackgasse, sondern eine
+beziffert Lücke** — und die einzige verbliebene Frage ist, ob die
+Schwelle für diese Frage die richtige ist (der **Gabelpunkt aus F-164**,
+weiterhin offene Nutzerentscheidung).
+
+Werkzeug: `bestand.py` → `Basisinfos/REGISTER_Fakten.md`
+

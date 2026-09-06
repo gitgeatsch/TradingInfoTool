@@ -809,11 +809,108 @@ def _methodikblatt() -> str:
     return "\n".join(out) + "\n"
 
 
+# ===================================================================
+#  5  DIE FAKTEN — die F-Nummern, gescannt und nach Thema erschlossen
+# ===================================================================
+# ⚠️⚠️ WARUM ES DAS GIBT (06.09.2026, nach dem dritten eigenen Verstoss
+# gegen R-R10 an EINEM Tag).
+#
+# Die Fakten-Entscheidungsmappe hat 9.154 Zeilen und ueber 230 F-Nummern,
+# chronologisch. Am 06.09. wurde dreimal gemessen, was dort bereits stand:
+#
+#   F-206 falsch angefuehrt   (auf H2 gemessen, nicht auf H20/R)
+#   F-165 nicht geoeffnet     (Frontloading war beantwortet)
+#   F-205..F-210 uebersehen   (N13 war eine Wiederholung von F-208,
+#                              N14 war durch F-210 abgeschlossen)
+#
+# Ein Vorsatz hilft dagegen nicht - ein durchsuchbarer Index schon.
+FAKTEN_THEMEN = (
+    ("Frontloading und Horizontwahl",
+     ("frontloading", "steil-kurz", "flach-lang", "horizont", "instrument",
+      "wegwahl", "hebel")),
+    ("Beitraege: Funding, Turnover, OI",
+     ("funding", "turnover", "oi_aenderung", "oi-", "terminmarkt",
+      "beitrag", "stufen")),
+    ("Kombination und Redundanz",
+     ("kombination", "redundanz", "mitlaeufer", "mitläufer", "schicht",
+      "korrelation", "und/oder")),
+    ("Schwelle, Kalibrierung, Potential",
+     ("schwelle", "kalibr", "potential", "quote", "crv", "punkte")),
+    ("Messfehler und Kontamination",
+     ("kontamination", "fehler", "nebenwirkung", "artefakt", "falsch",
+      "korrektur", "zurueckgenommen", "zurückgenommen")),
+    ("Kette, Trichter, Sperren",
+     ("trichter", "sperre", "gate", "stufe", "durchlass", "kette")),
+)
+
+
+def _faktenblatt() -> str:
+    import re as _re
+    p = os.path.join(BASIS, "Fakten_Entscheidungsmappe.md")
+    try:
+        zeilen = io.open(p, encoding="utf-8", errors="replace").read().splitlines()
+    except OSError as e:
+        return "# REGISTER - FAKTEN\n\nnicht lesbar: %s\n" % e
+    kopf = []
+    for i, z in enumerate(zeilen, 1):
+        m = _re.match(r"^##\s+(F-\d+[a-z]?)\s+(.*)$", z)
+        if m:
+            kopf.append((m.group(1), m.group(2).strip(), i))
+    eintraege = []
+    for j, (n, t, i) in enumerate(kopf):
+        ende = kopf[j + 1][2] - 1 if j + 1 < len(kopf) else len(zeilen)
+        eintraege.append((n, t, i, "\n".join(zeilen[i - 1:ende]).lower()))
+    out = ["# REGISTER — DIE FAKTEN (F-Nummern)",
+           "",
+           "*Erzeugt aus `bestand.py` durch **Scan** der "
+           "`Fakten_Entscheidungsmappe.md`. Nicht von Hand aendern.*",
+           "",
+           "⚠️⚠️ **Wofuer:** am 06.09.2026 wurde **dreimal an einem Tag** "
+           "gemessen, was in der Mappe bereits stand — F-206 falsch "
+           "angefuehrt, F-165 nicht geoeffnet, F-205 bis F-210 uebersehen "
+           "(N13 war eine Wiederholung von F-208, N14 durch F-210 "
+           "abgeschlossen). **Vor jeder neuen Messung hier nachsehen.**",
+           "",
+           "**%d Eintraege**, Zeilennummer bezieht sich auf "
+           "`Basisinfos/Fakten_Entscheidungsmappe.md`." % len(eintraege),
+           ""]
+    zug = {}
+    for n, t, i, rumpf in eintraege:
+        p2 = []
+        for titel, schl in FAKTEN_THEMEN:
+            w = sum(3 * t.lower().count(k) + rumpf.count(k) for k in schl)
+            if w:
+                p2.append((w, titel))
+        p2.sort(reverse=True)
+        zug[n] = [x[1] for x in p2[:2]]
+    getroffen = set()
+    for titel, _s in FAKTEN_THEMEN:
+        tr = [(n, t, i) for n, t, i, _r in eintraege if titel in zug.get(n, ())]
+        out += ["## %s (%d)" % (titel, len(tr)), ""]
+        if not tr:
+            out += ["*(keiner)*", ""]
+            continue
+        out += ["| Nr. | Titel | Zeile |", "|---|---|---|"]
+        for n, t, i in tr:
+            getroffen.add(n)
+            out.append("| **%s** | %s | %d |" % (n, t[:100], i))
+        out.append("")
+    rest = [(n, t, i) for n, t, i, _r in eintraege if n not in getroffen]
+    out += ["## Ohne Thema zugeordnet (%d)" % len(rest), ""]
+    if rest:
+        out += ["| Nr. | Titel | Zeile |", "|---|---|---|"]
+        for n, t, i in rest:
+            out.append("| %s | %s | %d |" % (n, t[:100], i))
+    out.append("")
+    return "\n".join(out) + "\n"
+
+
 def schreibe() -> None:
     for datei, inhalt in (("REGISTER_Kandidaten.md", _kandidatenblatt()),
                           ("REGISTER_Befunde.md", _befundblatt()),
                           ("REGISTER_Werkzeuge.md", _werkzeugblatt()),
-                          ("REGISTER_Methodik_Themen.md", _methodikblatt())):
+                          ("REGISTER_Methodik_Themen.md", _methodikblatt()),
+                          ("REGISTER_Fakten.md", _faktenblatt())):
         p = os.path.join(BASIS, datei)
         with io.open(p, "w", encoding="utf-8") as f:
             f.write(inhalt)
