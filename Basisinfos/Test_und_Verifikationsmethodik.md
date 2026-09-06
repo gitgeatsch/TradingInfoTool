@@ -7689,3 +7689,80 @@ blockiert nicht.
 
 Werkzeug: `n19_umrechnung_geprueft.py`
 
+
+
+## 2.130 ✔✔✔ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026)
+
+### Was gemessen wurde
+
+Die Quotenverschiebung je Fünftel **direkt auf der Barrieren-Quote** (Ziel
+vor Stop) — genau die Größe, die `BEITRAEGE.stufen` erwartet
+(*„Prozentpunkte auf die Quote, nicht R"*) und die Kelly braucht. Mit Band,
+Zufallskontrolle und Monotonieprüfung, bei H20 **und** H5.
+
+### ✔✔ Das Ergebnis: `vola` bei H5
+
+    Fuenftel 0   +3,431  [+2,800 .. +4,095]
+    Fuenftel 1   +1,291  [+0,827 .. +1,760]
+    Fuenftel 2   -0,069  [-0,462 .. +0,400]
+    Fuenftel 3   -1,533  [-1,934 .. -1,154]
+    Fuenftel 4   -3,119  [-3,903 .. -2,375]
+
+    -> MONOTON MIT BAND · 4 von 4 Nachbarpaaren getrennt · Kontrolle flach ✔
+
+> **Eine vollständig belegte fünfstufige Abstufung** — auf der Größe, die
+> die Bewertung tatsächlich meint, und beim Betriebshorizont.
+
+⚠️ **Der Maßstab entscheidet auch hier:** auf dem **Randmaß** waren es nur
+1 von 4 getrennt (2.127), auf der **Barrieren-Quote** sind es 4 von 4. Zum
+vierten Mal an diesem Tag ändert der Maßstab das Ergebnis — diesmal zum
+Besseren.
+
+⚠️ **Und der Horizont entscheidet:** `vola` erreicht bei **H20 nur 2 von
+4**, bei **H5 alle 4**. Das bestätigt die Basislösung 2.111 unabhängig.
+
+### ✖✖ Die registrierten Beiträge tragen das NICHT
+
+| | Kontrolle | Nachbarpaare getrennt | Spanne geschr. | registriert | Überhang |
+|---|---|---|---|---|---|
+| `funding` H20 | ⚠️ **NICHT flach** | 1 von 4 | 0,86 Pkt | 3,00 Pkt | **3,50×** |
+| `funding` H5 | ⚠️ **NICHT flach** | 0 von 4 | 0,52 Pkt | 3,00 Pkt | 5,75× |
+| `turnover` H20 | flach ✔ | **0 von 4** | 1,50 Pkt | 5,55 Pkt | **3,70×** |
+| `turnover` H5 | ⚠️ **NICHT flach** | 0 von 4 | 0,76 Pkt | 5,55 Pkt | 7,31× |
+
+**`funding`:** die Zufallskontrolle schließt bei Fünftel 4 die Null aus
+(+0,321 [+0,088 .. +0,589] bei H20). **Die Messung ist ungültig** — das
+Verfahren erzeugt dort etwas aus dem Nichts. ⚠️ **Aus diesem Lauf lassen
+sich für `funding` KEINE neuen Stufen ableiten.**
+
+**`turnover`:** bei H20 ist die Kontrolle sauber, aber **kein einziges
+Nachbarpaar ist getrennt** — die Ordnung ist nicht belegt.
+
+> **Die beiden registrierten Beiträge haben auf der Barrieren-Quote keine
+> belegte Stufenordnung. `vola` bei H5 hat sie.**
+
+### ⚠️ Die Einschränkungen — sie gehören in jede Verwendung
+
+| | |
+|---|---|
+| **42,7 % offen** bei H5 | die Barrieren-Quote beschreibt dort nur die Hälfte der Fälle |
+| **Halbierung** (÷2) | eine Konvention aus der bisherigen Kalibrierung, **keine Messung** |
+| **in-sample** | dieselbe Vorsicht wie bei `trefferbilanz.geschrumpft()` |
+| **N1** | `turnover` erklärt 18 % von `vola` — auf dem Randmaß gemessen |
+
+### Was daraus folgt
+
+| # | | Art |
+|---|---|---|
+| **N19-E1** | ⚠️ Für `funding` sind aus diesem Lauf **keine** Stufen ableitbar — die Kontrolle trägt nicht. **Warum?** ist offen (N22) | Messung |
+| **N19-E2** | Für `turnover` ist die Ordnung auf der Barrieren-Quote **nicht belegt** (0 von 4). Die registrierte Spanne ist 3,7× zu groß | ⚠️ **Nutzerentscheidung** |
+| **K1-b** | ✔ **frei** — `vola` bei H5 liefert die Stufenreihe. Geschrumpft: +1,72 / +0,65 / −0,03 / −0,77 / −1,56 | Bau |
+| **N22** | Warum ist die Zufallskontrolle bei `funding` nicht flach? Verdacht: gebundene Werte oder Tagesstruktur, die die Mischung nicht zerstört | Messung |
+
+⚠️⚠️ **Der Zustand des laufenden Systems ist damit unbequemer als vor der
+Messung** — zwei registrierte Beiträge stehen ohne belegte Stufenordnung
+da. **Das ist kein Grund, die Messung zu verwerfen, sondern der Grund, sie
+gemacht zu haben.**
+
+Werkzeug: `n19e_neukalibrierung.py`
+
