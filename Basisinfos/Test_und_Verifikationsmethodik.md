@@ -6976,3 +6976,89 @@ Echtlauf sichtbar. Als **K5** nachgetragen.
 Werkzeuge: `n5_kombination_rand.py` · `pruefe_n5_modi.py` ·
 `pruefe_n5_mengenkontrolle.py` · `pruefe_n5_haelften_saaten.py`
 
+
+
+## 2.122 ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026)
+
+**Die Frage aus 2.121:** `turnover` ist als Regler am Mittel registriert.
+Eine ODER-Sperre, die ihn benutzt, wendet ihn ein zweites Mal an — ist das
+eine Doppelzählung?
+
+**Ohne neue Messung zu beantworten** — die Antwort steckt in der Arithmetik
+der Bewertung.
+
+### ✖✖ MEIN ERSTER DURCHGANG WAR FALSCH — und der Code sagte es
+
+Ich rechnete gegen `potential.schwelle()` — die **feste** Vorgabe 0,080 R.
+Daraus folgte:
+
+> *„Nur 3 von 25 Kombinationen erreichen die Schwelle, alle mit
+> turnover-Fünftel 0. Ein Wert ohne turnover-Rang kann sie nie erreichen —
+> **88 % der 57 beobachteten Werte wären dauerhaft gesperrt.**"*
+
+⚠️ **Das laufende Tor benutzt `Potential.schwelle`** — einen **Anteil der
+bei DIESER Datenlage erreichbaren Spanne**. Und der Code benennt genau
+diesen Fehler, weil das Projekt ihn am **31.08. selbst gemacht und behoben**
+hat:
+
+    # nur Funding    max +0,0390 R    (36 von 43 Werten)
+    # beide          max +0,1335 R    ( 7 von 43 Werten)
+    # Eine Schwelle von 0,080 R waere fuer 36 von 43 Werten UNERREICHBAR -
+    # eine Sperre nach DATENLAGE, nicht nach Qualitaet (Regel 4).
+
+Die Zahlen im Kommentar sind **exakt meine**. Ich hatte einen behobenen
+Fehler nachgebaut und für einen Befund gehalten.
+
+### Die richtige Rechnung
+
+Die Schwelle ist ein **Anteil von 59,9 %** der erreichbaren Spanne.
+
+| | erreichbar | Schwelle | nötige Punkte | kommen durch |
+|---|---|---|---|---|
+| **A — beide Ränge** (7 von 57) | +0,1335 R | +0,0800 R | +2,67 | **3 von 25 = 12 %** |
+| **B — nur Funding** (36 von 57) | +0,0390 R | +0,0234 R | +0,78 | **2 von 5 = 40 %** |
+
+> ⚠️ **Ein Wert mit NUR Funding hat eine BESSERE Chance (40 %) als einer
+> mit beiden Rängen (12 %).**
+
+### ⚠️⚠️ Der Grund ist die SCHIEFE der Stufen, nicht die Qualität
+
+    funding    +0,82 · +1,30 · +0,12 · -0,54 · -1,70   -> 2 von 5 durch
+    turnover   +3,15 · +0,83 · +0,22 · -1,79 · -2,40   -> 1 von 5 durch
+
+`funding`s Maximum (+1,30) hat mit +0,82 einen nahen Zweiten — 60 % davon
+erreichen zwei Fünftel. `turnover`s Maximum (+3,15) steht allein; der
+Zweite (+0,83) liegt bei 26 %. **Die Durchlassquote hängt an der Form der
+Kalibrierung, nicht am Asset.** Als **N11** aufgenommen.
+
+### Die Antwort auf N8
+
+| Lage | Anteil | Was die ODER-Sperre täte |
+|---|---|---|
+| `turnover` **liegt vor** | 7 von 57 | Das Tor verlangt ohnehin Fünftel **0**. Die Sperre würde Fünftel **4** sperren — eine Gruppe, die das Tor **nie** passiert. ⚠️ **wirkungslos, nicht doppelt** |
+| `turnover` **fehlt** | 50 von 57 | Die Sperre kann ihn gar nicht auswerten. **Nur `vola` wirkt** |
+
+> **Es ist keine Doppelzählung.** Wo `turnover` wirken könnte, ist er
+> überflüssig; wo er gebraucht würde, fehlt er.
+
+### ⚠️⚠️⚠️ WAS DAS FÜR N5 BEDEUTET
+
+Der N5-Befund (`vola ODER turnover` schlägt jede Einzelgröße um 26–34 %)
+wurde auf dem **Messuniversum** erhoben, wo beide Größen vorliegen. **Im
+Betrieb liegt `turnover` bei 12 % der Werte vor.**
+
+> **Der gemessene Kombinationsvorteil ist im laufenden Betrieb weitgehend
+> nicht abrufbar.** Nicht weil er falsch wäre — sondern weil die zweite
+> Größe fehlt.
+
+Damit ist die nächste Frage nicht mehr „ODER oder nicht", sondern:
+
+> **Trägt `vola` ALLEIN als Sperre genug?** `vola` kommt aus der Kursreihe
+> und deckt **alle** Werte ab — es ist die einzige der beiden, die im
+> Betrieb überall wirken kann.
+
+Als **N12** aufgenommen — und sie ist die praktisch wichtigere.
+
+Werkzeuge: `pruefe_n8_schwellenarithmetik.py` · `pruefe_n8_gegenpruefung.py`
+· `pruefe_n8_live_abdeckung.py` · `pruefe_n8_schwelle_je_datenlage.py`
+

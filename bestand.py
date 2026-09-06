@@ -208,9 +208,14 @@ KANDIDATEN = (
                        "gefangen: asymmetrische Rangbildung, fehlende "
                        "Symmetrieprobe im Vorabtest"),
         ),
-        warnung="⚠️⚠️ BELEGT, ABER NICHT BAUREIF. Drei Punkte stehen davor: "
-                "(N8) `turnover` ist bereits als Regler am Mittel "
-                "registriert - eine Sperre damit wendet ihn ZWEIMAL an. "
+        warnung="⚠️⚠️ BELEGT, ABER IM BETRIEB WEITGEHEND NICHT ABRUFBAR "
+                "(N8/2.122): turnover liegt bei 7 von 57 beobachteten Werten "
+                "vor. Der gemessene Kombinationsvorteil braucht beide "
+                "Groessen. Die praktisch wichtigere Frage ist N12 - traegt "
+                "`vola` ALLEIN als Sperre genug? "
+                "⚠️ Frueherer Verdacht auf Doppelzaehlung ist ausgeraeumt: "
+                "wo turnover vorliegt, verlangt das Tor ohnehin Fuenftel 0, "
+                "eine Sperre auf Fuenftel 4 waere wirkungslos. "
                 "(N9) 36 % Sperrmenge ist eine erhebliche Verschaerfung bei "
                 "zwoelf bestehenden Trichterstufen. (N10) die Potentialformel "
                 "meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote. "
@@ -378,7 +383,36 @@ BEFUNDE = (
                      "gewinnt"),
     Befundlage("N8", "`turnover` ist bereits als Regler am Mittel "
                "registriert - eine Sperre mit `turnover` wendet ihn ZWEIMAL "
-               "an", "offen", "Methodik 2.121"),
+               "an", "abgeloest", "Methodik 2.121", abgeloest_durch="2.122",
+               warum="KEINE Doppelzaehlung: wo turnover vorliegt (7 von 57), "
+                     "verlangt das Tor ohnehin Fuenftel 0 - die Sperre wuerde "
+                     "Fuenftel 4 sperren, das nie durchkommt. Wo er fehlt "
+                     "(50 von 57), kann die Sperre ihn nicht auswerten. "
+                     "Wirkungslos, nicht doppelt"),
+    Befundlage("2.122", "Die Schwelle ist ein Anteil von 59,9 % der bei "
+               "DIESER Datenlage erreichbaren Spanne. Ein Wert mit nur "
+               "Funding kommt zu 40 % durch, einer mit beiden Raengen nur "
+               "zu 12 %", "gilt", "Methodik 2.122"),
+    Befundlage("88-Prozent-Meldung", "88 % der beobachteten Werte koennen "
+               "die Potentialschwelle nie erreichen", "abgeloest",
+               "eigene Rechnung 06.09.", abgeloest_durch="2.122",
+               warum="gegen die FESTE Vorgabe 0,080 gerechnet statt gegen "
+                     "`Potential.schwelle` je Datenlage. Das Projekt hatte "
+                     "genau diesen Fehler am 31.08. selbst gemacht und "
+                     "behoben - ich habe ihn nachgebaut"),
+    Befundlage("N11", "Die Durchlassquote haengt an der SCHIEFE der "
+               "Beitragsstufen, nicht am Asset: funding laesst 2 von 5 "
+               "Fuenfteln durch, turnover nur 1 von 5", "offen",
+               "Methodik 2.122",
+               warum="turnovers Maximum (+3,15) steht allein, der Zweite "
+                     "(+0,83) liegt bei 26 % davon. Bei funding liegt der "
+                     "Zweite (+0,82) bei 63 % des Maximums (+1,30)"),
+    Befundlage("N12", "Traegt `vola` ALLEIN als Sperre genug? Es ist die "
+               "einzige der beiden Groessen, die im Betrieb ueberall wirken "
+               "kann", "offen", "Methodik 2.122",
+               warum="vola kommt aus der Kursreihe und deckt alle Werte ab; "
+                     "turnover liegt bei 12 % vor. Der N5-Kombinationsvorteil "
+                     "ist im Betrieb weitgehend nicht abrufbar"),
     Befundlage("N9", "36 % Sperrmenge bei zwoelf bestehenden Trichterstufen "
                "- welche Durchlassmenge bleibt?", "offen", "Methodik 2.121"),
     Befundlage("N10", "Die Potentialformel meint eine BARRIEREN-Quote, das "

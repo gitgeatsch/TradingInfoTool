@@ -43,6 +43,10 @@
 - Quelle: Methodik 2.121
 - Warum: unerklaert. Kein Messfehler - die Symmetrieprobe ist bitgenau. Es erklaert, warum UND versagt und ODER gewinnt
 
+**2.122** — Die Schwelle ist ein Anteil von 59,9 % der bei DIESER Datenlage erreichbaren Spanne. Ein Wert mit nur Funding kommt zu 40 % durch, einer mit beiden Raengen nur zu 12 %
+
+- Quelle: Methodik 2.122
+
 ## ○ WAS OFFEN IST
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
@@ -50,9 +54,15 @@
 - Quelle: Methodik 2.119
 - Warum: ENTWURFSfrage, keine Messfrage - Nutzerentscheidung
 
-**N8** — `turnover` ist bereits als Regler am Mittel registriert - eine Sperre mit `turnover` wendet ihn ZWEIMAL an
+**N11** — Die Durchlassquote haengt an der SCHIEFE der Beitragsstufen, nicht am Asset: funding laesst 2 von 5 Fuenfteln durch, turnover nur 1 von 5
 
-- Quelle: Methodik 2.121
+- Quelle: Methodik 2.122
+- Warum: turnovers Maximum (+3,15) steht allein, der Zweite (+0,83) liegt bei 26 % davon. Bei funding liegt der Zweite (+0,82) bei 63 % des Maximums (+1,30)
+
+**N12** — Traegt `vola` ALLEIN als Sperre genug? Es ist die einzige der beiden Groessen, die im Betrieb ueberall wirken kann
+
+- Quelle: Methodik 2.122
+- Warum: vola kommt aus der Kursreihe und deckt alle Werte ab; turnover liegt bei 12 % vor. Der N5-Kombinationsvorteil ist im Betrieb weitgehend nicht abrufbar
 
 **N9** — 36 % Sperrmenge bei zwoelf bestehenden Trichterstufen - welche Durchlassmenge bleibt?
 
@@ -124,4 +134,16 @@
 - Quelle: Methodik 2.120
 - **Abgeloest durch: 2.121**
 - Warum: beantwortet: ODER traegt (+0,00777), mengenkontrolliert +26 % bis +34 % ueber der besten Einzelgroesse, beide Haelften, drei Saaten. UND traegt NICHT
+
+**N8** — `turnover` ist bereits als Regler am Mittel registriert - eine Sperre mit `turnover` wendet ihn ZWEIMAL an
+
+- Quelle: Methodik 2.121
+- **Abgeloest durch: 2.122**
+- Warum: KEINE Doppelzaehlung: wo turnover vorliegt (7 von 57), verlangt das Tor ohnehin Fuenftel 0 - die Sperre wuerde Fuenftel 4 sperren, das nie durchkommt. Wo er fehlt (50 von 57), kann die Sperre ihn nicht auswerten. Wirkungslos, nicht doppelt
+
+**88-Prozent-Meldung** — 88 % der beobachteten Werte koennen die Potentialschwelle nie erreichen
+
+- Quelle: eigene Rechnung 06.09.
+- **Abgeloest durch: 2.122**
+- Warum: gegen die FESTE Vorgabe 0,080 gerechnet statt gegen `Potential.schwelle` je Datenlage. Das Projekt hatte genau diesen Fehler am 31.08. selbst gemacht und behoben - ich habe ihn nachgebaut
 

@@ -141,7 +141,7 @@
 - **06.09.** — beide Historienhaelften tragen einzeln (+0,01045 / +0,00554), drei Saaten stabil
 - **06.09.** — zwei Konstruktionsfehler von den eigenen Kontrollen gefangen: asymmetrische Rangbildung, fehlende Symmetrieprobe im Vorabtest
 
-⚠️⚠️ BELEGT, ABER NICHT BAUREIF. Drei Punkte stehen davor: (N8) `turnover` ist bereits als Regler am Mittel registriert - eine Sperre damit wendet ihn ZWEIMAL an. (N9) 36 % Sperrmenge ist eine erhebliche Verschaerfung bei zwoelf bestehenden Trichterstufen. (N10) die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote. ⚠️ Der Effekt halbiert sich ueber die Zeit (+0,01045 -> +0,00554).
+⚠️⚠️ BELEGT, ABER IM BETRIEB WEITGEHEND NICHT ABRUFBAR (N8/2.122): turnover liegt bei 7 von 57 beobachteten Werten vor. Der gemessene Kombinationsvorteil braucht beide Groessen. Die praktisch wichtigere Frage ist N12 - traegt `vola` ALLEIN als Sperre genug? ⚠️ Frueherer Verdacht auf Doppelzaehlung ist ausgeraeumt: wo turnover vorliegt, verlangt das Tor ohnehin Fuenftel 0, eine Sperre auf Fuenftel 4 waere wirkungslos. (N9) 36 % Sperrmenge ist eine erhebliche Verschaerfung bei zwoelf bestehenden Trichterstufen. (N10) die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote. ⚠️ Der Effekt halbiert sich ueber die Zeit (+0,01045 -> +0,00554).
 
 ---
 
