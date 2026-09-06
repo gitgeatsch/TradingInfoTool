@@ -169,10 +169,20 @@ def _kz_und_geometrie(c, h, t, br, i):
     return kz, weiten
 
 
-def _ausgang(c, h, t, i, weite, crv):
-    """+1 Ziel zuerst, -1 Stop zuerst, 0 keins von beiden."""
+def _ausgang(c, h, t, i, weite, crv, hz=None):
+    """+1 Ziel zuerst, -1 Stop zuerst, 0 keins von beiden.
+
+    ⚠️ DER STOP WIRD ZUERST GEPRUEFT. Werden beide Barrieren am selben Tag
+    beruehrt, weiss die Tageskerze nicht, was zuerst kam - und wer das
+    zugunsten des Ziels aufloest, erfindet Ertrag (06.09., N-55: bis
+    +0,39 R in einer Welt ohne Richtung). Gleichstand geht an den Stop.
+
+    `hz` erlaubt einen anderen Horizont als die Modulvorgabe - noetig, weil
+    die LIVE-Registrierungen auf H20 stehen, diese Probe aber auf H5
+    entstanden ist.
+    """
     ziel, stop = c[i] + crv * weite, c[i] - weite
-    for j in range(i + 1, i + HORIZONT + 1):
+    for j in range(i + 1, i + (HORIZONT if hz is None else int(hz)) + 1):
         if t[j] <= stop:
             return -1
         if h[j] >= ziel:

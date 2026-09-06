@@ -122,7 +122,19 @@ KANDIDATEN = (
                        "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
                        "durchgehend ohne Null. Der Tempo-Anzeiger"),
         ),
-        warnung="✔✔ REHABILITIERT 06.09. (N-53): `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei Groessen, zweieinhalbmal `funding`. Auf der registrierten Barrieren-Quote traegt es NICHT (+0,00168, Band mit Null), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft und den Effekt verdeckt. Der Vorschlag vom Vormittag (2.133: stilllegen) ist damit ueberholt - er stand auf dem gemischten Massstab. ⚠️ R-R9 OFFEN: auf welcher Zielgroesse die Stufen kalibriert werden. `q` ist ,Ziel vor Stop' (= G0); dort ist turnover schwach, weil die GEOMETRIE es daempft - das ist eine Aussage ueber die Geometrie, nicht ueber den Beitrag. --- FRUEHER: Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
+        warnung="⚠️⚠️⚠️ REPRODUKTION FEHLGESCHLAGEN 06.09. (N-56): auf der "
+                "EIGENEN Basis (H20, bewegung_r, oberstes Fuenftel) kommt "
+                "-0,06293 [-0,13183 .. -0,00785] heraus gegen registriert "
+                "+0,0616 - gleiche Groessenordnung, UMGEKEHRTES Vorzeichen. "
+                "Die Fuenftel haben keine Ordnung: +0,009 · +0,053 · -0,265 "
+                "· -0,041 · +0,229; das BESTE ist Fuenftel 4, das die "
+                "Tabelle mit -2,40 am haertesten bestraft. Bestaetigt 2.133 "
+                "(0 von 2 Nachbarn getrennt, beide Haelften). "
+                "⚠️ DIE GROESSE BLEIBT - sie traegt Richtung (GS +0,00512, "
+                "der staerkste der drei). NICHT belegt ist die TABELLE, und "
+                "es sind die groessten Stufen im System. Nach 2.133 ist die "
+                "belegte Form eine ZWEITEILUNG. "
+                "--- ✔✔ REHABILITIERT 06.09. (N-53): `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei Groessen, zweieinhalbmal `funding`. Auf der registrierten Barrieren-Quote traegt es NICHT (+0,00168, Band mit Null), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft und den Effekt verdeckt. Der Vorschlag vom Vormittag (2.133: stilllegen) ist damit ueberholt - er stand auf dem gemischten Massstab. ⚠️ R-R9 OFFEN: auf welcher Zielgroesse die Stufen kalibriert werden. `q` ist ,Ziel vor Stop' (= G0); dort ist turnover schwach, weil die GEOMETRIE es daempft - das ist eine Aussage ueber die Geometrie, nicht ueber den Beitrag. --- FRUEHER: Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
                 "breit wie bei den anderen, das Urteil wandert mit der Saat. "
                 "⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab "
                 "(+0,01389 bei H20, 2.119) - registriert ist er nur am "
@@ -336,6 +348,32 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.139", "Die LIVE geschaltete OI-Sperre traegt RICHTUNG: "
+               "GS +0,00220 [+0,00058 .. +0,00373] bei H20 und +0,00381 "
+               "[+0,00205 .. +0,00550] bei H5, beide 0/5. Reproduktion in "
+               "der Live-Form gelungen (+0,00978, registriert +0,0145 im "
+               "Band)", "gilt", "Methodik 2.139 / n56_oi_richtungsrein.py"),
+    Befundlage("2.139-quote", "⚠️ Dieselbe Sperre SENKT bei H5 die "
+               "Barrieren-Trefferquote (-0,00262, Band ganz im Minus), weil "
+               "der Aufloesungskanal dagegenlaeuft (-0,00989). Richtung "
+               "besser, Quote schlechter - und `q` in der Potentialformel "
+               "IST die Quote", "gilt", "Methodik 2.139"),
+    Befundlage("2.139-turnover", "⚠️⚠️ `turnover` reproduziert NICHT: "
+               "gemessen -0,06293 [-0,13183 .. -0,00785] gegen registriert "
+               "+0,0616 - gleiche Groessenordnung, umgekehrtes Vorzeichen. "
+               "Die Fuenftel haben keine Ordnung (bestes ist 4, die Tabelle "
+               "bestraft es mit -2,40). Bestaetigt 2.133", "gilt",
+               "Methodik 2.139"),
+    Befundlage("2.139-funding", "`funding` reproduziert bis in die FORM: "
+               "Fuenftel +0,071 +0,083 +0,009 -0,053 -0,105, monoton, und "
+               "auch die registrierte Tabelle hat bei Fuenftel 1 ihr "
+               "Maximum", "gilt", "Methodik 2.139"),
+    Befundlage("Audit-H20R", "„Die Registrierungsbasis H20/R ist "
+               "kontaminiert\"", "abgeloest", "Audit 06.09.",
+               abgeloest_durch="2.139",
+               warum="zu stark formuliert. Belegt war die Kontamination "
+                     "fuer H5 mit `vola`; bei H20 mit externen Kennzahlen "
+                     "feuert `bewegung_r` in keiner der beiden Kunstwelten"),
     Befundlage("2.138", "`vola` ordnet den realisierten Ertrag: die "
                "Spreizung ruhig-lebhaft liegt in ALLEN 12 Geometrien ueber "
                "der artefaktbedingten (+0,035 bis +0,126 R, Tagesklammer). "

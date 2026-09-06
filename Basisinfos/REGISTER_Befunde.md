@@ -6,6 +6,22 @@
 
 ## ✔ WAS GILT
 
+**2.139** — Die LIVE geschaltete OI-Sperre traegt RICHTUNG: GS +0,00220 [+0,00058 .. +0,00373] bei H20 und +0,00381 [+0,00205 .. +0,00550] bei H5, beide 0/5. Reproduktion in der Live-Form gelungen (+0,00978, registriert +0,0145 im Band)
+
+- Quelle: Methodik 2.139 / n56_oi_richtungsrein.py
+
+**2.139-quote** — ⚠️ Dieselbe Sperre SENKT bei H5 die Barrieren-Trefferquote (-0,00262, Band ganz im Minus), weil der Aufloesungskanal dagegenlaeuft (-0,00989). Richtung besser, Quote schlechter - und `q` in der Potentialformel IST die Quote
+
+- Quelle: Methodik 2.139
+
+**2.139-turnover** — ⚠️⚠️ `turnover` reproduziert NICHT: gemessen -0,06293 [-0,13183 .. -0,00785] gegen registriert +0,0616 - gleiche Groessenordnung, umgekehrtes Vorzeichen. Die Fuenftel haben keine Ordnung (bestes ist 4, die Tabelle bestraft es mit -2,40). Bestaetigt 2.133
+
+- Quelle: Methodik 2.139
+
+**2.139-funding** — `funding` reproduziert bis in die FORM: Fuenftel +0,071 +0,083 +0,009 -0,053 -0,105, monoton, und auch die registrierte Tabelle hat bei Fuenftel 1 ihr Maximum
+
+- Quelle: Methodik 2.139
+
 **2.138** — `vola` ordnet den realisierten Ertrag: die Spreizung ruhig-lebhaft liegt in ALLEN 12 Geometrien ueber der artefaktbedingten (+0,035 bis +0,126 R, Tagesklammer). Es waehlt aber KEINE Bauform - dieselbe Geometrie gewinnt in allen Dritteln (Stop 2,0 x ATR / H20)
 
 - Quelle: Methodik 2.138 / n55_vola_in_der_geometrie.py
@@ -154,6 +170,12 @@
 - Quelle: Schritt 4a
 
 ## ↩ WAS ABGELOEST IST
+
+**Audit-H20R** — „Die Registrierungsbasis H20/R ist kontaminiert"
+
+- Quelle: Audit 06.09.
+- **Abgeloest durch: 2.139**
+- Warum: zu stark formuliert. Belegt war die Kontamination fuer H5 mit `vola`; bei H20 mit externen Kennzahlen feuert `bewegung_r` in keiner der beiden Kunstwelten
 
 **2.133-turnover** — „`turnover` ist in keiner Form belegt und gehoert stillgelegt"
 

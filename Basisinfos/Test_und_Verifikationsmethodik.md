@@ -4140,6 +4140,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `n56_oi_richtungsrein.py` | N-56: traegt die LIVE geschaltete OI-Sperre Richtung? Reproduktion in der Live-Form, dann GS (2.139) |
 | `n55_vola_in_der_geometrie.py` | N-55: `vola` in der Geometrie - Stopweite, Horizont, Hebel. ⚠️ Nullpunkt aus geeichten Kunstwelten (2.138) |
 | `n52_vola_geometrieprobe.py` | ⚠️⚠️ N-52: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
 | `pruefe_kalibrierung_trocken.py` | Was eine geplante Beitragsaenderung an Schwelle, Durchlass und Suite anrichtet - VOR der Aenderung |
@@ -8502,3 +8503,106 @@ der Hoch/Tief aus demselben Pfad stammen wie der Schluss (Brownsche Brücke
 je Tag statt unabhängiges Rauschen).
 
 Werkzeug: `n55_vola_in_der_geometrie.py` (`--eiche`, `--probe`)
+
+
+---
+
+## 2.139 ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026)
+
+### Warum geprüft wurde
+
+Das Audit desselben Tages hatte gezeigt: alle drei Live-Registrierungen
+stehen auf **H20 in R**. `oi_aenderung` ist der dringlichste Fall — die
+einzige der drei, die als **Sperre** wirkt und Signale vollständig
+unterdrückt, statt sie nur zu gewichten.
+
+⚠️ N-53 hatte das nicht beantwortet: dort wurde bei **H5 auf der
+Barrieren-Quote** gemessen — eine andere Basis. Nach R-R11 zuerst die
+Reproduktion, in der **Live-Form** (oberstes Fünftel gesperrt, nicht das
+Drittel aus N-53).
+
+### ⚠️ Zuerst eine Korrektur an meiner eigenen Audit-Aussage
+
+Ich hatte behauptet, die Registrierungsbasis `bewegung_r` sei
+kontaminiert. Belegt war das für **H5 mit `vola`** als Kennzahl (N-52,
++0,04050 in der richtungsfreien Welt). **Bei H20 mit externen Kennzahlen
+bestätigt es sich nicht:**
+
+| Kunstwelt (H20) | `bewegung_r` | Urteil |
+|---|---|---|
+| reines Rauschen | −0,00942 [−0,01820 .. −0,00002], 1/5 | feuert nicht |
+| reines Volatilitätsabbild | −0,02500 [−0,05185 .. +0,00332], 0/5 | feuert nicht |
+
+**Meine Aussage war zu stark.** Der Verdacht ist schwächer als
+dargestellt — ausgeräumt ist er nicht, die Bänder sind breit.
+
+### ✔ `oi_aenderung` — reproduziert und trägt Richtung
+
+| | H20 | H5 (Betriebshorizont) |
+|---|---|---|
+| **R** `bewegung_r` | +0,00978 [+0,00166 .. +0,01890] ✔ | +0,00344, ns |
+| | registriert **+0,0145 liegt im Band** → ✔ **REPRODUZIERT** | |
+| **GS** richtungsrein | **+0,00220 [+0,00058 .. +0,00373], 0/5 ✔** | **+0,00381 [+0,00205 .. +0,00550], 0/5 ✔** |
+| G0 Barrieren-Quote | +0,00089, ns | **−0,00262 [−0,00367 .. −0,00147] ⚠️** |
+| AUF Kanal | −0,00176 ✔ | **−0,00989 [−0,01127 .. −0,00837] ✔** |
+
+> **Die Sperre trägt Richtung — am Betriebshorizont sogar stärker als auf
+> ihrer Registrierungsbasis.** Die Frage ist beantwortet: sie steht zu
+> Recht.
+
+⚠️⚠️ **Aber sie senkt bei H5 die Barrieren-Trefferquote** (−0,00262, Band
+ganz im Minus). Der Grund ist der Auflösungskanal (−0,00989): die
+gesperrten Werte lösen häufiger auf, und eine Auflösung ist bei CRV 2 zu
+etwa ⅓ ein Treffer. **Dasselbe Muster wie bei `turnover` (2.136), nur
+ausgeprägter.**
+
+### ⚠️⚠️⚠️ Und daraus fällt ein Entwurfsbefund, der größer ist als die Sperre
+
+Die Sperre verbessert die **Richtung** und verschlechtert die
+**Trefferquote**. Beides ist sauber gemessen. Wirtschaftlich zählt die
+Richtung: eine richtungsneutrale Auflösung hat bei CRV 2 den
+Erwartungswert ⅓·(+2 R) + ⅔·(−1 R) = **null**. Mehr Auflösungen sind für
+sich genommen wertlos.
+
+> **`q` in der Potentialformel ist die Barrieren-Trefferquote — also genau
+> die Größe, die den wertlosen Kanal mitzählt.** Das System optimiert
+> etwas anderes als das, was Ertrag bringt.
+
+Das ist kein Fehler in der OI-Sperre, sondern **eine offene Frage an die
+Bewertungsformel selbst.** Sie gehört auf die Liste, nicht in diesen
+Abschnitt.
+
+### ⚠️⚠️ `turnover` reproduziert NICHT — und die Stufen haben keine Ordnung
+
+```
+registriert   +0,0616 R
+gemessen      -0,06293 R   [-0,13183 .. -0,00785]   0/5
+```
+
+Gleiche Größenordnung, **entgegengesetztes Vorzeichen**. Die Zerlegung in
+Fünftel zeigt, warum:
+
+| Fünftel (H20, `bewegung_r`) | 0 | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|---|
+| **`funding`** | +0,071 | **+0,083** | +0,009 | −0,053 | −0,105 |
+| **`turnover`** | +0,009 | +0,053 | **−0,265** | −0,041 | **+0,229** |
+
+**`funding` reproduziert bis in die Form** — auch die registrierte Tabelle
+hat bei Fünftel 1 ihren höchsten Wert (+1,30). Die Ordnung ist monoton.
+
+**`turnover` hat gar keine Ordnung.** Das beste Fünftel ist 4 — genau das,
+welches die Live-Tabelle am härtesten bestraft (−2,40). Und die Bänder
+sind riesig ([+0,025 .. +0,480] allein bei Fünftel 4).
+
+⚠️ Das ist **keine neue Messung gegen 2.133, sondern die Bestätigung
+davon**: dort ergab die Dreiteilung 0 von 2 getrennten Nachbarn in
+**beiden** Historienhälften. Ein Nachmessen erübrigt sich (R-R10).
+
+> **`turnover` trägt Richtung (2.136: GS +0,00512, der stärkste der drei) —
+> aber seine registrierte Fünftel-Tabelle ist nicht belegt. Und es sind
+> die GRÖSSTEN Stufen im ganzen System (+3,15 / −2,40).**
+
+**Die Größe bleibt, die Tabelle muss neu.** Nach 2.133 ist die belegte
+Form eine Zweiteilung, keine Fünfteilung.
+
+Werkzeug: `n56_oi_richtungsrein.py` (`--probe`)
