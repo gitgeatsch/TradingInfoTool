@@ -4224,3 +4224,91 @@ Die Zahl, mit der entschieden wird (**+0,1335 R** bei 0,00 %), steht in
 **keiner** Mailzeile. Die Mail zeigt +0,0335 R und **−0,3665 R**. Regel 2
 ist im Entscheidungspfad eingehalten, aber die Entscheidungszahl ist nicht
 nachvollziehbar. **Nutzerentscheidung**, weil es den Mailtext ändert.
+
+
+---
+
+# ⚠️⚠️ DIE DATENGRUNDLAGE — gemessen am 06.09.2026
+
+**Nutzervorgabe:** *„prüfe auch für die weitere Arbeit, ob wir die passende
+Datengrundlage haben. Sowie wann wir bestimmte Messungen sauber simulieren
+müssen."* Und: *„auch die Simulation muss sauber aufgesetzt sein — in vielen
+Fällen haben wir historische Daten. **Kunstdaten vs. Marktdaten.**"*
+
+## Die bindende Grenze ist die BLOCKZAHL
+
+    Block  = 3 x Horizont = 90 Kalendertage      (Methodik 2.95)
+    Grenze = 20 Bloecke                          (darunter deckt das Band
+                                                  nicht: bei 5 Bloecken
+                                                  19,5 % Fehlalarme)
+    also     1.800 Kalendertage MIT Daten
+
+⚠️ Eine Messung mit 300.000 Ankern auf 800 Tagen ist **untermächtig**; eine
+mit 15.000 Ankern auf 2.400 Tagen nicht. Die Ankerzahl täuscht.
+
+## Das Ergebnis — Blöcke je Kandidat und Menge
+
+| Kandidat | frei | 20 % | 10 % | **5 % (Produktion)** |
+|---|---|---|---|---|
+| **schnitt50** | 32 ✔ | 28 ✔ | 25 ✔ | **21 ✔** |
+| vola | 30 ✔ | 27 ✔ | 22 ✔ | 14 ✖ |
+| amihud | 32 ✔ | 23 ✔ | 19 ✖ | 13 ✖ |
+| funding | 26 ✔ | 24 ✔ | 19 ✖ | 13 ✖ |
+| turnover | 30 ✔ | 23 ✔ | 14 ✖ | **0 ✖** |
+| **`oi_aenderung`** | **18 ✖** | 17 ✖ | 12 ✖ | 4 ✖ |
+
+### ⚠️ Drei Befunde
+
+**1 — Die Produktionsmenge (5 %) ist nur für `schnitt50` messbar.** Für alle
+anderen fehlen 470 bis 600 Kalendertage. **F-212s Kernaussage (+0,0897 R bei
+5 %) steht auf 13 Blöcken** — das Werkzeug hat dort selbst gewarnt, und im
+Fazit stand es nicht.
+
+**2 — `oi_aenderung` ist auf KEINER Menge messbar**, nicht einmal frei
+(18 Blöcke). Es sperrt heute produktiv Signale.
+
+**3 — Der Rückblick der Kennzahl frisst die Blöcke.** `amihud` braucht
+250 Tage Vorlauf und verliert dadurch gegenüber `schnitt50` bei gleicher
+Symbolzahl neun Blöcke. Das ist keine Datenlücke, sondern eine Eigenschaft
+der Größe: **kurze Kennzahlen sind messbar, lange nicht.**
+
+## ⚠️ Kunstdaten sind hier KEIN Ersatz — zwei verschiedene Gründe
+
+| Grund | Beispiel | was hilft |
+|---|---|---|
+| **LAGE fehlt** — die Kursreihen sind da, nur die Signale nicht | `hebel` (0 Signale) · `short` (0) · `akkumulation` (0) | ✔ **Rekonstruktion aus MARKTDATEN** |
+| **DATEN fehlen** — die Reihe selbst ist zu schmal oder zu kurz | `turnover` (65 Symbole) · Terminmarkt (122 Tage) · die 5-%-Menge | ✖ nur mehr Daten. **Kunstdaten wären Selbstbetrug** |
+
+> **Kunstdaten prüfen das WERKZEUG. Marktdaten beantworten die FRAGE.**
+> Wer im zweiten Fall Kunstdaten nimmt, misst seine eigenen Annahmen zurück.
+
+## Der Vorschlag: die Norm nicht aufweichen, die Frage anders stellen
+
+`frei` und `20 %` sind für **alle** Kandidaten messbar. F-212 hat gezeigt,
+dass die Dosis-Wirkungs-Kurve **monoton** ist:
+
+    5 %  +0,0282  ·  10 %  +0,0172  ·  20 %  +0,0050  ·  frei  -0,0003
+
+Werden zwei Punkte belastbar gemessen und ist der Anstieg monoton, ist die
+**Richtung** bei 5 % belegt — als **ausgewiesene Fortschreibung**, nicht als
+Messung.
+
+    MESSEN         frei und 20 %        -> belastbar, alle Kandidaten
+    FORTSCHREIBEN  10 % und 5 %         -> Richtung aus der Monotonie
+    NIE            5 % als Messwert ausgeben, ohne die 13 Bloecke zu nennen
+
+⚠️ **Ausnahme `schnitt50`:** dort ist 5 % mit 21 Blöcken direkt messbar. Der
+einzige Kandidat, bei dem die Fortschreibung geprüft werden kann — und damit
+der Prüfstein für die Fortschreibung selbst.
+
+## Was daraus für den Gesamtplan folgt
+
+| # | | Art |
+|---|---|---|
+| **D1** | **Schritt 4a misst `frei` und `20 %`** für alle Kandidaten, nicht 5 % | Festlegung |
+| **D2** | **`schnitt50` prüft die Fortschreibung** — bei ihm sind alle vier Mengen messbar | Messung |
+| **D3** | ⚠️ **`oi_aenderung` ist als Live-Sperre nicht validierbar.** Entweder mehr Terminmarkt-Historie beschaffen oder die Sperre zurücknehmen | **Nutzerentscheidung** |
+| **D4** | **Hebel · Short · Akkumulation** aus Marktdaten rekonstruieren, nicht aus Kunstdaten | Bau, Schritt 4b |
+| **D5** | Jede künftige Kennzahl wird auf ihren **Rückblick** geprüft — er kostet Blöcke | Regel |
+
+Werkzeug: `pruefe_datengrundlage.py` · `messnorm_auswahl.datenlage()`
