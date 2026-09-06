@@ -16889,6 +16889,46 @@ def paket_hartes_budget() -> None:
            "werden, egal wie der Schalter steht")
 
 
+def paket_register() -> None:
+    """Laeuft das REGISTER mit dem laufenden System mit? (06.09.2026)
+
+    ⚠️ Nutzervorgabe: *"sonst findet man die Punkte nicht mehr oder sie
+    sind teilweise nicht nachvollziehbar."* Ein Register, das niemand
+    prueft, ist nach zwei Wochen falsch - und dann schaedlicher als keines,
+    weil man ihm glaubt.
+
+    Geprueft wird die BEZIEHUNG, nicht der Inhalt:
+      - jeder als tragend gefuehrte REGLER steht in
+        `wahrscheinlichkeit.BEITRAEGE`
+      - jeder als tragend gefuehrte SCHALTER hat seine Gate-Stufe
+      - kein Befund steht auf "gilt" und hat zugleich einen Abloeser
+      - kein abgeloester Befund ohne Verweis UND Begruendung (R-R11)
+
+    ⚠️ Die Pruefung ist am 06.09. gegen VIER kuenstliche Fehler getestet
+    worden und hat alle vier gefangen - eine gruene Pruefung ist sonst
+    kein Nachweis (Methodik 2.100).
+    """
+    P = "Register"
+    import bestand as _B                                     # noqa: PLC0415
+    fehler = _B.pruefe(still=True)
+    pruefe(P, "Register und laufendes System stimmen ueberein",
+           not fehler, " · ".join(fehler[:4]))
+    pruefe(P, "jeder Kandidat hat eine Hypothese",
+           all(k.hypothese.strip() for k in _B.KANDIDATEN),
+           "ohne Hypothese ist ein Beitrag nicht pruefbar (R-R11)")
+    pruefe(P, "jeder Kandidat nennt seine Registrierungsbasis",
+           all(k.basis.strip() for k in _B.KANDIDATEN),
+           "ohne Basis kann kein Befund reproduziert werden")
+    pruefe(P, "jeder tragende Kandidat nennt eine Messkette",
+           all(k.kette for k in _B.KANDIDATEN if k.zustand == "traegt"),
+           "ohne Kette ist nicht nachvollziehbar, was ihn traegt")
+    pruefe(P, "die Ansichten sind erzeugbar",
+           all(len(f()) > 200 for f in (_B._kandidatenblatt,
+                                        _B._befundblatt,
+                                        _B._werkzeugblatt,
+                                        _B._methodikblatt)))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -16903,6 +16943,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,

@@ -1,5 +1,14 @@
 # Test- und Verifikationsmethodik
 
+> 📇 **Dieses Dokument hat 85 nummerierte Abschnitte und ist
+> CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
+> Reihenfolge. Der thematische Zugang steht in
+> **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
+>
+> Was aktuell **gilt** und was **abgelöst** ist, steht in
+> **`REGISTER_Befunde.md`** — eine Korrektur findet man hier sonst nur
+> durch Vorwärtslesen.
+
 **Zweck:** Dauerhafter Standard, kein einmaliges Protokoll. Bisher wurden Tests und
 Notebook-Export-Analysen bei jeder Änderung neu und unterschiedlich tief erfunden -
 das macht Ergebnisse über die Zeit nicht vergleichbar und lässt leicht Unschärfe in
