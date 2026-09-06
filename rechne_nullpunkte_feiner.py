@@ -61,6 +61,22 @@ from messe_form_und_nullpunktkurve import (                 # noqa: E402
 from pruefe_persistenz_und_nullpunkt import (               # noqa: E402
     persistenz, kunst_fuenftel)
 
+# ⚠️ MEHR ZIEHUNGEN BEI WENIGEN SYMBOLEN (06.09., nach dem ersten Lauf).
+#
+# Mit fuenf Ziehungen war die Kurve bei 516 Symbolen monoton, bei den
+# duennen Strukturen aber nicht:
+#
+#     516 Symbole   0,46 0,51 0,58 0,59 0,84 1,09 1,24 1,41   monoton
+#     funding 287   0,31 0,48 0,65 1,31 1,07 1,07 1,41 1,56   springt
+#     turnover 65   0,70 0,88 0,78 1,85 2,14 2,18 2,40 3,38   springt
+#
+# Und ausgerechnet funding (2,5x) und turnover (3,4x) liegen an der
+# Entscheidungsschwelle. Die Zahl der Ziehungen richtet sich deshalb nach
+# der Symbolzahl - wenige Symbole brauchen mehr.
+def ziehungen_fuer(syms: int) -> int:
+    return 5 if syms >= 400 else (12 if syms >= 200 else 20)
+
+
 ZIEHUNGEN = 5
 BLOECKE = (1, 2, 3, 5, 20, 60, 250, None)
 
@@ -88,12 +104,12 @@ AUS_KURSDATEN = ("amihud", "vola", "schnitt", "schnitt50", "rsi",
 AUS_TERMIN = ("oi_aenderung", "long_bias", "top_bias", "taker_bias")
 
 
-def kurve_fuer(gebaut, zeilen, tage_je_sym) -> list:
+def kurve_fuer(gebaut, zeilen, tage_je_sym, ziehungen=ZIEHUNGEN) -> list:
     """[(persistenz, nullpunkt)] auf DIESER Struktur, feines Raster."""
     aus = []
     for b in BLOECKE:
         sp, pe = [], []
-        for z in range(ZIEHUNGEN):
+        for z in range(ziehungen):
             kf = kunst_fuenftel(gebaut, b, salz=z)
             if not kf:
                 continue
@@ -104,7 +120,23 @@ def kurve_fuer(gebaut, zeilen, tage_je_sym) -> list:
             if s == s:
                 sp.append(s)
         if sp:
-            aus.append((float(np.mean(pe)), float(np.max(sp))))
+            # ⚠️ NICHT DAS MAXIMUM (06.09., eigener Fehler beim Nachziehen).
+            #
+            # Das Maximum waechst mit der Zahl der Ziehungen, auch bei
+            # identischer Verteilung - nachgemessen an 1000 Wiederholungen:
+            #
+            #     5 Ziehungen  E[max] 1.29     12 -> 1.39     20 -> 1.45
+            #
+            # Ich hatte den duennen Strukturen mehr Ziehungen gegeben, um
+            # sie FAIRER zu behandeln - und ihnen damit allein deshalb
+            # einen hoeheren Nullpunkt verpasst. Bei turnover machte das
+            # den Unterschied zwischen 3,4x und 2,0x.
+            #
+            # `Mittel + 2 x Streuung` schaetzt dasselbe Quantil, unabhaengig
+            # von der Anzahl.
+            a = np.array(sp, float)
+            grenze = float(a.mean() + 2.0 * a.std(ddof=1)) if a.size > 1                 else float(a[0])
+            aus.append((float(np.mean(pe)), grenze))
     aus.sort()
     return aus
 
@@ -176,9 +208,10 @@ def main() -> int:
         syms = len({e["sym"] for liste in g.values() for e in liste})
         schluessel = (round(syms / 25.0), round(len(g) / 100.0))
         if schluessel not in kurven:
-            print("  ziehe Kurve fuer %d Symbole / %d Tage (%s) ..."
-                  % (syms, len(g), art), flush=True)
-            kurven[schluessel] = kurve_fuer(g, zeilen, tage_je_sym)
+            zz = ziehungen_fuer(syms)
+            print("  ziehe Kurve fuer %d Symbole / %d Tage (%s) - %d Ziehungen ..."
+                  % (syms, len(g), art, zz), flush=True)
+            kurven[schluessel] = kurve_fuer(g, zeilen, tage_je_sym, zz)
         kurven[art] = kurven[schluessel]
 
     for art in arten:

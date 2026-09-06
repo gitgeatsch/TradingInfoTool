@@ -8759,3 +8759,86 @@ Nullpunkt ab. Nur die Nulllinie wird neu gezogen.
 Werkzeuge: `messe_alle_groessen_neu.py`, `rechne_nullpunkte_feiner.py` (neu)
 Verwandt: **F-226** · **F-229** · Methodik 2.99 · 2.101
 
+
+
+## F-231 ⚠️⚠️⚠️ N-51d: BEIDE registrierten Beiträge fallen — sieben kursbasierte Größen tragen (06.09.2026)
+
+**Der Nullpunkt in seiner vierten Fassung.** Drei Fehler mussten dafür
+nacheinander behoben werden, jeder davon echt:
+
+| # | Fehler | Wirkung |
+|---|---|---|
+| 1 | eine Ziehung je Blocklänge | Kurve nicht monoton, der Nenner war eine Zufallszahl |
+| 2 | **eine Kurve für alle Strukturen** | dünn gedeckte Größen zu günstig — im Vorabtest 0,4× statt 1,6× |
+| 3 | **Blockraster in der Mitte zu grob** | `funding` (47,9 %) auf b=1 geschnappt, `turnover` (65,9 %) auf b=5 — entgegengesetzte Enden derselben Lücke |
+| 4 | **Maximum statt Streuungsmaß** | mehr Ziehungen → höherer Nullpunkt, rein mechanisch |
+
+⚠️ **Fehler 4 entstand beim Beheben von Fehler 3.** Ich gab den dünnen
+Strukturen mehr Ziehungen, um sie *fairer* zu behandeln — und verpasste
+ihnen damit allein durch die Anzahl einen höheren Nullpunkt. An 1.000
+Wiederholungen nachgemessen:
+
+    Ziehungen      E[max]     E[mittel + 2 sd]
+        5           1,291          1,467
+       12           1,403          1,483
+       20           1,464          1,486
+
+Das Maximum wächst, `Mittel + 2 Streuungen` bleibt stabil. Bei `turnover`
+war das der Unterschied zwischen **3,4×** und **2,0×** — also zwischen
+trägt und trägt nicht.
+
+⚠️ **Gefunden wurde es nicht durch eine Kontrolle**, sondern dadurch, dass
+zwei Zahlen für dieselbe Größe nebeneinander standen und sich
+widersprachen. Deshalb werden alte und neue Werte nebeneinander
+ausgegeben, statt ersetzt.
+
+### Das Ergebnis
+
+| Größe | NIVEAU | VERÄNDERUNG | Symbole |
+|---|---|---|---|
+| **schnitt** | **7,8×** | 5,7× | 516 |
+| **amihud** | **6,8×** | 6,0× | 516 |
+| **schnitt50** | **6,3×** | 4,2× | 516 |
+| **rsi** | **5,0×** | 3,6× | 516 |
+| **momentum_kurz** | **4,9×** | 4,3× | 516 |
+| **vola** | **4,8×** | 1,8× ✖ | 516 |
+| **momentum** | 2,9× | **5,6×** | 516 |
+| *turnover* **(registriert)** | *2,0×* ✖ | 0,7× ✖ | *65* |
+| *funding* **(registriert)** | *1,6×* ✖ | 0,6× ✖ | *287* |
+| funding_extrem | 0,9× ✖ | 0,2× ✖ | 278 |
+| **`oi_aenderung`** *(Live-Sperre)* | **1,0×** ✖ | 1,0× ✖ | 115 |
+| long_bias · top_bias · taker_bias | 0,5–0,9× ✖ | 0,8–1,1× ✖ | 115 |
+| `zufall` *(Kontrolle)* | **0,3×** ✔ | **0,4×** ✔ | 516 |
+
+> **Beide registrierten Beiträge fallen.** Zwischen der tragenden Gruppe
+> (ab 2,9×) und der nicht-tragenden (bis 2,0×) liegt eine saubere Lücke —
+> die Schwelle von 2,5× schneidet nicht mitten durch eine Häufung.
+
+### ⚠️ Was das NICHT heißt
+
+**`funding` ist nicht wertlos.** Sein Originalbefund vom 30.08. (**+0,137 R**
+auf Horizont 20, monoton, Block-Bootstrap, beide Historienhälften) gilt
+unverändert — er misst die **Rendite**, nicht die Barrierenquote. Was hier
+fällt, ist ausschließlich seine Wirkung auf die Größe, welche die Bewertung
+tatsächlich behauptet.
+
+**`turnover` dagegen fällt auf allen Wegen:** Stabilität (F-217), Abdeckung
+12,6 % (F-218), und jetzt 2,0×.
+
+### ⚠️ Die Restunschärfe, ehrlich benannt
+
+Die Nullpunkt-Kurven steigen im entscheidenden Bereich (20–84 %
+Beständigkeit) durchgehend; die verbliebenen Dellen liegen bei 96–100 %, wo
+keine der geprüften Größen liegt. Die Streuung von ±0,15 Punkten verschiebt
+die Verhältnisse um rund ein Fünftel. **Die Urteile überstehen das, weil die
+Lücke zwischen den Gruppen größer ist als die Unschärfe.**
+
+### Was offen bleibt
+
+Methodik **2.99** verlangt beide Richtungen des Schichtentests. Für die
+Veränderungsformen wurde nur C gemessen (`Veränderung | Niveau`), nicht D.
+Nachzuholen in **N-52**, zusammen mit dem geeichten Asset-Anteil aus 2.101.
+
+Werkzeuge: `messe_alle_groessen_neu.py`, `rechne_nullpunkte_feiner.py`
+Verwandt: **F-226** · **F-229** · **F-230** · Methodik 2.99 · 2.101 · 2.104
+
