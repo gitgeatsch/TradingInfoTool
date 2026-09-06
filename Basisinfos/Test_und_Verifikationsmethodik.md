@@ -5906,3 +5906,112 @@ beantwortet.
 beschaffen. Erst dann ist entscheidbar, ob die fehlende Altseason ein
 Mess- oder ein Marktbefund ist.
 
+
+
+## 2.112 ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026)
+
+**Nutzervorgabe:** *„das System soll nicht nur für bestimmte Extreme gebaut
+werden, sondern für den alltäglichen Handel — wo die großen Bewegungen zwar
+vorkommen, aber immer seltener werden. BTC wird keine 200 Prozent mehr am Tag
+machen, und einzelne selektive Altcoins bringen massiven Gewinn — **nicht alle
+Altcoins steigen.**"*
+
+Beide Annahmen wurden **gemessen**, nicht übernommen. Beide halten.
+
+### A1 — die Extreme werden seltener, aber ASYMMETRISCH
+
+Anteil der Tage mit Tagesbewegung über der Marke:
+
+| Epoche | BTC > 5 % | BTC > 10 % | Alt > 5 % | Alt > 10 % | Alt > 20 % |
+|---|---|---|---|---|---|
+| 2018–2020 | 14,96 % | **3,47 %** | 34,92 % | **12,95 %** | 2,46 % |
+| 2021–2023 | 8,19 % | 1,12 % | 27,24 % | 8,65 % | 1,76 % |
+| **2024–2026** | **4,98 %** | **0,41 %** | **25,01 %** | **6,63 %** | **1,15 %** |
+
+> **BTCs Extreme sterben 8,5-fach, die der Altcoins nur 2-fach.** Die
+> Annahme stimmt — und die *Asymmetrie* ist der brauchbare Teil: die großen
+> Bewegungen sind nicht verschwunden, sie sind **umgezogen**.
+
+### A2 — nicht alle steigen: der Querschnitt 2024–2026
+
+| Horizont | p10 | **p50** | p90 | p99 | Anteil > +2 R |
+|---|---|---|---|---|---|
+| **5 Tage** (in R) | −1,00 | **−0,19** | +0,92 | **+3,88** | **6,65 %** |
+| 60 Tage (in R) | −3,98 | **−1,35** | +3,37 | +15,25 | 19,27 % |
+| 60 Tage (Prozent) | −31,5 % | **−11,7 %** | +23,0 % | **+109,3 %** | 7,32 % (>+50 %) |
+
+> **Der mittlere Altcoin verliert, das oberste Prozent verdoppelt sich.**
+> Genau die Nutzerannahme — und damit ist der **Median die falsche
+> Kennzahl**: er misst per Definition das, was wir nicht handeln.
+
+⚠️ **6,65 % ist die entscheidende Zahl.** Selbst in der schwächsten Epoche
+erreicht an jedem Tag rund jeder fünfzehnte Altcoin binnen fünf Tagen
+**+2 R**. Bei 516 Reihen sind das **rund 34 Kandidaten pro Tag**. Das ist
+kein Extrem, das ist der **Alltag**.
+
+### ⚠️⚠️⚠️ Was daraus folgt — wir messen gegen den falschen Maßstab
+
+    Streuung, aus der die Auswahl schoepfen kann (p90 - p50, H5, 2024+):
+                                                       1,11 R
+    unser bester gemessener Beitrag (turnover):        0,0635 R
+                                                       -----------
+                                                       5,7 %
+
+> **Wir ernten knapp sechs Prozent dessen, was querschnittlich auf dem Tisch
+> liegt.** Kein „trägt nicht"-Befund der letzten Wochen war in der Nähe einer
+> Decke. Die Beiträge sind nicht zu schwach — der **Maßstab** greift daneben.
+
+Unser gesamter Apparat fragt: *verschiebt der Kandidat den MITTELWERT bzw.
+den Rangzusammenhang von `bewegung_r`?* In einem Markt mit negativem Median
+und Ertrag im oberen Rand ist das die falsche Frage. Ein Kandidat kann
+hervorragend die +3-R-Bewegungen finden und trotzdem eine Mittelwert­
+verschiebung nahe null zeigen, weil er zusätzlich Verlierer einsammelt.
+
+### ✖ ZURÜCKGEZOGEN — die Konzentrationskennzahl
+
+Die erste Fassung wies aus, die oberen 10 % trügen 24–28 % der Bewegung.
+Der Nullpunkt wurde nachgereicht:
+
+    Normalverteilung   21,7 - 21,9 %
+    t(3), schwerer Rand 26,0 - 26,3 %
+    GEMESSEN            24,3 - 27,9 %
+
+⚠️ **Der Messwert liegt zwischen zwei beliebigen Verteilungen** — die Zahl
+trennt nichts und wird nicht verwendet. (Regel: *die Kontrolle ist der erste
+Verdächtige*; hier hat sie die eigene Kennzahl gekippt.)
+
+### ✔ Nebenbei gelöst — die Phasenfrage aus dem Nachtrag zu 2.111
+
+Die BTC-Dominanz lieferte **eine** Phase und war unbrauchbar. Die
+**Querschnittsstreuung** liefert zwei:
+
+    Streuung p90-p50 (H5, in R), Median je Epoche:
+      2018-2020  1,268      2021-2023  1,131      2024-2026  0,999
+
+    Phasen >= 60 Tage, Schwelle = Median der geglaetteten Streuung:
+      HOCH     747 Tage ->  49 Bloecke  ✔
+      niedrig  575 Tage ->  38 Bloecke  ✔
+
+Die Einteilung ist inhaltlich plausibel — *hoch* trifft den Altseason-Lauf
+2020-12 bis 2021-05, *niedrig* die Zermürbung 2022 und 2024/25.
+
+⚠️ **Zwei Einschränkungen, die mitzuführen sind:** die Schwelle ist der
+Median der **ganzen** Reihe und damit für eine Schichtung zulässig, als
+LIVE-Filter aber ein Blick nach vorn. Und *hoch* liegt überwiegend vor 2022,
+*niedrig* überwiegend nach 2024 — **Schichter und Epoche sind teilweise
+verwechselbar.**
+
+### Die Regel in einem Satz
+
+> **In einem Markt mit negativem Median und Ertrag im oberen Rand ist die
+> Mittelwertverschiebung der falsche Erfolgsmaßstab. Gemessen wird, ob ein
+> Kandidat den Anteil der Anker im OBEREN RAND hebt — je Tagesklammer, mit
+> demselben Blockbootstrap und derselben Trennschärfe wie bisher.**
+
+Werkzeuge: `messe_alltagsmarkt.py` · `pruefe_alltagsmarkt.py`
+
+⚠️ **Vor der Übernahme zu prüfen:** ein Randmaß hat weniger Ereignisse
+(6,65 % der Anker) und damit potentiell weniger Trennschärfe. Die
+Positivkontrolle je Größe entscheidet, ob der Maßstab hält — **nicht die
+Plausibilität.**
+
