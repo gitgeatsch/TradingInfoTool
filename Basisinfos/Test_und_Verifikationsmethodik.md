@@ -7537,3 +7537,83 @@ einer Registrierung die Neukalibrierung der Schwelle samt Nachzug von
 
 Werkzeuge: `o4_beitragsform.py` · `pruefe_o4_stufenband.py`
 
+
+
+## 2.128 ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026)
+
+### Die Frage
+
+`messnorm` unterscheidet `bewegung_r` (barrierenfrei, alle Lagen) von
+`barriere` (Ziel vor Stop, nur wo ein Stop den Trade beendet —
+`STOP_BEENDET = {("hebel","einstieg"), ("hebel","swing")}`).
+
+**`r(q)` betrifft den Hebel. K1 braucht also die BARRIEREN-Quote.** Alle
+`vola`-Messungen sind aber auf dem Randmaß — einer **Horizont**-Quote.
+
+### Das Ergebnis — 746.877 bzw. 738.951 Anker
+
+| | H5 | H20 |
+|---|---|---|
+| **Barriere** Ziel vor Stop | 17,07 % | 31,73 % |
+| davon **offen geblieben** | ⚠️ **42,86 %** | 7,39 % |
+| **Horizont** über +2 R | 7,03 % | 18,43 % |
+| Spanne Barriere | 4,287 Pkt | 4,536 Pkt |
+| Spanne Horizont | 2,413 Pkt | 5,908 Pkt |
+| **Verhältnis** | **1,78** | **0,77** |
+| **Korrelation der Stufenreihen** | **+0,972** | **+0,991** |
+
+### ✔ Die Richtung überträgt sich
+
+Korrelation +0,97 und +0,99 über die fünf Fünftel. **Eine Verschiebung der
+Horizont-Quote geht mit einer Verschiebung der Barrieren-Quote einher — die
+Randmessung ist als Grundlage für die Kelly-Quote brauchbar.**
+
+### ⚠️ Aber der Faktor ist horizontabhängig — und kehrt sich um
+
+    H5    Barriere / Horizont = 1,78   der Effekt VERSTAERKT sich
+    H20   Barriere / Horizont = 0,77   der Effekt DAEMPFT sich
+
+> **Eine feste Umrechnung gibt es nicht. Der Faktor muss je Horizont
+> gemessen werden, nicht aus der CRV-Formel abgeleitet.**
+
+### ✔ Die Konstruktion bestätigt sich
+
+Bei H20 liegt die Barrieren-Basisquote bei **31,73 %** gegen die
+theoretischen `1/(1+CRV)` = 33,33 % — die Differenz erklären die 7,39 %
+offenen Trades. **Das Barrierensystem ist erwartungswertneutral, wie
+dokumentiert.**
+
+### ⚠️⚠️ DER BEFUND FÜR DEN ECHTLAUF
+
+> **Bei H5 bleiben 42,86 % der Trades OFFEN** — weder Ziel noch Stop wird
+> erreicht. Die Barrieren-Quote beschreibt dort nur die Hälfte des
+> Geschehens. **Bei einer Hebel-Haltedauer von 1–3 Tagen wäre der Anteil
+> noch höher.**
+
+Ein Echtlauf auf der Watchlist oder den Produktionsumläufen muss offene
+Positionen **explizit behandeln**. Sie als Verlust oder als Gewinn zu
+zählen ist beides falsch; sie wegzulassen verzerrt die Stichprobe.
+
+### ⚠️ Was NICHT gemessen wurde
+
+Verglichen wurden **Horizont-Quotenverschiebung gegen
+Barrieren-Quotenverschiebung**. **Nicht** geprüft ist, ob
+
+    d(quote) = d(Potential) / (1 + CRV)
+
+— die Umrechnung, mit der `funding` und `turnover` kalibriert wurden —
+korrekt ist. Das ist ein anderes Paar (R-Wirkung gegen Quotenverschiebung)
+und bleibt als **N19** offen.
+
+### Was daraus für K1 folgt
+
+| # | | |
+|---|---|---|
+| **K1-a** | Die Randmessung darf in die Kelly-Quote — die Richtung ist belegt | ✔ |
+| **K1-b** | Der Umrechnungsfaktor ist **je Horizont zu messen**, nicht zu setzen | Messung |
+| **K1-c** | ⚠️ Die Stufen der Hebelleiter folgen aus der gemessenen Umrechnung, **nicht aus gesetzten 2x/3x/5x** — Nutzervorgabe 06.09.: *„das war nur mein Beispiel, ich gehe davon aus, dass wir dies fachlich korrekt messen"* | Vorgabe |
+| **N19** | Ist `d(quote) = d(Potential)/(1+CRV)` korrekt? Betrifft die **bestehende** Kalibrierung von `funding` und `turnover` | Messung |
+| **N20** | Der **Echtlauf** muss offene Positionen explizit behandeln (bei H5: 42,86 %) | Bau |
+
+Werkzeug: `n10_barriere_gegen_horizont.py`
+
