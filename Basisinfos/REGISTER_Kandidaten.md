@@ -65,7 +65,7 @@
 - **06.09.** — Schritt 4a B: H5 voll  +0,02059 TRAEGT
 - **06.09.** — G2: juengere Epoche STAERKER (+0,0172 gegen +0,0137)
 
-⚠️ Nur 65 Symbole Abdeckung - das Nullband ist dreimal so breit wie bei den anderen. Urteil wandert mit der Saat.
+⚠️ Nur 65 Symbole Abdeckung - das Nullband ist dreimal so breit wie bei den anderen, das Urteil wandert mit der Saat. ⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab (+0,01389 bei H20, 2.119) - registriert ist er nur am Mittel. Und er erklaert 18 % von `vola` (N1, p=0,025).
 
 ---
 
@@ -111,8 +111,12 @@
 - **06.09.** — Schritt 3: traegt am RAND (+0,0038), nicht am Mittel - der von 2.112 vorhergesagte Fall
 - **06.09.** — Gegenpruefung: ueber drei Saaten stabil
 - **06.09.** — Schritt 4a: TRAEGT auf ALLEN DREI Laeufen
+- **06.09.** — N1-V2: Richtung geprueft - Gegenrichtung -0,00345, spiegelbildlich. Echter Richtungseffekt
+- **06.09.** — N1-C: in funding +0,00309 TRAEGT · in turnover +0,00281 nicht trennbar
+- **06.09.** — N1-D: turnover in vola +0,02217 TRAEGT - wird sogar staerker
+- **06.09.** — N1-Rangtest, 39 Mischungen: funding erklaert 3 % (p=0,325), turnover erklaert 18 % (Rang 1 von 40, p=0,025)
 
-⚠️ VOR der Registrierung: Redundanz gegen funding und turnover pruefen (N1). F-206 fand turnover+vola praktisch identisch mit turnover allein.
+⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. `vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover festgehalten wird, und funding erklaert nachweislich nichts. Aber die 18 % Ueberlappung mit turnover sind belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. Naechster Schritt ist nicht mehr Messung von vola allein, sondern die KOMBINATION vola UND turnover am Rand (N5).
 
 ---
 

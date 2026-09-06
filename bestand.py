@@ -120,7 +120,10 @@ KANDIDATEN = (
             ("06.09.", "G2: juengere Epoche STAERKER (+0,0172 gegen +0,0137)"),
         ),
         warnung="Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
-                "breit wie bei den anderen. Urteil wandert mit der Saat."),
+                "breit wie bei den anderen, das Urteil wandert mit der Saat. "
+                "⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab "
+                "(+0,01389 bei H20, 2.119) - registriert ist er nur am "
+                "Mittel. Und er erklaert 18 % von `vola` (N1, p=0,025)."),
     Kandidat(
         name="oi_aenderung",
         hypothese=("Aufbau von Open Interest zum Vortag: wo sich Hebel "
@@ -158,10 +161,23 @@ KANDIDATEN = (
                        "Mittel - der von 2.112 vorhergesagte Fall"),
             ("06.09.", "Gegenpruefung: ueber drei Saaten stabil"),
             ("06.09.", "Schritt 4a: TRAEGT auf ALLEN DREI Laeufen"),
+            ("06.09.", "N1-V2: Richtung geprueft - Gegenrichtung -0,00345, "
+                       "spiegelbildlich. Echter Richtungseffekt"),
+            ("06.09.", "N1-C: in funding +0,00309 TRAEGT · in turnover "
+                       "+0,00281 nicht trennbar"),
+            ("06.09.", "N1-D: turnover in vola +0,02217 TRAEGT - wird sogar "
+                       "staerker"),
+            ("06.09.", "N1-Rangtest, 39 Mischungen: funding erklaert 3 % "
+                       "(p=0,325), turnover erklaert 18 % (Rang 1 von 40, "
+                       "p=0,025)"),
         ),
-        warnung="⚠️ VOR der Registrierung: Redundanz gegen funding und "
-                "turnover pruefen (N1). F-206 fand turnover+vola praktisch "
-                "identisch mit turnover allein."),
+        warnung="⚠️⚠️ N1 ENTSCHIEDEN, ABER NICHT ZUR REGISTRIERUNG. "
+                "`vola` ist KEIN Mitlaeufer - 82 % bleiben, wenn turnover "
+                "festgehalten wird, und funding erklaert nachweislich "
+                "nichts. Aber die 18 % Ueberlappung mit turnover sind "
+                "belegt, und der Rest ist im Schichtentest NICHT TRENNBAR. "
+                "Naechster Schritt ist nicht mehr Messung von vola allein, "
+                "sondern die KOMBINATION vola UND turnover am Rand (N5)."),
     Kandidat(
         name="schnitt50",
         hypothese="Abstand zum eigenen 50-Tage-Schnitt als Trendlage.",
@@ -290,10 +306,34 @@ BEFUNDE = (
                "Methodik 2.119", warum="ENTWURFSfrage, keine Messfrage - "
                                        "Nutzerentscheidung"),
     Befundlage("N1", "Traegt `vola` unabhaengig, oder ist es redundant zu "
-               "funding/turnover?", "offen", "Schritt 4a",
-               warum="F-206 fand turnover+vola praktisch identisch mit "
-                     "turnover allein - das ist zu pruefen, bevor `vola` "
-                     "registriert wird"),
+               "funding/turnover?", "abgeloest", "Schritt 4a",
+               abgeloest_durch="2.120",
+               warum="beantwortet: KEIN Mitlaeufer (82 % bleiben), aber "
+                     "auch nicht reif - 18 % Ueberlappung mit turnover "
+                     "belegt (Rang 1 von 40, p=0,025), Rest nicht trennbar"),
+    Befundlage("2.120", "`vola` ist kein Mitlaeufer, aber nicht reif: "
+               "funding erklaert 3 % (p=0,325), turnover 18 % (p=0,025); "
+               "der Rest ist im Schichtentest nicht trennbar", "gilt",
+               "Methodik 2.120"),
+    Befundlage("F-206-Anfuehrung", "F-206 (turnover+vola praktisch "
+               "identisch) belegt Redundanz bei N1", "abgeloest",
+               "eigene Anfuehrung 06.09.", abgeloest_durch="2.120",
+               warum="F-206 wurde auf H2/Frontloading gemessen; F-207 haelt "
+                     "fest, dass sich das nicht auf H20/R uebertraegt. Die "
+                     "Anfuehrung war eine Horizontverwechslung"),
+    Befundlage("N5", "Traegt die KOMBINATION `vola` UND `turnover` am "
+               "Randmassstab mehr als jede Groesse einzeln?", "offen",
+               "Methodik 2.120",
+               warum="beide tragen dort etwas, und 82 % von vola sind "
+                     "unabhaengig - das ist die naheliegende Frage"),
+    Befundlage("N6", "`turnover` traegt auch am RAND (+0,01389 bei H20), "
+               "registriert ist er nur am Mittel", "offen",
+               "Methodik 2.119"),
+    Befundlage("N7", "Der Schichtentest braucht rueckwirkend eine "
+               "Trennschaerfe - alle frueheren Nullbefunde daraus sind "
+               "unbeziffert", "offen", "Methodik 2.120",
+               warum="messe_kandidaten_als_regel.geschichtet() hatte nie "
+                     "eine Positivkontrolle"),
     Befundlage("N2", "Warum traegt `schnitt50` bei H5, aber nicht bei H2 "
                "und H20?", "offen", "Schritt 4a"),
 )

@@ -4534,3 +4534,59 @@ Sperre, deren Entscheidungen sich in fünf Tagen entscheiden?*
 | **N3** | Alle Kandidaten auf Menge 20 % (bisher nur „frei") | Messung |
 | **N4** | Schritt 4b: `hebel` · `short` · `akkumulation` aus Marktdaten | Bau |
 
+
+
+---
+
+# ⚠️⚠️ N1 ENTSCHIEDEN — und der Gesamtplan sortiert sich neu (06.09.2026)
+
+## Das Ergebnis in einem Satz
+
+> **`vola` ist kein Mitläufer — aber auch nicht reif.** `funding` erklärt
+> 3 % (p = 0,325, kein Beleg), `turnover` erklärt **18 %** (Rang 1 von 40,
+> **p = 0,025**). Es bleiben 82 %, aber der Rest ist im Schichtentest nicht
+> von seinem Nullpunkt zu trennen.
+
+**`vola` wird NICHT registriert.** Zustand bleibt „offen".
+
+## Warum das die richtige Entscheidung ist
+
+Ein Beitrag, dessen unabhängiger Rest nicht trennbar ist, würde die
+Bewertung um eine Größe erweitern, deren Wirkung wir nicht beziffern
+können — und nach R-R9 eine Neukalibrierung der Schwelle auslösen. Der
+Preis wäre real, der Ertrag unbelegt.
+
+⚠️ **Das ist kein Nullbefund.** Die 82 % sind gemessen, und die
+Nichttrennbarkeit ist **kein Abdeckungsartefakt**: die gemischte Kontrolle
+läuft auf denselben 65 Symbolen und erreicht dort +0,00342.
+
+## Die nächsten Schritte, in dieser Reihenfolge
+
+| # | Was | Warum jetzt | Aufwand |
+|---|---|---|---|
+| **N5** | **Kombination `vola` UND `turnover` am Randmaßstab** | Beide tragen dort etwas, 82 % von `vola` sind unabhängig. Wenn eine Größe entsteht, ist es diese | 1 Lauf |
+| **N6** | **`turnover` am Randmaßstab** — er trägt dort (+0,01389 bei H20), registriert ist er nur am Mittel | Eine registrierte Größe mit einem zweiten, ungenutzten Geltungsbereich | 1 Lauf |
+| **N2** | **`schnitt50` bei H5 gegenprüfen** — trägt dort (+0,0101), bei H2 und H20 nicht. Der Bogen ist erklärungsbedürftig | offener Widerspruch | 1 Lauf |
+| **N3** | Alle Kandidaten auf **Menge 20 %** (bisher nur „frei") | die Produktion wählt 5 %, „frei" ist die Untergrenze der Aussage | 1 Lauf |
+| **N7** | ⚠️ **Schichtentest-Nullbefunde rückwirkend beziffern** | `geschichtet()` hatte nie eine Positivkontrolle — jeder frühere Nullbefund daraus ist unbeziffert | Nacharbeit |
+| **4b** | `hebel` · `short` · `akkumulation` aus Marktdaten rekonstruieren | die drei Lagen ohne Signale | Bau |
+| **5** | Der **Nachlauf über die Phasen** — es fehlt die Seitwärtsklasse | Nutzerfassung der Simulationsfrage | Bau |
+
+## ⚠️ N7 ist größer, als es aussieht
+
+`messe_kandidaten_als_regel.geschichtet()` hat **nie** eine
+Positivkontrolle gehabt. Jeder Schichtentest-Nullbefund der Vergangenheit
+sagt damit nicht, ob die Fächer den Effekt überhaupt hätten zeigen können.
+Betroffen ist unter anderem der **H-4c-Schichtentest**, mit dem
+`oi_aenderung` als eigener Beitrag von `funding` abgegrenzt wurde.
+
+⚠️ Das entwertet H-4c nicht — dort war der Befund **positiv** (+0,0136 R),
+und ein positiver Befund braucht keine Trennschärfe. **Nur die
+Nullbefunde** sind betroffen.
+
+## Offene Nutzerentscheidungen — unverändert
+
+**D3** Horizont der OI-Sperre (Entwurfsfrage) · **O1** Cooldown · **O3**
+Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday · **O7**
+MFE · die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
+

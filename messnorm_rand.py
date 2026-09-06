@@ -52,6 +52,7 @@ except Exception:                                            # noqa: BLE001
     pass
 
 import messe_bewertungskennzahl as M                         # noqa: E402
+import messe_kandidaten_als_regel as K                       # noqa: E402
 import messe_regel_wirksamkeit as W                          # noqa: E402
 import messnorm as N                                         # noqa: E402
 from messnorm import Befund, Lage, Protokoll, SAAT, ZIEHUNGEN  # noqa: E402
@@ -206,6 +207,150 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
             blocklaenge=block, saat=SAAT,
             block_ak=float(bp.get("ak", float("nan"))),
             block_ok=bool(bp.get("ok", True))))
+
+
+# ------------------------------------------------------- Schichtentest
+def geschichtet(je_tag: dict, schicht_je_tag: dict, *, marke=None,
+                faecher: int = 5, mische=None, pflanze: float = 0.0,
+                oben_sperren: bool = True) -> dict:
+    """Die Regel INNERHALB der Faecher einer zweiten Groesse — BEIDE Massstaebe.
+
+    Getreue Spiegelung von `messe_kandidaten_als_regel.geschichtet`, mit
+    zwei Ergaenzungen:
+
+      marke=None   Median-Differenz wie im Original (MITTELWERT-Massstab)
+      marke=2.0    Differenz der Randanteile (RAND-Massstab)
+
+      pflanze      ⚠️ DAS ORIGINAL HAT KEINE POSITIVKONTROLLE. Ein
+                   Nullbefund im Schichtentest war deshalb nie beziffert -
+                   man wusste nicht, ob die Faecher ueberhaupt maechtig
+                   genug sind, einen Effekt zu zeigen. Die Faecher sind
+                   klein (ein Fuenftel eines Tages), das Band also breit;
+                   genau dort braucht man die Trennschaerfe am dringendsten.
+
+    ⚠️ WOFUER (Pruefliste 2.80, Frage 1): traegt der Kandidat nur, weil er
+    nebenbei die zweite Groesse aussortiert? Innerhalb eines Faches ist die
+    zweite Groesse festgehalten - was uebrig bleibt, kann sie nicht mehr
+    erklaeren.
+    """
+    aus = {}
+    for tag, z in je_tag.items():
+        s = schicht_je_tag.get(tag)
+        if not s:
+            continue
+        w = np.array([x["kennzahl"] for x in z], float)
+        y = np.array([x["in_r"] for x in z], float)
+        sw = np.array([s.get(x["sym"], np.nan) for x in z], float)
+        gut = np.isfinite(sw)
+        if gut.sum() < K.MIND_JE_TAG:
+            continue
+        w, y, sw = w[gut], y[gut], sw[gut]
+        fach = np.minimum((W.rang(sw) * faecher).astype(int), faecher - 1)
+        frei = np.ones(len(w), bool)
+        genutzt = np.zeros(len(w), bool)
+        for f in range(faecher):
+            m = fach == f
+            if m.sum() < 4:
+                continue
+            r = W.rang(w[m])
+            if mische is not None:
+                r = mische.permutation(r)
+            lok = (r < W.GRENZE) if oben_sperren else (r >= 1.0 - W.GRENZE)
+            if lok.sum() < 3 or (~lok).sum() < 1:
+                continue
+            idx = np.flatnonzero(m)
+            frei[idx] = lok
+            genutzt[idx] = True
+        if genutzt.sum() < K.MIND_JE_TAG or frei[genutzt].sum() < 3:
+            continue
+        y2 = y.copy()
+        if pflanze:                       # auf die GESPERRTEN, wie im Original
+            y2[genutzt & ~frei] -= pflanze
+        a, b = y2[genutzt & frei], y2[genutzt]
+        if marke is None:
+            aus[tag] = float(np.median(a) - np.median(b))
+        else:
+            aus[tag] = float((a > marke).mean() - (b > marke).mean())
+    return aus
+
+
+def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
+                       lage: Lage, menge: str, rng, marke=None,
+                       horizont: int = 5,
+                       staerken: tuple = (0.02, 0.05, 0.10, 0.20),
+                       oben_sperren: bool = True, still: bool = True) -> Befund:
+    """Der Schichtentest unter der vollen Norm — mit Nullpunkt UND Trennschaerfe."""
+    block = N._block(horizont)
+
+    def _band(d, titel):
+        if still:
+            import contextlib
+            import io as _io
+            with contextlib.redirect_stdout(_io.StringIO()):
+                return M.urteil_tage(titel, d, rng, block)
+        return M.urteil_tage(titel, d, rng, block)
+
+    d = geschichtet(je_tag, schicht_je_tag, marke=marke,
+                    oben_sperren=oben_sperren)
+    haupt = _band(d, kandidat)
+    if haupt is None:
+        raise ValueError("zu wenige Tage fuer ein Band (%d)" % len(d))
+    bp = N.pruefe_block(d, block)
+
+    nu, no, nw = [], [], []
+    for z in range(ZIEHUNGEN):
+        n0 = geschichtet(je_tag, schicht_je_tag, marke=marke,
+                         mische=np.random.default_rng(SAAT + z),
+                         oben_sperren=oben_sperren)
+        nb = _band(n0, "null %d" % z)
+        if nb:
+            nw.append(nb["mittel"]); nu.append(nb["unten"]); no.append(nb["oben"])
+    null = {"mittel": float(np.mean(nw)) if nw else 0.0,
+            "unten": float(np.min(nu)) if nu else 0.0,
+            "oben": float(np.max(no)) if no else 0.0}
+
+    ts, ts_r, treffer = None, None, {}
+    for s in sorted(staerken):
+        gefunden, werte = 0, []
+        for z in range(ZIEHUNGEN):
+            p = geschichtet(je_tag, schicht_je_tag, marke=marke,
+                            mische=np.random.default_rng(
+                                SAAT + 1000 * z + int(s * 1000)),
+                            pflanze=s, oben_sperren=oben_sperren)
+            pb = _band(p, "pflanze %.2f/%d" % (s, z))
+            if pb:
+                werte.append(pb["mittel"])
+                if pb["unten"] > 0:
+                    gefunden += 1
+        treffer[s] = gefunden
+        if ts_r is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
+            ts_r = s
+            ts = float(np.mean(werte)) if werte else None
+
+    return Befund(
+        kandidat=kandidat, lage=lage,
+        zielgroesse="bewegung_r" if marke is None else _zielgroesse(marke),
+        menge=menge, wirkung=haupt["mittel"], unten=haupt["unten"],
+        oben=haupt["oben"], nullpunkt=null["mittel"], null_unten=null["unten"],
+        null_oben=null["oben"], trennschaerfe=ts, trennschaerfe_in_r=ts_r,
+        gepflanzt=tuple(sorted(staerken)),
+        n_anker=sum(len(z) for z in je_tag.values()), n_tage=haupt["tage"],
+        n_bloecke=max(1, haupt["tage"] // block),
+        abdeckung_symbole=len({x["sym"] for z in je_tag.values() for x in z}),
+        protokoll=Protokoll(
+            wirkung_funktion=("messnorm_rand.geschichtet (%s)"
+                              % ("Median" if marke is None
+                                 else "Rand > +%g R" % marke)),
+            band_funktion="messe_bewertungskennzahl.urteil_tage",
+            null_konstruktion="Raenge INNERHALB der Faecher gemischt",
+            null_ziehungen=ZIEHUNGEN,
+            positiv_konstruktion="in die gemischte Welt gepflanzt, "
+                                 "auf die Gesperrten",
+            positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,
+            blocklaenge=block, saat=SAAT,
+            block_ak=float(bp.get("ak", float("nan"))),
+            block_ok=bool(bp.get("ok", True))))
+
 
 
 # --------------------------------------------------------- Kunstwelten

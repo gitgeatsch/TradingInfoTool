@@ -6766,3 +6766,97 @@ Nutzerentscheidung. ⚠️ Nichts davon rechtfertigt eine Ausnahme des Wertes.
 
 Werkzeuge: `schritt4a_matched.py` · `schritt4a_gegenpruefung.py`
 
+
+
+## 2.120 ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026)
+
+**Die Frage:** `vola` trägt am Randmaßstab auf allen drei Läufen (2.119).
+Trägt er eigenständig — oder nur, weil er nebenbei `funding` oder
+`turnover` aussortiert?
+
+### Die Vorprüfung — sie hat zwei Fehlwege verhindert
+
+| | |
+|---|---|
+| **V1 Abdeckung** | `vola ∩ funding` 2.369 Tage / **157 Blöcke** · `vola ∩ turnover` 2.287 Tage / **152 Blöcke** — beide messbar. Die Sorge um 65 Symbole war unbegründet |
+| **V2 Richtung** | oben sperren **+0,00327**, unten sperren **−0,00345** — spiegelbildlich. Ein echter Richtungseffekt; hätte beides positiv getragen, wäre `vola` ein Streuungsartefakt |
+| **V3 Korrelation** | `vola/funding` −0,082 · `vola/turnover` +0,046 · `funding/turnover` −0,022 |
+
+⚠️ **Zwei Fehler, vor dem Messen gefunden:**
+
+**1 — F-206 war falsch angeführt.** *„`turnover`+`vola` ist praktisch
+identisch mit `turnover` allein"* wurde auf **H2/Frontloading** gemessen;
+F-207 hält fest, dass sich das nicht auf H20/R überträgt. N1 war
+unbelastet.
+
+**2 — Das vorhandene Werkzeug konnte die Frage nicht beantworten.**
+`messe_kandidaten_als_regel.geschichtet()` rechnet auf `in_r` — dem
+Mittelwert. `vola` trägt nur am Rand. Gebaut wurde eine Fassung für beide
+Maßstäbe und **bewiesen, dass sie bitgenau dasselbe liefert** (Abweichung
+0,000e+00, auch mit Mischung). ⚠️ Dabei geschlossen: **das Original hatte
+nie eine Positivkontrolle** — jeder frühere Schichtentest-Nullbefund war
+unbeziffert.
+
+### Der Schichtentest — beide Richtungen (2.99)
+
+Jeder Kandidat wird auf dem Maßstab geprüft, auf dem er trägt. Das ist
+kein Kunstgriff, sondern die Folge von 2.112.
+
+| | Wirkung | Band | Urteil |
+|---|---|---|---|
+| **Bezug** `vola` Rand | +0,00327 | [+0,00171 .. +0,00497] | **TRÄGT** |
+| **C** `vola` in `funding` | +0,00309 | [+0,00141 .. +0,00544] | **TRÄGT** |
+| **C** `vola` in `turnover` | +0,00281 | [+0,00105 .. +0,00465] | nicht trennbar |
+| **D** `funding` in `vola` | +0,00652 | [+0,00348 .. +0,01050] | nicht trennbar |
+| **D** `turnover` in `vola` | **+0,02217** | [+0,01501 .. +0,02979] | **TRÄGT** |
+
+`turnover` wird unter `vola` sogar **stärker** (+0,02059 → +0,02217).
+
+### ⚠️⚠️ DIE ENTSCHEIDENDE KONTROLLE — Schichtung oder Partner?
+
+„Nicht trennbar" hat zwei Ursachen, und sie sind zu trennen: erklärt der
+**Partner** etwas, oder kostet die **Schichtung** an sich Schärfe (die
+Fächer sind ein Fünftel eines Tages)?
+
+**Der Test:** dieselbe Schichtung mit einem **bedeutungslosen** Partner —
+die Schichtwerte werden je Tag über die Symbole vertauscht. Gleiche
+Fächergröße, keine Information.
+
+⚠️ **Erste Fassung mit EINER Mischung** — genau der Fehler aus 2.104. Mit
+sieben Mischungen: p = 1/8 = 0,125, nicht ausreichend. Erst der
+**verteilungsfreie Rangtest mit 39 Mischungen** trägt:
+
+| Partner | ECHT | gemischt (Mittel) | Rang | **p** | erklärt |
+|---|---|---|---|---|---|
+| `funding` | +0,00309 | +0,00318 | 13 von 40 | **0,325** | **3 %** — nichts |
+| `turnover` | +0,00281 | +0,00342 | **1 von 40** | **0,025** | **18 %** |
+
+Der echte Wert liegt bei `turnover` **unter allen 39 Mischungen**.
+
+### Das Urteil — keines der beiden erwarteten
+
+> **`vola` ist kein Mitläufer** — 82 % der Wirkung bleiben, wenn `turnover`
+> festgehalten wird, und `funding` erklärt nachweislich nichts.
+>
+> **Aber `vola` ist auch nicht reif.** Die 18 % Überlappung mit `turnover`
+> sind belegt, und der verbleibende Rest ist im Schichtentest **nicht
+> trennbar** von seinem Nullpunkt.
+
+⚠️ **Die Nichttrennbarkeit ist KEIN Abdeckungsartefakt.** Die gemischte
+Kontrolle läuft auf denselben 65 Symbolen und denselben Fächergrößen und
+erreicht dort +0,00342. Die Abdeckung ist kontrolliert; die 18 % sind echt.
+
+### Was daraus für den Gesamtplan folgt
+
+| # | | Art |
+|---|---|---|
+| **N1-E** | **`vola` wird NICHT registriert** — Zustand bleibt „offen". Begründung: 18 % Überlappung belegt, Rest nicht trennbar | Entscheidung |
+| **N5** | **Die KOMBINATION `vola` UND `turnover` am Randmaßstab** messen. Beide tragen dort etwas; die Frage ist, ob zusammen mehr herauskommt als einzeln | Messung |
+| **N6** | ⚠️ **`turnover` trägt auch am RAND** (+0,01389 bei H20, 2.119) — registriert ist er nur am Mittel. Ein eigener offener Punkt | Messung |
+| **N7** | Der **Schichtentest braucht rückwirkend eine Trennschärfe** — alle früheren Nullbefunde daraus sind unbeziffert | Nacharbeit |
+
+Werkzeuge: `n1_vola_redundanz.py` · `pruefe_n1_vorbedingungen.py` ·
+`pruefe_schichtentest_spiegelung.py` ·
+`pruefe_n1_schichtung_gegen_partner.py` · `pruefe_n1_mehrfachmischung.py` ·
+`pruefe_n1_rangtest.py`
+

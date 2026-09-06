@@ -6,12 +6,12 @@
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 8 | 3 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
-| **TAGESKLAMMER** | 27 | 10 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 78 | 28 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 168 | 60 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **NORM** | 13 | 5 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
+| **BLOCK** | 78 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **ALTBESTAND** | 168 | 59 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **168 von 281 Werkzeugen (60 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **168 von 286 Werkzeugen (59 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,10 +21,12 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (8)
+## NORM (13)
 
-    messnorm_auswahl.py, messnorm_rand.py, pruefe_datengrundlage.py, pruefe_nullschwelle.py
-    schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
+    messnorm_auswahl.py, messnorm_rand.py, pruefe_datengrundlage.py, pruefe_n1_mehrfachmischung.py
+    pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_nullschwelle.py
+    pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py
+    schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 

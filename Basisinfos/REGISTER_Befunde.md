@@ -30,6 +30,10 @@
 
 - Quelle: Methodik 2.119 · R-R11
 
+**2.120** — `vola` ist kein Mitlaeufer, aber nicht reif: funding erklaert 3 % (p=0,325), turnover 18 % (p=0,025); der Rest ist im Schichtentest nicht trennbar
+
+- Quelle: Methodik 2.120
+
 ## ○ WAS OFFEN IST
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
@@ -37,10 +41,19 @@
 - Quelle: Methodik 2.119
 - Warum: ENTWURFSfrage, keine Messfrage - Nutzerentscheidung
 
-**N1** — Traegt `vola` unabhaengig, oder ist es redundant zu funding/turnover?
+**N5** — Traegt die KOMBINATION `vola` UND `turnover` am Randmassstab mehr als jede Groesse einzeln?
 
-- Quelle: Schritt 4a
-- Warum: F-206 fand turnover+vola praktisch identisch mit turnover allein - das ist zu pruefen, bevor `vola` registriert wird
+- Quelle: Methodik 2.120
+- Warum: beide tragen dort etwas, und 82 % von vola sind unabhaengig - das ist die naheliegende Frage
+
+**N6** — `turnover` traegt auch am RAND (+0,01389 bei H20), registriert ist er nur am Mittel
+
+- Quelle: Methodik 2.119
+
+**N7** — Der Schichtentest braucht rueckwirkend eine Trennschaerfe - alle frueheren Nullbefunde daraus sind unbeziffert
+
+- Quelle: Methodik 2.120
+- Warum: messe_kandidaten_als_regel.geschichtet() hatte nie eine Positivkontrolle
 
 **N2** — Warum traegt `schnitt50` bei H5, aber nicht bei H2 und H20?
 
@@ -77,4 +90,16 @@
 - Quelle: Schritt 3, 06.09.
 - **Abgeloest durch: 2.119**
 - Warum: Zwei Groessen gleichzeitig geaendert (Horizont UND Epoche). Alle drei Registrierungen reproduzieren auf ihrer eigenen Basis - R-R11
+
+**N1** — Traegt `vola` unabhaengig, oder ist es redundant zu funding/turnover?
+
+- Quelle: Schritt 4a
+- **Abgeloest durch: 2.120**
+- Warum: beantwortet: KEIN Mitlaeufer (82 % bleiben), aber auch nicht reif - 18 % Ueberlappung mit turnover belegt (Rang 1 von 40, p=0,025), Rest nicht trennbar
+
+**F-206-Anfuehrung** — F-206 (turnover+vola praktisch identisch) belegt Redundanz bei N1
+
+- Quelle: eigene Anfuehrung 06.09.
+- **Abgeloest durch: 2.120**
+- Warum: F-206 wurde auf H2/Frontloading gemessen; F-207 haelt fest, dass sich das nicht auf H20/R uebertraegt. Die Anfuehrung war eine Horizontverwechslung
 
