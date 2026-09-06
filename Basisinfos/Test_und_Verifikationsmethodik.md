@@ -5854,3 +5854,55 @@ sie benutzt wird.
 Werkzeuge: `messnorm._block()` · `messnorm.pruefe_block()` ·
 `messnorm_auswahl.datenlage()` · `pruefe_datengrundlage.py`
 
+
+
+### ⚠️⚠️ Nachtrag zu 2.111 — die PHASE ist fuer Altcoins nicht verfuegbar (06.09.2026)
+
+**Nutzerhinweis:** *„bei Altcoins ist dies anders — BTC-Dominanz — also hier
+muss man aufpassen bei der Einteilung."*
+
+Der Hinweis erklärt die Anomalie aus 2.111, statt sie nur einzuschränken:
+**drei BTC-Bullenphasen 2024–2026 bei −50 % p. a. im breiten Markt ist genau
+das Bild steigender BTC-Dominanz.** Und unser Universum sind 515 von 516
+Altcoins.
+
+### Gemessen — BTC gegen den Median-Altcoin, je 60 Tage
+
+| Abschnitt | BTC | Alt-Median | Differenz |
+|---|---|---|---|
+| 2018–2020 | +10,9 % | **−28,4 %** | +39,3 % |
+| 2021–2023 | +9,7 % | **−27,2 %** | +36,9 % |
+| 2024–2026 | +5,1 % | **−25,2 %** | +30,2 % |
+
+    Phasen "ALT stark" mit >= 60 Tagen ueber neun Jahre:  0
+
+> **In diesen Daten gibt es keine einzige Altcoin-Phase.** Der
+> Median-Altcoin verliert durchgehend gegen BTC — in allen drei Regimen.
+
+### ⚠️ Zwei Deutungen, und sie sind nicht getrennt
+
+| | |
+|---|---|
+| **Das Maß ist zu grob** | der Median über 516 Reihen wird vom langen Schwanz sterbender Coins beherrscht. Ein kapitalgewichteter Index oder die Top-Alts gäben ein anderes Bild |
+| **Es stimmt** | in diesem Universum gibt es keine Altseason |
+
+**Beides ist mit den vorhandenen Daten nicht zu trennen** — dafür fehlt eine
+Marktkapitalisierungs-Reihe.
+
+### Die Folge für die Basislösung
+
+    nach BTC-PHASEN    verfuegbar (BULL 109 / BAER 81 Bloecke), aber fuer
+                       ein ALTCOIN-Universum die falsche Groesse
+    nach DOMINANZ      liefert mit diesem Mass nur EINE Phase - unbrauchbar
+
+> **Die Phasenschichtung ist für das Altcoin-Universum derzeit NICHT
+> verfügbar.** Das ist eine benannte Grenze, kein gelöstes Problem.
+
+⚠️ Damit bleibt als primäre Messung: **der vergleichbare Abschnitt ab 2024,
+Horizont 5, Block 15 — 63 Blöcke.** Die Phasenfrage wird mitgeführt, nicht
+beantwortet.
+
+**Offener Punkt:** eine Marktkapitalisierungs- oder Dominanz-Reihe
+beschaffen. Erst dann ist entscheidbar, ob die fehlende Altseason ein
+Mess- oder ein Marktbefund ist.
+
