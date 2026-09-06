@@ -4312,3 +4312,54 @@ der Prüfstein für die Fortschreibung selbst.
 | **D5** | Jede künftige Kennzahl wird auf ihren **Rückblick** geprüft — er kostet Blöcke | Regel |
 
 Werkzeug: `pruefe_datengrundlage.py` · `messnorm_auswahl.datenlage()`
+
+
+---
+
+# ⚠️⚠️ BASISLÖSUNG „ZU WENIG DATEN" — Methodik 2.111 (06.09.2026)
+
+**Der Engpass war eine Setzung, keine Messung.** `block = max(90, 3 x H)` —
+der Boden von 90 Tagen machte den einzigen vergleichbaren Marktabschnitt
+(2024–2026, rund 960 Tage) mit 10 Blöcken unmessbar.
+
+Nachgemessen reicht die Abhängigkeit genau so weit wie der Horizont
+(H5: nach 5 Tagen bei 0,037). `3 x Horizont` ist dreifach konservativ.
+
+    H20 · Block 60   ->  15 Bloecke   zu wenig
+    H5  · Block 15   ->  63 Bloecke   messbar, AK beim Block 0,04-0,09
+
+**Und der Betriebshorizont sind ohnehin 3–5 Tage.**
+
+## Die vier Stufen
+
+| # | | |
+|---|---|---|
+| **1** | Horizont an die **Frage** | Block folgt, kein fester Boden |
+| **2** | Block **je Messung belegen** | `pruefe_block()`, Grenze 0,15 |
+| **3** | Menge weiten | frei + 20 % messen, 10 %/5 % **fortschreiben** und kennzeichnen |
+| **4** | Aussage **schwächen** | Richtung statt Größe — nie die Norm aufweichen |
+
+⚠️ **Nie** die Historie verlängern, um Blöcke zu bekommen.
+
+## Die Marktphase — Möglichkeit und Warnung
+
+Gemessen (BTC gegen den 200-Tage-Schnitt): der Zyklus ist da, aber **keine
+Phase ab 2024 erreicht 20 Blöcke** (17 · 9 · 11 · 19). Über die ganze
+Historie geschichtet schon: **BULL 109 · BAER 81 Blöcke**.
+
+⚠️⚠️ Aber: **BTCs Phase ist seit 2024 nicht die Phase des Marktes.** Drei
+BTC-Bullenphasen bei −50 % p. a. im breiten Markt. Eine Schichtung nach
+BTC-Phasen ist deshalb zu **messen**, bevor sie benutzt wird.
+
+## Was das für die Reihenfolge ändert
+
+| | vorher | jetzt |
+|---|---|---|
+| Horizont | 20 (weil das Werkzeug so stand) | **5** — der Betriebshorizont |
+| Abschnitt | 2019–2026 | **ab 2024** — der vergleichbare |
+| Block | 90 (gesetzt) | **15** — belegt je Messung |
+| 5-%-Menge | unmessbar | ⚠️ **neu zu prüfen** unter H5/Block 15 |
+
+⚠️ **Die Datengrundlage-Tabelle von heute Nachmittag ist damit überholt** —
+sie zählte Blöcke bei H20/Block 90 über die volle Historie. Sie wird unter
+der Basislösung neu erhoben.

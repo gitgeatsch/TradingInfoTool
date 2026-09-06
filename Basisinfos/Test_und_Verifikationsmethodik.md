@@ -5749,3 +5749,108 @@ gebaut werden. Das Protokoll lehnt einen Irrweg schon bei der eigenen
 Konstruktion ab — wer die Fälle vorher baut, fällt beim *Aufbau* des Tests
 durch statt im Test.
 
+
+
+## 2.111 ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026)
+
+**Nutzervorgabe:** *„wir benötigen eine saubere Basislösung für ‚zu wenig
+Daten' — warum? Warten ist keine Option, teilweise sind Zeitreihen und Daten
+einfach nicht verfügbar, bzw. kann es sein, dass der Markt von 2017 nicht mit
+2024–2026 vergleichbar ist."*
+
+### Warum „mehr Historie" die falsche Antwort ist
+
+Befundkarte **3.11** (30.08.), gemessen:
+
+| | 2018–2020 | 2021–2023 | **2024–2026** |
+|---|---|---|---|
+| BTC Volatilität p. a. | 63,2 % | 53,9 % | **39,3 %** |
+| **Bewegung in R, Median 20 Tage** | **+0,1397** | −0,2469 | **−0,6251** |
+
+> *„Das ist kein Regimewechsel, sondern ein Struktureinbruch. Die
+> **Bewegungsgröße selbst** hat sich verändert."* — und sie **ist** unser
+> Messmaß.
+
+⚠️ **Historie zu verlängern, um Blöcke zu bekommen, mischt drei Märkte.** Das
+ist nicht schwächer, sondern falsch.
+
+### ⚠️ Der eigentliche Engpass war eine SETZUNG, keine Messung
+
+`messe_regel_wirksamkeit` rechnet `block = max(90, 3 x HORIZONT)`. Der Boden
+von 90 Tagen macht den einzigen vergleichbaren Abschnitt unmessbar:
+
+    2024-2026 = rund 960 Tage · Block 90 -> 10 Bloecke   (Grenze: 20)
+
+**Nachgemessen — die Autokorrelation der Tageswirkung (`schnitt50`):**
+
+| Horizont | lag 1 | lag 5 | lag 10 | lag 15 | lag 30 |
+|---|---|---|---|---|---|
+| **5** | 0,634 | **0,037** | −0,032 | −0,004 | −0,024 |
+| 10 | 0,702 | 0,319 | **0,004** | −0,020 | −0,101 |
+| 20 | 0,733 | 0,486 | 0,247 | 0,109 | **−0,064** |
+
+**Die Abhängigkeit reicht genau so weit wie der Horizont** — wie die Theorie
+überlappender Fenster es verlangt. `3 x Horizont` ist dreifach konservativ.
+Der Boden von 90 ist willkürlich.
+
+### Die Basislösung — vier Stufen, in dieser Reihenfolge
+
+    1  HORIZONT an die FRAGE          Block = 3 x Horizont, kein fester Boden.
+                                      Der Betriebshorizont sind 3-5 Tage.
+    2  BLOCK je Messung BELEGEN       `messnorm.pruefe_block()` misst die
+                                      Autokorrelation beim Blockabstand.
+                                      Ueber 0,15 -> Block zu kurz, Band zu eng.
+    3  MENGE weiten                   frei und 20 % sind messbar; 10 % und 5 %
+                                      aus der Monotonie FORTSCHREIBEN und als
+                                      Fortschreibung kennzeichnen.
+    4  AUSSAGE schwaechen             Richtung statt Groesse, mit
+                                      Trennschaerfe - nie die Norm aufweichen.
+
+**Wirkung, gemessen (vergleichbarer Abschnitt ab 2024):**
+
+| Kandidat | H20 · Block 60 | **H5 · Block 15** | AK beim Block |
+|---|---|---|---|
+| schnitt50 | 15 Blöcke ✖ | **63 ✔** | 0,041 |
+| vola | 15 ✖ | **63 ✔** | 0,038 |
+| amihud | 15 ✖ | **63 ✔** | 0,087 |
+
+> **Aus 10 unbrauchbaren Blöcken werden 63 belastbare** — ohne die Norm
+> anzufassen, allein durch den Horizont, der ohnehin der richtige ist.
+
+### ⚠️ Die MARKTPHASE gehört zur Aussage
+
+**Nutzerhinweis:** *„BTC hatte bisher einen Bullen- und Bärenzyklus. Ob dies
+weiterhin so ist, kann in Frage gestellt werden — aber es sagt etwas über die
+Marktphasen."*
+
+Gemessen (BTC gegen den eigenen 200-Tage-Schnitt, Phasen ≥ 60 Tage):
+
+    ab 2024   BULL 262 Tage -> 17 Bloecke   BULL 146 ->  9
+              BULL 178      -> 11           BAER 289 -> 19   (heute)
+
+**Keine einzelne Phase erreicht 20 Blöcke.** Je Phase zu messen ist im
+vergleichbaren Abschnitt **nicht möglich**.
+
+**Über die ganze Historie geschichtet dagegen schon:**
+
+    BULL gesamt  1.642 Tage -> 109 Bloecke
+    BAER gesamt  1.215 Tage ->  81 Bloecke
+
+⚠️⚠️ **Aber Vorsicht — und das ist der Fund, der aus denselben Zahlen
+fällt:** Von 2024 bis 2026 zeigt BTC **drei Bullenphasen**, während der
+breite Markt −50 % p. a. machte und die Bewegung in R auf −0,63 fiel.
+**BTCs Phase ist seit 2024 nicht mehr die Phase des Marktes.**
+
+Wer nach BTC-Phasen schichtet, um einen **breiten** Marktbefund zu messen,
+schichtet nach der falschen Größe. Die Schichtung ist zu **messen**, bevor
+sie benutzt wird.
+
+### Die Regel in einem Satz
+
+> **Nie die Historie verlängern, um Blöcke zu bekommen. Erst den Horizont an
+> die Frage anpassen, dann den Block belegen, dann die Menge weiten — und
+> wenn das nicht reicht, die Aussage schwächen statt die Norm.**
+
+Werkzeuge: `messnorm._block()` · `messnorm.pruefe_block()` ·
+`messnorm_auswahl.datenlage()` · `pruefe_datengrundlage.py`
+

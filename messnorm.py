@@ -307,8 +307,51 @@ class Befund:
 
 
 def _block(horizont: int) -> int:
-    """Methodik 2.95: der Block muss laenger sein als die Abhaengigkeit."""
-    return max(90, 3 * int(horizont))
+    """Der Block muss laenger sein als die ABHAENGIGKEIT - gemessen, nicht
+    gesetzt (06.09.2026).
+
+    ⚠️ `messe_regel_wirksamkeit` rechnet `max(90, 3 x HORIZONT)`. Der Boden
+    von 90 Tagen ist eine SETZUNG, keine Messung - und er macht den einzigen
+    vergleichbaren Marktabschnitt unmessbar:
+
+        2024-2026 sind rund 960 Kalendertage
+        Block 90 -> 10 Bloecke   unter der Grenze von 20, fuer JEDE Menge
+
+    Nachgemessen (Autokorrelation der Tageswirkung, `schnitt50`):
+
+        H     lag 1   lag 5   lag 10  lag 15  lag 30
+         5    0,634   0,037  -0,032  -0,004  -0,024    weg nach 5 Tagen
+        10    0,702   0,319   0,004  -0,020  -0,101    weg nach 10
+        20    0,733   0,486   0,247   0,109  -0,064    weg nach 30
+
+    **Die Abhaengigkeit reicht genau so weit wie der Horizont** - wie die
+    Theorie ueberlappender Fenster es verlangt. `3 x Horizont` ist damit
+    dreifach konservativ; der Boden von 90 ist es nicht, er ist willkuerlich.
+
+    ⚠️ ABER: die Blocklaenge wird je Messung NACHGEPRUEFT (`pruefe_block`),
+    nicht angenommen. Wer sie nur setzt, hat sie geraten.
+    """
+    return max(15, 3 * int(horizont))
+
+
+def pruefe_block(d: dict, block: int, grenze: float = 0.15) -> dict:
+    """Ist der Block laenger als die ABHAENGIGKEIT? — je Messung belegt.
+
+    Gibt die Autokorrelation der Tageswirkung beim Abstand `block` zurueck.
+    Liegt sie ueber `grenze`, ist der Block zu kurz und das Band zu eng.
+    """
+    tage = sorted(d)
+    if len(tage) < block + 30:
+        return {"lag": block, "ak": float("nan"), "ok": False,
+                "grund": "zu wenige Tage fuer die Pruefung"}
+    x = np.array([d[t] for t in tage], float)
+    a, b = x[:-block], x[block:]
+    if a.std() < 1e-12 or b.std() < 1e-12:
+        return {"lag": block, "ak": 0.0, "ok": True, "grund": "keine Streuung"}
+    ak = float(np.corrcoef(a, b)[0, 1])
+    return {"lag": block, "ak": ak, "ok": abs(ak) <= grenze,
+            "grund": ("Abhaengigkeit abgeklungen" if abs(ak) <= grenze
+                      else "⚠️ Block ZU KURZ - das Band waere zu eng")}
 
 
 def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
