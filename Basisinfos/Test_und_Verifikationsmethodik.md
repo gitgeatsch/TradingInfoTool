@@ -7850,3 +7850,73 @@ Ziehungszahl gehört in jede Kontrolle, nicht nur in die der Norm.
 
 Werkzeug: `n22_kontrolle_bei_funding.py`
 
+
+
+## 2.132 ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026)
+
+### Die Frage, präziser gestellt
+
+Nicht *„Schalter oder Regler"* — das sind zwei von vier Formen. Gefragt
+ist: **welche Aufteilung ist die GRÖBSTE, die noch belegt ist?** Und die
+Kontrolle läuft mit **fünf Mischungen** (Lehre aus N22), mit vorab
+genannter Fehlalarm-Erwartung.
+
+### ✖✖ DIE WICHTIGSTE KORREKTUR: `vola`s Fünfteilung hält NICHT
+
+    vola H5   ZWEITEILUNG   +2,09 -2,08         2/2 ohne Null · 1/1 · Kontrolle 0/10  ✔
+              DREITEILUNG   +2,92 -0,26 -2,65   2/3           · 2/2 · Kontrolle 0/15  ✔
+              FUENFTEILUNG  4/5 ohne Null       4/4 Nachbarn  ·       Kontrolle 5/25  ⚠️
+
+**Erwartet wären 1,2 Fehlalarme, beobachtet 5.** In N19-E hatte ich
+gemeldet: *„4 von 4 Nachbarpaaren getrennt, Kontrolle flach"* — **mit EINER
+Mischung**. Mit fünf hält das nicht.
+
+⚠️⚠️ **Zum vierten Mal an diesem Tag hat eine Einzelziehungs-Kontrolle
+getäuscht** — diesmal, indem sie einen Befund **bestätigte**.
+
+> **`vola` ist eine belegte DREITEILUNG, keine belegte Fünfteilung.**
+
+✔ Und das deckt sich mit **2.127**, wo auf dem **Randmaß** ebenfalls nur
+eine Dreiteilung hielt. **Zwei unabhängige Maßstäbe, dieselbe Form.**
+
+### Die Formen, gemessen
+
+| | H20 | H5 |
+|---|---|---|
+| `funding` | zwei Pole, Zweiteilung **nicht** belegt | **belegte ZWEITEILUNG** (+0,40 / −0,39, Kontrolle 2/10) |
+| `turnover` | zwei Pole, ⚠️ Kontrolle 5/25 | ⚠️ **KEINE Form belegt** (0/5 ohne Null, 0/4 Nachbarn) |
+| **`vola`** | **DREITEILUNG**, Kontrolle 0/15 ✔ | **DREITEILUNG**, Kontrolle 0/15 ✔ |
+
+### ⚠️ Ein methodischer Befund über die Fünfteilung selbst
+
+Bei **allen dreien** ist die Kontrolle in der Fünfteilung auffällig
+(2/25 · 5/25 · 5/25 gegen erwartet 1,2), in der **Dreiteilung dagegen
+ruhig** (4/15 · 1/15 · 0/15).
+
+> **Die Fünfteilung ist für diese Datenlage zu fein.** Bei `turnover` sind
+> es rund neun Werte je Fach.
+
+⚠️ **Keine der drei Größen trägt eine belegte Fünfteilung. Die
+registrierten fünfstufigen Tabellen sind damit für keinen der beiden
+Beiträge belegt** — nicht nur zu groß (N19-E), sondern in der **Auflösung**
+nicht gedeckt.
+
+### Was daraus folgt
+
+| # | | Art |
+|---|---|---|
+| **N23-E1** | ⚠️ **Die fünfstufige Bauform ist für keine Größe belegt.** `Beitrag.stufen` mit fünf Werten unterstellt eine Auflösung, die die Daten nicht hergeben | ⚠️ **Nutzerentscheidung** |
+| **N23-E2** | `funding` ist bei H5 eine **Zweiteilung** — ein Schalter mit zwei Richtungen, kein Regler | Befund |
+| **N23-E3** | `turnover` trägt bei H5 **gar keine Form**; bei H20 nur zwei Pole mit auffälliger Kontrolle | Befund |
+| **N23-E4** | ✔ **`vola` ist eine Dreiteilung** — an beiden Horizonten, mit makelloser Kontrolle, auf **zwei** Maßstäben bestätigt | Befund |
+| **K1-b** | ⚠️ Die Hebelleiter hat damit **drei Sprossen**, nicht fünf | Bau |
+
+⚠️⚠️ **Und die Warnung zur Bauform bleibt:** Ein Schalter gehört nach dem
+Präzedenzfall H-4c/N-14 als **Trichterstufe**. Aber eine Trichterstufe
+unterliegt der **Bestandsausnahme** — und die hat `oi_aenderung` bereits
+wirkungslos gemacht (F-180: *„nur Einstieg OHNE Bestand, und den gibt es
+nicht"*). **Zwei weitere Sperren derselben Bauform hätten dasselbe
+Schicksal.** Das ist eine Entwurfsfrage an der Kette, keine Messfrage.
+
+Werkzeug: `n23_form_der_beitraege.py`
+
