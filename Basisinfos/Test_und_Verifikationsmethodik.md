@@ -4140,6 +4140,8 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `erzeuge_stand_word.py` | Erzeugt `Basisinfos/Stand_06_09_2026.docx` - den Tagesstand als Word. ⚠️ Aenderungen ins Skript, nicht in die Datei |
+| `n57_flach_in_der_produktion.py` | ⚠️⚠️ N-57: wieviel laeuft FLACH aus? Kalibrierungsbasis gegen Produktionsgeometrie (2.140) |
 | `n56_oi_richtungsrein.py` | N-56: traegt die LIVE geschaltete OI-Sperre Richtung? Reproduktion in der Live-Form, dann GS (2.139) |
 | `n55_vola_in_der_geometrie.py` | N-55: `vola` in der Geometrie - Stopweite, Horizont, Hebel. ⚠️ Nullpunkt aus geeichten Kunstwelten (2.138) |
 | `n52_vola_geometrieprobe.py` | ⚠️⚠️ N-52: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
@@ -8606,3 +8608,88 @@ davon**: dort ergab die Dreiteilung 0 von 2 getrennten Nachbarn in
 Form eine Zweiteilung, keine Fünfteilung.
 
 Werkzeug: `n56_oi_richtungsrein.py` (`--probe`)
+
+
+---
+
+## 2.140 ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09.2026)
+
+### ⚠️ Die Frage hat sich beim Nachsehen geändert — meine erste Fassung war falsch adressiert
+
+Ich hatte 2.139 mit dem Satz geschlossen, `q` in der Potentialformel zähle
+einen wertlosen Kanal mit. **Beim Nachsehen im Code stimmt das nicht:**
+
+Es gibt **keinen Zeitausstieg**. `haltedauer_tage` wird nur als Information
+mitgegeben (`rollen_lauf` 2042/2377/2532), `positionsfuehrung` kennt keine
+Frist, `GRENZEN["tage_max"] = 120` deckelt nur die Kostenschätzung.
+
+> **In der Produktion läuft eine Position bis Stop oder Ziel. Flach
+> auslaufen gibt es dort nicht.** `q = P(Ziel vor Stop)` ist damit die
+> richtige Größe, und `wert_r = q·CRV − (1−q)` ist korrekt.
+
+### Das Problem löst sich nicht auf — es verschiebt sich, und zwar an die schlimmere Stelle
+
+**Jede Kalibrierung misst mit festem Horizont.** Dort zählt ein nicht
+aufgelöster Anker als 0 — also wie ein Stop. Die Kalibrierungsbasis tut
+etwas, was die Produktion nicht tut.
+
+Gemessen in der **echten** Geometrie (`_boeden`-Rauschboden:
+`max(5 % Kurs, 0,75 × ATR)`, Deckel 25 %, CRV 2,0), 687.748 Anker:
+
+| bis Tag | Ziel | Stop | **FLACH** | EW Kalibrierung | EW Produktion |
+|---|---|---|---|---|---|
+| **5** | 21,2 % | 47,5 % | **31,4 %** | **−0,3654 R** | −0,0756 R |
+| **20** | 32,7 % | 62,0 % | 5,3 % | −0,0199 R | +0,0354 R |
+| 60 | 33,9 % | 64,0 % | 2,1 % | +0,0179 R | +0,0398 R |
+| 120 | 34,3 % | 64,3 % | 1,4 % | +0,0280 R | **+0,0430 R** |
+
+**Median bis zur Auflösung: 3 Tage. 98,6 % lösen binnen 120 Tagen auf.**
+
+> **Bei H5 liegt die Kalibrierungsbasis um +0,2898 R daneben — sie hat
+> sogar das falsche Vorzeichen** (−0,3654 gegen +0,0430 der Produktion).
+
+### ✔✔ Und ein Fund, der die Formel ENTLASTET
+
+Unter den **aufgelösten** Ankern liegt die Trefferquote bei **34,8 %**.
+Die Potentialformel setzt `basisrate(crv) = 1/(1+crv) = 33,3 %`.
+
+> **Die Formel stimmt für die Produktion.** Kaputt ist nicht die Bewertung,
+> sondern die Messung, mit der wir sie füttern.
+
+### Die drei Gegenprüfungen — alle vorab benannt
+
+**A — Messgeometrie (1,0 × ATR):** dort laufen bei H5 sogar **42,8 %**
+flach aus. Die Verzerrung ist in unserer Messkonvention *größer* als in
+der Produktion.
+
+**B — beide Historienhälften:** 30,7 % und 32,1 % flach bei H5. Stabil.
+⚠️ Der Erwartungswert unterscheidet sich dagegen stark (+0,0674 gegen
+−0,0181 bei H120) — die zweite Hälfte ist der Bärenmarkt, bekannt.
+
+**C — Gleichstand ans Ziel statt an den Stop:** ⚠️ Die **Auflösungsquote
+darf sich dadurch nicht ändern**, nur ihre Aufteilung. Gemessen: 31,4 % in
+beiden Varianten, Aufteilung 21,2/47,5 gegen 21,9/46,7. **Die Zählung
+stimmt.**
+
+### ⚠️⚠️ Was daraus für die Kalibrierung folgt
+
+**1 — Die Stufen sind weniger betroffen als der Pegel.** Beiträge werden
+als *Differenz* zwischen Fünfteln gemessen; ein konstanter Versatz kürzt
+sich heraus. Verzerrt wird nur, was den **Auflösungskanal** mit bewegt —
+genau der Mechanismus aus 2.135/2.136.
+
+**2 — H20 ist deutlich sicherer als H5** (5,3 % gegen 31,4 % flach). ⚠️ Die
+Live-Registrierungen stehen auf H20. Das ist ein weiteres Argument dafür,
+dass sie weniger beschädigt sind als heute früh befürchtet.
+
+**3 — Der saubere Weg ist, auf den AUFGELÖSTEN zu kalibrieren.** Genau das
+tut GS. Damit deckt sich die Empfehlung aus 2.136 mit dieser Messung: die
+Stufen gehören auf `q unter den Aufgelösten` neu hergeleitet, nicht auf
+die rohe Barrieren-Quote.
+
+⚠️ **Zu prüfen (nicht behauptet):** ob die Befunde
+„Barrierensystem = Erwartungswert null" und „neun von zehn Einstiegen
+tragen sich nicht" teilweise dieselbe Ursache haben. Beide wurden anders
+gemessen; die Verbindung ist eine Vermutung, keine Feststellung.
+
+Werkzeug: `n57_flach_in_der_produktion.py`

@@ -348,6 +348,23 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.140", "Bei H5 laufen 31,4 % der Anker FLACH aus (H20: "
+               "5,3 %). Die Kalibrierungsbasis zaehlt sie als "
+               "Nicht-Treffer und liegt damit um +0,2898 R daneben - mit "
+               "falschem Vorzeichen (-0,3654 gegen +0,0430)", "gilt",
+               "Methodik 2.140 / n57_flach_in_der_produktion.py"),
+    Befundlage("2.140-formel", "✔ Die POTENTIALFORMEL stimmt fuer die "
+               "Produktion: unter den Aufgeloesten liegt die Trefferquote "
+               "bei 34,8 %, die Formel setzt basisrate(2,0) = 33,3 %. "
+               "Kaputt ist die Messung, nicht die Bewertung", "gilt",
+               "Methodik 2.140"),
+    Befundlage("2.139-quote-deutung", "„`q` in der Potentialformel zaehlt "
+               "einen wertlosen Kanal mit\"", "abgeloest", "Methodik 2.139",
+               abgeloest_durch="2.140",
+               warum="falsch adressiert. Die Kette hat KEINEN Zeitausstieg "
+                     "- in der Produktion laeuft eine Position bis Stop "
+                     "oder Ziel. Der Fehler sitzt in der Messkonvention "
+                     "mit festem Horizont, nicht in der Formel"),
     Befundlage("2.139", "Die LIVE geschaltete OI-Sperre traegt RICHTUNG: "
                "GS +0,00220 [+0,00058 .. +0,00373] bei H20 und +0,00381 "
                "[+0,00205 .. +0,00550] bei H5, beide 0/5. Reproduktion in "
