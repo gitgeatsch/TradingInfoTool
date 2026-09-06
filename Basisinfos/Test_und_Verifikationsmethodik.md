@@ -6256,3 +6256,119 @@ Strukturbefund, der Mittelwert *und* Rand übersteht.
 
 Werkzeuge: `messe_rand_je_schicht.py` · `pruefe_gefallen_randpotential.py`
 
+
+
+## 2.116 ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026)
+
+**Nutzerauftrag:** *„der Zeithorizont muss auf die korrekte Ebene angepasst
+werden — ich bin nicht der Experte, das musst du prüfen und dimensionieren.
+Müssen wir die Assets kategorisieren für bessere Ergebnisse?"*
+
+### Die Reichweite des Systems — zuerst gemessen
+
+    Signale (spot)          45      Bestand                55
+    Hebel-Signale            3      Marktscan-Kandidaten   99
+    Hebel-Trigger           40      -----------------------------
+    Hebel erlaubt           43      zusammen              155
+
+    Messuniversum (Krypto-Kursreihen)                      516
+    davon von der Systemlogik beruehrt                     9,7 %
+
+⚠️⚠️ **Das System handelt weitgehend auf Assets, die wir nicht messen.**
+155 berührte Symbole, aber nur rund 50 liegen im Messuniversum.
+
+Die Spot-Signale sind stark konzentriert: **BTC 30 von 118**, die vier
+größten (BTC, KAS, ETH, SEI) zusammen **54 %**.
+
+Der Marktscan sieht ausschließlich kleine Werte (größter 7,71 Mrd, Median
+33,7 Mio). *Das ist kein Mangel* — er ist ein **Entdecker** für Werte
+außerhalb des Bestands; BTC steht bereits im Bestand und muss nicht
+gefunden werden.
+
+### Das Maß: die ASYMMETRIE, nicht die rohe Randquote
+
+Der Anteil über +2 R wächst mit dem Horizont schon deshalb, weil mehr Zeit
+vergeht. Ein Vergleich **über Horizonte** braucht ein Maß, das das
+herauskürzt:
+
+    Anteil > +x R   minus / geteilt durch   Anteil < -x R
+
+Beide Seiten skalieren gleich. Was übrig bleibt, ist Potential.
+
+### Was die Punktschätzer zeigten — und was davon hielt
+
+Verhältnis > +2 R zu < −2 R, ab 2024:
+
+| Schicht | H=1 | H=3 | H=5 | H=10 | H=20 |
+|---|---|---|---|---|---|
+| Rang 1–5 | 1,37 | 1,15 | 1,04 | 1,01 | **1,06** |
+| Rang 6–20 | 1,86 | 1,34 | 1,13 | 0,88 | 0,79 |
+| Rang 21–50 | **1,88** | 1,16 | 1,00 | 0,83 | 0,70 |
+| Rang 51–100 | 1,75 | 1,07 | 0,96 | 0,81 | 0,68 |
+| ab Rang 101 | 1,45 | 0,95 | 0,90 | 0,79 | 0,65 |
+
+Das las sich als klare Regel: *kurzer Horizont trägt, langer nicht — und
+umso früher, je tiefer die Schicht.*
+
+### ✖ DIE ZUFALLSKONTROLLE HAT DIE REGEL GEKIPPT
+
+Randasymmetrie (Anteil > +2 R **minus** Anteil < −2 R), Blockbootstrap
+Block 3×H, gemischte Rangzuordnung als Kontrolle:
+
+| Schicht | H | ECHT | Band | ZUFALL |
+|---|---|---|---|---|
+| Rang 1–5 | 1 | +0,0021 | [−0,0030 , +0,0069] | +0,0038 |
+| Rang 1–5 | 20 | +0,0104 | [−0,1060 , +0,1111] | −0,0949 |
+| Rang 6–100 | 1 | +0,0044 | [+0,0003 , +0,0083] | +0,0028 |
+| Rang 6–100 | 20 | −0,0734 | [−0,1973 , +0,0347] | −0,0823 |
+| ab Rang 101 | 1 | +0,0027 | [−0,0004 , +0,0055] | +0,0033 |
+| ab Rang 101 | 20 | −0,0876 | [−0,2124 , +0,0203] | −0,0819 |
+
+> **Die Kontrolle reproduziert das Muster fast deckungsgleich.** Der
+> Horizontverfall ist **keine Eigenschaft der Schicht**, sondern
+> marktweit — er überlebt das Mischen der Rangzuordnung.
+
+**14 von 15 Zellen sind „null".** Die einzige positive (Rang 6–100, H=1)
+überlappt fast vollständig mit ihrer eigenen Kontrolle und ist damit nicht
+belastbar.
+
+### ✖ Und der Bruch zwischen den Kategorien existiert nicht
+
+Anteil > +2 R über 5 Tage, feine Ränge, ab 2024:
+
+    Rang    1-3   6,78 %      Rang   76-100   7,04 %
+    Rang    4-10  7,32 %      Rang  101-150   6,36 %
+    Rang   11-20  7,58 %      Rang  151-200   6,41 %
+    Rang   21-35  7,44 %      Rang  201-300   6,36 %
+    Rang   36-50  6,93 %      Rang  301-Ende  6,58 %
+    Rang   51-75  6,93 %
+
+> **Spannweite über das gesamte Universum: 1,2 Prozentpunkte.** Ein sanfter
+> Buckel um Rang 11–35, eine kleine Stufe nach Rang 100 — **kein Bruch, der
+> scharfe Kategorien rechtfertigt.**
+
+### ⚠️⚠️⚠️ DIE ANTWORT AUF DIE KATEGORISIERUNGSFRAGE
+
+    Die KATEGORIE (Asset, Groesse, Rang)         traegt NICHT
+    Der ZUSTAND innerhalb der Kategorie          TRAEGT
+      (gefallen gegen aufgestiegen, 2.115:
+       +0,0068, Band [+0,0034 , +0,0108],
+       Zufallskontrolle sauber)
+
+> **Das ist CLAUDE.md Regel 3 — gemessen statt behauptet.** Wir bewerten
+> nicht Assets, sondern wann ein Handeln begründet ist. Eine Einteilung
+> nach Größenklassen bringt **messbar nichts**; der Zustand, in dem sich
+> ein Wert befindet, bringt etwas.
+
+⚠️ **Fünf Kategorien sind feiner, als die Daten hergeben.** Wenn eine
+Trennung gebraucht wird, dann als **Kontext in der Mail** (Regel 3: „in der
+Mail erwünscht"), nicht als Auslöser und nicht als Messschnitt.
+
+### Was trotzdem für saubere Trennung spricht — ein anderer Grund
+
+Nicht die Wirkung, sondern die **Messbasis**: 9,7 % Überdeckung zwischen
+System und Messuniversum. Das ist zu klären, unabhängig von Kategorien.
+
+Werkzeuge: `messe_kategorie_und_horizont.py` ·
+`pruefe_horizont_dimensionierung.py`
+
