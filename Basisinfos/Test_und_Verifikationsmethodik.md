@@ -6099,3 +6099,80 @@ Positivkontrolle wie jeder andere Kandidat.
 
 Werkzeug: `messe_rangschichtung.py`
 
+
+
+## 2.114 ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026)
+
+**Nutzerpräzisierung:** *„mit Verschwinden meine ich, dass diese ehemals als
+Top-Coin zur breiten Mehrheit der tausenden Kryptowerte fallen mit niedriger
+Marktkapitalisierung — **nicht als verschwunden im klassischen Sinn**."*
+
+Das ist ein anderes Phänomen als die 168 delisteten Reihen aus 2.113 S1.
+Gemeint ist **Rangverfall**, und der ist getrennt zu messen.
+
+### ✔ V1 — der Verfall ist da, und er ist erheblich
+
+Anteil, der nach n Tagen noch in derselben Gruppe steht:
+
+| Startgruppe | +90 Tage | +365 Tage | **+730 Tage** |
+|---|---|---|---|
+| **Top 20** | 85,1 % | 63,4 % | **57,9 %** |
+| **Top 100** | 86,9 % | 65,9 % | **53,8 %** |
+
+> **Rund die Hälfte der Top 100 ist nach zwei Jahren nicht mehr dort.** Und
+> die Spitze ist zäher als der Mittelbau (57,9 % gegen 53,8 %) — genau die
+> beschriebene Hierarchie.
+
+⚠️ Gezählt sind nur Werte, die später noch Daten haben. **Der Verfall ist
+damit eher unterschätzt.**
+
+### ✖ V2 — der RANGTREND trägt nicht
+
+Rangänderung über 180 Tage → nächste 5 Tage in R, je Tagesklammer:
+
+    stark gestiegen   -0,0341     stabil          +0,0505
+    gestiegen         +0,0284     gefallen        +0,0461
+                                  stark gefallen  -0,1171 (Streufehler 0,18)
+
+    Abstand aufgestiegen minus abgestiegen  +0,0870 R, t = 0,43
+
+> **Kein Verlauf, sondern ein Bogen:** die Mitte ist am besten, beide
+> Extreme sind schlechter. Nichts davon ist von null zu trennen — und der
+> t-Wert ist bereits **zu großzügig**, weil er überlappende Tage als
+> unabhängig zählt.
+
+### ⚠️⚠️⚠️ M1 IST GEFALLEN — die Gegenprüfung gegen die eigene Vormessung
+
+2.113 S3 wies **+0,1020 R** zwischen „in Top 100 geblieben" und „neu in
+Top 100" aus und nannte das den stärksten Kandidaten, den wir hätten.
+**Diese Zahl war gepoolt.** Dieselbe Konstruktion mit Tagesklammer, am
+selben Tag gepaart:
+
+| | |
+|---|---|
+| gepoolt (2.113 S3) | **+0,1020 R** |
+| **mit Tagesklammer, gepaart** | **+0,0379 R** |
+| Blockbootstrap, Block 15, 2000 Ziehungen | **[−0,0317 , +0,1030]** |
+| Urteil | ✖ **TRÄGT NICHT** — das Band enthält die Null |
+
+> **Das Poolen hat den Effekt um das 2,7-Fache aufgeblasen** — exakt der in
+> 2.86 belegte Fehler, diesmal an der eigenen Messung vom selben Tag.
+
+**M1 wird zurückgezogen, bevor eine Messkampagne dafür startet.** Das ist
+der Zweck der Norm: der Fehler kostete Minuten statt Wochen.
+
+### Was von der Rangschichtung übrig bleibt
+
+| | Stand |
+|---|---|
+| Hierarchie BTC → Top 20 → Top 100 → Rest | ✔ **belegt** (2.113 S2) |
+| „tief im Rang = mehr Chance" | ✖ **widerlegt** — in R wird nach unten alles schlechter |
+| Rangverfall, rund die Hälfte in zwei Jahren | ✔ **belegt** (V1) |
+| Rangtrend als Beitrag | ✖ **trägt nicht** (V2) |
+| Rangzugehörigkeit als Beitrag | ✖ **trägt nicht** (M1 gefallen) |
+
+⚠️ Der Rang beschreibt den Markt zutreffend — **als Beitrag zur Bewertung
+trägt er in keiner der drei geprüften Fassungen.**
+
+Werkzeuge: `messe_rangverfall.py` · `pruefe_rangzugehoerigkeit.py`
+
