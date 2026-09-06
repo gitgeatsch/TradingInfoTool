@@ -6176,3 +6176,83 @@ trägt er in keiner der drei geprüften Fassungen.**
 
 Werkzeuge: `messe_rangverfall.py` · `pruefe_rangzugehoerigkeit.py`
 
+
+
+## 2.115 ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026)
+
+**Nutzereinwand:** *„das sind Fakten, aber diese wirken sich unterschiedlich
+aus — und habe ich bereits einmal beschrieben: **auch ein gefallenes Asset
+hat Hebelpotential auf kurzer Zeitachse.**"*
+
+⚠️ Der Einwand trifft die **eigene Vormessung derselben Stunde**: 2.113/2.114
+haben die Rangschichten am MITTELWERT bewertet — genau der Maßstab, den
+2.112 zwei Abschnitte zuvor als falsch belegt hat. Und daraus wurde ein
+**Asset-Vorurteil** abgeleitet, das CLAUDE.md Regel 3 verbietet.
+
+### Der Schnitt mit dem RANDMASS statt dem Mittelwert
+
+Anteil der Asset-Tage mit mehr als **+3 R**, Mittel über die Tage:
+
+| Schicht | Rangtrend | H=1 | H=3 | **H=5** |
+|---|---|---|---|---|
+| Rang 1–20 | stabil | 0,34 % | 1,91 % | 3,96 % |
+| Rang 21–100 | aufgestiegen | 0,32 % | 1,50 % | 2,90 % |
+| Rang 21–100 | stabil | 0,37 % | 1,84 % | 3,84 % |
+| Rang 21–100 | **GEFALLEN** | **0,41 %** | 1,85 % | 3,74 % |
+| ab Rang 101 | aufgestiegen | 0,46 % | 1,34 % | 2,47 % |
+| ab Rang 101 | stabil | 0,39 % | 1,32 % | 2,56 % |
+| **ab Rang 101** | **GEFALLEN** | **0,46 %** | **1,54 %** | **3,02 %** |
+
+> **In der tiefen Schicht ist GEFALLEN die beste Untergruppe, nicht die
+> schlechteste** — und der Vorsprung wächst mit der Schwelle (+10 % relativ
+> bei +2 R, **+22 % bei +3 R**). Das ist die Signatur von Randpotential.
+
+### ✔ BEFUND — mit Band und Zufallskontrolle
+
+Gefallen minus aufgestiegen, **ab Rang 101**, gepaart am selben Tag,
+Anteil > +3 R über 5 Tage, Blockbootstrap Block 15, 4.000 Ziehungen:
+
+| | Tage | Wert | Band | |
+|---|---|---|---|---|
+| **ECHT** | 1.655 | **+0,0068** | **[+0,0034 , +0,0108]** | ✔ **schließt Null aus** |
+| Zufallskontrolle | 1.655 | −0,0002 | [−0,0019 , +0,0015] | ✔ enthält Null |
+
+> **Die Nutzeraussage ist gemessen und sie hält.** Ein im Rang gefallenes
+> Asset hat auf kurzer Zeitachse ein um 0,68 Prozentpunkte höheres
+> Randpotential als ein aufgestiegenes — rund **ein Fünftel mehr**.
+
+⚠️ **Zur vollständigen Norm fehlen Trennschärfe und Protokoll.** Band und
+Zufallskontrolle sind der Kern, nicht das Ganze.
+
+### ⚠️⚠️⚠️ DIE EIGENTLICHE LEHRE
+
+    DIESELBEN DATEN, DERSELBE SCHNITT:
+
+      am MITTELWERT   "tief im Rang und gefallen ist schlechter"
+      am RANDMASS     "tief im Rang und gefallen ist BESSER"
+
+> **Der Maßstab hat das Vorzeichen entschieden, nicht der Markt.**
+
+Das ist derselbe Mechanismus wie beim Zielgrößenbefund vom 05.09.
+(`in_r` gegen `barriere` — trägt gegen trägt nicht). **Zum zweiten Mal in
+zwei Tagen kippt eine Aussage allein am Maßstab.** Damit ist 2.112 nicht
+mehr ein Vorschlag, sondern belegt.
+
+### ✖ M4 wird zurückgezogen
+
+2.113 M4 lautete: *„tief im Rang = mehr Chance ist widerlegt — in R wird
+nach unten alles schlechter."* Das galt für den Mittelwert und wurde
+unzulässig zu einer Asset-Aussage verallgemeinert.
+
+**Richtig ist:** am Mittelwert ist die tiefe Schicht schwächer; am Rand
+schrumpft der Abstand (8,21 % gegen 6,67 % bei +2 R/H5), und **innerhalb**
+der Schicht dreht die Reihenfolge — gefallen schlägt aufgestiegen.
+
+### Was stabil bleibt — über alle drei Fassungen
+
+**Die AUFGESTIEGENEN sind in jeder Schicht und in jedem Maßstab die
+schwächste Gruppe** (2.113 S3 · 2.114 V2 · hier). Das ist der einzige
+Strukturbefund, der Mittelwert *und* Rand übersteht.
+
+Werkzeuge: `messe_rand_je_schicht.py` · `pruefe_gefallen_randpotential.py`
+
