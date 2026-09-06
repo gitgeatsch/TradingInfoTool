@@ -3693,3 +3693,182 @@ Dinge in einem Regler.
 ⚠️ **Stehende Vorgabe seit 06.09.:** vor jedem langen Lauf ein Vorabtest auf
 Kunstdaten — inklusive des Grenzfalls, den die jeweilige Korrektur betrifft.
 Ein reiner Durchlauftest fängt zu wenig.
+
+
+---
+
+# ⛔⛔⛔ VOLLER HALT — 06.09.2026: die Grundlage ALLER Messungen wird geprüft
+
+**Nutzervorgabe:** *„jetzt ist voller HALT angesagt. Bevor wir irgendwie
+weitermachen, muss für ALLE Messungen die Grundlage geprüft werden — das ist
+das eigentliche Ergebnis. Wir vermessen seit Wochen die Beiträge und du
+verwirfst mit einer Messung ALLES — das kann nicht sein."*
+
+⚠️ **Keine weitere Messung, bis dieser Abschnitt abgearbeitet ist.**
+
+## 1. Was am 05./06.09. WIRKLICH passiert ist — die ehrliche Bilanz
+
+Es wurde **ein** neues Messinstrument eingeführt: der **persistente
+Nullpunkt** (F-226). Alles andere — Tagesklammer, Abdeckung, Stabilität,
+Schichtentest — bestand schon vorher.
+
+**Dieses eine Instrument hat funding und turnover gekippt. Und es ist das
+am schwächsten geprüfte im ganzen Satz:**
+
+| Fassung | Fehler | gefunden durch |
+|---|---|---|
+| 1 | eine Ziehung je Blocklänge | die nicht-monotone Kurve |
+| 2 | eine Kurve für ALLE Strukturen | den Vorabtest (8 gegen 60 Symbole) |
+| 3 | Blockraster in der Mitte zu grob | das vierte Vorabkriterium |
+| 4 | Maximum statt Streuungsmaß | zwei widersprechende Zahlen nebeneinander |
+
+⚠️⚠️ **Die vierte Fassung hat KEINE Positivkontrolle.** Sie wurde nie gegen
+eine Welt mit *bekanntem* Effekt und *bekannter* Beständigkeit geprüft. Sie
+weiß, wie „nichts" aussieht — sie hat nie gezeigt, dass sie „etwas" findet.
+
+> **Das Instrument, das die Arbeit von Wochen umgeworfen hat, ist das
+> einzige im Satz ohne Positivkontrolle.** Das ist die präzise Fassung des
+> Problems.
+
+## 2. Das Muster ist seit dem 26.08. dokumentiert — Befundkarte 3.1c
+
+**Vorfilter H wurde SIEBENMAL gemessen, mit sechs Ergebnissen.** Sechs der
+sieben Änderungen waren Methodenverbesserungen, **fünf davon haben den
+Befund verkleinert**. Der Abstand zur Schwelle fiel von 1,9 auf 0,42.
+
+Und jede Änderung entfernte eine **Überschätzung**: junge Reihen · zu
+schmale Basis · falscher Gebührenmaßstab · Überlebende · zu freundliche
+Schwellen.
+
+Die Befundkarte notiert die Sorge damals schon wörtlich:
+
+> *„Wenn jede Verbesserung H verkleinert hat, ist die Frage berechtigt, was
+> von ihm bleibt, wenn man weitersucht."*
+
+**Das heutige Geschehen ist die Fortsetzung dieses Musters, nicht ein neues
+Phänomen.**
+
+## 3. ⚠️⚠️⚠️ DIE DIAGNOSE — eine Auswahlverzerrung im FEHLERSUCHPROZESS
+
+**Wir prüfen positive Befunde intensiv und Nullbefunde kaum.**
+
+Ein positiver Befund löst eine Prüfung aus („kann das sein?"). Ein
+Nullbefund löst keine aus („dann trägt es eben nicht"). Wenn ein Verfahren
+viele mögliche Fehler hat und jeder Fehler nur dann entdeckt wird, wenn er
+ein *zu gutes* Ergebnis erzeugt, dann **findet der Suchprozess
+systematisch nur Überschätzungen** — und treibt über Wochen alles gegen
+null, unabhängig davon, was wahr ist.
+
+**Der Beleg ist mein eigenes Vorgehen am 05./06.09.:**
+
+| Befund | wie oft nachgeprüft |
+|---|---|
+| `amihud` trägt (positiv) | **fünfmal** — Liquiditätsschichten, Regel 3, Beständigkeit, Veränderungsform, bedingter Test — bis er fiel |
+| `turnover` trägt nicht | einmal gemessen, akzeptiert |
+| `funding` trägt nicht | einmal gemessen, akzeptiert |
+| die vier Terminmarkt-Größen | einmal gemessen, akzeptiert |
+
+⚠️ **Und das Projekt kennt die Gegenseite längst.** Befundkarte 3.10:
+
+> *„32 von 54 Messwerkzeugen laufen gegen die Watchlist (26–54 Reihen) statt
+> gegen `messdaten.db` (523) … Trennschärfe dort: nur Effekte ab ~20
+> Punkten. **Diese Nullbefunde sind untermächtig, nicht falsch.**"*
+
+Und Methodik **2.99** sagt es für den Schichtentest ausdrücklich: *„Ein
+Nullbefund im Schichtentest ist schwächer als einer in der rohen Messung —
+er kann Auflösungsmangel sein."*
+
+> **Die Regel existiert. Sie wurde auf die Nullbefunde vom 05./06.09. nicht
+> angewandt.**
+
+## 4. Der zweite, unabhängige Verdacht — die ZIELGRÖSSE
+
+Unabhängig von Punkt 3 steht ein zweites Problem, das erst am 06.09.
+auffiel (Nutzerfrage):
+
+    Barriere:   r = breite[i]                        SCHWANKUNG = 14 Tage
+    vola:       breite[j] / median(breite[j-250:j])  DASSELBE breite-Feld
+
+**Zielgröße und Kandidat teilen dieselbe Zwischenrechnung.** Und `amihud`,
+`schnitt`, `schnitt50`, `rsi`, `momentum` stammen aus denselben OHLC-Werten,
+aus denen der Pfad besteht, der über Treffer oder Stop entscheidet.
+
+⚠️ Das macht die sieben Befunde nicht falsch — es macht sie **ungeprüft**.
+Und es steht im Widerspruch zur Anforderung vom 30.08.: ein Beitrag soll
+*„nicht aus der Kursreihe"* stammen.
+
+## 5. DER PLAN — Schritt für Schritt, keine Messung überspringt einen
+
+### S0 — Das INVENTAR (keine Messung, nur Lesen)
+
+Eine Tabelle über **jeden** Beitrag, der jemals als tragend galt, mit
+sieben Spalten:
+
+    Beitrag · Datum · Werkzeug · ZIELGROESSE · KLAMMER · Basisgroesse ·
+    Kontrollen (Null UND Positiv) · was ihn kippte
+
+⚠️ **Ohne diese Tabelle ist keine Aussage über „die Arbeit von Wochen"
+möglich** — weil bis heute niemand nebeneinander gelegt hat, WAS jeweils
+gemessen wurde. Die Vermutung ist, dass mindestens drei verschiedene
+Zielgrößen vermischt wurden: Rendite in R (H20) · Barrierenquote (CRV 2) ·
+Anteil im Plus nach 250 Tagen.
+
+### S1 — Das Instrument validieren, das alles kippte
+
+Der persistente Nullpunkt bekommt eine **Positivkontrolle**: eine Welt mit
+bekanntem Effekt UND bekannter Beständigkeit. Findet er den Effekt bei
+95 % Beständigkeit noch? Bei 65 Symbolen noch?
+
+**Fällt er durch, ist F-226 bis F-231 hinfällig — und funding und turnover
+stehen wieder.**
+
+### S2 — Jeder Nullbefund bekommt dieselbe Prüfung wie ein Positivbefund
+
+Für **jede** Größe mit „trägt nicht" wird ein Effekt bekannter Größe in
+**ihre eigene Struktur** gepflanzt. Findet die Messung ihn nicht, war der
+Nullbefund **untermächtig**, kein Befund.
+
+Betrifft: funding (287 Symbole) · turnover (65) · funding_extrem (278) ·
+oi_aenderung · long_bias · top_bias · taker_bias (je 115) · alle sechs
+Veränderungsformen.
+
+### S3 — Die ZIELGRÖSSE klären
+
+Zwei Fragen, in dieser Reihenfolge:
+
+    a) WELCHE Zielgroesse behauptet das System eigentlich?
+       Die Bewertung erzeugt eine QUOTE - also die Barriere. Aber funding
+       wurde auf die RENDITE gefittet. Das ist zu entscheiden, nicht zu
+       messen.
+
+    b) Traegt ein Kursmass auch gegen eine Barriere, die `breite` NICHT
+       benutzt? (fester Prozentstop) - mit ausgewiesener Aufloesungsquote.
+
+### S4 — Die Widersprüche einzeln auflösen, nach dem Muster von 3.1c
+
+Für jeden gilt: *was hat sich geändert, und ist die Änderung berechtigt?*
+
+| Widerspruch | erst | dann |
+|---|---|---|
+| **funding** | +0,137 R · H20 · Block-Bootstrap · monoton · beide Hälften | 1,6× · Barriere · persistenter Nullpunkt |
+| **oi_aenderung** | trägt als Schalter (F-168) | 1,0× |
+| **Volumenanteil relativ** | trägt (F-170) | seither nie nachgemessen |
+| **vola** | erfüllt alle drei Kriterien (F-221) | Veränderungsform gefallen, Niveau teilt `breite` mit der Barriere |
+
+### S5 — Erst danach entscheiden
+
+Keine Registrierung, keine Entfernung, kein Hebelumbau, bevor S0 bis S4
+abgeschlossen sind.
+
+## 6. ⚠️ Die stehende Regel, die daraus folgt
+
+> **Symmetrische Prüfung: Ein Nullbefund braucht dieselbe Beweislast wie
+> ein Positivbefund.**
+>
+> Konkret: jede Aussage „trägt nicht" verlangt eine Positivkontrolle auf
+> DERSELBEN Struktur — gepflanzter Effekt bekannter Größe, gefunden oder
+> nicht. Ohne sie ist es keine Messung, sondern das Fehlen einer.
+
+Der Grund, warum diese Regel fehlte: Positivbefunde fühlen sich
+überprüfungsbedürftig an, Nullbefunde nicht. Genau diese Asymmetrie ist der
+Fehler.
