@@ -138,6 +138,7 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
     haupt = _band(d, kandidat)
     if haupt is None:
         raise ValueError("zu wenige Tage fuer ein Band (%d)" % len(d))
+    bp = N.pruefe_block(d, block)        # ⚠️ belegt, nicht angenommen
 
     nullwerte, nullunten, nulloben = [], [], []
     for z in range(ZIEHUNGEN):
@@ -202,7 +203,9 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "auf die Gesperrten",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,
-            blocklaenge=block, saat=SAAT))
+            blocklaenge=block, saat=SAAT,
+            block_ak=float(bp.get("ak", float("nan"))),
+            block_ok=bool(bp.get("ok", True))))
 
 
 # --------------------------------------------------------- Kunstwelten

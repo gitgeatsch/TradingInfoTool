@@ -4467,3 +4467,70 @@ Das ist kein Verlust — die Bewertung sitzt im Trichter.
 **O3** Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday ·
 **O7** MFE · die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
 
+
+
+---
+
+# ⚠️⚠️ DIMENSIONIERUNG KORRIGIERT — die Basis war falsch gewählt (06.09.2026)
+
+Schritt 4a hat die Festlegung vom selben Tag in **einem Punkt widerlegt**.
+
+## Was 2.111 gesetzt hatte, und warum es nicht hält
+
+„Abschnitt **ab 2024**", begründet mit dem Struktureinbruch (3.11). Der
+Marktbefund bleibt richtig — **die Wirkung der Kandidaten ist aber nicht
+epochenabhängig:**
+
+    funding    2021-05..2023-12  +0,00544      2024-01..2026-08  +0,00411
+    turnover   2021-05..2023-12  +0,01368      2024-01..2026-08  +0,01723
+
+Beide tragen in **keinem** der beiden 959-Tage-Fenster, und `turnover` ist
+in der jüngeren Epoche sogar stärker. **Es ist die Datenmenge, nicht die
+Epoche.**
+
+## Die korrigierte Dimensionierung
+
+| Größe | vorher (06.09. früh) | **jetzt** |
+|---|---|---|
+| Horizont | 5 | **5** (unverändert) |
+| Block | 15, je Messung belegt | **15 — und jetzt im Code erzwungen** |
+| **Abschnitt** | **ab 2024** | ⚠️ **VOLLE Historie primär**; ab 2024 als Robustheitsprüfung |
+| Menge | frei + 20 % | unverändert |
+| Universum | breit, kein Filter | unverändert |
+| Maßstab | Mittel + Rand | unverändert (Schritt 3) |
+
+⚠️ **Die Blockzahl ist notwendig, nicht hinreichend.** 63 Blöcke bestehen
+die Schwelle; für 0,004 R reichen sie nicht. Maßgeblich ist die
+**Trennschärfe**.
+
+## Der Stand der Kandidaten nach 4a
+
+| | Urteil |
+|---|---|
+| `funding` | ✔ trägt — unverändert |
+| `turnover` | ✔ trägt — unverändert |
+| `oi_aenderung` | ✔ bleibt — Geltungsbereich H20, dort validiert und reproduziert |
+| **`vola`** | ✔✔ **NEU — trägt am Rand > +2 R auf allen drei Läufen** |
+| `schnitt50` | ⚠️ offen — trägt bei H5, dort nie zuvor gemessen |
+| `amihud` | ✖ trägt nicht |
+
+## ⚠️ D3 neu formuliert — die Messfrage ist beantwortet
+
+**Nicht mehr:** *„die Sperre ist nicht validierbar."* Sie **ist** validiert
+und reproduziert bei H20.
+
+**Sondern:** *Der Betriebshorizont sind 3–5 Tage. Die Sperre ist bei H20
+validiert und trägt bei H5 nicht. Ist H20 der richtige Horizont für eine
+Sperre, deren Entscheidungen sich in fünf Tagen entscheiden?*
+
+**Entwurfsfrage, keine Messfrage — Nutzerentscheidung.**
+
+## Was als Nächstes zu messen ist
+
+| # | | |
+|---|---|---|
+| **N1** | `vola` als Beitrag registrieren? Erst Kombinationsprüfung gegen `funding`/`turnover` (Redundanz) | Messung |
+| **N2** | `schnitt50` bei H5 gegenprüfen — Saatstabilität, und warum H2 und H20 nichts zeigten | Messung |
+| **N3** | Alle Kandidaten auf Menge 20 % (bisher nur „frei") | Messung |
+| **N4** | Schritt 4b: `hebel` · `short` · `akkumulation` aus Marktdaten | Bau |
+

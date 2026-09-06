@@ -4838,3 +4838,70 @@ schlimmer, hält eine falsche für bestätigt, weil die Zahl zufällig passt.
 **Band**. Bei Turnover fehlte es und ist mit **[+0,0203 .. +0,1111]**
 erheblich; die größten Stufen des Systems stehen auf der unsichersten
 Zahl. Seit dem 02.09. steht es in `wahrscheinlichkeit.BEITRAEGE`.
+
+
+---
+
+# ⚠️⚠️⚠️ R-R11 — DIE REPRODUKTIONSPFLICHT (06.09.2026)
+
+**Nutzervorgabe:** *„bevor ein zuvor tragender Wert umgestoßen wird, ist
+dies sauber zu begründen — welche Hypothese liegt zugrunde, was wurde warum
+gemessen, gilt das nur für den Einzelwert oder fehlt eine weitere
+Bewertungsebene damit dieser trägt. **Sonst bleiben wir in der
+Umbauschleife.**"*
+
+## Die Regel
+
+> **Ein registrierter Befund darf nur von einer Messung umgestoßen werden,
+> die ihn ZUERST REPRODUZIERT.** Wer die Basis ändert und ein anderes
+> Ergebnis bekommt, hat nichts widerlegt — er hat etwas anderes gemessen.
+
+## Die vier Pflichtschritte vor jedem Widerruf
+
+| # | | |
+|---|---|---|
+| **1** | **REPRODUKTION** | auf der Registrierungsbasis: derselbe Horizont, derselbe Zeitraum, dieselbe Form. Kommt die Zahl zurück? |
+| **2** | **EINE Größe ändern** | Horizont **oder** Zeitraum **oder** Form — nie zwei gleichzeitig, sonst ist die Ursache nicht zuordenbar |
+| **3** | **VERWENDUNGSFORM prüfen** | ist der Wert ein SCHALTER oder ein REGLER? Wird er live als das gemessen, was er ist? |
+| **4** | **NÄCHSTE BEWERTUNGSEBENE** | Kombination · Schichtentest · andere Zielgröße. Trägt er nicht allein, kann er in Verbindung tragen |
+
+⚠️ **Erst wenn alle vier durch sind und alle negativ ausfallen, ist ein
+Widerruf zulässig.**
+
+## Was ein abweichendes Ergebnis stattdessen bedeutet
+
+    Reproduktion OK, andere Basis weicht ab   -> GELTUNGSBEREICH,
+                                                 kein Widerruf
+    Reproduktion MISSLINGT                    -> die Registrierung selbst
+                                                 pruefen, nicht den Wert
+    alle Basen negativ + Ebene 3 und 4 leer   -> Widerruf zulaessig
+
+## ⚠️ Der Anlass — und er war ein Beinahe-Schaden
+
+Schritt 3 (06.09.) maß alle Kandidaten bei **H5 ab 2024**. Registriert
+waren sie bei **H20 über die volle Historie**. Daraus wurde gemeldet, beide
+registrierten Beiträge seien gefallen und `oi_aenderung` trage auf keinem
+Maßstab.
+
+**Nach der Reproduktion blieb davon nichts übrig:**
+
+    funding        +0,0274 gegen registriert +0,0246   reproduziert
+    turnover       +0,0635 gegen registriert +0,0616   reproduziert
+    oi_aenderung   +0,0142 gegen registriert +0,0145   reproduziert
+
+Und der vermeintliche Epochenverfall war **Datenmangel**: auf einem gleich
+langen Fenster aus der früheren Historie fallen dieselben Werte ebenso.
+
+## ⚠️ Zwei Nebenregeln, die daraus folgen
+
+**A — Die Blockzahl ist notwendig, nicht hinreichend.** 63 Blöcke bestehen
+die 20er-Schwelle und reichen für einen Effekt von 0,004 R trotzdem nicht.
+**Maßgeblich ist die Trennschärfe.**
+
+**B — Ein Kandidat ist in der Form zu messen, in der er VERWENDET wird.**
+`oi_aenderung` ist ein Schalter auf H20; als abgestufter Beitrag bei H5
+gemessen misst man etwas anderes.
+
+**Verwandt:** R-R9 (Beitragswechsel = Neukalibrierung) · R-R10 (Dokumente
+öffnen, nicht greppen) · Methodik 2.119
+

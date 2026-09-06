@@ -170,6 +170,16 @@ class Protokoll:
     positiv_treffer: dict            # {staerke: gefunden in x von n}
     blocklaenge: int
     saat: int
+    # ⚠️ NACHGETRAGEN 06.09. (Schritt 4a, Gegenpruefung G1). Der Docstring
+    # von `_block` verlangte seit dem Bau: *"die Blocklaenge wird je
+    # Messung NACHGEPRUEFT, nicht angenommen. Wer sie nur setzt, hat sie
+    # geraten."* `pruefe()` setzte sie - und rief `pruefe_block()` nie auf.
+    # Die Norm dokumentierte ihre eigene Regel und hielt sie nicht ein.
+    # Folgenlos geblieben (alle 18 gepruefte Zellen lagen zwischen -0,053
+    # und +0,087 bei Grenze 0,15), aber genau deshalb faellt so etwas nicht
+    # auf.
+    block_ak: float = float("nan")   # Autokorrelation beim Blockabstand
+    block_ok: bool = True
 
     def __post_init__(self) -> None:
         # ⚠️ BEKANNTE FALSCHE WEGE WERDEN ABGELEHNT, nicht nur vermerkt.
@@ -198,6 +208,9 @@ class Protokoll:
             "  gefunden        %s" % " · ".join(
                 "%.2f R: %d/%d" % (k, v, self.positiv_ziehungen)
                 for k, v in sorted(self.positiv_treffer.items())),
+            "  Blockpruefung   AK %.4f beim Abstand %d -> %s"
+            % (self.block_ak, self.blocklaenge,
+               "lang genug" if self.block_ok else "⚠️ ZU KURZ"),
             "  Saat            %d" % self.saat,
         ]
 
@@ -297,6 +310,13 @@ class Befund:
             return ("KEIN BEFUND - nur %d Bloecke, das Band deckt nicht "
                     "(bei 5 Bloecken 19,5 %% Fehlalarme statt 5 %%)"
                     % self.n_bloecke)
+        # ⚠️ Ein zu kurzer Block macht das Band ZU ENG - dann waere ein
+        # "TRAEGT" ein Scheinbefund. Das wiegt schwerer als zu wenige
+        # Bloecke und steht deshalb direkt daneben.
+        if self.protokoll is not None and not self.protokoll.block_ok:
+            return ("KEIN BEFUND - Block %d zu kurz, Autokorrelation %.3f "
+                    "(Grenze 0,15). Das Band waere zu eng."
+                    % (self.protokoll.blocklaenge, self.protokoll.block_ak))
         if self.trennschaerfe is None:
             return ("KEIN BEFUND - untermaechtig: selbst %+.2f R gepflanzt "
                     "wurde nicht gefunden" % max(self.gepflanzt))
@@ -398,6 +418,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     haupt = _band(d, kandidat)
     if haupt is None:
         raise ValueError("zu wenige Tage fuer ein Band (%d)" % len(d))
+    bp = pruefe_block(d, block)          # ⚠️ belegt, nicht angenommen
 
     # ⚠️ MEHRERE ZIEHUNGEN, NICHT EINE (06.09., gemessen).
     # Die Basislinie wandert je Saat zwischen -0,0055 und +0,0010 - also um
@@ -470,7 +491,9 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "auf die Gesperrten",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,
-            blocklaenge=block, saat=SAAT))
+            blocklaenge=block, saat=SAAT,
+            block_ak=float(bp.get("ak", float("nan"))),
+            block_ok=bool(bp.get("ok", True))))
 
 
 # ------------------------------------------------------------- Selbsttest

@@ -6622,3 +6622,138 @@ wenn er auf **einem** trägt — und es wird ausgewiesen, auf welchem.
 Werkzeuge: `messnorm_rand.py` · `schritt3_trennschaerfe.py` ·
 `schritt3_gegenpruefung.py` · `pruefe_nullschwelle.py`
 
+
+
+## 2.119 ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026)
+
+**Nutzervorgabe:** *„bevor ein zuvor tragender Wert umgestoßen wird, ist dies
+sauber zu begründen — welche Hypothese liegt zugrunde, was wurde warum
+gemessen, gilt das nur für den Einzelwert oder fehlt eine weitere
+Bewertungsebene. Das Thema ist sehr schwierig, sonst bleiben wir in der
+Umbauschleife."*
+
+### ⚠️ Der Grundsatz, den das erzwingt
+
+> **Ein registrierter Befund darf nur von einer Messung umgestoßen werden,
+> die ihn ZUERST REPRODUZIERT.** Wer die Basis ändert und ein anderes
+> Ergebnis bekommt, hat nichts widerlegt — er hat etwas anderes gemessen.
+
+Schritt 3 hatte alle Kandidaten bei **H5 ab 2024** gemessen. Registriert
+waren sie bei **H20 über die volle Historie**. **Zwei Größen gleichzeitig
+geändert** — der Befund war damit gar nicht deutbar.
+
+### ✔✔ Alle drei Registrierungen REPRODUZIEREN
+
+| Kandidat | registriert | Lauf A (H20, voll) | |
+|---|---|---|---|
+| `funding` | +0,0246 R | **+0,02741** [+0,01161 .. +0,04245] | ✔ |
+| `turnover` | +0,0616 [+0,0203 .. +0,1111] | **+0,06352** [+0,01652 .. +0,11347] | ✔ |
+| `oi_aenderung` | +0,0145 [+0,0097 .. +0,0193] | **+0,01418** [+0,00931 .. +0,02051] | ✔ |
+
+> **Die ursprünglichen Messungen waren korrekt.** Damit ist überhaupt erst
+> entscheidbar, was die Abweichungen bedeuten.
+
+### Der Aufbau: die zwei Änderungen GETRENNT
+
+    A  H20 · volle Historie    REPRODUKTION
+    B  H5  · volle Historie    nur der HORIZONT geaendert
+    C  H5  · ab 2024           zusaetzlich die EPOCHE geaendert
+
+| Kandidat | A (H20 voll) | B (H5 voll) | C (H5 2024) |
+|---|---|---|---|
+| `funding` | **+0,0274 TRÄGT** | **+0,0084 TRÄGT** | +0,0041 trägt nicht |
+| `turnover` | +0,0635 (reproduziert) | **+0,0206 TRÄGT** | +0,0172 trägt nicht |
+| `oi_aenderung` | **+0,0142 TRÄGT** | +0,0066 trägt nicht | +0,0069 trägt nicht |
+| `vola` (Rand > +2 R) | **+0,0100 TRÄGT** | **+0,0033 TRÄGT** | **+0,0038 TRÄGT** |
+| `schnitt50` | +0,0055 trägt nicht | **+0,0101 TRÄGT** | **+0,0095 TRÄGT** |
+| `amihud` | trägt nicht | trägt nicht | trägt nicht |
+
+### ✔ G1 — der Block hält überall
+
+Autokorrelation der Tageswirkung beim Blockabstand, Grenze 0,15:
+
+    schnitt50   +0,023  -0,004  +0,041      funding      -0,026  -0,035  +0,082
+    vola        -0,044  -0,015  +0,038      turnover     -0,032  +0,052  +0,027
+    amihud      -0,053  -0,011  +0,087      oi_aenderung -0,005  -0,006  +0,007
+
+**Alle 18 Zellen ✔.** Die H5-Ergebnisse sind keine Artefakte eines zu
+kurzen Blocks; die Basislösung 2.111 hält empirisch für jeden Kandidaten.
+
+⚠️ **Aber die Norm prüft das nicht selbst:** `messnorm.pruefe()` SETZT den
+Block und ruft `pruefe_block()` nie auf — obwohl der eigene Docstring
+verlangt *„die Blocklänge wird je Messung NACHGEPRÜFT, nicht angenommen"*.
+**Die Norm dokumentiert ihre Regel und hält sie im Messpfad nicht ein.**
+Hier folgenlos, weil alle Zellen passen. Zu schließen.
+
+### ✖✖ G2 — „fällt an der Epoche" war eine FEHLDEUTUNG
+
+Gleich lange Fenster (959 Tage) aus der früheren Historie:
+
+| Kandidat | 2021-05 .. 2023-12 | 2024-01 .. 2026-08 |
+|---|---|---|
+| `funding` | +0,00544 [+0,00101 .. +0,01013] **trägt nicht** | +0,00411 **trägt nicht** |
+| `turnover` | +0,01368 [+0,00648 .. +0,02087] **trägt nicht** | +0,01723 **trägt nicht** |
+
+> **Beide fallen auch im FRÜHEREN Fenster.** Und `turnover` ist in der
+> jüngeren Epoche sogar **stärker** (+0,0172 gegen +0,0137).
+
+⚠️⚠️ **Es ist die Datenmenge, nicht die Epoche.** Auf 959 Tagen liegt
+`funding`s Wirkung (+0,004 R) weit **unter der Trennschärfe der Messung**
+(0,02 R). Das ist „trägt nicht bis 0,02 R" — und sagt nichts gegen
+`funding`.
+
+### ⚠️⚠️⚠️ WAS DAS FÜR DIE DIMENSIONIERUNG BEDEUTET
+
+2.111 hatte „ab 2024" gesetzt, weil der Markt sich verändert hat
+(Struktureinbruch 3.11). **Das bleibt als Marktbefund richtig** — aber:
+
+> **Die Wirkung der Kandidaten ist NICHT epochenabhängig.** funding +0,005
+> gegen +0,004, turnover +0,014 gegen +0,017. Das Marktniveau hat sich
+> verschoben, die Querschnittsregel nicht.
+
+    NEU     primaer   H5 ueber die VOLLE Historie
+            Kontrolle ab 2024 als Robustheitspruefung, nicht als Basis
+
+⚠️ **Die Blockzahl (≥ 20) ist notwendig, nicht hinreichend.** 63 Blöcke
+bestehen die Schwelle und reichen für einen Effekt von 0,004 R trotzdem
+nicht. **Maßgeblich ist die Trennschärfe, nicht die Blockzahl.**
+
+### Das Ergebnis je Kandidat — was WIRKLICH gilt
+
+| Kandidat | Urteil | Begründung |
+|---|---|---|
+| **`funding`** | ✔ **trägt, unverändert** | reproduziert; trägt bei H20 und H5 über die volle Historie; das 959-Tage-Fenster ist zu kurz für 0,004 R |
+| **`turnover`** | ✔ **trägt, unverändert** | reproduziert fast exakt; trägt bei H5 voll; jüngere Epoche stärker als die frühere |
+| **`oi_aenderung`** | ✔ **bleibt** — Geltungsbereich H20 | reproduziert bei H20; trägt nicht bei H5. **Die Live-Sperre ist auf H20 kalibriert (F-207)** — sie arbeitet dort, wo sie validiert ist |
+| **`vola`** | ✔✔ **NEU: trägt am Rand** | +0,0100 / +0,0033 / +0,0038 — **TRÄGT auf allen drei Läufen**, Horizont- und epochenunabhängig |
+| **`schnitt50`** | ⚠️ **offen** | trägt bei H5 (+0,0101) — **H5 wurde am 31.08. nie gemessen** (nur H2 und H20) |
+| **`amihud`** | ✖ trägt nicht | auf keinem Lauf, auf keinem Maßstab |
+
+### ⚠️ Zwei Namensverwechslungen, festgehalten damit sie nicht wiederkehren
+
+**1.** `schnitt` (200-Tage) wurde am 31.08. zurückgenommen — **nicht**
+`schnitt50` (50-Tage). Die Zahlen H5 −0,0069 / H20 −0,0221 gehören zum
+200er. Der 50er wurde bei H2 (+0,0029, trägt nicht) und H20 (kein Urteil,
+Positivkontrolle versagte) gemessen; **H5 nie**.
+
+**2.** „Fünftel 4 → sperren" in der H-4c-Notiz ist **nullbasiert** gezählt
+und meint das **oberste** Fünftel — wie die Live-Sperre
+(`„OI-Aufbau nicht im obersten Fuenftel"`) es tut.
+
+### ⚠️ D3 ist damit neu zu formulieren
+
+**Alt:** *„`oi_aenderung` ist als Live-Sperre nicht validierbar — entweder
+mehr Historie beschaffen oder die Sperre zurücknehmen."*
+
+**Neu:** Die Sperre **ist** validiert — bei H20, und sie reproduziert. Die
+offene Frage ist eine andere:
+
+> **Der Betriebshorizont sind 3–5 Tage. Die Sperre ist bei H20 validiert
+> und trägt bei H5 nicht. Ist H20 der richtige Horizont für eine Sperre,
+> deren Entscheidungen sich in fünf Tagen entscheiden?**
+
+Das ist eine **Entwurfsfrage**, keine Messfrage — und damit eine
+Nutzerentscheidung. ⚠️ Nichts davon rechtfertigt eine Ausnahme des Wertes.
+
+Werkzeuge: `schritt4a_matched.py` · `schritt4a_gegenpruefung.py`
+
