@@ -7766,3 +7766,87 @@ gemacht zu haben.**
 
 Werkzeug: `n19e_neukalibrierung.py`
 
+
+
+## 2.131 ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026)
+
+### Die Frage
+
+N19-E meldete: *„bei `funding` schließt die Zufallskontrolle bei Fünftel 4
+die Null aus — die Messung ist UNGÜLTIG."* Eine Kontrolle, die anschlägt,
+war im Projekt bisher **immer** ein Hinweis auf einen echten Fehler.
+
+### Drei Hypothesen, alle beantwortet
+
+| | | Ergebnis |
+|---|---|---|
+| **H1** | **Eine Ziehung.** Die Kontrolle lief mit EINER Mischung (Saat 4242) | ✔ **das war es** |
+| **H2** | Gebundene Werte — `W.rang` bricht Bindungen über die Feldreihenfolge | vorhanden (31,6 % / 11,2 %), aber **folgenlos** |
+| **H3** | Ungleiche Fächer | ✖ **widerlegt** — Verhältnis 1,02 bzw. 1,08 |
+
+    funding    2 von 50 Zellen mit Band ohne Null   (Erwartung 2,5)  ✔
+    turnover   1 von 50                                              ✔
+
+    Faechergroessen funding    29,5 · 29,1 · 29,1 · 29,1 · 29,8
+                    turnover    9,3 ·  8,9 ·  9,0 ·  8,9 ·  9,6
+
+> **Über zehn Mischungen liegt die Kontrolle exakt im Erwartungsbereich.**
+> Die Nichtflachheit war ein Einzelziehungs-Artefakt.
+
+⚠️ **Zum dritten Mal an diesem Tag** hat eine Kontrolle aus EINER Ziehung
+einen falschen Eindruck erzeugt — nach Methodik 2.104, die genau davor
+warnt. Die Regel ist bekannt; sie wurde dreimal nicht angewandt.
+
+### ✖ Die Korrektur an N19-E
+
+**Nicht gültig:** *„Für `funding` sind aus diesem Lauf keine Stufen
+ableitbar — die Kontrolle trägt nicht."*
+
+**Es gilt:** Die Kontrolle trägt. Die Messung ist gültig.
+
+### ⚠️⚠️ Und das macht das Urteil HÄRTER, nicht weicher
+
+Vorher war `funding` wegen der defekten Kontrolle **nicht bewertbar**.
+Jetzt ist es bewertbar — und das Ergebnis ist ungünstig:
+
+| | Nachbarpaare getrennt | Spanne gemessen | registriert | Überhang |
+|---|---|---|---|---|
+| `funding` H20 | **1 von 4** | 0,86 Pkt | 3,00 Pkt | **3,50×** |
+| `turnover` H20 | **0 von 4** | 1,50 Pkt | 5,55 Pkt | **3,70×** |
+| **`vola` H5** | **4 von 4** ✔ | — | — | — |
+
+> **Beide registrierten Beiträge haben auf der Barrieren-Quote keine
+> belegte Stufenordnung — gültig gemessen.**
+
+### Die Frage ist damit eine andere
+
+**Nicht** *„welche neuen Stufen?"* — neue Stufen zu setzen, deren Ordnung
+ebenso wenig belegt ist, wäre kein Fortschritt.
+
+> **Sondern: sind `funding` und `turnover` überhaupt als abgestufte REGLER
+> richtig gebaut — oder sind sie SCHALTER?**
+
+Bei `oi_aenderung` hat das Projekt diese Unterscheidung schon einmal
+getroffen (H-4c, 02.09.: *„Schalter, kein Regler → Trichterstufe statt
+Beitrag"*). Hier stellt sie sich erneut, und diesmal für **beide** tragenden
+Beiträge.
+
+`vola` ist mit 4 von 4 belegten Nachbarpaaren **der einzige echte Regler im
+Bestand**.
+
+### Was daraus folgt
+
+| # | | Art |
+|---|---|---|
+| **N22-E** | ✔ Die Kontrolle ist sauber. N19-Es funding-Urteil ist zurückgenommen | erledigt |
+| **N23** | ⚠️ **Sind `funding` und `turnover` Schalter statt Regler?** Wenn ja, gehören sie als Trichterstufe gebaut, nicht als abgestufter Beitrag | ⚠️ **Nutzerentscheidung**, gestützt auf Messung |
+| **N19-E2** | Die registrierten Spannen sind 3,5× bzw. 3,7× zu groß — unabhängig von der Form | ⚠️ **Nutzerentscheidung** (R-R9) |
+| **K1-b** | ✔ unverändert **frei** — `vola` blockiert nicht | Bau |
+
+⚠️ **Und eine Lehre für die Norm:** `messnorm` erzwingt fünf Ziehungen für
+den Nullpunkt. Meine Ad-hoc-Kontrollen in N19-E, N5 und N1 taten es
+nicht — **drei Fehlschlüsse aus derselben Ursache an einem Tag.** Die
+Ziehungszahl gehört in jede Kontrolle, nicht nur in die der Norm.
+
+Werkzeug: `n22_kontrolle_bei_funding.py`
+
