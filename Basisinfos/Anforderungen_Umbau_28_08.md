@@ -4751,3 +4751,114 @@ das ist der Unterschied, und er muss beim Bauen sichtbar bleiben.
     N7 · N17 · N11 laufen NEBENHER und aendern die Reihenfolge nicht
     N3 · N6 · N15 · D3 · O1 · O3 · O5 · O6 · O7 bleiben Nebenlinie
 
+
+
+---
+
+# ⚠️⚠️⚠️ N20 — DER ECHTLAUF: VORABFESTLEGUNG (06.09.2026)
+
+**Nutzervorgabe:** *„natürlich benötigen wir für die Simulation einen
+detaillierten Plan für eine saubere Durchmessung: welche Marktphasen, wie
+viele Einstiege und warum, wie viele Hebel und warum, dann haben diese ein
+Niveau/Ziel erreicht … können wir die MFE, mittlere Trefferquote, oder eine
+von dir fachlich sinnvolle Zielebene."*
+
+⚠️ **Dieser Abschnitt wird VOR dem Lauf geschrieben.** Wer die Zielebene
+nach dem Ergebnis wählt, hat gesucht statt gemessen (Methodik 2.49).
+
+## 1 — Die MARKTPHASEN
+
+| Einteilung | Blöcke | Stand |
+|---|---|---|
+| BTC-Trend (200-Tage-Schnitt) | BULL 109 · BÄR 81 | ✔ verfügbar |
+| Querschnittsstreuung (p90−p50 in R) | HOCH 49 · niedrig 38 | ✔ verfügbar |
+| BTC-Dominanz | 1 Phase in 9 Jahren | ✖ **unbrauchbar** |
+| **SEITWÄRTS** | — | ⚠️ **FEHLT — beide Einteilungen sind zweiwertig** |
+
+> ⚠️ **Die dritte Klasse muss gebaut UND vor Gebrauch gemessen werden**
+> (Methodik 2.111: *„eine Schichtung ist zu messen, bevor sie benutzt
+> wird"*). Ohne sie schichten wir nach einer Größe, die wir nicht kennen.
+
+⚠️ Und die bekannte Einschränkung: HOCH liegt überwiegend vor 2022,
+niedrig überwiegend nach 2024 — **Schichter und Epoche sind teilweise
+verwechselbar.**
+
+## 2 — Wie viele EINSTIEGE, und warum
+
+**Das ist keine freie Wahl.** Es folgt aus der Blockregel:
+
+    Block   = 3 x Horizont      bei H5 also 15 Tage
+    Grenze  = 20 Bloecke        (darunter deckt das Band nicht:
+                                 bei 5 Bloecken 19,5 % Fehlalarme)
+    -> mindestens 300 Tage JE PHASE
+
+Die Zahl der Einstiege ergibt sich daraus **und aus dem Durchlass**. Sie zu
+setzen wäre der Fehler — sie ist ein **Ergebnis**.
+
+## 3 — Wie viele HEBEL, und warum
+
+**Ebenfalls kein Parameter.** Es gilt `hebel = verlustanteil / stop_rel`;
+der Hebel **fällt an**. Wie viele Trades gehebelt sind, ist damit ein
+Ergebnis der **Stopverteilung** — und genau das soll der Lauf zeigen.
+
+⚠️ **Die Stufen (2×, 3×, 5×) werden nicht gesetzt.** Nutzervorgabe 06.09.:
+*„das war nur mein Beispiel, ich gehe davon aus, dass wir dies fachlich
+korrekt messen, bevor wir eine Regel für Hebel bauen."* Sie folgen aus der
+gemessenen Umrechnung (N19: Faktor 0,90 für `vola`).
+
+## 4 — DIE ZIELEBENE — und wo ich widerspreche
+
+### ✖ MFE ist als Erfolgsmaß bereits verworfen
+
+`feedback_mfe_kein_erfolgsmass_bei_variablem_stop`: bei variablem Stop ist
+„MFE ≥ 1 R" kein Erfolg, sondern eine Aussage über die **Stopweite**.
+
+### ✖ Die Trefferquote allein reicht nicht
+
+Sie ignoriert, wie viel je Treffer herauskommt. Zwei Systeme mit gleicher
+Quote und verschiedenem CRV sind nicht gleich gut.
+
+### ✔ Drei Ebenen zusammen — und die dritte ist neu
+
+| Ebene | misst | warum |
+|---|---|---|
+| **Trefferquote** (Ziel vor Stop) | wie **oft** | die Größe, auf der Kelly rechnet |
+| **Erwartungswert je Trade in R** | wie **viel** | Quote und CRV zusammen |
+| ⚠️ **Anteil OFFEN** | **weder noch** | **N10: bei H5 sind das 42,86 %** |
+
+> ⚠️⚠️ **Die dritte Ebene ist keine Feinheit.** Bei H5 endet fast die
+> Hälfte der Trades weder am Ziel noch am Stop. Wer sie als Verlust zählt,
+> misst zu pessimistisch; als Gewinn zu optimistisch; wer sie weglässt,
+> behält nur die schnell entschiedenen — also **systematisch die
+> volatilen**, und damit genau die Gruppe, über die `vola` etwas sagt.
+
+**Bei Hebel-Haltedauer 1–3 Tage liegt der Anteil noch höher.**
+
+### Das Dach: SQN und Expectancy — vorhanden, nicht neu erfunden
+
+`Zielgroessen_und_Erfolgsmasse.md` führt **SQN** als primäres Systemmaß
+(Ziel > 1,5) und die **Expectancy je Trade**. Beides wird übernommen; ein
+neues Maß wird nicht erfunden.
+
+## 5 — Was der Lauf NICHT darf
+
+| | |
+|---|---|
+| Die LLM-Synthese nachspielen | nicht reproduzierbar. Nachgespielt wird der **deterministische** Teil — Trichter und Sperren. Die Bewertung sitzt dort |
+| Gebühren in die Bewertung | Regel 2 — nur als Text |
+| Die Zielebene nachträglich wählen | dieser Abschnitt ist die Vorabfestlegung |
+| Offene Positionen stillschweigend behandeln | siehe oben — sie sind **auszuweisen** |
+
+## 6 — Die Reihenfolge
+
+    N20-a   die SEITWAERTS-Klasse bauen und messen      <- Voraussetzung
+    N20-b   den deterministischen Teil der Kette nachlaufen lassen
+    N20-c   je Phase: Trefferquote · Expectancy · Anteil OFFEN · SQN
+    N20-d   Gegenprobe gegen den TAKT (Regel 1: er hat null gemessenen
+            Vorteil - er ist der Vergleichsmassstab, nicht ein perfekter
+            Waehler)
+
+⚠️ **Vor N20 steht N19-E** (die Neukalibrierung von `funding`/`turnover`)
+— ein Echtlauf auf Stufen, die 1,5- bis 1,9-fach zu groß sind, misst die
+falsche Kette. **Das ist eine Nutzerentscheidung.**
+
