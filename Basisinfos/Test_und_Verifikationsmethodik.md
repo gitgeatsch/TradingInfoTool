@@ -7448,3 +7448,92 @@ ist — und warum.**
 
 Werkzeug: `n9_durchlass_vola_sperre.py`
 
+
+
+## 2.127 ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026)
+
+**Nutzervorgabe:** *„wir verfolgen immer noch ein dynamisches System, welches
+den Hebel aus den Bewertungen ableiten soll … ich predige laufend, die
+übergeordneten Ziele zu berücksichtigen."*
+
+⚠️ Der Einwand war berechtigt: N9, N12, N13 und N14 wurden gemessen, **ohne
+sie gegen N-42/O4 zu halten**. Die Abhängigkeitskarte im Gesamtplan ist die
+Gegenmaßnahme.
+
+### ✖✖✖ N-46 IST AUF DREI EBENEN ÜBERHOLT
+
+N-46 lautete: *„ein Nullpunkt für die Längs-Form, der die marktweite
+Gemeinsamkeit mitzerstört — ohne ihn ist keine Form baureif."*
+
+| # | | |
+|---|---|---|
+| **1** | **Die Messung, die das Problem zeigte, ist GESPERRT** | F-222 trägt seit dem 06.09.: *„Nicht gültig: die Spannen und Verhältnisse"* — und „längs hält die Ordnung nicht" besteht genau daraus |
+| **2** | **Der GRUND ist entfallen** | Die Längs-Form wurde gesucht, weil der Regel-3-Bezug bei quer „nur indirekt" sei. CLAUDE.md sagt seit dem 05./06.09.: **„Regel 3 verbietet NICHT den Querschnittsvergleich."** |
+| **3** | **Die heutigen Messungen sind bereits QUER** | Rang je Kalendertag, Tagesklammer, `messnorm` — regel-3-konform und auf gültiger Basis |
+
+⚠️ **Und eine weitere Leiche:** auch *„`vola` ist ein Schalter, `schnitt50`
+die einzige monotone Größe"* stammt aus dem gesperrten Teil von F-222 —
+und es ist die Aussage, an der die **Hebelleiter** hängt.
+
+### Die Form, auf gültiger Basis gemessen
+
+| | `vola` Mittel | **`vola` Rand** | `schnitt50` Rand |
+|---|---|---|---|
+| frei | Schalter | **+1,36 → −1,24** | Schalter |
+| 20 % selektiert | Schalter | **monoton** | Regler, **umgekehrt** |
+| erste Hälfte | — | **monoton** | Regler |
+| zweite Hälfte | — | **monoton** | ✖ **Schalter — hält nicht** |
+| als Regel | trägt nicht | ✔ **TRÄGT** (+0,00327) | nicht trennbar |
+
+> **`vola` ist der Regler, nicht `schnitt50`** — und zwar nur am
+> **Randmaßstab**. Am Mittelwert ist es ein Schalter. **Zum dritten Mal
+> heute dreht der Maßstab das Ergebnis.**
+
+### ⚠️ ABER: die Fünf-Stufen-Monotonie hält NICHT
+
+Die Punktschätzer sind sauber monoton. Mit Blockbootstrap je Fünftel:
+
+    Fuenftel 0   +1,3614  [+0,8600 .. +1,8388]
+    Fuenftel 1   +0,5798  [+0,2221 .. +0,9361]
+    Fuenftel 2   -0,0214  [-0,2875 .. +0,2984]
+    Fuenftel 3   -0,6496  [-0,9096 .. -0,3439]
+    Fuenftel 4   -1,2420  [-1,8879 .. -0,6642]
+
+    -> nur 1 von 4 Nachbarpaaren getrennt
+    Zufallskontrolle: 0 von 4, alle Baender enthalten die Null  ✔
+
+**Drei von vier Nachbarpaaren überlappen.** Die Fünfteilung ist nicht
+belegt — der dritte Punktschätzer-Fehlschluss dieses Tages, diesmal vor
+der Meldung gefangen.
+
+### ✔✔ WAS HÄLT — UND ES REICHT MÖGLICHERWEISE
+
+| | Band | |
+|---|---|---|
+| **Fünftel 0** (niedrigste Vola) | [+0,8600 .. +1,8388] | klar positiv |
+| **Fünftel 2** (Mitte) | [−0,2875 .. +0,2984] | null |
+| **Fünftel 4** (höchste Vola) | [−1,8879 .. −0,6642] | klar negativ |
+
+**Alle drei paarweise getrennt** — F0s Untergrenze (+0,860) liegt über F2s
+Obergrenze (+0,298), F2s Untergrenze (−0,288) über F4s Obergrenze (−0,664).
+
+> **Eine belegte DREITEILUNG statt einer unbelegten Fünfteilung.**
+
+⚠️ Und das trifft die Nutzerformulierung: *„hohes Risiko ok — welches 2x
+3x 5x — oder nur geringes Risiko Spot."* Im Kern eine Dreiteilung.
+**Für drei Sprossen ist die Grundlage da; für fünf nicht.**
+
+### Was das für die Kette bedeutet
+
+    N-46  ✖ ueberholt - entfaellt
+    O4    ✔ GELOEST: `vola` traegt (+0,00327, Band ohne Null) und deckt
+            516 von 516. Der Blocker aus N-42 ist weg.
+    K1    ○ die Leiter kann DREI Sprossen haben, nicht fuenf
+
+⚠️ **Die offenen Vorbehalte, unverändert:** `turnover` erklärt 18 % von
+`vola` (N1) · die Wirkung ist mit +0,00327 klein · **R-R9** verlangt bei
+einer Registrierung die Neukalibrierung der Schwelle samt Nachzug von
+`potential.KALIBRIERT_FUER` und Befundkarte 3.9.
+
+Werkzeuge: `o4_beitragsform.py` · `pruefe_o4_stufenband.py`
+

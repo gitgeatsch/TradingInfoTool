@@ -4667,3 +4667,87 @@ Erzeugt aus `bestand.py`, geprüft von `pruefe_pakete.py --paket Register`.
 Mindest-Stop · **O5** Positionsführung Hebel · **O6** Intraday · **O7** MFE
 · die drei Mailpunkte aus F-232 · der Gabelpunkt aus F-164
 
+
+
+---
+
+# ⚠️⚠️⚠️ DIE ABHÄNGIGKEITSKARTE — alle offenen Knoten in Verbindung (06.09.2026)
+
+**Nutzervorgabe:** *„bringe noch alle offenen Knoten und Punkte in
+Verbindung, damit wir keine weiteren Leichen oder Fehler in der Konsistenz
+der Lösung einbauen."*
+
+⚠️ **Anlass:** Am 06.09. wurden N9, N12, N13 und N14 gemessen, **ohne sie
+gegen N-42/O4 zu halten** — die Kette war vorhanden, die Verbindung fehlte.
+Diese Karte ist die Gegenmaßnahme.
+
+## Das übergeordnete Ziel — unverändert seit N-42
+
+> **`r(q)` — der Hebel entsteht dynamisch aus der Wahrscheinlichkeit.**
+> Das ist kein Widerspruch zur Sizing-Einordnung: der Hebel *fällt* aus der
+> Positionsgröße an, aber die Positionsgröße kommt aus Kelly auf der Quote
+> — **und die Quote ist die Bewertung.**
+
+**Der Blocker, beziffert (F-219/F-220):** Die Bewertung liefert **19,5 %
+Kalibrierung**; damit erreicht **genau eine** Kombination die Zielzone 2–5×.
+`r(q)` hat nichts zu verteilen.
+
+## Die KRITISCHE KETTE — alles andere ist Nebenlinie
+
+    N-46  ein gueltiger NULLPUNKT fuer die LAENGS-Form
+       |  ohne ihn ist keine Form baureif (F-221/F-222)
+       v
+    O4    ein zweiter Beitrag, der TRAEGT und BREIT DECKT
+       |  Kandidaten: vola (100 %, +0,647) · schnitt50 (100 %, +0,553)
+       |  ⚠️ EINE aus Gruppe 1 - sie korrelieren 0,25 bis 0,70
+       v
+    K1    r(q) - die Hebelleiter aus der Quote
+       |  ⚠️ Entscheidung offen: Quote KALIBRIERT oder ROH in Kelly?
+       v
+    DYNAMISCHER HEBEL
+
+## Wie die heutigen Punkte daran hängen
+
+| # | Frage | hängt an | Wirkung auf die Kette |
+|---|---|---|---|
+| **N2** | `schnitt50` bei H5 gegenprüfen | — | ⚠️ **direkt O4**: `schnitt50` ist die **einzige monotone** Größe längs. Für eine **Abstufung 2–5×** ist ein Regler mehr wert als ein Schalter — und `vola` ist ein Schalter |
+| **N16** | `vola` als Beitrag verdrahten | N-46 | **ist O4**, sobald die Form entschieden ist |
+| **N7** | Schichtentest-Trennschärfe nachrüsten | — | ⚠️ betrifft das **Redundanzurteil** in O4 — alle früheren Nullbefunde sind unbeziffert |
+| **N17** | Trägt der Momentum-Rang über `vola` hinaus? | — | 74,8 % Überschneidung. Berührt, ob die **Auswahl** durch `vola` ersetzt gehört |
+| **N11** | Schiefe der Stufen bestimmt die Durchlassquote | — | ⚠️ betrifft **K1**: die Schwelle wirkt je nach Stufenform verschieden |
+| **N3** | Menge 20 % | — | Nebenlinie — die Aussage gilt heute nur für „frei" |
+| **N6** | `turnover` auch am Rand | — | Nebenlinie |
+| **N10** | Barrieren- gegen Horizont-Quote | — | ⚠️ **Begriffsklärung vor K1** — Kelly braucht die Barrieren-Quote |
+| **N15** | `UND @ 10 %`, 58,3 % frontlastig | mehr Terminmarkt | zurückgestellt |
+| **N18** | Engpass ist der **Cooldown (93,8 %)** | — | ⚠️ **Vorbehalt gegen jede neue Sperre** — das System ist nicht zu durchlässig |
+| **D3** | Horizont der OI-Sperre | — | Entwurfsfrage, Nutzerentscheidung |
+| **F-164** | Der Gabelpunkt | O4 | ⚠️ **entschärft sich**, wenn O4 gelingt — dann trennt etwas |
+
+## ⚠️ Drei Konsistenzfallen, die dabei sichtbar wurden
+
+**1 — `vola` ist ein SCHALTER, kein Regler.** *„Nur das unterste eigene
+Fünftel hebt sich ab."* Für die Hebelleiter 2–5× braucht es eine
+**Abstufung**. Wer `vola` als O4-Beitrag registriert, hat den Blocker
+gelöst, aber **die Leiter nicht** — dafür ist `schnitt50` der Kandidat.
+
+**2 — Die Sperrform ist für beide der falsche Weg** (2.126): Eine Sperre
+unterliegt der Bestandsausnahme und ist damit wirkungslos (wie N-14) oder
+trifft genau die Werte, die als einzige durchkommen. **Nur die
+Beitragsform wirkt.**
+
+**3 — Der Engpass ist der Cooldown, nicht die Bewertung** (F-180/F-182,
+93,8 %). Jede Verschärfung trifft ein System, das ohnehin fast nichts
+durchlässt. ⚠️ **O4 macht die Bewertung besser, nicht durchlässiger** —
+das ist der Unterschied, und er muss beim Bauen sichtbar bleiben.
+
+## Die Reihenfolge, die daraus folgt
+
+    1  N-46   der Laengs-Nullpunkt          <- JETZT
+    2  N2     schnitt50 bei H5              (der Regler-Kandidat)
+    3  O4     die Form entscheiden und EINE Groesse registrieren
+    4  N10    Barrieren- gegen Horizont-Quote klaeren
+    5  K1     r(q) bauen
+    ---
+    N7 · N17 · N11 laufen NEBENHER und aendern die Reihenfolge nicht
+    N3 · N6 · N15 · D3 · O1 · O3 · O5 · O6 · O7 bleiben Nebenlinie
+
