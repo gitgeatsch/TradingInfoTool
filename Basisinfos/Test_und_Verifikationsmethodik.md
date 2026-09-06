@@ -6274,8 +6274,8 @@ Müssen wir die Assets kategorisieren für bessere Ergebnisse?"*
     Messuniversum (Krypto-Kursreihen)                      516
     davon von der Systemlogik beruehrt                     9,7 %
 
-⚠️⚠️ **Das System handelt weitgehend auf Assets, die wir nicht messen.**
-155 berührte Symbole, aber nur rund 50 liegen im Messuniversum.
+**155 berührte Symbole, rund 50 davon im Messuniversum.** Das ist ein
+**Fakt, kein Defekt** — und die Unterscheidung ist wesentlich.
 
 Die Spot-Signale sind stark konzentriert: **BTC 30 von 118**, die vier
 größten (BTC, KAS, ETH, SEI) zusammen **54 %**.
@@ -6364,10 +6364,25 @@ Anteil > +2 R über 5 Tage, feine Ränge, ab 2024:
 Trennung gebraucht wird, dann als **Kontext in der Mail** (Regel 3: „in der
 Mail erwünscht"), nicht als Auslöser und nicht als Messschnitt.
 
-### Was trotzdem für saubere Trennung spricht — ein anderer Grund
+### ⚠️ KORREKTUR — die 9,7 % Überdeckung sind KEIN Problem
 
-Nicht die Wirkung, sondern die **Messbasis**: 9,7 % Überdeckung zwischen
-System und Messuniversum. Das ist zu klären, unabhängig von Kategorien.
+Erste Fassung dieses Abschnitts nannte die geringe Überdeckung einen zu
+klärenden Punkt. **Nutzerkorrektur, und sie ist richtig:**
+
+> *„die Bewertung muss **allgemein und neutral funktionieren**. Ob wir die
+> Symbole gerade handeln oder nicht, ist irrelevant für die Basismessungen
+> und die Dimensionierung."*
+
+⚠️⚠️ **Auf die gehandelten Symbole zu messen wäre ein Zirkelschluss.** Die
+Bewertung soll die Auswahl beurteilen — misst man nur dort, wo die Auswahl
+bereits zugegriffen hat, baut man das Ergebnis der Auswahl in ihre eigene
+Grundlage ein. Das ist Überlebensauslese der eigenen Entscheidungen.
+
+**Das breite, neutrale Universum ist die richtige Messbasis** — gerade
+weil das System nur einen kleinen Teil davon anfasst.
+
+Und methodisch war die erste Fassung ein Verstoß gegen Regel 4: aus dem
+**Fakt** „9,7 % Überdeckung" wurde ohne Begründung ein **Problem**.
 
 Werkzeuge: `messe_kategorie_und_horizont.py` ·
 `pruefe_horizont_dimensionierung.py`
