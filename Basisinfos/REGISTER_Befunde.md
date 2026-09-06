@@ -6,9 +6,17 @@
 
 ## ✔ WAS GILT
 
+**2.138** — `vola` ordnet den realisierten Ertrag: die Spreizung ruhig-lebhaft liegt in ALLEN 12 Geometrien ueber der artefaktbedingten (+0,035 bis +0,126 R, Tagesklammer). Es waehlt aber KEINE Bauform - dieselbe Geometrie gewinnt in allen Dritteln (Stop 2,0 x ATR / H20)
+
+- Quelle: Methodik 2.138 / n55_vola_in_der_geometrie.py
+
+**2.138-null** — Der Nullpunkt fuer ,EW in R' ist NICHT null: Tageskerzen ueberschiessen die Barriere, die nahe staerker als die ferne (P(Ziel|aufgeloest) 0,344 statt 0,333). Er wird aus drei GEEICHTEN Kunstwelten gewonnen; ungeeicht unterschaetzt man ihn um das Doppelte
+
+- Quelle: Methodik 2.138
+
 **2.136** — `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei. Auf der registrierten Barrieren-Quote traegt es nicht (+0,00168 ns), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft
 
-- Quelle: Methodik 2.136 / n25_richtungsprobe_alle_drei.py
+- Quelle: Methodik 2.136 / n53_richtungsprobe_alle_drei.py
 
 **2.136-f** — `funding` traegt RICHTUNG +0,00197 [+0,00024 .. +0,00376], 0/5, und reitet den Aufloesungskanal NICHT (AUF ns) - sein G0-Befund war sauber, nur unguenstig gemessen
 
@@ -24,7 +32,7 @@
 
 **2.135** — `vola` traegt KEINE Richtung - richtungsrein (symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 [-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. Der Befund geht restlos in zwei GROESSENkanaele auf
 
-- Quelle: Methodik 2.135 / n24_vola_geometrieprobe.py
+- Quelle: Methodik 2.135 / n52_vola_geometrieprobe.py
 
 **2.135-AUF** — Die AUFLOESUNGSQUOTE traegt +0,03088 [+0,02753 .. +0,03436], monoton ueber die Drittel - ruhige Assets loesen ihre Barrieren nachweisbar oefter auf. Groesster sauberer Effekt des Tages, aber ueber die GEOMETRIE, nicht ueber den Markt
 
@@ -89,6 +97,10 @@
 - Warum: auf der FREIEN Menge sind beide unabhaengig (20,3 % gegen 20,0 %) - die Ueberschneidung entsteht ausschliesslich durch die Auswahl
 
 ## ○ WAS OFFEN IST
+
+**2.138-offen** — ⚠️ Die ZUSCHREIBUNG der Spreizung ist offen. Die Kunstwelt hat einen Strukturfehler: Hoch und Tief sind dort unabhaengiges Rauschen um den Schluss, in echten Daten liegt an einem Aufwaertstag das Tief nahe der Eroeffnung. Sie ueberschaetzt die Stop-Treffer. Naechster Schritt: Brownsche Bruecke je Tag
+
+- Quelle: Methodik 2.138
 
 **D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
 

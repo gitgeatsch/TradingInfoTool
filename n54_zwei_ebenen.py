@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""N26 — SIND ES ZWEI EBENEN? `vola` entscheidet OB, funding/turnover WOHIN (06.09.)
+"""N-54 — SIND ES ZWEI EBENEN? `vola` entscheidet OB, funding/turnover WOHIN (06.09.)
 
 ## Woher die Frage kommt
 
-N25 hat die drei Groessen erstmals durch dasselbe richtungsreine Verfahren
+N-53 hat die drei Groessen erstmals durch dasselbe richtungsreine Verfahren
 geschickt:
 
     Groesse    G0 (regist.)  GS (Richtung)  AUF (Kanal)
@@ -51,8 +51,8 @@ daraus schliessen. Zwei Fallen sind vorab benannt:
      -> Gegenmassnahme: die Vorhersage wird an GS geprueft, nicht an G0.
         GS ist auf Aufloesung bedingt - der Mengeneffekt ist heraus.
 
-    python n26_zwei_ebenen.py --probe
-    python n26_zwei_ebenen.py
+    python n54_zwei_ebenen.py --probe
+    python n54_zwei_ebenen.py
 """
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ import messe_bewertungskennzahl as MB                        # noqa: E402
 import messe_eigenschaft_beitrag as B                        # noqa: E402
 import messe_funding_niveau as F                             # noqa: E402
 import messe_regel_wirksamkeit as W                          # noqa: E402
-from n24_vola_geometrieprobe import (band, kontrolle,        # noqa: E402
+from n52_vola_geometrieprobe import (band, kontrolle,        # noqa: E402
                                      traegt, _ausgang, MISCHUNGEN)
 
 CRV, BRUCH, HORIZONT = 2.0, 5.0, 5
@@ -200,7 +200,7 @@ def urteile(name, erg):
 def main() -> int:
     t0 = time.time()
     print("=" * 92)
-    print("N26 — zwei Ebenen? `vola` entscheidet OB, funding/turnover WOHIN")
+    print("N-54 — zwei Ebenen? `vola` entscheidet OB, funding/turnover WOHIN")
     print("=" * 92)
     print("  Lade Reihen ...", flush=True)
     reihen = B.lade()

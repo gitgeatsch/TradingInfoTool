@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""N25 — TRAGEN `funding` UND `turnover` RICHTUNG? Dieselbe Probe wie N24 (06.09.)
+"""N-53 — TRAGEN `funding` UND `turnover` RICHTUNG? Dieselbe Probe wie N-52 (06.09.)
 
 ## ⚠️⚠️ Warum das JETZT kommt — der Punkt, den ich nicht zu Ende gedacht hatte
 
-N24 hat gezeigt: die **Barrieren-Quote** mischt zwei Dinge, die nichts
+N-52 hat gezeigt: die **Barrieren-Quote** mischt zwei Dinge, die nichts
 miteinander zu tun haben —
 
     Aufloesungsquote   loest der Anker in der Frist ueberhaupt auf?
@@ -43,8 +43,8 @@ Registrierung war sauber, auch wenn der Massstab unglücklich gewaehlt war.
             ⚠️ Das ist der Nachweis, dass die Probe den Kanal findet,
                den sie finden soll.
 
-    python n25_richtungsprobe_alle_drei.py --probe
-    python n25_richtungsprobe_alle_drei.py
+    python n53_richtungsprobe_alle_drei.py --probe
+    python n53_richtungsprobe_alle_drei.py
 """
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ import messe_eigenschaft_beitrag as B                        # noqa: E402
 import messe_funding_niveau as F                             # noqa: E402
 # ⚠️ Die Mechanik wird IMPORTIERT, nicht kopiert - ein Test, der eine
 # Kopie prueft, prueft nicht den Code (stehende Vorgabe).
-from n24_vola_geometrieprobe import (MASSSTAEBE, band,        # noqa: E402
+from n52_vola_geometrieprobe import (MASSSTAEBE, band,        # noqa: E402
                                      drittel, kontrolle, regel,
                                      traegt, _ausgang, MISCHUNGEN)
 
@@ -130,7 +130,7 @@ def zeige(je_tag, titel):
             print("     %-28s   zu wenige Tage" % lab)
             continue
         k = kontrolle(je_tag, feld, bb[0])
-        tr = traegt(bb, k)          # ⚠️ ZWEISEITIG - siehe n24.traegt()
+        tr = traegt(bb, k)          # ⚠️ ZWEISEITIG - siehe n52.traegt()
         print("     %-28s %+9.5f [%+.5f .. %+.5f]  %d von %d %s"
               % (lab, bb[0], bb[1], bb[2], k, MISCHUNGEN,
                  "✔ TRAEGT" if tr else ""), flush=True)
@@ -184,7 +184,7 @@ def main() -> int:
     t0 = time.time()
     probe = "--probe" in sys.argv
     print("=" * 92)
-    print("N25 — tragen `funding` und `turnover` RICHTUNG?")
+    print("N-53 — tragen `funding` und `turnover` RICHTUNG?")
     print("=" * 92)
 
     if probe:

@@ -4140,10 +4140,11 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
-| `n24_vola_geometrieprobe.py` | ⚠️⚠️ N24: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
+| `n55_vola_in_der_geometrie.py` | N-55: `vola` in der Geometrie - Stopweite, Horizont, Hebel. ⚠️ Nullpunkt aus geeichten Kunstwelten (2.138) |
+| `n52_vola_geometrieprobe.py` | ⚠️⚠️ N-52: Traegt `vola` RICHTUNG oder nur unsere Geometrie? Mit `--probe` gegen zwei richtungsfreie Kunstwelten (2.135) |
 | `pruefe_kalibrierung_trocken.py` | Was eine geplante Beitragsaenderung an Schwelle, Durchlass und Suite anrichtet - VOR der Aenderung |
-| `n25_richtungsprobe_alle_drei.py` | ⚠️⚠️ N25: tragen funding/turnover RICHTUNG? Alle drei durch dasselbe richtungsreine Verfahren (2.136) |
-| `n26_zwei_ebenen.py` | N26: spielen Geometrie- und Richtungsebene zusammen? (2.137) |
+| `n53_richtungsprobe_alle_drei.py` | ⚠️⚠️ N-53: tragen funding/turnover RICHTUNG? Alle drei durch dasselbe richtungsreine Verfahren (2.136) |
+| `n54_zwei_ebenen.py` | N-54: spielen Geometrie- und Richtungsebene zusammen? (2.137) |
 | `messe_degradierung.py` | Sind die NICHTS_TUN der acht Anker Urteile - oder degradierte Kaeufe? |
 | `messe_drift.py` | Traegt die Drift je Asset? |
 | `messe_stufen_aus_quote.py` | N-41: Beitragsstufen DIREKT aus der Barrieren-Quote (05.09.2026) |
@@ -8138,7 +8139,7 @@ Werkzeug: `pruefe_auswahl_produktion.py` · `pruefe_auswahl_schaedlich.py`
 
 ---
 
-## 2.135 ✖✖✖ N24 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometrie (06.09.2026)
+## 2.135 ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometrie (06.09.2026)
 
 ### Warum überhaupt geprüft wurde
 
@@ -8263,17 +8264,17 @@ der Durchlass stiege von 12 % auf 40–60 %).
 **Die Reihenfolge steht damit fest, und sie ist nicht verhandelbar:**
 erst muss etwas anderes tragen, dann wird kalibriert. Nicht umgekehrt.
 
-Werkzeug: `n24_vola_geometrieprobe.py` (mit `--probe` gegen zwei
+Werkzeug: `n52_vola_geometrieprobe.py` (mit `--probe` gegen zwei
 richtungsfreie Kunstwelten) · `pruefe_kalibrierung_trocken.py`
 
 
 ---
 
-## 2.136 ✔✔✔ N25 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026)
+## 2.136 ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026)
 
 ### Der Punkt, den ich nicht zu Ende gedacht hatte
 
-N24 (2.135) zeigte: die Barrieren-Quote mischt **Auflösung** und
+N-52 (2.135) zeigte: die Barrieren-Quote mischt **Auflösung** und
 **Richtung**. Bei `vola` war der ganze Befund der erste Kanal.
 
 ⚠️⚠️ **`funding` und `turnover` sind auf DERSELBEN Barrieren-Quote gemessen
@@ -8312,7 +8313,7 @@ mein Urteil sah ihn nicht.
 > → **mehr** Auflösung. Bei roher Volatilität heißt NIEDRIG schlicht
 > „ruhig" → **weniger**. **Derselbe Kanal, umgekehrtes Vorzeichen.**
 
-Ein einseitiges Kriterium sieht nur die halbe Welt. `n24.traegt()` ist
+Ein einseitiges Kriterium sieht nur die halbe Welt. `n52.traegt()` ist
 jetzt zweiseitig, und beide Skripte benutzen dieselbe Funktion.
 
 **2 — Der Erwartungswert in R ist AUCH kontaminiert.** Die Hoffnung war,
@@ -8346,12 +8347,12 @@ Größenkanal wie bei G0R.
    Richtungssignal. Das ist eine Aussage über die GEOMETRIE, nicht über
    den Beitrag.
 
-Werkzeug: `n25_richtungsprobe_alle_drei.py` (mit `--probe` gegen zwei
+Werkzeug: `n53_richtungsprobe_alle_drei.py` (mit `--probe` gegen zwei
 Kunstwelten: reines Rauschen und reines Volatilitätsabbild)
 
 ---
 
-## 2.137 ✖ N26 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026)
+## 2.137 ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026)
 
 ### Die Vorhersage, die geprüft wurde
 
@@ -8395,4 +8396,109 @@ Signal ausgerechnet dort, wo am wenigsten aufgelöst wird. In den Dritteln
 ist die Streuung dreifach, die Unterschiede liegen im Rauschen — aber das
 Muster ist bei beiden Größen gleichgerichtet und gehört im Auge behalten.
 
-Werkzeug: `n26_zwei_ebenen.py`
+Werkzeug: `n54_zwei_ebenen.py`
+
+
+---
+
+## 2.138 ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026)
+
+### Die Frage
+
+2.135 hat `vola` aus `BEITRAEGE` in die Geometrie verwiesen: keine
+Richtung, aber +3,1 Punkte auf die **Auflösungsquote**. Bleibt der Nutzen:
+
+> Welche Geometrie ist die richtige, wenn ein Asset ruhiger oder lebhafter
+> ist als es selbst sonst ist? Und was fällt daraus für den **Hebel**?
+
+Denn im Code steht `hebel_noetig = verlustanteil / stop_rel` — **die
+Stopweite bestimmt den Hebel unmittelbar.**
+
+Gemessen: 3 vola-Drittel × Stopweite {0,5 · 1,0 · 1,5 · 2,0} × ATR ×
+Horizont {5 · 10 · 20}, CRV fest 2,0. 2.523 Tage, 606.653 Anker.
+
+### ⚠️⚠️ Der Nullpunkt für „EW in R" ist NICHT null — Tageskerzen überschießen
+
+Der Vorabtest fand in der richtungsfreien Welt einen Ertrag von **+0,14
+bis +0,20 R bei jeder Geometrie**. Zwei Ursachen, beide echt:
+
+**1 — Die Same-Bar-Falle.** Werden Ziel und Stop am selben Tag berührt,
+weiß die Tageskerze nicht, was zuerst kam. Meine erste Fassung löste das
+zugunsten des **Ziels** auf — das erfindet Ertrag, am meisten bei engen
+Stops (+0,39 bei Stop 0,5 gegen +0,20 bei Stop 2,0). Der bestehende
+`_ausgang` prüft im Schleifendurchlauf zuerst den Stop; die vektorisierte
+Fassung hatte das verloren. **Gleichstand geht an den Stop.**
+
+**2 — Überschießen.** Auch danach blieb `P(Ziel|aufgelöst) = 0,344` statt
+der theoretischen ⅓. Eine Tageskerze überschießt die Barriere, und die
+*nahe* relativ stärker als die ferne.
+
+> **Der Nullpunkt ist hier nicht analytisch herleitbar — aber messbar.**
+> Er wird im selben Lauf aus drei Kunstwelten ohne Richtung gewonnen, je
+> Zelle der größte Wert (konservativ).
+
+### ⚠️ Und die Kunstwelt musste GEEICHT werden
+
+| | echte Daten | ungeeicht |
+|---|---|---|
+| ATR / Kurs | 0,08613 | 0,03445 |
+| (Hoch−Tief) / Kurs | 0,07353 | 0,02490 |
+| \|Tagesrendite\| | 0,02883 | 0,01953 |
+| **Spanne / Bewegung** | **2,551** | **1,275** |
+
+Der echte Markt hat eine **doppelt so breite Tagesspanne** relativ zur
+Schlusskursbewegung. Nach der Eichung (`--eiche`, alle drei auf 3–5 %
+genau) **dreht der Artefaktwert ins Minus** (−0,03 bis −0,12): mit breiter
+Tagesspanne wird der nahe Stop so oft zufällig berührt, dass
+Tagesdaten-Barrieren in einer driftlosen Welt **verlieren**.
+
+### ⚠️⚠️ Was NICHT hält — und warum ich dem eigenen Skript widersprochen habe
+
+Der Lauf meldete zunächst *„die Geometrie unterscheidet sich"*. Das hält
+nicht:
+
+- **Alle 36 von 36 Zellen** übersteigen den Artefakt. Ein Test, der nichts
+  aussortiert, trennt nichts.
+- **Strukturfehler der Kunstwelt:** dort sind Hoch und Tief *unabhängiges*
+  Rauschen um den Schluss. In echten Daten liegt an einem Aufwärtstag das
+  Tief nahe der Eröffnung — der Stop wird viel seltener zufällig berührt.
+  Die Kunstwelt **überschätzt die Stop-Treffer** und ist zu negativ.
+- **Auf dem rohen EW gewinnt in allen drei Dritteln dieselbe Geometrie**
+  (Stop 2,0 / H20: +0,1475 · +0,0933 · +0,0386).
+
+> **`vola` wählt die Bauform NICHT.** Der absolute Überschuss ist nicht
+> belastbar, und die Marktdrift begünstigt lange Horizonte zusätzlich.
+
+### ✔ Was hält — die SPREIZUNG zwischen den Dritteln
+
+Sie vergleicht echt gegen Artefakt in **derselben Zelle**; der Pegelfehler
+kürzt sich weitgehend heraus.
+
+| Stop | H | echt | Artefakt | Differenz |
+|---|---|---|---|---|
+| 0,5 | 5 | +0,0507 | +0,0158 | +0,0349 |
+| 1,0 | 20 | +0,1010 | +0,0073 | +0,0936 |
+| 1,5 | 20 | +0,1140 | −0,0120 | +0,1260 |
+| 2,0 | 20 | +0,1089 | +0,0145 | +0,0944 |
+
+**In allen 12 Geometrien liegt die echte Spreizung über der
+artefaktbedingten, um +0,0349 bis +0,1260 R.** Die Tagesklammer vergleicht
+ruhig gegen lebhaft **am selben Tag** — Marktdrift kann das nicht erklären.
+
+### ⚠️⚠️ Die Zuschreibung bleibt offen — und das gehört so gesagt
+
+`EW in R` ist einer der Maßstäbe, die 2.135/2.136 als **kontaminiert**
+erwiesen haben. Rein ist allein GS, und GS sagt bei `vola` nichts
+(−0,00041). Die Spreizung kann also weiterhin Geometrie sein — nur eine,
+die meine Kunstwelt wegen ihres Strukturfehlers nicht abbildet.
+
+> **Stand: `vola` ordnet den realisierten Ertrag stark und durchgängig
+> (0,04–0,13 R Spreizung, Tagesklammer), trägt aber keine Richtung und
+> wählt keine Bauform. Ob die Spreizung nutzbar ist, entscheidet erst ein
+> Artefaktmodell mit realistischer Tageskerze.**
+
+**Das ist die nächste Arbeit**, nicht ein Nebensatz: eine Kunstwelt, in
+der Hoch/Tief aus demselben Pfad stammen wie der Schluss (Brownsche Brücke
+je Tag statt unabhängiges Rauschen).
+
+Werkzeug: `n55_vola_in_der_geometrie.py` (`--eiche`, `--probe`)

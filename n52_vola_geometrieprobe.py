@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""N24 — IST `vola` EIN MARKTBEFUND ODER UNSERE EIGENE GEOMETRIE? (06.09.2026)
+"""N-52 — IST `vola` EIN MARKTBEFUND ODER UNSERE EIGENE GEOMETRIE? (06.09.2026)
 
 ## Warum diese Pruefung, bevor `vola` registriert wird
 
@@ -104,8 +104,8 @@ In Welt A (null Richtungsinformation) ergab die Regel:
     Welt B  wie A, aber niedrige relative Vola -> echte Aufwaertsdrift
             Erwartung: GS UND VZ zeigen es
 
-    python n24_vola_geometrieprobe.py --probe
-    python n24_vola_geometrieprobe.py
+    python n52_vola_geometrieprobe.py --probe
+    python n52_vola_geometrieprobe.py
 """
 from __future__ import annotations
 
@@ -139,7 +139,7 @@ MASSSTAEBE = (("g0", "G0 CRV 2 auf heutiger ATR", False),
               # Aufgeloesten). Ist G0R null, ist G0 VOLLSTAENDIG die
               # Aufloesungsquote - dann bleibt kein Rest zu erklaeren.
               ("g0r", "G0R Treffer|aufgeloest", False),
-              # ⚠️⚠️ DIE ENTSCHEIDENDE GEGENPROBE (06.09., N25).
+              # ⚠️⚠️ DIE ENTSCHEIDENDE GEGENPROBE (06.09., N-53).
               # Die Trefferquote behandelt einen FLACHEN AUSLAUF wie einen
               # Stop - beides zaehlt 0. Wirtschaftlich ist das falsch: ein
               # flacher Auslauf kostet fast nichts, ein Stop kostet 1 R.
@@ -268,7 +268,7 @@ def traegt(b, k):
     """⚠️ ZWEISEITIG. Ein Band, das ganz im MINUS liegt, ist genauso ein
     Befund wie eines ganz im Plus - nur mit umgekehrtem Vorzeichen.
 
-    06.09.2026, vom N25-Vorabtest gefangen: bei `vola` (ATR / eigener
+    06.09.2026, vom N-53-Vorabtest gefangen: bei `vola` (ATR / eigener
     Median) heisst NIEDRIG "gleich steigt die Vola" -> MEHR Aufloesung.
     Bei roher Volatilitaet heisst NIEDRIG schlicht "ruhig" -> WENIGER.
     Derselbe Kanal, umgekehrtes Vorzeichen. Ein einseitiges Kriterium
@@ -369,7 +369,7 @@ def main() -> int:
     t0 = time.time()
     probe = "--probe" in sys.argv
     print("=" * 92)
-    print("N24 — traegt `vola` ueber den MARKT oder ueber UNSERE GEOMETRIE?")
+    print("N-52 — traegt `vola` ueber den MARKT oder ueber UNSERE GEOMETRIE?")
     print("=" * 92)
 
     if probe:

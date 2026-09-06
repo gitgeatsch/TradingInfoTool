@@ -122,7 +122,7 @@ KANDIDATEN = (
                        "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
                        "durchgehend ohne Null. Der Tempo-Anzeiger"),
         ),
-        warnung="✔✔ REHABILITIERT 06.09. (N25): `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei Groessen, zweieinhalbmal `funding`. Auf der registrierten Barrieren-Quote traegt es NICHT (+0,00168, Band mit Null), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft und den Effekt verdeckt. Der Vorschlag vom Vormittag (2.133: stilllegen) ist damit ueberholt - er stand auf dem gemischten Massstab. ⚠️ R-R9 OFFEN: auf welcher Zielgroesse die Stufen kalibriert werden. `q` ist ,Ziel vor Stop' (= G0); dort ist turnover schwach, weil die GEOMETRIE es daempft - das ist eine Aussage ueber die Geometrie, nicht ueber den Beitrag. --- FRUEHER: Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
+        warnung="✔✔ REHABILITIERT 06.09. (N-53): `turnover` traegt RICHTUNG +0,00512 [+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE der drei Groessen, zweieinhalbmal `funding`. Auf der registrierten Barrieren-Quote traegt es NICHT (+0,00168, Band mit Null), weil sein Aufloesungskanal (-0,00218) gegen die Richtung laeuft und den Effekt verdeckt. Der Vorschlag vom Vormittag (2.133: stilllegen) ist damit ueberholt - er stand auf dem gemischten Massstab. ⚠️ R-R9 OFFEN: auf welcher Zielgroesse die Stufen kalibriert werden. `q` ist ,Ziel vor Stop' (= G0); dort ist turnover schwach, weil die GEOMETRIE es daempft - das ist eine Aussage ueber die Geometrie, nicht ueber den Beitrag. --- FRUEHER: Nur 65 Symbole Abdeckung - das Nullband ist dreimal so "
                 "breit wie bei den anderen, das Urteil wandert mit der Saat. "
                 "⚠️ OFFEN (N6): turnover traegt AUCH am Randmassstab "
                 "(+0,01389 bei H20, 2.119) - registriert ist er nur am "
@@ -184,14 +184,14 @@ KANDIDATEN = (
                        "aber deutlich schwaecher als turnover (+4,0)"),
             ("06.09.", "N23-E1: einzige belegte DREITEILUNG, beide Haelften, "
                        "2/2 Nachbarn getrennt"),
-            ("06.09.", "✖✖✖ N24: KEINE RICHTUNG. Richtungsrein (GS) "
+            ("06.09.", "✖✖✖ N-52: KEINE RICHTUNG. Richtungsrein (GS) "
                        "-0,00041 [-0,00287 .. +0,00194], 2/5 - und die "
                        "Drittel haben KEINE Ordnung mehr"),
-            ("06.09.", "N24: der Befund geht restlos in Groessenkanaele auf "
+            ("06.09.", "N-52: der Befund geht restlos in Groessenkanaele auf "
                        "- Aufloesungsquote +0,03088, Rest G0R +0,00760 "
                        "gegen Kunstwelt-Artefakt +0,00770 / +0,00731"),
         ),
-        warnung="⚠️⚠️⚠️ STAND NACH N24 (06.09.): `vola` GEHOERT NICHT IN "
+        warnung="⚠️⚠️⚠️ STAND NACH N-52 (06.09.): `vola` GEHOERT NICHT IN "
                 "`BEITRAEGE`. Richtungsrein gemessen traegt es nichts "
                 "(GS -0,00041, 2/5, keine Ordnung der Drittel). Der starke "
                 "Befund war unsere eigene Geometrie: ruhige Assets loesen "
@@ -207,7 +207,7 @@ KANDIDATEN = (
                 "Achse. "
                 "⚠️ OFFEN (R-R11): N1-V2 fand am RANDMASS einen "
                 "spiegelbildlichen Richtungseffekt (-0,00345). Das ist "
-                "durch N24 NICHT widerlegt - andere Zielgroesse -, steht "
+                "durch N-52 NICHT widerlegt - andere Zielgroesse -, steht "
                 "aber unter Verdacht, weil das Randmass sich den "
                 "Schiefe-Kanal mit `bewegung_r` teilt. Richtungsreine "
                 "Nachmessung am Rand steht aus. "
@@ -336,12 +336,30 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.138", "`vola` ordnet den realisierten Ertrag: die "
+               "Spreizung ruhig-lebhaft liegt in ALLEN 12 Geometrien ueber "
+               "der artefaktbedingten (+0,035 bis +0,126 R, Tagesklammer). "
+               "Es waehlt aber KEINE Bauform - dieselbe Geometrie gewinnt "
+               "in allen Dritteln (Stop 2,0 x ATR / H20)", "gilt",
+               "Methodik 2.138 / n55_vola_in_der_geometrie.py"),
+    Befundlage("2.138-null", "Der Nullpunkt fuer ,EW in R' ist NICHT null: "
+               "Tageskerzen ueberschiessen die Barriere, die nahe staerker "
+               "als die ferne (P(Ziel|aufgeloest) 0,344 statt 0,333). Er "
+               "wird aus drei GEEICHTEN Kunstwelten gewonnen; ungeeicht "
+               "unterschaetzt man ihn um das Doppelte", "gilt",
+               "Methodik 2.138"),
+    Befundlage("2.138-offen", "⚠️ Die ZUSCHREIBUNG der Spreizung ist offen. "
+               "Die Kunstwelt hat einen Strukturfehler: Hoch und Tief sind "
+               "dort unabhaengiges Rauschen um den Schluss, in echten Daten "
+               "liegt an einem Aufwaertstag das Tief nahe der Eroeffnung. "
+               "Sie ueberschaetzt die Stop-Treffer. Naechster Schritt: "
+               "Brownsche Bruecke je Tag", "offen", "Methodik 2.138"),
     Befundlage("2.136", "`turnover` traegt RICHTUNG +0,00512 "
                "[+0,00212 .. +0,00831], 0/5 - richtungsrein der STAERKSTE "
                "der drei. Auf der registrierten Barrieren-Quote traegt es "
                "nicht (+0,00168 ns), weil sein Aufloesungskanal (-0,00218) "
                "gegen die Richtung laeuft", "gilt",
-               "Methodik 2.136 / n25_richtungsprobe_alle_drei.py"),
+               "Methodik 2.136 / n53_richtungsprobe_alle_drei.py"),
     Befundlage("2.136-f", "`funding` traegt RICHTUNG +0,00197 "
                "[+0,00024 .. +0,00376], 0/5, und reitet den "
                "Aufloesungskanal NICHT (AUF ns) - sein G0-Befund war "
@@ -364,7 +382,7 @@ BEFUNDE = (
                "(symmetrische Barrieren, nur aufgeloeste Anker) -0,00041 "
                "[-0,00287 .. +0,00194], 2/5, keine Ordnung der Drittel. "
                "Der Befund geht restlos in zwei GROESSENkanaele auf",
-               "gilt", "Methodik 2.135 / n24_vola_geometrieprobe.py"),
+               "gilt", "Methodik 2.135 / n52_vola_geometrieprobe.py"),
     Befundlage("2.135-AUF", "Die AUFLOESUNGSQUOTE traegt +0,03088 "
                "[+0,02753 .. +0,03436], monoton ueber die Drittel - ruhige "
                "Assets loesen ihre Barrieren nachweisbar oefter auf. "
