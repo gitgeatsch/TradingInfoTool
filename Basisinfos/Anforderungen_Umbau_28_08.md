@@ -3872,3 +3872,299 @@ abgeschlossen sind.
 Der Grund, warum diese Regel fehlte: Positivbefunde fühlen sich
 überprüfungsbedürftig an, Nullbefunde nicht. Genau diese Asymmetrie ist der
 Fehler.
+
+
+---
+
+# ⛔ DIE URSACHE IST GEFUNDEN — und der Plan, der daraus folgt (06.09.2026)
+
+*Ersetzt den Plan S0–S5 vom selben Tag. Der war zu breit und hätte wochenlang
+geprüft, statt zu lösen.*
+
+## 1. Die Ursache — in einem Satz
+
+> **Ich habe zwei Tage lang die falsche ZIELGRÖSSE auf der falschen MENGE
+> gemessen. Beides steht seit dem 23.08. bzw. 04.09. dokumentiert.**
+
+### 1a — Die Zielgröße: `Konzept_Bewertungsstufe_29_08.md`, Abschnitt 1
+
+> **„Ist die Quote das richtige Maß? — NEIN."** Nutzervorgabe 23.08.:
+> *„Wichtig für den ‚guten Trade' ist das POTENTIAL … und **nicht die reelle
+> Zielerreichung**; diese ist immer außer Reichweite."*
+>
+> ⚠️ *„Wer ‚Ziel vor Stop' misst, misst die eigene Zielregel zurück. Das
+> erklärt die Nullbefundserie: **nicht der Markt war leer — das Maß war
+> blind**."*
+
+`messe_zielregel.ergebnisse()` misst **genau das**: +CRV bei Ziel zuerst,
+−1 bei Stop zuerst. **Jede meiner Messungen F-217 bis F-231 hat es benutzt.**
+
+Und dasselbe Dokument benennt, was fehlt:
+
+| heute | präzise | |
+|---|---|---|
+| „Quote" | Zielerreichungsquote | Anteil mit Ziel vor Stop — **blind** |
+| — fehlt — | **Bewegungserwartung** | wie weit sich der Kurs bewegt, **barrierenfrei** |
+
+⚠️⚠️ **Der Originalbefund von `funding` (+0,137 R, 30.08.) wurde auf `in_r`
+gemessen — Rendite in R nach H Tagen, barrierenfrei.** Also auf der
+RICHTIGEN Größe. Meine 1,6× stammen von der blinden.
+
+**`funding` ist nicht gefallen. Es wurde falsch gemessen.**
+
+### 1b — Die Menge: **F-212** vom 04.09.
+
+> *„Die Beiträge wirken auf **1.849 von 124.194 Ankern — 1,5 %**. Kalibriert
+> wurden sie auf 612.000–724.000 rohen Ankern."*
+
+| Menge | funding, Tagesklammer | funding, gepoolt |
+|---|---|---|
+| frei (alle Anker) | +0,0274 R | **−0,0003 R** |
+| **5 % — was die Produktion auswählt** | **+0,0897 R** | **+0,0282 R** |
+
+Dosis-Wirkung **monoton**: 5 % +0,0282 · 10 % +0,0172 · 20 % +0,0050 ·
+frei −0,0003. **Je schärfer die Auswahl, desto stärker der Beitrag.**
+
+Ich habe auf 623.380 Ankern gemessen — der Menge, auf der der Beitrag
+praktisch null ist.
+
+### 1c — Was NICHT die Ursache war
+
+⚠️ Meine These „Auswahlverzerrung im Fehlersuchprozess" **fällt**. Als Beleg
+hatte ich den *„falschen Gebührenmaßstab"* angeführt — die Korrektur ging
+aber in die **andere** Richtung (+2,6 → +4,5) und war die Korrektur **hin
+zu** Regel 2. Ich hatte ein Gegenbeispiel zur eigenen These zitiert.
+
+Und: eine Messung mit Gebühren und eine ohne messen **nicht dieselbe
+Größe**. Sie gehören nicht in dieselbe Reihe — auch nicht in die der
+Befundkarte 3.1c.
+
+## 2. Was GILT und was NICHT — die saubere Trennung
+
+### ✔ UNBERÜHRT (hängt nicht an der Zielgröße)
+
+| Befund | warum unberührt |
+|---|---|
+| **Abdeckung** 516 / 287 / 278 / 115 / 65 Symbole | reine Datenlage |
+| **Beständigkeit** amihud 95,4 % · vola 87,9 % · funding 47,9 % … | Eigenschaft der Größe |
+| **Überlappungsmatrix** der Kandidaten | Beziehung untereinander |
+| **F-223** — die Tagesklammer fehlte | methodisch, gilt für jede Zielgröße |
+| **F-227** — Regel 3 in `CLAUDE.md` war quellenlos | Dokumentenbefund |
+| **O2** — die 500 € kommen aus `TRANCHE_JE_FAKTOREN` | Codebefund |
+| **F-216** + Grundlinie — Ist-Zustand der Hebelgeometrie | Betriebszahlen |
+| **N-51-Nebenbefund** — Terminmarkt reicht nur 122 Tage | Datenlage |
+
+### ✖ NICHT GÜLTIG (falsche Zielgröße, falsche Menge — beides)
+
+    F-217  Stabilitaet funding/turnover
+    F-221  vola erfuellt alle Kriterien
+    F-222  drei gefallene Kandidaten stehen auf
+    F-224  die registrierten Beitraege sind ueberzeichnet
+    F-225  der Horizont entscheidet
+    F-228  amihud VERAENDERUNG ist der Hebel-Kandidat
+    F-229  alle Veraenderungsformen sind Faerbungen
+    F-230  sechs von sechs fallen
+    F-231  beide registrierten Beitraege fallen
+    F-215 / F-219  die Kalibrierung (17 % / 19,5 %)
+    F-220  der Hebel erreicht die Zielzone nicht
+
+⚠️ **Sie sind nicht falsch gerechnet — sie beantworten eine Frage, die laut
+eigener Dokumentation nichts über das Potential sagt.**
+
+### ○ OFFEN
+
+**F-226** — der persistente Nullpunkt. Die Rechnung ist korrekt und der
+Effekt ist real (überlappende Anker bei persistenten Größen). Ob er auf der
+richtigen Zielgröße dieselbe Größenordnung hat, ist **ungeprüft**.
+
+## 3. DIE MESSNORM — einmal festschreiben, danach nur noch anwenden
+
+⚠️ **Der eigentliche Fehler ist nicht eine falsche Messung, sondern dass
+jede Messung ihre Grundlage neu wählt.** Deshalb steht am Anfang keine
+Messung, sondern eine Norm.
+
+| # | Festlegung | Quelle |
+|---|---|---|
+| **Z** | **ZIELGRÖSSE: Bewegung in R nach H Tagen, barrierenfrei** (`in_r`). NICHT „Ziel vor Stop" | Konzept Bewertungsstufe §1 · Nutzervorgabe 23.08. |
+| **M** | **MENGE: die selektierte** — oberste 5 % je Tag. Zusätzlich die Dosis-Wirkungs-Kurve 5/10/20/frei als **Pflicht** | F-212 |
+| **K** | **KLAMMER: Kalendertag.** Nie gepoolt, nie je Block | Vorgabe 31.08. · Methodik 2.86 |
+| **G** | **KOSTEN: 0,00 %** für jede Rangfolge und jeden Filter. 1,50 % ausschließlich in der Mail | Konzept Bewertungsstufe §4 · Regel 2 |
+| **B** | **BAND: Block-Bootstrap.** Der einfache Standardfehler versagt bei `in_r` (Kontrolle 6–16× daneben, F-225) | Methodik 2.95 · Originalbefund funding |
+| **N** | **NULLKONTROLLE** auf derselben Struktur | F-226 |
+| **P** | **POSITIVKONTROLLE** auf derselben Struktur — gepflanzter Effekt bekannter Größe | Methodik 2.88 · 2.100 |
+| **S** | **SCHICHTENTEST in BEIDE Richtungen** (C und D) | Methodik 2.99 |
+| **A** | **ASSET-ANTEIL** nach 2.101, geeicht mit beiden Kontrollen | Methodik 2.101 |
+| **W** | **PFLICHTANGABEN:** Auflösungsquote je Gruppe · Zahl der geprüften Hypothesen · real gegen hypothetisch · mechanische Basislinie | Zielgrößen §4 |
+
+## 4. DER PLAN — vier Schritte, jeder mit Abnahmekriterium
+
+### Schritt 1 — Die Norm als WERKZEUG, nicht als Dokument
+
+**Was:** ein Modul `messnorm.py`, das Z bis W erzwingt. Jede künftige
+Messung ruft es; niemand wählt Zielgröße, Menge oder Klammer mehr selbst.
+
+**Warum:** Elf Messungen in zwei Tagen haben elf Mal die Grundlage neu
+gewählt. Eine Norm im Dokument wird nicht befolgt — eine im Code schon.
+*(Vorbild: `Beitrag.klammer="tag"` wirft beim Import, seit 31.08.)*
+
+**Wie:** eine Funktion `wirkung(kandidat, ...)`, die intern die Menge
+schneidet, die Tagesklammer legt, den Block-Bootstrap rechnet und **beide**
+Kontrollen mitlaufen lässt. Rückgabe: Wirkung, Band, Nullpunkt,
+Positivkontrolle, Auflösungsquote — als **ein** Datensatz, der ohne diese
+Felder gar nicht entstehen kann.
+
+**Abnahme:** Ein Aufruf ohne Positivkontrolle muss einen Fehler werfen.
+
+### Schritt 2 — Die Norm am BEKANNTEN Fall validieren
+
+**Was:** F-212 reproduzieren — funding auf 5 % muss **+0,0897 R** ergeben
+(Tagesklammer) bzw. **+0,0282 R** (gepoolt), frei **+0,0274** bzw. **−0,0003**.
+
+**Warum:** Ein Werkzeug, das einen bekannten Wert nicht reproduziert, darf
+keine unbekannten liefern. Diese Kontrolle hat am 04.09. Fehler 5 gefunden
+(Faktor 3,8 bei beiden Beiträgen).
+
+**Wie:** `messe_regel_wirksamkeit.wirkung()` ist die Referenz — dieselbe
+Funktion, die F-212 benutzt hat, nicht eine Nachbildung.
+
+**Abnahme:** Abweichung unter 10 % bei **beiden** Statistiken. Sonst Halt.
+
+### Schritt 3 — Die Positivkontrolle für JEDE Größe
+
+**Was:** In die Struktur jeder Größe einen Effekt bekannter Größe pflanzen
+(+0,02 R · +0,05 R · +0,10 R) und prüfen, ob die Norm ihn findet.
+
+**Warum:** Ohne sie ist „trägt nicht" kein Befund. Befundkarte 3.10:
+*„Diese Nullbefunde sind untermächtig, nicht falsch."* Betrifft besonders
+turnover (65 Symbole) und die Terminmarkt-Größen (115).
+
+**Wie:** derselbe Weg wie die Nullkontrolle, nur mit aufgeprägtem Effekt —
+und ⚠️ in der **richtigen Richtung** (Fehler 3 aus F-212).
+
+**Abnahme:** Je Größe die kleinste Effektstärke, die noch gefunden wird.
+Das ist ihre **Trennschärfe** — und sie gehört zu jedem Nullbefund dazu.
+
+### Schritt 4 — Erst jetzt: alle Kandidaten, einmal, nach der Norm
+
+**Was:** funding · turnover · funding_extrem · die vier Terminmarkt-Größen ·
+die sieben kursbasierten — alle mit Z bis W.
+
+**Warum:** Erst wenn Norm und Trennschärfe stehen, ist ein Vergleich
+zulässig.
+
+**Wie:** ein Lauf, ein Datensatz, eine Tabelle. Vorabtest auf Kunstdaten
+(Vorgabe 06.09.).
+
+**Abnahme:** Jede Zeile trägt Wirkung, Band, Nullpunkt, Trennschärfe,
+Auflösungsquote und Abdeckung. Zeilen ohne diese Felder gibt es nicht.
+
+## 5. Was dieser Plan NICHT tut
+
+- Er misst **nicht** noch einmal auf „Ziel vor Stop".
+- Er verwirft **nichts** auf Basis der ungültigen Befunde.
+- Er baut **kein** neues Maß, wo eines existiert (2.101, 2.99, `trichter.py`).
+- Er beantwortet **nicht** die Hebelfrage — die kommt danach, mit gültigen
+  Zahlen.
+
+⚠️ **Und er macht das System nicht unbrauchbar.** Die Kette läuft
+unverändert weiter. Was hier repariert wird, ist die Messung — nicht der
+Betrieb.
+
+
+---
+
+# ⚠️⚠️ NACHTRAG ZUR MESSNORM — die AUSGANGSLAGE ist Teil der Messung (06.09.)
+
+**Nutzervorgabe:** *„Trenne auch sauber das Thema — Krypto, Spot,
+Akkumulation, Hebel. Das sind unterschiedliche Ausgangslagen, welche nicht
+unsauber vermischt werden sollten — zumindest bei Hebel."* Und: *„short ist
+generell noch offen."*
+
+## Was der Code vorsieht
+
+    spot         -> einstieg · akkumulation
+    hebel        -> einstieg · swing
+    absicherung  -> einstieg
+
+## ⚠️ Was im Betrieb WIRKLICH vorkommt (neue Kette, 14.08.–05.09.)
+
+| Instrument | Signale | |
+|---|---|---|
+| **spot** | **3.513** | davon seit 29.08.: **590, alle `einstieg`** |
+| absicherung | 11 | |
+| **hebel** | **0** | ⚠️ **hat es NIE gegeben** |
+
+| Richtung | Signale |
+|---|---|
+| LONG | 590 |
+| **SHORT** | **0** — nie gefeuert |
+
+Von den 590 `spot × einstieg`: **100 % mit Stop**, **34 % mit Hebel > 1,0**.
+
+> ⚠️⚠️ **Der Hebel ist keine eigene Ausgangslage.** Er entsteht INNERHALB
+> von `spot × einstieg` als Nebenprodukt der Größenrechnung — der
+> „Pseudo-Hebel aus einer Spot-Kette". `akkumulation`, `swing` und `short`
+> haben in der neuen Kette **kein einziges Signal** erzeugt.
+
+## Was daraus für die Messnorm folgt
+
+### L1 — Die AUSGANGSLAGE ist ein Pflichtfeld jeder Messung
+
+Kein Ergebnis ohne die Angabe, für welches Paar `Instrument × Strategie ×
+Richtung` es gilt. Eine Zahl „für Krypto" gibt es nicht mehr.
+
+### L2 — Die ZIELGRÖSSE hängt an der Ausgangslage
+
+| Ausgangslage | endet ein Stop den Trade? | passende Zielgröße |
+|---|---|---|
+| **spot × einstieg** | ja (100 % tragen einen) | Bewegung in R **und** Barriere — beide gelten |
+| **spot × akkumulation** | nein, Tranchen über Zeit | Bewegung in R plus Einstandsentwicklung |
+| **hebel × einstieg** | ja, und er **liquidiert** | ⚠️ die **Barriere IST das Ergebnis** |
+| hebel × swing | nachgezogener Stop | pfadabhängig, eigenes Maß |
+| short | — | **ungeklärt, nie gefeuert** |
+
+⚠️ **Das korrigiert meine eigene Aussage von vorhin.** Ich hatte die
+Barriere pauschal als „blindes Maß" abgetan. Die Konzeptdoku sagt
+differenzierter:
+
+> *„H vergleicht zwei Arme mit **derselben** Zielregel. Der Unterschied
+> zwischen ihnen ist eine **gültige Aussage** — die Blindheit betrifft die
+> absolute Höhe, nicht den Vergleich."*
+
+**Für einen gehebelten Trade mit Stop ist die Barriere sogar das
+zutreffende Maß** — dort beendet der Stop den Trade wirklich. Blind ist sie
+für die Frage *„wie viel ist hier zu holen"*, nicht für *„erreicht dieser
+Trade sein Ziel vor dem Stop"*.
+
+**Der harte Fehler meiner Messungen bleibt die MENGE (F-212, Faktor 3),
+nicht der Vergleich als solcher.**
+
+### L3 — Hebel ist aus Produktionsdaten NICHT messbar
+
+Null Signale mit `instrument='hebel'`. Jede Aussage über die
+Hebelbewertung muss **simuliert** werden — und konstruktiv von Spot
+getrennt, weil die Daten sie nicht trennen.
+
+⚠️ Das ist keine Ausrede, sondern die stehende Vorgabe: *„Was wir nicht
+haben, simulieren wir."*
+
+### L4 — Was offen bleibt und nicht stillschweigend mitläuft
+
+| | |
+|---|---|
+| **short** | nie gefeuert, Zielgröße ungeklärt. `ist_short` existiert im Code und dreht Stop, Ziel und Liquidation |
+| **akkumulation** | kein Beitrag greift (`strategien=('einstieg',)`) → `vermessen=False`. Die Bewertung sagt dort **nichts** |
+| **swing** | kein Signal, und `spot × swing` ist ausdrücklich gestrichen |
+| **absicherung** | 11 Signale, nie gemessen |
+
+## Die korrigierte Reihenfolge
+
+    1  Messnorm als Werkzeug        (unveraendert)
+    2  am bekannten Fall validieren (F-212 reproduzieren)
+    3  Positivkontrolle je Groesse  (Trennschaerfe bestimmen)
+    4a alle Kandidaten fuer SPOT x EINSTIEG - die einzige Lage mit Daten
+    4b HEBEL x EINSTIEG simuliert, konstruktiv getrennt
+    5  akkumulation · swing · short · absicherung: erst wenn 4a/4b stehen
+
+⚠️ **4a und 4b sind zwei Messungen, nicht eine.** Sie teilen die Norm, aber
+nicht die Zielgröße und nicht die Menge.
