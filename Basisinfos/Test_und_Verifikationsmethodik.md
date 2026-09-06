@@ -5591,3 +5591,161 @@ in beiden Welten eine Kontrolle nahe Null (+0,003 bzw. +0,012) — wie ein
 Nullmodell es soll.
 
 Verwandt: 2.93 · 2.104 (mehrere Mischungen, nicht eine) · F-197
+
+
+## 2.110 ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026)
+
+**Anlass:** Elf Messungen in zwei Tagen (F-217 bis F-231) haben elf Mal die
+Grundlage neu gewählt — Zielgröße, Menge, Klammer, Nullpunkt, Kontrollen.
+Das Ergebnis war eine Folge von *„trägt / trägt nicht"*, die mit jeder
+Methodenänderung kippte und am Ende **beide registrierten Beiträge** verwarf.
+
+Nutzervorgabe: *„stelle sicher, dass wir zukünftig Regeln und Standards
+haben, die eine saubere Abgrenzung erlauben und nicht jede Messung als
+Zufallsergebnis trägt oder nicht trägt."*
+
+### Die drei Fehler, gegen die die Norm gebaut ist
+
+| | Fehler | Quelle, die es längst sagte |
+|---|---|---|
+| **1** | **falsche Zielgröße** — „Ziel vor Stop" misst die eigene Zielregel zurück | `Konzept_Bewertungsstufe_29_08.md` §1, Nutzervorgabe **23.08.** |
+| **2** | **falsche Menge** — die Beiträge wirken auf **1,5 %** der Anker, gemessen wurde auf 100 % | **F-212**, 04.09. |
+| **3** | **fehlende Trennschärfe** — ein „trägt nicht" ohne Positivkontrolle ist keine Messung, sondern das Fehlen einer | 2.88 · 2.100 · Befundkarte 3.10 |
+
+### ⚠️ Der Kern: VIER Urteile, und nur zwei sind Aussagen über die Welt
+
+| Urteil | Bedeutung |
+|---|---|
+| **TRÄGT** | das Band schließt den Nullpunkt aus |
+| **TRÄGT NICHT bis X** | die Positivkontrolle hat **X** gefunden, die Messung sieht nichts → **Effekte ab X sind ausgeschlossen**. Eine echte Aussage mit Schranke |
+| NICHT TRENNBAR | Wirkung über X, aber das Band schließt die Null ein — zu unpräzise |
+| **KEIN BEFUND** | zu wenige Blöcke, oder selbst die größte gepflanzte Stärke wurde nicht gefunden. **Eine Aussage über die MESSUNG** — und sie wird nicht mehr als Nullbefund ausgegeben |
+
+> **Der Unterschied zwischen „TRÄGT NICHT bis X" und „KEIN BEFUND" ist genau
+> der, der zwei Tage lang gefehlt hat.**
+
+### Die Norm — Z bis L, im Code erzwungen
+
+    Z  ZIELGROESSE   geschlossene Liste, passend zur Lage
+    M  MENGE         mit Dosis-Wirkungs-Kurve als Pflicht
+    K  KLAMMER       Kalendertag, nie gepoolt
+    G  KOSTEN        0,00 % fuer jede Rangfolge
+    B  BAND          Block-Bootstrap, Block >= 3 x Horizont, >= 20 Bloecke
+    N  NULLKONTROLLE auf derselben Struktur
+    P  POSITIVKONTR. -> TRENNSCHAERFE
+    W  PFLICHTANGABEN Anker · Tage · Bloecke · Abdeckung · Hypothesen
+    L  AUSGANGSLAGE  Instrument x Strategie x Richtung
+
+⚠️ **Eine Norm im Dokument wird nicht befolgt — eine im Code schon.** Vorbild
+ist `wahrscheinlichkeit.Beitrag.klammer="tag"`, das seit dem 31.08. beim
+Import wirft. `messnorm.Befund.__post_init__` wirft ebenso:
+
+- ohne Positivkontrolle
+- bei `klammer != "tag"`
+- bei `kosten_je_seite != 0.0`
+- bei Zielgröße `barriere` für eine Lage, in der **kein Stop den Trade
+  beendet**
+- bei einer unzulässigen Kombination `Instrument × Strategie`
+- bei `richtung="short"` — ungeklärt, null Signale in der Produktion
+
+### ⚠️ Die Zielgröße hängt an der AUSGANGSLAGE
+
+| Lage | beendet ein Stop den Trade? | zulässige Zielgröße |
+|---|---|---|
+| spot × einstieg | ja (100 % tragen einen) | `bewegung_r` |
+| spot × akkumulation | nein | `bewegung_r` |
+| **hebel × einstieg / swing** | **ja, und er liquidiert** | `bewegung_r` **und** `barriere` |
+
+Für einen gehebelten Trade mit Stop **ist** die Barriere das zutreffende
+Maß — dort beendet der Stop den Trade wirklich. Blind ist sie für die Frage
+*„wie viel ist hier zu holen"*, nicht für *„erreicht dieser Trade sein Ziel
+vor dem Stop"*.
+
+### Gemessen am 06.09. — warum die Lage Pflichtfeld ist
+
+    instrument='hebel'   0 Signale   in der neuen Kette NIE vorgekommen
+    Richtung SHORT       0 Signale
+    akkumulation/swing   0 Signale
+    spot x einstieg      590 Signale, davon 34 % mit Hebel > 1,0
+
+**Der Hebel entsteht INNERHALB von spot × einstieg.** Jede Hebel-Aussage
+trägt deshalb `simuliert=True` — aus Produktionsdaten ist sie nicht messbar.
+
+### Der Selbsttest, der die Norm absichert
+
+`python messnorm.py` prüft fünf Eigenschaften und muss bestehen, bevor die
+Norm benutzt wird:
+
+    1  die Ausgangslage wird erzwungen (auch short)
+    2  'barriere' nur, wo ein Stop den Trade beendet
+    3  ohne Positivkontrolle entsteht kein Befund
+    4  gepflanzter Effekt -> TRAEGT · kein Effekt -> TRAEGT NICHT bis X
+    5  wenige Tage -> KEIN BEFUND statt "traegt nicht"
+
+⚠️ **Der Selbsttest hat beim ersten Lauf einen eigenen Fehler gefunden:** die
+Kunstwelt hatte 900 Tage, also 10 Blöcke — die Norm verweigerte das Urteil,
+zu Recht. **Die Kunstwelt muss mindestens so groß sein wie die echte
+Anforderung**, sonst prüft der Test nur die Schutzschwelle statt der Norm.
+
+Werkzeug: `messnorm.py` · benutzt `messe_regel_wirksamkeit.wirkung()` und
+`messe_bewertungskennzahl.urteil_tage()` — dieselben Funktionen, mit denen
+F-212 gerechnet und reproduziert wurde, keine Nachbildung.
+
+
+
+### ⚠️⚠️ NACHTRAG zu 2.110 — der WEG gehört zum Urteil (06.09.2026)
+
+**Nutzerhinweis:** *„zur Urteilslogik gehört nicht nur das Ergebnis, sondern
+der Weg dorthin, wo die eigentlichen Fehler passieren."*
+
+**Der Beleg: kein einziger Fehler des 05./06.09. war im Ergebnis sichtbar.**
+Jeder erzeugte eine plausible Zahl.
+
+| Irrweg | sah aus wie |
+|---|---|
+| gepoolt statt Tagesklammer | ein starker Befund — 12,4 Punkte auf einem Nulleffekt |
+| Nullpunkt aus EINER Ziehung | eine saubere Kurve |
+| Maximum statt Streuungsmaß | ein strengerer Test |
+| Pflanzung auf die ECHTEN Daten | eine gute Trennschärfe |
+| Kunstwelt pflanzt nach Rohwert statt Rang | ein bestandener Selbsttest |
+| mit Gebühren gerechnet | ein plausibler Breakeven |
+
+### Die Konsequenz: `Protokoll` als Pflichtfeld
+
+Jeder `Befund` trägt seinen Weg mit sich, und die Norm prüft ihn:
+
+    wirkung_funktion       welche Funktion die Wirkung rechnete
+    band_funktion          welche das Band rechnete
+    null_konstruktion      wie der Nullpunkt entstand
+    null_ziehungen         >= 3, sonst Fehler
+    positiv_konstruktion   muss "gemischt" enthalten
+    positiv_ziehungen      >= 3
+    positiv_treffer        {Staerke: gefunden in x von n}
+    blocklaenge · saat
+
+⚠️ **Zwei Irrwege werden namentlich abgelehnt**, weil sie am 06.09. gemessen
+Schaden angerichtet haben:
+
+**1 — Pflanzung auf die echten Daten.** Steckt im Kandidaten schon ein
+Effekt, misst die Kontrolle `Effekt + Pflanzung` statt der Pflanzung allein.
+Gemessen: eine Welt mit **0,05 R** wurde als *„trägt nicht bis 0,02 R"*
+gemeldet — eine Schranke **unter** dem tatsächlich vorhandenen Effekt.
+
+**2 — Nullpunkt aus einer Ziehung.** Die Basislinie wandert je Saat zwischen
+**−0,0055 und +0,0010** — um denselben Betrag wie die gesuchten Effekte
+(+0,0016 bei 0,02 R). Eine Ziehung entscheidet dann das Urteil.
+
+### Der Selbsttest prüft SECHS Irrwege einzeln
+
+    ohne Protokoll                 -> abgelehnt
+    ohne Positivkontrolle          -> abgelehnt
+    Pflanzung auf ECHTE Daten      -> abgelehnt
+    Nullpunkt aus EINER Ziehung    -> abgelehnt
+    mit Gebuehren gerechnet        -> abgelehnt
+    gepoolt statt Tagesklammer     -> abgelehnt
+
+⚠️ **Und eine Lehre über den Test selbst:** Die Fälle müssen **träge**
+gebaut werden. Das Protokoll lehnt einen Irrweg schon bei der eigenen
+Konstruktion ab — wer die Fälle vorher baut, fällt beim *Aufbau* des Tests
+durch statt im Test.
+
