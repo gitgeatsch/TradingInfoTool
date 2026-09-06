@@ -6472,3 +6472,153 @@ genau in der Schicht, die der Filter entfernt.
 Werkzeuge: `messe_datenqualitaet.py` · `pruefe_filter_trennschaerfe.py` ·
 `pruefe_filter_am_befund.py`
 
+
+
+## 2.118 ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026)
+
+**Die Torfrage:** hat der Randmaßstab Trennschärfe? Ohne sie kann er kein
+„trägt nicht" aussprechen, sondern nur „kein Befund".
+
+Dimensionierung: Horizont 5 · Block 15 · ab 2024 · Menge frei · Klammer Tag ·
+Kosten 0,00 · 959 Tage · **63 Blöcke**.
+
+### ✔ Die Antwort: JA — aber er ist stumpfer
+
+Kleinste gefundene Pflanzung (in R, dieselbe körperliche Pflanzung
+`y[gesperrt] -= s` für alle drei Maßstäbe):
+
+| Kandidat | Mittel | Rand > +2 R | Rand > +3 R |
+|---|---|---|---|
+| schnitt50 | **0,02** | 0,05 | 0,20 |
+| vola | **0,02** | 0,05 | 0,10 |
+| amihud | **0,02** | 0,05 | 0,10 |
+| funding | **0,02** | 0,10 | 0,10 |
+| turnover | 0,05 | 0,20 | **0,40** |
+| oi_aenderung | **0,02** | 0,20 | 0,20 |
+
+> **Alle drei Maßstäbe finden bei 6 von 6 Kandidaten eine Pflanzung.** Der
+> Rand ist benutzbar — und **2,5- bis 10-fach stumpfer**. Das ist der Preis
+> für weniger Ereignisse, jetzt beziffert statt vermutet.
+
+### ✔✔ DER FUND: `vola` trägt am RAND und nicht am MITTEL
+
+    Mittel        -0,00129   [-0,01190 .. +0,00990]   Nullband [-0,00157 .. +0,00309]
+                  -> TRAEGT NICHT bis 0,02 R
+    Rand > +2 R   +0,00380   [+0,00160 .. +0,00628]   Nullband [-0,00072 .. +0,00058]
+                  -> TRAEGT
+
+**Über drei Saaten identisch**, Trennschärfe stabil bei 0,05 R.
+
+> **Der von 2.112 vorhergesagte Fall — zum ersten Mal auf echten Daten.**
+> Ein Kandidat, der in der FORM trägt und in der LAGE nicht. Am Mittelwert
+> wäre `vola` als „trägt nicht" abgelegt worden.
+
+### Die Gegenprüfung hat ZWEI meiner eigenen Aussagen gekippt
+
+**✖ 1 — „beide registrierten Beiträge fallen" ist für `turnover` falsch.**
+
+    Saat 1   0,05 / nein        Saat 2   0,05 / TRAEGT      Saat 3   0,02 / TRAEGT
+
+Zwei von drei Saaten sagen TRÄGT. `turnover` ist **nicht entscheidbar**,
+nicht „gefallen" — ein anderer Befund. `funding` dagegen ist über alle drei
+Saaten und alle drei Maßstäbe stabil **„trägt nicht"**.
+
+**✖ 2 — die Einseitigkeit der Norm hat hier nichts verborgen.**
+
+`oi_aenderung` zeigt am Rand −0,00149 mit Band [−0,00220 .. −0,00082]. Das
+schließt die **Null** aus — aber gegen das eigene **Nullband**
+[−0,00129 .. +0,00116] trennt es nicht. Ich hatte gegen die Null geprüft
+statt gegen den Nullpunkt. Die Meldung war voreilig.
+
+⚠️ Der Konstruktionsmangel bleibt: `Befund.traegt` prüft nur
+`unten > null_oben`, also nur die positive Richtung. Hier hat er nur nichts
+gekostet.
+
+### ⚠️ Warum `turnover` wandert — die Nullbänder offengelegt
+
+| Kandidat | Nullband (Mittel) | Breite |
+|---|---|---|
+| vola | [−0,00157 .. +0,00309] | 0,0047 |
+| funding | [−0,00197 .. +0,00331] | 0,0053 |
+| **turnover** | **[−0,00542 .. +0,01091]** | **0,0163** |
+
+`turnover` deckt nur 65 Symbole ab — sein Nullband ist dreimal so breit,
+und die Wirkung (+0,01723, untere Kante +0,00956) liegt genau auf der
+Schwelle. Deshalb entscheidet die Saat.
+
+**Das ist keine Eigenschaft von `turnover`, sondern der Abdeckung.**
+
+
+### ⚠️⚠️ Der Verdacht gegen die NORM — nachgeprüft und weitgehend widerlegt
+
+**Vermutung:** `Befund.traegt` vergleicht gegen `max(null_oben)` über fünf
+Ziehungen. Ein Maximum aus fünf Ziehungen wächst mit der Ziehungszahl —
+das hat dieses Projekt am 06.09. schon einmal gemessen und verworfen. Also
+müsse die Schwelle der Grund für das Wandern sein.
+
+**Erster Vergleich — und er taugte nicht.** Verglichen wurde
+`max(Bandkante)` gegen `Mittel+2sd der Punktschätzer`. Das sind zwei
+verschiedene Größen: dem zweiten fehlt die Bootstrap-Breite jeder einzelnen
+Ziehung, es ist systematisch kleiner. Dass es TRÄGT liefert, hätte den
+Maßstab **gelockert, nicht repariert.**
+
+**Gleichartig nachgeprüft** — dieselbe Größe (obere Bandkante), nur die
+Zusammenfassung variiert. `turnover`, untere Bandkante der Wirkung +0,00956:
+
+| Ziehungen | max | p90 | Mittel | Urteil max / p90 / Mittel |
+|---|---|---|---|---|
+| 5 | 0,01091 | 0,00916 | 0,00664 | nein · TRÄGT · TRÄGT |
+| 10 | 0,01091 | **0,00710** | 0,00586 | nein · TRÄGT · TRÄGT |
+| 20 | 0,01209 | **0,01035** | 0,00674 | nein · **nein** · TRÄGT |
+| 40 | 0,01209 | 0,00933 | 0,00613 | nein · TRÄGT · TRÄGT |
+| 80 | 0,01209 | 0,00867 | 0,00567 | nein · TRÄGT · TRÄGT |
+
+> **`p90` — mein vorgeschlagener Ersatz — schwankt um ±20 % und dreht das
+> Urteil. Das `max` wächst zwar um 11 %, läuft ab 20 Ziehungen in ein
+> Plateau und urteilt bei JEDER Ziehungszahl gleich.**
+
+### Was davon übrig bleibt
+
+| Behauptung | Stand |
+|---|---|
+| `max(null_oben)` wächst mit der Ziehungszahl | ✔ **stimmt** — +11 %, dann Plateau |
+| Das erklärt das Wandern von `turnover` | ✖ **widerlegt** — das Urteil aus `max` ist über alle Ziehungszahlen stabil |
+| Ein Quantil wäre die Reparatur | ✖ **widerlegt** — `p90` ist instabiler als das Maximum |
+
+⚠️⚠️ **Die Ursache ist eine andere: `turnover` liegt auf der Schwelle.**
+Wirkung +0,01723, untere Bandkante +0,00956, Nullschwelle +0,01091 — ein
+Abstand von 12 %. Jede Neuziehung der Saat verschiebt beide Seiten und
+kippt das Vorzeichen der Differenz.
+
+> **Keine Zusammenfassung repariert das. Die Messung kann es nicht
+> entscheiden — und der Grund ist die ABDECKUNG (65 Symbole), nicht die
+> Statistik.**
+
+Damit ist auch die dritte meiner Verdächtigungen gefallen. Von den drei
+Meldungen nach dem Hauptlauf hielt **eine**: der Fund bei `vola`.
+
+### Der Stand nach Schritt 3
+
+| | |
+|---|---|
+| **Randmaßstab benutzbar?** | ✔ **ja** — Trennschärfe bei 6 von 6, 2,5–10× stumpfer als das Mittel |
+| **`vola`** | ✔ **trägt am Rand > +2 R**, nicht am Mittel — über drei Saaten stabil |
+| **`funding`** | ✖ trägt nicht — stabil über drei Saaten und alle Maßstäbe |
+| **`turnover`** | ○ **nicht entscheidbar** — liegt auf der Schwelle, Ursache Abdeckung |
+| **`schnitt50` · `amihud` · `oi_aenderung`** | ✖ trägt nicht bzw. nicht trennbar |
+| Einseitiges `traegt` | ⚠️ Konstruktionsmangel, hier folgenlos |
+| `max` als Nullschwelle | ⚠️ wächst um 11 %, urteilsstabil — belassen |
+
+### ⚠️ Die ENTSCHEIDUNG aus Schritt 3
+
+> **Der Randmaßstab wird ZWEITE Zielgröße.** Er hat Trennschärfe, und er
+> findet mit `vola` etwas, das der Mittelwert nicht sieht. Er **ersetzt**
+> den Mittelwert nicht — er ist stumpfer und übersieht reine
+> Lageänderungen.
+
+**Schritt 4a läuft auf BEIDEN Maßstäben.** Ein Kandidat gilt als tragend,
+wenn er auf **einem** trägt — und es wird ausgewiesen, auf welchem.
+
+Werkzeuge: `messnorm_rand.py` · `schritt3_trennschaerfe.py` ·
+`schritt3_gegenpruefung.py` · `pruefe_nullschwelle.py`
+
