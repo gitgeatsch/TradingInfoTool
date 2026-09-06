@@ -6372,3 +6372,88 @@ System und Messuniversum. Das ist zu klären, unabhängig von Kategorien.
 Werkzeuge: `messe_kategorie_und_horizont.py` ·
 `pruefe_horizont_dimensionierung.py`
 
+
+
+## 2.117 ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026)
+
+**Nutzervorgabe:** *„um das Rauschen und Fehler zu vermeiden, den Datenmüll
+von guten Daten trennen — wir kappen und kalibrieren auf **ECHTEN Werten**,
+ohne Shitcoins. Nur als Idee."*
+
+### ✔ Die Abgrenzung stimmt — das ist kein Regel-3-Problem
+
+Ein Filter nach **Datenqualität** (tote Tage, kein Umsatz, Rundungsrauschen)
+ist eine Eigenschaft der **Reihe**. „Shitcoin" wäre ein Urteil über den
+**Wert** und verstieße gegen Regel 3. Deshalb wurden nur messbare
+Reihen-Eigenschaften verwendet.
+
+### Wie viel Müll ist überhaupt drin? — weniger als erwartet
+
+469 Reihen mit mindestens 120 Tagen ab 2024:
+
+    Anteil TOTER Tage (Kurs unveraendert)   p50 0,70 %  p90 1,95 %  max 27 %
+    Anteil Tage OHNE Umsatz                 p50 0,00 %  p90 0,00 %  max 0,66 %
+    Anteil Tage ohne Tagesspanne            p50 0,00 %  p90 0,00 %  max 0,66 %
+
+> **Der klassische Datenmüll ist praktisch nicht vorhanden.** `lade()`
+> verlangt bereits `close > 0` und über 312 Tage Historie, der
+> `BRUCH`-Wächter fängt Token-Umstellungen.
+
+Was bleibt, sind **Liquidität** und **Kursniveau**:
+
+    A  tote Tage < 5 %                461 von 469   98,3 %
+    B  Umsatz-Median > 1 Mio USD      371 von 469   79,1 %
+    C  Kurs > 1 Cent                  415 von 469   88,5 %
+    A und B und C                     323 von 469   68,9 %
+
+Der Filter entfernt tatsächlich, was gemeint war — AEUR, 1000CHEEMS,
+1MBABYDOGE, Fan-Token. **Über messbare Kriterien, nicht über ein Urteil.**
+
+### ✖ Test 1 — Trennschärfe: der Filter macht die Messung SCHLECHTER
+
+Effekt bekannter Größe in die oberen 20 % gepflanzt, Blockbootstrap:
+
+| Welt | Reihen/Tag | Bandbreite |
+|---|---|---|
+| ALLE | 343,1 | **0,1011** |
+| GEFILTERT | 230,0 | **0,1194** (18 % breiter) |
+
+Kein s bis 0,080 wird in einer der beiden Welten erkannt — **aber die
+gefilterte ist durchgehend unschärfer.**
+
+### ✖✖ Test 2 — am ECHTEN Befund: der Filter zerstört ihn
+
+Ein Nullbefund auf einem Aufbau ist kein Urteil. Deshalb derselbe Vergleich
+an der Messung mit belegtem Effekt (2.115):
+
+| Welt | Tage | n/Tag | Wert | Band | Urteil |
+|---|---|---|---|---|---|
+| **ALLE** | 1.655 | 198,2 | +0,0068 | **[+0,0034 , +0,0108]** | ✔ **TRÄGT** |
+| **GEFILTERT** | 1.280 | 112,6 | +0,0062 | [−0,0008 , +0,0114] | ✖ **trägt nicht** |
+
+> **Der Effekt bleibt fast gleich groß (+0,0068 → +0,0062), nur das Band
+> wird zu breit.** Der Filter entfernt kein Rauschen — er entfernt den
+> **Beleg**.
+
+### ⚠️⚠️⚠️ Und der tiefere Grund — die beiden Ideen widersprechen sich
+
+Der Befund aus 2.115 lautet: *ein im Rang **gefallenes** Asset hat auf
+kurzer Zeitachse mehr Randpotential.* Er wurde **„ab Rang 101"** gemessen —
+genau in der Schicht, die der Filter entfernt.
+
+> **Die kleinen, illiquiden Werte sind nicht der Müll, sondern die
+> Population, in der das einzige tragende Ergebnis liegt.** Wer sie
+> herausfiltert, wird blind für das, was funktioniert.
+
+### Was aus der Idee bleibt — richtig verortet
+
+| Idee | Urteil |
+|---|---|
+| Assets nach Qualität aus der **Messbasis** nehmen | ✖ **kostet Beleg, bringt nichts** |
+| Extremwerte der **Kennzahl** kappen (Eingangsgröße) | ○ ungeprüft, plausibel |
+| Extremwerte der **Zielgröße** kappen | ⚠️ **falsch** — dort liegt laut 2.112 der Ertrag |
+| Assets in der **Mail** einordnen | ✔ erlaubt und sinnvoll (Regel 3) |
+
+Werkzeuge: `messe_datenqualitaet.py` · `pruefe_filter_trennschaerfe.py` ·
+`pruefe_filter_am_befund.py`
+
