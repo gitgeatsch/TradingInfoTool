@@ -7691,7 +7691,26 @@ Werkzeug: `n19_umrechnung_geprueft.py`
 
 
 
-## 2.130 ✔✔✔ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026)
+## 2.130 ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026)
+
+> ⛔ **TEILWEISE ÜBERHOLT DURCH 2.132 (06.09.2026, abends).**
+>
+> **Nicht gültig:** die Aussage, `vola` habe bei H5 *4 von 4 Nachbarpaaren
+> getrennt, Kontrolle flach*. Sie stand auf **EINER** Mischung. Mit fünf
+> Mischungen zeigt die Fünfteilung **5 von 25** Fehlalarmen statt der
+> erwarteten 1,2 — die Fünfteilung ist **nicht** belegt.
+>
+> **Es bleibt gültig:** dass `vola` die einzige Größe mit belegter
+> Stufenordnung ist — nur ist es eine **DREITEILUNG** (Kontrolle 0/15),
+> keine Fünfteilung. Und es bleibt gültig, dass `funding` und `turnover`
+> keine belegte Ordnung haben.
+>
+> ⚠️ **Ebenfalls überholt:** der Abschnitt, für `funding` seien keine
+> Stufen ableitbar, weil die Kontrolle nicht trage — zurückgenommen durch
+> **2.131**: die Kontrolle ist sauber, es war ein Einzelziehungs-Artefakt.
+>
+> Ersatz: **2.132** (die Form) und **2.133** (die Zahlen zur Entscheidung).
+
 
 ### Was gemessen wurde
 
@@ -7996,4 +8015,92 @@ Widerruf des alten Befunds. Aber es ist die Frage, die für `r(q)` zählt.
 das System tun soll. Deshalb Entwurfsfrage.
 
 Werkzeug: `n23e1_bauform_zahlen.py`
+
+
+
+## 2.134 ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026)
+
+**Nutzervorgabe, die das ausgelöst hat:** *„bevor wir die nächsten
+Entscheidungen hinsichtlich wichtiger Änderungen, z. B. etwas entfernen,
+treffen, müssen wir alles tun, um eine Verbesserung zu erreichen. Wenn die
+Werte hier und in dieser Form nicht wirken, dann u. U. woanders."*
+
+### Was ich gemeldet hatte
+
+> *„Bei 10 % und 20 % senkt die Momentum-Auswahl die Barrieren-Trefferquote
+> um 0,85 bis 0,98 Prozentpunkte — Band ganz im Minus."* Und daran gehängt:
+> *„Die Auswahl abzuschalten hätte denselben Effekt wie `vola` zu
+> registrieren."*
+
+### ⚠️⚠️ DER FEHLER: DIE GRUNDMENGE
+
+**A1 misst `k=2` aus rund 40 Symbolen der Watchlist.** Meine Messung lief
+auf dem **Messuniversum mit 516 Symbolen** — dieselbe Regel, eine völlig
+andere Auswahl.
+
+> **`k=2` ist keine Auswahlregel, solange nicht feststeht, WORAUS gewählt
+> wird.** Aus 40 handelbaren Werten sind zwei die besten 5 %; aus 516 sind
+> sie die besten 0,4 %.
+
+### Die Messung auf Watchlist-Näherung (größte N nach Tagesumsatz)
+
+| Grundmenge | H5 | H20 |
+|---|---|---|
+| **40 Symbole** | **+0,5002 %** [−0,36 .. +1,37] | **+1,2021 %** [−1,16 .. +3,98] |
+| 80 | +0,5160 % | +1,7756 % |
+| 160 | +0,4149 % | +1,0637 % |
+| alle (516) | +0,1040 % | +0,3149 % |
+| *A1 mass auf 40* | *+0,79 %* | *+2,74 %* |
+
+**Bei 40 Symbolen ist die Wirkung fünfmal so groß wie bei allen 516** — und
+in der Richtung von A1s Zahlen.
+
+### ✔ Und die Stopweite: die Auswahl schadet bei KEINER
+
+    H5, 40 Symbole, Barrieren-Trefferquote:
+      -1,0 R  +0,1000    -1,5 R  +0,8333
+      -2,0 R  +0,7498    -3,0 R  +0,3671
+
+**Alle positiv** (nicht trennbar, aber durchgehend im Plus). Auf 516
+Symbolen waren es −0,38 bis −0,98.
+
+> **Die Auswahl ist nicht schädlich. Mein Befund war ein
+> Grundmengen-Artefakt.**
+
+### ✖ Was damit zurückgenommen ist
+
+| | |
+|---|---|
+| *„Die Momentum-Auswahl ist nachweisbar schädlich"* | ✖ **widerlegt** |
+| *„Abschalten hätte denselben Effekt wie `vola` registrieren"* | ✖ **widerlegt** |
+| *„Die Auswahl wählt systematisch, was `vola` schlecht bewertet"* | ⚠️ **zurückgestellt** — der 74,8-%-Überschneidungsbefund (N9) steht ebenfalls auf 516 Symbolen |
+
+⚠️ **Nicht betroffen:** alle Befunde zu `vola`, `funding`, `turnover`
+selbst. Sie messen Eigenschaften im Querschnitt, nicht eine Auswahlregel
+mit fester Trefferzahl — dort ist die Grundmenge die Messbasis und nicht
+Teil der Regel.
+
+### ⚠️ Was offenbleibt
+
+**A1s Befund reproduziert nicht sauber.** Die Punktschätzer stimmen in der
+Richtung (+0,50 gegen +0,79), aber mit dem **Blockbootstrap** enthält das
+Band die Null. A1 rechnete mit **Newey-West** und bekam t = 3,29.
+
+Zwei verschiedene Fehlermaße — und der Blockbootstrap ist in diesem Projekt
+der Standard, weil Newey-West bei überlappenden Ankern zu enge Bänder gibt.
+
+> **Der belastbare Stand: die Auswahl ist NICHT SCHÄDLICH. Dass sie NÜTZT,
+> ist mit dem heutigen Maßstab nicht belegt.** Das ist schwächer als A1s
+> Aussage, aber die ehrliche.
+
+### Die Lehre
+
+⚠️ **Eine Regel mit fester Trefferzahl (`k = 2`) ist ohne ihre Grundmenge
+nicht definiert.** Bei Anteilsregeln (oberstes Fünftel) fällt das nicht
+auf, bei Trefferzahlregeln kippt es das Ergebnis. **Vor jeder Messung einer
+Auswahlregel gehört die Grundmenge geprüft — sie ist Teil der Regel, nicht
+der Messbasis.**
+
+Werkzeug: `pruefe_auswahl_produktion.py` · `pruefe_auswahl_schaedlich.py`
+(letzteres nur noch als Beleg des Fehlers)
 
