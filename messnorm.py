@@ -218,6 +218,19 @@ class Befund:
     null_unten: float
     null_oben: float
     trennschaerfe: float | None          # kleinste GEFUNDENE gepflanzte Staerke
+    # ⚠️ EINHEITEN (06.09., vom Vorabtest des Randmassstabs gefunden).
+    #
+    # `urteil` vergleicht `wirkung` gegen `trennschaerfe`. Solange beide in
+    # R stehen, geht das auf. Beim Randmassstab steht `wirkung` aber in
+    # ANTEILSPUNKTEN, waehrend gepflanzt wird in R - der Vergleich war
+    # sinnlos (0,0008 Anteilspunkte gegen 0,05 R) und haette jedes Urteil
+    # verfaelscht.
+    #
+    # Regel ab jetzt: `trennschaerfe` steht IMMER in der Einheit von
+    # `wirkung`. Die gepflanzte Staerke in R - die einzige Groesse, die
+    # ZWISCHEN den Massstaeben vergleichbar ist - steht in
+    # `trennschaerfe_in_r`.
+    trennschaerfe_in_r: float | None = None
     gepflanzt: tuple = ()
     # Pflichtangaben
     n_anker: int = 0
@@ -287,21 +300,26 @@ class Befund:
         if self.trennschaerfe is None:
             return ("KEIN BEFUND - untermaechtig: selbst %+.2f R gepflanzt "
                     "wurde nicht gefunden" % max(self.gepflanzt))
+        einheit = ZIELGROESSEN[self.zielgroesse].get("einheit", "R")
         if self.traegt:
             return "TRAEGT"
         if abs(self.wirkung) < self.trennschaerfe:
-            return ("TRAEGT NICHT bis %.2f R (Effekte ab dieser Groesse sind "
-                    "ausgeschlossen)" % self.trennschaerfe)
+            return ("TRAEGT NICHT bis %.4f %s%s (Effekte ab dieser Groesse "
+                    "sind ausgeschlossen)"
+                    % (self.trennschaerfe, einheit,
+                       ("" if (self.trennschaerfe_in_r is None
+                                or einheit == "R")
+                        else " = %.2f R gepflanzt" % self.trennschaerfe_in_r)))
         return ("NICHT TRENNBAR - Wirkung %+.4f ueber der Trennschaerfe "
-                "%.2f, aber das Band schliesst die Null ein"
-                % (self.wirkung, self.trennschaerfe))
+                "%.4f %s, aber das Band schliesst die Null ein"
+                % (self.wirkung, self.trennschaerfe, einheit))
 
     def zeile(self) -> str:
         return ("%-16s %-28s %-11s %-6s %+8.4f R [%+.4f .. %+.4f] · "
                 "Null %+.4f · Trennsch. %s · %d Tage/%d Bl. · %d Sym · %s"
                 % (self.kandidat, str(self.lage), self.zielgroesse, self.menge,
                    self.wirkung, self.unten, self.oben, self.nullpunkt,
-                   ("%.2f R" % self.trennschaerfe) if self.trennschaerfe
+                   ("%.4f" % self.trennschaerfe) if self.trennschaerfe
                    else "KEINE", self.n_tage, self.n_bloecke,
                    self.abdeckung_symbole, self.urteil))
 
@@ -440,6 +458,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],
         null_oben=null["oben"], trennschaerfe=trennschaerfe,
+        trennschaerfe_in_r=trennschaerfe,   # beim Mittel dieselbe Einheit
         gepflanzt=tuple(sorted(staerken)), n_anker=n_anker,
         n_tage=haupt["tage"], n_bloecke=max(1, haupt["tage"] // block),
         abdeckung_symbole=syms, hypothesen=hypothesen,
