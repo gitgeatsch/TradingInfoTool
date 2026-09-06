@@ -7920,3 +7920,80 @@ Schicksal.** Das ist eine Entwurfsfrage an der Kette, keine Messfrage.
 
 Werkzeug: `n23_form_der_beitraege.py`
 
+
+
+## 2.133 ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026)
+
+### 1 — Die Vergröberung kostet nichts
+
+Wirkung als Regel, Barrieren-Quote, H5:
+
+| | 2 Fächer (sperrt 50 %) | 3 Fächer (33 %) | 5 Fächer (20 %) |
+|---|---|---|---|
+| `funding` | **+0,00196** ✔ | +0,00169 ✔ | +0,00130 ✔ |
+| `turnover` | +0,00048 | +0,00110 | +0,00041 — **keiner trägt** |
+| `vola` | **+0,01043** ✔ | +0,00888 ✔ | +0,00688 ✔ |
+
+**Die gröbere Form trägt mindestens genauso gut.**
+
+⚠️ **Einschränkung, die dazugehört:** zwei Fächer sperren 50 %, fünf nur
+20 %. Die Wirkung ist anteilgewichtet — mehr sperren hebt sie mechanisch.
+**Der Vergleich ist nicht mengenkontrolliert.** Was bleibt: es gibt
+**keinen Grund für fünf Stufen** — sie liefern weniger und behaupten mehr.
+
+### 2 — Die konkreten Stufen (Dreiteilung, geschrumpft ÷2)
+
+    vola       +1,461 · -0,132 · -1,323      Spanne 2,78 Pkt
+    funding    +0,216 · +0,040 · -0,248      Spanne 0,46 Pkt
+    turnover   +0,148 · +0,021 · -0,158      Spanne 0,31 Pkt
+
+**`vola`s Spanne ist rund sechsmal so groß wie die der beiden
+registrierten Beiträge.**
+
+### 3 ⚠️⚠️ — Über die Zeit hält nur EINE
+
+    Dreiteilung, Nachbarpaare getrennt:
+
+                    erste Haelfte    zweite Haelfte
+    funding         0 von 2          0 von 2
+    turnover        0 von 2          0 von 2
+    vola            2 von 2  ✔       2 von 2  ✔
+
+> **`vola` hält die Dreiteilung in BEIDEN Historienhälften vollständig.
+> `funding` und `turnover` in KEINER.**
+
+### Die Entscheidungsgrundlage
+
+| Größe | wirkt als Regel? | Form belegt? | über die Zeit? | → Bauform |
+|---|---|---|---|---|
+| `funding` | ✔ +0,00196 | ✖ | ✖ | **Schalter** — eine Schwelle, keine Stufen |
+| `turnover` | ✖ trägt nicht | ✖ | ✖ | ⚠️ auf dieser Frage **nichts belegt** |
+| **`vola`** | ✔ **+0,01043** | ✔ **Dreiteilung** | ✔ **beide Hälften** | **Dreiteilung** |
+
+⚠️ **Zu `turnover` die faire Einordnung:** Es wurde bei **H20 auf
+`bewegung_r`** reproduziert (+0,0635 R, Schritt 4a). Der Nullbefund hier
+gilt für die **Barrieren-Quote bei H5** — eine **andere Frage**, kein
+Widerruf des alten Befunds. Aber es ist die Frage, die für `r(q)` zählt.
+
+### ⚠️ Was Messung ist und was ENTWURF
+
+**Gemessen und entschieden:**
+
+    die fuenfstufige Bauform ist fuer keine Groesse belegt
+    vola ist eine Dreiteilung, ueber beide Haelften
+    funding wirkt, ist aber nicht abstufbar
+    turnover traegt auf der Barrieren-Quote bei H5 nicht
+
+**NICHT durch Messung entscheidbar — Entwurfsfragen:**
+
+| | |
+|---|---|
+| **Bleibt die Bestandsausnahme?** | Ein Schalter gehört nach H-4c/N-14 als Trichterstufe. Aber die Bestandsausnahme hat `oi_aenderung` bereits wirkungslos gemacht (F-180). Bleibt sie, ist die Bauform für einen Schalter sinnlos; fällt sie, treffen Sperren auch Bestandswerte — was mit *„wer da sperrt, unterdrückt Verkaufssignale"* einmal ausgeschlossen wurde |
+| **Werden `funding`/`turnover` zurückgestuft?** | Ihre Stufentabellen sind weder in der Größe (N19-E: 3,5× / 3,7× zu groß) noch in der Auflösung (N23) gedeckt. Das zu ändern ist R-R9-pflichtig |
+| **Wird `vola` registriert?** | Die Form ist belegt, die Wirkung ist sechsmal größer als die der bestehenden. Aber es löst R-R9 aus |
+
+**Keine Messung kann sagen, welches richtig ist** — es hängt davon ab, was
+das System tun soll. Deshalb Entwurfsfrage.
+
+Werkzeug: `n23e1_bauform_zahlen.py`
+
