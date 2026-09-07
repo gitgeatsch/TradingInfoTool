@@ -4140,6 +4140,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `pruefe_audit_06_07_09.py` | ⛔ Audit der Messungen N-52..N-58 gegen die vier eigenen Regeln (2.143) |
 | `n58_turnover_stufen_neu.py` | ⚠️ N-58: `turnover`s Stufen neu herleiten - auf den AUFGELOESTEN, echte Geometrie, H20 (2.141) |
 | `erzeuge_stand_word.py` | Erzeugt `Basisinfos/Stand_06_09_2026.docx` - den Tagesstand als Word. ⚠️ Aenderungen ins Skript, nicht in die Datei |
 | `n57_flach_in_der_produktion.py` | ⚠️⚠️ N-57: wieviel laeuft FLACH aus? Kalibrierungsbasis gegen Produktionsgeometrie (2.140) |
@@ -8145,6 +8146,15 @@ Werkzeug: `pruefe_auswahl_produktion.py` · `pruefe_auswahl_schaedlich.py`
 
 ## 2.135 ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometrie (06.09.2026)
 
+> ⛔ **EINGESCHRÄNKT AM 07.09.2026 (Audit 2.143).** Zwei Verstöße:
+> gemessen auf der **freien** statt der selektierten Menge (F-212: die
+> Beiträge wirken dort auf 1,5 % der Anker), und der Kernbefund ist ein
+> **„trägt nicht" ohne Trennschärfe** — `messnorm` lehnt genau das ab.
+>
+> **Es bleibt:** die Zerlegung des Mechanismus (Auflösungsquote gegen
+> Richtung) und die beiden geeichten Kunstwelten. **Nicht gültig als
+> Beitragsurteil über `vola`.**
+
 ### Warum überhaupt geprüft wurde
 
 Nach 2.133 war `vola` die einzige Größe mit belegter Stufenordnung über
@@ -8276,6 +8286,17 @@ richtungsfreie Kunstwelten) · `pruefe_kalibrierung_trocken.py`
 
 ## 2.136 ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026)
 
+> ⚠️ **EINGESCHRÄNKT AM 07.09.2026 (Audit 2.143).** Gemessen auf der
+> **freien** Menge (F-212).
+>
+> ✔ **Die POSITIVEN Befunde bleiben — und zwar konservativ:** auf der
+> freien Menge sind die Beiträge *verdünnt*; wer dort einen Effekt findet,
+> findet ihn auf der selektierten erst recht. `funding` und `turnover`
+> tragen Richtung.
+>
+> ⛔ **Der NEGATIVE Befund über `vola` gilt nicht** — Nullbefund ohne
+> Trennschärfe auf der falschen Menge.
+
 ### Der Punkt, den ich nicht zu Ende gedacht hatte
 
 N-52 (2.135) zeigte: die Barrieren-Quote mischt **Auflösung** und
@@ -8358,6 +8379,10 @@ Kunstwelten: reines Rauschen und reines Volatilitätsabbild)
 
 ## 2.137 ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026)
 
+> ⛔ **EINGESCHRÄNKT AM 07.09.2026 (Audit 2.143).** Nullbefund ohne
+> Trennschärfe, auf der freien Menge. „Die Ebenen sind unabhängig" ist
+> damit **nicht belegt** — es ist das Fehlen einer Messung.
+
 ### Die Vorhersage, die geprüft wurde
 
 Aus 2.136 fiel eine Bauform ab, die nicht erfunden, sondern abgelesen war:
@@ -8406,6 +8431,12 @@ Werkzeug: `n54_zwei_ebenen.py`
 ---
 
 ## 2.138 ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026)
+
+> ⚠️ **EINGESCHRÄNKT AM 07.09.2026 (Audit 2.143).** Der **Pegel** (EW in R
+> je Zelle) ist auf `spot × einstieg` unzulässig — dort beendet kein Stop
+> den Trade, und der Erwartungswert ist per Konstruktion null. ✔ Die
+> **Spreizung** zwischen den Dritteln ist ein Armvergleich und bleibt
+> gültig, mit dem bereits vermerkten Kunstwelt-Vorbehalt.
 
 ### Die Frage
 
@@ -8512,6 +8543,17 @@ Werkzeug: `n55_vola_in_der_geometrie.py` (`--eiche`, `--probe`)
 
 ## 2.139 ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026)
 
+> ⛔⛔ **TEILWEISE GEFALLEN AM 07.09.2026 (Audit 2.143).**
+>
+> **Der turnover-Teil ist widerlegt.** „Reproduziert nicht" wurde auf der
+> **freien** Menge gemessen. F-212 vom 04.09. hat auf der **selektierten**
+> gemessen, und dort reproduziert `turnover` einwandfrei:
+> **+0,0635 R gegen registriert +0,0616 R.**
+>
+> ⚠️ Der `oi_aenderung`-Teil steht auf derselben Menge und ist damit
+> ebenfalls nur **eingeschränkt** gültig — als Armvergleich zulässig, aber
+> auf der Menge, auf der die Beiträge kaum wirken.
+
 ### Warum geprüft wurde
 
 Das Audit desselben Tages hatte gezeigt: alle drei Live-Registrierungen
@@ -8615,6 +8657,17 @@ Werkzeug: `n56_oi_richtungsrein.py` (`--probe`)
 
 ## 2.140 ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09.2026)
 
+> ⚠️ **TEILWEISE KORRIGIERT AM 07.09.2026 (Audit 2.143).**
+>
+> ✔ **Die Zählung gilt** — sie ist kein Beitragsurteil: 31,4 % flach bei
+> H5, 5,3 % bei H20, Median 3 Tage.
+>
+> ⛔ **Die Deutung ist falsch.** Der Abschnitt behauptet, in der Produktion
+> laufe eine Position „bis Stop oder Ziel". Für `spot × einstieg` beendet
+> der Stop den Trade aber **nicht** (`messnorm.STOP_BEENDET` enthält nur
+> `hebel`). Was einen Spot-Einstieg beendet, ist die Ausstiegsentscheidung
+> — nicht die Barriere.
+
 ### ⚠️ Die Frage hat sich beim Nachsehen geändert — meine erste Fassung war falsch adressiert
 
 Ich hatte 2.139 mit dem Satz geschlossen, `q` in der Potentialformel zähle
@@ -8699,6 +8752,17 @@ Werkzeug: `n57_flach_in_der_produktion.py`
 ---
 
 ## 2.141 ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07.09.2026)
+
+> ⛔⛔⛔ **GEFALLEN AM 07.09.2026 (Audit 2.143).** Gemessen auf der
+> **freien** Menge, auf der die Beiträge laut F-212 auf 1,5 % der Anker
+> wirken — dort liegt selbst `funding` bei −0,0003 R. Ein Nullbefund war
+> dort zu erwarten und sagt nichts über `turnover`.
+>
+> **Auf der selektierten Menge reproduziert `turnover`** (+0,0635 gegen
+> +0,0616, F-212). **Die registrierte Tabelle steht.**
+>
+> **Es bleibt:** die Trennschärfe-Methodik (2,0 Punkte) und die Feststellung,
+> dass die 50/50-Form auf der Fünftel-Skala nicht darstellbar ist.
 
 ### Der Auftrag und die drei Vorentscheidungen
 
@@ -8788,6 +8852,18 @@ Werkzeug: `n58_turnover_stufen_neu.py`
 ---
 
 ## 2.142 ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026)
+
+> ⛔⛔⛔ **ZURÜCKGENOMMEN AM 07.09.2026 (Audit 2.143).** Die Änderung stand
+> auf 2.139 und 2.141, und beide sind gefallen. `turnover_fuenftel` steht
+> wieder auf (+3,15 · +0,83 · +0,22 · −1,79 · −2,40), `SCHWELLE_VORGABE`
+> wieder auf 0,080.
+>
+> **Es bleibt gültig, unabhängig von der Rücknahme:**
+> 1. der **R-R9-Verstoß** — kalibriert wurde nach der Wirkung statt nach
+>    der Durchlassquote, und die ist eine Nutzerentscheidung
+> 2. die **Reproduktion des Verfahrens** — `messe_schwelle_kalibrierung.py`
+>    gibt die registrierte 0,080 zurück (+0,1502 je verworfenem Signal)
+> 3. der **R-R10-Beinahe-Fehler** — die +0,056 sind F-215 und überholt
 
 ### Was geändert wurde
 
@@ -8905,3 +8981,104 @@ die Durchlassquote feststeht, gehört das Ergebnis nach R-R9 dorthin.
 - Befundkarte **3.9d**
 
 Werkzeug: `messe_schwelle_kalibrierung.py` (unverändert benutzt)
+
+
+---
+
+## 2.143 ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026)
+
+### Der Anlass war eine Nutzerfrage, keine eigene Prüfung
+
+> *„Sollten wir den Wert nicht über die Kette und in Kombination testen und
+> simulieren, um dann eine Entscheidung zu treffen, oder ist die
+> Einzelmessung ausreichend?"*
+
+Beim Nachschlagen, was es dazu schon gibt, stand im überholten Werkzeug
+`pruefe_turnover_weglassen.py` die Antwort:
+
+> **F-212 vom 04.09.:** *die Beiträge wirken auf **1,5 % der Anker**. Auf
+> der freien Menge liegt `funding` bei −0,0003 R, also bei null; auf der
+> **selektierten** (oberste 5 % je Tag nach 250-Tage-Momentum) trägt es
+> **dreimal stärker**.* Dort reproduziert auch `turnover`:
+>
+>     Funding   +0,0274 R   registriert +0,0246   ✔
+>     Turnover  +0,0635 R   registriert +0,0616   ✔
+
+**Meine gesamte turnover-Kette von heute war damit hinfällig** — und die
+Live-Änderung, die darauf stand, ist zurückgenommen.
+
+### Das Audit — mechanisch, gegen vier Regeln
+
+`pruefe_audit_06_07_09.py` prüft jede Messung gegen:
+
+| | Regel | Quelle |
+|---|---|---|
+| **R1** | `barriere` nur wo ein Stop den Trade **beendet** — oder als **Armvergleich** | `messnorm.STOP_BEENDET` |
+| **R2** | Beitragsurteile auf der **selektierten** Menge | F-212 |
+| **R3** | kein „trägt nicht" ohne **Trennschärfe** | `messnorm.Befund` |
+| **R4** | mindestens **fünf** Mischungen | 2.131 |
+
+| | R1 | R2 | R3 | Urteil |
+|---|---|---|---|---|
+| **N-52** `vola` Richtung | ○ | ✖ | ✖ | eingeschränkt |
+| **N-53** alle drei | ○ | ✖ | — | positive Befunde bleiben |
+| **N-54** zwei Ebenen | ○ | ✖ | ✖ | eingeschränkt |
+| **N-55** Geometrie | ✖ | — | — | Pegel unzulässig, Spreizung gilt |
+| **N-56** OI + turnover | ○ | ✖ | — | turnover-Teil **gefallen** |
+| **N-57** flach | ✔ | ✔ | ✔ | **Zählung gilt**, Deutung falsch |
+| **N-58** turnover-Stufen | ○ | ✖ | — | **gefallen** |
+
+### ⚠️⚠️ Die gemeinsame Ursache — und sie ist nicht die, die ich erwartet hatte
+
+**Nicht die Zielgröße.** Alle Beitragsurteile waren **Armvergleiche**
+(gesperrt gegen frei, Fach gegen Tagesmittel) und damit ausdrücklich
+zulässig, auch auf `spot × einstieg`.
+
+> **Es ist die MENGE.** Sechs von sieben Messungen liefen auf der freien
+> Menge, obwohl seit dem 04.09. belegt ist, dass die Beiträge dort auf
+> 1,5 % der Anker wirken.
+
+⚠️ **Es ist dieselbe Fehlerklasse wie 2.134** (die Momentum-Auswahl schien
+schädlich, weil `k = 2` aus 516 statt aus 40 Symbolen gewählt wurde).
+**Zweimal in zwei Tagen dieselbe Ursache: die Grundmenge ist Teil der
+Frage, nicht der Messbasis.**
+
+### ⚠️ Und die zweite Ursache: ich habe die Norm umgangen
+
+Vier Nullbefunde ohne Positivkontrolle. `messnorm.Befund` lehnt genau das
+ab — *„ein ‚trägt nicht' ohne Trennschärfe ist keine Messung, sondern das
+Fehlen einer"*.
+
+**Ich habe `messnorm` nicht benutzt, weil meine Zielgröße dort nicht
+vorgesehen war.** Der Grund, warum sie nicht vorgesehen war, ist der
+Befund: für `spot × einstieg` ist `barriere` nur als Armvergleich zulässig.
+Hätte ich die Norm gerufen, hätte sie mich auf die Menge gestoßen — sie
+führt `menge` als Pflichtfeld.
+
+> **Wer die Norm umgeht, weil sie den eigenen Aufbau nicht kennt, umgeht
+> die Prüfung, die genau diesen Aufbau ablehnen würde.**
+
+### ✔ Was den Tag ÜBERSTEHT
+
+- **N-53s positive Befunde** — und zwar **konservativ**: auf der freien
+  Menge sind die Beiträge verdünnt; wer dort einen Effekt findet, findet
+  ihn auf der selektierten erst recht. `funding` +0,00197, `turnover`
+  +0,00512, beide 0/5.
+- **N-57s Zählung** — 31,4 % flach bei H5, 5,3 % bei H20, Median 3 Tage.
+  Kein Beitragsurteil, saubere Zählung, drei Gegenprüfungen.
+- **2.134** — die Auswahl ist nicht schädlich (auf der richtigen
+  Grundmenge gemessen).
+- **Die Methodik selbst**: der herleitbare Nullpunkt (GS), die geeichten
+  Kunstwelten, die Same-Bar-Regel, die Trennschärfe als Pflichtangabe,
+  das zweiseitige Kriterium. Diese Werkzeuge sind gültig — sie wurden nur
+  auf die falsche Menge angewandt.
+
+### Was daraus zu tun ist
+
+1. **Die selektierte Menge in `messnorm` verankern**, damit sie nicht
+   wieder umgangen werden kann.
+2. **N-52 bis N-56 auf der selektierten Menge wiederholen** — mit
+   Trennschärfe, über `messnorm`.
+3. Erst danach die fünf abgelehnten Beiträge.
+
+Werkzeug: `pruefe_audit_06_07_09.py`

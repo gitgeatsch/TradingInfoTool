@@ -6,7 +6,15 @@
 
 ## ✔ WAS GILT
 
-**2.142** — Kalibrierung durchgefuehrt: turnover-Stufen auf (+0,33 x3, -0,48 x2), SCHWELLE_VORGABE 0,080 -> 0,005. erreichbar_max faellt 0,1335 -> 0,0489 R, Durchlass steigt 16,4 % -> 54,0 %. Verfahren vorher an der alten Lage REPRODUZIERT (gab 0,080 zurueck)
+**2.143** — AUDIT: sechs von sieben Messungen des 06./07.09. liefen auf der FREIEN statt der selektierten Menge. F-212 belegt seit 04.09., dass die Beitraege dort auf 1,5 % der Anker wirken. Dieselbe Fehlerklasse wie 2.134 - die Grundmenge ist Teil der FRAGE
+
+- Quelle: Methodik 2.143 / pruefe_audit_06_07_09.py
+
+**2.143-norm** — ⚠️ Vier Nullbefunde ohne Trennschaerfe. Ich habe `messnorm` umgangen, weil meine Zielgroesse dort nicht vorgesehen war - und der Grund dafuer WAR der Befund. Wer die Norm umgeht, umgeht die Pruefung, die den eigenen Aufbau ablehnen wuerde
+
+- Quelle: Methodik 2.143
+
+**2.142-alt** — Kalibrierung durchgefuehrt: turnover-Stufen auf (+0,33 x3, -0,48 x2), SCHWELLE_VORGABE 0,080 -> 0,005. erreichbar_max faellt 0,1335 -> 0,0489 R, Durchlass steigt 16,4 % -> 54,0 %. Verfahren vorher an der alten Lage REPRODUZIERT (gab 0,080 zurueck)
 
 - Quelle: Methodik 2.142 / Befundkarte 3.9d
 
@@ -194,6 +202,18 @@
 - Quelle: Schritt 4a
 
 ## ↩ WAS ABGELOEST IST
+
+**2.141** — „`turnover`s Stufen lassen sich nicht herleiten"
+
+- Quelle: Methodik 2.141
+- **Abgeloest durch: 2.143**
+- Warum: auf der FREIEN Menge gemessen, wo selbst funding bei -0,0003 R liegt. Auf der selektierten reproduziert turnover: +0,0635 gegen registriert +0,0616 (F-212)
+
+**2.142** — „Kalibrierung durchgefuehrt: turnover auf +0,33/-0,48, Schwelle 0,005"
+
+- Quelle: Methodik 2.142
+- **Abgeloest durch: 2.143**
+- Warum: ZURUECKGENOMMEN - stand auf 2.139 und 2.141, beide gefallen. Es bleibt der R-R9-Verstoss (nach Wirkung statt Durchlassquote kalibriert) und die Reproduktion des Verfahrens
 
 **2.139-quote-deutung** — „`q` in der Potentialformel zaehlt einen wertlosen Kanal mit"
 

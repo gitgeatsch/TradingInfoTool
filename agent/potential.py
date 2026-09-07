@@ -419,63 +419,24 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # 0,080 alles gesperrt, was nur einen Beitrag hat (max +0,039 R) - also 36
 # von 43 Werten. `Potential.schwelle` rechnet sie auf die erreichbare
 # Spanne um: bei nur Funding entspricht 0,080 dann 0,0234 R.
-# ⚠️⚠️ NEU KALIBRIERT AM 07.09.2026 (R-R9, nach N-58 / Methodik 2.141).
+# ⚠️⚠️⚠️ AM 07.09.2026 AUF 0,005 GESETZT UND AM SELBEN TAG ZURUECKGENOMMEN.
 #
-# VORHER 0,080 - kalibriert fuer eine Beitragslage, in der `turnover`
-# Stufen von +3,15 bis -2,40 hatte. Diese Tabelle ist gefallen (2.141:
-# nichts traegt, Trennschaerfe 2,0 Punkte gegen 5,55 Punkte Spanne).
+# Die Neukalibrierung war eine FOLGE der turnover-Aenderung, und die stand
+# auf zwei ungueltigen Messungen (freie statt selektierte Menge, F-212).
+# Mit der Tabelle faellt auch die Schwelle zurueck: `erreichbar_max` ist
+# wieder 0,1335 R, und 0,080 ist damit erreichbar.
 #
-# ⚠️ WARUM DIE ALTE SCHWELLE NICHT STEHENBLEIBEN KONNTE - sie war nicht
-# nur unpassend, sie war UNERREICHBAR: mit den neuen Stufen faellt
-# `erreichbar_max` von 0,1335 auf 0,0489 R. Eine Schwelle von 0,080 haette
-# fuer JEDE Datenlage `traegt_hier = False` ergeben. Das ist derselbe
-# Fehler wie am 31.08. ("88 % der Werte koennen nie durch"), und die Suite
-# prueft ihn seither.
+# ⚠️ WAS AUS DEM VORGANG BLEIBT - zwei Dinge, beide unabhaengig gueltig:
 #
-# NEU KALIBRIERT mit `messe_schwelle_kalibrierung.py`, demselben Werkzeug
-# und demselben Kriterium wie beim letzten Mal (groesster Gewinn JE
-# VERWORFENEM Signal). Das Verfahren wurde vorher an der alten Lage
-# REPRODUZIERT: es gab dort 0,080 zurueck (+0,1502 je verworfenem).
+#   1  R-R9 verlangt als Zielgroesse die DURCHLASSQUOTE, nicht die Wirkung,
+#      und verbietet ausdruecklich, das Maximum zu waehlen. Ich hatte nach
+#      "Gewinn je verworfenem Signal" optimiert. Die Durchlassquote ist
+#      laut Regelwerk eine NUTZERENTSCHEIDUNG und steht weiterhin aus.
 #
-#   Schwelle   Durchlass   Ertrag     je verworfenem
-#   0,005        54,0 %    -0,1565       +0,1072   <- bestes
-#   0,010        31,9 %    -0,2439       -0,0558   <- SCHLECHTER als ohne
-#   0,030        14,7 %    -0,2019       +0,0047
-#   0,080             0    zu wenige
-#
-# ⚠️⚠️ WAS DIESE ZAHLEN SAGEN, und es ist unangenehm: HAERTER FILTERN MACHT
-# DAS ERGEBNIS SCHLECHTER. Die alte 0,080 war die beste Schwelle WEGEN
-# turnovers riesiger Stufen - also wegen einer Tabelle, die nicht
-# existiert. Die Trennschaerfe der Schwelle kam aus einer Fiktion.
-#
-# ⚠️ FOLGE FUER DEN BETRIEB: der Durchlass steigt von 16,4 % auf 54,0 %.
-# Das ist mehr als das Dreifache. Es ist KEINE Lockerung aus Bequem-
-# lichkeit, sondern das, was uebrigbleibt, wenn eine erfundene
-# Unterscheidungskraft wegfaellt.
-#
-# ⚠️ 0,005 heisst praktisch "das Potential muss POSITIV sein" - bei
-# 0,000 / 0,001 / 0,005 ist der Durchlass identisch (54,0 %), es liegt
-# also kein Anker dazwischen. Von den gleichwertigen Werten der
-# vorsichtigste.
-# ⚠️⚠️⚠️ DIESE ZAHL IST VORLAEUFIG, NICHT KALIBRIERT (07.09.2026).
-#
-# R-R9 verlangt als Zielgroesse die DURCHLASSQUOTE, nicht die Wirkung:
-#   "Die Wirkung waechst mit jedem Beitrag - die Frage ist, wie viele
-#    Empfehlungen das System liefern soll. Diese Zahl ist eine
-#    NUTZERENTSCHEIDUNG. Ohne sie ist jede Kalibrierung willkuerlich."
-# Und Punkt 4: "Nicht das Maximum waehlen - es gibt kein Optimum."
-#
-# Genau das ist hier passiert: optimiert wurde nach "Gewinn je verworfenem
-# Signal", und das Maximum wurde genommen. Der Wert haelt das System
-# betriebsfaehig (mit 0,080 kaeme NICHTS mehr durch), ersetzt aber die
-# Entscheidung nicht.
-#
-#   gewuenschter Durchlass  ->  noetige Schwelle
-#   54 %                        0,005   (aktuell)
-#   32 %                        0,010
-#   19 %                        0,020
-#   15 % (etwa wie bisher)      0,030
-SCHWELLE_VORGABE = 0.005
+#   2  Das Verfahren `messe_schwelle_kalibrierung.py` REPRODUZIERT die
+#      registrierte 0,080 (+0,1502 je verworfenem Signal) - das war die
+#      R-R11-Vorpruefung und sie ist gueltig geblieben.
+SCHWELLE_VORGABE = 0.080
 
 # ---------------------------------------------------------------------------
 # R-R9: DIE SCHWELLE GEHOERT ZU EINER BEITRAGSLAGE (30.08.2026)
@@ -571,7 +532,7 @@ SCHWELLE_VORGABE = 0.005
 # ungueltig geworden. Sie gilt fuer genau die Beitragslage, die jetzt
 # wieder besteht.
 KALIBRIERT_FUER = ("funding_fuenftel:0.82/1.30/0.12/-0.54/-1.70 "
-                   "turnover_fuenftel:0.33/0.33/0.33/-0.48/-0.48")
+                   "turnover_fuenftel:3.15/0.83/0.22/-1.79/-2.40")
 """Die Beitragslage, fuer die SCHWELLE_VORGABE kalibriert wurde.
 
 ⚠️ WIRD BEI JEDER AENDERUNG AN `wahrscheinlichkeit.BEITRAEGE` MITGEZOGEN -

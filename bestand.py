@@ -123,7 +123,17 @@ KANDIDATEN = (
                        "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
                        "durchgehend ohne Null. Der Tempo-Anzeiger"),
         ),
-        warnung="⚠️⚠️⚠️ REPRODUKTION FEHLGESCHLAGEN 06.09. (N-56): auf der "
+        warnung="✔✔ TABELLE STEHT (Stand 07.09. nach dem Audit 2.143). "
+                "F-212 vom 04.09. hat auf der SELEKTIERTEN Menge gemessen "
+                "und reproduziert: +0,0635 R gegen registriert +0,0616. "
+                "⚠️ Meine Gegenmessungen N-56 und N-58 liefen auf der "
+                "FREIEN Menge, wo die Beitraege laut F-212 auf 1,5 % der "
+                "Anker wirken - dort liegt selbst funding bei -0,0003 R. "
+                "Beide sind abgeloest, die daraus gefolgte Live-Aenderung "
+                "(+0,33/-0,48) ist ZURUECKGENOMMEN. "
+                "⚠️ WER DIESE TABELLE AENDERN WILL, MUSS AUF DER "
+                "SELEKTIERTEN MENGE MESSEN. "
+                "--- UEBERHOLT: ⚠️⚠️⚠️ REPRODUKTION FEHLGESCHLAGEN 06.09. (N-56): auf der "
                 "EIGENEN Basis (H20, bewegung_r, oberstes Fuenftel) kommt "
                 "-0,06293 [-0,13183 .. -0,00785] heraus gegen registriert "
                 "+0,0616 - gleiche Groessenordnung, UMGEKEHRTES Vorzeichen. "
@@ -349,7 +359,30 @@ class Befundlage:
 
 
 BEFUNDE = (
-    Befundlage("2.142", "Kalibrierung durchgefuehrt: turnover-Stufen auf "
+    Befundlage("2.143", "AUDIT: sechs von sieben Messungen des 06./07.09. "
+               "liefen auf der FREIEN statt der selektierten Menge. F-212 "
+               "belegt seit 04.09., dass die Beitraege dort auf 1,5 % der "
+               "Anker wirken. Dieselbe Fehlerklasse wie 2.134 - die "
+               "Grundmenge ist Teil der FRAGE", "gilt",
+               "Methodik 2.143 / pruefe_audit_06_07_09.py"),
+    Befundlage("2.143-norm", "⚠️ Vier Nullbefunde ohne Trennschaerfe. Ich "
+               "habe `messnorm` umgangen, weil meine Zielgroesse dort nicht "
+               "vorgesehen war - und der Grund dafuer WAR der Befund. Wer "
+               "die Norm umgeht, umgeht die Pruefung, die den eigenen "
+               "Aufbau ablehnen wuerde", "gilt", "Methodik 2.143"),
+    Befundlage("2.141", "„`turnover`s Stufen lassen sich nicht herleiten\"",
+               "abgeloest", "Methodik 2.141", abgeloest_durch="2.143",
+               warum="auf der FREIEN Menge gemessen, wo selbst funding bei "
+                     "-0,0003 R liegt. Auf der selektierten reproduziert "
+                     "turnover: +0,0635 gegen registriert +0,0616 (F-212)"),
+    Befundlage("2.142", "„Kalibrierung durchgefuehrt: turnover auf "
+               "+0,33/-0,48, Schwelle 0,005\"", "abgeloest",
+               "Methodik 2.142", abgeloest_durch="2.143",
+               warum="ZURUECKGENOMMEN - stand auf 2.139 und 2.141, beide "
+                     "gefallen. Es bleibt der R-R9-Verstoss (nach Wirkung "
+                     "statt Durchlassquote kalibriert) und die "
+                     "Reproduktion des Verfahrens"),
+    Befundlage("2.142-alt", "Kalibrierung durchgefuehrt: turnover-Stufen auf "
                "(+0,33 x3, -0,48 x2), SCHWELLE_VORGABE 0,080 -> 0,005. "
                "erreichbar_max faellt 0,1335 -> 0,0489 R, Durchlass steigt "
                "16,4 % -> 54,0 %. Verfahren vorher an der alten Lage "

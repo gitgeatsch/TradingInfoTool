@@ -348,52 +348,33 @@ BEITRAEGE = (
                "monoton ueber fuenf Fuenftel, Momentum-Korrelation +0,002"),
         strategien=("einstieg",),
         klassen=("krypto",)),
-    # ⚠️⚠️ TABELLE ERSETZT AM 07.09.2026 (N-58, Methodik 2.141).
+    # ⚠️⚠️⚠️ TABELLE AM 07.09.2026 GEAENDERT UND AM SELBEN TAG
+    # ZURUECKGENOMMEN. Der Vorgang steht hier, weil er die naechste
+    # Aenderung an dieser Stelle verhindern soll.
     #
-    # DIE ALTE TABELLE WAR (+3.15, +0.83, +0.22, -1.79, -2.40) - Spanne
-    # 5,55 Punkte, die groessten Stufen im ganzen System. Sie ist gefallen,
-    # und zwar in zwei Schritten:
+    # GEAENDERT WURDE auf (+0.33, +0.33, +0.33, -0.48, -0.48), gestuetzt auf
+    # N-56 ("reproduziert nicht") und N-58 ("Stufen nicht herleitbar").
     #
-    #   N-56  Reproduktion auf der EIGENEN Basis (H20, bewegung_r, oberstes
-    #         Fuenftel) ergab -0,06293 [-0,13183 .. -0,00785] gegen
-    #         registriert +0,0616 - gleiche Groessenordnung, UMGEKEHRTES
-    #         Vorzeichen. Die Fuenftel hatten keine Ordnung: das BESTE war
-    #         Fuenftel 4, das die Tabelle mit -2,40 am haertesten bestrafte.
+    # BEIDE MESSUNGEN WAREN UNGUELTIG - sie liefen auf der FREIEN Menge.
+    # F-212 vom 04.09. hat belegt: **die Beitraege wirken auf 1,5 % der
+    # Anker**. Auf der freien Menge liegt funding bei -0,0003 R, also bei
+    # null; auf der SELEKTIERTEN (oberste 5 % je Tag nach 250-Tage-
+    # Momentum) traegt es dreimal staerker. Dort reproduziert auch turnover:
     #
-    #   N-58  Neuherleitung auf sauberer Basis (Treffer unter den
-    #         AUFGELOESTEN, echte Geometrie aus `_boeden`, H20, Block 60
-    #         belegt): NICHTS traegt - weder Fuenfteilung noch Zweiteilung
-    #         noch Schalter. Alle Kontrollen sauber, alle Vorzeichen
-    #         positiv, kein Band ohne Null.
+    #     Funding    +0,0274 R   registriert +0,0246   ✔
+    #     Turnover   +0,0635 R   registriert +0,0616   ✔
     #
-    # ⚠️ TRENNSCHAERFE 2,0 PUNKTE. Gepflanzte +0,2 / +0,5 / +1,0 wurden
-    # nicht gefunden, +2,0 wurde gefunden. Die alte Spanne von 5,55 lag
-    # WEIT darueber - waere sie echt gewesen, haetten wir sie gesehen.
+    # ⚠️ Dieselbe Fehlerklasse wie bei 2.134 (die Momentum-Auswahl schien
+    # schaedlich, weil k=2 aus 516 statt aus 40 Symbolen gewaehlt wurde):
+    # DIE GRUNDMENGE IST TEIL DER FRAGE, nicht der Messbasis.
     #
-    # ⚠️⚠️ DIESE ZAHLEN SIND EIN DECKEL, KEIN MESSWERT. Sie sind der
-    # Punktschaetzer der 60/40-Zweiteilung (+0,331 / -0,482, Kontrolle 0/5),
-    # dessen Band die Null ENTHAELT [-0,089 .. +0,729]. Sie stehen hier aus
-    # einem einzigen Grund: von den drei moeglichen Werten ist die ALTE
-    # Tabelle die einzige, von der wir WISSEN, dass sie falsch ist. Diese
-    # ist 17-mal kleiner und mit drei unabhaengigen Messungen
-    # gleichgerichtet (N-53 GS +0,00512; 60/40-Schnitt; Schalterprobe).
-    #
-    # ⚠️ DIE GROESSE BLEIBT BERECHTIGT: `turnover` traegt Richtung
-    # (N-53/2.136, GS +0,00512 - der staerkste der drei). Gefallen ist die
-    # AUFLOESUNG, nicht der Wert.
-    #
-    # ⚠️ WARUM 60/40 UND NICHT 50/50: das Merkmal liefert Fuenftel (0..4);
-    # ein 50/50-Schnitt laege ZWISCHEN Fuenftel 2 und 3 und ist auf dieser
-    # Skala nicht darstellbar. Gemessen wurde die Form, die gebaut wird.
-    #
-    # ⚠️ NAECHSTER SCHRITT: die fuenf abgelehnten Beitraege unter GS neu
-    # vermessen. Sie wurden alle auf der Basis abgelehnt, die sich als
-    # gegen richtungsreine Kandidaten verzerrt erwiesen hat - genau der
-    # Fehler, der `turnover` beinahe gekostet haette.
+    # ⚠️⚠️ WER DIESE TABELLE AENDERN WILL, MUSS AUF DER SELEKTIERTEN MENGE
+    # MESSEN. Alles andere misst eine Menge, in der die Beitraege gar nicht
+    # wirken - und bekommt zuverlaessig einen Nullbefund.
     Beitrag(
         name="Turnover-Rang im Markt",
         zustand="traegt", punkte=0.0, merkmal="turnover_fuenftel",
-        stufen=(+0.33, +0.33, +0.33, -0.48, -0.48), klammer="tag",
+        stufen=(+3.15, +0.83, +0.22, -1.79, -2.40), klammer="tag",
         quelle=("rechne_turnover_beitrag.py, 2.636 Kalendertage; "
                 "Regelwirkung +0,0616 R [+0,0203 .. +0,1111]"),
         warum=("Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst "

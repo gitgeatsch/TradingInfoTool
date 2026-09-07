@@ -350,6 +350,24 @@ untereinander konsistent, Kursreihen gegen die DB geprüft.
 
 #### 3.9d ⚠️⚠️⚠️ DIE TURNOVER-TABELLE IST GEFALLEN — und die Schwelle mit ihr (07.09.2026)
 
+> ⛔⛔⛔ **ZURÜCKGENOMMEN AM SELBEN TAG (Audit, Methodik 2.143).**
+>
+> Die Änderung stand auf N-56 und N-58 — **beide haben auf der FREIEN
+> statt der selektierten Menge gemessen.** F-212 vom 04.09. hat auf der
+> selektierten gemessen und reproduziert `turnover` einwandfrei:
+> **+0,0635 R gegen registriert +0,0616 R.** Auf der freien Menge wirken
+> die Beiträge laut F-212 auf **1,5 % der Anker**; dort liegt selbst
+> `funding` bei −0,0003 R.
+>
+> **Wiederhergestellt:** `turnover_fuenftel` = (+3,15 · +0,83 · +0,22 ·
+> −1,79 · −2,40), `SCHWELLE_VORGABE` = 0,080.
+>
+> **Es bleibt gültig:** der R-R9-Verstoß (kalibriert wurde nach der
+> Wirkung statt nach der Durchlassquote — die Durchlassquote ist eine
+> ausstehende Nutzerentscheidung), die Reproduktion des Kalibrier-
+> verfahrens (0,080, +0,1502 je verworfenem Signal), und der
+> R-R10-Beinahe-Fehler mit den +0,056 aus dem überholten F-215.
+
 **R-R9-Eintrag zur Beitragsänderung.** Zwei Zahlen im laufenden System
 geändert, beide begründet, beide gegengeprüft.
 

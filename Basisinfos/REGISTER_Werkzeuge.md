@@ -6,12 +6,12 @@
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 17 | 6 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 18 | 6 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 82 | 28 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **BLOCK** | 82 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
 | **ALTBESTAND** | 172 | 58 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **172 von 298 Werkzeugen (58 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **172 von 299 Werkzeugen (58 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,13 +21,13 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (17)
+## NORM (18)
 
-    messnorm_auswahl.py, messnorm_rand.py, pruefe_datengrundlage.py, pruefe_n1_mehrfachmischung.py
-    pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py
-    pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py, pruefe_nullschwelle.py, pruefe_o4_stufenband.py
-    pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py
-    schritt4a_matched.py
+    messnorm_auswahl.py, messnorm_rand.py, pruefe_audit_06_07_09.py, pruefe_datengrundlage.py
+    pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py
+    pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py, pruefe_nullschwelle.py
+    pruefe_o4_stufenband.py, pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py
+    schritt4a_gegenpruefung.py, schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 
