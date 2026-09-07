@@ -4862,3 +4862,81 @@ neues Maß wird nicht erfunden.
 — ein Echtlauf auf Stufen, die 1,5- bis 1,9-fach zu groß sind, misst die
 falsche Kette. **Das ist eine Nutzerentscheidung.**
 
+
+
+---
+
+# ⚠️⚠️⚠️ STAND 07.09.2026 — DER TAG, AN DEM DIE MENGE ALLES ENTSCHIED
+
+## Was passiert ist, in drei Sätzen
+
+**Sechs von sieben Messungen der beiden Vortage liefen auf der falschen
+Menge.** Eine daraus gefolgte Live-Änderung (turnover-Tabelle, Schwelle)
+musste zurückgenommen werden. **Die Menge ist seither im Code an die Frage
+gebunden** — sie kann nicht mehr aus dem Gedächtnis gewählt werden.
+
+## Die Kette der Befunde, in ihrer Reihenfolge
+
+| | Befund | Stand |
+|---|---|---|
+| **2.135** N-52 | `vola` trägt keine Richtung | ⛔ eingeschränkt (freie Menge, keine Trennschärfe) |
+| **2.136** N-53 | `turnover` richtungsrein am stärksten | ✔ **gilt konservativ** (auf der verdünnten Menge gefunden) |
+| **2.137** N-54 | die zwei Ebenen sind unabhängig | ⛔ eingeschränkt |
+| **2.138** N-55 | `vola` ordnet die Höhe, nicht die Bauform | ⚠️ Pegel unzulässig, Spreizung gilt |
+| **2.139** N-56 | OI-Sperre trägt Richtung · turnover reproduziert nicht | ⛔ turnover-Teil **gefallen** |
+| **2.140** N-57 | 31,4 % laufen flach aus | ✔ **Zählung gilt**, Deutung korrigiert |
+| **2.141** N-58 | turnovers Stufen nicht herleitbar | ⛔ **gefallen** |
+| **2.142** | Kalibrierung durchgeführt | ⛔ **zurückgenommen** |
+| **2.143** | ⛔ **DAS AUDIT** — sechs von sieben auf der falschen Menge | ✔ gilt |
+| **2.144** | die Menge ist an die Frage gebunden | ✔ **im Code erzwungen** |
+| **2.145** N-59 | **`schnitt` trägt auf der selektierten Menge** | ✔ **Kandidat** |
+| **2.146** | Abdeckung: keine Lücke bei den stabilen Werten | ✔ gilt |
+
+## ⚠️ Der Live-Zustand — unverändert gegenüber dem 06.09.
+
+    turnover_fuenftel   (+3,15 · +0,83 · +0,22 · -1,79 · -2,40)
+    SCHWELLE_VORGABE    0,080
+    erreichbar_max      0,1335 R
+
+**Die Rücknahme ist vollständig.** F-212 hat auf der selektierten Menge
+gemessen und reproduziert `turnover` einwandfrei (+0,0635 gegen registriert
++0,0616) — die Tabelle steht zu Recht.
+
+## ✔ Was am Ende des Tages MEHR ist als am Morgen
+
+1. **`messnorm.FRAGEARTEN`** — die Menge ist an die Frage gebunden, sechs
+   Suite-Prüfungen sichern es
+2. **`schnitt` als Kandidat** — 100 % Abdeckung, geringe Redundanz
+   (r −0,097 / −0,168), +0,1707 R auf der selektierten Menge
+3. **Die Abdeckung ist geklärt** — Kern 3/3, große Werte 8/8, keine Lücke
+4. **Neun behebbare Datenlücken benannt** (Kurse nie geladen)
+
+## ⚠️⚠️ DIE OFFENEN PUNKTE, nach Dringlichkeit
+
+| Rang | Punkt | Warum |
+|---|---|---|
+| **1** | **`schnitt`s Stabilität klären** | Er ist der beste Kandidat, den wir je hatten — 100 % Abdeckung. Aber die Historienhälften klaffen (+0,35 gegen +0,04). ⚠️ Die Halbierung halbiert auch die Blöcke; nötig ist eine Schichtung, die daran nicht scheitert |
+| **2** | **N-52 bis N-56 wiederholen** | auf der selektierten Menge, mit Trennschärfe, über `messnorm_auswahl` |
+| **3** | **Die Durchlassquote festlegen** | ⚠️ **Nutzerentscheidung** laut R-R9. Ohne sie ist jede Schwellenkalibrierung willkürlich |
+| **4** | Neun Kursreihen nachladen | AKT, ASTER, BRETT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME |
+| **5** | `H` und Lebendigkeit messen | die beiden verbliebenen Abgelehnten |
+| **6** | Der Maßstab aller Stufen | F-219: die Bewertung liefert 19,5 % — alle Stufen rund 5× zu groß. Ändert den **Hebel**, nicht die Rangfolge |
+
+## ⚠️ Ein Einwand aus diesem Plan gegen den nächsten Schritt
+
+Für Punkt 1 lag „Marktphasen statt Hälften" nahe. **Der Plan selbst warnt
+davor** (Abschnitt N20, Marktphasen):
+
+> *„HOCH liegt überwiegend vor 2022, niedrig überwiegend nach 2024 —
+> **Schichter und Epoche sind teilweise verwechselbar.**"*
+
+Das trifft `schnitt` genau: er war in der **ersten** Hälfte stark. Eine
+Streuungs-Schichtung würde denselben Zeiteffekt nur anders benennen.
+
+> **Brauchbar ist allein der BTC-Trend** (BULL 109 · BÄR 81 Blöcke), weil
+> Bull- und Bärphasen sich **abwechseln** — dort sind Schichter und Epoche
+> getrennt.
+
+⚠️ **Und die Blockregel bleibt bindend:** 20 Blöcke Minimum. Bei H20 ist
+der Block 60 Tage, also **1.200 Tage je Phase**. Ob BULL und BÄR das
+hergeben, ist vor der Deutung zu prüfen — nicht danach.

@@ -114,8 +114,8 @@ def main() -> int:
     absatz(d, "Die Bewertungsebene des TradingInfoTool — was heute gemessen "
               "wurde, was gilt und wo es weitergeht.", farbe=GRAU,
            groesse=11, nach=2)
-    absatz(d, "Methodik 2.134 bis 2.142 · Messungen N-52 bis N-58 · "
-              "Suite 1.976 Prüfungen, alle bestanden", farbe=GRAU,
+    absatz(d, "Methodik 2.134 bis 2.146 · Messungen N-52 bis N-59 · "
+              "Suite 1.982 Prüfungen, alle bestanden", farbe=GRAU,
            groesse=9, nach=14)
 
     # ------------------------------------------------------------ Kernsatz
@@ -133,7 +133,7 @@ def main() -> int:
               "Volatilität.")
 
     # ------------------------------------------------------------- Befunde
-    d.add_heading("Die sieben Befunde", level=1)
+    d.add_heading("Die Befunde", level=1)
     tabelle(d, ("Nr.", "Befund", "Wirkung"), [
         ("N-52", "**`vola` trägt keine Richtung**", "Der stärkste Befund "
          "des Tages war unsere eigene Geometrie: ruhige Werte lösen ihre "
@@ -252,7 +252,21 @@ def main() -> int:
 
     # ------------------------------------------------- die Aenderung 07.09.
     d.add_page_break()
-    d.add_heading("Die Änderung am laufenden System (7. September)", level=1)
+    d.add_heading("Die Änderung am laufenden System — und ihre Rücknahme", level=1)
+    merksatz(d, "Am 7. September wurde eine Live-Änderung vorgenommen und "
+                "am selben Tag zurückgenommen. Sechs von sieben Messungen "
+                "der beiden Tage liefen auf der falschen MENGE — und die "
+                "Änderung stand auf zweien davon.")
+    absatz(d, "F-212 vom 4. September hatte auf der SELEKTIERTEN Menge "
+              "gemessen und reproduziert `turnover` einwandfrei: +0,0635 R "
+              "gegen registriert +0,0616 R. Auf der freien Menge wirken die "
+              "Beiträge auf 1,5 % der Anker — dort liegt selbst `funding` "
+              "bei −0,0003 R. Ein Nullbefund war vorprogrammiert.")
+    absatz(d, "Wiederhergestellt: turnover_fuenftel = (+3,15 · +0,83 · "
+              "+0,22 · −1,79 · −2,40), SCHWELLE_VORGABE = 0,080. Der "
+              "Live-Zustand ist unverändert gegenüber dem 6. September.",
+           fett=True)
+    d.add_heading("Was die Änderung gewesen wäre", level=2)
     tabelle(d, ("", "vorher", "jetzt"), [
         ("`turnover_fuenftel`", "+3,15 · +0,83 · +0,22 · −1,79 · −2,40",
          "**+0,33 · +0,33 · +0,33 · −0,48 · −0,48**"),
@@ -288,19 +302,82 @@ def main() -> int:
         ("15 % (etwa wie bisher)", "0,030"),
     ], breiten=(6.0, 5.0))
 
+    # ------------------------------------------------------- Audit + Fund
+    d.add_page_break()
+    d.add_heading("Das Audit — die gemeinsame Ursache", level=1)
+    tabelle(d, ("", "Zielgröße", "Menge", "Trennschärfe", "Urteil"), [
+        ("N-52 `vola` Richtung", "○", "✖", "✖", "eingeschränkt"),
+        ("N-53 alle drei", "○", "✖", "—", "**positive Befunde bleiben**"),
+        ("N-54 zwei Ebenen", "○", "✖", "✖", "eingeschränkt"),
+        ("N-55 Geometrie", "✖", "—", "—", "Pegel unzulässig"),
+        ("N-56 OI + turnover", "○", "✖", "—", "turnover-Teil gefallen"),
+        ("N-57 flach", "✔", "✔", "✔", "**Zählung gilt**"),
+        ("N-58 turnover-Stufen", "○", "✖", "—", "gefallen"),
+    ], breiten=(5.0, 2.6, 2.2, 3.0, 4.2))
+    merksatz(d, "Die gemeinsame Ursache ist nicht die Zielgröße — alle "
+                "Beitragsurteile waren Armvergleiche und damit zulässig. "
+                "Es ist die MENGE. Und es ist dieselbe Fehlerklasse wie am "
+                "Vortag: zweimal in zwei Tagen.")
+    absatz(d, "Die Konsequenz steht seither im Code: `messnorm.FRAGEARTEN` "
+              "bindet die Frage an die Menge. Eine Marktfrage darf auf die "
+              "breite Basis (516 Symbole), ein Beitragsurteil nur auf die "
+              "selektierte (~2–3 je Tag). Sechs Suite-Prüfungen sichern die "
+              "Bindung.")
+
+    d.add_heading("Der Fund: der Abstand zum 200-Tage-Schnitt", level=1)
+    absatz(d, "Die abgelehnten Beiträge wurden auf der richtigen Menge "
+              "nachgemessen — sie waren alle auf der Basis abgelehnt "
+              "worden, die sich als verzerrt erwiesen hat.")
+    tabelle(d, ("Kandidat", "frei", "20 %", "10 %", "5 %", "Urteil"), [
+        ("**`schnitt`**", "+0,0304", "**+0,1707**", "+0,1518", "+0,2192",
+         "✔ **trägt bei 20 %**"),
+        ("`schnitt50`", "+0,0055", "+0,0647", "+0,0898", "+0,1042",
+         "trägt nicht bis 0,020 R"),
+        ("`amihud`", "−0,0007", "+0,0055", "+0,0097", "+0,0560",
+         "trägt nicht bis 0,020 R"),
+        ("`vola`", "+0,0268", "+0,1265", "+0,1173", "+0,1062",
+         "nicht trennbar"),
+        ("`rsi`", "+0,0069", "+0,0053", "−0,0020", "+0,0079",
+         "trägt nicht bis 0,020 R"),
+    ], breiten=(3.0, 2.4, 2.4, 2.4, 2.4, 4.4))
+    absatz(d, "Die Kontrollen halten bitgenau: `zufall` trägt nicht, "
+              "`funding` reproduziert seine Sollwerte auf beiden Mengen "
+              "(+0,0274 frei, +0,0897 bei 5 %).")
+    tabelle(d, ("", "`schnitt`", "funding", "turnover"), [
+        ("Abdeckung", "**516/516 = 100 %**", "288 (56 %)", "65 (13 %)"),
+        ("Redundanz", "—", "r = −0,097", "r = −0,168"),
+    ], breiten=(3.4, 4.0, 3.4, 3.4))
+    absatz(d, "Aber über die Zeit hält er nicht durch: erste Hälfte +0,3483 "
+              "(nur 17 Blöcke), zweite Hälfte +0,0375 (Trennschärfe 0,10 — "
+              "untermächtig, nicht widerlegt). Ein starker Kandidat, kein "
+              "registrierungsreifer Befund.", fett=True)
+
     # -------------------------------------------------------------- offen
     d.add_heading("Was offen ist", level=1)
     tabelle(d, ("Rang", "Punkt", "Warum"), [
-        ("1", "**Die Durchlassquote festlegen**",
-         "Nutzerentscheidung laut R-R9. Ohne sie ist die Schwelle 0,005 "
-         "vorläufig und die Kalibrierung formal unvollständig."),
-        ("2", "**Die fünf abgelehnten Beiträge unter GS neu vermessen**",
-         "`H`, Rangplatz, Schnittabstand, Lebendigkeit, Termine — alle "
-         "wurden auf der Basis abgelehnt, die sich als gegen "
-         "richtungsreine Kandidaten verzerrt erwiesen hat. Genau der "
-         "Fehler, der `turnover` beinahe gekostet hätte. Das System ist "
-         "dünn, WEIL diese fünf abgelehnt wurden."),
-        ("3", "Den Maßstab der Stufen korrigieren",
+        ("1", "**`schnitt`s Stabilität klären**",
+         "Der beste Kandidat, den wir je hatten — 100 % Abdeckung, geringe "
+         "Redundanz. Aber die Historienhälften klaffen. Die Halbierung "
+         "halbiert auch die Blöcke; nötig ist eine Schichtung, die daran "
+         "nicht scheitert. Brauchbar ist allein der BTC-Trend, weil sich "
+         "Bull- und Bärphasen abwechseln — bei der Streuungs-Schichtung "
+         "sind Schichter und Epoche verwechselbar."),
+        ("2", "**N-52 bis N-56 wiederholen**",
+         "auf der selektierten Menge, mit Trennschärfe, über "
+         "`messnorm_auswahl`. Ihre Befunde stehen sonst weiter unter "
+         "Vorbehalt."),
+        ("3", "**Die Durchlassquote festlegen**",
+         "Nutzerentscheidung laut R-R9. Ohne sie ist jede "
+         "Schwellenkalibrierung willkürlich — unabhängig von der "
+         "Rücknahme."),
+        ("4", "Neun Kursreihen nachladen",
+         "AKT, ASTER, BRETT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME — "
+         "sie haben funding/oi, aber keine Kurse. Keine Symbolfehler."),
+        ("5", "`H` und Lebendigkeit messen",
+         "die beiden verbliebenen Abgelehnten. Rangplatz ist bereits live "
+         "als Trichterstufe 5 (Doppelzählung), für Termine gibt es keine "
+         "Daten."),
+        ("6", "Den Maßstab der Stufen korrigieren",
          "F-219: die Bewertung liefert 19,5 % dessen, was sie behauptet — "
          "alle Stufen sind rund 5× zu groß. Ändert Rangfolge und Schwelle "
          "nicht, wohl aber den Hebel (F-220)."),
@@ -316,15 +393,13 @@ def main() -> int:
     ], breiten=(1.4, 4.8, 9.8))
 
     d.add_heading("Der nächste Schritt", level=1)
-    absatz(d, "Die fünf abgelehnten Beiträge unter dem sauberen Maßstab neu "
-              "vermessen. Das ist der einzige Weg, der die eigentliche "
-              "Schwäche angeht: die Bewertungsebene trägt faktisch eine "
-              "Größe, und der Code warnt selbst, dass ein System mit genau "
-              "einem Beitrag diesen Beitrag nicht mehr prüfen kann.")
-    absatz(d, "Alle fünf wurden auf einer Basis abgelehnt, die einen "
-              "Richtungseffekt aufheben kann — bei `turnover` ist genau das "
-              "passiert, und die Neumessung hat es zutage gebracht.",
-           farbe=GRAU)
+    absatz(d, "`schnitt`s Stabilität nach BTC-Trend prüfen. Hält er in "
+              "Bull- und Bärphasen, ist er der dritte Beitrag — mit "
+              "vollständiger Abdeckung, was weder `funding` (56 %) noch "
+              "`turnover` (13 %) bieten.")
+    absatz(d, "Die Blockregel bleibt bindend: 20 Blöcke Minimum, bei H20 "
+              "also 1.200 Tage je Phase. Ob BULL und BÄR das hergeben, ist "
+              "vor der Deutung zu prüfen — nicht danach.", farbe=GRAU)
 
     d.add_paragraph()
     absatz(d, "Erzeugt aus `erzeuge_stand_word.py`. Änderungen gehören in "
