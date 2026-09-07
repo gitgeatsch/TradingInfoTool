@@ -376,6 +376,17 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.147", "`schnitt`s STABILITAET ist mit diesen Daten NICHT "
+               "ENTSCHEIDBAR. Bei H20 fehlen die Bloecke (BAER 19 von 20), "
+               "bei H5 die Trennschaerfe (0,05 R ueber den Effekten). Die "
+               "Gegenprobe `funding` faellt BEIDE Male in jeder Phase durch "
+               "- ein Befund ueber die SCHICHTUNG, nicht ueber `schnitt`",
+               "gilt", "Methodik 2.147 / n60_schnitt_stabilitaet.py"),
+    Befundlage("2.147-weg", "⚠️ Die Frage braucht MEHR ANKER, nicht eine "
+               "andere Schichtung. Eine dritte Einteilung zu suchen, bis "
+               "eine ,traegt', waere der Fehler aus Prueflliste 2.80. Was "
+               "hilft: die neun fehlenden Kursreihen nachladen", "offen",
+               "Methodik 2.147"),
     Befundlage("2.146", "Abdeckung: Kern (BTC, ETH, SOL) 3/3 und grosse "
                "Werte 8/8 zu 100 % bewertbar - KEINE Luecke bei den "
                "stabilen Werten. Uebrige 16/33. ⚠️ 13 Nicht-Krypto-"

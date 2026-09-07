@@ -14,6 +14,10 @@
 
 - Quelle: Methodik 2.145
 
+**2.147** — `schnitt`s STABILITAET ist mit diesen Daten NICHT ENTSCHEIDBAR. Bei H20 fehlen die Bloecke (BAER 19 von 20), bei H5 die Trennschaerfe (0,05 R ueber den Effekten). Die Gegenprobe `funding` faellt BEIDE Male in jeder Phase durch - ein Befund ueber die SCHICHTUNG, nicht ueber `schnitt`
+
+- Quelle: Methodik 2.147 / n60_schnitt_stabilitaet.py
+
 **2.146** — Abdeckung: Kern (BTC, ETH, SOL) 3/3 und grosse Werte 8/8 zu 100 % bewertbar - KEINE Luecke bei den stabilen Werten. Uebrige 16/33. ⚠️ 13 Nicht-Krypto-Eintraege gehoeren nicht in die Rechnung (richtig ist 29 von 44, nicht von 57)
 
 - Quelle: Methodik 2.146 / zeige_abdeckung_krypto.py
@@ -169,6 +173,10 @@
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
 
 - Quelle: Methodik 2.145
+
+**2.147-weg** — ⚠️ Die Frage braucht MEHR ANKER, nicht eine andere Schichtung. Eine dritte Einteilung zu suchen, bis eine ,traegt', waere der Fehler aus Prueflliste 2.80. Was hilft: die neun fehlenden Kursreihen nachladen
+
+- Quelle: Methodik 2.147
 
 **2.146-luecke** — ⚠️ Neun Watchlist-Werte haben funding/oi, aber KEINE Kursreihe: AKT, ASTER, BRETT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME. Keine Symbolfehler - die coingecko-IDs stimmen, die Kurse wurden nie geladen. Behebbar
 

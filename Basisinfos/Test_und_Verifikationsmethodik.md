@@ -4141,6 +4141,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
 | `n59_abgelehnte_auf_selektierter_menge.py` | N-59: die abgelehnten Beitraege auf der SELEKTIERTEN Menge (2.145) |
+| `n60_schnitt_stabilitaet.py` | N-60: haelt `schnitt` ueber die Zeit? Nach BTC-Trend, mit `funding` als Gegenprobe (2.147) |
 | `zeige_abdeckung_krypto.py` | Welche Krypto-Assets haben welche Abdeckung? (2.146) |
 | `messnorm_auswahl.py` | ⚠️⚠️ DIE NORM AUF DER SELEKTIERTEN MENGE - fuer JEDE Beitragsfrage. `pruefe_auswahl(menge='5%')` (2.144) |
 | `pruefe_audit_06_07_09.py` | ⛔ Audit der Messungen N-52..N-58 gegen die vier eigenen Regeln (2.143) |
@@ -9334,3 +9335,86 @@ Der Grund ist der Filter `assetklasse='krypto'`: **798 sind Nicht-Krypto**
 dieses Fehlers.
 
 Werkzeug: `zeige_abdeckung_krypto.py`
+
+
+---
+
+## 2.147 ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026)
+
+### Die Frage und der Einwand aus dem eigenen Plan
+
+N-59 fand `schnitt` als besten Kandidaten (+0,1707 R, 100 % Abdeckung),
+aber die Historienhälften klaffen. Naheliegend war „Marktphasen statt
+Hälften". ⚠️ **Der Gesamtplan warnt davor** (N20):
+
+> *„HOCH liegt überwiegend vor 2022, niedrig überwiegend nach 2024 —
+> **Schichter und Epoche sind teilweise verwechselbar.**"*
+
+Das trifft `schnitt` genau — er war in der **ersten** Hälfte stark. Eine
+Streuungs-Schichtung hätte denselben Zeiteffekt nur umbenannt.
+
+**Gewählt wurde deshalb der BTC-Trend** (über/unter dem 200-Tage-Schnitt),
+weil sich Bull- und Bärphasen **abwechseln**. Gemessen: **66
+Phasenwechsel** — Schichter und Epoche sind getrennt. ✔
+
+⚠️ Die Einteilung wurde **importiert** (`messe_h_als_filter.btc_ueber_schnitt`),
+ebenso Norm (`messnorm_auswahl`) und Kennzahl
+(`messe_kandidaten_als_regel.baue`). Neu ist allein die Verschaltung
+„selektierte Menge × Zeitphase" — die gab es nicht.
+
+### ⚠️ Zwei Anläufe, zwei verschiedene Engpässe
+
+**H20 — die Blöcke fehlen.**
+
+| | BULL | BÄR |
+|---|---|---|
+| Blöcke | 26 ✔ | **19** ⚠️ (Grenze 20) |
+| `schnitt` | **+0,2102 [+0,0863 .. +0,3394] ✔ TRÄGT** | +0,1157, nur 16 Blöcke — kein Befund |
+| **`funding`** | +0,1206 — nicht trennbar | +0,0046, 15 Blöcke — kein Befund |
+
+**H5 — die Blöcke reichen (105 / 80), jetzt fehlt die Trennschärfe.**
+
+| | GANZ | BULL | BÄR |
+|---|---|---|---|
+| `schnitt` | +0,0423 ✔ **TRÄGT** | +0,0555 [+0,0183 .. +0,0939] | +0,0241 |
+| **`funding`** | +0,0240 | +0,0347 [+0,0133 .. +0,0585] | +0,0095 |
+| `zufall` | trägt nicht ✔ | trägt nicht ✔ | trägt nicht ✔ |
+
+Bei H5 sind alle Effekte kleiner (`funding` GANZ +0,0240 statt +0,0721),
+die Trennschärfe bleibt aber bei **0,05 R** — also liegt sie **über** den
+Effekten.
+
+### ⚠️⚠️ Die eingebaute Gegenprobe hat beide Male gegriffen
+
+`funding` ist ein **bekannt tragender** Beitrag. **Er fällt in beiden
+Anläufen in jeder Phase durch.**
+
+> **Das ist ein Befund über die SCHICHTUNG, nicht über `schnitt`.** Wenn
+> eine Zerlegung auch den bekannten Beitrag verschwinden lässt, misst sie
+> nicht die Stabilität, sondern ihre eigene Auflösungsgrenze.
+
+⚠️ Ohne diese Gegenprobe hätte der H20-Lauf gelesen werden können als
+*„`schnitt` trägt nur im Bullenmarkt"* — eine Aussage, die sich gut anhört
+und nichts bedeutet.
+
+### Der Stand
+
+> **`schnitt` trägt insgesamt — bei H20 (+0,1707) und bei H5 (+0,0423),
+> beide Male mit sauberer Zufallskontrolle. Ob er über die Zeit hält, ist
+> mit den vorhandenen Daten NICHT ENTSCHEIDBAR.**
+
+Das ist kein Nullbefund und keine Bestätigung. Es ist die dritte
+Urteilsform der Norm: **untermächtig.**
+
+### Was daraus folgt
+
+1. **Nicht registrieren** — die Stabilität ist Voraussetzung, nicht Kür.
+2. **Die Frage braucht mehr Anker, nicht eine andere Schichtung.** Beide
+   Zerlegungen scheitern an derselben Grenze, nur an verschiedenen Enden.
+   ⚠️ Eine dritte Einteilung zu suchen, bis eine „trägt", wäre genau der
+   Fehler, den die Prüfliste 2.80 beschreibt.
+3. **Was hilft: die neun fehlenden Kursreihen nachladen** und die
+   Nicht-Krypto-Trennung nutzen — mehr Symbole je Tag heißt mehr Anker je
+   Block.
+
+Werkzeug: `n60_schnitt_stabilitaet.py`
