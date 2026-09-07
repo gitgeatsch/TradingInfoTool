@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Erzeugt den Tagesstand als Word-Datei (06.09.2026).
+"""Erzeugt den Arbeitsstand als Word-Datei (06.-07.09.2026).
 
 ⚠️ NICHT VON HAND AENDERN - die Aenderung gehoert in dieses Skript, sonst
 laeuft die Datei vom Befundstand weg. Dieselbe Regel wie bei den Registern.
@@ -19,7 +19,7 @@ from docx.oxml import OxmlElement                            # noqa: E402
 from docx.oxml.ns import qn                                  # noqa: E402
 from docx.shared import Pt, RGBColor, Cm                     # noqa: E402
 
-ZIEL = "Basisinfos/Stand_06_09_2026.docx"   # 07.09. ergaenzt
+ZIEL = "Basisinfos/Stand_06_09_2026.docx"
 
 ROT = RGBColor(0xB0, 0x2A, 0x1F)
 GRUEN = RGBColor(0x1B, 0x6B, 0x3A)
@@ -109,12 +109,12 @@ def main() -> int:
     st.font.size = Pt(10.5)
 
     # ---------------------------------------------------------------- Kopf
-    t = d.add_heading("Arbeitsstand 6. September 2026", level=0)
+    t = d.add_heading("Arbeitsstand 6.–7. September 2026", level=0)
     t.alignment = WD_ALIGN_PARAGRAPH.LEFT
     absatz(d, "Die Bewertungsebene des TradingInfoTool — was heute gemessen "
               "wurde, was gilt und wo es weitergeht.", farbe=GRAU,
            groesse=11, nach=2)
-    absatz(d, "Methodik 2.134 bis 2.140 · Messungen N-52 bis N-57 · "
+    absatz(d, "Methodik 2.134 bis 2.142 · Messungen N-52 bis N-58 · "
               "Suite 1.976 Prüfungen, alle bestanden", farbe=GRAU,
            groesse=9, nach=14)
 
@@ -133,7 +133,7 @@ def main() -> int:
               "Volatilität.")
 
     # ------------------------------------------------------------- Befunde
-    d.add_heading("Die sechs Befunde", level=1)
+    d.add_heading("Die sieben Befunde", level=1)
     tabelle(d, ("Nr.", "Befund", "Wirkung"), [
         ("N-52", "**`vola` trägt keine Richtung**", "Der stärkste Befund "
          "des Tages war unsere eigene Geometrie: ruhige Werte lösen ihre "
@@ -153,7 +153,12 @@ def main() -> int:
          "Recht. ⚠️ Zugleich: `turnover`s Tabelle reproduziert nicht."),
         ("N-57", "**31,4 % laufen flach aus**", "Bei H5. Die "
          "Kalibrierungsbasis liegt dadurch um +0,29 R daneben — mit "
-         "falschem Vorzeichen."),
+         "falschem Vorzeichen. ✔ Die Potentialformel selbst stimmt: unter "
+         "den Aufgelösten 34,8 %, die Formel setzt 33,3 %."),
+        ("N-58", "**`turnover`s Stufen sind nicht herleitbar**", "Weder "
+         "Fünfteilung noch Zweiteilung noch Schalter. Trennschärfe 2,0 "
+         "Punkte — die registrierte Tabelle hatte 5,55 Punkte Spanne. "
+         "Wäre sie echt, hätten wir sie gesehen."),
     ], breiten=(1.6, 4.6, 9.8))
 
     # -------------------------------------------------------------- Stand
@@ -245,22 +250,60 @@ def main() -> int:
     punkt(d, "Eine Regel mit fester Trefferzahl ist Teil der Regel, nicht "
              "der Messbasis — die Grundmenge gehört mitgeprüft.")
 
-    # -------------------------------------------------------------- offen
+    # ------------------------------------------------- die Aenderung 07.09.
     d.add_page_break()
+    d.add_heading("Die Änderung am laufenden System (7. September)", level=1)
+    tabelle(d, ("", "vorher", "jetzt"), [
+        ("`turnover_fuenftel`", "+3,15 · +0,83 · +0,22 · −1,79 · −2,40",
+         "**+0,33 · +0,33 · +0,33 · −0,48 · −0,48**"),
+        ("`SCHWELLE_VORGABE`", "0,080 R", "**0,005 R**"),
+        ("`erreichbar_max`", "0,1335 R", "0,0489 R"),
+        ("Durchlass", "16,4 %", "**54,0 %**"),
+    ], breiten=(4.6, 6.0, 6.0))
+    absatz(d, "Die Schwelle musste nicht aus Systematik mit, sondern aus "
+              "Notwendigkeit: `erreichbar_max` fällt auf 0,0489 R — eine "
+              "Schwelle von 0,080 hätte für jede Datenlage bedeutet, dass "
+              "nichts mehr durchkommt. Das Verfahren wurde vorher an der "
+              "alten Lage reproduziert und gab dort 0,080 zurück.")
+    merksatz(d, "Der unangenehme Teil: härter filtern macht das Ergebnis "
+                "schlechter. Die alte Schwelle 0,080 war die beste wegen "
+                "turnovers riesiger Stufen — also wegen einer Tabelle, die "
+                "nicht existiert. Die Trennschärfe der Schwelle kam aus "
+                "einer Fiktion.")
+
+    d.add_heading("⚠️ Ein Regelverstoß, selbst gefunden", level=2)
+    absatz(d, "R-R9 verlangt als Zielgröße der Schwellenkalibrierung "
+              "ausdrücklich die DURCHLASSQUOTE, nicht die Wirkung — und "
+              "Punkt 4 der Prüfliste verbietet, das Maximum zu wählen. "
+              "Genau das ist hier geschehen: optimiert wurde nach „Gewinn "
+              "je verworfenem Signal“, und das Maximum wurde genommen.")
+    absatz(d, "Die 0,005 sind damit vorläufig, nicht kalibriert. Sie halten "
+              "das System betriebsfähig, ersetzen die Entscheidung aber "
+              "nicht — welche Durchlassquote das System liefern soll, ist "
+              "laut Regelwerk eine Nutzerentscheidung.", fett=True)
+    tabelle(d, ("gewünschter Durchlass", "nötige Schwelle"), [
+        ("54 % (aktuell)", "0,005"),
+        ("32 %", "0,010"),
+        ("19 %", "0,020"),
+        ("15 % (etwa wie bisher)", "0,030"),
+    ], breiten=(6.0, 5.0))
+
+    # -------------------------------------------------------------- offen
     d.add_heading("Was offen ist", level=1)
     tabelle(d, ("Rang", "Punkt", "Warum"), [
-        ("1", "**`turnover`s Stufen neu herleiten**",
-         "Die Tabelle reproduziert nicht — gemessen −0,06293 gegen "
-         "registriert +0,0616, Vorzeichen gedreht. Die Fünftel haben keine "
-         "Ordnung, und es sind die größten Stufen im System (+3,15 / "
-         "−2,40), live geschaltet. Belegte Form ist eine Zweiteilung."),
-        ("2", "**Auf den Aufgelösten kalibrieren**",
-         "31,4 % flach bei H5 verzerren jede Kalibrierung auf der rohen "
-         "Barrieren-Quote. H20 ist mit 5,3 % deutlich sicherer — die "
-         "Live-Registrierungen stehen dort."),
-        ("3", "Die Gesamtkalibrierung (R-R9)",
-         "Stufen, Schwelle, KALIBRIERT_FUER, Befundkarte 3.9. Hängt an 1 "
-         "und 2, in dieser Reihenfolge."),
+        ("1", "**Die Durchlassquote festlegen**",
+         "Nutzerentscheidung laut R-R9. Ohne sie ist die Schwelle 0,005 "
+         "vorläufig und die Kalibrierung formal unvollständig."),
+        ("2", "**Die fünf abgelehnten Beiträge unter GS neu vermessen**",
+         "`H`, Rangplatz, Schnittabstand, Lebendigkeit, Termine — alle "
+         "wurden auf der Basis abgelehnt, die sich als gegen "
+         "richtungsreine Kandidaten verzerrt erwiesen hat. Genau der "
+         "Fehler, der `turnover` beinahe gekostet hätte. Das System ist "
+         "dünn, WEIL diese fünf abgelehnt wurden."),
+        ("3", "Den Maßstab der Stufen korrigieren",
+         "F-219: die Bewertung liefert 19,5 % dessen, was sie behauptet — "
+         "alle Stufen sind rund 5× zu groß. Ändert Rangfolge und Schwelle "
+         "nicht, wohl aber den Hebel (F-220)."),
         ("4", "`vola`s Zuschreibung",
          "Braucht eine Kunstwelt mit Brownscher Brücke je Tag statt "
          "unabhängigem Hoch/Tief-Rauschen."),
@@ -273,13 +316,15 @@ def main() -> int:
     ], breiten=(1.4, 4.8, 9.8))
 
     d.add_heading("Der nächste Schritt", level=1)
-    absatz(d, "`turnover`s Stufen auf der belegten Form neu herleiten — "
-              "Zweiteilung statt Fünfteilung, und zwar auf den aufgelösten "
-              "Ankern statt auf der rohen Quote. Das ist der einzige Punkt, "
-              "an dem heute eine live geschaltete Zahl nachweislich nicht "
-              "hält, und er ist mit den vorliegenden Messungen erreichbar.")
-    absatz(d, "Die Größe bleibt in jedem Fall: `turnover` trägt Richtung. "
-              "Was fällt, ist allein die Tabelle.", farbe=GRAU)
+    absatz(d, "Die fünf abgelehnten Beiträge unter dem sauberen Maßstab neu "
+              "vermessen. Das ist der einzige Weg, der die eigentliche "
+              "Schwäche angeht: die Bewertungsebene trägt faktisch eine "
+              "Größe, und der Code warnt selbst, dass ein System mit genau "
+              "einem Beitrag diesen Beitrag nicht mehr prüfen kann.")
+    absatz(d, "Alle fünf wurden auf einer Basis abgelehnt, die einen "
+              "Richtungseffekt aufheben kann — bei `turnover` ist genau das "
+              "passiert, und die Neumessung hat es zutage gebracht.",
+           farbe=GRAU)
 
     d.add_paragraph()
     absatz(d, "Erzeugt aus `erzeuge_stand_word.py`. Änderungen gehören in "
