@@ -4940,3 +4940,64 @@ Streuungs-Schichtung würde denselben Zeiteffekt nur anders benennen.
 ⚠️ **Und die Blockregel bleibt bindend:** 20 Blöcke Minimum. Bei H20 ist
 der Block 60 Tage, also **1.200 Tage je Phase**. Ob BULL und BÄR das
 hergeben, ist vor der Deutung zu prüfen — nicht danach.
+
+
+---
+
+# ⚠️ DIE ANDEREN ASSETKLASSEN — ausdrücklich VORGESEHEN (07.09.2026)
+
+**Nutzervorgabe:** *„die anderen Assetgruppen kommen später, aber im Plan
+**vorsehen**, falls noch nicht erledigt."*
+
+## Der Stand — damit die Lücke benannt bleibt
+
+| Klasse | Reihen | Zellen im Betrieb | Stufe 12 |
+|---|---|---|---|
+| **krypto** | 524 | spot × einstieg · spot × akkumulation | ✔ **entscheidet** (einstieg) · ⚠️ winkt durch (akkumulation) |
+| aktien | 470 | spot × einstieg · spot × akkumulation | ⚠️ winkt durch |
+| themen_etf | 293 | spot × einstieg · spot × akkumulation | ⚠️ winkt durch |
+| rohstoffe | 35 | spot × einstieg · spot × akkumulation | ⚠️ winkt durch |
+| hedge | — | absicherung × einstieg | ⚠️ winkt durch |
+
+> **Acht von neun laufenden Zellen liefern eine Empfehlung, ohne dass eine
+> Messung dahintersteht.** Nur `krypto × spot × einstieg` entscheidet.
+
+## ⚠️ Die Voraussetzung ist DATENLAGE, nicht Methodik
+
+Für die vier anderen Klassen gibt es **keine Nicht-Kurs-Daten**: kein
+Funding (das ist ein Perpetual-Begriff), kein Open Interest in unserer
+Quelle, keine Umlaufmenge. **Beide registrierten Beiträge sind damit dort
+strukturell nicht verfügbar** — nicht ungemessen, sondern nicht messbar.
+
+**Was dort messbar wäre, sind Kursgrößen:**
+
+| Kandidat | Stand bei Krypto | für die anderen Klassen |
+|---|---|---|
+| **`schnitt`** (200-Tage-Abstand) | ⚠️ Kandidat, 100 % Abdeckung | ⚠️ **nie gemessen** |
+| `vola` (relative ATR) | ✖ keine Richtung | ⚠️ nie gemessen |
+| `amihud` (Illiquidität) | ✖ trägt nicht | ⚠️ nie gemessen |
+| `rsi` | ✖ trägt nicht | ⚠️ nie gemessen |
+
+⚠️ **Die Messbasis ist da:** seit N-19 trägt `messdaten.db` 470 Aktien,
+293 ETF und 35 Rohstoffe — und seit dem 07.09. sind die Klassen im
+Ladepfad sauber getrennt (2.149). **Der Weg ist frei, er ist nur noch
+nicht gegangen.**
+
+## Die Reihenfolge, wenn es soweit ist
+
+1. **`schnitt` für die vier Klassen messen** — er ist der einzige
+   Kandidat, der bei Krypto überhaupt trägt und keine Fremddaten braucht.
+   ⚠️ Die Blockregel gilt dort genauso: Aktien haben Wochenendlücken, also
+   sind Kalender- und Handelstage nicht dasselbe.
+2. ⚠️ **Vorher die Zielgröße klären.** `barriere` ist nur zulässig, wo ein
+   Stop den Trade beendet — für `spot × einstieg` gilt das nicht
+   (`messnorm.STOP_BEENDET`). Für die anderen Klassen ist das ungeprüft.
+3. **Erst dann Stufe 12 dort scharfschalten.** Vorher wäre es eine Sperre
+   nach Datenlage (Regel 4) — genau der Zustand, den das übergeordnete
+   Ziel ausschließt.
+
+⚠️ **Was NICHT zu tun ist:** die Krypto-Beiträge dort einsetzen. `funding`
+und `turnover` tragen `klassen=("krypto",)` — und das ist kein Versehen,
+sondern die Datenlage.
+
+**Vollständige Darstellung:** `Basisinfos/Standort_Krypto_07_09_2026.docx`

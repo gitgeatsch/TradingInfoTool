@@ -4141,6 +4141,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
 | `n59_abgelehnte_auf_selektierter_menge.py` | N-59: die abgelehnten Beitraege auf der SELEKTIERTEN Menge (2.145) |
+| `erzeuge_standort_krypto.py` | Erzeugt `Basisinfos/Standort_Krypto_07_09_2026.docx` - die Zahlen werden beim Erzeugen GELESEN, nicht getippt |
 | `pruefe_assetklassen_trennung.py` | ⚠️⚠️ Aendert der Assetklassen-Filter etwas? Alt gegen ECHT, bitgleich (2.149) |
 | `pruefe_messbasis_wechsel.py` | ⚠️ Aendert eine erweiterte Messbasis die URTEILE? Anker vorher/nachher (2.148) |
 | `n60_schnitt_stabilitaet.py` | N-60: haelt `schnitt` ueber die Zeit? Nach BTC-Trend, mit `funding` als Gegenprobe (2.147) |
