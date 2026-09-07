@@ -6,6 +6,10 @@
 
 ## ✔ WAS GILT
 
+**2.141** — `turnover`s Stufen lassen sich NICHT herleiten - weder als Fuenfteilung noch als Zweiteilung noch als SCHALTER. Trennschaerfe 2,0 Punkte; die registrierte Tabelle hat 5,55 Punkte Spanne - waere sie echt, wuerde man sie sehen
+
+- Quelle: Methodik 2.141 / n58_turnover_stufen_neu.py
+
 **2.140** — Bei H5 laufen 31,4 % der Anker FLACH aus (H20: 5,3 %). Die Kalibrierungsbasis zaehlt sie als Nicht-Treffer und liegt damit um +0,2898 R daneben - mit falschem Vorzeichen (-0,3654 gegen +0,0430)
 
 - Quelle: Methodik 2.140 / n57_flach_in_der_produktion.py
@@ -121,6 +125,10 @@
 - Warum: auf der FREIEN Menge sind beide unabhaengig (20,3 % gegen 20,0 %) - die Ueberschneidung entsteht ausschliesslich durch die Auswahl
 
 ## ○ WAS OFFEN IST
+
+**2.141-lage** — ⚠️ ENTSCHEIDUNG OFFEN: Tabelle lassen (aktiv falsch), auf die gemessene Zweiteilung +0,33/-0,48 (nicht belegt, aber 17x kleiner und gleichgerichtet) oder auf null (entfernt einen belegten Richtungstraeger). Jeder Weg verlangt R-R9
+
+- Quelle: Methodik 2.141
 
 **2.138-offen** — ⚠️ Die ZUSCHREIBUNG der Spreizung ist offen. Die Kunstwelt hat einen Strukturfehler: Hoch und Tief sind dort unabhaengiges Rauschen um den Schluss, in echten Daten liegt an einem Aufwaertstag das Tief nahe der Eroeffnung. Sie ueberschaetzt die Stop-Treffer. Naechster Schritt: Brownsche Bruecke je Tag
 

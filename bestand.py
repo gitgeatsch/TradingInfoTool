@@ -348,6 +348,17 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.141", "`turnover`s Stufen lassen sich NICHT herleiten - "
+               "weder als Fuenfteilung noch als Zweiteilung noch als "
+               "SCHALTER. Trennschaerfe 2,0 Punkte; die registrierte "
+               "Tabelle hat 5,55 Punkte Spanne - waere sie echt, wuerde man "
+               "sie sehen", "gilt",
+               "Methodik 2.141 / n58_turnover_stufen_neu.py"),
+    Befundlage("2.141-lage", "⚠️ ENTSCHEIDUNG OFFEN: Tabelle lassen (aktiv "
+               "falsch), auf die gemessene Zweiteilung +0,33/-0,48 (nicht "
+               "belegt, aber 17x kleiner und gleichgerichtet) oder auf null "
+               "(entfernt einen belegten Richtungstraeger). Jeder Weg "
+               "verlangt R-R9", "offen", "Methodik 2.141"),
     Befundlage("2.140", "Bei H5 laufen 31,4 % der Anker FLACH aus (H20: "
                "5,3 %). Die Kalibrierungsbasis zaehlt sie als "
                "Nicht-Treffer und liegt damit um +0,2898 R daneben - mit "

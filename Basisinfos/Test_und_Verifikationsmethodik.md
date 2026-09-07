@@ -4140,6 +4140,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `n58_turnover_stufen_neu.py` | ⚠️ N-58: `turnover`s Stufen neu herleiten - auf den AUFGELOESTEN, echte Geometrie, H20 (2.141) |
 | `erzeuge_stand_word.py` | Erzeugt `Basisinfos/Stand_06_09_2026.docx` - den Tagesstand als Word. ⚠️ Aenderungen ins Skript, nicht in die Datei |
 | `n57_flach_in_der_produktion.py` | ⚠️⚠️ N-57: wieviel laeuft FLACH aus? Kalibrierungsbasis gegen Produktionsgeometrie (2.140) |
 | `n56_oi_richtungsrein.py` | N-56: traegt die LIVE geschaltete OI-Sperre Richtung? Reproduktion in der Live-Form, dann GS (2.139) |
@@ -8693,3 +8694,92 @@ tragen sich nicht" teilweise dieselbe Ursache haben. Beide wurden anders
 gemessen; die Verbindung ist eine Vermutung, keine Feststellung.
 
 Werkzeug: `n57_flach_in_der_produktion.py`
+
+
+---
+
+## 2.141 ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07.09.2026)
+
+### Der Auftrag und die drei Vorentscheidungen
+
+Nach 2.139 reproduziert `turnover`s registrierte Tabelle nicht. Neu
+hergeleitet wurde auf einer Basis, die aus den Befunden desselben Tages
+folgt — **jede der drei Festlegungen stand vor der Messung fest:**
+
+| | gewählt | Grund |
+|---|---|---|
+| **Zielgröße** | Treffer unter den **Aufgelösten** | 2.140: bei H5 laufen 31,4 % flach aus, und die Produktion kennt keinen Zeitausstieg |
+| **Geometrie** | `max(5 % Kurs, 0,75 × ATR)`, Deckel 25 % | die **echte** aus `_boeden` — nicht die Messkonvention 1,0 × ATR |
+| **Horizont** | H20 | H5 hat 31,4 % flach statt 5,3 %; „bis zur Auflösung" verlangte Block 360 → nur 7 Blöcke statt der geforderten 20 |
+
+⚠️ Die Blocklänge wurde **belegt, nicht angenommen**: `pruefe_block` gibt
+bei Abstand 60 eine Autokorrelation von **+0,040** — Abhängigkeit
+abgeklungen.
+
+### Die Form — und warum sie nicht 50/50 sein kann
+
+2.133 belegt eine **Zweiteilung**. Aber das Merkmal heißt
+`turnover_fuenftel` (0..4), und ein 50/50-Schnitt liegt **zwischen**
+Fünftel 2 und 3. Gemessen wurden deshalb genau die beiden **baubaren**
+Schnitte — die Form, die gebaut wird, nicht eine, die sich nachher nicht
+umsetzen lässt.
+
+### Das Ergebnis — nichts trägt
+
+**2.694 Tage, 122.851 Anker, davon 110.427 aufgelöst (89,9 %).**
+
+| | Wert | Band | Kontrolle |
+|---|---|---|---|
+| Fünftel 0..4 | +0,305 · +0,107 · +0,606 · −0,064 · −0,859 | alle mit Null | 2/5 · 2/5 · 1/5 · **5/5** · 0/5 |
+| Zweiteilung 40/60 | unten +0,212 | [−0,611 .. +0,922] | 1/5 |
+| Zweiteilung 60/40 | unten +0,331 | [−0,089 .. +0,729] | 0/5 |
+| Schalter: oberstes ⅕ sperren | +0,227 | [−0,044 .. +0,457] | 0/5 |
+| Schalter: oberste ⅖ sperren | +0,331 | [−0,089 .. +0,729] | 0/5 |
+
+⚠️ **Auch als SCHALTER nicht** — der Präzedenzfall H-4c (`oi_aenderung`
+trägt als Schalter, wo die Monotonie fiel) greift hier nicht. Alle
+Kontrollen sind sauber und alle Vorzeichen positiv, aber **kein Band
+schließt die Null aus.**
+
+### ✔ Was die Aussage belastbar macht: die Trennschärfe
+
+| gepflanzt | gemessen | gefunden? |
+|---|---|---|
+| +0,2 Punkte | +0,332 [−0,491 .. +1,042] | nein |
+| +0,5 | +0,512 [−0,311 .. +1,222] | nein |
+| +1,0 | +0,812 [−0,011 .. +1,522] | nein (knapp) |
+| **+2,0** | +1,413 [+0,588 .. +2,123] | ✔ ja |
+
+> **„Trägt nicht bis 2,0 Punkte."** Die registrierte Tabelle hat eine
+> Spanne von **5,55 Punkten** — weit über der Nachweisgrenze. **Wäre sie
+> echt, würden wir sie sehen.**
+
+Dazu: die Historienhälften **drehen das Vorzeichen** (−0,015 gegen
++0,419). Und bei H5 trägt ebenfalls nichts.
+
+### ⚠️ Kein Widerspruch zu 2.136 — aber eine Lücke
+
+2.136 fand `turnover` als **Richtungsträger** (GS +0,00512, 0/5). Hier
+trägt nichts. Das ist kein Widerspruch:
+
+- dort **eine** Regelwirkung, hier fünf Gruppen — fünffaches Rauschen
+- dort GS (symmetrische Barrieren, H5, Messgeometrie), hier CRV 2,
+  H20, Produktionsgeometrie
+
+**Die Größe trägt, die Auflösung nicht.** Was fehlt, ist nicht Evidenz für
+`turnover`, sondern Evidenz für eine **abgestufte Tabelle**.
+
+### ⚠️⚠️ Die Entscheidungslage — sie gehört dem Nutzer
+
+Drei Wege, und keiner ist unproblematisch:
+
+| | Folge |
+|---|---|
+| **Tabelle lassen** (+3,15 / −2,40) | ⚠️ **Aktiv falsch.** Die Spanne liegt weit über der Nachweisgrenze; sie ist demonstrierbar nicht da. |
+| **Auf die gemessene Zweiteilung** (+0,33 / −0,48) | Nicht belegt, aber mit drei unabhängigen Messungen gleichgerichtet und **17-mal kleiner**. Ein Deckel, kein Messwert. |
+| **Auf null, stillgelegt wie `H`** | Entfernt eine Größe, die als Richtungsträger belegt ist (2.136). |
+
+⚠️ **Jeder Weg ändert laufendes Verhalten und verlangt nach R-R9 die
+Neukalibrierung der Schwelle**, `KALIBRIERT_FUER` und Befundkarte 3.9.
+
+Werkzeug: `n58_turnover_stufen_neu.py`
