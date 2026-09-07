@@ -49,6 +49,21 @@ import json
 
 # Die Stufen in der Reihenfolge, in der sie durchlaufen werden. Der Text ist
 # der, der in der Auswertung steht - er soll ohne Codekenntnis lesbar sein.
+# ⚠️⚠️ DER NAMENSSCHATTEN: DIE BEWERTUNGSSTUFE HEISST UEBERALL "STUFE 11",
+# IST ABER DIE ZWOELFTE (07.09.2026 aufgefallen).
+#
+# Grund: `terminmarkt` wurde nachtraeglich eingefuegt (N-14, 02.09.). Vorher
+# waren es elf Stufen und `entscheider` war die 11. Die alte Nummer steht
+# seither in Dutzenden Kommentaren und Dokumentabschnitten:
+#
+#     "Stufe 11 verwirft" · "Stufe 11 sperrt den ganzen Lauf" ·
+#     "Stufe 11 zaehlt dort heute nur" · G-6
+#
+# ⚠️ WER "STUFE 11" LIEST, MEINT DEN ENTSCHEIDER - also Nummer 12 dieser
+# Liste. Die Namen (`entscheider`, `terminmarkt`) sind eindeutig, die
+# Nummern sind es nicht. Deshalb wird im Code mit NAMEN gearbeitet, nie
+# mit Indizes - und diese Notiz steht hier, damit die naechste Lesung
+# nicht wieder danach suchen muss.
 STUFEN = (
     ("auftrag", "Instrument und Strategie erlaubt"),
     ("fakten", "Faktenlage ausreichend"),

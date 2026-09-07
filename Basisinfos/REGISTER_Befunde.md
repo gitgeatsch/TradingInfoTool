@@ -14,6 +14,18 @@
 
 - Quelle: Methodik 2.145
 
+**2.152** — Der Zustand der Kette je Strategie: bei `einstieg` ENTSCHEIDET Stufe 12 (funding+turnover), bei `akkumulation` WINKT SIE DURCH (vermessen=False, Notiz statt Sperre - eine Sperre ohne Beitraege waere eine Sperre nach Datenlage, Regel 4)
+
+- Quelle: Methodik 2.152
+
+**2.152-akkum** — ⚠️⚠️ Das Akkumulationsmass IST `schnitt` (Abstand zum 200-Schnitt, H90 statt H20). Gemessen am 28.08., monoton ueber NEUN Baender in beiden Kalenderhaelften - aber es kam NIE ins Kandidatenregister. N-59 fand am 07.09. denselben Wert fuer `einstieg`, ohne dass die Verbindung gezogen war
+
+- Quelle: Methodik 2.152
+
+**2.152-nummer** — ⚠️ Namensschatten: der `entscheider` ist die ZWOELFTE Stufe, heisst aber ueberall ,Stufe 11'. `terminmarkt` wurde nachtraeglich eingefuegt (N-14). Folgenlos, weil der Code ueber NAMEN adressiert - jetzt in `rollen_gate.STUFEN` vermerkt
+
+- Quelle: Methodik 2.152
+
 **2.151** — Die sieben F-198-Kryptoreihen sind GELADEN (8 von 183, 13.168 Kerzen; 175 zu kurz). Messbasis 516 -> 524. Die Trennung haelt: DASH aktien 1.440 Kerzen ab 2020, krypto 2.721 ab 2019. Kursprobe eindeutig: T 0,0044 $ (Threshold, nicht AT&T)
 
 - Quelle: Methodik 2.151 / lade_messreihen.py
@@ -217,6 +229,10 @@
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
 
 - Quelle: Methodik 2.145
+
+**2.152-kern** — ⚠️⚠️ Das Akkumulationsmass traegt NICHT fuer BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) - und `asset_dca_settings` enthaelt genau BTC und ETH. Die Akkumulation laeuft auf den Werten, fuer die das Mass keine Begruendung liefert
+
+- Quelle: Methodik 2.152
 
 **2.149-prod** — ⚠️ Die PRODUKTIONSDATENBANK hat die `assetklasse`-Spalte NICHT. F-198 fuehrte sie nur in der Messbasis ein. Heute folgenlos (Watchlist-Symbole sind eindeutig), aber die Trennung ist dort strukturell nicht moeglich
 

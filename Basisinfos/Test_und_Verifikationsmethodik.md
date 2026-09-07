@@ -9823,3 +9823,209 @@ die Kursprobe (Inhalt, nicht Struktur).
 
 Werkzeug: `lade_messreihen.py --schreiben` ·
 `pruefe_assetklassen_trennung.py` · `pruefe_messbasis_wechsel.py`
+
+
+---
+
+## 2.152 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026)
+
+### Die Nutzerfrage
+
+> *„Wie ist der Zustand der Kette für Krypto für **beide Strategien** — wo
+> tragen die Beiträge in der Kette (Gate, Vorfilter, Trichter, Nachfilter)?"*
+
+Die Antwort steht im Code an vier Stellen. Hier zusammengeführt — und
+gegen die Dokumentation geprüft, wie verlangt.
+
+### Die zwölf Stufen und wo eine MESSUNG dahintersteht
+
+| # | Stufe | Art | Gilt für | Stand |
+|---|---|---|---|---|
+| 1–4 | auftrag · fakten · lagebild · anlass | mechanisch | beide | ✔ |
+| **5** | **auswahl** — beste k der Gruppe | **Messung** | beide | ✔ nicht schädlich (2.134) · ⚠️ Bestandsausnahme: gehaltene Werte gehen durch |
+| **6** | **terminmarkt** — OI nicht im obersten Fünftel | **Messung** | **nur einstieg, nicht bei Bestand** | ✔ trägt Richtung (2.139) |
+| 7–8 | wiederholung · urteil | mechanisch | beide | ✔ |
+| 9 | aktion | mechanisch | — | lässt nur `KAUFEN · NACHKAUFEN · ERÖFFNEN` durch |
+| 10–11 | geometrie · risikoschicht | mechanisch | beide | ✔ |
+| **12** | **entscheider** — Potential gegen Schwelle | **Messung** | **nur einstieg** | siehe unten |
+
+### ⚠️ Ein Namensschatten, der in Dutzenden Kommentaren steht
+
+**Der Entscheider ist die ZWÖLFTE Stufe — heißt aber überall „Stufe 11".**
+Grund: `terminmarkt` wurde nachträglich eingefügt (N-14, 02.09.), dadurch
+rückte er von 11 auf 12. Code und Doku tragen die alte Nummer.
+
+> ✔ Folgenlos, weil der Code die Stufen über **Namen** adressiert, nie über
+> Indizes. Aber wer „Stufe 11" liest, muss wissen, dass Nummer 12 gemeint
+> ist. Jetzt in `rollen_gate.STUFEN` vermerkt und von der Suite geprüft.
+
+### Was Stufe 12 je Strategie TUT — gemessen, nicht vermutet
+
+| | `vermessen` | `bewertbar` | `traegt_hier` | → die Stufe |
+|---|---|---|---|---|
+| **einstieg** | True | True | True | ✔ **ENTSCHEIDET** (funding + turnover) |
+| **akkumulation** | **False** | False | False | ⚠️ **WINKT DURCH** (Notiz) |
+
+⚠️ **Sie sperrt dort nicht — und das ist Absicht:** *„NICHT VERMESSEN —
+zählen, nicht sperren. Der Trichter weist es aus, damit die Lücke sichtbar
+bleibt und nicht als stilles Durchwinken verschwindet."* Eine Sperre ohne
+Beiträge wäre eine **Sperre nach Datenlage** (Regel 4).
+
+**Grund:** `funding` und `turnover` tragen `strategien=("einstieg",)`. Bei
+`akkumulation` gilt **kein** Beitrag, also `erreichbar_max = 0`.
+
+### ⚠️⚠️ Und hier hätte ich fast eine Lücke gemeldet, die keine ist
+
+Auf die Nutzerkorrektur *„Akkumulation wurde als abgewandelter Spot
+geplant … Kauf in Bodennähe bzw. vor Trendwende — du hattest es bereits in
+einem Plan festgehalten"* habe ich weitergesucht. **Es gibt sehr wohl ein
+gemessenes Akkumulationsmaß** — `Befund_Akkumulationsmass_28_08.md`,
+`messe_akkumulationsmass.py`, 505 Reihen, 3.292 Tage.
+
+**Nutzerauftrag vom 28.08.:** *„für Akkumulation eine Begründung, also
+echtes Signalmaß zu finden."*
+
+| Zustand | Rang | Zufall 5–95 % | p | Höhe | |
+|---|---|---|---|---|---|
+| **UNTER_SMA** | **+0,0283** | −0,0124 .. +0,0089 | 0,000 | +1,62 % | ✔ trägt |
+| RUECKGANG | +0,0045 | −0,0062 .. +0,0048 | 0,060 | +0,11 % | trägt nicht |
+| DCA *(Rechenkontrolle)* | ±0,0000 | — | — | 0 % | ✔ |
+| TIEFPUNKT *(Positivkontrolle)* | +0,4242 | — | 0,000 | +52,6 % | ✔ |
+| WOCHENTAG *(Negativkontrolle)* | −0,0008 | ±0,0007 | 0,978 | −0,05 % | ✔ |
+
+**Die stetige Form ist stärker und monoton über NEUN Bänder, in beiden
+Kalenderhälften:** unter −40 % zum Schnitt **+0,0960 (+6,06 %)** bis über
++30 % **−0,1508 (−11,79 %)**.
+
+### ⚠️⚠️⚠️ Der Zusammenhang, der bis heute nicht gezogen war
+
+> **Das Akkumulationsmaß IST `schnitt`** — der Abstand zum eigenen
+> 200-Tage-Schnitt, nur auf H90 statt H20 gemessen.
+
+Und N-59 hat **denselben Wert** am 07.09. als besten Kandidaten für
+`einstieg` gefunden (+0,1707 R auf der selektierten Menge, 100 %
+Abdeckung). **Zwei Messungen, zwei Strategien, dieselbe Größe — und sie
+standen unverbunden nebeneinander**, weil der 28.08.-Befund **nie ins
+Kandidatenregister kam.**
+
+⚠️ Genau dafür gibt es `bestand.py`. Jetzt nachgetragen.
+
+### ⚠️ Die Einschränkung, die den praktischen Wert bestimmt
+
+| | Rang | p |
+|---|---|---|
+| 505 Reihen | **+0,0283** | 0,000 |
+| **BTC** | **−0,0251** | 0,723 |
+| **ETH** | **−0,0308** | 0,810 |
+| **SOL** | **−0,0291** | 0,855 |
+
+**Und `asset_dca_settings` enthält genau BTC und ETH.**
+
+> **Die Akkumulation läuft auf den beiden Werten, für die das gemessene
+> Maß keine Begründung liefert.**
+
+Es ist kein n=3-Rauschen: die Kernwerte liegen **2,39 Standardfehler**
+unter dem Mittel, und nur **14,3 %** aller 505 Symbole haben einen
+negativen Vorsprung — alle drei Kernwerte sind darunter. Nach
+Gesamtentwicklung geschichtet bleibt der Vorsprung konstant.
+
+⚠️ Dazu: der Effekt **schrumpft** (unterstes Band 1. Hälfte +0,2020 →
+2. Hälfte +0,0879, Faktor 2,3). Und er ist **kein Alpha-Nachweis** — er
+sagt, **wann** innerhalb einer Akkumulation gekauft wird, nicht **ob**
+akkumuliert werden soll.
+
+### Der Stand, zusammengefasst
+
+| | einstieg | akkumulation |
+|---|---|---|
+| Bewertung (Stufe 12) | ✔ **entscheidet** (funding + turnover) | ⚠️ **winkt durch** |
+| OI-Sperre (Stufe 6) | ✔ aktiv | ✖ nicht (nur einstieg) |
+| Auswahl (Stufe 5) | ✔ aktiv | ⚠️ Bestandsausnahme |
+| gemessener Kandidat | `schnitt` +0,1707 R (N-59) | `schnitt` H90, monoton — **aber nicht für BTC/ETH** |
+
+Werkzeug: `pruefe_pakete.py` → Paket **„Kette je Strategie"** (6 Prüfungen)
+
+
+---
+
+## 2.153 ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026)
+
+### Der Nutzer hat einen Verfahrensfehler von mir erwischt
+
+> *„schlecht — `schnitt` ist für Hebel gefallen oder?"*
+
+**Ja.** Am 31.08. wurde `schnitt` mittags als dritter tragender Beitrag
+registriert und **abends im Horizontlauf zurückgenommen** — *„bei keinem
+Horizont trennbar, bei langen negativ"*:
+
+    H5 -0,0069 · H10 -0,0118 · H20 -0,0221
+
+⚠️⚠️ **Und N-59 hat am 07.09. +0,1707 gemeldet, ohne diesen Befund zuerst
+zu reproduzieren.** Das verstößt gegen R-R11: *„Ein registrierter Befund
+darf nur von einer Messung umgestoßen werden, die ihn ZUERST
+reproduziert."*
+
+### Die Reproduktion — mit DEMSELBEN Werkzeug
+
+`messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20`
+
+| Horizont | 31.08. | **heute** | |
+|---|---|---|---|
+| H1 | — | +0,0047 [+0,0033 .. +0,0062] | ✔ trägt |
+| H2 | — | +0,0060 [+0,0034 .. +0,0090] | ✔ trägt |
+| **H5** | **−0,0069** | **+0,0092** [+0,0032 .. +0,0161] | ✔ trägt |
+| **H10** | **−0,0118** | **+0,0158** [+0,0008 .. +0,0311] | ✔ trägt |
+| **H20** | **−0,0221** | **+0,0299** [−0,0039 .. +0,0668] | nicht trennbar |
+
+**Alle Vorzeichen gedreht.**
+
+### ✔ Die Kontrolle reproduziert — also liegt es nicht am Werkzeug
+
+    KONTROLLE FUNDING H20   +0.0246 R [+0.0093 .. +0.0371]   TRAEGT
+    registriert             +0.0246 R                        ✔ bitgenau
+
+### ⚠️⚠️ Die Ursache: N-19
+
+Am 31.08. lief die Messung auf **1.314 Symbolen** — Krypto **plus 798
+Aktien, ETF und Rohstoffe**. Der N-19-Fix (`assetklasse='krypto'` in
+`B.lade()`) kam erst am **03./04.09.** Heute sind es 524 reine
+Kryptosymbole.
+
+Und `B.lade()` benennt selbst, warum `funding` überlebte:
+
+> *„Früher gelaufene Messungen, die zusätzlich `funding` oder `turnover`
+> VERLANGEN, waren dabei kaum betroffen — beide Datenquellen sind faktisch
+> krypto-exklusiv. **Das war aber Zufall der Datenlage, kein Schutz durch
+> Design.**"*
+
+> **`funding` war geschützt, `schnitt` nicht.** Er wird aus **Kursreihen**
+> berechnet — und die gab es für Aktien. Der 31.08.-Befund stand auf der
+> kontaminierten Basis und ist damit hinfällig.
+
+### Was jetzt gilt
+
+| | |
+|---|---|
+| **31.08. „`schnitt` fällt im Horizontlauf"** | ⛔ **abgelöst** — kontaminierte Basis (N-19) |
+| **Heute, freie Menge** | ✔ trägt bei H1, H2, H5, H10 · H20 nicht trennbar |
+| **N-59, selektierte Menge** | ✔ +0,1707 R bei 20 % |
+| **28.08., Akkumulationsmaß H90** | ✔ monoton über neun Bänder |
+
+> **Vier unabhängige Messungen, dieselbe Größe, alle positiv.** Der einzige
+> negative Befund stand auf der Basis, die N-19 als kontaminiert erwiesen
+> hat.
+
+⚠️ **Was weiterhin gilt:** die Stabilität über die Zeit ist ungeklärt
+(2.147), und für BTC/ETH/SOL trägt das Akkumulationsmaß nicht (2.152).
+
+### ⚠️ Die Lehre über mich
+
+**Ich habe N-59 gemessen, ohne das Faktenregister zu befragen.** Der
+31.08.-Eintrag stand im Kandidatenregister — mit Datum, Zahlen und
+Begründung. R-R11 verlangt die Reproduktion **vor** dem Umstoßen, nicht
+danach auf Nachfrage.
+
+> Dass der alte Befund am Ende fällt, macht das Verfahren nicht richtig.
+> **Hätte er gehalten, stünde jetzt ein falscher Kandidat im Register.**
+
+Werkzeug: `messe_kandidaten_als_regel.py --horizonte`

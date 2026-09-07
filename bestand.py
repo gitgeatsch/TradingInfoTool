@@ -304,19 +304,60 @@ KANDIDATEN = (
                 "(N2) - der Horizontverlauf H2 klein / H5 gross / H20 klein "
                 "ist erklaerungsbeduerftig."),
     Kandidat(
+        name="akkumulationsmass (= schnitt, H90)",
+        hypothese=("Kauf in BODENNAEHE: je tiefer unter dem eigenen "
+                   "200-Tage-Schnitt, desto guenstiger der Einstieg "
+                   "innerhalb einer Akkumulation."),
+        form="regler",
+        basis="H90 · 505 Krypto-Reihen · 3.292 Tage · zirkulaerer Verschub",
+        wert="stetig monoton ueber NEUN Baender: unter -40 % +0,0960 "
+             "(+6,06 %) bis ueber +30 % -0,1508 (-11,79 %)",
+        live="- NICHT registriert",
+        zustand="offen",
+        kette=(
+            ("28.08.", "Nutzerauftrag: ,fuer Akkumulation eine Begruendung, "
+                       "also echtes Signalmass finden'"),
+            ("28.08.", "Schalter UNTER_SMA +0,0283 (p=0,000) - traegt, aber "
+                       "feuert an 68,5 % aller Tage"),
+            ("28.08.", "Die STETIGE Form ist staerker und monoton ueber "
+                       "neun Baender, in BEIDEN Kalenderhaelften"),
+            ("28.08.", "Kontrollen: TIEFPUNKT +0,4242 (Maschine intakt) · "
+                       "WOCHENTAG -0,0008 p=0,978 · DCA exakt 0,0000"),
+            ("28.08.", "⚠️⚠️ TRAEGT NICHT FUER BTC/ETH/SOL - und genau die "
+                       "sind fuer akkumulation freigeschaltet"),
+            ("07.09.", "N-59: DERSELBE Wert traegt bei `einstieg` auf der "
+                       "selektierten Menge (+0,1707 R, 100 % Abdeckung)"),
+        ),
+        warnung="⚠️⚠️ ES IST DERSELBE WERT WIE `schnitt` - nur auf H90 "
+                "statt H20 und als Akkumulationsmass gelesen. Das war bis "
+                "zum 07.09. nicht verknuepft: der Befund vom 28.08. stand "
+                "in `Befund_Akkumulationsmass_28_08.md` und NICHT im "
+                "Register. "
+                "⚠️ DIE ENTSCHEIDENDE EINSCHRAENKUNG: fuer BTC (-0,0251, "
+                "p=0,723), ETH (-0,0308) und SOL (-0,0291) traegt es NICHT "
+                "- und `asset_dca_settings` enthaelt genau BTC und ETH. "
+                "Es ist kein n=3-Rauschen: die Kernwerte liegen 2,39 "
+                "Standardfehler unter dem Mittel, und nur 14,3 % aller 505 "
+                "Symbole haben einen negativen Vorsprung. "
+                "⚠️ Der Effekt SCHRUMPFT: unterstes Band 1. Haelfte +0,2020 "
+                "-> 2. Haelfte +0,0879, Faktor 2,3. "
+                "⚠️ Und es ist KEIN Alpha-Nachweis: es sagt, WANN innerhalb "
+                "einer Akkumulation gekauft wird - nicht, OB akkumuliert "
+                "werden soll."),
+    Kandidat(
         name="schnitt",
         hypothese="Abstand zum eigenen 200-Tage-Schnitt.",
         form="regler",
         basis="H1..H20 Horizontlauf 31.08.",
         wert="H5 -0,0069 · H10 -0,0118 · H20 -0,0221",
         live="- zurueckgenommen",
-        zustand="zurueck",
+        zustand="offen",
         kette=(
             ("31.08.", "mittags als dritter tragender Beitrag registriert"),
             ("31.08.", "abends im Horizontlauf gefallen - bei keinem "
                        "Horizont trennbar, bei langen negativ"),
         ),
-        warnung="⚠️ Die Marken tragen weiterhin den STOP - nur als "
+        warnung="✔✔ DER 31.08.-BEFUND IST ABGELOEST (07.09., 2.153). Reproduziert mit DEMSELBEN Werkzeug drehen ALLE Vorzeichen: H5 -0,0069 -> +0,0092 ✔ · H10 -0,0118 -> +0,0158 ✔ · H20 -0,0221 -> +0,0299 (nicht trennbar). Die Kontrolle reproduziert bitgenau (funding H20 +0,0246). ⚠️ URSACHE: am 31.08. lief die Messung auf 1.314 Symbolen - Krypto PLUS 798 Aktien/ETF/Rohstoffe. Der N-19-Fix kam erst am 03./04.09. `funding` war geschuetzt (krypto-exklusive Quelle), `schnitt` NICHT - er kommt aus Kursreihen, und die gab es fuer Aktien. ⚠️⚠️ MEIN VERFAHRENSFEHLER: N-59 hat den Befund umgestossen, OHNE ihn zuerst zu reproduzieren (R-R11). Dass er am Ende faellt, macht das Verfahren nicht richtig. --- FRUEHER: ⚠️ Die Marken tragen weiterhin den STOP - nur als "
                 "BEWERTUNGSbeitrag tragen sie nicht."),
     Kandidat(
         name="amihud",
@@ -376,6 +417,27 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.152", "Der Zustand der Kette je Strategie: bei "
+               "`einstieg` ENTSCHEIDET Stufe 12 (funding+turnover), bei "
+               "`akkumulation` WINKT SIE DURCH (vermessen=False, Notiz "
+               "statt Sperre - eine Sperre ohne Beitraege waere eine "
+               "Sperre nach Datenlage, Regel 4)", "gilt", "Methodik 2.152"),
+    Befundlage("2.152-akkum", "⚠️⚠️ Das Akkumulationsmass IST `schnitt` "
+               "(Abstand zum 200-Schnitt, H90 statt H20). Gemessen am "
+               "28.08., monoton ueber NEUN Baender in beiden "
+               "Kalenderhaelften - aber es kam NIE ins Kandidatenregister. "
+               "N-59 fand am 07.09. denselben Wert fuer `einstieg`, ohne "
+               "dass die Verbindung gezogen war", "gilt", "Methodik 2.152"),
+    Befundlage("2.152-kern", "⚠️⚠️ Das Akkumulationsmass traegt NICHT fuer "
+               "BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) - "
+               "und `asset_dca_settings` enthaelt genau BTC und ETH. Die "
+               "Akkumulation laeuft auf den Werten, fuer die das Mass keine "
+               "Begruendung liefert", "offen", "Methodik 2.152"),
+    Befundlage("2.152-nummer", "⚠️ Namensschatten: der `entscheider` ist "
+               "die ZWOELFTE Stufe, heisst aber ueberall ,Stufe 11'. "
+               "`terminmarkt` wurde nachtraeglich eingefuegt (N-14). "
+               "Folgenlos, weil der Code ueber NAMEN adressiert - jetzt in "
+               "`rollen_gate.STUFEN` vermerkt", "gilt", "Methodik 2.152"),
     Befundlage("2.151", "Die sieben F-198-Kryptoreihen sind GELADEN "
                "(8 von 183, 13.168 Kerzen; 175 zu kurz). Messbasis "
                "516 -> 524. Die Trennung haelt: DASH aktien 1.440 Kerzen ab "

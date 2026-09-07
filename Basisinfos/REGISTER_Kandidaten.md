@@ -14,7 +14,8 @@
 | ○ | **`vola`** | regler | offen | H5/H20 · volle Historie · Massstab RAND > +2 R |
 | ○ | **`vola ODER turnover`** | schalter | offen | H5 · volle Historie · Rand > +2 R · Menge frei · 167 Bloecke |
 | ○ | **`schnitt50`** | regler | offen | 31.08. bei H2 und H20 gemessen - H5 NIE |
-| ↩ | **`schnitt`** | regler | zurueck | H1..H20 Horizontlauf 31.08. |
+| ○ | **`akkumulationsmass (= schnitt, H90)`** | regler | offen | H90 · 505 Krypto-Reihen · 3.292 Tage · zirkulaerer Verschub |
+| ○ | **`schnitt`** | regler | offen | H1..H20 Horizontlauf 31.08. |
 | ✖ | **`amihud`** | regler | traegt nicht | H20 volle Historie, beide Richtungen geprueft |
 | ↩ | **`H (Vorfilter)`** | schalter | zurueck | gepoolt ueber die ganze Historie |
 
@@ -172,7 +173,32 @@
 
 ---
 
-## ↩ `schnitt`
+## ○ `akkumulationsmass (= schnitt, H90)`
+
+**Hypothese:** Kauf in BODENNAEHE: je tiefer unter dem eigenen 200-Tage-Schnitt, desto guenstiger der Einstieg innerhalb einer Akkumulation.
+
+| | |
+|---|---|
+| **Form** | regler |
+| **Registrierungsbasis** | H90 · 505 Krypto-Reihen · 3.292 Tage · zirkulaerer Verschub |
+| **Wert** | stetig monoton ueber NEUN Baender: unter -40 % +0,0960 (+6,06 %) bis ueber +30 % -0,1508 (-11,79 %) |
+| **Live** | - NICHT registriert |
+| **Zustand** | **offen** |
+
+**Die Messkette:**
+
+- **28.08.** — Nutzerauftrag: ,fuer Akkumulation eine Begruendung, also echtes Signalmass finden'
+- **28.08.** — Schalter UNTER_SMA +0,0283 (p=0,000) - traegt, aber feuert an 68,5 % aller Tage
+- **28.08.** — Die STETIGE Form ist staerker und monoton ueber neun Baender, in BEIDEN Kalenderhaelften
+- **28.08.** — Kontrollen: TIEFPUNKT +0,4242 (Maschine intakt) · WOCHENTAG -0,0008 p=0,978 · DCA exakt 0,0000
+- **28.08.** — ⚠️⚠️ TRAEGT NICHT FUER BTC/ETH/SOL - und genau die sind fuer akkumulation freigeschaltet
+- **07.09.** — N-59: DERSELBE Wert traegt bei `einstieg` auf der selektierten Menge (+0,1707 R, 100 % Abdeckung)
+
+⚠️⚠️ ES IST DERSELBE WERT WIE `schnitt` - nur auf H90 statt H20 und als Akkumulationsmass gelesen. Das war bis zum 07.09. nicht verknuepft: der Befund vom 28.08. stand in `Befund_Akkumulationsmass_28_08.md` und NICHT im Register. ⚠️ DIE ENTSCHEIDENDE EINSCHRAENKUNG: fuer BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) traegt es NICHT - und `asset_dca_settings` enthaelt genau BTC und ETH. Es ist kein n=3-Rauschen: die Kernwerte liegen 2,39 Standardfehler unter dem Mittel, und nur 14,3 % aller 505 Symbole haben einen negativen Vorsprung. ⚠️ Der Effekt SCHRUMPFT: unterstes Band 1. Haelfte +0,2020 -> 2. Haelfte +0,0879, Faktor 2,3. ⚠️ Und es ist KEIN Alpha-Nachweis: es sagt, WANN innerhalb einer Akkumulation gekauft wird - nicht, OB akkumuliert werden soll.
+
+---
+
+## ○ `schnitt`
 
 **Hypothese:** Abstand zum eigenen 200-Tage-Schnitt.
 
@@ -182,14 +208,14 @@
 | **Registrierungsbasis** | H1..H20 Horizontlauf 31.08. |
 | **Wert** | H5 -0,0069 · H10 -0,0118 · H20 -0,0221 |
 | **Live** | - zurueckgenommen |
-| **Zustand** | **zurueck** |
+| **Zustand** | **offen** |
 
 **Die Messkette:**
 
 - **31.08.** — mittags als dritter tragender Beitrag registriert
 - **31.08.** — abends im Horizontlauf gefallen - bei keinem Horizont trennbar, bei langen negativ
 
-⚠️ Die Marken tragen weiterhin den STOP - nur als BEWERTUNGSbeitrag tragen sie nicht.
+⚠️ ✔✔ DER 31.08.-BEFUND IST ABGELOEST (07.09., 2.153). Reproduziert mit DEMSELBEN Werkzeug drehen ALLE Vorzeichen: H5 -0,0069 -> +0,0092 ✔ · H10 -0,0118 -> +0,0158 ✔ · H20 -0,0221 -> +0,0299 (nicht trennbar). Die Kontrolle reproduziert bitgenau (funding H20 +0,0246). ⚠️ URSACHE: am 31.08. lief die Messung auf 1.314 Symbolen - Krypto PLUS 798 Aktien/ETF/Rohstoffe. Der N-19-Fix kam erst am 03./04.09. `funding` war geschuetzt (krypto-exklusive Quelle), `schnitt` NICHT - er kommt aus Kursreihen, und die gab es fuer Aktien. ⚠️⚠️ MEIN VERFAHRENSFEHLER: N-59 hat den Befund umgestossen, OHNE ihn zuerst zu reproduzieren (R-R11). Dass er am Ende faellt, macht das Verfahren nicht richtig. --- FRUEHER: ⚠️ Die Marken tragen weiterhin den STOP - nur als BEWERTUNGSbeitrag tragen sie nicht.
 
 ---
 

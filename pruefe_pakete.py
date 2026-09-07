@@ -16902,6 +16902,57 @@ def paket_hartes_budget() -> None:
            "werden, egal wie der Schalter steht")
 
 
+def paket_kette_je_strategie() -> None:
+    """Was tut die Kette JE STRATEGIE? (07.09.2026)
+
+    ⚠️ Nutzerfrage: *"Wie ist der Zustand der Kette fuer Krypto fuer beide
+    Strategien - wo tragen die Beitraege?"* Die Antwort steht im Code, aber
+    an vier Stellen. Diese Pruefung haelt sie zusammen und schlaegt an,
+    wenn eine davon still wandert.
+    """
+    P = "Kette je Strategie"
+    from agent import potential as _PT
+    from agent import rollen_gate as _RG
+    from agent import wahrscheinlichkeit as _WK
+    _m = {"funding_fuenftel": 1, "turnover_fuenftel": 0}
+
+    def _lage(strat):
+        return _PT.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                          instrument="spot", strategie=strat, h=None,
+                          merkmale=_m)
+
+    _ein, _akk = _lage("einstieg"), _lage("akkumulation")
+    pruefe(P, "⚠️ EINSTIEG: die Bewertungsstufe ENTSCHEIDET",
+           _ein.vermessen and _ein.bewertbar and _ein.traegt_hier,
+           "zwei tragende Beitraege (funding, turnover), erreichbar_max "
+           "%.4f R gegen Schwelle %.4f R" % (_ein.erreichbar_max,
+                                             _ein.schwelle))
+    pruefe(P, "⚠️⚠️ AKKUMULATION: sie WINKT DURCH, sie sperrt nicht",
+           not _akk.vermessen,
+           "kein Beitrag traegt dort (`strategien=('einstieg',)`), also "
+           "`vermessen=False` -> NOTIZ statt Sperre. Waere sie 'vermessen "
+           "aber ohne Wert', wuerde sie SPERREN - und das waere eine "
+           "Sperre nach Datenlage (Regel 4)")
+    _gilt = [b.name for b in _WK.BEITRAEGE if b.zustand == "traegt"
+             and _WK._gilt(b, "krypto", "akkumulation")[0]]
+    pruefe(P, "und bei akkumulation traegt tatsaechlich KEIN Beitrag",
+           not _gilt,
+           "gefunden: %s - dann muesste die Stufe dort entscheiden statt "
+           "durchzuwinken" % _gilt)
+    # ⚠️ DER NAMENSSCHATTEN: "Stufe 11" meint den Entscheider, Nummer 12.
+    _namen = [k for k, _t in _RG.STUFEN]
+    pruefe(P, "⚠️ `entscheider` ist die ZWOELFTE Stufe, heisst aber ueberall 'Stufe 11'",
+           _namen.index("entscheider") == 11 and len(_RG.STUFEN) == 12,
+           "`terminmarkt` wurde nachtraeglich eingefuegt (N-14), dadurch "
+           "rueckte der Entscheider von 11 auf 12. Die alte Nummer steht "
+           "in Dutzenden Kommentaren. Wer mit Indizes arbeitet statt mit "
+           "Namen, greift die falsche Stufe (Reihenfolge: %s)" % _namen)
+    pruefe(P, "und die Stufen sind ueber NAMEN adressiert, nicht ueber Indizes",
+           all(isinstance(k, str) for k, _t in _RG.STUFEN),
+           "sonst haette das Einfuegen von `terminmarkt` still alles "
+           "verschoben")
+
+
 def paket_assetklassen_trennung() -> None:
     """Trennt der Ladepfad die Assetklassen? (07.09.2026)
 
@@ -17139,6 +17190,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Kette je Strategie": paket_kette_je_strategie,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,
