@@ -16929,6 +16929,28 @@ def paket_assetklassen_trennung() -> None:
            "traegt die Tabelle die Klasse selbst, ist `messreihen` nicht "
            "nur ueberfluessig, sondern schaedlich: `DASH` steht dort als "
            "`aktien` und wuerde trotz korrekter Kryptokerzen verworfen")
+    # ⚠️⚠️ UND DER LIVE-PFAD: rangt `marktrang` NUR gegen Krypto?
+    _m = io.open("agent/marktrang.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ `marktrang.schnitte()` rangt NUR gegen Krypto",
+           "AND assetklasse='krypto' " in _m,
+           "die Messbasis traegt seit N-19 auch Aktien/ETF/Rohstoffe - 798 "
+           "von 1.314 Symbolen. Ohne Filter liefe der Krypto-Rang gegen "
+           "AAPL. Bis 07.09. war das nur durch ZUFALL folgenlos "
+           "(Nicht-Krypto hat keinen Binance-USDT-Preis)")
+    pruefe(P, "und die MESSBASIS des Schnitts ebenso",
+           _m.count("AND assetklasse='krypto'") >= 2,
+           "sonst waere die ,Messbasis' 1.314 statt 516 Symbole - der "
+           "Filter gehoert an BEIDE Stellen, `schnitte()` und `MESSBASIS`")
+    pruefe(P, "⚠️ und eine fehlende Spalte liefert KEINEN Rang",
+           "Kein Rang ist besser als ein falscher" in _m,
+           "ein Rang ueber alle Klassen saehe aus wie ein richtiger - "
+           "genau die Falle aus F-198")
+    from agent import marktrang as _MR
+    _b = _MR.messbasis("schnitt")
+    pruefe(P, "und die Schnitt-Messbasis ist tatsaechlich krypto-gross",
+           400 < len(_b) < 700,
+           "gemessen %d Symbole - vor dem Fix waren es 1.314" % len(_b))
+
     # ⚠️ UND DER ZUSTAND SELBST, nicht nur der Code.
     import sqlite3 as _sq
     _c = _sq.connect("file:data/messdaten.db?mode=ro", uri=True)

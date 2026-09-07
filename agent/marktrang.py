@@ -167,9 +167,40 @@ def schnitte(hoechstalter: int = SCHNITT_FRISCHE_TAGE) -> dict:
             _SCHNITT_ZWISCHEN["werte"] = {}
             return {}
         roh: dict = {}
+        # ⚠️⚠️ NUR KRYPTO (07.09.2026). Die Messbasis traegt seit N-19
+        # auch Aktien, ETF und Rohstoffe - 798 von 1.314 Symbolen.
+        #
+        # BIS HEUTE WAR DAS FOLGENLOS, aber durch ZUFALL der Datenlage:
+        # `schnitt_werte()` braucht zusaetzlich einen Binance-USDT-Preis,
+        # und den haben Aktien nicht. Uebrig blieben acht - und die sind
+        # genau die F-198-Kollisionen (BOND, C, DASH, DIA, MDT, STX, T)
+        # plus MUB. Fuer `DASH` hiess das:
+        #
+        #     Schnitt aus DoorDash-AKTIENkursen (1.440 Kerzen)
+        #     Preis   aus Binance DASHUSDT (Krypto)
+        #     -> k/sch - 1  =  Kryptopreis durch Aktienschnitt
+        #
+        # Ein sinnloser Wert, der in den Querschnittsrang aller anderen
+        # einging. Gemessen hat es bei keinem der 29 Watchlist-Werte das
+        # Fuenftel gedreht - aber Schutz durch Zufall ist kein Schutz.
+        #
+        # ⚠️ `marktrang` wird nur fuer Krypto gerufen (`rollen_lauf`:
+        # `elif assetklasse == "krypto"`), deshalb ist der harte Filter
+        # hier richtig und keine Einschraenkung.
+        _hat_klasse = any(r[1] == "assetklasse" for r in
+                          c.execute("PRAGMA table_info(price_history_ohlc)"))
+        if not _hat_klasse:
+            logger.error("Schnittabstand: %s hat keine Spalte "
+                         "`assetklasse` - der Rang liefe ueber ALLE Klassen. "
+                         "Kein Rang ist besser als ein falscher.",
+                         SCHNITT_MESSDB)
+            c.close()
+            _SCHNITT_ZWISCHEN["werte"] = {}
+            return {}
         for sym, kurs in c.execute(
                 "SELECT symbol, close FROM price_history_ohlc "
-                "WHERE currency='USD' AND close IS NOT NULL AND close > 0 "
+                "WHERE currency='USD' AND assetklasse='krypto' "
+                "AND close IS NOT NULL AND close > 0 "
                 "ORDER BY symbol, date"):
             roh.setdefault(str(sym).upper(), []).append(float(kurs))
         c.close()
@@ -324,9 +355,12 @@ MESSBASIS = {"funding": ("data/funding_historie.db",
              "oi": ("data/terminmarkt_historie.db",
                     "SELECT DISTINCT symbol FROM terminmarkt_tag "
                     "UNION SELECT DISTINCT symbol FROM terminmarkt"),
+             # ⚠️ AUCH HIER NUR KRYPTO (07.09.2026) - sonst waere die
+             # "Messbasis" 1.314 Symbole statt 516, und der Rang liefe
+             # gegen Aktien. Siehe den Block in `schnitte()`.
              "schnitt": (SCHNITT_MESSDB,
                          "SELECT DISTINCT symbol FROM price_history_ohlc "
-                         "WHERE currency='USD'")}
+                         "WHERE currency='USD' AND assetklasse='krypto'")}
 _MESSBASIS_ZWISCHEN: dict = {}
 # Welche Messbasis-Ausfaelle schon gemeldet wurden - siehe `messbasis()`.
 _SCHON_GEMELDET: set = set()

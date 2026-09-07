@@ -14,6 +14,18 @@
 
 - Quelle: Methodik 2.145
 
+**2.150** — ⚠️⚠️ `marktrang.schnitte()` rangte gegen ALLE 1.314 Symbole der Messbasis - 798 davon Nicht-Krypto. Der Krypto-Schnittrang lief gegen AAPL. Gefixt: assetklasse='krypto' an beiden Stellen, 1.314 -> 516
+
+- Quelle: Methodik 2.150 / agent/marktrang.py
+
+**2.150-zufall** — ✔ Es schlug nicht durch, weil `schnitt_werte()` einen Binance-USDT-Preis braucht - den haben Aktien nicht (0 von 29 Watchlist-Werten wechselten das Fuenftel). ⚠️ Aber es war Schutz durch ZUFALL der Datenlage, nicht durch Design
+
+- Quelle: Methodik 2.150
+
+**2.150-acht** — ⚠️ Acht Werte waren doch falsch: BOND, C, DASH, DIA, MDT, MUB, STX, T - die F-198-Kollisionen. Fuer DASH wurde der Kryptopreis durch den DoorDash-Aktienschnitt geteilt
+
+- Quelle: Methodik 2.150
+
 **2.149** — STRUKTURFIX: F-198s Reparatur war im LADEPFAD nie angekommen - `lade_reihen_aus_db` las die `assetklasse`-Spalte nicht und gruppierte nach (symbol, currency). Jetzt filtert die Abfrage, und `_reihen_roh` ueberspringt die schaedliche 1:1-Zuordnung aus `messreihen`
 
 - Quelle: Methodik 2.149 / pruefe_assetklassen_trennung.py

@@ -9625,3 +9625,100 @@ zugeordnet), aber die Trennung ist dort strukturell nicht möglich.
 
 Werkzeug: `pruefe_assetklassen_trennung.py` · `pruefe_pakete.py` → Paket
 **Assetklassen**
+
+
+---
+
+## 2.150 ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026)
+
+### Die Frage kam vom Nutzer, und sie war ein Verdacht
+
+> *„Zu den Assetklassen: geh in die Doku und den Code zur Prüfung,
+> irgendwas passt nicht … das bedeutet, der scharfe Filter ist in der Prod
+> auch für Aktien scharf?"*
+
+### Was gefunden wurde
+
+`marktrang.schnitte()` liest aus `data/messdaten.db` — und die trägt seit
+N-19 **1.314 Symbole: 516 Krypto, 470 Aktien, 293 ETF, 35 Rohstoffe.**
+
+    SELECT symbol, close FROM price_history_ohlc
+    WHERE currency='USD' AND close IS NOT NULL AND close > 0
+
+**Kein Assetklassen-Filter.** Ebenso `MESSBASIS["schnitt"]`. Der
+Querschnittsrang eines Kryptowertes wäre also gegen AAPL, ABBV, ABNB
+gebildet worden.
+
+### ✔ Warum es trotzdem nicht durchschlug — und warum das kein Trost ist
+
+`schnitt_werte()` braucht zusätzlich einen **Binance-USDT-Preis**. Den
+haben Aktien nicht. Von 1.314 blieben **512** übrig.
+
+**Gemessen: 0 von 29 Watchlist-Werten wechseln das Fünftel.**
+
+> ⚠️ **Aber es war Schutz durch ZUFALL der Datenlage, nicht durch Design** —
+> exakt die Formulierung, die `messe_eigenschaft_beitrag.lade()` schon
+> einmal für sich selbst gebraucht hat.
+
+### ⚠️⚠️ Und acht Werte waren doch falsch — die F-198-Kollisionen
+
+Von den 512 waren **8 nicht im Kryptouniversum**:
+
+    BOND · C · DASH · DIA · MDT · MUB · STX · T
+
+Das sind **genau die F-198-Kollisionen** plus `MUB`. Sie haben einen
+Binance-USDT-Preis (weil es die Coins gibt) **und** Kurskerzen unter der
+Aktien-Klasse. Für `DASH` hieß das:
+
+| | |
+|---|---|
+| Schnitt | aus **DoorDash-Aktienkursen** (1.440 Kerzen, `aktien`) |
+| Preis | aus **Binance DASHUSDT** (Krypto) |
+| Ergebnis | `k/sch − 1` = **Kryptopreis geteilt durch Aktienschnitt** |
+
+**Ein sinnloser Wert — und er ging in den Querschnittsrang aller anderen
+ein.**
+
+### Der Fix und was er ändert
+
+`assetklasse='krypto'` an **beiden** Stellen: `schnitte()` und
+`MESSBASIS["schnitt"]`. ⚠️ Und eine fehlende Spalte liefert **keinen**
+Rang statt eines falschen — *„Kein Rang ist besser als ein falscher."*
+
+| | vorher | nachher |
+|---|---|---|
+| `schnitte()` | 1.314 | **516** |
+| `messbasis("schnitt")` | 1.314 | **516** |
+| `schnitt_werte()` | 512, davon 8 fremd | **504, davon 0 fremd** |
+| Fünftel-Wechsel Watchlist | — | **0 von 29** |
+
+⚠️ `marktrang` wird nur für Krypto gerufen (`rollen_lauf`:
+`elif assetklasse == "krypto"`), deshalb ist der harte Filter dort richtig.
+
+### Wie weit reichte der Fehler?
+
+| | |
+|---|---|
+| **Bewertung** | ✔ **nicht betroffen** — der Beitrag „Abstand zum 200-Tage-Schnitt" steht auf `zustand="null"` |
+| **Mail** | ⚠️ betroffen — die Zeile *„im Marktvergleich (N Werte)"* nannte 1.314 statt 516 |
+| **Der N-59-Kandidat** | ⚠️⚠️ **hier wäre es teuer geworden** |
+
+⚠️⚠️ **Der wichtigste Punkt:** N-59 hat `schnitt` als Kandidaten gemessen
+(+0,1707 R) — auf der **krypto-reinen** Basis (`B.lade()` filtert). Der
+**Live-Wert** kam aus `marktrang` und wäre gegen 1.314 gemischte Symbole
+gerangt worden.
+
+> **Gemessene und live berechnete Größe wären verschieden gewesen.** Der
+> Docstring warnt sogar: *„Über die Watchlist gerangt dreht das Vorzeichen
+> — das ist gemessen, nicht befürchtet."* Die Rangmenge ist nachweislich
+> heikel.
+
+### Die Absicherung
+
+Vier weitere Prüfungen im Suite-Paket **„Assetklassen"** (jetzt zehn):
+der Filter an beiden Stellen, die laute Meldung bei fehlender Spalte, und
+die **gemessene** Basisgröße (400 < n < 700). → **1.992 Prüfungen, alle
+bestanden.**
+
+Werkzeug: `agent/marktrang.py` · `pruefe_pakete.py` → Paket
+**Assetklassen**
