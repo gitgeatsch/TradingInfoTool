@@ -348,6 +348,131 @@ untereinander konsistent, Kursreihen gegen die DB geprüft.
 ⚠️ **Strukturell abgesichert:** `Beitrag.klammer` ist Pflichtfeld;
 `zustand="traegt"` verlangt `klammer="tag"`, sonst wirft der Import.
 
+#### 3.9d ⚠️⚠️⚠️ DIE TURNOVER-TABELLE IST GEFALLEN — und die Schwelle mit ihr (07.09.2026)
+
+**R-R9-Eintrag zur Beitragsänderung.** Zwei Zahlen im laufenden System
+geändert, beide begründet, beide gegengeprüft.
+
+| | vorher | jetzt |
+|---|---|---|
+| `turnover_fuenftel` | (+3,15 · +0,83 · +0,22 · −1,79 · −2,40) | **(+0,33 · +0,33 · +0,33 · −0,48 · −0,48)** |
+| `SCHWELLE_VORGABE` | 0,080 R | **0,005 R** |
+| `erreichbar_max` (volle Lage) | 0,1335 R | **0,0489 R** |
+| Durchlass | 16,4 % | **54,0 %** |
+
+##### Warum die Tabelle fiel
+
+**N-56 (2.139)** — Reproduktion auf der eigenen Basis: gemessen −0,06293
+[−0,13183 .. −0,00785] gegen registriert +0,0616. Gleiche Größenordnung,
+**umgekehrtes Vorzeichen**. Die Fünftel hatten keine Ordnung; das *beste*
+war Fünftel 4, das die Tabelle mit −2,40 am härtesten bestrafte.
+
+**N-58 (2.141)** — Neuherleitung auf sauberer Basis (Treffer unter den
+**Aufgelösten**, echte Geometrie aus `_boeden`, H20, Block 60 belegt):
+**nichts trägt** — weder Fünfteilung noch Zweiteilung noch Schalter.
+
+⚠️ **Trennschärfe 2,0 Punkte.** Gepflanzte +0,2 / +0,5 / +1,0 wurden nicht
+gefunden, +2,0 wurde gefunden. Die alte Spanne von **5,55 Punkten** lag
+weit darüber — **wäre sie echt gewesen, hätten wir sie gesehen.**
+
+##### ⚠️ Was die neuen Zahlen sind — und was nicht
+
+Die (+0,33 / −0,48) sind der **Punktschätzer der 60/40-Zweiteilung**, dessen
+Band die Null **enthält** [−0,089 .. +0,729]. **Ein Deckel, kein Messwert.**
+
+Sie stehen dort aus einem Grund: von den drei möglichen Werten ist die
+**alte Tabelle die einzige, von der wir wissen, dass sie falsch ist.** Die
+neue ist 17-mal kleiner und mit drei unabhängigen Messungen
+gleichgerichtet (N-53 GS +0,00512; 60/40-Schnitt; Schalterprobe).
+
+⚠️ **Die Größe bleibt berechtigt.** `turnover` trägt Richtung (2.136, GS
++0,00512 — der stärkste der drei). Gefallen ist die **Auflösung**, nicht
+der Wert.
+
+##### Warum die Schwelle mitmusste
+
+Nicht aus Systematik, sondern aus Notwendigkeit: `erreichbar_max` fällt auf
+0,0489 R. **Eine Schwelle von 0,080 hätte für jede Datenlage
+`traegt_hier = False` ergeben** — derselbe Fehler wie am 31.08.
+
+Neu kalibriert mit demselben Werkzeug und Kriterium wie beim letzten Mal.
+⚠️ Das Verfahren wurde vorher an der **alten** Lage reproduziert: es gab
+dort 0,080 zurück (+0,1502 je verworfenem Signal).
+
+| Schwelle | Durchlass | Ertrag | je verworfenem |
+|---|---|---|---|
+| **0,005** | 54,0 % | −0,1565 | **+0,1072** |
+| 0,010 | 31,9 % | −0,2439 | −0,0558 |
+| 0,030 | 14,7 % | −0,2019 | +0,0047 |
+| 0,080 | 0 | — | zu wenige |
+
+##### ⚠️⚠️ Der unangenehme Teil
+
+**Härter filtern macht das Ergebnis schlechter.** Die alte 0,080 war die
+beste Schwelle **wegen turnovers riesiger Stufen** — also wegen einer
+Tabelle, die nicht existiert.
+
+> **Die Trennschärfe der Schwelle kam aus einer Fiktion.** Der Durchlass
+> steigt auf mehr als das Dreifache — das ist keine Lockerung, sondern
+> das, was übrigbleibt, wenn eine erfundene Unterscheidungskraft wegfällt.
+
+##### Was geprüft wurde
+
+- ✔ bestes Asset kommt durch (0,0489 > 0,0050), dünne Datenlage auch
+  (0,0390 > 0,0040), schlechtestes gesperrt (−0,0654)
+- ✔ die Datenlagen-Schwelle differenziert weiter (0,0040 < 0,0050)
+- ✔ `KALIBRIERT_FUER` stimmt mit `beitragslage()` überein
+- ✔ Suite 1.976 Prüfungen, alle bestanden
+- ✔ Altwerte nachgezogen in `potential.py` (Docstring), `bestand.py`,
+  `messe_bewertung_kalibrierung.py`
+
+### ⚠️⚠️⚠️ REGELVERSTOSS, selbst gefunden: R-R9 verlangt eine andere Zielgröße
+
+Das Regelwerk sagt zur Schwellenkalibrierung wörtlich:
+
+> **„Die Zielgröße, an der kalibriert wird: Nicht die Wirkung, sondern die
+> DURCHLASSQUOTE.** Die Wirkung wächst mit jedem Beitrag — die Frage ist,
+> wie viele Empfehlungen das System liefern soll. ⚠️ **Diese Zahl ist eine
+> Nutzerentscheidung** und gehört neben die Schwelle dokumentiert. **Ohne
+> sie ist jede Kalibrierung willkürlich.**"
+
+Und Punkt 4 der Prüfliste: *„⚠️ Nicht das Maximum wählen — der Effekt
+wächst linear mit der Sperrquote, es gibt kein Optimum."*
+
+**Ich habe genau das getan** — nach „Gewinn je verworfenem Signal"
+optimiert, also nach der Wirkung, und das Maximum gewählt.
+
+> **Die 0,005 sind damit VORLÄUFIG, nicht kalibriert.** Sie halten das
+> System betriebsfähig (mit 0,080 käme nichts mehr durch), aber die
+> eigentliche Kalibrierung steht aus: **welche Durchlassquote soll das
+> System liefern?** Das ist eine Nutzerentscheidung.
+
+Zur Orientierung, gemessen:
+
+| gewünschter Durchlass | nötige Schwelle |
+|---|---|
+| 54 % | 0,005 (aktuell) |
+| 32 % | 0,010 |
+| 19 % | 0,020 |
+| 15 % (etwa wie bisher) | 0,030 |
+
+⚠️ `config.yaml` hat keinen `bewertung`-Eintrag; der Codewert wirkt. Sobald
+die Durchlassquote feststeht, gehört das Ergebnis nach R-R9 dorthin.
+
+##### ⚠️ Was offen bleibt
+
+**Der Maßstab aller Stufen ist herleitbar, die Form nicht.** F-219 misst,
+dass die Bewertung **19,5 %** dessen liefert, was sie behauptet — alle
+Stufen sind also rund 5× zu groß. Das skaliert alle gleich und ändert
+Rangfolge und Schwelle nicht, wohl aber den **Hebel** (F-220).
+
+**Der nächste Schritt sind die fünf abgelehnten Beiträge** (`H`,
+Rangplatz, Schnittabstand, Lebendigkeit, Termine). Sie wurden **alle** auf
+der Basis abgelehnt, die sich als gegen richtungsreine Kandidaten verzerrt
+erwiesen hat — genau der Fehler, der `turnover` beinahe gekostet hätte.
+
+---
+
 #### 3.9b ⚠️⚠️ H zerlegt: Komposition gegen Leistung (30.08.2026)
 
 Der gepoolte H-Vorsprung misst, **wann** H auftritt — nicht, **was** ein

@@ -6,6 +6,14 @@
 
 ## ✔ WAS GILT
 
+**2.142** — Kalibrierung durchgefuehrt: turnover-Stufen auf (+0,33 x3, -0,48 x2), SCHWELLE_VORGABE 0,080 -> 0,005. erreichbar_max faellt 0,1335 -> 0,0489 R, Durchlass steigt 16,4 % -> 54,0 %. Verfahren vorher an der alten Lage REPRODUZIERT (gab 0,080 zurueck)
+
+- Quelle: Methodik 2.142 / Befundkarte 3.9d
+
+**2.142-fiktion** — ⚠️⚠️ Haerter filtern macht das Ergebnis SCHLECHTER (bei 0,010: -0,0558 je verworfenem). Die alte Schwelle 0,080 war die beste WEGEN turnovers riesiger Stufen - die Trennschaerfe der Schwelle kam aus einer Fiktion
+
+- Quelle: Methodik 2.142
+
 **2.141** — `turnover`s Stufen lassen sich NICHT herleiten - weder als Fuenfteilung noch als Zweiteilung noch als SCHALTER. Trennschaerfe 2,0 Punkte; die registrierte Tabelle hat 5,55 Punkte Spanne - waere sie echt, wuerde man sie sehen
 
 - Quelle: Methodik 2.141 / n58_turnover_stufen_neu.py

@@ -19,7 +19,7 @@ from docx.oxml import OxmlElement                            # noqa: E402
 from docx.oxml.ns import qn                                  # noqa: E402
 from docx.shared import Pt, RGBColor, Cm                     # noqa: E402
 
-ZIEL = "Basisinfos/Stand_06_09_2026.docx"
+ZIEL = "Basisinfos/Stand_06_09_2026.docx"   # 07.09. ergaenzt
 
 ROT = RGBColor(0xB0, 0x2A, 0x1F)
 GRUEN = RGBColor(0x1B, 0x6B, 0x3A)

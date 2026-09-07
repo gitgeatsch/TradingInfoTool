@@ -54,7 +54,7 @@
 | **Form** | regler |
 | **Registrierungsbasis** | H20 · 2.636 Kalendertage |
 | **Wert** | +0,0616 R [+0,0203 .. +0,1111] |
-| **Live** | agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel · Stufen (+3.15, +0.83, +0.22, -1.79, -2.40) |
+| **Live** | agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel · Stufen (+0.33, +0.33, +0.33, -0.48, -0.48) seit 07.09. (vorher +3.15/+0.83/+0.22/-1.79/-2.40, 2.141) |
 | **Zustand** | **traegt** |
 
 **Die Messkette:**

@@ -185,6 +185,7 @@ class Potential:
             beide          max +0,1335 R    ( 7 von 43 Werten)
 
         Eine Schwelle von 0,080 R waere fuer 36 von 43 Werten UNERREICHBAR -
+        (Stand bis 07.09.2026; die Vorgabe steht seither auf 0,005)
         sie waeren dauerhaft gesperrt, egal wie gut ihr Funding steht. Das
         ist eine Sperre nach DATENLAGE, nicht nach Qualitaet (Regel 4).
 
@@ -203,14 +204,22 @@ class Potential:
         Wer nur einen Beitrag hat, muss denselben ANTEIL seiner Spanne
         schaffen wie einer mit zweien. Gerechnet am Stand 31.08.:
 
+        Gerechnet am Stand 07.09. (nach N-58, Vorgabe 0,005):
+
+            funding           max +0,0390 R  ->  Schwelle 0,0040 R
+            turnover          max +0,0099 R  ->  Schwelle 0,0010 R
+            funding+turnover  max +0,0489 R  ->  Schwelle 0,0050 R  (Vorgabe)
+
+        ⚠️ FRUEHERER STAND (31.08. bis 07.09., turnover mit +3,15/-2,40):
+
             funding           max +0,0390 R  ->  Schwelle 0,0029 R
             turnover          max +0,0945 R  ->  Schwelle 0,0071 R
-            funding+turnover  max +0,1335 R  ->  Schwelle 0,0800 R  (Vorgabe)
+            funding+turnover  max +0,1335 R  ->  Schwelle 0,0800 R
 
         ⚠️ DIE ZAHL WAR HIER VERALTET (gefunden 03.09.2026). Der Text nannte
         0,0100 R - das war die Vorgabe bis zur Neukalibrierung.
-        `SCHWELLE_VORGABE` steht seit dem 31.08. auf **0,080**, und die drei
-        Zeilen darueber rechnen mit ihr. Eine falsche Zahl im Docstring einer
+        `SCHWELLE_VORGABE` steht seit dem 07.09. auf **0,005** (davor 0,080),
+        und die Zeilen darueber rechnen mit ihr. Eine falsche Zahl im Docstring einer
         Schwelle ist teurer als anderswo: sie wird beim naechsten Nachrechnen
         als Sollwert gelesen.
 
@@ -410,7 +419,63 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # 0,080 alles gesperrt, was nur einen Beitrag hat (max +0,039 R) - also 36
 # von 43 Werten. `Potential.schwelle` rechnet sie auf die erreichbare
 # Spanne um: bei nur Funding entspricht 0,080 dann 0,0234 R.
-SCHWELLE_VORGABE = 0.080
+# ⚠️⚠️ NEU KALIBRIERT AM 07.09.2026 (R-R9, nach N-58 / Methodik 2.141).
+#
+# VORHER 0,080 - kalibriert fuer eine Beitragslage, in der `turnover`
+# Stufen von +3,15 bis -2,40 hatte. Diese Tabelle ist gefallen (2.141:
+# nichts traegt, Trennschaerfe 2,0 Punkte gegen 5,55 Punkte Spanne).
+#
+# ⚠️ WARUM DIE ALTE SCHWELLE NICHT STEHENBLEIBEN KONNTE - sie war nicht
+# nur unpassend, sie war UNERREICHBAR: mit den neuen Stufen faellt
+# `erreichbar_max` von 0,1335 auf 0,0489 R. Eine Schwelle von 0,080 haette
+# fuer JEDE Datenlage `traegt_hier = False` ergeben. Das ist derselbe
+# Fehler wie am 31.08. ("88 % der Werte koennen nie durch"), und die Suite
+# prueft ihn seither.
+#
+# NEU KALIBRIERT mit `messe_schwelle_kalibrierung.py`, demselben Werkzeug
+# und demselben Kriterium wie beim letzten Mal (groesster Gewinn JE
+# VERWORFENEM Signal). Das Verfahren wurde vorher an der alten Lage
+# REPRODUZIERT: es gab dort 0,080 zurueck (+0,1502 je verworfenem).
+#
+#   Schwelle   Durchlass   Ertrag     je verworfenem
+#   0,005        54,0 %    -0,1565       +0,1072   <- bestes
+#   0,010        31,9 %    -0,2439       -0,0558   <- SCHLECHTER als ohne
+#   0,030        14,7 %    -0,2019       +0,0047
+#   0,080             0    zu wenige
+#
+# ⚠️⚠️ WAS DIESE ZAHLEN SAGEN, und es ist unangenehm: HAERTER FILTERN MACHT
+# DAS ERGEBNIS SCHLECHTER. Die alte 0,080 war die beste Schwelle WEGEN
+# turnovers riesiger Stufen - also wegen einer Tabelle, die nicht
+# existiert. Die Trennschaerfe der Schwelle kam aus einer Fiktion.
+#
+# ⚠️ FOLGE FUER DEN BETRIEB: der Durchlass steigt von 16,4 % auf 54,0 %.
+# Das ist mehr als das Dreifache. Es ist KEINE Lockerung aus Bequem-
+# lichkeit, sondern das, was uebrigbleibt, wenn eine erfundene
+# Unterscheidungskraft wegfaellt.
+#
+# ⚠️ 0,005 heisst praktisch "das Potential muss POSITIV sein" - bei
+# 0,000 / 0,001 / 0,005 ist der Durchlass identisch (54,0 %), es liegt
+# also kein Anker dazwischen. Von den gleichwertigen Werten der
+# vorsichtigste.
+# ⚠️⚠️⚠️ DIESE ZAHL IST VORLAEUFIG, NICHT KALIBRIERT (07.09.2026).
+#
+# R-R9 verlangt als Zielgroesse die DURCHLASSQUOTE, nicht die Wirkung:
+#   "Die Wirkung waechst mit jedem Beitrag - die Frage ist, wie viele
+#    Empfehlungen das System liefern soll. Diese Zahl ist eine
+#    NUTZERENTSCHEIDUNG. Ohne sie ist jede Kalibrierung willkuerlich."
+# Und Punkt 4: "Nicht das Maximum waehlen - es gibt kein Optimum."
+#
+# Genau das ist hier passiert: optimiert wurde nach "Gewinn je verworfenem
+# Signal", und das Maximum wurde genommen. Der Wert haelt das System
+# betriebsfaehig (mit 0,080 kaeme NICHTS mehr durch), ersetzt aber die
+# Entscheidung nicht.
+#
+#   gewuenschter Durchlass  ->  noetige Schwelle
+#   54 %                        0,005   (aktuell)
+#   32 %                        0,010
+#   19 %                        0,020
+#   15 % (etwa wie bisher)      0,030
+SCHWELLE_VORGABE = 0.005
 
 # ---------------------------------------------------------------------------
 # R-R9: DIE SCHWELLE GEHOERT ZU EINER BEITRAGSLAGE (30.08.2026)
@@ -506,7 +571,7 @@ SCHWELLE_VORGABE = 0.080
 # ungueltig geworden. Sie gilt fuer genau die Beitragslage, die jetzt
 # wieder besteht.
 KALIBRIERT_FUER = ("funding_fuenftel:0.82/1.30/0.12/-0.54/-1.70 "
-                   "turnover_fuenftel:3.15/0.83/0.22/-1.79/-2.40")
+                   "turnover_fuenftel:0.33/0.33/0.33/-0.48/-0.48")
 """Die Beitragslage, fuer die SCHWELLE_VORGABE kalibriert wurde.
 
 ⚠️ WIRD BEI JEDER AENDERUNG AN `wahrscheinlichkeit.BEITRAEGE` MITGEZOGEN -

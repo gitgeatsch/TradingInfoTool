@@ -108,7 +108,8 @@ KANDIDATEN = (
         basis="H20 · 2.636 Kalendertage",
         wert="+0,0616 R [+0,0203 .. +0,1111]",
         live="agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel "
-             "· Stufen (+3.15, +0.83, +0.22, -1.79, -2.40)",
+             "· Stufen (+0.33, +0.33, +0.33, -0.48, -0.48) seit 07.09. "
+             "(vorher +3.15/+0.83/+0.22/-1.79/-2.40, 2.141)",
         zustand="traegt",
         kette=(
             ("30.08.", "2e registriert"),
@@ -348,6 +349,17 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.142", "Kalibrierung durchgefuehrt: turnover-Stufen auf "
+               "(+0,33 x3, -0,48 x2), SCHWELLE_VORGABE 0,080 -> 0,005. "
+               "erreichbar_max faellt 0,1335 -> 0,0489 R, Durchlass steigt "
+               "16,4 % -> 54,0 %. Verfahren vorher an der alten Lage "
+               "REPRODUZIERT (gab 0,080 zurueck)", "gilt",
+               "Methodik 2.142 / Befundkarte 3.9d"),
+    Befundlage("2.142-fiktion", "⚠️⚠️ Haerter filtern macht das Ergebnis "
+               "SCHLECHTER (bei 0,010: -0,0558 je verworfenem). Die alte "
+               "Schwelle 0,080 war die beste WEGEN turnovers riesiger "
+               "Stufen - die Trennschaerfe der Schwelle kam aus einer "
+               "Fiktion", "gilt", "Methodik 2.142"),
     Befundlage("2.141", "`turnover`s Stufen lassen sich NICHT herleiten - "
                "weder als Fuenfteilung noch als Zweiteilung noch als "
                "SCHALTER. Trennschaerfe 2,0 Punkte; die registrierte "

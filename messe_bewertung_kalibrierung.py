@@ -27,6 +27,8 @@ mue ist eine Formel ohne Eingabe.
 3 ARITHMETIK      quote = 1/(1+CRV) = 33,3 % steht per Konstruktion fest.
                   Die Behauptung ist ein Shift von 4,5 Prozentpunkten
                   (0,000 -> 33,3 % · 0,080 -> 36,0 % · 0,133 -> 37,8 %).
+                  ⚠️ Die Beispielwerte stammen vom 05.09.; seit dem
+                     07.09. reicht das Potential nur bis +0,049 R.
                   -> DAS ist die Pruefgroesse, nicht "traegt/traegt nicht".
 
 4 MACHT           Vorab gerechnet: ~1.800 entschiedene Anker je Gruppe.
@@ -387,7 +389,10 @@ def main() -> int:
     fit = {}
     for name, roh, registriert in (
             ("funding", fu_roh, (+0.82, +1.30, +0.12, -0.54, -1.70)),
-            ("turnover", tu_roh, (+3.15, +0.83, +0.22, -1.79, -2.40))):
+            # ⚠️ 07.09.2026: die registrierte Tabelle ist gefallen (2.141).
+            # Hier steht sie als VERGLEICHSGROESSE - dieses Werkzeug
+            # fittet seine Stufen ohnehin selbst auf der ersten Haelfte.
+            ("turnover", tu_roh, (+0.33, +0.33, +0.33, -0.48, -0.48))):
         h1 = {t: z for t, z in roh.items() if t in erste}
         _w, punkte, _s = RB.beitragstabelle(h1)
         fit[name] = punkte if punkte else list(registriert)
