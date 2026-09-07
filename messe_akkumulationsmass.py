@@ -171,19 +171,54 @@ VERSCHUEBE = 400
 SAAT = 20260828
 
 
-def lade_reihen(db: str, min_tage: int):
+def lade_reihen(db: str, min_tage: int, assetklasse: str = "krypto"):
     """Schlusskurse je Symbol PLUS die Lage auf der gemeinsamen Kalenderachse.
 
     Gibt (reihen, start) zurueck: `reihen[sym]` sind die Kurse, `start[sym]`
     ist der Index des ersten Tages auf der globalen Achse. Ohne diese Achse
     bedeutet Index t bei jedem Symbol ein anderes Datum - und ein Verschub um
     d ist dann je Symbol ein anderer Verschub (Korrektur 2, siehe Kopf)."""
+    # ⚠️⚠️ DER ASSETKLASSEN-FILTER (07.09.2026) - und er repariert die
+    # NULLHYPOTHESE, nicht nur die Symbolmenge.
+    #
+    # Am 28.08. war `messdaten.db` reines Krypto; die Abfrage brauchte
+    # keinen Filter. Seit N-19 (03.09.) traegt sie auch Aktien, ETF und
+    # Rohstoffe - und die reichen bis 1973 zurueck.
+    #
+    # ⚠️ DIE SYMBOLE FIELEN ZWAR HERAUS (Aktien haben Wochenendluecken,
+    # die Lueckenlosigkeitspruefung unten wirft sie weg - 501 von 1.315).
+    # ABER DIE KALENDERACHSE BLIEB: 14.728 Tage statt ~3.292.
+    #
+    # Und ueber diese Achse laeuft der zirkulaere Verschub:
+    #
+    #     versatz = rng.integers(H, achse - H, ...)   -> bis 14.638
+    #     np.roll(m, int(d) % len(m))                 -> je Reihe ANDERS
+    #
+    # Genau der Fehler, den der Kommentar in `messe()` beschreibt: "damit
+    # verschob sich jede Reihe um einen ANDEREN Betrag, die
+    # Gleichzeitigkeit des Marktes war in der Nullverteilung aufgehoben
+    # und diese ZU ENG". Eine zu enge Nullverteilung erzeugt falsch
+    # positive Befunde.
+    #
+    # ⚠️ Solange alle Reihen aehnlich lang sind und d < len(m), ist
+    # `d % len(m) == d` fuer alle - dann stimmt die Gleichzeitigkeit. Das
+    # war am 28.08. der Fall und ist es mit dem Filter wieder.
     c = sqlite3.connect(db)
+    _spalte = any(r[1] == "assetklasse" for r in
+                  c.execute("PRAGMA table_info(price_history_ohlc)"))
+    if assetklasse and not _spalte:
+        raise SystemExit(
+            "%s hat keine Spalte `assetklasse`. Ohne sie liefe die "
+            "Kalenderachse ueber ALLE Klassen und die Nullverteilung "
+            "waere zu eng. Kein Befund ist besser als ein falscher." % db)
+    _wo = "AND assetklasse = ? " if (assetklasse and _spalte) else ""
     kurse = defaultdict(list)
     daten = defaultdict(list)
     for sym, tag, kurs in c.execute(
             "SELECT symbol, date, close FROM price_history_ohlc "
-            "WHERE close IS NOT NULL AND close > 0 ORDER BY symbol, date"):
+            "WHERE close IS NOT NULL AND close > 0 " + _wo +
+            "AND currency = 'USD' ORDER BY symbol, date",
+            (assetklasse,) if _wo else ()):
         kurse[sym].append(float(kurs))
         daten[sym].append(str(tag)[:10])
     c.close()

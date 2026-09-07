@@ -14,6 +14,18 @@
 
 - Quelle: Methodik 2.145
 
+**2.154** — Das AKKUMULATIONSMASS haelt auf der neuen Basis: UNTER_SMA +0,0288 (28.08.: +0,0283), TIEFPUNKT +0,4242 BITGLEICH, WOCHENTAG -0,0008. Kennlinie weiter monoton ueber neun Baender. BTC -0,0251 / ETH -0,0308 / SOL -0,0291 bis auf die dritte Stelle reproduziert
+
+- Quelle: Methodik 2.154 / messe_akkumulationsmass.py
+
+**2.154-achse** — ⚠️ Das Werkzeug war heute unsicher: es fragte OHNE Filter ab. Die Symbole fielen durch die Lueckenlosigkeitspruefung heraus (Aktien haben Wochenendluecken), aber die KALENDERACHSE blieb bei 14.728 statt 3.309 Tagen - und ueber die laeuft der zirkulaere Verschub. Eine zu enge Nullverteilung erzeugt falsch positive Befunde. Gefixt
+
+- Quelle: Methodik 2.154
+
+**2.153** — Der 31.08.-Befund zu `schnitt` ist ABGELOEST: reproduziert mit demselben Werkzeug drehen alle Vorzeichen (H5 -0,0069 -> +0,0092). Ursache: die Messung lief auf 1.314 Symbolen inkl. 798 Nicht-Krypto; der N-19-Fix kam erst am 03.09.
+
+- Quelle: Methodik 2.153
+
 **2.152** — Der Zustand der Kette je Strategie: bei `einstieg` ENTSCHEIDET Stufe 12 (funding+turnover), bei `akkumulation` WINKT SIE DURCH (vermessen=False, Notiz statt Sperre - eine Sperre ohne Beitraege waere eine Sperre nach Datenlage, Regel 4)
 
 - Quelle: Methodik 2.152

@@ -2,7 +2,7 @@
 
 *Erzeugt aus `bestand.py`. **Nicht von Hand aendern.***
 
-⚠️ **Wofuer:** die Methodik hat **119** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
+⚠️ **Wofuer:** die Methodik hat **120** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
 
 Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`.
 
@@ -153,7 +153,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 8994 |
 | **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9287 |
 
-## Auswahl, Menge und Universum (47)
+## Auswahl, Menge und Universum (48)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -204,6 +204,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9729 |
 | **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9830 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9951 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10036 |
 
 ## Kombination, Schichtung, Redundanz (19)
 
@@ -257,7 +258,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9632 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9951 |
 
-## Marktbefunde (42)
+## Marktbefunde (43)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -303,8 +304,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9344 |
 | **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9632 |
 | **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9830 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10036 |
 
-## Pruefdisziplin und Urteilslogik (18)
+## Pruefdisziplin und Urteilslogik (19)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -326,6 +328,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.149** | ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026) | 9540 |
 | **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9729 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9951 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10036 |
 
 ## Ohne Thema zugeordnet (11)
 

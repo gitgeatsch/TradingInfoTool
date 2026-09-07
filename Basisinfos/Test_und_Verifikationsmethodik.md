@@ -10029,3 +10029,93 @@ danach auf Nachfrage.
 > **Hätte er gehalten, stünde jetzt ein falscher Kandidat im Register.**
 
 Werkzeug: `messe_kandidaten_als_regel.py --horizonte`
+
+
+---
+
+## 2.154 ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026)
+
+### ⚠️ Zuerst: das Werkzeug war heute unsicher geworden
+
+`messe_akkumulationsmass.lade_reihen()` fragte **ohne jeden Filter** ab:
+
+    SELECT symbol, date, close FROM price_history_ohlc
+    WHERE close IS NOT NULL AND close > 0
+
+Am 28.08. war das richtig — `messdaten.db` war reines Krypto. **Seit N-19
+(03.09.) trägt sie auch Aktien, ETF und Rohstoffe.**
+
+✔ Die Symbole fielen zwar heraus: die **Lückenlosigkeitsprüfung** wirft
+Aktien weg (Wochenenden!), 501 von 1.315 blieben. ⚠️ **Aber wieder Schutz
+durch Zufall, nicht durch Design** — und der eigentliche Schaden saß
+woanders:
+
+> **Die Kalenderachse blieb bei 14.728 Tagen** statt ~3.300 — weil Aktien
+> bis 1973 zurückreichen. **Und über diese Achse läuft der zirkuläre
+> Verschub, also die Nullhypothese.**
+
+```
+versatz = rng.integers(H, achse - H, ...)   ->  bis 14.638
+np.roll(m, int(d) % len(m))                 ->  je Reihe ANDERS
+```
+
+Genau der Fehler, den `messe()` im eigenen Kommentar beschreibt: *„damit
+verschob sich jede Reihe um einen ANDEREN Betrag, die Gleichzeitigkeit des
+Marktes war in der Nullverteilung aufgehoben und **diese zu eng**."* Eine
+zu enge Nullverteilung erzeugt **falsch positive** Befunde.
+
+**Filter eingebaut** (`assetklasse='krypto'` + `currency='USD'`) →
+**Achse 3.309 statt 14.728 Tage**, 508 Reihen.
+
+⚠️ Ein Restpunkt bleibt und ist **nicht** durch N-19 entstanden: die Reihen
+sind 401 bis 3.292 Tage lang, für kurze ist `d % len(m)` weiterhin
+verschieden. Das war am 28.08. genauso. Die Negativkontrolle (WOCHENTAG,
+p = 0,970) zeigt, dass die Nullverteilung trotzdem trägt.
+
+### ✔✔ Das Ergebnis — reproduziert, teils bitgleich
+
+| Zustand | 28.08. | **07.09.** | |
+|---|---|---|---|
+| **UNTER_SMA** | +0,0283 · p 0,000 · +1,62 % | **+0,0288 · p 0,000 · +1,64 %** | ✔ trägt |
+| RUECKGANG | +0,0045 · p 0,060 | +0,0045 · p 0,062 | knapp |
+| DCA *(Rechenkontrolle)* | ±0,0000 | +0,0000 | ✔ Pflicht |
+| TIEFPUNKT *(Positiv)* | +0,4242 · +52,62 % | **+0,4242 · +52,62 %** | ✔ **bitgleich** |
+| WOCHENTAG *(Negativ)* | −0,0008 · p 0,978 | −0,0008 · p 0,970 | ✔ liegt auf null |
+
+**Die Kennlinie bleibt monoton über alle neun Bänder, in beiden
+Kalenderhälften:**
+
+| Band | 28.08. | **heute** |
+|---|---|---|
+| unter −40 % | +0,0960 (+6,06 %) | **+0,0966 (+6,08 %)** |
+| über +30 % | −0,1508 (−11,79 %) | **−0,1515 (−11,80 %)** |
+
+**Und die mitlaufenden Gegenprüfungen:** gestiegene Reihen +0,0292
+(p 0,010) · gefallene +0,0288 (p 0,000) · 1. Hälfte +0,0743 · 2. Hälfte
++0,0241 · **Saat-Wiederholung +0,0288 mit anderer Saat.**
+
+### ⚠️⚠️ Die Einschränkung hält ebenfalls — bis auf die dritte Stelle
+
+| | 28.08. | **heute (471 Symbole)** |
+|---|---|---|
+| Mittel | — | +0,0288 (Streuung 0,0420) |
+| **BTC** | −0,0251 (p 0,723) | **−0,0251** (p 0,738) |
+| **ETH** | −0,0308 (p 0,810) | **−0,0308** (p 0,782) |
+| **SOL** | −0,0291 (p 0,855) | **−0,0291** (p 0,853) |
+| negativer Vorsprung | 14,3 % | **14,9 %** |
+
+> **`asset_dca_settings` enthält BTC und ETH.** Die Akkumulation läuft
+> weiterhin auf den beiden Werten, für die das gemessene Maß **keine**
+> Begründung liefert. Das ist eine **Entscheidung**, keine Messfrage.
+
+### Was jetzt gesichert ist
+
+| | |
+|---|---|
+| Das Maß trägt über 507 Reihen | ✔ mit allen vier Kontrollen |
+| Die stetige Form ist monoton | ✔ neun Bänder, beide Hälften |
+| Es trägt nicht für BTC/ETH/SOL | ⚠️ unverändert, kein Rauschen |
+| Es ist derselbe Wert wie `schnitt` | ✔ jetzt im Register verknüpft |
+| Der Effekt schrumpft | ⚠️ 1. Hälfte +0,0743 → 2. Hälfte +0,0241 |
+
+Werkzeug: `messe_akkumulationsmass.py --horizont 90 [--kennlinie|--zerlege]`
