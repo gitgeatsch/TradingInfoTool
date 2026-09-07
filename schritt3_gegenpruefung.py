@@ -137,12 +137,12 @@ def main() -> int:
                 R.SAAT = saat
                 try:
                     if mk is None:
-                        f = N.pruefe(art, je_tag, lage=L,
+                        f = N.pruefe(art, je_tag, lage=L, frageart="markt",
                                      zielgroesse="bewegung_r", menge="frei",
                                      rng=rng, horizont=HORIZONT,
                                      staerken=STAERKEN)
                     else:
-                        f = R.pruefe_rand(art, je_tag, lage=L, menge="frei",
+                        f = R.pruefe_rand(art, je_tag, lage=L, frageart="markt", menge="frei",
                                           rng=rng, marke=mk,
                                           horizont=HORIZONT,
                                           staerken=STAERKEN)

@@ -53,7 +53,8 @@ import sys
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import messe_bewertungskennzahl as M                        # noqa: E402
 # ⚠️ ALLES IMPORTIERT, NICHTS NACHGEBAUT.
@@ -187,6 +188,12 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     anker = sum(len(y) for _o, y in g.values())
     syms = len({x["sym"] for z in je_tag.values() for x in z})
     return Befund(
+        # ⚠️ DIE FRAGEART FAELLT AUS DER MENGE (07.09.2026, Methodik 2.143).
+        # `menge="frei"` ist hier die VERGLEICHSBASIS und beantwortet die
+        # MARKT-Frage (P6: breiter als das Portfolio). Die selektierten
+        # Mengen beantworten die BETRIEBS-Frage (F-212). Beides in einem
+        # Lauf - genau dafuer gibt es dieses Modul.
+        frageart=("markt" if menge == "frei" else "beitrag"),
         kandidat=kandidat, lage=lage, zielgroesse="bewegung_r", menge=menge,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],

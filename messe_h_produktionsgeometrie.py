@@ -129,7 +129,8 @@ import time
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, ".")
 
 from agent.entscheidungsrechnung import _stop_abstand            # noqa: E402

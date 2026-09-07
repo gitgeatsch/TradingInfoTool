@@ -45,7 +45,8 @@ import sys
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 CACHE = "anker_h_2026_08_30.json"
 MIND_JE_GRUPPE = 30      # H-Tage und Nicht-H-Tage je Symbol

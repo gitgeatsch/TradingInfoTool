@@ -110,11 +110,11 @@ def main() -> int:
                 rng = np.random.default_rng(N.SAAT)
                 try:
                     if mass == "mittel":
-                        f = N.pruefe(art, teil, lage=L,
+                        f = N.pruefe(art, teil, lage=L, frageart="markt",
                                      zielgroesse="bewegung_r", menge="frei",
                                      rng=rng, horizont=5, staerken=STAERKEN)
                     else:
-                        f = R.pruefe_rand(art, teil, lage=L, menge="frei",
+                        f = R.pruefe_rand(art, teil, lage=L, frageart="markt", menge="frei",
                                           rng=rng, marke=2.0, horizont=5,
                                           staerken=STAERKEN)
                 except Exception as e:                       # noqa: BLE001

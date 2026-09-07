@@ -16889,6 +16889,71 @@ def paket_hartes_budget() -> None:
            "werden, egal wie der Schalter steht")
 
 
+def paket_messmenge() -> None:
+    """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
+
+    ⚠️ DIE FEHLERQUELLE, DIE DIESES PROJEKT AM OEFTESTEN ERWISCHT HAT -
+    dreimal in sechs Tagen:
+
+        F-167 (02.09.)  32 Watchlist-Werte, wo eine Messbasis noetig war
+        2.134 (06.09.)  k=2 aus 516 statt aus 40 Symbolen
+        2.143 (07.09.)  sechs von sieben Messungen auf der freien Menge;
+                        eine Live-Aenderung musste zurueckgenommen werden
+
+    Seit dem 07.09. bindet `messnorm.FRAGEARTEN` die Frage an die Menge.
+    Diese Pruefung stellt sicher, dass die Bindung nicht still zurueckfaellt.
+    """
+    P = "Messmenge"
+    import messnorm as _MN
+    _L = _MN.Lage(instrument="spot", strategie="einstieg")
+    _pr = _MN.Protokoll(
+        wirkung_funktion="pruefung", band_funktion="pruefung",
+        null_konstruktion="mischung", null_ziehungen=10,
+        positiv_konstruktion="in die gemischte Welt gepflanzt",
+        positiv_ziehungen=10, positiv_treffer=1, blocklaenge=60, saat=1)
+    _gem = dict(kandidat="pruefung", lage=_L, zielgroesse="bewegung_r",
+                wirkung=0.01, unten=0.005, oben=0.02, nullpunkt=0.0,
+                null_unten=-0.005, null_oben=0.005, trennschaerfe=0.02,
+                gepflanzt=(0.02,), protokoll=_pr,
+                n_anker=1000, n_tage=500, n_bloecke=25)
+
+    def _geht(menge, frageart):
+        try:
+            _MN.Befund(menge=menge, frageart=frageart, **_gem)
+            return True
+        except ValueError:
+            return False
+
+    pruefe(P, "⚠️ kein Befund OHNE Frageart",
+           not _geht("messuniversum", ""),
+           "ohne sie ist die Mengenwahl eine Gedaechtnisleistung - und die "
+           "ist dreimal misslungen (F-167, 2.134, 2.143)")
+    pruefe(P, "⚠️⚠️ kein BEITRAGSURTEIL auf der FREIEN Menge",
+           not _geht("frei", "beitrag") and not _geht("messuniversum", "beitrag"),
+           "F-212: die Beitraege wirken dort auf 1,5 %% der Anker, selbst "
+           "`funding` liegt bei -0,0003 R. Ein Nullbefund ist "
+           "vorprogrammiert - genau so fiel die turnover-Tabelle am 07.09. "
+           "zu Unrecht")
+    pruefe(P, "aber die MARKT-Frage darf auf die breite Basis",
+           _geht("messuniversum", "markt"),
+           "P6/F-167: die Messbasis muss BREITER sein als das Portfolio - "
+           "sonst misst man seine eigene Auswahl. Beide Prinzipien gelten, "
+           "sie beantworten verschiedene FRAGEN")
+    pruefe(P, "und das Beitragsurteil auf der SELEKTIERTEN",
+           _geht("5%%".replace("%%", "%"), "beitrag"),
+           "`messnorm_auswahl.pruefe_auswahl(menge='5%')` - das Modul gibt "
+           "es seit dem 06.09.")
+    pruefe(P, "eine unbekannte Frageart wird abgelehnt",
+           not _geht("messuniversum", "erfunden"),
+           "sonst waere das Feld Dekoration")
+    _q = io.open("messnorm_auswahl.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ `messnorm_auswahl` leitet die Frageart aus der MENGE ab",
+           'frageart=("markt" if menge == "frei" else "beitrag")' in _q,
+           "dort ist `frei` die VERGLEICHSBASIS (Marktfrage) und die "
+           "selektierten Mengen sind das Betriebsurteil - beides in einem "
+           "Lauf. Wer das von Hand setzt, kann es verwechseln")
+
+
 def paket_register() -> None:
     """Laeuft das REGISTER mit dem laufenden System mit? (06.09.2026)
 
@@ -16943,6 +17008,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Messmenge": paket_messmenge,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,
           "Trennung": paket_trennung,

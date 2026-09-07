@@ -77,7 +77,8 @@ from binascii import crc32
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import messe_eigenschaft_beitrag as B                       # noqa: E402
 import messe_funding_niveau as F                            # noqa: E402

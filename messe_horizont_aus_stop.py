@@ -58,7 +58,8 @@ import statistics as st
 import sys
 from datetime import date
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 MISCHUNGEN = 10
 BOOTSTRAP = 2000

@@ -60,7 +60,8 @@ import sys
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 MISCHUNGEN = 10          # 2.104: eine einzelne Ziehung ist kein Nullpunkt
 BOOTSTRAP = 2000

@@ -102,14 +102,14 @@ def main() -> int:
         ergebnis, tage, blk = {}, 0, 0
         for lab, fn in (
                 ("mittel", lambda: N.pruefe(
-                    art, gebaut, lage=L, zielgroesse="bewegung_r",
+                    art, gebaut, lage=L, frageart="markt", zielgroesse="bewegung_r",
                     menge="frei", rng=rng, horizont=HORIZONT,
                     staerken=STAERKEN)),
                 ("rand2", lambda: R.pruefe_rand(
-                    art, gebaut, lage=L, menge="frei", rng=rng, marke=2.0,
+                    art, gebaut, lage=L, frageart="markt", menge="frei", rng=rng, marke=2.0,
                     horizont=HORIZONT, staerken=STAERKEN)),
                 ("rand3", lambda: R.pruefe_rand(
-                    art, gebaut, lage=L, menge="frei", rng=rng, marke=3.0,
+                    art, gebaut, lage=L, frageart="markt", menge="frei", rng=rng, marke=3.0,
                     horizont=HORIZONT, staerken=STAERKEN))):
             try:
                 f = fn()

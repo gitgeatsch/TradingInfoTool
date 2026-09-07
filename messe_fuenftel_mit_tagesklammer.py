@@ -86,7 +86,8 @@ from collections import defaultdict
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import argparse                                             # noqa: E402
 import messe_bewertungskennzahl as MB                       # noqa: E402

@@ -185,12 +185,12 @@ def main() -> int:
             rng = np.random.default_rng(N.SAAT)
             try:
                 if marke is None:
-                    f = N.pruefe(art, welten[art], lage=L,
+                    f = N.pruefe(art, welten[art], lage=L, frageart="markt",
                                  zielgroesse="bewegung_r", menge="frei",
                                  rng=rng, horizont=H,
                                  staerken=(0.02, 0.05, 0.10, 0.20))
                 else:
-                    f = R.pruefe_rand(art, welten[art], lage=L, menge="frei",
+                    f = R.pruefe_rand(art, welten[art], lage=L, frageart="markt", menge="frei",
                                       rng=rng, marke=marke, horizont=H,
                                       staerken=(0.02, 0.05, 0.10, 0.20))
             except Exception as e:                           # noqa: BLE001

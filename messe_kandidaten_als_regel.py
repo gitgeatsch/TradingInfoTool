@@ -106,7 +106,8 @@ from zlib import crc32 as _crc32
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import messe_bewertungskennzahl as M
 import messe_bewertungskennzahl as MB

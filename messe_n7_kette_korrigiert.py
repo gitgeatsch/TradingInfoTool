@@ -29,7 +29,8 @@ import numpy as np
 
 import messe_n7_kette as M
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 VON, BIS = "2026-08-14", "2026-08-26"
 

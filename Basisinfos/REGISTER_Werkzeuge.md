@@ -6,9 +6,9 @@
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 18 | 6 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 19 | 6 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 82 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **BLOCK** | 81 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
 | **ALTBESTAND** | 172 | 58 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
 > ⚠️ **172 von 299 Werkzeugen (58 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
@@ -21,13 +21,13 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (18)
+## NORM (19)
 
     messnorm_auswahl.py, messnorm_rand.py, pruefe_audit_06_07_09.py, pruefe_datengrundlage.py
     pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py
     pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py, pruefe_nullschwelle.py
-    pruefe_o4_stufenband.py, pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py
-    schritt4a_gegenpruefung.py, schritt4a_matched.py
+    pruefe_o4_stufenband.py, pruefe_pakete.py, pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py
+    schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 
@@ -39,7 +39,7 @@
     pruefe_momentum_trennschaerfe.py, pruefe_n31_tagesklammer.py, pruefe_regel_trennschaerfe.py, pruefe_schwelle_gegenpruefung.py
     pruefe_turnover_befund.py, pruefe_turnover_und_kombination.py, rechne_sperren_zusammen.py
 
-## BLOCK (82)
+## BLOCK (81)
 
     messe_abstand_zum_zufall.py, messe_akkumulation_az4.py, messe_akkumulationsmass.py, messe_alle_groessen_neu.py
     messe_allocator_gegen_zufall.py, messe_alltagsmarkt.py, messe_asset_anteil_und_relativform.py, messe_ausstieg.py
@@ -57,11 +57,11 @@
     pruefe_beitragszahl_sickert.py, pruefe_filter_am_befund.py, pruefe_filter_trennschaerfe.py, pruefe_funding_je_reihe.py
     pruefe_gefallen_randpotential.py, pruefe_h_tageseffekt.py, pruefe_horizont_dimensionierung.py, pruefe_kandidaten_abdeckung_stabilitaet.py
     pruefe_kandidaten_untereinander.py, pruefe_konsistenz_06_09.py, pruefe_n8_gegenpruefung.py, pruefe_ohne_widerstand.py
-    pruefe_pakete.py, pruefe_persistenz_und_nullpunkt.py, pruefe_rangzugehoerigkeit.py, pruefe_regel_je_marktphase.py
-    pruefe_steigung_invarianz.py, pruefe_strukturstop.py, pruefe_stufen_gegen_quote.py, pruefe_stufen_stabilitaet.py
-    pruefe_trailing_je_instrument.py, pruefe_turnover_weglassen.py, pruefe_veraenderungsformen_unabhaengig.py, pruefe_vola_unabhaengig.py
-    pruefe_vola_zeitpunkt_oder_asset.py, pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py
-    rechne_nullpunkte_feiner.py, simuliere_staffelung.py
+    pruefe_persistenz_und_nullpunkt.py, pruefe_rangzugehoerigkeit.py, pruefe_regel_je_marktphase.py, pruefe_steigung_invarianz.py
+    pruefe_strukturstop.py, pruefe_stufen_gegen_quote.py, pruefe_stufen_stabilitaet.py, pruefe_trailing_je_instrument.py
+    pruefe_turnover_weglassen.py, pruefe_veraenderungsformen_unabhaengig.py, pruefe_vola_unabhaengig.py, pruefe_vola_zeitpunkt_oder_asset.py
+    pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
+    simuliere_staffelung.py
 
 ## ALTBESTAND (172)
 

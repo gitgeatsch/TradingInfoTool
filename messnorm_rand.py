@@ -250,6 +250,10 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
     n_anker = sum(len(z) for z in je_tag.values())
     syms = len({x["sym"] for z in je_tag.values() for x in z})
     return Befund(
+        # ⚠️ Das Randmass beantwortet eine MARKT-Frage - dort
+        # ist die breite Basis richtig (P6). Fuer die Wirkung
+        # IM BETRIEB ist `messnorm_auswahl` zustaendig.
+        frageart="markt",
         kandidat=kandidat, lage=lage, zielgroesse=_zielgroesse(marke),
         menge=menge, wirkung=haupt["mittel"], unten=haupt["unten"],
         oben=haupt["oben"], nullpunkt=null["mittel"],
@@ -392,6 +396,10 @@ def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
             ts = float(np.mean(werte)) if werte else None
 
     return Befund(
+        # ⚠️ Das Randmass beantwortet eine MARKT-Frage - dort
+        # ist die breite Basis richtig (P6). Fuer die Wirkung
+        # IM BETRIEB ist `messnorm_auswahl` zustaendig.
+        frageart="markt",
         kandidat=kandidat, lage=lage,
         zielgroesse="bewegung_r" if marke is None else _zielgroesse(marke),
         menge=menge, wirkung=haupt["mittel"], unten=haupt["unten"],
@@ -458,7 +466,7 @@ def selbsttest() -> bool:
     print()
     print("1. LEERE WELT - kein Effekt. BEIDE Massstaebe muessen schweigen.")
     leer = N._welt(np.random.default_rng(1), tage=2400, syms=60, effekt=0.0)
-    a = N.pruefe("leer/mittel", leer, lage=L, zielgroesse="bewegung_r",
+    a = N.pruefe("leer/mittel", leer, lage=L, frageart="markt", zielgroesse="bewegung_r", 
                  menge="frei", rng=rng, horizont=5)
     b = pruefe_rand("leer/rand", leer, lage=L, menge="frei", rng=rng,
                     marke=2.0, horizont=5)
@@ -476,7 +484,7 @@ def selbsttest() -> bool:
     print("      ueber +2 R nur um rund 0,10 Prozentpunkte. Der Rand MUSS")
     print("      hier schwaecher sein - das ist gemessen, kein Fehler.")
     stark = N._welt(np.random.default_rng(2), tage=2400, syms=60, effekt=0.10)
-    a = N.pruefe("stark/mittel", stark, lage=L, zielgroesse="bewegung_r",
+    a = N.pruefe("stark/mittel", stark, lage=L, frageart="markt", zielgroesse="bewegung_r", 
                  menge="frei", rng=rng, horizont=5)
     b = pruefe_rand("stark/rand", stark, lage=L, menge="frei", rng=rng,
                     marke=2.0, horizont=5)
@@ -489,7 +497,7 @@ def selbsttest() -> bool:
     print("3. DER GRENZFALL - Unterschied NUR im Rand, Median identisch.")
     print("   Erwartung: der Mittelwert findet NICHTS, der Rand FINDET es.")
     nur = _welt_nur_rand(np.random.default_rng(3), tage=2400, syms=60)
-    a = N.pruefe("nurrand/mittel", nur, lage=L, zielgroesse="bewegung_r",
+    a = N.pruefe("nurrand/mittel", nur, lage=L, frageart="markt", zielgroesse="bewegung_r", 
                  menge="frei", rng=rng, horizont=5)
     b = pruefe_rand("nurrand/rand", nur, lage=L, menge="frei", rng=rng,
                     marke=2.0, horizont=5)
@@ -505,7 +513,7 @@ def selbsttest() -> bool:
     print("4. DIE TRENNSCHAERFE NEBENEINANDER - dieselbe Pflanzung in R")
     leer2 = N._welt(np.random.default_rng(7), tage=2400, syms=60, effekt=0.0)
     st = (0.02, 0.05, 0.10, 0.20, 0.40)
-    am = N.pruefe("ts/mittel", leer2, lage=L, zielgroesse="bewegung_r",
+    am = N.pruefe("ts/mittel", leer2, lage=L, frageart="markt", zielgroesse="bewegung_r", 
                   menge="frei", rng=rng, horizont=5, staerken=st)
     print("   Mittel       kleinste gefundene Pflanzung: %s"
           % (("%.2f R" % am.trennschaerfe_in_r)

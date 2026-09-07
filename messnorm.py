@@ -63,7 +63,11 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+# ⚠️ ABGESICHERT (07.09.2026): `pruefe_pakete` ersetzt stdout durch einen
+# Mitschnitt ohne `reconfigure`. Ein Modul, das die Suite beim IMPORT
+# sprengt, ist dort nicht pruefbar - und genau dieses hier muss es sein.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import messe_bewertungskennzahl as M                        # noqa: E402
 import messe_regel_wirksamkeit as W                         # noqa: E402
@@ -73,6 +77,70 @@ import messe_regel_wirksamkeit as W                         # noqa: E402
 # ⚠️ GESCHLOSSENE LISTE. Wer eine neue Zielgroesse braucht, traegt sie hier
 # ein - und muss dabei sagen, fuer welche Lagen sie gilt. Ein freier String
 # waere genau die Beliebigkeit, gegen die dieses Modul gebaut ist.
+# ⚠️⚠️⚠️ DIE MENGE — die Fehlerquelle, die dieses Projekt am oeftesten
+# erwischt hat (07.09.2026, nach dem Audit 2.143).
+#
+# ZWEI PRINZIPIEN, BEIDE DOKUMENTIERT, BEIDE RICHTIG — und wer sie
+# verwechselt, bekommt zuverlaessig das falsche Ergebnis:
+#
+#   P6 / F-167   "Die Messbasis ist BREITER als das Portfolio und muss es
+#                sein - sonst misst man seine eigene Auswahl."
+#   F-212        Beitragsurteile gehoeren auf die SELEKTIERTE Menge. Auf
+#                der freien wirken die Beitraege auf 1,5 % der Anker;
+#                dort liegt selbst `funding` bei -0,0003 R.
+#
+# **Es ist kein Widerspruch, sondern zwei verschiedene FRAGEN.** Deshalb
+# ist `frageart` seit dem 07.09. Pflicht: sie bindet die Frage an die
+# Menge, statt die Wahl dem Gedaechtnis zu ueberlassen.
+#
+# ⚠️ DIE FEHLERHISTORIE, damit sie nicht ein viertes Mal passiert:
+#
+#   F-167 (02.09.)  32 Watchlist-Werte importiert, wo eine Messbasis
+#                   noetig war -> nur 12 Bloecke, Band deckt nicht
+#   2.134 (06.09.)  `k = 2` aus 516 statt aus 40 Symbolen gewaehlt ->
+#                   die Auswahl schien schaedlich, war sie nicht
+#   2.143 (07.09.)  sechs von sieben Messungen auf der freien Menge ->
+#                   Nullbefunde, die nichts bedeuten; eine Live-Aenderung
+#                   musste zurueckgenommen werden
+#
+# DIE TATSAECHLICHEN GROESSEN, am 07.09. gezaehlt:
+#
+#   Messuniversum          516 Symbole   (`messe_eigenschaft_beitrag.lade`)
+#   Watchlist               57 Eintraege - davon nur 29 im Messuniversum
+#   selektiert (5 %)      ~2-3 je Tag    (oberste 5 % nach 250-Tage-Momentum)
+#   Abdeckung funding      288 (56 %) · turnover 65 (13 %) · oi 115 (22 %)
+FRAGEARTEN = {
+    "markt": {
+        "text": "Traegt diese Groesse im Markt?",
+        "menge": "messuniversum",
+        "begruendung": ("P6: die Messbasis muss BREITER sein als das "
+                        "Portfolio - sonst misst man seine eigene Auswahl"),
+    },
+    "beitrag": {
+        "text": "Was bewirkt dieser Beitrag im BETRIEB?",
+        "menge": "selektiert",
+        "begruendung": ("F-212: die Beitraege wirken erst an Trichterstufe "
+                        "12, auf einer Menge, die elf Stufen vorher schon "
+                        "gefiltert haben. Auf der freien Menge misst man "
+                        "98,5 % Anker, an denen sie nie zum Zug kommen - "
+                        "ein Nullbefund ist dort vorprogrammiert"),
+    },
+    "geometrie": {
+        "text": "Wie soll die Geometrie stehen (Stop, Ziel, Horizont)?",
+        "menge": "messuniversum",
+        "begruendung": ("die Geometrie gilt fuer jeden Anker, nicht nur "
+                        "fuer die ausgewaehlten - hier ist die breite "
+                        "Basis richtig"),
+    },
+    "zaehlung": {
+        "text": "Wieviele/wie oft? (deskriptiv, kein Urteil)",
+        "menge": "beliebig, aber benannt",
+        "begruendung": "eine Zaehlung urteilt nicht - sie muss nur sagen, "
+                       "WORUEBER sie zaehlt",
+    },
+}
+
+
 ZIELGROESSEN = {
     "bewegung_r": {
         "text": "Rendite in R nach H Tagen, BARRIERENFREI",
@@ -245,6 +313,11 @@ class Befund:
     # `trennschaerfe_in_r`.
     trennschaerfe_in_r: float | None = None
     gepflanzt: tuple = ()
+    # ⚠️ SEIT 07.09. PFLICHT (technisch mit Vorgabe, inhaltlich erzwungen
+    # in `__post_init__`). Sie bindet die FRAGE an die MENGE - ohne sie war
+    # die Wahl eine Gedaechtnisleistung, und die ist dreimal misslungen
+    # (F-167, 2.134, 2.143).
+    frageart: str = ""
     # Pflichtangaben
     n_anker: int = 0
     n_tage: int = 0
@@ -256,6 +329,24 @@ class Befund:
     protokoll: Protokoll | None = None
 
     def __post_init__(self) -> None:
+        if not self.frageart:
+            raise ValueError(
+                "kein Befund ohne FRAGEART (seit 07.09.2026, Methodik "
+                "2.143). Erlaubt: %s. Sie bindet die Frage an die Menge - "
+                "ohne sie war die Wahl eine Gedaechtnisleistung, und die "
+                "ist dreimal misslungen (F-167, 2.134, 2.143)."
+                % ", ".join(FRAGEARTEN))
+        if self.frageart not in FRAGEARTEN:
+            raise ValueError("unbekannte Frageart: %r - erlaubt: %s"
+                             % (self.frageart, ", ".join(FRAGEARTEN)))
+        if self.frageart == "beitrag" and self.menge in ("frei", "messuniversum"):
+            raise ValueError(
+                "⚠️⚠️ BEITRAGSURTEIL AUF DER FREIEN MENGE. F-212: die "
+                "Beitraege wirken dort auf 1,5 %% der Anker, und selbst "
+                "`funding` liegt bei -0,0003 R. Ein Nullbefund ist "
+                "vorprogrammiert. Benutze `messnorm_auswahl.pruefe_auswahl()` "
+                "mit menge='5%%' - das Modul gibt es seit dem 06.09. "
+                "(Menge war %r)" % self.menge)
         if self.zielgroesse not in ZIELGROESSEN:
             raise ValueError("unbekannte Zielgroesse: %r" % self.zielgroesse)
         if self.zielgroesse == "barriere" and not self.lage.stop_beendet:
@@ -393,7 +484,7 @@ def pruefe_block(d: dict, block: int, grenze: float = 0.15) -> dict:
 
 
 def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
-           menge: str, rng, horizont: int = 20,
+           menge: str, rng, frageart: str = "", horizont: int = 20,
            staerken: tuple = (0.02, 0.05, 0.10), hypothesen: int = 1,
            oben_sperren: bool = True, still: bool = True) -> Befund:
     """DIE eine Messung. Alles andere ruft sie.
@@ -475,6 +566,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     n_anker = sum(len(z) for z in je_tag.values())
     syms = len({x["sym"] for z in je_tag.values() for x in z})
     return Befund(
+        frageart=frageart,
         kandidat=kandidat, lage=lage, zielgroesse=zielgroesse, menge=menge,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],
@@ -571,8 +663,9 @@ def selbsttest() -> bool:
         return Protokoll(**werte)
 
     def _befund(**aend):
-        werte = dict(kandidat="x", lage=L, zielgroesse="bewegung_r",
-                     menge="frei", wirkung=0.0, unten=0.0, oben=0.0,
+        werte = dict(kandidat="x", lage=L, frageart="markt",
+                     zielgroesse="bewegung_r", menge="frei",
+                     wirkung=0.0, unten=0.0, oben=0.0,
                      nullpunkt=0.0, null_unten=0.0, null_oben=0.0,
                      trennschaerfe=0.02, gepflanzt=(0.02,), protokoll=_prot())
         werte.update(aend)
@@ -584,7 +677,7 @@ def selbsttest() -> bool:
     for lage, erw in ((Lage("spot", "akkumulation"), False),
                       (Lage("hebel", "einstieg", simuliert=True), True)):
         try:
-            _befund(lage=lage, zielgroesse="barriere")
+            _befund(lage=lage, frageart="markt", zielgroesse="barriere")
             got = True
         except ValueError:
             got = False
@@ -630,7 +723,7 @@ def selbsttest() -> bool:
     faelle = (("klarer Effekt +0,10 R", 0.10),
               ("kein Effekt", 0.0))
     for name, eff in faelle:
-        b = pruefe("kunst", _welt(rng, effekt=eff), lage=L,
+        b = pruefe("kunst", _welt(rng, effekt=eff), lage=L, frageart="markt",
                    zielgroesse="bewegung_r", menge="frei", rng=rng)
         print("   %-24s %+7.4f R · Trennsch. %s · %s"
               % (name, b.wirkung,
@@ -653,7 +746,7 @@ def selbsttest() -> bool:
 
     # 5 — untermaechtig wird als KEIN BEFUND ausgewiesen
     print("\n5. Wenige Tage -> KEIN BEFUND statt 'traegt nicht'")
-    b = pruefe("kunst_kurz", _welt(rng, tage=200), lage=L,
+    b = pruefe("kunst_kurz", _welt(rng, tage=200), lage=L, frageart="markt",
                zielgroesse="bewegung_r", menge="frei", rng=rng)
     gut = b.urteil.startswith("KEIN BEFUND")
     ok &= gut

@@ -4140,6 +4140,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `messnorm_auswahl.py` | ⚠️⚠️ DIE NORM AUF DER SELEKTIERTEN MENGE - fuer JEDE Beitragsfrage. `pruefe_auswahl(menge='5%')` (2.144) |
 | `pruefe_audit_06_07_09.py` | ⛔ Audit der Messungen N-52..N-58 gegen die vier eigenen Regeln (2.143) |
 | `n58_turnover_stufen_neu.py` | ⚠️ N-58: `turnover`s Stufen neu herleiten - auf den AUFGELOESTEN, echte Geometrie, H20 (2.141) |
 | `erzeuge_stand_word.py` | Erzeugt `Basisinfos/Stand_06_09_2026.docx` - den Tagesstand als Word. ⚠️ Aenderungen ins Skript, nicht in die Datei |
@@ -9082,3 +9083,103 @@ führt `menge` als Pflichtfeld.
 3. Erst danach die fünf abgelehnten Beiträge.
 
 Werkzeug: `pruefe_audit_06_07_09.py`
+
+
+---
+
+## 2.144 ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026)
+
+### Der Auftrag kam vom Nutzer, und er hatte den Punkt schon erkannt
+
+> *„Was mir auffällt und bereits mehrfach eine Fehlerquelle war: prüfe die
+> Dokumentation und die Messungen, welche ‚Grundmenge' je Messung korrekt
+> ist — ich kann mich erinnern, da hatten wir bereits Korrekturen
+> (Marktmenge, vorhandene Menge vs. Watchlist oder sonstige Auswahl)."*
+
+**Er erinnerte sich richtig. Es waren drei Korrekturen in sechs Tagen.**
+
+| | Fall | Folge |
+|---|---|---|
+| **F-167** 02.09. | 32 Watchlist-Werte importiert, wo eine **Messbasis** nötig war | nur 12 Blöcke, das Band deckte nicht |
+| **2.134** 06.09. | `k = 2` aus **516** statt aus **40** Symbolen gewählt | die Auswahl schien schädlich — war sie nicht |
+| **2.143** 07.09. | sechs von sieben Messungen auf der **freien** Menge | Nullbefunde ohne Bedeutung; eine **Live-Änderung musste zurückgenommen werden** |
+
+### ⚠️⚠️ Zwei Prinzipien, beide dokumentiert, beide richtig
+
+> **P6 / F-167:** *„Die Messbasis ist **breiter** als das Portfolio und
+> muss es sein — sonst misst man seine eigene Auswahl."*
+>
+> **F-212:** *Beitragsurteile gehören auf die **selektierte** Menge. Auf
+> der freien wirken die Beiträge auf **1,5 % der Anker**; dort liegt selbst
+> `funding` bei −0,0003 R.*
+
+**Das ist kein Widerspruch, sondern zwei verschiedene FRAGEN** — und wer
+sie verwechselt, bekommt zuverlässig das falsche Ergebnis. Genau deshalb
+war die Wahl bisher eine Gedächtnisleistung, und genau deshalb ist sie
+dreimal misslungen.
+
+### Die tatsächlichen Mengen, am 07.09. gezählt
+
+| Menge | Größe | wofür |
+|---|---|---|
+| **Messuniversum** | **516** Symbole | Markt- und Geometriefragen |
+| **Watchlist** | **57** Einträge — ⚠️ nur **29 im Messuniversum** | Kettenfragen |
+| **selektiert (5 %)** | ~2–3 je Tag (oberste 5 % nach 250-Tage-Momentum) | **Beitragsfragen** |
+| Abdeckung je Größe | `funding` 288 (56 %) · `oi` 115 (22 %) · **`turnover` 65 (13 %)** | — |
+
+⚠️ **Ein eigener Befund nebenbei: nur 29 von 57 Watchlist-Symbolen sind
+überhaupt im Messuniversum.** Fast die Hälfte der gehandelten Werte ist
+nicht messbar.
+
+### Was gebaut wurde — die Bindung, nicht ein weiteres Werkzeug
+
+⚠️ **`messnorm_auswahl.py` gab es schon seit dem 06.09.** — mit
+`pruefe_auswahl(menge='5%')`, der Tagesklammer und der bitgenauen
+F-212-Reproduktion. **Ich habe es nicht benutzt und mir eine eigene
+Messung gebaut.** Das ist die eigentliche Lehre, und deshalb ist die
+Antwort nicht „noch ein Modul", sondern **Durchsetzung**:
+
+`messnorm.FRAGEARTEN` bindet die Frage an die Menge:
+
+| Frageart | Menge | Begründung |
+|---|---|---|
+| `markt` | Messuniversum | P6 — breiter als das Portfolio |
+| `beitrag` | **selektiert** | F-212 — sonst 1,5 % der Anker |
+| `geometrie` | Messuniversum | gilt für jeden Anker |
+| `zaehlung` | benannt | eine Zählung urteilt nicht |
+
+**`Befund` lehnt jetzt ab:**
+- einen Befund **ohne** Frageart
+- ein **Beitragsurteil auf der freien Menge** — mit Verweis auf `messnorm_auswahl`
+- eine unbekannte Frageart
+
+**Und `messnorm_auswahl` leitet die Frageart aus der Menge ab** —
+`menge="frei"` ist dort die *Vergleichsbasis* (Marktfrage), die
+selektierten sind das Betriebsurteil. Wer es von Hand setzt, kann es
+verwechseln.
+
+### Die Gegenprüfungen
+
+- ✔ **sechs Fälle** einzeln geprüft: ohne Frageart · Beitrag auf `frei` ·
+  Beitrag auf `messuniversum` · Markt auf `messuniversum` · Beitrag auf
+  `5%` · unbekannte Frageart — **alle wie erwartet**
+- ✔ **Suite-Paket „Messmenge"** mit sechs Prüfungen, damit die Bindung
+  nicht still zurückfällt → **1.982 Prüfungen, alle bestanden**
+- ✔ **Alle drei Selbsttests** (`messnorm`, `messnorm_rand`,
+  `messnorm_auswahl`) bestanden nach dem Umbau
+
+### ⚠️ Zwei Nebenfunde aus dem Umbau
+
+**1 — `ast.parse` fängt doppelte Schlüsselwortargumente NICHT.** Meine
+Syntaxprüfung meldete „0 Fehler", während Python beim Import
+`SyntaxError: keyword argument repeated` warf. **Für Syntaxprüfungen gilt
+ab jetzt `compile()`, nicht `ast.parse()`.**
+
+**2 — `pruefe_pakete` ersetzt `stdout` durch einen Mitschnitt ohne
+`reconfigure`.** Ein Modul, das die Suite beim Import sprengt, ist dort
+nicht prüfbar — und `messnorm` muss es sein. Der Aufruf ist jetzt
+abgesichert (nur dort, wo er auf Modulebene steht; 36 Dateien mit
+eingerücktem Aufruf wurden zurückgenommen).
+
+Werkzeug: `messnorm.FRAGEARTEN` · `messnorm_auswahl.pruefe_auswahl` ·
+`pruefe_pakete.py` → Paket **Messmenge**

@@ -19,7 +19,8 @@ Ein Wert von 1,00 heisst: kein Vorteil, nur Rauschen.
 from __future__ import annotations
 import sys
 import numpy as np
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠️ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 import messe_eigenschaft_beitrag as B                       # noqa: E402
 
 BRUCH, RB = 5.0, 252

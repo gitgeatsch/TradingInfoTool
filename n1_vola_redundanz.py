@@ -113,11 +113,11 @@ def main() -> int:
                              ("turnover", None, "turnover Mittel    ")):
         rng = np.random.default_rng(N.SAAT)
         if marke is None:
-            f = N.pruefe(name, w[name], lage=L, zielgroesse="bewegung_r",
+            f = N.pruefe(name, w[name], lage=L, frageart="markt", zielgroesse="bewegung_r",
                          menge="frei", rng=rng, horizont=HORIZONT,
                          staerken=STAERKEN)
         else:
-            f = R.pruefe_rand(name, w[name], lage=L, menge="frei", rng=rng,
+            f = R.pruefe_rand(name, w[name], lage=L, frageart="markt", menge="frei", rng=rng,
                               marke=marke, horizont=HORIZONT,
                               staerken=STAERKEN)
         bezug[name] = f
@@ -135,7 +135,7 @@ def main() -> int:
             try:
                 f = R.pruefe_geschichtet(
                     "vola in %s" % schichtname, w["vola"], sch[schichtname],
-                    lage=L, menge="frei", rng=rng, marke=marke,
+                    lage=L, frageart="markt", menge="frei", rng=rng, marke=marke,
                     horizont=HORIZONT, staerken=STAERKEN)
             except Exception as e:                           # noqa: BLE001
                 print("  vola in %-9s %s  FEHLER: %s"
@@ -156,7 +156,7 @@ def main() -> int:
         rng = np.random.default_rng(N.SAAT)
         try:
             f = R.pruefe_geschichtet(
-                "%s in vola" % name, w[name], sch["vola"], lage=L,
+                "%s in vola" % name, w[name], sch["vola"], lage=L, frageart="markt",
                 menge="frei", rng=rng, marke=None, horizont=HORIZONT,
                 staerken=STAERKEN)
         except Exception as e:                               # noqa: BLE001

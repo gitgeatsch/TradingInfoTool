@@ -359,6 +359,19 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.144", "Die MENGE ist jetzt an die FRAGE gebunden: "
+               "`messnorm.FRAGEARTEN` lehnt ein Beitragsurteil auf der "
+               "freien Menge ab und verweist auf `messnorm_auswahl`. Sechs "
+               "Suite-Pruefungen sichern die Bindung", "gilt",
+               "Methodik 2.144 / messnorm.FRAGEARTEN"),
+    Befundlage("2.144-mengen", "Die tatsaechlichen Groessen: Messuniversum "
+               "516 · Watchlist 57 (davon nur 29 im Messuniversum!) · "
+               "selektiert ~2-3 je Tag · Abdeckung funding 288 (56 %), oi "
+               "115 (22 %), turnover 65 (13 %)", "gilt", "Methodik 2.144"),
+    Befundlage("2.144-ast", "⚠️ `ast.parse` faengt doppelte "
+               "Schluesselwortargumente NICHT - nur `compile()`. Die "
+               "Syntaxpruefung meldete 0 Fehler, waehrend Python beim "
+               "Import SyntaxError warf", "gilt", "Methodik 2.144"),
     Befundlage("2.143", "AUDIT: sechs von sieben Messungen des 06./07.09. "
                "liefen auf der FREIEN statt der selektierten Menge. F-212 "
                "belegt seit 04.09., dass die Beitraege dort auf 1,5 % der "
