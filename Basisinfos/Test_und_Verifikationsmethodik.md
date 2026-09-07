@@ -9722,3 +9722,104 @@ bestanden.**
 
 Werkzeug: `agent/marktrang.py` · `pruefe_pakete.py` → Paket
 **Assetklassen**
+
+
+---
+
+## 2.151 ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026)
+
+### Der Ablauf, wie vorab festgelegt
+
+1. Sicherung (`data/messdaten_vor_nachladen_07_09.db`, 1.496 MB)
+2. Laden — **8 von 183 Reihen brauchbar, 13.168 Kerzen** (175 zu kurz)
+3. Der Bitgleich-Beweis erneut
+4. Die sieben Anker vorher/nachher
+
+### Die Kollisionen wurden GEMELDET, nicht still behandelt
+
+    ⚠️ 7 Symbol-Kollisionen - Klasse NICHT umgestellt (das Symbol gehoert
+       bereits einer anderen Klasse, die Kerzen wurden trotzdem getrennt
+       gespeichert):
+         BOND: bleibt themen_etf, wollte krypto
+         C, DASH, MDT, STX, T: bleibt aktien, wollte krypto
+         DIA: bleibt themen_etf, wollte krypto
+
+### ✔ Die Trennung hält — sichtbar an den Zeiträumen
+
+| Symbol | als Aktie/ETF | als Krypto |
+|---|---|---|
+| `T` | 10.780 Kerzen ab **1983** | 1.656 ab 2022 |
+| `MDT` | 13.449 ab **1973** | 2.149 ab 2020 |
+| `C` | 12.521 ab **1977** | 417 ab 2025 |
+| `DASH` | 1.440 ab 2020 | 2.721 ab **2019** |
+
+### ✔✔ Und die stärkste Probe: der KURS
+
+Länge und Datum können zufällig passen — ein Kurs nicht:
+
+| Symbol | Kurs | Krypto | Aktie/ETF |
+|---|---|---|---|
+| `T` | **0,0044 $** | Threshold ✔ | AT&T ~20 $ |
+| `MDT` | **0,0040 $** | Measurable Data ✔ | Medtronic ~90 $ |
+| `STX` | **0,2716 $** | Stacks ✔ | Seagate ~100 $ |
+| `DASH` | **68,28 $** | Dash ✔ | DoorDash ~200 $ |
+
+**Alle sieben sind eindeutig die Kryptowerte.**
+
+### ⚠️⚠️ Was der Filter verhindert hat — jetzt messbar
+
+| Klasse | ohne Filter | mit Filter | |
+|---|---|---|---|
+| krypto | 517 | **524** | die 7 Reihen wären **gar nicht angekommen** |
+| aktien | 470 | 470 | ⚠️ aber `C, DASH, MDT, STX` **inhaltlich verwoben** |
+| themen_etf | 293 | 293 | ⚠️ `BOND, DIA` ebenso |
+| rohstoffe | 35 | 35 | ✔ unberührt |
+
+> **Ohne den Fix wären sechs Aktien-/ETF-Reihen mit Kryptokerzen
+> verunreinigt worden — und die sieben Kryptoreihen hätte die
+> 1:1-Zuordnung aus `messreihen` trotzdem verworfen.** Beide Hälften des
+> Fixes waren nötig.
+
+### Der Ankervergleich — zwei Urteile kippen, und das ist aufschlussreich
+
+| Anker | Menge | vorher | nachher | |
+|---|---|---|---|---|
+| `funding` | **frei** | trägt | trägt nicht | ⚠️ kippt |
+| `turnover` | **frei** | nicht trennbar | trägt | ⚠️ kippt |
+| `funding` | 5 % | kein Befund | kein Befund | ✔ |
+| `schnitt` | 20 % H20 | **trägt** | **trägt** | ✔ |
+| `schnitt` | 20 % H5 | **trägt** | **trägt** | ✔ |
+| `zufall` | frei · 5 % | trägt nicht | trägt nicht | ✔ |
+
+⚠️ Die Wirkungen bewegten sich um **0,002–0,003 R**. Die Urteile kippen,
+weil sich der **Nullpunkt aus den Mischungen** verschoben hat — sie
+standen auf der Kippe.
+
+> ✔✔ **Beide Kipper stehen auf der FREIEN Menge** — genau der, die F-212
+> als untauglich für Beitragsurteile erwiesen hat. **Jeder Anker auf der
+> selektierten Menge ist unverändert.**
+
+Nach R-R11: *was sich beim Basiswechsel dreht, war nie robust — der
+Wechsel hat es nur gezeigt.* **Das bestätigt F-212 zusätzlich.**
+
+> **Kein belastbarer Befund ist betroffen.** `schnitt` bleibt Kandidat mit
+> +0,17593 R (vorher +0,17072).
+
+### ⚠️ Und eine Suite-Prüfung hatte selbst den Fehler, den sie verhindern soll
+
+*„`messe_eigenschaft_beitrag.lade()` liefert NUR Krypto"* schlug an und
+meldete *„7 Nicht-Krypto-Symbole"* — **die sieben Kryptowerte.** Sie prüfte
+gegen `SELECT symbol FROM messreihen WHERE assetklasse='krypto'`, also
+gegen dieselbe 1:1-Zuordnung.
+
+> **Eine 1:1-Zuordnung als Wahrheit über eine Tabelle, die es besser
+> weiß.** Umgestellt auf `price_history_ohlc.assetklasse`.
+
+### Der Stand
+
+**Messbasis: 516 → 524 Kryptosymbole.** Suite **1.995 Prüfungen, alle
+bestanden** — Paket „Assetklassen" jetzt mit **14** Prüfungen, darunter
+die Kursprobe (Inhalt, nicht Struktur).
+
+Werkzeug: `lade_messreihen.py --schreiben` ·
+`pruefe_assetklassen_trennung.py` · `pruefe_messbasis_wechsel.py`

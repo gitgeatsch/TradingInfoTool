@@ -15433,8 +15433,21 @@ def paket_kalibrierung() -> None:
     import sqlite3 as _sq3
     _reihen17b = _MEB.lade()
     _c17b = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
+    # ⚠️⚠️ GEGEN DIE KERZENTABELLE, NICHT GEGEN `messreihen` (07.09.2026).
+    #
+    # Bis heute stand hier `SELECT symbol FROM messreihen WHERE
+    # assetklasse='krypto'`. `messreihen` bildet `symbol -> EINE Klasse`
+    # ab - und seit dem Nachladen der sieben F-198-Kollisionen (BOND, C,
+    # DASH, DIA, MDT, STX, T) ist das falsch: sie stehen dort als
+    # aktien/themen_etf, HABEN aber Kryptokerzen.
+    #
+    # Die Pruefung meldete daraufhin "7 Nicht-Krypto-Symbole" - und lag
+    # falsch. ⚠️ Sie hatte genau den Fehler, den sie verhindern soll:
+    # eine 1:1-Zuordnung als Wahrheit ueber eine Tabelle, die es besser
+    # weiss. `price_history_ohlc.assetklasse` ist die Quelle.
     _kr17b = {r[0] for r in _c17b.execute(
-        "SELECT symbol FROM messreihen WHERE assetklasse='krypto'")}
+        "SELECT DISTINCT symbol FROM price_history_ohlc "
+        "WHERE assetklasse='krypto' AND currency='USD'")}
     _c17b.close()
     _fremd17b = set(_reihen17b) - _kr17b
     pruefe(P, "⚠️⚠️ messe_eigenschaft_beitrag.lade() liefert NUR Krypto",
@@ -16959,12 +16972,52 @@ def paket_assetklassen_trennung() -> None:
         "WHERE currency IN ('USD','EUR') GROUP BY symbol, currency "
         "HAVING k > 1"))
     _c.close()
-    pruefe(P, "die Messbasis hat kein Symbol in ZWEI Klassen - noch nicht",
-           not _doppelt,
-           "sobald doch, ist der Filter oben die einzige Trennung. Diese "
-           "Zeile faellt beim Nachladen von DASH/STX/T/... - dann muss "
-           "`pruefe_assetklassen_trennung.py` erneut BITGLEICH melden "
-           "(gefunden: %s)" % ", ".join(x[0] for x in _doppelt[:5]))
+    # ⚠️⚠️ SEIT DEM 07.09. LIEGEN SIEBEN SYMBOLE IN ZWEI KLASSEN.
+    # Die Vorgaengerzeile pruefte "noch keine Kollision" und war als
+    # Ausloeser gedacht: sie sollte beim Nachladen fallen. Sie ist
+    # gefallen - und der Filter hat gehalten
+    # (`pruefe_assetklassen_trennung.py`: greift GENAU bei den sieben,
+    # sonst nirgends). Jetzt prueft diese Zeile das Gegenteil: dass die
+    # Trennung TAETSAECHLICH getrennte Reihen liefert.
+    _erwartet = {"BOND", "C", "DASH", "DIA", "MDT", "STX", "T"}
+    _ist = {x[0] for x in _doppelt}
+    pruefe(P, "⚠️⚠️ die sieben F-198-Kollisionen liegen in ZWEI Klassen",
+           _ist == _erwartet,
+           "erwartet %s - gefunden %s. Kommt eines dazu, gehoert es "
+           "geprueft; verschwindet eines, ist eine Reihe weg"
+           % (sorted(_erwartet), sorted(_ist)))
+    from backtest_llm1_historisch import lade_reihen_aus_db as _lrd
+    _kr = _lrd("data/messdaten.db", assetklasse="krypto")
+    _ak = _lrd("data/messdaten.db", assetklasse="aktien")
+    pruefe(P, "und der Filter liefert fuer DASH GETRENNTE Reihen",
+           "DASH" in _kr and "DASH" in _ak
+           and len(_kr["DASH"]) != len(_ak["DASH"]),
+           "DASH ist die DoorDash-Aktie UND die Kryptowaehrung. Gleiche "
+           "Laenge hiesse: eine der beiden fehlt oder sie sind vermischt "
+           "(krypto %d, aktien %d)"
+           % (len(_kr.get("DASH", ())), len(_ak.get("DASH", ()))))
+    # ⚠️⚠️ DIE STAERKSTE PRUEFUNG: der KURS, nicht die Struktur.
+    # Laenge und Datum koennen zufaellig passen; ein Kurs von 0,004 USD
+    # kann keine AT&T-Aktie sein. Threshold (T) und Measurable Data (MDT)
+    # handeln im Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD.
+    import messe_eigenschaft_beitrag as _MEB2
+    _r2 = _MEB2.lade()
+    _zu_teuer = [(s_, _r2[s_][-1][1]) for s_, grenze in
+                 (("T", 1.0), ("MDT", 1.0), ("STX", 5.0), ("C", 5.0),
+                  ("DIA", 5.0), ("DASH", 150.0))
+                 if s_ in _r2 and _r2[s_][-1][1] > grenze]
+    pruefe(P, "⚠️⚠️ und die Kurse sind KRYPTO-typisch, nicht Aktienkurse",
+           not _zu_teuer,
+           "Threshold (T) und Measurable Data (MDT) handeln im "
+           "Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD. Ein zu "
+           "hoher Kurs hiesse: die Aktienreihe ist durchgeschlagen "
+           "(gefunden: %s)" % ", ".join("%s %.4f" % x for x in _zu_teuer))
+    pruefe(P, "⚠️ und die Kryptoreihe beginnt SPAETER als die Aktienreihe",
+           _kr.get("DASH") and _ak.get("DASH")
+           and _kr["DASH"][0].date > "2018-01-01"
+           and _ak["DASH"][0].date > "2019-01-01",
+           "eine Pruefung auf den INHALT, nicht nur die Laenge: DoorDash "
+           "ging 2020 an die Boerse, Dash handelt seit 2019 bei Binance")
 
 
 def paket_messmenge() -> None:

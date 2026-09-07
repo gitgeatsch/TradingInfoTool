@@ -91,6 +91,7 @@ def main() -> int:
     print("  %-12s %8s %8s %10s   %s"
           % ("Klasse", "alt", "neu", "Kurswerte", "Urteil"))
     alles_gleich = True
+    _abweichungen: set = set()
     for klasse in KLASSEN:
         a = alt_reihen_roh(DB, klasse, kl)
         n = neu_reihen_roh(DB, klasse, kl)
@@ -103,6 +104,7 @@ def main() -> int:
                 abweich.append(sym)
         ok = gleiche_menge and not abweich
         alles_gleich &= ok
+        _abweichungen |= set(abweich) | (set(a) ^ set(n))
         print("  %-12s %8d %8d %10d   %s"
               % (klasse, len(a), len(n), werte,
                  "✔ BITGLEICH" if ok else
@@ -117,8 +119,47 @@ def main() -> int:
             if nur_n:
                 print("       nur NEU: %s" % ", ".join(nur_n[:8]))
 
+    # ⚠️⚠️ DAS URTEIL HAENGT DAVON AB, OB ES KOLLISIONEN GIBT (07.09.2026).
+    #
+    # Erste Fassung meldete stur "der Filter aendert etwas -> jeder Befund
+    # neu pruefen". Das war fuer den Zustand VOR dem Nachladen richtig:
+    # dort durfte er nichts aendern. NACH dem Laden MUSS er etwas aendern -
+    # sonst haette er nicht gegriffen. Ein Werkzeug mit falschem Urteil ist
+    # schlimmer als keines.
+    import sqlite3 as _sq
+    _c = _sq.connect("file:%s?mode=ro" % DB, uri=True)
+    _koll = {r[0] for r in _c.execute(
+        "SELECT symbol FROM price_history_ohlc WHERE currency IN ('USD','EUR') "
+        "GROUP BY symbol, currency HAVING COUNT(DISTINCT assetklasse) > 1")}
+    _c.close()
     print()
     print("=" * 92)
+    if _koll:
+        print("  ZUSTAND: %d Symbole liegen in ZWEI Klassen" % len(_koll))
+        print("     %s" % ", ".join(sorted(_koll)))
+        print()
+        if alles_gleich:
+            print("  ⚠️⚠️ DER FILTER AENDERT NICHTS - OBWOHL es Kollisionen")
+            print("     gibt. Dann greift er nicht, und die Reihen sind")
+            print("     vermischt. Das ist der schlimmste Fall.")
+            return 1
+        # Er MUSS abweichen, aber NUR bei den kollidierten Symbolen.
+        fremd = sorted(x for x in _abweichungen if x not in _koll)
+        print("  ✔✔ DER FILTER GREIFT - und zwar GENAU bei den")
+        print("     kollidierten Symbolen.")
+        if fremd:
+            print("  ⚠️⚠️ ABER auch bei %d anderen: %s"
+                  % (len(fremd), ", ".join(fremd[:8])))
+            print("     Das waere eine unerwartete Nebenwirkung.")
+            return 1
+        print("     Keine Abweichung ausserhalb der Kollisionen.")
+        print()
+        print("  ⚠️ WAS DER FILTER VERHINDERT HAT, konkret:")
+        print("     - die %d Kryptoreihen kaemen sonst GAR NICHT an" % len(_koll))
+        print("       (`messreihen` fuehrt sie als aktien/themen_etf)")
+        print("     - und die Aktien-/ETF-Reihen derselben Kuerzel waeren")
+        print("       mit Kryptokerzen VERWOBEN")
+        return 0
     if alles_gleich:
         print("  ✔✔ DER FILTER AENDERT HEUTE NICHTS - in keiner Klasse, in")
         print("     keinem Kurswert. Er ist reine Vorsorge: erst wenn ein")

@@ -376,6 +376,28 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.151", "Die sieben F-198-Kryptoreihen sind GELADEN "
+               "(8 von 183, 13.168 Kerzen; 175 zu kurz). Messbasis "
+               "516 -> 524. Die Trennung haelt: DASH aktien 1.440 Kerzen ab "
+               "2020, krypto 2.721 ab 2019. Kursprobe eindeutig: T 0,0044 $ "
+               "(Threshold, nicht AT&T)", "gilt",
+               "Methodik 2.151 / lade_messreihen.py"),
+    Befundlage("2.151-filter", "⚠️ Ohne den Fix waeren SECHS Aktien-/"
+               "ETF-Reihen mit Kryptokerzen verwoben worden (C, DASH, MDT, "
+               "STX, BOND, DIA) - und die sieben Kryptoreihen haette die "
+               "1:1-Zuordnung trotzdem verworfen. Beide Haelften des Fixes "
+               "waren noetig", "gilt", "Methodik 2.151"),
+    Befundlage("2.151-anker", "Beim Basiswechsel kippen ZWEI Urteile - "
+               "beide auf der FREIEN Menge (funding traegt->traegt nicht, "
+               "turnover nicht trennbar->traegt). Die Wirkungen bewegten "
+               "sich nur um 0,002-0,003 R. JEDER Anker auf der SELEKTIERTEN "
+               "Menge ist unveraendert - `schnitt` bleibt Kandidat "
+               "(+0,17593 statt +0,17072)", "gilt", "Methodik 2.151"),
+    Befundlage("2.151-suite", "⚠️ Eine Suite-Pruefung hatte selbst den "
+               "Fehler, den sie verhindern soll: sie pruefte gegen "
+               "`messreihen` (1:1) und meldete die sieben Kryptowerte als "
+               ",Nicht-Krypto'. Umgestellt auf "
+               "`price_history_ohlc.assetklasse`", "gilt", "Methodik 2.151"),
     Befundlage("2.150", "⚠️⚠️ `marktrang.schnitte()` rangte gegen ALLE "
                "1.314 Symbole der Messbasis - 798 davon Nicht-Krypto. Der "
                "Krypto-Schnittrang lief gegen AAPL. Gefixt: "
