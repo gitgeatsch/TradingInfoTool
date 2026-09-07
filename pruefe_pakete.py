@@ -16889,6 +16889,62 @@ def paket_hartes_budget() -> None:
            "werden, egal wie der Schalter steht")
 
 
+def paket_assetklassen_trennung() -> None:
+    """Trennt der Ladepfad die Assetklassen? (07.09.2026)
+
+    ⚠️ F-198 hat `price_history_ohlc` repariert - Primary Key
+    `(symbol, assetklasse, currency, date)`, damit `DASH` als DoorDash-Aktie
+    und als Kryptowaehrung getrennte Zeitreihen bekommt.
+
+    ⚠️⚠️ ABER `lade_reihen_aus_db` LAS DIE SPALTE NICHT. Sie gruppierte nach
+    `(symbol, currency)` - beide Instrumente waeren in DIESELBE Liste
+    gefallen. Heute folgenlos (F-198 hat die sieben Kollisionen bereinigt),
+    aber sobald die fehlenden Kryptoreihen nachgeladen werden, nicht mehr.
+    """
+    P = "Assetklassen"
+    import inspect as _insp
+    from backtest_llm1_historisch import lade_reihen_aus_db as _lade
+    import simuliere_bremse as _SB
+    _q = _insp.getsource(_lade)
+    pruefe(P, "⚠️⚠️ `lade_reihen_aus_db` kennt einen Assetklassen-Filter",
+           "assetklasse" in _insp.signature(_lade).parameters,
+           "ohne ihn fallen zwei Instrumente unter demselben Kuerzel in "
+           "DIESELBE Zeitreihe - der Fehler, den F-198 fuer die TABELLE "
+           "behoben hat, blieb im LADEPFAD stehen")
+    pruefe(P, "und er landet in der Abfrage, nicht nur in der Signatur",
+           "assetklasse = ?" in _q,
+           "ein Parameter, der die WHERE-Klausel nicht erreicht, ist "
+           "Dekoration")
+    pruefe(P, "⚠️ eine fehlende Spalte wird LAUT gemeldet",
+           "IGNORIERT" in _q and "logger.warning" in _q,
+           "`data/tradinginfotool.db` hat die Spalte nicht. Still zu "
+           "filtern waere fail-soft ist fail-silent")
+    _r = _insp.getsource(_SB._reihen_roh)
+    pruefe(P, "⚠️ `_reihen_roh` gibt die Klasse an die Abfrage weiter",
+           "assetklasse=klasse" in _r,
+           "sonst filtert nur die 1:1-Zuordnung aus `messreihen` - und die "
+           "kennt je Symbol nur EINE Klasse")
+    pruefe(P, "und die 1:1-Zuordnung greift nur OHNE die Spalte",
+           "if not _spalte and kl.get(sym) != klasse" in _r,
+           "traegt die Tabelle die Klasse selbst, ist `messreihen` nicht "
+           "nur ueberfluessig, sondern schaedlich: `DASH` steht dort als "
+           "`aktien` und wuerde trotz korrekter Kryptokerzen verworfen")
+    # ⚠️ UND DER ZUSTAND SELBST, nicht nur der Code.
+    import sqlite3 as _sq
+    _c = _sq.connect("file:data/messdaten.db?mode=ro", uri=True)
+    _doppelt = list(_c.execute(
+        "SELECT symbol, COUNT(DISTINCT assetklasse) k FROM price_history_ohlc "
+        "WHERE currency IN ('USD','EUR') GROUP BY symbol, currency "
+        "HAVING k > 1"))
+    _c.close()
+    pruefe(P, "die Messbasis hat kein Symbol in ZWEI Klassen - noch nicht",
+           not _doppelt,
+           "sobald doch, ist der Filter oben die einzige Trennung. Diese "
+           "Zeile faellt beim Nachladen von DASH/STX/T/... - dann muss "
+           "`pruefe_assetklassen_trennung.py` erneut BITGLEICH melden "
+           "(gefunden: %s)" % ", ".join(x[0] for x in _doppelt[:5]))
+
+
 def paket_messmenge() -> None:
     """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
 
@@ -17008,6 +17064,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "L3": paket_l3,
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
+          "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

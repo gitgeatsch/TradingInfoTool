@@ -376,6 +376,23 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.149", "STRUKTURFIX: F-198s Reparatur war im LADEPFAD nie "
+               "angekommen - `lade_reihen_aus_db` las die "
+               "`assetklasse`-Spalte nicht und gruppierte nach "
+               "(symbol, currency). Jetzt filtert die Abfrage, und "
+               "`_reihen_roh` ueberspringt die schaedliche 1:1-Zuordnung "
+               "aus `messreihen`", "gilt",
+               "Methodik 2.149 / pruefe_assetklassen_trennung.py"),
+    Befundlage("2.149-beweis", "Der Fix aendert HEUTE NICHTS: ueber alle "
+               "vier Klassen und 5,1 Mio Kurswerte BITGLEICH (516/470/293/"
+               "35 Symbole). Kein bestehender Befund ist betroffen. 25 "
+               "abhaengige Module importieren, Suite 1.988 bestanden",
+               "gilt", "Methodik 2.149"),
+    Befundlage("2.149-prod", "⚠️ Die PRODUKTIONSDATENBANK hat die "
+               "`assetklasse`-Spalte NICHT. F-198 fuehrte sie nur in der "
+               "Messbasis ein. Heute folgenlos (Watchlist-Symbole sind "
+               "eindeutig), aber die Trennung ist dort strukturell nicht "
+               "moeglich", "offen", "Methodik 2.149"),
     Befundlage("2.148", "F-198s offener Punkt ist BEANTWORTET: sieben "
                "Kryptoreihen fehlen wirklich (DASH 2.721 Kerzen, STX 2.510, "
                "DIA 2.195, MDT 2.149, T 1.656, BOND 1.114, C 417). Von 183 "

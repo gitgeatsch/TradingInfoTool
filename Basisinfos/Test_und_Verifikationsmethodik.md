@@ -4141,6 +4141,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
 | `n59_abgelehnte_auf_selektierter_menge.py` | N-59: die abgelehnten Beitraege auf der SELEKTIERTEN Menge (2.145) |
+| `pruefe_assetklassen_trennung.py` | ⚠️⚠️ Aendert der Assetklassen-Filter etwas? Alt gegen ECHT, bitgleich (2.149) |
 | `pruefe_messbasis_wechsel.py` | ⚠️ Aendert eine erweiterte Messbasis die URTEILE? Anker vorher/nachher (2.148) |
 | `n60_schnitt_stabilitaet.py` | N-60: haelt `schnitt` ueber die Zeit? Nach BTC-Trend, mit `funding` als Gegenprobe (2.147) |
 | `zeige_abdeckung_krypto.py` | Welche Krypto-Assets haben welche Abdeckung? (2.146) |
@@ -9532,3 +9533,95 @@ Zahl.
 liegen sie in `Basisinfos/messbasis_anker.json` statt in einem Kopf.
 
 Werkzeug: `pruefe_messbasis_wechsel.py` (`--vorher` / `--nachher`)
+
+
+---
+
+## 2.149 ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026)
+
+### Was gefunden wurde, bevor irgendetwas geladen wurde
+
+F-198 hat am 03.09. `price_history_ohlc` repariert: Primary Key
+`(symbol, assetklasse, currency, date)`, damit `DASH` als DoorDash-Aktie
+und als Kryptowährung **getrennte Zeitreihen** bekommt.
+
+⚠️⚠️ **`lade_reihen_aus_db` liest diese Spalte nicht.** Sie gruppiert nach
+`(symbol, currency)`:
+
+    select symbol, currency, date, ... from price_history_ohlc
+    where currency in ('USD','EUR') ... order by symbol, currency, date
+
+> **Der Fehler, den F-198 für die TABELLE behoben hat, blieb im LADEPFAD
+> stehen.** Käme Krypto-`DASH` dazu, fielen Aktien- und Kryptokerzen in
+> **dieselbe Liste** — zwei Instrumente ineinander verwoben.
+
+✔ **Heute folgenlos**, gemessen: **null** Symbol/Währung-Paare mit
+mehreren Assetklassen. F-198s Bereinigung hält. ⚠️ **Nach dem Nachladen
+nicht mehr.**
+
+### Die Abhängigkeitskarte — vor dem Eingriff erhoben
+
+| | Zahl |
+|---|---|
+| Aufrufer von `klassen_aus_db` | **21 Dateien** |
+| Aufrufer von `_reihen_roh` | **23 Dateien** |
+| direkte Leser von `messreihen` | 5 |
+| ⚠️ darunter | **`pruefe_pakete.py` selbst** |
+
+### Der Fix — an zwei Stellen, beide nötig
+
+**1 — `lade_reihen_aus_db(db, nur_taeglich, assetklasse=None)`.** Der
+Filter landet in der WHERE-Klausel. `None` lässt alles beim Alten; die
+Produktion sieht keinen Unterschied.
+
+⚠️ **Und eine fehlende Spalte wird LAUT gemeldet:**
+`data/tradinginfotool.db` hat sie nicht — dort kam der F-198-Fix nie an.
+Still zu filtern wäre *fail-soft ist fail-silent*.
+
+**2 — `_reihen_roh` reicht die Klasse durch UND überspringt die
+1:1-Zuordnung, wenn die Spalte da ist.**
+
+⚠️ Der zweite Teil ist der wichtigere und war beinahe übersehen:
+`messreihen` bildet `symbol → EINE Klasse` ab. Nach dem Nachladen stünde
+`DASH` dort als `aktien` — und wäre **trotz korrekter Kryptokerzen
+verworfen worden**. Der SQL-Filter allein hätte nicht gereicht.
+
+### ✔✔ Der Beweis: der Fix ändert heute NICHTS
+
+`pruefe_assetklassen_trennung.py` vergleicht **alte gegen echte** Funktion
+über alle Klassen — nicht „ungefähr gleich", sondern **bitgleich**:
+
+| Klasse | alt | neu | Kurswerte | |
+|---|---|---|---|---|
+| krypto | 516 | 516 | 758.196 | ✔ bitgleich |
+| aktien | 470 | 470 | 2.955.076 | ✔ bitgleich |
+| themen_etf | 293 | 293 | 1.198.813 | ✔ bitgleich |
+| rohstoffe | 35 | 35 | 189.712 | ✔ bitgleich |
+
+**5,1 Millionen Kurswerte, kein einziger Unterschied.**
+
+> ⚠️ **Damit ist kein bestehender Befund betroffen.** Der Filter ist reine
+> Vorsorge — er greift erst, wenn ein Symbol in zwei Klassen Kerzen hat.
+
+⚠️ Die ALTE Fassung ist eine Kopie (ihren Code gibt es nicht mehr), die
+NEUE ruft die **echte** Funktion — wie die stehende Vorgabe es verlangt.
+
+### Die Gegenprüfungen
+
+- ✔ **Alle 25 abhängigen Module importieren**, 0 Fehler
+- ✔ **Suite: 1.988 Prüfungen, alle bestanden** — mit neuem Paket
+  **„Assetklassen"** (6 Prüfungen), damit der Fix nicht still zurückfällt
+- ✔ Eine der sechs prüft den **Zustand**, nicht nur den Code: *„die
+  Messbasis hat kein Symbol in ZWEI Klassen — noch nicht."* ⚠️ **Diese
+  Zeile fällt beim Nachladen** — dann muss
+  `pruefe_assetklassen_trennung.py` erneut bitgleich melden.
+
+### ⚠️ Ein offener Punkt, der dabei sichtbar wurde
+
+**`data/tradinginfotool.db` — die Produktionsdatenbank — hat die
+`assetklasse`-Spalte nicht.** F-198 hat sie nur in der Messbasis
+eingeführt. Heute folgenlos (Watchlist-Symbole sind eindeutig einer Klasse
+zugeordnet), aber die Trennung ist dort strukturell nicht möglich.
+
+Werkzeug: `pruefe_assetklassen_trennung.py` · `pruefe_pakete.py` → Paket
+**Assetklassen**

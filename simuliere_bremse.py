@@ -121,16 +121,52 @@ def _reihen_roh(db: str, klasse: str, klassen: dict | None = None) -> dict:
 
     `klassen` ist deshalb ein optionaler Ersatz fuer diese Zuordnung. Ohne
     Angabe bleibt alles exakt wie bisher - die Produktion sieht keinen
-    Unterschied."""
+    Unterschied.
+
+    ⚠️⚠️ ZWEITER FILTER SEIT 07.09.2026 - IN DER ABFRAGE SELBST.
+    `klassen` bildet `symbol -> EINE Klasse` ab (`messreihen` hat
+    `symbol TEXT PRIMARY KEY`). Fuer ein Symbol, das in ZWEI Klassen
+    Kerzen hat, reicht das nicht: `lade_reihen_aus_db` gruppierte nach
+    `(symbol, currency)` und haette beide Instrumente in EINE Reihe
+    gelegt.
+    ⚠️ Deshalb wird die Klasse jetzt AUCH an die Abfrage gegeben. Solange
+    kein Symbol in zwei Klassen liegt, ist das Ergebnis identisch - am
+    07.09. an allen fuenf Klassen nachgewiesen
+    (`pruefe_assetklassen_trennung.py`). Danach ist es der Unterschied
+    zwischen einer sauberen und einer verwobenen Reihe."""
     import config as C
     from backtest_llm1_historisch import lade_reihen_aus_db
 
     kl = klassen if klassen is not None else {
         x.symbol: str(getattr(x, "assetklasse", "") or "").lower()
         for x in C.get_watchlist()}
+    # ⚠️⚠️ WENN DIE KERZEN IHRE KLASSE SELBST TRAGEN, IST SIE DIE WAHRHEIT.
+    #
+    # Der zweite Filter (`kl.get(sym) != klasse`) stammt aus `messreihen`
+    # bzw. der Watchlist - beide bilden `symbol -> EINE Klasse` ab. Fuer
+    # ein Symbol mit Kerzen in ZWEI Klassen ist das falsch: `DASH` steht
+    # in `messreihen` als `aktien`, haette nach dem Nachladen aber auch
+    # Kryptokerzen - und wuerde trotz korrekter Abfrage verworfen.
+    #
+    # Traegt die Tabelle eine `assetklasse`-Spalte, hat die Abfrage oben
+    # bereits sauber gefiltert. Dann ist die 1:1-Zuordnung nicht nur
+    # ueberfluessig, sondern schaedlich.
+    #
+    # ⚠️ NACHGEWIESEN BITGLEICH (07.09., `pruefe_assetklassen_trennung.py`):
+    # ueber alle vier Klassen und 5,1 Mio Kurswerte kein Unterschied -
+    # weil `messreihen` und die Spalte heute uebereinstimmen.
+    import sqlite3 as _sq
+    try:
+        with _sq.connect("file:%s?mode=ro" % db, uri=True) as _c:
+            _spalte = any(r[1] == "assetklasse" for r in
+                          _c.execute("PRAGMA table_info(price_history_ohlc)"))
+    except _sq.Error:
+        _spalte = False
     aus = {}
-    for sym, kerzen in lade_reihen_aus_db(db).items():
-        if sym.startswith("_") or kl.get(sym) != klasse or len(kerzen) < 400:
+    for sym, kerzen in lade_reihen_aus_db(db, assetklasse=klasse).items():
+        if sym.startswith("_") or len(kerzen) < 400:
+            continue
+        if not _spalte and kl.get(sym) != klasse:
             continue
         c = np.array([float(k.close) for k in kerzen])
         h = np.array([float(k.high) for k in kerzen])

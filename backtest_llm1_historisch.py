@@ -133,7 +133,9 @@ def _arg(name: str, default: int) -> int:
 
 
 def lade_reihen_aus_db(db: str = "data/tradinginfotool.db",
-                       nur_taeglich: bool = True) -> dict[str, list[Kerze]]:
+                       nur_taeglich: bool = True,
+                       assetklasse: str | None = None
+                       ) -> dict[str, list[Kerze]]:
     """Kursreihen direkt aus der Datenbank - ohne den 125-MB-JSON-Umweg.
 
     ANLASS (11.08.2026): `lade_reihen()` scheiterte mit MemoryError. Ursache war
@@ -166,12 +168,44 @@ def lade_reihen_aus_db(db: str = "data/tradinginfotool.db",
     Eine EUR-Reihe darf nicht noch einmal nach EUR umgerechnet werden."""
     import sqlite3
     c = sqlite3.connect(db)
+    # ⚠️⚠️ DER ASSETKLASSEN-FILTER (07.09.2026).
+    #
+    # Diese Abfrage gruppierte nach `(symbol, currency)` und las die Spalte
+    # `assetklasse` NICHT - obwohl F-198 sie am 03.09. eigens eingefuehrt
+    # hat, samt Primary Key `(symbol, assetklasse, currency, date)`.
+    #
+    # HEUTE FOLGENLOS, weil F-198 die sieben kollidierten Symbole (C, DASH,
+    # STX, T, BOND, DIA, MDT) bereinigt hat - gemessen am 07.09.: NULL
+    # Symbol/Waehrung-Paare mit mehreren Assetklassen.
+    #
+    # ⚠️ ABER: sobald die fehlenden Kryptoreihen nachgeladen werden, haette
+    # `DASH` Aktien- UND Kryptokerzen unter derselben Waehrung. Sie fielen
+    # in DIESELBE Liste - zwei Instrumente ineinander verwoben, genau der
+    # Fehler, den F-198 fuer die Tabelle behoben hat.
+    #
+    # `assetklasse=None` laesst alles beim Alten - die Produktion sieht
+    # keinen Unterschied. Wer die Klasse angibt, bekommt nur sie.
+    #
+    # ⚠️ UND DIE SPALTE MUSS NICHT EXISTIEREN: `data/tradinginfotool.db`
+    # hat sie nicht (der F-198-Fix kam dort nie an). Fehlt sie, gilt das
+    # alte Verhalten - LAUT vermerkt, nicht still.
+    _hat_klasse = any(
+        r[1] == "assetklasse"
+        for r in c.execute("PRAGMA table_info(price_history_ohlc)"))
+    if assetklasse and not _hat_klasse:
+        logger.warning(
+            "%s hat keine Spalte `assetklasse` - der Filter %r wird "
+            "IGNORIERT. Solange kein Symbol in zwei Klassen liegt, ist das "
+            "folgenlos; danach nicht mehr.", db, assetklasse)
+    _wo = ("and assetklasse = ? " if (assetklasse and _hat_klasse) else "")
     q = ("select symbol, currency, date, open, high, low, close, volume "
          "from price_history_ohlc where currency in ('USD','EUR') "
+         + _wo +
          "and close is not null and high is not null and low is not null "
          "order by symbol, currency, date")
+    _arg = (assetklasse,) if _wo else ()
     je_waehrung: dict[tuple[str, str], list[Kerze]] = {}
-    for sym, cur, datum, o, h, l, cl, v in c.execute(q):
+    for sym, cur, datum, o, h, l, cl, v in c.execute(q, _arg):
         je_waehrung.setdefault((sym, cur), []).append(
             Kerze(str(datum)[:10], float(o if o is not None else cl),
                   float(h), float(l), float(cl),

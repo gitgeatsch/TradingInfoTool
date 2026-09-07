@@ -14,6 +14,14 @@
 
 - Quelle: Methodik 2.145
 
+**2.149** — STRUKTURFIX: F-198s Reparatur war im LADEPFAD nie angekommen - `lade_reihen_aus_db` las die `assetklasse`-Spalte nicht und gruppierte nach (symbol, currency). Jetzt filtert die Abfrage, und `_reihen_roh` ueberspringt die schaedliche 1:1-Zuordnung aus `messreihen`
+
+- Quelle: Methodik 2.149 / pruefe_assetklassen_trennung.py
+
+**2.149-beweis** — Der Fix aendert HEUTE NICHTS: ueber alle vier Klassen und 5,1 Mio Kurswerte BITGLEICH (516/470/293/35 Symbole). Kein bestehender Befund ist betroffen. 25 abhaengige Module importieren, Suite 1.988 bestanden
+
+- Quelle: Methodik 2.149
+
 **2.148** — F-198s offener Punkt ist BEANTWORTET: sieben Kryptoreihen fehlen wirklich (DASH 2.721 Kerzen, STX 2.510, DIA 2.195, MDT 2.149, T 1.656, BOND 1.114, C 417). Von 183 ,fehlenden' Paaren sind 175 zu kurz und 7 Kollisionen
 
 - Quelle: Methodik 2.148 / pruefe_messbasis_wechsel.py
@@ -181,6 +189,10 @@
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
 
 - Quelle: Methodik 2.145
+
+**2.149-prod** — ⚠️ Die PRODUKTIONSDATENBANK hat die `assetklasse`-Spalte NICHT. F-198 fuehrte sie nur in der Messbasis ein. Heute folgenlos (Watchlist-Symbole sind eindeutig), aber die Trennung ist dort strukturell nicht moeglich
+
+- Quelle: Methodik 2.149
 
 **2.148-sperre** — ⚠️ LADEN IST NOCH NICHT SICHER: F-198 hat `price_history_ohlc` gefixt (PK mit assetklasse), aber `messreihen` nicht - dort gilt ,eine Klasse je Symbol'. Rund zehn Messwerkzeuge lesen `klassen_aus_db` und wuerden die neuen Kryptokerzen falsch einordnen. ERST Strukturfix, DANN laden
 
