@@ -376,6 +376,22 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.148", "F-198s offener Punkt ist BEANTWORTET: sieben "
+               "Kryptoreihen fehlen wirklich (DASH 2.721 Kerzen, STX 2.510, "
+               "DIA 2.195, MDT 2.149, T 1.656, BOND 1.114, C 417). Von 183 "
+               ",fehlenden' Paaren sind 175 zu kurz und 7 Kollisionen",
+               "gilt", "Methodik 2.148 / pruefe_messbasis_wechsel.py"),
+    Befundlage("2.148-sperre", "⚠️ LADEN IST NOCH NICHT SICHER: F-198 hat "
+               "`price_history_ohlc` gefixt (PK mit assetklasse), aber "
+               "`messreihen` nicht - dort gilt ,eine Klasse je Symbol'. "
+               "Rund zehn Messwerkzeuge lesen `klassen_aus_db` und wuerden "
+               "die neuen Kryptokerzen falsch einordnen. ERST Strukturfix, "
+               "DANN laden", "offen", "Methodik 2.148"),
+    Befundlage("2.148-engpass", "⚠️ Die Messung scheitert NICHT an der "
+               "Datenmenge: `schnitt` hat 233 Anker je Tag und 186 Bloecke "
+               "(Grenze 20). Der Engpass ist die Wirkungsgroesse gegen die "
+               "Streuung. Meine Empfehlung ,Kursreihen nachladen hilft' war "
+               "falsch", "gilt", "Methodik 2.148"),
     Befundlage("2.147", "`schnitt`s STABILITAET ist mit diesen Daten NICHT "
                "ENTSCHEIDBAR. Bei H20 fehlen die Bloecke (BAER 19 von 20), "
                "bei H5 die Trennschaerfe (0,05 R ueber den Effekten). Die "

@@ -4141,6 +4141,7 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
 | `n59_abgelehnte_auf_selektierter_menge.py` | N-59: die abgelehnten Beitraege auf der SELEKTIERTEN Menge (2.145) |
+| `pruefe_messbasis_wechsel.py` | ⚠️ Aendert eine erweiterte Messbasis die URTEILE? Anker vorher/nachher (2.148) |
 | `n60_schnitt_stabilitaet.py` | N-60: haelt `schnitt` ueber die Zeit? Nach BTC-Trend, mit `funding` als Gegenprobe (2.147) |
 | `zeige_abdeckung_krypto.py` | Welche Krypto-Assets haben welche Abdeckung? (2.146) |
 | `messnorm_auswahl.py` | ⚠️⚠️ DIE NORM AUF DER SELEKTIERTEN MENGE - fuer JEDE Beitragsfrage. `pruefe_auswahl(menge='5%')` (2.144) |
@@ -9418,3 +9419,116 @@ Urteilsform der Norm: **untermächtig.**
    Block.
 
 Werkzeug: `n60_schnitt_stabilitaet.py`
+
+
+---
+
+## 2.148 ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026)
+
+### Die Frage kam vom Nutzer
+
+> *„Kannst du die bzw. alle fehlenden Assets nachladen? Wenn welche fehlen,
+> müssen wir welche in die Watchlist aufnehmen — daran darf die Messung
+> nicht scheitern, oder?"*
+
+### ⚠️ Zuerst: die Messung scheitert NICHT an der Datenmenge
+
+Gemessen, bevor irgendetwas geladen wurde:
+
+| | |
+|---|---|
+| `schnitt` bei H5 | **233 Anker je Tag** · 2.800 Tage · **186 Blöcke** |
+| bei 20 % Auswahl | 47 Anker je Tag |
+| Grenze der Norm | **20 Blöcke** |
+
+> **Der Engpass ist die Wirkungsgröße gegen die Streuung, nicht die
+> Symbolzahl.** Meine frühere Empfehlung („neun Kursreihen nachladen
+> hilft der Stabilitätsfrage") war falsch und ist zurückgenommen.
+
+### Und die Watchlist ist der falsche Hebel — der Code sagt es selbst
+
+> `lade_messreihen.py`: *„**NICHT IN DIE PRODUKTIONSDATENBANK.** Neue
+> Symbole dort einzutragen hieße, den Live-Betrieb als Nebenwirkung einer
+> Messung zu ändern."* · *„**UND NICHT IN DIE WATCHLIST.**"*
+
+Die Messbasis ist **absichtlich breiter** als das Portfolio (P6) und wird
+getrennt gepflegt. Etwas zu handeln, damit es messbar wird, wäre die
+falsche Richtung.
+
+### Was wirklich fehlt — 183 Paare, und sie zerfallen sauber
+
+| | Zahl | |
+|---|---|---|
+| **zu kurz (< 400 Kerzen)** | **175** | ⚠️ darunter alle drei Watchlist-Symbole ASTER, MORPHO, PLUME — **sie sind zu jung, nicht vergessen** |
+| **Namenskollisionen aus F-198** | **7** | `DASH` 2.721 Kerzen · `STX` 2.510 · `DIA` 2.195 · `MDT` 2.149 · `T` 1.656 · `BOND` 1.114 · `C` 417 |
+| sonstige | 1 | `TREE`, 406 Kerzen |
+
+✔ **Und die Überlebensverzerrung ist bereits behandelt:** die Messbasis
+enthält **177 eingestellte Paare** (BREAK) neben 339 handelnden.
+
+### ✔ Damit ist F-198s offener Punkt beantwortet
+
+> **F-198:** *„falls unter den sieben bereinigten Symbolen echte
+> Altcoin-Ticker waren (BOND, DASH, MDT, STX, T sind alle plausible
+> Kryptonamen), fehlen sie jetzt möglicherweise in Kryptos eigener
+> Messbasis. **Das ist ein offener Punkt, keine Annahme.**"*
+
+**Sie fehlen.** Alle sieben sind bei Binance als USDT-Spotpaare mit langer
+Historie verfügbar und in der Krypto-Messbasis nicht vorhanden.
+
+### ⚠️⚠️ Aber Laden ist noch nicht sicher — `messreihen` ist nicht mitgefixt
+
+F-198 hat `price_history_ohlc` repariert: Primary Key
+`(symbol, assetklasse, currency, date)` — zwei Klassen desselben Symbols
+bekommen **getrennte Zeitreihen**. ✔
+
+⚠️ **`messreihen` aber nicht:** dort gilt weiter `symbol TEXT PRIMARY KEY`,
+also **eine Klasse je Symbol**. `DASH` steht dort als `aktien`. Der Lader
+zählt das als Kollision und lässt es stehen — richtig, aber die Folge ist:
+
+    price_history_ohlc   DASH/krypto ✔ und DASH/aktien ✔  getrennt
+    messreihen           DASH -> aktien                    (bleibt)
+    klassen_aus_db()     liest `messreihen`  -> DASH ist "aktien"
+    _reihen_roh()        filtert `kl.get(sym) != klasse`   -> 1:1
+
+**Rund zehn Messwerkzeuge lesen `klassen_aus_db`.** Sie würden die neuen
+Kryptokerzen falsch einordnen — dieselbe Vermischung wie N-19, nur
+andersherum. **Das ist der Grund, warum F-198 „Krypto absichtlich nicht
+angefasst" hat.**
+
+### Die Reihenfolge, die daraus folgt
+
+1. **Strukturfix:** `klassen_aus_db`/`_reihen_roh` auf
+   `price_history_ohlc.assetklasse` umstellen — die Spalte gibt es seit
+   F-198, die 1:1-Zuordnung wird damit überflüssig.
+2. **Dann laden** (7 + `TREE`).
+3. **Dann die Anker vergleichen** — `pruefe_messbasis_wechsel.py --nachher`.
+
+### ✔ Und die Antwort auf „was müssen wir erneut prüfen?"
+
+**Für die Vergangenheit: nichts pauschal.** Ob ein Befund neu zu fassen
+ist, entscheidet nicht die Menge der neuen Daten, sondern ob sich ein
+**Urteil** ändert. Genau das misst `pruefe_messbasis_wechsel.py`: dieselben
+sieben Anker vorher und nachher, verglichen wird das Urteil, nicht die
+Zahl.
+
+**Die Anker, festgehalten vor dem Wechsel (516 Symbole):**
+
+| Anker | H | Menge | Wirkung | Urteil |
+|---|---|---|---|---|
+| `funding` | 20 | frei | +0,02741 | TRÄGT |
+| `funding` | 20 | 5 % | +0,08970 | kein Befund |
+| `turnover` | 20 | frei | +0,06352 | nicht trennbar |
+| `schnitt` | 20 | 20 % | +0,17072 | TRÄGT |
+| `schnitt` | 5 | 20 % | +0,04226 | TRÄGT |
+| `zufall` | 20 | frei | +0,00451 | trägt nicht |
+| `zufall` | 20 | 5 % | −0,01614 | kein Befund |
+
+> ⚠️ **Nach R-R11 gilt: was sich beim Basiswechsel dreht, war nie robust —
+> der Wechsel hat es nur gezeigt.** Bleibt jedes Urteil stehen, bleiben
+> auch die Befunde stehen; nur die Punktschätzer verschieben sich.
+
+**Für die Zukunft: die neuen Werte sind ab dann der Bezug.** Deshalb
+liegen sie in `Basisinfos/messbasis_anker.json` statt in einem Kopf.
+
+Werkzeug: `pruefe_messbasis_wechsel.py` (`--vorher` / `--nachher`)
