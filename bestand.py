@@ -359,6 +359,34 @@ class Befundlage:
 
 
 BEFUNDE = (
+    Befundlage("2.145", "`schnitt` (Abstand zum eigenen 200-Tage-Schnitt) "
+               "TRAEGT auf der selektierten Menge: +0,1707 R "
+               "[+0,0723 .. +0,2781] bei 20 %, Trennschaerfe 0,020. "
+               "Abdeckung 516/516 (100 %), Redundanz gering (r -0,097 zu "
+               "funding, -0,168 zu turnover). War als ,traegt nicht' "
+               "abgelehnt", "gilt",
+               "Methodik 2.145 / n59_abgelehnte_auf_selektierter_menge.py"),
+    Befundlage("2.145-zeit", "⚠️ ABER `schnitt` haelt ueber die ZEIT nicht "
+               "durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite "
+               "+0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht "
+               "widerlegt). KANDIDAT, kein registrierungsreifer Befund",
+               "offen", "Methodik 2.145"),
+    Befundlage("2.145-turnover5", "⚠️ `turnover` verliert bei 5 % "
+               "Auswahlstaerke ALLE Tage (65 Symbole, davon 5 % = 2 Anker). "
+               "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
+               "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
+               "Methodik 2.145"),
+    Befundlage("2.146", "Abdeckung: Kern (BTC, ETH, SOL) 3/3 und grosse "
+               "Werte 8/8 zu 100 % bewertbar - KEINE Luecke bei den "
+               "stabilen Werten. Uebrige 16/33. ⚠️ 13 Nicht-Krypto-"
+               "Eintraege gehoeren nicht in die Rechnung (richtig ist "
+               "29 von 44, nicht von 57)", "gilt",
+               "Methodik 2.146 / zeige_abdeckung_krypto.py"),
+    Befundlage("2.146-luecke", "⚠️ Neun Watchlist-Werte haben funding/oi, "
+               "aber KEINE Kursreihe: AKT, ASTER, BRETT, GRIFFAIN, HYPE, "
+               "KAS, MON, MORPHO, PLUME. Keine Symbolfehler - die "
+               "coingecko-IDs stimmen, die Kurse wurden nie geladen. "
+               "Behebbar", "offen", "Methodik 2.146"),
     Befundlage("2.144", "Die MENGE ist jetzt an die FRAGE gebunden: "
                "`messnorm.FRAGEARTEN` lehnt ein Beitragsurteil auf der "
                "freien Menge ab und verweist auf `messnorm_auswahl`. Sechs "

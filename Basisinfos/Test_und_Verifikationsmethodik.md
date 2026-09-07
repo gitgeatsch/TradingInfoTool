@@ -4140,6 +4140,8 @@ An der Quelle geprüft, wer sie befolgt:
 | `messe_fuenftel_mit_tagesklammer.py` | Fuenftelstufen unter der Tagesklammer statt gepoolt |
 | `messe_kalibrierung_je_datenlage.py` | Die Schwelle je Datenlage - wer weniger Beitraege hat, kann weniger erreichen |
 | `messe_kandidaten_je_horizont.py` | Drei Horizonte, zwei Zielgroessen - traegt der Kandidat ueberall? |
+| `n59_abgelehnte_auf_selektierter_menge.py` | N-59: die abgelehnten Beitraege auf der SELEKTIERTEN Menge (2.145) |
+| `zeige_abdeckung_krypto.py` | Welche Krypto-Assets haben welche Abdeckung? (2.146) |
 | `messnorm_auswahl.py` | ⚠️⚠️ DIE NORM AUF DER SELEKTIERTEN MENGE - fuer JEDE Beitragsfrage. `pruefe_auswahl(menge='5%')` (2.144) |
 | `pruefe_audit_06_07_09.py` | ⛔ Audit der Messungen N-52..N-58 gegen die vier eigenen Regeln (2.143) |
 | `n58_turnover_stufen_neu.py` | ⚠️ N-58: `turnover`s Stufen neu herleiten - auf den AUFGELOESTEN, echte Geometrie, H20 (2.141) |
@@ -9183,3 +9185,152 @@ eingerücktem Aufruf wurden zurückgenommen).
 
 Werkzeug: `messnorm.FRAGEARTEN` · `messnorm_auswahl.pruefe_auswahl` ·
 `pruefe_pakete.py` → Paket **Messmenge**
+
+
+---
+
+## 2.145 ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026)
+
+### Der Auftrag
+
+Die abgelehnten Beiträge auf der **richtigen** Menge nachmessen. Sie waren
+alle auf einer Basis abgelehnt worden, die sich als verzerrt erwiesen hat
+(2.143) — **genau der Fehler, der `turnover` beinahe gekostet hätte.**
+
+⚠️ **Nichts davon ist neu gebaut.** `messe_kandidaten_als_regel.baue` für
+die Kennzahl, `momentum250`+`sammle` für die Auswahl,
+`messnorm_auswahl.pruefe_auswahl` für die Norm. Das ist die Lehre aus
+2.143 in der Anwendung.
+
+### Die Kontrollen zuerst — sie halten bitgenau
+
+| | Menge | Wert | Sollwert | |
+|---|---|---|---|---|
+| `zufall` | frei | +0,0045 | trägt nicht | ✔ |
+| `zufall` | 5 % | −0,0161 | trägt nicht | ✔ |
+| `funding` | frei | **+0,0274** | +0,0274 | ✔ **reproduziert** |
+| `funding` | 5 % | **+0,0897** | +0,0897 | ✔ **reproduziert** |
+
+⚠️ Die erste Fassung trug **+0,0274 als Sollwert für die 5-%-Menge** ein
+und meldete „nicht reproduziert". **Der Fehler saß in der Erwartung, nicht
+in der Messung** — Sollwerte gehören **je Menge** notiert.
+
+### Das Ergebnis
+
+| Kandidat | frei | 20 % | 10 % | 5 % | Urteil |
+|---|---|---|---|---|---|
+| **`schnitt`** | +0,0304 | **+0,1707 ✔** | +0,1518 | +0,2192 | ✔ **TRÄGT bei 20 %** |
+| `schnitt50` | +0,0055 | +0,0647 | +0,0898 | +0,1042 | trägt nicht bis 0,020 R |
+| `amihud` | −0,0007 | +0,0055 | +0,0097 | +0,0560 | trägt nicht bis 0,020 R |
+| `vola` | +0,0268 | +0,1265 | +0,1173 | +0,1062 | nicht trennbar |
+| `rsi` | +0,0069 | +0,0053 | −0,0020 | +0,0079 | trägt nicht bis 0,020 R |
+| `turnover` | +0,0635 | +0,0902 | +0,0137 | — | nicht trennbar |
+
+> **Der Abstand zum eigenen 200-Tage-Schnitt trägt auf der selektierten
+> Menge** — und zeigt genau das F-212-Muster: frei +0,03, selektiert +0,17.
+> Er war als *„trägt nicht, auf keinem Horizont"* abgelehnt.
+
+### ✔✔ Zwei Eigenschaften, die ihn stark machen
+
+| | `schnitt` | funding | turnover |
+|---|---|---|---|
+| **Abdeckung** | **516/516 = 100 %** | 288 (56 %) | 65 (13 %) |
+| Redundanz | — | r = **−0,097** | r = **−0,168** |
+
+**Vollständige Abdeckung und weitgehend unabhängig.** Das ist genau, was
+der Bewertungsebene fehlt.
+
+### ⚠️⚠️ Und der Dämpfer: über die Zeit hält es nicht durch
+
+| Zeitraum | Wirkung | Band | Urteil |
+|---|---|---|---|
+| **GANZ** | +0,1707 R | [+0,0723 .. +0,2781] | ✔ TRÄGT |
+| erste Hälfte | +0,3483 R | [+0,1800 .. +0,5105] | nur 17 Blöcke — kein Befund |
+| **zweite Hälfte** | **+0,0375 R** | [−0,0326 .. +0,1365] | trägt nicht bis 0,10 R |
+
+⚠️ **Vorsicht bei der Deutung.** Die zweite Hälfte hat eine Trennschärfe
+von **0,10 R** — ein Effekt von +0,0375 wäre dort **gar nicht auffindbar**.
+„Trägt nicht" heißt hier **untermächtig**, nicht widerlegt. Aber die
+Punktschätzer klaffen (+0,35 gegen +0,04), und die Halbierung kann das
+nicht auflösen: sie halbiert die Blöcke und damit die Aussagekraft.
+
+> **Stand: `schnitt` ist ein starker KANDIDAT, kein registrierungsreifer
+> Befund.** Zu klären ist die Stabilität — und zwar mit einer Zerlegung,
+> die nicht an der Blockzahl scheitert (Marktphasen statt Hälften, oder
+> ein gleitendes Fenster).
+
+### ⚠️ Ein Nebenbefund über die Messbarkeit selbst
+
+`turnover` verliert bei **5 %** Auswahlstärke **alle** Tage: 65 Symbole,
+davon 5 % je Tag sind zwei Anker — zu wenig für zwei Gruppen.
+
+> **Die Produktionsauswahl IST diese 5 %.** `turnover`s Beitrag ist bei der
+> tatsächlichen Auswahlstärke **nicht messbar.** Das ist keine Schwäche der
+> Messung, sondern eine Aussage über die Datenlage.
+
+### Was nicht gemessen wurde, mit Grund
+
+| | Grund |
+|---|---|
+| **Vorfilter H** | braucht die Marken-Rechnung, die `baue` nicht liefert |
+| **Lebendigkeit** | braucht TVL als `zusatz` (188 Reihen liegen vor) — offen |
+| **Rangplatz** | ⚠️ ist **bereits live** als Trichterstufe 5 („gehört zu den besten k der Gruppe"). Ihn als Beitrag zu messen wäre Doppelzählung |
+| **Bekannte Termine** | ⚠️ es gibt **keine Termindaten**. `terminmarkt` ist der Futures-Markt, kein Kalender — daher `zustand="nie"` |
+
+Werkzeug: `n59_abgelehnte_auf_selektierter_menge.py`
+
+---
+
+## 2.146 ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026)
+
+### Der Nutzerhinweis, der einen überzogenen Befund eingeordnet hat
+
+Ich hatte gemeldet: *„nur 29 von 57 Watchlist-Symbolen sind im
+Messuniversum"* — das klang nach einem schweren Befund.
+
+> **Nutzer:** *„Wichtig sind die stabilen Werte. Altbestand und
+> Hochrisikowerte im Meme-/Smallcap-Bereich müssen mitlaufen, und hier ist
+> eine fehlende Bewertung als unkritisch zu bewerten."*
+
+**Damit ist die Frage nicht, wie viele fehlen, sondern WELCHE.**
+
+### Drei Korrekturen, alle vom Nutzer
+
+**1 — Keine Mischung von Krypto und Nicht-Krypto.** Die Watchlist führt 57
+Einträge, davon **13 Nicht-Krypto**: 2 Aktien (PLTR, VST), 7 ETF, 4
+Rohstoffe. Richtig ist **29 von 44**, nicht von 57. ⚠️ Genau die
+Vermischung, die N-19 schon einmal gekostet hat.
+
+**2 — SOL gehört zum Kern.** Ich hatte ihn unter „große Werte" geführt.
+
+**3 — HYPE, MORPHO, KAS, BRETT prüfen.** ✔ Geprüft: **keine
+Symbolfehler.** Die coingecko-IDs stimmen (`hyperliquid`, `morpho`,
+`kaspa`, `based-brett`); die Symbole haben in `price_history_ohlc` **null
+Zeilen, in keiner Schreibweise.** **Die Kurse wurden nie geladen** — eine
+behebbare Datenlücke.
+
+### Das Ergebnis nach den Korrekturen
+
+| Gruppe | bewertbar |
+|---|---|
+| **Kern (BTC, ETH, SOL)** | **3 von 3 (100 %)** |
+| **Große Werte** | **8 von 8 (100 %)** |
+| Übrige (Meme/Smallcap/neu) | 16 von 33 (48 %) |
+
+> ✔ **Bei den stabilen Werten ist keine einzige Lücke** — genau die
+> Priorität, die der Nutzer gesetzt hat.
+
+⚠️ **Neun Werte haben Zusatzdaten, aber keine Kursreihe** (behebbar):
+`AKT, ASTER, BRETT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME`.
+
+⚠️ **Und in der Messbasis haben 204 von 516 Symbolen (39,5 %) null
+Beiträge** — sie bekommen kein Potential und damit keine Empfehlung.
+
+### ✔ Eine vermeintliche Diskrepanz, die keine ist
+
+`price_history_ohlc` kennt **1.314** Symbole, `B.lade()` liefert **516**.
+Der Grund ist der Filter `assetklasse='krypto'`: **798 sind Nicht-Krypto**
+(seit N-19). **Die Trennung ist bereits gebaut** — und zwar wegen genau
+dieses Fehlers.
+
+Werkzeug: `zeige_abdeckung_krypto.py`
