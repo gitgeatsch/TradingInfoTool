@@ -162,6 +162,69 @@ ZIELGROESSEN = {
 ZIEHUNGEN = 5
 SAAT = 20260906
 
+# ============================================================================
+# DER MESSSTANDARD - hier steht er, nicht in der Dokumentation
+# ============================================================================
+# Nutzervorgabe 08.09.2026: "jedenfalls diesen Schritt breit in die
+# relevanten Dokumentationen, Messungen, Code, Basisdokumente, Regelwerke
+# uebernehmen." Und frueher schon: "so einen Parameter vergesse ich in
+# Kuerze und du auch - die Doku reicht bei so einer zentralen Einstellung
+# nicht." Deshalb: benannt, an EINER Stelle, mit `standardzeile()`
+# ausgebbar - und von `pruefe_pakete.py` bewacht.
+#
+# ---- Was am 08.09.2026 geaendert wurde und WARUM ---------------------------
+#
+# 1) NULL_ZIEHUNGEN / NULL_PERZENTIL       (Befunde 2.188 bis 2.192)
+#    `null_oben` war das MAXIMUM ueber fuenf Ziehungen. Ein Maximum ist
+#    kein Schaetzer: es waechst mit jeder weiteren Ziehung und hat keinen
+#    Grenzwert. Auf Kunstdaten mit bekannter Wahrheit schrumpft seine
+#    Streuung NICHT (0,0140 -> 0,0095 bei n = 5 bis 80), die eines
+#    Perzentils schon (0,0118 -> 0,0038). Und bei fuenf Ziehungen lag das
+#    Maximum UNTER dem wahren 90. Perzentil - die Latte hing zu tief.
+#    ACHTUNG: Es ist NICHT strenger, sondern stabil. `schnitt` bei 10 %
+#    kippte umgekehrt, von "traegt nicht" auf TRAEGT.
+#
+# 2) TRENNSCHAERFE_GEGEN_NULLPUNKT          (Befund 2.188-inkonsistenz)
+#    Die Trennschaerfe prueft `unten > 0`, das Urteil `unten > null_oben`.
+#    Zwei Massstaebe, live sichtbar in EINEM Satz an `turnover`:
+#    "Wirkung +0,0639 ueber der Trennschaerfe 0,0500 R, aber ...".
+#
+# 3) STAERKEN                                (Befund 2.194)
+#    Die Leiter endete bei 0,10, waehrend `schnitt` +0,1858 wirkt.
+#    "Untermaechtig - selbst +0,10 gepflanzt nicht gefunden" war eine
+#    Aussage ueber die LEITER. `messnorm_rand.py` benutzte die laengere
+#    ohnehin schon - der eigene Werkzeugkasten widersprach sich.
+#
+# ---- WAS DAMIT NICHT ERLEDIGT IST ------------------------------------------
+#
+# Diese drei machen die Urteile WIDERSPRUCHSFREI, nicht SCHAERFER. Offen
+# bleibt (Befund 2.198): die Positivkontrolle pflanzt in die GEMISCHTE
+# Welt, deren Band breiter sein kann - dann ueberschaetzt die
+# Trennschaerfe systematisch, was noetig waere. `schnitt` traegt mit
+# +0,186 bei ausgewiesener Trennschaerfe 0,40. Ebenso offen: `ZIEHUNGEN`
+# steckt weiter in der Positivkontrolle (4 von 5 - eine Quote mit sechs
+# moeglichen Werten), und ob p90 zum Vertrauensniveau des Bandes passt.
+#
+# "Die Basis steht" waere deshalb eine Behauptung, kein Befund. Was sie
+# rechtfertigen wuerde, ist ein Selbsttest der ganzen Anlage gegen
+# bekannte Wahrheit - Fehlalarm- UND Fundquote. Der fehlt.
+# ============================================================================
+MESSSTANDARD_AB = "2026-09-08"
+NULL_ZIEHUNGEN = 40
+NULL_PERZENTIL = 90.0
+TRENNSCHAERFE_GEGEN_NULLPUNKT = True
+STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
+
+
+def standardzeile() -> str:
+    """Der Messstandard IN KLARTEXT - fuer jeden Messkopf und Bericht."""
+    return ("Messstandard ab %s: Nullpunkt = %.0f. Perzentil ueber %d "
+            "Ziehungen | Trennschaerfe gegen %s | gepflanzte Staerken bis "
+            "%.2f R | Positivkontrolle %d Ziehungen (unveraendert)"
+            % (MESSSTANDARD_AB, NULL_PERZENTIL, NULL_ZIEHUNGEN,
+               "den Nullpunkt" if TRENNSCHAERFE_GEGEN_NULLPUNKT else "NULL",
+               max(STAERKEN), ZIEHUNGEN))
+
 STOP_BEENDET = {("hebel", "einstieg"), ("hebel", "swing")}
 
 
@@ -408,12 +471,21 @@ class Befund:
             return ("KEIN BEFUND - Block %d zu kurz, Autokorrelation %.3f "
                     "(Grenze 0,15). Das Band waere zu eng."
                     % (self.protokoll.blocklaenge, self.protokoll.block_ak))
+        # `traegt` STEHT VOR der Untermacht-Abfrage (2.193, 08.09.2026).
+        # Vorher stand die None-Abfrage davor und verdeckte echte Befunde:
+        # `schnitt` bei 20 % hatte Wirkung +0,1858 und `traegt` = True,
+        # ausgegeben wurde "KEIN BEFUND". Eine zu kurze Leiter entwertet
+        # einen NULLbefund - einen POSITIVEN nicht. Das Band schliesst den
+        # Nullpunkt aus oder es tut es nicht; die Positivkontrolle aendert
+        # daran nichts.
+        # Die beiden Abfragen DAVOR (zu wenige Bloecke, Block zu kurz)
+        # bleiben vorn - die entwerten das Band SELBST.
+        if self.traegt:
+            return "TRAEGT"
         if self.trennschaerfe is None:
             return ("KEIN BEFUND - untermaechtig: selbst %+.2f R gepflanzt "
                     "wurde nicht gefunden" % max(self.gepflanzt))
         einheit = ZIELGROESSEN[self.zielgroesse].get("einheit", "R")
-        if self.traegt:
-            return "TRAEGT"
         if abs(self.wirkung) < self.trennschaerfe:
             return ("TRAEGT NICHT bis %.4f %s%s (Effekte ab dieser Groesse "
                     "sind ausgeschlossen)"
@@ -485,7 +557,7 @@ def pruefe_block(d: dict, block: int, grenze: float = 0.15) -> dict:
 
 def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
            menge: str, rng, frageart: str = "", horizont: int = 20,
-           staerken: tuple = (0.02, 0.05, 0.10), hypothesen: int = 1,
+           staerken: tuple = STAERKEN, hypothesen: int = 1,
            oben_sperren: bool = True, still: bool = True) -> Befund:
     """DIE eine Messung. Alles andere ruft sie.
 
@@ -516,7 +588,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     # denselben Betrag wie die gesuchten Effekte. Eine Ziehung ist kein
     # Nullpunkt (Methodik 2.104).
     nullwerte, nullunten, nulloben = [], [], []
-    for z in range(ZIEHUNGEN):
+    for z in range(NULL_ZIEHUNGEN):
         n0, _a, _g2, _u2 = W.wirkung(
             je_tag, oben_sperren, mische=np.random.default_rng(SAAT + z))
         nb = _band(n0, "null %d" % z)
@@ -524,9 +596,12 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
             nullwerte.append(nb["mittel"])
             nullunten.append(nb["unten"])
             nulloben.append(nb["oben"])
+    # PERZENTIL, NICHT MAXIMUM (2.188). Siehe Kopf dieses Moduls.
     null = {"mittel": float(np.mean(nullwerte)) if nullwerte else 0.0,
-            "unten": float(np.min(nullunten)) if nullunten else 0.0,
-            "oben": float(np.max(nulloben)) if nulloben else 0.0}
+            "unten": (float(np.percentile(nullunten, 100.0 - NULL_PERZENTIL))
+                      if nullunten else 0.0),
+            "oben": (float(np.percentile(nulloben, NULL_PERZENTIL))
+                     if nulloben else 0.0)}
 
     # ⚠️ DIE TRENNSCHAERFE: die KLEINSTE gepflanzte Staerke, die gefunden
     # wird. Sie ist die eigentliche Neuerung - ohne sie ist "traegt nicht"
@@ -554,7 +629,10 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
             p, _a2, _g3, _u3 = W.wirkung(je_tag, oben_sperren,
                                          mische=misch_rng, pflanze=s)
             pb = _band(p, "pflanze %.2f/%d" % (s, z))
-            if pb and pb["unten"] > 0:
+            # DERSELBE MASSSTAB WIE DAS URTEIL (2.188-inkonsistenz).
+            latte = (max(0.0, null["oben"])
+                     if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
+            if pb and pb["unten"] > latte:
                 gefunden += 1
         treffer[s] = gefunden
         # ⚠️ MEHRHEIT, NICHT EIN TREFFER. Bei einer Ziehung entscheidet die

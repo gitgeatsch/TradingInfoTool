@@ -61,9 +61,154 @@ import messe_bewertungskennzahl as M                        # noqa: E402
 from messe_beitrag_auf_auswahl import sammle, momentum250   # noqa: E402
 from pruefe_n31_tagesklammer import je_tag_wirkung          # noqa: E402
 from messnorm import (Lage, Befund, Protokoll, ZIEHUNGEN,   # noqa: E402
-                      SAAT, _block)
+                      SAAT, _block, NULL_ZIEHUNGEN, NULL_PERZENTIL,
+                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN)
 
-MENGEN = {"frei": 1.0, "20%": 0.20, "10%": 0.10, "5%": 0.05}
+MENGEN = {"frei": 1.0, "50%": 0.50, "20%": 0.20, "10%": 0.10,
+          "5%": 0.05}
+# ⚠️⚠️ `50%` KAM AM 07.09.2026 DAZU - und zwar wegen eines Fehlbefunds.
+#
+# `turnover` schien ab 2022 das Vorzeichen zu drehen (-0,0112 / -0,0307).
+# `pruefe_auswahl` reproduzierte das NICHT und sagte woertlich "KEIN
+# BEFUND - untermaechtig". Der Grund: turnover deckt 66 von 524 Symbolen
+# ab, und 20 % davon sind 10,1 Anker je Tag. Auf 50 % sind es 25,5 - dort
+# ist er ab 2022 POSITIV (+0,0598 [+0,0066 .. +0,1139]).
+#
+# ⚠️ Die Menge ist kein Geschmack, sie folgt der DATENLAGE - siehe
+# `menge_nach_datenlage` unten.
+
+MIND_ANKER = 12
+"""Untergrenze fuer die Ankerzahl je Tag - NICHT neu erfunden.
+
+`messe_beitrag_auf_auswahl.sammle` verwirft Tage mit weniger als 12
+Werten (`if len(zeilen) < 12: continue`). Dieselbe Zahl gilt hier fuer
+die GEWAEHLTEN Anker: eine Auswahl, die weniger uebrig laesst, als die
+Rohmenge mindestens haben muss, ist keine Grundlage.
+
+⚠️ Warum es diese Grenze braucht (N-65, 07.09.2026): `median(Gruppe) -
+median(alle)` ist bei kleinen Gruppen nach oben verzerrt. Gemessen mit
+GEMISCHTEN Raengen - also ohne jede Information - lieferte die Statistik
++0,10 bis +0,16 R statt null. Das ist groesser als jeder gesuchte
+Effekt."""
+
+
+def zulaessige_mengen(je_tag: dict, mom: dict, mindest: int = MIND_ANKER,
+                      horizont: int = 20, bloecke: int = 20) -> list:
+    """ALLE Mengen, die die Datenlage traegt - nicht nur die schmalste.
+
+    ⚠️⚠️ WARUM ES DIESE FUNKTION NEBEN `menge_nach_datenlage` GIBT
+    (07.09.2026, aus der Durchsicht N-73 gelernt).
+
+    `menge_nach_datenlage` gibt die SCHMALSTE zulaessige Menge zurueck -
+    weil die Betriebsmenge schmal ist (F-212). Aber die schmalste
+    zulaessige ist zugleich die RAUSCHENDSTE: weniger Anker, breiteres
+    Band. Sie zum alleinigen Massstab zu machen, bestraft jeden
+    Kandidaten mit guter Abdeckung.
+
+    Gemessen an `schnitt` (N-73): bei 10 % +0,1780 [+0,0274 .. +0,3361]
+    "nicht trennbar", bei 20 % +0,1759 [+0,0715 .. +0,2907] "TRAEGT".
+    **Fast derselbe Punktschaetzer, anderes Urteil** - allein wegen der
+    Bandbreite.
+
+    > Die Zulaessigkeit sortiert aus, was zu duenn ist. Das URTEIL sollte
+    > ueber ALLE zulaessigen Mengen halten. Ein Kandidat, der nur auf
+    > einer von ihnen traegt, ist nicht robust - und das ist ein Befund
+    > ueber ihn, kein Grund, sich die passende Menge auszusuchen.
+
+    Angewandt:
+
+        turnover   zulaessig {50 %, frei}       traegt in BEIDEN   ✔
+        schnitt    zulaessig {10 %, 20 %, frei} traegt nur bei 20 % ✖
+
+    ⚠️ `frei` ist mit aufgefuehrt, beantwortet aber die MARKT-Frage
+    (P6) - sie zaehlt als Vergleichsbasis, nicht als Beitragsurteil.
+    """
+    aus = []
+    for name in ("5%", "10%", "20%", "50%", "frei"):
+        if _traegt_die_menge(je_tag, mom, name, mindest, horizont, bloecke):
+            aus.append(name)
+    return aus
+
+
+def _traegt_die_menge(je_tag, mom, name, mindest, horizont, bloecke) -> bool:
+    """Haelt DIESE Menge beide Kriterien? — Anker je Tag UND Bloecke."""
+    import numpy as _np
+    from messe_beitrag_auf_auswahl import _auswahl_maske as _maske
+    anteil = MENGEN[name]
+    n = []
+    for tag, zeilen in je_tag.items():
+        if len(zeilen) < 12:
+            continue
+        m = _maske(zeilen, mom.get(tag) or {}, anteil, None)
+        if m is not None and m.any():
+            n.append(int(m.sum()))
+    if not n or float(_np.mean(n)) < mindest:
+        return False
+    return datenlage(je_tag, mom, name, horizont).get("bloecke", 0) >= bloecke
+
+
+def menge_nach_datenlage(je_tag: dict, mom: dict,
+                         mindest: int = MIND_ANKER,
+                         horizont: int = 20,
+                         bloecke: int = 20) -> str | None:
+    """Die SCHMALSTE Menge, die noch `mindest` Anker je Tag liefert.
+
+    ⚠️ WARUM SCHMAL UND NICHT BREIT. F-212: die Beitraege wirken erst am
+    Ende des Trichters, auf einer bereits ausgewaehlten Menge. Die
+    Messmenge soll die Betriebsmenge nachbilden - also so schmal wie
+    moeglich. Aber nur so schmal, wie die Datenlage es traegt.
+
+    ⚠️ UND DIE REGEL GILT FUER ALLE BEITRAEGE GLEICH. Gemessen am
+    07.09.2026 fuer die spaete Aera:
+
+        turnover       50 %   (bei 20 % nur 10,1 Anker/Tag)
+        funding        10 %
+        oi_aenderung   20 %
+
+    Dass `turnover` eine breitere Menge braucht, ist kein Sonderrecht -
+    es ist dieselbe Regel auf eine duennere Abdeckung angewandt. Wer alle
+    auf dieselbe Menge zwingt, misst bei einem von ihnen Rauschen.
+
+    ⚠️ ZWEI Bedingungen: `mindest` Anker JE TAG **und** `bloecke`
+    Bloecke insgesamt. Eine schmale Auswahl verwirft auch TAGE - bei
+    `schnitt` haelt 5 % zwar die Ankerzahl (16,1), laesst aber nur 11
+    Bloecke uebrig. Die Norm antwortet dort "KEIN BEFUND".
+
+    Gibt `None` zurueck, wenn KEINE Auswahl beide Kriterien haelt - dann
+    ist die Frage auf dieser Datenlage nicht als Beitragsfrage zu
+    stellen, und das ist ein Ergebnis, kein Zwischenschritt.
+    """
+    import numpy as _np
+    from messe_beitrag_auf_auswahl import _auswahl_maske as _maske
+    # ⚠️ Von SCHMAL nach BREIT, und beim ersten Treffer abbrechen. Die
+    # erste Fassung lief weiter und waehlte damit immer die breiteste -
+    # genau das Gegenteil (07.09., vom Vorabtest gefangen).
+    for name in ("5%", "10%", "20%", "50%"):
+        anteil = MENGEN[name]
+        n = []
+        for tag, zeilen in je_tag.items():
+            if len(zeilen) < 12:
+                continue
+            m = _maske(zeilen, mom.get(tag) or {}, anteil, None)
+            if m is not None and m.any():
+                n.append(int(m.sum()))
+        if not n or float(_np.mean(n)) < mindest:
+            continue
+        # ⚠️⚠️ ZWEI BEDINGUNGEN, NICHT EINE (07.09., nachgetragen).
+        #
+        # Die erste Fassung prueft nur die Ankerzahl. Bei `schnitt` waehlte
+        # sie damit 5 % (16,1 Anker/Tag) - dort bleiben aber nur 11
+        # BLOECKE uebrig, und die Norm antwortet "KEIN BEFUND".
+        #
+        # ⚠️ UND DIE BLOCKZAHL WIRD NICHT SELBST GEZAEHLT. Die zweite
+        # Fassung zaehlte Tage mit nichtleerer Maske - `je_tag_wirkung`
+        # verwirft aber weitere (es braucht >= 1 oben und >= 3 unten).
+        # Deshalb 27 statt 11 Bloecke, und das Kriterium griff nicht.
+        # `datenlage()` rechnet es ueber die ECHTE Kette - sie steht seit
+        # dem 06.09. genau dafuer da. R-R10: nachsehen, nicht neu bauen.
+        if datenlage(je_tag, mom, name, horizont).get("bloecke", 0) >= bloecke:
+            return name
+    return None
 
 
 def _band(d, rng, block):
@@ -138,10 +283,32 @@ def datenlage(je_tag: dict, mom: dict, menge: str,
 
 def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                    menge: str, rng, horizont: int = 20,
-                   staerken: tuple = (0.02, 0.05, 0.10),
+                   staerken: tuple = STAERKEN,
                    hypothese: str = "", verwendung: str = "",
-                   hypothesen: int = 1) -> Befund:
-    """Ein Befund auf der selektierten Menge, unter der TAGESKLAMMER."""
+                   hypothesen: int = 1,
+                   null_ziehungen: int = NULL_ZIEHUNGEN,
+                   null_perzentil: float = NULL_PERZENTIL,
+                   trennschaerfe_gegen_nullpunkt: bool =
+                   TRENNSCHAERFE_GEGEN_NULLPUNKT) -> Befund:
+    """Ein Befund auf der selektierten Menge, unter der TAGESKLAMMER.
+
+    ⚠️⚠️ DIE VORGABEWERTE SIND DER MESSSTANDARD (`messnorm`, 08.09.2026)
+
+    `null_ziehungen` · `null_perzentil` · `trennschaerfe_gegen_nullpunkt`
+    · `staerken` kommen aus `messnorm` und stehen dort begruendet. Wer
+    sie hier ueberschreibt, misst NICHT nach Norm und muss das im Befund
+    vermerken.
+
+    Der kurze Grund, warum sie so stehen: das MAXIMUM ueber fuenf
+    Ziehungen war kein Schaetzer - es waechst mit der Ziehungszahl und
+    hat keinen Grenzwert (N-81, auf Kunstdaten UND echt gezeigt). Daran
+    hing `funding` bei 50 %: Abstand +0,0002 R bei fuenf Ziehungen,
+    gekippt ab zehn.
+
+    ⚠️ Die Umstellung wurde Ziffer fuer Ziffer gegen die Vorgaengerfassung
+    geprueft, BEVOR sie Standard wurde (N-82: 14 von 16 Urteilen
+    unveraendert, `zufall` unter beiden Regeln sauber).
+    """
     if menge not in MENGEN:
         raise ValueError("unbekannte Menge: %r — erlaubt: %s"
                          % (menge, ", ".join(MENGEN)))
@@ -156,7 +323,8 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
 
     # ---- Nullkontrolle: Rang je Tag gemischt, mehrere Ziehungen -------
     nullw, nullu, nullo = [], [], []
-    for z in range(ZIEHUNGEN):
+    nz = int(null_ziehungen) if null_ziehungen else ZIEHUNGEN
+    for z in range(nz):
         gz = sammle(je_tag, mom, anteil,
                     mische_rang=np.random.default_rng(SAAT + z))
         nb = _band(je_tag_wirkung(gz), rng, block)
@@ -164,9 +332,15 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
             nullw.append(nb["mittel"])
             nullu.append(nb["unten"])
             nullo.append(nb["oben"])
+    # ⚠️ Ohne `null_perzentil` bleibt es beim MAXIMUM - unveraendert.
+    if nullo and null_perzentil:
+        oben = float(np.percentile(nullo, float(null_perzentil)))
+        unten = float(np.percentile(nullu, 100.0 - float(null_perzentil)))
+    else:
+        oben = float(np.max(nullo)) if nullo else 0.0
+        unten = float(np.min(nullu)) if nullu else 0.0
     null = {"mittel": float(np.mean(nullw)) if nullw else 0.0,
-            "unten": float(np.min(nullu)) if nullu else 0.0,
-            "oben": float(np.max(nullo)) if nullo else 0.0}
+            "unten": unten, "oben": oben}
 
     # ---- Positivkontrolle -> TRENNSCHAERFE ----------------------------
     # ⚠️ pflanze = -s, damit die Kennzahl STEIGT. Siehe Modulkopf: das
@@ -179,7 +353,13 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                         mische_rang=np.random.default_rng(SAAT + 1000 * z),
                         pflanze=-s)
             pb = _band(je_tag_wirkung(gz), rng, block)
-            if pb and pb["unten"] > 0:
+            # ⚠️ 2.188-inkonsistenz: die Trennschaerfe prueft gegen NULL,
+            # das URTEIL (`Befund.traegt`) gegen `null_oben`. Sind beide
+            # verschieden, widersprechen sich Trennschaerfe und Urteil im
+            # SELBEN Satz - live sichtbar an `turnover`. Der Vorgabewert
+            # laesst das alte Verhalten unveraendert.
+            latte = max(0.0, null["oben"]) if trennschaerfe_gegen_nullpunkt                 else 0.0
+            if pb and pb["unten"] > latte:
                 gefunden += 1
         treffer[s] = gefunden
         if trennschaerfe is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
@@ -206,7 +386,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                              "pruefe_n31_tagesklammer.je_tag_wirkung",
             band_funktion="messe_bewertungskennzahl.urteil_tage",
             null_konstruktion="Raenge je Tag gemischt (mische_rang)",
-            null_ziehungen=ZIEHUNGEN,
+            null_ziehungen=nz,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "pflanze=-s (Kennzahl STEIGT)",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,
@@ -215,7 +395,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
 
 def vergleiche(a: Befund, b: Befund, je_tag: dict, mom: dict, rng, *,
                horizont: int = 20,
-               staerken: tuple = (0.02, 0.05, 0.10)) -> dict:
+               staerken: tuple = STAERKEN) -> dict:
     """Der GEPAARTE Vergleich (2.105) — mit eigener Trennschaerfe.
 
     ⚠️ Sie fehlte bisher. F-212 meldete *„der Beitrag faellt auf der

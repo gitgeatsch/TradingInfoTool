@@ -10120,3 +10120,113 @@ Kalenderhälften:**
 | Der Effekt schrumpft | ⚠️ 1. Hälfte +0,0743 → 2. Hälfte +0,0241 |
 
 Werkzeug: `messe_akkumulationsmass.py --horizont 90 [--kennlinie|--zerlege]`
+
+---
+
+## 2.155 ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten
+
+**Gemessen am 08.09.2026.** Werkzeuge: `n81_konvergiert_der_nullpunkt.py`
+· `n82_beitragslage_beide_nullregeln.py` · `n83_frei_beide_nullregeln.py`
+· `n84_trennschaerfe_massstab.py` · `n85_leiter_zu_kurz.py`.
+Befunde 2.188 bis 2.199.
+
+### Der Anlass
+
+Nutzerhinweis: *„beachte dass wir schon mehrfach Beiträge unterschiedlich
+als gefallen und wieder aufgenommen haben."* Die Ursache lag nicht bei
+den Kandidaten, sondern **in der Messanlage** — an drei Stellen.
+
+### Fehler 1 — der Nullpunkt war ein Maximum
+
+```python
+return self.unten > max(0.0, self.null_oben)   # Befund.traegt
+null_oben = float(np.max(nullo))               # ueber ZIEHUNGEN = 5
+```
+
+> **Ein Maximum über N Ziehungen ist kein Schätzer.** Es wächst mit jeder
+> weiteren Ziehung und hat keinen Grenzwert.
+
+Auf Kunstdaten mit bekannter Wahrheit (400 Welten, N(0; 0,02), echtes
+p90 = 0,0256):
+
+| n | max | max **Streuung** | p90 | p90 **Streuung** |
+|---|---|---|---|---|
+| 5 | 0,0226 | 0,0140 | 0,0172 | 0,0118 |
+| 20 | 0,0374 | 0,0108 | 0,0227 | 0,0066 |
+| 80 | 0,0489 ⬈ | **0,0095** | 0,0244 | **0,0038** |
+
+Die Streuung von `max` schrumpft **nicht** — das tut ein Schätzer nie.
+Und bei fünf Ziehungen liegt `max` **unter** dem wahren p90: die Latte
+hing zu tief, das Urteil fiel zu wohlwollend.
+
+⚠️ **Es ist keine Verschärfung, sondern eine Stabilisierung.** Die Regel
+bewegt sich in beide Richtungen: `schnitt` bei 10 % kippte **umgekehrt**,
+von „trägt nicht" auf TRÄGT.
+
+### Fehler 2 — zwei Maßstäbe in einem Satz
+
+Die **Trennschärfe** prüfte `pb["unten"] > 0` — gegen null. Das **Urteil**
+prüft gegen `null_oben`. Live sichtbar an `turnover`:
+
+> *„Wirkung +0,0639 über der Trennschärfe 0,0500 R, aber …"*
+
+### Fehler 3 — die Leiter war zu kurz
+
+Die gepflanzten Stärken endeten bei **0,10**, während `schnitt` **+0,1858**
+wirkt. „Untermächtig — selbst +0,10 R gepflanzt wurde nicht gefunden" war
+eine Aussage über die **Leiter**, nicht über die Anlage.
+
+⚠️ Und der eigene Werkzeugkasten widersprach sich: `messnorm_rand.py`
+benutzte seit jeher `(0,02 · 0,05 · 0,10 · 0,20)`.
+
+### Ein vierter, kleinerer Fund — die Reihenfolge im Urteil
+
+`if self.trennschaerfe is None: return "KEIN BEFUND"` stand **vor**
+`if self.traegt: return "TRAEGT"`. Eine zu kurze Leiter entwertet einen
+**Null**befund — einen **positiven** nicht. `schnitt` 20 % hatte
+`traegt = True` und meldete „KEIN BEFUND".
+
+### Der gesetzte Standard
+
+```python
+MESSSTANDARD_AB = "2026-09-08"
+NULL_ZIEHUNGEN = 40
+NULL_PERZENTIL = 90.0
+TRENNSCHAERFE_GEGEN_NULLPUNKT = True
+STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
+```
+
+Alle drei Normmodule — `messnorm`, `messnorm_auswahl`, `messnorm_rand` —
+ziehen aus **dieser einen** Quelle. `standardzeile()` gibt ihn in
+Klartext aus. Das Prüfpaket **`Messstandard`** bewacht ihn; alle zehn
+Prüfungen sind durch **Mutation** belegt (Fehler zurückgebaut → Wächter
+feuert).
+
+### Wie er abgenommen wurde — bevor er Standard wurde
+
+1. **Neutralität zuerst:** die Parameter wurden mit Vorgabewerten
+   eingeführt, die den alten Code **Ziffer für Ziffer** reproduzieren —
+   gegen die Vorgängerfassung aus `git` geprüft.
+2. **Beide Regeln nebeneinander** (N-82, 16 Kandidaten, 37,5 Min):
+   `zufall` trägt unter **keiner**; **14 von 16 Urteilen unverändert**.
+3. **R-R11:** der `funding`-Originalbefund wurde auf **seiner eigenen**
+   Basis (`frei`) reproduziert — er trägt unter beiden Regeln.
+4. **Die Probe gegen Gefälligkeit** (N-85, vorab benannt): die längere
+   Leiter holt `schnitt` zurück, rettet `turnover` und `funding`-50 %
+   aber **nicht**. Wäre sie ein Freibrief, hätte sie auch dort gefunden.
+
+### ⚠️⚠️ Was der Standard NICHT leistet
+
+Er macht die Urteile **widerspruchsfrei**, nicht **schärfer**. Offen:
+
+| | |
+|---|---|
+| **Befund 2.198** | die Positivkontrolle pflanzt in die **gemischte** Welt, deren Band breiter sein kann — dann überschätzt die Trennschärfe systematisch. `schnitt` trägt mit +0,186 bei ausgewiesener Trennschärfe 0,40 |
+| **`ZIEHUNGEN` = 5** | steckt weiter in der Positivkontrolle (4 von 5 — eine Quote mit sechs möglichen Werten) |
+| **p90 oder p95?** | ungeprüft, ob das Perzentil zum Vertrauensniveau des Bandes passt |
+| **Der Selbsttest fehlt** | Fehlalarm- UND Fundquote der ganzen Anlage gegen bekannte Wahrheit |
+
+> ⚠️ **„Die Basis steht" wäre deshalb eine Behauptung, kein Befund.** An
+> einem einzigen Tag kamen drei Fehler in einem Modul heraus, das
+> vorgestern als geprüft galt. Das ist die belastbarste Aussage über die
+> Fehlerrate, die vorliegt.

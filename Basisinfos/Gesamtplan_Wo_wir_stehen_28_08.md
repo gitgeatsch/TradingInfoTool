@@ -733,3 +733,1122 @@ verlangt hat (*„ein gehebelter Trade mit engem Stop trägt sich rechnerisch
 nicht, bevor er begonnen hat — das wäre zu messen, bevor Aufwand in seine
 Verwaltung fließt"*). Sie kann den ganzen Umbau der Instrument-Achse
 überflüssig machen.
+
+
+# ⚠️⚠️ NACHTRAG 07.09.2026 — `schnitt` und das Akkumulationsmaß sind DIESELBE GRÖSSE
+
+**Quelle:** Befundkarte 2.155 bis 2.159 · `n61` bis `n67` ·
+`REGISTER_Befunde.md`
+
+## Der Fund, der zwei Themen zusammenlegt
+
+`schnitt` rechnet `c / mean(c[-200:]) − 1`. `UNTER_SMA` (das
+Akkumulationsmaß) prüft `kurs < sma200`. **Dieselbe Achse**, einmal
+stetig, einmal als Schalter. Sie standen nie nebeneinander, weil der
+28.08.-Befund nie ins Register kam und `schnitt` am 31.08. auf
+kontaminierter Basis verworfen wurde (2.153).
+
+> Damit sind „`schnitt` wieder einbauen" und „das Akkumulationsmaß als
+> Beitrag aufsetzen" **eine** Aufgabe, nicht zwei.
+
+## Was am 07.09. entschieden wurde
+
+| | |
+|---|---|
+| **Durchlassquote** | **0,080 R festgeschrieben** = 16,4 % Durchlass ≈ 6 Empfehlungen/Woche. R-R9 verlangte sie als Nutzerentscheidung; sie stand seit dem 30.08. aus |
+| **Sichtbarkeit** | Die Schwelle stand **nur als Konstante im Code**. Jetzt: `config.yaml → bewertung: potential_schwelle_r` steuert ohne Neustart, **jede Mail nennt Wert, Quelle und Alter**, fünf Suiteprüfungen halten es offen |
+| **BTC/ETH/SOL** | **Nichts zu lösen.** Die −0,0251/−0,0308/−0,0291 aus 2.154 sind mit p 0,833 nicht von null zu trennen (3 Reihen, 8–12 Blöcke). Nach Tiefanteil geschichtet trägt `UNTER_SMA` in 4 von 5 Fünfteln, im **flachsten** — dort liegen BTC und ETH — am stärksten: +0,0481 (p 0,000, 101 Reihen) |
+
+## ⚠️⚠️ Die ABDECKUNG ist das stärkste Argument für `schnitt`
+
+| Beitrag | Symbole | Abdeckung | Quelle |
+|---|---|---|---|
+| funding | 293 | 55,9 % | Binance-Perpetuals (fremd) |
+| turnover | 66 | 12,6 % | onchain (fremd) |
+| oi_aenderung | 117 | 22,3 % | Terminmarkt (fremd) |
+| **schnitt** | **524** | **100 %** | **die Kursreihe selbst** |
+
+**Bewertbar: 60,5 % → 100 %.** 207 Symbole bekamen bisher gar keine
+Bewertung. `schnitt` ist der einzige Beitrag ohne Fremdquelle und heilt
+damit genau den Defekt, den die stehende Vorgabe benennt: *„sonst kodiert
+die Bewertung: hat Daten."*
+
+## Was `schnitt` sein KANN — und was nicht
+
+| Form | Befund |
+|---|---|
+| **Sperre** (oberstes Fünftel) | ✔ **trägt** — +0,1759 R allein (N-59 reproduziert), **+0,0397 R zusätzlich nach funding+turnover** (2.159) |
+| **5-Stufen-Regler** | ✖ **nicht herleitbar** — entzerrt +4,07 / +5,55 / **+9,49** / +1,71 / −4,65 Punkte: ein **Buckel**, Hochpunkt bei Fünftel 2. Die Vorabfestlegung verlangt Monotonie |
+| **Schalter am SMA** | ○ **nicht unterscheidbar** vom Regler — die Bänder überlappen (2.158-form) |
+
+⚠️ **Der Buckel ist zum dritten Mal da:** 27.08. (Verbilligung), 31.08.
+(+1,27 +1,59 +0,24 −1,28 −1,82), 07.09. Er ist kein Messfehler, sondern
+offenbar die Form der Sache.
+
+## ⚠️ Zwei eigene Fehler, von den eigenen Kontrollen gefangen
+
+1. **Konstruktionsverzerrung.** `median(Gruppe) − median(alle)` lieferte
+   bei *gemischten* Rängen +0,10 bis +0,16 R statt null — der
+   Stichprobenmedian kleiner Gruppen ist bei schiefer Verteilung nach oben
+   verzerrt. Fünftel 0 hat 1,49 Anker je Tag. **Die Verzerrung war so groß
+   wie die gesuchten Effekte.** Alle Zahlen sind seither entzerrt.
+2. **Gleichstandsfalle (2.157-form, zurückgezogen).** Der Schalter-Arm
+   lief über den Rang; bei 65,2 % Einsen liegt das oberste Rangfünftel
+   ganz in der Einser-Gruppe, und `rang` bricht Gleichstände nach
+   Array-Reihenfolge. **Nach Umsortieren eines Tages waren nur 15 von 62
+   Symbolen dieselben.** Der Arm maß eine beliebige Teilmenge.
+
+## Der Plan — Reihenfolge und Abbruchbedingung
+
+| # | Schritt | Zustand |
+|---|---|---|
+| **S-1** | Durchlassquote 0,080 festschreiben | ✔ erledigt 07.09. |
+| **S-2** | Schwelle sichtbar und steuerbar machen | ✔ erledigt 07.09. |
+| **S-3** | Stufen für `schnitt` herleiten | ✖ **nicht herleitbar** — Buckel, 2.158 |
+| **S-4** | Über die Kette simulieren | ✔ trägt zusätzlich, 2.159 |
+| **S-7** | Stabilität über die Zeit klären | ⛔ **erledigt 07.09. — Abbruchbedingung EINGETRETEN** |
+| **S-5** | `schnitt` als Sperre bauen | ⛔ **fällt weg** (siehe unten) |
+| **S-6** | R-R9: Schwelle neu kalibrieren | ⛔ entfällt mit S-5 |
+
+## ⛔⛔ S-7 BEANTWORTET — und `schnitt` fällt (07.09. abends)
+
+⚠️ **N-60 kam nicht weiter, weil der Aufbau falsch war**, nicht weil Daten
+fehlten. Es fragte *„trägt er in A?"* UND *„trägt er in B?"* — zwei
+halbierte Tests. Die richtige Frage ist **eine**: *ist (A−B) von null zu
+trennen?*, gestellt auf der ganzen Reihe.
+
+| Schnitt | A | B | A−B | Band | |
+|---|---|---|---|---|---|
+| **Hälften** | +0,2742 | +0,0504 | **+0,2238** | [+0,0792 .. +0,3988] | ⚠️ **Unterschied**, Trennschärfe 0,02 R |
+| funding | +0,0771 | +0,0195 | +0,0576 | [−0,0450 .. +0,1804] | stabil bis 0,05 R |
+| zufall | −0,0006 | +0,0060 | −0,0066 | [−0,0258 .. +0,0154] | kein |
+
+**Der Jahresverlauf zeigt die Quelle:**
+
+    2019 +0,4532   2021 +0,3440   2023 -0,0498   2025 +0,1280
+    2020 +0,5100   2022 +0,0187   2024 +0,1603   2026 -0,1158
+
+**Und heute trägt er nicht mehr nachweisbar** — weder allein noch in der
+Kette:
+
+| | ganz | ab 2022 | ab 2023 | ab 2024 |
+|---|---|---|---|---|
+| **funding** (Kontrolle) | +0,0446 ✔ | +0,0157 ✔ | +0,0170 ✔ | +0,0182 ✔ |
+| **schnitt** allein | +0,1623 ✔ | +0,0414 ✖ | +0,0478 ✖ | +0,0855 ✖ |
+| **schnitt in der Kette** | +0,0397 ✔ | +0,0165 ✖ | +0,0216 ✖ | +0,0264 ✖ |
+
+⚠️⚠️ **Es liegt NICHT an der Messdauer:** `funding` trägt in denselben
+Fenstern mit einem *kleineren* Effekt. `schnitt`s Bänder sind rund
+fünfmal breiter — der Effekt ist groß, aber zu unruhig.
+
+⚠️ **Genauigkeit:** „heute nicht nachweisbar" ist nicht „trägt nicht".
+Die Trennschärfe liegt allein bei 0,10 R, in der Kette bei 0,05 R; die
+Werte liegen darunter. Es ist **unentschieden** — aber eine
+Bauentscheidung braucht einen Nachweis, keine offene Frage.
+
+⚠️ **Das Abdeckungsargument trägt allein nicht.** 60,5 % → 100 % bleibt
+ein echter Mangel, aber ihn mit einer Größe zu schließen, deren heutige
+Wirkung nicht nachweisbar ist, wäre genau der Defekt der stehenden
+Vorgabe: *„sonst kodiert die Bewertung: hat Daten."*
+
+### Was daraus als nächstes folgt
+
+    N-1   Die Abdeckungsluecke bleibt OFFEN und braucht einen ANDEREN
+          Beitrag aus der eigenen Kursreihe - `schnitt` scheidet aus.
+          Kandidaten aus der Kursreihe, noch nie unter der Norm gemessen:
+          Lebendigkeit, Positionierung im ATR-Kanal, Rueckgang vom Hoch.
+    N-3   Die Schwelle 0,080 bleibt, wo sie ist - ohne neuen Beitrag
+          gibt es keine R-R9-Folgepflicht.
+
+## ⚠️⚠️ N-2 SOFORT NACHGEZOGEN — und `turnover` hat ein Problem
+
+Einen Kandidaten an einer Hürde scheitern zu lassen, die die **laufenden**
+Beiträge nie nehmen mussten, wäre zweierlei Maß gewesen. Also derselbe
+Test auf den Bestand (`n70`):
+
+| Beitrag | Stabilität (Hälften) | ganz | ab 2022 | ab 2024 |
+|---|---|---|---|---|
+| **oi_aenderung** | stabil bis 0,05 R | +0,0296 ✔ | +0,0296 ✔ | +0,0287 ✔ |
+| **funding** | stabil bis 0,05 R | +0,0446 ✔ | +0,0157 ✔ | +0,0182 ✔ |
+| **turnover** | stabil bis 0,10 R | +0,0498 ✖ | **−0,0112** | **−0,0307** |
+
+⚠️ **`oi_aenderung` ist der solideste Beitrag im System** — über die Zeit
+praktisch unverändert.
+
+⚠️⚠️ **`turnover` dreht ab 2022 das Vorzeichen** und trägt dabei die
+**größten Stufen des Systems** (+3,15 bis −2,40). R-R11 ist erfüllt: das
+Werkzeug reproduziert den registrierten Anker exakt (frei +0,0616
+[+0,0185 .. +0,1084] gegen +0,06163 [+0,01851 .. +0,10841]). **Aber auf
+der selektierten Menge — wo Beiträge zu beurteilen sind — liegt er bei
++0,0865 [−0,0060 .. +0,1696]: das Band schließt die Null ein.** Der
+registrierte Befund stammt von der *freien* Menge.
+
+Das verstärkt **F-217** („funding hält, turnover nicht") aus einer ganz
+anderen Richtung: dort die Kalibrierung, hier die Zeitachse.
+
+    N-4   ⚠️ turnover ist der naechste Punkt, nicht die Abdeckungsluecke.
+          Zu klaeren: (a) reproduziert das Vorzeichen ab 2022 auch mit
+          `pruefe_auswahl` je Zeitraum? (b) wenn ja - Stufen auf null,
+          wie bei H am 31.08., oder Tabelle neu herleiten?
+          ⚠️ Beides loest R-R9 aus: die Schwelle 0,080 waere neu zu
+          kalibrieren.
+
+## ⚠️ Was S-5 konkret hieße — und warum es KEIN Beitrag an Stufe 12 ist
+
+`oi_aenderung` ist der Präzedenzfall: er trägt **als Schalter** (H-4c) und
+sitzt als Sperre an Stufe 11, nicht als Punktetabelle an Stufe 12. Für
+`schnitt` gilt dasselbe:
+
+    Stufe 11   Sperre: oberstes Fuenftel des Schnittabstands
+               (Durchlassquote der Simulation: sperrt 21,6 % dessen,
+                was funding + turnover uebrig lassen)
+    Stufe 12   UNVERAENDERT - `schnitt_fuenftel` bleibt auf `zustand="null"`,
+               weil die Stufen nicht monoton sind
+
+⚠️ **Die Redundanz ist gemessen und schließt es nicht aus:** Spearman
++0,704 zum Auswahlmomentum im vollen Querschnitt, aber **+0,418 innerhalb
+der Auswahl** — und nur die zweite Zahl zählt, weil Stufe 11/12 auf der
+bereits ausgewählten Menge arbeiten.
+
+## Akkumulation — was daraus für die Strategie folgt
+
+Die Kette winkt bei `akkumulation` an Stufe 12 durch (`vermessen=False`,
+2.152). Mit `schnitt` als Sperre gäbe es dort **zum ersten Mal eine
+gemessene Grundlage** — und zwar für alle Werte, auch BTC/ETH/SOL.
+
+⚠️ **Aber die Zielgröße ist zu trennen.** `bewegung_r` beantwortet „wie
+läuft es nach dem Einstieg", die *Verbilligung* beantwortet „war es ein
+guter Kauftag". 2.154 gilt auf der zweiten, 2.159 auf der ersten. **Wer
+sie vermischt, hat zwei Befunde zu einem gemacht.**
+
+## Die anderen Assetklassen — vorgesehen, nicht vergessen
+
+`schnitt` braucht **keine Fremdquelle** und ist damit der einzige Beitrag,
+der in Aktien, Themen-ETF, Rohstoffen und Absicherung ohne neue Datenquelle
+messbar wäre. Die Messbasis dafür steht seit N-19 (03.09.).
+
+    A-1   `schnitt` auf den vier Nicht-Krypto-Klassen messen -
+          dieselbe Norm, dieselbe selektierte Menge
+    A-2   erst danach entscheiden, ob G-6 dort scharf bleibt
+          (2.152: vier von fuenf Klassen sind nach DATENLAGE gesperrt,
+           nicht nach Bewertung - das ist eine Luecke, kein Urteil)
+
+⚠️ **A-1 kommt nach S-7**, nicht davor: eine Größe, deren Zeitstabilität
+in Krypto ungeklärt ist, in vier weitere Klassen zu tragen, vervierfacht
+nur das offene Problem.
+
+
+# ⚠️⚠️ NACHTRAG 07.09.2026 SPÄT — N-4 geklärt: `turnover` gerettet, zwei eigene Befunde gefallen
+
+**Quelle:** Befundkarte 2.162 / 2.163 · `n71` / `n72` · Register
+
+## Die Vorgabe, unter der das lief
+
+Nutzervorgabe: *„bevor eine Bewertung fällt müssen wir alles unternehmen —
+was ist der Grund und dass wir eine Lösung finden."* Ein Nullbefund ist
+eine **Zerlegung**, kein Urteil.
+
+## ⚠️⚠️ Der Grund war nie der Beitrag, sondern die MENGE
+
+`turnover` deckt **66 von 524** Symbolen ab. Auf der 20-%-Menge sind das
+**10,1 Anker je Tag** (früh 5,3) — und N-65 hat gemessen, dass die
+Statistik dort fast nur Rauschen ist. `pruefe_auswahl` sagte das selbst:
+*„KEIN BEFUND — untermächtig."*
+
+Vier Erklärungen wurden vorab benannt und getrennt geprüft:
+
+| | | |
+|---|---|---|
+| **A Gruppengröße** | ✔ **bestätigt** | 10,1 Anker/Tag bei 20 %, 25,5 bei 50 % |
+| **B Datenquelle** | ✖ ausgeschieden | der `splycur`-Ausreißer ab 2023 ist XVG — große Umlaufmenge macht den Quotienten *klein*; die Kennzahl ist über alle Jahre stabil und geht als Rang ein |
+| **C Marktwandel** | ○ nicht nötig | A erklärt es vollständig |
+| **D nur oberstes Fünftel** | ✔ **beruhigend** | die Extreme sind stabil: F0 +0,2314 → +0,2745, F4 −0,1354 → −0,1316. Nur die Mitte dreht — und die Live-Regel sperrt F4 |
+
+## Die Lösung — eine Regel, für alle gleich
+
+> **Die schmalste Menge, die noch ≥ 12 Anker je Tag **und** ≥ 20 Blöcke
+> liefert.**
+
+Die 12 ist nicht erfunden: `sammle` verwirft Tage unter 12 Werten bereits
+im Code. Gebaut als `messnorm_auswahl.menge_nach_datenlage()`, plus die
+neue Menge `50%`; fünf Suiteprüfungen halten es offen.
+
+| Beitrag | Menge | Wirkung ab 2022 | Stabilität |
+|---|---|---|---|
+| **turnover** | 50 % | **+0,0598** [+0,0066 .. +0,1139] | stabil bis 0,10 R |
+| **funding** | 10 % | +0,0607 [+0,0079 .. +0,0863] | stabil bis 0,10 R |
+| **oi_aenderung** | 20 % | +0,0446 [+0,0270 .. +0,0633] | stabil bis 0,05 R |
+| zufall | 5 % | +0,0052 [−0,0191 .. +0,0235] | stabil |
+
+**`turnover` ist nicht gefallen — er ist ab 2022 positiv.** Alle drei
+Live-Beiträge tragen und sind zeitstabil.
+
+## ⚠️⚠️ Zwei eigene Befunde von heute sind dabei gefallen
+
+1. **„`turnover` dreht ab 2022 das Vorzeichen"** (2.161-turnover) — auf
+   der falschen Menge gemessen.
+2. **„`schnitt` ist nicht zeitstabil"** (2.160) — **zwei** Fehler: die
+   20-%-Menge statt seiner eigenen (10 %), *und* eine Trennschärfe, die
+   auf die **echte** Reihe gepflanzt war. Ist der Unterschied schon
+   trennbar, bleibt er es bei jedem Versatz — „ab 0,02 R" hieß nur „der
+   Effekt ist groß". Zentriert gemessen: **>0,20 R**.
+
+⚠️ **Ein neuer Befund über `schnitt` bleibt aber:** sein
+Hälftenunterschied **dreht mit der Menge** (+0,2238 bei 20 %, −0,0647 bei
+10 %). Bei `funding` und `zufall` tut er das *nicht*. Eine Größe, deren
+Vorzeichen am Messfenster hängt, ist keine verlässliche Grundlage.
+
+## Der Stand von `schnitt` — dasselbe Ergebnis, schwächerer Grund
+
+    Stufen        nicht monoton (2.158)              -> nicht nutzbar
+    heute         +0,1152 [-0,0377 .. +0,2687]       -> nicht trennbar
+    Stabilitaet   -0,0647, Trennschaerfe >0,20 R     -> unentschieden
+    Massstab      Vorzeichen dreht mit der Menge     -> nicht verlaesslich
+
+⚠️ **Nicht „widerlegt", sondern „nichts davon entscheidbar".** Drei offene
+Fragen sind keine Bauentscheidung.
+
+**R-R11 nach dem Umbau:** alle sieben Anker aus `messbasis_anker.json`
+reproduzieren auf fünf Stellen — `50%` und `menge_nach_datenlage` haben
+keine bestehende Messung verschoben.
+
+### Was als nächstes ansteht
+
+    N-5   ✔ ERLEDIGT 07.09. - siehe unten.
+    N-6   Die Abdeckungsluecke (60,5 % bewertbar) bleibt offen und
+          braucht einen Beitrag aus der eigenen Kursreihe. `schnitt`
+          scheidet vorerst aus.
+    N-7   Die Schwelle 0,080 bleibt - kein neuer Beitrag, keine
+          R-R9-Folgepflicht.
+
+
+# ✔✔ NACHTRAG 07.09.2026 — N-5 erledigt: die Durchsicht fällt beruhigend aus
+
+**Quelle:** Befundkarte 2.164 · `n73_durchsicht_kandidaten.py` · 11 Minuten
+
+## Die Frage
+
+Alle früheren Beitragsmessungen liefen auf 20 % oder 5 %, ohne je zu
+prüfen, ob die Datenlage das trägt. `turnover` war daran fast gescheitert.
+**Wie viele andere stehen auf zu dünner Grundlage?**
+
+## Die Antwort: zwei von zehn
+
+| Kandidat | zulässige Mengen | Urteil |
+|---|---|---|
+| **turnover** | {50 %, frei} | **trägt in BEIDEN** ✔ |
+| **schnitt** | {10 %, 20 %, 50 %, frei} | trägt **nur bei 20 %** ✖ |
+| funding · oi_aenderung · vola · schnitt50 · amihud · rsi · momentum | — | **über alle Mengen gleich** ✔ |
+| zufall | — | trägt auf keiner ✔ |
+
+**`amihud` und `rsi` bleiben abgelehnt, `vola` bleibt offen, `funding` und
+`oi_aenderung` bleiben tragend.** Die bisherigen Befunde stehen —
+`turnover` war der Einzelfall, nicht die Regel.
+
+## ✔✔ `turnover` ist voll rehabilitiert — nicht nur ab 2022
+
+Auf der **ganzen** Historie und seiner Menge (50 %): **+0,0909
+[+0,0433 .. +0,1454], Urteil TRÄGT** — stärker als der registrierte Wert
+von der freien Menge (+0,0616).
+
+## ⚠️⚠️ `schnitt` ist nicht robust — und das ist der vierte Grund
+
+Zulässig sind für ihn vier Mengen. Er trägt nur auf einer.
+
+    10 %   +0,1780 [+0,0274 .. +0,3361]   nicht trennbar
+    20 %   +0,1759 [+0,0715 .. +0,2907]   TRAEGT
+    frei   +0,0299 [-0,0018 .. +0,0668]   nicht trennbar
+
+**Fast derselbe Punktschätzer, anderes Urteil** — allein wegen der
+Bandbreite. Der N-59-Befund hängt an der Wahl „20 %".
+
+## ⚠️ Ein Denkfehler in der eigenen Regel, von der Durchsicht aufgedeckt
+
+`menge_nach_datenlage` gibt die **schmalste** zulässige Menge — und die
+ist zugleich die **rauschendste**. Sie zum alleinigen Maßstab zu machen
+bestraft jeden Kandidaten mit guter Abdeckung.
+
+> **Richtig:** die Zulässigkeit sortiert aus, was zu dünn ist. Das
+> **Urteil** muss über **alle** zulässigen Mengen halten. Ein Kandidat,
+> der nur auf einer trägt, ist nicht robust — und das ist ein Befund über
+> ihn, kein Grund, sich die passende Menge auszusuchen.
+
+Gebaut als `messnorm_auswahl.zulaessige_mengen()`, mit Suiteprüfung.
+
+### Was jetzt ansteht
+
+    N-6   Die Abdeckungsluecke: 60,5 % der 524 Symbole sind bewertbar,
+          weil alle drei tragenden Beitraege aus FREMDQUELLEN kommen.
+          Gebraucht wird ein Beitrag aus der eigenen Kursreihe -
+          `schnitt` scheidet aus (nicht robust). Nie unter der Norm
+          gemessene Kandidaten aus der Kursreihe: Lebendigkeit,
+          Positionierung im ATR-Kanal, Rueckgang vom Hoch.
+    N-7   ✔ ERLEDIGT 07.09. - die Tabelle ist RICHTIG, siehe unten.
+    N-8   Die vier Nicht-Krypto-Klassen: dort ist noch KEIN Beitrag
+          gemessen, und G-6 sperrt sie nach Datenlage (2.152).
+
+
+# ✔✔ NACHTRAG 07.09.2026 — N-7 erledigt: `turnover`s Stufen sind richtig
+
+**Quelle:** Befundkarte 2.165 · `n74_turnover_stufen_nachgerechnet.py`
+
+## Die Sorge
+
+N-73 zeigte: auf seiner zulässigen Menge (50 %) trägt `turnover` mit
++0,0909 R — **48 % stärker** als der registrierte Wert von der freien
+Menge. Die live laufende Tabelle trägt die **größten Stufen des Systems**.
+Wenn sie um die Hälfte danebenliegt, liegt jede Bewertung mit ihr daneben.
+
+## Das Ergebnis: sie liegt nicht daneben
+
+| | F0 | F1 | F2 | F3 | F4 | Spanne |
+|---|---|---|---|---|---|---|
+| **registriert** | +3,15 | +0,83 | +0,22 | −1,79 | −2,40 | +5,55 |
+| **Querschnitt, entzerrt** | **+3,13** | +0,76 | +0,22 | −1,73 | −2,38 | +5,51 |
+| Auswahl 50 % | +4,04 | +0,96 | −0,04 | −2,06 | −2,90 | +6,94 |
+
+**Abweichung höchstens 0,07 Punkte.** Alle Varianten monoton (die
+Vorabbedingung), `zufall` bei maximal 0,38 Punkten.
+
+**R-R11 vorab erfüllt:** `rechne_turnover_beitrag.py` reproduziert die
+registrierte Tabelle exakt.
+
+## ⚠️ Warum die Entzerrung hier nichts ändert — bei `schnitt` aber alles
+
+Im **Querschnitt** sind die Fünftel **gleich groß** (9,0 bis 9,8 Anker je
+Tag). Die Verzerrung aus N-65 trifft alle fünf gleich und hebt sich im
+Bezug auf den Mittelwert der fünf auf. Bei `schnitt` auf der selektierten
+Menge hatte Fünftel 0 dagegen **1,49** Anker und Fünftel 4 **29,35** —
+dort verschiebt die Verzerrung die Stufen gegeneinander.
+
+> **Die Gefahr liegt nicht in der Verzerrung selbst, sondern in ihrer
+> UNGLEICHHEIT über die Gruppen.**
+
+## Die Entscheidung: Tabelle NICHT ändern
+
+Auf der Auswahl wäre sie 25 % steiler — dieselbe Richtung wie N-73. Aber:
+
+    Ableitungsbasis   der volle Querschnitt ist GENAU die Basis, auf der
+                      `marktrang` auch in der Produktion rangt
+    Besetzung         auf der Auswahl nur 3,9 bis 5,2 Anker je Fuenftel
+    Stellvertreter    die momentum250-Auswahl ist nicht die Menge, die in
+                      der Kette wirklich bis zur Bewertung kommt
+    Folgekosten       eine Aenderung loeste R-R9 aus (Neukalibrierung der
+                      Schwelle 0,080) - ohne belegten Gewinn
+
+⚠️ **Die registrierte Tabelle unterschätzt also eher — und unterschätzen
+ist die sichere Richtung.** Revidierbar, sobald die tatsächliche Menge an
+Stufe 12 rekonstruiert werden kann statt über einen Stellvertreter.
+
+### Damit ist die Beitragslage für Krypto sauber
+
+    funding        traegt · stabil bis 0,10 R · Tabelle steht
+    turnover       traegt (+0,0909 auf 50 %) · stabil bis 0,10 R ·
+                   Tabelle NACHGERECHNET und bestaetigt
+    oi_aenderung   traegt · stabil bis 0,05 R · Schalter
+    schnitt        nicht robust - vier unabhaengige Gruende
+    amihud, rsi    abgelehnt, ueber alle Mengen bestaetigt
+    vola           offen (nicht trennbar auf allen Mengen)
+
+**Offen bleiben N-6 (Abdeckungslücke) und N-8 (Nicht-Krypto-Klassen).**
+
+
+# ⛔ NACHTRAG 07.09.2026 — `amihud` an der Positionsgröße: auch dort nicht
+
+**Quelle:** Befundkarte 2.167 · `n76_amihud_an_der_groesse.py`
+
+## Die Hypothese
+
+`amihud` trägt als Richtungsbeitrag nicht (N-73, N-75). Aber
+Illiquidität sagt nichts über die Richtung — sie sagt, **wie teuer ein
+Ausstieg wird**. Und davon lebt RM-1:
+
+    max_position = risk_budget / (stop_abstand / kurs)
+
+Diese Rechnung **setzt voraus, dass der Stop hält.**
+
+⚠️ **Zwei Regeln vorab geklärt:** Regel 2 (Gebühren nicht in die
+Bewertung) — hier wird nichts am Potential gerechnet, die Größe ist eine
+getrennte Entscheidung. Regel 3 (beim Hebel kein Asset-Rang) — `amihud`
+wird **absolut** gemessen, feste Niveaus statt Tagesränge.
+
+## ⚠️⚠️ Befund 1: Der Stop-Durchschlag existiert in Krypto praktisch nicht
+
+**71 Fälle von 728.920 Ankern (0,0097 %).** Die Kontrolle (gemischt)
+liefert 15/10/20/14 gegen echte 0/14/18/28/11 — nicht unterscheidbar.
+
+> **Der Grund generalisiert: Krypto handelt durchgehend.** Ein Kurstag,
+> der *ganz* unter dem Stop liegt, verlangt eine Übernachtlücke — die es
+> an einem 24/7-Markt nicht gibt.
+
+### ✔✔ Daraus folgt etwas Nützliches, unabhängig von `amihud`
+
+**RM-1s Grundannahme ist für Krypto belegt:** in 99,99 % der Anker war
+der Stop zum Stoppreis handelbar. ⚠️ Untergrenze — ohne Eröffnungskurs
+ist nur nachweisbar, was den *ganzen* Tag unter dem Stop lag.
+
+## ⚠️⚠️ Befund 2: Die Mehrstreuung liegt auf der falschen Seite
+
+| Band | unten (Median−P25) | oben (P75−Median) | IQA |
+|---|---|---|---|
+| 0 liquideste | **1,909** | **1,342** | 3,251 |
+| 4 illiquideste | **1,727** | **2,054** | 3,780 |
+
+Der Interquartilsabstand steigt deutlich (Kontrollspanne nur 0,027) —
+**aber vollständig nach oben.** Auf der **Verlustseite** sind illiquide
+Werte *enger*. Kleiner zu dimensionieren wäre unbegründet.
+
+⚠️ **Der Geometrie-Einwand wurde geprüft und ausgeräumt:** der 5-%-Boden
+bindet bei Band 0 in 38,2 % und bei Band 4 in 38,5 % der Anker
+(ATR/Kurs 0,0790 gegen 0,0752) — praktisch gleich.
+
+## ⚠️ Zwei eigene Ausgabefehler, zwischen Ergebnis und Deutung gefangen
+
+1. „Durchschlag 0,0 %" war **gerundet**, nicht null — die Mittelwerte
+   standen auf 11 Fällen, ohne dass die Zahl dastand.
+2. Die **Standardabweichung** als Streuungsmaß lag bei 250, getragen von
+   0,06 % der Anker (ein Coin, der sich in 20 Tagen verzwanzigfacht,
+   ergibt bei 5 % Stopweite 400 R).
+
+Beides ersetzt durch absolute Zahlen und den Interquartilsabstand.
+
+### Damit ist `amihud` an beiden Achsen erledigt
+
+    Richtung        traegt nicht - alle Mengen (N-73), beide Achsen (N-75)
+    Positionsgroesse traegt nicht - kein Rutschen, Mehrstreuung nach OBEN
+
+**Offen bleiben N-6 (Abdeckungslücke) und N-8 (Nicht-Krypto-Klassen).**
+
+
+# ⛔ NACHTRAG 07.09.2026 — N-6 ist falsch gestellt und wird gestrichen
+
+**Quelle:** Befundkarte 2.168 · `n77_ist_die_abdeckung_repraesentativ.py`
+
+## Die Prämisse hielt der Prüfung nicht stand
+
+N-6 hieß: *„60,5 % der Symbole sind bewertbar — gebraucht wird ein Beitrag
+aus der eigenen Kursreihe."* Gemessen:
+
+| | ohne Beitrag |
+|---|---|
+| **Betrieb** (Watchlist, k=2) | **4,2 %** der gewählten Anker — FLOKI, XNO |
+| Messbasis (524, 20 %) | 32,4 % |
+
+⚠️ **Nutzervorgabe vom 07.09., wörtlich:** bei Meme- und Smallcap-Werten
+ist eine fehlende Bewertung *„als unkritisch zu bewerten"*. FLOKI ist ein
+Meme-Coin, XNO ein Smallcap. **Kein Betriebsproblem.**
+
+## Als Messfrage: nicht entschieden auf der Auflösung, die zählt
+
+`schnitt` und `vola` (beide 100 % Abdeckung) auf beiden Gruppen:
+
+    schnitt   MIT -0,0774 gegen OHNE   Band schliesst null ein
+    vola      MIT -0,0885 gegen OHNE   Band schliesst null ein
+    zufall            -0,0056          Band schliesst null ein  ✔
+
+⚠️ **Aber die Trennschärfe liegt bei 0,10 R** — größer als die Effekte, um
+die es geht (0,02–0,09 R). Ein Unterschied dieser Größe könnte sich
+verstecken. **Nicht „repräsentativ", sondern „nicht entscheidbar".**
+
+⚠️⚠️ **Die Kontrolle fing dabei einen eigenen Fehler:** der erste Anlauf
+differenzierte die **rohen** Tagesreihen. Bei 35 gegen 20 Ankern je Tag
+ist die N-65-Verzerrung *ungleich* — `zufall` zeigte prompt einen
+„Unterschied" von −0,0212 [−0,0417 .. −0,0038]. Mit je Gruppe entzerrten
+Reihen verschwindet er.
+
+## ⚠️⚠️ Warum ein neuer Kursreihen-Beitrag nicht die Antwort ist
+
+Die **Kombinationsmatrix vom 27.08.** hat es bereits festgehalten:
+
+> *„M2–M12 und M15–M17 sind alle aus Kurs, Volumen oder Modellantwort
+> abgeleitet. M13 und M14 sind die einzigen echten Fremdquellen."*
+> … *„Die Information steckt nicht in den Kursdaten. Wer nur Kursreihen
+> kombiniert, kombiniert Ableitungen derselben Quelle."*
+
+Die heutige Durchsicht bestätigt es: `schnitt`, `vola`, `rsi`, `amihud`,
+`momentum`, `schnitt50` — alle gemessen, keiner trägt robust.
+
+## Die beiden echten Fremdquellen — geprüft
+
+| | |
+|---|---|
+| **M13 Terminmarkt** | ✔ realisiert (122 Symbole, 1.734 Tage bis 02.09.2026) — ⚠️ deckt aber nur 122 von 524 ab und **schließt die Lücke nicht** |
+| **M14 Entwickleraktivität** | Messwerkzeug da, **in keiner Datenbank eine Tabelle** |
+
+**Es gibt derzeit keine verfügbare Quelle, die die Lücke schließen würde.**
+
+### Was stattdessen offen ist — ohne neue Datenquelle
+
+    N-9   ⛔ ERLEDIGT 07.09. - KEINER traegt. Siehe unten.
+    N-8   Die vier Nicht-Krypto-Klassen - dort ist noch KEIN Beitrag
+          gemessen, und G-6 sperrt sie nach Datenlage (2.152).
+    N-10  ⚠️ NUTZERENTSCHEIDUNG: eine neue Fremdquelle mit BREITER
+          Abdeckung anbinden waere der einzige Weg, die Luecke
+          wirklich zu schliessen. Das ist eine Aufwands- und
+          Kostenfrage, keine Messfrage.
+
+
+# ⛔⛔ NACHTRAG 07.09.2026 — N-9 erledigt: mit den vorhandenen Daten gibt es keinen vierten Beitrag
+
+**Quelle:** Befundkarte 2.169 · `n78_terminmarkt_kanaele.py`
+
+## Das Ergebnis
+
+| Kanal | zulässige Mengen | trägt auf |
+|---|---|---|
+| `oi_je_umsatz` | 20 %, 50 %, frei | **0 von 3** |
+| `long_bias` | 20 %, 50 %, frei | **0 von 3** |
+| `top_bias` | 50 %, frei | **0 von 2** |
+| `taker_bias` | 20 %, 50 %, frei | **0 von 3** |
+| *`oi_aenderung`* (Referenz) | 20 %, 50 %, frei | **3 von 3** |
+
+`oi_aenderung`s Band schließt in **jeder** Menge die Null aus (+0,0469 /
++0,0243 / +0,0145) — die vier Kandidaten in keiner. `zufall` trägt
+nirgends.
+
+## ⚠️⚠️ Warum die N-17b-Befunde sich nicht übertragen
+
+Dort trugen `oi_je_umsatz`, `long_bias` und `top_bias` — **aber gegen
+FRONTLOADING**, eine andere Zielgröße. Genau diese Verwechslung hat F-207
+schon einmal erzeugt.
+
+> **Ein Kandidat, der die Frontloading-Quote verschiebt, verbessert
+> deshalb nicht das ERGEBNIS.**
+
+## Zwei saubere Nebenbefunde
+
+    oi_je_umsatz gegen turnover   -0,490   beide umsatznormiert -
+                                           echte Ueberschneidung
+    long_bias gegen top_bias      +0,950   N-17b mass +0,955 - REPRODUZIERT
+
+## ⚠️⚠️ Der Gesamtbefund
+
+> **Mit den vorhandenen Daten gibt es keinen vierten Beitrag.**
+
+    Kursreihe      erschoepft (2.168 - 15 Merkmale, keiner robust)
+    Terminmarkt    erschoepft (nur `oi_aenderung` traegt)
+    onchain        liefert `turnover`
+    Binance        liefert `funding`
+
+Ein weiterer Beitrag verlangt eine **neue Datenquelle**. Das ist eine
+Entscheidung über Aufwand und Kosten — keine Messfrage.
+
+### Was offen bleibt
+
+    N-8    Die vier Nicht-Krypto-Klassen: dort ist noch KEIN Beitrag
+           gemessen, und G-6 sperrt sie nach Datenlage (2.152). Das
+           ist die letzte Messfrage mit vorhandenen Daten.
+    N-10   ⚠️ NUTZERENTSCHEIDUNG: neue Fremdquelle anbinden.
+           Genannte Kandidaten: Entwickleraktivitaet (Werkzeug da,
+           keine Daten), Sentiment/Social, CoinGecko-Metadaten.
+
+
+# ⚠️⚠️ NACHTRAG 08.09.2026 — N-8 KORRIGIERT: der Aktien-Nullbefund war Untermacht
+
+**Quelle:** Befundkarte 2.172 · Nutzerhinweis: *„ich finde es seltsam, dass
+wir keinen einzigen tragenden Betrag erhalten."*
+
+## Der Fehler
+
+`bewegung_r` teilt durch die Stopweite `max(5 % Kurs, 0,75 ATR)`. Diese
+Geometrie ist **für Krypto gebaut** — und wirkt in den anderen Klassen
+völlig anders:
+
+| Klasse | ATR/Kurs | 5-%-Boden bindet | Stopweite in ATR |
+|---|---|---|---|
+| krypto | 8,59 % | 29,1 % | **0,75** ← wie vorgesehen |
+| aktien | 2,18 % | **97,1 %** | **2,29** |
+| themen_etf | 1,13 % | **99,2 %** | **4,43** |
+| rohstoffe | 2,00 % | 97,4 % | **2,50** |
+
+**Der Stop liegt bei Nicht-Krypto drei- bis sechsmal weiter von der
+eigenen Schwankung entfernt.** Damit sind die R-Werte dort gestaucht.
+
+## Die Folge, in Zahlen
+
+Streuung von `bewegung_r` (Interquartilsabstand): krypto **3,710** ·
+aktien **1,929** · rohstoffe **1,715** · themen_etf **0,905**.
+
+In **eigenen Streuungseinheiten** liegen die Effekte fast gleichauf:
+
+| Klasse | Kandidat | in R | in Streuungseinheiten |
+|---|---|---|---|
+| krypto | schnitt 20 % | +0,1759 | 0,047 |
+| **aktien** | **schnitt 20 %** | +0,0725 | **0,038** |
+| **aktien** | **vola 20 %** | +0,0714 | **0,037** |
+| **rohstoffe** | **schnitt 50 %** | +0,1192 | **0,070** ← größer als Krypto |
+| themen_etf | vola 10 % | +0,2303 | **0,254** |
+
+## ⛔ Was daraus folgt
+
+**Der Aktien-Nullbefund ist zurückgezogen.** Ein Effekt der Krypto-Größe
+hätte dort **+0,0915 R** ergeben — die Trennschärfe lag bei 0,05–0,10 R,
+also genau an der Grenze. Gemessen wurden +0,0725. **Die Messung konnte
+dort nichts zeigen.**
+
+Und damit fällt auch die Aussage *„der Grundbefund vom 10.08. ist nicht
+krypto-spezifisch"* — sie stand auf dieser Messung.
+
+⚠️ **Der ETF-Befund wird dadurch größer, nicht kleiner:** `vola` liegt
+bei **0,254** Streuungseinheiten (bei 5 %: 0,322) — das **Fünffache** des
+stärksten Krypto-Effekts. Der Vorbehalt bleibt (1 von 5 Mengen, effektiv
+1,9 unabhängige Reihen), aber die Größe verdient eine eigene Messung.
+
+## Die Lehre
+
+> **Eine Zielgröße, die durch eine GEOMETRIE normiert, ist nur dort
+> vergleichbar, wo die Geometrie gleich wirkt.**
+
+Wer Klassen vergleicht, muss die Effekte in **eigenen
+Streuungseinheiten** ausdrücken — oder die Geometrie je Klasse
+kalibrieren.
+
+### Was daraus als Arbeit folgt
+
+    N-11   ⚠️ N-8 WIEDERHOLEN mit klassengerechter Geometrie. Zwei Wege:
+           (a) den 5-%-Boden je Klasse kalibrieren, so dass der Stop
+               ueberall bei rund 0,75 ATR liegt, oder
+           (b) die Effekte grundsaetzlich in Streuungseinheiten messen.
+           ⚠️ (a) aendert die PRODUKTION, (b) nur die MESSUNG - das ist
+           eine Entscheidung, keine Messfrage.
+    N-12   Der ETF-Befund `vola` eigens messen - groesster Effekt des
+           Projekts, aber auf effektiv 1,9 unabhaengigen Reihen.
+
+
+# 📋 NACHTRAG 08.09.2026 — DATENLAGE: die Meldelücke, die Auffrischung, und was offen bleibt
+
+**Nutzervorgabe 08.09.:** *„immer wieder die Schritte mitdokumentieren und
+im Plan niederschreiben."* Dieser Abschnitt ist das Protokoll.
+
+## Der Anlass — ein Beispiel, das keines war
+
+*„Neues Asset wird in der Watchlist aufgenommen oder neuer Coin-Bestand
+Spot — es müssen die Daten zur Bewertung für das Asset vorhanden sein."*
+
+Beim Nachsehen war es der **Ist-Zustand**: acht gehaltene
+Krypto-Positionen ohne Messreihe, drei Kernwerte betroffen (CANTON,
+MORPHO, HYPE), und **nichts hat es gemeldet**.
+
+## Was gebaut wurde
+
+| | |
+|---|---|
+| `pruefe_neuaufnahme.py` | prüft die drei Lebenszyklus-Fälle (**neu** · **fällt weg** · **ändert sich**) plus die Beitragslage |
+| Suitepaket `Neuaufnahme` | sechs Prüfungen, davon vier rot — **und das ist richtig** |
+| Ausnahmeliste | mit **Grund** je Eintrag (EURCV: Cash-Äquivalent) |
+
+⚠️ **Zwei Fehler in der eigenen Prüfung, beide beim Gegenprüfen gefunden:**
+1. Die Frische wurde über das **Maximum** je Klasse gemessen — sechs frische
+   Reihen ließen 518 alte frisch aussehen. Jetzt Median + Anteil.
+2. **Eingestellte** Reihen wurden als veraltet gezählt. Sie sind
+   *vollständig*, nicht alt — jetzt getrennt ausgewiesen.
+
+## Die Datenlage, geklärt
+
+**Es war kein Übernahmeversäumnis, sondern eine Quellenfrage.** Die
+Messbasis lädt Binance-USDT (`quelle='binance_mess'`, einheitlich).
+Binance führt die fehlenden Symbole überwiegend nicht.
+
+| Gruppe | Symbole | Weg |
+|---|---|---|
+| **aufnehmbar (10)** | AIOZ · AKT · BRETT · CAT · GRIFFAIN · **HYPE** · KAS · MORPHO · PLUME · SUPRA | Übernahme **mit Quellenkennzeichnung** |
+| **Datenlage-Grenze (2)** | ASTER (318 T) · MON (269 T) | Coins existieren erst seit 10/2025 bzw. 11/2025 |
+| **nicht lösbar (1)** | **CANTON** | 252 Tagespreise **ohne Hoch/Tief** — kein ATR, keine Stopgeometrie. ⚠️ **Kernwert im Bestand** |
+| nicht relevant | VSN | Nutzerentscheidung 08.09. |
+
+⚠️ **HYPE war eine eigene Korrektur:** ich hatte die Quellen einzeln geprüft
+(bybit 238, gemessen 167) und „zu kurz" geurteilt. **Kombiniert sind es 405
+lückenlose Tage.**
+
+## Die Auffrischung — Schritt für Schritt protokolliert
+
+    1  Sicherung   data/messdaten_vor_auffrischung_08_09.db
+                   SHA-256 bitgleich geprueft, 110 GB frei
+    2  Anker       `pruefe_messbasis_wechsel.py --vorher`
+                   sieben Anker, reproduzieren die registrierten Werte
+                   exakt (+0,17593 · +0,06163 · +0,02458)
+    3  Trockenlauf 347 von 487 brauchbar, 140 abgelehnt (ALLE "zu kurz")
+    4  Schreiben   `lade_messreihen.py --schreiben`
+                   347 Reihen, 539.568 Kerzen, 259 s
+    5  Ergebnis    347 Reihen stehen jetzt auf 2026-09-08 (vorher 21.08.)
+    6  Gegenprobe  `pruefe_messbasis_wechsel.py --nachher`
+
+⚠️ **Der Lader meldet die Kollisionen selbst:** *„C: bleibt aktien, wollte
+krypto"* — fünf Symbole, Kerzen getrennt gespeichert, Klasse nicht
+umgestellt.
+
+## ⚠️⚠️ Was dabei offen blieb — F-198 ist nur halb bereinigt
+
+Sieben Symbole (**BOND · C · DASH · DIA · MDT · STX · T**) tragen in
+`price_history_ohlc` eine **andere Klasse** als in `messreihen`. Alle
+haben Kurse in **zwei** Klassen — aber `messreihen.symbol` ist PRIMARY
+KEY und kann nur *einer* zuordnen.
+
+| | |
+|---|---|
+| ✔ | **Die Messungen sind nicht betroffen** — `_reihen_roh` nutzt die Spalte, nicht `messreihen` |
+| ⚠️ | **`klassen_aus_db()` liefert dort die falsche Klasse** — über **zehn** Werkzeuge importieren sie |
+
+**Nicht repariert, mit Grund:** der saubere Fix verlangt eine
+Mehrfachzuordnung — eine Strukturänderung an `messreihen`, die zehn
+Werkzeuge berührt. Als Suiteprüfung gemeldet.
+
+### Offene Punkte aus diesem Abschnitt
+
+    D-1   Die zehn aufnehmbaren Symbole uebernehmen - MIT
+          Quellenkennzeichnung, plus eine Pruefung, die meldet, wenn
+          eine Messung gemischte Quellen benutzt.
+    D-2   ⚠️ NUTZERENTSCHEIDUNG: CANTON ist ein Kernwert im Bestand und
+          nicht bewertbar (keine Tagesspanne). Entweder eine OHLC-Quelle
+          beschaffen oder die Rolle anpassen.
+    D-3   F-198 zu Ende bringen: `messreihen` muss ein Symbol MEHREREN
+          Klassen zuordnen koennen, oder `klassen_aus_db()` liest aus
+          `price_history_ohlc`.
+    D-4   Die Nicht-Krypto-Klassen sind mit 5 Tagen aktuell - fuer sie
+          gibt es noch keinen eigenen Auffrischungstakt.
+
+## Nachtrag 08.09. abends — D-1 erledigt, zwei neue Punkte (NIEDRIG)
+
+**D-1 ✔ erledigt:** zehn Reihen übernommen (6.768 Zeilen), Messbasis
+526 → 536, gehaltene Lücken **acht → drei**. Quellenreinheit sichtbar
+(`uebernommen_bybit` / `_gemessen` / `_binance`), Status `uebernommen`
+statt `handelnd`, weil `lade_messreihen.py` sie **nie** auffrischen kann.
+Ankervergleich: **alle fünf inhaltlichen Anker unverändert**, größte
+Verschiebung +0,00375 R.
+
+### ⚠️ CANTON — korrigiert
+
+Meine Aussage *„gar keine Kursreihe"* war **zu eng**. CANTON hat **252
+CoinGecko-Tagespreise**; was fehlt, ist **OHLC**. Und das
+Symbolproblem (CoinGecko führt es als **`CC`**) ist seit 31.08. über die
+`coingecko_id` gelöst.
+
+| | |
+|---|---|
+| gleitender Schnitt | ✔ möglich |
+| ATR · Stopgeometrie · `vola` | ✖ ohne Tagesspanne nicht |
+| funding · turnover · oi | ✖ nirgends gelistet |
+
+    D-5  ⚠️ NIEDRIG: acht der zehn Uebernommenen haben einen
+         200-Tage-Schnitt, aber KEINEN Abstand - `schnitt_werte()`
+         braucht einen aktuellen Binance-Ticker, und dort sind sie
+         nicht. HEUTE FOLGENLOS (`schnitt` ist nicht registriert),
+         aber bei einer Aktivierung waeren sie ohne Rang.
+
+    D-6  ⚠️ NIEDRIG *fuer die Desktop-Kopie*: `price_history`
+         (CoinGecko-Tagespreise) steht dort seit dem 19.07. still -
+         BTC, KAS und CANTON alle 51 Tage alt. Deshalb faellt CANTON
+         an `SCHNITT_FRISCHE_TAGE = 10`.
+         ⚠️⚠️ ABER: laeuft `refresh_prices_job` auch auf dem NOTEBOOK
+         nicht mehr, fehlen dort seit 51 Tagen die Tagespreise fuer
+         ALLE Werte ohne Boersenlisting. Das waere NICHT niedrig.
+         -> Das ist eine RUECKFRAGE an den Nutzer, keine Messung.
+
+---
+
+## ⚠️⚠️⚠️ NACHTRAG 08.09.2026 — DIE URSACHE DES HIN UND HER IST GEFUNDEN
+
+Nutzervorgabe 08.09.: *„beachte dass wir schon mehrfach Beiträge
+unterschiedlich als gefallen und wieder aufgenommen haben."*
+
+Er hatte recht, und die Ursache liegt **nicht bei den Kandidaten**,
+sondern in der Messanlage selbst.
+
+### Der Fund
+
+`messnorm.Befund.traegt` lautet:
+
+```python
+return self.unten > max(0.0, self.null_oben)
+```
+
+und `null_oben` entsteht so (`messnorm_auswahl.py`):
+
+```python
+for z in range(ZIEHUNGEN):          # ZIEHUNGEN = 5
+    ...
+null_oben = float(np.max(nullo))    # das MAXIMUM ueber fuenf Ziehungen
+```
+
+> **Ein Maximum über fünf Ziehungen ist kein Schätzer.** Es wächst mit
+> jeder weiteren Ziehung und hat keinen Grenzwert. Damit hängt die
+> Strenge jedes Urteils an einer Zahl, die niemand begründen kann.
+
+### Der Beleg — zweifach geführt
+
+**Auf Kunstdaten**, wo die Wahrheit bekannt ist (400 Welten, Ziehungen
+aus N(0; 0,02), echtes 90. Perzentil = 0,0256):
+
+| n | max Mittel | max **Streuung** | p90 Mittel | p90 **Streuung** |
+|---|---|---|---|---|
+| 5 | 0,0226 | 0,0140 | 0,0172 | 0,0118 |
+| 20 | 0,0374 | 0,0108 | 0,0227 | 0,0066 |
+| 80 | 0,0489 | **0,0095** | 0,0244 | **0,0038** |
+
+`max` steigt weiter und **seine Streuung schrumpft nicht** — das tut ein
+Schätzer nicht. `p90` läuft ab n = 20 in ein Band, Streuung schrumpft
+auf ein Drittel.
+
+⚠️ **Und bei fünf Ziehungen liegt `max` mit 0,0226 UNTER dem wahren 90.
+Perzentil von 0,0256.** Die Latte hängt zu tief — das Urteil fällt zu
+wohlwollend aus.
+
+**Auf den echten Daten** (`n81_konvergiert_der_nullpunkt.py`, 80
+Ziehungen je Fall):
+
+| | Band unten | max(5) | max(80) | p90 ab n=20 |
+|---|---|---|---|---|
+| `schnitt` 20 % | +0,0974 | +0,0382 | +0,0524 ⬈ | ~0,039 → **trägt** |
+| `funding` 50 % | +0,0195 | +0,0193 | +0,0267 ⬈ | ~0,0218 → **trägt nicht** |
+
+`funding` bei 50 % trug mit einem Abstand von **+0,0002 R** — zwei
+Zehntausendstel. Ab **zehn** Ziehungen kippt es.
+
+### ⚠️ Es widerspricht zwei eigenen stehenden Vorgaben
+
+*„Die ZIEHUNGSZAHL gehört in JEDE Kontrolle"* und *„EINE ZIEHUNG IST
+KEIN NULLPUNKT"*. Beide wurden für die **Wirkung** befolgt und für den
+**Nullpunkt** übersehen.
+
+### Was daran NICHT hängt
+
+`schnitt` bei 20 % hält bei 5, 10, 20, 40, 60 und 80 Ziehungen
+durchgehend. Sein Abstand beträgt +0,058 statt +0,0002. **Ein Befund
+mit großem Abstand ist robust; gefährlich sind die knappen.**
+
+### Der Eingriff — bewusst neutral gehalten
+
+`pruefe_auswahl` bekommt zwei neue Parameter, deren **Vorgabewerte das
+bisherige Verhalten exakt reproduzieren**:
+
+```python
+null_ziehungen: int = 0        # 0 -> ZIEHUNGEN (=5), wie bisher
+null_perzentil: float = 0.0    # 0 -> MAXIMUM, wie bisher
+```
+
+⚠️ Gegen die vorherige Fassung Ziffer für Ziffer geprüft: `schnitt` 10 %
+und 20 %, `funding` 20 % — Band, Nullpunkt, Trennschärfe und Urteil
+identisch. **Kein bestehender Befund verschiebt sich.**
+
+Damit lassen sich beide Regeln nebeneinander messen, statt die Norm
+blind umzustellen (`n82_beitragslage_beide_nullregeln.py`).
+
+### ⚠️ Ein zweiter, noch offener Punkt in derselben Anlage
+
+Die **Trennschärfe** prüft `pb["unten"] > 0` — gegen NULL. Das **Urteil**
+prüft gegen `null_oben`. Ist `null_oben` positiv, ist das Urteil
+strenger als die ausgewiesene Trennschärfe angibt. Ein Kandidat kann
+„Trennschärfe 0,02" tragen und bei einem Effekt von 0,05 trotzdem kein
+TRÄGT erreichen. **Bewusst nicht im selben Lauf geändert** — zwei
+Änderungen wären nicht mehr zuzuordnen.
+
+### Eine eigene Vermutung, die dabei widerlegt wurde
+
+Ich hielt `null_oben` für saatabhängig. Es ist **deterministisch**: die
+Nullziehungen laufen auf der festen Saat `SAAT + z`, nicht auf der
+übergebenen `rng`. Fünf Saaten liefern +0,0375 bis +0,0383. Was wandert,
+ist die Reaktion auf geänderte **Daten**, nicht auf Zufall.
+
+### Was die stabile Regel an der Beitragslage ändert — N-82 und N-83
+
+**N-82**, 16 Kandidaten auf allen zulässigen selektierten Mengen, beide
+Regeln nebeneinander, 37,5 Minuten:
+
+- ✔ `zufall` trägt unter **keiner** der beiden Regeln — der Lauf gilt
+- **14 von 16 Kandidaten behalten ihr Urteil unverändert**
+- Genau einer wechselt: `funding` von TRÄGT auf **NICHT ENTSCHEIDBAR**
+
+⚠️ *Nicht entscheidbar* ist laut Norm eine Aussage über die **Messung**,
+nicht über den Kandidaten. `funding` ist damit **nicht widerlegt**.
+
+⚠️⚠️ **Die neue Regel ist nicht strenger, sondern stabil** — sie bewegt
+sich in beide Richtungen. `schnitt` bei 10 % kippt **umgekehrt**, von
+„trägt nicht" auf TRÄGT, weil `max(5)` dort mit 0,0609 zufällig hoch lag
+(p90 über 40: 0,0482). Wer die Regel für eine Verschärfung hält, hat sie
+nicht verstanden.
+
+**N-83** holt die Reproduktionspflicht nach. Der `funding`-Befund vom
+30.08. stand auf der Menge **`frei`** — die Mengen-Systematik gab es
+damals noch nicht. Auf dieser Basis nachgemessen:
+
+| auf `frei` | Wirkung | Abstand alt | Abstand neu | |
+|---|---|---|---|---|
+| **`funding`** | +0,0249 | +0,0042 | **+0,0044** | ✔ trägt unter beiden |
+| **`turnover`** | +0,0639 | +0,0018 | **−0,0008** | ⚠️ kippt → nicht trennbar |
+| `schnitt` | +0,0314 | −0,0154 | −0,0156 | trägt hier nicht |
+| `zufall` | +0,0043 | −0,0097 | −0,0142 | ✔ sauber |
+
+> ✔✔ **R-R11 erfüllt: der `funding`-Originalbefund ist reproduziert und
+> NICHT umgestoßen.** 353.892 Anker, 299 Symbole, 39 Blöcke.
+
+✔ Und die **live genutzte Form passt dazu**: `funding` ist als
+*„Funding-Rang im Markt"* registriert, und `frei` beantwortet nach
+P6/F-212 genau die Marktfrage. Was fällt, ist `funding` als **Beitrag**
+auf der selektierten Menge — nicht die Form, die läuft.
+
+⚠️⚠️ **`turnover` dagegen verliert seine einzige Basis.** Auf den
+selektierten Mengen war er schon vorher nicht entscheidbar; auf `frei`
+kippt er jetzt.
+
+Und ausgerechnet dort schlägt die zweite Unstimmigkeit durch. Sein
+Urteil lautet wörtlich:
+
+> *„Wirkung +0,0639 über der Trennschärfe 0,0500 R, aber …"*
+
+**Die Trennschärfe wurde gegen NULL bestimmt, das Urteil fällt gegen
+`null_oben` = 0,0220.** Zwei Maßstäbe in einem Satz, und sie
+widersprechen sich (2.188-inkonsistenz).
+
+### Der Stand der drei live gemessenen Beiträge
+
+| | unter der stabilen Nullregel |
+|---|---|
+| **`schnitt`** | ✔ trägt als **Beitrag** — 10 % und 20 %, Abstand bis +0,0569 |
+| **`funding`** | ✔ trägt als **Markt-Aussage** — `frei`, Abstand +0,0044 |
+| **`turnover`** | ⚠️ trägt **nirgends** mehr |
+
+### ⚠️ Was NICHT geschehen ist
+
+**Die Nullregel ist nicht umgestellt.** Sie ist als Parameter verfügbar,
+der Vorgabewert reproduziert das bisherige Verhalten Ziffer für Ziffer.
+Ob sie zum Standard wird, ist eine **Nutzerentscheidung** — sie ändert
+den Maßstab für jeden künftigen Befund.
+
+### Die zwei Folgefunde — N-84 und N-85
+
+Ihre stehende Vorgabe *„bevor eine Bewertung fällt, müssen wir alles
+unternehmen — was ist der Grund und dass wir eine Lösung finden"* galt
+hier für `turnover`. Sie hat sich gelohnt: es kamen **zwei weitere
+Fehler derselben Anlage** heraus.
+
+#### N-84 — die Trennschärfe gleichgezogen
+
+Wird die Trennschärfe gegen `null_oben` geprüft statt gegen null, ändert
+sich **kein einziges `traegt`** — wie vorhergesagt. Aber die
+Begründungen kippen falsch herum:
+
+```
+schnitt 20 %   Wirkung +0,1858   traegt = TRUE   ->  Urteil "KEIN BEFUND"
+```
+
+⚠️ **Ordnungsfehler in `messnorm.urteil`:** die Abfrage
+`if self.trennschaerfe is None: return "KEIN BEFUND"` steht **vor**
+`if self.traegt: return "TRAEGT"`. Ein echtes TRÄGT wird verdeckt.
+
+#### N-85 — die Leiter der gepflanzten Stärken ist zu kurz
+
+Sie endet bei **0,10**, während `schnitt` eine Wirkung von **+0,1858**
+hat. „Untermächtig — selbst +0,10 R gepflanzt wurde nicht gefunden" ist
+eine Aussage über die **Leiter**, nicht über die Anlage.
+
+⚠️ Und der eigene Werkzeugkasten widerspricht sich: `messnorm_rand.py`
+benutzt seit jeher `(0,02 · 0,05 · 0,10 · 0,20)`.
+
+Mit der Leiter bis 0,40, stabiler Nullregel und gleichgezogener
+Trennschärfe:
+
+| | Wirkung | trägt | Trennsch. | Urteil |
+|---|---|---|---|---|
+| `schnitt` 20 % | +0,1858 | ✔ | 0,40 | **TRÄGT** |
+| `schnitt` 10 % | +0,1830 | ✔ | 0,40 | **TRÄGT** |
+| **`funding` frei** | +0,0249 | ✔ | **0,10** | **TRÄGT** |
+| `turnover` frei | +0,0639 | ✖ | 0,20 | trägt nicht **bis 0,20 R** |
+| `turnover` 50 % | +0,0913 | ✖ | 0,40 | trägt nicht bis 0,40 R |
+| `funding` 50 % | +0,0313 | ✖ | 0,20 | trägt nicht bis 0,20 R |
+| `zufall` frei | +0,0043 | ✖ | 0,10 | ✔ trägt nicht |
+| `zufall` 20 % | +0,0163 | ✖ | 0,40 | ✔ trägt nicht |
+
+✔ **Die vorab benannte Probe hält: die lange Leiter ist kein
+Freibrief.** Sie holt `schnitt` zurück, rettet `turnover` und
+`funding`-50 % aber **nicht** — und `zufall` trägt unter keiner Variante.
+
+#### ⚠️ Was das für `turnover` heißt — er ist NICHT widerlegt
+
+> **„Trägt nicht bis 0,20 R" schließt nur Effekte ab 0,20 R aus. Seine
+> gemessene Wirkung beträgt +0,0639. Über DIESE Größe sagt die Anlage
+> nichts.**
+
+`turnover` ist **unentschieden**, nicht gefallen. Das ist ein anderer
+Zustand, und er verlangt eine bessere Messung, keine Abwertung.
+
+#### ✔✔ Und `funding` ist der robusteste Befund des Projekts
+
+Er trägt unter **beiden** Nullregeln, **beiden** Trennschärfe-Maßstäben
+und **beiden** Leitern — der einzige Fall, der alle vier Varianten
+übersteht, und das mit einer Trennschärfe von 0,10 statt 0,40.
+
+#### ⚠️ Ein dritter Punkt, bewusst nicht verfolgt
+
+Die Positivkontrolle pflanzt in die **gemischte** Welt, deren Band
+breiter sein kann als das der echten. Dann überschätzt die Trennschärfe
+systematisch — `schnitt` trägt mit +0,186 bei ausgewiesener Trennschärfe
+0,40. Nicht im selben Zug geändert.
+
+### ⚠️⚠️ Der Stand — drei Parameter liegen bereit, KEINER ist gesetzt
+
+| Parameter | Vorgabe heute | geprüfte Alternative |
+|---|---|---|
+| `null_ziehungen` / `null_perzentil` | 5, Maximum | 40, 90. Perzentil |
+| `trennschaerfe_gegen_nullpunkt` | `False` (gegen null) | `True` |
+| `staerken` | bis 0,10 | bis 0,40 |
+
+**Alle drei Vorgabewerte reproduzieren das bisherige Verhalten Ziffer
+für Ziffer.** Ob sie zum Standard werden, ist eine Nutzerentscheidung —
+sie ändert den Maßstab für jeden künftigen Befund.
+
+### ✔ Nutzerentscheidung 08.09.: alle drei sind gesetzt
+
+```python
+MESSSTANDARD_AB = "2026-09-08"
+NULL_ZIEHUNGEN = 40
+NULL_PERZENTIL = 90.0
+TRENNSCHAERFE_GEGEN_NULLPUNKT = True
+STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
+```
+
+Durchgezogen in: `messnorm.py` (die Quelle) · `messnorm_auswahl.py` ·
+`messnorm_rand.py` · `pruefe_pakete.py` (Paket **`Messstandard`**, zehn
+Prüfungen, alle durch Mutation belegt) · `CLAUDE.md` · Methodik **2.155**
+· Befunde **2.188 bis 2.200** · Memory.
+
+⚠️ **Ein viertes betroffenes Modul kam dabei heraus:**
+`messnorm_rand.py` hatte alle drei Fehler, und zwar in **beiden**
+Messfunktionen. Es gehört zur Normfamilie und war nie mitbetrachtet
+worden — genau die Uneinheitlichkeit, die 2.194 aufgedeckt hat.
+
+**Abnahme, in dieser Reihenfolge:** erst neutral parametrisiert und
+Ziffer für Ziffer gegen die `git`-Vorgängerfassung geprüft → dann beide
+Regeln nebeneinander → dann R-R11 auf der Originalbasis → dann die vorab
+benannte Probe gegen Gefälligkeit. Erst danach gesetzt.
+
+### ⚠️⚠️ R-R9 greift — die Neukalibrierung ist fällig
+
+Die Beitragslage hat sich geändert, also ist eine Neukalibrierung fällig.
+Live registriert sind drei gemessene Größen:
+
+| | Stand nach dem Standard |
+|---|---|
+| `funding` (Markt-Rang) | ✔ hält |
+| `schnitt` | ✔ hält — und trägt jetzt auf **zwei** Mengen statt einer |
+| `turnover` (Markt-Rang) | ⚠️ unentschieden; seine Stufen (3,15 / 0,83 / 0,22 / −1,79 / −2,4) stehen auf einer Basis, die keinen tragenden Befund mehr liefert |
+
+> ⚠️ **`turnover` wird NICHT abgeräumt.** „Trägt nicht bis 0,20 R"
+> schließt nur Effekte ab 0,20 R aus — seine Wirkung beträgt +0,0639.
+> Über diese Größe sagt die Anlage nichts. Das verlangt eine **bessere
+> Messung**, keine Abwertung.
+
+### Der nächste Schritt, den ich empfehle
+
+**Der Selbsttest der Messanlage gegen bekannte Wahrheit.** Künstliche
+Welten mit eingebautem Effekt bekannter Größe, und dann die zwei Quoten
+messen, die alles entscheiden:
+
+| | |
+|---|---|
+| **Fehlalarmquote** | wie oft meldet die Anlage TRÄGT, wo nichts ist? |
+| **Fundquote** | wie oft findet sie einen Effekt, der wirklich da ist? |
+
+Für die **Nullregel** allein ist das getan (N-81). Für die Anlage als
+Ganzes nie. Solange es fehlt, ist jede Aussage über Stabilität eine
+Behauptung — und die Fehlerrate von heute (drei Funde an einem Tag in
+einem Modul, das als geprüft galt) spricht dagegen.

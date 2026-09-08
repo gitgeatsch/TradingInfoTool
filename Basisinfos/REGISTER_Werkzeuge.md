@@ -6,12 +6,12 @@
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 20 | 7 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 21 | 7 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
 | **BLOCK** | 81 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 173 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **ALTBESTAND** | 174 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **173 von 301 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **174 von 303 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,13 +21,14 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (20)
+## NORM (21)
 
-    messnorm_auswahl.py, messnorm_rand.py, pruefe_audit_06_07_09.py, pruefe_datengrundlage.py
-    pruefe_messbasis_wechsel.py, pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py
-    pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py
-    pruefe_nullschwelle.py, pruefe_o4_stufenband.py, pruefe_pakete.py, pruefe_schichtentest_spiegelung.py
-    schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
+    messe_alle_kandidaten.py, messnorm_auswahl.py, messnorm_rand.py, pruefe_audit_06_07_09.py
+    pruefe_datengrundlage.py, pruefe_messbasis_wechsel.py, pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py
+    pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py
+    pruefe_n5_modi.py, pruefe_nullschwelle.py, pruefe_o4_stufenband.py, pruefe_pakete.py
+    pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py
+    schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 
@@ -63,7 +64,7 @@
     pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
     simuliere_staffelung.py
 
-## ALTBESTAND (173)
+## ALTBESTAND (174)
 
     messe_abgleich_alt_neu.py, messe_akkumulation.py, messe_akkumulation_phasen.py, messe_alter_vs_zeit.py
     messe_anlass.py, messe_anreicherung.py, messe_auswahl.py, messe_auswahl_historie.py
@@ -99,14 +100,14 @@
     pruefe_massstab_unterschied.py, pruefe_messwerkzeug_bodenabstand.py, pruefe_messwerkzeug_h3.py, pruefe_messwerkzeug_h_neu.py
     pruefe_messwerkzeug_h_produktion.py, pruefe_n8_live_abdeckung.py, pruefe_n8_schwelle_je_datenlage.py, pruefe_n8_schwellenarithmetik.py
     pruefe_nachweis_grundmenge.py, pruefe_nachweis_robustheit.py, pruefe_nb_betrieb.py, pruefe_nb_details.py
-    pruefe_nb_nach_umschaltung.py, pruefe_nichtkurs_bestand.py, pruefe_outcome_plausibilitaet.py, pruefe_pfad_bewerter.py
-    pruefe_phase1.py, pruefe_phasenindex.py, pruefe_positionierung_kanal.py, pruefe_produktion_nb.py
-    pruefe_prompt_matrix.py, pruefe_quellen2.py, pruefe_quellen_optionen.py, pruefe_regime_glaettung.py
-    pruefe_regimephasen_vorflug.py, pruefe_rollenkette.py, pruefe_s6a_rollen.py, pruefe_short_ursache.py
-    pruefe_sperrquote_wirkung.py, pruefe_sprung_bei_crv4.py, pruefe_szenario_stufe0.py, pruefe_trader_merkmale.py
-    pruefe_tvl_abdeckung.py, pruefe_u1_wirkung.py, pruefe_waehrungen.py, pruefe_wahrscheinlichkeit_bitgleich.py
-    pruefe_watchlist.py, pruefe_zahlen_in_prompts.py, rechne_einordnung_vorschau.py, rechne_funding_beitrag.py
-    rechne_kandidaten_beitrag.py, rechne_oi_beitrag.py, rechne_redundanz_je_asset.py, rechne_takt_je_asset.py
-    rechne_turnover_beitrag.py, simuliere_bremse.py, simuliere_h_varianten.py, simuliere_kette.py
-    simuliere_rollout_gegen_nb.py
+    pruefe_nb_nach_umschaltung.py, pruefe_neuaufnahme.py, pruefe_nichtkurs_bestand.py, pruefe_outcome_plausibilitaet.py
+    pruefe_pfad_bewerter.py, pruefe_phase1.py, pruefe_phasenindex.py, pruefe_positionierung_kanal.py
+    pruefe_produktion_nb.py, pruefe_prompt_matrix.py, pruefe_quellen2.py, pruefe_quellen_optionen.py
+    pruefe_regime_glaettung.py, pruefe_regimephasen_vorflug.py, pruefe_rollenkette.py, pruefe_s6a_rollen.py
+    pruefe_short_ursache.py, pruefe_sperrquote_wirkung.py, pruefe_sprung_bei_crv4.py, pruefe_szenario_stufe0.py
+    pruefe_trader_merkmale.py, pruefe_tvl_abdeckung.py, pruefe_u1_wirkung.py, pruefe_waehrungen.py
+    pruefe_wahrscheinlichkeit_bitgleich.py, pruefe_watchlist.py, pruefe_zahlen_in_prompts.py, rechne_einordnung_vorschau.py
+    rechne_funding_beitrag.py, rechne_kandidaten_beitrag.py, rechne_oi_beitrag.py, rechne_redundanz_je_asset.py
+    rechne_takt_je_asset.py, rechne_turnover_beitrag.py, simuliere_bremse.py, simuliere_h_varianten.py
+    simuliere_kette.py, simuliere_rollout_gegen_nb.py
 

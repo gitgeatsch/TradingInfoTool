@@ -15235,6 +15235,70 @@ def paket_kalibrierung() -> None:
            "kalibrieren (Methodik 2.93), (2) KALIBRIERT_FUER setzen, "
            "(3) Befundkarte 3.9." % (lage, _PT.KALIBRIERT_FUER))
 
+    # ---- DIE SCHWELLE MUSS SICHTBAR SEIN (07.09.2026) ------------------
+    #
+    # ⚠️⚠️ Nutzerhinweis, woertlich: *"Was machen wir, dass ich die Schwelle
+    # immer im Bewusstsein habe oder steuerbar ist - so einen Parameter
+    # vergesse ich in Kuerze und du auch - die Doku reicht bei so einer
+    # zentralen Einstellung nicht finde ich."*
+    #
+    # Der Befund an dem Tag: die Zahl, die entscheidet ob ueberhaupt eine
+    # Empfehlung entsteht, stand NUR als Konstante im Code. Mail, config
+    # und GUI schwiegen. Diese Pruefungen halten die drei Wege offen -
+    # ein Wert, den niemand sieht, wird nicht geprueft.
+    _cfgd = {}
+    try:
+        import config as _cfgm
+        _cfgd = (_cfgm.load_config() or {}).get("bewertung") or {}
+    except Exception:                                        # noqa: BLE001
+        pass
+    pruefe(P, "⚠️ die Schwelle ist ueber `config.yaml` STEUERBAR",
+           _cfgd.get("potential_schwelle_r") is not None,
+           "ohne `bewertung: potential_schwelle_r` waere die Zahl nur im "
+           "Code aenderbar. `schwelle()` liest sie bei JEDEM Aufruf neu - "
+           "dafuer muss niemand neu starten. Der Steuerpunkt wurde am "
+           "07.09. eigens angelegt, weil eine zentrale Einstellung, die "
+           "nur in der Doku steht, zuverlaessig vergessen wird")
+    pruefe(P, "und der gesteuerte Wert stimmt mit der Code-Vorgabe ueberein",
+           abs(float(_cfgd.get("potential_schwelle_r",
+                               _PT.SCHWELLE_VORGABE))
+               - _PT.SCHWELLE_VORGABE) < 1e-9,
+           "config %s, Code %s - laufen sie auseinander, gilt config, "
+           "aber jede Doku und jeder Kommentar beschreibt den Code. Genau "
+           "diese Falle steht als stehende Vorgabe im Memory "
+           "(feedback_codevorgabe_ist_nicht_der_laufende_wert): an EINEM "
+           "Tag dreimal danebengelegen"
+           % (_cfgd.get("potential_schwelle_r"),
+              _PT.SCHWELLE_VORGABE))
+    _zeile = ""
+    try:
+        _zeile = _PT.schwellenzeile()
+    except Exception as _e:                                  # noqa: BLE001
+        _zeile = "FEHLER: %s" % _e
+    pruefe(P, "`schwellenzeile()` nennt Wert, Quelle und Alter",
+           all(t in _zeile for t in ("%.3f" % _PT.schwelle(), "kalibriert am",
+                                     "Durchlass")),
+           "sie ist der EINE Text, den Mail und Bericht benutzen - zwei "
+           "Formulierungen waeren zwei Wahrheiten. Steht: %s" % _zeile[:80])
+    _mail = io.open("agent/signal_mail.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ und die MAIL traegt sie",
+           "schwellenzeile" in _mail,
+           "die Mail ist der Ort, an den taeglich gesehen wird. Stuende "
+           "die Schwelle nicht dort, waere sie in vier Wochen wieder "
+           "vergessen - das war der Anlass des 07.09.")
+    # ⚠️ DAS ALTER IST EINE WARNUNG, KEIN FEHLER. Eine Kalibrierung
+    # veraltet nicht an einem Stichtag - aber ungeprueft altern darf sie
+    # auch nicht. 90 Tage ist eine Setzung, keine Messung.
+    import datetime as _dtm
+    _alter = (_dtm.date.today()
+              - _dtm.date.fromisoformat(_PT.KALIBRIERT_AM)).days
+    pruefe(P, "die Kalibrierung ist juenger als 90 Tage",
+           _alter <= 90,
+           "kalibriert am %s, also %d Tage alt. Das ist kein Defekt, aber "
+           "eine Aufforderung: `messe_schwelle_kalibrierung.py` laufen "
+           "lassen und `KALIBRIERT_AM` nachziehen"
+           % (_PT.KALIBRIERT_AM, _alter))
+
     pruefe(P, "die Schwelle liegt ueber null",
            _PT.SCHWELLE_VORGABE > 0.0,
            "Nutzervorgabe 30.08.: bei Potential null traegt KEIN Beitrag - "
@@ -17128,6 +17192,78 @@ def paket_messmenge() -> None:
     pruefe(P, "eine unbekannte Frageart wird abgelehnt",
            not _geht("messuniversum", "erfunden"),
            "sonst waere das Feld Dekoration")
+    # ---- DIE MENGE FOLGT DER DATENLAGE (07.09.2026) --------------------
+    #
+    # ⚠️⚠️ Anlass war ein FEHLBEFUND von mir: `turnover` schien ab 2022
+    # das Vorzeichen zu drehen (-0,0112 / -0,0307). Gemessen war das auf
+    # der 20-%-Menge - bei einer Abdeckung von 66 von 524 Symbolen sind
+    # das 10,1 Anker je Tag. `pruefe_auswahl` reproduzierte den Wechsel
+    # NICHT und sagte "KEIN BEFUND - untermaechtig". Auf 50 % ist
+    # turnover ab 2022 POSITIV.
+    #
+    # Die Regel dagegen: die SCHMALSTE Menge, die noch MIND_ANKER Anker
+    # je Tag liefert - fuer alle Beitraege gleich.
+    import messnorm_auswahl as _MA
+    pruefe(P, "⚠️ `50%` steht als Menge zur Verfuegung",
+           "50%" in _MA.MENGEN and abs(_MA.MENGEN["50%"] - 0.5) < 1e-9,
+           "ohne sie hat ein Beitrag mit duenner Abdeckung nur die Wahl "
+           "zwischen einer zu engen Auswahl (Rauschen) und `frei` (das "
+           "ist die MARKT-Frage, nicht die Beitragsfrage)")
+    pruefe(P, "⚠️⚠️ und `menge_nach_datenlage` waehlt die SCHMALSTE",
+           hasattr(_MA, "menge_nach_datenlage"),
+           "die Menge ist kein Geschmack - sie folgt der Abdeckung")
+    if hasattr(_MA, "menge_nach_datenlage"):
+        # Kunstwelt: 40 Werte je Tag -> 20 % sind 8, 50 % sind 20.
+        # Bei MIND_ANKER 12 muss also `50%` herauskommen, nicht `frei`
+        # und nicht `20%`.
+        # ⚠️ 1.400 Tage, nicht 28 - seit dem 07.09. prueft die Funktion
+        # AUCH die Blockzahl (>= 20 Bloecke a 60 Tagen). Eine kurze
+        # Kunstwelt faellt daran, und die Pruefung haette gemeldet, dass
+        # gar keine Menge reicht. Der Vorabtest hat es gefangen.
+        import datetime as _d0
+        _t0 = _d0.date(2022, 1, 1)
+        _tage = [(_t0 + _d0.timedelta(days=k)).isoformat()
+                 for k in range(1400)]
+        _je = {t: [{"sym": "S%02d" % i, "kennzahl": float(i),
+                    "in_r": float((i % 7) - 3)} for i in range(40)]
+               for t in _tage}
+        _mom = {t: {"S%02d" % i: float(i) for i in range(40)} for t in _je}
+        _g = _MA.menge_nach_datenlage(_je, _mom, 12)
+        pruefe(P, "sie rechnet an einer Kunstwelt richtig", _g == "50%",
+               "40 Werte je Tag: 20 %% sind 8 Anker (zu wenig), 50 %% "
+               "sind 20. Erwartet '50%%', bekommen %r. ⚠️ Die erste "
+               "Fassung lief von schmal nach breit OHNE Abbruch und "
+               "waehlte damit immer die BREITESTE - genau das Gegenteil"
+               % _g)
+        pruefe(P, "und gibt `None`, wenn KEINE Menge reicht",
+               _MA.menge_nach_datenlage(_je, _mom, 9999) is None,
+               "dann ist die Frage auf dieser Datenlage nicht als "
+               "Beitragsfrage zu stellen - das ist ein Ergebnis, kein "
+               "Zwischenschritt")
+        pruefe(P, "⚠️ und sie prueft AUCH die Blockzahl, nicht nur Anker",
+               _MA.menge_nach_datenlage(_je, _mom, 12, bloecke=9999) is None,
+               "bei `schnitt` hielt 5 %% die Ankerzahl (16,1/Tag), liess "
+               "aber nur 11 BLOECKE uebrig - die Norm haette 'KEIN "
+               "BEFUND' gesagt. Eine schmale Auswahl verwirft auch TAGE. "
+               "⚠️ Die Blockzahl wird von `datenlage()` ueber die ECHTE "
+               "Kette gerechnet, nicht selbst gezaehlt: eine eigene "
+               "Zaehlung kam auf 27 statt 11, weil `je_tag_wirkung` "
+               "weitere Tage verwirft")
+        pruefe(P, "⚠️⚠️ `zulaessige_mengen` gibt ALLE, nicht nur die schmalste",
+               hasattr(_MA, "zulaessige_mengen")
+               and len(_MA.zulaessige_mengen(_je, _mom)) >= 2,
+               "die SCHMALSTE zulaessige ist zugleich die RAUSCHENDSTE - "
+               "weniger Anker, breiteres Band. Bei `schnitt` lieferte 10 %% "
+               "+0,1780 [+0,0274 .. +0,3361] 'nicht trennbar' und 20 %% "
+               "+0,1759 [+0,0715 .. +0,2907] 'TRAEGT' - fast derselbe "
+               "Punktschaetzer, anderes Urteil. Ein Urteil muss ueber ALLE "
+               "zulaessigen Mengen halten, sonst sucht man sich die "
+               "passende aus")
+    pruefe(P, "MIND_ANKER ist die Grenze, die `sammle` schon benutzt",
+           getattr(_MA, "MIND_ANKER", None) == 12,
+           "`sammle` verwirft Tage unter 12 Werten. Eine Auswahl, die "
+           "weniger uebrig laesst als die Rohmenge mindestens haben "
+           "muss, ist keine Grundlage - die Zahl ist nicht neu erfunden")
     _q = io.open("messnorm_auswahl.py", encoding="utf-8").read()
     pruefe(P, "⚠️ `messnorm_auswahl` leitet die Frageart aus der MENGE ab",
            'frageart=("markt" if menge == "frei" else "beitrag")' in _q,
@@ -17176,6 +17312,191 @@ def paket_register() -> None:
                                         _B._methodikblatt)))
 
 
+def paket_messstandard() -> None:
+    """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT
+
+    Am 08.09. kamen an EINEM Tag drei Fehler derselben Messanlage heraus,
+    die vorher als geprueft galt. Alle drei waren unsichtbar, weil sie in
+    Zahlen steckten, die niemand benannt hatte:
+
+        null_oben = np.max(nullo) ueber ZIEHUNGEN = 5
+        Trennschaerfe gegen 0, Urteil gegen null_oben
+        gepflanzte Staerken bis 0,10 bei einer Wirkung von 0,186
+
+    Nutzervorgabe: *"so einen Parameter vergesse ich in Kuerze und du
+    auch - die Doku reicht bei so einer zentralen Einstellung nicht."*
+
+    ⚠️ Dieses Paket bewacht deshalb nicht die WERTE (die duerfen sich mit
+    Begruendung aendern), sondern dass sie **benannt, an einer Stelle und
+    ueberall gleich** sind. Eine zweite Kopie irgendwo ist genau der
+    Fehler, der 2.194 erzeugt hat: `messnorm_rand` benutzte eine andere
+    Leiter als `messnorm`, jahrelang unbemerkt.
+    """
+    P = "Messstandard"
+    import messnorm as _N
+    import messnorm_auswahl as _MA
+    import messnorm_rand as _MR
+
+    pruefe(P, "der Messstandard ist BENANNT, nicht eingestreut",
+           all(hasattr(_N, k) for k in
+               ("NULL_ZIEHUNGEN", "NULL_PERZENTIL",
+                "TRENNSCHAERFE_GEGEN_NULLPUNKT", "STAERKEN",
+                "MESSSTANDARD_AB")),
+           "die fuenf Groessen gehoeren nach `messnorm` - eine Zahl ohne "
+           "Namen wird nicht wiedergefunden")
+    zeile = _N.standardzeile()
+    pruefe(P, "und er ist in KLARTEXT ausgebbar (`standardzeile`)",
+           "Perzentil" in zeile and "Trennschaerfe" in zeile
+           and str(_N.NULL_ZIEHUNGEN) in zeile,
+           "bekommen: %s" % zeile)
+
+    # ---- Der Nullpunkt: Perzentil, nicht Maximum ------------------------
+    quelle_a = io.open("messnorm.py", encoding="utf-8").read()
+    quelle_b = io.open("messnorm_auswahl.py", encoding="utf-8").read()
+    quelle_c = io.open("messnorm_rand.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ KEIN Normmodul bildet den Nullpunkt als MAXIMUM",
+           ('float(np.max(nulloben))' not in quelle_a
+            and 'float(np.max(no))' not in quelle_c
+            and 'float(np.max(nullo))' not in quelle_c),
+           "ein Maximum waechst mit der Ziehungszahl und hat keinen "
+           "Grenzwert - es ist kein Schaetzer (Befund 2.188). "
+           "`messnorm_auswahl` behaelt den Zweig als ausdruecklich "
+           "abwaehlbaren Rueckfall (`null_perzentil=0`), nicht als Vorgabe")
+    pruefe(P, "die Nullziehungen sind deutlich mehr als fuenf",
+           _N.NULL_ZIEHUNGEN >= 20,
+           "bei 5 Ziehungen lag das Maximum UNTER dem wahren 90. "
+           "Perzentil - die Latte hing zu tief (bekommen: %d)"
+           % _N.NULL_ZIEHUNGEN)
+
+    # ---- Ein Massstab, nicht zwei ---------------------------------------
+    pruefe(P, "⚠️ Trennschaerfe und Urteil messen gegen DENSELBEN Punkt",
+           bool(_N.TRENNSCHAERFE_GEGEN_NULLPUNKT),
+           "sonst steht in EINEM Satz 'Wirkung ueber der Trennschaerfe' "
+           "und trotzdem kein TRAEGT - live an `turnover` gesehen")
+
+    # ---- Die Leiter muss die eigenen Wirkungen erreichen -----------------
+    pruefe(P, "⚠️ die gepflanzte Leiter reicht ueber die groessten "
+              "gemessenen Wirkungen",
+           max(_N.STAERKEN) >= 0.20,
+           "`schnitt` wirkt +0,186 - eine Leiter bis 0,10 meldet dann "
+           "'untermaechtig' und meint die LEITER, nicht die Anlage "
+           "(bekommen: bis %.2f)" % max(_N.STAERKEN))
+
+    # ---- EINE Quelle, keine Kopien --------------------------------------
+    pruefe(P, "⚠️⚠️ und ALLE Normmodule ziehen aus derselben Quelle",
+           ("from messnorm import" in quelle_b and "STAERKEN" in quelle_b
+            and "STAERKEN" in quelle_c and "NULL_ZIEHUNGEN" in quelle_c),
+           "genau hier lag 2.194: `messnorm_rand` fuehrte eine eigene "
+           "Leiter (bis 0,20), `messnorm` eine andere (bis 0,10)")
+    pruefe(P, "und keins von ihnen traegt noch eine eigene Zahlenleiter",
+           ("(0.02, 0.05, 0.10)" not in quelle_a
+            and "(0.02, 0.05, 0.10)" not in quelle_b
+            and "(0.02, 0.05, 0.10, 0.20)" not in quelle_c),
+           "eine zweite Kopie laeuft still auseinander")
+
+    # ---- Der Ordnungsfehler im Urteil (2.193) ---------------------------
+    i_traegt = quelle_a.find("if self.traegt:\n            return \"TRAEGT\"")
+    i_unter = quelle_a.find("KEIN BEFUND - untermaechtig")
+    pruefe(P, "⚠️ `traegt` wird VOR der Untermacht-Abfrage geprueft",
+           0 < i_traegt < i_unter,
+           "sonst verdeckt eine zu kurze Leiter einen ECHTEN Befund: "
+           "`schnitt` 20 % hatte traegt=True und meldete 'KEIN BEFUND' "
+           "(Befund 2.193)")
+
+    # ---- ⚠️ Und die Ehrlichkeit ueber das, was NICHT erledigt ist --------
+    pruefe(P, "⚠️ der offene Rest steht im Modul, nicht nur im Plan",
+           "GEMISCHTE" in quelle_a and "Selbsttest" in quelle_a,
+           "die Positivkontrolle pflanzt in die gemischte Welt (Befund "
+           "2.198), und der Selbsttest der Anlage gegen bekannte Wahrheit "
+           "fehlt. Wer das nur in den Plan schreibt, findet es nicht "
+           "wieder, wenn er im Code steht")
+
+
+def paket_neuaufnahme() -> None:
+    """Ist jedes Asset sauber aufgenommen? (08.09.2026)
+
+    ⚠️⚠️ DIE MELDELUECKE, die es bis zum 08.09. gab. Nutzerhinweis:
+    *„Neues Asset wird in der Watchlist aufgenommen oder neuer
+    Coin-Bestand Spot - es muessen die Daten zur Bewertung fuer das Asset
+    vorhanden sein bzw. das Asset in der Ablaufkette sauber aufgenommen
+    werden."*
+
+    Beim Nachsehen war es der Ist-Zustand: acht gehaltene
+    Krypto-Positionen ohne Messreihe, drei davon mit `rolle=core`
+    (CANTON, MORPHO - und HYPE in der Watchlist). **Nichts hat es
+    gemeldet**, und `agent/datenfrische.py` erwaehnt `messdaten` kein
+    einziges Mal.
+
+    ⚠️ DIESES PAKET DARF ROT SEIN. Es meldet echte Luecken; gruen wird es
+    erst, wenn sie geschlossen sind. Ein Paket, das eine offene Luecke
+    gruen faerbt, waere schlimmer als keines.
+    """
+    P = "Neuaufnahme"
+    import pruefe_neuaufnahme as _NA
+    maengel = _NA.pruefe(still=True)
+    gehalten = [m for m in maengel if "ist GEHALTEN" in m]
+    frische = [m for m in maengel if "Messbasis" in m]
+    kern = [m for m in maengel if "KERNWERTE" in m]
+    pruefe(P, "⚠️⚠️ jede GEHALTENE Position hat eine Messreihe",
+           not gehalten,
+           "ohne Messreihe kann die Kette den Wert nicht bewerten - "
+           "weder nachkaufen noch verkaufen. %s"
+           % ("; ".join(m[:90] for m in gehalten[:4]) if gehalten
+              else "keine Luecke"))
+    pruefe(P, "⚠️ die Messbasis ist nicht veraltet",
+           not frische,
+           "gemessen am MEDIAN je Klasse, nicht am Maximum - eine einzige "
+           "frische Reihe wuerde sonst die ganze Klasse frisch aussehen "
+           "lassen (genau das meldete die erste Fassung). %s"
+           % ("; ".join(frische) if frische else "alle aktuell"))
+    pruefe(P, "⚠️⚠️ kein KERNWERT ohne jeden Beitrag",
+           not kern,
+           "bei Meme- und Smallcap-Werten ist eine fehlende Bewertung "
+           "laut Nutzervorgabe unkritisch - bei Kernwerten nicht. %s"
+           % ("; ".join(kern) if kern else "keiner"))
+    pruefe(P, "die Ausnahmen tragen einen GRUND",
+           all(len(v) > 40 for v in _NA.AUSNAHMEN.values()),
+           "eine Ausnahme ohne Begruendung ist eine stille Luecke - genau "
+           "die soll diese Pruefung ja finden. Ausgenommen: %s"
+           % ", ".join(_NA.AUSNAHMEN))
+    # ---- DIE F-198-KOLLISIONEN SIND NUR HALB BEREINIGT (08.09.2026) ----
+    #
+    # ⚠️⚠️ `messreihen` hat `symbol TEXT PRIMARY KEY` - ein Symbol kann
+    # dort nur EINER Klasse gehoeren. Sieben Symbole haben aber Kurse in
+    # ZWEI (DASH: aktien 1.440 + krypto 2.721). `messreihen` fuehrt sie
+    # unter der Nicht-Krypto-Klasse.
+    #
+    # ✔ DIE MESSUNGEN SIND NICHT BETROFFEN: `_reihen_roh` ueberspringt
+    # den `messreihen`-Filter, wenn `price_history_ohlc` die Spalte
+    # `assetklasse` traegt - der Fix vom 07.09.
+    #
+    # ⚠️ ABER `klassen_aus_db()` liefert fuer diese sieben weiterhin die
+    # falsche Klasse, und ueber zehn Messwerkzeuge importieren sie. Wer
+    # sie zur Klassenentscheidung nutzt, bekommt dort das Falsche.
+    import sqlite3 as _sq3
+    _c3 = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
+    _koll = [r[0] for r in _c3.execute(
+        "SELECT DISTINCT p.symbol FROM price_history_ohlc p "
+        "JOIN messreihen r ON r.symbol = p.symbol "
+        "WHERE p.assetklasse <> r.assetklasse ORDER BY 1")]
+    _c3.close()
+    pruefe(P, "⚠️⚠️ `messreihen` und die Kursdaten sind klassengleich",
+           not _koll,
+           "%d Symbole tragen in `price_history_ohlc` eine ANDERE Klasse "
+           "als in `messreihen`: %s. Ursache: `messreihen.symbol` ist "
+           "PRIMARY KEY und kann ein Symbol nur EINER Klasse zuordnen - "
+           "die Kursdaten fuehren sie in zwei. ✔ Die Messungen sind "
+           "nicht betroffen (`_reihen_roh` nutzt die Spalte), ⚠️ aber "
+           "`klassen_aus_db()` liefert dort die falsche Klasse"
+           % (len(_koll), ", ".join(_koll[:8])))
+    pruefe(P, "⚠️ und `faellt weg` gilt NICHT als Mangel",
+           not any("weder Watchlist" in m for m in maengel),
+           "P6 verlangt ausdruecklich, dass die Messbasis BREITER ist als "
+           "das Portfolio. 488 Symbole ohne Watchlist-Eintrag sind gewollt")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -17198,7 +17519,9 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
-          "Kalibrierung": paket_kalibrierung}
+          "Kalibrierung": paket_kalibrierung,
+          "Neuaufnahme": paket_neuaufnahme,
+          "Messstandard": paket_messstandard}
 
 
 class _Mitschnitt:

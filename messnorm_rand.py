@@ -55,7 +55,9 @@ import messe_bewertungskennzahl as M                         # noqa: E402
 import messe_kandidaten_als_regel as K                       # noqa: E402
 import messe_regel_wirksamkeit as W                          # noqa: E402
 import messnorm as N                                         # noqa: E402
-from messnorm import Befund, Lage, Protokoll, SAAT, ZIEHUNGEN  # noqa: E402
+from messnorm import (Befund, Lage, Protokoll, SAAT,   # noqa: E402
+                      ZIEHUNGEN, NULL_ZIEHUNGEN, NULL_PERZENTIL,
+                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN)
 
 # Die Marken, an denen der Rand gemessen wird. +2 R ist der Alltag
 # (6,65 % der Asset-Tage), +3 R der schaerfere Schnitt.
@@ -177,7 +179,7 @@ def wirkung_rand(je_tag: dict, oben_sperren: bool = True, mische=None,
 
 def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
                 marke: float = 2.0, horizont: int = 5,
-                staerken: tuple = (0.02, 0.05, 0.10, 0.20),
+                staerken: tuple = STAERKEN,
                 hypothesen: int = 1, oben_sperren: bool = True,
                 zweit: dict | None = None, modus: str = "einzeln",
                 grenze: float | None = None, still: bool = True) -> Befund:
@@ -205,7 +207,7 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
     bp = N.pruefe_block(d, block)        # ⚠️ belegt, nicht angenommen
 
     nullwerte, nullunten, nulloben = [], [], []
-    for z in range(ZIEHUNGEN):
+    for z in range(NULL_ZIEHUNGEN):
         n0, _a2, _g2, _u2 = wirkung_rand(
             je_tag, oben_sperren, mische=np.random.default_rng(SAAT + z),
             marke=marke, zweit=zweit, modus=modus, grenze=grenze)
@@ -214,9 +216,12 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
             nullwerte.append(nb["mittel"])
             nullunten.append(nb["unten"])
             nulloben.append(nb["oben"])
+    # PERZENTIL, NICHT MAXIMUM (Messstandard 08.09.2026, Befund 2.188).
     null = {"mittel": float(np.mean(nullwerte)) if nullwerte else 0.0,
-            "unten": float(np.min(nullunten)) if nullunten else 0.0,
-            "oben": float(np.max(nulloben)) if nulloben else 0.0}
+            "unten": (float(np.percentile(nullunten, 100.0 - NULL_PERZENTIL))
+                      if nullunten else 0.0),
+            "oben": (float(np.percentile(nulloben, NULL_PERZENTIL))
+                     if nulloben else 0.0)}
 
     # ⚠️ ZWEI GROESSEN, NICHT EINE (06.09., vom Vorabtest gefunden).
     #
@@ -240,7 +245,10 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
             pb = _band(p, "pflanze %.2f/%d" % (s, z))
             if pb:
                 werte.append(pb["mittel"])
-                if pb["unten"] > 0:
+                # DERSELBE MASSSTAB WIE DAS URTEIL (Befund 2.188).
+                latte = (max(0.0, null["oben"])
+                         if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
+                if pb["unten"] > latte:
                     gefunden += 1
         treffer[s] = gefunden
         if trennschaerfe_in_r is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
@@ -268,7 +276,7 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
                               "Modus %s)" % (marke, modus)),
             band_funktion="messe_bewertungskennzahl.urteil_tage",
             null_konstruktion="Raenge je Tag gemischt",
-            null_ziehungen=ZIEHUNGEN,
+            null_ziehungen=NULL_ZIEHUNGEN,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "auf die Gesperrten",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,
@@ -345,7 +353,7 @@ def geschichtet(je_tag: dict, schicht_je_tag: dict, *, marke=None,
 def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
                        lage: Lage, menge: str, rng, marke=None,
                        horizont: int = 5,
-                       staerken: tuple = (0.02, 0.05, 0.10, 0.20),
+                       staerken: tuple = STAERKEN,
                        oben_sperren: bool = True, still: bool = True) -> Befund:
     """Der Schichtentest unter der vollen Norm — mit Nullpunkt UND Trennschaerfe."""
     block = N._block(horizont)
@@ -366,16 +374,19 @@ def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
     bp = N.pruefe_block(d, block)
 
     nu, no, nw = [], [], []
-    for z in range(ZIEHUNGEN):
+    for z in range(NULL_ZIEHUNGEN):
         n0 = geschichtet(je_tag, schicht_je_tag, marke=marke,
                          mische=np.random.default_rng(SAAT + z),
                          oben_sperren=oben_sperren)
         nb = _band(n0, "null %d" % z)
         if nb:
             nw.append(nb["mittel"]); nu.append(nb["unten"]); no.append(nb["oben"])
+    # PERZENTIL, NICHT MAXIMUM (Messstandard 08.09.2026, Befund 2.188).
     null = {"mittel": float(np.mean(nw)) if nw else 0.0,
-            "unten": float(np.min(nu)) if nu else 0.0,
-            "oben": float(np.max(no)) if no else 0.0}
+            "unten": (float(np.percentile(nu, 100.0 - NULL_PERZENTIL))
+                      if nu else 0.0),
+            "oben": (float(np.percentile(no, NULL_PERZENTIL))
+                     if no else 0.0)}
 
     ts, ts_r, treffer = None, None, {}
     for s in sorted(staerken):
@@ -388,7 +399,10 @@ def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
             pb = _band(p, "pflanze %.2f/%d" % (s, z))
             if pb:
                 werte.append(pb["mittel"])
-                if pb["unten"] > 0:
+                # DERSELBE MASSSTAB WIE DAS URTEIL (Befund 2.188).
+                latte = (max(0.0, null["oben"])
+                         if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
+                if pb["unten"] > latte:
                     gefunden += 1
         treffer[s] = gefunden
         if ts_r is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
@@ -415,7 +429,7 @@ def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
                                  else "Rand > +%g R" % marke)),
             band_funktion="messe_bewertungskennzahl.urteil_tage",
             null_konstruktion="Raenge INNERHALB der Faecher gemischt",
-            null_ziehungen=ZIEHUNGEN,
+            null_ziehungen=NULL_ZIEHUNGEN,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "auf die Gesperrten",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,

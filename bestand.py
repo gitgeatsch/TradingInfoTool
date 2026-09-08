@@ -107,9 +107,16 @@ KANDIDATEN = (
         form="regler",
         basis="H20 · 2.636 Kalendertage",
         wert="+0,0616 R [+0,0203 .. +0,1111]",
+        # ⚠️⚠️ AM 07.09. STAND HIER EIN VERALTETER WERT. Das Feld nannte
+        # "(+0.33, +0.33, +0.33, -0.48, -0.48) seit 07.09." - die
+        # Aenderung war am selben Tag ZURUECKGENOMMEN (2.143), und die
+        # `warnung` unten sagte das auch. Das Blatt widersprach sich
+        # selbst und dem Code. Genau der Fall, den das Register
+        # verhindern soll.
         live="agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel "
-             "· Stufen (+0.33, +0.33, +0.33, -0.48, -0.48) seit 07.09. "
-             "(vorher +3.15/+0.83/+0.22/-1.79/-2.40, 2.141)",
+             "· Stufen (+3.15, +0.83, +0.22, -1.79, -2.40) "
+             "· 07.09. entzerrt NACHGERECHNET und bestaetigt "
+             "(Querschnitt +3,13/+0,76/+0,22/-1,73/-2,38, Methodik 2.165)",
         zustand="traegt",
         kette=(
             ("30.08.", "2e registriert"),
@@ -397,6 +404,22 @@ class Befundlage:
     quelle: str
     abgeloest_durch: str = ""
     warum: str = ""
+    basis: str = ""
+    """⚠️⚠️ AUF WELCHER MESSBASIS STEHT DIESER BEFUND? (08.09.2026)
+
+    Am 08.09. wurde die Messbasis zweimal geaendert - Auffrischung (347
+    Reihen auf den 08.09.) und Uebernahme (10 Symbole, 526 -> 536). Danach
+    war nicht mehr feststellbar, welche der 92 geltenden Befunde auf
+    welcher Grundlage entstanden waren; 25 tragen Messzahlen, und jede
+    einzelne haette geprueft werden muessen.
+
+    ⚠️ **R-R11 verlangt Reproduktion vor Widerruf - aber wer nicht weiss,
+    WORAUF ein Befund steht, kann ihn nicht reproduzieren.** Genau das
+    macht dieses Feld sichtbar.
+
+    Vorgabe leer, damit die 92 Altbefunde unveraendert bleiben; ein
+    leeres Feld heisst "Basis nicht vermerkt", nicht "keine Basis". Ab
+    dem 08.09. wird es gefuellt."""
 
 
 BEFUNDE = (
@@ -417,6 +440,1383 @@ BEFUNDE = (
                "Die Produktionsauswahl IST diese 5 % - sein Beitrag ist bei "
                "der tatsaechlichen Auswahlstaerke NICHT messbar", "gilt",
                "Methodik 2.145"),
+    Befundlage("2.162", "✔✔ DIE LOESUNG FUER `turnover`: DIE MENGE MUSS "
+               "ZUR DATENLAGE PASSEN. Kriterium, vorab gesetzt und fuer "
+               "ALLE Beitraege gleich: die SCHMALSTE Menge, die noch >= "
+               "12 Anker je Tag liefert (dieselbe Untergrenze, die "
+               "`sammle` bereits im Code verwendet). Ergebnis: turnover "
+               "50 %, funding 10 %, oi_aenderung 20 %, zufall 5 %. Dort "
+               "traegt jeder der drei ab 2022 - turnover +0,0598, "
+               "funding +0,0607, oi_aenderung +0,0446, alle mit Band "
+               "ohne Null; `zufall` +0,0052 mit Null im Band", "gilt",
+               "Methodik 2.162 / n72_turnover_loesung.py"),
+    Befundlage("2.162-grund", "Der GRUND war nie der Beitrag: `turnover` "
+               "deckt 66 von 524 Symbolen ab. 20 % davon sind 10,1 Anker "
+               "je Tag - und N-65 hat gemessen, dass die Statistik bei "
+               "so kleinen Gruppen fast nur Rauschen ist. Wer alle "
+               "Beitraege auf 20 % zwingt, misst bei einem von ihnen "
+               "Rauschen", "gilt", "Methodik 2.162"),
+    Befundlage("2.162-b", "⚠️ Die DATENQUELLE wurde mitgeprueft und ist "
+               "in Ordnung (stehende Vorgabe). Der `splycur`-Ausreisser "
+               "ab 2023 ist XVG - aber eine grosse UMLAUFMENGE macht den "
+               "Quotienten KLEIN. Die Kennzahl selbst ist stabil ueber "
+               "alle Jahre (Median 0,003-0,010, P95 0,036-0,079) und "
+               "geht ohnehin als RANG ein", "gilt", "Methodik 2.162"),
+    Befundlage("2.162-extreme", "Und die Fuenftel zeigen, warum die "
+               "LIVE-Regel nie betroffen war: die EXTREME sind ueber die "
+               "Aeren stabil - F0 +0,2314 -> +0,2745, F4 -0,1354 -> "
+               "-0,1316. Nur die MITTE dreht (F1 +0,5334 -> +0,0375). "
+               "Die Sperre trifft F4", "gilt", "Methodik 2.162"),
+    Befundlage("2.161", "✔✔ DIE ZEITSTABILITAET DER LEBENDEN BEITRAEGE - "
+               "erstmals gemessen. `oi_aenderung` ist der SOLIDESTE: "
+               "stabil bis 0,05 R (Haelften -0,0038) und traegt in JEDEM "
+               "Fenster - ganz +0,0296 [+0,0146 .. +0,0443], ab 2022 "
+               "+0,0296, ab 2024 +0,0287. Praktisch unveraendert ueber "
+               "die Zeit. `funding` ebenso: stabil bis 0,05 R, traegt ab "
+               "2022 (+0,0157) und ab 2024 (+0,0182)", "gilt",
+               "Methodik 2.161 / n70_stabilitaet_der_lebenden.py"),
+    Befundlage("2.161-turnover", "„`turnover` dreht ab 2022 das "
+               "Vorzeichen (-0,0112 / -0,0307)\"", "abgeloest",
+               "Methodik 2.161", abgeloest_durch="2.162",
+               warum="auf der 20-%-Menge gemessen, die seine Datenlage "
+                     "NICHT traegt: 10,1 Anker je Tag (frueh 5,3). "
+                     "`pruefe_auswahl` reproduziert den Wechsel NICHT und "
+                     "sagt woertlich 'KEIN BEFUND - untermaechtig'. Auf "
+                     "der Menge, die seine Abdeckung traegt (50 %), ist "
+                     "er ab 2022 POSITIV: +0,0598 [+0,0066 .. +0,1139]"),
+    Befundlage("2.161-rr11", "R-R11 erfuellt, BEVOR das behauptet wird: "
+               "`pruefe_auswahl` reproduziert den registrierten Anker "
+               "exakt - turnover frei +0,0616 [+0,0185 .. +0,1084] gegen "
+               "Anker +0,06163 [+0,01851 .. +0,10841]. ⚠️ AUF DER "
+               "SELEKTIERTEN Menge aber, wo Beitraege zu beurteilen sind "
+               "(F-212, frageart=beitrag), liegt er bei +0,0865 [-0,0060 "
+               ".. +0,1696] - das Band schliesst die Null EIN, Urteil "
+               "'traegt nicht bis 0,10 R'. Der registrierte Befund stammt "
+               "von der FREIEN Menge", "gilt", "Methodik 2.161"),
+    Befundlage("2.161-f217", "⚠️ Das VERSTAERKT F-217 ('funding haelt, "
+               "turnover NICHT - gegen zwei Nullpunkte') aus einer "
+               "voellig anderen Richtung: dort war es die Kalibrierung, "
+               "hier die Zeitachse. Zwei unabhaengige Zugaenge, dasselbe "
+               "Ergebnis - das ist mehr als eine Wiederholung", "gilt",
+               "Methodik 2.161"),
+    Befundlage("2.161-massstab", "⚠️ WARUM DIESE MESSUNG UEBERHAUPT KAM: "
+               "der Test, an dem `schnitt` gescheitert ist, war auf die "
+               "LIVE laufenden Beitraege nie angewandt worden. Einen "
+               "Kandidaten an einer Huerde scheitern zu lassen, die die "
+               "Bestandsbeitraege nie nehmen mussten, waere zweierlei "
+               "Mass gewesen", "gilt", "Methodik 2.161"),
+    Befundlage("2.160", "„`schnitt` ist nicht zeitstabil: Haelften "
+               "+0,2238 R [+0,0792 .. +0,3988], Trennschaerfe 0,02 R\"",
+               "abgeloest", "Methodik 2.160", abgeloest_durch="2.163",
+               warum="ZWEI Fehler, beide eigene. (1) Gemessen auf der "
+                     "20-%-Menge - `schnitt`s Datenlage verlangt 10 % "
+                     "(schmalste mit >= 12 Ankern UND >= 20 Bloecken). "
+                     "Dort ist der Unterschied -0,0647 [-0,3098 .. "
+                     "+0,2161], also mit umgekehrtem Vorzeichen und "
+                     "nicht trennbar. (2) Die Trennschaerfe war auf die "
+                     "ECHTE Reihe gepflanzt, also auf einen bereits "
+                     "trennbaren Unterschied - dann bleibt er es bei "
+                     "jedem Versatz. 'Ab 0,02 R' hiess nur 'der Effekt "
+                     "ist gross'. Zentriert gemessen liegt sie bei "
+                     ">0,20 R"),
+    Befundlage("2.171", "⛔⛔ `hedge` IST STRUKTURELL AUSSERHALB DER "
+               "BEITRAGSMASCHINERIE - aus DREI unabhaengigen Gruenden, "
+               "nicht wegen fehlender Daten. Jeder einzelne genuegt", "gilt",
+               "Methodik 2.171 / Bestandsdurchsicht 07.09."),
+    Befundlage("2.171-zwei", "GRUND 1 - ZWEI INSTRUMENTE. `hedge` kennt "
+               "DBPK (S&P 500 2x invers) und 3QSS (Nasdaq-100 3x short). "
+               "`messe_beitrag_auf_auswahl.sammle` verwirft Tage mit "
+               "weniger als 12 Werten. Zwei Werte sind kein Querschnitt - "
+               "es gibt nichts zu rangen", "gilt", "Methodik 2.171"),
+    Befundlage("2.171-rekonstruiert", "GRUND 2 - DIE REIHEN SIND "
+               "REKONSTRUIERT und ihre Grenze steht in der eigenen "
+               "Dokumentation: `agent/rekonstruktion.py` sagt woertlich, "
+               "die Reihen taugen 'fuer KURZE Horizonte (Tage bis zwei "
+               "Wochen)' und 'NICHT fuer Aussagen ueber Monate'. Es "
+               "fehlen Rollkosten, Gebuehren und beim Hebelprodukt der "
+               "Wechselkurs. ⚠️ H20 sind VIER Wochen - ausserhalb der "
+               "benannten Gueltigkeit", "gilt", "Methodik 2.171"),
+    Befundlage("2.171-frage", "GRUND 3 - ES IST EINE ANDERE FRAGE. Das "
+               "Hedge-Regelwerk (`agent/hedge/analyst.py`) fragt WANN "
+               "abgesichert wird: Regel 5 nennt `aktien_baermarkt.aktiv`, "
+               "VIX, DXY, Regel 6 die Makro-Analoge. Das ist eine "
+               "ZEITREIHEN-Frage. Die Beitragsmaschinerie rangt "
+               "innerhalb des Tages - sie ist querschnittlich (N-75). "
+               "Und Regel 3 sagt ausdruecklich: 'das Ziel ist NICHT "
+               "maximaler Gewinn der Hedge-Position selbst, sondern eine "
+               "ANGEMESSENE Portfolio-Absicherung' - `bewegung_r` misst "
+               "also die falsche Groesse", "gilt", "Methodik 2.171"),
+    Befundlage("2.171-aufbau", "WIE `hedge` HEUTE FUNKTIONIERT: es ist "
+               "KEINE Assetklasse, sondern eine ROLLE - die Instrumente "
+               "stehen in der Watchlist als `etf`, deshalb hat "
+               "`price_history_ohlc` keine hedge-Zeile. Deckel: "
+               "max_abdeckung_anteil 1,0, "
+               "bull_wahrscheinlichkeit_schwelle 35 % mit "
+               "Positionsdeckel 0,5. Beide Positionen sind GEHALTEN "
+               "(3QSS 218,25 · DBPK 1.739,16) und haben Einstandspreise "
+               "(2,05 bzw. 0,1713 EUR, in `avg_buy_price_manual_eur`)",
+               "gilt", "Methodik 2.171"),
+    Befundlage("2.171-offen", "⚠️ WAS VON HIER AUS NICHT FESTSTELLBAR "
+               "IST: ob `hedge` produktiv Signale erzeugt. Die "
+               "Desktop-Kopie der Produktiv-DB endet Mitte Juli 2026 "
+               "(`signals` 21.07., `holdings` 19.07.); die laufende "
+               "Produktion ist das Notebook. Die 0 Hedge-Signale in "
+               "dieser DB sind deshalb KEIN Befund ueber den Betrieb",
+               "gilt", "Methodik 2.171"),
+    Befundlage("2.171-weg", "WAS `hedge` STATTDESSEN BRAUCHT: ein "
+               "eigenes Bewertungsverfahren auf der ZEITACHSE - 'wann "
+               "absichern', gemessen gegen die Regime-Groessen, die das "
+               "Regelwerk bereits nennt. ⚠️ Das ist dieselbe Frage wie "
+               "die der MAKRO-Schichter aus N-8: `macro_snapshot` (3.384 "
+               "Tage) und `makro_historie_monat` (1.184 Monate) haben je "
+               "Tag EINEN Wert fuer alle Assets - sie koennen kein "
+               "Querschnittsbeitrag sein, wohl aber ein Regime-Schichter",
+               "gilt", "Methodik 2.171"),
+    Befundlage("2.170", "„In Aktien traegt kein Kandidat - ein "
+               "belastbarer Nullbefund\"", "abgeloest", "Methodik 2.170",
+               abgeloest_durch="2.172",
+               warum="die Zielgroesse `bewegung_r` ist ueber die Klassen "
+                     "NICHT vergleichbar. Sie teilt durch "
+                     "max(5 % Kurs, 0,75 ATR) - und bei Nicht-Krypto "
+                     "bindet fast immer der 5-%-Boden (Aktien 97,1 %, "
+                     "ETF 99,2 %). Der Stop liegt dort 2,29 bzw. 4,43 "
+                     "ATR entfernt statt 0,75. In eigenen "
+                     "Streuungseinheiten sind die Aktien-Effekte GENAUSO "
+                     "GROSS wie die von Krypto (0,038 gegen 0,047) - sie "
+                     "waren nur nicht von null zu trennen"),
+    Befundlage("2.170-grundbefund", "„Der Grundbefund vom 10.08. ist "
+               "nicht krypto-spezifisch - er gilt in Aktien genauso\"",
+               "abgeloest", "Methodik 2.170", abgeloest_durch="2.172",
+               warum="stand auf 2.170 und faellt mit ihm. Die Messung "
+                     "konnte in Aktien gar nichts zeigen"),
+    Befundlage("2.189", "N-82: die Beitragslage unter BEIDEN Nullregeln, "
+               "16 Kandidaten auf allen zulaessigen selektierten Mengen. "
+               "`zufall` traegt unter KEINER der beiden - der Lauf ist "
+               "gueltig. 14 von 16 Kandidaten behalten ihr Urteil "
+               "UNVERAENDERT", "gilt",
+               "n82_beitragslage_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen, H20"),
+    Befundlage("2.189-wechsel", "⚠️ Genau EIN Kandidat wechselt: `funding` "
+               "von TRAEGT auf NICHT ENTSCHEIDBAR. Er trug nur bei 50 % "
+               "und dort mit +0,0002 R Abstand. ⚠️ NICHT ENTSCHEIDBAR ist "
+               "eine Aussage ueber die MESSUNG, nicht ueber `funding` - "
+               "er ist damit NICHT widerlegt", "gilt",
+               "n82_beitragslage_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, selektierte Mengen"),
+    Befundlage("2.189-beidseitig", "⚠️ DIE NEUE REGEL IST NICHT STRENGER, "
+               "SONDERN STABIL - sie bewegt sich in BEIDE Richtungen. "
+               "`schnitt` bei 10 % kippt umgekehrt, von traegt-nicht auf "
+               "TRAEGT (null_oben 0,0609 -> 0,0482), weil das Maximum "
+               "ueber fuenf Ziehungen dort zufaellig HOCH lag. Wer die "
+               "Regel fuer eine Verschaerfung haelt, hat sie nicht "
+               "verstanden", "gilt", "n82_beitragslage_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen"),
+    Befundlage("2.190", "✔✔ R-R11 ERFUELLT: der `funding`-Originalbefund "
+               "vom 30.08. (+0,137 R) stand auf der Menge `frei` - die "
+               "Mengen-Systematik gab es damals nicht. Auf DIESER Basis "
+               "nachgemessen traegt er unter BEIDEN Regeln: Abstand "
+               "+0,0042 (alt) und +0,0044 (neu), 353.892 Anker, 299 "
+               "Symbole, 39 Bloecke. Der Befund steht", "gilt",
+               "n83_frei_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, Menge `frei`, H20"),
+    Befundlage("2.190-form", "✔ UND DIE LIVE-FORM PASST DAZU: `funding` "
+               "ist als 'Funding-Rang im MARKT' registriert - `frei` "
+               "beantwortet nach P6/F-212 genau die Marktfrage. Was "
+               "faellt, ist `funding` als BEITRAG auf der selektierten "
+               "Menge; die live genutzte Form ist davon unberuehrt",
+               "gilt", "n83_frei_beide_nullregeln.py",
+               basis="agent/wahrscheinlichkeit.BEITRAEGE, Stand 08.09."),
+    Befundlage("2.191", "⚠️⚠️ `turnover` KIPPT dagegen auf seiner einzigen "
+               "Basis `frei`: Abstand +0,0018 (alt) -> -0,0008 (neu), "
+               "Urteil NICHT TRENNBAR. Auf den selektierten Mengen war er "
+               "schon vorher nicht entscheidbar. Damit hat `turnover` "
+               "unter der stabilen Nullregel KEINE Basis mehr, auf der er "
+               "traegt", "gilt", "n83_frei_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, Menge `frei`, 124.221 Anker"),
+    Befundlage("2.191-inkonsistenz", "⚠️⚠️ UND GENAU DORT SCHLAEGT DIE "
+               "ZWEITE UNSTIMMIGKEIT DURCH (2.188-inkonsistenz): "
+               "`turnover`s Urteil lautet woertlich 'Wirkung +0,0639 "
+               "ueber der Trennschaerfe 0,0500 R, aber ...'. Die "
+               "TRENNSCHAERFE wurde gegen NULL bestimmt, das URTEIL "
+               "faellt gegen null_oben = 0,0220. Beide Massstaebe in "
+               "EINEM Satz, und sie widersprechen sich", "gilt",
+               "n83_frei_beide_nullregeln.py",
+               basis="Messbasis 08.09.2026, Menge `frei`"),
+    Befundlage("2.192", "⚠️ DER STAND DER DREI LIVE GEMESSENEN BEITRAEGE "
+               "unter der stabilen Nullregel: `schnitt` traegt als "
+               "BEITRAG (10 % und 20 %, Abstand bis +0,0569) · `funding` "
+               "traegt als MARKT-Aussage (frei, +0,0044) · `turnover` "
+               "traegt NIRGENDS mehr. ⚠️ Die Nullregel ist NICHT "
+               "umgestellt - sie ist nur als Parameter verfuegbar, "
+               "Vorgabe unveraendert. Das ist eine Nutzerentscheidung",
+               "gilt", "N-82 / N-83 / Nutzervorlage 08.09.",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen, H20"),
+    Befundlage("2.193", "⚠️ ORDNUNGSFEHLER IN `messnorm.urteil`: die "
+               "Abfrage `if self.trennschaerfe is None -> KEIN BEFUND` "
+               "steht VOR `if self.traegt -> TRAEGT`. Ein echtes TRAEGT "
+               "wird dadurch verdeckt. `Befund.traegt` selbst bleibt "
+               "korrekt - nur der ausgegebene Satz widerspricht ihm",
+               "gilt", "n84_trennschaerfe_massstab.py",
+               basis="Messbasis 08.09.2026, Codelesung messnorm.py"),
+    Befundlage("2.194", "⚠️⚠️ DIE LEITER DER GEPFLANZTEN STAERKEN ENDET ZU "
+               "FRUEH: (0,02 · 0,05 · 0,10), waehrend `schnitt` bei 20 % "
+               "eine Wirkung von +0,1858 hat - fast doppelt so viel wie "
+               "die groesste Stufe. 'Untermaechtig' war eine Aussage "
+               "ueber die LEITER, nicht ueber die Anlage", "gilt",
+               "n85_leiter_zu_kurz.py",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen, H20"),
+    Befundlage("2.194-bestand", "⚠️ Und der eigene Werkzeugkasten "
+               "widerspricht sich hier: `messnorm_rand.py` benutzt seit "
+               "jeher die laengere Leiter (0,02 · 0,05 · 0,10 · 0,20), "
+               "`messnorm.py` und `messnorm_auswahl.py` die kurze",
+               "gilt", "Codelesung 08.09.2026"),
+    Befundlage("2.194-probe", "✔ DIE LANGE LEITER IST KEIN FREIBRIEF - das "
+               "war die vorab benannte Probe. Sie holt `schnitt` 10 % und "
+               "20 % von KEIN BEFUND auf TRAEGT zurueck, rettet aber "
+               "`turnover` und `funding`-50 % NICHT: dort bleibt es bei "
+               "'traegt nicht bis 0,20/0,40 R'. Und `zufall` traegt unter "
+               "keiner Leiter", "gilt", "n85_leiter_zu_kurz.py",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen, H20"),
+    Befundlage("2.195", "⚠️ `traegt` hat sich unter KEINER der drei "
+               "Aenderungen geaendert (Nullregel ausgenommen): weder die "
+               "gleichgezogene Trennschaerfe noch die laengere Leiter "
+               "beruehren es. Beide aendern nur die BEGRUENDUNG - was "
+               "genau der Zweck der vier Urteile ist", "gilt",
+               "n84 + n85", basis="Messbasis 08.09.2026"),
+    Befundlage("2.196", "⚠️ TURNOVER IST NICHT WIDERLEGT, SONDERN "
+               "UNENTSCHIEDEN: mit langer Leiter lautet sein Urteil "
+               "'traegt nicht bis 0,20 R' auf `frei` und 'bis 0,40 R' bei "
+               "50 %. Ausgeschlossen sind also nur Effekte ab 0,20 R - "
+               "seine gemessene Wirkung betraegt +0,0639. Ueber DIESE "
+               "Groesse sagt die Anlage nichts", "gilt",
+               "n85_leiter_zu_kurz.py",
+               basis="Messbasis 08.09.2026, Menge `frei`, 124.221 Anker"),
+    Befundlage("2.197", "✔✔ `funding` AUF `frei` IST DER ROBUSTESTE "
+               "BEFUND: er traegt unter beiden Nullregeln, unter beiden "
+               "Trennschaerfe-Massstaeben und unter beiden Leitern - "
+               "einziger Fall, der ALLE vier Varianten uebersteht, mit "
+               "einer Trennschaerfe von 0,10 statt 0,40", "gilt",
+               "n83 + n84 + n85",
+               basis="Messbasis 08.09.2026, Menge `frei`, 353.892 Anker"),
+    Befundlage("2.198", "⚠️ OFFEN UND NICHT VERFOLGT: die "
+               "Positivkontrolle pflanzt in die GEMISCHTE Welt, deren "
+               "Band breiter sein kann als das der echten. Dann "
+               "ueberschaetzt die Trennschaerfe systematisch, was noetig "
+               "waere - `schnitt` traegt mit Wirkung +0,186 bei "
+               "ausgewiesener Trennschaerfe 0,40. Dritter Punkt derselben "
+               "Anlage, bewusst nicht im selben Zug geaendert", "gilt",
+               "n85_leiter_zu_kurz.py",
+               basis="Messbasis 08.09.2026"),
+    Befundlage("2.199", "✔ DER MESSSTANDARD IST GESETZT (08.09.2026, "
+               "Nutzerentscheidung): NULL_ZIEHUNGEN=40 · "
+               "NULL_PERZENTIL=90 · TRENNSCHAERFE_GEGEN_NULLPUNKT=True · "
+               "STAERKEN bis 0,40. Benannt in `messnorm`, von "
+               "`messnorm_auswahl` und `messnorm_rand` von DORT bezogen, "
+               "in Klartext ausgebbar (`standardzeile`)", "gilt",
+               "messnorm.py / Methodik 2.155",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen"),
+    Befundlage("2.199-abnahme", "✔ UND ER WURDE ABGENOMMEN, BEVOR ER "
+               "STANDARD WURDE: erst neutral parametrisiert und Ziffer "
+               "fuer Ziffer gegen die Vorgaengerfassung geprueft · dann "
+               "beide Regeln nebeneinander (N-82: `zufall` unter keiner "
+               "tragend, 14 von 16 Urteilen unveraendert) · dann R-R11 "
+               "auf der Originalbasis (N-83) · dann die vorab benannte "
+               "Probe gegen Gefaelligkeit (N-85)", "gilt",
+               "N-81 bis N-85 / Methodik 2.155",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen"),
+    Befundlage("2.199-waechter", "✔ Das Pruefpaket `Messstandard` "
+               "bewacht ihn mit zehn Pruefungen - nicht die WERTE (die "
+               "duerfen sich begruendet aendern), sondern dass sie "
+               "benannt, an EINER Stelle und ueberall gleich sind. Alle "
+               "zehn sind durch MUTATION belegt: Fehler zurueckgebaut, "
+               "Waechter feuert", "gilt", "pruefe_pakete.py --paket "
+               "Messstandard"),
+    Befundlage("2.199-rand", "⚠️ DABEI KAM EIN VIERTES BETROFFENES MODUL "
+               "HERAUS: `messnorm_rand.py` hatte ALLE DREI Fehler, und "
+               "zwar in BEIDEN Messfunktionen. Es gehoert zur Normfamilie "
+               "und war bis dahin nie mitbetrachtet worden - genau die "
+               "Uneinheitlichkeit, die 2.194 aufgedeckt hat", "gilt",
+               "Codelesung 08.09.2026"),
+    Befundlage("2.199-offen", "⚠️⚠️ WAS DER STANDARD NICHT LEISTET: er "
+               "macht die Urteile WIDERSPRUCHSFREI, nicht SCHAERFER. "
+               "Offen bleiben 2.198 (Positivkontrolle pflanzt in die "
+               "gemischte Welt), `ZIEHUNGEN`=5 in der Positivkontrolle, "
+               "ob p90 zum Vertrauensniveau des Bandes passt - und vor "
+               "allem der SELBSTTEST der ganzen Anlage gegen bekannte "
+               "Wahrheit (Fehlalarm- UND Fundquote). 'Die Basis steht' "
+               "waere eine Behauptung, kein Befund", "gilt",
+               "Methodik 2.155 / Expertenurteil 08.09."),
+    Befundlage("2.200", "⚠️⚠️ R-R9 GREIFT: die Beitragslage hat sich "
+               "geaendert, also ist eine Neukalibrierung faellig. Live "
+               "registriert sind `funding` (Markt-Rang - haelt), "
+               "`turnover` (Markt-Rang - jetzt unentschieden) und "
+               "`schnitt` (haelt, und traegt jetzt auf ZWEI Mengen statt "
+               "einer). ⚠️ `turnover`s Stufen (3,15/0,83/0,22/-1,79/-2,4) "
+               "stehen auf einer Basis, die keinen tragenden Befund mehr "
+               "liefert", "gilt", "agent/wahrscheinlichkeit.BEITRAEGE",
+               basis="Messbasis 08.09.2026, Stand nach N-85"),
+    Befundlage("2.200-nicht-abraeumen", "⚠️ ABER `turnover` WIRD NICHT "
+               "ABGERAEUMT. Sein Urteil lautet 'traegt nicht bis 0,20 R' "
+               "- ausgeschlossen sind nur Effekte ab 0,20 R, seine "
+               "Wirkung betraegt +0,0639. Ueber DIESE Groesse sagt die "
+               "Anlage nichts. Nutzervorgabe, stehend: 'bevor eine "
+               "Bewertung faellt muessen wir alles unternehmen'. Das "
+               "verlangt eine bessere Messung, keine Abwertung", "gilt",
+               "Nutzervorgabe / Befund 2.196",
+               basis="Messbasis 08.09.2026, Menge `frei`"),
+    Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
+               "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
+               "prueft `unten > max(0, null_oben)` - wobei `null_oben` "
+               "das MAXIMUM ueber diese fuenf Mischungen ist. Ein "
+               "Maximum ueber wenige Ziehungen ist systematisch ZU "
+               "NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus",
+               "gilt", "Methodik 2.188 / Nutzervorgabe 08.09.",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.188-beleg", "⚠️⚠️ DER BELEG, an `funding` bei 50 % "
+               "(Abstand `unten - null_oben`): bei 5 Ziehungen +0,0002 R "
+               "-> TRAEGT · bei 20 Ziehungen -0,0045 -> NICHT TRENNBAR · "
+               "bei 40 Ziehungen -0,0056 -> TRAEGT NICHT bis 0,05. ZWEI "
+               "Zehntausendstel R entschieden ueber das Urteil. "
+               "`null_oben` steigt dabei von +0,0192 auf +0,0250",
+               "gilt", "Methodik 2.188",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.188-schnitt", "✔ NICHT ALLE URTEILE HAENGEN DARAN: "
+               "`schnitt` bei 20 % haelt bei 5, 10, 20 UND 40 Ziehungen "
+               "durchgehend TRAEGT - der Abstand betraegt dort +0,0595 "
+               "bis +0,0521. Ein Befund mit grossem Abstand ist robust; "
+               "gefaehrlich sind die knappen", "gilt", "Methodik 2.188",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.188-vorgabe", "⚠️ UND ES WIDERSPRICHT ZWEI EIGENEN "
+               "STEHENDEN VORGABEN: 'Die ZIEHUNGSZAHL gehoert in JEDE "
+               "Kontrolle' und 'EINE ZIEHUNG IST KEIN NULLPUNKT'. Beide "
+               "wurden fuer die WIRKUNG befolgt und fuer den NULLPUNKT "
+               "uebersehen", "gilt", "Methodik 2.188"),
+    Befundlage("2.188-inkonsistenz", "⚠️ Und eine zweite Unstimmigkeit "
+               "in derselben Anlage: die TRENNSCHAERFE prueft "
+               "`pb['unten'] > 0` - gegen NULL. Das URTEIL prueft gegen "
+               "`null_oben`. Wenn `null_oben` > 0 ist, ist das Urteil "
+               "STRENGER als die Trennschaerfe angibt. Ein Kandidat kann "
+               "eine Trennschaerfe von 0,02 haben und bei einem Effekt "
+               "von 0,05 kein TRAEGT erreichen", "gilt",
+               "Methodik 2.188"),
+    Befundlage("2.188-nichtsaat", "⚠️ Eine eigene Vermutung wurde dabei "
+               "WIDERLEGT: ich hielt `null_oben` fuer saatabhaengig. Es "
+               "ist deterministisch - die Nullziehungen laufen auf der "
+               "festen Saat `SAAT + z`, nicht auf der uebergebenen "
+               "`rng`. Fuenf Saaten liefern +0,0375 bis +0,0383. Was "
+               "wandert, ist die Reaktion auf geaenderte DATEN, nicht "
+               "auf Zufall", "gilt", "Methodik 2.188"),
+    Befundlage("2.187", "⚠️⚠️ R-R11 AUF DER NEUEN MESSBASIS: die "
+               "Durchsicht aller Kandidaten (N-73) ist auf der Basis vom "
+               "08.09. (536 Symbole) wiederholt. DIE WIRKUNGEN "
+               "REPRODUZIEREN FAST EXAKT - turnover 50 % +0,0913 gegen "
+               "+0,0909, schnitt 20 % +0,1858 gegen +0,1759, funding "
+               "frei +0,0249 gegen +0,0246. ABER DREI URTEILE WANDERN, "
+               "weil sich Nullpunkte und Trennschaerfen verschieben",
+               "gilt", "Methodik 2.187 / n73 auf neuer Basis",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.187-was-haelt", "✔ WAS REPRODUZIERT: `schnitt` ist "
+               "weiterhin NICHT ROBUST (traegt nur bei 20 %, nicht bei "
+               "10 % oder frei) · `amihud`, `rsi`, `momentum` und "
+               "`schnitt50` bleiben abgelehnt, auf ALLEN Mengen · "
+               "`zufall` traegt nirgends. Die tragenden Ablehnungen des "
+               "07.09. stehen", "gilt", "Methodik 2.187",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.187-was-wandert", "⚠️ WAS WANDERT, jeweils bei nahezu "
+               "gleicher Wirkung: `turnover` 50 % von TRAEGT auf 'nicht "
+               "trennbar' · `funding` frei von 'traegt nicht bis 0,10' "
+               "auf TRAEGT · `vola` 20 % von 'nicht trennbar' auf "
+               "TRAEGT. Die Zahl der Mengen-Widersprueche steigt von "
+               "ZWEI auf VIER", "gilt", "Methodik 2.187",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+    Befundlage("2.187-lehre", "⚠️⚠️ DIE LEHRE: die Urteile der Norm "
+               "haengen an NULLPUNKT und TRENNSCHAERFE, und beide werden "
+               "je Lauf aus Ziehungen geschaetzt. Eine um 2 % "
+               "veraenderte Messbasis verschiebt die WIRKUNG um weniger "
+               "als 0,0005 R, kann aber ein Urteil kippen. Wer nur die "
+               "Wirkung vergleicht, sieht das nicht - wer nur das Urteil "
+               "vergleicht, haelt eine Verschiebung des Nullpunkts fuer "
+               "einen neuen Befund", "gilt", "Methodik 2.187"),
+    Befundlage("2.187-feld", "✔ STRUKTURELLER FIX: `Befundlage` hat "
+               "jetzt ein Feld `basis`. Am 08.09. war nach zwei "
+               "Basiswechseln nicht mehr feststellbar, welche der 92 "
+               "geltenden Befunde auf welcher Grundlage entstanden waren "
+               "- 25 tragen Messzahlen. ⚠️ R-R11 verlangt Reproduktion "
+               "vor Widerruf, aber wer nicht weiss, WORAUF ein Befund "
+               "steht, kann ihn nicht reproduzieren. Vorgabe leer (die "
+               "Altbefunde bleiben unveraendert), ab jetzt gefuellt",
+               "gilt", "Methodik 2.187"),
+    Befundlage("2.186", "⚠️ MEINE AUSSAGE 'CANTON HAT GAR KEINE "
+               "KURSREIHE' WAR ZU ENG. Es hat 252 CoinGecko-Tagespreise "
+               "in `price_history`. Was fehlt, ist OHLC - nur `close`, "
+               "also kein ATR, keine Stopgeometrie, kein `vola`. Fuer "
+               "einen gleitenden Schnitt genuegt es; `marktrang.py` "
+               "nutzt genau das", "gilt",
+               "Methodik 2.186 / Nutzerhinweis 08.09."),
+    Befundlage("2.186-symbol", "✔ DAS SYMBOLPROBLEM IST REAL, "
+               "DOKUMENTIERT UND GELOEST: CoinGecko fuehrt "
+               "`canton-network` unter dem Symbol **CC**, unsere "
+               "Watchlist unter `CANTON`. Der Abgleich lief ueber das "
+               "SYMBOL - 'CANTON konnte deshalb NIE gefunden werden, und "
+               "zwar lautlos' (marktrang.py). Seit 31.08. laeuft er ueber "
+               "die `coingecko_id`", "gilt", "Methodik 2.186"),
+    Befundlage("2.186-frische", "⚠️⚠️ WARUM CANTON TROTZDEM IN "
+               "`schnitte()` FEHLT - und der Grund ist NICHT CANTON: "
+               "`SCHNITT_FRISCHE_TAGE` ist 10, CANTONs letzter Tagespreis "
+               "ist vom 2026-07-19 und damit 51 Tage alt. ⚠️ ABER "
+               "`bitcoin` und `kaspa` sind in `price_history` GENAUSO 51 "
+               "Tage alt - DIE GANZE TABELLE STEHT SEIT DEM 19.07. "
+               "STILL. Das ist ein Datenstand-Befund ueber die "
+               "DESKTOP-KOPIE", "gilt", "Methodik 2.186"),
+    Befundlage("2.186-notebook", "⚠️ WAS VON HIER AUS NICHT FESTSTELLBAR "
+               "IST: ob `refresh_prices_job` auf dem NOTEBOOK weiterlaeuft. "
+               "Steht `price_history` auch dort seit dem 19.07., fehlen "
+               "seit 51 Tagen die Tagespreise fuer ALLE Werte ohne "
+               "Boersenlisting (CANTON, VSN, AIOZ, SUPRA). Das waere kein "
+               "niedrig priorisierter Punkt mehr - es ist eine "
+               "RUECKFRAGE, keine Messung", "gilt", "Methodik 2.186"),
+    Befundlage("2.186-abstand", "⚠️ UND DIE UEBERNAHME HAT EINE NEUE "
+               "LUECKE ERZEUGT: `schnitte()` liefert jetzt 536 Symbole, "
+               "`schnitt_werte()` nur 516. ACHT der zehn Uebernommenen "
+               "(AIOZ, AKT, BRETT, CAT, GRIFFAIN, HYPE, KAS, SUPRA) "
+               "haben einen 200-Tage-Schnitt, aber KEINEN Abstand - "
+               "`schnitt_werte` braucht einen AKTUELLEN Kurs vom "
+               "Binance-Ticker, und dort sind sie nicht gelistet. MORPHO "
+               "und PLUME funktionieren (sie haben Binance-Zeilen). ✔ "
+               "Heute FOLGENLOS, weil `schnitt` nicht registriert ist "
+               "(zustand='null') und die Messungen direkt aus der "
+               "Messbasis lesen - aber bei einer Aktivierung waeren "
+               "diese acht ohne Rang", "gilt", "Methodik 2.186"),
+    Befundlage("2.185", "✔✔ D-1 ERLEDIGT: ZEHN REIHEN AUS DER "
+               "PRODUKTION UEBERNOMMEN (AIOZ, AKT, BRETT, CAT, GRIFFAIN, "
+               "HYPE, KAS, MORPHO, PLUME, SUPRA) - 6.768 Zeilen, alle "
+               "mit Median-Tagesabstand 1, null Luecken, null Zeilen "
+               "ohne Tagesspanne. Messbasis 526 -> 536 Krypto-Symbole. "
+               "Die gehaltenen Luecken sinken von ACHT auf DREI",
+               "gilt", "Methodik 2.185 / uebernehme_messreihen.py"),
+    Befundlage("2.185-quelle", "⚠️⚠️ DIE QUELLENREINHEIT BLEIBT SICHTBAR: "
+               "jede uebernommene Zeile traegt eine eigene Quelle - "
+               "`uebernommen_gemessen` 3.878, `uebernommen_bybit` 2.822, "
+               "`uebernommen_binance` 68 gegen `binance_mess` 5.121.873. "
+               "Ein `SELECT DISTINCT quelle` zeigt es sofort. Bei "
+               "mehreren Quellen je Tag gewinnt die beste: binance vor "
+               "bybit vor gemessen", "gilt", "Methodik 2.185"),
+    Befundlage("2.185-veralten", "⚠️ UND DER PREIS IST BENANNT: diese "
+               "Symbole sind NICHT auf Binance - `lade_messreihen.py` "
+               "kann sie NIE auffrischen. Sie enden am 19.08. bzw. "
+               "13.07. und bleiben dort stehen. Deshalb tragen sie in "
+               "`messreihen_status` den eigenen Status `uebernommen` "
+               "statt `handelnd` - sichtbar statt still", "gilt",
+               "Methodik 2.185"),
+    Befundlage("2.185-rest", "WAS OFFEN BLEIBT, mit prazisierter "
+               "Begruendung: ASTER (318 USD-Tage) und MON (269) liegen "
+               "unter der 400er-Grenze - eine DATENLAGE-Grenze, keine "
+               "Nachlaessigkeit; die Coins existieren erst seit 10/2025 "
+               "bzw. 11/2025. CANTON hat in der Produktion GAR KEINE "
+               "Kursreihe und ist zugleich Kernwert. VSN ist auf "
+               "Nutzerentscheidung 08.09. ausgenommen ('vsn ist nicht "
+               "relevant')", "gilt", "Methodik 2.185"),
+    Befundlage("2.185-meldung", "⚠️ Die Meldung selbst war nach der "
+               "Uebernahme UNGENAU geworden: sie sagte bei ASTER und MON "
+               "weiter 'die Daten sind da, nur nicht uebernommen', "
+               "dabei sind sie zu kurz. Ursache: sie zaehlte die "
+               "GESAMTzeilen (USD+EUR) statt der USD-Tage. Korrigiert - "
+               "jetzt nennt sie die USD-Tageszahl und trennt 'zu kurz' "
+               "von 'nicht uebernommen'", "gilt", "Methodik 2.185"),
+    Befundlage("2.184", "✔✔ DIE AUFFRISCHUNG IST DURCH: 347 Reihen, "
+               "539.568 Kerzen, 259 s. Die Krypto-Messbasis steht jetzt "
+               "auf 2026-09-08 statt 2026-08-21 - nur noch drei Reihen "
+               "auf dem alten Stand. Ablauf protokolliert: Sicherung "
+               "(SHA-256 bitgleich) -> Anker VORHER -> Trockenlauf -> "
+               "Schreiben -> Anker NACHHER", "gilt",
+               "Methodik 2.184 / Gesamtplan 08.09."),
+    Befundlage("2.184-urteile", "⚠️⚠️ ZWEI URTEILE HABEN SICH GEAENDERT, "
+               "und beide sind VERBESSERUNGEN durch mehr Daten, keine "
+               "Instabilitaet: `funding` H20 frei geht von 'traegt nicht "
+               "bis 0,10 R' auf TRAEGT (+0,02458 -> +0,02581, also nur "
+               "+0,00123 Verschiebung), und `zufall` H20 5 % von 'KEIN "
+               "BEFUND' auf 'traegt nicht bis 0,05 R'. In beiden Faellen "
+               "ist das BAND enger geworden - 526 statt 524 Symbole und "
+               "18 Tage mehr Daten", "gilt", "Methodik 2.184"),
+    Befundlage("2.184-logik", "⚠️ DABEI EINE EIGENE FEHLANNAHME "
+               "KORRIGIERT: ich hielt 'TRAEGT' fuer 'Effekt ueber der "
+               "Trennschaerfe'. `messnorm.Befund.urteil` sagt es anders - "
+               "TRAEGT heisst 'das Band schliesst den NULLPUNKT aus'. Die "
+               "Trennschaerfe blieb bei 0,1; sie erklaert den Wechsel "
+               "nicht. Und er ist SAATSTABIL: fuenf Saaten, ein Urteil",
+               "gilt", "Methodik 2.184"),
+    Befundlage("2.184-rr11", "⚠️ R-R11 GILT TROTZDEM: die Anker in "
+               "`messbasis_anker.json` stehen jetzt auf der NEUEN Basis. "
+               "Der registrierte `funding`-Befund (+0,0246) und alle "
+               "heutigen Messungen (N-73 bis N-80) liefen auf der ALTEN. "
+               "Die groesste Verschiebung betraegt +0,01358 R (`schnitt` "
+               "H20 20 %: +0,17593 -> +0,18951) - kein Urteil dort "
+               "aendert sich, aber die ZAHLEN sind nachzuziehen", "gilt",
+               "Methodik 2.184"),
+    Befundlage("2.182", "✔ DIE FRISCHEPRUEFUNG WAR ZU STRENG und ist "
+               "korrigiert: EINGESTELLTE Reihen sind VOLLSTAENDIG, nicht "
+               "veraltet - sie handeln nicht mehr, es gibt keine neuen "
+               "Kurse. Die erste Fassung zaehlte alle 174 eingestellten "
+               "Krypto-Reihen als Mangel und haette das Paket dauerhaft "
+               "rot gehalten fuer etwas, das kein Fehler ist. Jetzt: 350 "
+               "handelnde, davon 344 veraltet (98 %); die 174 "
+               "eingestellten getrennt ausgewiesen", "gilt",
+               "Methodik 2.182"),
+    Befundlage("2.182-trocken", "DER TROCKENLAUF DER AUFFRISCHUNG: 347 "
+               "von 487 Binance-Paaren brauchbar, 539.568 Kerzen, 4,6 "
+               "Minuten. 140 abgelehnt - ALLE wegen 'zu kurz' (< 400 "
+               "Kerzen), keine Plausibilitaets- oder Lueckenfehler. "
+               "Schreibsemantik ist ein sauberer Upsert (INSERT OR "
+               "REPLACE, PK ueber symbol/assetklasse/currency/date) - "
+               "eine Auffrischung ERGAENZT, sie ueberschreibt keine "
+               "Historie. Die harte Sperre gegen die Produktions-DB "
+               "greift", "gilt", "Methodik 2.182 / lade_messreihen.py"),
+    Befundlage("2.183", "⚠️⚠️ DIE F-198-KOLLISIONEN SIND NUR HALB "
+               "BEREINIGT: sieben Symbole (BOND, C, DASH, DIA, MDT, STX, "
+               "T) tragen in `price_history_ohlc` eine ANDERE Klasse als "
+               "in `messreihen`. Alle sieben haben Kurse in ZWEI Klassen "
+               "- DASH etwa aktien 1.440 UND krypto 2.721 -, aber "
+               "`messreihen.symbol` ist PRIMARY KEY und kann nur EINER "
+               "Klasse zuordnen", "gilt", "Methodik 2.183"),
+    Befundlage("2.183-folge", "✔ DIE MESSUNGEN SIND NICHT BETROFFEN: "
+               "`_reihen_roh` ueberspringt den `messreihen`-Filter, wenn "
+               "`price_history_ohlc` die Spalte `assetklasse` traegt - "
+               "der Fix vom 07.09. ⚠️ ABER `klassen_aus_db()` liest "
+               "weiterhin aus `messreihen` und liefert fuer diese sieben "
+               "die FALSCHE Klasse. Ueber ZEHN Messwerkzeuge importieren "
+               "sie. Wer sie zur Klassenentscheidung nutzt, bekommt dort "
+               "das Falsche", "gilt", "Methodik 2.183"),
+    Befundlage("2.183-nichtjetzt", "⚠️ NICHT JETZT REPARIERT, und mit "
+               "Grund: der saubere Fix verlangt, dass ein Symbol "
+               "MEHREREN Klassen zugeordnet werden kann - das ist eine "
+               "Strukturaenderung an `messreihen` und beruehrt zehn "
+               "Werkzeuge. Nutzervorgabe 08.09.: 'langsam und vorsichtig "
+               "planen und umsetzen'. Als Suitepruefung gemeldet, damit "
+               "es nicht wieder untergeht", "gilt", "Methodik 2.183"),
+    Befundlage("2.181", "⚠️ KORREKTUR AN MEINER EIGENEN "
+               "KLASSIFIZIERUNG: `HYPE` IST AUFNEHMBAR. Ich hatte es als "
+               "'zu kurz' gefuehrt (bybit 238, gemessen 167) - "
+               "KOMBINIERT ergeben die beiden USD-Quellen 405 "
+               "einzigartige Tage von 405 moeglichen, also LUECKENLOS "
+               "und ueber der 400er-Grenze. Sie ergaenzen sich exakt: "
+               "bybit 2025-07-11 bis 2026-08-19, gemessen 2026-01-28 bis "
+               "2026-07-13. Damit sind es ZEHN aufnehmbare, nicht neun",
+               "gilt", "Methodik 2.181 / Nutzerhinweis 08.09."),
+    Befundlage("2.181-grenzen", "ASTER (318 Tage) und MON (269) bleiben "
+               "auch kombiniert unter 400 - aber der Grund ist die "
+               "DATENLAGE, nicht die Sammlung: die Coins existieren erst "
+               "seit 10/2025 bzw. 11/2025. Beide Reihen sind zu 100 % "
+               "lueckenlos. Das ist eine Grenze, keine Nachlaessigkeit",
+               "gilt", "Methodik 2.181"),
+    Befundlage("2.181-canton", "⚠️⚠️ CANTON ist der schwierigste Fall - "
+               "und er hat DOCH Daten, nur in der falschen Tabelle: "
+               "`price_history` (CoinGecko-Tagespreise) fuehrt "
+               "`canton-network` mit 252 Zeilen (2025-11-10 bis "
+               "2026-07-19). ⚠️ Diese Tabelle hat aber NUR "
+               "`price_usd`/`price_eur` - KEIN Hoch/Tief. Ohne "
+               "Tagesspanne gibt es kein ATR, keine Stopgeometrie und "
+               "kein `vola`. CANTON ist damit zu kurz UND ohne Spanne - "
+               "als KERNWERT im Bestand ist das eine echte "
+               "Einschraenkung, die der Nutzer kennen muss", "gilt",
+               "Methodik 2.181"),
+    Befundlage("2.181-gemessen", "✔ Entwarnung zur Quelle `gemessen`: "
+               "laut `database/db.py` ist sie ein 'echter Kursabruf' "
+               "(ueber `api/boersen_klines.py` bzw. "
+               "`api/yfinance_krypto_fallback.py`), also echte Kerzen "
+               "mit Hoch und Tief. Der Anteil ohne Tagesspanne betraegt "
+               "bei den fraglichen Symbolen 0,0 %", "gilt",
+               "Methodik 2.181"),
+    Befundlage("2.180", "⚠️⚠️ DIE FEHLENDEN MESSREIHEN SIND KEIN "
+               "UEBERNAHMEVERSAEUMNIS, sondern eine QUELLENFRAGE. Die "
+               "Messbasis laedt Binance-USDT-Spotpaare "
+               "(`quelle='binance_mess'`, 5.114.965 Zeilen einheitlich). "
+               "Binance FUEHRT die fehlenden Symbole ueberwiegend nicht: "
+               "von 14 haben nur ASTER (51 Zeilen), MORPHO (31) und "
+               "PLUME (37) ueberhaupt Binance-Daten, alle erst seit "
+               "Juli 2026", "gilt", "Methodik 2.180 / Audit 08.09."),
+    Befundlage("2.180-ersatz", "Die Produktion ergaenzt aus ANDEREN "
+               "Quellen: `bybit` (AIOZ, BRETT, CAT, HYPE, KAS, MON, "
+               "SUPRA) und `gemessen` (AKT, GRIFFAIN und andere). ⚠️ "
+               "Eine Uebernahme wuerde die Quellenreinheit der Messbasis "
+               "brechen - deshalb ist Kopieren NICHT der saubere Weg, "
+               "sondern Uebernahme MIT Quellenkennzeichnung", "gilt",
+               "Methodik 2.180"),
+    Befundlage("2.180-qualitaet", "GEPRUEFT, ob die Ersatzquellen die "
+               "Aufnahmebedingungen halten (Median-Tagesabstand genau 1, "
+               ">= 400 Kerzen, < 5 % Luecken): NEUN sind aufnehmbar - "
+               "AIOZ (bybit 592), AKT (gemessen 727), BRETT (bybit 854), "
+               "CAT (418), GRIFFAIN (537), KAS (608 bzw. bybit 470), "
+               "MORPHO (606), PLUME (447), SUPRA (bybit 631). DREI sind "
+               "zu kurz: ASTER (267), HYPE (238), MON (232). ZWEI haben "
+               "nirgends Daten: CANTON, VSN", "gilt", "Methodik 2.180"),
+    Befundlage("2.180-gehalten", "Auf die ACHT gehaltenen Positionen "
+               "heruntergebrochen: VIER aufnehmbar (BRETT, KAS, MORPHO, "
+               "SUPRA), ZWEI zu kurz (ASTER, MON - das ist eine "
+               "Datenlage-Grenze, keine Nachlaessigkeit), ZWEI ohne jede "
+               "Quelle (CANTON, VSN)", "gilt", "Methodik 2.180"),
+    Befundlage("2.180-spanne", "⚠️ Ein Qualitaetsverdacht wurde geprueft "
+               "und AUSGERAEUMT: `gemessen` hat insgesamt in 6,6 % der "
+               "Zeilen `high = low = close` - also keine Tagesspanne, "
+               "womit ATR und `vola` dort wertlos waeren. Bei den 14 "
+               "fraglichen Symbolen betraegt der Anteil aber 0,0 %. Die "
+               "6,6 % betreffen andere Werte", "gilt", "Methodik 2.180"),
+    Befundlage("2.180-vorrang", "⚠️⚠️ ENTSCHEIDUNG ZUR REIHENFOLGE: die "
+               "GROESSERE Luecke ist die Frische. 518 von 524 "
+               "Krypto-Reihen sind 18 Tage alt; neun Reihen zu "
+               "ergaenzen, waehrend 518 veralten, waere die falsche "
+               "Reihenfolge. Und die Auffrischung hat KEIN "
+               "Qualitaetsproblem - dieselbe Quelle, dasselbe Werkzeug",
+               "gilt", "Methodik 2.180"),
+    Befundlage("2.179", "✔ DIE MELDELUECKE IST GESCHLOSSEN: "
+               "`pruefe_neuaufnahme.py` prueft die drei "
+               "Lebenszyklus-Faelle, die der Nutzer benannt hat - NEU "
+               "(Watchlist/Bestand ohne Messreihe), FAELLT WEG (nur "
+               "berichtet, KEIN Mangel wegen P6) und AENDERT SICH "
+               "(Frische je Klasse). Dazu die Beitragslage der "
+               "gehaltenen Werte. Als Suitepaket `Neuaufnahme` "
+               "verdrahtet", "gilt",
+               "Methodik 2.179 / pruefe_neuaufnahme.py"),
+    Befundlage("2.179-rot", "⚠️⚠️ DAS PAKET IST ROT, UND DAS IST "
+               "RICHTIG: 3 von 5 Pruefungen schlagen an. Ein Paket, das "
+               "eine offene Luecke gruen faerbt, waere schlimmer als "
+               "keines. Gruen wird es, wenn die acht Messreihen "
+               "uebernommen und die Krypto-Basis nachgeladen ist",
+               "gilt", "Methodik 2.179"),
+    Befundlage("2.179-frische", "⚠️⚠️⚠️ DABEI GEFUNDEN: DIE "
+               "KRYPTO-MESSBASIS IST ZU 99 % VERALTET. Die Median-Reihe "
+               "endet am 21.08.2026 - 18 Tage alt; 518 von 524 Reihen "
+               "sind aelter als sieben Tage. Nur SECHS Reihen (die am "
+               "07.09. nachgeladenen) reichen bis heute. Die "
+               "Nicht-Krypto-Klassen sind mit 5 Tagen aktuell", "gilt",
+               "Methodik 2.179"),
+    Befundlage("2.179-median", "⚠️ Und die Pruefung hat einen Fehler in "
+               "SICH SELBST aufgedeckt: die erste Fassung nahm das "
+               "MAXIMUM je Klasse und meldete 'krypto 1 Tag alt' - weil "
+               "sechs frische Reihen die ganze Klasse frisch aussehen "
+               "liessen. Der MEDIAN und der Anteil der Veralteten sind "
+               "das richtige Mass. Dieselbe Fehlerklasse wie beim "
+               "Stichprobenmedian in N-65", "gilt", "Methodik 2.179"),
+    Befundlage("2.179-core", "⚠️ DREI KERNWERTE betroffen, nicht einer: "
+               "CANTON (gehalten, `rolle=core`, NIRGENDS Daten), MORPHO "
+               "(gehalten, `core`, 1.243 Zeilen in der Produktion) und "
+               "HYPE (Watchlist, `core`, 572 Zeilen). Ich hatte zuerst "
+               "nur CANTON gesehen", "gilt", "Methodik 2.179"),
+    Befundlage("2.176", "⚠️⚠️⚠️ ACHT GEHALTENE KRYPTO-POSITIONEN HABEN "
+               "KEINE MESSREIHE - und NICHTS meldet es. Betroffen: "
+               "ASTER, BRETT, CANTON, KAS, MON, MORPHO, SUPRA, VSN. "
+               "⚠️ CANTON hat `rolle=core` - ein KERNWERT ohne jede "
+               "Kursreihe. Gefunden auf Nutzerhinweis 08.09.: 'neues "
+               "Asset in der Watchlist oder neuer Coin-Bestand - die "
+               "Daten zur Bewertung muessen vorhanden sein'", "gilt",
+               "Methodik 2.176 / Audit 08.09."),
+    Befundlage("2.176-vorhanden", "⚠️ SECHS DAVON HABEN HISTORIE IN DER "
+               "PRODUKTIONS-DB, sie wurde nur nie in die Messbasis "
+               "uebernommen: KAS 1.686 Zeilen · MORPHO 1.243 · BRETT "
+               "854 · SUPRA 631 · ASTER 585 · MON 501. Zwei haben gar "
+               "nichts: CANTON und VSN. Es ist also ueberwiegend ein "
+               "UEBERNAHME-, kein Beschaffungsproblem", "gilt",
+               "Methodik 2.176"),
+    Befundlage("2.176-still", "⚠️⚠️ UND ES IST STILL: die acht sind in "
+               "`messreihen` UND `messreihen_status` gar nicht gefuehrt, "
+               "und es gibt KEINE Pruefung, die fehlende Messreihen fuer "
+               "gehaltene Positionen meldet (im ganzen Baum kein "
+               "Treffer). Werkzeuge zum Nachladen existieren "
+               "(`lade_messreihen.py`), aber kein Automatismus bei "
+               "Neuaufnahme", "gilt", "Methodik 2.176"),
+    Befundlage("2.176-eurcv", "✔ EURCV gehoert NICHT in diese Liste "
+               "(Nutzerhinweis 08.09.): es hat `ist_cash_aequivalent = "
+               "True` und ist das Cash-Aequivalent, kein zu bewertender "
+               "Coin. `asset_schalter.py` behandelt es gesondert und "
+               "notiert den Datenmangel bereits. Es braucht einen PREIS "
+               "fuer die Cash-Quote, aber keine Bewertung", "gilt",
+               "Methodik 2.176"),
+    Befundlage("2.177", "⚠️ AUFLAGE 2 GEPRUEFT - die Trennung Bewertung "
+               "gegen Wirtschaftlichkeit ist im CODE sauber: "
+               "`potential.py` rechnet ausdruecklich gebuehrenfrei "
+               "('BEWERTUNG = ist das ein guter Trade, OHNE Gebuehren', "
+               "`gebuehr_je_seite=0.0` ist kein Versehen), und "
+               "`stop_relativ` geht nicht in die Quote ein - Stop 5 % "
+               "und 25 % liefern beide 0,373033", "gilt",
+               "Methodik 2.177"),
+    Befundlage("2.177-etikett", "⚠️⚠️ ABER DIE STUFENBESCHRIFTUNG IST "
+               "ALTBESTAND: `rollen_gate.STUFEN` nennt die zwoelfte "
+               "Stufe 'Trefferquote schlaegt den Breakeven'. Seit U-1 "
+               "(30.08.) entscheidet dort `potential.traegt()` - "
+               "gebuehrenfrei. Der Kommentar darueber sagt es selbst "
+               "('die alte Begruendung galt einem Modul, das an dieser "
+               "Stelle nicht mehr steht'), aber das ETIKETT wurde nicht "
+               "nachgezogen. Wer es liest, glaubt an einen "
+               "Wirtschaftlichkeitsfilter, den es nicht gibt", "gilt",
+               "Methodik 2.177 / Auflage 1"),
+    Befundlage("2.178", "⚠️⚠️ AUFLAGE 3 BESTAETIGT (Nutzerhinweis): SPOT "
+               "HAT IN DER BEWERTUNG KEINEN STOP. "
+               "`messnorm.STOP_BEENDET` kennt nur hebel x einstieg und "
+               "hebel x swing. ⚠️ ABER die Zielgroesse `bewegung_r` "
+               "aller Messungen TEILT DURCH DIE STOPWEITE - sie normiert "
+               "bei Spot durch eine Groesse, die die Bewertung dort "
+               "nicht kennt. Dieselbe Fehlerklasse wie 2.172 (geliehene "
+               "Geometrie); bei Krypto ist die Weite rund 0,75 ATR und "
+               "damit ein brauchbarer Massstab, aber es gehoert benannt",
+               "gilt", "Methodik 2.178"),
+    Befundlage("2.178-instrument", "Und ein Nebenfund: `instrument = "
+               "'hebel'` hat es in der NEUEN Kette nie gegeben - 3.513 "
+               "spot, 11 absicherung, 0 hebel. Der Hebel entsteht als "
+               "ETIKETT innerhalb von spot x einstieg, sobald "
+               "`verlustanteil / stop_rel > 1`", "gilt",
+               "Methodik 2.178"),
+    Befundlage("2.175", "✔ N-11 DURCHGEFUEHRT: die Klassen in "
+               "STREUUNGSEINHEITEN gemessen (in_r geteilt durch den IQA "
+               "der eigenen Kandidatenwelt, Fenster ab 2018). Ergebnis: "
+               "krypto `schnitt` +0,059 (1 von 4 Mengen) · themen_etf "
+               "`vola` +0,062 (2 von 5) · rohstoffe `schnitt` +0,025 (0 "
+               "von 2) · aktien `schnitt` und `vola` je +0,015 (0 von "
+               "allen). `zufall` in jeder Klasse sauber", "gilt",
+               "Methodik 2.175 / n80_streuungseinheiten.py"),
+    Befundlage("2.175-aktien", "⚠️ DIE AKTIEN-EFFEKTE SIND RUND EIN "
+               "VIERTEL VON KRYPTO (+0,015 gegen +0,059), nicht "
+               "gleichauf. Meine Handrechnung hatte das Gegenteil "
+               "nahegelegt - sie stand auf dem falschen Nenner. Der "
+               "N-8-Nullbefund fuer Aktien bleibt damit ZURUECKGEZOGEN "
+               "(die Messung war zu grob), aber die Effekte sind dort "
+               "auch normiert klein", "gilt", "Methodik 2.175"),
+    Befundlage("2.175-etf", "⚠️⚠️ DER STAERKSTE WERT DES GANZEN LAUFS "
+               "ist `vola` bei THEMEN_ETF: +0,062 Streuungseinheiten und "
+               "als einziger auf ZWEI von fuenf zulaessigen Mengen "
+               "tragend - mehr als Krypto `schnitt` (1 von 4). ⚠️ Der "
+               "Vorbehalt aus 2.170-etf bleibt: die Klasse hat effektiv "
+               "nur 1,9 unabhaengige Reihen", "gilt", "Methodik 2.175"),
+    Befundlage("2.175-robust", "⚠️ UND DER NUECHTERNE GESAMTBEFUND: KEIN "
+               "Kandidat traegt in KEINER Klasse auf ALLEN zulaessigen "
+               "Mengen. Krypto `schnitt` 1 von 4, ETF `vola` 2 von 5, "
+               "alles andere 0. Nach der N-73-Regel ist damit keiner "
+               "robust - auch nach der Normierung nicht", "gilt",
+               "Methodik 2.175"),
+    Befundlage("2.174", "⚠️⚠️⚠️ DAS HEBELKONZEPT IST NICHT GESCHEITERT - "
+               "es wurde auf einer inzwischen GEFALLENEN Kalibrierung fuer "
+               "gescheitert erklaert. Nutzervorgabe (F-220, woertlich): "
+               "'die Wahrscheinlichkeit auf positives "
+               "Chance-Risiko-Verhaeltnis soll den Hebel dynamisch "
+               "erzeugen', Zielzone 2-5x", "gilt",
+               "Methodik 2.174 / Recherche 08.09."),
+    Befundlage("2.174-ist", "⚠️⚠️ WAS HEUTE GEBAUT IST: die Produktion "
+               "rechnet `hebel_noetig = verlustanteil / stop_rel`. Die "
+               "QUOTE geht NICHT ein - `agent/assetklassen.py` sagt es "
+               "ausdruecklich ('es gibt keinen Zirkelbezug, hebel_noetig "
+               "haengt an Verlustanteil'). Der Hebel entsteht aus der "
+               "GEOMETRIE, nicht aus der Wahrscheinlichkeit. Die "
+               "Nutzervorgabe ist damit NICHT umgesetzt", "gilt",
+               "Methodik 2.174"),
+    Befundlage("2.174-f220", "F-220 rechnete mit einem "
+               "Kalibrierungsfaktor 0,195 und kam zu 'nur EINE Lage "
+               "erreicht 2-5x'. ⚠️ Zwei Dinge dazu: (a) der Faktor ist am "
+               "05.09. GEFALLEN - F-215s Kalibrierung besteht die "
+               "Invarianzpruefung nicht (Verfuegbarkeits-Artefakt), und "
+               "(b) er wird NIRGENDS IM CODE angewandt. Die Produktion "
+               "rechnet unkalibriert. F-220 selbst ist am 06.09. "
+               "zurueckgezogen", "gilt", "Methodik 2.174"),
+    Befundlage("2.174-neu", "✔✔ UNKALIBRIERT MIT DER HEUTIGEN "
+               "BEITRAGSLAGE GERECHNET (Kapital 10.000, Einsatz 500, "
+               "Stop 5 %, halbes Kelly, CRV 2,0) FUNKTIONIERT DIE "
+               "DYNAMISCHE ERZEUGUNG: kein Beitrag 0,00x · mittlere Lage "
+               "1,02x · nur funding bestes 3,90x · bestes funding + "
+               "mittleres turnover 4,56x · nur turnover bestes 9,45x · "
+               "beide bestes 13,35x. ZWEI Lagen liegen in der Zielzone "
+               "2-5x, und die Abstufung ist echt", "gilt",
+               "Methodik 2.174"),
+    Befundlage("2.174-grenzen", "⚠️ ZWEI EINSCHRAENKUNGEN, benannt: (1) "
+               "die Spitze 13,35x braucht den vorhandenen Deckel "
+               "`GRENZEN['hebel_max']` = 10,0. (2) Die Abstufung SPRINGT "
+               "von 1,02x auf 3,90x - zwischen 'kein Hebel' und 'fast "
+               "4x' liegt nichts. Ursache ist die grobe "
+               "Fuenftel-Aufloesung der Beitraege. Fuer eine feine "
+               "Zielzone 2-5x reicht sie nicht", "gilt",
+               "Methodik 2.174"),
+    Befundlage("2.173", "⚠️⚠️ ZWEI EIGENE FEHLDARSTELLUNGEN ZUM "
+               "STRATEGIESTAND, vom Nutzer korrigiert (08.09.). Ich hatte "
+               "gesagt, `swing` und `hebel` haetten 'keine Beitraege' und "
+               "das als Luecke dargestellt. Beides war falsch "
+               "eingeordnet", "gilt",
+               "Methodik 2.173 / Nutzerkorrektur 08.09."),
+    Befundlage("2.173-swing", "`swing` IST KEINE LUECKE, SONDERN "
+               "GESTRICHEN. `Anforderungen_Umbau_28_08.md`: 'hebel x "
+               "swing entfaellt (Nutzerentscheidung 31.08.: nur Einstieg "
+               "reicht)' und 'spot x swing ist ausdruecklich gestrichen'. "
+               "Begruendung dort: bei 1-20 Tagen Horizont ist der "
+               "praktische Unterschied zu `einstieg` klein, und Swing "
+               "verlangt ein eigenes Ausstiegswerk", "gilt",
+               "Methodik 2.173"),
+    Befundlage("2.173-hebel", "⚠️⚠️ DER HEBEL BEKOMMT SEHR WOHL EINE "
+               "BEWERTUNG - sie ist nur nicht vom Spot UNTERSCHEIDBAR. "
+               "Im Code geprueft: `wahrscheinlichkeit.Beitrag` hat die "
+               "Felder klassen/strategien/richtungen, aber KEIN "
+               "`instrumente`. Und `rechne()` liefert bei Stop 6,4 % "
+               "gegen 2,5 % und mit Finanzierung 0,02 R dreimal EXAKT "
+               "dieselbe Quote 0,373033. Das ist der Befund vom 01.09. "
+               "('die Bewertung hat keine Instrument-Achse'), nicht "
+               "'keine Bewertung'", "gilt", "Methodik 2.173"),
+    Befundlage("2.173-regel2", "Nebenbei belegt: `rechne()` rechnet "
+               "`kosten_r` aus Gebuehr und Finanzierung, laesst sie aber "
+               "NICHT in die Quote einfliessen. Regel 2 (Gebuehren "
+               "gehoeren nicht in die Bewertung) ist im Code korrekt "
+               "umgesetzt", "gilt", "Methodik 2.173"),
+    Befundlage("2.173-amihud", "⚠️ UND EINE LUECKE IN MEINER EIGENEN "
+               "N-76-ARBEIT: ich habe `amihud` nur als NIVEAU gemessen "
+               "(feste Baender, Regel-3-konform). F-228 hatte die "
+               "VERAENDERUNG als Hebel-Kandidaten benannt. ⚠️ F-228 ist "
+               "zwar am 06.09. selbst zurueckgezogen (gemessen auf 'Ziel "
+               "vor Stop' und/oder der freien Menge) - aber die Frage "
+               "nach der VERAENDERUNG ist damit weder bestaetigt noch "
+               "widerlegt. `messe_fremdgroesse.py` trennt beides "
+               "ausdruecklich: NIVEAU = Eigenschaft, VERAENDERUNG = LAGE",
+               "gilt", "Methodik 2.173"),
+    Befundlage("2.172", "⚠️⚠️ DIE ZIELGROESSE `bewegung_r` IST UEBER DIE "
+               "ASSETKLASSEN NICHT VERGLEICHBAR - und das entwertet den "
+               "N-8-Nullbefund. Sie teilt durch max(5 % Kurs, 0,75 ATR). "
+               "Gemessen ab 2018: der Boden bindet bei Krypto in 29,1 % "
+               "der Anker, bei AKTIEN in 97,1 %, bei THEMEN_ETF in "
+               "99,2 %, bei Rohstoffen in 97,4 %. Der Stop liegt dort "
+               "2,29 / 4,43 / 2,50 ATR entfernt statt 0,75", "gilt",
+               "Methodik 2.172 / Nutzerhinweis 08.09."),
+    Befundlage("2.172-streuung", "„In Streuungseinheiten liegen die "
+               "Effekte fast gleichauf - Aktien 0,038, Rohstoffe "
+               "0,070\"", "abgeloest", "Methodik 2.172",
+               abgeloest_durch="2.175",
+               warum="HANDRECHNUNG mit dem falschen Nenner: ich habe "
+                     "durch die Streuung der GANZEN Klasse geteilt, "
+                     "gemessen wird aber die Kandidatenwelt (bei "
+                     "Rohstoffen IQA 4,775 statt 1,715). Sauber "
+                     "gemessen (N-80): Aktien +0,015, Rohstoffe +0,025 "
+                     "gegen Krypto +0,059"),
+    Befundlage("2.172-untermacht", "⚠️⚠️ DAMIT IST DER AKTIEN-BEFUND "
+               "UNTERMACHT, KEIN NULLBEFUND. Ein Effekt der "
+               "Krypto-Groesse haette in Aktien +0,0915 R ergeben - die "
+               "Trennschaerfe lag bei 0,05 bis 0,10 R, also genau an der "
+               "Grenze. Gemessen wurden +0,0725. Die Messung KONNTE "
+               "dort nichts zeigen", "gilt", "Methodik 2.172"),
+    Befundlage("2.172-etf", "⚠️ Und der ETF-Befund wird dadurch nicht "
+               "kleiner, sondern GROESSER: `vola` liegt dort bei 0,254 "
+               "Streuungseinheiten (5 %: 0,322) - das FUENFFACHE des "
+               "staerksten Krypto-Effekts. Der Vorbehalt aus 2.170-etf "
+               "bleibt (1 von 5 Mengen, effektiv 1,9 unabhaengige "
+               "Reihen), aber die Groesse verdient eine eigene Messung",
+               "gilt", "Methodik 2.172"),
+    Befundlage("2.172-lehre", "⚠️ DIE LEHRE: eine Zielgroesse, die durch "
+               "eine GEOMETRIE normiert, ist nur dort vergleichbar, wo "
+               "die Geometrie gleich wirkt. Der 5-%-Boden ist fuer "
+               "Krypto gebaut (ATR/Kurs 8,6 %) und bindet dort selten; "
+               "bei Aktien (2,2 %) und ETF (1,1 %) bindet er fast "
+               "immer. Wer Klassen vergleicht, muss die Effekte in "
+               "EIGENEN Streuungseinheiten ausdruecken - oder die "
+               "Geometrie je Klasse kalibrieren", "gilt",
+               "Methodik 2.172"),
+    Befundlage("2.170-rohstoffe", "ROHSTOFFE sind NICHT MESSBAR: 35 "
+               "Symbole, 28,8 Werte je Tag, nur `50%` und `frei` "
+               "zulaessig - und dort lautet JEDES Urteil 'KEIN BEFUND'. "
+               "Die Norm sagt es selbst. Das ist eine Datenlage-Aussage, "
+               "keine Bewertung", "gilt", "Methodik 2.170"),
+    Befundlage("2.170-etf", "⚠️ THEMEN_ETF: `vola` traegt bei 10 % "
+               "(+0,2303 [+0,0993 .. +0,3712]) und zeigt einen MONOTON "
+               "fallenden Verlauf ueber alle fuenf Mengen (+0,2911 / "
+               "+0,2303 / +0,0919 / +0,0382 / +0,0287) - ein Effekt, der "
+               "auf die selektiertesten Werte konzentriert ist. Kein "
+               "Mengenartefakt: `zufall` zeigt in KEINER Klasse einen "
+               "fallenden Verlauf", "gilt", "Methodik 2.170"),
+    Befundlage("2.170-etf-vorbehalt", "⚠️⚠️ ABER DER ETF-BEFUND STEHT "
+               "AUF DUENNEM EIS: nur 1 von 5 Mengen erreicht 'TRAEGT' "
+               "(N-73-Regel: nicht robust), UND die Klasse hat die "
+               "hoechste Querschnittskorrelation aller vier - im Mittel "
+               "0,527 gegen 0,209 bei Aktien. Das entspricht effektiv "
+               "1,9 unabhaengigen Reihen. 293 Themen-ETF halten "
+               "grossteils DIESELBEN Aktien; der Blockbootstrap "
+               "behandelt Zeit-, nicht Querschnittsabhaengigkeit",
+               "gilt", "Methodik 2.170"),
+    Befundlage("2.170-g6", "WAS FUER G-6 FOLGT: die Sperre der vier "
+               "Klassen nach DATENLAGE bleibt begruendet. Fuer Aktien "
+               "und Rohstoffe gibt es keinen tragenden Beitrag, bei "
+               "Themen-ETF nur einen nicht robusten Hinweis. ⚠️ Die "
+               "Sperre ist damit nicht mehr nur 'nach Datenlage' - fuer "
+               "Aktien ist sie jetzt GEMESSEN begruendet", "gilt",
+               "Methodik 2.170"),
+    Befundlage("2.170-fenster", "Das gemeinsame Fenster ab 2018-01-01 "
+               "stand VOR der Messung fest und ist vom Nutzer bestaetigt: "
+               "'zu den daten ab 1972 - auch hier aehnlich wie bei "
+               "krypto, waere ich der Meinung sollte man vorsichtig "
+               "sein'. Ohne es haette man Krypto ab 2017 gegen Aktien ab "
+               "1972 gestellt - und Aktien haetten mit 211 gegen 42 "
+               "Bloecken allein durch Aussagekraft besser ausgesehen",
+               "gilt", "Methodik 2.170"),
+    Befundlage("2.169", "⛔ N-9 ERLEDIGT: KEINER DER VIER "
+               "TERMINMARKT-KANAELE TRAEGT AUF `bewegung_r`. "
+               "`oi_je_umsatz` 0 von 3 zulaessigen Mengen, `long_bias` 0 "
+               "von 3, `top_bias` 0 von 2, `taker_bias` 0 von 3. Die "
+               "Referenz `oi_aenderung` dagegen 3 von 3 - ihr Band "
+               "schliesst in JEDER Menge die Null aus (+0,0469 / +0,0243 "
+               "/ +0,0145). `zufall` traegt auf keiner", "gilt",
+               "Methodik 2.169 / n78_terminmarkt_kanaele.py"),
+    Befundlage("2.169-zielgroesse", "⚠️⚠️ DAMIT UEBERTRAGEN SICH DIE "
+               "N-17b-BEFUNDE NICHT. Dort trugen `oi_je_umsatz`, "
+               "`long_bias` und `top_bias` - aber gegen FRONTLOADING, "
+               "eine andere Zielgroesse. Genau diese Verwechslung hat "
+               "F-207 schon einmal erzeugt. Ein Kandidat, der die "
+               "Frontloading-Quote verschiebt, verbessert deshalb nicht "
+               "das ERGEBNIS", "gilt", "Methodik 2.169"),
+    Befundlage("2.169-redundanz", "Zwei Redundanzen sauber gemessen, "
+               "beide INNERHALB der Auswahl: `oi_je_umsatz` gegen "
+               "`turnover` -0,490 - beide sind umsatznormiert, das ist "
+               "eine echte Ueberschneidung. Und `long_bias` gegen "
+               "`top_bias` +0,950, was N-17b (+0,955) exakt "
+               "REPRODUZIERT. Die drei uebrigen Paare liegen unter "
+               "0,16", "gilt", "Methodik 2.169"),
+    Befundlage("2.169-gesamt", "⚠️ DER GESAMTBEFUND: mit den vorhandenen "
+               "Daten gibt es keinen vierten Beitrag AUS DEN GEPRUEFTEN "
+               "QUELLEN. Kursreihe erschoepft (2.168), Terminmarkt "
+               "erschoepft (nur `oi_aenderung` traegt), onchain liefert "
+               "`turnover`, Binance liefert `funding`", "gilt",
+               "Methodik 2.169"),
+    Befundlage("2.169-korrektur", "⚠️⚠️ EINSCHRAENKUNG, am selben Abend "
+               "gefunden: 'alle Quellen erschoepft' war ZU WEIT gefasst. "
+               "Die Durchsicht des Datenbestands (auf Nutzerhinweis) "
+               "zeigt zwei weitere Quellen, die es gibt und die gemessen "
+               "WURDEN - aber unter der ALTEN Norm vom 30.08., vor den "
+               "heutigen Mengenregeln: `tvl_historie` (188 Symbole, "
+               "261.406 Zeilen, ab 2018-02) und `adractcnt` - aktive "
+               "Adressen (66 Symbole, 203.378 Zeilen, ab 2013-01), beide "
+               "in `messe_fremdgroesse.py`. Sie gehoeren unter der "
+               "heutigen Norm nachgemessen - das ist ein OFFENER Punkt, "
+               "kein erledigter", "gilt", "Methodik 2.169"),
+    Befundlage("2.168", "⛔ N-6 IST FALSCH GESTELLT UND WIRD "
+               "GESTRICHEN. Die Abdeckungsluecke ist kein "
+               "BETRIEBSproblem: ueber die Watchlist mit k=2 haben nur "
+               "4,2 % der gewaehlten Anker keinen Beitrag, und das sind "
+               "FLOKI und XNO. ⚠️ Nutzervorgabe 07.09. woertlich: bei "
+               "Meme- und Smallcap-Werten ist eine fehlende Bewertung "
+               "'als UNKRITISCH zu bewerten'", "gilt",
+               "Methodik 2.168 / n77_ist_die_abdeckung_repraesentativ.py"),
+    Befundlage("2.168-mess", "Als MESSfrage ist die Luecke groesser: auf "
+               "der Messbasis haben 32,4 % der gewaehlten Anker keinen "
+               "Beitrag. Geprueft, ob die abgedeckte Teilmenge deshalb "
+               "verzerrt: `schnitt` und `vola` (beide 100 % Abdeckung) "
+               "zeigen zwischen den Gruppen -0,0774 bzw. -0,0885, beide "
+               "Baender schliessen null ein. ⚠️ ABER die Trennschaerfe "
+               "liegt bei 0,10 R - groesser als die Effekte, um die es "
+               "geht (0,02 bis 0,09 R). Also NICHT ENTSCHIEDEN auf der "
+               "Aufloesung, die zaehlen wuerde", "gilt",
+               "Methodik 2.168"),
+    Befundlage("2.168-kontrolle", "⚠️⚠️ Und die Kontrolle hat einen "
+               "eigenen Fehler gefangen: der erste Anlauf differenzierte "
+               "die ROHEN Tagesreihen der beiden Gruppen. Bei 35 gegen "
+               "20 Ankern je Tag ist die N-65-Verzerrung UNGLEICH - "
+               "`zufall` zeigte prompt einen 'Unterschied' von -0,0212 "
+               "[-0,0417 .. -0,0038]. Mit je Gruppe entzerrten Reihen: "
+               "-0,0056, Band schliesst null ein", "gilt",
+               "Methodik 2.168"),
+    Befundlage("2.168-erschoepft", "⚠️⚠️ WARUM EIN NEUER "
+               "KURSREIHEN-BEITRAG NICHT DIE ANTWORT IST: die "
+               "Kombinationsmatrix vom 27.08. hat es bereits "
+               "festgehalten - von 17 Merkmalen sind M2 bis M12 und M15 "
+               "bis M17 ALLE aus Kurs, Volumen oder Modellantwort "
+               "abgeleitet. 'Die Information steckt nicht in den "
+               "Kursdaten. Wer nur Kursreihen kombiniert, kombiniert "
+               "Ableitungen derselben Quelle.' Die heutige Durchsicht "
+               "bestaetigt das: schnitt, vola, rsi, amihud, momentum, "
+               "schnitt50 sind alle gemessen, keiner traegt robust",
+               "gilt", "Methodik 2.168"),
+    Befundlage("2.168-quellen", "DIE BEIDEN ECHTEN FREMDQUELLEN, "
+               "geprueft: M13 Terminmarkt ist REALISIERT (122 Symbole, "
+               "1.734 Tage bis 02.09.2026) - deckt aber nur 122 von 524 "
+               "ab und schliesst die Luecke NICHT. M14 "
+               "Entwickleraktivitaet: das Messwerkzeug existiert, aber "
+               "in KEINER Datenbank liegt eine Tabelle dazu. ⚠️ Es gibt "
+               "derzeit keine verfuegbare Quelle, die die Luecke "
+               "schliessen wuerde", "gilt", "Methodik 2.168"),
+    Befundlage("2.168-offen", "⚠️ WAS STATTDESSEN OFFEN IST, ohne neue "
+               "Datenquelle: der Terminmarkt liefert VIER weitere "
+               "Kanaele, die nicht registriert sind - `oi_wert`, "
+               "`long_bias`, `top_bias`, `taker_bias`, je 122 Symbole "
+               "und rund 1.400 bis 1.736 Tage. Zwei davon (long_bias, "
+               "top_bias) sind in N-17b als nicht unabhaengig vom RSI "
+               "gemessen; `oi_wert` und `taker_bias` nie unter der Norm",
+               "gilt", "Methodik 2.168"),
+    Befundlage("2.167", "⛔ `amihud` TRAEGT AUCH AN DER POSITIONSGROESSE "
+               "NICHT - aber jetzt mit einem GRUND, nicht als "
+               "Nullbefund. Zwei Hypothesen, beide gemessen, beide "
+               "verneint: der Stop rutscht nicht, und die Mehrstreuung "
+               "liegt auf der falschen Seite", "gilt",
+               "Methodik 2.167 / n76_amihud_an_der_groesse.py"),
+    Befundlage("2.167-luecke", "⚠️⚠️ DER STOP-DURCHSCHLAG EXISTIERT IN "
+               "KRYPTO PRAKTISCH NICHT: 71 Faelle von 728.920 Ankern "
+               "(0,0097 %). Der Grund generalisiert - KRYPTO HANDELT "
+               "DURCHGEHEND. Ein Kurstag, der GANZ unter dem Stop liegt, "
+               "verlangt eine Uebernachtluecke, und die gibt es an einem "
+               "24/7-Markt nicht. Die Kontrolle (gemischt) liefert "
+               "15/10/20/14 gegen echte 0/14/18/28/11 - nicht "
+               "unterscheidbar", "gilt", "Methodik 2.167"),
+    Befundlage("2.167-rm1", "✔✔ DARAUS FOLGT ETWAS NUETZLICHES, "
+               "unabhaengig von amihud: RM-1 rechnet "
+               "`max_position = risk_budget / (stop_abstand / kurs)` und "
+               "SETZT VORAUS, DASS DER STOP HAELT. Fuer Krypto ist diese "
+               "Annahme belegt - in 99,99 % der Anker war der Stop zum "
+               "Stoppreis handelbar", "gilt", "Methodik 2.167"),
+    Befundlage("2.167-open", "⚠️⚠️ KORREKTUR 07.09. abends: N-76 nannte "
+               "als Vorbehalt 'ohne Eroeffnungskurs ist nur nachweisbar, "
+               "was den GANZEN Tag unter dem Stop lag'. DIE SPALTE `open` "
+               "GIBT ES - in `price_history_ohlc`, zu 100 % gefuellt, in "
+               "ALLEN vier Assetklassen. Nur "
+               "`messe_eigenschaft_beitrag.lade()` liest sie nicht. Der "
+               "Stop-Durchschlag waere damit EXAKT messbar statt "
+               "konservativ genaehert - gefunden erst, als der Nutzer "
+               "eine Durchsicht des Datenbestands verlangte", "gilt",
+               "Methodik 2.167 / Datenbestandsdurchsicht 07.09."),
+    Befundlage("2.167-seite", "⚠️⚠️ DIE ZWEITE HYPOTHESE (illiquide Werte "
+               "streuen breiter, also kleiner dimensionieren) IST "
+               "WIDERLEGT - und zwar an der SEITE. Der "
+               "Interquartilsabstand steigt zwar (3,251 -> 3,780 gegen "
+               "eine Kontrollspanne von nur 0,027), aber er steigt "
+               "VOLLSTAENDIG NACH OBEN: P75-Median 1,342 -> 2,054, "
+               "waehrend Median-P25 von 1,909 auf 1,727 FAELLT. Auf der "
+               "VERLUSTSEITE sind illiquide Werte enger. Kleiner zu "
+               "dimensionieren waere unbegruendet", "gilt",
+               "Methodik 2.167"),
+    Befundlage("2.167-geometrie", "Der naheliegende Einwand wurde "
+               "geprueft und AUSGERAEUMT: der 5-%-Boden koennte bei "
+               "ruhigen Werten oefter binden und die kleinere "
+               "R-Streuung erzeugen. Gemessen bindet er bei Band 0 in "
+               "38,2 % und bei Band 4 in 38,5 % der Anker, ATR/Kurs "
+               "0,0790 gegen 0,0752 - praktisch gleich. Der Unterschied "
+               "ist echt, nur zeigt er nach oben", "gilt",
+               "Methodik 2.167"),
+    Befundlage("2.167-ausgabe", "⚠️ ZWEI EIGENE AUSGABEFEHLER, beide "
+               "zwischen Ergebnis und Deutung gefangen (Methodik 2.80): "
+               "'Durchschlag 0,0 %' war GERUNDET statt null - die "
+               "Mittelwerte standen auf 11 Faellen, ohne dass die Zahl "
+               "dastand. Und die STANDARDABWEICHUNG als Streuungsmass "
+               "lag bei 250, getragen von 0,06 % der Anker (ein Coin, "
+               "der sich in 20 Tagen verzwanzigfacht, ergibt bei 5 % "
+               "Stopweite 400 R). Beides ersetzt durch absolute Zahlen "
+               "und den Interquartilsabstand", "gilt", "Methodik 2.167"),
+    Befundlage("2.166", "DIE DURCHSICHT DER GEFALLENEN BEITRAEGE: bei "
+               "VIER von fuenf ist ein Messfehler ausgeschlossen. `rsi` "
+               "und `amihud` tragen auf KEINER Achse (quer wie laengs) "
+               "und ueber alle zulaessigen Mengen (N-73) - sie sind "
+               "sauber abgelehnt. `schnitt` ist vierfach geprueft. "
+               "Offen bleibt allein `H`", "gilt",
+               "Methodik 2.166 / n75_quer_gegen_laengs.py"),
+    Befundlage("2.166-these", "⚠️ MEINE THESE WAR: die Beitragsmaschinerie "
+               "rangt INNERHALB DES TAGES, ist also rein "
+               "querschnittlich - Kandidaten mit Zeitreihen-Natur (`H`, "
+               "`rsi`, `schnitt`) waeren mit dem falschen Instrument "
+               "gemessen. GEMESSEN UND WIDERLEGT: kein Kandidat traegt "
+               "NUR laengs. Kontrollen halten - `zufall` traegt auf "
+               "keiner Achse, `funding` (ein CS-Signal) ist quer "
+               "staerker als laengs (+0,0229 gegen +0,0011), wie es "
+               "muss", "gilt", "Methodik 2.166"),
+    Befundlage("2.166-momentum", "⚠️⚠️ AUSNAHME `momentum`: sein Urteil "
+               "'traegt nicht' ist NICHT INTERPRETIERBAR. Spearman "
+               "+0,930 zur Auswahlgroesse `momentum250` der Stufe 5 - er "
+               "wird auf der Menge gemessen, die er selbst definiert. "
+               "Das ist kein Befund ueber Momentum, sondern eine "
+               "Tautologie. Er sitzt bereits an Stufe 5", "gilt",
+               "Methodik 2.166"),
+    Befundlage("2.166-h", "⚠️ `H` IST DER EINZIGE, BEI DEM EIN "
+               "MESSFEHLER OFFEN BLEIBT. Er braucht Marken, Stop und "
+               "Ziel - nicht nur Kursreihen - und laesst sich deshalb "
+               "durch `messe_kandidaten_als_regel` gar nicht messen. "
+               "Sein Fall beruht auf gepoolt (+4,5) gegen je Tag "
+               "(-1,02). ⚠️ Und er ist ein ABSOLUTES Kriterium je Asset, "
+               "waehrend die Maschinerie querschnittlich rangt - "
+               "`messe_h_als_filter` nennt genau das im eigenen Kopf",
+               "gilt", "Methodik 2.166"),
+    Befundlage("2.166-woanders", "WO EIN GEFALLENER SINNVOLL WAERE: "
+               "`amihud` misst Illiquiditaet - das ist eine Frage der "
+               "AUSFUEHRBARKEIT und POSITIONSGROESSE (wieviel laesst "
+               "sich handeln, ohne den Kurs zu bewegen), nicht der "
+               "Richtung. Dort nie geprueft. `schnitt` traegt auf der "
+               "VERBILLIGUNG bei H90 (+0,0292, im flachsten Fuenftel "
+               "+0,0481) - das ist die AKKUMULATION, nicht `einstieg`. "
+               "⚠️ Kein Widerspruch zu 2.164: andere Zielgroesse, "
+               "anderer Horizont", "gilt", "Methodik 2.166"),
+    Befundlage("2.166-register", "⚠️ Beim Durchsehen gefunden: das "
+               "`live`-Feld von `turnover` nannte noch die am 07.09. "
+               "ZURUECKGENOMMENEN Stufen (+0,33 x3 / -0,48 x2) - "
+               "waehrend die `warnung` desselben Eintrags die Ruecknahme "
+               "beschrieb. Das Blatt widersprach sich selbst und dem "
+               "Code. Die Selbstpruefung fing es nicht: sie prueft nur, "
+               "OB ein Merkmal vorkommt. Jetzt vergleicht sie die ZAHLEN "
+               "(scharf getestet)", "gilt", "Methodik 2.166"),
+    Befundlage("2.165", "✔✔ N-7 ERLEDIGT: `turnover`s STUFEN SIND "
+               "RICHTIG. Entzerrt nachgerechnet ergibt der Querschnitt "
+               "+3,13 / +0,76 / +0,22 / -1,73 / -2,38 gegen registriert "
+               "+3,15 / +0,83 / +0,22 / -1,79 / -2,40 - Abweichung "
+               "hoechstens 0,07 Punkte. Monoton, Spanne +5,51 gegen "
+               "+5,55. Kontrolle `zufall` bei maximal 0,38 Punkten. "
+               "R-R11 vorab erfuellt: `rechne_turnover_beitrag.py` "
+               "reproduziert die Tabelle exakt", "gilt",
+               "Methodik 2.165 / n74_turnover_stufen_nachgerechnet.py"),
+    Befundlage("2.165-warum", "⚠️ WARUM DIE ENTZERRUNG HIER NICHTS "
+               "AENDERT, bei `schnitt` aber alles: im Querschnitt sind "
+               "die Fuenftel GLEICH GROSS (9,0 bis 9,8 Anker je Tag). "
+               "Die Verzerrung aus N-65 trifft alle fuenf gleich und "
+               "hebt sich im Bezug auf den Mittelwert der fuenf auf. Bei "
+               "`schnitt` auf der selektierten Menge hatte Fuenftel 0 "
+               "dagegen 1,49 Anker und Fuenftel 4 dann 29,35", "gilt",
+               "Methodik 2.165"),
+    Befundlage("2.165-auswahl", "⚠️ Auf der AUSWAHL (50 %) waere die "
+               "Tabelle um 25 % steiler: +4,04 / +0,96 / -0,04 / -2,06 "
+               "/ -2,90, Spanne +6,94. Das passt zur Richtung aus N-73 "
+               "(Wirkung dort 48 % staerker). ⚠️ ABER: die Fuenftel "
+               "haben dort nur 3,9 bis 5,2 Anker, und die Auswahl nach "
+               "momentum250 ist nur ein STELLVERTRETER fuer die Werte, "
+               "die in der Kette wirklich bis zur Bewertung kommen. Die "
+               "registrierte Tabelle UNTERSCHAETZT also - und "
+               "unterschaetzen ist die sichere Richtung", "gilt",
+               "Methodik 2.165"),
+    Befundlage("2.165-entscheidung", "EMPFEHLUNG: Tabelle NICHT aendern. "
+               "Sie reproduziert, ist monoton, haelt der Entzerrung "
+               "stand und ihre Ableitungsbasis (voller Querschnitt) ist "
+               "GENAU die, auf der `marktrang` auch in der Produktion "
+               "rangt. Die steilere Variante stuende auf duennerer "
+               "Besetzung und einem Stellvertreter - und loeste R-R9 "
+               "aus (Neukalibrierung der Schwelle 0,080) ohne belegten "
+               "Gewinn", "gilt", "Methodik 2.165"),
+    Befundlage("2.164", "✔✔ DIE DURCHSICHT ALLER KANDIDATEN (N-5) ist "
+               "durch und faellt BERUHIGEND aus: von zehn Kandidaten "
+               "aendern nur ZWEI ihr Urteil mit der Menge. `amihud`, "
+               "`rsi`, `schnitt50`, `vola`, `momentum` und `funding` "
+               "urteilen ueber alle Mengen gleich - ihre Befunde stehen. "
+               "`zufall` traegt auf keiner Menge", "gilt",
+               "Methodik 2.164 / n73_durchsicht_kandidaten.py"),
+    Befundlage("2.164-turnover", "„`turnover` traegt auf 50 % "
+               "(+0,0909, Urteil TRAEGT) und ist damit voll "
+               "rehabilitiert\"", "abgeloest", "Methodik 2.164",
+               abgeloest_durch="2.187",
+               warum="R-R11 auf der NEUEN Messbasis (08.09., 536 "
+                     "Symbole): die WIRKUNG reproduziert auf drei "
+                     "Stellen (+0,0913 gegen +0,0909), aber das URTEIL "
+                     "auf 50 % ist jetzt 'NICHT TRENNBAR' - der "
+                     "Nullpunkt hat sich in das Band geschoben. ⚠️ "
+                     "`turnover` traegt weiterhin, aber auf `frei` "
+                     "(+0,0639, TRAEGT), nicht auf 50 %"),
+    Befundlage("2.164-schnitt", "⚠️⚠️ `schnitt` IST NICHT ROBUST: "
+               "zulaessig sind {10 %, 20 %, 50 %, frei}, aber er traegt "
+               "NUR bei 20 % (+0,1759 [+0,0715 .. +0,2907]). Bei 10 % "
+               "steht fast derselbe Punktschaetzer (+0,1780) mit "
+               "breiterem Band [+0,0274 .. +0,3361] - 'nicht trennbar'. "
+               "Der N-59-Befund haengt an der Wahl 20 %", "gilt",
+               "Methodik 2.164"),
+    Befundlage("2.164-regel", "⚠️ UND EIN DENKFEHLER IN DER EIGENEN "
+               "REGEL, von der Durchsicht aufgedeckt: die SCHMALSTE "
+               "zulaessige Menge ist zugleich die RAUSCHENDSTE. Sie zum "
+               "alleinigen Massstab zu machen bestraft Kandidaten mit "
+               "guter Abdeckung. Richtig: die Zulaessigkeit sortiert aus, "
+               "was zu duenn ist - das URTEIL muss ueber ALLE "
+               "zulaessigen Mengen halten. Gebaut als "
+               "`zulaessige_mengen()`", "gilt", "Methodik 2.164"),
+    Befundlage("2.163", "⚠️⚠️ DIE ZEITSTABILITAET, korrekt gemessen: "
+               "jeder Beitrag auf SEINER Menge, Trennschaerfe ZENTRIERT. "
+               "`oi_aenderung` stabil bis 0,05 R (-0,0051), `turnover` "
+               "und `funding` stabil bis 0,10 R (+0,0256 / +0,0415), "
+               "`zufall` stabil bis 0,05 R. ⚠️ `schnitt` auf 10 %: "
+               "-0,0647 [-0,3098 .. +0,2161] bei einer Trennschaerfe von "
+               ">0,20 R - UNENTSCHIEDEN, weder stabil noch instabil "
+               "nachgewiesen", "gilt", "Methodik 2.163"),
+    Befundlage("2.163-schnitt", "Fuer `schnitt` bleibt das PRAKTISCHE "
+               "Ergebnis unveraendert, aber der Grund ist schwaecher: "
+               "nicht 'instabil belegt', sondern 'nichts davon "
+               "entscheidbar'. Die Stufen sind nicht monoton (2.158), "
+               "die heutige Wirkung nicht trennbar (+0,1152 [-0,0377 .. "
+               "+0,2687] ab 2022 auf 10 %), die Stabilitaet "
+               "unentschieden. ⚠️ Drei offene Fragen sind keine "
+               "Bauentscheidung", "gilt", "Methodik 2.163"),
+    Befundlage("2.163-massstab", "⚠️⚠️ UND EIN BEFUND UEBER `schnitt` "
+               "SELBST: sein Haelftenunterschied DREHT mit der Menge "
+               "(+0,2238 bei 20 %, -0,0647 bei 10 %). Bei `funding` "
+               "(+0,0473 / +0,0415) und `zufall` (-0,0083 / -0,0229) "
+               "tut er das NICHT. Eine Groesse, deren Vorzeichen am "
+               "Messfenster haengt, ist keine verlaessliche Grundlage - "
+               "das ist die stehende Vorgabe 'der Massstab entscheidet "
+               "das Vorzeichen', hier zum wiederholten Mal", "gilt",
+               "Methodik 2.163"),
+    Befundlage("2.163-anker", "R-R11 nach dem Umbau: alle SIEBEN Anker "
+               "aus `messbasis_anker.json` reproduzieren auf fuenf "
+               "Stellen. Das Hinzufuegen von `50%` und "
+               "`menge_nach_datenlage` hat keine bestehende Messung "
+               "verschoben", "gilt", "Methodik 2.163"),
+    Befundlage("2.160-heute", "⛔⛔ UND ER TRAEGT HEUTE NICHT MEHR "
+               "NACHWEISBAR - weder allein noch in der Kette. Allein: ab "
+               "2022 +0,0414 [-0,0307 .. +0,1002], ab 2023 +0,0478, ab "
+               "2024 +0,0855 - kein Band schliesst null aus. In der "
+               "Kette: ab 2022 +0,0165, ab 2023 +0,0216, ab 2024 +0,0264 "
+               "- ebenfalls keines", "gilt",
+               "Methodik 2.160 / n69_traegt_er_heute_noch.py"),
+    Befundlage("2.160-kontrolle", "⚠️⚠️ UND ES LIEGT NICHT AN DER "
+               "MESSDAUER: `funding` traegt in DENSELBEN Fenstern - ab "
+               "2022 +0,0157 [+0,0043 .. +0,0318], ab 2023 +0,0170, ab "
+               "2024 +0,0182 - mit einem KLEINEREN Effekt als `schnitt`. "
+               "`schnitt`s Baender sind rund fuenfmal breiter: der "
+               "Effekt ist gross, aber zu unruhig", "gilt",
+               "Methodik 2.160"),
+    Befundlage("2.160-epoche", "Der Jahresverlauf zeigt die Quelle: 2019 "
+               "+0,4532 / 2020 +0,5100 / 2021 +0,3440 / 2022 +0,0187 / "
+               "2023 -0,0498 / 2024 +0,1603 / 2025 +0,1280 / 2026 "
+               "-0,1158. ⚠️ `funding` zeigt DASSELBE Muster schwaecher "
+               "(2020 +0,2876, danach +0,01 bis +0,03) - ein Teil "
+               "gehoert der EPOCHE, nicht dem Kandidaten: der fruehe "
+               "Kryptomarkt war ineffizienter", "gilt", "Methodik 2.160"),
+    Befundlage("2.160-genauigkeit", "⚠️ WAS NICHT GESAGT IST: 'traegt "
+               "heute nicht NACHWEISBAR' ist nicht 'traegt nicht'. Die "
+               "Trennschaerfe liegt allein bei 0,10 R und in der Kette "
+               "bei 0,05 R; die gemessenen Werte liegen darunter. Es ist "
+               "UNENTSCHIEDEN, nicht widerlegt - aber eine "
+               "Bauentscheidung braucht einen Nachweis, keine offene "
+               "Frage. Das Fenster ab 2024 hat zudem nur 15 Bloecke und "
+               "verfehlt die eigene 20er-Regel", "gilt",
+               "Methodik 2.160"),
+    Befundlage("2.160-methode", "Und WARUM N-60 nicht weiterkam: es "
+               "fragte 'traegt er in A?' UND 'traegt er in B?' - zwei "
+               "halbierte Tests. Die richtige Frage ist EINE: 'ist (A-B) "
+               "von null zu trennen?' auf der ganzen Reihe. Der Test "
+               "wurde auf Kunstdaten geeicht (40 Laeufe je Fall): 18 % "
+               "Fehlalarm bei Wahrheit null statt nominell 10 %, 100 % "
+               "Treffer ab +0,03. Er erklaert also zu OFT einen "
+               "Unterschied - was den gefundenen Unterschied vorsichtig, "
+               "einen Nullbefund aber stark macht", "gilt",
+               "Methodik 2.160"),
+    Befundlage("2.159", "✔✔ `schnitt` TRAEGT ZUSAETZLICH - ueber die "
+               "Kette simuliert. Nach Auswahl (Stufe 5) UND nach funding "
+               "+ turnover gemessen: +0,0397 R entzerrt, Rohband "
+               "[+0,0132 .. +0,0751] - es schliesst den eigenen Nullwert "
+               "+0,0052 AUS. Die Kontrolle `zufall` an derselben Stelle: "
+               "+0,0058 entzerrt, Rohband [-0,0003 .. +0,0230] - "
+               "schliesst ihn EIN. 2.461 Kalendertage", "gilt",
+               "Methodik 2.159 / n67_schnitt_ueber_die_kette.py"),
+    Befundlage("2.159-quote", "Die Durchlassquote der simulierten Kette: "
+               "50,6 Anker je Tag nach der Auswahl, 43,0 nach funding + "
+               "turnover (die beiden sperren nur 15 %, weil ihre "
+               "Abdeckung bei 56 % bzw. 13 % liegt), davon sperrt "
+               "`schnitt` weitere 21,6 %", "gilt", "Methodik 2.159"),
+    Befundlage("2.159-grenze", "⚠️ WAS OFFEN BLEIBT: die Rohbaender von "
+               "`schnitt` und `zufall` UEBERLAPPEN in [+0,0132 .. "
+               "+0,0230]. Der Nachweis stuetzt sich darauf, dass nur "
+               "`schnitt`s Band den eigenen Nullwert ausschliesst - nicht "
+               "auf getrennte Baender. Und eine TRENNSCHAERFE wurde in "
+               "diesem Aufbau nicht bestimmt", "gilt", "Methodik 2.159"),
+    Befundlage("2.158", "⚠️⚠️ DIE FUENF STUFEN FUER `schnitt` LASSEN SICH "
+               "NICHT HERLEITEN. Entzerrt ergeben sie +4,07 / +5,55 / "
+               "+9,49 / +1,71 / -4,65 Punkte - ein BUCKEL mit Hochpunkt "
+               "bei Fuenftel 2, nicht bei 0. Die Vorabfestlegung in "
+               "`messe_schnittabstand_beitrag.py` verlangt Monotonie fuer "
+               "nutzbar. Zum ZWEITEN Mal bei derselben Groesse (31.08.: "
+               "+1,27 +1,59 +0,24 -1,28 -1,82, ebenfalls Buckel) und in "
+               "derselben Form wie der 27.08.-Buckel", "gilt",
+               "Methodik 2.158 / n64+n65"),
+    Befundlage("2.158-verzerrung", "⚠️⚠️ Und die eigene Kontrolle fing "
+               "einen Konstruktionsfehler: `median(Gruppe) - median(alle)` "
+               "lieferte bei GEMISCHTEN Raengen +0,10 bis +0,16 R statt "
+               "null - der Stichprobenmedian kleiner Gruppen ist bei "
+               "schiefer Verteilung nach oben verzerrt. Fuenftel 0 hat "
+               "1,49 Anker je Tag. Die Verzerrung war so gross wie die "
+               "gesuchten Effekte; alle Zahlen sind seither entzerrt "
+               "(Nullwert je Gruppe abgezogen, 20 Ziehungen)", "gilt",
+               "Methodik 2.158 / n65"),
+    Befundlage("2.158-form", "Die FORMFRAGE bleibt OFFEN. "
+               "Gleichstandsfrei gemessen (Schalter fragt `kennzahl<0` "
+               "direkt statt ueber den Rang): SCHALTER +0,0370 R "
+               "[-0,0511 .. +0,2498], REGLER -0,1399 R [-0,0627 .. "
+               "+0,0440] fuer die Gruppe UEBER dem Schnitt. Die "
+               "Rohbaender UEBERLAPPEN - die Formen sind nicht "
+               "unterscheidbar", "gilt", "Methodik 2.158 / n66"),
+    Befundlage("2.158-redundanz", "⚠️ `schnitt` und die AUSWAHL der Kette "
+               "messen teilweise dasselbe: Spearman +0,704 im vollen "
+               "Tagesquerschnitt, aber +0,418 INNERHALB der Auswahl - und "
+               "nur die zweite Zahl zaehlt, weil Stufe 12 auf der bereits "
+               "ausgewaehlten Menge arbeitet. Ursache: hohes "
+               "250-Tage-Momentum heisst fast zwangslaeufig ueber dem "
+               "eigenen 200-Schnitt. 60,6 % der Gewaehlten liegen "
+               "darueber, im vollen Querschnitt nur 34,8 %", "gilt",
+               "Methodik 2.158 / n66"),
+    Befundlage("2.157", "⚠️⚠️ `schnitt` UND DAS AKKUMULATIONSMASS SIND "
+               "DIESELBE GROESSE: `c/mean(200)-1` als Regler gegen "
+               "`kurs<sma200` als Schalter. Sie standen nie nebeneinander, "
+               "weil der 28.08.-Befund nie ins Register kam und `schnitt` "
+               "am 31.08. auf kontaminierter Basis verworfen wurde "
+               "(2.153). Damit sind 'schnitt wieder einbauen' und "
+               "'Akkumulationsmass als Beitrag' EINE Aufgabe", "gilt",
+               "Methodik 2.157 / n63_form_der_achse.py"),
+    Befundlage("2.157-form", "„Die Form ist entschieden: REGLER +0,1759 R "
+               "schlaegt SCHALTER +0,0040 R\"", "abgeloest",
+               "Methodik 2.157", abgeloest_durch="2.158",
+               warum="der Schalter-Arm hat NIE einen Schalter gemessen. "
+                     "`pruefe_auswahl` sperrt Rang >= 0,8; bei einer "
+                     "0/1-Kennzahl mit 65,2 % Einsen liegt das oberste "
+                     "Rangfuenftel GANZ in der Einser-Gruppe, und `rang` "
+                     "bricht Gleichstaende nach ARRAY-REIHENFOLGE. "
+                     "Belegt: nach Umsortieren der Zeilen EINES Tages "
+                     "sind nur 15 von 62 Symbolen dieselben. Der Arm mass "
+                     "eine BELIEBIGE Teilmenge - +0,0040 R ist genau das "
+                     "erwartete Nichts. Die Formfrage ist wieder OFFEN"),
+    Befundlage("2.157-regler", "Was aus N-63 BLEIBT: der Regler-Arm "
+               "reproduziert den registrierten Anker auf die vierte "
+               "Stelle (+0,17593 gegen +0,1759). Dort gibt es keine "
+               "Gleichstaende. Die FORMFRAGE ist damit wieder OFFEN", 
+               "gilt", "Methodik 2.157 / R-R11"),
+    Befundlage("2.157-anker", "⚠️ Und die Messung REPRODUZIERT den "
+               "registrierten Anker auf die vierte Stelle: +0,17593 "
+               "(messbasis_anker.json, N-59) gegen +0,1759 heute. Der "
+               "Schalter kommt aus DERSELBEN Kandidatenwelt, nur die "
+               "Kennzahl ist 0/1 - der Unterschied kann nicht aus der "
+               "Datenlage stammen", "gilt", "Methodik 2.157 / R-R11"),
+    Befundlage("2.157-grenze", "⚠️ WAS DAMIT NICHT GESAGT IST: der "
+               "Schalter verliert auf `bewegung_r`. Das 28.08.-Mass wurde "
+               "auf der VERBILLIGUNG gemessen (Perzentilrang der eigenen "
+               "Reihe) - ein anderes Erfolgsmass fuer eine andere Frage. "
+               "2.154 bleibt dort gueltig", "gilt", "Methodik 2.157"),
+    Befundlage("2.156", "⚠️⚠️ BTC/ETH/SOL BRAUCHEN KEINE EIGENE LOESUNG. "
+               "Die -0,0251/-0,0308/-0,0291 aus 2.154 sind mit p 0,833 "
+               "NICHT von null zu trennen - drei Reihen, 8 bis 12 Bloecke. "
+               "Auf allen 507 Reihen nach Tiefanteil geschichtet traegt "
+               "`UNTER_SMA` in 4 von 5 Fuenfteln, und im FLACHSTEN - dort "
+               "liegen BTC (2,0 %) und ETH (9,7 %) - am staerksten von "
+               "allen: +0,0481 (p 0,000, 101 Reihen). SOL liegt im "
+               "zweiten (+0,0246, p 0,035)", "gilt",
+               "Methodik 2.156 / n62_wirkung_nach_tiefe.py"),
+    Befundlage("2.156-tiefe", "Der ZAEHLBEFUND dahinter (3.003 Tage, keine "
+               "Untermacht): BTC liegt an 2,0 % der Tage unter -40 % vom "
+               "eigenen 200-Schnitt, das uebrige Universum an 20,6 % - "
+               "zehnfacher Unterschied. Umgekehrt liegt BTC an 21,1 % der "
+               "Tage ueber +30 % (Universum 13,2 %). Die Kernwerte sind "
+               "seltener tief, nicht anders gebaut", "gilt",
+               "Methodik 2.156 / n61_kernwerte_akkumulation.py"),
+    Befundlage("2.156-eigenschaft", "⚠️ Und der Schichter ERKLAERT die "
+               "Wirkung nicht: der Verlauf ueber die fuenf Fuenftel ist "
+               "nicht monoton (+0,048 / +0,025 / +0,016 / +0,025 / "
+               "+0,032). Das REPRODUZIERT den Vorbefund "
+               "`eigenschaften_erklaeren_den_vorsprung_nicht` - es ist "
+               "kein neuer Nullbefund. Vorab benannt, nicht nachtraeglich",
+               "gilt", "Methodik 2.156"),
+    Befundlage("2.155", "⚠️⚠️ Die DURCHLASSQUOTE ist entschieden: "
+               "Schwelle 0,080 R = 16,4 % Durchlass = rund 6 "
+               "Empfehlungen/Woche. R-R9 verlangt sie als "
+               "NUTZERENTSCHEIDUNG, und sie stand seit dem 30.08. aus - "
+               "damit war jede Kalibrierung willkuerlich. Haerter "
+               "filtern ist gemessen SCHAEDLICH (0,010: -0,0558 je "
+               "verworfenem Signal)", "gilt",
+               "Nutzerentscheidung 07.09. / agent/potential.py"),
+    Befundlage("2.155-sicht", "⚠️⚠️ Und der Befund dahinter: die Zahl, die "
+               "entscheidet OB eine Empfehlung entsteht, war UNSICHTBAR - "
+               "nur Konstante im Code, kein `bewertung`-Block in "
+               "config.yaml, kein Wort in Mail oder GUI. Nutzerhinweis: "
+               "'so einen Parameter vergesse ich in Kuerze und du auch - "
+               "die Doku reicht bei so einer zentralen Einstellung "
+               "nicht'. Jetzt: config.yaml steuert ohne Neustart, jede "
+               "Mail nennt Wert/Quelle/Alter, fuenf Suitepruefungen "
+               "halten es offen", "gilt",
+               "Methodik 2.155 / paket Kalibrierung"),
+    Befundlage("2.155-leiche", "⚠️ Beim Aufraeumen gefunden: der Docstring "
+               "in potential.py behauptete noch 'steht seit 07.09. auf "
+               "0,005' - der Wert der am selben Tag zurueckgenommenen "
+               "Aenderung. Genau der Fall, vor dem die Datei selbst warnt "
+               "('eine falsche Zahl im Docstring einer Schwelle ist "
+               "teurer als anderswo')", "gilt", "Methodik 2.155"),
     Befundlage("2.154", "Das AKKUMULATIONSMASS haelt auf der neuen Basis: "
                "UNTER_SMA +0,0288 (28.08.: +0,0283), TIEFPUNKT +0,4242 "
                "BITGLEICH, WOCHENTAG -0,0008. Kennlinie weiter monoton "
@@ -966,6 +2366,44 @@ def pruefe(still: bool = False) -> list:
                 fehler.append(
                     "%s gilt als tragender REGLER, steht aber nicht in "
                     "wahrscheinlichkeit.BEITRAEGE" % k.name)
+
+    # 1b — ⚠️⚠️ DIE GENANNTEN STUFEN MUESSEN DIE LAUFENDEN SEIN.
+    #
+    # Am 07.09.2026 stand im `live`-Feld von `turnover` noch
+    # "(+0.33, +0.33, +0.33, -0.48, -0.48) seit 07.09." - eine am selben
+    # Tag zurueckgenommene Aenderung. Der Code fuehrte laengst wieder
+    # (+3.15, +0.83, +0.22, -1.79, -2.40), und die `warnung` desselben
+    # Eintrags sagte das auch. **Das Blatt widersprach sich selbst.**
+    #
+    # Die Pruefung oben faengt das NICHT: sie prueft nur, ob das Merkmal
+    # ueberhaupt vorkommt. Ein Register, dessen Zahlen weglaufen, ist
+    # schlimmer als keines - man glaubt ihm.
+    try:
+        from agent import wahrscheinlichkeit as _W
+        _lauf = {b.merkmal: b.stufen for b in _W.BEITRAEGE}
+    except Exception as _e:                                  # noqa: BLE001
+        fehler.append("wahrscheinlichkeit nicht lesbar: %s" % _e)
+        _lauf = {}
+    for k in KANDIDATEN:
+        if "Stufen (" not in (k.live or ""):
+            continue
+        _m = k.live.split("merkmal ")[-1].split(" ")[0] if "merkmal " in k.live else ""
+        _echt = _lauf.get(_m)
+        if _echt is None:
+            continue
+        _genannt = k.live.split("Stufen (")[1].split(")")[0]
+        try:
+            _z = tuple(round(float(x), 2) for x in _genannt.split(","))
+        except ValueError:
+            fehler.append("%s: Stufen im Register nicht lesbar: %r"
+                          % (k.name, _genannt))
+            continue
+        if tuple(round(float(x), 2) for x in _echt) != _z:
+            fehler.append(
+                "%s: das Register nennt Stufen %s, der Code fuehrt %s - "
+                "eine der beiden Zahlen ist falsch, und man glaubt dem "
+                "Register" % (k.name, _z,
+                              tuple(round(float(x), 2) for x in _echt)))
 
     # 2 — jeder tragende SCHALTER muss eine Gate-Stufe haben
     try:
