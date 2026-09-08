@@ -67,8 +67,17 @@ SCHWANKUNG = 14           # Handelstage fuer die Schwankungsbreite
 MIND_ASSETS = 15          # weniger als das ist kein Querschnitt
 
 
-def lade():
-    """Kursreihen je Symbol: Datum, Schluss, Volumen - NUR KRYPTO.
+def lade(assetklasse: str = "krypto"):
+    """Kursreihen je Symbol: Datum, Schluss, Volumen - VORGABE KRYPTO.
+
+    ⚠️⚠️ DIE VORGABE BLEIBT `krypto` UND DARF ES BLEIBEN (07.09.2026,
+    N-8). 44 Skripte rufen diese Funktion ohne Argument; alle meinen
+    Krypto, und alle bekommen weiter Krypto. Der Parameter ist NUR fuer
+    die Nicht-Krypto-Klassen da, wo bisher gar nicht gemessen wurde.
+
+    Wer ihn setzt, muss wissen was er tut: `funding`, `turnover` und
+    `oi_aenderung` sind KRYPTO-QUELLEN. Fuer aktien/themen_etf/rohstoffe
+    bleiben nur die Kursreihen-Kandidaten.
 
     ⚠️⚠️ GEFUNDEN 04.09.2026 (N-17b, Gegenprobe der Zufallskontrolle).
     Bis N-19 (03.09.) enthielt `data/messdaten.db` ausschliesslich Krypto -
@@ -95,8 +104,9 @@ def lade():
     for sym, tag, schluss, hoch, tief, vol in c.execute(
             "SELECT symbol, date, close, high, low, volume "
             "FROM price_history_ohlc WHERE currency='USD' "
-            "AND assetklasse='krypto' "
-            "AND close IS NOT NULL AND close > 0 ORDER BY symbol, date"):
+            "AND assetklasse=? "
+            "AND close IS NOT NULL AND close > 0 ORDER BY symbol, date",
+            (str(assetklasse),)):
         roh.setdefault(sym, []).append(
             (tag[:10], float(schluss), float(hoch or schluss),
              float(tief or schluss), float(vol or 0.0)))

@@ -419,24 +419,91 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # 0,080 alles gesperrt, was nur einen Beitrag hat (max +0,039 R) - also 36
 # von 43 Werten. `Potential.schwelle` rechnet sie auf die erreichbare
 # Spanne um: bei nur Funding entspricht 0,080 dann 0,0234 R.
-# ⚠️⚠️⚠️ AM 07.09.2026 AUF 0,005 GESETZT UND AM SELBEN TAG ZURUECKGENOMMEN.
+# ⚠️⚠️ DIE DURCHLASSQUOTE IST FESTGELEGT — Nutzerentscheidung 07.09.2026.
 #
-# Die Neukalibrierung war eine FOLGE der turnover-Aenderung, und die stand
-# auf zwei ungueltigen Messungen (freie statt selektierte Menge, F-212).
-# Mit der Tabelle faellt auch die Schwelle zurueck: `erreichbar_max` ist
-# wieder 0,1335 R, und 0,080 ist damit erreichbar.
+# R-R9 verlangt als Zielgroesse die DURCHLASSQUOTE, nicht die Wirkung:
+# "Die Wirkung waechst mit jedem Beitrag - die Frage ist, wie viele
+# Empfehlungen das System liefern soll. Diese Zahl ist eine
+# NUTZERENTSCHEIDUNG. Ohne sie ist jede Kalibrierung willkuerlich."
 #
-# ⚠️ WAS AUS DEM VORGANG BLEIBT - zwei Dinge, beide unabhaengig gueltig:
+# ⚠️ DIE ENTSCHEIDUNG, woertlich: "0,080 vorerst festschreiben."
 #
-#   1  R-R9 verlangt als Zielgroesse die DURCHLASSQUOTE, nicht die Wirkung,
-#      und verbietet ausdruecklich, das Maximum zu waehlen. Ich hatte nach
-#      "Gewinn je verworfenem Signal" optimiert. Die Durchlassquote ist
-#      laut Regelwerk eine NUTZERENTSCHEIDUNG und steht weiterhin aus.
+#     Schwelle 0,080  ->  16,4 % Durchlass  ->  rund 6 Empfehlungen/Woche
 #
-#   2  Das Verfahren `messe_schwelle_kalibrierung.py` REPRODUZIERT die
-#      registrierte 0,080 (+0,1502 je verworfenem Signal) - das war die
-#      R-R11-Vorpruefung und sie ist gueltig geblieben.
+# ⚠️ DIE PROZENTZAHL GILT FUER DIE MESSBASIS, NICHT FUER DIE KETTE. Dort
+# filtert Stufe 5 schon auf k=2 von rund 41 Werten; an der Bewertungsstufe
+# kommen ~2-3 Kandidaten je Lauf an, nicht 500. Die 16,4 % sagen also, WIE
+# STRENG die Schwelle ist - nicht, wieviele Mails entstehen.
+#
+# DIE ALTERNATIVEN, gemessen (`messe_schwelle_kalibrierung.py`):
+#
+#     0,005   54 %   ~19 Empfehlungen/Woche
+#     0,010   32 %   ~11        ⚠️ Ertrag SCHLECHTER als ohne Schwelle
+#     0,020   19 %    ~7
+#     0,080   16 %    ~6        <- gewaehlt
+#
+# ⚠️ HAERTER FILTERN HAT SICH ALS SCHAEDLICH GEMESSEN (bei 0,010: -0,0558
+# je verworfenem Signal). Die Schwelle nach oben zu treiben bringt nichts.
+#
+# ⚠️⚠️ ZWISCHENDURCH STAND HIER 0,005 - am 07.09. gesetzt und am selben Tag
+# zurueckgenommen, weil die zugrunde liegende turnover-Aenderung auf der
+# falschen Menge gemessen war (Methodik 2.143).
+#
+# ⚠️⚠️ WER DIESE ZAHL AENDERT, aendert die Zahl der Empfehlungen - nicht
+# ihre Qualitaet. Sie ist ueber `config.yaml -> bewertung:
+# potential_schwelle_r` OHNE NEUSTART steuerbar, und jede Mail nennt sie
+# samt Durchlass und Alter (`schwellenzeile()`). Beides gibt es seit dem
+# 07.09., weil eine zentrale Einstellung, die nur in der Doku steht,
+# zuverlaessig vergessen wird - Nutzerhinweis desselben Tages.
 SCHWELLE_VORGABE = 0.080
+KALIBRIERT_AM = "2026-08-31"
+"""Wann die Schwelle zuletzt KALIBRIERT wurde (nicht: zuletzt angefasst).
+
+⚠️ Die Durchlassquote wurde am 07.09. FESTGELEGT, die ZAHL stammt aber aus
+der Kalibrierung vom 31.08. - sie ist seither unveraendert gueltig. Dieses
+Datum traegt die Mail mit, damit eine alt gewordene Kalibrierung auffaellt,
+bevor jemand ihr glaubt."""
+
+
+def schwellenzeile(mit_datenlage=None) -> str:
+    """Die Schwelle IN KLARTEXT — fuer jede Mail und jeden Statusbericht.
+
+    ⚠️ WARUM ES DAS GIBT (Nutzerhinweis 07.09.2026, woertlich): *"Was
+    machen wir, dass ich die Schwelle immer im Bewusstsein habe oder
+    steuerbar ist - so einen Parameter vergesse ich in Kuerze und du auch
+    - die Doku reicht bei so einer zentralen Einstellung nicht."*
+
+    Er hat recht: bis dahin stand die Schwelle NUR als Konstante im Code.
+    Die Mail nannte sie nicht, `config.yaml` kannte sie nicht, die GUI
+    zeigte sie nicht. **Ein Wert, den niemand sieht, wird nicht geprueft.**
+    """
+    import datetime as _dt
+    try:
+        alter = (_dt.date.today()
+                 - _dt.date.fromisoformat(KALIBRIERT_AM)).days
+    except ValueError:
+        alter = -1
+    # ⚠️ DIE QUELLE WIRD GEFRAGT, NICHT AUS DEM WERT GESCHLOSSEN.
+    # Erste Fassung verglich `wirksam` mit `SCHWELLE_VORGABE` - und meldete
+    # "Code-Vorgabe", obwohl `config.yaml` den Eintrag hatte. Bei
+    # GLEICHEM Wert sind die Quellen so nicht unterscheidbar, und wer die
+    # Zeile liest, sucht den Steuerpunkt an der falschen Stelle.
+    wirksam = schwelle()
+    quelle = "Code-Vorgabe"
+    try:
+        import config as _cfg
+        if (_cfg.load_config() or {}).get("bewertung", {})                 .get("potential_schwelle_r") is not None:
+            quelle = "config.yaml"
+    except Exception:                                        # noqa: BLE001
+        pass
+    zeile = ("Bewertungsschwelle %.3f R (%s, kalibriert am %s, %d Tage alt)"
+             " — rund 16 %% Durchlass"
+             % (wirksam, quelle, KALIBRIERT_AM, alter))
+    if mit_datenlage is not None:
+        zeile += " · bei dieser Datenlage %.4f R" % mit_datenlage
+    if alter > 90:
+        zeile += "  ⚠️ aelter als 90 Tage — nachrechnen"
+    return zeile
 
 # ---------------------------------------------------------------------------
 # R-R9: DIE SCHWELLE GEHOERT ZU EINER BEITRAGSLAGE (30.08.2026)

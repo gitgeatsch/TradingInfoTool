@@ -1783,6 +1783,35 @@ deribit_optionsmarkt:
 # (Fazit vs. eigene Konfidenz desselben Laufs), der nichts am Fazit selbst
 # aendert. Krypto Spot+Hebel (agent/krypto/analyst.py Regel 29 / hebel_
 # analyst.py Regel 21).
+# --- Die BEWERTUNGSSCHWELLE (agent/potential.py) -------------------------
+#
+# ⚠️⚠️ DER ZENTRALSTE EINZELWERT DES SYSTEMS. Er entscheidet, ob aus einem
+# Potential eine Empfehlung wird. Bis zum 07.09.2026 stand er NUR als
+# Konstante im Code - unsichtbar in Mail, config und GUI. Nutzerhinweis
+# desselben Tages: *"so einen Parameter vergesse ich in Kuerze und du auch
+# - die Doku reicht bei so einer zentralen Einstellung nicht."*
+#
+# ⚠️ HIER WIRD ER GESTEUERT, ohne Neustart. Fehlt der Eintrag, gilt
+# `potential.SCHWELLE_VORGABE`. Jede Mail nennt den wirksamen Wert samt
+# Quelle und Alter der Kalibrierung.
+#
+# WAS DIE ZAHL BEDEUTET (gemessen, `messe_schwelle_kalibrierung.py`):
+#
+#     0,005   54 % Durchlass   ~19 Empfehlungen/Woche
+#     0,010   32 %             ~11    ⚠️ Ertrag SCHLECHTER als ohne Schwelle
+#     0,020   19 %              ~7
+#     0,080   16 %              ~6    <- Nutzerentscheidung 07.09.2026
+#
+# ⚠️ Die Prozente gelten fuer die MESSBASIS, nicht fuer die Kette: dort
+# filtert Stufe 5 schon auf k=2 von rund 41 Werten.
+#
+# ⚠️⚠️ R-R9: WER EINEN BEITRAG AENDERT, MUSS DIESE ZAHL NEU KALIBRIEREN.
+# Jeder zusaetzliche Beitrag hebt alle Potentiale an - bei gleicher
+# Schwelle kaemen mehr Signale durch, ohne dass sich ihre Qualitaet
+# geaendert haette.
+bewertung:
+  potential_schwelle_r: 0.080            # kalibriert 2026-08-31, festgeschrieben 2026-09-07
+
 signal_fazit:
   konsistenz_schwelle_niedrig: 55        # Fazit "ja" unter dieser Konfidenz -> Hinweis.
   konsistenz_schwelle_hoch: 65           # Fazit "nein" ueber dieser Konfidenz -> Hinweis.

@@ -717,4 +717,27 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
             text = "\n".join(zeilen[:3] + [""] + kopf + zeilen[3:])
     except Exception:                                        # noqa: BLE001
         pass
+    # ⚠️⚠️ DIE BEWERTUNGSSCHWELLE STEHT UNTER JEDER MAIL (07.09.2026).
+    #
+    # Nutzerhinweis, woertlich: *"Was machen wir, dass ich die Schwelle
+    # immer im Bewusstsein habe oder steuerbar ist - so einen Parameter
+    # vergesse ich in Kuerze und du auch - die Doku reicht bei so einer
+    # zentralen Einstellung nicht finde ich."*
+    #
+    # ⚠️ ER HAT RECHT, und der Befund war schlimmer als vermutet: die
+    # Schwelle entscheidet, ob eine Empfehlung ueberhaupt entsteht - und
+    # stand NUR als Konstante im Code. Die Mail nannte sie nicht,
+    # `config.yaml` kannte sie nicht, die GUI zeigte sie nicht. Ein Wert,
+    # den niemand sieht, wird nicht geprueft.
+    #
+    # Deshalb steht sie jetzt dort, wo taeglich hingesehen wird - samt
+    # Durchlass, Quelle (Code oder `config.yaml`) und ALTER. Wird die
+    # Kalibrierung aelter als 90 Tage, sagt die Zeile das von selbst.
+    #
+    # ⚠️ SIE SPERRT NICHTS und rechnet nichts nach. Eine Zeile Text.
+    try:
+        from agent.potential import schwellenzeile as _sz
+        text += chr(10) + TRENNER + chr(10) + _sz()
+    except Exception:                                        # noqa: BLE001
+        pass
     return betreff, text
