@@ -345,9 +345,15 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     # ---- Positivkontrolle -> TRENNSCHAERFE ----------------------------
     # ⚠️ pflanze = -s, damit die Kennzahl STEIGT. Siehe Modulkopf: das
     # Vorzeichen ist hier umgekehrt zu `messe_regel_wirksamkeit`.
-    trennschaerfe, treffer = None, {}
+    # ⚠️⚠️ ZWEI SKALEN (Fehler 5, 08.09.2026) - ausfuehrlich begruendet im
+    # Kopf von `messnorm.pruefe`. Kurz: `s` ist die GEPFLANZTE Staerke, die
+    # Anlage misst davon aber nur (1 - GRENZE) = 20 %. An echten Daten
+    # nachgemessen: 20,3 / 20,1 / 19,6 / 19,2 % fuer 0,05 / 0,10 / 0,20 /
+    # 0,40. `urteil` vergleicht `wirkung` mit `trennschaerfe` - stand dort
+    # die gepflanzte Zahl, war der Vergleich um Faktor 5 daneben.
+    trennschaerfe, trennschaerfe_in_r, treffer = None, None, {}
     for s in sorted(staerken):
-        gefunden = 0
+        gefunden, werte = 0, []
         for z in range(ZIEHUNGEN):
             gz = sammle(je_tag, mom, anteil,
                         mische_rang=np.random.default_rng(SAAT + 1000 * z),
@@ -358,12 +364,16 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
             # verschieden, widersprechen sich Trennschaerfe und Urteil im
             # SELBEN Satz - live sichtbar an `turnover`. Der Vorgabewert
             # laesst das alte Verhalten unveraendert.
-            latte = max(0.0, null["oben"]) if trennschaerfe_gegen_nullpunkt                 else 0.0
-            if pb and pb["unten"] > latte:
-                gefunden += 1
+            latte = (max(0.0, null["oben"])
+                     if trennschaerfe_gegen_nullpunkt else 0.0)
+            if pb:
+                werte.append(pb["mittel"])
+                if pb["unten"] > latte:
+                    gefunden += 1
         treffer[s] = gefunden
         if trennschaerfe is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
-            trennschaerfe = s
+            trennschaerfe_in_r = s
+            trennschaerfe = float(np.mean(werte)) if werte else None
 
     anker = sum(len(y) for _o, y in g.values())
     syms = len({x["sym"] for z in je_tag.values() for x in z})
@@ -378,6 +388,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],
         null_oben=null["oben"], trennschaerfe=trennschaerfe,
+        trennschaerfe_in_r=trennschaerfe_in_r,
         gepflanzt=tuple(sorted(staerken)), n_anker=anker,
         n_tage=haupt["tage"], n_bloecke=max(0, haupt["tage"] // block),
         abdeckung_symbole=syms, hypothesen=hypothesen,

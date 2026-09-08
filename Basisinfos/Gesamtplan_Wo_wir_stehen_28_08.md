@@ -1852,3 +1852,90 @@ Für die **Nullregel** allein ist das getan (N-81). Für die Anlage als
 Ganzes nie. Solange es fehlt, ist jede Aussage über Stabilität eine
 Behauptung — und die Fehlerrate von heute (drei Funde an einem Tag in
 einem Modul, das als geprüft galt) spricht dagegen.
+
+### ⚠️⚠️ FEHLER 5, gefunden beim Bau des Selbsttest-Prüfstandes
+
+Beim Vorabtest des Prüfstandes fiel auf, dass eine gepflanzte Stärke von
+0,40 nur eine **gemessene** Wirkung von 0,079 erzeugt — konstant rund
+**20 %**. Der Grund ist herleitbar: gepflanzt wird auf die oberen 20 %,
+und `median(alle)` verschiebt sich nur um diesen Anteil.
+
+> **`trennschaerfe` war die gepflanzte Zahl, `wirkung` die gemessene — und
+> `messnorm.urteil` verglich sie miteinander.**
+
+An Theorie, Kunstwelt und echten Daten belegt (20,3 / 20,1 / 19,6 /
+19,2 %). Behoben; `messnorm_rand` machte es seit jeher richtig — **zum
+dritten Mal an einem Tag war das ausgeklammerte Modul im Recht.**
+
+✔ **Befund 2.198 ist damit aufgelöst** — `schnitt` trägt mit +0,186 bei
+einer *gemessenen* Trennschärfe von 0,0944. Kein Widerspruch. Meine
+Vermutung über die gemischte Welt war die falsche Spur.
+
+⚠️ **`turnover` bekommt das ehrliche Urteil:** „nicht trennbar" statt
+„trägt nicht bis 0,20 R". Wirkung +0,0639 gegen Auflösung 0,0456 — die
+Wirkung liegt über der Auflösung, das Band schließt die Null ein.
+
+Ausführlich: Methodik **2.156**.
+
+---
+
+## ✔✔✔ DER SELBSTTEST IST GELAUFEN — 08.09.2026
+
+Die Frage war Ihre: *„haben wir eine stabile Basis?"* Jetzt gibt es eine
+Zahl statt einer Behauptung.
+
+```
+Fehlalarmquote        0 von 150 Nullwelten, drei Beharrlichkeitsstufen
+                      -> obere 95-%-Schranke 2 %   (nominal 2,5 %)
+Auflösung             +0,0293 R  (80-%-Fundquote)
+Selbstauskunft        +0,0389 R  -> sie ist 25 % BESSER als versprochen
+```
+
+**Die Übergangszone ist schmal:** +0,0195 → 30 %, **+0,0293 → 95 %**,
++0,0363 → 100 %. Von blind zu sicher in 0,01 R.
+
+### Die drei Sorgen, die ich Ihnen genannt hatte
+
+| Sorge | Befund |
+|---|---|
+| meldet sie Befunde ins Leere? | ✔ **nein** — 0 von 150 |
+| ist sie übervorsichtig? | ✔ **nein**, im Gegenteil — sie findet besser als sie behauptet |
+| trübt Beharrlichkeit das Bild? | ✔ **nein** — 0/50 auch bei AK 0,985 |
+
+⚠️ **Eine eigene Vermutung war falsch:** ich erwartete, die Beharrlichkeit
+(`schnitt` hat 0,985) treibe die Fehlalarmquote. Sie tut es nicht.
+
+### ✔✔ Und die Skalenkorrektur ist unabhängig bestätigt
+
+Vor ihr hätte die Anlage „Trennschärfe 0,20" behauptet bei einer echten
+Auflösung von 0,029 — **Faktor 7 daneben**. Danach: 0,0389 behauptet
+gegen 0,0293 tatsächlich.
+
+### Was die drei live gemessenen Beiträge jetzt wert sind
+
+| | Wirkung | gegen die Auflösung 0,0293 |
+|---|---|---|
+| `schnitt` 20 % | +0,1858 | **6,3-fach** — solide |
+| `funding` frei | +0,0249 | knapp **darunter** — trägt, aber am Rand |
+| `turnover` frei | +0,0639 | **2,2-fach darüber** — und trägt trotzdem nicht |
+
+⚠️⚠️ **`turnover` ist damit nicht „zu schwach", sondern über die Blöcke
+instabil.** Das ist ein anderer Befund, und er sagt, wo nachzusehen wäre.
+
+⚠️ Einschränkung: die Kunstwelt hat 150 Symbole, `turnover` nur 66 — die
+Zahl ist ein Hinweis, kein Beweis.
+
+### ⚠️⚠️ Was auch jetzt NICHT belegt ist
+
+Geprüft wurde: ein **Niveauversatz** auf den oberen 20 %, auf der
+**20-%-Menge**, bei **H20**, mit **150 Symbolen**, bei **unabhängiger
+Auswahl**.
+
+Offen bleiben: gradueller Zusammenhang statt Sprung · die Mengen `frei`,
+`10 %`, `50 %` · kleine Symbolzahlen · andere Zielgrößen · eine Auswahl,
+die mit dem Effekt zusammenhängt.
+
+> **„Geprüft" heißt hier: in diesem Ausschnitt.** Das ist erheblich mehr
+> als heute früh — und es ist nicht dasselbe wie „überall richtig".
+
+Ausführlich: Methodik **2.157**, Befunde **2.204 bis 2.207**.

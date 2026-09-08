@@ -487,12 +487,15 @@ class Befund:
                     "wurde nicht gefunden" % max(self.gepflanzt))
         einheit = ZIELGROESSEN[self.zielgroesse].get("einheit", "R")
         if abs(self.wirkung) < self.trennschaerfe:
+            # ⚠️ `trennschaerfe` ist das GEMESSENE Niveau - nur so ist der
+            # Vergleich mit `wirkung` zulaessig (Fehler 5). Die gepflanzte
+            # Staerke steht daneben, sonst ist die Schranke nicht
+            # nachvollziehbar.
             return ("TRAEGT NICHT bis %.4f %s%s (Effekte ab dieser Groesse "
                     "sind ausgeschlossen)"
                     % (self.trennschaerfe, einheit,
-                       ("" if (self.trennschaerfe_in_r is None
-                                or einheit == "R")
-                        else " = %.2f R gepflanzt" % self.trennschaerfe_in_r)))
+                       ("" if self.trennschaerfe_in_r is None
+                        else " = %.2f gepflanzt" % self.trennschaerfe_in_r)))
         return ("NICHT TRENNBAR - Wirkung %+.4f ueber der Trennschaerfe "
                 "%.4f %s, aber das Band schliesst die Null ein"
                 % (self.wirkung, self.trennschaerfe, einheit))
@@ -606,7 +609,24 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     # ⚠️ DIE TRENNSCHAERFE: die KLEINSTE gepflanzte Staerke, die gefunden
     # wird. Sie ist die eigentliche Neuerung - ohne sie ist "traegt nicht"
     # nicht von "haetten wir gar nicht sehen koennen" zu unterscheiden.
-    trennschaerfe = None
+    # ⚠️⚠️ ZWEI SKALEN, NICHT EINE (Fehler 5, 08.09.2026).
+    #
+    # `s` ist die GEPFLANZTE Staerke. Die Anlage MISST davon aber nur
+    # (1 - GRENZE) = 20 %: gesenkt werden die oberen 20 %, und
+    # `median(alle)` verschiebt sich nur um diesen Anteil - `median(frei)`
+    # gar nicht. An echten Daten nachgemessen: 20,3 / 20,1 / 19,6 / 19,2 %
+    # fuer s = 0,05 / 0,10 / 0,20 / 0,40.
+    #
+    # `urteil` vergleicht `wirkung` (gemessen) mit `trennschaerfe`. Stand
+    # dort die gepflanzte Zahl, war der Vergleich um Faktor 5 daneben und
+    # der Satz "Effekte ab X sind ausgeschlossen" schlicht falsch.
+    #
+    #     trennschaerfe        das GEMESSENE Niveau -> mit `wirkung` vergleichbar
+    #     trennschaerfe_in_r   die gepflanzte Staerke -> nachvollziehbar
+    #
+    # `messnorm_rand.py` trennt beide seit jeher so; hier wurde es
+    # nachgezogen.
+    trennschaerfe, trennschaerfe_in_r = None, None
     treffer = {}
     for s in sorted(staerken):
         # ⚠️ IN DIE GEMISCHTE WELT PFLANZEN (06.09., von der Gegenpruefung
@@ -623,12 +643,14 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
         # `mische` zerstoert das echte Signal, `pflanze` legt ein bekanntes
         # hinein. Erst dann beantwortet die Zahl die Frage, die sie stellen
         # soll: haette diese Anlage einen Effekt DIESER Groesse gefunden?
-        gefunden = 0
+        gefunden, werte = 0, []
         for z in range(ZIEHUNGEN):
             misch_rng = np.random.default_rng(SAAT + 1000 * z + int(s * 1000))
             p, _a2, _g3, _u3 = W.wirkung(je_tag, oben_sperren,
                                          mische=misch_rng, pflanze=s)
             pb = _band(p, "pflanze %.2f/%d" % (s, z))
+            if pb:
+                werte.append(pb["mittel"])
             # DERSELBE MASSSTAB WIE DAS URTEIL (2.188-inkonsistenz).
             latte = (max(0.0, null["oben"])
                      if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
@@ -639,7 +661,8 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
         # Saat - gemessen wanderte die Basislinie um den Betrag des
         # gesuchten Effekts.
         if trennschaerfe is None and gefunden >= max(3, (4 * ZIEHUNGEN) // 5):
-            trennschaerfe = s
+            trennschaerfe_in_r = s
+            trennschaerfe = float(np.mean(werte)) if werte else None
 
     n_anker = sum(len(z) for z in je_tag.values())
     syms = len({x["sym"] for z in je_tag.values() for x in z})
@@ -649,7 +672,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],
         null_oben=null["oben"], trennschaerfe=trennschaerfe,
-        trennschaerfe_in_r=trennschaerfe,   # beim Mittel dieselbe Einheit
+        trennschaerfe_in_r=trennschaerfe_in_r,
         gepflanzt=tuple(sorted(staerken)), n_anker=n_anker,
         n_tage=haupt["tage"], n_bloecke=max(1, haupt["tage"] // block),
         abdeckung_symbole=syms, hypothesen=hypothesen,

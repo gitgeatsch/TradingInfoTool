@@ -764,6 +764,177 @@ BEFUNDE = (
                "verlangt eine bessere Messung, keine Abwertung", "gilt",
                "Nutzervorgabe / Befund 2.196",
                basis="Messbasis 08.09.2026, Menge `frei`"),
+    Befundlage("2.201", "⚠️⚠️⚠️ FEHLER 5 - TRENNSCHAERFE UND WIRKUNG "
+               "STANDEN AUF ZWEI SKALEN, und `messnorm.urteil` verglich "
+               "sie miteinander. `trennschaerfe` war die GEPFLANZTE "
+               "Staerke, `wirkung` die GEMESSENE Groesse. Der Faktor ist "
+               "(1 - GRENZE) = 20 %: gesenkt werden die oberen 20 %, "
+               "`median(alle)` verschiebt sich nur um diesen Anteil, "
+               "`median(frei)` gar nicht", "gilt",
+               "selbsttest_welt.py + Nachmessung 08.09.",
+               basis="Theorie + Kunstwelt + Messbasis 08.09.2026"),
+    Befundlage("2.201-beleg", "✔ DREIFACH BELEGT: aus der Definition "
+               "hergeleitet (20 %) · in der Kunstwelt gemessen (17,8 / "
+               "18,7 / 19,3 / 19,7 / 19,5 % ueber fuenf Staerken) · an "
+               "den ECHTEN Daten nach Abzug des Grundpegels (+0,0145) "
+               "gemessen: 20,3 / 20,1 / 19,6 / 19,2 % fuer s = 0,05 / "
+               "0,10 / 0,20 / 0,40", "gilt",
+               "Nachmessung 08.09.2026",
+               basis="Messbasis 08.09.2026, Menge 20 %, `zufall`-Welt"),
+    Befundlage("2.201-loest-2198", "✔✔ UND ES LOEST BEFUND 2.198 AUF: "
+               "`schnitt` traegt mit Wirkung +0,186 bei ausgewiesener "
+               "Trennschaerfe 0,40 - das sah nach Widerspruch aus. Auf "
+               "der gemessenen Skala betraegt die Trennschaerfe 0,0944, "
+               "und 0,186 liegt klar darueber. KEIN Widerspruch. Die "
+               "Vermutung 'die Positivkontrolle pflanzt in die gemischte "
+               "Welt und ueberschaetzt' war die falsche Spur",
+               "gilt", "Nachmessung 08.09.2026",
+               basis="Messbasis 08.09.2026, 536 Krypto-Reihen"),
+    Befundlage("2.201-turnover", "⚠️⚠️ UND ES AENDERT `turnover`s "
+               "URTEILSKATEGORIE: Wirkung +0,0639 gegen die gemessene "
+               "Trennschaerfe 0,0456 - die Wirkung liegt UEBER der "
+               "Aufloesung, das Band schliesst die Null aber ein. Das "
+               "Urteil lautet jetzt NICHT TRENNBAR statt 'traegt nicht "
+               "bis 0,20 R'. Er ist unentschieden, und die Anlage sagt "
+               "das jetzt auch", "gilt", "Nachmessung 08.09.2026",
+               basis="Messbasis 08.09.2026, Menge `frei`, 124.221 Anker"),
+    Befundlage("2.201-satz-war-falsch", "⚠️ Der Satz 'Effekte ab dieser "
+               "Groesse sind ausgeschlossen' war damit um Faktor 5 zu "
+               "schwach. Ausgeschlossen waren nie Effekte ab 0,20 R, "
+               "sondern ab rund 0,046 R. Jede so begruendete Ablehnung "
+               "war zu nachsichtig formuliert", "gilt",
+               "messnorm.Befund.urteil"),
+    Befundlage("2.201-rand-hatte-recht", "⚠️ ZUM DRITTEN MAL AN EINEM "
+               "TAG: `messnorm_rand.py` trennte beide Skalen SEIT JEHER "
+               "richtig (`trennschaerfe = mean(werte)`, "
+               "`trennschaerfe_in_r = s`) - `messnorm` und "
+               "`messnorm_auswahl` nicht. Erst war es die Leiter (2.194), "
+               "dann die Nullregel, jetzt die Skala. Das Modul war nie "
+               "Teil der Normbetrachtung", "gilt",
+               "Codelesung 08.09.2026"),
+    Befundlage("2.202", "⚠️ DER PRUEFSTAND FUER DEN SELBSTTEST STEHT und "
+               "hat seinen Vorabtest bestanden: die Nullwelt ist leer "
+               "(Mittel -0,0011 bei Streuung 0,0019) · die wahre Wirkung "
+               "je Staerke ist nachgemessen statt angenommen · die "
+               "Autokorrelation auf Blocklaenge ist mit der echten "
+               "vergleichbar (+0,032 gegen -0,004, Grenze 0,15)",
+               "gilt", "selbsttest_welt.py",
+               basis="Kunstwelten, 1500 Tage x 150 Werte"),
+    Befundlage("2.202-nicht-pflanze", "⚠️⚠️ ENTWURFSREGEL DES "
+               "PRUEFSTANDES: er benutzt `pflanze` NICHT. Die Welten "
+               "werden von Grund auf mit der Beziehung gebaut, sonst "
+               "pruefte der Test den Mechanismus mit sich selbst - und "
+               "genau dieser Mechanismus stand unter Verdacht. Der "
+               "Tagesschock ist AR(1), weil unabhaengige Tage keine "
+               "Bloecke braeuchten und die Fehlalarmquote schmeichelhaft "
+               "ausfiele", "gilt", "selbsttest_welt.py"),
+    Befundlage("2.203", "⚠️⚠️ DIE LEHRE AUS DREI FEHLERN AN EINEM TAG: "
+               "`messnorm_rand.py` hatte jedes Mal recht, weil es aus der "
+               "Normbetrachtung ausgeklammert war. Daraus die Frage, die "
+               "vor jeder Normaenderung zu stellen ist: WER GEHOERT NOCH "
+               "ZUR FAMILIE? Nachgesehen: die Normfamilie ist "
+               "`messnorm` + `messnorm_auswahl` + `messnorm_rand` - alle "
+               "drei sind jetzt gleichgezogen", "gilt",
+               "Codedurchsicht 08.09.2026"),
+    Befundlage("2.203-altbestand", "⚠️⚠️ ABER DREI ALTBESTANDSWERKZEUGE "
+               "bauen eigene Kontrollen: `messe_beitragssumme.py` "
+               "(mittelt ueber Ziehungen und weist die Streuung aus - "
+               "sauber), `n19e_neukalibrierung.py` und "
+               "`messe_volumenanteil.py`", "gilt",
+               "Codedurchsicht 08.09.2026"),
+    Befundlage("2.203-volumenanteil", "⚠️⚠️⚠️ `messe_volumenanteil.py` "
+               "faehrt seine Negativkontrolle mit EINER EINZIGEN Ziehung "
+               "(`mische=rng`, kein Wiederholen, keine Mehrheitsregel), "
+               "Positivkontrolle nur bis 0,05. Das verletzt die eigene "
+               "stehende Vorgabe 'eine Ziehung ist kein Nullpunkt' direkt "
+               "- und aus diesem Werkzeug stammt der registrierte Befund "
+               "N-13-1' 'der Volumenanteil traegt'. ⚠️ NICHT nachgemessen "
+               "(08.09.), nur festgestellt - der Befund steht damit unter "
+               "Vorbehalt, ist aber NICHT widerlegt", "gilt",
+               "Codedurchsicht 08.09.2026",
+               basis="Codelesung, keine Nachmessung"),
+    Befundlage("2.204", "✔✔✔ DER SELBSTTEST DER MESSANLAGE GEGEN "
+               "BEKANNTE WAHRHEIT IST GELAUFEN - zum ersten Mal. 50 "
+               "Nullwelten und 120 Welten mit bekanntem Effekt, gebaut "
+               "OHNE `pflanze`, mit AR(1)-Tagesschock und der echten "
+               "Streuung der Messbasis (IQA 3,073)", "gilt",
+               "selbsttest_messanlage.py / selbsttest_welt.py",
+               basis="182 Kunstwelten, 1500 Tage x 150 Werte, H20, 20 %"),
+    Befundlage("2.204-fehlalarm", "✔ FEHLALARMQUOTE: 0 von 50 Nullwelten. "
+               "Sollwert war <= 2,5 % (das Band ist ein 95-%-Band). ⚠️ "
+               "0/50 schliesst eine wahre Quote bis rund 6 % NICHT aus "
+               "(Dreierregel) - 'nicht hoch' ist belegt, 'exakt null' "
+               "nicht", "gilt", "selbsttest_messanlage.py",
+               basis="50 Kunstwelten ohne Effekt"),
+    Befundlage("2.204-aufloesung", "✔ DIE AUFLOESUNG BETRAEGT +0,0293 R "
+               "(80-%-Fundquote). Die Uebergangszone ist schmal: "
+               "+0,0104 -> 0 % · +0,0195 -> 30 % · +0,0293 -> 95 % · "
+               "+0,0363 -> 100 %. Von blind zu sicher in 0,01 R - kein "
+               "Graubereich", "gilt", "selbsttest_messanlage.py",
+               basis="120 Kunstwelten, sechs Effektstufen"),
+    Befundlage("2.204-behauptung", "✔✔ UND DIE ANLAGE SAGT DIE WAHRHEIT "
+               "UEBER SICH SELBST: sie weist eine Trennschaerfe von "
+               "+0,0389 aus und findet tatsaechlich ab +0,0293 - sie ist "
+               "also 25 % BESSER als versprochen, nicht schlechter. "
+               "Nullbefunde sind damit staerker, als die Anlage selbst "
+               "ausweist", "gilt", "selbsttest_messanlage.py",
+               basis="12 Kunstwelten mit voller Leiter"),
+    Befundlage("2.204-bestaetigt-2201", "✔✔ DAMIT IST DIE "
+               "SKALENKORREKTUR (2.201) UNABHAENGIG BESTAETIGT: vor ihr "
+               "haette die Anlage 'Trennschaerfe 0,20' behauptet bei "
+               "einer echten Aufloesung von 0,029 - Faktor 7 daneben. "
+               "Nach ihr stimmen Behauptung und Wirklichkeit auf 25 % "
+               "ueberein", "gilt", "selbsttest_messanlage.py",
+               basis="182 Kunstwelten"),
+    Befundlage("2.205", "⚠️⚠️ WAS DER SELBSTTEST UEBER `turnover` SAGT: "
+               "seine Wirkung (+0,0639) liegt beim 2,2-fachen der "
+               "Aufloesung (0,0293) - sie ist NICHT zu klein zum Sehen. "
+               "Dass das Band den Nullpunkt trotzdem einschliesst, heisst "
+               "die Wirkung ist ueber die BLOECKE instabil. Das ist ein "
+               "anderer Befund als 'zu schwach' - und er sagt, wo "
+               "nachzusehen waere", "gilt", "selbsttest_messanlage.py",
+               basis="Vergleich Kunstwelt-Aufloesung gegen Messbasis"),
+    Befundlage("2.205-einschraenkung", "⚠️ EINSCHRAENKUNG, DIE DAZUGEHOERT: "
+               "die Kunstwelt hat 150 Symbole x 1500 Tage, `turnover` auf "
+               "`frei` nur 66 Symbole. Die Aufloesungszahl ist deshalb "
+               "NICHT eins zu eins uebertragbar - der Vergleich ist ein "
+               "Hinweis, kein Beweis", "gilt", "selbsttest_messanlage.py"),
+    Befundlage("2.206", "⚠️⚠️ EINE LUECKE IM EIGENEN PRUEFSTAND, VOR DEM "
+               "ERGEBNIS GEFUNDEN: er zog die Kennzahl jeden Tag neu "
+               "(Autokorrelation 0). An den echten Daten gemessen: "
+               "`zufall` -0,001 · `funding` +0,608 · `schnitt` +0,985. "
+               "Bei `schnitt` stehen an fast allen Tagen DIESELBEN "
+               "Symbole in der gesperrten Gruppe - ein Pruefstand ohne "
+               "Beharrlichkeit sagt ueber die beiden TRAGENDEN Beitraege "
+               "nichts", "gilt", "selbsttest_welt.py",
+               basis="536 Krypto-Symbole mit >= 200 Tagen"),
+    Befundlage("2.206-gebaut", "✔ Die Achse ist eingebaut und geprueft: "
+               "AR(1) je Symbol, eingestellt 0,000/0,610/0,985 -> "
+               "gemessen -0,007/0,601/0,978. Die Vorgabe bleibt 0, damit "
+               "die schon gemessenen Zahlen reproduzierbar bleiben",
+               "gilt", "selbsttest_welt.py"),
+    Befundlage("2.207", "✔✔✔ DIE BEHARRLICHKEIT AENDERT NICHTS: 0 "
+               "Fehlalarme in 50 Nullwelten bei AK 0,610 (funding-artig) "
+               "UND 0 in 50 bei AK 0,985 (schnitt-artig). Auch die "
+               "Streuung der Nullwelten bleibt praktisch gleich (0,0047 / "
+               "0,0042 gegen 0,0047 ohne Beharrlichkeit). Die "
+               "Blockbootstrap faengt sie ab", "gilt",
+               "selbsttest_messanlage.py --ak",
+               basis="2 x 50 Kunstwelten, 1500 Tage x 150 Werte"),
+    Befundlage("2.207-schaerfer", "✔✔ DAMIT WIRD DIE AUSSAGE SCHAERFER: "
+               "0 Fehlalarme in 150 Nullwelten ueber DREI "
+               "Beharrlichkeitsstufen. Obere 95-%-Schranke nach der "
+               "Dreierregel: 2 % - unterhalb des nominalen Sollwerts von "
+               "2,5 %. Das ist der erste belastbare Nachweis, dass die "
+               "Anlage nicht ins Leere feuert", "gilt",
+               "selbsttest_messanlage.py",
+               basis="150 Kunstwelten ohne Effekt, drei AK-Stufen"),
+    Befundlage("2.207-vermutung-falsch", "⚠️ UND EINE EIGENE VERMUTUNG "
+               "WAR FALSCH: ich hatte erwartet, die Beharrlichkeit werde "
+               "die Fehlalarmquote treiben, weil sie weniger unabhaengige "
+               "Beobachtungen bedeutet. Sie tut es nicht. Die Sorge war "
+               "berechtigt, das Nachmessen richtig - das Ergebnis "
+               "entlastet", "gilt", "selbsttest_messanlage.py --ak"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

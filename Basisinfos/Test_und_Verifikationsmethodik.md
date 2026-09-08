@@ -1500,6 +1500,22 @@ mitgeschrieben, aber ausdrücklich **nachrangig** und mit diesem Vorbehalt.
 
 ---
 
+### Nachtrag 08.09.2026 — der Lebenszyklus, der Gesamtstand, der Prüfstand
+
+| Skript | Beantwortet |
+|---|---|
+| `pruefe_neuaufnahme.py` | Ist jedes Asset sauber aufgenommen? Deckt die drei Lebenszyklusfälle ab — **NEU** (Watchlist/Spot ohne Messreihe), **FÄLLT WEG**, **ÄNDERT SICH**. Schließt die Meldelücke vom 08.09.; jede Ausnahme trägt einen Grund |
+| `uebernehme_messreihen.py` | Holt Reihen aus der **Produktion** in die Messbasis, mit eigener Quellenmarkierung (`uebernommen_<original>`), damit die Quellenreinheit sichtbar bleibt. ⚠️ Harte Sperre gegen die Produktionsdatenbank |
+| `messe_alle_kandidaten.py` | **Der Gesamtstand**: alle Kandidaten in EINEM Lauf, auf EINER Basis, nach EINEM vorab gesetzten Kriterium. Gebaut, weil dieselben Beiträge mehrfach fielen und wieder aufgenommen wurden — jede Messung benutzte eine andere Anlage |
+| `selbsttest_welt.py` | **Der Prüfstand**: künstliche Welten mit bekannter Wahrheit. ⚠️ Baut den Effekt OHNE `pflanze`, sonst prüfte der Test den Mechanismus mit sich selbst. AR(1)-Tagesschock, echte Streuung (IQA 3,073), einstellbare **Beharrlichkeit** der Kennzahl |
+| `selbsttest_messanlage.py` | **Fehlalarm- und Fundquote** der Norm gegen bekannte Wahrheit. Beantwortet als Erstes überhaupt, ob die Anlage hält, was sie behauptet. Siehe 2.157 |
+
+⚠️ **Die Prüfung „jedes Messwerkzeug steht im Werkzeugkasten" greift nur
+bei den Namenspräfixen `messe_`, `pruefe_`, `bewerte_`, `lade_`,
+`simuliere_`, `uebernehme_`, `selbsttest_`.** Wer ein Werkzeug anders
+nennt, macht es für diesen Wächter unsichtbar — die `n<Nummer>_`-Skripte
+sind Einzelmessungen und absichtlich nicht erfasst.
+
 ## 2.14 Externe Methodenlage — wie die Fachliteratur unsere Probleme löst (Nachtrag 2026-08-09)
 
 **Anlass:** Nutzer-Vorgabe, *„eine Detailrecherche wie die aktuelle Lehrmeinung
@@ -10230,3 +10246,229 @@ Er macht die Urteile **widerspruchsfrei**, nicht **schärfer**. Offen:
 > einem einzigen Tag kamen drei Fehler in einem Modul heraus, das
 > vorgestern als geprüft galt. Das ist die belastbarste Aussage über die
 > Fehlerrate, die vorliegt.
+
+---
+
+## 2.156 ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN
+
+**Gefunden am 08.09.2026**, beim Bau des Prüfstandes für den Selbsttest —
+also von einem Vorabtest, nicht von einer Überlegung. Befunde 2.201.
+
+### Der Fund
+
+```python
+messnorm_auswahl.py   trennschaerfe = s                 # die GEPFLANZTE Staerke
+messnorm.py           if abs(self.wirkung) < self.trennschaerfe    # ...verglichen
+```
+
+`wirkung` ist eine **gemessene** Größe, `trennschaerfe` war die
+**gepflanzte** — und `urteil` verglich sie miteinander.
+
+### Der Faktor ist herleitbar, nicht empirisch geraten
+
+Die Kennzahl ist `median(frei) − median(alle)`, und gepflanzt wird auf die
+oberen **20 %** (`GRENZE = 0,80`). Werden 20 % der Verteilung um `s`
+gesenkt, verschiebt sich der Median **aller** nur um `(1 − GRENZE)·s`;
+der Median der **freien** gar nicht.
+
+> **Die Anlage misst also nur 20 % dessen, was sie pflanzt.**
+
+### Dreifach belegt
+
+| | 0,05 | 0,10 | 0,20 | 0,40 |
+|---|---|---|---|---|
+| **Kunstwelt** | 17,8 % | 18,7 % | 19,3 % | 19,7 % |
+| **echte Daten** (abzgl. Grundpegel +0,0145) | 20,3 % | 20,1 % | 19,6 % | 19,2 % |
+
+Vorhersage aus der Definition: **20 %**.
+
+### Drei Folgen, und die erste ist eine Erleichterung
+
+**1. Befund 2.198 löst sich auf.** `schnitt` trägt mit Wirkung +0,186 bei
+ausgewiesener Trennschärfe 0,40 — das sah nach Widerspruch aus. Auf der
+gemessenen Skala beträgt die Trennschärfe **0,0944**, und 0,186 liegt
+klar darüber. Meine Vermutung, die Positivkontrolle überschätze wegen der
+gemischten Welt, war die **falsche Spur**.
+
+**2. `turnover` wechselt die Urteilskategorie.**
+
+| | vorher | jetzt |
+|---|---|---|
+| Wirkung | +0,0639 | +0,0639 |
+| Trennschärfe | 0,20 (gepflanzt) | **0,0456** (gemessen) |
+| Urteil | „trägt nicht bis 0,20 R" | ⚠️ **NICHT TRENNBAR** |
+
+Seine Wirkung liegt **über** der Auflösung, das Band schließt die Null
+aber ein. Er ist **unentschieden** — und die Anlage sagt das jetzt auch,
+statt es als Ablehnung zu verkleiden.
+
+**3. Der Satz war um Faktor 5 zu schwach.** *„Effekte ab dieser Größe sind
+ausgeschlossen"* nannte 0,20 R, wo tatsächlich schon ab **0,046 R**
+ausgeschlossen war. Jede so begründete Ablehnung war zu nachsichtig
+formuliert.
+
+### ⚠️ Zum dritten Mal an einem Tag: `messnorm_rand` hatte recht
+
+```python
+messnorm_rand.py:255   trennschaerfe_in_r = s                 # gepflanzt
+messnorm_rand.py:256   trennschaerfe = np.mean(werte)         # gemessen
+```
+
+Erst die Leiter (2.194), dann die Nullregel, jetzt die Skala — **dreimal
+war das ausgelagerte Modul richtig und die Hauptnorm falsch.** Es war nie
+Teil der Normbetrachtung. Das ist kein Zufall mehr, sondern ein Muster:
+**wer ein Modul aus der Familie ausklammert, verliert den Abgleich.**
+
+### Der Stand jetzt
+
+| | Wirkung | Trennschärfe (gemessen) | gepflanzt | Urteil |
+|---|---|---|---|---|
+| `schnitt` 20 % | +0,1858 | 0,0944 | 0,40 | TRÄGT |
+| `schnitt` 10 % | +0,1830 | 0,0948 | 0,40 | TRÄGT |
+| `funding` frei | +0,0249 | 0,0208 | 0,10 | TRÄGT |
+| `turnover` frei | +0,0639 | 0,0456 | 0,20 | ⚠️ nicht trennbar |
+| `turnover` 50 % | +0,0913 | 0,0952 | 0,40 | trägt nicht bis 0,0952 |
+| `zufall` frei | +0,0043 | 0,0217 | 0,10 | ✔ trägt nicht |
+
+---
+
+## 2.157 ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit
+
+**Gelaufen am 08.09.2026**, zum ersten Mal. Werkzeuge:
+`selbsttest_welt.py` (der Prüfstand) · `selbsttest_messanlage.py` (die
+Messung). Befunde 2.204 bis 2.206.
+
+### Der Anlass — eine Nutzerfrage, die eine ehrliche Antwort verlangte
+
+> *„Bist du dir sicher, dass wir mit diesem Schritt eine stabile Basis
+> haben oder ist das Risiko noch hoch, dass noch Fehler vorliegen?"*
+
+Die Antwort war: **nein.** Der Messstandard macht die Urteile
+widerspruchsfrei, nicht **richtig**. Was eine Aussage über Stabilität
+rechtfertigt, sind zwei Quoten gegen bekannte Wahrheit — und die gab es
+für die Anlage als Ganzes nie.
+
+### ⚠️⚠️ Die entscheidende Entwurfsregel: NICHT `pflanze` benutzen
+
+Die Positivkontrolle der Norm pflanzt mit `pflanze=-s` in die gemischte
+Welt. Wer damit auch die Testwelten baut, **prüft den Mechanismus mit
+sich selbst** — und genau dieser Mechanismus stand unter Verdacht
+(2.198).
+
+> Die Welten tragen die Beziehung **von Grund auf**; die Norm bekommt sie
+> als gewöhnliche `je_tag`-Struktur und kann nicht wissen, dass etwas
+> darin steckt.
+
+### Der Prüfstand, und was er von der echten Welt übernimmt
+
+| | |
+|---|---|
+| Streuung | IQA **3,073** — an der Messbasis abgelesen, nicht geschätzt |
+| Tagesschock | **AR(1)**, φ = 0,90 — ohne ihn bräuchte es keine Blöcke, und die Fehlalarmquote fiele schmeichelhaft aus |
+| Blockverhalten | Autokorrelation auf Blocklänge **+0,032** gegen echt **−0,004** — beide unter der Grenze 0,15 |
+| Umfang | 1500 Tage × 150 Werte = 25 Blöcke |
+
+### ⚠️ Der Vorabtest, der drei Dinge hätte kippen können
+
+1. **Ist die Nullwelt leer?** Mittel −0,0011 bei Streuung 0,0019 → ja.
+2. **Was ist eine gepflanzte Stärke wert?** 17,8 / 18,7 / 19,3 / 19,7 % —
+   ⚠️ **hier wurde Fehler 5 gefunden** (siehe 2.156). Der Vorabtest hat
+   ihn gefunden, nicht eine Überlegung.
+3. **Sieht die Abhängigkeit echt aus?** Ja, siehe Tabelle.
+
+### Das Ergebnis
+
+```
+Fehlalarmquote                     0 von 50 Nullwelten
+Auflösung (80 % Fundquote)         +0,0293 R
+Anlage behauptet über sich selbst  +0,0389 R
+```
+
+**Die Fundquote, und wie scharf der Übergang ist:**
+
+| gemessene Wirkung | Fundquote |
+|---|---|
+| +0,0104 | 0 % |
+| +0,0195 | 30 % |
+| **+0,0293** | **95 %** |
+| +0,0363 | 100 % |
+| +0,0599 | 100 % |
+
+**Von blind zu sicher in 0,01 R.** Kein Graubereich.
+
+### Was das beantwortet — beide Sorgen, und keine bestätigt sich
+
+| Sorge | Befund |
+|---|---|
+| meldet sie Befunde ins Leere? | ✔ 0 von 50. ⚠️ *0/50 schließt eine wahre Quote bis ~6 % nicht aus (Dreierregel)* |
+| ist sie übervorsichtig? | ✔ im Gegenteil — sie findet **25 % besser**, als sie behauptet |
+| stimmt ihre Selbstauskunft? | ✔ 0,0389 behauptet gegen 0,0293 tatsächlich |
+
+> ✔✔ **Und damit ist die Skalenkorrektur (2.156) unabhängig bestätigt.**
+> Vor ihr hätte die Anlage „Trennschärfe 0,20" behauptet bei einer echten
+> Auflösung von 0,029 — **Faktor 7 daneben.**
+
+### ⚠️⚠️ Was der Selbsttest über `turnover` sagt
+
+Seine Wirkung (+0,0639) liegt beim **2,2-fachen** der Auflösung. Sie ist
+**nicht zu klein zum Sehen**. Dass das Band den Nullpunkt trotzdem
+einschließt, heißt: die Wirkung ist über die **Blöcke** instabil.
+
+> **Das ist ein anderer Befund als „zu schwach" — und er sagt, wo
+> nachzusehen wäre.**
+
+⚠️ Einschränkung: die Kunstwelt hat 150 Symbole, `turnover` nur 66. Die
+Zahl ist ein Hinweis, kein Beweis.
+
+### ⚠️ Eine Lücke im eigenen Prüfstand — vor dem Ergebnis gefunden
+
+Er zog die Kennzahl jeden Tag neu, Autokorrelation 0. An den echten Daten:
+
+| | Autokorrelation je Symbol, Tag zu Tag |
+|---|---|
+| `zufall` | −0,001 ← **so war der Prüfstand gebaut** |
+| `funding` | **+0,608** |
+| `schnitt` | **+0,985** |
+
+Bei `schnitt` stehen an fast allen Tagen **dieselben** Symbole in der
+gesperrten Gruppe. Ein Prüfstand ohne Beharrlichkeit sagt über genau die
+beiden **tragenden** Beiträge nichts — und fällt vermutlich zu
+schmeichelhaft aus.
+
+✔ Eingebaut als AR(1) je Symbol und geprüft: eingestellt
+0,000 / 0,610 / 0,985 → gemessen −0,007 / 0,601 / 0,978. Die Vorgabe
+bleibt 0, damit die schon gemessenen Zahlen reproduzierbar bleiben.
+
+### ✔✔ Und die Beharrlichkeit nachgemessen — die Sorge bestätigt sich NICHT
+
+| Beharrlichkeit | entspricht | Fehlalarme | Streuung der Nullwelten |
+|---|---|---|---|
+| 0,000 | `zufall` | 0 / 50 | 0,0047 |
+| 0,610 | `funding` | 0 / 50 | 0,0047 |
+| 0,985 | `schnitt` | 0 / 50 | 0,0042 |
+
+⚠️ **Meine Erwartung war, dass die Beharrlichkeit die Fehlalarmquote
+treibt** — weniger unabhängige Beobachtungen, breiteres wahres Band. Sie
+tut es nicht; die Blockbootstrap fängt sie ab. Die Sorge war berechtigt,
+das Nachmessen richtig, das Ergebnis entlastet.
+
+> ✔✔ **0 Fehlalarme in 150 Nullwelten über drei Beharrlichkeitsstufen.**
+> Obere 95-%-Schranke nach der Dreierregel: **2 %** — unterhalb des
+> nominalen Sollwerts von 2,5 %.
+
+**Das ist der erste belastbare Nachweis, dass die Anlage nicht ins Leere
+feuert.**
+
+### ⚠️⚠️ Was auch danach NICHT belegt ist
+
+| | |
+|---|---|
+| Die Form des Effekts | geprüft wurde ein **Niveauversatz** auf den oberen 20 %. Ein **gradueller** Zusammenhang über alle Ränge ist nicht geprüft |
+| Die Auswahl | `mom` ist im Prüfstand **unabhängig** vom Effekt. In der Kette ist sie es nicht |
+| Andere Mengen | gemessen wurde auf **20 %**. `frei`, `10 %`, `50 %` sind offen |
+| Kleine Symbolzahlen | die Welt hat 150 Symbole; `turnover` hat 66. Die Auflösung dort ist ungemessen |
+| Andere Zielgrößen | nur `bewegung_r`, H20 |
+
+> **„Die Anlage ist geprüft" heißt: für einen Niveauversatz, auf der
+> 20-%-Menge, bei H20, mit 150 Symbolen.** Alles andere ist weiterhin
+> unbelegt — und das ist ein Unterschied zu „unbewiesen falsch".

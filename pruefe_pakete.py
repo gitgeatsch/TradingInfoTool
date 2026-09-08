@@ -12493,7 +12493,13 @@ def paket_dimension() -> None:
                                   capture_output=True, text=True,
                                   encoding="utf-8").stdout.split()
               if "/" not in x and x.split("_")[0] in
-              ("messe", "pruefe", "bewerte", "lade", "simuliere")]
+              # ⚠️ `uebernehme` und `selbsttest` am 08.09. ergaenzt -
+              # beides sind Werkzeuge im Sinne von 2.13, blieben dem
+              # Waechter aber unsichtbar, weil er nur Praefixe kennt.
+              # Ein Waechter mit Praefixliste uebersieht genau das,
+              # was neu benannt wird.
+              ("messe", "pruefe", "bewerte", "lade", "simuliere",
+               "uebernehme", "selbsttest")]
     _ohne = sorted(x for x in _stamm if x[:-3] not in _kasten)
     pruefe(P, "jedes Messwerkzeug steht im Werkzeugkasten 2.13",
            not _ohne,
@@ -17404,6 +17410,22 @@ def paket_messstandard() -> None:
            "sonst verdeckt eine zu kurze Leiter einen ECHTEN Befund: "
            "`schnitt` 20 % hatte traegt=True und meldete 'KEIN BEFUND' "
            "(Befund 2.193)")
+
+    # ---- Fehler 5: EINE Skala fuer Trennschaerfe und Wirkung -------------
+    pruefe(P, "⚠️⚠️ die Trennschaerfe steht auf der GEMESSENEN Skala",
+           ('trennschaerfe = float(np.mean(werte))' in quelle_a
+            and 'trennschaerfe = float(np.mean(werte))' in quelle_b
+            and 'trennschaerfe = s' not in quelle_a
+            and 'trennschaerfe = s' not in quelle_b),
+           "`urteil` vergleicht `wirkung` (gemessen) mit `trennschaerfe`. "
+           "Stand dort die GEPFLANZTE Staerke, war der Vergleich um den "
+           "Faktor (1 - GRENZE) = 5 daneben - an Theorie, Kunstwelt UND "
+           "echten Daten belegt (Befund 2.201)")
+    pruefe(P, "und die gepflanzte Staerke bleibt daneben nachvollziehbar",
+           ("trennschaerfe_in_r=trennschaerfe_in_r" in quelle_a
+            and "trennschaerfe_in_r=trennschaerfe_in_r" in quelle_b
+            and "trennschaerfe_in_r=ts_r" in quelle_c),
+           "ohne sie ist die Schranke nicht mehr zurueckzurechnen")
 
     # ---- ⚠️ Und die Ehrlichkeit ueber das, was NICHT erledigt ist --------
     pruefe(P, "⚠️ der offene Rest steht im Modul, nicht nur im Plan",

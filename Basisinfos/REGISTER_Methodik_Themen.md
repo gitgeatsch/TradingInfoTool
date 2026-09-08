@@ -2,7 +2,7 @@
 
 *Erzeugt aus `bestand.py`. **Nicht von Hand aendern.***
 
-⚠️ **Wofuer:** die Methodik hat **121** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
+⚠️ **Wofuer:** die Methodik hat **123** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
 
 Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`.
 
@@ -36,7 +36,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8440 |
 | **2.155** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10126 |
 
-## Block, Bootstrap und Abhaengigkeit (41)
+## Block, Bootstrap und Abhaengigkeit (42)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -81,8 +81,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8761 |
 | **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9428 |
 | **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9730 |
+| **2.157** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10319 |
 
-## Trennschaerfe und Positivkontrolle (16)
+## Trennschaerfe und Positivkontrolle (18)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -102,8 +103,10 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9196 |
 | **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9345 |
 | **2.155** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10126 |
+| **2.156** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10236 |
+| **2.157** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10319 |
 
-## Zielgroesse und MASSSTAB (48)
+## Zielgroesse und MASSSTAB (49)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -155,8 +158,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 8995 |
 | **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9288 |
 | **2.155** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10126 |
+| **2.156** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10236 |
 
-## Auswahl, Menge und Universum (48)
+## Auswahl, Menge und Universum (49)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -208,6 +212,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9831 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9952 |
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10037 |
+| **2.156** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10236 |
 
 ## Kombination, Schichtung, Redundanz (19)
 
@@ -309,7 +314,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9831 |
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10037 |
 
-## Pruefdisziplin und Urteilslogik (19)
+## Pruefdisziplin und Urteilslogik (20)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -332,6 +337,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9730 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9952 |
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10037 |
+| **2.157** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10319 |
 
 ## Ohne Thema zugeordnet (11)
 
