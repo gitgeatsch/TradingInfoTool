@@ -1838,6 +1838,60 @@ BEFUNDE = (
                "Arbeit, die es nicht mehr gibt. **Beim Aufloesen gehoert "
                "der Rueckverweis in die alten Eintraege**", "gilt",
                "Selbstbefund 09.09.2026"),
+    Befundlage("2.248", "✔✔ N-91: DAS VERFAHREN IST GEGEN BEKANNTE "
+               "WAHRHEIT GEEICHT, BEVOR es lief. Auf Kunstdaten (400 Tage "
+               "x 60 Anker) erkennt es alle drei Formen: monoton "
+               "(-0,392, beide Haelften -0,21/-0,20) · Buckel (-0,004 "
+               "GESAMT, aber +0,246/-0,255 in den Haelften) · nichts "
+               "(-0,015/-0,014/-0,010). ⚠️ Und es zeigt die Falle: ein "
+               "Buckel liefert eine GESAMT-Rangkorrelation von -0,004 - "
+               "von 'nichts' NICHT zu unterscheiden. Nur die Haelften "
+               "trennen sie", "gilt", "n91_rangkorrelation_form.py",
+               basis="Kunstdaten mit bekannter Form"),
+    Befundlage("2.249", "✔✔✔ `schnitt` HAT KEINEN BUCKEL. Ueber die "
+               "Rangkorrelation je Kalendertag zeigen BEIDE Haelften "
+               "dasselbe negative Vorzeichen - auf der Momentummenge "
+               "(-0,0311 / -0,0441) wie auf Zufallsmengen (-0,0155 / "
+               "-0,0406 und weitere). Der Buckel aus den Fuenfteln war "
+               "ein ARTEFAKT DER GRUPPENMEDIANE bei ungleicher Besetzung "
+               "(1,5 gegen 29,7 Anker je Tag)", "gilt",
+               "n91_rangkorrelation_form.py",
+               basis="Messmenge v1, Menge 20 %, H20, Spearman je Tag"),
+    Befundlage("2.249-richtung", "✔ UND DIE RICHTUNG STIMMT MIT DER "
+               "HYPOTHESE: negativ heisst hoeherer Rang -> schlechteres "
+               "Ergebnis, also 'tief unter dem eigenen Schnitt ist "
+               "besser'. Das ist genau die Akkumulationsthese", "gilt",
+               "n91_rangkorrelation_form.py"),
+    Befundlage("2.249-zufall-staerker", "✔✔ UND AUF ZUFALLSMENGEN IST ER "
+               "STAERKER: die Gesamtkorrelation ist dort in 4 von 5 "
+               "Faellen trennbar negativ (-0,043 bis -0,054, Baender ohne "
+               "null), auf der Momentummenge dagegen nicht (-0,0278). "
+               "Auch das passt zur Kollinearitaet - auf der "
+               "Momentumspitze bleibt zu wenig Streuung", "gilt",
+               "n91_rangkorrelation_form.py"),
+    Befundlage("2.250", "⚠️⚠️ UEBERRASCHUNG: DEN BUCKEL HAT `funding`, "
+               "nicht `schnitt`. Auf der Momentummenge zeigen seine "
+               "Haelften GEGENLAEUFIGE und BEIDE TRENNBARE Werte (+0,0541 "
+               "[+0,022..+0,088] und -0,0268 [-0,049..-0,004]). Auf "
+               "Zufallsmengen verschwindet er - derselbe "
+               "Kollinearitaetseffekt, nur bei einem Beitrag, der LIVE "
+               "laeuft", "gilt", "n91_rangkorrelation_form.py",
+               basis="Messmenge v1, Menge 20 %, H20"),
+    Befundlage("2.250-folge", "⚠️ WAS DARAUS FOLGT: `funding`s "
+               "Fuenftel-Stufen (+0,82/+1,30/+0,12/-0,54/-1,70) sind "
+               "NICHT monoton - Fuenftel 1 liegt ueber Fuenftel 0. Das "
+               "stand immer da und galt als hinnehmbar. Die "
+               "Rangkorrelation zeigt jetzt, dass es auf der "
+               "Momentummenge ein TRENNBARER Buckel ist. ⚠️ Ob das die "
+               "Live-Stufen entwertet, ist eine eigene Frage - sie sind "
+               "auf `frei` kalibriert, nicht auf 20 %", "gilt",
+               "n91 / agent/wahrscheinlichkeit.BEITRAEGE"),
+    Befundlage("2.250-kontrolle", "✔ Die Kontrolle sitzt: `zufall` "
+               "bleibt ueber alle sechs Auswahlen bei +-0,005 bis "
+               "+-0,011, gegen `schnitt`s -0,03 bis -0,05. Zwei von "
+               "sechs zeigen 'nur die obere trennbar' mit +0,0074 und "
+               "-0,0113 - bei sechs Ziehungen und einem 95-%-Band das "
+               "Erwartete", "gilt", "n91_rangkorrelation_form.py"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

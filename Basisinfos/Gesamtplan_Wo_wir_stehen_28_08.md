@@ -2368,8 +2368,10 @@ einmal offen war.
 | # | Punkt | Stand |
 |---|---|---|
 | **B1** | `schnitt` **Zeitstabilität** | ✔ **GELÖST 09.09.** — war Kollinearität mit der Auswahl (2.242) |
-| **B2** | `schnitt` **Form** (Buckel, dreimal aufgetreten) | ⚠️ **in Messung** (N-90): ist er dasselbe Artefakt? |
+| **B2** | `schnitt` **Form** (Buckel, dreimal aufgetreten) | ✔ **GELÖST 09.09.** — die Rangkorrelation zeigt **keinen Buckel**: beide Hälften negativ, auf Momentum wie Zufall. Der Buckel war ein Artefakt der Gruppenmediane bei 1,5 gegen 29,7 Ankern (2.249) |
 | **B3** | ⚠️ `vola` trägt mit **einer** Aussage von drei Mengen und ist auf 20 % zeitinstabil — **an derselben Stelle wie `schnitt`** | offen, Kollinearität vermutet, ungeprüft |
+| **B9** | ⚠️⚠️ **NEU 09.09.: `funding` zeigt den Buckel** — auf der Momentummenge sind seine Hälften gegenläufig UND beide trennbar (+0,0541 / −0,0268). Auf Zufallsmengen verschwindet er. ⚠️ Er läuft **live** | **offen** (2.250) |
+| **B10** | ⚠️ `schnitt` als **Regler**: Form geklärt (monoton), Zeitstabilität geklärt (Kollinearität) — **die Stufen müssen aber noch aus einem monotonen Verfahren abgeleitet werden**, nicht aus Gruppenmedianen | **offen — der nächste Schritt** |
 | **B4** | `amihud` ist **zeitstabil mit konsistentem Vorzeichen** — trägt aber nicht. 2.166 sagt: er misst **Ausführbarkeit**, nicht Potential | offen als Nebenweg |
 | **B5** | `schnitt50` zeitstabil, aber **Widerspruch** im Gesamtlauf | offen |
 | **B6** | ⚠️ `turnover`s Abdeckung: **66 von 536**. Coin Metrics kennt nur 139 Assets; die 18 „gewinnbaren" sind Wrapped-Mengen und **nicht brauchbar** | **offen — nur über eine andere Quelle (CoinGecko) lösbar** (2.233) |
