@@ -62,7 +62,8 @@ from messe_beitrag_auf_auswahl import sammle, momentum250   # noqa: E402
 from pruefe_n31_tagesklammer import je_tag_wirkung          # noqa: E402
 from messnorm import (Lage, Befund, Protokoll, ZIEHUNGEN,   # noqa: E402
                       SAAT, _block, NULL_ZIEHUNGEN, NULL_PERZENTIL,
-                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug)
+                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug,
+                      ZIELGROESSE_JE_LAGE)
 
 MENGEN = {"frei": 1.0, "50%": 0.50, "20%": 0.20, "10%": 0.10,
           "5%": 0.05}
@@ -291,7 +292,8 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                    trennschaerfe_gegen_nullpunkt: bool =
                    TRENNSCHAERFE_GEGEN_NULLPUNKT,
                    auswahl_saat: int | None = None,
-                   nur: set | None = None) -> Befund:
+                   nur: set | None = None,
+                   zielgroesse: str = "bewegung_r") -> Befund:
     """Ein Befund auf der selektierten Menge, unter der TAGESKLAMMER.
 
     ⚠️⚠️ DIE VORGABEWERTE SIND DER MESSSTANDARD (`messnorm`, 08.09.2026)
@@ -345,6 +347,17 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     if menge not in MENGEN:
         raise ValueError("unbekannte Menge: %r — erlaubt: %s"
                          % (menge, ", ".join(MENGEN)))
+    # ⚠️⚠️ DIE ZIELGROESSE MUSS ZUR LAGE PASSEN (09.09.2026). Vorher stand
+    # hier `zielgroesse="bewegung_r"` FEST VERDRAHTET, und die `lage` wurde
+    # nur an den Befund durchgereicht. Eine Messung mit
+    # `lage=Lage("hebel","einstieg")` haette damit Spot-Bewegung gemessen
+    # und "Hebel" daraufgeschrieben - eine Etikettenluege.
+    soll = ZIELGROESSE_JE_LAGE.get((lage.instrument, lage.strategie))
+    if soll and zielgroesse != soll:
+        raise ValueError(
+            "%s verlangt die Zielgroesse %r, bekommen %r. Wer bewusst eine "
+            "andere misst, ruft `messnorm.pruefe` und begruendet es im "
+            "Befund." % (lage, soll, zielgroesse))
     block = _block(horizont)
     anteil = MENGEN[menge]
 
@@ -418,7 +431,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
         # Mengen beantworten die BETRIEBS-Frage (F-212). Beides in einem
         # Lauf - genau dafuer gibt es dieses Modul.
         frageart=("markt" if menge == "frei" else "beitrag"),
-        kandidat=kandidat, lage=lage, zielgroesse="bewegung_r", menge=menge,
+        kandidat=kandidat, lage=lage, zielgroesse=zielgroesse, menge=menge,
         wirkung=haupt["mittel"], unten=haupt["unten"], oben=haupt["oben"],
         nullpunkt=null["mittel"], null_unten=null["unten"],
         null_oben=null["oben"], trennschaerfe=trennschaerfe,

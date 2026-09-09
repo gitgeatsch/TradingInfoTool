@@ -566,6 +566,42 @@
 
 - Quelle: Nutzerentscheidung offen
 
+**2.234** — ⚠️⚠️⚠️ DIE LAGE WAR BIS ZUM 09.09. NUR EIN ETIKETT: `pruefe_auswahl` hatte `zielgroesse='bewegung_r'` FEST VERDRAHTET und reichte die `lage` nur an den Befund durch. Eine Messung mit `lage=Lage('hebel',...)` haette Spot-Bewegung gemessen und 'Hebel' daraufgeschrieben
+
+- Quelle: messnorm_auswahl.py / Selbstbefund 09.09.
+
+**2.234-zielgroessen** — ⚠️⚠️ UND `ZIELGROESSEN` KANNTE DIE VERBILLIGUNG NICHT, obwohl die Akkumulation seit dem 28.08. mit ihr gemessen wird. Ein Zielgroessenregister, das die laufende Zielgroesse einer Lage nicht kennt, kann nicht verhindern, dass eine Lage mit dem Massstab einer anderen gemessen wird
+
+- Quelle: messnorm.ZIELGROESSEN
+
+**2.234-behoben** — ✔ BEHOBEN: `verbilligung` ist nachgetragen, `ZIELGROESSE_JE_LAGE` ordnet jeder Lage ihr Mass zu (spot/einstieg -> bewegung_r · spot/akkumulation -> verbilligung · hebel/* -> barriere), und `pruefe_auswahl` WEIST AB, wenn beides nicht zusammenpasst
+
+- Quelle: messnorm.py / messnorm_auswahl.py
+
+**2.235** — ⚠️⚠️⚠️ K-1c: DIE AKKUMULATIONSLAGE IST MIT DER BLOCKREGEL NICHT MESSBAR. Alle fuenf Kandidaten - einschliesslich der Kontrolle `zufall` - liefern KEIN BEFUND: 6 bis 10 Bloecke gegen 20 geforderte. Die Ursache ist strukturell: bei H90 betraegt die Blocklaenge 3 x 90 = 270 Tage, fuer 20 Bloecke braeuchte es 5.400 Handelstage - rund 22 Jahre. Der Kryptomarkt hat 2.900
+
+- Quelle: k1c_lagen_eigene_zielgroesse.py
+
+**2.235-nicht-dagegen** — ⚠️ DAS IST KEINE AUSSAGE GEGEN DIE BEITRAEGE. 'Kein Befund' ist laut Norm eine Aussage ueber die MESSUNG. Weder fuer noch gegen - die Anlage kann auf diesem Horizont nicht urteilen
+
+- Quelle: k1c_lagen_eigene_zielgroesse.py
+
+**2.235-eigener-fehler** — ⚠️⚠️ EIGENER FEHLER, sofort korrigiert: die erste Fassung des Skripts las `b.traegt` statt das URTEIL und meldete drei Traeger, waehrend ALLE FUENF 'KEIN BEFUND' lauteten. `traegt` prueft nur 'Band ueber dem Bezugspunkt' und weiss NICHTS von der Blockzahl. Dieselbe Verwechslung wie Fehler 4 vom 08.09. - diesmal an der Norm VORBEI, weil das Skript die Eigenschaft direkt gelesen hat
+
+- Quelle: k1c_lagen_eigene_zielgroesse.py
+
+**2.236** — ⚠️⚠️ WAS DARAUS FOLGT - und es beruehrt die Nutzerwarnung vom 08.09. ('keine unerreichbaren Regeln aufstellen'): 20 Bloecke bei H90 SIND unerreichbar, solange der Kryptomarkt jung ist. Entweder der Horizont oder die Blockregel muss sich aendern - das ist eine ENTWURFSfrage, keine Messfrage. ⚠️ Und `NACHKAUFEN` mit 51,7 Mails am Tag laeuft auf genau dieser Lage
+
+- Quelle: k1c_lagen_eigene_zielgroesse.py / Nutzervorgabe 08.09.
+
+**2.236-hebel** — ⚠️ HEBEL IST NOCH NICHT GEMESSEN, und der Grund gehoert benannt: die vorhandene Barrierenfunktion (`messe_sentiment_je_horizont.barriere`) rechnet mit STOP_ATR = 2,5, die Produktion aber mit max(5 % Kurs, 0,75 x ATR). Sie misst ein ANDERES System. Fuer `hebel x einstieg` braeuchte es die Barriere auf der Produktionsgeometrie - ein eigener Baustein
+
+- Quelle: messe_sentiment_je_horizont.py / Kettenplan
+
+**2.236-neutral** — ✔ NUTZERWARNUNG 09.09. EINGEHALTEN ('fuer Strategie und Bewertung neutral ohne Wirtschaftlichkeit'): die Verbilligung ist reine Kursbewegung - keine Gebuehr, kein Breakeven. Fuer den Hebelpfad gilt dasselbe: `barriere` ist Ziel vor Stop, ebenfalls ohne Kosten. Regel 2
+
+- Quelle: Nutzervorgabe 09.09.2026
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.

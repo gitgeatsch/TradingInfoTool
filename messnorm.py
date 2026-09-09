@@ -155,6 +155,38 @@ ZIELGROESSEN = {
                         "als VERGLEICH zweier Arme unter derselben Zielregel "
                         "und dort, wo der Stop den Trade wirklich beendet."),
     },
+    # ⚠️⚠️ NACHGETRAGEN AM 09.09.2026 - sie FEHLTE, obwohl die Akkumulation
+    # seit dem 28.08. mit ihr gemessen wird (`messe_akkumulationsmass.py`,
+    # 505 Reihen, sieben Kontrollen). Ein Zielgroessenregister, das die
+    # laufende Zielgroesse einer Lage nicht kennt, kann seine Aufgabe nicht
+    # erfuellen: es soll verhindern, dass eine Lage mit dem Massstab einer
+    # anderen gemessen wird.
+    "verbilligung": {
+        "text": ("Perzentilrang der Verbilligung V(t,H) = "
+                 "Mittel(Kurs[t+1..t+H]) / Kurs(t) - 1 INNERHALB der "
+                 "eigenen Reihe"),
+        "gilt_fuer": "nur spot x akkumulation",
+        "einheit": "Rang",
+        "begruendung": ("das Erfolgsmass, das `handelsauftrag.py` der "
+                        "Akkumulation ausdruecklich gibt. Als Perzentilrang "
+                        "in der EIGENEN Reihe ist die Basisrate exakt 0,500 "
+                        "per Konstruktion - der Drift kann nicht als Signal "
+                        "durchgehen. ⚠️ Fuer BTC, ETH und SOL traegt der "
+                        "Befund NICHT (Rang -0,025 bis -0,031, p 0,72 bis "
+                        "0,86) - sie sind 2,39 Standardfehler unter dem "
+                        "Mittel von 505 Reihen."),
+    },
+}
+
+# ⚠️ Welche Zielgroesse gehoert zu welcher Lage? Ohne diese Zuordnung wird
+# eine Lage mit dem Massstab einer anderen gemessen - und der Befund traegt
+# ein Etikett, das nicht zu seinem Inhalt passt.
+ZIELGROESSE_JE_LAGE = {
+    ("spot", "einstieg"): "bewegung_r",
+    ("spot", "akkumulation"): "verbilligung",
+    ("hebel", "einstieg"): "barriere",
+    ("hebel", "swing"): "barriere",
+    ("absicherung", "einstieg"): "bewegung_r",
 }
 
 # Lagen, in denen ein Stop den Trade beendet - nur dort ist "barriere" die
