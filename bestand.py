@@ -2038,8 +2038,10 @@ BEFUNDE = (
                "arbeitet (`funding` d34 +0,0656 [+0,019..+0,118] "
                "TRENNBAR, `oi_aenderung` d34 +0,0520 [+0,007..+0,094] "
                "TRENNBAR), ist d01 NICHT trennbar (+0,0402 [-0,037.."
-               "+0,116] und +0,0260 [-0,027..+0,083])", "gilt",
+               "+0,116] und +0,0260 [-0,027..+0,083])", "abgeloest",
                "n95_ist_der_knick_stabil.py",
+               abgeloest_durch="2.263",
+               warum="Gemessen wurde auf `frei` - der RANGmenge. Auf der AUSWAHLmenge (20 %), fuer die die Beitraege gebaut sind, ist d01 bei `funding` TRENNBAR (+0,2069 [+0,0137 .. +0,4304]) bei stummer Kontrolle. Der Nullbefund gilt fuer die Rangmenge, nicht fuer die Bewertungsmenge - N-96 hat ihn auf `frei` exakt reproduziert (R-R11 erfuellt), bevor er eingeschraenkt wurde.",
                basis="Messmenge v1, Menge frei, 40 Nullziehungen"),
     Befundlage("2.259-b11", "✔✔ DAMIT IST B11 BEANTWORTET: 'das Extrem "
                "ist nicht der beste Fall' ist NICHT belegt. Der "
@@ -2047,7 +2049,9 @@ BEFUNDE = (
                "Und das passt zu `funding_extrem`, der im Gesamtlauf "
                "Widerspruch zeigt und die Live-Sperre nicht verbessert "
                "(F-207) - zwei unabhaengige Zugaenge, dasselbe Ergebnis",
-               "gilt", "n95_ist_der_knick_stabil.py"),
+               "abgeloest", "n95_ist_der_knick_stabil.py",
+               abgeloest_durch="2.263 / 2.264",
+               warum="Auf der Auswahlmenge ist der Unterschied trennbar, auf der Live-Menge (k=2 je Tag) mangels Besetzung gar nicht beurteilbar. B11 ist damit wieder OFFEN - als Frage der Datenlage, nicht als beantwortete Frage."),
     Befundlage("2.259-kontrollen", "✔ Die Kontrolle ist ueberall sauber: "
                "`zufall` zeigt weder bei d01 noch bei d34 einen "
                "trennbaren Wert, in keiner Haelfte. Und `schnitt` ist "
@@ -2060,8 +2064,10 @@ BEFUNDE = (
                "zusammengelegt, die GEMESSEN nicht unterscheidbar sind, "
                "werden BEIDE Tabellen monoton fallend: `funding` +1,06 / "
                "+1,06 / +0,12 / -0,54 / -1,70 und `schnitt` +1,44 / "
-               "+1,44 / +0,28 / -1,19 / -1,96", "gilt",
+               "+1,44 / +0,28 / -1,19 / -1,96", "abgeloest",
                "n95_ist_der_knick_stabil.py",
+               abgeloest_durch="2.263 / 2.264 / 2.265",
+               warum="Die Zusammenlegung ist NICHT AUSGEFUEHRT. Es gibt keine Menge, auf der d01 und der Pruefstein d34 zusammenpassen. Und `pruefe_funding_monoton.py:59` prueft mit 0,02 R Toleranz, waehrend die Inversion 0,002 R betrug - der Knick war bekannt und bewusst durchgelassen, das Zusammenlegen waere Kosmetik statt Korrektur.",
                basis="Messmenge v1, Menge frei"),
     Befundlage("2.260-nicht-angepasst", "⚠️ UND ES IST KEINE ANPASSUNG "
                "AN DAS GEWUENSCHTE ERGEBNIS: die Zusammenlegung ist durch "
@@ -2069,14 +2075,18 @@ BEFUNDE = (
                "es ist) und war VORAB als Konsequenz benannt - im "
                "Skriptkopf, vor dem Lauf: 'Dann waeren Stufe 0 und 1 "
                "ZUSAMMENZULEGEN, nicht die Beitraege zu verwerfen'",
-               "gilt", "n95_ist_der_knick_stabil.py"),
+               "abgeloest", "n95_ist_der_knick_stabil.py",
+               abgeloest_durch="2.263",
+               warum="Die Aussage ueber das VERFAHREN bleibt richtig - die Konsequenz stand vorab im Skriptkopf. Sie praesupponiert aber die Zusammenlegung, und die ist nicht ausgefuehrt: auf der Auswahlmenge ist d01 trennbar."),
     Befundlage("2.260-rr9", "⚠️⚠️ ES IST ABER EIN EINGRIFF IN EINEN LIVE "
                "LAUFENDEN BEITRAG: `funding`s registrierte Stufen "
                "wuerden von +0,82/+1,30/... auf +1,06/+1,06/... wechseln. "
                "Das aendert die Beitragslage und loest R-R9 aus - die "
                "Schwelle waere neu zu kalibrieren. NUTZERENTSCHEIDUNG, "
-               "nicht stille Automatik", "gilt",
-               "agent/wahrscheinlichkeit.BEITRAEGE / R-R9"),
+               "nicht stille Automatik", "abgeloest",
+               "agent/wahrscheinlichkeit.BEITRAEGE / R-R9",
+               abgeloest_durch="2.263",
+               warum="Die Bedingung ist richtig geblieben, der Fall aber nicht eingetreten: die Stufen wurden NICHT geaendert, R-R9 wurde nicht ausgeloest. Der Vorgang steht als Kommentar neben der Tabelle in `agent/wahrscheinlichkeit.py`."),
     Befundlage("2.261", "⚠️ ZWEI VORSCHLAEGE VON MIR SIND HEUTE "
                "DURCHGEFALLEN, bevor der dritte trug: die MONOTONIE als "
                "Huerde (sie reisst den Bestand mit - sechs von acht "
@@ -2084,7 +2094,9 @@ BEFUNDE = (
                "SPANNE als Ersatz (sie laesst alle acht durch). Erst die "
                "Frage 'ist der Knick STABIL' hat entschieden - und sie "
                "brauchte kein neues Kriterium, nur die vorhandene "
-               "Maschinerie", "gilt", "Selbstbefund 09.09.2026"),
+               "Maschinerie", "abgeloest", "Selbstbefund 09.09.2026",
+               abgeloest_durch="2.263 / 2.266",
+               warum="Auch der DRITTE Vorschlag hat nicht getragen. Die Frage 'ist der Knick stabil' war richtig gestellt, aber auf der falschen Menge beantwortet - und mein erster Korrekturlauf hatte selbst die Rangreihenfolge vertauscht. Der Tag endete mit drei durchgefallenen Vorschlaegen, nicht mit zweien."),
     Befundlage("2.262", "⚠️⚠️⚠️ DER BETRIEBSABLAUF IST ZWEISTUFIG - und "
                "F-212s Messmenge bildet ihn nach. `marktrang.raenge` "
                "bildet den Rang ueber die MESSBASIS (536) und liest ihn "

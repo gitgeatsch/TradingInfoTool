@@ -42,6 +42,8 @@ fuer jede Statistik.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import sys
 
 import numpy as np
@@ -108,7 +110,8 @@ def _auswahl_maske(zeilen: list, mom_tag: dict, anteil: float,
 
 def sammle(je_tag: dict, mom: dict, anteil: float,
            mische_rang=None, mische_auswahl=None,
-           pflanze: float | None = None, nur: set | None = None) -> dict:
+           pflanze: float | None = None,
+           nur: set | Mapping | None = None) -> dict:
     """Je Kalendertag die GEWAEHLTEN Anker als (oben?, Ergebnis).
 
     ⚠️⚠️ KEINE Tagesmediane mehr. Der erste Anlauf (04.09.) bildete je Tag
@@ -160,7 +163,14 @@ def sammle(je_tag: dict, mom: dict, anteil: float,
             continue
         # ⚠️ NACH dem Rang verengen, nie davor - siehe Kopf.
         if nur is not None:
-            m = m & np.array([x["sym"] in nur for x in zeilen])
+            # ⚠️⚠️ ZWEI FORMEN, und die Unterscheidung muss SCHARF sein:
+            # eine feste Symbolmenge (Watchlist, K-1w) oder eine Menge JE
+            # TAG (die A1-Auswahl waehlt taeglich neu, K-1a). Ein `set`
+            # ist keine `Mapping`, ein `dict` schon - daran haengt es.
+            # Wer ein Tages-Woerterbuch als Menge durchreicht, prueft
+            # gegen die SCHLUESSEL und misst schweigend Unsinn.
+            erlaubt = (nur.get(tag) or ()) if isinstance(nur, Mapping) else nur
+            m = m & np.array([x["sym"] in erlaubt for x in zeilen])
             if not m.any():
                 continue
         aus[tag] = (oben[m], y[m])

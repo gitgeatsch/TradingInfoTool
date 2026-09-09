@@ -292,7 +292,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                    trennschaerfe_gegen_nullpunkt: bool =
                    TRENNSCHAERFE_GEGEN_NULLPUNKT,
                    auswahl_saat: int | None = None,
-                   nur: set | None = None,
+                   nur: set | dict | None = None,
                    zielgroesse: str = "bewegung_r") -> Befund:
     """Ein Befund auf der selektierten Menge, unter der TAGESKLAMMER.
 

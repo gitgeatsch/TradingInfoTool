@@ -822,33 +822,9 @@
 
 - Quelle: Vorschlag 09.09.2026
 
-**2.259** — ✔✔✔ N-95: DER KNICK IST NICHT BELEGT - und zwar mit TRENNSCHAERFE, nicht aus Untermacht. Bei den beiden Beitraegen, wo die Maschinerie nachweislich arbeitet (`funding` d34 +0,0656 [+0,019..+0,118] TRENNBAR, `oi_aenderung` d34 +0,0520 [+0,007..+0,094] TRENNBAR), ist d01 NICHT trennbar (+0,0402 [-0,037..+0,116] und +0,0260 [-0,027..+0,083])
-
-- Quelle: n95_ist_der_knick_stabil.py
-
-**2.259-b11** — ✔✔ DAMIT IST B11 BEANTWORTET: 'das Extrem ist nicht der beste Fall' ist NICHT belegt. Der Unterschied zwischen Fuenftel 0 und 1 ist Rauschen. ⚠️ Und das passt zu `funding_extrem`, der im Gesamtlauf Widerspruch zeigt und die Live-Sperre nicht verbessert (F-207) - zwei unabhaengige Zugaenge, dasselbe Ergebnis
-
-- Quelle: n95_ist_der_knick_stabil.py
-
 **2.259-kontrollen** — ✔ Die Kontrolle ist ueberall sauber: `zufall` zeigt weder bei d01 noch bei d34 einen trennbaren Wert, in keiner Haelfte. Und `schnitt` ist UNTERMAECHTIG - auch sein d34 ist nicht trennbar, also sagt sein d01 nichts. `turnover` zeigt ein trennbares NEGATIVES d01, dessen Haelften aber kippen (+0,021 gegen -0,262)
 
 - Quelle: n95_ist_der_knick_stabil.py
-
-**2.260** — ✔✔✔ UND DAMIT IST AUCH B10 GELOEST - OHNE DIE MONOTONIE-VORGABE AUFZUGEBEN. Werden die zwei Stufen zusammengelegt, die GEMESSEN nicht unterscheidbar sind, werden BEIDE Tabellen monoton fallend: `funding` +1,06 / +1,06 / +0,12 / -0,54 / -1,70 und `schnitt` +1,44 / +1,44 / +0,28 / -1,19 / -1,96
-
-- Quelle: n95_ist_der_knick_stabil.py
-
-**2.260-nicht-angepasst** — ⚠️ UND ES IST KEINE ANPASSUNG AN DAS GEWUENSCHTE ERGEBNIS: die Zusammenlegung ist durch die MESSUNG begruendet (d01 nicht trennbar, waehrend d34 es ist) und war VORAB als Konsequenz benannt - im Skriptkopf, vor dem Lauf: 'Dann waeren Stufe 0 und 1 ZUSAMMENZULEGEN, nicht die Beitraege zu verwerfen'
-
-- Quelle: n95_ist_der_knick_stabil.py
-
-**2.260-rr9** — ⚠️⚠️ ES IST ABER EIN EINGRIFF IN EINEN LIVE LAUFENDEN BEITRAG: `funding`s registrierte Stufen wuerden von +0,82/+1,30/... auf +1,06/+1,06/... wechseln. Das aendert die Beitragslage und loest R-R9 aus - die Schwelle waere neu zu kalibrieren. NUTZERENTSCHEIDUNG, nicht stille Automatik
-
-- Quelle: agent/wahrscheinlichkeit.BEITRAEGE / R-R9
-
-**2.261** — ⚠️ ZWEI VORSCHLAEGE VON MIR SIND HEUTE DURCHGEFALLEN, bevor der dritte trug: die MONOTONIE als Huerde (sie reisst den Bestand mit - sechs von acht Kandidaten brechen sie, darunter zwei live) und die SPANNE als Ersatz (sie laesst alle acht durch). Erst die Frage 'ist der Knick STABIL' hat entschieden - und sie brauchte kein neues Kriterium, nur die vorhandene Maschinerie
-
-- Quelle: Selbstbefund 09.09.2026
 
 **2.262** — ⚠️⚠️⚠️ DER BETRIEBSABLAUF IST ZWEISTUFIG - und F-212s Messmenge bildet ihn nach. `marktrang.raenge` bildet den Rang ueber die MESSBASIS (536) und liest ihn fuer unsere Symbole nur ab (,DER RANG ENTSTEHT UEBER DEN MARKT'); `auswahl.waehle` nimmt danach k=2 aus der Watchlist nach 250-Tage-Entwicklung - 4,7 %. F-212s ,oberste 5 % nach Momentum' ist damit KEIN Messkonstrukt, sondern eine Nachbildung genau dieser Auswahl, nur auf der Messbasis statt auf der Watchlist. ⚠️ Damit ist der Widerspruch aus 2.228 aufloesbar: die Ableitungsbasis (`frei`) ist die Rangmenge, die Auswahlmenge ist die Bewertungsmenge - zwei verschiedene Rollen, kein Widerspruch
 
@@ -1734,6 +1710,42 @@
 - Quelle: Methodik 2.170
 - **Abgeloest durch: 2.172**
 - Warum: stand auf 2.170 und faellt mit ihm. Die Messung konnte in Aktien gar nichts zeigen
+
+**2.259** — ✔✔✔ N-95: DER KNICK IST NICHT BELEGT - und zwar mit TRENNSCHAERFE, nicht aus Untermacht. Bei den beiden Beitraegen, wo die Maschinerie nachweislich arbeitet (`funding` d34 +0,0656 [+0,019..+0,118] TRENNBAR, `oi_aenderung` d34 +0,0520 [+0,007..+0,094] TRENNBAR), ist d01 NICHT trennbar (+0,0402 [-0,037..+0,116] und +0,0260 [-0,027..+0,083])
+
+- Quelle: n95_ist_der_knick_stabil.py
+- **Abgeloest durch: 2.263**
+- Warum: Gemessen wurde auf `frei` - der RANGmenge. Auf der AUSWAHLmenge (20 %), fuer die die Beitraege gebaut sind, ist d01 bei `funding` TRENNBAR (+0,2069 [+0,0137 .. +0,4304]) bei stummer Kontrolle. Der Nullbefund gilt fuer die Rangmenge, nicht fuer die Bewertungsmenge - N-96 hat ihn auf `frei` exakt reproduziert (R-R11 erfuellt), bevor er eingeschraenkt wurde.
+
+**2.259-b11** — ✔✔ DAMIT IST B11 BEANTWORTET: 'das Extrem ist nicht der beste Fall' ist NICHT belegt. Der Unterschied zwischen Fuenftel 0 und 1 ist Rauschen. ⚠️ Und das passt zu `funding_extrem`, der im Gesamtlauf Widerspruch zeigt und die Live-Sperre nicht verbessert (F-207) - zwei unabhaengige Zugaenge, dasselbe Ergebnis
+
+- Quelle: n95_ist_der_knick_stabil.py
+- **Abgeloest durch: 2.263 / 2.264**
+- Warum: Auf der Auswahlmenge ist der Unterschied trennbar, auf der Live-Menge (k=2 je Tag) mangels Besetzung gar nicht beurteilbar. B11 ist damit wieder OFFEN - als Frage der Datenlage, nicht als beantwortete Frage.
+
+**2.260** — ✔✔✔ UND DAMIT IST AUCH B10 GELOEST - OHNE DIE MONOTONIE-VORGABE AUFZUGEBEN. Werden die zwei Stufen zusammengelegt, die GEMESSEN nicht unterscheidbar sind, werden BEIDE Tabellen monoton fallend: `funding` +1,06 / +1,06 / +0,12 / -0,54 / -1,70 und `schnitt` +1,44 / +1,44 / +0,28 / -1,19 / -1,96
+
+- Quelle: n95_ist_der_knick_stabil.py
+- **Abgeloest durch: 2.263 / 2.264 / 2.265**
+- Warum: Die Zusammenlegung ist NICHT AUSGEFUEHRT. Es gibt keine Menge, auf der d01 und der Pruefstein d34 zusammenpassen. Und `pruefe_funding_monoton.py:59` prueft mit 0,02 R Toleranz, waehrend die Inversion 0,002 R betrug - der Knick war bekannt und bewusst durchgelassen, das Zusammenlegen waere Kosmetik statt Korrektur.
+
+**2.260-nicht-angepasst** — ⚠️ UND ES IST KEINE ANPASSUNG AN DAS GEWUENSCHTE ERGEBNIS: die Zusammenlegung ist durch die MESSUNG begruendet (d01 nicht trennbar, waehrend d34 es ist) und war VORAB als Konsequenz benannt - im Skriptkopf, vor dem Lauf: 'Dann waeren Stufe 0 und 1 ZUSAMMENZULEGEN, nicht die Beitraege zu verwerfen'
+
+- Quelle: n95_ist_der_knick_stabil.py
+- **Abgeloest durch: 2.263**
+- Warum: Die Aussage ueber das VERFAHREN bleibt richtig - die Konsequenz stand vorab im Skriptkopf. Sie praesupponiert aber die Zusammenlegung, und die ist nicht ausgefuehrt: auf der Auswahlmenge ist d01 trennbar.
+
+**2.260-rr9** — ⚠️⚠️ ES IST ABER EIN EINGRIFF IN EINEN LIVE LAUFENDEN BEITRAG: `funding`s registrierte Stufen wuerden von +0,82/+1,30/... auf +1,06/+1,06/... wechseln. Das aendert die Beitragslage und loest R-R9 aus - die Schwelle waere neu zu kalibrieren. NUTZERENTSCHEIDUNG, nicht stille Automatik
+
+- Quelle: agent/wahrscheinlichkeit.BEITRAEGE / R-R9
+- **Abgeloest durch: 2.263**
+- Warum: Die Bedingung ist richtig geblieben, der Fall aber nicht eingetreten: die Stufen wurden NICHT geaendert, R-R9 wurde nicht ausgeloest. Der Vorgang steht als Kommentar neben der Tabelle in `agent/wahrscheinlichkeit.py`.
+
+**2.261** — ⚠️ ZWEI VORSCHLAEGE VON MIR SIND HEUTE DURCHGEFALLEN, bevor der dritte trug: die MONOTONIE als Huerde (sie reisst den Bestand mit - sechs von acht Kandidaten brechen sie, darunter zwei live) und die SPANNE als Ersatz (sie laesst alle acht durch). Erst die Frage 'ist der Knick STABIL' hat entschieden - und sie brauchte kein neues Kriterium, nur die vorhandene Maschinerie
+
+- Quelle: Selbstbefund 09.09.2026
+- **Abgeloest durch: 2.263 / 2.266**
+- Warum: Auch der DRITTE Vorschlag hat nicht getragen. Die Frage 'ist der Knick stabil' war richtig gestellt, aber auf der falschen Menge beantwortet - und mein erster Korrekturlauf hatte selbst die Rangreihenfolge vertauscht. Der Tag endete mit drei durchgefallenen Vorschlaegen, nicht mit zweien.
 
 **2.172-streuung** — „In Streuungseinheiten liegen die Effekte fast gleichauf - Aktien 0,038, Rohstoffe 0,070"
 
