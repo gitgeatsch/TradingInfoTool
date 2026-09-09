@@ -2338,3 +2338,84 @@ Ausstieg.
 | **`spot × einstieg`** | ✔ die einzige belegte und kalibrierte Lage — H20 ist dafür stimmig |
 | **Akkumulation** | ⚠️ `schnitt` als Sperre **nicht baubar** (N-88). BTC/ETH/SOL brauchen keine eigene Lösung (Untermacht, kein Gegenbefund) |
 | **Hebel** | ⚠️ Entwurf steht (Sizing, kein Timing), scheitert aber an der Bewertung — und zusätzlich am Horizont. **Beides gemessen, nichts übersehen** |
+
+---
+
+# ⚠️⚠️⚠️ DIE OFFENEN PUNKTE — Stand 09.09.2026, vollständig
+
+Nutzervorgabe 09.09.: *„alle neuen und noch offenen Punkte von gestern
+und heute bitte in den Plan, Doku eintragen falls noch nicht erfolgt,
+sonst vergessen wir diese."*
+
+**Diese Liste ist die Sammelstelle.** Erledigte Punkte werden hier
+durchgestrichen, nicht gelöscht — sonst geht verloren, warum etwas
+einmal offen war.
+
+## A — DIE MESSANLAGE (aus dem Umbau vom 08./09.09.)
+
+| # | Punkt | Stand |
+|---|---|---|
+| **A1** | ⚠️⚠️ **Das Band ist auf BINÄREN Daten viermal zu eng** — erwartet ±0,0023, beobachtet ±0,0006. Die Kontrolle `zufall` trägt dadurch | **offen, blockiert den Hebel** (2.238) |
+| **A2** | ⚠️ **Die Blockregel ist bei H90 unerreichbar** — 20 Blöcke bräuchten 5.400 Tage ≈ 22 Jahre, der Markt hat 2.900. Entweder Horizont oder Regel muss sich ändern | **offen — Entwurfsfrage** (2.236) |
+| **A3** | ⚠️ `ZIEHUNGEN = 5` steckt weiter in der **Positivkontrolle** (4 von 5 — eine Quote mit sechs möglichen Werten) | offen (2.188-offen) |
+| **A4** | ⚠️ Ob das **90. Perzentil** zum Vertrauensniveau des Bandes passt, ist ungeprüft | offen |
+| **A5** | ⚠️ Die Positivkontrolle pflanzt in die **gemischte** Welt | ✔ weitgehend erklärt durch 2.201 (Skalenfehler), Rest gering |
+| **A6** | ⚠️⚠️ `messe_volumenanteil.py` fährt seine Negativkontrolle mit **EINER** Ziehung — und daraus stammt der registrierte Befund N-13-1' | **offen, Befund unter Vorbehalt** (2.203) |
+| **A7** | ⚠️ `messe_schwelle_kalibrierung.py` liest nur **zwei fest verdrahtete** Merkmale — ein dritter Beitrag würde still ignoriert | offen (2.211) |
+
+## B — DIE BEITRÄGE
+
+| # | Punkt | Stand |
+|---|---|---|
+| **B1** | `schnitt` **Zeitstabilität** | ✔ **GELÖST 09.09.** — war Kollinearität mit der Auswahl (2.242) |
+| **B2** | `schnitt` **Form** (Buckel, dreimal aufgetreten) | ⚠️ **in Messung** (N-90): ist er dasselbe Artefakt? |
+| **B3** | ⚠️ `vola` trägt mit **einer** Aussage von drei Mengen und ist auf 20 % zeitinstabil — **an derselben Stelle wie `schnitt`** | offen, Kollinearität vermutet, ungeprüft |
+| **B4** | `amihud` ist **zeitstabil mit konsistentem Vorzeichen** — trägt aber nicht. 2.166 sagt: er misst **Ausführbarkeit**, nicht Potential | offen als Nebenweg |
+| **B5** | `schnitt50` zeitstabil, aber **Widerspruch** im Gesamtlauf | offen |
+| **B6** | ⚠️ `turnover`s Abdeckung: **66 von 536**. Coin Metrics kennt nur 139 Assets; die 18 „gewinnbaren" sind Wrapped-Mengen und **nicht brauchbar** | **offen — nur über eine andere Quelle (CoinGecko) lösbar** (2.233) |
+| **B7** | ⚠️⚠️ **Der Horizont**: Beiträge auf H20 belegt, bei H1/H2 6–7× kleiner. H2-Kalibrierung durchgemessen, Schwelle praktisch 0,000 | **bewusst nicht registriert — offene Nutzerentscheidung** (F-203) |
+| **B8** | ⚠️ **R-R9**: jeder Beitragswechsel verlangt eine Neukalibrierung der Schwelle | steht bereit, greift bei Einbau |
+
+## C — DIE KETTENPRÜFUNG (Plan vom 09.09.)
+
+| # | Punkt | Stand |
+|---|---|---|
+| **C1** | K-1a — Beiträge auf der A1-Menge | offen |
+| **C2** | K-1b — auf unselektierter Menge | ✔ **gemessen** — übertragen sich (2.221) |
+| **C3** | K-1c — andere Lagen | ⚠️ **teilweise**: Akkumulation nicht messbar (A2), Hebel ungültig (A1) |
+| **C4** | K-2 — trägt die **Summe** mehr als der beste Einzelne? | offen |
+| **C5** | K-3 — **trennt die Schwelle 0,080** oder kürzt sie nur? | offen — praktisch wichtigste Einzelfrage |
+| **C6** | K-4/K-5 — **Ablation** je Trichterstufe, Komplementarität | offen |
+| **C7** | K-6 — die **79 % „Einstieg nie erreicht"** | offen — größter unerklärter Posten |
+| **C8** | K-7 — end-to-end gegen Zufall | offen, ⚠️ voraussichtlich nicht entscheidbar (n = 139) |
+| **C9** | ⚠️ **P6 gegen F-212**: die Beiträge sind auf `frei` registriert (Markt-Frage), F-212 verlangt die selektierte Menge (Beitrags-Frage) | teilweise geklärt, für `funding` entschieden (2.230) |
+| **C10** | ⚠️ Die **Watchlist ist zu klein**, um `turnover` und `oi_aenderung` dort zu prüfen (5 bzw. 21 Blöcke) | offen — Datenlage, nicht Beitragsfrage |
+
+## D — DATENLAGE UND BETRIEB
+
+| # | Punkt | Stand |
+|---|---|---|
+| **D1** | ⚠️ **CANTON** ist gehalten (`rolle=core`), hat aber **kein OHLC** — auch nicht in der Produktion | **offen, Nutzerentscheidung** |
+| **D2** | ⚠️ **ASTER** (318 Tage) und **MON** (269) sind zu kurz für die Messbasis | offen |
+| **D3** | ⚠️ **7 Klassenkollisionen** (BOND, C, DASH, DIA, MDT, STX, T) — `messreihen.symbol` ist PRIMARY KEY | offen, Messungen nicht betroffen |
+| **D4** | ⚠️⚠️ **Es gibt keine Bestandshistorie** — `holdings` hat 55 Zeilen ohne Zeitachse, `portfolio_wert_historie` ist leer. Die K-1b-Frage konnte nur über einen **Stellvertreter** beantwortet werden | **offen — strukturell** |
+| **D5** | ⚠️ `strategie` wird in den Signalen **nie gesetzt** | offen |
+| **D6** | Läuft `refresh_prices_job` auf dem Notebook noch? | **offene Rückfrage an den Nutzer** |
+
+## E — DIE GROSSE PLANUNG
+
+| # | Punkt | Stand |
+|---|---|---|
+| **E1** | ⚠️⚠️⚠️ **Die umfangreiche Planung mit GUI, Funktionalitäten und Anwendungsfällen** (neue Assets, Assets fallen weg oder ändern sich) — ausdrücklich am **07.09.** verlangt | **offen, nie begonnen** |
+| **E2** | Die fünf Krypto-Phasen (Grundlinie · Position mit These · Strategie setzen · Akkumulation · Hebel) | offen |
+| **E3** | ⚠️ **Der Produktivgang** — nach Block I und II der Kettenprüfung erwägbar, nicht davor | offen |
+
+## ✔ Was in den letzten zwei Tagen ERLEDIGT wurde
+
+- Der **Messstandard** gesetzt (Nullregel, Trennschärfe, Leiter, Urteilsreihenfolge, Skala) — sechs Fehler
+- Der **Nullbezug** gegen bekannte Wahrheit **gemessen** statt gewählt
+- Der **Selbsttest** der Messanlage — erstmals überhaupt
+- Die **Messmenge eingefroren** (`messmenge.V1`, 536 Symbole, 174 eingestellt)
+- Die **Registrierungsbasis maschinenlesbar** (`bestand.messbasis`) — nach drei R-R11-Fehlern an einem Tag
+- **R-R9 abgearbeitet** — Kalibrierung reproduziert ziffergenau
+- `schnitt`s **Zeitstabilität gelöst** — Kollinearität, nicht Instabilität

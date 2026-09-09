@@ -1784,6 +1784,60 @@ BEFUNDE = (
                "Kandidat - aber es ist ein Grund, ihn nicht abzuschreiben "
                "(Befund 2.166-woanders: er misst AUSFUEHRBARKEIT)",
                "gilt", "n89_familie_und_schnitt_loesung.py"),
+    Befundlage("2.245", "⚠️⚠️ N-90 IST UNGUELTIG - die KONTROLLE ist "
+               "wilder als der Kandidat. `zufall` erzeugt auf "
+               "Zufallsmengen Stufen von -33,89 bis +90,85 Punkten, "
+               "waehrend die ganze Beitragsskala bei +-5 liegt. Bei rund "
+               "9 Ankern je Tag und Fuenftel ist `median(Fuenftel) - "
+               "median(alle)` zu verrauscht, und die Entzerrung "
+               "verstaerkt es. Die FORMFRAGE bleibt unbeantwortet",
+               "gilt", "n90_buckel_oder_artefakt.py",
+               basis="Messmenge v1, Menge 20 %, 5 Zufallsziehungen"),
+    Befundlage("2.245-besetzung", "✔✔ EINE SACHE IST ABER SAUBER UND "
+               "BELEGT DIE KOLLINEARITAET ZUM DRITTEN MAL: die BESETZUNG "
+               "der Fuenftel geht von 1,5 / 2,2 / 3,7 / 8,5 / 29,7 "
+               "(Momentum) auf 8,7 / 9,0 / 9,3 / 9,4 / 9,2 (zufaellig) - "
+               "ein zwanzigfaches Ungleichgewicht wird zu perfekter "
+               "Gleichverteilung. Auf der Momentumspitze liegen fast "
+               "alle Werte ueber ihrem eigenen Schnitt", "gilt",
+               "n90_buckel_oder_artefakt.py"),
+    Befundlage("2.245-momentum", "✔ Und der Momentum-Bezugsfall "
+               "reproduziert N-65 sauber: +3,01 / +5,32 / +9,35 / +2,64 "
+               "/ -4,57 gegen +4,07 / +5,55 / +9,49 / +1,71 / -4,65 - "
+               "Buckel bei Fuenftel 2, Besetzung 1,5 gegen 29,7. Die "
+               "kleinen Unterschiede stammen aus der geaenderten "
+               "Messbasis", "gilt", "n90_buckel_oder_artefakt.py"),
+    Befundlage("2.246", "✔✔ ALLE OFFENEN PUNKTE VON GESTERN UND HEUTE "
+               "SIND IM GESAMTPLAN GESAMMELT (Nutzerauftrag 09.09.): A1 "
+               "bis A7 Messanlage · B1 bis B8 Beitraege · C1 bis C10 "
+               "Kettenpruefung · D1 bis D6 Datenlage und Betrieb · E1 bis "
+               "E3 die grosse Planung. Erledigte werden dort "
+               "durchgestrichen, nicht geloescht - sonst geht verloren, "
+               "warum etwas einmal offen war", "gilt",
+               "Basisinfos/Gesamtplan_Wo_wir_stehen_28_08.md"),
+    Befundlage("2.247", "⚠️⚠️ GEGENPROBE ERGAB FUENF EINTRAEGE, DIE ALS "
+               "OFFEN GEFUEHRT WURDEN OBWOHL ERLEDIGT (Nutzerauftrag "
+               "09.09.): `bewertung_hat_keine_instrument_achse` und "
+               "`die_begruendung_waehlt_nicht_das_instrument` sind seit "
+               "dem 04.09. als KATEGORIENVERWECHSLUNG aufgeloest · "
+               "`hebel_hat_eine_bewertung_nie_validiert` ist in der "
+               "Rahmung erledigt · KEINER von ihnen verwies auf die "
+               "Aufloesung, und der Index fuehrte alle mit Warnzeichen",
+               "gilt", "Memory-Durchsicht 09.09.2026"),
+    Befundlage("2.247-zwei-andere", "⚠️ Zwei weitere waren NICHT erledigt, "
+               "sondern nur ANDERS zu lesen: `hebel_faktisch_kein_hebel` "
+               "(der Median 1,10 ist die FOLGE der kalibrierten Quote, "
+               "kein Defekt) und `s1_blockiert_akkumulation` (die Spalte "
+               "`strategie` existiert inzwischen, wird aber nie gesetzt - "
+               "alle 118 Signale NULL). Beide nachgezogen statt "
+               "geschlossen", "gilt", "Memory-Durchsicht 09.09.2026"),
+    Befundlage("2.247-lehre", "⚠️⚠️ DIE LEHRE: ein aufgeloester Befund "
+               "loescht die alten Eintraege NICHT automatisch. Wer nur "
+               "den neuen schreibt, laesst funf alte als offen "
+               "stehen - und der naechste Blick in den Index zeigt "
+               "Arbeit, die es nicht mehr gibt. **Beim Aufloesen gehoert "
+               "der Rueckverweis in die alten Eintraege**", "gilt",
+               "Selbstbefund 09.09.2026"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

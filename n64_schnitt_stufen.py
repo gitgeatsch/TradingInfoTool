@@ -78,12 +78,28 @@ PUNKT_JE_R = 1.0 / 0.03      # Umkehrung von q = basisrate + punkte/100
 ZIEH, SAAT = 5, 20260907
 
 
-def je_fuenftel(je_tag: dict, mom: dict, anteil: float, mische=None):
+def je_fuenftel(je_tag: dict, mom: dict, anteil: float, mische=None,
+                auswahl_saat=None):
     """Je Kalendertag: median(Fuenftel k) - median(alle Gewaehlten).
 
     ⚠️ Baut Rang und Auswahlmaske mit DENSELBEN Funktionen wie `sammle` -
     keine Kopie, sonst misst diese Datei etwas anderes als der Massstab,
     gegen den sie antritt.
+
+    ## ⚠️⚠️ `auswahl_saat` — die Menge ZUFAELLIG statt nach Momentum
+
+    Nachgetragen am 09.09.2026. N-89 hat belegt, dass `schnitt`s
+    Zeitinstabilitaet KOLLINEARITAET mit der Momentum-Auswahl ist: auf
+    Zufallsmengen verschwindet sie (Haelftenunterschied -0,431 -> -0,013).
+
+    Der Buckel in den Stufen (+4,07/+5,55/+9,49/+1,71/-4,65) wurde von
+    N-64/N-65 auf der SELEKTIERTEN Menge gerechnet. Ist er dasselbe
+    Artefakt? Ein Hinweis stand schon in N-64: die Fuenftel sind dort
+    extrem ungleich besetzt - 1,49 Anker je Tag im untersten, 29,35 im
+    obersten. Auf einer Zufallsmenge muessten sie ausgeglichener sein.
+
+    ⚠️ Eine SAAT, kein Generator - die Nullziehungen muessen DIESELBE
+    Auswahl sehen wie die Hauptmessung.
     """
     aus = {k: {} for k in range(5)}
     besetzt = {k: [] for k in range(5)}
@@ -96,7 +112,10 @@ def je_fuenftel(je_tag: dict, mom: dict, anteil: float, mische=None):
         if mische is not None:
             r = mische.permutation(r)
         y = np.array([x["in_r"] for x in zeilen], float)
-        m = A._auswahl_maske(zeilen, mom.get(tag) or {}, anteil, None)
+        m = A._auswahl_maske(
+            zeilen, mom.get(tag) or {}, anteil,
+            None if auswahl_saat is None
+            else np.random.default_rng(int(auswahl_saat)))
         if m is None or not m.any():
             continue
         rw, yw = r[m], y[m]
