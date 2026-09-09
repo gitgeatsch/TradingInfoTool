@@ -1488,6 +1488,65 @@ BEFUNDE = (
                "die die Tagesklammer ueberstehen. Die beiden Zahlen sind "
                "nicht teilbar; massgeblich sind die BLOECKE", "gilt",
                "Selbstbefund 09.09.2026"),
+    Befundlage("2.231", "⚠️⚠️ NUTZEREINWAND 09.09., BERECHTIGT: 'wenn "
+               "die Watchlist ein Asset ist, sollte es egal sein'. Er hat "
+               "recht - ich hatte ZWEI Fragen vermischt. 'Traegt die "
+               "REGEL?' ist eine Aussage ueber die Welt, dafuer ist die "
+               "MESSBASIS die richtige und staerkere Basis. 'Wirkt sie "
+               "auf UNSEREN Werten?' ist die Watchlist-Frage. K-1w hat "
+               "die zweite gemessen und ich habe sie als Antwort auf die "
+               "erste gelesen", "gilt", "Nutzereinwand 09.09.2026"),
+    Befundlage("2.231-folge", "⚠️ DAMIT IST K-1w NEU ZU LESEN: auf 43 "
+               "statt 536 Symbolen werden 92 % der Daten weggeworfen - "
+               "`turnover`s 5 Bloecke sind ein Befund ueber die "
+               "MESSANLAGE, nicht ueber `turnover`. Der "
+               "Messbasis-Befund steht. Uebrig bleibt nur die kleinere "
+               "Frage, ob die Watchlist systematisch anders ist",
+               "gilt", "Nutzereinwand 09.09.2026 / K-1w"),
+    Befundlage("2.232", "✔✔✔ DIE MESSMENGE IST EINGEFROREN "
+               "(Nutzerentscheidung 09.09.): `messmenge.V1`, 536 Symbole, "
+               "davon 174 EINGESTELLTE Reihen - der Survivorship-Schutz. "
+               "Keine Auswahl nach Groesse, Liquiditaet oder Leistung. "
+               "`lade()` liefert genau sie und MELDET, wenn eine Reihe "
+               "fehlt, statt stillschweigend weniger zu messen", "gilt",
+               "messmenge.py / messe_eigenschaft_beitrag.lade",
+               basis="Messmenge Krypto v1, gesetzt 09.09.2026"),
+    Befundlage("2.232-warum", "⚠️⚠️ DER GRUND IST NICHT ABDECKUNG, "
+               "SONDERN REPRODUZIERBARKEIT: bis heute war die Messmenge "
+               "das, was gerade in der Datenbank stand. `oi_aenderung` "
+               "war auf 117 Symbolen registriert, heute waren es 122 - "
+               "und der Wert wanderte von +0,0145 auf +0,0126. R-R11 ist "
+               "nicht durchsetzbar, wenn sich die Basis unter dem Befund "
+               "wegschiebt", "gilt", "messmenge.py",
+               basis="Befund 2.225-reproduziert"),
+    Befundlage("2.232-abnahme", "✔ Abgenommen: die eingefrorene Menge "
+               "liefert 536 = 536 identisch, und `funding` frei +0,0249 "
+               "sowie `turnover` frei +0,0639 reproduzieren ziffergenau. "
+               "Vier Waechter im Paket `Messstandard` halten es fest",
+               "gilt", "pruefe_pakete --paket Messstandard"),
+    Befundlage("2.233", "✔ DIE TURNOVER-ABDECKUNG IST EINE GRENZE DER "
+               "QUELLE, NICHT DES ZUSCHNITTS: der Coin-Metrics-"
+               "Community-Katalog fuehrt fuer `SplyCur` (1d) insgesamt "
+               "139 Assets. Davon liegen 66 in unserer Messmenge von 536 "
+               "- also 12 %. Selbst bei vollstaendiger Abdeckung des "
+               "Katalogs waeren es 26 %", "gilt",
+               "Katalogabfrage 09.09.2026",
+               basis="community-api.coinmetrics.io/v4/catalog/asset-metrics"),
+    Befundlage("2.233-nicht-brauchbar", "⚠️⚠️ UND DIE 18 SCHEINBAR "
+               "GEWINNBAREN SIND NICHT BRAUCHBAR: sie heissen `BNB_ETH`, "
+               "`USDC_ETH`, `SHIB_ETH`, `MATIC_ETH`, `TRX_ETH` - das sind "
+               "die Mengen AUF ETHEREUM, nicht die Umlaufmengen. "
+               "`turnover` ist Umsatz durch Umlaufmenge; wer die "
+               "Wrapped-Menge einsetzt, misst einen Bruchteil des Tokens "
+               "auf einer Kette, und die Kennzahl waere STILL falsch",
+               "gilt", "Katalogabfrage 09.09.2026"),
+    Befundlage("2.233-offen", "⚠️ OFFEN BLEIBT DER WEG UEBER EINE ANDERE "
+               "QUELLE: CoinGecko fuehrt Umlaufmengen fuer weit mehr "
+               "Coins. Er ist der einzige, der etwas aendern wuerde - "
+               "braucht aber eine eigene Pruefung, weil zwei Quellen fuer "
+               "dieselbe Groesse still auseinanderlaufen koennen "
+               "(stehende Vorgabe: die Datenquelle mitpruefen)", "gilt",
+               "Nutzerentscheidung offen"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

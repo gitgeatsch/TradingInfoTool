@@ -17411,6 +17411,40 @@ def paket_messstandard() -> None:
            "`schnitt` 20 % hatte traegt=True und meldete 'KEIN BEFUND' "
            "(Befund 2.193)")
 
+    # ---- ⚠️⚠️⚠️ DIE MESSMENGE muss EINGEFROREN sein ---------------------
+    #
+    # Am 09.09. angelegt. Bis dahin war die Messmenge das, was gerade in
+    # der Datenbank stand - damit verschiebt sich die Basis unter den
+    # Befunden, und R-R11 ist nicht durchsetzbar. Man kann nicht
+    # reproduzieren, was sich bewegt.
+    #
+    #     `oi_aenderung` registriert 02.09.   +0,0145 R   117 Symbole
+    #     dasselbe gemessen      09.09.       +0,0126 R   122 Symbole
+    import messmenge as _mm
+    import messe_eigenschaft_beitrag as _meb
+    pruefe(P, "⚠️⚠️ die Messmenge ist EINGEFROREN und versioniert",
+           hasattr(_mm, "V1") and hasattr(_mm, "VERSION")
+           and hasattr(_mm, "zeile") and len(_mm.V1) > 100,
+           "eine Messmenge, die sich mit jedem Datenabruf aendert, macht "
+           "R-R11 unmoeglich - ein Befund laesst sich nicht "
+           "reproduzieren, wenn die Basis wandert")
+    pruefe(P, "und `lade()` liefert GENAU sie",
+           set(_meb.lade()) == set(_mm.V1),
+           "sonst ist das Einfrieren Dekoration: %d geladen, %d in der "
+           "Menge" % (len(_meb.lade()), len(_mm.V1)))
+    pruefe(P, "⚠️ die EINGESTELLTEN Reihen sind drin (Survivorship)",
+           _mm.ABDECKUNG.get("eingestellt", 0) >= 100,
+           "wer nur die Reihen nimmt, die heute noch laufen, misst "
+           "Survivorship - gross ist, was gross GEWORDEN ist. In v1 sind "
+           "%d von %d Reihen eingestellt"
+           % (_mm.ABDECKUNG.get("eingestellt", 0), len(_mm.V1)))
+    pruefe(P, "und die Abdeckung je Zusatzquelle ist FESTGEHALTEN",
+           all(k in _mm.ABDECKUNG for k in
+               ("funding", "terminmarkt", "turnover")),
+           "sonst entsteht sie implizit und faellt erst auf, wenn eine "
+           "Messung an ihr scheitert - `turnover` deckt nur %d von %d ab"
+           % (_mm.ABDECKUNG.get("turnover", 0), len(_mm.V1)))
+
     # ---- ⚠️⚠️ Die REGISTRIERUNGSBASIS muss maschinenlesbar sein ---------
     #
     # Am 09.09. angelegt, nach DREI R-R11-Fehlern derselben Klasse an EINEM

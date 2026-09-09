@@ -2204,3 +2204,61 @@ der laufenden Signale betreffen.
 > ⚠️ **Das ist bereits ein Befund, noch vor der Messung:** die Beiträge
 > werden auf einer Menge angewandt, auf der sie nie geprüft wurden — und
 > für eine Frage, für die sie nie gemessen wurden.
+
+---
+
+## ✔ 09.09. — DIE MESSMENGE IST EINGEFROREN, und der Nutzer hatte recht
+
+### ⚠️ Der Einwand, der eine eigene Verwechslung aufdeckte
+
+> *„wenn die Watchlist ein Asset ist, sollte es egal sein. wenn es um die
+> Messmenge geht, ok — dann definiere ein Krypto-Standardset."*
+
+**Er hat recht, und ich hatte zwei Fragen vermischt:**
+
+| Frage | richtige Basis |
+|---|---|
+| **„Trägt die Regel?"** — Aussage über die Welt | **die Messbasis** — je mehr Daten, desto besser |
+| **„Wirkt sie auf unseren Werten?"** | die Watchlist |
+
+K-1w hat die zweite gemessen, ich habe sie als Antwort auf die erste
+gelesen. Auf 43 statt 536 Symbolen werden **92 % der Daten weggeworfen** —
+`turnover`s 5 Blöcke sind ein Befund über die **Messanlage**, nicht über
+`turnover`. **Der Messbasis-Befund steht.**
+
+### `messmenge.V1` — 536 Symbole, eingefroren
+
+| | |
+|---|---|
+| **Inhalt** | alle Symbole über dem Historienfilter, **einschließlich der 174 eingestellten** |
+| **Auswahl** | ⚠️ **keine** nach Größe, Liquidität oder Leistung |
+| **Änderung** | nur mit neuer Versionsnummer |
+| **`lade()`** | liefert genau sie — und **meldet**, wenn eine Reihe fehlt |
+
+⚠️⚠️ **Der Grund ist Reproduzierbarkeit, nicht Abdeckung.** `oi_aenderung`
+war auf **117** Symbolen registriert, heute waren es **122** — und der
+Wert wanderte von +0,0145 auf +0,0126. **R-R11 ist nicht durchsetzbar,
+wenn sich die Basis unter dem Befund wegschiebt.**
+
+✔ Abgenommen: 536 = 536, `funding` +0,0249 und `turnover` +0,0639
+reproduzieren ziffergenau. Vier Wächter halten es fest.
+
+### ✔ Und `turnover`s Abdeckung ist eine Grenze der QUELLE
+
+```
+Coin Metrics Community, Katalog SplyCur (1d):   139 Assets
+davon in unserer Messmenge (536):                66  = 12 %
+theoretisches Maximum:                          139  = 26 %
+```
+
+⚠️⚠️ **Die 18 scheinbar gewinnbaren sind nicht brauchbar:** `BNB_ETH`,
+`USDC_ETH`, `SHIB_ETH`, `MATIC_ETH` — das sind die Mengen **auf
+Ethereum**, nicht die Umlaufmengen. `turnover` ist Umsatz durch
+Umlaufmenge; die Wrapped-Menge einzusetzen machte die Kennzahl **still
+falsch**.
+
+**66 ist die tatsächliche Obergrenze.** Kein Zuschnitt ändert das.
+
+⚠️ Offen bleibt der Weg über eine **andere Quelle** (CoinGecko führt
+Umlaufmengen für weit mehr Coins) — der einzige, der etwas ändern würde,
+und er braucht eine eigene Prüfung.

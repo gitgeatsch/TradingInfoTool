@@ -67,7 +67,7 @@ SCHWANKUNG = 14           # Handelstage fuer die Schwankungsbreite
 MIND_ASSETS = 15          # weniger als das ist kein Querschnitt
 
 
-def lade(assetklasse: str = "krypto"):
+def lade(assetklasse: str = "krypto", menge="V1"):
     """Kursreihen je Symbol: Datum, Schluss, Volumen - VORGABE KRYPTO.
 
     ⚠️⚠️ DIE VORGABE BLEIBT `krypto` UND DARF ES BLEIBEN (07.09.2026,
@@ -98,7 +98,25 @@ def lade(assetklasse: str = "krypto"):
     Datenquellen sind faktisch krypto-exklusiv (nur `DASH`, dieselbe alte
     Namenskollision aus F-198/F-201, hatte einen Treffer). Das war aber
     Zufall der Datenlage, kein Schutz durch Design - ab jetzt filtert
-    diese Funktion selbst."""
+    diese Funktion selbst.
+
+    ## ⚠️⚠️⚠️ DIE EINGEFRORENE MESSMENGE (09.09.2026)
+
+    Bis heute war die Messmenge das, was gerade in der Datenbank stand.
+    **Damit verschiebt sich die Basis unter den Befunden**, und R-R11 ist
+    nicht durchsetzbar - man kann nicht reproduzieren, was sich bewegt.
+    Am 09.09. dreimal erlebt, am deutlichsten hier:
+
+        `oi_aenderung` registriert 02.09.   +0,0145 R   117 Symbole
+        dasselbe gemessen      09.09.       +0,0126 R   122 Symbole
+
+    Fuer `krypto` liefert die Funktion deshalb **genau `messmenge.V1`**.
+    Fehlt eine Reihe der eingefrorenen Menge in der Datenbank, wird das
+    GEMELDET statt stillschweigend weniger zu messen.
+
+    ⚠️ `menge=None` gibt die ungefilterte Datenbanksicht zurueck - fuer
+    den Fall, dass eine neue Version zusammengestellt wird. Wer so misst,
+    schreibt es in den Befund."""
     c = sqlite3.connect(DB, uri=True)
     roh = {}
     for sym, tag, schluss, hoch, tief, vol in c.execute(
@@ -111,7 +129,22 @@ def lade(assetklasse: str = "krypto"):
             (tag[:10], float(schluss), float(hoch or schluss),
              float(tief or schluss), float(vol or 0.0)))
     c.close()
-    return {s: v for s, v in roh.items() if len(v) > RUECKBLICK + 60}
+    fertig = {s: v for s, v in roh.items() if len(v) > RUECKBLICK + 60}
+    # ⚠️ Die eingefrorene Menge gilt NUR fuer krypto - die anderen Klassen
+    # haben (noch) keine. Wer sie setzt, bekommt genau sie.
+    if menge and str(assetklasse) == "krypto":
+        import messmenge as _mm
+        soll = getattr(_mm, str(menge))
+        fehlt = soll - set(fertig)
+        if fehlt:
+            # ⚠️ MELDEN, nicht stillschweigend weniger messen. Eine
+            # geschrumpfte Basis sieht sonst aus wie ein neuer Befund.
+            print("  ⚠️⚠️ %d Reihen der Messmenge %s fehlen in der "
+                  "Datenbank: %s%s"
+                  % (len(fehlt), menge, ", ".join(sorted(fehlt)[:8]),
+                     " ..." if len(fehlt) > 8 else ""))
+        return {s: v for s, v in fertig.items() if s in soll}
+    return fertig
 
 
 def spanne(hoch, tief, schluss, n):
