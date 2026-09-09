@@ -140,11 +140,11 @@
 
 **2.199** — ✔ DER MESSSTANDARD IST GESETZT (08.09.2026, Nutzerentscheidung): NULL_ZIEHUNGEN=40 · NULL_PERZENTIL=90 · TRENNSCHAERFE_GEGEN_NULLPUNKT=True · STAERKEN bis 0,40. Benannt in `messnorm`, von `messnorm_auswahl` und `messnorm_rand` von DORT bezogen, in Klartext ausgebbar (`standardzeile`)
 
-- Quelle: messnorm.py / Methodik 2.155
+- Quelle: messnorm.py / Methodik 2.188
 
 **2.199-abnahme** — ✔ UND ER WURDE ABGENOMMEN, BEVOR ER STANDARD WURDE: erst neutral parametrisiert und Ziffer fuer Ziffer gegen die Vorgaengerfassung geprueft · dann beide Regeln nebeneinander (N-82: `zufall` unter keiner tragend, 14 von 16 Urteilen unveraendert) · dann R-R11 auf der Originalbasis (N-83) · dann die vorab benannte Probe gegen Gefaelligkeit (N-85)
 
-- Quelle: N-81 bis N-85 / Methodik 2.155
+- Quelle: N-81 bis N-85 / Methodik 2.188
 
 **2.199-waechter** — ✔ Das Pruefpaket `Messstandard` bewacht ihn mit zehn Pruefungen - nicht die WERTE (die duerfen sich begruendet aendern), sondern dass sie benannt, an EINER Stelle und ueberall gleich sind. Alle zehn sind durch MUTATION belegt: Fehler zurueckgebaut, Waechter feuert
 
@@ -156,7 +156,7 @@
 
 **2.199-offen** — ⚠️⚠️ WAS DER STANDARD NICHT LEISTET: er macht die Urteile WIDERSPRUCHSFREI, nicht SCHAERFER. Offen bleiben 2.198 (Positivkontrolle pflanzt in die gemischte Welt), `ZIEHUNGEN`=5 in der Positivkontrolle, ob p90 zum Vertrauensniveau des Bandes passt - und vor allem der SELBSTTEST der ganzen Anlage gegen bekannte Wahrheit (Fehlalarm- UND Fundquote). 'Die Basis steht' waere eine Behauptung, kein Befund
 
-- Quelle: Methodik 2.155 / Expertenurteil 08.09.
+- Quelle: Methodik 2.188 / Expertenurteil 08.09.
 
 **2.200** — ⚠️⚠️ R-R9 GREIFT: die Beitragslage hat sich geaendert, also ist eine Neukalibrierung faellig. Live registriert sind `funding` (Markt-Rang - haelt), `turnover` (Markt-Rang - jetzt unentschieden) und `schnitt` (haelt, und traegt jetzt auf ZWEI Mengen statt einer). ⚠️ `turnover`s Stufen (3,15/0,83/0,22/-1,79/-2,4) stehen auf einer Basis, die keinen tragenden Befund mehr liefert
 
@@ -257,6 +257,154 @@
 **2.207-vermutung-falsch** — ⚠️ UND EINE EIGENE VERMUTUNG WAR FALSCH: ich hatte erwartet, die Beharrlichkeit werde die Fehlalarmquote treiben, weil sie weniger unabhaengige Beobachtungen bedeutet. Sie tut es nicht. Die Sorge war berechtigt, das Nachmessen richtig - das Ergebnis entlastet
 
 - Quelle: selbsttest_messanlage.py --ak
+
+**2.208** — ✔ R-R9 IM ENGEREN SINN IST ERFUELLT: die Beitragslage im Code ist unveraendert (funding + turnover), der Fingerabdruck `KALIBRIERT_FUER` stimmt mit `BEITRAEGE` ueberein, und die Kalibrierung reproduziert auf der HEUTIGEN Messbasis praktisch ziffergenau: 0,080 -> 16,5 % Durchlass (31.08. ebenso), Gewinn +0,1316 gegen +0,1324. Basis von 123.465 auf 124.221 Anker gewachsen
+
+- Quelle: messe_schwelle_kalibrierung.py
+
+**2.208-schnitt** — ⚠️⚠️ DABEI KAM HERAUS, DASS `schnitt` NIE WIEDER AUFGENOMMEN WURDE: seine Ruecknahme vom 31.08. ist seit dem 07.09. als ABGELOEST verzeichnet (2.153, kontaminierte Basis - 1.314 Symbole statt Krypto allein), aber im Code steht er weiter auf `zustand=null, stufen=None`. Die Ruecknahme ist gefallen, die Konsequenz daraus nie gezogen
+
+- Quelle: agent/wahrscheinlichkeit.BEITRAEGE / REGISTER_Kandidaten
+
+**2.208-n86** — ✔ N-86 bestaetigt das unabhaengig mit einem ANDEREN Werkzeug: `schnitt` auf `frei` bei H5 +0,0094 gegen +0,0092 der 07.09.-Reproduktion. Und auf der 20-%-Menge traegt er bei FUENF von sechs Horizonten, mit monoton wachsender Wirkung (+0,0130 H1 -> +0,0418 H5 -> +0,1858 H20). Die Ausnahme H10 ist eine Enthaltung, kein Widerspruch
+
+- Quelle: n86_rr9_schnitt_ueber_horizonte.py
+
+**2.208-aber** — ⚠️ ABER `schnitt` KANN TROTZDEM KEIN REGLER SEIN: 2.158 gilt unveraendert - die fuenf Stufen sind ein BUCKEL (+4,07/+5,55/+9,49/+1,71/-4,65, Hochpunkt bei Fuenftel 2), zweimal gemessen. Die Vorabfestlegung verlangt Monotonie. Es gibt also gar keinen Beitragswechsel, fuer den zu kalibrieren waere - der Registerstand 'offen, nicht live' ist richtig
+
+- Quelle: Befund 2.158 / REGISTER_Kandidaten
+
+**2.209** — ⚠️⚠️ EIGENE KORREKTUR: ich habe `turnover` heute auf der VOLLEN Historie gemessen und daraus 'nicht trennbar' geschlossen. Seine registrierte Basis ist aber 50 % AB 2022 (2.162). Das war derselbe R-R11-Verstoss, den ich bei `funding` am selben Tag noch vermieden hatte
+
+- Quelle: n87_rr11_auf_der_eigenen_basis.py
+
+**2.209-reproduziert** — ✔ AUF DER EIGENEN BASIS REPRODUZIEREN DIE WIRKUNGEN FAST ZIFFERGENAU: turnover +0,0608 gegen Anker +0,0598 · oi_aenderung +0,0442 gegen +0,0446 · funding +0,0542 gegen +0,0607. Was sich geaendert hat, ist NICHT der Effekt, sondern das KRITERIUM
+
+- Quelle: n87_rr11_auf_der_eigenen_basis.py
+
+**2.210** — ⚠️⚠️⚠️ FEHLER 6 - DAS KRITERIUM ZAEHLT DIE UNSICHERHEIT DOPPELT. `traegt = unten > null_oben` verlangt, dass die UNTERE Vertrauensgrenze des Effekts die OBERE der Nullwelt ueberschreitet - also zwei 95-%-Baender, die sich nicht ueberlappen. Das entspricht etwa p < 0,005, nicht p < 0,05
+
+- Quelle: Nullpunkt-Zerlegung 08.09.2026
+
+**2.210-beleg** — ✔ DER BELEG: der Nullpunkt hat kaum VERSATZ, aber ein breites BAND. null MITTEL +0,0068 (turnover) / +0,0106 (funding) / +0,0172 (oi_aenderung) / +0,0081 (zufall) - null_oben dagegen +0,0592 / +0,0414 / +0,0495 / +0,0397. `null_oben` ist also im Wesentlichen die obere Vertrauensgrenze EINER Nullwelt, ein Streumass - und die Streuung steckt im Band schon drin
+
+- Quelle: Nullpunkt-Zerlegung 08.09.2026
+
+**2.210-erklaert** — ✔✔ UND ES ERKLAERT ZWEI BISHER UNVERBUNDENE BEOBACHTUNGEN: warum der Selbsttest 0 Fehlalarme in 150 Welten fand (nominal 2,5 % erlaubt - die Anlage ist uebervorsichtig), und warum das dort kaum auffiel: in der Kunstwelt (150 Symbole, 1500 Tage) sind die Baender ENG, die Doppelzaehlung faellt kaum ins Gewicht. Auf den echten schmalen Basen (turnover: 66 Symbole) sind sie BREIT - dort dominiert sie
+
+- Quelle: selbsttest_messanlage.py + Nullpunkt-Zerlegung
+
+**2.210-nicht-geaendert** — ⚠️⚠️ NICHTS DAVON WURDE GEAENDERT. Den Standard zu lockern, weil er den eigenen Beitraegen im Weg steht, waere motiviertes Rechnen. Der saubere Weg ist der, fuer den der Pruefstand gebaut wurde: die Alternative auf Fehlalarm- UND Fundquote messen, BEVOR sie gewaehlt wird
+
+- Quelle: Nutzervorgabe 08.09. / selbsttest_messanlage.py
+
+**2.211** — ⚠️ EINE LUECKE IM KALIBRIERUNGSWERKZEUG, beilaeufig gefunden: `messe_schwelle_kalibrierung.py` liest die Stufen zwar aus der LIVE-Registrierung (keine Kopie), aber nur fuer die zwei fest verdrahteten Merkmale `funding_fuenftel` und `turnover_fuenftel`. Ein DRITTER Beitrag wuerde still ignoriert - und die Kalibrierung waere falsch, ohne dass es auffaellt
+
+- Quelle: messe_schwelle_kalibrierung.py
+
+**2.212** — ⚠️⚠️⚠️ EINSCHRAENKUNG DES SELBSTTESTS VOM 08.09.: die Kunstwelt ist SECHSMAL PRAEZISER als die Wirklichkeit. Bandbreite 0,018 gegen 0,108 beim echten `turnover` auf 50 % ab 2022. Die dort gemessene Aufloesung von +0,0293 R und die 0 Fehlalarme gelten damit fuer eine Welt, die deutlich leichter ist als die echte
+
+- Quelle: selbsttest_kriterien.py / Nachmessung 09.09.
+
+**2.212-diagnose** — ⚠️ DIE URSACHE LIEGT IN DER TAGESREIHE, aus der das Band entsteht: echt 1.692 Tage mit SD 0,3307 und Autokorrelation +0,602 (SD je Block 0,1473) - kuenstlich SD 0,1500, AK1 +0,197, SD je Block 0,0315. Die echte Reihe ist doppelt so streuend UND dreimal so traege
+
+- Quelle: Nachmessung 09.09.2026
+
+**2.212-drei-versuche** — ⚠️ DREI ERKLAERUNGSVERSUCHE, ALLE UNZUREICHEND: Schwankung des Effekts ueber die Tage (selbst beim Fuenffachen nur 0,031) · Ueberlappung der Zielgroesse (H20 teilt 19 von 20 Tagen - brachte nichts, 0,015) · Beharrlichkeit der Kennzahl (turnover +0,669 gemessen). Alle drei zusammen: 0,029 gegen echte 0,108
+
+- Quelle: Nachmessung 09.09.2026
+
+**2.212-abgebrochen** — ⚠️⚠️ UND DANN ABGEBROCHEN, statt weiterzukalibrieren: eine Kunstwelt so lange anzupassen, bis sie passt, ist Probieren - und hinterher nicht mehr auseinanderzuhalten. Die drei Achsen bleiben im Werkzeug (`staerke_streuung`, `ueberlappung`, `kennzahl_ak`), alle mit Vorgabe 0, damit die Zahlen vom 08.09. reproduzierbar bleiben
+
+- Quelle: selbsttest_welt.py
+
+**2.213** — ✔✔ DER BESSERE PRUEFSTAND SIND DIE ECHTEN DATEN SELBST: eine NULLWELT entsteht durch Mischen der Raenge je Kalendertag. Sie hat die echte Streuung, die echte Traegheit und die echte Symbolzahl von selbst, ohne jede Kalibrierung - und enthaelt per Konstruktion keinen Zusammenhang. Jedes 'traegt' darauf ist ein Fehlalarm
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.213-erste-zahlen** — ⚠️ UND DER KURZLAUF ZEIGT SOFORT, was die Kunstwelt NIE gezeigt haette (dort 0 % Fehlalarm fuer alle drei): auf `turnover` findet Kriterium A eine Wirkung von +0,0457 in KEINEM Fall, B und C in allen - und auf `funding` erzeugen B und C in 1 von 4 Nullwelten einen Fehlalarm. ⚠️ Acht Welten sind keine Aussage, aber der Aufbau trennt
+
+- Quelle: selbsttest_kriterien_echt.py --klein
+
+**2.213-versatz** — ⚠️ Und er zeigt den Versatz: die Nullwelt auf `funding` 10 % hat eine Wirkung von +0,0164 - in einer Welt OHNE jeden Zusammenhang. Genau diesen Versatz korrigiert `nullpunkt`, und genau deshalb ist 'Band ohne Null' (Kriterium C) zu wenig
+
+- Quelle: selbsttest_kriterien_echt.py --klein
+
+**2.214** — ✔✔✔ DIE DREI KRITERIEN SIND GEGEN BEKANNTE WAHRHEIT GEMESSEN - auf ECHTEN Daten, Nullwelten durch Mischen der Raenge (100 Nullwelten, 36 gepflanzte, zwei Basen). Sollwert 2,5 % Fehlalarme, weil das Band ein 95-%-Band ist
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-c** — ⚠️⚠️⚠️ KRITERIUM C IST WIDERLEGT: `unten > 0` liefert 22 von 100 Fehlalarmen (22,0 % ± 4,1) gegen einen Sollwert von 2,5 %. Fast ein Viertel der Nullwelten besteht es. ⚠️ DAS IST DAS KRITERIUM AUS BEFUND 2.162 - auf ihm wurden `turnover`, `funding` und `oi_aenderung` auf ihren eigenen Basen als tragend gefuehrt
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-a** — ⚠️⚠️ KRITERIUM A IST ZU STRENG - und zwar gemessen, nicht nur hergeleitet: 0 von 100 Fehlalarmen, aber es findet eine Wirkung von +0,0448 in KEINEM einzigen von sechs Faellen und +0,0676 nur in vier von sechs. Fundquote insgesamt 58,3 %. ⚠️ `turnover`s echte Wirkung betraegt +0,0608 - sie liegt genau in dem Bereich, den A nicht sieht
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-b** — ✔✔ KRITERIUM B TRIFFT DAS ZIEL: `unten > max(0, nullpunkt)` liefert 3 von 100 Fehlalarmen (3,0 % ± 1,7) - das Vertrauensband schliesst den Sollwert 2,5 % EIN, es ist davon nicht unterscheidbar. Und die Fundquote betraegt 97,2 % (35 von 36)
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-warum** — ✔ UND ES PASST ZUR HERLEITUNG (2.210): der Nullpunkt hat einen VERSATZ (Mittel +0,007 bis +0,017, auf `funding`s Nullwelten sogar +0,0139 Wirkung ohne jeden Zusammenhang) - den muss man abziehen, sonst ist C zu locker. Aber seine STREUUNG steckt im Band bereits - wer auch die abzieht, zaehlt doppelt und bekommt A
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-vorhersage** — ✔ DIE VORHERSAGE STAND VOR DEM LAUF und ist eingetroffen: 'A FA nahe 0, Fundquote bricht ein · B FA um 2,5 %, Fundquote deutlich besser · C FA deutlich ueber 2,5 %'. ⚠️ Und der Ausgang, der den heutigen Standard bestaetigt haette - B mit hoher Fehlalarmquote - war ausdruecklich benannt
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.214-nicht-gesetzt** — ⚠️⚠️ NICHTS DAVON IST GESETZT. Der Wechsel von A auf B wuerde Urteile zugunsten der eigenen Beitraege drehen - er gehoert dem Nutzer vorgelegt, wie der Messstandard am 08.09. auch
+
+- Quelle: Nutzerentscheidung offen
+
+**2.215** — ✔ GEGENPRUEFUNG AUF EINER DRITTEN, UNABHAENGIGEN BASIS: `oi_aenderung` 20 % ab 2022 - andere Datenquelle (Terminmarkt statt Kursreihe), andere Menge, 122 statt 64 Symbole. Fehlalarme A 0/50 · B 1/50 = 2,0 % · C 20/50 = 40,0 %. Das Ergebnis ist NICHT basisabhaengig
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.215-gesamt** — ✔✔ UEBER ALLE DREI BASEN, 150 Nullwelten: A 0/150 = 0,0 % Fehlalarme bei 63 % Fundquote · B 4/150 = 2,7 % bei 98 % · C 42/150 = 28,0 % bei 100 %. Der Sollwert ist 2,5 %, weil das Band ein 95-%-Band ist
+
+- Quelle: selbsttest_kriterien_echt.py
+
+**2.216** — ✔✔✔ NUTZERENTSCHEIDUNG 09.09.2026: KRITERIUM B IST GESETZT. `messnorm.NULLBEZUG = 'nullpunkt'` - das Urteil prueft gegen den VERSATZ der Nullwelten, nicht gegen ihre STREUUNG. Alternativen bleiben waehlbar ('null_oben', 'null'), damit der frueher Stand reproduzierbar bleibt
+
+- Quelle: messnorm.py / Nutzerentscheidung 09.09.
+
+**2.216-ein-bezug** — ⚠️⚠️ UND URTEIL UND TRENNSCHAERFE LESEN DENSELBEN BEZUG (`messnorm._bezug`). Fehler 2 vom 08.09. war genau das Gegenteil - zwei Massstaebe in EINEM Satz. Wer sie trennt, baut ihn neu ein; deshalb gibt es die Funktion, und deshalb bewacht sie das Pruefpaket
+
+- Quelle: messnorm._bezug / pruefe_pakete --paket Messstandard
+
+**2.216-reproduziert** — ✔ DIE UMSTELLUNG IST SAUBER GEKAPSELT: mit `NULLBEZUG='null_oben'` reproduzieren ALLE ACHT Pruefpunkte den Stand vom 08.09. ziffergenau (schnitt 20 %, funding frei/10 %, turnover frei/50 %, oi_aenderung 20 %, zufall frei/5 %) - Wirkung, Urteil und Trennschaerfe
+
+- Quelle: b_abnahme, Teil 1
+
+**2.217** — ✔✔ DIE BEITRAGSLAGE UNTER B - und die Kontrolle haelt: `schnitt` 20 % +0,1858 TRAEGT · `funding` frei +0,0249 TRAEGT · `turnover` frei +0,0639 TRAEGT · `turnover` 50 % ab 2022 +0,0608 TRAEGT · `funding` 10 % ab 2022 +0,0542 TRAEGT · `oi_aenderung` 20 % ab 2022 +0,0442 TRAEGT. ⚠️ `zufall` traegt WEDER auf `frei` NOCH auf 5 % - B ist nicht 'alles traegt'
+
+- Quelle: b_abnahme, Teil 2
+
+**2.217-trennschaerfe** — ✔ Und die Trennschaerfen liegen jetzt bei 0,010 bis 0,053 statt bei 0,08 bis 0,10 - in der Groessenordnung der gemessenen Aufloesung statt darueber
+
+- Quelle: b_abnahme, Teil 2
+
+**2.218** — ⚠️⚠️ WAS DAMIT NICHT GEMESSEN IST - Nutzerhinweis 09.09., woertlich: *'wir sind noch in der Pruefung und Kalibrierung einzelner Beitraege. Die LEISTUNG DER KETTE ist hier noch nicht beruecksichtigt.'* Alles bisher Gemessene betrifft EINZELNE Beitraege auf ihrer eigenen Basis - nicht, was die Kette als Ganzes daraus macht
+
+- Quelle: Nutzervorgabe 09.09.2026
+
+**2.218-was-fehlt** — ⚠️ Konkret ungemessen: das ZUSAMMENWIRKEN der Beitraege in `potential.rechne` · die Wirkung der Schwelle 0,080 auf die tatsaechlich erzeugten Signale · die Trichterstufen davor (Auswahl, Sperren) · und ob die Kette am Ende besser ist als ihre Teile. Die Kalibrierung 16,5 % Durchlass sagt, wie STRENG die Schwelle ist - nicht, was dabei herauskommt
+
+- Quelle: Nutzervorgabe 09.09.2026 / agent/potential.py
+
+**2.219** — ✔✔ DER GESAMTSTAND UNTER KRITERIUM B - 16 Kandidaten, alle zulaessigen selektierten Mengen, ein Lauf. ⚠️ DIE KONTROLLE HAELT: `zufall` traegt auf KEINER der drei Mengen. Fuenf tragen (funding, turnover, oi_aenderung, vola, schnitt), SIEBEN nicht (oi_je_umsatz, long_bias, top_bias, taker_bias, amihud, rsi, zufall), VIER widersprechen sich (schnitt50, momentum, momentum_kurz, funding_extrem). B laesst nicht alles durch
+
+- Quelle: messe_alle_kandidaten.py
+
+**2.219-schnitt** — ✔ `schnitt` ist der ROBUSTESTE: er traegt auf ALLEN DREI Mengen (10 %, 20 %, 50 %), drei von drei Aussagen. ⚠️ Registrierbar ist er trotzdem nicht - 2.158 gilt unveraendert, seine Stufen sind ein Buckel. Das ist eine Frage der FORM, nicht der Signifikanz
+
+- Quelle: messe_alle_kandidaten.py / Befund 2.158
+
+**2.219-vola** — ⚠️ `vola` TRAEGT NEU - aber nur mit EINER Aussage von drei Mengen, die anderen beiden sind Enthaltungen. Unter dem alten Bezug war er WIDERSPRUCH. Eine einzelne Aussage ist duenn und keine Registrierungsgrundlage; ausserdem gilt 2.143 weiter ('vola traegt KEINE Richtung')
+
+- Quelle: messe_alle_kandidaten.py
 
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 

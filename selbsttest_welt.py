@@ -68,7 +68,9 @@ SCHOCK_ANTEIL = 0.40  # Anteil des Tagesschocks an der Gesamtstreuung
 
 def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
          je_tag_n: int = JE_TAG, phi: float = PHI,
-         kennzahl_ak: float = 0.0) -> tuple[dict, dict]:
+         kennzahl_ak: float = 0.0,
+         staerke_streuung: float = 0.0,
+         ueberlappung: int = 0) -> tuple[dict, dict]:
     """Eine Welt mit bekannter Wahrheit -> (je_tag, mom).
 
     `staerke = 0` heisst: die Kennzahl sagt NICHTS ueber das Ergebnis.
@@ -93,6 +95,55 @@ def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
     ⚠️ Die Vorgabe bleibt 0, damit frueher gemessene Zahlen reproduzierbar
     bleiben. Die beharrlichen Faelle laufen ausdruecklich mit
     `kennzahl_ak=0.61` bzw. `0.985`.
+
+    ## ⚠️⚠️ `staerke_streuung` — der Effekt SCHWANKT ueber die Tage
+
+    Am 09.09. beim Kriterienvergleich gemessen: die Kunstwelt war
+    SECHSMAL praeziser als die Wirklichkeit.
+
+        Kunstwelt (66 Symbole, 1700 Tage)   Bandbreite 0,018
+        echt `turnover` 50 % ab 2022        Bandbreite 0,108
+
+    Die Bandbreite entsteht aus der Streuung der TAGESWERTE. In der
+    ersten Fassung war der Effekt an jedem Tag GLEICH gross - deshalb
+    schwankten die Tage kaum, und jedes Kriterium sah gut aus.
+
+    > **Ein Pruefstand, der praeziser ist als die Wirklichkeit,
+    > beantwortet die Frage nicht** - dort funktioniert jedes Kriterium.
+
+    `staerke_streuung` laesst den Tageseffekt um `staerke` schwanken:
+    `staerke_t = staerke + N(0, staerke_streuung)`. Das bildet genau die
+    Lage nach, die `turnover` zugeschrieben wird - eine Wirkung, die im
+    Mittel da ist, aber ueber die Bloecke instabil.
+
+    ⚠️ Die Vorgabe bleibt 0 - alle bis zum 08.09. gemessenen Zahlen
+    bleiben reproduzierbar.
+
+    ## ⚠️⚠️⚠️ `ueberlappung` — DER GRUND, WARUM ES BLOECKE GIBT
+
+    Am 09.09. gemessen: die Kunstwelt war SECHSMAL praeziser als die
+    Wirklichkeit (Bandbreite 0,018 gegen 0,108). Die Effektschwankung
+    erklaerte es NICHT - selbst beim Fuenffachen des Effekts kam nur
+    0,031 heraus.
+
+    Der Grund ist die ZIELGROESSE selbst: `in_r` ist bei H20 eine
+    20-Tage-VORWAERTSRENDITE. Tag t und Tag t+1 teilen 19 ihrer 20 Tage.
+    Die erste Fassung zog `in_r` an jedem Tag unabhaengig - damit hatte
+    sie rund 1.700 unabhaengige Beobachtungen statt der echten ~85.
+
+        1.700 / 20 = 85 unabhaengige Tage -> Standardfehler mal sqrt(20)
+        = 4,5.  Beobachtet: Faktor 6.
+
+    > **Ein Pruefstand ohne Ueberlappung hat nichts, wogegen die Bloecke
+    > schuetzen muessten** - und bescheinigt der Anlage eine Praezision,
+    > die sie in der Wirklichkeit nicht hat.
+
+    `ueberlappung=H` baut Tagesrenditen und summiert sie ueber H Tage
+    vorwaerts - genau wie die echte Zielgroesse.
+
+    ⚠️ Die Vorgabe bleibt 0, damit die Zahlen vom 08.09. reproduzierbar
+    bleiben. ⚠️⚠️ Aber jede AUSSAGE ueber die Aufloesung der Anlage
+    braucht `ueberlappung=HORIZONT` - sonst ist sie zu guenstig.
     """
     syms = ["S%03d" % i for i in range(je_tag_n)]
 
@@ -119,6 +170,30 @@ def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
     kz = rng.normal(0.0, 1.0, je_tag_n)
     rest = (1.0 - a * a) ** 0.5
 
+    # ⚠️ UEBERLAPPENDE ZIELGROESSE: erst Tagesrenditen, dann H-Tage-Summen.
+    # Ohne das hat die Welt ~H mal zu viele unabhaengige Beobachtungen.
+    vor = None
+    if ueberlappung:
+        H = int(ueberlappung)
+        tr = (schock[:, None] * s_schock / (H ** 0.5)
+              + rng.standard_t(4, size=(tage + H, je_tag_n))
+              * s_eigen / (H ** 0.5)) if False else None
+        # Tagesrenditen: Marktfaktor mit Gedaechtnis + Eigenanteil.
+        m = np.zeros(tage + H, float)
+        for t in range(1, tage + H):
+            m[t] = phi * m[t - 1] + rng.normal(0.0, 1.0)
+        if m.std() > 0:
+            m = m / m.std()
+        einzel = rng.standard_t(4, size=(tage + H, je_tag_n))
+        tagesr = (m[:, None] * SCHOCK_ANTEIL
+                  + einzel * (1.0 - SCHOCK_ANTEIL))
+        # Vorwaerts summieren und auf die echte IQA skalieren.
+        kum = np.cumsum(tagesr, axis=0)
+        vor = kum[H:] - kum[:-H]          # (tage, je_tag_n)
+        iq = float(np.percentile(vor, 75) - np.percentile(vor, 25))
+        if iq > 0:
+            vor = vor * (ECHT_IQA / iq)
+
     je_tag, mom = {}, {}
     for t in range(tage):
         tag = "T%05d" % t
@@ -129,10 +204,16 @@ def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
         # ⚠️ DIE ECHTE Rangfunktion, keine Nachbildung - sonst weicht die
         # gepflanzte Grenze von der gemessenen ab.
         oben = W.rang(kz) >= W.GRENZE
-        y = (ECHT_MEDIAN + schock[t] * s_schock
-             + rng.standard_t(4, size=je_tag_n) * s_eigen)
-        if staerke:
-            y = y - float(staerke) * oben
+        if vor is not None:
+            y = ECHT_MEDIAN + vor[t]
+        else:
+            y = (ECHT_MEDIAN + schock[t] * s_schock
+                 + rng.standard_t(4, size=je_tag_n) * s_eigen)
+        if staerke or staerke_streuung:
+            s_t = float(staerke)
+            if staerke_streuung:
+                s_t += float(rng.normal(0.0, staerke_streuung))
+            y = y - s_t * oben
         je_tag[tag] = [{"sym": syms[i], "kennzahl": float(kz[i]),
                         "in_r": float(y[i])} for i in range(je_tag_n)]
         # Die AUSWAHL ist unabhaengig vom Effekt - der saubere Grundfall.

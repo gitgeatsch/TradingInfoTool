@@ -62,7 +62,7 @@ from messe_beitrag_auf_auswahl import sammle, momentum250   # noqa: E402
 from pruefe_n31_tagesklammer import je_tag_wirkung          # noqa: E402
 from messnorm import (Lage, Befund, Protokoll, ZIEHUNGEN,   # noqa: E402
                       SAAT, _block, NULL_ZIEHUNGEN, NULL_PERZENTIL,
-                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN)
+                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug)
 
 MENGEN = {"frei": 1.0, "50%": 0.50, "20%": 0.20, "10%": 0.10,
           "5%": 0.05}
@@ -364,8 +364,8 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
             # verschieden, widersprechen sich Trennschaerfe und Urteil im
             # SELBEN Satz - live sichtbar an `turnover`. Der Vorgabewert
             # laesst das alte Verhalten unveraendert.
-            latte = (max(0.0, null["oben"])
-                     if trennschaerfe_gegen_nullpunkt else 0.0)
+            # ⚠️ DERSELBE BEZUG WIE DAS URTEIL - siehe `messnorm._bezug`.
+            latte = (_bezug(null) if trennschaerfe_gegen_nullpunkt else 0.0)
             if pb:
                 werte.append(pb["mittel"])
                 if pb["unten"] > latte:

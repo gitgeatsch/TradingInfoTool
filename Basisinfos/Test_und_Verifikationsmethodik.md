@@ -10139,7 +10139,7 @@ Werkzeug: `messe_akkumulationsmass.py --horizont 90 [--kennlinie|--zerlege]`
 
 ---
 
-## 2.155 ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten
+## 2.188 ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten
 
 **Gemessen am 08.09.2026.** Werkzeuge: `n81_konvergiert_der_nullpunkt.py`
 · `n82_beitragslage_beide_nullregeln.py` · `n83_frei_beide_nullregeln.py`
@@ -10249,7 +10249,7 @@ Er macht die Urteile **widerspruchsfrei**, nicht **schärfer**. Offen:
 
 ---
 
-## 2.156 ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN
+## 2.201 ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN
 
 **Gefunden am 08.09.2026**, beim Bau des Prüfstandes für den Selbsttest —
 also von einem Vorabtest, nicht von einer Überlegung. Befunde 2.201.
@@ -10332,7 +10332,7 @@ Teil der Normbetrachtung. Das ist kein Zufall mehr, sondern ein Muster:
 
 ---
 
-## 2.157 ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit
+## 2.204 ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit
 
 **Gelaufen am 08.09.2026**, zum ersten Mal. Werkzeuge:
 `selbsttest_welt.py` (der Prüfstand) · `selbsttest_messanlage.py` (die
@@ -10472,3 +10472,111 @@ feuert.**
 > **„Die Anlage ist geprüft" heißt: für einen Niveauversatz, auf der
 > 20-%-Menge, bei H20, mit 150 Symbolen.** Alles andere ist weiterhin
 > unbelegt — und das ist ein Unterschied zu „unbewiesen falsch".
+
+---
+
+## 2.216 ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden
+
+**Gemessen und gesetzt am 09.09.2026** (Nutzerentscheidung). Werkzeug:
+`selbsttest_kriterien_echt.py`. Befunde 2.210 und 2.214 bis 2.218.
+
+### Die Frage
+
+`Befund.traegt` verglich die untere Vertrauensgrenze des Effekts mit
+`null_oben` — der **oberen** Vertrauensgrenze einer Nullwelt. Das
+verlangt zwei 95-%-Bänder, die sich **nicht überlappen**, und entspricht
+etwa p < 0,005 statt p < 0,05.
+
+> **Die Unsicherheit wird zweimal gezählt** — einmal im Band, einmal im
+> Nullpunkt.
+
+Belegt daran, dass der Nullpunkt kaum **Versatz** hat (Mittel +0,007 bis
++0,017), aber ein breites **Band** ([−0,027 .. +0,059]).
+
+### ⚠️ Warum nicht auf Kunstwelten geprüft wurde
+
+Der erste Anlauf lief auf künstlichen Welten. Beim Gegenprüfen war sie
+**sechsmal präziser als die Wirklichkeit** (Bandbreite 0,018 gegen 0,108).
+Weder Überlappung der Zielgröße noch Beharrlichkeit der Kennzahl noch
+Schwankung des Effekts schlossen die Lücke — zusammen kamen sie auf 0,029.
+
+> **Ein Prüfstand, der präziser ist als die Wirklichkeit, beantwortet die
+> Frage nicht** — dort funktioniert jedes Kriterium.
+
+⚠️ Statt die Kunstwelt weiter zu kalibrieren, bis sie passt (Probieren,
+hinterher nicht mehr auseinanderzuhalten), wurde auf die **echten Daten**
+gewechselt: eine **Nullwelt entsteht durch Mischen der Ränge je
+Kalendertag**. Sie hat die echte Streuung, Trägheit und Symbolzahl von
+selbst — und enthält per Konstruktion keinen Zusammenhang.
+
+### Das Ergebnis — 150 Nullwelten über drei Basen
+
+`turnover` 50 % · `funding` 10 % · `oi_aenderung` 20 %, je ab 2022.
+Sollwert **2,5 %**, weil das Band ein 95-%-Band ist.
+
+| Bezug | Fehlalarme | Fundquote |
+|---|---|---|
+| `null_oben` | **0/150 = 0,0 %** | 34/54 = **63 %** |
+| **`nullpunkt`** | **4/150 = 2,7 %** | 53/54 = **98 %** |
+| `null` | **42/150 = 28,0 %** | 54/54 = 100 % |
+
+**Drei Aussagen, jede belegt:**
+
+1. ⚠️⚠️ **`null` ist widerlegt** — 28 % Fehlalarme. Das ist das Kriterium
+   aus Befund 2.162, auf dem `turnover`, `funding` und `oi_aenderung`
+   geführt wurden. Auf der `oi_aenderung`-Basis sogar **40 %**.
+2. ⚠️ **`null_oben` ist zu streng** — es findet eine Wirkung von +0,0448
+   in **keinem** von sechs Fällen. `turnover` wirkt +0,0608.
+3. ✔ **`nullpunkt` trifft das Ziel** — 2,7 % ± 1,7, vom Sollwert nicht
+   unterscheidbar, bei 98 % Fundquote.
+
+⚠️ **Beide Fehlerarten zählen.** Wer nur die Fehlalarme ansieht, wählt
+immer den strengsten Bezug — und genau das steckte in der Anlage.
+
+### ⚠️⚠️ EIN Bezug, nicht zwei
+
+Fehler 2 vom 08.09. war *„zwei Maßstäbe in einem Satz"*. Deshalb lesen
+Urteil **und** Trennschärfe dieselbe Größe (`messnorm._bezug`) — in allen
+drei Normmodulen. Das Prüfpaket `Messstandard` bewacht es, durch Mutation
+belegt.
+
+### Die Abnahme
+
+| | |
+|---|---|
+| **Vorhersage vorab** | „A FA nahe 0, Fundquote bricht ein · B FA um 2,5 % · C deutlich darüber" — eingetroffen |
+| **Der Gegen-Ausgang benannt** | „Fällt B's Fehlalarmquote hoch aus, bleibt A zu Recht stehen" |
+| **Gegenprüfung** | dritte, unabhängige Basis (Terminmarkt, 122 Symbole): B 2,0 %, C 40,0 % |
+| **Reproduktion** | mit `NULLBEZUG="null_oben"` kommen **alle acht** Prüfpunkte ziffergenau wie am 08.09. heraus |
+| **Kontrolle** | `zufall` trägt unter B **weder** auf `frei` **noch** auf 5 % |
+
+### Die Beitragslage unter dem neuen Bezug
+
+| | Wirkung | Bezug | trägt | Trennschärfe |
+|---|---|---|---|---|
+| `schnitt` 20 % | +0,1858 | +0,0136 | ✔ | 0,0376 |
+| `funding` frei | +0,0249 | +0,0000 | ✔ | 0,0105 |
+| `turnover` frei | +0,0639 | +0,0062 | ✔ | 0,0255 |
+| `turnover` 50 % ab 2022 | +0,0608 | +0,0068 | ✔ | 0,0244 |
+| `funding` 10 % ab 2022 | +0,0542 | +0,0106 | ✔ | 0,0366 |
+| `oi_aenderung` 20 % ab 2022 | +0,0442 | +0,0172 | ✔ | 0,0530 |
+| **`zufall` frei** | +0,0043 | +0,0022 | **✖** | 0,0116 |
+| **`zufall` 5 % ab 2022** | +0,0053 | +0,0081 | **✖** | 0,0469 |
+
+Die Trennschärfen liegen jetzt bei 0,010 bis 0,053 statt 0,08 bis 0,10 —
+in der Größenordnung der gemessenen Auflösung statt darüber.
+
+### ⚠️⚠️ Was damit NICHT gemessen ist
+
+Nutzerhinweis vom 09.09., wörtlich:
+
+> *„wir sind noch in der Prüfung und Kalibrierung einzelner Beiträge. Die
+> Leistung der Kette ist hier noch nicht berücksichtigt."*
+
+Ungemessen bleiben: das **Zusammenwirken** der Beiträge in
+`potential.rechne` · die Wirkung der Schwelle auf die tatsächlich
+erzeugten Signale · die Trichterstufen davor · und ob die Kette am Ende
+besser ist als ihre Teile.
+
+⚠️ Die Kalibrierung „0,080 → 16,5 % Durchlass" sagt, wie **streng** die
+Schwelle ist — **nicht, was dabei herauskommt.**

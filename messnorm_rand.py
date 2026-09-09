@@ -57,7 +57,7 @@ import messe_regel_wirksamkeit as W                          # noqa: E402
 import messnorm as N                                         # noqa: E402
 from messnorm import (Befund, Lage, Protokoll, SAAT,   # noqa: E402
                       ZIEHUNGEN, NULL_ZIEHUNGEN, NULL_PERZENTIL,
-                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN)
+                      TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug)
 
 # Die Marken, an denen der Rand gemessen wird. +2 R ist der Alltag
 # (6,65 % der Asset-Tage), +3 R der schaerfere Schnitt.
@@ -246,7 +246,8 @@ def pruefe_rand(kandidat: str, je_tag: dict, *, lage: Lage, menge: str, rng,
             if pb:
                 werte.append(pb["mittel"])
                 # DERSELBE MASSSTAB WIE DAS URTEIL (Befund 2.188).
-                latte = (max(0.0, null["oben"])
+                # ⚠️ DERSELBE BEZUG WIE DAS URTEIL (`messnorm._bezug`).
+                latte = (_bezug(null)
                          if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
                 if pb["unten"] > latte:
                     gefunden += 1
@@ -400,7 +401,8 @@ def pruefe_geschichtet(kandidat: str, je_tag: dict, schicht_je_tag: dict, *,
             if pb:
                 werte.append(pb["mittel"])
                 # DERSELBE MASSSTAB WIE DAS URTEIL (Befund 2.188).
-                latte = (max(0.0, null["oben"])
+                # ⚠️ DERSELBE BEZUG WIE DAS URTEIL (`messnorm._bezug`).
+                latte = (_bezug(null)
                          if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
                 if pb["unten"] > latte:
                     gefunden += 1

@@ -1808,7 +1808,7 @@ STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
 
 Durchgezogen in: `messnorm.py` (die Quelle) · `messnorm_auswahl.py` ·
 `messnorm_rand.py` · `pruefe_pakete.py` (Paket **`Messstandard`**, zehn
-Prüfungen, alle durch Mutation belegt) · `CLAUDE.md` · Methodik **2.155**
+Prüfungen, alle durch Mutation belegt) · `CLAUDE.md` · Methodik **2.188**
 · Befunde **2.188 bis 2.200** · Memory.
 
 ⚠️ **Ein viertes betroffenes Modul kam dabei heraus:**
@@ -1875,7 +1875,7 @@ Vermutung über die gemischte Welt war die falsche Spur.
 „trägt nicht bis 0,20 R". Wirkung +0,0639 gegen Auflösung 0,0456 — die
 Wirkung liegt über der Auflösung, das Band schließt die Null ein.
 
-Ausführlich: Methodik **2.156**.
+Ausführlich: Methodik **2.201**.
 
 ---
 
@@ -1938,4 +1938,81 @@ die mit dem Effekt zusammenhängt.
 > **„Geprüft" heißt hier: in diesem Ausschnitt.** Das ist erheblich mehr
 > als heute früh — und es ist nicht dasselbe wie „überall richtig".
 
-Ausführlich: Methodik **2.157**, Befunde **2.204 bis 2.207**.
+Ausführlich: Methodik **2.204**, Befunde **2.204 bis 2.207**.
+
+---
+
+## ✔✔✔ 09.09.2026 — DER NULLBEZUG IST GEMESSEN ENTSCHIEDEN
+
+R-R9 abzuarbeiten hat auf eine tiefer liegende Frage geführt: **wogegen
+wird eigentlich geprüft?**
+
+### Was R-R9 selbst ergab
+
+✔ **Im engeren Sinn erfüllt.** Beitragslage im Code unverändert,
+Fingerabdruck stimmt, Kalibrierung reproduziert ziffergenau: **0,080 →
+16,5 % Durchlass**, Gewinn +0,1316 gegen +0,1324.
+
+⚠️ Dabei kam heraus: **`schnitt` wurde nie wieder aufgenommen.** Seine
+Rücknahme vom 31.08. gilt seit dem 07.09. als abgelöst (kontaminierte
+Basis) — im Code steht er weiter auf `stufen=None`. ⚠️ Er kann aber auch
+kein Regler sein: seine fünf Stufen sind ein **Buckel**, zweimal
+gemessen. **Es gibt also gar keinen Beitragswechsel, für den zu
+kalibrieren wäre.**
+
+⚠️ Und eine eigene Korrektur: ich hatte `turnover` auf der vollen
+Historie gemessen — seine registrierte Basis ist **50 % ab 2022**.
+Derselbe R-R11-Verstoß, den ich bei `funding` am selben Tag vermieden
+hatte. Auf der eigenen Basis reproduzieren die Wirkungen ziffergenau.
+
+### Der eigentliche Fund
+
+`traegt` verglich die **untere** Vertrauensgrenze des Effekts mit der
+**oberen** der Nullwelt — zwei 95-%-Bänder, die sich nicht überlappen,
+also etwa p < 0,005. **Die Unsicherheit wurde zweimal gezählt.**
+
+### Wie entschieden wurde — gemessen, nicht diskutiert
+
+150 Nullwelten über **drei echte Basen** (Ränge je Tag gemischt):
+
+| Bezug | Fehlalarme (Soll 2,5 %) | Fundquote |
+|---|---|---|
+| `null_oben` (bis 08.09.) | **0/150 = 0,0 %** | 34/54 = **63 %** |
+| **`nullpunkt`** ← gewählt | **4/150 = 2,7 %** | 53/54 = **98 %** |
+| `null` (Befund 2.162) | **42/150 = 28,0 %** | 54/54 = 100 % |
+
+⚠️⚠️ **Das alte Kriterium erzeugte 28 % Fehlalarme** — auf der
+`oi_aenderung`-Basis sogar 40 %. Darauf standen `turnover`, `funding` und
+`oi_aenderung`.
+
+### ⚠️ Der Prüfstand vom 08.09. musste dafür ersetzt werden
+
+Er war **sechsmal präziser als die Wirklichkeit**. Drei Erklärungen
+probiert (Überlappung, Beharrlichkeit, Effektschwankung) — zusammen 0,029
+gegen echte 0,108. Dann **abgebrochen statt weiterkalibriert**, und auf
+Nullwelten aus **echten** Daten gewechselt.
+
+⚠️ Damit ist auch die gestrige Aussage eingeschränkt: die dort gemessene
+Auflösung von +0,0293 galt für eine leichtere Welt.
+
+### Der Stand jetzt
+
+```python
+messnorm.NULLBEZUG = "nullpunkt"     # Urteil UND Trennschaerfe
+```
+
+Alle sechs registrierten Messpunkte tragen, **`zufall` trägt nicht** —
+weder auf `frei` noch auf 5 %. Die Trennschärfen liegen bei 0,010 bis
+0,053 statt 0,08 bis 0,10.
+
+### ⚠️⚠️ Und was das ausdrücklich NICHT ist
+
+Nutzerhinweis 09.09.: *„wir sind noch in der Prüfung und Kalibrierung
+einzelner Beiträge. **Die Leistung der Kette ist hier noch nicht
+berücksichtigt.**"*
+
+Ungemessen: das Zusammenwirken der Beiträge · die Wirkung der Schwelle
+auf die tatsächlich erzeugten Signale · die Trichterstufen davor · ob die
+Kette am Ende besser ist als ihre Teile.
+
+Ausführlich: Methodik **2.216**, Befunde **2.208 bis 2.218**.

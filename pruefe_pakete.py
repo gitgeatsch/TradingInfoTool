@@ -17411,6 +17411,58 @@ def paket_messstandard() -> None:
            "`schnitt` 20 % hatte traegt=True und meldete 'KEIN BEFUND' "
            "(Befund 2.193)")
 
+    # ---- ⚠️ Die NUMMERNFOLGE: Methodik und Befunde teilen sie ------------
+    #
+    # Am 09.09. angelegt, weil genau das passiert ist: drei neue
+    # Methodik-Kapitel bekamen 2.155/2.156/2.157 - Nummern, die seit dem
+    # 07.09. als BEFUNDE vergeben waren (n61-n63, voellig anderer Inhalt).
+    # Ein Verweis "siehe Methodik 2.157" haette dann auf zwei
+    # verschiedene Sachen gezeigt.
+    import re as _re
+    import bestand as _bd
+    _meth = set(_re.findall(r"^## (2\.\d+) ",
+                            io.open("Basisinfos/Test_und_Verifikationsmethodik.md",
+                                    encoding="utf-8").read(), _re.M))
+    _bef = {b.kennung.split("-")[0] for b in _bd.BEFUNDE}
+    # Ein Kapitel darf es ohne Befund geben (aeltere), aber keines darf auf
+    # einer Nummer liegen, die ein Befund ANDEREN Inhalts belegt. Praktisch
+    # pruefbar: jedes Kapitel ab 2.155 muss einen gleichnamigen Befund haben.
+    _neu = sorted(x for x in _meth
+                  if x.startswith("2.") and x.count(".") == 1
+                  and len(x.split(".")[1]) == 3
+                  and int(x.split(".")[1]) >= 155)
+    _ohne = [x for x in _neu if x not in _bef]
+    pruefe(P, "⚠️ jedes neue Methodik-Kapitel hat einen Befund gleicher "
+              "Nummer",
+           not _ohne,
+           "Methodik-Kapitel und Befund-Kennungen sind DIESELBE Folge. "
+           "Ohne Befund gleicher Nummer zeigt ein Verweis auf zwei "
+           "verschiedene Sachen%s"
+           % (" - betroffen: %s" % ", ".join(_ohne) if _ohne else ""))
+
+    # ---- Der NULLBEZUG: gemessen gewaehlt, nicht gesetzt -----------------
+    pruefe(P, "⚠️⚠️ der NULLBEZUG ist BENANNT und an EINER Stelle",
+           hasattr(_N, "NULLBEZUG") and hasattr(_N, "_bezug")
+           and "def bezugswert" in quelle_a,
+           "wogegen geprueft wird, entscheidet ueber jedes Urteil - eine "
+           "Zahl ohne Namen wird nicht wiedergefunden")
+    pruefe(P, "⚠️⚠️ und Urteil UND Trennschaerfe lesen DENSELBEN Bezug",
+           ("return self.unten > self.bezugswert" in quelle_a
+            and "latte = _bezug(null)" in quelle_a
+            and "_bezug(null)" in quelle_b and "_bezug(null)" in quelle_c),
+           "Fehler 2 vom 08.09. war genau das: zwei Massstaebe in EINEM "
+           "Satz - das Urteil gegen `null_oben`, die Trennschaerfe gegen "
+           "null. Wer sie trennt, baut ihn neu ein")
+    pruefe(P, "⚠️ der Bezug ist der GEMESSENE (`nullpunkt`), nicht der "
+              "strengste",
+           _N.NULLBEZUG == "nullpunkt",
+           "auf echten Daten gemessen (150 Nullwelten, drei Basen): "
+           "`nullpunkt` 2,7 %% Fehlalarme bei Soll 2,5 %% und 98 %% "
+           "Fundquote · `null_oben` 0 %% Fehlalarme, aber nur 63 %% "
+           "Fundquote · `null` 28 %% Fehlalarme. ⚠️ BEIDE Fehlerarten "
+           "zaehlen - wer nur die Fehlalarme ansieht, waehlt immer das "
+           "strengste (bekommen: %r)" % _N.NULLBEZUG)
+
     # ---- Fehler 5: EINE Skala fuer Trennschaerfe und Wirkung -------------
     pruefe(P, "⚠️⚠️ die Trennschaerfe steht auf der GEMESSENEN Skala",
            ('trennschaerfe = float(np.mean(werte))' in quelle_a

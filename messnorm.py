@@ -209,20 +209,70 @@ SAAT = 20260906
 # rechtfertigen wuerde, ist ein Selbsttest der ganzen Anlage gegen
 # bekannte Wahrheit - Fehlalarm- UND Fundquote. Der fehlt.
 # ============================================================================
-MESSSTANDARD_AB = "2026-09-08"
+MESSSTANDARD_AB = "2026-09-09"
 NULL_ZIEHUNGEN = 40
 NULL_PERZENTIL = 90.0
 TRENNSCHAERFE_GEGEN_NULLPUNKT = True
 STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
 
+# ---- DER NULLBEZUG (09.09.2026, gemessen und vom Nutzer entschieden) -------
+#
+# Wogegen wird geprueft? Drei Kandidaten standen zur Wahl, alle drei wurden
+# gegen bekannte Wahrheit gemessen - auf ECHTEN Daten, mit Nullwelten durch
+# Mischen der Raenge (`selbsttest_kriterien_echt.py`, 150 Nullwelten ueber
+# DREI Basen: turnover 50 %, funding 10 %, oi_aenderung 20 %):
+#
+#     Bezug          Fehlalarme (Soll 2,5 %)      Fundquote
+#     "null_oben"      0 / 150  =  0,0 %          34/54 =  63 %
+#     "nullpunkt"      4 / 150  =  2,7 %          53/54 =  98 %   <- gewaehlt
+#     "null"          42 / 150  = 28,0 %          54/54 = 100 %
+#
+# ⚠️ BEIDE FEHLERARTEN ZAEHLEN. Wer nur die Fehlalarme ansieht, waehlt
+# immer den strengsten Bezug - und "null_oben" findet eine Wirkung von
+# +0,0448 in KEINEM von sechs Faellen, waehrend `turnover` +0,0608 wirkt.
+#
+# ---- WARUM "nullpunkt" UND NICHT "null_oben" -------------------------------
+#
+# `null_oben` ist die OBERE Vertrauensgrenze einer Nullwelt, also ein
+# STREUMASS. `unten > null_oben` verlangt damit zwei 95-%-Baender, die sich
+# nicht ueberlappen - das entspricht etwa p < 0,005 statt p < 0,05. Die
+# Unsicherheit wird zweimal gezaehlt: einmal im Band, einmal im Nullpunkt.
+#
+# `nullpunkt` ist das MITTEL der Nullwelten, also der VERSATZ. Den gibt es
+# wirklich (+0,007 bis +0,017; auf `funding`s Nullwelten sogar +0,0139
+# Wirkung ohne jeden Zusammenhang) - deshalb reicht "null" nicht.
+#
+#     Versatz abziehen     noetig    -> sonst 28 % Fehlalarme
+#     Streuung abziehen    doppelt   -> sie steckt im Band bereits
+#
+# ---- ⚠️⚠️ EIN BEZUG, NICHT ZWEI --------------------------------------------
+#
+# Fehler 2 vom 08.09. war "zwei Massstaebe in EINEM Satz": das Urteil pruefte
+# gegen `null_oben`, die Trennschaerfe gegen null. Deshalb lesen BEIDE diese
+# eine Groesse. Wer sie aendert, aendert beide - das ist Absicht.
+NULLBEZUG = "nullpunkt"          # "nullpunkt" | "null_oben" | "null"
+
+
+def _bezug(null: dict) -> float:
+    """Der Bezugspunkt aus einer Nullkontrolle — dieselbe Wahl wie `traegt`.
+
+    ⚠️ Es gibt sie, damit Urteil und Trennschaerfe NICHT auseinanderlaufen
+    koennen (Fehler 2 vom 08.09.). Wer hier etwas aendert, aendert beide.
+    """
+    if NULLBEZUG == "null_oben":
+        return max(0.0, float(null.get("oben") or 0.0))
+    if NULLBEZUG == "null":
+        return 0.0
+    return max(0.0, float(null.get("mittel") or 0.0))
+
 
 def standardzeile() -> str:
     """Der Messstandard IN KLARTEXT - fuer jeden Messkopf und Bericht."""
-    return ("Messstandard ab %s: Nullpunkt = %.0f. Perzentil ueber %d "
-            "Ziehungen | Trennschaerfe gegen %s | gepflanzte Staerken bis "
-            "%.2f R | Positivkontrolle %d Ziehungen (unveraendert)"
-            % (MESSSTANDARD_AB, NULL_PERZENTIL, NULL_ZIEHUNGEN,
-               "den Nullpunkt" if TRENNSCHAERFE_GEGEN_NULLPUNKT else "NULL",
+    return ("Messstandard ab %s: Bezug = %s (Fehlalarme 2,7 %% bei Soll "
+            "2,5 %%, Fundquote 98 %%) | Nullwelten = %.0f. Perzentil ueber "
+            "%d Ziehungen | Trennschaerfe gegen denselben Bezug | "
+            "gepflanzte Staerken bis %.2f R | Positivkontrolle %d Ziehungen"
+            % (MESSSTANDARD_AB, NULLBEZUG, NULL_PERZENTIL, NULL_ZIEHUNGEN,
                max(STAERKEN), ZIEHUNGEN))
 
 STOP_BEENDET = {("hebel", "einstieg"), ("hebel", "swing")}
@@ -435,7 +485,23 @@ class Befund:
 
     @property
     def traegt(self) -> bool:
-        return self.unten > max(0.0, self.null_oben)
+        return self.unten > self.bezugswert
+
+    @property
+    def bezugswert(self) -> float:
+        """Wogegen geprueft wird — EINE Groesse fuer Urteil UND Trennschaerfe.
+
+        ⚠️ Gemessen am 09.09.2026 auf echten Daten (150 Nullwelten, drei
+        Basen): `nullpunkt` trifft mit 2,7 % Fehlalarmen den Sollwert von
+        2,5 % und findet 98 % der gepflanzten Effekte. `null_oben` macht
+        0 % Fehlalarme, findet aber nur 63 % - es zaehlt die Unsicherheit
+        doppelt. `null` macht 28 % Fehlalarme.
+        """
+        if NULLBEZUG == "null_oben":
+            return max(0.0, self.null_oben)
+        if NULLBEZUG == "null":
+            return 0.0
+        return max(0.0, self.nullpunkt)
 
     @property
     def urteil(self) -> str:
@@ -652,8 +718,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
             if pb:
                 werte.append(pb["mittel"])
             # DERSELBE MASSSTAB WIE DAS URTEIL (2.188-inkonsistenz).
-            latte = (max(0.0, null["oben"])
-                     if TRENNSCHAERFE_GEGEN_NULLPUNKT else 0.0)
+            latte = _bezug(null)
             if pb and pb["unten"] > latte:
                 gefunden += 1
         treffer[s] = gefunden
