@@ -850,6 +850,26 @@
 
 - Quelle: Selbstbefund 09.09.2026
 
+**2.262** — ⚠️⚠️⚠️ DER BETRIEBSABLAUF IST ZWEISTUFIG - und F-212s Messmenge bildet ihn nach. `marktrang.raenge` bildet den Rang ueber die MESSBASIS (536) und liest ihn fuer unsere Symbole nur ab (,DER RANG ENTSTEHT UEBER DEN MARKT'); `auswahl.waehle` nimmt danach k=2 aus der Watchlist nach 250-Tage-Entwicklung - 4,7 %. F-212s ,oberste 5 % nach Momentum' ist damit KEIN Messkonstrukt, sondern eine Nachbildung genau dieser Auswahl, nur auf der Messbasis statt auf der Watchlist. ⚠️ Damit ist der Widerspruch aus 2.228 aufloesbar: die Ableitungsbasis (`frei`) ist die Rangmenge, die Auswahlmenge ist die Bewertungsmenge - zwei verschiedene Rollen, kein Widerspruch
+
+- Quelle: agent/marktrang.py:643 / agent/auswahl.py:70
+
+**2.263** — ⚠️⚠️⚠️ DIE MENGE ENTSCHEIDET DAS URTEIL UEBER DEN KNICK (N-96). `d01` = Fuenftel 1 minus Fuenftel 0 bei `funding`: auf `frei` +0,0402 [-0,0369 .. +0,1159] NICHT trennbar, auf 20 % +0,2069 [+0,0137 .. +0,4304] TRENNBAR - und die Kontrolle ist in BEIDEN Zellen stumm (+0,0139 bzw. +0,0033). Auf `frei` traegt `d34` (+0,0656 [+0,0191 .. +0,1180]), der Aufbau arbeitet dort also; auf 20 % traegt `d34` NICHT (+0,0786), waehrend `d01` traegt. ⚠️⚠️ ES GIBT KEINE MENGE, AUF DER BEIDES ZUSAMMENPASST - und damit keinen Beleg fuer das Zusammenlegen von Stufe 0 und 1
+
+- Quelle: n96_d01_auf_der_selektierten_menge.py
+
+**2.264** — ⚠️⚠️ AUF DER LIVE-MENGE IST DIE FRAGE NICHT BEANTWORTBAR (N-97). Auf der Watchlist (43 Werte, Rang ueber die Messbasis, Verengung NACH dem Rang wie 2.229) hat `d34` nur 2,7 bzw. 2,4 Anker je Fuenftel - KEIN BEFUND, nicht ,traegt nicht'; `d01` hat dort ein Band von ±0,25 R. ⚠️⚠️ Und die Menge, auf der die ENTSCHEIDUNG faellt, sind k=2 Werte pro Tag. Eine fuenfstufige Tabelle laesst sich darauf nicht beurteilen - das ist keine Frage der Sorgfalt, sondern der Datenlage. Nebenbefund: von 43 Watchlist-Werten liegen je Tag 4,2/4,1/~11/2,7/2,4 in den Funding-Fuenfteln - die Stufen -0,54 und -1,70 tragen unter drei Werte je Tag
+
+- Quelle: n97_d01_auf_der_watchlist.py
+
+**2.265** — ⚠️⚠️ ,MONOTON' HIESS NIE STRENG MONOTON. `pruefe_funding_monoton.py:59` prueft mit einer TOLERANZ von 0,02 R (`werte[i] >= werte[i+1] - 0.02`). Die Inversion vom 30.08. betrug 0,002 R - ein Zehntel davon. Der Knick war BEKANNT und bewusst durchgelassen, nicht uebersehen. ⚠️ Die Toleranz steht nirgends in der Registrierung, die schlicht ,monoton ueber fuenf Fuenftel' behauptet - und sie ist die EINZIGE Monotoniepruefung im System; `turnover` hat gar keine. Damit waere das Zusammenlegen keine Fehlerkorrektur, sondern Kosmetik an einer bereits bewerteten Stelle
+
+- Quelle: pruefe_funding_monoton.py:59
+
+**2.266** — ⚠️⚠️⚠️ EIGENER KONSTRUKTIONSFEHLER, VOM CODE GEFANGEN: der erste N-96-Lauf hat ZUERST VERENGT UND DANN GERANGT. Damit entstehen Fuenftel INNERHALB der Kohorte - ein Merkmal, das weder `marktrang.raenge` noch `sammle` berechnet (beide: ,NACH dem Rang verengen, nie davor'). Vorabtest auf Kunstdaten mit korrelierter Auswahl: 0 % gemeinsame Mitglieder in Fuenftel 0. ⚠️ Bei `funding` blieb der Schaden klein (+0,2317 gegen +0,2069), weil seine Momentum-Korrelation +0,002 ist - der Fehler war real, seine Wirkung hier zufaellig gering. ⚠️⚠️ Gefunden hat ihn nicht die Pruefsuite, sondern das Nachlesen im BETRIEBSCODE - dieselbe Lehre wie 2.229
+
+- Quelle: Selbstbefund 09.09.2026 / Befund 2.229
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.

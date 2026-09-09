@@ -2371,7 +2371,7 @@ einmal offen war.
 | **B2** | `schnitt` **Form** (Buckel, dreimal aufgetreten) | ✔ **GELÖST 09.09.** — die Rangkorrelation zeigt **keinen Buckel**: beide Hälften negativ, auf Momentum wie Zufall. Der Buckel war ein Artefakt der Gruppenmediane bei 1,5 gegen 29,7 Ankern (2.249) |
 | **B3** | ⚠️ `vola` trägt mit **einer** Aussage von drei Mengen und ist auf 20 % zeitinstabil — **an derselben Stelle wie `schnitt`** | offen, Kollinearität vermutet, ungeprüft |
 | **B9** | `funding`s Buckel | ✔ **GEKLÄRT 09.09.** — er ist auf der 20-%-Menge trennbar, auf **`frei` nicht** (untere Hälfte +0,0211 [−0,000..+0,042]). Die Live-Stufen stehen auf `frei` und **reproduzieren exakt** (+0,77/+1,40/+0,22/−0,64/−1,75 gegen +0,82/+1,30/+0,12/−0,54/−1,70); die Fünftel sind dort ausgeglichen besetzt (30/29/30/29/30). ⚠️ Die Nicht-Monotonie bleibt real (2.251) |
-| **B11** | ⚠️ **NEU: zweitbestes Funding schlägt bestes Funding** — Fünftel 1 (+1,40) über Fünftel 0 (+0,77). Könnte heißen, dass **extremes Funding ein Warnsignal** ist statt des besten Falls. Nie geprüft | **offen** (2.252) |
+| **B11** | ⚠️⚠️ **Die MENGE entscheidet die Antwort** — auf `frei` ist der Knick Rauschen, auf der Auswahlmenge (20 %) trennbar. Es gibt keine Menge, auf der `d01` und der Prüfstein `d34` zusammenpassen; auf der Live-Menge (k=2/Tag) ist die Frage mangels Besetzung **nicht beantwortbar** | **offen — Datenlage** (2.263, 2.264) |
 | **B10** | ⚠️ `schnitt` als **Regler**: Form geklärt (monoton), Zeitstabilität geklärt (Kollinearität) — **die Stufen müssen aber noch aus einem monotonen Verfahren abgeleitet werden**, nicht aus Gruppenmedianen | **offen — der nächste Schritt** |
 | **B4** | `amihud` ist **zeitstabil mit konsistentem Vorzeichen** — trägt aber nicht. 2.166 sagt: er misst **Ausführbarkeit**, nicht Potential | offen als Nebenweg |
 | **B5** | `schnitt50` zeitstabil, aber **Widerspruch** im Gesamtlauf | offen |
@@ -2478,7 +2478,7 @@ eine andere Achse:** den Abstand vom **eigenen** Normalzustand in MAD,
 
 ---
 
-## 09.09. — B10 UND B11 GELÖST: der Knick ist Rauschen, die Lösung ist Zusammenlegen
+## 09.09. — B10/B11: der Knick auf `frei` — ⚠️ ÜBERHOLT, siehe die Korrektur darunter
 
 ### Zwei Kriterien sind vorher gescheitert
 
@@ -2530,6 +2530,82 @@ unterscheidbar** sind, werden **beide** Tabellen monoton fallend.
 durch die Messung begründet und stand **vorab** im Skriptkopf als
 Konsequenz — *„Dann wären Stufe 0 und 1 zusammenzulegen, nicht die
 Beiträge zu verwerfen."*
+
+---
+
+## ⚠️⚠️⚠️ 09.09. KORREKTUR — der Abschnitt darüber gilt NICHT MEHR
+
+**Anlass war die Nutzervorgabe** *„aber vorsicht funding wurde sehr
+intensiv geprüft — schau nochmal in die doku plan und messungen damit wir
+nichts zurück oder verbauen."* Sie war berechtigt: beim Öffnen von
+`agent/wahrscheinlichkeit.py` stand direkt an der Tabelle eine Sperre.
+
+> ⚠️⚠️ **WER DIESE TABELLE ÄNDERN WILL, MUSS AUF DER SELEKTIERTEN MENGE
+> MESSEN.** Alles andere misst eine Menge, in der die Beiträge gar nicht
+> wirken — und bekommt zuverlässig einen Nullbefund.
+
+**N-92, N-93 und N-95 liefen alle auf `frei`.** Der Vorschlag war damit
+nicht gedeckt.
+
+### Was das Nachmessen ergeben hat (N-96, N-97)
+
+| Menge | `d01` (der Knick) | `d34` (unstrittig) | Kontrolle |
+|---|---|---|---|
+| `frei` (536) | +0,0402 [−0,0369 .. +0,1159] **nicht trennbar** | **+0,0656 [+0,0191 .. +0,1180] trennbar** | ✔ stumm |
+| 20 % Momentum | **+0,2069 [+0,0137 .. +0,4304] TRENNBAR** | +0,0786 nicht trennbar | ✔ stumm |
+| 10 % | zu wenige Blöcke | zu wenige Blöcke | ⚠️ **feuert** (+0,0874) |
+| Watchlist (43) | +0,0423, Band ±0,25 R | Besetzung 2,7/2,4 → **KEIN BEFUND** | ✔ stumm |
+
+> ⚠️⚠️⚠️ **Es gibt keine Menge, auf der beides zusammenpasst.** Auf
+> `frei` arbeitet der Aufbau (`d34` trägt) und der Knick ist null; auf
+> 20 % trägt der Knick und `d34` nicht. **Damit ist das Zusammenlegen von
+> Stufe 0 und 1 nicht belegt — und die Live-Tabelle bleibt unverändert.**
+
+### ⚠️⚠️ Drei Nebenbefunde, die schwerer wiegen als die Ausgangsfrage
+
+**1. Der Betriebsablauf ist zweistufig — und F-212 bildet ihn nach.**
+
+```
+agent/marktrang.raenge    Rang über die MESSBASIS (536), für uns nur ABGELESEN
+agent/auswahl.waehle      k=2 aus der Watchlist nach 250-Tage-Entwicklung ≈ 4,7 %
+```
+
+F-212s „oberste 5 % nach Momentum" ist **kein Messkonstrukt**, sondern
+eine Nachbildung genau dieser Auswahl. Damit ist der Widerspruch aus
+**2.228 auflösbar**: `frei` ist die **Rang**menge, die Auswahl ist die
+**Bewertungs**menge — zwei Rollen, kein Widerspruch.
+
+**2. Die Live-Entscheidungsmenge sind k=2 Werte pro Tag.** Schon auf der
+ganzen Watchlist (43) reicht die Besetzung nicht (2,7 bzw. 2,4 Anker je
+Fünftel). Eine fünfstufige Tabelle lässt sich dort **nicht** beurteilen —
+Datenlage, nicht Sorgfalt. Von 43 Werten liegen je Tag
+**4,2 / 4,1 / ~11 / 2,7 / 2,4** in den Funding-Fünfteln; die Stufen
+−0,54 und −1,70 tragen unter drei Werte pro Tag.
+
+**3. „monoton" hieß nie streng monoton.**
+
+```python
+mono = all(werte[i] >= werte[i+1] - 0.02 for i in range(4))   # pruefe_funding_monoton.py:59
+```
+
+Die Prüfung vom 30.08. hat eine **Toleranz von 0,02 R**; die Inversion
+betrug 0,002 R. Der Knick war **bekannt und bewusst durchgelassen**.
+Zusammenlegen wäre also keine Fehlerkorrektur, sondern Kosmetik. ⚠️ Die
+Toleranz steht in keiner Registrierung — dort heißt es schlicht „monoton
+über fünf Fünftel" —, und es ist die **einzige** Monotonieprüfung im
+System; `turnover` hat gar keine.
+
+### ⚠️ Und ein eigener Fehler, den der Betriebscode gefangen hat
+
+Der **erste** N-96-Lauf hat zuerst verengt und dann gerangt. Das erzeugt
+Fünftel innerhalb der Kohorte — ein Merkmal, das die Anlage nie
+berechnet (`marktrang`: *„DER RANG ENTSTEHT ÜBER DEN MARKT"*; `sammle`:
+*„NACH dem Rang verengen, nie davor"*). Vorabtest auf Kunstdaten:
+**0 % gemeinsame Mitglieder** in Fünftel 0. Bei `funding` blieb der
+Schaden klein (+0,2317 gegen +0,2069), weil seine Momentum-Korrelation
++0,002 ist — der Fehler war real, seine Wirkung hier zufällig gering.
+
+**Befunde 2.262 bis 2.266.**
 
 ### ⚠️⚠️ Was daraus folgt — und es ist eine Entscheidung
 

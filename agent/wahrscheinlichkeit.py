@@ -337,6 +337,37 @@ BEITRAEGE = (
     # heisst ueberhitzt, viel Turnover heisst ueberbewertet. Wer die
     # Sortierrichtung dreht, dreht die Beitraege ins Gegenteil, ohne dass
     # eine Pruefung anschlaegt.
+    # ⚠️⚠️⚠️ ZWEITER AENDERUNGSVERSUCH AM 09.09.2026 - GEPRUEFT UND
+    # NICHT AUSGEFUEHRT. Er steht hier aus demselben Grund wie der
+    # Vorgang darunter: damit der naechste nicht bei null anfaengt.
+    #
+    # VORGESCHLAGEN WAR, Fuenftel 0 und 1 zusammenzulegen:
+    #     (+0.82, +1.30, +0.12, -0.54, -1.70)
+    #  -> (+1.06, +1.06, +0.12, -0.54, -1.70)   dann monoton fallend
+    #
+    # Gestuetzt auf N-95 ("der Knick ist Rauschen"). ⚠️ N-92/93/95 liefen
+    # ALLE auf `frei` - also genau das, was der Block unten verbietet.
+    #
+    # NACHGEMESSEN AUF DER AUSWAHLMENGE (N-96, N-97):
+    #
+    #     Menge        d01 = Stufe 1 - Stufe 0        d34 (Pruefstein)
+    #     frei         +0,0402 [-0,0369 .. +0,1159]   +0,0656 TRAEGT
+    #     20 %         +0,2069 [+0,0137 .. +0,4304]   +0,0786 traegt nicht
+    #     Watchlist    +0,0423, Band +-0,25 R         Besetzung 2,7/2,4
+    #
+    # ⚠️⚠️ ES GIBT KEINE MENGE, AUF DER BEIDES ZUSAMMENPASST. Auf `frei`
+    # arbeitet der Aufbau und der Knick ist null; auf der Auswahlmenge
+    # traegt der Knick und der Pruefstein nicht. Auf der Menge, auf der
+    # die Kette WIRKLICH entscheidet - `auswahl.waehle` nimmt k=2 nach
+    # 250-Tage-Entwicklung - ist die Besetzung zu duenn fuer ein Urteil.
+    #
+    # ⚠️ UND DER KNICK WAR NIE UEBERSEHEN: `pruefe_funding_monoton.py:59`
+    # prueft mit einer Toleranz von 0,02 R, die Inversion betrug 0,002 R.
+    # "monoton" hiess hier immer "monoton bis auf Rauschen".
+    #
+    # ⚠️⚠️ WER ES ERNEUT VERSUCHT, BRAUCHT EINE MESSUNG AUF DER
+    # AUSWAHLMENGE, DEREN PRUEFSTEIN `d34` DORT EBENFALLS TRAEGT.
+    # Alles andere ist eine Zelle ohne Gegenprobe. (Befunde 2.262-2.266)
     Beitrag(
         name="Funding-Rang im Markt",
         zustand="traegt", punkte=0.0, merkmal="funding_fuenftel",
