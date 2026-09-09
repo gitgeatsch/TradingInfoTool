@@ -2362,6 +2362,7 @@ einmal offen war.
 | **A5** | ⚠️ Die Positivkontrolle pflanzt in die **gemischte** Welt | ✔ weitgehend erklärt durch 2.201 (Skalenfehler), Rest gering |
 | **A6** | ⚠️⚠️ `messe_volumenanteil.py` fährt seine Negativkontrolle mit **EINER** Ziehung — und daraus stammt der registrierte Befund N-13-1' | **offen, Befund unter Vorbehalt** (2.203) |
 | **A7** | ⚠️ `messe_schwelle_kalibrierung.py` liest nur **zwei fest verdrahtete** Merkmale — ein dritter Beitrag würde still ignoriert | offen (2.211) |
+| **A8** | ⚠️⚠️⚠️ **Die Messnorm ist auf der LIVE-Menge nicht anwendbar** — `pruefe_auswahl` misst unter der Tagesklammer, bei k=2 bleiben **0 verwertbare Tage**. Dritte Sperre derselben Bauart neben A1 und A2 | **offen — Nutzerentscheidung** (2.273) |
 
 ## B — DIE BEITRÄGE
 
@@ -2383,7 +2384,7 @@ einmal offen war.
 
 | # | Punkt | Stand |
 |---|---|---|
-| **C1** | K-1a — Beiträge auf der A1-Menge | offen |
+| **C1** | K-1a — Beiträge auf der A1-Menge | ⚠️⚠️ **GEMESSEN 10.09.** — **kein** registrierter Beitrag trägt, bei keinem k. ⚠️ Aber es ist **kein Nullbefund**: bei k=2 ist selbst ein gepflanzter Effekt von 0,40 R nicht auflösbar (2.267, 2.267-kein-nullbefund) |
 | **C2** | K-1b — auf unselektierter Menge | ✔ **gemessen** — übertragen sich (2.221) |
 | **C3** | K-1c — andere Lagen | ⚠️ **teilweise**: Akkumulation nicht messbar (A2), Hebel ungültig (A1) |
 | **C4** | K-2 — trägt die **Summe** mehr als der beste Einzelne? | offen |
@@ -2613,3 +2614,97 @@ Es wäre ein **Eingriff in einen live laufenden Beitrag**: `funding`s
 Stufen wechselten von +0,82/+1,30/… auf +1,06/+1,06/…. Das ändert die
 Beitragslage und **löst R-R9 aus** — die Schwelle wäre neu zu
 kalibrieren. **Nutzerentscheidung, keine stille Automatik.**
+
+---
+
+## ⚠️⚠️⚠️ 10.09. — K-1a GEMESSEN: die Beiträge sind dort, wo entschieden wird, nicht prüfbar
+
+### Zuerst: was die A1-Menge wirklich ist
+
+Am Betriebscode nachgelesen, nicht angenommen:
+
+```
+agent/marktrang.raenge    Rang über die MESSBASIS (536), für uns nur ABGELESEN
+agent/auswahl.waehle      k = 2 nach 250-Tage-Entwicklung
+agent/rollen_lauf.py:1269 `return`, wenn nicht gewählt — ⚠️ nur OHNE Bestand
+```
+
+✔ **A1 sperrt wirklich** (2.270). Gehaltene Positionen umgehen die Auswahl
+ganz — deshalb ist K-1b eine echte zweite Frage, keine Variante.
+
+⚠️ **14 von 43 Watchlist-Werten sind heute gar nicht wählbar** — ihnen
+fehlt die Jahreshistorie (AIOZ, AKT, ASTER, BRETT, CANTON, CAT, GRIFFAIN,
+HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN). Über die ganze Historie sind
+im Schnitt nur **14,0 Werte je Tag** wählbar, 2026 aber **37,5** (2.271).
+
+### Das Ergebnis — Kontrolle 7 von 7 sauber
+
+| Kandidat | k=2 | k=3 | k=5 | k=8 | k=13 | k=21 | alle |
+|---|---|---|---|---|---|---|---|
+| `funding` | −0,0264 | −0,0375 | −0,0216 | −0,0133 | −0,0040 | −0,0002 | +0,0151 |
+| `turnover` | −0,0590 | −0,0414 | −0,0281 | −0,0194 | −0,0146 | −0,0121 | −0,0116 |
+| `oi_aenderung` | −0,0012 | +0,0374 | +0,0040 | +0,0226 | +0,0104 | +0,0213 | +0,0220 |
+| `schnitt` | **+0,8697** | **+0,4989** | +0,2107 | +0,1129 | +0,0412 | −0,0037 | −0,0313 |
+| `zufall` ✔ | −0,0101 | −0,0047 | +0,0039 | +0,0046 | +0,0057 | +0,0061 | −0,0022 |
+
+> ⚠️⚠️ **Kein registrierter Beitrag trägt — bei keinem k.** Aber das ist
+> **kein Nullbefund**: bei k=2 findet die Anlage nicht einmal einen
+> **gepflanzten** Effekt von 0,40 R, auch nicht bei der Kontrolle. Die
+> Beiträge sind nicht widerlegt, sie sind dort **nicht prüfbar**.
+
+### ⚠️⚠️⚠️ `schnitt`s scheinbarer Treffer ist die Kollinearität aus 2.242
+
+Die Diagnose zeigt es in einer Zeile — **Anteil der Gewählten, den die
+Regel sperrt** (definitionsgemäß 20 %):
+
+| | k=2 | k=3 | k=5 | k=8 | k=13 | k=21 | alle |
+|---|---|---|---|---|---|---|---|
+| `schnitt` | **82,3 %** | 75,1 % | 65,7 % | 58,9 % | 48,8 % | 42,9 % | 34,3 % |
+| `zufall` | 20,3 % | 20,0 % | 19,9 % | 20,0 % | 20,1 % | 19,9 % | 20,0 % |
+
+`frei` trägt bei `schnitt` und k=2 im Schnitt **0,35 Anker je Tag** —
+weniger als einen. Der Sperranteil fällt exakt spiegelbildlich zur
+Wirkung. **A1 und `schnitt` messen dasselbe:** wer 250 Tage gestiegen
+ist, steht über seinem eigenen Schnitt (2.268).
+
+### ⚠️⚠️ Und ein Nebenbefund, der schwerer wiegt als die Ausgangsfrage
+
+**Die registrierten Sperren feuern im Betrieb kaum:**
+
+| | sperrt auf der Watchlist |
+|---|---|
+| `turnover` | **1,9 %** |
+| `funding` | **13,2 %** |
+| `oi_aenderung` | 20,4 % ✔ |
+| `zufall` | 20,0 % ✔ |
+
+Eine Sperre, die zwei von hundert Werten trifft, ist praktisch keine —
+und sie erklärt, warum die Beiträge laut F-212 auf **1,5 % der Anker**
+wirken. Ursache ist die Messbasis: `turnover` deckt 66 von 536 Symbolen
+ab, und die Watchlist liegt in seiner Verteilung unten (2.269).
+
+### ⚠️ Kein Widerspruch zu K-1w — aber auch keine Reproduktion
+
+K-1w misst `funding` auf der Watchlist mit **+0,0886**, K-1a mit
+**+0,0151**. Zwei Unterschiede, **beide meine**: anderer Schätzer
+(gepoolt statt Tagesklammer) und andere Menge (nur A1-wählbare Symbole
+statt aller 43). **2.229-funding steht unverändert** — K-1a hat es nicht
+gemessen (2.272, R-R11).
+
+### ⚠️⚠️⚠️ Das Muster: dreimal dieselbe Aussage
+
+| | Sperre | trifft |
+|---|---|---|
+| **A1** | Band auf binären Daten 4× zu eng | **Hebel** |
+| **A2** | Blockregel bei H90 bräuchte 22 Jahre | **Akkumulation** |
+| **A8** | Tagesklammer bei k=2 → 0 verwertbare Tage | **die Live-Menge selbst** |
+
+> **Die Messanlage reicht überall dort nicht hin, wo das System
+> tatsächlich entscheidet.** Kein Messfehler, sondern eine Aussage über
+> die Datenlage.
+
+**Die Folge ist eine Nutzerentscheidung, keine Messung:** entweder die
+Kette entscheidet auf einer **breiteren Menge** — dann wird sie messbar
+—, oder es gilt ausdrücklich, dass die Bewertung nur auf einer
+**Stellvertretermenge** validiert ist. Beides ist vertretbar;
+stillschweigend das zweite zu tun, wäre es nicht (2.273).

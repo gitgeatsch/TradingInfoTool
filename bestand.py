@@ -2163,6 +2163,94 @@ BEFUNDE = (
                "hat ihn nicht die Pruefsuite, sondern das Nachlesen im "
                "BETRIEBSCODE - dieselbe Lehre wie 2.229", "gilt",
                "Selbstbefund 09.09.2026 / Befund 2.229"),
+    Befundlage("2.267", "⚠️⚠️⚠️ K-1a GEMESSEN: KEIN registrierter "
+               "Beitrag traegt auf der A1-MENGE - und zwar bei KEINEM k "
+               "(2, 3, 5, 8, 13, 21, alle A1-waehlbaren). `funding` "
+               "-0,0264 bei k=2 bis +0,0151 bei allen; `turnover` "
+               "durchgehend negativ (-0,0590 bis -0,0116); "
+               "`oi_aenderung` +0,0374 bis +0,0220. Alle Baender "
+               "schliessen den Nullpunkt ein. ⚠️ Die Kontrolle `zufall` "
+               "traegt bei KEINEM k - 7 von 7 sauber, der Lauf gilt",
+               "gilt", "k1a_beitrag_auf_der_a1_menge.py",
+               basis="H20 · A1-Menge top-k je Tag · gepoolt nach "
+                     "Messstandard · 40 Nullziehungen"),
+    Befundlage("2.267-kein-nullbefund", "⚠️⚠️ UND DAS IST KEIN "
+               "NULLBEFUND, sondern fehlende AUFLOESUNG: bei k=2 findet "
+               "die Anlage nicht einmal einen GEPFLANZTEN Effekt von "
+               "0,40 R - Urteil ,KEIN BEFUND (Leiter zu kurz)' bei "
+               "`funding`, `turnover` UND der Kontrolle. Erst ab k=21 "
+               "bzw. auf der vollen A1-Menge reicht die Leiter (,traegt "
+               "nicht bis 0,20'). ⚠️ Die registrierten Beitraege sind "
+               "damit NICHT widerlegt - sie sind dort nicht pruefbar",
+               "gilt", "k1a_beitrag_auf_der_a1_menge.py"),
+    Befundlage("2.268", "⚠️⚠️⚠️ `schnitt` SAH BEI k=2 UND k=3 WIE EIN "
+               "TRAEGER AUS (+0,8697 [+0,1099 .. +1,6776] und +0,4989) - "
+               "es ist die KOLLINEARITAET aus 2.242. Die Diagnose zeigt "
+               "es unmittelbar: die Regel sperrt auf der A1-Menge 82,3 % "
+               "der Gewaehlten statt der definitionsgemaessen 20 %, und "
+               "`frei` traegt im Schnitt 0,35 Anker JE TAG - weniger als "
+               "einen. Der Sperranteil faellt 82/75/66/59/49/43/34 mit "
+               "wachsendem k, die Wirkung spiegelbildlich "
+               "0,87/0,50/0,21/0,11/0,04/-0,00/-0,03. ⚠️ Ursache: die "
+               "A1-Regel waehlt die zwei besten nach 250-Tage-"
+               "Entwicklung - wer so gestiegen ist, steht ueber seinem "
+               "eigenen Schnitt. A1 und `schnitt` messen dasselbe",
+               "gilt", "k1a_diagnose_besetzung.py",
+               basis="H20 · A1-Menge · Sperranteil je k"),
+    Befundlage("2.269", "⚠️⚠️ DIE REGISTRIERTEN SPERREN FEUERN IM "
+               "BETRIEB KAUM: auf der Watchlist sperrt `turnover` 1,9 % "
+               "der Werte (bei k=2: 5,5 %), `funding` 13,2 %, waehrend "
+               "`oi_aenderung` mit 20,4 % und die Kontrolle mit 20,0 % "
+               "genau auf dem definitionsgemaessen Fuenftel liegen. "
+               "⚠️ Eine Sperre, die zwei von hundert Werten trifft, ist "
+               "praktisch keine - und sie erklaert, warum die Beitraege "
+               "laut F-212 auf 1,5 % der Anker wirken. Der Grund ist die "
+               "Messbasis: `turnover` deckt 66 von 536 Symbolen ab, und "
+               "die Watchlist liegt in seiner Verteilung unten",
+               "gilt", "k1a_diagnose_besetzung.py"),
+    Befundlage("2.270", "✔ A1 SPERRT WIRKLICH - am Betriebscode "
+               "geprueft, nicht angenommen: `rollen_lauf.py:1269` endet "
+               "mit `return`, wenn ein Symbol nicht in "
+               "`auswahl['gewaehlt']` steht. ⚠️ ABER NUR OHNE BESTAND "
+               "(`not _hat_bestand`) - gehaltene Positionen umgehen die "
+               "Auswahl ganz. Damit ist die Einstiegsmenge bestaetigt "
+               "k=2 je Tag, und K-1b (Bestandsmenge) ist eine echte "
+               "zweite Frage, keine Variante derselben",
+               "gilt", "agent/rollen_lauf.py:1269"),
+    Befundlage("2.271", "⚠️⚠️ 14 VON 43 WATCHLIST-WERTEN SIND HEUTE GAR "
+               "NICHT A1-WAEHLBAR - ihnen fehlt die Jahreshistorie, und "
+               "`auswahl.rangliste` ueberspringt Werte mit "
+               "`len(kerzen) <= 250`: AIOZ, AKT, ASTER, BRETT, CANTON, "
+               "CAT, GRIFFAIN, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, "
+               "VSN. ⚠️ Ueber die ganze Historie sind im Schnitt nur "
+               "14,0 Werte je Tag waehlbar (33 %), 2026 aber 37,5 "
+               "(87 %) - wer den Durchschnitt als heutigen Zustand "
+               "liest, unterschaetzt die Menge um mehr als das Doppelte",
+               "gilt", "k1a_beitrag_auf_der_a1_menge.py"),
+    Befundlage("2.272", "⚠️ KEIN WIDERSPRUCH ZU 2.229-funding, ABER "
+               "AUCH KEINE REPRODUKTION (R-R11): K-1w misst `funding` "
+               "auf der Watchlist mit +0,0886 [+0,0582 .. +0,1458], "
+               "K-1a auf seiner vollen A1-Menge mit +0,0151 [-0,0101 .. "
+               "+0,0366]. Zwei Unterschiede, beide meine: anderer "
+               "SCHAETZER (gepoolt statt Tagesklammer) und andere MENGE "
+               "(nur A1-waehlbare Symbole statt aller 43). 2.229-funding "
+               "steht unveraendert - K-1a hat es nicht gemessen",
+               "gilt", "k1a_beitrag_auf_der_a1_menge.py / R-R11"),
+    Befundlage("2.273", "⚠️⚠️⚠️ DIE DRITTE STRUKTURELLE SPERRE DERSELBEN "
+               "BAUART: `messnorm_auswahl.pruefe_auswahl` misst unter "
+               "der TAGESKLAMMER - median(frei) minus median(alle) "
+               "INNERHALB jedes Tages. Auf der A1-Menge (k=2) bleiben "
+               "gemessen NULL verwertbare Tage. ⚠️ Zusammen mit A1 "
+               "(Hebel: Band auf binaeren Daten viermal zu eng) und A2 "
+               "(Akkumulation: Blockregel bei H90 braeuchte 22 Jahre) "
+               "steht dreimal dieselbe Aussage: DIE MESSANLAGE REICHT "
+               "NICHT DORTHIN, WO DAS SYSTEM ENTSCHEIDET. Das ist kein "
+               "Messfehler, sondern eine Aussage ueber die Datenlage - "
+               "und die Folge ist eine NUTZERENTSCHEIDUNG: entweder die "
+               "Kette entscheidet auf breiterer Menge, oder die "
+               "Bewertung gilt ausdruecklich nur auf einer "
+               "Stellvertretermenge als validiert",
+               "gilt", "k1a_beitrag_auf_der_a1_menge.py / A1 / A2"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "
