@@ -289,7 +289,9 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
                    null_ziehungen: int = NULL_ZIEHUNGEN,
                    null_perzentil: float = NULL_PERZENTIL,
                    trennschaerfe_gegen_nullpunkt: bool =
-                   TRENNSCHAERFE_GEGEN_NULLPUNKT) -> Befund:
+                   TRENNSCHAERFE_GEGEN_NULLPUNKT,
+                   auswahl_saat: int | None = None,
+                   nur: set | None = None) -> Befund:
     """Ein Befund auf der selektierten Menge, unter der TAGESKLAMMER.
 
     ⚠️⚠️ DIE VORGABEWERTE SIND DER MESSSTANDARD (`messnorm`, 08.09.2026)
@@ -308,14 +310,45 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     ⚠️ Die Umstellung wurde Ziffer fuer Ziffer gegen die Vorgaengerfassung
     geprueft, BEVOR sie Standard wurde (N-82: 14 von 16 Urteilen
     unveraendert, `zufall` unter beiden Regeln sauber).
+
+    ## ⚠️⚠️ `auswahl_saat` — die Menge ZUFAELLIG statt nach Momentum
+
+    Fuer die Kettenfrage K-1b (09.09.2026). Die Kette beurteilt 27 von 43
+    Werten, davon 25 **weil der Nutzer sie haelt** - nach NICHTS
+    selektiert. Die Beitraege sind aber alle auf momentum-verengten
+    Mengen belegt. Ob sie sich auf eine unselektierte Menge uebertragen,
+    ist nie geprueft worden.
+
+    `auswahl_saat` waehlt je Tag GLEICH VIELE Werte, aber zufaellig. Alles
+    andere bleibt: der Rang kommt weiter aus dem vollen Tagesquerschnitt
+    (wie `marktrang` in der Produktion), Nullkontrolle und
+    Positivkontrolle laufen unveraendert.
+
+    ⚠️ ES IST EINE SAAT, KEIN GENERATOR. `sammle` verbraucht je Tag
+    Zufall; ein durchgereichter Generator lieferte fuer Hauptmessung,
+    Nullkontrolle und Positivkontrolle DREI VERSCHIEDENE Auswahlen - und
+    der Vergleich waere verwaschen. Aus der Saat wird an jeder Stelle
+    derselbe Generator neu gebaut.
+
+    ⚠️ Ein Zufallsausschnitt ist ein STELLVERTRETER, kein Abbild: eine
+    Bestands-Historie gibt es nicht (`holdings` hat 55 Zeilen ohne
+    Zeitachse, `portfolio_wert_historie` ist leer). Der echte Bestand ist
+    vom Nutzer gewaehlt, also nicht neutral - aber auch nicht gegen den
+    Beitrag gerichtet. Traegt ein Beitrag auf dem Zufallsausschnitt, wird
+    er es auf dem Bestand auch tun; traegt er NUR auf der Momentumspitze,
+    haengt sein Beleg an einer Auswahl, die der Bestand nicht durchlaeuft.
     """
+    def _aw():
+        """Frischer Generator aus der Saat - oder None fuer 'wie bisher'."""
+        return (None if auswahl_saat is None
+                else np.random.default_rng(int(auswahl_saat)))
     if menge not in MENGEN:
         raise ValueError("unbekannte Menge: %r — erlaubt: %s"
                          % (menge, ", ".join(MENGEN)))
     block = _block(horizont)
     anteil = MENGEN[menge]
 
-    g = sammle(je_tag, mom, anteil)
+    g = sammle(je_tag, mom, anteil, mische_auswahl=_aw(), nur=nur)
     d = je_tag_wirkung(g)
     haupt = _band(d, rng, block)
     if haupt is None:
@@ -326,7 +359,8 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     nz = int(null_ziehungen) if null_ziehungen else ZIEHUNGEN
     for z in range(nz):
         gz = sammle(je_tag, mom, anteil,
-                    mische_rang=np.random.default_rng(SAAT + z))
+                    mische_rang=np.random.default_rng(SAAT + z),
+                    mische_auswahl=_aw(), nur=nur)
         nb = _band(je_tag_wirkung(gz), rng, block)
         if nb:
             nullw.append(nb["mittel"])
@@ -357,7 +391,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
         for z in range(ZIEHUNGEN):
             gz = sammle(je_tag, mom, anteil,
                         mische_rang=np.random.default_rng(SAAT + 1000 * z),
-                        pflanze=-s)
+                        pflanze=-s, mische_auswahl=_aw(), nur=nur)
             pb = _band(je_tag_wirkung(gz), rng, block)
             # ⚠️ 2.188-inkonsistenz: die Trennschaerfe prueft gegen NULL,
             # das URTEIL (`Befund.traegt`) gegen `null_oben`. Sind beide

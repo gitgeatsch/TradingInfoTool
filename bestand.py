@@ -77,10 +77,49 @@ class Kandidat:
     zustand: str                    # traegt | traegt nicht | offen | zurueck
     kette: tuple = ()               # die Messungen, chronologisch
     warnung: str = ""
+    # ⚠️⚠️ DIE BASIS MASCHINENLESBAR (09.09.2026) - `basis` ist Freitext
+    # und nennt die MENGE nicht. An EINEM Tag sind daraus DREI
+    # R-R11-Fehler entstanden: `turnover` auf der vollen Historie statt
+    # auf `frei`, `oi_aenderung` auf 20 % ab 2022 statt auf `frei`, und
+    # `funding` beinahe ebenso.
+    #
+    # ⚠️ NICHT VERWECHSELN mit den Mengen aus Befund 2.162 (turnover 50 %,
+    # funding 10 %, oi_aenderung 20 %). Die stammen aus einer EIGENEN
+    # Messung zur Zeitstabilitaet - sie sind NICHT die
+    # Registrierungsbasis. 2.161-rr11 sagt es woertlich: *"Der
+    # registrierte Befund stammt von der FREIEN Menge."*
+    menge: str = ""                 # "frei" | "5%" | "10%" | "20%" | "50%"
+    fenster: str = ""               # "voll" | "2022-01-01" | ...
+
+
+def messbasis(name: str) -> tuple:
+    """Die REGISTRIERUNGSBASIS eines Kandidaten -> (menge, fenster).
+
+    ⚠️⚠️ VOR JEDER MESSUNG AUFRUFEN. Wer mehrere Kandidaten in einem Lauf
+    auf DERSELBEN Menge misst, misst bei mindestens einem etwas anderes
+    als das Registrierte - und ein abweichendes Ergebnis widerlegt dann
+    nichts (R-R11).
+
+    An einem einzigen Tag (09.09.2026) sind aus genau diesem Muster DREI
+    Fehler entstanden. Deshalb gibt es diese Funktion.
+
+        menge, fenster = bestand.messbasis("turnover")   # ("frei", "voll")
+        je = {t: z for t, z in je.items()
+              if fenster == "voll" or str(t) >= fenster}
+
+    Ein leeres Ergebnis heisst: **die Basis ist nicht maschinenlesbar
+    hinterlegt** - dann im Kandidatenregister nachsehen und sie eintragen,
+    nicht raten.
+    """
+    for k in KANDIDATEN:
+        if k.name == name:
+            return (k.menge, k.fenster)
+    raise KeyError("%r steht nicht im Kandidatenregister" % name)
 
 
 KANDIDATEN = (
     Kandidat(
+        menge="frei", fenster="voll",
         name="funding",
         hypothese=("Querschnittsrang der Finanzierungsrate: wer heute am "
                    "wenigsten zahlt. Viel Funding heisst ueberhitzt."),
@@ -101,6 +140,7 @@ KANDIDATEN = (
         ),
         warnung="Fremdquelle, deshalb Luecken in der Abdeckung."),
     Kandidat(
+        menge="frei", fenster="voll",
         name="turnover",
         hypothese=("Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit "
                    "heisst eher ueberbewertet."),
@@ -158,6 +198,7 @@ KANDIDATEN = (
                 "(+0,01389 bei H20, 2.119) - registriert ist er nur am "
                 "Mittel. Und er erklaert 18 % von `vola` (N1, p=0,025)."),
     Kandidat(
+        menge="frei", fenster="voll",
         name="oi_aenderung",
         hypothese=("Aufbau von Open Interest zum Vortag: wo sich Hebel "
                    "auftuermt, kippt die Bewegung eher."),
@@ -1209,6 +1250,244 @@ BEFUNDE = (
                "('vola traegt KEINE Richtung')", "gilt",
                "messe_alle_kandidaten.py",
                basis="Messbasis 08.09.2026, eine von drei Mengen"),
+    Befundlage("2.220", "⚠️⚠️⚠️ NOCH VOR DER ERSTEN KETTENMESSUNG "
+               "GEFUNDEN, durch Nachsehen statt Annehmen: die KETTENMENGE "
+               "ist keine momentum-selektierte Menge. Von 43 Krypto-"
+               "Werten passieren 25 die Auswahl, WEIL SIE BESTAND HABEN - "
+               "nach nichts selektiert; nur 2 kommen von A1 (top-k nach "
+               "Jahresentwicklung). Die Beitraege sind aber auf den "
+               "Mengen 5/10/20/50 % belegt, alle nach Momentum verengt",
+               "gilt", "agent/auswahl.py / Kettenplan 09.09.",
+               basis="43 Krypto-Werte im Lauf, NB-Backup 03.09."),
+    Befundlage("2.220-signale", "⚠️ Und die Signalverteilung bestaetigt "
+               "es: `NACHKAUFEN` mit 51,7 Mails am Tag hat per Definition "
+               "Bestand - der groesste Einzelposten der Kette entsteht auf "
+               "der Menge, auf der die Beitraege NIE gemessen wurden",
+               "gilt", "Kettenplan 09.09. / F-172"),
+    Befundlage("2.220-haltefrage", "⚠️⚠️ UND EINE ZWEITE, DARAUS "
+               "FOLGENDE: `agent/auswahl.py` schreibt selbst in die Mail "
+               "'bei einer gehaltenen Position lautet die Frage halten "
+               "oder verkaufen'. Alle Beitraege sind fuer die Lage "
+               "`instrument=spot, strategie=einstieg` gemessen. Ob sie "
+               "fuer die HALTEFRAGE gelten, ist nie geprueft worden",
+               "gilt", "agent/auswahl.py / agent/wahrscheinlichkeit.py"),
+    Befundlage("2.220-plan", "✔ K-1 wurde daraufhin in DREI Teile "
+               "zerlegt: K-1a auf der A1-Menge (dafuer sind sie gebaut) · "
+               "K-1b auf der BESTANDS-Menge (dort entstehen die meisten "
+               "Signale, dort nie gemessen) · K-1c fuer die Haltefrage "
+               "statt den Einstieg. ⚠️ Das ist bereits ein Befund vor der "
+               "Messung: die Beitraege werden auf einer Menge angewandt, "
+               "auf der sie nie geprueft wurden", "gilt",
+               "Kettenplan 09.09.2026"),
+    Befundlage("2.221", "✔✔ K-1b GEMESSEN: tragen die Beitraege auf "
+               "einer UNSELEKTIERTEN Menge? Verglichen wurde die "
+               "Momentum-Auswahl gegen FUENF Zufallsauswahlen gleicher "
+               "Groesse, alles andere unveraendert. ⚠️ Ein "
+               "Zufallsausschnitt ist ein STELLVERTRETER - eine "
+               "Bestands-Historie gibt es nicht (`holdings` 55 Zeilen "
+               "ohne Zeitachse, `portfolio_wert_historie` leer)",
+               "gilt", "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Messbasis 08.09.2026, je registrierte Menge"),
+    Befundlage("2.221-turnover", "✔✔ `turnover` IST DER ROBUSTESTE: "
+               "+0,0608 auf der Momentummenge -> +0,0470 auf "
+               "Zufallsmengen, 5 von 5 tragen, 3,2-fach ueber der "
+               "Kontrolle. Sein Beleg haengt NICHT an der Auswahl",
+               "gilt", "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Menge 50 % ab 2022, 5 Zufallsziehungen"),
+    Befundlage("2.221-funding", "✔ `funding` uebertraegt sich auch: "
+               "+0,0542 -> +0,0320, 4 von 5, 2,2-fach ueber der "
+               "Kontrolle. ⚠️ Aber die Wirkung faellt um ein Drittel - "
+               "die Momentum-Auswahl konzentriert den Effekt, macht ihn "
+               "aber nicht aus", "gilt",
+               "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Menge 10 % ab 2022, 5 Zufallsziehungen"),
+    Befundlage("2.222", "⚠️⚠️⚠️ `schnitt`s WIRKUNG IST ZU VIER FUENFTELN "
+               "EIN AUSWAHL-ARTEFAKT: +0,1858 auf der Momentummenge -> "
+               "+0,0366 auf Zufallsmengen, ein Faktor 5. Er traegt zwar "
+               "weiter (4 von 5, 2,5-fach ueber der Kontrolle), aber die "
+               "Zahl, die ihn am Vormittag als '6,3-fach ueber der "
+               "Aufloesung' und 'solidesten' auswies, gilt NUR auf der "
+               "momentum-verengten Menge", "gilt",
+               "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Menge 20 %, 5 Zufallsziehungen"),
+    Befundlage("2.222-passt", "✔ Und es passt zu 2.158-redundanz: "
+               "`schnitt` und die Auswahl korrelieren mit Spearman +0,704 "
+               "im vollen Querschnitt. Auf der momentum-verengten Menge "
+               "misst `schnitt` also teilweise die AUSWAHL mit - genau "
+               "der Anteil, der auf einer Zufallsmenge wegfaellt",
+               "gilt", "Befund 2.158-redundanz / K-1b"),
+    Befundlage("2.222-rangfolge", "⚠️⚠️ DIE RANGFOLGE DREHT SICH DAMIT "
+               "UM. Auf der Menge, auf der die KETTE arbeitet, gilt: "
+               "`turnover` +0,0470 (3,2x) > `schnitt` +0,0366 (2,5x) > "
+               "`funding` +0,0320 (2,2x) > `oi_aenderung` +0,0267 "
+               "(1,8x). Am Vormittag stand `schnitt` mit +0,186 weit "
+               "vorn", "gilt", "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Messbasis 08.09.2026, Zufallsmengen"),
+    Befundlage("2.223", "✖ ZURUECKGEZOGEN (2.225) - falsche Basis. "
+               "War: `oi_aenderung` BRICHT EIN: +0,0442 -> "
+               "+0,0267, nur 2 von 5 tragen, und das ist nur das "
+               "1,8-fache der Kontrolle (die auf Zufallsmengen +0,0146 "
+               "wirkt). Auf einer unselektierten Menge ist er vom Zufall "
+               "kaum zu unterscheiden - und er laeuft LIVE als Sperre",
+               "gilt", "k1b_beitrag_auf_bestandsmenge.py",
+               basis="Menge 20 % ab 2022 - NICHT seine Basis"),
+    Befundlage("2.224", "⚠️⚠️ EIGENER FEHLER IN DER KONTROLLREGEL, "
+               "korrigiert: der erste K-1b-Lauf erklaerte sich fuer "
+               "wertlos, weil `zufall` in 1 von 6 Varianten trug. Die "
+               "Regel war falsch - Kriterium B HAT eine Fehlalarmquote "
+               "von 2,7 %, bei sechs Ziehungen sieht man mit 15 % "
+               "Wahrscheinlichkeit mindestens einen. Eine Kontrolle, die "
+               "nie feuern darf, verlangt implizit 0 % - also genau das "
+               "am selben Tag verworfene `null_oben`", "gilt",
+               "k1b_beitrag_auf_bestandsmenge.py"),
+    Befundlage("2.224-ersatz", "✔ Die Regel prueft jetzt die WIRKUNG "
+               "statt der Quote: mit fuenf Ziehungen laesst sich eine "
+               "Quote ohnehin nicht schaetzen. Massstab ist die Kontrolle "
+               "auf DERSELBEN Art Menge (+0,0146), und der Kandidat muss "
+               "sie deutlich uebertreffen", "gilt",
+               "k1b_beitrag_auf_bestandsmenge.py"),
+    Befundlage("2.225", "✖ ZURUECKGEZOGEN: '`oi_aenderung` bricht ein - "
+               "vom Zufall kaum zu unterscheiden' (2.223). Die Aussage "
+               "stand auf der Menge 20 % ab 2022. Seine "
+               "REGISTRIERUNGSBASIS ist `frei` auf der vollen Historie, "
+               "und dort traegt er: +0,0126 R [+0,0071 .. +0,0184], "
+               "131.869 Anker, 122 Symbole", "gilt",
+               "Nachmessung 09.09.2026",
+               basis="Messbasis 08.09.2026, Menge `frei`, volle Historie"),
+    Befundlage("2.225-reproduziert", "✔ Der registrierte Wert "
+               "reproduziert im Rahmen der geaenderten Basis: +0,0145 R "
+               "auf 126.491 Ankern und 117 Symbolen (02.09.) gegen "
+               "+0,0126 R auf 131.869 Ankern und 122 Symbolen (heute). "
+               "Die Messbasis wurde am 08.09. aufgefrischt und um zehn "
+               "Reihen erweitert", "gilt", "Nachmessung 09.09.2026"),
+    Befundlage("2.225-k1b-trifft-nicht", "⚠️⚠️ UND DIE K-1b-FRAGE TRIFFT "
+               "IHN OHNEHIN NICHT - sie ist fuer ihn schon beantwortet. "
+               "K-1b fragt 'gilt der Beleg auf einer UNSELEKTIERTEN "
+               "Menge?'. Seine Registrierungsbasis IST die unselektierte "
+               "Menge (`frei`). Und live wirkt er nur bei EINSTIEG, NICHT "
+               "bei Bestand - die Bestandsfrage stellt sich fuer ihn gar "
+               "nicht", "gilt",
+               "REGISTER_Kandidaten / agent/rollen_gate.py"),
+    Befundlage("2.225-dritter-fehler", "⚠️⚠️⚠️ DRITTER R-R11-FEHLER "
+               "DERSELBEN KLASSE AN EINEM TAG: `turnover` auf der vollen "
+               "Historie statt 50 % ab 2022 · `funding` beinahe ebenso "
+               "(rechtzeitig gefangen) · `oi_aenderung` auf 20 % ab 2022 "
+               "statt `frei`. Die Ursache ist immer dieselbe: ich messe "
+               "mehrere Kandidaten in EINEM Lauf auf EINER Menge, statt "
+               "jeden auf SEINER Basis. ⚠️ Das Kandidatenregister nennt "
+               "die Basis je Kandidat - es gehoert VOR jeden Lauf "
+               "geoeffnet, nicht danach", "gilt",
+               "Selbstbefund 09.09.2026"),
+    Befundlage("2.226", "⚠️ WAS ZU `oi_aenderung` OFFEN BLEIBT: die "
+               "Wirkung ist mit +0,0126 R die KLEINSTE der vier und nah "
+               "an der Aufloesung · bei 50 % ab 2022 traegt er NICHT "
+               "(Band [-0,0005 .. +0,0283]) · der Geltungsbereich ist "
+               "H20, der Betriebshorizont aber 3-5 Tage, und bei H5 "
+               "traegt er nicht (+0,00663, 06.09.) · und er wirkt nur auf "
+               "10,6 von 174,3 Signalen am Tag. Korrekt belegt, aber "
+               "wenig wirksam", "gilt",
+               "Nachmessung 09.09. / REGISTER_Kandidaten / F-172",
+               basis="Messbasis 08.09.2026 + NB-Backup 29.08."),
+    Befundlage("2.227", "⚠️⚠️⚠️ DIE URSACHE DER DREI R-R11-FEHLER IST "
+               "STRUKTURELL: das Feld `Kandidat.basis` ist FREITEXT ('H20 "
+               "· 2.369 Kalendertage · 290 Symbole') und nennt die MENGE "
+               "nicht. Die Basis war dokumentiert, aber fuer den Code "
+               "nicht benutzbar - deshalb wiederholte sich der Fehler",
+               "gilt", "bestand.Kandidat / Selbstbefund 09.09."),
+    Befundlage("2.227-aufloesung", "✔✔ UND DABEI KAM DIE AUFLOESUNG "
+               "HERAUS: ALLE DREI live registrierten Beitraege stehen auf "
+               "`frei` - dem vollen Tagesquerschnitt. 2.161-rr11 sagt es "
+               "woertlich fuer `turnover` ('Der registrierte Befund "
+               "stammt von der FREIEN Menge'), `oi_aenderung`s Ankerzahl "
+               "bestaetigt es (126.491 ~ frei), und `funding`s "
+               "Originalbefund vom 30.08. war der Querschnitt je "
+               "Kalendertag", "gilt", "bestand.py / Nachmessung 09.09.",
+               basis="Messbasis 08.09.2026"),
+    Befundlage("2.227-nicht-2162", "⚠️⚠️ DIE MENGEN AUS BEFUND 2.162 "
+               "(turnover 50 %, funding 10 %, oi_aenderung 20 %) SIND "
+               "NICHT DIE REGISTRIERUNGSBASIS - sie stammen aus einer "
+               "eigenen Messung zur Zeitstabilitaet. Genau diese "
+               "Verwechslung hat heute N-87 auf die falsche Basis "
+               "gefuehrt", "gilt", "Befund 2.162 / 2.161-rr11"),
+    Befundlage("2.227-auf-frei", "✔✔ AUF IHREN ECHTEN "
+               "REGISTRIERUNGSBASEN TRAGEN UNTER KRITERIUM B ALLE DREI: "
+               "`funding` frei +0,0249 · `turnover` frei +0,0639 · "
+               "`oi_aenderung` frei +0,0126. Das ist ein saubereres Bild "
+               "als das, was N-87 auf den 2.162-Mengen zeigte", "gilt",
+               "Nachmessung 09.09.2026",
+               basis="Messbasis 08.09.2026, Menge `frei`, volle Historie"),
+    Befundlage("2.227-gebaut", "✔ ABGESTELLT STATT VORGENOMMEN: "
+               "`Kandidat` hat jetzt `menge` und `fenster` "
+               "maschinenlesbar, `bestand.messbasis(name)` gibt sie "
+               "heraus, und zwei Waechter im Paket `Messstandard` "
+               "erzwingen sie fuer jeden TRAGENDEN Kandidaten - beide "
+               "durch Mutation belegt", "gilt",
+               "bestand.messbasis / pruefe_pakete --paket Messstandard"),
+    Befundlage("2.228", "⚠️⚠️ EIN WIDERSPRUCH BLEIBT OFFEN und gehoert in "
+               "die Kettenpruefung: die drei Beitraege sind auf `frei` "
+               "registriert - das ist nach P6/F-212 die MARKT-Frage. "
+               "F-212 verlangt aber, einen BEITRAG auf der SELEKTIERTEN "
+               "Menge zu beurteilen. 2.161-rr11 hat das schon benannt. "
+               "Solange das nicht entschieden ist, steht jeder Beitrag "
+               "auf einer Basis, die eine andere Frage beantwortet als "
+               "die, fuer die er benutzt wird", "gilt",
+               "Befund 2.161-rr11 / F-212 / Kettenplan"),
+    Befundlage("2.229", "✔✔✔ K-1w GEMESSEN - die Beitraege auf der "
+               "WATCHLIST, auf der die Kette wirklich arbeitet (43 "
+               "Krypto-Werte, davon 39 in der Messbasis). ⚠️ Rang ueber "
+               "die MESSBASIS, gemessen auf der Watchlist - ueber die "
+               "Watchlist gerangt dreht das Vorzeichen (REGISTER_"
+               "Kandidaten). Dafuer bekam `sammle` den Parameter `nur`, "
+               "der NACH dem Rang verengt", "gilt",
+               "k1w_beitrag_auf_der_watchlist.py",
+               basis="Watchlist 43 Symbole, Rang ueber 536"),
+    Befundlage("2.229-funding", "✔✔ `funding` TRAEGT AUF DER WATCHLIST - "
+               "und zwar STAERKER: +0,0886 gegen +0,0249 auf der "
+               "Messbasis, Band [+0,0582 .. +0,1458], 34 Bloecke, "
+               "Trennschaerfe 0,0775. Genug Macht, echtes Urteil",
+               "gilt", "k1w_beitrag_auf_der_watchlist.py",
+               basis="Watchlist, Menge frei, 40.195 Anker, 34 Bloecke"),
+    Befundlage("2.229-turnover", "⚠️⚠️ `turnover` IST AUF DER WATCHLIST "
+               "NICHT MESSBAR - nur 5 Bloecke gegen 20 geforderte, Urteil "
+               "'KEIN BEFUND'. ⚠️ Das ist laut Norm eine Aussage ueber die "
+               "MESSUNG, nicht ueber die Welt. Er deckt 66 Symbole ab, "
+               "und davon liegen zu wenige in der 43er-Watchlist",
+               "gilt", "k1w_beitrag_auf_der_watchlist.py",
+               basis="Watchlist, 15.354 Anker, 321 Tage, 5 Bloecke"),
+    Befundlage("2.229-oi", "⚠️ `oi_aenderung` IST AUF DER WATCHLIST "
+               "UNENTSCHIEDEN: Wirkung +0,0146 gegen eine Trennschaerfe "
+               "von 0,0473 - die Anlage kann dort Effekte dieser Groesse "
+               "nicht aufloesen. 21 Bloecke, also gerade ueber der "
+               "Grenze. Kein Nullbefund", "gilt",
+               "k1w_beitrag_auf_der_watchlist.py",
+               basis="Watchlist, 29.728 Anker, 1.319 Tage, 21 Bloecke"),
+    Befundlage("2.229-kontrolle", "✔ Die Kontrolle haelt: `zufall` traegt "
+               "auf der Watchlist NICHT (+0,0179, 43 Bloecke, "
+               "Trennschaerfe 0,0606)", "gilt",
+               "k1w_beitrag_auf_der_watchlist.py"),
+    Befundlage("2.230", "⚠️⚠️⚠️ DER EIGENTLICHE BEFUND: DIE WATCHLIST IST "
+               "ZU KLEIN, UM ZWEI DER DREI BEITRAEGE DORT ZU PRUEFEN. "
+               "`turnover` erreicht 5 von 20 noetigen Bloecken, "
+               "`oi_aenderung` loest seine eigene Wirkung nicht auf. Nur "
+               "`funding` hat genug Abdeckung. Das ist keine Aussage "
+               "GEGEN die beiden - es heisst, dass ihre Wirkung auf der "
+               "Kettenmenge UNBELEGT ist", "gilt",
+               "k1w_beitrag_auf_der_watchlist.py",
+               basis="Watchlist 43 Symbole"),
+    Befundlage("2.230-folge", "⚠️ WAS DARAUS FOLGT: der Widerspruch aus "
+               "2.228 (frei gegen selektiert) laesst sich auf der "
+               "Watchlist NICHT entscheiden - dafuer fehlen die Daten. "
+               "Fuer `funding` ist er entschieden (traegt dort, "
+               "staerker); fuer die anderen beiden bleibt er offen, und "
+               "zwar aus Datenmangel, nicht aus Uneinigkeit", "gilt",
+               "Befund 2.228 / K-1w"),
+    Befundlage("2.230-anzeigefehler", "⚠️ Eigener Anzeigefehler dabei "
+               "gefunden: eine abgeleitete Spalte 'Anker/Tag' zeigte 47,8 "
+               "bei nur 43 Watchlist-Symbolen - unmoeglich. `n_anker` "
+               "zaehlt ueber ALLE Tage der Sammlung, `n_tage` nur die, "
+               "die die Tagesklammer ueberstehen. Die beiden Zahlen sind "
+               "nicht teilbar; massgeblich sind die BLOECKE", "gilt",
+               "Selbstbefund 09.09.2026"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

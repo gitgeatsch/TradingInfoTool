@@ -2016,3 +2016,191 @@ auf die tatsächlich erzeugten Signale · die Trichterstufen davor · ob die
 Kette am Ende besser ist als ihre Teile.
 
 Ausführlich: Methodik **2.216**, Befunde **2.208 bis 2.218**.
+
+---
+
+# ⚠️⚠️ DIE PRÜFUNG DER KETTE — der Plan (abgestimmt 09.09.2026)
+
+Nutzervorgabe: *„setze die Prüfung der Kette detailliert auf und stimme
+dies mit mir ab — denke die ist u.U. nicht eine Messung sondern
+mehrere."* Er hatte recht: es sind **sieben**, plus eine Vorfrage.
+
+## Die drei abgestimmten Grundentscheidungen
+
+| | Entscheidung |
+|---|---|
+| **Zielgröße** | **beides getrennt** — `bewegung_r` für Block I und II (viel Macht), realisiertes R für Block III (wenig Macht) |
+| **Messbasis** | **hybrid** — deterministische Stufen über die volle Historie simuliert, nicht-deterministische (LLM-Rollen) nur am echten Signalbestand |
+| **Reihenfolge** | **I → II → III** — erst die entscheidbaren Fragen |
+
+## ⚠️ Der Rahmen, der über allem steht
+
+Der Befund *„Barrierensystem = Erwartungswert null"* gilt weiter: brutto,
+für jede Geometrie. Es helfen nur **Drift, neue Information oder
+niedrigere Kosten**.
+
+> **Die Kette kann keinen Gewinn erzeugen — sie kann nur den positiven
+> Rand besser treffen als der Zufall.** Das ist die einzige sinnvolle
+> Kettenfrage; alles andere ist eine Frage an die Arithmetik.
+
+## ⚠️ Die Machtlage, vorher benannt
+
+| | Beobachtungen |
+|---|---|
+| Beiträge (bisher gemessen) | **740.336 Anker** |
+| Kette, Signale gesamt (NB-Backup) | 2.789 über 16 Tage |
+| Kette, **entschieden** (Ziel oder Stop) | **139** |
+
+**Faktor 5.000.** Block III wird deshalb voraussichtlich „nicht
+entscheidbar" liefern — das ist **vorher gesagt** und kein Grund, es zu
+unterlassen, aber ein Grund, es **nicht als Freigabekriterium** zu
+setzen.
+
+---
+
+## BLOCK I — trägt die Bewertung DORT, wo sie wirkt?
+
+Die Beiträge sind auf **536 Symbolen** belegt. Die Kette beurteilt **~43**,
+davon 25 mit Bestand. Ob ein Beitrag auf dieser verengten Menge noch
+trägt, ist nie geprüft worden — außer für `schnitt` (2.159).
+
+### K-1 — Reproduzieren die Beiträge nach der Auswahl?
+
+| | |
+|---|---|
+| **Basis** | Messbasis, aber verengt auf die Menge, die die Auswahl durchlässt |
+| **Zielgröße** | `bewegung_r`, H20 |
+| **Kandidaten** | `funding`, `turnover`, `oi_aenderung` — je auf ihrer eigenen registrierten Basis |
+| **Kontrolle** | `zufall` an derselben Stelle |
+| **Vorhersage** | sie tragen weiter, aber **schwächer** — die Auswahl greift bereits nach Momentum, und `schnitt` korreliert damit zu +0,418 |
+| **Was sie widerlegt** | trägt einer **nicht mehr**, ist er als Kettenbeitrag ungeeignet, egal wie gut er auf der Messbasis dasteht |
+
+### K-2 — Trägt die SUMME mehr als der beste Einzelbeitrag?
+
+| | |
+|---|---|
+| **Anlass** | Memory: *„Die Summe der Beiträge taugt nicht als Rangfolge"* — unter dem neuen Nullbezug nie nachgemessen |
+| **Vergleich** | Summe gegen den besten Einzelnen, auf derselben Menge |
+| **Vorhersage** | die Summe trägt, aber **nicht mehr** als der beste Einzelne |
+| **Warum es zählt** | trifft das zu, ist die Punktetabelle Aufwand ohne Ertrag — und R-R9 verliert seinen Gegenstand |
+
+### K-3 — Trennt die Schwelle 0,080, oder kürzt sie nur?
+
+| | |
+|---|---|
+| **Frage** | ist das **Durchgelassene** messbar besser als das **Gesperrte** — mit Band und Kontrolle? |
+| **Bisher** | `messe_schwelle_kalibrierung` zeigt +0,1316 „gegen ohne" — aber **ohne Band und ohne Nullkontrolle** |
+| **Vorhersage** | sie trennt, aber der Abstand ist klein gegen die Auflösung |
+| **⚠️ Bedeutung** | das ist die **praktisch wichtigste Einzelfrage**: 0,080 steuert den Produktivgang direkt |
+
+---
+
+## BLOCK II — trägt jede STUFE ihren eigenen Beitrag?
+
+Eine Ablation: jede Stufe einmal weglassen und messen, was sich ändert.
+
+### K-4 — Was trägt jede einzelne Trichterstufe bei?
+
+| | |
+|---|---|
+| **Verfahren** | je Stufe: mit / ohne, auf derselben Menge, mit Band |
+| **Bekannt** | die **Auswahl bringt null zusätzliche Werte** (alle Gewählten haben Bestand) · die **Sperren nehmen 14 %**, nicht 33 % |
+| **Vorhersage** | mehrere Stufen tragen **nichts Messbares** bei — die Auswahl am ehesten |
+| **⚠️ Regel** | eine Stufe, die nichts beiträgt, wird **nicht gelöscht, sondern stillgelegt** (G-a, Kanarienvogel) |
+
+### K-5 — Sind die Stufen komplementär oder redundant?
+
+| | |
+|---|---|
+| **Anlass** | am 02.09. für **zwei** Sperren gemessen (komplementär) — für die ganze Kette nie |
+| **Verfahren** | paarweise Überschneidung der gesperrten Mengen + Rangkorrelation |
+| **Vorhersage** | die Bewertungsstufen überschneiden sich stark mit der Auswahl (Spearman +0,418 bei `schnitt` ist der Hinweis) |
+
+---
+
+## BLOCK III — was macht die Kette daraus? ⚠️ wenig Macht
+
+### K-6 — Die 79 % „Einstieg nie erreicht"
+
+| | |
+|---|---|
+| **Der Posten** | **538 von 677** Signalen erreichten die Einstiegszone nie |
+| **Frage** | Absicht (die Zone ist bewusst günstig gelegt) oder Konstruktionsfehler? |
+| **Zielgröße** | realisiertes R, plus: was wäre gewesen, hätte man **sofort** eingestiegen? |
+| **⚠️ Bedeutung** | **der größte unerklärte Posten im ganzen System.** Ist es ein Fehler, ändert er alles danach |
+
+### K-7 — Schlägt die Kette end-to-end den quotengleichen Zufall?
+
+| | |
+|---|---|
+| **Kontrolle** | quotengleicher Zufall — **nie** gegen die Gesamtmenge (Methodik 2.93) |
+| **Vorhersage** | ⚠️ **nicht entscheidbar** bei n = 139 |
+| **Was es trotzdem liefert** | die **Größe** des Vertrauensbands — also die Antwort darauf, wieviele Signale es bräuchte, um die Frage je zu beantworten |
+
+---
+
+## ⚠️ Was dieser Plan NICHT enthält
+
+| | |
+|---|---|
+| **Wirtschaftlichkeit** | Gebühren gehören nicht in die Bewertung (Regel 2). Die Breakeven-Rechnung ist eine **Betriebsfrage**, keine Messung |
+| **Die LLM-Rollen** | ihre Qualität ist bis heute nicht messbar (Memory: *„LLM-Qualität nicht messbar"*) — sie bleiben im Hybrid der ungeprüfte Teil, und das gehört benannt |
+| **GUI und Anwendungsfälle** | eigener Plan, seit 07.09. offen |
+
+## ⚠️⚠️ Und was am Ende NICHT herauskommen wird
+
+Ein „die Kette ist gut". Was herauskommen kann:
+
+1. welche Stufen **messbar beitragen** und welche nicht
+2. ob die Bewertung **auf der Kettenmenge** noch trägt
+3. ob die Schwelle **trennt oder nur kürzt**
+4. **wieviele Signale** es bräuchte, um die Endfrage je zu entscheiden
+
+**Das ist die Grundlage für den Produktivgang** — nicht ein Gütesiegel.
+
+## ⚠️⚠️ KORREKTUR DES PLANS, noch vor der ersten Messung
+
+Beim Nachsehen in `agent/auswahl.py` — statt die Kettenmenge anzunehmen —
+fiel auf, dass **K-1 falsch entworfen war**.
+
+### Die Kettenmenge ist keine momentum-selektierte Menge
+
+```
+43 Krypto-Werte im Lauf
+  25 mit Bestand    passieren die Auswahl IMMER - nach NICHTS selektiert
+   2 von A1         top-2 nach Jahresentwicklung (gemessen +2,74 % H20, t 4,52)
+```
+
+Die Beiträge sind auf den Mengen `5/10/20/50 %` belegt — alle nach
+**Momentum** verengt. Die Kette wendet sie aber überwiegend auf den
+**Bestand** an, und der ist nach nichts selektiert.
+
+**Die Signalverteilung bestätigt es:** `NACHKAUFEN` mit **51,7 Mails/Tag**
+hat per Definition Bestand.
+
+### ⚠️⚠️ Und eine zweite Frage, die daraus folgt
+
+`agent/auswahl.py` schreibt es selbst in die Mail:
+
+> *„Dieser Wert wurde NICHT ausgewählt — er wird beurteilt, weil Sie ihn
+> halten. Bei einer gehaltenen Position lautet die Frage **‚halten oder
+> verkaufen'**, und die stellt sich unabhängig vom Rang."*
+
+Alle Beiträge sind für die Lage `instrument=spot, strategie=einstieg`
+gemessen. Ob sie für die **Haltefrage** gelten, ist nie geprüft worden.
+
+### K-1 wird deshalb in drei Teile zerlegt
+
+| | Frage |
+|---|---|
+| **K-1a** | Tragen die Beiträge auf der **A1-Menge** (top-k nach Jahresentwicklung)? Das ist die Menge, für die sie gedacht sind |
+| **K-1b** | Tragen sie auf der **BESTANDS-Menge** — also dort, wo die meisten Signale entstehen? ⚠️ Diese Menge ist nach nichts selektiert; die Beiträge sind dort nie gemessen worden |
+| **K-1c** | Gelten sie überhaupt für die **Haltefrage**, oder nur für den Einstieg? ⚠️ Alle Belege stehen auf `strategie=einstieg` |
+
+**Vorhersage:** K-1a trägt (dafür sind sie gebaut) · K-1b ist offen und
+das eigentliche Risiko · K-1c ist ungemessen und könnte einen großen Teil
+der laufenden Signale betreffen.
+
+> ⚠️ **Das ist bereits ein Befund, noch vor der Messung:** die Beiträge
+> werden auf einer Menge angewandt, auf der sie nie geprüft wurden — und
+> für eine Frage, für die sie nie gemessen wurden.

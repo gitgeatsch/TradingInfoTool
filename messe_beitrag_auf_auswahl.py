@@ -108,7 +108,7 @@ def _auswahl_maske(zeilen: list, mom_tag: dict, anteil: float,
 
 def sammle(je_tag: dict, mom: dict, anteil: float,
            mische_rang=None, mische_auswahl=None,
-           pflanze: float | None = None) -> dict:
+           pflanze: float | None = None, nur: set | None = None) -> dict:
     """Je Kalendertag die GEWAEHLTEN Anker als (oben?, Ergebnis).
 
     ⚠️⚠️ KEINE Tagesmediane mehr. Der erste Anlauf (04.09.) bildete je Tag
@@ -119,6 +119,18 @@ def sammle(je_tag: dict, mom: dict, anteil: float,
     ⚠️ DER RANG KOMMT AUS DEM VOLLEN TAGESQUERSCHNITT, erst danach wird
     verengt - genau wie `marktrang` in der Produktion ueber die Messbasis
     rangt und nicht ueber die Auswahl.
+
+    ## ⚠️⚠️ `nur` — auf eine SYMBOLMENGE verengen (09.09.2026)
+
+    Fuer die Kettenpruefung: die Kette arbeitet auf einer WATCHLIST von 43
+    Krypto-Werten, nicht auf den 536 der Messbasis. Ob die Beitraege DORT
+    tragen, ist nie gemessen worden.
+
+    ⚠️ Die Verengung greift NACH dem Rang - genau wie `_auswahl_maske`.
+    Wer stattdessen `je_tag` vorher filtert, rangt ueber die Watchlist,
+    und das ist eine andere Groesse: gemessen DREHT sie das Vorzeichen
+    (+3,43 gegen -3,10, nur 54 % identische Fuenftel - REGISTER_Kandidaten
+    zu `schnitt`).
     """
     aus: dict = {}
     for tag, zeilen in je_tag.items():
@@ -146,6 +158,11 @@ def sammle(je_tag: dict, mom: dict, anteil: float,
         m = _auswahl_maske(zeilen, mom.get(tag) or {}, anteil, mische_auswahl)
         if m is None or not m.any():
             continue
+        # ⚠️ NACH dem Rang verengen, nie davor - siehe Kopf.
+        if nur is not None:
+            m = m & np.array([x["sym"] in nur for x in zeilen])
+            if not m.any():
+                continue
         aus[tag] = (oben[m], y[m])
     return aus
 

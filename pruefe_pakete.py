@@ -17411,6 +17411,33 @@ def paket_messstandard() -> None:
            "`schnitt` 20 % hatte traegt=True und meldete 'KEIN BEFUND' "
            "(Befund 2.193)")
 
+    # ---- ⚠️⚠️ Die REGISTRIERUNGSBASIS muss maschinenlesbar sein ---------
+    #
+    # Am 09.09. angelegt, nach DREI R-R11-Fehlern derselben Klasse an EINEM
+    # Tag: `turnover` auf der vollen Historie statt auf `frei`,
+    # `oi_aenderung` auf 20 % ab 2022 statt auf `frei`, `funding` beinahe
+    # ebenso. Ursache war jedes Mal, mehrere Kandidaten in EINEM Lauf auf
+    # DERSELBEN Menge zu messen. Das Feld `basis` ist Freitext und nennt
+    # die Menge nicht - dokumentiert, aber nicht benutzbar.
+    import bestand as _bk
+    _ohne_basis = [k.name for k in _bk.KANDIDATEN
+                   if k.zustand == "traegt" and not (k.menge and k.fenster)]
+    pruefe(P, "⚠️⚠️ jeder TRAGENDE Kandidat hat eine maschinenlesbare "
+              "Registrierungsbasis",
+           not _ohne_basis,
+           "ohne `menge` und `fenster` misst der naechste Lauf wieder auf "
+           "der falschen Menge - und ein abweichendes Ergebnis widerlegt "
+           "dann nichts (R-R11)%s"
+           % (" - betroffen: %s" % ", ".join(_ohne_basis)
+              if _ohne_basis else ""))
+    pruefe(P, "und `bestand.messbasis()` gibt sie heraus",
+           hasattr(_bk, "messbasis")
+           and _bk.messbasis("turnover") == ("frei", "voll"),
+           "⚠️ NICHT die Mengen aus Befund 2.162 (turnover 50 %, funding "
+           "10 %, oi_aenderung 20 %) - die stammen aus einer eigenen "
+           "Messung zur Zeitstabilitaet. 2.161-rr11 woertlich: 'Der "
+           "registrierte Befund stammt von der FREIEN Menge'")
+
     # ---- ⚠️ Die NUMMERNFOLGE: Methodik und Befunde teilen sie ------------
     #
     # Am 09.09. angelegt, weil genau das passiert ist: drei neue
