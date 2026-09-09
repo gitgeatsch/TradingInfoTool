@@ -1929,6 +1929,75 @@ BEFUNDE = (
                "Hypothese, die nie geprueft wurde. ⚠️ Nicht Teil von B9, "
                "aber notiert", "gilt",
                "n92_b9_funding_buckel_auf_frei.py / offene Frage"),
+    Befundlage("2.253", "✔✔ B10: AUF `frei` IST DIE BESETZUNG "
+               "AUSGEGLICHEN UND DER BUCKEL VERAENDERT. `schnitt` "
+               "liefert dort +1,28 / +1,59 / +0,28 / -1,19 / -1,96 bei "
+               "48/48/47/48/48 Ankern je Fuenftel. N-65 fand auf der "
+               "20-%-Menge dagegen +4,07 / +5,55 / +9,49 / +1,71 / -4,65 "
+               "- einen ausgepraegten HOCHPUNKT IN DER MITTE. Auf `frei` "
+               "sind nur Fuenftel 0 und 1 vertauscht, danach faellt es "
+               "sauber", "gilt", "n93_b10_schnitt_stufen_auf_frei.py",
+               basis="Messmenge v1, Menge frei, Live-Ableitung"),
+    Befundlage("2.253-dieselbe-form", "✔✔✔ UND ES IST EXAKT DIESELBE "
+               "FORM WIE BEI `funding`: +0,77 / +1,40 / +0,22 / -0,64 / "
+               "-1,75, ebenfalls Hochpunkt bei Fuenftel 1. Zwei "
+               "UNABHAENGIGE Groessen - Funding aus dem Terminmarkt, "
+               "`schnitt` aus der Kursreihe - zeigen auf `frei` denselben "
+               "Knick an derselben Stelle", "gilt",
+               "n93_b10_schnitt_stufen_auf_frei.py",
+               basis="Messmenge v1, Menge frei"),
+    Befundlage("2.253-kontrolle", "✔ Die Kontrolle trennt sauber: "
+               "`zufall` hat auf `frei` eine Spanne von 0,28 gegen "
+               "`schnitt`s 3,55 und `funding`s 3,15 - beide Beitraege "
+               "liegen ZWOELFFACH darueber", "gilt",
+               "n93_b10_schnitt_stufen_auf_frei.py"),
+    Befundlage("2.253-schaetzer", "⚠️ DIE GEGENPROBE HAT SICH GELOHNT: "
+               "bei `schnitt` gehen Median (+1,28) und MITTEL (+62,39) "
+               "weit auseinander - seine Verteilung hat schwere Raender "
+               "(536 Symbole gegen `funding`s 300, die zusaetzlichen sind "
+               "kleinere Coins). Bei `funding` stimmen beide fast "
+               "ueberein. ⚠️ Auch die Kontrolle wird mit dem Mittel wild "
+               "(+0,56 / -7,23 / +2,72 / -0,60 / +4,55) - der MEDIAN ist "
+               "hier richtig", "gilt",
+               "n93_b10_schnitt_stufen_auf_frei.py"),
+    Befundlage("2.254", "⚠️⚠️⚠️ B10 IST DAMIT KEINE MESSFRAGE MEHR, "
+               "SONDERN EINE MASSSTABSFRAGE: `schnitt` erfuellt die "
+               "Monotonie-Vorgabe GENAUSO WENIG wie `funding` - und "
+               "`funding` laeuft LIVE. Entweder die Vorgabe gilt streng, "
+               "dann muesste auch `funding` fallen; oder sie gilt nicht "
+               "streng, dann ist `schnitt` registrierbar (100 % "
+               "Abdeckung, R-R9 im Gefolge). Das ist eine "
+               "Nutzerentscheidung", "gilt",
+               "n93_b10_schnitt_stufen_auf_frei.py"),
+    Befundlage("2.254-praezedenz", "✔ Und das Projekt hat genau diese "
+               "Lage schon einmal benannt (2.161-massstab): 'Einen "
+               "Kandidaten an einer Huerde scheitern zu lassen, die die "
+               "Bestandsbeitraege nie nehmen mussten, waere zweierlei "
+               "Mass gewesen.' Damals fuehrte es zur Zeitstabilitaets"
+               "pruefung der LEBENDEN Beitraege - hier fuehrt es zur "
+               "Monotoniefrage", "gilt", "Befund 2.161-massstab"),
+    Befundlage("2.255", "⚠️ B11 IST NICHT UNBERUEHRT - Nutzerhinweis "
+               "09.09.: 'glaube zu Extremfunding gab es bereits eine "
+               "Bewertung'. Er hat recht: `funding_extrem` ist ein "
+               "registrierter Kandidat. ⚠️ ABER er misst eine ANDERE "
+               "Achse - den Abstand vom EIGENEN Normalzustand in MAD, "
+               "VORZEICHENLOS, je Symbol. B11 fragt nach der FORM der "
+               "Querschnitts-Rangskala", "gilt",
+               "messe_kandidaten_als_regel.py / Nutzerhinweis 09.09."),
+    Befundlage("2.255-teilbeleg", "⚠️ Trotzdem ist er ein TEILBELEG "
+               "gegen die B11-These: waere extremes Funding ein "
+               "Warnsignal, muesste `funding_extrem` es zeigen. Er zeigt "
+               "im Gesamtlauf WIDERSPRUCH (traegt auf 20 %, nicht auf "
+               "50 %), und F-207 haelt fest, dass er die Live-Sperre "
+               "NICHT verbessert", "gilt",
+               "Befund 2.219 / F-207"),
+    Befundlage("2.255-aber", "⚠️⚠️ WAS DIE THESE DAGEGEN STUETZT: der "
+               "Knick sitzt bei `funding` UND bei `schnitt` an DERSELBEN "
+               "Stelle (Fuenftel 1 ueber Fuenftel 0), auf `frei`, bei "
+               "zwei unabhaengigen Datenquellen. Das ist schwer als "
+               "Zufall zu lesen - und es waere eine Aussage ueber den "
+               "MARKT, keine Messschwaeche", "gilt",
+               "n93_b10_schnitt_stufen_auf_frei.py"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

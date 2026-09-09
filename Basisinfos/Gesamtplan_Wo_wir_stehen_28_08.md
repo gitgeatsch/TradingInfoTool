@@ -2422,3 +2422,56 @@ einmal offen war.
 - Die **Registrierungsbasis maschinenlesbar** (`bestand.messbasis`) — nach drei R-R11-Fehlern an einem Tag
 - **R-R9 abgearbeitet** — Kalibrierung reproduziert ziffergenau
 - `schnitt`s **Zeitstabilität gelöst** — Kollinearität, nicht Instabilität
+
+---
+
+## 09.09. — B10 und B11: der Buckel gehört BEIDEN, an derselben Stelle
+
+### B10 — `schnitt`s Stufen auf derselben Basis wie `funding`
+
+N-92 hatte gezeigt, dass `funding`s Live-Stufen auf **`frei`** entstehen,
+wo die Fünftel ausgeglichen besetzt sind. `schnitt`s Buckel wurde auf der
+**20-%-Menge** gemessen (1,5 gegen 29,7 Anker). **Die beiden waren nie
+vergleichbar.**
+
+| auf `frei` | Fünftel 0..4 | Besetzung | Spanne |
+|---|---|---|---|
+| **`schnitt`** | +1,28 / **+1,59** / +0,28 / −1,19 / −1,96 | 48/48/47/48/48 | 3,55 |
+| **`funding`** *(live)* | +0,77 / **+1,40** / +0,22 / −0,64 / −1,75 | 30/29/30/29/30 | 3,15 |
+| `zufall` | −0,17 / +0,07 / +0,09 / +0,11 / −0,10 | 51/50/50/50/51 | **0,28** |
+
+✔ Der Buckel hat sich **verändert**: N-65 fand auf 20 % einen
+ausgeprägten Hochpunkt in der **Mitte** (+9,49 bei Fünftel 2). Auf `frei`
+sind nur **Fünftel 0 und 1 vertauscht**, danach fällt es sauber.
+
+⚠️ Die Gegenprobe war nötig: bei `schnitt` gehen Median (+1,28) und
+**Mittel (+62,39)** weit auseinander — schwere Ränder. Auch die Kontrolle
+wird mit dem Mittel wild. **Der Median ist hier richtig.**
+
+> ⚠️⚠️⚠️ **B10 ist damit keine Messfrage mehr, sondern eine
+> Maßstabsfrage:** `schnitt` erfüllt die Monotonie-Vorgabe **genauso
+> wenig wie `funding`** — und `funding` läuft live.
+
+**Entweder** die Vorgabe gilt streng → dann müsste auch `funding` fallen.
+**Oder** sie gilt nicht streng → dann ist `schnitt` registrierbar, mit
+**100 % Abdeckung** und R-R9 im Gefolge. **Nutzerentscheidung.**
+
+✔ Das Projekt hat diese Lage schon einmal benannt (2.161-massstab):
+*„Einen Kandidaten an einer Hürde scheitern zu lassen, die die
+Bestandsbeiträge nie nehmen mussten, wäre zweierlei Maß."*
+
+### B11 — und der Nutzer hatte recht: `funding_extrem` gibt es schon
+
+⚠️ Nutzerhinweis 09.09.: *„glaube zu Extremfunding gab es bereits eine
+Bewertung."* Richtig — `funding_extrem` ist registriert. **Aber er misst
+eine andere Achse:** den Abstand vom **eigenen** Normalzustand in MAD,
+**vorzeichenlos**, je Symbol. B11 fragt nach der Form der
+**Querschnitts-Rangskala**.
+
+| | |
+|---|---|
+| **gegen** die These | `funding_extrem` zeigt im Gesamtlauf **WIDERSPRUCH**, und F-207: er verbessert die Live-Sperre **nicht** |
+| **für** die These | der Knick sitzt bei `funding` **und** `schnitt` an **derselben** Stelle, auf `frei`, bei **zwei unabhängigen Datenquellen** |
+
+⚠️ Das ist schwer als Zufall zu lesen — und wäre eine Aussage über den
+**Markt**, keine Messschwäche.
