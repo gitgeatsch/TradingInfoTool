@@ -1892,6 +1892,43 @@ BEFUNDE = (
                "sechs zeigen 'nur die obere trennbar' mit +0,0074 und "
                "-0,0113 - bei sechs Ziehungen und einem 95-%-Band das "
                "Erwartete", "gilt", "n91_rangkorrelation_form.py"),
+    Befundlage("2.251", "✔✔ B9 BEANTWORTET: `funding`s BUCKEL BETRIFFT "
+               "DIE LIVE-STUFEN NICHT. Er ist auf der 20-%-Menge "
+               "trennbar (+0,0541 / -0,0268, beide Baender ohne null), "
+               "auf `frei` aber NICHT - dort hat die untere Haelfte die "
+               "Null gerade noch im Band (+0,0211 [-0,000 .. +0,042]). "
+               "⚠️ Und die Live-Stufen stehen auf `frei`, an der Quelle "
+               "geprueft: `rechne_funding_beitrag.py` bildet KEINE "
+               "Auswahl", "gilt", "n92_b9_funding_buckel_auf_frei.py",
+               basis="Messmenge v1, Menge frei und 20 %, H20"),
+    Befundlage("2.251-reproduziert", "✔✔ UND DIE LIVE-STUFEN "
+               "REPRODUZIEREN EXAKT: +0,77 / +1,40 / +0,22 / -0,64 / "
+               "-1,75 gegen registriert +0,82 / +1,30 / +0,12 / -0,54 / "
+               "-1,70. Abweichungen hoechstens 0,10, durch die gewachsene "
+               "Messbasis erklaert", "gilt",
+               "n92_b9_funding_buckel_auf_frei.py",
+               basis="Messmenge v1, Menge frei"),
+    Befundlage("2.251-besetzung", "✔✔ UND DIE URSACHE AUS N-90 LIEGT "
+               "HIER NICHT VOR: die Fuenftel sind auf `frei` "
+               "ausgeglichen besetzt (30 / 29 / 30 / 29 / 30). In N-90 "
+               "standen 1,5 gegen 29,7 Anker - genau das machte die "
+               "Gruppenmediane dort unbrauchbar. Auf `frei` tragen sie",
+               "gilt", "n92_b9_funding_buckel_auf_frei.py"),
+    Befundlage("2.252", "⚠️ WAS TROTZDEM STEHT: die NICHT-MONOTONIE ist "
+               "real und reproduziert - Fuenftel 1 (+1,40) liegt ueber "
+               "Fuenftel 0 (+0,77). Sie war immer bekannt und galt als "
+               "hinnehmbar. ⚠️ Die Kontrolle ist uebrigens AUCH nicht "
+               "monoton (-0,17/+0,07/+0,09/+0,11/-0,10) - bei fuenf "
+               "verrauschten Punkten ist exakte Monotonie selten "
+               "zufaellig. Aber `funding`s Spanne ist ZEHNMAL groesser",
+               "gilt", "n92_b9_funding_buckel_auf_frei.py"),
+    Befundlage("2.252-inhaltlich", "⚠️⚠️ UND SIE IST INHALTLICH "
+               "MERKWUERDIG: 'zweitbestes Funding schlaegt bestes "
+               "Funding'. Das koennte heissen, dass EXTREMES Funding ein "
+               "Warnsignal ist statt des besten Falls - eine eigene "
+               "Hypothese, die nie geprueft wurde. ⚠️ Nicht Teil von B9, "
+               "aber notiert", "gilt",
+               "n92_b9_funding_buckel_auf_frei.py / offene Frage"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "
