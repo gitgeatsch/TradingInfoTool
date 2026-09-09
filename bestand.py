@@ -2032,6 +2032,59 @@ BEFUNDE = (
                "Ist er stabil, ist 'das Extrem ist nicht der beste Fall' "
                "belegt - und das waere eine Aussage ueber den MARKT",
                "gilt", "Vorschlag 09.09.2026"),
+    Befundlage("2.259", "✔✔✔ N-95: DER KNICK IST NICHT BELEGT - und "
+               "zwar mit TRENNSCHAERFE, nicht aus Untermacht. Bei den "
+               "beiden Beitraegen, wo die Maschinerie nachweislich "
+               "arbeitet (`funding` d34 +0,0656 [+0,019..+0,118] "
+               "TRENNBAR, `oi_aenderung` d34 +0,0520 [+0,007..+0,094] "
+               "TRENNBAR), ist d01 NICHT trennbar (+0,0402 [-0,037.."
+               "+0,116] und +0,0260 [-0,027..+0,083])", "gilt",
+               "n95_ist_der_knick_stabil.py",
+               basis="Messmenge v1, Menge frei, 40 Nullziehungen"),
+    Befundlage("2.259-b11", "✔✔ DAMIT IST B11 BEANTWORTET: 'das Extrem "
+               "ist nicht der beste Fall' ist NICHT belegt. Der "
+               "Unterschied zwischen Fuenftel 0 und 1 ist Rauschen. ⚠️ "
+               "Und das passt zu `funding_extrem`, der im Gesamtlauf "
+               "Widerspruch zeigt und die Live-Sperre nicht verbessert "
+               "(F-207) - zwei unabhaengige Zugaenge, dasselbe Ergebnis",
+               "gilt", "n95_ist_der_knick_stabil.py"),
+    Befundlage("2.259-kontrollen", "✔ Die Kontrolle ist ueberall sauber: "
+               "`zufall` zeigt weder bei d01 noch bei d34 einen "
+               "trennbaren Wert, in keiner Haelfte. Und `schnitt` ist "
+               "UNTERMAECHTIG - auch sein d34 ist nicht trennbar, also "
+               "sagt sein d01 nichts. `turnover` zeigt ein trennbares "
+               "NEGATIVES d01, dessen Haelften aber kippen (+0,021 gegen "
+               "-0,262)", "gilt", "n95_ist_der_knick_stabil.py"),
+    Befundlage("2.260", "✔✔✔ UND DAMIT IST AUCH B10 GELOEST - OHNE DIE "
+               "MONOTONIE-VORGABE AUFZUGEBEN. Werden die zwei Stufen "
+               "zusammengelegt, die GEMESSEN nicht unterscheidbar sind, "
+               "werden BEIDE Tabellen monoton fallend: `funding` +1,06 / "
+               "+1,06 / +0,12 / -0,54 / -1,70 und `schnitt` +1,44 / "
+               "+1,44 / +0,28 / -1,19 / -1,96", "gilt",
+               "n95_ist_der_knick_stabil.py",
+               basis="Messmenge v1, Menge frei"),
+    Befundlage("2.260-nicht-angepasst", "⚠️ UND ES IST KEINE ANPASSUNG "
+               "AN DAS GEWUENSCHTE ERGEBNIS: die Zusammenlegung ist durch "
+               "die MESSUNG begruendet (d01 nicht trennbar, waehrend d34 "
+               "es ist) und war VORAB als Konsequenz benannt - im "
+               "Skriptkopf, vor dem Lauf: 'Dann waeren Stufe 0 und 1 "
+               "ZUSAMMENZULEGEN, nicht die Beitraege zu verwerfen'",
+               "gilt", "n95_ist_der_knick_stabil.py"),
+    Befundlage("2.260-rr9", "⚠️⚠️ ES IST ABER EIN EINGRIFF IN EINEN LIVE "
+               "LAUFENDEN BEITRAG: `funding`s registrierte Stufen "
+               "wuerden von +0,82/+1,30/... auf +1,06/+1,06/... wechseln. "
+               "Das aendert die Beitragslage und loest R-R9 aus - die "
+               "Schwelle waere neu zu kalibrieren. NUTZERENTSCHEIDUNG, "
+               "nicht stille Automatik", "gilt",
+               "agent/wahrscheinlichkeit.BEITRAEGE / R-R9"),
+    Befundlage("2.261", "⚠️ ZWEI VORSCHLAEGE VON MIR SIND HEUTE "
+               "DURCHGEFALLEN, bevor der dritte trug: die MONOTONIE als "
+               "Huerde (sie reisst den Bestand mit - sechs von acht "
+               "Kandidaten brechen sie, darunter zwei live) und die "
+               "SPANNE als Ersatz (sie laesst alle acht durch). Erst die "
+               "Frage 'ist der Knick STABIL' hat entschieden - und sie "
+               "brauchte kein neues Kriterium, nur die vorhandene "
+               "Maschinerie", "gilt", "Selbstbefund 09.09.2026"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

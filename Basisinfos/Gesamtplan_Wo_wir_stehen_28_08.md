@@ -2475,3 +2475,65 @@ eine andere Achse:** den Abstand vom **eigenen** Normalzustand in MAD,
 
 ⚠️ Das ist schwer als Zufall zu lesen — und wäre eine Aussage über den
 **Markt**, keine Messschwäche.
+
+---
+
+## 09.09. — B10 UND B11 GELÖST: der Knick ist Rauschen, die Lösung ist Zusammenlegen
+
+### Zwei Kriterien sind vorher gescheitert
+
+| | warum |
+|---|---|
+| **Monotonie** als Hürde | reißt den Bestand mit — **sechs von acht** Kandidaten brechen sie, darunter **zwei live laufende** (`funding`, `oi_aenderung`) |
+| **Stufenspanne** als Ersatz | lässt **alle acht** durch, auch `rsi` und `amihud`, die nicht tragen. Sie misst Spreizung, nicht Wirkung |
+
+### Erst die richtige Frage hat entschieden — ohne neues Kriterium
+
+**Ist der Knick stabil?** Gemessen als `d01 = Stufe 1 − Stufe 0`, mit
+Band, gegen den Nullpunkt — und `d34` als Prüfstein, ob die Maschinerie
+überhaupt arbeitet.
+
+| | d01 (der Knick) | d34 (unstrittige Ordnung) |
+|---|---|---|
+| **`funding`** | +0,040 [−0,037 .. +0,116] **nicht trennbar** | **+0,066 [+0,019 .. +0,118] TRENNBAR** |
+| **`oi_aenderung`** | +0,026 [−0,027 .. +0,083] **nicht trennbar** | **+0,052 [+0,007 .. +0,094] TRENNBAR** |
+| `schnitt` | +0,019 nicht trennbar | nicht trennbar → **untermächtig** |
+| `turnover` | −0,131 trennbar, Hälften **kippen** | nicht trennbar |
+| `zufall` | ✔ nicht trennbar | ✔ nicht trennbar |
+
+> ⚠️⚠️⚠️ **Bei den beiden Beiträgen mit nachgewiesener Messmacht ist der
+> Knick NICHT trennbar, die unstrittige Ordnung schon.** Das ist ein
+> Nullbefund **mit** Trennschärfe.
+
+### ✔✔ B11 beantwortet
+
+**„Das Extrem ist nicht der beste Fall" ist NICHT belegt.** Der
+Unterschied zwischen Fünftel 0 und 1 ist Rauschen. Das passt zu
+`funding_extrem`, der im Gesamtlauf Widerspruch zeigt und die Live-Sperre
+nicht verbessert (F-207) — **zwei unabhängige Zugänge, dasselbe
+Ergebnis**.
+
+### ✔✔✔ B10 gelöst — ohne die Monotonie-Vorgabe aufzugeben
+
+```
+funding (registriert)   alt  +0,82  +1,30  +0,12  -0,54  -1,70
+                        neu  +1,06  +1,06  +0,12  -0,54  -1,70   MONOTON
+
+schnitt                 alt  +1,28  +1,59  +0,28  -1,19  -1,96
+                        neu  +1,44  +1,44  +0,28  -1,19  -1,96   MONOTON
+```
+
+Werden die zwei Stufen zusammengelegt, die **gemessen nicht
+unterscheidbar** sind, werden **beide** Tabellen monoton fallend.
+
+⚠️ **Keine Anpassung an das gewünschte Ergebnis:** die Zusammenlegung ist
+durch die Messung begründet und stand **vorab** im Skriptkopf als
+Konsequenz — *„Dann wären Stufe 0 und 1 zusammenzulegen, nicht die
+Beiträge zu verwerfen."*
+
+### ⚠️⚠️ Was daraus folgt — und es ist eine Entscheidung
+
+Es wäre ein **Eingriff in einen live laufenden Beitrag**: `funding`s
+Stufen wechselten von +0,82/+1,30/… auf +1,06/+1,06/…. Das ändert die
+Beitragslage und **löst R-R9 aus** — die Schwelle wäre neu zu
+kalibrieren. **Nutzerentscheidung, keine stille Automatik.**
