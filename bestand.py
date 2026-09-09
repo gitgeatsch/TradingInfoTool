@@ -1998,6 +1998,40 @@ BEFUNDE = (
                "Zufall zu lesen - und es waere eine Aussage ueber den "
                "MARKT, keine Messschwaeche", "gilt",
                "n93_b10_schnitt_stufen_auf_frei.py"),
+    Befundlage("2.256", "⚠️⚠️⚠️ MEIN VORSCHLAG IST DURCHGEFALLEN: die "
+               "SPANNE gegen den Nullpunkt trennt NICHT. Auf `frei` "
+               "bestehen ALLE ACHT Kandidaten - darunter `rsi` (2,16) "
+               "und `amihud` (1,32), die im Gesamtlauf NICHT tragen. Nur "
+               "die Kontrolle faellt durch (0,28 gegen p97,5 = 0,70). Ein "
+               "Kriterium, das jeden durchlaesst, haelt niemanden auf",
+               "gilt", "n94_spanne_statt_monotonie.py",
+               basis="Messmenge v1, Menge frei, 40 Nullziehungen"),
+    Befundlage("2.256-grund", "✔ DER GRUND IST IM NACHHINEIN "
+               "EINLEUCHTEND: die Spanne misst, ob die Fuenftel "
+               "AUSEINANDERLIEGEN - nicht, ob sie etwas BEDEUTEN. Auch "
+               "`rsi` spreizt sich, ohne zu tragen. Spreizung und "
+               "Wirkung sind zwei verschiedene Dinge", "gilt",
+               "n94_spanne_statt_monotonie.py"),
+    Befundlage("2.257", "⚠️⚠️ UND DIE GEGENPROBE ZEIGT, WIE SCHIEF DIE "
+               "MONOTONIE STEHT: von acht Kandidaten sind nur `turnover` "
+               "und `vola` monoton. SECHS sind es nicht - darunter ZWEI "
+               "LIVE LAUFENDE (`funding` und `oi_aenderung`). Die "
+               "Vorgabe wurde nie an den Bestandsbeitraegen geprueft",
+               "gilt", "n94_spanne_statt_monotonie.py",
+               basis="Messmenge v1, Menge frei"),
+    Befundlage("2.258", "⚠️ DIE RICHTIGE FRAGE IST EINE ANDERE, und sie "
+               "braucht kein drittes Kriterium: IST DIE NICHT-MONOTONIE "
+               "STABIL? Reproduziert 'Fuenftel 1 ueber Fuenftel 0' ueber "
+               "Haelften und Teilmengen, ist es ein MARKTEFFEKT - dann "
+               "ist die Stufentabelle richtig und die Monotonie-Vorgabe "
+               "war falsch. Kippt es, ist es Rauschen und die Vorgabe hat "
+               "einen Sinn", "gilt", "Vorschlag 09.09.2026"),
+    Befundlage("2.258-beides", "✔ Und es beantwortet B10 UND B11 in einem "
+               "Zug: der Knick sitzt bei `funding` und `schnitt` an "
+               "DERSELBEN Stelle, bei zwei unabhaengigen Datenquellen. "
+               "Ist er stabil, ist 'das Extrem ist nicht der beste Fall' "
+               "belegt - und das waere eine Aussage ueber den MARKT",
+               "gilt", "Vorschlag 09.09.2026"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "
