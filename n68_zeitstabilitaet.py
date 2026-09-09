@@ -109,13 +109,38 @@ GEPFLANZT = (0.02, 0.05, 0.10, 0.20)
 MIN_BLOECKE = 20
 
 
-def entzerrte_reihe(je_tag, mom, anteil):
-    """e[tag] = echte Wirkung minus dem Nullwert desselben Tages."""
-    echt = je_tag_wirkung(sammle(je_tag, mom, anteil))
+def entzerrte_reihe(je_tag, mom, anteil, auswahl_saat=None):
+    """e[tag] = echte Wirkung minus dem Nullwert desselben Tages.
+
+    ## ⚠️⚠️ `auswahl_saat` — die Menge ZUFAELLIG statt nach Momentum
+
+    Nachgetragen am 09.09.2026. N-88 hat gezeigt, dass `schnitt`s
+    Haelftenunterschied NUR auf den schmalen Momentum-Mengen kippt
+    (-0,431 bei 5 %, +0,197 bei 20 %) und auf den weiten ruhig ist
+    (+0,002 bei 50 %, +0,018 auf `frei`).
+
+    **Der Verdacht: Kollinearitaet mit der Auswahl.** `schnitt` und das
+    250-Tage-Momentum korrelieren mit Spearman +0,704 - auf der
+    Momentumspitze liegen fast alle Werte ueber ihrem eigenen Schnitt,
+    also bleibt kaum Streuung uebrig, und die Messung wird instabil.
+
+    Mit `auswahl_saat` wird je Tag GLEICH VIEL gewaehlt, aber zufaellig.
+    Traegt die Instabilitaet dann nicht mehr, ist sie eine Eigenschaft der
+    AUSWAHL und nicht von `schnitt`.
+
+    ⚠️ Es ist eine SAAT, kein Generator - `sammle` verbraucht je Tag
+    Zufall, und die Nullziehungen muessten sonst eine ANDERE Auswahl
+    sehen als die Hauptmessung.
+    """
+    def _aw():
+        return (None if auswahl_saat is None
+                else np.random.default_rng(int(auswahl_saat)))
+    echt = je_tag_wirkung(sammle(je_tag, mom, anteil, mische_auswahl=_aw()))
     summe, zahl = {}, {}
     for z in range(ZIEH):
         n = je_tag_wirkung(sammle(je_tag, mom, anteil,
-                                  mische_rang=np.random.default_rng(SAAT + z)))
+                                  mische_rang=np.random.default_rng(SAAT + z),
+                                  mische_auswahl=_aw()))
         for t, v in n.items():
             summe[t] = summe.get(t, 0.0) + v
             zahl[t] = zahl.get(t, 0) + 1

@@ -642,7 +642,7 @@
 
 - Quelle: n88_schnitt_zeitstabil_neu.py
 
-**2.240-abbruch** — ⚠️⚠️ DIE ABBRUCHBEDINGUNG AUS DEM KANDIDATENREGISTER IST DAMIT BESTAETIGT, nicht aufgeloest. 'Unentschieden' (07.09.) war zu freundlich: der Test gibt je nach Menge widerspruechliche SIGNIFIKANTE Antworten, und das ist eine Eigenschaft von `schnitt`, nicht des Verfahrens. Die Sperre ist NICHT baubar
+**2.240-abbruch** — ⚠️ TEILWEISE ABGELOEST DURCH 2.243 (die Instabilitaet war Kollinearitaet). War: DIE ABBRUCHBEDINGUNG AUS DEM KANDIDATENREGISTER IST DAMIT BESTAETIGT, nicht aufgeloest. 'Unentschieden' (07.09.) war zu freundlich: der Test gibt je nach Menge widerspruechliche SIGNIFIKANTE Antworten, und das ist eine Eigenschaft von `schnitt`, nicht des Verfahrens. Die Sperre ist NICHT baubar
 
 - Quelle: n88_schnitt_zeitstabil_neu.py / REGISTER_Kandidaten
 
@@ -661,6 +661,34 @@
 **2.241-nur-hebel** — ✔✔ UND ER TRIFFT NUR DEN HEBEL, NICHT SPOT: die 2,0 Tage mediane Dauer (F-202) stammen aus Trades MIT Barrieren. Spot hat nach Nutzerentscheidung vom 03.09. KEINEN Stop - der Ausstieg ist rein bewertungsbasiert, nichts zwingt zum frueher Ausstieg. Fuer `spot x einstieg` ist H20 damit stimmig. Genau deshalb heisst der Befund 'der HEBEL scheitert an der Bewertung' und nicht 'die Bewertung scheitert'
 
 - Quelle: Review 09.09.2026 / F-202 / N-16e
+
+**2.242** — ✔✔✔ N-89 TEIL B: `schnitt`s ZEITINSTABILITAET IST KOLLINEARITAET MIT DER AUSWAHL, nicht seine Eigenschaft. Auf 5 % faellt der Haelftenunterschied von -0,4310 (Momentum, trennbar) auf -0,013 bis +0,005 (fuenf Zufallsauswahlen, KEINE trennbar). Auf 20 % von +0,1973 auf +0,021 bis +0,045, davon 1 von 5 trennbar - bei einem Test mit 18 % Fehlalarmquote das Erwartete
+
+- Quelle: n89_familie_und_schnitt_loesung.py
+
+**2.242-warum** — ✔ DIE ERKLAERUNG PASST ZUM MECHANISMUS: `schnitt` und das Auswahl-Momentum korrelieren mit Spearman +0,704. Auf der Momentumspitze liegen fast alle Werte ueber ihrem eigenen Schnitt - es bleibt kaum Streuung uebrig, und die Messung wird instabil. Je schmaler die Menge, desto staerker: -0,431 bei 5 %, +0,197 bei 20 %, +0,002 bei 50 %
+
+- Quelle: n89 / Befund 2.158-redundanz
+
+**2.242-k1b** — ✔✔ UND ES ERKLAERT K-1b VON DER ANDEREN SEITE: dort brach `schnitt`s Wirkung auf Zufallsmengen von +0,186 auf +0,037 ein (2.222). Beides ist derselbe Mechanismus - auf der Momentummenge misst `schnitt` teilweise die AUSWAHL mit
+
+- Quelle: n89 / Befund 2.222
+
+**2.243** — ⚠️⚠️ DAMIT IST DIE ABBRUCHBEDINGUNG ANDERS ZU LESEN ALS IN 2.240: `schnitt` ist NICHT gefallen - er wurde auf der FALSCHEN Menge geprueft. Auf einer nicht momentum-selektierten Menge ist er zeitstabil. ⚠️ Und die KETTE arbeitet auf genau so einer Menge (ueberwiegend Bestand, nach nichts selektiert - Befund 2.220)
+
+- Quelle: n89_familie_und_schnitt_loesung.py
+
+**2.243-offen** — ⚠️ WAS DAMIT NICHT GELOEST IST: die FORM. Der Buckel (+4,07/+5,55/+9,49/+1,71/-4,65) ist dreimal aufgetreten. ⚠️⚠️ ABER: N-64/N-65 haben die Stufen auf der SELEKTIERTEN Menge gerechnet - wenn `schnitt` dort mit dem Momentum kollinear ist, koennte der Buckel DASSELBE Artefakt sein. Das ist pruefbar und die naechste Frage
+
+- Quelle: Befund 2.158 / n89 / offene Frage
+
+**2.244** — ⚠️ N-89 TEIL A: KEINE VERTRETERIN DER FAMILIE BESTEHT BEIDE HUERDEN. `vola` traegt, ist aber auf 20 % zeitinstabil - GENAU WIE `schnitt`, und beide korrelieren mit 0,703, also vermutlich dieselbe Kollinearitaet. `schnitt50` ist zeitstabil, liefert aber einen WIDERSPRUCH im Gesamtlauf. `rsi` ist auf DREI Mengen zeitinstabil und traegt nicht
+
+- Quelle: n89_familie_und_schnitt_loesung.py
+
+**2.244-amihud** — ⚠️⚠️ `amihud` IST DER EINZIGE MIT SAUBEREM STABILITAETSBILD: nirgends trennbar UND konsistentes Vorzeichen (+0,004 bis +0,029) - besser als die Kontrolle, deren Vorzeichen dreht. ⚠️ Er traegt aber nicht (Gesamtlauf 09.09.: TRAEGT NICHT auf allen drei Mengen). Zeitstabil und wirkungslos ist kein Kandidat - aber es ist ein Grund, ihn nicht abzuschreiben (Befund 2.166-woanders: er misst AUSFUEHRBARKEIT)
+
+- Quelle: n89_familie_und_schnitt_loesung.py
 
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
