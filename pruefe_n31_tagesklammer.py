@@ -38,7 +38,7 @@ from messe_beitrag_auf_auswahl import momentum250, sammle
 HORIZONT, BLOCK = 20, 90
 
 
-def je_tag_wirkung(gesammelt: dict) -> dict:
+def je_tag_wirkung(gesammelt: dict, statistik: str = "median") -> dict:
     """Die REGISTRIERTE Statistik: Median(frei) - Median(ALLE).
 
     ⚠️⚠️ NICHT gegen die GESPERRTEN, sondern gegen ALLE - so rechnet
@@ -50,12 +50,27 @@ def je_tag_wirkung(gesammelt: dict) -> dict:
     3,8-fache (Funding +0,0940 statt +0,0246, Turnover +0,2302 statt
     +0,0616 - derselbe Faktor bei beiden, die Signatur eines
     Definitionsunterschieds). Gefunden hat es die Reproduktionskontrolle.
+
+    ## ⚠️⚠️ `statistik` — MEDIAN oder MITTEL (09.09.2026)
+
+    Der Median ist die registrierte Statistik und bleibt die Vorgabe. Fuer
+    die Zielgroesse `barriere` taugt er aber NICHT: der Ausgang ist BINAER
+    (Ziel vor Stop = 0/1), der Median ist dann 0 oder 1, und die Differenz
+    fast immer exakt null - die Statistik waere entartet. Eine
+    TREFFERQUOTE ist ein Mittel.
+
+    ⚠️ Die Wahl faellt NICHT hier, sondern an der Zielgroesse
+    (`messnorm.ZIELGROESSEN[...]["statistik"]`). Wer sie hier frei setzt,
+    kann eine Zielgroesse mit der Statistik einer anderen messen.
     """
+    if statistik not in ("median", "mittel"):
+        raise ValueError("unbekannte Statistik: %r" % statistik)
+    lage = np.median if statistik == "median" else np.mean
     aus = {}
     for tag, (oben, y) in gesammelt.items():
         if oben.sum() < 1 or (~oben).sum() < 3:
             continue
-        aus[tag] = float(np.median(y[~oben]) - np.median(y))
+        aus[tag] = float(lage(y[~oben]) - lage(y))
     return aus
 
 

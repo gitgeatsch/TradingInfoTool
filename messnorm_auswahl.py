@@ -63,7 +63,7 @@ from pruefe_n31_tagesklammer import je_tag_wirkung          # noqa: E402
 from messnorm import (Lage, Befund, Protokoll, ZIEHUNGEN,   # noqa: E402
                       SAAT, _block, NULL_ZIEHUNGEN, NULL_PERZENTIL,
                       TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug,
-                      ZIELGROESSE_JE_LAGE)
+                      ZIELGROESSE_JE_LAGE, ZIELGROESSEN)
 
 MENGEN = {"frei": 1.0, "50%": 0.50, "20%": 0.20, "10%": 0.10,
           "5%": 0.05}
@@ -361,8 +361,11 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     block = _block(horizont)
     anteil = MENGEN[menge]
 
+    # ⚠️ Die Statistik faellt aus der ZIELGROESSE, nicht aus dem Aufruf -
+    # sonst misst jemand `barriere` mit dem Median (entartet, weil binaer).
+    _stat = ZIELGROESSEN[zielgroesse].get("statistik", "median")
     g = sammle(je_tag, mom, anteil, mische_auswahl=_aw(), nur=nur)
-    d = je_tag_wirkung(g)
+    d = je_tag_wirkung(g, _stat)
     haupt = _band(d, rng, block)
     if haupt is None:
         raise ValueError("zu wenige Tage fuer ein Band (%d)" % len(d))
@@ -374,7 +377,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
         gz = sammle(je_tag, mom, anteil,
                     mische_rang=np.random.default_rng(SAAT + z),
                     mische_auswahl=_aw(), nur=nur)
-        nb = _band(je_tag_wirkung(gz), rng, block)
+        nb = _band(je_tag_wirkung(gz, _stat), rng, block)
         if nb:
             nullw.append(nb["mittel"])
             nullu.append(nb["unten"])
@@ -405,7 +408,7 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
             gz = sammle(je_tag, mom, anteil,
                         mische_rang=np.random.default_rng(SAAT + 1000 * z),
                         pflanze=-s, mische_auswahl=_aw(), nur=nur)
-            pb = _band(je_tag_wirkung(gz), rng, block)
+            pb = _band(je_tag_wirkung(gz, _stat), rng, block)
             # ⚠️ 2.188-inkonsistenz: die Trennschaerfe prueft gegen NULL,
             # das URTEIL (`Befund.traegt`) gegen `null_oben`. Sind beide
             # verschieden, widersprechen sich Trennschaerfe und Urteil im

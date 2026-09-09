@@ -602,6 +602,38 @@
 
 - Quelle: Nutzervorgabe 09.09.2026
 
+**2.237** — ⚠️⚠️ K-1c HEBEL: DER LAUF IST UNGUELTIG - die Kontrolle `zufall` TRAEGT (+0,0007, Band [+0,0002 .. +0,0013], 48 Bloecke). Drei Kandidaten sahen wie Traeger aus (turnover, oi_aenderung, schnitt); keiner davon gilt
+
+- Quelle: k1c_hebel_barriere.py
+
+**2.237-median** — ✔ DER MEDIAN IST BEI BINAEREN DATEN ENTARTET - belegt: bei 0/1-Ausgaengen und zufaelliger Sperrgruppe hat `median(frei) - median(alle)` die Streuung 0,00000 und nur den Wert 0,0. Deshalb konnte `barriere` mit der bisherigen Anlage gar nicht gemessen werden - das war ein echtes Hindernis, kein erfundenes
+
+- Quelle: Kunstprobe 09.09.2026
+
+**2.237-mittel-ok** — ✔ UND DIE MITTEL-STATISTIK IST UNVERZERRT: ueber 4.000 Ziehungen betraegt `mean(frei) - mean(alle)` im Mittel +0,00004 bis +0,00042 bei einer Streuung von 0,0136. Der Fehler liegt also NICHT in der Statistik
+
+- Quelle: Kunstprobe 09.09.2026
+
+**2.238** — ⚠️⚠️⚠️ DER FEHLER LIEGT IM BAND: bei rund 250 Ankern je Tag und 48 Bloecken muesste das Band etwa ±0,0023 breit sein - beobachtet sind ±0,0006, also VIERMAL ZU ENG. Ein zu enges Band laesst jede Winzigkeit 'tragen', und genau das tut `zufall` hier
+
+- Quelle: k1c_hebel_barriere.py / Ueberschlagsrechnung 09.09.
+
+**2.238-klasse** — ⚠️ DAS IST DIESELBE KLASSE WIE FEHLER 6: die EICHUNG DES BANDES auf einem neuen Datentyp war nie geprueft. Der Pruefstand kann es beantworten - Fehlalarmquote der Barrieren-Anlage auf Nullwelten, genau wie am 09.09. fuer den Nullbezug
+
+- Quelle: Selbstbefund 09.09.2026
+
+**2.238-gebaut** — ✔ WAS TROTZDEM STEHT: die Zielgroesse `barriere` ist jetzt BAUBAR - `ZIELGROESSEN` traegt die Statistik je Zielgroesse, `je_tag_wirkung` hat die Mittel-Variante (Vorgabe bleibt Median, Neutralitaetsprobe bestanden), und die Barriere laeuft auf der PRODUKTIONSGEOMETRIE min(25 %, max(5 %, 0,75 x ATR)) mit CRV 2,0 - nicht auf der 2,5er-Variante aus `messe_sentiment_je_horizont`
+
+- Quelle: messnorm.py / pruefe_n31_tagesklammer.py / k1c_hebel_barriere.py
+
+**2.238-auswahl** — ⚠️ Und eine Auswahl gehoert benannt: im Fenster von 20 Tagen loesen sich 94,7 % der Anker, die uebrigen fallen heraus. Das ist verwandt mit den 79 % 'Einstieg nie erreicht' aus K-6 - dort aber viel groesser, weil die Kette eine EINSTIEGSZONE hat, die erst erreicht werden muss
+
+- Quelle: k1c_hebel_barriere.py
+
+**2.239** — ⚠️ EIGENE UEBERVORSICHT, vom Nutzer korrigiert: ich hatte gefragt statt gebaut ('wir bauen doch gerade alles um - verstehe den Grund nicht'). Er hatte recht: eine Barrierenfunktion auf Produktionsgeometrie ist genau die laufende Arbeit, keine Grundsatzentscheidung. ⚠️ Das ECHTE Hindernis lag woanders und war vorher nicht sichtbar - der entartete Median
+
+- Quelle: Nutzereinwand 09.09.2026
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.

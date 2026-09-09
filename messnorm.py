@@ -145,11 +145,17 @@ ZIELGROESSEN = {
     "bewegung_r": {
         "text": "Rendite in R nach H Tagen, BARRIERENFREI",
         "gilt_fuer": "alle Lagen",
+        "statistik": "median",
         "begruendung": "misst die Bewegung, nicht die eigene Zielregel",
     },
     "barriere": {
         "text": "Ziel vor Stop (CRV-Barriere)",
         "gilt_fuer": "nur Lagen, in denen ein Stop den Trade BEENDET",
+        # ⚠️⚠️ MITTEL, NICHT MEDIAN (09.09.2026). Der Ausgang ist BINAER
+        # (Ziel vor Stop = 0/1); der Median ist dann 0 oder 1, und die
+        # Differenz fast immer exakt null - die Statistik waere entartet.
+        # Eine Trefferquote ist ein MITTEL.
+        "statistik": "mittel",
         "begruendung": ("blind fuer 'wieviel ist zu holen' - der "
                         "Erwartungswert ist per Konstruktion null. Zulaessig "
                         "als VERGLEICH zweier Arme unter derselben Zielregel "
@@ -167,6 +173,7 @@ ZIELGROESSEN = {
                  "eigenen Reihe"),
         "gilt_fuer": "nur spot x akkumulation",
         "einheit": "Rang",
+        "statistik": "median",
         "begruendung": ("das Erfolgsmass, das `handelsauftrag.py` der "
                         "Akkumulation ausdruecklich gibt. Als Perzentilrang "
                         "in der EIGENEN Reihe ist die Basisrate exakt 0,500 "
