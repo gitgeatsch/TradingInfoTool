@@ -1669,6 +1669,64 @@ BEFUNDE = (
                "ECHTE Hindernis lag woanders und war vorher nicht "
                "sichtbar - der entartete Median", "gilt",
                "Nutzereinwand 09.09.2026"),
+    Befundlage("2.240", "✔✔✔ N-88: `schnitt`s ZEITSTABILITAET IST "
+               "ENTSCHIEDEN - und zwar GEGEN ihn. Ueber alle fuenf Mengen "
+               "gemessen dreht sein Haelftenunterschied das Vorzeichen "
+               "(-0,431 / -0,081 / +0,197 / +0,002 / +0,018) und ist auf "
+               "ZWEI Mengen TRENNBAR - auf 5 % mit -0,43, auf 20 % mit "
+               "+0,20. Widerspruechliche signifikante Antworten je nach "
+               "Menge", "gilt", "n88_schnitt_zeitstabil_neu.py",
+               basis="Messmenge v1, entzerrte Reihe, H20, fuenf Mengen"),
+    Befundlage("2.240-kontrollen", "✔ UND DIE KONTROLLEN TRENNEN DAS AB: "
+               "`funding` zeigt ueber alle fuenf Mengen DASSELBE "
+               "Vorzeichen (+0,060 bis +0,003) und auf KEINER einen "
+               "trennbaren Unterschied - er ist zeitstabil. `zufall` "
+               "dreht zwar auch, wird aber NIE trennbar. Nur `schnitt` "
+               "liefert gegenlaeufige SIGNIFIKANTE Unterschiede",
+               "gilt", "n88_schnitt_zeitstabil_neu.py"),
+    Befundlage("2.240-abbruch", "⚠️⚠️ DIE ABBRUCHBEDINGUNG AUS DEM "
+               "KANDIDATENREGISTER IST DAMIT BESTAETIGT, nicht "
+               "aufgeloest. 'Unentschieden' (07.09.) war zu freundlich: "
+               "der Test gibt je nach Menge widerspruechliche "
+               "SIGNIFIKANTE Antworten, und das ist eine Eigenschaft von "
+               "`schnitt`, nicht des Verfahrens. Die Sperre ist NICHT "
+               "baubar", "gilt", "n88_schnitt_zeitstabil_neu.py / "
+               "REGISTER_Kandidaten"),
+    Befundlage("2.240-standard", "⚠️ Der neue Messstandard hat daran "
+               "NICHTS geaendert - richtig so: die Zeitstabilitaet haengt "
+               "nicht am Nullbezug (dort wird ein UNTERSCHIED gegen null "
+               "geprueft, keine Wirkung gegen eine gemischte Welt), "
+               "sondern an der Menge. Die Vorhersage stand vor dem Lauf "
+               "und ist eingetroffen", "gilt",
+               "n88_schnitt_zeitstabil_neu.py"),
+    Befundlage("2.241", "✔ REVIEW DER ERLEDIGTEN HEBEL-BEFUNDE "
+               "(Nutzerauftrag 09.09., keine Doppelmessung sondern Suche "
+               "nach Showstoppern): KEIN Showstopper beim "
+               "Kalibrierungsfaktor. `hebel_scheitert_an_der_bewertung` "
+               "rechnet mit 19,5 % - das ist der ERSATZ F-219, gemessen "
+               "mit der Invarianz als vorab gesetztem Annahmekriterium "
+               "(ROH und ANTEIL fielen durch, RANG war exakt invariant). "
+               "Gefallen war die ALTE Zahl 16,8 %", "gilt",
+               "Review 09.09.2026 / F-219"),
+    Befundlage("2.241-horizont", "⚠️⚠️ DER EINE ECHTE SHOWSTOPPER IST "
+               "BEKANNT UND GEMESSEN, nicht uebersehen: die Beitraege "
+               "sind auf H20 belegt (funding +0,0246, turnover +0,0616), "
+               "bei H1/H2 aber 6-7x kleiner (+0,0019 / +0,0026). N-17a "
+               "hat die H2-Kalibrierung vollstaendig durchgemessen "
+               "(F-203): die beste Schwelle ist praktisch 0,000, r ~ "
+               "0,02. ✔ BEWUSST NICHT live registriert - 'eine Schwelle "
+               "ohne Trennschaerfe waere eine Mengenbremse ohne "
+               "Qualitaetsaussage'", "gilt", "Review 09.09. / F-185 / "
+               "F-203 / F-210"),
+    Befundlage("2.241-nur-hebel", "✔✔ UND ER TRIFFT NUR DEN HEBEL, NICHT "
+               "SPOT: die 2,0 Tage mediane Dauer (F-202) stammen aus "
+               "Trades MIT Barrieren. Spot hat nach Nutzerentscheidung "
+               "vom 03.09. KEINEN Stop - der Ausstieg ist rein "
+               "bewertungsbasiert, nichts zwingt zum frueher Ausstieg. "
+               "Fuer `spot x einstieg` ist H20 damit stimmig. Genau "
+               "deshalb heisst der Befund 'der HEBEL scheitert an der "
+               "Bewertung' und nicht 'die Bewertung scheitert'", "gilt",
+               "Review 09.09.2026 / F-202 / N-16e"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

@@ -2262,3 +2262,79 @@ falsch**.
 ⚠️ Offen bleibt der Weg über eine **andere Quelle** (CoinGecko führt
 Umlaufmengen für weit mehr Coins) — der einzige, der etwas ändern würde,
 und er braucht eine eigene Prüfung.
+
+---
+
+# 09.09. — `schnitt` ENTSCHIEDEN, und der Review der erledigten Punkte
+
+## N-88: die Abbruchbedingung ist bestätigt, nicht aufgelöst
+
+Das Kandidatenregister hielt fest: *„die Zeitstabilität ist unentschieden.
+**Wer vor ihrer Klärung baut, wiederholt den 31.08.-Fehler.**"* Über
+**alle fünf Mengen** gemessen, auf der entzerrten Reihe:
+
+| | 5 % | 10 % | 20 % | 50 % | frei | |
+|---|---|---|---|---|---|---|
+| **`schnitt`** | **−0,431** ⚠️ | −0,081 | **+0,197** ⚠️ | +0,002 | +0,018 | **trennbar auf 5 % UND 20 % — gegenläufig** |
+| `funding` | +0,060 | +0,043 | +0,052 | +0,003 | +0,011 | ✔ gleiches Vorzeichen, **keiner** trennbar |
+| `zufall` | −0,068 | −0,022 | +0,003 | −0,018 | +0,003 | ✔ keiner trennbar |
+
+> ⚠️⚠️ **„Unentschieden" war zu freundlich.** `schnitt` liefert je nach
+> Menge **widersprüchliche signifikante** Antworten — der Zufall dreht
+> zwar auch, wird aber **nie** trennbar. **Die Sperre ist nicht baubar.**
+
+✔ **`funding` ist dagegen zeitstabil** — und ein Nullbefund ist bei
+diesem Test **stark** (er erklärt zu oft einen Unterschied, 18 % statt
+10 %).
+
+⚠️ Der neue Messstandard hat daran nichts geändert — **richtig so**: die
+Zeitstabilität hängt nicht am Nullbezug, sondern an der Menge. Die
+Vorhersage stand vor dem Lauf und ist eingetroffen.
+
+## Der Review der „erledigten" Punkte
+
+Nutzerauftrag: *„keine neue Doppelmessung, aber prüfe ob du relevante
+Fehler und Showstopper findest."*
+
+### ✔ Kein Showstopper beim Hebel-Kalibrierungsfaktor
+
+`hebel_scheitert_an_der_bewertung` rechnet mit **19,5 %** — das ist der
+**Ersatz F-219**, gemessen mit der Invarianz als vorab gesetztem
+Annahmekriterium (ROH und ANTEIL fielen durch, RANG war exakt invariant).
+Gefallen war die **alte** Zahl 16,8 %.
+
+### ⚠️⚠️ Der eine echte Showstopper ist bekannt und gemessen
+
+```
+Horizont   Funding    Turnover
+H1        +0,0019    +0,0044
+H2        +0,0026    +0,0107
+H20       +0,0246    +0,0616
+```
+
+Die Beiträge sind auf **H20** belegt; bei H1/H2 sind sie **6–7× kleiner**.
+N-17a hat die H2-Kalibrierung vollständig durchgemessen (F-203): **die
+beste Schwelle ist praktisch 0,000**, r ≈ 0,02.
+
+✔ **Bewusst NICHT live registriert** — *„eine Schwelle ohne Trennschärfe
+wäre eine Mengenbremse ohne Qualitätsaussage."* Er wurde also **nicht
+übersehen**, sondern gemessen und die Konsequenz gezogen.
+
+### ✔✔ Und er trifft NUR den Hebel, nicht Spot
+
+Die **2,0 Tage mediane Dauer** (F-202) stammen aus Trades **mit
+Barrieren**. **Spot hat nach Nutzerentscheidung vom 03.09. keinen Stop** —
+der Ausstieg ist rein bewertungsbasiert, nichts zwingt zum frühen
+Ausstieg.
+
+> **Für `spot × einstieg` ist H20 damit stimmig.** Genau deshalb heißt der
+> Befund *„der **Hebel** scheitert an der Bewertung"* und nicht *„die
+> Bewertung scheitert."*
+
+## Der Stand nach dem Review
+
+| | |
+|---|---|
+| **`spot × einstieg`** | ✔ die einzige belegte und kalibrierte Lage — H20 ist dafür stimmig |
+| **Akkumulation** | ⚠️ `schnitt` als Sperre **nicht baubar** (N-88). BTC/ETH/SOL brauchen keine eigene Lösung (Untermacht, kein Gegenbefund) |
+| **Hebel** | ⚠️ Entwurf steht (Sizing, kein Timing), scheitert aber an der Bewertung — und zusätzlich am Horizont. **Beides gemessen, nichts übersehen** |
