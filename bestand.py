@@ -2304,8 +2304,10 @@ BEFUNDE = (
                "zu 2.166 (er misst Ausfuehrbarkeit, nicht Potential). "
                "⚠️ Das Urteil steht unter dem Vorbehalt aus 2.274: "
                "solange der Nullpunkt nicht entschieden ist, ist auch "
-               ",traegt nicht' nur vorlaeufig", "gilt",
+               ",traegt nicht' nur vorlaeufig", "abgeloest",
                "n98_n46_laengs_nullpunkt.py",
+               abgeloest_durch="2.283",
+               warum="Es ist UNTERMACHT, kein Nullbefund. Bei der Beharrlichkeit von `schnitt` (0,985) findet die Anlage einen Effekt von 0,03 R in 20 % und von 0,05 R in 50 % der Faelle - die echten Kandidaten liegen genau in diesem Bereich. Ein ,traegt nicht' sagt dort nichts ueber die Welt.",
                basis="H20 · Laengs-Rang FENSTER 250 · Messmenge V1"),
     Befundlage("2.278", "✔ HERKUNFT SAUBER GETRENNT (Nutzervorgabe "
                "10.09.: ,trennen nach vor und nach dem aktuellen Umbau - "
@@ -2319,6 +2321,100 @@ BEFUNDE = (
                "ausweist: Code 174 von 303 Altbestand · Messungen 356 "
                "von 458 ohne vermerkte Basis · Dokumente 48 von 55 vor "
                "dem Umbau", "gilt", "soll_ist.py / REGISTER_Werkzeuge"),
+    Befundlage("2.279", "⚠️⚠️⚠️ DIE HEBELDIAGNOSE IST KORRIGIERT: "
+               "NICHT ,die Bewertung ist zu schwach', sondern ,sie ist zu "
+               "GROB'. Ich habe drei Tage lang F-220 zitiert (,nur EINE "
+               "Lage erreicht 2,60x') - F-220 ist am 06.09. "
+               "ZURUECKGEZOGEN, und der Kalibrierungsfaktor 19,5 % ist am "
+               "05.09. gefallen. Es gilt 2.174-neu: unkalibriert "
+               "erreichen ZWEI Lagen die Zielzone (funding bestes 3,90x, "
+               "funding bestes + turnover mittleres 4,56x), und die "
+               "Abstufung ist ECHT", "gilt", "Befund 2.174 / 2.174-neu"),
+    Befundlage("2.279-zerlegt", "✔ ,SCHWACH' IST DAMIT ZERLEGT - auf "
+               "Nutzerfrage 10.09. (,erkennen wir ueberhaupt gute "
+               "Hebelchancen?'): NIVEAU ✔ ja, zwei Lagen erreichen "
+               "2-5x · AUFLOESUNG ⚠️ nein, die Abstufung SPRINGT von "
+               "1,02x auf 3,90x, weil die Beitraege Fuenftel sind "
+               "(2.174-grenzen) · TRENNSCHAERFE ⚠️ NIE GEMESSEN - ob eine "
+               "hoehere Quote mit einer hoeheren REALEN Trefferquote "
+               "einhergeht · DECKEL ✔ `hebel_max` = 10 vorhanden. "
+               "⚠️⚠️ Wir erkennen ,gut' gegen ,nicht gut', aber nicht "
+               ",wie gut'", "gilt", "Befund 2.174-grenzen / Nutzerfrage "
+               "10.09."),
+    Befundlage("2.280", "⚠️⚠️ A1 IST DAMIT KEINE NACHARBEIT MEHR, "
+               "SONDERN VORAUSSETZUNG. Die offene Trennschaerfefrage "
+               "(,geht ein hoeherer Hebel mit einer hoeheren realen "
+               "Trefferquote einher?') fragt nach BINAEREN Ausgaengen - "
+               "und genau dort ist unser Band viermal zu eng, weshalb die "
+               "Kontrolle traegt (2.238). Ohne A1 ist die Frage nicht "
+               "beantwortbar, mit welcher Simulation auch immer",
+               "gilt", "Befund 2.238 / 2.279-zerlegt"),
+    Befundlage("2.281", "⚠️⚠️⚠️ DREI FEHLAUSSAGEN AN EINEM TAG AUS "
+               "DERSELBEN URSACHE: ich habe aus MEMORY-Eintraegen "
+               "zitiert, ohne im REGISTER gegenzupruefen. (1) ,Der Hebel "
+               "ist konzeptionell abgeschlossen' - der Eintrag schliesst "
+               "nur die Instrument-Achse. (2) ,`portfolio_wert_historie` "
+               "ist LEER' - sie laeuft seit dem 08.05. mit 91 Zeilen, ich "
+               "las die veraltete Desktop-Kopie. (3) ,Nur EINE Lage "
+               "erreicht 2,60x' - F-220 ist zurueckgezogen. "
+               "⚠️⚠️ Ein Memory-Eintrag ist ein SCHNAPPSCHUSS vom Tag "
+               "seiner Entstehung; das Register wird ERZEUGT und ist "
+               "aktuell. Beide sehen beim Lesen gleich verbindlich aus",
+               "gilt", "Selbstbefund 10.09.2026"),
+    Befundlage("2.282", "✔✔✔ N-46 IST GELOEST - UND ZWAR MIT DEM "
+               "VORHANDENEN WERKZEUG. Gegen bekannte Wahrheit gemessen "
+               "(100 Nullwelten je Beharrlichkeit, Soll 2,5 %) arbeiten "
+               "BEIDE Nullmodelle: Verschub 0,0 %% / 1,0 %%, "
+               "Tagesmischung 1,0 %% / 4,0 %%. ⚠️⚠️ Damit ist N-46s "
+               "Praemisse WIDERLEGT - ,die Tagesmischung taugt dort "
+               "nicht' trifft nicht zu. Kriterium 4 des Vierfachtests "
+               "(Regel 3 laengs) ist nicht mehr blockiert, und damit "
+               "auch nicht der Weg zu einem dritten Beitrag", "gilt",
+               "n99_n46b_fehlalarm_laengs.py",
+               basis="100 Nullwelten je Beharrlichkeit 0,61 und 0,985 · "
+                     "ueberlappung=H20 · 20 Ziehungen je Nullpunkt"),
+    Befundlage("2.282-fund", "✔✔ UND DIE FUNDQUOTE ENTSCHEIDET KLAR FUER "
+               "DIE TAGESMISCHUNG - auf SECHS von acht Sprossen besser, "
+               "auf zwei gleich, nirgends schlechter. Bei 0,985: 0,03 R "
+               "20,0 %% gegen 5,0 %% · 0,05 R 50,0 %% gegen 25,0 %% · "
+               "0,08 R 90,0 %% gegen 70,0 %%. ⚠️ Das ist exakt das "
+               "`null_oben`-Muster vom 09.09.: das konservativere Modell "
+               "hat weniger Fehlalarme und zahlt mit Fundkraft. Dort fiel "
+               "die Entscheidung genauso - fuer das Modell, das die "
+               "SOLLQUOTE trifft", "gilt",
+               "n99_n46b_fehlalarm_laengs.py",
+               basis="40 Welten je Sprosse · Leiter 0,03/0,05/0,08/0,12 R "
+                     "auf den LAENGS-Rang gepflanzt"),
+    Befundlage("2.283", "⚠️⚠️⚠️ DIE AUFLOESUNGSGRENZE DER LAENGS-ACHSE - "
+               "und sie entwertet einen eigenen Nebenbefund. Bei hoher "
+               "Beharrlichkeit (0,985, wie `schnitt`) findet die Anlage "
+               "einen Effekt von 0,03 R in 20 %%, von 0,05 R in 50 %% "
+               "und erst ab 0,08 R in 90 %% der Faelle. **Die echten "
+               "Kandidaten liegen bei 0,02 bis 0,05 R.** ⚠️⚠️ Damit ist "
+               "N-46as Nebenbefund ,kein Kandidat traegt laengs' (2.277) "
+               "KEINE Aussage ueber die Welt, sondern UNTERMACHT - "
+               "genau fuer die beharrlichen Groessen, um die es geht",
+               "gilt", "n99_n46b_fehlalarm_laengs.py"),
+    Befundlage("2.284", "⚠️⚠️ SELBSTBEFUND: MEIN VERSCHUB-BAU WAR NICHT "
+               "NOETIG. N-46a hat ein Nullmodell gebaut, um ein Problem "
+               "zu loesen, das die Messung nicht bestaetigt - die "
+               "Tagesmischung war die ganze Zeit brauchbar. ⚠️ Die "
+               "Ursache steht in 2.274-rr11: ich habe N-46s "
+               "Ausgangsbeobachtung (,amihud: Kontrolle +0,620 gegen "
+               "echten Wert +0,713') NIE reproduziert, sondern auf ihr "
+               "gebaut. R-R11 verlangt die Reproduktion VOR dem Bau, "
+               "nicht nur vor dem Widerruf", "gilt",
+               "Selbstbefund 10.09.2026 / R-R11"),
+    Befundlage("2.285", "⚠️ EIN VORBEHALT ZUR TAGESMISCHUNG, benannt: "
+               "bei hoher Beharrlichkeit feuert sie mit 4,0 %% gegen ein "
+               "Soll von 2,5 %% - das 1,6-fache. Bei niedriger "
+               "Beharrlichkeit liegt sie mit 1,0 %% darunter. Sie "
+               "KLAMMERT das Soll also, waehrend der Verschub durchgehend "
+               "darunter liegt. Fuer beharrliche Groessen ist ein "
+               "TRAEGT-Urteil damit etwas grosszuegiger, als das Band "
+               "verspricht - kein Fehler, aber beim naechsten Grenzfall "
+               "zuerst hier hinsehen", "gilt",
+               "n99_n46b_fehlalarm_laengs.py"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

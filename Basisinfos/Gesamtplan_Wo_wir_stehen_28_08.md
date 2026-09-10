@@ -3109,3 +3109,154 @@ Stand ein Befund; nach dieser Entscheidung ist sie die Umsetzung.
 Lage erreicht (F-220). Der Hebel entsteht dynamisch — aber er entsteht
 fast nie. Das bleibt der Engpass, und er heißt weiterhin: die Bewertung
 ist zu schwach.
+
+---
+
+# ⚠️⚠️⚠️ 10.09. — DIE HEBELDIAGNOSE IST KORRIGIERT: zu GROB, nicht zu schwach
+
+> Nutzerfrage 10.09.: *„1. ein ,guter' Hebel kommt selten zum Einsatz —
+> OK. 2. erkennen wir überhaupt gute Hebelchancen? Das ist die Frage und
+> sollte durch Simulationen bewertet und ggf. kalibriert werden können."*
+
+## Was ich drei Tage lang falsch gesagt habe
+
+Ich habe **F-220** zitiert — *„nur EINE Lage erreicht 2,60×"* — und
+daraus *„die Bewertung ist zu schwach"* gemacht.
+
+| | |
+|---|---|
+| **F-220** | am **06.09. ZURÜCKGEZOGEN** |
+| **Kalibrierungsfaktor 19,5 %** | am **05.09. GEFALLEN** (Verfügbarkeits-Artefakt) — und er wird **nirgends im Code angewandt**, die Produktion rechnet unkalibriert |
+
+**Es gilt Befund 2.174-neu (08.09.)**, unkalibriert mit der heutigen
+Beitragslage (Kapital 10.000, Einsatz 500, Stop 5 %, halbes Kelly,
+CRV 2,0):
+
+```
+kein Beitrag                          0,00×
+mittlere Lage                         1,02×
+                                      ⚠️  hier liegt NICHTS
+nur funding bestes                    3,90×   ← Zielzone
+bestes funding + mittleres turnover   4,56×   ← Zielzone
+nur turnover bestes                   9,45×
+beide bestes                         13,35×
+```
+
+> **ZWEI Lagen liegen in der Zielzone 2–5×, und die Abstufung ist echt.**
+
+## „Schwach" zerlegt — die Antwort auf beide Nutzerfragen
+
+| | Frage | Stand |
+|---|---|---|
+| **NIVEAU** | reicht die Quote für 2–5×? | ✔ **ja**, zwei Lagen |
+| **AUFLÖSUNG** | trifft sie die Zone *gezielt*? | ⚠️ **nein** — Sprung 1,02 → 3,90 |
+| **TRENNSCHÄRFE** | steigt die **reale** Trefferquote mit der Quote? | ⚠️ **nie gemessen** |
+| **DECKEL** | 13,35× braucht `hebel_max = 10` | ✔ vorhanden |
+
+**Zu Frage 1** — ✔ bestätigt: von sechs Lagen erzeugen zwei einen
+brauchbaren Hebel. **Seltenheit ist kein Mangel**, und ich habe sie
+fälschlich als einen dargestellt.
+
+**Zu Frage 2** — ⚠️ die Abstufung ist echt, aber **zu grob**. Ursache
+(2.174-grenzen): die Beiträge sind **Fünftel**; fünf Stufen ergeben ein
+Raster, das gröber ist als die Zielzone.
+
+> **Wir erkennen „gut" gegen „nicht gut". Wir erkennen nicht „wie gut".**
+
+## ⚠️⚠️ Und damit ordnet sich A1 neu ein
+
+Die eigentliche Frage — *geht ein höherer Hebel mit einer höheren
+**realen** Trefferquote einher?* — fragt nach **binären Ausgängen**. Genau
+dort ist unser Band viermal zu eng, und die Kontrolle trägt (2.238).
+
+**A1 ist damit keine Nacharbeit, sondern die Voraussetzung** — ohne sie
+ist die Frage mit keiner Simulation beantwortbar.
+
+## Zwei Wege für die Auflösung — beide offen, beide simulierbar
+
+    feinere Stufung   mehr als fuenf Stufen je Beitrag
+    stetige Form      Regler statt Fuenftel
+
+⚠️ **Vorbehalt aus dem Bestand:** mehrere Beiträge haben sich als
+**Schalter** erwiesen, nicht als Regler. Ob die Daten eine feinere
+Auflösung überhaupt tragen, ist selbst eine Messfrage.
+
+## ⚠️⚠️⚠️ Die Ursache meiner drei Fehlaussagen von heute
+
+| # | falsch | Quelle | richtig |
+|---|---|---|---|
+| 1 | „Hebel konzeptionell abgeschlossen" | Memory-Eintrag | er schließt nur die **Instrument-Achse** |
+| 2 | „`portfolio_wert_historie` ist LEER" | **veraltete Desktop-Kopie** | läuft seit 08.05., 91 Zeilen |
+| 3 | „nur EINE Lage erreicht 2,60×" | Memory-Eintrag | F-220 zurückgezogen |
+
+> **Ein Memory-Eintrag ist ein SCHNAPPSCHUSS vom Tag seiner Entstehung.
+> Das Register wird ERZEUGT und ist aktuell. Beide sehen beim Lesen
+> gleich verbindlich aus** — deshalb wiederholt sich der Fehler.
+
+**Gebaut dagegen:** Kopfwarnungen in beiden Hebel-Memoryeinträgen, die
+Datenstandsprüfung in `soll_ist.py`, und die stehende Vorgabe *„vor jeder
+Aussage aus dem Memory im Register gegenprüfen"* (Befund 2.281).
+
+---
+
+# ✔✔✔ 10.09. — N-46 IST GELÖST, und zwar mit dem VORHANDENEN Werkzeug
+
+Der Blocker stand seit dem 05.09.: *„Ein gültiger Nullpunkt für die
+LÄNGS-Form … das ist die einzige Frage, die den Weg blockiert."* Die
+Begründung lautete, die Tagesmischung tauge dort nicht.
+
+## Gegen bekannte Wahrheit gemessen — 100 Nullwelten je Beharrlichkeit
+
+| Beharrlichkeit | Verschub | Tagesmischung | Soll |
+|---|---|---|---|
+| **0,61** (wie `funding`) | 0,0 % | **1,0 %** | 2,5 % |
+| **0,985** (wie `schnitt`) | 1,0 % | **4,0 %** | 2,5 % |
+
+> ⚠️⚠️ **Beide Nullmodelle arbeiten. N-46s Prämisse ist damit widerlegt** —
+> „die Tagesmischung taugt dort nicht" trifft nicht zu.
+
+## Und die Fundquote entscheidet klar
+
+Gepflanzt auf den **Längs**-Rang, 40 Welten je Sprosse:
+
+| gepflanzt | 0,61 Versch. | 0,61 Tagesm. | 0,985 Versch. | 0,985 Tagesm. |
+|---|---|---|---|---|
+| 0,03 R | 25,0 % | **32,5 %** | 5,0 % | **20,0 %** |
+| 0,05 R | 85,0 % | **97,5 %** | 25,0 % | **50,0 %** |
+| 0,08 R | 100 % | 100 % | 70,0 % | **90,0 %** |
+| 0,12 R | 100 % | 100 % | 97,5 % | 97,5 % |
+
+**Sechs von acht Sprossen besser, zwei gleich, nirgends schlechter.**
+
+⚠️ **Das ist exakt das `null_oben`-Muster vom 09.09.**: das konservativere
+Modell hat weniger Fehlalarme und zahlt mit Fundkraft. Dort fiel die
+Entscheidung genauso — für das Modell, das die **Sollquote trifft**.
+
+> **Kriterium 4 des Vierfachtests (Regel 3 längs) ist nicht mehr
+> blockiert — und damit auch nicht der Weg zu einem dritten Beitrag.**
+
+## ⚠️⚠️⚠️ Der Nebenbefund wiegt schwerer als die Entscheidung: A9
+
+Bei hoher Beharrlichkeit löst die Längs-Achse **erst ab 0,08 R** auf.
+**Die echten Kandidaten liegen bei 0,02 bis 0,05 R.**
+
+> **Damit ist N-46as Nebenbefund „kein Kandidat trägt längs" (2.277)
+> KEINE Aussage über die Welt, sondern UNTERMACHT** — genau für die
+> beharrlichen Größen wie `schnitt`, um die es geht. 2.277 ist abgelöst.
+
+**Als Blocker A9 in den Abgleich aufgenommen**, damit ein „trägt nicht
+längs" nicht beim nächsten Mal wieder als Befund gelesen wird.
+
+## ⚠️ Zwei Selbstbefunde
+
+**2.284 — mein Verschub-Bau war nicht nötig.** Ich habe ein Nullmodell
+gebaut, um ein Problem zu lösen, das die Messung nicht bestätigt.
+Ursache: ich habe N-46s Ausgangsbeobachtung **nie reproduziert**, sondern
+auf ihr gebaut. **R-R11 verlangt die Reproduktion vor dem BAU, nicht nur
+vor dem Widerruf.**
+
+**2.285 — ein Vorbehalt zur Tagesmischung:** bei hoher Beharrlichkeit
+feuert sie mit 4,0 % gegen ein Soll von 2,5 % — das 1,6-fache. Sie
+**klammert** das Soll, während der Verschub durchgehend darunter liegt.
+Für beharrliche Größen ist ein TRÄGT-Urteil damit etwas großzügiger, als
+das Band verspricht.

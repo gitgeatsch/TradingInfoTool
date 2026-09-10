@@ -202,11 +202,10 @@ REIHENFOLGE = (
             "n98_n46_laengs_nullpunkt.py; Befund 2.275",
             fertig=True),
     Schritt(2, "N-46b",
-            "⚠️ OFFEN: welcher Nullpunkt ist RICHTIG? Die Tagesmischung "
-            "ist ENGER, nicht weiter - meine Begruendung ist widerlegt "
-            "(2.274). Entscheidung braucht die FEHLALARMQUOTE auf "
-            "Nullwelten, wie am 09.09. beim Nullbezug.",
-            "Befund 2.274 / 2.276; selbsttest_messanlage.py"),
+            "✔ ENTSCHIEDEN: die TAGESMISCHUNG gewinnt - Fehlalarm 1,0/"
+            "4,0 % gegen Soll 2,5 %, Fundquote auf 6 von 8 Sprossen "
+            "besser. N-46 ist mit dem VORHANDENEN Werkzeug geloest.",
+            "Befund 2.282 / 2.282-fund", fertig=True),
     Schritt(3, "A2/AKKU",
             "Akkumulation mit demselben Nullmodell neu messen (K-1c).",
             "faellt aus N-46 ab; Befund_Akkumulationsmass 28.08."),
@@ -246,10 +245,11 @@ BLOCKER = (
            "`pruefe_auswahl` misst unter der Tagesklammer, bei k=2 bleiben "
            "0 verwertbare Tage",
      "K-1a ist dort nicht entscheidbar", "2.273"),
-    ("N-46", "Kein gueltiger Nullpunkt fuer die LAENGS-Form - die "
-             "Tagesmischung laesst die marktweite Gemeinsamkeit stehen",
-     "blockiert Kriterium 4 des Vierfachtests, damit jeden neuen Beitrag",
-     "Plan 05.09."),
+    ("A9", "Die LAENGS-Achse loest bei beharrlichen Groessen erst ab "
+           "0,08 R auf: 0,03 R -> 20 %, 0,05 R -> 50 %, 0,08 R -> 90 %. "
+           "Die echten Kandidaten liegen bei 0,02 bis 0,05 R",
+     "ein ,traegt nicht laengs' ist dort UNTERMACHT, kein Nullbefund",
+     "2.283"),
 )
 
 
