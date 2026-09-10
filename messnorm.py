@@ -196,6 +196,37 @@ ZIELGROESSE_JE_LAGE = {
     ("absicherung", "einstieg"): "bewegung_r",
 }
 
+# ⚠️⚠️ STILLGELEGTE LAGEN - nicht geloescht, sondern gesperrt (Regel G-a)
+#
+# Nutzervorgabe 10.09.2026: *„Swing ist keine genutzte Strategie mehr."*
+#
+# ⚠️ WARUM NICHT LOESCHEN: `swing` steht an fuenf Stellen in
+# `pruefe_pakete` als Testfall der BETRIEBSkette (`HA.pruefe("Hebel",
+# "Swing")`), und `handelsauftrag.STRATEGIEN` fuehrt es weiter. Ein
+# Loeschen haette die Suite gebrochen und die Betriebskette angefasst -
+# fuer eine Aenderung, die nur die MESSachse betrifft.
+#
+# ⚠️⚠️ Das ist die Hausregel G-a: „eine Stufe, die nichts beitraegt, wird
+# NICHT geloescht, sondern stillgelegt" - mit einem Kanarienvogel, der
+# anschlaegt, wenn sie doch jemand benutzt.
+#
+# Wer eine stillgelegte Lage misst, bekommt einen Fehler mit Begruendung -
+# nicht ein stilles Ergebnis auf einer Lage, die es nicht mehr gibt.
+LAGEN_STILLGELEGT = {
+    ("hebel", "swing"): ("Nutzervorgabe 10.09.2026: swing ist keine "
+                         "genutzte Strategie mehr. Der Eintrag in "
+                         "ZIELGROESSE_JE_LAGE bleibt stehen, damit die "
+                         "Betriebskette unangetastet bleibt."),
+}
+
+
+def stillgelegt(instrument: str, strategie: str) -> str:
+    """Der Grund, wenn diese Lage stillgelegt ist - sonst leer."""
+    return LAGEN_STILLGELEGT.get(
+        (str(instrument or "").strip().lower(),
+         str(strategie or "").strip().lower()), "")
+
+
 # Lagen, in denen ein Stop den Trade beendet - nur dort ist "barriere" die
 # zutreffende Zielgroesse.
 ZIEHUNGEN = 5

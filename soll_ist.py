@@ -79,6 +79,14 @@ class Lage:
     klasse: str
     soll: str
     blocker: str = ""
+    erbt_spot: bool = False
+    """⚠️ Erbt diese Lage die Spot-Beitraege ABSICHTLICH?
+
+    Nutzerentscheidung 10.09.: der Hebel bekommt **keine eigene
+    Bewertungsgruppe**. Eine Bewertung, ein Potential - der Hebel
+    entsteht dynamisch daraus. Damit ist das ,Erben' der Spot-Beitraege
+    die UMSETZUNG, nicht ein Mangel. Ohne dieses Feld meldete der
+    Abgleich es weiter als Abweichung."""
 
 
 @dataclass
@@ -110,6 +118,32 @@ VORGABEN = (
             "erst nach dem Krypto-Produktivgang. A-1, A-2 und die "
             "N-19-Messbasis sind zurueckgestellt.",
             "Nutzervorgabe 10.09.", "erfuellt"),
+    Vorgabe("BEZUGSGROESSE",
+            "Bezugsgroesse fuer `r x Kapital` ist das GESAMTKAPITAL OHNE "
+            "CASH - genau `portfolio_wert_historie.wert_eur` (alle "
+            "Klassen, ohne Cash). Der Drawdown-Massstab bleibt "
+            "`index_wert` (Z-3).",
+            "Nutzerentscheidung 10.09. (P-5)", "erfuellt"),
+    Vorgabe("BEWERTUNG-NIE-BLOCKIEREN",
+            "⚠️⚠️ Aenderungen im Portfolio duerfen die BEWERTUNG nicht "
+            "blockieren - und schon gar nicht still. Das Potential "
+            "braucht das Kapital NICHT; nur die DIMENSIONIERUNG braucht "
+            "es. Faellt der Wert aus: LAUTE Meldung, kein stiller "
+            "Vorgabewert.",
+            "Nutzervorgabe 10.09.; N-40 'fail-soft ist fail-silent'"),
+    Vorgabe("HEBEL-KEINE-EIGENE-GRUPPE",
+            "Der Hebel bekommt KEINE eigene Bewertungsgruppe. Eine "
+            "Bewertung, ein Potential - der Hebel entsteht dynamisch "
+            "daraus, wenn Chance/Risiko es hergibt. Damit ist H-2/N-33 "
+            "als ENTSCHEIDUNG erledigt, nicht nur als Kategorienbefund.",
+            "Nutzerentscheidung 10.09.", "erfuellt"),
+    Vorgabe("KORRELATION-IM-DECKEL",
+            "Die Korrelation des Marktes gehoert in den AGGREGAT-DECKEL "
+            "(K3), nicht in eine Schrumpfung des Einzeltrade-Kelly (K1). "
+            "Der Hebel gilt dem EINZELNEN Asset. Vorbedingung fuer K3: "
+            "Positionsfuehrung fuer Hebel - Spot ist ein Bestand, Hebel "
+            "ein Trade mit Lebenszyklus.",
+            "Nutzerentscheidung 10.09. (P-4); N-40 K3"),
     Vorgabe("VIERFACHTEST",
             "Ein neuer Beitrag braucht ALLE VIER: Abdeckung (F-218) · "
             "Stabilitaet (F-217) · Unabhaengig von funding · Regel 3 "
@@ -143,14 +177,17 @@ LAGEN = (
                  "Laengs-Form nicht entschieden; L1 - SOL fehlt im "
                  "DCA-Schalter"),
     Lage("hebel", "einstieg", "krypto",
-         "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG",
+         "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
+         "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
          blocker="F-220 - nur EINE Lage erreicht 2,60x; A1 - Band auf "
-                 "binaeren Daten; L5 - `portfolio_wert_historie` ist LEER, "
-                 "das Kapital ist zur Laufzeit unbekannt"),
+                 "binaeren Daten; P-1 - die Rollen-Kette liest den "
+                 "Portfoliowert nicht",
+         erbt_spot=True),
     Lage("hebel", "swing", "krypto",
          "⚠️ NICHT MEHR GENUTZT - gehoert aus `ZIELGROESSE_JE_LAGE` "
          "entfernt (L2)",
-         blocker="L2 - Lage existiert nur noch im Code"),
+         blocker="L2 - Lage existiert nur noch im Code",
+         erbt_spot=True),
     Lage("absicherung", "einstieg", "hedge",
          "nur zwei Hedge-Positionen, KEINE in Krypto - zurueckgestellt",
          blocker="KRYPTO-ZUERST"),
@@ -366,7 +403,7 @@ def abgleich() -> list:
     # 1 - Jede Lage: ist sie so vermessen, wie das SOLL es verlangt?
     for lg in LAGEN:
         hat = W.vermessen(lg.klasse, lg.strategie)
-        if lg.blocker and hat:
+        if lg.blocker and hat and not lg.erbt_spot:
             # ⚠️⚠️⚠️ NICHT das SOLL nachziehen - das IST hat hier eine
             # LUECKE. `wahrscheinlichkeit.vermessen` nimmt (klasse,
             # strategie, richtung) und kennt KEINE Instrument-Achse. Die
@@ -431,10 +468,13 @@ def abgleich() -> list:
         pass
 
     # 7 - `swing` ist laut Nutzervorgabe keine genutzte Strategie mehr.
-    if ("hebel", "swing") in N.ZIELGROESSE_JE_LAGE:
-        ab.append("L2: `messnorm.ZIELGROESSE_JE_LAGE` fuehrt "
-                  "(hebel, swing) als eigene Lage - laut Nutzervorgabe "
-                  "10.09. ist `swing` keine genutzte Strategie mehr.")
+    #     ⚠️ Geprueft wird die STILLLEGUNG, nicht das Fehlen: der Eintrag
+    #     bleibt stehen, damit die Betriebskette unangetastet ist (G-a).
+    if not N.stillgelegt("hebel", "swing"):
+        ab.append("L2: die Lage (hebel, swing) ist NICHT stillgelegt - "
+                  "laut Nutzervorgabe 10.09. ist `swing` keine genutzte "
+                  "Strategie mehr. Erwartet wird ein Eintrag in "
+                  "`messnorm.LAGEN_STILLGELEGT`.")
 
     # 5 - Die Reihenfolge: hoechstens EIN Schritt darf offen und zugleich
     #     der naechste sein; spaetere duerfen nicht vorgezogen sein.

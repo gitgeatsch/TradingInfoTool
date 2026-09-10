@@ -63,7 +63,8 @@ from pruefe_n31_tagesklammer import je_tag_wirkung          # noqa: E402
 from messnorm import (Lage, Befund, Protokoll, ZIEHUNGEN,   # noqa: E402
                       SAAT, _block, NULL_ZIEHUNGEN, NULL_PERZENTIL,
                       TRENNSCHAERFE_GEGEN_NULLPUNKT, STAERKEN, _bezug,
-                      ZIELGROESSE_JE_LAGE, ZIELGROESSEN)
+                      ZIELGROESSE_JE_LAGE, ZIELGROESSEN,
+                      stillgelegt)
 
 MENGEN = {"frei": 1.0, "50%": 0.50, "20%": 0.20, "10%": 0.10,
           "5%": 0.05}
@@ -352,6 +353,12 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
     # nur an den Befund durchgereicht. Eine Messung mit
     # `lage=Lage("hebel","einstieg")` haette damit Spot-Bewegung gemessen
     # und "Hebel" daraufgeschrieben - eine Etikettenluege.
+    # ⚠️ STILLGELEGTE LAGEN abweisen, bevor gemessen wird (L2, 10.09.).
+    # Ein Ergebnis auf einer Lage, die es nicht mehr gibt, ist Aufwand,
+    # der spaeter als Befund gelesen wird.
+    _grund = stillgelegt(lage.instrument, lage.strategie)
+    if _grund:
+        raise ValueError("%s ist STILLGELEGT: %s" % (lage, _grund))
     soll = ZIELGROESSE_JE_LAGE.get((lage.instrument, lage.strategie))
     if soll and zielgroesse != soll:
         raise ValueError(

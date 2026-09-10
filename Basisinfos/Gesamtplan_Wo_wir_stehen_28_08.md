@@ -2927,7 +2927,7 @@ waren.
 | **L2** | ⚠️ **`swing` aus der Messachse entfernen.** `ZIELGROESSE_JE_LAGE` fuehrt `("hebel","swing")` als eigene Lage. Eine Lage, die es nicht mehr gibt, erzeugt Messaufwand und falsche Abgleiche | Bau, klein |
 | **L3** | ⚠️ **`strategie` wird nicht persistiert.** `strategie_fuer()` existiert, aber in `signals` steht durchgehend NULL. Solange das so ist, ist Akkumulation im Betrieb nicht nachweisbar (D5) | Bau |
 | **L4** | **SHORT nachgelagert aufnehmen** — nicht gemessen, nicht geplant, aber die Datenstruktur traegt ihn bereits (`richtung`, `angefragte_richtung`) | Plan, nachgelagert |
-| **L5** | ⚠️⚠️ **`portfolio_wert_historie` ist LEER.** K1 (`r x Kapital`) braucht den Portfoliowert zur Laufzeit — es gibt keine Quelle dafuer. **Das ist ein harter Blocker fuer den Hebelumbau**, unabhaengig von der Bewertung | Bau, Vorbedingung K1 |
+| **L5** | ⚠️ **KORRIGIERT 10.09.** — der Portfoliowert ist **nicht** leer. `portfolio_wert_historie` läuft seit dem **08.05.**, 91 Zeilen (F-190/S1); leer ist nur die veraltete Desktop-Kopie. **Der echte Mangel ist ein Lesepfad:** N-40/K1 hat geprüft, dass `rollen_lauf`, `betraege` und `entscheidungsrechnung` die Tabelle **nicht lesen** — die einzigen Leser sind die Module der **alten** Kette | Bau, Vorbedingung K1 |
 | **L6** | ⚠️ **Der Datenstand des Desktops muss im Abgleich sichtbar sein**, sonst werden veraltete Betriebszahlen wieder als aktuell gelesen | ✔ in `soll_ist.py` gebaut |
 
 ⚠️⚠️ **L5 ist neu und wiegt schwer:** N-40/K1 hat die Machbarkeit
@@ -2936,3 +2936,176 @@ still auf einen Vorgabewert zurueck, driftet das Risiko unbemerkt."* Die
 Tabelle ist leer. Der Hebel kann aus der Wahrscheinlichkeit nicht
 erzeugt werden, solange das Kapital zur Laufzeit unbekannt ist — **auch
 dann nicht, wenn die Bewertung traegt.**
+
+---
+
+# 10.09. — DER PORTFOLIOWERT: was er umfasst, und was er nicht umfasst
+
+> Nutzerhinweis 10.09.: *„Der Portfoliowert bzw. ob wir mit echten Daten
+> arbeiten sollen sollte geprüft werden — alles, nur Krypto,
+> Prozentanteil, etc. — auch zum Portfoliowert sollte es zumindest etwas
+> in der Dokumentation geben."*
+
+**Es gibt etwas, und zwar mehr als gedacht.** Nachgelesen in
+`agent/portfolio_historie.py`, `database/db.py:5033` und der
+Fakten-Entscheidungsmappe.
+
+## Was gezählt wird
+
+| | |
+|---|---|
+| **Umfang** | ⚠️ **ALLE Assetklassen**, nicht nur Krypto — `get_wallet_transactions()` liefert die Krypto-Bewegungen (auch Staking, Boni, externe Einzahlungen), `get_trades()` die Käufe/Verkäufe **aller** Klassen und deckt damit Aktien/ETF/ETC ab |
+| **`wert_eur`** | der Wert der **gehaltenen Assets, OHNE Cash** — eine bewusste Entscheidung, keine Vereinfachung |
+| **`cash_eur`** | **getrennt** geführt: bei laufenden Werten der echte Betrag, bei rekonstruierten 0 |
+| **`index_wert`** | ⚠️ **Z-3 rechnet auf `index_wert`, NICHT auf `wert_eur`** (Korrektur 07.08.) — das ist die prozentuale Bezugsgröße |
+| **Läuft seit** | **08.05.**, 91 Zeilen (F-190/S1) |
+
+## ⚠️ Warum Cash bewusst draußen ist
+
+Der Cash-Bestand der Vergangenheit ist nicht rekonstruierbar. Würde man
+den heutigen Betrag konstant über alle Tage mitführen, wäre er ein
+gleichbleibender Summand — und ein konstanter Summand **dämpft jeden
+prozentualen Rückschlag**: aus 15 % Assetverlust würden bei 10.000 EUR
+Assets und 5.000 EUR Cash nur 10 % Gesamtverlust. Z-3 (Drawdown-
+Notbremse) würde später auslösen, als sie soll — *„ein Messfehler, der
+sich nach dem Kontostand des Erstellungstags richtet."*
+
+## Die echten Zahlen, die in der Mappe stehen
+
+    Portfolio (Gesamtkapital)            9.942 EUR
+    Einsatz je Trade (spot/einstieg)       800 EUR
+    Risiko je Trade = 15 % vom Einsatz     120 EUR  =  1,21 % des Kapitals
+    Kelly f* (kalibriertes Potential)     0,67 %   =    67 EUR
+    halbes Kelly                          0,34 %   =    33 EUR
+
+    32 gleichzeitige Positionen · 7.779 von 9.942 EUR investiert (78 %)
+
+> **Der heutige feste Verlustanteil ist Faktor 1,8 über vollem Kelly und
+> 3,6 über halbem** — nicht Faktor 45, wie hier bis zum 05.09. stand
+> (Nennerfehler: 15 % **vom Einsatz** gegen 0,34 % **vom Gesamtkapital**).
+
+## ⚠️⚠️ Was daran offen ist — und es ist NICHT „keine Daten"
+
+| # | Punkt | Art |
+|---|---|---|
+| **P-1** | ⚠️⚠️ **Die Rollen-Kette liest die Tabelle nicht.** N-40/K1 hat es geprüft: `rollen_lauf`, `betraege` und `entscheidungsrechnung` lesen `portfolio_wert_historie` **nicht** — die einzigen Leser sind die Module der **alten** Kette. Für `r × Kapital` fehlt also ein **Lesepfad**, nicht die Daten | Bau, klein |
+| **P-2** | ⚠️ **Der Rückfall muss LAUT sein.** N-40: *„fehlt der Wert und wir fallen still auf einen Vorgabewert zurück, driftet das Risiko unbemerkt"* — fail-soft ist fail-silent | Bau, Pflicht |
+| **P-3** | ⚠️ `mengen_json` zählt `quantity` **ohne** `staked_quantity` — sechs Werte fehlen. **Nicht repariert**, weil ein Fix `wert_eur`/`index_wert` springen ließe | **Nutzerentscheidung** |
+| **P-4** | ⚠️ **Kelly gilt für EINE wiederholte, unabhängige Wette.** Gemessen sind **32 gleichzeitige Positionen**, 78 % investiert, in einem stark korrelierten Markt. Die Einzeltrade-Zahl ist damit nicht ohne Weiteres übertragbar | Messfrage, offen |
+| **P-5** | ⚠️ **Bezugsgröße festlegen:** alles / nur Krypto / Anteil. Heute umfasst `wert_eur` **alle Klassen ohne Cash**. Für die Hebelrechnung in Krypto wäre zu klären, ob das Gesamtkapital oder der Krypto-Anteil die richtige Basis ist | **Nutzerentscheidung** |
+
+⚠️ **P-5 ist die Frage aus dem Nutzerhinweis, und sie ist offen.** Die
+Daten geben beides her — entschieden ist es nicht.
+
+## ✔ Und SOL ist im Plan, mehrfach
+
+Der Nutzerhinweis stimmt: `Anforderungen_Umbau_28_08.md:79` führt
+**„Kern-Krypto | 3 (BTC, ETH, SOL) | spot **und** hebel"**, Zeile 338
+**„spot × akkumulation nur wenn dca_erlaubt (BTC/ETH/SOL)"**, Zeile 357
+**„BTC, ETH und SOL dürfen beides"**, und
+`Ausloeser_und_Begruendungen_27_08.md:36` **„K1 — Kern (BTC, ETH, SOL)"**.
+
+⚠️ **L1 bleibt trotzdem stehen** — im Schalter `asset_dca_settings` ist
+SOL nicht gesetzt (Stand der Desktop-Kopie, 19.08.). Ob das am Notebook
+anders ist, lässt sich hier nicht prüfen. **Der Plan ist richtig, die
+Daten sind zu prüfen.**
+
+---
+
+# ✔ ENTSCHEIDUNGEN 10.09. — die Bezugsgröße und der Hebel
+
+## ✔ P-5 ENTSCHIEDEN: Gesamtkapital ohne Cash
+
+> *„Gesamtkapital ohne Cash als Bezugsgröße"*
+
+Das ist genau `portfolio_wert_historie.wert_eur` — der Wert der
+gehaltenen Assets über **alle** Klassen, ohne Cash. **Keine Änderung am
+Datenmodell nötig**; die Größe existiert seit dem 08.05.
+
+⚠️ Für den prozentualen Rückschlag bleibt `index_wert` die Basis (Z-3,
+Korrektur 07.08.). Zwei Größen, zwei Aufgaben:
+
+    wert_eur     die BEZUGSGROESSE fuer `r x Kapital`   (P-5, heute)
+    index_wert   der DRAWDOWN-Massstab fuer Z-3         (07.08.)
+
+## ⚠️⚠️⚠️ UND DIE HARTE AUFLAGE DAZU
+
+> *„wichtig: Änderungen im Portfolio dürfen nicht die Bewertung
+> blockieren, schon gar nicht still!"*
+
+**Daraus folgt eine Architekturregel, und sie ist scharf zu trennen:**
+
+| | braucht das Kapital? | was bei fehlendem/geändertem Wert gilt |
+|---|---|---|
+| **BEWERTUNG** (`potential.rechne`) | **NEIN** | ⚠️ **läuft weiter, immer.** Das Potential kommt aus den Markträngen; das Kapital kommt darin nicht vor |
+| **DIMENSIONIERUNG** (`r × Kapital`) | ja | darf sich ändern — **aber laut** |
+
+> **Ein fehlender oder geänderter Portfoliowert darf die Bewertung NIE
+> erreichen.** Er darf höchstens die Positionsgröße beeinflussen, und
+> auch das nur mit einer sichtbaren Meldung.
+
+⚠️ **Das ist NICHT dasselbe wie beim Marktrang.** Dort gilt: fällt der
+Abruf aus, liegt jedes Potential bei 0,000 und Stufe 11 sperrt — weil die
+Beiträge selbst fehlen. Beim Portfoliowert fehlt **nichts, was die
+Bewertung braucht**. Wer ihn in die Bewertung durchreicht, baut eine
+Abhängigkeit, die es fachlich nicht gibt.
+
+**Umsetzungsregel für P-1/P-2:**
+
+    1  Der Lesepfad geht in die DIMENSIONIERUNG, nicht in die Bewertung.
+    2  Faellt der Wert aus -> LAUTE Meldung, wie beim Marktrang-Totalausfall
+       ("Das ist ein Datenausfall, kein ruhiger Tag").
+    3  KEIN stiller Vorgabewert. Fail-soft ist fail-silent.
+    4  Eine Pruefung in der Suite haelt offen, dass `potential.rechne`
+       den Portfoliowert NICHT liest.
+
+## ✔ P-4 ENTSCHIEDEN: der Hebel gilt dem EINZELNEN Asset
+
+> *„der Markt ist korreliert, das ist ein Fakt. Der Hebel soll auf ein
+> einzelnes Asset angewendet werden, wenn die Voraussetzungen passen und
+> ein optimales Chance-Risiko-Verhältnis (Wahrscheinlichkeit) gegeben
+> ist, dass der Hebel zum Einsatz kommen soll (2–5×)."*
+
+⚠️ **Damit ist die Korrelationsfrage nicht weg, sondern verortet** — und
+der Entwurf hat dafür bereits eine Stelle:
+
+| | Aufgabe | Ebene |
+|---|---|---|
+| **K1** `r(q)` | die Wahrscheinlichkeit erzeugt das Risiko **dieses einen Trades** | Einzeltrade |
+| **K3** Aggregat-Deckel | fängt ab, dass 32 gleichzeitige Positionen in einem korrelierten Markt **zusammen** zu viel Risiko tragen | Portfolio |
+| **K4** kein Hebeldeckel | `hebel_max = 10` bleibt **Plausibilitätsgrenze**, kein Risikoinstrument | — |
+
+> **Die Korrelation gehört in den Aggregat-Deckel, nicht in eine
+> Schrumpfung des Einzeltrade-Kelly.** Wer sie im Einzeltrade
+> einpreist, bestraft jeden Trade für ein Portfolio, das er nicht kennt.
+
+⚠️ **Vorbedingung für K3 ist die Positionsführung für Hebel** — und
+`handelsauftrag` benennt den Grund: *„Spot und Hebel sind nicht dasselbe
+Objekt. Spot ist ein **Bestand**; Hebel ist ein **Trade** mit
+Lebenszyklus, Finanzierung und Liquidationspreis. Beide können
+gleichzeitig auf demselben Symbol bestehen."*
+
+## ✔ UND DIE FRAGE, DIE SEIT WOCHEN OFFEN WAR, IST ENTSCHIEDEN
+
+> *„OB Hebel ausschließlich aus SPOT zu Hebel entstehen soll oder eine
+> eigene Bewertungsgruppe braucht, haben wir schon seit Wochen am Tisch
+> — deine bisherigen Aussagen und die Literatur unterscheiden hier nicht,
+> also bleibt die dynamische Entscheidung, wann und wie ein Hebel zum
+> Einsatz kommt."*
+
+**Entschieden: KEINE eigene Bewertungsgruppe für den Hebel.**
+
+| | |
+|---|---|
+| **Was gilt** | Eine Bewertung, ein Potential. Der Hebel entsteht **dynamisch** daraus, wenn Chance/Risiko es hergibt |
+| **Was damit erledigt ist** | H-2 / N-33 („bekommt die Bewertung eine Instrument-Achse?") — endgültig, als **Entscheidung**, nicht nur als Kategorienbefund |
+| **Was daraus folgt** | ⚠️ Die Lage `hebel × einstieg` braucht **keine eigenen Beiträge**. Dass sie die Spot-Beiträge „erbt", ist damit **kein Mangel mehr, sondern der gewollte Zustand** |
+
+⚠️⚠️ **Damit fällt eine Abweichung im SOLL/IST-Abgleich weg** — die
+Meldung *„hebel × einstieg erbt die Spot-Beiträge"* war nach dem alten
+Stand ein Befund; nach dieser Entscheidung ist sie die Umsetzung.
+
+**Was NICHT wegfällt:** die Zielzone 2–5× wird heute nur von **einer**
+Lage erreicht (F-220). Der Hebel entsteht dynamisch — aber er entsteht
+fast nie. Das bleibt der Engpass, und er heißt weiterhin: die Bewertung
+ist zu schwach.
