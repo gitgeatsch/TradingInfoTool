@@ -173,15 +173,18 @@ LAGEN = (
          "vermessen - mindestens zwei tragende Beitraege"),
     Lage("spot", "akkumulation", "krypto",
          "Core-Werte BTC, ETH, SOL - Zielgroesse `verbilligung`, H90",
-         blocker="A2 - Blockregel bei H90; N-46b - Nullpunkt der "
-                 "Laengs-Form nicht entschieden; L1 - SOL fehlt im "
-                 "DCA-Schalter"),
+         blocker="A2 - Blockregel bei H90 (Loesung: zirkulaerer Verschub, "
+                 "bei H90 auf 505 Reihen validiert); L1 - SOL fehlt "
+                 "im DCA-Schalter. ✔ N-46 ist geloest (2.282)"),
     Lage("hebel", "einstieg", "krypto",
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
-         blocker="F-220 - nur EINE Lage erreicht 2,60x; A1 - Band auf "
-                 "binaeren Daten; P-1 - die Rollen-Kette liest den "
-                 "Portfoliowert nicht",
+         blocker="A9 - die AUFLOESUNG: die Abstufung springt 1,02x -> 3,90x, "
+                 "weil die Beitraege Fuenftel sind (2.174-grenzen); "
+                 "A1 - Band auf binaeren Daten, blockiert die "
+                 "TRENNSCHAERFE-Frage; P-1 - die Rollen-Kette liest "
+                 "den Portfoliowert nicht. ⚠️ F-220 ist "
+                 "ZURUECKGEZOGEN (06.09.) - NICHT mehr zitieren",
          erbt_spot=True),
     Lage("hebel", "swing", "krypto",
          "⚠️ NICHT MEHR GENUTZT - gehoert aus `ZIELGROESSE_JE_LAGE` "
