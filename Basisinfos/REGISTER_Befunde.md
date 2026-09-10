@@ -1002,6 +1002,34 @@
 
 - Quelle: n102_vierfachtest.py / Messstandard 08.09.
 
+**2.297** — ✔✔✔ V1: KRITERIUM 4 IST ERFUELLBAR - der Deadlock ist aufgeloest. Mit der STREUUNGSZERLEGUNG (Methodik 2.101) statt eines Signifikanztests bestehen die meisten Kandidaten es in der ROHEN Form: `oi_aenderung` 0,4 %% · `schnitt50` 6,9 %% · `funding` 15,7 %% · `vola` 16,5 %% · `schnitt` 25,4 %% - alle ueberwiegend ZEITPUNKT-Aussagen. Die Skala ist geeicht (FEST 99,9 %%, ZUFALL 0,1 %%), beide Arme auf der Menge des Kandidaten
+
+- Quelle: n103_v1_asset_anteil.py
+
+**2.297-rr11** — ✔ R-R11 ERFUELLT VOR DER ERSTEN NEUEN AUSSAGE: `turnover` roh 51,2 %% gegen die registrierten 52 %% aus F-170. Die Messung reproduziert, also gilt der Lauf
+
+- Quelle: n103_v1_asset_anteil.py / F-170
+
+**2.298** — ⚠️⚠️⚠️ UND DER BEFUND TRIFFT DEN BESTAND, NICHT DIE KANDIDATEN: `turnover` laeuft LIVE und ist zu 51,2 %% eine ASSET-Eigenschaft - er sagt zur Haelfte, WELCHES Asset, nicht WANN. `amihud` liegt mit 70,7 %% noch hoeher, ist aber nicht registriert. ⚠️ Haette ich nur die Kandidaten gemessen, waere `turnover` mit 51 %% durchgelaufen, waehrend ein neuer Kandidat mit demselben Wert gefallen waere - zweierlei Mass, der Fehler von N-2
+
+- Quelle: n103_v1_asset_anteil.py / F-170 / 2.294
+
+**2.299** — ⚠️⚠️⚠️ MEINE EIGENE LOESUNG IST WIDERLEGT - von der eigenen Gegenpruefung. Ich hatte die RELATIVE Form (Standardisierung gegen den eigenen 20-Tage-Schnitt) als Behandlungsvorschlag gefuehrt, weil sie alle Kandidaten unter 1,5 %% bringt. Auf Kunstdaten mit EINGESTELLTEM Asset-Anteil: gebaut 10 %% -> relativ 0,0 %% · gebaut 50 %% -> 0,0 %% · gebaut 90 %% -> 0,0 %%. ⚠️⚠️ Die Standardisierung entfernt das Symbolmittel PER KONSTRUKTION - sie senkt JEDE Groesse auf null und beweist NICHTS
+
+- Quelle: n103_v1_asset_anteil.py / Selbstbefund 10.09.2026
+
+**2.299-folge** — ⚠️ WAS DARAUS FOLGT, und es ist kein Nullbefund: die relative Form bleibt ein moeglicher UMBAU - aber der Nachweis muss dann ueber die WIRKUNG der umgeformten Groesse laufen, nicht ueber ihren Asset-Anteil. Genau so war es beim Volumenanteil: relative Form 1,4 %% Asset-Anteil UND +0,0231 R Wirkung. BEIDES, nicht eines
+
+- Quelle: n103_v1_asset_anteil.py / F-170
+
+**2.300** — ✔✔ `schnitt` BESTEHT KRITERIUM 4 IN DER ROHEN FORM (25,4 %% Asset-Anteil, ueberwiegend Zeitpunkt) - und er ist zugleich der EINZIGE robuste Kandidat aus dem Vierfachtest (3 von 3 Mengen, 2.293) und der erste gemessene Beitrag der Akkumulationslage (2.286-schnitt). ⚠️ Damit besteht er drei der vier Kriterien; Kriterium 3 (unabhaengig von `funding`) steht noch aus
+
+- Quelle: n103_v1_asset_anteil.py / 2.293 / 2.286-schnitt
+
+**2.301** — ⚠️ NEU AUS V1: `turnover`s Asset-Anteil von 51,2 %% ist ein offener Punkt AM BESTAND, kein Grund zum Abschalten. Regel 3 verbietet das dauerhafte Asset-Urteil; 51 %% heisst, dass die HAELFTE der Streuung aus dem Symbol kommt - nicht, dass der Beitrag falsch ist. ⚠️ Er bleibt registriert; zu klaeren ist, ob eine andere FORM (wie beim Volumenanteil) denselben Beitrag mit weniger Asset-Anteil UND erhaltener Wirkung liefert
+
+- Quelle: n103_v1_asset_anteil.py
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.

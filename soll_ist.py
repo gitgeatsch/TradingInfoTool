@@ -227,29 +227,34 @@ REIHENFOLGE = (
             "Streuungszerlegung, Methodik 2.101).",
             "Befund 2.292 / 2.292-fehlkonstruktion", fertig=True),
     Schritt(5, "V1 KRITERIUM 4",
-            "Kriterium 4 nach Methodik 2.101 neu messen - "
-            "Streuungszerlegung mit geeichter Skala. Beschreibend, "
-            "deshalb von A9 nicht betroffen.",
-            "Befund 2.292-fehlkonstruktion"),
-    Schritt(6, "V2 N-73 AUF DEN BESTAND",
+            "✔ ERLEDIGT: Kriterium 4 ist ERFUELLBAR. Die meisten "
+            "Kandidaten bestehen es ROH - `schnitt` mit 25,4 %. ⚠️ Der "
+            "Befund trifft den BESTAND: `turnover` ist zu 51,2 % eine "
+            "Asset-Eigenschaft.",
+            "Befund 2.297 / 2.298", fertig=True),
+    Schritt(6, "V7 KRITERIUM 3",
+            "Unabhaengig von `funding`? - bei KEINEM Kandidaten gemessen. "
+            "Das letzte fehlende der vier Kriterien.",
+            "Vierfachtest 05.09.; Befund 2.300"),
+    Schritt(7, "V2 N-73 AUF DEN BESTAND",
             "⚠️ `funding` und `turnover` durch denselben N-73-Test - sie "
             "sind VOR N-73 auf `frei` registriert. Sonst zweierlei Mass "
             "(N-2).",
             "Befund 2.294"),
-    Schritt(7, "FORM",
+    Schritt(8, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(8, "KALIBRIERUNG",
+    Schritt(9, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(9, "K1",
+    Schritt(10, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(10, "KETTE",
+    Schritt(11, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

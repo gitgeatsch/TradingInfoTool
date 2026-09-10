@@ -3460,3 +3460,81 @@ auf.**
 - **L5** — korrigiert: der Portfoliowert ist nicht leer, es fehlt ein Lesepfad
 - **P-4/P-5** — Bezugsgröße und Korrelationsverortung entschieden
 - **Die Naht** — `Beitrag.instrumente`, bitgleich, vier Wächter
+
+---
+
+# ✔✔✔ 10.09. — V1: KRITERIUM 4 IST ERFÜLLBAR, und der Befund trifft den Bestand
+
+## Das Ergebnis — Streuungszerlegung statt Signifikanztest
+
+| Kandidat | roh | Lesart |
+|---|---|---|
+| `oi_aenderung` | **0,4 %** | ✔ Zeitpunkt |
+| `schnitt50` | **6,9 %** | ✔ Zeitpunkt |
+| `funding` | **15,7 %** | ✔ Zeitpunkt |
+| `vola` | **16,5 %** | ✔ Zeitpunkt |
+| **`schnitt`** | **25,4 %** | ✔ überwiegend Zeitpunkt |
+| ⚠️ `turnover` | **51,2 %** | **überwiegend ASSET — und er läuft LIVE** |
+| ⚠️ `amihud` | **70,7 %** | überwiegend ASSET |
+| `zufall` ✔ | 0,1 % | ✔ |
+
+**Skala geeicht:** FEST 99,9 % · ZUFALL 0,1 %, beide Arme auf der Menge
+des Kandidaten. **R-R11 erfüllt:** `turnover` roh 51,2 % gegen die
+registrierten 52 % aus F-170.
+
+> **Der Deadlock ist aufgelöst.** Kriterium 4 ist mit dem richtigen
+> Werkzeug messbar — und die meisten Kandidaten bestehen es **in der
+> rohen Form**, ohne jede Umformung.
+
+## ⚠️⚠️⚠️ Und der Befund trifft den BESTAND
+
+`turnover` läuft **live** und ist zu **51,2 %** eine Asset-Eigenschaft —
+er sagt zur Hälfte, *welches* Asset, nicht *wann*.
+
+⚠️ Hätte ich nur die Kandidaten gemessen, wäre `turnover` mit 51 %
+durchgelaufen, während ein neuer Kandidat mit demselben Wert gefallen
+wäre. **Zweierlei Maß — der Fehler von N-2.**
+
+## ⚠️⚠️⚠️ Meine eigene Lösung ist widerlegt — von der eigenen Gegenprüfung
+
+Ich hatte die **relative Form** als Behandlungsvorschlag geführt, weil sie
+alle Kandidaten unter 1,5 % bringt. Auf Kunstdaten mit **eingestelltem**
+Asset-Anteil:
+
+```
+gebaut 10 % Asset  →  roh  7,6 %  →  relativ 0,0 %
+gebaut 50 % Asset  →  roh 47,1 %  →  relativ 0,0 %
+gebaut 90 % Asset  →  roh 88,9 %  →  relativ 0,0 %
+```
+
+**Die Standardisierung entfernt das Symbolmittel per Konstruktion.** Sie
+senkt jede Größe auf null und beweist nichts.
+
+⚠️ **Was daraus folgt, ist kein Nullbefund:** die relative Form bleibt ein
+möglicher **Umbau** — aber der Nachweis muss dann über die **Wirkung** der
+umgeformten Größe laufen. Beim Volumenanteil war genau das der Punkt:
+relative Form **1,4 % Asset-Anteil UND +0,0231 R Wirkung**. Beides.
+
+## ✔✔ `schnitt` steht jetzt bei drei von vier Kriterien
+
+| | |
+|---|---|
+| **1 Abdeckung** | ✔ 100 % (536 von 536) |
+| **2 Stabilität** | ✔ stabil (N-68-Form) |
+| **4 Regel 3** | ✔ **25,4 % — überwiegend Zeitpunkt, roh** |
+| **3 Unabhängig** | ⚠️ **steht noch aus** |
+
+Dazu: der **einzige robuste** Kandidat über alle Mengen (3 von 3) und der
+**erste gemessene Beitrag der Akkumulationslage** (+0,0470, p 0,000).
+
+## Die offenen Punkte, aktualisiert
+
+| # | Punkt | Stand |
+|---|---|---|
+| **V1** | Kriterium 4 nach 2.101 | ✔ **erledigt** — erfüllbar, `schnitt` besteht |
+| **V2** | `funding`/`turnover` durch N-73 | offen, **vor** jeder Registrierung |
+| **V3** | `volumenanteil` bauen | offen |
+| **V4** | `amihud` längs rückwärts | offen, nachrangig |
+| **V5** | Entscheidung über `schnitt` | offen — braucht V2 und Kriterium 3 |
+| **V6** | ⚠️ **NEU: `turnover`s Asset-Anteil 51,2 %** — kein Grund zum Abschalten, aber ein offener Punkt am Bestand. Zu klären, ob eine andere FORM denselben Beitrag mit weniger Asset-Anteil **und erhaltener Wirkung** liefert | **offen** |
+| **V7** | ⚠️ **NEU: Kriterium 3** (unabhängig von `funding`) — bei keinem Kandidaten gemessen | **offen** |
