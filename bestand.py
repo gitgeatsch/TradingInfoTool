@@ -2639,6 +2639,80 @@ BEFUNDE = (
                "andere FORM (wie beim Volumenanteil) denselben Beitrag "
                "mit weniger Asset-Anteil UND erhaltener Wirkung liefert",
                "gilt", "n103_v1_asset_anteil.py"),
+    Befundlage("2.302", "✔✔ V7/KRITERIUM 3: `turnover` IST UNABHAENGIG "
+               "VON `funding` - und das ist das EINZIGE gedeckte Urteil "
+               "des Laufs. In Funding-Fuenftel geschichtet traegt er in "
+               "2 von 5 echten Faechern und in 0 von 5 GEMISCHTEN. Zwei "
+               "Faecher Unterschied, ueber der Aufloesung. ⚠️ Damit ist "
+               "die Registrierungsaussage ,zu 92 %% additiv zu Funding' "
+               "erstmals UNTER DER NORM bestaetigt", "gilt",
+               "n104_v7_kriterium3.py",
+               basis="H20 · frei (Registrierungsbasis) · 5 "
+                     "Funding-Fuenftel je Tag · 30 Symbole je Fach"),
+    Befundlage("2.302-gegenkontrolle", "✔ UND DIE GEGENKONTROLLE IST DER "
+               "GRUND, WARUM DAS URTEIL TRAEGT. Dieselbe Schichtung mit "
+               "GEMISCHTEM Funding - gleiche Fachgroesse, keine "
+               "Information. Ohne diesen Arm waere jedes ,traegt nicht "
+               "mehr' wertlos, weil es allein daher kommen koennte, dass "
+               "ein Fuenftel ein Fuenftel der Anker hat. Die Konstruktion "
+               "stammt aus `pruefe_n1_schichtung_gegen_partner`",
+               "gilt", "n104_v7_kriterium3.py"),
+    Befundlage("2.303", "⚠️⚠️ FUER DIE KANDIDATEN IST KRITERIUM 3 MIT "
+               "DIESEM AUFBAU NICHT ENTSCHEIDBAR - aus DREI verschiedenen "
+               "Gruenden, und sie sind zu trennen: `vola` traegt ohne "
+               "Schichtung, aber in 0 von 5 Faechern - echt WIE gemischt, "
+               "also kostet die SCHICHTUNG (kein Redundanzbefund). "
+               "`schnitt` und `schnitt50` tragen auf `frei` ohnehin nicht "
+               "- das ist die MARKT-Frage, nicht ihre Beitragsmenge. "
+               "`oi_aenderung` liegt mit 2 gegen 3 Faechern auf der "
+               "Aufloesungsgrenze", "gilt", "n104_v7_kriterium3.py"),
+    Befundlage("2.303-struktur", "⚠️ DIESELBE STRUKTUR WIE BEI KRITERIUM "
+               "4 VOR V1 - aber NICHT dieselbe Ursache. Bei Kriterium 4 "
+               "war das WERKZEUG falsch (Signifikanztest statt "
+               "Streuungszerlegung). Hier ist das Werkzeug richtig, es "
+               "fehlt die MACHT: Schichtung mal schmale Menge laesst zu "
+               "wenige Anker. Das ist ein Dimensionierungsproblem, kein "
+               "Konstruktionsfehler", "gilt", "n104_v7_kriterium3.py"),
+    Befundlage("2.304", "⚠️⚠️ EIGENE UEBERDEUTUNG, VOM ERGEBNIS GEFANGEN: "
+               "der erste Lauf las `oi_aenderung`s ,2 gegen 3 Fuenftel' "
+               "als ,`funding` erklaert einen Teil mit'. Bei fuenf "
+               "Faechern ist EIN Fach die feinste unterscheidbare "
+               "Einheit - ein Unterschied von einem Fuenftel ist die "
+               "GRENZE, keine Aussage. ⚠️ Dieselbe Ueberdeutung wie beim "
+               "Gleichstand in N-46b; dort hat der Vorabtest sie "
+               "gefangen, hier erst das Ergebnis. Die Aufloesungsgrenze "
+               "steht jetzt im Werkzeug", "gilt",
+               "n104_v7_kriterium3.py / Selbstbefund 10.09.2026"),
+    Befundlage("2.305", "⚠️⚠️ UND EINE STILLE VERENGUNG, VOM NUTZER "
+               "GEFANGEN: ich hatte `schnitt50` aus dem Lauf genommen - "
+               "aus LAUFZEITgruenden (9 Minuten je Kandidat), nicht aus "
+               "Sachgruenden. Er steht sachlich gut da: 100 %% "
+               "Abdeckung, 6,9 %% Asset-Anteil (der zweitbeste Wert nach "
+               "`oi_aenderung`), stabil, und laut 2.222 die EINZIGE "
+               "monotone Form - genau das zaehlt beim Schritt FORM. "
+               "⚠️ Nachgemessen: dasselbe Bild wie `schnitt` (2 gegen 1 "
+               "Fach, auf `frei`). Die Kuerzung war trotzdem falsch - "
+               "sie im Skriptkopf zu vermerken ist nicht dasselbe wie sie "
+               "zu begruenden", "gilt",
+               "Nutzereinwand 10.09. / n104_v7_kriterium3.py"),
+    Befundlage("2.306", "⚠️ DER MENGENVORBEHALT, jetzt benannt statt "
+               "stillschweigend: fuer die REGISTRIERTEN Beitraege "
+               "(`turnover`, `oi_aenderung`) ist `frei` die "
+               "Registrierungsbasis - dort richtig. Fuer KANDIDATEN ohne "
+               "Basis (`schnitt`, `schnitt50`, `vola`) ist `frei` die "
+               "MARKT-Frage (P6). Behoben werden kann es hier nicht: "
+               "eine Momentum-Menge UND ein Funding-Fuenftel zugleich "
+               "liessen rund SECHS Anker je Tag uebrig", "gilt",
+               "n104_v7_kriterium3.py / P6"),
+    Befundlage("2.307", "➔ DER LOESUNGSWEG FUER KRITERIUM 3 (Nutzervorgabe "
+               ",kein Beitrag faellt ohne Loesung'): ZWEI Schichten statt "
+               "fuenf. Bei fuenf Faechern bleiben 30 Symbole je Tag; bei "
+               "zwei waeren es 75, und auf der 20-%%-Beitragsmenge immer "
+               "noch rund 25 - ueber dem Mindestquerschnitt von 12. "
+               "⚠️ Das halbiert den Machtverlust UND erlaubt, die "
+               "Kandidaten auf ihrer BEITRAGSmenge zu messen statt auf "
+               "`frei`. Damit waeren beide Gruende aus 2.303 zugleich "
+               "adressiert", "offen", "V8, aus 2.303 und 2.306"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

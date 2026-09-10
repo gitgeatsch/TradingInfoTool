@@ -3538,3 +3538,70 @@ Dazu: der **einzige robuste** Kandidat über alle Mengen (3 von 3) und der
 | **V5** | Entscheidung über `schnitt` | offen — braucht V2 und Kriterium 3 |
 | **V6** | ⚠️ **NEU: `turnover`s Asset-Anteil 51,2 %** — kein Grund zum Abschalten, aber ein offener Punkt am Bestand. Zu klären, ob eine andere FORM denselben Beitrag mit weniger Asset-Anteil **und erhaltener Wirkung** liefert | **offen** |
 | **V7** | ⚠️ **NEU: Kriterium 3** (unabhängig von `funding`) — bei keinem Kandidaten gemessen | **offen** |
+
+---
+
+# 10.09. — V7/KRITERIUM 3: ein gedecktes Urteil, und es betrifft den Bestand
+
+| Kandidat | ohne | echt | GEMISCHT | Urteil |
+|---|---|---|---|---|
+| **`turnover`** | +0,0639 ✔ | **2 von 5** | **0 von 5** | ✔ **unabhängig von `funding`** |
+| `oi_aenderung` | +0,0126 ✔ | 2 von 5 | 3 von 5 | — ein Fach, Auflösungsgrenze |
+| `vola` | +0,0325 ✔ | 0 von 5 | 0 von 5 | ⚠️ die **Schichtung** kostet |
+| `schnitt` | +0,0314 | 2 von 5 | 0 von 5 | — auf `frei` = Marktfrage |
+| `schnitt50` | +0,0097 | 2 von 5 | 1 von 5 | — dito |
+| `zufall` ✔ | +0,0043 | 0 von 5 | 0 von 5 | ✔ Kontrolle stumm |
+
+## ✔ `turnover` ist unabhängig von `funding` — erstmals unter der Norm
+
+Zwei Fächer Unterschied (2 echt gegen 0 gemischt), über der Auflösung.
+**Damit ist die Registrierungsaussage *„zu 92 % additiv zu Funding"*
+erstmals unter dem Messstandard bestätigt.**
+
+⚠️ Und die **Gegenkontrolle** ist der Grund, warum das Urteil trägt:
+dieselbe Schichtung mit **gemischtem** Funding — gleiche Fächergröße,
+keine Information. Ohne diesen Arm wäre jedes „trägt nicht mehr" wertlos.
+
+## ⚠️⚠️ Für die Kandidaten ist Kriterium 3 nicht entscheidbar — aus drei verschiedenen Gründen
+
+| | Grund |
+|---|---|
+| `vola` | trägt ohne Schichtung, aber in **0 von 5 Fächern — echt wie gemischt**. Die **Schichtung** kostet, kein Redundanzbefund |
+| `schnitt`, `schnitt50` | tragen auf `frei` ohnehin nicht — das ist die **Marktfrage**, nicht ihre Beitragsmenge |
+| `oi_aenderung` | 2 gegen 3 Fächer — **Auflösungsgrenze** |
+
+⚠️ **Dieselbe Struktur wie bei Kriterium 4 vor V1 — aber nicht dieselbe
+Ursache.** Dort war das *Werkzeug* falsch. Hier ist es richtig, es fehlt
+die **Macht**: Schichtung × schmale Menge lässt zu wenige Anker. Ein
+Dimensionierungsproblem, kein Konstruktionsfehler.
+
+## ➔ Der Lösungsweg — V8: zwei Schichten statt fünf
+
+> Nutzervorgabe: *„Kein Beitrag fällt ohne Grund, und wenn doch, müssen
+> wir eine Lösung suchen."*
+
+```
+5 Fächer  →  30 Symbole je Tag
+2 Fächer  →  75 Symbole je Tag
+2 Fächer auf der 20-%-Beitragsmenge  →  ~25 je Tag  (Mindestquerschnitt 12)
+```
+
+**Das halbiert den Machtverlust UND erlaubt, die Kandidaten auf ihrer
+Beitragsmenge zu messen statt auf `frei`** — beide Gründe aus 2.303
+zugleich adressiert.
+
+## ⚠️ Zwei eigene Fehler in diesem Lauf
+
+**① Überdeutung, vom Ergebnis gefangen.** Der erste Lauf las
+`oi_aenderung`s „2 gegen 3 Fünftel" als *„`funding` erklärt einen Teil
+mit"*. Bei fünf Fächern ist **ein Fach die feinste unterscheidbare
+Einheit**. Dieselbe Überdeutung wie beim Gleichstand in N-46b — dort hat
+der Vorabtest sie gefangen, hier erst das Ergebnis.
+
+**② Eine stille Verengung, vom Nutzer gefangen.** Ich hatte `schnitt50`
+aus **Laufzeitgründen** herausgenommen. Sachlich steht er gut da: 100 %
+Abdeckung, **6,9 % Asset-Anteil** (zweitbester Wert), stabil, und laut
+2.222 die **einzige monotone Form** — genau das zählt beim Schritt FORM.
+Nachgemessen, dasselbe Bild wie `schnitt`. ⚠️ **Die Kürzung war trotzdem
+falsch — sie im Skriptkopf zu vermerken ist nicht dasselbe wie sie zu
+begründen.**

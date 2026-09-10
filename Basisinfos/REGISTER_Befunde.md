@@ -1030,6 +1030,34 @@
 
 - Quelle: n103_v1_asset_anteil.py
 
+**2.302** — ✔✔ V7/KRITERIUM 3: `turnover` IST UNABHAENGIG VON `funding` - und das ist das EINZIGE gedeckte Urteil des Laufs. In Funding-Fuenftel geschichtet traegt er in 2 von 5 echten Faechern und in 0 von 5 GEMISCHTEN. Zwei Faecher Unterschied, ueber der Aufloesung. ⚠️ Damit ist die Registrierungsaussage ,zu 92 %% additiv zu Funding' erstmals UNTER DER NORM bestaetigt
+
+- Quelle: n104_v7_kriterium3.py
+
+**2.302-gegenkontrolle** — ✔ UND DIE GEGENKONTROLLE IST DER GRUND, WARUM DAS URTEIL TRAEGT. Dieselbe Schichtung mit GEMISCHTEM Funding - gleiche Fachgroesse, keine Information. Ohne diesen Arm waere jedes ,traegt nicht mehr' wertlos, weil es allein daher kommen koennte, dass ein Fuenftel ein Fuenftel der Anker hat. Die Konstruktion stammt aus `pruefe_n1_schichtung_gegen_partner`
+
+- Quelle: n104_v7_kriterium3.py
+
+**2.303** — ⚠️⚠️ FUER DIE KANDIDATEN IST KRITERIUM 3 MIT DIESEM AUFBAU NICHT ENTSCHEIDBAR - aus DREI verschiedenen Gruenden, und sie sind zu trennen: `vola` traegt ohne Schichtung, aber in 0 von 5 Faechern - echt WIE gemischt, also kostet die SCHICHTUNG (kein Redundanzbefund). `schnitt` und `schnitt50` tragen auf `frei` ohnehin nicht - das ist die MARKT-Frage, nicht ihre Beitragsmenge. `oi_aenderung` liegt mit 2 gegen 3 Faechern auf der Aufloesungsgrenze
+
+- Quelle: n104_v7_kriterium3.py
+
+**2.303-struktur** — ⚠️ DIESELBE STRUKTUR WIE BEI KRITERIUM 4 VOR V1 - aber NICHT dieselbe Ursache. Bei Kriterium 4 war das WERKZEUG falsch (Signifikanztest statt Streuungszerlegung). Hier ist das Werkzeug richtig, es fehlt die MACHT: Schichtung mal schmale Menge laesst zu wenige Anker. Das ist ein Dimensionierungsproblem, kein Konstruktionsfehler
+
+- Quelle: n104_v7_kriterium3.py
+
+**2.304** — ⚠️⚠️ EIGENE UEBERDEUTUNG, VOM ERGEBNIS GEFANGEN: der erste Lauf las `oi_aenderung`s ,2 gegen 3 Fuenftel' als ,`funding` erklaert einen Teil mit'. Bei fuenf Faechern ist EIN Fach die feinste unterscheidbare Einheit - ein Unterschied von einem Fuenftel ist die GRENZE, keine Aussage. ⚠️ Dieselbe Ueberdeutung wie beim Gleichstand in N-46b; dort hat der Vorabtest sie gefangen, hier erst das Ergebnis. Die Aufloesungsgrenze steht jetzt im Werkzeug
+
+- Quelle: n104_v7_kriterium3.py / Selbstbefund 10.09.2026
+
+**2.305** — ⚠️⚠️ UND EINE STILLE VERENGUNG, VOM NUTZER GEFANGEN: ich hatte `schnitt50` aus dem Lauf genommen - aus LAUFZEITgruenden (9 Minuten je Kandidat), nicht aus Sachgruenden. Er steht sachlich gut da: 100 %% Abdeckung, 6,9 %% Asset-Anteil (der zweitbeste Wert nach `oi_aenderung`), stabil, und laut 2.222 die EINZIGE monotone Form - genau das zaehlt beim Schritt FORM. ⚠️ Nachgemessen: dasselbe Bild wie `schnitt` (2 gegen 1 Fach, auf `frei`). Die Kuerzung war trotzdem falsch - sie im Skriptkopf zu vermerken ist nicht dasselbe wie sie zu begruenden
+
+- Quelle: Nutzereinwand 10.09. / n104_v7_kriterium3.py
+
+**2.306** — ⚠️ DER MENGENVORBEHALT, jetzt benannt statt stillschweigend: fuer die REGISTRIERTEN Beitraege (`turnover`, `oi_aenderung`) ist `frei` die Registrierungsbasis - dort richtig. Fuer KANDIDATEN ohne Basis (`schnitt`, `schnitt50`, `vola`) ist `frei` die MARKT-Frage (P6). Behoben werden kann es hier nicht: eine Momentum-Menge UND ein Funding-Fuenftel zugleich liessen rund SECHS Anker je Tag uebrig
+
+- Quelle: n104_v7_kriterium3.py / P6
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.
@@ -1789,6 +1817,10 @@
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
 
 - Quelle: Methodik 2.145
+
+**2.307** — ➔ DER LOESUNGSWEG FUER KRITERIUM 3 (Nutzervorgabe ,kein Beitrag faellt ohne Loesung'): ZWEI Schichten statt fuenf. Bei fuenf Faechern bleiben 30 Symbole je Tag; bei zwei waeren es 75, und auf der 20-%%-Beitragsmenge immer noch rund 25 - ueber dem Mindestquerschnitt von 12. ⚠️ Das halbiert den Machtverlust UND erlaubt, die Kandidaten auf ihrer BEITRAGSmenge zu messen statt auf `frei`. Damit waeren beide Gruende aus 2.303 zugleich adressiert
+
+- Quelle: V8, aus 2.303 und 2.306
 
 **2.152-kern** — ⚠️⚠️ Das Akkumulationsmass traegt NICHT fuer BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) - und `asset_dca_settings` enthaelt genau BTC und ETH. Die Akkumulation laeuft auf den Werten, fuer die das Mass keine Begruendung liefert
 

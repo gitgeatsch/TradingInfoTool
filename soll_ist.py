@@ -233,28 +233,35 @@ REIHENFOLGE = (
             "Asset-Eigenschaft.",
             "Befund 2.297 / 2.298", fertig=True),
     Schritt(6, "V7 KRITERIUM 3",
-            "Unabhaengig von `funding`? - bei KEINEM Kandidaten gemessen. "
-            "Das letzte fehlende der vier Kriterien.",
-            "Vierfachtest 05.09.; Befund 2.300"),
-    Schritt(7, "V2 N-73 AUF DEN BESTAND",
+            "⚠️ GEMESSEN: nur EIN gedecktes Urteil - `turnover` ist "
+            "unabhaengig von `funding` (2 gegen 0 Faecher). Fuer die "
+            "KANDIDATEN nicht entscheidbar: die Schichtung kostet die "
+            "Macht.",
+            "Befund 2.302 / 2.303", fertig=True),
+    Schritt(7, "V8 ZWEI SCHICHTEN",
+            "Kriterium 3 mit ZWEI Faechern statt fuenf, und auf der "
+            "BEITRAGSmenge statt `frei` - 75 statt 30 Symbole je Tag. "
+            "Loest beide Gruende aus 2.303 zugleich.",
+            "Befund 2.307"),
+    Schritt(8, "V2 N-73 AUF DEN BESTAND",
             "⚠️ `funding` und `turnover` durch denselben N-73-Test - sie "
             "sind VOR N-73 auf `frei` registriert. Sonst zweierlei Mass "
             "(N-2).",
             "Befund 2.294"),
-    Schritt(8, "FORM",
+    Schritt(9, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(9, "KALIBRIERUNG",
+    Schritt(10, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(10, "K1",
+    Schritt(11, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(11, "KETTE",
+    Schritt(12, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )
