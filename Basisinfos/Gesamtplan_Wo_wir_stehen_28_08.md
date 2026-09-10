@@ -2708,3 +2708,231 @@ Kette entscheidet auf einer **breiteren Menge** — dann wird sie messbar
 —, oder es gilt ausdrücklich, dass die Bewertung nur auf einer
 **Stellvertretermenge** validiert ist. Beides ist vertretbar;
 stillschweigend das zweite zu tun, wäre es nicht (2.273).
+
+---
+
+# 10.09. — NUTZERVORGABE: KRYPTO ZUERST, MULTIASSET NACHGELAGERT
+
+> *„lass Multiasset, nicht Krypto als nachgelagerte Aufgabe nach Krypto
+> Produktivgang im Plan — zuerst muss Krypto sauber laufen."*
+
+**Das ist eine Festlegung, keine Messfrage.** Sie ordnet alles um, was
+bisher als „vier Klassen nach Datenlage gesperrt" gefuehrt wurde:
+
+| | war | ist ab jetzt |
+|---|---|---|
+| **A-1** `schnitt` auf den vier Nicht-Krypto-Klassen | offener Messpunkt | **zurueckgestellt** — nach dem Krypto-Produktivgang |
+| **A-2** G-6 in den anderen Klassen | offene Entscheidung | **zurueckgestellt** |
+| **N-19-Messbasis** (4 Klassen) | aufgesetzt | bleibt stehen, wird **nicht weiter bespielt** |
+| **G-6** sperrt vier Klassen nach Datenlage | „Luecke" | **kein Mangel mehr, sondern der gewollte Zustand** bis Krypto steht |
+
+Was das fuer die Befundlage heisst: 2.152 („vier von fuenf Klassen sind
+nach DATENLAGE gesperrt, nicht nach Bewertung — das ist eine Luecke, kein
+Urteil") bleibt inhaltlich richtig, ist aber **keine offene Baustelle
+mehr**. Die Luecke ist ab jetzt **beabsichtigt**.
+
+---
+
+# 10.09. — KORREKTUR MEINER DARSTELLUNG, und der Hebel-Strang richtiggestellt
+
+## Was ich falsch dargestellt habe
+
+**Der Hebel ist NICHT erledigt.** Ich habe ihn als „konzeptionell
+abgeschlossen (Sizing-Frage)" gefuehrt. Die Nutzervorgabe lautet aber:
+
+> *„Der Hebel MUSS dynamisch anfallen — wenn eine optimale
+> Wahrscheinlichkeit fuer Chance und Risiko besteht."*
+> *„die Wahrscheinlichkeit auf positives Chance-Risiko-Verhaeltnis soll
+> den Hebel dynamisch erzeugen"*, Zielzone **2–5x**
+
+`hebel = verlustanteil / stop_rel` erzeugt den Hebel aus der
+**Volatilitaet**, nicht aus der **Wahrscheinlichkeit**. Das ist nicht
+dasselbe, und die Vorgabe verlangt das zweite.
+
+## Der Strang, der wirklich offen ist (F-220)
+
+Der Mechanismus **ist gebaut**: kalibrierte Quote -> halbes Kelly ->
+Hebel. Er scheitert an der Bewertung, nicht am Entwurf:
+
+| Lage | halb-Kelly | Hebel |
+|---|---|---|
+| nur `funding`, bestes Fuenftel | 0,190 % | 0,76x |
+| **beide, jeweils bestes Fuenftel** | 0,651 % | **2,60x** |
+| bestes funding + mittleres turnover | 0,222 % | 0,89x |
+
+> **Nur die eine beste Kombination erreicht die Zielzone 2–5x.** Und
+> ausgerechnet die braucht `turnover` — der 66 von 536 Symbolen deckt.
+
+**Damit ist der Hebel kein eigener Baustein, sondern derselbe Engpass wie
+alles andere: die Bewertung ist zu schwach und zu duenn gedeckt.** Ein
+dritter, breit deckender Beitrag loest Hebel und Abdeckung in einem Zug.
+
+## „Fehlende Daten" — das war falsch. Die Daten SIND da.
+
+Am 10.09. in `data/messdaten.db` nachgesehen statt behauptet:
+
+| Klasse | Symbole | davon mit Volumen |
+|---|---|---|
+| **krypto** | **536** | **536** (>90 % der Tage) |
+| aktien | 470 | 470 |
+| themen_etf | 293 | 293 |
+| rohstoffe | 35 | 35 |
+
+785.038 von 785.040 Krypto-Zeilen tragen Volumen.
+
+> **`turnover`s 66-Symbol-Grenze kommt NICHT von fehlenden Daten.** Sie
+> kommt vom **Nenner**: Coin Metrics liefert die *Umlaufmenge* nur fuer 66
+> Werte. Das Volumen selbst liegt fuer alle 536 vor.
+
+## Und es gibt bereits einen Kandidaten, der den Nenner nicht braucht
+
+**`volumenanteil`, relative Form** (Anteil gegen die eigenen 20 Tage) —
+gemessen am 02.09. (F-170), aber **nie registriert**:
+
+    volle Basis          +0,0231 R [+0,0093 .. +0,0368]
+                         1.026.279 Anker · 578 Symbole · 84 Bloecke
+    Zielmenge (512 ohne
+    turnover)            +0,0246 R
+    Asset-Anteil          1,4 %   (Regel 3 erfuellt; die ROHE Form fiel
+                                   mit 69,8 % vorab durch)
+    Form                  SPERRE, nicht Regler — belastbar allein Fuenftel 4
+
+**Warum er noch nicht registriert ist:** A6 — seine Negativkontrolle lief
+mit **EINER** Ziehung. Der Befund steht unter Vorbehalt, nicht gefallen.
+
+> **84 Bloecke sind reichlich Macht.** Das ist der einzige Kandidat im
+> System, der volle Abdeckung, geprueffte Form und ausreichende Datenlage
+> zugleich hat.
+
+---
+
+# 10.09. — AKKUMULATION: die fachliche Entscheidung, benannt
+
+> Nutzervorgabe: *„bei Akkumulation und Horizont muessen wir offenbar eine
+> Aenderung vornehmen — hier musst du wissen, welche Aenderung die
+> fachlich beste ist."*
+
+## Die Entscheidung: **der Horizont bleibt H90. Das NULLMODELL aendert sich.**
+
+**Warum nicht der Horizont:** H90 ist nicht gesetzt, sondern die Sache
+selbst. Die Verbilligung fragt *„war es ein guter Kauftag"* — gemessen am
+mittleren Kurs der folgenden Periode. Ein Quartal ist der Zeitraum, ueber
+den akkumuliert wird; H20 beantwortete eine andere Frage.
+
+**Warum das Nullmodell:** Der Befund vom 28.08. hat bei **H=90 auf 505
+Reihen** sauber gemessen — mit dem **zirkulaeren Verschub** auf der
+Kalenderachse, nicht mit dem Blockbootstrap:
+
+| Zelle | Rang | Zufall 5–95 % | p | |
+|---|---|---|---|---|
+| **UNTER_SMA** (Primaerzelle) | +0,0283 | −0,0124 .. +0,0089 | **0,000** | traegt |
+| TIEFPUNKT *(Positivkontrolle)* | +0,4242 | −0,0337 .. +0,0292 | 0,000 | Maschine intakt |
+| WOCHENTAG *(Negativkontrolle)* | −0,0008 | −0,0007 .. +0,0007 | 0,978 | liegt auf null |
+| DCA *(Rechenkontrolle)* | ±0,0000 | — | — | Pflicht |
+
+**Und die Methodik sagt es bereits woertlich (2.77):** *„bei
+ueberlappenden Ankern ist ein freier Placebo zu eng."* Der Verschub
+erhaelt die **Gleichzeitigkeit des Marktes** — genau die Eigenschaft, die
+bei H90 gebraucht wird.
+
+## Der Fehler war meiner, nicht der des Entwurfs
+
+K-1c hat die **Blockregel** angewandt, die fuer H20 gebaut ist. Bei H90
+ist ein Block 270 Tage; 20 Bloecke braeuchten 22 Jahre. **Das ist keine
+Aussage ueber die Akkumulation, sondern ueber die falsche Wahl des
+Nullmodells.** A2 ist damit keine offene Entwurfsfrage mehr.
+
+**Was zu tun ist:** `messnorm` bekommt eine zweite Nullkonstruktion
+(`nullmodell="verschub"`), zugelassen fuer Lagen, in denen die Blockregel
+strukturell unerreichbar ist. Dann K-1c Akkumulation neu. Der
+Messstandard wird dadurch **nicht aufgeweicht** — Trennschaerfeleiter,
+die vier Urteile und der Nullbezug bleiben; nur die Erzeugung der
+Nullverteilung wechselt dort, wo Ueberlappung sie erzwingt.
+
+---
+
+# 10.09. — DIE REIHENFOLGE BIS ZUM KRYPTO-PRODUKTIVGANG
+
+Alles Nicht-Krypto ist ab hier **nachgelagert** (Nutzervorgabe oben).
+
+| # | Schritt | warum an dieser Stelle |
+|---|---|---|
+| **1** | **A1 beheben** — Fehlalarmquote der Barrieren-Anlage auf Nullwelten | Ohne sie ist `barriere` nicht messbar, und `barriere` ist die Zielgroesse **jeder** Hebel-Lage. Der Pruefstand steht seit dem 08.09. |
+| **2** | **`volumenanteil` unter dem Messstandard nachmessen** | Der einzige Kandidat mit **voller Abdeckung** und geprueffter Form. Er ist der Engpass fuer den Hebel (2–5x braucht eine staerkere Bewertung) und schliesst zugleich `turnover`s Abdeckungsluecke |
+| **3** | **Akkumulation: Nullmodell `verschub`, dann K-1c neu** | Fachlich entschieden, siehe oben. Danach hat die Akkumulation zum ersten Mal eine gemessene Grundlage |
+| **4** | **Hebel: die Quote mit dem dritten Beitrag neu durchrechnen** | Erst jetzt beantwortbar: erreicht die Zielzone 2–5x mehr als die eine beste Lage? |
+| **5** | **K-3 — trennt die Schwelle 0,080?** | R-R9: nach jedem Beitragswechsel ohnehin neu zu kalibrieren. Deshalb **nach** 2, nicht davor |
+| **6** | K-2, K-4, K-5 | Rest von Block I und II — danach ist der Produktivgang laut E3 erwaegbar |
+
+**Was sich gegenueber gestern aendert:** K-3 stand als naechster Schritt.
+Das war falsch herum — ein Beitragswechsel loest R-R9 aus und macht jede
+vorher gemessene Schwelle ungueltig. **Erst die Beitraege, dann die
+Schwelle.**
+
+---
+
+# 10.09. — DIE LAGEN ZUSAMMENGEFUEHRT: Vorgabe gegen Code gegen Daten
+
+> Nutzervorgabe 10.09.: *„Swing ist keine genutzte Strategie mehr; bei
+> Krypto verbleiben KLASSEN: Core-Werte fuer Akkumulation (BTC, ETH,
+> SOL) und SPOT und Hebel … Absicherung ist aktuell nur ueber 2
+> Hedge-Positionen gegeben, keine in Krypto … Hebel Long: aktuell nur
+> LONG beruecksichtigt und aktiviert, Short ist noch nicht gemessen und
+> geplant — das kann man nachgelagert in den Plan aufnehmen."*
+
+## ⚠️⚠️⚠️ ZUERST: WELCHE DATEN GELTEN — die Desktop-Kopie ist VERALTET
+
+| Datenbank | juengster Stand | gilt fuer |
+|---|---|---|
+| `data/messdaten.db` | **2026-09-10**, 536 Symbole | ✔ **alle Messungen** — sie stehen |
+| `data/tradinginfotool.db` | **2026-08-19** (Signale enden 2026-07-21) | ⚠️ **jede Aussage zum Betrieb ist veraltet** |
+
+**Keine einzige Tabelle traegt September-Daten.** Die Produktion laeuft
+auf dem Notebook; ihre Daten liegen auf dem Desktop nicht vor.
+
+⚠️ **Was daraus folgt:** Zahlen wie „43 Werte in der Watchlist", „118
+Signale", „`strategie` nie gesetzt" stammen aus dieser Kopie. Sie sind
+als **Stand 19.08.** zu lesen, nicht als heutiger Betrieb. Die
+Messbefunde sind davon NICHT betroffen.
+
+## Die Zusammenfuehrung
+
+| Nutzervorgabe | Code | Daten (Stand 19.08.) |
+|---|---|---|
+| **Core/Akkumulation: BTC, ETH, SOL** | `handelsauftrag.strategie_fuer()` liest den Schalter `dca_erlaubt` — **nur fuer `spot`** | ⚠️ `asset_dca_settings`: **BTC und ETH. SOL FEHLT** |
+| **SPOT** | `instrument="spot"`, Vorgabe `einstieg` | ⚠️ `signals.strategie` bei **allen 118 NULL** |
+| **Hebel** | `HEBEL_HANDELBAR_JE_GRUPPE = {"krypto": True}`; das Etikett wird aus der **Rechnung** abgeleitet (`ist_hebelgeschaeft`), nicht vorgewaehlt | `hebel_signals` 5 (alle 14.07.) · `hebel_triggers` 49 · `hebel_positions` **0** |
+| **Swing nicht mehr genutzt** | ⚠️ steht weiter in `STRATEGIEN`, in `handelsauftrag` als Paar `hebel -> (einstieg, swing)`, in `rollen_lauf._REIHENFOLGE` und in `messnorm.ZIELGROESSE_JE_LAGE` | keine Daten |
+| **Absicherung nur Hedge, keine in Krypto** | ✔ `INSTRUMENTE_JE_GRUPPE`: `krypto -> ("spot",)`, `hedge -> ("absicherung",)` | — |
+| **Hebel: nur LONG aktiv, Short nachgelagert** | `config.yaml` S-6: *„Short beratend, Bitpanda fuehrt aktuell nur Long aus"* | ⚠️ `hebel_signals.richtung`: **4 SHORT, 1 LONG** — alle vom 14.07., also VOR der Einschraenkung |
+
+## ⚠️ Zwei Begriffe fuer „Kern", und sie sind nicht dasselbe
+
+`handelsauftrag.py` haelt es ausdruecklich fest:
+
+    `rolle: core` (config.yaml)   13 Assets   steuert COOLDOWN und Budget
+    `dca_erlaubt` (DB-Schalter)    3 Assets   steuert die STRATEGIE
+
+Zehn Assets sind `core`, bekommen aber `einstieg`: AVAX, BNB, CANTON,
+HYPE, LINK, MORPHO, NEAR, SEI, SUI, TAO. **Sie werden gehalten, aber
+nicht aktiv aufgebaut.** Wer die Strategie aus `rolle` ableitet, bekommt
+dreizehn statt drei — und Positionen ohne Stop, die nie dafuer vorgesehen
+waren.
+
+## Was daraus als AUFGABE folgt
+
+| # | Punkt | Art |
+|---|---|---|
+| **L1** | ⚠️ **SOL fehlt im DCA-Schalter.** Die Vorgabe nennt BTC, ETH, SOL; gesetzt sind zwei. Ohne SOL laeuft der groesste Core-Wert nach `einstieg` — mit Stop und Trailing | **Nutzerentscheidung / Datenpflege** |
+| **L2** | ⚠️ **`swing` aus der Messachse entfernen.** `ZIELGROESSE_JE_LAGE` fuehrt `("hebel","swing")` als eigene Lage. Eine Lage, die es nicht mehr gibt, erzeugt Messaufwand und falsche Abgleiche | Bau, klein |
+| **L3** | ⚠️ **`strategie` wird nicht persistiert.** `strategie_fuer()` existiert, aber in `signals` steht durchgehend NULL. Solange das so ist, ist Akkumulation im Betrieb nicht nachweisbar (D5) | Bau |
+| **L4** | **SHORT nachgelagert aufnehmen** — nicht gemessen, nicht geplant, aber die Datenstruktur traegt ihn bereits (`richtung`, `angefragte_richtung`) | Plan, nachgelagert |
+| **L5** | ⚠️⚠️ **`portfolio_wert_historie` ist LEER.** K1 (`r x Kapital`) braucht den Portfoliowert zur Laufzeit — es gibt keine Quelle dafuer. **Das ist ein harter Blocker fuer den Hebelumbau**, unabhaengig von der Bewertung | Bau, Vorbedingung K1 |
+| **L6** | ⚠️ **Der Datenstand des Desktops muss im Abgleich sichtbar sein**, sonst werden veraltete Betriebszahlen wieder als aktuell gelesen | ✔ in `soll_ist.py` gebaut |
+
+⚠️⚠️ **L5 ist neu und wiegt schwer:** N-40/K1 hat die Machbarkeit
+geprueft und „klein, aber echt" notiert — *„fehlt der Wert und wir fallen
+still auf einen Vorgabewert zurueck, driftet das Risiko unbemerkt."* Die
+Tabelle ist leer. Der Hebel kann aus der Wahrscheinlichkeit nicht
+erzeugt werden, solange das Kapital zur Laufzeit unbekannt ist — **auch
+dann nicht, wenn die Bewertung traegt.**

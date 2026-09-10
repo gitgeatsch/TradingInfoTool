@@ -878,6 +878,30 @@
 
 - Quelle: k1a_beitrag_auf_der_a1_menge.py / A1 / A2
 
+**2.274** — ⚠️⚠️⚠️ N-46 IST NICHT GESCHLOSSEN - meine BEGRUENDUNG ist von der eigenen Abbruchbedingung widerlegt. Vorhergesagt war: die Tagesmischung liegt DEUTLICH HOEHER als der Verschub. Gemessen liegt sie durchgehend NIEDRIGER (Faktor 0,2 bis 0,6): amihud +0,0070 gegen +0,0323 · vola +0,0078 gegen +0,0364 · schnitt +0,0154 gegen +0,0571 · rsi +0,0121 gegen +0,0271 · zufall +0,0041 gegen +0,0069. ⚠️ Die Tagesmischung ist damit der GROSSZUEGIGERE Nullpunkt, nicht der zu strenge - genau umgekehrt zu meiner Begruendung
+
+- Quelle: n98_n46_laengs_nullpunkt.py
+
+**2.274-rr11** — ⚠️⚠️ UND DIE AUSGANGSBEOBACHTUNG VON N-46 IST NICHT REPRODUZIERT: sie lautet ,bei `amihud` lieferte die Kontrolle +0,620 gegen einen echten Wert von +0,713'. Gemessen steht amihuds echter Wert bei -0,0445 und die Tagesmischung bei +0,0022 - drei Groessenordnungen daneben, also eine andere Skala und eine andere Messung. **R-R11 ist nicht erfuellt**, und ohne Reproduktion ist der Blocker N-46 weder geloest noch widerlegt
+
+- Quelle: n98_n46_laengs_nullpunkt.py / R-R11
+
+**2.275** — ✔✔ WAS TROTZDEM STEHT - der zirkulaere Verschub ist als Nullmodell BRAUCHBAR, drei von vier Pruefungen sauber. P1 ZENTRIERT: bei `zufall` +0,0034 mit Streuung 0,0026, also nahe null. P2 KONTROLLE: `zufall` traegt unter Verschub NICHT. P3 MACHT: ein gepflanzter Effekt von 0,20 R wird mit +0,0420 [+0,0374 .. +0,0465] gefunden - erwartet waren 0,20 x (1 - GRENZE) = 0,040. ⚠️ Der Treffer ist exakt und bestaetigt nebenbei zum dritten Mal den 20-%%-Skalenfaktor aus Fehler 5
+
+- Quelle: n98_n46_laengs_nullpunkt.py
+
+**2.276** — ⚠️⚠️ DIE ENTSCHEIDUNG ZWISCHEN DEN BEIDEN NULLPUNKTEN HAENGT NICHT AN IHRER HOEHE, sondern an der FEHLALARMQUOTE gegen bekannte Wahrheit. Genau dieses Verfahren hat am 09.09. den Nullbezug entschieden (150 Nullwelten, drei Basen: `nullpunkt` 2,7 %% Fehlalarme bei Soll 2,5 %%, `null_oben` 0 %% aber nur 63 %% Fundquote, `null` 28 %%). Fuer die LAENGS-Achse steht dieser Selbsttest aus - er ist der naechste Schritt von N-46, nicht eine weitere Begruendung
+
+- Quelle: selbsttest_messanlage.py / Befund 2.204
+
+**2.277** — ⚠️ NEBENBEFUND: KEIN Kandidat traegt auf der LAENGS-Achse - weder unter dem Verschub noch unter der Tagesmischung. `amihud` -0,0445 · `vola` +0,0056 · `schnitt` -0,0163 · `rsi` -0,0104. ⚠️⚠️ `amihud` ist dabei UMGEKEHRT gerichtet und sein Band schliesst die Null knapp aus ([-0,0994 .. -0,0005]) - das ist keine Bestaetigung, aber auch kein Nullbefund, und es passt zu 2.166 (er misst Ausfuehrbarkeit, nicht Potential). ⚠️ Das Urteil steht unter dem Vorbehalt aus 2.274: solange der Nullpunkt nicht entschieden ist, ist auch ,traegt nicht' nur vorlaeufig
+
+- Quelle: n98_n46_laengs_nullpunkt.py
+
+**2.278** — ✔ HERKUNFT SAUBER GETRENNT (Nutzervorgabe 10.09.: ,trennen nach vor und nach dem aktuellen Umbau - Messungen, Dokumente und Code'). N-46 uebernimmt `laengs_rang` und `wirkung` aus `n75` (07.09., VOR dem Standard) - beides DEFINITIONEN, kein Nullmodell. Band, Nullpunkt, Perzentil und Leiter kommen aus `messnorm` (NACH). Der Akkumulationsbefund vom 28.08. dient als VORBILD, nicht als Beleg. ⚠️ Dafuer gibt es jetzt `soll_ist.py`, das die Grenze fuer alle drei Ebenen ausweist: Code 174 von 303 Altbestand · Messungen 356 von 458 ohne vermerkte Basis · Dokumente 48 von 55 vor dem Umbau
+
+- Quelle: soll_ist.py / REGISTER_Werkzeuge
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.
