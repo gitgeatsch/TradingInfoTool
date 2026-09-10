@@ -244,16 +244,17 @@ REIHENFOLGE = (
             "sondern die ZAEHLMETRIK. ✔ Die Vorfrage ist geloest (auf "
             "20 % tragen alle drei Kandidaten).",
             "Befund 2.308", fertig=True),
-    Schritt(8, "V9 GESCHICHTET ALS EIN BEFUND",
+    Schritt(8, "V2 N-73 AUF DEN BESTAND",
+            "✔ GEMESSEN: `funding` besteht N-73 NICHT (2 von 3). "
+            "`schnitt` besteht sie BESSER als jeder registrierte "
+            "Beitrag - die Zweierlei-Mass-Sorge ist umgekehrt "
+            "beantwortet.",
+            "Befund 2.312 / 2.312-antwort", fertig=True),
+    Schritt(9, "V9 GESCHICHTET ALS EIN BEFUND",
             "`messnorm_rand.pruefe_geschichtet(marke=None)` - eine "
             "STETIGE Kennzahl mit einem Band statt einer Zaehlung ueber "
             "Faecher. Das Werkzeug lag die ganze Zeit vor.",
             "Befund 2.309 / 2.310"),
-    Schritt(9, "V2 N-73 AUF DEN BESTAND",
-            "⚠️ `funding` und `turnover` durch denselben N-73-Test - sie "
-            "sind VOR N-73 auf `frei` registriert. Sonst zweierlei Mass "
-            "(N-2).",
-            "Befund 2.294"),
     Schritt(10, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",

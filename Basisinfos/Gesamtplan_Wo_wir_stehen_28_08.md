@@ -3663,3 +3663,47 @@ von der Kennzahl unabhängig.
 Bei zwei Fächern auf einer 20-%-Menge ist die Blockzahl knapp, und
 `Befund.traegt` weiß nichts davon — Fehler 4 vom 08.09., an dem
 `k1c_lagen_eigene_zielgroesse` schon einmal gescheitert ist.
+
+---
+
+# ✔✔✔ 10.09. — V2/N-73 AUF DEM BESTAND: die Zweierlei-Maß-Sorge ist beantwortet
+
+| Beitrag | zulässige Beitragsmengen | trägt auf | |
+|---|---|---|---|
+| **`schnitt`** *(Kandidat)* | 10 %, 20 %, 50 % | **3 von 3** | ✔ |
+| `funding` *(live)* | 10 %, 20 %, 50 % | **2 von 3** | ⚠️ nicht bei 20 % |
+| `turnover` *(live)* | **nur 50 %** | 1 von 1 | ✔ aber dünn |
+| `oi_aenderung` *(live)* | 20 %, 50 % | 2 von 2 | ✔ |
+| `zufall` ✔ | 10, 20, 50 % | 0 von 3 | ✔ Kontrolle |
+
+## ⚠️⚠️⚠️ `funding` besteht N-73 nicht — und das dreht die Frage um
+
+Ein **live laufender** Beitrag trägt auf 2 von 3 Mengen (bei 20 % „nicht
+trennbar"). Dasselbe Profil wie `schnitt50`.
+
+> **`schnitt` besteht N-73 besser als jeder registrierte Beitrag.** Ihn
+> an dieser Hürde zu messen ist **nicht unfair** — er nimmt sie sauberer
+> als der Bestand.
+
+⚠️ Die Hürde bleibt damit gültig. Sie ist für den **Bestand** neu zu
+begründen, nicht für den Kandidaten zu senken.
+
+## ⚠️⚠️ Eine Lesart, die der Bruch versteckt
+
+`turnover` besteht mit **„1 von 1"** — aber nur, weil bei seiner
+Abdeckung (66 von 536) **überhaupt nur eine** Beitragsmenge zulässig ist.
+
+> **„1 von 1" ist eine SCHWÄCHERE Aussage als „3 von 3".** Der N-73-Bruch
+> hängt daran, wie viele Mengen die Datenlage trägt — wer nur den Bruch
+> liest, hält einen dünnen Beitrag für so robust wie einen breiten.
+
+## ➔ Was daraus folgt — und es ist KEIN Abschalten
+
+`funding` trägt auf 10 % und 50 %, nur bei 20 % nicht. Nach der
+Nutzervorgabe fällt kein Beitrag ohne Grund, und ein Nichttragen auf
+**einer von drei** Mengen ist ein Grund zum Nachsehen, keiner zum
+Entfernen.
+
+**V10 (offen):** hat die 20-%-Menge bei `funding` eine Besonderheit? Seine
+Abdeckung ist 300 von 536 — die Momentum-Auswahl und die
+Funding-Verfügbarkeit könnten sich überschneiden. Oder es ist Rauschen.

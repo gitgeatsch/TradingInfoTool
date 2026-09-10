@@ -1074,6 +1074,22 @@
 
 - Quelle: n105_v8_kriterium3_zwei_faecher.py
 
+**2.312** — ⚠️⚠️⚠️ V2: `funding` BESTEHT N-73 NICHT - ein LIVE laufender, registrierter Beitrag traegt auf 2 von 3 zulaessigen Beitragsmengen (10 %% +0,0688 TRAEGT · 20 %% +0,0582 NICHT TRENNBAR · 50 %% +0,0313 TRAEGT). Das ist dasselbe Profil wie `schnitt50` - und schwaecher als der Kandidat `schnitt` mit 3 von 3
+
+- Quelle: n106_v2_n73_auf_dem_bestand.py
+
+**2.312-antwort** — ✔✔✔ DAMIT IST DIE ZWEIERLEI-MASS-SORGE AUS 2.294 BEANTWORTET - und zwar UMGEKEHRT zur Erwartung: `schnitt` besteht N-73 BESSER als jeder registrierte Beitrag. Ihn an dieser Huerde zu messen ist nicht unfair - er nimmt sie sauberer als der Bestand. ⚠️ Die Huerde bleibt damit gueltig; sie ist fuer den BESTAND neu zu begruenden, nicht fuer den Kandidaten zu senken
+
+- Quelle: n106_v2_n73_auf_dem_bestand.py / 2.294
+
+**2.313** — ⚠️⚠️ UND EINE LESART, DIE DER BRUCH VERSTECKT: `turnover` besteht mit ,1 von 1' - aber nur, weil bei seiner Abdeckung (66 von 536) UEBERHAUPT NUR EINE Beitragsmenge zulaessig ist (50 %%). ,1 von 1' ist eine SCHWAECHERE Aussage als ,3 von 3'. Der N-73-Bruch haengt daran, wie viele Mengen die Datenlage traegt - wer nur den Bruch liest, haelt einen duennen Beitrag fuer so robust wie einen breiten
+
+- Quelle: n106_v2_n73_auf_dem_bestand.py
+
+**2.314** — ✔ `oi_aenderung` BESTEHT N-73 SAUBER: 2 von 2 (20 %% +0,0464 · 50 %% +0,0211), dazu `frei` +0,0126. ⚠️ Er ist damit der einzige LIVE laufende Beitrag, der die Huerde ohne Einschraenkung nimmt - und er laeuft als SPERRE, nicht als Regler
+
+- Quelle: n106_v2_n73_auf_dem_bestand.py
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.
@@ -1841,6 +1857,10 @@
 **2.310** — ➔ V9 IST DER RICHTIGE WEG FUER KRITERIUM 3: `pruefe_geschichtet(..., marke=None)` statt einer Zaehlung ueber Faecher. Eine STETIGE Kennzahl mit einem Band schlaegt eine Zaehlung mit drei bis sechs moeglichen Werten - genau der Unterschied, an dem V7 und V8 gescheitert sind. Die Gegenkontrolle (GEMISCHTES Funding) bleibt, sie ist von der Kennzahl unabhaengig
 
 - Quelle: V9, aus 2.308 und 2.309
+
+**2.315** — ➔ WAS AUS 2.312 FOLGT - und es ist KEIN Abschalten: `funding` traegt auf 10 %% und 50 %%, nur bei 20 %% nicht. Nach der Nutzervorgabe faellt kein Beitrag ohne Grund, und ein Nichttragen auf EINER von drei Mengen ist ein Grund zum Nachsehen, keiner zum Entfernen. ⚠️ Zu klaeren: ob die 20-%%-Menge bei `funding` eine Besonderheit hat (Abdeckung 300 von 536 - die Momentum-Auswahl und die Funding-Verfuegbarkeit koennten sich ueberschneiden) oder ob es Rauschen ist
+
+- Quelle: V10, aus 2.312
 
 **2.152-kern** — ⚠️⚠️ Das Akkumulationsmass traegt NICHT fuer BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) - und `asset_dca_settings` enthaelt genau BTC und ETH. Die Akkumulation laeuft auf den Werten, fuer die das Mass keine Begruendung liefert
 
