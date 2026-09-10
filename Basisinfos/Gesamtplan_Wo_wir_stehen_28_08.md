@@ -3260,3 +3260,75 @@ feuert sie mit 4,0 % gegen ein Soll von 2,5 % — das 1,6-fache. Sie
 **klammert** das Soll, während der Verschub durchgehend darunter liegt.
 Für beharrliche Größen ist ein TRÄGT-Urteil damit etwas großzügiger, als
 das Band verspricht.
+
+---
+
+# ✔✔✔ 10.09. — A2 GELÖST: die Akkumulation ist messbar, und `schnitt` trägt
+
+## Der Weg war ein Methodenwechsel, keine Horizontänderung
+
+K-1c scheiterte an der **Blockzahl** (6–10 statt 20), nicht am
+Nullpunkt. Bei H90 bräuchten 20 Blöcke 5.400 Handelstage.
+
+> **Ein Permutationstest braucht keine Blöcke**, weil der zirkuläre
+> Verschub die Abhängigkeitsstruktur **erhält** statt sie zu
+> zerschneiden. Genau deshalb funktioniert er bei H90.
+
+⚠️ **N-46b hat das nicht gelöst** — dort ging es um den Nullpunkt der
+Längs-Achse, hier fehlte das **Band**. Zwei verschiedene Probleme.
+
+## Das Ergebnis — 518 Reihen, 400 Verschübe
+
+| Kandidat | Vorsprung | Zufall 5–95 % | p | Symbole | Urteil |
+|---|---|---|---|---|---|
+| **`schnitt`** | **+0,0470** | [−0,0121 .. +0,0106] | 0,000 | **481** | ⚠️ **TRÄGT** |
+| `turnover` | +0,0353 | [−0,0220 .. +0,0245] | 0,005 | **49** | ⚠️ trägt, dünn |
+| `funding` | **−0,0230** | [−0,0105 .. +0,0093] | 0,000 | 291 | ⚠️⚠️ **UMGEKEHRT** |
+| `oi_aenderung` | **−0,0178** | [−0,0075 .. +0,0076] | 0,000 | 119 | ⚠️⚠️ **UMGEKEHRT** |
+| `zufall` ✔ | +0,0015 | [−0,0019 .. +0,0019] | 0,223 | 518 | trägt nicht |
+
+**Kontrollen (R-R11 erfüllt, vor der ersten neuen Aussage):**
+TIEFPUNKT +0,4245 gegen 28.08. +0,4242 · WOCHENTAG −0,0005 gegen −0,0008.
+
+## ✔ `schnitt` ist der erste gemessene Beitrag für die Akkumulationslage
+
++0,0470 auf 481 von 518 Symbolen — **stärker als `UNTER_SMA` am 28.08.**
+(+0,0283). Und es passt: 2.155 hält fest, dass `schnitt` und das
+Akkumulationsmaß **dieselbe Größe** sind.
+
+## ⚠️⚠️⚠️ Der Befund, der überrascht: zwei Beiträge laufen rückwärts
+
+`funding` und `oi_aenderung` liegen **weit unter** dem Nullband, mit
+**p = 0,000**. Ihr „gutes" Fünftel — wenig Funding, wenig OI-Aufbau —
+ist für die Akkumulation systematisch der **schlechtere Kauftag**.
+
+> **Das ist kein Nullbefund. Die Richtung ist belegt, nur andersherum.**
+
+⚠️⚠️ Beide sind live als `strategien=("einstieg",)` deklariert und
+wirken deshalb **nicht** auf die Akkumulation. **Nach diesem Befund ist
+das ein Glück, kein Zufall** — würden sie dort greifen, liefen sie
+rückwärts.
+
+## ⚠️ Die Auflösung, eigens bestimmt
+
+**0,0216 in Rangeinheiten.** A9s Grenze (0,08 R) gilt hier **nicht** —
+`verbilligung` ist ein Perzentilrang mit Basisrate 0,500, keine
+R-Größe. Eine Zahl aus der einen Skala in die andere zu tragen wäre
+derselbe Fehler wie beim Kalibrierungsfaktor.
+
+## ⚠️ Drei eigene Fehler, alle vor dem Lauf gefangen
+
+1. **Stille Fehlausrichtung:** die Kauftage wurden über die Tagesliste
+   aus `K.baue` gemappt — die beginnt später. Jetzt kommt die
+   Datumszuordnung aus derselben Abfrage wie die Kurse.
+2. **Symbolabhängiger Verschub:** ich zog den Startpunkt ab — der
+   dokumentierte 28.08.-Fehler mit umgekehrtem Vorzeichen.
+3. **Zu grobes Urteil:** nur TRÄGT/trägt nicht — `funding` wäre als
+   Nullbefund ausgewiesen worden. Jetzt drei Stufen.
+
+## Was daraus folgt
+
+Die Lage `spot × akkumulation` hat zum ersten Mal einen **gemessenen
+Beitrag**. ⚠️ Offen bleibt **L1** (SOL fehlt im DCA-Schalter) und die
+Frage, ob `schnitt` dort als **Regler oder Schalter** registriert wird —
+das ist Schritt 5 (FORM).

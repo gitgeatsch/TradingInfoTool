@@ -173,9 +173,10 @@ LAGEN = (
          "vermessen - mindestens zwei tragende Beitraege"),
     Lage("spot", "akkumulation", "krypto",
          "Core-Werte BTC, ETH, SOL - Zielgroesse `verbilligung`, H90",
-         blocker="A2 - Blockregel bei H90 (Loesung: zirkulaerer Verschub, "
-                 "bei H90 auf 505 Reihen validiert); L1 - SOL fehlt "
-                 "im DCA-Schalter. ✔ N-46 ist geloest (2.282)"),
+         blocker="⚠️ NUR NOCH L1 - SOL fehlt im DCA-Schalter. "
+                 "✔ A2 geloest (2.286), `schnitt` traegt "
+                 "(+0,0470, 481 Symbole). Offen: Form als Regler "
+                 "oder Schalter (Schritt FORM)"),
     Lage("hebel", "einstieg", "krypto",
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
@@ -210,8 +211,10 @@ REIHENFOLGE = (
             "besser. N-46 ist mit dem VORHANDENEN Werkzeug geloest.",
             "Befund 2.282 / 2.282-fund", fertig=True),
     Schritt(3, "A2/AKKU",
-            "Akkumulation mit demselben Nullmodell neu messen (K-1c).",
-            "faellt aus N-46 ab; Befund_Akkumulationsmass 28.08."),
+            "✔ GELOEST: Permutationstest statt Bootstrap-Band. `schnitt` "
+            "traegt (+0,0470, 481 Symbole, p 0,000) - der erste gemessene "
+            "Beitrag fuer die Akkumulationslage.",
+            "Befund 2.286 / 2.286-schnitt", fertig=True),
     Schritt(4, "VIERFACHTEST",
             "Kandidaten durch alle vier Kriterien: `vola`, `schnitt50`, "
             "`amihud`, `volumenanteil`.",
@@ -239,9 +242,10 @@ BLOCKER = (
     ("A1", "Band auf BINAEREN Daten viermal zu eng (erwartet ±0,0023, "
            "beobachtet ±0,0006) - die Kontrolle traegt dadurch",
      "blockiert `barriere`, also jede Hebelmessung", "2.238"),
-    ("A2", "Blockregel bei H90 unerreichbar - 20 Bloecke braeuchten "
-           "5.400 Handelstage (~22 Jahre), der Markt hat 2.900",
-     "blockiert die Akkumulation", "2.236"),
+    ("A2", "✔ GELOEST 10.09. - ein PERMUTATIONSTEST (zirkulaerer "
+           "Verschub) braucht keine Bloecke, weil er die "
+           "Abhaengigkeitsstruktur erhaelt statt sie zu zerschneiden",
+     "die Akkumulation ist messbar; `schnitt` traegt", "2.286"),
     ("A6", "`messe_volumenanteil` faehrt seine Negativkontrolle mit EINER "
            "Ziehung", "Befund N-13-1' steht unter Vorbehalt", "2.203"),
     ("A8", "Die Messnorm ist auf der LIVE-Menge nicht anwendbar - "

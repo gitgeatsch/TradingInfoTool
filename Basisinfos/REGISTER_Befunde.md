@@ -934,6 +934,30 @@
 
 - Quelle: n99_n46b_fehlalarm_laengs.py
 
+**2.286** — ✔✔✔ A2 IST GELOEST - DIE AKKUMULATION IST MESSBAR. Nicht durch eine Aenderung am Horizont, sondern durch einen METHODENWECHSEL: ein PERMUTATIONSTEST (zirkulaerer Verschub) statt eines Bootstrap-Bandes. Er braucht keine Bloecke, weil der Verschub die Abhaengigkeitsstruktur ERHAELT statt sie zu zerschneiden - genau deshalb funktioniert er bei H90, wo 20 Bloecke 5.400 Handelstage braeuchten. ⚠️ N-46b hat das NICHT geloest: dort ging es um den Nullpunkt, hier fehlte das BAND
+
+- Quelle: n101_a2_akkumulation.py
+
+**2.286-schnitt** — ✔✔ `schnitt` TRAEGT FUER DIE AKKUMULATION - der erste gemessene Beitrag fuer diese Lage ueberhaupt: Rangvorsprung +0,0470 gegen ein Nullband [-0,0121 .. +0,0106], p 0,000, auf 481 von 518 Symbolen, Kaufquote 19,3 %%. ⚠️ Das ist STAERKER als `UNTER_SMA` am 28.08. (+0,0283) - und es passt, denn 2.155 haelt fest: `schnitt` und das Akkumulationsmass sind DIESELBE GROESSE
+
+- Quelle: n101_a2_akkumulation.py
+
+**2.287** — ⚠️⚠️⚠️ `funding` UND `oi_aenderung` WIRKEN FUER DIE AKKUMULATION UMGEKEHRT - und das ist KEIN Nullbefund. `funding` -0,0230 gegen [-0,0105 .. +0,0093], p 0,000 · `oi_aenderung` -0,0178 gegen [-0,0075 .. +0,0076], p 0,000. Ihr ,gutes' Fuenftel (wenig Funding, wenig OI-Aufbau) ist systematisch der SCHLECHTERE Kauftag. ⚠️⚠️ Beide sind LIVE als `strategien=('einstieg',)` deklariert und wirken deshalb NICHT auf die Akkumulation - das ist nach diesem Befund ein GLUECK, kein Zufall: wuerden sie dort greifen, liefen sie rueckwaerts
+
+- Quelle: n101_a2_akkumulation.py
+
+**2.288** — ⚠️ `turnover` TRAEGT fuer die Akkumulation (+0,0353, p 0,005) - aber auf nur 49 von 518 Symbolen, und sein Nullband ist mit ±0,022 das breiteste im Lauf. Dieselbe Abdeckungsgrenze wie ueberall (B6: die Umlaufmenge kommt fuer 66 Werte). Ein Befund unter Vorbehalt der Abdeckung, kein tragfaehiger Beitrag
+
+- Quelle: n101_a2_akkumulation.py
+
+**2.289** — ✔✔ R-R11 IST ERFUELLT - die Kontrollen reproduzieren den 28.08.-Stand vor der ersten neuen Aussage: TIEFPUNKT (Positivkontrolle) +0,4245 gegen +0,4242 · WOCHENTAG (Negativkontrolle) -0,0005 gegen -0,0008 · `zufall` +0,0015, p 0,223. ⚠️ Die Aufloesung dieser Zielgroesse betraegt 0,0216 in RANGeinheiten - A9s Grenze (0,08 R) gilt hier NICHT, weil `verbilligung` ein Perzentilrang mit Basisrate 0,500 ist und keine R-Groesse
+
+- Quelle: n101_a2_akkumulation.py
+
+**2.290** — ⚠️⚠️ DREI EIGENE FEHLER BEIM BAU, alle vor dem Lauf gefangen: (1) die Kauftage wurden ueber die Tagesliste aus `K.baue` auf die Kursreihe gemappt - die beginnt aber spaeter (Horizontabschnitt), die Maske waere STILL um einen unbekannten Betrag verschoben gewesen; jetzt kommt die Datumszuordnung aus derselben Abfrage wie die Kurse. (2) Der Verschub zog den Startpunkt des Symbols ab - das ist der dokumentierte 28.08.-Fehler mit umgekehrtem Vorzeichen, jede symbolabhaengige Verschiebung hebt die Gleichzeitigkeit auf. (3) Das Urteil kannte nur TRAEGT/traegt nicht und haette `funding` als Nullbefund ausgewiesen - dieselbe Verwechslung wie Fehler 4 vom 08.09.
+
+- Quelle: Selbstbefund 10.09.2026
+
 **2.188** — ⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: `messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` prueft `unten > max(0, null_oben)` - wobei `null_oben` das MAXIMUM ueber diese fuenf Mischungen ist. Ein Maximum ueber wenige Ziehungen ist systematisch ZU NIEDRIG, also faellt das Urteil zu WOHLWOLLEND aus
 
 - Quelle: Methodik 2.188 / Nutzervorgabe 08.09.
