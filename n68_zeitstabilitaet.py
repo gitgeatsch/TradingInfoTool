@@ -198,6 +198,88 @@ def unterschied(e, mengeA, mengeB, block, saat=SAAT, zieh=ZIEHUNGEN_BAND,
             "blA": len(ta) // block, "blB": len(tb) // block}
 
 
+def stabilitaetsurteil(e, block, staerken=None):
+    """EIN Stabilitaetsurteil mit VIER moeglichen Werten - und Trennschaerfe.
+
+    ## ⚠️⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (10.09.2026)
+
+    `n102_vierfachtest.py:135` entschied Kriterium 2 so:
+
+        "stabil": bool(d["unten"] <= 0.0 <= d["oben"])
+
+    **,Stabil' hiess dort nur: das Band schliesst die Null ein.** Ein
+    NICHT-Verwerfen, als Haken ausgegeben - und mit einer Richtung, die
+    den falschen Kandidaten belohnt:
+
+    > **Je BREITER das Band, desto sicherer das ✔.**
+
+    Gemessen an `schnitt`, dessen Baender rund sechsmal breiter sind als
+    `funding`s: er bestand Kriterium 2 nicht, weil er stabil ist,
+    sondern weil er unruhig ist. Richtig gemessen faellt er (Diff
+    +0,1973 [+0,0717 .. +0,3892] auf der 20-%-Menge).
+
+    ## Die vier Urteile - dieselben wie in `messnorm`
+
+        NICHT STABIL      Band schliesst die Null aus -> ein Unterschied
+                          ist NACHGEWIESEN
+        STABIL BIS X      |diff| unter der Trennschaerfe -> Unterschiede
+                          ab X sind ausgeschlossen. Eine AUSSAGE.
+        NICHT TRENNBAR    |diff| ueber X, Band haelt die Null - KEINE
+                          Aussage
+        KEIN BEFUND       selbst der groesste Versatz wurde nicht gefunden
+
+    ⚠️ Die Reihenfolge folgt 2.193: `traegt` steht VOR der
+    Untermacht-Abfrage. Das Band schliesst die Null aus oder nicht; die
+    Positivkontrolle aendert daran nichts.
+
+    ## ⚠️⚠️ DIE LEITER IST NICHT DIE ,R'-LEITER DER NORM
+
+    Hier wird der Versatz DIREKT auf die entzerrte Reihe gepflanzt, also
+    1:1. `messnorm` pflanzt gegen den Nullpunkt mit der Daempfung aus
+    GRENZE = 0,80. **Ein ,bis 0,20' hier ist nicht mit einem ,0,05 R'
+    dort zu vergleichen.**
+
+    ⚠️ `zentriere=True` ist Pflicht - sonst wird auf einen bereits
+    vorhandenen Unterschied gepflanzt (eigener Fehler 07.09., siehe
+    `unterschied`).
+    """
+    if staerken is None:
+        import messnorm as _N
+        staerken = _N.STAERKEN
+    tage = sorted(e)
+    if len(tage) < 4 * block:
+        return None
+    mitte = tage[len(tage) // 2]
+    A = {t for t in e if t < mitte}
+    Bm = {t for t in e if t >= mitte}
+    d = unterschied(e, A, Bm, block)
+    if d is None:
+        return None
+    ts = None
+    for st in staerken:
+        p = unterschied(e, A, Bm, block, versatz=st, zentriere=True)
+        if p is not None and p["unten"] > 0.0:
+            ts = st
+            break
+    nachgewiesen = not (d["unten"] <= 0.0 <= d["oben"])
+    if nachgewiesen:
+        u = "NICHT STABIL - Unterschied nachgewiesen"
+    elif ts is None:
+        u = ("KEIN BEFUND - selbst %+.2f gepflanzt nicht gefunden"
+             % max(staerken))
+    elif abs(d["diff"]) < ts:
+        u = ("STABIL BIS %.2f (Unterschiede ab dieser Groesse "
+             "ausgeschlossen)" % ts)
+    else:
+        u = ("NICHT TRENNBAR - Diff %+.4f ueber %.2f, Band haelt Null"
+             % (d["diff"], ts))
+    return {"diff": d["diff"], "unten": d["unten"], "oben": d["oben"],
+            "ts": ts, "urteil": u, "stabil": (not nachgewiesen) and
+            ts is not None and abs(d["diff"]) < ts,
+            "nachgewiesen": nachgewiesen,
+            "blA": d["blA"], "blB": d["blB"]}
+
+
 def main() -> int:
     t0 = time.time()
     print("=" * 98)

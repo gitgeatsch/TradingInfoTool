@@ -1090,6 +1090,54 @@
 
 - Quelle: n106_v2_n73_auf_dem_bestand.py
 
+**2.321** — ✔ S-7 IST GEKLAERT - und REPRODUZIERT, auf drei Wegen: die Wirkungszahlen (Faktor 1,14 bis 1,45 gegen S-7s Tafel), der JAHRESVERLAUF (2019 +0,52 gegen +0,45 · 2022 +0,022 gegen +0,019 · 2023 −0,047 gegen −0,050) und der HAELFTENUNTERSCHIED (+0,1973 gegen +0,2238, samt der Vorzeichendrehung bei 10 %%: −0,0805 gegen −0,0647). R-R11 ist erfuellt, das Urteil darf gedeutet werden
+
+- Quelle: n108_s7_geklaert.py / n109_s7_gegenpruefung.py
+
+**2.321-wortlaut** — ⚠️⚠️ ABER S-7 IST NUR IN SEINEM EIGENEN WORTLAUT BESTAETIGT - *,es ist unentschieden'* - und NICHT in der Lesart, `schnitt` trage ab 2022 nicht. Auf allen drei Mengen ab 2022 lautet das Urteil NICHT TRENNBAR, nicht TRAEGT NICHT. Der Unterschied ist der Kern der Norm: `zufall` bekommt in JEDER Zeile ein TRAEGT NICHT bis X - eine Aussage ueber die Welt. `schnitt` bekommt dreimal keine Aussage
+
+- Quelle: n108_s7_geklaert.py / messnorm.urteil
+
+**2.321-ab2024** — ⚠️⚠️ UND S-7s SPALTE ,AB 2024' WAR NIE GUELTIG: 962 Tage = 16 Bloecke, gefordert sind 20. Unter dem heutigen Standard ist das KEIN BEFUND, nicht traegt nicht. ⚠️ Mein eigener Hauptlauf sagte es NICHT - bei leerer Mengenliste laeuft die innere Schleife nie und es wird gar nichts gedruckt. Fail-silent im eigenen Werkzeug; die Abnahmetafel hat es aufgefangen, die Zeile nicht
+
+- Quelle: n109_s7_gegenpruefung.py G4
+
+**2.322** — ⚠️⚠️ DER MECHANISMUS IST DIE BANDBREITE, NICHT ein fehlender Effekt. Bei GLEICHER Blockzahl ist `schnitt`s Band rund sechsmal breiter als `funding`s (ab 2022, 10 %%: 0,383 gegen 0,063). Signal je Bandbreite im Mittel 0,36 gegen 0,61. Er hat die GROESSERE Wirkung und den SCHLECHTEREN Schaetzer - und das bestaetigt die Notiz vom 07.09. (`schnitt`s Baender sind fuenfmal breiter) aus eigener Rechnung
+
+- Quelle: n109_s7_gegenpruefung.py G2
+
+**2.323** — ✖ MEINE ERKLAERUNG ,KLUMPIGKEIT' IST WIDERLEGT - und zwar von der eigenen Kontrolle. Das Kriterium Streuung-ueber-Mittel gab ALLEN dreien klumpig, auch `zufall` (Str/Mit 1,25). Damit misst es eine Eigenschaft des Jahresfensters, nicht des Kandidaten. ⚠️ Die Tafel zeigt statt Streuen einen NIVEAUABFALL: 2019 bis 2021 bei +0,36 bis +0,57, ab 2022 zwischen −0,05 und +0,17 - und `zufall` liegt dort bei 0,03 bis 0,07, also zehnmal kleiner. Die Frueh-Erhoehung ist NICHT vom Zeitfenster erklaert
+
+- Quelle: n109_s7_gegenpruefung.py G3
+
+**2.324** — ⚠️⚠️⚠️ UND DABEI IST EIN FEHLER IM VIERFACHTEST SELBST AUFGEFALLEN: `n102_vierfachtest.py:135` entschied Kriterium 2 allein ueber d[unten] <= 0.0 <= d[oben] - STABIL hiess dort nur DAS BAND SCHLIESST DIE NULL EIN. Ein NICHT-Verwerfen, als Haken ausgegeben, mit einer Richtung, die den falschen Kandidaten belohnt: JE BREITER DAS BAND, DESTO SICHERER DAS ✔. `schnitt`, dessen Baender sechsmal breiter sind, bestand also nicht, WEIL er stabil ist, sondern WEIL er unruhig ist
+
+- Quelle: n102_vierfachtest.py:135 / Selbstbefund 10.09.
+
+**2.324-n73** — ⚠️⚠️ ZWEITER FEHLER, GLEICHE STELLE: N-73 war bei Kriterium 2 nie angewandt. Im selben `main()`, zehn Zeilen auseinander, lief Kriterium 1 ueber ALLE zulaessigen Mengen und Kriterium 2 ueber EINE. Und genau das kippt: `schnitt`s Haelftenunterschied dreht mit der Menge (−0,0805 bei 10 %%, +0,1973 bei 20 %%). WER EINE MENGE WAEHLT, WAEHLT DAS URTEIL. Der Bestand hatte es am 07.09. schon notiert, es war nur nie in den Test gewandert
+
+- Quelle: n102_vierfachtest.py / 2.7-07.09.
+
+**2.325** — ⚠️⚠️⚠️ RICHTIG GEMESSEN FAELLT `schnitt` AN KRITERIUM 2 - und es ist KEIN nicht-trennbar, sondern ein NACHGEWIESENER Unterschied: auf der 20-%%-Menge +0,1973 [+0,0717 .. +0,3892], Band schliesst die Null AUS, 20/20 Bloecke. Auf 10 %% und 50 %% ist er stabil - nach N-73 zaehlt das nicht als Entlastung, sondern als fehlende Robustheit. ⚠️ `zufall` bekommt nirgends NICHT STABIL (stabil bis 0,02 bis 0,05) - die Kontrolle haelt
+
+- Quelle: n110_kriterium2_mit_trennschaerfe.py
+
+**2.325-2319** — ⚠️⚠️⚠️ DAMIT IST 2.319 ZU WIDERRUFEN: `schnitt` hat NICHT alle vier Kriterien. Er hat DREI - Abdeckung, Unabhaengigkeit, Regel 3 - und faellt an der STABILITAET. ⚠️ Der Widerruf ist zulaessig, weil er reproduziert wurde (2.321): dreimal, auf drei verschiedenen Wegen. R-R11 ist erfuellt
+
+- Quelle: n110_kriterium2_mit_trennschaerfe.py / R-R11
+
+**2.328** — ✔✔ KEIN LAUFENDER BEITRAG IST BETROFFEN: `funding` (bis 0,10 · 0,10 · 0,05), `oi_aenderung` (bis 0,05 · 0,02) und `turnover` (bis 0,10) sind auf ALLEN ihren zulaessigen Mengen stabil - mit Aussage, nicht mit nicht-trennbar. Dieser Lauf aendert nichts am Betrieb; er verhindert eine Registrierung, die sonst auf einem fehlerhaften Kriterium beruht haette
+
+- Quelle: n110_kriterium2_mit_trennschaerfe.py
+
+**2.329** — ⚠️ VOM VORABTEST GEFANGEN - DIE ZWEI LEITERN SIND NICHT DIESELBE SKALA: der Stabilitaetstest pflanzt den Versatz 1:1 auf die entzerrte Reihe, `messnorm` pflanzt gegen den Nullpunkt mit der Daempfung aus GRENZE = 0,80 (gepflanzte 0,10 R erscheinen als rund 0,02). Ein bis-0,20 im Stabilitaetstest ist NICHT mit einem 0,05 R der Norm zu vergleichen. Steht jetzt im Kopf beider Werkzeuge und in der Ausgabe
+
+- Quelle: n110 / n68.stabilitaetsurteil
+
+**2.330** — ✔ DAS KORRIGIERTE URTEIL STEHT AN DER QUELLE - `n68_zeitstabilitaet.stabilitaetsurteil()`, gerufen von `n102` UND `n110`. Vorgabe: ein Test muss die ECHTE Funktion rufen, nie eine Kopie. ⚠️ Die alte Konstruktion sitzt sonst nirgends: `n88:152` und `n89:106` nutzen dieselbe Zeile in der RICHTIGEN Richtung (als trennt), geprueft per Suche ueber alle Skripte
+
+- Quelle: n68_zeitstabilitaet.py / n102 / n110
+
 **2.316** — ✔✔✔ V9: KRITERIUM 3 IST BEANTWORTET - `funding` erklaert bei KEINEM Kandidaten etwas. Geschichtet gemessen als EIN Befund mit EINEM Band: `schnitt` echt +0,0388 gegen gemischt +0,0361 · `schnitt50` +0,0300 gegen +0,0311 · `turnover` +0,0442 gegen +0,0514 · `oi_aenderung` +0,0135 gegen +0,0128. ⚠️⚠️ Der ABFALL durch die Schichtung (`schnitt` von +0,1858 auf +0,0388) tritt mit BEDEUTUNGSLOSEM Partner genauso ein - er ist ein Artefakt der Schichtung, keine Redundanz
 
 - Quelle: n107_v9_kriterium3_ein_befund.py
@@ -1105,10 +1153,6 @@
 **2.318** — ⚠️⚠️ DREI ANLAEUFE, DREI EIGENE FEHLER - und jeder von einer anderen Instanz gefangen: V7 - Zaehlmetrik zu grob, und die Kontrolle bekam ,unabhaengig' (vom VORABTEST gefangen). V8 - mein Loesungsweg ,weniger Faecher' machte die Zaehlmetrik GROEBER statt besser (vom ERGEBNIS gefangen). V9 - das richtige Werkzeug lag vor, ich hatte es wegen eines Aufrufparameters verworfen, und beim Umbau die Vorfrage aus V7 nicht mitgenommen (vom ERGEBNIS gefangen, weil `zufall` wieder ein positives Urteil bekam)
 
 - Quelle: Selbstbefund 10.09.2026
-
-**2.319** — ✔✔✔ `schnitt` HAT DAMIT ALLE VIER KRITERIEN: 1 ABDECKUNG 100 %% (536 von 536) · 2 STABILITAET stabil (N-68-Form) · 3 UNABHAENGIG von `funding` (V9) · 4 REGEL 3 mit 25,4 %% Asset-Anteil roh bestanden. Dazu N-73 mit 3 von 3 Mengen - BESSER als jeder registrierte Beitrag (`funding` 2 von 3) - und er traegt zusaetzlich in der AKKUMULATIONSlage (+0,0470, p 0,000). ⚠️ Die Entscheidung ueber die Registrierung ist eine NUTZERENTSCHEIDUNG und loest R-R9 aus: die Schwelle 0,080 waere neu zu kalibrieren
-
-- Quelle: V1/V2/V9 · Vierfachtest · 2.286-schnitt
 
 **2.320** — ⚠️ WAS BEI `vola` UEBRIG BLEIBT: geschichtet traegt er nicht mehr - echt wie gemischt, bei einer Trennschaerfe von 0,05 R. Das ist ein ECHTER Nullbefund, keine Untermacht: `funding` erklaert auch bei ihm nichts, aber die Schichtung nimmt ihm die Trennbarkeit. Zusammen mit N-73 (1 von 3 Mengen) bleibt er der wackligste der Kandidaten
 
@@ -1886,6 +1930,14 @@
 
 - Quelle: V10, aus 2.312
 
+**2.326** — ✔✔ DIE LOESUNG STEHT IN DERSELBEN TAFEL - `schnitt50` ist auf ALLEN DREI Mengen stabil (bis 0,20 · 0,20 · 0,05). ⚠️ Nutzervorgabe: Kein Beitrag darf einfach fallen, konkrete Begruendung erforderlich und ggf. Loesung suchen. Die Begruendung steht in 2.325; die Loesung ist die 50er-Form, die der Nutzer am 09.09. selbst zurueckgeholt hat (Warum hast du schnitt50 einfach herausgenommen?) und die nach 2.222 die einzige MONOTONE Form ist. Zu pruefen bleiben bei ihm Kriterium 1 und N-73
+
+- Quelle: n110_kriterium2_mit_trennschaerfe.py / 2.222
+
+**2.327** — ⚠️ `vola` FAELLT AN DERSELBEN STELLE - und fast mit derselben Zahl: +0,2039 [+0,0760 .. +0,3912] auf 20 %%, gegen `schnitt`s +0,1973, beide mit 20/20 Bloecken. Das ist zu aehnlich fuer Zufall und stuetzt 2.293 (`vola` ist Geometrie, nicht Richtung): die beiden koennten denselben geometrischen Anteil enthalten. ⚠️ HYPOTHESE, nicht Befund - sie ist nicht gemessen
+
+- Quelle: n110_kriterium2_mit_trennschaerfe.py
+
 **2.152-kern** — ⚠️⚠️ Das Akkumulationsmass traegt NICHT fuer BTC (-0,0251, p=0,723), ETH (-0,0308) und SOL (-0,0291) - und `asset_dca_settings` enthaelt genau BTC und ETH. Die Akkumulation laeuft auf den Werten, fuer die das Mass keine Begruendung liefert
 
 - Quelle: Methodik 2.152
@@ -2032,6 +2084,12 @@
 - Quelle: n98_n46_laengs_nullpunkt.py
 - **Abgeloest durch: 2.283**
 - Warum: Es ist UNTERMACHT, kein Nullbefund. Bei der Beharrlichkeit von `schnitt` (0,985) findet die Anlage einen Effekt von 0,03 R in 20 % und von 0,05 R in 50 % der Faelle - die echten Kandidaten liegen genau in diesem Bereich. Ein ,traegt nicht' sagt dort nichts ueber die Welt.
+
+**2.319** — ✔✔✔ `schnitt` HAT DAMIT ALLE VIER KRITERIEN: 1 ABDECKUNG 100 %% (536 von 536) · 2 STABILITAET stabil (N-68-Form) · 3 UNABHAENGIG von `funding` (V9) · 4 REGEL 3 mit 25,4 %% Asset-Anteil roh bestanden. Dazu N-73 mit 3 von 3 Mengen - BESSER als jeder registrierte Beitrag (`funding` 2 von 3) - und er traegt zusaetzlich in der AKKUMULATIONSlage (+0,0470, p 0,000). ⚠️ Die Entscheidung ueber die Registrierung ist eine NUTZERENTSCHEIDUNG und loest R-R9 aus: die Schwelle 0,080 waere neu zu kalibrieren
+
+- Quelle: V1/V2/V9 · Vierfachtest · 2.286-schnitt
+- **Abgeloest durch: 2.325**
+- Warum: Kriterium 2 war fehlerhaft konstruiert (2.324): ,stabil' hiess dort nur ,das Band schliesst die Null ein', ohne Trennschaerfe und auf EINER Menge statt allen. Richtig gemessen ist `schnitt`s Haelftenunterschied auf der 20-%%-Menge NACHGEWIESEN (+0,1973 [+0,0717 .. +0,3892], 20/20 Bloecke) - er hat DREI Kriterien, nicht vier. ⚠️ Reproduziert vor dem Widerruf, dreifach (2.321), R-R11 erfuellt
 
 **2.172-streuung** — „In Streuungseinheiten liegen die Effekte fast gleichauf - Aktien 0,038, Rohstoffe 0,070"
 

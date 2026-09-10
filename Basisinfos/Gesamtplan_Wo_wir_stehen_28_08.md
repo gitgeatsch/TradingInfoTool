@@ -3769,3 +3769,125 @@ die Schwelle 0,080 wäre neu zu kalibrieren.
 ⚠️ Und bei `vola` bleibt: geschichtet nicht mehr trennbar (echter
 Nullbefund, Trennschärfe 0,05 R), dazu N-73 mit 1 von 3. Er bleibt der
 wackligste der Kandidaten.
+
+---
+
+# ⚠️⚠️⚠️ 10.09. — S-7 GEKLÄRT, und dabei fiel Kriterium 2 auf
+
+## Zuerst: die Reproduktion (R-R11)
+
+S-7 stammt vom 07.09., **vor** dem Messstandard. Reproduziert wurde er auf
+**drei** Wegen, bevor irgendetwas gedeutet wurde:
+
+| | S-7 (07.09.) | jetzt | |
+|---|---|---|---|
+| Wirkung `schnitt` ganz | +0,1623 | +0,1858 | 1,14× ✔ |
+| Wirkung `schnitt` ab 2022 | +0,0414 | +0,0589 | 1,42× ✔ |
+| Jahr 2019 · 2022 · 2023 | +0,45 · +0,019 · −0,050 | +0,52 · +0,022 · −0,047 | ✔ |
+| Hälftenunterschied 20 % | +0,2238 | +0,1973 | ✔ |
+| Hälftenunterschied 10 % | −0,0647 | −0,0805 | ✔ **auch die Drehung** |
+
+## ⚠️⚠️ S-7 ist bestätigt — aber nur in seinem eigenen Wortlaut
+
+> *„Es ist **unentschieden**."* — S-7, 07.09.
+
+Ab 2022 lautet das Urteil auf **allen drei** Mengen **NICHT TRENNBAR**,
+nicht „trägt nicht". Der Unterschied ist der Kern der Norm:
+
+| | |
+|---|---|
+| `zufall` | bekommt in **jeder** Zeile ein „TRÄGT NICHT bis X" — **eine Aussage** |
+| `schnitt` | bekommt ab 2022 dreimal „keine Aussage" |
+
+⚠️ **Und S-7s Spalte „ab 2024" war nie gültig:** 962 Tage = **16 Blöcke**,
+gefordert sind 20. Unter dem heutigen Standard ist das KEIN BEFUND.
+
+## Der Mechanismus: die Bandbreite, nicht ein fehlender Effekt
+
+Bei **gleicher** Blockzahl (25/25, ab 2022, 10 %):
+
+```
+schnitt   Wirkung +0,1221   Band 0,383   Signal/Band 0,32
+funding   Wirkung +0,0542   Band 0,063   Signal/Band 0,86
+```
+
+> **`schnitt` hat die größere Wirkung und den schlechteren Schätzer.**
+
+✖ Meine Erklärung „klumpig" ist **widerlegt** — von der eigenen Kontrolle:
+das Kriterium gab auch `zufall` „klumpig", misst also das Jahresfenster.
+Der Jahresverlauf zeigt statt Streuen einen **Niveauabfall** (2019–21 bei
++0,36…+0,57, ab 2022 −0,05…+0,17, `zufall` dort zehnmal kleiner).
+
+---
+
+# ⚠️⚠️⚠️ Und dabei fiel ein Fehler im Vierfachtest auf
+
+`n102_vierfachtest.py:135` entschied Kriterium 2 so:
+
+```python
+"stabil": bool(d["unten"] <= 0.0 <= d["oben"])
+```
+
+**„Stabil" hieß dort nur: das Band schließt die Null ein.** Ein
+Nicht-Verwerfen, als Haken ausgegeben — mit einer Richtung, die genau den
+falschen Kandidaten belohnt:
+
+> **Je breiter das Band, desto sicherer das ✔.**
+
+⚠️ **Zweiter Fehler, gleiche Stelle:** N-73 war bei Kriterium 2 nie
+angewandt. Im selben `main()`, zehn Zeilen auseinander, lief Kriterium 1
+über **alle** zulässigen Mengen und Kriterium 2 über **eine**.
+
+## Richtig gemessen — über alle Mengen, mit Trennschärfe
+
+| Kandidat | 10 % | 20 % | 50 % | Kriterium 2 |
+|---|---|---|---|---|
+| **`schnitt`** | stabil bis 0,40 | **+0,1973 [+0,0717 .. +0,3892]** | stabil bis 0,10 | ✖ **FÄLLT** |
+| `schnitt50` | stabil bis 0,20 | stabil bis 0,20 | stabil bis 0,05 | ✔ auf allen drei |
+| `funding` | stabil bis 0,10 | stabil bis 0,10 | stabil bis 0,05 | ✔ |
+| `oi_aenderung` | — | stabil bis 0,05 | stabil bis 0,02 | ✔ |
+| `turnover` | — | — | stabil bis 0,10 | ✔ |
+| `vola` | stabil bis 0,40 | **+0,2039 [+0,0760 .. +0,3912]** | stabil bis 0,10 | ✖ **FÄLLT** |
+| `zufall` ✔ | stabil bis 0,05 | stabil bis 0,05 | stabil bis 0,02 | ✔ Kontrolle hält |
+
+⚠️ **Bei `schnitt` ist es kein „nicht trennbar", sondern ein
+NACHGEWIESENER Unterschied** — das Band schließt die Null aus, 20/20
+Blöcke.
+
+---
+
+# ⚠️⚠️⚠️ 2.319 IST WIDERRUFEN — `schnitt` hat DREI Kriterien, nicht vier
+
+```
+1 ABDECKUNG    ✔ 100 %  (536 von 536)
+2 STABILITÄT   ✖ FÄLLT — Unterschied nachgewiesen (20 %)
+3 UNABHÄNGIG   ✔ funding erklärt nichts        (V9)
+4 REGEL 3      ✔ 25,4 % Asset-Anteil, roh      (V1)
+```
+
+⚠️ **Der Widerruf ist zulässig, weil vorher reproduziert wurde** — dreifach.
+R-R11 ist erfüllt.
+
+## ✔✔ Die Lösung steht in derselben Tafel: `schnitt50`
+
+> *„Kein Beitrag darf einfach fallen, konkrete Begründung erforderlich und
+> ggf. Lösung suchen."* — Nutzervorgabe
+
+Die Begründung steht oben. Die Lösung ist die **50er-Form** — auf allen
+drei Mengen stabil, nach 2.222 die einzige **monotone** Form, und vom
+Nutzer am 09.09. selbst zurückgeholt (*„Warum hast du schnitt50 einfach
+herausgenommen?"*). ⚠️ **Bei ihm zu prüfen bleiben Kriterium 1 und N-73.**
+
+## ✔✔ Kein laufender Beitrag ist betroffen
+
+`funding`, `oi_aenderung` und `turnover` sind auf **allen** ihren
+zulässigen Mengen stabil — mit Aussage, nicht mit „nicht trennbar". Dieser
+Lauf ändert nichts am Betrieb. **Er verhindert eine Registrierung, die
+sonst auf einem fehlerhaften Kriterium beruht hätte.**
+
+## ⚠️ Offen daraus
+
+| | |
+|---|---|
+| **V11** | `schnitt50` gegen Kriterium 1 und N-73 — der Ersatzweg |
+| **V12** | `vola` und `schnitt` fallen fast mit derselben Zahl (+0,2039 / +0,1973). Gemeinsamer geometrischer Anteil? ⚠️ Hypothese, nicht gemessen |

@@ -85,7 +85,8 @@ from messe_alle_kandidaten import HORIZONT, zusatzquellen     # noqa: E402
 from messe_beitrag_auf_auswahl import momentum250             # noqa: E402
 from messnorm import _block                                   # noqa: E402
 from messnorm_auswahl import MENGEN                           # noqa: E402
-from n68_zeitstabilitaet import entzerrte_reihe, unterschied  # noqa: E402
+from n68_zeitstabilitaet import (entzerrte_reihe,          # noqa: E402
+                                 stabilitaetsurteil)
 from n75_quer_gegen_laengs import laengs_rang, wirkung        # noqa: E402
 from n91_rangkorrelation_form import band                     # noqa: E402
 
@@ -115,24 +116,26 @@ def abdeckung(je_tag: dict) -> tuple:
 
 
 def stabilitaet(je_tag, mom, menge, block):
-    """EINE Frage: ist (erste Haelfte - zweite) von null zu trennen?
+    """⚠️⚠️⚠️ KORRIGIERT 10.09.2026 - die alte Fassung war fehlerhaft.
 
-    ⚠️ Nicht zwei halbierte Tests - das war der Fehler von N-60. Und der
-    Test erklaert zu OFT einen Unterschied (18 % statt 10 %, N-68):
-    **ein Nullbefund ist stark, ein gefundener Unterschied vorsichtig zu
-    lesen.**
+    Sie entschied allein ueber `d["unten"] <= 0.0 <= d["oben"]`, also
+    ,das Band schliesst die Null ein'. Das ist ein NICHT-Verwerfen, als
+    Haken ausgegeben - **je breiter das Band, desto sicherer das ✔**.
+    `schnitt`, dessen Baender sechsmal breiter sind als `funding`s,
+    bestand damit, weil er unruhig ist. Richtig gemessen faellt er.
+
+    Das Urteil steht jetzt in `n68_zeitstabilitaet.stabilitaetsurteil`
+    (vier Urteile, mit Trennschaerfe auf die zentrierte Reihe).
+
+    ⚠️ ZWEITER FEHLER, gleiche Stelle: der Aufrufer gibt EINE `menge`,
+    waehrend Kriterium 1 zehn Zeilen darueber ueber ALLE zulaessigen
+    laeuft. N-73 war hier nie angewandt - und `schnitt`s
+    Haelftenunterschied dreht mit der Menge (−0,0805 bei 10 %, +0,1973
+    bei 20 %). Wer eine Menge waehlt, waehlt das Urteil.
+    Vollstaendig ueber alle Mengen: `n110_kriterium2_mit_trennschaerfe.py`.
     """
     e = entzerrte_reihe(je_tag, mom, MENGEN[menge])
-    tage = sorted(e)
-    if len(tage) < 4 * block:
-        return None
-    mitte = tage[len(tage) // 2]
-    d = unterschied(e, {t for t in e if t < mitte},
-                    {t for t in e if t >= mitte}, block)
-    if d is None:
-        return None
-    return {"diff": d["diff"], "unten": d["unten"], "oben": d["oben"],
-            "stabil": bool(d["unten"] <= 0.0 <= d["oben"])}
+    return stabilitaetsurteil(e, block)
 
 
 def laengs(je_tag, mom, block):
@@ -270,10 +273,20 @@ def main() -> int:
         if st is None:
             print("     2 STABILITAET  nicht messbar (zu wenige Bloecke)")
         else:
-            print("     2 STABILITAET  Diff %+.4f [%+.4f .. %+.4f]  %s"
+            # ⚠️ Das volle Urteil, nicht nur ja/nein - ,nicht trennbar'
+            # ist KEINE Stabilitaet, und genau das hat die alte Fassung
+            # als ✔ ausgegeben.
+            print("     2 STABILITAET  Diff %+.4f [%+.4f .. %+.4f] "
+                  "Trennsch %s  %s"
                   % (st["diff"], st["unten"], st["oben"],
-                     "✔ stabil" if st["stabil"] else
-                     "⚠️ UNTERSCHIED (vorsichtig lesen, N-68)"), flush=True)
+                     ("%.2f" % st["ts"]) if st["ts"] else "KEINE",
+                     st["urteil"]), flush=True)
+            print("       ⚠️ NUR DIESE EINE MENGE (%s). N-73 gilt hier "
+                  "nicht - `schnitt`s" % menge)
+            print("          Haelftenunterschied dreht mit ihr (−0,0805 "
+                  "bei 10 %, +0,1973 bei 20 %).")
+            print("          Vollstaendig: "
+                  "n110_kriterium2_mit_trennschaerfe.py")
 
         # ---- 4 REGEL 3 LAENGS --------------------------------------------
         lg = laengs(je, mom, block)
