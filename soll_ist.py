@@ -251,10 +251,10 @@ REIHENFOLGE = (
             "beantwortet.",
             "Befund 2.312 / 2.312-antwort", fertig=True),
     Schritt(9, "V9 GESCHICHTET ALS EIN BEFUND",
-            "`messnorm_rand.pruefe_geschichtet(marke=None)` - eine "
-            "STETIGE Kennzahl mit einem Band statt einer Zaehlung ueber "
-            "Faecher. Das Werkzeug lag die ganze Zeit vor.",
-            "Befund 2.309 / 2.310"),
+            "✔ ERLEDIGT: Kriterium 3 ist beantwortet - `funding` erklaert "
+            "bei KEINEM Kandidaten etwas. `schnitt` hat damit ALLE VIER "
+            "Kriterien.",
+            "Befund 2.316 / 2.319", fertig=True),
     Schritt(10, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",

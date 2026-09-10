@@ -3707,3 +3707,65 @@ Entfernen.
 **V10 (offen):** hat die 20-%-Menge bei `funding` eine Besonderheit? Seine
 Abdeckung ist 300 von 536 — die Momentum-Auswahl und die
 Funding-Verfügbarkeit könnten sich überschneiden. Oder es ist Rauschen.
+
+---
+
+# ✔✔✔ 10.09. — V9: KRITERIUM 3 IST BEANTWORTET, und `schnitt` hat alle vier
+
+| Kandidat | echt | GEMISCHT | Trennschärfe | Urteil |
+|---|---|---|---|---|
+| **`schnitt`** | +0,0388 | +0,0361 | 0,05 R | ✔ unabhängig |
+| `schnitt50` | +0,0300 | +0,0311 | 0,05 R | ✔ unabhängig |
+| `turnover` | +0,0442 | +0,0514 | 0,05 R | ✔ unabhängig |
+| `oi_aenderung` | +0,0135 | +0,0128 | 0,05 R | ✔ unabhängig |
+| `vola` | +0,0359 | +0,0348 | 0,05 R | ✔ unabhängig, aber nicht mehr trennbar |
+| `zufall` ✔ | +0,0018 | +0,0005 | 0,05 R | trägt ungeschichtet nicht |
+
+## Die Lesart gibt das Werkzeug selbst vor
+
+> *„Bleibt es auch dort beim selben Wert, ist es die **Schichtung** — der
+> Partner erklärt **nichts**."*
+> — `pruefe_n1_schichtung_gegen_partner`
+
+Und **„der Partner erklärt nichts" ist Unabhängigkeit** — genau das, was
+Kriterium 3 fragt.
+
+⚠️⚠️ `schnitt` fällt durch die Schichtung von **+0,1858 auf +0,0388** —
+mit **bedeutungslosem** Partner auf **+0,0361**. Der Abfall ist ein
+**Artefakt der Schichtung**, keine Redundanz.
+
+## ✔✔ Warum V9 gelingt, wo V7 und V8 scheiterten
+
+**Die Trennschärfe ist beziffert: 0,05 R in jeder Zeile.** Bei den
+Zählmetriken gab es keine — ein „trägt nicht" war dort nie von
+Untermacht zu unterscheiden. Eine **stetige Kennzahl mit Band und
+Leiter** schlägt eine Zählung mit drei bis sechs möglichen Werten.
+
+## ⚠️⚠️ Drei Anläufe, drei eigene Fehler — jeder von einer anderen Instanz gefangen
+
+| | Fehler | gefangen von |
+|---|---|---|
+| **V7** | Zählmetrik zu grob; Kontrolle bekam „unabhängig" | dem **Vorabtest** |
+| **V8** | mein Lösungsweg „weniger Fächer" machte die Metrik **gröber** | dem **Ergebnis** |
+| **V9** | Werkzeug wegen eines Aufrufparameters verworfen; Vorfrage aus V7 nicht mitgenommen | dem **Ergebnis** (`zufall` bekam wieder ein positives Urteil) |
+
+---
+
+# ✔✔✔ `schnitt` HAT ALLE VIER KRITERIEN
+
+```
+1 ABDECKUNG    ✔ 100 %  (536 von 536)
+2 STABILITÄT   ✔ stabil (N-68-Form)
+3 UNABHÄNGIG   ✔ funding erklärt nichts        (V9)
+4 REGEL 3      ✔ 25,4 % Asset-Anteil, roh      (V1)
+
+N-73           ✔ 3 von 3 Mengen — BESSER als `funding` (2 von 3)
+Akkumulation   ✔ trägt dort ebenfalls (+0,0470, p 0,000)
+```
+
+⚠️ **Die Registrierung ist eine NUTZERENTSCHEIDUNG und löst R-R9 aus** —
+die Schwelle 0,080 wäre neu zu kalibrieren.
+
+⚠️ Und bei `vola` bleibt: geschichtet nicht mehr trennbar (echter
+Nullbefund, Trennschärfe 0,05 R), dazu N-73 mit 1 von 3. Er bleibt der
+wackligste der Kandidaten.

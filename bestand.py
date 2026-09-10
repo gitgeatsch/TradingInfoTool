@@ -2803,6 +2803,66 @@ BEFUNDE = (
                "die Momentum-Auswahl und die Funding-Verfuegbarkeit "
                "koennten sich ueberschneiden) oder ob es Rauschen ist",
                "offen", "V10, aus 2.312"),
+    Befundlage("2.316", "✔✔✔ V9: KRITERIUM 3 IST BEANTWORTET - "
+               "`funding` erklaert bei KEINEM Kandidaten etwas. "
+               "Geschichtet gemessen als EIN Befund mit EINEM Band: "
+               "`schnitt` echt +0,0388 gegen gemischt +0,0361 · "
+               "`schnitt50` +0,0300 gegen +0,0311 · `turnover` +0,0442 "
+               "gegen +0,0514 · `oi_aenderung` +0,0135 gegen +0,0128. "
+               "⚠️⚠️ Der ABFALL durch die Schichtung (`schnitt` von "
+               "+0,1858 auf +0,0388) tritt mit BEDEUTUNGSLOSEM Partner "
+               "genauso ein - er ist ein Artefakt der Schichtung, keine "
+               "Redundanz", "gilt", "n107_v9_kriterium3_ein_befund.py",
+               basis="H20 · Kandidaten auf 20 % (vorab), Bestand auf "
+                     "seiner Basis · marke=None · 5 Funding-Faecher"),
+    Befundlage("2.316-lesart", "✔ DIE LESART GIBT DAS WERKZEUG SELBST "
+               "VOR - `pruefe_n1_schichtung_gegen_partner`: ,Bleibt es "
+               "auch dort beim selben Wert, ist es die SCHICHTUNG - der "
+               "Partner erklaert NICHTS.' Und ,der Partner erklaert "
+               "nichts' IST Unabhaengigkeit, also genau das, was "
+               "Kriterium 3 fragt. ⚠️ Meine erste Ausgabe sagte nur "
+               ",kein Unterschied, Baender ueberlappen' - technisch "
+               "richtig, aber sie liess den Leser mit der Zahl allein, "
+               "statt den Schluss zu ziehen", "gilt",
+               "n107_v9_kriterium3_ein_befund.py"),
+    Befundlage("2.317", "✔✔ UND DIE TRENNSCHAERFE IST BEZIFFERT: 0,05 R "
+               "in jeder Zeile. Bei den Zaehlmetriken von V7 und V8 gab "
+               "es KEINE - ein ,traegt nicht' war dort nie von "
+               "Untermacht zu unterscheiden. Jetzt ist der Nullbefund "
+               "bei `zufall` eine echte Aussage. ⚠️ Das ist der Grund, "
+               "warum V9 gelingt, wo V7 und V8 gescheitert sind: eine "
+               "STETIGE Kennzahl mit Band und Leiter statt einer "
+               "Zaehlung mit drei bis sechs moeglichen Werten",
+               "gilt", "n107_v9_kriterium3_ein_befund.py"),
+    Befundlage("2.318", "⚠️⚠️ DREI ANLAEUFE, DREI EIGENE FEHLER - und "
+               "jeder von einer anderen Instanz gefangen: V7 - "
+               "Zaehlmetrik zu grob, und die Kontrolle bekam ,unabhaengig' "
+               "(vom VORABTEST gefangen). V8 - mein Loesungsweg ,weniger "
+               "Faecher' machte die Zaehlmetrik GROEBER statt besser (vom "
+               "ERGEBNIS gefangen). V9 - das richtige Werkzeug lag vor, "
+               "ich hatte es wegen eines Aufrufparameters verworfen, und "
+               "beim Umbau die Vorfrage aus V7 nicht mitgenommen (vom "
+               "ERGEBNIS gefangen, weil `zufall` wieder ein positives "
+               "Urteil bekam)", "gilt", "Selbstbefund 10.09.2026"),
+    Befundlage("2.319", "✔✔✔ `schnitt` HAT DAMIT ALLE VIER KRITERIEN: "
+               "1 ABDECKUNG 100 %% (536 von 536) · 2 STABILITAET stabil "
+               "(N-68-Form) · 3 UNABHAENGIG von `funding` (V9) · "
+               "4 REGEL 3 mit 25,4 %% Asset-Anteil roh bestanden. Dazu "
+               "N-73 mit 3 von 3 Mengen - BESSER als jeder registrierte "
+               "Beitrag (`funding` 2 von 3) - und er traegt zusaetzlich "
+               "in der AKKUMULATIONSlage (+0,0470, p 0,000). "
+               "⚠️ Die Entscheidung ueber die Registrierung ist eine "
+               "NUTZERENTSCHEIDUNG und loest R-R9 aus: die Schwelle "
+               "0,080 waere neu zu kalibrieren", "gilt",
+               "V1/V2/V9 · Vierfachtest · 2.286-schnitt"),
+    Befundlage("2.320", "⚠️ WAS BEI `vola` UEBRIG BLEIBT: geschichtet "
+               "traegt er nicht mehr - echt wie gemischt, bei einer "
+               "Trennschaerfe von 0,05 R. Das ist ein ECHTER Nullbefund, "
+               "keine Untermacht: `funding` erklaert auch bei ihm nichts, "
+               "aber die Schichtung nimmt ihm die Trennbarkeit. Zusammen "
+               "mit N-73 (1 von 3 Mengen) bleibt er der wackligste der "
+               "Kandidaten", "gilt",
+               "n107_v9_kriterium3_ein_befund.py / 2.293"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "
