@@ -2713,6 +2713,54 @@ BEFUNDE = (
                "Kandidaten auf ihrer BEITRAGSmenge zu messen statt auf "
                "`frei`. Damit waeren beide Gruende aus 2.303 zugleich "
                "adressiert", "offen", "V8, aus 2.303 und 2.306"),
+    Befundlage("2.308", "⚠️⚠️⚠️ V8 WIDERLEGT MEINEN EIGENEN LOESUNGSWEG "
+               "AUS 2.307. Mit ZWEI Faechern statt fuenf ist KEIN Urteil "
+               "mehr gedeckt - mit fuenf war es eines. `turnover` hatte "
+               "bei fuenf Faechern 2 gegen 0; dieselben Daten liefern bei "
+               "zwei Faechern 2 gegen 1, und das ist nur EIN Fach "
+               "Unterschied. ⚠️⚠️ NICHT DIE MACHT WAR DER ENGPASS, "
+               "SONDERN DIE ZAEHLMETRIK: weniger Faecher geben mehr Anker "
+               "je Fach, aber die Zaehlung hat dann nur noch drei "
+               "moegliche Werte (0, 1, 2)", "gilt",
+               "n105_v8_kriterium3_zwei_faecher.py",
+               basis="H20 · 2 Funding-Faecher · Kandidaten auf 20 %, "
+                     "Bestand auf frei · 74 Symbole je Fach"),
+    Befundlage("2.308-vorfrage", "✔ WAS V8 TROTZDEM GELOEST HAT: die "
+               "VORFRAGE. Auf der 20-%%-Menge tragen `schnitt` "
+               "(+0,1858), `schnitt50` (+0,0698) und `vola` (+0,1332) "
+               "ohne Schichtung - auf `frei` taten sie das nicht. Der "
+               "Mengenvorbehalt aus 2.306 ist damit ausgeraeumt, und die "
+               "Messung ist ueberhaupt erst aussagekraeftig geworden",
+               "gilt", "n105_v8_kriterium3_zwei_faecher.py"),
+    Befundlage("2.309", "⚠️⚠️⚠️ UND DAS RICHTIGE WERKZEUG LAG DIE GANZE "
+               "ZEIT VOR - ich habe es wegen eines AUFRUFPARAMETERS "
+               "verworfen. `messnorm_rand.pruefe_geschichtet` misst die "
+               "Schichtung als EINEN Befund mit EINEM Band - Nullpunkt, "
+               "Trennschaerfe und eine eingebaute Positivkontrolle "
+               "(`pflanze`), die dem Original fehlt. Und `marke=None` "
+               "gibt die Median-Differenz, also den STANDARDmassstab. "
+               "⚠️ Ich habe es abgelehnt, weil der eine Aufrufer, den ich "
+               "ansah (`pruefe_n1_schichtung_gegen_partner`), "
+               "`marke=2.0` uebergab - ich habe das Argument eines "
+               "Aufrufers fuer die Natur des Werkzeugs gehalten",
+               "gilt", "messnorm_rand.py:290 / Selbstbefund 10.09.2026"),
+    Befundlage("2.310", "➔ V9 IST DER RICHTIGE WEG FUER KRITERIUM 3: "
+               "`pruefe_geschichtet(..., marke=None)` statt einer Zaehlung "
+               "ueber Faecher. Eine STETIGE Kennzahl mit einem Band "
+               "schlaegt eine Zaehlung mit drei bis sechs moeglichen "
+               "Werten - genau der Unterschied, an dem V7 und V8 "
+               "gescheitert sind. Die Gegenkontrolle (GEMISCHTES Funding) "
+               "bleibt, sie ist von der Kennzahl unabhaengig",
+               "offen", "V9, aus 2.308 und 2.309"),
+    Befundlage("2.311", "✔ KANARIENVOGEL IN V8: `traegt_wirklich()` liest "
+               "das URTEIL statt der Eigenschaft `traegt`. Bei zwei "
+               "Faechern auf einer 20-%%-Menge ist die Blockzahl knapp, "
+               "und `Befund.traegt` weiss nichts davon - genau der Fehler "
+               "4 vom 08.09., an dem `k1c_lagen_eigene_zielgroesse` "
+               "einmal gescheitert ist (drei gemeldete Traeger, waehrend "
+               "alle fuenf KEIN BEFUND lauteten). Auf Kunstdaten "
+               "geprueft", "gilt",
+               "n105_v8_kriterium3_zwei_faecher.py"),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

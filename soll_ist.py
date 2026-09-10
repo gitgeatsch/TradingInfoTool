@@ -239,29 +239,35 @@ REIHENFOLGE = (
             "Macht.",
             "Befund 2.302 / 2.303", fertig=True),
     Schritt(7, "V8 ZWEI SCHICHTEN",
-            "Kriterium 3 mit ZWEI Faechern statt fuenf, und auf der "
-            "BEITRAGSmenge statt `frei` - 75 statt 30 Symbole je Tag. "
-            "Loest beide Gruende aus 2.303 zugleich.",
-            "Befund 2.307"),
-    Schritt(8, "V2 N-73 AUF DEN BESTAND",
+            "⚠️ WIDERLEGT: mit zwei Faechern ist KEIN Urteil gedeckt - "
+            "mit fuenf war es eines. Nicht die Macht war der Engpass, "
+            "sondern die ZAEHLMETRIK. ✔ Die Vorfrage ist geloest (auf "
+            "20 % tragen alle drei Kandidaten).",
+            "Befund 2.308", fertig=True),
+    Schritt(8, "V9 GESCHICHTET ALS EIN BEFUND",
+            "`messnorm_rand.pruefe_geschichtet(marke=None)` - eine "
+            "STETIGE Kennzahl mit einem Band statt einer Zaehlung ueber "
+            "Faecher. Das Werkzeug lag die ganze Zeit vor.",
+            "Befund 2.309 / 2.310"),
+    Schritt(9, "V2 N-73 AUF DEN BESTAND",
             "⚠️ `funding` und `turnover` durch denselben N-73-Test - sie "
             "sind VOR N-73 auf `frei` registriert. Sonst zweierlei Mass "
             "(N-2).",
             "Befund 2.294"),
-    Schritt(9, "FORM",
+    Schritt(10, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(10, "KALIBRIERUNG",
+    Schritt(11, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(11, "K1",
+    Schritt(12, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(12, "KETTE",
+    Schritt(13, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

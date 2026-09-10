@@ -3605,3 +3605,61 @@ Abdeckung, **6,9 % Asset-Anteil** (zweitbester Wert), stabil, und laut
 Nachgemessen, dasselbe Bild wie `schnitt`. ⚠️ **Die Kürzung war trotzdem
 falsch — sie im Skriptkopf zu vermerken ist nicht dasselbe wie sie zu
 begründen.**
+
+---
+
+# ⚠️⚠️⚠️ 10.09. — V8 WIDERLEGT MEINEN EIGENEN LÖSUNGSWEG
+
+| Kandidat | ohne | echt | GEMISCHT | Urteil |
+|---|---|---|---|---|
+| `schnitt` | +0,1858 ✔ | 1 von 2 | 1 von 2 | — kein Unterschied |
+| `schnitt50` | +0,0698 ✔ | 1 von 2 | 0 von 2 | — ein Fach |
+| `vola` | +0,1332 ✔ | 1 von 2 | 0 von 2 | — ein Fach |
+| `turnover` | +0,0639 ✔ | **2 von 2** | 1 von 2 | — ein Fach |
+| `oi_aenderung` | +0,0126 ✔ | 2 von 2 | 2 von 2 | — kein Unterschied |
+| `zufall` ✔ | +0,0163 | 0 von 2 | 0 von 2 | Vorfrage nicht bestanden |
+
+## Mit zwei Fächern ist KEIN Urteil gedeckt — mit fünf war es eines
+
+`turnover` hatte bei fünf Fächern **2 gegen 0**. Dieselben Daten liefern
+bei zwei Fächern **2 gegen 1** — und das ist nur *ein* Fach Unterschied.
+
+> ⚠️⚠️ **Nicht die Macht war der Engpass, sondern die ZÄHLMETRIK.**
+> Weniger Fächer geben mehr Anker je Fach, aber die Zählung hat dann nur
+> noch drei mögliche Werte (0, 1, 2). Meine Annahme in 2.307 war falsch.
+
+## ✔ Was V8 trotzdem gelöst hat: die Vorfrage
+
+Auf der **20-%-Menge** tragen `schnitt` (+0,1858), `schnitt50` (+0,0698)
+und `vola` (+0,1332) **ohne Schichtung** — auf `frei` taten sie das
+nicht. Der Mengenvorbehalt aus 2.306 ist ausgeräumt, und die Messung ist
+überhaupt erst aussagekräftig geworden.
+
+## ⚠️⚠️⚠️ Und das richtige Werkzeug lag die ganze Zeit vor
+
+`messnorm_rand.pruefe_geschichtet` misst die Schichtung als **einen
+Befund mit einem Band** — Nullpunkt, Trennschärfe und eine **eingebaute
+Positivkontrolle** (`pflanze`), die dem Original fehlt:
+
+```
+marke=None   Median-Differenz wie im Original (MITTELWERT-Maßstab)
+marke=2.0    Differenz der Randanteile        (RAND-Maßstab)
+```
+
+⚠️ **Ich habe es verworfen, weil der eine Aufrufer, den ich ansah,
+`marke=2.0` übergab** — ich habe das Argument eines Aufrufers für die
+Natur des Werkzeugs gehalten.
+
+## ➔ V9 — der richtige Weg für Kriterium 3
+
+**Eine stetige Kennzahl mit einem Band schlägt eine Zählung mit drei bis
+sechs möglichen Werten** — genau der Unterschied, an dem V7 und V8
+gescheitert sind. Die Gegenkontrolle (gemischtes Funding) bleibt; sie ist
+von der Kennzahl unabhängig.
+
+## ✔ Ein Kanarienvogel, der in V8 gegriffen hätte
+
+`traegt_wirklich()` liest das **Urteil** statt der Eigenschaft `traegt`.
+Bei zwei Fächern auf einer 20-%-Menge ist die Blockzahl knapp, und
+`Befund.traegt` weiß nichts davon — Fehler 4 vom 08.09., an dem
+`k1c_lagen_eigene_zielgroesse` schon einmal gescheitert ist.
