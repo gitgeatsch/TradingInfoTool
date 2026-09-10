@@ -3332,3 +3332,131 @@ Die Lage `spot × akkumulation` hat zum ersten Mal einen **gemessenen
 Beitrag**. ⚠️ Offen bleibt **L1** (SOL fehlt im DCA-Schalter) und die
 Frage, ob `schnitt` dort als **Regler oder Schalter** registriert wird —
 das ist Schritt 5 (FORM).
+
+---
+
+# 10.09. — DIE NAHT GEBAUT, UND DER VIERFACHTEST IST NICHT ERFÜLLBAR
+
+## ✔ Die fachliche Bewertung (Nutzerauftrag): der Hebel kommt aus dem SPOT-Weg
+
+> Nutzerfrage: *„1. Soll Hebel durch den SPOT-Weg? 2. Wäre eine saubere
+> Trennung der Bewertungen technisch und fachlich sinnvoller, auch für
+> zukünftige Änderungen?"*
+
+**Zu 1: ja — aber nicht, weil es dieselbe Frage wäre.** Es gibt drei
+belegte Unterschiede:
+
+| | Spot | Hebel |
+|---|---|---|
+| Stop | keiner | ja, beendet den Trade |
+| Zielgröße | `bewegung_r`, H20 | `barriere`, binär |
+| Dauer | H20 | **2,0 Tage Median** (F-202) |
+| Kosten | einmalig | **Finanzierung täglich** |
+
+Entschieden wurde so aus drei Gründen: **①** eine eigene Hebelbewertung
+ist heute **nicht messbar** (A1 — das Band ist auf binären Daten viermal
+zu eng). **②** Das Aufteilen der Evidenz schwächt beide — zwei Beiträge,
+die auf 1,5 % der Anker wirken. **③** `r(q)` → Kelly → Hebel braucht nur
+**eine** Quote.
+
+**Zu 2: ja, die Trennung ist sauberer — deshalb wurde die NAHT gebaut,
+nicht die Trennung.**
+
+`Beitrag` hat jetzt die vierte Achse `instrumente`, Vorgabe **leer =
+alle**. Damit ist eine spätere Trennung eine **Daten**änderung statt
+einer Codeänderung an jedem Aufrufer von `vermessen()`.
+
+⚠️ **Der Grund, warum das nötig war:** die Antwort *„gilt für alle
+Instrumente"* steckte bis heute in der **Abwesenheit eines Feldes** —
+derselbe Fehler, den `assetklassen.hebel_handelbar()` schon einmal
+behoben hat (*„eine Eigenschaft des Ablaufs statt des Assets"*).
+
+**Bitgleich nachgewiesen:** Quote `0,37303333333333333` vor und nach dem
+Umbau. **Vier Wächter** im Paket „Stufen", darunter einer, der festhält,
+dass heute **kein** Beitrag eine Instrumentliste trägt — eine stille
+Trennung würde auffallen.
+
+### ✔ Und der Auslöser für die echte Trennung ist prüfbar
+
+> Sobald **A1 behoben** und `barriere` messbar ist: messen, ob ein Beitrag
+> auf `barriere` **anders** wirkt als auf `bewegung_r`. Trägt er dort
+> anders, bekommt der Hebel seine eigene Bewertung — sonst nicht.
+
+Eine Messfrage mit Datum, kein offener Vorbehalt.
+
+---
+
+## ⚠️⚠️⚠️ Der Vierfachtest ist in seiner Fassung vom 05.09. nicht erfüllbar
+
+| Kandidat | 1 Abdeckung | Wirkung (N-73) | 2 Stabilität | 4 Regel 3 |
+|---|---|---|---|---|
+| **`schnitt`** | 100 % | ✔ **3 von 3 — robust** | ✔ stabil | ⚠️ untermächtig |
+| `schnitt50` | 100 % | 2 von 3 | ✔ stabil | ⚠️ untermächtig |
+| `vola` | 100 % | 1 von 3 | ✔ stabil | ⚠️ untermächtig |
+| `amihud` | 100 % | 0 von 3 | ✔ stabil | ⚠️ untermächtig |
+| `zufall` ✔ | 100 % | 0 von 3 | ✔ | ⚠️ |
+
+**Kriterium 4 liefert bei ALLEN untermächtig — auch bei der Kontrolle.**
+Das ist der vorab benannte Ausgang: ein Befund über die **Anlage**, nicht
+über die Kandidaten. **A9 ist an echten Daten bestätigt.**
+
+### ⚠️⚠️ Und Kriterium 4 ist FALSCH KONSTRUIERT — nicht auszusetzen, sondern richtig zu messen
+
+Es prüft heute mit einem **Signifikanztest** auf der Längs-Achse, ob eine
+Größe eine verkleidete Asset-Eigenschaft ist. Das richtige Maß steht seit
+dem 02.09. in **Methodik 2.101** — die **Streuungszerlegung**:
+
+```
+zwischen    Varianz der Symbolmittel      → Asset-Eigenschaft
+innerhalb   mittlere Varianz je Symbol    → Zeitpunkt-Aussage
+Asset-Anteil = zwischen / (zwischen + innerhalb)
+
+geeicht:  fester Wert je Symbol 95,9 %  ·  Zufall 0,1 %
+          turnover 52 %  ·  volumenanteil roh 73 %, relativ 1 %
+```
+
+> ⚠️⚠️ **Das ist BESCHREIBEND, kein Signifikanztest — und deshalb von A9
+> gar nicht betroffen.**
+
+⚠️ Dazu: CLAUDE.md hält fest, dass **Regel 3 den Querschnittsvergleich
+nicht verbietet**. Ein Signifikanztest auf der Längs-Achse verlangt mehr,
+als die Regel fordert.
+
+### ✔✔ `schnitt` ist der einzige robuste Kandidat — und N-73 ist das Anti-Hin-und-Her-Werkzeug
+
+```
+schnitt      3 von 3 Mengen   +0,1830 / +0,1858 / +0,0434   ✔ robust
+schnitt50    2 von 3
+vola         1 von 3          ← DAS Profil ist das Hin und Her
+amihud       0 von 3
+```
+
+> **Ein Kandidat, der auf einer Menge trägt und auf zweien nicht, liefert
+> je nach Messung „trägt" oder „trägt nicht".** Genau das ist über Wochen
+> passiert. `schnitt` hat dieses Profil nicht.
+
+⚠️ **Abgrenzung:** das hier gemessene Kriterium 2 fragt *erste gegen
+zweite Hälfte* (N-68). S-7 hat am 07.09. eine **andere** Frage gestellt
+(*„trägt er in den Fenstern ab 2022?"*). **Das „stabil" hebt S-7 nicht
+auf.**
+
+---
+
+## Die offenen Punkte, die daraus NEU entstehen
+
+| # | Punkt | Art |
+|---|---|---|
+| **V1** | ⚠️⚠️ **Kriterium 4 nach Methodik 2.101 neu messen** — Streuungszerlegung mit geeichter Skala statt Signifikanztest | Bau + Messung |
+| **V2** | ⚠️⚠️ **`funding` und `turnover` durch N-73** — sie sind VOR N-73 auf `frei` registriert und nie über alle zulässigen Mengen geprüft. Sonst zweierlei Maß (N-2) | Messung, **vor** jeder Registrierung |
+| **V3** | `volumenanteil` in `K.baue` bauen — er braucht eine **Querschnittsrechnung** (Anteil am Tagesgesamtumsatz), die eine Symbolschleife nicht sehen kann. Der Kandidat mit der besten Abdeckung | Bau |
+| **V4** | ⚠️ `amihud` läuft **längs rückwärts** (−0,0445, Band ohne Null). Passt zu 2.166: er misst Ausführbarkeit, nicht Potential | offen, nachrangig |
+| **V5** | Entscheidung über `schnitt` als dritten Beitrag — **erst nach V1 und V2**, und sie löst **R-R9** aus | **Nutzerentscheidung** |
+
+## ✔ Was heute ERLEDIGT wurde
+
+- **N-46a/b** — der Längs-Nullpunkt entschieden, N-46 als Blocker gefallen
+- **A2/AKKU** — die Akkumulation ist messbar, `schnitt` trägt dort (p 0,000)
+- **L2** — `swing` stillgelegt (nicht gelöscht), Kanarienvogel geprüft
+- **L5** — korrigiert: der Portfoliowert ist nicht leer, es fehlt ein Lesepfad
+- **P-4/P-5** — Bezugsgröße und Korrelationsverortung entschieden
+- **Die Naht** — `Beitrag.instrumente`, bitgleich, vier Wächter

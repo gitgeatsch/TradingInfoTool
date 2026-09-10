@@ -15035,6 +15035,35 @@ def paket_beitrag_stufen() -> None:
            "wenn __post_init__ zu streng ist, faellt der Import - und zwar "
            "beim Start, nicht im Betrieb")
 
+    # ---- DIE NAHT: DIE INSTRUMENT-ACHSE (10.09.2026) ----
+    #
+    # ⚠️⚠️ Sie ist gebaut, aber NICHT vollzogen. Entscheidung 10.09.: der
+    # Hebel kommt vorerst aus dem Spot-Weg, weil eine eigene Bewertung
+    # heute nicht messbar ist (A1). Diese Pruefungen halten BEIDES offen:
+    # dass die Achse existiert UND dass sie heute nichts aendert.
+    from agent.wahrscheinlichkeit import _gilt as _gilt_x
+    pruefe(P, "⚠️ die INSTRUMENT-Achse existiert",
+           hasattr(Beitrag(punkte=1.0, **grund), "instrumente"),
+           "ohne das Feld steckt die Antwort ,gilt fuer alle Instrumente' "
+           "in der ABWESENHEIT eines Feldes - genau der Fehler, den "
+           "`assetklassen.hebel_handelbar()` schon einmal behoben hat")
+    pruefe(P, "⚠️⚠️ und sie ist HEUTE bei allen Beitraegen leer",
+           all(not b.instrumente for b in BEITRAEGE),
+           "leer heisst ,gilt fuer alle'. Traegt einer eine Liste, ist die "
+           "Trennung STILL vollzogen worden - und die Hebel-Lage bekaeme "
+           "andere Beitraege als der Spot, ohne dass es jemand entschieden "
+           "hat")
+    _probe = Beitrag(punkte=1.0, instrumente=("spot",), **grund)
+    pruefe(P, "⚠️ und sie GREIFT, sobald ein Beitrag sie setzt",
+           (not _gilt_x(_probe, "krypto", "", "", "hebel")[0])
+           and _gilt_x(_probe, "krypto", "", "", "spot")[0],
+           "eine Achse, die gesetzt werden kann und dann nichts tut, ist "
+           "schlimmer als keine - sie taeuscht eine Trennung vor")
+    pruefe(P, "und ein nicht passendes Instrument bekommt eine BEGRUENDUNG",
+           "Instrument" in _gilt_x(_probe, "krypto", "", "", "hebel")[1],
+           "nie eine stille Null - dieselbe Linie wie bei Klasse, "
+           "Strategie und Richtung")
+
     # ---- DIE NEUE BAUFORM ----
     neu = Beitrag(punkte=0.0, stufen=(1.0, 0.5, 0.0, -0.5, -1.0),
                   merkmal="funding_fuenftel", **grund)

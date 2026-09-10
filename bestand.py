@@ -2476,6 +2476,109 @@ BEFUNDE = (
                "`funding` als Nullbefund ausgewiesen - dieselbe "
                "Verwechslung wie Fehler 4 vom 08.09.",
                "gilt", "Selbstbefund 10.09.2026"),
+    Befundlage("2.291", "✔ DIE NAHT IST GEBAUT: `Beitrag.instrumente` "
+               "als vierte Achse neben klassen/strategien/richtungen, "
+               "Vorgabe LEER = alle. Bitgleich nachgewiesen (Quote "
+               "0,37303333333333333 vor und nach dem Umbau), vier "
+               "Waechter im Paket ,Stufen' - darunter einer, der "
+               "festhaelt, dass HEUTE kein Beitrag eine Instrumentliste "
+               "traegt. ⚠️ Der Grund: die Antwort ,gilt fuer alle "
+               "Instrumente' steckte bis heute in der ABWESENHEIT eines "
+               "Feldes - derselbe Fehler, den `assetklassen."
+               "hebel_handelbar()` schon einmal behoben hat", "gilt",
+               "agent/wahrscheinlichkeit.py / pruefe_pakete --paket Stufen"),
+    Befundlage("2.291-entscheidung", "⚠️⚠️ FACHLICHE BEWERTUNG 10.09. "
+               "(Nutzerauftrag): DER HEBEL KOMMT VORERST AUS DEM "
+               "SPOT-WEG - aber NICHT, weil es dieselbe Frage waere. Es "
+               "gibt drei belegte Unterschiede: Stop (Hebel ja, Spot "
+               "nein), Zielgroesse (`barriere` binaer gegen "
+               "`bewegung_r`), Dauer (2,0 Tage Median gegen H20) und "
+               "taegliche Finanzierung. Entschieden wurde so, weil "
+               "(1) eine eigene Hebelbewertung heute NICHT MESSBAR ist "
+               "(A1), (2) das Aufteilen der Evidenz beide schwaecht - "
+               "zwei Beitraege auf 1,5 %% der Anker - und (3) `r(q)` nur "
+               "EINE Quote braucht", "gilt",
+               "Fachliche Bewertung 10.09.2026 / Befund 2.173-hebel"),
+    Befundlage("2.291-ausloeser", "✔ UND DER AUSLOESER FUER DIE ECHTE "
+               "TRENNUNG IST BENANNT UND PRUEFBAR: sobald A1 behoben und "
+               "`barriere` messbar ist, wird gemessen, ob ein Beitrag auf "
+               "`barriere` ANDERS wirkt als auf `bewegung_r`. Traegt er "
+               "dort anders, bekommt der Hebel seine eigene Bewertung - "
+               "sonst nicht. ⚠️ Das ist eine Messfrage mit einem Datum, "
+               "kein offener Vorbehalt", "gilt",
+               "Fachliche Bewertung 10.09.2026"),
+    Befundlage("2.292", "⚠️⚠️⚠️ DER VIERFACHTEST IST IN SEINER FASSUNG "
+               "VOM 05.09. VON NIEMANDEM ZU BESTEHEN. Kriterium 4 (Regel "
+               "3 laengs) liefert bei ALLEN fuenf gemessenen Kandidaten "
+               "UNTERMACHT - einschliesslich der Kontrolle. Das ist der "
+               "vorab benannte Ausgang: ein Befund ueber die ANLAGE, "
+               "nicht ueber die Kandidaten. A9 (2.283) ist damit an "
+               "echten Daten bestaetigt: die Laengs-Achse loest bei "
+               "0,02 bis 0,05 R nicht auf, und genau dort liegen alle "
+               "Kandidaten", "gilt", "n102_vierfachtest.py",
+               basis="H20 · alle zulaessigen Mengen je Kandidat · "
+                     "Messmenge V1 · 20 Nullziehungen"),
+    Befundlage("2.292-fehlkonstruktion", "⚠️⚠️⚠️ UND KRITERIUM 4 IST "
+               "FALSCH KONSTRUIERT - es muss nicht ausgesetzt, sondern "
+               "mit dem RICHTIGEN Werkzeug gemessen werden. Es prueft "
+               "heute mit einem SIGNIFIKANZTEST auf der Laengs-Achse, ob "
+               "eine Groesse eine verkleidete Asset-Eigenschaft ist. Das "
+               "richtige Mass steht seit dem 02.09. in Methodik 2.101: "
+               "die STREUUNGSZERLEGUNG (Asset-Anteil = zwischen / "
+               "(zwischen + innerhalb)), mit geeichter Skala - fester "
+               "Wert je Symbol 95,9 %%, Zufall 0,1 %%, turnover 52 %%, "
+               "volumenanteil roh 73 %% gegen relativ 1 %%. ⚠️⚠️ Das ist "
+               "BESCHREIBEND, kein Signifikanztest - und deshalb von A9 "
+               "GAR NICHT betroffen", "gilt",
+               "Methodik 2.101 / Fachliche Bewertung 10.09.2026"),
+    Befundlage("2.292-regel3", "⚠️ Dazu kommt: CLAUDE.md haelt "
+               "ausdruecklich fest, dass Regel 3 den QUERSCHNITTSVERGLEICH "
+               "NICHT VERBIETET. Ein Signifikanztest auf der Laengs-Achse "
+               "verlangt damit MEHR, als die Regel fordert - Regel 3 "
+               "verbietet das dauerhafte Asset-Urteil und den Asset-Rang "
+               "beim Hebel, nicht die Querschnittsmessung", "gilt",
+               "CLAUDE.md Regel 3 / F-227"),
+    Befundlage("2.293", "✔✔ `schnitt` IST DER EINZIGE ROBUSTE KANDIDAT - "
+               "und N-73 ist damit das ANTI-HIN-UND-HER-WERKZEUG. Ueber "
+               "alle zulaessigen Beitragsmengen gemessen: `schnitt` "
+               "traegt auf 3 von 3 (+0,1830 / +0,1858 / +0,0434), "
+               "`schnitt50` auf 2 von 3, `vola` auf 1 von 3, `amihud` "
+               "und `zufall` auf 0 von 3. ⚠️⚠️ DAS PROFIL ,traegt auf "
+               "einer Menge, auf zweien nicht' IST das Hin und Her - je "
+               "nach gewaehlter Menge lautet das Urteil anders. `schnitt` "
+               "hat es nicht. Alle vier Kandidaten haben 100 %% "
+               "Abdeckung und bestehen Kriterium 2", "gilt",
+               "n102_vierfachtest.py"),
+    Befundlage("2.293-abgrenzung", "⚠️ ABGRENZUNG, damit daraus kein "
+               "voreiliger Schluss wird: das hier gemessene Kriterium 2 "
+               "fragt ,erste gegen zweite Haelfte' (N-68). S-7 hat am "
+               "07.09. eine ANDERE Frage gestellt - ,traegt er in den "
+               "Fenstern ab 2022?'. Mein ,stabil' hebt S-7 NICHT auf",
+               "gilt", "n102_vierfachtest.py / S-7"),
+    Befundlage("2.294", "⚠️⚠️ DIE LUECKE, DIE VOR JEDER REGISTRIERUNG ZU "
+               "SCHLIESSEN IST: `funding` und `turnover` sind VOR N-73 "
+               "registriert worden, auf `frei`. Sie sind NIE ueber alle "
+               "zulaessigen Mengen geprueft worden. Einen neuen "
+               "Kandidaten daran zu messen und die Bestandsbeitraege "
+               "nicht, waere zweierlei Mass - genau der Fehler, der am "
+               "07.09. schon einmal gefangen wurde (N-2: ,einen "
+               "Kandidaten an einer Huerde scheitern zu lassen, die die "
+               "laufenden Beitraege nie nehmen mussten')", "gilt",
+               "n102_vierfachtest.py / N-73 / N-2"),
+    Befundlage("2.295", "⚠️ `amihud` LAEUFT LAENGS RUECKWAERTS: -0,0445 "
+               "[-0,0994 .. -0,0005], das Band schliesst die Null "
+               "negativ aus. Mein ,untermaechtig'-Etikett verschluckt "
+               "das - dieselbe Grobheit wie bei A2 am selben Tag, nur "
+               "umgekehrt. ⚠️ Es passt zu 2.166: er misst "
+               "Ausfuehrbarkeit, nicht Potential", "gilt",
+               "n102_vierfachtest.py"),
+    Befundlage("2.296", "✔ DIE KONTROLLE ARBEITET, und das ist der "
+               "Nachweis, dass der Messstandard tut, wofuer er gesetzt "
+               "wurde: `zufall` hat bei 20 %% ein Band OHNE Null "
+               "(+0,0026 .. +0,0321) - und die Norm ueberstimmt es "
+               "korrekt mit ,traegt nicht bis 0,0346'. Ohne den "
+               "Nullpunkt waere daraus ein Scheinbefund geworden",
+               "gilt", "n102_vierfachtest.py / Messstandard 08.09."),
     Befundlage("2.188", "⚠️⚠️⚠️ DIE URSACHE DES HIN UND HER GEFUNDEN: "
                "`messnorm_auswahl.ZIEHUNGEN` ist 5, und `Befund.traegt` "
                "prueft `unten > max(0, null_oben)` - wobei `null_oben` "

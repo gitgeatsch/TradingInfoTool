@@ -131,12 +131,17 @@ VORGABEN = (
             "es. Faellt der Wert aus: LAUTE Meldung, kein stiller "
             "Vorgabewert.",
             "Nutzervorgabe 10.09.; N-40 'fail-soft ist fail-silent'"),
-    Vorgabe("HEBEL-KEINE-EIGENE-GRUPPE",
-            "Der Hebel bekommt KEINE eigene Bewertungsgruppe. Eine "
-            "Bewertung, ein Potential - der Hebel entsteht dynamisch "
-            "daraus, wenn Chance/Risiko es hergibt. Damit ist H-2/N-33 "
-            "als ENTSCHEIDUNG erledigt, nicht nur als Kategorienbefund.",
-            "Nutzerentscheidung 10.09.", "erfuellt"),
+    Vorgabe("HEBEL-AUS-SPOT",
+            "Der Hebel kommt VORERST aus dem Spot-Weg - nicht weil es "
+            "dieselbe Frage waere (Stop, `barriere`, 2,0 Tage Dauer, "
+            "taegliche Finanzierung sind reale Unterschiede), sondern "
+            "weil eine eigene Bewertung heute NICHT MESSBAR ist (A1), "
+            "das Aufteilen der Evidenz beide schwaecht und `r(q)` nur "
+            "EINE Quote braucht. ⚠️ AUSLOESER fuer die Trennung: sobald "
+            "A1 behoben ist, messen, ob ein Beitrag auf `barriere` anders "
+            "wirkt als auf `bewegung_r`. Die NAHT (`Beitrag.instrumente`) "
+            "ist gebaut, damit das eine Datenaenderung waere.",
+            "Fachliche Bewertung 10.09. (Nutzerauftrag)", "erfuellt"),
     Vorgabe("KORRELATION-IM-DECKEL",
             "Die Korrelation des Marktes gehoert in den AGGREGAT-DECKEL "
             "(K3), nicht in eine Schrumpfung des Einzeltrade-Kelly (K1). "
@@ -216,23 +221,35 @@ REIHENFOLGE = (
             "Beitrag fuer die Akkumulationslage.",
             "Befund 2.286 / 2.286-schnitt", fertig=True),
     Schritt(4, "VIERFACHTEST",
-            "Kandidaten durch alle vier Kriterien: `vola`, `schnitt50`, "
-            "`amihud`, `volumenanteil`.",
-            "Entscheidung 05.09."),
-    Schritt(5, "FORM",
+            "⚠️ GEMESSEN, ABER NICHT ERFUELLBAR: Kriterium 4 liefert bei "
+            "ALLEN Kandidaten untermaechtig - auch bei der Kontrolle. Es "
+            "ist falsch konstruiert (Signifikanztest statt "
+            "Streuungszerlegung, Methodik 2.101).",
+            "Befund 2.292 / 2.292-fehlkonstruktion", fertig=True),
+    Schritt(5, "V1 KRITERIUM 4",
+            "Kriterium 4 nach Methodik 2.101 neu messen - "
+            "Streuungszerlegung mit geeichter Skala. Beschreibend, "
+            "deshalb von A9 nicht betroffen.",
+            "Befund 2.292-fehlkonstruktion"),
+    Schritt(6, "V2 N-73 AUF DEN BESTAND",
+            "⚠️ `funding` und `turnover` durch denselben N-73-Test - sie "
+            "sind VOR N-73 auf `frei` registriert. Sonst zweierlei Mass "
+            "(N-2).",
+            "Befund 2.294"),
+    Schritt(7, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(6, "KALIBRIERUNG",
+    Schritt(8, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(7, "K1",
+    Schritt(9, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(8, "KETTE",
+    Schritt(10, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

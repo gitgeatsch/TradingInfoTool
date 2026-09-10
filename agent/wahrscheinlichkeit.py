@@ -109,6 +109,41 @@ class Beitrag:
     punkte: float         # Prozentpunkte; nur bei `traegt` ungleich null
     quelle: str           # woher die Zahl stammt
     warum: str            # warum sie so ist, in einem Satz
+    # ⚠️⚠️⚠️ DIE VIERTE ACHSE - GEBAUT AM 10.09.2026, HEUTE OHNE WIRKUNG
+    #
+    # Nutzerfrage 10.09.: *„Waere eine saubere Trennung der Bewertungen
+    # technisch und fachlich sinnvoller, auch fuer zukuenftige
+    # Aenderungen?"* - Antwort: ja. Vollzogen wird sie NICHT.
+    #
+    # DER BEFUND, DER SIE NOETIG MACHT (01.09., bestaetigt 2.173-hebel):
+    # `rechne()` liefert bei Stop 6,4 % gegen 2,5 % und mit Finanzierung
+    # 0,02 R **dreimal exakt dieselbe Quote 0,373033**. Die Bewertung hat
+    # keine Instrument-Achse - und bis heute nicht, WEIL DAS FELD FEHLT.
+    #
+    # ⚠️⚠️ Das ist eine Eigenschaft, die in der ABWESENHEIT eines Feldes
+    # steckt. Genau dieser Fehler ist hier schon einmal behoben worden:
+    # `assetklassen.hebel_handelbar()` entstand, weil die Handelbarkeit
+    # „in der Frage steckte, welcher LAUF gerade dran ist - eine
+    # Eigenschaft des Ablaufs statt des Assets".
+    #
+    # ENTSCHEIDUNG 10.09.: Der Hebel kommt VORERST aus dem Spot-Weg - nicht
+    # weil es dieselbe Frage waere (Stop, Zielgroesse `barriere`, Dauer
+    # 2,0 Tage und taegliche Finanzierung sind reale Unterschiede),
+    # sondern weil
+    #   1. eine eigene Hebelbewertung heute NICHT MESSBAR ist (A1: das
+    #      Band ist auf binaeren Daten viermal zu eng),
+    #   2. das Aufteilen der Evidenz beide schwaechen wuerde (zwei
+    #      Beitraege, die auf 1,5 % der Anker wirken), und
+    #   3. `r(q)` -> Kelly -> Hebel nur EINE Quote braucht.
+    #
+    # ⚠️ DER AUSLOESER FUER DIE ECHTE TRENNUNG ist benannt und pruefbar:
+    # sobald A1 behoben und `barriere` messbar ist, wird gemessen, ob ein
+    # Beitrag auf `barriere` ANDERS wirkt als auf `bewegung_r`. Traegt er
+    # dort anders, bekommt der Hebel seine eigene Bewertung - sonst nicht.
+    #
+    # Vorgabe leer = ALLE Instrumente, wie bei `klassen`/`strategien`.
+    # Damit ist dieser Schritt bitgleich; die Pruefsuite haelt das fest.
+    instrumente: tuple = ()
     klassen: tuple = ()    # leer = alle; sonst nur diese Anlageklassen
     # ⚠️⚠️ LEER HEISST "UEBERALL GUELTIG" - UND DAS IST FAST NIE WAHR.
     #
@@ -553,7 +588,7 @@ BEITRAEGE = (
 
 
 def _gilt(b: Beitrag, klasse: str, strategie: str = "",
-          richtung: str = "") -> tuple[bool, str]:
+          richtung: str = "", instrument: str = "") -> tuple[bool, str]:
     """Gilt dieser Beitrag hier - und wenn nicht, warum?
 
     ⚠️ DREI ACHSEN SEIT DEM 30.08.2026 (G-2' Schritt 2c). Vorher gab es nur
@@ -576,11 +611,19 @@ def _gilt(b: Beitrag, klasse: str, strategie: str = "",
     if b.richtungen and str(richtung or "").lower() not in b.richtungen:
         return False, ("fuer %s nie gemessen - %s ist auf %s belegt"
                        % (richtung or "?", b.name, "/".join(b.richtungen)))
+    # ⚠️ DIE VIERTE ACHSE (10.09.2026). Heute traegt KEIN Beitrag eine
+    # Instrumentliste, also greift diese Bedingung nie - der Schritt ist
+    # bitgleich. Sie steht hier, damit eine spaetere Trennung eine
+    # DATENaenderung ist und keine Codeaenderung an jedem Aufrufer.
+    if b.instrumente and str(instrument or "").lower() not in b.instrumente:
+        return False, ("fuer das Instrument %s nie gemessen - %s ist auf "
+                       "%s belegt" % (instrument or "?", b.name,
+                                      "/".join(b.instrumente)))
     return True, ""
 
 
 def vermessen(klasse: str = "", strategie: str = "",
-              richtung: str = "") -> list:
+              richtung: str = "", instrument: str = "") -> list:
     """Welche tragenden Beitraege sind fuer DIESE Lage ueberhaupt registriert?
 
     ⚠️ DIE FRAGE, DIE AM 31.08. DEN ROLLOUT AUFGEHALTEN HAT.
@@ -625,13 +668,14 @@ def vermessen(klasse: str = "", strategie: str = "",
     """
     return [b for b in BEITRAEGE
             if b.zustand == "traegt" and _gilt(b, klasse, strategie,
-                                               richtung)[0]]
+                                               richtung, instrument)[0]]
 
 
 def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
            finanzierung_r: float = 0.0,
            klasse: str = "", h: bool | None = None, strategie: str = "",
-           richtung: str = "", merkmale: dict | None = None) -> dict:
+           richtung: str = "", instrument: str = "",
+           merkmale: dict | None = None) -> dict:
     """Die vollstaendige Rechnung. WIRFT, statt zu raten.
 
     `h` ist das Ergebnis von `vorfilter.bewerte()["h"]` - `None` heisst
@@ -654,7 +698,7 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
 
     zeilen, zuschlag = [], 0.0
     for b in BEITRAEGE:
-        passt, grund = _gilt(b, klasse, strategie, richtung)
+        passt, grund = _gilt(b, klasse, strategie, richtung, instrument)
         if not passt:
             zeilen.append({"name": b.name, "zustand": "nie", "punkte": 0.0,
                            "warum": grund, "luecke": False})
