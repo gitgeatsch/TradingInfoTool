@@ -3102,6 +3102,79 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.340", "⚠️⚠️⚠️ L1 IST GRAVIERENDER ALS ANGENOMMEN - "
+               "am NOTEBOOK steht NUR BTC im DCA-Schalter, nicht einmal "
+               "ETH. Die Nutzervorgabe nennt BTC, ETH UND SOL. Damit "
+               "laufen ZWEI VON DREI Kernwerten produktiv nach "
+               "`einstieg`, also MIT Stop und Trailing - statt als "
+               "Akkumulation. ⚠️ Die Desktop-Kopie hatte BTC+ETH und "
+               "verdeckte damit die Haelfte des Problems", "gilt",
+               "NB-Sicherung 2026-09-11 04:48 · asset_dca_settings",
+               basis="Notebook-Sicherung, ALTER Codestand"),
+    Befundlage("2.341", "⚠️⚠️ EIN STILLER AUSFALL, LIVE BELEGT: der Job "
+               "`portfolio_wert` lief am 11.09. um 04:43 - die juengste "
+               "Zeile in `portfolio_wert_historie` ist aber vom 01.09. "
+               "Er schreibt nur rund alle SECHS Tage (01.09., 26.08., "
+               "20.08.). ⚠️ Und genau diese Tabelle liefert nach "
+               "Nutzerentscheidung P-5 die BEZUGSGROESSE fuer r x "
+               "Kapital", "gilt",
+               "NB-Sicherung 2026-09-11 · job_laeufe / "
+               "portfolio_wert_historie",
+               basis="Notebook-Sicherung, ALTER Codestand"),
+    Befundlage("2.341-ursache", "✔ DIE URSACHE IST EINE RICHTIG GEBAUTE "
+               "SCHRANKE: `MIN_ABDECKUNG_FUER_TAGESWERT = 0,80` - unter "
+               "80 %% Kursabdeckung wird NICHTS geschrieben, mit der "
+               "ausdruecklichen Begruendung *,Lieber eine sichtbare "
+               "Luecke als ein plausibel aussehender Falschwert.' Die "
+               "letzte geschriebene Zeile hatte 6 von 32 Symbolen ohne "
+               "Kurs, also 81 %% - knapp darueber. ⚠️⚠️ DIE SCHRANKE IST "
+               "RICHTIG, DAS SCHWEIGEN IST DAS PROBLEM: ,sichtbar' ist "
+               "die Luecke nur fuer den, der in die Tabelle sieht. Zehn "
+               "Tage ohne Bezugsgroesse, und niemand erfaehrt es",
+               "gilt", "agent/portfolio_historie.py:147"),
+    Befundlage("2.342", "⚠️ NUR SECHS VON 21 JOBS HINTERLASSEN EINE SPUR: "
+               "`job_laeufe` fuehrt ausstiegs_empfehlungen, "
+               "portfolio_wert, externe_reihen, lagebild_reihen, "
+               "backward_tracking und makro_analog. Fuer die uebrigen 15 "
+               "- darunter `refresh_prices`, `refresh_history`, "
+               "`marktscan`, `hebel_screening` - ist NICHT nachvoll"
+               "ziehbar, wann sie zuletzt liefen. Nach einem Ausfall ist "
+               "damit nicht feststellbar, was gefehlt hat", "gilt",
+               "NB-Sicherung 2026-09-11 · job_laeufe",
+               basis="Notebook-Sicherung, ALTER Codestand"),
+    Befundlage("2.343", "⚠️ `hebel_signals` STEHT SEIT DEM 10.08. - ein "
+               "Monat ohne neue Zeile, bei 1.998 vorhandenen. Ob das ein "
+               "Ausfall oder die richtige Folge der Lage ist, ist NICHT "
+               "geklaert. ⚠️ Es passt zur Hebelspur: die Lage `hebel` "
+               "ist blockiert (A1/A9/P-1), aber ein stilles Versiegen "
+               "sieht genauso aus wie ein begruendetes Schweigen",
+               "offen", "NB-Sicherung 2026-09-11 · hebel_signals",
+               basis="Notebook-Sicherung, ALTER Codestand"),
+    Befundlage("2.344", "✔ WAS AM NOTEBOOK LAEUFT: `signals` bis 11.09. "
+               "04:48 (6.842 Zeilen) · `price_history` und "
+               "`price_history_ohlc` bis 10.09. · `macro_snapshot` und "
+               "`externe_reihe` bis 11.09. Der Betrieb laeuft, die "
+               "Kursdaten sind frisch. Die Luecken sitzen in den "
+               "ABGELEITETEN Groessen, nicht in der Beschaffung",
+               "gilt", "NB-Sicherung 2026-09-11",
+               basis="Notebook-Sicherung, ALTER Codestand"),
+    Befundlage("2.345", "⚠️⚠️ ALLE NB-BEFUNDE STEHEN UNTER EINEM "
+               "VORBEHALT, den der Nutzer am 11.09. genannt hat: *,der "
+               "Codestand am NB ist sehr alt und wir machen jetzt einen "
+               "massiven Umbau.'* Was ich aus der Sicherung lese, ist die "
+               "AUSGABE VON ALTEM CODE. ➔ Das entwertet die Befunde "
+               "nicht, aber es aendert ihre Folge: **der Rollout ist der "
+               "Moment, sie zu beheben** - der Code wird ohnehin ersetzt, "
+               "und S-1/S-2 gehoeren in dasselbe Paket", "gilt",
+               "Nutzerhinweis 11.09."),
+    Befundlage("2.346", "⚠️ EIGENER FEHLGRIFF, sofort bemerkt: ich wollte "
+               "die sechs Symbole ohne Kurs benennen und habe Symbol "
+               "gegen `coingecko_id` gejoint - die Watchlist steht aber "
+               "NICHT in der Datenbank (sie kommt aus `config.yaml` und "
+               "`Assets.xlsx`). Das Ergebnis meldete BTC und ETH als "
+               ",kein Kurs', was offensichtlich falsch ist. Belastbar ist "
+               "allein die Zahl aus der Tabelle selbst: 6 von 32",
+               "gilt", "Selbstbefund 11.09.2026"),
     Befundlage("2.331", "⚠️⚠️ V11: `schnitt50` BESTEHT N-73 NICHT - "
                "2 von 3 Beitragsmengen. Er traegt auf 10 %% (+0,0846) und "
                "20 %% (+0,0698), bei 50 %% lautet das Urteil TRAEGT NICHT "
