@@ -272,7 +272,27 @@ REIHENFOLGE = (
             "Faktor 6 bei VIERMAL schaerferem Test. BILANZ: es gibt "
             "KEINEN dritten Beitrag.",
             "Befunde 2.331 bis 2.339", fertig=True),
-    Schritt(12, "A1 / HEBEL-SPUR",
+    Schritt(12, "S-1 SAMMLUNG ABSICHERN",
+            "⚠️⚠️⚠️ NUTZERVORGABE 11.09.: die API-Abfragen und "
+            "Datensammlungen am Notebook muessen stabil sein - ein kurzer "
+            "Ausfall darf keinen Schaden anrichten. GEPRUEFT: die drei "
+            "Messquellen (funding_historie, terminmarkt_historie, "
+            "onchain_historie) haben KEINEN der 21 Scheduler-Jobs - sie "
+            "werden von Hand geschrieben. Kein Misfire-Schutz, kein "
+            "Watchdog, kein Backoff, keine Fehlermail. ➔ als Jobs "
+            "aufsetzen, `fuelle_luecken` als Vorbild.",
+            "Nutzervorgabe 11.09.; scheduler/background.py; "
+            "api/boersen_klines.fuelle_luecken"),
+    Schritt(13, "S-2 STILLER AUSFALL",
+            "⚠️⚠️⚠️ `agent/marktrang.py:718`: faellt die API aus, wird "
+            "`funding_fuenftel` zu None und die Zeile wird WEGGELASSEN. "
+            "Die Mail sieht normal aus, die Bewertung ist stumm um einen "
+            "Beitrag aermer. Bei Totalausfall nennt sie die FALSCHE "
+            "Ursache (Messbasis statt Netz). ➔ sichtbare Zeile ,heute "
+            "nicht verfuegbar' mit der richtigen Ursache. Verletzt "
+            "fail-soft-ist-fail-silent UND die Vorgabe vom 10.09.",
+            "agent/marktrang.py:718; Nutzervorgabe 10./11.09."),
+    Schritt(14, "A1 / HEBEL-SPUR",
             "⚠️⚠️⚠️ DER ENGPASS DES HEBELS, und er hat einen BENANNTEN "
             "Weg: das Band auf binaeren Daten ist VIERMAL zu eng (2.238), "
             "deshalb traegt auf `barriere` sogar `zufall`. Loesung laut "
@@ -283,7 +303,7 @@ REIHENFOLGE = (
             "messbar - sie sind bisher nur gegen `bewegung_r` gefallen, "
             "und das VOR dem Messstandard.",
             "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
-    Schritt(13, "TAKT UND E2E",
+    Schritt(15, "TAKT UND E2E",
             "⚠️ NUTZERVORGABE 11.09.: die Krypto-Umsetzung umfasst den "
             "TAKT und die End2End-SIMULATION der Kette. "
             "⚠️ `simuliere_kette.py` EXISTIERT (16.08.) und macht genau "
@@ -293,7 +313,7 @@ REIHENFOLGE = (
             "zuerst nachgezogen werden. Der TAKT ist bisher nur "
             "Betriebsbefund, kein Planschritt.",
             "Nutzervorgabe 11.09.; simuliere_kette.py"),
-    Schritt(14, "EMAIL STRUKTUR UND INHALTE",
+    Schritt(16, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ NUTZERVORGABE 11.09.: nach dem Umbau sind Struktur und "
             "Inhalte der Mails anzupassen. Bekannte Ausgangslage: 83,6 %% "
             "Wiederholungsanteil und rund 133 Mails/Tag (beides am "
@@ -301,36 +321,36 @@ REIHENFOLGE = (
             "Mail ist der Ort fuer FAKTEN und Bewertungsgruende "
             "(Regel 3), nicht fuer Ausloeser.",
             "Nutzervorgabe 11.09.; Befunde zu Redundanz und Takt"),
-    Schritt(15, "GUI UND UEBERSICHTSSEITE",
+    Schritt(17, "GUI UND UEBERSICHTSSEITE",
             "⚠️ Offen seit 07.09., nie begonnen (E1). Nutzerbestaetigung "
             "11.09.: steht als groesserer Punkt an, NACH den eMails.",
             "Nutzervorgabe 07.09. und 11.09."),
-    Schritt(16, "LLM-ROLLEN UND MODELLE",
+    Schritt(18, "LLM-ROLLEN UND MODELLE",
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der "
             "LLM-Rollen und -Modelle - NACH den eMails. Bekannte "
             "Vorgaben, die hier gelten: nur kostenfreie LLMs · das LLM "
             "muss den Zufall schlagen und messbar sein · kein "
             "deterministischer Override des LLM-Werturteils.",
             "Nutzervorgabe 11.09."),
-    Schritt(17, "V12 VOLA UND SCHNITT",
+    Schritt(19, "V12 VOLA UND SCHNITT",
             "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
             "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
             "Gemeinsamer geometrischer Anteil? Stuetzt 2.293.",
             "Befund 2.327 - offen"),
-    Schritt(18, "FORM",
+    Schritt(20, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(19, "KALIBRIERUNG",
+    Schritt(21, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(20, "K1",
+    Schritt(22, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(21, "KETTE",
+    Schritt(23, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

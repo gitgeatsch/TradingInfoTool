@@ -4137,3 +4137,126 @@ Einstiegs-Schwelle 0,080.
 prüfen ist: das Mailaufkommen und der Wiederholungsanteil. Das sind
 Betriebsbefunde, und die Desktop-Kopie ist vom 19.08. zu alt, um sie zu
 beurteilen.
+
+---
+
+# 🎯 11.09. — DIE EMPFEHLUNG ZUR REIHENFOLGE (Nutzerauftrag)
+
+> *„prüfe als Experte welche Schritte optimal zum Ziel führen um zumindest
+> Krypto gesamtheitlich produktiv zu setzen"*
+
+## ⚠️⚠️ Zuerst: zwei Befunde zur Betriebsfestigkeit, heute geprüft
+
+### 1 · Die drei Messquellen haben KEINEN Scheduler-Job
+
+| Datenbank | jüngste Zeile | wer schreibt sie |
+|---|---|---|
+| `funding_historie.db` | **2026-08-31** | `hole_fremdreihen.py` — **von Hand** |
+| `terminmarkt_historie.db` | **2026-08-31** | `hole_terminmarkt_historie.py` — **von Hand** |
+| `onchain_historie.db` | **2026-08-29** | `hole_fremdreihen.py` — **von Hand** |
+
+Von den 21 geplanten Jobs schreibt **keiner** diese drei. Kein Misfire-
+Schutz, kein Staleness-Watchdog, kein Backoff, keine Fehlermail.
+
+⚠️ **Tragweite — und sie ist kleiner, als sie zuerst aussah:** die
+laufenden **Werte** kommen aus **Live-API-Abrufen**
+(`_hole(PREMIUM_INDEX)`, `_hole(OI_HIST)`, `_hole(COINGECKO_MARKETS)`),
+nicht aus diesen Datenbanken. Die DBs liefern nur die **Messbasis**
+(Symbolliste).
+
+| | betroffen von der Veralterung? |
+|---|---|
+| **laufende Bewertung** | nur die Symbolliste — kaum |
+| **Messungen, Kalibrierung, neue Beiträge** | ⚠️⚠️ **voll** |
+
+### 2 · ⚠️⚠️⚠️ Ein API-Ausfall fällt STILL aus der Mail
+
+`agent/marktrang.py:718`:
+
+```python
+f = eintrag.get("funding_fuenftel")
+if f is not None:
+    zeilen.append("Finanzierung: ...")
+```
+
+> **Fällt die API kurz aus, wird der Wert `None` — und die Zeile wird
+> einfach weggelassen.** Die Mail sieht normal aus, nur etwas kürzer. Die
+> Bewertung ist an dem Tag stumm um einen Beitrag ärmer.
+
+⚠️ Und bei Totalausfall aller vier nennt die Mail die **falsche Ursache**:
+*„er gehört weder zur Funding- noch zur Umschlag- noch zur
+Terminmarkt-Messbasis"* — es lag aber am **Netz**, nicht an der Messbasis.
+
+**Das verletzt zwei stehende Vorgaben gleichzeitig:** *„fail-soft ist
+fail-silent"* und die Vorgabe vom 10.09.: *„Änderungen dürfen die
+Bewertung nicht blockieren — und schon gar nicht still."*
+
+---
+
+# Die empfohlene Reihenfolge
+
+## ⓿ STUFE 0 — Betriebsfestigkeit. **Vor allem anderen.**
+
+**Warum zuerst:** eine produktiv gesetzte Bewertung, die bei einem
+API-Ausfall still einen Beitrag verliert, ist **schlechter als keine** —
+sie sieht richtig aus. Und der Betrieb läuft **jetzt**, nicht erst nach
+der Produktivsetzung.
+
+| | |
+|---|---|
+| **S-1** | die drei Fremdquellen als **Scheduler-Jobs** — mit Backoff, Fehlermail und Lückenfüllung. `fuelle_luecken` existiert bereits für Klines und ist das Vorbild |
+| **S-2** | ⚠️ ein ausgefallener Beitrag muss **laut** sein: sichtbare Zeile *„heute nicht verfügbar"* statt Weglassen — und die **richtige** Ursache nennen |
+| **S-3** | Datenstand nachziehen (11–13 Tage Rückstand) |
+
+## ❶ STUFE 1 — Die Akkumulation fertigstellen
+
+**Warum als nächstes:** der billigste echte Gewinn. Ein Beitrag ist
+**gemessen** (`schnitt` +0,0470, p 0,000, 481 von 518 Symbolen) und muss
+nur noch entschieden und verdrahtet werden. Danach haben **zwei von drei**
+Krypto-Lagen eine Bewertung statt einer.
+
+| | |
+|---|---|
+| **FORM** | Regler oder Schalter — Nutzerentscheidung |
+| **Registrierung** | löst R-R9 aus, aber **nur für diese Lage** |
+| **L1** | SOL im DCA-Schalter freischalten |
+
+## ❷ STUFE 2 — End2End und Takt. **Vor der Produktivsetzung, nicht danach.**
+
+`simuliere_kette.py` existiert (16.08.) und macht genau das — echte
+Reihen, Bestände, Rechnung, DB-Schreiben, Mailaufbau, Attrappe nur für
+die zwei Modellaufrufe, schreibt in eine **Kopie**. ⚠️ Sie ist **vor dem
+Umbau** und muss zuerst nachgezogen werden.
+
+Danach der **Takt**: Mailaufkommen und Wiederholungsanteil messen.
+
+## ❸ STUFE 3 — Produktivsetzung Spot (Einstieg **und** Akkumulation)
+
+## ❹ STUFE 4 — Der Hebel. **Der lange Weg — und er kann parallel laufen.**
+
+```
+A1   Prüfstand: Fehlalarmquote der Barrieren-Anlage auf Nullwelten
+     -> dasselbe Verfahren wie am 09.09. für den Nullbezug
+        ⚠️ kein Forschungsproblem, ein nicht gelaufenes Verfahren
+     v
+die VIER Terminmarkt-Kanäle gegen `barriere` messen
+     ⚠️ ihre Ablehnung gilt nur gegen `bewegung_r` - und stammt
+        von VOR dem Messstandard
+     v
+A9   die Auflösung: die Abstufung springt 1,02x -> 3,90x
+```
+
+## ❺ STUFE 5 — eMails, GUI, LLM-Rollen
+
+In dieser Reihenfolge (Nutzervorgabe 11.09.).
+
+---
+
+# ⚠️ Was ich NICHT zuerst machen würde — und warum
+
+| | |
+|---|---|
+| **Hebel vor Akkumulation** | A1 → Messung → Kalibrierung ist eine **lange Kette mit ungewissem Ausgang**. Die Akkumulation hat einen **gemessenen** Beitrag, der nur registriert werden muss |
+| **V12** (`vola`/`schnitt`) | klärt nur, **warum** zwei Kandidaten fielen, die ohnehin gefallen sind — kein Weg zum Ziel |
+| **Weitere Beitragssuche auf der Kursreihe** | 2.168-erschöpft: die Quelle ist durch. Ein weiterer braucht eine **neue** Quelle — und die vier Terminmarkt-Kanäle sind genau das, aber erst nach A1 |
+| **Produktivsetzen vor Stufe 0** | eine Bewertung, die still einen Beitrag verliert, sieht richtig aus. Das ist die gefährlichste aller Lagen |
