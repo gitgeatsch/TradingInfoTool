@@ -20,10 +20,11 @@ WAS ALS OFFENES HEBELRISIKO ZAEHLT:
 
     offene Positionen   aus `hebel_positions` (echter Bitpanda-Abgleich), ueber
                         die Hebelfuehrung (H-4): Verlust bis zum Plan-Stop,
-                        hoechstens das Eigenkapital. OHNE Plan oder mit der
-                        Liquidation vor dem Stop: das EIGENKAPITAL - mehr kann
-                        eine Margin-Position nicht verlieren, und einen Stop,
-                        den das System nicht kennt, darf es nicht annehmen.
+                        hoechstens das Eigenkapital. Mit der Liquidation vor
+                        dem Stop: das EIGENKAPITAL - mehr kann eine
+                        Margin-Position nicht verlieren. OHNE Plan: ein
+                        ANGENOMMENER Stop (`STOP_ANGENOMMEN`), hoechstens das
+                        Eigenkapital - siehe unten.
     offene Signale      Hebelsignale der Rollen-Kette, die noch zu einer
                         Position werden KOENNEN: noch nicht aufgeloest, Frist
                         nicht abgelaufen, juenger als das Zuordnungsfenster der
@@ -39,9 +40,16 @@ Paket-B-Regel "unter 2x ist Spot" gilt unveraendert.
 
 ⚠️ ANNAHMEN (Befund 2.380-annahmen): das Zuordnungsfenster
 (`hebelfuehrung.KOPPEL_TAGE`) bestimmt, wie lange ein nicht eroeffnetes Signal
-Risiko belegt - Nutzerentscheidung 11.09.: 24 Stunden (vorher 3 Tage). Eine
-Position ohne bekannten Stop zaehlt mit dem ganzen Eigenkapital (zur
-Entscheidung vorgelegt).
+Risiko belegt - Nutzerentscheidung 11.09.: 24 Stunden (vorher 3 Tage).
+
+⚠️ POSITION OHNE BEKANNTEN STOP - NUTZERENTSCHEIDUNG 11.09.2026: VARIANTE B
+(Befund 2.380-ohne-stop). Sie zaehlt mit einem angenommenen Stop von 11,7 %
+ab Einstand, hoechstens mit dem Eigenkapital. Die erste Fassung nahm das
+ganze Eigenkapital (A) - vom Nutzer abgelehnt: *"eine Position blockiert
+alles, das passt nicht zu unserem Vorgehen. Initial haben wir angedacht, dass
+zumindest drei Hebelpositionen offen sein koennen."* An den echten NB-
+Positionen: A im Median 222 EUR, B 166 EUR; im Median passen 2,5 gegen 3,3
+Positionen in den Deckel.
 """
 from __future__ import annotations
 
@@ -52,9 +60,18 @@ logger = logging.getLogger(__name__)
 
 AUFGELOEST_NICHT = (None, "", "offen")
 
+# DER ANGENOMMENE STOP einer Position ohne zugeordnetes Signal, relativ zum
+# Einstand. HERKUNFT: die Stopregel des Codes auf 1.289 echte NB-Einstiege
+# angewandt, mit deren Widerlegungspreis - Median 11,7 % (10 % 5,9 · 90 %
+# 16,0; Befund 2.378-gegenpruefung). Es ist der Stop, den das System fuer
+# einen solchen Trade im Median selbst gesetzt haette - keine Vorsichtszahl.
+STOP_ANGENOMMEN = 0.117
+
 
 def _risiko_position(t: dict) -> tuple[float, str]:
     """(Risiko in EUR, Grund) einer gefuehrten Position."""
+    from agent.schreibweise import de
+
     pw = float(t.get("positionswert_eur") or 0.0)
     ek = t.get("eigenkapital_eur")
     L = t.get("hebel")
@@ -62,7 +79,15 @@ def _risiko_position(t: dict) -> tuple[float, str]:
     if t.get("einstand_eur") is None:
         return ek, "unvollstaendig rekonstruiert - Eigenkapital als Hoechstverlust"
     if not t.get("plan"):
-        return ek, "ohne bekannten Stop - Eigenkapital als Hoechstverlust"
+        # VARIANTE B (Nutzer 11.09.): angenommener Stop, hoechstens das
+        # Eigenkapital. ⚠️ Die Liquidation wird hier NICHT gegen den
+        # angenommenen Stop geprueft - so wurde B vorgelegt und bestaetigt;
+        # die Frage steht zur Abstimmung (Befund 2.382-liquidation).
+        risiko = min(STOP_ANGENOMMEN * pw, ek)
+        return risiko, ("ohne bekannten Stop - angenommen %s %% ab Einstand%s"
+                        % (de(100 * STOP_ANGENOMMEN, 1),
+                           ", begrenzt auf das Eigenkapital"
+                           if risiko >= ek - 1e-9 else ""))
     if t.get("liquidation_vor_stop"):
         return ek, "Liquidation vor dem Stop - Eigenkapital als Hoechstverlust"
     s = float(t.get("stop_abstand_einstand") or 0.0)

@@ -405,8 +405,8 @@ REIHENFOLGE = (
             "Spalte `verlust_am_stop_eur`. MIT KORREKTUR ZU H-4: die Kette "
             "schrieb `instrument` nie - jetzt ,hebel' fuer r(q)/SHORT "
             "(2.379-instrument-korrektur). ✔ Fenster 24 h (Nutzer 11.09., "
-            "2.380-fenster). ⚠️ OFFEN: Position ohne bekannten Stop - A "
-            "abgelehnt, B vorgelegt (2.380-ohne-stop).",
+            "2.380-fenster). ✔ Position ohne bekannten Stop: Variante B "
+            "(Nutzer 11.09., 2.380-ohne-stop).",
             "Befunde 2.380*, 2.379-instrument-korrektur",
             fertig=True),
     Schritt(22, "S-4 SPOT SAUBER",
@@ -420,14 +420,18 @@ REIHENFOLGE = (
             "Befunde 2.381*",
             fertig=True),
     Schritt(23, "E2E PAKET B",
-            "`simuliere_kette.py` gegen die NB-Sicherung, mit einem GEZIELT "
-            "erzeugten Hebelgeschaeft (steuerbare Attrappe): Mail, Chart, "
-            "Signalzeile als Hebel, Hebeltopf, Cooldown, Aggregat-Deckel. "
-            "Dazu Spot unveraendert und die Akkumulation gesperrt, mit "
-            "Grund im Trichter. Dazu die Hebelfuehrung (H-4) mit einer "
-            "offenen Position UND ihrem Signal - der erste Lauf am 11.09. "
-            "hatte die Zuordnung durch das Zurueckdatieren verloren.",
-            "Befund 2.371 (nie ein Hebelgeschaeft simuliert)"),
+            "✔ ERLEDIGT 11.09.: `simuliere_kette.py --nachweis-paket-b` gegen "
+            "die NB-Sicherung, 17 Faelle gezeigt - Hebelgeschaeft mit Zeile, "
+            "Mail, Chart, Hebeltopf, Cooldown 3,5 h, Aggregat-Deckel; "
+            "Hebelfuehrung mit Position UND ihrem Signal; Deckel ausgeschoepft "
+            "-> Spot mit 800 EUR; Schalter aus -> derselbe Betrag; kein "
+            "Akkumulationssignal (2.382). Vorher B gebaut (2.380-ohne-stop). "
+            "BEFUNDE: die Akkumulationszelle erreicht ihre Sperre nie - Anlass "
+            "und Cooldown je Symbol (2.382-akku-anlass, Schritt 26); der Topf "
+            "begrenzt praktisch nie (2.382-topf); B und die Liquidation "
+            "(2.382-liquidation); Rundung des Hebels (2.382-rundung).",
+            "Befunde 2.382*",
+            fertig=True),
     Schritt(24, "ROLLOUT PAKET B",
             "Gesamtpaket auf das Notebook (stehende Regel). Checkliste "
             "`Basisinfos/Ausrollen_24_08.md` vorher aktualisieren: "
@@ -437,8 +441,14 @@ REIHENFOLGE = (
             "(2.376-rollout). ⚠️ Der "
             "Akkumulationsschalter steht fuer BTC, ETH und SOL seit langem "
             "an (Vorgabe von `get_dca_erlaubt`, 2.380-akku-schalter) und "
-            "wirkt bis Paket 2 nicht (Sperre). OFFEN: das Fenster aus "
-            "2.380-annahmen. OFFEN: alter Marktscan "
+            "wirkt bis Paket 2 nicht (Sperre). ✔ Fenster 24 h, Position "
+            "ohne Stop Variante B. ZUR ABSTIMMUNG vor dem Scharfschalten: B "
+            "und die Liquidation (2.382-liquidation), die Topfregel "
+            "(2.382-topf). ⚠️ Der Hebel-Schalter je Asset ist opt-in - am NB "
+            "23 von 43 Kryptowerten an; nur dort entsteht ein Hebelgeschaeft. "
+            "Nach dem Nachrechnen des Portfoliowerts den E2E "
+            "(`--nachweis-paket-b`) gegen die frische Sicherung wiederholen. "
+            "OFFEN: alter Marktscan "
             "weiter aktiv? (2.369) - `hebel_screening.aktiv: false` legt "
             "seit H-4 nur noch das Screening still (2.379-schalter). "
             "Prompt-Stand 2026-09-11a (2.379-liq).",
@@ -464,7 +474,8 @@ REIHENFOLGE = (
             "faellt damit von selbst. `schnitt` am Notebook aus der "
             "KURSREIHE rechnen - `messdaten.db` liegt dort bewusst nicht. "
             "Mail und Simulation. ⚠️⚠️ DAZU DER COOLDOWN JE STRATEGIE "
-            "(2.380-akku-cooldown): die Akkumulationszelle haengt heute "
+            "(2.380-akku-cooldown) UND DIE ANLASS-MESSUNG JE ZELLE "
+            "(2.382-akku-anlass): die Akkumulationszelle haengt heute "
             "hinter der Einstiegszelle und kam NIE zum Urteil - mit "
             "Kostenschutz beheben und in `simuliere_kette` zwei Zellen "
             "nachweisen.",

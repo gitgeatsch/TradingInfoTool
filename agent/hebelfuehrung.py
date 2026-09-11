@@ -89,7 +89,8 @@ MELDEN = (LIQUIDIERT, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT, STOP_NACHZIEHEN)
 # Deckel 73 % der Hebelkandidaten zu Spot, bei 1 Tag 32 % (Watchlist 2026).
 #
 # ⚠️ FOLGE FUER DEN DECKEL: wer eine Position spaeter als 24 h nach dem Signal
-# eroeffnet, hat keinen Plan - sie zaehlt mit dem ganzen Eigenkapital.
+# eroeffnet, hat keinen Plan - sie zaehlt mit einem angenommenen Stop von
+# 11,7 %, hoechstens mit dem Eigenkapital (Variante B, Nutzer 11.09.).
 # Die Zuordnung steht IN DER MAIL (Signalnummer und Datum).
 KOPPEL_TAGE = 1.0
 # Uhrenversatz zwischen Bitpanda-Zeitstempel und Signalzeit.
@@ -279,12 +280,15 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             "zu frueh als zu spaet.")
 
     if not plan:
+        from agent.hebel_aggregat import STOP_ANGENOMMEN
+
         t["hinweise"].append(
             "Kein Hebelsignal der Rollen-Kette zugeordnet (dasselbe Symbol, "
             "dieselbe Richtung, bis %d Stunden vor der Eroeffnung) - Stop, Ziel "
             "und Widerlegung sind unbekannt. Gefuehrt werden Liquidation und "
-            "Finanzierung; im Aggregat-Deckel zaehlt das ganze Eigenkapital."
-            % round(24 * KOPPEL_TAGE))
+            "Finanzierung. Stop unbekannt - im Aggregat-Deckel angenommen "
+            "%s %% ab Einstand, hoechstens das Eigenkapital."
+            % (round(24 * KOPPEL_TAGE), _de(100 * STOP_ANGENOMMEN, 1)))
         return t
 
     # ---- DER PLAN - dieselbe Pruefung wie fuer jedes Signal -----------
@@ -451,6 +455,12 @@ def zeilen(t: dict) -> list:
             teil += " - der Kurs steht bereits %s %% jenseits davon" % _de(
                 -100.0 * _ab, 1)
         z.append(teil)
+    # WAS DIE POSITION IM AGGREGAT-DECKEL BELEGT (H-5) - aus DERSELBEN Funktion,
+    # mit der der Deckel rechnet, nicht als zweite Rechnung.
+    from agent.hebel_aggregat import _risiko_position
+
+    _r, _grund = _risiko_position(t)
+    z.append("   Im Deckel    %s EUR - %s" % (eur(_r, 2), _grund))
     p = t.get("plan")
     if p:
         z.append("   Plan         Signal %s vom %s: Stop %s EUR · Ziel %s EUR"

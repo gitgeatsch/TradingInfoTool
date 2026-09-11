@@ -268,7 +268,7 @@ def _kurs_aus_fakten(eingabe: dict) -> float:
     return 1.0
 
 
-def _kopie(quelle: str) -> str:
+def _kopie(quelle: str, name: str = "simuliere_kette.db") -> str:
     """Die Datenbank in den Scratchpad kopieren - ueber SQLites eigene
     Sicherung, nicht ueber das Dateisystem.
 
@@ -291,7 +291,7 @@ def _kopie(quelle: str) -> str:
     also automatisch drin), schreibt EINE in sich stimmige Datei, und
     braucht danach keine Beileger mehr. Die Quelle wird `mode=ro`
     geoeffnet - gelesen, nie geschrieben."""
-    ziel = Path(tempfile.gettempdir()) / "simuliere_kette.db"
+    ziel = Path(tempfile.gettempdir()) / name
     # Erst die Reste des letzten Laufs weg. Ohne das liegt neben der frisch
     # gesicherten Datei weiter das alte WAL - und genau daran ist es
     # gescheitert.
@@ -563,6 +563,470 @@ def nachweis_n14(db: str) -> int:
     print("=" * 76)
     return 0
 
+def nachweis_paket_b(quelle: str) -> int:
+    """SCHRITT 23 - PAKET B VON ANFANG BIS ENDE, mit einem GEZIELT erzeugten
+    Hebelgeschaeft (11.09.2026).
+
+    Befund 2.371: bis zum 11.09. ist NIE ein Hebelgeschaeft durch die Kette
+    gelaufen - weder im Betrieb (Schalter aus) noch in dieser Simulation. Die
+    Suite prueft H-2, H-4, H-5 und S-4 einzeln; ob sie im Lauf zusammen die
+    richtige Mail, Zeile, Sperre und Summe ergeben, sagt sie nicht.
+
+    STEUERBAR IST DIE ATTRAPPE UEBER DIE MARKTRAENGE - dieselben Fuenftel, aus
+    denen `potential.rechne()` die Quote bildet (gerechnet 11.09.):
+
+        Funding 0 + Turnover 0   Quote 0,373 -> r 1,25 %  -> Hebel (bis 5x)
+        ohne Beitrag             Quote 0,333 -> r 0       -> Spot
+
+    ZWEI KOPIEN, beide im Temp-Verzeichnis, nie die Quelle:
+
+        A  Schalter AN   Hebelgeschaeft · Hebelfuehrung · Deckel ausgeschoepft
+        B  Schalter AUS  derselbe Spot-Trade als Vergleich (N-38) · Akkumulation
+
+    Warum zwei: die Anlass-Sperre laesst denselben Faktensatz nur einmal
+    durch. Ein Vergleichslauf in derselben Kopie hinge an ihr, nicht am
+    Schalter.
+
+    ⚠️ DIE KUENSTLICHEN POSITIONEN LIEGEN AUF SYMBOLEN OHNE KURSREIHE (ZZPLAN,
+    ZZOHNESTOP, ZZVOLL). Sie fallen an `fakten`, bevor ein Modell gefragt
+    wird - Hebelfuehrung und Deckel lesen aber `hebel_positions`, nicht die
+    Kursreihen. Geschrieben wird ueber die ECHTEN Schreiber
+    (`felder_aus_entscheidung`, `schreibe_signal`, `upsert_hebel_position`):
+    eine von Hand gesetzte Zeile hat H-4 schon einmal verdeckt (Befund
+    2.379-instrument-korrektur). Und sie entstehen NACH dem Zurueckdatieren -
+    der erste H-4-Lauf verlor die Zuordnung genau daran.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from agent import assetklassen as AK
+    from agent import hebel_aggregat as HAG
+    from agent import portfolio_historie as PH
+    from agent import rollen_eingabe as RE
+    from agent import rollen_lauf as RL
+    from agent import signal_abbildung as SA
+    from agent import toepfe as TO
+    from agent import wiederholung as WH
+    from agent.betraege import hebel_aus_quote_einstellungen
+    from agent.schreibweise import de
+    from backtest_llm1_historisch import lade_reihen_aus_db
+    from database import db as DBM
+    from database.models import HebelPosition
+
+    HEBEL = {"funding_fuenftel": 0, "turnover_fuenftel": 0,
+             "oi_fuenftel": 1, "querschnitt_oi": 122}
+    OHNE = {"oi_fuenftel": 1, "querschnitt_oi": 122}
+    ablage = Path(tempfile.gettempdir()) / "simuliere_kette_mails"
+    ablage.mkdir(exist_ok=True)
+    faelle: list = []
+
+    def fall(name, erfuellt, beleg=""):
+        faelle.append((name, bool(erfuellt)))
+        print("  %s  %s" % ("✔" if erfuellt else "✖", name))
+        for z in [x for x in str(beleg or "").splitlines() if x.strip()][:14]:
+            print("         " + z)
+
+    def konfig(aktiv: bool) -> dict:
+        c = _echte_config()
+        rk = dict(c.get("rollen_kette") or {})
+        rk["hebel_aus_quote"] = {**dict(rk.get("hebel_aus_quote") or {}),
+                                 "aktiv": aktiv}
+        c["rollen_kette"] = rk
+        return c
+
+    def vorbereiten(name: str) -> str:
+        db = _kopie(quelle, name)
+        # Derselbe Grund wie in `main`: sonst prueft der Lauf den Cooldown der
+        # Produktion statt der Kette.
+        with _verbindung(db) as c0:
+            for tabelle in ("signals", "hebel_signals"):
+                try:
+                    c0.execute(f"UPDATE {tabelle} SET created_at = "
+                               f"datetime(created_at, '-30 days')")
+                except sqlite3.Error:
+                    pass
+            c0.commit()
+        return db
+
+    def einfuegen(c, tabelle, werte):
+        spalten = list(c.execute(f"PRAGMA table_info({tabelle})"))
+        w = dict(werte)
+        for s in spalten:
+            if s[1] not in w and s[3] and s[4] is None and not s[5]:
+                w[s[1]] = 0 if any(t in (s[2] or "").upper()
+                                   for t in ("INT", "REAL")) else "x"
+        cols = [k for k in w if k in {s[1] for s in spalten}]
+        c.execute("INSERT OR REPLACE INTO %s (%s) VALUES (%s)" % (
+            tabelle, ",".join(cols), ",".join("?" * len(cols))),
+            [w[k] for k in cols])
+
+    def position(c, symbol, *, auf, hebel, ek, kurs=None, einstand=100.0):
+        pw = hebel * ek
+        DBM.upsert_hebel_position(c, HebelPosition(
+            symbol=symbol, richtung="LONG", status="offen",
+            eroeffnet_am=auf.isoformat(),
+            letzte_transaktion_unix_timestamp=int(auf.timestamp()),
+            hebel_effektiv=hebel, positionswert_eur=pw,
+            kreditbetrag_eur=pw - ek, eigenkapital_eur=ek,
+            positionsmenge=pw / einstand))
+        if kurs is not None:
+            einfuegen(c, "price_cache", {"symbol": symbol, "price_eur": kurs,
+                                         "price_usd": kurs / 0.9,
+                                         "fetched_at": jetzt.isoformat()})
+        c.commit()
+
+    def lauf(db, symbole, raenge, cfg, strategie="einstieg"):
+        modell = Attrappe("spot")
+        conn = _verbindung(db)
+        try:
+            e = RL.fuehre_lauf(
+                conn=conn, reihen=reihen, symbole=list(symbole),
+                betriebsart="probe", instrument="spot", strategie=strategie,
+                client=modell, modell="attrappe", config=cfg, db=db,
+                zai_client=ZaiAttrappe(), assetklasse="krypto", versand=None,
+                antworten={"marktraenge": raenge})
+        finally:
+            conn.commit()
+            conn.close()
+        e["_aufrufe"] = modell.aufrufe
+        return e
+
+    def ablegen(eintrag, name):
+        if not eintrag:
+            return
+        (ablage / ("paket_b_%s.txt" % name)).write_text(
+            str(eintrag.get("text") or ""), encoding="utf-8")
+        for nr, b in enumerate(eintrag.get("bilder") or []):
+            if b.get("png"):
+                (ablage / ("paket_b_%s_%d.png" % (name, nr))).write_bytes(b["png"])
+
+    def mail_zu(e, symbol):
+        return next((m for m in e.get("mails") or []
+                     if m.get("symbol") == symbol), None)
+
+    def betrag(text):
+        m = _re.search(r"^Betrag\s+([\d.,]+) EUR - (.+)$", text or "", _re.M)
+        return (m.group(1), m.group(2).strip()) if m else (None, None)
+
+    def gruende(e, stufe):
+        tr = e.get("durchlauf")
+        return [str(g) for g in ((getattr(tr, "gruende", {}) or {}).get(stufe)
+                                 or {})]
+
+    def verluste(e):
+        tr = e.get("durchlauf")
+        return {k: v for k, v in (getattr(tr, "verloren_je_stufe", {})
+                                  or {}).items() if v}
+
+    def signal_von(e, symbol):
+        return next((s for s in e.get("signale") or []
+                     if s.get("symbol") == symbol and s.get("id")), None)
+
+    def zeile(db, sid):
+        c = _verbindung(db)
+        try:
+            r = c.execute("SELECT * FROM signals WHERE id = ?", (sid,)).fetchone()
+            return dict(r) if r else {}
+        finally:
+            c.close()
+
+    def toepfe(db):
+        c = _verbindung(db)
+        try:
+            return TO.belegt_eur(c, "hebel"), TO.belegt_eur(c, "spot")
+        finally:
+            c.close()
+
+    def sperre_stunden(db, symbol, erzeugt, cfg):
+        c = _verbindung(db)
+        try:
+            bis = WH.gesperrt_bis(c, symbol, "spot", config=cfg, gruppe="krypto")
+        finally:
+            c.close()
+        if not bis:
+            return None
+        a0 = datetime.fromisoformat(str(erzeugt).replace("Z", "+00:00"))
+        a0 = a0 if a0.tzinfo else a0.replace(tzinfo=timezone.utc)
+        return (datetime.fromisoformat(bis) - a0).total_seconds() / 3600.0
+
+    def mit(text, *worte):
+        return "\n".join(z for z in str(text or "").splitlines()
+                         if any(w in z for w in worte))
+
+    print("=" * 76)
+    print("SCHRITT 23 - PAKET B VON ANFANG BIS ENDE")
+    print("=" * 76)
+    dbA = vorbereiten("paket_b_schalter_an.db")
+    print("Quelle  : %s" % quelle)
+    print("KOPIE A : %s   (Schalter an)" % dbA)
+    reihen = lade_reihen_aus_db(dbA)
+    AN, AUS = konfig(True), konfig(False)
+    ein = hebel_aus_quote_einstellungen(AN)
+    jetzt = datetime.now(timezone.utc).replace(microsecond=0)
+    c = _verbindung(dbA)
+    try:
+        kap = PH.aktuelles_kapital(c)
+        erlaubt = {r[0] for r in c.execute(
+            "SELECT symbol FROM asset_hebel_settings "
+            "WHERE hebel_pruefung_erlaubt = 1")}
+    finally:
+        c.close()
+    if not kap.get("verwendbar"):
+        print("✖ ABBRUCH - Kapital nicht verwendbar: %s" % kap.get("satz"))
+        return 1
+    K = float(kap["wert_eur"])
+    deckel = float(ein["aggregat_anteil"]) * K
+    print("Kapital : %s EUR (%s) - Aggregat-Deckel %s EUR"
+          % (de(K, 0), kap.get("zustand"), de(deckel, 2)))
+    krypto = next((list(s) for g, i, s in AK.laeufe() if g == "krypto"), [])
+    kandidaten = []
+    for s in krypto:
+        if len(reihen.get(s) or ()) <= 60 or s not in erlaubt:
+            continue
+        try:
+            menge, _ = RE.bestand(s, dbA, "spot")
+        except Exception:                                    # noqa: BLE001
+            menge = None
+        if not (menge and float(menge) > 0):
+            kandidaten.append(s)
+    kandidaten.sort(key=lambda s: (s != "ONDO", s))
+    print("Kandidaten (Hebel erlaubt, kein Bestand): %s" % ", ".join(kandidaten[:12]))
+
+    # ---- DIE POSITIONEN - nach dem Zurueckdatieren, ueber die echten Schreiber
+    c = _verbindung(dbA)
+    auf1 = jetzt - timedelta(days=3.5)
+    _rech = {"etikett": "hebel", "hebel": 5.0, "verlust_am_stop_eur": 57.5,
+             "hebel_aus_quote": {"ist_hebel": True},
+             "einstieg_von_eur": 99.5, "einstieg_bis_eur": 100.5,
+             "stop_eur": 88.5, "ziel_von_eur": 123.0, "ziel_bis_eur": 125.0}
+    plan_id = SA.schreibe_signal(c, SA.felder_aus_entscheidung(
+        {"aktion": "KAUFEN", "richtung": "LONG",
+         "begruendung": "E2E Paket B - der Plan der Position"},
+        fakten={}, rechnung=_rech, instrument="spot", strategie="einstieg",
+        eur_je_usd=0.9, modell="attrappe"),
+        symbol="ZZPLAN", erstellt_am=(auf1 - timedelta(hours=2)).isoformat())
+    position(c, "ZZPLAN", auf=auf1, hebel=5.0, ek=100.0, kurs=100.0)
+    position(c, "ZZOHNESTOP", auf=jetzt - timedelta(hours=5), hebel=4.0, ek=150.0)
+    c.close()
+    print("Positionen: ZZPLAN 5x seit 3,5 Tagen, Plan-Signal %s (Stop 11,5 %%) · "
+          "ZZOHNESTOP 4x ohne Signal und ohne Kurs" % plan_id)
+
+    # ================================================================ A1
+    print("\n--- A1  DAS HEBELGESCHAEFT ---")
+    S1 = e1 = None
+    for s in kandidaten[:6]:
+        vor = toepfe(dbA)
+        e = lauf(dbA, [s, "ZZPLAN", "ZZOHNESTOP"], {s: HEBEL}, AN)
+        sg = signal_von(e, s)
+        if sg and (sg.get("felder") or {}).get("instrument") == "hebel":
+            S1, e1, vor1 = s, e, vor
+            break
+        print("  %s: kein Hebelsignal - %d Signale, Verluste %r"
+              % (s, len(e.get("signale") or []), verluste(e)))
+    if not S1:
+        fall("A1 ein Hebelgeschaeft entsteht", False,
+             "kein Kandidat kam als Hebel durch - Nachweis nicht moeglich")
+        return 1
+    z1 = zeile(dbA, signal_von(e1, S1)["id"])
+    print("  Wert %s - Signal %s" % (S1, z1.get("id")))
+    fall("H1 die Signalzeile ist ein HEBELgeschaeft: instrument 'hebel', "
+         "Hebel 2 bis 5x, Verlust am Stop gesetzt",
+         z1.get("instrument") == "hebel"
+         and 2.0 <= float(z1.get("hebel") or 0) <= float(ein["hebel_grenze"]) + 1e-9
+         and float(z1.get("verlust_am_stop_eur") or 0) > 0,
+         "instrument %r · hebel %r · verlust_am_stop_eur %r · action %r"
+         % (z1.get("instrument"), z1.get("hebel"),
+            z1.get("verlust_am_stop_eur"), z1.get("action")))
+    m1 = mail_zu(e1, S1)
+    ablegen(m1, "1_hebelgeschaeft")
+    t1 = str((m1 or {}).get("text") or "")
+    b1 = betrag(t1)
+    fall("H2 die Mail: Betrag MIT Hebel, Hebelrechnung samt Aggregat-Satz, "
+         "Liquidation, Anhang C",
+         bool(m1) and str(b1[1] or "").startswith("Hebel")
+         and "Aggregat-Deckel:" in t1 and "Zwangsaufloesung" in t1,
+         "Betreff: %s\n" % (m1 or {}).get("betreff")
+         + mit(t1, "Betrag  ", "Aggregat-Deckel", "Liquidation", "Zwangsaufloesung",
+               "Hebel aus der", "r(q)"))
+    png = [b for b in (m1 or {}).get("bilder") or []
+           if (b.get("png") or b"")[:4] == b"\x89PNG"]
+    fall("H3 der Chart zur Mail entsteht", bool(png),
+         "%d PNG - abgelegt unter %s" % (len(png), ablage))
+    nach1 = toepfe(dbA)
+    _ts = float(z1.get("position_size_eur") or 0.0)
+    fall("H4 Hebeltopf: das Signal belegt den HEBEL-Topf, der Spot-Topf bleibt",
+         _ts > 0 and abs((nach1[0] - vor1[0]) - _ts) < 1e-6
+         and abs(nach1[1] - vor1[1]) < 1e-6,
+         "Hebeltopf %s -> %s EUR · Spot-Topf %s -> %s EUR · Tranche %s EUR"
+         % (de(vor1[0], 0), de(nach1[0], 0), de(vor1[1], 0), de(nach1[1], 0),
+            de(_ts, 0)))
+    _std1 = sperre_stunden(dbA, S1, z1.get("created_at"), AN)
+    _soll_h = WH.stunden("spot", AN, "krypto", strategie="einstieg",
+                         hebel_zuletzt=float(z1.get("hebel") or 0))
+    _soll_s = WH.stunden("spot", AN, "krypto", strategie="einstieg",
+                         hebel_zuletzt=1.2)
+    fall("H5 Cooldown: der kurze Takt fuer Hebel (%s h statt %s h)"
+         % (de(_soll_h, 1), de(_soll_s, 1)),
+         _std1 is not None and abs(_std1 - _soll_h) < 0.02 and _soll_h < _soll_s,
+         "gesperrt fuer %s Stunden ab dem Signal" % (de(_std1, 2) if _std1 else "-"))
+    ha1 = e1.get("hebel_aggregat") or {}
+    fall("H6 Aggregat-Deckel im Lauf: ZZPLAN Liquidation vor dem Stop = "
+         "Eigenkapital 100 + ZZOHNESTOP 11,7 % von 600 = 70,20 -> offen 170,20",
+         abs(float(ha1.get("offen_eur") or -1) - 170.2) < 0.01
+         and abs(float(ha1.get("deckel_eur") or 0) - deckel) < 0.01,
+         ha1.get("satz"))
+    c = _verbindung(dbA)
+    agg1 = HAG.aggregat(c, kapital_eur=K, anteil=float(ein["aggregat_anteil"]),
+                        hebelnenner_eur=float(ein["hebelnenner_eur"]))
+    c.close()
+    fall("H7 danach zaehlt das neue Signal mit seinem Verlust am Stop - und "
+         "r(q) nahm nicht mehr als frei war",
+         abs(agg1["offen_eur"] - (170.2 + float(z1["verlust_am_stop_eur"]))) < 0.01
+         and float(z1["verlust_am_stop_eur"]) <= float(ha1.get("frei_eur") or 0) + 0.01,
+         "\n".join("%-8s %-10s %8s EUR  %s" % (p["art"], p["symbol"],
+                                              de(p["risiko_eur"], 2), p["grund"])
+                   for p in agg1["posten"]))
+    hf = e1.get("hebelfuehrung") or {}
+    mh = next((m for m in e1.get("mails") or []
+               if m.get("seite") == "hebelfuehrung"), None)
+    ablegen(mh, "1_hebelfuehrung")
+    th = str((mh or {}).get("text") or "")
+    fall("H8 Hebelfuehrung: beide Positionen gefuehrt, ZZPLAN mit SEINEM Signal "
+         "- HEBEL SENKEN",
+         hf.get("offen") == 2 and ("Plan         Signal %s vom" % plan_id) in th
+         and "ZZPLAN - Hebel 5,0x LONG" in th and "HEBEL SENKEN" in th,
+         "Betreff: %s\n%s" % ((mh or {}).get("betreff"),
+                              mit(th, "ZZPLAN", "Plan ", "Nachschuss",
+                                  "hoechstens", "Im Deckel")))
+    fall("H9 ZZOHNESTOP: KURS FEHLT - Stop unbekannt, angenommen 11,7 %, im "
+         "Deckel 70,20 EUR",
+         "ZZOHNESTOP" in th and "KURS FEHLT" in th
+         and "Stop unbekannt - im Aggregat-Deckel angenommen 11,7 %" in th
+         and "Im Deckel    70,20 EUR" in th,
+         mit(th, "ZZOHNESTOP", "Stop unbekannt", "Im Deckel    70"))
+    e1b = lauf(dbA, [S1], {S1: HEBEL}, AN)
+    _ga, _gw = gruende(e1b, "anlass"), gruende(e1b, "wiederholung")
+    fall("H10 derselbe Wert gleich danach: kein Signal, kein Modellaufruf",
+         not signal_von(e1b, S1) and e1b["_aufrufe"] == 0 and bool(_ga or _gw),
+         "Anlass: %r · Cooldown: %r" % (_ga[:2], _gw[:2]))
+
+    # ================================================================ A2
+    print("\n--- A2  DER DECKEL IST FAST AUSGESCHOEPFT ---")
+    c = _verbindung(dbA)
+    _offen = HAG.aggregat(c, kapital_eur=K, anteil=float(ein["aggregat_anteil"]),
+                          hebelnenner_eur=float(ein["hebelnenner_eur"]))["offen_eur"]
+    _luecke = deckel - _offen - 30.0
+    # ⚠️ NUR AUFFUELLEN, WO NOCH MEHR ALS 30 EUR FREI SIND. Beim ersten Lauf
+    # (Kapital der Kopie 9.942 EUR, Deckel 298) liess das ONDO-Signal nur noch
+    # 3 EUR - die Pruefung erwartete trotzdem 30 und meldete einen Fehler,
+    # den es nicht gab.
+    _frei_soll = 30.0 if _luecke > 0 else max(0.0, deckel - _offen)
+    if _luecke > 0:
+        position(c, "ZZVOLL", auf=jetzt - timedelta(hours=2), hebel=3.0,
+                 ek=_luecke / (HAG.STOP_ANGENOMMEN * 3.0), kurs=100.0)
+    c.close()
+    print("  offen %s EUR von %s - ZZVOLL belegt %s EUR, frei bleiben %s EUR"
+          % (de(_offen, 2), de(deckel, 2), de(max(0.0, _luecke), 2),
+             de(_frei_soll, 2)))
+    S2 = e2 = None
+    for s in [k for k in kandidaten if k != S1][:6]:
+        e = lauf(dbA, [s], {s: HEBEL}, AN)
+        if signal_von(e, s):
+            S2, e2 = s, e
+            break
+        print("  %s: kein Signal - Verluste %r" % (s, verluste(e)))
+    if not S2:
+        fall("D0 ein zweiter Hebelkandidat erreicht die Rechnung", False,
+             "kein Kandidat kam durch")
+    else:
+        z2 = zeile(dbA, signal_von(e2, S2)["id"])
+        m2 = mail_zu(e2, S2)
+        ablegen(m2, "2_deckel_ausgeschoepft")
+        t2 = str((m2 or {}).get("text") or "")
+        b2 = betrag(t2)
+        ha2 = e2.get("hebel_aggregat") or {}
+        print("  Wert %s - Signal %s" % (S2, z2.get("id")))
+        fall("D1 der Lauf sieht frei %s EUR" % de(_frei_soll, 2),
+             abs(float(ha2.get("frei_eur") or -1) - _frei_soll) < 0.05,
+             ha2.get("satz"))
+        fall("D2 derselbe Hebelkandidat wird SPOT: instrument 'spot', keine "
+             "Hebelspalte, Betrag ohne Hebel",
+             z2.get("instrument") == "spot" and z2.get("hebel") is None
+             and b2[1] == "kein Hebel",
+             "instrument %r · hebel %r · Betrag %s EUR - %s"
+             % (z2.get("instrument"), z2.get("hebel"), b2[0], b2[1]))
+        fall("D3 die Mail sagt warum",
+             "nach dem Aggregat-Deckel unter 2,0x" in t2,
+             mit(t2, "Aggregat-Deckel", "traegt", "unter 2,0x"))
+        _std2 = sperre_stunden(dbA, S2, z2.get("created_at"), AN)
+        fall("D4 und der Cooldown ist der lange Takt fuer Spot (%s h)"
+             % de(_soll_s, 1),
+             _std2 is not None and abs(_std2 - _soll_s) < 0.02,
+             "gesperrt fuer %s Stunden" % (de(_std2, 2) if _std2 else "-"))
+
+    # ================================================================ B
+    print("\n--- B  SCHALTER AUS: SPOT UNVERAENDERT · AKKUMULATION ---")
+    dbB = vorbereiten("paket_b_schalter_aus.db")
+    print("KOPIE B : %s   (Schalter aus)" % dbB)
+    if S2:
+        eB = lauf(dbB, [S2], {S2: HEBEL}, AUS)
+        mB = mail_zu(eB, S2)
+        ablegen(mB, "3_vergleich_schalter_aus")
+        bB = betrag(str((mB or {}).get("text") or ""))
+        fall("N1 Spot unveraendert (N-38): derselbe Trade mit Schalter AUS hat "
+             "denselben Betrag",
+             bB[0] is not None and bB[0] == b2[0],
+             "Schalter an: %s EUR - %s · Schalter aus: %s EUR - %s"
+             % (b2[0], b2[1], bB[0], bB[1]))
+    kern = next((s for s in ("BTC", "ETH", "SOL") if reihen.get(s)), None)
+    if kern:
+        eK = lauf(dbB, [kern], {kern: OHNE}, AN)
+        z8 = eK.get("zellen") or {}
+        print("  Kernwert %s - Zellen %r - Verluste %r"
+              % (kern, (z8.get("je_symbol") or {}).get(kern), verluste(eK)))
+        fall("K1 der Kernwert laeuft mit zwei Zellen (Akkumulation + taktisch)",
+             (z8.get("paare") or 0) > (z8.get("symbole") or 0),
+             "paare %r · symbole %r" % (z8.get("paare"), z8.get("symbole")))
+        fall("K2 mit der Betriebskonfiguration entsteht kein Akkumulationssignal",
+             not any(str((s.get("felder") or {}).get("strategie")) == "akkumulation"
+                     for s in eK.get("signale") or []))
+        # ⚠️ BEFUND, KEIN HAKEN (erster Lauf 11.09.): die Akkumulationszelle
+        # erreicht die Sperre im Betrieb gar nicht. `anlass.beobachte` ist je
+        # Symbol und Instrument verschluesselt, nicht je Strategie - die
+        # Einstiegszelle laeuft zuerst (`_REIHENFOLGE`) und verbraucht den
+        # Faktensatz, die zweite Zelle sieht "0 Blockaenderungen". Dazu kommt
+        # der Cooldown je Symbol (2.380-akku-cooldown). Beides gehoert zu
+        # Schritt 26. Es wird GEZEIGT, nicht als bestanden gezaehlt.
+        _gAn = gruende(eK, "anlass")
+        print("  ○  BEFUND (Schritt 26): die Akkumulationszelle faellt an "
+              "`anlass`, nicht an der Sperre - %r" % _gAn[:2])
+        # ⚠️ DIE SPERRE SELBST IST IM LAUF NICHT ERREICHBAR - und das ist der
+        # zweite Teil des Befunds, kein Mangel dieser Simulation. Zweiter
+        # Lauf am 11.09. mit Anlass-Sperre aus (nur in der Kopie): beide
+        # Zellen fielen an `wiederholung` - der erste Lauf hatte fuer BTC eine
+        # Zeile geschrieben. `zellen()` laesst (spot, einstieg) IMMER zu, ein
+        # Kernwert hat also stets zwei Zellen, und beide Sperren gelten dem
+        # SYMBOL. Die Verdrahtung der Sperre belegt die Suite (Paket B,
+        # `lage_gesperrt` an der Entscheiderstufe); im Lauf wird sie erst
+        # sichtbar, wenn Schritt 26 Anlass und Cooldown je Zelle fuehrt.
+        _ohne_anlass = konfig(True)
+        _ohne_anlass["anlass"] = {**dict(_ohne_anlass.get("anlass") or {}),
+                                  "aktiv": False}
+        eK2 = lauf(dbB, [kern], {kern: OHNE}, _ohne_anlass)
+        print("  ○  BEFUND (Schritt 26): auch ohne Anlass-Sperre erreicht die "
+              "Akkumulationszelle den Entscheider nicht - Verluste %r, "
+              "Entscheider %r" % (verluste(eK2), gruende(eK2, "entscheider")[:2]))
+
+    print("\n" + "=" * 76)
+    offen = [n for n, ok in faelle if not ok]
+    print("%d Faelle, %d gezeigt, %d offen" % (len(faelle), len(faelle) - len(offen),
+                                              len(offen)))
+    for n in offen:
+        print("  ✖ " + n)
+    print("Mails und Charts: %s (paket_b_*)" % ablage)
+    print("=" * 76)
+    return 1 if offen else 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--db", default="data/tradinginfotool.db")
@@ -572,6 +1036,8 @@ def main() -> int:
                    help="nur diese Gruppe, sonst alle")
     p.add_argument("--nachweis-n14", action="store_true",
                    help="nur den N-14-Nachweis (OI-Sperre), ohne Netzabruf")
+    p.add_argument("--nachweis-paket-b", action="store_true",
+                   help="Schritt 23: Paket B mit gezielt erzeugtem Hebelgeschaeft")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -591,6 +1057,8 @@ def main() -> int:
 
     if getattr(a, "nachweis_n14", False):
         return nachweis_n14(a.db)
+    if getattr(a, "nachweis_paket_b", False):
+        return nachweis_paket_b(a.db)
 
     from agent import assetklassen as AK
     from agent import rollen_lauf as RL

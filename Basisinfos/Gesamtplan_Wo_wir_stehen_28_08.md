@@ -5062,3 +5062,36 @@ Rangangaben zusammenlegen.
   Eigenkapital) abgelehnt; **B vorgelegt** — Stop 11,7 %, höchstens das
   Eigenkapital: im Median 166 statt 222 EUR, im Median passen 3,3 statt 2,5
   Positionen in den Deckel.
+
+## ✔ Schritt 23 — Paket B von Anfang bis Ende (Befunde 2.382*)
+
+**Vorher entschieden und gebaut:** Position ohne bekannten Stop = **Variante B**
+(angenommener Stop 11,7 %, höchstens das Eigenkapital; 2.380-ohne-stop). Die
+Hebelmail sagt „Stop unbekannt – angenommen 11,7 %" und je Position „Im Deckel
+X EUR".
+
+`simuliere_kette.py --nachweis-paket-b` gegen die NB-Sicherung vom 11.09.,
+zwei Kopien, die Attrappe über die Marktränge gesteuert — **17 Fälle gezeigt:**
+
+| Teil | Ergebnis |
+|---|---|
+| **Hebelgeschäft** | ONDO: Zeile `instrument='hebel'`, 2,1x, Verlust am Stop 125 EUR; Mail „Betrag 500 EUR – Hebel 2,1x" mit Aggregat-Satz, Liquidation, Anhang C; Chart |
+| **Topf und Cooldown** | Hebeltopf 1.500 → 2.000 EUR, Spot-Topf unverändert; gesperrt 3,5 h (Spot 12 h) |
+| **Aggregat-Deckel** | 170 EUR offen (Position mit Liquidation vor dem Stop = EK 100, Position ohne Stop nach B 70,20), mit dem Signal 295 EUR |
+| **Hebelführung** | Position ↔ ihr geschriebenes Signal: HEBEL SENKEN mit Nachschuss; ohne Signal: KURS FEHLT mit B-Hinweis |
+| **Deckel ausgeschöpft** | AKT wird Spot mit 800 EUR, die Mail nennt den Grund |
+| **Spot unverändert** | Schalter aus: derselbe Betrag 800 EUR |
+| **Akkumulation** | kein Signal |
+
+**Befunde, die daraus folgen:**
+
+- ⚠️⚠️ **Die Akkumulationszelle erreicht ihre Sperre im Lauf nie**
+  (2.382-akku-anlass) — Anlass-Messung **und** Cooldown gelten dem Symbol, die
+  Einstiegszelle läuft zuerst. → Schritt 26: beides je Zelle.
+- ⚠️⚠️ **Der Topf begrenzt praktisch nie** (2.382-topf) — er zählt nur Zeilen,
+  die die Signalverfolgung noch nicht gesehen hat. Für den Hebel greift der
+  Aggregat-Deckel. **Zur Abstimmung.**
+- ⚠️ **B und die Liquidation** (2.382-liquidation) — dieselbe Regel wie bei
+  Positionen mit Plan hieße: Median 176 statt 170 EUR, allein im Deckel 14 statt
+  9 %. **Zur Abstimmung.**
+- ○ Feinschliff: Rundung des Hebels, Wortlaut Anhang C (2.382-rundung).

@@ -18419,16 +18419,45 @@ def paket_aggregat_deckel() -> None:
     _a = _HAG.aggregat(c, kapital_eur=18213.0, anteil=0.03, jetzt=_jetzt,
                        lauf_signale=_lauf)
     # AAA: Plan-Stop 12 % von 500 = 60, hoechstens EK 100 -> 60
-    # BBB: ohne Plan -> Eigenkapital 150
+    # BBB: ohne Plan -> Variante B (Nutzer 11.09.): 11,7 % von 600 = 70,20,
+    #      hoechstens EK 150 -> 70,20
     # CCC: offenes Signal 100 · DDD zu alt · EEE aufgeloest · FFF Geometrie
     # AAA-Signal ist der Plan -> nicht doppelt · GGG Lauf-Signal 50
-    # -> 60 + 150 + 100 + 50 = 360; Deckel 546,39; frei 186,39
+    # -> 60 + 70,20 + 100 + 50 = 280,20; Deckel 546,39; frei 266,19
     _je = sorted((p["art"], p["symbol"], round(p["risiko_eur"], 6)) for p in _a["posten"])
-    pruefe(P, "⚠️⚠️ offen = 60 (Stop) + 150 (ohne Plan: Eigenkapital) + 100 (Signal) + 50 (Lauf) = 360",
-           abs(_a["offen_eur"] - 360.0) < 1e-6
+    pruefe(P, "⚠️⚠️ offen = 60 (Stop) + 70,20 (ohne Plan: 11,7 % von 600) + 100 (Signal) + 50 (Lauf) = 280,20",
+           abs(_a["offen_eur"] - 280.2) < 1e-6
            and abs(_a["deckel_eur"] - 546.39) < 1e-6
-           and abs(_a["frei_eur"] - 186.39) < 1e-6,
+           and abs(_a["frei_eur"] - 266.19) < 1e-6,
            "%r" % _je)
+    _bbb = [p for p in _a["posten"] if p["symbol"] == "BBB"]
+    pruefe(P, "⚠️ Variante B: der Grund nennt den angenommenen Stop, nicht das Eigenkapital",
+           len(_bbb) == 1 and "angenommen 11,7 % ab Einstand" in _bbb[0]["grund"]
+           and "Eigenkapital" not in _bbb[0]["grund"], "%r" % _bbb)
+    # EIGENSCHAFT statt Einzelwert: fuer jeden Hebel und jede Groesse ist das
+    # Risiko ohne Plan min(11,7 % x Positionswert, Eigenkapital) - also nie
+    # das ganze Eigenkapital, solange der Hebel unter 1 / 0,117 = 8,55x liegt.
+    _fehl_b = []
+    for _L in (1.5, 2.0, 3.0, 5.0, 8.0, 8.55, 9.0, 10.0, 20.0):
+        for _ek in (10.0, 100.0, 1234.5):
+            _r, _g = _HAG._risiko_position({
+                "positionswert_eur": _L * _ek, "eigenkapital_eur": _ek,
+                "hebel": _L, "einstand_eur": 1.0, "plan": None})
+            _soll = min(_HAG.STOP_ANGENOMMEN * _L * _ek, _ek)
+            if abs(_r - _soll) > 1e-9 or (_r < _ek - 1e-9) != (_L * 0.117 < 1 - 1e-9) \
+                    or (("begrenzt auf das Eigenkapital" in _g) != (_r >= _ek - 1e-9)):
+                _fehl_b.append((_L, _ek, _r, _soll, _g))
+    pruefe(P, "B als Eigenschaft: 27 Faelle - unter 8,55x ein Teil, darueber das Eigenkapital",
+           not _fehl_b and abs(_HAG.STOP_ANGENOMMEN - 0.117) < 1e-12, "%r" % _fehl_b[:3])
+    _tb = _HFa.fuehre(symbol="BBB", richtung="LONG", eroeffnet_am=_auf.isoformat(),
+                      hebel=4.0, positionswert_eur=600.0, kreditbetrag_eur=450.0,
+                      eigenkapital_eur=150.0, positionsmenge=6.0, kurs_eur=100.0,
+                      jetzt=_jetzt, plan=None)
+    _zb = _HFa.zeilen(_tb)
+    pruefe(P, "die Hebelmail sagt es: Stop unbekannt, angenommen 11,7 % - und was es im Deckel belegt",
+           any("Stop unbekannt - im Aggregat-Deckel angenommen 11,7 %" in z for z in _zb)
+           and any(z.strip().startswith("Im Deckel") and "70,20 EUR" in z for z in _zb)
+           and not any("das ganze Eigenkapital" in z for z in _zb), "%r" % _zb)
     pruefe(P, "nicht gezaehlt: Plan-Signal doppelt, zu alt, aufgeloest, Geometrie-Hebel, geschriebenes Laufsignal doppelt",
            [s for _, s, _ in _je] == ["GGG", "AAA", "BBB", "CCC"]
            or sorted(s for _, s, _ in _je) == ["AAA", "BBB", "CCC", "GGG"], "%r" % _je)
