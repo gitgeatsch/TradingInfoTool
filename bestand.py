@@ -3102,6 +3102,87 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.366", "✔✔✔ DIE HEUTIGEN MAILAENDERUNGEN SIND IN EINER "
+               "FERTIGEN KRYPTO-MAIL NACHGEWIESEN - nicht nur in Pruefungen. "
+               "ONDO, gegen die NB-Sicherung, abgelegt unter "
+               "%%TEMP%%/simuliere_kette_mails: ,Ausgangspunkt: Ziel "
+               "2,0-mal so weit wie der Stop' · ,+ Funding-Rang im Markt "
+               "+1,3 %%' · ,✖  Standard 0,30 %%: ... 0,4 Prozentpunkte ZU "
+               "WENIG (-0,011 R je Trade = −1,08 EUR)' · die "
+               "Bewertungsschwelle · der Vorfilter · die Lebendigkeit. Die "
+               "englischen Dezimalzahlen aus 2.363 sind in Krypto- UND "
+               "Rohstoff-Mail verschwunden. ⚠️ Nicht nachweisbar in einem "
+               "normalen Lauf: die S-2-Ausfallzeile (sie erscheint nur bei "
+               "einem echten Abrufausfall) - dafuer stehen fuenf "
+               "Dauerpruefungen", "gilt",
+               "simuliere_kette.py · krypto_spot_ONDO.txt",
+               basis="NB-Sicherung 11.09. 04:48; Werte RENDER/ONDO/KAITO"),
+    Befundlage("2.366-minus", "⚠️ UND EIN SCHOENHEITSFEHLER, DEN ICH AM "
+               "11.09. SELBST EINGEBAUT HATTE und erst in der fertigen Mail "
+               "sah: ,(-0,011 R je Trade = −1,08 EUR)' - Bindestrich und "
+               "typografisches Minus in EINER Klammer. `_in_eur` schreibt "
+               "jetzt mit `de(..., vorzeichen=True)` wie die R-Zahl davor. "
+               "⚠️ Kein Pruefpaket haette das gefunden - genau dafuer gilt "
+               "der Grundsatz, dass eine Stufe erst IN DER FERTIGEN MAIL als "
+               "gebaut gilt", "gilt", "agent/wahrscheinlichkeit._in_eur"),
+    Befundlage("2.362", "✔✔ SCHRITT 15 - DIE KETTE REISST NICHT, auf dem "
+               "Datenstand des NOTEBOOKS: `simuliere_kette.py` lief gegen "
+               "eine Kopie der NB-Sicherung vom 11.09. 04:48 - also genau "
+               "gegen das alte Schema, auf das der Rollout trifft. Alle "
+               "fuenf Gruppen durchlaufen, 0 Fehler. Nachgewiesen: der "
+               "Zellen-Pfad (BTC mit zwei Zellen), Schritt 7 "
+               "(Positionsfuehrung in der Mail), der Vorfilter-Schatten. "
+               "Und im gezielten Lauf die erste KRYPTO-Mail end-to-end "
+               "(ONDO: Trichter vollstaendig, heraus 1)", "gilt",
+               "simuliere_kette.py gegen NB-Sicherung 2026-09-11",
+               basis="NB-Sicherung 11.09. 04:48, Kopie im Temp-Verzeichnis"),
+    Befundlage("2.362-krypto", "⚠️ WARUM DER ERSTE LAUF KEINE KRYPTO-MAIL "
+               "LIEFERTE - und alle Verwerfungen waren richtig: (1) die "
+               "Simulation nahm die ersten fuenf Werte mit Kursreihe; der "
+               "einzige Ueberlebende hatte Potential −0,016 R gegen die "
+               "Schwelle 0,023 R seiner Datenlage. (2) Mit live tragenden "
+               "Werten (BNB, SEI) verwarf die Kette KAUFEN, weil beide im "
+               "Bestand sind und die Positionsfuehrung SCHLIESSEN sagt. "
+               "(3) Die Attrappe gibt die Aktionen REIHUM aus - eine "
+               "Einstiegsmail entsteht nur, wenn KAUFEN auf einen Wert ohne "
+               "Bestand faellt. ➔ Mit RENDER/ONDO/KAITO (ohne Bestand, live "
+               "ueber der Schwelle) kam sie", "gilt",
+               "gate_durchlaessigkeit der Simulationskopie"),
+    Befundlage("2.363", "⚠️⚠️ ECHTER MAILFEHLER, VON DER SIMULATION "
+               "GEFUNDEN: `agent/auswahl.py` formatierte an ZWEI Stellen mit "
+               "`:.1f` - in einer echten Rohstoff-Mail ,Der "
+               "Rohstoff-Referenzkontrakt steht 11.5 %% ueber seinem "
+               "eigenen Schnitt', in der Krypto-Mail ,2.7 Prozentpunkte' "
+               "und ,11.9 %%'. Die zweite Stelle traf JEDE gewaehlte Mail. "
+               "➔ Beide auf `schreibweise.de()`; dazu die Sperrbegruendung "
+               "in `entscheidungsrechnung.py`, die im Trichter steht. "
+               "Dauerpruefung im Paket Mail - am Verhalten, nicht am "
+               "Quelltext", "gilt", "agent/auswahl.py / pruefe_pakete.py"),
+    Befundlage("2.364", "⚠️⚠️ DREI FEHLER IM WERKZEUG SELBST: (1) der "
+               "Trichter wurde auf 16 Zeilen GEKAPPT - bei vielen "
+               "Begruendungszeilen fielen die letzten Stufen und ,heraus' "
+               "aus der Anzeige, und es sah aus wie ein stiller Verlust in "
+               "der Kette. (2) Die Zahlschreibweise-Luecke nannte nur die "
+               "Zahl, nicht die ZEILE - und weil der Mailtext nirgends "
+               "gespeichert wurde, war sie nicht auffindbar. (3) Der "
+               "Mailtext wurde nur im Speicher geprueft; ob eine Zeile "
+               "WIRKLICH in der Mail steht, war nachher nicht nachsehbar. "
+               "Alle drei behoben; fertige Mails liegen jetzt unter "
+               "%%TEMP%%/simuliere_kette_mails. Dazu ein irrefuehrender "
+               "Hinweis: `--symbole` umgeht die Vorauswahl der SIMULATION, "
+               "nicht die Stufe ,beste k' der Kette", "gilt",
+               "simuliere_kette.py"),
+    Befundlage("2.365", "⚠️ ZWEI EIGENE FEHLER BEIM AUSWERTEN, beide selbst "
+               "gefunden: (1) ich meldete einen stillen Verlust in der "
+               "Krypto-Kette - es war die 16-Zeilen-Kappung der Anzeige. "
+               "(2) Ich meldete einen Widerspruch ,Kette haelt BNB und SEI "
+               "fuer Bestand, das NB haelt sie nicht' - meine Abfrage "
+               "pruefte nur `quantity > 0` und uebersah `staked_quantity` "
+               "(SEI 2.711, BNB 0,159). `rollen_eingabe.bestand()` zaehlt "
+               "Gestaktes seit dem 17.08. zu Recht mit. Die Kette hatte "
+               "recht. ⚠️ Derselbe Fehler steckt vermutlich in meiner "
+               "Zaehlung ,29 Bestaende' aus 2.346", "gilt",
+               "Selbstbefund 11.09.2026"),
     Befundlage("2.361", "⚠️⚠️⚠️ DIE ROLLENKETTE SCHREIBT DAS REGIME NICHT "
                "MIT: seit dem 14.08. tragen am Notebook 3.872 von 3.883 "
                "Signalen `regime = None`, `regime_source` ebenfalls leer. "

@@ -8815,6 +8815,32 @@ def paket_mail() -> None:
 
     P = "Mail"
 
+    # --- ⚠️ DEUTSCHE SCHREIBWEISE IN DEN AUSWAHLZEILEN (11.09.2026) -------
+    #
+    # Gefunden von `simuliere_kette.py` gegen die NB-Sicherung, in einer
+    # echten Rohstoff-Mail: "Der Rohstoff-Referenzkontrakt steht 11.5 %
+    # ueber seinem eigenen Schnitt". `auswahl.saetze()` formatierte an ZWEI
+    # Stellen mit `:.1f` - die zweite traefe jede gewaehlte Krypto-Mail.
+    # Nutzervorgabe vom selben Tag: *"im Text immer fuer mich lesbare und
+    # zuordenbare Werte"*.
+    #
+    # ⚠️ GEPRUEFT AM VERHALTEN: `saetze()` wird gerufen und die AUSGABE
+    # durchsucht - nicht der Quelltext nach `:.1f` (die Lehre von S-1).
+    import re as _re_m
+    from agent import auswahl as _AW_m
+    _z_m = _AW_m.saetze(
+        {"k": 1, "gewaehlt": {"OD7C"}, "aktiv": True,
+         "platz": {"OD7C": (1, 5)}, "von": 5}, "OD7C",
+        zustand={"name": "Der Rohstoff-Referenzkontrakt", "abstand": 0.115,
+                 "fenster": 200})
+    _eng_m = [x for x in _z_m if _re_m.search(
+        r"(?<![\d.])\d+\.\d(?!\d{2})",
+        _re_m.sub(r"\b\d{1,2}\.\d{1,2}\.(\d{2,4})?", " ", x))]
+    pruefe(P, "⚠️ die Auswahlzeilen schreiben Zahlen DEUTSCH (11,5 %, nicht "
+           "11.5 %)", bool(_z_m) and not _eng_m,
+           "am 11.09. in einer echten Rohstoff-Mail gefunden. Gefunden: %s"
+           % (" · ".join(x[:60] for x in _eng_m) or "-"))
+
     # --- A2: das Ziel darf nicht hinter der Marke liegen, die dieselbe Mail
     # nennt. Der Parameter `widerstand` existierte seit jeher - und wurde von
     # KEINEM Aufrufer je gefuellt.

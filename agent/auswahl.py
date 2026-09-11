@@ -256,16 +256,22 @@ def saetze(auswahl: dict, symbol: str, zustand: dict | None = None,
             "weil Sie ihn halten. Bei einer gehaltenen Position lautet die "
             "Frage 'halten oder verkaufen', und die stellt sich unabhaengig "
             "vom Rang. Der Rang oben ist deshalb eine Auskunft, kein Grund.")
+    # ⚠️ DEUTSCHE SCHREIBWEISE (11.09.2026, von `simuliere_kette.py` gegen
+    # die NB-Sicherung gefunden). Hier stand zweimal `:.1f` - in einer
+    # echten Rohstoff-Mail: "Der Rohstoff-Referenzkontrakt steht 11.5 %
+    # ueber seinem eigenen Schnitt". Nutzervorgabe vom selben Tag: *"im
+    # Text immer fuer mich lesbare und zuordenbare Werte"*.
+    from agent.schreibweise import de
     if symbol in (auswahl.get("gewaehlt") or set()):
         zeilen.append(
             f"Beurteilt werden je Durchgang die besten {auswahl['k']} dieser "
             f"Gruppe. Gemessen ueber {GEMESSEN['termine']} Termine lagen sie "
-            f"auf {20} Handelstage {100 * GEMESSEN['abstand_h20']:.1f} "
+            f"auf {20} Handelstage {de(100 * GEMESSEN['abstand_h20'], 1)} "
             f"Prozentpunkte vor dem Gruppenschnitt.")
     if zustand:
         wie = ("ueber" if zustand["abstand"] > 0 else "unter")
         zeilen.append(
-            f"{zustand['name']} steht {abs(100 * zustand['abstand']):.1f} % "
+            f"{zustand['name']} steht {de(abs(100 * zustand['abstand']), 1)} % "
             f"{wie} seinem eigenen Schnitt der letzten {zustand['fenster']} "
             f"Handelstage. Diese Angabe sperrt nichts - sie wird "
             f"mitgeschrieben, um sie spaeter an Ergebnissen zu pruefen.")

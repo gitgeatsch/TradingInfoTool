@@ -579,7 +579,14 @@ def main() -> int:
     NUR_SYMBOLE = {s.strip().upper() for s in (a.symbole or "").split(",")
                    if s.strip()}
     if NUR_SYMBOLE:
-        print("NUR DIESE SYMBOLE: %s - die Auswahlstufe wird umgangen"
+        # ⚠️ BERICHTIGT 11.09.2026: hier stand "die Auswahlstufe wird
+        # umgangen". Umgangen wird nur die VORAUSWAHL dieser Simulation
+        # (welche Werte in den Lauf gehen). Die Stufe "beste k" der KETTE
+        # greift weiter - im Lauf gegen die NB-Sicherung fielen dort trotz
+        # `--symbole` zwei von fuenf heraus, und der alte Text liess das
+        # wie einen Fehler aussehen.
+        print("NUR DIESE SYMBOLE: %s - umgangen wird die Vorauswahl der "
+              "Simulation; die Stufe 'beste k' der Kette greift weiter"
               % ", ".join(sorted(NUR_SYMBOLE)))
 
     if getattr(a, "nachweis_n14", False):
@@ -836,7 +843,16 @@ def main() -> int:
         if d is not None and hasattr(d, "bericht"):
             bericht = d.bericht()
             zeilen = bericht if isinstance(bericht, list) else str(bericht).splitlines()
-            for zeile in zeilen[:16]:
+            # ⚠️⚠️ NICHT KAPPEN (11.09.2026). Hier stand `zeilen[:16]`.
+            # Beim ersten Lauf gegen die NB-Sicherung hatte der Krypto-
+            # Trichter viele Begruendungszeilen - die letzten Stufen
+            # (Toepfe, Trefferquote) und die Zeile `heraus` fielen aus der
+            # ANZEIGE. Es sah aus wie ein stiller Verlust in der Kette:
+            # 1 Kandidat nach "Zonen rechenbar", 0 Signale, und keine
+            # Stufe nannte den Verlust. Der Trichter ist genau die
+            # Tabelle, die sagt, WO die Kette verliert - wer ihr Ende
+            # abschneidet, schneidet die Antwort ab.
+            for zeile in zeilen:
                 print(f"    {zeile}")
         for f in (e.get("fehler") or [])[:6]:
             print(f"    FEHLER: {f[:110]}")
@@ -850,6 +866,20 @@ def main() -> int:
         # Prompt.
         for eintrag in (e.get("mails") or [])[:99]:
             text = str(eintrag.get("text") or "")
+            # ⚠️ DIE FERTIGE MAIL ABLEGEN (11.09.2026). Bis hierher wurde
+            # der Text nur im Speicher geprueft und nirgends geschrieben -
+            # ob eine Zeile WIRKLICH in der Mail steht, war danach nicht
+            # mehr nachsehbar. Der Projektgrundsatz verlangt aber den
+            # Nachweis IN DER FERTIGEN MAIL, und der Nutzer will die
+            # Mails durchsehen. Geschrieben wird nur ins Temp-Verzeichnis.
+            try:
+                _ablage = Path(tempfile.gettempdir()) / "simuliere_kette_mails"
+                _ablage.mkdir(exist_ok=True)
+                (_ablage / ("%s_%s_%s.txt" % (gruppe, instrument,
+                    eintrag.get("symbol", "unbekannt")))).write_text(
+                        text, encoding="utf-8")
+            except OSError:
+                pass
             # SAMMELMAILS HABEN KEINE ASSET-BLOECKE. Sie fassen einen Lauf
             # zusammen; ein Verlauf- oder Gegenpruefungsblock waere dort
             # sinnlos. Meine erste Fassung hat sie mitgezaehlt und zwei
@@ -909,9 +939,18 @@ def main() -> int:
                         f"Gebuehrensatz fehlt in der Mail: {_fehlende}")
             _punkt = _englische_zahlen(text)
             if _punkt:
+                # ⚠️ DIE ZEILE MITNENNEN, nicht nur die Zahl (11.09.2026).
+                # Beim Lauf gegen die NB-Sicherung meldete die Simulation
+                # "englische Zahlschreibweise ['11.5']" - und weil der
+                # Mailtext nirgends gespeichert wird, war danach nicht mehr
+                # feststellbar, WELCHE Zeile ihn traegt. Eine Luecke, die
+                # man nicht findet, kann man nicht beheben.
+                _wo = [z.strip() for z in text.splitlines()
+                       if any(x in _DATUM.sub(" ", z) for x in _punkt)]
                 gesamt["luecken"].append(
                     f"{gruppe}/{instrument} {eintrag.get('symbol', '?')}: "
-                    f"englische Zahlschreibweise {_punkt[:4]}")
+                    f"englische Zahlschreibweise {_punkt[:4]} - in: "
+                    f"{(_wo[0] if _wo else '?')[:110]}")
             # Und die sechs Handelsparameter muessen den Fett-Schwarz-Griff
             # bekommen - geprueft am gerenderten HTML, weil dazwischen die
             # Reihenfolge der Formatregeln liegt.

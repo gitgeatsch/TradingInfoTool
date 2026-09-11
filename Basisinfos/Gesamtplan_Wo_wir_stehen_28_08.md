@@ -4641,3 +4641,52 @@ wird, ist eine Nutzerentscheidung.
 | **Ihre These vom 12.08.** | *„sehr schlechtes Sentiment ist oft für DCA oder Spot gut, eher schlecht bei Hebel"* — gemessen wurde sie mit `messe_sentiment_je_horizont.py` (BTC, 3.087 Tage). ⚠️ **Ein Ergebnis steht in keinem Register.** Das ist eine Lücke im Bestand, kein Nullbefund |
 | **Für R-1 (Regime rekonstruieren)** | F&G ist die **einzige** Stimmungsreihe mit acht Jahren Historie. ⚠️ **Aber:** kombiniert man ihn mit einem preisbasierten Regime, zählt die Kurshälfte **doppelt** — genau das Problem des heutigen `regime_score` (50/50). Vor R-1 zu entscheiden |
 | **Für die Akkumulation** | Ihre These betrifft direkt die Lage `spot/akkumulation` (Bodenbildung). ⚠️ **Nicht gemessen ist nicht unwirksam** — gegen `verbilligung` (die Akkumulations-Zielgröße) ist F&G nie geprüft worden |
+
+---
+
+# ✔ 11.09. — SCHRITT 15: DIE KETTE REISST NICHT, auf dem Stand des Notebooks
+
+`simuliere_kette.py` lief gegen eine **Kopie der NB-Sicherung** vom
+11.09. 04:48 — also gegen genau das alte Schema, auf das der Rollout
+trifft. Geschrieben wurde nur in die Kopie.
+
+## Was nachgewiesen ist
+
+| | |
+|---|---|
+| **Alle fünf Gruppen** | durchlaufen, **0 Fehler** |
+| **Zellen-Pfad** | BTC mit zwei Zellen (Akkumulation + taktisch) |
+| **Schritt 7** | Positionsführung erreicht die Mail |
+| **Vorfilter-Schatten** | in der Mail |
+| ✔✔ **Erste Krypto-Mail end-to-end** | ONDO — Trichter vollständig, `heraus 1` |
+| ✔✔✔ **Die heutigen Mailänderungen, IN der fertigen Mail** | *„Ziel 2,0-mal so weit wie der Stop"* · *„+1,3 %"* · *„0,4 Prozentpunkte ZU WENIG (-0,011 R je Trade = −1,08 EUR)"* · ✔/✖ statt ⚠️ · Bewertungsschwelle · Lebendigkeit |
+
+## ⚠️ Warum der erste Lauf keine Krypto-Mail lieferte — alle Verwerfungen waren richtig
+
+| Lauf | Grund |
+|---|---|
+| die ersten fünf Werte mit Kursreihe | einziger Überlebender: Potential −0,016 R gegen die Schwelle 0,023 R seiner Datenlage |
+| BNB, SEI (live tragend) | **gestaked im Bestand**, Positionsführung sagt SCHLIESSEN → kein neuer Einstieg |
+| die Attrappe | gibt Aktionen **reihum** aus — eine Einstiegsmail entsteht nur, wenn KAUFEN auf einen Wert **ohne** Bestand fällt |
+| ✔ RENDER, ONDO, KAITO | ohne Bestand, live über der Schwelle → **Mail** |
+
+## Gefunden und behoben
+
+| | |
+|---|---|
+| ⚠️⚠️ **Echter Mailfehler** | `agent/auswahl.py` formatierte zweimal mit `:.1f` — *„11.5 %"* in der Rohstoff-Mail, *„2.7 Prozentpunkte"* in **jeder** gewählten Mail. Jetzt `de()`, Dauerprüfung im Paket Mail |
+| ⚠️ **Drei Werkzeugfehler** | Trichter auf 16 Zeilen **gekappt** (sah aus wie ein stiller Verlust) · Lücke nannte nur die Zahl, nicht die **Zeile** · Mailtext wurde **nirgends abgelegt** — jetzt unter `%TEMP%/simuliere_kette_mails` |
+| ⚠️ **Selbst eingebaut** | gemischtes Minuszeichen in *„(-0,011 R je Trade = −1,08 EUR)"* — **kein Prüfpaket hätte das gefunden**, nur die fertige Mail |
+
+## ⚠️ Zwei eigene Fehler beim Auswerten
+
+1. **„Stiller Verlust in der Krypto-Kette"** gemeldet — es war die gekappte Anzeige.
+2. **„Die Kette hält BNB und SEI für Bestand, das NB nicht"** gemeldet — meine Abfrage prüfte nur `quantity > 0` und übersah die **Staking**-Spalte. Die Kette hatte recht.
+
+## ⚠️ Was Schritt 15 NICHT leistet
+
+| | |
+|---|---|
+| **Qualität der Empfehlungen** | die zwei Modellaufrufe sind eine **Attrappe** — die Simulation zeigt, dass die Kette trägt, nicht, dass die Urteile gut sind |
+| **S-2-Ausfallzeile** | erscheint nur bei echtem Abrufausfall — dafür stehen fünf Dauerprüfungen |
+| **T-1** | die Attrappe mit Aktionen reihum macht Einstiegsmails zur Glückssache. Für die Fehleridentifikation je Strategie und Asset braucht sie einen **steuerbaren** Modus |

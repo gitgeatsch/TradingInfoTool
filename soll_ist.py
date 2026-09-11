@@ -307,16 +307,16 @@ REIHENFOLGE = (
     # nichts gewonnen, wenn man den Rollout auf sie wartet.
     # ================================================================
     Schritt(15, "E2E VOR DEM ROLLOUT",
-            "⚠️ DER ROLLOUT-SCHUTZ, und mehr braucht er nicht: "
-            "`simuliere_kette.py` auf den Umbaustand nachziehen und "
-            "laufen lassen. Sie ist vom 16.08. - VOR dem Umbau. Sie "
-            "beantwortet EINE Frage: reisst die Kette irgendwo? Echte "
-            "Reihen, Bestaende, Rechnung, DB-Schreiben, Mailaufbau; "
-            "Attrappe nur fuer die zwei Modellaufrufe, und sie schreibt "
-            "in eine KOPIE. ⚠️ Das Projekt hat dafuer einen eigenen "
-            "Merksatz: *eine Stufe gilt erst als gebaut, wenn die "
-            "Kettensimulation sie in der fertigen Mail nachweist.*",
-            "simuliere_kette.py; Beschluss 11.09."),
+            "✔ ERLEDIGT 11.09.: `simuliere_kette.py` gegen eine KOPIE der "
+            "NB-Sicherung - also gegen das alte Schema, auf das der "
+            "Rollout trifft. Alle fuenf Gruppen, 0 Fehler; Zellen-Pfad, "
+            "Positionsfuehrung und Vorfilter nachgewiesen; die erste "
+            "Krypto-Mail end-to-end (ONDO) mit ALLEN heutigen "
+            "Mailaenderungen. Gefunden und behoben: englische "
+            "Dezimalzahlen in `auswahl.py` (echter Mailfehler), drei "
+            "Werkzeugfehler (Trichter gekappt, Luecke ohne Zeile, Mail nicht "
+            "abgelegt), ein gemischtes Minuszeichen.",
+            "Befunde 2.362 bis 2.366", fertig=True),
     Schritt(16, "DER ROLLOUT",
             "⚠️⚠️ FEHLTE BIS HEUTE ALS SCHRITT - obwohl alle Vorarbeiten "
             "auf ihn zulaufen. 292 Commits, 10 Betriebsdateien, "

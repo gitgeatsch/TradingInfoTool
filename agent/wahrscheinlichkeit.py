@@ -817,8 +817,12 @@ def _in_eur(wert_r: float | None, risiko_eur: float | None) -> str:
     # Unter einem Cent waere die Angabe Schein-Genauigkeit.
     if abs(betrag) < 0.01:
         return ""
-    return " = %s%s EUR" % ("+" if betrag > 0 else "−",
-                            de(abs(betrag), 2))
+    # ⚠️ DASSELBE MINUSZEICHEN WIE DIE R-ZAHL DAVOR (11.09.2026, in der
+    # fertigen ONDO-Mail der Simulation gesehen): dort stand
+    # "(-0,011 R je Trade = −1,08 EUR)" - Bindestrich und typografisches
+    # Minus in EINER Klammer. `de(..., vorzeichen=True)` schreibt beide
+    # gleich.
+    return " = %s EUR" % de(betrag, 2, vorzeichen=True)
 
 
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",

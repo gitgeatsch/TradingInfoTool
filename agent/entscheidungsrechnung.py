@@ -837,10 +837,13 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         if hebel_noetig < 1.0:
             betrag = risiko_eur / stop_rel
             if betrag < _min:
+                # ⚠️ Deutsche Schreibweise auch hier (11.09.2026) - dieser
+                # Satz landet als Sperrgrund im Trichter, den der Nutzer liest.
+                from agent.schreibweise import de as _de
                 raise RechnungBlockiert(
                     f"Betrag {betrag:.0f} EUR unter der Mindestgroesse "
                     f"{_min:.0f} EUR - das Risikobudget "
-                    f"({risiko_eur:.0f} EUR bei {100 * stop_rel:.1f} % Stop) "
+                    f"({risiko_eur:.0f} EUR bei {_de(100 * stop_rel, 1)} % Stop) "
                     f"traegt hier keine handelbare Groesse")
             grund = "Risikobudget (Hebel 1,0 - kein Hebel moeglich)"
             hebel_noetig = 1.0
