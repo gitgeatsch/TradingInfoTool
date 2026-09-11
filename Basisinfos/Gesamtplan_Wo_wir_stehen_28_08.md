@@ -4733,3 +4733,71 @@ vollständige Bewertung.
 1. **Mailgliederung vorziehen?** (Vorschlag liegt vor, nichts gestrichen)
 2. **Akkumulation am Notebook** bis zur Registrierung: nur BTC wie heute, oder aus?
 3. **Alter Marktscan** — weiter aktiv? Er verschickt eigene Mails und ist der einzige Ort, an dem das Regime wirkt
+
+---
+
+# 🚦 11.09. — PAKET B: Hebel und Spot vor dem Rollout, Akkumulation danach
+
+> *„meine Priorität liegt bei 1 Hebel 2 Spot 3 Akkumulation — zumindest
+> Hebel und Spot müssen sauber funktionieren."* — *„ja Paket B, Deckel 5x,
+> Rest wie empfohlen"* (Nutzerentscheidung 11.09.)
+
+## ⚠️⚠️ Warum der frühere Plan falsch war
+
+Er stellte den Rollout **vor** Hebel und Akkumulation. Die Vorgabe
+KRYPTO-ZUERST meint aber **Krypto gesamt**. Beide Lücken standen in der
+Doku — **2.174-ist** seit 08.09. (*„die Nutzervorgabe ist damit NICHT
+umgesetzt"*) und null Beiträge der Akkumulation —, sie waren nur nicht als
+Showstopper benannt.
+
+⚠️ Und meine Empfehlung *„`r(q)` als eine Regel für Spot und Hebel"* war
+falsch: sie widerspricht **N-38** vom 05.09. (*„Spot bleibt unberührt"*).
+Zurückgezogen (2.374-rq).
+
+## Die Regeln (Vorgabe PAKET-B)
+
+| | |
+|---|---|
+| **Risiko** | `r(q) × Kapital`, `r(q)` = halbes Kelly, geklammert **0,50–1,25 %** |
+| **Kapital** | `portfolio_wert_historie.wert_eur` — Gesamtkapital ohne Cash (P-5) |
+| **Hebel** | `(Risiko ÷ Stop) ÷ 500 EUR` — **unter 2x wird es Spot** |
+| **Grenze** | **5x** bis zur Trennschärfe (A1) |
+| **Quote** | unkalibriert — die Kalibrierung ist am 05.09. gefallen |
+| **Aggregat** | alle Hebelrisiken zusammen höchstens **3 %** des Kapitals |
+| **Spot** | Betrag **unverändert** |
+| **Akkumulation** | **gesperrt** bis Paket 2 — ohne Beitrag keine Nachkauf-Empfehlung |
+
+## Der Ablauf
+
+| # | Schritt | Tage |
+|---|---|---|
+| 16 | ✔ Akkumulation gesperrt (Sicherheitsnetz) | erledigt |
+| 17 | H-1 Portfoliowert lesen (lauter Rückfall) | 0,5 |
+| 18 | H-2 `r(q)` | 1 |
+| 19 | H-3 Hebelverteilung simulieren — **vor** dem Scharfschalten | 0,5 |
+| 20 | H-4 Positionsführung Hebel | 1–2 |
+| 21 | H-5 Aggregat-Deckel | 0,5 |
+| 22 | S-4 Spot sauber: unverändert nachweisen, Mailgliederung, O1 prüfen | 1,5 |
+| 23 | E2E Paket B mit erzwungenem Hebelgeschäft | 0,5–1 |
+| 24 | **Rollout Paket B** | 1 |
+| 25–27 | **Paket 2:** Akkumulation messen, bauen, Rollout | 4–5 |
+
+## ✔ Zur Nutzerfrage „alle Messungen vor dem Umbau?"
+
+**Nein, gezielt.** *Messen vor Bauen* gilt für **Bewertungsbeiträge** —
+deshalb beginnt Paket 2 mit dem Messpaket. `r(q)` ist **kein** neuer
+Beitrag; es verteilt Risiko auf den registrierten. Die fehlende
+Hebelmessung hängt an A1 und ändert nicht, was gebaut wird. **Ergänzt:**
+H-3 simuliert die Hebelverteilung vor dem Scharfschalten (Nutzervorgabe
+28.08.: *„vorher prüfen und simulieren"*).
+
+## ⚠️⚠️ H-1 vor dem Bau: das Kapital ist so nicht verwendbar (Befund 2.375)
+
+| | |
+|---|---|
+| **Gestaktes fehlt** | `schreibe_tageswert` zählt nur `quantity`. SOL, TAO, SUI, NEAR, AVAX, HYPE, SEI, BNB, VSN liegen **nur gestaked**, ETH zu 97 % — rund **6.093 EUR**, bei 9.942 EUR ausgewiesenem Wert **~38 %** |
+| **Selten geschrieben** | jüngste Zeile **01.09.** — der Job läuft täglich, verwirft aber die meisten Tage an der 80-%-Abdeckungswache (62 %, 75 %) |
+| **Warum Kurse fehlen** | ETF/ETC ohne Wochenendkurs · KAIA, SUPRA, BRETT, VST nur mit USD-Reihe · Rohstoff-ETC bis 07.09. · EURCV ohne Kurs |
+| **P-3 ist kleiner als gedacht** | der Index rechnet mengenkonstant aus dem Vortag — **er springt nicht**, Z-3 bleibt unberührt (2.375-index) |
+
+➔ **Wartet auf P-3 (Nutzerentscheidung).**

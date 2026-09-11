@@ -151,6 +151,27 @@ class Potential:
                    if z.get("zustand") == "traegt")
 
     @property
+    def lage_gesperrt(self) -> str:
+        """⚠️⚠️ Der Grund, warum DIESE LAGE ohne Bewertung gesperrt ist - oder "".
+
+        NUTZERENTSCHEIDUNG 11.09.2026 (Paket B): die AKKUMULATION ist bis
+        zur Registrierung ihrer Beitraege (Paket 2) GESPERRT. Bis dahin
+        winkte die Entscheiderstufe sie durch - `vermessen=False` ergab nur
+        eine Notiz, und ueber einen Nachkauf haette allein das Sprachmodell
+        der Rolle Haendler entschieden (Befund 2.370).
+
+        ⚠️ KEINE SPERRE NACH DATENLAGE (Regel 4). Hier fehlt nicht der Wert
+        EINES Assets, sondern fuer die ganze Lage die Messung. Es gilt
+        ,keine Empfehlung ohne Grund'. Die Einstiegslage ist nicht
+        betroffen.
+        """
+        if (str(self.strategie or "").strip().lower() == "akkumulation"
+                and not self.bewertbar):
+            return ("Akkumulation ohne gemessenen Beitrag - gesperrt bis zur "
+                    "Registrierung (Nutzerentscheidung 11.09., Paket B)")
+        return ""
+
+    @property
     def erreichbar_max(self) -> float:
         """Das hoechste Potential, das bei DIESER Datenlage moeglich waere.
 

@@ -817,7 +817,12 @@ def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
         send_notification_email("TradingInfoTool: Z-3 AUSGELOEST - Drawdown-Notbremse", body, empfaenger)
     except Exception:
         logger.exception("portfolio_wert_job fehlgeschlagen")
-        _notify_job_failure("portfolio_wert_job")
+        # ⚠️ HIER FEHLTE DAS ZWEITE ARGUMENT (gefunden 11.09.2026). Der Aufruf
+        # warf selbst einen TypeError - ausgerechnet im Fehlerzweig, die
+        # Meldung kam nie an.
+        _notify_job_failure("portfolio_wert_job",
+                            "Portfoliowert-Job fehlgeschlagen - Einzelheiten "
+                            "im Log (portfolio_wert_job).")
     finally:
         # Siehe `merke_joblauf()` - der Nachholer beim Start fragt danach.
         db.merke_joblauf(conn, "portfolio_wert")

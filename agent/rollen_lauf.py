@@ -2140,6 +2140,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # *"Die Scharfschaltung muss und darf erst erfolgen, wenn alle
         # Assets einen Beitrag haben."* Fuer Krypto ist sie erfuellt
         # (43 von 43 seit P2), fuer die vier anderen noch nicht.
+        if _potential.lage_gesperrt:
+            # ⚠️⚠️ PAKET B (Nutzerentscheidung 11.09.2026): die AKKUMULATION
+            # ist bis zur Registrierung ihrer Beitraege gesperrt. Bis hierher
+            # landete sie im Zweig darunter - `vermessen=False` ergab nur
+            # eine Notiz, und ueber einen Nachkauf entschied allein das
+            # Sprachmodell (Befund 2.370). Der Grund steht im Trichter.
+            durchlauf.verloren(symbol, "entscheider",
+                               _potential.lage_gesperrt)
+            return
         if not _potential.vermessen:
             # NICHT VERMESSEN - zaehlen, nicht sperren. Der Trichter
             # weist es aus, damit die Luecke sichtbar bleibt und nicht

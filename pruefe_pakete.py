@@ -8718,6 +8718,16 @@ def paket_frische() -> None:
     from agent import mindestkriterien as MK
 
     P = "Frische"
+    # ⚠️ EIN FEHLER IM FEHLERZWEIG (11.09.2026, Befund 2.375-notify):
+    # `portfolio_wert_job` rief `_notify_job_failure` mit EINEM Argument -
+    # der Aufruf warf selbst, die Meldung kam nie an.
+    import re as _re_nf
+    _bg_nf = _quelltext("scheduler/background.py")
+    _einarg = _re_nf.findall(r'_notify_job_failure\(\s*"[^"]*"\s*\)', _bg_nf)
+    pruefe(P, "jede Fehlermeldung eines Jobs hat einen TEXT",
+           not _einarg,
+           "`_notify_job_failure(job_id, fehler_text)` - ohne Text wirft der "
+           "Aufruf im Fehlerzweig selbst. Gefunden: %s" % _einarg)
 
     def bau(alter_tage: int) -> sqlite3.Connection:
         """Eine Datenbank, in der jede Quelle genau `alter_tage` alt ist."""
@@ -17488,12 +17498,28 @@ def paket_kette_je_strategie() -> None:
            "zwei tragende Beitraege (funding, turnover), erreichbar_max "
            "%.4f R gegen Schwelle %.4f R" % (_ein.erreichbar_max,
                                              _ein.schwelle))
-    pruefe(P, "⚠️⚠️ AKKUMULATION: sie WINKT DURCH, sie sperrt nicht",
+    pruefe(P, "AKKUMULATION: die Lage ist weiter NICHT vermessen",
            not _akk.vermessen,
-           "kein Beitrag traegt dort (`strategien=('einstieg',)`), also "
-           "`vermessen=False` -> NOTIZ statt Sperre. Waere sie 'vermessen "
-           "aber ohne Wert', wuerde sie SPERREN - und das waere eine "
-           "Sperre nach Datenlage (Regel 4)")
+           "kein Beitrag traegt dort (`strategien=('einstieg',)`)")
+    # ⚠️⚠️ PAKET B (Nutzerentscheidung 11.09.2026). Hier stand bis dahin
+    # ,AKKUMULATION: sie WINKT DURCH, sie sperrt nicht' - als GEWOLLTER
+    # Zustand, begruendet mit Regel 4. Die Folge (Befund 2.370): ueber einen
+    # Nachkauf entschied allein das Sprachmodell. Seit Paket B ist die Lage
+    # bis zur Registrierung ihrer Beitraege gesperrt.
+    pruefe(P, "⚠️⚠️ AKKUMULATION: ohne Beitrag GESPERRT, nicht durchgewunken",
+           bool(_akk.lage_gesperrt) and not _ein.lage_gesperrt,
+           "Nutzerentscheidung 11.09. (Paket B): keine Nachkauf-Empfehlung "
+           "ohne gemessenen Grund; der Einstieg bleibt unberuehrt. Grund: %r"
+           % _akk.lage_gesperrt)
+    _rl17 = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "und der Ablauf prueft die Sperre VOR der Notiz ,nicht vermessen'",
+           0 < _rl17.find("if _potential.lage_gesperrt:")
+           < _rl17.find("if not _potential.vermessen:"),
+           "sonst endete die Akkumulation weiter im Zweig, der nur zaehlt")
+    pruefe(P, "und die Sperre bricht ab, statt nur zu zaehlen",
+           "_potential.lage_gesperrt)\n            return"
+           in _rl17.replace("\r\n", "\n"),
+           "ein Filter, der zaehlt und nicht abbricht, ist kein Filter (G-6)")
     _gilt = [b.name for b in _WK.BEITRAEGE if b.zustand == "traegt"
              and _WK._gilt(b, "krypto", "akkumulation")[0]]
     pruefe(P, "und bei akkumulation traegt tatsaechlich KEIN Beitrag",

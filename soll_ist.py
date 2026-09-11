@@ -110,10 +110,24 @@ VORGABEN = (
             "VOLATILITAET - das ist NICHT dasselbe.",
             "Nutzervorgabe; F-220 / N-40 K1 / memory hebel_scheitert_an_der_bewertung"),
     Vorgabe("REIHENFOLGE",
-            "ERST die Bewertung tragfaehig machen, DANN der Hebelumbau. "
-            "K1/K2/K3 bleiben stehen, bis `r(q)` etwas zu verteilen hat.",
-            "Nutzerentscheidung 05.09., Anforderungen_Umbau Abschnitt "
-            "'ENTSCHEIDUNG 05.09.'"),
+            "⚠️ ABGELOEST 11.09.: die Entscheidung vom 05.09. (,erst die "
+            "Bewertung, dann der Hebelumbau - r(q) hat nichts zu "
+            "verteilen') stand auf der GEFALLENEN Kalibrierung (19,5 %). "
+            "2.174-neu: unkalibriert erreichen zwei Lagen 2-5x - r(q) hat "
+            "etwas zu verteilen. JETZT: Paket B - Hebel (K1, K3, O5) und "
+            "Spot VOR dem Rollout, die Akkumulation als Paket 2.",
+            "Nutzerentscheidung 05.09. -> abgeloest durch "
+            "Nutzerentscheidung 11.09. (Paket B)", "erfuellt"),
+    Vorgabe("PAKET-B",
+            "HEBEL: risiko = r(q) x Kapital, r(q) = halbes Kelly geklammert "
+            "0,50-1,25 % (N-39); Kapital = `portfolio_wert_historie."
+            "wert_eur` (P-5); hebel = (risiko / Stop) / 500 EUR; unter 2x "
+            "SPOT; harte Grenze 5x bis zur Trennschaerfe (A1); Quote "
+            "unkalibriert; Aggregat-Deckel 3 % des Kapitals. SPOT: Betrag "
+            "UNVERAENDERT (N-38: ,Spot bleibt unberuehrt'). AKKUMULATION: "
+            "gesperrt bis Paket 2.",
+            "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
+            "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
     Vorgabe("KRYPTO-ZUERST",
             "Multiasset (Aktien, ETF, Rohstoffe, Hedge) ist NACHGELAGERT - "
             "erst nach dem Krypto-Produktivgang. A-1, A-2 und die "
@@ -179,18 +193,19 @@ LAGEN = (
          "vermessen - mindestens zwei tragende Beitraege"),
     Lage("spot", "akkumulation", "krypto",
          "Core-Werte BTC, ETH, SOL - Zielgroesse `verbilligung`, H90",
-         blocker="⚠️ NUR NOCH L1 - SOL fehlt im DCA-Schalter. "
-                 "✔ A2 geloest (2.286), `schnitt` traegt "
-                 "(+0,0470, 481 Symbole). Offen: Form als Regler "
-                 "oder Schalter (Schritt FORM)"),
+         blocker="⚠️⚠️ GESPERRT BIS PAKET 2 (Nutzerentscheidung "
+                 "11.09.) - ohne Beitrag keine Nachkauf-Empfehlung "
+                 "(2.374-akku). Messpaket, dann Bau als Regler (Schritte "
+                 "AKKU-MESSPAKET, AKKU-BAU). L1 (ETH, SOL) erst mit "
+                 "Paket 2"),
     Lage("hebel", "einstieg", "krypto",
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
-         blocker="A9 - die AUFLOESUNG: die Abstufung springt 1,02x -> 3,90x, "
+         blocker="PAKET B baut r(q) (Schritte H-1 bis H-5). Offen "
+                 "danach: A9 - die AUFLOESUNG: die Abstufung springt 1,02x -> 3,90x, "
                  "weil die Beitraege Fuenftel sind (2.174-grenzen); "
                  "A1 - Band auf binaeren Daten, blockiert die "
-                 "TRENNSCHAERFE-Frage; P-1 - die Rollen-Kette liest "
-                 "den Portfoliowert nicht. ⚠️ F-220 ist "
+                 "TRENNSCHAERFE-Frage. ⚠️ F-220 ist "
                  "ZURUECKGEZOGEN (06.09.) - NICHT mehr zitieren",
          erbt_spot=True),
     Lage("hebel", "swing", "krypto",
@@ -294,17 +309,21 @@ REIHENFOLGE = (
             "Zentral statt fuenfzehn Kopien.",
             "Befunde 2.360", fertig=True),
     # ================================================================
-    # AB HIER: DER PRODUKTIVGANG (Beschluss 11.09.2026)
+    # AB HIER: DER PRODUKTIVGANG - PAKET B (Nutzerentscheidung 11.09.2026)
     #
-    # ⚠️ WARUM DER ROLLOUT ZUERST KOMMT, obwohl die Bewertung duenn ist:
-    # das Notebook ist 292 Commits zurueck. Solange diese Luecke steht,
-    # ist JEDE weitere Aenderung doppelt teuer - sie muss durch dieselbe
-    # Luecke. Ist das NB einmal aktuell, sind weitere Pulls billig.
+    # > "meine Prioritaet liegt bei 1 Hebel 2 Spot 3 Akkumulation -
+    # >  zumindest Hebel und Spot muessen sauber funktionieren."
+    # > "ja Paket B, Deckel 5x, Rest wie empfohlen"
     #
-    # ⚠️⚠️ UND DER ROLLOUT HAENGT NICHT AN DER AKKUMULATION: die Lage
-    # `spot/akkumulation` hat heute NULL Beitraege und haette sie nach
-    # dem Rollout genauso. Sie verhaelt sich davor wie danach - also ist
-    # nichts gewonnen, wenn man den Rollout auf sie wartet.
+    # ⚠️⚠️ WARUM DER FRUEHERE PLAN FALSCH WAR: er stellte den Rollout VOR
+    # Hebel und Akkumulation ("der Rollout haengt nicht an der
+    # Akkumulation"). Die Vorgabe KRYPTO-ZUERST heisst aber Krypto GESAMT.
+    # Beide Luecken standen in der Doku (2.174-ist seit 08.09., null
+    # Beitraege der Akkumulation) - sie waren nur nicht als Showstopper
+    # benannt (Befund 2.374).
+    #
+    #   PAKET B   Hebel und Spot sauber, Akkumulation GESPERRT -> Rollout
+    #   PAKET 2   Akkumulation messen und bauen -> zweiter Rollout
     # ================================================================
     Schritt(15, "E2E VOR DEM ROLLOUT",
             "✔ ERLEDIGT 11.09.: `simuliere_kette.py` gegen eine KOPIE der "
@@ -320,25 +339,112 @@ REIHENFOLGE = (
             "behoben (2.367). ⚠️ NICHT NACHGEWIESEN: ein Hebelgeschaeft "
             "(Faktor ueber 1,0) - in keinem Lauf entstanden (2.371).",
             "Befunde 2.362 bis 2.373", fertig=True),
-    Schritt(16, "DER ROLLOUT",
-            "⚠️⚠️ FEHLTE BIS HEUTE ALS SCHRITT - obwohl alle Vorarbeiten "
-            "auf ihn zulaufen. 292 Commits, 10 Betriebsdateien, "
-            "Gesamtpaket statt inkrementell (stehende Regel fuer das NB). "
-            "Checkliste in `Basisinfos/Ausrollen_24_08.md`, Abschnitt "
-            "11.09. ⚠️ DANACH AM NB: die Oberflaeche EINMAL oeffnen und "
-            "ETH + SOL im Akkumulations-Schalter setzen (L1 - der "
-            "Schalter existiert, er wirkt nur auf dem Geraet, auf dem die "
-            "GUI laeuft), und die drei Messquellen nachziehen. ⚠️ NACHTRAG "
-            "11.09.: (a) die Checkliste nennt noch 2048 Pruefungen und "
-            "drei Rote - heute 2084 und vier; (b) `config.yaml` am "
-            "Notebook vor dem Pull abgleichen; (c) S-1 erkennt die "
-            "Symbolliste jetzt als Sollzustand (2.368). OFFENE "
-            "ENTSCHEIDUNGEN VOR DEM ROLLOUT: Mailgliederung vorziehen? "
-            "(2.372) · Akkumulation am Notebook bis zur Registrierung "
-            "nur BTC oder aus? (2.370) · alter Marktscan weiter aktiv? "
-            "(2.369)",
-            "Basisinfos/Ausrollen_24_08.md"),
-    Schritt(17, "TAKT",
+    Schritt(16, "AKKU-SPERRE",
+            "✔ ERLEDIGT 11.09.: Sicherheitsnetz - die Akkumulation ist ohne "
+            "gemessenen Beitrag GESPERRT statt durchgewunken "
+            "(`Potential.lage_gesperrt`, geprueft VOR der Notiz ,nicht "
+            "vermessen'). Bis dahin entschied ueber einen Nachkauf allein "
+            "das Sprachmodell (2.370). Einstieg unberuehrt.",
+            "Nutzerentscheidung 11.09. (Paket B); Befund 2.374-akku",
+            fertig=True),
+    Schritt(17, "H-1 PORTFOLIOWERT",
+            "P-1: die Rollen-Kette liest das KAPITAL - "
+            "`portfolio_wert_historie.wert_eur` (Gesamtkapital ohne Cash, "
+            "P-5). Faellt der Wert aus: LAUTE Meldung, kein stiller "
+            "Vorgabewert - und die BEWERTUNG laeuft weiter "
+            "(BEWERTUNG-NIE-BLOCKIEREN). Nur die Hebelrechnung braucht es. "
+            "⚠️⚠️ VOR DEM BAU GEFUNDEN (2.375): der Wert zaehlt das "
+            "GESTAKTE nicht (rund 6.093 EUR, 38 %) und wird am Notebook "
+            "nur alle rund sechs Tage geschrieben (Abdeckungswache). "
+            "WARTET AUF P-3 (Nutzerentscheidung).",
+            "Nutzerentscheidung 10.09. (P-1, P-5); Anforderungen_Umbau K1"),
+    Schritt(18, "H-2 r(q)",
+            "K1 (vormals Schritt 28): die Wahrscheinlichkeit erzeugt das "
+            "Risiko. risiko = r(q) x Kapital, r(q) = halbes Kelly, "
+            "geklammert 0,50 bis 1,25 % (N-39); nominal = risiko / "
+            "Stopabstand; hebel = nominal / 500 EUR (Hebelnenner, Nutzer "
+            "05.09.). Unter 2x -> SPOT mit UNVERAENDERTEM Betrag (N-38). "
+            "Harte Grenze 5x bis zur Trennschaerfe (Nutzer 11.09.). Quote "
+            "UNKALIBRIERT - die Kalibrierung ist am 05.09. gefallen. Die "
+            "Herleitung steht in EUR in der Mail.",
+            "Nutzerauftraege 28.08./05.09./11.09.; Anforderungen_Umbau "
+            "N-38/N-39; Vorgabe PAKET-B"),
+    Schritt(19, "H-3 HEBELVERTEILUNG",
+            "VOR dem Scharfschalten: r(q) ueber die echten historischen "
+            "Anker simulieren - wie oft 2-5x, wie oft Spot, wie oft greift "
+            "die 5x-Grenze, je Beitragslage. Nutzervorgabe 28.08.: "
+            "*,vorher pruefen und simulieren'*. ⚠️ Das ersetzt NICHT die "
+            "Trennschaerfe-Messung (A1) - es zeigt, was die Regel TUT, "
+            "nicht ob sie trifft.",
+            "Nutzervorgabe 28.08.; Expertenurteil 11.09. (2.374-messen)"),
+    Schritt(20, "H-4 POSITIONSFUEHRUNG HEBEL",
+            "O5: Hebel ist ein TRADE mit Lebenszyklus, Spot ein Bestand. "
+            "Stop, Ziel, Liquidationsabstand und taegliche Finanzierung "
+            "werden gefuehrt; Schliessen und Reduzieren kommen als Mail. "
+            "⚠️ Die unsicherste Schaetzung im Paket (1-2 Tage) - Umfang erst "
+            "nach Sichtung von `hebel_positions` und `ausstiegsrechnung` "
+            "sicher.",
+            "Anforderungen_Umbau O5; Vorgabe KORRELATION-IM-DECKEL"),
+    Schritt(21, "H-5 AGGREGAT-DECKEL",
+            "K3: alle offenen Hebelrisiken zusammen hoechstens 3 % des "
+            "Kapitals (Nutzer 11.09.). Die Korrelation des Marktes gehoert "
+            "HIERHER, nicht in r(q) (P-4).",
+            "Nutzerentscheidung 10.09. (P-4) und 11.09."),
+    Schritt(22, "S-4 SPOT SAUBER",
+            "(a) Nachweis, dass r(q) Spot NICHT veraendert; (b) die "
+            "Mailgliederung aus dem Vorschlag vom 11.09. einbauen - nichts "
+            "gestrichen - und dabei die ZWEI Trefferquoten in einer Mail "
+            "aufloesen (2.372); (c) den gemeldeten Befund O1 (Cooldown "
+            "wirkt nicht) am Code pruefen. Feinschliff der Mail NACH dem "
+            "Rollout.",
+            "Nutzerentscheidung 11.09.; Befund 2.372; Anforderungen O1"),
+    Schritt(23, "E2E PAKET B",
+            "`simuliere_kette.py` gegen die NB-Sicherung, mit einem GEZIELT "
+            "erzeugten Hebelgeschaeft (steuerbare Attrappe): Mail, Chart, "
+            "Signalzeile als Hebel, Hebeltopf, Cooldown, Aggregat-Deckel. "
+            "Dazu Spot unveraendert und die Akkumulation gesperrt, mit "
+            "Grund im Trichter.",
+            "Befund 2.371 (nie ein Hebelgeschaeft simuliert)"),
+    Schritt(24, "ROLLOUT PAKET B",
+            "Gesamtpaket auf das Notebook (stehende Regel). Checkliste "
+            "`Basisinfos/Ausrollen_24_08.md` vorher aktualisieren: "
+            "Pruefungszahl, `config.yaml` am Notebook VOR dem Pull "
+            "abgleichen, S-1 erkennt die Symbolliste (2.368). ⚠️ Der "
+            "Akkumulationsschalter wirkt bis Paket 2 nicht (Sperre) - ETH "
+            "und SOL erst mit Paket 2 setzen. OFFEN: alter Marktscan "
+            "weiter aktiv? (2.369)",
+            "Basisinfos/Ausrollen_24_08.md; Nutzerentscheidung 11.09."),
+
+    # ================================================================
+    # PAKET 2 - DIE AKKUMULATION (Messen vor Bauen)
+    # ================================================================
+    Schritt(25, "AKKU-MESSPAKET",
+            "(1) 2.286/2.287 reproduzieren (R-R11); (2) Zeitstabilitaet je "
+            "Kandidat fuer H90 - Permutationstest je Haelfte, `n68` ist "
+            "blockbasiert und passt dort nicht; (3) Ueberschneidung der "
+            "drei: `schnitt` +0,0470, `funding` UMGEKEHRT -0,0230, "
+            "`oi_aenderung` UMGEKEHRT -0,0178; (4) Stufen. Faellt ein "
+            "Kandidat: Loesung suchen (KEIN-BEITRAG-FAELLT) - die Sperre "
+            "bleibt so lange.",
+            "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09."),
+    Schritt(26, "AKKU-BAU",
+            "Form REGLER (Fuenftelstufen, nur spot x akkumulation). Eigene "
+            "SKALA: `verbilligung` ist ein Rang mit Basisrate 0,500, kein "
+            "R - daher eigene Schwelle (R-R9 nur fuer diese Lage). "
+            "Registrierung mit `strategien=('akkumulation',)` - die Sperre "
+            "faellt damit von selbst. `schnitt` am Notebook aus der "
+            "KURSREIHE rechnen - `messdaten.db` liegt dort bewusst nicht. "
+            "Mail und Simulation.",
+            "vormals Schritt FORM; Befunde 2.286-schnitt, 2.374"),
+    Schritt(27, "ROLLOUT PAKET 2",
+            "Akkumulation aufs Notebook; DANN ETH und SOL im "
+            "Akkumulationsschalter setzen (L1).",
+            "Nutzerentscheidung 11.09."),
+
+    # ================================================================
+    # NACH DEM PRODUKTIVGANG
+    # ================================================================
+    Schritt(28, "TAKT",
             "⚠️ ERST NACH DEM ROLLOUT messen - vorher misst man den alten "
             "Stand. Mailaufkommen und Wiederholungsanteil am echten "
             "Betrieb.",
@@ -356,14 +462,14 @@ REIHENFOLGE = (
     # vorliegen. Ein Werkzeug gegen den alten Stand zu bauen heisst, es
     # beim ersten echten Einsatz nochmal anzufassen.
     # ================================================================
-    Schritt(18, "T-1 FEHLERIDENTIFIKATION",
+    Schritt(29, "T-1 FEHLERIDENTIFIKATION",
             "Je STRATEGIE, ASSET und ZEITRAUM - baut auf "
             "`simuliere_kette.py` auf, die den Durchlauf schon kann. "
             "⚠️ Ein Standardwerkzeug mit Schaltern statt Wegwerfskripten: "
             "allein am 11.09. sind fuenf entstanden (n108 bis n112), wo "
             "eines gereicht haette.",
             "Nutzervorschlag 11.09."),
-    Schritt(19, "T-3 HISTORISCHE SIMULATION",
+    Schritt(30, "T-3 HISTORISCHE SIMULATION",
             "⚠️⚠️ AUF `bewegung_r` (POTENTIAL), NICHT auf Zielerreichung. "
             "Nutzervorgabe 23.08.: *,Wichtig fuer den guten Trade ist das "
             "POTENTIAL und NICHT die reelle Zielerreichung, diese ist "
@@ -378,26 +484,7 @@ REIHENFOLGE = (
             "feedback_potential_statt_zielerreichung; "
             "agent/krypto/backtesting.py"),
 
-    # ================================================================
-    # DIE BEWERTUNG VERVOLLSTAENDIGEN
-    # ⚠️ Frueh nach dem Rollout: ein gemessener Beitrag liegt bereit und
-    # muss nur entschieden und verdrahtet werden - der billigste echte
-    # Gewinn im ganzen Plan.
-    # ================================================================
-    Schritt(20, "FORM",
-            "Form und Vertreterin entscheiden (quer/laengs, "
-            "Schalter/Regler). ⚠️ Fuer die AKKUMULATION liegt `schnitt` "
-            "gemessen bereit (+0,0470, p 0,000, 481 von 518 Symbolen) und "
-            "muss nur registriert werden - danach hat die Lage erstmals "
-            "eine Bewertung statt null Beitraegen. Loest R-R9 aus, aber "
-            "NUR fuer diese Lage. ⚠️ NACHTRAG 11.09.: die Entscheidung ist "
-            "an Charlie uebergeben. Bis zur Registrierung laeuft die "
-            "Akkumulation OHNE Bewertung durch (2.370). Vorher: R-R11 "
-            "reproduzieren, Kriterium 2 auf V1/H90, Stufen herleiten, "
-            "Schwelle dieser Lage kalibrieren, `messdaten.db` am "
-            "Notebook klaeren.",
-            "Plan 05.09.; Befunde 2.286-schnitt, 2.370"),
-    Schritt(21, "EMAIL STRUKTUR UND INHALTE",
+    Schritt(31, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
             "Regel 1 war schon erfuellt (2.356); offen sind Regel 2 "
             "(gleichlautende Luecken zu EINEM Satz, gezaehlt nach GRUND) "
@@ -405,14 +492,14 @@ REIHENFOLGE = (
             "Vorschlag: die Mail ist lang, WEIL die Bewertung duenn ist - "
             "nach Schritt 21 schrumpft der Lueckenblock von selbst.",
             "Gesamtplan 11.09. - Mail-Vorschlag"),
-    Schritt(22, "GUI UND UEBERSICHTSSEITE",
+    Schritt(32, "GUI UND UEBERSICHTSSEITE",
             "⚠️ Offen seit 07.09., nie begonnen (E1). ⚠️ Die "
             "Uebersichtsseite EXISTIERT (`remote/status.py`, rund 40 "
             "Aggregatoren) - hier geht es um Erweiterung, nicht Neubau. "
             "Die Bewertungsschwelle steht seit dem 11.09. darin (35 "
             "Parameter); in der GUI fehlt sie noch.",
             "remote/status.py; Nutzervorgabe 07.09. und 11.09."),
-    Schritt(23, "LLM-ROLLEN UND MODELLE",
+    Schritt(33, "LLM-ROLLEN UND MODELLE",
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
             "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
@@ -440,7 +527,7 @@ REIHENFOLGE = (
     # geworden: ohne eine historisch rekonstruierte Phase (R-1) und eine
     # geklaerte Datenlage je Phase (R-2) ist es nicht ausfuehrbar.
     # ================================================================
-    Schritt(24, "SONDERPUNKT REGIME",
+    Schritt(34, "SONDERPUNKT REGIME",
             "⚠️⚠️⚠️ BELEGTE AUSGANGSLAGE: (1) das diskrete Regime war nie "
             "etwas anderes als ,baer' - 2.549 Signale 07.07. bis 14.08., "
             "Ursache eine ODER-Bedingung (Fear & Greed allein erzwingt "
@@ -464,9 +551,13 @@ REIHENFOLGE = (
             "Nutzervorgabe 11.09.; project_regime_immer_baer_kein_vergleich; "
             "NB-Sicherung 11.09.; agent/krypto/regime.py"),
     # ================================================================
-    # DER HEBEL - der lange Weg, ab hier parallel moeglich
+    # DER HEBEL - die Messung, die Paket B NICHT ersetzt
+    #
+    # Paket B baut die Regel (r(q)); ob ein hoeherer Hebel auch mit einer
+    # hoeheren REALEN Trefferquote einhergeht, ist erst nach A1 messbar.
+    # Bis dahin begrenzen die Klammer 0,50-1,25 % und die 5x-Grenze.
     # ================================================================
-    Schritt(25, "A1 / HEBEL-SPUR",
+    Schritt(35, "A1 / HEBEL-SPUR",
             "⚠️⚠️⚠️ DER ENGPASS DES HEBELS, mit BENANNTEM Weg: das Band "
             "auf binaeren Daten ist VIERMAL zu eng (2.238), deshalb "
             "traegt auf `barriere` sogar `zufall`. Loesung laut "
@@ -477,26 +568,23 @@ REIHENFOLGE = (
             "bisher sind sie nur gegen `bewegung_r` gefallen, und das VOR "
             "dem Messstandard.",
             "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
-    Schritt(26, "V12 VOLA UND SCHNITT",
+    Schritt(36, "V12 VOLA UND SCHNITT",
             "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
             "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
             "Gemeinsamer geometrischer Anteil? Stuetzt 2.293. "
             "⚠️ Niedrige Dringlichkeit - klaert nur, WARUM zwei "
             "Kandidaten fielen, die ohnehin gefallen sind.",
             "Befund 2.327 - offen"),
-    Schritt(27, "KALIBRIERUNG",
+    Schritt(37, "KALIBRIERUNG",
             "Kalibrierung neu, dann die Hebelhoehe rechnen: erreicht sie "
             "2-5x? ⚠️ Der Engpass ist die AUFLOESUNG, nicht die Staerke - "
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
-    Schritt(28, "K1",
-            "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
-            "(`betraege.py`).",
-            "N-40 K1"),
-    Schritt(29, "KETTE",
+    Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
+
 
 )
 
@@ -763,8 +851,9 @@ def abgleich() -> list:
                       "⚠️ GELESEN AUF: %s. Massgeblich ist das NOTEBOOK - "
                       "dort stand am 11.09. NUR BTC. Der Schalter ist in "
                       "der Oberflaeche vorhanden und dort EINMAL AM NB zu "
-                      "setzen (Rollout-Checkliste, "
-                      "Ausrollen_24_08.md)." % (", ".join(sorted(fehlt)), _wo))
+                      "setzen - ⚠️ seit Paket B (11.09.) erst mit ROLLOUT "
+                      "PAKET 2, bis dahin ist die Akkumulation gesperrt."
+                      % (", ".join(sorted(fehlt)), _wo))
 
     # 7 - `swing` ist laut Nutzervorgabe keine genutzte Strategie mehr.
     #     ⚠️ Geprueft wird die STILLLEGUNG, nicht das Fehlen: der Eintrag
