@@ -8,10 +8,10 @@
 |---|---|---|---|
 | **NORM** | 21 | 7 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 81 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **BLOCK** | 82 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
 | **ALTBESTAND** | 174 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **174 von 303 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **174 von 304 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -40,7 +40,7 @@
     pruefe_momentum_trennschaerfe.py, pruefe_n31_tagesklammer.py, pruefe_regel_trennschaerfe.py, pruefe_schwelle_gegenpruefung.py
     pruefe_turnover_befund.py, pruefe_turnover_und_kombination.py, rechne_sperren_zusammen.py
 
-## BLOCK (81)
+## BLOCK (82)
 
     messe_abstand_zum_zufall.py, messe_akkumulation_az4.py, messe_akkumulationsmass.py, messe_alle_groessen_neu.py
     messe_allocator_gegen_zufall.py, messe_alltagsmarkt.py, messe_asset_anteil_und_relativform.py, messe_ausstieg.py
@@ -62,7 +62,7 @@
     pruefe_strukturstop.py, pruefe_stufen_gegen_quote.py, pruefe_stufen_stabilitaet.py, pruefe_trailing_je_instrument.py
     pruefe_turnover_weglassen.py, pruefe_veraenderungsformen_unabhaengig.py, pruefe_vola_unabhaengig.py, pruefe_vola_zeitpunkt_oder_asset.py
     pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
-    simuliere_staffelung.py
+    simuliere_hebelverteilung.py, simuliere_staffelung.py
 
 ## ALTBESTAND (174)
 

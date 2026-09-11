@@ -370,13 +370,15 @@ REIHENFOLGE = (
             "Befunde 2.377*; Nutzerentscheidung 11.09. (Paket B)",
             fertig=True),
     Schritt(19, "H-3 HEBELVERTEILUNG",
-            "VOR dem Scharfschalten: r(q) ueber die echten historischen "
-            "Anker simulieren - wie oft 2-5x, wie oft Spot, wie oft greift "
-            "die 5x-Grenze, je Beitragslage. Nutzervorgabe 28.08.: "
-            "*,vorher pruefen und simulieren'*. ⚠️ Das ersetzt NICHT die "
-            "Trennschaerfe-Messung (A1) - es zeigt, was die Regel TUT, "
-            "nicht ob sie trifft.",
-            "Nutzervorgabe 28.08.; Expertenurteil 11.09. (2.374-messen)"),
+            "✔ ERLEDIGT 11.09.: `simuliere_hebelverteilung.py` ueber "
+            "633.672 echte Anker, Betriebsfall mit Widerlegungspreis. Bei "
+            "18.213 EUR: Spot 56 %, Hebel 44 % (Grenze 5x 5 %), "
+            "Liquidation nie; stark kapitalabhaengig (12 % bei 9.942, 80 % "
+            "bei 30.000). Watchlist 2026: Hebel 58 %, Grenze 5x 10 %, Stop Median 13,7 %. Gegenpruefung G1-G6 "
+            "bestanden; Stopregel an 1.289 NB-Einstiegen gegengeprueft. "
+            "EMPFEHLUNG: Schalter mit dem Rollout (nach H-4, H-5, E2E).",
+            "Befunde 2.378*",
+            fertig=True),
     Schritt(20, "H-4 POSITIONSFUEHRUNG HEBEL",
             "O5: Hebel ist ein TRADE mit Lebenszyklus, Spot ein Bestand. "
             "Stop, Ziel, Liquidationsabstand und taegliche Finanzierung "

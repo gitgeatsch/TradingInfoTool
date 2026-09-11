@@ -4873,3 +4873,60 @@ wird, folgt aus dem Risikobudget …" geht auch an das Modell und wird in
 Schritt 22 angefasst · ein Hebelgeschäft end-to-end erst in Schritt 23 · bei Spot stehen zwei Risikozahlen untereinander (97 EUR Hebelrechnung, 95 EUR am Stop) — Feinschliff in Schritt 22.
 
 ✔ **Kette gegen die NB-Kopie** (Schalter nur im Speicher an): 1 Signal, 1 Mail, 0 Fehler. ONDO: *„Trefferquote 34,6 % … halbes Kelly 0,97 % … = 97 EUR · bei 11,9 % Stop: 813 EUR Positionswert / 500 EUR Einsatz = 1,6x – unter 2,0x, daher Spot mit dem gewohnten Betrag“*.
+
+## ✔ H-3 — was r(q) tut, über echte Anker simuliert (Befund 2.378)
+
+`simuliere_hebelverteilung.py` — Standardwerkzeug mit Schaltern (`--kapital`,
+`--ab`, `--nur-watchlist`, `--anteil`). Bewertung, Stop und Hebel über die
+**echten** Funktionen; Gegenprüfung G1–G6 in jedem Lauf.
+
+### Bei 18.213 EUR Kapital (Stand nach H-1), Betriebsfall
+
+| | alle Jahre (113.224) | ab 2026 (24.543) | Watchlist 2026 |
+|---|---|---|---|
+| **Spot** | 56,3 % | 54,0 % | 41,6 % |
+| **Hebel** | 43,7 % | 46,0 % | 58,4 % |
+| davon 2x / 3x / 4x | 24,2 / 9,7 / 4,4 % | 26,4 / 10,6 / 4,2 % | 28,3 / 13,2 / 7,1 % |
+| **an der Grenze 5x** | 5,3 % | 4,9 % | 9,8 % |
+| Liquidation bindet | nie | nie | nie |
+
+### Nach Kapital (alle Jahre)
+
+| Kapital | Hebel | an der 5x-Grenze |
+|---|---|---|
+| 9.942 EUR | 12,1 % | 0,0 % |
+| **18.213 EUR** | **43,7 %** | 5,3 % |
+| 30.000 EUR | 79,8 % | 19,0 % |
+
+### Nach Beitragslage (18.213 EUR)
+
+| Lage | Hebel | an der Grenze |
+|---|---|---|
+| nur Funding | 34,0 % | 0,8 % |
+| Funding + Turnover | 93,6 % | 28,1 % |
+| nur Turnover | 91,6 % | 28,3 % |
+
+### ⚠️⚠️ Ein Irrtum im ersten Entwurf — vom Vorabtest gefangen
+
+Ich hatte angenommen, der Widerlegungspreis des Modells könne den Stop nur
+**weiter** machen. Falsch: mit ihm entfällt der Rückfall auf 2,5 x ATR, und
+der Stop wird **enger**. Der Vorabtest ergab 20 % gegen echte 7,6 % — der
+Abgleich mit den NB-Signalen hat es gezeigt.
+
+### ✔ Unabhängige Gegenprüfung des Stops
+
+Die Stopregel des **neuen** Codes auf **1.289 echte NB-Einstiege** angewandt:
+Median **11,7 %** (10 % 5,9 · 90 % 16,0). Die Simulation liegt mit 16,4 %
+darüber — **im Betrieb entsteht eher mehr Hebel als simuliert.**
+
+### ➔ Was das für den Schalter heißt — Empfehlung
+
+1. Die Regel verhält sich wie gebaut; die Grenzen greifen.
+2. Der Hebel hängt stark am **Kapital** — P-3 war kein Detail.
+3. Die **grobe Stufung** (A9) wird sichtbar: mit beiden Beiträgen fast
+   immer über 2x, oft an der Grenze.
+4. Ob höherer Hebel häufiger trägt, zeigt die Simulation **nicht** (A1).
+
+**Empfehlung: den Schalter mit dem Rollout von Paket B einschalten — nach
+Positionsführung (H-4), Aggregat-Deckel (H-5) und dem E2E-Nachweis
+(Schritt 23), nicht jetzt.**

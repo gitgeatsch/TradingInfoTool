@@ -1098,6 +1098,22 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.378** — ✔✔ H-3 - WAS r(q) TUT, UEBER ECHTE ANKER SIMULIERT (`simuliere_hebelverteilung.py`, Standardwerkzeug mit Schaltern). Messmenge V1, 633.672 Anker 2019-2026, 536 Symbole; Bewertung, Stop und Hebel ueber die ECHTEN Funktionen. Durch die Bewertungsschwelle: 113.224 (17,9 %%). BEI 18.213 EUR KAPITAL: Spot 56,3 %% · Hebel 43,7 %% (2x 24,2 · 3x 9,7 · 4x 4,4 · Grenze 5x 5,3 %%); Liquidationsabstand greift NIE. Nach Beitragslage: nur funding 34,0 %% Hebel · funding+turnover 93,6 %% (28,1 %% an der 5x-Grenze) · nur turnover 91,6 %%. Kapital 9.942 EUR: 12,1 %% Hebel; 30.000 EUR: 79,8 %% (19,0 %% an der Grenze). Risiko je Hebeltrade Median 178 EUR bei 18.213 EUR. Ab 2026: Spot 54,0 %% · Hebel 46,0 %%; in der Auswahlmenge (oberste 20 %%) 62,6 %%. NUR WATCHLIST 2026: 39 Werte, 8.606 Anker, 3.694 durch die Schwelle (42,9 %%); Spot 41,6 %% · Hebel 58,4 %% (2x 28,3 · 3x 13,2 · 4x 7,1 · Grenze 5x 9,8 %%); Stop Median 13,7 %% - naeher am Betrieb (11,7 %%); in der Auswahlmenge 77,3 %% Hebel
+
+- Quelle: simuliere_hebelverteilung.py · Laeufe 11.09.
+
+**2.378-stop** — ⚠️⚠️ EIN IRRTUM IM ERSTEN ENTWURF - vom Vorabtest gefangen, nicht vom Lauf. Das Werkzeug rechnete zuerst OHNE Widerlegungspreis und nahm an, er koenne den Stop nur weiter machen. FALSCH: `_stop_abstand` nimmt den Rueckfall 2,5 x ATR nur ohne Widerlegungspreis; mit ihm gilt der Rauschboden max(2 x ATR, 5 %%), der Stop wird ENGER. Am Notebook nennt das Modell ihn in 1.425 von 1.427 Einstiegen. Der Vorabtest ergab Stops um 20 %% gegen echte 7,6 %% - der Abgleich mit den NB-Signalen hat den Fehler gezeigt. Jetzt: Betriebsfall mit Widerlegungspreis im Rauschen, der Fall ohne als Empfindlichkeit
+
+- Quelle: Vorabtest 11.09. · NB-Sicherung 11.09.
+
+**2.378-gegenpruefung** — ✔ GEGENPRUEFUNG, im Werkzeug eingebaut und in jedem Lauf bestanden: G1 Hebel unabhaengig nachgerechnet (2.000 Anker x 3 Kapitalstufen, 0 Abweichungen) · G2 Rohhebel linear im Kapital · G3 mehr Kapital nie weniger Hebel · G4 ATR identisch mit `rollen_eingabe.atr_bis` · G5 Quote je Beitragslage = direkte Bewertung · G6 Stop = `rechne()` mit und ohne Widerlegungspreis. DAZU UNABHAENGIG: die Stopregel des NEUEN Codes auf 1.289 echte NB-Einstiege angewandt, mit deren Widerlegungspreis - Median 11,7 %% (10 %% 5,9 · 90 %% 16,0); ohne Widerlegungspreis 14,6 %%; alter Code am NB 7,7 %%
+
+- Quelle: simuliere_hebelverteilung.py G1-G6 · NB-Sicherung
+
+**2.378-deutung** — ⚠️⚠️ WAS DIE ZAHLEN FUER DAS SCHARFSCHALTEN HEISSEN: (1) die Regel verhaelt sich wie gebaut - Spot, wo die Quote nichts hergibt; Hebel, wo Beitraege tragen; die Grenzen greifen. (2) Die HISTORISCHEN Stops (Median 16,4 %%) sind WEITER als die zu erwartenden des Betriebs (11,7 %%) - im Betrieb entsteht also eher MEHR Hebel als simuliert. (3) Der Hebel haengt stark am KAPITAL (12 %% -> 80 %% zwischen 9.942 und 30.000 EUR) - deshalb war P-3 kein Detail. (4) Die GROBE Stufung (A9) wird sichtbar: wo beide Beitraege vorliegen, landet fast jeder Fall ueber 2x und ein grosser Teil an der Grenze. (5) Ob hoeherer Hebel haeufiger traegt, zeigt die Simulation NICHT (A1). ➔ EMPFEHLUNG: den Schalter erst mit Positionsfuehrung (H-4), Aggregat-Deckel (H-5) und dem E2E-Nachweis (Schritt 23) einschalten - also mit dem Rollout von Paket B, nicht jetzt
+
+- Quelle: Befund 2.378 · Nutzerentscheidung offen
+
 **2.377** — ✔✔✔ H-2 GEBAUT - DER HEBEL ENTSTEHT AUS DER WAHRSCHEINLICHKEIT, wie beauftragt (28.08./05.09./11.09.). `betraege.hebelrechnung`: Risiko = r(q) x Kapital, r(q) = halbes Kelly geklammert 0,50-1,25 %% (N-39); Positionswert = Risiko / Stop; Hebel = Positionswert / 500 EUR. Unter 2x SPOT mit unveraendertem Betrag (N-38); harte Grenze 5x bis zur Trennschaerfe; ohne positive Erwartung (Kelly <= 0) KEIN Hebel, auch nicht die Untergrenze. In der Kette: die Quote wird VOR der Vorabrechnung bestimmt, das Etikett aus r(q) steuert taktische Zelle, Hebel-Schalter und Topf; `rechne()` bekommt Risiko, Einsatz und Grenze. Ohne Kapital oder Quote: kein Hebel, Satz in der Mail, einmal je Lauf im Log. Die Herleitung steht in EUR im Abschnitt DIE RECHNUNG. ⚠️ Schalter `rollen_kette.hebel_aus_quote.aktiv` steht AUS - Schritt 19 simuliert die Hebelverteilung vor dem Scharfschalten
 
 - Quelle: agent/betraege.py · agent/rollen_lauf.py · agent/entscheidungsrechnung.py · config.yaml
