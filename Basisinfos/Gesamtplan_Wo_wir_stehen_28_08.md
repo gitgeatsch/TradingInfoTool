@@ -3989,3 +3989,151 @@ erschöpft** ist (2.168-erschöpft): ein weiterer Beitrag braucht eine
 |---|---|
 | **Parameter übersehen** | `auswahl_saat` stand seit 09.09. im Code, samt Testvorschrift im Docstring. **Zweiter Fall dieser Art in zwei Tagen** — am 10.09. dasselbe bei V9 |
 | **Falsch zitiert** | „`schnitt50` ist nach 2.222 die einzige monotone Form" — 2.222 sagt das nicht. Die Behauptung stammt aus `Anforderungen_Umbau_28_08.md` (O4/N2), gilt nur **längs**, ist vorstandardlich, N2 ist offen — und im Hebelzusammenhang führt die Fakten-Entscheidungsmappe `schnitt50` als **nicht monoton** |
+
+---
+
+# 📋 11.09. — DER KRYPTO-STAND JE STRATEGIE (Nutzerauftrag)
+
+> *„gib mir für Krypto nach Strategie den aktuellen Stand ob und wie der
+> Umbau erfolgen kann im Vergleich zum Plan und was das für die
+> Produktivsetzung bedeutet"*
+
+**Alles unten ist aus dem laufenden Code gelesen**, nicht aus dem Plan
+erinnert — `agent/wahrscheinlichkeit.BEITRAEGE`, `agent/assetklassen.py`,
+`agent/handelsauftrag.ERLAUBTE_PAARE`, `agent/rollen_lauf.py`.
+
+⚠️ **Vorbehalt:** die Betriebsdatenbank am Desktop ist auf Stand
+**19.08.** Jede Aussage über den *laufenden* Betrieb (Schalterstände,
+Mailaufkommen, offene Positionen) ist am **Notebook** zu prüfen.
+
+## Die fünf Lagen, die es in Krypto überhaupt gibt
+
+| Instrument | Strategie | wer bekommt sie |
+|---|---|---|
+| `spot` | `einstieg` | **alle** Krypto-Werte — der Grundfall |
+| `spot` | `akkumulation` | nur mit `asset_dca_settings.dca_erlaubt` |
+| `hebel` | `einstieg` | nur mit `asset_hebel_settings.hebel_pruefung_erlaubt` |
+| `hebel` | `swing` | ⛔ im Code übersprungen (Nutzerentscheidung 31.08.) |
+| `absicherung` | `einstieg` | in Krypto **keine** (nur 2 Hedge-Positionen, nicht Krypto) |
+
+## ⚠️⚠️ Was live PUNKTE gibt — zwei von acht
+
+Von den acht registrierten Beiträgen haben nur **zwei** `zustand="traegt"`
+und eine Stufentabelle:
+
+```
+Funding-Rang im Markt    (0,82 · 1,30 · 0,12 · −0,54 · −1,70)   strategien=('einstieg',)
+Turnover-Rang im Markt   (3,15 · 0,83 · 0,22 · −1,79 · −2,40)   strategien=('einstieg',)
+```
+
+Die anderen sechs stehen auf `null` / `nie` / `enthalten` mit **0,0
+Punkten** — darunter `Abstand zum eigenen 200-Tage-Schnitt` (`schnitt`).
+**Er gibt live keine Punkte**, er erscheint nur als Merkmal im Text.
+
+Dazu die **OI-Sperre** in `rollen_lauf.py`: greift nur bei
+`strategie == "einstieg"` **und** nur ohne Bestand — beides gemessen
+begründet.
+
+---
+
+## 1 · `spot` / `einstieg` — der einzige vollständige Weg
+
+| | |
+|---|---|
+| **SOLL** | Bewertung aus tragenden Beiträgen, Schwelle, Sperren |
+| **IST** | ✔ 2 tragende Beiträge · ✔ OI-Sperre · ✔ Schwelle 0,080 |
+| **Lücke** | **keine strukturelle** |
+
+⚠️ **Aber zwei Befunde über den Bestand, die in die Entscheidung gehören:**
+
+- **V2 (2.312):** `funding` besteht **N-73 nicht** — 2 von 3 Mengen
+- **V11 (2.334):** `funding` kippt unter dem schärferen Stabilitätstest
+  in **1 von 3 Saaten**
+
+**Beides ist kein Abschaltgrund** — aber es heißt, dass der Bestand
+dieselbe Hürde nicht nimmt, an der Kandidaten scheitern.
+
+➔ **Produktivfähig, wenn akzeptiert wird, dass es bei zwei Beiträgen
+bleibt.**
+
+---
+
+## 2 · `spot` / `akkumulation` — messbar, aber nicht verdrahtet
+
+⚠️⚠️ **Hier muss ich mich korrigieren.** Mein Satz von heute Vormittag
+*„es gibt keinen dritten Beitrag"* galt der **Einstiegs**-Bewertung. Für
+die Akkumulation sieht es anders aus.
+
+| | |
+|---|---|
+| **SOLL** | eigene Bewertung für den Nachkauf — kein Stop, kein Trailing |
+| **IST** | ⛔ **null** Beiträge. `funding` und `turnover` sind auf `einstieg` beschränkt — **zu Recht**: die Messung ankert auf einem Einstieg, über den Nachkauf sagt sie nichts |
+| **Gemessen** | ✔ `schnitt` trägt: **+0,0470**, Nullband [−0,0121 .. +0,0106], **p 0,000**, 481 von 518 Symbolen, Kaufquote 19,3 % |
+
+⚠️ **Und das Auswahl-Artefakt-Argument aus 2.335 trifft ihn hier NICHT:**
+2.286 lief auf der **freien** Messmenge V1 (518 Reihen, H90,
+`verbilligung`, Permutationstest) — nicht auf der Momentum-20-%-Menge.
+Die zwei Befunde sind auf verschiedenen Mengen und beißen sich nicht.
+
+**Offen:**
+1. **FORM** — Regler oder Schalter (Schritt 13 im Ablauf)
+2. **Registrierung** — löst R-R9 aus, aber **nur für diese Lage**
+3. **L1** — `dca_erlaubt` führt am Desktop nur **BTC, ETH**; die
+   Nutzervorgabe nennt **BTC, ETH, SOL**. ⚠️ Am Notebook zu prüfen
+
+➔ **Ein überschaubarer Schritt von der Produktivsetzung entfernt.**
+
+---
+
+## 3 · `hebel` / `einstieg` — Signale ja, Hebelhöhe nein
+
+| | |
+|---|---|
+| **SOLL** | Hebel **dynamisch** aus der Wahrscheinlichkeit, Zielzone **2–5×** |
+| **IST** | erbt `funding` + `turnover` aus dem Spot-Weg (Entscheidung 10.09., bewusst) |
+| **Blockiert** | **A9** · **A1** · **P-1** |
+
+```
+A9   die AUFLOESUNG: die Abstufung springt 1,02x -> 3,90x, weil die
+     Beitraege Fuenftel sind (2.174-grenzen)
+A1   das Band liegt auf binaeren Daten - blockiert die Trennschaerfe-Frage
+P-1  die Rollen-Kette liest den Portfoliowert nicht
+```
+
+⚠️ **Der Engpass ist die Auflösung, nicht die Stärke** — zwei Lagen
+erreichen die Zielzone, aber dazwischen gibt es nichts. Ein Hebel, der
+von 1,02× auf 3,90× springt, ist keine Abstufung.
+
+➔ **Signale sind bewertbar, die Hebelhöhe ist es nicht.** Der lange Weg.
+
+---
+
+## 4 · `hebel` / `swing` — stillgelegt, kein Handlungsbedarf
+
+`assetklassen.py` überspringt sie an **einer** Stelle mit Begründung,
+`messnorm.LAGEN_STILLGELEGT` führt sie mit Kanarienvogel. Nutzerhinweis
+10.09.: *„Swing ist keine genutzte Strategie mehr."*
+
+## 5 · `absicherung` — zurückgestellt
+
+Vorgabe **KRYPTO-ZUERST** (10.09.). In Krypto gibt es keine
+Absicherungsposition; die zwei Hedge-Positionen sind nicht Krypto.
+
+---
+
+# Was das für die Produktivsetzung heißt
+
+| Stufe | was nötig ist | Aufwand |
+|---|---|---|
+| **A** `spot/einstieg` allein | **nichts** — steht | sofort |
+| **B** **+** `spot/akkumulation` | FORM entscheiden · `schnitt` registrieren · SOL freischalten | überschaubar |
+| **C** **+** `hebel` | A9 (Auflösung) · A1 (Band) · P-1 (Portfoliowert) | der lange Weg |
+
+⚠️ **R-R9 greift nur lageweise:** `schnitt` für die Akkumulation zu
+registrieren zwingt zur Neukalibrierung **dieser** Lage — nicht der
+Einstiegs-Schwelle 0,080.
+
+⚠️⚠️ **Was die Produktivsetzung NICHT löst** und vorher am Notebook zu
+prüfen ist: das Mailaufkommen und der Wiederholungsanteil. Das sind
+Betriebsbefunde, und die Desktop-Kopie ist vom 19.08. zu alt, um sie zu
+beurteilen.
