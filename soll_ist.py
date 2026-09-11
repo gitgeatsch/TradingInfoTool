@@ -252,23 +252,44 @@ REIHENFOLGE = (
             "Befund 2.312 / 2.312-antwort", fertig=True),
     Schritt(9, "V9 GESCHICHTET ALS EIN BEFUND",
             "✔ ERLEDIGT: Kriterium 3 ist beantwortet - `funding` erklaert "
-            "bei KEINEM Kandidaten etwas. `schnitt` hat damit ALLE VIER "
-            "Kriterien.",
-            "Befund 2.316 / 2.319", fertig=True),
-    Schritt(10, "FORM",
+            "bei KEINEM Kandidaten etwas. ⚠️ Der Zusatz ,`schnitt` hat "
+            "damit ALLE VIER Kriterien' (2.319) ist am 10.09. ABGELOEST "
+            "durch 2.325 - er hat DREI.",
+            "Befund 2.316 · 2.319 abgeloest durch 2.325", fertig=True),
+    Schritt(10, "S-7 GEKLAERT",
+            "✔ ERLEDIGT: S-7 dreifach reproduziert und nur in seinem "
+            "eigenen Wortlaut bestaetigt (,unentschieden'). ⚠️⚠️ DABEI "
+            "fiel KRITERIUM 2 auf: `n102:135` gab ,Band haelt die Null' "
+            "als ✔ aus - je breiter das Band, desto sicherer. Richtig "
+            "gemessen FAELLT `schnitt` daran.",
+            "Befunde 2.321 bis 2.330", fertig=True),
+    Schritt(11, "V11 SCHNITT50",
+            "⚠️⚠️ ERLEDIGT, ABER NEGATIV: `schnitt50` besteht N-73 NICHT "
+            "(2 von 3; Kriterium 1 mit 100 %% erfuellt). ⚠️⚠️⚠️ Und der "
+            "AUSWAHL-TEST hat die Zuschreibung aus 2.325 gekippt: "
+            "`schnitt`s Instabilitaet gehoert der AUSWAHL, nicht ihm - "
+            "Faktor 6 bei VIERMAL schaerferem Test. BILANZ: es gibt "
+            "KEINEN dritten Beitrag.",
+            "Befunde 2.331 bis 2.339", fertig=True),
+    Schritt(12, "V12 VOLA UND SCHNITT",
+            "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
+            "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
+            "Gemeinsamer geometrischer Anteil? Stuetzt 2.293.",
+            "Befund 2.327 - offen"),
+    Schritt(13, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(11, "KALIBRIERUNG",
+    Schritt(14, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(12, "K1",
+    Schritt(15, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(13, "KETTE",
+    Schritt(16, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

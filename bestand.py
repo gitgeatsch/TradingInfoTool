@@ -2803,6 +2803,129 @@ BEFUNDE = (
                "die Momentum-Auswahl und die Funding-Verfuegbarkeit "
                "koennten sich ueberschneiden) oder ob es Rauschen ist",
                "offen", "V10, aus 2.312"),
+    Befundlage("2.325-auswahl", "⚠️⚠️ 2.325 IST ZU BERICHTIGEN, NICHT "
+               "ZU WIDERRUFEN - und die beiden Teile sind zu trennen: "
+               "(a) die MESSUNG steht - auf der Momentum-20-%%-Menge ist "
+               "der Haelftenunterschied +0,1973 [+0,0717 .. +0,3892] "
+               "nachgewiesen und dreifach reproduziert. (b) die "
+               "ZUSCHREIBUNG faellt - es ist nicht `schnitt`s Eigenschaft, "
+               "sondern die der KOLLINEARITAET mit der Auswahl (2.333). "
+               "⚠️ FUER DEN VIERFACHTEST AENDERT SICH NICHTS: er ist auf "
+               "der SELEKTIERTEN Menge definiert (F-212), und dort faellt "
+               "`schnitt` an Kriterium 2. **2.319 bleibt abgeloest**",
+               "gilt", "n112_v11_gegenpruefung.py / F-212"),
+    Befundlage("2.325-warum-egal", "✔ UND DIE PRAKTISCHE FOLGE DREHT SICH "
+               "DADURCH NICHT UM: der Grund gegen `schnitt` als dritten "
+               "Beitrag ist jetzt 2.335 (er bildet zu vier Fuenfteln die "
+               "AUSWAHL nach) - ein Grund, der von Kriterium 2 voellig "
+               "unabhaengig ist und schon seit dem 09.09. im Bestand "
+               "steht. ⚠️ Wer nur 2.333 liest, koennte meinen, `schnitt` "
+               "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
+               "anderer geworden, und ein staerkerer", "gilt",
+               "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.331", "⚠️⚠️ V11: `schnitt50` BESTEHT N-73 NICHT - "
+               "2 von 3 Beitragsmengen. Er traegt auf 10 %% (+0,0846) und "
+               "20 %% (+0,0698), bei 50 %% lautet das Urteil TRAEGT NICHT "
+               "bis 0,0213 R - eine ECHTE Aussage, kein nicht-trennbar. "
+               "Kriterium 1 dagegen ist erfuellt: 536 Symbole = 100 %%, "
+               "251,6 Anker/Tag. ⚠️ Damit steht er SCHWAECHER da als "
+               "`schnitt` (3 von 3) und gleichauf mit `funding` (2 von 3) "
+               "- als robuster Ersatz taugt er nicht", "gilt",
+               "n111_v11_schnitt50.py"),
+    Befundlage("2.331-2187", "✔ UND DER WIDERSPRUCH IM BESTAND IST "
+               "AUFGELOEST: 2.187-was-haelt (,`schnitt50` bleibt "
+               "abgelehnt, auf ALLEN Mengen') und 2.219 (,widerspricht "
+               "sich ueber die Mengen') hatten DIESELBE Basis und sagten "
+               "das Gegenteil. **2.219 hatte recht** - er traegt auf 10 %% "
+               "und 20 %%, nicht auf 50 %%. 2.187s Formulierung war zu "
+               "weit", "gilt", "n111_v11_schnitt50.py / 2.219"),
+    Befundlage("2.332", "⚠️⚠️ DIE EHRLICHE GEGENFRAGE AUS V11 TEIL C: ein "
+               "Kandidat OHNE Wirkung ist trivial stabil - also stehen "
+               "Wirkung und Haelftenunterschied nebeneinander. Auf der "
+               "20-%%-Menge bewegen sich ALLE DREI um 80 bis 106 %% ihrer "
+               "eigenen Wirkung: `schnitt` 1,06 · `funding` 0,89 · "
+               "`schnitt50` 0,80. ⚠️ Der einzige Unterschied ist der "
+               "BETRAG - `schnitt`s groesserer Wert schliesst die Null "
+               "aus, die kleineren fallen unter dieselbe ABSOLUTE Leiter. "
+               "Kriterium 2 trennt damit nicht stabil von instabil, "
+               "sondern GROSS von KLEIN", "gilt",
+               "n111_v11_schnitt50.py Teil C / n112 G4"),
+    Befundlage("2.333", "⚠️⚠️⚠️ UND DAMIT FAELLT DIE ZUSCHREIBUNG AUS "
+               "2.325: `schnitt`s Instabilitaet ist eine Eigenschaft der "
+               "AUSWAHL, nicht seine. Mit gleich grosser, aber "
+               "ZUFAELLIGER Auswahl (`entzerrte_reihe(auswahl_saat=...)`, "
+               "drei Saaten) faellt der Haelftenunterschied auf der "
+               "20-%%-Menge von +0,1973 auf +0,0380 / +0,0264 / +0,0310 - "
+               "ein Faktor 6, und STABIL in allen drei. Das ist genau "
+               "der Test, den der Docstring des Parameters vorgibt: "
+               ",Traegt die Instabilitaet dann nicht mehr, ist sie eine "
+               "Eigenschaft der AUSWAHL und nicht von `schnitt`'", "gilt",
+               "n112_v11_gegenpruefung.py G3 / N-88 / 2.222"),
+    Befundlage("2.333-schaerfer", "✔✔ DIE NAHELIEGENDE GEGENERKLAERUNG IST "
+               "AUSGESCHLOSSEN - und zwar umgekehrt: unter Zufallsauswahl "
+               "ist der Test nicht SCHWAECHER, sondern VIERMAL SCHAERFER. "
+               "Trennschaerfe 0,05 statt 0,20, Band [-0,0055 .. +0,0897] "
+               "statt [+0,0717 .. +0,3892]. **Ein Nullbefund bei hoeherer "
+               "Aufloesung** - das sauberste Ergebnis, das der Aufbau "
+               "liefern kann", "gilt", "n112 Zusatzpruefung"),
+    Befundlage("2.334", "⚠️⚠️ UND UNTER DEMSELBEN SCHAERFEREN TEST KIPPT "
+               "AUSGERECHNET `funding` - der LIVE laeuft: bei Saat "
+               "20260911 auf der 20-%%-Menge +0,0417 [+0,0036 .. +0,0785], "
+               "Band schliesst die Null AUS, also NICHT STABIL. In 1 von "
+               "3 Saaten. `schnitt`, `schnitt50` und `zufall` sind dort "
+               "in 3 von 3 stabil. ⚠️ Kein Grund zum Abschalten - aber "
+               "dieselbe Lage wie bei V2/2.312: die Huerde ist fuer den "
+               "BESTAND neu zu begruenden, nicht fuer den Kandidaten zu "
+               "senken", "gilt", "n112_v11_gegenpruefung.py G3"),
+    Befundlage("2.335", "⚠️⚠️⚠️ DER EIGENTLICHE EINWAND GEGEN `schnitt` "
+               "IST EIN ANDERER UND STAERKERER - und er steht seit dem "
+               "09.09. da: er bildet die AUSWAHL nach. Spearman +0,704 "
+               "mit dem 250-Tage-Momentum (2.158-redundanz), Wirkung zu "
+               "vier Fuenfteln Auswahlartefakt (+0,1858 auf der "
+               "Momentummenge gegen +0,0366 auf Zufallsmengen, 2.222). "
+               "**Ein Beitrag, der die bereits getroffene Auswahl "
+               "wiederholt, bringt der Kette wenig Neues** - und dieser "
+               "Grund ist von Kriterium 2 voellig unabhaengig", "gilt",
+               "2.222 / 2.222-passt / 2.158-redundanz"),
+    Befundlage("2.336", "⚠️⚠️ BILANZ NACH V11: ES GIBT KEINEN DRITTEN "
+               "BEITRAG. `schnitt` bildet zu 4/5 die Auswahl nach "
+               "(2.335) · `schnitt50` besteht N-73 nicht (2.331) · `vola` "
+               "faellt an Kriterium 2 UND hat N-73 mit 1 von 3 (2.327, "
+               "2.293). Das deckt sich mit dem frueheren Befund, dass die "
+               "Kursreihe als Quelle erschoepft ist - ein weiterer "
+               "Beitrag braucht eine NEUE Quelle", "gilt",
+               "V11 / 2.168-erschoepft"),
+    Befundlage("2.337", "⚠️⚠️ EIGENER FEHLER, ZWEITER DIESER ART IN ZWEI "
+               "TAGEN: ich habe `entzerrte_reihe` korrigiert und "
+               "erweitert, ohne zu sehen, dass sie seit dem 09.09. einen "
+               "Parameter `auswahl_saat` GENAU FUER DIESE FRAGE hat - "
+               "samt Testvorschrift im Docstring. Am 10.09. war es "
+               "dasselbe Muster bei V9 (,das richtige Werkzeug lag vor, "
+               "wegen eines Aufrufparameters verworfen'). **Vor dem "
+               "Aendern eines Werkzeugs seine SIGNATUR und seinen "
+               "Docstring ganz lesen**, nicht nur die Stelle, die man "
+               "aendern will", "gilt", "Selbstbefund 11.09.2026"),
+    Befundlage("2.338", "⚠️ UND EINE FALSCHE ZITIERUNG, DIE ICH WEITER-"
+               "GEREICHT HABE: ,`schnitt50` ist nach 2.222 die einzige "
+               "monotone Form' steht in 2.305, 2.326, im Gesamtplan und "
+               "im Kopf von `n102` - aber **2.222 sagt das nicht**, es "
+               "handelt von `schnitt`s Auswahlartefakt. Die Behauptung "
+               "stammt aus `Anforderungen_Umbau_28_08.md` (O4/N2), gilt "
+               "dort nur LAENGS, ist vorstandardlich, und ihr eigener "
+               "Nachtest N2 ist OFFEN. Im Hebelzusammenhang (H2/H3) "
+               "fuehrt die Fakten-Entscheidungsmappe `schnitt50` sogar "
+               "ausdruecklich als NICHT MONOTON", "gilt",
+               "Basisinfos/Anforderungen_Umbau_28_08.md O4/N2 / "
+               "Fakten_Entscheidungsmappe.md"),
+    Befundlage("2.339", "✔ WAS V11 SAUBER REPRODUZIERT HAT (R-R11): alle "
+               "ZWOELF Haelftenunterschiede aus n110 auf vier "
+               "Nachkommastellen · `schnitt`s Wirkungen aus n108 (+0,1830 "
+               "/ +0,1858 / +0,0434) · `funding`s (+0,0688 / +0,0582 / "
+               "+0,0313) · `schnitt50`s +0,0698 aus 2.308-vorfrage. "
+               "⚠️ UND DER MASSSTAB IST GEPRUEFT: mean(entzerrte Reihe) "
+               "trifft Wirkung minus Nullpunkt bei allen vier Kandidaten "
+               "- ohne das waere das Verhaeltnis in 2.332 sinnlos "
+               "gewesen", "gilt", "n112_v11_gegenpruefung.py G1/G2"),
     Befundlage("2.321", "✔ S-7 IST GEKLAERT - und REPRODUZIERT, auf drei "
                "Wegen: die Wirkungszahlen (Faktor 1,14 bis 1,45 gegen "
                "S-7s Tafel), der JAHRESVERLAUF (2019 +0,52 gegen +0,45 · "
@@ -2891,8 +3014,10 @@ BEFUNDE = (
                "selbst zurueckgeholt hat (Warum hast du schnitt50 "
                "einfach herausgenommen?) und die nach 2.222 die einzige "
                "MONOTONE Form ist. Zu pruefen bleiben bei ihm "
-               "Kriterium 1 und N-73", "offen",
-               "n110_kriterium2_mit_trennschaerfe.py / 2.222"),
+               "Kriterium 1 und N-73", "abgeloest",
+               "n110_kriterium2_mit_trennschaerfe.py / 2.222",
+               abgeloest_durch="2.331",
+               warum="V11 hat beide Stuetzen weggenommen: N-73 besteht er\n                     NICHT (2 von 3, 2.331), und die Monotonie war FALSCH\n                     ZITIERT (2.338). Kriterium 1 erfuellt er - das allein\n                     macht ihn nicht zum Ersatz"),
     Befundlage("2.327", "⚠️ `vola` FAELLT AN DERSELBEN STELLE - und fast "
                "mit derselben Zahl: +0,2039 [+0,0760 .. +0,3912] auf "
                "20 %%, gegen `schnitt`s +0,1973, beide mit 20/20 "
@@ -3051,8 +3176,14 @@ BEFUNDE = (
                "10 % oder frei) · `amihud`, `rsi`, `momentum` und "
                "`schnitt50` bleiben abgelehnt, auf ALLEN Mengen · "
                "`zufall` traegt nirgends. Die tragenden Ablehnungen des "
-               "07.09. stehen", "gilt", "Methodik 2.187",
-               basis="Messbasis 08.09.2026, 536 Krypto-Symbole"),
+               "07.09. stehen", "abgeloest", "Methodik 2.187",
+               basis="Messbasis 08.09.2026, 536 Krypto-Symbole",
+               abgeloest_durch="2.331-2187",
+               warum="Die Teilaussage zu `schnitt50` (,bleibt "
+                     "abgelehnt, auf ALLEN Mengen') ist FALSCH - "
+                     "er traegt auf 10 %% (+0,0846) und 20 %% "
+                     "(+0,0698), nur auf 50 %% nicht. 2.219 hatte "
+                     "recht. Der Rest des Befundes steht"),
     Befundlage("2.187-was-wandert", "⚠️ WAS WANDERT, jeweils bei nahezu "
                "gleicher Wirkung: `turnover` 50 % von TRAEGT auf 'nicht "
                "trennbar' · `funding` frei von 'traegt nicht bis 0,10' "

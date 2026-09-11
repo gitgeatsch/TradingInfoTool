@@ -3891,3 +3891,101 @@ sonst auf einem fehlerhaften Kriterium beruht hätte.**
 |---|---|
 | **V11** | `schnitt50` gegen Kriterium 1 und N-73 — der Ersatzweg |
 | **V12** | `vola` und `schnitt` fallen fast mit derselben Zahl (+0,2039 / +0,1973). Gemeinsamer geometrischer Anteil? ⚠️ Hypothese, nicht gemessen |
+
+---
+
+# ⚠️⚠️⚠️ 11.09. — V11: kein dritter Beitrag, und 2.325 ist zu berichtigen
+
+## `schnitt50` besteht N-73 nicht
+
+| Menge | Wirkung | Band | Urteil |
+|---|---|---|---|
+| 10 % | +0,0846 | [+0,0172 .. +0,1491] | **TRÄGT** |
+| 20 % | +0,0698 | [+0,0168 .. +0,1457] | **TRÄGT** |
+| 50 % | +0,0156 | [−0,0217 .. +0,0740] | **TRÄGT NICHT bis 0,0213 R** |
+
+| | |
+|---|---|
+| **Kriterium 1** | ✔ 536 Symbole = **100 %**, 251,6 Anker/Tag |
+| **N-73** | ✖ **2 von 3** — schwächer als `schnitt` (3 von 3) |
+
+⚠️ Bei 50 % ist es **kein** „nicht trennbar", sondern eine **echte
+Aussage**. Die Messung konnte dort etwas finden und hat nichts gefunden.
+
+✔ **Und der Widerspruch im Bestand ist aufgelöst:** 2.187 („abgelehnt auf
+ALLEN Mengen") gegen 2.219 („widerspricht sich") — **2.219 hatte recht.**
+
+## ⚠️⚠️ Teil C: ein Kandidat ohne Wirkung ist trivial stabil
+
+```
+Kandidat   Menge    Wirkung   Haelften  Anteil   Urteil
+schnitt    20%      +0.1858   +0.1973    1.06    NICHT STABIL
+funding    20%      +0.0582   +0.0520    0.89    STABIL BIS 0.20
+schnitt50  20%      +0.0698   +0.0560    0.80    STABIL BIS 0.20
+```
+
+**Alle drei bewegen sich um 80–106 % ihrer eigenen Wirkung.** Der einzige
+Unterschied ist der **Betrag**. Damit trennt Kriterium 2 nicht stabil von
+instabil, sondern **groß von klein** — und `funding` läuft live.
+
+---
+
+# ⚠️⚠️⚠️ Der Auswahl-Test — und damit fällt die Zuschreibung aus 2.325
+
+`entzerrte_reihe` hat seit dem 09.09. einen Parameter **`auswahl_saat`**,
+gebaut für genau diese Frage. **Ich hatte ihn am 10.09. nicht gesetzt.**
+
+> *„Mit `auswahl_saat` wird je Tag gleich viel gewählt, aber **zufällig**.
+> Trägt die Instabilität dann nicht mehr, ist sie eine Eigenschaft der
+> **Auswahl** und nicht von `schnitt`."*
+
+| `schnitt`, 20 % | Hälftenunterschied | Trennschärfe |
+|---|---|---|
+| **Momentum-Auswahl** | **+0,1973** [+0,0717 .. +0,3892] | 0,20 |
+| Zufallsauswahl, 3 Saaten | **+0,0380 / +0,0264 / +0,0310** | **0,05** |
+
+⚠️⚠️ **Faktor 6 — und die naheliegende Gegenerklärung ist ausgeschlossen:**
+unter Zufallsauswahl ist der Test **viermal schärfer**, nicht schwächer.
+Ein Nullbefund bei höherer Auflösung.
+
+⚠️ **Und unter demselben schärferen Test kippt ausgerechnet `funding`** —
+1 von 3 Saaten: +0,0417 [+0,0036 .. +0,0785], Band schließt die Null aus.
+
+## ⚠️ Was das NICHT heißt
+
+**`schnitt` ist nicht rehabilitiert.** Der Vierfachtest ist auf der
+**selektierten** Menge definiert (F-212) — dort fällt er an Kriterium 2,
+und **2.319 bleibt abgelöst**. Was fällt, ist die *Zuschreibung*: es ist
+nicht seine Eigenschaft, sondern die der Kollinearität.
+
+## ⚠️⚠️⚠️ Der eigentliche Einwand ist ein anderer — und ein stärkerer
+
+> `schnitt` korreliert mit **Spearman +0,704** mit dem 250-Tage-Momentum
+> (2.158-redundanz), und seine Wirkung ist **zu vier Fünfteln ein
+> Auswahl-Artefakt** (+0,1858 auf der Momentummenge → +0,0366 auf
+> Zufallsmengen, 2.222).
+
+**Ein Beitrag, der die bereits getroffene Auswahl wiederholt, bringt der
+Kette wenig Neues** — und dieser Grund ist von Kriterium 2 völlig
+unabhängig.
+
+---
+
+# ⚠️⚠️ BILANZ: es gibt keinen dritten Beitrag
+
+| Kandidat | woran es liegt |
+|---|---|
+| `schnitt` | bildet zu 4/5 die **Auswahl** nach (2.335) |
+| `schnitt50` | besteht **N-73 nicht** (2 von 3) |
+| `vola` | fällt an Kriterium 2 **und** N-73 mit 1 von 3 |
+
+Das deckt sich mit dem früheren Befund, dass die **Kursreihe als Quelle
+erschöpft** ist (2.168-erschöpft): ein weiterer Beitrag braucht eine
+**neue Quelle**.
+
+## ⚠️ Zwei eigene Fehler, die dazugehören
+
+| | |
+|---|---|
+| **Parameter übersehen** | `auswahl_saat` stand seit 09.09. im Code, samt Testvorschrift im Docstring. **Zweiter Fall dieser Art in zwei Tagen** — am 10.09. dasselbe bei V9 |
+| **Falsch zitiert** | „`schnitt50` ist nach 2.222 die einzige monotone Form" — 2.222 sagt das nicht. Die Behauptung stammt aus `Anforderungen_Umbau_28_08.md` (O4/N2), gilt nur **längs**, ist vorstandardlich, N2 ist offen — und im Hebelzusammenhang führt die Fakten-Entscheidungsmappe `schnitt50` als **nicht monoton** |
