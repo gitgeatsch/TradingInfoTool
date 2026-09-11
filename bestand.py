@@ -90,6 +90,16 @@ class Kandidat:
     # registrierte Befund stammt von der FREIEN Menge."*
     menge: str = ""                 # "frei" | "5%" | "10%" | "20%" | "50%"
     fenster: str = ""               # "voll" | "2022-01-01" | ...
+    # ⚠️⚠️ DIE LOESUNGSSPUR (11.09.2026). Nutzervorgabe, mehrfach
+    # wiederholt: *"kein Beitrag faellt ohne Grund, es ist eine Loesung
+    # zu suchen."* Ohne dieses Feld stand die Begruendung verstreut in
+    # den Befunden und die Vorgabe war nicht pruefbar - acht von sechzehn
+    # gemessenen Kandidaten hatten ueberhaupt kein Blatt.
+    #
+    # Hier gehoert hinein: WARUM er gefallen ist, WAS versucht wurde und
+    # WAS offen bleibt. Ein leeres Feld bei `zustand="traegt nicht"` ist
+    # ein Mangel, kein Normalfall.
+    loesung: str = ""
 
 
 def messbasis(name: str) -> tuple:
@@ -347,6 +357,19 @@ KANDIDATEN = (
             ("06.09.", "Schritt 4a: H5 voll +0,0101 TRAEGT, H5 2024 "
                        "+0,0095 TRAEGT"),
         ),
+        loesung=("⚠️⚠️ ALS ERSATZ FUER `schnitt` GEPRUEFT UND GEFALLEN "
+                 "(V11, 11.09.): Kriterium 1 erfuellt er mit 100 %% "
+                 "Abdeckung, N-73 aber NICHT - 2 von 3 Mengen "
+                 "(10 %% +0,0846 TRAEGT · 20 %% +0,0698 TRAEGT · "
+                 "50 %% +0,0156 TRAEGT NICHT bis 0,0213 R). Bei 50 %% ist "
+                 "es eine ECHTE Aussage, kein ,nicht trennbar'. "
+                 "⚠️⚠️ UND DIE ZWEITE STUETZE IST AUCH WEG: ,die einzige "
+                 "MONOTONE Form' stammt aus **F-222/N-45** - einem Blatt "
+                 "mit Sperrkopf (,GILT NICHT ALS BEITRAGSURTEIL', "
+                 "gemessen auf Ziel-vor-Stop und/oder der freien Menge). "
+                 "Beide Argumente fuer ihn sind damit gefallen. "
+                 "➔ OFFEN bliebe nur eine andere FORM oder ein anderer "
+                 "HORIZONT (N2: H5 ist nie gegengeprueft)"),
         warnung="⚠️ NICHT VERWECHSELN mit `schnitt` (200-Tage), der am "
                 "31.08. zurueckgenommen wurde. H5 ist neu und gegenzupruefen "
                 "(N2) - der Horizontverlauf H2 klein / H5 gross / H20 klein "
@@ -417,7 +440,21 @@ KANDIDATEN = (
         live="- nicht registriert",
         zustand="traegt nicht",
         kette=(("30.08.", "gemessen, beide Richtungen null"),
-               ("06.09.", "Schritt 4a: auf keinem Lauf, keinem Massstab")),
+               ("06.09.", "Schritt 4a: auf keinem Lauf, keinem Massstab"),
+               ("09.09.", "2.244-amihud: der EINZIGE mit sauberem "
+                          "Stabilitaetsbild - nirgends trennbar UND "
+                          "konsistentes Vorzeichen (+0,004 bis +0,029)"),
+               ("11.09.", "⚠️ laeuft LAENGS rueckwaerts (V4, offen)")),
+        loesung=("⚠️⚠️ NICHT ALS BEITRAG, SONDERN AN ANDERER STELLE - und "
+                 "das ist belegt, nicht geraten: 2.166-woanders haelt "
+                 "fest, dass er AUSFUEHRBARKEIT misst, nicht Ertrag. Eine "
+                 "Groesse, die sagt ,wie teuer ist der Ausstieg hier', "
+                 "gehoert in die DIMENSIONIERUNG (Positionsgroesse, "
+                 "Slippage), nicht in die Potentialbewertung. ⚠️ Dazu "
+                 "2.244-amihud: er ist zeitstabil und wirkungslos - das "
+                 "ist kein Kandidat, aber ein Grund, ihn nicht "
+                 "abzuschreiben. ⚠️ OFFEN bleibt V4: er laeuft LAENGS "
+                 "rueckwaerts, und das ist ungeklaert"),
         warnung=""),
     Kandidat(
         name="H (Vorfilter)",
@@ -431,6 +468,188 @@ KANDIDATEN = (
         kette=(("31.08.", "R1: faellt als Beitrag - gepoolt gemessen, unter "
                           "der Tagesklammer nicht trennbar"),),
         warnung="Die Marken tragen weiterhin den Stop."),
+
+    # ================================================================
+    # DIE VIER TERMINMARKT-KANAELE (N-9, 2.169)
+    # ⚠️⚠️ ALLE VIER sind auf `bewegung_r` gefallen - der SPOT-Zielgroesse.
+    # Gegen `barriere`, die Zielgroesse des HEBELS, ist keiner je gemessen
+    # worden. A1 blockiert das (2.238: das Band ist viermal zu eng).
+    # ================================================================
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="oi_je_umsatz",
+        hypothese=("Offene Terminpositionen je Umsatz - wie stark steht "
+                   "der Terminmarkt relativ zum Kassamarkt?"),
+        form="regler",
+        basis="H20 · 122 Symbole · rund 1.400 bis 1.736 Tage",
+        wert="traegt auf KEINER der 3 zulaessigen Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("06.09.", "N-9: 0 von 3 zulaessigen Mengen auf "
+                          "`bewegung_r` (Referenz `oi_aenderung` 3 von 3)"),
+               ("06.09.", "2.169-zielgroesse: trug in N-17b gegen "
+                          "FRONTLOADING - eine ANDERE Zielgroesse")),
+        loesung=("⚠️⚠️ OFFEN UND KONKRET: er ist gegen `bewegung_r` "
+                 "gefallen, also gegen die SPOT-Frage. Die HEBEL-Frage "
+                 "ist `barriere` (Ziel vor Stop) - dagegen ist er NIE "
+                 "gemessen. Der Weg dorthin fuehrt ueber **A1**: das Band "
+                 "auf binaeren Daten ist viermal zu eng (2.238), deshalb "
+                 "traegt dort sogar `zufall`. A1 hat einen benannten "
+                 "Loesungsweg (2.238-klasse): Fehlalarmquote der "
+                 "Barrieren-Anlage auf Nullwelten - dasselbe Verfahren, "
+                 "das am 09.09. den Nullbezug entschieden hat")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="long_bias",
+        hypothese=("Anteil der Long-Konten am Terminmarkt - viele Longs "
+                   "heissen einseitige Positionierung."),
+        form="regler",
+        basis="H20 · 122 Symbole · rund 1.400 bis 1.736 Tage",
+        wert="traegt auf KEINER der 3 zulaessigen Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("06.09.", "N-9: 0 von 3 zulaessigen Mengen auf "
+                          "`bewegung_r`"),
+               ("06.09.", "2.169-zielgroesse: trug gegen FRONTLOADING"),
+               ("05.09.", "N-17b: NICHT unabhaengig vom `rsi`")),
+        loesung=("⚠️ ZWEIFACH belastet: gegen `bewegung_r` gefallen UND "
+                 "nicht unabhaengig vom `rsi`. Die `barriere`-Spur aus "
+                 "`oi_je_umsatz` gilt auch hier, ist bei ihm aber "
+                 "schwaecher - selbst wenn er dort traegt, bliebe die "
+                 "Redundanz mit `rsi` zu klaeren")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="top_bias",
+        hypothese=("Positionierung der groessten Konten - folgen die "
+                   "Grossen oder stehen sie dagegen?"),
+        form="regler",
+        basis="H20 · 122 Symbole · rund 1.400 bis 1.736 Tage",
+        wert="traegt auf KEINER der 2 zulaessigen Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("06.09.", "N-9: 0 von 2 zulaessigen Mengen auf "
+                          "`bewegung_r`"),
+               ("06.09.", "2.169-zielgroesse: trug gegen FRONTLOADING"),
+               ("05.09.", "N-17b: NICHT unabhaengig vom `rsi`")),
+        loesung=("⚠️ Wie `long_bias` - und mit der duennsten Datenlage der "
+                 "vier: nur ZWEI Mengen sind ueberhaupt zulaessig. Ein "
+                 "Urteil auf zwei Mengen ist schwaecher als eines auf "
+                 "drei (2.312: ,1 von 1' ist keine starke Aussage)")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="taker_bias",
+        hypothese=("Verhaeltnis aggressiver Kaeufer zu Verkaeufern - wer "
+                   "nimmt den Preis, statt zu warten?"),
+        form="regler",
+        basis="H20 · 122 Symbole · rund 1.400 bis 1.736 Tage",
+        wert="traegt auf KEINER der 3 zulaessigen Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("06.09.", "N-9: 0 von 3 zulaessigen Mengen auf "
+                          "`bewegung_r`"),),
+        loesung=("⚠️⚠️ DER AUSSICHTSREICHSTE DER VIER - und der einzige, "
+                 "bei dem die Redundanzfrage offen ist statt negativ "
+                 "beantwortet: `oi_wert` und `taker_bias` sind laut "
+                 "2.168-offen NIE unter der Norm gemessen worden, und "
+                 "anders als `long_bias`/`top_bias` ist er nicht als "
+                 "`rsi`-redundant belegt. Dieselbe `barriere`-Spur wie "
+                 "`oi_je_umsatz`, ohne dessen Vorbelastung")),
+
+    # ================================================================
+    # DIE KURSREIHEN-GROESSEN, die nicht tragen
+    # ================================================================
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="rsi",
+        hypothese=("Relative-Staerke-Index - ueberkauft heisst Rueckschlag, "
+                   "ueberverkauft heisst Erholung."),
+        form="regler",
+        basis="H20 · volle Historie · 536 Symbole",
+        wert="traegt nicht UND auf drei Mengen zeitinstabil",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("09.09.", "Gesamtlauf: traegt auf keiner Menge (2.219)"),
+               ("09.09.", "N-89: auf DREI Mengen zeitinstabil (2.244)"),
+               ("09.09.", "2.256: besteht die Spannenpruefung auf `frei` "
+                          "mit 2,16 - aber die Pruefung laesst JEDEN "
+                          "durch und taugt nicht")),
+        loesung=("⛔ DOPPELT gefallen: wirkungslos UND zeitinstabil. Das "
+                 "ist der einzige Kandidat, bei dem beide Hauptkriterien "
+                 "gleichzeitig reissen. ⚠️ Er gehoert ausserdem zur "
+                 "Familie um `vola`/`schnitt` (Ueberlappung 0,25 bis "
+                 "0,70, F-222/N-45) - aus der gehoert ohnehin nur EINE "
+                 "Vertreterin in die Bewertung. Eine Loesung waere nur "
+                 "ueber eine andere FORM denkbar, und dafuer gibt es "
+                 "keinen Anhaltspunkt")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="momentum",
+        hypothese=("Kursentwicklung ueber 250 Tage - wer gestiegen ist, "
+                   "steigt weiter."),
+        form="regler",
+        basis="H20 · volle Historie · 536 Symbole",
+        wert="widerspricht sich ueber die Mengen",
+        live="- nicht als Beitrag; er IST die Auswahl (`auswahl.waehle`, "
+             "RUECKBLICK_TAGE = 250)",
+        zustand="traegt nicht",
+        kette=(("09.09.", "Gesamtlauf: widerspricht sich ueber die "
+                          "Mengen (2.219)"),
+               ("09.09.", "2.220: die KETTENMENGE ist gar keine "
+                          "momentum-selektierte - von 43 Werten "
+                          "passieren 25, WEIL sie Bestand haben")),
+        loesung=("⚠️⚠️ HIER IST DIE LOESUNG KEINE MESSFRAGE: `momentum` "
+                 "ist bereits im System - als AUSWAHL, nicht als "
+                 "Beitrag. Ihn zusaetzlich als Beitrag zu fuehren, hiesse "
+                 "dieselbe Groesse zweimal zu zaehlen; genau daran ist "
+                 "`schnitt` gescheitert (2.335: Spearman +0,704 mit der "
+                 "Auswahl). ⚠️ Die OFFENE Frage ist eine andere und steht "
+                 "als N17 im Plan: **gehoert die Auswahl selbst "
+                 "ersetzt?**")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="momentum_kurz",
+        hypothese=("Kursentwicklung ueber wenige Wochen statt ueber ein "
+                   "Jahr - die kurze Variante von `momentum`."),
+        form="regler",
+        basis="H20 · volle Historie · 536 Symbole",
+        wert="widerspricht sich ueber die Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("09.09.", "Gesamtlauf: widerspricht sich ueber die "
+                          "Mengen (2.219)"),),
+        loesung=("⚠️ OFFEN, aber schwach: er ist der einzige der acht, zu "
+                 "dem es ausser dem Gesamtlauf KEINE eigene Untersuchung "
+                 "gibt. Er teilt die Kollinearitaetsfrage mit "
+                 "`momentum`. ⚠️ Ihn ernsthaft zu pruefen hiesse, ihn "
+                 "gegen die AUSWAHL zu entzerren - dasselbe Verfahren, "
+                 "das bei `schnitt` am 11.09. gelaufen ist "
+                 "(`entzerrte_reihe(auswahl_saat=...)`)")),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="funding_extrem",
+        hypothese=("Abstand der Finanzierungsrate vom EIGENEN "
+                   "Normalzustand in MAD, vorzeichenlos - nicht der "
+                   "Querschnittsrang, sondern die eigene Auffaelligkeit."),
+        form="regler",
+        basis="H20 · 300 Symbole (Funding-Abdeckung)",
+        wert="widerspricht sich ueber die Mengen",
+        live="- nicht registriert",
+        zustand="traegt nicht",
+        kette=(("09.09.", "Gesamtlauf: widerspricht sich ueber die "
+                          "Mengen (2.219)"),
+               ("09.09.", "2.255: er misst eine ANDERE Achse als "
+                          "`funding` - Eigen-Normalzustand statt "
+                          "Querschnittsrang"),
+               ("05.09.", "N-17b: die Kombination mit `oi_aenderung` ist "
+                          "echte Verstaerkung - aber F-207 zeigte, dass "
+                          "sie die LIVE-Sperre nicht verbessert")),
+        loesung=("⚠️ OFFEN: er ist der einzige Gefallene, der in "
+                 "KOMBINATION schon einmal getragen hat (N-17b mit "
+                 "`oi_aenderung`). ⚠️ Aber F-207/F-208 haben gezeigt, "
+                 "dass die Kombination weder die Live-Sperre verbessert "
+                 "noch F-165s Schwelle erreicht. Als EIGENSTAENDIGER "
+                 "Beitrag ist er widerspruechlich; als Verstaerker ist er "
+                 "gemessen und zu schwach")),
 )
 
 
@@ -4844,6 +5063,13 @@ def _kandidatenblatt() -> str:
             for datum, was in k.kette:
                 z.append("- **%s** — %s" % (datum, was))
             z.append("")
+        if k.loesung:
+            z += ["**Die Loesungsspur** — *kein Beitrag faellt ohne "
+                  "Grund:*", "", "> %s" % k.loesung, ""]
+        elif k.zustand == "traegt nicht":
+            z += ["⚠️⚠️ **KEINE LOESUNGSSPUR HINTERLEGT.** Die "
+                  "Nutzervorgabe verlangt sie bei jedem gefallenen "
+                  "Beitrag — hier fehlt sie.", ""]
         if k.warnung:
             z += [k.warnung if k.warnung.startswith("⚠️")
                   else "⚠️ %s" % k.warnung, ""]
