@@ -806,6 +806,13 @@ def _migrate_signal_instrument(conn: sqlite3.Connection) -> None:
     ihnen eine Eigenschaft zuzuschreiben, die sie nie hatten.
 
     Idempotent: laeuft bei jedem Start, aendert nach dem ersten Mal nichts.
+
+    ⚠️ SEIT H-5 (11.09.2026) SCHREIBT DIE KETTE DAS INSTRUMENT SELBST -
+    "hebel" fuer ein Hebelgeschaeft aus r(q) oder SHORT
+    (`signal_abbildung.felder_aus_entscheidung`). Vorher blieb die Spalte
+    beim Schreiben leer und wurde hier mit dem Instrument der GRUPPE
+    gefuellt - ein Hebelsignal hiess damit "spot". Diese Migration fasst nur
+    LEERE Zeilen an und ueberschreibt ein geschriebenes "hebel" nicht.
     """
     existing = {row["name"] for row in conn.execute("PRAGMA table_info(signals)")}
     if not existing:

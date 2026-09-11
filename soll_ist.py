@@ -196,8 +196,10 @@ LAGEN = (
          blocker="⚠️⚠️ GESPERRT BIS PAKET 2 (Nutzerentscheidung "
                  "11.09.) - ohne Beitrag keine Nachkauf-Empfehlung "
                  "(2.374-akku). Messpaket, dann Bau als Regler (Schritte "
-                 "AKKU-MESSPAKET, AKKU-BAU). L1 (ETH, SOL) erst mit "
-                 "Paket 2"),
+                 "AKKU-MESSPAKET, AKKU-BAU). Der Schalter steht fuer BTC, "
+                 "ETH und SOL an (2.380-akku-schalter). ⚠️ Die Akkumulation "
+                 "lief NIE - der Cooldown sperrt sie hinter der "
+                 "Einstiegszelle (2.380-akku-cooldown)"),
     Lage("hebel", "einstieg", "krypto",
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
@@ -396,10 +398,18 @@ REIHENFOLGE = (
             "Befunde 2.379*, 2.378-korrektur",
             fertig=True),
     Schritt(21, "H-5 AGGREGAT-DECKEL",
-            "K3: alle offenen Hebelrisiken zusammen hoechstens 3 % des "
-            "Kapitals (Nutzer 11.09.). Die Korrelation des Marktes gehoert "
-            "HIERHER, nicht in r(q) (P-4).",
-            "Nutzerentscheidung 10.09. (P-4) und 11.09."),
+            "✔ ERLEDIGT 11.09.: `agent/hebel_aggregat.py` - offene Positionen "
+            "(bis zum Stop, ohne Stop das Eigenkapital), offene Hebelsignale "
+            "und die Signale des Laufs zusammen hoechstens 3 % des Kapitals; "
+            "ein neuer Trade bekommt den Rest, unter 2x wird er Spot. Neue "
+            "Spalte `verlust_am_stop_eur`. MIT KORREKTUR ZU H-4: die Kette "
+            "schrieb `instrument` nie - jetzt ,hebel' fuer r(q)/SHORT "
+            "(2.379-instrument-korrektur). ⚠️ ZUR ABSTIMMUNG (2.380-annahmen): "
+            "das Fenster von 3 Tagen - bei 3 Tagen macht der Deckel 73 % der "
+            "Hebelkandidaten zu Spot, bei 1 Tag 32 % (Watchlist 2026); "
+            "Position ohne Stop = ganzes Eigenkapital.",
+            "Befunde 2.380*, 2.379-instrument-korrektur",
+            fertig=True),
     Schritt(22, "S-4 SPOT SAUBER",
             "(a) Nachweis, dass r(q) Spot NICHT veraendert; (b) die "
             "Mailgliederung aus dem Vorschlag vom 11.09. einbauen - nichts "
@@ -424,8 +434,10 @@ REIHENFOLGE = (
             "abgleichen, S-1 erkennt die Symbolliste (2.368), "
             "Portfoliowert 02.09. bis Rollout einmal nachrechnen "
             "(2.376-rollout). ⚠️ Der "
-            "Akkumulationsschalter wirkt bis Paket 2 nicht (Sperre) - ETH "
-            "und SOL erst mit Paket 2 setzen. OFFEN: alter Marktscan "
+            "Akkumulationsschalter steht fuer BTC, ETH und SOL seit langem "
+            "an (Vorgabe von `get_dca_erlaubt`, 2.380-akku-schalter) und "
+            "wirkt bis Paket 2 nicht (Sperre). OFFEN: das Fenster aus "
+            "2.380-annahmen. OFFEN: alter Marktscan "
             "weiter aktiv? (2.369) - `hebel_screening.aktiv: false` legt "
             "seit H-4 nur noch das Screening still (2.379-schalter). "
             "Prompt-Stand 2026-09-11a (2.379-liq).",
@@ -450,11 +462,16 @@ REIHENFOLGE = (
             "Registrierung mit `strategien=('akkumulation',)` - die Sperre "
             "faellt damit von selbst. `schnitt` am Notebook aus der "
             "KURSREIHE rechnen - `messdaten.db` liegt dort bewusst nicht. "
-            "Mail und Simulation.",
+            "Mail und Simulation. ⚠️⚠️ DAZU DER COOLDOWN JE STRATEGIE "
+            "(2.380-akku-cooldown): die Akkumulationszelle haengt heute "
+            "hinter der Einstiegszelle und kam NIE zum Urteil - mit "
+            "Kostenschutz beheben und in `simuliere_kette` zwei Zellen "
+            "nachweisen.",
             "vormals Schritt FORM; Befunde 2.286-schnitt, 2.374"),
     Schritt(27, "ROLLOUT PAKET 2",
-            "Akkumulation aufs Notebook; DANN ETH und SOL im "
-            "Akkumulationsschalter setzen (L1).",
+            "Akkumulation aufs Notebook. Der Schalter steht fuer BTC, ETH "
+            "und SOL schon an (2.380-akku-schalter) - mit der Registrierung "
+            "faellt die Sperre.",
             "Nutzerentscheidung 11.09."),
 
     # ================================================================
@@ -852,23 +869,29 @@ def abgleich() -> list:
     # Entwicklungsaufgabe, sondern ein Schritt der Rollout-Checkliste.
     for _pfad, _wo in (("data/tradinginfotool.db", "DESKTOP (nicht "
                         "produktiv - nur zur Anzeige)"),):
+        # ⚠️⚠️ DIE PRUEFUNG LAS DIE TABELLE STATT DES SCHALTERS (11.09.2026,
+        # Nutzerfund an der GUI). Hier stand `SELECT symbol FROM
+        # asset_dca_settings WHERE dca_erlaubt=1`. `db.get_dca_erlaubt()`
+        # liefert OHNE Zeile aber die Vorgabe {BTC, ETH, SOL} - und genau
+        # darueber lesen GUI, `handelsauftrag.strategie_fuer` und
+        # `assetklassen._schalter`. Am NB steht nur BTC als ZEILE; ETH und SOL
+        # sind ueber die Vorgabe an, seit langem. Aus dieser Pruefung entstand
+        # der falsche Planpunkt "ETH und SOL erst mit Paket 2 setzen"
+        # (2.380-akku-schalter). Jetzt dieselbe Funktion wie der Betrieb.
         try:
+            import database.db as _DBl
             c = sqlite3.connect("file:%s?mode=ro" % _pfad, uri=True)
-            gesetzt = {x[0].upper() for x in c.execute(
-                "SELECT symbol FROM asset_dca_settings WHERE dca_erlaubt=1")}
+            c.row_factory = sqlite3.Row
+            gesetzt = {s for s in ("BTC", "ETH", "SOL")
+                       if _DBl.get_dca_erlaubt(c, s)}
             c.close()
         except sqlite3.Error:
             continue
         fehlt = {"BTC", "ETH", "SOL"} - gesetzt
         if fehlt:
-            ab.append("L1: `dca_erlaubt` fehlt fuer %s - die Nutzervorgabe "
-                      "nennt BTC, ETH und SOL. Ohne ihn laeuft der Wert "
-                      "nach `einstieg`, also mit Stop und Trailing. "
-                      "⚠️ GELESEN AUF: %s. Massgeblich ist das NOTEBOOK - "
-                      "dort stand am 11.09. NUR BTC. Der Schalter ist in "
-                      "der Oberflaeche vorhanden und dort EINMAL AM NB zu "
-                      "setzen - ⚠️ seit Paket B (11.09.) erst mit ROLLOUT "
-                      "PAKET 2, bis dahin ist die Akkumulation gesperrt."
+            ab.append("L1: die Akkumulation ist fuer %s AUS (`get_dca_erlaubt`, "
+                      "samt Vorgabe) - die Nutzervorgabe nennt BTC, ETH und "
+                      "SOL. ⚠️ GELESEN AUF: %s. Massgeblich ist das NOTEBOOK."
                       % (", ".join(sorted(fehlt)), _wo))
 
     # 7 - `swing` ist laut Nutzervorgabe keine genutzte Strategie mehr.

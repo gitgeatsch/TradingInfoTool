@@ -2071,6 +2071,11 @@ rollen_kette:
     hebelnenner_eur: 500
     hebel_ab: 2.0
     hebel_grenze: 5.0
+    # H-5 (Nutzerentscheidung 11.09.2026): alle offenen Hebelrisiken zusammen
+    # hoechstens dieser Anteil des Kapitals. Offene Positionen (Verlust bis
+    # zum Stop, ohne Stop das Eigenkapital) plus offene Hebelsignale. Ein
+    # neuer Trade bekommt hoechstens den Rest; unter hebel_ab wird er Spot.
+    aggregat_anteil: 0.03
 
   # ⚠️ DER COOLDOWN JE GRUPPE (23.08.2026) - REPARATUR EINER S6b-FOLGE.
   #

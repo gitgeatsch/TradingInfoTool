@@ -124,6 +124,11 @@ SPALTEN_SIGNAL = {
     # aber das ist die POSITION, nicht das SIGNAL. Ein Signal, das nie zur
     # Position wurde, hinterlaesst dort nichts.
     "liquidation_etwa_eur": "REAL",
+    # H-5 (11.09.2026): WAS DER TRADE AM STOP VERLIERT. Der Aggregat-Deckel
+    # summiert die offenen Hebelrisiken - und `position_size_eur` ist die
+    # Tranche aus der MODELLANTWORT, nicht der gerechnete Betrag. Ohne diese
+    # Spalte muesste das Risiko eines offenen Signals geschaetzt werden.
+    "verlust_am_stop_eur": "REAL",
     "quelle_kette": "TEXT",                 # 'alt' oder 'rollen' - ohne diese
                                             # Spalte laesst sich spaeter keine
                                             # Messung nach Ketten trennen
@@ -525,6 +530,33 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                   else str(instrument) == "hebel")
     if _ist_hebel and rechnung and rechnung.get("hebel"):
         aus["hebel"] = float(rechnung["hebel"])
+    # ⚠️⚠️ H-5 (11.09.2026): DAS INSTRUMENT FOLGT DEM HEBELGESCHAEFT.
+    #
+    # BEFUND BEIM BAU DES AGGREGAT-DECKELS: `instrument` wurde hier nie
+    # geschrieben. Die Spalte fuellte erst `db._migrate_signal_instrument` beim
+    # naechsten Start - mit dem Instrument der GRUPPE, fuer Krypto immer
+    # "spot". Am NB: 0 von 3.859 Rollen-Zeilen tragen "hebel". Die
+    # Hebelfuehrung (H-4) und die Ausstiegsfuehrung lesen genau diese Spalte -
+    # sie haetten im Betrieb nie ein Hebelsignal gefunden. Der E2E-Nachweis
+    # vom 11.09. hatte die Zeile von Hand auf "hebel" gesetzt und das verdeckt.
+    #
+    # ⚠️ WARUM NICHT EINFACH DIE SPALTE `hebel`: sie traegt auch die
+    # Geometrie-Reste von 1,0-1,5x (Etikett aus `verlustanteil / stop_rel`).
+    # Am NB stehen ALLE 77 offenen Zeilen mit `hebel` auf Symbolen im
+    # SPOTbestand - das sind Spot-Positionen. Ein Hebelgeschaeft ist, was
+    # r(q) als Hebel ergab (>= 2x), oder SHORT (Spot kann nicht short).
+    # Topf und Cooldown lesen weiter `hebel` - an ihnen aendert sich nichts.
+    _hq_hebel = bool(((rechnung or {}).get("hebel_aus_quote") or {})
+                     .get("ist_hebel"))
+    _short = str(antwort.get("richtung") or "").upper() == "SHORT"
+    if instrument:
+        aus["instrument"] = ("hebel" if _ist_hebel and (_hq_hebel or _short)
+                             else str(instrument))
+    # WAS DER TRADE AM STOP VERLIERT, in der Zeile (H-5). Der Aggregat-Deckel
+    # summiert offene Hebelrisiken; `position_size_eur` ist dafuer unbrauchbar
+    # (es ist die Tranche aus der Modellantwort, nicht der gerechnete Betrag).
+    if rechnung and rechnung.get("verlust_am_stop_eur") is not None:
+        aus["verlust_am_stop_eur"] = float(rechnung["verlust_am_stop_eur"])
     # Die Zonen nur, wenn es sie gibt - bei NICHTS_TUN und bei Akkumulation
     # entfallen sie, und ein Nullwert waere dort eine Aussage, die niemand
     # getroffen hat.

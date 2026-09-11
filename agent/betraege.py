@@ -305,6 +305,8 @@ HEBEL_AUS_QUOTE_VORGABE: dict = {
     "hebelnenner_eur": 500.0,  # Nutzer 05.09.: "500 ok als Basiswert"
     "hebel_ab": 2.0,           # Nutzer 05.09.: "ein Hebel unter 2 ist kein Hebel"
     "hebel_grenze": 5.0,       # Nutzer 11.09.: Deckel 5x bis zur Trennschaerfe
+    "aggregat_anteil": 0.03,   # Nutzer 11.09.: alle Hebelrisiken zusammen
+                               # hoechstens 3 % des Kapitals (H-5, hebel_aggregat)
 }
 
 
@@ -317,7 +319,8 @@ def hebel_aus_quote_einstellungen(config: dict | None = None) -> dict:
 def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
                   stop_rel: float, einstellungen: dict | None = None,
                   kapital_satz: str = "",
-                  hebel_sicher: float | None = None) -> dict:
+                  hebel_sicher: float | None = None,
+                  aggregat: dict | None = None) -> dict:
     """Der Hebel aus der Wahrscheinlichkeit - REIN, ohne DB, Uhr oder Netz.
 
     ⚠️ OHNE POSITIVE ERWARTUNG KEIN HEBEL. Ist das volle Kelly <= 0, sagt
@@ -359,7 +362,8 @@ def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
            "hebel": 1.0, "ist_hebel": False, "grenze_greift": False,
            "hebelnenner_eur": nenner, "hebel_ab": ab,
            "hebel_grenze": grenze, "hebel_sicher": None,
-           "liquidation_greift": False, "saetze": []}
+           "liquidation_greift": False, "risiko_vor_aggregat_eur": 0.0,
+           "aggregat_greift": False, "aggregat": aggregat, "saetze": []}
     kopf = ("Hebel aus der Wahrscheinlichkeit: Trefferquote %s %% bei CRV %s"
             % (_de(100 * q, 1), _de(c, 1)))
     if kelly <= 0:
@@ -370,7 +374,17 @@ def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
         r = min(max(halb, r_min), r_max)
         klammer = ("Obergrenze" if halb > r_max
                    else "Untergrenze" if halb < r_min else "")
-        risiko = r * kap
+        risiko_voll = r * kap
+        # ⚠️⚠️ H-5 (11.09.2026): DER AGGREGAT-DECKEL. Alle offenen
+        # Hebelrisiken zusammen hoechstens `aggregat_anteil` des Kapitals
+        # (`hebel_aggregat.aggregat`). Er BEGRENZT: dieser Trade bekommt
+        # hoechstens das freie Restrisiko. Faellt der Hebel dadurch unter
+        # `hebel_ab`, wird es Spot - die Paket-B-Regel gilt unveraendert.
+        # Ohne `aggregat` (Aufrufer ohne Portfolioblick, Simulation) wie bisher.
+        frei = (None if aggregat is None
+                else max(0.0, float(aggregat.get("frei_eur") or 0.0)))
+        risiko = risiko_voll if frei is None else min(risiko_voll, frei)
+        agg_greift = bool(frei is not None and risiko < risiko_voll - 1e-9)
         nominal = risiko / stop
         roh = nominal / nenner
         # ⚠️ DER LIQUIDATIONSABSTAND ZAEHLT MIT (Gegenpruefung 11.09.): was
@@ -386,11 +400,16 @@ def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
                    grenze_greift=bool(ist and moeglich > grenze + 1e-9),
                    liquidation_greift=bool(ist and sicher
                                            and roh > sicher + 1e-9
-                                           and sicher < grenze))
+                                           and sicher < grenze),
+                   risiko_vor_aggregat_eur=risiko_voll,
+                   aggregat_greift=agg_greift)
         zeile2 = ("   bei %s %% Stop: %s EUR Positionswert / %s EUR Einsatz "
                   "= %sx" % (_de(100 * stop, 1), _de(nominal, 0),
                              _de(nenner, 0), _de(roh, 1)))
-        if not ist and sicher and roh >= ab - 1e-9:
+        if not ist and agg_greift:
+            zeile2 += (" - nach dem Aggregat-Deckel unter %sx, daher Spot mit "
+                       "dem gewohnten Betrag" % _de(ab, 1))
+        elif not ist and sicher and roh >= ab - 1e-9:
             zeile2 += (" - der Liquidationsabstand erlaubt nur %sx, daher "
                        "Spot mit dem gewohnten Betrag" % _de(sicher, 1))
         elif not ist:
@@ -406,8 +425,18 @@ def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
             kopf + " -> halbes Kelly %s %% -> Risiko %s %%%s von %s EUR "
             "Kapital = %s EUR" % (_de(100 * halb, 2), _de(100 * r, 2),
                                   (" (%s)" % klammer) if klammer else "",
-                                  _de(kap, 0), _de(risiko, 0)),
-            zeile2]
+                                  _de(kap, 0), _de(risiko_voll, 0))]
+        # H-5: DER STAND DES AGGREGAT-DECKELS - zwischen dem Risiko aus r(q)
+        # und der Positionsgroesse, denn er steht auch in der Rechnung dazwischen.
+        if aggregat is not None:
+            _az = "   " + str(aggregat.get("satz")
+                              or "Aggregat-Deckel: frei %s EUR" % _de(frei, 0))
+            if agg_greift:
+                _az += (" -> dieser Trade traegt %s statt %s EUR"
+                        % (_de(risiko, 0), _de(risiko_voll, 0))
+                        if risiko > 0 else " -> ausgeschoepft")
+            aus["saetze"].append(_az)
+        aus["saetze"].append(zeile2)
     if kapital_satz and "⚠️" in kapital_satz:
         aus["saetze"].append("   " + kapital_satz)
     return aus

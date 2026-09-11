@@ -361,6 +361,68 @@ def main() -> int:
           % (de(st.median(werte), 1), de(float(np.percentile(werte, 90)), 1),
              pct(sum(1 for w in werte if w == 0), len(werte))))
 
+    # ---- 3b. H-5: der Aggregat-Deckel ueber die Tage (11.09.2026) --------
+    #
+    # Je Tag die Hebelkandidaten der Auswahl, beste Quote zuerst - wie die
+    # Kette sie nacheinander rechnet. Ein angenommener Hebeltrade belegt sein
+    # Risiko (Verlust am Stop: Einsatz x Hebel x Stop, wie `rechne()`) fuer W
+    # Tage: so lange ein Signal offen oder eine Position gehalten wird. Jeder
+    # weitere bekommt ueber die ECHTE `hebelrechnung` nur den Rest.
+    #
+    # ⚠️ EINE NAEHERUNG: Tagesanker statt 15-Minuten-Laeufe, keine Ausstiege
+    # vor Ablauf von W, kein Cooldown. Sie zeigt die GROESSENORDNUNG, mit der
+    # der Deckel Hebeltrades zu Spot macht - fuer die Abstimmung von W.
+    anteil_agg = float(ein.get("aggregat_anteil", 0.03))
+    agg_ueber = 0.0
+    je_tag_kand = defaultdict(list)
+    for a in durch:
+        if a["auswahl"]:
+            je_tag_kand[a["tag"]].append(a)
+    print()
+    print("3b. AGGREGAT-DECKEL (H-5): offene Hebelrisiken hoechstens %s %% des Kapitals"
+          % de(100 * anteil_agg, 1))
+    print("    Hebelkandidaten der Auswahl je Tag, beste Quote zuerst; ein Hebeltrade belegt sein Risiko W Tage")
+    for k in kapital:
+        for W in (1, 3):
+            belegt = []
+            n_kand = voll = gekuerzt = zu_spot = tage_greift = 0
+            je_tag_n = []
+            for ti, t in enumerate(tage):
+                belegt = [(e, r) for e, r in belegt if e > ti]
+                kand = sorted((a for a in je_tag_kand.get(t, [])
+                               if a["h"][k]["ist_hebel"]),
+                              key=lambda a: (-a["quote"], a["sym"]))
+                n_heute, griff = 0, False
+                for a in kand:
+                    n_kand += 1
+                    frei = max(0.0, anteil_agg * k - sum(r for _, r in belegt))
+                    h = BE.hebelrechnung(quote=a["quote"], crv=CRV, kapital_eur=k,
+                                         stop_rel=a["stop"], einstellungen=ein,
+                                         hebel_sicher=a["sicher"],
+                                         aggregat={"frei_eur": frei})
+                    if not h["ist_hebel"]:
+                        zu_spot += 1
+                        griff = True
+                        continue
+                    if h["aggregat_greift"]:
+                        gekuerzt += 1
+                        griff = True
+                    else:
+                        voll += 1
+                    belegt.append((ti + W, h["hebel"] * ein["hebelnenner_eur"] * a["stop"]))
+                    agg_ueber = max(agg_ueber, sum(r for _, r in belegt) - anteil_agg * k)
+                    n_heute += 1
+                je_tag_n.append(n_heute)
+                tage_greift += int(griff)
+            print("  %s EUR, W = %d Tag%s: Kandidaten %6d · voll %s · gekuerzt %s · "
+                  "durch den Deckel Spot %s · Hebeltrades je Tag Median %s (90 %% %s) · "
+                  "Tage mit Deckel %s"
+                  % (de(k, 0), W, "" if W == 1 else "e", n_kand, pct(voll, n_kand),
+                     pct(gekuerzt, n_kand), pct(zu_spot, n_kand),
+                     de(st.median(je_tag_n), 1) if je_tag_n else "-",
+                     de(float(np.percentile(je_tag_n, 90)), 1) if je_tag_n else "-",
+                     pct(tage_greift, len(tage))))
+
     # ---- 4. Gegenpruefung -----------------------------------------------
     print()
     print("4. GEGENPRUEFUNG")
@@ -442,6 +504,23 @@ def main() -> int:
                 abw_s += 1
     pruefe("G6 Stop = `rechne()`, mit und ohne Widerlegungspreis (50 x 2)",
            abw_s == 0, "%d Abweichungen" % abw_s)
+    # G7/G8 (H-5): ein Deckel, der nicht greift, aendert nichts - und die
+    # simulierte Belegung ueberschreitet ihn nie.
+    abw_a = 0
+    for a in stich[:500]:
+        for k in kapital:
+            h2 = BE.hebelrechnung(quote=a["quote"], crv=CRV, kapital_eur=k,
+                                  stop_rel=a["stop"], einstellungen=ein,
+                                  hebel_sicher=a["sicher"],
+                                  aggregat={"frei_eur": 1e12})
+            if (h2["ist_hebel"] != a["h"][k]["ist_hebel"]
+                    or abs(h2["hebel"] - a["h"][k]["hebel"]) > 1e-9
+                    or h2["aggregat_greift"]):
+                abw_a += 1
+    pruefe("G7 ein nicht greifender Aggregat-Deckel aendert nichts (%d x %d)"
+           % (min(500, len(stich)), len(kapital)), abw_a == 0, "%d Abweichungen" % abw_a)
+    pruefe("G8 die simulierte Belegung ueberschreitet den Deckel nie",
+           agg_ueber <= 1e-6, "hoechstens %s EUR darueber" % de(agg_ueber, 2))
     print()
     print("GEGENPRUEFUNG: %s" % ("alle bestanden" if not fehler else "FEHLGESCHLAGEN: %s" % fehler))
     return 0 if not fehler else 1

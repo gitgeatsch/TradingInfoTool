@@ -1920,11 +1920,37 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                     stop_min_atr=BE.stop_min_atr(config),
                     marke_stop_eur=_marke_am_stop(
                         _bloecke_anlass, befund.get("richtung") == "SHORT"))
+                # ⚠️⚠️ H-5 (11.09.2026): DER AGGREGAT-DECKEL. Alle offenen
+                # Hebelrisiken zusammen hoechstens `aggregat_anteil` des
+                # Kapitals - offene Positionen, offene Hebelsignale und die
+                # Signale DIESES Laufs. Je Asset neu gelesen: ein Signal, das
+                # drei Symbole weiter oben geschrieben wurde, belegt schon.
+                #
+                # ⚠️ FAELLT DIE ABFRAGE AUS, GIBT ES KEINEN HEBEL - laut.
+                # Ohne Deckel wuerde r(q) wieder unbegrenzt addieren; die
+                # sichere Richtung ist Spot (P-2: kein stiller Rueckfall).
+                try:
+                    from agent import hebel_aggregat as _HAG
+                    _agg = _HAG.aggregat(
+                        conn, kapital_eur=_hq_kapital["wert_eur"],
+                        anteil=float(_hq_einst["aggregat_anteil"]),
+                        lauf_signale=ergebnis.get("signale"),
+                        hebelnenner_eur=float(_hq_einst["hebelnenner_eur"]))
+                except Exception as _ax:                     # noqa: BLE001
+                    _agg = {"frei_eur": 0.0, "offen_eur": None,
+                            "satz": "⚠️⚠️ Aggregat-Deckel nicht lesbar (%s) - "
+                                    "ohne ihn kein Hebel" % str(_ax)[:60]}
+                    ergebnis.setdefault("fehler", []).append(
+                        f"{symbol}: Aggregat-Deckel nicht lesbar: {_ax}")
+                ergebnis["hebel_aggregat"] = {
+                    k: _agg.get(k) for k in ("offen_eur", "deckel_eur",
+                                             "frei_eur", "satz")}
                 _hq = BE.hebelrechnung(
                     quote=_hq_quote, crv=ER.GRENZEN["crv"],
                     kapital_eur=_hq_kapital["wert_eur"],
                     stop_rel=_stop_q, einstellungen=_hq_einst,
                     kapital_satz=_hq_kapital.get("satz") or "",
+                    aggregat=_agg,
                     hebel_sicher=ER.hebel_sicher(
                         _stop_q, befund.get("richtung") == "SHORT"))
             _etikett = ("hebel" if ((_hq and _hq["ist_hebel"])

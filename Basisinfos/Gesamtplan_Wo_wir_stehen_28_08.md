@@ -4984,3 +4984,57 @@ Die Finanzierung schiebt die Liquidation um rund 0,2 % je Tag an den Einstieg.
 Die echten 188 Positionen hielten im Median 0,3 Tage (90 % unter 3,3).
 **Beim heutigen Kapital keine Handlung nötig.** Über eine Tagesreserve beim
 Einstieg ist zu entscheiden, wenn das Kapital wächst.
+
+
+## ✔ H-5 — der Aggregat-Deckel, eine Korrektur zu H-4 und zwei Funde zur Akkumulation (Befunde 2.380*)
+
+**Alle offenen Hebelrisiken zusammen höchstens 3 % des Kapitals** — bei
+18.213 EUR sind das 546 EUR. Gezählt werden:
+
+| Posten | Risiko |
+|---|---|
+| offene Position mit Plan | Verlust bis zum Stop, höchstens das Eigenkapital |
+| offene Position **ohne** bekannten Stop | das **ganze Eigenkapital** |
+| offenes Hebelsignal (noch nicht eröffnet) | Verlust am Stop laut Rechnung |
+| Signal desselben Laufs | ebenso |
+
+Die Summe unterstellt, dass alles gleichzeitig verliert (Korrelation 1) — die
+Vorgabe P-4. Der Deckel **begrenzt**: ein neuer Trade bekommt höchstens das
+freie Restrisiko; unter 2x wird er Spot mit dem gewohnten Betrag.
+
+### ⚠️⚠️⚠️ Korrektur zu H-4
+
+Die Kette schrieb `signals.instrument` **nie** — die Start-Migration setzte
+„spot". Hebel- und Ausstiegsführung lesen genau diese Spalte und hätten im
+Betrieb nie ein Hebelsignal gefunden. Mein E2E hatte die Zeile **von Hand**
+auf „hebel" gesetzt. Jetzt schreibt die Kette „hebel" für r(q)-Hebel und
+SHORT; geprüft über den echten Schreibweg, Mutationstest bestanden.
+
+### Was der Deckel tut — und woran es hängt (Watchlist 2026, 18.213 EUR)
+
+| Ein Hebelsignal belegt Risiko | voll | gekürzt | **zu Spot** | Hebeltrades je Tag |
+|---|---|---|---|---|
+| **1 Tag** | 55,9 % | 11,7 % | **32,4 %** | Median 3 |
+| **3 Tage** (heute gesetzt) | 8,0 % | 19,3 % | **72,7 %** | Median 1 |
+
+### ⚠️ Zur Abstimmung (2.380-annahmen)
+
+1. **Das Fenster** — heute 3 Tage, gesetzt, nicht gemessen. Echte Latenz
+   Signal → Eröffnung: 0,5 / 0,6 / 3,4 **Stunden** (drei Fälle); Haltedauer
+   Median 0,3 Tage.
+2. **Position ohne Stop = ganzes Eigenkapital** — echte Positionen Median
+   222 EUR, 90 % 720 EUR: eine größere Handposition füllt den Deckel allein.
+3. **Ursprünglicher Stop** — ein nachgezogener Stop senkt das gezählte
+   Risiko nicht.
+
+### ⚠️⚠️ Akkumulation: der Schalter stimmt — aber sie lief nie
+
+- **Schalter (2.380-akku-schalter):** BTC, ETH und SOL stehen **seit langem**
+  auf An (Vorgabe von `get_dca_erlaubt`). Nur die Planprüfung las die Tabelle
+  und meldete „nur BTC" — daraus entstand der falsche Punkt „ETH/SOL erst mit
+  Paket 2 setzen". Berichtigt.
+- **Cooldown (2.380-akku-cooldown):** am NB **0** Signale mit Strategie
+  Akkumulation. Der Cooldown fragt das jüngste Signal des **Symbols** ab, egal
+  welcher Strategie; die Einstiegszelle läuft zuerst und schreibt alle ~12 h
+  — die 48-h-Sperre der Akkumulation läuft nie ab. Für Paket B ohne Wirkung
+  (Sperre), **gehört in Schritt 26** — mit Kostenschutz.

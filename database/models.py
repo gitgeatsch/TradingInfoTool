@@ -474,6 +474,10 @@ class Signal:
     # `Signal` wird aus `SELECT *` gebaut, und eine Spalte ohne Feld kappt
     # JEDEN Lesepfad. Genau das hat die Suite gefangen.
     liquidation_etwa_eur: float | None = None  # nur Hebel, sonst None
+    # H-5 (11.09.2026): was der Trade am Stop verliert, aus der Rechnung. Der
+    # Aggregat-Deckel summiert offene Hebelrisiken; `position_size_eur` ist die
+    # Tranche der Modellantwort, nicht der gerechnete Betrag.
+    verlust_am_stop_eur: float | None = None
     # P1 (24.08.2026): DAS URTEIL VON Z1 AN DER ZEILE.
     #
     # ⚠️ Z1 lief, ging in die Mail und in die Zaehlung - und nicht in

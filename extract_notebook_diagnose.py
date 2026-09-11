@@ -469,6 +469,9 @@ _SPOT_SIGNAL_SPALTEN = (
     # in `hebel_positions`, aber das ist die POSITION: ein Signal, das nie zur
     # Position wurde, hinterlaesst dort nichts.
     "liquidation_etwa_eur, "
+    # H-5 (11.09.2026): der Verlust am Stop aus der Rechnung. Ohne ihn laesst
+    # sich am Notebook nicht nachrechnen, was der Aggregat-Deckel summiert hat.
+    "verlust_am_stop_eur, "
     # P1 (24.08.2026): das Urteil von Z1 mit. Ohne es laesst sich am
     # Notebook nicht fragen, ob Signale mit einem Treuebruch anders
     # laufen als saubere - und genau dafuer wurde die Spalte angelegt.

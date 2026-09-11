@@ -106,6 +106,10 @@ def plan_zu(conn, symbol: str, richtung: str, eroeffnet_am) -> dict | None:
     """Das Hebelsignal, auf das hin die Position eroeffnet wurde - oder None.
 
     NUR `signals` MIT `instrument = 'hebel'` - die Tabelle der Rollen-Kette.
+    ⚠️ KORREKTUR 11.09.2026 (H-5, Befund 2.379-instrument-korrektur): bis
+    dahin schrieb die Kette das Instrument NIE; die Start-Migration setzte
+    "spot" - diese Abfrage haette im Betrieb nichts gefunden. Jetzt schreibt
+    `signal_abbildung` "hebel" fuer ein Hebelgeschaeft aus r(q) oder SHORT.
     `hebel_signals` (alte Kette) fuehrt ihre Zonen in USD und endet am
     10.08.; eine Position daraus ist vor dem Rollout eroeffnet und hat keinen
     Plan in EUR. Sie wird trotzdem gefuehrt - Liquidation und Finanzierung

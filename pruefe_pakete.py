@@ -18277,6 +18277,166 @@ def paket_hebelfuehrung() -> None:
            _bth.count("ist_hebel = _tabelle_ist_hebel or (") == 2)
 
 
+def paket_aggregat_deckel() -> None:
+    """H-5 - der Aggregat-Deckel (Paket B, 11.09.2026).
+
+    Nutzerentscheidung 11.09.: alle Hebelrisiken zusammen hoechstens 3 % des
+    Kapitals; P-4: die Korrelation gehoert hierher. Mit geprueft: die
+    Korrektur zu H-4 - die Kette schrieb `instrument` nie, ein Hebelsignal
+    hiess nach der Start-Migration "spot" (2.379-instrument-korrektur).
+    Alles ueber die ECHTEN Funktionen, die Zahlen von Hand gerechnet; das
+    Signal entsteht ueber `felder_aus_entscheidung` + `schreibe_signal`, nicht
+    als von Hand gesetzte Zeile.
+    """
+    P = "Aggregat-Deckel"
+    import sqlite3 as _sq
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+
+    import database.db as _dba
+    from agent import betraege as _BEa
+    from agent import hebel_aggregat as _HAG
+    from agent import hebelfuehrung as _HFa
+    from agent import signal_abbildung as _SAa
+    from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen as _caea
+    from database.models import HebelPosition as _HPa
+    _ein = {**_BEa.HEBEL_AUS_QUOTE_VORGABE, "aktiv": True}
+
+    # ---- die Kappung in der Hebelrechnung, von Hand --------------------
+    # q 0,40, CRV 2: Kelly 0,10, halb 5 % -> Klammer 1,25 % von 18.213 = 227,66
+    _kw = dict(quote=0.40, crv=2.0, kapital_eur=18213.0, stop_rel=0.05,
+               einstellungen=_ein)
+    _h0 = _BEa.hebelrechnung(**_kw)
+    _h1 = _BEa.hebelrechnung(**_kw, aggregat={"frei_eur": 100.0,
+                                              "satz": "Aggregat-Deckel: Probe"})
+    pruefe(P, "⚠️⚠️ frei 100 EUR: Risiko 100 statt 227,66 -> 100 / 0,05 / 500 = 4,0x",
+           _h1["ist_hebel"] and abs(_h1["risiko_eur"] - 100.0) < 1e-9
+           and abs(_h1["hebel"] - 4.0) < 1e-9 and _h1["aggregat_greift"]
+           and abs(_h1["risiko_vor_aggregat_eur"] - 227.6625) < 1e-9,
+           "%r" % {k: _h1[k] for k in ("risiko_eur", "hebel", "aggregat_greift")})
+    pruefe(P, "und der Satz sagt, was der Deckel tat",
+           any("traegt 100 statt 228 EUR" in z for z in _h1["saetze"]), _h1["saetze"])
+    _h2 = _BEa.hebelrechnung(**_kw, aggregat={"frei_eur": 40.0})
+    pruefe(P, "frei 40 EUR: 40 / 0,05 / 500 = 1,6x - unter 2x, also SPOT",
+           not _h2["ist_hebel"] and _h2["aggregat_greift"]
+           and any("nach dem Aggregat-Deckel unter 2,0x" in z for z in _h2["saetze"]),
+           _h2["saetze"])
+    _h3 = _BEa.hebelrechnung(**_kw, aggregat={"frei_eur": 0.0})
+    pruefe(P, "ausgeschoepft: kein Hebel", not _h3["ist_hebel"] and _h3["risiko_eur"] == 0.0)
+    _h4 = _BEa.hebelrechnung(**_kw, aggregat={"frei_eur": 500.0})
+    pruefe(P, "genug frei: dasselbe Ergebnis wie ohne Deckel",
+           _h4["hebel"] == _h0["hebel"] and not _h4["aggregat_greift"]
+           and _h4["risiko_eur"] == _h0["risiko_eur"])
+    pruefe(P, "ohne `aggregat` rechnet sie wie bisher (Simulation, alte Aufrufer)",
+           not _h0["aggregat_greift"] and _h0["aggregat"] is None
+           and len(_h0["saetze"]) == 2)
+
+    # ---- das Instrument folgt dem Hebelgeschaeft (Korrektur zu H-4) -----
+    _rech = {"etikett": "hebel", "hebel": 4.0, "verlust_am_stop_eur": 100.0,
+             "hebel_aus_quote": {"ist_hebel": True},
+             "einstieg_von_eur": 99.5, "einstieg_bis_eur": 100.5,
+             "stop_eur": 88.0, "ziel_von_eur": 124.0, "ziel_bis_eur": 126.0}
+
+    def _felder(rechnung, richtung="LONG", aktion="KAUFEN"):
+        return _SAa.felder_aus_entscheidung(
+            {"aktion": aktion, "richtung": richtung, "begruendung": "Probe"},
+            fakten={}, rechnung=rechnung, instrument="spot",
+            strategie="einstieg", eur_je_usd=0.9, modell="probe")
+
+    _geo = {**_rech, "hebel": 1.2, "hebel_aus_quote": None}
+    pruefe(P, "⚠️⚠️ r(q)-Hebel: instrument 'hebel'; Geometrie 1,2x: 'spot' (Hebelspalte bleibt)",
+           _felder(_rech).get("instrument") == "hebel"
+           and _felder(_geo).get("instrument") == "spot"
+           and abs(_felder(_geo).get("hebel") - 1.2) < 1e-9,
+           "am NB stehen alle 77 offenen Zeilen mit `hebel` auf Spotbestaenden")
+    pruefe(P, "SHORT ist immer ein Hebelgeschaeft; Spot bleibt Spot",
+           _felder({**_geo}, richtung="SHORT").get("instrument") == "hebel"
+           and _felder({**_rech, "etikett": "spot", "hebel_aus_quote": None})
+           .get("instrument") == "spot")
+    pruefe(P, "der Verlust am Stop steht in der Zeile",
+           _felder(_rech).get("verlust_am_stop_eur") == 100.0)
+
+    # ---- DIE NAHT: echtes Schema, geschriebene Signale, echte Summe -----
+    c = _sq.connect(":memory:")
+    c.row_factory = _sq.Row
+    _dba.init_db(c)
+    _SAa.migriere(c)
+    _jetzt = _dt.now(_tz.utc).replace(microsecond=0)
+
+    def _schreibe(rechnung, erzeugt, symbol, **kw):
+        return _SAa.schreibe_signal(c, _felder(rechnung, **kw), symbol=symbol,
+                                    erstellt_am=erzeugt.isoformat())
+
+    _auf = _jetzt - _td(hours=5)
+    _plan = _schreibe({**_rech, "verlust_am_stop_eur": 60.0}, _auf - _td(hours=1), "AAA")
+    _dba.upsert_hebel_position(c, _HPa(
+        symbol="AAA", richtung="LONG", status="offen", eroeffnet_am=_auf.isoformat(),
+        letzte_transaktion_unix_timestamp=int(_auf.timestamp()), hebel_effektiv=5.0,
+        positionswert_eur=500.0, kreditbetrag_eur=400.0, eigenkapital_eur=100.0,
+        positionsmenge=5.0))
+    _dba.upsert_hebel_position(c, _HPa(
+        symbol="BBB", richtung="LONG", status="offen", eroeffnet_am=_auf.isoformat(),
+        letzte_transaktion_unix_timestamp=int(_auf.timestamp()), hebel_effektiv=4.0,
+        positionswert_eur=600.0, kreditbetrag_eur=450.0, eigenkapital_eur=150.0,
+        positionsmenge=6.0))
+    _offen = _schreibe(_rech, _jetzt - _td(hours=2), "CCC")
+    _alt = _schreibe(_rech, _jetzt - _td(days=4), "DDD")
+    _zu = _schreibe(_rech, _jetzt - _td(hours=3), "EEE")
+    c.execute("UPDATE signals SET outcome_status='stop_loss_erreicht' WHERE id=?", (_zu,))
+    _geo_id = _schreibe(_geo, _jetzt - _td(hours=1), "FFF")
+    c.commit()
+    pruefe(P, "⚠️⚠️ ein GESCHRIEBENES r(q)-Signal traegt instrument 'hebel' in der Tabelle",
+           c.execute("SELECT instrument FROM signals WHERE id=?", (_offen,)).fetchone()[0] == "hebel"
+           and c.execute("SELECT instrument FROM signals WHERE id=?", (_geo_id,)).fetchone()[0] == "spot")
+    pruefe(P, "und die Hebelfuehrung ordnet der Position ihr geschriebenes Signal zu",
+           (_HFa.plan_zu(c, "AAA", "LONG", _auf.isoformat()) or {}).get("signal_id") == _plan)
+
+    _lauf = [{"symbol": "GGG", "id": None,
+              "felder": {"instrument": "hebel", "action": "KAUFEN",
+                         "verlust_am_stop_eur": 50.0}},
+             {"symbol": "CCC", "id": _offen, "felder": {"instrument": "hebel",
+                                                         "action": "KAUFEN",
+                                                         "verlust_am_stop_eur": 100.0}}]
+    _a = _HAG.aggregat(c, kapital_eur=18213.0, anteil=0.03, jetzt=_jetzt,
+                       lauf_signale=_lauf)
+    # AAA: Plan-Stop 12 % von 500 = 60, hoechstens EK 100 -> 60
+    # BBB: ohne Plan -> Eigenkapital 150
+    # CCC: offenes Signal 100 · DDD zu alt · EEE aufgeloest · FFF Geometrie
+    # AAA-Signal ist der Plan -> nicht doppelt · GGG Lauf-Signal 50
+    # -> 60 + 150 + 100 + 50 = 360; Deckel 546,39; frei 186,39
+    _je = sorted((p["art"], p["symbol"], round(p["risiko_eur"], 6)) for p in _a["posten"])
+    pruefe(P, "⚠️⚠️ offen = 60 (Stop) + 150 (ohne Plan: Eigenkapital) + 100 (Signal) + 50 (Lauf) = 360",
+           abs(_a["offen_eur"] - 360.0) < 1e-6
+           and abs(_a["deckel_eur"] - 546.39) < 1e-6
+           and abs(_a["frei_eur"] - 186.39) < 1e-6,
+           "%r" % _je)
+    pruefe(P, "nicht gezaehlt: Plan-Signal doppelt, zu alt, aufgeloest, Geometrie-Hebel, geschriebenes Laufsignal doppelt",
+           [s for _, s, _ in _je] == ["GGG", "AAA", "BBB", "CCC"]
+           or sorted(s for _, s, _ in _je) == ["AAA", "BBB", "CCC", "GGG"], "%r" % _je)
+    _f = _caea(c)
+    c.execute("UPDATE signals SET outcome_status='offen', outcome_max_realisiertes_crv=0.1 "
+              "WHERE id=?", (_plan,))
+    c.commit()
+    _f = {e["signal_id"]: e for e in _caea(c).get("alle", [])}
+    pruefe(P, "die Ausstiegsfuehrung erkennt das geschriebene Signal als Hebel und Bestand",
+           _plan in _f and _f[_plan]["ist_hebel"] and _f[_plan]["ist_bestand"],
+           "%r" % {k: (v["ist_hebel"], v["ist_bestand"]) for k, v in _f.items()})
+    c.close()
+
+    # ---- Vorgabe, config und Verdrahtung --------------------------------
+    import config as _cfga
+    _c = _cfga.load_config() or {}
+    pruefe(P, "Vorgabe und config.yaml: 3 % des Kapitals (Nutzerentscheidung 11.09.)",
+           abs(float(_BEa.HEBEL_AUS_QUOTE_VORGABE["aggregat_anteil"]) - 0.03) < 1e-12
+           and abs(float(_BEa.hebel_aus_quote_einstellungen(_c)["aggregat_anteil"])
+                   - 0.03) < 1e-12)
+    _rla = _quelltext("agent/rollen_lauf.py").replace("\r\n", "\n")
+    pruefe(P, "⚠️ die Kette rechnet den Deckel VOR der Hebelrechnung und gibt ihn hinein",
+           0 < _rla.find("_agg = _HAG.aggregat(") < _rla.find("aggregat=_agg,")
+           and "lauf_signale=ergebnis.get(\"signale\")" in _rla)
+    pruefe(P, "⚠️ faellt die Abfrage aus, gibt es keinen Hebel (frei 0) - laut",
+           '_agg = {"frei_eur": 0.0' in _rla and "Aggregat-Deckel nicht lesbar" in _rla)
+
+
 def paket_messmenge() -> None:
     """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
 
@@ -18833,6 +18993,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kapital": paket_kapital,
           "Hebel aus Quote": paket_hebel_aus_quote,
           "Hebelfuehrung": paket_hebelfuehrung,
+          "Aggregat-Deckel": paket_aggregat_deckel,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,
