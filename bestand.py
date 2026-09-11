@@ -3102,6 +3102,65 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.376", "✔✔✔ H-1 GEBAUT - DAS KAPITAL IST LESBAR, "
+               "VOLLSTAENDIG UND UEBERWACHT. (1) P-3 Option A "
+               "(Nutzerentscheidung 11.09.): `schreibe_tageswert` zaehlt "
+               "`quantity + staked_quantity`. (2) FORTSCHREIBUNG: ein "
+               "fehlender Tageskurs wird hoechstens VIER Tage durch den "
+               "letzten bekannten Schlusskurs ersetzt und im Log genannt; "
+               "die 80-%%-Wache bleibt und zaehlt danach. (3) LESEPFAD "
+               "`aktuelles_kapital()`: frisch bis 3 Tage, alt bis 14 (wird "
+               "verwendet und genannt), darueber NICHT verwendbar - dann "
+               "keine Hebelrechnung, der Trade wird Spot, mit Satz in "
+               "Klartext; nie ein stiller Vorgabewert (P-2). (4) "
+               "UEBERWACHUNG: Quelle `kapital` (Rolle K) in "
+               "`datenfrische`, Grenze 3 Tage. Zwoelf Pruefungen im neuen "
+               "Paket ,Kapital', alle durch die echten Funktionen", "gilt",
+               "agent/portfolio_historie.py · agent/datenfrische.py · "
+               "pruefe_pakete --paket Kapital"),
+    Befundlage("2.376-nb", "✔✔ GEGEN DIE NB-SICHERUNG (Kopie) NACHGEWIESEN: "
+               "vorher ,Kapital 9.942 EUR - Stand 01.09., 10 Tage alt, 6 von "
+               "32 Werten ohne Kurs'. Nachgerechnet 02.09. bis 10.09.: JEDER "
+               "Tag geschrieben, Abdeckung 100 %%, 0 ohne Kurs; "
+               "fortgeschrieben wurden nur Boersentitel (am Wochenende 12, "
+               "werktags 5 bis 9, hoechstens 3 Tage). Kapital am 10.09.: "
+               "18.212,70 EUR ohne Cash. Der Index lief ohne Sprung weiter "
+               "(01.09. 95,578 -> 02.09. 95,431), obwohl der Wert von 9.942 "
+               "auf 17.610 EUR stieg - 2.375-index ist damit am echten "
+               "Bestand bestaetigt. ✔ GEGENPRUEFUNG: unabhaengig per SQL "
+               "nachgerechnet (juengster EUR-Kurs, sonst USD x EUR/USD des "
+               "Stichtags, EURCV = 1): 18.212,22 gegen 18.212,70 EUR - 0,48 "
+               "EUR (0,003 %%) Abweichung, in keiner Rechnung fehlt ein "
+               "Posten. Die Ursache ist NICHT einzeln aufgeschluesselt; "
+               "vermutet wird der Wechselkurs bei fortgeschriebenen "
+               "USD-Kursen (Kette: Kurstag, Nachrechnung: Stichtag)", "gilt",
+               "pruefe_kapital_nb.py (Scratchpad) · NB-Sicherung 11.09."),
+    Befundlage("2.376-korrektur", "⚠️ ZWEI MEINER AUSSAGEN IN 2.375 WAREN "
+               "FALSCH - die Diagnose je Tag hat sie widerlegt: EURCV hat "
+               "nicht ,keinen Kurs', es ist ein Cash-Aequivalent und zaehlt "
+               "mit 1,00 EUR; KAIA, SUPRA und BRETT haben EUR-Kurse aus "
+               "`price_history`, nicht nur USD. Ich hatte nur "
+               "`price_history_ohlc` abgefragt - die Tabelle, die "
+               "`_eur_kurse_je_symbol` ausdruecklich als EINE von ZWEI "
+               "Quellen fuehrt. Die echten Luecken waren ausschliesslich "
+               "BOERSENTITEL (Wochenende, ein bis drei Tage Nachlauf). Die "
+               "vorgeschlagene USD-Umrechnung war deshalb unnoetig und ist "
+               "nicht gebaut", "gilt",
+               "Diagnose 11.09. · agent/portfolio_historie._eur_kurse_je_symbol"),
+    Befundlage("2.376-rollout", "⚠️ FUER DEN ROLLOUT: am Notebook fehlen "
+               "Zeilen 02.09. bis zum Rollout. Der Job schreibt danach nur "
+               "den Vortag - das Kapital ist damit ab dem ersten Morgen "
+               "frisch, die LUECKE im Verlauf bleibt aber. Einmal "
+               "nachrechnen mit `schreibe_tageswert(datum=...)` je Tag, "
+               "sonst meldet die Frischepruefung am Rollout-Tag ,kapital: "
+               "abruf', bis der erste Lauf geschrieben hat", "gilt",
+               "Rollout-Checkliste"),
+    Befundlage("2.376-log", "⚠️ UND EIN LOGFEHLER: an verworfenen Tagen "
+               "formatierte `portfolio_wert_job` `%%.2f` auf None - ein "
+               ",Logging error' statt einer Aussage. Die Zeile steht jetzt "
+               "nur, wenn geschrieben wurde, und nennt die Zahl der "
+               "fortgeschriebenen Kurse", "gilt",
+               "scheduler/background.portfolio_wert_job"),
     Befundlage("2.375", "⚠️⚠️⚠️ H-1 VOR DEM BAU: DAS KAPITAL IST NICHT "
                "VERWENDBAR, WIE ES HEUTE GESCHRIEBEN WIRD - zwei Befunde "
                "am Notebook (Sicherung 11.09.). (1) ES FEHLT DAS GESTAKTE: "

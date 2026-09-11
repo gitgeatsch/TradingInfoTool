@@ -8760,6 +8760,10 @@ def paket_frische() -> None:
                   (stand, stand))
         c.execute("CREATE TABLE holdings (symbol TEXT, updated_at TEXT)")
         c.execute("INSERT INTO holdings VALUES ('BTC', ?)", (stand,))
+        c.execute("CREATE TABLE portfolio_wert_historie (datum TEXT, "
+                  "berechnet_am TEXT)")
+        c.execute("INSERT INTO portfolio_wert_historie VALUES (?, ?)",
+                  (stand, stand))
         c.commit()
         return c
 
@@ -17658,6 +17662,137 @@ def paket_assetklassen_trennung() -> None:
            "ging 2020 an die Boerse, Dash handelt seit 2019 bei Binance")
 
 
+def paket_kapital() -> None:
+    """H-1 - das Kapital fuer die Hebelrechnung (11.09.2026).
+
+    Drei Befunde vom Notebook (2.375, 2.376): der Portfoliowert zaehlte das
+    GESTAKTE nicht (rund 6.100 EUR), er wurde nur alle rund sechs Tage
+    geschrieben (ETF/ETC ohne Wochenendkurs), und die Rollen-Kette las ihn
+    nicht. Alles hier laeuft durch die ECHTEN Funktionen auf einer
+    kuenstlichen Datenbank.
+    """
+    P = "Kapital"
+    import sqlite3 as _sq
+    from types import SimpleNamespace as _NS
+    import database.db as _db
+    from database.models import OhlcPoint as _OP
+    from agent import portfolio_historie as _PH
+    from agent import datenfrische as _DFk
+
+    def _neu():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _db.init_db(c)
+        return c
+
+    def _kurs(c, sym, tag, preis=100.0):
+        _db.upsert_ohlc_points(c, [_OP(symbol=sym, currency="EUR", date=tag,
+                                       open=preis, high=preis, low=preis,
+                                       close=preis, volume=1.0,
+                                       fetched_at=tag + "T00:00:00+00:00")])
+
+    def _wl(*syms):
+        return [_NS(symbol=s_, coingecko_id=None, ist_cash_aequivalent=False)
+                for s_ in syms]
+
+    # ---- P-3: das Gestakte zaehlt mit --------------------------------
+    c = _neu()
+    _db.upsert_holding(c, "FREI", 1.0)
+    _db.upsert_holding(c, "STAK", 0.0)
+    _db.update_holding_staked_quantity(c, "STAK", 2.0)
+    for _s in ("FREI", "STAK"):
+        _kurs(c, _s, "2026-09-10")
+    e = _PH.schreibe_tageswert(c, datum="2026-09-10", watchlist=_wl("FREI", "STAK"))
+    pruefe(P, "⚠️⚠️ P-3: das GESTAKTE zaehlt zum Portfoliowert",
+           e.get("geschrieben") and abs((e.get("wert_eur") or 0) - 300.0) < 1e-6,
+           "1 x 100 frei + 2 x 100 NUR gestaked = 300 EUR - vorher 100. Am "
+           "Notebook fehlten so rund 6.100 EUR. Ergebnis: %r" % e.get("wert_eur"))
+    _mj = c.execute("SELECT mengen_json FROM portfolio_wert_historie").fetchone()[0]
+    pruefe(P, "und die Mengen fuer den naechsten Index enthalten es auch",
+           '"STAK": 2.0' in (_mj or ""), str(_mj))
+
+    # ---- 2.375-index: der Index springt NICHT ------------------------
+    c = _neu()
+    _db.upsert_holding(c, "FREI", 1.0)
+    _db.upsert_holding(c, "STAK", 0.0)
+    _db.update_holding_staked_quantity(c, "STAK", 2.0)
+    for _t in ("2026-09-09", "2026-09-10"):
+        for _s in ("FREI", "STAK"):
+            _kurs(c, _s, _t)
+    _db.upsert_portfolio_wert(c, "2026-09-09", 100.0, quelle="laufend",
+                              index_wert=100.0, mengen_json='{"FREI": 1.0}')
+    e = _PH.schreibe_tageswert(c, datum="2026-09-10", watchlist=_wl("FREI", "STAK"))
+    pruefe(P, "⚠️ beim Hinzukommen des Gestakten springt NUR der Wert, nicht der Index",
+           abs((e.get("wert_eur") or 0) - 300.0) < 1e-6
+           and abs((e.get("index") or 0) - 100.0) < 1e-9,
+           "der Index rechnet mit den Mengen der Vorzeile - Z-3 bleibt "
+           "unberuehrt. Wert %r, Index %r" % (e.get("wert_eur"), e.get("index")))
+
+    # ---- Fortschreibung ueber das Wochenende --------------------------
+    c = _neu()
+    for _s in ("K1", "K2", "K3", "K4", "ETF"):
+        _db.upsert_holding(c, _s, 1.0)
+    for _s in ("K1", "K2", "K3", "K4"):
+        _kurs(c, _s, "2026-09-06")
+    _kurs(c, "ETF", "2026-09-04", 50.0)      # Freitag
+    e = _PH.schreibe_tageswert(c, datum="2026-09-06",
+                               watchlist=_wl("K1", "K2", "K3", "K4", "ETF"))
+    pruefe(P, "⚠️⚠️ ein ETF ohne Wochenendkurs zaehlt mit dem Freitagskurs",
+           e.get("geschrieben") and abs((e.get("wert_eur") or 0) - 450.0) < 1e-6
+           and e.get("symbole_ohne_kurs") == 0,
+           "am Notebook fehlten an Wochenenden 9 von 38 Kursen - 76 %%, unter "
+           "der Wache. Ergebnis: Wert %r, ohne Kurs %r"
+           % (e.get("wert_eur"), e.get("symbole_ohne_kurs")))
+    pruefe(P, "und die Fortschreibung wird GENANNT, nicht still gerechnet",
+           e.get("fortgeschrieben") == ["ETF (2 T)"], str(e.get("fortgeschrieben")))
+    c = _neu()
+    for _s in ("K1", "ETF"):
+        _db.upsert_holding(c, _s, 1.0)
+    _kurs(c, "K1", "2026-09-10")
+    _kurs(c, "ETF", "2026-09-05")            # fuenf Tage alt
+    e = _PH.schreibe_tageswert(c, datum="2026-09-10", watchlist=_wl("K1", "ETF"))
+    pruefe(P, "ueber vier Tage alt ist KEIN Kurs mehr, sondern eine tote Reihe",
+           e.get("symbole_ohne_kurs") == 1 and e.get("geschrieben") is False,
+           "sie bleibt als ,ohne Kurs' sichtbar, und die Wache greift: %r" % e)
+
+    # ---- der Lesepfad -----------------------------------------------
+    c = _neu()
+    k = _PH.aktuelles_kapital(c, heute="2026-09-11")
+    pruefe(P, "⚠️⚠️ ohne Portfoliowert: NICHT verwendbar und LAUT",
+           not k["verwendbar"] and k["zustand"] == "fehlt"
+           and "Spot" in k["satz"],
+           "kein stiller Vorgabewert (P-2) - der Satz nennt die Folge: %r"
+           % k["satz"])
+    _db.upsert_portfolio_wert(c, "2026-09-10", 16035.4, quelle="laufend",
+                              symbole_gesamt=38, symbole_ohne_kurs=2)
+    k = _PH.aktuelles_kapital(c, heute="2026-09-11")
+    pruefe(P, "frisch: verwendbar, deutsch geschrieben, mit Luecke",
+           k["verwendbar"] and k["zustand"] == "frisch"
+           and "16.035 EUR" in k["satz"] and "2 von 38" in k["satz"],
+           k["satz"])
+    k = _PH.aktuelles_kapital(c, heute="2026-09-20")
+    pruefe(P, "zehn Tage alt: verwendbar, aber genannt",
+           k["verwendbar"] and k["zustand"] == "alt" and "10 Tage alt" in k["satz"],
+           k["satz"])
+    k = _PH.aktuelles_kapital(c, heute="2026-09-30")
+    pruefe(P, "ueber vierzehn Tage: NICHT verwendbar, der Trade wird Spot",
+           not k["verwendbar"] and k["zustand"] == "zu_alt" and "Spot" in k["satz"],
+           k["satz"])
+
+    # ---- die Ueberwachung --------------------------------------------
+    _kq = [q for q in _DFk.REGISTRATUR if q.name == "kapital"]
+    pruefe(P, "das Kapital steht in der Frischepruefung",
+           len(_kq) == 1 and _kq[0].tabelle == "portfolio_wert_historie"
+           and _kq[0].tabelle in _DFk._EINFACH,
+           "am Notebook stand es zehn Tage still, ohne dass es jemand erfuhr "
+           "(2.341) - jetzt meldet ein Stillstand sich")
+    pruefe(P, "und der Job loggt den Wert nur, wenn er geschrieben wurde",
+           'if ergebnis.get("geschrieben"):'
+           in _quelltext("scheduler/background.py"),
+           "an einem verworfenen Tag stand %.2f auf None - ein Logging error "
+           "statt einer Aussage")
+
+
 def paket_messmenge() -> None:
     """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
 
@@ -18211,6 +18346,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "I-Reparatur": paket_instrument_reparatur,
           "Budget": paket_hartes_budget,
           "Kette je Strategie": paket_kette_je_strategie,
+          "Kapital": paket_kapital,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,

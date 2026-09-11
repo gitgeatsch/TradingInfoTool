@@ -348,16 +348,16 @@ REIHENFOLGE = (
             "Nutzerentscheidung 11.09. (Paket B); Befund 2.374-akku",
             fertig=True),
     Schritt(17, "H-1 PORTFOLIOWERT",
-            "P-1: die Rollen-Kette liest das KAPITAL - "
-            "`portfolio_wert_historie.wert_eur` (Gesamtkapital ohne Cash, "
-            "P-5). Faellt der Wert aus: LAUTE Meldung, kein stiller "
-            "Vorgabewert - und die BEWERTUNG laeuft weiter "
-            "(BEWERTUNG-NIE-BLOCKIEREN). Nur die Hebelrechnung braucht es. "
-            "⚠️⚠️ VOR DEM BAU GEFUNDEN (2.375): der Wert zaehlt das "
-            "GESTAKTE nicht (rund 6.093 EUR, 38 %) und wird am Notebook "
-            "nur alle rund sechs Tage geschrieben (Abdeckungswache). "
-            "WARTET AUF P-3 (Nutzerentscheidung).",
-            "Nutzerentscheidung 10.09. (P-1, P-5); Anforderungen_Umbau K1"),
+            "✔ ERLEDIGT 11.09.: das KAPITAL ist lesbar, vollstaendig und "
+            "ueberwacht. P-3 Option A - das Gestakte zaehlt; fehlende "
+            "Tageskurse von Boersentiteln hoechstens vier Tage "
+            "fortgeschrieben; `aktuelles_kapital()` mit frisch/alt/zu_alt "
+            "und Klartextsatz, ueber 14 Tage keine Hebelrechnung (Spot), nie "
+            "ein stiller Vorgabewert; Quelle `kapital` in der "
+            "Frischepruefung. Gegen die NB-Kopie: 9.942 EUR (10 Tage alt) "
+            "-> 18.213 EUR, jeder Tag geschrieben, Index ohne Sprung.",
+            "Befunde 2.375, 2.376; Nutzerentscheidung 11.09. (P-3 A)",
+            fertig=True),
     Schritt(18, "H-2 r(q)",
             "K1 (vormals Schritt 28): die Wahrscheinlichkeit erzeugt das "
             "Risiko. risiko = r(q) x Kapital, r(q) = halbes Kelly, "
@@ -409,7 +409,9 @@ REIHENFOLGE = (
             "Gesamtpaket auf das Notebook (stehende Regel). Checkliste "
             "`Basisinfos/Ausrollen_24_08.md` vorher aktualisieren: "
             "Pruefungszahl, `config.yaml` am Notebook VOR dem Pull "
-            "abgleichen, S-1 erkennt die Symbolliste (2.368). ⚠️ Der "
+            "abgleichen, S-1 erkennt die Symbolliste (2.368), "
+            "Portfoliowert 02.09. bis Rollout einmal nachrechnen "
+            "(2.376-rollout). ⚠️ Der "
             "Akkumulationsschalter wirkt bis Paket 2 nicht (Sperre) - ETH "
             "und SOL erst mit Paket 2 setzen. OFFEN: alter Marktscan "
             "weiter aktiv? (2.369)",

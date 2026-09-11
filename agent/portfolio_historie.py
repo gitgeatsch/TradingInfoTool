@@ -146,6 +146,42 @@ MAX_ALTER_FUER_PLAUSIBILITAET_TAGE = 5
 # plausibel aussehender Falschwert; dasselbe Prinzip wie bei der FX-Ableitung.
 MIN_ABDECKUNG_FUER_TAGESWERT = 0.80
 
+# Wie viele Tage darf ein fehlender Tageskurs durch den LETZTEN BEKANNTEN
+# Schlusskurs ersetzt werden? (H-1, 11.09.2026)
+#
+# DER FUND (Notebook-Sicherung 11.09., Befund 2.376). Der Job schrieb nur
+# rund alle sechs Tage. Die Diagnose je Tag zeigte, WER fehlte - ausschliesslich
+# BOERSENGEHANDELTE Titel: ETF und ETC haben am Wochenende keinen Kurs (CEBS,
+# DBPK, EXH3, VVMX, ISOC, X136, 3QSS), und ihre Reihen hinken ein bis drei
+# Tage nach (OD7C/H/L/N). Mit dem Gestakten sind es 38 Positionen - 9 ohne
+# Kurs sind 76 %, knapp unter der Wache.
+#
+# ⚠️ WARUM DAS KEIN ,PLAUSIBEL AUSSEHENDER FALSCHWERT' IST (2.341-ursache):
+# ein Titel, an dem nicht gehandelt wurde, HAT keinen neuen Kurs - sein Wert
+# ist der letzte Schlusskurs. So bewertet jede Fondsgesellschaft am
+# Wochenende. Ein Kurssturz-Artefakt entstand, wenn ein Titel mit NULL
+# einging; das verhindert die Fortschreibung gerade.
+#
+# VIER TAGE: Wochenende plus Feiertag plus ein Tag Nachlauf. Laenger nicht -
+# dann ist es keine Handelspause mehr, sondern eine tote Reihe, und die
+# gehoert als ,ohne Kurs' sichtbar. Die Wache (80 %) bleibt unveraendert und
+# zaehlt NACH der Fortschreibung.
+MAX_FORTSCHREIBEN_TAGE = 4
+
+# Ab wann das KAPITAL fuer die Hebelrechnung als alt bzw. unbrauchbar gilt
+# (H-1, 11.09.2026). Der Job schreibt taeglich den VORTAG - ein Alter von
+# einem Tag ist also der Normalfall.
+#
+#   bis 3 Tage     frisch - hoechstens ein Lauf versaeumt
+#   4 bis 14 Tage  alt - wird verwendet, aber LAUT genannt: ein Kapital
+#                  bewegt sich in zwei Wochen selten um mehr als ein Zehntel,
+#                  und die Klammer von r(q) begrenzt ohnehin
+#   ueber 14 Tage  NICHT verwendbar - ohne Kapital keine Hebelrechnung, der
+#                  Trade wird als Spot gerechnet. Nie ein stiller Vorgabewert
+#                  (Vorgabe BEWERTUNG-NIE-BLOCKIEREN, P-2)
+KAPITAL_HINWEIS_TAGE = 3
+KAPITAL_MAX_TAGE = 14
+
 # Welche FX-Verwuerfe wurden in DIESEM Prozess schon gemeldet, und wie oft kamen
 # sie seither wieder? Siehe tages_fx_kurse() fuer die Begruendung - kurz: die
 # Ableitung laeuft bei jeder Bewertung neu, und ein einziger verworfener Tag
@@ -1003,31 +1039,61 @@ def schreibe_tageswert(
     coingecko_ids = {a.symbol: a.coingecko_id for a in watchlist if a.coingecko_id}
     cash_aequivalente = {a.symbol for a in watchlist if a.ist_cash_aequivalent}
 
-    holdings = {h.symbol: h.quantity for h in db.get_all_holdings(conn) if h.quantity > 0}
+    # ⚠️⚠️ DAS GESTAKTE ZAEHLT MIT (P-3, Nutzerentscheidung 11.09.2026).
+    #
+    # Hier stand `h.quantity > 0` - gestakte Mengen fehlten. Am Notebook
+    # lagen neun Werte NUR gestaked (SOL, TAO, SUI, NEAR, AVAX, HYPE, SEI,
+    # BNB, VSN), ETH zu 97 %: rund 6.100 EUR, 38 % des Kapitals ohne Cash.
+    # Genau dieser Wert ist die Bezugsgroesse fuer r x Kapital (P-5).
+    #
+    # ⚠️ DER INDEX SPRINGT DADURCH NICHT (2.375-index): er rechnet unten
+    # beide Kurse gegen die Mengen der VORZEILE. Springen darf nur
+    # `wert_eur`, einmal - und genau das ist die Korrektur.
+    holdings = {
+        h.symbol: (h.quantity or 0.0) + (h.staked_quantity or 0.0)
+        for h in db.get_all_holdings(conn)
+        if (h.quantity or 0.0) + (h.staked_quantity or 0.0) > MIN_MENGE_REAL
+    }
     vorzeilen = [z for z in db.get_portfolio_wert_historie(conn) if z["datum"] < tag]
     vorzeile = vorzeilen[-1] if vorzeilen else None
 
-    ab = vorzeile["datum"] if vorzeile else tag
+    # Die Fortschreibung braucht Kurse VOR dem Bezugstag.
+    _fruehestens = (datetime.strptime(tag, "%Y-%m-%d").date()
+                    - timedelta(days=MAX_FORTSCHREIBEN_TAGE)).isoformat()
+    ab = min(vorzeile["datum"], _fruehestens) if vorzeile else _fruehestens
     kurs_am, _ = _kurs_lookup(
         conn, set(holdings) | set(json.loads(vorzeile["mengen_json"] or "{}") if vorzeile else ()),
         ab, coingecko_ids, cash_aequivalente,
     )
 
+    def kurs_fort(symbol: str, t: str) -> tuple[float | None, int | None]:
+        """(Kurs, wie viele Tage alt) - der letzte bekannte Schlusskurs,
+        hoechstens MAX_FORTSCHREIBEN_TAGE zurueck. Siehe die Konstante."""
+        t0 = datetime.strptime(t, "%Y-%m-%d").date()
+        for alter in range(MAX_FORTSCHREIBEN_TAGE + 1):
+            k = kurs_am(symbol, (t0 - timedelta(days=alter)).isoformat())
+            if k is not None:
+                return k, alter
+        return None, None
+
     wert = 0.0
     ohne_kurs = 0
+    fortgeschrieben: list[str] = []
     for symbol, menge in holdings.items():
-        kurs = kurs_am(symbol, tag)
+        kurs, alter = kurs_fort(symbol, tag)
         if kurs is None:
             ohne_kurs += 1
         else:
             wert += menge * kurs
+            if alter:
+                fortgeschrieben.append(f"{symbol} ({alter} T)")
 
     index = 100.0
     if vorzeile and vorzeile["index_wert"] and vorzeile["mengen_json"]:
         basis = json.loads(vorzeile["mengen_json"])
         alt = neu = 0.0
         for symbol, menge in basis.items():
-            p_alt, p_neu = kurs_am(symbol, vorzeile["datum"]), kurs_am(symbol, tag)
+            p_alt, p_neu = kurs_fort(symbol, vorzeile["datum"])[0], kurs_fort(symbol, tag)[0]
             if p_alt is None or p_neu is None or menge <= 0:
                 continue
             alt += menge * p_alt
@@ -1049,7 +1115,15 @@ def schreibe_tageswert(
         )
         return {"datum": tag, "wert_eur": None, "index": None,
                 "symbole_ohne_kurs": ohne_kurs, "geschrieben": False,
-                "abdeckung": abdeckung}
+                "abdeckung": abdeckung, "fortgeschrieben": fortgeschrieben}
+
+    if fortgeschrieben:
+        # SICHTBAR, NICHT STILL: welcher Kurs nicht vom Bezugstag stammt.
+        logger.info(
+            "Tageswert %s: %d Kurse fortgeschrieben (letzter bekannter "
+            "Schlusskurs, hoechstens %d Tage): %s",
+            tag, len(fortgeschrieben), MAX_FORTSCHREIBEN_TAGE,
+            ", ".join(fortgeschrieben))
 
     db.upsert_portfolio_wert(
         conn, tag, wert,
@@ -1061,7 +1135,79 @@ def schreibe_tageswert(
         mengen_json=json.dumps(holdings),
     )
     return {"datum": tag, "wert_eur": wert, "index": index,
-            "symbole_ohne_kurs": ohne_kurs, "geschrieben": True, "abdeckung": abdeckung}
+            "symbole_ohne_kurs": ohne_kurs, "geschrieben": True, "abdeckung": abdeckung,
+            "fortgeschrieben": fortgeschrieben}
+
+
+def aktuelles_kapital(conn: sqlite3.Connection, heute: str | None = None) -> dict:
+    """Das KAPITAL fuer die Hebelrechnung - oder der LAUTE Grund, warum es fehlt.
+
+    H-1 / P-1 (11.09.2026). Bezugsgroesse ist nach Nutzerentscheidung P-5
+    das Gesamtkapital OHNE Cash: der juengste `wert_eur` aus
+    `portfolio_wert_historie`. Bis hierher las die Rollen-Kette diese
+    Tabelle nicht (N-40).
+
+    ⚠️ KEIN STILLER VORGABEWERT (P-2, Vorgabe BEWERTUNG-NIE-BLOCKIEREN).
+    Fehlt das Kapital oder ist es zu alt, ist `verwendbar` False und `satz`
+    sagt es in Klartext - der Aufrufer rechnet dann OHNE Hebel und schreibt
+    den Satz in die Mail. Die BEWERTUNG haengt nie daran.
+
+    Die Funktion LOGGT NICHT: sie wird je Signal gerufen, und eine Warnung
+    je Asset waere dieselbe Zeile vierzigmal. Melden ist Sache des Laufs.
+
+    Rueckgabe: wert_eur, datum, alter_tage, symbole_gesamt,
+    symbole_ohne_kurs, zustand (frisch | alt | zu_alt | fehlt), verwendbar,
+    satz."""
+    from agent.schreibweise import de as _de
+
+    heute = heute or _heute_utc()
+    aus = {"wert_eur": None, "datum": None, "alter_tage": None,
+           "symbole_gesamt": 0, "symbole_ohne_kurs": 0,
+           "zustand": "fehlt", "verwendbar": False, "satz": ""}
+    try:
+        zeile = conn.execute(
+            "SELECT datum, wert_eur, symbole_gesamt, symbole_ohne_kurs "
+            "FROM portfolio_wert_historie ORDER BY datum DESC LIMIT 1"
+        ).fetchone()
+    except sqlite3.Error as exc:
+        aus["satz"] = ("⚠️⚠️ Kapital nicht lesbar (%s) - ohne Kapital keine "
+                       "Hebelrechnung, der Trade wird als Spot gerechnet."
+                       % str(exc)[:60])
+        return aus
+    if not zeile or not zeile[1] or float(zeile[1]) <= 0:
+        aus["satz"] = ("⚠️⚠️ Kein Kapital bekannt - der Portfoliowert ist "
+                       "leer. Ohne Kapital keine Hebelrechnung, der Trade "
+                       "wird als Spot gerechnet.")
+        return aus
+
+    datum, wert = str(zeile[0])[:10], float(zeile[1])
+    alter = (datetime.strptime(heute[:10], "%Y-%m-%d").date()
+             - datetime.strptime(datum, "%Y-%m-%d").date()).days
+    aus.update(wert_eur=wert, datum=datum, alter_tage=alter,
+               symbole_gesamt=int(zeile[2] or 0),
+               symbole_ohne_kurs=int(zeile[3] or 0))
+    stand = "%s.%s." % (datum[8:10], datum[5:7])
+    luecke = (", %d von %d Werten ohne Kurs" % (aus["symbole_ohne_kurs"],
+                                                aus["symbole_gesamt"])
+              if aus["symbole_ohne_kurs"] else "")
+    if alter > KAPITAL_MAX_TAGE:
+        aus["zustand"] = "zu_alt"
+        aus["satz"] = ("⚠️⚠️ Kapital NICHT verwendbar - letzter Stand %s, %d "
+                       "Tage alt (Grenze %d). Ohne Kapital keine "
+                       "Hebelrechnung, der Trade wird als Spot gerechnet."
+                       % (stand, alter, KAPITAL_MAX_TAGE))
+        return aus
+    aus["verwendbar"] = True
+    if alter > KAPITAL_HINWEIS_TAGE:
+        aus["zustand"] = "alt"
+        aus["satz"] = ("⚠️ Kapital %s EUR ohne Cash - Stand %s, %d Tage alt%s. "
+                       "Der Portfoliowert wird nicht fortgeschrieben."
+                       % (_de(wert, 0), stand, alter, luecke))
+    else:
+        aus["zustand"] = "frisch"
+        aus["satz"] = ("Kapital %s EUR ohne Cash (Stand %s%s)"
+                       % (_de(wert, 0), stand, luecke))
+    return aus
 
 
 def compute_hedge_wirksamkeit(

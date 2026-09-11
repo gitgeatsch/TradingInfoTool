@@ -766,11 +766,18 @@ def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
     try:
         watchlist = watchlist_provider()
         ergebnis = schreibe_tageswert(conn, watchlist=watchlist)
-        logger.info(
-            "Portfolio-Wert %s: %.2f EUR, Index %.3f, %d Symbole ohne Kurs",
-            ergebnis["datum"], ergebnis["wert_eur"], ergebnis["index"],
-            ergebnis["symbole_ohne_kurs"],
-        )
+        # ⚠️ NUR WENN GESCHRIEBEN (11.09.2026). An einem verworfenen Tag sind
+        # `wert_eur` und `index` None - `%.2f` darauf erzeugte im Log einen
+        # ,Logging error' statt einer Aussage. Die Warnung zum verworfenen
+        # Tag schreibt `schreibe_tageswert` selbst.
+        if ergebnis.get("geschrieben"):
+            logger.info(
+                "Portfolio-Wert %s: %.2f EUR, Index %.3f, %d Symbole ohne Kurs, "
+                "%d Kurse fortgeschrieben",
+                ergebnis["datum"], ergebnis["wert_eur"], ergebnis["index"],
+                ergebnis["symbole_ohne_kurs"],
+                len(ergebnis.get("fortgeschrieben") or ()),
+            )
 
         config_dict = config_module.load_config()
         schwelle = config_dict.get("ziele", {}).get("max_drawdown_prozent", 15)

@@ -4801,3 +4801,33 @@ H-3 simuliert die Hebelverteilung vor dem Scharfschalten (Nutzervorgabe
 | **P-3 ist kleiner als gedacht** | der Index rechnet mengenkonstant aus dem Vortag — **er springt nicht**, Z-3 bleibt unberührt (2.375-index) |
 
 ➔ **Wartet auf P-3 (Nutzerentscheidung).**
+
+## ✔ H-1 gebaut — das Kapital ist lesbar, vollständig und überwacht (Befund 2.376)
+
+> *„ja A, weiter mit Schritt 17 – prüfen, gegenprüfen, doku"* (Nutzerentscheidung P-3)
+
+| | |
+|---|---|
+| **Gestaktes** | zählt jetzt mit — `quantity + staked_quantity` |
+| **Fortschreibung** | fehlender Tageskurs höchstens **4 Tage** durch den letzten Schlusskurs ersetzt, im Log **genannt**; die 80-%-Wache bleibt |
+| **Lesepfad** | `aktuelles_kapital()` — frisch bis 3 Tage · alt bis 14 (verwendet, genannt) · darüber **keine Hebelrechnung, Spot**, mit Satz in Klartext |
+| **Überwachung** | Quelle `kapital` (Rolle K) in der Frischeprüfung, Grenze 3 Tage |
+| **Prüfungen** | neues Paket „Kapital", 12 Prüfungen durch die echten Funktionen |
+
+### Gegen die NB-Sicherung (Kopie)
+
+| | vorher | nachher |
+|---|---|---|
+| **Kapital** | 9.942 EUR, Stand 01.09., **10 Tage alt** | **18.213 EUR**, Stand 10.09. |
+| **Tage 02.–10.09.** | kein einziger geschrieben | **alle** geschrieben, Abdeckung 100 % |
+| **Index** | 95,578 (01.09.) | 95,431 (02.09.) — **kein Sprung** |
+
+✔ **Gegenprüfung:** unabhängig per SQL nachgerechnet — 18.212,22 gegen 18.212,70 EUR, **0,48 EUR (0,003 %)** Abweichung, kein Posten fehlt. Die Ursache ist nicht einzeln aufgeschlüsselt (vermutet: Wechselkurs bei fortgeschriebenen USD-Kursen).
+
+⚠️ **Zwei meiner Aussagen in 2.375 waren falsch** (2.376-korrektur): EURCV ist
+ein Cash-Äquivalent (1,00 EUR), KAIA/SUPRA/BRETT haben EUR-Kurse aus
+`price_history`. Die echten Lücken waren nur Börsentitel — die
+USD-Umrechnung war unnötig und ist nicht gebaut.
+
+⚠️ **Für den Rollout:** den Portfoliowert 02.09. bis Rollout am Notebook
+einmal nachrechnen (2.376-rollout).

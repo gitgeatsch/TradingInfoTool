@@ -155,6 +155,12 @@ REGISTRATUR: tuple[Quelle, ...] = (
            "refresh_ohlc", "die Kerzen selbst"),
     Quelle("bestand", "BC", "holdings", 3,
            "refresh_bitpanda_holdings", "was tatsaechlich im Depot liegt"),
+    # ⚠️⚠️ ROLLE "K" - DAS KAPITAL (H-1, 11.09.2026). Keine Promptquelle,
+    # sondern die Bezugsgroesse fuer r x Kapital (P-5). Am Notebook stand
+    # sie zehn Tage still, ohne dass es jemand erfuhr (2.341). Drei Tage:
+    # der Job schreibt taeglich den Vortag.
+    Quelle("kapital", "K", "portfolio_wert_historie", 3,
+           "portfolio_wert", "Kapital fuer die Hebelrechnung (r x Kapital)"),
 
     # ---- ⚠️⚠️⚠️ DIE DREI MESSQUELLEN (S-1, 11.09.2026) ----------------
     #
@@ -217,6 +223,7 @@ _EINFACH = {
     "open_interest_snapshot": ("fetched_at", "fetched_at"),
     "price_history_ohlc": ("date", "fetched_at"),
     "holdings": ("updated_at", "updated_at"),
+    "portfolio_wert_historie": ("datum", "berechnet_am"),
 }
 
 
