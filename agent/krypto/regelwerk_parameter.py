@@ -30,6 +30,33 @@ _REGIME_REIHENFOLGE = ("krise_extrem", "baer", "seitwaerts", "bulle", "euphorie_
 # innerhalb von regime.profile.<regime>.*, Wert wird über alle 5 Regime-Profile
 # zusammengefasst) oder `code_konstante` (liest aus risk_gate.py statt config.yaml).
 _PARAMETER: tuple[dict, ...] = (
+    # ⚠️⚠️ DIE BEWERTUNGSSCHWELLE STEHT HIER VORN (11.09.2026) - sie ist
+    # der Parameter, der ueber die ZAHL der Empfehlungen entscheidet.
+    #
+    # NUTZERHINWEIS 07.09., woertlich: *"so einen Parameter vergesse ich in
+    # Kuerze und du auch - die Doku reicht bei so einer zentralen
+    # Einstellung nicht."* Daraufhin entstanden `config.yaml ->
+    # bewertung.potential_schwelle_r` und `potential.schwellenzeile()`,
+    # die jede Mail mittraegt.
+    #
+    # ⚠️ NUR DIE UEBERSICHTSSEITE UND DIE GUI FEHLTEN NOCH - gefunden am
+    # 11.09. bei der Umbau-Analyse, nachdem der Nutzer denselben Punkt
+    # erneut ansprach ("aktuell ist es nur code"). Konfigurierbar und in
+    # der Mail ausgewiesen war sie da schon; hier stand sie nicht.
+    {
+        "bezeichnung": "Bewertungsschwelle (Potential in R)",
+        "pfad": ("bewertung", "potential_schwelle_r"),
+        "kategorie": KATEGORIE_B,
+        "begruendung": (
+            "Ab welchem Potential eine Empfehlung ueberhaupt entsteht. "
+            "Kalibriert 2026-08-31, festgeschrieben 2026-09-07 "
+            "(Nutzerentscheidung, woertlich: '0,080 vorerst "
+            "festschreiben'). Rund 16 % Durchlass, etwa 6 Empfehlungen je "
+            "Woche. ⚠️ Wer diese Zahl aendert, aendert die ZAHL der "
+            "Empfehlungen - nicht ihre Qualitaet; haerter filtern ist als "
+            "schaedlich gemessen. Ohne Neustart steuerbar."),
+        "geaendert_am": "2026-09-07",
+    },
     {
         "bezeichnung": "RM-2 Core-Allokations-Limit",
         "pfad": ("risiko", "max_allokation_pro_core_asset_prozent"),

@@ -185,7 +185,12 @@ class Potential:
             beide          max +0,1335 R    ( 7 von 43 Werten)
 
         Eine Schwelle von 0,080 R waere fuer 36 von 43 Werten UNERREICHBAR -
-        (Stand bis 07.09.2026; die Vorgabe steht seither auf 0,005)
+        ⚠️⚠️ DIESE ZEILE WAR SELBST VERALTET (gefunden 11.09.2026).
+        Sie sagte ,die Vorgabe steht seither auf 0,005' - 0,005 wurde
+        am 07.09. gesetzt und AM SELBEN TAG zurueckgenommen (siehe
+        den Block bei SCHWELLE_VORGABE unten, Methodik 2.143).
+        **Der laufende Wert ist 0,080** - Code-Vorgabe, `config.yaml`
+        und `schwellenzeile()` stimmen ueberein, am 11.09. geprueft.
         sie waeren dauerhaft gesperrt, egal wie gut ihr Funding steht. Das
         ist eine Sperre nach DATENLAGE, nicht nach Qualitaet (Regel 4).
 
@@ -204,7 +209,8 @@ class Potential:
         Wer nur einen Beitrag hat, muss denselben ANTEIL seiner Spanne
         schaffen wie einer mit zweien. Gerechnet am Stand 31.08.:
 
-        Gerechnet am Stand 07.09. (nach N-58, Vorgabe 0,005):
+        Gerechnet am Stand 07.09. mit der DAMALS kurz gesetzten
+        Vorgabe 0,005 - ⚠️ sie gilt NICHT mehr:
 
             funding           max +0,0390 R  ->  Schwelle 0,0040 R
             turnover          max +0,0099 R  ->  Schwelle 0,0010 R
@@ -218,7 +224,9 @@ class Potential:
 
         ⚠️ DIE ZAHL WAR HIER VERALTET (gefunden 03.09.2026). Der Text nannte
         0,0100 R - das war die Vorgabe bis zur Neukalibrierung.
-        `SCHWELLE_VORGABE` steht seit dem 07.09. auf **0,005** (davor 0,080),
+        ⚠️ UND GENAU DIESER SATZ WAR DER NAECHSTE FEHLER DERSELBEN
+        ART: er sagte, `SCHWELLE_VORGABE` stehe auf 0,005. Sie steht
+        auf **0,080**,
         und die Zeilen darueber rechnen mit ihr. Eine falsche Zahl im Docstring einer
         Schwelle ist teurer als anderswo: sie wird beim naechsten Nachrechnen
         als Sollwert gelesen.

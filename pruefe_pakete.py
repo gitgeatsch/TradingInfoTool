@@ -15206,6 +15206,42 @@ def paket_kalibrierung() -> None:
 
     P = "Kalibrierung"
 
+    # ---- ⚠️⚠️ BEHAUPTET EIN KOMMENTAR EINE ANDERE SCHWELLE? (11.09.2026)
+    #
+    # DER ANLASS, aus der Umbau-Analyse. `agent/potential.py` trug DREIMAL
+    # die Aussage, `SCHWELLE_VORGABE` stehe auf 0,005 - sie steht auf
+    # 0,080. Die 0,005 war am 07.09. gesetzt und AM SELBEN TAG
+    # zurueckgenommen worden (die turnover-Aenderung dahinter war auf der
+    # falschen Menge gemessen, Methodik 2.143); der Docstring wurde nicht
+    # mitgezogen.
+    #
+    # ⚠️ UND DASSELBE MODUL BEKLAGT DEN FEHLER AN ANDERER STELLE SELBST:
+    # "Eine falsche Zahl im Docstring einer Schwelle ist teurer als
+    # anderswo: sie wird beim naechsten Nachrechnen als Sollwert gelesen."
+    # Genau das ist passiert - beim Review habe ich die Zeile zuerst
+    # geglaubt und 0,005 fuer den laufenden Wert gehalten.
+    #
+    # Konservativ geprueft: nur Saetze, die der Konstante EXPLIZIT einen
+    # Wert zuschreiben. Historische Werte in Tabellen sind erlaubt und
+    # erwuenscht - sie tragen die Entstehungsgeschichte.
+    import io as _io_k
+    import re as _re_k
+    from agent import potential as _POT
+    _quelle = _io_k.open("agent/potential.py", encoding="utf-8",
+                         errors="replace").read()
+    _muster = _re_k.compile(
+        r"`?SCHWELLE_VORGABE`?\s+steht[^.\n]{0,40}?"
+        r"auf\s+\*{0,2}([0-9]+[.,][0-9]+)")
+    _ist = float(_POT.SCHWELLE_VORGABE)
+    _falsch = [m.group(0)[:64] for m in _muster.finditer(_quelle)
+               if abs(float(m.group(1).replace(",", ".")) - _ist) > 1e-9]
+    pruefe(P, "⚠️⚠️ kein Kommentar behauptet eine andere Schwelle als die "
+           "Konstante", not _falsch,
+           "SCHWELLE_VORGABE steht auf %.3f. Eine falsche Zahl im "
+           "Docstring einer Schwelle wird beim naechsten Nachrechnen als "
+           "Sollwert gelesen - das Modul sagt das selbst. Gefunden: %s"
+           % (_ist, " · ".join(_falsch) or "-"))
+
     h = [b for b in _WK.BEITRAEGE if b.merkmal == "h"]
     pruefe(P, "H ist ueber sein Merkmal auffindbar", len(h) == 1,
            "seit Schritt 2c haengt kein Beitrag mehr am Namen")
