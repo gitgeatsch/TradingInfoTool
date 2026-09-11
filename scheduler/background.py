@@ -6,7 +6,8 @@ import threading
 import time
 from datetime import datetime, timedelta, timezone
 
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
+from apscheduler.events import (EVENT_JOB_ERROR, EVENT_JOB_EXECUTED,
+                                EVENT_JOB_MISSED)
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import database.db as db
@@ -121,6 +122,11 @@ MULTI_ASSET_BATCH_CRON_HOURS = "9,19"  # 2026-07-20, Quotrix-Handelsfenster-Fix 
 # verschieben kann, obwohl die *_job()-Funktionen selbst keine Scheduler-Referenz als
 # Parameter bekommen (gleiches Modul-Level-Zugriffsmuster wie die Locks oben).
 _scheduler_ref = None
+# ⚠️ S-3 (11.09.2026): der Ereignis-Horcher braucht eine Verbindung, um
+# jeden erfolgreichen Lauf zu vermerken. Dasselbe Muster wie
+# `_scheduler_ref` - gesetzt beim Aufbau, sonst None, und dann tut der
+# Horcher schlicht nichts.
+_conn_factory_ref = None
 _consecutive_failures: dict[str, int] = {}
 # Bewusst NUR die drei haeufig getakteten Jobs (15-30 Min) - bei den beiden
 # 24-Stunden-Jobs (Historie/OHLC) und den Cron-getakteten Jobs (Marktscan/
@@ -3713,7 +3719,43 @@ def _log_job_event(event) -> None:
     zweite Verteidigungslinie fuer alles, was DENNOCH bis zum Scheduler durchschlaegt
     (z.B. ein Bug im Job-Wrapper selbst), UND faengt zusaetzlich verpasste Laeufe ab
     (EVENT_JOB_MISSED - z.B. wenn der Rechner zur geplanten Zeit im Standby war),
-    was bisher komplett unsichtbar blieb."""
+    was bisher komplett unsichtbar blieb.
+
+    ## ⚠️⚠️⚠️ S-3 (11.09.2026): JEDER ERFOLGREICHE LAUF WIRD VERMERKT
+
+    DER BEFUND. Von 21 geplanten Jobs hinterliessen nur SECHS eine Spur in
+    `job_laeufe` - und die sechs nicht aus Ueberwachungsgruenden, sondern
+    weil sie einen NACHHOLER brauchen (`merke_joblauf` wurde dafuer
+    gebaut). Fuer `refresh_prices`, `refresh_history`, `marktscan`,
+    `hebel_screening` und elf weitere war nach einem Ausfall NICHT
+    feststellbar, wann sie zuletzt liefen - also auch nicht, was gefehlt
+    hat.
+
+    ⚠️ WARUM HIER UND NICHT ALS 15 EINZELAUFRUFE. Das Projekt kennt die
+    Lehre: *drei Kopien laufen garantiert auseinander.* Fuenfzehn
+    Aufrufe von Hand einzustreuen heisst, beim naechsten neuen Job einen
+    zu vergessen - und genau dieser waere dann der unsichtbare. Der
+    Listener sieht JEDEN Lauf, auch kuenftige.
+
+    ⚠️ ER DARF NIEMALS WERFEN. Ein Listener, der stolpert, stoert den
+    Scheduler - und zwar bei jedem Job. Deshalb ein breiter Fang und
+    eine Meldung nur auf DEBUG: dass die Buchhaltung klemmt, ist kein
+    Grund, die Arbeit anzuhalten (dieselbe Linie wie `merke_joblauf`
+    selbst).
+    """
+    if getattr(event, "code", None) == EVENT_JOB_EXECUTED:
+        if _conn_factory_ref is None:
+            return
+        try:
+            _c = _conn_factory_ref()
+            try:
+                db.merke_joblauf(_c, event.job_id)
+            finally:
+                _c.close()
+        except Exception:                                    # noqa: BLE001
+            logger.debug("Joblauf %s nicht vermerkt", event.job_id,
+                         exc_info=True)
+        return
     if event.exception:
         logger.error("Scheduler-Job '%s' fehlgeschlagen (unbehandelt): %s", event.job_id, event.exception)
         _notify_job_failure(event.job_id, f"Unbehandelter Fehler im Job-Wrapper: {event.exception}")
@@ -4334,8 +4376,16 @@ def build_scheduler(
         )
     else:
         logger.info("Kein BITPANDA_API_KEY - automatischer Bestandsabgleich deaktiviert (P-8)")
-    scheduler.add_listener(_log_job_event, EVENT_JOB_ERROR | EVENT_JOB_MISSED)
+    # ⚠️⚠️ S-3: AUCH DIE ERFOLGREICHEN LAEUFE (11.09.2026). Vorher
+    # horchte der Listener nur auf FEHLER und MISFIRES - ein Job, der
+    # sauber lief, hinterliess nichts. Von 21 Jobs fuehrten deshalb nur
+    # sechs eine Spur in `job_laeufe`, und nach einem Ausfall war nicht
+    # feststellbar, was gefehlt hat.
+    scheduler.add_listener(
+        _log_job_event,
+        EVENT_JOB_ERROR | EVENT_JOB_MISSED | EVENT_JOB_EXECUTED)
 
-    global _scheduler_ref
+    global _scheduler_ref, _conn_factory_ref
     _scheduler_ref = scheduler
+    _conn_factory_ref = db_conn_factory
     return scheduler

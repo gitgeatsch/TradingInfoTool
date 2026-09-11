@@ -7163,6 +7163,77 @@ def paket_15() -> None:
     pruefe(P, "die drei taeglichen Jobs vermerken ihren Lauf",
            _q7.count("merke_joblauf(") >= 3,
            "wer nicht vermerkt, wird bei jedem Neustart nachgeholt")
+
+    # ---- ⚠️⚠️⚠️ S-3: JEDER Job hinterlaesst eine Spur (11.09.2026) -----
+    #
+    # DER BEFUND aus der NB-Sicherung: von 21 geplanten Jobs fuehrten nur
+    # SECHS eine Zeile in `job_laeufe` - und die sechs nicht aus
+    # Ueberwachungsgruenden, sondern weil sie einen NACHHOLER brauchen.
+    # Fuer `refresh_prices`, `refresh_history`, `marktscan`,
+    # `hebel_screening` und elf weitere war nach einem Ausfall NICHT
+    # feststellbar, wann sie zuletzt liefen - also auch nicht, was
+    # gefehlt hat.
+    #
+    # ⚠️ GEPRUEFT WIRD DAS VERHALTEN, NICHT DER QUELLTEXT. Bei S-1 ist
+    # am selben Tag eine Pruefung gruen geblieben, die nur nach einem
+    # Funktionsnamen im Text suchte - der Aufruf stand noch da und wurde
+    # nur nie erreicht. Hier wird der Horcher mit echten Ereignissen
+    # gerufen.
+    import scheduler.background as _BG7
+    from apscheduler.events import (EVENT_JOB_ERROR as _EE,
+                                    EVENT_JOB_EXECUTED as _EX)
+
+    class _Offen(_sq7.Connection):
+        def close(self):
+            pass                       # im Test offen halten
+
+    class _Ereignis:
+        def __init__(self, code, jid, exc=None):
+            self.code, self.job_id, self.exception = code, jid, exc
+
+    _c8 = _sq7.connect(":memory:", factory=_Offen)
+    _c8.row_factory = _sq7.Row
+    _alt_conn, _alt_notify = _BG7._conn_factory_ref, _BG7._notify_job_failure
+    _gemeldet = []
+    try:
+        _BG7._conn_factory_ref = lambda: _c8
+        _BG7._notify_job_failure = lambda j, t: _gemeldet.append(j)
+        _BG7._log_job_event(_Ereignis(_EX, "refresh_prices"))
+        _erfolg = _db7.letzter_joblauf(_c8, "refresh_prices")
+        _BG7._log_job_event(_Ereignis(_EE, "kaputt", RuntimeError("x")))
+        _fehler = _db7.letzter_joblauf(_c8, "kaputt")
+        _BG7._conn_factory_ref = None
+        _BG7._log_job_event(_Ereignis(_EX, "ohne_verbindung"))
+        _ohne_absturz = True
+    except Exception as _exc8:                               # noqa: BLE001
+        _erfolg, _fehler, _ohne_absturz = None, None, False
+        _gemeldet.append("AUSNAHME: %s" % _exc8)
+    finally:
+        _BG7._conn_factory_ref = _alt_conn
+        _BG7._notify_job_failure = _alt_notify
+
+    pruefe(P, "⚠️⚠️ JEDER erfolgreiche Lauf wird vermerkt, nicht nur die "
+           "sechs mit Nachholer", bool(_erfolg),
+           "der Horcht auf EVENT_JOB_EXECUTED ist die EINE Stelle - "
+           "fuenfzehn Einzelaufrufe von Hand heissen, beim naechsten "
+           "neuen Job einen zu vergessen, und genau der waere dann der "
+           "unsichtbare. Vermerkt: %r" % _erfolg)
+    pruefe(P, "⚠️ ein FEHLGESCHLAGENER Lauf wird NICHT vermerkt",
+           _fehler is None and "kaputt" in _gemeldet,
+           "er ist nicht gelaufen - ihn zu vermerken hiesse, einen "
+           "Ausfall als Erfolg zu buchen. Die Fehlermeldung muss aber "
+           "trotzdem raus. Vermerkt: %r · gemeldet: %s"
+           % (_fehler, _gemeldet))
+    pruefe(P, "⚠️ und ohne Verbindung stolpert der Horcher NICHT",
+           _ohne_absturz,
+           "ein Listener, der wirft, stoert den Scheduler - und zwar bei "
+           "JEDEM Job. Dass die Buchhaltung klemmt, ist kein Grund, die "
+           "Arbeit anzuhalten")
+    pruefe(P, "und er ist auf EVENT_JOB_EXECUTED registriert",
+           "EVENT_JOB_EXECUTED" in _q7.split("add_listener")[-1][:200],
+           "ohne die Registrierung feuert er nie - die drei Pruefungen "
+           "darueber wuerden trotzdem gruen bleiben, weil sie die "
+           "Funktion direkt rufen")
     # ⚠️ NICHT UEBER DIE TEXTPOSITION. Meine erste Fassung verglich, wo die
     # drei Aufrufe im Quelltext STEHEN - dort steht der Ausstiegs-Job zuerst.
     # Die Reihenfolge steckt aber in den VERSATZSEKUNDEN, nicht in der

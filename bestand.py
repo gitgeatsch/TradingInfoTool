@@ -3102,6 +3102,45 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.360", "✔✔✔ S-3 IST GEBAUT - jeder Job hinterlaesst "
+               "eine Spur. Von 21 geplanten fuehrten nur SECHS eine Zeile "
+               "in `job_laeufe`, und die sechs nicht aus "
+               "Ueberwachungsgruenden: `merke_joblauf` wurde fuer den "
+               "NACHHOLER gebaut, und nur Jobs mit Nachholbedarf riefen "
+               "sie. Fuer `refresh_prices`, `refresh_history`, "
+               "`marktscan`, `hebel_screening` und elf weitere war nach "
+               "einem Ausfall NICHT feststellbar, wann sie zuletzt "
+               "liefen - also auch nicht, was gefehlt hat", "gilt",
+               "scheduler/background._log_job_event"),
+    Befundlage("2.360-zentral", "✔✔ ZENTRAL STATT FUENFZEHN KOPIEN: der "
+               "Ereignis-Horcher lauscht jetzt zusaetzlich auf "
+               "EVENT_JOB_EXECUTED - vorher nur auf ERROR und MISSED, "
+               "also blieb ein Job, der SAUBER lief, unsichtbar. "
+               "⚠️ Fuenfzehn Einzelaufrufe von Hand einzustreuen hiesse, "
+               "beim naechsten neuen Job einen zu vergessen - und genau "
+               "der waere dann der unsichtbare. Der Horcher sieht jeden "
+               "Lauf, auch kuenftige. Das Projekt kennt die Lehre: *drei "
+               "Kopien laufen garantiert auseinander*", "gilt",
+               "scheduler/background.py"),
+    Befundlage("2.360-gegenprobe", "✔✔ VIER VERHALTEN GEGENGEPRUEFT: ein "
+               "ERFOLGREICHER Lauf wird vermerkt · ein FEHLGESCHLAGENER "
+               "NICHT (er ist nicht gelaufen - ihn zu vermerken hiesse, "
+               "einen Ausfall als Erfolg zu buchen), die Fehlermeldung "
+               "geht trotzdem raus · OHNE Verbindung stolpert der Horcher "
+               "nicht (ein Listener, der wirft, stoert den Scheduler bei "
+               "JEDEM Job) · und er ist auf EVENT_JOB_EXECUTED "
+               "registriert. ⚠️ Die Gegenprobe wird ROT, sobald man den "
+               "Zweig abschaltet", "gilt", "pruefe_pakete.py"),
+    Befundlage("2.360-verhalten", "⚠️ UND DIESMAL PRUEFT DIE PRUEFUNG DAS "
+               "VERHALTEN, NICHT DEN QUELLTEXT - die Lehre von S-1 vom "
+               "selben Tag: dort blieb eine Pruefung gruen, die nur nach "
+               "einem Funktionsnamen im Text suchte; der Aufruf stand "
+               "noch da und wurde nur nie erreicht. Hier wird der Horcher "
+               "mit echten Ereignissen gerufen. ⚠️ Die vierte Pruefung "
+               "(Registrierung) bleibt eine Textpruefung - und zwar "
+               "bewusst: die drei darueber rufen die Funktion DIREKT und "
+               "wuerden auch dann gruen bleiben, wenn niemand sie je "
+               "anschliesst", "gilt", "Selbstbefund 11.09.2026"),
     Befundlage("2.358", "✔✔✔ S-1 IST GEBAUT - die drei MESSQUELLEN "
                "sind ueberwacht. `funding_historie`, "
                "`terminmarkt_historie` und `onchain_historie` standen in "
