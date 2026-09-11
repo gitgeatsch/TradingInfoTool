@@ -246,3 +246,114 @@ nach zwei Wochen.
 **Die Frage, die der Trichter danach beantwortet:** greift Stufe 11 auf
 denselben Zellen wie vorher, oder verschiebt sich der Verlust? Und: was
 macht die neue Stufe `terminmarkt` (N-14)?
+
+---
+
+# 🚀 11.09.2026 — DER PRODUKTIVGANG NACH DEM BEWERTUNGSUMBAU
+
+> *„der Umbau des Systems für das NB läuft nun schon seit Tagen bzw.
+> Wochen, da die bestehende Lösung nicht funktioniert — also auch kein
+> Pull am NB seit Tagen. Wenn du Vorarbeiten und die S1 etc. benötigst,
+> dann mach die Planung und Umsetzung so, dass wir sauber vom Desktop auf
+> das NB produktiv gehen können."*
+> — Nutzervorgabe 11.09.2026
+
+## Die Lage — gemessen, nicht geschätzt
+
+| | |
+|---|---|
+| **Commits seit dem letzten dokumentierten Ausrollstand (24.08.)** | **292** |
+| Commits seit dem 02.09. | 181 |
+| geänderte **Betriebs**dateien seit 02.09. | 10 — `agent/auswahl.py`, `marktrang.py`, `potential.py`, `rollen_gate.py`, `rollen_lauf.py`, `signal_mail.py`, `wahrscheinlichkeit.py`, `zweite_meinung.py`, `database/models.py`, `scheduler/rollen_job.py` |
+
+⚠️ **Das ist kein Nachziehen, das ist ein Gesamtpaket.** Die stehende
+Regel gilt: *am Notebook immer eine custom zusammengestellte
+Gesamtpaket-Installation, nicht einzelne Schritte nacheinander* — der
+inkrementelle Weg hat dort schon einmal eine Lücke hinterlassen.
+
+---
+
+## ⓿ Die Vorarbeiten — **am Desktop, vor dem Rollout**
+
+**Warum vorher:** der Code wird ohnehin ersetzt. Diese drei nachträglich
+einzubauen kostet einen **zweiten** Rollout.
+
+### S-1 · Die drei Messquellen als Scheduler-Jobs
+
+**Heute:** `funding_historie.db`, `terminmarkt_historie.db` und
+`onchain_historie.db` werden von `hole_fremdreihen.py` und
+`hole_terminmarkt_historie.py` **von Hand** geschrieben. Von 21 geplanten
+Jobs schreibt **keiner** sie. Kein Misfire-Schutz, kein
+Staleness-Watchdog, kein Backoff, keine Fehlermail.
+
+**Tragweite — kleiner als sie aussieht:** die laufenden **Werte** kommen
+aus Live-API-Abrufen; die DBs liefern nur die **Messbasis**. Für den
+Betrieb also kaum kritisch, für **Messungen und Kalibrierung** voll.
+
+➔ Als Jobs aufsetzen, mit `api.boersen_klines.fuelle_luecken` als
+Vorbild — sie füllt bereits Lücken statt nur die Spitze zu prüfen.
+
+### S-2 · ⚠️⚠️ Der stille Ausfall
+
+`agent/marktrang.py:718`:
+
+```python
+f = eintrag.get("funding_fuenftel")
+if f is not None:
+    zeilen.append("Finanzierung: ...")
+```
+
+> Fällt die API kurz aus, wird der Wert `None` — und die Zeile wird
+> **weggelassen**. Die Mail sieht normal aus, nur kürzer. Die Bewertung
+> ist an dem Tag **stumm um einen Beitrag ärmer**.
+
+Bei Totalausfall aller vier nennt die Mail sogar die **falsche Ursache**
+(„gehört nicht zur Messbasis" — es lag am **Netz**).
+
+➔ Sichtbare Zeile *„heute nicht verfügbar"* mit der **richtigen**
+Ursache. Verletzt sonst zwei stehende Vorgaben: *fail-soft ist
+fail-silent* und *Änderungen dürfen die Bewertung nicht blockieren, schon
+gar nicht still*.
+
+### S-3 · Alle Jobs protokollieren
+
+**Heute** hinterlassen nur **6 von 21** Jobs eine Spur in `job_laeufe`.
+Für `refresh_prices`, `refresh_history`, `marktscan`, `hebel_screening`
+und elf weitere ist **nicht feststellbar, wann sie zuletzt liefen** —
+nach einem Ausfall also nicht, was gefehlt hat.
+
+➔ `_log_job_event` für alle 21, nicht für sechs.
+
+---
+
+## ❶ Der Rollout selbst
+
+Die Schritte aus Abschnitt 1 oben gelten unverändert (`fetch` vor `pull`,
+Scheduler stoppen/ziehen/starten, `pruefe_pakete.py`,
+`finde_freie_namen.py`).
+
+⚠️ **Zwei Zahlen sind neu:** die Prüfsuite meldet heute **2048** (nicht
+1.679), und die drei bekannten Roten sind CANTON/ASTER/MON ohne
+Messreihe, CANTON ohne Beitrag, sieben Klassenkollisionen — dazu die
+Datenalterung der Nicht-Krypto-Messbasen.
+
+---
+
+## ❷ Die Abnahme **am Notebook** — was danach wahr sein muss
+
+| | |
+|---|---|
+| **L1** | ⚠️ **die Oberfläche einmal am NB öffnen** und im Watchlist-Reiter *„Akkumulation umschalten (Krypto)"* für **ETH und SOL** setzen. Der Schalter **existiert** — er wirkt aber auf die DB des Geräts, auf dem die GUI läuft. Am Desktop geschaltet landet er in der Desktop-DB, die nie produktiv ist |
+| **Datenstand** | `funding_historie` / `terminmarkt_historie` / `onchain_historie` nachziehen (Rückstand 11–13 Tage) |
+| **`portfolio_wert_historie`** | muss wieder **täglich** schreiben. Steht sie erneut, ist die 80-%-Abdeckungsschranke der Grund — dann sind die 6 von 32 Symbolen ohne Kurs die eigentliche Aufgabe |
+| **`hebel_signals`** | steht seit dem 10.08. — nach dem Rollout prüfen, ob das ein Ausfall oder die begründete Folge der blockierten Hebellage ist |
+
+---
+
+## ⚠️ Was dieser Rollout NICHT löst
+
+| | |
+|---|---|
+| **Die Hebellage** | bleibt blockiert (A1, A9, P-1) — der Rollout ändert daran nichts |
+| **Der Takt** | Mailaufkommen und Wiederholungsanteil sind **nach** dem Rollout zu messen, nicht vorher — vorher misst man den alten Stand |
+| **Die Akkumulationsbewertung** | `schnitt` ist gemessen, aber **nicht registriert**. Bis die FORM entschieden ist, hat die Akkumulationslage **null** Beiträge — auch nach dem Rollout |

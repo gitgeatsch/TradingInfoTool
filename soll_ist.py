@@ -587,19 +587,39 @@ def abgleich() -> list:
                       "Notebook." % (pfad, jung))
 
     # 6 - Nutzervorgabe: Core sind BTC, ETH UND SOL.
-    try:
-        c = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
-        gesetzt = {x[0].upper() for x in c.execute(
-            "SELECT symbol FROM asset_dca_settings WHERE dca_erlaubt=1")}
-        c.close()
+    #
+    # ⚠️⚠️ DIESE PRUEFUNG LAS DAS FALSCHE GERAET (behoben 11.09.2026).
+    # Sie oeffnete `data/tradinginfotool.db` - die DESKTOP-Kopie, die nie
+    # produktiv ist und am 11.09. auf Stand 19.08. stand. Sie meldete
+    # damit ueber ein Geraet, auf dem der Schalter gar nichts bewirkt.
+    #
+    # Am NOTEBOOK (Sicherung 11.09. 04:48) stand NUR BTC - nicht einmal
+    # ETH. Die Desktop-Kopie hatte BTC+ETH und verdeckte die Haelfte des
+    # Problems.
+    #
+    # ⚠️ Der Schalter EXISTIERT in der Oberflaeche ("Akkumulation
+    # umschalten (Krypto)", Watchlist-Reiter). Er wirkt aber auf die DB
+    # des Geraets, auf dem die GUI laeuft - L1 ist deshalb KEINE
+    # Entwicklungsaufgabe, sondern ein Schritt der Rollout-Checkliste.
+    for _pfad, _wo in (("data/tradinginfotool.db", "DESKTOP (nicht "
+                        "produktiv - nur zur Anzeige)"),):
+        try:
+            c = sqlite3.connect("file:%s?mode=ro" % _pfad, uri=True)
+            gesetzt = {x[0].upper() for x in c.execute(
+                "SELECT symbol FROM asset_dca_settings WHERE dca_erlaubt=1")}
+            c.close()
+        except sqlite3.Error:
+            continue
         fehlt = {"BTC", "ETH", "SOL"} - gesetzt
         if fehlt:
-            ab.append("L1: Der Akkumulations-Schalter `dca_erlaubt` fehlt "
-                      "fuer %s - die Nutzervorgabe nennt BTC, ETH und SOL. "
-                      "Ohne ihn laeuft der Wert nach `einstieg`, also mit "
-                      "Stop und Trailing." % ", ".join(sorted(fehlt)))
-    except sqlite3.Error:
-        pass
+            ab.append("L1: `dca_erlaubt` fehlt fuer %s - die Nutzervorgabe "
+                      "nennt BTC, ETH und SOL. Ohne ihn laeuft der Wert "
+                      "nach `einstieg`, also mit Stop und Trailing. "
+                      "⚠️ GELESEN AUF: %s. Massgeblich ist das NOTEBOOK - "
+                      "dort stand am 11.09. NUR BTC. Der Schalter ist in "
+                      "der Oberflaeche vorhanden und dort EINMAL AM NB zu "
+                      "setzen (Rollout-Checkliste, "
+                      "Ausrollen_24_08.md)." % (", ".join(sorted(fehlt)), _wo))
 
     # 7 - `swing` ist laut Nutzervorgabe keine genutzte Strategie mehr.
     #     ⚠️ Geprueft wird die STILLLEGUNG, nicht das Fehlen: der Eintrag
