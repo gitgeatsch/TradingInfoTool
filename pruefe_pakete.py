@@ -1167,12 +1167,23 @@ def paket_11() -> None:
     # Ueberschrift stand ueber einem WisdomTree-Zertifikat und einem inversen
     # S&P-ETF. Diese Pruefung hat die Aenderung korrekt gefangen; sie prueft
     # jetzt dieselbe ABSICHT (Reihenfolge und Vollstaendigkeit) am neuen Namen.
-    for nr, name in ((1, "DER WERT"), (2, "DIE RECHNUNG"),
-                     (3, "DAS URTEIL DES MODELLS"), (4, "EINORDNUNG")):
-        pruefe(P, f"Abschnitt {nr} heisst '{name}'", f"--- {nr}. {name} ---" in text)
-    pruefe(P, "der Wert steht VOR der Rechnung",
-           text.index("1. DER WERT") < text.index("2. DIE RECHNUNG"),
-           "Nutzer: 'Info Teil zum Coin und dann die wichtigen Abschnitte'")
+    # ⚠️⚠️ S-4 (11.09.2026): DIE GLIEDERUNG NACH DEM MAILVORSCHLAG. Aus vier
+    # Abschnitten wurden: Kopf (Auf einen Blick, Was dagegen spricht), sechs
+    # Abschnitte, Anhang - NICHTS gestrichen (Befund 2.372). Diese Pruefung
+    # haelt dieselbe ABSICHT fest wie vorher - Reihenfolge und
+    # Vollstaendigkeit -, an den neuen Namen. Die EINORDNUNG (die zweite,
+    # aeltere Trefferquote) steht jetzt im Anhang.
+    for name in ("AUF EINEN BLICK", "2. DIE RECHNUNG", "3. DIE LAGE DES WERTS",
+                 "5. DIE MODELLE - DAS URTEIL", "ANHANG - ZUM NACHSCHLAGEN"):
+        pruefe(P, f"Abschnitt '{name}' steht da", f"--- {name} ---" in text)
+    pruefe(P, "Reihenfolge: Kopf, Rechnung, Lage, Modelle, Anhang",
+           text.index("AUF EINEN BLICK") < text.index("2. DIE RECHNUNG")
+           < text.index("3. DIE LAGE DES WERTS")
+           < text.index("5. DIE MODELLE - DAS URTEIL")
+           < text.index("ANHANG - ZUM NACHSCHLAGEN")
+           and "Einordnung." in text[text.index("ANHANG - ZUM NACHSCHLAGEN"):],
+           "Mailvorschlag 11.09.: oben, womit man handelt - unten, was man "
+           "nachschlagen will; nichts gestrichen")
     # ZWEI EIGENE FEHLER IN DIESER EINEN PRUEFUNG, beide an der Testeingabe:
     #   * ein selbstgebautes `rechnung`-dict ohne `einstieg_von_eur`
     #   * KEINE Fakten uebergeben - dann bleibt Abschnitt 1 leer, und
@@ -1181,7 +1192,7 @@ def paket_11() -> None:
     # Beides derselbe Typ wie die streng steigende Testreihe: die Eingabe
     # stellt den Fall nicht her, den sie pruefen will.
     pruefe(P, "und die Absicherung bekommt ihre eigene Ueberschrift",
-           "--- 1. DIE ABSICHERUNG ---" in SM.baue_mail(
+           "--- 3. DIE ABSICHERUNG ---" in SM.baue_mail(
                symbol="DBPK", name="DBPK", kurs_eur=55500.0,
                instrument="absicherung", strategie="einstieg", rechnung=weit,
                coin_fakten=["Abzusicherndes Exposure: 8.898 EUR."],
@@ -2041,7 +2052,7 @@ def paket_14() -> None:
     pruefe(P, "der Betreff nennt die Aktion DIESER Mail",
            betreff.startswith("TradingInfoTool: BTC - NACHKAUFEN"), betreff)
     pruefe(P, "und der faellige Ausstieg steht ganz oben im Text",
-           txt.index("Bestehende Position") < txt.index("3. DAS URTEIL"),
+           txt.index("Bestehende Position") < txt.index("5. DIE MODELLE - DAS URTEIL"),
            "sichtbar vor dem Urteil des Modells - nur nicht als Ueberschrift")
     # BEI EINER NICHT-EINSTIEGSAKTION BLEIBT ER IM BETREFF: dort beschreibt er
     # tatsaechlich, was zu tun ist.
@@ -4214,7 +4225,7 @@ def paket_15() -> None:
            any("72. Perzentil" in z for z in _ohne),
            "sonst waere die Bestaetigung ein konstantes Feld")
     pruefe(P, "die Gegenpruefung hat einen EIGENEN Mailabschnitt",
-           "5. GEGENPRUEFUNG (zweites Modell)" in _quelltext(
+           "5. DIE MODELLE - DIE GEGENPRUEFUNG (zweites Modell)" in _quelltext(
                "agent/signal_mail.py")
            and "gegenpruefung=list(zweite_zeilen)" in _quelltext(
                "agent/rollen_lauf.py"),
@@ -7296,8 +7307,8 @@ def paket_15() -> None:
     from agent import signal_mail as SM9
 
     pruefe(P, "die Mailueberschrift folgt dem Instrument",
-           SM9._ueberschrift_wert("spot") == "1. DER WERT"
-           and SM9._ueberschrift_wert("absicherung") == "1. DIE ABSICHERUNG",
+           SM9._ueberschrift_wert("spot") == "3. DIE LAGE DES WERTS"
+           and SM9._ueberschrift_wert("absicherung") == "3. DIE ABSICHERUNG",
            "'DER COIN' stand ueber einem WisdomTree-Zertifikat und einem "
            "inversen S&P-ETF - ein Etikett, das dem Leser etwas anderes "
            "sagt, als vor ihm liegt")
@@ -9200,7 +9211,9 @@ def paket_lesbar() -> None:
     # --- DIE HERKUNFTSANGABE JE ABSCHNITT ------------------------------
     pruefe(P, "jeder Abschnitt hat eine Herkunft",
            set(_SM.HERKUNFT) == {"wert", "position", "rechnung", "urteil",
-                                 "einordnung", "gegenpruefung"},
+                                 "einordnung", "gegenpruefung",
+                                 # S-4: die Abschnitte der Gliederung
+                                 "bewertung", "markt", "projekt", "anhang"},
            str(sorted(_SM.HERKUNFT)))
     pruefe(P, "sie sagt WIE wir es wissen, nicht WER geredet hat",
            all("LLM" not in v and "Gemini" not in v
@@ -11518,11 +11531,12 @@ def paket_dimension() -> None:
 
     # ⚠️ NUR ZWEI BLOECKE WERDEN EIGENS DARGESTELLT - der Rest MUSS in die
     # Coin-Fakten. Kommt ein neuer dazu, faellt er hier auf.
-    _eigens = ("bestand", "marken")
+    # S-4 (11.09.2026): die Hebelgeometrie steht eigens im Anhang (Teil C).
+    _eigens = ("bestand", "marken", "hebelgeometrie")
     pruefe(P, "jeder Block ist entweder eigens dargestellt oder dabei",
            all(n in _eigens or n in _LGB.BLOCK_REIHENFOLGE
                for n in _LGB.BLOCK_REIHENFOLGE)
-           and '_n not in ("bestand", "marken")' in _rlq,
+           and '_n not in ("bestand", "marken", "hebelgeometrie")' in _rlq,
            "wer einen Block ergaenzt und die Mail vergisst, baut denselben "
            "Fehler noch einmal")
 
@@ -12431,8 +12445,11 @@ def paket_dimension() -> None:
 
     # ⚠️ ES LIEST DIE FERTIGE MAIL - KEINE ZWEITE RECHNUNG.
     _mq = _quelltext("agent/signal_mail.py")
+    # S-4 (11.09.2026): seit der Gliederung liest der Kopf die fertigen
+    # ABSCHNITTE (vorher den fertigen Text) - dieselbe Absicht.
     pruefe(P, "und es rechnet nichts neu, sondern liest den fertigen Text",
-           "zeilen = text.split" in _mq and "_GB.saetze(zeilen)" in _mq,
+           "_GB.saetze(_abschnitte)" in _mq
+           and "_GB.dagegen(_abschnitte, gegenpruefung)" in _mq,
            "eine zweite Rechnung koennte von der ersten abweichen - genau "
            "der Fehler, der vier Kopien derselben Stopzeile hinterliess")
 
@@ -13471,8 +13488,11 @@ def paket_dimension() -> None:
     # ⚠️ UND SIE MUSS IN DER MAIL GANZ OBEN STEHEN.
     _smq = _quelltext("agent/signal_mail.py")
     pruefe(P, "die Zusammenfuehrung steht VOR dem Bestand",
-           "if wahrscheinlichkeit:" in _smq
-           and _smq.index("if wahrscheinlichkeit:") < _smq.index("if bestand:"),
+           # S-4: seit der Gliederung als Abschnitt 1 VOR der Lage (3),
+           # und ihre Quote steht zusaetzlich im Kopf.
+           '_abschnitt("1. DIE BEWERTUNG"' in _smq
+           and _smq.index('_abschnitt("1. DIE BEWERTUNG"')
+           < _smq.index("_abschnitt(_ueberschrift_wert(instrument)"),
            "erst das Ergebnis, dann die Bestandteile - sonst ist es wieder "
            "eine Strichliste, die der Leser selbst zusammenrechnet")
 
@@ -18437,6 +18457,147 @@ def paket_aggregat_deckel() -> None:
            '_agg = {"frei_eur": 0.0' in _rla and "Aggregat-Deckel nicht lesbar" in _rla)
 
 
+def paket_mailgliederung() -> None:
+    """S-4 (b) - die Mail nach dem Vorschlag vom 11.09. gegliedert.
+
+    Nutzerhinweis 11.09.: *"der Text erschlaegt einen beim Lesen"*; der
+    Vorschlag wurde als stimmig bestaetigt (Befund 2.372). Grundsatz: NICHTS
+    WIRD GESTRICHEN - es wird gruppiert. Die wichtigste Pruefung hier ist
+    deshalb eine EIGENSCHAFT: jede uebergebene Zeile steht in der fertigen
+    Mail. Alles ueber die echten Funktionen.
+    """
+    P = "Mailgliederung"
+    from agent import entscheidungsrechnung as _ERm
+    from agent import gesamtbild as _GBm
+    from agent import signal_mail as _SMm
+    from agent import wahrscheinlichkeit as _WKm
+    from agent import zweite_meinung as _ZMm
+
+    _r = _ERm.rechne(kurs=0.3101, atr=0.0185, risiko_eur=48.0,
+                     betrag_wunsch_eur=800.0, umgeworfen_preis_eur=0.2732,
+                     stop_min_atr=2.0, kostenklasse="krypto",
+                     assetklasse="krypto", instrument="spot",
+                     hebel_handelbar=False, topf_frei_eur=3000.0,
+                     cash_frei_eur=418.0)
+    _wk = _WKm.saetze(crv=_r["crv"], stop_relativ=_r["stop_relativ"],
+                      klasse="krypto", strategie="einstieg",
+                      merkmale={"funding_fuenftel": 0},
+                      risiko_eur=_r.get("risiko_eur"))
+    pruefe(P, "die Trennmarken stehen so im Wahrscheinlichkeitsblock, wie die Mail sie sucht",
+           any(_WKm.QUOTE_TEXT in z for z in _wk)
+           and any(z.startswith(_WKm.MARKE_TRAEGT) or z.startswith(_WKm.MARKE_ZU_WENIG)
+                   for z in _wk)
+           and _WKm.KOPF_NICHT_EINGERECHNET in _wk,
+           "sonst verteilt die Mail still falsch - die Marken sind die EINE Stelle")
+    _teile = dict(
+        bestand="ONDO ist nicht im Bestand.",
+        marken=["Der naechste Widerstand liegt 0,6 Schwankungsbreiten hoeher."],
+        faktenblock=["Schwankung   5,2 % je Tag   GUENSTIG"],
+        coin_fakten=["Die Marktstruktur zeigt hoehere Hochs."],
+        vorfilter=["Kursmarken rund um diesen Einstieg",
+                   "   Nach oben liegt eine Marke 3,4 % hoeher"],
+        marktrang=["Finanzierung: ein niedriges Fuenftel im Marktvergleich."],
+        marktvergleich=["Rang 1 von 3 nach der Entwicklung der letzten 250 "
+                        "Handelstage."],
+        termine=["Bekannte Termine in den naechsten 30 Tagen (Anzeige):",
+                 "   in 4 Tagen: FOMC-Sitzung",
+                 "⚠️ UNGUENSTIG FUER EINEN EINSTIEG JETZT: Termin in der "
+                 "Fuenf-Tage-Bewegung."],
+        lebendigkeit=["Lebendigkeit des Projekts (Merkmal, kein Urteil):",
+                      "⚠️ NOCH KEINE BEWERTUNG MOEGLICH - 23 von 30"],
+        hebelgeometrie=["Falls ein Hebel noetig wird: bei 3-fach 27 %."],
+        einordnung=["Von hundert solchen Einstiegen erreichen erfahrungsgemaess "
+                    "34 das Ziel vor dem Stop."],
+        wahrscheinlichkeit=_wk)
+    _gp = _ZMm.zeilen({"einwand": "ja", "einwand_grund": "Finanzierung hoch",
+                       "grundlage": []})
+    _betr, _t = _SMm.baue_mail(
+        symbol="ONDO", name="ONDO", kurs_eur=0.3101, instrument="spot",
+        strategie="einstieg", rechnung=_r, assetklasse="krypto",
+        urteil={"aktion": "KAUFEN", "begruendung": "Die Struktur dreht.",
+                "was_dagegen": "Umsatz auf Abwaertstagen.",
+                "umgeworfen_durch": "Schlusskurs unter 0,29 EUR",
+                "unabhaengige_faktoren": 1,
+                "belege": [{"fakt": "hoehere Hochs", "richtung": "dafuer",
+                            "gewicht": "hoch"}]},
+        gegenpruefung=_gp, **_teile)
+
+    _koepfe = ["AUF EINEN BLICK", "WAS DAGEGEN SPRICHT", "1. DIE BEWERTUNG",
+               "2. DIE RECHNUNG", "3. DIE LAGE DES WERTS", "4. DER MARKTVERGLEICH",
+               "5. DIE MODELLE - DAS URTEIL", "5. DIE MODELLE - DIE GEGENPRUEFUNG",
+               "6. TERMINE UND PROJEKT", "ANHANG - ZUM NACHSCHLAGEN"]
+    _pos = [_t.find("--- " + k) for k in _koepfe]
+    pruefe(P, "⚠️⚠️ Kopf, sechs Abschnitte, Anhang - vollstaendig und in dieser Reihenfolge",
+           all(p >= 0 for p in _pos) and _pos == sorted(_pos),
+           "%r" % dict(zip(_koepfe, _pos)))
+
+    def _abschnitt(name):
+        a = _t.find("--- " + name)
+        b = _t.find("\n--- ", a + 4)
+        return _t[a:b if b > 0 else len(_t)]
+
+    _blick = _abschnitt("AUF EINEN BLICK")
+    pruefe(P, "der Kopf traegt, womit man handelt: Zone, Stop, Ziel, Betrag, Ergebnis, Quote, Gebuehren",
+           all(w in _blick for w in ("Einstiegszone", "Stop ", "Take-Profit",
+                                     "Betrag", "am Stop -", "am Ziel +",
+                                     "geschaetzte Trefferquote",
+                                     "Standard 0,30 %", "Bitpanda 1,50 %")),
+           _blick)
+    _b1 = _abschnitt("1. DIE BEWERTUNG")
+    pruefe(P, "die Gebuehrenzeilen stehen EINMAL - im Kopf, nicht mehr in Abschnitt 1",
+           "Standard 0,30 %" not in _b1 and "Bitpanda 1,50 %" not in _b1
+           and _WKm.QUOTE_TEXT in _b1, _b1[:300])
+    _anh = _abschnitt("ANHANG")
+    pruefe(P, "⚠️ die ZWEITE Trefferquote steht im Anhang, als solche benannt (2.372)",
+           "ZWEITE, aeltere Schaetzung" in _anh and "erfahrungsgemaess 34" in _anh
+           and "erfahrungsgemaess" not in _t[:_t.find("--- ANHANG")],
+           "34,6 % entscheidet, die Erfahrungsrate ist Nebenrechnung")
+    pruefe(P, "Anhang A: nicht eingerechnet · C: Liquidationsabstaende",
+           "A  Nicht eingerechnet, und warum:" in _anh
+           and "C  Abstand zur Zwangsaufloesung" in _anh
+           and "bei 3-fach 27 %" in _anh
+           and _WKm.KOPF_NICHT_EINGERECHNET.strip() not in _b1)
+    pruefe(P, "Marktrang und Rang im Marktvergleich · Kursmarken in der Lage · Termine und Lebendigkeit in 6",
+           "niedriges Fuenftel" in _abschnitt("4. DER MARKTVERGLEICH")
+           and "Rang 1 von 3" in _abschnitt("4. DER MARKTVERGLEICH")
+           and "Kursmarken rund um" in _abschnitt("3. DIE LAGE DES WERTS")
+           and "FOMC" in _abschnitt("6. TERMINE UND PROJEKT")
+           and "Lebendigkeit des Projekts" in _abschnitt("6. TERMINE UND PROJEKT"))
+    _geg = _abschnitt("WAS DAGEGEN SPRICHT")
+    pruefe(P, "WAS DAGEGEN SPRICHT sammelt Widerspruch, UNGUENSTIG und die Grenze der Rechnung",
+           "Gegenpruefung WIDERSPRICHT" in _geg and "Bekannte Termine" in _geg
+           and ("reicht" in _geg or "!!" not in _t), _geg)
+    pruefe(P, "der Widerspruch bleibt in der Ueberschrift der Gegenpruefung (G-b)",
+           "DIE GEGENPRUEFUNG (zweites Modell) — ⚠ WIDERSPRUCH" in _t)
+
+    # ⚠️⚠️ DIE EIGENSCHAFT: NICHTS GESTRICHEN.
+    def _norm(z):
+        return " ".join(str(z).split())
+    _aus = _norm(_t)
+    _fehlt = []
+    for _k, _v in _teile.items():
+        for _z in ([_v] if isinstance(_v, str) else _v):
+            if _norm(_z) and _norm(_z) not in _aus:
+                _fehlt.append((_k, _z[:60]))
+    for _z in _gp:
+        if _norm(_z) and _norm(_z) not in _aus:
+            _fehlt.append(("gegenpruefung", _z[:60]))
+    pruefe(P, "⚠️⚠️ NICHTS GESTRICHEN: jede uebergebene Zeile steht in der fertigen Mail",
+           not _fehlt, "%r" % _fehlt[:5])
+
+    # Ohne Einstieg: der Kopf nennt die Empfehlung, keine Zahlen eines Plans.
+    _, _th = _SMm.baue_mail(symbol="ONDO", name="ONDO", kurs_eur=0.3101,
+                            instrument="spot", strategie="einstieg", rechnung=_r,
+                            urteil={"aktion": "HALTEN", "begruendung": "x"},
+                            wahrscheinlichkeit=_wk)
+    pruefe(P, "HALTEN: der Kopf nennt die Empfehlung, keine Einstiegszone",
+           "Empfehlung      HALTEN" in _th
+           and "Einstiegszone" not in _th[:_th.find("--- 1.")])
+    pruefe(P, "`gesamtbild.dagegen` sperrt nichts - es gibt nur Zeilen zurueck",
+           _GBm.dagegen([], None) == []
+           and isinstance(_GBm.dagegen(["Cash frei 1 EUR !! reicht nicht"]), list))
+
+
 def paket_messmenge() -> None:
     """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
 
@@ -18994,6 +19155,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Hebel aus Quote": paket_hebel_aus_quote,
           "Hebelfuehrung": paket_hebelfuehrung,
           "Aggregat-Deckel": paket_aggregat_deckel,
+          "Mailgliederung": paket_mailgliederung,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,

@@ -404,20 +404,21 @@ REIHENFOLGE = (
             "ein neuer Trade bekommt den Rest, unter 2x wird er Spot. Neue "
             "Spalte `verlust_am_stop_eur`. MIT KORREKTUR ZU H-4: die Kette "
             "schrieb `instrument` nie - jetzt ,hebel' fuer r(q)/SHORT "
-            "(2.379-instrument-korrektur). ⚠️ ZUR ABSTIMMUNG (2.380-annahmen): "
-            "das Fenster von 3 Tagen - bei 3 Tagen macht der Deckel 73 % der "
-            "Hebelkandidaten zu Spot, bei 1 Tag 32 % (Watchlist 2026); "
-            "Position ohne Stop = ganzes Eigenkapital.",
+            "(2.379-instrument-korrektur). ✔ Fenster 24 h (Nutzer 11.09., "
+            "2.380-fenster). ⚠️ OFFEN: Position ohne bekannten Stop - A "
+            "abgelehnt, B vorgelegt (2.380-ohne-stop).",
             "Befunde 2.380*, 2.379-instrument-korrektur",
             fertig=True),
     Schritt(22, "S-4 SPOT SAUBER",
-            "(a) Nachweis, dass r(q) Spot NICHT veraendert; (b) die "
-            "Mailgliederung aus dem Vorschlag vom 11.09. einbauen - nichts "
-            "gestrichen - und dabei die ZWEI Trefferquoten in einer Mail "
-            "aufloesen (2.372); (c) den gemeldeten Befund O1 (Cooldown "
-            "wirkt nicht) am Code pruefen. Feinschliff der Mail NACH dem "
-            "Rollout.",
-            "Nutzerentscheidung 11.09.; Befund 2.372; Anforderungen O1"),
+            "✔ ERLEDIGT 11.09.: (a) der Hebelschalter aendert den Spot-Betrag "
+            "nicht - 1.436 NB-Einstiege, Betrag ueberall gleich; 33 % verlieren "
+            "nur ihren Scheinhebel 1,2x (2.381-spot). (b) die Mail nach dem "
+            "Vorschlag gegliedert, nichts gestrichen, die zweite Trefferquote "
+            "im Anhang (2.381-mail). (c) O1 behoben: 12 h wirken wieder, der "
+            "kurze Takt erst ab 2x (2.381). Feinschliff der Mail (Kursmarken "
+            "und Rangangaben zusammenlegen) NACH dem Rollout.",
+            "Befunde 2.381*",
+            fertig=True),
     Schritt(23, "E2E PAKET B",
             "`simuliere_kette.py` gegen die NB-Sicherung, mit einem GEZIELT "
             "erzeugten Hebelgeschaeft (steuerbare Attrappe): Mail, Chart, "

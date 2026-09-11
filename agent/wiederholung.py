@@ -112,7 +112,16 @@ def stunden(instrument: str, config: dict | None = None,
         return float(VORGABE_JE_STRATEGIE[s])
     # L5: was zuletzt herauskam. Ein gehebeltes Signal will frueher wieder
     # angesehen werden als ein Spot-Signal.
-    if hebel_zuletzt is not None and float(hebel_zuletzt) > 1.0:
+    #
+    # ⚠️⚠️ O1 BEHOBEN (S-4, 11.09.2026): AB `hebel_ab`, NICHT AB 1,0. Hier
+    # stand `> 1.0` - und die Geometrie schrieb auf Spot-Signale 1,0-1,5x
+    # (am NB 77 offene Zeilen, alle auf Spotbestaenden). Jede davon holte den
+    # 3,5-h-Takt, und die Nutzervorgabe vom 28.08. (Krypto 12 h) wirkte nicht:
+    # gerechnet an BTC 11.09. 04:47 (Hebel 1,2) - gesperrt nur bis 08:17.
+    # Die Paket-B-Regel sagt, was ein Hebel ist: "unter 2x ist Spot".
+    from agent.betraege import hebel_aus_quote_einstellungen as _hq_ein
+    _ab = float(_hq_ein(config).get("hebel_ab") or 2.0)
+    if hebel_zuletzt is not None and float(hebel_zuletzt) >= _ab - 1e-9:
         ueber = ((config or {}).get("rollen_kette") or {}).get(
             "cooldown_stunden_wenn_gehebelt")
         return float(ueber if ueber is not None else VORGABE_WENN_GEHEBELT)

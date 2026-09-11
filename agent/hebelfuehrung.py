@@ -77,13 +77,21 @@ MELDEN = (LIQUIDIERT, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT, STOP_NACHZIEHEN)
 
 # WIE WEIT EIN SIGNAL VOR DER EROEFFNUNG LIEGEN DARF, um als ihr Plan zu gelten.
 #
-# ⚠️ GESETZT, NICHT GEMESSEN - die Rollen-Kette hat bis heute kein
-# Hebelsignal geschrieben, es gibt keinen Fall, an dem sich das eichen liesse.
-# Die Groessenordnung kommt aus den 188 echten Positionen am NB: gehalten im
-# Median 0,3 Tage, 90 % unter 3,3 Tagen. Wer drei Tage nach dem Signal
-# eroeffnet, handelt auf eine andere Lage. Die Zuordnung steht deshalb IN DER
-# MAIL (Signalnummer und Datum), damit sie nachpruefbar ist.
-KOPPEL_TAGE = 3.0
+# ⚠️ NUTZERENTSCHEIDUNG 11.09.2026: 24 STUNDEN (vorher gesetzt 3 Tage).
+#
+# Das Fenster wirkt ZWEIMAL: es bestimmt, welches Signal einer Position als
+# Plan gilt, UND wie lange ein nicht eroeffnetes Hebelsignal im
+# Aggregat-Deckel Risiko belegt (`hebel_aggregat.offene_signale`).
+#
+# Die Grundlage der Abstimmung (Befund 2.380-annahmen, 2.380-sim): echte
+# Latenz Signal -> Eroeffnung am NB 0,5 / 0,6 / 3,4 STUNDEN (drei Faelle);
+# Haltedauer der 188 echten Positionen Median 0,3 Tage. Bei 3 Tagen machte der
+# Deckel 73 % der Hebelkandidaten zu Spot, bei 1 Tag 32 % (Watchlist 2026).
+#
+# ⚠️ FOLGE FUER DEN DECKEL: wer eine Position spaeter als 24 h nach dem Signal
+# eroeffnet, hat keinen Plan - sie zaehlt mit dem ganzen Eigenkapital.
+# Die Zuordnung steht IN DER MAIL (Signalnummer und Datum).
+KOPPEL_TAGE = 1.0
 # Uhrenversatz zwischen Bitpanda-Zeitstempel und Signalzeit.
 KOPPEL_NACHLAUF = timedelta(hours=1)
 EROEFFNUNG = ("KAUFEN", "NACHKAUFEN", "EROEFFNEN")
@@ -273,9 +281,10 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
     if not plan:
         t["hinweise"].append(
             "Kein Hebelsignal der Rollen-Kette zugeordnet (dasselbe Symbol, "
-            "dieselbe Richtung, bis %s Tage vor der Eroeffnung) - Stop, Ziel "
+            "dieselbe Richtung, bis %d Stunden vor der Eroeffnung) - Stop, Ziel "
             "und Widerlegung sind unbekannt. Gefuehrt werden Liquidation und "
-            "Finanzierung." % str(KOPPEL_TAGE).replace(".0", ""))
+            "Finanzierung; im Aggregat-Deckel zaehlt das ganze Eigenkapital."
+            % round(24 * KOPPEL_TAGE))
         return t
 
     # ---- DER PLAN - dieselbe Pruefung wie fuer jedes Signal -----------

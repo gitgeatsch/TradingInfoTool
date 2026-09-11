@@ -825,6 +825,21 @@ def _in_eur(wert_r: float | None, risiko_eur: float | None) -> str:
     return " = %s EUR" % de(betrag, 2, vorzeichen=True)
 
 
+# S-4 (11.09.2026): DIE STELLEN, AN DENEN DIE MAIL DIESEN BLOCK AUFTEILT.
+#
+# `signal_mail.baue_mail` stellt die Trefferquote und die Gebuehrenzeilen in
+# den Kopf ("Auf einen Blick") und "Nicht eingerechnet" in den Anhang
+# (Mailgliederung vom 11.09., Befund 2.372). Die Marken stehen HIER, und
+# `saetze()` benutzt sie selbst - die Aufteilung muss dann nicht am Wortlaut
+# raten. Wer eine aendert, aendert beide Seiten zugleich.
+QUOTE_TEXT = "= geschaetzte Trefferquote"
+MARKE_TRAEGT = "✔  "
+MARKE_ZU_WENIG = "✖  "
+KOPF_NICHT_EINGERECHNET = "   Nicht eingerechnet, und warum:"
+WARNUNG_EIN_BEITRAG = "⚠️ Die Bewertung steht auf EINEM Beitrag"
+WARNUNG_KEIN_BEITRAG = "⚠️ KEIN gemessener Beitrag greift hier"
+
+
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
            h: bool | None = None, saetze_zum_berichten=None,
            merkmale: dict | None = None, strategie: str = "",

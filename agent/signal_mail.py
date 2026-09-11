@@ -261,6 +261,13 @@ HERKUNFT = {
     "urteil": "BEHAUPTET - Rolle Haendler",
     "einordnung": "GERECHNET aus der gemessenen Erfahrungsrate",
     "gegenpruefung": "BEHAUPTET - andere Quelle: Terminmarkt und Kette",
+    # S-4 (11.09.2026): die Abschnitte der neuen Gliederung.
+    "bewertung": "GERECHNET aus gemessenen Beitraegen - kein Urteil, keine "
+                 "Gebuehren",
+    "markt": "GEMESSEN - Querschnitt des Marktes, Tatsachen ohne Wirkung auf "
+             "die Zahl",
+    "projekt": "GEMESSEN - Fremdquellen, Anzeige ohne Wirkung",
+    "anhang": "ZUM NACHSCHLAGEN - nichts davon geht in die Entscheidung ein",
 }
 
 
@@ -279,12 +286,14 @@ def _abschnitt(titel: str, zeilen: list[str],
 # (`rolle_trader._HANDELN["absicherung"]`: "Du entscheidest ueber eine
 # ABSICHERUNG, nicht ueber einen Trade").
 UEBERSCHRIFT_WERT = {
-    "absicherung": "1. DIE ABSICHERUNG",
+    # S-4 (11.09.2026): seit der Gliederung Abschnitt 3 - Abschnitt 1 ist die
+    # Bewertung, nach der entschieden wird.
+    "absicherung": "3. DIE ABSICHERUNG",
 }
 
 
 def _ueberschrift_wert(instrument: str | None) -> str:
-    return UEBERSCHRIFT_WERT.get(str(instrument or ""), "1. DER WERT")
+    return UEBERSCHRIFT_WERT.get(str(instrument or ""), "3. DIE LAGE DES WERTS")
 
 
 def gegenpruefung_titel(gegenpruefung: list | None) -> str:
@@ -302,7 +311,10 @@ def gegenpruefung_titel(gegenpruefung: list | None) -> str:
     Einwand" (▲), "unklar"/"nicht gelaufen" (●) und der leere Fall
     bleiben unveraendert. Genau die eine Zeile, die laut Befund
     unterging (8.2: "45 Widersprueche je Tag, alle versendet")."""
-    titel = "5. GEGENPRUEFUNG (zweites Modell)"
+    # S-4 (11.09.2026): unter "5. DIE MODELLE", direkt nach dem Urteil - zwei
+    # Quellen nebeneinander, wie im Mailvorschlag. Der Widerspruch bleibt in
+    # der Ueberschrift (G-b).
+    titel = "5. DIE MODELLE - DIE GEGENPRUEFUNG (zweites Modell)"
     if gegenpruefung and str(gegenpruefung[0]).startswith("▼"):
         titel += " — ⚠ WIDERSPRUCH"
     return titel
@@ -337,7 +349,14 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               # andere - der Leser soll die Zahl sehen, bevor er die
               # Einzelteile liest, aus denen sie entsteht.
               wahrscheinlichkeit: list[str] | None = None,
-              assetklasse: str | None = None) -> tuple[str, str]:
+              assetklasse: str | None = None,
+              # S-4 (11.09.2026): DIE TEILE EINZELN - fuer die Gliederung
+              # nach dem Mailvorschlag vom 11.09. Alle optional; ohne sie
+              # landet der Inhalt wie bisher in DER LAGE DES WERTS.
+              marktrang: list[str] | None = None,
+              marktvergleich: list[str] | None = None,
+              termine: list[str] | None = None,
+              hebelgeometrie: list[str] | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
     `rechnung` kommt aus `entscheidungsrechnung.rechne()`, `urteil` ist die
@@ -414,13 +433,48 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # Bestand (habe ich das ueberhaupt?), dann die Marken in Euro, dann der
     # gemessene Faktenblock, zuletzt das Umfeld. Absolute Zahlen vor
     # relativen - das ist die Regel der NUTZER-Schiene, nicht die des Modells.
+    # ⚠️⚠️ S-4 (11.09.2026): DIE GLIEDERUNG NACH DEM MAILVORSCHLAG.
+    #
+    # Nutzerhinweis 11.09.: *"der Text erschlaegt einen beim Lesen - besser
+    # gruppieren"*; der Vorschlag wurde als stimmig bestaetigt (Befund 2.372).
+    # Grundsatz: NICHTS WIRD GESTRICHEN. Es wird gruppiert - oben, womit man
+    # handelt; unten, was man nachschlagen will:
+    #
+    #     AUF EINEN BLICK        Zone, Stop, Ziel, Betrag, Ergebnis,
+    #                            Trefferquote, Gebuehren
+    #     WAS DAGEGEN SPRICHT    je eine Zeile
+    #     1. DIE BEWERTUNG       die Quote und woraus sie entsteht
+    #     2. DIE RECHNUNG        unveraendert
+    #     3. DIE LAGE DES WERTS  Bestand, Marken, Merkmale, Umfeld
+    #     4. DER MARKTVERGLEICH  Auswahl, Rangplatz, Marktraenge
+    #     5. DIE MODELLE         Urteil und Gegenpruefung
+    #     6. TERMINE UND PROJEKT
+    #     ANHANG                 nicht eingerechnet · die ZWEITE, aeltere
+    #                            Trefferquote · Liquidationsabstaende
+    #
+    # DIE ZWEI TREFFERQUOTEN (2.372): 34,6 % ist die Bewertung, nach der
+    # entschieden wird (Abschnitt 1, im Kopf). Die Erfahrungsrate aus der
+    # Trefferbilanz ("34 -> 32 von 100") ist eine zweite, aeltere Schaetzung -
+    # sie steht im Anhang, benannt als solche, statt als Abschnitt 4 gleichrangig
+    # daneben.
+    from agent import wahrscheinlichkeit as _WKM
+
+    bewertung, gebuehren, nicht_eingerechnet = [], [], []
+    _im_nicht = False
+    for z in list(wahrscheinlichkeit or []):
+        if z == _WKM.KOPF_NICHT_EINGERECHNET:
+            _im_nicht = True
+            continue
+        if _im_nicht and z.startswith("      "):
+            nicht_eingerechnet.append(z.strip())
+            continue
+        _im_nicht = False
+        if z.startswith(_WKM.MARKE_TRAEGT) or z.startswith(_WKM.MARKE_ZU_WENIG):
+            gebuehren.append(z)
+        else:
+            bewertung.append(z)
+
     eins = []
-    # ⚠️ GANZ NACH OBEN, NOCH VOR DEN BESTAND. Bis heute stand hier eine
-    # Strichliste ("1 dafuer, 1 dagegen, 2 nicht bewertbar") - sie liess die
-    # Zusammenfuehrung beim Leser. Die gerechnete Zahl ersetzt sie nicht,
-    # sie steht davor: erst das Ergebnis, dann die Bestandteile.
-    if wahrscheinlichkeit:
-        eins += list(wahrscheinlichkeit)
     if bestand:
         eins += ([""] if eins else []) + [bestand]
     if marken:
@@ -428,8 +482,8 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     if faktenblock:
         eins += ([""] if eins else []) + faktenblock
     eins += list(coin_fakten or [])
-    if lebendigkeit:
-        eins += ([""] if eins else []) + list(lebendigkeit)
+    # S-4: die LEBENDIGKEIT steht in "6. TERMINE UND PROJEKT", nicht mehr in
+    # der Lage des Werts (Mailvorschlag 11.09.).
     # ⚠️ EIGENER ABSATZ, NICHT ANS LAGEBILD ANGEHAENGT. Der Schatten sagt
     # etwas ueber UNSERE Auswahl, nicht ueber den Wert - wer ihn zwischen
     # die Marktmerkmale mischt, liest ihn als weiteren Marktfakt.
@@ -634,43 +688,114 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # kuendigt nur an, was ohnehin zwei Zeilen darunter steht.
     _g5_titel = gegenpruefung_titel(gegenpruefung)
 
-    text = "\n".join(
-        kopf
-        # ⚠️ NICHT MEHR FEST "DER COIN" (16.08.2026). Die Ueberschrift stand
-        # aus der Zeit, als die Kette nur Krypto bediente - seit dem
-        # Vollumstieg stand sie ueber einem WisdomTree-Zertifikat (OD7H) und
-        # ueber einem inversen S&P-ETF (DBPK). Gefunden, als die Simulation
-        # zum ersten Mal Rohstoffe und Absicherung durchlaufen liess.
-        #
-        # Kein Defekt der Kette - aber ein Etikett, das dem Leser etwas
-        # anderes sagt, als vor ihm liegt. Dieselbe Regel wie bei den
-        # Faktensaetzen: was dasteht, muss stimmen.
-        + _abschnitt(_ueberschrift_wert(instrument), eins,
-                     HERKUNFT["wert"])
+    # ---- S-4: DIE ABSCHNITTE NACH DEM MAILVORSCHLAG (11.09.2026) --------
+    #
+    # ⚠️ ZUERST DIE SECHS ABSCHNITTE UND DER ANHANG, DANN DER KOPF. Der Kopf
+    # ("Auf einen Blick", "Was dagegen spricht") LIEST die fertigen
+    # Abschnitte (`gesamtbild`) - er rechnet nichts neu.
+    _lage = [z for z in eins]
+    _markt = list(marktvergleich or [])
+    if marktrang:
+        _markt += ([""] if _markt else []) + list(marktrang)
+    _projekt = list(termine or [])
+    if lebendigkeit:
+        _projekt += ([""] if _projekt else []) + list(lebendigkeit)
+    _anhang = []
+    if nicht_eingerechnet:
+        # Die Kopfzeile WOERTLICH wie im Wahrscheinlichkeitsblock - "nichts
+        # gestrichen" gilt auch fuer Ueberschriften (Paket Mailgliederung).
+        _anhang += (["A" + _WKM.KOPF_NICHT_EINGERECHNET.replace("   ", "  ", 1)
+                     + " (sie gehen nicht in die Trefferquote ein)"]
+                    + [f"   {z}" for z in nicht_eingerechnet])
+    if einordnung:
+        _anhang += ([""] if _anhang else []) + [
+            "B  Eigene Bilanz - eine ZWEITE, aeltere Schaetzung (die "
+            "Erfahrungsrate). Entschieden wird nach der Trefferquote in "
+            "Abschnitt 1."] + [(f"   {z}" if z else "") for z in einordnung]
+    if hebelgeometrie:
+        _anhang += ([""] if _anhang else []) + [
+            "C  Abstand zur Zwangsaufloesung, falls ein Hebel noetig wird:"
+        ] + [f"   {z}" for z in hebelgeometrie]
+    _abschnitte = (
+        _abschnitt("1. DIE BEWERTUNG", bewertung, HERKUNFT["bewertung"])
         + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG",
                      zwei,
                      HERKUNFT["position" if ausstieg else "rechnung"])
-        + _abschnitt("3. DAS URTEIL DES MODELLS", drei,
-                     HERKUNFT["urteil"])
-        + _abschnitt("4. EINORDNUNG", list(einordnung or []),
-                     HERKUNFT["einordnung"])
-        # EIGENE UEBERSCHRIFT (Nutzervorgabe 16.08.2026). Die Zeilen der
-        # zweiten Stufe standen bisher hinten in der EINORDNUNG - dort
-        # sahen sie aus wie ein Nachsatz unserer eigenen Rechnung. Sie
-        # sind aber die Aussage einer ANDEREN Quelle und gehoeren
-        # entsprechend abgesetzt.
-        # DIE PERZENTILE, DIE NICHTS UNTERSCHEIDEN, FALLEN HIER WEG
-        # (17.08.2026). Vier gleichlautende Zeilen "im gewohnten Bereich"
-        # werden zu einer. Das MODELL hat sie alle bekommen - hier steht
-        # nur, was der Nutzer liest.
+        + _abschnitt(_ueberschrift_wert(instrument), _lage, HERKUNFT["wert"])
+        + _abschnitt("4. DER MARKTVERGLEICH", _markt, HERKUNFT["markt"])
+        + _abschnitt("5. DIE MODELLE - DAS URTEIL", drei, HERKUNFT["urteil"])
         + _abschnitt(_g5_titel,
                      ohne_gewohntes(gegenpruefung,
                                     "Angaben zur Positionierung"),
                      HERKUNFT["gegenpruefung"])
+        + _abschnitt("6. TERMINE UND PROJEKT", _projekt, HERKUNFT["projekt"])
+        + _abschnitt("ANHANG - ZUM NACHSCHLAGEN", _anhang, HERKUNFT["anhang"]))
+
+    # AUF EINEN BLICK - womit man handelt. Die Zahlen stehen in `rechnung`;
+    # dieselben Namen wie in Abschnitt 2, damit der Renderer sie gleich
+    # hervorhebt (`ui.formatting.HANDELSPARAMETER`).
+    from agent.schreibweise import de as _sde
+
+    _blick = []
+    _r = rechnung or {}
+    if (aktion in AKTIONEN_MIT_EINSTIEG and not ausstieg_dringend
+            and _r.get("stop_eur") is not None):
+        if _r.get("einstieg_von_eur") is not None:
+            _blick.append(f"Einstiegszone   {preis(_r['einstieg_von_eur'])} bis "
+                          f"{preis(_r.get('einstieg_bis_eur') or _r['einstieg_von_eur'])} EUR")
+        _blick.append(f"Stop            {preis(_r['stop_eur'])} EUR"
+                      + (f"  (-{_sde(100 * float(_r['stop_relativ']), 1)} %)"
+                         if _r.get("stop_relativ") else ""))
+        if _r.get("ziel_von_eur") is not None:
+            _blick.append(f"Take-Profit     {preis(_r['ziel_von_eur'])} bis "
+                          f"{preis(_r.get('ziel_bis_eur') or _r['ziel_von_eur'])} EUR")
+        if _r.get("betrag_eur") is not None:
+            _hb = float(_r.get("hebel") or 1.0)
+            _blick.append(f"Betrag          {eur(_r['betrag_eur'])} EUR - "
+                          + ("kein Hebel" if _hb <= 1.0
+                             else f"Hebel {_sde(_hb, 1)}x"))
+        if _r.get("verlust_am_stop_eur") is not None:
+            _blick.append(f"Ergebnis        am Stop -{eur(_r['verlust_am_stop_eur'])} "
+                          f"EUR · am Ziel +{eur(_r.get('gewinn_am_ziel_eur') or 0)} EUR")
+    else:
+        _blick.append(f"Empfehlung      {aktion}"
+                      + (f" - Ausstieg: {dringend}" if dringend else ""))
+    _quote = next((z for z in bewertung if _WKM.QUOTE_TEXT in z), None)
+    if _quote:
+        _blick.append("Bewertung       " + " ".join(
+            _quote.replace(_WKM.QUOTE_TEXT, "geschaetzte Trefferquote").split()))
+    _blick += [f"   {z}" for z in bewertung
+               if z.startswith(_WKM.WARNUNG_EIN_BEITRAG)
+               or z.startswith(_WKM.WARNUNG_KEIN_BEITRAG)]
+    _blick += [f"   {z}" for z in gebuehren]
+    _gegen = []
+    try:
+        from agent import gesamtbild as _GB
+        _gegen = _GB.dagegen(_abschnitte, gegenpruefung)
+        _gb = _GB.saetze(_abschnitte)
+        if _gb:
+            # "Dagegen spricht" steht jetzt als eigener Block darunter - hier
+            # nicht ein zweites Mal.
+            _blick += [""] + [z for z in _gb
+                              if not (_gegen and z.startswith("⚠️ Dagegen spricht"))]
+    except Exception:                                        # noqa: BLE001
+        pass
+    _kopfabschnitte = (
+        _abschnitt("AUF EINEN BLICK", _blick)
+        + _abschnitt("WAS DAGEGEN SPRICHT - je eine Zeile, Einzelheiten weiter "
+                     "unten", _gegen))
+
+    text = "\n".join(
+        kopf + _kopfabschnitte + _abschnitte
         + [TRENNER,
            "Ausfuehrung manuell ueber die Bitpanda-App. Details im Hebel-Tab."
            if instrument == "hebel" else
            "Ausfuehrung manuell ueber die Bitpanda-App."])
+    # ⚠️ VORHER ZWEI EIGENE UEBERSCHRIFTEN, DIE BLEIBEN: "DER WERT" heisst
+    # nicht mehr "DER COIN" (16.08., die Kette bedient sechs Gruppen), und
+    # die Gegenpruefung steht als eigene Quelle abgesetzt (16.08.) - mit
+    # dem Widerspruch in der Ueberschrift (G-b). Beides traegt die neue
+    # Gliederung weiter; die EINORDNUNG steht jetzt im Anhang (Teil B).
 
     # ⚠️ "PERZENTIL" EINMAL ERKLAEREN - AN DER ERSTEN STELLE (20.08.2026).
     #
@@ -698,25 +823,10 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     except Exception:                                        # noqa: BLE001
         pass
 
-    # 93 E: DAS GESAMTBILD GANZ NACH OBEN (20.08.2026).
-    #
-    # Es liest die FERTIGE Mail und zaehlt die Etiketten, die weiter unten
-    # ohnehin stehen. Damit gibt es KEINE zweite Rechnung, die von der
-    # ersten abweichen koennte - genau der Fehler, der am 18.08. vier
-    # Kopien derselben Stopzeile hinterlassen hat.
-    #
-    # ⚠️ ES SPERRT NICHTS (Fallstrick E1). Auch "3 dagegen" ist eine
-    # Zusammenfassung, kein Veto.
-    try:
-        from agent import gesamtbild as _GB
-        zeilen = text.split("\n")
-        kopf = _GB.saetze(zeilen)
-        if kopf:
-            # Unter die drei Kopfzeilen (Titel, Kurs, Instrument), vor den
-            # ersten Abschnitt - "das fuer mich Wichtige zuerst".
-            text = "\n".join(zeilen[:3] + [""] + kopf + zeilen[3:])
-    except Exception:                                        # noqa: BLE001
-        pass
+    # 93 E: DAS GESAMTBILD steht seit S-4 (11.09.2026) im Abschnitt AUF EINEN
+    # BLICK - es liest weiterhin die FERTIGEN Abschnitte und zaehlt die
+    # Etiketten, die dort stehen; KEINE zweite Rechnung. ⚠️ Es sperrt nichts
+    # (Fallstrick E1).
     # ⚠️⚠️ DIE BEWERTUNGSSCHWELLE STEHT UNTER JEDER MAIL (07.09.2026).
     #
     # Nutzerhinweis, woertlich: *"Was machen wir, dass ich die Schwelle

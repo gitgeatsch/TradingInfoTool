@@ -5038,3 +5038,27 @@ SHORT; geprüft über den echten Schreibweg, Mutationstest bestanden.
   welcher Strategie; die Einstiegszelle läuft zuerst und schreibt alle ~12 h
   — die 48-h-Sperre der Akkumulation läuft nie ab. Für Paket B ohne Wirkung
   (Sperre), **gehört in Schritt 26** — mit Kostenschutz.
+
+
+## ✔ S-4 — Spot sauber: Nachweis, Mailgliederung, Cooldown (Befunde 2.381*)
+
+| Teil | Ergebnis |
+|---|---|
+| **(a) Spot unverändert** | 1.436 echte Einstiege, Betrag **überall gleich** (800 EUR). 33 % trugen einen Scheinhebel 1,2x — mit Schalter reiner Spot, Verlust am Stop 48 → 40 EUR |
+| **(b) Mail gegliedert** | Kopf *Auf einen Blick* und *Was dagegen spricht*, sechs Abschnitte, Anhang — **nichts gestrichen**, als Eigenschaft geprüft |
+| **(c) O1 Cooldown** | die 12 h für Krypto wirkten nicht (jeder Hebel über 1,0 holte 3,5 h) — jetzt erst ab 2x |
+
+**Die zwei Trefferquoten:** entschieden wird nach Abschnitt 1 (steht im Kopf);
+die ältere Erfahrungsrate steht nur noch im Anhang B, als solche benannt.
+
+**Feinschliff nach dem Rollout:** dieselbe Kursmarke aus drei Modulen und drei
+Rangangaben zusammenlegen.
+
+## Entscheidungen 11.09. abends
+
+- ✔ **Fenster 24 Stunden** (2.380-fenster) — der Deckel macht damit rund 32 %
+  statt 73 % der Hebelkandidaten zu Spot.
+- ⚠️ **Position ohne bekannten Stop** (2.380-ohne-stop): A (ganzes
+  Eigenkapital) abgelehnt; **B vorgelegt** — Stop 11,7 %, höchstens das
+  Eigenkapital: im Median 166 statt 222 EUR, im Median passen 3,3 statt 2,5
+  Positionen in den Deckel.

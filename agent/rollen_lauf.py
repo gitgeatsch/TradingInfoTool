@@ -2511,6 +2511,13 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     if _aw_zeilen:
         _leben0 = _aw_zeilen + ([""] if _leben0 else []) + _leben0
 
+    # S-4 (11.09.2026): DIE TEILE EINZELN FUER DIE GLIEDERUNG DER MAIL.
+    # Auswahl und Rangplatz stehen dort im MARKTVERGLEICH, Lebendigkeit und
+    # Termine in TERMINE UND PROJEKT (Mailvorschlag 11.09., Befund 2.372).
+    # Zusammengesetzt wird darunter wie bisher - fuer alle anderen Leser.
+    _mail_markt = list(_leben0)
+    _mail_leben = list(_leben)
+    _mail_termine = list(_anlaesse)
     # Rangplatz zuerst, Lebendigkeit darunter - beide sind Merkmale ueber
     # den WERT, keine Rechnung; sie gehoeren nebeneinander.
     if _leben0:
@@ -2643,11 +2650,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         return SM.baue_mail(
             akkumulationslage=_akl_zeilen or None,
             wahrscheinlichkeit=_wk_zeilen or None,
-            lebendigkeit=_leben or None,
-            # ⚠️ ZUSAMMEN MIT DEN VORFILTERZEILEN, aber davor: die
-            # Marktraenge tragen die Bewertung, die Marken nicht mehr.
-            vorfilter=((_mr_zeilen + ([""] if _mr_zeilen and _vf_zeilen else [])
-                        + _vf_zeilen) or None),
+            # ⚠️ S-4 (11.09.2026): GETRENNT FUER DIE GLIEDERUNG. Die
+            # Marktraenge und der Rangplatz stehen im MARKTVERGLEICH, die
+            # Kursmarken des Vorfilters in der LAGE DES WERTS, Lebendigkeit und
+            # Termine in TERMINE UND PROJEKT (Mailvorschlag 11.09.).
+            lebendigkeit=_mail_leben or None,
+            termine=_mail_termine or None,
+            marktvergleich=_mail_markt or None,
+            marktrang=_mr_zeilen or None,
+            vorfilter=_vf_zeilen or None,
             # DER BESTAND GANZ OBEN - Nutzervorgabe 12.08.: "Das fuer mich
             # wichtige zuerst." Habe ich das ueberhaupt, ist die erste Frage.
             bestand=(_bloecke.get("bestand") or [None])[0],
@@ -2682,8 +2693,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # `BLOCK_REIHENFOLGE` steht und nicht eigens dargestellt wird,
             # landet hier. Eine Paketpruefung haelt das fest.
             coin_fakten=[z for _n in _LB.BLOCK_REIHENFOLGE
-                         if _n not in ("bestand", "marken")
+                         if _n not in ("bestand", "marken", "hebelgeometrie")
                          for z in (_bloecke.get(_n) or [])] or None,
+            # S-4: der Liquidationsabstand je Faktor steht im ANHANG - in
+            # einer Spot-Mail mit Hebel 1,0 war er mitten in der Lage
+            # (Befund 2.372, Punkt 5). Gestrichen wird er nicht.
+            hebelgeometrie=_bloecke.get("hebelgeometrie") or None,
             # DIESELBEN SAETZE AN MODELL UND NUTZER. Bei der Absicherung
             # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
             # der Entscheidung, das Umfeld nur ihr Hintergrund.

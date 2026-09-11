@@ -128,3 +128,68 @@ def saetze(zeilen: list[str]) -> list[str]:
     aus.append("   Diese Zeile fasst nur zusammen, was weiter unten steht. "
                "Sie verhindert keine Empfehlung und ersetzt keine.")
     return aus
+
+
+# Woran eine Grenze der Rechnung zu erkennen ist ("Cash frei 418 EUR !!
+# reicht fuer diese Position nicht") - dieselbe Marke, die `entscheidungs-
+# rechnung.saetze()` und `verkaufsrechnung` fuer Warnungen setzen.
+MARKE_GRENZE = "!!"
+# Die erste Zeile von `gegenpruefer_rollen.satz()`, wenn Z1 anschlaegt.
+Z1_ANGESCHLAGEN = "(Z1) hat angeschlagen"
+
+
+def _dagegen_satz(zeilen: list[str], anfang: str) -> str | None:
+    """Der erste UNGUENSTIG-Satz im Block, der mit `anfang` beginnt."""
+    gefunden = False
+    for z in zeilen:
+        if z.lstrip().startswith(anfang):
+            gefunden = True
+            continue
+        if gefunden:
+            if not z.strip():
+                break
+            if DAGEGEN in z:
+                s = z.strip().replace("⚠️", "").strip()
+                # AM SATZENDE KUERZEN, nicht mitten im Satz (erster Kettenlauf
+                # 11.09.: "Was dann passiert, entscheidet ..."). Der ganze Satz
+                # steht weiter unten.
+                ende = s.find(". ")
+                if 0 < ende < 180:
+                    return s[:ende + 1]
+                return s[:160] + ("..." if len(s) > 160 else "")
+    return None
+
+
+def dagegen(zeilen: list[str], gegenpruefung: list | None = None) -> list[str]:
+    """S-4 (11.09.2026): WAS DAGEGEN SPRICHT - je eine Zeile, oben in der Mail.
+
+    Aus dem Mailvorschlag vom 11.09. (Befund 2.372): der Leser soll die
+    Einwaende sehen, bevor er sechs Abschnitte liest. Wie `saetze()` LIEST
+    diese Funktion die fertige Mail - es gibt keine zweite Rechnung. Gesammelt
+    wird, was weiter unten ohnehin als Warnung steht:
+
+        die Gegenpruefung widerspricht     erste Zeile beginnt mit ▼
+        ein Merkmal steht auf UNGUENSTIG   Trichter, Termine, ...
+        eine Grenze der Rechnung           Zeilen mit "!!"
+        die Treuepruefung Z1 schlaegt an
+
+    ⚠️ SIE SPERRT NICHTS - und die Einzelheiten bleiben, wo sie waren."""
+    aus = []
+    g = [str(x) for x in (gegenpruefung or []) if str(x).strip()]
+    if g and g[0].startswith("▼"):
+        aus.append("✖  Gegenpruefung WIDERSPRICHT - "
+                   + g[0].lstrip("▼").strip()[:140])
+    je = bewerte(zeilen)["je_merkmal"]
+    for name, anfang in MERKMALE:
+        if je.get(name) == "dagegen":
+            satz = _dagegen_satz(list(zeilen or []), anfang)
+            aus.append(f"✖  {name}" + (f" - {satz}" if satz else ""))
+    for z in zeilen or []:
+        if MARKE_GRENZE in z:
+            aus.append("✖  " + " ".join(z.replace(MARKE_GRENZE, "-").split()))
+        elif Z1_ANGESCHLAGEN in z:
+            # Die Einzelheiten stehen im Anhang B - hier nur der Hinweis, statt
+            # einer Zeile, die mit einem Doppelpunkt ins Leere endet.
+            aus.append("✖  " + z.strip().rstrip(":")
+                       + " - Einzelheiten im Anhang B")
+    return aus

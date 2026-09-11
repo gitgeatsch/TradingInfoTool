@@ -37,10 +37,11 @@ Toepfe. Ein neuer Hebeltrade bekommt hoechstens das freie Restrisiko. Faellt
 sein Hebel dadurch unter 2x, wird er Spot mit dem gewohnten Betrag - die
 Paket-B-Regel "unter 2x ist Spot" gilt unveraendert.
 
-⚠️ GESETZTE ANNAHMEN, zur Abstimmung (Befund 2.380-annahmen): das
-Zuordnungsfenster (`hebelfuehrung.KOPPEL_TAGE`, 3 Tage) bestimmt, wie lange ein
-nicht eroeffnetes Signal Risiko belegt; eine Position ohne bekannten Stop zaehlt
-mit dem ganzen Eigenkapital.
+⚠️ ANNAHMEN (Befund 2.380-annahmen): das Zuordnungsfenster
+(`hebelfuehrung.KOPPEL_TAGE`) bestimmt, wie lange ein nicht eroeffnetes Signal
+Risiko belegt - Nutzerentscheidung 11.09.: 24 Stunden (vorher 3 Tage). Eine
+Position ohne bekannten Stop zaehlt mit dem ganzen Eigenkapital (zur
+Entscheidung vorgelegt).
 """
 from __future__ import annotations
 
