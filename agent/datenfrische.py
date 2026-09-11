@@ -78,6 +78,19 @@ class Quelle:
     max_datenalter: int
     job: str
     zweck: str
+    # ⚠️⚠️ EINE EIGENE DATEI (S-1, 11.09.2026). Bis hierher lagen ALLE
+    # Quellen in der Betriebsdatenbank, und `conn` genuegte. Die drei
+    # MESSquellen liegen in eigenen Dateien - `funding_historie.db`,
+    # `terminmarkt_historie.db`, `onchain_historie.db`.
+    #
+    # WARUM SIE HIERHER GEHOEREN UND NICHT IN EINE ZWEITE REGISTRATUR:
+    # zwei Registraturen fuer dieselbe Frage laufen auseinander - das
+    # steht als Lehre schon im Projekt ("drei Kopien laufen garantiert
+    # auseinander"). Die Frage ist dieselbe: wie alt ist das, worauf wir
+    # uns stuetzen.
+    datei: str = ""
+    # Spalten, wenn die Tabelle keine `quelle`-Spalte hat: (Datum, Abruf).
+    spalten: tuple = ()
 
 
 # DIE REGISTRATUR. Je Zeile eine Quelle, die ein Modell tatsaechlich liest.
@@ -137,6 +150,51 @@ REGISTRATUR: tuple[Quelle, ...] = (
            "refresh_ohlc", "die Kerzen selbst"),
     Quelle("bestand", "BC", "holdings", 3,
            "refresh_bitpanda_holdings", "was tatsaechlich im Depot liegt"),
+
+    # ---- ⚠️⚠️⚠️ DIE DREI MESSQUELLEN (S-1, 11.09.2026) ----------------
+    #
+    # Nutzervorgabe: *"die API Abfragen und Datensammlungen am Notebook
+    # muessen stabil umgesetzt werden, damit ein kurzer Ausfall so wie
+    # heute keinen Schaden anrichten kann."*
+    #
+    # GEPRUEFT AM 11.09.: von 21 Scheduler-Jobs schreibt KEINER diese
+    # drei. Sie werden von Hand gefuellt (`hole_fremdreihen.py`,
+    # `hole_terminmarkt_historie.py`) - kein Misfire-Schutz, kein
+    # Watchdog, kein Backoff, keine Meldung. Am Desktop hinkten sie 11
+    # bis 13 Tage.
+    #
+    # ⚠️ ROLLE "M" - UND DAS IST DIE WICHTIGE UNTERSCHEIDUNG. A, BC und G
+    # speisen PROMPTS: faellt dort etwas aus, urteilt das Modell auf
+    # altem Stand. Diese drei speisen die MESSBASIS - die Symbolliste,
+    # gegen die gerangt wird. Die laufenden WERTE kommen aus
+    # Live-Abrufen (`marktrang._hole`), nicht von hier.
+    #
+    #     Fuer den BETRIEB      wenig kritisch - die Liste aendert sich
+    #                           langsam
+    #     Fuer MESSUNGEN und
+    #     Kalibrierung          voll kritisch - jede Neumessung laeuft
+    #                           auf diesem Stand
+    #
+    # Deshalb eigene Rolle: ein Ausfall hier ist eine MESS-Stoerung, kein
+    # Betriebsausfall. Die Nutzervorgabe vom 10.09. gilt: *"Aenderungen
+    # duerfen die Bewertung nicht blockieren - und schon gar nicht
+    # still."* Blockieren tut hier nichts; das Schweigen faellt weg.
+    #
+    # ⚠️ 21 Tage Obergrenze, nicht 6: diese Reihen werden in Schueben
+    # nachgeladen, nicht taeglich. Sie soll eine TOTE Quelle finden,
+    # keine langsame - dieselbe Begruendung wie bei WALCL oben.
+    Quelle("funding_reihe", "M", "funding", 21,
+           "hole_fremdreihen.py (VON HAND)",
+           "Messbasis des Funding-Rangs - 300 Symbole",
+           datei="data/funding_historie.db", spalten=("datum", "")),
+    Quelle("terminmarkt_reihe", "M", "terminmarkt_tag", 21,
+           "hole_terminmarkt_historie.py (VON HAND)",
+           "Messbasis des Terminmarkt-Rangs - 122 Symbole",
+           datei="data/terminmarkt_historie.db", spalten=("tag", "")),
+    Quelle("onchain_reihe", "M", "splycur", 21,
+           "hole_fremdreihen.py (VON HAND)",
+           "Umlaufmenge - Nenner des Turnover-Rangs, 66 Symbole",
+           datei="data/onchain_historie.db", spalten=("datum", "")),
 )
 
 # Wie der Stand je Tabelle gelesen wird. Bewusst hier und nicht in der
@@ -222,6 +280,53 @@ def _stand_einfach(conn, tabelle: str, datum: str,
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
 
 
+def _stand_datei(q) -> tuple[str | None, str | None, int]:
+    """Eine Quelle in einer EIGENEN Datei (S-1, 11.09.2026).
+
+    ## ⚠️⚠️ DER ABRUFSTAND KOMMT AUS DER DATEIZEIT — und warum das geht
+
+    Keine der drei Messquellen fuehrt eine `fetched_at`-Spalte; sie haben
+    nur `datum` bzw. `tag`. Damit waere der ABRUFSTAND nicht messbar - und
+    genau der ist nach dem Kopf dieses Moduls *"der eigentliche
+    Gesundheitswert"*, weil er an UNS haengt und nicht am Anbieter.
+
+    **Die Aenderungszeit der Datei beantwortet dieselbe Frage.** Die
+    Skripte (`hole_fremdreihen.py`, `hole_terminmarkt_historie.py`)
+    schreiben die Datei; ihre mtime ist damit der Zeitpunkt des letzten
+    erfolgreichen Schreibens.
+
+    ⚠️ **Was daran ungenau ist, und es gehoert gesagt:** eine mtime
+    aendert sich auch bei einem TEILWEISEN Schreiben. Sie beweist also
+    nicht, dass der Abruf vollstaendig war - nur, dass ueberhaupt einer
+    stattfand. Fuer die Frage *"laeuft der Job noch?"* genuegt das; fuer
+    *"war er vollstaendig?"* nicht. Eine echte `fetched_at`-Spalte waere
+    besser und ist der naechste Schritt, wenn die Quellen Jobs bekommen.
+    """
+    import os
+    import sqlite3
+    pfad = q.datei
+    if not pfad or not os.path.exists(pfad):
+        return None, None, 0
+    try:
+        abruf = datetime.fromtimestamp(
+            os.stat(pfad).st_mtime, timezone.utc).isoformat(
+                timespec="seconds")
+    except OSError:
+        abruf = None
+    datum_spalte = (q.spalten or ("datum",))[0]
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % pfad, uri=True)
+        zeile = c.execute(
+            "SELECT MAX(%s), COUNT(*) FROM %s"
+            % (datum_spalte, q.tabelle)).fetchone()
+        c.close()
+    except Exception:                                        # noqa: BLE001
+        return None, abruf, 0
+    if not zeile:
+        return None, abruf, 0
+    return zeile[0], abruf, int(zeile[1] or 0)
+
+
 def _stand_extern(conn, quelle: str) -> tuple[str | None, str | None, int]:
     try:
         zeile = conn.execute(
@@ -232,7 +337,8 @@ def _stand_extern(conn, quelle: str) -> tuple[str | None, str | None, int]:
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
 
 
-def pruefe(conn, heute: date | None = None) -> list[dict]:
+def pruefe(conn, heute: date | None = None,
+           mit_dateien: bool = True) -> list[dict]:
     """Eine Zeile je Quelle - Stand, Alter, Urteil.
 
     `urteil` ist eines von vier Woertern, und die Reihenfolge ist die der
@@ -253,7 +359,25 @@ def pruefe(conn, heute: date | None = None) -> list[dict]:
     heute = heute or datetime.now(timezone.utc).date()
     aus: list[dict] = []
     for q in REGISTRATUR:
-        if q.tabelle == "macro_snapshot":
+        # ⚠️⚠️ DATEIQUELLEN LESEN AN `conn` VORBEI (11.09.2026, von der
+        # Pruefsuite gefangen). Sie oeffnen einen FESTEN Pfad unter
+        # `data/`. Ein Test, der eine kuenstliche Datenbank uebergibt,
+        # kann sie damit nicht umlenken - er baute alles frisch auf und
+        # bekam trotzdem drei Befunde aus den echten Dateien.
+        #
+        # ⚠️ Der Fehler war MEINER, nicht der des Tests: wer eine Quelle
+        # an einen festen Pfad bindet, nimmt ihr die Testbarkeit. Bis die
+        # drei einen Job haben (und damit eine `fetched_at`-Spalte in der
+        # Betriebs-DB), bleibt das so - `mit_dateien=False` ist die
+        # ehrliche Zwischenloesung, nicht die schoene.
+        #
+        # Die Dateiquellen haben eigene Dauerpruefungen im Paket
+        # "Terminmarkt" - sie sind nicht ungeprueft, nur anders.
+        if q.datei and not mit_dateien:
+            continue
+        if q.datei:
+            daten, abruf, anzahl = _stand_datei(q)
+        elif q.tabelle == "macro_snapshot":
             daten, abruf, anzahl = _stand_macro(conn, _SPALTE_MACRO[q.name])
         elif q.tabelle == "makro_historie_monat":
             daten, abruf, anzahl = _stand_monat(conn)

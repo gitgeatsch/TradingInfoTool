@@ -8662,18 +8662,26 @@ def paket_frische() -> None:
         c.commit()
         return c
 
-    frisch = DF.pruefe(bau(0))
+    # ⚠️ `mit_dateien=False` (11.09.2026): die drei MESSquellen lesen
+    # FESTE Pfade unter `data/` und damit an `conn` vorbei - eine
+    # kuenstliche Datenbank kann sie nicht umlenken. Sie haben eigene
+    # Dauerpruefungen im Paket "Terminmarkt"; HIER geht es um die
+    # Datenbanklogik. Ohne diesen Schalter meldete die frisch gebaute
+    # Datei drei Befunde aus echten Dateien.
+    frisch = DF.pruefe(bau(0), mit_dateien=False)
     pruefe(P, "frische Datei: kein einziger Befund",
            not DF.auffaellig(frisch),
            f"{len(DF.auffaellig(frisch))} von {len(frisch)} auffaellig")
+    _ohne_datei = [q for q in DF.REGISTRATUR if not q.datei]
     pruefe(P, "frische Datei: alle Quellen geprueft",
-           len(frisch) == len(DF.REGISTRATUR),
-           f"{len(frisch)} Zeilen, {len(DF.REGISTRATUR)} Quellen")
+           len(frisch) == len(_ohne_datei),
+           f"{len(frisch)} Zeilen, {len(_ohne_datei)} Quellen ohne "
+           f"eigene Datei (von {len(DF.REGISTRATUR)} insgesamt)")
 
     # 30 Tage: laenger als jede Abrufgrenze, kuerzer als die grosszuegigste
     # Datengrenze (yfinance, 120) - so wird sichtbar, dass das ABRUFALTER
     # das Urteil traegt, nicht das Datenalter.
-    tot = DF.pruefe(bau(30))
+    tot = DF.pruefe(bau(30), mit_dateien=False)
     pruefe(P, "stillstehende Datei: jede Quelle faellt auf",
            len(DF.auffaellig(tot)) == len(tot),
            f"{len(DF.auffaellig(tot))} von {len(tot)}")
@@ -8684,7 +8692,7 @@ def paket_frische() -> None:
     # Eine leere Datei ist NICHT "alles frisch" - der Fehler, der die
     # Pruefung wertlos machen wuerde.
     leer = sqlite3.connect(":memory:")
-    ohne = DF.pruefe(leer)
+    ohne = DF.pruefe(leer, mit_dateien=False)
     pruefe(P, "leere Datei meldet 'fehlt', nicht 'frisch'",
            all(z["urteil"] == "fehlt" for z in ohne),
            str(sorted({z["urteil"] for z in ohne})))
@@ -15697,6 +15705,98 @@ def paket_terminmarkt() -> None:
     P = "Terminmarkt"
     import ast as _ast
     import pathlib as _pl
+
+    # ---- ⚠️⚠️⚠️ S-1: DIE DREI MESSQUELLEN SIND UEBERWACHT (11.09.2026)
+    #
+    # Nutzervorgabe: *"die API Abfragen und Datensammlungen am Notebook
+    # muessen stabil umgesetzt werden"* - und zum Totalausfall: *"wenn
+    # eine ganze Datenquelle oder Bereich ausfaellt sollte nach
+    # kritischen Meldungen klar sein dass etwas zu tun ist."*
+    #
+    # GEPRUEFT AM 11.09.: von 21 Scheduler-Jobs schrieb KEINER
+    # funding_historie, terminmarkt_historie oder onchain_historie. Sie
+    # standen in KEINER Registratur - also auch nicht in der
+    # Frischepruefung, die es seit dem 17.08. gibt.
+    from agent import datenfrische as _DF
+    _mess = [q for q in _DF.REGISTRATUR if q.rolle == "M"]
+    pruefe(P, "⚠️⚠️ die drei MESSQUELLEN sind in `datenfrische` "
+           "registriert", len(_mess) == 3,
+           "sie speisen die Messbasis von funding, turnover und der "
+           "OI-Sperre - die einzigen drei Groessen, die live Punkte "
+           "geben oder sperren. Gefunden: %s"
+           % ([q.name for q in _mess] or "KEINE"))
+    pruefe(P, "und jede nennt ihre eigene DATEI",
+           all(q.datei and q.spalten for q in _mess),
+           "sie liegen NICHT in der Betriebsdatenbank - ohne `datei` "
+           "laese die Pruefung die falsche Stelle")
+    pruefe(P, "⚠️ und eine eigene ROLLE, damit ein Ausfall dort keine "
+           "Betriebsstoerung meldet",
+           all(q.rolle == "M" for q in _mess)
+           and not any(q.rolle == "M" for q in _DF.REGISTRATUR
+                       if q.name not in {x.name for x in _mess}),
+           "A/BC/G speisen PROMPTS, M speist die MESSBASIS. Ein Ausfall "
+           "dort blockiert keine Signale - er macht jede Neumessung auf "
+           "altem Stand. Nutzervorgabe 10.09.: Aenderungen duerfen die "
+           "Bewertung nicht blockieren, und schon gar nicht still")
+    # ⚠️⚠️⚠️ DAS VERHALTEN PRUEFEN, NICHT DEN QUELLTEXT.
+    #
+    # Die erste Fassung suchte "_notify_job_failure(" im Quelltext von
+    # `_melde_datenfrische`. Die Gegenprobe hat sie entlarvt: schaltet
+    # man die Eskalation ab, steht der Aufruf noch da - er wird nur nie
+    # erreicht, und die Pruefung blieb GRUEN.
+    #
+    # ⚠️ Derselbe Fehlertyp wie am selben Tag beim Bitgleichheitstest:
+    # **eine Pruefung, die einen Pfad nicht laeuft, sagt ueber ihn
+    # nichts.** Hier wird die Funktion mit einer kuenstlichen Lage
+    # gerufen und gezaehlt, was sie meldet.
+    import scheduler.background as _BG
+    _echt_notify, _echt_pruefe = _BG._notify_job_failure, _DF.pruefe
+
+    def _lage(*urteile):
+        return [{"quelle": "q%d" % i, "rolle": "M" if i == 0 else "A",
+                 "job": "job%d" % i, "zweck": "-", "zeilen": 1,
+                 "datenstand": "2026-09-01", "datenalter_tage": 10,
+                 "abrufstand": "2026-09-01", "abrufalter_tage": 10,
+                 "max_datenalter_tage": 21, "urteil": u}
+                for i, u in enumerate(urteile)]
+
+    def _melde_mit(*urteile):
+        _gesendet = []
+        _BG._notify_job_failure = lambda j, t: _gesendet.append(t)
+        _DF.pruefe = lambda *a, **k: list(_lage(*urteile))
+        try:
+            _BG._melde_datenfrische(None)
+        except Exception:                                    # noqa: BLE001
+            pass
+        finally:
+            _BG._notify_job_failure = _echt_notify
+            _DF.pruefe = _echt_pruefe
+        return _gesendet
+
+    _bei_abruf = _melde_mit("abruf", "frisch")
+    pruefe(P, "⚠️⚠️ ein Ausfall wird GEMELDET, nicht nur geloggt",
+           len(_bei_abruf) == 1 and "WAS ZU TUN IST" in _bei_abruf[0],
+           "Nutzervorgabe 11.09.: bei einem Ausfall einer ganzen "
+           "Datenquelle muss klar sein, dass etwas zu tun ist. Eine "
+           "Logzeile am Notebook liest niemand - dasselbe Muster wie bei "
+           "der stillen Mailzeile und der stillen Schwelle. Gesendet: %d"
+           % len(_bei_abruf))
+    pruefe(P, "und die Meldung nennt die ROLLE M gesondert",
+           bool(_bei_abruf) and "MESSBASIS" in _bei_abruf[0],
+           "ein Ausfall der Messbasis blockiert KEINE Signale, macht aber "
+           "jede Neumessung auf altem Stand - diese Einordnung gehoert in "
+           "die Meldung, sonst wird sie wie ein Betriebsausfall gelesen")
+    pruefe(P, "⚠️ und NUR bei `fehlt`/`abruf`, NICHT bei `daten`",
+           not _melde_mit("daten", "daten"),
+           "`daten` heisst: wir fragen, der Anbieter liefert nichts - das "
+           "kann eine Feiertagswoche sein. Wer das meldet, meldet bald "
+           "nichts mehr, weil die Meldung abstumpft. Der Kopf von "
+           "`datenfrische` sagt es: ein Anbieter ohne Neues ist normal, "
+           "ein Job, der nicht laeuft, ist es nie")
+    pruefe(P, "und gar nicht, wenn alles frisch ist",
+           not _melde_mit("frisch", "frisch"),
+           "eine Meldung ohne Anlass ist die sicherste Art, kuenftige "
+           "Meldungen unwirksam zu machen")
 
     # ---- ⚠️⚠️⚠️ S-2: EIN AUSFALL IST KEINE MESSBASISLUECKE (11.09.2026)
     #

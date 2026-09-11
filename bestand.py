@@ -3102,6 +3102,70 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.358", "✔✔✔ S-1 IST GEBAUT - die drei MESSQUELLEN "
+               "sind ueberwacht. `funding_historie`, "
+               "`terminmarkt_historie` und `onchain_historie` standen in "
+               "KEINER Registratur - also auch nicht in der "
+               "Frischepruefung, die es seit dem 17.08. gibt. Jetzt in "
+               "`datenfrische.REGISTRATUR` mit eigener ROLLE ,M'. Am "
+               "Desktop melden sie sofort: funding 11 Tage, terminmarkt 7, "
+               "onchain 12 - Urteil ,abruf', also **unser** Fehler, nicht "
+               "der des Anbieters", "gilt", "agent/datenfrische.py"),
+    Befundlage("2.358-rolle", "✔ DIE ROLLE ,M' IST DIE WICHTIGE "
+               "UNTERSCHEIDUNG: A, BC und G speisen PROMPTS - faellt dort "
+               "etwas aus, urteilt das Modell auf altem Stand. M speist "
+               "die MESSBASIS, also die Symbolliste, gegen die gerangt "
+               "wird; die laufenden WERTE kommen aus Live-Abrufen. Ein "
+               "Ausfall dort blockiert KEINE Signale, macht aber jede "
+               "Neumessung und Kalibrierung auf altem Stand. "
+               "⚠️ Nutzervorgabe 10.09.: *,Aenderungen duerfen die "
+               "Bewertung nicht blockieren - und schon gar nicht still.'* "
+               "Blockieren tut hier nichts; das Schweigen faellt weg",
+               "gilt", "agent/datenfrische.py"),
+    Befundlage("2.358-handlung", "✔✔ UND DER HANDLUNGSBEDARF WIRD "
+               "GEMELDET, nicht nur geloggt. Nutzervorgabe 11.09.: *,bei "
+               "Totalausfall besteht Handlungsbedarf - wenn eine ganze "
+               "Datenquelle oder Bereich ausfaellt sollte nach kritischen "
+               "Meldungen klar sein dass etwas zu tun ist.'* "
+               "`_melde_datenfrische` schrieb bis heute NUR ins Log. "
+               "⚠️ Eskaliert wird NUR bei ,fehlt' und ,abruf', nicht bei "
+               ",daten' - der Kopf von `datenfrische` sagt warum: *,Ein "
+               "Anbieter, der nichts Neues hat, ist normal. Ein Job, der "
+               "nicht laeuft, ist es nie.'* Wer auch ,daten' meldet, "
+               "meldet bald nichts mehr", "gilt",
+               "scheduler/background._melde_datenfrische"),
+    Befundlage("2.358-gruppiert", "⚠️ UND DIE MELDUNG IST NACH JOB "
+               "GRUPPIERT, nicht je Quelle: die erste Fassung schrieb 18 "
+               "Zeilen, und ACHT davon hatten dieselbe Ursache "
+               "(`externe_reihen` laeuft nicht). **Eine Textwand macht "
+               "keinen Handlungsbedarf klar, sie verdeckt ihn.** Der JOB "
+               "ist die Handlungseinheit - wer liest, will wissen, was er "
+               "anfassen muss. Dasselbe Prinzip wie "
+               "`signal_mail.ohne_gewohntes`", "gilt",
+               "scheduler/background.py"),
+    Befundlage("2.359", "⚠️⚠️ ZWEI EIGENE FEHLER BEIM BAUEN, BEIDE VON "
+               "DER GEGENPROBE GEFANGEN: (1) meine Pruefung suchte "
+               "`_notify_job_failure(` im QUELLTEXT - schaltet man die "
+               "Eskalation ab, steht der Aufruf noch da und wird nur nie "
+               "erreicht. Sie blieb GRUEN. **Derselbe Fehlertyp wie am "
+               "selben Tag beim Bitgleichheitstest: eine Pruefung, die "
+               "einen Pfad nicht laeuft, sagt ueber ihn nichts.** Jetzt "
+               "wird die Funktion mit vier kuenstlichen Lagen gerufen. "
+               "(2) meine Dateiquellen lesen FESTE Pfade unter `data/` "
+               "und damit an `conn` vorbei - vier bestehende Pruefungen "
+               "mit kuenstlicher Datenbank kippten. `mit_dateien=False` "
+               "ist die ehrliche Zwischenloesung, nicht die schoene",
+               "gilt", "Selbstbefund 11.09.2026"),
+    Befundlage("2.359-abruf", "⚠️ UND EINE OFFENE UNGENAUIGKEIT, benannt "
+               "statt verschwiegen: keine der drei Messquellen fuehrt "
+               "eine `fetched_at`-Spalte. Der ABRUFSTAND - nach dem Kopf "
+               "des Moduls *,der eigentliche Gesundheitswert'* - kommt "
+               "deshalb aus der AENDERUNGSZEIT der Datei. Die beweist, "
+               "dass ueberhaupt geschrieben wurde, NICHT dass der Abruf "
+               "vollstaendig war. Fuer ,laeuft der Job noch?' genuegt "
+               "das; fuer ,war er vollstaendig?' nicht. Eine echte "
+               "`fetched_at`-Spalte kommt, wenn die drei Jobs bekommen",
+               "offen", "agent/datenfrische._stand_datei"),
     Befundlage("2.357", "✔✔✔ S-2 IST GEBAUT - ein Ausfall ist keine "
                "Messbasisluecke mehr. Nutzervorgabe 11.09.: *,die API "
                "Abfragen und Datensammlungen am Notebook muessen stabil "

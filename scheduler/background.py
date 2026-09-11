@@ -1387,6 +1387,85 @@ def _melde_datenfrische(conn) -> int:
                 z["urteil"], z["quelle"], z["rolle"], z["job"],
                 z["datenstand"], z["datenalter_tage"],
                 str(z["abrufstand"] or "-")[:10], z["abrufalter_tage"])
+        # ---- ⚠️⚠️⚠️ HANDLUNGSBEDARF MELDEN, NICHT NUR LOGGEN ----------
+        #
+        # NUTZERVORGABE 11.09.2026, woertlich: *"bei Totalausfall besteht
+        # Handlungsbedarf - wenn eine ganze Datenquelle oder Bereich
+        # ausfaellt sollte nach kritischen Meldungen klar sein dass etwas
+        # zu tun ist."*
+        #
+        # Bis hierher schrieb diese Funktion NUR ins Log. Eine Logzeile
+        # am Notebook liest niemand - dasselbe Muster, das heute schon
+        # zweimal aufgefallen ist (die stille Mailzeile in `marktrang`,
+        # die stille Schwelle in `potential`).
+        #
+        # ⚠️ ESKALIERT WIRD NUR BEI "fehlt" UND "abruf" - und die
+        # Begruendung steht im Kopf von `datenfrische`:
+        #
+        #     "Ein Anbieter, der nichts Neues hat, ist normal.
+        #      Ein Job, der nicht laeuft, ist es nie."
+        #
+        # "daten" heisst: wir fragen, der Anbieter liefert nichts. Das
+        # kann eine Feiertagswoche sein. Wer das meldet, meldet bald
+        # nichts mehr - die Meldung stumpft ab.
+        _kritisch = [z for z in schlecht
+                     if z.get("urteil") in ("fehlt", "abruf")]
+        if _kritisch:
+            # ⚠️⚠️ NACH JOB GRUPPIEREN, NICHT JE QUELLE AUFLISTEN.
+            # Erste Fassung schrieb 18 Zeilen - und acht davon hatten
+            # DIESELBE Ursache (`externe_reihen` laeuft nicht). Eine
+            # Textwand macht keinen Handlungsbedarf klar, sie verdeckt
+            # ihn. Dasselbe Prinzip wie `signal_mail.ohne_gewohntes`:
+            # zusammenfassen, was gleich ist.
+            #
+            # Der JOB ist die Handlungseinheit - nicht die Quelle. Wer
+            # liest, will wissen, WAS er anfassen muss.
+            _je_job: dict = {}
+            for z in _kritisch:
+                _je_job.setdefault(z["job"], []).append(z)
+            _zeilen = []
+            for _job, _qs in sorted(_je_job.items(),
+                                    key=lambda x: -len(x[1])):
+                _aeltest = max(
+                    (q["abrufalter_tage"] or 9999) for q in _qs)
+                # ⚠️ "seit jeher Tagen" war die erste Fassung - eine Mail,
+                # die so schreibt, wirkt auf den Rest genauso sorgfaeltig.
+                # Dieselbe Lehre wie in `signal_mail.ohne_gewohntes`.
+                _wann = ("seit %d Tagen" % _aeltest if _aeltest < 9999
+                         else "noch NIE")
+                _zeilen.append(
+                    "JOB %s - %d Quelle(n), %s erfolgreich abgerufen:"
+                    "\n     %s"
+                    % (_job, len(_qs), _wann,
+                       ", ".join(q["quelle"] for q in _qs)))
+            _mess = [z for z in _kritisch if z.get("rolle") == "M"]
+            _was_tun = (
+                "WAS ZU TUN IST: der genannte Job hat seit ueber zwei "
+                "Tagen nicht erfolgreich geschrieben. Zuerst nachsehen, "
+                "ob er ueberhaupt laeuft (Log nach dem Jobnamen "
+                "durchsuchen), dann ob die Quelle erreichbar ist.")
+            if _mess:
+                # ⚠️ DIE ROLLE M IST EINE ANDERE DRINGLICHKEIT, und das
+                # gehoert in die Mail: sie blockiert KEINE Signale.
+                _was_tun += (
+                    "\n\n⚠️ %d davon tragen die Rolle M (MESSBASIS): "
+                    "%s. Sie speisen NICHT die laufende Bewertung - die "
+                    "Werte kommen aus Live-Abrufen - sondern die "
+                    "Symbolliste, gegen die gerangt wird. Ein Ausfall "
+                    "dort blockiert keine Signale, macht aber jede "
+                    "NEUMESSUNG und jede Kalibrierung auf altem Stand. "
+                    "Diese drei werden von Hand nachgeladen "
+                    "(hole_fremdreihen.py, hole_terminmarkt_historie.py) "
+                    "- sie haben bis heute keinen Job."
+                    % (len(_mess), ", ".join(z["quelle"] for z in _mess)))
+            _notify_job_failure(
+                "datenfrische",
+                "%d Datenquelle(n) aus %d Job(s) ohne frischen Abruf.\n\n"
+                "%s\n\n%s"
+                % (len(_kritisch), len(_je_job),
+                   "\n\n".join(_zeilen), _was_tun))
+            logger.error("Datenfrische: %d Quelle(n) kritisch - "
+                         "Meldung verschickt", len(_kritisch))
         return len(schlecht)
     except Exception:                                        # noqa: BLE001
         logger.exception("Frischepruefung fehlgeschlagen")
