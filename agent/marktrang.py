@@ -703,10 +703,49 @@ def saetze(eintrag: dict | None) -> list[str]:
     # Zeile "fuer diesen Wert liegt keiner vor" bekommen. Das waere nicht
     # nur unvollstaendig, sondern falsch: es liegt einer vor, und er hat
     # ihn womoeglich gerade gesperrt.
+    # ---- ⚠️⚠️⚠️ S-2: EIN AUSFALL IST KEINE MESSBASISLUECKE (11.09.2026)
+    #
+    # DER FEHLER, den das behebt. Faellt der Abruf aus, ist das Fuenftel
+    # `None` - und die Zeile darunter wurde SCHLICHT WEGGELASSEN. Die Mail
+    # sah normal aus, nur kuerzer; die Bewertung war an dem Tag stumm um
+    # einen Beitrag aermer. Nutzervorgabe 11.09.: *"die API Abfragen und
+    # Datensammlungen am Notebook muessen stabil umgesetzt werden, damit
+    # ein kurzer Ausfall so wie heute keinen Schaden anrichten kann."*
+    #
+    # ⚠️⚠️ UND DIE SAMMELZEILE NANNTE DIE FALSCHE URSACHE: sie behauptete
+    # "gehoert zu keiner Messbasis" - auch dann, wenn schlicht das NETZ
+    # weg war. Eine falsche Begruendung ist schlimmer als keine: sie
+    # schickt den Leser an die falsche Stelle.
+    #
+    # DIE UNTERSCHEIDUNG STECKT SCHON IN DEN DATEN. `raenge()` setzt
+    # `querschnitt_<name>` ERST nach erfolgreichem Abruf (und nach der
+    # Mindestquerschnittspruefung). Also:
+    #
+    #     querschnitt == 0   der ganze Rang ist heute AUSGEFALLEN -
+    #                        Abruf, Messbasis oder zu wenige Werte
+    #     querschnitt > 0    der Rang steht, DIESER Wert gehoert nicht
+    #                        dazu - eine dauerhafte Eigenschaft
+    #
+    # Alle drei Abbruchstellen in `raenge()` melden bereits ins Log. Keine
+    # erreichte die Mail. Genau das ist "fail-soft ist fail-silent".
+    _NAMEN = (("funding", "Finanzierung"), ("turnover", "Umschlag"),
+              ("oi", "Terminmarkt"), ("schnitt", "Schnittabstand"))
+    _ausgefallen = [wort for schl, wort in _NAMEN
+                    if not (eintrag.get("querschnitt_" + schl) or 0)]
     if (eintrag.get("funding_fuenftel") is None
             and eintrag.get("turnover_fuenftel") is None
             and eintrag.get("oi_fuenftel") is None
             and eintrag.get("schnitt_fuenftel") is None):
+        if len(_ausgefallen) == len(_NAMEN):
+            # ⚠️ ALLE VIER ausgefallen - das ist KEINE Aussage ueber den
+            # Wert, sondern ueber den heutigen Lauf.
+            return ["⚠️ Marktvergleich HEUTE NICHT VERFUEGBAR - keiner der "
+                    "vier Raenge (Finanzierung, Umschlag, Terminmarkt, "
+                    "Schnittabstand) konnte gebildet werden. Das ist ein "
+                    "Ausfall der Abfrage, KEINE Eigenschaft dieses Wertes. "
+                    "Die Bewertung steht heute allein auf der Geometrie - "
+                    "sie ist damit nicht mit Bewertungen anderer Tage "
+                    "vergleichbar."]
         return ["Marktvergleich: fuer diesen Wert liegt keiner vor - er "
                 "gehoert weder zur Funding- noch zur Umschlag- noch zur "
                 "Terminmarkt-Messbasis (%d, %d bzw. %d Werte). Die "
@@ -715,6 +754,16 @@ def saetze(eintrag: dict | None) -> list[str]:
                 % (eintrag.get("querschnitt_funding") or 0,
                    eintrag.get("querschnitt_turnover") or 0,
                    eintrag.get("querschnitt_oi") or 0)]
+    if _ausgefallen:
+        # ⚠️ TEILAUSFALL - der haeufigere und heimtueckischere Fall: die
+        # Mail sieht vollstaendig aus, nur eine Zeile fehlt. Ohne diesen
+        # Satz ist er von "steht gut da" nicht zu unterscheiden.
+        zeilen.append(
+            "⚠️ Heute nicht verfuegbar: %s. Der Abruf ist ausgefallen "
+            "oder lieferte zu wenige Werte fuer einen Rang - das ist "
+            "KEINE Aussage ueber diesen Wert. Die Bewertung stuetzt sich "
+            "heute auf weniger Beitraege als sonst."
+            % ", ".join(_ausgefallen))
     f = eintrag.get("funding_fuenftel")
     if f is not None:
         lage = {0: "das niedrigste", 1: "ein niedriges", 2: "ein mittleres",

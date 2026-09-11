@@ -15698,6 +15698,58 @@ def paket_terminmarkt() -> None:
     import ast as _ast
     import pathlib as _pl
 
+    # ---- ⚠️⚠️⚠️ S-2: EIN AUSFALL IST KEINE MESSBASISLUECKE (11.09.2026)
+    #
+    # Nutzervorgabe: *"die API Abfragen und Datensammlungen am Notebook
+    # muessen stabil umgesetzt werden, damit ein kurzer Ausfall so wie
+    # heute keinen Schaden anrichten kann."*
+    #
+    # DER FEHLER: faellt der Abruf aus, war das Fuenftel `None` und die
+    # Zeile wurde SCHLICHT WEGGELASSEN. Die Mail sah normal aus, nur
+    # kuerzer - und die Bewertung war an dem Tag stumm um einen Beitrag
+    # aermer. Bei Totalausfall nannte die Sammelzeile sogar die FALSCHE
+    # Ursache ("gehoert zu keiner Messbasis" - es lag am Netz).
+    #
+    # Die Unterscheidung steckt in `querschnitt_<name>`: sie wird ERST
+    # nach erfolgreichem Abruf gesetzt. Vier Faelle, alle festgehalten.
+    from agent import marktrang as _MR
+    _voll = {"funding_fuenftel": 1, "querschnitt_funding": 300,
+             "turnover_fuenftel": 0, "querschnitt_turnover": 66,
+             "oi_fuenftel": 2, "querschnitt_oi": 122,
+             "schnitt_fuenftel": 1, "querschnitt_schnitt": 536}
+    _teil = dict(_voll, funding_fuenftel=None, querschnitt_funding=0)
+    _fremd = {k: (None if k.endswith("fuenftel") else v)
+              for k, v in _voll.items()}
+    _total = {k: (None if k.endswith("fuenftel") else 0)
+              for k, v in _voll.items()}
+    pruefe(P, "⚠️ NORMALFALL: keine Ausfallzeile",
+           not any("nicht verfuegbar" in z.lower()
+                   for z in _MR.saetze(_voll)),
+           "wo nichts ausgefallen ist, darf auch nichts gemeldet werden - "
+           "sonst stumpft die Meldung ab")
+    pruefe(P, "⚠️⚠️ TEILAUSFALL wird GENANNT, nicht weggelassen",
+           any("Heute nicht verfuegbar" in z for z in _MR.saetze(_teil)),
+           "der heimtueckischere Fall: die Mail sieht vollstaendig aus, "
+           "nur eine Zeile fehlt. Ohne diesen Satz ist er von 'steht gut "
+           "da' nicht zu unterscheiden")
+    pruefe(P, "und er nennt die betroffene Groesse",
+           any("Finanzierung" in z and "Heute nicht verfuegbar" in z
+               for z in _MR.saetze(_teil)),
+           "'irgendetwas fehlt' schickt den Leser suchen")
+    pruefe(P, "⚠️ MESSBASISLUECKE bleibt Messbasisluecke",
+           any("gehoert weder zur Funding" in z
+               for z in _MR.saetze(_fremd)),
+           "stehen die Raenge (querschnitt > 0) und dieser Wert gehoert "
+           "nicht dazu, ist das eine dauerhafte Eigenschaft - kein "
+           "Ausfall. Die alte Zeile ist hier richtig")
+    pruefe(P, "⚠️⚠️ TOTALAUSFALL nennt den AUSFALL, nicht die Messbasis",
+           any("HEUTE NICHT VERFUEGBAR" in z for z in _MR.saetze(_total))
+           and not any("gehoert weder" in z for z in _MR.saetze(_total)),
+           "die alte Fassung behauptete 'gehoert zu keiner Messbasis' - "
+           "auch dann, wenn schlicht das NETZ weg war. Eine falsche "
+           "Begruendung ist schlimmer als keine: sie schickt den Leser an "
+           "die falsche Stelle")
+
     # ---- DAUERPRUEFUNG T6: Mail und Stufe 11 rechnen GLEICH -------------
     #
     # ⚠️⚠️ ANLASS 02.09.2026, gefunden beim Lesen einer echten Mail. Der

@@ -1098,6 +1098,22 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.357** — ✔✔✔ S-2 IST GEBAUT - ein Ausfall ist keine Messbasisluecke mehr. Nutzervorgabe 11.09.: *,die API Abfragen und Datensammlungen am Notebook muessen stabil umgesetzt werden, damit ein kurzer Ausfall so wie heute keinen Schaden anrichten kann.'* Faellt der Abruf aus, war das Fuenftel None und die Zeile wurde SCHLICHT WEGGELASSEN - die Mail sah normal aus, nur kuerzer, und die Bewertung war an dem Tag stumm um einen Beitrag aermer
+
+- Quelle: agent/marktrang.py
+
+**2.357-falsch** — ⚠️⚠️ UND BEI TOTALAUSFALL NANNTE DIE MAIL DIE FALSCHE URSACHE: ,er gehoert weder zur Funding- noch zur Umschlag- noch zur Terminmarkt-Messbasis' - auch dann, wenn schlicht das NETZ weg war. **Eine falsche Begruendung ist schlimmer als keine: sie schickt den Leser an die falsche Stelle.** Er haette die Messbasis geprueft, waehrend die Ursache im Abruf lag
+
+- Quelle: agent/marktrang.py
+
+**2.357-daten** — ✔ DIE UNTERSCHEIDUNG STECKTE SCHON IN DEN DATEN, sie wurde nur nicht ausgewertet: `raenge()` setzt `querschnitt_<name>` ERST nach erfolgreichem Abruf und nach der Mindestquerschnittspruefung. Also bedeutet querschnitt == 0 ,der ganze Rang ist heute ausgefallen' und querschnitt > 0 mit fehlendem Fuenftel ,dieser Wert gehoert nicht dazu'. ⚠️ Alle DREI Abbruchstellen in `raenge()` melden bereits ins Log - keine erreichte die MAIL. Genau das ist fail-soft-ist-fail-silent
+
+- Quelle: agent/marktrang.raenge / Analyse 11.09.
+
+**2.357-gegenprobe** — ✔✔ GEGENGEPRUEFT ueber VIER Faelle, mit fuenf Dauerpruefungen im Paket Terminmarkt: NORMAL (keine Ausfallzeile - wo nichts ausgefallen ist, darf nichts gemeldet werden, sonst stumpft die Meldung ab) · TEILAUSFALL (wird genannt UND benennt die Groesse) · MESSBASISLUECKE (bleibt, was sie war - die alte Zeile ist dort richtig) · TOTALAUSFALL (nennt den Ausfall, NICHT die Messbasis). ⚠️ Die Gegenprobe wird ROT, sobald man die Teilausfallzeile abschaltet
+
+- Quelle: pruefe_pakete.py Paket Terminmarkt
+
 **2.351** — ⚠️⚠️⚠️ ANALYSE DER BEWERTUNGSSCHICHT - DER SCHWERSTE FUND, und er ist REPRODUZIERT: `schwelle()` und `schwellenzeile()` ermittelten die QUELLE getrennt. Die eine nahm den Wert, die andere fragte nur, ob der Schluessel existiert. Bei `potential_schwelle_r: 0,02` - Komma statt Punkt, in einem deutschsprachigen Projekt die naheliegendste Verwechslung - liest YAML eine Zeichenkette, `float()` wirft, der Rueckfall greift: wirksam bleibt 0,080, und die Mail meldet trotzdem ,(config.yaml)'. **Der Nutzer haette geglaubt, seine Einstellung wirke**
 
 - Quelle: agent/potential.py / Analyse 11.09.2026
