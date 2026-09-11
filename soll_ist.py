@@ -315,8 +315,11 @@ REIHENFOLGE = (
             "Mailaenderungen. Gefunden und behoben: englische "
             "Dezimalzahlen in `auswahl.py` (echter Mailfehler), drei "
             "Werkzeugfehler (Trichter gekappt, Luecke ohne Zeile, Mail nicht "
-            "abgelegt), ein gemischtes Minuszeichen.",
-            "Befunde 2.362 bis 2.366", fertig=True),
+            "abgelegt), ein gemischtes Minuszeichen. NACHTRAG 11.09. nachmittags: der "
+            "CHART war nicht geprueft - zwei Zahlenfehler gefunden und "
+            "behoben (2.367). ⚠️ NICHT NACHGEWIESEN: ein Hebelgeschaeft "
+            "(Faktor ueber 1,0) - in keinem Lauf entstanden (2.371).",
+            "Befunde 2.362 bis 2.373", fertig=True),
     Schritt(16, "DER ROLLOUT",
             "⚠️⚠️ FEHLTE BIS HEUTE ALS SCHRITT - obwohl alle Vorarbeiten "
             "auf ihn zulaufen. 292 Commits, 10 Betriebsdateien, "
@@ -325,7 +328,15 @@ REIHENFOLGE = (
             "11.09. ⚠️ DANACH AM NB: die Oberflaeche EINMAL oeffnen und "
             "ETH + SOL im Akkumulations-Schalter setzen (L1 - der "
             "Schalter existiert, er wirkt nur auf dem Geraet, auf dem die "
-            "GUI laeuft), und die drei Messquellen nachziehen.",
+            "GUI laeuft), und die drei Messquellen nachziehen. ⚠️ NACHTRAG "
+            "11.09.: (a) die Checkliste nennt noch 2048 Pruefungen und "
+            "drei Rote - heute 2084 und vier; (b) `config.yaml` am "
+            "Notebook vor dem Pull abgleichen; (c) S-1 erkennt die "
+            "Symbolliste jetzt als Sollzustand (2.368). OFFENE "
+            "ENTSCHEIDUNGEN VOR DEM ROLLOUT: Mailgliederung vorziehen? "
+            "(2.372) · Akkumulation am Notebook bis zur Registrierung "
+            "nur BTC oder aus? (2.370) · alter Marktscan weiter aktiv? "
+            "(2.369)",
             "Basisinfos/Ausrollen_24_08.md"),
     Schritt(17, "TAKT",
             "⚠️ ERST NACH DEM ROLLOUT messen - vorher misst man den alten "
@@ -379,8 +390,13 @@ REIHENFOLGE = (
             "gemessen bereit (+0,0470, p 0,000, 481 von 518 Symbolen) und "
             "muss nur registriert werden - danach hat die Lage erstmals "
             "eine Bewertung statt null Beitraegen. Loest R-R9 aus, aber "
-            "NUR fuer diese Lage.",
-            "Plan 05.09. - Nutzerentscheidung; Befund 2.286-schnitt"),
+            "NUR fuer diese Lage. ⚠️ NACHTRAG 11.09.: die Entscheidung ist "
+            "an Charlie uebergeben. Bis zur Registrierung laeuft die "
+            "Akkumulation OHNE Bewertung durch (2.370). Vorher: R-R11 "
+            "reproduzieren, Kriterium 2 auf V1/H90, Stufen herleiten, "
+            "Schwelle dieser Lage kalibrieren, `messdaten.db` am "
+            "Notebook klaeren.",
+            "Plan 05.09.; Befunde 2.286-schnitt, 2.370"),
     Schritt(21, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
             "Regel 1 war schon erfuellt (2.356); offen sind Regel 2 "
@@ -439,7 +455,12 @@ REIHENFOLGE = (
             "bekannten Wendepunkten · R-2 Datenlage je Phase (Blockregel - "
             "vermutlich Phasen zusammenlegen) · R-3 Beitraege je Phase "
             "(vormals T-2) · R-4 die Schreibluecke im Betrieb · R-5 erst "
-            "danach: gehoert Regime ueberhaupt in die Bewertung?",
+            "danach: gehoert Regime ueberhaupt in die Bewertung? ⚠️ "
+            "NACHTRAG 11.09.: Quelle und Wirkung in 2.369 - heute wirkt "
+            "es NUR im alten Marktscan. Fear & Greed: der mit der besten "
+            "Aussagekraft, per Messung in R-3 entschieden "
+            "(alternative.me gegen CoinMarketCap, 2.369-fg), dazu Fear & "
+            "Greed gegen die Akkumulation.",
             "Nutzervorgabe 11.09.; project_regime_immer_baer_kein_vergleich; "
             "NB-Sicherung 11.09.; agent/krypto/regime.py"),
     # ================================================================

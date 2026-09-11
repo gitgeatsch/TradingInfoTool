@@ -64,6 +64,11 @@ from datetime import date, datetime, timezone
 # dazwischen und der Ausfall faellt erst am Dienstag auf.
 MAX_ABRUFALTER_TAGE = 2
 
+# Kennung einer Messquelle, die als reine Symbolliste uebertragen wurde
+# (`baue_messbasis_paket.py`, Tabelle `_nur_symbolliste`) - siehe
+# `_stand_datei`. Steht an der Stelle des Datenstands.
+NUR_SYMBOLLISTE = "symbolliste"
+
 
 @dataclass(frozen=True)
 class Quelle:
@@ -316,6 +321,19 @@ def _stand_datei(q) -> tuple[str | None, str | None, int]:
     datum_spalte = (q.spalten or ("datum",))[0]
     try:
         c = sqlite3.connect("file:%s?mode=ro" % pfad, uri=True)
+        # ⚠️⚠️ AM NOTEBOOK LIEGT NUR DIE SYMBOLLISTE (Gegenpruefung 11.09.).
+        # `baue_messbasis_paket.py` uebertraegt die drei Dateien als reine
+        # Symbollisten (wenige Kilobyte statt 176 MB) und markiert sie mit
+        # der Tabelle `_nur_symbolliste`. Dort gibt es kein Datum - die
+        # erste Fassung von S-1 las das als ,fehlt' und haette am Notebook
+        # mit jedem Lauf Alarm geschlagen. Die Symbolliste IST dort der
+        # Sollzustand; gemessen wird am Desktop.
+        if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                     "AND name='_nur_symbolliste'").fetchone():
+            anzahl = c.execute("SELECT COUNT(*) FROM %s"
+                               % q.tabelle).fetchone()[0]
+            c.close()
+            return NUR_SYMBOLLISTE, abruf, int(anzahl or 0)
         zeile = c.execute(
             "SELECT MAX(%s), COUNT(*) FROM %s"
             % (datum_spalte, q.tabelle)).fetchone()
@@ -387,9 +405,25 @@ def pruefe(conn, heute: date | None = None,
         else:
             daten, abruf, anzahl = _stand_extern(conn, q.name)
         alter_daten, alter_abruf = _tage(daten, heute), _tage(abruf, heute)
-        if not anzahl or alter_daten is None:
+        # ⚠️⚠️ ZWEI KORREKTUREN AUS DER GEGENPRUEFUNG VON S-1 (11.09.2026).
+        # Beide haetten am Notebook ab dem ersten Lauf Alarm geschlagen:
+        #
+        # 1. Die SYMBOLLISTE ist dort der Sollzustand, kein Ausfall. Sie
+        #    bekommt ein eigenes Urteil und wird nicht gemeldet - leer
+        #    bleibt sie ein ,fehlt'.
+        # 2. Die Messbasis wird VON HAND nachgeladen, sie hat keinen Job.
+        #    Die Zwei-Tage-Grenze fuer den Abruf traf sie nach 48 Stunden,
+        #    obwohl ihre Registratur ausdruecklich sagt, sie solle eine
+        #    TOTE Quelle finden, keine langsame. Fuer Rolle M gilt deshalb
+        #    die eigene Obergrenze auch fuer den Abruf.
+        abrufgrenze = (q.max_datenalter if q.rolle == "M"
+                       else MAX_ABRUFALTER_TAGE)
+        if daten == NUR_SYMBOLLISTE:
+            urteil = "liste" if anzahl else "fehlt"
+            alter_daten = None
+        elif not anzahl or alter_daten is None:
             urteil = "fehlt"
-        elif alter_abruf is None or alter_abruf > MAX_ABRUFALTER_TAGE:
+        elif alter_abruf is None or alter_abruf > abrufgrenze:
             urteil = "abruf"
         elif alter_daten > q.max_datenalter:
             urteil = "daten"
@@ -406,8 +440,11 @@ def pruefe(conn, heute: date | None = None,
 
 
 def auffaellig(zeilen: list[dict]) -> list[dict]:
-    """Nur die Zeilen, die nicht frisch sind - fuer Log und Export."""
-    return [z for z in zeilen if z.get("urteil") != "frisch"]
+    """Nur die Zeilen, die nicht frisch sind - fuer Log und Export.
+
+    ⚠️ ,liste' ist nicht auffaellig: am Notebook ist die Symbolliste der
+    Sollzustand der Messbasis (Gegenpruefung S-1, 11.09.2026)."""
+    return [z for z in zeilen if z.get("urteil") not in ("frisch", "liste")]
 
 
 def als_text(zeilen: list[dict]) -> list[str]:

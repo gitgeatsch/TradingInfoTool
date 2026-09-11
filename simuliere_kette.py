@@ -878,6 +878,15 @@ def main() -> int:
                 (_ablage / ("%s_%s_%s.txt" % (gruppe, instrument,
                     eintrag.get("symbol", "unbekannt")))).write_text(
                         text, encoding="utf-8")
+                # DAS BILD GEHOERT ZUR MAIL (Nutzerhinweis 11.09.: "das
+                # eMail generiert auch einen Chart - nicht vergessen und
+                # pruefen"). Bis dahin wurde es gebaut, aber nie abgelegt -
+                # ob es entsteht und was darauf steht, war nicht nachsehbar.
+                for _nr, _bild in enumerate(eintrag.get("bilder") or []):
+                    if _bild.get("png"):
+                        (_ablage / ("%s_%s_%s_%d.png" % (gruppe, instrument,
+                            eintrag.get("symbol", "unbekannt"), _nr))
+                         ).write_bytes(_bild["png"])
             except OSError:
                 pass
             # SAMMELMAILS HABEN KEINE ASSET-BLOECKE. Sie fassen einen Lauf

@@ -38,6 +38,33 @@ logger = logging.getLogger(__name__)
 TAGE = 90
 
 
+def achse(wert: float) -> str:
+    """Eine Achsenbeschriftung in deutscher Schreibweise (11.09.2026).
+
+    GEFUNDEN AN DER ERSTEN SIMULIERTEN KRYPTO-MAIL (ONDO): die Preisachse
+    zeigte ,0.38' - englisch, in einer Mail, deren Text seit demselben Tag
+    durchgehend deutsch schreibt. Ab 1.000 mit Tausenderpunkt, darunter mit
+    so vielen Stellen, wie der Wert hat - Kleinstkurse wie 0,0000089
+    duerfen nicht zu ,8.9e-06' werden."""
+    from agent.schreibweise import de as _de
+    if abs(wert) >= 1000:
+        return _de(wert, 0)
+    roh = ("%.10f" % wert).rstrip("0").rstrip(".")
+    return (roh or "0").replace(".", ",")
+
+
+def marke_text(wert: float, beruehrungen=None) -> str:
+    """Die Beschriftung einer Marke am rechten Rand (11.09.2026).
+
+    ⚠️ HIER STAND `f"{wert:,.0f}"` - null Nachkommastellen. Bei ONDO
+    (0,32 EUR) stand an allen sechs Marken ,0'. Genau der Fehler, den
+    `signal_mail.preis()` am 14.08. fuer den Mailtext behoben hat (PLUME,
+    ,Einstiegszone 0 bis 0 EUR') - das Bild hatte seinen eigenen, zweiten
+    Zahlenweg und bekam die Korrektur nie."""
+    from agent.signal_mail import preis as _preis
+    return _preis(float(wert)) + (f"  {beruehrungen}x" if beruehrungen else "")
+
+
 def render_trade_chart(*, reihe: list, index: int, rechnung: dict,
                        symbol: str, marken: list | None = None,
                        fx_eur_je_usd: float | None = None) -> bytes | None:
@@ -109,8 +136,7 @@ def render_trade_chart(*, reihe: list, index: int, rechnung: dict,
                 if isinstance(eintrag, dict):
                     wert = float(eintrag.get("preis_eur"))
                     n = eintrag.get("beruehrungen")
-                    text = (f"{wert:,.0f}".replace(",", ".")
-                            + (f"  {n}x" if n else ""))
+                    text = marke_text(wert, n)
                 else:
                     wert, text = float(eintrag), None
                 ax.axhline(wert, color="#888888", linewidth=0.7, alpha=0.6)
@@ -127,6 +153,9 @@ def render_trade_chart(*, reihe: list, index: int, rechnung: dict,
 
         ax.set_title(f"{symbol} - der geplante Trade", fontsize=10)
         ax.tick_params(labelsize=8)
+        # DEUTSCHE PREISACHSE (11.09.2026) - siehe `achse()`.
+        from matplotlib.ticker import FuncFormatter
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _p: achse(v)))
         # DIE ZEITACHSE WAR LEER (17.08.2026, Nutzerhinweis). Hier stand
         # `ax.set_xticks([])` - das Bild zeigte einen Verlauf ohne
         # Zeitangabe, und ob er ueber zwei Wochen oder ueber ein halbes

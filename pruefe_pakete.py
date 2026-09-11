@@ -7639,6 +7639,26 @@ def paket_15() -> None:
     pruefe(P, "zu kurze Reihen ergeben kein Bild statt eines leeren",
            _chart(reihe=_rr[:5], index=4, rechnung=_rech, symbol="TST",
                   fx_eur_je_usd=0.92) is None)
+    # ⚠️ DAS BILD HAT EINEN EIGENEN ZAHLENWEG (11.09.2026, ONDO-Simulation):
+    # an allen sechs Marken stand ,0', die Preisachse schrieb ,0.38'.
+    from ui import trade_chart as _TCD
+    pruefe(P, "Marken im Bild tragen den Kurs mit Nachkommastellen",
+           _TCD.marke_text(0.3208, 2) == "0,3208  2x"
+           and _TCD.marke_text(0.0119).startswith("0,0119"),
+           "vorher `f'{wert:,.0f}'` - bei ONDO 0,32 EUR stand an jeder Marke "
+           ",0'. Derselbe Fehler wie PLUME am 14.08. im Mailtext: "
+           "%r / %r" % (_TCD.marke_text(0.3208, 2), _TCD.marke_text(0.0119)))
+    pruefe(P, "die Preisachse schreibt deutsch",
+           _TCD.achse(0.38) == "0,38" and _TCD.achse(95000.0) == "95.000"
+           and _TCD.achse(0.0000089) == "0,0000089" and _TCD.achse(12.5) == "12,5",
+           "%r / %r / %r / %r" % (_TCD.achse(0.38), _TCD.achse(95000.0),
+                                  _TCD.achse(0.0000089), _TCD.achse(12.5)))
+    pruefe(P, "das Bild verwendet die deutsche Achse auch wirklich",
+           "set_major_formatter" in _quelltext("ui/trade_chart.py")
+           and "marke_text(wert, n)" in _quelltext("ui/trade_chart.py"),
+           "die Hilfsfunktionen allein beweisen nichts, wenn der Chart sie "
+           "nicht ruft - der sichtbare Nachweis steht im abgelegten PNG der "
+           "Kettensimulation")
     pruefe(P, "der Versandweg nimmt Bilder an",
            "def versand(betreff: str, text: str, bilder=None)" in _quelltext(
                "scheduler/rollen_job.py")
@@ -15894,6 +15914,80 @@ def paket_terminmarkt() -> None:
            not _melde_mit("frisch", "frisch"),
            "eine Meldung ohne Anlass ist die sicherste Art, kuenftige "
            "Meldungen unwirksam zu machen")
+
+    # ---- ⚠️⚠️⚠️ S-1 GEGENPRUEFUNG: KEIN DAUERALARM AM NOTEBOOK (11.09.)
+    #
+    # Die erste Fassung haette am Notebook ab dem ersten Lauf gemeldet -
+    # aus ZWEI Gruenden, und keine Pruefung hat es gesehen, weil alle mit
+    # `mit_dateien=False` oder mit kuenstlichen Urteilen liefen:
+    #
+    #   1. dort liegen die drei Dateien nur als SYMBOLLISTE (ohne Datum,
+    #      `baue_messbasis_paket.py`) -> ,fehlt'
+    #   2. von Hand geladene Quellen haben keinen Job, die Zwei-Tage-
+    #      Grenze fuer den Abruf traf sie nach 48 Stunden -> ,abruf'
+    #
+    # Hier laufen ECHTE Dateien durch die ECHTE `pruefe()`.
+    import os as _os15
+    import sqlite3 as _sq15
+    import tempfile as _tf15
+    import time as _ti15
+    import dataclasses as _dc15
+    from datetime import date as _da15, timedelta as _td15
+    _tmp15 = _tf15.mkdtemp()
+
+    def _datei15(name, art, tage_alt):
+        _p = _os15.path.join(_tmp15, name)
+        _c = _sq15.connect(_p)
+        if art == "voll":
+            _c.execute("CREATE TABLE t (datum TEXT, symbol TEXT)")
+            _c.execute("INSERT INTO t VALUES (?, 'BTC')", (
+                (_da15.today() - _td15(days=tage_alt)).isoformat(),))
+        else:
+            _c.execute("CREATE TABLE t (symbol TEXT)")
+            if art == "liste":
+                _c.execute("INSERT INTO t VALUES ('BTC')")
+            _c.execute("CREATE TABLE _nur_symbolliste (hinweis TEXT)")
+        _c.commit()
+        _c.close()
+        _alt = _ti15.time() - tage_alt * 86400
+        _os15.utime(_p, (_alt, _alt))
+        return _p
+
+    def _urteil15(name, art, tage_alt, rolle="M"):
+        _q = _dc15.replace(_mess[0], name=name, rolle=rolle, tabelle="t",
+                           datei=_datei15(name + ".db", art, tage_alt),
+                           spalten=("datum", ""), max_datenalter=21)
+        _echt_reg = _DF.REGISTRATUR
+        _DF.REGISTRATUR = (_q,)
+        try:
+            _z = _DF.pruefe(_sq15.connect(":memory:"))
+        finally:
+            _DF.REGISTRATUR = _echt_reg
+        return _z[0]["urteil"], _DF.auffaellig(_z)
+
+    _u_liste, _auff_liste = _urteil15("nb_liste", "liste", 9)
+    pruefe(P, "⚠️⚠️ die SYMBOLLISTE am Notebook ist kein Ausfall",
+           _u_liste == "liste" and not _auff_liste,
+           "`baue_messbasis_paket.py` uebertraegt die Messquellen als "
+           "Symbolliste ohne Datum - dort ist das der Sollzustand. Die erste "
+           "Fassung las ,fehlt' und haette mit jedem Lauf gemeldet. "
+           "Urteil: %r" % _u_liste)
+    pruefe(P, "eine LEERE Symbolliste bleibt ein Ausfall",
+           _urteil15("nb_leer", "leer", 0)[0] == "fehlt",
+           "ohne Symbole rangt die Bewertung gegen nichts")
+    _u_m5 = _urteil15("m_5", "voll", 5)[0]
+    pruefe(P, "⚠️⚠️ von Hand geladene Messbasis: 5 Tage alt ist KEIN Abrufausfall",
+           _u_m5 == "frisch",
+           "sie hat keinen Job - die Zwei-Tage-Grenze traf sie nach 48 "
+           "Stunden. Ihre Grenze ist die eigene Obergrenze (21 Tage). "
+           "Urteil: %r" % _u_m5)
+    pruefe(P, "aber 30 Tage ohne Nachladen WERDEN gemeldet",
+           _urteil15("m_30", "voll", 30)[0] == "abruf",
+           "die Ueberwachung soll eine TOTE Messbasis finden, keine langsame")
+    pruefe(P, "und fuer Quellen MIT Job bleibt es bei zwei Tagen",
+           _urteil15("a_5", "voll", 5, rolle="A")[0] == "abruf",
+           "die Korrektur gilt nur der Rolle M - ein Job, der fuenf Tage "
+           "nicht schreibt, ist ausgefallen")
 
     # ---- ⚠️⚠️⚠️ S-2: EIN AUSFALL IST KEINE MESSBASISLUECKE (11.09.2026)
     #

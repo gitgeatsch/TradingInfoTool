@@ -4690,3 +4690,46 @@ trifft. Geschrieben wurde nur in die Kopie.
 | **Qualität der Empfehlungen** | die zwei Modellaufrufe sind eine **Attrappe** — die Simulation zeigt, dass die Kette trägt, nicht, dass die Urteile gut sind |
 | **S-2-Ausfallzeile** | erscheint nur bei echtem Abrufausfall — dafür stehen fünf Dauerprüfungen |
 | **T-1** | die Attrappe mit Aktionen reihum macht Einstiegsmails zur Glückssache. Für die Fehleridentifikation je Strategie und Asset braucht sie einen **steuerbaren** Modus |
+
+---
+
+# 🔎 11.09. — VOR SCHRITT 16: fünf Fragen, und was die Prüfung fand
+
+> *„1. Quelle des Regimes, nur im eMail als Info oder mit einer Auswirkung —
+> Fear & Greed: nicht irgendeinen, sondern jenen mit der besten
+> Aussagekraft? 2. Akkumulation — das hätte ich eher bei dir gesehen.
+> 3. Das eMail generiert auch einen Chart — nicht vergessen und prüfen.
+> 4. Der Text erschlägt einen beim Lesen — besser gruppieren, u. U. noch vor
+> dem Rollout? 5. Prüfe über alle Themen der letzten Tage, ob etwas liegen
+> geblieben ist."* — und: *„ob alle Beiträge für Krypto inkl. Hebel
+> vorhanden sind — also der Kern des Produktivgangs"*
+
+## ⚠️⚠️ Zuerst: sind alle Krypto-Beiträge da? — Nein, und das war bekannt
+
+| Lage | Bewertung | Stand |
+|---|---|---|
+| `spot` / `einstieg` | **2 tragende Beiträge** + OI-Sperre + Schwelle | vollständig im Sinne des Plans |
+| `spot` / `akkumulation` | **0 Beiträge** — und die Stufe **sperrt nicht**, sie zählt nur | ⚠️ entscheidet nach dem Rollout allein das Modell (2.370) |
+| Hebel | keine eigene Lage — **Ergebnis der Rechnung**, Höhe aus Risikobudget und Stop | ⚠️ Höhe nicht bewertet (A9/A1/P-1), **end-to-end nie nachgewiesen** (2.371) |
+
+➔ Der Rollout bringt den **Betriebsstand** auf das Notebook, nicht die
+vollständige Bewertung.
+
+## Die Befunde
+
+| | |
+|---|---|
+| **2.367** Chart | zwei Zahlenfehler (Marken „0", Achse englisch) — behoben |
+| **2.368** S-1 | hätte am Notebook ab dem ersten Lauf Alarm geschlagen — eigener Baufehler, behoben |
+| **2.369** Regime | wirkt **nur** im alten Marktscan; in der Rollenkette nirgends |
+| **2.369-fg** Fear & Greed | alternative.me (BTC, ab 2018) gegen CoinMarketCap (Top-10 + Optionsmarkt, ab 07.2023) — **Messfrage** |
+| **2.370** Akkumulation | läuft ohne Bewertung durch |
+| **2.371** Hebel | Ergebnis der Rechnung, nie end-to-end nachgewiesen; am NB seit 14.08. kein Signal als `hebel` |
+| **2.372** Mail | fünf Doppelungen, darunter **zwei Trefferquoten** in einer Mail |
+| **2.373** Sichtung | verifiziert und gemeldet, siehe Befund |
+
+## Offene Entscheidungen vor dem Rollout
+
+1. **Mailgliederung vorziehen?** (Vorschlag liegt vor, nichts gestrichen)
+2. **Akkumulation am Notebook** bis zur Registrierung: nur BTC wie heute, oder aus?
+3. **Alter Marktscan** — weiter aktiv? Er verschickt eigene Mails und ist der einzige Ort, an dem das Regime wirkt

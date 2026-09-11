@@ -1446,8 +1446,12 @@ def _melde_datenfrische(conn) -> int:
                        ", ".join(q["quelle"] for q in _qs)))
             _mess = [z for z in _kritisch if z.get("rolle") == "M"]
             _was_tun = (
-                "WAS ZU TUN IST: der genannte Job hat seit ueber zwei "
-                "Tagen nicht erfolgreich geschrieben. Zuerst nachsehen, "
+                # ⚠️ "seit ueber zwei Tagen" stimmte nur fuer Jobs - die von
+                # Hand geladene Messbasis hat ihre eigene Grenze (21 Tage,
+                # Gegenpruefung S-1 am 11.09.).
+                "WAS ZU TUN IST: der genannte Job hat nicht erfolgreich "
+                "geschrieben (Grenze: zwei Tage bei Jobs, bei der von Hand "
+                "geladenen Messbasis 21 Tage). Zuerst nachsehen, "
                 "ob er ueberhaupt laeuft (Log nach dem Jobnamen "
                 "durchsuchen), dann ob die Quelle erreichbar ist.")
             if _mess:
