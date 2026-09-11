@@ -4831,3 +4831,45 @@ USD-Umrechnung war unnötig und ist nicht gebaut.
 
 ⚠️ **Für den Rollout:** den Portfoliowert 02.09. bis Rollout am Notebook
 einmal nachrechnen (2.376-rollout).
+
+## ✔ H-2 gebaut — der Hebel entsteht aus der Wahrscheinlichkeit (Befund 2.377)
+
+> *„Hebel … soll dynamisch aus einem Szenario entstehen — Wahrscheinlichkeit
+> ist für ein optimales Risiko- und Chanceverhältnis. DAS IST UND WAR DER
+> AUFTRAG!"* (Nutzer 11.09.)
+
+```
+Risiko         = r(q) x Kapital        r(q) = halbes Kelly, geklammert 0,50–1,25 %
+Positionswert  = Risiko ÷ Stop
+Hebel          = Positionswert ÷ 500 EUR      unter 2x -> Spot (Betrag unverändert)
+Grenze         = 5x und Liquidationsabstand   ohne positive Erwartung kein Hebel
+```
+
+| | |
+|---|---|
+| **In der Kette** | Quote vor der Vorabrechnung; das Etikett aus r(q) steuert taktische Zelle, Hebel-Schalter und Topf; `rechne()` bekommt Risiko, Einsatz und Grenze |
+| **Ohne Kapital/Quote** | kein Hebel, Satz in der Mail, einmal je Lauf im Log |
+| **Mail** | Herleitung in EUR im Abschnitt DIE RECHNUNG |
+| **Schalter** | `rollen_kette.hebel_aus_quote.aktiv` — **AUS**, bis Schritt 19 simuliert hat |
+
+### ⚠️⚠️ Die Gegenprüfung fand einen echten Fehler im ersten Einbau
+
+Das Etikett kam aus dem Stop von `dimensioniere`, der die Zielweite 2,5 x ATR
+nicht kennt. In **20 von 144** Rasterfällen setzte `rechne()` den Stop weiter
+— aus „Hebel 2,0x" im Etikett wurde 1,6x in der Rechnung. **Behoben:** `stop_relativ()` und
+`hebel_sicher()` sind dieselbe Stelle wie in `rechne()`.
+
+| Nachweis | Ergebnis |
+|---|---|
+| Formel, unabhängig nachgerechnet | 2.000 Zufallsfälle, **0 Abweichungen** |
+| Etikett r(q) gegen `rechne()` | 400 Zufallsfälle, Stop, Etikett und Hebel **identisch** |
+| Paket „Hebel aus Quote" | alle Prüfungen grün |
+
+### ⚠️ Was H-2 nicht leistet
+
+Trennschärfe ungemessen (A1) · grobe Stufung (A9) · Rundung auf 0,1x (Risiko
+am Stop höchstens rund 1 % über r(q)) · der Faktentext „Welcher Faktor es
+wird, folgt aus dem Risikobudget …" geht auch an das Modell und wird in
+Schritt 22 angefasst · ein Hebelgeschäft end-to-end erst in Schritt 23 · bei Spot stehen zwei Risikozahlen untereinander (97 EUR Hebelrechnung, 95 EUR am Stop) — Feinschliff in Schritt 22.
+
+✔ **Kette gegen die NB-Kopie** (Schalter nur im Speicher an): 1 Signal, 1 Mail, 0 Fehler. ONDO: *„Trefferquote 34,6 % … halbes Kelly 0,97 % … = 97 EUR · bei 11,9 % Stop: 813 EUR Positionswert / 500 EUR Einsatz = 1,6x – unter 2,0x, daher Spot mit dem gewohnten Betrag“*.

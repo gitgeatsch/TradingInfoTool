@@ -359,16 +359,16 @@ REIHENFOLGE = (
             "Befunde 2.375, 2.376; Nutzerentscheidung 11.09. (P-3 A)",
             fertig=True),
     Schritt(18, "H-2 r(q)",
-            "K1 (vormals Schritt 28): die Wahrscheinlichkeit erzeugt das "
-            "Risiko. risiko = r(q) x Kapital, r(q) = halbes Kelly, "
-            "geklammert 0,50 bis 1,25 % (N-39); nominal = risiko / "
-            "Stopabstand; hebel = nominal / 500 EUR (Hebelnenner, Nutzer "
-            "05.09.). Unter 2x -> SPOT mit UNVERAENDERTEM Betrag (N-38). "
-            "Harte Grenze 5x bis zur Trennschaerfe (Nutzer 11.09.). Quote "
-            "UNKALIBRIERT - die Kalibrierung ist am 05.09. gefallen. Die "
-            "Herleitung steht in EUR in der Mail.",
-            "Nutzerauftraege 28.08./05.09./11.09.; Anforderungen_Umbau "
-            "N-38/N-39; Vorgabe PAKET-B"),
+            "✔ ERLEDIGT 11.09.: der Hebel entsteht aus der "
+            "Wahrscheinlichkeit - halbes Kelly, geklammert 0,50-1,25 % des "
+            "Kapitals, Positionswert / 500 EUR; unter 2x Spot mit "
+            "unveraendertem Betrag; Grenze 5x und Liquidationsabstand; ohne "
+            "positive Erwartung kein Hebel. Das Etikett aus r(q) steuert "
+            "Zelle, Schalter und Topf; die Herleitung steht in EUR in der "
+            "Mail. Gegenpruefung fand einen Stop-Fehler im ersten Einbau "
+            "(behoben, 2.377-gegenpruefung). ⚠️ SCHALTER AUS bis Schritt 19.",
+            "Befunde 2.377*; Nutzerentscheidung 11.09. (Paket B)",
+            fertig=True),
     Schritt(19, "H-3 HEBELVERTEILUNG",
             "VOR dem Scharfschalten: r(q) ueber die echten historischen "
             "Anker simulieren - wie oft 2-5x, wie oft Spot, wie oft greift "

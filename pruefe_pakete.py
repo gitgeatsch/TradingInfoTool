@@ -17192,11 +17192,16 @@ def paket_zellen() -> None:
     # ⚠️ UND BEIDE RECHNUNGEN MUESSEN DIESELBE ANNAHME HABEN. Bekaeme die
     # VORABrechnung keinen Hebel und die ECHTE doch, liefen sie auseinander -
     # der Trichter zeigte auf eine Zelle, die die Mail anders rechnet.
+    # ⚠️ SEIT H-2 (11.09.2026) DREI STELLEN: dazu kommt die Frage, ob die
+    # Hebelrechnung aus der Quote ueberhaupt laeuft (`_hq_rechnet`). Auch
+    # sie muss die Strategie fragen - sonst rechnete sie fuer eine
+    # Akkumulation einen Hebel, den beide Rechnungen danach verweigern.
     _stellen = _quelle.count("_HA_HEBEL_OK(strategie)")
     pruefe(P, "beide Rechnungen fragen die Strategie - `dimensioniere` UND "
               "`rechne`",
-           _stellen == 2,
-           "gefunden an %d Stellen, erwartet 2. Eine Rechnung mit und eine "
+           _stellen == 3,
+           "gefunden an %d Stellen, erwartet 3 (dimensioniere, rechne, "
+           "Hebelrechnung). Eine Rechnung mit und eine "
            "ohne Hebelerlaubnis waeren zwei verschiedene Trades unter einem "
            "Namen" % _stellen)
     # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG IST VERDRAHTET ---------------
@@ -17793,6 +17798,207 @@ def paket_kapital() -> None:
            "statt einer Aussage")
 
 
+def paket_hebel_aus_quote() -> None:
+    """H-2 - der Hebel aus der Wahrscheinlichkeit (Paket B, 11.09.2026).
+
+    Nutzerauftrag: *"die Wahrscheinlichkeit auf positive Risiko und Chance
+    soll den Hebel dynamisch erzeugen"* - Zielzone 2-5x, unter 2x Spot,
+    harte Grenze 5x bis zur Trennschaerfe. Alles hier ruft die ECHTEN
+    Funktionen; die Zahlen sind von Hand nachgerechnet.
+    """
+    P = "Hebel aus Quote"
+    from agent import betraege as _BEq
+    from agent import entscheidungsrechnung as _ERq
+    _ein = {**_BEq.HEBEL_AUS_QUOTE_VORGABE, "aktiv": True}
+
+    # ---- die Formel am gerechneten Beispiel (ONDO, 11.09.) -----------
+    h = _BEq.hebelrechnung(quote=0.346, crv=2.0, kapital_eur=10000.0,
+                           stop_rel=0.119, einstellungen=_ein)
+    pruefe(P, "⚠️⚠️ halbes Kelly: Quote 34,6 % bei CRV 2 ergibt 0,95 % Risiko",
+           abs(h["kelly"] - 0.019) < 1e-9 and abs(h["r"] - 0.0095) < 1e-9
+           and abs(h["risiko_eur"] - 95.0) < 1e-6,
+           "(0,346 x 3 - 1) / 2 / 2 = 0,0095 - Ergebnis: Kelly %.4f, r %.4f, "
+           "Risiko %.2f EUR" % (h["kelly"], h["r"], h["risiko_eur"]))
+    pruefe(P, "und daraus 1,6x - unter 2x, also SPOT",
+           abs(h["hebel_roh"] - 95.0 / 0.119 / 500.0) < 1e-9
+           and not h["ist_hebel"] and h["hebel"] == 1.0
+           and "daher Spot" in h["saetze"][1],
+           "95 / 0,119 / 500 = 1,597 - %r" % h["saetze"])
+
+    # ---- Klammer oben und harte Grenze -------------------------------
+    h = _BEq.hebelrechnung(quote=0.40, crv=2.0, kapital_eur=18213.0,
+                           stop_rel=0.05, einstellungen=_ein)
+    pruefe(P, "⚠️ die Klammer begrenzt das Risiko auf 1,25 % des Kapitals",
+           abs(h["r"] - 0.0125) < 1e-12 and h["klammer"] == "Obergrenze"
+           and abs(h["risiko_eur"] - 227.6625) < 1e-6,
+           "halbes Kelly waere %.2f %% - ungeklammert haengt die Nominale "
+           "an einem Prozentpunkt Quote" % (100 * h["kelly_halb"]))
+    pruefe(P, "⚠️⚠️ und die harte Grenze 5x greift",
+           h["ist_hebel"] and h["hebel"] == 5.0 and h["grenze_greift"]
+           and abs(h["hebel_roh"] - 9.1065) < 1e-9,
+           "roh %.3fx -> %.1fx. Nutzerentscheidung 11.09.: Deckel 5x bis "
+           "zur Trennschaerfe" % (h["hebel_roh"], h["hebel"]))
+    _t = " ".join(h["saetze"])
+    import re as _re_hq
+    pruefe(P, "die Herleitung steht in EUR und deutsch",
+           "18.213 EUR Kapital" in _t and "40,0 %" in _t
+           and "Grenze 5,0x" in _t
+           and not _re_hq.search(r"\d\.\d(?!\d\d)", _t), _t)
+
+    # ---- Klammer unten und die 2x-Kante -------------------------------
+    h = _BEq.hebelrechnung(quote=0.336, crv=2.0, kapital_eur=10000.0,
+                           stop_rel=0.05, einstellungen=_ein)
+    pruefe(P, "die Untergrenze hebt ein kleines positives Kelly auf 0,50 %",
+           abs(h["r"] - 0.005) < 1e-12 and h["klammer"] == "Untergrenze",
+           "halbes Kelly %.3f %%" % (100 * h["kelly_halb"]))
+    pruefe(P, "genau 2,0x ist ein Hebel (Nutzer: unter 2 ist keiner)",
+           h["ist_hebel"] and abs(h["hebel"] - 2.0) < 1e-9,
+           "50 / 0,05 / 500 = 2,0 - %r" % h["hebel"])
+    h = _BEq.hebelrechnung(quote=0.336, crv=2.0, kapital_eur=9990.0,
+                           stop_rel=0.05, einstellungen=_ein)
+    pruefe(P, "knapp darunter ist Spot", not h["ist_hebel"], "%r" % h["hebel_roh"])
+
+    # ---- ohne positive Erwartung ------------------------------------
+    h = _BEq.hebelrechnung(quote=0.30, crv=2.0, kapital_eur=50000.0,
+                           stop_rel=0.05, einstellungen=_ein)
+    pruefe(P, "⚠️ ohne positive Erwartung KEIN Hebel - auch nicht die Untergrenze",
+           not h["ist_hebel"] and h["r"] == 0.0
+           and "keine positive Erwartung" in h["saetze"][0],
+           "sonst entstuende aus Kelly < 0 ein Mindestrisiko und bei 50.000 "
+           "EUR Kapital ein 10-fach-Hebel: %r" % h["saetze"])
+
+    # ---- falsche Eingaben werfen -------------------------------------
+    for _kw, _name in (({"quote": 1.2}, "Quote ueber 1"),
+                       ({"kapital_eur": 0.0}, "Kapital null"),
+                       ({"stop_rel": 0.0}, "Stop null"),
+                       ({"quote": None}, "Quote fehlt")):
+        _arg = {"quote": 0.35, "crv": 2.0, "kapital_eur": 10000.0,
+                "stop_rel": 0.05, "einstellungen": _ein, **_kw}
+        try:
+            _BEq.hebelrechnung(**_arg)
+            _geworfen = False
+        except _BEq.BetragUnbekannt:
+            _geworfen = True
+        pruefe(P, "falsche Eingabe wirft statt zu raten: %s" % _name, _geworfen)
+
+    # ---- der Schalter ------------------------------------------------
+    import config as _cfgq
+    _c = _cfgq.load_config() or {}
+    pruefe(P, "⚠️ Vorgabe und config.yaml: AUS, bis Schritt 19 simuliert hat",
+           _BEq.HEBEL_AUS_QUOTE_VORGABE["aktiv"] is False
+           and "hebel_aus_quote" in (_c.get("rollen_kette") or {})
+           and _BEq.hebel_aus_quote_einstellungen(_c).get("aktiv") is False,
+           "der Plan verlangt die Simulation der Hebelverteilung VOR dem "
+           "Scharfschalten")
+    pruefe(P, "und config.yaml fuehrt dieselben Werte wie die Vorgabe",
+           all(abs(float(_BEq.hebel_aus_quote_einstellungen(_c)[k])
+                   - float(_BEq.HEBEL_AUS_QUOTE_VORGABE[k])) < 1e-12
+               for k in ("r_min", "r_max", "hebelnenner_eur", "hebel_ab",
+                         "hebel_grenze")),
+           str(_BEq.hebel_aus_quote_einstellungen(_c)))
+
+    # ---- rechne() haelt die Grenze -----------------------------------
+    _kw = dict(kurs=100.0, atr=1.0, risiko_eur=227.66, betrag_wunsch_eur=500.0,
+               hebel_handelbar=True, kostenklasse="krypto",
+               assetklasse="krypto")
+    _r0 = _ERq.rechne(**_kw)
+    _r5 = _ERq.rechne(**_kw, hebel_grenze=5.0)
+    pruefe(P, "⚠️ rechne() haelt die Grenze 5x",
+           _r5["hebel"] <= 5.0 + 1e-9
+           and (_r0["hebel"] <= 5.0 or "Hebelgrenze" in _r5["hebel_grenze"]),
+           "ohne Grenze %r (%s), mit Grenze %r (%s)"
+           % (_r0["hebel"], _r0["hebel_grenze"], _r5["hebel"],
+              _r5["hebel_grenze"]))
+    pruefe(P, "und ohne Grenze rechnet rechne() wie bisher",
+           _r0["hebel_grenze"] in ("Risikobudget", "RM-11 Liquidationsabstand",
+                                   "Hoechsthebel"), _r0["hebel_grenze"])
+    _r5["hebel_aus_quote"] = _BEq.hebelrechnung(
+        quote=0.40, crv=2.0, kapital_eur=18213.0, stop_rel=0.05,
+        einstellungen=_ein)
+    _mail = "\n".join(_ERq.saetze(_r5))
+    pruefe(P, "die Herleitung steht im Abschnitt DIE RECHNUNG",
+           "Hebel aus der Wahrscheinlichkeit" in _mail, _mail[-400:])
+
+    # ---- die Verdrahtung in der Kette --------------------------------
+    _rlq = _quelltext("agent/rollen_lauf.py").replace("\r\n", "\n")
+    pruefe(P, "⚠️⚠️ das Etikett aus r(q) steuert taktische Zelle und Topf",
+           'if ist_taktisch and _etikett != "hebel":' in _rlq
+           and '("hebel" if _etikett == "hebel"' in _rlq,
+           "sonst entschiede die Geometrie weiter ueber Spot oder Hebel, und "
+           "r(q) rechnete nur noch den Betrag")
+    pruefe(P, "die Quote wird VOR der Vorabrechnung bestimmt",
+           0 < _rlq.find("_hq_quote = _PTq.rechne(")
+           < _rlq.find("_vor = ER.dimensioniere("), "")
+    pruefe(P, "und gegen die Bewertung verglichen",
+           "Quote der Hebelrechnung" in _rlq,
+           "zwei Stellen, die dieselbe Zahl rechnen, laufen sonst still "
+           "auseinander")
+    pruefe(P, "rechne() bekommt Risiko, Einsatz und Grenze aus r(q)",
+           "hebel_grenze=(_hq_einst" in _rlq
+           and '_hq["risiko_eur"] if _hq_hebel' in _rlq, "")
+    pruefe(P, "die Nein-Zeile traegt ohne Quote kein Hebel-Etikett",
+           "and not BE.hebel_aus_quote_einstellungen(" in _rlq, "")
+    pruefe(P, "⚠️ die Kette entscheidet mit dem Stop und der Liquidationsgrenze von rechne()",
+           "_stop_q = ER.stop_relativ(" in _rlq
+           and "hebel_sicher=ER.hebel_sicher(_stop_q)" in _rlq,
+           "Gegenpruefung 11.09.: mit dem Stop aus `dimensioniere` lag das "
+           "Etikett in 20 von 144 Faellen daneben")
+
+    # ---- ⚠️⚠️ GEGENPRUEFUNG 11.09.: ETIKETT UND RECHNUNG SAGEN DASSELBE --
+    #
+    # Der erste Einbau entschied mit dem Stop aus `dimensioniere` - der kennt
+    # die Zielweite 2,5 x ATR nicht. Ergebnis: ,Hebel' im Etikett, 1,6x in
+    # der Rechnung. Hier laufen 400 Zufallsfaelle durch BEIDE echten
+    # Funktionen.
+    import random as _rnd_hq
+    _g = _rnd_hq.Random(11)
+    _falsch_stop, _falsch_hebel, _n = [], [], 0
+    for _i in range(400):
+        _kurs = _g.choice([0.3, 2.5, 100.0, 60000.0])
+        _atr = _kurs * _g.uniform(0.005, 0.09)
+        _marke = _kurs * _g.choice([0.97, 0.9]) if _g.random() < 0.4 else None
+        _umg = _kurs * 0.93 if _g.random() < 0.3 else None
+        _s = _ERq.stop_relativ(kurs=_kurs, atr=_atr, umgeworfen_preis_eur=_umg,
+                               stop_min_atr=2.0, marke_stop_eur=_marke)
+        _h = _BEq.hebelrechnung(quote=_g.uniform(0.34, 0.46), crv=2.0,
+                                kapital_eur=_g.uniform(5000.0, 40000.0),
+                                stop_rel=_s, einstellungen=_ein,
+                                hebel_sicher=_ERq.hebel_sicher(_s))
+        try:
+            _rr = _ERq.rechne(
+                kurs=_kurs, atr=_atr,
+                risiko_eur=(_h["risiko_eur"] if _h["ist_hebel"] else 48.0),
+                betrag_wunsch_eur=(500.0 if _h["ist_hebel"] else 800.0),
+                umgeworfen_preis_eur=_umg, stop_min_atr=2.0,
+                marke_stop_eur=_marke, hebel_handelbar=_h["ist_hebel"],
+                hebel_grenze=5.0, assetklasse="krypto")
+        except _ERq.RechnungBlockiert:
+            continue
+        _n += 1
+        if abs(_rr["stop_relativ"] - round(_s, 5)) > 1e-5:
+            _falsch_stop.append((round(_s, 5), _rr["stop_relativ"]))
+        if ((_rr["etikett"] == "hebel") != _h["ist_hebel"]
+                or (_h["ist_hebel"]
+                    and abs(_rr["hebel"] - round(_h["hebel"], 1)) > 1e-9)):
+            _falsch_hebel.append((round(_h["hebel"], 2), _rr["etikett"],
+                                  _rr["hebel"]))
+    pruefe(P, "⚠️⚠️ die Hebelrechnung benutzt DENSELBEN Stop wie rechne()",
+           not _falsch_stop and _n > 300,
+           "%d Faelle, abweichend: %s" % (_n, _falsch_stop[:5]))
+    pruefe(P, "⚠️⚠️ und das Etikett aus r(q) ist das der Rechnung, mit demselben Hebel",
+           not _falsch_hebel,
+           "abweichend: %s" % _falsch_hebel[:5])
+    _s22 = 0.22
+    _h = _BEq.hebelrechnung(quote=0.45, crv=2.0, kapital_eur=100000.0,
+                            stop_rel=_s22, einstellungen=_ein,
+                            hebel_sicher=_ERq.hebel_sicher(_s22))
+    pruefe(P, "bei weitem Stop deckelt der Liquidationsabstand unter 5x - und es steht da",
+           _h["ist_hebel"] and _h["liquidation_greift"]
+           and abs(_h["hebel"] - _ERq.hebel_sicher(_s22)) < 1e-9
+           and "Liquidationsabstand" in _h["saetze"][1],
+           "%r / %r" % (_h["hebel"], _h["saetze"]))
+
+
 def paket_messmenge() -> None:
     """Bindet die MESSNORM die Frage an die Menge? (07.09.2026)
 
@@ -18347,6 +18553,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Budget": paket_hartes_budget,
           "Kette je Strategie": paket_kette_je_strategie,
           "Kapital": paket_kapital,
+          "Hebel aus Quote": paket_hebel_aus_quote,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,

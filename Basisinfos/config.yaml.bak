@@ -2057,6 +2057,21 @@ gegenpruefung:
 # also keine zweite Meinung zum selben Asset geben. Ziel ist, das Ergebnis
 # an echten Mails zu sehen und danach zu optimieren.
 rollen_kette:
+  # ⚠️⚠️ H-2 (Paket B, Nutzerentscheidung 11.09.2026): DER HEBEL AUS DER
+  # WAHRSCHEINLICHKEIT. risiko = r(q) x Kapital, r(q) = halbes Kelly,
+  # geklammert r_min..r_max; hebel = (risiko / Stop) / hebelnenner_eur;
+  # unter hebel_ab wird es Spot mit unveraendertem Betrag; harte Grenze
+  # hebel_grenze bis zur Trennschaerfe. Code-Vorgabe: agent/betraege.py.
+  # ⚠️ AUS, bis Schritt 19 (Hebelverteilung simulieren) gelaufen ist - der
+  # Plan verlangt die Simulation VOR dem Scharfschalten.
+  hebel_aus_quote:
+    aktiv: false
+    r_min: 0.005
+    r_max: 0.0125
+    hebelnenner_eur: 500
+    hebel_ab: 2.0
+    hebel_grenze: 5.0
+
   # ⚠️ DER COOLDOWN JE GRUPPE (23.08.2026) - REPARATUR EINER S6b-FOLGE.
   #
   # WAS PASSIERT IST. Bis S6b lief Krypto mit ZWEI Laeufen, und jeder hatte

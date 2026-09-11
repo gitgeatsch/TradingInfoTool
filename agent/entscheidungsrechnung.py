@@ -263,6 +263,30 @@ def _boeden(kurs: float, atr: float, k: float,
     return aus
 
 
+def stop_relativ(*, kurs: float, atr: float,
+                 umgeworfen_preis_eur: float | None = None,
+                 ist_short: bool = False,
+                 stop_min_atr: float | None = None,
+                 marke_stop_eur: float | None = None) -> float:
+    """Der relative Stopabstand GENAU SO, wie `rechne()` ihn setzt.
+
+    ⚠️ H-2 (11.09.2026, von der Gegenpruefung gefunden). Die Hebelrechnung
+    entschied zuerst mit dem Stop aus `dimensioniere()` - der kennt nur die
+    Boeden, `rechne()` zusaetzlich die Zielweite 2,5 x ATR. In 20 von 144
+    Faellen lag der echte Stop weiter (10 statt 8 %), und aus einem
+    ,Hebel 2,0x' im Etikett wurde in der Rechnung 1,6x - unter der Grenze, ab der es
+    ueberhaupt ein Hebel ist. Wer das Etikett vorab setzt, muss denselben
+    Stop benutzen wie die Rechnung danach: deshalb diese eine Stelle."""
+    return _stop_abstand(float(kurs), float(atr), umgeworfen_preis_eur,
+                         ist_short, stop_min_atr, marke_stop_eur)[0] / float(kurs)
+
+
+def hebel_sicher(stop_rel: float) -> float:
+    """Der hoechste Hebel, bei dem die Liquidation noch hinter dem Stop liegt
+    (RM-11) - dieselbe Zahl, mit der `rechne()` deckelt."""
+    return max_safe_hebel(100.0 * float(stop_rel), GRENZEN["liquidations_marge"])
+
+
 def _stop_abstand(kurs: float, atr: float,
                   umgeworfen_preis_eur: float | None = None,
                   ist_short: bool = False,
@@ -578,7 +602,10 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            stop_min_atr: float | None = None,
            marke_stop_eur: float | None = None,
            hebel_handelbar: bool | None = None,
-           risikobudget_hart: bool = False) -> dict:
+           risikobudget_hart: bool = False,
+           # H-2 (Paket B, 11.09.2026): die harte Hebelgrenze bis zur
+           # Trennschaerfe (Nutzer: 5x). None heisst: nur `hebel_max`.
+           hebel_grenze: float | None = None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -847,7 +874,15 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
                     f"traegt hier keine handelbare Groesse")
             grund = "Risikobudget (Hebel 1,0 - kein Hebel moeglich)"
             hebel_noetig = 1.0
-        hebel = max(1.0, min(hebel_noetig, sicher, GRENZEN["hebel_max"]))
+        # ⚠️ H-2 (Paket B, 11.09.2026): DIE HARTE GRENZE BIS ZUR
+        # TRENNSCHAERFE. `hebel_max` (10) bleibt die Plausibilitaetsgrenze
+        # der Boerse; `hebel_grenze` (Nutzer: 5x) ist enger, solange nicht
+        # gemessen ist, ob ein hoeherer Hebel auch haeufiger traegt (A1).
+        _obergrenze = GRENZEN["hebel_max"]
+        if (hebel_grenze is not None
+                and 1.0 <= float(hebel_grenze) < GRENZEN["hebel_max"]):
+            _obergrenze = float(hebel_grenze)
+        hebel = max(1.0, min(hebel_noetig, sicher, _obergrenze))
         e["hebel"] = round(hebel, 1)
         # ⚠️ DIESELBE VERDREHUNG WIE IN `dimensioniere` (dort am 22.08.
         # gefunden): `hebel <= hebel_noetig` ist bei LONG immer wahr, weil
@@ -855,8 +890,11 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         # anderen Zweige waren toter Code.
         if hebel >= hebel_noetig - 1e-9:
             e["hebel_grenze"] = "Risikobudget"
-        elif sicher <= GRENZEN["hebel_max"] + 1e-9 and hebel <= sicher + 1e-9:
+        elif sicher <= _obergrenze + 1e-9 and hebel <= sicher + 1e-9:
             e["hebel_grenze"] = "RM-11 Liquidationsabstand"
+        elif _obergrenze < GRENZEN["hebel_max"]:
+            e["hebel_grenze"] = ("Hebelgrenze %sx bis zur Trennschaerfe"
+                                 % de(_obergrenze, 1))
         else:
             e["hebel_grenze"] = "Hoechsthebel"
         # Bei SHORT liegt die Liquidation UEBER dem Einstieg.
@@ -1110,12 +1148,26 @@ def saetze(e: dict, marken: list | None = None,
     #
     # Dasselbe Muster wie `uebersprungen` bei Rolle G: das Fehlen einer
     # Zeile ist keine Aussage, sondern eine Luecke.
+    _hq = e.get("hebel_aus_quote")
+    _hq_luecke = e.get("hebel_aus_quote_luecke")
     if e["hebel"] > 1:
         z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
                  f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR)")
+    elif _hq is not None or _hq_luecke:
+        # H-2: mit der Hebelrechnung heisst 1,0 nicht mehr "kein Hebel
+        # noetig", sondern "die Wahrscheinlichkeit ergibt keinen" - die
+        # Herleitung steht direkt darunter.
+        z.append("Hebel           1,0x  - Spot, kein Hebelgeschaeft")
     elif e.get("instrument") == "hebel" or e.get("hebel") is not None:
         z.append("Hebel           1,0x  - kein Hebel noetig, der Betrag "
                  "folgt dem Risikobudget")
+    # ⚠️ H-2 (Paket B, 11.09.2026): DIE HERLEITUNG IN EUR - woher der Hebel
+    # kommt, und warum es Spot bleibt. Nutzervorgabe: lesbare, zuordenbare
+    # Werte in EUR, kein ,2R'.
+    if _hq is not None:
+        z += list(_hq.get("saetze") or [])
+    elif _hq_luecke:
+        z.append("   " + str(_hq_luecke))
     z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
              f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
     # DER TRICHTER STEHT NACH DEN SECHS HANDELSPARAMETERN (20.08.2026).

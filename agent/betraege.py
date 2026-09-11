@@ -272,3 +272,142 @@ def risiko_eur(instrument: str, strategie: str, config: dict | None = None,
     zwei Orten zu pflegen."""
     return (einsatz_eur(instrument, strategie, config, gruppe)
             * verlustanteil(instrument, config))
+
+
+# ---------------------------------------------------------------------------
+# H-2 / K1 - DER HEBEL AUS DER WAHRSCHEINLICHKEIT (Paket B, 11.09.2026)
+# ---------------------------------------------------------------------------
+# Nutzerauftrag 28.08./05.09.: *"die Wahrscheinlichkeit auf positive Risiko
+# und Chance soll auch den Hebel dynamisch erzeugen"*, Zielzone 2-5x.
+# Nutzerentscheidung 11.09. (Paket B): unter 2x Spot, harte Grenze 5x bis zur
+# Trennschaerfe, Quote unkalibriert, Spot-Betrag UNVERAENDERT (N-38).
+#
+#     risiko  = r(q) x Kapital          r(q) = halbes Kelly, geklammert
+#     nominal = risiko / Stopabstand     der Stop bestimmt nur die GROESSE
+#     hebel   = nominal / Hebelnenner    faellt an, wird nicht gewaehlt
+#
+# ⚠️ HEUTE STAND HIER `hebel = verlustanteil / stop_rel` (Befund 2.174-ist):
+# der Hebel kam aus der GEOMETRIE, die Quote ging nicht ein. Genau das war
+# die Luecke zum Auftrag.
+#
+# ⚠️ WARUM EINE KLAMMER (Anforderungen N-39): bei CRV 2 liegt der Nullpunkt
+# exakt bei q = 33,3 %; ein Prozentpunkt Fehler in q verschiebt die Nominale
+# um Tausende. Solange die Trennschaerfe nicht gemessen ist (A1), setzt das
+# Band die Grenzen, nicht die Formel.
+#
+# ⚠️ AUS, bis Schritt 19 die Hebelverteilung simuliert hat - der Plan
+# verlangt die Simulation VOR dem Scharfschalten. Umschalten in
+# `config.yaml` unter `rollen_kette.hebel_aus_quote.aktiv`.
+HEBEL_AUS_QUOTE_VORGABE: dict = {
+    "aktiv": False,
+    "r_min": 0.005,            # 0,50 % des Kapitals (N-39)
+    "r_max": 0.0125,           # 1,25 % des Kapitals (N-39)
+    "hebelnenner_eur": 500.0,  # Nutzer 05.09.: "500 ok als Basiswert"
+    "hebel_ab": 2.0,           # Nutzer 05.09.: "ein Hebel unter 2 ist kein Hebel"
+    "hebel_grenze": 5.0,       # Nutzer 11.09.: Deckel 5x bis zur Trennschaerfe
+}
+
+
+def hebel_aus_quote_einstellungen(config: dict | None = None) -> dict:
+    """Die Einstellungen der Hebelrechnung - Vorgabe, von `config.yaml`
+    (`rollen_kette.hebel_aus_quote`) ueberschrieben."""
+    return {**HEBEL_AUS_QUOTE_VORGABE, **_cfg(config, "hebel_aus_quote")}
+
+
+def hebelrechnung(*, quote: float, crv: float, kapital_eur: float,
+                  stop_rel: float, einstellungen: dict | None = None,
+                  kapital_satz: str = "",
+                  hebel_sicher: float | None = None) -> dict:
+    """Der Hebel aus der Wahrscheinlichkeit - REIN, ohne DB, Uhr oder Netz.
+
+    ⚠️ OHNE POSITIVE ERWARTUNG KEIN HEBEL. Ist das volle Kelly <= 0, sagt
+    die Formel: nicht setzen. Die Untergrenze der Klammer wird dann NICHT
+    angewandt - sonst entstuende aus einer negativen Erwartung ein
+    Mindestrisiko und bei engem Stop ein Hebelgeschaeft. Die Bewertungs-
+    schwelle sperrt solche Faelle ohnehin; diese Funktion verlaesst sich
+    nicht darauf.
+
+    ⚠️ WIRFT BEI FALSCHER EINGABE, statt zu raten - dieselbe Linie wie
+    `einsatz_eur()`.
+
+    Rueckgabe: kelly, kelly_halb, r, klammer, risiko_eur, nominal_eur,
+    hebel_roh, hebel (gedeckelt), ist_hebel, grenze_greift und `saetze` -
+    die Herleitung in EUR fuer die Mail."""
+    from agent.schreibweise import de as _de
+
+    e = {**HEBEL_AUS_QUOTE_VORGABE, **(einstellungen or {})}
+    try:
+        q, c = float(quote), float(crv)
+        kap, stop = float(kapital_eur), float(stop_rel)
+    except (TypeError, ValueError) as exc:
+        raise BetragUnbekannt(f"Hebelrechnung ohne Zahl: {exc}") from exc
+    if not 0.0 < q < 1.0:
+        raise BetragUnbekannt(f"Quote {quote!r} liegt nicht zwischen 0 und 1")
+    if c <= 0 or kap <= 0 or stop <= 0:
+        raise BetragUnbekannt(
+            f"CRV {crv!r}, Kapital {kapital_eur!r} und Stop {stop_rel!r} "
+            f"muessen positiv sein")
+    r_min, r_max = float(e["r_min"]), float(e["r_max"])
+    nenner, ab = float(e["hebelnenner_eur"]), float(e["hebel_ab"])
+    grenze = float(e["hebel_grenze"])
+
+    kelly = (q * (1.0 + c) - 1.0) / c
+    halb = kelly / 2.0
+    aus = {"quote": q, "crv": c, "kapital_eur": kap, "stop_rel": stop,
+           "kelly": kelly, "kelly_halb": halb, "r": 0.0, "klammer": "",
+           "risiko_eur": 0.0, "nominal_eur": 0.0, "hebel_roh": 0.0,
+           "hebel": 1.0, "ist_hebel": False, "grenze_greift": False,
+           "hebelnenner_eur": nenner, "hebel_ab": ab,
+           "hebel_grenze": grenze, "hebel_sicher": None,
+           "liquidation_greift": False, "saetze": []}
+    kopf = ("Hebel aus der Wahrscheinlichkeit: Trefferquote %s %% bei CRV %s"
+            % (_de(100 * q, 1), _de(c, 1)))
+    if kelly <= 0:
+        aus["saetze"] = [kopf + " - keine positive Erwartung (halbes Kelly "
+                         "%s %%), daher kein Hebel"
+                         % _de(100 * halb, 2, vorzeichen=True)]
+    else:
+        r = min(max(halb, r_min), r_max)
+        klammer = ("Obergrenze" if halb > r_max
+                   else "Untergrenze" if halb < r_min else "")
+        risiko = r * kap
+        nominal = risiko / stop
+        roh = nominal / nenner
+        # ⚠️ DER LIQUIDATIONSABSTAND ZAEHLT MIT (Gegenpruefung 11.09.): was
+        # `rechne()` spaeter auf RM-11 deckelt, muss schon hier gelten - sonst
+        # hiesse es ,Hebel', und die Rechnung ergaebe weniger.
+        sicher = float(hebel_sicher) if hebel_sicher else None
+        moeglich = min(roh, sicher) if sicher else roh
+        ist = moeglich >= ab - 1e-9
+        aus.update(r=r, klammer=klammer, risiko_eur=risiko,
+                   nominal_eur=nominal, hebel_roh=roh, ist_hebel=ist,
+                   hebel=(min(moeglich, grenze) if ist else 1.0),
+                   hebel_sicher=sicher,
+                   grenze_greift=bool(ist and moeglich > grenze + 1e-9),
+                   liquidation_greift=bool(ist and sicher
+                                           and roh > sicher + 1e-9
+                                           and sicher < grenze))
+        zeile2 = ("   bei %s %% Stop: %s EUR Positionswert / %s EUR Einsatz "
+                  "= %sx" % (_de(100 * stop, 1), _de(nominal, 0),
+                             _de(nenner, 0), _de(roh, 1)))
+        if not ist and sicher and roh >= ab - 1e-9:
+            zeile2 += (" - der Liquidationsabstand erlaubt nur %sx, daher "
+                       "Spot mit dem gewohnten Betrag" % _de(sicher, 1))
+        elif not ist:
+            zeile2 += (" - unter %sx, daher Spot mit dem gewohnten Betrag"
+                       % _de(ab, 1))
+        elif aus["liquidation_greift"]:
+            zeile2 += (" -> der Liquidationsabstand erlaubt hoechstens %sx"
+                       % _de(sicher, 1))
+        elif aus["grenze_greift"]:
+            zeile2 += (" -> Grenze %sx (bis die Trennschaerfe gemessen ist)"
+                       % _de(grenze, 1))
+        aus["saetze"] = [
+            kopf + " -> halbes Kelly %s %% -> Risiko %s %%%s von %s EUR "
+            "Kapital = %s EUR" % (_de(100 * halb, 2), _de(100 * r, 2),
+                                  (" (%s)" % klammer) if klammer else "",
+                                  _de(kap, 0), _de(risiko, 0)),
+            zeile2]
+    if kapital_satz and "⚠️" in kapital_satz:
+        aus["saetze"].append("   " + kapital_satz)
+    return aus

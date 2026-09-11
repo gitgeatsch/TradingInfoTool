@@ -1774,6 +1774,60 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # weder Topf noch Einsatz; das Etikett steht also fest, BEVOR der Topf
     # gebraucht wird. Genau deshalb sind F3 und F4 aus 88.5 entfallen.
     _topf_instrument = instrument
+    # ---- ⚠️⚠️ H-2 (Paket B, 11.09.2026): DER HEBEL AUS DER WAHRSCHEINLICHKEIT
+    #
+    # Nutzerauftrag: *"die Wahrscheinlichkeit auf positive Risiko und Chance
+    # soll den Hebel dynamisch erzeugen"*, Zielzone 2-5x. Bis hierher kam das
+    # Etikett Spot/Hebel aus `verlustanteil / stop_rel` - aus der GEOMETRIE
+    # (Befund 2.174-ist).
+    #
+    # ⚠️ DIE QUOTE WIRD VORGEZOGEN. Das Etikett steuert gleich darunter die
+    # taktische Zelle, den Hebel-Schalter und den Topf - also muss `r(q)`
+    # VOR diesen Stellen entscheiden, nicht erst nach der Bewertung. Die
+    # Quote haengt nicht am Stopabstand (N-40, an der echten Funktion
+    # geprueft); weiter unten wird sie gegen die Bewertung verglichen.
+    #
+    # ⚠️ NUR WO EIN HEBEL UEBERHAUPT IN FRAGE KOMMT (Gruppe handelbar,
+    # Strategie erlaubt) und nur mit Schalter. Ohne Kapital oder Quote: KEIN
+    # Hebel, der Grund steht in der Mail - nie ein stiller Vorgabewert (P-2).
+    _hq_einst = BE.hebel_aus_quote_einstellungen(config)
+    _hq_rechnet = bool(_hq_einst.get("aktiv")) and bool(
+        _AKL.hebel_handelbar(assetklasse) and _HA_HEBEL_OK(strategie))
+    _hq = _hq_quote = _hq_kapital = None
+    _hq_luecke = ""
+    if _hq_rechnet:
+        try:
+            from agent import portfolio_historie as _PHq
+            _hq_kapital = _PHq.aktuelles_kapital(conn)
+        except Exception as _kx:                             # noqa: BLE001
+            _hq_kapital = {"verwendbar": False,
+                           "satz": "⚠️⚠️ Kapital nicht lesbar (%s) - ohne "
+                                   "Kapital keine Hebelrechnung, der Trade "
+                                   "wird als Spot gerechnet." % str(_kx)[:60]}
+        try:
+            from agent import potential as _PTq
+            # DIESELBEN MERKMALE WIE UNTEN BEI DER BEWERTUNG - die Quote
+            # wird dort verglichen, damit die zwei Stellen nicht still
+            # auseinanderlaufen.
+            _mr_q = (marktraenge or {}).get(symbol) or {}
+            _hq_quote = _PTq.rechne(
+                crv=ER.GRENZEN["crv"],
+                stop_relativ=ER.GRENZEN["stop_min_relativ"],
+                klasse=assetklasse, instrument=instrument,
+                strategie=strategie, h=None,
+                merkmale={k: _mr_q[k] for k in ("funding_fuenftel",
+                                                "turnover_fuenftel",
+                                                "schnitt_fuenftel")
+                          if _mr_q.get(k) is not None} or None).quote
+        except Exception as _qx:                             # noqa: BLE001
+            _hq_quote = None
+            _hq_luecke = ("⚠️⚠️ Quote nicht rechenbar (%s) - ohne Quote keine "
+                          "Hebelrechnung, der Trade wird als Spot gerechnet."
+                          % str(_qx)[:60])
+        if not (_hq_kapital or {}).get("verwendbar"):
+            _hq_luecke = ((_hq_kapital or {}).get("satz")
+                          or "⚠️⚠️ Kapital fehlt - keine Hebelrechnung.")
+    _etikett = None
     try:
         _vor = ER.dimensioniere(
             kurs=kurs_e, atr=atr_e,
@@ -1806,6 +1860,36 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # gemeldet. Jetzt entsteht es nicht mehr.
             hebel_handelbar=(_AKL.hebel_handelbar(assetklasse)
                              and _HA_HEBEL_OK(strategie)))
+        # ⚠️⚠️ H-2: DAS ETIKETT. Ohne Schalter wie bisher aus der Geometrie
+        # (`verlustanteil / stop_rel`); mit Schalter aus r(q) - unter 2x
+        # Spot. SHORT erzwingt weiter Hebel: Spot kann bei Bitpanda nicht
+        # short (Tatsache, keine Prognose). Der Stop kommt unveraendert aus
+        # der Vorabrechnung - r(q) bestimmt die GROESSE, nicht den Stop.
+        _etikett = _vor["etikett"]
+        if _hq_rechnet:
+            if (_hq_quote is not None
+                    and (_hq_kapital or {}).get("verwendbar")):
+                # ⚠️ DERSELBE STOP WIE IN `rechne()` (Gegenpruefung 11.09.):
+                # `dimensioniere` kennt die Zielweite 2,5 x ATR nicht und lag
+                # in 20 von 144 Faellen enger - das Etikett haette ,Hebel'
+                # gesagt, wo die Rechnung 1,6x ergibt. Und dieselbe
+                # Liquidationsgrenze, mit der `rechne()` deckelt.
+                _stop_q = ER.stop_relativ(
+                    kurs=kurs_e, atr=atr_e,
+                    umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
+                    ist_short=(befund.get("richtung") == "SHORT"),
+                    stop_min_atr=BE.stop_min_atr(config),
+                    marke_stop_eur=_marke_am_stop(
+                        _bloecke_anlass, befund.get("richtung") == "SHORT"))
+                _hq = BE.hebelrechnung(
+                    quote=_hq_quote, crv=ER.GRENZEN["crv"],
+                    kapital_eur=_hq_kapital["wert_eur"],
+                    stop_rel=_stop_q, einstellungen=_hq_einst,
+                    kapital_satz=_hq_kapital.get("satz") or "",
+                    hebel_sicher=ER.hebel_sicher(_stop_q))
+            _etikett = ("hebel" if ((_hq and _hq["ist_hebel"])
+                                    or befund.get("richtung") == "SHORT")
+                        else "spot")
         # ⚠️ S6b: DER TOPF FOLGT DEM ERGEBNIS, NICHT DEM LAUF. Der zweite
         # Zweig (`"spot" if instrument == "hebel"`) war die Ruecknahme des
         # Lauf-Etiketts, wenn die Rechnung keinen Hebel ergab - es gibt
@@ -1830,13 +1914,13 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # (LINK, TAO, ...) behaelt seinen Einstieg unveraendert - ob er als
         # Spot oder gehebelt ausgefuehrt wird, faellt dort weiterhin aus der
         # Rechnung an und aus dem Freigabeschalter.
-        if ist_taktisch and _vor.get("etikett") != "hebel":
+        if ist_taktisch and _etikett != "hebel":
             durchlauf.verloren(
                 symbol, "geometrie",
                 "taktische Zelle ohne Hebel - dieses Asset wird akkumuliert, "
                 "ein Spot-Einstieg mit Stop ist hier nicht vorgesehen")
             return
-        _topf_instrument = ("hebel" if _vor["etikett"] == "hebel"
+        _topf_instrument = ("hebel" if _etikett == "hebel"
                             else instrument)
         # I-2 (28.08.2026): DIE PAARPRUEFUNG DORT, WO DAS ETIKETT ENTSTEHT.
         #
@@ -1925,6 +2009,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     frei = TO.frei_eur(_topf_instrument, config=config,
                        belegt_eur=(TO.belegt_eur(conn, _topf_instrument)
                                    if betriebsart != TROCKEN else 0.0))
+    # ⚠️ H-2: EIN HEBELGESCHAEFT AUS r(q) - nur wenn die Rechnung es ergab UND
+    # der Hebel-Schalter des Assets es zulaesst (`_topf_instrument`). Dann
+    # kommen Risiko und Einsatz aus der Hebelrechnung; sonst bleibt alles
+    # wie bisher - Spot unveraendert (N-38).
+    _hq_hebel = bool(_hq and _topf_instrument == "hebel")
     # DIE BETRAEGE KOMMEN AUS `betraege`, NICHT AUS DIESER ZEILE. Vorher standen
     # hier 75.0 und 500.0 - Zahlen, die niemand hergeleitet hatte und die jedes
     # Signal gleich gross machten.
@@ -1933,11 +2022,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # Nur fuer den Trichter: welche Faktoren
                              # gelten hier? (93 A/A2)
                              assetklasse=assetklasse,
-                             risiko_eur=BE.risiko_eur(instrument, strategie,
-                                                      config, assetklasse),
+                             risiko_eur=(_hq["risiko_eur"] if _hq_hebel
+                                         else BE.risiko_eur(
+                                             instrument, strategie,
+                                             config, assetklasse)),
                              instrument=instrument,
-                             betrag_wunsch_eur=BE.einsatz_eur(
-                                 instrument, strategie, config, assetklasse),
+                             betrag_wunsch_eur=(
+                                 _hq_einst["hebelnenner_eur"] if _hq_hebel
+                                 else BE.einsatz_eur(
+                                     instrument, strategie, config,
+                                     assetklasse)),
                              topf_frei_eur=frei, cash_frei_eur=cash_frei,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
                              # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und
@@ -1957,9 +2051,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              # doch. Zwei Rechnungen mit verschiedenen
                              # Annahmen sind die naechste Stelle zum
                              # Auseinanderlaufen.
+                             # ⚠️ H-2: mit Schalter ist ein Hebel nur dort
+                             # handelbar, wo r(q) ihn ergab - sonst machte
+                             # `rechne()` aus Stop < 6 % wieder 1,2x.
                              hebel_handelbar=(
                                  _AKL.hebel_handelbar(assetklasse)
-                                 and _HA_HEBEL_OK(strategie)),
+                                 and _HA_HEBEL_OK(strategie)
+                                 and (not _hq_rechnet
+                                      or _topf_instrument == "hebel")),
+                             hebel_grenze=(_hq_einst["hebel_grenze"]
+                                           if _hq_rechnet else None),
                              stop_min_atr=BE.stop_min_atr(config),
                              # S2, Kapitel 90: die Marke auf der
                              # STOPSEITE. Sie liegt vorerst ungenutzt im
@@ -1986,6 +2087,20 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     except ER.RechnungBlockiert as exc:
         durchlauf.verloren(symbol, "geometrie", str(exc)[:40])
         return
+    # ⚠️ H-2: DIE HEBELRECHNUNG GEHT MIT IN DIE RECHNUNG - fuer die Mail
+    # (Herleitung in EUR) und fuer die Pruefung, was r(q) tatsaechlich tat.
+    # Eine Luecke (kein Kapital, keine Quote) wird genannt: in der Mail, im
+    # Laufergebnis und EINMAL je Lauf im Log.
+    if _hq_rechnet:
+        if _hq is not None:
+            rechnung["hebel_aus_quote"] = _hq
+        elif _hq_luecke:
+            rechnung["hebel_aus_quote_luecke"] = _hq_luecke
+            ergebnis.setdefault("hebel_aus_quote_luecke", []).append(
+                f"{symbol}: {_hq_luecke}")
+            if not ergebnis.get("_hebel_aus_quote_gemeldet"):
+                ergebnis["_hebel_aus_quote_gemeldet"] = True
+                logger.warning("Hebelrechnung ohne Grundlage - %s", _hq_luecke)
     durchlauf.bestanden(symbol, "geometrie")
     durchlauf.bestanden(symbol, "risikoschicht")
 
@@ -2088,6 +2203,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             merkmale=_merkmale or None)
     except Exception:                                        # noqa: BLE001
         logger.exception("Potential fuer %s nicht rechenbar", symbol)
+    # ⚠️ H-2: ZWEI STELLEN RECHNEN DIESELBE QUOTE - die Hebelrechnung vorab
+    # (mit dem Mindeststop, weil der Stop noch nicht feststeht) und die
+    # Bewertung hier. Die Quote haengt nicht am Stop (N-40); weicht sie
+    # trotzdem ab, stimmt eine der beiden Annahmen nicht mehr - und das darf
+    # nicht still passieren.
+    if (_hq_quote is not None and _potential is not None
+            and abs(float(_hq_quote) - float(_potential.quote)) > 1e-9):
+        ergebnis.setdefault("fehler", []).append(
+            "%s: Quote der Hebelrechnung %.4f weicht von der Bewertung %.4f "
+            "ab" % (symbol, _hq_quote, _potential.quote))
+        logger.warning("%s: Quote der Hebelrechnung %.4f weicht von der "
+                       "Bewertung %.4f ab", symbol, _hq_quote,
+                       _potential.quote)
 
     if _potential is None:
         # ⚠️ KEINE ZAHL HEISST NICHT "TRAEGT NICHT". Wer bei fehlender Rechnung
@@ -2947,7 +3075,14 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             kostenklasse=_kostenklasse(assetklasse),
             # ⚠️ A1: auch die Nein-Zeile - sonst truege sie ein anderes
             # Etikett als dasselbe Symbol im Hauptpfad.
-            hebel_handelbar=_AKL.hebel_handelbar(assetklasse),
+            # ⚠️ H-2 (11.09.2026): mit der Hebelrechnung traegt die
+            # Nein-Zeile KEIN Hebel-Etikett mehr. Hier gibt es keine Quote,
+            # und ein Nein ist kein Geschaeft - sonst etikettierte die alte
+            # Geometrie (Stop < 6 %) sie weiter als Hebel, mit 3,5 h
+            # Cooldown statt 12 h.
+            hebel_handelbar=(_AKL.hebel_handelbar(assetklasse)
+                             and not BE.hebel_aus_quote_einstellungen(
+                                 config).get("aktiv")),
             umgeworfen_tage=_tage_bis(befund.get("umgeworfen_bis"), tag))
         kern = FB.werte_aus_reihe(
             [k.high for k in reihe], [k.low for k in reihe],
