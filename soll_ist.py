@@ -352,19 +352,7 @@ REIHENFOLGE = (
             "allein am 11.09. sind fuenf entstanden (n108 bis n112), wo "
             "eines gereicht haette.",
             "Nutzervorschlag 11.09."),
-    Schritt(19, "T-2 REGIMETRENNUNG",
-            "⚠️⚠️⚠️ DER GROESSTE ERKENNTNISGEWINN DES WERKZEUGS, und eine "
-            "echte Luecke: das System kennt FUENF Regimes (krise_extrem, "
-            "baer, seitwaerts, bulle, euphorie_extrem) - aber KEINE "
-            "einzige unserer Messungen ist je nach Regime getrennt "
-            "worden. Der Bestand haelt sogar fest: *immer Baer, kein "
-            "Vergleich*. Wir haben also NIE gemessen, ob `funding` und "
-            "`turnover` in einem anderen Regime ueberhaupt tragen. "
-            "⚠️ Das beruehrt die Gueltigkeit BEIDER live laufender "
-            "Beitraege.",
-            "agent/krypto/regime.REGIME_STATES; "
-            "project_regime_immer_baer_kein_vergleich"),
-    Schritt(20, "T-3 HISTORISCHE SIMULATION",
+    Schritt(19, "T-3 HISTORISCHE SIMULATION",
             "⚠️⚠️ AUF `bewegung_r` (POTENTIAL), NICHT auf Zielerreichung. "
             "Nutzervorgabe 23.08.: *,Wichtig fuer den guten Trade ist das "
             "POTENTIAL und NICHT die reelle Zielerreichung, diese ist "
@@ -385,7 +373,7 @@ REIHENFOLGE = (
     # muss nur entschieden und verdrahtet werden - der billigste echte
     # Gewinn im ganzen Plan.
     # ================================================================
-    Schritt(21, "FORM",
+    Schritt(20, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler). ⚠️ Fuer die AKKUMULATION liegt `schnitt` "
             "gemessen bereit (+0,0470, p 0,000, 481 von 518 Symbolen) und "
@@ -393,7 +381,7 @@ REIHENFOLGE = (
             "eine Bewertung statt null Beitraegen. Loest R-R9 aus, aber "
             "NUR fuer diese Lage.",
             "Plan 05.09. - Nutzerentscheidung; Befund 2.286-schnitt"),
-    Schritt(22, "EMAIL STRUKTUR UND INHALTE",
+    Schritt(21, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
             "Regel 1 war schon erfuellt (2.356); offen sind Regel 2 "
             "(gleichlautende Luecken zu EINEM Satz, gezaehlt nach GRUND) "
@@ -401,14 +389,14 @@ REIHENFOLGE = (
             "Vorschlag: die Mail ist lang, WEIL die Bewertung duenn ist - "
             "nach Schritt 21 schrumpft der Lueckenblock von selbst.",
             "Gesamtplan 11.09. - Mail-Vorschlag"),
-    Schritt(23, "GUI UND UEBERSICHTSSEITE",
+    Schritt(22, "GUI UND UEBERSICHTSSEITE",
             "⚠️ Offen seit 07.09., nie begonnen (E1). ⚠️ Die "
             "Uebersichtsseite EXISTIERT (`remote/status.py`, rund 40 "
             "Aggregatoren) - hier geht es um Erweiterung, nicht Neubau. "
             "Die Bewertungsschwelle steht seit dem 11.09. darin (35 "
             "Parameter); in der GUI fehlt sie noch.",
             "remote/status.py; Nutzervorgabe 07.09. und 11.09."),
-    Schritt(24, "LLM-ROLLEN UND MODELLE",
+    Schritt(23, "LLM-ROLLEN UND MODELLE",
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
             "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
@@ -416,6 +404,44 @@ REIHENFOLGE = (
             "des LLM-Werturteils.",
             "Nutzervorgabe 11.09."),
 
+    # ================================================================
+    # ⚠️⚠️⚠️ SONDERPUNKT REGIME (Nutzervorgabe 11.09.2026)
+    #
+    # > "das Regime-Thema war schon in der Vergangenheit ein schwieriges
+    # >  Thema fuer dich auch bei den Messungen - das sollten wir
+    # >  jedenfalls detailliert als Sonderpunkt neben der LLM-Thematik
+    # >  anlegen."
+    # > "Regime konnte fuer unsere Bewertungsgrundlagen bisher kaum
+    # >  sinnvoll genutzt werden."
+    #
+    # Das Verstaendnis des Nutzers ist durch die Daten BESTAETIGT, und
+    # der Grund ist praezise: es gab NIE ein brauchbares Regimesignal,
+    # gegen das man haette messen koennen. Nicht gemessen ist nicht
+    # unwirksam - dieselbe Klasse wie "nicht trennbar" gegen "traegt
+    # nicht". Details: Gesamtplan 11.09., Abschnitt Sonderpunkt Regime.
+    #
+    # ⚠️ Das fruehere T-2 (Regimetrennung der Beitraege) ist hier R-3
+    # geworden: ohne eine historisch rekonstruierte Phase (R-1) und eine
+    # geklaerte Datenlage je Phase (R-2) ist es nicht ausfuehrbar.
+    # ================================================================
+    Schritt(24, "SONDERPUNKT REGIME",
+            "⚠️⚠️⚠️ BELEGTE AUSGANGSLAGE: (1) das diskrete Regime war nie "
+            "etwas anderes als ,baer' - 2.549 Signale 07.07. bis 14.08., "
+            "Ursache eine ODER-Bedingung (Fear & Greed allein erzwingt "
+            "baer). (2) NEU 11.09.: seit dem 14.08. tragen am Notebook "
+            "3.872 von 3.883 Signalen `regime = None` - die Rollenkette "
+            "schreibt es gar nicht mit. (3) Das Modell reagiert auf einen "
+            "Regimewechsel im Faktensatz nicht messbar. (4) H uebertraegt "
+            "sich nicht ueber einen Regimewechsel (Kapitel 109). (5) KEINE "
+            "Beitragsmessung ist je nach Regime getrennt worden. "
+            "ARBEITSPAKETE: R-1 Regime historisch REKONSTRUIEREN, eine "
+            "Definition fuer die ganze Historie, mit Positivkontrolle an "
+            "bekannten Wendepunkten · R-2 Datenlage je Phase (Blockregel - "
+            "vermutlich Phasen zusammenlegen) · R-3 Beitraege je Phase "
+            "(vormals T-2) · R-4 die Schreibluecke im Betrieb · R-5 erst "
+            "danach: gehoert Regime ueberhaupt in die Bewertung?",
+            "Nutzervorgabe 11.09.; project_regime_immer_baer_kein_vergleich; "
+            "NB-Sicherung 11.09.; agent/krypto/regime.py"),
     # ================================================================
     # DER HEBEL - der lange Weg, ab hier parallel moeglich
     # ================================================================

@@ -4485,7 +4485,159 @@ antworten**. Der Unterschied ist eine Zeile im Maß, nicht im Werkzeug.
 
 | | |
 |---|---|
-| **T-2 braucht Regimedaten über die Zeit** | Fear & Greed und BTC-Dominanz liegen laut `backtesting.py` erst **seit 07.07.2026** vor. Für frühere Jahre bleibt nur der vereinfachte BTC-Trend (`_simplified_btc_regime`). ⚠️ **Eine Regimetrennung über die volle Historie ist damit NICHT dieselbe Größe wie eine ab Juli** — das gehört vor der Messung entschieden, nicht danach erklärt |
+| **T-2 braucht Regimedaten über die Zeit** | ⚠️ **BERICHTIGT 11.09.:** hier stand, Fear & Greed **und** BTC-Dominanz lägen erst seit 07.07.2026 vor — das stammte aus dem Kopf von `backtesting.py` (17.07.) und ist **zur Hälfte falsch**. **Fear & Greed** ist seit dem 12.08. **ab 2018-02-01** nachgeladen (`lade_fear_greed_nach.py`, 3.111 Werte; am NB 3.141). Nur die **BTC-Dominanz** liegt tatsächlich erst ab 07.07.2026 vor (61 Werte). ⚠️ Eine Regimedefinition mit Dominanz trägt also nur zwei Monate — mit Fear & Greed gut acht Jahre. Das gehört vor der Messung entschieden. (Teil des Sonderpunkts Regime, R-1) |
 | **T-3 braucht die Messquellen frisch** | die historische Simulation läuft auf `funding_historie`, `terminmarkt_historie`, `onchain_historie`. Die hinken heute 11–13 Tage. ⚠️ Deshalb steht das Nachziehen in der Rollout-Checkliste, nicht erst bei T-3 |
 | **T-1 erbt die Attrappe** | `simuliere_kette.py` ersetzt die zwei Modellaufrufe deterministisch. ⚠️ Das ist für *„reißt die Kette?"* richtig und für *„sind die Empfehlungen gut?"* **falsch** — T-1 kann Fehler finden, aber **keine Qualität beurteilen**. Wer das vermischt, hält einen Durchlauf für einen Beleg |
 | **Nach Schritt 21 ändert sich die Mail von selbst** | wird `schnitt` für die Akkumulation registriert, schrumpft der Lückenblock ohne Zutun. ⚠️ Deshalb steht **FORM vor EMAIL** — sonst strafft man einen Text, der sich gleich ändert |
+
+---
+
+# 🌗 11.09. — SONDERPUNKT REGIME
+
+> *„das Regime-Thema war schon in der Vergangenheit ein schwieriges Thema
+> für dich, auch bei den Messungen — das sollten wir jedenfalls detailliert
+> als Sonderpunkt neben der LLM-Thematik anlegen."*
+>
+> *„Regime konnte für unsere Bewertungsgrundlagen bisher kaum sinnvoll
+> genutzt werden — so habe ich es verstanden."*
+> — Nutzer, 11.09.2026
+
+## ✔ Das Verständnis stimmt — und der Grund ist präzise
+
+**Es gab nie ein brauchbares Regimesignal, gegen das man hätte messen
+können.** Das ist etwas anderes als *„Regime ist unwichtig"*:
+
+> **Nicht gemessen ist nicht unwirksam.** Dieselbe Klasse wie *„nicht
+> trennbar"* gegen *„trägt nicht"*.
+
+## Die belegte Ausgangslage
+
+| # | Befund | Beleg |
+|---|---|---|
+| 1 | **Das diskrete Regime war nie etwas anderes als „baer".** Ursache eine ODER-Bedingung: `btc < ema50 ODER fgi in (Fear, Extreme Fear)` — Fear & Greed allein erzwingt „baer". Der Index stand an allen 31 beobachteten Tagen zwischen 20 und 33 | 2.549 Signale 07.07.–14.08., kein anderes Label; `agent/krypto/regime.py` |
+| 2 | ⚠️⚠️ **NEU: seit der Rollenkette wird das Regime gar nicht mehr geschrieben.** Seit dem 14.08. tragen am Notebook **3.872 von 3.883** Signalen `regime = None`, `regime_source` ebenfalls leer | NB-Sicherung 11.09. |
+| 3 | **Das Modell reagiert auf einen Regimewechsel im Faktensatz nicht messbar** — Konfidenz 0,28×, Stop 0,10× des Eigenrauschens | Messung 06.08., n = 29 |
+| 4 | **H überträgt sich nicht über einen Regimewechsel** | Kapitel 109 |
+| 5 | **Der Markt drehte 14.–22.08.** (Median +15,8 %, 46 von 49 positiv) — Trefferquoten danach sind **Marktrichtung**, keine Modellleistung (82,8 %) | Kursdaten des Betriebs |
+| 6 | ⚠️⚠️⚠️ **Keine einzige Beitragsmessung ist je nach Regime getrennt worden.** Ob `funding`, `turnover` und die OI-Sperre in einer anderen Phase tragen, ist **offen** | Register |
+| 7 | Regime wird **bewusst nicht** als Schalter benutzt | Befundkarte 7.5 |
+| 8 | Ein **stetiger Regime-Score** existiert seit dem 06.08. — nur für das Gate, nicht für das LLM | `regime.regime_score()` |
+
+## ⚠️ Meine wiederkehrenden Fehler — damit sie nicht wiederkommen
+
+| | |
+|---|---|
+| **„Markt oder Modell?"** | wiederholt gefragt, obwohl es mit **einer** Phase in den Daten nicht beantwortbar war — nach Aussage des Nutzers „100 mal besprochen" |
+| **Aktien-Definition auf BTC übertragen** | „20 % Rückgang = Bärenmarkt" gilt für Aktienindizes; bei BTC liegen echte Zyklusböden bei **50–70 % und mehr** (2015 −61 %, 2018 −83 %, 2022 −77 %) |
+| **Eine Phase als Maßstab behandeln** | alles bisher Gemessene gilt unter **einer** Marktphase bzw. ohne Trennung — das gehört in jede Ergebnisaussage und wurde zu oft weggelassen |
+
+---
+
+# Die Arbeitspakete — in dieser Reihenfolge
+
+## R-1 · Das Regime historisch REKONSTRUIEREN
+
+**Eine** Definition, angewandt auf die **ganze** Historie. Ohne das gibt es
+nichts zu trennen — die Produktionsdaten tragen entweder „baer" oder nichts.
+
+⚠️ **Vorab zu entscheiden:**
+
+| | |
+|---|---|
+| **preisbasiert** | BTC gegen EMA50/EMA200 — über die volle Kurshistorie gleich definiert |
+| **mit Fear & Greed** | ⚠️ **BERICHTIGT 11.09.:** liegt **ab 2018-02-01** vor — seit dem 12.08. nachgeladen über `alternative.me/fng/?limit=0` (3.111 Werte, größte Lücke 4 Tage). Meine erste Fassung nannte hier fälschlich 07.07.2026. ⚠️ **Aber:** der Index gilt laut Anbieter **nur für Bitcoin** und ist zur Hälfte aus Kursdaten gebaut (Volatilität 25 %, Momentum/Volumen 25 %). Für Altcoin-Phasen ist er eine Näherung über den Leitmarkt, keine eigene Messung |
+| **mit BTC-Dominanz** | liegt **erst ab 07.07.2026** vor (61 Werte, CoinGecko `global`). Für eine historische Rekonstruktion **nicht verwendbar** |
+
+⚠️⚠️ **Eine Regimetrennung über die volle Historie mit einer Definition ab
+Juli ist nicht dieselbe Größe** — gemischte Definitionen erzeugen einen
+Bruch, der wie ein Regimewechsel aussieht.
+
+**Positivkontrolle, vorab benannt:** die rekonstruierten Phasen müssen die
+**bekannten Wendepunkte** treffen — die Zyklusböden 2018-12 und 2022-11
+(dieselben drei Daten stehen schon in
+`BTC_CYCLE_BOTTOM_DEVIATIONS_STD`) und den Dreh vom 14.–22.08.2026. Trifft
+sie das nicht, gilt die Rekonstruktion nicht.
+
+## R-2 · Die Datenlage JE PHASE
+
+⚠️ **Die Blockregel gilt je Phase:** 20 Blöcke à 60 Tage = **1.200 Tage je
+Phase**. `krise_extrem` und `euphorie_extrem` werden das kaum erreichen.
+
+➔ **Vorab entscheiden, welche Phasen zusammengelegt werden** — vermutlich
+drei statt fünf (defensiv · neutral · offensiv). Nachträglich
+zusammenzulegen, weil eine Phase kein Ergebnis bringt, wäre Suchen nach
+dem passenden Schnitt.
+
+## R-3 · Tragen die Beiträge in JEDER Phase? *(vormals T-2)*
+
+`funding`, `turnover`, `oi_aenderung` — mit der Messnorm, N-73 und
+bezifferter Trennschärfe **je Phase**. Dazu die Gegenfrage aus V11: **ist
+ein Unterschied zwischen den Phasen eine Eigenschaft des Beitrags oder der
+Auswahl?** (`entzerrte_reihe(auswahl_saat=...)`)
+
+⚠️ **Das berührt die Gültigkeit beider live laufender Beiträge.**
+
+## R-4 · Die Schreiblücke im Betrieb
+
+Die Rollenkette schreibt `regime` nicht mit (Befund 2 oben). ⚠️ **Jeder Tag
+nach dem Rollout ohne Regime-Spalte ist ein Tag, der später für eine
+Trennung am echten Betrieb fehlt.** Als **Fakt** mitschreiben, nicht als
+Schalter — das bleibt bis R-5 ausgeschlossen.
+
+## R-5 · Erst danach: gehört Regime überhaupt in die Bewertung?
+
+Als Schichtung, als Schalter — oder gar nicht. **Die Vorgabe bleibt:** kein
+Schalter ohne Messung (Befundkarte 7.5).
+
+---
+
+## ⚠️ Warum er neben der LLM-Thematik steht und nicht vor dem Rollout
+
+Der Rollout hängt nicht am Regime — die Kette nutzt es nicht. **Aber R-4
+ist billig und verliert jeden Tag Daten.** Ob R-4 in den Rollout vorgezogen
+wird, ist eine Nutzerentscheidung.
+
+---
+
+## 😨 Zum Sonderpunkt Regime — Fear & Greed: Quelle, Geltung, Verwendung
+
+> *„wenn und ob wir mit Fear & Greed arbeiten — welches Modell verwenden wir
+> und für welchen Bereich (Krypto total, nur BTC), welche Datenquellen?"*
+> — Nutzerfrage 11.09.2026, aus dem Code beantwortet
+
+### Quelle und Geltungsbereich
+
+| | |
+|---|---|
+| **Anbieter** | `alternative.me` — der „Crypto Fear & Greed Index", Endpunkt `api.alternative.me/fng/` (`api/macro.py`) |
+| **Eigenes Modell?** | **Nein.** Der Wert wird übernommen, nicht selbst gerechnet |
+| ⚠️ **Geltungsbereich** | **nur Bitcoin** — laut Anbieter *„the current index is for bitcoin only"*. Keine Aussage über Altcoins; die Mailzeile sagt deshalb „Bitcoin", nicht „der Kryptomarkt" |
+| **Zusammensetzung** | Volatilität 25 % · Momentum/Volumen 25 % · Social Media 15 % · Umfragen 15 % (**pausiert**) · BTC-Dominanz 10 % · Google Trends 10 % |
+| ⚠️ **Folge** | **rund die Hälfte ist aus Kursdaten gebaut** — er ist nicht so unabhängig, wie er aussieht. Gemessen korreliert er trotzdem kaum mit dem Trend (r +0,01), mäßig mit Volatilität (−0,26) und Liquidität (−0,28) |
+
+### Datenlage
+
+| | |
+|---|---|
+| **laufend** | täglich ein Wert (`limit=1`), Job `lagebild_reihen`, überwacht in `datenfrische` |
+| **Historie** | **ab 2018-02-01**, einmal nachgeladen am 12.08. (`lade_fear_greed_nach.py`, `limit=0`, 3.111 Werte, größte Lücke 4 Tage) |
+| **Stand** | Notebook bis **11.09.2026** (3.141 Tage) · Desktop bis 12.08. |
+| **BTC-Dominanz** | CoinGecko `global` — gespeichert **erst ab 07.07.2026** (61 Werte), also für keine historische Rekonstruktion brauchbar |
+| **Aktien** | keine Aktien-Variante (kein CNN Fear & Greed) im System |
+
+### Wo er wirkt — drei Stellen, drei verschiedene Rollen
+
+| Stelle | Wie | Rolle |
+|---|---|---|
+| **Regime (Gate)** | diskret: `btc < ema50 ODER F&G in (Fear, Extreme Fear)` → **F&G allein erzwingt „baer"** — die Ursache, warum das Regime nie etwas anderes war · stetig: `regime_score` = 50 % Preis + 50 % F&G → Mindestkonfidenz | Gate |
+| **Rolle A (Fakt)** | `marktlage.beschreibe_stimmung` — als **Perzentil der eigenen Historie**, **ohne** Etikett („Extreme Fear" wird bewusst nicht weitergegeben), streng kausal | Kontext fürs LLM |
+| **Alte Spot-Pipeline** | Regel 29, **asymmetrisch** (Nutzer-Nuance 28.07.): extreme Angst nur **unterstützend**, nie eigener Kaufgrund; extreme Gier stärker gewichten. Für Hebel **bewusst nicht** (Zeithorizont passt nicht) | Prompt-Regel |
+| **Bewertung** | ⚠️ **nirgends** — kein Beitrag in `wahrscheinlichkeit.BEITRAEGE` | — |
+
+### ⚠️ Was offen ist — und warum es in den Sonderpunkt gehört
+
+| | |
+|---|---|
+| **Ihre These vom 12.08.** | *„sehr schlechtes Sentiment ist oft für DCA oder Spot gut, eher schlecht bei Hebel"* — gemessen wurde sie mit `messe_sentiment_je_horizont.py` (BTC, 3.087 Tage). ⚠️ **Ein Ergebnis steht in keinem Register.** Das ist eine Lücke im Bestand, kein Nullbefund |
+| **Für R-1 (Regime rekonstruieren)** | F&G ist die **einzige** Stimmungsreihe mit acht Jahren Historie. ⚠️ **Aber:** kombiniert man ihn mit einem preisbasierten Regime, zählt die Kurshälfte **doppelt** — genau das Problem des heutigen `regime_score` (50/50). Vor R-1 zu entscheiden |
+| **Für die Akkumulation** | Ihre These betrifft direkt die Lage `spot/akkumulation` (Bodenbildung). ⚠️ **Nicht gemessen ist nicht unwirksam** — gegen `verbilligung` (die Akkumulations-Zielgröße) ist F&G nie geprüft worden |

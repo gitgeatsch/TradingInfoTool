@@ -3102,6 +3102,27 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.361", "⚠️⚠️⚠️ DIE ROLLENKETTE SCHREIBT DAS REGIME NICHT "
+               "MIT: seit dem 14.08. tragen am Notebook 3.872 von 3.883 "
+               "Signalen `regime = None`, `regime_source` ebenfalls leer. "
+               "Davor (07.07. bis 14.08., alte Kette) trugen 2.549 Signale "
+               "ausnahmslos ,baer'. Es gab damit NIE ein zweites Label in "
+               "den Betriebsdaten - erst gar keines. ⚠️ Jeder Tag nach dem "
+               "Rollout ohne diese Spalte fehlt spaeter fuer eine Trennung "
+               "am echten Betrieb", "gilt",
+               "NB-Sicherung 2026-09-11 · signals.regime",
+               basis="Notebook-Sicherung, ALTER Codestand; "
+                     "am Desktop-Code ebenfalls kein Schreiber gefunden"),
+    Befundlage("2.361-verstaendnis", "✔ DAS NUTZERVERSTAENDNIS IST "
+               "BESTAETIGT, und praezisiert: *,Regime konnte fuer unsere "
+               "Bewertungsgrundlagen bisher kaum sinnvoll genutzt werden.'* "
+               "Der Grund ist nicht, dass Regime unwichtig waere, sondern "
+               "dass es NIE ein brauchbares Regimesignal gab, gegen das man "
+               "haette messen koennen. **Nicht gemessen ist nicht "
+               "unwirksam** - dieselbe Klasse wie ,nicht trennbar' gegen "
+               ",traegt nicht'. Deshalb Sonderpunkt mit fuenf "
+               "Arbeitspaketen (R-1 bis R-5), nicht Abschluss", "gilt",
+               "Nutzerhinweis 11.09. / Gesamtplan Sonderpunkt Regime"),
     Befundlage("2.360", "✔✔✔ S-3 IST GEBAUT - jeder Job hinterlaesst "
                "eine Spur. Von 21 geplanten fuehrten nur SECHS eine Zeile "
                "in `job_laeufe`, und die sechs nicht aus "
