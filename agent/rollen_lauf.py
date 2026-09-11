@@ -2374,7 +2374,19 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Zeile "noetig X %" die Finanzierung - die Mail nannte fuer
             # einen Hebeltrade eine zu niedrige Huerde.
             hebel=rechnung.get("hebel"),
-            tage=rechnung.get("haltedauer_tage"))
+            tage=rechnung.get("haltedauer_tage"),
+            # ⚠️ DER EUROBETRAG NEBEN DEM R-WERT (11.09.2026).
+            # Nutzervorgabe, woertlich: *"ich sollte im Text immer fuer
+            # mich lesbare und zuordenbare Werte und Textformulierungen
+            # erhalten (kein 2R), EUR Betraege, etc."*
+            #
+            # `R` ist der Betrag, der beim Stop verloren geht - die
+            # Umrechnung braucht NICHT den Portfoliowert (der am
+            # Notebook seit dem 01.09. stillsteht), sondern nur das
+            # Risiko DIESES Trades. Es steht in derselben `rechnung`,
+            # aus der auch Stop und Ziel kommen; keine zweite
+            # Ermittlung, die auseinanderlaufen koennte.
+            risiko_eur=rechnung.get("risiko_eur"))
     except Exception:                                        # noqa: BLE001
         logger.exception("Wahrscheinlichkeit fuer %s uebersprungen", symbol)
         _wk_zeilen = []

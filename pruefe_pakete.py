@@ -15242,6 +15242,40 @@ def paket_kalibrierung() -> None:
            "Sollwert gelesen - das Modul sagt das selbst. Gefunden: %s"
            % (_ist, " · ".join(_falsch) or "-"))
 
+    # ---- ⚠️ LESBARE WERTE: R BEKOMMT EINEN EUROBETRAG (11.09.2026) -----
+    #
+    # Nutzervorgabe, woertlich: *"ich sollte im Text immer fuer mich
+    # lesbare und zuordenbare Werte und Textformulierungen erhalten (kein
+    # 2R), EUR Betraege, etc."*
+    #
+    # ⚠️ WARUM DIESE PRUEFUNG UND NICHT DER BITGLEICHHEITSTEST: der
+    # uebergibt `risiko_eur=None` und betritt den neuen Zweig GAR NICHT -
+    # er blieb gruen, obwohl `de()` dort einen NameError warf. Ein Test,
+    # der einen Pfad nicht laeuft, sagt ueber ihn nichts. Vom Vorabtest
+    # am selben Tag gefangen.
+    _mit = _WK.saetze(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                      strategie="einstieg", h=True,
+                      merkmale={"funding_fuenftel": 1,
+                                "turnover_fuenftel": 0},
+                      risiko_eur=75.0)
+    _ohne = _WK.saetze(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                       strategie="einstieg", h=True,
+                       merkmale={"funding_fuenftel": 1,
+                                 "turnover_fuenftel": 0})
+    _r_zeilen = [z for z in _mit if "R je Trade" in z]
+    pruefe(P, "⚠️ jede R-Zeile nennt AUCH einen Eurobetrag",
+           bool(_r_zeilen) and all("EUR" in z for z in _r_zeilen),
+           "R ist die interne Einheit - der Leser braucht den Betrag. "
+           "Die Zahl in R BLEIBT stehen (nur sie ist ueber Trades "
+           "vergleichbar), der Euro kommt daneben. Gefunden: %s"
+           % (" · ".join(z[-42:] for z in _r_zeilen) or "keine R-Zeile"))
+    pruefe(P, "und OHNE Risikobetrag bleibt die Zeile unveraendert",
+           all("EUR" not in z for z in _ohne if "R je Trade" in z),
+           "die Ergaenzung ist am Aufrufort gesetzt, nicht in der "
+           "Rechnung - ohne `risiko_eur` muss die Zeile bitgleich zur "
+           "alten sein (432 Faelle in "
+           "`pruefe_wahrscheinlichkeit_bitgleich.py`)")
+
     h = [b for b in _WK.BEITRAEGE if b.merkmal == "h"]
     pruefe(P, "H ist ueber sein Merkmal auffindbar", len(h) == 1,
            "seit Schritt 2c haengt kein Beitrag mehr am Namen")

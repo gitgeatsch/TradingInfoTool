@@ -782,10 +782,50 @@ def rechne(*, crv: float, stop_relativ: float, gebuehr_je_seite: float,
             "beitraege": zeilen, "klasse": str(klasse or "").lower()}
 
 
+def _in_eur(wert_r: float | None, risiko_eur: float | None) -> str:
+    """R in EURO — für den Leser, nicht für die Rechnung (11.09.2026).
+
+    ## ⚠️ Nutzervorgabe 11.09.2026, woertlich
+
+    > *„ich sollte im Text immer fuer mich lesbare und zuordenbare Werte
+    > und Textformulierungen erhalten (kein 2R), EUR Betraege, etc."*
+
+    `R` ist die interne Einheit: **ein R ist der Betrag, der beim Stop
+    verloren geht.** `betraege.py` haelt fest: `Risiko in Euro = Einsatz x
+    Verlustanteil`. Die Umrechnung braucht also NICHT den Portfoliowert,
+    sondern nur das Risiko DIESES Trades - und das rechnet die Kette
+    ohnehin (`rechnung["risiko_eur"]`).
+
+    ⚠️ **DIE ZAHL IN R BLEIBT STEHEN.** Sie ist die vergleichbare Groesse:
+    zwei Trades mit verschiedenem Einsatz sind nur in R vergleichbar. Der
+    Eurobetrag kommt DANEBEN, nicht an ihre Stelle.
+
+    ⚠️ Ohne `risiko_eur` gibt die Funktion einen LEEREN String zurueck -
+    dann steht die Zeile wie bisher da. Das haelt die 432 Faelle von
+    `pruefe_wahrscheinlichkeit_bitgleich.py` unveraendert; der Eurobetrag
+    ist eine Ergaenzung am Aufrufort, keine Aenderung der Rechnung.
+    """
+    # ⚠️ LOKAL, wie in `saetze()` - `de` ist dort ebenfalls lokal
+    # importiert. Vom Vorabtest gefangen: der Bitgleichheitstest blieb
+    # gruen, weil er `risiko_eur=None` uebergibt und diesen Zweig gar
+    # nicht betritt. Ein Test, der den neuen Pfad nicht laeuft, sagt
+    # ueber ihn nichts.
+    from agent.schreibweise import de
+    if wert_r is None or not risiko_eur:
+        return ""
+    betrag = float(wert_r) * float(risiko_eur)
+    # Unter einem Cent waere die Angabe Schein-Genauigkeit.
+    if abs(betrag) < 0.01:
+        return ""
+    return " = %s%s EUR" % ("+" if betrag > 0 else "−",
+                            de(abs(betrag), 2))
+
+
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
            h: bool | None = None, saetze_zum_berichten=None,
            merkmale: dict | None = None, strategie: str = "",
-           hebel: float | None = None, tage: float | None = None) -> list[str]:
+           hebel: float | None = None, tage: float | None = None,
+           risiko_eur: float | None = None) -> list[str]:
     """Die Zeilen fuer den Kopf der Mail.
 
     ⚠️ SIE SPERREN NICHTS. Auch "traegt nicht" ist kein Veto - es ist die
@@ -962,7 +1002,8 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
                    f"geschaetzt {de(100 * r['quote'], 1)} % - "
                    f"{de(abs(r['abstand_punkte']), 1)} Punkte "
                    f"{'MEHR als noetig, TRAEGT' if traegt else 'ZU WENIG'}"
-                   f" ({de(r['erwartungswert_r'], 3)} R je Trade)")
+                   f" ({de(r['erwartungswert_r'], 3)} R je Trade"
+                   f"{_in_eur(r['erwartungswert_r'], risiko_eur)})")
 
     # ⚠️ WAS NICHT DRINSTECKT, GEHOERT IN DIESELBE ZUSAMMENFASSUNG.
     # Ohne diese Zeilen liest sich die Quote, als waere alles beruecksichtigt
