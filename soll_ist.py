@@ -271,25 +271,65 @@ REIHENFOLGE = (
             "Faktor 6 bei VIERMAL schaerferem Test. BILANZ: es gibt "
             "KEINEN dritten Beitrag.",
             "Befunde 2.331 bis 2.339", fertig=True),
-    Schritt(12, "V12 VOLA UND SCHNITT",
+    Schritt(12, "A1 / HEBEL-SPUR",
+            "⚠️⚠️⚠️ DER ENGPASS DES HEBELS, und er hat einen BENANNTEN "
+            "Weg: das Band auf binaeren Daten ist VIERMAL zu eng (2.238), "
+            "deshalb traegt auf `barriere` sogar `zufall`. Loesung laut "
+            "2.238-klasse: Fehlalarmquote der Barrieren-Anlage auf "
+            "Nullwelten - dasselbe Verfahren, das am 09.09. den "
+            "Nullbezug entschieden hat. ⚠️ DANACH erst sind die VIER "
+            "Terminmarkt-Kanaele gegen die RICHTIGE Zielgroesse "
+            "messbar - sie sind bisher nur gegen `bewegung_r` gefallen, "
+            "und das VOR dem Messstandard.",
+            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
+    Schritt(13, "TAKT UND E2E",
+            "⚠️ NUTZERVORGABE 11.09.: die Krypto-Umsetzung umfasst den "
+            "TAKT und die End2End-SIMULATION der Kette. "
+            "⚠️ `simuliere_kette.py` EXISTIERT (16.08.) und macht genau "
+            "das - echte Reihen, Bestaende, Rechnung, DB-Schreiben, "
+            "Mailaufbau, Attrappe nur fuer die zwei Modellaufrufe, "
+            "schreibt in eine KOPIE. Aber sie ist VOR dem Umbau und muss "
+            "zuerst nachgezogen werden. Der TAKT ist bisher nur "
+            "Betriebsbefund, kein Planschritt.",
+            "Nutzervorgabe 11.09.; simuliere_kette.py"),
+    Schritt(14, "EMAIL STRUKTUR UND INHALTE",
+            "⚠️ NUTZERVORGABE 11.09.: nach dem Umbau sind Struktur und "
+            "Inhalte der Mails anzupassen. Bekannte Ausgangslage: 83,6 %% "
+            "Wiederholungsanteil und rund 133 Mails/Tag (beides am "
+            "Notebook zu pruefen - die Desktop-DB ist zu alt). ⚠️ Die "
+            "Mail ist der Ort fuer FAKTEN und Bewertungsgruende "
+            "(Regel 3), nicht fuer Ausloeser.",
+            "Nutzervorgabe 11.09.; Befunde zu Redundanz und Takt"),
+    Schritt(15, "GUI UND UEBERSICHTSSEITE",
+            "⚠️ Offen seit 07.09., nie begonnen (E1). Nutzerbestaetigung "
+            "11.09.: steht als groesserer Punkt an, NACH den eMails.",
+            "Nutzervorgabe 07.09. und 11.09."),
+    Schritt(16, "LLM-ROLLEN UND MODELLE",
+            "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der "
+            "LLM-Rollen und -Modelle - NACH den eMails. Bekannte "
+            "Vorgaben, die hier gelten: nur kostenfreie LLMs · das LLM "
+            "muss den Zufall schlagen und messbar sein · kein "
+            "deterministischer Override des LLM-Werturteils.",
+            "Nutzervorgabe 11.09."),
+    Schritt(17, "V12 VOLA UND SCHNITT",
             "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
             "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
             "Gemeinsamer geometrischer Anteil? Stuetzt 2.293.",
             "Befund 2.327 - offen"),
-    Schritt(13, "FORM",
+    Schritt(18, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
             "Schalter/Regler).",
             "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(14, "KALIBRIERUNG",
+    Schritt(19, "KALIBRIERUNG",
             "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
             "2-5x?",
             "Plan 05.09."),
-    Schritt(15, "K1",
+    Schritt(20, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
             "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
             "Barrierenmessung.",
             "N-40 K1"),
-    Schritt(16, "KETTE",
+    Schritt(21, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
 )

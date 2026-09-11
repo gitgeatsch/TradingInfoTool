@@ -102,6 +102,44 @@ class Kandidat:
     loesung: str = ""
 
 
+def umbauseite(k) -> tuple:
+    """VOR oder NACH dem Messstandard? — abgeleitet aus der Messkette.
+
+    ## ⚠️⚠️ Nutzervorgabe 10./11.09.2026
+
+    > *„du musst sauber trennen nach vor und nach dem aktuellen Umbau -
+    > das gilt fuer Messungen, Dokumente und Code!!!"*
+
+    Fuer CODE gibt es die Trennung (`REGISTER_Werkzeuge`, nach
+    Methodikstand), fuer MESSUNGEN und DOKUMENTE auch
+    (`soll_ist.umbaugrenze`). Fuer die KANDIDATENBLAETTER fehlte sie -
+    und gerade dort entscheidet sie, ob ein Urteil ueberhaupt zaehlt.
+
+    ⚠️ **Es wird kein neues Feld erfunden.** Die Seite folgt aus dem
+    letzten Eintrag der vorhandenen `kette`, so wie die Dokumentenseite
+    aus dem Aenderungsdatum folgt.
+
+    ⚠️⚠️ **DAS DATUM IST EIN ANHALT, KEIN URTEIL** - dieselbe
+    Einschraenkung wie bei den Dokumenten. Ein altes Urteil kann richtig
+    sein; es sagt nur, dass es die Norm vom 08./09.09. nicht gesehen hat.
+
+    ⚠️ NICHT lexikalisch vergleichen: „30.08." ist als Zeichenkette
+    groesser als „06.09.". Sortiert wird nach (Monat, Tag) - der Fehler
+    ist beim Bauen dieser Funktion einmal passiert.
+    """
+    tage = []
+    for datum, _was in (k.kette or ()):
+        teile = str(datum).strip(".").split(".")
+        if len(teile) >= 2 and teile[0].isdigit() and teile[1].isdigit():
+            tage.append((int(teile[1]), int(teile[0])))   # (Monat, Tag)
+    if not tage:
+        return ("ohne Datum", "?")
+    m, t = max(tage)
+    letzte = "%02d.%02d." % (t, m)
+    # Der Messstandard gilt ab dem 09.09.2026.
+    return (("nach Umbau" if (m, t) >= (9, 9) else "vor Umbau"), letzte)
+
+
 def messbasis(name: str) -> tuple:
     """Die REGISTRIERUNGSBASIS eines Kandidaten -> (menge, fenster).
 
@@ -147,7 +185,10 @@ KANDIDATEN = (
             ("06.09.", "Schritt 4a B: H5 voll  +0,00841 TRAEGT"),
             ("06.09.", "G2: faellt in BEIDEN 959-Tage-Fenstern -> "
                        "Datenmenge, nicht Epoche"),
-        ),
+        
+               ("10.09.", "⚠️ V2/N-73: besteht die Huerde NICHT - 2 von 3 Beitragsmengen (10 %% +0,0688 TRAEGT · 20 %% +0,0582 NICHT TRENNBAR · 50 %% +0,0313 TRAEGT)"),
+               ("11.09.", "⚠️ V11: kippt unter dem schaerferen Stabilitaetstest mit ZUFALLSauswahl in 1 von 3 Saaten (+0,0417 [+0,0036 .. +0,0785])"),
+               ),
         warnung="Fremdquelle, deshalb Luecken in der Abdeckung."),
     Kandidat(
         menge="frei", fenster="voll",
@@ -179,7 +220,10 @@ KANDIDATEN = (
             ("06.09.", "N13: verschiebt die FRONTLOADING-Quote um +4,0 bis "
                        "+4,5 Punkte - bei JEDER Breite (20/10/5 %), Band "
                        "durchgehend ohne Null. Der Tempo-Anzeiger"),
-        ),
+        
+               ("10.09.", "⚠️ V2/N-73: 1 von 1 - aber nur, weil bei seiner Abdeckung (66 von 536) UEBERHAUPT NUR EINE Beitragsmenge zulaessig ist. Eine SCHWAECHERE Aussage als 3-von-3"),
+               ("11.09.", "✔ V11: stabil auf seiner einen Menge (bis 0,10)"),
+               ),
         warnung="✔✔ TABELLE STEHT (Stand 07.09. nach dem Audit 2.143). "
                 "F-212 vom 04.09. hat auf der SELEKTIERTEN Menge gemessen "
                 "und reproduziert: +0,0635 R gegen registriert +0,0616. "
@@ -227,7 +271,10 @@ KANDIDATEN = (
             ("06.09.", "Schritt 3: H5 ab 2024 - traegt nicht"),
             ("06.09.", "Schritt 4a A: H20 voll +0,01418 REPRODUZIERT"),
             ("06.09.", "Schritt 4a B: H5 voll +0,00663 - traegt nicht"),
-        ),
+        
+               ("10.09.", "✔ V2/N-73: 2 von 2 - der einzige live laufende Beitrag, der die Huerde ohne Einschraenkung nimmt"),
+               ("11.09.", "✔ V11: stabil auf beiden Mengen (bis 0,05 · 0,02) - die schaerfsten Schranken im Feld"),
+               ),
         warnung="⚠️ GELTUNGSBEREICH H20. Der Betriebshorizont sind 3-5 Tage. "
                 "Ob H20 der richtige Horizont fuer diese Sperre ist, ist eine "
                 "ENTWURFSfrage (D3) - keine Messfrage."),
@@ -271,7 +318,11 @@ KANDIDATEN = (
             ("06.09.", "N-52: der Befund geht restlos in Groessenkanaele auf "
                        "- Aufloesungsquote +0,03088, Rest G0R +0,00760 "
                        "gegen Kunstwelt-Artefakt +0,00770 / +0,00731"),
-        ),
+        
+               ("10.09.", "⚠️ V9: unabhaengig von funding, aber geschichtet NICHT MEHR TRENNBAR (echter Nullbefund, 0,05 R)"),
+               ("10.09.", "⚠️⚠️ Kriterium 2 FAELLT: +0,2039 [+0,0760 .. +0,3912] auf der 20-%%-Menge, Band schliesst die Null aus"),
+               ("10.09.", "⚠️ N-73 nur 1 von 3 Mengen - der wackligste Kandidat"),
+               ),
         warnung="⚠️⚠️⚠️ STAND NACH N-52 (06.09.): `vola` GEHOERT NICHT IN "
                 "`BEITRAEGE`. Richtungsrein gemessen traegt es nichts "
                 "(GS -0,00041, 2/5, keine Ordnung der Drittel). Der starke "
@@ -356,7 +407,10 @@ KANDIDATEN = (
                        "- die Positivkontrolle versagte dort"),
             ("06.09.", "Schritt 4a: H5 voll +0,0101 TRAEGT, H5 2024 "
                        "+0,0095 TRAEGT"),
-        ),
+        
+               ("10.09.", "✔ V9: unabhaengig von funding · ✔ Kriterium 2: stabil auf ALLEN drei Mengen (bis 0,20 · 0,20 · 0,05)"),
+               ("11.09.", "⚠️⚠️ V11: Kriterium 1 erfuellt (100 %%), N-73 aber NICHT - 2 von 3. Als Ersatz fuer `schnitt` gefallen"),
+               ),
         loesung=("⚠️⚠️ ALS ERSATZ FUER `schnitt` GEPRUEFT UND GEFALLEN "
                  "(V11, 11.09.): Kriterium 1 erfuellt er mit 100 %% "
                  "Abdeckung, N-73 aber NICHT - 2 von 3 Mengen "
@@ -427,7 +481,13 @@ KANDIDATEN = (
             ("31.08.", "mittags als dritter tragender Beitrag registriert"),
             ("31.08.", "abends im Horizontlauf gefallen - bei keinem "
                        "Horizont trennbar, bei langen negativ"),
-        ),
+        
+               ("07.09.", "✔ N-59: traegt auf der selektierten Menge, 100 %% Abdeckung"),
+               ("10.09.", "✔ A2: traegt fuer die AKKUMULATION (+0,0470, p 0,000, 481 von 518 Symbolen) - auf der FREIEN Messmenge V1"),
+               ("10.09.", "⚠️⚠️ Kriterium 2 FAELLT auf der Betriebsmenge: +0,1973 [+0,0717 .. +0,3892] bei 20 %%"),
+               ("11.09.", "⚠️⚠️⚠️ ABER die Instabilitaet gehoert der AUSWAHL: mit ZUFALLSauswahl +0,0380 / +0,0264 / +0,0310, stabil in 3 von 3 - bei VIERMAL schaerferem Test"),
+               ("11.09.", "⚠️⚠️ Der tragende Einwand ist ein anderer: Spearman +0,704 mit der Auswahl, Wirkung zu 4/5 Auswahlartefakt (2.222/2.335)"),
+               ),
         warnung="✔✔ DER 31.08.-BEFUND IST ABGELOEST (07.09., 2.153). Reproduziert mit DEMSELBEN Werkzeug drehen ALLE Vorzeichen: H5 -0,0069 -> +0,0092 ✔ · H10 -0,0118 -> +0,0158 ✔ · H20 -0,0221 -> +0,0299 (nicht trennbar). Die Kontrolle reproduziert bitgenau (funding H20 +0,0246). ⚠️ URSACHE: am 31.08. lief die Messung auf 1.314 Symbolen - Krypto PLUS 798 Aktien/ETF/Rohstoffe. Der N-19-Fix kam erst am 03./04.09. `funding` war geschuetzt (krypto-exklusive Quelle), `schnitt` NICHT - er kommt aus Kursreihen, und die gab es fuer Aktien. ⚠️⚠️ MEIN VERFAHRENSFEHLER: N-59 hat den Befund umgestossen, OHNE ihn zuerst zu reproduzieren (R-R11). Dass er am Ende faellt, macht das Verfahren nicht richtig. --- FRUEHER: ⚠️ Die Marken tragen weiterhin den STOP - nur als "
                 "BEWERTUNGSbeitrag tragen sie nicht."),
     Kandidat(
@@ -5041,14 +5101,34 @@ def _kandidatenblatt() -> str:
          "diesem Blatt nicht passiert (R-R11).",
          ""]
     sym = {"traegt": "✔", "traegt nicht": "✖", "offen": "○", "zurueck": "↩"}
+    seite = {k.name: umbauseite(k) for k in KANDIDATEN}
+    vor = [k for k in KANDIDATEN if seite[k.name][0] != "nach Umbau"]
+    z += ["⚠️⚠️ **VOR ODER NACH DEM UMBAU?** Die Grenze ist der "
+          "Messstandard vom 08./09.09.2026. **%d von %d Blaettern "
+          "stammen von davor** — ihre Urteile haben die Norm nicht "
+          "gesehen (anderer Nullpunkt, andere Trennschaerfe, kuerzere "
+          "Leiter)." % (len(vor), len(KANDIDATEN)),
+          "",
+          "⚠️ Das Datum ist ein **Anhalt, kein Urteil**: ein altes "
+          "Ergebnis kann richtig sein. Es sagt nur, dass es unter "
+          "anderen Regeln entstanden ist und vor einem Widerruf "
+          "reproduziert gehoert (R-R11).",
+          ""]
     z += ["## Uebersicht", "",
-          "| | Kandidat | Form | Zustand | Registrierungsbasis |",
-          "|---|---|---|---|---|"]
+          "| | Kandidat | Form | Zustand | Umbauseite | letzte Messung | "
+          "Registrierungsbasis |",
+          "|---|---|---|---|---|---|---|"]
     for k in KANDIDATEN:
-        z.append("| %s | **`%s`** | %s | %s | %s |"
+        wo, wann = seite[k.name]
+        marke = {"nach Umbau": "✔ nach", "vor Umbau": "⚠️ VOR",
+                 "ohne Datum": "? ohne"}.get(wo, wo)
+        z.append("| %s | **`%s`** | %s | %s | %s | %s | %s |"
                  % (sym.get(k.zustand, "?"), k.name, k.form, k.zustand,
-                    k.basis))
+                    marke, wann, k.basis))
     z.append("")
+    if vor:
+        z += ["### ⚠️ Diese Blaetter stammen von VOR dem Messstandard", "",
+              ", ".join("`%s`" % k.name for k in vor), ""]
     for k in KANDIDATEN:
         z += ["---", "", "## %s `%s`" % (sym.get(k.zustand, "?"), k.name), "",
               "**Hypothese:** %s" % k.hypothese, "",
@@ -5057,7 +5137,14 @@ def _kandidatenblatt() -> str:
               "| **Registrierungsbasis** | %s |" % k.basis,
               "| **Wert** | %s |" % k.wert,
               "| **Live** | %s |" % k.live,
-              "| **Zustand** | **%s** |" % k.zustand, ""]
+              "| **Zustand** | **%s** |" % k.zustand,
+              "| **Umbauseite** | %s (letzte Messung %s) |"
+              % (("✔ **nach** dem Messstandard"
+                  if umbauseite(k)[0] == "nach Umbau" else
+                  "⚠️ **VOR** dem Messstandard — Urteil unter anderen "
+                  "Regeln entstanden"
+                  if umbauseite(k)[0] == "vor Umbau" else
+                  "? kein Datum in der Messkette"), umbauseite(k)[1]), ""]
         if k.kette:
             z += ["**Die Messkette:**", ""]
             for datum, was in k.kette:
