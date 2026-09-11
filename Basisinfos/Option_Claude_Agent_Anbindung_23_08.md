@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-23 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Option — eine Claude-Anbindung: wie das technisch geht, und welche Form zu diesem Projekt passt
 
 *Nutzerauftrag 23.08.: „Die Option als Erweiterung und auch als Lösung für

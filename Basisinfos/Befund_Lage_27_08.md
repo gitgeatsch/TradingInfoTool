@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-27 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 > ⚠⚠ **DER BUCKEL IST WIDERLEGT (27.08.2026, wenige Minuten nach dem
 > Entwurf) — er war die MARKTPHASE.**
 >

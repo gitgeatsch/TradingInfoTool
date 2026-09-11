@@ -1,3 +1,23 @@
+<!-- STAND: 2026-08-12 · VOR dem Messstandard vom 2026-09-09 -->
+
+> ⚠️⚠️ **DIESES DOKUMENT SAH DEN UMBAU NICHT.** Zuletzt geaendert
+> **2026-08-12**; der Messstandard gilt ab **2026-09-09**.
+>
+> Seine Messwerte sind unter **anderen Regeln** entstanden:
+> anderer Nullpunkt (Maximum ueber fuenf Ziehungen statt
+> 90. Perzentil ueber 40), andere Trennschaerfe (gegen null statt
+> gegen den Nullpunkt), kuerzere Leiter (bis 0,10 statt 0,40).
+>
+> **Kein Sperrvermerk** — ein altes Ergebnis kann richtig sein. Es
+> heisst: vor einem Widerruf **reproduzieren** (R-R11), und nicht
+> als aktuellen Stand zitieren. Was gilt, steht in
+> `REGISTER_Befunde.md`.
+>
+> ⚠️⚠️ **54 Messwerte** in diesem Dokument — hier ist die
+> Verwechslungsgefahr am groessten.
+
+---
+
 # Arbeitsstand Deadloop — lebende Datei, Stand 2026-08-09
 
 **Zweck:** Diese Datei ist der Anker gegen Informationsverlust zwischen Sessions.

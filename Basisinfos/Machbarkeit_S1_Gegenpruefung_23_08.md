@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-23 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Machbarkeitsprüfung vor S1 — trägt der erweiterte Ansatz über Pläne, Zentraldokumente, Regelwerke und Code?
 
 *Nutzervorgabe 23.08.: „bitte vorab noch einmal den neuen (erweiterten) Ansatz

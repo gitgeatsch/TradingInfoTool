@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-18 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Rollenkonzept — Ein- und Ausgang je Rolle (ENTWURF, 2026-08-10)
 
 > ## ⚠️ STANDVERMERK 16.08.2026 — dieses Dokument ist ÜBERHOLT

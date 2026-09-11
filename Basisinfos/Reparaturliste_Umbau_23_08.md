@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-24 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Reparaturliste — was der Umbau offen gelassen hat
 
 *Nutzervorgabe 23.08.: „zuerst sollte feststehen was ist alles zu reparieren."*

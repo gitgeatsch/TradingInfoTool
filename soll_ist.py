@@ -52,6 +52,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 import bestand as BE                                          # noqa: E402
 import messmenge                                              # noqa: E402
+import markiere_dokumente as MD
 import messnorm as N                                          # noqa: E402
 from agent import wahrscheinlichkeit as W                     # noqa: E402
 
@@ -489,11 +490,20 @@ def umbaugrenze() -> dict:
                         "ohne_basis": len(BE.BEFUNDE) - len(mit)}
     dok = []
     for pfad in sorted(glob.glob("Basisinfos/*.md")):
+        # ⚠️⚠️ DER STANDKOPF SCHLAEGT DAS DATEIDATUM (11.09.2026).
+        # `markiere_dokumente.py` setzt in jedes Vor-Umbau-Dokument eine
+        # Zeile `<!-- STAND: JJJJ-MM-TT ... -->`. Das SETZEN hat das
+        # Aenderungsdatum auf heute gezogen - ohne diese Abfrage wuerden
+        # danach ALLE 48 als Nach-Umbau gelten, und die Trennung waere
+        # durch den Versuch zerstoert, sie herzustellen.
         try:
-            m = time.strftime("%Y-%m-%d",
-                              time.localtime(os.stat(pfad).st_mtime))
-        except OSError:
-            continue
+            m = MD.stand(pfad)[0]
+        except Exception:                                    # noqa: BLE001
+            try:
+                m = time.strftime("%Y-%m-%d",
+                                  time.localtime(os.stat(pfad).st_mtime))
+            except OSError:
+                continue
         dok.append((m, os.path.basename(pfad)))
     aus["dokumente"] = dok
     return aus

@@ -1,3 +1,23 @@
+<!-- STAND: 2026-08-23 · VOR dem Messstandard vom 2026-09-09 -->
+
+> ⚠️⚠️ **DIESES DOKUMENT SAH DEN UMBAU NICHT.** Zuletzt geaendert
+> **2026-08-23**; der Messstandard gilt ab **2026-09-09**.
+>
+> Seine Messwerte sind unter **anderen Regeln** entstanden:
+> anderer Nullpunkt (Maximum ueber fuenf Ziehungen statt
+> 90. Perzentil ueber 40), andere Trennschaerfe (gegen null statt
+> gegen den Nullpunkt), kuerzere Leiter (bis 0,10 statt 0,40).
+>
+> **Kein Sperrvermerk** — ein altes Ergebnis kann richtig sein. Es
+> heisst: vor einem Widerruf **reproduzieren** (R-R11), und nicht
+> als aktuellen Stand zitieren. Was gilt, steht in
+> `REGISTER_Befunde.md`.
+>
+> ⚠️⚠️ **23 Messwerte** in diesem Dokument — hier ist die
+> Verwechslungsgefahr am groessten.
+
+---
+
 # Gesamtplan — Granularität je Asset: was wo gemessen wird, und in welcher Reihenfolge
 
 *Nutzerfrage 23.08.: „kannst du mir deinen Gesamtplan je Asset und Granularität

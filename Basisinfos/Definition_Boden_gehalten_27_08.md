@@ -1,3 +1,20 @@
+<!-- STAND: 2026-08-27 · VOR dem Messstandard vom 2026-09-09 -->
+
+> ⚠️ **DIESES DOKUMENT SAH DEN UMBAU NICHT.** Zuletzt geaendert
+> **2026-08-27**; der Messstandard gilt ab **2026-09-09**.
+>
+> Seine Messwerte sind unter **anderen Regeln** entstanden:
+> anderer Nullpunkt (Maximum ueber fuenf Ziehungen statt
+> 90. Perzentil ueber 40), andere Trennschaerfe (gegen null statt
+> gegen den Nullpunkt), kuerzere Leiter (bis 0,10 statt 0,40).
+>
+> **Kein Sperrvermerk** — ein altes Ergebnis kann richtig sein. Es
+> heisst: vor einem Widerruf **reproduzieren** (R-R11), und nicht
+> als aktuellen Stand zitieren. Was gilt, steht in
+> `REGISTER_Befunde.md`.
+
+---
+
 > ⚠⚠ **TEILWEISE ÜBERHOLT am 27.08.2026 — für den KERN nicht mehr nötig.**
 >
 > Der Nutzer hat entschieden, den Kern zu **staffeln** statt zu timen (*„Staffelung wie in akkumulation beschrieben, das passt zur Praxis“*). Damit entfällt die Ja/Nein-Frage „ist jetzt ein Boden?“, auf die G die Antwort war — die Staffelung fragt **wie viel**, nicht **ob**. Siehe `Entscheidung_Kern_Staffelung_27_08.md`.

@@ -1,3 +1,23 @@
+<!-- STAND: 2026-09-03 · VOR dem Messstandard vom 2026-09-09 -->
+
+> ⚠️⚠️ **DIESES DOKUMENT SAH DEN UMBAU NICHT.** Zuletzt geaendert
+> **2026-09-03**; der Messstandard gilt ab **2026-09-09**.
+>
+> Seine Messwerte sind unter **anderen Regeln** entstanden:
+> anderer Nullpunkt (Maximum ueber fuenf Ziehungen statt
+> 90. Perzentil ueber 40), andere Trennschaerfe (gegen null statt
+> gegen den Nullpunkt), kuerzere Leiter (bis 0,10 statt 0,40).
+>
+> **Kein Sperrvermerk** — ein altes Ergebnis kann richtig sein. Es
+> heisst: vor einem Widerruf **reproduzieren** (R-R11), und nicht
+> als aktuellen Stand zitieren. Was gilt, steht in
+> `REGISTER_Befunde.md`.
+>
+> ⚠️⚠️ **88 Messwerte** in diesem Dokument — hier ist die
+> Verwechslungsgefahr am groessten.
+
+---
+
 # Regelwerk — Entscheidungslog (Chronologie)
 
 **Zweck:** chronologisches Protokoll aller Regelwerks-Änderungen, Untersuchungen und bewusst verworfenen Optionen. Beantwortet "*warum* haben wir X so entschieden, und was haben wir geprüft und verworfen?".

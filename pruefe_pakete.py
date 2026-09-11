@@ -17337,6 +17337,53 @@ def paket_register() -> None:
     pruefe(P, "jeder Kandidat nennt seine Registrierungsbasis",
            all(k.basis.strip() for k in _B.KANDIDATEN),
            "ohne Basis kann kein Befund reproduziert werden")
+    # ---- DIE ALT/NEU-TRENNUNG (11.09.2026, Nutzervorgabe zweimal) ----
+    #
+    # ⚠️⚠️ WARUM DIESE VIER PRUEFUNGEN: das SETZEN der Standkoepfe hat
+    # das Aenderungsdatum aller 48 Vor-Umbau-Dokumente auf heute
+    # gezogen. Ohne die Kopfabfrage in `soll_ist.umbaugrenze()` waere
+    # die Trennung durch den Versuch zerstoert, sie herzustellen.
+    # Faellt eine dieser Zeilen, ist genau das passiert.
+    import markiere_dokumente as _MD                          # noqa: PLC0415
+    import soll_ist as _SI                                    # noqa: PLC0415
+    import glob as _g                                         # noqa: PLC0415
+    import os as _os                                          # noqa: PLC0415
+    _dok = [x for x in sorted(_g.glob("Basisinfos/*.md"))
+            if _os.path.basename(x) not in _MD.ERZEUGT]
+    _ohne = [_os.path.basename(x) for x in _dok
+             if not _MD.stand(x)[1] and _MD.stand(x)[0] < _MD.GRENZE]
+    pruefe(P, "⚠️⚠️ jedes Vor-Umbau-Dokument traegt einen STANDKOPF",
+           not _ohne,
+           "ohne Kopf wird ein altes Dokument als aktueller Stand "
+           "gelesen - das ist die gefaehrlichste der drei Luecken, denn "
+           "ein Dokument wird geoeffnet, nicht abgefragt. Ohne Kopf: %s"
+           % (", ".join(_ohne[:5]) or "-"))
+    _falsch = [_os.path.basename(x) for x in _dok
+               if _MD.stand(x)[1] and _MD.stand(x)[0] >= _MD.GRENZE]
+    pruefe(P, "⚠️ kein Standkopf auf einem NACH-Umbau-Dokument",
+           not _falsch,
+           "ein Kopf mit Datum ab der Grenze ist ein Widerspruch in "
+           "sich: %s" % (", ".join(_falsch[:5]) or "-"))
+    try:
+        _u = _SI.umbaugrenze()
+        _vor = [d for d in _u["dokumente"] if d[0] < _u["grenze"]]
+        _ok = len(_vor) >= 40
+    except Exception as _exc:                                 # noqa: BLE001
+        _ok, _vor = False, []
+    pruefe(P, "⚠️⚠️ `umbaugrenze` liest den KOPF, nicht das Dateidatum",
+           _ok,
+           "alle 48 Koepfe wurden am 11.09. gesetzt, ihr Dateidatum ist "
+           "seither HEUTE. Zaehlt diese Pruefung weniger als 40 "
+           "Vor-Umbau-Dokumente, faellt sie auf das Dateidatum zurueck "
+           "und die Trennung ist weg (gezaehlt: %d)" % len(_vor))
+    _gefallen_ohne = [k.name for k in _B.KANDIDATEN
+                      if k.zustand == "traegt nicht" and not k.loesung]
+    pruefe(P, "⚠️⚠️ jeder GEFALLENE Kandidat nennt eine Loesungsspur",
+           not _gefallen_ohne,
+           "Nutzervorgabe, mehrfach wiederholt: kein Beitrag faellt ohne "
+           "Grund, es ist eine Loesung zu suchen. Ohne Spur: %s"
+           % (", ".join(_gefallen_ohne) or "-"))
+
     pruefe(P, "jeder tragende Kandidat nennt eine Messkette",
            all(k.kette for k in _B.KANDIDATEN if k.zustand == "traegt"),
            "ohne Kette ist nicht nachvollziehbar, was ihn traegt")

@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-03 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
 > **Eigentümer:** Gernot Spiessmaier · **Version:** 1.6 · **Stand:** 2026-07-08

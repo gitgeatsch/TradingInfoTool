@@ -1,3 +1,4 @@
+<!-- STAND: 2026-09-02 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Ausrollen — was auf dem Notebook zu tun ist, und was danach zu beobachten
 
 *Stand: 24.08.2026, alles gepusht bis `3970b7b`. **38 Commits** seit dem

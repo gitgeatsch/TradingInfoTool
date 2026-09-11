@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-11 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Übergabe — Stand 11.08.2026
 
 **Zuerst lesen, in dieser Reihenfolge:**

@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-27 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Auslöser und Begründungen — alle Stufen, beide Seiten
 
 **Angelegt 27.08.2026.** Nutzervorgabe:

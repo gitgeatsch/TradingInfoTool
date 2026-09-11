@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-23 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Quote oder Kriterium — und eine Richtigstellung an meiner eigenen Formulierung
 
 *Nutzereinwand 23.08.: „Aus hunderten von Signalen pro Tag wird nun 1 oder 0,

@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-24 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Nachrichten (Weg D) — Plan und Konzept
 
 *Nutzervorgabe 24.08.2026: „mach weiter mit den nachrichten" und, unmittelbar

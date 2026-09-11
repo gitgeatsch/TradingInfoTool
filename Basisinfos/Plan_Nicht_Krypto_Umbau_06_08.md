@@ -1,3 +1,4 @@
+<!-- STAND: 2026-08-06 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
 # Plan: Nicht-Krypto-Assets auf stabile Beine (06.08.2026)
 
 **Auftrag:** sauberer Plan für den Gesamtumbau der Nicht-Krypto-Assets, inklusive
