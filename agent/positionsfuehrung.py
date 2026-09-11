@@ -137,17 +137,27 @@ class Position:
         return len(self.signale)
 
 
-def _kurs(conn, symbol: str) -> float | None:
-    """Letzter bekannter EUR-Kurs. `None`, wenn keiner vorliegt."""
+def kurs_mit_stand(conn, symbol: str) -> tuple:
+    """Letzter bekannter EUR-Kurs UND wann er geholt wurde - `(None, None)`,
+    wenn keiner vorliegt.
+
+    H-4 (11.09.2026): die Hebelfuehrung warnt vor der Liquidation. Eine
+    Warnung auf einem alten Kurs saehe aus wie eine auf einem frischen -
+    deshalb geht der Stand mit in die Mail."""
     try:
         r = conn.execute(
-            "SELECT price_eur FROM price_cache WHERE symbol=? "
+            "SELECT price_eur, fetched_at FROM price_cache WHERE symbol=? "
             "ORDER BY fetched_at DESC LIMIT 1", (symbol,)).fetchone()
         if r and r[0]:
-            return float(r[0])
+            return float(r[0]), (str(r[1]) if r[1] is not None else None)
     except Exception as exc:                                 # noqa: BLE001
         logger.debug("Kurs fuer %s nicht lesbar: %s", symbol, exc)
-    return None
+    return None, None
+
+
+def _kurs(conn, symbol: str) -> float | None:
+    """Letzter bekannter EUR-Kurs. `None`, wenn keiner vorliegt."""
+    return kurs_mit_stand(conn, symbol)[0]
 
 
 def lade(conn, symbole=None, instrument: str = "spot",

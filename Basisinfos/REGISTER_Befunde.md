@@ -1098,6 +1098,30 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.379** — ✔✔✔ H-4 GEBAUT - DIE HEBELFUEHRUNG (`agent/hebelfuehrung.py`). Jede OFFENE Position aus `hebel_positions` (echter Bitpanda-Abgleich) wird mit ihrem Plan verbunden: dem juengsten Rollen-Hebelsignal desselben Symbols und derselben Richtung bis 3 Tage vor der Eroeffnung (gesetzt, nicht gemessen - Signalnummer steht in der Mail). Gefuehrt: Einstand, Tage, Ergebnis vor und nach Finanzierung, Finanzierung bisher und je Tag (Staffel aus `backward_tracking`), Liquidationspreis mit den echten Tagen, der Plan ueber `ausstiegsrechnung.bewerte()`. Empfehlungen nach Dringlichkeit: LIQUIDATION ERREICHT · SCHLIESSEN · HEBEL SENKEN (mit Nachschuss) · KURS FEHLT · STOP NACHZIEHEN · HALTEN. Eigene Mail aus dem Rollen-Lauf, einmal je Zustand und Tag, vermerkt erst NACH dem Versand; die Zeilen stehen zusaetzlich in der Verkaufsmail. Finanzierung = Information, kein Ausloeser (Regel 2); HEBEL SENKEN ist RM-11, keine Bewertung. Nachweis: Paket Hebelfuehrung 31 Pruefungen, Faelle von Hand gerechnet; E2E an der NB-Kopie mit kuenstlicher Position (LINK 5x, Stop 11,5 %%: Tag 1,5 HALTEN bis Tag 3,0 - Tag 3,5 HEBEL SENKEN, Nachschuss 0,48 EUR); `simuliere_kette` bringt die Hebelmail an
+
+- Quelle: agent/hebelfuehrung.py · pruefe_pakete --paket Hebelfuehrung · h4_e2e / simuliere_kette 11.09.
+
+**2.379-rm11** — ⚠️⚠️⚠️ RM-11 WAR FALSCH - bei JEDEM erlaubten Hebel lag die geschaetzte Liquidation VOR dem Stop. `max_safe_hebel` rechnete `(1 - Marge) / Stop` aus der Zeit, als die Marge ein Puffer auf 1/Hebel war (0,175). Am 16.07. bekam dieselbe Zahl in `estimate_liquidation_price` die Bedeutung Wartungsmarge (am echten LINK-Fall kalibriert), am 19.07. wurde sie 0,09 - `max_safe_hebel` wurde nicht nachgezogen. REPRODUZIERT mit den echten Funktionen: Stop 5 %% -> 18,20x erlaubt, Liquidation 3,85 %% UEBER dem Einstieg; 11,7 %% (Betriebsmedian) -> 7,78x, Liquidation 4,24 %% unter dem Einstieg; 16,4 %% -> 5,55x / 9,91 %%; 25 %% -> 3,64x / 20,30 %%. Richtig (Liquidation und Stop gleichgesetzt): 7,38 · 5,09 · 4,18 · 3,15x. Die Pruefung, die das finden sollte, verglich `rechne()` mit `max_safe_hebel()` - die Funktion mit sich selbst. ➔ neu hergeleitet fuer LONG und SHORT, mit Haltetagen; geprueft gegen die EIGENSCHAFT (294 Faelle, Abweichung 2,8e-14). Betrifft auch die alte Kette (`pre_check_hebel`, RM-11 exakt)
+
+- Quelle: hebel_risk_gate.max_safe_hebel · h4_sichtung / h4_pruefung 11.09.
+
+**2.379-liq** — ⚠️⚠️ ZWEI WEITERE STELLEN MIT 1/HEBEL. (1) `rechne()` schrieb `liquidation_etwa_eur = Kurs x (1 - 1/Hebel)` - bei 5x 20 %% unter dem Einstieg, kalibriert 12,1 %%; dazu auf 2 Stellen gerundet, bei Werten um 0,05 EUR wertlos. Jetzt `estimate_liquidation_price` Tag 0, 6 Stellen, und der Rechnungssatz nennt, bis zu welchem Tag die Liquidation hinter dem Stop bleibt. (2) Der Faktentext fuer Rolle BC (`lagebeschreibung._hebelgeometrie`) nannte bei 3/6/10-fach 33/17/10 %% - richtig 27/8/1 %%, beim Hoechsthebel neunmal zu weit. Ein Fakt, den das Modell liest: Prompt-Stand 2026-09-11a. Die Pruefung dazu testete die Identitaet 1-(1-1/h) = 1/h
+
+- Quelle: entscheidungsrechnung.rechne · lagebeschreibung · rolle_trader.PROMPT_STAND
+
+**2.379-instrument** — ⚠️⚠️ DIE AUSSTIEGSFUEHRUNG HAETTE JEDES HEBELSIGNAL DER ROLLEN-KETTE ALS SPOT GEFUEHRT. `compute_ausstiegs_empfehlungen` setzte `ist_hebel` nach der TABELLE (`hebel_signals`); die Rollen-Kette schreibt nach `signals` mit der Spalte `instrument`. Folge: Fuehrung unter (Symbol, spot), gegen den Spotbestand geprueft, und `_fuehrung_zu(..., hebel)` fand nie etwas. Am NB unsichtbar: 0 von 3.859 Zeilen der Rollen-Kette tragen instrument hebel. ➔ die Zeile entscheidet, in beiden Schleifen. E2E an der NB-Kopie: das kuenstliche Signal steht als Hebel UND Bestand; die neun Spotsignale von LINK bleiben Spot (ihre zwei SCHLIESSEN standen schon vorher)
+
+- Quelle: backward_tracking.compute_ausstiegs_empfehlungen · h4_e2e 11.09.
+
+**2.379-schalter** — ⚠️⚠️ `hebel_screening.aktiv: false` HAETTE DIE ROLLEN-KETTE ABGESCHALTET. Der Schalter stand vor einem `return True` am Anfang von `hebel_screening_job` - dahinter liegen der Abgleich der echten Hebelpositionen und der Umlauf der Rollen-Kette. Genau dieser Schalter liegt nahe, wenn die alte Kette beim Rollout stillgelegt wird (offene Frage 2.369): keine Urteile, keine Mails, keine Meldung. ➔ er legt nur noch das Screening still
+
+- Quelle: scheduler/background.hebel_screening_job
+
+**2.378-korrektur** — ⚠️ KORREKTUR ZU 2.378, nach 2.379-rm11 reproduziert (R-R11): ,Liquidationsabstand greift nie' gilt bei 9.942 und 18.213 EUR UNVERAENDERT - dort begrenzt das Kapital den Hebel, bevor RM-11 erreicht wird; alle Zahlen bei 18.213 EUR bitgleich. Bei 30.000 EUR greift das korrigierte RM-11 in 6,4 %% aller Durchgelassenen (Watchlist 2026: 3,7 %%); die Grenze 5x sinkt dort von 19,0 auf 16,0 %% (Watchlist 29,6 auf 26,9 %%). Der Hebelanteil bleibt 79,8 %%
+
+- Quelle: h4_hebelverteilung_voll/_2026/_2026_watchlist.log 11.09.
+
 **2.378** — ✔✔ H-3 - WAS r(q) TUT, UEBER ECHTE ANKER SIMULIERT (`simuliere_hebelverteilung.py`, Standardwerkzeug mit Schaltern). Messmenge V1, 633.672 Anker 2019-2026, 536 Symbole; Bewertung, Stop und Hebel ueber die ECHTEN Funktionen. Durch die Bewertungsschwelle: 113.224 (17,9 %%). BEI 18.213 EUR KAPITAL: Spot 56,3 %% · Hebel 43,7 %% (2x 24,2 · 3x 9,7 · 4x 4,4 · Grenze 5x 5,3 %%); Liquidationsabstand greift NIE. Nach Beitragslage: nur funding 34,0 %% Hebel · funding+turnover 93,6 %% (28,1 %% an der 5x-Grenze) · nur turnover 91,6 %%. Kapital 9.942 EUR: 12,1 %% Hebel; 30.000 EUR: 79,8 %% (19,0 %% an der Grenze). Risiko je Hebeltrade Median 178 EUR bei 18.213 EUR. Ab 2026: Spot 54,0 %% · Hebel 46,0 %%; in der Auswahlmenge (oberste 20 %%) 62,6 %%. NUR WATCHLIST 2026: 39 Werte, 8.606 Anker, 3.694 durch die Schwelle (42,9 %%); Spot 41,6 %% · Hebel 58,4 %% (2x 28,3 · 3x 13,2 · 4x 7,1 · Grenze 5x 9,8 %%); Stop Median 13,7 %% - naeher am Betrieb (11,7 %%); in der Auswahlmenge 77,3 %% Hebel
 
 - Quelle: simuliere_hebelverteilung.py · Laeufe 11.09.
@@ -2269,6 +2293,10 @@
 **2.315** — ➔ WAS AUS 2.312 FOLGT - und es ist KEIN Abschalten: `funding` traegt auf 10 %% und 50 %%, nur bei 20 %% nicht. Nach der Nutzervorgabe faellt kein Beitrag ohne Grund, und ein Nichttragen auf EINER von drei Mengen ist ein Grund zum Nachsehen, keiner zum Entfernen. ⚠️ Zu klaeren: ob die 20-%%-Menge bei `funding` eine Besonderheit hat (Abdeckung 300 von 536 - die Momentum-Auswahl und die Funding-Verfuegbarkeit koennten sich ueberschneiden) oder ob es Rauschen ist
 
 - Quelle: V10, aus 2.312
+
+**2.379-tage** — ⚠️⚠️ WIE LANGE EIN HEBEL SICHER BLEIBT. RM-11 prueft bei der Eroeffnung Tag 0 (Nutzerentscheidung 14.07.: keine Haltedauer raten); die Finanzierung schiebt die Liquidation um rund 0,2 %% des Einstiegs je Tag. `simuliere_hebelverteilung.py` mit korrigiertem RM-11: bei 18.213 EUR erreicht die Liquidation den Stop im Median nach 79 Tagen (10 %% nach 26), KEIN Fall unter 3,3 Tagen; Watchlist 2026 Median 73 (10 %% 25). Bei 30.000 EUR: Median 31 (10 %% 2,6), am ersten Tag 8,5 %%, unter 3,3 Tagen 11,2 %%. Die 188 echten Positionen am NB hielten im Median 0,3 Tage (90 %% unter 3,3; Hebel Median 5,6x). ➔ beim heutigen Kapital keine Handlung noetig; ueber eine Tagesreserve beim Einstieg ist zu entscheiden, wenn das Kapital waechst
+
+- Quelle: simuliere_hebelverteilung.py 11.09. (drei Laeufe) · NB hebel_positions
 
 **2.359-abruf** — ⚠️ UND EINE OFFENE UNGENAUIGKEIT, benannt statt verschwiegen: keine der drei Messquellen fuehrt eine `fetched_at`-Spalte. Der ABRUFSTAND - nach dem Kopf des Moduls *,der eigentliche Gesundheitswert'* - kommt deshalb aus der AENDERUNGSZEIT der Datei. Die beweist, dass ueberhaupt geschrieben wurde, NICHT dass der Abruf vollstaendig war. Fuer ,laeuft der Job noch?' genuegt das; fuer ,war er vollstaendig?' nicht. Eine echte `fetched_at`-Spalte kommt, wenn die drei Jobs bekommen
 

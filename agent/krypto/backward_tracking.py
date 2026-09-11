@@ -5189,15 +5189,30 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                                  # in `spalten`, wurde aber nie GELESEN - und
                                  # `row["strategie"]` warf deshalb IndexError.
                                  # Gefunden von pruefe_pakete, nicht im Betrieb.
-                                 "strategie") if c in spalten))
+                                 "strategie",
+                                 # H-4 (11.09.2026): das Instrument der Zeile
+                                 "instrument") if c in spalten))
             rows = conn.execute(
                 f"SELECT {felder} FROM {tabelle} "
                 f"WHERE outcome_status = ? AND outcome_max_realisiertes_crv IS NOT NULL "
                 f"AND take_profit_usd_von IS NOT NULL",
                 (OUTCOME_OFFEN,),
             ).fetchall()
+            _tabelle_ist_hebel = ist_hebel
             for row in rows:
                 ergebnis["geprueft"] += 1
+                # ⚠️⚠️ H-4 (11.09.2026): DAS INSTRUMENT STEHT IN DER ZEILE,
+                # NICHT IM TABELLENNAMEN. Die Rollen-Kette schreibt ihre
+                # Hebelsignale nach `signals` (Spalte `instrument`), nicht
+                # nach `hebel_signals` - hier galt aber jede Zeile aus
+                # `signals` als Spot. Ein Hebelsignal der neuen Kette waere
+                # damit unter (Symbol, "spot") gefuehrt worden, gegen den
+                # SPOT-Bestand geprueft - und `_fuehrung_zu(..., "hebel")`
+                # haette nie etwas gefunden. Am NB unsichtbar, weil die
+                # Rollen-Kette bis heute kein Hebelsignal geschrieben hat.
+                ist_hebel = _tabelle_ist_hebel or (
+                    "instrument" in spalten
+                    and str(row["instrument"] or "").lower() == "hebel")
                 z = _zonen_absolut(row)
                 if z is None:
                     continue
@@ -5331,14 +5346,20 @@ def compute_ausstiegs_empfehlungen(conn, watchlist: list | None = None,
                 continue
             try:
                 rows = conn.execute(
-                    f"SELECT symbol, outcome_entschieden_am, outcome_realisiertes_crv "
+                    f"SELECT symbol, outcome_entschieden_am, outcome_realisiertes_crv"
+                    f"{', instrument' if 'instrument' in spalten else ''} "
                     f"FROM {tabelle} WHERE outcome_status = ? "
                     f"AND outcome_entschieden_am >= ?",
                     (OUTCOME_TAKE_PROFIT, seit_tag)).fetchall()
             except Exception:
                 logger.exception("Take-Profit-Nachlese fuer %s fehlgeschlagen", tabelle)
                 continue
+            _tabelle_ist_hebel = ist_hebel
             for row in rows:
+                # H-4 (11.09.2026): auch hier entscheidet die ZEILE - siehe oben.
+                ist_hebel = _tabelle_ist_hebel or (
+                    "instrument" in spalten
+                    and str(row["instrument"] or "").lower() == "hebel")
                 # NUR WAS WIRKLICH IM DEPOT LIEGT. Ein erreichtes Ziel auf einem
                 # nie gekauften Signal ist ein Messpunkt, kein Verkaufsauftrag.
                 #

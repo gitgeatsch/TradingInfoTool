@@ -918,6 +918,45 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             f"Positionsfuehrung uebersprungen: {type(_pfx).__name__}: {_pfx}")
         logger.exception("Positionsfuehrung fuer %s uebersprungen", assetklasse)
 
+    # ---- H-4: DIE HEBELFUEHRUNG (Paket B, 11.09.2026) ------------------
+    #
+    # ⚠️ EIN HEBEL IST EIN TRADE, KEIN BESTAND (O5). Die Positionsfuehrung
+    # oben kennt nur Spot; die echten Hebelpositionen standen in
+    # `hebel_positions`, samt Liquidationspreis ueber die echten Tage - und
+    # wurden von keiner Mail gelesen. `agent/hebelfuehrung.py` verbindet sie
+    # mit ihrem Plan und meldet SCHLIESSEN, HEBEL SENKEN, STOP NACHZIEHEN.
+    #
+    # ⚠️ EIGENE MAIL, NICHT NUR IN DER VERKAUFSMAIL: die geht nur raus, wenn
+    # das MODELL einen Ausstieg urteilt. Eine Liquidation vor dem Stop wartet
+    # nicht auf ein Urteil. Einmal je Zustand und Tag (`neue_meldungen`).
+    #
+    # ⚠️ UND FAIL-SOFT MIT VERMERK, wie die Positionsfuehrung.
+    from agent.assetklassen import hebel_handelbar as _hb_hf
+
+    if _hb_hf(assetklasse):
+        try:
+            from agent import hebelfuehrung as _HF
+            _trades = _HF.lade(conn, symbole=list(symbole or ()))
+            if _trades:
+                _positionen = list(_positionen or []) + [
+                    _HF.zeilen(x) for x in _trades]
+            ergebnis["hebelfuehrung"] = {
+                "offen": len(_trades),
+                "empfehlungen": [x.get("empfehlung") for x in _trades]}
+            _neu_hf = _HF.neue_meldungen(conn, _trades)
+            _hf_mail = _HF.sammel_mail(_neu_hf, zeitpunkt=tag)
+            if _hf_mail:
+                ergebnis.setdefault("mails", []).append(
+                    {"symbol": "(Hebel)", "betreff": _hf_mail[0],
+                     "text": _hf_mail[1], "seite": "hebelfuehrung"})
+                if betriebsart == SCHARF and versand is not None:
+                    versand(*_hf_mail)
+                    _HF.vermerke(conn, _neu_hf)
+        except Exception as _hfx:                            # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"Hebelfuehrung uebersprungen: {type(_hfx).__name__}: {_hfx}")
+            logger.exception("Hebelfuehrung fuer %s uebersprungen", assetklasse)
+
     _sammel = VK2.sammel_mail(ergebnis.get("ausstiege") or [],
                               modell=modell, zeitpunkt=tag,
                               positionen=_positionen)
@@ -1886,7 +1925,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                     kapital_eur=_hq_kapital["wert_eur"],
                     stop_rel=_stop_q, einstellungen=_hq_einst,
                     kapital_satz=_hq_kapital.get("satz") or "",
-                    hebel_sicher=ER.hebel_sicher(_stop_q))
+                    hebel_sicher=ER.hebel_sicher(
+                        _stop_q, befund.get("richtung") == "SHORT"))
             _etikett = ("hebel" if ((_hq and _hq["ist_hebel"])
                                     or befund.get("richtung") == "SHORT")
                         else "spot")

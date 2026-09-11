@@ -755,13 +755,68 @@ def estimate_liquidation_price(
     return entry_price * (1 - hebel_abstand + zeit_faktor) / (1 - sicherheitsmarge_relativ)
 
 
-def max_safe_hebel(stop_loss_distance_pct: float, sicherheitsmarge_relativ: float) -> float:
-    """RM-11: der Hebel muss so gewaehlt sein, dass zwischen Stop-Loss und
-    geschaetztem Liquidationspreis ein Sicherheitsabstand bleibt - sonst greift
-    Bitpandas Zwangsliquidation, BEVOR der eigene Stop-Loss ueberhaupt ausloesen
-    kann. `sicherheitsmarge_relativ` (z.B. 0.175) ist ein relativer Puffer auf
-    den reinen 1/Hebel-Abstand, keine additive Prozentzahl."""
-    return (1 - sicherheitsmarge_relativ) / (stop_loss_distance_pct / 100)
+def max_safe_hebel(stop_loss_distance_pct: float, sicherheitsmarge_relativ: float,
+                   ist_short: bool = False, tage: float = 0.0,
+                   funding_rate_daily_pct: float = 0.18) -> float:
+    """RM-11: der hoechste Hebel, bei dem der geschaetzte Liquidationspreis
+    noch HINTER dem Stop liegt - sonst greift Bitpandas Zwangsliquidation,
+    BEVOR der eigene Stop ueberhaupt ausloesen kann.
+
+    ⚠️⚠️ KORRIGIERT 11.09.2026 (H-4, Gegenpruefung). Hier stand
+    `(1 - marge) / stop` - geschrieben, als `sicherheitsmarge_relativ` noch
+    ein "relativer Puffer auf den reinen 1/Hebel-Abstand" war (0,175). Am
+    16.07. bekam dieselbe Zahl in `estimate_liquidation_price()` eine ANDERE
+    Bedeutung - die Wartungsmarge, gegen den echten LINK-Fall kalibriert -,
+    und am 19.07. wurde sie auf 0,09 gesenkt. Diese Funktion wurde dabei nicht
+    nachgezogen. Mit den ECHTEN Funktionen reproduziert: bei JEDEM Hebel, den
+    die alte Formel erlaubte, lag die geschaetzte Liquidation VOR dem Stop -
+    bei 11,7 % Stop (Betriebs-Median) 7,78x erlaubt, Liquidation bei 4,2 %;
+    bei 5 % Stop 18,2x, Liquidation UEBER dem Einstieg. Die Pruefung, die das
+    haette finden sollen, verglich `rechne()` mit DIESER Funktion statt mit
+    der Eigenschaft "Liquidation hinter dem Stop".
+
+    JETZT AUS DERSELBEN FORMEL WIE `estimate_liquidation_price()` hergeleitet,
+    durch Gleichsetzen von Liquidationspreis und Stop:
+
+        LONG   E(1 - 1/L + t f)/(1 - m) <= E(1 - s)  ->  L <= 1/(1 - (1-s)(1-m) + t f)
+        SHORT  E(1 + 1/L - t f)/(1 + m) >= E(1 + s)  ->  L <= 1/((1+s)(1+m) - 1 + t f)
+
+    `tage` = 0 bei der Empfehlung (Nutzerentscheidung 14.07.: keine
+    Haltedauer raten); die Positionsfuehrung rechnet mit den echten Tagen."""
+    s = float(stop_loss_distance_pct) / 100.0
+    m = float(sicherheitsmarge_relativ)
+    zeit = max(0.0, float(tage or 0.0)) * float(funding_rate_daily_pct) / 100.0
+    if ist_short:
+        nenner = (1.0 + s) * (1.0 + m) - 1.0 + zeit
+    else:
+        nenner = 1.0 - (1.0 - s) * (1.0 - m) + zeit
+    if nenner <= 0:
+        return float("inf")
+    return 1.0 / nenner
+
+
+def tage_bis_liquidation_am_stop(stop_rel: float, hebel: float,
+                                 sicherheitsmarge_relativ: float,
+                                 ist_short: bool = False,
+                                 funding_rate_daily_pct: float = 0.18) -> float | None:
+    """Nach wie vielen Haltetagen die geschaetzte Liquidation den Stop erreicht.
+
+    Die Finanzierung schiebt den Liquidationspreis jeden Tag naeher an den
+    Einstieg (`estimate_liquidation_price`, Zeitkomponente). Ein Hebel, der am
+    Tag der Eroeffnung sicher ist, ist es deshalb nicht fuer immer - bei 5x und
+    einem Stop knapp unter der Grenze nur wenige Tage. 0.0, wenn die
+    Liquidation schon bei Eroeffnung vor dem Stop liegt; None ohne Hebel."""
+    if not hebel or float(hebel) <= 1.0:
+        return None
+    s, m = float(stop_rel), float(sicherheitsmarge_relativ)
+    f = float(funding_rate_daily_pct) / 100.0
+    if f <= 0:
+        return None
+    if ist_short:
+        t = (1.0 / float(hebel) + 1.0 - (1.0 + s) * (1.0 + m)) / f
+    else:
+        t = (1.0 / float(hebel) - 1.0 + (1.0 - s) * (1.0 - m)) / f
+    return max(0.0, t)
 
 
 @dataclass
@@ -1046,6 +1101,10 @@ def post_check_hebel(
         # hebel.liquidations_sicherheitsmarge_relativ): ATR 7% -> Annahme 14% Stop
         # -> 6,50x erlaubt. Tatsaechlicher Stop 17,9% -> nur 5,08x sind sicher.
         # Der vorab berechnete Wert laege also 1,4 Hebelstufen zu hoch.
+        #
+        # ⚠️ DIESE ZAHLEN STAMMEN AUS DER FALSCHEN FORMEL (Korrektur 11.09.2026,
+        # siehe `max_safe_hebel`): mit der kalibrierten Liquidation sind es
+        # bei 14 % Stop 4,60x und bei 17,9 % 3,95x - nicht 6,50x und 5,08x.
         #
         # Bisher unauffaellig geblieben, weil der Median-Hebel bei 3,0 liegt - die
         # Luecke ist real, hat sich aber noch nicht materialisiert. Als

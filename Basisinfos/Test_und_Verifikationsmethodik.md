@@ -2257,6 +2257,7 @@ selbst im Faktensatz.
 | Skript | Frage | Ausloeser |
 |---|---|---|
 | `simuliere_kette.py` | **Laeuft die Abrufkette durch, und kommen die Saetze am Ende an?** Betriebsart `probe` gegen eine KOPIE der Datenbank, echte Reihen/Fakten/Rechnung/Schreiben/Mailaufbau, Attrappe nur fuer die drei Modellaufrufe. Spielt je Instrument JEDE Aktion des Vokabulars durch. | nach jeder Aenderung an der Rollen-Kette, **vor** jedem Produktivgang |
+| `simuliere_hebelverteilung.py` | **Was macht `r(q)` aus echten Ankern?** (Nachtrag 11.09., H-3/H-4) Messmenge V1, Bewertung, Stop und Hebel ueber die echten Funktionen; Spot/Hebel/Grenze 5x/RM-11 je Kapitalstufe, je Beitragslage und Jahr, dazu **nach wie vielen Tagen die Liquidation den Stop erreicht**. Schalter `--kapital`, `--ab`, `--nur-watchlist`, `--anteil`; Gegenpruefung G1-G6 in jedem Lauf. | nach jeder Aenderung an Hebelrechnung, Stopregel, RM-11 oder Kapital; vor dem Scharfschalten von `hebel_aus_quote` |
 
 **Warum zusaetzlich zu den 855 Paketpruefungen.** Die sind statisch und pruefen
 Teile. An einem einzigen Tag haben sie viermal etwas nicht gefunden, das beim

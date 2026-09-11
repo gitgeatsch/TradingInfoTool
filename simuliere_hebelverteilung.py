@@ -310,6 +310,22 @@ def main() -> int:
             print("  Hebel, wo einer entsteht: Median %sx · 10 %% %sx · 90 %% %sx · Risiko je Trade Median %s EUR"
                   % (de(st.median(hw), 1), de(np.percentile(hw, 10), 1),
                      de(np.percentile(hw, 90), 1), de(st.median(rw), 0)))
+            # H-4 (11.09.2026): WIE LANGE DER HEBEL SICHER BLEIBT. Die
+            # Finanzierung schiebt die Liquidation jeden Tag naeher an den
+            # Einstieg; RM-11 prueft bei der Eroeffnung nur Tag 0. Bezug: die
+            # 188 echten Positionen am NB wurden zu 90 % unter 3,3 Tagen
+            # gehalten.
+            from agent.krypto.hebel_risk_gate import tage_bis_liquidation_am_stop
+            tb = [tage_bis_liquidation_am_stop(h["stop_rel"], h["hebel"],
+                                               ER.GRENZEN["liquidations_marge"])
+                  for h in hebel]
+            tb = [x for x in tb if x is not None]
+            if tb:
+                print("  Liquidation erreicht den Stop nach: Median %s Tagen · 10 %% %s · "
+                      "am ersten Tag %s · unter 3,3 Tagen %s"
+                      % (de(st.median(tb), 0), de(np.percentile(tb, 10), 1),
+                         pct(sum(1 for x in tb if x < 1.0), len(tb)),
+                         pct(sum(1 for x in tb if x < 3.3), len(tb))))
         stufen = Counter()
         for a in durch:
             h = a["h"][k]

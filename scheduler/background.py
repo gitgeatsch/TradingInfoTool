@@ -3368,17 +3368,28 @@ def hebel_screening_job(
         from agent.krypto.hebel_screening import run_hebel_screening
 
         config_dict = config_module.load_config()
-        if not config_dict.get("hebel_screening", {}).get("aktiv", True):
-            logger.info("Hebel-Screening deaktiviert (config.yaml hebel_screening.aktiv=false) - übersprungen")
-            return True
-
-        triggers = run_hebel_screening(conn_factory, watchlist, kraken_client, coingecko_client, config_dict)
-        kandidaten = [t for t in triggers if t.ist_kandidat]
-        logger.info(
-            "Hebel-Screening: %d Assets bewertet, %d Kandidaten (Score >= Schwelle)",
-            len(triggers), len(kandidaten),
-        )
-        _pruefe_oi_abdeckung_warnung(conn_factory, config_dict)
+        # ⚠️⚠️ DER SCHALTER SCHALTET NUR DAS SCREENING AB (H-4, 11.09.2026).
+        #
+        # Hier stand ein `return True`. Dieser Job traegt seit Phase 3 aber
+        # zwei Dinge huckepack, die mit dem alten Screening nichts zu tun
+        # haben: den Abgleich der ECHTEN Hebelpositionen bei Bitpanda (ohne
+        # ihn fuehrt die Hebelfuehrung Positionen, die laengst geschlossen
+        # sind, und kennt neue nicht) und den UMLAUF DER ROLLEN-KETTE weiter
+        # unten. `hebel_screening.aktiv: false` - naheliegend, sobald die alte
+        # Kette beim Rollout stillgelegt wird - haette beides lautlos
+        # abgeschaltet: keine Urteile, keine Mails, keine Fehlermeldung.
+        # Genutzt wurden `triggers`/`kandidaten` nur fuer die Logzeile.
+        if config_dict.get("hebel_screening", {}).get("aktiv", True):
+            triggers = run_hebel_screening(conn_factory, watchlist, kraken_client, coingecko_client, config_dict)
+            kandidaten = [t for t in triggers if t.ist_kandidat]
+            logger.info(
+                "Hebel-Screening: %d Assets bewertet, %d Kandidaten (Score >= Schwelle)",
+                len(triggers), len(kandidaten),
+            )
+            _pruefe_oi_abdeckung_warnung(conn_factory, config_dict)
+        else:
+            logger.info("Hebel-Screening deaktiviert (config.yaml hebel_screening.aktiv=false) - "
+                        "Screening übersprungen; Positionsabgleich und Rollen-Umlauf laufen weiter")
 
         if bitpanda_api_key:
             from importer.bitpanda_margin_positions import auto_add_unknown_hebel_symbols, sync_hebel_positions

@@ -4930,3 +4930,57 @@ darüber — **im Betrieb entsteht eher mehr Hebel als simuliert.**
 **Empfehlung: den Schalter mit dem Rollout von Paket B einschalten — nach
 Positionsführung (H-4), Aggregat-Deckel (H-5) und dem E2E-Nachweis
 (Schritt 23), nicht jetzt.**
+
+## ✔ H-4 — die Hebelführung, und vier Fehler, die die Gegenprüfung fand (Befunde 2.379*)
+
+**Ein Hebel ist ein Trade, kein Bestand (O5).** `agent/hebelfuehrung.py` führt
+jede **offene** Position aus `hebel_positions` (echter Bitpanda-Abgleich) mit
+ihrem Plan — dem jüngsten Rollen-Hebelsignal desselben Symbols und derselben
+Richtung bis 3 Tage vor der Eröffnung.
+
+| Empfehlung | wann |
+|---|---|
+| **LIQUIDATION ERREICHT** | Kurs jenseits des geschätzten Liquidationspreises |
+| **SCHLIESSEN** | Widerlegung, nachgezogener Stop unterschritten, Signal laut Verfolgung am Stop oder Ziel |
+| **HEBEL SENKEN** | die Liquidation liegt vor dem Stop — mit Nachschussbetrag (RM-11, keine Bewertung) |
+| **KURS FEHLT** | kein Kurs für eine offene Hebelposition |
+| **STOP NACHZIEHEN** | Trailing ab +1 R |
+| HALTEN | sonst — mit dem Tag, ab dem die Liquidation den Stop erreicht |
+
+Eigene Mail aus dem Rollen-Lauf, **einmal je Zustand und Tag**, vermerkt erst
+nach dem Versand. Die Finanzierung steht in EUR — **Information, kein
+Auslöser** (Regel 2).
+
+### ⚠️⚠️⚠️ Was die Gegenprüfung fand
+
+| # | Fehler | Folge |
+|---|---|---|
+| 1 | `max_safe_hebel` rechnete mit der **alten Bedeutung** der Marge | bei **jedem** erlaubten Hebel lag die Liquidation **vor** dem Stop — 11,7 % Stop: 7,78x statt 5,09x |
+| 2 | „Liquidation etwa" in der Mail = `1 − 1/Hebel` | bei 5x −20 % statt −12,1 % |
+| 3 | Faktentext für das Modell: 33/17/10 % | richtig 27/8/1 % — Prompt-Stand **2026-09-11a** |
+| 4 | Ausstiegsführung erkannte Hebel nur an der **Tabelle** | jedes Rollen-Hebelsignal wäre als Spot geführt worden |
+| 5 | `hebel_screening.aktiv: false` → `return True` | hätte Positionsabgleich **und** Rollen-Kette lautlos abgeschaltet |
+
+Die Prüfungen zu 1 und 3 verglichen eine Funktion **mit sich selbst**. Jetzt
+wird gegen die **Eigenschaft** geprüft: beim höchsten erlaubten Hebel liegt
+die Liquidation genau am Stop (294 Fälle).
+
+### Was die Korrektur an H-3 ändert
+
+| Kapital | vorher | jetzt |
+|---|---|---|
+| 18.213 EUR | Hebel 43,7 %, Grenze 5,3 %, RM-11 0 % | **unverändert** — das Kapital begrenzt vor RM-11 |
+| 30.000 EUR | Hebel 79,8 %, Grenze 19,0 %, RM-11 0 % | Hebel 79,8 %, Grenze 16,0 %, **RM-11 6,4 %** |
+
+### Wie lange ein Hebel sicher bleibt (offen, 2.379-tage)
+
+Die Finanzierung schiebt die Liquidation um rund 0,2 % je Tag an den Einstieg.
+
+| Kapital | Liquidation am Stop nach | am ersten Tag | unter 3,3 Tagen |
+|---|---|---|---|
+| **18.213 EUR** | Median 79 Tage (10 %: 26) | 0 % | 0 % |
+| 30.000 EUR | Median 31 Tage (10 %: 2,6) | 8,5 % | 11,2 % |
+
+Die echten 188 Positionen hielten im Median 0,3 Tage (90 % unter 3,3).
+**Beim heutigen Kapital keine Handlung nötig.** Über eine Tagesreserve beim
+Einstieg ist zu entscheiden, wenn das Kapital wächst.

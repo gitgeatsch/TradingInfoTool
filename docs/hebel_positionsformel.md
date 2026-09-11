@@ -298,7 +298,14 @@ Risikobetrag           = Konto-Eigenkapital × 1%        (risiko_pro_trade_proze
                                                            bewusst niedriger als Spot-RM-1
                                                            2% - siehe Begründung unten)
 Positionsgröße         = Risikobetrag / Stop-Loss-Abstand_%
-max_sicherer_hebel     = (1 − Sicherheitsmarge_relativ[0,175]) / Stop-Loss-Abstand_%
+max_sicherer_hebel     = 1 / (1 − (1 − Stop-Abstand) × (1 − Wartungsmarge[0,09]) + Tage × 0,0018)   (LONG)
+                         1 / ((1 + Stop-Abstand) × (1 + Wartungsmarge) − 1 + Tage × 0,0018)     (SHORT)
+                         ⚠️ KORRIGIERT 11.09.2026 (H-4): hier stand (1 − Marge) / Stop-Abstand -
+                         aus der Zeit, als die Marge ein Puffer auf 1/Hebel war. Seit der
+                         Kalibrierung 16./19.07. ist sie die Wartungsmarge der Liquidationsformel
+                         oben; die alte Formel erlaubte bei JEDEM Stop einen Hebel, dessen
+                         geschaetzte Liquidation VOR dem Stop lag (11,7 % Stop: 7,78x statt 5,09x).
+                         Jetzt durch Gleichsetzen von Liquidationspreis(t) und Stop hergeleitet.
 verwendeter_Hebel      = MIN(config max_hebel [10], max_sicherer_hebel, AZ-7-Regime-Deckel)
 Eigenkapitalbedarf     = Positionsgröße / verwendeter_Hebel
                          → gegen RM-2 (Allokations-Deckel) und RM-4 (Cash-Reserve-

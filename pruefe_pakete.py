@@ -1073,9 +1073,17 @@ def paket_10() -> None:
     # RM-11 bleibt wirksam, auch wenn das Risikobudget mehr erlauben wuerde.
     eng = ER.rechne(kurs=100, atr=1.0, risiko_eur=400, instrument="hebel",
                     betrag_wunsch_eur=500, topf_frei_eur=500)
+    # ⚠️ H-4 (11.09.2026): GEGEN DIE EIGENSCHAFT, nicht gegen die Formel.
+    # Hier stand `hebel <= max_safe_hebel(...)` - die Funktion gegen sich
+    # selbst; sie haette die falsche Marge-Bedeutung (2.379-rm11) nie
+    # gefunden. Und `hebel` steht gerundet (7,4 gegen 7,38). Die Eigenschaft
+    # heisst: die geschaetzte Liquidation liegt nicht vor dem Stop.
     pruefe(P, "der Liquidationsabstand deckelt den Hebel",
-           eng["hebel"] <= ER.max_safe_hebel(100 * eng["stop_relativ"], 0.09) + 1e-9,
-           "sonst greift Bitpandas Zwangsliquidation VOR dem eigenen Stop")
+           eng["liquidation_etwa_eur"] <= 100 * (1 - eng["stop_relativ"]) + 1e-4
+           and eng["hebel"] <= ER.hebel_sicher(eng["stop_relativ"]) + 0.05,
+           "sonst greift Bitpandas Zwangsliquidation VOR dem eigenen Stop - "
+           "Liquidation %r, Stop %r" % (eng["liquidation_etwa_eur"],
+                                        100 * (1 - eng["stop_relativ"])))
 
     # KEIN WIDERSPRUCH ZWISCHEN KOPF UND CODE (R-T8 sinngemaess).
     kopfzeile = ER.__doc__ or ""
@@ -6508,10 +6516,18 @@ def paket_15() -> None:
            "eine Aktie laesst sich hier nicht hebeln - der Satz waere dort "
            "schlicht falsch. Bei Krypto MUSS er stehen, auch im Spot-Lauf: "
            "der Hebel faellt seit S6a aus der Rechnung an, nicht aus dem Lauf")
+    # ⚠️ H-4 (11.09.2026): hier stand die Identitaet `1 - (1 - 1/h) = 1/h` -
+    # sie prueft sich selbst und haette die fehlende Wartungsmarge an BEIDEN
+    # Stellen nie gefunden. Jetzt gegen die kalibrierte Formel UND den Text.
+    from agent.krypto.hebel_risk_gate import estimate_liquidation_price as _liq5
     _kurs5, _hebel5 = 100.0, 10.0
     pruefe(P, "und er benutzt dieselbe Formel wie die spaetere Rechnung",
-           abs((_kurs5 - _kurs5 * (1 - 1 / _hebel5)) / _kurs5
-               - 1.0 / _hebel5) < 1e-12
+           abs(_liq5(_kurs5, _hebel5, "LONG", 0.0,
+                     sicherheitsmarge_relativ=ER5.GRENZEN["liquidations_marge"])
+               - 100.0 * 0.9 / 0.91) < 1e-9
+           and "10-fach 1 %" in _heb["hebelgeometrie"][0]
+           and "6-fach 8 %" in _heb["hebelgeometrie"][0]
+           and "3-fach 27 %" in _heb["hebelgeometrie"][0]
            and 10.0 in LB3.GRENZHEBEL
            and LB3.GRENZHEBEL[-1] == ER5.GRENZEN["hebel_max"],
            "der groesste Stuetzpunkt MUSS der Hoechsthebel sein - sonst "
@@ -7433,7 +7449,7 @@ def paket_15() -> None:
     # nichts.
     # Zuletzt 2026-08-17c: eine Zeile gegen erfundene Perzentile (A6).
     pruefe(P, "der Prompt-Stand ist mitgezogen",
-           RT5.PROMPT_STAND == "2026-08-17e",
+           RT5.PROMPT_STAND == "2026-09-11a",
            "die Eingabe UND die Anweisung der Rolle BC haben sich "
            "geaendert - ohne neuen Stand waeren die Urteile davor und "
            "danach nicht auseinanderzuhalten")
@@ -9117,7 +9133,7 @@ def paket_belege() -> None:
            "kein Perzentil, und der Leser kann es nicht unterscheiden")
 
     pruefe(P, "A6: und der Promptstand wurde mitgezogen",
-           RT.PROMPT_STAND == "2026-08-17e",
+           RT.PROMPT_STAND == "2026-09-11a",
            f"{RT.PROMPT_STAND} - sonst waeren Signale vor und nach der "
            f"Aenderung nicht trennbar")
 
@@ -12258,8 +12274,16 @@ def paket_dimension() -> None:
     # alle drei Bindungsgruende erreichbar sind. Erreicht wird der
     # Hoechsthebel jetzt ueber den Verlustanteil (0,55/0,05 = 11,0 > 10,0),
     # nicht mehr ueber einen Stop, den es nicht mehr gibt.
+    #
+    # ⚠️⚠️ SEIT H-4 (11.09.2026) IST DER HOECHSTHEBEL NICHT MEHR ERREICHBAR -
+    # und das ist eine Eigenschaft, kein Testfehler. `max_safe_hebel` rechnete
+    # mit der alten Bedeutung der Marge (2.379-rm11) und erlaubte bei 5 %
+    # Stop 18,2x. Richtig ist 1/(1 - 0,95 x 0,91) = 7,38x: bei der
+    # Stop-Untergrenze 5 % und der Wartungsmarge 0,09 liegt JEDER sichere
+    # Hebel unter den 10x der Boerse. Der Fall (0,05 / 60 %) wird deshalb von
+    # RM-11 gebunden; die Unerreichbarkeit wird unten ausdruecklich geprueft.
     _faelle = ((0.05, 0.30, "Risikobudget"),
-               (0.05, 0.60, "Hoechsthebel"),
+               (0.05, 0.60, "RM-11 Liquidationsabstand"),
                (0.22, 0.95, "RM-11 Liquidationsabstand"))
     for _sr, _va, _erwartet in _faelle:
         _d = _gebunden(_sr, _va)
@@ -12269,10 +12293,20 @@ def paket_dimension() -> None:
                f"gemeldet: {_d['gebunden_durch']} (Hebel {_d['hebel']:.2f}, "
                f"noetig {_d['hebel_noetig']:.2f}, sicher "
                f"{_d['hebel_sicher']:.2f})")
-    pruefe(P, "und alle drei Gruende sind ueberhaupt erreichbar",
+    pruefe(P, "und beide erreichbaren Gruende kommen vor",
            len({_gebunden(s, v)["gebunden_durch"]
-                for s, v, _ in _faelle}) == 3,
+                for s, v, _ in _faelle}) == 2,
            "ein Feld, das nur einen Wert annehmen kann, ist keine Auskunft")
+    pruefe(P, "⚠️⚠️ der Hoechsthebel ist unerreichbar: selbst bei der Stop-"
+              "Untergrenze liegt der sichere Hebel darunter (2.379-rm11)",
+           _ERD.hebel_sicher(_ERD.GRENZEN["stop_min_relativ"])
+           < _ERD.GRENZEN["hebel_max"]
+           and _gebunden(0.05, 0.99)["gebunden_durch"] != "Hoechsthebel",
+           "sicher bei %s %% Stop: %.2fx gegen %sx - vor der Korrektur 18,2x. "
+           "Faellt diese Zeile, hat sich Marge, Untergrenze oder Formel "
+           "geaendert" % (100 * _ERD.GRENZEN["stop_min_relativ"],
+                          _ERD.hebel_sicher(_ERD.GRENZEN["stop_min_relativ"]),
+                          _ERD.GRENZEN["hebel_max"]))
 
     # ⚠️ UND DER DECKEL SENKT DAS RISIKO NICHT. In der neuen Rechnung steht
     # der Verlust je Trade VOR dem Hebel fest (verlustanteil x einsatz); ein
@@ -17940,7 +17974,8 @@ def paket_hebel_aus_quote() -> None:
            "and not BE.hebel_aus_quote_einstellungen(" in _rlq, "")
     pruefe(P, "⚠️ die Kette entscheidet mit dem Stop und der Liquidationsgrenze von rechne()",
            "_stop_q = ER.stop_relativ(" in _rlq
-           and "hebel_sicher=ER.hebel_sicher(_stop_q)" in _rlq,
+           and ('hebel_sicher=ER.hebel_sicher( _stop_q, befund.get("richtung") '
+                '== "SHORT"))') in " ".join(_rlq.split()),
            "Gegenpruefung 11.09.: mit dem Stop aus `dimensioniere` lag das "
            "Etikett in 20 von 144 Faellen daneben")
 
@@ -17997,6 +18032,249 @@ def paket_hebel_aus_quote() -> None:
            and abs(_h["hebel"] - _ERq.hebel_sicher(_s22)) < 1e-9
            and "Liquidationsabstand" in _h["saetze"][1],
            "%r / %r" % (_h["hebel"], _h["saetze"]))
+
+
+def paket_hebelfuehrung() -> None:
+    """H-4 - die Hebelfuehrung und RM-11 im Lebenszyklus (Paket B, 11.09.2026).
+
+    Mit geprueft: zwei Befunde der Gegenpruefung. `max_safe_hebel` rechnete
+    mit einer Marge, deren Bedeutung sich am 16.07. geaendert hatte - bei
+    JEDEM erlaubten Hebel lag die geschaetzte Liquidation VOR dem Stop. Und
+    `liquidation_etwa_eur` rechnete `1 - 1/Hebel`, ohne Wartungsmarge. Alles
+    hier ruft die ECHTEN Funktionen; die Zahlen sind von Hand nachgerechnet.
+    """
+    P = "Hebelfuehrung"
+    import re as _re_hf
+    import sqlite3 as _sq
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+
+    import database.db as _dbh
+    from agent import entscheidungsrechnung as _ERh
+    from agent import hebelfuehrung as _HF
+    from agent import signal_abbildung as _SAh
+    from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen as _cae
+    from agent.krypto.hebel_risk_gate import (
+        estimate_liquidation_price as _liqh, max_safe_hebel as _msh,
+        tage_bis_liquidation_am_stop as _tbh)
+    from database.models import HebelPosition as _HP
+    M = _ERh.GRENZEN["liquidations_marge"]
+
+    # ---- RM-11: gegen die EIGENSCHAFT, nicht gegen die Formel ----------
+    #
+    # ⚠️ Die alte Pruefung verglich `rechne()` mit `max_safe_hebel()` - also
+    # die Funktion mit sich selbst. Die Eigenschaft heisst: beim hoechsten
+    # erlaubten Hebel liegt die geschaetzte Liquidation AM Stop.
+    _abw, _hinter = 0.0, True
+    for _short in (False, True):
+        for _t in (0.0, 3.0, 20.0):
+            for _i in range(1, 50):
+                _s = _i / 200.0
+                _L = _msh(100 * _s, M, ist_short=_short, tage=_t)
+                _r = "SHORT" if _short else "LONG"
+                _stop = 100 * (1 + _s) if _short else 100 * (1 - _s)
+                _abw = max(_abw, abs(_liqh(100, _L, _r, _t,
+                                           sicherheitsmarge_relativ=M) - _stop))
+                _l2 = _liqh(100, 0.99 * _L, _r, _t, sicherheitsmarge_relativ=M)
+                _hinter = _hinter and ((_l2 > _stop) if _short else (_l2 < _stop))
+    pruefe(P, "⚠️⚠️ beim hoechsten sicheren Hebel liegt die Liquidation GENAU am Stop",
+           _abw < 1e-9,
+           "Abweichung %.2e ueber 294 Faelle (Stop 0,5-24,5 %%, LONG/SHORT, "
+           "Tag 0/3/20). Die alte Formel erlaubte bei 11,7 %% Stop 7,78x - "
+           "Liquidation bei 4,2 %%" % _abw)
+    pruefe(P, "und knapp darunter liegt sie dahinter", _hinter)
+    pruefe(P, "⚠️ Betriebsmedian 11,7 % Stop: 5,09x",
+           abs(_msh(11.7, M) - 1 / (1 - 0.883 * 0.91)) < 1e-12
+           and abs(_msh(11.7, M) - 5.0898) < 1e-3, "%.4f" % _msh(11.7, M))
+    pruefe(P, "SHORT ist strenger als LONG (Marge wirkt ueber dem Einstieg)",
+           _ERh.hebel_sicher(0.12, True) < _ERh.hebel_sicher(0.12))
+    pruefe(P, "Tage bis zum Stop: 5x / 12 % = 0,0008 / 0,0018 = 0,444",
+           abs(_tbh(0.12, 5, M) - 0.0008 / 0.0018) < 1e-9, "%r" % _tbh(0.12, 5, M))
+
+    # ---- rechne(): die Liquidation MIT Wartungsmarge ------------------
+    _e = _ERh.rechne(kurs=100.0, atr=1.0, risiko_eur=400, instrument="hebel",
+                     betrag_wunsch_eur=500, topf_frei_eur=500)
+    pruefe(P, "⚠️⚠️ rechne(): bei RM-11-Bindung liegt die Liquidation AM Stop",
+           _e["hebel_grenze"] == "RM-11 Liquidationsabstand"
+           and abs(_e["liquidation_etwa_eur"] - 100 * (1 - _e["stop_relativ"])) < 1e-4,
+           "vorher 1 - 1/Hebel: %r gegen Stop %r"
+           % (_e["liquidation_etwa_eur"], 100 * (1 - _e["stop_relativ"])))
+    pruefe(P, "und die Mail sagt, dass sie den Stop schon am ersten Tag erreicht",
+           any("erreicht den Stop schon am ersten Tag" in z for z in _ERh.saetze(_e)),
+           "Nutzerentscheidung 14.07.: bei der Empfehlung keine Haltedauer "
+           "raten, aber den Hinweis geben")
+    _e2 = _ERh.rechne(kurs=64797, atr=1750, risiko_eur=75, instrument="hebel",
+                      betrag_wunsch_eur=500, topf_frei_eur=500)
+    _L2 = 1.0 / (1.0 - (1 - M) * _e2["liquidation_etwa_eur"] / 64797)
+    pruefe(P, "die Liquidation passt zum Hebel der Rechnung (rueckwaerts gerechnet)",
+           _e2["hebel"] > 1 and abs(_L2 - _e2["hebel"]) <= 0.05 + 1e-9,
+           "L aus der Liquidation %.3f, Hebel %r" % (_L2, _e2["hebel"]))
+
+    # ---- die Fuehrung an Faellen, von Hand gerechnet -------------------
+    _auf = _dt(2026, 9, 10, 12, 0, tzinfo=_tz.utc)
+    _b = dict(symbol="XYZ", richtung="LONG", eroeffnet_am=_auf.isoformat(),
+              hebel=5.0, positionswert_eur=500.0, kreditbetrag_eur=400.0,
+              eigenkapital_eur=100.0, positionsmenge=5.0, marge=M, position_id=7)
+    _plan = dict(signal_id=1, erzeugt_am="2026-09-10", einstieg=100.0,
+                 stop=88.0, ziel=124.0, ist_short=False,
+                 umgeworfen_preis_eur=None, umgeworfen_bis=None,
+                 umgeworfen_durch=None, outcome_status="offen", mfe_r=0.2,
+                 strategie="einstieg")
+    _a = _HF.fuehre(**_b, kurs_eur=101.0, jetzt=_auf + _td(days=0.5), plan=_plan)
+    _lmax = 1 / (1 - 0.88 * 0.91 + 0.5 * 0.0018)
+    pruefe(P, "⚠️⚠️ 5x, Stop 12 %, Tag 0,5: HEBEL SENKEN - Liquidation 88,011, "
+              "Nachschuss 500 / 4,9975 - 100 = 0,05 EUR",
+           _a["empfehlung"] == _HF.HEBEL_SENKEN
+           and abs(_a["liquidation_eur"] - 100 * 0.8009 / 0.91) < 1e-9
+           and abs(_a["nachschuss_eur"] - (500 / _lmax - 100)) < 1e-9,
+           "%r" % ((_a["empfehlung"], _a["liquidation_eur"], _a.get("nachschuss_eur")),))
+    pruefe(P, "Finanzierung 400 x 0,18 % x 0,5 = 0,36 EUR; Ergebnis +5,00, netto +4,64",
+           abs(_a["finanzierung_bisher_eur"] - 0.36) < 1e-9
+           and abs(_a["ergebnis_netto_eur"] - 4.64) < 1e-9)
+    _h = _HF.fuehre(**_b, kurs_eur=101.0, jetzt=_auf + _td(days=0.2), plan=_plan)
+    pruefe(P, "Tag 0,2: noch HALTEN - mit dem Tag, ab dem es kippt",
+           _h["empfehlung"] == "HALTEN"
+           and any("bis etwa Tag 0,4" in x for x in _h["hinweise"]),
+           "%r" % _h["hinweise"])
+    _t = _HF.fuehre(**_b, kurs_eur=87.0, jetzt=_auf + _td(days=0.5), plan=_plan)
+    pruefe(P, "Kurs jenseits der Liquidation: LIQUIDATION ERREICHT",
+           _t["empfehlung"] == _HF.LIQUIDIERT, _t["empfehlung"])
+    _b3 = {**_b, "hebel": 3.0, "kreditbetrag_eur": 333.33, "eigenkapital_eur": 166.67}
+    _t = _HF.fuehre(**_b3, kurs_eur=94.0, jetzt=_auf + _td(days=1),
+                    plan={**_plan, "umgeworfen_preis_eur": 95.0})
+    pruefe(P, "Widerlegungspreis erreicht: SCHLIESSEN (dieselbe bewerte() wie jedes Signal)",
+           _t["empfehlung"] == "SCHLIESSEN", _t["empfehlung"])
+    _t = _HF.fuehre(**_b3, kurs_eur=118.0, jetzt=_auf + _td(days=1),
+                    plan={**_plan, "mfe_r": 1.6})
+    pruefe(P, "+1,6 R: STOP NACHZIEHEN auf 107,20 EUR (Einstieg + 0,6 R)",
+           _t["empfehlung"] == "STOP NACHZIEHEN"
+           and abs(_t["bewertung"]["stop_empfohlen"] - 107.2) < 1e-9
+           and any("Stop nachziehen auf 107,20 EUR" in z for z in _HF.zeilen(_t)),
+           "%r" % (_t["bewertung"] or {}).get("stop_empfohlen"))
+    _t = _HF.fuehre(**_b3, kurs_eur=99.0, jetzt=_auf + _td(days=1),
+                    plan={**_plan, "outcome_status": "stop_loss_erreicht"})
+    pruefe(P, "Signal laut Verfolgung am Stop, Position noch offen: SCHLIESSEN",
+           _t["empfehlung"] == "SCHLIESSEN")
+    _t = _HF.fuehre(**_b, kurs_eur=None, jetzt=_auf, plan=_plan)
+    pruefe(P, "⚠️ ohne Kurs: KURS FEHLT - kein stilles HALTEN",
+           _t["empfehlung"] == _HF.KURS_FEHLT)
+    _t = _HF.fuehre(**{**_b, "hebel": 2.0, "kreditbetrag_eur": 250.0,
+                       "eigenkapital_eur": 250.0},
+                    kurs_eur=100.0, jetzt=_auf + _td(days=70), plan=None)
+    pruefe(P, "Staffel 70 Tage: 250 x (60 x 0,18 + 10 x 0,12) % = 30,00 EUR, heute 0,30",
+           abs(_t["finanzierung_bisher_eur"] - 30.0) < 1e-9
+           and abs(_t["finanzierung_je_tag_eur"] - 0.30) < 1e-9)
+    pruefe(P, "ohne Plan: HALTEN - und die Luecke steht da",
+           _t["empfehlung"] == "HALTEN"
+           and any("Kein Hebelsignal" in x for x in _t["hinweise"]))
+    pruefe(P, "⚠️ die Finanzierung loest nichts aus (Regel 2) - und sagt es",
+           "Information, kein Ausloeser" in " ".join(_HF.zeilen(_t)))
+
+    # ---- einmal je Zustand und Tag ---------------------------------------
+    pruefe(P, "gleicher Zustand am selben Tag: derselbe Schluessel; am naechsten ein neuer",
+           _HF.schluessel(_a, "2026-09-11") == _HF.schluessel(dict(_a), "2026-09-11")
+           and _HF.schluessel(_a, "2026-09-11") != _HF.schluessel(_a, "2026-09-12"))
+    pruefe(P, "HALTEN allein erzeugt keine Mail", _HF.sammel_mail([_h]) is None,
+           "eine taegliche 'nichts zu tun'-Mail erzieht dazu, sie nicht zu oeffnen")
+    _m = _HF.sammel_mail([_h, _a])
+    pruefe(P, "die Mail traegt nur den Handlungsbedarf - deutsch geschrieben",
+           bool(_m) and "HEBEL SENKEN XYZ" in _m[0] and "1 offene Position" in _m[1]
+           and not _re_hf.search(r"\d\.\d{1,2}(?!\d)", _m[1]), _m and _m[1])
+
+    # ---- DIE NAHT: echtes Schema, echte Zuordnung, echte Ausstiegsfuehrung --
+    c = _sq.connect(":memory:")
+    c.row_factory = _sq.Row
+    _dbh.init_db(c)
+    _SAh.migriere(c)
+
+    def _einfuegen(tabelle, werte):
+        spalten = list(c.execute(f"PRAGMA table_info({tabelle})"))
+        w = dict(werte)
+        for s in spalten:
+            if s[1] not in w and s[3] and s[4] is None and not s[5]:
+                w[s[1]] = 0 if ("INT" in (s[2] or "").upper()
+                                or "REAL" in (s[2] or "").upper()) else "x"
+        namen = {s[1] for s in spalten}
+        cols = [k for k in w if k in namen]
+        cur = c.execute("INSERT INTO %s (%s) VALUES (%s)" % (
+            tabelle, ",".join(cols), ",".join("?" * len(cols))), [w[k] for k in cols])
+        c.commit()
+        return cur.lastrowid
+
+    _jetzt = _dt.now(_tz.utc).replace(microsecond=0)
+    _auf2 = _jetzt - _td(days=0.2)
+    _einfuegen("price_cache", {"symbol": "XYZ", "price_eur": 101.0,
+                               "price_usd": 101.0 / 0.9,
+                               "fetched_at": _jetzt.isoformat()})
+
+    def _signal(instrument, erzeugt, stop):
+        return _einfuegen("signals", {
+            "symbol": "XYZ", "instrument": instrument, "action": "KAUFEN",
+            "richtung": "LONG", "hebel": 5.0 if instrument == "hebel" else None,
+            "created_at": erzeugt.isoformat(), "quelle_kette": "rollen",
+            "entry_eur_von": 99.5, "entry_eur_bis": 100.5,
+            "stop_loss_eur_von": stop, "stop_loss_eur_bis": stop,
+            "take_profit_eur_von": 124.0, "take_profit_eur_bis": 124.0,
+            "entry_usd_von": 99.5 / 0.9, "entry_usd_bis": 100.5 / 0.9,
+            "stop_loss_usd_von": stop / 0.9, "stop_loss_usd_bis": stop / 0.9,
+            "take_profit_usd_von": 124.0 / 0.9, "take_profit_usd_bis": 124.0 / 0.9,
+            "outcome_status": "offen", "outcome_max_realisiertes_crv": 0.2,
+            "strategie": "einstieg"})
+
+    _alt = _signal("hebel", _auf2 - _td(days=5), 80.0)      # vor dem Fenster
+    _plan_id = _signal("hebel", _auf2 - _td(hours=2), 88.0)  # der Plan
+    _nach = _signal("hebel", _auf2 + _td(hours=3), 70.0)     # nach der Eroeffnung
+    _spot_id = _signal("spot", _auf2 - _td(hours=1), 88.0)
+    _dbh.upsert_hebel_position(c, _HP(
+        symbol="XYZ", richtung="LONG", status="offen",
+        eroeffnet_am=_auf2.isoformat(),
+        letzte_transaktion_unix_timestamp=int(_auf2.timestamp()),
+        hebel_effektiv=5.0, positionswert_eur=500.0, kreditbetrag_eur=400.0,
+        eigenkapital_eur=100.0, positionsmenge=5.0))
+    _p = _HF.plan_zu(c, "XYZ", "LONG", _auf2.isoformat())
+    pruefe(P, "⚠️ die Zuordnung nimmt das Signal VOR der Eroeffnung, im Fenster",
+           _p is not None and _p["signal_id"] == _plan_id and abs(_p["stop"] - 88.0) < 1e-9,
+           "Plan %r - Kandidaten: 5 Tage davor %s, 2 h davor %s, 3 h danach %s, Spot %s"
+           % (_p and _p["signal_id"], _alt, _plan_id, _nach, _spot_id))
+    _tr = _HF.lade(c, symbole=["XYZ"], jetzt=_auf2 + _td(days=0.5))
+    pruefe(P, "lade(): die Position aus `hebel_positions`, Kurs aus `price_cache`, HEBEL SENKEN",
+           len(_tr) == 1 and _tr[0]["empfehlung"] == _HF.HEBEL_SENKEN
+           and abs(_tr[0]["kurs_eur"] - 101.0) < 1e-9 and _tr[0]["kurs_stand"],
+           "%r" % [(x["empfehlung"], x["kurs_eur"]) for x in _tr])
+    _neu = _HF.neue_meldungen(c, _tr, tag="2099-01-01")
+    _HF.vermerke(c, _neu, tag="2099-01-01")
+    pruefe(P, "nach dem Versand am selben Tag nicht noch einmal, am naechsten wieder",
+           len(_neu) == 1 and _HF.neue_meldungen(c, _tr, tag="2099-01-01") == []
+           and len(_HF.neue_meldungen(c, _tr, tag="2099-01-02")) == 1)
+    _f = _cae(c)
+    _zeile = {e["signal_id"]: e for e in _f.get("alle", [])}
+    pruefe(P, "⚠️⚠️ die Ausstiegsfuehrung fuehrt das Rollen-Hebelsignal als HEBEL und als Bestand",
+           _plan_id in _zeile and _zeile[_plan_id]["ist_hebel"]
+           and _zeile[_plan_id]["ist_bestand"],
+           "vorher galt jede Zeile aus `signals` als Spot - `_fuehrung_zu(..., "
+           "'hebel')` haette sie nie gefunden: %r"
+           % {k: (v["ist_hebel"], v["ist_bestand"]) for k, v in _zeile.items()})
+    pruefe(P, "und das Spotsignal desselben Symbols bleibt Spot (ohne Spotbestand)",
+           _spot_id in _zeile and not _zeile[_spot_id]["ist_hebel"]
+           and not _zeile[_spot_id]["ist_bestand"])
+    c.close()
+
+    # ---- die Verdrahtung ------------------------------------------------
+    _rlh = _quelltext("agent/rollen_lauf.py").replace("\r\n", "\n")
+    pruefe(P, "⚠️ die Kette fuehrt die Hebelpositionen - vor der Verkaufsmail",
+           0 < _rlh.find("_HF.lade(conn, symbole=") < _rlh.find("_sammel = VK2.sammel_mail("))
+    pruefe(P, "vermerkt wird erst NACH dem Versand, und nur scharf",
+           0 < _rlh.find("versand(*_hf_mail)") < _rlh.find("_HF.vermerke(conn, _neu_hf)"),
+           "sonst gilt eine nie verschickte Warnung als gemeldet")
+    _bgh = _quelltext("scheduler/background.py").replace("\r\n", "\n")
+    _i0 = _bgh.find('if config_dict.get("hebel_screening", {}).get("aktiv", True):')
+    _i1 = _bgh.find("sync_hebel_positions(conn, bitpanda_api_key)")
+    pruefe(P, "⚠️⚠️ hebel_screening.aktiv=false schaltet Positionsabgleich und Umlauf NICHT ab",
+           0 < _i0 < _i1 and "return True" not in _bgh[_i0:_i1],
+           "hier stand ein `return True` - der Schalter haette beim Stilllegen "
+           "der alten Kette auch die Rollen-Kette lautlos abgeschaltet")
+    _bth = _quelltext("agent/krypto/backward_tracking.py")
+    pruefe(P, "das Instrument der Zeile entscheidet - in beiden Schleifen",
+           _bth.count("ist_hebel = _tabelle_ist_hebel or (") == 2)
 
 
 def paket_messmenge() -> None:
@@ -18554,6 +18832,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kette je Strategie": paket_kette_je_strategie,
           "Kapital": paket_kapital,
           "Hebel aus Quote": paket_hebel_aus_quote,
+          "Hebelfuehrung": paket_hebelfuehrung,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Register": paket_register,

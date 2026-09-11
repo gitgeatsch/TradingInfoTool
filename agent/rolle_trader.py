@@ -360,7 +360,13 @@ SYSTEM_PROMPT_TRADER_OHNE_PERSONA = _baue_prompt(mit_betragsfrage=False,
 #              `.replace(",", ".")` ueber einen ganzen Satz, das in
 #              `marktlage` stand und nur solange stimmte, wie der Satz
 #              kein zweites Komma hatte.
-PROMPT_STAND = "2026-08-17e"
+# 2026-09-11a: DER LIQUIDATIONSABSTAND WAR FALSCH (H-4). Der Faktentext
+#              `lagebeschreibung._hebelgeometrie` nannte "bei 10-fach 10 %"
+#              - der reine Kehrwert des Hebels. Bitpanda liquidiert aber bei
+#              der Wartungsmarge (kalibriert am echten LINK-Fall): richtig
+#              sind rund 1 % bei 10-fach, 8 % bei 6-fach, 27 % bei 3-fach.
+#              Ein Fakt, den das Modell liest - also ein neuer Stand.
+PROMPT_STAND = "2026-09-11a"
 
 
 # --- Die abgeleiteten Zonen (Paket 1, 12.08.2026) -------------------------

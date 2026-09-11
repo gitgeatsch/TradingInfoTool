@@ -380,13 +380,21 @@ REIHENFOLGE = (
             "Befunde 2.378*",
             fertig=True),
     Schritt(20, "H-4 POSITIONSFUEHRUNG HEBEL",
-            "O5: Hebel ist ein TRADE mit Lebenszyklus, Spot ein Bestand. "
-            "Stop, Ziel, Liquidationsabstand und taegliche Finanzierung "
-            "werden gefuehrt; Schliessen und Reduzieren kommen als Mail. "
-            "⚠️ Die unsicherste Schaetzung im Paket (1-2 Tage) - Umfang erst "
-            "nach Sichtung von `hebel_positions` und `ausstiegsrechnung` "
-            "sicher.",
-            "Anforderungen_Umbau O5; Vorgabe KORRELATION-IM-DECKEL"),
+            "✔ ERLEDIGT 11.09.: `agent/hebelfuehrung.py` - jede offene "
+            "Position aus `hebel_positions` mit ihrem Plan, Liquidation mit "
+            "den echten Tagen, Finanzierung, `bewerte()`; LIQUIDATION "
+            "ERREICHT / SCHLIESSEN / HEBEL SENKEN / STOP NACHZIEHEN als eigene "
+            "Mail, einmal je Zustand und Tag. DIE GEGENPRUEFUNG FAND VIER "
+            "FEHLER: RM-11 liess bei jedem Hebel die Liquidation vor dem Stop "
+            "zu (2.379-rm11); Liquidation in Mail und Faktentext ohne "
+            "Wartungsmarge (2.379-liq, Prompt-Stand 2026-09-11a); die "
+            "Ausstiegsfuehrung haette Rollen-Hebelsignale als Spot gefuehrt "
+            "(2.379-instrument); `hebel_screening.aktiv: false` haette die "
+            "Kette abgeschaltet (2.379-schalter). Bei 18.213 EUR bleibt die "
+            "Hebelverteilung unveraendert. OFFEN (2.379-tage): Tagesreserve "
+            "beim Einstieg - erst bei wachsendem Kapital noetig.",
+            "Befunde 2.379*, 2.378-korrektur",
+            fertig=True),
     Schritt(21, "H-5 AGGREGAT-DECKEL",
             "K3: alle offenen Hebelrisiken zusammen hoechstens 3 % des "
             "Kapitals (Nutzer 11.09.). Die Korrelation des Marktes gehoert "
@@ -405,7 +413,9 @@ REIHENFOLGE = (
             "erzeugten Hebelgeschaeft (steuerbare Attrappe): Mail, Chart, "
             "Signalzeile als Hebel, Hebeltopf, Cooldown, Aggregat-Deckel. "
             "Dazu Spot unveraendert und die Akkumulation gesperrt, mit "
-            "Grund im Trichter.",
+            "Grund im Trichter. Dazu die Hebelfuehrung (H-4) mit einer "
+            "offenen Position UND ihrem Signal - der erste Lauf am 11.09. "
+            "hatte die Zuordnung durch das Zurueckdatieren verloren.",
             "Befund 2.371 (nie ein Hebelgeschaeft simuliert)"),
     Schritt(24, "ROLLOUT PAKET B",
             "Gesamtpaket auf das Notebook (stehende Regel). Checkliste "
@@ -416,7 +426,9 @@ REIHENFOLGE = (
             "(2.376-rollout). ⚠️ Der "
             "Akkumulationsschalter wirkt bis Paket 2 nicht (Sperre) - ETH "
             "und SOL erst mit Paket 2 setzen. OFFEN: alter Marktscan "
-            "weiter aktiv? (2.369)",
+            "weiter aktiv? (2.369) - `hebel_screening.aktiv: false` legt "
+            "seit H-4 nur noch das Screening still (2.379-schalter). "
+            "Prompt-Stand 2026-09-11a (2.379-liq).",
             "Basisinfos/Ausrollen_24_08.md; Nutzerentscheidung 11.09."),
 
     # ================================================================

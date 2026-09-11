@@ -41,7 +41,8 @@ from __future__ import annotations
 
 import math
 
-from agent.krypto.hebel_risk_gate import max_safe_hebel
+from agent.krypto.hebel_risk_gate import (
+    estimate_liquidation_price, max_safe_hebel, tage_bis_liquidation_am_stop)
 from agent.schreibweise import de
 
 # ---------------------------------------------------------------------------
@@ -281,10 +282,14 @@ def stop_relativ(*, kurs: float, atr: float,
                          ist_short, stop_min_atr, marke_stop_eur)[0] / float(kurs)
 
 
-def hebel_sicher(stop_rel: float) -> float:
+def hebel_sicher(stop_rel: float, ist_short: bool = False) -> float:
     """Der hoechste Hebel, bei dem die Liquidation noch hinter dem Stop liegt
-    (RM-11) - dieselbe Zahl, mit der `rechne()` deckelt."""
-    return max_safe_hebel(100.0 * float(stop_rel), GRENZEN["liquidations_marge"])
+    (RM-11) - dieselbe Zahl, mit der `rechne()` deckelt.
+
+    ⚠️ SEIT 11.09.2026 MIT RICHTUNG: bei SHORT liegt die Liquidation ueber dem
+    Einstieg, und die Wartungsmarge wirkt dort anders (`max_safe_hebel`)."""
+    return max_safe_hebel(100.0 * float(stop_rel), GRENZEN["liquidations_marge"],
+                          ist_short=bool(ist_short))
 
 
 def _stop_abstand(kurs: float, atr: float,
@@ -838,7 +843,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     e["etikett"] = ("hebel" if _handelbar
                     and (_noetig_vorab > 1.0 or ist_short) else "spot")
     if e["etikett"] == "hebel":
-        sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
+        sicher = hebel_sicher(stop_rel, ist_short)
         # DER BETRAG FOLGT DEM RISIKOBUDGET, NICHT DER HEBEL DEM BETRAG
         # (15.08.2026).
         #
@@ -898,8 +903,21 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         else:
             e["hebel_grenze"] = "Hoechsthebel"
         # Bei SHORT liegt die Liquidation UEBER dem Einstieg.
-        e["liquidation_etwa_eur"] = round(
-            kurs * (1 + 1 / hebel) if ist_short else kurs * (1 - 1 / hebel), 2)
+        #
+        # ⚠️⚠️ H-4 (11.09.2026): MIT DER WARTUNGSMARGE, nicht `1 - 1/Hebel`.
+        # Die Mail nannte bei 5x eine Liquidation 20 % unter dem Einstieg;
+        # die am echten LINK-Fall kalibrierte Formel sagt 12,1 %. Jetzt
+        # DIESELBE Funktion wie die Positionsfuehrung (Tag 0).
+        #
+        # ⚠️ UND SECHS STELLEN STATT ZWEI: bei einem Wert um 0,05 EUR machte
+        # `round(..., 2)` aus jeder Liquidation 0,05 oder 0,04.
+        e["liquidation_etwa_eur"] = round(estimate_liquidation_price(
+            kurs, hebel, "SHORT" if ist_short else "LONG", 0.0,
+            sicherheitsmarge_relativ=GRENZEN["liquidations_marge"]), 6)
+        # AB WANN die Finanzierung die Liquidation vor den Stop schiebt - die
+        # Zahl, die bei der Eroeffnung sagt, wie lange der Hebel sicher ist.
+        e["liquidation_tage_bis_stop"] = tage_bis_liquidation_am_stop(
+            stop_rel, hebel, GRENZEN["liquidations_marge"], ist_short)
     else:
         e["hebel"] = 1.0
         # HARTES BUDGET AUCH OHNE HEBEL (28.08.2026).
@@ -1152,7 +1170,15 @@ def saetze(e: dict, marken: list | None = None,
     _hq_luecke = e.get("hebel_aus_quote_luecke")
     if e["hebel"] > 1:
         z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
-                 f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR)")
+                 f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR"
+                 # H-4: wie lange der Hebel sicher bleibt - die Finanzierung
+                 # schiebt die Liquidation jeden Tag naeher an den Stop.
+                 + (("" if e.get("liquidation_tage_bis_stop") is None
+                     else ", erreicht den Stop schon am ersten Tag"
+                     if e["liquidation_tage_bis_stop"] < 1
+                     else ", hinter dem Stop bis etwa Tag "
+                     + _eur(e["liquidation_tage_bis_stop"], 0)))
+                 + ")")
     elif _hq is not None or _hq_luecke:
         # H-2: mit der Hebelrechnung heisst 1,0 nicht mehr "kein Hebel
         # noetig", sondern "die Wahrscheinlichkeit ergibt keinen" - die
@@ -1287,7 +1313,7 @@ def dimensioniere(*, kurs: float, atr: float, k: float, verlustanteil: float,
 
     risiko_eur = verlustanteil * einsatz_eur
     hebel_noetig = verlustanteil / stop_rel
-    sicher = max_safe_hebel(100 * stop_rel, GRENZEN["liquidations_marge"])
+    sicher = hebel_sicher(stop_rel, ist_short)
 
     if hebel_handelbar and (hebel_noetig > 1.0 or ist_short):
         etikett = "hebel"

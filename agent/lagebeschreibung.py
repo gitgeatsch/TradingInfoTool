@@ -626,11 +626,13 @@ def _hebelgeometrie(atr: float, close: float,
 
     DAS HENNE-EI-PROBLEM UND SEINE LOESUNG. Der Faktor folgt aus dem
     Stopabstand, den das Modell erst nennen wird - vorher kennt ihn niemand.
-    Der ABSTAND je Faktor steht aber schon fest: er ist `1/Hebel`, genau die
-    Formel, mit der `entscheidungsrechnung` spaeter `liquidation_etwa_eur`
-    rechnet. Eine Tabelle ueber drei Stuetzstellen statt eines Kreisbezugs.
+    Der ABSTAND je Faktor steht aber schon fest: genau die Formel, mit der
+    `entscheidungsrechnung` spaeter `liquidation_etwa_eur` rechnet
+    (`estimate_liquidation_price`, Tag 0 - bis zum 11.09.2026 stand hier
+    `1/Hebel`, ohne Wartungsmarge). Eine Tabelle ueber drei Stuetzstellen
+    statt eines Kreisbezugs.
 
-    WARUM DAS KEIN KONSTANTES FELD IST (R-T6). Die Prozentwerte 33/17/10 sind
+    WARUM DAS KEIN KONSTANTES FELD IST (R-T6). Die Prozentwerte 27/8/1 sind
     ueber alle Assets gleich - fuer sich genommen waeren sie genau das
     stehende Feld, das nichts unterscheidet. Die Schwankungsbreiten daneben
     sind es nicht: bei einem ruhigen Wert sind 10 % viele ATR, bei einem
@@ -661,8 +663,22 @@ def _hebelgeometrie(atr: float, close: float,
         return []
     if not close or close <= 0 or not atr or atr <= 0:
         return []
-    teile = [f"bei {S.de(h, 0)}-fach {S.de(100.0 / h, 0)} %, also "
-             f"{S.de((float(close) / h) / float(atr), 1)} Schwankungsbreiten"
+    # ⚠️⚠️ DER ABSTAND IST NICHT 1/HEBEL (H-4, 11.09.2026). Hier stand
+    # `100 / h` - "bei 10-fach 10 %". Bitpanda liquidiert aber schon bei der
+    # Wartungsmarge, nicht erst bei Eigenkapital null; kalibriert am echten
+    # LINK-Fall (`estimate_liquidation_price`). Richtig sind bei 10-fach rund
+    # 1 %, bei 6-fach 8 %, bei 3-fach 27 %. Das Modell bekam also einen
+    # Liquidationsabstand genannt, der beim Hoechsthebel NEUNMAL zu weit war.
+    # Jetzt DIESELBE Formel wie `entscheidungsrechnung.liquidation_etwa_eur`.
+    from agent.entscheidungsrechnung import GRENZEN as _GR
+    from agent.krypto.hebel_risk_gate import estimate_liquidation_price as _liq
+
+    def _abstand(h: float) -> float:
+        return 1.0 - _liq(1.0, h, "LONG", 0.0,
+                          sicherheitsmarge_relativ=_GR["liquidations_marge"])
+
+    teile = [f"bei {S.de(h, 0)}-fach {S.de(100.0 * _abstand(h), 0)} %, also "
+             f"{S.de(float(close) * _abstand(h) / float(atr), 1)} Schwankungsbreiten"
              for h in GRENZHEBEL]
     # ⚠️ BEDINGT FORMULIERT SEIT S5 (19.08.2026, Nutzerfund an echten Mails).
     #

@@ -918,6 +918,19 @@ def main() -> int:
                     print("    --- SCHRITT 7 IN DER FERTIGEN MAIL ---")
                     for _z in _ab.split(chr(10))[:9]:
                         print("    " + _z)
+            # H-4 (11.09.2026): DIE HEBELFUEHRUNG IST EBENFALLS EINE
+            # SAMMELMAIL - sie handelt von offenen Positionen, nicht von einem
+            # Asset, und traegt deshalb keinen Verlauf-Block. Der erste Lauf
+            # meldete genau das als Luecke ("(Hebel): Verlauf-Block fehlt").
+            # Gezaehlt wird, dass sie ankommt; der Beleg steht einmal im Lauf.
+            if eintrag.get("seite") == "hebelfuehrung":
+                if not gesamt.get("hebelfuehrung_gesehen"):
+                    print("")
+                    print("    --- H-4 HEBELFUEHRUNG IN DER FERTIGEN MAIL ---")
+                    for _z in text.split(chr(10))[:16]:
+                        print("    " + _z)
+                gesamt["hebelfuehrung_gesehen"] = True
+                continue
             if str(eintrag.get("symbol") or "").lower().startswith("(sammel"):
                 continue
             # ⚠️ JEDE MAIL, NICHT NUR DIE, DIE ICH GEBAUT HABE
