@@ -1098,6 +1098,50 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.351** — ⚠️⚠️⚠️ ANALYSE DER BEWERTUNGSSCHICHT - DER SCHWERSTE FUND, und er ist REPRODUZIERT: `schwelle()` und `schwellenzeile()` ermittelten die QUELLE getrennt. Die eine nahm den Wert, die andere fragte nur, ob der Schluessel existiert. Bei `potential_schwelle_r: 0,02` - Komma statt Punkt, in einem deutschsprachigen Projekt die naheliegendste Verwechslung - liest YAML eine Zeichenkette, `float()` wirft, der Rueckfall greift: wirksam bleibt 0,080, und die Mail meldet trotzdem ,(config.yaml)'. **Der Nutzer haette geglaubt, seine Einstellung wirke**
+
+- Quelle: agent/potential.py / Analyse 11.09.2026
+
+**2.351-warum-schwer** — ⚠️⚠️ WARUM DAS SCHWERER WIEGT ALS EIN GEWOEHNLICHER FEHLER: es trifft genau den Parameter, zu dem der Nutzer am 07.09. sagte - *,so einen Parameter vergesse ich in Kuerze und du auch, die Doku reicht bei so einer zentralen Einstellung nicht.'* Daraufhin entstanden die Steuerbarkeit ueber `config.yaml` und die Mailzeile. **Beide Vorkehrungen waren vorhanden - und genau ihr Zusammenspiel war kaputt.** Die Schwelle entscheidet ueber die ZAHL der Empfehlungen
+
+- Quelle: Nutzerhinweis 07.09. / Analyse 11.09.
+
+**2.351-ursache** — ✔ DIE URSACHE IST DIE ZWEITE ERMITTLUNG, NICHT DER RUECKFALL. Der Rueckfall ist richtig - ohne ihn stuende das System bei einem Tippfehler still. Falsch war, dass niemand davon erfuhr. ➔ `schwelle_und_quelle()` liefert Wert, Quelle UND Stoerung aus EINEM Vorgang; `schwelle()` meldet die Stoerung ins Log, `schwellenzeile()` in die MAIL. Dasselbe Prinzip, das das Projekt schon kennt: *drei Kopien laufen garantiert auseinander*
+
+- Quelle: agent/potential.py
+
+**2.351-gegenprobe** — ✔✔ GEGENGEPRUEFT ueber VIER Faelle, und der gueltige Weg wirkt weiterhin: `0,02` (Komma) -> Code-Vorgabe + Hinweis · `zwei` -> Code-Vorgabe + Hinweis · Schluessel FEHLT -> Code-Vorgabe OHNE Hinweis (das ist der Normalfall) · `0.02` gueltig -> config.yaml, 0,020 wirkt. Acht neue Pruefungen im Paket Kalibrierung halten alle vier fest
+
+- Quelle: pruefe_pakete.py Paket Kalibrierung
+
+**2.352** — ✔ WAS DIE ANALYSE SONST GEFUNDEN HAT - und es spricht FUER die Schicht: das Paket Kalibrierung prueft die Schwelle bereits mit ueber 20 Zeilen (Steuerbarkeit, Mail, Alter, Stufen, R-R9). Die 13 Module ohne Aufrufer sind SAMTLICH erklaert - `remote/server` wird in `main.py:387` in einem Thread gestartet (Fehlalarm der Modulkarte durch dynamischen Import), `szenario_*` ist als Kontrollgroesse in der Pruefsuite gefuehrt, der Rest traegt GESTRICHEN oder ABGELOEST im Kopf
+
+- Quelle: zeige_modulkarte.py --tot / Analyse 11.09.
+
+**2.352-still** — ✔ UND DIE STILLEN AUSFAELLE SIND SORTIERT: von 14 except-Bloecken in der Bewertungsschicht melden die Betriebspfade, und die stillen liegen auf SCHATTENpfaden - `auswahl.marktzustand` sagt im eigenen Docstring *,Schatten, keine Schranke'*, ein stilles None sperrt dort nichts. Die EINE Ausnahme war die Schwelle (2.351)
+
+- Quelle: Analyse 11.09.2026
+
+**2.353** — ⚠️ LESBARE WERTE (Nutzervorgabe 11.09., woertlich: *,ich sollte im Text immer fuer mich lesbare und zuordenbare Werte und Textformulierungen erhalten (kein 2R), EUR Betraege, etc.'*): vier Stellen richtiggestellt - CRV ausgeschrieben (,Ziel 2,0-mal so weit wie der Stop'), die Einheit an die Beitragszahl (+1,3 %%), ,Punkte' -> ,Prozentpunkte', und R bekommt den Eurobetrag daneben (−0,467 R je Trade = −34,99 EUR). ⚠️ DIE ZAHL IN R BLEIBT - nur sie ist ueber Trades vergleichbar
+
+- Quelle: agent/wahrscheinlichkeit.py
+
+**2.353-eur** — ✔ UND DIE UMRECHNUNG HAENGT NICHT AM KAPUTTEN PORTFOLIOWERT: `R` ist der Betrag, der beim Stop verloren geht (`betraege.py`: Risiko in Euro = Einsatz x Verlustanteil). Gebraucht wird nur das Risiko DIESES Trades, und das steht in derselben `rechnung` wie Stop und Ziel. Wichtig, weil `portfolio_wert_historie` am Notebook seit dem 01.09. stillsteht (2.341)
+
+- Quelle: agent/betraege.py / agent/rollen_lauf.py
+
+**2.354** — ⚠️⚠️ EIN ZEICHEN STAND FUER DREI DINGE - und das IST der Nutzerbefund *,schwer abgrenzbare Hinweise, Warnungen und ehrliche Luecken'*: ⚠️ markierte die BEWERTUNG (,kein Beitrag greift hier'), die GEBUEHR (,deckt nicht'} und einen DAUERVORBEHALT (,keine Prognose'). ➔ Die Gebuehrenzeile bekommt ✔/✖. ⚠️ NICHT weggelassen: ,deckt die Gebuehr nicht' ist eine Aussage, kein Schmuck - und Regel 2 verlangt ohnehin, dass Gebuehren nicht in die BEWERTUNG eingehen; ein Warnzeichen legt genau das nahe
+
+- Quelle: agent/wahrscheinlichkeit.py / Nutzerbefund 11.09.
+
+**2.355** — ✔✔ DIE SPERRE GEGEN DAS BEQUEME NEUAUFZEICHNEN: die vier Textaenderungen machten 144 von 432 Bitgleichheitsfaellen rot. Neu aufzeichnen war richtig - aber das ist ein URTEIL, kein Handgriff, und dieselbe Geste koennte beim naechsten Mal eine geaenderte ZAHL mitloeschen. ✔ GEMESSEN: 144 Abweichungen, ALLE unter Text-Schluesseln, NULL unter Zahlen. ➔ `--aufzeichnen` verweigert jetzt den Dienst, wenn sich eine ZAHL geaendert hat, und nennt die Schluessel; `--auch-zahlen` hebt es auf. Beide Richtungen gegengeprueft
+
+- Quelle: pruefe_wahrscheinlichkeit_bitgleich.py
+
+**2.356** — ⚠️ EIGENE KORREKTUR: ich hatte vorgeschlagen, die Zeile ,KEIN gemessener Beitrag greift hier' nach oben zu holen - sie steht bereits an Position 4 von 16, direkt unter der Trefferquote. Regel 1 des Mailvorschlags war schon erfuellt. Nachgemessen statt umgebaut
+
+- Quelle: Selbstbefund 11.09.2026
+
 **2.347** — ⚠️⚠️⚠️ EIGENER VERFAHRENSFEHLER, vom Nutzer gestoppt: ich wollte S-1/S-2/S-3 bauen, ohne `zeige_modulkarte.py` zu benutzen - obwohl sie GENAU gegen diesen Fehler gebaut ist und als stehende Vorgabe im Memory steht (,Vor jeder Ausarbeitung: zeige_modulkarte.py'). Ihr eigener Docstring zitiert den Nutzerbefund woertlich: *,das ist ein problem des projektes dass du immer nur die haelfte der infos bei der ausarbeitung kennst dann bleibt immer etwas liegen'* - und listet sechs Beispiele, darunter ,welche sind Kern?' -> GUI-Schalter nennt BTC/ETH/SOL. **Exakt mein heutiger Fall.** Der Nutzerhinweis lautete: ,ich wuerde auch einen code Review und doku empfehlen damit du keine Funktionen und kritischen Punkte uebersiehst'
 
 - Quelle: zeige_modulkarte.py / Nutzerhinweis 11.09.2026

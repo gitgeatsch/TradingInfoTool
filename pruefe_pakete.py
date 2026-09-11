@@ -15276,6 +15276,55 @@ def paket_kalibrierung() -> None:
            "alten sein (432 Faelle in "
            "`pruefe_wahrscheinlichkeit_bitgleich.py`)")
 
+    # ---- ⚠️⚠️⚠️ WERT UND QUELLE DUERFEN NICHT AUSEINANDERLAUFEN --------
+    #
+    # DER FEHLER, gefunden am 11.09.2026 bei der Analyse der
+    # Bewertungsschicht und REPRODUZIERT: `schwelle()` nahm den Wert,
+    # `schwellenzeile()` fragte getrennt, ob der Schluessel existiert.
+    # Bei `potential_schwelle_r: 0,02` - Komma statt Punkt, in einem
+    # deutschsprachigen Projekt die naheliegendste Verwechslung - griff
+    # der Rueckfall auf die Code-Vorgabe, und die Mail meldete trotzdem
+    # "config.yaml".
+    #
+    # ⚠️ Der Nutzer haette geglaubt, seine Einstellung wirke. Bei genau
+    # dem Parameter, zu dem er am 07.09. sagte: *"so einen Parameter
+    # vergesse ich in Kuerze und du auch."*
+    #
+    # Der RUECKFALL ist richtig - ohne ihn stuende das System bei einem
+    # Tippfehler. Falsch war das Schweigen.
+    import config as _cfg_k
+    _echt = _cfg_k.load_config
+    try:
+        for _roh, _erwartet_stoerung in (("0,02", True), ("zwei", True),
+                                         (0.02, False), (None, False)):
+            def _kaputt(_w=_roh):
+                _d = dict(_echt() or {})
+                _d["bewertung"] = ({} if _w is None
+                                   else {"potential_schwelle_r": _w})
+                return _d
+            _cfg_k.load_config = _kaputt
+            _wert, _quelle, _stoerung = _POT.schwelle_und_quelle()
+            _zeile = _POT.schwellenzeile()
+            # Die Quelle muss zum WERT passen, nicht zum Schluessel.
+            _stimmt = (("config.yaml" in _quelle)
+                       == (abs(_wert - _POT.SCHWELLE_VORGABE) > 1e-12
+                           or _roh == 0.08))
+            pruefe(P, "⚠️⚠️ Schwelle %r: Quelle passt zum WERT" % (_roh,),
+                   bool(_stoerung) == _erwartet_stoerung
+                   and (not _stoerung or "config.yaml" not in _quelle),
+                   "bei einem unbrauchbaren Eintrag greift die "
+                   "Code-Vorgabe - dann darf die Mail NICHT config.yaml "
+                   "nennen. Wert %.3f · Quelle %s · Stoerung %r"
+                   % (_wert, _quelle, _stoerung[:40]))
+            pruefe(P, "und die Mailzeile nennt die Stoerung" if
+                   _erwartet_stoerung else
+                   "und ohne Stoerung bleibt die Mailzeile sauber",
+                   ("⚠️" in _zeile) == _erwartet_stoerung,
+                   "wer die Schwelle gesetzt hat, liest die MAIL - nicht "
+                   "die Logdatei am Notebook. Zeile: %s" % _zeile[-70:])
+    finally:
+        _cfg_k.load_config = _echt
+
     h = [b for b in _WK.BEITRAEGE if b.merkmal == "h"]
     pruefe(P, "H ist ueber sein Merkmal auffindbar", len(h) == 1,
            "seit Schritt 2c haengt kein Beitrag mehr am Namen")

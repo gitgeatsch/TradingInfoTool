@@ -86,7 +86,15 @@ braucht H (oder einen zweiten Beitrag) ueber ein CRV-RASTER gemessen.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
+
+# ⚠️ NUR FUER DIE SCHWELLENSTOERUNG (11.09.2026). Dieses Modul rechnet
+# sonst still - es hat keine Netzaufrufe und keine Datenbank. Die eine
+# Meldung betrifft den Fall, in dem `config.yaml` einen ungueltigen
+# Schwellenwert traegt und der Rueckfall greift: der DARF nicht stumm
+# sein, sonst glaubt der Nutzer, seine Einstellung wirke.
+logger = logging.getLogger(__name__)
 
 
 class PotentialUnbekannt(RuntimeError):
@@ -496,17 +504,21 @@ def schwellenzeile(mit_datenlage=None) -> str:
     # "Code-Vorgabe", obwohl `config.yaml` den Eintrag hatte. Bei
     # GLEICHEM Wert sind die Quellen so nicht unterscheidbar, und wer die
     # Zeile liest, sucht den Steuerpunkt an der falschen Stelle.
-    wirksam = schwelle()
-    quelle = "Code-Vorgabe"
-    try:
-        import config as _cfg
-        if (_cfg.load_config() or {}).get("bewertung", {})                 .get("potential_schwelle_r") is not None:
-            quelle = "config.yaml"
-    except Exception:                                        # noqa: BLE001
-        pass
+    #
+    # ⚠️⚠️ UND DANN LIEFEN BEIDE AUSEINANDER (behoben 11.09.2026). Die
+    # Quelle wurde HIER getrennt ermittelt: sie fragte nur, ob der
+    # Schluessel existiert - nicht, ob sein Wert benutzbar ist. Bei
+    # `potential_schwelle_r: 0,02` (Komma statt Punkt) griff in
+    # `schwelle()` der Rueckfall, und diese Zeile meldete trotzdem
+    # "config.yaml". Beides kommt jetzt aus EINEM Aufruf.
+    wirksam, quelle, stoerung = schwelle_und_quelle()
     zeile = ("Bewertungsschwelle %.3f R (%s, kalibriert am %s, %d Tage alt)"
              " — rund 16 %% Durchlass"
              % (wirksam, quelle, KALIBRIERT_AM, alter))
+    if stoerung:
+        # ⚠️ IN DIE MAIL, nicht nur ins Log. Wer die Schwelle gesetzt hat,
+        # liest die Mail - nicht die Logdatei am Notebook.
+        zeile += "  ⚠️ %s" % stoerung
     if mit_datenlage is not None:
         zeile += " · bei dieser Datenlage %.4f R" % mit_datenlage
     if alter > 90:
@@ -647,21 +659,72 @@ def kalibrierung_gilt() -> tuple[bool, str]:
     return lage == KALIBRIERT_FUER, lage
 
 
+def schwelle_und_quelle() -> tuple:
+    """(Wert, Quelle, Stoerung) — EINE Ermittlung, nicht zwei.
+
+    ## ⚠️⚠️⚠️ DER FEHLER, DEN DAS BEHEBT (gefunden 11.09.2026)
+
+    `schwelle()` und `schwellenzeile()` ermittelten die Quelle GETRENNT:
+    die eine nahm den Wert, die andere fragte nur, ob der Schluessel
+    existiert. Bei einem UNGUELTIGEN Wert liefen sie auseinander.
+
+    Reproduziert mit `potential_schwelle_r: 0,02` - Komma statt Punkt,
+    in einem deutschsprachigen Projekt die naheliegendste Verwechslung.
+    YAML liest das als Zeichenkette, `float()` wirft, der Rueckfall
+    greift:
+
+        wirksame Schwelle   0,080              (Code-Vorgabe)
+        die Mail sagt       "0.080 R (config.yaml, ...)"
+
+    **Die Mail behauptete, der Wert komme aus `config.yaml`.** Der Nutzer
+    haette geglaubt, seine Einstellung wirke - bei genau dem Parameter,
+    zu dem er am 07.09. sagte: *"so einen Parameter vergesse ich in
+    Kuerze und du auch."*
+
+    ⚠️ Die Ursache ist die ZWEITE Ermittlung, nicht der Rueckfall. Der
+    Rueckfall ist richtig - ohne ihn stuende das System bei einem
+    Tippfehler. Falsch war, dass niemand davon erfuhr.
+
+    Gibt drei Dinge zurueck: den Wert, die Quelle ("config.yaml" oder
+    "Code-Vorgabe") und - wenn etwas schiefging - den GRUND als Klartext.
+    """
+    try:
+        import config as _cfg
+        roh = (_cfg.load_config() or {}).get("bewertung", {}) \
+            .get("potential_schwelle_r")
+    except Exception as exc:                                 # noqa: BLE001
+        return (SCHWELLE_VORGABE, "Code-Vorgabe",
+                "config.yaml nicht lesbar (%s)" % str(exc)[:60])
+    if roh is None:
+        return (SCHWELLE_VORGABE, "Code-Vorgabe", "")
+    try:
+        return (float(roh), "config.yaml", "")
+    except (TypeError, ValueError):
+        # ⚠️ NICHT STILL. Genau hier ist die Mail auseinandergelaufen.
+        return (SCHWELLE_VORGABE, "Code-Vorgabe",
+                "der Eintrag in config.yaml ist keine Zahl (%r) - "
+                "Komma statt Punkt? Die Code-Vorgabe greift." % (roh,))
+
+
 def schwelle() -> float:
     """Die geltende Potentialschwelle - aus der Konfiguration, sonst Vorgabe.
 
     ⚠️ Wird bei JEDEM Aufruf gelesen, nicht beim Import gecacht. Wer die Zahl
     in `config.yaml` aendert, soll nicht neu starten muessen - das ist der
     Unterschied zwischen "kalibrierbar" und "konfigurierbar".
+
+    ⚠️⚠️ Die Ermittlung steht seit dem 11.09. in `schwelle_und_quelle()` -
+    EINMAL, fuer Wert UND Quelle. Vorher gab es zwei, und sie liefen bei
+    einem ungueltigen Eintrag auseinander.
     """
-    try:
-        import config as _cfg
-        wert = (_cfg.load_config() or {}).get("bewertung", {})             .get("potential_schwelle_r")
-        if wert is not None:
-            return float(wert)
-    except Exception:                                        # noqa: BLE001
-        pass
-    return SCHWELLE_VORGABE
+    wert, _quelle, stoerung = schwelle_und_quelle()
+    if stoerung:
+        # ⚠️ Die Meldung gehoert hierher, nicht in die Mailzeile: `schwelle()`
+        # wird bei JEDER Bewertung gerufen, die Zeile nur beim Versand.
+        # "fail-soft ist fail-silent" - der Rueckfall bleibt, das Schweigen
+        # nicht.
+        logger.warning("Bewertungsschwelle: %s", stoerung)
+    return wert
 
 
 def traegt(wert_r: float, grenze: float | None = None) -> bool:
