@@ -1098,6 +1098,26 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.347** — ⚠️⚠️⚠️ EIGENER VERFAHRENSFEHLER, vom Nutzer gestoppt: ich wollte S-1/S-2/S-3 bauen, ohne `zeige_modulkarte.py` zu benutzen - obwohl sie GENAU gegen diesen Fehler gebaut ist und als stehende Vorgabe im Memory steht (,Vor jeder Ausarbeitung: zeige_modulkarte.py'). Ihr eigener Docstring zitiert den Nutzerbefund woertlich: *,das ist ein problem des projektes dass du immer nur die haelfte der infos bei der ausarbeitung kennst dann bleibt immer etwas liegen'* - und listet sechs Beispiele, darunter ,welche sind Kern?' -> GUI-Schalter nennt BTC/ETH/SOL. **Exakt mein heutiger Fall.** Der Nutzerhinweis lautete: ,ich wuerde auch einen code Review und doku empfehlen damit du keine Funktionen und kritischen Punkte uebersiehst'
+
+- Quelle: zeige_modulkarte.py / Nutzerhinweis 11.09.2026
+
+**2.348** — ✔✔✔ UND DER REVIEW HAT S-1/S-3 DRASTISCH VERKLEINERT: `agent/datenfrische.py` existiert seit dem 17.08. und ist GENAU das Muster, das gebraucht wird. Es unterscheidet ZWEI Alter, und die Unterscheidung ist der ganze Trick: DATENSTAND (juengstes Datum in der Reihe - haengt am ANBIETER, ein hohes Alter kann richtig sein) gegen ABRUFSTAND (wann wir zuletzt erfolgreich nachgesehen haben - haengt an UNS, und ist der eigentliche Gesundheitswert). *,Ein Anbieter, der nichts Neues hat, ist normal. Ein Job, der nicht laeuft, ist es nie.'*
+
+- Quelle: agent/datenfrische.py
+
+**2.348-anlass** — ⚠️ UND SEIN ANLASS IST MEIN BEFUND 2.341, nur einen Monat aelter: am 17.08. stellte sich heraus, dass DREI Rolle-A-Quellen von einem Skript stammten, das ein Mensch von Hand gestartet hatte. Der Docstring: *,Ein fehlender Satz faellt auf; ein alter Satz sieht aus wie ein frischer. Das ist fail-soft-ist-fail-silent in seiner unangenehmsten Form: hier faellt nicht einmal etwas aus. Es steht nur still.'* Genau die Klasse, die ich heute in `portfolio_wert_historie` gefunden habe
+
+- Quelle: agent/datenfrische.py / 2.341
+
+**2.349** — ⚠️⚠️ DIE LUECKE IST PRAEZISE UND KLEIN: die Registratur fuehrt 15 Quellen - alle in der BETRIEBS-DB. Die drei MESSquellen fehlen: `funding_historie.db` (nicht registriert), `onchain_historie.db`/splycur -> turnover (nicht registriert), und `terminmarkt_historie.db` - der Eintrag `terminmarkt` meint eine ANDERE Tabelle (`open_interest_snapshot` via `hebel_screening`). ➔ S-1/S-3 heisst damit NICHT ,ein Ueberwachungssystem bauen', sondern ,drei Zeilen in eine vorhandene Registratur eintragen' - plus eine kleine Erweiterung, weil `datenfrische` heute nur Tabellen der Betriebs-DB kennt und die drei EIGENE Dateien sind
+
+- Quelle: agent/datenfrische.REGISTRATUR
+
+**2.350** — ⚠️ UND NOCH EINE UEBERSEHENE FUNKTION, vom Nutzer genannt (*,wir pruefen auch die Datenquellen und Abfragen auf der Uebersichtsseite'*): `remote/status.py` ist eine Statusseite mit rund VIERZIG Aggregatoren, darunter `_get_api_health`, `_get_coingecko_quota`, `_get_llm_kontingent` und `is_price_stale`. Sie prueft Datenquellen und Kontingente bereits. ⚠️ Ich haette S-1 gebaut, ohne sie zu kennen
+
+- Quelle: remote/status.py
+
 **2.340** — ⚠️⚠️⚠️ L1 IST GRAVIERENDER ALS ANGENOMMEN - am NOTEBOOK steht NUR BTC im DCA-Schalter, nicht einmal ETH. Die Nutzervorgabe nennt BTC, ETH UND SOL. Damit laufen ZWEI VON DREI Kernwerten produktiv nach `einstieg`, also MIT Stop und Trailing - statt als Akkumulation. ⚠️ Die Desktop-Kopie hatte BTC+ETH und verdeckte damit die Haelfte des Problems
 
 - Quelle: NB-Sicherung 2026-09-11 04:48 · asset_dca_settings
