@@ -4260,3 +4260,134 @@ In dieser Reihenfolge (Nutzervorgabe 11.09.).
 | **V12** (`vola`/`schnitt`) | klärt nur, **warum** zwei Kandidaten fielen, die ohnehin gefallen sind — kein Weg zum Ziel |
 | **Weitere Beitragssuche auf der Kursreihe** | 2.168-erschöpft: die Quelle ist durch. Ein weiterer braucht eine **neue** Quelle — und die vier Terminmarkt-Kanäle sind genau das, aber erst nach A1 |
 | **Produktivsetzen vor Stufe 0** | eine Bewertung, die still einen Beitrag verliert, sieht richtig aus. Das ist die gefährlichste aller Lagen |
+
+---
+
+# ✉️ 11.09. — DER MAIL-VORSCHLAG (Nutzerauftrag), auf Messung gestützt
+
+> *„von oben nach unten die wichtigsten Informationen mit tatsächlichem
+> Nutzen und unten Zusatzinformationen — zusätzlich die Inhalte straffen,
+> da die aktuellen Mails bereits sehr viel Textinformation mit Hinweisen,
+> Warnungen und schwer abgrenzbaren ehrlichen Lücken führen."*
+
+## ⚠️ Zuerst: die Reihenfolge ist bereits Ihr Vorschlag
+
+`agent/signal_mail.py` hat vier Abschnitte, und die Begründung steht im
+Modulkopf:
+
+> *„Erst der Wert (worum geht es), dann die Rechnung (was wäre zu tun),
+> dann das Urteil (warum), dann die Einordnung (was ist es wert). **Wer
+> nach zwei Abschnitten aufhört zu lesen, hat das Wichtigste.**"*
+
+**Das Problem ist also nicht die Ordnung, sondern die Menge.**
+
+## Das Problem, gemessen statt geschätzt
+
+| Lage | Zeilen | davon „Lücken" |
+|---|---|---|
+| krypto / einstieg | 20 | **6** (30 %) |
+| krypto / akkumulation | 16 | **8** (50 %) |
+| aktien / einstieg | 16 | **6** (38 %) |
+
+⚠️⚠️ **Der Block *„Nicht eingerechnet, und warum"* ist der größte
+Einzelposten** — sechs Zeilen à rund 100 Zeichen, **in jeder Mail für
+jedes Asset identisch**. Er sagt nie etwas Neues.
+
+⚠️ Und die **wichtigste** Zeile geht darin unter. Bei der Akkumulation
+steht mitten im Block:
+
+> *„KEIN gemessener Beitrag greift hier — die Zahl ist die reine Basisrate
+> aus der Geometrie."*
+
+**Das ist kein Hinweis, das ist das Ergebnis.** Es gehört nach oben.
+
+## ✔ Das Mittel existiert schon — es ist nur halb angewandt
+
+`signal_mail.ohne_gewohntes()` löst genau diese Frage, und ihr Docstring
+formuliert das Prinzip:
+
+> *„Nur was auffällt — plus EIN Satz für den Rest. ,Nichts Auffälliges'
+> ist nicht wertlos... Aber dafür reicht ein Satz für den ganzen
+> Abschnitt, nicht vier gleichlautende Zeilen."*
+
+⚠️ **Sie greift nur bei Perzentilzeilen** (`if "Perzentil" not in z`). Die
+ehrlichen Lücken sind eine zweite Klasse — dasselbe Prinzip, nicht
+angewandt.
+
+---
+
+# Der Vorschlag — drei Regeln, keine neue Struktur
+
+## Regel 1 · Ein Ergebnis ist keine Lücke
+
+Diese Sätze wandern **nach oben**, direkt unter die Trefferquote:
+
+```
+"KEIN gemessener Beitrag greift hier - die Zahl ist die reine
+ Basisrate aus der Geometrie."
+```
+
+**Begründung:** wer nur zwei Zeilen liest, muss wissen, ob die Zahl auf
+Messung oder auf Geometrie steht. Das ist die folgenreichste Auskunft der
+ganzen Mail.
+
+## Regel 2 · Gleichlautende Lücken werden zu EINEM Satz
+
+Aus sechs Zeilen wird eine:
+
+```
+VORHER  Nicht eingerechnet, und warum:
+           Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und ...
+           Rangplatz in der Anlageklasse: als ZUSATZbedingung innerhalb ...
+           Funding-Rang im Markt: fuer die Strategie akkumulation nie ...
+           Turnover-Rang im Markt: fuer die Strategie akkumulation nie ...
+           Abstand zum eigenen 200-Tage-Schnitt: Als MERKMAL zeigt der ...
+           Lebendigkeit des Projekts: gemessen und gefallen: TVL- ...
+           Bekannte Termine: Anzeige, nie gegen den Zufall gemessen
+
+NACHHER Nicht eingerechnet: 7 Beitraege - 2 fuer diese Strategie nie
+        gemessen, 4 gemessen und gefallen, 1 reine Anzeige. Einzelheiten
+        im Anhang.
+```
+
+⚠️ **Die Zählung nach GRUND, nicht nur die Zahl.** „7 Beiträge" allein
+verschweigt den Unterschied zwischen *nie gemessen* (offene Frage) und
+*gemessen und gefallen* (beantwortete Frage). Genau dieselbe
+Unterscheidung macht `ohne_gewohntes` mit „alle" gegen „weitere".
+
+## Regel 3 · Anhang statt Weglassen
+
+Die Begründungen **bleiben** — unter einer Trennlinie am Ende, unter
+`ANHANG: die nicht eingerechneten Beiträge`.
+
+⚠️ **Warum nicht löschen:** die Begründung ist der Unterschied zwischen
+einem System, das etwas nicht weiß, und einem, das etwas verschweigt. Sie
+gehört nur nicht in den Lesefluss.
+
+---
+
+# ⚠️ Was ich NICHT kürzen würde
+
+| | |
+|---|---|
+| **Die Schwellenzeile** | *„Bewertungsschwelle 0.080 R, kalibriert 2026-08-31, 11 Tage alt"* — sie ist auf Nutzerhinweis vom 07.09. entstanden, weil ein Wert, den niemand sieht, nicht geprüft wird |
+| **Die Gebührenzeilen** | Regel 2 verlangt, dass Gebühren **nicht** in die Bewertung eingehen — als **Text** sind sie richtig und nötig. ⚠️ Aber ihr ⚠️-Zeichen wirkt wie eine Warnung; es gehört weg, der Satz bleibt |
+| **Die Grundsatzzeile** | *„KEINE PROGNOSE FÜR DIESEN TRADE, sondern die gemessene Häufigkeit in einer Gruppe"* — einmal pro Mail, am Ende. Sie ist der Unterschied zwischen Messung und Versprechen |
+
+---
+
+# Die Reihenfolge für diesen Umbau
+
+| | |
+|---|---|
+| **1** | **Regel 1** — das Ergebnis nach oben. Kleinster Eingriff, größte Wirkung, kein Informationsverlust |
+| **2** | **Regel 2 + 3** — Zusammenfassung und Anhang. Braucht eine Erweiterung von `ohne_gewohntes` auf die zweite Klasse |
+| **3** | ⚠️ **NACH dem Produktivgang messen** — am echten Aufkommen, nicht am Entwurf. Vorher misst man den alten Stand |
+
+⚠️⚠️ **Und ein Vorbehalt, der vor allem steht:** die Mail ist heute
+lang, **weil die Bewertung dünn ist**. Zwei tragende Beiträge und sieben
+nicht eingerechnete — das Verhältnis erzeugt den Textberg. Wird die
+Akkumulation verdrahtet und ein dritter Beitrag registriert, schrumpft
+der Lückenblock von selbst. **Die Mail zu straffen behebt das Symptom;
+die Bewertung zu vervollständigen behebt die Ursache.** Beides ist
+richtig — aber in dieser Reihenfolge zu lesen.
