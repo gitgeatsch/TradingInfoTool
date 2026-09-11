@@ -293,67 +293,164 @@ REIHENFOLGE = (
             "nach einem Ausfall war nicht feststellbar, was gefehlt hat. "
             "Zentral statt fuenfzehn Kopien.",
             "Befunde 2.360", fertig=True),
-    Schritt(15, "A1 / HEBEL-SPUR",
-            "⚠️⚠️⚠️ DER ENGPASS DES HEBELS, und er hat einen BENANNTEN "
-            "Weg: das Band auf binaeren Daten ist VIERMAL zu eng (2.238), "
-            "deshalb traegt auf `barriere` sogar `zufall`. Loesung laut "
-            "2.238-klasse: Fehlalarmquote der Barrieren-Anlage auf "
-            "Nullwelten - dasselbe Verfahren, das am 09.09. den "
-            "Nullbezug entschieden hat. ⚠️ DANACH erst sind die VIER "
-            "Terminmarkt-Kanaele gegen die RICHTIGE Zielgroesse "
-            "messbar - sie sind bisher nur gegen `bewegung_r` gefallen, "
-            "und das VOR dem Messstandard.",
-            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
-    Schritt(16, "TAKT UND E2E",
-            "⚠️ NUTZERVORGABE 11.09.: die Krypto-Umsetzung umfasst den "
-            "TAKT und die End2End-SIMULATION der Kette. "
-            "⚠️ `simuliere_kette.py` EXISTIERT (16.08.) und macht genau "
-            "das - echte Reihen, Bestaende, Rechnung, DB-Schreiben, "
-            "Mailaufbau, Attrappe nur fuer die zwei Modellaufrufe, "
-            "schreibt in eine KOPIE. Aber sie ist VOR dem Umbau und muss "
-            "zuerst nachgezogen werden. Der TAKT ist bisher nur "
-            "Betriebsbefund, kein Planschritt.",
-            "Nutzervorgabe 11.09.; simuliere_kette.py"),
-    Schritt(17, "EMAIL STRUKTUR UND INHALTE",
-            "⚠️ NUTZERVORGABE 11.09.: nach dem Umbau sind Struktur und "
-            "Inhalte der Mails anzupassen. Bekannte Ausgangslage: 83,6 %% "
-            "Wiederholungsanteil und rund 133 Mails/Tag (beides am "
-            "Notebook zu pruefen - die Desktop-DB ist zu alt). ⚠️ Die "
-            "Mail ist der Ort fuer FAKTEN und Bewertungsgruende "
-            "(Regel 3), nicht fuer Ausloeser.",
-            "Nutzervorgabe 11.09.; Befunde zu Redundanz und Takt"),
-    Schritt(18, "GUI UND UEBERSICHTSSEITE",
-            "⚠️ Offen seit 07.09., nie begonnen (E1). Nutzerbestaetigung "
-            "11.09.: steht als groesserer Punkt an, NACH den eMails.",
-            "Nutzervorgabe 07.09. und 11.09."),
-    Schritt(19, "LLM-ROLLEN UND MODELLE",
-            "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der "
-            "LLM-Rollen und -Modelle - NACH den eMails. Bekannte "
-            "Vorgaben, die hier gelten: nur kostenfreie LLMs · das LLM "
-            "muss den Zufall schlagen und messbar sein · kein "
-            "deterministischer Override des LLM-Werturteils.",
+    # ================================================================
+    # AB HIER: DER PRODUKTIVGANG (Beschluss 11.09.2026)
+    #
+    # ⚠️ WARUM DER ROLLOUT ZUERST KOMMT, obwohl die Bewertung duenn ist:
+    # das Notebook ist 292 Commits zurueck. Solange diese Luecke steht,
+    # ist JEDE weitere Aenderung doppelt teuer - sie muss durch dieselbe
+    # Luecke. Ist das NB einmal aktuell, sind weitere Pulls billig.
+    #
+    # ⚠️⚠️ UND DER ROLLOUT HAENGT NICHT AN DER AKKUMULATION: die Lage
+    # `spot/akkumulation` hat heute NULL Beitraege und haette sie nach
+    # dem Rollout genauso. Sie verhaelt sich davor wie danach - also ist
+    # nichts gewonnen, wenn man den Rollout auf sie wartet.
+    # ================================================================
+    Schritt(15, "E2E VOR DEM ROLLOUT",
+            "⚠️ DER ROLLOUT-SCHUTZ, und mehr braucht er nicht: "
+            "`simuliere_kette.py` auf den Umbaustand nachziehen und "
+            "laufen lassen. Sie ist vom 16.08. - VOR dem Umbau. Sie "
+            "beantwortet EINE Frage: reisst die Kette irgendwo? Echte "
+            "Reihen, Bestaende, Rechnung, DB-Schreiben, Mailaufbau; "
+            "Attrappe nur fuer die zwei Modellaufrufe, und sie schreibt "
+            "in eine KOPIE. ⚠️ Das Projekt hat dafuer einen eigenen "
+            "Merksatz: *eine Stufe gilt erst als gebaut, wenn die "
+            "Kettensimulation sie in der fertigen Mail nachweist.*",
+            "simuliere_kette.py; Beschluss 11.09."),
+    Schritt(16, "DER ROLLOUT",
+            "⚠️⚠️ FEHLTE BIS HEUTE ALS SCHRITT - obwohl alle Vorarbeiten "
+            "auf ihn zulaufen. 292 Commits, 10 Betriebsdateien, "
+            "Gesamtpaket statt inkrementell (stehende Regel fuer das NB). "
+            "Checkliste in `Basisinfos/Ausrollen_24_08.md`, Abschnitt "
+            "11.09. ⚠️ DANACH AM NB: die Oberflaeche EINMAL oeffnen und "
+            "ETH + SOL im Akkumulations-Schalter setzen (L1 - der "
+            "Schalter existiert, er wirkt nur auf dem Geraet, auf dem die "
+            "GUI laeuft), und die drei Messquellen nachziehen.",
+            "Basisinfos/Ausrollen_24_08.md"),
+    Schritt(17, "TAKT",
+            "⚠️ ERST NACH DEM ROLLOUT messen - vorher misst man den alten "
+            "Stand. Mailaufkommen und Wiederholungsanteil am echten "
+            "Betrieb.",
             "Nutzervorgabe 11.09."),
-    Schritt(20, "V12 VOLA UND SCHNITT",
-            "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
-            "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
-            "Gemeinsamer geometrischer Anteil? Stuetzt 2.293.",
-            "Befund 2.327 - offen"),
+
+    # ================================================================
+    # DAS STANDARDWERKZEUG (Nutzervorschlag 11.09., gestaffelt)
+    #
+    # > "kein einfacher End2End Test sondern eine umfangreichere Test-
+    # >  und Simulationsstufe (ein Standardwerkzeug): Fehleridentifikation,
+    # >  Empfehlungen je Strategie, Asset und Zeitraum, unterschiedliche
+    # >  Marktphasen, optional eine historische Simulation."
+    #
+    # ⚠️ NACH dem Rollout, weil erst dann echte Laeufe auf NEUEM Code
+    # vorliegen. Ein Werkzeug gegen den alten Stand zu bauen heisst, es
+    # beim ersten echten Einsatz nochmal anzufassen.
+    # ================================================================
+    Schritt(18, "T-1 FEHLERIDENTIFIKATION",
+            "Je STRATEGIE, ASSET und ZEITRAUM - baut auf "
+            "`simuliere_kette.py` auf, die den Durchlauf schon kann. "
+            "⚠️ Ein Standardwerkzeug mit Schaltern statt Wegwerfskripten: "
+            "allein am 11.09. sind fuenf entstanden (n108 bis n112), wo "
+            "eines gereicht haette.",
+            "Nutzervorschlag 11.09."),
+    Schritt(19, "T-2 REGIMETRENNUNG",
+            "⚠️⚠️⚠️ DER GROESSTE ERKENNTNISGEWINN DES WERKZEUGS, und eine "
+            "echte Luecke: das System kennt FUENF Regimes (krise_extrem, "
+            "baer, seitwaerts, bulle, euphorie_extrem) - aber KEINE "
+            "einzige unserer Messungen ist je nach Regime getrennt "
+            "worden. Der Bestand haelt sogar fest: *immer Baer, kein "
+            "Vergleich*. Wir haben also NIE gemessen, ob `funding` und "
+            "`turnover` in einem anderen Regime ueberhaupt tragen. "
+            "⚠️ Das beruehrt die Gueltigkeit BEIDER live laufender "
+            "Beitraege.",
+            "agent/krypto/regime.REGIME_STATES; "
+            "project_regime_immer_baer_kein_vergleich"),
+    Schritt(20, "T-3 HISTORISCHE SIMULATION",
+            "⚠️⚠️ AUF `bewegung_r` (POTENTIAL), NICHT auf Zielerreichung. "
+            "Nutzervorgabe 23.08.: *,Wichtig fuer den guten Trade ist das "
+            "POTENTIAL und NICHT die reelle Zielerreichung, diese ist "
+            "immer ausser Reichweite.'* Ein Barrierensystem auf "
+            "driftfreiem Pfad hat Erwartungswert NULL fuer jede "
+            "Geometrie - ,Ziel vor Stop' faellt per Konstruktion auf "
+            "1/(1+CRV). **Wer das misst, misst unsere eigene Zielregel "
+            "zurueck** und erzeugt die Nullbefundserie erneut. "
+            "✔ GRUNDSTOCK VORHANDEN: `agent/krypto/backtesting.py` (vom "
+            "17.07., ohne Aufrufer) - mit ehrlich benannten Grenzen im "
+            "Kopf.",
+            "feedback_potential_statt_zielerreichung; "
+            "agent/krypto/backtesting.py"),
+
+    # ================================================================
+    # DIE BEWERTUNG VERVOLLSTAENDIGEN
+    # ⚠️ Frueh nach dem Rollout: ein gemessener Beitrag liegt bereit und
+    # muss nur entschieden und verdrahtet werden - der billigste echte
+    # Gewinn im ganzen Plan.
+    # ================================================================
     Schritt(21, "FORM",
             "Form und Vertreterin entscheiden (quer/laengs, "
-            "Schalter/Regler).",
-            "Plan 05.09. - Nutzerentscheidung"),
-    Schritt(22, "KALIBRIERUNG",
-            "Kalibrierung neu, dann F-220 neu rechnen: erreicht der Hebel "
-            "2-5x?",
+            "Schalter/Regler). ⚠️ Fuer die AKKUMULATION liegt `schnitt` "
+            "gemessen bereit (+0,0470, p 0,000, 481 von 518 Symbolen) und "
+            "muss nur registriert werden - danach hat die Lage erstmals "
+            "eine Bewertung statt null Beitraegen. Loest R-R9 aus, aber "
+            "NUR fuer diese Lage.",
+            "Plan 05.09. - Nutzerentscheidung; Befund 2.286-schnitt"),
+    Schritt(22, "EMAIL STRUKTUR UND INHALTE",
+            "⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
+            "Regel 1 war schon erfuellt (2.356); offen sind Regel 2 "
+            "(gleichlautende Luecken zu EINEM Satz, gezaehlt nach GRUND) "
+            "und Regel 3 (Anhang statt Weglassen). ⚠️ Vorbehalt aus dem "
+            "Vorschlag: die Mail ist lang, WEIL die Bewertung duenn ist - "
+            "nach Schritt 21 schrumpft der Lueckenblock von selbst.",
+            "Gesamtplan 11.09. - Mail-Vorschlag"),
+    Schritt(23, "GUI UND UEBERSICHTSSEITE",
+            "⚠️ Offen seit 07.09., nie begonnen (E1). ⚠️ Die "
+            "Uebersichtsseite EXISTIERT (`remote/status.py`, rund 40 "
+            "Aggregatoren) - hier geht es um Erweiterung, nicht Neubau. "
+            "Die Bewertungsschwelle steht seit dem 11.09. darin (35 "
+            "Parameter); in der GUI fehlt sie noch.",
+            "remote/status.py; Nutzervorgabe 07.09. und 11.09."),
+    Schritt(24, "LLM-ROLLEN UND MODELLE",
+            "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
+            "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
+            "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
+            "schlagen und messbar sein · kein deterministischer Override "
+            "des LLM-Werturteils.",
+            "Nutzervorgabe 11.09."),
+
+    # ================================================================
+    # DER HEBEL - der lange Weg, ab hier parallel moeglich
+    # ================================================================
+    Schritt(25, "A1 / HEBEL-SPUR",
+            "⚠️⚠️⚠️ DER ENGPASS DES HEBELS, mit BENANNTEM Weg: das Band "
+            "auf binaeren Daten ist VIERMAL zu eng (2.238), deshalb "
+            "traegt auf `barriere` sogar `zufall`. Loesung laut "
+            "2.238-klasse: Fehlalarmquote der Barrieren-Anlage auf "
+            "Nullwelten - dasselbe Verfahren, das am 09.09. den Nullbezug "
+            "entschieden hat. ⚠️ DANACH erst sind die VIER "
+            "Terminmarkt-Kanaele gegen die RICHTIGE Zielgroesse messbar; "
+            "bisher sind sie nur gegen `bewegung_r` gefallen, und das VOR "
+            "dem Messstandard.",
+            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
+    Schritt(26, "V12 VOLA UND SCHNITT",
+            "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
+            "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
+            "Gemeinsamer geometrischer Anteil? Stuetzt 2.293. "
+            "⚠️ Niedrige Dringlichkeit - klaert nur, WARUM zwei "
+            "Kandidaten fielen, die ohnehin gefallen sind.",
+            "Befund 2.327 - offen"),
+    Schritt(27, "KALIBRIERUNG",
+            "Kalibrierung neu, dann die Hebelhoehe rechnen: erreicht sie "
+            "2-5x? ⚠️ Der Engpass ist die AUFLOESUNG, nicht die Staerke - "
+            "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
+            "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
-    Schritt(23, "K1",
+    Schritt(28, "K1",
             "`r(q)` bauen - die Wahrscheinlichkeit erzeugt das Risiko "
-            "(`betraege.risiko_eur`). ⚠️ Braucht A1 fuer die "
-            "Barrierenmessung.",
+            "(`betraege.py`).",
             "N-40 K1"),
-    Schritt(24, "KETTE",
+    Schritt(29, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
+
 )
 
 # ---- Blocker, die benannt sind -------------------------------------------

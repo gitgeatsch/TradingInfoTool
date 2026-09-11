@@ -4391,3 +4391,101 @@ Akkumulation verdrahtet und ein dritter Beitrag registriert, schrumpft
 der Lückenblock von selbst. **Die Mail zu straffen behebt das Symptom;
 die Bewertung zu vervollständigen behebt die Ursache.** Beides ist
 richtig — aber in dieser Reihenfolge zu lesen.
+
+---
+
+# 🗺️ 11.09. — DIE REIHENFOLGE STEHT (Beschluss), und was sie vorausplant
+
+## ✔ Die Vorarbeiten sind fertig
+
+| | |
+|---|---|
+| **S-1** | die drei Messquellen sind in `datenfrische` überwacht (Rolle **M**), ein Ausfall **meldet sich** — nach Job gruppiert, mit Handlungsanweisung |
+| **S-2** | ein Ausfall ist keine Messbasislücke mehr — Teilausfall wird **genannt** statt weggelassen, Totalausfall nennt den **Ausfall** statt der falschen Ursache |
+| **S-3** | alle 21 Jobs hinterlassen eine Spur — zentral über `EVENT_JOB_EXECUTED`, nicht in fünfzehn Kopien |
+
+⚠️ **Alle drei nützen erst im Betrieb.** Sie am Desktop liegen zu lassen,
+während das Notebook auf altem Code läuft, wäre das größere Risiko.
+
+## ⚠️⚠️ Der Rollout fehlte bis heute als Planschritt
+
+Obwohl **alle** Vorarbeiten auf ihn zulaufen. Jetzt Schritt 16.
+
+### Warum er zuerst kommt, obwohl die Bewertung dünn ist
+
+> Das Notebook ist **292 Commits** zurück. Solange diese Lücke steht, ist
+> **jede** weitere Änderung doppelt teuer — sie muss durch dieselbe Lücke.
+> **Ist das NB einmal aktuell, sind weitere Pulls billig.**
+
+⚠️ **Und er hängt nicht an der Akkumulation:** die Lage
+`spot/akkumulation` hat heute **null** Beiträge und hätte sie nach dem
+Rollout genauso. Sie verhält sich davor wie danach — es ist also nichts
+gewonnen, wenn man den Rollout auf sie wartet.
+
+---
+
+# Das Standardwerkzeug — gestaffelt, nicht in einem Stück
+
+> *„kein einfacher End2End Test sondern eine umfangreichere Test- und
+> Simulationsstufe (ein Standardwerkzeug): Fehleridentifikation,
+> Empfehlungen je Strategie, Asset und Zeitraum, unterschiedliche
+> Marktphasen, optional eine historische Simulation mit Zielerreichung."*
+> — Nutzervorschlag 11.09.
+
+## ✔✔ Was daran stärker ist, als es klang
+
+Die **Marktphasen** sind keine Erweiterung, sondern eine **Lücke**. Das
+System kennt fünf Regimes:
+
+```
+krise_extrem · baer · seitwaerts · bulle · euphorie_extrem
+```
+
+⚠️⚠️⚠️ **Aber keine einzige unserer Messungen ist je nach Regime getrennt
+worden.** Der Bestand hält sogar fest: *„immer Bär, kein Vergleich"*. Wir
+haben also **nie gemessen, ob `funding` und `turnover` in einem anderen
+Regime überhaupt tragen** — und das berührt die Gültigkeit **beider** live
+laufender Beiträge.
+
+**Das ist der größte Erkenntnisgewinn des ganzen Werkzeugs.**
+
+## ⚠️ Was ich geändert habe — und warum
+
+**„Historische Simulation mit Zielerreichung" → auf POTENTIAL.**
+
+> *„Wichtig für den ‚guten Trade' ist das **POTENTIAL** — also hohe
+> Wahrscheinlichkeit, dass etwas unter bestimmten Bedingungen eintritt —
+> und **NICHT die reelle Zielerreichung**; diese ist immer außer
+> Reichweite."* — Nutzervorgabe 23.08.
+
+Der Grund ist gemessen: ein Barrierensystem auf driftfreiem Pfad hat
+Erwartungswert **null** für **jede** Geometrie. „Ziel vor Stop" fällt per
+Konstruktion auf `1/(1+CRV)` — die Trefferquote steht fest, **bevor der
+Markt etwas tut**.
+
+> **Wer dieses Maß misst, misst unsere eigene Zielregel zurück** — und
+> erzeugt die Nullbefundserie erneut, die uns Wochen gekostet hat.
+
+➔ Dieselbe Simulation auf `bewegung_r` beantwortet die Frage und **kann
+antworten**. Der Unterschied ist eine Zeile im Maß, nicht im Werkzeug.
+
+## ✔ Und was schon da ist
+
+| | |
+|---|---|
+| `simuliere_kette.py` | E2E, vom **16.08.** — echte Reihen, DB-Schreiben, Mailaufbau, Attrappe nur für die zwei Modellaufrufe, schreibt in eine **Kopie** |
+| `agent/krypto/backtesting.py` | Backtesting-Engine vom **17.07., ohne Aufrufer** — mit ehrlich benannten Grenzen: *„Der eigentliche LLM-Entscheidungsschritt wird NICHT nachgebildet"* |
+| `agent/krypto/regime.py` | die fünf Regimes, gemessen und in Betrieb |
+
+**Der Grundstock liegt also vor — er ist nur nie zusammengeführt worden.**
+
+---
+
+# ⚠️ Was diese Planung voraussetzt — damit es nicht später auffällt
+
+| | |
+|---|---|
+| **T-2 braucht Regimedaten über die Zeit** | Fear & Greed und BTC-Dominanz liegen laut `backtesting.py` erst **seit 07.07.2026** vor. Für frühere Jahre bleibt nur der vereinfachte BTC-Trend (`_simplified_btc_regime`). ⚠️ **Eine Regimetrennung über die volle Historie ist damit NICHT dieselbe Größe wie eine ab Juli** — das gehört vor der Messung entschieden, nicht danach erklärt |
+| **T-3 braucht die Messquellen frisch** | die historische Simulation läuft auf `funding_historie`, `terminmarkt_historie`, `onchain_historie`. Die hinken heute 11–13 Tage. ⚠️ Deshalb steht das Nachziehen in der Rollout-Checkliste, nicht erst bei T-3 |
+| **T-1 erbt die Attrappe** | `simuliere_kette.py` ersetzt die zwei Modellaufrufe deterministisch. ⚠️ Das ist für *„reißt die Kette?"* richtig und für *„sind die Empfehlungen gut?"* **falsch** — T-1 kann Fehler finden, aber **keine Qualität beurteilen**. Wer das vermischt, hält einen Durchlauf für einen Beleg |
+| **Nach Schritt 21 ändert sich die Mail von selbst** | wird `schnitt` für die Akkumulation registriert, schrumpft der Lückenblock ohne Zutun. ⚠️ Deshalb steht **FORM vor EMAIL** — sonst strafft man einen Text, der sich gleich ändert |
