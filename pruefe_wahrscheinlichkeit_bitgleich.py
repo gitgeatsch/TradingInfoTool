@@ -30,6 +30,7 @@ inklusive Reihenfolge und Text.
 """
 import io
 import json
+import os
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -96,9 +97,53 @@ def erfassen() -> dict:
 def main() -> int:
     jetzt = erfassen()
     if "--aufzeichnen" in sys.argv:
+        # ⚠️⚠️⚠️ DIE SPERRE GEGEN DAS BEQUEME NEUAUFZEICHNEN (11.09.2026).
+        #
+        # DER ANLASS. Vier TEXTaenderungen an `saetze()` machten 144 der
+        # 432 Faelle rot. Neu aufzeichnen war richtig - aber das ist ein
+        # URTEIL, kein Handgriff, und beim naechsten Mal koennte
+        # dieselbe Geste eine geaenderte ZAHL mitloeschen. Dann ist der
+        # Massstab weg, und zwar genau dann, wenn er gebraucht wird.
+        #
+        # DIE TRENNUNG STECKT SCHON IN DEN SCHLUESSELN: Text steht unter
+        # `...|saetze`, die Zahlen unter `...|geb<x>`. Sie wird hier nur
+        # ausgewertet.
+        #
+        #     TEXT aendert sich absichtlich - Formulierungen werden besser
+        #     ZAHLEN aendern sich NIE, ohne dass eine Messung es verlangt
+        #
+        # Wer die Zahlen wirklich neu setzen will, nimmt `--auch-zahlen`
+        # dazu - und schreibt den Grund ins Umbaudokument. Die Huerde ist
+        # bewusst klein, aber sie zwingt zum Hinsehen.
+        try:
+            _alt = json.loads(io.open(REFERENZ, encoding="utf-8").read())
+        except (OSError, ValueError):
+            _alt = {}
+        _zahl = sorted(k for k in (set(_alt) | set(jetzt))
+                       if not k.endswith("saetze")
+                       and _alt.get(k) != jetzt.get(k))
+        if _zahl and "--auch-zahlen" not in sys.argv:
+            print("=" * 66)
+            print("⚠️⚠️⚠️ NICHT AUFGEZEICHNET - %d ZAHLEN haben sich "
+                  "geaendert" % len(_zahl))
+            print("=" * 66)
+            for k in _zahl[:8]:
+                print("   %s" % k)
+            if len(_zahl) > 8:
+                print("   ... und %d weitere" % (len(_zahl) - 8))
+            print()
+            print("Eine geaenderte TEXTzeile ist Absicht. Eine geaenderte")
+            print("ZAHL ist ein Befund - sie gehoert gemessen, nicht")
+            print("ueberschrieben. Ist die Aenderung gewollt UND begruendet:")
+            print("   python %s --aufzeichnen --auch-zahlen"
+                  % os.path.basename(__file__))
+            return 1
+        _text = sum(1 for k in (set(_alt) | set(jetzt))
+                    if k.endswith("saetze") and _alt.get(k) != jetzt.get(k))
         io.open(REFERENZ, "w", encoding="utf-8").write(
             json.dumps(jetzt, ensure_ascii=False, indent=1, sort_keys=True))
         print("Aufgezeichnet: %d Faelle -> %s" % (len(jetzt), REFERENZ))
+        print("   %d TEXTzeilen neu, %d Zahlen veraendert" % (_text, len(_zahl)))
         print("⚠️ Diese Datei ist der Massstab. Sie wird NUR neu geschrieben,")
         print("   wenn eine Aenderung ABSICHTLICH das Ergebnis verschiebt -")
         print("   und dann steht der Grund im Umbaudokument.")

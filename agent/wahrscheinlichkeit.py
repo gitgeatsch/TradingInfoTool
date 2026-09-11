@@ -886,19 +886,30 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
     def _zeile(text: str, wert: str) -> str:
         return f"   {text:<52}{wert:>7}"
 
+    # ⚠️ KEINE KUERZEL IM FLIESSTEXT (11.09.2026). Nutzervorgabe,
+    # woertlich: *"ich sollte im Text immer fuer mich lesbare und
+    # zuordenbare Werte und Textformulierungen erhalten (kein 2R), EUR
+    # Betraege, etc."* - "CRV 2,0" stand hier ungeloest. Es heisst:
+    # das Ziel liegt doppelt so weit wie der Stop, und daraus folgt die
+    # Basisrate 1/(1+CRV). Wer das Kuerzel nicht kennt, liest eine Zahl
+    # ohne Bedeutung.
     aus = ["Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-           _zeile(f"Ausgangspunkt aus der Geometrie (CRV "
-                  f"{de(erste['crv'], 1)})",
+           _zeile(f"Ausgangspunkt: Ziel {de(erste['crv'], 1)}-mal so weit "
+                  f"wie der Stop",
                   f"{de(100 * erste['basisrate'], 1)} %")]
     for z in erste["beitraege"]:
         if z["zustand"] == "traegt":
             # ⚠️ DAS VORZEICHEN GEHOERT AN DIE ZAHL, nicht davor. Ein
             # negativer Beitrag stand als "+-0,5" da - das liest sich wie
             # ein Tippfehler und verdeckt, dass der Beitrag ABZIEHT.
+            # ⚠️ DIE EINHEIT GEHOERT AN DIE ZAHL (11.09.2026). Bisher
+            # stand hier "+1,3" - Prozentpunkte WORAUF, stand nirgends.
+            # Mit dem "%" liest sich die Spalte als Rechnung: 33,3 %
+            # oben, +1,3 % und +3,1 % dazwischen, 37,8 % unten.
             aus.append(_zeile(
                 ("+ " if z["punkte"] >= 0 else "− ") + z["name"],
-                "%s%s" % ("+" if z["punkte"] >= 0 else "−",
-                          de(abs(z["punkte"]), 1))))
+                "%s%s %%" % ("+" if z["punkte"] >= 0 else "−",
+                             de(abs(z["punkte"]), 1))))
             aus.append(f"     ({z['warum']})")
     aus.append(_zeile("= geschaetzte Trefferquote",
                       f"{de(100 * erste['quote'], 1)} %"))
@@ -997,10 +1008,24 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
         # Jetzt stehen NOETIG und GESCHAETZT in derselben Zeile nebeneinander,
         # und das Urteil steht am Ende statt in der Mitte.
         traegt = r["abstand_punkte"] > 0
-        marke = "   " if traegt else "⚠️ "
+        # ⚠️⚠️ HIER STAND EIN WARNZEICHEN, UND DAS WAR FALSCH EINGEORDNET
+        # (11.09.2026). Nutzerbefund: die Mails fuehren "Hinweise,
+        # Warnungen und schwer abgrenzbare ehrliche Luecken" - und genau
+        # das entsteht, wenn EIN Zeichen drei verschiedene Dinge meint:
+        #
+        #     ⚠️ KEIN gemessener Beitrag greift hier   die BEWERTUNG
+        #     ⚠️ Bitpanda 1,50 %: ... ZU WENIG         die GEBUEHR
+        #     ⚠️ KEINE PROGNOSE FUER DIESEN TRADE      ein Dauervorbehalt
+        #
+        # ⚠️ ABER WEGLASSEN WAERE FALSCH: "deckt die Gebuehr nicht" ist
+        # eine Aussage, kein Schmuck. Sie bekommt ein EIGENES Zeichen -
+        # ✔/✖ sagt dasselbe, ohne wie eine Warnung der Bewertung zu
+        # wirken. Regel 2 verlangt ohnehin, dass Gebuehren NICHT in die
+        # Bewertung eingehen; ein Warnzeichen legt genau das nahe.
+        marke = "✔  " if traegt else "✖  "
         aus.append(f"{marke}{name}: noetig {de(100 * r['breakeven'], 1)} %, "
                    f"geschaetzt {de(100 * r['quote'], 1)} % - "
-                   f"{de(abs(r['abstand_punkte']), 1)} Punkte "
+                   f"{de(abs(r['abstand_punkte']), 1)} Prozentpunkte "
                    f"{'MEHR als noetig, TRAEGT' if traegt else 'ZU WENIG'}"
                    f" ({de(r['erwartungswert_r'], 3)} R je Trade"
                    f"{_in_eur(r['erwartungswert_r'], risiko_eur)})")

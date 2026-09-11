@@ -118,11 +118,11 @@
  "crv1.5|stop0.03|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -254,11 +254,11 @@
  "crv1.5|stop0.03|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -390,11 +390,11 @@
  "crv1.5|stop0.03|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -526,11 +526,11 @@
  "crv1.5|stop0.03|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -662,11 +662,11 @@
  "crv1.5|stop0.03|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -798,11 +798,11 @@
  "crv1.5|stop0.03|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -934,11 +934,11 @@
  "crv1.5|stop0.03|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -1070,11 +1070,11 @@
  "crv1.5|stop0.03|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -1206,11 +1206,11 @@
  "crv1.5|stop0.03|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -1342,11 +1342,11 @@
  "crv1.5|stop0.03|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -1478,11 +1478,11 @@
  "crv1.5|stop0.03|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -1614,11 +1614,11 @@
  "crv1.5|stop0.03|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 48,0 %, geschaetzt 40,0 % - 8,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 80,0 %, geschaetzt 40,0 % - 40,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -1750,11 +1750,11 @@
  "crv1.5|stop0.05|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -1886,11 +1886,11 @@
  "crv1.5|stop0.05|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2022,11 +2022,11 @@
  "crv1.5|stop0.05|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2158,11 +2158,11 @@
  "crv1.5|stop0.05|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2294,11 +2294,11 @@
  "crv1.5|stop0.05|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2430,11 +2430,11 @@
  "crv1.5|stop0.05|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2566,11 +2566,11 @@
  "crv1.5|stop0.05|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2702,11 +2702,11 @@
  "crv1.5|stop0.05|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2838,11 +2838,11 @@
  "crv1.5|stop0.05|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -2974,11 +2974,11 @@
  "crv1.5|stop0.05|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -3110,11 +3110,11 @@
  "crv1.5|stop0.05|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -3246,11 +3246,11 @@
  "crv1.5|stop0.05|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 44,8 %, geschaetzt 40,0 % - 4,8 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 64,0 %, geschaetzt 40,0 % - 24,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -3382,11 +3382,11 @@
  "crv1.5|stop0.2|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -3518,11 +3518,11 @@
  "crv1.5|stop0.2|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -3654,11 +3654,11 @@
  "crv1.5|stop0.2|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -3790,11 +3790,11 @@
  "crv1.5|stop0.2|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -3926,11 +3926,11 @@
  "crv1.5|stop0.2|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -4062,11 +4062,11 @@
  "crv1.5|stop0.2|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -4198,11 +4198,11 @@
  "crv1.5|stop0.2|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -4334,11 +4334,11 @@
  "crv1.5|stop0.2|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -4470,11 +4470,11 @@
  "crv1.5|stop0.2|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -4606,11 +4606,11 @@
  "crv1.5|stop0.2|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -4742,11 +4742,11 @@
  "crv1.5|stop0.2|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -4878,11 +4878,11 @@
  "crv1.5|stop0.2|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 1,5)            40,0 %",
+   "   Ausgangspunkt: Ziel 1,5-mal so weit wie der Stop     40,0 %",
    "   = geschaetzte Trefferquote                           40,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 41,2 %, geschaetzt 40,0 % - 1,2 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 46,0 %, geschaetzt 40,0 % - 6,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -5014,11 +5014,11 @@
  "crv2.0|stop0.03|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5150,11 +5150,11 @@
  "crv2.0|stop0.03|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5286,11 +5286,11 @@
  "crv2.0|stop0.03|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5422,11 +5422,11 @@
  "crv2.0|stop0.03|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5558,11 +5558,11 @@
  "crv2.0|stop0.03|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5694,11 +5694,11 @@
  "crv2.0|stop0.03|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5830,11 +5830,11 @@
  "crv2.0|stop0.03|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -5966,11 +5966,11 @@
  "crv2.0|stop0.03|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -6102,11 +6102,11 @@
  "crv2.0|stop0.03|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -6238,11 +6238,11 @@
  "crv2.0|stop0.03|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -6374,11 +6374,11 @@
  "crv2.0|stop0.03|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -6510,11 +6510,11 @@
  "crv2.0|stop0.03|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 40,0 %, geschaetzt 33,3 % - 6,7 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 66,7 %, geschaetzt 33,3 % - 33,3 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -6646,11 +6646,11 @@
  "crv2.0|stop0.05|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -6782,11 +6782,11 @@
  "crv2.0|stop0.05|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -6918,11 +6918,11 @@
  "crv2.0|stop0.05|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7054,11 +7054,11 @@
  "crv2.0|stop0.05|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7190,11 +7190,11 @@
  "crv2.0|stop0.05|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7326,11 +7326,11 @@
  "crv2.0|stop0.05|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7462,11 +7462,11 @@
  "crv2.0|stop0.05|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7598,11 +7598,11 @@
  "crv2.0|stop0.05|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7734,11 +7734,11 @@
  "crv2.0|stop0.05|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -7870,11 +7870,11 @@
  "crv2.0|stop0.05|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -8006,11 +8006,11 @@
  "crv2.0|stop0.05|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -8142,11 +8142,11 @@
  "crv2.0|stop0.05|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 37,3 %, geschaetzt 33,3 % - 4,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 53,3 %, geschaetzt 33,3 % - 20,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -8278,11 +8278,11 @@
  "crv2.0|stop0.2|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -8414,11 +8414,11 @@
  "crv2.0|stop0.2|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -8550,11 +8550,11 @@
  "crv2.0|stop0.2|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -8686,11 +8686,11 @@
  "crv2.0|stop0.2|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -8822,11 +8822,11 @@
  "crv2.0|stop0.2|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -8958,11 +8958,11 @@
  "crv2.0|stop0.2|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -9094,11 +9094,11 @@
  "crv2.0|stop0.2|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -9230,11 +9230,11 @@
  "crv2.0|stop0.2|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -9366,11 +9366,11 @@
  "crv2.0|stop0.2|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -9502,11 +9502,11 @@
  "crv2.0|stop0.2|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -9638,11 +9638,11 @@
  "crv2.0|stop0.2|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -9774,11 +9774,11 @@
  "crv2.0|stop0.2|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,0)            33,3 %",
+   "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
    "   = geschaetzte Trefferquote                           33,3 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 34,3 %, geschaetzt 33,3 % - 1,0 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 38,3 %, geschaetzt 33,3 % - 5,0 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -9910,11 +9910,11 @@
  "crv2.6|stop0.03|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10046,11 +10046,11 @@
  "crv2.6|stop0.03|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10182,11 +10182,11 @@
  "crv2.6|stop0.03|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10318,11 +10318,11 @@
  "crv2.6|stop0.03|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10454,11 +10454,11 @@
  "crv2.6|stop0.03|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10590,11 +10590,11 @@
  "crv2.6|stop0.03|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10726,11 +10726,11 @@
  "crv2.6|stop0.03|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10862,11 +10862,11 @@
  "crv2.6|stop0.03|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -10998,11 +10998,11 @@
  "crv2.6|stop0.03|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -11134,11 +11134,11 @@
  "crv2.6|stop0.03|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -11270,11 +11270,11 @@
  "crv2.6|stop0.03|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -11406,11 +11406,11 @@
  "crv2.6|stop0.03|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 33,3 %, geschaetzt 27,8 % - 5,6 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 55,6 %, geschaetzt 27,8 % - 27,8 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -11542,11 +11542,11 @@
  "crv2.6|stop0.05|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -11678,11 +11678,11 @@
  "crv2.6|stop0.05|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -11814,11 +11814,11 @@
  "crv2.6|stop0.05|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -11950,11 +11950,11 @@
  "crv2.6|stop0.05|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12086,11 +12086,11 @@
  "crv2.6|stop0.05|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12222,11 +12222,11 @@
  "crv2.6|stop0.05|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12358,11 +12358,11 @@
  "crv2.6|stop0.05|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12494,11 +12494,11 @@
  "crv2.6|stop0.05|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12630,11 +12630,11 @@
  "crv2.6|stop0.05|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -12766,11 +12766,11 @@
  "crv2.6|stop0.05|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -12902,11 +12902,11 @@
  "crv2.6|stop0.05|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -13038,11 +13038,11 @@
  "crv2.6|stop0.05|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 31,1 %, geschaetzt 27,8 % - 3,3 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 44,4 %, geschaetzt 27,8 % - 16,7 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -13174,11 +13174,11 @@
  "crv2.6|stop0.2|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13310,11 +13310,11 @@
  "crv2.6|stop0.2|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13446,11 +13446,11 @@
  "crv2.6|stop0.2|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13582,11 +13582,11 @@
  "crv2.6|stop0.2|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13718,11 +13718,11 @@
  "crv2.6|stop0.2|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13854,11 +13854,11 @@
  "crv2.6|stop0.2|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -13990,11 +13990,11 @@
  "crv2.6|stop0.2|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -14126,11 +14126,11 @@
  "crv2.6|stop0.2|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -14262,11 +14262,11 @@
  "crv2.6|stop0.2|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -14398,11 +14398,11 @@
  "crv2.6|stop0.2|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -14534,11 +14534,11 @@
  "crv2.6|stop0.2|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -14670,11 +14670,11 @@
  "crv2.6|stop0.2|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 2,6)            27,8 %",
+   "   Ausgangspunkt: Ziel 2,6-mal so weit wie der Stop     27,8 %",
    "   = geschaetzte Trefferquote                           27,8 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,6 %, geschaetzt 27,8 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 31,9 %, geschaetzt 27,8 % - 4,2 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -14806,11 +14806,11 @@
  "crv3.0|stop0.03|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -14942,11 +14942,11 @@
  "crv3.0|stop0.03|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15078,11 +15078,11 @@
  "crv3.0|stop0.03|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15214,11 +15214,11 @@
  "crv3.0|stop0.03|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15350,11 +15350,11 @@
  "crv3.0|stop0.03|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15486,11 +15486,11 @@
  "crv3.0|stop0.03|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15622,11 +15622,11 @@
  "crv3.0|stop0.03|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15758,11 +15758,11 @@
  "crv3.0|stop0.03|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -15894,11 +15894,11 @@
  "crv3.0|stop0.03|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -16030,11 +16030,11 @@
  "crv3.0|stop0.03|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -16166,11 +16166,11 @@
  "crv3.0|stop0.03|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -16302,11 +16302,11 @@
  "crv3.0|stop0.03|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Punkte ZU WENIG (-0,200 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Punkte ZU WENIG (-1,000 R je Trade)",
+   "✖  Standard 0,30 %: noetig 30,0 %, geschaetzt 25,0 % - 5,0 Prozentpunkte ZU WENIG (-0,200 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 50,0 %, geschaetzt 25,0 % - 25,0 Prozentpunkte ZU WENIG (-1,000 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -16438,11 +16438,11 @@
  "crv3.0|stop0.05|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -16574,11 +16574,11 @@
  "crv3.0|stop0.05|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -16710,11 +16710,11 @@
  "crv3.0|stop0.05|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -16846,11 +16846,11 @@
  "crv3.0|stop0.05|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -16982,11 +16982,11 @@
  "crv3.0|stop0.05|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -17118,11 +17118,11 @@
  "crv3.0|stop0.05|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -17254,11 +17254,11 @@
  "crv3.0|stop0.05|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -17390,11 +17390,11 @@
  "crv3.0|stop0.05|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -17526,11 +17526,11 @@
  "crv3.0|stop0.05|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -17662,11 +17662,11 @@
  "crv3.0|stop0.05|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -17798,11 +17798,11 @@
  "crv3.0|stop0.05|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -17934,11 +17934,11 @@
  "crv3.0|stop0.05|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Punkte ZU WENIG (-0,120 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Punkte ZU WENIG (-0,600 R je Trade)",
+   "✖  Standard 0,30 %: noetig 28,0 %, geschaetzt 25,0 % - 3,0 Prozentpunkte ZU WENIG (-0,120 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 40,0 %, geschaetzt 25,0 % - 15,0 Prozentpunkte ZU WENIG (-0,600 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -18070,11 +18070,11 @@
  "crv3.0|stop0.2|kl-|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18206,11 +18206,11 @@
  "crv3.0|stop0.2|kl-|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18342,11 +18342,11 @@
  "crv3.0|stop0.2|kl-|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18478,11 +18478,11 @@
  "crv3.0|stop0.2|klaktien|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18614,11 +18614,11 @@
  "crv3.0|stop0.2|klaktien|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18750,11 +18750,11 @@
  "crv3.0|stop0.2|klaktien|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf aktien nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -18886,11 +18886,11 @@
  "crv3.0|stop0.2|kletf|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -19022,11 +19022,11 @@
  "crv3.0|stop0.2|kletf|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -19158,11 +19158,11 @@
  "crv3.0|stop0.2|kletf|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): auf etf nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto",
@@ -19294,11 +19294,11 @@
  "crv3.0|stop0.2|klkrypto|hFalse|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -19430,11 +19430,11 @@
  "crv3.0|stop0.2|klkrypto|hNone|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
@@ -19566,11 +19566,11 @@
  "crv3.0|stop0.2|klkrypto|hTrue|gebsaetze": {
   "zeilen": [
    "Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
-   "   Ausgangspunkt aus der Geometrie (CRV 3,0)            25,0 %",
+   "   Ausgangspunkt: Ziel 3,0-mal so weit wie der Stop     25,0 %",
    "   = geschaetzte Trefferquote                           25,0 %",
    "⚠️ KEIN gemessener Beitrag greift hier - die Zahl ist die reine Basisrate aus der Geometrie.",
-   "⚠️ Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Punkte ZU WENIG (-0,030 R je Trade)",
-   "⚠️ Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Punkte ZU WENIG (-0,150 R je Trade)",
+   "✖  Standard 0,30 %: noetig 25,8 %, geschaetzt 25,0 % - 0,8 Prozentpunkte ZU WENIG (-0,030 R je Trade)",
+   "✖  Bitpanda 1,50 %: noetig 28,7 %, geschaetzt 25,0 % - 3,7 Prozentpunkte ZU WENIG (-0,150 R je Trade)",
    "   Bereits enthalten: Trichter (uebliche Kursbewegung) - er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen",
    "   Nicht eingerechnet, und warum:",
    "      Vorfilter H (Weg frei, Stop gedeckt): gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop",
