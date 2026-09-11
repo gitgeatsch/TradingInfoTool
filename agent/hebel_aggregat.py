@@ -50,6 +50,12 @@ alles, das passt nicht zu unserem Vorgehen. Initial haben wir angedacht, dass
 zumindest drei Hebelpositionen offen sein koennen."* An den echten NB-
 Positionen: A im Median 222 EUR, B 166 EUR; im Median passen 2,5 gegen 3,3
 Positionen in den Deckel.
+
+⚠️ UND MIT DER LIQUIDATIONSREGEL (Nutzerentscheidung 11.09.2026 spaet, Befund
+2.382-liquidation): dieselbe Regel wie fuer eine Position MIT Plan - liegt die
+Liquidation (mit den echten Tagen) schon vor dem angenommenen Stop, schuetzt
+er nicht, und es zaehlt das Eigenkapital. An den NB-Positionen: Median 176
+statt 170 EUR, allein im Deckel 14 statt 9 %.
 """
 from __future__ import annotations
 
@@ -80,9 +86,19 @@ def _risiko_position(t: dict) -> tuple[float, str]:
         return ek, "unvollstaendig rekonstruiert - Eigenkapital als Hoechstverlust"
     if not t.get("plan"):
         # VARIANTE B (Nutzer 11.09.): angenommener Stop, hoechstens das
-        # Eigenkapital. ⚠️ Die Liquidation wird hier NICHT gegen den
-        # angenommenen Stop geprueft - so wurde B vorgelegt und bestaetigt;
-        # die Frage steht zur Abstimmung (Befund 2.382-liquidation).
+        # Eigenkapital - MIT der Liquidationsregel (Nutzer 11.09. spaet,
+        # Befund 2.382-liquidation): liegt die Liquidation schon vor dem
+        # angenommenen Stop, gilt dasselbe wie mit Plan.
+        liq = t.get("liquidation_eur")
+        if liq:
+            short = str(t.get("richtung") or "").upper() == "SHORT"
+            e0 = float(t["einstand_eur"])
+            stop = e0 * ((1.0 + STOP_ANGENOMMEN) if short
+                         else (1.0 - STOP_ANGENOMMEN))
+            if (float(liq) <= stop) if short else (float(liq) >= stop):
+                return ek, ("ohne bekannten Stop - die Liquidation liegt vor dem "
+                            "angenommenen Stop von %s %% - Eigenkapital als "
+                            "Hoechstverlust" % de(100 * STOP_ANGENOMMEN, 1))
         risiko = min(STOP_ANGENOMMEN * pw, ek)
         return risiko, ("ohne bekannten Stop - angenommen %s %% ab Einstand%s"
                         % (de(100 * STOP_ANGENOMMEN, 1),

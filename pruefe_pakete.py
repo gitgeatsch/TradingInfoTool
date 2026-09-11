@@ -18457,7 +18457,37 @@ def paket_aggregat_deckel() -> None:
     pruefe(P, "die Hebelmail sagt es: Stop unbekannt, angenommen 11,7 % - und was es im Deckel belegt",
            any("Stop unbekannt - im Aggregat-Deckel angenommen 11,7 %" in z for z in _zb)
            and any(z.strip().startswith("Im Deckel") and "70,20 EUR" in z for z in _zb)
-           and not any("das ganze Eigenkapital" in z for z in _zb), "%r" % _zb)
+           and any("liegt die Liquidation schon davor" in z for z in _zb), "%r" % _zb)
+    # ⚠️⚠️ NUTZERENTSCHEIDUNG 11.09. spaet: B MIT der Liquidationsregel. Ueber
+    # die ECHTE Fuehrung (Liquidation mit den echten Tagen), gegen die
+    # unabhaengige Tagesformel `tage_bis_liquidation_am_stop`: nach diesem Tag
+    # zaehlt das Eigenkapital, vorher 11,7 % des Positionswerts. Faelle nahe
+    # am Kipptag bleiben aussen vor (Rundungsrand).
+    from agent.krypto.hebel_risk_gate import tage_bis_liquidation_am_stop as _tbl
+    _fehl_l, _n_l, _n_ek = [], 0, 0
+    for _L in (2.0, 3.0, 4.0, 5.0, 6.0, 8.0):
+        _tstern = _tbl(_HAG.STOP_ANGENOMMEN, _L, 0.09)
+        for _tg in (0.0, 1.0, 3.0, 10.0, 50.0, 100.0):
+            if abs(_tg - _tstern) < 0.5:
+                continue
+            _tl = _HFa.fuehre(symbol="LLL", richtung="LONG",
+                              eroeffnet_am=(_jetzt - _td(days=_tg)).isoformat(),
+                              hebel=_L, positionswert_eur=100.0 * _L,
+                              kreditbetrag_eur=100.0 * (_L - 1.0),
+                              eigenkapital_eur=100.0, positionsmenge=_L,
+                              kurs_eur=100.0, jetzt=_jetzt, plan=None)
+            _r, _g = _HAG._risiko_position(_tl)
+            _soll_ek = _tg > _tstern
+            _soll = 100.0 if _soll_ek else min(_HAG.STOP_ANGENOMMEN * _L * 100.0, 100.0)
+            _n_l += 1
+            _n_ek += int(_soll_ek)
+            if abs(_r - _soll) > 1e-6 or (
+                    _soll_ek != ("Liquidation liegt vor dem angenommenen Stop" in _g)):
+                _fehl_l.append((_L, _tg, round(_tstern, 2), _r, _soll, _g))
+    pruefe(P, "⚠️⚠️ B mit Liquidationsregel: nach dem Kipptag zaehlt das Eigenkapital, "
+              "vorher 11,7 %% - %d Faelle ueber die echte Fuehrung, %d davon mit Eigenkapital"
+              % (_n_l, _n_ek),
+           not _fehl_l and 0 < _n_ek < _n_l, "%r" % _fehl_l[:3])
     pruefe(P, "nicht gezaehlt: Plan-Signal doppelt, zu alt, aufgeloest, Geometrie-Hebel, geschriebenes Laufsignal doppelt",
            [s for _, s, _ in _je] == ["GGG", "AAA", "BBB", "CCC"]
            or sorted(s for _, s, _ in _je) == ["AAA", "BBB", "CCC", "GGG"], "%r" % _je)

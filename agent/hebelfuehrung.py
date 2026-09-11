@@ -287,7 +287,8 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             "dieselbe Richtung, bis %d Stunden vor der Eroeffnung) - Stop, Ziel "
             "und Widerlegung sind unbekannt. Gefuehrt werden Liquidation und "
             "Finanzierung. Stop unbekannt - im Aggregat-Deckel angenommen "
-            "%s %% ab Einstand, hoechstens das Eigenkapital."
+            "%s %% ab Einstand, hoechstens das Eigenkapital; liegt die "
+            "Liquidation schon davor, das ganze Eigenkapital."
             % (round(24 * KOPPEL_TAGE), _de(100 * STOP_ANGENOMMEN, 1)))
         return t
 

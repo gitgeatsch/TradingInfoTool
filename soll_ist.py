@@ -442,9 +442,11 @@ REIHENFOLGE = (
             "Akkumulationsschalter steht fuer BTC, ETH und SOL seit langem "
             "an (Vorgabe von `get_dca_erlaubt`, 2.380-akku-schalter) und "
             "wirkt bis Paket 2 nicht (Sperre). ✔ Fenster 24 h, Position "
-            "ohne Stop Variante B. ZUR ABSTIMMUNG vor dem Scharfschalten: B "
-            "und die Liquidation (2.382-liquidation), die Topfregel "
-            "(2.382-topf). ⚠️ Der Hebel-Schalter je Asset ist opt-in - am NB "
+            "ohne Stop Variante B mit Liquidationsregel (2.382-liquidation); "
+            "die Topfregel bleibt bis nach dem Rollout (2.382-topf). ✔ "
+            "VORBEREITET: `ausrollen_paket_b.py` (2.383), am NB mit "
+            "`--nachrechnen` vor dem Neustart; Ablauf in "
+            "`Basisinfos/Ausrollen_24_08.md`, Abschnitt PAKET B. ⚠️ Der Hebel-Schalter je Asset ist opt-in - am NB "
             "23 von 43 Kryptowerten an; nur dort entsteht ein Hebelgeschaeft. "
             "Nach dem Nachrechnen des Portfoliowerts den E2E "
             "(`--nachweis-paket-b`) gegen die frische Sicherung wiederholen. "
@@ -489,11 +491,14 @@ REIHENFOLGE = (
     # ================================================================
     # NACH DEM PRODUKTIVGANG
     # ================================================================
-    Schritt(28, "TAKT",
+    Schritt(28, "TAKT UND TOPF",
             "⚠️ ERST NACH DEM ROLLOUT messen - vorher misst man den alten "
             "Stand. Mailaufkommen und Wiederholungsanteil am echten "
-            "Betrieb.",
-            "Nutzervorgabe 11.09."),
+            "Betrieb. DAZU DIE TOPFREGEL NEU FASSEN (Nutzer 11.09., "
+            "2.382-topf): der Topf zaehlt nur Signale, die die Verfolgung "
+            "noch nicht gesehen hat, und begrenzt praktisch nie; beim Hebel "
+            "greift der Aggregat-Deckel.",
+            "Nutzervorgabe 11.09.; Befund 2.382-topf"),
 
     # ================================================================
     # DAS STANDARDWERKZEUG (Nutzervorschlag 11.09., gestaffelt)

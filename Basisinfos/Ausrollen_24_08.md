@@ -357,3 +357,130 @@ Datenalterung der Nicht-Krypto-Messbasen.
 | **Die Hebellage** | bleibt blockiert (A1, A9, P-1) — der Rollout ändert daran nichts |
 | **Der Takt** | Mailaufkommen und Wiederholungsanteil sind **nach** dem Rollout zu messen, nicht vorher — vorher misst man den alten Stand |
 | **Die Akkumulationsbewertung** | `schnitt` ist gemessen, aber **nicht registriert**. Bis die FORM entschieden ist, hat die Akkumulationslage **null** Beiträge — auch nach dem Rollout |
+
+---
+
+# 🚀 PAKET B — der Rollout am Notebook (Schritt 24, vorbereitet 11.09.2026)
+
+> Nutzerentscheidung 11.09.: *„1 Hebel, 2 Spot, 3 Akkumulation — zumindest
+> Hebel und Spot müssen sauber funktionieren."* Paket B bringt beides; die
+> Akkumulation bleibt gesperrt (Paket 2).
+
+## Was dieser Rollout ändert
+
+| | vorher | nachher |
+|---|---|---|
+| **Hebel** | aus der Stopgeometrie (1,0–1,5x auf Spot-Signalen) | aus der **Wahrscheinlichkeit** r(q), 2–5x, sonst Spot mit **unverändertem Betrag** |
+| **Aggregat-Deckel** | keiner | alle Hebelrisiken zusammen ≤ **3 % des Kapitals** (bei 18.213 EUR: 546 EUR) |
+| **Hebelführung** | Positionen wurden nirgends gelesen | eigene Mail bei LIQUIDATION / SCHLIESSEN / HEBEL SENKEN / KURS FEHLT / STOP NACHZIEHEN |
+| **Mail** | ein Block | *Auf einen Blick* · *Was dagegen spricht* · 6 Abschnitte · Anhang |
+| **Cooldown Krypto** | 3,5 h für jeden Hebel > 1,0 | 3,5 h erst ab 2x, sonst **12 h** |
+| **Kapital** | 9.942 EUR (ohne Gestaktes, 01.09.) | **18.213 EUR** (mit Gestaktem, nachgerechnet) |
+
+## ⚠️ Die Schalter — Stand beim Push
+
+| Schalter | Wirkung | Stand |
+|---|---|---|
+| `rollen_kette.hebel_aus_quote.aktiv` | ohne ihn entsteht **kein** Hebelgeschäft | *wird beim Push eingetragen* |
+| `marktscan.aktiv` | alter Marktscan, eigene Mails (2.369) | *wird beim Push eingetragen* |
+| `hebel_screening.aktiv` | altes Hebel-Screening; `false` legt **nur** das Screening still, Positionsabgleich und Hebelführung laufen weiter | *wird beim Push eingetragen* |
+| Hebel-Schalter **je Asset** (GUI) | nur dort entsteht ein Hebelgeschäft | am NB **24 von 44** Kryptowerten an |
+
+## Die Schritte, in dieser Reihenfolge
+
+**1. App und Watchdog beenden** (Tray-Symbol).
+
+**2. Zuerst `fetch`, nicht `pull`:**
+
+```bash
+git fetch && git status
+```
+
+⚠️ **Meldet `git status` eine geänderte `Basisinfos/config.yaml`** — die App
+schreibt sie selbst (Watchlist, Schalter): `git diff Basisinfos/config.yaml`
+ansehen. Betrifft es andere Abschnitte als der Push, nur diese Datei
+committen, dann weiter. Überlappt es: **anhalten**, nicht verwerfen.
+
+```bash
+git pull --ff-only
+```
+
+**3. Die Vollständigkeitsprüfung — erst lesen, dann nachrechnen:**
+
+```bash
+python ausrollen_paket_b.py
+```
+
+Erwartet: **C1 ✔ K1 ✔**; offen dürfen nur **P2** (Kapital alt) und **D1**
+(Quelle `kapital`) sein — genau das rechnet der nächste Schritt nach.
+
+```bash
+python ausrollen_paket_b.py --nachrechnen
+```
+
+Erwartet: **0 nicht erfüllt**, *„Kapital … FRISCH"*, Deckel rund **546 EUR**
+(am Desktop gegen die Sicherung vom 11.09. gerechnet: 9 Tage, 18.213 EUR). Die
+neue Spalte `verlust_am_stop_eur` wird dabei angelegt und gelesen.
+
+**4. Die Suite:**
+
+```bash
+python pruefe_pakete.py
+```
+
+Muss **2.193 Prüfungen** melden, davon nur die **4 bekannten Roten**: Messreihe
+für gehaltene Werte (ASTER, CANTON, MON), Messbasis Nicht-Krypto veraltet,
+Kernwert CANTON ohne Beitrag, sieben Klassenkollisionen. Die Ausgabe steht in
+`Pruefungen\pruefe_pakete_ausgabe_T440.txt` — **Dateinamen prüfen**.
+
+**5. Der Durchlauf mit einem Hebelgeschäft** (arbeitet auf zwei Kopien im
+Temp-Verzeichnis, rund 1 GB, einige Minuten):
+
+```bash
+python simuliere_kette.py --nachweis-paket-b
+```
+
+Erwartet: **17 Fälle, 17 gezeigt**, dazu zwei ○-Befunde zur Akkumulation
+(Schritt 26). ⚠️ Er ruft keine Modelle — die Antworten kommen aus einer
+Attrappe, das Kontingent bleibt unberührt.
+
+```bash
+python finde_freie_namen.py
+```
+
+Muss **0 Kandidaten** melden.
+
+**6. Watchdog starten.**
+
+## Was danach zu erwarten ist
+
+| | |
+|---|---|
+| **Hebelmails** | nur für Werte mit Hebel-Schalter **und** Beiträgen, die r(q) über 2x heben — **selten** (Simulation: rund die Hälfte der Kandidaten, davon ein Drittel durch den Deckel Spot) |
+| **Hebelführung** | eine Mail nur bei Handlungsbedarf, einmal je Zustand und Tag |
+| **Spot** | Beträge wie bisher; der Betreff verliert das Schein-„(Hebel)" |
+| **Akkumulation** | **keine** Signale — im Trichter steht `anlass`, nicht die Sperre (2.382-akku-anlass) |
+
+## Nach dem ersten Lauf
+
+```bash
+python ausrollen_paket_b.py
+```
+
+Alles ✔ außer Hinweisen. ⚠️ **Die erste Hebelmail LESEN, nicht zählen:**
+Kopf *„Betrag … – Hebel …x"*, darunter die Hebelrechnung mit dem Satz zum
+Aggregat-Deckel.
+
+## Was dieser Rollout NICHT bringt
+
+| | |
+|---|---|
+| Akkumulation | Paket 2 (Schritte 25–27) — und dort Anlass und Cooldown je Zelle |
+| Topfregel | begrenzt praktisch nie — neu fassen nach dem Rollout (Schritt 28) |
+| Feinschliff Mail | Kursmarken und Rangangaben zusammenlegen, Rundung des Hebels, Wortlaut Anhang C |
+
+## Wenn etwas schiefgeht
+
+Zurück ist ein `git revert` über die Paket-B-Commits. **Die Daten bleiben
+additiv:** die Spalte `verlust_am_stop_eur` und die nachgerechneten Tage in
+`portfolio_wert_historie` stören einen älteren Code nicht.

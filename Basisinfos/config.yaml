@@ -2073,7 +2073,8 @@ rollen_kette:
     hebel_grenze: 5.0
     # H-5 (Nutzerentscheidung 11.09.2026): alle offenen Hebelrisiken zusammen
     # hoechstens dieser Anteil des Kapitals. Offene Positionen (Verlust bis
-    # zum Stop, ohne Stop das Eigenkapital) plus offene Hebelsignale. Ein
+    # zum Stop; ohne Stop angenommen 11,7 %, liegt die Liquidation davor das
+    # Eigenkapital) plus offene Hebelsignale. Ein
     # neuer Trade bekommt hoechstens den Rest; unter hebel_ab wird er Spot.
     aggregat_anteil: 0.03
 

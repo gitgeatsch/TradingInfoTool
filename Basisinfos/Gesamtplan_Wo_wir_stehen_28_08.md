@@ -5095,3 +5095,15 @@ zwei Kopien, die Attrappe über die Marktränge gesteuert — **17 Fälle gezeig
   Positionen mit Plan hieße: Median 176 statt 170 EUR, allein im Deckel 14 statt
   9 %. **Zur Abstimmung.**
 - ○ Feinschliff: Rundung des Hebels, Wortlaut Anhang C (2.382-rundung).
+
+## Schritt 24 — vorbereitet (Befund 2.383), Entscheidungen 11.09. spät
+
+- ✔ **B mit Liquidationsregel** (2.382-liquidation) — gebaut, Eigenschaft über
+  34 Fälle, Mutante gefangen.
+- ✔ **Topfregel bleibt** bis nach dem Rollout (2.382-topf) → Schritt 28.
+- ✔ **`ausrollen_paket_b.py`** — die Vollständigkeitsprüfung für das Notebook;
+  gegen die Sicherung getestet: Kapital 9.942 → **18.213 EUR**, Index ohne
+  Sprung, Schutzsperre am Desktop geprüft. Ablauf: `Ausrollen_24_08.md`,
+  Abschnitt **PAKET B**.
+- ⚠️ Offen vor dem Push: die drei Schalter (`hebel_aus_quote`, alter Marktscan,
+  altes Hebel-Screening) und die Freigabe zum Push.

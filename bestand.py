@@ -3102,6 +3102,24 @@ BEFUNDE = (
                "sei rehabilitiert. Ist er nicht - der Einwand ist nur ein "
                "anderer geworden, und ein staerkerer", "gilt",
                "2.335 / 2.222 / 2.158-redundanz"),
+    Befundlage("2.383", "✔✔ SCHRITT 24 VORBEREITET - `ausrollen_paket_b.py`, "
+               "die Vollstaendigkeitspruefung fuer das Notebook (stehende Regel: "
+               "Gesamtpaket statt Einzelschritte). Prueft Code, config, Schema "
+               "mit LESEPROBE, Kapital, Datenfrische, Hebel-Schalter und Deckel; "
+               "`--nachrechnen` schreibt die fehlenden Tage in "
+               "`portfolio_wert_historie` (2.376-rollout). Getestet gegen eine "
+               "Kopie der NB-Sicherung 11.09.: ohne Nachrechnen 2 Punkte offen "
+               "(Kapital ,alt' 9.942 EUR, Quelle kapital ,abruf') - richtig "
+               "gemeldet; mit Nachrechnen 9 Tage (02.09.-10.09.), Abdeckung je "
+               "1,0, Kapital FRISCH 18.213 EUR - derselbe Wert wie in H-1 ueber "
+               "einen anderen Weg. Der INDEX springt nicht (95,58 -> 95,43), nur "
+               "der Wert einmal (das Gestakte, 2.375-index). Neue Spalte "
+               "`verlust_am_stop_eur` angelegt und gelesen; Deckel 546 EUR. "
+               "SCHUTZSPERRE geprueft (Betriebspfad auf eine Attrappe gelenkt): "
+               "am Desktop ohne `--db` Abbruch, keine Datei angelegt; als "
+               "Notebook greift sie nicht. Am NB 24 von 44 Kryptowerten mit "
+               "Hebel-Schalter. Suite 2193 Pruefungen, 4 bekannte Rote", "gilt",
+               "ausrollen_paket_b.py · NB-Sicherung 11.09. (Kopie)"),
     Befundlage("2.382", "✔✔✔ SCHRITT 23 - PAKET B VON ANFANG BIS ENDE "
                "NACHGEWIESEN (Befund 2.371: bis dahin nie ein Hebelgeschaeft "
                "simuliert). `simuliere_kette.py --nachweis-paket-b` gegen die "
@@ -3145,7 +3163,9 @@ BEFUNDE = (
                "stumm", "offen",
                "simuliere_kette --nachweis-paket-b 11.09. · "
                "rollen_lauf._REIHENFOLGE · anlass.beobachte"),
-    Befundlage("2.382-topf", "⚠️⚠️ ZUR ABSTIMMUNG: DER TOPF BEGRENZT "
+    Befundlage("2.382-topf", "✔ NUTZERENTSCHEIDUNG 11.09. spaet: WIE "
+               "EMPFOHLEN - fuer Paket B bleibt die Topfregel, sie wird nach "
+               "dem Rollout neu gefasst (Schritt 28). Der Befund: DER TOPF BEGRENZT "
                "PRAKTISCH NIE. `toepfe.belegt_eur` zaehlt nur Einstiege mit "
                "`outcome_status IS NULL` - die Zeilen, die die Signalverfolgung "
                "noch nicht gesehen hat. Am NB (11.09. 04:48): 5 Zeilen (Hebel "
@@ -3159,9 +3179,13 @@ BEFUNDE = (
                "ist die Grenze, die greift. Dazu trennt der Topf an der Spalte "
                "`hebel`: alte Geometriezeilen 1,2x zaehlen weiter als Hebel. "
                "Empfehlung: fuer Paket B nichts aendern, die Topfregel nach dem "
-               "Rollout neu fassen", "offen",
+               "Rollout neu fassen", "gilt",
                "NB-Sicherung 11.09. signals · toepfe.belegt_eur"),
-    Befundlage("2.382-liquidation", "⚠️ ZUR ABSTIMMUNG: VARIANTE B UND DIE "
+    Befundlage("2.382-liquidation", "✔ NUTZERENTSCHEIDUNG 11.09. spaet: B "
+               "MIT DER LIQUIDATIONSREGEL - gebaut und geprueft (Paket "
+               "Aggregat-Deckel: Eigenschaft ueber 34 Faelle der echten "
+               "Fuehrung gegen die unabhaengige Tagesformel; die Mutante ohne "
+               "Regel wird gefangen). Vorgelegt war: VARIANTE B UND DIE "
                "LIQUIDATION. B wurde als min(11,7 %% x Positionswert, "
                "Eigenkapital) vorgelegt und so gebaut. Fuer eine Position MIT "
                "Plan gilt aber: liegt die Liquidation vor dem Stop, zaehlt das "
@@ -3171,8 +3195,7 @@ BEFUNDE = (
                "Altpositionen ueber 5x. Median 170 -> 176 EUR, 90 %% 496 -> 609 "
                "EUR, allein im Deckel 9,2 -> 14,1 %%. Neue Positionen des Systems "
                "sind auf 5x und RM-11 gedeckelt; betroffen waeren vor allem von "
-               "Hand eroeffnete. Im Code: B wie bestaetigt, ohne "
-               "Liquidationspruefung", "offen",
+               "Hand eroeffnete", "gilt",
                "NB-Sicherung 11.09. hebel_positions · Nutzer 11.09."),
     Befundlage("2.382-rundung", "○ FEINSCHLIFF (nach dem Rollout): der Hebel "
                "wird auf 0,1 GERUNDET (`round(hebel, 1)`), und der Verlust am "
@@ -3253,7 +3276,9 @@ BEFUNDE = (
                "angenommen 11,7 %%' und je Position ,Im Deckel X EUR'. "
                "Nachweis: Paket Aggregat-Deckel (Eigenschaft ueber 27 Faelle), "
                "Mutationstest (A macht 4 Pruefungen rot, B ohne EK-Grenze 1), "
-               "E2E 2.382. Offen dazu: 2.382-liquidation", "gilt",
+               "E2E 2.382. ✔ Dazu die Liquidationsregel (Nutzer 11.09. spaet, "
+               "2.382-liquidation): liegt die Liquidation schon vor dem "
+               "angenommenen Stop, zaehlt das Eigenkapital", "gilt",
                "NB-Sicherung 11.09. hebel_positions · Nutzer 11.09. · "
                "agent/hebel_aggregat.py"),
     Befundlage("2.380", "✔✔✔ H-5 GEBAUT - DER AGGREGAT-DECKEL "
