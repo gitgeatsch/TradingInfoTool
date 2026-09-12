@@ -3147,7 +3147,18 @@ BEFUNDE = (
                "(Stufe 9, 25 Faelle in 7 Tagen) und auf ,Ausstieg steht auf "
                "SCHLIESSEN' (166). Beide buchen ein Nein und schicken keine "
                "Mail - bei einem Einstieg ist das richtig, bei einem "
-               "Ausstieg ist es die Frage", "offen",
+               "Ausstieg ist es die Frage. ✔ AUFGEKLAERT UND BEHOBEN AM "
+               "SELBEN TAG (48a, Befunde 2.401-gestakt und 2.402): an den "
+               "echten Trichtergruenden nachgesehen lauteten ALLE 25 "
+               "Faelle *,vollstaendig gestakt, nicht frei verkaeuflich'* "
+               "- KEIN einziger ,ohne Bestand'. Und die 166 "
+               "SCHLIESSEN-Faelle sind EINSTIEGE (NACHKAUFEN), gehoeren "
+               "also gar nicht dazu. Der gestakte Fall bekommt seit 48a "
+               "einen eigenen Mailabschnitt statt Schweigen. ⚠️ DIESER "
+               "NACHTRAG KAM ERST ABENDS, und das ist selbst ein Befund: "
+               "der Fall war seit Stunden geloest und stand hier weiter "
+               "auf offen - genau das, was die Vorgabe SOFORT-EINTRAGEN "
+               "verhindern soll", "gilt",
                "NB-Sicherung 12.09. · Schritt 43"),
     Befundlage("2.407", "✔✔ SCHRITT 44, PUNKTE 2a UND 2b GEBAUT - DIE "
                "VIER-FELDER-MESSUNG IST VOLLSTAENDIG. Der Plan stand seit "
