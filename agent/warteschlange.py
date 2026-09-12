@@ -133,14 +133,63 @@ def _vorgemerkt(conn) -> set:
         return set()
 
 
+# ⚠️⚠️ WIE ALT EIN SCREENING-SCORE NOCH SORTIEREN DARF (Schritt 40,
+# 12.09.2026). Am 12.09. wurde `hebel_screening.aktiv` auf false gesetzt -
+# seither schreibt NIEMAND mehr in `hebel_triggers`. Der Score dort altert
+# ab jetzt jeden Tag, und `MAX(score_gesamt)` ohne Datumsfilter haette ihn
+# fuer immer weiterbenutzt.
+#
+# DAS WAERE KEIN ABSTURZ GEWESEN, SONDERN SCHLIMMER: die Kette haette in
+# einem Monat nach einer eingefrorenen Zahl sortiert, und niemand haette es
+# gemerkt. Genau die Klasse "stiller Ausfall", die dieses Projekt schon
+# dreimal Wochen gekostet hat (N-40, 2.386, 2.389-log).
+#
+# ⚠️ 30 TAGE IST EINE SETZUNG, KEIN BEFUND - und sie steht hier, damit sie
+# jemand widerlegen kann. Begruendung: das Screening lief alle 15 Minuten,
+# ein Score war also nie aelter als Stunden gemeint. Dreissig Tage sind
+# grosszuegig und lassen der Stilllegung Zeit; wer sie enger will, hat recht
+# und muss es nur messen.
+RANG_MAX_ALTER_TAGE = 30
+
+
 def _rang(conn) -> dict:
-    """Der juengste Screening-Score je Symbol. Hoeher = frueher."""
+    """Der juengste Screening-Score je Symbol. Hoeher = frueher.
+
+    ⚠️ NUR SOLANGE ER FRISCH IST. Ein Score aus einer abgeschalteten Quelle
+    ist keine Rangfolge mehr, sondern ein Fossil - siehe
+    `RANG_MAX_ALTER_TAGE` oben. Faellt er weg, sortiert `sortiere()` nach
+    der Wartezeit weiter; es geht also nichts kaputt, es wird nur ehrlicher.
+    """
     try:
         return {str(s).upper(): float(w or 0) for s, w in conn.execute(
             "SELECT symbol, MAX(score_gesamt) FROM hebel_triggers "
-            "GROUP BY symbol")}
+            "WHERE screened_at >= datetime('now', ?) "
+            "GROUP BY symbol", ("-%d day" % RANG_MAX_ALTER_TAGE,))}
     except Exception:                                        # noqa: BLE001
         return {}
+
+
+def rang_alter_tage(conn) -> int | None:
+    """Wie alt der juengste Screening-Score ist - fuer die Meldung.
+
+    `None`, wenn es gar keinen gibt. Diese Funktion sagt NICHTS ueber die
+    Sortierung; sie ist dafuer da, dass das Altern SICHTBAR wird, bevor der
+    Rang stillschweigend ausfaellt."""
+    try:
+        z = conn.execute(
+            "SELECT MAX(screened_at) FROM hebel_triggers").fetchone()
+    except Exception:                                        # noqa: BLE001
+        return None
+    if not z or not z[0]:
+        return None
+    from datetime import datetime, timezone
+    try:
+        d = datetime.fromisoformat(str(z[0]).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=timezone.utc)
+    return max(0, (datetime.now(timezone.utc) - d).days)
 
 
 def _zuletzt(conn) -> dict:

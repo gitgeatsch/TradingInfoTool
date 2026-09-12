@@ -274,6 +274,22 @@ class HebelView(ttk.Frame):
                 if _alt is None or str(_sig.created_at) > str(_alt.created_at):
                     signals[_schluessel] = _sig
             kandidaten = db.get_pending_hebel_candidates(conn)
+            # ---- SCHRITT 40: SAGEN, DASS DIE QUELLE STILLGELEGT IST -----
+            #
+            # ⚠️ DIE ENTSCHEIDUNG STEHT NICHT HIER, sondern in
+            # `agent/datenfrische.stillgelegt_hinweis` - eine Regel in einer
+            # tkinter-Ansicht kann die Suite nicht pruefen, und ungeprueft
+            # war schon der letzte Altbestand.
+            try:
+                from agent.datenfrische import stillgelegt_hinweis
+
+                _hin = stillgelegt_hinweis(config_module.load_config(),
+                                           len(kandidaten))
+                if _hin:
+                    self.status_label.config(text=_hin,
+                                             foreground=theme.warn_color())
+            except Exception:                                # noqa: BLE001
+                logger.exception("Stilllegungshinweis nicht lesbar")
             positions = db.get_open_hebel_positions(conn)
             # Anzeigefilter (2026-07-27) - NUR fuer die GUI-Darstellung, die
             # geteilte Funktion selbst bleibt unveraendert (siehe deren

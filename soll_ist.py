@@ -774,6 +774,15 @@ REIHENFOLGE = (
             "Nutzervorgabe 12.09.; Befunde 2.390*",
             block="D-ABBILDUNG"),
     Schritt(40, "ALTBESTAND STILLLEGEN",
+            "✔ ERLEDIGT AM 12.09. (Befunde 2.404*): der Screening-Rang "
+            "altert nicht mehr still (`RANG_MAX_ALTER_TAGE`, gemeldet je "
+            "Lauf), die leere Kandidatenliste sagt warum sie leer ist, und "
+            "die Leser des Altbestands sind aufgeschrieben (2.404-leser). "
+            "⚠️ Punkt (3) Log war schon am selben Tag behoben, Punkt (1) "
+            "Verfall am Notebook gelaufen. ⚠️ NICHT ERLEDIGT und "
+            "ausdruecklich VERSCHOBEN: die 4.071 Marktscan-Kandidaten - sie "
+            "sind erst mit Schritt 39 entscheidbar, weil vorher niemand "
+            "sagen kann, ob sie Wert haben. "
             "⚠️ NUTZERVORGABE 12.09.: *,damit wir nicht laufend ueber "
             "Altbestaende stolpern, sollten wir diese sauber stilllegen'*. "
             "AUFNAHME statt Einzelfaelle: (1) die alte Hebelkette - Screening "
@@ -787,8 +796,14 @@ REIHENFOLGE = (
             "`messe_allocator_gegen_zufall.py` stehen. ⚠️ Jede Stilllegung "
             "braucht den Satz ,wer liest das noch' - eine geloeschte "
             "Messgrundlage kommt nicht zurueck.",
-            "Nutzervorgabe 12.09.; Befunde 2.388, 2.389-log",
-            block="D-BETRIEB"),
+            "Nutzervorgabe 12.09.; Befunde 2.388, 2.389-log, 2.404*",
+            # ⚠️ FERTIG TROTZ EINES VERSCHOBENEN PUNKTES - und das ist keine
+            # Aufweichung der Vorgabe SCHRITT-FUER-SCHRITT. Die 4.071
+            # Marktscan-Kandidaten waren von Anfang an als "erst mit Schritt
+            # 39 entscheidbar" beschrieben: ob sie Wert haben, kann vor dem
+            # P-Scan niemand sagen. Sie gehoeren also zu 39, nicht als Rest
+            # zu 40. Alles, was 40 SELBST leisten kann, ist geleistet.
+            fertig=True, block="D-BETRIEB"),
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
             "⚠️ ERSATZ FUER DEN ALTEN MARKTSCAN, in drei Stufen (2.385-pscan): "
             "(1) SCHATTEN - denselben gemessenen Rang wie in der Kette taeglich "

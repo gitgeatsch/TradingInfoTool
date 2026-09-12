@@ -524,6 +524,33 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         symbole = WS.sortiere(conn, symbole, instrument)
         ergebnis["reihenfolge"] = WS.erklaere(conn, symbole,
                                               instrument=instrument)
+        # ---- SCHRITT 40: DAS ALTERN DES SCREENING-RANGS SICHTBAR MACHEN
+        #
+        # ⚠️ Seit dem 12.09. schreibt niemand mehr in `hebel_triggers` (das
+        # Screening ist aus). Der Rang, nach dem hier sortiert wird, altert
+        # also jeden Tag. `_rang` laesst ihn nach `RANG_MAX_ALTER_TAGE`
+        # fallen - aber ein Ausfall, den niemand sieht, ist genau der stille
+        # Ausfall, den dieses Projekt dreimal teuer bezahlt hat.
+        #
+        # EINMAL JE LAUF, und nur wenn es etwas zu sagen gibt.
+        try:
+            _ra = WS.rang_alter_tage(conn)
+            if _ra is None:
+                ergebnis["rang_quelle"] = ("kein Screening-Score vorhanden - "
+                                           "sortiert wird nach Wartezeit")
+            elif _ra > WS.RANG_MAX_ALTER_TAGE:
+                ergebnis["rang_quelle"] = (
+                    "Screening-Score ist %d Tage alt (Grenze %d) - er zaehlt "
+                    "NICHT mehr, sortiert wird nach Wartezeit"
+                    % (_ra, WS.RANG_MAX_ALTER_TAGE))
+                logger.warning("Screening-Rang veraltet: %d Tage", _ra)
+            elif _ra > WS.RANG_MAX_ALTER_TAGE // 2:
+                ergebnis["rang_quelle"] = (
+                    "Screening-Score ist %d Tage alt (Grenze %d) - er zaehlt "
+                    "noch, altert aber" % (_ra, WS.RANG_MAX_ALTER_TAGE))
+        except Exception as _rx:                             # noqa: BLE001
+            ergebnis.setdefault("fehler", []).append(
+                f"Rangalter nicht lesbar: {type(_rx).__name__}: {_rx}")
 
     # DER DECKEL ZAEHLT NUR ECHTE MODELLAUFRUFE, nicht Symbole. Ein Symbol, das
     # am Cooldown scheitert, kostet nichts und darf den Deckel nicht verbrauchen

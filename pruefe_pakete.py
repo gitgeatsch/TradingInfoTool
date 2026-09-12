@@ -14535,6 +14535,82 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_altbestand() -> None:
+    """Schritt 40 - der Altbestand meldet sich, statt still zu altern.
+
+    ⚠️ NUTZERVORGABE 12.09.: *"damit wir nicht laufend ueber Altbestaende
+    stolpern, sollten wir diese sauber stilllegen"*. Zwei Dinge alterten
+    still, seit `hebel_screening.aktiv` am 12.09. auf false steht: der
+    Sortier-Rang der Warteschlange und die leere Kandidatenliste im
+    Hebel-Tab."""
+    P = "Altbestand"
+    import sqlite3
+
+    from agent import warteschlange as WS
+    from agent.datenfrische import stillgelegt_hinweis
+
+    # ---- der Rang altert und faellt dann WEG ----------------------------
+    con = sqlite3.connect(":memory:")
+    con.execute("CREATE TABLE hebel_triggers (symbol TEXT, richtung TEXT, "
+                "score_gesamt REAL, screened_at TEXT, ist_kandidat INT, "
+                "status TEXT)")
+    con.execute("INSERT INTO hebel_triggers VALUES "
+                "('FRISCH','LONG',80,datetime('now','-1 day'),1,'neu')")
+    con.execute("INSERT INTO hebel_triggers VALUES "
+                "('ALT','LONG',99,datetime('now','-400 day'),1,'neu')")
+    rang = WS._rang(con)
+    pruefe(P, "⚠️ ein FRISCHER Screening-Score sortiert weiter",
+           "FRISCH" in rang)
+    pruefe(P, "⚠️⚠️ ein VERALTETER faellt weg - auch wenn er hoeher ist",
+           "ALT" not in rang,
+           "seit dem 12.09. schreibt niemand mehr in `hebel_triggers`. Ohne "
+           "Altersgrenze haette die Kette in einem Jahr nach einer "
+           "eingefrorenen Zahl sortiert - kein Absturz, sondern ein stiller "
+           "Ausfall. Bekommen: %s" % sorted(rang))
+    pruefe(P, "die Grenze steht als benannte Konstante, nicht in der Abfrage",
+           isinstance(WS.RANG_MAX_ALTER_TAGE, int)
+           and WS.RANG_MAX_ALTER_TAGE > 0,
+           "eine Setzung, die man nicht findet, kann niemand widerlegen")
+    pruefe(P, "⚠️ und das Alter ist ABFRAGBAR, nicht nur wirksam",
+           WS.rang_alter_tage(con) == 1,
+           "ein Ausfall, den niemand sieht, ist der stille Ausfall - "
+           "`rollen_lauf` meldet ihn einmal je Lauf")
+    con2 = sqlite3.connect(":memory:")
+    con2.execute("CREATE TABLE hebel_triggers (symbol TEXT, score_gesamt REAL,"
+                 " screened_at TEXT)")
+    pruefe(P, "ohne jede Zeile ist das Alter None, nicht 0",
+           WS.rang_alter_tage(con2) is None,
+           "0 hiesse ,taufrisch' - das Gegenteil von ,gar nichts da'")
+    pruefe(P, "und eine fehlende Tabelle wirft nicht",
+           WS.rang_alter_tage(sqlite3.connect(":memory:")) is None
+           and WS._rang(sqlite3.connect(":memory:")) == {})
+
+    # ---- die leere Liste sagt, WARUM sie leer ist ------------------------
+    pruefe(P, "⚠️ bei EINGESCHALTETEM Screening gibt es keinen Hinweis",
+           stillgelegt_hinweis({"hebel_screening": {"aktiv": True}}, 0) is None,
+           "ein Hinweis, der immer steht, wird nicht gelesen")
+    _aus = stillgelegt_hinweis({"hebel_screening": {"aktiv": False}}, 0)
+    pruefe(P, "⚠️⚠️ bei abgeschaltetem sagt die leere Liste, dass sie kein "
+              "Ausfall ist",
+           bool(_aus) and "kein Ausfall" in _aus,
+           "eine leere Liste sagt sonst zwei verschiedene Dinge: ,gerade "
+           "kein Kandidat' und ,hier schaut niemand mehr nach'")
+    _rest = stillgelegt_hinweis({"hebel_screening": {"aktiv": False}}, 7)
+    pruefe(P, "⚠️ und uebrige Zeilen werden als ALTBESTAND benannt",
+           bool(_rest) and "Altbestand" in _rest and "7" in _rest,
+           "Zeilen aus einer abgeschalteten Quelle sind Altbestand, egal wie "
+           "frisch sie aussehen")
+    pruefe(P, "ohne config wird NICHT ,eingeschaltet' angenommen",
+           stillgelegt_hinweis(None, 0) is not None,
+           "im Zweifel melden - eine fehlende Konfiguration ist kein Beleg "
+           "dafuer, dass alles laeuft")
+    pruefe(P, "⚠️ die Entscheidung steht NICHT in der tkinter-Ansicht",
+           "aktiv" not in io.open("ui/hebel_view.py", encoding="utf-8"
+                                  ).read().split("stillgelegt_hinweis")[1][:400],
+           "eine Regel in der GUI kann die Suite nicht pruefen - genau so "
+           "ist der letzte Altbestand entstanden")
+
+
 def paket_ausstiegsguete() -> None:
     """48b - das Erfolgsmass fuer Ausstiege, gegen BEKANNTE WAHRHEIT geprueft.
 
@@ -19629,6 +19705,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Altbestand": paket_altbestand,
           "Ausstiegsguete": paket_ausstiegsguete,
           "Gestakt": paket_gestakt,
           "Verkauf": paket_verkaufsseite,

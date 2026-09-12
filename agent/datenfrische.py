@@ -446,6 +446,39 @@ def pruefe(conn, heute: date | None = None,
     return aus
 
 
+def stillgelegt_hinweis(config: dict | None,
+                        kandidaten: int = 0) -> str | None:
+    """Sagt, wenn eine LEERE Liste an einer abgeschalteten Quelle liegt.
+
+    ⚠️⚠️ SCHRITT 40, 12.09.2026 - der Kern von "Altbestand stilllegen".
+    Nutzervorgabe: *"damit wir nicht laufend ueber Altbestaende stolpern,
+    sollten wir diese sauber stilllegen"*.
+
+    Seit dem 12.09. steht `hebel_screening.aktiv` auf false. Die
+    Kandidatenliste im Hebel-Tab ist damit dauerhaft leer - und eine leere
+    Liste sagt zwei voellig verschiedene Dinge:
+
+        "es gibt gerade keinen Kandidaten"   ein Befund
+        "hier schaut niemand mehr nach"      ein Zustand
+
+    Ohne diesen Satz sind beide nicht zu unterscheiden, und der Nutzer sucht
+    beim naechsten Mal wieder danach. Dieselbe Klasse wie 2.386 und
+    2.389-log: ein abgesprochener Zustand, der aussieht wie ein Ausfall.
+
+    ⚠️ SIE GIBT AUCH DANN EINEN SATZ, WENN NOCH KANDIDATEN DA SIND - dann
+    ist er sogar wichtiger: Zeilen aus einer abgeschalteten Quelle sind
+    Altbestand, egal wie frisch sie aussehen."""
+    an = bool(((config or {}).get("hebel_screening") or {}).get("aktiv"))
+    if an:
+        return None
+    if kandidaten:
+        return ("⚠ %d Kandidat%s aus dem STILLGELEGTEN Screening - "
+                "Altbestand, es kommen keine neuen dazu"
+                % (kandidaten, "en" if kandidaten != 1 else ""))
+    return ("Screening stillgelegt (hebel_screening.aktiv = false) - "
+            "keine neuen Kandidaten, das ist kein Ausfall")
+
+
 def auffaellig(zeilen: list[dict]) -> list[dict]:
     """Nur die Zeilen, die nicht frisch sind - fuer Log und Export.
 
