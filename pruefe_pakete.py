@@ -14618,6 +14618,98 @@ def paket_kostenbezug() -> None:
            "(L-1)/L x satz - bei 5x ist mehr Kapital geliehen als bei 3,9x")
 
 
+def paket_vetoart() -> None:
+    """2.407-namensschatten - zwei Arten von Veto, EINE Spalte, saubere Trennung.
+
+    ⚠️ Die Ausgangslage: `risk_veto` heisst nach dem Risk-Gate der alten
+    Kette (419 Zeilen). Seit Schritt 44/2b schreibt die Entscheiderstufe
+    dasselbe Feld - rund 1.251 Zeilen PRO WOCHE. Ohne Trennung waeren die
+    alten nach einem Monat 1,4 % der Menge, und jede Auswertung haette
+    stillschweigend ihre Bedeutung geaendert.
+
+    ⚠️⚠️ DIE LOESUNG IST NICHT ,zwei Spaltensaetze' (Option-B-Konvention des
+    Projekts): die richtet sich gegen das Vermischen von ERGEBNISSEN -
+    hypothetische gegen echte Trades. Hier ist die FRAGE dieselbe, nur der
+    GRUND unterscheidet sich. Getrennt wird deshalb beim MELDEN."""
+    P = "Vetoart"
+    import sqlite3
+
+    from agent.krypto import backward_tracking as BT
+    from agent import signal_abbildung as SA
+    from database.models import Signal
+
+    pruefe(P, "⚠️ es gibt ein eigenes Feld fuer die ART",
+           SA.SPALTEN_SIGNAL.get("veto_art") == "TEXT"
+           and "veto_art" in Signal.__dataclass_fields__,
+           "`quelle_kette` waere ein PROXY - er stimmt heute zufaellig und "
+           "hoerte auf zu stimmen, sobald die neue Kette je ein echtes "
+           "Risk-Gate-Veto schriebe")
+    pruefe(P, "die Arten stehen als Konstanten, nicht als Zeichenketten",
+           BT.VETO_RISK_GATE == "risk_gate"
+           and BT.VETO_ENTSCHEIDER == "entscheider",
+           "drei Stellen mit demselben Literal sind drei Stellen zum "
+           "Vertippen")
+
+    # ---- der Altbestand ist RISK_GATE, nicht ,unbekannt' ----------------
+    class _S:
+        veto_art = None
+    pruefe(P, "⚠️⚠️ ein fehlendes `veto_art` zaehlt als Risk-Gate",
+           BT.veto_art_von(_S()) == BT.VETO_RISK_GATE,
+           "alle 419 Zeilen bis 12.09. haben keins, und sie SIND "
+           "Risk-Gate-Vetos. Das ist die eine Stelle, an der ein fehlender "
+           "Wert einen Vorgabewert bekommen darf - und sie steht deshalb "
+           "ausgeschrieben da, nicht als stilles `or` im Code")
+    _S.veto_art = "entscheider"
+    pruefe(P, "und ein gesetztes wird uebernommen",
+           BT.veto_art_von(_S()) == BT.VETO_ENTSCHEIDER)
+
+    # ---- BEIDE werden aufgeloest, GETRENNT gemeldet ---------------------
+    _quelle = io.open("agent/krypto/backward_tracking.py",
+                      encoding="utf-8").read()
+    _disk = _quelle.split("def _hat_veto_schatten_these")[1][:1400]
+    pruefe(P, "⚠️ der Diskriminator schliesst KEINE Art aus",
+           "veto_art" not in _disk.split("return entry is not None")[0]
+           or "!= " not in _disk,
+           "die Frage ,war unser Nein richtig' ist fuer beide dieselbe - "
+           "eine zweite Kopie der Aufloesungslogik waere eine zweite Stelle "
+           "zum Auseinanderlaufen")
+
+    c = sqlite3.connect(":memory:")
+    c.execute("CREATE TABLE signals (id INTEGER PRIMARY KEY, risk_veto INT, "
+              "action TEXT, veto_art TEXT, veto_outcome_status TEXT)")
+    c.executemany("INSERT INTO signals (risk_veto, action, veto_art, "
+                  "veto_outcome_status) VALUES (?,?,?,?)",
+                  [(1, "HALTEN", None, "stop_loss_erreicht"),
+                   (1, "HALTEN", "risk_gate", "take_profit_erreicht"),
+                   (1, "HALTEN", "entscheider", "take_profit_erreicht"),
+                   (1, "HALTEN", "entscheider", None),
+                   (0, "KAUFEN", None, None)])
+    b = BT.veto_schatten_bilanz(c)
+    pruefe(P, "⚠️⚠️ die Bilanz trennt die beiden Arten",
+           set(b) == {"risk_gate", "entscheider"},
+           "bekommen: %s" % sorted(b))
+    pruefe(P, "der Altbestand landet beim Risk-Gate",
+           b["risk_gate"].get("stop_loss_erreicht") == 1
+           and b["risk_gate"].get("take_profit_erreicht") == 1,
+           "eine Zeile ohne `veto_art` und eine mit 'risk_gate' - beide "
+           "gehoeren in denselben Topf")
+    pruefe(P, "und die Entscheider-Zeilen bleiben fuer sich",
+           b["entscheider"].get("take_profit_erreicht") == 1
+           and b["entscheider"].get("offen") == 1)
+    pruefe(P, "⚠️ ein Signal OHNE Veto zaehlt nirgends mit",
+           sum(sum(v.values()) for v in b.values()) == 4,
+           "die KAUFEN-Zeile ist kein Veto-Schatten")
+
+    # ---- und die zentrale Beschreibung existiert ------------------------
+    _m = io.open("database/models.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ es gibt EINE zentrale Beschreibung, was `risk_veto` heisst",
+           "veto_art         sagt WELCHES" in _m
+           and "WER `risk_veto` AUSWERTET, MUSS `veto_art` MITFILTERN" in _m,
+           "Nutzerauftrag 12.09.: das Feld mit Beschreibung und Hinweis "
+           "kennzeichnen - an EINER Stelle, sonst laufen die Fassungen "
+           "auseinander")
+
+
 def paket_vierfelder() -> None:
     """Schritt 44, 2a/2b - die zwei leeren Felder der Vier-Felder-Messung.
 
@@ -20023,6 +20115,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Kostenbezug": paket_kostenbezug,
+          "Vetoart": paket_vetoart,
           "Vierfelder": paket_vierfelder,
           "Marktscanwert": paket_marktscanwert,
           "Altbestand": paket_altbestand,

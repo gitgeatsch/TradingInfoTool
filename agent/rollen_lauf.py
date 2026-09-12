@@ -3328,6 +3328,12 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
         # gemacht hat (Bewertung neben Betriebszustand in einer Spalte).
         if grund_art == "bewertung":
             felder["risk_veto"] = 1
+            # ⚠️ DIE ART DAZU, und zwar als eigenes Feld statt als Proxy
+            # ueber `quelle_kette` - siehe die zentrale Beschreibung in
+            # `database/models.py::Signal.veto_art`. Ohne sie zaehlt jede
+            # bestehende Auswertung ab morgen etwas anderes: 419 alte Zeilen
+            # gegen rund 1.251 neue PRO WOCHE.
+            felder["veto_art"] = "entscheider"
             felder["risk_veto_reason"] = (
                 "Entscheiderstufe: Potential unter der Schwelle")
         else:

@@ -348,6 +348,32 @@ class Signal:
     # check_signal_veto_shadow_outcome(). Da `action` bereits auf HALTEN steht,
     # wird die Handelsrichtung fuer die Zonen-Auswertung aus der relativen
     # Reihenfolge stop_loss/entry/take_profit abgeleitet, nicht aus `action`.
+    # ⚠️⚠️ SEIT 12.09.2026 GIBT ES ZWEI ARTEN VON VETO - und dies ist die
+    # zentrale Stelle, an der steht, welche (Nutzerauftrag: "das risk_veto
+    # mit einer Beschreibung und Hinweis kennzeichnen").
+    #
+    #     risk_veto        sagt DASS ein Nein da war - nicht WELCHES.
+    #     veto_art         sagt WELCHES:
+    #
+    #         NULL           Altbestand (alle 419 Zeilen bis 12.09.) oder
+    #                        unbekannt - fuer die Auswertung wie "risk_gate"
+    #         "risk_gate"    Risk-Gate der ALTEN Kette: CRV-Pflicht,
+    #                        Bitpanda-/Cash-Veto, Regime-Mindestkonfidenz
+    #         "entscheider"  Stufe 12 der NEUEN Kette: das gemessene
+    #                        Potential liegt unter der Schwelle seiner
+    #                        Datenlage
+    #
+    # ⚠️ WARUM DAS FELD NOETIG WURDE: der zweite Arm bringt rund 1.251 Zeilen
+    # PRO WOCHE gegen 419 im gesamten Altbestand. Ohne Trennung waeren die
+    # alten nach einem Monat 1,4 % der Menge, und jede Auswertung, die
+    # `risk_veto` zaehlt, haette stillschweigend ihre Bedeutung geaendert -
+    # ohne dass jemand etwas aendert.
+    #
+    # ⚠️⚠️ WER `risk_veto` AUSWERTET, MUSS `veto_art` MITFILTERN. Die Frage
+    # "war unser Nein richtig?" ist fuer beide Arten dieselbe, die ANTWORT
+    # nicht: das eine ist ein Risikoregel-Nein, das andere ein
+    # Bewertungs-Nein.
+    veto_art: str | None = None
     veto_outcome_status: str | None = None
     veto_outcome_geprueft_am: str | None = None
     veto_outcome_entschieden_am: str | None = None

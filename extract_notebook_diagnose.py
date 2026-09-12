@@ -479,6 +479,10 @@ _SPOT_SIGNAL_SPALTEN = (
     "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
     # SCHRITT 44, 2a/2b: die Bewertung neben dem Urteil - ohne sie ist
     # die Vier-Felder-Messung von aussen nicht nachvollziehbar.
+    # ⚠️ `veto_art` sagt, WELCHE Art von Nein eine risk_veto-Zeile ist -
+    # ohne sie mischt jede Auswertung 419 alte Risk-Gate-Faelle mit
+    # rund 1.251 Entscheider-Faellen pro Woche (models.Signal.veto_art).
+    "veto_art, "
     "potential_r, potential_schwelle_r, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
     "umgeworfen_bis, "

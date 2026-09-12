@@ -223,6 +223,31 @@ SPALTEN_SIGNAL = {
     # ueber oder unter der Schwelle liegen, je nach Datenlage des Symbols
     # (Schwelle je Datenlage, 31.08.). Wer nur den Wert speichert, muss die
     # Schwelle spaeter rekonstruieren - und sie aendert sich.
+    # ⚠️⚠️ WELCHE ART VON NEIN (Schritt 44, 2b - 12.09.2026).
+    #
+    # `risk_veto` sagt DASS es ein Nein gab, nicht WELCHES. Bis heute reichte
+    # das, weil es nur eine Sorte gab: das Risk-Gate der alten Kette. Mit 2b
+    # kommt eine zweite dazu - die Entscheiderstufe, die wegen zu niedrigem
+    # Potential verwirft.
+    #
+    # ⚠️ WARUM EIN EIGENES FELD UND NICHT `quelle_kette`: das waere ein
+    # PROXY. Er stimmt heute zufaellig (nur die neue Kette schreibt
+    # Entscheider-Vetos), und er hoerte in dem Moment auf zu stimmen, in dem
+    # die neue Kette je ein echtes Risk-Gate-Veto schriebe. Ein Diskriminator,
+    # der von einer Nebenbedingung lebt, ist eine Falle mit Verfallsdatum.
+    #
+    # ⚠️⚠️ UND WARUM NICHT ZWEI GETRENNTE SPALTENSAETZE (Option-B-Konvention
+    # dieses Projekts, siehe `models.Signal.veto_outcome_status`): weil die
+    # Konvention gegen das VERMISCHEN VON ERGEBNISSEN gerichtet ist -
+    # hypothetische gegen echte Trades. Hier ist die FRAGE dieselbe ("war
+    # unser Nein richtig?"), nur der Grund des Neins unterscheidet sich. Eine
+    # zweite Kopie der Aufloesungslogik waere eine zweite Stelle zum
+    # Auseinanderlaufen; ein Diskriminatorfeld ist eine Spalte.
+    #
+    #     NULL           Altbestand oder unbekannt
+    #     "risk_gate"    Risk-Gate der alten Kette
+    #     "entscheider"  Potential unter der Schwelle (Stufe 12)
+    "veto_art": "TEXT",
     "potential_r": "REAL",
     "potential_schwelle_r": "REAL",
     "umgeworfen_durch": "TEXT",

@@ -803,6 +803,43 @@ def gap_bewusster_fill(schwelle: float, open_preis: float | None,
     return max(schwelle, open_preis)
 
 
+# ⚠️ DIE ARTEN DES VETOS - zentral, damit sie nicht an drei Stellen als
+# Zeichenkette stehen. Die Beschreibung, WAS sie bedeuten, steht in
+# `database/models.py::Signal.veto_art` (12.09.2026).
+VETO_RISK_GATE = "risk_gate"
+VETO_ENTSCHEIDER = "entscheider"
+
+
+def veto_art_von(signal) -> str:
+    """Die Art des Vetos - mit dem Altbestand als Risk-Gate.
+
+    ⚠️ `None` IST KEINE LUECKE, SONDERN DER ALTBESTAND. Alle 419 Zeilen bis
+    zum 12.09.2026 tragen kein `veto_art`, und sie sind samt und sonders
+    Risk-Gate-Vetos. Das ist die eine Stelle, an der ein fehlender Wert
+    einen Vorgabewert bekommen DARF - und sie steht deshalb ausgeschrieben
+    hier, nicht als stilles `or` irgendwo im Code."""
+    return str(getattr(signal, "veto_art", None) or VETO_RISK_GATE)
+
+
+def veto_schatten_bilanz(conn) -> dict:
+    """Wie viele Veto-Schatten es je ART gibt - GETRENNT.
+
+    ⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (12.09.2026): seit Schritt 44/2b
+    fuellen ZWEI Quellen dieselben Spalten. Die Frage "war unser Nein
+    richtig?" ist fuer beide dieselbe, die ANTWORT nicht - das eine ist ein
+    Risikoregel-Nein, das andere ein Bewertungs-Nein. Wer beide in einer
+    Zahl zusammenzieht, bekommt ab der ersten Woche im Verhaeltnis 3:1 die
+    Entscheider-Faelle und nennt sie weiter "Risk-Gate".
+    """
+    aus: dict = {}
+    for art, status, n in conn.execute(
+            "SELECT COALESCE(veto_art, ?), veto_outcome_status, COUNT(*) "
+            "FROM signals WHERE risk_veto = 1 AND action = 'HALTEN' "
+            "GROUP BY 1, 2", (VETO_RISK_GATE,)):
+        aus.setdefault(art, {})[status or "offen"] = n
+    return aus
+
+
 def _hat_veto_schatten_these(signal) -> bool:
     """Diskriminator fuer einen echten Veto-Schatten-Kandidaten (2026-07-28,
     siehe database/models.py::Signal.veto_outcome_status-Docstring fuer die
@@ -814,6 +851,17 @@ def _hat_veto_schatten_these(signal) -> bool:
     automatisch durch."""
     if not (getattr(signal, "risk_veto", False) and signal.action == "HALTEN"):
         return False
+    # ⚠️⚠️ BEIDE ARTEN KOMMEN HIER DURCH - und das ist Absicht (12.09.2026).
+    #
+    # Seit Schritt 44/2b schreibt die Rollen-Kette ebenfalls `risk_veto=1`,
+    # fuer ein Nein der ENTSCHEIDERSTUFE. Die FRAGE ist dieselbe ("war unser
+    # Nein richtig?"), also loest dieselbe Mechanik sie auf - eine zweite
+    # Kopie waere eine zweite Stelle zum Auseinanderlaufen.
+    #
+    # ⚠️ GETRENNT WIRD BEIM MELDEN, NICHT BEIM AUFLOESEN: `veto_art` steht
+    # auf jeder Zeile (siehe `models.Signal.veto_art`), und wer zaehlt, muss
+    # danach filtern. Sonst mischen sich 419 alte Risk-Gate-Faelle mit rund
+    # 1.251 Entscheider-Faellen PRO WOCHE.
     entry = _entry_mid(signal)
     stop = _threshold(signal.stop_loss_usd_von, signal.stop_loss_usd)
     take = _threshold(signal.take_profit_usd_von, signal.take_profit_usd)
