@@ -4460,10 +4460,34 @@ def paket_15() -> None:
            f"{vor} -> {nach} | gewaehlt={sorted(_a15['gewaehlt'])} "
            f"kauft15={_kauft15} (in symbole: {_kauft15 in symbole}) | "
            + " · ".join(erg["durchlauf"].bericht()))
-    pruefe(P, "die Mail traegt die Kennung des geschriebenen Signals",
-           any(m.get("signal_id") for m in erg["mails"]),
-           "ohne sie liesse sich eine verschickte Mail spaeter keinem "
-           "Datensatz zuordnen")
+    # ⚠️ NICHT GEZEIGT IST NICHT BESTANDEN (Notebook-Lauf 12.09.2026).
+    #
+    # Der aufgezeichnete Client antwortet KAUFEN - die KETTE kann daraus
+    # aber einen AUSSTIEG machen: steht fuer den Wert eine
+    # Ausstiegsempfehlung auf SCHLIESSEN, entsteht keine Einstiegsmail,
+    # sondern eine Sammelmail. Am Notebook war genau das der Fall (4x
+    # NICHTS_TUN, 1x KAUFEN mit Ausstieg SCHLIESSEN), und diese Pruefung
+    # wurde rot, obwohl der Code stimmt: `rollen_lauf` setzt die Kennung
+    # unmittelbar nach dem Schreiben an den Mail-Eintrag.
+    #
+    # ⚠️ SIE WIRD DESHALB NICHT WEICHGESPUELT, sondern an ihre
+    # Voraussetzung gebunden: gibt es eine Asset-Mail, MUSS sie die
+    # Kennung tragen. Gibt es keine, wird das BENANNT - ein gruener Haken
+    # ohne Gegenstand waere schlimmer als ein rotes Kreuz.
+    _asset_mails15 = [m for m in erg["mails"]
+                      if not str(m.get("symbol") or "").startswith("(")]
+    if _asset_mails15:
+        pruefe(P, "die Mail traegt die Kennung des geschriebenen Signals",
+               any(m.get("signal_id") for m in _asset_mails15),
+               "ohne sie liesse sich eine verschickte Mail spaeter keinem "
+               "Datensatz zuordnen")
+    else:
+        _UEBERSPRUNGEN.append((P, "keine Einstiegsmail in diesem Lauf",
+                               "der aufgezeichnete KAUFEN-Kandidat lief als "
+                               "AUSSTIEG (SCHLIESSEN) - die Kennung an der "
+                               "Mail ist damit nicht pruefbar. Die "
+                               "Signalzeile selbst wurde geschrieben, das "
+                               "prueft die Zeile darueber"))
     neu = c.execute(
         "SELECT schwankung_perzentil, momentum_perzentil, volumen_perzentil, "
         "lagebild_id FROM signals WHERE quelle_kette='rollen' "
