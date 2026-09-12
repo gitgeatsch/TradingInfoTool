@@ -968,7 +968,13 @@ REIHENFOLGE = (
             "⚠️ OFFEN BLEIBT DER VORBEHALT (2.408-vorbehalt): gemessen "
             "ist der Beitrag auf 66 Symbolen, angewendet wuerde er auf "
             "233 - die Form des H-Fehlers, und genau der Inhalt von "
-            "Stufe 2. Bis dahin bleibt der alte Marktscan an.",
+            "Stufe 2. ⚠️⚠️ DER P-SCAN IST DAMIT TEIL 4 VON SCHRITT 49 "
+            "geworden - er haengt an derselben Datenbasis, und die muss "
+            "zuerst sauber sein (Befund 2.410: der gemessene und der "
+            "angewendete `turnover` sind heute nicht dieselbe Groesse). "
+            "Was HIER bleibt: der alte Marktscan, seine Bewertung und die "
+            "Frage, ob ,auch im Trending' als AUSSCHLUSS taugt. Bis dahin "
+            "bleibt der alte Marktscan an.",
             "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan",
             block="D-BEWERTUNG"),
     Schritt(46, "D2 - STRAFFEN UND KORREKT ABBILDEN",
@@ -989,6 +995,57 @@ REIHENFOLGE = (
             "KEINE neue Messung, kein neuer Beitrag, keine LLM-Aenderung.",
             "Nutzervorgabe 12.09.; Befunde 2.399, 2.399-abbildung",
             block="D-ABBILDUNG"),
+    Schritt(49, "EINE QUELLE FUER TURNOVER - UND DIE BREITE, DIE DARAUS "
+            "FOLGT",
+            "⚠️⚠️ AUSLOESER IST EIN FEHLER IM LAUFENDEN BETRIEB (Befund "
+            "2.410): der gemessene und der angewendete `turnover` sind nicht "
+            "dieselbe Groesse. Die Formel ist beide Male `Volumen / (Preis x "
+            "Umlaufmenge)`, aber die MENGE kommt aus zwei Quellen - die "
+            "Messung nimmt `splycur` aus `onchain_historie.db`, der Betrieb "
+            "`circulating_supply` von CoinGecko. Von 33 vergleichbaren "
+            "Symbolen weichen 16 (48 %%) ab, teils um 25 bis 74 %% - LINK "
+            "aus der Watchlist um -25,2 %%. Ursache: die Onchain-Werte sind "
+            "runde Zahlen (UNI und LINK je 1.000.000.000) und damit die "
+            "GESAMTAUSGABE, nicht die UMLAUFENDE Menge. ⚠️ Das betrifft "
+            "EINEN DER ZWEI TRAGENDEN BEITRAEGE. "
+            "➔ VIER TEILE, IN EINEM ZUG (Vorgabe KEINE-TEILLOESUNG) - aber "
+            "mit einem ENTSCHEIDUNGSPUNKT nach Teil 2. "
+            "(1) HISTORIE LADEN, ohne neue Abhaengigkeit: `turnover` kuerzt "
+            "sich zu `Volumen / Marktkapitalisierung`, und beides liefert "
+            "CoinGecko `market_chart?days=365` kostenfrei und ohne "
+            "Schluessel - 366 Tage, praktisch geprueft am 12.09. "
+            "(`days=max` verlangt einen Schluessel, HTTP 401). Die "
+            "Funding-Historie ebenso frei: Binance `/fapi/v1/fundingRate`, "
+            "500 Saetze = 166 Tage je Abruf, paginierbar. Rund 233 Aufrufe, "
+            "acht Minuten. ⚠️ KEIN SAMMELN UEBER WOCHEN - die Historie "
+            "existiert bereits, sie wird geholt. "
+            "(2) ⚠️⚠️ R-R11 ZUERST: den bestehenden Befund ,turnover "
+            "traegt' auf der ALTEN Basis REPRODUZIEREN, dann auf der neuen "
+            "messen. Wer die Basis wechselt und ein anderes Ergebnis "
+            "bekommt, hat nichts widerlegt - er hat etwas anderes gemessen. "
+            "⚠️ HIER LIEGT DER ENTSCHEIDUNGSPUNKT: traegt `turnover` auf "
+            "sauberer Basis NICHT mehr, ist das ein WIDERRUF und kein "
+            "Messfehler - dann faellt die halbe Bewertung, und die Teile 3 "
+            "und 4 entfallen. Das ist ein moegliches Ergebnis und kein "
+            "Grund, trotzdem weiterzubauen. "
+            "(3) EINE QUELLE FUER BEIDE SEITEN: `rechne_turnover_beitrag` "
+            "und `marktrang.turnover_werte` auf dieselbe Groesse stellen. "
+            "Danach braucht `turnover` die `onchain_historie.db` nicht mehr "
+            "- ⚠️ die Datei bleibt trotzdem stehen, `adractcnt` haengt noch "
+            "daran (Regel: eine geloeschte Messgrundlage kommt nicht "
+            "zurueck). "
+            "(4) ERST DANN DER P-SCAN, auf der Basis, die dann steht: 233 "
+            "Symbole statt 42, davon rund 112 ausserhalb der Watchlist "
+            "(2.408). Stufen wie in 2.385-pscan - Schatten, messen, dann "
+            "eine Liste, gefiltert auf handelbare Werte (2.405-folge: die "
+            "Handelbarkeit traegt). Die Liste schlaegt BEOBACHTUNG vor, kein "
+            "Handeln (Regel 1). "
+            "⚠️ WAS DIESER SCHRITT NICHT IST: eine Verbreiterung um ihrer "
+            "selbst willen. Teil 1 bis 3 waeren auch ohne P-Scan noetig - "
+            "der Fehler wirkt heute.",
+            "Befunde 2.410, 2.410-loesung, 2.408, 2.409; Nutzerauftrag "
+            "12.09.; Vorgabe KEINE-TEILLOESUNG",
+            block="D-BETRIEB"),
     Schritt(45, "DIE VERGESSENEN VIER - AUS DER GEGENPRUEFUNG",
             "⚠️ Aus der Gegenpruefung vom 12.09. (Befund 2.395): vier offene "
             "Punkte standen in KEINEM Schritt. (1) 2.380-annahmen - drei "
