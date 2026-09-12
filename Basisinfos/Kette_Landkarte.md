@@ -392,3 +392,97 @@ Von zwölf Stufen entscheidet **eine** ein Sprachmodell (Stufe 8, LLM-1 Rolle
 BC), **eine weitere** teilen sich Sprachmodell und Rechnung (Stufe 9), **zehn
 sind reine Rechnung** — und die schärfste davon (Stufe 12, `agent/potential.py`)
 verwirft mehr als alle Sprachmodelle zusammen.
+
+
+---
+
+# ⚠️⚠️ Was an dieser Landkarte nicht stimmt — Nutzereinwand 12.09.
+
+> *„Z1 kommt gar nicht vor bzw. sehe ich diese in der Kette nicht. ZAI hat
+> keine Stufe? Nichts tun ist heikel bzw. ‚gemischte Stufe' hört sich schon
+> seltsam an."*
+
+**Alle drei Einwände treffen zu — und sie treffen nicht die Landkarte, sondern
+die Kette.** Ich habe oben Z1 als „Teil 8c" und als „Wächter" geführt. Beides
+beschönigt.
+
+## Warum die Kette hier schief ist — die Abgrenzung des Nutzers
+
+> *„wir bauen seit Wochen am deterministischen Einstieg je Strategie — das LLM
+> wurde lange Zeit nicht ‚angegriffen', auch nicht in der Planung."*
+> — dazu seine eigene Auflage: *„das ist mein Gefühl, prüfen musst du das über
+> Doku und Code."*
+
+**Geprüft an der Git-Historie und am Plan. Das Gefühl trägt — aber der Stichtag
+ist der 22.08., nicht der Kettenumbau.** Die einfache Fassung („nie
+angefasst") wäre falsch gewesen:
+
+| Modul | letzte Änderung | Änderungen seit 01.08. | davon vor dem 22.08. |
+|---|---|---|---|
+| `rolle_trader.py` (Rolle BC) | 11.09.\* | 23 | **21** |
+| `zweite_meinung.py` (Rolle G) | 03.09.\*\* | 20 | **18** |
+| `gegenpruefer_rollen.py` (Z1) | **18.08.** | 6 | 6 |
+| `rolle_analyst.py` (Rolle A) | **12.08.** | 7 | 7 |
+| | | | |
+| `entscheidungsrechnung.py` | 11.09. | **33** | — |
+| `potential.py` | 11.09. | 12 | — |
+| `marktrang.py` | **12.09.** | 6 | — |
+
+\* der 11.09.-Commit kam aus dem **Hebelbau** (H-4) und hat das Urteil nicht
+angefasst. \*\* der 03.09.-Commit legt nur tote Felder still (G-a).
+
+**Und die Planung:** der erste LLM-Punkt überhaupt ist **Schritt 33, angelegt
+am 11.09.** — nachgelagert („NACH den eMails") und ohne einen einzigen
+Bauschritt. Davor stand kein LLM-Punkt im Plan.
+
+➔ **Richtige Fassung: der LLM-Strang wurde im August in zwölf Tagen gebaut und
+steht seit dem 22.08.** — drei Wochen Stillstand, während der deterministische
+Strang durchlief. Der deterministische Teil ist **um ihn herumgewachsen**.
+
+Die Schieflage ist damit ein Versäumnis, keine Fehlentscheidung — sie wird
+aufgeräumt, nicht verteidigt. **Schritt 44 ist der erste echte Zugriff auf den
+LLM-Strang seit drei Wochen**, und bewusst ein Aufräumen: keine neue Rolle,
+keine neue Fähigkeit, kein zusätzlicher Aufruf.
+
+| Einwand | Befund |
+|---|---|
+| **„Z1 sehe ich in der Kette nicht"** | richtig — `gegenpruefer_rollen.pruefe_und_zaehle()` bucht **immer** `bestanden`, nie `verloren`. Sie ist kein Wächter, sondern ein **Vermerk**. Im Trichter ist sie unsichtbar |
+| **„Z.ai hat keine Stufe?"** | richtig — **gar keine.** Sie läuft nebenläufig, bucht nichts, hat kein Veto |
+| **„gemischte Stufe hört sich seltsam an"** | richtig — sie **ist** seltsam. Stufe 9 bucht eine *Bewertung* (56× NICHTS_TUN) in dieselbe Spalte wie einen *Betriebszustand* (166× SCHLIESSEN, 25× gestakt) |
+
+## Die Ursache: ein Zählwerk für drei Fragen
+
+`durchlauf.verloren()` kennt **einen** Verlust. Gebucht werden drei Dinge:
+
+| Art | Stufen | was es bedeutet |
+|---|---|---|
+| **nicht gefragt** | `anlass`, `auswahl`, `terminmarkt`, `wiederholung` | Kostenfilter — spart einen Aufruf |
+| **nicht möglich** | `fakten`, `geometrie`, Vertrag | Datenmangel |
+| **bewertet: nein** | `entscheider`, NICHTS_TUN | eine **Bewertung** — das Einzige, was den Deadloop erklärt |
+| *(betriebszustand)* | SCHLIESSEN, gestakt, ohne Bestand | Lage des Depots, kein Urteil |
+
+⚠️ **Die Unterscheidung ist im Projekt bekannt.** Sie steht wörtlich im Kopf
+von `agent/rollen_gate.py`: *„drei Arten von ‚nicht jetzt': Kostenfilter,
+Nutzerentscheidung, Qualitätsfilter. Nur der dritte trägt Deadloop-Risiko."*
+Sie wurde nie abgebildet.
+
+## Erster Hinweis auf die Wirkung — ⚠️ kein Befund nach Norm
+
+Roh gezählt an `outcome_status`, **ohne Tagesklammer, ohne Nullmodell**. Er
+steht hier, weil er die Richtung von Schritt 42 vorgibt.
+
+| Stelle | wie oft sie anschlägt (7 Tage, 449 Urteile) | trennt sie die Ausgänge? |
+|---|---|---|
+| **Z1** (Rechnung) | **69 = 15,4 %** — 60× Zahl ohne Deckung, 9× Zuspitzung | angeschlagen **42,9 %** TP · sauber **43,0 %** — **nein** |
+| **LLM-2 Rolle G** (Z.ai) | 163 beantwortet, davon **60 Einwand** · 286 nicht gefragt (G5) | Einwand **56,8 %** TP · kein Einwand **58,9 %** — **nein** |
+| **LLM-1 Rolle BC**, „reines Halten" | — | 578 hätten das Ziel erreicht, 482 den Stop — **eine Sperre, die 55 % Gewinner mit aussortiert** |
+
+⚠️ **In jedem siebenten Urteil nennt LLM-1 Rolle BC eine Zahl, die in der
+Eingabe nicht steht** — und die Empfehlung geht unverändert hinaus.
+
+⚠️⚠️ **Das heißt nicht, dass eine Stelle wegkann** (Vorgabe: kein Beitrag
+fällt ohne Grund). Es heißt, dass ihr Beitrag **unbelegt** ist.
+
+➔ **Schritt 44** ordnet (Trichter / Wächter / Entscheidungshilfe trennen),
+**Schritt 42** misst. In dieser Reihenfolge — sonst misst 42 auf einer
+Buchhaltung, die Bewertung und Betriebszustand vermengt.
