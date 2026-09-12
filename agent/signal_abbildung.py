@@ -204,6 +204,27 @@ SPALTEN_SIGNAL = {
     # filtert nichts; es haelt nur fest, was in der Mail ohnehin stand.
     "auffaellige_json": "TEXT",
     "belege_json": "TEXT",
+    # ---- SCHRITT 44, PUNKTE 2a/2b (12.09.2026) -----------------------
+    #
+    # ⚠️⚠️ DIE ZWEI LEEREN FELDER DER VIER-FELDER-MESSUNG. Der Plan steht
+    # seit dem 29.08. in `Konzept_Bewertungsstufe_29_08.md`, Abschnitt 5:
+    #
+    #                    Bewertung ja        Bewertung nein
+    #     LLM kauft      Empfehlung ✔        1.251 in 7 Tagen - nur `return`
+    #     LLM haelt      Schatten OHNE       Ruhe ✔
+    #                    Bewertung
+    #
+    # Ohne diese beiden Felder ist "traegt die BEWERTUNG?" nicht
+    # beantwortbar - und genau das ist die Frage, fuer die die
+    # Entscheiderstufe gebaut wurde. Sie verwirft 92 % dessen, was sie
+    # erreicht, und niemand weiss, ob zu Recht.
+    #
+    # ⚠️ ZWEI SPALTEN, NICHT EINE. Der WERT allein sagt nichts: 0,05 R kann
+    # ueber oder unter der Schwelle liegen, je nach Datenlage des Symbols
+    # (Schwelle je Datenlage, 31.08.). Wer nur den Wert speichert, muss die
+    # Schwelle spaeter rekonstruieren - und sie aendert sich.
+    "potential_r": "REAL",
+    "potential_schwelle_r": "REAL",
     "umgeworfen_durch": "TEXT",
     "umgeworfen_preis_eur": "REAL",
     "umgeworfen_bis": "TEXT",

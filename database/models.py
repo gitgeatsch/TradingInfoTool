@@ -504,6 +504,13 @@ class Signal:
                                                # Entscheidung" nachtraeglich
                                                # unbeantwortbar
     umgeworfen_durch: str | None = None
+    # SCHRITT 44, 2a/2b (12.09.2026): die gerechnete Bewertung NEBEN dem
+    # Modellurteil. Ohne sie laesst sich "traegt die Bewertung?" nicht
+    # beantworten - die verworfenen Faelle stuenden nirgends.
+    # ⚠️ Der WERT allein reicht nicht: 0,05 R kann ueber oder unter der
+    # Schwelle liegen, je nach Datenlage des Symbols. Deshalb beide.
+    potential_r: float | None = None
+    potential_schwelle_r: float | None = None
     umgeworfen_preis_eur: float | None = None
     umgeworfen_bis: str | None = None
     lagebild_id: int | None = None

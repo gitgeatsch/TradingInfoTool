@@ -14535,6 +14535,108 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_vierfelder() -> None:
+    """Schritt 44, 2a/2b - die zwei leeren Felder der Vier-Felder-Messung.
+
+    ⚠️ Der Plan steht seit dem 29.08. in `Konzept_Bewertungsstufe_29_08.md`:
+
+                       Bewertung ja        Bewertung nein
+        LLM kauft      Empfehlung          1.251 in 7 Tagen - nur `return`
+        LLM haelt      Schatten OHNE       Ruhe
+                       Bewertung
+
+    Ohne beide Felder ist "traegt die BEWERTUNG?" nicht beantwortbar."""
+    P = "Vierfelder"
+    import inspect
+    import sqlite3
+
+    from agent import rollen_lauf as RL
+    from agent import signal_abbildung as SA
+
+    # ---- die Spalten sind da und additiv --------------------------------
+    pruefe(P, "⚠️ die Zeile kann ein Potential tragen",
+           SA.SPALTEN_SIGNAL.get("potential_r") == "REAL"
+           and SA.SPALTEN_SIGNAL.get("potential_schwelle_r") == "REAL")
+    pruefe(P, "⚠️⚠️ und die SCHWELLE steht daneben, nicht nur der Wert",
+           "potential_schwelle_r" in SA.SPALTEN_SIGNAL,
+           "0,05 R kann ueber oder unter der Schwelle liegen, je nach "
+           "Datenlage des Symbols (Schwelle je Datenlage, 31.08.). Wer nur "
+           "den Wert speichert, muss die Schwelle spaeter rekonstruieren - "
+           "und sie aendert sich")
+    c = sqlite3.connect(":memory:")
+    c.execute("CREATE TABLE signals (id INTEGER PRIMARY KEY, symbol TEXT)")
+    neu1 = SA.migriere(c)
+    pruefe(P, "die Migration legt sie an",
+           "signals.potential_r" in neu1
+           and "signals.potential_schwelle_r" in neu1)
+    pruefe(P, "und ist idempotent",
+           SA.migriere(c) == [],
+           "eine Migration, die beim zweiten Lauf etwas tut, ist keine")
+
+    # ---- die Nein-Zeile kennt beide Arme --------------------------------
+    sig = inspect.signature(RL._schreibe_nein)
+    pruefe(P, "⚠️ `_schreibe_nein` unterscheidet die HERKUNFT",
+           "grund_art" in sig.parameters,
+           "eine Zeile vom Modell und eine von der Bewertung sehen gleich "
+           "aus, beweisen aber Verschiedenes - sie in einen Topf zu werfen "
+           "waere der Fehler von Stufe 9")
+    pruefe(P, "der Vorgabewert ist der Modellarm",
+           sig.parameters["grund_art"].default == "modell",
+           "die bestehenden Aufrufer sind der Modellarm - ein anderer "
+           "Vorgabewert haette sie still umgehaengt")
+    pruefe(P, "und sie bekommt die Marktraenge fuer die Bewertung",
+           "marktraenge" in sig.parameters,
+           "ohne sie rechnet `potential.rechne` ohne Merkmale und liefert "
+           "die Basisrate statt der Bewertung")
+
+    quelle = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ der Modellarm setzt `ist_reines_llm_halten`",
+           'felder["ist_reines_llm_halten"] = 1' in quelle)
+    pruefe(P, "⚠️⚠️ der BEWERTUNGSarm setzt `risk_veto` statt dessen",
+           'felder["risk_veto"] = 1' in quelle
+           and 'if grund_art == "bewertung":' in quelle,
+           "der Veto-Schatten-Zweig von `backward_tracking` sucht genau "
+           "danach - er laeuft seit dem 28.07. leer, weil die neue Kette ihn "
+           "nie befuellt hat")
+    # ⚠️ NICHT UEBER TEXTINDIZES - die brechen beim naechsten Kommentar.
+    # Der Abschnitt zwischen der Verzweigung und dem naechsten Feld muss
+    # BEIDE Marken enthalten, aber in verschiedenen Zweigen.
+    _zweig = quelle.split('if grund_art == "bewertung":')[1][:600]
+    pruefe(P, "⚠️ und die beiden schliessen einander aus",
+           _zweig.index('felder["risk_veto"]')
+           < _zweig.index("else:")
+           < _zweig.index('felder["ist_reines_llm_halten"]'),
+           "eine Zeile, die BEIDE Marken traegt, wuerde von beiden Armen "
+           "aufgeloest und doppelt gezaehlt")
+
+    # ---- der Diskriminator des Auswertungsarms passt --------------------
+    from agent.krypto import backward_tracking as BT
+
+    d = inspect.getsource(BT._hat_veto_schatten_these)
+    pruefe(P, "⚠️⚠️ der Veto-Arm verlangt `risk_veto` UND action=HALTEN",
+           'risk_veto' in d and 'HALTEN' in d,
+           "beides muss die Nein-Zeile liefern, sonst schreibt sie ins "
+           "Leere. `signal_abbildung.UMBENENNUNG` macht aus NICHTS_TUN ein "
+           "HALTEN - deshalb passt es")
+    pruefe(P, "und alle drei Zonen - die Nein-Zeile rechnet sie",
+           "entry" in d and "stop" in d and "take" in d
+           and "rechnung = ER.rechne(" in quelle,
+           "ohne Zonen gibt es keine hypothetische These, die sich "
+           "nachverfolgen liesse")
+
+    # ---- 2b sitzt an der richtigen Stelle -------------------------------
+    pruefe(P, "⚠️ 2b haengt am ENTSCHEIDER-Verlust, nicht anderswo",
+           'grund_art="bewertung"' in quelle
+           and quelle.index('grund_art="bewertung"')
+           > quelle.index('"Potential %.3f R unter der Schwelle'),
+           "die Schattenzeile gehoert genau dorthin, wo 1.251 Zellen in "
+           "sieben Tagen verschwanden")
+    pruefe(P, "⚠️⚠️ und der Trichter bucht den Verlust WEITERHIN",
+           'symbol, "entscheider",' in quelle,
+           "eine Schattenzeile ist keine Handlung - wer sie als "
+           ",durchgekommen' buchte, faelschte den Trichter")
+
+
 def paket_marktscanwert() -> None:
     """Die Wertpruefung des Marktscans - gegen BEKANNTE WAHRHEIT.
 
@@ -19757,6 +19859,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Vierfelder": paket_vierfelder,
           "Marktscanwert": paket_marktscanwert,
           "Altbestand": paket_altbestand,
           "Ausstiegsguete": paket_ausstiegsguete,

@@ -477,6 +477,9 @@ _SPOT_SIGNAL_SPALTEN = (
     # laufen als saubere - und genau dafuer wurde die Spalte angelegt.
     "z1_verletzt, z1_zahlen_geprueft, "
     "quelle_kette, lagebild_id, prompt_stand, fx_eur_je_usd, "
+    # SCHRITT 44, 2a/2b: die Bewertung neben dem Urteil - ohne sie ist
+    # die Vier-Felder-Messung von aussen nicht nachvollziehbar.
+    "potential_r, potential_schwelle_r, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
     "umgeworfen_bis, "
     # DIE BELEGE SELBST (14.08.). Bis dahin ging nur ihre ANZAHL in die

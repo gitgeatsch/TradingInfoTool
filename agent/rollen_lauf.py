@@ -1776,7 +1776,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                config=config, modell=modell,
                                ergebnis=ergebnis, module=module,
                                assetklasse=assetklasse, fakten=bc_ein,
-                               z1=z1)
+                               z1=z1, marktraenge=marktraenge)
             return
         durchlauf.bestanden(symbol, "aktion")
         _sende_ausstieg(
@@ -1820,7 +1820,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
                            module=module, assetklasse=assetklasse,
-                           fakten=bc_ein, z1=z1)
+                           fakten=bc_ein, z1=z1, marktraenge=marktraenge)
         return
 
     # KEIN EINSTIEG, WO DER AUSSTIEG SCHON FAELLIG IST (O-37, 15.08.2026).
@@ -1869,7 +1869,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                            strategie=strategie, conn=conn, db=db,
                            config=config, modell=modell, ergebnis=ergebnis,
                            module=module, assetklasse=assetklasse,
-                           fakten=bc_ein, z1=z1)
+                           fakten=bc_ein, z1=z1, marktraenge=marktraenge)
         return
     durchlauf.bestanden(symbol, "aktion")
 
@@ -2481,6 +2481,42 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # still. Der Verlust steht mit Grund und Zahl im Trichter
             # ("Potential -0,000 R unter der Schwelle 0,010 R"), und der
             # Lauf meldet ihn wie jede andere Stufe.
+            #
+            # ---- SCHRITT 44, PUNKT 2b (12.09.2026) ----------------------
+            #
+            # ⚠️⚠️ HIER STAND NUR `return`, UND DAS WAR DAS ZWEITE LEERE
+            # FELD DER VIER-FELDER-MESSUNG. 1.251 Zellen in sieben Tagen
+            # fallen an dieser Stelle - das Modell hat KAUFEN gesagt, die
+            # Bewertung sagt nein, und danach war der Fall weg. Ohne diese
+            # Zeile ist die Frage "TRAEGT DIE BEWERTUNG?" unbeantwortbar:
+            # man kann verworfene und durchgelassene Faelle nicht
+            # vergleichen, wenn die verworfenen nirgends stehen.
+            #
+            # ⚠️ DER MOTOR DAFUER LAEUFT SEIT DEM 28.07. LEER: `backward_
+            # tracking._hat_veto_schatten_these` sucht Zeilen mit
+            # `risk_veto=1` UND `action='HALTEN'` UND allen drei Zonen -
+            # 418 aufgeloeste Faelle, ALLE aus der alten Kette, KEINE aus
+            # dieser. Woertlich dieselbe Lage wie beim Halten-Arm am 14.08.
+            # ("Die Maschine existiert - sie bekam nur nie Futter").
+            #
+            # ⚠️⚠️ `risk_veto` WIRD BEWUSST WIEDERVERWENDET, und das ist ein
+            # Namensschatten mit offenen Augen: das Feld heisst nach dem
+            # Risk-Gate der alten Kette, und der Entscheider ist kein
+            # Risk-Gate. Die Alternative waere eine zweite Spalte plus ein
+            # zweiter Auswertungszweig gewesen - fuer dieselbe Frage. Wer
+            # das spaeter trennen will, findet hier den Grund; wer die
+            # Zeilen unterscheiden will, nimmt `quelle_kette='rollen'`.
+            if betriebsart != TROCKEN:
+                _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
+                               atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,
+                               lagebild_id=lagebild_id,
+                               instrument=instrument, strategie=strategie,
+                               conn=conn, db=db, config=config,
+                               modell=modell, ergebnis=ergebnis,
+                               module=module, assetklasse=assetklasse,
+                               fakten=bc_ein, z1=z1,
+                               marktraenge=marktraenge,
+                               grund_art="bewertung")
             return
         durchlauf.bestanden(symbol, "entscheider")
 
@@ -3197,7 +3233,8 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
                    lagebild_id, instrument, strategie, conn, db, config,
                    modell, ergebnis, module, assetklasse="krypto",
-                   fakten=None, z1=None) -> None:
+                   fakten=None, z1=None, marktraenge=None,
+                   grund_art="modell") -> None:
     """Ein NICHTS_TUN als auflösbare Zeile - der Kontrollarm der Messung.
 
     `assetklasse` IST PFLICHT UND STAND HIER NICHT (gefunden 15.08.2026, an
@@ -3279,7 +3316,62 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
         # SEIT DEM 15.08. NIMMT DIE ABBILDUNG SELBST die Rechnung, fuer beide
         # Wege. Der Flicken ist damit weg, und es gibt die Geometrie einmal -
         # samt USD-Umrechnung, die hier ebenfalls doppelt stand.
-        felder["ist_reines_llm_halten"] = 1
+        # ⚠️ WELCHER ARM - das entscheidet, was die Zeile spaeter beweist.
+        #
+        #   grund_art="modell"     das Modell sagte NICHTS_TUN
+        #                          -> Selbst-Halten-Arm (seit 31.07.)
+        #   grund_art="bewertung"  das Modell sagte KAUFEN, die gerechnete
+        #                          Bewertung verwarf -> Veto-Schatten-Arm
+        #
+        # Beide Zeilen sehen sonst gleich aus, beweisen aber Verschiedenes.
+        # Sie in einen Topf zu werfen waere genau der Fehler, den Stufe 9
+        # gemacht hat (Bewertung neben Betriebszustand in einer Spalte).
+        if grund_art == "bewertung":
+            felder["risk_veto"] = 1
+            felder["risk_veto_reason"] = (
+                "Entscheiderstufe: Potential unter der Schwelle")
+        else:
+            felder["ist_reines_llm_halten"] = 1
+        # ---- SCHRITT 44, PUNKT 2a: DIE BEWERTUNG GEHOERT DAZU ----------
+        #
+        # ⚠️⚠️ BIS HEUTE FEHLTE SIE. Diese Zeile ist der Kontrollarm fuer
+        # "war das Nein des Modells richtig?" - und `backward_tracking`
+        # loest sie seit dem 31.07. auf (1.576 Faelle). Was sie NICHT
+        # trug, war die gerechnete Bewertung: die Zelle erreicht Stufe 12
+        # nie, also stand neben dem Modellurteil keine Zahl.
+        #
+        # DAMIT WAR DER VERGLEICH, FUER DEN SIE GEBAUT WURDE, UNMOEGLICH:
+        # "LLM-kaufen gegen LLM-halten BEI GLEICHER BEWERTUNG" braucht die
+        # Bewertung auf beiden Seiten. Ein Schatten ohne sie laesst sich nur
+        # gegen den Markt vergleichen, nicht gegen die eigene Schwelle.
+        #
+        # ⚠️ SIE ENTSCHEIDET HIER NICHTS. Kein Filter, keine Mail, kein
+        # Abbruch - nur zwei Zahlen mehr in einer Zeile, die ohnehin
+        # geschrieben wird. Faellt die Rechnung aus, bleibt das Feld leer;
+        # ein fehlender Wert ist kein Nullwert.
+        try:
+            from agent import potential as _PT3
+
+            _mr3 = (marktraenge or {}).get(symbol) or {}
+            _pot3 = _PT3.rechne(
+                crv=rechnung["crv"],
+                stop_relativ=rechnung.get("stop_relativ"),
+                klasse=assetklasse, instrument=instrument,
+                strategie=strategie,
+                merkmale={k: _mr3[k] for k in ("funding_fuenftel",
+                                               "turnover_fuenftel",
+                                               "schnitt_fuenftel")
+                          if _mr3.get(k) is not None} or None)
+            if _pot3 is not None and _pot3.bewertbar:
+                felder["potential_r"] = round(float(_pot3.wert_r), 6)
+                felder["potential_schwelle_r"] = round(
+                    float(_pot3.schwelle), 6)
+        except Exception as _px:                             # noqa: BLE001
+            # EINE MESSUNG DARF DEN LAUF NICHT ANHALTEN - aber sie muss
+            # sagen, wenn sie ausfaellt (N-40).
+            ergebnis.setdefault("fehler", []).append(
+                f"{symbol}: Potential fuer die Nein-Zeile: "
+                f"{type(_px).__name__}: {_px}")
         felder["gate_passed"] = 0        # es ist kein Signal, es ist eine Messung
         kennung = SA.schreibe_signal(conn, felder, symbol=symbol)
         ergebnis.setdefault("nein_gemessen", []).append(
