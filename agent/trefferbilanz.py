@@ -548,10 +548,44 @@ def satz(bewertung: dict, einstieg=None, stop=None,
             if not k or k.get("kosten_rel") is None:
                 continue
             pct = 100.0 * k["kosten_rel"]
+            # ⚠️⚠️ AUF DEN POSITIONSWERT, NICHT AUF DEN EINSATZ (Befund
+            # 2.390-zahlen, behoben 12.09.2026).
+            #
+            # `kosten_rel` bezieht sich auf das NOMINAL - das steht so im
+            # Kopf von `backward_tracking.kosten_in_r`: "ein gehebeltes
+            # Geschaeft kauft und verkauft eine Position vom Nominal
+            # N = E x L, und darauf faellt derselbe Handelssatz an".
+            # Hier wurde es mit dem EINSATZ multipliziert.
+            #
+            # DIE FOLGE, gerechnet an der SOL-Mail vom 12.09. (Einsatz 500,
+            # Hebel 3,9, Nominal 1.950, Stop 8,94 %, 16 Tage):
+            #
+            #     Mail    5,4 % "des Einsatzes"   ->   27 EUR
+            #     richtig 5,4 % des Nominals      ->  105 EUR
+            #
+            # ⚠️ DIE ZEILE DARUNTER WAR IMMER RICHTIG: "frisst 60 % Ihres
+            # Risikos" rechnet `kosten_rel / stop_rel`, und beide beziehen
+            # sich auf dasselbe Nominal - der Hebel kuerzt sich heraus.
+            # 0,600 R x 174 EUR Risiko = 105 EUR, dieselbe Zahl. Die Mail
+            # widersprach sich also selbst, und zwar um den Faktor Hebel.
+            #
+            # ⚠️ BEI SPOT AENDERT SICH NICHTS: dort ist L = 1, Nominal =
+            # Einsatz, und auch das Wort "Einsatz" bleibt richtig.
+            _L = float(hebel) if hebel and float(hebel) > 1.0 else 1.0
+            _bezug = "Positionswerts" if _L > 1.0 else "Einsatzes"
             zeile = ((f"   {name}: " if name else "   ")
-                     + f"{_de(pct)} % des Einsatzes")
+                     + f"{_de(pct)} % des {_bezug}")
             if einsatz_eur:
-                zeile += f" (rund {pct / 100 * float(einsatz_eur):.0f} EUR)"
+                _nominal = float(einsatz_eur) * _L
+                zeile += f" (rund {pct / 100 * _nominal:.0f} EUR"
+                if _L > 1.0:
+                    # DEN BEZUG DAZUSCHREIBEN. Eine Zahl, die sich beim
+                    # Hebel auf etwas anderes bezieht als der Einsatz, den
+                    # der Nutzer ueberweist, muss das sagen - sonst sucht er
+                    # den Unterschied bei sich.
+                    zeile += (f" auf {_nominal:.0f} EUR Position, nicht auf "
+                              f"{float(einsatz_eur):.0f} EUR Einsatz")
+                zeile += ")"
             # ⚠️ BEIM HEBEL DIE AUFTEILUNG DAZU. Ohne sie sieht der Leser
             # eine Zahl, die zwei ganz verschiedene Dinge mischt: der
             # Handelsanteil faellt einmal an, die Finanzierung laeuft JEDEN

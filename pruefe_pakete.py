@@ -14535,6 +14535,89 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_kostenbezug() -> None:
+    """Befund 2.390-zahlen - die Kosten in EUR gehen auf den POSITIONSWERT.
+
+    ⚠️ DER FUND: `kosten_rel` bezieht sich auf das Nominal (so steht es im
+    Kopf von `backward_tracking.kosten_in_r`: "N = E x L, und darauf faellt
+    derselbe Handelssatz an"). Die Mailzeile multiplizierte es mit dem
+    EINSATZ. Bei der SOL-Mail vom 12.09.: 27 EUR statt 105 EUR - genau um
+    den Faktor Hebel daneben.
+
+    ⚠️⚠️ DIE MAIL WIDERSPRACH SICH SELBST: die Zeile darunter ("frisst 60 %
+    Ihres Risikos") war immer richtig, denn dort kuerzt sich der Hebel
+    heraus. 0,600 R x 174 EUR = 105 EUR - dieselbe Zahl, die oben mit 27
+    angegeben war."""
+    P = "Kostenbezug"
+    from agent import trefferbilanz as TB
+    from agent.krypto.backward_tracking import kosten_in_r
+
+    bw = {"basisrate": 0.35, "wahrscheinlichkeit": 0.346, "belastbar": False,
+          "n": 0, "faelle": 0, "crv": 2.0, "kosten_r": 0.6, "traegt": False,
+          "breakeven": 0.44}
+    EIN, STOP, E, L, TAGE = 88.14, 80.26, 500.0, 3.9, 16.0
+    stop_rel = (EIN - STOP) / EIN
+    risiko = E * L * stop_rel
+
+    mit = TB.satz(bw, einstieg=EIN, stop=STOP, einsatz_eur=E,
+                  klasse="krypto", instrument="spot", hebel=L, tage=TAGE)
+    ohne = TB.satz(bw, einstieg=EIN, stop=STOP, einsatz_eur=E,
+                   klasse="krypto", instrument="spot", hebel=None, tage=TAGE)
+    _mit = chr(10).join(mit)
+    _ohne = chr(10).join(ohne)
+
+    pruefe(P, "⚠️⚠️ beim HEBEL heisst der Bezug ,Positionswert', nicht ,Einsatz'",
+           "des Positionswerts" in _mit and "des Einsatzes" not in _mit,
+           "`kosten_rel` geht auf das Nominal - ,des Einsatzes' war schlicht "
+           "der falsche Bezug")
+    pruefe(P, "⚠️ und die Zeile sagt, WORAUF sie sich bezieht",
+           "nicht auf 500 EUR Einsatz" in _mit,
+           "eine Zahl, die sich auf etwas anderes bezieht als den Betrag, "
+           "den der Nutzer ueberweist, muss das sagen - sonst sucht er den "
+           "Unterschied bei sich")
+    pruefe(P, "⚠️⚠️ bei SPOT bleibt alles wie bisher",
+           "des Einsatzes" in _ohne and "Positionswert" not in _ohne,
+           "dort ist Nominal = Einsatz; eine Aenderung waere eine "
+           "Verschlechterung ohne Anlass")
+
+    # ---- DIE GEGENPROBE UEBER ZWEI UNABHAENGIGE WEGE -------------------
+    #
+    # ⚠️ Der eigentliche Beleg. Weg 1: kosten_rel x Nominal. Weg 2:
+    # kosten_r x Risiko. Beide muessen dieselbe EUR-Zahl ergeben - taten sie
+    # vor dem Fix NICHT, und genau daran war der Fehler zu sehen.
+    k = kosten_in_r(stop_rel, "hebel", TAGE, hebel=L, position_eur=E)
+    weg1 = k["kosten_rel"] * E * L
+    weg2 = k["kosten_r"] * risiko
+    pruefe(P, "⚠️⚠️ zwei Wege, eine Zahl: kosten_rel x Nominal = kosten_r x Risiko",
+           abs(weg1 - weg2) < 0.5,
+           "%.1f EUR gegen %.1f EUR - stimmen sie nicht ueberein, ist eine "
+           "der beiden Bezugsgroessen falsch" % (weg1, weg2))
+    pruefe(P, "und die Mail nennt genau diese Zahl",
+           ("%.0f EUR" % weg1) in _mit,
+           "erwartet %.0f EUR im Text" % weg1)
+    pruefe(P, "⚠️ der ALTE Wert steht NICHT mehr drin",
+           ("(rund %.0f EUR)" % (k["kosten_rel"] * E)) not in _mit,
+           "27 EUR statt 105 - das war der Fehler, um den Faktor Hebel")
+
+    # ---- und der Prozentsatz selbst war nie falsch ----------------------
+    pruefe(P, "⚠️ die R-Aussage war IMMER richtig",
+           abs(k["kosten_r"] - k["kosten_rel"] / stop_rel) < 1e-9,
+           "dort kuerzt sich der Hebel heraus - Gebuehr und Risiko skalieren "
+           "beide mit dem Nominal. Deshalb widersprach die Mail sich selbst, "
+           "statt durchgehend falsch zu sein")
+    pruefe(P, "der Handelssatz haengt NICHT am Hebel",
+           abs(kosten_in_r(stop_rel, "hebel", TAGE, hebel=2.0,
+                           position_eur=E)["handel_rel"]
+               - k["handel_rel"]) < 1e-12,
+           "in R ist die Handelsgebuehr beim Hebeltrade exakt so gross wie "
+           "bei Spot; der Hebel wirkt allein ueber die Finanzierung")
+    pruefe(P, "⚠️ die Finanzierung dagegen waechst mit ihm",
+           kosten_in_r(stop_rel, "hebel", TAGE, hebel=5.0,
+                       position_eur=E)["finanzierung_rel"]
+           > k["finanzierung_rel"],
+           "(L-1)/L x satz - bei 5x ist mehr Kapital geliehen als bei 3,9x")
+
+
 def paket_vierfelder() -> None:
     """Schritt 44, 2a/2b - die zwei leeren Felder der Vier-Felder-Messung.
 
@@ -19886,6 +19969,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Kostenbezug": paket_kostenbezug,
           "Vierfelder": paket_vierfelder,
           "Marktscanwert": paket_marktscanwert,
           "Altbestand": paket_altbestand,
