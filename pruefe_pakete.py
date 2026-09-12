@@ -19432,6 +19432,33 @@ def paket_plan() -> None:
     _rang = {n: i for i, (n, _) in enumerate(SI.BLOECKE)}
     _offen = sorted((s for s in SI.REIHENFOLGE if not s.fertig),
                     key=lambda s: (_rang.get(s.block, 99), s.nr))
+    # ---------------------------------------------------------------
+    # ⚠️⚠️ DER HALDENWAECHTER (Vorgabe AUFRAEUMEN-VOR-NEUBAU, 12.09.2026)
+    # ---------------------------------------------------------------
+    #
+    # An EINEM Tag blieben 12 selbst erzeugte Befunde offen liegen - einer
+    # davon war seit Stunden geloest und stand nur nicht nachgetragen da.
+    # Der Nutzer hat es gezaehlt, nicht ich. Diese Pruefung zaehlt ab jetzt.
+    #
+    # ⚠️ SIE ZAEHLT NUR DIE JUENGSTEN. Alte offene Befunde sind Arbeitsvorrat
+    # und stehen in den Planschritten; die Halde entsteht durch das, was
+    # HEUTE dazukommt und nicht abgearbeitet wird. Als Naeherung fuer "jung"
+    # dient die hoechste Befundnummer - die letzten zwanzig.
+    import bestand as _BE
+
+    _nummern = []
+    for _b in _BE.BEFUNDE:
+        _k = str(_b.kennung).split("-")[0].replace(".", "")
+        if _k.isdigit():
+            _nummern.append((int(_k), _b))
+    _jung = [b for _n, b in sorted(_nummern, key=lambda x: -x[0])[:20]]
+    _offen_jung = [b for b in _jung if b.stand == "offen"]
+    pruefe(P, "⚠️⚠️ hoechstens DREI der juengsten Befunde sind offen",
+           len(_offen_jung) <= 3,
+           "Vorgabe AUFRAEUMEN-VOR-NEUBAU: kein neuer Schritt, solange mehr "
+           "offen ist. Offen (%d): %s"
+           % (len(_offen_jung), ", ".join(b.kennung for b in _offen_jung)))
+
     pruefe(P, "⚠️ und der gemeldete NAECHSTE Schritt folgt der Blockordnung",
            bool(_offen) and _offen[0].block == "D-BETRIEB",
            "vorher meldete `soll_ist` Schritt 25, waehrend an 44 gearbeitet "

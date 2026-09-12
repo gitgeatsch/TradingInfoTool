@@ -136,6 +136,42 @@ VORGABEN = (
             "gesperrt bis Paket 2.",
             "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
             "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
+    Vorgabe("AUFRAEUMEN-VOR-NEUBAU",
+            "⚠️⚠️ NUTZERZUSTIMMUNG 12.09. auf eigenen Vorschlag, nachdem an "
+            "EINEM Tag 12 offene Punkte liegen geblieben waren - einer davon "
+            "seit Stunden geloest und nur nicht nachgetragen. DREI REGELN: "
+            "(1) KEIN NEUER SCHRITT, solange mehr als DREI selbst erzeugte "
+            "Befunde offen sind. Nicht als Vorsatz, sondern als Pruefung im "
+            "Paket ,Plan'. (2) NACH JEDEM BAU die Befunde nachziehen, die er "
+            "loest - wer baut und den Befund stehen laesst, erzeugt eine "
+            "zweite Wahrheit. (3) OFFENE PUNKTE GEHOEREN VORGELEGT, NICHT "
+            "ABGELEGT: was ich nicht selbst entscheiden kann, ist eine FRAGE "
+            "an den Nutzer und kein Eintrag. ⚠️ Der Nutzer dazu: *,die "
+            "Struktur und der Weg scheinen zu stimmen - bei den Details und "
+            "Abhaengigkeiten muessen wir vorsichtig und genau vorgehen'*.",
+            "Nutzerzustimmung 12.09."),
+    Vorgabe("LLM-SCHIENE-GANZ",
+            "⚠️⚠️ NUTZERVORGABE 12.09. zum L-Block: *,ohne Messung und "
+            "Simulation nicht sinnvoll. Es sollte die GANZE LLM-Schiene "
+            "geprueft werden - welche Kriterien werden PRO ROLLE bewertet "
+            "und WARUM. Neuen Umbau mit ECHTEN EINSTIEGSGRUENDEN "
+            "beruecksichtigen - und dies gleich fuer EIN- UND AUSSTIEG.'* ➔ "
+            "VIER TEILE, und keiner davon ist ,den Prompt anpassen': (1) "
+            "BESTANDSAUFNAHME je Rolle - welche Kriterien stehen heute im "
+            "Prompt, und mit welcher Begruendung? Fuer Rolle A, Rolle BC und "
+            "Rolle G getrennt. ⚠️ Erwartung nach 2.398: die meisten "
+            "Kriterien stammen aus dem Entwurf vom August und sind nie "
+            "gemessen worden. (2) ECHTE EINSTIEGSGRUENDE EINSPEISEN: die "
+            "Rollen kennen `potential`, `funding`, `turnover`, `schnitt` und "
+            "die Trefferquote mit KEINEM Wort (2.398) - sie raten an einem "
+            "anderen Massstab als dem, an dem sie gemessen werden. (3) "
+            "AUSSTIEG GLEICHRANGIG: dieselbe Frage fuer die Verkaufsseite - "
+            "und dort traegt das Modell nachweislich (2.403: VERKAUFEN "
+            "schlaegt den Zufall um 29 Punkte bei H10), waehrend es beim "
+            "Einstieg unbelegt ist. (4) ⚠️ ERST MESSEN, DANN AENDERN: ohne "
+            "Simulation ist jede Promptaenderung eine Meinung. Schritt 42 "
+            "liefert die Grundlage, nicht umgekehrt.",
+            "Nutzervorgabe 12.09.; Befunde 2.398, 2.403"),
     Vorgabe("SOFORT-EINTRAGEN",
             "⚠️ NUTZERVORGABE 12.09.: *,offene Punkte und Erledigungen immer "
             "gleich eintragen in Doku und Plan'*. Nicht am Ende einer "
@@ -654,6 +690,16 @@ REIHENFOLGE = (
             "remote/status.py; Nutzervorgabe 07.09. und 11.09.",
             block="D-ABBILDUNG"),
     Schritt(33, "LLM-ROLLEN UND MODELLE",
+            "⚠️⚠️ INHALT AM 12.09. GESETZT (Vorgabe LLM-SCHIENE-GANZ): die "
+            "GANZE Schiene, nicht einzelne Prompts. (1) Je Rolle "
+            "aufschreiben, WELCHE Kriterien sie heute bewertet und mit "
+            "welcher Begruendung - Rolle A, Rolle BC, Rolle G getrennt. (2) "
+            "Die echten, GEMESSENEN Einstiegsgruende einspeisen: heute kennt "
+            "keine Rolle `potential`, `funding`, `turnover` oder die "
+            "Trefferquote (2.398). (3) Dasselbe fuer den AUSSTIEG - dort "
+            "traegt das Modell nachweislich (2.403), beim Einstieg nicht. "
+            "(4) ⚠️ ERST NACH Schritt 42: ohne Messung ist jede "
+            "Promptaenderung eine Meinung. "
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
             "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
@@ -818,6 +864,14 @@ REIHENFOLGE = (
             # zu 40. Alles, was 40 SELBST leisten kann, ist geleistet.
             fertig=True, block="D-BETRIEB"),
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
+            "⚠️ NUTZERENTSCHEIDUNG 12.09.: *,Marktscan ist fuer mich "
+            "klar, trending koennte eine Loesung sein'* - und der Auftrag, "
+            "das fachlich zu entscheiden. ➔ NAECHSTER TEILSCHRITT IST DAMIT "
+            "gesetzt: `trending` messen (2.406-luecke, 812 Kandidaten, nie "
+            "ausgewertet), BEVOR ein Ersatz gebaut wird. Erst wenn feststeht, "
+            "ob Aufmerksamkeit besser traegt als Kursanstieg, ist "
+            "entscheidbar, ob der Scan eine neue Quelle oder eine neue "
+            "Bewertung braucht. "
             "⚠️⚠️ NUTZERVORGABE 12.09. - DAS ZIEL DIESES SCHRITTS IN "
             "EINEM SATZ: *,der Marktscan sollte zukuenftig ebenfalls aus "
             "einer sinnvollen BEWERTUNG erfolgen - ein erst kuerzlich "
