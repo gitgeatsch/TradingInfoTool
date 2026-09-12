@@ -937,9 +937,22 @@ REIHENFOLGE = (
             "hoher Rang ausserhalb der Watchlist mehr Potential (`bewegung_r`, "
             "nicht Zielerreichung)? Ohne Nachweis keine Empfehlung; (3) erst "
             "dann eine Aufnahme-Liste, gefiltert auf bei Bitpanda handelbare "
-            "Werte. ⚠️ Der Engpass ist die Onchain-Basis (66 Symbole) - sie zu "
-            "verbreitern ist der eigentliche Bauteil. Bis dahin bleibt der "
-            "alte Marktscan an.",
+            "Werte. ⚠️⚠️ DER ,ENGPASS ONCHAIN-BASIS (66 SYMBOLE)' WAR EIN "
+            "DENKFEHLER (Befund 2.408, korrigiert 12.09.): das ist die "
+            "MESSBASIS aus `messdaten.db`, nicht die ANWENDUNGSBASIS. Der "
+            "Live-Rang kommt aus CoinGecko-Markets und den "
+            "Binance-Perpetuals und braucht KEINE Historie - turnover 233 "
+            "Symbole, funding 851, BEIDE 137, davon 112 ausserhalb der "
+            "Watchlist. ➔ DER P-SCAN IST HEUTE BAUBAR, ohne eine einzige "
+            "neue Datenquelle. ✔ RECHERCHE EXTERN GELAUFEN (2.409): keine "
+            "fertige Loesung passt - sie liefern Faktoren OHNE Messung, "
+            "was der Vierfachtest verbietet. DefiLlama (TVL, frei, ohne "
+            "Schluessel) ist als DRITTER BEITRAG interessant, gehoert "
+            "aber in die Kette (Schritt 38), nicht in die Entdeckung. "
+            "⚠️ OFFEN BLEIBT DER VORBEHALT (2.408-vorbehalt): gemessen "
+            "ist der Beitrag auf 66 Symbolen, angewendet wuerde er auf "
+            "233 - die Form des H-Fehlers, und genau der Inhalt von "
+            "Stufe 2. Bis dahin bleibt der alte Marktscan an.",
             "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan",
             block="D-BEWERTUNG"),
     Schritt(46, "D2 - STRAFFEN UND KORREKT ABBILDEN",
