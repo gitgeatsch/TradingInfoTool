@@ -19727,6 +19727,19 @@ def paket_plan() -> None:
            "offen ist. Offen (%d): %s"
            % (len(_offen_jung), ", ".join(b.kennung for b in _offen_jung)))
 
+    # ⚠️ ZWEI EBENEN: Blockordnung, und INNERHALB die Listenposition.
+    # Die Schrittnummer ist KEIN Rang - sie sagt, wann etwas entstanden ist.
+    _pos = {x.nr: i for i, x in enumerate(SI.REIHENFOLGE)}
+    _offen = sorted((x for x in SI.REIHENFOLGE if not x.fertig),
+                    key=lambda x: (_rang.get(x.block, 99), _pos[x.nr]))
+    pruefe(P, "⚠️⚠️ innerhalb eines Blocks zaehlt die POSITION, nicht die Nummer",
+           bool(_offen) and _offen[0].nr != min(
+               x.nr for x in SI.REIHENFOLGE
+               if not x.fertig and x.block == _offen[0].block),
+           "sonst waere der aelteste Schritt immer der naechste - Schritt 49 "
+           "(Fehler im laufenden Betrieb) gehoert vor 44 (halb fertig), "
+           "obwohl seine Nummer groesser ist. Gemeldet: %s"
+           % (_offen[0].nr if _offen else "-"))
     pruefe(P, "⚠️ und der gemeldete NAECHSTE Schritt folgt der Blockordnung",
            bool(_offen) and _offen[0].block == "D-BETRIEB",
            "vorher meldete `soll_ist` Schritt 25, waehrend an 44 gearbeitet "

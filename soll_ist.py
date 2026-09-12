@@ -380,6 +380,17 @@ BLOECKE = (
     ("SPAETER", "nachgelagert nach eigener Nutzervorgabe"),
 )
 
+# ⚠️⚠️ INNERHALB EINES BLOCKS ZAEHLT DIE POSITION IN DIESER LISTE
+# (Nutzerauftrag 12.09.: "Rangfolge innerhalb der Bloecke einfuehren").
+#
+# NICHT die Schrittnummer - die sagt, WANN ein Schritt entstanden ist, nicht
+# wie dringend er ist. Schritt 49 (ein Fehler, der heute wirkt) steht vor
+# Schritt 44 (halb fertig), obwohl seine Nummer groesser ist.
+#
+# UMSORTIEREN HEISST ZEILEN VERSCHIEBEN, und das ist Absicht: eine zweite
+# Zahl neben der Schrittnummer waere eine zweite Stelle, die gepflegt werden
+# muss - und die erste, die vergessen wird.
+
 REIHENFOLGE = (
     Schritt(1, "N-46a",
             "Zirkulaerer Verschub als Laengs-Nullpunkt GEBAUT - P1/P2/P3 "
@@ -1580,9 +1591,26 @@ def main() -> int:
     # Vorher meldete diese Stelle "naechster Schritt 25", waehrend an 44
     # gearbeitet wurde - die Liste war die Reihenfolge ihrer Entstehung, nicht
     # die der Arbeit. Jetzt gilt die Reihenfolge der Bloecke (Befund 2.395).
+    # ⚠️⚠️ ZWEI EBENEN, UND BEIDE SIND ABSICHT (12.09.2026, Nutzerauftrag
+    # "Rangfolge innerhalb der Bloecke einfuehren"):
+    #
+    #   zwischen den Bloecken   die Reihenfolge von BLOECKE
+    #   INNERHALB eines Blocks  die REIHENFOLGE DER LISTE, nicht die Nummer
+    #
+    # ⚠️ DIE SCHRITTNUMMER IST KEIN RANG. Sie sagt, WANN ein Schritt
+    # entstanden ist, nicht wie dringend er ist - Schritt 49 (ein Fehler im
+    # laufenden Betrieb) gehoert vor Schritt 44 (halb fertig), obwohl seine
+    # Nummer groesser ist. Vorher sortierte diese Stelle nach `s.nr` und
+    # meldete deshalb 44.
+    #
+    # ⚠️⚠️ UMSORTIEREN HEISST ZEILEN VERSCHIEBEN. Das ist Absicht: eine
+    # zweite Zahl neben der Schrittnummer waere eine zweite Stelle, die
+    # gepflegt werden muss - und die erste, die vergessen wird.
     _rang = {name: i for i, (name, _) in enumerate(BLOECKE)}
+    _pos = {s.nr: i for i, s in enumerate(REIHENFOLGE)}
     offen = sorted((s for s in REIHENFOLGE if not s.fertig),
-                   key=lambda s: (_rang.get(s.block, len(BLOECKE)), s.nr))
+                   key=lambda s: (_rang.get(s.block, len(BLOECKE)),
+                                  _pos[s.nr]))
 
     print("=" * 100)
     print("SOLL / IST — steht der Umbau noch im Plan?")
@@ -1675,9 +1703,11 @@ def main() -> int:
         if not drin:
             continue
         print("   %-14s %s" % (name, warum))
-        for s in drin:
+        for _r, s in enumerate(drin, 1):
             z = "→" if offen and s is offen[0] else " "
-            print("     %s %-3d %-14s %s" % (z, s.nr, s.kennung, s.text[:58]))
+            # DER RANG STEHT DA, sonst haelt ihn jemand fuer die Nummer.
+            print("     %s %d. Schritt %-3d %-14s %s"
+                  % (z, _r, s.nr, s.kennung, s.text[:48]))
             if not kurz:
                 print("           %-12s Quelle: %s" % ("", s.quelle))
         print()
