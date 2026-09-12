@@ -136,6 +136,22 @@ VORGABEN = (
             "gesperrt bis Paket 2.",
             "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
             "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
+    Vorgabe("KEINE-TEILLOESUNG",
+            "⚠️⚠️ NUTZERVORGABE 12.09. zum P-Scan, gilt aber allgemein: "
+            "*,eigene Daten erstellen ist eine Loesung, aber hier haben wir "
+            "wieder eine unfertige Loesung und Abhaengigkeit - ich waere "
+            "fuer MESSEN UND SUCHEN, BIS WIR EINE LOESUNG HABEN, und dann "
+            "gleich korrekt umsetzen - fertig.'* ➔ WAS DAS AUSSCHLIESST: "
+            "einen Teilbau, der Daten sammelt und dann wartet ("
+            ",Stufe 1 Schatten, in vier Wochen sehen wir weiter'). So "
+            "entsteht eine halbe Sache im Betrieb, die niemand mehr "
+            "anfasst - davon hat das Projekt genug (die alte Hebelkette, "
+            "der Marktscan-Rueckstand, der leerlaufende Veto-Arm). ➔ WAS ES "
+            "VERLANGT: erst die vollstaendige Loesung KENNEN - Datenweg, "
+            "Messweg, Nachweis - und sie dann in EINEM Zug bauen. ⚠️ Wenn "
+            "sich zeigt, dass es keine Loesung gibt, ist das ein "
+            "ERGEBNIS und kein Grund, trotzdem anzufangen.",
+            "Nutzervorgabe 12.09."),
     Vorgabe("AUFRAEUMEN-VOR-NEUBAU",
             "⚠️⚠️ NUTZERZUSTIMMUNG 12.09. auf eigenen Vorschlag, nachdem an "
             "EINEM Tag 12 offene Punkte liegen geblieben waren - einer davon "
