@@ -14535,6 +14535,84 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_ausstiegsguete() -> None:
+    """48b - das Erfolgsmass fuer Ausstiege, gegen BEKANNTE WAHRHEIT geprueft.
+
+    ⚠️ STEHENDE VORGABE: *"Kontrollen muessen selbst geprueft werden"* und
+    *"Vorabtest auf Kunstdaten vor langen Laeufen"*. Ein Messwerkzeug, das
+    nur an echten Daten laeuft, kann nicht sagen, ob es funktioniert - es
+    liefert immer irgendeine Zahl.
+
+    Hier werden drei Welten gebaut, in denen die WAHRHEIT bekannt ist:
+    ein Wert, der nach der Empfehlung faellt (der Verkauf war richtig),
+    einer, der steigt (falsch), und einer, der wie der Markt laeuft (kein
+    Beitrag). Das Werkzeug muss alle drei richtig einordnen."""
+    P = "Ausstiegsguete"
+    import importlib
+
+    MA = importlib.import_module("messe_ausstiegsguete")
+
+    # ---- eine Kursreihe mit BEKANNTEM Verlauf ---------------------------
+    def reihe(werte):
+        tage = ["2026-09-%02d" % (i + 1) for i in range(len(werte))]
+        return ({t: w for t, w in zip(tage, werte)}, tage)
+
+    faellt = reihe([100.0] * 5 + [90.0] * 30)     # ab Tag 6 zehn Prozent tiefer
+    steigt = reihe([100.0] * 5 + [110.0] * 30)
+    flach = reihe([100.0] * 35)
+
+    pruefe(P, "⚠️ ein Wert, der FAELLT, ergibt eine negative Bewegung",
+           abs(MA._bewegung(faellt[0], faellt[1], "2026-09-05", 3) + 0.10) < 1e-9,
+           "die Guete dreht das Vorzeichen erst danach um - hier steht die "
+           "rohe Bewegung, und sie muss stimmen")
+    pruefe(P, "ein Wert, der STEIGT, eine positive",
+           abs(MA._bewegung(steigt[0], steigt[1], "2026-09-05", 3) - 0.10) < 1e-9)
+    pruefe(P, "ein flacher Wert ergibt null",
+           MA._bewegung(flach[0], flach[1], "2026-09-05", 3) == 0.0)
+    pruefe(P, "⚠️⚠️ fehlende Zukunft ergibt None, NICHT null",
+           MA._bewegung(faellt[0], faellt[1], "2026-09-30", 20) is None,
+           "ein fehlender Wert als Null zu zaehlen waere derselbe Fehler wie "
+           "N-40 - er sieht aus wie ,kein Beitrag' statt wie ,nicht messbar'")
+    pruefe(P, "ein Tag VOR der Reihe ergibt None",
+           MA._bewegung(faellt[0], faellt[1], "2026-08-01", 3) is None)
+    pruefe(P, "⚠️ ein Tag OHNE Kurs nimmt den letzten davor",
+           MA._bewegung(faellt[0], faellt[1], "2026-09-05T14:30", 3) is not None,
+           "Wochenenden und Datenluecken duerfen einen Fall nicht verwerfen")
+
+    # ---- die Guete selbst: dreht sie das Vorzeichen richtig? ------------
+    #
+    # guete = -(bewegung_asset - bewegung_markt). Der Markt steht hier flach,
+    # also ist die Guete genau die negative Bewegung.
+    b_faellt = MA._bewegung(faellt[0], faellt[1], "2026-09-05", 3)
+    b_steigt = MA._bewegung(steigt[0], steigt[1], "2026-09-05", 3)
+    pruefe(P, "⚠️⚠️ ein Verkauf VOR einem Kursverfall ist GUT (positiv)",
+           -(b_faellt - 0.0) > 0,
+           "das ist die eine Aussage, um die es geht - wer sie verdreht, "
+           "misst das Gegenteil und merkt es nie")
+    pruefe(P, "und vor einem Anstieg SCHLECHT (negativ)",
+           -(b_steigt - 0.0) < 0)
+    pruefe(P, "⚠️ faellt der Wert wie der MARKT, ist die Guete null",
+           abs(-(b_faellt - b_faellt)) < 1e-12,
+           "die Tagesklammer: wenn alles faellt, ist ein Verkauf kein "
+           "Verdienst, sondern Glueck. Genau das rechnet sie heraus")
+
+    # ---- die Horizonte und die Aktionen ---------------------------------
+    pruefe(P, "es wird ueber MEHRERE Horizonte gemessen",
+           len(MA.HORIZONTE) >= 3 and 3 in MA.HORIZONTE,
+           "ein einzelner Horizont wuerde eine Wahl verstecken, die niemand "
+           "begruendet hat (die Horizont-Achse ist im Projekt offen)")
+    pruefe(P, "⚠️ und ALLE Ausstiegsaktionen sind abgedeckt",
+           set(MA.AUSSTIEG) >= {"VERKAUFEN", "REDUZIEREN"},
+           "eine vergessene Aktion faellt still aus der Messung - genau der "
+           "Fehler, mit dem die Verkaufsseite am 14.08. begann")
+    from agent.verkaufsrechnung import AKTIONEN_MIT_AUSSTIEG
+    pruefe(P, "und sie stimmen mit `verkaufsrechnung` ueberein",
+           set(MA.AUSSTIEG) == set(AKTIONEN_MIT_AUSSTIEG),
+           "zwei Listen derselben Sache sind zwei Stellen zum "
+           "Auseinanderlaufen. Messung: %s · Betrieb: %s"
+           % (sorted(MA.AUSSTIEG), sorted(AKTIONEN_MIT_AUSSTIEG)))
+
+
 def paket_gestakt() -> None:
     """48a - die gestakte Position bekommt einen Hinweis statt Schweigen.
 
@@ -19551,6 +19629,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Ausstiegsguete": paket_ausstiegsguete,
           "Gestakt": paket_gestakt,
           "Verkauf": paket_verkaufsseite,
           "Akkumass": paket_akkumass,

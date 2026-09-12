@@ -9,9 +9,9 @@
 | **NORM** | 21 | 7 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
 | **BLOCK** | 82 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 174 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **ALTBESTAND** | 175 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **174 von 304 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **175 von 305 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -64,50 +64,50 @@
     pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
     simuliere_hebelverteilung.py, simuliere_staffelung.py
 
-## ALTBESTAND (174)
+## ALTBESTAND (175)
 
     messe_abgleich_alt_neu.py, messe_akkumulation.py, messe_akkumulation_phasen.py, messe_alter_vs_zeit.py
-    messe_anlass.py, messe_anreicherung.py, messe_auswahl.py, messe_auswahl_historie.py
-    messe_b2_unabhaengigkeit.py, messe_basislinie.py, messe_basislinie_aufloesung.py, messe_begruendungen.py
-    messe_betragsdeckel.py, messe_bodenabstand.py, messe_degradierung.py, messe_dimensionierung.py
-    messe_dosis.py, messe_dosis_sauber.py, messe_drift.py, messe_drift_absolut.py
-    messe_drift_zerlegt.py, messe_dritter_faktor.py, messe_eigenschaft_beitrag.py, messe_entwickleraktivitaet.py
-    messe_faktorzahl.py, messe_fensterlaenge_selbstjustierung.py, messe_filterschaden.py, messe_geometrie.py
-    messe_h3_totzone_und_kombination.py, messe_h_je_zeitabschnitt.py, messe_h_lagenregel.py, messe_h_neu.py
-    messe_halten_ursache.py, messe_halten_ursache2.py, messe_halten_ursache3.py, messe_kandidaten_redundanz.py
-    messe_kat_alter.py, messe_kategorie_und_horizont.py, messe_klassen.py, messe_kollinearitaet.py
-    messe_kombi_gegen_f165_bar.py, messe_konjunktion.py, messe_konjunktion_positivkontrolle.py, messe_konstellationen.py
-    messe_kostenhebel.py, messe_lage_beitrag.py, messe_liquiditaet.py, messe_llm1_positionsbias.py
-    messe_llm_gegen_regel.py, messe_marken.py, messe_marktphasen.py, messe_n7_kette.py
-    messe_n7_kette_korrigiert.py, messe_namensanker.py, messe_phase_invers.py, messe_prompt_nebeneffekte.py
-    messe_prompt_verbesserungen.py, messe_regime_empfindlichkeit.py, messe_regimeflag_sauber.py, messe_regimewechsel_trockenlauf.py
-    messe_reifeband.py, messe_reihung_x_h.py, messe_schnittabstand_beitrag.py, messe_schwelle_h2_kalibrierung.py
-    messe_schwelle_kalibrierung.py, messe_signalbilanz.py, messe_spiegel.py, messe_struktur_bereinigt.py
-    messe_strukturstop.py, messe_summe_gegen_mittel.py, messe_szenario_stufe1.py, messe_tagewahl_je_symbol.py
-    messe_trichter_treffer.py, messe_ueberleben.py, messe_umschlag_kontext.py, messe_verkaufsseite.py
-    messe_wann.py, messe_zai_ohne_regime.py, messe_zeitteilung.py, messe_zerlegung.py
-    pruefe_abdeckung.py, pruefe_abdeckung_watchlist.py, pruefe_aktionsvokabular.py, pruefe_analogie.py
-    pruefe_assetdaten.py, pruefe_assetklassen_datenlage.py, pruefe_assetklassen_trennung.py, pruefe_aufruf_signaturen.py
-    pruefe_ausrollbarkeit.py, pruefe_ausrollen.py, pruefe_ausschuss_suche.py, pruefe_auswertbarkeit.py
-    pruefe_beitragsabdeckung.py, pruefe_belege_gegen_fakten.py, pruefe_bruchschwelle.py, pruefe_btc_abflachung.py
-    pruefe_coingecko_stand.py, pruefe_coinmetrics_umfang.py, pruefe_cooldown_nachgestellt.py, pruefe_cooldown_wirkung.py
-    pruefe_crv_positionsgroesse.py, pruefe_datenqualitaet.py, pruefe_defillama_historie.py, pruefe_einstiegsnachweis.py
-    pruefe_export_standard.py, pruefe_export_vollcheck.py, pruefe_fakten_bezugsgroessen.py, pruefe_fakten_rollout.py
-    pruefe_funding_historie.py, pruefe_funding_monoton.py, pruefe_fx_ableitung.py, pruefe_gegenpruefung_trefferquote.py
-    pruefe_gemini_verhalten.py, pruefe_h_kette_von_grund_auf.py, pruefe_h_original_reproduziert.py, pruefe_instrument_verzweigungen.py
-    pruefe_kalibrierung_trocken.py, pruefe_kette_horizonte.py, pruefe_kette_je_asset.py, pruefe_konjunktion_befund.py
-    pruefe_llm_stabilitaet.py, pruefe_makro_bestand.py, pruefe_marktlage.py, pruefe_marktrang.py
-    pruefe_massstab_unterschied.py, pruefe_messwerkzeug_bodenabstand.py, pruefe_messwerkzeug_h3.py, pruefe_messwerkzeug_h_neu.py
-    pruefe_messwerkzeug_h_produktion.py, pruefe_n8_live_abdeckung.py, pruefe_n8_schwelle_je_datenlage.py, pruefe_n8_schwellenarithmetik.py
-    pruefe_nachweis_grundmenge.py, pruefe_nachweis_robustheit.py, pruefe_nb_betrieb.py, pruefe_nb_details.py
-    pruefe_nb_nach_umschaltung.py, pruefe_neuaufnahme.py, pruefe_nichtkurs_bestand.py, pruefe_outcome_plausibilitaet.py
-    pruefe_pfad_bewerter.py, pruefe_phase1.py, pruefe_phasenindex.py, pruefe_positionierung_kanal.py
-    pruefe_produktion_nb.py, pruefe_prompt_matrix.py, pruefe_quellen2.py, pruefe_quellen_optionen.py
-    pruefe_regime_glaettung.py, pruefe_regimephasen_vorflug.py, pruefe_rollenkette.py, pruefe_s6a_rollen.py
-    pruefe_short_ursache.py, pruefe_sperrquote_wirkung.py, pruefe_sprung_bei_crv4.py, pruefe_szenario_stufe0.py
-    pruefe_trader_merkmale.py, pruefe_tvl_abdeckung.py, pruefe_u1_wirkung.py, pruefe_waehrungen.py
-    pruefe_wahrscheinlichkeit_bitgleich.py, pruefe_watchlist.py, pruefe_zahlen_in_prompts.py, rechne_einordnung_vorschau.py
-    rechne_funding_beitrag.py, rechne_kandidaten_beitrag.py, rechne_oi_beitrag.py, rechne_redundanz_je_asset.py
-    rechne_takt_je_asset.py, rechne_turnover_beitrag.py, simuliere_bremse.py, simuliere_h_varianten.py
-    simuliere_kette.py, simuliere_rollout_gegen_nb.py
+    messe_anlass.py, messe_anreicherung.py, messe_ausstiegsguete.py, messe_auswahl.py
+    messe_auswahl_historie.py, messe_b2_unabhaengigkeit.py, messe_basislinie.py, messe_basislinie_aufloesung.py
+    messe_begruendungen.py, messe_betragsdeckel.py, messe_bodenabstand.py, messe_degradierung.py
+    messe_dimensionierung.py, messe_dosis.py, messe_dosis_sauber.py, messe_drift.py
+    messe_drift_absolut.py, messe_drift_zerlegt.py, messe_dritter_faktor.py, messe_eigenschaft_beitrag.py
+    messe_entwickleraktivitaet.py, messe_faktorzahl.py, messe_fensterlaenge_selbstjustierung.py, messe_filterschaden.py
+    messe_geometrie.py, messe_h3_totzone_und_kombination.py, messe_h_je_zeitabschnitt.py, messe_h_lagenregel.py
+    messe_h_neu.py, messe_halten_ursache.py, messe_halten_ursache2.py, messe_halten_ursache3.py
+    messe_kandidaten_redundanz.py, messe_kat_alter.py, messe_kategorie_und_horizont.py, messe_klassen.py
+    messe_kollinearitaet.py, messe_kombi_gegen_f165_bar.py, messe_konjunktion.py, messe_konjunktion_positivkontrolle.py
+    messe_konstellationen.py, messe_kostenhebel.py, messe_lage_beitrag.py, messe_liquiditaet.py
+    messe_llm1_positionsbias.py, messe_llm_gegen_regel.py, messe_marken.py, messe_marktphasen.py
+    messe_n7_kette.py, messe_n7_kette_korrigiert.py, messe_namensanker.py, messe_phase_invers.py
+    messe_prompt_nebeneffekte.py, messe_prompt_verbesserungen.py, messe_regime_empfindlichkeit.py, messe_regimeflag_sauber.py
+    messe_regimewechsel_trockenlauf.py, messe_reifeband.py, messe_reihung_x_h.py, messe_schnittabstand_beitrag.py
+    messe_schwelle_h2_kalibrierung.py, messe_schwelle_kalibrierung.py, messe_signalbilanz.py, messe_spiegel.py
+    messe_struktur_bereinigt.py, messe_strukturstop.py, messe_summe_gegen_mittel.py, messe_szenario_stufe1.py
+    messe_tagewahl_je_symbol.py, messe_trichter_treffer.py, messe_ueberleben.py, messe_umschlag_kontext.py
+    messe_verkaufsseite.py, messe_wann.py, messe_zai_ohne_regime.py, messe_zeitteilung.py
+    messe_zerlegung.py, pruefe_abdeckung.py, pruefe_abdeckung_watchlist.py, pruefe_aktionsvokabular.py
+    pruefe_analogie.py, pruefe_assetdaten.py, pruefe_assetklassen_datenlage.py, pruefe_assetklassen_trennung.py
+    pruefe_aufruf_signaturen.py, pruefe_ausrollbarkeit.py, pruefe_ausrollen.py, pruefe_ausschuss_suche.py
+    pruefe_auswertbarkeit.py, pruefe_beitragsabdeckung.py, pruefe_belege_gegen_fakten.py, pruefe_bruchschwelle.py
+    pruefe_btc_abflachung.py, pruefe_coingecko_stand.py, pruefe_coinmetrics_umfang.py, pruefe_cooldown_nachgestellt.py
+    pruefe_cooldown_wirkung.py, pruefe_crv_positionsgroesse.py, pruefe_datenqualitaet.py, pruefe_defillama_historie.py
+    pruefe_einstiegsnachweis.py, pruefe_export_standard.py, pruefe_export_vollcheck.py, pruefe_fakten_bezugsgroessen.py
+    pruefe_fakten_rollout.py, pruefe_funding_historie.py, pruefe_funding_monoton.py, pruefe_fx_ableitung.py
+    pruefe_gegenpruefung_trefferquote.py, pruefe_gemini_verhalten.py, pruefe_h_kette_von_grund_auf.py, pruefe_h_original_reproduziert.py
+    pruefe_instrument_verzweigungen.py, pruefe_kalibrierung_trocken.py, pruefe_kette_horizonte.py, pruefe_kette_je_asset.py
+    pruefe_konjunktion_befund.py, pruefe_llm_stabilitaet.py, pruefe_makro_bestand.py, pruefe_marktlage.py
+    pruefe_marktrang.py, pruefe_massstab_unterschied.py, pruefe_messwerkzeug_bodenabstand.py, pruefe_messwerkzeug_h3.py
+    pruefe_messwerkzeug_h_neu.py, pruefe_messwerkzeug_h_produktion.py, pruefe_n8_live_abdeckung.py, pruefe_n8_schwelle_je_datenlage.py
+    pruefe_n8_schwellenarithmetik.py, pruefe_nachweis_grundmenge.py, pruefe_nachweis_robustheit.py, pruefe_nb_betrieb.py
+    pruefe_nb_details.py, pruefe_nb_nach_umschaltung.py, pruefe_neuaufnahme.py, pruefe_nichtkurs_bestand.py
+    pruefe_outcome_plausibilitaet.py, pruefe_pfad_bewerter.py, pruefe_phase1.py, pruefe_phasenindex.py
+    pruefe_positionierung_kanal.py, pruefe_produktion_nb.py, pruefe_prompt_matrix.py, pruefe_quellen2.py
+    pruefe_quellen_optionen.py, pruefe_regime_glaettung.py, pruefe_regimephasen_vorflug.py, pruefe_rollenkette.py
+    pruefe_s6a_rollen.py, pruefe_short_ursache.py, pruefe_sperrquote_wirkung.py, pruefe_sprung_bei_crv4.py
+    pruefe_szenario_stufe0.py, pruefe_trader_merkmale.py, pruefe_tvl_abdeckung.py, pruefe_u1_wirkung.py
+    pruefe_waehrungen.py, pruefe_wahrscheinlichkeit_bitgleich.py, pruefe_watchlist.py, pruefe_zahlen_in_prompts.py
+    rechne_einordnung_vorschau.py, rechne_funding_beitrag.py, rechne_kandidaten_beitrag.py, rechne_oi_beitrag.py
+    rechne_redundanz_je_asset.py, rechne_takt_je_asset.py, rechne_turnover_beitrag.py, simuliere_bremse.py
+    simuliere_h_varianten.py, simuliere_kette.py, simuliere_rollout_gegen_nb.py
 

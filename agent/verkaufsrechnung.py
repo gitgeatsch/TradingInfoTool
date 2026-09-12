@@ -455,8 +455,20 @@ def sammel_mail(alle: list, modell: str | None = None,
                    "Auftrag.",
                    "Die Position besteht - sie ist nur nicht frei "
                    "verkaeuflich.",
-                   "Wer handeln will, muss zuerst entstaken (Bitpanda-App); "
-                   "das dauert.", ""]
+                   "Wer handeln will, muss zuerst entstaken "
+                   "(Bitpanda-App).", ""]
+        # ⚠️ NUTZERANGABE 12.09.2026, KEINE MESSUNG: *"bis auf ETH ist ein
+        # Unstaken der Assets grundsaetzlich kurzfristig moeglich"*. Meine
+        # erste Fassung schrieb pauschal "das dauert" - das haette die Sperre
+        # groesser aussehen lassen, als sie ist, und genau davon haengt ab,
+        # ob der Nutzer ueberhaupt handelt. Die Angabe steht als Angabe da,
+        # nicht als gemessene Frist.
+        if any(str(g.get("symbol") or "").upper() == "ETH" for g in gesperrt):
+            zeilen += ["Nach Ihrer Angabe ist Entstaken kurzfristig moeglich "
+                       "- ausser bei ETH.", ""]
+        else:
+            zeilen += ["Nach Ihrer Angabe ist Entstaken hier kurzfristig "
+                       "moeglich.", ""]
         for g in sorted(gesperrt,
                         key=lambda x: -(x["gesperrt"].get("wert_gesamt_eur") or 0)):
             v = g["gesperrt"]
