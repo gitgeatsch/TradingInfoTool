@@ -2737,9 +2737,118 @@ def paket_12d() -> None:
            d.heraus == 2 and d.bestanden_je_stufe["lagebild"] == 2,
            "ein Waechter, der selbst verwirft, macht seine eigene Wirkung "
            "unsichtbar - und das System hat monatelang nicht gekauft")
+    # ⚠️ TEXT GEAENDERT AM 12.09. (Schritt 44) - und die Zusage ist
+    # STAERKER geworden, nicht nur anders formuliert. Vorher stand die Zeile
+    # nur da, WENN Z1 angeschlagen hat; "keine Zeile" hiess also entweder
+    # "sauber" oder "gar nicht gelaufen". Nutzereinwand: *"Z1 kommt gar nicht
+    # vor bzw. sehe ich diese in der Kette nicht."*
     pruefe(P, "aber er steht im Bericht",
-           any("Treuepruefung Z1" in z for z in d.bericht()))
+           any("Z1 Treue zur Eingabe" in z for z in d.bericht()))
     pruefe(P, "und im JSON des Laufs", "z1_verstoesse" in d.als_json())
+    # ⚠️⚠️ UND SIE STEHT AUCH DA, WENN NICHTS IST (Schritt 44). Eine
+    # Waechterzeile, die nur bei Befund erscheint, ist von "nicht gelaufen"
+    # nicht zu unterscheiden - genau das war der Einwand.
+    _sauber = RG.Durchlauf("z1-sauber")
+    _sauber.beginne("BTC")
+    _sauber.bestanden("BTC", "urteil")
+    _sauber.z1_zahlen(3)
+    pruefe(P, "⚠️ und ohne jeden Befund steht sie AUCH da",
+           any("Z1 Treue zur Eingabe" in z for z in _sauber.bericht())
+           and any("1 sauber" in z for z in _sauber.bericht()),
+           "vorher erschien die Zeile nur bei einem Befund - 'keine Zeile' "
+           "war von 'gar nicht gelaufen' nicht zu unterscheiden")
+
+    # ---------------------------------------------------------------
+    # ⚠️⚠️ DIE VIER VERLUSTARTEN (Schritt 44, 12.09.2026)
+    # ---------------------------------------------------------------
+    #
+    # NUTZEREINWAND: *"nichts tun ist heikel bzw. 'gemischte Stufe' hoert
+    # sich schon seltsam an"*. Die Stufe `aktion` bucht eine BEWERTUNG
+    # (NICHTS_TUN des Sprachmodells) in dieselbe Spalte wie einen
+    # BETRIEBSZUSTAND (Depot steht auf SCHLIESSEN). Diese Pruefungen halten
+    # fest, dass die beiden auseinandergehalten werden.
+    a = RG.Durchlauf("arten")
+    for _s in ("A", "B", "C", "D", "E"):
+        a.beginne(_s)
+    a.verloren("A", "wiederholung", "Cooldown bis morgen")
+    a.verloren("B", "aktion", "NICHTS_TUN")
+    a.verloren("C", "aktion", "KAUFEN, aber Ausstieg steht auf SCHLIESSEN",
+               art="betriebszustand")
+    a.verloren("D", "entscheider", "Potential unter der Schwelle")
+    a.bestanden("E", "urteil")
+    pruefe(P, "⚠️ ein Kostenfilter heisst `nicht_gefragt`",
+           a.arten["wiederholung"] == {"nicht_gefragt": 1},
+           "der Cooldown spart einen Modellaufruf - er sagt nichts ueber "
+           "das Asset")
+    pruefe(P, "⚠️⚠️ und die GEMISCHTE Stufe wird getrennt",
+           a.arten["aktion"] == {"bewertet_nein": 1, "betriebszustand": 1},
+           "ein NICHTS_TUN des Sprachmodells und ein Depot auf SCHLIESSEN "
+           "sind zwei verschiedene Aussagen - sie standen in einer Spalte")
+    pruefe(P, "der gerechnete Entscheider zaehlt als BEWERTUNG",
+           a.arten["entscheider"] == {"bewertet_nein": 1},
+           "er ist der haerteste Filter der Kette (92 %) - und er ist "
+           "gerechnet, nicht geurteilt")
+    pruefe(P, "⚠️ der Vertrag an `urteil` ist KEINE Bewertung",
+           RG.ART_JE_STUFE["urteil"] == "nicht_moeglich",
+           "die Verluste dort sind verworfene ANTWORTEN (8x ungueltig, 1x "
+           "Netz in 7 Tagen), keine Ablehnungen durch Rolle BC")
+    pruefe(P, "jede Stufe hat eine Art",
+           all(_st in RG.ART_JE_STUFE for _st in RG.STUFEN_NAMEN),
+           "eine Stufe ohne Art wuerde still in die Vorgabe fallen")
+    pruefe(P, "⚠️ eine unbekannte Art faellt AUF, statt still zu verschwinden",
+           _wirft(lambda: a.verloren("E", "aktion", "x", art="quatsch"),
+                  ValueError),
+           "fail-soft ist fail-silent - der Fehler hat dieses Projekt "
+           "zweimal teuer zu stehen bekommen")
+    # ⚠️ DIE ZEITREIHE BLEIBT HEIL: `verloren` zaehlt weiter wie vorher.
+    pruefe(P, "⚠️⚠️ und `verloren` zaehlt UNVERAENDERT weiter",
+           a.verloren_je_stufe["aktion"] == 2
+           and sum(a.arten["aktion"].values()) == 2,
+           "wer NICHTS_TUN aus `verloren` herausnaehme, machte alte und neue "
+           "Laeufe unvergleichbar (R-R11) - die Arten kommen ADDITIV daneben")
+    pruefe(P, "die Verlustarten stehen im Bericht",
+           any("Verlustarten" in z for z in a.bericht())
+           and any("BEWERTET und verneint" in z for z in a.bericht()))
+    pruefe(P, "und im JSON", '"arten"' in a.als_json())
+
+    # ---------------------------------------------------------------
+    # ⚠️ LLM-2 ROLLE G / Z.AI BEKOMMT EINE ZEILE (Schritt 44, 4b)
+    # ---------------------------------------------------------------
+    #
+    # NUTZEREINWAND: *"ZAI hat keine Stufe?"* - sie hatte gar keine. 60
+    # Einwaende bei 163 Antworten in 7 Tagen, und keine Zeile im Trichter.
+    from agent import zweite_meinung as _ZMG
+
+    g = RG.Durchlauf("zai")
+    g.beginne("BTC")
+    g.gegenpruefung("BTC", True)
+    g.gegenpruefung("ETH", False)
+    g.gegenpruefung("SOL", None)
+    g.gegenpruefung_entfaellt("keine eigene Grundlage")
+    pruefe(P, "⚠️ Z.ai wird gezaehlt - Einwand, kein Einwand, unklar",
+           g.zai == {"einwand": 1, "kein_einwand": 1, "unklar": 1,
+                     "nicht_gefragt": 1})
+    pruefe(P, "⚠️⚠️ 'ja' heisst EINWAND, nicht Zustimmung",
+           _ZMG.einwand_liegt_vor("ja") is True
+           and _ZMG.einwand_liegt_vor("nein") is False,
+           "diese Umkehrung hat am 03.09. schon einmal zur falschen Lesart "
+           "gefuehrt (G-a) - deshalb geht die Zaehlung durch die Funktion "
+           "und nicht durch einen Textvergleich")
+    pruefe(P, "⚠️ 'nicht gefragt' ist NICHT 'kein Einwand'",
+           g.zai["nicht_gefragt"] == 1 and g.zai["kein_einwand"] == 1,
+           "ohne symbolspezifische Terminmarktdaten wird Rolle G gar nicht "
+           "erst gefragt (G5) - wer das als Zustimmung liest, liest "
+           "Zustimmung, wo niemand gefragt wurde")
+    pruefe(P, "und sie steht im Bericht - als Vermerk, nicht als Stufe",
+           any("Rolle G" in z and "kein Veto" in z for z in g.bericht()),
+           "sie verwirft nichts; ein Zaehler, der eingreift, faelscht seine "
+           "eigene Messung")
+    pruefe(P, "Z.ai ist KEINE Stufe des Trichters",
+           "gegenpruefung" not in RG.STUFEN_NAMEN
+           and "zai" not in RG.STUFEN_NAMEN,
+           "sie laeuft nebenlaeufig und hat kein Veto - eine Stufe waere "
+           "die falsche Zusage")
+    pruefe(P, "und im JSON", '"zai"' in g.als_json())
 
     # DIE MAIL SCHWEIGT, WENN NICHTS IST.
     pruefe(P, "ohne Befund kein Satz in der Mail",

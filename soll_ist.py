@@ -714,8 +714,36 @@ REIHENFOLGE = (
             "verbreitern ist der eigentliche Bauteil. Bis dahin bleibt der "
             "alte Marktscan an.",
             "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan"),
+    Schritt(45, "DIE VERGESSENEN VIER - AUS DER GEGENPRUEFUNG",
+            "⚠️ Aus der Gegenpruefung vom 12.09. (Befund 2.395): vier offene "
+            "Punkte standen in KEINEM Schritt. (1) 2.380-annahmen - drei "
+            "gesetzte Annahmen sind seit dem 11.09. mit ,zur Abstimmung' "
+            "markiert und nie abgestimmt worden, darunter "
+            "`hebelfuehrung.KOPPEL_TAGE`=3 Tage (wie weit ein Signal einer "
+            "Position zugerechnet wird). ⚠️ Eine Annahme, die niemand "
+            "bestaetigt hat, ist kein Vorgabewert, sondern eine offene "
+            "Frage - Nutzervorgabe ,bei Zweifel in die Abstimmung'. (2) "
+            "2.389-richtung - die Absicherung verliert Signale an der "
+            "Richtungspflicht. (3) 2.359-abruf - keine der drei Messquellen "
+            "fuehrt `fetched_at`; das gemeldete Alter ist das Datenalter, "
+            "nicht das Abrufalter (zwei Alter, Nutzervorgabe). (4) "
+            "2.148-sperre / 2.149-prod - `messreihen` hat den "
+            "Primaerschluessel ohne `assetklasse`, die Produktionsdatenbank "
+            "die Spalte gar nicht. ⚠️ ZWEI WEITERE BEFUNDE SIND ERLEDIGT "
+            "und nur nicht nachgezogen (2.395-erledigt): 2.146-luecke (alle "
+            "neun Werte haben laengst eine Kursreihe) und 2.343 "
+            "(`hebel_signals` ist die Tabelle der ALTEN Pipeline, kein "
+            "Ausfall).",
+            "Gegenpruefung 12.09.; Befunde 2.395, 2.395-erledigt"),
     Schritt(44, "DIE KETTE GERADEZIEHEN - TRICHTER, WAECHTER, "
             "ENTSCHEIDUNGSHILFE TRENNEN",
+            "✔ PUNKTE 1, 3 UND 4b GEBAUT AM 12.09. (Befund 2.396): vier "
+            "Verlustarten, Z1 immer im Bericht, LLM-2 Rolle G mit eigener "
+            "Zeile. 16 neue Pruefungen, Suite 2.212. ⚠️ OFFEN BLEIBEN: 2a/2b "
+            "(die zwei leeren Felder der Vier-Felder-Messung), 4 (der "
+            "Widerlegungspreis - Nutzerentscheidung steht aus) und die "
+            "Wiederholung des E2E am Notebook gegen eine frische Sicherung "
+            "(2.396-e2e). ",
             "⚠️⚠️ DIE ABGRENZUNG, die der Nutzer am 12.09. gezogen hat - "
             "*,wir bauen seit Wochen am DETERMINISTISCHEN EINSTIEG je "
             "Strategie, das LLM wurde lange Zeit nicht angegriffen, auch "

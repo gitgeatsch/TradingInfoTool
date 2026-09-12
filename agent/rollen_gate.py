@@ -163,6 +163,87 @@ STUFEN_NAMEN = tuple(s for s, _ in STUFEN)
 # eine Bewertung im Code, die nichts bewirkt.
 NUR_ZAEHLEN: tuple = ()
 
+# ---------------------------------------------------------------------------
+# ⚠️⚠️ DIE VIER ARTEN VON "NEIN" (Schritt 44, Punkt 1, 12.09.2026)
+# ---------------------------------------------------------------------------
+#
+# NUTZEREINWAND, der das ausgeloest hat: *"nichts tun ist heikel bzw.
+# 'gemischte Stufe' hoert sich schon seltsam an"*. Er hat recht, und die
+# Ursache steht seit dem 16.08. im Kopf dieses Moduls, ohne je gebaut
+# worden zu sein:
+#
+#     "drei Arten von 'nicht jetzt': Kostenfilter, Nutzerentscheidung,
+#      Qualitaetsfilter. Nur der dritte traegt Deadloop-Risiko."
+#
+# `verloren()` kannte bis heute EINEN Verlust. Gebucht wurden vier Dinge:
+#
+#     nicht_gefragt     wir haben nicht gefragt - spart einen Modellaufruf.
+#                       anlass, auswahl, terminmarkt, wiederholung
+#     nicht_moeglich    wir konnten nicht - Daten fehlen oder die Antwort
+#                       war unbrauchbar. fakten, lagebild, urteil, geometrie
+#     bewertet_nein     wir haben gefragt UND bewertet, und die Antwort ist
+#                       nein. Das EINZIGE, was den Deadloop erklaert
+#     betriebszustand   die Lage des Depots oder ein Schalter des Nutzers -
+#                       gar kein Urteil ueber das Asset
+#
+# ⚠️ WARUM DIE ART AN DER STUFE HAENGT UND NICHT AM AUFRUF: damit sich
+# KEINE der zwanzig Aufrufstellen aendern muss. Wer eine Buchhaltung
+# umbaut und dabei zwanzig Stellen anfasst, hat hinterher zwanzig
+# Gelegenheiten fuer einen Fehler. Nur wo eine Stufe WIRKLICH gemischt ist
+# - `aktion` - gibt der Aufrufer die Art ausdruecklich mit.
+#
+# ⚠️⚠️ UND DIE ZEITREIHE BLEIBT HEIL. Die Zahlen unter `verloren` aendern
+# sich durch diese Aenderung NICHT - `arten` kommt additiv daneben. Wer
+# NICHTS_TUN aus `verloren.aktion` herausnaehme, machte alte und neue
+# Laeufe unvergleichbar (R-R11).
+ARTEN = ("nicht_gefragt", "nicht_moeglich", "bewertet_nein", "betriebszustand")
+
+# Klartext fuer die Laufmeldung - sie soll ohne Codekenntnis lesbar sein.
+ARTKUERZEL = {
+    "nicht_gefragt": "nicht gefragt (spart einen Modellaufruf)",
+    "nicht_moeglich": "nicht moeglich (Daten oder Antwort unbrauchbar)",
+    "bewertet_nein": "BEWERTET und verneint",
+    "betriebszustand": "Betriebszustand (Depot oder Schalter)",
+}
+
+ART_JE_STUFE = {
+    # Schalter des Nutzers und unvorgesehene Paare - kein Urteil ueber das Asset
+    "auftrag": "betriebszustand",
+    "fakten": "nicht_moeglich",
+    "lagebild": "nicht_moeglich",
+    # die vier Kostenfilter - jeder hat genau deshalb eine eigene Stufe
+    "anlass": "nicht_gefragt",
+    "auswahl": "nicht_gefragt",
+    "terminmarkt": "nicht_gefragt",
+    "wiederholung": "nicht_gefragt",
+    # ⚠️ NICHT "bewertet_nein": hier verwirft der VERTRAG die Antwort, nicht
+    # das Sprachmodell die Empfehlung. Gemessen ueber 7 Tage waren es 8x
+    # ungueltig und 1x Netz - null Ablehnungen durch Rolle BC.
+    "urteil": "nicht_moeglich",
+    # ⚠️ DIE GEMISCHTE STUFE. Vorgabe ist das Urteil des Sprachmodells
+    # (NICHTS_TUN); die beiden Betriebsfaelle geben ihre Art selbst mit.
+    "aktion": "bewertet_nein",
+    "geometrie": "nicht_moeglich",
+    "risikoschicht": "betriebszustand",
+    # der haerteste Filter der Kette - und er ist gerechnet, nicht geurteilt
+    "entscheider": "bewertet_nein",
+}
+
+
+def art_fuer(stufe: str, art: str | None = None) -> str:
+    """Die Verlustart - ausdruecklich mitgegeben oder aus der Stufe.
+
+    Eine unbekannte Art faellt auf, statt still zu verschwinden: das war der
+    Fehler, den `fail-soft ist fail-silent` in diesem Projekt schon zweimal
+    teuer gemacht hat."""
+    if art is None:
+        return ART_JE_STUFE.get(stufe, "nicht_moeglich")
+    if art not in ARTEN:
+        raise ValueError("unbekannte Verlustart '%s' - bekannt: %s"
+                         % (art, ", ".join(ARTEN)))
+    return art
+
+
 
 class Durchlauf:
     """Ein Zaehlwerk fuer EINEN Lauf ueber alle Assets.
@@ -178,6 +259,9 @@ class Durchlauf:
         self.bestanden_je_stufe = {s: 0 for s in STUFEN_NAMEN}
         self.verloren_je_stufe = {s: 0 for s in STUFEN_NAMEN}
         self.gruende: dict[str, dict[str, int]] = {s: {} for s in STUFEN_NAMEN}
+        # DIE VIER ARTEN JE STUFE (Schritt 44). Additiv neben `verloren` -
+        # die Summe ueber die Arten einer Stufe ist immer ihr Verlust.
+        self.arten: dict[str, dict[str, int]] = {s: {} for s in STUFEN_NAMEN}
         self.faktorzahlen: list[int] = []
         # Z1-BEFUNDE (Paket 12d): je Symbol die verletzten Regeln.
         # Sie nehmen NICHTS aus dem Lauf - ein Treuebruch ist ein Befund
@@ -195,6 +279,10 @@ class Durchlauf:
         # weder "bestanden" noch "verloren", und ohne eigene Zeile waere
         # es ein stilles Durchwinken.
         self.notizen: dict[str, dict[str, int]] = {}
+        # LLM-2 ROLLE G (Schritt 44, 4b): sie hatte bis heute keine Zeile.
+        self.zai: dict[str, int] = {}
+        self.zai_symbole: list = []
+        self.zai_gruende: dict[str, int] = {}
 
     def beginne(self, symbol: str) -> None:
         self.hinein += 1
@@ -209,11 +297,23 @@ class Durchlauf:
             # die Tabelle auf die falsche Stelle - und genau dafuer gibt es sie.
             self.letzte_stufe[symbol] = stufe
 
-    def verloren(self, symbol: str, stufe: str, grund: str = "") -> None:
+    def verloren(self, symbol: str, stufe: str, grund: str = "",
+                 art: str | None = None) -> None:
+        """`art` nur dort mitgeben, wo eine Stufe WIRKLICH gemischt ist.
+
+        Sonst gilt `ART_JE_STUFE` - siehe den Abschnitt oben. Der Vorgabewert
+        `None` heisst "nimm die Art der Stufe", nicht "unbekannt"."""
         self._pruefe(stufe)
         if symbol not in self._offen:
             return
+        # ⚠️ DIE ART ZUERST - SIE KANN WERFEN (gefunden von der eigenen
+        # Pruefung, 12.09.2026). Stand sie hinter dem Zaehler, hinterliess
+        # eine ungueltige Art einen HALB gebuchten Verlust: `verloren` um
+        # eins hoeher, `arten` leer. Genau die Sorte stiller Schieflage, die
+        # diese Buchhaltung beseitigen soll.
+        _a = art_fuer(stufe, art)
         self.verloren_je_stufe[stufe] += 1
+        self.arten[stufe][_a] = self.arten[stufe].get(_a, 0) + 1
         if grund:
             self.gruende[stufe][grund] = self.gruende[stufe].get(grund, 0) + 1
         # NUR-ZAEHLEN-STUFEN NEHMEN NICHTS AUS DEM LAUF. Der Entscheider
@@ -245,6 +345,43 @@ class Durchlauf:
             return
         self.notizen.setdefault(stufe, {})
         self.notizen[stufe][text] = self.notizen[stufe].get(text, 0) + 1
+
+    def gegenpruefung(self, symbol: str, einwand) -> None:
+        """LLM-2 Rolle G (Z.ai) - VERMERKEN, nicht filtern (Schritt 44, 4b).
+
+        ⚠️ NUTZEREINWAND 12.09.: *"ZAI hat keine Stufe?"* - richtig, sie hatte
+        gar keine. Sie laeuft nebenlaeufig, hat kein Veto und stand deshalb in
+        keiner Zeile des Trichters. Ueber 7 Tage waren das 60 Einwaende bei
+        163 Antworten, die niemand sah.
+
+        KEINE STUFE, SONDERN EIN VERMERK - aus demselben Grund wie bei Z1: sie
+        nimmt nichts aus dem Lauf, und ein Zaehler, der eingreift, faelscht
+        seine eigene Messung. `einwand` ist das Ergebnis von
+        `zweite_meinung.einwand_liegt_vor()`:
+
+            True    Einwand liegt vor      (roh "ja")
+            False   kein Einwand           (roh "nein")
+            None    unklar oder nicht gestellt
+
+        ⚠️ "ja" heisst EINWAND, nicht Zustimmung - diese Umkehrung hat im
+        Projekt schon einmal zur falschen Lesart gefuehrt (G-a, 03.09.)."""
+        if einwand is True:
+            self.zai["einwand"] = self.zai.get("einwand", 0) + 1
+            self.zai_symbole.append(symbol)
+        elif einwand is False:
+            self.zai["kein_einwand"] = self.zai.get("kein_einwand", 0) + 1
+        else:
+            self.zai["unklar"] = self.zai.get("unklar", 0) + 1
+
+    def gegenpruefung_entfaellt(self, grund: str = "keine eigene Grundlage") -> None:
+        """Nicht gefragt - und das ist der HAEUFIGSTE Fall (G5).
+
+        Ohne symbolspezifische Terminmarktdaten wird Rolle G gar nicht erst
+        gefragt. Wer das mit "kein Einwand" verwechselt, liest Zustimmung, wo
+        niemand gefragt wurde."""
+        self.zai["nicht_gefragt"] = self.zai.get("nicht_gefragt", 0) + 1
+        if grund:
+            self.zai_gruende[grund] = self.zai_gruende.get(grund, 0) + 1
 
     def faktorzahl(self, anzahl: int | None) -> None:
         """Nur mitschreiben (E3). Die Faktorzahl zeigte in der Messung KEINEN
@@ -332,19 +469,78 @@ class Durchlauf:
             for text, n in sorted((self.notizen.get(stufe) or {}).items(),
                                   key=lambda x: -x[1])[:3]:
                 z.append(f"        {n}x ⚠️ {text} [nicht beurteilt]")
+            # ⚠️ DIE ARTEN NUR DORT, WO SIE ETWAS TRENNEN (Schritt 44). Eine
+            # Stufe mit genau einer Art sagt dasselbe wie ihre Zeile darueber;
+            # sie zweimal zu drucken macht die Tabelle laenger, nicht klarer.
+            _a = self.arten.get(stufe) or {}
+            if len(_a) > 1:
+                z.append("        davon " + ", ".join(
+                    f"{n}x {ARTKUERZEL.get(k, k)}"
+                    for k, n in sorted(_a.items(), key=lambda x: -x[1])))
         z.append(f"heraus          {self.heraus:>4}")
-        if self.z1_verstoesse:
-            von = len(self.z1_verstoesse)
-            regeln: dict = {}
-            for liste in self.z1_verstoesse.values():
-                for r in liste:
-                    regeln[r] = regeln.get(r, 0) + 1
-            z.append(f"Treuepruefung Z1: {von} Ausgabe(n) mit Befund - "
-                     + ", ".join(f"{r} {n}x" for r, n in sorted(regeln.items())))
+        z.extend(self.bericht_arten())
+        z.extend(self.bericht_llm())
         if self.faktorzahlen:
             schnitt = sum(self.faktorzahlen) / len(self.faktorzahlen)
             z.append(f"unabhaengige Faktoren: Schnitt {schnitt:.1f} ueber "
                      f"{len(self.faktorzahlen)} Urteile (nur gezaehlt, kein Filter)")
+        return z
+
+    def bericht_arten(self) -> list[str]:
+        """Die vier Arten ueber den GANZEN Lauf - die Zeile, die erklaert.
+
+        ⚠️ SIE BEANTWORTET DIE FRAGE, DIE DER TRICHTER BISHER NICHT KONNTE:
+        von allem, was nicht herauskam - wieviel haben wir gar nicht erst
+        gefragt, wieviel konnten wir nicht, und wieviel ist wirklich BEWERTET
+        und verneint worden? Nur das Letzte traegt Deadloop-Risiko."""
+        gesamt: dict = {}
+        for je_stufe in self.arten.values():
+            for k, n in je_stufe.items():
+                gesamt[k] = gesamt.get(k, 0) + n
+        if not gesamt:
+            return []
+        summe = sum(gesamt.values())
+        z = ["Verlustarten (%d):" % summe]
+        for k in ARTEN:
+            n = gesamt.get(k, 0)
+            if n:
+                z.append("    %-16s %4d  %5.1f %%   %s"
+                         % (k, n, 100.0 * n / summe, ARTKUERZEL[k]))
+        return z
+
+    def bericht_llm(self) -> list[str]:
+        """Die drei Sprachmodell-Stellen und Z1 - IMMER, auch bei null.
+
+        ⚠️ NUTZEREINWAND 12.09.: *"Z1 kommt gar nicht vor bzw. sehe ich diese
+        in der Kette nicht. ZAI hat keine Stufe?"* Beides stimmte. Z1 stand nur
+        in der Zeile, WENN es angeschlagen hat - "keine Zeile" hiess also
+        entweder "sauber" oder "gar nicht gelaufen", und das ist nicht
+        dasselbe. Z.ai stand nirgends.
+
+        KEINE VON BEIDEN IST EINE STUFE. Sie verwerfen nichts; sie werden
+        vermerkt. Genau das soll man hier ablesen koennen."""
+        z = []
+        von = len(self.z1_verstoesse)
+        _urteile = self.bestanden_je_stufe.get("urteil", 0)
+        if _urteile or von:
+            regeln: dict = {}
+            for liste in self.z1_verstoesse.values():
+                for r in liste:
+                    regeln[r] = regeln.get(r, 0) + 1
+            _teil = (" - " + ", ".join(f"{r} {n}x"
+                                       for r, n in sorted(regeln.items()))
+                     ) if regeln else ""
+            z.append("Z1 Treue zur Eingabe (Rechnung, kein Filter): "
+                     f"{_urteile - von} sauber, {von} angeschlagen{_teil}")
+            z.append(f"    {self.z1_zahlen_geprueft} Zahlen geprueft, "
+                     f"{self.z1_ausgaben_ohne_zahl} Ausgabe(n) ohne jede Zahl")
+        if self.zai:
+            z.append("LLM-2 Rolle G / Z.ai (kein Veto): "
+                     + ", ".join(f"{n}x {k}" for k, n in sorted(
+                         self.zai.items(), key=lambda x: -x[1])))
+            for grund, n in sorted(self.zai_gruende.items(),
+                                   key=lambda x: -x[1])[:2]:
+                z.append(f"        {n}x {grund}")
         return z
 
     def als_json(self) -> str:
@@ -353,6 +549,12 @@ class Durchlauf:
                            "bestanden": self.bestanden_je_stufe,
                            "verloren": self.verloren_je_stufe,
                            "gruende": self.gruende,
+                           # ⚠️ ADDITIV (Schritt 44): `verloren` bleibt Zahl
+                           # fuer Zahl, wie sie war - sonst waeren alte und
+                           # neue Laeufe unvergleichbar (R-R11).
+                           "arten": self.arten,
+                           "zai": self.zai,
+                           "zai_gruende": self.zai_gruende,
                            "faktorzahlen": self.faktorzahlen,
                            "z1_verstoesse": self.z1_verstoesse,
                            "z1_zahlen_geprueft": self.z1_zahlen_geprueft,

@@ -992,8 +992,28 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         if faden.is_alive():
             ergebnis.setdefault("fehler", []).append(
                 f"zweite Meinung fuer Signal {kennung} nicht rechtzeitig fertig")
+            durchlauf.gegenpruefung_entfaellt("Zeitueberschreitung")
             continue
         zweite = eintrag.get("zweite_meinung")
+        # ⚠️ HIER ZAEHLEN, NICHT IM FADEN (Schritt 44, Punkt 4b). Der Zaehler
+        # gehoert demselben Faden wie der Trichter; ihn aus dem Nebenfaden zu
+        # fuellen waere dieselbe Klasse Fehler wie eine geteilte
+        # sqlite3-Verbindung. Nach dem `join` ist das Ergebnis da.
+        #
+        # ⚠️⚠️ "ja" HEISST EINWAND, nicht Zustimmung - deshalb geht es durch
+        # `einwand_liegt_vor()` und nicht durch einen Textvergleich.
+        if zweite and zweite.get("uebersprungen"):
+            durchlauf.gegenpruefung_entfaellt(
+                str(zweite.get("uebersprungen_art") or "uebersprungen"))
+        elif zweite and "einwand" in zweite:
+            durchlauf.gegenpruefung(
+                str(kennung), ZM.einwand_liegt_vor(zweite.get("einwand")))
+        else:
+            # LEERES ERGEBNIS IST NICHT "KEIN EINWAND". Es heisst, dass keine
+            # Antwort vorliegt - G5 (keine eigene Grundlage), Ausfall oder
+            # Zeitueberschreitung. Wer das als Zustimmung liest, liest
+            # Zustimmung, wo niemand gefragt wurde.
+            durchlauf.gegenpruefung_entfaellt("ohne Antwort")
         if zweite:
             ZM.schreibe(conn, kennung, zweite)
 
@@ -1687,7 +1707,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Bestand" liest, sucht den Fehler an der falschen Stelle.
             _grund = ("vollstaendig gestakt, nicht frei verkaeuflich"
                       if (menge or 0.0) > 0 else "ohne Bestand")
-            durchlauf.verloren(symbol, "aktion", f"{aktion} {_grund}")
+            # ⚠️ BETRIEBSZUSTAND, KEIN URTEIL (Schritt 44). "ohne
+            # Bestand" und "vollstaendig gestakt" sagen etwas ueber das
+            # DEPOT, nicht ueber das Asset - sie gehoeren nicht in dieselbe
+            # Spalte wie ein NICHTS_TUN des Sprachmodells.
+            durchlauf.verloren(symbol, "aktion", f"{aktion} {_grund}",
+                               art="betriebszustand")
             if betriebsart != TROCKEN:
                 _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
                                atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,
@@ -1776,8 +1801,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     _fuehrung = _fuehrung_zu(ergebnis, symbol, instrument)
     if (_fuehrung.get("ist_bestand")
             and str(_fuehrung.get("empfehlung") or "").startswith("SCHLIESSEN")):
+        # ⚠️ EBENFALLS BETRIEBSZUSTAND: die Position steht auf
+        # SCHLIESSEN. Das Sprachmodell hat hier zum Einstieg geraten -
+        # verhindert wird er von der Lage, nicht von einem Urteil.
         durchlauf.verloren(symbol, "aktion",
-                           f"{aktion}, aber Ausstieg steht auf SCHLIESSEN")
+                           f"{aktion}, aber Ausstieg steht auf SCHLIESSEN",
+                           art="betriebszustand")
         if betriebsart != TROCKEN:
             _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
                            atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,
