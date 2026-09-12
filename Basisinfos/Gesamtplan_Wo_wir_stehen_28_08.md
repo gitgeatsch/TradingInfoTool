@@ -5180,3 +5180,25 @@ belegt, am Stop −174 EUR. Alles nachgerechnet, alles in der Mail hergeleitet.
 ➔ **Schritt 41** — Fachprüfung vor der Straffung. Die Reihenfolge ist die
 Vorgabe: Wer kürzt, bevor er weiß, was fehlt und was falsch ist, kürzt das
 Falsche. Schritt 31 (Straffung) setzt darauf auf.
+
+## Die Landkarte der Kette — und die Frage, was die Modelle beitragen
+
+Vollständig in `Basisinfos/Kette_Landkarte.md` (12.09.2026). Kurz:
+
+**Zwölf Stufen, sieben davon vor dem ersten Modellaufruf** — jede hat eine
+eigene Stufe, *weil* sie keinen Aufruf kostet. Das Modell wird an Stufe 8
+gefragt, Rolle A einmal je Umlauf davor, Z.ai nebenläufig danach.
+
+⚠️ **Der „Entscheider" ist keine LLM-Rolle mehr.** Händler und Entscheider
+wurden am 10.08. in einen Aufruf gelegt; die gleichnamige Stufe 12 ist
+gerechnet — und sie ist mit **1.251 von 1.366 (92 %)** der härteste Filter der
+Kette.
+
+⚠️⚠️ **Vorgabe gegen Ist** (2.391-hilfe): Die Modelle sollen Entscheidungshilfe
+sein. Rolle A und Z.ai sind es. **Rolle BC blockiert** (56 Zellen in 7 Tagen mit
+„NICHTS_TUN") **und ändert Zahlen** — ihr Widerlegungspreis bestimmt die
+Stopweite, und daran hängen Betrag, Hebel und Ziel.
+
+➔ **Schritt 42** beantwortet die Frage, die darunter liegt: Zahl und Güte der
+echten Empfehlungen, und erst darauf aufbauend die Aussagekraft der LLM-Stufen
+gegen ein Nullmodell.

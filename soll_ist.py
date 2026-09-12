@@ -621,6 +621,29 @@ REIHENFOLGE = (
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
+    Schritt(42, "T-0 GESAMTKETTE HISTORISCH - ZAHL, GUETE, AUSSAGEKRAFT",
+            "⚠️⚠️ MEHRFACH GEFORDERTE NUTZERVORGABE (zuletzt 12.09.): *,eine "
+            "historische Pruefung der Gesamtkette - im ersten Schritt sind "
+            "Anzahl und Qualitaet der echten Empfehlungen relevant, und dann "
+            "darauf aufbauend MUSS eine erste sinnvolle Aussagekraft "
+            "(Simulation) der LLM-Stufen erfolgen'*. ZWEI STUFEN, in dieser "
+            "Reihenfolge. (1) ZAHL UND GUETE DER ECHTEN EMPFEHLUNGEN: aus "
+            "`signals` seit dem Scharfgang - wie viele je Tag, Gruppe, Aktion "
+            "und Instrument; wie viele erreichten den Einstieg, wie gingen sie "
+            "aus (`outcome_status`), und was war das POTENTIAL (`bewegung_r`), "
+            "NICHT die Zielerreichung. Datenlage steht: 3.859 Zeilen der "
+            "Rollen-Kette, davon 964 ,Einstieg nie erreicht', 379 offen, 217 "
+            "Stop, 214 Ziel. ⚠️ Die Population zuerst definieren - 2.076 "
+            "Zeilen sind ,nicht anwendbar' (HALTEN, fehlende Zonen). (2) "
+            "AUSSAGEKRAFT DER LLM-STUFEN: traegt das Urteil? Verglichen wird "
+            "auf DERSELBEN Menge gegen ein Nullmodell (Zufall bei gleicher "
+            "Trefferzahl) - fuer Rolle BC (KAUFEN gegen NICHTS_TUN), fuer den "
+            "Widerlegungspreis (veraendert er den Stop zum Besseren?) und fuer "
+            "Z.ai (Einwand ja/nein gegen Ausgang). Mit Tagesklammer, mit "
+            "Zufallskontrolle, Erfolgsmass POTENTIAL. ⚠️ Ohne diese Messung "
+            "ist der Beitrag der Modelle unbelegt (2.391) - und die "
+            "Entscheidungen aus 2.391-hilfe sind nicht begruendbar.",
+            "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*"),
     Schritt(41, "MAIL UND GUI - FACHPRUEFUNG VOR DER STRAFFUNG",
             "⚠️ NUTZERVORGABE 12.09. nach der ERSTEN echten Hebelmail: *,die "
             "Struktur der eMail ist nicht schlecht, jedoch sehe ich vor lauter "
