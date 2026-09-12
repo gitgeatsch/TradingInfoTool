@@ -428,10 +428,14 @@ neue Spalte `verlust_am_stop_eur` wird dabei angelegt und gelesen.
 python pruefe_pakete.py
 ```
 
-⚠️ **Am Notebook sind es 2.186 Prüfungen, 3 übersprungene Blöcke und 3 Rote**
-— `data/messdaten.db` liegt dort planmäßig nicht, die drei Zustandsprüfungen
-dazu entfallen samt der Roten „klassengleich" (Befund 2.386). Am Desktop sind
-es **2.193 Prüfungen** mit diesen **4 bekannten Roten**: Messreihe
+⚠️ **Am Notebook sind es 2.180 Prüfungen, 4 übersprungene Blöcke und 0 Rote**
+— `data/messdaten.db` liegt dort planmäßig nicht (Befund 2.386).
+
+> ⚠️⚠️ **Null Rote heißt am Notebook NICHT „alles in Ordnung".** Alle vier
+> bekannten Roten liegen im Paket *Neuaufnahme*, und das ist dort nicht
+> beantwortbar — es wird als Ganzes übersprungen. Die Lücken gelten weiter.
+
+Am Desktop sind es **2.193 Prüfungen** mit diesen **4 bekannten Roten**: Messreihe
 für gehaltene Werte (ASTER, CANTON, MON), Messbasis Nicht-Krypto veraltet,
 Kernwert CANTON ohne Beitrag, sieben Klassenkollisionen. Die Ausgabe steht in
 `Pruefungen\pruefe_pakete_ausgabe_T440.txt` — **Dateinamen prüfen**.

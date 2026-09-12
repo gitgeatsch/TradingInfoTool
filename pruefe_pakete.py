@@ -70,6 +70,9 @@ def pruefe(paket: str, name: str, bedingung, detail: str = "") -> None:
 # uebersprungen, gezaehlt, und am Ende beim Namen genannt. Wer den Block
 # doch braucht, sieht dort, was zu holen ist.
 _UEBERSPRUNGEN: list[tuple[str, str, str]] = []
+_OHNE_MESSDATEN = ("am Notebook planmaessig nicht vorhanden (166 MB, "
+                   "Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen "
+                   "sie, der Betriebscode nicht")
 
 
 def _datei_fehlt(paket: str, pfad: str, warum: str) -> bool:
@@ -15867,7 +15870,7 @@ def paket_kalibrierung() -> None:
     # traegt, macht das VERFAHREN ungueltig, nicht den Kandidaten).
     #
     if not _datei_fehlt(P, "data/messdaten.db",
-                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+                        _OHNE_MESSDATEN):
         # ECHTER Funktionsaufruf, keine Kopie (Lehre vom selben Tag wie G-b).
         import messe_eigenschaft_beitrag as _MEB
         import sqlite3 as _sq3
@@ -17689,7 +17692,7 @@ def paket_assetklassen_trennung() -> None:
            "ein Rang ueber alle Klassen saehe aus wie ein richtiger - "
            "genau die Falle aus F-198")
     if not _datei_fehlt(P, "data/messdaten.db",
-                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+                        _OHNE_MESSDATEN):
         from agent import marktrang as _MR
         _b = _MR.messbasis("schnitt")
         pruefe(P, "und die Schnitt-Messbasis ist tatsaechlich krypto-gross",
@@ -19024,10 +19027,11 @@ def paket_messstandard() -> None:
            "eine Messmenge, die sich mit jedem Datenabruf aendert, macht "
            "R-R11 unmoeglich - ein Befund laesst sich nicht "
            "reproduzieren, wenn die Basis wandert")
-    pruefe(P, "und `lade()` liefert GENAU sie",
-           set(_meb.lade()) == set(_mm.V1),
-           "sonst ist das Einfrieren Dekoration: %d geladen, %d in der "
-           "Menge" % (len(_meb.lade()), len(_mm.V1)))
+    if not _datei_fehlt(P, "data/messdaten.db", _OHNE_MESSDATEN):
+        pruefe(P, "und `lade()` liefert GENAU sie",
+               set(_meb.lade()) == set(_mm.V1),
+               "sonst ist das Einfrieren Dekoration: %d geladen, %d in der "
+               "Menge" % (len(_meb.lade()), len(_mm.V1)))
     pruefe(P, "⚠️ die EINGESTELLTEN Reihen sind drin (Survivorship)",
            _mm.ABDECKUNG.get("eingestellt", 0) >= 100,
            "wer nur die Reihen nimmt, die heute noch laufen, misst "
@@ -19165,6 +19169,15 @@ def paket_neuaufnahme() -> None:
     gruen faerbt, waere schlimmer als keines.
     """
     P = "Neuaufnahme"
+    # ⚠️ GANZ ODER GAR NICHT (12.09.2026): `pruefe_neuaufnahme` liest BEIDE
+    # Datenbanken - die Produktion UND `data/messdaten.db`. Fehlt die
+    # Messdatenbank (Notebook, planmaessig), ist die Frage ,hat jede
+    # gehaltene Position eine Messreihe?' dort nicht beantwortbar. Dann
+    # wird das Paket als Ganzes uebersprungen - vorher riss es den Lauf
+    # ab und nahm auch die vier ECHTEN Befunde ueber die Produktionsdaten
+    # mit, die es am Desktop meldet.
+    if _datei_fehlt(P, "data/messdaten.db", _OHNE_MESSDATEN):
+        return
     import pruefe_neuaufnahme as _NA
     maengel = _NA.pruefe(still=True)
     gehalten = [m for m in maengel if "ist GEHALTEN" in m]
@@ -19207,7 +19220,7 @@ def paket_neuaufnahme() -> None:
     # falsche Klasse, und ueber zehn Messwerkzeuge importieren sie. Wer
     # sie zur Klassenentscheidung nutzt, bekommt dort das Falsche.
     if not _datei_fehlt(P, "data/messdaten.db",
-                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+                        _OHNE_MESSDATEN):
         import sqlite3 as _sq3
         _c3 = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
         _koll = [r[0] for r in _c3.execute(
@@ -19349,7 +19362,40 @@ def main() -> int:
                 print(f"[FEHLER] Paket {p} kennt diese Datei nicht - "
                       f"bekannt: {sorted(PAKETE)}")
                 return 2
-            PAKETE[p]()
+            # ⚠️⚠️⚠️ EIN PAKET DARF DIE SUITE NICHT MITNEHMEN (12.09.2026).
+            #
+            # Zweimal am Notebook passiert, beim Rollout von Paket B: eine
+            # planmaessig fehlende Datei (`data/messdaten.db`, 166 MB, so
+            # entschieden am 02.09.) liess `sqlite3.OperationalError`
+            # fliegen - einmal direkt im Pruefcode, einmal eine Ebene
+            # tiefer im Messmodul. Beide Male lieferte die GANZE Suite
+            # NICHTS: 0 von 2.193 und 0 von 2.186 Pruefungen, ohne eine
+            # einzige ausgegebene Zeile. Die gezielten Wachen bleiben die
+            # erste Antwort; dies hier ist die zweite, damit die naechste
+            # unbedachte Stelle nur ihr eigenes Paket kostet.
+            #
+            # ⚠️ UND SIE VERSCHLUCKT NICHTS: uebersprungen wird NUR, wenn
+            # die Datei wirklich fehlt. Jeder andere Abbruch ist ROT, mit
+            # Traceback - sonst verschwindet ein echter Defekt in einer
+            # Sammelkategorie, und das waere schlimmer als der Absturz.
+            try:
+                PAKETE[p]()
+            except Exception as exc:                     # noqa: BLE001
+                import sqlite3 as _sqn
+                import traceback as _tbn
+                _spur = _tbn.format_exc()
+                _planmaessig = (isinstance(exc, _sqn.OperationalError)
+                                and "unable to open database file"
+                                in str(exc).lower()
+                                and not Path("data/messdaten.db").exists())
+                if _planmaessig:
+                    _UEBERSPRUNGEN.append((p, "data/messdaten.db",
+                                           _OHNE_MESSDATEN))
+                else:
+                    pruefe(p, "⚠️⚠️ das Paket laeuft ohne Abbruch durch",
+                           False,
+                           " | ".join(_spur.strip().splitlines()[-3:])[:400])
+                    print(_spur)
 
         letztes = None
         schlecht = 0
