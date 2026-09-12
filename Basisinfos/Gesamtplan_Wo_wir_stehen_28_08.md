@@ -5107,3 +5107,17 @@ zwei Kopien, die Attrappe über die Marktränge gesteuert — **17 Fälle gezeig
   Abschnitt **PAKET B**.
 - ⚠️ Offen vor dem Push: die drei Schalter (`hebel_aus_quote`, alter Marktscan,
   altes Hebel-Screening) und die Freigabe zum Push.
+
+## Schalter beim Rollout — Entscheidungen 12.09.2026
+
+| Schalter | Stand | Grund |
+|---|---|---|
+| `hebel_aus_quote.aktiv` | ✔ **an** | Verteilung simuliert, E2E gezeigt, Rollout-Skript geprüft (2.384) |
+| `hebel_screening.aktiv` | ✔ **aus** | altes Screening, keine Rechenzeit mehr; Positionsabgleich und Hebelführung laufen weiter |
+| `marktscan.aktiv` | **an** | ⚠️ er ist die **einzige** Entdeckung außerhalb der Watchlist (2.385) — abschalten hieße: keine neuen Werte mehr, ohne Ersatz |
+
+**Der Ersatz, als Vorschlag (2.385-pscan, Schritt 39):** dieselbe gemessene
+Bewertung wie in der Kette auf alle Werte anwenden, für die die Messbasis
+reicht — heute 42, davon 35 außerhalb der Watchlist. Erst im Schatten
+mitschreiben, dann messen (`bewegung_r`, nicht Zielerreichung), erst dann
+empfehlen. Engpass ist die Onchain-Basis mit 66 Symbolen.

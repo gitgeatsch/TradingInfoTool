@@ -381,9 +381,9 @@ Datenalterung der Nicht-Krypto-Messbasen.
 
 | Schalter | Wirkung | Stand |
 |---|---|---|
-| `rollen_kette.hebel_aus_quote.aktiv` | ohne ihn entsteht **kein** Hebelgeschäft | *wird beim Push eingetragen* |
-| `marktscan.aktiv` | alter Marktscan, eigene Mails (2.369) | *wird beim Push eingetragen* |
-| `hebel_screening.aktiv` | altes Hebel-Screening; `false` legt **nur** das Screening still, Positionsabgleich und Hebelführung laufen weiter | *wird beim Push eingetragen* |
+| `rollen_kette.hebel_aus_quote.aktiv` | ohne ihn entsteht **kein** Hebelgeschäft | ✔ **AN** (Nutzer 12.09.) |
+| `marktscan.aktiv` | alter Marktscan, eigene Mails (2.369) | **AN** — die einzige Entdeckung außerhalb der Watchlist (2.385); der Ersatz wird erst gemessen (Schritt 39) |
+| `hebel_screening.aktiv` | altes Hebel-Screening; `false` legt **nur** das Screening still, Positionsabgleich und Hebelführung laufen weiter | ✔ **AUS** (Nutzer 12.09.) |
 | Hebel-Schalter **je Asset** (GUI) | nur dort entsteht ein Hebelgeschäft | am NB **24 von 44** Kryptowerten an |
 
 ## Die Schritte, in dieser Reihenfolge

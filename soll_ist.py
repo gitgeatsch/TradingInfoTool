@@ -451,8 +451,11 @@ REIHENFOLGE = (
             "Nach dem Nachrechnen des Portfoliowerts den E2E "
             "(`--nachweis-paket-b`) gegen die frische Sicherung wiederholen. "
             "OFFEN: alter Marktscan "
-            "weiter aktiv? (2.369) - `hebel_screening.aktiv: false` legt "
-            "seit H-4 nur noch das Screening still (2.379-schalter). "
+            "weiter aktiv? ✔ ENTSCHIEDEN 12.09.: der Marktscan bleibt AN - "
+            "er ist die einzige Entdeckung ausserhalb der Watchlist und "
+            "kostet keine Modellaufrufe (2.385); der Ersatz wird gemessen, "
+            "bevor er ihn ersetzt (Schritt 39). Das ALTE Hebel-Screening ist "
+            "AUS, der Hebel aus der Quote ist AN (2.384). "
             "Prompt-Stand 2026-09-11a (2.379-liq).",
             "Basisinfos/Ausrollen_24_08.md; Nutzerentscheidung 11.09."),
 
@@ -631,6 +634,18 @@ REIHENFOLGE = (
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
+    Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
+            "⚠️ ERSATZ FUER DEN ALTEN MARKTSCAN, in drei Stufen (2.385-pscan): "
+            "(1) SCHATTEN - denselben gemessenen Rang wie in der Kette taeglich "
+            "fuer ALLE Werte mitschreiben, fuer die die Messbasis reicht (heute "
+            "42, davon 35 ausserhalb der Watchlist); (2) MESSEN - traegt ein "
+            "hoher Rang ausserhalb der Watchlist mehr Potential (`bewegung_r`, "
+            "nicht Zielerreichung)? Ohne Nachweis keine Empfehlung; (3) erst "
+            "dann eine Aufnahme-Liste, gefiltert auf bei Bitpanda handelbare "
+            "Werte. ⚠️ Der Engpass ist die Onchain-Basis (66 Symbole) - sie zu "
+            "verbreitern ist der eigentliche Bauteil. Bis dahin bleibt der "
+            "alte Marktscan an.",
+            "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan"),
     Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),

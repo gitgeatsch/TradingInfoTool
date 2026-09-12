@@ -1402,7 +1402,7 @@ budget_allocator:
 # Deterministisches Zwei-Zweige-Scoring (Trendfolge + Kontra), KEIN Groq-Aufruf hier -
 # reine Vorpruefung alle 15 Min, analog zur Marktscan-Stufe-B-Bewertung.
 hebel_screening:
-  aktiv: true
+  aktiv: false
   intervall_minuten: 15
   oi_lookback_stunden: 4               # Fenster fuer die OI-%-Aenderung (Trendfolge-Zweig)
   oi_abdeckung_schwelle_fehlschlaege: 8  # NEU (2026-07-19, echter Notebook-Fund: KAS/KAIA/
@@ -2065,7 +2065,7 @@ rollen_kette:
   # ⚠️ AUS, bis Schritt 19 (Hebelverteilung simulieren) gelaufen ist - der
   # Plan verlangt die Simulation VOR dem Scharfschalten.
   hebel_aus_quote:
-    aktiv: false
+    aktiv: true
     r_min: 0.005
     r_max: 0.0125
     hebelnenner_eur: 500

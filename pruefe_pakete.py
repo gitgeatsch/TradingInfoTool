@@ -17938,12 +17938,14 @@ def paket_hebel_aus_quote() -> None:
     # ---- der Schalter ------------------------------------------------
     import config as _cfgq
     _c = _cfgq.load_config() or {}
-    pruefe(P, "⚠️ Vorgabe und config.yaml: AUS, bis Schritt 19 simuliert hat",
+    pruefe(P, "⚠️ Vorgabe im CODE bleibt AUS - scharf geschaltet wird in der "
+              "config.yaml, mit dem Rollout von Paket B (Nutzer 12.09.2026)",
            _BEq.HEBEL_AUS_QUOTE_VORGABE["aktiv"] is False
            and "hebel_aus_quote" in (_c.get("rollen_kette") or {})
-           and _BEq.hebel_aus_quote_einstellungen(_c).get("aktiv") is False,
-           "der Plan verlangt die Simulation der Hebelverteilung VOR dem "
-           "Scharfschalten")
+           and _BEq.hebel_aus_quote_einstellungen(_c).get("aktiv") is True,
+           "der Plan verlangte die Simulation der Hebelverteilung (2.378), den "
+           "E2E (2.382) und das Rollout-Skript (2.383) VOR dem Scharfschalten - "
+           "alle drei liegen vor")
     pruefe(P, "und config.yaml fuehrt dieselben Werte wie die Vorgabe",
            all(abs(float(_BEq.hebel_aus_quote_einstellungen(_c)[k])
                    - float(_BEq.HEBEL_AUS_QUOTE_VORGABE[k])) < 1e-12
