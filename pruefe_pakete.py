@@ -18990,6 +18990,59 @@ def paket_messmenge() -> None:
            "Lauf. Wer das von Hand setzt, kann es verwechseln")
 
 
+def paket_plan() -> None:
+    """Der PLAN muss maschinell heil sein - EIN KOMMA hat ihn schon zerlegt.
+
+    ⚠️ GEFUNDEN AM 12.09.2026: ein Fortschrittstext wurde in `Schritt(44, ...)`
+    mit einem Komma EINGEFUEGT statt angehaengt. Damit rutschte jedes folgende
+    Argument um eins weiter - die Quelle landete im Feld `fertig`, und der
+    Schritt galt als ERLEDIGT. Sichtbar wurde das nur zufaellig, weil er nach
+    dem Einfuehren der Bloecke in der falschen Gruppe auftauchte.
+
+    ⚠️⚠️ EINE DATENKLASSE MIT VORGABEWERTEN FAENGT DAS NICHT: `fertig` nimmt
+    jeden Wert an, und ein nicht leerer Text ist wahr. Genau deshalb steht
+    diese Pruefung hier und nicht im Vertrauen auf die Typangabe."""
+    P = "Plan"
+    import soll_ist as SI
+
+    _kaputt = [s for s in SI.REIHENFOLGE if not isinstance(s.fertig, bool)]
+    pruefe(P, "⚠️⚠️ jedes `fertig` ist ein echter Wahrheitswert",
+           not _kaputt,
+           "ein Komma zu viel schiebt die Argumente weiter und der Schritt "
+           "gilt als erledigt: "
+           + ", ".join("%d=%r" % (s.nr, s.fertig) for s in _kaputt))
+    pruefe(P, "und jede `quelle` ist eine nicht leere Zeichenkette",
+           all(isinstance(s.quelle, str) and s.quelle for s in SI.REIHENFOLGE))
+    pruefe(P, "und jeder `text` ebenfalls",
+           all(isinstance(s.text, str) and s.text for s in SI.REIHENFOLGE))
+    pruefe(P, "die Nummern sind eindeutig",
+           len({s.nr for s in SI.REIHENFOLGE}) == len(SI.REIHENFOLGE))
+    _lose = [s for s in SI.REIHENFOLGE if not s.block and not s.fertig]
+    pruefe(P, "⚠️ jeder OFFENE Schritt ist einem Block zugeordnet",
+           not _lose,
+           "ohne Block sammelt sich wieder eine Halde ohne Rangfolge - genau "
+           "der Zustand aus Befund 2.395. Ohne Block: "
+           + ", ".join(str(s.nr) for s in _lose))
+    _namen = {n for n, _ in SI.BLOECKE}
+    pruefe(P, "und der Block ist einer der vereinbarten",
+           all(s.block in _namen for s in SI.REIHENFOLGE if s.block),
+           "bekannt: " + ", ".join(sorted(_namen)))
+    pruefe(P, "⚠️⚠️ die LLM-Arbeit steht HINTER der deterministischen",
+           max(i for i, (n, _) in enumerate(SI.BLOECKE) if n.startswith("D-"))
+           < min(i for i, (n, _) in enumerate(SI.BLOECKE) if n.startswith("L-")),
+           "Nutzervorgabe REIHENFOLGE-12-09: erst D pruefen und abbilden, "
+           "dann die Rollen - sie kennen die neue Bewertung nicht (2.398)")
+    _rang = {n: i for i, (n, _) in enumerate(SI.BLOECKE)}
+    _offen = sorted((s for s in SI.REIHENFOLGE if not s.fertig),
+                    key=lambda s: (_rang.get(s.block, 99), s.nr))
+    pruefe(P, "⚠️ und der gemeldete NAECHSTE Schritt folgt der Blockordnung",
+           bool(_offen) and _offen[0].block == "D-BETRIEB",
+           "vorher meldete `soll_ist` Schritt 25, waehrend an 44 gearbeitet "
+           "wurde - die Liste war die Reihenfolge ihrer Entstehung. Jetzt: "
+           + (("%d %s (%s)" % (_offen[0].nr, _offen[0].kennung,
+                               _offen[0].block)) if _offen else "keiner"))
+
+
 def paket_register() -> None:
     """Laeuft das REGISTER mit dem laufenden System mit? (06.09.2026)
 
@@ -19425,6 +19478,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Mailgliederung": paket_mailgliederung,
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
+          "Plan": paket_plan,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,
           "Trennung": paket_trennung,

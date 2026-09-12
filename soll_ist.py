@@ -92,13 +92,21 @@ class Lage:
 
 @dataclass
 class Schritt:
-    """Ein Schritt der vereinbarten Reihenfolge."""
+    """Ein Schritt der vereinbarten Reihenfolge.
+
+    ⚠️ `block` KAM AM 12.09.2026 DAZU, und der Grund steht in Befund 2.395:
+    der Plan hatte zwanzig offene Schritte OHNE Rangfolge. `soll_ist` meldete
+    "naechster Schritt 25", waehrend an 44 gearbeitet wurde - eine Liste, die
+    die Arbeit nicht abbildet, ist Zierde. Der Vorgabewert ist leer, damit
+    kein bestehender Schritt bricht; wer keinen Block hat, faellt unter
+    "nicht eingeordnet" und faellt damit AUF."""
     nr: int
     kennung: str
     text: str
     quelle: str
     fertig: bool = False
     hinweis: str = ""
+    block: str = ""
 
 
 # ---- Die Vorgaben, die ueber allem stehen ---------------------------------
@@ -128,6 +136,24 @@ VORGABEN = (
             "gesperrt bis Paket 2.",
             "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
             "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
+    Vorgabe("SCHRITT-FUER-SCHRITT",
+            "⚠️⚠️ NUTZERVORGABE 12.09.: *,bei der Umsetzung sorgsam Schritt "
+            "fuer Schritt vorgehen und IMMER PRUEFEN, ob die Punkte "
+            "VOLLSTAENDIG erledigt wurden - und dann erst zum naechsten Punkt "
+            "gehen.'* ➔ WAS DAS KONKRET HEISST: (1) ein Schritt gilt erst als "
+            "fertig, wenn er GEPRUEFT und GEGENGEPRUEFT ist und in der Doku "
+            "steht - drei Teile, nicht einer. (2) Ein Schritt mit "
+            "Restpunkten ist NICHT fertig; die Reste werden benannt, nicht "
+            "mitgeschleppt (Beispiel Schritt 44: Punkte 1, 3 und 4b gebaut, "
+            "2a/2b offen - er bleibt offen). (3) Kein Vorgriff auf den "
+            "naechsten Punkt, solange der laufende Reste hat. ⚠️ WARUM DIE "
+            "VORGABE KAM: am 12.09. wurden in vier Zuegen der Plan "
+            "umgeworfen, drei Befunde revidiert und zwei eigene Vorschlaege "
+            "zurueckgezogen - jeder einzelne Schritt war richtig, die "
+            "SUMME war Unordnung. Ein Komma in `Schritt(44, ...)` blieb "
+            "dabei stundenlang unbemerkt und liess einen offenen Schritt als "
+            "erledigt gelten.",
+            "Nutzervorgabe 12.09."),
     Vorgabe("REIHENFOLGE-12-09",
             "⚠️⚠️ NUTZERVORGABE 12.09., um das Klein-Klein zu beenden: "
             "*,bevor das ganze im Chaos endet - folgende Vorgehensweise: "
@@ -262,6 +288,33 @@ LAGEN = (
 )
 
 # ---- Die vereinbarte Reihenfolge -----------------------------------------
+# ---------------------------------------------------------------------------
+# ⚠️⚠️ DIE BLOECKE (Nutzervorgabe REIHENFOLGE-12-09, 12.09.2026)
+# ---------------------------------------------------------------------------
+#
+# *"bevor das ganze im Chaos endet - folgende Vorgehensweise: ist die
+#  deterministische Ebene sauber und stabil, dann sollten wir diesen Bereich
+#  STRAFFEN und KORREKT ABBILDEN. Die LLM Stufen benoetigen ohnehin eine
+#  komplette Ueberarbeitung, da diese ohne der neuen Bewertung arbeiten."*
+#
+# Die Reihenfolge INNERHALB eines Blocks ist die Liste; die Reihenfolge der
+# BLOECKE ist die Vorgabe. Ein Schritt ohne Block faellt auf - das ist
+# Absicht, sonst sammelt sich hier wieder eine Halde.
+BLOECKE = (
+    ("ERLEDIGT", "abgeschlossen - bleibt als Spur stehen"),
+    ("D-BETRIEB", "⚠️ DER DETERMINISTISCHE TEIL, der JETZT laeuft und "
+                  "Empfehlungen erzeugt. Was hier faul ist, kostet heute "
+                  "Geld - nicht in vier Wochen"),
+    ("D-ABBILDUNG", "straffen und korrekt abbilden: der Plan, die Doku, die "
+                    "Mail und die GUI muessen dasselbe sagen wie der Code"),
+    ("D-BEWERTUNG", "die Messarbeit am deterministischen Teil - Beitraege, "
+                    "Blocker, Schwelle. Sie geht weiter, blockiert aber "
+                    "nichts anderes"),
+    ("L-ROLLEN", "⚠️ DIE LLM-STUFEN, KOMPLETT - erst wenn D steht. Grund: "
+                 "sie kennen die neue Bewertung mit keinem Wort (2.398)"),
+    ("SPAETER", "nachgelagert nach eigener Nutzervorgabe"),
+)
+
 REIHENFOLGE = (
     Schritt(1, "N-46a",
             "Zirkulaerer Verschub als Laengs-Nullpunkt GEBAUT - P1/P2/P3 "
@@ -496,7 +549,8 @@ REIHENFOLGE = (
             "`oi_aenderung` UMGEKEHRT -0,0178; (4) Stufen. Faellt ein "
             "Kandidat: Loesung suchen (KEIN-BEITRAG-FAELLT) - die Sperre "
             "bleibt so lange.",
-            "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09."),
+            "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09.",
+            block="D-BEWERTUNG"),
     Schritt(26, "AKKU-BAU",
             "Form REGLER (Fuenftelstufen, nur spot x akkumulation). Eigene "
             "SKALA: `verbilligung` ist ein Rang mit Basisrate 0,500, kein "
@@ -510,12 +564,14 @@ REIHENFOLGE = (
             "hinter der Einstiegszelle und kam NIE zum Urteil - mit "
             "Kostenschutz beheben und in `simuliere_kette` zwei Zellen "
             "nachweisen.",
-            "vormals Schritt FORM; Befunde 2.286-schnitt, 2.374"),
+            "vormals Schritt FORM; Befunde 2.286-schnitt, 2.374",
+            block="D-BEWERTUNG"),
     Schritt(27, "ROLLOUT PAKET 2",
             "Akkumulation aufs Notebook. Der Schalter steht fuer BTC, ETH "
             "und SOL schon an (2.380-akku-schalter) - mit der Registrierung "
             "faellt die Sperre.",
-            "Nutzerentscheidung 11.09."),
+            "Nutzerentscheidung 11.09.",
+            block="D-BEWERTUNG"),
 
     # ================================================================
     # NACH DEM PRODUKTIVGANG
@@ -527,7 +583,8 @@ REIHENFOLGE = (
             "2.382-topf): der Topf zaehlt nur Signale, die die Verfolgung "
             "noch nicht gesehen hat, und begrenzt praktisch nie; beim Hebel "
             "greift der Aggregat-Deckel.",
-            "Nutzervorgabe 11.09.; Befund 2.382-topf"),
+            "Nutzervorgabe 11.09.; Befund 2.382-topf",
+            block="D-ABBILDUNG"),
 
     # ================================================================
     # DAS STANDARDWERKZEUG (Nutzervorschlag 11.09., gestaffelt)
@@ -547,7 +604,8 @@ REIHENFOLGE = (
             "⚠️ Ein Standardwerkzeug mit Schaltern statt Wegwerfskripten: "
             "allein am 11.09. sind fuenf entstanden (n108 bis n112), wo "
             "eines gereicht haette.",
-            "Nutzervorschlag 11.09."),
+            "Nutzervorschlag 11.09.",
+            block="D-BEWERTUNG"),
     Schritt(30, "T-3 HISTORISCHE SIMULATION",
             "⚠️⚠️ AUF `bewegung_r` (POTENTIAL), NICHT auf Zielerreichung. "
             "Nutzervorgabe 23.08.: *,Wichtig fuer den guten Trade ist das "
@@ -561,7 +619,8 @@ REIHENFOLGE = (
             "17.07., ohne Aufrufer) - mit ehrlich benannten Grenzen im "
             "Kopf.",
             "feedback_potential_statt_zielerreichung; "
-            "agent/krypto/backtesting.py"),
+            "agent/krypto/backtesting.py",
+            block="D-BEWERTUNG"),
 
     Schritt(31, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ SETZT AUF SCHRITT 41 AUF (Fachpruefung) - erst pruefen, dann "
@@ -571,21 +630,24 @@ REIHENFOLGE = (
             "und Regel 3 (Anhang statt Weglassen). ⚠️ Vorbehalt aus dem "
             "Vorschlag: die Mail ist lang, WEIL die Bewertung duenn ist - "
             "nach Schritt 21 schrumpft der Lueckenblock von selbst.",
-            "Gesamtplan 11.09. - Mail-Vorschlag"),
+            "Gesamtplan 11.09. - Mail-Vorschlag",
+            block="D-ABBILDUNG"),
     Schritt(32, "GUI UND UEBERSICHTSSEITE",
             "⚠️ Offen seit 07.09., nie begonnen (E1). ⚠️ Die "
             "Uebersichtsseite EXISTIERT (`remote/status.py`, rund 40 "
             "Aggregatoren) - hier geht es um Erweiterung, nicht Neubau. "
             "Die Bewertungsschwelle steht seit dem 11.09. darin (35 "
             "Parameter); in der GUI fehlt sie noch.",
-            "remote/status.py; Nutzervorgabe 07.09. und 11.09."),
+            "remote/status.py; Nutzervorgabe 07.09. und 11.09.",
+            block="D-ABBILDUNG"),
     Schritt(33, "LLM-ROLLEN UND MODELLE",
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
             "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
             "schlagen und messbar sein · kein deterministischer Override "
             "des LLM-Werturteils.",
-            "Nutzervorgabe 11.09."),
+            "Nutzervorgabe 11.09.",
+            block="L-ROLLEN"),
 
     # ================================================================
     # ⚠️⚠️⚠️ SONDERPUNKT REGIME (Nutzervorgabe 11.09.2026)
@@ -629,7 +691,8 @@ REIHENFOLGE = (
             "(alternative.me gegen CoinMarketCap, 2.369-fg), dazu Fear & "
             "Greed gegen die Akkumulation.",
             "Nutzervorgabe 11.09.; project_regime_immer_baer_kein_vergleich; "
-            "NB-Sicherung 11.09.; agent/krypto/regime.py"),
+            "NB-Sicherung 11.09.; agent/krypto/regime.py",
+            block="D-BEWERTUNG"),
     # ================================================================
     # DER HEBEL - die Messung, die Paket B NICHT ersetzt
     #
@@ -647,20 +710,23 @@ REIHENFOLGE = (
             "Terminmarkt-Kanaele gegen die RICHTIGE Zielgroesse messbar; "
             "bisher sind sie nur gegen `bewegung_r` gefallen, und das VOR "
             "dem Messstandard.",
-            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten"),
+            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten",
+            block="D-BEWERTUNG"),
     Schritt(36, "V12 VOLA UND SCHNITT",
             "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
             "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
             "Gemeinsamer geometrischer Anteil? Stuetzt 2.293. "
             "⚠️ Niedrige Dringlichkeit - klaert nur, WARUM zwei "
             "Kandidaten fielen, die ohnehin gefallen sind.",
-            "Befund 2.327 - offen"),
+            "Befund 2.327 - offen",
+            block="D-BEWERTUNG"),
     Schritt(37, "KALIBRIERUNG",
             "Kalibrierung neu, dann die Hebelhoehe rechnen: erreicht sie "
             "2-5x? ⚠️ Der Engpass ist die AUFLOESUNG, nicht die Staerke - "
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
-            "Plan 05.09."),
+            "Plan 05.09.",
+            block="D-BEWERTUNG"),
     Schritt(42, "T-0 GESAMTKETTE HISTORISCH - ZAHL, GUETE, AUSSAGEKRAFT",
             "⚠️⚠️ MEHRFACH GEFORDERTE NUTZERVORGABE (zuletzt 12.09.): *,eine "
             "historische Pruefung der Gesamtkette - im ersten Schritt sind "
@@ -683,7 +749,8 @@ REIHENFOLGE = (
             "Zufallskontrolle, Erfolgsmass POTENTIAL. ⚠️ Ohne diese Messung "
             "ist der Beitrag der Modelle unbelegt (2.391) - und die "
             "Entscheidungen aus 2.391-hilfe sind nicht begruendbar.",
-            "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*"),
+            "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*",
+            block="L-ROLLEN"),
     Schritt(41, "MAIL UND GUI - FACHPRUEFUNG VOR DER STRAFFUNG",
             "⚠️ NUTZERVORGABE 12.09. nach der ERSTEN echten Hebelmail: *,die "
             "Struktur der eMail ist nicht schlecht, jedoch sehe ich vor lauter "
@@ -704,7 +771,8 @@ REIHENFOLGE = (
             "zeigt die alte Dreiteilung, leere Konfidenz-/Trigger-Spalten und "
             "1,0-1,2x-Zeilen als ,Hebel'. ⚠️ Schritt 31 (Straffung nach Regel "
             "2 und 3) kommt DANACH und setzt auf diesem Ergebnis auf.",
-            "Nutzervorgabe 12.09.; Befunde 2.390*"),
+            "Nutzervorgabe 12.09.; Befunde 2.390*",
+            block="D-ABBILDUNG"),
     Schritt(40, "ALTBESTAND STILLLEGEN",
             "⚠️ NUTZERVORGABE 12.09.: *,damit wir nicht laufend ueber "
             "Altbestaende stolpern, sollten wir diese sauber stilllegen'*. "
@@ -719,7 +787,8 @@ REIHENFOLGE = (
             "`messe_allocator_gegen_zufall.py` stehen. ⚠️ Jede Stilllegung "
             "braucht den Satz ,wer liest das noch' - eine geloeschte "
             "Messgrundlage kommt nicht zurueck.",
-            "Nutzervorgabe 12.09.; Befunde 2.388, 2.389-log"),
+            "Nutzervorgabe 12.09.; Befunde 2.388, 2.389-log",
+            block="D-BETRIEB"),
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
             "⚠️ ERSATZ FUER DEN ALTEN MARKTSCAN, in drei Stufen (2.385-pscan): "
             "(1) SCHATTEN - denselben gemessenen Rang wie in der Kette taeglich "
@@ -731,7 +800,8 @@ REIHENFOLGE = (
             "Werte. ⚠️ Der Engpass ist die Onchain-Basis (66 Symbole) - sie zu "
             "verbreitern ist der eigentliche Bauteil. Bis dahin bleibt der "
             "alte Marktscan an.",
-            "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan"),
+            "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan",
+            block="D-BEWERTUNG"),
     Schritt(46, "D2 - STRAFFEN UND KORREKT ABBILDEN",
             "⚠️ NUTZERVORGABE 12.09. (REIHENFOLGE-12-09): *,ist die "
             "deterministische Ebene sauber und stabil, dann sollten wir "
@@ -748,7 +818,8 @@ REIHENFOLGE = (
             "schliessen (2.395-erledigt). (4) Trichter, Mail und GUI muessen "
             "DASSELBE sagen - das ist Schritt 41, er gehoert hierher. ⚠️ "
             "KEINE neue Messung, kein neuer Beitrag, keine LLM-Aenderung.",
-            "Nutzervorgabe 12.09.; Befunde 2.399, 2.399-abbildung"),
+            "Nutzervorgabe 12.09.; Befunde 2.399, 2.399-abbildung",
+            block="D-ABBILDUNG"),
     Schritt(45, "DIE VERGESSENEN VIER - AUS DER GEGENPRUEFUNG",
             "⚠️ Aus der Gegenpruefung vom 12.09. (Befund 2.395): vier offene "
             "Punkte standen in KEINEM Schritt. (1) 2.380-annahmen - drei "
@@ -769,7 +840,8 @@ REIHENFOLGE = (
             "neun Werte haben laengst eine Kursreihe) und 2.343 "
             "(`hebel_signals` ist die Tabelle der ALTEN Pipeline, kein "
             "Ausfall).",
-            "Gegenpruefung 12.09.; Befunde 2.395, 2.395-erledigt"),
+            "Gegenpruefung 12.09.; Befunde 2.395, 2.395-erledigt",
+            block="D-BETRIEB"),
     Schritt(44, "DIE KETTE GERADEZIEHEN - TRICHTER, WAECHTER, "
             "ENTSCHEIDUNGSHILFE TRENNEN",
             "✔ PUNKTE 1, 3 UND 4b GEBAUT AM 12.09. (Befund 2.396): vier "
@@ -778,7 +850,7 @@ REIHENFOLGE = (
             "(die zwei leeren Felder der Vier-Felder-Messung), 4 (der "
             "Widerlegungspreis - Nutzerentscheidung steht aus) und die "
             "Wiederholung des E2E am Notebook gegen eine frische Sicherung "
-            "(2.396-e2e). ",
+            "(2.396-e2e). "
             "⚠️⚠️ DIE ABGRENZUNG, die der Nutzer am 12.09. gezogen hat - "
             "*,wir bauen seit Wochen am DETERMINISTISCHEN EINSTIEG je "
             "Strategie, das LLM wurde lange Zeit nicht angegriffen, auch "
@@ -874,7 +946,49 @@ REIHENFOLGE = (
             "Bewertung und Betriebszustand vermengt. ⚠️⚠️ KEINE STELLE "
             "FAELLT hier weg (KEIN-BEITRAG-FAELLT) - sie werden sichtbar "
             "und messbar gemacht.",
-            "Nutzerauftrag 12.09.; Befunde 2.393, 2.393-wirkung, 2.391-hilfe"),
+            "Nutzerauftrag 12.09.; Befunde 2.393, 2.393-wirkung, 2.391-hilfe",
+            block="D-BETRIEB"),
+    Schritt(47, "DER STOP AUF GEMESSENE GRUNDLAGE - VORBEDINGUNG FUER "
+            "ALLES AM HEBEL",
+            "⚠️⚠️ ERGEBNIS DER WIDERLEGUNGSPREIS-MESSUNG (Befunde 2.397, "
+            "2.400). Der Hebel entsteht aus ZWEI Groessen: `hebel = (risiko "
+            "/ STOP) / 500`. Die Quote ist gemessen (r(q), halbes Kelly), "
+            "DER STOP NICHT. Er kommt in 81,5 %% der Faelle aus einer "
+            "Modellangabe, und wo die fehlt, aus `_stop_aus_atr` mit 2,5 x "
+            "ATR - was bei Krypto regelmaessig in den Deckel von 25 %% "
+            "laeuft. ⚠️ EIN STOP VON 25 %% MACHT JEDEN HEBEL UNMOEGLICH: "
+            "ueber die ganze r(q)-Spanne ergibt er 0,72x bis 1,80x. ➔ ZU "
+            "TUN: (1) die vorhandenen Messungen zusammentragen - der "
+            "Rauschbefund (0,75 ATR wird in 57,3 %% der Faelle binnen fuenf "
+            "Handelstagen getroffen, 26.910 Anker) und die Ausstiegsregel "
+            "(495 aufgeloeste Signale, +0,092 R). (2) Daraus die Stopweite "
+            "je Anlageklasse BEGRUENDEN statt sie zu setzen - `stop_ziel_atr` "
+            "2,5 und `stop_max_relativ` 25 %% stehen heute ohne eigenen "
+            "Befund in `GRENZEN`. (3) Gegen die echten Faelle rechnen, "
+            "vorher und nachher, dieselbe Funktion zweimal - so wie "
+            "`messe_widerlegung.py` es vormacht. ⚠️⚠️ ERST WENN DAS STEHT, "
+            "kann der Widerlegungspreis aus der Rechnung genommen und zur "
+            "reinen Gegenbewertung in der Mail werden, wie der Nutzer es "
+            "will. Vorher wuerde die Kette gar keinen Hebel mehr erzeugen.",
+            "Nutzervorgabe 12.09.; Befunde 2.397, 2.400, 2.400-hebel",
+            block="D-BEWERTUNG"),
+    Schritt(48, "AUSSTIEG: DEFEKT UND ERFASSUNG - OHNE UMBAU",
+            "⚠️ AUS DER EXPERTENANTWORT (Befund 2.400-verkauf): der Nutzer "
+            "hat recht, der UMBAU der Verkaufsseite gehoert hinter die "
+            "stabilen Einstiege. Zwei Punkte sind aber kein Umbau. (1) DER "
+            "DEFEKT: 105 Ausstiege sind als ,reines LLM-Halten' gebucht und "
+            "haben den Nutzer NIE erreicht (2.392-stumm) - bis 11.09. Den "
+            "Zweig finden und schliessen; eine Empfehlung, die niemand "
+            "liest, ist ein Ausfall. (2) DIE ERFASSUNG: die Guete der 517 "
+            "Ausstiege ist nicht messbar (409 auf `nicht_anwendbar`). Ein "
+            "eigenes Erfolgsmass anlegen und MITSCHREIBEN - Potential nach "
+            "der Empfehlung gegen ein Nullmodell (halten), keine "
+            "Zielerreichung. ⚠️ NUR ERFASSEN, NICHTS BEWERTEN und nichts "
+            "sperren. Bei 15-20 Faellen pro Tag sind das in vier Wochen rund "
+            "500 auswertbare Faelle - wer erst mit dem Umbau anfaengt zu "
+            "messen, beginnt ihn mit null Daten.",
+            "Expertenempfehlung 12.09.; Befunde 2.392-stumm, 2.394",
+            block="D-BETRIEB"),
     Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
             "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
             "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
@@ -908,10 +1022,12 @@ REIHENFOLGE = (
             "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
             "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
             "davor).",
-            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm"),
+            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
+            block="D-BEWERTUNG"),
     Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
-            "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),
+            "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9",
+            block="D-BEWERTUNG"),
 
 
 )
@@ -1215,7 +1331,13 @@ def abgleich() -> list:
 def main() -> int:
     kurz = "--kurz" in sys.argv
     ab = abgleich()
-    offen = [s for s in REIHENFOLGE if not s.fertig]
+    # ⚠️ DIE BLOCKORDNUNG ENTSCHEIDET, NICHT DIE LISTENPOSITION (12.09.2026).
+    # Vorher meldete diese Stelle "naechster Schritt 25", waehrend an 44
+    # gearbeitet wurde - die Liste war die Reihenfolge ihrer Entstehung, nicht
+    # die der Arbeit. Jetzt gilt die Reihenfolge der Bloecke (Befund 2.395).
+    _rang = {name: i for i, (name, _) in enumerate(BLOECKE)}
+    offen = sorted((s for s in REIHENFOLGE if not s.fertig),
+                   key=lambda s: (_rang.get(s.block, len(BLOECKE)), s.nr))
 
     print("=" * 100)
     print("SOLL / IST — steht der Umbau noch im Plan?")
@@ -1293,13 +1415,34 @@ def main() -> int:
             print("      %-6s -> %s   (%s)" % ("", folge, q))
         print()
 
-    print("  DIE VEREINBARTE REIHENFOLGE")
-    for s in REIHENFOLGE:
-        z = "✔" if s.fertig else ("→" if offen and s is offen[0] else " ")
-        print("   %s %d %-14s %s" % (z, s.nr, s.kennung, s.text[:66]))
-        if not kurz:
-            print("       %-14s Quelle: %s" % ("", s.quelle))
+    # ⚠️ NACH BLOECKEN, NICHT ALS LISTE (12.09.2026, Befund 2.395). Eine
+    # Liste von zwanzig offenen Schritten ohne Rangfolge sagt nicht, was als
+    # naechstes dran ist - sie sagt nur, dass viel offen ist.
+    print("  DIE VEREINBARTE REIHENFOLGE — nach Bloecken")
+    fertige = [s for s in REIHENFOLGE if s.fertig]
+    print("   ✔ ERLEDIGT: %d Schritte (%s)"
+          % (len(fertige), ", ".join(str(s.nr) for s in fertige)))
     print()
+    for name, warum in BLOECKE:
+        if name == "ERLEDIGT":
+            continue
+        drin = [s for s in REIHENFOLGE if s.block == name and not s.fertig]
+        if not drin:
+            continue
+        print("   %-14s %s" % (name, warum))
+        for s in drin:
+            z = "→" if offen and s is offen[0] else " "
+            print("     %s %-3d %-14s %s" % (z, s.nr, s.kennung, s.text[:58]))
+            if not kurz:
+                print("           %-12s Quelle: %s" % ("", s.quelle))
+        print()
+    # ⚠️ WER KEINEN BLOCK HAT, FAELLT AUF - sonst sammelt sich wieder eine Halde.
+    lose = [s for s in REIHENFOLGE if not s.block and not s.fertig]
+    if lose:
+        print("   ⚠️⚠️ NICHT EINGEORDNET (%d) - gehoert in einen Block:" % len(lose))
+        for s in lose:
+            print("      %d %-14s %s" % (s.nr, s.kennung, s.text[:58]))
+        print()
 
     print("=" * 100)
     if ab:
