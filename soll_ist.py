@@ -973,6 +973,10 @@ REIHENFOLGE = (
             "Nutzervorgabe 12.09.; Befunde 2.397, 2.400, 2.400-hebel",
             block="D-BEWERTUNG"),
     Schritt(48, "AUSSTIEG: DEFEKT UND ERFASSUNG - OHNE UMBAU",
+            "✔ 48a ERLEDIGT AM 12.09. (Befund 2.402): die gestakte Position "
+            "bekommt einen eigenen Mailabschnitt statt Schweigen; Paket "
+            ",Gestakt' mit 15 Pruefungen, auf dem echten Weg gegengeprueft. "
+            "⚠️ 48b OFFEN - die Erfassung. "
             "⚠️ AUS DER EXPERTENANTWORT (Befund 2.400-verkauf): der Nutzer "
             "hat recht, der UMBAU der Verkaufsseite gehoert hinter die "
             "stabilen Einstiege. Zwei Punkte sind aber kein Umbau. (1) DER "

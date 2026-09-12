@@ -959,7 +959,8 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
 
     _sammel = VK2.sammel_mail(ergebnis.get("ausstiege") or [],
                               modell=modell, zeitpunkt=tag,
-                              positionen=_positionen)
+                              positionen=_positionen,
+                              gesperrt=ergebnis.get("gesperrt") or None)
     if _sammel:
         ergebnis.setdefault("mails", []).append(
             {"symbol": "(Sammel)", "betreff": _sammel[0], "text": _sammel[1],
@@ -1713,6 +1714,33 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # Spalte wie ein NICHTS_TUN des Sprachmodells.
             durchlauf.verloren(symbol, "aktion", f"{aktion} {_grund}",
                                art="betriebszustand")
+            # ---- SCHRITT 48a: DIE GESTAKTE POSITION BEKOMMT EINEN HINWEIS
+            #
+            # ⚠️ NUR HIER, NICHT BEI "ohne Bestand". Der Unterschied stand
+            # seit dem 17.08. drei Zeilen weiter oben im Text und hatte keine
+            # Folge: bei "ohne Bestand" ist Schweigen richtig, es gibt nichts
+            # zu verkaufen. Bei "vollstaendig gestakt" GIBT es die Position -
+            # der Nutzer koennte entstaken und erfuhr nur nichts davon.
+            # Gemessen: 25 von 25 stummen Faellen in sieben Tagen waren
+            # gestakt, KEIN einziger war ohne Bestand.
+            #
+            # ⚠️⚠️ DIE ZELLE BLEIBT VERLOREN. Ein Hinweis ist kein Auftrag,
+            # und der Trichter darf nicht behaupten, hier sei etwas
+            # durchgekommen - `art="betriebszustand"` steht eine Zeile
+            # darueber und bleibt richtig.
+            try:
+                _gsp = VK.gesperrt_durch_staking(
+                    aktion=aktion, menge=menge or 0.0, kurs_eur=kurs_e,
+                    gestakt=gestakt, einstand_eur=einstand)
+                if _gsp:
+                    ergebnis.setdefault("gesperrt", []).append(
+                        {"symbol": symbol, "gesperrt": _gsp,
+                         "begruendung": befund.get("begruendung")})
+            except Exception as _gx:                         # noqa: BLE001
+                # EINE ZUSATZINFORMATION DARF DEN LAUF NICHT ANHALTEN - aber
+                # sie muss sagen, wenn sie ausfaellt (N-40).
+                ergebnis.setdefault("fehler", []).append(
+                    f"{symbol}: Staking-Hinweis: {type(_gx).__name__}: {_gx}")
             if betriebsart != TROCKEN:
                 _schreibe_nein(symbol=symbol, befund=befund, kurs_e=kurs_e,
                                atr_e=atr_e, tag=tag, reihe=reihe, idx=idx,

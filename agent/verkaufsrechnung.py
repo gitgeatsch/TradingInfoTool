@@ -195,6 +195,58 @@ def rechne(*, aktion: str, menge: float, kurs_eur: float,
     return aus
 
 
+def gesperrt_durch_staking(*, aktion: str, menge: float, kurs_eur: float,
+                           gestakt: float | None = None,
+                           einstand_eur: float | None = None) -> dict | None:
+    """Die DRITTE Klasse: es gibt die Position, sie ist nur nicht frei.
+
+    ⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (Schritt 48a, 12.09.2026). `rechne()`
+    gibt `None` zurueck, sobald `frei = menge - gestakt` auf null faellt - und
+    das ist RICHTIG: eine Empfehlung ueber eine Menge, an die man nicht
+    herankommt, ist keine. Der Aufrufer machte daraus aber SCHWEIGEN, und
+    zwar fuer beide Faelle:
+
+        ohne Bestand         es gibt nichts zu verkaufen   -> Schweigen ist richtig
+        vollstaendig gestakt es GIBT die Position          -> Schweigen verschweigt
+                                                              eine Handlung
+
+    Der Unterschied steht seit dem 17.08. im Wortlaut in `rollen_lauf`
+    (*"ZWEI SEHR VERSCHIEDENE GRUENDE, EIN WORT"*) - gezogen wurde die
+    Konsequenz nie. GEMESSEN an sieben Tagen: ALLE 25 stummen Faelle lauteten
+    "vollstaendig gestakt", KEIN einziger "ohne Bestand". Der Nutzer kann
+    entstaken; er erfuhr nur nichts davon.
+
+    ⚠️ WAS DIESE FUNKTION NICHT TUT: sie erzeugt KEINEN Verkaufsauftrag. Die
+    Menge ist nicht verfuegbar, und daran aendert ein Hinweis nichts. Sie
+    liefert genau das, was fehlt - die Information, dass eine Sperre zwischen
+    dem Urteil und der Handlung steht.
+
+    `None`, wenn nichts gesperrt ist: kein Bestand, kein Staking, oder es
+    bleibt freie Menge uebrig (dann hat `rechne()` einen Auftrag geliefert).
+    """
+    menge = float(menge or 0.0)
+    g = float(gestakt or 0.0)
+    if menge <= 0 or g <= 0 or not kurs_eur or kurs_eur <= 0:
+        return None
+    # ⚠️ NUR DIE VOLLSTAENDIGE SPERRE. Bleibt etwas frei, gibt es einen
+    # richtigen Auftrag - dann steht das Staking dort schon als `gestakt`.
+    if menge - g > 1e-12:
+        return None
+
+    aus = {
+        "aktion": str(aktion or "").strip().upper(),
+        "menge_gesamt": menge,
+        "gestakt": g,
+        "wert_gesamt_eur": menge * float(kurs_eur),
+        "gesperrt": "staking",
+    }
+    if einstand_eur and einstand_eur > 0:
+        aus["einstand_eur"] = float(einstand_eur)
+        aus["ergebnis_prozent"] = 100.0 * (float(kurs_eur)
+                                           / float(einstand_eur) - 1.0)
+    return aus
+
+
 def saetze(e: dict) -> list[str]:
     """Die Rechnung in der Form, in der sie in die E-Mail gehoert.
 
@@ -267,7 +319,8 @@ def _rang(p: dict) -> tuple:
 
 def sammel_mail(alle: list, modell: str | None = None,
                 zeitpunkt: str | None = None,
-                positionen: list | None = None) -> tuple | None:
+                positionen: list | None = None,
+                gesperrt: list | None = None) -> tuple | None:
     """EINE Mail fuer alle Ausstiege eines Laufs. `None`, wenn keiner anfiel.
 
     NUTZEREINWAND 14.08., NOCH WAEHREND DIESER UMBAU LIEF: *"45 Signale sind
@@ -295,7 +348,10 @@ def sammel_mail(alle: list, modell: str | None = None,
     """
     from agent.signal_mail import eur, preis
 
-    if not alle:
+    # ⚠️ AUCH OHNE EINEN EINZIGEN AUFTRAG (Schritt 48a): wenn alle Urteile an
+    # der Staking-Sperre haengen, ist genau DAS die Nachricht. Vorher fiel
+    # der ganze Lauf hier auf `None` und der Nutzer erfuhr nichts.
+    if not alle and not gesperrt:
         return None
     posten = sorted(alle, key=_rang)
     # NUR VERKAEUFE ZAEHLEN IN DIE SUMME. Eine Hebelaenderung bewegt kein Geld
@@ -319,12 +375,25 @@ def sammel_mail(alle: list, modell: str | None = None,
         kopf.append(" · ".join(x for x in (zeitpunkt,
                                            f"Modell {modell}" if modell else None)
                                if x))
-    kopf += ["",
-             "DIES IST KEINE GEWINNMITNAHME. Das Modell haelt diese Positionen",
-             "fuer schwaecher als die Alternative - mehr sagt es nicht.",
-             "Ausfuehrung manuell ueber die Bitpanda-App.", ""]
+    # ⚠️ DER SATZ GILT DEN AUFTRAEGEN. Bei einem Lauf, in dem ALLES an der
+    # Staking-Sperre haengt, gibt es nichts auszufuehren - dann waere
+    # "Ausfuehrung manuell" eine Anweisung ins Leere (Schritt 48a).
+    if alle:
+        kopf += ["",
+                 "DIES IST KEINE GEWINNMITNAHME. Das Modell haelt diese Positionen",
+                 "fuer schwaecher als die Alternative - mehr sagt es nicht.",
+                 "Ausfuehrung manuell ueber die Bitpanda-App.", ""]
+    else:
+        kopf += ["",
+                 "KEIN AUSFUEHRBARER AUFTRAG in diesem Lauf - alle Urteile",
+                 "haengen an der Staking-Sperre. Siehe unten.", ""]
 
-    zeilen = list(kopf) + ["--- WAS ZU TUN IST ---"]
+    if gesperrt:
+        kopf.insert(0, "%d Position%s mit Urteil, aber GESPERRT durch Staking"
+                    % (len(gesperrt), "en" if len(gesperrt) > 1 else ""))
+    zeilen = list(kopf)
+    if alle:
+        zeilen += ["--- WAS ZU TUN IST ---"]
     for p in posten:
         v = p["verkauf"]
         if "anteil" not in v:
@@ -370,6 +439,39 @@ def sammel_mail(alle: list, modell: str | None = None,
             if teil:
                 zeilen.append("           " + " · ".join(teil))
 
+    # ---- SCHRITT 48a: WAS GESPERRT IST (12.09.2026) ---------------------
+    #
+    # ⚠️ EIGENER ABSCHNITT, NICHT IN DER AUFTRAGSLISTE. Hier steht kein
+    # Auftrag - die Menge ist nicht verfuegbar. Sie zwischen die
+    # ausfuehrbaren Zeilen zu mischen waere genau die Falschaussage, wegen
+    # der schon die Hebelaenderungen getrennt wurden.
+    #
+    # GEMESSEN, warum es diesen Abschnitt gibt: in sieben Tagen fielen 25
+    # Urteile still an dieser Sperre - 22 REDUZIEREN, 3 VERKAUFEN, und der
+    # Nutzer erfuhr von keinem einzigen.
+    if gesperrt:
+        zeilen += ["", "--- GESPERRT: DIE MENGE IST GESTAKT ---",
+                   "Hier gibt es ein Urteil, aber keinen ausfuehrbaren "
+                   "Auftrag.",
+                   "Die Position besteht - sie ist nur nicht frei "
+                   "verkaeuflich.",
+                   "Wer handeln will, muss zuerst entstaken (Bitpanda-App); "
+                   "das dauert.", ""]
+        for g in sorted(gesperrt,
+                        key=lambda x: -(x["gesperrt"].get("wert_gesamt_eur") or 0)):
+            v = g["gesperrt"]
+            zeile = (f"{g['symbol']:<10} {v['aktion']:<11} "
+                     f"{'gestakt':<12} "
+                     f"{eur(v['wert_gesamt_eur'], 2):>10} EUR")
+            if "ergebnis_prozent" in v:
+                vz = "+" if v["ergebnis_prozent"] >= 0 else ""
+                zeile += f"   Stand {vz}{eur(v['ergebnis_prozent'], 1)} %"
+            zeilen.append(zeile)
+        zeilen += ["",
+                   "⚠️ Das ist KEINE Handlungsempfehlung, sondern eine "
+                   "Information:",
+                   "   ob sich das Entstaken lohnt, sagt diese Zeile nicht.", ""]
+
     # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG (01.09.2026) ------------------
     #
     # ⚠️ `agent/positionsfuehrung.py` war seit dem 27.08. gebaut und stand
@@ -402,9 +504,11 @@ def sammel_mail(alle: list, modell: str | None = None,
         for _pz in positionen:
             zeilen += list(_pz)
 
-    zeilen += ["", "--- WARUM ---"]
-    for p in posten:
-        zeilen.append(f"{p['symbol']}: {p.get('begruendung') or '(keine Begruendung)'}")
+    if posten:
+        zeilen += ["", "--- WARUM ---"]
+        for p in posten:
+            zeilen.append(f"{p['symbol']}: "
+                          f"{p.get('begruendung') or '(keine Begruendung)'}")
 
     kern = []
     if verkaeufe:
@@ -412,5 +516,10 @@ def sammel_mail(alle: list, modell: str | None = None,
                     + (f", davon {ganz} ganz" if ganz else "") + ")")
     if anpassungen:
         kern.append(f"{len(anpassungen)}x Hebel aendern")
+    # ⚠️ DIE GESPERRTEN GEHOEREN IN DEN BETREFF (Schritt 48a). Ohne sie hiess
+    # die Mail bei einem reinen Sperrlauf "TradingInfoTool: " - ein leerer
+    # Betreff ist schlimmer als keine Mail, er wird ungelesen weggeklickt.
+    if gesperrt:
+        kern.append("%dx gestakt - Urteil ohne Auftrag" % len(gesperrt))
     betreff = "TradingInfoTool: " + ", ".join(kern)
     return betreff, "\n".join(zeilen)

@@ -14535,6 +14535,95 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_gestakt() -> None:
+    """48a - die gestakte Position bekommt einen Hinweis statt Schweigen.
+
+    ⚠️ GEMESSEN, warum es dieses Paket gibt: in sieben Tagen fielen 25
+    Urteile still an der Staking-Sperre (22 REDUZIEREN, 3 VERKAUFEN), und
+    ALLE 25 lauteten "vollstaendig gestakt" - KEIN einziger "ohne Bestand".
+    Der Unterschied stand seit dem 17.08. im Wortlaut im Code und hatte
+    keine Folge."""
+    P = "Gestakt"
+    from agent import verkaufsrechnung as VK
+
+    voll = VK.gesperrt_durch_staking(aktion="REDUZIEREN", menge=100.0,
+                                     kurs_eur=2.5, gestakt=100.0,
+                                     einstand_eur=2.0)
+    pruefe(P, "⚠️ eine VOLLSTAENDIG gestakte Position meldet sich",
+           bool(voll) and voll["gesperrt"] == "staking",
+           "sie existiert - der Nutzer koennte entstaken und erfuhr nichts")
+    pruefe(P, "und sie nennt den vollen Wert, nicht eine Verkaufsmenge",
+           voll["wert_gesamt_eur"] == 250.0 and "menge_verkauf" not in voll,
+           "eine Verkaufsmenge waere eine Empfehlung ueber etwas, an das man "
+           "nicht herankommt - genau das soll sie NICHT sein")
+    pruefe(P, "⚠️⚠️ eine TEILWEISE gestakte meldet sich NICHT",
+           VK.gesperrt_durch_staking(aktion="REDUZIEREN", menge=100.0,
+                                     kurs_eur=2.5, gestakt=40.0) is None,
+           "dort gibt es freie Menge, also einen echten Auftrag - `rechne` "
+           "fuehrt das Staking dann schon als `gestakt` mit. Zwei Meldungen "
+           "zum selben Fall waeren die Doppelung, die die Mail ohnehin hat")
+    pruefe(P, "⚠️ und OHNE BESTAND bleibt es still",
+           VK.gesperrt_durch_staking(aktion="VERKAUFEN", menge=0.0,
+                                     kurs_eur=2.5, gestakt=0.0) is None,
+           "es gibt nichts zu verkaufen - hier IST Schweigen richtig. Das "
+           "ist der Unterschied, der seit 17.08. im Text stand und nie "
+           "gezogen wurde")
+    pruefe(P, "kein Kurs, keine Aussage",
+           VK.gesperrt_durch_staking(aktion="VERKAUFEN", menge=10.0,
+                                     kurs_eur=0.0, gestakt=10.0) is None)
+
+    # ---- die Mail --------------------------------------------------------
+    m = VK.sammel_mail([], zeitpunkt="2026-09-12",
+                       gesperrt=[{"symbol": "SOL", "gesperrt": voll}])
+    pruefe(P, "⚠️⚠️ ein Lauf mit NUR gesperrten Faellen erzeugt eine Mail",
+           m is not None,
+           "vorher fiel `sammel_mail` auf None und der Nutzer erfuhr nichts - "
+           "genau die 25 stummen Faelle")
+    pruefe(P, "der Betreff ist nicht leer",
+           bool(m) and m[0].strip() != "TradingInfoTool:"
+           and "gestakt" in m[0],
+           "ein leerer Betreff ist schlimmer als keine Mail - er wird "
+           "ungelesen weggeklickt. Bekommen: %r" % (m[0] if m else None))
+    pruefe(P, "⚠️ und er verspricht keinen Auftrag",
+           bool(m) and "Urteil ohne Auftrag" in m[0])
+    text = m[1] if m else ""
+    pruefe(P, "die Mail sagt, was zu tun WAERE - entstaken",
+           "entstaken" in text.lower())
+    pruefe(P, "⚠️⚠️ und sie sagt ausdruecklich, dass es KEINE Empfehlung ist",
+           "KEINE Handlungsempfehlung" in text,
+           "ob sich das Entstaken lohnt, ist nicht gemessen - eine Zeile, "
+           "die das offenlaesst, darf nicht wie ein Auftrag aussehen")
+    pruefe(P, "⚠️ ohne Auftrag steht auch kein ,Ausfuehrung manuell' darin",
+           "Ausfuehrung manuell" not in text,
+           "eine Anweisung ins Leere: es gibt nichts auszufuehren")
+    pruefe(P, "der gesperrte Abschnitt ist von der Auftragsliste getrennt",
+           "GESPERRT: DIE MENGE IST GESTAKT" in text
+           and "WAS ZU TUN IST" not in text,
+           "sie zwischen die ausfuehrbaren Zeilen zu mischen waere dieselbe "
+           "Falschaussage, wegen der die Hebelaenderungen getrennt wurden")
+
+    # ---- und ein Lauf MIT Auftraegen behaelt seine alte Form -------------
+    auftrag = {"symbol": "LINK", "begruendung": "Test",
+               "verkauf": VK.rechne(aktion="VERKAUFEN", menge=10.0,
+                                    kurs_eur=20.0, einstand_eur=15.0)}
+    m2 = VK.sammel_mail([auftrag], zeitpunkt="2026-09-12")
+    pruefe(P, "⚠️ ein Lauf OHNE gesperrte Faelle sieht aus wie immer",
+           bool(m2) and "WAS ZU TUN IST" in m2[1]
+           and "GESPERRT" not in m2[1]
+           and "Ausfuehrung manuell" in m2[1],
+           "die Aenderung ist additiv - wer keine gestakte Position hat, "
+           "merkt nichts davon")
+    m3 = VK.sammel_mail([auftrag], zeitpunkt="2026-09-12",
+                        gesperrt=[{"symbol": "SOL", "gesperrt": voll}])
+    pruefe(P, "und beides zusammen steht in EINER Mail",
+           bool(m3) and "WAS ZU TUN IST" in m3[1] and "GESPERRT" in m3[1]
+           and "Verkaufsvorschlaege" in m3[0] and "gestakt" in m3[0],
+           "zwei Mails zum selben Lauf waeren der Fehler vom 14.08.")
+    pruefe(P, "leer bleibt leer",
+           VK.sammel_mail([], gesperrt=None) is None,
+           "ohne Auftrag und ohne Sperre gibt es nichts zu sagen")
+
+
 def paket_verkaufsseite() -> None:
     """B1/B2 - die Verkaufsseite bekommt Fakten und Merkmale (23.08.2026).
 
@@ -19462,6 +19551,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Gestakt": paket_gestakt,
           "Verkauf": paket_verkaufsseite,
           "Akkumass": paket_akkumass,
           "Abkapselung": paket_abkapselung,
