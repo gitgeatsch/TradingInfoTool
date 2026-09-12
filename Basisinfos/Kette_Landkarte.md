@@ -186,3 +186,209 @@ Angabe — daraus folgen 8,9 % Stopabstand, 3,9x Hebel und 174 EUR Risiko.
 weiterhin eine Empfehlung verhindern dürfen, und soll seine Preisangabe die
 Geometrie bestimmen? Beides ist heute so gebaut, beides widerspricht der
 Vorgabe „Entscheidungshilfe".
+
+---
+
+# Die Stufen einzeln — und wer genau entscheidet
+
+*Nutzervorgabe 12.09.2026: „gliedere mir die einzelnen Stufen so auf, dass ich
+diese nachvollziehen kann — vor allem **‚Modell' ist nicht eindeutig**. Wenn es
+sich um die LLM-Bewertung handelt, dann soll das angeführt sein; wenn es eine
+deterministische Komponente ist, dann die korrekte Bezeichnung in der Kette."*
+
+## ⚠️ Die Sprachregelung — ab hier verbindlich
+
+Das Wort **„Modell"** ist im Projekt dreifach belegt und wird deshalb **nicht
+mehr allein verwendet**:
+
+| verboten | gemeint sein kann | ab jetzt zu schreiben |
+|---|---|---|
+| „das Modell" | das Sprachmodell im Urteil | **LLM-1 Rolle BC** |
+| „das Modell" | das Sprachmodell für die Marktlage | **LLM-1 Rolle A** |
+| „das Modell" | die Gegenprüfung bei Z.ai | **LLM-2 Rolle G** |
+| „das Modell" | eine gerechnete Formel (z. B. Kelly) | **Rechnung**, plus Modulname |
+
+**Die drei LLM-Stellen heißen künftig immer mit Rolle und Stufe.** Jede
+deterministische Stelle wird mit ihrem **Modul** genannt — `agent/<datei>.py`,
+notfalls `Modul.funktion()`. Ein Satz wie „das Modell verwirft" ist ohne diese
+Angabe nicht überprüfbar, und genau daran ist diese Frage entstanden.
+
+---
+
+## Die zwölf Stufen, einzeln
+
+Zahlen in der letzten Zeile jedes Blocks: gemessen über 7 Tage (39.471 Zellen
+hinein, 202 heraus), aus `gate_durchlaessigkeit` der Notebook-Sicherung.
+
+### Vor der Schleife — **LLM-1 Rolle A (Marktlage)**
+
+| | |
+|---|---|
+| **Wer** | **Sprachmodell**, Rolle A |
+| **Wo im Code** | `agent/rolle_analyst.py`, aufgerufen aus `agent/rollen_lauf.py` |
+| **Wie oft** | **einmal je Umlauf und Gruppe** — nicht je Asset |
+| **Was sie liefert** | ein Lagebild des Marktes: Regime, Rahmen, Text |
+| **Was sie NICHT sieht** | kein einzelnes Asset, keine Position, keinen Betrag |
+| **Wirkung** | **null Verluste** — sie blockiert nichts |
+
+---
+
+### 1 `auftrag` — „Instrument und Strategie erlaubt"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/asset_schalter.py::darf_analysiert_werden()` und `agent/handelsauftrag.py::pruefe()` |
+| **Prüft** | die **Schalter des Nutzers** je Asset (DCA, Hebelprüfung, Bitpanda-Override) und ob das Paar Instrument/Strategie überhaupt vorgesehen ist |
+| **7 Tage** | 39.471 durch, 0 verloren |
+
+### 2 `fakten` — „Faktenlage ausreichend"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/faktenblock.py` (Werte aus der Kursreihe), `agent/lagebeschreibung.py` (Satzblöcke), Torwächter `agent/mindestkriterien.py::pruefe_bc()` |
+| **Prüft** | Gibt es überhaupt eine Kursreihe, reicht die Grundlage für eine Frage? |
+| **Warum eigene Stufe** | ohne Grundlage wird **gar nicht erst gefragt** — das spart den Aufruf |
+| **7 Tage** | 38.802 durch, **669 verloren** |
+
+### 3 `lagebild` — „Lagebild geliefert"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** — sie prüft das Ergebnis von **LLM-1 Rolle A** |
+| **Modul** | Buchung in `agent/rollen_lauf.py`, direkt nach `fakten` |
+| **Prüft** | Liegt das Lagebild aus Rolle A vor? |
+| **7 Tage** | 38.802 durch, **0 verloren** ➔ *Rolle A hat in sieben Tagen keine einzige Zelle gestoppt* |
+
+### 4 `anlass` — „Faktensatz hat sich geändert"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/anlass.py::sperrt()` — Fingerabdruck über **genau den Faktensatz, den LLM-1 Rolle BC bekommt** |
+| **Prüft** | Ist überhaupt etwas Neues passiert, seit zuletzt gefragt wurde? |
+| **Warum eigene Stufe (16.08.)** | *kostet keinen Aufruf* — und ein identischer Faktensatz ist etwas anderes als eine Zeitregel |
+| **7 Tage** | 26.797 durch, **12.005 verloren** |
+
+### 5 `auswahl` — „gehört zu den besten k der Gruppe"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/auswahl.py`, Rangbildung in `agent/marktrang.py` |
+| **Prüft** | Querschnittsrang in der Assetklasse; **Bestandspositionen sind ausgenommen** — die Verkaufsfrage darf die Auswahl nicht sperren |
+| **7 Tage** | 16.242 durch, **10.555 verloren** |
+
+### 6 `terminmarkt` — „OI-Aufbau nicht im obersten Fünftel"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/positionierung.py`, Fünftel-Rang über `open_interest_snapshot` (Grundlage F-168) |
+| **Prüft** | den **Zeitpunkt**, nicht das Asset: ist der Terminmarkt überhitzt? |
+| **7 Tage** | 16.242 durch, 0 verloren |
+
+### 7 `wiederholung` — „nicht kürzlich schon gefragt"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/wiederholung.py::gesperrt_bis()` — Cooldown je Symbol, Instrument, Gruppe **und Strategie** |
+| **7 Tage** | 2.055 durch, **14.187 verloren** |
+
+---
+
+### 8 `urteil` — hier und **nur hier** urteilt LLM-1 Rolle BC
+
+⚠️ **Diese Stufe besteht aus vier Teilen, und nur der erste ist das
+Sprachmodell.** Wer „Verlust bei urteil" liest, sieht meist die Wächter, nicht
+das Urteil.
+
+| Teil | Wer | Modul | was er tut |
+|---|---|---|---|
+| 8a | **LLM-1 Rolle BC** | `agent/rolle_trader.py::prompt_fuer()` | **der einzige Modellaufruf je Asset.** Liefert Aktion, Richtung, Begründung, Gegenargument, Belege, Zahl unabhängiger Faktoren, Widerlegung (wodurch / welcher Preis / bis wann), Einstieg und Stop **als Angabe** |
+| 8b | Rechnung | `agent/rolle_trader.py::validiere()` → `agent/empfehlung_vertrag.py` | Pflichtfelder, Richtungspflicht, Ablehnung sich selbst zurückziehender Begründungen |
+| 8c | Rechnung | `agent/gegenpruefer_rollen.py` (**„Z1"**) | **Treue zur Eingabe**: Zahlendeckung, Richtungstreue, Zuspitzung, Leerlauf. Fragt *nicht*, ob das Urteil klug ist |
+| 8d | Rechnung | `urteil_memo` in `agent/rollen_lauf.py` | ein Urteil je **Asset**, nicht je Zelle — die zweite Zelle liest es aus dem Speicher, ohne neuen Aufruf |
+
+**7 Tage:** 2.046 durch, **9 verloren** — davon 8× vom **Vertrag** (8b) als
+ungültig verworfen, 1× Netzfehler. **Die 9 sind keine Ablehnung durch Rolle BC,
+sondern Ablehnungen ihrer Antwort.**
+
+⚠️ **Warum LLM-1 Rolle BC „Händler *und* Entscheider" heißt:** bis 10.08.2026
+waren das zwei getrennte Aufrufe (~162 täglich). Nach dem Nutzereinwand wurden
+sie in **einen** gelegt. Seither gibt es **keine LLM-Rolle „Entscheider" mehr** —
+Stufe 12 heißt nur noch so.
+
+---
+
+### 9 `aktion` — „Aktion ist ein Einstieg"
+
+⚠️ **Die einzige Stufe, an der Sprachmodell und Rechnung gemischt verlieren.**
+
+| Verlustgrund | Wer entscheidet | Modul | 7 Tage |
+|---|---|---|---|
+| `NICHTS_TUN` / `HALTEN` | **LLM-1 Rolle BC** | die Aktion aus 8a gegen `agent/signal_mail.py::AKTIONEN_MIT_EINSTIEG` | **56** |
+| „Ausstieg steht auf SCHLIESSEN" | **Rechnung** | `agent/hebelfuehrung.py` | 166 |
+| „vollständig gestakt / ohne Bestand" | **Rechnung** | `agent/verkaufsrechnung.py::rechne()` | 25 |
+
+**7 Tage:** 1.799 durch, 247 verloren — **56 davon** sind das Sprachmodell.
+Das sind **2,7 %** der 2.046 Zellen, die es beurteilt hat.
+
+### 10 `geometrie` — „Zonen rechenbar"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/entscheidungsrechnung.py::rechne()` — Stopweite aus Rauschboden und Marken, Ziel mechanisch CRV 2,0, Zonen |
+| ⚠️ **Eingabe aus Rolle BC** | `umgeworfen_preis_eur` — die Preisangabe des Sprachmodells geht **als Boden in die Stopweite** ein (`_stop_abstand`) |
+| **Verluste** | taktische Zelle ohne Hebel (Akkumulation) — **Rechnung**, kein Urteil |
+| **7 Tage** | 1.366 durch, 346 verloren |
+
+### 11 `risikoschicht` — „Töpfe, Cash, Positionsgröße"
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/toepfe.py` (`frei_eur`, `belegt_eur`, `cash_frei_eur`), `agent/betraege.py`, **Paket B:** `agent/hebel_aggregat.py` (Aggregat-Deckel 3 %) |
+| **7 Tage** | 1.366 durch, **0 verloren** — die Prüfungen laufen bereits im Geometrieblock; die Stufe bucht nur noch |
+
+### 12 `entscheider` — ⚠️ **kein Sprachmodell**
+
+| | |
+|---|---|
+| **Wer** | **Rechnung** |
+| **Modul** | `agent/potential.py` — `traegt_hier` gegen die **Schwelle je Datenlage** (Vorgabe 0,080 R bei voller Datenlage) |
+| **Nicht mehr** | `agent/trefferbilanz.py` — das war bis U-1 (30.08.) so und steht noch in alten Kommentaren |
+| **Prüft** | Schlägt das gemessene **Potential** die Schwelle seiner Datenlage? |
+| **7 Tage** | **115 durch, 1.251 verloren = 92 %** |
+
+➔ **Der härteste Filter der ganzen Kette ist gerechnet, nicht geurteilt.**
+
+---
+
+### Nebenläufig nach dem Urteil — **LLM-2 Rolle G (Z.ai)**
+
+| | |
+|---|---|
+| **Wer** | **Sprachmodell**, zweiter Anbieter |
+| **Modul** | `agent/zweite_meinung.py`, Fakten aus `agent/positionierung.py` |
+| **Eigene Fakten** | offene Kontrakte, Finanzierungsrate als Perzentil, Anteil Long-Konten, Marktregime mit Dauer — **nichts davon steht im Faktentext von Rolle BC** |
+| **Wirkung** | **kein Veto.** Text in der Mail (Abschnitt 5) und im Kopf unter „Was dagegen spricht" |
+| **Ausfall** | fail-soft — die Kette läuft weiter, im Log steht „Z.ai-Rolle G fehlgeschlagen" |
+| **Wann gefragt** | nur bei eigener Grundlage (G5) — ohne symbolspezifische Terminmarktdaten gar nicht |
+
+⚠️ **Z1 ist nicht Z.ai.** `gegenpruefer_rollen` (Z1, Stufe 8c) ist eine
+**Rechnung** und prüft die *Treue zur Eingabe*. `zweite_meinung` (Rolle G) ist
+ein **zweites Sprachmodell** und prüft die *Sache*. Die Verwechslung ist im
+Projekt schon vorgekommen.
+
+---
+
+## Die Antwort in einem Satz
+
+Von zwölf Stufen entscheidet **eine** ein Sprachmodell (Stufe 8, LLM-1 Rolle
+BC), **eine weitere** teilen sich Sprachmodell und Rechnung (Stufe 9), **zehn
+sind reine Rechnung** — und die schärfste davon (Stufe 12, `agent/potential.py`)
+verwirft mehr als alle Sprachmodelle zusammen.

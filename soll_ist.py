@@ -128,6 +128,15 @@ VORGABEN = (
             "gesperrt bis Paket 2.",
             "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
             "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
+    Vorgabe("VERKAUF-VOR-MULTIASSET",
+            "⚠️ Die VERKAUFSEMPFEHLUNGEN werden angegangen UND "
+            "ABGESCHLOSSEN, bevor Multiasset (Aktien etc.) beginnt. Sie "
+            "sind heute der groessere Teil des Betriebs (517 seit 14.08., "
+            "15-20 pro Tag) und laufen an den Stufen 10 bis 12 vorbei - "
+            "ohne Potential, ohne Schwelle, ohne Deckel und ohne "
+            "messbare Guete.",
+            "Nutzervorgabe 12.09.: ,das sollten wir vor der Multiasset - "
+            "Aktien etc. angehen und abschliessen'; Befund 2.392"),
     Vorgabe("KRYPTO-ZUERST",
             "Multiasset (Aktien, ETF, Rohstoffe, Hedge) ist NACHGELAGERT - "
             "erst nach dem Krypto-Produktivgang. A-1, A-2 und die "
@@ -692,6 +701,30 @@ REIHENFOLGE = (
             "verbreitern ist der eigentliche Bauteil. Bis dahin bleibt der "
             "alte Marktscan an.",
             "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan"),
+    Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
+            "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
+            "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
+            "etc.) angehen und ABSCHLIESSEN'*. ⚠️⚠️ WARUM DAS DRINGEND IST "
+            "(Befund 2.392, gemessen): die Ausstiegsseite ist mit 517 "
+            "Empfehlungen seit 14.08. und 15 bis 20 pro Tag der GROESSERE "
+            "Teil des Betriebs - und sie verzweigt an Stufe 9 direkt in die "
+            "Mail. Die Stufen 10 bis 12 sieht sie nie, also gilt fuer sie "
+            "weder das gemessene Potential noch eine Schwelle noch ein "
+            "Deckel. (1) GUETE ZUERST: `outcome_status` taugt fuer Ausstiege "
+            "nicht - 409 von 517 stehen auf ,nicht_anwendbar', der Rest auf "
+            "EINSTIEGS-Kategorien. Es braucht ein eigenes Erfolgsmass fuer "
+            ",war der Verkauf richtig' - Potential, nicht Zielerreichung: "
+            "was hat der Kurs NACH der Empfehlung getan, gegen ein "
+            "Nullmodell (halten). (2) STUMME AUSSTIEGE (2.392-stumm): 105 "
+            "Ausstiege sind als ,reines LLM-Halten' ohne Mail gebucht, bis "
+            "11.09. - den Zweig finden und schliessen. (3) WIEDERHOLUNG: "
+            "SUPRA 12x VERKAUFEN, MON 10x REDUZIEREN in 7 Tagen - greift der "
+            "Cooldown auf der Ausstiegsseite ueberhaupt? (4) ERST DANN die "
+            "Frage nach einer eigenen Bewertungsstufe fuer den Ausstieg. ⚠️ "
+            "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
+            "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
+            "davor).",
+            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm"),
     Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9"),

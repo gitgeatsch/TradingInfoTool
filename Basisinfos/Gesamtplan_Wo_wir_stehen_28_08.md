@@ -5202,3 +5202,51 @@ Stopweite, und daran hängen Betrag, Hebel und Ziel.
 ➔ **Schritt 42** beantwortet die Frage, die darunter liegt: Zahl und Güte der
 echten Empfehlungen, und erst darauf aufbauend die Aussagekraft der LLM-Stufen
 gegen ein Nullmodell.
+
+
+---
+
+# 12.09. — NUTZERVORGABE: DIE VERKAUFSSEITE VOR MULTIASSET
+
+> *„nimm noch die Verkaufsempfehlungen in den Gesamtplan auf — das sollten wir
+> vor der Multiasset — Aktien etc. angehen und abschließen."*
+
+**Das ordnet den Plan um** und trifft die Stelle, die bisher am wenigsten
+Aufmerksamkeit bekommen hat, obwohl sie die meiste Post erzeugt.
+
+## Gemessen an der NB-Sicherung vom 12.09.
+
+| | |
+|---|---|
+| Ausstiegsempfehlungen seit 14.08. | **517** — 405 REDUZIEREN, 112 VERKAUFEN |
+| zuletzt | **15 bis 20 pro Tag**, ununterbrochen bis heute |
+| zum Vergleich: Einstiegsseite | 202 in 7 Tagen aus 39.471 Zellen |
+| `outcome_status = nicht_anwendbar` | **409 von 517 (79 %)** |
+| Rest | 59 `stop_loss_erreicht`, 46 `einstieg_nie_erreicht` — **Einstiegs**-Kategorien |
+| als „reines LLM-Halten" gebucht, **ohne Mail** | **105**, bis 11.09. |
+
+## Der kurze Weg — und was dadurch fehlt
+
+Eine Ausstiegsaktion verzweigt in `agent/rollen_lauf.py` an **Stufe 9
+(`aktion`)** direkt nach `_sende_ausstieg` und kehrt zurück. Die Stufen **10
+(`geometrie`), 11 (`risikoschicht`) und 12 (`entscheider`) werden nie
+erreicht.**
+
+| gilt für den Einstieg | gilt für den Ausstieg |
+|---|---|
+| gemessenes Potential, `agent/potential.py` — verwirft dort **92 %** | — |
+| Schwelle je Datenlage | — |
+| Aggregat-Deckel, Töpfe, Cash | — |
+| Trefferquote gegen Breakeven | — |
+| Betrag, Hebel, Ziel gerechnet | nur Stück und Euro (`agent/verkaufsrechnung.py`) |
+
+⚠️ **Was verkauft wird, entscheidet allein LLM-1 Rolle BC.** Das steht so im
+Kopf des Moduls: *„es entscheidet nicht, OB verkauft wird"*. Auf der
+Einstiegsseite ist das Sprachmodell für 2,7 % der Verluste verantwortlich — auf
+der Ausstiegsseite für 100 % der Entscheidungen.
+
+➔ **Schritt 43**, und die Vorgabe **VERKAUF-VOR-MULTIASSET**. Zuerst die
+**Güte** (es gibt heute keine einzige Zahl darüber, ob ein Verkauf richtig
+war), dann die **stummen Ausstiege**, dann die **Wiederholung** (SUPRA 12×
+VERKAUFEN, MON 10× REDUZIEREN in sieben Tagen) — erst danach die Frage nach
+einer eigenen Bewertungsstufe.
