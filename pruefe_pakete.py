@@ -14535,6 +14535,58 @@ def paket_auswahl() -> None:
            "Abgelehnten")
 
 
+def paket_marktscanwert() -> None:
+    """Die Wertpruefung des Marktscans - gegen BEKANNTE WAHRHEIT.
+
+    ⚠️ Nutzerauftrag 12.09.: *"Marktscan Pruefung auf Wert ist notwendig"*.
+    Das Ergebnis entscheidet ueber 4.071 unbearbeitete Kandidaten - eine
+    Messung, an der so viel haengt, muss selbst geprueft sein."""
+    P = "Marktscanwert"
+    import importlib
+
+    MW = importlib.import_module("messe_marktscan_wert")
+
+    def r(werte, start="2026-08-01"):
+        from datetime import date, timedelta
+        d0 = date.fromisoformat(start)
+        tage = [(d0 + timedelta(days=i)).isoformat() for i in range(len(werte))]
+        return ({t: w for t, w in zip(tage, werte)}, tage)
+
+    # fuenf Symbole, alle exakt +10 % ueber das Fenster
+    reihen = {"S%d" % i: r([100.0] * 3 + [110.0] * 10) for i in range(5)}
+    m = MW.markt_im_fenster(reihen, "2026-08-03", "2026-08-06")
+    pruefe(P, "⚠️ die Marktklammer trifft eine bekannte Welt",
+           m is not None and abs(m - 0.10) < 1e-9,
+           "fuenf Symbole mit exakt +10 %% muessen +10 %% ergeben - bekommen: "
+           "%r" % m)
+    pruefe(P, "⚠️⚠️ zu wenige Symbole ergeben None, NICHT null",
+           MW.markt_im_fenster({"A": r([100.0] * 13)},
+                               "2026-08-03", "2026-08-06") is None,
+           "ein fehlender Bezugspunkt als Null gerechnet hiesse ,der Markt "
+           "stand still' - das ist eine Behauptung, keine Luecke")
+    pruefe(P, "ein Fenster ohne Kurse ergibt None",
+           MW.markt_im_fenster(reihen, "2020-01-01", "2020-01-05") is None)
+
+    # der Kurs an einem Tag OHNE Kerze nimmt den letzten davor
+    einzeln, tage = r([100.0, 101.0, 102.0] + [103.0] * 10)
+    pruefe(P, "⚠️ ein Tag ohne Kerze nimmt den letzten davor",
+           MW._kurs_am(einzeln, tage, "2026-08-02T23:59") == 101.0,
+           "Wochenenden und Datenluecken duerfen einen Fall nicht verwerfen")
+    pruefe(P, "und ein Tag VOR der Reihe ergibt None",
+           MW._kurs_am(einzeln, tage, "2026-07-01") is None)
+
+    # die Guete-Richtung: besser als der Markt = positiv
+    besser = 0.20 - 0.10
+    schlechter = 0.05 - 0.10
+    pruefe(P, "⚠️⚠️ besser als der Markt ist POSITIV",
+           besser > 0 and schlechter < 0,
+           "wer das Vorzeichen dreht, misst das Gegenteil und merkt es nie")
+    pruefe(P, "die echten Einstufungen des Scans sind abgedeckt",
+           set(MW.ECHTE) == {"watchlist_wuerdig", "kaufkandidat"},
+           "'kein_treffer' gehoert NICHT dazu - diese Zeilen wurden nie "
+           "verfolgt und haetten die Bilanz verduennt")
+
+
 def paket_altbestand() -> None:
     """Schritt 40 - der Altbestand meldet sich, statt still zu altern.
 
@@ -19705,6 +19757,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
+          "Marktscanwert": paket_marktscanwert,
           "Altbestand": paket_altbestand,
           "Ausstiegsguete": paket_ausstiegsguete,
           "Gestakt": paket_gestakt,

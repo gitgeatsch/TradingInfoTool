@@ -136,6 +136,19 @@ VORGABEN = (
             "gesperrt bis Paket 2.",
             "Nutzerentscheidung 11.09.: ,ja Paket B, Deckel 5x, Rest wie "
             "empfohlen'; Prioritaet ,1 Hebel 2 Spot 3 Akkumulation'"),
+    Vorgabe("SOFORT-EINTRAGEN",
+            "⚠️ NUTZERVORGABE 12.09.: *,offene Punkte und Erledigungen immer "
+            "gleich eintragen in Doku und Plan'*. Nicht am Ende einer "
+            "Sitzung, nicht ,wenn es rund ist' - SOFORT, im selben Zug wie "
+            "die Arbeit. ⚠️ Der Grund steht in der Sitzung selbst: am 12.09. "
+            "kamen an einem Tag 15 Befunde und 6 Planschritte dazu; was "
+            "nicht im Moment des Findens eingetragen wurde, war eine Stunde "
+            "spaeter nicht mehr rekonstruierbar. Ein Befund, der nur im "
+            "Gespraech steht, ist verloren. ➔ Gilt fuer BEIDES: was fertig "
+            "ist, wird als fertig vermerkt - und was dabei offen bleibt, "
+            "wird im selben Zug als offen eingetragen, nicht "
+            "mitgeschleppt.",
+            "Nutzervorgabe 12.09."),
     Vorgabe("SCHRITT-FUER-SCHRITT",
             "⚠️⚠️ NUTZERVORGABE 12.09.: *,bei der Umsetzung sorgsam Schritt "
             "fuer Schritt vorgehen und IMMER PRUEFEN, ob die Punkte "
@@ -805,6 +818,20 @@ REIHENFOLGE = (
             # zu 40. Alles, was 40 SELBST leisten kann, ist geleistet.
             fertig=True, block="D-BETRIEB"),
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
+            "✔ DIE WERTPRUEFUNG IST GELAUFEN (Nutzerauftrag 12.09., Befund "
+            "2.405): der alte Marktscan schlaegt den Zufall NICHT - 40,4 %% "
+            "seiner Funde liefen besser als der Markt, ein Zufallsgriff in "
+            "die eigene Watchlist erreicht 44,7 %%. ⚠️ DAMIT HAT DIESER "
+            "SCHRITT EINEN MASSSTAB: der Ersatz muss 44,7 %% schlagen, nicht "
+            "null. ⚠️ Und die 4.071 unbearbeiteten Kandidaten sind kein "
+            "Rueckstand mehr - eine Quelle ohne nachweisbaren Wert erzeugt "
+            "keinen Verlust durch Warten. ➔ ZWEI PUNKTE VORGEZOGEN (2.405-"
+            "folge): (a) ,bei Bitpanda handelbar' liegt bei -3,13 %% gegen "
+            "-7,12 %% insgesamt - wenn das traegt, ist der HANDELBARKEITS-"
+            "Filter mehr wert als die ganze Bewertung des Scans, und das "
+            "waere billig zu haben; (b) die Selektion heilen: solange nur "
+            "verfolgt wird, was der Scan selbst hoch einstuft, misst man "
+            "seine Konsistenz statt seiner Guete. "
             "⚠️ ERSATZ FUER DEN ALTEN MARKTSCAN, in drei Stufen (2.385-pscan): "
             "(1) SCHATTEN - denselben gemessenen Rang wie in der Kette taeglich "
             "fuer ALLE Werte mitschreiben, fuer die die Messbasis reicht (heute "
