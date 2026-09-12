@@ -1098,6 +1098,10 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.390** — ✔✔✔ DIE ERSTE ECHTE HEBELMAIL AUS PAKET B - SOL, 12.09.2026 07:39, Modell gemini-3.1-flash-lite. DIE RECHNUNG STIMMT UND IST NACHVOLLZIEHBAR: Trefferquote 34,6 %% bei CRV 2,0 -> halbes Kelly 0,97 %% -> Risiko 0,97 %% von 17.987 EUR = 175 EUR; Aggregat-Deckel 0 von 540 EUR belegt; bei 8,9 %% Stop 1.962 EUR Positionswert / 500 EUR Einsatz = 3,9x; am Stop -174 EUR, am Ziel +349 EUR. Nachgerechnet: Stopabstand (88,14 -> 80,26) = 8,9 %%, Ziel = 2x Stopabstand = 17,9 %%, Liquidation 72,17 EUR ,hinter dem Stop bis etwa Tag 46'. Die Mail nennt die Herleitung in EUR, den Deckel und die Grenze - genau wie gebaut. ⚠️ Der Trade traegt sich nach Gebuehren NICHT (noetig 44,4 %% Standard / 53,3 %% Bitpanda gegen 34,6 %% geschaetzt) - das steht da und sperrt nichts (Regel 2)
+
+- Quelle: Mail SOL 12.09. · GUI Hebel-Reiter
+
 **2.389** — ✔✔ DIE ABNAHME DES ERSTEN UMLAUFS (12.09.2026, aus dem Logfenster des NB-Exports). Neustart 07:08:06, alle Schluessel gefunden, Fernsteuerseite oben. In 17 Minuten ZWEI vollstaendige Umlaeufe ueber ALLE fuenf Ketten - aktien, hedge, krypto (43 von 43 gedeckt), rohstoffe, themen_etf, jeweils scharf. 0 Signale, Mails gehen raus (SMTP arbeitet: Verkaufsvorschlaege und Stop-Nachzieh-Empfehlungen an den Nutzer). Nur 4 Fehler seit dem Neustart, alle vier derselbe bekannte (`marktrang`, messdaten.db - siehe 2.389-log). ✔ UND DER SCHALTER WIRKT WIE GEBAUT: `hebel_screening_job` laeuft weiter alle 15 Minuten und protokolliert ,Screening uebersprungen; Positionsabgleich laeuft weiter' - genau die Trennung aus 2.379-schalter, jetzt im Betrieb belegt
 
 - Quelle: NB-Export 12.09. 07:25 · log_auszug
@@ -2377,6 +2381,18 @@
 **2.315** — ➔ WAS AUS 2.312 FOLGT - und es ist KEIN Abschalten: `funding` traegt auf 10 %% und 50 %%, nur bei 20 %% nicht. Nach der Nutzervorgabe faellt kein Beitrag ohne Grund, und ein Nichttragen auf EINER von drei Mengen ist ein Grund zum Nachsehen, keiner zum Entfernen. ⚠️ Zu klaeren: ob die 20-%%-Menge bei `funding` eine Besonderheit hat (Abdeckung 300 von 536 - die Momentum-Auswahl und die Funding-Verfuegbarkeit koennten sich ueberschneiden) oder ob es Rauschen ist
 
 - Quelle: V10, aus 2.312
+
+**2.390-gui** — ⚠️⚠️ GUI UND MAIL LAUFEN AUSEINANDER (Nutzerbefund 12.09.: *,die GUI bzw. Anzeige und eMail sollten nicht wesentlich auseinanderlaufen'*). Die Mail hat seit S-4 die neue Gliederung (AUF EINEN BLICK · WAS DAGEGEN SPRICHT · sechs Abschnitte · Anhang A/B/C). Der Hebel-Reiter der Oberflaeche zeigt weiter die ALTE Dreiteilung: ,1. MATHEMATISCH BERECHNET / 2. LLM-BEWERTUNG (Konfidenz -) / 3. KONKLUSION (RISIKOFAKTOREN)' mit ,Keine strukturierten Risikofaktoren verfuegbar'. ⚠️ DREI KONKRETE ABWEICHUNGEN: (1) die Spalten ,Konfidenz' und ,Trigger' sind leer, weil die neue Kette sie bewusst nicht liefert (Konfidenz war 77,5 %% vorhergesagt gegen 33,3 %% eingetreten); (2) die Liste fuehrt Zeilen mit 1,0x bis 1,2x als ,Hebel' - seit dem Rollout ist alles unter 2x SPOT, die Zeilen stammen aus Laeufen vor 07:08; (3) die GUI zeigt Zonen in USD UND EUR, die Mail nur in EUR. Es sind ZWEI Leser desselben Signals, und sie erzaehlen Verschiedenes
+
+- Quelle: GUI Hebel-Reiter 12.09. · Mail SOL 12.09.
+
+**2.390-warnungen** — ⚠️⚠️ DIE MAIL WARNT MEHR ALS SIE SAGT (Nutzerbefund 12.09.: *,ich sehe vor lauter Warnungen was nicht passen koennte nicht auf einen Blick was relevant ist'*). Gezaehlt an der SOL-Mail: rund 19 Warn- und Dagegen-Zeilen (Kopf 3, ,Was dagegen spricht' 3, Bewertung 3, Rechnung 2, Marktvergleich 3, Termine und Projekt 4, Anhang 1). Dem steht KEINE einzige Dafuer-Zeile gegenueber: ,von 4 pruefbaren Merkmalen 2 dagegen, 2 noch nicht bewertbar'. ⚠️ Das ist kein Darstellungsfehler, sondern die ehrliche Folge einer duennen Bewertung (EIN tragender Beitrag) - die Mail sagt es sogar selbst. Die Frage ist, ob der Leser bei dieser Dichte noch erkennt, was ENTSCHEIDET. ⚠️ Dazu echte Doppelungen in derselben Mail: ,steht auf EINEM Beitrag' zweimal, die Kursmarke 91,15 EUR dreimal (Marken, Widerstand, Kursmarken), der Umschlag 7,6 %% zweimal (Lage und Belege), der Stopabstand 8,9 %% dreimal
+
+- Quelle: Mail SOL 12.09. · Nutzerbefund
+
+**2.390-zahlen** — ⚠️⚠️⚠️ ZAHLENVERDACHT IN ANHANG B: DIE GEBUEHREN IGNORIEREN DEN HEBEL. Der Kopf rechnet gehebelt (,am Stop -174 EUR' bei 3,9x), Anhang B rechnet auf den EINSATZ: ,Standard 0,30 %%: 3,0 %% des Einsatzes (rund 15 EUR) - davon Handel 0,6 %%, Finanzierung 2,4 %% fuer 16 Tage -> frisst 33 %% Ihres Risikos'. Die 33 %% ergeben sich gegen 44,50 EUR, also gegen das UNGEHEBELTE Risiko (8,9 %% von 500 EUR) - nicht gegen die 174 EUR aus dem Kopf. Und die Finanzierung von 2,4 %% ist auf 500 EUR gerechnet; bei 3,9x liegt der KREDIT bei rund 1.462 EUR, 16 Tage x 0,18 %% waeren rund 42 EUR statt 12. ⚠️ WENN DAS ZUTRIFFT, ist die Kostenaussage bei jedem Hebelgeschaeft zu niedrig - und sie steht in derselben Mail wie die gehebelte Ergebniszeile. ZU PRUEFEN, nicht angenommen: an `trefferbilanz`/`kosten` gegen die echten Funktionen, mit einem Fall ohne und einem mit Hebel
+
+- Quelle: Mail SOL 12.09. Anhang B · Schritt 41
 
 **2.389-richtung** — ⚠️ ABSICHERUNG: ZWEI SIGNALE FIELEN AN DER RICHTUNGSPFLICHT. Im ersten Umlauf nach dem Neustart meldete hedge/absicherung 2 Fehler: *,DBPK: NACHKAUFEN ohne Richtung - erlaubt (LONG, SHORT), bekommen None'*, dasselbe fuer 3QSS. S6c verlangt die Richtung instrumentunabhaengig; das Modell liefert sie fuer die beiden Absicherungstitel nicht. Im ZWEITEN Umlauf trat es nicht auf - es haengt am Modell, nicht an der Struktur. ⚠️ Folge: an solchen Laeufen entsteht fuer die Absicherung kein Signal, ohne dass es jemandem auffaellt (2 von 2 Werten)
 

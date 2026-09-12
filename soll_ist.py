@@ -524,7 +524,8 @@ REIHENFOLGE = (
             "agent/krypto/backtesting.py"),
 
     Schritt(31, "EMAIL STRUKTUR UND INHALTE",
-            "⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
+            "⚠️ SETZT AUF SCHRITT 41 AUF (Fachpruefung) - erst pruefen, dann "
+            "straffen. ⚠️ NUTZERVORGABE 11.09.: Struktur und Inhalte straffen. "
             "Regel 1 war schon erfuellt (2.356); offen sind Regel 2 "
             "(gleichlautende Luecken zu EINEM Satz, gezaehlt nach GRUND) "
             "und Regel 3 (Anhang statt Weglassen). ⚠️ Vorbehalt aus dem "
@@ -620,6 +621,27 @@ REIHENFOLGE = (
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
+    Schritt(41, "MAIL UND GUI - FACHPRUEFUNG VOR DER STRAFFUNG",
+            "⚠️ NUTZERVORGABE 12.09. nach der ERSTEN echten Hebelmail: *,die "
+            "Struktur der eMail ist nicht schlecht, jedoch sehe ich vor lauter "
+            "Warnungen nicht auf einen Blick was relevant ist - davor aber "
+            "eine saubere fachliche und inhaltliche Bewertung'*. ⚠️⚠️ DIE "
+            "REIHENFOLGE IST DIE VORGABE: erst pruefen, DANN straffen - wer "
+            "kuerzt, bevor er weiss, was fehlt und was falsch ist, kuerzt das "
+            "Falsche. (1) FACHPRUEFUNG: fehlen relevante Bewertungen? Sind die "
+            "ZAHLEN korrekt (erster Verdacht: 2.390-zahlen, die Gebuehren "
+            "rechnen ohne Hebel)? (2) REDUNDANZ: echte Doppelungen gegen "
+            "bewusste Wiederholung trennen (2.390-warnungen: Kursmarke "
+            "dreimal, Stopabstand dreimal, ,EIN Beitrag' zweimal). (3) "
+            "LESBARKEIT: 19 Warnzeilen gegen null Dafuer-Zeilen - was "
+            "ENTSCHEIDET, muss oben stehen. (4) BEGRIFFE: ,Modell' meint im "
+            "Kopf das LLM und in Abschnitt 5 die Rollen - doppelt belegt; wo "
+            "stehen die LLM-Bewertungen und was ist aus der Konfidenz "
+            "geworden? (5) GLEICHLAUF MIT DER GUI (2.390-gui): die Oberflaeche "
+            "zeigt die alte Dreiteilung, leere Konfidenz-/Trigger-Spalten und "
+            "1,0-1,2x-Zeilen als ,Hebel'. ⚠️ Schritt 31 (Straffung nach Regel "
+            "2 und 3) kommt DANACH und setzt auf diesem Ergebnis auf.",
+            "Nutzervorgabe 12.09.; Befunde 2.390*"),
     Schritt(40, "ALTBESTAND STILLLEGEN",
             "⚠️ NUTZERVORGABE 12.09.: *,damit wir nicht laufend ueber "
             "Altbestaende stolpern, sollten wir diese sauber stilllegen'*. "

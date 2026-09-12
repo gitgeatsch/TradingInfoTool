@@ -5162,3 +5162,21 @@ Kandidaten an. Seit 07:08 ist auch der Erzeuger aus.
   Suite-Absturz, nur kostet er hier die Lesbarkeit des Logs (2.389-log).
 - Die Absicherung verlor zwei Signale an der Richtungspflicht, weil das Modell
   keine Richtung nannte (2.389-richtung).
+
+## Die erste echte Hebelmail (SOL, 12.09.2026) — und was sie zeigt
+
+**Die Rechnung stimmt.** Trefferquote 34,6 % → halbes Kelly 0,97 % → Risiko
+175 EUR von 17.987 EUR Kapital → bei 8,9 % Stop 3,9x, Deckel 0 von 540 EUR
+belegt, am Stop −174 EUR. Alles nachgerechnet, alles in der Mail hergeleitet.
+
+**Drei Befunde daraus** (Nutzerdurchsicht):
+
+| | |
+|---|---|
+| **GUI läuft der Mail hinterher** (2.390-gui) | alte Dreiteilung, leere Konfidenz- und Trigger-Spalten, 1,0–1,2x-Zeilen als „Hebel" |
+| **19 Warnzeilen, keine Dafür-Zeile** (2.390-warnungen) | ehrliche Folge einer dünnen Bewertung — aber der Leser erkennt nicht mehr, was entscheidet. Dazu echte Doppelungen |
+| ⚠️ **Zahlenverdacht** (2.390-zahlen) | Anhang B rechnet die Gebühren auf den Einsatz, nicht auf den Hebel: 12 EUR Finanzierung statt rund 42 |
+
+➔ **Schritt 41** — Fachprüfung vor der Straffung. Die Reihenfolge ist die
+Vorgabe: Wer kürzt, bevor er weiß, was fehlt und was falsch ist, kürzt das
+Falsche. Schritt 31 (Straffung) setzt darauf auf.
