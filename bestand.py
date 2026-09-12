@@ -3127,8 +3127,18 @@ BEFUNDE = (
                "Fehler gemeldet - nur kostet er hier keinen Absturz, sondern "
                "die Lesbarkeit des Logs. Wer echte Fehler sucht, sucht sie in "
                "einem Rauschen aus Falschmeldungen. ➔ Einmal je Lauf als "
-               "Hinweis statt bei jedem Symbol als ERROR", "offen",
-               "NB-Export 12.09. · agent/marktrang.py"),
+               "Hinweis statt bei jedem Symbol als ERROR. ✔ BEHOBEN AM SELBEN "
+               "TAG (Nutzerentscheidung 12.09.): `marktrang._messbasis_ausfall` "
+               "unterscheidet, was vorher in einen Topf fiel - FEHLT die Datei, "
+               "ist der Rang unmoeglich und das ist abgesprochen (EINMAL je "
+               "Prozess ein Hinweis, danach still); IST sie da und liefert "
+               "nichts, bleibt es ein Fehler bei JEDEM Lauf. Die Unterscheidung "
+               "steht an EINER Stelle - die Rangschleife entscheidet sie nicht "
+               "selbst, sonst laufen zwei Fassungen auseinander. Gegengeprueft "
+               "an der ECHTEN Funktion mit Log-Mitschnitt (Paket Luecken, drei "
+               "Pruefungen): hinweis / still / fehler. Erwartete Wirkung am "
+               "Notebook: 262 der 362 Fehlerzeilen fallen weg", "gilt",
+               "NB-Export 12.09. · agent/marktrang._messbasis_ausfall"),
     Befundlage("2.389-richtung", "⚠️ ABSICHERUNG: ZWEI SIGNALE FIELEN AN DER "
                "RICHTUNGSPFLICHT. Im ersten Umlauf nach dem Neustart meldete "
                "hedge/absicherung 2 Fehler: *,DBPK: NACHKAUFEN ohne Richtung - "

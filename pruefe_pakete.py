@@ -13864,6 +13864,33 @@ def paket_luecken() -> None:
 
     P = "Luecken"
 
+    # ---- EIN ABGESPROCHENER ZUSTAND IST KEIN FEHLER (12.09.2026) ------
+    #
+    # Befund 2.389-log: am Notebook fehlt `data/messdaten.db` planmaessig,
+    # und `marktrang` meldete das bei JEDEM Lauf auf ERROR-Ebene - 262 von
+    # 362 Fehlerzeilen in 72 Stunden. Die Meldung war richtig und hat
+    # trotzdem geschadet: sie verdeckt die Fehler, die etwas Neues sagen.
+    #
+    # ⚠️ GEPRUEFT WIRD DIE UNTERSCHEIDUNG, nicht die Lautstaerke - und
+    # zwar an der ECHTEN Funktion, nicht an einer Kopie.
+    from agent import marktrang as _MRL
+
+    _MRL._SCHON_GEMELDET.discard("entfaellt:pruefprobe")
+    _erst = _MRL._messbasis_ausfall("pruefprobe", "data/gibt_es_nicht.db")
+    _zweit = _MRL._messbasis_ausfall("pruefprobe", "data/gibt_es_nicht.db")
+    pruefe(P, "⚠️⚠️ fehlt die Messbasis-DATEI, kommt EIN Hinweis - nicht bei jedem Lauf ein Fehler",
+           (_erst, _zweit) == ("hinweis", "still"),
+           "erst %r, dann %r - am Notebook waren es 262 ERROR-Zeilen in 72 Stunden fuer einen abgesprochenen Zustand" % (_erst, _zweit))
+    pruefe(P, "⚠️ ist die Datei DA und liefert nichts, bleibt es ein Fehler",
+           _MRL._messbasis_ausfall("pruefprobe", "agent/marktrang.py") == "fehler",
+           "sonst verschwindet ein echter Ausfall in derselben Sammelkategorie wie die geplante Abwesenheit")
+    _MRL._SCHON_GEMELDET.discard("entfaellt:pruefprobe")
+    _mrq = _quelltext("agent/marktrang.py")
+    pruefe(P, "und die Rangschleife entscheidet das nicht selbst, sie ruft die eine Stelle",
+           "_messbasis_ausfall(name, MESSBASIS.get(name" in _mrq
+           and _mrq.count("def _messbasis_ausfall") == 1,
+           "zwei Fassungen derselben Unterscheidung laufen auseinander - dieselbe Falle wie bei den vier Kopien der Stopzeile")
+
     pruefe(P, "Krypto meldet die Terminmarktluecken weiterhin",
            all(_PO._luecke_melden(n, "krypto")
                for n in _PO.TERMINMARKT_GROESSEN),

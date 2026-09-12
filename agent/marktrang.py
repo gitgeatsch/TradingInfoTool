@@ -366,6 +366,43 @@ _MESSBASIS_ZWISCHEN: dict = {}
 _SCHON_GEMELDET: set = set()
 
 
+def _messbasis_ausfall(name: str, datei: str | None) -> str:
+    """Wie ein Ausfall der Messbasis gemeldet wird - und warum verschieden.
+
+    ⚠️⚠️ EIN ABGESPROCHENER ZUSTAND IST KEIN FEHLER (12.09.2026, Befund
+    2.389-log). Am Notebook liegt `data/messdaten.db` planmaessig nicht
+    (166 MB, so entschieden beim Rollout 02.09.). Die Meldung darueber
+    stand daraufhin 262 Mal in 72 Stunden im Log - bei 362 Fehlerzeilen
+    insgesamt. Sie sagte nichts Falsches und richtete trotzdem Schaden an:
+    wer echte Fehler sucht, sucht sie seither im Rauschen.
+
+    DIE UNTERSCHEIDUNG IST DER PUNKT, nicht die Lautstaerke:
+
+        Datei FEHLT      der Rang ist unmoeglich, und das ist abgesprochen
+                         -> einmal je Prozess als Hinweis
+        Datei IST DA      sie liefert trotzdem nichts -> das ist ein
+                         Fehler, und zwar bei jedem Lauf
+
+    Gibt zurueck, was gemeldet wurde (,hinweis', ,still' oder ,fehler') -
+    damit es pruefbar ist, ohne das Log zu lesen."""
+    import os as _os
+
+    if datei and not _os.path.exists(datei):
+        marke = "entfaellt:%s" % name
+        if marke in _SCHON_GEMELDET:
+            return "still"
+        _SCHON_GEMELDET.add(marke)
+        logger.info("Marktrang: %s entfaellt - die Messbasis %s liegt an "
+                    "diesem Geraet nicht. Der Beitrag fehlt damit in der "
+                    "Bewertung; diese Meldung kommt einmal je Prozess.",
+                    name, datei)
+        return "hinweis"
+    logger.error("Marktrang: %s uebersprungen - Messbasis nicht lesbar "
+                 "(%s ist da, liefert aber nichts). Ein Rang ueber die "
+                 "falsche Menge saehe aus wie ein richtiger.", name, datei)
+    return "fehler"
+
+
 def messbasis(name: str) -> set:
     """Die Symbole, auf denen der Beitrag gemessen wurde. Leer = unbekannt."""
     import sqlite3
@@ -629,9 +666,9 @@ def raenge(symbole, *, mit_turnover: bool = True) -> dict:
         # ⚠️ AUF DIE MESSBASIS EINGRENZEN - siehe den Block bei MESSBASIS.
         basis = messbasis(name)
         if not basis:
-            logger.error("Marktrang: %s uebersprungen - Messbasis nicht "
-                         "lesbar. Ein Rang ueber die falsche Menge saehe "
-                         "aus wie ein richtiger.", name)
+            # Die Unterscheidung steht in `_messbasis_ausfall` - eine
+            # Stelle, an der sie geprueft werden kann (Befund 2.389-log).
+            _messbasis_ausfall(name, MESSBASIS.get(name, (None, None))[0])
             continue
         werte = {s_: w for s_, w in roh.items() if s_ in basis}
         if len(werte) < MINDEST_QUERSCHNITT:
