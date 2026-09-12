@@ -89,7 +89,7 @@ def main() -> int:
     faelle = list(con.execute("""
         SELECT symbol, einstufung, outcome_return_pct,
                date(outcome_gestartet_am), date(outcome_geprueft_am),
-               score_gesamt, bitpanda_gelistet
+               score_gesamt, bitpanda_gelistet, market_cap_usd
           FROM marktscan_candidates
          WHERE outcome_return_pct IS NOT NULL
            AND outcome_gestartet_am IS NOT NULL
@@ -121,7 +121,7 @@ def main() -> int:
     # ---- die Guete je Fall ----------------------------------------------
     roh: dict = {}
     fenster = []
-    for sym, stufe, ertrag, von, bis, score, bp in faelle:
+    for sym, stufe, ertrag, von, bis, score, bp, _mc in faelle:
         m = markt_im_fenster(reihen, von, bis)
         if m is None:
             continue
@@ -162,7 +162,7 @@ def main() -> int:
     for _cg, _sym in con.execute(
             "SELECT coingecko_id, symbol FROM marktscan_candidates"):
         _ids.setdefault(_sym, set()).add(_cg)
-    for sym, stufe, ertrag, von, bis, score, bp in faelle:
+    for sym, stufe, ertrag, von, bis, score, bp, _mc in faelle:
         m = markt_im_fenster(reihen, von, bis)
         if m is None:
             continue
@@ -180,6 +180,32 @@ def main() -> int:
     print("  ⚠️ und nach der QUELLE - war der Coin AUCH im Trending?")
     for k in ("auch_trending", "nur_top_gainer"):
         zeige(k)
+
+    # ---- HANDELBARKEIT GEGEN GROESSE (2.405-folge, Punkt 3) ------------
+    #
+    # ⚠️ "bei Bitpanda handelbar" traegt sichtbar - aber handelbare Werte
+    # sind auch die GROESSEREN. Ohne Kontrolle waere der Befund ein
+    # Groesseneffekt mit einem anderen Namen. Deshalb dieselbe Frage noch
+    # einmal INNERHALB der groesseren Haelfte: bleibt der Unterschied, liegt
+    # er nicht an der Marktkapitalisierung.
+    _mit_mc = [(f, m) for f, m in
+               ((f, f[7]) for f in faelle) if m and m > 0]
+    if len(_mit_mc) >= 20:
+        _mit_mc.sort(key=lambda x: x[1])
+        _gross = [f for f, _ in _mit_mc[len(_mit_mc) // 2:]]
+        for f in _gross:
+            sym, stufe, ertrag, von, bis, score, bp, _mc = f
+            m = markt_im_fenster(reihen, von, bis)
+            if m is None:
+                continue
+            g = (float(ertrag) / 100.0) - m
+            roh.setdefault("gross_handelbar" if bp == 1
+                           else "gross_nicht_handelbar", []).append(g)
+        print("")
+        print("  ⚠️⚠️ Handelbarkeit INNERHALB der groesseren Haelfte -")
+        print("      bleibt der Unterschied, ist es KEIN Groesseneffekt")
+        for k in ("gross_handelbar", "gross_nicht_handelbar"):
+            zeige(k)
 
     # ---- die Zufallskontrolle -------------------------------------------
     #

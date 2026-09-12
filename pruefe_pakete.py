@@ -14799,6 +14799,26 @@ def paket_marktscanwert() -> None:
            "Symbole sind nicht eindeutig - dieselbe Falle, die im Projekt "
            "schon einmal zwei Assets vermengt hat")
 
+    # ---- die Groessenkontrolle (2.405-folge, Punkt 3) ------------------
+    #
+    # ⚠️ Handelbare Werte sind auch die GROESSEREN. Ohne Kontrolle waere
+    # "Handelbarkeit traegt" ein Groesseneffekt mit anderem Namen - genau
+    # die Verwechslung, vor der die Vorgabe "Wirksamkeit statt
+    # Merkmalsmessung" warnt.
+    _q = io.open("messe_marktscan_wert.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ die Handelbarkeit wird GEGEN die Groesse kontrolliert",
+           "gross_handelbar" in _q and "market_cap_usd" in _q,
+           "sonst misst man, dass grosse Coins anders laufen als kleine - "
+           "und nennt es Handelbarkeit")
+    pruefe(P, "⚠️ und die Kontrolle teilt an der MITTE, nicht an einer "
+              "gesetzten Grenze",
+           "len(_mit_mc) // 2" in _q,
+           "eine gesetzte Schwelle waere eine zweite Annahme; der Median "
+           "teilt die vorliegende Menge und behauptet nichts")
+    pruefe(P, "sie laeuft nur bei genug Faellen",
+           "len(_mit_mc) >= 20" in _q,
+           "zwei Haelften aus zehn Faellen sind keine Kontrolle")
+
     pruefe(P, "die echten Einstufungen des Scans sind abgedeckt",
            set(MW.ECHTE) == {"watchlist_wuerdig", "kaufkandidat"},
            "'kein_treffer' gehoert NICHT dazu - diese Zeilen wurden nie "
