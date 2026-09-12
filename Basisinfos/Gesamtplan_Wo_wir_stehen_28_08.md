@@ -5121,3 +5121,24 @@ Bewertung wie in der Kette auf alle Werte anwenden, für die die Messbasis
 reicht — heute 42, davon 35 außerhalb der Watchlist. Erst im Schatten
 mitschreiben, dann messen (`bewegung_r`, nicht Zielerreichung), erst dann
 empfehlen. Engpass ist die Onchain-Basis mit 66 Symbolen.
+
+## ✔ Paket B ist am Notebook scharf (12.09.2026, Befunde 2.384 bis 2.387)
+
+Der Hebel kommt ab jetzt aus der **Wahrscheinlichkeit**, nicht aus der
+Stopgeometrie; alle Hebelrisiken zusammen sind auf 3 % des Kapitals gedeckelt;
+Positionen werden als Trades geführt; die Mail ist gegliedert; die Akkumulation
+bleibt gesperrt.
+
+**Der Rollout hat einen Fehler aufgedeckt, der größer war als der Rollout:**
+Das Kapital lag bei 9.942 statt 17.978 EUR, weil sechs gestakte Positionen
+fehlten. Der Deckel hätte auf halber Größe gearbeitet (298 statt 539 EUR).
+Gefunden hat es nicht eine Messung, sondern das Nachrechnen der Zeitreihe.
+
+**Und zwei Prüfungen haben sich als geräteabhängig erwiesen** (2.386, 2.387-rot):
+eine planmäßig fehlende Datei tötete die ganze Suite, eine Prüfung verlangte
+etwas, das in diesem Lauf nicht entstand. Beides ist jetzt benannt statt
+grün oder tot — die Suite hat dafür eine dritte Kategorie.
+
+**Offen, nach dem Rollout:** der Schreibjob (2.387-job), die fortgeschriebenen
+Börsentitel (2.387-fortschreibung), die Akkumulationszelle (2.382-akku-anlass,
+Schritt 26) und die Abnahme des ersten Umlaufs.

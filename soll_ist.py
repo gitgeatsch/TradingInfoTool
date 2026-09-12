@@ -433,35 +433,21 @@ REIHENFOLGE = (
             "Befunde 2.382*",
             fertig=True),
     Schritt(24, "ROLLOUT PAKET B",
-            "Gesamtpaket auf das Notebook (stehende Regel). Checkliste "
-            "`Basisinfos/Ausrollen_24_08.md` vorher aktualisieren: "
-            "Pruefungszahl, `config.yaml` am Notebook VOR dem Pull "
-            "abgleichen, S-1 erkennt die Symbolliste (2.368), "
-            "Portfoliowert 02.09. bis Rollout einmal nachrechnen "
-            "(2.376-rollout). ⚠️ Der "
-            "Akkumulationsschalter steht fuer BTC, ETH und SOL seit langem "
-            "an (Vorgabe von `get_dca_erlaubt`, 2.380-akku-schalter) und "
-            "wirkt bis Paket 2 nicht (Sperre). ✔ Fenster 24 h, Position "
-            "ohne Stop Variante B mit Liquidationsregel (2.382-liquidation); "
-            "die Topfregel bleibt bis nach dem Rollout (2.382-topf). ✔ "
-            "VORBEREITET: `ausrollen_paket_b.py` (2.383), am NB mit "
-            "`--nachrechnen` vor dem Neustart; Ablauf in "
-            "`Basisinfos/Ausrollen_24_08.md`, Abschnitt PAKET B. ⚠️ Der Hebel-Schalter je Asset ist opt-in - am NB "
-            "23 von 43 Kryptowerten an; nur dort entsteht ein Hebelgeschaeft. "
-            "Nach dem Nachrechnen des Portfoliowerts den E2E "
-            "(`--nachweis-paket-b`) gegen die frische Sicherung wiederholen. "
-            "OFFEN: alter Marktscan "
-            "weiter aktiv? ✔ ENTSCHIEDEN 12.09.: der Marktscan bleibt AN - "
-            "er ist die einzige Entdeckung ausserhalb der Watchlist und "
-            "kostet keine Modellaufrufe (2.385); der Ersatz wird gemessen, "
-            "bevor er ihn ersetzt (Schritt 39). Das ALTE Hebel-Screening ist "
-            "AUS, der Hebel aus der Quote ist AN (2.384). "
-            "Prompt-Stand 2026-09-11a (2.379-liq).",
-            "Basisinfos/Ausrollen_24_08.md; Nutzerentscheidung 11.09."),
-
-    # ================================================================
-    # PAKET 2 - DIE AKKUMULATION (Messen vor Bauen)
-    # ================================================================
+            "✔ ERLEDIGT 12.09.: Gesamtpaket am Notebook (142 Commits, "
+            "fast-forward). `ausrollen_paket_b.py --nachrechnen` 13 Punkte, 0 "
+            "offen - ⚠️ das Kapital war nicht nur alt, sondern FALSCH: 9.942 "
+            "-> 17.978 EUR, weil sechs gestakte Positionen fehlten (32 "
+            "Symbole mit 6 Kursluecken gegen 38 ohne); der Aggregat-Deckel "
+            "steht damit bei 539 statt 298 EUR (2.387). Suite 2.179 ALLE "
+            "BESTANDEN mit 5 uebersprungenen Bloecken, `--nachweis-paket-b` 17 "
+            "von 17, `finde_freie_namen` 0. Scharf: Hebel aus der Quote AN, "
+            "altes Hebel-Screening AUS, Marktscan AN (2.384, 2.385). Zwei "
+            "Rote unterwegs, beide kein Betriebscode (2.387-rot). ⚠️ OFFEN "
+            "nach dem Neustart: die Abnahme des ersten Umlaufs, der "
+            "Schreibjob (2.387-job), die fortgeschriebenen Boersentitel "
+            "(2.387-fortschreibung).",
+            "Basisinfos/Ausrollen_24_08.md; Notebook-Rollout 12.09.",
+            fertig=True),
     Schritt(25, "AKKU-MESSPAKET",
             "(1) 2.286/2.287 reproduzieren (R-R11); (2) Zeitstabilitaet je "
             "Kandidat fuer H90 - Permutationstest je Haelfte, `n68` ist "

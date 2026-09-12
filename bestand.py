@@ -3118,7 +3118,18 @@ BEFUNDE = (
                "nachgerechnet, waere er auf der halben Groesse gelaufen. "
                "Schalterstand am Geraet bestaetigt: Hebel aus der Quote AN, "
                "altes Hebel-Screening AUS, Marktscan AN. Spalten `instrument`, "
-               "`verlust_am_stop_eur`, `strategie` vorhanden und LESBAR", "gilt",
+               "`verlust_am_stop_eur`, `strategie` vorhanden und LESBAR. ✔ DIE "
+               "KETTE IST DURCH: Suite 2.179 Pruefungen ALLE BESTANDEN, 5 "
+               "Bloecke uebersprungen, Exit 0; `--nachweis-paket-b` 17 von 17 "
+               "Faellen, davon D2 der Kern: der Deckel WANDELT statt zu "
+               "sperren (frei 30 von 539 EUR -> Spot mit 800 EUR, Cooldown 12 "
+               "statt 3,5 h), und die Mail begruendet es im Klartext; "
+               "`finde_freie_namen` 0. ⚠️ EINE ABHAENGIGKEIT, die der "
+               "Notebook-Lauf selbst benannt hat: der Nachweis rechnet gegen "
+               "539 EUR - also gegen die Kapitalbasis, die dieser Rollout "
+               "ERST HERGESTELLT hat. Mit dem alten Wert waeren es 298 EUR "
+               "gewesen und der Deckel haette frueher auf Spot "
+               "zurueckgestuft", "gilt",
                "ausrollen_paket_b.py am Notebook 12.09."),
     Befundlage("2.387-rot", "⚠️ DIE ZWEI ROTEN DES ERSTEN NOTEBOOK-LAUFS - "
                "keine davon ein Fehler des Betriebscodes. (1) Paket Register: "
@@ -3137,8 +3148,29 @@ BEFUNDE = (
                "jetzt an ihrer Voraussetzung: gibt es eine Asset-Mail, MUSS "
                "sie die Kennung tragen; gibt es keine, wird das BENANNT "
                "(uebersprungen). Ein gruener Haken ohne Gegenstand waere "
-               "schlimmer als ein rotes Kreuz", "gilt",
+               "schlimmer als ein rotes Kreuz. ✔ BEIDE ERLEDIGT: die zwei "
+               "Juli-Dokumente haben ueber `markiere_dokumente.py` ihren "
+               "Standkopf mit dem URSPRUENGLICHEN Datum bekommen (2 gesetzt, "
+               "48 unveraendert; unversioniert, also nur am Geraet) - danach "
+               "2.179 Pruefungen ALLE BESTANDEN. ⚠️ Und das Werkzeug nennt "
+               "die Einbahnstrasse selbst: das Aenderungsdatum steht jetzt auf "
+               "heute, die Einstufung kommt ab sofort NUR noch aus dem Kopf", "gilt",
                "Notebook-Lauf 12.09. · pruefe_pakete Paket 15"),
+    Befundlage("2.387-job", "⚠️ OFFEN NACH DEM ROLLOUT: DER "
+               "PORTFOLIOWERT-JOB HAT ZEHN TAGE NICHT GESCHRIEBEN (01.09. bis "
+               "11.09., am Notebook beim Rollout gesehen). Er ist eingeplant "
+               "(`id=portfolio_wert`, mit Nachholfenster), und seine "
+               "Abdeckungsschranke kann es nicht gewesen sein: 26 von 32 "
+               "Werten mit Kurs sind 81 %% gegen die geforderten 80 %%. Das "
+               "Nachrechnen hat die LUECKE geschlossen, nicht die URSACHE. ➔ "
+               "Nach dem Neustart an der juengsten Zeile pruefen: schreibt er "
+               "wieder taeglich, war es der abgeraeumte Prozess vom 02.09.; "
+               "schreibt er nicht, ist es der Job selbst. ⚠️ Dazu ein zweiter "
+               "Punkt: die aelteren Luecken der Zeitreihe (03.08.->20.08., "
+               "20.08.->26.08., 26.08.->01.09.) werden NICHT nachgerechnet - "
+               "der Verlauf hat dort weiter Sprungstellen, der Index bleibt "
+               "stetig", "offen",
+               "Notebook-Rollout 12.09. · scheduler/background.portfolio_wert_job"),
     Befundlage("2.387-fortschreibung", "⚠️ OFFEN NACH DEM ROLLOUT: SECHS "
                "BOERSENTITEL WERDEN DAUERND FORTGESCHRIEBEN. In jeder "
                "nachgerechneten Zeile stehen dieselben Symbole (ISOC, OD7C, "

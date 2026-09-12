@@ -491,3 +491,49 @@ Aggregat-Deckel.
 Zurück ist ein `git revert` über die Paket-B-Commits. **Die Daten bleiben
 additiv:** die Spalte `verlust_am_stop_eur` und die nachgerechneten Tage in
 `portfolio_wert_historie` stören einen älteren Code nicht.
+
+## ✔ Durchgeführt am 12.09.2026 — die echten Zahlen
+
+| Schritt | Ergebnis am Notebook |
+|---|---|
+| `git pull --ff-only` | 142 Commits, fast-forward, keine Konflikte, `config.yaml` lokal unverändert |
+| `ausrollen_paket_b.py` (lesend) | 14 Punkte, 2 offen — genau die vorhergesagten (Kapital alt, Quelle `kapital`) |
+| `ausrollen_paket_b.py --nachrechnen` | 10 Tage geschrieben, **13 Punkte, 0 offen** |
+| `pruefe_pakete.py` | **2.179 Prüfungen, ALLE BESTANDEN, 5 Blöcke übersprungen** |
+| `simuliere_kette.py --nachweis-paket-b` | **17 Fälle, 17 gezeigt, 0 offen** |
+| `finde_freie_namen.py` | 0 Kandidaten |
+
+### ⚠️⚠️ Der wichtigste Fund des Rollouts
+
+Das Kapital war **nicht nur alt, sondern falsch**: 9.942 → **17.978 EUR**. Keine
+Marktbewegung — die alte Zeile führte 32 Symbole mit 6 Kurslücken, die neuen 38
+ohne Lücke. Es fehlten sechs Positionen komplett, die **gestakten** (P-3). Der
+Aggregat-Deckel steht damit bei **539 statt 298 EUR**; ohne das Nachrechnen wäre
+Paket B auf halber Größe scharf gegangen.
+
+⚠️ **Der E2E-Nachweis hängt an dieser Basis:** Er rechnet gegen 539 EUR — also
+gegen den Zustand, den dieser Rollout erst hergestellt hat.
+
+### Zwei Rote unterwegs, beide kein Betriebscode
+
+1. **Register** — zwei unversionierte Juli-Dokumente ohne Standkopf, nur am
+   Notebook. Über `markiere_dokumente.py` gesetzt (2 gesetzt, 48 unverändert).
+2. **Paket 15** — verlangte die Signalkennung an einer Einstiegsmail, die in
+   diesem Lauf gar nicht entstand (der aufgezeichnete KAUFEN-Kandidat lief als
+   Ausstieg). Die Prüfung hängt jetzt an ihrer Voraussetzung.
+
+### ⚠️ Null Rote heißt am Notebook nicht „alles geprüft"
+
+Fünf Blöcke sind übersprungen: vier, weil `data/messdaten.db` dort planmäßig
+fehlt, einer mangels Einstiegsmail. Die vier bekannten Roten vom Desktop liegen
+genau in diesen Blöcken — sie sind dort **nicht beantwortet, nur nicht stellbar**.
+
+### Offen nach dem Rollout
+
+- **Der Schreibjob** hat zehn Tage nicht geschrieben (2.387-job). Nachgerechnet
+  ist die Lücke, nicht die Ursache — nach dem Neustart an der jüngsten Zeile prüfen.
+- **Sechs Börsentitel** werden dauernd fortgeschrieben (2.387-fortschreibung) —
+  gedeckelt auf vier Tage, aber sie gehen ins Kapital und damit in den Deckel ein.
+  Zu prüfen sind die Ticker.
+- **Ältere Lücken** der Kapital-Zeitreihe (ab 03.08.) bleiben stehen.
+- **Die Abnahme des ersten Umlaufs** nach dem Neustart.
