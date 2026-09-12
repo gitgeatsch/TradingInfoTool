@@ -4,6 +4,7 @@
 ⚠️ SCHREIBT NICHT IN DIE PRODUKTIONS-DB. Ziele:
     data/funding_historie.db   Binance Futures, 8-Stunden-Takt, ab 2019
     data/onchain_historie.db   Coin Metrics Community, taeglich, ab 2015
+    data/markt_historie.db     CoinGecko, taeglich, 365 Tage (Schritt 49)
 
 ## Warum rueckwirkend moeglich
 
@@ -35,7 +36,14 @@ import time
 import urllib.error
 import urllib.request
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+# ⚠️ NICHT AUF MODULEBENE UMSTELLEN (12.09.2026, zum zweiten Mal an diesem
+# Tag). `pruefe_pakete` ersetzt `sys.stdout` durch einen Mitschnitt ohne
+# `reconfigure` - das Modul liess sich dort gar nicht erst importieren, und
+# ein Werkzeug, das man nicht importieren kann, kann man auch nicht pruefen.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
 
 import messe_eigenschaft_beitrag as B
 
@@ -48,10 +56,16 @@ def hole(url, versuche=3, pause=1.0, timeout=60):
             r = urllib.request.Request(url, headers=KOPF)
             with urllib.request.urlopen(r, timeout=timeout) as a:
                 return json.loads(a.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             if n == versuche - 1:
                 raise
-            time.sleep(pause * (n + 2))
+            # ⚠️ EIN 429 IST KEINE STOERUNG, SONDERN EINE ANSAGE (12.09.2026).
+            # Wer nach zwei Sekunden wieder anklopft, bekommt wieder 429 und
+            # verbrennt seinen Versuch. Gemessen am ersten Turnover-Lauf: 2
+            # Symbole je Minute statt 27, weil fast jede Anfrage abgewiesen
+            # wurde. Bei einem 429 wird deshalb DEUTLICH laenger gewartet.
+            _code = getattr(e, "code", None)
+            time.sleep((15.0 * (n + 1)) if _code == 429 else pause * (n + 2))
     return None
 
 
@@ -170,6 +184,103 @@ def onchain(unsere, metrik="AdrActCnt", pause=0.8):
     conn.close()
 
 
+# ---------------------------------------------------------------------------
+def turnover(pause=6.0, tage=365):
+    """Umschlag je Tag: Handelsvolumen durch Marktkapitalisierung.
+
+    ⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (Schritt 49, Teil 1, 12.09.2026).
+    Befund 2.410: der GEMESSENE und der ANGEWENDETE `turnover` waren nicht
+    dieselbe Groesse. Beide rechnen `Volumen / (Preis x Umlaufmenge)` - aber
+    die Menge kam aus zwei Quellen:
+
+        Messung      `splycur` aus onchain_historie.db (Coin Metrics)
+        Anwendung    `circulating_supply` von CoinGecko
+
+    Von 33 vergleichbaren Symbolen wichen 16 um mindestens 5 % ab, teils um
+    25 bis 74 % - LINK aus der Watchlist um -25,2 %. Die Onchain-Werte sind
+    runde Zahlen (UNI und LINK je 1.000.000.000): das ist die GESAMTAUSGABE,
+    nicht die UMLAUFENDE Menge. Zwei Begriffe unter einem Namen.
+
+    ⚠️ DIE FORMEL KUERZT SICH, und darin liegt die Loesung:
+
+        turnover = Volumen / (Preis x Menge) = Volumen / MARKTKAPITALISIERUNG
+
+    Beide Groessen liefert `market_chart` in EINEM Aufruf - keine
+    Umlaufmenge noetig, also auch keine zweite Quelle, die abweichen kann.
+    Gegengerechnet an ADA am 12.09.: Historie 0,039040 gegen die
+    Live-Funktion 0,039041.
+
+    ⚠️⚠️ GENAU DIE 250 VON SEITE 1, nicht mehr. `marktrang.turnover_werte`
+    liest `coins/markets?per_page=250&page=1` - wer hier breiter laedt,
+    misst wieder etwas anderes als der Betrieb anwendet und baut 2.410 neu
+    auf, nur andersherum. Wer mehr will, aendert BEIDE Seiten.
+
+    ⚠️ `days=365` IST DIE FREIE GRENZE: `days=max` beantwortet CoinGecko
+    ohne Schluessel mit HTTP 401 (geprueft 12.09.). 365 Tage reichen fuer
+    eine Beitragsmessung um ein Vielfaches.
+
+    ⚠️⚠️ PAUSE 6 s - UND DAS IST GEMESSEN, NICHT GESCHAETZT. Meine erste
+    Fassung stand auf 2,2 s mit der Begruendung "die freie Grenze liegt bei
+    etwa 30 Anfragen je Minute". Der erste echte Lauf brachte 2 Symbole je
+    Minute statt 27: CoinGecko antwortet mit HTTP 429, und jede Wiederholung
+    kostet zusaetzlich. Der Abruf selbst dauert 0,2 s - die Zeit geht
+    vollstaendig fuer abgewiesene Anfragen drauf.
+
+    Bei 6 s sind es rund zehn Anfragen je Minute und damit etwa 25 Minuten
+    fuer 250 Symbole. Wer es eilig hat, gewinnt nichts: mit 2,2 s dauerte
+    derselbe Lauf hochgerechnet 125 Minuten."""
+    print("=" * 78)
+    print("C. UMSCHLAG (CoinGecko, Volumen / Marktkapitalisierung)")
+    print("=" * 78)
+    markets = hole("https://api.coingecko.com/api/v3/coins/markets"
+                   "?vs_currency=usd&order=market_cap_desc&per_page=250&page=1")
+    # ⚠️ DIE ID UND DAS SYMBOL - beides. Die ID braucht der Abruf, das Symbol
+    # ist unser Schluessel. Ueber das Symbol allein waere CANTON schon einmal
+    # falsch zugeordnet worden (siehe marktrang._coingecko_namen).
+    paare = [(str(e.get("id") or ""), str(e.get("symbol") or "").upper())
+             for e in (markets or []) if e.get("id") and e.get("symbol")]
+    print("  %d Symbole auf Seite 1 der Marktliste" % len(paare))
+
+    conn = sqlite3.connect("data/markt_historie.db")
+    anlegen(conn, "turnover")
+    ok = leer = fehler = 0
+    for i, (cg_id, sym) in enumerate(paare, 1):
+        try:
+            d = hole("https://api.coingecko.com/api/v3/coins/%s/market_chart"
+                     "?vs_currency=usd&days=%d&interval=daily" % (cg_id, tage))
+            vol = {int(t) // 86400000: v for t, v in (d.get("total_volumes") or [])}
+            mc = {int(t) // 86400000: v for t, v in (d.get("market_caps") or [])}
+            zeilen = []
+            for tagnr, v in vol.items():
+                m = mc.get(tagnr)
+                # ⚠️ KEIN WERT STATT EINER NULL. Eine Marktkapitalisierung
+                # von 0 ergaebe eine Division durch null; sie wegzulassen ist
+                # ehrlicher als sie zu erfinden (N-40).
+                if m and m > 0 and v is not None:
+                    datum = dt.datetime.fromtimestamp(
+                        tagnr * 86400, dt.timezone.utc).date().isoformat()
+                    zeilen.append((sym, datum, float(v) / float(m)))
+            if zeilen:
+                conn.executemany(
+                    "INSERT OR REPLACE INTO turnover VALUES (?,?,?)", zeilen)
+                conn.commit()
+                ok += 1
+            else:
+                leer += 1
+        except Exception as e:                       # noqa: BLE001
+            fehler += 1
+            print("  %-9s FEHLER: %s" % (sym, str(e)[:50]))
+        if i % 25 == 0:
+            print("  %3d von %d  (ok %d, leer %d, Fehler %d)"
+                  % (i, len(paare), ok, leer, fehler))
+        time.sleep(pause)
+    n, sy, a, b = conn.execute(
+        "SELECT COUNT(*), COUNT(DISTINCT symbol), MIN(datum), MAX(datum) "
+        "FROM turnover").fetchone()
+    print("FERTIG: %d Symbole, %d Tagespunkte, %s .. %s" % (sy, n, a, b))
+    conn.close()
+
+
 if __name__ == "__main__":
     unsere = {s.upper() for s in B.lade().keys()}
     was = sys.argv[1] if len(sys.argv) > 1 else "beides"
@@ -177,3 +288,8 @@ if __name__ == "__main__":
         funding(unsere)
     if was in ("onchain", "beides"):
         onchain(unsere)
+    # ⚠️ NICHT IN "beides": `turnover` braucht rund zehn Minuten und laedt
+    # 250 Symbole, die mit `unsere` nichts zu tun haben - wer "beides" ruft,
+    # will die Reihen zu SEINEN Werten auffrischen, nicht den halben Markt.
+    if was == "turnover":
+        turnover()

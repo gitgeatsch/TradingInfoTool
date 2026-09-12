@@ -14618,6 +14618,73 @@ def paket_kostenbezug() -> None:
            "(L-1)/L x satz - bei 5x ist mehr Kapital geliehen als bei 3,9x")
 
 
+def paket_turnoverquelle() -> None:
+    """Schritt 49 - EINE Quelle fuer turnover, Messung wie Anwendung.
+
+    ⚠️ Befund 2.410: die Messung nahm die Umlaufmenge aus `onchain_historie`
+    (Coin Metrics), der Betrieb aus CoinGecko. Von 33 vergleichbaren
+    Symbolen wichen 16 um mindestens 5 % ab - LINK um -25,2 %, weil die
+    Onchain-Zahl die GESAMTAUSGABE ist (glatte 1.000.000.000).
+
+    Die Loesung ist eine Kuerzung, keine neue Quelle:
+    `Volumen / (Preis x Menge)` = `Volumen / Marktkapitalisierung`."""
+    P = "Turnoverquelle"
+    import importlib
+
+    HF = importlib.import_module("hole_fremdreihen")
+
+    pruefe(P, "⚠️ es gibt eine Ladefunktion fuer den Umschlag",
+           hasattr(HF, "turnover"),
+           "und zwar IN `hole_fremdreihen`, nicht als neues Skript - dort "
+           "stehen Wiederholung, Pausen und Tagesverdichtung schon")
+    _d = (HF.turnover.__doc__ or "")
+    pruefe(P, "⚠️⚠️ sie rechnet Volumen durch MARKTKAPITALISIERUNG",
+           "Volumen / MARKTKAPITALISIERUNG" in _d,
+           "die Umlaufmenge kuerzt sich heraus - damit kann keine zweite "
+           "Quelle mehr abweichen")
+    _q = io.open("hole_fremdreihen.py", encoding="utf-8").read()
+    _fn = _q.split("def turnover(")[1].split(chr(10) + "def ")[0]
+    # ⚠️ NUR DER CODE, NICHT DER DOCSTRING. Der erklaert ausdruecklich, warum
+    # `circulating_supply` und `splycur` NICHT mehr gebraucht werden - eine
+    # Pruefung, die den Text mitliest, schlaegt auf ihre eigene Begruendung
+    # an. (Erste Fassung tat genau das.)
+    _code = _fn.split('"""')[2] if _fn.count('"""') >= 2 else _fn
+    pruefe(P, "und sie holt die Menge NICHT mehr getrennt",
+           "circulating_supply" not in _code and "splycur" not in _code,
+           "eine zweite Quelle fuer dieselbe Groesse ist genau der Fehler "
+           "aus 2.410")
+    pruefe(P, "⚠️ sie laedt GENAU die Seite, die auch der Betrieb liest",
+           "per_page=250&page=1" in _fn,
+           "breiter zu laden hiesse, wieder etwas anderes zu messen als man "
+           "anwendet - 2.410 andersherum")
+    from agent import marktrang as MR
+    pruefe(P, "und der Betrieb liest wirklich diese Seite",
+           "per_page=250&page=1" in MR.COINGECKO_MARKETS,
+           "beide Seiten muessen dieselbe Menge sehen: %s"
+           % MR.COINGECKO_MARKETS[-40:])
+    pruefe(P, "⚠️ `days=365` steht als Vorgabe, nicht `max`",
+           "tage=365" in _q.split("def turnover(")[1][:60],
+           "`days=max` beantwortet CoinGecko ohne Schluessel mit HTTP 401 "
+           "(geprueft 12.09.) - ein Vorgabewert, der scheitert, ist keiner")
+    pruefe(P, "⚠️⚠️ eine Marktkapitalisierung von null wird UEBERSPRUNGEN",
+           "m and m > 0" in _fn,
+           "sonst teilt sie durch null oder erfindet einen Wert - ein "
+           "fehlender Punkt ist ehrlicher (N-40)")
+    pruefe(P, "die Zuordnung geht ueber die CoinGecko-ID, nicht das Symbol",
+           'e.get("id")' in _fn,
+           "ueber das Symbol allein waere CANTON schon einmal falsch "
+           "zugeordnet worden")
+    pruefe(P, "⚠️ sie schreibt in eine EIGENE Messdatei",
+           'data/markt_historie.db' in _fn
+           and "tradinginfotool.db" not in _fn,
+           "die Produktionsdatenbank wird von einer Messung nie beruehrt")
+    pruefe(P, "und `beides` startet sie NICHT mit",
+           'if was == "turnover"' in _q,
+           "sie laedt zehn Minuten lang 250 Symbole, die mit der eigenen "
+           "Watchlist nichts zu tun haben - wer `beides` ruft, will etwas "
+           "anderes")
+
+
 def paket_vetoart() -> None:
     """2.407-namensschatten - zwei Arten von Veto, EINE Spalte, saubere Trennung.
 
@@ -20168,6 +20235,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Kostenbezug": paket_kostenbezug,
+          "Turnoverquelle": paket_turnoverquelle,
           "Vetoart": paket_vetoart,
           "Vierfelder": paket_vierfelder,
           "Marktscanwert": paket_marktscanwert,
