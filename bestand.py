@@ -3175,8 +3175,23 @@ BEFUNDE = (
                "DASSELBE MUSTER beim Marktscan: 4.071 Kandidaten auf ,neu', 10 "
                "verworfen, 7 uebernommen - eine Entdeckung, die 4.071 "
                "unbearbeitete Vorschlaege erzeugt, hat kein Erkenntnis-, "
-               "sondern ein Auswahlproblem (stuetzt Schritt 39)", "gilt",
-               "NB-Sicherung 12.09. 05:35 · hebel_triggers · Nutzer 12.09."),
+               "sondern ein Auswahlproblem (stuetzt Schritt 39). ⚠️⚠️ UND ES IST "
+               "KEIN EINMALIGER ALTBESTAND, SONDERN EIN KREISLAUF: der "
+               "Rueckstau wurde schon dreimal von Hand geleert - 696 Zeilen am "
+               "19.07., 1.077 am 30.08., 1.029 am 12.09. Genau dazu passt, "
+               "dass `llm_generiert` seit Wochen exakt auf 1.699 steht. ✔ "
+               "AUSGEFUEHRT 12.09. (Nutzerentscheidung): die 1.029 wartenden "
+               "Kandidaten stehen auf ,verfallen' (14.047 -> 15.076), "
+               "`llm_generiert` unberuehrt, die 96.000 Messzeilen unberuehrt. "
+               "Ruecknahme-Marke: `status_geaendert_am = "
+               "2026-09-12T06:22:10.655469+00:00` traegt genau diese 1.029 "
+               "Zeilen. ➔ WEIL DER RUECKSTAU WIEDERKEHRT, wird die Prognose "
+               "jetzt GEPRUEFT statt geglaubt: der Export fuehrt den "
+               "Altbestand mit Zeitstempel, und der Vollcheck fragt (E8), ob "
+               "die Kette NACH dem letzten Trigger lief - dann ist der alte "
+               "Erzeuger nachweislich still. In beide Richtungen an einer "
+               "Testdatei geprueft", "gilt",
+               "NB-Sicherung 12.09. · hebel_triggers · Nutzer 12.09."),
     Befundlage("2.387", "✔✔ DER ROLLOUT AM NOTEBOOK - Paket B laeuft dort "
                "(12.09.2026). Pull auf 9f9408c (142 Commits, fast-forward, "
                "keine Konflikte, `config.yaml` lokal unveraendert). "

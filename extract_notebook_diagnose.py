@@ -1949,6 +1949,12 @@ def _paket_b(conn) -> dict:
                 "akkumulationssignale": conn.execute(
                     "SELECT COUNT(*) FROM signals WHERE quelle_kette='rollen' "
                     "AND strategie='akkumulation'").fetchone()[0],
+                # Der Bezugspunkt fuer "der alte Erzeuger ist still":
+                # laeuft die Kette NACH dem letzten Trigger, produziert
+                # das alte Screening nachweislich nichts mehr (2.388).
+                "juengste_signalzeile": conn.execute(
+                    "SELECT MAX(created_at) FROM signals "
+                    "WHERE quelle_kette='rollen'").fetchone()[0],
                 "juengste_hebelzeilen": [
                     {"created_at": r[0], "symbol": r[1], "action": r[2],
                      "hebel": r[3], "verlust_am_stop_eur": r[4]}
@@ -1965,6 +1971,29 @@ def _paket_b(conn) -> dict:
                 "hinweis": "die Migration laeuft beim ersten Kettenlauf"}
     except Exception as exc:                                 # noqa: BLE001
         aus["signalzeilen"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+    # ⚠️ DER ALTBESTAND MIT ZEITSTEMPEL (12.09.2026, Befund 2.388). Die
+    # Zahl allein sagt nichts: 96.000 Zeilen sind ein Endstand, wenn der
+    # Erzeuger aus ist - und ein Leck, wenn er laeuft. Der Rueckstau wurde
+    # dreimal von Hand geleert (696 am 19.07., 1.077 am 30.08., 1.029 am
+    # 12.09.), er baut sich also wieder auf. Seit dem Abschalten des alten
+    # Screenings darf KEIN neuer Trigger mehr dazukommen - genau das ist
+    # hier nachsehbar, statt es zu glauben.
+    try:
+        _n = conn.execute("SELECT COUNT(*), MAX(screened_at) "
+                          "FROM hebel_triggers").fetchone()
+        aus["altbestand"] = {
+            "hebel_triggers_gesamt": _n[0],
+            "juengster_trigger": _n[1],
+            "je_status": {"%s/%s" % (r[0], r[1]): r[2] for r in conn.execute(
+                "SELECT status, ist_kandidat, COUNT(*) FROM hebel_triggers "
+                "GROUP BY 1, 2")},
+            "marktscan_kandidaten_neu": conn.execute(
+                "SELECT COUNT(*) FROM marktscan_candidates "
+                "WHERE status = 'neu'").fetchone()[0],
+        }
+    except Exception as exc:                                 # noqa: BLE001
+        aus["altbestand"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
     return aus
 
 

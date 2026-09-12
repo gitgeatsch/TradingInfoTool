@@ -355,6 +355,22 @@ def main() -> None:
 
         # Die Einmal-Marken sind der BELEG, dass die Fuehrung gemeldet hat -
         # sie stehen in `job_laeufe`, sind aber keine Jobs (H-4).
+        # ⚠️ DER ALTBESTAND, UND OB ER NOCH WAECHST (Befund 2.388). Der
+        # Rueckstau der alten Hebelkette ist dreimal von Hand geleert worden
+        # (696 / 1.077 / 1.029) - eine Zahl allein sagt also nichts. Die
+        # Frage ist, ob nach dem Abschalten des alten Screenings noch etwas
+        # dazukommt. Bezugspunkt ist die KETTE: laeuft sie nach dem letzten
+        # Trigger, ist der alte Erzeuger nachweislich still.
+        alt_ = pb.get("altbestand") or {}
+        sig_ = (pb.get("signalzeilen") or {}).get("juengste_signalzeile")
+        if alt_.get("juengster_trigger") and sig_:
+            zeile(str(sig_) > str(alt_["juengster_trigger"]),
+                  f"E8  der alte Erzeuger ist still: letzter Trigger "
+                  f"{str(alt_['juengster_trigger'])[:16]}, die Kette lief "
+                  f"danach ({str(sig_)[:16]})", warnung=True)
+            print(JA + f"E8b Altbestand: {alt_.get('je_status')} · "
+                  f"Marktscan-Kandidaten auf 'neu': "
+                  f"{alt_.get('marktscan_kandidaten_neu')}")
         marken = ((d.get("joblaeufe") or {}).get("einmal_marken") or {})
         print(JA + f"E7  Meldungen der Hebelfuehrung bisher: "
               f"{marken.get('anzahl', 0)}"
