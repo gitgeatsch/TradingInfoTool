@@ -254,6 +254,112 @@ def main() -> None:
         print(f"{JA}D8  noch kein Signal mit quelle_kette='rollen' "
               f"({len(ss) + len(hs)} Altsignale) - erwartet vor dem Scharfgang")
 
+    # ------------------------------------------------------------ E
+    #
+    # ⚠️ NEU MIT DEM ROLLOUT VON PAKET B (12.09.2026). Ohne diesen Block
+    # prueft der Vollcheck den Stand von gestern: der Hebel kommt seit
+    # heute aus der WAHRSCHEINLICHKEIT, alle Hebelrisiken zusammen sind
+    # gedeckelt, und die Akkumulation ist gesperrt. Nichts davon war
+    # vorher im Export - und was nicht exportiert wird, wird nicht
+    # geprueft.
+    kopf("E) PAKET B - kommt der Hebel aus der Wahrscheinlichkeit?")
+    pb = d.get("paket_b") or {}
+    if not pb or pb.get("nicht_verfuegbar"):
+        print(NEIN + "E   kein Paket-B-Abschnitt im Export - die Datei ist "
+              "von vor dem 12.09., oder der Abschnitt ist ausgefallen: %s"
+              % (pb.get("nicht_verfuegbar") or "fehlt"))
+    else:
+        sch = pb.get("schalter") or {}
+        hq = sch.get("hebel_aus_quote") or {}
+
+        def _z(wert, soll):
+            """Zahlenvergleich, der eine fehlende Zahl NICHT als gleich liest."""
+            try:
+                return abs(float(wert) - soll) < 1e-9
+            except (TypeError, ValueError):
+                return False
+
+        zeile(bool(hq.get("aktiv")),
+              f"E1a der Hebel aus der Quote ist SCHARF (aktiv={hq.get('aktiv')}, "
+              f"Quelle {(sch.get('quelle') or {}).get('aktiv', '?')})",
+              warnung=True)
+        zeile(_z(hq.get("aggregat_anteil"), 0.03) and _z(hq.get("hebel_grenze"), 5.0)
+              and _z(hq.get("hebel_ab"), 2.0) and _z(hq.get("hebelnenner_eur"), 500.0),
+              f"E1b die Regeln stehen wie entschieden: Deckel "
+              f"{hq.get('aggregat_anteil')} · Grenze {hq.get('hebel_grenze')}x · "
+              f"ab {hq.get('hebel_ab')}x · Nenner {hq.get('hebelnenner_eur')} EUR",
+              warnung=True)
+        # ⚠️ Der alte Marktscan bleibt AN (Nutzerentscheidung 12.09., 2.385):
+        # er ist die einzige Entdeckung ausserhalb der Watchlist. Deshalb
+        # hier eine ANZEIGE, keine Forderung.
+        zeile(not sch.get("hebel_screening_aktiv"),
+              "E1c das ALTE Hebel-Screening ist aus (Positionsabgleich und "
+              "Hebelfuehrung laufen weiter)", warnung=True)
+        print(JA + f"E1d alter Marktscan: "
+              f"{'an' if sch.get('marktscan_aktiv') else 'aus'} - entschieden am 12.09., der Ersatz wird erst gemessen (Schritt 39)")
+
+        kap = pb.get("kapital") or {}
+        zeile(bool(kap.get("verwendbar")) and kap.get("zustand") == "frisch",
+              f"E2a das Kapital ist verwendbar und frisch: "
+              f"{kap.get('wert_eur')} EUR, Stand {kap.get('datum')} "
+              f"({kap.get('zustand')})", warnung=True)
+        # ⚠️ 2.387-job: der Schreibjob stand zehn Tage. Das Nachrechnen hat
+        # die Luecke geschlossen, nicht die Ursache - deshalb hier die
+        # Frage, ob er WIEDER taeglich schreibt.
+        zeile((kap.get("alter_tage") if kap.get("alter_tage") is not None
+               else 99) <= 1,
+              f"E2b der Portfoliowert-Job schreibt wieder taeglich "
+              f"(juengste Zeile {kap.get('datum')}, {kap.get('alter_tage')} "
+              f"Tage alt) - 2.387-job", warnung=True)
+
+        agg = pb.get("aggregat_deckel") or {}
+        if agg.get("deckel_eur") is not None:
+            soll = float(agg.get("anteil") or 0) * float(agg.get("kapital_eur") or 0)
+            zeile(abs(float(agg["deckel_eur"]) - soll) < 0.01
+                  and float(agg.get("frei_eur") or 0) >= 0.0,
+                  f"E3  {agg.get('satz')}", warnung=True)
+        else:
+            print(WARN + f"E3  kein Deckel rechenbar: "
+                  f"{agg.get('nicht_rechenbar') or agg.get('nicht_ermittelbar')}")
+
+        # ⚠️⚠️ DIE NAHT, AN DER H-5 HING: bis zum 11.09. schrieb die Kette
+        # das Instrument NIE (0 von 3.859 Zeilen), und der Aggregat-Deckel
+        # haette seine eigenen Signale nicht wiedergefunden.
+        sz = pb.get("signalzeilen") or {}
+        if "je_instrument" in sz:
+            print(JA + f"E4a Signalzeilen je Instrument: {sz['je_instrument']}")
+            zeile(sz.get("hebelzeilen_ohne_verlust") == 0
+                  and sz.get("hebelzeilen_unter_2x") == 0,
+                  f"E4b jede Hebelzeile traegt ihren Verlust am Stop und "
+                  f"Hebel >= 2x (ohne Verlust {sz.get('hebelzeilen_ohne_verlust')}, "
+                  f"unter 2x {sz.get('hebelzeilen_unter_2x')})", warnung=True)
+            zeile(sz.get("akkumulationssignale") == 0,
+                  f"E5  keine Akkumulationssignale - gesperrt bis Paket 2 "
+                  f"({sz.get('akkumulationssignale')} Zeilen)", warnung=True)
+        else:
+            print(WARN + f"E4  Signalzeilen nicht auswertbar: {sz}")
+
+        fue = pb.get("hebelfuehrung")
+        if isinstance(fue, list):
+            ohne_plan = [x for x in fue if not x.get("plan_signal_id")]
+            senken = [x for x in fue if x.get("liquidation_vor_stop")]
+            print(JA + f"E6a {len(fue)} offene Hebelposition(en), davon "
+                  f"{len(ohne_plan)} ohne zugeordnetes Signal (zaehlen mit "
+                  f"11,7 % im Deckel) und {len(senken)} mit Liquidation vor "
+                  f"dem Stop")
+            zeile(all(x.get("nachschuss_eur") is not None for x in senken),
+                  "E6b jede Position mit Liquidation vor dem Stop nennt ihren "
+                  "Nachschuss", warnung=True)
+        else:
+            print(WARN + f"E6  Hebelfuehrung nicht lesbar: {fue}")
+
+        # Die Einmal-Marken sind der BELEG, dass die Fuehrung gemeldet hat -
+        # sie stehen in `job_laeufe`, sind aber keine Jobs (H-4).
+        marken = ((d.get("joblaeufe") or {}).get("einmal_marken") or {})
+        print(JA + f"E7  Meldungen der Hebelfuehrung bisher: "
+              f"{marken.get('anzahl', 0)}"
+              + (f" · juengste: {marken.get('juengste')[:3]}"
+                 if marken.get("juengste") else ""))
     print()
     print("=" * 92)
     print(f"OFFENE PUNKTE: {len(befunde)}")

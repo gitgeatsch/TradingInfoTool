@@ -1343,9 +1343,20 @@ def _joblaeufe(conn) -> dict:
         zeilen.append(eintrag)
     # UEBER 26 STUNDEN heisst: ein taeglicher Lauf ist ausgefallen UND der
     # Nachholer hat ihn nicht geholt. Zwei Stunden Puffer auf den Tagestakt.
-    return {"jobs": zeilen,
-            "ueberfaellig": [z["job_id"] for z in zeilen
-                             if (z.get("alter_stunden") or 0) > 26]}
+    _wiederkehrend = [z for z in zeilen if ":" not in str(z["job_id"])]
+    _einmal = [z for z in zeilen if ":" in str(z["job_id"])]
+    return {"jobs": _wiederkehrend,
+            "ueberfaellig": [z["job_id"] for z in _wiederkehrend
+                             if (z.get("alter_stunden") or 0) > 26],
+            # EINMAL-MARKEN, keine Jobs: die Hebelfuehrung haelt hier fest,
+            # welche Lage sie an welchem Tag schon gemeldet hat (H-4). Sie
+            # kehren nie wieder und waeren als ,ueberfaellig' eine
+            # Falschmeldung - gezaehlt werden sie trotzdem, sie sind der
+            # Beleg, DASS die Fuehrung gemeldet hat.
+            "einmal_marken": {"anzahl": len(_einmal),
+                              "juengste": sorted(
+                                  (z["job_id"] for z in _einmal),
+                                  reverse=True)[:10]}}
 
 
 def _laufzeit(logzeilen: list) -> dict:
@@ -1827,6 +1838,133 @@ def _dimensionierung(conn) -> dict:
         "anteil_mit_hebel_prozent": "rund 44",
         "quelle": "Umbauplan 92.9, gemessen an der Simulation vom 18.08.",
     }
+    return aus
+
+
+def _paket_b(conn) -> dict:
+    """PAKET B, wie es am Notebook WIRKT - nicht nur die Tabellen dazu
+    (12.09.2026, mit dem Rollout).
+
+    WOZU. Die Tabellen `hebel_positions`, `signals` und
+    `portfolio_wert_historie` sind laengst im Export. Was daraus FOLGT, war
+    es nicht: ob der Schalter ueberhaupt an ist, welches Kapital gilt, wie
+    voll der Aggregat-Deckel steht und was die Hebelfuehrung zu jeder
+    offenen Position sagt. Genau diese vier Zahlen entscheiden, ob Paket B
+    arbeitet - und keine davon steht in einer Tabelle.
+
+    ⚠️ GERECHNET WIRD AM NOTEBOOK, nicht spaeter am Desktop. Dieselbe
+    Begruendung wie beim Anlass-Abschnitt: wer die Zahlen nachtraeglich aus
+    der Sicherung rekonstruiert, misst seinen eigenen Nachbau. Hier steht,
+    was das Geraet gesehen hat.
+
+    Fail-soft je Teil: ein fehlender Schalter darf nicht den ganzen Export
+    kosten - aber der Ausfall steht drin, nicht ein leeres Feld."""
+    aus: dict = {}
+    hq: dict = {}
+    try:
+        import config as _cfg
+        from agent import betraege as _BE
+
+        datei = _cfg.load_config() or {}
+        hq = _BE.hebel_aus_quote_einstellungen(datei)
+        roh = ((datei.get("rollen_kette") or {}).get("hebel_aus_quote") or {})
+        aus["schalter"] = {
+            "hebel_aus_quote": hq,
+            # WOHER JEDER WERT KOMMT - dieselbe Unterscheidung wie beim
+            # Anlass: "aus" in der Datei und "aus" als Vorgabe sind zwei
+            # verschiedene Aussagen.
+            "quelle": {k: ("config.yaml" if k in roh else "Vorgabe im Code")
+                       for k in hq},
+            "marktscan_aktiv": bool((datei.get("marktscan") or {}).get("aktiv", True)),
+            "hebel_screening_aktiv": bool(
+                (datei.get("hebel_screening") or {}).get("aktiv", True)),
+        }
+    except Exception as exc:                                 # noqa: BLE001
+        aus["schalter"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+    try:
+        from agent import portfolio_historie as _PH
+
+        aus["kapital"] = _PH.aktuelles_kapital(conn)
+    except Exception as exc:                                 # noqa: BLE001
+        aus["kapital"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+    try:
+        from agent import hebel_aggregat as _HAG
+
+        _wert = (aus.get("kapital") or {}).get("wert_eur")
+        if _wert and hq:
+            _a = _HAG.aggregat(conn, kapital_eur=float(_wert),
+                               anteil=float(hq["aggregat_anteil"]),
+                               hebelnenner_eur=float(hq["hebelnenner_eur"]))
+            aus["aggregat_deckel"] = _a
+        else:
+            aus["aggregat_deckel"] = {
+                "nicht_rechenbar": "ohne verwendbares Kapital gibt es keinen "
+                                   "Deckel - und damit keinen Hebel"}
+    except Exception as exc:                                 # noqa: BLE001
+        aus["aggregat_deckel"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+    try:
+        from agent import hebelfuehrung as _HF
+
+        aus["hebelfuehrung"] = [
+            {"symbol": x.get("symbol"), "richtung": x.get("richtung"),
+             "hebel": x.get("hebel"), "tage": x.get("tage"),
+             "empfehlung": x.get("empfehlung"),
+             "einstand_eur": x.get("einstand_eur"),
+             "kurs_eur": x.get("kurs_eur"),
+             "liquidation_eur": x.get("liquidation_eur"),
+             "abstand_liquidation": x.get("abstand_liquidation"),
+             "liquidation_vor_stop": x.get("liquidation_vor_stop"),
+             "nachschuss_eur": x.get("nachschuss_eur"),
+             "finanzierung_bisher_eur": x.get("finanzierung_bisher_eur"),
+             "plan_signal_id": (x.get("plan") or {}).get("signal_id"),
+             "stop_eur": x.get("stop_eur"),
+             "gruende": x.get("gruende"), "hinweise": x.get("hinweise")}
+            for x in _HF.lade(conn)]
+    except Exception as exc:                                 # noqa: BLE001
+        aus["hebelfuehrung"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
+
+    # ⚠️ DIE NAHT, AN DER H-5 HING: ein Hebelgeschaeft muss in der Zeile als
+    # solches stehen (`instrument`) UND seinen Verlust am Stop tragen - sonst
+    # findet der Deckel es nicht wieder. Bis zum 11.09. schrieb die Kette das
+    # Instrument NIE (0 von 3.859 Zeilen). Deshalb hier gezaehlt, nicht
+    # geglaubt.
+    try:
+        spalten = {r[1] for r in conn.execute("PRAGMA table_info(signals)")}
+        if {"instrument", "verlust_am_stop_eur"} <= spalten:
+            aus["signalzeilen"] = {
+                "je_instrument": {str(r[0]): r[1] for r in conn.execute(
+                    "SELECT COALESCE(instrument,'(leer)'), COUNT(*) FROM signals "
+                    "WHERE quelle_kette='rollen' GROUP BY 1 ORDER BY 2 DESC")},
+                "hebelzeilen_ohne_verlust": conn.execute(
+                    "SELECT COUNT(*) FROM signals WHERE quelle_kette='rollen' "
+                    "AND instrument='hebel' AND verlust_am_stop_eur IS NULL"
+                ).fetchone()[0],
+                "hebelzeilen_unter_2x": conn.execute(
+                    "SELECT COUNT(*) FROM signals WHERE quelle_kette='rollen' "
+                    "AND instrument='hebel' AND (hebel IS NULL OR hebel < 2.0)"
+                ).fetchone()[0],
+                "akkumulationssignale": conn.execute(
+                    "SELECT COUNT(*) FROM signals WHERE quelle_kette='rollen' "
+                    "AND strategie='akkumulation'").fetchone()[0],
+                "juengste_hebelzeilen": [
+                    {"created_at": r[0], "symbol": r[1], "action": r[2],
+                     "hebel": r[3], "verlust_am_stop_eur": r[4]}
+                    for r in conn.execute(
+                        "SELECT created_at, symbol, action, hebel, "
+                        "verlust_am_stop_eur FROM signals WHERE "
+                        "quelle_kette='rollen' AND instrument='hebel' "
+                        "ORDER BY created_at DESC LIMIT 10")],
+            }
+        else:
+            aus["signalzeilen"] = {
+                "spalten_fehlen": sorted({"instrument", "verlust_am_stop_eur"}
+                                         - spalten),
+                "hinweis": "die Migration laeuft beim ersten Kettenlauf"}
+    except Exception as exc:                                 # noqa: BLE001
+        aus["signalzeilen"] = {"nicht_ermittelbar": f"{type(exc).__name__}: {exc}"}
     return aus
 
 
@@ -2693,6 +2831,10 @@ def main() -> None:
         except Exception as exc:  # noqa: BLE001
             rollen_kette = {"nicht_verfuegbar": str(exc)}
         try:
+            paket_b = _paket_b(conn)
+        except Exception as exc:  # noqa: BLE001
+            paket_b = {"nicht_verfuegbar": str(exc)}
+        try:
             dimensionierung = _dimensionierung(conn)
             kapitel93 = _kapitel93(conn)
         except Exception as exc:  # noqa: BLE001
@@ -3044,6 +3186,7 @@ def main() -> None:
         "llm_kontingent": llm_kontingent,
         "konfiguration_und_makro": konfiguration_und_makro,
         "rollen_kette": rollen_kette,
+        "paket_b": paket_b,
         "dimensionierung": dimensionierung,
         "kapitel93": kapitel93,
         "vorfilter_schatten": vorfilter_schatten,
