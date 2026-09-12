@@ -809,6 +809,18 @@ def gap_bewusster_fill(schwelle: float, open_preis: float | None,
 VETO_RISK_GATE = "risk_gate"
 VETO_ENTSCHEIDER = "entscheider"
 
+# ⚠️⚠️ DIE EINE BEDINGUNG, DIE JEDE AUSWERTUNG BRAUCHT (12.09.2026).
+#
+# Sie steht hier als Konstante und nicht fuenfmal als Zeichenkette im Code -
+# genau weil der Docstring von `models.Signal.veto_outcome_status` vor
+# "einer vergessenen Filterstelle" warnt. Beim ersten Bau am 12.09. habe ich
+# EINE von sechs Stellen angefasst und den Rest uebersehen; die Konstante
+# macht das beim naechsten Mal unmoeglich.
+#
+# ⚠️ `veto_art IS NULL` GEHOERT DAZU: alle 419 Zeilen bis zum 12.09. tragen
+# keins und SIND Risk-Gate-Vetos.
+NUR_RISK_GATE = "(veto_art IS NULL OR veto_art = 'risk_gate')"
+
 
 def veto_art_von(signal) -> str:
     """Die Art des Vetos - mit dem Altbestand als Risk-Gate.
@@ -1410,6 +1422,11 @@ def run_backward_tracking(conn, watchlist, config: dict) -> BackwardTrackingResu
     # eine offene reale Position; Ablauf-Check (_is_expired()) bleibt sinnvoll,
     # da er nur von den signal-eigenen Feldern (created_at, halte_kriterium_*)
     # abhaengt, nicht von action.
+    # BEIDE-ARTEN-GEWOLLT: hier wird AUFGELOEST, nicht ausgewertet. Die
+    # Frage "war unser Nein richtig?" ist fuer Risk-Gate und Entscheider
+    # dieselbe, also loest dieselbe Mechanik beide auf - getrennt wird beim
+    # MELDEN (`veto_schatten_bilanz`). Diese Marke ist kein Kommentar,
+    # sondern wird von `pruefe_pakete --paket Vetoart` gelesen.
     veto_shadow_rows = conn.execute(
         "SELECT id FROM signals WHERE risk_veto = 1 AND action = 'HALTEN' "
         "AND (veto_outcome_status IS NULL OR veto_outcome_status = ?)",
@@ -1539,8 +1556,12 @@ def _aggregate_resolved_signal_rows(
     # Die Zeilen bleiben in der Datenbank und im Export vollstaendig erhalten;
     # ueber VETO_GRUND_NUR_LONG sind sie gezielt auswertbar. Gefiltert wird nur
     # die laufende Kennzahl.
+    # ⚠️ NUR_RISK_GATE MIT (12.09.2026): seit Schritt 44/2b tragen auch
+    # Entscheider-Neins `risk_veto=1`. Ohne diese Bedingung zaehlt die
+    # Kennzahl ab der ersten Woche ueberwiegend die neue Art und heisst
+    # weiter "Veto-Schatten".
     filter_clause = (
-        "risk_veto = 1 AND action = 'HALTEN' "
+        "risk_veto = 1 AND action = 'HALTEN' AND " + NUR_RISK_GATE + " "
         "AND (risk_veto_reason IS NULL OR risk_veto_reason NOT LIKE '%Nur Long%') AND "
     ) if veto else ""
 
@@ -1819,7 +1840,10 @@ def compute_veto_shadow_performance_nach_grund(conn, watchlist: list | None = No
     placeholders = ", ".join("?" for _ in _RESOLVED_OUTCOMES)
     spot_rows = conn.execute(
         f"SELECT symbol, risk_veto_reason, veto_outcome_status AS status, "
+        # ⚠️ NUR_RISK_GATE (12.09.2026) - sonst mischen sich die
+        # Entscheider-Neins in die Auswertung "nach Grund".
         f"veto_outcome_realisiertes_crv AS crv FROM signals WHERE risk_veto = 1 "
+        f"AND {NUR_RISK_GATE} "
         f"AND action = 'HALTEN' AND veto_outcome_status IN ({placeholders})",
         _RESOLVED_OUTCOMES,
     ).fetchall()
@@ -3559,8 +3583,13 @@ def compute_zai_richtung_performance_schatten(
         )
         _erfasse(TIER_HEBEL, urteil)
 
+    # ⚠️ NUR_RISK_GATE (12.09.2026). Die hebel_signals-Abfrage darueber
+    # braucht es NICHT: diese Tabelle gehoert der alten Pipeline und wird von
+    # der Rollen-Kette nicht beschrieben (Befund 2.395-erledigt) - sie kann
+    # gar keine Entscheider-Zeile enthalten.
     spot_ids = conn.execute(
         "SELECT id, symbol FROM signals WHERE risk_veto = 1 AND action = 'HALTEN' "
+        f"AND {NUR_RISK_GATE} "
         "AND veto_outcome_max_realisiertes_crv IS NOT NULL AND zai_eigene_richtung IS NOT NULL",
     ).fetchall()
     for row in spot_ids:

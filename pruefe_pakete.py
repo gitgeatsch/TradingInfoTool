@@ -14700,6 +14700,46 @@ def paket_vetoart() -> None:
            sum(sum(v.values()) for v in b.values()) == 4,
            "die KAUFEN-Zeile ist kein Veto-Schatten")
 
+    # ---- ⚠️⚠️ JEDE AUSWERTUNGSSTELLE, MASCHINELL ------------------------
+    #
+    # Der Docstring von `models.Signal.veto_outcome_status` warnt vor "einer
+    # vergessenen Filterstelle" - und beim ersten Bau am 12.09. habe ich
+    # genau das getan: EINE von sechs Stellen angefasst. Diese Pruefung
+    # zaehlt sie, statt sich auf ein Gedaechtnis zu verlassen.
+    #
+    # ⚠️ Eine Stelle ist entweder gefiltert (`NUR_RISK_GATE`) oder
+    # ausdruecklich als BEIDE-ARTEN-GEWOLLT markiert. Ein drittes gibt es
+    # nicht.
+    _bt = io.open("agent/krypto/backward_tracking.py",
+                  encoding="utf-8").read().split(chr(10))
+    _offen = []
+    for _i, _ln in enumerate(_bt):
+        if "risk_veto = 1" not in _ln or "hebel_signals" in _ln:
+            continue
+        _um = chr(10).join(_bt[max(0, _i - 9):_i + 9])
+        if "hebel_signals" in _um and "FROM signals" not in _ln:
+            continue          # die Tabelle der alten Pipeline
+        # DREI gueltige Faelle, und nur drei:
+        #   NUR_RISK_GATE        nur der alte Arm wird ausgewertet
+        #   BEIDE-ARTEN-GEWOLLT  aufloesen statt auswerten
+        #   veto_art im GROUP BY die Auswertung trennt selbst nach Art
+        if ("NUR_RISK_GATE" in _um or "BEIDE-ARTEN-GEWOLLT" in _um
+                or "COALESCE(veto_art" in _um):
+            continue
+        if _ln.strip().startswith("#") or '"""' in _um[:200]:
+            continue          # Docstring oder Kommentar
+        _offen.append(_i + 1)
+    pruefe(P, "⚠️⚠️ JEDE Auswertung auf `risk_veto` ist entschieden",
+           not _offen,
+           "entweder mit NUR_RISK_GATE gefiltert oder ausdruecklich als "
+           "BEIDE-ARTEN-GEWOLLT markiert - ein Drittes gibt es nicht. "
+           "Offen in Zeile(n): %s" % _offen)
+    pruefe(P, "⚠️ und die Bedingung steht EINMAL, nicht fuenfmal",
+           "NUR_RISK_GATE = " in chr(10).join(_bt)
+           and chr(10).join(_bt).count("veto_art = 'risk_gate'") == 1,
+           "fuenf gleiche Zeichenketten sind fuenf Stellen zum Vertippen - "
+           "und genau die Falle, in die ich heute schon getappt bin")
+
     # ---- und die zentrale Beschreibung existiert ------------------------
     _m = io.open("database/models.py", encoding="utf-8").read()
     pruefe(P, "⚠️ es gibt EINE zentrale Beschreibung, was `risk_veto` heisst",
