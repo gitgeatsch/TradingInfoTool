@@ -53,6 +53,33 @@ def pruefe(paket: str, name: str, bedingung, detail: str = "") -> None:
     _ERGEBNISSE.append((paket, name, bool(bedingung), detail))
 
 
+# ⚠️⚠️ WAS AN EINEM GERAET PLANMAESSIG FEHLT, DARF DIE SUITE NICHT TOETEN
+# (gefunden am Notebook, 12.09.2026, beim Rollout von Paket B).
+#
+# `data/messdaten.db` (166 MB) liegt am Notebook BEWUSST nicht - so
+# entschieden beim Rollout am 02.09.: sie wird wirklich ausgelesen, wer sie
+# will, laedt sie mit `lade_messreihen.py`. Drei ZUSTANDSpruefungen oeffneten
+# sie ungeschuetzt. Folge dort: `sqlite3.OperationalError: unable to open
+# database file` VOR dem ersten Paket - 0 von 2.193 Pruefungen, ohne eine
+# einzige ausgegebene Zeile. Am Desktop faellt das nie auf, weil die Datei
+# hier liegt. Dieselbe Klasse wie `paket_b1` (24.08.) und der KeyError vom
+# 02.09.: eine Pruefung, die stirbt, prueft nichts mehr.
+#
+# ⚠️ EIN ROTES KREUZ WAERE GENAUSO FALSCH wie der Absturz: die Datei fehlt
+# nach Absprache, nicht aus Versehen. Deshalb eine DRITTE Kategorie -
+# uebersprungen, gezaehlt, und am Ende beim Namen genannt. Wer den Block
+# doch braucht, sieht dort, was zu holen ist.
+_UEBERSPRUNGEN: list[tuple[str, str, str]] = []
+
+
+def _datei_fehlt(paket: str, pfad: str, warum: str) -> bool:
+    """Fehlt die Datei? Dann wird der Block uebersprungen, nicht rot."""
+    if Path(pfad).exists():
+        return False
+    _UEBERSPRUNGEN.append((paket, pfad, warum))
+    return True
+
+
 def _quelltext(pfad: str) -> str:
     """Nur der AKTIVE Code - Kommentarzeilen fliegen raus.
 
@@ -15839,35 +15866,37 @@ def paket_kalibrierung() -> None:
     # schlug an, wie vorgesehen (Regelwerk: eine Kontrollgroesse, die
     # traegt, macht das VERFAHREN ungueltig, nicht den Kandidaten).
     #
-    # ECHTER Funktionsaufruf, keine Kopie (Lehre vom selben Tag wie G-b).
-    import messe_eigenschaft_beitrag as _MEB
-    import sqlite3 as _sq3
-    _reihen17b = _MEB.lade()
-    _c17b = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
-    # ⚠️⚠️ GEGEN DIE KERZENTABELLE, NICHT GEGEN `messreihen` (07.09.2026).
-    #
-    # Bis heute stand hier `SELECT symbol FROM messreihen WHERE
-    # assetklasse='krypto'`. `messreihen` bildet `symbol -> EINE Klasse`
-    # ab - und seit dem Nachladen der sieben F-198-Kollisionen (BOND, C,
-    # DASH, DIA, MDT, STX, T) ist das falsch: sie stehen dort als
-    # aktien/themen_etf, HABEN aber Kryptokerzen.
-    #
-    # Die Pruefung meldete daraufhin "7 Nicht-Krypto-Symbole" - und lag
-    # falsch. ⚠️ Sie hatte genau den Fehler, den sie verhindern soll:
-    # eine 1:1-Zuordnung als Wahrheit ueber eine Tabelle, die es besser
-    # weiss. `price_history_ohlc.assetklasse` ist die Quelle.
-    _kr17b = {r[0] for r in _c17b.execute(
-        "SELECT DISTINCT symbol FROM price_history_ohlc "
-        "WHERE assetklasse='krypto' AND currency='USD'")}
-    _c17b.close()
-    _fremd17b = set(_reihen17b) - _kr17b
-    pruefe(P, "⚠️⚠️ messe_eigenschaft_beitrag.lade() liefert NUR Krypto",
-           not _fremd17b,
-           "gefunden: %d Nicht-Krypto-Symbole in %d insgesamt (%s) - "
-           "jede Messung, die darauf aufsetzt, mischt sonst Aktien/ETF/"
-           "Rohstoffe in denselben Tagesquerschnitt wie Krypto"
-           % (len(_fremd17b), len(_reihen17b),
-              ", ".join(sorted(_fremd17b)[:5])))
+    if not _datei_fehlt(P, "data/messdaten.db",
+                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+        # ECHTER Funktionsaufruf, keine Kopie (Lehre vom selben Tag wie G-b).
+        import messe_eigenschaft_beitrag as _MEB
+        import sqlite3 as _sq3
+        _reihen17b = _MEB.lade()
+        _c17b = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
+        # ⚠️⚠️ GEGEN DIE KERZENTABELLE, NICHT GEGEN `messreihen` (07.09.2026).
+        #
+        # Bis heute stand hier `SELECT symbol FROM messreihen WHERE
+        # assetklasse='krypto'`. `messreihen` bildet `symbol -> EINE Klasse`
+        # ab - und seit dem Nachladen der sieben F-198-Kollisionen (BOND, C,
+        # DASH, DIA, MDT, STX, T) ist das falsch: sie stehen dort als
+        # aktien/themen_etf, HABEN aber Kryptokerzen.
+        #
+        # Die Pruefung meldete daraufhin "7 Nicht-Krypto-Symbole" - und lag
+        # falsch. ⚠️ Sie hatte genau den Fehler, den sie verhindern soll:
+        # eine 1:1-Zuordnung als Wahrheit ueber eine Tabelle, die es besser
+        # weiss. `price_history_ohlc.assetklasse` ist die Quelle.
+        _kr17b = {r[0] for r in _c17b.execute(
+            "SELECT DISTINCT symbol FROM price_history_ohlc "
+            "WHERE assetklasse='krypto' AND currency='USD'")}
+        _c17b.close()
+        _fremd17b = set(_reihen17b) - _kr17b
+        pruefe(P, "⚠️⚠️ messe_eigenschaft_beitrag.lade() liefert NUR Krypto",
+               not _fremd17b,
+               "gefunden: %d Nicht-Krypto-Symbole in %d insgesamt (%s) - "
+               "jede Messung, die darauf aufsetzt, mischt sonst Aktien/ETF/"
+               "Rohstoffe in denselben Tagesquerschnitt wie Krypto"
+               % (len(_fremd17b), len(_reihen17b),
+                  ", ".join(sorted(_fremd17b)[:5])))
 
 
 
@@ -17659,66 +17688,68 @@ def paket_assetklassen_trennung() -> None:
            "Kein Rang ist besser als ein falscher" in _m,
            "ein Rang ueber alle Klassen saehe aus wie ein richtiger - "
            "genau die Falle aus F-198")
-    from agent import marktrang as _MR
-    _b = _MR.messbasis("schnitt")
-    pruefe(P, "und die Schnitt-Messbasis ist tatsaechlich krypto-gross",
-           400 < len(_b) < 700,
-           "gemessen %d Symbole - vor dem Fix waren es 1.314" % len(_b))
+    if not _datei_fehlt(P, "data/messdaten.db",
+                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+        from agent import marktrang as _MR
+        _b = _MR.messbasis("schnitt")
+        pruefe(P, "und die Schnitt-Messbasis ist tatsaechlich krypto-gross",
+               400 < len(_b) < 700,
+               "gemessen %d Symbole - vor dem Fix waren es 1.314" % len(_b))
 
-    # ⚠️ UND DER ZUSTAND SELBST, nicht nur der Code.
-    import sqlite3 as _sq
-    _c = _sq.connect("file:data/messdaten.db?mode=ro", uri=True)
-    _doppelt = list(_c.execute(
-        "SELECT symbol, COUNT(DISTINCT assetklasse) k FROM price_history_ohlc "
-        "WHERE currency IN ('USD','EUR') GROUP BY symbol, currency "
-        "HAVING k > 1"))
-    _c.close()
-    # ⚠️⚠️ SEIT DEM 07.09. LIEGEN SIEBEN SYMBOLE IN ZWEI KLASSEN.
-    # Die Vorgaengerzeile pruefte "noch keine Kollision" und war als
-    # Ausloeser gedacht: sie sollte beim Nachladen fallen. Sie ist
-    # gefallen - und der Filter hat gehalten
-    # (`pruefe_assetklassen_trennung.py`: greift GENAU bei den sieben,
-    # sonst nirgends). Jetzt prueft diese Zeile das Gegenteil: dass die
-    # Trennung TAETSAECHLICH getrennte Reihen liefert.
-    _erwartet = {"BOND", "C", "DASH", "DIA", "MDT", "STX", "T"}
-    _ist = {x[0] for x in _doppelt}
-    pruefe(P, "⚠️⚠️ die sieben F-198-Kollisionen liegen in ZWEI Klassen",
-           _ist == _erwartet,
-           "erwartet %s - gefunden %s. Kommt eines dazu, gehoert es "
-           "geprueft; verschwindet eines, ist eine Reihe weg"
-           % (sorted(_erwartet), sorted(_ist)))
-    from backtest_llm1_historisch import lade_reihen_aus_db as _lrd
-    _kr = _lrd("data/messdaten.db", assetklasse="krypto")
-    _ak = _lrd("data/messdaten.db", assetklasse="aktien")
-    pruefe(P, "und der Filter liefert fuer DASH GETRENNTE Reihen",
-           "DASH" in _kr and "DASH" in _ak
-           and len(_kr["DASH"]) != len(_ak["DASH"]),
-           "DASH ist die DoorDash-Aktie UND die Kryptowaehrung. Gleiche "
-           "Laenge hiesse: eine der beiden fehlt oder sie sind vermischt "
-           "(krypto %d, aktien %d)"
-           % (len(_kr.get("DASH", ())), len(_ak.get("DASH", ()))))
-    # ⚠️⚠️ DIE STAERKSTE PRUEFUNG: der KURS, nicht die Struktur.
-    # Laenge und Datum koennen zufaellig passen; ein Kurs von 0,004 USD
-    # kann keine AT&T-Aktie sein. Threshold (T) und Measurable Data (MDT)
-    # handeln im Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD.
-    import messe_eigenschaft_beitrag as _MEB2
-    _r2 = _MEB2.lade()
-    _zu_teuer = [(s_, _r2[s_][-1][1]) for s_, grenze in
-                 (("T", 1.0), ("MDT", 1.0), ("STX", 5.0), ("C", 5.0),
-                  ("DIA", 5.0), ("DASH", 150.0))
-                 if s_ in _r2 and _r2[s_][-1][1] > grenze]
-    pruefe(P, "⚠️⚠️ und die Kurse sind KRYPTO-typisch, nicht Aktienkurse",
-           not _zu_teuer,
-           "Threshold (T) und Measurable Data (MDT) handeln im "
-           "Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD. Ein zu "
-           "hoher Kurs hiesse: die Aktienreihe ist durchgeschlagen "
-           "(gefunden: %s)" % ", ".join("%s %.4f" % x for x in _zu_teuer))
-    pruefe(P, "⚠️ und die Kryptoreihe beginnt SPAETER als die Aktienreihe",
-           _kr.get("DASH") and _ak.get("DASH")
-           and _kr["DASH"][0].date > "2018-01-01"
-           and _ak["DASH"][0].date > "2019-01-01",
-           "eine Pruefung auf den INHALT, nicht nur die Laenge: DoorDash "
-           "ging 2020 an die Boerse, Dash handelt seit 2019 bei Binance")
+        # ⚠️ UND DER ZUSTAND SELBST, nicht nur der Code.
+        import sqlite3 as _sq
+        _c = _sq.connect("file:data/messdaten.db?mode=ro", uri=True)
+        _doppelt = list(_c.execute(
+            "SELECT symbol, COUNT(DISTINCT assetklasse) k FROM price_history_ohlc "
+            "WHERE currency IN ('USD','EUR') GROUP BY symbol, currency "
+            "HAVING k > 1"))
+        _c.close()
+        # ⚠️⚠️ SEIT DEM 07.09. LIEGEN SIEBEN SYMBOLE IN ZWEI KLASSEN.
+        # Die Vorgaengerzeile pruefte "noch keine Kollision" und war als
+        # Ausloeser gedacht: sie sollte beim Nachladen fallen. Sie ist
+        # gefallen - und der Filter hat gehalten
+        # (`pruefe_assetklassen_trennung.py`: greift GENAU bei den sieben,
+        # sonst nirgends). Jetzt prueft diese Zeile das Gegenteil: dass die
+        # Trennung TAETSAECHLICH getrennte Reihen liefert.
+        _erwartet = {"BOND", "C", "DASH", "DIA", "MDT", "STX", "T"}
+        _ist = {x[0] for x in _doppelt}
+        pruefe(P, "⚠️⚠️ die sieben F-198-Kollisionen liegen in ZWEI Klassen",
+               _ist == _erwartet,
+               "erwartet %s - gefunden %s. Kommt eines dazu, gehoert es "
+               "geprueft; verschwindet eines, ist eine Reihe weg"
+               % (sorted(_erwartet), sorted(_ist)))
+        from backtest_llm1_historisch import lade_reihen_aus_db as _lrd
+        _kr = _lrd("data/messdaten.db", assetklasse="krypto")
+        _ak = _lrd("data/messdaten.db", assetklasse="aktien")
+        pruefe(P, "und der Filter liefert fuer DASH GETRENNTE Reihen",
+               "DASH" in _kr and "DASH" in _ak
+               and len(_kr["DASH"]) != len(_ak["DASH"]),
+               "DASH ist die DoorDash-Aktie UND die Kryptowaehrung. Gleiche "
+               "Laenge hiesse: eine der beiden fehlt oder sie sind vermischt "
+               "(krypto %d, aktien %d)"
+               % (len(_kr.get("DASH", ())), len(_ak.get("DASH", ()))))
+        # ⚠️⚠️ DIE STAERKSTE PRUEFUNG: der KURS, nicht die Struktur.
+        # Laenge und Datum koennen zufaellig passen; ein Kurs von 0,004 USD
+        # kann keine AT&T-Aktie sein. Threshold (T) und Measurable Data (MDT)
+        # handeln im Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD.
+        import messe_eigenschaft_beitrag as _MEB2
+        _r2 = _MEB2.lade()
+        _zu_teuer = [(s_, _r2[s_][-1][1]) for s_, grenze in
+                     (("T", 1.0), ("MDT", 1.0), ("STX", 5.0), ("C", 5.0),
+                      ("DIA", 5.0), ("DASH", 150.0))
+                     if s_ in _r2 and _r2[s_][-1][1] > grenze]
+        pruefe(P, "⚠️⚠️ und die Kurse sind KRYPTO-typisch, nicht Aktienkurse",
+               not _zu_teuer,
+               "Threshold (T) und Measurable Data (MDT) handeln im "
+               "Cent-Bereich, AT&T bei ~20 und Medtronic bei ~90 USD. Ein zu "
+               "hoher Kurs hiesse: die Aktienreihe ist durchgeschlagen "
+               "(gefunden: %s)" % ", ".join("%s %.4f" % x for x in _zu_teuer))
+        pruefe(P, "⚠️ und die Kryptoreihe beginnt SPAETER als die Aktienreihe",
+               _kr.get("DASH") and _ak.get("DASH")
+               and _kr["DASH"][0].date > "2018-01-01"
+               and _ak["DASH"][0].date > "2019-01-01",
+               "eine Pruefung auf den INHALT, nicht nur die Laenge: DoorDash "
+               "ging 2020 an die Boerse, Dash handelt seit 2019 bei Binance")
 
 
 def paket_kapital() -> None:
@@ -19175,22 +19206,24 @@ def paket_neuaufnahme() -> None:
     # ⚠️ ABER `klassen_aus_db()` liefert fuer diese sieben weiterhin die
     # falsche Klasse, und ueber zehn Messwerkzeuge importieren sie. Wer
     # sie zur Klassenentscheidung nutzt, bekommt dort das Falsche.
-    import sqlite3 as _sq3
-    _c3 = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
-    _koll = [r[0] for r in _c3.execute(
-        "SELECT DISTINCT p.symbol FROM price_history_ohlc p "
-        "JOIN messreihen r ON r.symbol = p.symbol "
-        "WHERE p.assetklasse <> r.assetklasse ORDER BY 1")]
-    _c3.close()
-    pruefe(P, "⚠️⚠️ `messreihen` und die Kursdaten sind klassengleich",
-           not _koll,
-           "%d Symbole tragen in `price_history_ohlc` eine ANDERE Klasse "
-           "als in `messreihen`: %s. Ursache: `messreihen.symbol` ist "
-           "PRIMARY KEY und kann ein Symbol nur EINER Klasse zuordnen - "
-           "die Kursdaten fuehren sie in zwei. ✔ Die Messungen sind "
-           "nicht betroffen (`_reihen_roh` nutzt die Spalte), ⚠️ aber "
-           "`klassen_aus_db()` liefert dort die falsche Klasse"
-           % (len(_koll), ", ".join(_koll[:8])))
+    if not _datei_fehlt(P, "data/messdaten.db",
+                        "am Notebook planmaessig nicht vorhanden (166 MB, Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen sie, der Betriebscode nicht"):
+        import sqlite3 as _sq3
+        _c3 = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
+        _koll = [r[0] for r in _c3.execute(
+            "SELECT DISTINCT p.symbol FROM price_history_ohlc p "
+            "JOIN messreihen r ON r.symbol = p.symbol "
+            "WHERE p.assetklasse <> r.assetklasse ORDER BY 1")]
+        _c3.close()
+        pruefe(P, "⚠️⚠️ `messreihen` und die Kursdaten sind klassengleich",
+               not _koll,
+               "%d Symbole tragen in `price_history_ohlc` eine ANDERE Klasse "
+               "als in `messreihen`: %s. Ursache: `messreihen.symbol` ist "
+               "PRIMARY KEY und kann ein Symbol nur EINER Klasse zuordnen - "
+               "die Kursdaten fuehren sie in zwei. ✔ Die Messungen sind "
+               "nicht betroffen (`_reihen_roh` nutzt die Spalte), ⚠️ aber "
+               "`klassen_aus_db()` liefert dort die falsche Klasse"
+               % (len(_koll), ", ".join(_koll[:8])))
     pruefe(P, "⚠️ und `faellt weg` gilt NICHT als Mangel",
            not any("weder Watchlist" in m for m in maengel),
            "P6 verlangt ausdruecklich, dass die Messbasis BREITER ist als "
@@ -19331,9 +19364,16 @@ def main() -> int:
                 print(f"        ({detail})")
             schlecht += 0 if ok else 1
 
+        if _UEBERSPRUNGEN:
+            print("\nUEBERSPRUNGEN - an diesem Geraet planmaessig nicht "
+                  "pruefbar:")
+            for _pk, _pf, _warum in _UEBERSPRUNGEN:
+                print(f"  PAKET {_pk}: {_pf} - {_warum}")
         print("\n" + "=" * 68)
         print(f"{len(_ERGEBNISSE)} Pruefungen, "
-              + ("ALLE BESTANDEN" if not schlecht else f"{schlecht} FEHLGESCHLAGEN"))
+              + ("ALLE BESTANDEN" if not schlecht else f"{schlecht} FEHLGESCHLAGEN")
+              + (f", {len(_UEBERSPRUNGEN)} Block(e) uebersprungen"
+                 if _UEBERSPRUNGEN else ""))
         return 1 if schlecht else 0
     finally:
         sys.stdout = _original_stdout

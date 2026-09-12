@@ -1098,6 +1098,10 @@
 
 - Quelle: 2.335 / 2.222 / 2.158-redundanz
 
+**2.386** — ⚠️⚠️⚠️ AM NOTEBOOK STARB DIE GANZE SUITE - 0 von 2.193 Pruefungen, ohne eine einzige ausgegebene Zeile (Rollout 12.09., gefunden im ersten Lauf nach dem Pull). URSACHE: drei ZUSTANDSpruefungen oeffneten `data/messdaten.db` ungeschuetzt - die Datei liegt am Notebook BEWUSST nicht (166 MB, so entschieden beim Rollout 02.09.). `sqlite3.OperationalError` in `paket_assetklassen_trennung`, und weil die Pakete VOR der Ausgabe laufen, fiel damit alles aus. Am Desktop faellt es nie auf, weil die Datei hier liegt - dieselbe Klasse wie `paket_b1` (24.08.), der KeyError vom 02.09. und die `.index()`-Pruefung vom 03.09.: eine Pruefung, die stirbt, prueft nichts mehr. ➔ DRITTE KATEGORIE statt Absturz ODER falschem Rot: `_datei_fehlt()` bucht den Block als UEBERSPRUNGEN, die Schlussausgabe nennt ihn samt Grund. Gegengeprueft: am Desktop unveraendert (Assetklassen 13, Kalibrierung 51, Neuaufnahme 6); mit simuliert fehlender Datei kein Absturz, 7 Pruefungen weniger, 3 Bloecke uebersprungen. ERWARTUNG AM NOTEBOOK: 2.186 Pruefungen, 3 Bloecke uebersprungen, 3 bekannte Rote (die vierte, ,klassengleich', gehoert zu den uebersprungenen)
+
+- Quelle: pruefe_pakete._datei_fehlt · Notebook-Lauf 12.09.
+
 **2.384** — ✔✔✔ SCHARF GESCHALTET MIT DEM ROLLOUT VON PAKET B (Nutzerentscheidungen 12.09.2026). (1) `rollen_kette.hebel_aus_quote.aktiv: true` - ab jetzt entsteht der Hebel aus der Wahrscheinlichkeit r(q) statt aus der Stopgeometrie; die Vorgabe im CODE bleibt AUS, eingeschaltet wird allein in der config.yaml. Voraussetzungen lagen vor: Verteilung simuliert (2.378), E2E gezeigt (2.382), Rollout-Skript geprueft (2.383). (2) `hebel_screening.aktiv: false` - das ALTE Hebel-Screening verbraucht keine Rechenzeit mehr; Positionsabgleich und Hebelfuehrung laufen weiter (2.379-schalter, im Paket Hebelfuehrung gegen den Quelltext geprueft). (3) Der alte MARKTSCAN bleibt AN - siehe 2.385. Die Paketpruefung verlangt jetzt ausdruecklich `aktiv is True` in der config und `False` in der Code-Vorgabe: wer den Schalter zuruecknimmt, sieht es in der Suite
 
 - Quelle: Basisinfos/config.yaml · Nutzerentscheidung 12.09.
