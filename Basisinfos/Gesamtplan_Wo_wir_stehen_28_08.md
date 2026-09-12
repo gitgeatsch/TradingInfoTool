@@ -5142,3 +5142,23 @@ grün oder tot — die Suite hat dafür eine dritte Kategorie.
 **Offen, nach dem Rollout:** der Schreibjob (2.387-job), die fortgeschriebenen
 Börsentitel (2.387-fortschreibung), die Akkumulationszelle (2.382-akku-anlass,
 Schritt 26) und die Abnahme des ersten Umlaufs.
+
+## ✔ Die Abnahme des ersten Umlaufs (12.09.2026, Befunde 2.388/2.389)
+
+Neustart 07:08, zwei vollständige Umläufe über alle fünf Ketten in 17 Minuten,
+Mails gehen raus, vier Fehler — alle vier derselbe bekannte. Der Hebelschalter
+wirkt im Betrieb: *„Screening übersprungen; Positionsabgleich läuft weiter."*
+
+**Und die Frage, die seit Wochen offen war, ist beantwortet:** Die Urteile
+bewegen sich nicht, weil der Verbraucher der alten Hebelkette seit dem 10.08.
+steht. Die 1.699 sind ein Endstand. Der Erzeuger lief bis heute früh weiter und
+legte 96.000 Messzeilen an, die der Verfall nicht anfassen kann — er fasst nur
+Kandidaten an. Seit 07:08 ist auch der Erzeuger aus.
+
+⚠️ **Zwei Dinge, die dabei sichtbar wurden:**
+
+- Ein abgesprochener Zustand (die planmäßig fehlende `messdaten.db`) wird
+  **262-mal in 72 Stunden als ERROR** protokolliert — dieselbe Klasse wie der
+  Suite-Absturz, nur kostet er hier die Lesbarkeit des Logs (2.389-log).
+- Die Absicherung verlor zwei Signale an der Richtungspflicht, weil das Modell
+  keine Richtung nannte (2.389-richtung).

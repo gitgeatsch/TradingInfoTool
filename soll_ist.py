@@ -620,6 +620,21 @@ REIHENFOLGE = (
             "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
             "Fuenftel sind (2.174-grenzen).",
             "Plan 05.09."),
+    Schritt(40, "ALTBESTAND STILLLEGEN",
+            "⚠️ NUTZERVORGABE 12.09.: *,damit wir nicht laufend ueber "
+            "Altbestaende stolpern, sollten wir diese sauber stilllegen'*. "
+            "AUFNAHME statt Einzelfaelle: (1) die alte Hebelkette - Screening "
+            "ist AUS (2.384), der Verbraucher steht seit 10.08., die 1.029 "
+            "wartenden Kandidaten sind verfallen gesetzt; offen bleibt die "
+            "Anzeige in der Oberflaeche (2.388). (2) Der Marktscan bleibt AN, "
+            "aber 4.071 Kandidaten warten unbearbeitet - erst mit Schritt 39 "
+            "entscheidbar. (3) Das LOG: ein abgesprochener Zustand wird 262x "
+            "in 72 h als ERROR gemeldet (2.389-log). (4) Was NICHT stillgelegt "
+            "wird und warum: `hebel_triggers` bleibt als Messgrundlage von "
+            "`messe_allocator_gegen_zufall.py` stehen. ⚠️ Jede Stilllegung "
+            "braucht den Satz ,wer liest das noch' - eine geloeschte "
+            "Messgrundlage kommt nicht zurueck.",
+            "Nutzervorgabe 12.09.; Befunde 2.388, 2.389-log"),
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
             "⚠️ ERSATZ FUER DEN ALTEN MARKTSCAN, in drei Stufen (2.385-pscan): "
             "(1) SCHATTEN - denselben gemessenen Rang wie in der Kette taeglich "
