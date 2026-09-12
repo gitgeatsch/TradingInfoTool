@@ -143,10 +143,42 @@ def main() -> int:
               % (schluessel, len(w), 100 * st.median(w), 100 * st.fmean(w),
                  pos))
 
+    # ---- DIE QUELLE, UND ZWAR ALS UEBERSCHNEIDUNG ----------------------
+    #
+    # ⚠️ NUTZERANMERKUNG 12.09.: "trending koennte eine Loesung sein". Sie
+    # laesst sich NICHT direkt beantworten - reine Trending-Funde haben
+    # keinen gemessenen Ertrag, weil sie am Altersfilter haengen bleiben
+    # (dokumentierte API-Luecke: /search/trending liefert kein atl_date).
+    #
+    # WAS SICH BEANTWORTEN LAESST: wie liefen die Coins, die BEIDES waren?
+    # Sie haben ueber ihre Top-Gainer-Zeile einen gemessenen Ertrag, und die
+    # Trending-Eigenschaft steht in einer zweiten Zeile derselben Tabelle.
+    # Keine Aussage ueber REINES Trending - aber die einzige, die heute ohne
+    # neuen Datenabruf moeglich ist.
+    _trend = {r[0] for r in con.execute(
+        "SELECT DISTINCT coingecko_id FROM marktscan_candidates "
+        "WHERE discovery_source = 'trending'")}
+    _ids = {}
+    for _cg, _sym in con.execute(
+            "SELECT coingecko_id, symbol FROM marktscan_candidates"):
+        _ids.setdefault(_sym, set()).add(_cg)
+    for sym, stufe, ertrag, von, bis, score, bp in faelle:
+        m = markt_im_fenster(reihen, von, bis)
+        if m is None:
+            continue
+        g = (float(ertrag) / 100.0) - m
+        _auch = bool(_ids.get(sym, set()) & _trend)
+        roh.setdefault("auch_trending" if _auch else "nur_top_gainer",
+                       []).append(g)
+
     print("\n--- ERTRAG GEGEN DEN MARKT IM GLEICHEN FENSTER ---")
     print("  (positiv = der Fund lief BESSER als unsere Symbole im selben "
           "Zeitraum)")
     for k in ("alle", *ECHTE, "bei Bitpanda handelbar"):
+        zeige(k)
+    print("")
+    print("  ⚠️ und nach der QUELLE - war der Coin AUCH im Trending?")
+    for k in ("auch_trending", "nur_top_gainer"):
         zeige(k)
 
     # ---- die Zufallskontrolle -------------------------------------------

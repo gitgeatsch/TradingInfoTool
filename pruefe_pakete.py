@@ -14766,6 +14766,39 @@ def paket_marktscanwert() -> None:
     pruefe(P, "⚠️⚠️ besser als der Markt ist POSITIV",
            besser > 0 and schlechter < 0,
            "wer das Vorzeichen dreht, misst das Gegenteil und merkt es nie")
+    # ---- die Quellen-Aufteilung (2.406-luecke) --------------------------
+    #
+    # ⚠️ Sie beantwortet NICHT "traegt reines Trending" - dafuer fehlen die
+    # Ertraege. Sie beantwortet "war ein Coin, der AUCH im Trending stand,
+    # besser oder schlechter". Der Unterschied gehoert in die Pruefung,
+    # damit ihn niemand ueberliest.
+    import sqlite3 as _sq
+
+    _c = _sq.connect(":memory:")
+    _c.execute("CREATE TABLE marktscan_candidates (coingecko_id TEXT, "
+               "symbol TEXT, discovery_source TEXT)")
+    _c.executemany("INSERT INTO marktscan_candidates VALUES (?,?,?)",
+                   [("aaa", "AAA", "trending"), ("aaa", "AAA", "top_gainers"),
+                    ("bbb", "BBB", "top_gainers")])
+    _tr = {r[0] for r in _c.execute(
+        "SELECT DISTINCT coingecko_id FROM marktscan_candidates "
+        "WHERE discovery_source = 'trending'")}
+    _id = {}
+    for _cg, _sy in _c.execute(
+            "SELECT coingecko_id, symbol FROM marktscan_candidates"):
+        _id.setdefault(_sy, set()).add(_cg)
+    pruefe(P, "⚠️ ein Coin aus BEIDEN Quellen zaehlt als ,auch trending'",
+           bool(_id.get("AAA", set()) & _tr),
+           "die Trending-Eigenschaft steht in einer ZWEITEN Zeile derselben "
+           "Tabelle - wer nur die Zeile mit dem Ertrag ansieht, sieht sie nie")
+    pruefe(P, "und einer nur aus top_gainers nicht",
+           not (_id.get("BBB", set()) & _tr))
+    pruefe(P, "⚠️⚠️ die Zuordnung geht ueber die coingecko_id, nicht das Symbol",
+           "coingecko_id" in io.open("messe_marktscan_wert.py",
+                                     encoding="utf-8").read(),
+           "Symbole sind nicht eindeutig - dieselbe Falle, die im Projekt "
+           "schon einmal zwei Assets vermengt hat")
+
     pruefe(P, "die echten Einstufungen des Scans sind abgedeckt",
            set(MW.ECHTE) == {"watchlist_wuerdig", "kaufkandidat"},
            "'kein_treffer' gehoert NICHT dazu - diese Zeilen wurden nie "
