@@ -14678,6 +14678,20 @@ def paket_turnoverquelle() -> None:
            'data/markt_historie.db' in _fn
            and "tradinginfotool.db" not in _fn,
            "die Produktionsdatenbank wird von einer Messung nie beruehrt")
+    pruefe(P, "⚠️⚠️ der Lauf ist WIEDERAUFNEHMBAR",
+           "schon_da" in _code and "MAX(datum) >= ?" in _code,
+           "er dauert rund 25 Minuten - ohne Wiederaufnahme kostet jeder "
+           "Abbruch alles. Genau das ist beim ersten Lauf passiert: 15 "
+           "Symbole geladen, abgebrochen, alles noch einmal")
+    pruefe(P, "⚠️ und ,schon da' heisst: der letzte Tag stimmt",
+           "_gestern" in _code,
+           "ein Symbol mit Daten bis vorgestern ist NICHT fertig - es zu "
+           "ueberspringen hiesse, eine Luecke festzuschreiben")
+    pruefe(P, "⚠️ ein 429 wird als ANSAGE behandelt, nicht als Stoerung",
+           "429" in _q and "15.0 * (n + 1)" in _q,
+           "wer nach zwei Sekunden wieder anklopft, bekommt wieder 429 und "
+           "verbrennt seinen Versuch - gemessen: 2 Symbole je Minute statt "
+           "der erwarteten 27")
     pruefe(P, "und `beides` startet sie NICHT mit",
            'if was == "turnover"' in _q,
            "sie laedt zehn Minuten lang 250 Symbole, die mit der eigenen "

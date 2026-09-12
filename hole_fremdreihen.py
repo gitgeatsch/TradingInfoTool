@@ -185,7 +185,7 @@ def onchain(unsere, metrik="AdrActCnt", pause=0.8):
 
 
 # ---------------------------------------------------------------------------
-def turnover(pause=6.0, tage=365):
+def turnover(pause=8.0, tage=365):
     """Umschlag je Tag: Handelsvolumen durch Marktkapitalisierung.
 
     ⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (Schritt 49, Teil 1, 12.09.2026).
@@ -226,9 +226,21 @@ def turnover(pause=6.0, tage=365):
     kostet zusaetzlich. Der Abruf selbst dauert 0,2 s - die Zeit geht
     vollstaendig fuer abgewiesene Anfragen drauf.
 
-    Bei 6 s sind es rund zehn Anfragen je Minute und damit etwa 25 Minuten
-    fuer 250 Symbole. Wer es eilig hat, gewinnt nichts: mit 2,2 s dauerte
-    derselbe Lauf hochgerechnet 125 Minuten."""
+    ⚠️⚠️ DIE ZAHL IST GEMESSEN, UND ZWAR IM DRITTEN ANLAUF. 2,2 s (aus der
+    Doku "30 Anfragen je Minute") ergaben 2 Symbole je Minute - fast jede
+    Anfrage wurde abgewiesen. 6 s brachten den Lauf ganz zum Stehen: die
+    Drosselung traf danach sogar `/ping`. Erst ein Test mit sechs Anfragen
+    hintereinander zeigte, was traegt:
+
+        Pause 8 s = 7,5 Anfragen/Minute -> 6 von 6 durch
+
+    250 Symbole brauchen damit rund 33 Minuten. ⚠️ Die Drosselung ist KEIN
+    Bann: sie loest sich in unter einer Minute. Wer sie trifft, verliert
+    Zeit, nicht den Zugang.
+
+    ⚠️ WER ES EILIGER BRAUCHT, nimmt einen CoinGecko-Demo-Schluessel (frei,
+    30 Anfragen/Minute, 10.000 im Monat). Das ist eine Abhaengigkeit mehr
+    und eine Nutzerentscheidung - ohne ihn geht es auch, nur langsamer."""
     print("=" * 78)
     print("C. UMSCHLAG (CoinGecko, Volumen / Marktkapitalisierung)")
     print("=" * 78)
@@ -243,8 +255,32 @@ def turnover(pause=6.0, tage=365):
 
     conn = sqlite3.connect("data/markt_historie.db")
     anlegen(conn, "turnover")
-    ok = leer = fehler = 0
+
+    # ---- WIEDERAUFNEHMBAR (12.09.2026) --------------------------------
+    #
+    # ⚠️ Der Lauf dauert rund 25 Minuten. Ohne diese Stelle kostet jeder
+    # Abbruch - Netz weg, Rechner aus, ein Abbruch von Hand - alles, und der
+    # naechste Versuch faengt bei null an. Genau das ist beim ersten Lauf
+    # passiert: 15 Symbole geladen, dann abgebrochen, alles noch einmal.
+    #
+    # ⚠️⚠️ ,SCHON DA' HEISST: DER LETZTE TAG STIMMT. Ein Symbol mit Daten
+    # bis vorgestern ist NICHT fertig - es zu ueberspringen hiesse, eine
+    # Luecke festzuschreiben. Nur wer bis gestern oder heute reicht, wird
+    # ausgelassen.
+    _gestern = (dt.datetime.now(dt.timezone.utc).date()
+                - dt.timedelta(days=1)).isoformat()
+    schon_da = {r[0] for r in conn.execute(
+        "SELECT symbol FROM turnover GROUP BY symbol HAVING MAX(datum) >= ?",
+        (_gestern,))}
+    if schon_da:
+        print("  %d Symbole sind aktuell und werden uebersprungen"
+              % len(schon_da))
+
+    ok = leer = fehler = uebersprungen = 0
     for i, (cg_id, sym) in enumerate(paare, 1):
+        if sym in schon_da:
+            uebersprungen += 1
+            continue
         try:
             d = hole("https://api.coingecko.com/api/v3/coins/%s/market_chart"
                      "?vs_currency=usd&days=%d&interval=daily" % (cg_id, tage))
@@ -271,8 +307,9 @@ def turnover(pause=6.0, tage=365):
             fehler += 1
             print("  %-9s FEHLER: %s" % (sym, str(e)[:50]))
         if i % 25 == 0:
-            print("  %3d von %d  (ok %d, leer %d, Fehler %d)"
-                  % (i, len(paare), ok, leer, fehler))
+            print("  %3d von %d  (ok %d, leer %d, Fehler %d, "
+                  "uebersprungen %d)"
+                  % (i, len(paare), ok, leer, fehler, uebersprungen))
         time.sleep(pause)
     n, sy, a, b = conn.execute(
         "SELECT COUNT(*), COUNT(DISTINCT symbol), MIN(datum), MAX(datum) "
