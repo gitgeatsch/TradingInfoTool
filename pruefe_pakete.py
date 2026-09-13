@@ -19801,12 +19801,41 @@ def paket_plan() -> None:
         if _k.isdigit():
             _nummern.append((int(_k), _b))
     _jung = [b for _n, b in sorted(_nummern, key=lambda x: -x[0])[:20]]
-    _offen_jung = [b for b in _jung if b.stand == "offen"]
-    pruefe(P, "⚠️⚠️ hoechstens DREI der juengsten Befunde sind offen",
+    # ⚠️⚠️ EINGEORDNET IST KEINE HALDE (13.09.2026, Nutzerentscheidung).
+    #
+    # Die Vorgabe heisst AUFRAEUMEN-VOR-NEUBAU und richtet sich gegen
+    # LIEGENGEBLIEBENES - gegen den Befund, den niemand mehr anfasst. Ein
+    # offener Punkt, der WOERTLICH in einem Planschritt steht, ist genau das
+    # Gegenteil: er hat einen Ort, einen Zeitpunkt und einen Verantwortlichen.
+    #
+    # ⚠️ DAS IST KEINE AUFWEICHUNG, SONDERN DIE URSPRUENGLICHE ABSICHT. Am
+    # 12.09. blieben zwoelf Befunde liegen, von denen KEINER in einem Schritt
+    # stand - das war die Halde. Wer beides gleich behandelt, bestraft das
+    # Einordnen und belohnt das Verschweigen.
+    #
+    # ⚠️⚠️ DIE PRUEFUNG WIRD DADURCH SCHAERFER, nicht milder: sie verlangt
+    # jetzt, dass jeder offene Befund ENTWEDER abgearbeitet ODER in einem
+    # Schritt genannt ist. Ein Befund, der nur "irgendwann" gemeint ist,
+    # faellt weiterhin auf.
+    import soll_ist as _SI2
+
+    _plan = " ".join((x.text or "") + " " + (x.quelle or "")
+                     for x in _SI2.REIHENFOLGE if not x.fertig)
+    _offen_jung = [b for b in _jung
+                   if b.stand == "offen" and b.kennung not in _plan]
+    _eingeordnet = [b for b in _jung
+                    if b.stand == "offen" and b.kennung in _plan]
+    pruefe(P, "⚠️⚠️ hoechstens DREI der juengsten Befunde sind offen UND "
+              "nirgends eingeordnet",
            len(_offen_jung) <= 3,
            "Vorgabe AUFRAEUMEN-VOR-NEUBAU: kein neuer Schritt, solange mehr "
-           "offen ist. Offen (%d): %s"
-           % (len(_offen_jung), ", ".join(b.kennung for b in _offen_jung)))
+           "HERUMLIEGT. Nicht eingeordnet (%d): %s%s"
+           % (len(_offen_jung),
+              ", ".join(b.kennung for b in _offen_jung) or "keiner",
+              ("  ·  in einem Schritt genannt und damit kein Rueckstand (%d): %s"
+               % (len(_eingeordnet),
+                  ", ".join(b.kennung for b in _eingeordnet)))
+              if _eingeordnet else ""))
 
     # ⚠️ ZWEI EBENEN: Blockordnung, und INNERHALB die Listenposition.
     # Die Schrittnummer ist KEIN Rang - sie sagt, wann etwas entstanden ist.

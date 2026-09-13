@@ -1033,6 +1033,11 @@ REIHENFOLGE = (
             "✔ TEIL 1 FERTIG AM 13.09. (Befund 2.412): 246 Symbole, 365 "
             "Tage, 81.424 Tagespunkte in `data/markt_historie.db` - gegen "
             "66 Symbole bisher. "
+            "⚠️ VOR TEIL 2 NACHGELESEN (Befund 2.412-lage): der "
+            "registrierte Stand ist SCHWAECHER als angenommen - 2.191 "
+            "(kippt auf `frei`), 2.192 (,traegt nirgends mehr'), 2.196 "
+            "(,nicht widerlegt, sondern UNENTSCHIEDEN'). Der Anker "
+            "+0,0616 gilt auf der SELEKTIERTEN Menge, nicht auf `frei`. "
             "(2) ⚠️⚠️ R-R11 ZUERST: den bestehenden Befund ,turnover "
             "traegt' auf der ALTEN Basis REPRODUZIEREN, dann auf der neuen "
             "messen. Wer die Basis wechselt und ein anderes Ergebnis "
@@ -1042,6 +1047,21 @@ REIHENFOLGE = (
             "Messfehler - dann faellt die halbe Bewertung, und die Teile 3 "
             "und 4 entfallen. Das ist ein moegliches Ergebnis und kein "
             "Grund, trotzdem weiterzubauen. "
+            "✔ TEIL 2 GELAUFEN AM 13.09.: R-R11 erfuellt (2.413, die "
+            "Reproduktion trifft den Anker in 7 Sekunden). ⚠️⚠️ ABER DAS "
+            "ERGEBNIS IST EIN ANDERES ALS ERWARTET (2.413-zerfall): mit "
+            "gemeinsamem Zeitfenster gemessen zerfaellt die Tabelle im "
+            "letzten Jahr auf BEIDEN Basen - alt ueber 341 Tage +3,86 / "
+            "-1,89 / -1,70 / -0,81 / +0,55, neu +1,28 / -1,25 / -0,03 / "
+            "-0,42 / +0,42. Keine Ordnung, Fuenftel 1 schlechter als "
+            "Fuenftel 4. Der Unterschied ist also NICHT die Datenquelle, "
+            "sondern der ZEITRAUM. ⚠️ Und daraus folgt das Dilemma "
+            "(2.413-dilemma), das Teil 3 zu entscheiden hat: die alte Basis "
+            "hat sieben Jahre und die falsche Menge, die neue die richtige "
+            "Groesse und nur ein Jahr. Eine Umstellung kalibrierte die "
+            "Tabelle auf einem SIEBTEL der Historie neu - das tauscht einen "
+            "Fehler in der GROESSE gegen einen Mangel an DATEN. ➔ TEIL 3 IST "
+            "DAMIT EINE ENTSCHEIDUNG, KEIN BAU, und sie gehoert dem Nutzer. "
             "(3) EINE QUELLE FUER BEIDE SEITEN: `rechne_turnover_beitrag` "
             "und `marktrang.turnover_werte` auf dieselbe Groesse stellen. "
             "Danach braucht `turnover` die `onchain_historie.db` nicht mehr "
@@ -1284,7 +1304,16 @@ REIHENFOLGE = (
             "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
             block="D-BEWERTUNG"),
     Schritt(38, "KETTE",
-            "K-3 (Schwelle), dann K-2, K-4, K-5.",
+            "K-3 (Schwelle), dann K-2, K-4, K-5. ⚠️ HIER GEHOERT AUCH DER "
+            "DRITTE BEITRAG HIN (Befund 2.409-kandidaten): DefiLlama-TVL ist "
+            "kostenfrei, ohne Schluessel und die einzige ECHTE "
+            "Onchain-Groesse der Recherche vom 12.09. - sie stammt NICHT "
+            "wieder aus der Kursreihe, der Vorwurf der ,illusion of "
+            "confirmation' trifft sie also nicht. ⚠️ Sie deckt nur "
+            "DeFi-Protokolle ab und muss den VIERFACHTEST bestehen wie jeder "
+            "andere. Ebenfalls hier: `schnitt` (heute nur Anzeige) und "
+            "`oi_aenderung` (heute nur Sperre) brauchen keine Datenarbeit, "
+            "sondern eine MESSUNG.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9",
             block="D-BEWERTUNG"),
 

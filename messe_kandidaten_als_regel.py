@@ -260,6 +260,29 @@ def baue(reihen, art, zusatz=None, horizont=None):
                 menge = (extra or {}).get(tage[i])
                 if menge and menge > 0:
                     wert = float(v[i] / menge)
+            elif art == "turnover_markt":
+                # ⚠️⚠️ DIESELBE GROESSE, EINE ANDERE HERKUNFT (Schritt 49,
+                # 13.09.2026). `turnover` oben rechnet
+                # `Volumen(Binance-Kerze) / Umlaufmenge(Coin Metrics)` -
+                # ZWEI Quellen, und beide weichen von dem ab, was der
+                # Betrieb benutzt:
+                #
+                #     Messung      Stueckvolumen EINER Boerse
+                #                  / Umlaufmenge onchain (= Gesamtausgabe,
+                #                    bei LINK und UNI glatte 1.000.000.000)
+                #     Anwendung    USD-Volumen ALLER Boersen
+                #                  / Marktkapitalisierung
+                #
+                # Von 33 vergleichbaren Symbolen wichen die Mengen bei 16 um
+                # mindestens 5 % ab, bei GNO um 74 % (Befund 2.410).
+                #
+                # ⚠️ HIER KOMMT DER FERTIGE WERT HEREIN, wie bei `funding`:
+                # `Volumen / Marktkapitalisierung` ist bereits gerechnet und
+                # steht in `data/markt_historie.db`. Die Preise kuerzen sich
+                # dabei heraus - Stueck/Menge und USD/Marktkap. sind
+                # dieselbe Zahl, sofern Volumen und Menge aus DERSELBEN
+                # Quelle stammen. Genau das war vorher nicht der Fall.
+                wert = (extra or {}).get(tage[i])
             elif art == "funding":
                 wert = (extra or {}).get(tage[i])
             elif art in ("oi_aenderung", "long_bias", "top_bias",
