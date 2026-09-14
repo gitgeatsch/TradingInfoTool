@@ -959,7 +959,19 @@ def _get_regime_status(conn: sqlite3.Connection) -> dict | None:
     agent/krypto/regime.py::get_last_known_regime_status())."""
     from agent.krypto.regime import get_last_known_regime_status
 
-    return get_last_known_regime_status(conn)
+    status = get_last_known_regime_status(conn)
+    # ⚠️ SCHRITT 32 (14.09.2026, 2.448-uebersicht): der Stand kommt aus
+    # `signals.regime` - die Rollen-Kette setzt es NIE. Die Karte zeigt also
+    # den letzten Lauf der ALTEN Kette, und ohne diesen Satz sieht ein
+    # eingefrorener Wert aus wie ein aktueller.
+    if status:
+        status = dict(status)
+        status["herkunft_hinweis"] = REGIME_HERKUNFT_HINWEIS
+    return status
+
+
+REGIME_HERKUNFT_HINWEIS = ("Aus der ALTEN Kette - die Rollen-Kette setzt kein "
+                           "Regime; der Wert bewegt sich nicht mehr.")
 
 
 def _get_z3_und_bewertung(conn: sqlite3.Connection, portfolio_value_eur: float | None) -> dict | None:

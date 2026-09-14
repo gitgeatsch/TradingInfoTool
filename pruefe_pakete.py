@@ -70,6 +70,90 @@ def pruefe(paket: str, name: str, bedingung, detail: str = "") -> None:
 # uebersprungen, gezaehlt, und am Ende beim Namen genannt. Wer den Block
 # doch braucht, sieht dort, was zu holen ist.
 _UEBERSPRUNGEN: list[tuple[str, str, str]] = []
+
+
+# ⚠️⚠️⚠️ DIE SUITE SCHREIBT NIE IN DIE STANDARD-DATENBANK (14.09.2026).
+#
+# AM NOTEBOOK IST `data/tradinginfotool.db` DIE PRODUKTION. Gemessen am
+# Desktop (alle 77 Pakete einzeln, Tabellen-Fingerabdruck davor und danach):
+# zwei Pakete schrieben hinein -
+#
+#     Paket 15   ein GESTELLTER Gemini-Fehler ,HTTP 400 {"e": 1}' in
+#                `api_health_status` - am Notebook stand danach die
+#                Anbieter-Ampel der Uebersichtsseite auf Rot, ohne Stoerung.
+#                Der Schutz dagegen stand schon im Paket und war NIE
+#                wirksam: er ersetzte `track_api_health` NACH dem Import,
+#                die Methoden waren laengst dekoriert.
+#     Paket 6    `signal_abbildung.migriere()` auf der ECHTEN Datenbank und
+#                ein Test-Lagebild. Heute folgenlos (die Kette migriert
+#                selbst) - aber eine neue Spalte haette die SUITE der
+#                Produktion angelegt, vor dem Start der App.
+#
+# ⚠️ WARUM KEIN FINGERABDRUCK VORHER/NACHHER: am Notebook schreibt die
+# Produktion WAEHREND des Suitelaufs selbst (Lagebilder, Anbieter-Status) -
+# jeder Vergleich der Datei schluege falsch an. Der Waechter sieht deshalb
+# nur die EIGENEN Schreibzugriffe dieses Prozesses: jede Verbindung, die die
+# Suite beschreibbar auf die Standard-Datei oeffnet, bekommt einen
+# SQLite-Authorizer, der INSERT/UPDATE/DELETE/CREATE/ALTER/DROP meldet.
+#
+# ⚠️ ER BLOCKIERT NICHTS. Er meldet - die Suite prueft danach genau dasselbe
+# wie vorher. `mode=ro`-Verbindungen und Kopien (`:memory:`, Wegwerfdateien)
+# sind nicht betroffen; lesen darf die Suite die echte Datenbank weiterhin.
+_STANDARD_DB_SCHREIBER: list[tuple[str, str, str, str]] = []
+_AKTUELLES_PAKET = [None]
+
+
+def _standard_db_waechter_an():
+    """Installiert den Waechter; gibt die Funktion zum Entfernen zurueck."""
+    import os
+    import sqlite3 as _sq
+    import traceback as _tb
+
+    _ziel = os.path.normcase(os.path.realpath("data/tradinginfotool.db"))
+    _schreiben = {getattr(_sq, n): n.replace("SQLITE_", "") for n in (
+        "SQLITE_INSERT", "SQLITE_UPDATE", "SQLITE_DELETE", "SQLITE_CREATE_TABLE",
+        "SQLITE_ALTER_TABLE", "SQLITE_DROP_TABLE", "SQLITE_CREATE_INDEX",
+        "SQLITE_DROP_INDEX", "SQLITE_CREATE_VIEW", "SQLITE_DROP_VIEW",
+        "SQLITE_CREATE_TRIGGER", "SQLITE_DROP_TRIGGER") if hasattr(_sq, n)}
+    _echt = _sq.connect
+
+    def _ist_standard(datenbank, uri) -> bool:
+        pfad = os.fspath(datenbank) if not isinstance(datenbank, str) else datenbank
+        if pfad.startswith("file:"):
+            pfad, _, abfrage = pfad[5:].partition("?")
+            if "mode=ro" in abfrage:
+                return False
+        elif pfad == ":memory:" or not pfad:
+            return False
+        try:
+            return os.path.normcase(os.path.realpath(pfad)) == _ziel
+        except (OSError, ValueError):
+            return False
+
+    def _verbinde(datenbank, *a, **k):
+        conn = _echt(datenbank, *a, **k)
+        try:
+            if _ist_standard(datenbank, k.get("uri")):
+                def _meldung(aktion, arg1, arg2, dbname, quelle):
+                    if aktion in _schreiben and dbname != "temp":
+                        stelle = next((f"{f.filename.split(os.sep)[-1]}:{f.lineno}"
+                                       for f in reversed(_tb.extract_stack()[:-1])
+                                       if "sqlite3" not in f.filename), "?")
+                        _STANDARD_DB_SCHREIBER.append(
+                            (str(_AKTUELLES_PAKET[0]), _schreiben[aktion],
+                             str(arg1), stelle))
+                    return _sq.SQLITE_OK
+                conn.set_authorizer(_meldung)
+        except Exception:                                    # noqa: BLE001
+            pass
+        return conn
+
+    _sq.connect = _verbinde
+
+    def _aus():
+        _sq.connect = _echt
+    return _aus
+
 _OHNE_MESSDATEN = ("am Notebook planmaessig nicht vorhanden (166 MB, "
                    "Rollout 02.09.) - diese ZUSTANDSpruefungen brauchen "
                    "sie, der Betriebscode nicht")
@@ -644,7 +728,22 @@ def paket_6() -> None:
            abbild["NICHTS_TUN"] == "HALTEN" and abbild["KAUFEN"] == "KAUFEN"
            and abbild["REDUZIEREN"] == "REDUZIEREN", str(abbild))
 
-    con = sqlite3.connect("data/tradinginfotool.db")
+    # ⚠️⚠️ NICHT DIE STANDARD-DATENBANK (14.09.2026, Waechter
+    # `_standard_db_waechter_an`). Hier stand eine beschreibbare Verbindung
+    # auf `data/tradinginfotool.db` - am Notebook die PRODUKTION. Das Paket
+    # fuehrte dort `migriere()` aus und legte ein Test-Lagebild an. Heute
+    # folgenlos, aber eine neue Spalte haette die SUITE der Produktion
+    # angelegt. Geprueft wird dasselbe - die Migration, ihre Idempotenz, das
+    # Lagebild - an einer Kopie des ECHTEN Schemas, gelesen nur lesend.
+    # Die Kette migriert im Betrieb selbst (`rollen_lauf`, vor jedem Lauf);
+    # niemand verlaesst sich darauf, dass die Suite es tut.
+    _q6 = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+    con = sqlite3.connect(":memory:")
+    for (_sql6,) in _q6.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' "
+            "AND name IN ('signals', 'lagebilder') AND sql IS NOT NULL"):
+        con.execute(_sql6)
+    _q6.close()
     try:
         # ECKPUNKT 2: die fuenf heimatlosen Felder haben jetzt Spalten.
         SA.migriere(con)
@@ -1236,8 +1335,12 @@ def paket_11() -> None:
     pruefe(P, "keine Konfidenz in Prozent mehr",
            "Konfidenz" not in text,
            "im eigenen System 77,5 % vorhergesagt gegen 33,3 % tatsaechlich")
-    pruefe(P, "der Betreff nennt Symbol, Aktion und Instrument",
-           betreff == "TradingInfoTool: BTC - KAUFEN (Hebel)", betreff)
+    # ⚠️ SEIT SCHRITT 41 (13.09.2026) STEHT DIE RICHTUNG MIT IM BETREFF -
+    # eine SHORT-Mail hiess vorher "KAUFEN (Hebel)" (Paket Mailrichtung).
+    # Die Testeingabe nennt keine Richtung; der Stop unter dem Einstieg
+    # macht sie zu LONG - genau der Rueckfall, den der Mailbauer benutzt.
+    pruefe(P, "der Betreff nennt Symbol, Aktion, Instrument und Richtung",
+           betreff == "TradingInfoTool: BTC - KAUFEN (Hebel, LONG)", betreff)
 
 
 
@@ -1267,15 +1370,29 @@ def paket_12() -> None:
 
     # DER NUTZEREINWAND: "74. Perzentil ist fuer mich nicht lesbar."
     pruefe(P, "im Text steht kein Perzentil", "erzentil" not in text,
-           "das Perzentil bestimmt nur das Urteilswort, es erscheint nicht")
-    pruefe(P, "jede Kernzeile traegt ein Urteilswort",
-           sum(text.count(u) for u in FB._URTEIL) >= 3)
+           "das Perzentil bestimmte nur das Urteilswort - und das ist seit "
+           "Schritt 31 gestrichen")
+    # ⚠️⚠️ UMGEKEHRT SEIT SCHRITT 31 (13.09.2026, Nutzerentscheidung
+    # ,ja streichen', Befund 2.446-etiketten). Hier stand ,jede Kernzeile
+    # traegt ein Urteilswort'. Die Etiketten standen auf einer gepoolten
+    # Messung vom 12.08.; nach Standard traegt keine der drei Familien
+    # (2.135, REGISTER_Kandidaten momentum, Volumen nie registriert).
+    pruefe(P, "⚠️⚠️ KEINE Kernzeile traegt ein Etikett (2.446-etiketten)",
+           not any(u in text for u in FB._URTEIL),
+           "ein Etikett ist eine Bewertung - ohne gueltigen Beleg gehoert es "
+           "nicht in die Mail")
+    pruefe(P, "⚠️⚠️ und kein Wirkungssatz aus der Messung vom 12.08.",
+           "Treffer am guten Ende" not in text
+           and "ueber alle Einstiege gemessen" not in text,
+           "29,5 %% gegen 17,8 %% - gepoolt, vor Tagesklammer und Messstandard")
 
-    # ABSOLUT ZUERST (Umbauplan 12.1) - der Wert vor der Einordnung.
-    kopf = [z for z in text.split("\n") if z.startswith("Schwankung")][0]
-    pruefe(P, "der Absolutwert steht vor dem Urteil",
-           kopf.index("3,0 %") < kopf.index("GUENSTIG"),
-           "R-T1/R-T2 gelten fuer das MODELL, nicht fuer den Nutzer")
+    # ABSOLUT ZUERST (Umbauplan 12.1) - der Wert steht in der Kopfzeile.
+    kopf = [z for z in text.split("\n") if z.startswith("Schwankungsbreite")][0]
+    pruefe(P, "der Absolutwert steht in der Kopfzeile, unter dem Wort der Mail",
+           "3,0 %" in kopf,
+           "R-T1/R-T2 gelten fuer das MODELL, nicht fuer den Nutzer. ⚠️ Seit "
+           "Schritt 31 heisst die Zeile ,Schwankungsbreite' - es IST die ATR, "
+           "in der die Mail alle Abstaende misst")
 
     # "KEIN BEIWERK OHNE SINN": jede Zusatzinfo erklaert sich.
     zus = FB.zusatz("krypto_hebel", dict(funding_eur_tag=0.29, put_skew=-9.99))
@@ -1308,8 +1425,10 @@ def paket_12() -> None:
            "Keine Angabe zu" in ohne and "Kursentwicklung" in ohne
            and "Volumen" in ohne,
            "sonst sieht ein Signal mit einem Fakt aus wie eines mit dreien")
-    pruefe(P, "und im Singular richtig formuliert",
-           "Ein Punkt weniger steht" in "\n".join(FB.baue(
+    # Seit Schritt 31 ohne ,... steht damit hinter dieser Empfehlung' - die
+    # Werte tragen die Empfehlung nicht, sie sind Lage.
+    pruefe(P, "und genau die fehlende Familie wird genannt",
+           "Keine Angabe zu: Volumen." in "\n".join(FB.baue(
                "aktien", kern_werte=dict(atr_relativ=0.014,
                                          schwankung_perzentil=0.55,
                                          rueckgang_60t=-0.02,
@@ -1319,7 +1438,9 @@ def paket_12() -> None:
                                                    kern_werte=voll)),
            "Zusatzinfo ist freiwillig - ihr Fehlen ist keine Aussage")
 
-    # DAS URTEIL FOLGT DER GEMESSENEN RICHTUNG, nicht dem Bauchgefuehl.
+    # ⚠️ `_urteil` STEHT NICHT MEHR IN DER MAIL (Schritt 31) - es bleibt als
+    # Rueckweg, falls eine Familie nach Standard traegt. Diese drei pruefen
+    # nur noch, dass der Rueckweg nicht still verdirbt.
     pruefe(P, "niedrige Schwankung ist GUENSTIG, hohe UNGUENSTIG",
            FB._urteil(0.1, False) == "GUENSTIG"
            and FB._urteil(0.9, False) == "UNGUENSTIG",
@@ -1340,11 +1461,12 @@ def paket_12() -> None:
            "die alte Hebel-Mail mischte EUR und USD ohne Kennzeichen")
 
     # KOPF UND CODE DUERFEN EINANDER NICHT WIDERSPRECHEN (wie in Paket 10).
-    pruefe(P, "der Modulkopf zeigt den Wortlaut, den der Code erzeugt",
-           "ueber alle Einstiege gemessen" in (FB.__doc__ or "")
-           and "ueber alle Einstiege gemessen" in text,
-           "die erste Fassung las sich, als sei die Quote die Aussicht DIESES "
-           "Signals - sie ist die Verteilung, in die es faellt")
+    pruefe(P, "der Modulkopf sagt, dass das Etikett gestrichen ist - und warum",
+           "SEIT 13.09.2026 OHNE ETIKETT" in (FB.__doc__ or "")
+           and "2.446-etiketten" in (FB.__doc__ or "")
+           and "ueber alle Einstiege gemessen" not in text,
+           "Kopf und Code duerfen einander nicht widersprechen - der alte "
+           "Wortlaut steht im Kopf nur noch als Geschichte")
 
     # ---- ANSCHLUSS AN DIE MAIL, mit echten Werten ----
     import sqlite3
@@ -1554,12 +1676,27 @@ def paket_12() -> None:
     pruefe(P, "bei zu kurzer Reihe ebenfalls nicht",
            render_signal_chart(symbol="BTC", kurse_eur=cc[-5:], **plan) is None)
 
-    pruefe(P, "der Faktenblock steht in Abschnitt 1, vor der Rechnung",
-           (lambda t: t.index("Schwankung") < t.index("2. DIE RECHNUNG"))(
-               SM.baue_mail(symbol="BTC", name="B", kurs_eur=64797,
-                            instrument="spot", strategie="einstieg", rechnung=r,
-                            urteil={"aktion": "KAUFEN"},
-                            faktenblock=FB.baue("krypto_spot", kern_werte=echt))[1]))
+    # ⚠️ SEIT S-4 (11.09.2026) STEHT DER FAKTENBLOCK IN ,3. DIE LAGE DES
+    # WERTS' - NACH der Rechnung. Hier stand ,in Abschnitt 1, vor der
+    # Rechnung', geprueft als `index("Schwankung") < index("2. DIE
+    # RECHNUNG")`. Sie bestand zwei Tage lang NUR ZUFAELLIG: im Kopf stand
+    # ,Schwankungsbreite und Stop' (gesamtbild). Aufgefallen in Schritt 31,
+    # als dieser Name wegfiel. Geprueft wird jetzt der wirkliche Ort - am
+    # eigenen Titel der Zeile, nicht an einem Wort, das ueberall stehen kann.
+    _t12 = SM.baue_mail(symbol="BTC", name="B", kurs_eur=64797,
+                        instrument="spot", strategie="einstieg", rechnung=r,
+                        urteil={"aktion": "KAUFEN"},
+                        faktenblock=FB.baue("krypto_spot", kern_werte=echt))[1]
+    _fz = next((k for k, z in enumerate(_t12.split("\n"))
+                if z.startswith("Schwankungsbreite  ")), None)
+    _l3 = next((k for k, z in enumerate(_t12.split("\n"))
+                if z.startswith("--- 3. DIE LAGE DES WERTS")), None)
+    _l4 = next((k for k, z in enumerate(_t12.split("\n"))
+                if z.startswith("--- 4.") or z.startswith("--- 5.")), None)
+    pruefe(P, "der Faktenblock steht in Abschnitt 3, der Lage des Werts (S-4)",
+           None not in (_fz, _l3, _l4) and _l3 < _fz < _l4,
+           "Zeile %s, Abschnitt 3 ab %s, naechster Abschnitt ab %s"
+           % (_fz, _l3, _l4))
 
 
 
@@ -2743,7 +2880,7 @@ def paket_12d() -> None:
     # "sauber" oder "gar nicht gelaufen". Nutzereinwand: *"Z1 kommt gar nicht
     # vor bzw. sehe ich diese in der Kette nicht."*
     pruefe(P, "aber er steht im Bericht",
-           any("Z1 Treue zur Eingabe" in z for z in d.bericht()))
+           any("RECHNUNG Z1 - Treue zur Eingabe" in z for z in d.bericht()))
     pruefe(P, "und im JSON des Laufs", "z1_verstoesse" in d.als_json())
     # ⚠️⚠️ UND SIE STEHT AUCH DA, WENN NICHTS IST (Schritt 44). Eine
     # Waechterzeile, die nur bei Befund erscheint, ist von "nicht gelaufen"
@@ -2753,7 +2890,7 @@ def paket_12d() -> None:
     _sauber.bestanden("BTC", "urteil")
     _sauber.z1_zahlen(3)
     pruefe(P, "⚠️ und ohne jeden Befund steht sie AUCH da",
-           any("Z1 Treue zur Eingabe" in z for z in _sauber.bericht())
+           any("RECHNUNG Z1 - Treue zur Eingabe" in z for z in _sauber.bericht())
            and any("1 sauber" in z for z in _sauber.bericht()),
            "vorher erschien die Zeile nur bei einem Befund - 'keine Zeile' "
            "war von 'gar nicht gelaufen' nicht zu unterscheiden")
@@ -3122,6 +3259,7 @@ def gesamtpruefung() -> None:
     genau drei sind so entstanden, alle durch Paket 13 und keine davon von den
     23 Pruefungen des Pakets selbst bemerkt."""
     P = "gesamt"
+    import pathlib
     import os
     import re as _re
     from agent.empfehlung_vertrag import AKTIONEN, AKTIONEN_HEBEL
@@ -3336,6 +3474,49 @@ def gesamtpruefung() -> None:
     pruefe(P, "⚠️⚠️ und damit wirkt G-6 SOFORT nach dem Pull",
            not ohne_betrieb,
            "unerreichbar: " + ", ".join(sorted(ohne_betrieb)))
+
+    # ---- ⚠️⚠️ 2.343: DAS SCHWEIGEN VON `hebel_signals` IST BEGRUENDET ---
+    #
+    # Der Befund fragte: *"`hebel_signals` steht seit dem 10.08. - ein Monat
+    # ohne neue Zeile, bei 1.998 vorhandenen. Ob das ein Ausfall oder die
+    # richtige Folge der Lage ist, ist NICHT geklaert."* Und er nannte den
+    # eigentlichen Punkt: *"ein stilles Versiegen sieht genauso aus wie ein
+    # begruendetes Schweigen."*
+    #
+    # ✔ GEKLAERT AM 13.09.: die Tabelle gehoert der ALTEN Kette. Ihr
+    # Schreiber ist `hebel_analyst`, und `empfehlung_vertrag` sagt dazu
+    # woertlich: *"DIE ALTE KETTE BLEIBT UNBERUEHRT ... sie schreibt in
+    # `hebel_signals` und laeuft fuer Krypto nicht mehr. Ein Eingriff dort
+    # waere Arbeit an einem toten Pfad."* Die neue Kette schreibt ueber
+    # `signal_abbildung` nach `signals`.
+    #
+    # ⚠️ DIESE ZEILE MACHT AUS DER ANTWORT EINEN ZUSTAND. Wird
+    # `hebel_analyst` je wieder verdrahtet, faellt sie - und dann ist die
+    # Frage "Ausfall oder Schweigen?" wieder offen und wird bewusst
+    # gestellt, statt still zu bleiben.
+    _rufer = []
+    for _f in pathlib.Path(".").glob("**/*.py"):
+        _t = str(_f).replace(chr(92), "/")
+        if ("/agent/hebel_analyst.py" in "/" + _t or _t.startswith("bestand")
+                or _t.startswith("pruefe_") or "/.git/" in "/" + _t):
+            continue
+        _q = _f.read_text(encoding="utf-8", errors="replace")
+        for _zeile in _q.split(chr(10)):
+            _z = _zeile.strip()
+            if _z.startswith("#") or _z.startswith('"'):
+                continue
+            if ("import hebel_analyst" in _z
+                    or "from agent.hebel_analyst" in _z
+                    or "from agent import hebel_analyst" in _z):
+                _rufer.append(_t)
+                break
+    pruefe(P, "⚠️⚠️ `hebel_analyst` BLEIBT OHNE AUFRUFER (2.343)",
+           not _rufer,
+           "er ist der einzige Schreiber von `hebel_signals`, und die "
+           "Tabelle steht seit dem 10.08. still. Das ist die RICHTIGE Folge "
+           "der Lage, kein Ausfall - solange niemand ihn wieder verdrahtet. "
+           "Faellt diese Zeile, gehoert 2.343 neu beantwortet. Aufrufer: %s"
+           % _rufer)
     # ⚠️ DIE GEGENPROBE: die Pruefung muss eine ECHTE Luecke noch finden.
     # Ohne sie waere "alles verdrahtet" auch dann gruen, wenn die Methode
     # kaputt ist - und genau das war heute frueher der Fall.
@@ -4093,6 +4274,66 @@ def _beispiel_durchlauf(RG):
         if i:
             d.verloren(sym, "aktion", "NICHTS_TUN")
     return d
+
+
+def _ohne_statusbuchung(paket):
+    """Fuehrt ein Paket aus, ohne dass `track_api_health` in die STANDARD-DB bucht.
+
+    ⚠️⚠️ WARUM (14.09.2026): Paket 15 baut Gemini-Clients mit gestellten
+    Antworten (503, 400) und laesst die Kette im Probelauf echte Quellen
+    abfragen. Jeder Aufruf geht durch den Dekorator `track_api_health`, und
+    der oeffnet `db.get_connection()` - die Standard-DB, am Notebook die
+    Produktion. Dort stand danach ein erfundener Gemini-Fehler ,HTTP 400
+    {"e": 1}' und die Anbieter-Ampel der Uebersichtsseite auf Rot.
+
+    ⚠️ DER ALTE SCHUTZ WAR NIE WIRKSAM: das Paket ersetzte
+    `api_health.track_api_health` - aber die Client-Methoden sind beim
+    Import LAENGST dekoriert; das Ersetzen der Fabrik aendert an ihnen
+    nichts. Ein Schutz, der dasteht und nicht greift, ist schlimmer als
+    keiner.
+
+    ⚠️ DIESER HIER SETZT AN DER STELLE AN, DIE DER DEKORATOR ZUR LAUFZEIT
+    NACHSCHLAEGT: `api_health.db`. Fuer die Dauer des Pakets zeigt sie auf
+    einen Ersatz, dessen `get_connection()` eine Speicher-Datenbank mit der
+    echten Tabellenstruktur liefert; die Buchungsfunktionen bleiben die
+    echten. Nichts sonst wird umgeleitet - alle anderen Lese- und
+    Schreibwege des Pakets sind unveraendert."""
+    def _lauf():
+        import sqlite3 as _sq
+        import types as _ty
+        import database.api_health as _AH
+        import database.db as _dbm
+
+        _ddl = None
+        try:
+            _q = _sq.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+            _r = _q.execute("SELECT sql FROM sqlite_master WHERE type='table' "
+                            "AND name='api_health_status'").fetchone()
+            _q.close()
+            _ddl = _r[0] if _r else None
+        except _sq.Error:
+            _ddl = None
+        _ddl = _ddl or ("CREATE TABLE api_health_status (source TEXT PRIMARY KEY, "
+                        "last_success_at TEXT, last_error_at TEXT, "
+                        "last_error_type TEXT, last_error_message TEXT)")
+
+        def _speicher():
+            c = _sq.connect(":memory:")
+            c.execute(_ddl)
+            return c
+
+        _ersatz = _ty.SimpleNamespace(
+            get_connection=_speicher,
+            record_api_health_success=_dbm.record_api_health_success,
+            record_api_health_error=_dbm.record_api_health_error)
+        _alt = _AH.db
+        _AH.db = _ersatz
+        try:
+            return paket()
+        finally:
+            _AH.db = _alt
+    _lauf.__name__ = getattr(paket, "__name__", "paket")
+    return _lauf
 
 
 def paket_15() -> None:
@@ -5224,7 +5465,6 @@ def paket_15() -> None:
     # der gar keiner war.
     import json as _j2
     import api.gemini as _G
-    import database.api_health as _AH
 
     class _Antwort:
         def __init__(self, code, body=None):
@@ -5247,7 +5487,10 @@ def paket_15() -> None:
 
     _GUT = {"choices": [{"message": {"content": "{}"}}]}
     _alt_sleep, _alt_zaehl = _G.time.sleep, _G.zaehle_aufruf
-    _alt_health = _AH.track_api_health
+    # ⚠️ HIER STAND `_alt_health = _AH.track_api_health` und im `finally`
+    # das Zuruecksetzen - als Schutz gegen Buchungen in die Produktivdatei.
+    # Er griff NIE (die Methoden sind beim Import dekoriert). Der wirksame
+    # Schutz ist seit 14.09. `_ohne_statusbuchung` um das ganze Paket.
     # NICHT IN DIE PRODUKTIVDATEI SCHREIBEN. `track_api_health` bucht sonst je
     # Aufruf einen Gesundheitsstand - im ersten Anlauf ist mir das
     # durchgerutscht, und es ist genau der Fehler, den der Trockenlauf-Grundsatz
@@ -5272,7 +5515,6 @@ def paket_15() -> None:
                "ein fehlerhafter Antrag wird beim zweiten Mal nicht richtig")
     finally:
         _G.time.sleep, _G.zaehle_aufruf = _alt_sleep, _alt_zaehl
-        _AH.track_api_health = _alt_health
     pruefe(P, "die 429-Versuche werden davon nicht aufgebraucht",
            "versuch_503 = versuch_429 = 0" in _nur_code("api/gemini.py"),
            "zwei Gruende, zwei Zaehler - sonst nimmt ein Anbieterausfall die "
@@ -8772,10 +9014,14 @@ def paket_15() -> None:
            any("gelten hier NICHT" in z for z in _hedge_block),
            "wegzulassen ohne es zu sagen waere die zweite Haelfte desselben "
            "Fehlers - der Leser wuesste nicht, dass etwas fehlt")
-    pruefe(P, "die uebrigen Bereiche behalten ihre Kernfamilien",
-           any("Treffer am guten Ende" in z
-               for z in FB12.baue("krypto_spot", kern_werte=_kern12)),
-           "dort sind die Quoten an genau dieser Frage gemessen")
+    # Seit Schritt 31 zeigt kein Bereich mehr Trefferquoten (2.446-etiketten)
+    # - die WERTE der Kernfamilien bleiben ausserhalb der Absicherung.
+    _spot12 = FB12.baue("krypto_spot", kern_werte=_kern12)
+    pruefe(P, "die uebrigen Bereiche behalten ihre Kernfamilien - als Wert",
+           any(z.startswith("Schwankungsbreite") for z in _spot12)
+           and not any("Treffer am guten Ende" in z for z in _spot12),
+           "Wert und Beschreibung sind Fakten; die Quote vom 12.08. ist "
+           "nirgends mehr belegt")
 
     # AL4 DIE LAGE ERREICHT MODELL UND MAIL.
     _rl12 = _quelltext("agent/rollen_lauf.py")
@@ -8936,8 +9182,10 @@ def paket_frische() -> None:
         c.execute("INSERT INTO job_laeufe VALUES ('makro_analog', ?)", (stand,))
         c.execute("CREATE TABLE externe_reihe (quelle TEXT, schluessel TEXT, "
                   "datum TEXT, wert REAL, geholt_am TEXT)")
-        for q in ("coinmetrics", "defillama", "deribit", "cftc_cot",
-                  "etf_bestand", "finra", "sec_edgar", "yfinance"):
+        # `coinmetrics_splycur` seit 14.09. (2.453-turnover-gebaut) - eine
+        # neue Registratur-Zeile gehoert auch in die frische Musterdatei.
+        for q in ("coinmetrics", "coinmetrics_splycur", "defillama", "deribit",
+                  "cftc_cot", "etf_bestand", "finra", "sec_edgar", "yfinance"):
             c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?,?)",
                       (q, "x", stand, 1.0, stand))
         c.execute("CREATE TABLE open_interest_snapshot (symbol TEXT, "
@@ -10495,8 +10743,10 @@ def paket_dimension() -> None:
            "vorher hing er am INSTRUMENT, also am Lauf - seit S5 faellt in "
            "vier von fuenf Faellen 1,0 an, und drei Stellen sagten Hebel, "
            "waehrend die Rechnung nein sagte")
+    # ⚠️ "(Hebel" OHNE schliessende Klammer: seit Schritt 41 folgt die
+    # Richtung ("(Hebel, LONG)"). Die Absicht bleibt dieselbe.
     pruefe(P, "und nennt ihn, wo einer anfaellt",
-           "(Hebel)" in _betreff(_mit_h))
+           "(Hebel" in _betreff(_mit_h), _betreff(_mit_h))
 
     # ---- P1 AUS KAPITEL 91: DIE EXTREME SICHTBAR MACHEN ----
     from agent import marktlage as _ML3
@@ -11732,9 +11982,11 @@ def paket_dimension() -> None:
 
     # ⚠️ UND DAS WORT SELBST WIRD EINMAL JE MAIL ERKLAERT.
     _smq = _quelltext("agent/signal_mail.py")
-    pruefe(P, "'Perzentil' wird an der ersten Fundstelle erklaert",
+    # Seit Schritt 31 im Anhang E (Lesehilfen), einmal je Mail.
+    pruefe(P, "'Perzentil' wird einmal je Mail erklaert (Anhang E)",
            "Perzentil = Rangplatz in der eigenen Geschichte" in _smq
-           and "nur 7 von 100" in _smq,
+           and "nur 7 von 100" in _smq
+           and "LESEHILFE_PERZENTIL" in _smq,
            "das Wort steht an 141 Stellen im System und wurde an keiner "
            "erklaert - und die Konvention ist mehrdeutig, wenn man sie nicht "
            "kennt. `marktlage._perzentil` zaehlt die Werte DARUNTER")
@@ -14618,85 +14870,582 @@ def paket_kostenbezug() -> None:
            "(L-1)/L x satz - bei 5x ist mehr Kapital geliehen als bei 3,9x")
 
 
+def paket_stopgrundlage() -> None:
+    """Schritt 47 - steht die Stopweite auf einer GEMESSENEN Grundlage?
+
+    ⚠️⚠️ WARUM DAS ZAEHLT: `hebel = risiko_eur / (einsatz x stop_rel)`.
+    Der Zaehler ist gemessen (r(q), halbes Kelly aus der Quote), der
+    NENNER nicht. Damit haengt der Hebel jedes laufenden Signals an einer
+    Zahl ohne eigenen Befund.
+
+    ⚠️⚠️ SEIT DEM ABEND DES 13.09. IST DER NENNER GEMESSEN (2.435).
+    Der erste Anlauf ueber die SIGNALE (2.431) war ein Auswahleffekt -
+    251 Faelle im breitesten Band waren 21 Symbole, und der Bootstrap
+    zieht ueber Symbole (2.434). Der zweite Anlauf rechnet HISTORISCH und
+    GEPAART: 534 Symbole, 32.040 Anker, jeder Anker mit JEDER Weite.
+
+    ➤ ERGEBNIS: ein inneres Maximum bei 7 bis 9 %% - und `stop_ziel_atr`
+    = 2,5 trifft es (2.435-optimum). Die Zahl bleibt, hat aber jetzt
+    einen eigenen Befund. `stop_max_relativ` = 25 %% bleibt offen, der
+    Preis ist aber beziffert (2.435-deckel).
+
+    ⚠️ DIESES PAKET BEWACHT BEIDES: dass die Grenzen unveraendert
+    stehen, UND dass die Messanlage, die sie traegt, ihre Eigenschaften
+    behaelt. Die Regeltests unten rechnen `_ergebnis` auf KONSTRUIERTEN
+    Reihen mit bekannter Antwort - nicht auf Echtdaten, wo ein Fehler
+    sich hinter Rauschen versteckt."""
+    P = "Stopgrundlage"
+    from agent import entscheidungsrechnung as _ER
+
+    _q = io.open("agent/entscheidungsrechnung.py", encoding="utf-8").read()
+    _g = _ER.GRENZEN
+
+    # ---- die Werte selbst, damit eine Aenderung auffaellt --------------
+    pruefe(P, "⚠️ die Stopgrenzen stehen unveraendert",
+           abs(_g["stop_ziel_atr"] - 2.5) < 1e-9
+           and abs(_g["stop_max_relativ"] - 0.25) < 1e-9
+           and abs(_g["stop_min_atr"] - 0.75) < 1e-9
+           and abs(_g["stop_min_relativ"] - 0.05) < 1e-9,
+           "wer eine aendert, aendert die Hebelhoehe JEDES Signals - und "
+           "muss die Begruendung mitaendern. Ist: ziel %s · max %s · "
+           "min_atr %s · min_rel %s"
+           % (_g["stop_ziel_atr"], _g["stop_max_relativ"],
+              _g["stop_min_atr"], _g["stop_min_relativ"]))
+
+    # ---- ⚠️⚠️ UND DIE ZWEI OHNE EIGENEN BEFUND SIND BENANNT ------------
+    #
+    # Nicht "es fehlt eine Begruendung" als Vorwurf, sondern als
+    # sichtbarer Zustand: `stop_min_relativ` und `stop_min_atr` stehen auf
+    # den Tagesspannen-Perzentilen (RM-1b/RM-1c). `stop_ziel_atr` steht
+    # auf FREMDEN Praxisstandards plus einem Backtest mit 61 aufgeloesten
+    # Trades - der Survivorship-Stichprobe, die `messe_stop_abstand_-
+    # baender` als unbrauchbar nachgewiesen hat. `stop_max_relativ` traegt
+    # im Code den Vermerk "NEU, es gab bisher keine".
+    pruefe(P, "⚠️⚠️ und die Begruendung steht IM CODE, nicht nur im Plan",
+           "2.435-optimum" in _q and "2.437" in _q,
+           "eine Zahl, deren Beleg nur im Plan steht, findet niemand "
+           "wieder, der den Code liest - und eine, deren LUECKE nur dort "
+           "steht, erst recht nicht")
+    # ---- ⚠️⚠️ UND DER ABGELOESTE BEFUND WIRD NICHT MEHR ZITIERT -------
+    #
+    # Eigene Regel seit 13.09.: kein Betriebscode begruendet eine
+    # Konstante mit einem abgeloesten Befund. 2.431 sagte "ueber 12 %
+    # traegt" und stand als Begruendung genau hier - wer den Code las,
+    # bekam eine Empfehlung zum Aufweiten, die es nicht mehr gibt.
+    _tot = [k for k in ("2.431-fenster",) if k in _q]
+    pruefe(P, "⚠️⚠️ und KEIN abgeloester Befund begruendet hier noch etwas",
+           not _tot,
+           "2.431 empfahl das Aufweiten auf 12-22 %%. 2.435-optimum misst "
+           "das Gegenteil: ueber 9 %% wird es schlechter. Ein Leser des "
+           "Codes darf die alte Empfehlung nicht mehr finden. Gefunden: "
+           "%s" % (_tot or "keiner"))
+
+    # ---- das Werkzeug, das die Frage beantwortet -----------------------
+    import pathlib
+    _w = pathlib.Path("messe_stop_abstand_baender.py")
+    pruefe(P, "⚠️ das Messwerkzeug dazu gibt es",
+           _w.exists(),
+           "ohne es waere die Stopweite nur zu behaupten")
+    _t = _w.read_text(encoding="utf-8", errors="replace") if _w.exists() else ""
+    pruefe(P, "⚠️⚠️ und es hat KEINEN Aufloesungsfilter",
+           "KEIN Aufloesungs-Filter" in _t,
+           "daran sind zwei Vormessungen gebrochen: ob ein Signal "
+           "aufloest, haengt VOM STOPABSTAND ab - genau der Variablen, um "
+           "die es geht. Ein enger Stop loest fast immer auf, ein weiter "
+           "faellt aus der Stichprobe")
+    pruefe(P, "und es rechnet gegen eine BASISLINIE",
+           "basislinie" in _t,
+           "ein Erwartungswert ohne Nullmodell ist keine Aussage")
+    # ---- ⚠⚠ SEIT 13.09. VOLLSTAENDIG NACH NORM (2.433) -------------
+    pruefe(P, "⚠⚠ und es hat TRENNSCHAERFE und POSITIVKONTROLLE",
+           "def trennschaerfe" in _t and "def positivkontrolle" in _t,
+           "ohne sie ist ein ,nicht trennbar` nicht von ,haetten wir gar "
+           "nicht sehen koennen` zu unterscheiden - genau daran ist die "
+           "Aussage vom Vormittag gekippt")
+    pruefe(P, "⚠⚠⚠ und es pflanzt ZENTRIERT",
+           "_gepflanzt" in _t and "ZENTRIEREN IST PFLICHT" in _t,
+           "wer den Effekt auf die ECHTE Reihe pflanzt, misst den "
+           "vorhandenen Effekt noch einmal: ist er schon signifikant, "
+           "bleibt er es bei jedem Versatz (stehende Vorgabe 07.09.)")
+    pruefe(P, "⚠ und die Zentrierung wird in JEDEM Lauf gegengeprueft",
+           "_probe_zentrierung" in _t,
+           "der Schnelltest ist: bei Staerke 0 muss der Abstand zur "
+           "Basislinie exakt 0 sein. Eine Kontrolle, die man einmal "
+           "gerechnet hat, ist keine")
+    pruefe(P, "⚠ und die Staerkenleiter ist die der NORM",
+           "STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)" in _t,
+           "eine zweite Leiter waere eine zweite Skala - Befunde aus "
+           "beiden waeren nicht vergleichbar")
+
+    # ---- ⚠️ DER HEBEL AN DEN GEMESSENEN BAENDERN -----------------------
+    from agent import betraege as _B
+    _h = {p: _B.hebelrechnung(quote=0.373, crv=2.0, kapital_eur=17987.0,
+                              stop_rel=p / 100.0)["hebel"]
+          for p in (12, 15, 20, 25)}
+    pruefe(P, "⚠️ ein weiter Stop macht den Hebel nicht unmoeglich",
+           _h[12] >= 2.0 and _h[15] >= 2.0 and _h[20] >= 2.0,
+           "der Planschritt nahm das an; es gilt erst am Deckel: 12 %% -> "
+           "%.2fx · 15 %% -> %.2fx · 20 %% -> %.2fx. ⚠️ Das ist "
+           "ARITHMETIK und war NIE ein Grund aufzuweiten - 2.435-optimum "
+           "misst, dass ueber 9 %% das Ergebnis schlechter wird"
+           % (_h[12], _h[15], _h[20]))
+    pruefe(P, "⚠️ und am DECKEL von 25 % bricht er weg",
+           _h[25] < 2.0,
+           "genau das ist die Stelle, an der 2.397 gemessen hat, es gaebe "
+           "ohne Widerlegungspreis keinen Hebel: %.2fx" % _h[25])
+
+    # ================================================================
+    # ⚠️⚠️⚠️ DIE ZWEITE MESSANLAGE - historisch und GEPAART (2.435)
+    # ================================================================
+    _hw = pathlib.Path("messe_stopweite_historisch.py")
+    _he = pathlib.Path("pruefe_stopweite_gegen.py")
+    pruefe(P, "⚠️⚠️ das historische Werkzeug gibt es",
+           _hw.exists(),
+           "die Signalstichprobe konnte die Frage nicht beantworten "
+           "(2.434) - ohne das zweite Werkzeug waere sie weiter offen")
+    pruefe(P, "⚠️⚠️ und die EHRENRUNDE dazu auch",
+           _he.exists(),
+           "Nutzerauftrag 13.09.: eine Gegenpruefung, damit das Thema "
+           "nicht wieder aufgemacht werden muss. Sie hat einen echten "
+           "Fehlschluss gefangen (2.435-gleichtag)")
+    _ht = _hw.read_text(encoding="utf-8", errors="replace") if _hw.exists() else ""
+    _et = _he.read_text(encoding="utf-8", errors="replace") if _he.exists() else ""
+    pruefe(P, "⚠️⚠️ es rechnet GEPAART - derselbe Anker, andere Weite",
+           "DIE PAARUNG" in _ht and "je_w[bezug]" in _ht,
+           "das ist der staerkere der beiden Hebel: ungepaart vergleicht "
+           "man VERSCHIEDENE Lagen mit verschiedenen Stops, und in jedem "
+           "Vergleich steckt die Frage, ob es dieselben Lagen waren")
+    pruefe(P, "⚠️⚠️ und es hat KEINEN Aufloesungsfilter",
+           "KEIN AUFLOESUNGSFILTER" in _ht,
+           "derselbe Fehler wie in den Vormessungen: ob ein Anker "
+           "aufloest, haengt VOM Stopabstand ab - gemessen ist, dass bei "
+           "2 % 97 % aufloesen und bei 20 % nur 29 %")
+    pruefe(P, "⚠️ die Gleichtagsregel ist konservativ UND umschaltbar",
+           "stop_zuerst=True" in _ht or "stop_zuerst: bool = True" in _ht,
+           "konservativ, weil aus Tagesdaten die Reihenfolge unbekannt "
+           "ist; umschaltbar, weil erst der Vergleich beider Regeln "
+           "zeigt, ob ein Urteil an der Annahme haengt - genau daran ist "
+           ",enge Stops schaden` gefallen (2.435-gleichtag)")
+    pruefe(P, "⚠️⚠️ die Beschleunigung ist gegen die langsame Fassung geprueft",
+           "def selbsttest" in _ht,
+           "der Bootstrap zieht 2.000 mal ueber 534 Symbole; die naive "
+           "Fassung waere zu langsam. Eine Abkuerzung ohne Gegenprobe "
+           "ist eine stille Aenderung des Ergebnisses")
+    pruefe(P, "⚠️ und die Ehrenrunde ruft den ECHTEN Code auf",
+           "M.sammle(" in _et and "sammle(reihen" in _ht,
+           "ein Gegentest, der die Rechnung nachbaut, prueft die Kopie "
+           "(stehende Vorgabe)")
+    _proben = sum(1 for i in range(1, 9) if ("def probe%d_" % i) in _et)
+    pruefe(P, "⚠️ und sie hat alle acht Proben",
+           _proben == 8,
+           "Aufloesung · Aufloesungsquote · Gleichtagsregel · Saat · "
+           "Bezugspunkt · Zeitfenster · R-R11 · Feinraster. Gefunden: %d"
+           % _proben)
+
+    # ---- ⚠️⚠️⚠️ REGELTESTS AUF KONSTRUIERTEN REIHEN ------------------
+    #
+    # Nicht auf Echtdaten: dort versteckt sich ein Vorzeichenfehler
+    # hinter dem Rauschen. Hier ist die Antwort VORHER bekannt.
+    import numpy as _np
+    import messe_stopweite_historisch as _MS
+
+    def _reihe(spannen):
+        """(hoch, tief, schluss) aus einer Liste (hoch, tief, schluss)."""
+        return (_np.array([x[0] for x in spannen], dtype=float),
+                _np.array([x[1] for x in spannen], dtype=float),
+                _np.array([x[2] for x in spannen], dtype=float))
+
+    _i = _np.array([0])
+    # Einstieg 100, Weite 10 %% -> Stop 90, Ziel 120 (CRV 2)
+    _h1, _t1, _c1 = _reihe([(100, 100, 100), (125, 99, 124)])   # Ziel
+    _h2, _t2, _c2 = _reihe([(100, 100, 100), (101, 89, 90)])    # Stop
+    _h3, _t3, _c3 = _reihe([(100, 100, 100), (125, 89, 100)])   # BEIDES
+    _h4, _t4, _c4 = _reihe([(100, 100, 100), (105, 95, 105)])   # nichts
+
+    _z = _MS._ergebnis(_h1, _t1, _c1, _i, 0.10, 1, False)[0][0]
+    pruefe(P, "REGEL Ziel getroffen -> +CRV",
+           abs(_z - _MS.CRV) < 1e-9,
+           "Einstieg 100, Ziel 120, Hoch 125 - erwartet %+.1f, bekommen "
+           "%+.4f" % (_MS.CRV, _z))
+    _z = _MS._ergebnis(_h2, _t2, _c2, _i, 0.10, 1, False)[0][0]
+    pruefe(P, "REGEL Stop getroffen -> -1",
+           abs(_z + 1.0) < 1e-9,
+           "Einstieg 100, Stop 90, Tief 89 - erwartet -1, bekommen %+.4f" % _z)
+    _a = _MS._ergebnis(_h3, _t3, _c3, _i, 0.10, 1, False, stop_zuerst=True)[0][0]
+    _b = _MS._ergebnis(_h3, _t3, _c3, _i, 0.10, 1, False, stop_zuerst=False)[0][0]
+    pruefe(P, "⚠️⚠️ REGEL Gleichtag: konservativ Stop, umgeschaltet Ziel",
+           abs(_a + 1.0) < 1e-9 and abs(_b - _MS.CRV) < 1e-9,
+           "eine Kerze beruehrt Stop UND Ziel. Betrieb muss -1 liefern "
+           "(die unguenstige Annahme), umgeschaltet %+.1f. Bekommen: "
+           "%+.4f und %+.4f" % (_MS.CRV, _a, _b))
+    _z = _MS._ergebnis(_h4, _t4, _c4, _i, 0.10, 1, False)[0][0]
+    pruefe(P, "REGEL nichts getroffen -> Mark-to-Market in R",
+           abs(_z - 0.5) < 1e-9,
+           "Schluss 105 bei Einstieg 100 und 10 %% Weite sind +0,5 R - "
+           "bekommen %+.4f" % _z)
+    _z = _MS._ergebnis(_h2, _t2, _c2, _i, 0.10, 1, True)[0][0]
+    pruefe(P, "⚠️ REGEL SHORT spiegelt das Vorzeichen",
+           abs(_z - 1.0) < 1e-9,
+           "short auf 100 bei 10 %% Weite: Stop 110, Ziel 80. Tief 89 "
+           "trifft keins, Schluss 90 ist ein Kursverlust von 10 %% - fuer "
+           "einen Short also +1,0 R. Ohne die Spiegelung stuende hier "
+           "-1,0. Bekommen %+.4f" % _z)
+    _auf = _MS._ergebnis(_h4, _t4, _c4, _i, 0.10, 1, False)[1][0]
+    pruefe(P, "REGEL die Aufloesungsmarke stimmt",
+           not bool(_auf),
+           "wer weder Stop noch Ziel trifft, darf nicht als aufgeloest "
+           "gezaehlt werden - sonst ist die Quote in Probe 2 falsch")
+    # die Paarung gegen sich selbst MUSS exakt 0 sein
+    _pv = {"A": [1.0, -2.0, 0.5], "B": [0.25]}
+    pruefe(P, "⚠️ ZENTRIERUNG bei Staerke 0 ist exakt 0",
+           abs(_MS._probe_zentrierung(_pv)) < 1e-12,
+           "die Gegenprobe zum zentrierten Pflanzen laeuft in jedem Lauf "
+           "mit; bekommen %.2e" % _MS._probe_zentrierung(_pv))
+
+
+def paket_ausstiegserfassung() -> None:
+    """Schritt 48 (2) - der Kurs zum Empfehlungszeitpunkt wird MITGESCHRIEBEN.
+
+    ⚠️ Ein EINSTIEG haelt seine Lage in `entry_usd_von/bis` und
+    `stop_loss_*` fest - ein AUSSTIEG hielt bis zum 13.09. GAR NICHTS
+    fest: `_sende_ausstieg` reichte `rechnung=None` durch. Was das
+    kostet, steht in 2.403: die Guetemessung rechnet mit dem
+    TAGESSCHLUSS, und bei H3 liegt sie deshalb am Zufall, waehrend sie
+    bei H10 den Zufall deutlich schlaegt.
+
+    ⚠️⚠️ NUR ERFASSEN, NICHTS BEWERTEN (Nutzervorgabe zu Schritt 48) -
+    kein Ablauf, keine Mail, keine Sperre aendert sich."""
+    P = "Ausstiegserfassung"
+    import inspect as _in
+    import sqlite3 as _sq
+    from agent import signal_abbildung as _SA
+    from database import models as _MD
+
+    pruefe(P, "⚠️⚠️ die Spalte `kurs_bei_empfehlung_eur` gibt es",
+           "kurs_bei_empfehlung_eur" in _SA.SPALTEN_SIGNAL,
+           "ohne sie bleibt vom Empfehlungszeitpunkt eines Ausstiegs nur "
+           "der Zeitstempel - und die Guete ist nur auf Tagesschluss "
+           "aufloesbar (2.403)")
+    # ---- ⚠️⚠️ DIE KOPPLUNG, die beim Bauen SOFORT zugeschlagen hat -----
+    #
+    # `SPALTEN_SIGNAL` und `models.Signal` MUESSEN zusammen wachsen: das
+    # Lesen geht ueber `SELECT *`, und eine Spalte ohne Feld macht JEDES
+    # Signal unlesbar - auch jedes alte (der Ausfall vom 14.08.). Ebenso
+    # der NB-Export: fehlt die Spalte dort, ist sie am Desktop nicht
+    # auswertbar, und genau dort wird gemessen.
+    pruefe(P, "⚠️⚠️ und `models.Signal` kennt sie AUCH",
+           "kurs_bei_empfehlung_eur" in _MD.Signal.__dataclass_fields__,
+           "`_row_to_signal` baut aus `SELECT *` - eine Spalte ohne Feld "
+           "macht jedes Signal unlesbar, auch jedes alte (Ausfall 14.08.)")
+    _ex = io.open("extract_notebook_diagnose.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ und der NB-Export nimmt sie mit",
+           "kurs_bei_empfehlung_eur" in _ex,
+           "gemessen wird am Desktop - was nicht exportiert wird, ist "
+           "dort nicht da")
+
+    # ---- der Weg: Parameter, Fuellung, Durchreichung -------------------
+    pruefe(P, "⚠️ `felder_aus_entscheidung` nimmt den Kurs entgegen",
+           "kurs_bei_empfehlung_eur" in _in.signature(
+               _SA.felder_aus_entscheidung).parameters,
+           "sonst muesste ihn jeder Aufrufer selbst ins Feldwerk legen - "
+           "drei Stellen, die auseinanderlaufen koennen")
+    _rl = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    _fn = _rl.split("def _sende_ausstieg(")[1].split(chr(10) + "def ")[0]
+    pruefe(P, "⚠️⚠️ und der AUSSTIEG reicht ihn wirklich durch",
+           "kurs_bei_empfehlung_eur=kurs_e" in _fn,
+           "`kurs_e` lag dort immer schon vor - geschrieben wurde er nie. "
+           "Genau das ist der Punkt dieses Schritts")
+
+    # ---- ⚠️ ER WIRD GESETZT, UND OHNE ANGABE BLEIBT ER LEER ------------
+    def _felder(**zus):
+        return _SA.felder_aus_entscheidung(
+            {"aktion": "REDUZIEREN", "begruendung": "x"},
+            fakten={"asset": "XLM"}, lagebild_id=None, prompt_stand="p",
+            eur_je_usd=None, familien=None, strategie="einstieg",
+            instrument="spot", rechnung=None, modell="m", **zus)
+
+    pruefe(P, "⚠️ mit Kurs steht er im Feldwerk",
+           _felder(kurs_bei_empfehlung_eur=0.1234).get(
+               "kurs_bei_empfehlung_eur") == 0.1234,
+           "eine Spalte, die nie gefuellt wird, ist Dekoration")
+    pruefe(P, "⚠️⚠️ und OHNE Kurs bleibt er None, nicht 0",
+           _felder().get("kurs_bei_empfehlung_eur") is None,
+           "ein geratener Kurs waere schlimmer als keiner - 0,00 EUR "
+           "saehe aus wie eine Messung (dieselbe Regel wie bei H)")
+
+    # ---- die Migration ist additiv und wiederholbar --------------------
+    _c = _sq.connect(":memory:")
+    _c.execute("CREATE TABLE signals (id INTEGER PRIMARY KEY, symbol TEXT, "
+               "created_at TEXT, action TEXT)")
+    _SA.migriere(_c)
+    _sp = {r[1] for r in _c.execute("PRAGMA table_info(signals)")}
+    pruefe(P, "⚠️ `migriere()` legt sie an",
+           "kurs_bei_empfehlung_eur" in _sp,
+           "sonst schreibt die Kette in eine Spalte, die es nicht gibt")
+    pruefe(P, "und ein zweiter Lauf legt NICHTS mehr an",
+           _SA.migriere(_c) == [],
+           "additiv UND idempotent - sonst bricht jeder zweite Start")
+    _c.close()
+
+    # ---- ⚠️⚠️ NICHTS BEWERTEN: der Kurs darf nirgends WIRKEN -----------
+    #
+    # Die Nutzervorgabe zu diesem Schritt lautet ausdruecklich "nur
+    # erfassen, nichts bewerten und nichts sperren". Eine Erfassung, die
+    # sich in eine Entscheidung schleicht, waere genau der Fehler, den
+    # Regel 4 meint (ein Fakt ist keine Begruendung).
+    _wirkt = []
+    for _f in ("agent/entscheidungsrechnung.py", "agent/potential.py",
+               "agent/wahrscheinlichkeit.py", "agent/rollen_gate.py",
+               "agent/signal_mail.py"):
+        if "kurs_bei_empfehlung_eur" in io.open(
+                _f, encoding="utf-8").read():
+            _wirkt.append(_f)
+    pruefe(P, "⚠️⚠️ und der erfasste Kurs BEWERTET nichts",
+           not _wirkt,
+           "Schritt 48 ist ausdruecklich ,nur erfassen, nichts bewerten "
+           "und nichts sperren'. Er taucht auf in: %s" % _wirkt)
+
+
+def paket_abrufvermerk() -> None:
+    """Schritt 50 Teil B - war der Abruf VOLLSTAENDIG, nicht nur juengst?
+
+    ⚠️ Befund 2.359-abruf: der Abrufstand kam aus der AENDERUNGSZEIT der
+    Datei. Die beweist, dass geschrieben wurde - nicht, dass alle Symbole
+    geholt wurden. Am 13.09. sofort belegt: nach einem Lauf standen 65 von
+    66 Symbolen im Vermerk, ZRX fehlte (voruebergehender Netzfehler). Die
+    Datei sah frisch aus, ein Symbol war es nicht.
+
+    ⚠️⚠️ EINE `fetched_at`-SPALTE WAERE DIE FALSCHE LOESUNG GEWESEN, obwohl
+    der Planpunkt sie so beschrieb: `MAX(fetched_at)` sagt dasselbe wie die
+    Dateizeit, und alle INSERTs der Ladeskripte schreiben POSITIONELL
+    (`VALUES (?,?,?)`) - eine vierte Spalte haette sie stumm gebrochen."""
+    P = "Abrufvermerk"
+    import sqlite3 as _sq
+    from agent import datenfrische as _DF
+
+    _q = io.open("hole_fremdreihen.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ die Ladeskripte legen `abruf_symbol` an",
+           "CREATE TABLE IF NOT EXISTS abruf_symbol" in _q,
+           "ohne die Tabelle bleibt der Abrufstand die Dateizeit - und die "
+           "unterscheidet einen vollstaendigen Lauf nicht von einem halben")
+    # ⚠️ NUR AUFRUFE, NICHT DIE DEFINITION. Die erste Fassung zaehlte
+    # `_q.count("vermerke(conn,")` und kam auf 4 - die Zeile
+    # `def vermerke(conn, ...)` sieht genauso aus wie ein Aufruf. Eine
+    # Zaehlung, die ihre eigene Definition mitzaehlt, meldet einen Fehler,
+    # den es nicht gibt.
+    _rufe = [z for z in _q.split(chr(10))
+             if "vermerke(conn," in z and not z.lstrip().startswith("def ")]
+    pruefe(P, "⚠️⚠️ und vermerken NUR im Erfolgszweig",
+           len(_rufe) == 3 and "NUR BEI ERFOLG" in _q,
+           "ein Vermerk nach einem Fehlschlag liesse einen "
+           "unvollstaendigen Lauf vollstaendig aussehen - genau das, was "
+           "er finden soll. Gefunden: %d Aufrufe" % len(_rufe))
+    _t = io.open("hole_terminmarkt_historie.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ die dritte Quelle ebenso",
+           "abruf_symbol" in _t and 'INSERT OR REPLACE INTO abruf_symbol' in _t,
+           "drei Messquellen, EIN Format - sonst braucht `datenfrische` "
+           "drei Sonderwege")
+
+    # ---- ⚠️⚠️ DIE ERWARTUNG GEHOERT AN DIE MESSBASIS ---------------------
+    #
+    # Beim Bauen selbst hineingetappt: `terminmarkt_tag` hat 100 Symbole,
+    # `terminmarkt` 122, und `MESSBASIS[oi]` ist die VEREINIGUNG. Wer gegen
+    # EINE Tabelle zaehlt, meldet 100 von 122 und damit einen Fehlalarm.
+    from agent import marktrang as _MR
+    import messmenge as _mm
+    _erw = {q.name: q for q in _DF.REGISTRATUR if getattr(q, "erwartet", 0)}
+    pruefe(P, "⚠️ alle drei Messquellen haben eine Erwartungszahl",
+           len(_erw) == 3,
+           "ohne sie meldet der Vermerk nur einen Zeitstempel: %s"
+           % sorted(_erw))
+    pruefe(P, "⚠️⚠️ und sie stimmt mit der MESSBASIS ueberein, nicht mit "
+              "einer Tabelle",
+           _erw["onchain_reihe"].erwartet == _mm.ABDECKUNG["turnover"]
+           and _erw["funding_reihe"].erwartet == _mm.ABDECKUNG["funding"]
+           and _erw["terminmarkt_reihe"].erwartet == _mm.ABDECKUNG["terminmarkt"],
+           "die Messbasis ist die Vereinigung, die Tabelle nur ein Teil "
+           "davon - onchain %d/%d, funding %d/%d, terminmarkt %d/%d"
+           % (_erw["onchain_reihe"].erwartet, _mm.ABDECKUNG["turnover"],
+              _erw["funding_reihe"].erwartet, _mm.ABDECKUNG["funding"],
+              _erw["terminmarkt_reihe"].erwartet,
+              _mm.ABDECKUNG["terminmarkt"]))
+    pruefe(P, "⚠️⚠️ der Terminmarkt zaehlt ueber BEIDE Tabellen",
+           set(_erw["terminmarkt_reihe"].vermerk_tabellen)
+           == {"terminmarkt", "terminmarkt_tag"},
+           "`MESSBASIS[oi]` ist die Vereinigung - nur die Tagestabelle zu "
+           "zaehlen meldete 100 von 122: %s"
+           % (_erw["terminmarkt_reihe"].vermerk_tabellen,))
+
+    # ---- ⚠️ ADDITIV: ohne Vermerk bleibt alles wie bisher ---------------
+    class _Leer:
+        erwartet, tabelle, vermerk_tabellen = 300, "funding", ()
+    pruefe(P, "⚠️⚠️ eine LEERE Vermerkstabelle meldet KEINEN Alarm",
+           _DF._abrufvermerk(_sq.connect(":memory:"), _Leer()) is None,
+           "die Tabelle fuellt sich erst mit dem naechsten Ladelauf - "
+           "'0 von 300' waere ein Fehlalarm ueber die eigene Umstellung")
+
+    class _Ohne:
+        erwartet, tabelle, vermerk_tabellen = 0, "funding", ()
+    pruefe(P, "und ohne Erwartungszahl ebenfalls nicht",
+           _DF._abrufvermerk(_sq.connect(":memory:"), _Ohne()) is None,
+           "eine Quelle ohne gesetzte Erwartung bleibt bei der Dateizeit")
+
+    # ---- ⚠️ und er sagt WIRKLICH etwas, wenn er da ist ------------------
+    if not _datei_fehlt(P, "data/onchain_historie.db", _OHNE_MESSDATEN):
+        _c = _sq.connect("file:data/onchain_historie.db?mode=ro", uri=True)
+        _da = _c.execute("SELECT COUNT(*) FROM sqlite_master WHERE "
+                         "type='table' AND name='abruf_symbol'").fetchone()[0]
+        _c.close()
+        if _da:
+            _stand, _abruf, _n = _DF._stand_datei(_erw["onchain_reihe"])
+            pruefe(P, "⚠️⚠️ und der gemeldete Abrufstand NENNT die Symbolzahl",
+                   "von %d Symbolen" % _mm.ABDECKUNG["turnover"] in (_abruf or ""),
+                   "sonst ist er wieder nur ein Zeitstempel: %r" % (_abruf,))
+
+
 def paket_turnoverquelle() -> None:
-    """Schritt 49 - EINE Quelle fuer turnover, Messung wie Anwendung.
+    """Schritt 49 - EINE Groesse fuer turnover, Messung wie Anwendung.
 
-    ⚠️ Befund 2.410: die Messung nahm die Umlaufmenge aus `onchain_historie`
-    (Coin Metrics), der Betrieb aus CoinGecko. Von 33 vergleichbaren
-    Symbolen wichen 16 um mindestens 5 % ab - LINK um -25,2 %, weil die
-    Onchain-Zahl die GESAMTAUSGABE ist (glatte 1.000.000.000).
+    ⚠️ Befund 2.410: die Messung nimmt die Umlaufmenge aus
+    `onchain_historie` (Coin Metrics `splycur`), der Betrieb aus CoinGecko
+    (`circulating_supply`). Von 33 vergleichbaren Symbolen weichen 16 um
+    mindestens 5 % ab - LINK um -25,2 %.
 
-    Die Loesung ist eine Kuerzung, keine neue Quelle:
-    `Volumen / (Preis x Menge)` = `Volumen / Marktkapitalisierung`."""
+    ⚠️⚠️ DIESES PAKET HAT AM 13.09. DIE SEITE GEWECHSELT. Bis dahin
+    bewachte es die Loesung ,Volumen / Marktkapitalisierung aus der
+    CoinGecko-Marktliste'. Die ist WIDERLEGT (2.410-loesung abgeloest):
+    der Abruf `order=market_cap_desc&per_page=250` ist ein
+    Survivorship-Filter (2.416 - 4 % eingestellte Reihen gegen 32 % in der
+    Messmenge) und reicht nur 366 Tage weit (2.416-laenge). Eine freie
+    Quelle mit Historie gibt es nicht - neun Anbieter direkt geprueft
+    (2.417).
+
+    ➔ DER ENTSCHIEDENE WEG IST DER UMGEKEHRTE: nicht die Messung auf eine
+    breitere Quelle heben, sondern die ANWENDUNG an die Messung
+    angleichen."""
     P = "Turnoverquelle"
     import importlib
 
     HF = importlib.import_module("hole_fremdreihen")
-
-    pruefe(P, "⚠️ es gibt eine Ladefunktion fuer den Umschlag",
-           hasattr(HF, "turnover"),
-           "und zwar IN `hole_fremdreihen`, nicht als neues Skript - dort "
-           "stehen Wiederholung, Pausen und Tagesverdichtung schon")
-    _d = (HF.turnover.__doc__ or "")
-    pruefe(P, "⚠️⚠️ sie rechnet Volumen durch MARKTKAPITALISIERUNG",
-           "Volumen / MARKTKAPITALISIERUNG" in _d,
-           "die Umlaufmenge kuerzt sich heraus - damit kann keine zweite "
-           "Quelle mehr abweichen")
     _q = io.open("hole_fremdreihen.py", encoding="utf-8").read()
-    _fn = _q.split("def turnover(")[1].split(chr(10) + "def ")[0]
-    # ⚠️ NUR DER CODE, NICHT DER DOCSTRING. Der erklaert ausdruecklich, warum
-    # `circulating_supply` und `splycur` NICHT mehr gebraucht werden - eine
-    # Pruefung, die den Text mitliest, schlaegt auf ihre eigene Begruendung
-    # an. (Erste Fassung tat genau das.)
-    _code = _fn.split('"""')[2] if _fn.count('"""') >= 2 else _fn
-    pruefe(P, "und sie holt die Menge NICHT mehr getrennt",
-           "circulating_supply" not in _code and "splycur" not in _code,
-           "eine zweite Quelle fuer dieselbe Groesse ist genau der Fehler "
-           "aus 2.410")
-    pruefe(P, "⚠️ sie laedt GENAU die Seite, die auch der Betrieb liest",
-           "per_page=250&page=1" in _fn,
-           "breiter zu laden hiesse, wieder etwas anderes zu messen als man "
-           "anwendet - 2.410 andersherum")
+
+    # ---- TEIL A: `splycur` hat einen Aufruf (2.418) ---------------------
+    pruefe(P, "⚠️⚠️ `splycur` hat einen AUFRUF",
+           'if was == "splycur"' in _q,
+           "bis zum 13.09. hatte es KEINEN - die Reihe wurde einmal von "
+           "Hand geholt und lief zwoelf Tage aus dem Takt. Es gab keinen "
+           "Aufruf, den man haette vergessen koennen (2.418)")
+    pruefe(P, "und er laedt WIRKLICH SplyCur, nicht AdrActCnt",
+           'onchain(unsere, metrik="SplyCur")' in _q,
+           "`onchain()` hat AdrActCnt als Vorgabe - genau deshalb fiel "
+           "zwoelf Tage nichts auf")
+    pruefe(P, "⚠️ und `beides` startet ihn NICHT mit",
+           '"splycur", "beides"' not in _q,
+           "`onchain` laedt eine ANDERE Metrik in dieselbe Datei - ein "
+           "`beides`, das drei Dinge tut, ist der naechste stille "
+           "Nebeneffekt")
+
+    # ---- TEIL C: die verworfene Basis geht NICHT in den Betrieb ---------
+    #
+    # ⚠️ Sie bleibt als BELEG liegen (2.416, 2.417) - geloescht wuerde sie
+    # in einem halben Jahr neu geladen, weil niemand mehr weiss, warum sie
+    # nicht taugt. Aber sie darf nichts speisen.
+    import pathlib
+    _leser = []
+    for _f in pathlib.Path(".").glob("agent/**/*.py"):
+        # ⚠️ MIT `data/`-PRAEFIX. Ohne ihn matcht der Name auch
+        # `terminmarkt_historie.db` - die erste Fassung meldete
+        # `datenfrische` und `marktrang` als Leser, und beide lesen den
+        # TERMINMARKT. Ein Teilstring ist keine Zuordnung.
+        if "data/markt_historie.db" in _f.read_text(encoding="utf-8",
+                                                    errors="replace"):
+            _leser.append(str(_f))
+    pruefe(P, "⚠️⚠️ `markt_historie.db` speist den BETRIEB NICHT",
+           not _leser,
+           "sie ist ein Survivorship-Auszug ueber 366 Tage und taugt weder "
+           "zum Kalibrieren noch zum Anwenden (2.416, 2.416-laenge). Sie "
+           "liegt als BELEG, nicht als Quelle. Leser: %s" % _leser)
+    pruefe(P, "und die Ladefunktion dafuer traegt die Warnung",
+           "Survivorship" in (HF.turnover.__doc__ or "")
+           or "SURVIVORSHIP" in (HF.turnover.__doc__ or ""),
+           "wer sie in einem Jahr liest, muss ohne Suche erfahren, warum "
+           "das Ergebnis nicht in Betrieb ging")
+
+    # ---- die Messseite bleibt, wie sie ist ------------------------------
     from agent import marktrang as MR
-    pruefe(P, "und der Betrieb liest wirklich diese Seite",
-           "per_page=250&page=1" in MR.COINGECKO_MARKETS,
-           "beide Seiten muessen dieselbe Menge sehen: %s"
-           % MR.COINGECKO_MARKETS[-40:])
-    pruefe(P, "⚠️ `days=365` steht als Vorgabe, nicht `max`",
-           "tage=365" in _q.split("def turnover(")[1][:60],
-           "`days=max` beantwortet CoinGecko ohne Schluessel mit HTTP 401 "
-           "(geprueft 12.09.) - ein Vorgabewert, der scheitert, ist keiner")
-    pruefe(P, "⚠️⚠️ eine Marktkapitalisierung von null wird UEBERSPRUNGEN",
-           "m and m > 0" in _fn,
-           "sonst teilt sie durch null oder erfindet einen Wert - ein "
-           "fehlender Punkt ist ehrlicher (N-40)")
-    pruefe(P, "die Zuordnung geht ueber die CoinGecko-ID, nicht das Symbol",
-           'e.get("id")' in _fn,
-           "ueber das Symbol allein waere CANTON schon einmal falsch "
-           "zugeordnet worden")
-    pruefe(P, "⚠️ sie schreibt in eine EIGENE Messdatei",
-           'data/markt_historie.db' in _fn
-           and "tradinginfotool.db" not in _fn,
-           "die Produktionsdatenbank wird von einer Messung nie beruehrt")
-    pruefe(P, "⚠️⚠️ der Lauf ist WIEDERAUFNEHMBAR",
-           "schon_da" in _code and "MAX(datum) >= ?" in _code,
-           "er dauert rund 25 Minuten - ohne Wiederaufnahme kostet jeder "
-           "Abbruch alles. Genau das ist beim ersten Lauf passiert: 15 "
-           "Symbole geladen, abgebrochen, alles noch einmal")
-    pruefe(P, "⚠️ und ,schon da' heisst: der letzte Tag stimmt",
-           "_gestern" in _code,
-           "ein Symbol mit Daten bis vorgestern ist NICHT fertig - es zu "
-           "ueberspringen hiesse, eine Luecke festzuschreiben")
-    pruefe(P, "⚠️ ein 429 wird als ANSAGE behandelt, nicht als Stoerung",
-           "429" in _q and "15.0 * (n + 1)" in _q,
-           "wer nach zwei Sekunden wieder anklopft, bekommt wieder 429 und "
-           "verbrennt seinen Versuch - gemessen: 2 Symbole je Minute statt "
-           "der erwarteten 27")
-    pruefe(P, "und `beides` startet sie NICHT mit",
-           'if was == "turnover"' in _q,
-           "sie laedt zehn Minuten lang 250 Symbole, die mit der eigenen "
-           "Watchlist nichts zu tun haben - wer `beides` ruft, will etwas "
-           "anderes")
+    pruefe(P, "⚠️ die MESSBASIS von turnover ist weiterhin `splycur`",
+           MR.MESSBASIS["turnover"][0] == "data/onchain_historie.db",
+           "sie IST definiert als die Menge, auf der die Tabelle entstanden "
+           "ist - eine Umstellung ohne Neukalibrierung waere 2.416-"
+           "reihenfolge")
+
+    # ---- TEIL B: der BETRIEB rechnet dieselbe Groesse wie die MESSUNG ---
+    #
+    # ⚠️⚠️ Befund 2.410 nannte ZWEI Unterschiede, und ich hatte zuerst
+    # nur einen gesehen. Beide sind am 13.09. auf dem vollstaendigen Tag
+    # 07.09. gemessen worden:
+    #
+    #     Nenner (Umlaufmenge)   86,2 % gleiches Fuenftel
+    #     Zaehler (Volumen)      57,1 % gleiches Fuenftel   <- der groessere
+    #
+    # Wer nur den Nenner umstellt, repariert die kleinere Haelfte.
+    _m = io.open("agent/marktrang.py", encoding="utf-8").read()
+    _fn = _m.split("def turnover_werte(")[1].split(chr(10) + "def ")[0]
+    # ⚠️ NUR DER CODE, NICHT DER DOCSTRING - der nennt die alten Quellen
+    # ausdruecklich, um zu erklaeren, warum sie weg sind. Eine Pruefung, die
+    # den Text mitliest, schlaegt auf ihre eigene Begruendung an (derselbe
+    # Fehler wie in der ersten Fassung dieses Pakets).
+    _code = _fn.split('"""')[2] if _fn.count('"""') >= 2 else _fn
+    pruefe(P, "⚠️⚠️ der ZAEHLER kommt aus der Messquelle (Binance-Stueck)",
+           "BINANCE_24H" in _code,
+           "die Messung nimmt die Binance-Tageskerze in STUECK; "
+           "CoinGecko-USD-Volumen ueber alle Boersen ist eine andere "
+           "Groesse - gemessen 57,1 % gleiches Fuenftel, 28,6 % "
+           "Randwechsel")
+    pruefe(P, "⚠️⚠️ der NENNER kommt aus der Messquelle (`splycur`)",
+           "umlaufmengen()" in _code and "circulating_supply" not in _code,
+           "`circulating_supply` ist eine zweite Quelle fuer dieselbe "
+           "Groesse - genau der Fehler aus 2.410")
+    pruefe(P, "⚠️ und GENAU die Paarung, die auch gemessen wurde",
+           'endswith("USDT")' in _code,
+           "`lade_messreihen` holt `<SYM>USDT`. Eine andere Notierung "
+           "zuzulassen hiesse wieder, etwas anderes anzuwenden als zu "
+           "messen")
+    pruefe(P, "⚠️⚠️ die Umlaufmenge hat eine FRISCHEGRENZE",
+           hasattr(MR, "SPLYCUR_FRISCHE_TAGE")
+           and MR.SPLYCUR_FRISCHE_TAGE == 21,
+           "ohne sie kaeme BNBs Menge von 2019-04-22 als heutiger Nenner "
+           "durch - `splycur` fuehrt fuenf Reihen, die an der QUELLE enden. "
+           "21 Tage ist dieselbe Grenze wie in `datenfrische.py`; gemessen "
+           "sind 15 Tage bei 98,9 % gleichem Fuenftel (2.417-frische)")
+    pruefe(P, "und sie GREIFT auch",
+           len(MR.umlaufmengen(0)) < len(MR.umlaufmengen(9999)),
+           "eine Grenze, die nichts aussortiert, ist Dekoration: bei 0 "
+           "Tagen %d Werte, bei 9999 Tagen %d"
+           % (len(MR.umlaufmengen(0)), len(MR.umlaufmengen(9999))))
+    # ⚠️ SEIT 14.09. (2.453-turnover-gebaut) liest die Funktion ZWEI Orte -
+    # Betriebsdatenbank und Messdatei - und ihr Docstring ist laenger. Die
+    # fruehere Fassung suchte `mode=ro` in den ersten 1.400 Zeichen und fiel
+    # damit rot, obwohl beide Verbindungen lesend sind. Geprueft wird jetzt
+    # die GANZE Funktion: jede Verbindung traegt `mode=ro`.
+    _uf = _m.split("def umlaufmengen(")[1].split(chr(10) + "def ")[0]
+    pruefe(P, "⚠️ die Menge liest die Datenbank NUR LESEND",
+           _uf.count("sqlite3.connect(") >= 1
+           and _uf.count("sqlite3.connect(") == _uf.count("?mode=ro")
+           and _uf.count("sqlite3.connect(") == _uf.count("uri=True"),
+           "eine Bewertung schreibt nie in eine Messdatei - Verbindungen %d, "
+           "davon lesend %d" % (_uf.count("sqlite3.connect("),
+                                _uf.count("?mode=ro")))
+    pruefe(P, "⚠️⚠️ ohne frische Menge gibt es KEINEN Wert, keine Null",
+           "return {}" in _code,
+           "ein Merkmal, das man nicht kennt, darf nie aussehen wie eines, "
+           "das man geprueft hat - dieselbe Regel wie bei H")
+    pruefe(P, "⚠️ die alte CoinGecko-Marktliste ist NICHT mehr verdrahtet",
+           "_UNBENUTZT_COINGECKO_MARKETS" in _m
+           and "COINGECKO_MARKETS)" not in _code,
+           "sie war der stille Groessenschnitt IM BETRIEB: von 66 Symbolen "
+           "der Messbasis standen nur 33 in den heutigen Top 250. Nach der "
+           "Umstellung sind es 60")
 
 
 def paket_vetoart() -> None:
@@ -18576,11 +19325,25 @@ def paket_assetklassen_trennung() -> None:
            "assetklasse=klasse" in _r,
            "sonst filtert nur die 1:1-Zuordnung aus `messreihen` - und die "
            "kennt je Symbol nur EINE Klasse")
-    pruefe(P, "und die 1:1-Zuordnung greift nur OHNE die Spalte",
-           "if not _spalte and kl.get(sym) != klasse" in _r,
+    # ⚠️ DER WORTLAUT HAT SICH AM 13.09. GEAENDERT, die Absicht nicht
+    # (Schritt 50 Teil A). Vorher stand dort `kl.get(sym) != klasse` -
+    # eine GLEICHHEITSfrage, weil `messreihen` je Symbol nur EINE Klasse
+    # kannte. Jetzt liefert `klassen_aus_db` eine MENGE, und die Frage ist
+    # `klasse not in ...`. Bedingung und Zweck sind dieselben: der
+    # 1:1-Filter greift nur, wenn die Kerzen ihre Klasse NICHT selbst
+    # tragen.
+    pruefe(P, "und die Zuordnung greift nur OHNE die Spalte",
+           "if not _spalte and klasse not in" in _r,
            "traegt die Tabelle die Klasse selbst, ist `messreihen` nicht "
-           "nur ueberfluessig, sondern schaedlich: `DASH` steht dort als "
-           "`aktien` und wuerde trotz korrekter Kryptokerzen verworfen")
+           "nur ueberfluessig, sondern schaedlich: `DASH` stand dort als "
+           "`aktien` und waere trotz korrekter Kryptokerzen verworfen "
+           "worden")
+    pruefe(P, "⚠️⚠️ und sie fragt eine MENGE ab, keine Gleichheit",
+           "frozenset" in _insp.getsource(_SB.klassen_aus_db),
+           "seit dem 13.09. kann ein Symbol in ZWEI Klassen stehen "
+           "(Ticker-Kollisionen wie DASH oder T). Eine Gleichheitsfrage "
+           "gaebe dort zwangslaeufig fuer eine der beiden das falsche "
+           "Ergebnis")
     # ⚠️⚠️ UND DER LIVE-PFAD: rangt `marktrang` NUR gegen Krypto?
     _m = io.open("agent/marktrang.py", encoding="utf-8").read()
     pruefe(P, "⚠️⚠️ `marktrang.schnitte()` rangt NUR gegen Krypto",
@@ -19779,8 +20542,11 @@ def paket_plan() -> None:
            "Nutzervorgabe REIHENFOLGE-12-09: erst D pruefen und abbilden, "
            "dann die Rollen - sie kennen die neue Bewertung nicht (2.398)")
     _rang = {n: i for i, (n, _) in enumerate(SI.BLOECKE)}
-    _offen = sorted((s for s in SI.REIHENFOLGE if not s.fertig),
-                    key=lambda s: (_rang.get(s.block, 99), s.nr))
+    # ⚠⚠ DIE ECHTE FUNKTION, KEINE NACHBILDUNG (13.09., Schritt 46).
+    # Hier stand eine zweite Sortierung - und als `wartet_auf` dazukam,
+    # meldete `soll_ist` 32 und diese Pruefung 28. Ein Test, der seine
+    # eigene Kopie prueft, merkt eine Aenderung des Betriebs nicht.
+    _alle_offen, _offen, _wartend = SI.geordnet()
     # ---------------------------------------------------------------
     # ⚠️⚠️ DER HALDENWAECHTER (Vorgabe AUFRAEUMEN-VOR-NEUBAU, 12.09.2026)
     # ---------------------------------------------------------------
@@ -19837,25 +20603,971 @@ def paket_plan() -> None:
                   ", ".join(b.kennung for b in _eingeordnet)))
               if _eingeordnet else ""))
 
+    # ---- ⚠️⚠️ DIE ZWEITE ACHSE: ALT ODER NEU (13.09.2026) --------------
+    #
+    # NUTZERVORGABE: *"Der PLAN muss klar zwischen altem und neuem Umbau
+    # unterscheiden"*. Anlass war meine eigene Vermischung - ich hatte den
+    # Widerlegungspreis als tragend fuer den Hebel dargestellt, obwohl
+    # `r(q)` (NEU) ihn erzeugt und der Stop (ALT) ihn nur skaliert. In
+    # einem Bericht ohne diese Achse sieht eine Reparatur aus wie ein
+    # Baufortschritt.
+    _ohne_umbau = [x.nr for x in SI.REIHENFOLGE if not x.umbau]
+    pruefe(P, "⚠️⚠️ jeder Schritt sagt ALT oder NEU",
+           not _ohne_umbau,
+           "sonst liest sich eine Reparatur wie ein Baufortschritt. Ohne "
+           "Kennzeichnung: %s" % _ohne_umbau)
+    _falsch = [(x.nr, x.umbau) for x in SI.REIHENFOLGE
+               if x.umbau not in ("alt", "neu", "beides")]
+    pruefe(P, "und zwar mit einem der DREI Woerter",
+           not _falsch,
+           "`alt` (wird aufgeraeumt) · `neu` (wird gebaut) · `beides` "
+           "(ersetzt und baut). Ein freier Text waere die naechste Stelle, "
+           "die auseinanderlaeuft: %s" % _falsch)
+    pruefe(P, "⚠️ und die Ausgabe ZEIGT es",
+           "UMBAUZEICHEN" in io.open("soll_ist.py", encoding="utf-8").read(),
+           "ein Feld, das niemand sieht, ist keine Unterscheidung")
+
+    # ================================================================
+    # ⚠️⚠️⚠️ ABHAENGIGKEITEN (13.09.2026, Schritt 46 Teil 2)
+    # ================================================================
+    #
+    # Die Bloecke ordnen nach DRINGLICHKEIT. Sie kannten keine
+    # ABHAENGIGKEIT - und deshalb meldete `soll_ist` als naechsten
+    # Schritt 28, dessen eigener Text sagt *"ERST NACH DEM ROLLOUT
+    # messen - vorher misst man den alten Stand"*. Derselbe Fehler wie
+    # 2.395 (Rangfolge fehlt), nur eine Ebene tiefer.
+    _nr = {x.nr for x in SI.REIHENFOLGE}
+    _fertig_nr = {x.nr for x in SI.REIHENFOLGE if x.fertig}
+    _mit = [x for x in SI.REIHENFOLGE if x.wartet_auf]
+
+    pruefe(P, "⚠️⚠️ jeder Schritt kennt das Feld `wartet_auf`",
+           all(isinstance(x.wartet_auf, tuple) for x in SI.REIHENFOLGE),
+           "ohne das Feld zeigt der Plan auf Schritte, die nicht duerfen")
+    _unbekannt = [(x.nr, n) for x in _mit for n in x.wartet_auf if n not in _nr]
+    pruefe(P, "⚠️ und jede Abhaengigkeit zeigt auf einen Schritt, den es gibt",
+           not _unbekannt,
+           "ein Verweis ins Leere blockiert einen Schritt fuer immer, ohne "
+           "dass jemand sieht, warum. Gefunden: %s" % (_unbekannt or "keiner"))
+    _selbst = [x.nr for x in _mit if x.nr in x.wartet_auf]
+    pruefe(P, "⚠️ und keiner wartet auf sich selbst",
+           not _selbst,
+           "das waere eine Blockade, die nie aufgeht. Gefunden: %s"
+           % (_selbst or "keiner"))
+
+    # ⚠️ KREISE: A wartet auf B, B auf A - beide waeren fuer immer blockiert
+    def _kreis(start, gesehen, karte):
+        if start in gesehen:
+            return True
+        for n in karte.get(start, ()):  # noqa: SIM110
+            if _kreis(n, gesehen | {start}, karte):
+                return True
+        return False
+
+    _karte = {x.nr: tuple(x.wartet_auf) for x in SI.REIHENFOLGE}
+    _kreise = [n for n in _karte if _kreis(n, frozenset(), _karte)]
+    pruefe(P, "⚠️⚠️ und es gibt keinen Kreis",
+           not _kreise,
+           "A wartet auf B und B auf A - beide waeren fuer immer "
+           "blockiert, und der Plan saehe trotzdem geordnet aus. "
+           "Gefunden: %s" % (_kreise or "keiner"))
+
+    # ---- ⚠️⚠️⚠️ WAS IM TEXT STEHT, MUSS IM FELD STEHEN -----------------
+    #
+    # Der eigentliche Waechter. Ein Schritt, der von sich selbst sagt
+    # "ERST NACH ...", aber kein `wartet_auf` traegt, wird wieder als
+    # naechster gemeldet - genau der Fehler, den dieser Schritt behebt.
+    import re as _re
+    # ⚠️ NUR SELBSTBEZUEGLICHE WENDUNGEN. "kommt DANACH" stand zuerst mit
+    # in diesem Muster und hat sofort Schritt 41 gemeldet - dort heisst es
+    # aber *"Schritt 31 kommt DANACH"*, also ein NACHFOLGER, keine eigene
+    # Abhaengigkeit. Die Information ist trotzdem erfasst: 31 traegt
+    # `wartet_auf=(41,)`. Ein Muster, das Vorwaerts- und Rueckwaertsbezug
+    # nicht unterscheidet, meldet die Haelfte falsch.
+    _sagt = [x for x in SI.REIHENFOLGE
+             if not x.fertig
+             and _re.search(r"ERST NACH|erst nach dem Rollout", x.text)]
+    _stumm = [x.nr for x in _sagt if not x.wartet_auf]
+    pruefe(P, "⚠️⚠️⚠️ und jeder Schritt, der ,ERST NACH' sagt, traegt es auch",
+           not _stumm,
+           "die Abhaengigkeit im Fliesstext liest niemand, wenn die "
+           "Ausgabe den Schritt als naechsten meldet. Betroffen waeren: "
+           "%s (gefunden mit Text-Hinweis: %s)"
+           % (_stumm or "keiner", [x.nr for x in _sagt]))
+
+    # ---- REGELTEST auf KONSTRUIERTEN Schritten -------------------------
+    #
+    # Nicht am echten Plan: dort ist die Antwort ein Zufall des Standes.
+    _a = SI.Schritt(901, "A", "t", "q", fertig=True, block="D-BETRIEB")
+    _b = SI.Schritt(902, "B", "t", "q", block="D-BETRIEB", wartet_auf=(903,))
+    _c = SI.Schritt(903, "C", "t", "q", block="D-BETRIEB")
+    _kunst = [_a, _b, _c]
+    _f = {x.nr for x in _kunst if x.fertig}
+    _wart = [x for x in _kunst
+             if not x.fertig and any(n not in _f for n in x.wartet_auf)]
+    _ber = [x for x in _kunst if not x.fertig and x not in _wart]
+    pruefe(P, "REGEL der Wartende wird uebersprungen, der Bereite gemeldet",
+           [x.nr for x in _wart] == [902] and [x.nr for x in _ber] == [903],
+           "B steht VOR C und wartet auf C - gemeldet werden muss C. "
+           "Bekommen: wartend %s, bereit %s"
+           % ([x.nr for x in _wart], [x.nr for x in _ber]))
+    _c2 = SI.Schritt(903, "C", "t", "q", fertig=True, block="D-BETRIEB")
+    _kunst2 = [_a, _b, _c2]
+    _f2 = {x.nr for x in _kunst2 if x.fertig}
+    _ber2 = [x for x in _kunst2
+             if not x.fertig and all(n in _f2 for n in x.wartet_auf)]
+    pruefe(P, "REGEL und sobald der Vorgaenger fertig ist, wird er bereit",
+           [x.nr for x in _ber2] == [902],
+           "eine Blockade, die nicht aufgeht, waere schlimmer als keine. "
+           "Bekommen: %s" % [x.nr for x in _ber2])
+
+    # ---- ⚠️⚠️ SCHRITT 47 STEHT AN DER SPITZE ---------------------------
+    #
+    # Nutzerentscheidung 13.09. Der Grund ist eine Messung: solange der
+    # Stop aus einer Modellangabe kommt, haengt der Hebel JEDES laufenden
+    # Signals an einer Zahl, deren Guete nie gemessen wurde (2.397). Ohne
+    # den Widerlegungspreis greift der ATR-Rueckfall mit 25 % - dann
+    # erreicht kein r(q) die 2,0x-Grenze und es gaebe gar keinen Hebel
+    # mehr. Der Ausweg ist ein GEMESSENER Stop, nicht das Streichen der
+    # Modellzahl.
+    _s47 = next((x for x in SI.REIHENFOLGE if x.nr == 47), None)
+    pruefe(P, "⚠️⚠️ Schritt 47 (gemessener Stop) steht an erster Stelle",
+           _s47 is not None and _s47.block == "D-BETRIEB"
+           and (_s47.fertig or (bool(_offen) and _offen[0].nr == 47)),
+           "er ist die Vorbedingung dafuer, dass die Modellzahl aus der "
+           "Geometrie verschwindet - solange er offen ist, gehoert er nach "
+           "vorne. Block: %s, naechster: %s"
+           % (getattr(_s47, "block", "-"),
+              (_offen[0].nr if _offen else "-")))
+
     # ⚠️ ZWEI EBENEN: Blockordnung, und INNERHALB die Listenposition.
     # Die Schrittnummer ist KEIN Rang - sie sagt, wann etwas entstanden ist.
     _pos = {x.nr: i for i, x in enumerate(SI.REIHENFOLGE)}
-    _offen = sorted((x for x in SI.REIHENFOLGE if not x.fertig),
-                    key=lambda x: (_rang.get(x.block, 99), _pos[x.nr]))
+    # dieselbe Quelle wie oben - `geordnet()` liefert bereits die Ordnung
+    # ⚠️⚠️ DIE REGEL PRUEFEN, NICHT DEN ZUFALL (13.09.2026).
+    #
+    # Die erste Fassung verlangte, dass der naechste offene Schritt NICHT
+    # der niedrigstnummerierte seines Blocks ist - und belegte das mit
+    # "49 gehoert vor 44". Das galt, solange 49 offen war. Mit 49 und 45
+    # erledigt blieben 44 und 48, und 44 ist zugleich erster in der Liste
+    # UND kleinste Nummer: die Zeile fiel, ohne dass etwas falsch war.
+    #
+    # ➤ Eine Pruefung, die von der zufaelligen Gestalt der Daten
+    # abhaengt, meldet frueher oder spaeter einen Fehler, den es nicht
+    # gibt. Geprueft wird deshalb die SORTIERREGEL selbst, an einem
+    # gestellten Fall - dort ist der Unterschied immer sichtbar.
+    class _S:
+        def __init__(self, nr, block, pos):
+            self.nr, self.block, self._pos = nr, block, pos
+
+    _fall = [_S(11, "D-BETRIEB", 1), _S(99, "D-BETRIEB", 0),
+             _S(1, "L-ROLLEN", 0)]
+    _sortiert = sorted(_fall, key=lambda x: (_rang.get(x.block, 99), x._pos))
     pruefe(P, "⚠️⚠️ innerhalb eines Blocks zaehlt die POSITION, nicht die Nummer",
-           bool(_offen) and _offen[0].nr != min(
-               x.nr for x in SI.REIHENFOLGE
-               if not x.fertig and x.block == _offen[0].block),
-           "sonst waere der aelteste Schritt immer der naechste - Schritt 49 "
-           "(Fehler im laufenden Betrieb) gehoert vor 44 (halb fertig), "
-           "obwohl seine Nummer groesser ist. Gemeldet: %s"
-           % (_offen[0].nr if _offen else "-"))
+           [x.nr for x in _sortiert] == [99, 11, 1],
+           "die Schrittnummer sagt, WANN etwas entstanden ist - nicht, wie "
+           "dringend es ist. Im gestellten Fall muss 99 vor 11 kommen "
+           "(erste Listenposition) und beide vor der L-Rolle. Bekommen: %s"
+           % [x.nr for x in _sortiert])
+    pruefe(P, "und die echte Reihenfolge benutzt dieselbe Regel",
+           bool(_alle_offen) and _alle_offen == sorted(
+               (x for x in SI.REIHENFOLGE if not x.fertig),
+               key=lambda x: (_rang.get(x.block, 99), _pos[x.nr])),
+           "sonst prueft die Zeile darueber eine Regel, die im Betrieb "
+           "gar nicht angewandt wird")
+    # ⚠⚠ UND DIE ZWEITE EBENE: die BEREITEN sind genau die offenen
+    # ohne die wartenden - in unveraenderter Reihenfolge. Diese Zeile
+    # stand zuerst falsch: sie verglich die bereiten gegen ALLE offenen
+    # und fiel in dem Moment, in dem `wartet_auf` zum ersten Mal etwas
+    # zurueckhielt. Die Ordnung war richtig, die Pruefung war es nicht.
+    pruefe(P, "⚠️ und die bereiten sind die offenen ohne die wartenden",
+           _offen == [x for x in _alle_offen if x not in _wartend],
+           "eine Blockade darf die REIHENFOLGE nicht aendern, nur "
+           "Eintraege herausnehmen. Offen %d, wartend %d, bereit %d"
+           % (len(_alle_offen), len(_wartend), len(_offen)))
+    # ⚠️⚠️ WIEDER DIE REGEL STATT DES ZUFALLS (13.09.2026, zweites Mal
+    # heute). Hier stand `_offen[0].block == "D-BETRIEB"` - fest verdrahtet.
+    # Das galt, solange dieser Block offene Schritte hatte. Am 13.09. wurden
+    # 44, 45, 48, 49 und 50 fertig, D-BETRIEB war LEER, und die Zeile fiel -
+    # obwohl der naechste Schritt voellig richtig aus D-ABBILDUNG kam.
+    #
+    # ➤ Geprueft wird jetzt: der naechste offene Schritt gehoert zum ERSTEN
+    # Block der Blockordnung, der ueberhaupt noch offene Schritte hat. Das
+    # ist die Regel; welcher Block das gerade ist, geht sie nichts an.
+    _erster_block = next(
+        (b for b in sorted(_rang, key=lambda x: _rang[x])
+         if any(not x.fertig and x.block == b for x in SI.REIHENFOLGE)), None)
     pruefe(P, "⚠️ und der gemeldete NAECHSTE Schritt folgt der Blockordnung",
-           bool(_offen) and _offen[0].block == "D-BETRIEB",
+           bool(_offen) and _offen[0].block == _erster_block,
            "vorher meldete `soll_ist` Schritt 25, waehrend an 44 gearbeitet "
-           "wurde - die Liste war die Reihenfolge ihrer Entstehung. Jetzt: "
-           + (("%d %s (%s)" % (_offen[0].nr, _offen[0].kennung,
-                               _offen[0].block)) if _offen else "keiner"))
+           "wurde - die Liste war die Reihenfolge ihrer Entstehung. Erster "
+           "Block mit offenen Schritten: %s. Gemeldet: %s"
+           % (_erster_block,
+              (("%d %s (%s)" % (_offen[0].nr, _offen[0].kennung,
+                                _offen[0].block)) if _offen else "keiner")))
+
+
+def paket_abbildung() -> None:
+    """Schritt 46 - sagt die DOKUMENTATION dasselbe wie der laufende Stand?
+
+    ⚠️⚠️ WARUM DAS EIN EIGENES PAKET IST. `CLAUDE.md` ist die Datei, die
+    vor jeder Ausarbeitung gelesen wird. Am 13.09. behauptete sie, der
+    Selbsttest der Messanlage gegen bekannte Wahrheit fehle - er war seit
+    dem 08.09. gelaufen (2.204, Fehlalarmquote 0 von 50, Aufloesung
+    +0,0293 R). Eine geschlossene Luecke, die als offen gefuehrt wird,
+    kostet mehr als eine offene: sie laesst eine Frage neu stellen, die
+    beantwortet ist.
+
+    ⚠️ UND SIE TRUG VIER VERALTETE ZAHLEN: 148 F-Nummern (sind 75), 85
+    Methodik-Abschnitte (sind 124), 72 %% von 281 Werkzeugen Altbestand
+    (sind 176 von 308 = 57 %%), 92.000 Zeilen (sind 107.000). Von Hand
+    nachgezogen laufen sie wieder weg - deshalb PRUEFT das hier gegen
+    die erzeugten Register statt sie zu wiederholen.
+
+    ⚠️⚠️ DAS REGISTER WIDERSPRACH SICH DABEI SELBST: die Kopfzeile sagte
+    "281 Eintraege", die Tabelle zwei Zeilen darunter "176 von 308". Die
+    281 waren im Generator hart hinterlegt - genau die Falle, gegen die
+    das Blatt gebaut wurde."""
+    P = "Abbildung"
+    import pathlib
+    import re as _re
+
+    _md = io.open("CLAUDE.md", encoding="utf-8").read()
+    _fk = io.open("Basisinfos/REGISTER_Fakten.md", encoding="utf-8").read()
+    _me = io.open("Basisinfos/REGISTER_Methodik_Themen.md",
+                  encoding="utf-8").read()
+    _wz = io.open("Basisinfos/REGISTER_Werkzeuge.md", encoding="utf-8").read()
+
+    def _zahl(text, muster, name):
+        m = _re.search(muster, text)
+        return int(m.group(1)) if m else None
+
+    # ---- die Zahlen, jede gegen ihre QUELLE ---------------------------
+    _f_md = _zahl(_md, r"\*\*Die (\d+) F-Nummern nach Thema\*\*", "md")
+    _f_reg = _zahl(_fk, r"\*\*(\d+) Eintraege\*\*", "reg")
+    pruefe(P, "⚠️ CLAUDE.md nennt die richtige Zahl der F-Nummern",
+           _f_md is not None and _f_md == _f_reg,
+           "das Faktenregister ist die Stelle, an der VOR jeder Messung "
+           "nachgesehen wird - eine falsche Anzahl dort laesst es "
+           "unvollstaendig aussehen. CLAUDE.md: %s, Register: %s"
+           % (_f_md, _f_reg))
+
+    _m_md = _zahl(_md, r"den (\d+) Methodik-Abschnitten", "md")
+    _m_reg = _zahl(_me, r"hat \*\*(\d+)\*\* nummerierte Abschnitte", "reg")
+    pruefe(P, "⚠️ und die richtige Zahl der Methodik-Abschnitte",
+           _m_md is not None and _m_md == _m_reg,
+           "CLAUDE.md: %s, Register: %s" % (_m_md, _m_reg))
+
+    _w_md = _re.search(r"\*\*(\d+) von (\d+) Messwerkzeugen \((\d+) %\)", _md)
+    _w_reg = _re.search(r"\*\*(\d+) von (\d+) Werkzeugen \((\d+) %\)", _wz)
+    pruefe(P, "⚠️⚠️ und die richtige Altbestandsquote",
+           bool(_w_md) and bool(_w_reg) and _w_md.groups() == _w_reg.groups(),
+           "72 %% von 281 stand dort, waehrend das Register 176 von 308 "
+           "(57 %%) auswies. CLAUDE.md: %s, Register: %s"
+           % (_w_md.groups() if _w_md else None,
+              _w_reg.groups() if _w_reg else None))
+
+    # ---- ⚠️⚠️ UND DAS REGISTER MUSS MIT SICH SELBST UEBEREINSTIMMEN ----
+    _kopf = _zahl(_wz, r"nicht gepflegt — (\d+) Eintraege", "kopf")
+    pruefe(P, "⚠️⚠️ das Werkzeugregister widerspricht sich nicht selbst",
+           _kopf is not None and _w_reg is not None
+           and _kopf == int(_w_reg.group(2)),
+           "die Kopfzeile nannte 281, die Tabelle darunter 308 - eine "
+           "harte Zahl im Generator, die mitgewachsen ist, ohne "
+           "mitgezaehlt zu werden. Kopf: %s, Tabelle: %s"
+           % (_kopf, _w_reg.group(2) if _w_reg else None))
+
+    # ---- die geschlossene Luecke ---------------------------------------
+    pruefe(P, "⚠️⚠️⚠️ CLAUDE.md fuehrt den Selbsttest NICHT mehr als fehlend",
+           "fehlt weiterhin" not in _md,
+           "er ist am 08.09. gelaufen (2.204): 50 Nullwelten, 120 Welten "
+           "mit bekanntem Effekt, Fehlalarmquote 0 von 50, Aufloesung "
+           "+0,0293 R bei 80 % Fundquote")
+    pruefe(P, "⚠️ und nennt seine ZWEI Einschraenkungen mit",
+           "Dreierregel" in _md and "nicht die **Daten**" in _md,
+           "0 von 50 schliesst eine wahre Quote bis rund 6 % nicht aus, "
+           "und ein Selbsttest prueft die ANLAGE, nicht die Daten. Ohne "
+           "beides waere aus einer zu strengen Aussage eine zu milde "
+           "geworden")
+    pruefe(P, "und das Werkzeug dazu gibt es wirklich",
+           pathlib.Path("selbsttest_messanlage.py").exists()
+           and pathlib.Path("selbsttest_welt.py").exists(),
+           "eine Doku, die auf ein Werkzeug verweist, das es nicht gibt, "
+           "ist schlimmer als eine, die schweigt")
+
+
+def paket_gebuehrengrenze() -> None:
+    """Regel 2 AM HEBEL - die Bewertung ist gebuehrenfrei, die Mail nicht.
+
+    ⚠️ NUTZERABGLEICH 13.09.2026: *"wir haben eine Regel - neutrale
+    Bewertung fuer die Signale und Empfehlung, und Wirtschaftlichkeit und
+    Rechnung (Gebuehren 0,3 und 1,5) erfolgt im eMail. Vergiss die
+    Abgrenzung nicht"* - und auf Nachfrage praezisiert: *"ich rede vom
+    Hebel"*.
+
+    ⚠️⚠️ WARUM GERADE DORT: `kosten_r = 2 x Gebuehr / stop_rel` waechst,
+    je ENGER der Stop ist. Bei 1,50 %% und 8 %% Stop sind das 0,375 R -
+    das ZEHNFACHE der Weitenunterschiede, die 2.435-optimum gemessen hat
+    (+-0,04 R). Eine Gebuehr, die in die Hebelkette rutscht, verschoebe
+    das Ergebnis nicht ein wenig, sie bestimmte das Vorzeichen. Genau
+    deshalb steht die Grenze hier als PRUEFUNG und nicht als Kommentar.
+
+    ⚠️ UND SIE GILT IN BEIDE RICHTUNGEN: faellt die Gebuehr aus der MAIL
+    heraus, ist die Trennung genauso kaputt - dann faende die
+    Wirtschaftlichkeit nirgends mehr statt."""
+    P = "Gebuehrengrenze"
+    import inspect as _in
+
+    from agent import betraege as _BT
+    from agent import potential as _PO
+    from agent import wahrscheinlichkeit as _WK
+
+    # ---- 1. DIE HEBELRECHNUNG KENNT KEINE GEBUEHR ---------------------
+    _par = set(_in.signature(_BT.hebelrechnung).parameters)
+    _verdaechtig = {p for p in _par
+                    if any(w in p.lower()
+                           for w in ("gebuehr", "kosten", "finanz", "spread"))}
+    pruefe(P, "⚠️⚠️⚠️ `hebelrechnung` hat gar keinen Gebuehren-Eingang",
+           not _verdaechtig,
+           "der Hebel entsteht aus Quote und CRV - eine Kostenart als "
+           "Parameter waere die Tuer, durch die Regel 2 faellt. "
+           "Parameter: %s" % sorted(_par))
+
+    # ---- 2. DER NULLPUNKT IST DER GEBUEHRENFREIE BREAKEVEN ------------
+    #
+    # Bei CRV 2 ist 1/(1+2) = 33,3 %. Mit 0,30 %% Gebuehr auf 8 %% Stop
+    # laege die Huerde bei 34,3 %, mit 1,50 %% bei 38,3 %. Traefe der
+    # Hebel eine dieser Zahlen, waere die Wirtschaftlichkeit in die
+    # Bewertung gewandert.
+    _k0 = _BT.hebelrechnung(quote=1.0 / 3.0, crv=2.0, kapital_eur=20000.0,
+                            stop_rel=0.08)
+    pruefe(P, "⚠️⚠️ und bei 33,3 % Quote gibt es KEINEN Hebel - Kelly ist null",
+           abs(_k0["kelly"]) < 1e-9,
+           "33,3 %% ist der GEBUEHRENFREIE Breakeven bei CRV 2. Genau dort "
+           "muss die Kette in Spot kippen - keinen Punkt frueher (das "
+           "waere eine eingebaute Gebuehr) und keinen spaeter. Kelly: "
+           "%.6f" % _k0["kelly"])
+    _k1 = _BT.hebelrechnung(quote=0.343, crv=2.0, kapital_eur=20000.0,
+                            stop_rel=0.08)
+    pruefe(P, "⚠️ und knapp darueber entsteht schon einer",
+           _k1["kelly"] > 0,
+           "34,3 %% ist die Huerde MIT 0,30 %% Gebuehr. Dass der Hebel dort "
+           "laengst positiv ist, zeigt, dass er die Gebuehr nicht kennt - "
+           "Kelly: %.6f" % _k1["kelly"])
+
+    # ---- 3. DIE BEWERTUNG RUFT MIT NULL AN --------------------------
+    _q = io.open("agent/potential.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ `potential.rechne` uebergibt `gebuehr_je_seite=0.0`",
+           "gebuehr_je_seite=0.0" in _q,
+           "das ist die Stelle, an der die Bewertung entsteht - dort darf "
+           "keine Kostenart ankommen")
+    _b0 = _WK.rechne(crv=2.0, stop_relativ=0.08, gebuehr_je_seite=0.0)
+    pruefe(P, "⚠️ und dann ist der Breakeven exakt 1/(1+CRV)",
+           abs(_b0["breakeven"] - 1.0 / 3.0) < 1e-12
+           and abs(_b0["kosten_r"]) < 1e-12,
+           "ohne Gebuehr muss die Huerde die reine Geometrie sein. "
+           "Breakeven %.6f, kosten_r %.6f"
+           % (_b0["breakeven"], _b0["kosten_r"]))
+
+    # ---- 4. UND DIE GEBUEHR WIRKT DORT, WO SIE HINGEHOERT ------------
+    _b3 = _WK.rechne(crv=2.0, stop_relativ=0.08, gebuehr_je_seite=0.003)
+    _b15 = _WK.rechne(crv=2.0, stop_relativ=0.08, gebuehr_je_seite=0.015)
+    pruefe(P, "⚠️⚠️ mit Gebuehr steigt die Huerde - und zwar 2 x Satz / Stop",
+           abs(_b3["kosten_r"] - 2 * 0.003 / 0.08) < 1e-12
+           and abs(_b15["kosten_r"] - 2 * 0.015 / 0.08) < 1e-12
+           and _b15["breakeven"] > _b3["breakeven"] > _b0["breakeven"],
+           "die Wirtschaftlichkeit muss es GEBEN, sonst ist die Trennung "
+           "in der anderen Richtung kaputt. 0,30 %%: %.4f R · 1,50 %%: "
+           "%.4f R" % (_b3["kosten_r"], _b15["kosten_r"]))
+    pruefe(P, "⚠️⚠️⚠️ und die Gebuehr trifft ENGE Stops haerter - genau "
+              "gegenlaeufig zur Bewertung",
+           _WK.rechne(crv=2.0, stop_relativ=0.02,
+                      gebuehr_je_seite=0.015)["kosten_r"]
+           > 4 * _b15["kosten_r"] - 1e-9,
+           "2 x Gebuehr / stop_rel: bei 2 % Stop und 1,50 % sind das "
+           "1,50 R, bei 8 % 0,375 R. 2.435-optimum misst die Weite "
+           "GEBUEHRENFREI bei 7-9 % - unter Gebuehren laege das Optimum "
+           "weiter. ⚠️ Das ist KEIN Widerspruch, sondern die Trennung: "
+           "die Bewertung sagt, wo der Trade gut ist; die Mail sagt, was "
+           "er kostet")
+
+
+def paket_haltedauer() -> None:
+    """Befund 2.445 - die Haltedauer der Mail gegen die eigenen Reihen.
+
+    ⚠️ DIE VORGESCHICHTE: die Mail nennt "Haltedauer etwa 25 Handelstage",
+    der Nutzer erwartete 3-5 Tage. Ich hatte daraus VOR der Messung einen
+    Befund gemacht (2.444: "falsche Frage, 25 statt 5, Kosten
+    ueberzeichnet") - die Messung hat alle drei Saetze widerlegt. Die
+    Formel `(CRV x k)^2` trifft den gemessenen Median bis zur ERSTEN Marke
+    am Betriebspunkt auf rund 10 %; die 3-5 Tage gelten fuer 1-ATR-Stops.
+
+    Dieses Paket bewacht die Tagesrechnung selbst - an KONSTRUIERTEN Reihen,
+    deren Antwort vorher feststeht - und dass der Code-Kopf das
+    Messergebnis traegt statt eines offenen Punkts."""
+    P = "Haltedauer"
+    import pathlib
+    import numpy as _np
+
+    _w = pathlib.Path("messe_haltedauer.py")
+    pruefe(P, "⚠️⚠️ das Messwerkzeug gibt es", _w.exists(),
+           "ohne es waere die Zahl in der Mail wieder nur zu behaupten")
+    _t = _w.read_text(encoding="utf-8", errors="replace") if _w.exists() else ""
+    pruefe(P, "⚠️⚠️ es hat Positivkontrolle UND Reproduktion",
+           "def positivkontrolle" in _t and "def reproduktion" in _t,
+           "die Positivkontrolle prueft die Anlage an bekannter Wahrheit, "
+           "die Reproduktion (R-R11) prueft, dass sie genauso zaehlt wie "
+           "2.435 - beide sind am 13.09. bestanden, und beide muessen in "
+           "jedem Lauf mitlaufen")
+    pruefe(P, "⚠️ und es waehlt die Anker EXAKT wie die Stopmessung",
+           "def waehle_anker" in _t and "M.VORLAUF" in _t,
+           "sonst waere die Reproduktion ein Zufall statt einer Pruefung")
+
+    import messe_haltedauer as _MH
+
+    def _r(z):
+        return (_np.array([x[0] for x in z], float),
+                _np.array([x[1] for x in z], float),
+                _np.array([x[2] for x in z], float))
+
+    _i = _np.array([0])
+    _s, _z = _np.array([10.0]), _np.array([20.0])       # Stop 90, Ziel 120
+    # (hoch, tief, schluss) - Tag 0 ist der Einstieg bei 100
+    _faelle = (
+        ("Ziel am Tag 2", [(100, 100, 100), (105, 95, 100), (121, 99, 120)],
+         False, 2, 1),
+        ("Stop am Tag 1", [(100, 100, 100), (101, 89, 90)], False, 1, -1),
+        ("Gleichtag zaehlt als Stop", [(100, 100, 100), (125, 85, 100)],
+         False, 1, -1),
+        ("nichts getroffen = zensiert", [(100, 100, 100), (105, 95, 100),
+                                          (106, 94, 100)], False, 3, 0),
+        ("SHORT: Hoch ueber 110 ist der Stop", [(100, 100, 100),
+                                                (111, 99, 105)], True, 1, -1),
+        ("SHORT: Tief unter 80 ist das Ziel", [(100, 100, 100),
+                                               (101, 79, 80)], True, 1, 1),
+    )
+    for name, reihe, short, tag_soll, art_soll in _faelle:
+        _h, _tf, _c = _r(reihe)
+        _hz = 2 if "zensiert" in name else 5
+        _tag, _art = _MH.austrittstag(_h, _tf, _c, _i, _s, _z, _hz, short)
+        pruefe(P, "REGEL " + name,
+               int(_tag[0]) == tag_soll and int(_art[0]) == art_soll,
+               "erwartet Tag %d / Art %+d, bekommen Tag %d / Art %+d"
+               % (tag_soll, art_soll, int(_tag[0]), int(_art[0])))
+
+    _q = io.open("agent/entscheidungsrechnung.py", encoding="utf-8").read()
+    _kopf = _q[_q.index("def _haltedauer_tage"):_q.index("def _runde_kurs")]
+    pruefe(P, "⚠️⚠️ der Code-Kopf traegt das MESSERGEBNIS, keinen offenen Punkt",
+           "2.445" in _kopf and "offener Punkt" not in _kopf,
+           "dort stand ,sie gehoert gegen die eigenen Reihen nachgerechnet "
+           "- offener Punkt'. Das ist geschehen; wer den Code liest, muss "
+           "die gemessene Tabelle finden, nicht die alte Luecke")
+    pruefe(P, "⚠️ und er sagt, dass die ERKLAERUNG fehlt",
+           "NICHT erklaert" in _kopf,
+           "die Irrfahrt-Herleitung sagt 42 Tage voraus, gemessen sind 23 - "
+           "wer die Formel auf Aktien uebertraegt, hat keinen Beleg "
+           "(2.445-mechanismus)")
+
+
+def paket_mailrichtung() -> None:
+    """Schritt 41 - nennt die Einstiegsmail ihre RICHTUNG?
+
+    ⚠️⚠️⚠️ DER FUND (13.09.2026, am Pruefstand `pruefstand_hebelmail.py`,
+    echte Kette auf einer Kopie der Produktionssicherung): eine
+    SHORT-Empfehlung kam als *"SOL - KAUFEN (Hebel)"*, mit dem Stop UEBER
+    dem Kurs, beschriftet *"(-11,2 %)"*, und dem Ziel darunter. Das Wort
+    SHORT stand nur im Anhang. Ausgefuehrt wird von Hand in der
+    Bitpanda-App - wer "KAUFEN" liest, eroeffnet die GEGENPOSITION.
+
+    ⚠️ Versandwirksam nur bei `hebel_richtung_modus: beide` - der Standard
+    `nur_long` haelt SHORT-Mails am Versand zurueck (2.447-schalter).
+
+    Seit dem 22.08. gab es kein SHORT-Signal, vorher 252 (15.-22.08., alte
+    Kette). Der Weg ist offen (S6c) - der Fehler war scharf, nur noch
+    nicht eingetreten.
+
+    ⚠️ Geprueft wird am ECHTEN Mailbauer mit einer ECHTEN Rechnung aus
+    `entscheidungsrechnung.rechne(ist_short=...)` - nicht an einem
+    handgebauten Text."""
+    P = "Mailrichtung"
+    from agent import entscheidungsrechnung as _ER
+    from agent import signal_mail as _SM
+
+    def _mail(richtung, instrument="hebel"):
+        _r = _ER.rechne(kurs=100.0, atr=3.2, risiko_eur=200.0,
+                        instrument=instrument, betrag_wunsch_eur=500.0,
+                        topf_frei_eur=50000.0, cash_frei_eur=50000.0,
+                        assetklasse="krypto", kostenklasse="krypto",
+                        ist_short=(richtung == "SHORT"), hebel_grenze=5.0)
+        _u = {"aktion": "KAUFEN", "richtung": richtung, "begruendung": "x",
+              "was_dagegen": "y", "umgeworfen_durch": "z",
+              "unabhaengige_faktoren": 1,
+              "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]}
+        return _r, _SM.baue_mail(symbol="SOL", name="Solana", kurs_eur=100.0,
+                                 instrument=instrument, strategie="einstieg",
+                                 rechnung=_r, urteil=_u)
+
+    _rs, (_bs, _ts) = _mail("SHORT")
+    _rl, (_bl, _tl) = _mail("LONG")
+    pruefe(P, "REGEL die SHORT-Rechnung legt den Stop UEBER den Kurs",
+           float(_rs["stop_eur"]) > 100.0 > float(_rl["stop_eur"]),
+           "sonst prueften die Zeilen darunter eine Mail, die gar keinen "
+           "Short beschreibt. Stop SHORT %s, LONG %s"
+           % (_rs["stop_eur"], _rl["stop_eur"]))
+    pruefe(P, "⚠️⚠️⚠️ REGEL der Betreff einer SHORT-Mail nennt SHORT",
+           "SHORT" in _bs,
+           "wer nur den Betreff liest, darf nicht die Gegenposition "
+           "eroeffnen. Betreff: %s" % _bs)
+    pruefe(P, "⚠️ REGEL und der einer Hebel-LONG-Mail nennt LONG",
+           "LONG" in _bl and "SHORT" not in _bl,
+           "beim Hebel ist die Richtung eine offene Frage, also gehoert sie "
+           "auch bei LONG dazu. Betreff: %s" % _bl)
+    _blick_s = _ts[_ts.index("AUF EINEN BLICK"):_ts.index("--- 1.")] \
+        if "--- 1." in _ts else _ts
+    pruefe(P, "⚠️⚠️ REGEL ,Auf einen Blick' nennt die Richtung VOR den Zahlen",
+           "Richtung        SHORT" in _blick_s
+           and _blick_s.index("Richtung") < _blick_s.index("Stop  "),
+           "jede Zahl darunter wird nur mit der Richtung richtig gelesen")
+    pruefe(P, "⚠️⚠️ REGEL der Stopabstand eines SHORT traegt ein PLUS",
+           "(+" in [z for z in _ts.split("\n") if z.startswith("Stop  ")][0]
+           and "(-" in [z for z in _tl.split("\n") if z.startswith("Stop  ")][0],
+           "hier stand fest ,(-x %%)' - bei einem Short liegt der Stop "
+           "ueber dem Kurs. SHORT: %s"
+           % [z for z in _ts.split("\n") if z.startswith("Stop  ")][:1])
+
+    # ---- und der Pruefstand, der den Fund moeglich gemacht hat ------------
+    import pathlib
+    _ps = pathlib.Path("pruefstand_hebelmail.py")
+    pruefe(P, "⚠️ der Pruefstand fuer echte Mails gibt es",
+           _ps.exists(),
+           "versandte Mails werden nirgends gespeichert - ohne ihn laesst "
+           "sich eine aktuelle Mail nur pruefen, wenn der Nutzer sie "
+           "weiterleitet")
+    _pt = _ps.read_text(encoding="utf-8") if _ps.exists() else ""
+    pruefe(P, "⚠️⚠️ und er laedt die ECHTE Konfiguration",
+           "def betriebskonfiguration" in _pt and "config.yaml" in _pt,
+           "die erste Fassung uebergab nur die Bremsen-Konfiguration - "
+           "`hebel_aus_quote` war dadurch aus, und die Mail zeigte einen "
+           "Hebel von 1,3x, den die Produktion seit Paket B nicht erzeugt")
+
+
+def paket_mailstraffung() -> None:
+    """Schritt 31 - die Mail gestrafft, und drei SHORT-Falschaussagen behoben.
+
+    ⚠️⚠️ ZUERST DIE FEHLER (13.09.2026, am Pruefstand
+    `pruefstand_hebelmail.py`, derselbe Trade LONG gegen SHORT): die
+    SHORT-Mail sagte an drei Stellen etwas anderes als die LONG-Mail, obwohl
+    Stop (11,2 %%) und Ziel (22 %%) gleich weit entfernt lagen:
+
+        Anhang B   ohne Kosten, ,noetig 33 - Traegt sich'    (LONG: 53, NICHT)
+        Trichter   Zielzeile fehlte, Kopf ,1 dafuer, 1 dagegen' (LONG: 2 dagegen)
+        Marken     Marken UNTER dem Kurs mit ,+1,0 Schwankungsbreiten'
+
+    Ursache jedes Mal ein Vorzeichen: `einstieg > stop`, `ziel - einstieg`,
+    ein festes `+`. Dieselbe Fehlerklasse wie 2.446-richtung.
+
+    ⚠️ VERSANDWIRKSAM NUR BEI `hebel_richtung_modus: beide`. Der Standard
+    `nur_long` haelt SHORT-Mails am Versand zurueck - nachgeprueft am
+    scharfen Lauf mit abgefangenem Versand (2.447-schalter).
+
+    Dann die Straffung (2.446-etiketten/-redundanz/-lesbarkeit/-begriffe,
+    2.445-fenster). Geprueft wird am ECHTEN Code: `entscheidungsrechnung`,
+    `trefferbilanz`, `trichter`, `gesamtbild`, `faktenblock`, `signal_mail`."""
+    P = "Mailstraffung"
+    from agent import entscheidungsrechnung as _ER
+    from agent import faktenblock as _FB
+    from agent import gesamtbild as _GB
+    from agent import signal_mail as _SM
+    from agent import trefferbilanz as _TB
+    from agent import trichter as _TR
+
+    def _r(short, klasse="krypto"):
+        return _ER.rechne(kurs=100.0, atr=4.5, risiko_eur=225.0,
+                          instrument="hebel", betrag_wunsch_eur=500.0,
+                          topf_frei_eur=50000.0, cash_frei_eur=50000.0,
+                          assetklasse=klasse, kostenklasse="krypto",
+                          ist_short=short, hebel_grenze=5.0)
+
+    _rl, _rs = _r(False), _r(True)
+    pruefe(P, "REGEL die Testrechnung ist ein echter SHORT mit gleichen Abstaenden",
+           float(_rs["stop_eur"]) > 100.0 > float(_rl["stop_eur"])
+           and abs(abs(_rs["ziel_eur"] - 100) - abs(_rl["ziel_eur"] - 100)) < 1e-6,
+           "sonst prueften die Zeilen darunter keinen Richtungsunterschied")
+
+    # ---- (1) Trichter: die Zielzeile gibt es in BEIDEN Richtungen ---------
+    _zl, _zs = _ER.saetze(_rl), _ER.saetze(_rs)
+    pruefe(P, "⚠️⚠️ REGEL der SHORT bekommt die Zielzeile des Trichters",
+           any("Ihr Ziel liegt" in z for z in _zs)
+           and any("Ihr Ziel liegt" in z for z in _zl),
+           "`ziel_relativ` war (ziel - einstieg)/einstieg - beim SHORT negativ, "
+           "und `trichter.saetze` verlangt > 0. Die Zeile fiel still weg")
+    pruefe(P, "⚠️⚠️ und der Kopf zaehlt LONG und SHORT gleich",
+           _GB.bewerte(_zl)["dagegen"] == _GB.bewerte(_zs)["dagegen"],
+           "LONG %s, SHORT %s" % (_GB.bewerte(_zl), _GB.bewerte(_zs)))
+
+    # ---- (2) Marken: das Vorzeichen folgt der Lage ------------------------
+    _mk = [{"preis_eur": 95.0, "abstand_atr": 1.1, "beruehrungen": 4,
+            "nach_unten_gedreht": 2, "gehalten": 2}]
+    _ms = _ER.marken_saetze(_rs, _mk)
+    _mkl = [dict(_mk[0], preis_eur=105.0)]
+    _ml = _ER.marken_saetze(_rl, _mkl)
+    pruefe(P, "⚠️⚠️ REGEL eine Marke UNTER dem Kurs traegt ein Minus",
+           any("-1,1 Schwankungsbreiten" in z for z in _ms)
+           and any("+1,1 Schwankungsbreiten" in z for z in _ml),
+           "SHORT %s | LONG %s" % (_ms[1:2], _ml[1:2]))
+
+    # ---- (3) Anhang B: Kosten auch beim SHORT ------------------------------
+    _kl = _TB.kosten_r_aus_stop(100.0, 90.0, instrument="hebel", hebel=4.0,
+                                tage=25)
+    _ks = _TB.kosten_r_aus_stop(100.0, 110.0, instrument="hebel", hebel=4.0,
+                                tage=25)
+    pruefe(P, "⚠️⚠️ REGEL die Kosten in R haengen am ABSTAND, nicht an der Richtung",
+           _kl is not None and _ks is not None and abs(_kl - _ks) < 1e-12,
+           "LONG %s, SHORT %s - vorher war SHORT None, also Kosten 0 und "
+           ",noetig 33 - Traegt sich'" % (_kl, _ks))
+    _b = {"basisrate": 0.34, "belastbar": False, "faelle": 0,
+          "breakeven": 0.53, "traegt": False, "wahrscheinlichkeit": 0.34}
+    _sl = _TB.satz(_b, einstieg=100.0, stop=90.0, einsatz_eur=500.0,
+                   klasse="krypto", instrument="hebel", hebel=4.0, tage=25)
+    _ss = _TB.satz(_b, einstieg=100.0, stop=110.0, einsatz_eur=500.0,
+                   klasse="krypto", instrument="hebel", hebel=4.0, tage=25)
+    pruefe(P, "⚠️⚠️ und der Kostenblock steht auch in der SHORT-Mail",
+           any("Was der Handel kostet" in z for z in _ss)
+           and [z for z in _sl if "%" in z] == [z for z in _ss if "%" in z],
+           "der ganze Block hing an `einstieg > stop`")
+    pruefe(P, "⚠️ die fuenfte Nennung des Stopabstands ist weg",
+           not any("so viel riskieren Sie" in z for z in _sl + _ss),
+           ",Ihr Stop liegt x %% unter dem Einstieg' - doppelt und beim SHORT "
+           "falsch")
+    pruefe(P, "⚠️ ,noetig' nennt seinen Gebuehrensatz",
+           any("Bitpanda 1,50 %" in z and "muessten es" in z for z in _sl),
+           "der Kopf nennt zwei Huerden, hier stand eine Zahl ohne Satz")
+
+    # ---- (4) Begriffe: Krypto hat Kalendertage ----------------------------
+    _tk = _TR.saetze(100.0, 4.5, klasse="krypto")
+    _ta = _TR.saetze(100.0, 1.5, klasse="aktien")
+    pruefe(P, "⚠️ REGEL Krypto: ,Tagen' - Aktien bleiben bei ,Handelstagen'",
+           (not _tk or not any("Handelstag" in z for z in _tk))
+           and any(" Tagen " in z for z in _tk)
+           and (not _ta or any("Handelstagen" in z for z in _ta)),
+           "die Kerzen enthalten Wochenenden (2.445-fenster)")
+    pruefe(P, "⚠️ und die Haltedauer ebenso",
+           any(z.startswith("Haltedauer") and " Tage " in z for z in _zl)
+           and not any("Handelstag" in z for z in _zl if z.startswith("Haltedauer")))
+
+    # ---- (5) 2.445-fenster: Haltedauer gegen sicheres Hebelfenster --------
+    pruefe(P, "⚠️⚠️ REGEL ist das sichere Fenster kuerzer als die Haltedauer, steht es da",
+           float(_rs["liquidation_tage_bis_stop"]) < float(_rs["haltedauer_tage"])
+           and any(z.startswith("Sicher bis") and "!!" in z for z in _zs),
+           "SHORT: Fenster %.1f, Haltedauer %s"
+           % (_rs["liquidation_tage_bis_stop"], _rs["haltedauer_tage"]))
+    pruefe(P, "⚠️ und nur dann - im Normalfall keine Zeile mehr",
+           float(_rl["liquidation_tage_bis_stop"]) >= float(_rl["haltedauer_tage"])
+           and not any(z.startswith("Sicher bis") for z in _zl),
+           "LONG: Fenster %.1f, Haltedauer %s"
+           % (_rl["liquidation_tage_bis_stop"], _rl["haltedauer_tage"]))
+    pruefe(P, "⚠️ und im Kopf, weil `!!` eine Grenze der Rechnung markiert",
+           any(z.startswith("✖  Sicher bis") for z in _GB.dagegen(_zs)))
+
+    # ---- (6) Kopf: die Tatsache, nicht der halbe Satz ----------------------
+    _dz = _GB.dagegen(_zl)
+    pruefe(P, "⚠️ ,Was dagegen spricht' nennt die Tatsache hinter UNGUENSTIG",
+           any("Ihr Ziel liegt" in z for z in _dz)
+           and not any("die Ausnahme" in z for z in _dz)
+           and not any("Schwankungsbreite und Stop" in z for z in _dz), _dz)
+
+    # ---- (7) Faktenblock ohne Etikett (Nutzerentscheidung 2.446-etiketten)
+    _fb = "\n".join(_FB.baue("krypto_hebel", kern_werte=dict(
+        atr_relativ=0.044, schwankung_perzentil=0.1, rueckgang_60t=-0.06,
+        momentum_perzentil=0.9, volumen_relativ=1.5, volumen_perzentil=0.9)))
+    pruefe(P, "⚠️⚠️ REGEL kein GUENSTIG/MITTEL/UNGUENSTIG im Faktenblock",
+           not any(u in _fb for u in ("GUENSTIG", "MITTEL"))
+           and "Treffer am guten Ende" not in _fb, _fb[:200])
+
+    # ---- (8) die ganze Mail: Kopf, Anhang D und E -------------------------
+    _wk = ["Wie wahrscheinlich traegt dieser Trade? (gerechnet, kein Urteil)",
+           "   Ausgangspunkt: Ziel 2,0-mal so weit wie der Stop     33,3 %",
+           "   + Funding-Rang im Markt                              +0,8 %",
+           "     (Querschnittsrang: wer heute am wenigsten Finanzierung zahlt)",
+           "   = geschaetzte Trefferquote                           34,1 %"]
+    _, _t = _SM.baue_mail(
+        symbol="SOL", name="Solana", kurs_eur=100.0, instrument="hebel",
+        strategie="einstieg", rechnung=_rl, marken_werte={"oben": _mkl},
+        urteil={"aktion": "KAUFEN", "richtung": "LONG", "begruendung": "x"},
+        wahrscheinlichkeit=_wk, assetklasse="krypto",
+        faktenblock=_FB.baue("krypto_hebel", kern_werte=dict(
+            atr_relativ=0.044, rueckgang_60t=-0.06, volumen_relativ=1.5)))
+    _haupt, _, _anh = _t.partition("--- ANHANG")
+    _blick = _haupt[_haupt.find("--- AUF EINEN BLICK ---"):]
+    pruefe(P, "⚠️ ,Auf einen Blick' beginnt mit der Empfehlung und ihrer Herkunft",
+           _blick.split("\n")[1].startswith("Empfehlung      KAUFEN - Urteil des Modells"),
+           _blick.split("\n")[1])
+    pruefe(P, "⚠️ die Lesehilfen stehen im Anhang E - je einmal",
+           "E  Lesehilfen" in _anh
+           and _t.count("Der Trichter sagt WIE WEIT") == 1
+           and "Der Trichter sagt WIE WEIT" in _anh
+           and "iesen Preisen hat der Kurs frueher gedreht" in _anh
+           and "iesen Preisen hat der Kurs frueher gedreht" not in _haupt,
+           "Regel 3 des Mailvorschlags: Anhang statt Weglassen")
+    pruefe(P, "⚠️ die Beitragsbeschreibung steht im Anhang D, nicht in der Rechnung",
+           "(Querschnittsrang" not in _haupt
+           and "D  Die eingerechneten Beitraege" in _anh
+           and "Funding-Rang im Markt (Querschnittsrang" in _anh)
+    _abs1 = _haupt[_haupt.find("--- 1. DIE BEWERTUNG"):_haupt.find("--- 2.")]
+    _z1 = [z.strip() for z in _abs1.split("\n") if z.strip()]
+    _ia = next((k for k, z in enumerate(_z1) if z.startswith("Ausgangspunkt")), -9)
+    pruefe(P, "und die Rechnung in Abschnitt 1 steht ungestoert untereinander",
+           [z[:1] for z in _z1[_ia:_ia + 3]] == ["A", "+", "="], _z1)
+
+    # ---- (8b) der Richtungsschalter bleibt, wo er ist (2.447-schalter) -----
+    # Nutzerauftrag 14.09.: *,pruefe, dass bei long und short sowie LONG ONLY
+    # nichts gebrochen ist'*. Der Schalter wirkt NUR am Versand; der Mailbau
+    # darf ihn nie lesen - sonst saehe eine Mail je nach Einstellung anders
+    # aus, und die Messung des Signaltexts haenge an einer Nutzereinstellung.
+    _mailbau = ("agent/signal_mail.py", "agent/trefferbilanz.py",
+                "agent/trichter.py", "agent/gesamtbild.py",
+                "agent/faktenblock.py", "agent/entscheidungsrechnung.py")
+    _liest = [p_ for p_ in _mailbau
+              if "hebel_richtung_modus" in _nur_code(p_)
+              or "mail_richtung_erlaubt" in _nur_code(p_)]
+    pruefe(P, "⚠️⚠️ REGEL kein Mailbaustein liest den Richtungsschalter",
+           not _liest, "liest ihn: %s" % _liest)
+    _ps = _quelltext("pruefstand_hebelmail.py")
+    pruefe(P, "⚠️ und die Schalterprobe am abgefangenen Versand gibt es",
+           "def schalterprobe" in _ps and "RL.SCHARF" in _ps
+           and "versand=lambda" in _ps and "zai_client=None" in _ps,
+           "der Trockenlauf kehrt VOR dem Schalter zurueck - ueber den "
+           "Versand sagt `baue()` nichts")
+
+    # ---- (9) was NICHT angefasst wurde, bleibt unangefasst ----------------
+    _lq = _quelltext("agent/lagebeschreibung.py")
+    pruefe(P, "⚠️⚠️ die Saetze, die das MODELL liest, sind unveraendert",
+           "Handelstage zeigt die" in _lq
+           and "Schwankungsbreiten hoeher, bei" in _lq,
+           "`lagebeschreibung` geht an Modell UND Nutzer - dort zu straffen "
+           "waere eine Promptaenderung, und die gehoert nach der Messung in "
+           "Schritt 33")
+
+
+def paket_guikette() -> None:
+    """Schritt 32 - die Oberflaeche zeigt die Kette, die laeuft.
+
+    ⚠️⚠️ BEFUND 2.448 (14.09.2026): alle Reiter trugen noch die alte Kette.
+    KEIN Reiter zeigte die neue Bewertung, JEDER Analyseknopf startete die
+    alte Pipeline - ein Klick haette ein Signal der alten Kette in die
+    Produktion geschrieben. Nutzerentscheidungen: Knoepfe stilllegen mit
+    Hinweis, Detailansicht in der neuen Gliederung AUS DB-FELDERN,
+    Anzeigen der alten Kette kennzeichnen.
+
+    ⚠️ EIN FEHLER DER ERSTEN FASSUNG, den erst die Oberflaechenprobe fand:
+    die Regel reichte `config=None` durch, `aktiv_fuer(None)` ist die LEERE
+    Code-Vorgabe - jeder Knopf blieb frei. Die erste Pruefung unten haelt
+    genau das fest."""
+    P = "GuiKette"
+    from scheduler import rollen_job as _RJ
+    from agent import signal_ansicht as _SANS
+
+    # ---- (1) die Regel -----------------------------------------------------
+    pruefe(P, "⚠️⚠️ REGEL ohne uebergebene Konfiguration gilt die ECHTE config.yaml",
+           _RJ.alte_analyse_hinweis("krypto") is not None
+           and _RJ.bedient_neue_kette("krypto", None) is False,
+           "`aktiv_fuer(None)` ist die leere Code-Vorgabe - die erste Fassung "
+           "liess dadurch jeden Knopf frei")
+    pruefe(P, "⚠️ REGEL faellt eine Klasse aus aktiv_fuer, ist ihr Knopf wieder frei",
+           _RJ.alte_analyse_hinweis("krypto", {"rollen_kette": {"aktiv_fuer": ["aktien"]}}) is None
+           and _RJ.alte_analyse_hinweis("aktien", {"rollen_kette": {"aktiv_fuer": ["aktien"]}}),
+           "keine feste Sperre: der dokumentierte Rueckfallweg bleibt bedienbar")
+
+    # ---- (2) jeder Analyseknopf fragt sie, BEVOR er etwas startet ----------
+    def _vor_start(pfad, handler, start):
+        q = _quelltext(pfad)
+        i = q.find("def %s(" % handler)
+        if i < 0:
+            return False
+        rumpf = q[i:q.find("\n    def ", i + 10)]
+        return ("_alte_analyse_hinweis" in rumpf or "_kann_berechnen" in rumpf) and \
+            (start not in rumpf or rumpf.find("_alte_analyse_hinweis") < rumpf.find(start)
+             or rumpf.find("_kann_berechnen") < rumpf.find(start))
+    for _p, _h, _st in (("ui/signals_view.py", "_on_compute_clicked", "threading.Thread"),
+                        ("ui/signals_view.py", "_on_batch_clicked", "threading.Thread"),
+                        ("ui/hebel_view.py", "_on_analyze_clicked", "threading.Thread"),
+                        ("ui/marktscan_view.py", "_on_writeup_clicked", "threading.Thread")):
+        pruefe(P, "⚠️⚠️ %s.%s fragt die Kettenregel vor dem Start" % (_p.split("/")[-1], _h),
+               _vor_start(_p, _h, _st),
+               "sonst schreibt ein Klick ein Signal der alten Kette (2.448-knoepfe)")
+    _ms = _quelltext("ui/marktscan_view.py")
+    pruefe(P, "und ,Jetzt scannen' bleibt frei - kein Modellaufruf, der Job laeuft",
+           "_alte_analyse_hinweis" not in _ms[_ms.find("def _on_scan_clicked("):
+                                             _ms.find("def _run_scan(")],
+           "Schritt 40: der Marktscan bleibt an")
+
+    # ---- (3) die Ansicht ------------------------------------------------------
+    import json as _j
+    _sig = {"quelle_kette": "rollen", "action": "KAUFEN", "richtung": "SHORT",
+            "instrument": "hebel", "hebel": 4.0, "strategie": "einstieg",
+            "entry_eur_von": 99.0, "entry_eur_bis": 101.0,
+            "stop_loss_eur_von": 111.25, "take_profit_eur_von": 77.5,
+            "take_profit_eur_bis": 78.6, "position_size_eur": 500.0,
+            "liquidation_etwa_eur": 120.0, "verlust_am_stop_eur": 225.0,
+            "short_reasoning": "x", "gegenargument": "y", "umgeworfen_durch": "z",
+            "belege_json": _j.dumps([{"fakt": "f", "richtung": "dagegen", "gewicht": "hoch"}]),
+            "unabhaengige_faktoren": 1, "zai_gegenpruefung_urteil": "nein",
+            "zai_gegenpruefung_kurzbegruendung": "k", "gate_passed": 1,
+            "facts_json": _j.dumps({"stand": ["Lage A"]}), "modell": "m",
+            "prompt_stand": "p", "created_at": "2026-09-12T05:39:37+00:00"}
+    _t = "\n".join(_SANS.zeilen(_sig))
+    pruefe(P, "⚠️⚠️ REGEL die Ansicht nennt, was NICHT gespeichert ist - in der ersten Zeile",
+           _SANS.zeilen(_sig)[0] == _SANS.HERKUNFTSZEILE
+           and "Trefferquote" in _SANS.HERKUNFTSZEILE,
+           "sonst liest sich die Ansicht wie die versandte Mail")
+    pruefe(P, "⚠️ dieselben Abschnittstitel wie die Mail, ohne die alte Dreiteilung",
+           all(k in _t for k in ("--- AUF EINEN BLICK ---", "--- 2. DIE RECHNUNG ---",
+                                 "--- 3. DIE LAGE DES WERTS ---",
+                                 "--- 5. DIE MODELLE - DAS URTEIL ---"))
+           and "MATHEMATISCH" not in _t and "Konfidenz" not in _t
+           and "Konfidenz" not in _SANS.metazeile(_sig))
+    pruefe(P, "⚠️⚠️ REGEL beim SHORT traegt der Stop ein Plus - wie in der Mail",
+           "Stop            111,25 EUR  (+11,2 %)" in _t, [z for z in _t.split("\n") if z.startswith("Stop")])
+    pruefe(P, "⚠️ ,nein' der Gegenpruefung heisst ,kein Einwand'",
+           "Gegenpruefung (zweites Modell): kein Einwand" in _t,
+           "`zweite_meinung.einwand_liegt_vor` - das rohe Wort liest sich wie Zustimmung")
+    _nein = dict(_sig, gate_passed=0)
+    pruefe(P, "⚠️ eine Nein-Buchung sagt, dass sie keine Empfehlung war",
+           "NEIN-BUCHUNG" in "\n".join(_SANS.zeilen(_nein))
+           and "NEIN-BUCHUNG" not in _t)
+    _alt = dict(_sig, instrument="spot", hebel=1.2)
+    pruefe(P, "⚠️ eine Hebelzahl ohne Hebelgeschaeft wird benannt, nicht als Hebel gezeigt",
+           _SANS.ist_hebel_altbestand(_alt) and not _SANS.ist_hebel_altbestand(_sig)
+           and "vor Paket B" in "\n".join(_SANS.zeilen(_alt))
+           and "Hebel 1,2x" not in "\n".join(_SANS.zeilen(_alt)),
+           "2.446-gui: 55 von 56 Hebelzeilen seit 11.09. lagen bei 1,0-1,2x")
+    _smq = _quelltext("agent/signal_mail.py")
+    _saq = _quelltext("agent/signal_ansicht.py")
+    pruefe(P, "⚠️ Richtungszeile und Belegmarker stehen EINMAL - die Ansicht holt sie",
+           "RICHTUNG_TEXT = {" in _smq and "SHORT - Gewinn bei FALLENDEM Kurs" not in _saq
+           and "RICHTUNG_TEXT" in _saq and "BELEG_ZEICHEN" in _saq,
+           "zwei Schreibweisen derselben Zeile laufen auseinander")
+
+    # ---- (4) die Reiter benutzen die Ansicht ------------------------------------
+    for _p in ("ui/signals_view.py", "ui/hebel_view.py", "ui/letzte_bewertung.py"):
+        pruefe(P, "%s zeigt Rollen-Signale ueber `signal_ansicht`" % _p.split("/")[-1],
+               "signal_ansicht" in _quelltext(_p) and "ist_rollen_signal" in _quelltext(_p)
+               or ("_rollen_signale" in _quelltext(_p) and "_SANS.zeilen" in _quelltext(_p)))
+    pruefe(P, "⚠️ ,Letzte Bewertung' liest nicht mehr NUR die alte Kette",
+           "db.get_latest_signal(" in _quelltext("ui/letzte_bewertung.py"),
+           "`get_latest_real_signal_per_symbol` filtert groq_raw_response - seit "
+           "15.08. nur Zeilen vom 14.08.")
+
+    # ---- (5) die alten Anzeigen sagen, woher sie kommen ------------------------
+    pruefe(P, "⚠️ Regime-Reiter: Stand und Override als ALTE Kette gekennzeichnet",
+           "ALTEN Kette" in _quelltext("ui/regime_view.py")
+           and "Wirkt nur auf die ALTE Kette" in _quelltext("ui/regime_view.py"),
+           "die Rollen-Kette liest weder Regime noch Override")
+    import remote.status as _RS
+    pruefe(P, "⚠️ Uebersichtsseite: die Regime-Karte traegt ihre Herkunft",
+           "herkunft_hinweis" in _quelltext("remote/status.py")
+           and "r.herkunft_hinweis" in _quelltext("remote/server.py")
+           and "ALTEN Kette" in _RS.REGIME_HERKUNFT_HINWEIS)
+    _rl = _nur_code("agent/rollen_lauf.py")
+    pruefe(P, "und die Kennzeichnung stimmt noch: die Rollen-Kette liest kein Regime",
+           "manueller_override" not in _rl and "get_last_known_regime" not in _rl
+           and "determine_regime" not in _rl,
+           "liest sie es eines Tages, ist der Hinweis falsch und muss weg")
+
+
+def paket_standard_db() -> None:
+    """Der Waechter gegen Schreibzugriffe auf die Standard-DB - selbst geprueft.
+
+    ⚠️ WARUM ER EINEN SELBSTTEST BRAUCHT (14.09.2026): in Paket 15 stand ein
+    Schutz gegen genau diesen Fehler, und er griff nie. Ein Waechter, der
+    still bestanden meldet, ist davon nicht zu unterscheiden. Also wird hier
+    an einer WEGWERF-Datenbank gezeigt, dass er (1) Schreibzugriffe dieses
+    Prozesses meldet - direkt und ueber `db.get_connection()` -, (2) Lesen,
+    `mode=ro` und Speicherkopien NICHT meldet und (3) Schreibzugriffe eines
+    ANDEREN Prozesses NICHT meldet. Punkt 3 ist der Notebook-Fall: dort
+    schreibt die Produktion waehrend des Suitelaufs selbst."""
+    P = "StandardDB"
+    import os
+    import sqlite3 as _sq
+    import subprocess
+    import tempfile
+
+    _vorher = len(_STANDARD_DB_SCHREIBER)
+    _alt_cwd = os.getcwd()
+    _tmp = tempfile.mkdtemp(prefix="waechter_")
+    _aus = None
+    try:
+        os.makedirs(os.path.join(_tmp, "data"))
+        _pfad = os.path.join(_tmp, "data", "tradinginfotool.db")
+        _c = _sq.connect(_pfad)
+        _c.execute("CREATE TABLE t (x)")
+        _c.commit()
+        _c.close()
+        os.chdir(_tmp)
+        _aus = _standard_db_waechter_an()
+
+        # (1) direkt geschrieben
+        _c = _sq.connect("data/tradinginfotool.db")
+        _c.execute("INSERT INTO t VALUES (1)")
+        _c.commit()
+        _c.close()
+        _n1 = len(_STANDARD_DB_SCHREIBER) - _vorher
+        pruefe(P, "⚠️⚠️ REGEL ein Schreibzugriff dieses Prozesses wird gemeldet",
+               _n1 >= 1 and _STANDARD_DB_SCHREIBER[-1][1] == "INSERT",
+               str(_STANDARD_DB_SCHREIBER[_vorher:]))
+
+        # (2) lesen, mode=ro, Speicher
+        _c = _sq.connect("data/tradinginfotool.db")
+        _c.execute("SELECT * FROM t").fetchall()
+        _c.close()
+        _c = _sq.connect("file:data/tradinginfotool.db?mode=ro", uri=True)
+        _c.execute("SELECT * FROM t").fetchall()
+        _c.close()
+        _m = _sq.connect(":memory:")
+        _m.execute("CREATE TABLE u (x)")
+        _m.execute("INSERT INTO u VALUES (1)")
+        _m.close()
+        pruefe(P, "⚠️ REGEL Lesen, mode=ro und Speicherkopien werden NICHT gemeldet",
+               len(_STANDARD_DB_SCHREIBER) - _vorher == _n1,
+               str(_STANDARD_DB_SCHREIBER[_vorher + _n1:]))
+
+        # (3) ein ANDERER Prozess schreibt - der Notebook-Fall
+        subprocess.run([sys.executable, "-c",
+                        "import sqlite3;c=sqlite3.connect('data/tradinginfotool.db');"
+                        "c.execute('INSERT INTO t VALUES (2)');c.commit();c.close()"],
+                       check=True, cwd=_tmp, timeout=60)
+        _c = _sq.connect("data/tradinginfotool.db")
+        _anzahl = _c.execute("SELECT COUNT(*) FROM t").fetchone()[0]
+        _c.close()
+        pruefe(P, "⚠️⚠️ REGEL Schreibzugriffe eines ANDEREN Prozesses werden NICHT gemeldet",
+               _anzahl == 2 and len(_STANDARD_DB_SCHREIBER) - _vorher == _n1,
+               "am Notebook schreibt die Produktion waehrend des Suitelaufs - "
+               "sie darf keinen Fehlalarm ausloesen")
+    finally:
+        if _aus:
+            _aus()
+        os.chdir(_alt_cwd)
+        # der Selbsttest darf das Ergebnis der Suite nicht faerben
+        del _STANDARD_DB_SCHREIBER[_vorher:]
+        import shutil
+        shutil.rmtree(_tmp, ignore_errors=True)
+
+    # (4) die zwei gefundenen Stellen bleiben repariert
+    _q = _quelltext("pruefe_pakete.py")
+    pruefe(P, "⚠️ Paket 15 laeuft ohne Statusbuchung in die Standard-DB",
+           '"15": _ohne_statusbuchung(paket_15)' in _q
+           # im CODE gesucht, nicht im Text - diese Zeile nennt das Muster
+           # selbst und haette sich sonst selbst gefunden
+           and not __import__("re").search(
+               r"_AH\s*\.\s*track_api_health\s*=", _nur_code("pruefe_pakete.py")),
+           "der alte Schutz ersetzte die Dekorator-Fabrik nach dem Import - "
+           "wirkungslos")
+    _p6 = _q[_q.find("def paket_6() -> None:"):_q.find("def paket_7() -> None:")]
+    pruefe(P, "⚠️ Paket 6 migriert auf einer Schemakopie, nicht auf der echten Datenbank",
+           'sqlite3.connect("data/tradinginfotool.db")' not in _p6
+           and "mode=ro" in _p6 and ":memory:" in _p6)
+    pruefe(P, "und der Waechter laeuft in jedem Suitelauf",
+           "_waechter_aus = _standard_db_waechter_an()" in _q
+           and '"Standard-DB"' in _q)
 
 
 def paket_register() -> None:
@@ -19878,6 +21590,111 @@ def paket_register() -> None:
     kein Nachweis (Methodik 2.100).
     """
     P = "Register"
+
+    # ---- ⚠️⚠️⚠️ DIE ARGUMENTVERSCHIEBUNG (13.09.2026) -------------------
+    #
+    # AN EINEM TAG ZWEIMAL DIESELBE KLASSE. Am 12.09. war es ein Komma in
+    # `Schritt(...)`, das den Text zum vierten Argument machte und `quelle`
+    # in `fertig` schob; dafuer gibt es seither eine Zeile im Paket `Plan`.
+    # Heute traf es `Befundlage`: ein Hilfsskript ersetzte das
+    # Stand-Literal `"offen",` durch `"langer Text", "gilt",` - und weil
+    # `stand` das DRITTE Argument ist, wurde daraus
+    #
+    #     stand           = der lange Text     (gehoerte in die AUSSAGE)
+    #     quelle          = "gilt"             (gehoerte in den STAND)
+    #     abgeloest_durch = die echte Quelle   (gehoerte in die QUELLE)
+    #
+    # SECHS Befunde standen so da, und sie sahen im Register richtig aus -
+    # der Text war ja vollstaendig, nur im falschen Feld. Aufgefallen ist
+    # es beim Zaehlen der Stand-Werte, nicht beim Lesen.
+    #
+    # ⚠️ DIESE ZEILE IST DIE GEGENPROBE ZU JEDEM KUENFTIGEN HILFSSKRIPT.
+    # ⚠️  ist in diesem Paket anderswo die BEFUNDKARTE (eine
+    # Textdatei) - hier braucht es das MODUL. Ein zweiter Name fuer
+    # dasselbe Kuerzel waere genau die Verwechslung, die dieses Paket
+    # verhindern soll.
+    import bestand as _bestand
+
+    _STAENDE = {"gilt", "offen", "abgeloest"}
+    _falsch = [(b.kennung, b.stand[:60]) for b in _bestand.BEFUNDE
+               if b.stand not in _STAENDE]
+    pruefe(P, "⚠️⚠️⚠️ jeder Befund hat einen STAND, der ein bekanntes Wort ist",
+           not _falsch,
+           "steht dort ein SATZ, ist ein Argument verschoben - dann ist "
+           "auch `quelle` falsch und die echte Quelle in "
+           "`abgeloest_durch` gerutscht. Betroffen: %s" % _falsch[:4])
+    _ohne = [b.kennung for b in _bestand.BEFUNDE
+             if b.stand == "abgeloest" and not b.abgeloest_durch]
+    pruefe(P, "⚠️⚠️ und jeder ABGELOESTE nennt seinen Nachfolger",
+           not _ohne,
+           "R-R11: ein Befund faellt nicht einfach weg, er wird ERSETZT - "
+           "und wer ihn in einem Jahr liest, muss ohne Suche erfahren, "
+           "wodurch. Ohne Nachfolger: %s" % _ohne)
+    # ---- ⚠️⚠️ EIN OFFENER PUNKT DARF KEINE VERALTETE ZAHL ZITIEREN ----
+    #
+    # ANLASS 13.09.: Befund 2.380-annahmen und Schritt 45 nannten
+    # `hebelfuehrung.KOPPEL_TAGE` = 3 Tage und fuehrten das als OFFENE
+    # Frage. Entschieden war sie am 11.09. (24 Stunden), der Code stand
+    # seither auf 1.0, und `ausrollen_paket_b` bewachte den Wert. Ich habe
+    # dem Nutzer die Frage trotzdem vorgelegt und eine Empfehlung
+    # ausgesprochen - fuer etwas, das er selbst entschieden hatte.
+    #
+    # ⚠️ NUR OFFENE PUNKTE. Ein GELTENDER Befund darf einen alten Wert
+    # zitieren ("vorher gesetzt 3 Tage") - das ist Geschichte und richtig.
+    # Ein OFFENER Punkt, der eine ueberholte Zahl nennt, ist eine Frage,
+    # die keine mehr ist.
+    #
+    # ⚠️ VORAB GEPRUEFT, bevor sie hier steht: 5 Konstanten-Zitate im
+    # ganzen Bestand, alle aufloesbar, genau EIN Treffer - kein Fehlalarm.
+    import importlib as _il
+    import re as _re
+    _MUSTER = _re.compile(
+        r"`([a-z_]+)\.([A-Z][A-Z0-9_]{2,})`\s*=\s*([0-9]+(?:[.,][0-9]+)?)")
+
+    def _konst(_m, _k):
+        for _p in (_m, "agent." + _m):
+            try:
+                return getattr(_il.import_module(_p), _k)
+            except Exception:                                # noqa: BLE001
+                continue
+        return None
+
+    def _veraltet(_quelle, _text):
+        _aus = []
+        for _m, _k, _zahl in _MUSTER.findall(_text or ""):
+            _ist = _konst(_m, _k)
+            if _ist is None:
+                continue
+            try:
+                _soll = float(str(_zahl).replace(",", "."))
+                _ist_f = float(_ist)
+            except (TypeError, ValueError):
+                continue
+            if abs(_ist_f - _soll) > 1e-9:
+                _aus.append("%s: `%s.%s` zitiert %s, im Code %s"
+                            % (_quelle, _m, _k, _zahl, _ist))
+        return _aus
+
+    _stale = []
+    for _b in _bestand.BEFUNDE:
+        if _b.stand == "offen":
+            _stale += _veraltet("Befund %s" % _b.kennung, _b.aussage)
+    # ⚠️ DIE SCHRITTE GEHOEREN DAZU - der eine echte Treffer stand in
+    # Schritt 45, nicht in einem Befund.
+    import soll_ist as _si
+    for _s in _si.REIHENFOLGE:
+        if not _s.fertig:
+            _stale += _veraltet("Schritt %d" % _s.nr, _s.text)
+    pruefe(P, "⚠️⚠️ kein OFFENER Punkt zitiert eine VERALTETE Konstante",
+           not _stale,
+           "eine offene Frage, deren Zahl im Code laengst anders steht, ist "
+           "keine Frage mehr - sie laesst den Nutzer zweimal dasselbe "
+           "entscheiden (2.424): %s" % _stale)
+
+    _leer = [b.kennung for b in _bestand.BEFUNDE if not (b.quelle or "").strip()]
+    pruefe(P, "⚠️ und jeder Befund nennt eine QUELLE",
+           not _leer,
+           "eine Aussage ohne Quelle ist eine Behauptung: %s" % _leer[:5])
     import bestand as _B                                     # noqa: PLC0415
     fehler = _B.pruefe(still=True)
     pruefe(P, "Register und laufendes System stimmen ueberein",
@@ -20049,6 +21866,54 @@ def paket_messstandard() -> None:
     #     dasselbe gemessen      09.09.       +0,0126 R   122 Symbole
     import messmenge as _mm
     import messe_eigenschaft_beitrag as _meb
+    # ---- ⚠️⚠️ DER KLASSENSCHLUESSEL (Schritt 50 Teil A, 13.09.2026) ----
+    import lade_messreihen as _lm
+    import sqlite3 as _sq5
+    pruefe(P, "⚠️⚠️ `messreihen` traegt die KLASSE im Schluessel",
+           "PRIMARY KEY (symbol, assetklasse))" in _lm.SCHEMA.split(
+               "CREATE TABLE IF NOT EXISTS messreihen (")[1][:200],
+           "mit `symbol TEXT PRIMARY KEY` kann ein Ticker nur EINER Klasse "
+           "gehoeren - DASH stand als `aktien` da und ist AUCH eine "
+           "Kryptowaehrung (2.421)")
+    pruefe(P, "und `messreihen_status` ebenso",
+           _lm.SCHEMA.count("PRIMARY KEY (symbol, assetklasse))") == 2,
+           "eine Statuszeile fuer zwei Reihen ist dieselbe Mehrdeutigkeit, "
+           "nur eine Tabelle weiter")
+    pruefe(P, "⚠️ es gibt eine MIGRATION, nicht nur ein neues Schema",
+           hasattr(_lm, "migriere_klassenschluessel"),
+           "`CREATE TABLE IF NOT EXISTS` aendert eine BESTEHENDE Tabelle "
+           "nicht - ohne Migration bliebe die Datenbank auf dem alten "
+           "Schluessel und niemand saehe es")
+    # ⚠️ UND SIE IST WIEDERHOLBAR - an einer Datenbank IM SPEICHER
+    # geprueft, nicht an der echten.
+    _p = _sq5.connect(":memory:")
+    _p.executescript(
+        "CREATE TABLE price_history_ohlc (symbol TEXT, assetklasse TEXT, "
+        "currency TEXT, date TEXT, open REAL, high REAL, low REAL, "
+        "close REAL, volume REAL, fetched_at TEXT, quelle TEXT, "
+        "PRIMARY KEY(symbol,assetklasse,currency,date));"
+        "CREATE TABLE messreihen (symbol TEXT PRIMARY KEY, "
+        "assetklasse TEXT NOT NULL);"
+        "CREATE TABLE messreihen_status (symbol TEXT PRIMARY KEY, "
+        "status TEXT NOT NULL);")
+    _p.execute("INSERT INTO messreihen VALUES ('DASH','aktien')")
+    _p.execute("INSERT INTO messreihen_status VALUES ('DASH','handelnd')")
+    for _k in ("aktien", "krypto"):
+        _p.execute("INSERT INTO price_history_ohlc VALUES "
+                   "('DASH',?,'USD','2026-01-01',1,1,1,1,1,'x','y')", (_k,))
+    _erst = _lm.migriere_klassenschluessel(_p)
+    _zweit = _lm.migriere_klassenschluessel(_p)
+    pruefe(P, "⚠️⚠️ die Migration ergaenzt die fehlende Zeile",
+           _erst == (1, 1)
+           and _p.execute("SELECT COUNT(*) FROM messreihen").fetchone()[0] == 2,
+           "DASH muss danach als `aktien` UND als `krypto` dastehen: %s"
+           % (_erst,))
+    pruefe(P, "und ein zweiter Lauf tut NICHTS",
+           _zweit == (0, 0),
+           "eine Migration, die beim zweiten Mal wieder zuschlaegt, "
+           "verdoppelt Zeilen oder verliert welche: %s" % (_zweit,))
+    _p.close()
+
     pruefe(P, "⚠️⚠️ die Messmenge ist EINGEFROREN und versioniert",
            hasattr(_mm, "V1") and hasattr(_mm, "VERSION")
            and hasattr(_mm, "zeile") and len(_mm.V1) > 100,
@@ -20206,6 +22071,7 @@ def paket_neuaufnahme() -> None:
     # mit, die es am Desktop meldet.
     if _datei_fehlt(P, "data/messdaten.db", _OHNE_MESSDATEN):
         return
+    import config as _cfg_mod
     import pruefe_neuaufnahme as _NA
     maengel = _NA.pruefe(still=True)
     gehalten = [m for m in maengel if "ist GEHALTEN" in m]
@@ -20228,6 +22094,151 @@ def paket_neuaufnahme() -> None:
            "bei Meme- und Smallcap-Werten ist eine fehlende Bewertung "
            "laut Nutzervorgabe unkritisch - bei Kernwerten nicht. %s"
            % ("; ".join(kern) if kern else "keiner"))
+    # ---- ⚠️⚠️ REGELTEST: DIE HANDELSTAGE-RECHNUNG (13.09., Schritt 51)
+    #
+    # Die Frischegrenze wird fuer schliessende Maerkte in HANDELStagen
+    # gezaehlt, weil ihre Begruendung KRYPTO-spezifisch ist ("handelt
+    # durchgehend"). Das darf die Grenze nicht LOCKERN - sie muss eine
+    # echt veraltete Basis weiterhin fangen. Geprueft an gestellten
+    # Daten, nicht am Tagesstand.
+    import datetime as _dt
+    _do = _dt.date(2026, 9, 3)          # Donnerstag
+    _so = _dt.date(2026, 9, 13)         # Sonntag, 10 Kalendertage spaeter
+    pruefe(P, "⚠️⚠️ REGEL Wochenenden zaehlen bei aktien/rohstoffe/etf nicht",
+           _NA._alter_tage("2026-09-03", _so, "aktien") == 6
+           and _NA._alter_tage("2026-09-03", _so, "krypto") == 10,
+           "Do 03.09. bis So 13.09. sind 10 Kalendertage, aber 6 "
+           "Handelstage. Krypto handelt durchgehend, dort muessen es 10 "
+           "bleiben. Bekommen: aktien %d, krypto %d"
+           % (_NA._alter_tage("2026-09-03", _so, "aktien"),
+              _NA._alter_tage("2026-09-03", _so, "krypto")))
+    _alt = _NA._alter_tage("2026-08-10", _so, "aktien")
+    pruefe(P, "⚠️⚠️ REGEL und eine ECHT veraltete Basis wird weiter gefangen",
+           _alt > _NA.FRISCHE_GRENZE_TAGE,
+           "sonst waere aus der Waehrungskorrektur eine Lockerung "
+           "geworden. 10.08. bis 13.09. sind %d Handelstage, Grenze %d"
+           % (_alt, _NA.FRISCHE_GRENZE_TAGE))
+    pruefe(P, "REGEL und ein frischer Stand bleibt frisch",
+           _NA._alter_tage("2026-09-11", _so, "aktien") == 0,
+           "Fr 11.09. bis So 13.09. enthaelt keinen Handelstag - bekommen "
+           "%d" % _NA._alter_tage("2026-09-11", _so, "aktien"))
+
+    # ================================================================
+    # ⚠️⚠️⚠️ DIE STUMMMELDUNG (Schritt 51, 13.09.2026)
+    # ================================================================
+    #
+    # Nutzerentscheidung: *"ja Mailzeile fuer alle drei"*. Bis dahin war
+    # die Kette zu gehaltenen Positionen mit zu kurzer Kursreihe STUMM -
+    # kein Nachkauf, kein Verkauf, keine Begruendung, und keine Zeile
+    # darueber. Gesucht wurde in `agent/` und `ui/`: es gab keine.
+    #
+    # ⚠️ DAS LAUFZEITKRITERIUM IST EIN ANDERES ALS HIER OBEN. Dieses
+    # Paket fragt nach einer MESSREIHE in `data/messdaten.db` - die das
+    # Notebook planmaessig NICHT hat. Im Betrieb entscheidet deshalb die
+    # Laenge der USD-Kursreihe in `price_history_ohlc`, mit derselben
+    # Grenze (`lade_messreihen.MIN_KERZEN`).
+    from agent import verkaufsrechnung as _VK
+
+    _rl = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ die Stummmeldung ist in die Kette eingehaengt",
+           "stumme_bestaende(" in _rl and "stumm=_stumm" in _rl,
+           "eine Funktion, die niemand ruft, meldet nichts - genau das "
+           "war der Zustand vorher")
+    pruefe(P, "⚠️ und sie liest `holdings`, nicht die Laufsymbole",
+           "FROM holdings" in io.open("agent/verkaufsrechnung.py",
+                                      encoding="utf-8").read(),
+           "CANTON steht im BESTAND und nicht in der Watchlist des Laufs "
+           "- wer die Laufsymbole nimmt, sieht genau die Werte nicht, um "
+           "die es geht")
+    pruefe(P, "⚠️ und die Grenze ist IMPORTIERT, nicht abgeschrieben",
+           "from lade_messreihen import MIN_KERZEN" in io.open(
+               "agent/verkaufsrechnung.py", encoding="utf-8").read(),
+           "zwei Kopien derselben Grenze laufen frueher oder spaeter "
+           "auseinander - es ist dieselbe, an der `lade_messreihen` eine "
+           "Reihe verwirft")
+
+    # ---- ⚠️⚠️ REGELTESTS AUF EINER GESTELLTEN DB --------------------
+    #
+    # Nicht am echten Bestand: dort ist die Antwort der Tagesstand.
+    import sqlite3 as _sq3
+
+    class _W:                       # ein Watchlist-Eintrag, gestellt
+        def __init__(self, sym, kl, cash=False):
+            self.symbol, self.assetklasse = sym, kl
+            self.ist_cash_aequivalent = cash
+
+    _kunst = _sq3.connect(":memory:")
+    _kunst.row_factory = _sq3.Row
+    _kunst.execute("CREATE TABLE holdings (symbol TEXT, quantity REAL, "
+                   "staked_quantity REAL)")
+    _kunst.execute("CREATE TABLE price_history_ohlc (symbol TEXT, "
+                   "date TEXT, currency TEXT)")
+    for _s, _n, _kl in (("KURZ", 399, "krypto"),      # eine unter der Grenze
+                        ("GENAU", 400, "krypto"),     # genau auf der Grenze
+                        ("LEER", 0, "krypto"),        # gar keine Reihe
+                        ("AKTIE", 0, "aktien"),       # falsche Klasse
+                        ("CASH", 0, "krypto")):       # Cash-Aequivalent
+        _kunst.execute("INSERT INTO holdings VALUES (?,?,?)", (_s, 1.0, 0.0))
+        for _i in range(_n):
+            _kunst.execute("INSERT INTO price_history_ohlc VALUES (?,?,?)",
+                           (_s, "2025-%02d-%02d" % (_i // 28 + 1, _i % 28 + 1),
+                            "USD"))
+    _echt = _cfg_mod.get_watchlist
+    _cfg_mod.get_watchlist = lambda: [
+        _W("KURZ", "krypto"), _W("GENAU", "krypto"), _W("LEER", "krypto"),
+        _W("AKTIE", "aktien"), _W("CASH", "krypto", cash=True)]
+    try:
+        _r = _VK.stumme_bestaende(_kunst, assetklasse="krypto")
+        _syms = [x["symbol"] for x in _r]
+        pruefe(P, "⚠️⚠️ REGEL genau die zu kurzen Kryptowerte, sonst keiner",
+               sorted(_syms) == ["KURZ", "LEER"],
+               "399 Tage und 0 Tage gehoeren gemeldet; 400 ist auf der "
+               "Grenze und damit bewertbar; eine Aktie steht gar nicht in "
+               "`price_history_ohlc`; ein Cash-Aequivalent braucht keine "
+               "Bewertung. Bekommen: %s" % _syms)
+        pruefe(P, "REGEL der kuerzeste zuerst - er ist am laengsten stumm",
+               _syms and _syms[0] == "LEER",
+               "Reihenfolge: %s" % _syms)
+        pruefe(P, "REGEL und die Fehlmenge stimmt",
+               all(x["fehlend"] == x["grenze"] - x["tage"] for x in _r)
+               and [x["fehlend"] for x in _r if x["symbol"] == "KURZ"] == [1],
+               "bei 399 von 400 fehlt genau EINER: %s"
+               % [(x["symbol"], x["fehlend"]) for x in _r])
+        _leer = _VK.stumme_bestaende(_kunst, assetklasse="aktien")
+        pruefe(P, "⚠️ REGEL fuer Klassen ohne USD-Kursreihe meldet sie NICHTS",
+               _leer == [],
+               "Aktien, ETFs und Rohstoffe stehen nicht in "
+               "`price_history_ohlc` - dort waere die Zahl fuer JEDEN Wert "
+               "0 und die Meldung reines Rauschen. Bekommen: %s" % _leer)
+        # ---- und die Mail selbst -----------------------------------
+        pruefe(P, "⚠️⚠️ REGEL `stumm` ALLEIN loest keine Mail aus",
+               _VK.sammel_mail([], stumm=_r) is None,
+               "eine Mail, die nur sagt ,zu diesen Werten kann ich nichts "
+               "sagen', kaeme taeglich und ohne Anlass - genau der "
+               "Andrang, gegen den die Sammelmail gebaut wurde")
+        _v = _VK.rechne(aktion="REDUZIEREN", menge=250.0, kurs_eur=0.40,
+                        einstand_eur=0.30)
+        _post = [{"symbol": "XLM", "aktion": "REDUZIEREN", "grund": "Probe",
+                  "verkauf": _v}]
+        _mit = _VK.sammel_mail(_post, stumm=_r)
+        _ohne = _VK.sammel_mail(_post, stumm=None)
+        pruefe(P, "⚠️⚠️ REGEL faehrt sie mit, steht der Abschnitt drin",
+               _mit and "STUMM: GEHALTEN, ABER NICHT BEWERTBAR" in _mit[1]
+               and "KURZ" in _mit[1],
+               "sonst waere die Funktion gebaut und die Zeile trotzdem "
+               "unsichtbar")
+        pruefe(P, "REGEL und ohne stumme Werte fehlt er ganz",
+               _ohne and "STUMM:" not in _ohne[1],
+               "ein leerer Abschnitt in jeder Mail waere Rauschen")
+        pruefe(P, "⚠️ REGEL und der BETREFF nennt sie",
+               _mit and "stumm" in _mit[0],
+               "was in der Mail steht, aber nicht im Betreff, liest "
+               "niemand, der die Mail nur ueberfliegt. Betreff: %s"
+               % (_mit[0] if _mit else "-"))
+    finally:
+        _cfg_mod.get_watchlist = _echt
+        _kunst.close()
+
     pruefe(P, "die Ausnahmen tragen einen GRUND",
            all(len(v) > 40 for v in _NA.AUSNAHMEN.values()),
            "eine Ausnahme ohne Begruendung ist eine stille Luecke - genau "
@@ -20251,33 +22262,620 @@ def paket_neuaufnahme() -> None:
                         _OHNE_MESSDATEN):
         import sqlite3 as _sq3
         _c3 = _sq3.connect("file:data/messdaten.db?mode=ro", uri=True)
-        _koll = [r[0] for r in _c3.execute(
-            "SELECT DISTINCT p.symbol FROM price_history_ohlc p "
-            "JOIN messreihen r ON r.symbol = p.symbol "
-            "WHERE p.assetklasse <> r.assetklasse ORDER BY 1")]
+        # ---- ⚠️⚠️⚠️ ZWEIMAL AN EINEM TAG UMGEBAUT, UND BEIDE MALE ZU RECHT
+        #
+        # VORMITTAGS: die Zeile war DAUERROT - sie meldete seit Tagen
+        # dieselben sieben Symbole und wurde deshalb ueberlesen. Umgebaut
+        # auf "keine NEUE Kollision", mit den sieben namentlich drin.
+        #
+        # NACHMITTAGS: Schritt 50 Teil A hat die Ursache BESEITIGT. Der
+        # Schluessel von `messreihen` ist jetzt (symbol, assetklasse) -
+        # DASH steht als Aktie UND als Kryptowaehrung, so wie es ist. Eine
+        # "Kollision" gibt es damit nicht mehr; die Frage ist eine andere
+        # geworden.
+        #
+        # ➤ WAS JETZT GEPRUEFT WIRD, ist die Invariante dahinter: JEDE
+        # (Symbol, Klasse) mit Kursdaten hat auch eine Zeile in
+        # `messreihen`. Faellt sie, ist eine Reihe geladen worden, die
+        # keine Zuordnung hat - und die faende keine Messung.
+        _fehlend = [r[0] for r in _c3.execute(
+            "SELECT DISTINCT p.symbol || ' / ' || p.assetklasse "
+            "FROM price_history_ohlc p LEFT JOIN messreihen r "
+            "ON r.symbol = p.symbol AND r.assetklasse = p.assetklasse "
+            "WHERE r.symbol IS NULL ORDER BY 1")]
+        pruefe(P, "⚠️⚠️ jede (Symbol, Klasse) mit Kursdaten steht in "
+                  "`messreihen`",
+               not _fehlend,
+               "seit Schritt 50 Teil A traegt der Schluessel die Klasse - "
+               "eine Kursreihe ohne Zuordnung waere eine, die keine "
+               "Messung findet. Ohne Zeile: %s" % _fehlend[:8])
+        # ⚠️ DIE GEGENRICHTUNG ist KEIN Mangel: `messreihen` darf Symbole
+        # fuehren, deren Kurse (noch) nicht geladen sind.
+        _doppel = [r[0] for r in _c3.execute(
+            "SELECT symbol FROM messreihen GROUP BY symbol "
+            "HAVING COUNT(*) > 1 ORDER BY 1")]
+        pruefe(P, "⚠️ und die Doppelticker sind SICHTBAR, nicht verschwunden",
+               len(_doppel) == 7,
+               "sieben Ticker gibt es zweimal - DASH ist DoorDash UND die "
+               "Kryptowaehrung, T ist AT&T UND Threshold. Sie zu FUEHREN "
+               "ist der Sinn des neuen Schluessels; verschwaenden sie, "
+               "waere eine Reihe verloren. Gefunden: %s" % _doppel)
         _c3.close()
-        pruefe(P, "⚠️⚠️ `messreihen` und die Kursdaten sind klassengleich",
-               not _koll,
-               "%d Symbole tragen in `price_history_ohlc` eine ANDERE Klasse "
-               "als in `messreihen`: %s. Ursache: `messreihen.symbol` ist "
-               "PRIMARY KEY und kann ein Symbol nur EINER Klasse zuordnen - "
-               "die Kursdaten fuehren sie in zwei. ✔ Die Messungen sind "
-               "nicht betroffen (`_reihen_roh` nutzt die Spalte), ⚠️ aber "
-               "`klassen_aus_db()` liefert dort die falsche Klasse"
-               % (len(_koll), ", ".join(_koll[:8])))
     pruefe(P, "⚠️ und `faellt weg` gilt NICHT als Mangel",
            not any("weder Watchlist" in m for m in maengel),
            "P6 verlangt ausdruecklich, dass die Messbasis BREITER ist als "
            "das Portfolio. 488 Symbole ohne Watchlist-Eintrag sind gewollt")
 
 
+def paket_terminmarkt_daten() -> None:
+    """Schritt 54: die Terminmarkt-Daten sind frisch - oder es wird gesagt.
+
+    ⚠️⚠️⚠️ BEFUND 2.452 (14.09.2026). `open_interest_snapshot` war ein
+    Nebenprodukt des alten Hebel-Screenings; seit dessen Abschaltung am 12.09.
+    schrieb sie niemand. `positionierung` las die letzten 400 Zeilen ohne
+    Alter, und Rolle BC und Rolle G bekamen eingefrorene Saetze als aktuell -
+    bei 13 Werten aus dem Juli. Was dieses Paket festhaelt:
+
+        1  ein EIGENER Job sammelt fuer ALLE Kryptowerte der Kette
+        2  das Screening schreibt nicht mehr
+        3  Lesegrenze 2 h - danach KEINE Zahl, sondern ,keine aktuelle Angabe'
+        4  das 8-Stunden-Fenster nach der Uhr, nicht nach Zeilen
+        5  Vergleich ueber 100 Stunden
+        6  Meldung: 6 h gesamt, 24 h je Wert, ab App-Start, eine Mail je Ausfall
+        7  der Waechter laeuft im Job der Rollen-Kette, nicht im Sammeljob
+
+    ⚠️ JEDE GRENZE AUCH IN DER GEGENRICHTUNG: eine Pruefung, die nur ,gruen'
+    kennt, ist von einer fehlenden nicht zu unterscheiden. Nur Speicher-
+    datenbanken - keine Zeile in `data/tradinginfotool.db`."""
+    P = "TerminmarktDaten"
+    import ast as _ast
+    import re as _re
+    import sqlite3 as _sq
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    from types import SimpleNamespace as _NS
+
+    from agent import datenfrische as _DF
+    from agent import mindestkriterien as _MK
+    from agent import positionierung as _PO
+    from agent import terminmarkt_sammlung as _TS
+
+    # OHNE ASSETKLASSE gelesen: sonst holte `lage` fuer Krypto den
+    # Boersenfluss aus dem Netz. Die Terminmarkt-Luecken meldet sie ohne
+    # Klasse genauso (`_luecke_melden`: unklar ist besser als verschwiegen).
+    _schema = _quelltext("database/db.py")
+
+    def _tabelle(name):
+        m = _re.search(r"CREATE TABLE IF NOT EXISTS %s \(.*?\);" % name,
+                       _schema, _re.S)
+        return m.group(0)
+
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        c.execute(_tabelle("open_interest_snapshot"))
+        c.execute(_tabelle("oi_abdeckung_status"))
+        return c
+
+    # ---- 1  DER JOB -----------------------------------------------------
+    _wl = [_NS(symbol="BTC", assetklasse="krypto", ist_cash_aequivalent=False),
+           _NS(symbol="USDC", assetklasse="krypto", ist_cash_aequivalent=True),
+           _NS(symbol="AAPL", assetklasse="aktien", ist_cash_aequivalent=False),
+           _NS(symbol="AVAX", assetklasse="krypto", ist_cash_aequivalent=False)]
+    pruefe(P, "⚠️⚠️ gesammelt wird fuer ALLE Kryptowerte der Kette - ohne "
+           "Cash-Aequivalente, ohne andere Klassen",
+           [a.symbol for a in _TS.werte_der_kette(_wl)] == ["BTC", "AVAX"],
+           "gefunden: %s" % [a.symbol for a in _TS.werte_der_kette(_wl)])
+    _ts_code = _nur_code("agent/terminmarkt_sammlung.py")
+    pruefe(P, "⚠️⚠️ und NICHT nur fuer Werte mit erlaubter Hebelpruefung",
+           "hebel_pruefung_erlaubt" not in _ts_code
+           and "hebel_screening\"" not in _ts_code
+           and "aktiv" not in _ts_code,
+           "genau dieser Filter liess 13 Werte seit Juli ohne Daten "
+           "(2.452-alt)")
+
+    _c = _db()
+    _aufrufe = []
+
+    def _stub(conn, asset, kraken):
+        _aufrufe.append(asset.symbol)
+        if asset.symbol == "AVAX":
+            raise RuntimeError("Boerse weg")
+        return asset.symbol == "BTC"
+
+    _wl2 = _TS.werte_der_kette(_wl) + [
+        _NS(symbol="CANTON", assetklasse="krypto", ist_cash_aequivalent=False)]
+    _erg = _TS.sammle(_c, _wl2, None, abruf=_stub)
+    _stat = {r["symbol"]: r["konsekutive_fehlschlaege"]
+             for r in _c.execute("SELECT * FROM oi_abdeckung_status")}
+    pruefe(P, "ein Fehler bei einem Wert nimmt die anderen nicht mit",
+           _aufrufe == ["BTC", "AVAX", "CANTON"]
+           and _erg["mit_daten"] == ["BTC"]
+           and _erg["ohne"] == ["AVAX", "CANTON"]
+           and _erg["fehler"] == ["AVAX"],
+           "Aufrufe %s, Ergebnis %s" % (_aufrufe, _erg))
+    pruefe(P, "der Abdeckungszaehler wird weiter gefuehrt (die Watchlist "
+           "zeigt ihn an)",
+           _stat == {"BTC": 0, "AVAX": 1, "CANTON": 1}, str(_stat))
+
+    # Die ECHTE Abruffunktion mit ersetzten Boersen: vier Zeilen, EIN Zeitstempel.
+    import agent.krypto.hebel_screening as _HS
+    _echt = {n: getattr(_HS, n) for n in (
+        "get_binance_open_interest", "get_bybit_open_interest",
+        "get_okx_open_interest", "get_binance_long_short_ratio")}
+    _HS.get_binance_open_interest = lambda s: _NS(open_interest=100.0, open_interest_usd=1e6)
+    _HS.get_bybit_open_interest = lambda s: _NS(open_interest=90.0, open_interest_usd=9e5)
+    _HS.get_okx_open_interest = lambda s: _NS(open_interest=80.0, open_interest_usd=8e5)
+    _HS.get_binance_long_short_ratio = lambda s: _NS(long_account_pct=61.0)
+    _kr = _NS(get_funding_rates=lambda fs: [{"relative_funding_rate": 0.0001}] * 30)
+    try:
+        _c2 = _db()
+        _TS.sammle(_c2, [_NS(symbol="BTC", assetklasse="krypto",
+                             ist_cash_aequivalent=False)], _kr)
+        _zeilen = _c2.execute("SELECT exchange, fetched_at FROM "
+                              "open_interest_snapshot").fetchall()
+    finally:
+        for n, f in _echt.items():
+            setattr(_HS, n, f)
+    pruefe(P, "die echte Abruffunktion schreibt vier Boersenzeilen mit "
+           "EINEM Zeitstempel",
+           sorted(r["exchange"] for r in _zeilen)
+           == ["binance", "bybit", "kraken", "okx"]
+           and len({r["fetched_at"] for r in _zeilen}) == 1,
+           "die Divergenz paart die Boersen auf demselben `fetched_at`: %s"
+           % [tuple(r) for r in _zeilen])
+
+    _bg = _ast.parse(_quelltext("scheduler/background.py"))
+    _fn = {n.name: n for n in _ast.walk(_bg) if isinstance(n, _ast.FunctionDef)}
+
+    def _rufe(knoten, name):
+        return [c for c in _ast.walk(knoten) if isinstance(c, _ast.Call)
+                and ((isinstance(c.func, _ast.Name) and c.func.id == name)
+                     or (isinstance(c.func, _ast.Attribute) and c.func.attr == name))]
+
+    _jobs = [c for c in _rufe(_fn["build_scheduler"], "add_job")
+             if c.args and isinstance(c.args[0], _ast.Name)
+             and c.args[0].id == "terminmarkt_job"]
+    _id = [k.value.value for c in _jobs for k in c.keywords
+           if k.arg == "id" and isinstance(k.value, _ast.Constant)]
+    pruefe(P, "⚠️⚠️ `terminmarkt_job` ist als EIGENER Job angemeldet",
+           _id == ["terminmarkt"], "gefunden: %s" % _id)
+    def _code(fn):
+        """Der Funktionsrumpf OHNE Docstring - der erklaert, warum etwas
+        NICHT benutzt wird, und darf die Pruefung nicht ausloesen."""
+        rumpf = list(fn.body)
+        if (rumpf and isinstance(rumpf[0], _ast.Expr)
+                and isinstance(rumpf[0].value, _ast.Constant)):
+            rumpf = rumpf[1:]
+        return chr(10).join(_ast.unparse(k) for k in rumpf)
+
+    _locks = next((n.value for n in _bg.body if isinstance(n, _ast.Assign)
+                   and any(isinstance(t, _ast.Name) and t.id == "_JOB_LOCKS"
+                           for t in n.targets)), None)
+    _lockpaare = ({k.value: v.id for k, v in zip(_locks.keys, _locks.values)}
+                  if isinstance(_locks, _ast.Dict) else {})
+    pruefe(P, "mit eigenem Lock, nicht dem des Screenings",
+           _lockpaare.get("terminmarkt") == "terminmarkt_lock"
+           and "terminmarkt_lock.acquire" in _code(_fn["terminmarkt_job"])
+           and "hebel_screening_lock" not in _code(_fn["terminmarkt_job"]),
+           "im Screening-Job laeuft die Rollen-Kette - ein langer Umlauf "
+           "haette das Sammeln uebersprungen")
+    pruefe(P, "der Job haengt an keinem Screening-Schalter",
+           "hebel_screening" not in _code(_fn["terminmarkt_job"]),
+           "sonst waere es derselbe Fehler wie am 12.09.")
+
+    # ---- 2  DAS SCREENING SCHREIBT NICHT MEHR ----------------------------
+    _hs = _ast.parse(_quelltext("agent/krypto/hebel_screening.py"))
+    _run = next(n for n in _ast.walk(_hs) if isinstance(n, _ast.FunctionDef)
+                and n.name == "run_hebel_screening")
+    pruefe(P, "⚠️ `run_hebel_screening` ruft den Abruf NICHT mehr auf",
+           not _rufe(_run, "fetch_and_store_oi_snapshot")
+           and not _rufe(_run, "record_oi_abdeckung_ergebnis"),
+           "zwei Schreiber je Takt waeren doppelte Abrufe")
+    pruefe(P, "die alte Warnung je Wert (acht Fehlschlaege) ist ersetzt",
+           "_pruefe_oi_abdeckung_warnung" not in _fn
+           and "_notify_oi_abdeckung_warnung" not in _fn
+           and not _rufe(_bg, "_pruefe_oi_abdeckung_warnung"),
+           "Nutzerentscheidung 14.09. (A): sie mailte fuer Werte ohne Boerse "
+           "jeden Tag neu")
+
+    # ---- 7  DER WAECHTER IM JOB DER KETTE, VOR DEM UMLAUF ----------------
+    _hj = _fn["hebel_screening_job"]
+    _w = _rufe(_hj, "_pruefe_terminmarkt_frische")
+    _u = _rufe(_hj, "fuehre_umlauf")
+    pruefe(P, "⚠️⚠️ die Frische wird im Job der Rollen-Kette geprueft, VOR "
+           "dem Umlauf",
+           len(_w) == 1 and _u and _w[0].lineno < _u[0].lineno
+           and not _rufe(_fn["terminmarkt_job"], "_pruefe_terminmarkt_frische"),
+           "ein Waechter im Sammeljob schwiege genau dann, wenn der Job "
+           "ausfaellt")
+    pruefe(P, "die Datenfrische nennt den neuen Job als Schreiber",
+           [q.job for q in _DF.REGISTRATUR if q.name == "terminmarkt"]
+           == ["terminmarkt"],
+           str([q.job for q in _DF.REGISTRATUR if q.name == "terminmarkt"]))
+
+    # ---- 3 bis 5  DER LESER --------------------------------------------
+    _J = _dt(2026, 9, 14, 12, 0, tzinfo=_tz.utc)
+
+    def _fuelle(c, sym, juengst, stunden, oi=lambda i: 1000.0 + i,
+                luecke=None, funding=True):
+        """Alle 15 Minuten ein Satz Zeilen, von `juengst` zurueck.
+        i = Minuten vor `juengst` / 15; OI waechst also nach VORNE."""
+        n = int(stunden * 4)
+        for i in range(n + 1):
+            t = juengst - _td(minutes=15 * i)
+            if luecke and luecke[0] <= t <= luecke[1]:
+                continue
+            ts = t.isoformat()
+            for b in ("binance", "bybit", "okx"):
+                c.execute("INSERT INTO open_interest_snapshot VALUES "
+                          "(?,?,?,?,?,?,?)",
+                          (sym, b, oi(n - i) * {"binance": 1, "bybit": 1.01,
+                                                 "okx": 0.99}[b], None, None,
+                           50.0 + (i % 7) if b == "binance" else None, ts))
+            if funding:
+                c.execute("INSERT INTO open_interest_snapshot VALUES "
+                          "(?,?,?,?,?,?,?)",
+                          (sym, "kraken", None, None, 0.0001 * (i % 5), None, ts))
+
+    def _satz(lage):
+        return " ".join(_PO.saetze(lage, nur_eigen=True))
+
+    _c3 = _db()
+    _fuelle(_c3, "FRI", _J - _td(hours=1, minutes=59), 110)
+    _fuelle(_c3, "ALT", _J - _td(hours=2, minutes=1), 110)
+    _frisch = _PO.lage(_c3, "FRI", jetzt=_J)
+    _alt = _PO.lage(_c3, "ALT", jetzt=_J)
+    pruefe(P, "⚠️⚠️⚠️ 1 h 59 alt: Zahlen und Saetze wie gewohnt",
+           _frisch.get("oi_aenderung_pct") is not None
+           and _frisch.get("funding_perzentil") is not None
+           and _frisch.get("long_perzentil") is not None
+           and _frisch.get("divergenz") and not _frisch.get("veraltet")
+           and "Perzentil" in _satz(_frisch),
+           "Lage: %s" % {k: _frisch.get(k) for k in (
+               "oi_aenderung_pct", "funding_perzentil", "long_perzentil",
+               "veraltet")})
+    pruefe(P, "⚠️⚠️⚠️ 2 h 01 alt: KEINE Zahl, sondern ,keine aktuelle Angabe' "
+           "mit dem Alter",
+           all(_alt.get(k) is None for k in (
+               "oi_aenderung_pct", "funding_perzentil", "long_anteil_pct",
+               "divergenz"))
+           and sorted(v["groesse"] for v in _alt.get("veraltet") or [])
+           == ["Anteil der Long-Konten", "Finanzierungsrate", "Open Interest"]
+           and "keine aktuelle Angabe" in _satz(_alt)
+           and "2 Stunden alt" in _satz(_alt)
+           and "Perzentil" not in _satz(_alt),
+           "das ist Befund 2.452: %s" % _satz(_alt))
+    _grenze = _PO.LESEGRENZE_STUNDEN
+    try:
+        _PO.LESEGRENZE_STUNDEN = 10.0 ** 6
+        _ohne = _PO.lage(_c3, "ALT", jetzt=_J)
+    finally:
+        _PO.LESEGRENZE_STUNDEN = _grenze
+    pruefe(P, "GEGENPROBE: ohne Lesegrenze kaeme die alte Zahl wieder durch",
+           _ohne.get("oi_aenderung_pct") is not None
+           and not _ohne.get("veraltet"),
+           "sonst prueft die Zeile oben nicht die Grenze, sondern etwas "
+           "anderes")
+    pruefe(P, "die Grenze steht auf 2 Stunden (Nutzerentscheidung 14.09.)",
+           _PO.LESEGRENZE_STUNDEN == 2.0
+           and _PO.VERGLEICHSZEITRAUM_STUNDEN == 100.0, "")
+    _nie = _PO.lage(_c3, "NIE", jetzt=_J)
+    pruefe(P, "nie vorhanden ist etwas anderes als veraltet",
+           not _nie.get("veraltet") and "Open Interest" in _nie["fehlt"], "")
+    _heb = _PO.lage(_c3, "ALT", instrument="hebel",
+                    jetzt=_J)
+    pruefe(P, "beim Hebel meldet die Finanzierungsrate nichts - dort liest G "
+           "sie bewusst nicht",
+           "Finanzierungsrate" not in [v["groesse"] for v in
+                                       _heb.get("veraltet") or []], "")
+    _vor = _PO.lage(_c3, "FRI", 
+                    jetzt=_J - _td(hours=3))
+    pruefe(P, "Nachspielen: Werte nach `jetzt` zaehlen nicht",
+           _vor.get("oi_jetzt") == 1000.0 + int(110 * 4) - 5
+           and not _vor.get("veraltet"),
+           "juengster Wert %s" % _vor.get("oi_jetzt"))
+
+    # 4  DAS FENSTER NACH DER UHR: eine Luecke von 3 Stunden in der Reihe.
+    _c4 = _db()
+    _j4 = _J - _td(minutes=10)
+    _fuelle(_c4, "LUE", _j4, 110,
+            luecke=(_j4 - _td(hours=6), _j4 - _td(hours=3, minutes=1)))
+    _l4 = _PO.lage(_c4, "LUE", jetzt=_J)
+    _soll = round(100.0 * ((1000.0 + 440) - (1000.0 + 440 - 32)) / (1000.0 + 440 - 32), 2)
+    pruefe(P, "⚠️⚠️ das 8-Stunden-Fenster nach der Uhr - auch ueber eine "
+           "Luecke von 3 Stunden",
+           _l4.get("oi_fenster_stunden") == 8.0
+           and _l4.get("oi_aenderung_pct") == _soll,
+           "gerechnet %s ueber %s h, soll %s ueber 8 h - nach Zeilen laege "
+           "der Vergleich 12 Takte weiter zurueck"
+           % (_l4.get("oi_aenderung_pct"), _l4.get("oi_fenster_stunden"), _soll))
+    _div4 = _l4.get("divergenz") or {}
+    pruefe(P, "die Divergenz paart ebenfalls nach der Uhr",
+           _div4.get("fenster_stunden") == 8.0
+           and _div4.get("n_historie", 0) >= _PO.MINDEST_HISTORIE_DIVERGENZ,
+           str(_div4))
+    _c5 = _db()
+    _fuelle(_c5, "NEU", _J - _td(minutes=5), 3)
+    _l5 = _PO.lage(_c5, "NEU", jetzt=_J)
+    pruefe(P, "fehlt der Stand von vor 8 Stunden, wird es GESAGT",
+           _l5.get("oi_aenderung_pct") is None and _l5.get("oi_ohne_vergleich")
+           and "noch nicht sagen" in _satz(_l5),
+           "nach dem Neustart oder einem Ausfall - Schweigen saehe aus wie "
+           ",keine Bewegung': %s" % _satz(_l5))
+
+    # 5  VERGLEICH UEBER 100 STUNDEN: alte Extremwerte zaehlen nicht mit.
+    _c6 = _db()
+    _fuelle(_c6, "HIS", _J - _td(minutes=5), 20)
+    for i in range(300):
+        _c6.execute("INSERT INTO open_interest_snapshot VALUES (?,?,?,?,?,?,?)",
+                    ("HIS", "binance", 5.0, None, None, 99.0,
+                     (_J - _td(hours=200, minutes=15 * i)).isoformat()))
+    _l6 = _PO.lage(_c6, "HIS", jetzt=_J)
+    pruefe(P, "⚠️ der Vergleich reicht 100 Stunden zurueck, nicht 400 Zeilen",
+           _l6.get("long_n") == 81 and _l6.get("long_perzentil") is not None
+           and _l6["long_perzentil"] < 100,
+           "mit 400 Zeilen stuenden 300 Werte von vor 200 Stunden im "
+           "Vergleich: n=%s, Perzentil %s" % (_l6.get("long_n"),
+                                             _l6.get("long_perzentil")))
+    pruefe(P, "ein veralteter Terminmarkt zaehlt fuer Rolle G nicht als Quelle",
+           "terminmarkt" not in _MK.quellen_g(_alt)
+           and "terminmarkt" in _MK.quellen_g(_frisch), "")
+
+    # ---- 6  DIE MELDUNG ------------------------------------------------
+    _c7 = _db()
+    for sym, alter in (("A", 5 + 59 / 60), ("B", 5 + 59 / 60)):
+        _c7.execute("INSERT INTO open_interest_snapshot VALUES (?,?,?,?,?,?,?)",
+                    (sym, "binance", 1.0, None, None, None,
+                     (_J - _td(hours=alter)).isoformat()))
+    _start_alt = _J - _td(days=10)
+    _f1 = _TS.frische(_c7, ["A", "B", "C"], jetzt=_J, app_start=_start_alt)
+    _f2 = _TS.frische(_c7, ["A", "B", "C"], jetzt=_J + _td(minutes=2),
+                      app_start=_start_alt)
+    pruefe(P, "⚠️⚠️ 5 h 59 ohne neue Zeile: keine Meldung - 6 h 01: Meldung",
+           not _f1["gesamt"] and _f2["gesamt"],
+           "%s / %s" % (_f1["gesamt_stunden"], _f2["gesamt_stunden"]))
+    pruefe(P, "ein Wert, den keine Boerse fuehrt, ist ,nie' - kein Ausfall",
+           _f1["nie"] == ["C"] and not _f1["einzeln"], str(_f1))
+    _f3 = _TS.frische(_c7, ["A", "B"], jetzt=_J + _td(hours=90),
+                      app_start=_J + _td(hours=89))
+    pruefe(P, "⚠️ gezaehlt ab dem App-Start: nach einer Notebook-Pause keine "
+           "Sofortmeldung",
+           not _f3["gesamt"] and not _f3["einzeln"],
+           "Daten 96 h alt, App seit 1 h: %s" % _f3)
+
+    _z = _TS.Meldezustand()
+    _m1 = _TS.meldung(_f2, _z)
+    pruefe(P, "die Mail hat einen eigenen, sprechenden Betreff",
+           _m1 is not None and "Terminmarkt-Daten seit 6 Stunden" in _m1[0]
+           and "WAS ZU TUN IST" in _m1[1],
+           str(_m1[0] if _m1 else None))
+    pruefe(P, "scheitert der Versand, versucht es der naechste Lauf wieder",
+           _TS.meldung(_f2, _z) is not None, "")
+    _TS.vormerken(_z, _m1[2])
+    pruefe(P, "⚠️⚠️ eine Mail je Ausfall - der zweite Lauf schweigt",
+           _TS.meldung(_f2, _z) is None, "")
+    _TS.meldung(_f1, _z)
+    _m2 = _TS.meldung(_f2, _z)
+    pruefe(P, "erholt es sich, meldet der naechste Ausfall wieder",
+           _m2 is not None and not _z.gesamt, "")
+
+    _c8 = _db()
+    for sym, alter in (("A", 0.2), ("B", 25.0), ("C", 30.0)):
+        _c8.execute("INSERT INTO open_interest_snapshot VALUES (?,?,?,?,?,?,?)",
+                    (sym, "binance", 1.0, None, None, None,
+                     (_J - _td(hours=alter)).isoformat()))
+    _f4 = _TS.frische(_c8, ["A", "B"], jetzt=_J, app_start=_start_alt)
+    _z2 = _TS.Meldezustand()
+    _m3 = _TS.meldung(_f4, _z2)
+    pruefe(P, "⚠️⚠️ ein einzelner Wert seit 24 h ohne Zeile wird gemeldet - "
+           "der Juli-Fall",
+           [e["symbol"] for e in _f4["einzeln"]] == ["B"] and _m3 is not None
+           and "B" in _m3[1], str(_f4["einzeln"]))
+    _TS.vormerken(_z2, _m3[2])
+    _f5 = _TS.frische(_c8, ["A", "B", "C"], jetzt=_J, app_start=_start_alt)
+    _m4 = _TS.meldung(_f5, _z2)
+    pruefe(P, "derselbe Wert nicht zweimal - ein neuer schon, als NEU markiert",
+           _TS.meldung(_f4, _z2) is None and _m4 is not None
+           and _re.search(r"NEU\s+C", _m4[1])
+           and not _re.search(r"NEU\s+B", _m4[1]), _m4[1] if _m4 else "")
+    pruefe(P, "die Grenzen stehen auf 6 h und 24 h (Nutzerentscheidung 14.09.)",
+           _TS.MELDEGRENZE_STUNDEN == 6.0
+           and _TS.EINZELWERT_GRENZE_STUNDEN == 24.0, "")
+
+
+def paket_umlaufmenge() -> None:
+    """2.453-turnover: die Umlaufmenge fuer turnover kommt aus dem Betrieb.
+
+    ⚠️⚠️⚠️ ROLLOUT-BLOCKER, GEFUNDEN IM REVIEW 14.09.2026. Schritt 49B las die
+    Umlaufmenge (`SplyCur`) aus der Messdatei `data/onchain_historie.db`. Am
+    Notebook liegt sie bewusst nur als Symbolliste - die Abfrage waere mit
+    `no such column: datum` gescheitert und turnover fuer ALLE Werte
+    weggefallen. Und ohne Job waere er nach 21 Tagen auch am Desktop
+    verstummt. Was dieses Paket festhaelt:
+
+        1  der Abruf liest Coin Metrics richtig (Folgeseiten, Leerwerte)
+        2  der Tagesjob `externe_reihen` holt sie fuer die Messbasis
+        3  der Leser nimmt zuerst die Betriebsdatenbank, dann die Messdatei
+        4  die NOTEBOOK-LAGE (Symbolliste) wirft NICHT - und die Gegenprobe
+           zeigt, dass die alte Abfrage dort wirft
+        5  Frischegrenze 21 Tage in beiden Orten
+        6  die Datenfrische ueberwacht die neue Quelle
+
+    Nur Wegwerfdateien und Speicherdatenbanken; der Abruf wird ohne den
+    Gesundheitsdekorator gerufen (`__wrapped__`), damit nichts in die
+    Standard-DB bucht."""
+    P = "Umlaufmenge"
+    import ast as _ast
+    import datetime as _dtm
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+
+    from agent import datenfrische as _DF
+    from agent import marktrang as _MR
+    import api.onchain as _ON
+
+    # ---- 1  DER ABRUF ----------------------------------------------------
+    class _Antwort:
+        def __init__(self, daten):
+            self._d = daten
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self._d
+
+    class _Sitzung:
+        def __init__(self):
+            self.aufrufe = []
+
+        def get(self, url, params=None, timeout=None):
+            self.aufrufe.append((url, params))
+            if len(self.aufrufe) == 1:
+                return _Antwort({"data": [
+                    {"asset": "btc", "time": "2026-09-12T00:00:00.000000000Z", "SplyCur": "19000000.5"},
+                    {"asset": "eth", "time": "2026-09-12T00:00:00.000000000Z", "SplyCur": None},
+                ], "next_page_url": "https://naechste.seite/x"})
+            return _Antwort({"data": [
+                {"asset": "eth", "time": "2026-09-13T00:00:00.000000000Z", "SplyCur": "120000000"},
+            ]})
+
+    _roh = getattr(_ON.get_splycur_history, "__wrapped__", None)
+    pruefe(P, "der Abruf ist gesundheitsueberwacht und ohne Dekorator pruefbar",
+           callable(_roh), "")
+    _sitz = _Sitzung()
+    _erg = _roh(["BTC", "eth", ""], tage=30, session=_sitz) if _roh else {}
+    pruefe(P, "⚠️ Folgeseiten werden nachgeladen, Leerwerte fallen weg, Symbole gross",
+           _erg == {"BTC": [("2026-09-12", 19000000.5)],
+                    "ETH": [("2026-09-13", 120000000.0)]}
+           and len(_sitz.aufrufe) == 2
+           and _sitz.aufrufe[0][1]["assets"] == "btc,eth"
+           and _sitz.aufrufe[1][1] is None,
+           "Ergebnis %s, Aufrufe %s" % (_erg, _sitz.aufrufe))
+    _leer = _Sitzung()
+    pruefe(P, "⚠️ ein unbekanntes Symbol kippt den Abruf nicht (Ignore-Schalter)",
+           _sitz.aufrufe and _sitz.aufrufe[0][1].get("ignore_unsupported_errors") == "true"
+           and _sitz.aufrufe[0][1].get("ignore_forbidden_errors") == "true",
+           "ohne sie antwortet Coin Metrics mit HTTP 400 fuer den GANZEN Abruf "
+           "(live nachgesehen 14.09.)")
+    pruefe(P, "ohne Symbole kein Abruf",
+           _roh([], session=_leer) == {} and not _leer.aufrufe if _roh else False, "")
+
+    # ---- 2  DER TAGESJOB -------------------------------------------------
+    _bg = _ast.parse(_quelltext("scheduler/background.py"))
+    _job = next(n for n in _ast.walk(_bg) if isinstance(n, _ast.FunctionDef)
+                and n.name == "externe_reihen_job")
+
+    def _rufe(k, name):
+        return [c for c in _ast.walk(k) if isinstance(c, _ast.Call)
+                and ((isinstance(c.func, _ast.Name) and c.func.id == name)
+                     or (isinstance(c.func, _ast.Attribute) and c.func.attr == name))]
+
+    _abruf = _rufe(_job, "get_splycur_history")
+    _schreib = [c for c in _rufe(_job, "schreibe_externe_reihe")
+                if len(c.args) > 1 and isinstance(c.args[1], _ast.Attribute)
+                and c.args[1].attr == "SPLYCUR_QUELLE"]
+    _gefangen = [t for t in _ast.walk(_job) if isinstance(t, _ast.Try)
+                 and t.handlers and _rufe(t, "get_splycur_history")
+                 and not _rufe(t, "get_btc_exchange_flow_history")]
+    pruefe(P, "⚠️⚠️ `externe_reihen_job` holt die Umlaufmenge und schreibt sie "
+           "unter `SPLYCUR_QUELLE`",
+           len(_abruf) == 1 and len(_schreib) == 1
+           and _rufe(_job, "messbasis"),
+           "ohne diesen Abruf gaebe es am Notebook keinen Nenner")
+    pruefe(P, "mit eigenem Fehlerfang - ein Coin-Metrics-Ausfall nimmt die "
+           "anderen Quellen nicht mit", bool(_gefangen), "")
+
+    # ---- 3 bis 5  DER LESER ---------------------------------------------
+    _heute = _dtm.date.today()
+    _frisch = (_heute - _dtm.timedelta(days=2)).isoformat()
+    _alt = (_heute - _dtm.timedelta(days=30)).isoformat()
+    _tmp = _tf.mkdtemp(prefix="umlauf_")
+    try:
+        _betrieb = _os.path.join(_tmp, "betrieb.db")
+        c = _sq.connect(_betrieb)
+        c.execute("CREATE TABLE externe_reihe (quelle TEXT, schluessel TEXT, "
+                  "datum TEXT, wert REAL, geholt_am TEXT)")
+        for sym, tag, wert in (("AAA", _alt, 1.0), ("AAA", _frisch, 100.0),
+                               ("BBB", _alt, 200.0), ("DDD", _frisch, 400.0)):
+            c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?,?)",
+                      (_MR.SPLYCUR_QUELLE, sym, tag, wert, "x"))
+        c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?,?)",
+                  ("andere_quelle", "EEE", _frisch, 9.0, "x"))
+        c.commit()
+        c.close()
+        _voll = _os.path.join(_tmp, "voll.db")
+        c = _sq.connect(_voll)
+        c.execute("CREATE TABLE splycur (symbol TEXT, datum TEXT, wert REAL)")
+        for sym, tag, wert in (("AAA", _frisch, 999.0), ("CCC", _frisch, 300.0),
+                               ("FFF", _alt, 600.0)):
+            c.execute("INSERT INTO splycur VALUES (?,?,?)", (sym, tag, wert))
+        c.commit()
+        c.close()
+        _liste = _os.path.join(_tmp, "liste.db")
+        c = _sq.connect(_liste)
+        c.execute("CREATE TABLE splycur (symbol TEXT)")
+        c.execute("INSERT INTO splycur VALUES ('AAA')")
+        c.commit()
+        c.close()
+        _leerdb = _os.path.join(_tmp, "leer.db")
+        c = _sq.connect(_leerdb)
+        c.execute("CREATE TABLE externe_reihe (quelle TEXT, schluessel TEXT, "
+                  "datum TEXT, wert REAL, geholt_am TEXT)")
+        c.commit()
+        c.close()
+
+        _nb = _MR.umlaufmengen(db_pfad=_betrieb, datei=_liste)
+        pruefe(P, "⚠️⚠️⚠️ NOTEBOOK-LAGE: Betriebsdatenbank + Symbolliste liefert "
+               "die frischen Werte",
+               _nb == {"AAA": 100.0, "DDD": 400.0},
+               "BBB ist 30 Tage alt, EEE gehoert einer anderen Quelle: %s" % _nb)
+        try:
+            _nb_leer = _MR.umlaufmengen(db_pfad=_leerdb, datei=_liste)
+            _wirft = None
+        except Exception as exc:                             # noqa: BLE001
+            _nb_leer, _wirft = None, exc
+        pruefe(P, "⚠️⚠️⚠️ NOTEBOOK-LAGE VOR DEM ERSTEN JOBLAUF: leer, aber KEIN Fehler",
+               _nb_leer == {} and _wirft is None, "Fehler: %r" % (_wirft,))
+        c = _sq.connect("file:%s?mode=ro" % _liste, uri=True)
+        try:
+            c.execute("SELECT symbol, datum, wert FROM splycur").fetchall()
+            _alt_wirft = False
+        except _sq.OperationalError:
+            _alt_wirft = True
+        c.close()
+        pruefe(P, "GEGENPROBE: die fruehere Abfrage wirft auf der Symbolliste",
+               _alt_wirft, "sonst prueft die Zeile oben nicht den Notebook-Fall")
+        _mix = _MR.umlaufmengen(db_pfad=_betrieb, datei=_voll)
+        pruefe(P, "⚠️ die Betriebsdatenbank hat Vorrang, die Messdatei ergaenzt nur",
+               _mix == {"AAA": 100.0, "DDD": 400.0, "CCC": 300.0}, str(_mix))
+        _desk = _MR.umlaufmengen(db_pfad=_os.path.join(_tmp, "fehlt.db"), datei=_voll)
+        pruefe(P, "Rueckfall Messdatei, auch wenn die Betriebsdatenbank fehlt",
+               _desk == {"AAA": 999.0, "CCC": 300.0}, str(_desk))
+        pruefe(P, "die Frischegrenze bleibt 21 Tage", _MR.SPLYCUR_FRISCHE_TAGE == 21, "")
+    finally:
+        import shutil as _sh
+        _sh.rmtree(_tmp, ignore_errors=True)
+
+    # ---- 6  DIE DATENFRISCHE --------------------------------------------
+    _q = [q for q in _DF.REGISTRATUR if q.name == _MR.SPLYCUR_QUELLE]
+    pruefe(P, "⚠️ die Datenfrische ueberwacht die neue Quelle am richtigen Job",
+           len(_q) == 1 and _q[0].tabelle == "externe_reihe"
+           and _q[0].job == "externe_reihen",
+           str([(q.name, q.tabelle, q.job) for q in _q]))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": paket_15, "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": _ohne_statusbuchung(paket_15), "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Kostenbezug": paket_kostenbezug,
+          "Stopgrundlage": paket_stopgrundlage,
+          "Ausstiegserfassung": paket_ausstiegserfassung,
+          "Abrufvermerk": paket_abrufvermerk,
           "Turnoverquelle": paket_turnoverquelle,
           "Vetoart": paket_vetoart,
           "Vierfelder": paket_vierfelder,
@@ -20302,8 +22900,17 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Assetklassen": paket_assetklassen_trennung,
           "Messmenge": paket_messmenge,
           "Plan": paket_plan,
+          "Abbildung": paket_abbildung,
+          "Gebuehrengrenze": paket_gebuehrengrenze,
+          "Haltedauer": paket_haltedauer,
+          "Mailrichtung": paket_mailrichtung,
+          "Mailstraffung": paket_mailstraffung,
+          "GuiKette": paket_guikette,
+          "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,
+          "TerminmarktDaten": paket_terminmarkt_daten,
+          "Umlaufmenge": paket_umlaufmenge,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
@@ -20393,8 +23000,10 @@ def main() -> int:
     _original_stdout = sys.stdout
     _puffer = io.StringIO()
     sys.stdout = _Mitschnitt(_original_stdout, _puffer)
+    _waechter_aus = _standard_db_waechter_an()
     try:
         for p in laufen:
+            _AKTUELLES_PAKET[0] = p
             if p not in PAKETE:
                 print(f"[FEHLER] Paket {p} kennt diese Datei nicht - "
                       f"bekannt: {sorted(PAKETE)}")
@@ -20434,6 +23043,20 @@ def main() -> int:
                            " | ".join(_spur.strip().splitlines()[-3:])[:400])
                     print(_spur)
 
+        _waechter_aus()
+        # ⚠️⚠️ DIE STANDARD-DB (siehe `_standard_db_waechter_an`): eine Zeile
+        # je Lauf, rot mit Paket, Aktion, Tabelle und Aufrufstelle.
+        _je = {}
+        for _pk, _akt, _tab, _st in _STANDARD_DB_SCHREIBER:
+            _je.setdefault((_pk, _akt, _tab, _st), 0)
+            _je[(_pk, _akt, _tab, _st)] += 1
+        pruefe("Standard-DB",
+               "⚠️⚠️⚠️ kein Paket schreibt in data/tradinginfotool.db "
+               "(am Notebook die PRODUKTION)",
+               not _je,
+               "; ".join("Paket %s %s %s @ %s (%dx)" % (k + (n,))
+                         for k, n in sorted(_je.items()))[:600])
+
         letztes = None
         schlecht = 0
         for paket, name, ok, detail in _ERGEBNISSE:
@@ -20459,6 +23082,7 @@ def main() -> int:
                  if _UEBERSPRUNGEN else ""))
         return 1 if schlecht else 0
     finally:
+        _waechter_aus()
         sys.stdout = _original_stdout
         _schreibe_ausgabe_ins_austauschordner(_puffer.getvalue())
 

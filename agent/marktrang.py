@@ -44,11 +44,31 @@ aus zwei Vergleichen.
 ⚠️ CoinGecko kostet Kontingent (10.000/Monat, Grundverbrauch bereits ~230/Tag).
 **Ein Aufruf je Lauf** ist eingeplant - 0,4 % des Monatskontingents.
 
-⚠️ Die Umlaufmenge kommt hier von CoinGecko (`circulating_supply`), gemessen
-wurde mit Coin Metrics (`SplyCur`). Die Definitionen unterscheiden sich
-(Burns, gesperrte Bestaende - bei BNB 29 %). **Geprueft am 30.08.:
-Rangkorrelation +0,967, und die Sperrentscheidung waere bei 33 von 33
-Symbolen identisch.** Der Wechsel ist damit unkritisch.
+⚠️⚠️⚠️ SEIT 13.09.2026 RECHNET DER UMSCHLAG MIT DERSELBEN GROESSE WIE
+DIE MESSUNG (Schritt 49 Teil B, Befund 2.410). Bis dahin waren es ZWEI
+Unterschiede, nicht einer:
+
+    Zaehler   Messung Binance-Tageskerze in STUECK  |  Betrieb
+              CoinGecko-USD-Volumen ueber ALLE Boersen, durch den Preis
+    Nenner    Messung `SplyCur` (Coin Metrics)      |  Betrieb
+              `circulating_supply` (CoinGecko)
+
+Beide sind gemessen worden, auf dem vollstaendigen Tag 07.09.:
+
+    Nenner    86,2 % gleiches Fuenftel, Randfuenftel 13,8 %
+    Zaehler   57,1 % gleiches Fuenftel, Randfuenftel 28,6 %   <- groesser
+
+⚠️ DER BEFUND VOM 30.08. IST REPRODUZIERT UND GILT WEITER (R-R11):
+Rangkorrelation +0,975 gegen registriert +0,967, Sperrentscheidung 33
+von 33 identisch. Er sagt aber nur etwas ueber die SPERRE (Fuenftel 4).
+Ueber die BEITRAGSSTUFEN sagt er nichts - und dort wandern 4 von 33
+Symbolen, alle an der Grenze Fuenftel 0 zu 1, wo mit +3,15 gegen +0,83
+die groesste Stufe des Systems liegt.
+
+⚠️⚠️ WARUM NICHT UMGEKEHRT - die Messung auf CoinGecko heben? Weil es
+keine freie historische Umlaufmenge gibt: neun Anbieter direkt geprueft,
+keiner liefert sie ohne Schluessel (2.417). Und der einzige freie Weg
+holt die TOP 250 VON HEUTE, also einen Survivorship-Filter (2.416).
 
 ## Was das Modul NICHT tut
 
@@ -70,7 +90,13 @@ logger = logging.getLogger(__name__)
 PREMIUM_INDEX = "https://fapi.binance.com/fapi/v1/premiumIndex"
 OI_HIST = ("https://fapi.binance.com/futures/data/openInterestHist"
            "?symbol=%sUSDT&period=1d&limit=2")
-COINGECKO_MARKETS = ("https://api.coingecko.com/api/v3/coins/markets"
+# ⚠️ SEIT 13.09. NICHT MEHR IM BETRIEB (Schritt 49 Teil B). Sie stand
+# hier fuer `turnover_werte`; der Umschlag kommt jetzt aus `BINANCE_24H`
+# und `splycur`. Die Zeile bleibt, weil `hole_fremdreihen.turnover`
+# GENAU diese Seite laedt - die beiden gehoeren zusammen, falls die
+# Frage je wieder aufgemacht wird. Der Grund GEGEN sie steht dort im
+# Docstring, nicht hier.
+_UNBENUTZT_COINGECKO_MARKETS = ("https://api.coingecko.com/api/v3/coins/markets"
                      "?vs_currency=usd&order=market_cap_desc&per_page=250&page=1")
 KOPF = {"User-Agent": "TradingInfoTool/1.0"}
 ZEITSPERRE = 30
@@ -138,6 +164,26 @@ SCHNITT_TAGE = 200
 SCHNITT_MESSDB = "data/messdaten.db"
 SCHNITT_FRISCHE_TAGE = 10          # ab hier kein Rang mehr - siehe oben
 BINANCE_PREISE = "https://api.binance.com/api/v3/ticker/price"
+# ⚠️⚠️ DER ZAEHLER DES UMSCHLAGS, seit 13.09. (Schritt 49 Teil B). Ein
+# Aufruf, 3.701 Paare, schluessellos. Das Feld `volume` ist das
+# BASIS-Volumen in Stueck - genau das, was `lade_messreihen.py` als
+# Tageskerze speichert und woraus die registrierte Beitragstabelle
+# entstanden ist.
+BINANCE_24H = "https://api.binance.com/api/v3/ticker/24hr"
+# ⚠️ Die Frischegrenze der Umlaufmenge. Sie ist NICHT geraten: gemessen
+# am 13.09. (2.417-frische) laesst eine 15 Tage alte Menge 98,9 % der
+# Fuenftel unveraendert. 21 Tage ist dieselbe Grenze, die
+# `datenfrische.py` fuer `splycur` ohnehin fuehrt - zwei verschiedene
+# Zahlen fuer dieselbe Reihe waeren die naechste Stelle zum
+# Auseinanderlaufen.
+SPLYCUR_FRISCHE_TAGE = 21
+
+# ⚠️⚠️ WO DIE UMLAUFMENGE IM BETRIEB STEHT (Befund 2.453-turnover, 14.09.2026).
+# `externe_reihen_job` holt sie taeglich von Coin Metrics in die
+# Betriebsdatenbank (`externe_reihe`, quelle unten, schluessel = Symbol). Die
+# Messdatei ist nur noch der Rueckfall am Desktop - am Notebook liegt sie als
+# Symbolliste ohne Datum und Wert.
+SPLYCUR_QUELLE = "coinmetrics_splycur"
 _SCHNITT_ZWISCHEN: dict = {}
 
 
@@ -594,22 +640,138 @@ def _coingecko_namen() -> dict:
     return aus
 
 
+def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
+                 db_pfad=None, datei: str = "data/onchain_historie.db") -> dict:
+    """Die Umlaufmenge aus DERSELBEN Quelle, mit der gemessen wurde.
+
+    ⚠️ NUR DER LETZTE PUNKT JE SYMBOL, und nur wenn er frisch genug ist.
+    Eine alte Umlaufmenge ist kein kleiner Fehler, sondern ein stiller:
+    `splycur` fuehrt BNB bis 2019-04-22 und DOT bis 2022-06-03, weil die
+    Reihen an der QUELLE enden (nachgeprueft 13.09.). Eine sieben Jahre alte
+    Menge als heutigen Nenner zu nehmen waere schlimmer als gar kein Wert -
+    und kein Wert ist hier die ehrliche Antwort (dieselbe Regel wie bei H).
+
+    ⚠️ Dass die 15 Tage, die wir tatsaechlich hatten, harmlos waren, ist
+    GEMESSEN und nicht angenommen: 98,9 % gleiches Fuenftel, 0,6 %
+    Randwechsel (2.417-frische). Der Praezedenzfall im Haus ist die
+    Schnitt-Frischegrenze, gezogen bei 93,5 %.
+    
+    ⚠️⚠️ ZWEI ORTE, IN DIESER REIHENFOLGE (Befund 2.453-turnover, 14.09.):
+
+        1  die Betriebsdatenbank (`externe_reihe`, taeglich vom Job
+           `externe_reihen` gefuellt) - der Weg am Notebook
+        2  die Messdatei `data/onchain_historie.db` - nur fuer Symbole, die
+           dort fehlen; am Desktop der Rueckfall
+
+    Bis zum 14.09. las die Funktion NUR die Messdatei und hatte nur
+    try/finally. Am Notebook - Symbolliste ohne `datum` - waere jede Abfrage
+    mit `no such column` gescheitert und turnover fuer ALLE Werte weggefallen.
+    Jeder Ort ist jetzt einzeln gefangen; bleibt beides leer, sagt es das Log
+    als WARNUNG, nicht als Info."""
+    import datetime as _dt
+    import sqlite3
+
+    aus: dict = {}
+    heute = _dt.date.today()
+
+    def _nimm(sym, tag, wert, ziel):
+        try:
+            alter = (heute - _dt.date.fromisoformat(str(tag)[:10])).days
+        except ValueError:
+            return
+        if alter <= hoechstalter and wert and float(wert) > 0:
+            ziel[str(sym).upper()] = float(wert)
+
+    if db_pfad is None:
+        try:
+            from database import db as _DB
+            db_pfad = _DB.DB_PATH
+        except Exception:                                    # noqa: BLE001
+            db_pfad = None
+    betrieb: dict = {}
+    if db_pfad is not None:
+        try:
+            conn = sqlite3.connect(f"file:{db_pfad}?mode=ro", uri=True)
+            try:
+                for sym, tag, wert in conn.execute(
+                        "SELECT schluessel, datum, wert FROM externe_reihe t "
+                        "WHERE quelle = ? AND datum = (SELECT MAX(datum) FROM "
+                        "externe_reihe WHERE quelle = t.quelle AND "
+                        "schluessel = t.schluessel)", (SPLYCUR_QUELLE,)):
+                    _nimm(sym, tag, wert, betrieb)
+            finally:
+                conn.close()
+        except sqlite3.Error as exc:
+            logger.warning("Marktrang: Umlaufmenge aus der Betriebsdatenbank "
+                           "nicht lesbar: %s", exc)
+    aus.update(betrieb)
+
+    datei_werte: dict = {}
+    try:
+        conn = sqlite3.connect(f"file:{datei}?mode=ro", uri=True)
+        try:
+            spalten = {r[1] for r in conn.execute("PRAGMA table_info(splycur)")}
+            if {"datum", "wert"} <= spalten:
+                for sym, tag, wert in conn.execute(
+                        "SELECT symbol, datum, wert FROM splycur t WHERE datum = "
+                        "(SELECT MAX(datum) FROM splycur WHERE symbol = t.symbol)"):
+                    _nimm(sym, tag, wert, datei_werte)
+        finally:
+            conn.close()
+    except sqlite3.Error as exc:
+        logger.info("Marktrang: Messdatei %s ohne Umlaufmenge: %s", datei, exc)
+    for sym, wert in datei_werte.items():
+        aus.setdefault(sym, wert)
+
+    if not aus:
+        logger.warning(
+            "Marktrang: KEINE frische Umlaufmenge - weder in der "
+            "Betriebsdatenbank (%s) noch in %s; turnover faellt heute aus",
+            SPLYCUR_QUELLE, datei)
+    return aus
+
+
 def turnover_werte(symbole=None) -> dict:
     """Handelsvolumen je Umlaufmenge, fuer den GANZEN Markt.
 
     ⚠️ Wie `funding_werte`: der Rang gehoert ueber den Markt gebildet,
     nicht ueber unsere Auswahl (31.08.2026).
+
+    ⚠️⚠️ BEIDE HAELFTEN KOMMEN SEIT DEM 13.09. AUS DER MESSQUELLE
+    (Schritt 49 Teil B): Binance-Stueckvolumen durch `SplyCur`. Vorher war
+    es CoinGecko-USD-Volumen ueber alle Boersen durch `circulating_supply`,
+    also auf BEIDEN Seiten etwas anderes, als die registrierte Tabelle
+    bewertet. Die Zahlen dazu stehen im Modulkopf.
+
+    ⚠️ EIN UNTERSCHIED BLEIBT UND IST UNVERMEIDBAR: die Messung nimmt die
+    Kerze eines KALENDERTAGES, hier steht ein rollendes 24-Stunden-Fenster.
+    Dieselbe Boerse, dieselbe Einheit, dieselbe Fensterlaenge - nur anders
+    ausgerichtet. Die Alternative waere die Kerze von GESTERN, also ein bis
+    zu 24 Stunden alter Wert; ein Fenster, das JETZT endet, ist naeher an
+    der Gegenwart, die bewertet werden soll.
+
+    ⚠️ NICHT die laufende Tageskerze nehmen: sie ist eine TEILKERZE und
+    enthaelt nur das Volumen bis zum Abruf - gemessen 19 bis 39 % eines
+    ganzen Tages (2.418-teilkerze).
     """
-    namen = _coingecko_namen()
+    menge = umlaufmengen()
+    if not menge:
+        logger.info("Marktrang: keine frische Umlaufmenge - kein Umschlag")
+        return {}
     aus = {}
-    for e in _hole(COINGECKO_MARKETS):
-        # ⚠️ ERST UEBER DIE ID, dann ueber das Symbol - siehe CANTON.
-        basis = namen.get(str(e.get("id") or "").lower())             or str(e.get("symbol") or "").upper()
-        menge = e.get("circulating_supply")
-        volumen = e.get("total_volume")
-        preis = e.get("current_price")
-        if basis and menge and volumen and preis and menge > 0 and preis > 0:
-            aus[basis] = float(volumen) / float(preis) / float(menge)
+    for e in _hole(BINANCE_24H):
+        paar = str(e.get("symbol") or "")
+        # ⚠️ GENAU DIE PAARUNG, DIE AUCH GEMESSEN WURDE: `lade_messreihen`
+        # holt `<SYM>USDT`. Wer hier eine andere Notierung zulaesst, misst
+        # wieder etwas anderes, als er anwendet.
+        if not paar.endswith("USDT"):
+            continue
+        basis = paar[:-4]
+        if basis not in menge:
+            continue
+        volumen = e.get("volume")          # BASIS-Volumen in Stueck
+        if volumen and float(volumen) > 0:
+            aus[basis] = float(volumen) / menge[basis]
     return aus
 
 

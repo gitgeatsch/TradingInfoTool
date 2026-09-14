@@ -4648,7 +4648,8 @@ FUNDING_MINDESTREIHE = 30
 
 
 def lies_funding_reihe(conn: sqlite3.Connection, symbol: str,
-                       grenze: int = 400) -> list:
+                       grenze: int = 400, *, seit: str | None = None,
+                       bis: str | None = None, mit_zeit: bool = False) -> list:
     """Die Finanzierungsrate eines Symbols - ABSTEIGEND, juengste zuerst.
 
     EINE DEFINITION FUER ALLE LESER. Vor dem 16.08. las jeder Aufrufer selbst
@@ -4659,21 +4660,47 @@ def lies_funding_reihe(conn: sqlite3.Connection, symbol: str,
 
     ⚠️ DER RUECKFALL IST BEFRISTET. Sobald die kraken-Reihe lang genug ist
     (bei einem 15-Minuten-Takt nach gut acht Stunden), greift er nicht mehr.
-    Wer ihn in ein paar Wochen entfernt, aendert nichts am Verhalten."""
+    Wer ihn in ein paar Wochen entfernt, aendert nichts am Verhalten.
+
+    ⚠️⚠️ `seit` / `bis` / `mit_zeit` (Schritt 54, 14.09.2026, Befund 2.452).
+    Ohne sie liest die Funktion die letzten `grenze` Zeilen, egal wie alt -
+    genau so kamen eingefrorene Werte als aktuell in Rolle BC und Rolle G.
+    `positionierung` liest seither ein ZEITFENSTER und braucht den Zeitpunkt
+    je Wert, um das Alter zu pruefen. Mit `mit_zeit` kommen
+    (fetched_at, wert)-Paare zurueck.
+
+    MIT ZEITFENSTER GILT EIN ZWEITER RUECKFALL: erreicht keine Quelle die
+    Mindestreihe, kommt die erste NICHT LEERE zurueck. Sonst saehe eine frisch
+    anlaufende Kraken-Reihe (nach einem Ausfall) wie ,keine Angabe' aus. Der
+    Aufrufer entscheidet ueber die Mindestlaenge selbst. OHNE Zeitfenster
+    bleibt das Verhalten fuer die alten Leser unveraendert."""
+    erste = None
     for quelle in FUNDING_QUELLEN:
+        sql = ("SELECT fetched_at, funding_rate FROM open_interest_snapshot "
+               "WHERE symbol = ? AND exchange = ? AND funding_rate IS NOT NULL")
+        werte: list = [str(symbol).upper(), quelle]
+        if seit is not None:
+            sql += " AND fetched_at >= ?"
+            werte.append(seit)
+        if bis is not None:
+            sql += " AND fetched_at <= ?"
+            werte.append(bis)
+        sql += " ORDER BY fetched_at DESC LIMIT ?"
+        werte.append(int(grenze))
         try:
-            zeilen = [r[0] for r in conn.execute(
-                "SELECT funding_rate FROM open_interest_snapshot "
-                "WHERE symbol = ? AND exchange = ? AND funding_rate IS NOT NULL "
-                "ORDER BY fetched_at DESC LIMIT ?",
-                (str(symbol).upper(), quelle, int(grenze)))]
+            paare = [(r[0], r[1]) for r in conn.execute(sql, werte)]
         except sqlite3.Error as exc:
             logger.info("Funding %s/%s nicht lesbar: %s", symbol, quelle, exc)
             continue
+        zeilen = paare if mit_zeit else [p[1] for p in paare]
         if len(zeilen) >= FUNDING_MINDESTREIHE:
             return zeilen
-        if zeilen and quelle == FUNDING_QUELLEN[-1]:
+        if zeilen and erste is None:
+            erste = zeilen
+        if zeilen and quelle == FUNDING_QUELLEN[-1] and seit is None:
             return zeilen
+    if seit is not None and erste is not None:
+        return erste
     return []
 
 

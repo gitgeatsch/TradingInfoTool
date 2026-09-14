@@ -72,11 +72,89 @@ CREATE TABLE IF NOT EXISTS price_history_ohlc (
     low REAL NOT NULL, close REAL NOT NULL, volume REAL NOT NULL,
     fetched_at TEXT NOT NULL, quelle TEXT NOT NULL DEFAULT 'binance_mess',
     PRIMARY KEY (symbol, assetklasse, currency, date));
+-- ⚠️⚠️ DER SCHLUESSEL TRAEGT DIE KLASSE (Schritt 50 Teil A, 13.09.2026).
+--
+-- Bis dahin war es `symbol TEXT PRIMARY KEY` - eine Klasse je Symbol.
+-- `price_history_ohlc` fuehrt dagegen (symbol, assetklasse, ...) und kann
+-- ein Symbol in ZWEI Klassen halten. Sieben Symbole tun das, und es sind
+-- keine Datenfehler, sondern TICKER-KOLLISIONEN: DASH ist DoorDash UND
+-- die Kryptowaehrung, T ist AT&T UND Threshold, STX Seagate UND Stacks
+-- (dazu BOND, C, DIA, MDT).
+--
+-- ⚠️ FOLGENLOS WAR ES BISHER NUR DURCH EINEN ZWEITEN FIX: `_reihen_roh`
+-- ueberspringt seit dem 07.09. den `messreihen`-Filter, sobald die Kerzen
+-- ihre Klasse selbst tragen (Befund 2.421). Die falsche Zuordnung stand
+-- trotzdem da, und `klassen_aus_db()` gab sie weiter.
+--
+-- ⚠️ `messreihen_status` GEHOERT DAZU. Es hatte dieselbe Mehrdeutigkeit -
+-- EINE Statuszeile fuer ZWEI Reihen. Nur eine der beiden Tabellen zu
+-- aendern hiesse, die Mehrdeutigkeit eine Tabelle weiter zu schieben.
 CREATE TABLE IF NOT EXISTS messreihen (
-    symbol TEXT PRIMARY KEY, assetklasse TEXT NOT NULL);
+    symbol TEXT NOT NULL, assetklasse TEXT NOT NULL,
+    PRIMARY KEY (symbol, assetklasse));
 CREATE TABLE IF NOT EXISTS messreihen_status (
-    symbol TEXT PRIMARY KEY, status TEXT NOT NULL);
+    symbol TEXT NOT NULL, assetklasse TEXT NOT NULL, status TEXT NOT NULL,
+    PRIMARY KEY (symbol, assetklasse));
 """
+
+
+def migriere_klassenschluessel(conn) -> tuple[int, int]:
+    """`CREATE TABLE IF NOT EXISTS` aendert eine BESTEHENDE Tabelle nicht.
+
+    Dieselbe Lage wie bei `hole_terminmarkt_historie.migriere` am 01.09.:
+    der Schluessel muss um eine Spalte wachsen, und die Daten sollen
+    bleiben.
+
+    ⚠️ WAS SIE TUT: baut beide Tabellen mit dem neuen Schluessel neu,
+    uebernimmt jede vorhandene Zeile unveraendert und ERGAENZT die
+    fehlende zweite Zeile fuer jedes Symbol, das in
+    `price_history_ohlc` in zwei Klassen liegt. Der Status der
+    ergaenzten Reihe wird vom Symbol uebernommen - er ist die beste
+    verfuegbare Angabe, und eine erfundene waere schlechter.
+
+    ⚠️ SIE IST WIEDERHOLBAR: laeuft sie auf einem bereits migrierten
+    Stand, findet sie nichts zu tun und meldet (0, 0).
+
+    Rueckgabe: (ergaenzte messreihen-Zeilen, ergaenzte Statuszeilen).
+    """
+    def _pk_hat_klasse(tab: str) -> bool:
+        return any(r[5] == 2 for r in conn.execute("PRAGMA table_info(%s)" % tab))
+
+    if _pk_hat_klasse("messreihen") and _pk_hat_klasse("messreihen_status"):
+        return 0, 0
+
+    doppelt = {r[0]: [x[0] for x in conn.execute(
+        "SELECT DISTINCT assetklasse FROM price_history_ohlc WHERE symbol=?",
+        (r[0],))] for r in conn.execute(
+            "SELECT symbol FROM price_history_ohlc GROUP BY symbol "
+            "HAVING COUNT(DISTINCT assetklasse) > 1")}
+
+    alt_r = list(conn.execute("SELECT symbol, assetklasse FROM messreihen"))
+    alt_s = list(conn.execute("SELECT symbol, status FROM messreihen_status"))
+    klasse_von = dict(alt_r)
+
+    conn.execute("ALTER TABLE messreihen RENAME TO _messreihen_alt")
+    conn.execute("ALTER TABLE messreihen_status RENAME TO _messreihen_status_alt")
+    conn.executescript(SCHEMA)
+
+    neu_r = list(alt_r)
+    for sym, klassen in doppelt.items():
+        for k in klassen:
+            if (sym, k) not in set(neu_r):
+                neu_r.append((sym, k))
+    conn.executemany("INSERT OR REPLACE INTO messreihen VALUES (?,?)", neu_r)
+
+    neu_s = []
+    for sym, status in alt_s:
+        for k in (doppelt.get(sym) or [klasse_von.get(sym)]):
+            if k:
+                neu_s.append((sym, k, status))
+    conn.executemany("INSERT OR REPLACE INTO messreihen_status VALUES (?,?,?)",
+                     neu_s)
+    conn.execute("DROP TABLE _messreihen_alt")
+    conn.execute("DROP TABLE _messreihen_status_alt")
+    conn.commit()
+    return len(neu_r) - len(alt_r), len(neu_s) - len(alt_s)
 
 
 def _tag(ms: int) -> str:
@@ -340,22 +418,30 @@ def main() -> int:
             # gewann per INSERT OR REPLACE stumm der LETZTE Lauf; jetzt
             # gewinnt der ERSTE, und eine Kollision wird als Fund
             # gezaehlt statt zu verschwinden.
-            _bisher = conn.execute(
+            # ⚠️⚠️ SEIT DEM 13.09. IST EINE ZWEITE KLASSE KEINE
+            # KOLLISION MEHR (Schritt 50 Teil A). Der Schluessel ist
+            # (symbol, assetklasse); ein Ticker, den es als Aktie UND als
+            # Kryptowaehrung gibt, bekommt ZWEI Zeilen statt einer, die
+            # gewinnt. Das ist keine Nachsicht, sondern die Wahrheit:
+            # DASH IST DoorDash und die Kryptowaehrung.
+            #
+            # ⚠️ GEZAEHLT WERDEN SIE WEITER - als DOPPELTICKER, nicht als
+            # Fehler. Ein neuer gehoert angesehen, bevor er in eine
+            # Messung geraet; nur ist er kein Grund mehr, eine Reihe
+            # wegzuwerfen.
+            _bisher = [r[0] for r in conn.execute(
                 "SELECT assetklasse FROM messreihen WHERE symbol=?",
-                (sym,)).fetchone()
-            if _bisher is None:
+                (sym,))]
+            if a.klasse not in _bisher:
                 conn.execute("INSERT INTO messreihen VALUES (?,?)",
                              (sym, a.klasse))
-                eigene_klasse = a.klasse
-            else:
-                eigene_klasse = _bisher[0]
-                if eigene_klasse != a.klasse:
-                    kollisionen.append((sym, eigene_klasse, a.klasse))
-            if eigene_klasse == a.klasse:
-                conn.execute("INSERT OR REPLACE INTO messreihen_status "
-                             "VALUES (?,?)",
-                             (sym, "eingestellt" if a.status == "BREAK"
-                              else "handelnd"))
+                if _bisher:
+                    kollisionen.append((sym, ", ".join(_bisher), a.klasse))
+            eigene_klasse = a.klasse
+            conn.execute("INSERT OR REPLACE INTO messreihen_status "
+                         "VALUES (?,?,?)",
+                         (sym, a.klasse, "eingestellt" if a.status == "BREAK"
+                          else "handelnd"))
             conn.commit()
         if (i + 1) % 100 == 0:
             print(f"  {i + 1}/{len(liste)} nach {time.time() - t0:.0f} s - "

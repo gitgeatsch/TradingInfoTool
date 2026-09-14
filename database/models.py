@@ -538,6 +538,22 @@ class Signal:
     potential_r: float | None = None
     potential_schwelle_r: float | None = None
     umgeworfen_preis_eur: float | None = None
+    # ⚠️⚠️ DER KURS ZUM ZEITPUNKT DER EMPFEHLUNG (Schritt 48, 13.09.2026).
+    #
+    # Ein EINSTIEG haelt seine Lage in `entry_usd_von/bis` und
+    # `stop_loss_*` fest - ein AUSSTIEG hielt bis heute GAR NICHTS fest.
+    # `_sende_ausstieg` reichte `rechnung=None` durch, und vom
+    # Empfehlungszeitpunkt blieb nur der Zeitstempel.
+    #
+    # Was das kostete, steht in 2.403: die Guetemessung muss mit dem
+    # TAGESSCHLUSS rechnen. Bei H10 schlaegt VERKAUFEN den Zufall
+    # deutlich (78,8 % gegen 50,0 %), bei H3 liegt es AM Zufall - wer den
+    # Kurs der Stunde nicht kennt, kann kurze Horizonte nicht beurteilen.
+    #
+    # ⚠️ NUR ERFASSEN, NICHT BEWERTEN: die Spalte aendert keinen Ablauf,
+    # keine Mail und keine Sperre. Bei 15 bis 20 Ausstiegen am Tag stehen
+    # in vier Wochen rund 500 auswertbare Faelle da.
+    kurs_bei_empfehlung_eur: float | None = None
     umgeworfen_bis: str | None = None
     lagebild_id: int | None = None
     prompt_stand: str | None = None

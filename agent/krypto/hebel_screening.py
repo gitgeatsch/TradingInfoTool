@@ -10,6 +10,18 @@ combine_scores-Aequivalent), OI-Abruf analog agent/krypto/anticyclic.py::assess(
 dass hier zusaetzlich jeder Abruf in open_interest_snapshot persistiert wird -
 anticyclic.py ruft live ab und speichert nichts, hier ist die Zeitreihe der Punkt.
 
+⚠️ SEIT 14.09.2026 (Schritt 54, Befund 2.452): `fetch_and_store_oi_snapshot`
+ruft NICHT mehr das Screening auf, sondern der eigene Job `terminmarkt_job`
+(`agent/terminmarkt_sammlung.py`) fuer alle Kryptowerte. Das Screening liest nur.
+
+⚠️ SEIT 14.09.2026 (Schritt 54, Befund 2.452): `fetch_and_store_oi_snapshot`
+ruft NICHT mehr das Screening auf, sondern der eigene Job `terminmarkt_job`
+(`agent/terminmarkt_sammlung.py`) fuer alle Kryptowerte. Das Screening liest nur.
+
+⚠️ SEIT 14.09.2026 (Schritt 54, Befund 2.452): `fetch_and_store_oi_snapshot`
+ruft NICHT mehr das Screening auf, sondern der eigene Job `terminmarkt_job`
+(`agent/terminmarkt_sammlung.py`) fuer alle Kryptowerte. Das Screening liest nur.
+
 Bekannte, dokumentierte Vereinfachung (P-10-Stil): "kursaenderung_pct_lookback"
 nutzt CoinGecko's rollierenden 24h-Change (price_cache.change_24h_pct), NICHT
 eine echte 4h-Fensteraenderung - eine eigene stuendliche Preis-Zeitreihe existiert
@@ -353,7 +365,8 @@ def run_hebel_screening(
     Rohstoffe ausgeschlossen, wie ueberall in der Krypto-Pipeline) MINUS
     Assets mit abgeschaltetem Hebel-Pruefung-Toggle (2026-07-18, siehe
     db.get_hebel_pruefung_erlaubt()). Fuer jedes verbleibende Asset:
-    OI-Snapshot abrufen+speichern, dann bis zu zwei unabhaengige Kandidaten
+    die OI-Snapshots LESEN (seit 14.09. schreibt sie `terminmarkt_job`),
+    dann bis zu zwei unabhaengige Kandidaten
     bewerten (Trendfolge- UND Kontra-These koennen gleichzeitig existieren, mit
     potenziell unterschiedlicher Richtung - siehe UNIQUE(symbol, richtung,
     screening_run_id) im Schema)."""
@@ -376,14 +389,14 @@ def run_hebel_screening(
         # als_kandidaten()) sind ein unabhaengiger Kandidatenpfad und bleiben
         # unabhaengig vom Toggle weiter risikoueberwacht.
         krypto_assets = [a for a in krypto_assets if db.get_hebel_pruefung_erlaubt(conn, a.symbol)]
-        for asset in krypto_assets:
-            erfolg = fetch_and_store_oi_snapshot(conn, asset, kraken_client)
-            # OI-Abdeckungs-Tracking (2026-07-19, siehe db.record_oi_abdeckung_
-            # ergebnis()-Docstring) - persistenter Zaehler je Symbol, unabhaengig
-            # von diesem einzelnen Lauf, damit scheduler/background.py::
-            # hebel_screening_job() spaeter erkennen kann, welche Symbole
-            # dauerhaft (nicht nur diesen einen Lauf) betroffen sind.
-            db.record_oi_abdeckung_ergebnis(conn, asset.symbol, erfolg)
+        # ⚠️⚠️ DAS SCREENING SCHREIBT KEINE SNAPSHOTS MEHR (Schritt 54,
+        # 14.09.2026). Hier stand der Abruf je Asset - er war der EINZIGE
+        # Schreiber von `open_interest_snapshot`. Mit `hebel_screening.aktiv:
+        # false` stand die Tabelle still, und Rolle BC und Rolle G bekamen
+        # eingefrorene Saetze (Befund 2.452). Das Sammeln liegt jetzt im
+        # eigenen Job `terminmarkt_job` (`agent/terminmarkt_sammlung.py`), fuer
+        # ALLE Kryptowerte. Dieses Screening liest nur noch, was dort steht -
+        # ein zweiter Schreiber erzeugte doppelte Abrufe je Takt.
 
         for asset in krypto_assets:
             oi_change_pct = compute_oi_change_pct(conn, asset.symbol, "binance", cfg["oi_lookback_stunden"])

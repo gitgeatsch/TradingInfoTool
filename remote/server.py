@@ -694,6 +694,10 @@ function renderRegimeStatus(r) {
   const label = REGIME_LABELS[r.regime] || r.regime;
   const cls = "regime-" + r.regime;
   let html = '<div class="row"><span>Stand</span><span>' + fmtDateTime(r.created_at) + '</span></div>';
+  // Schritt 32 (2.448-uebersicht): die Herkunft steht VOR dem Wert.
+  if (r.herkunft_hinweis) {
+    html += '<div class="row"><span class="muted-text">⚠ ' + r.herkunft_hinweis + '</span></div>';
+  }
   html += '<div class="row"><span>Regime</span><span class="' + cls + '"><strong>' + label + '</strong></span></div>';
   if (r.regime_reason) {
     const praefix = r.regime_source === "manuell" ? "⚠ " : "";

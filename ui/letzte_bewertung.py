@@ -21,17 +21,36 @@ from ui.formatting import format_zeitpunkt_lokal
 def show_letzte_bewertung(parent, db_conn_factory, symbol: str) -> None:
     conn = db_conn_factory()
     try:
+        # ⚠️⚠️ SCHRITT 32 (14.09.2026, 2.448): ZUERST die Rollen-Kette.
+        # `get_latest_real_signal_per_symbol` filtert `groq_raw_response IS NOT
+        # NULL` - das setzt nur die ALTE Kette. Der Dialog zeigte deshalb seit
+        # dem 15.08. eine Bewertung vom 14.08., egal wie oft seither geurteilt
+        # wurde.
+        neu = db.get_latest_signal(conn, symbol)
         latest = db.get_latest_real_signal_per_symbol(conn).get(symbol)
     finally:
         conn.close()
 
     dialog = tk.Toplevel(parent)
     dialog.title(f"Letzte Bewertung: {symbol}")
-    dialog.resizable(False, False)
     dialog.transient(parent)
 
     frame = ttk.Frame(dialog, padding=12)
     frame.pack(fill="both", expand=True)
+
+    from agent import signal_ansicht as _SANS
+    if neu is not None and _SANS.ist_rollen_signal(neu):
+        from ui.detail_panel import configure_tags, render_detail_text
+        ttk.Label(frame, text=f"{symbol} — {_SANS.metazeile(neu)}",
+                  font=("", 10, "bold"), wraplength=640).pack(anchor="w", pady=(0, 8))
+        text = tk.Text(frame, height=30, width=100, wrap="word", relief="flat")
+        text.pack(fill="both", expand=True)
+        configure_tags(text)
+        render_detail_text(text, "\n".join(_SANS.zeilen(neu)))
+        text.config(state="disabled")
+        ttk.Button(frame, text="Schließen", command=dialog.destroy).pack(anchor="e", pady=(10, 0))
+        return
+    dialog.resizable(False, False)
 
     if latest is None:
         ttk.Label(frame, text=f"Für {symbol} liegt noch keine echte KI-Analyse vor.").pack(anchor="w")
@@ -40,7 +59,7 @@ def show_letzte_bewertung(parent, db_conn_factory, symbol: str) -> None:
 
     when = format_zeitpunkt_lokal(latest.created_at)
     ttk.Label(
-        frame, text=f"{symbol} — letzte Analyse vom {when} ({latest.action}, {latest.confidence_pct or '-'}% Konfidenz)",
+        frame, text=f"{symbol} — letzte Analyse vom {when} ({latest.action}, {latest.confidence_pct or '-'}% Konfidenz) — ALTE Kette",
         font=("", 10, "bold"), wraplength=480,
     ).pack(anchor="w", pady=(0, 8))
 

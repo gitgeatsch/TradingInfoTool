@@ -131,8 +131,13 @@ def main() -> int:
     for s in syms:
         # ⚠️ Steht das Symbol schon in `messreihen`? Dann NICHT anfassen -
         # eine Klassenumstellung waere ein stiller Eingriff (F-198).
+        # ⚠️ SEIT 13.09. NACH (SYMBOL, KLASSE) FRAGEN. Vorher genuegte
+        # das Symbol - mit dem neuen Schluessel wuerde die Frage sonst
+        # eine Aktie mit demselben Ticker als "steht schon da" melden und
+        # die Krypto-Reihe still ablehnen (Schritt 50 Teil A).
         vorhanden = z.execute(
-            "SELECT assetklasse FROM messreihen WHERE symbol=?", (s,)).fetchone()
+            "SELECT assetklasse FROM messreihen WHERE symbol=? "
+            "AND assetklasse='krypto'", (s,)).fetchone()
         if vorhanden:
             abgelehnt.append((s, "steht bereits als %s" % vorhanden[0]))
             print("  %-10s %8s   ⚠️ steht bereits als %s"
@@ -170,8 +175,8 @@ def main() -> int:
                     "VALUES (?,'krypto','USD',?,?,?,?,?,?,?,?)",
                     (s, tag[:10], offen, hoch, tief, schluss, vol or 0.0,
                      jetzt, "uebernommen_%s" % q))
-            z.execute("INSERT OR REPLACE INTO messreihen VALUES (?, 'krypto')",
-                      (s,))
+            z.execute("INSERT OR REPLACE INTO messreihen VALUES "
+                      "(?, 'krypto')", (s,))
             # ⚠️ NICHT 'handelnd'. Diese Reihen kann `lade_messreihen` NIE
             # auffrischen - sie sind nicht auf Binance. Ein eigener Status
             # macht sichtbar, dass sie einen anderen Weg brauchen.

@@ -479,7 +479,7 @@ class Durchlauf:
                     for k, n in sorted(_a.items(), key=lambda x: -x[1])))
         z.append(f"heraus          {self.heraus:>4}")
         z.extend(self.bericht_arten())
-        z.extend(self.bericht_llm())
+        z.extend(self.bericht_pruefstellen())
         if self.faktorzahlen:
             schnitt = sum(self.faktorzahlen) / len(self.faktorzahlen)
             z.append(f"unabhaengige Faktoren: Schnitt {schnitt:.1f} ueber "
@@ -508,14 +508,34 @@ class Durchlauf:
                          % (k, n, 100.0 * n / summe, ARTKUERZEL[k]))
         return z
 
-    def bericht_llm(self) -> list[str]:
-        """Die drei Sprachmodell-Stellen und Z1 - IMMER, auch bei null.
+    def bericht_pruefstellen(self) -> list[str]:
+        """Die Pruefstellen der Kette - IMMER, auch bei null.
 
         ⚠️ NUTZEREINWAND 12.09.: *"Z1 kommt gar nicht vor bzw. sehe ich diese
         in der Kette nicht. ZAI hat keine Stufe?"* Beides stimmte. Z1 stand nur
         in der Zeile, WENN es angeschlagen hat - "keine Zeile" hiess also
         entweder "sauber" oder "gar nicht gelaufen", und das ist nicht
         dasselbe. Z.ai stand nirgends.
+
+        ⚠️⚠️ UMBENANNT AM 13.09. NACH EINEM ZWEITEN NUTZEREINWAND: *"die
+        Vermischung von Z1 und ZAI LLM finde ich kritisch"*. Die Funktion
+        hiess `bericht_pruefstellen` und stellte damit BEIDE unter dieselbe
+        Ueberschrift - obwohl Z1 GAR KEIN Sprachmodell ist. Der Einwand
+        trifft; derselbe Fehler ist im Modulkopf von
+        `gegenpruefer_rollen.py` schon einmal korrigiert worden ("das war
+        vereinnahmend"), und hier war er wieder da.
+
+            Z1     RECHNUNG, kein Modell. Prueft die TREUE zur Eingabe:
+                   nennt das Urteil Zahlen, die in der Eingabe nicht
+                   stehen? Kostenlos, kann sich nicht irren, faengt
+                   ERFINDUNG.
+            Z.ai   SPRACHMODELL (LLM-2, Rolle G). Prueft das URTEIL: wo
+                   ist die schwaechste Stelle, widerspricht die
+                   Begruendung den harten Fakten. Ein Aufruf, kann sich
+                   irren, faengt DENKFEHLER.
+
+        Sie ersetzen einander nicht, und sie gehoeren nicht unter eine
+        Ueberschrift.
 
         KEINE VON BEIDEN IST EINE STUFE. Sie verwerfen nichts; sie werden
         vermerkt. Genau das soll man hier ablesen koennen."""
@@ -530,12 +550,12 @@ class Durchlauf:
             _teil = (" - " + ", ".join(f"{r} {n}x"
                                        for r, n in sorted(regeln.items()))
                      ) if regeln else ""
-            z.append("Z1 Treue zur Eingabe (Rechnung, kein Filter): "
+            z.append("RECHNUNG Z1 - Treue zur Eingabe (kein Modell, kein Filter): "
                      f"{_urteile - von} sauber, {von} angeschlagen{_teil}")
             z.append(f"    {self.z1_zahlen_geprueft} Zahlen geprueft, "
                      f"{self.z1_ausgaben_ohne_zahl} Ausgabe(n) ohne jede Zahl")
         if self.zai:
-            z.append("LLM-2 Rolle G / Z.ai (kein Veto): "
+            z.append("SPRACHMODELL LLM-2 Rolle G / Z.ai - prueft das URTEIL (kein Veto): "
                      + ", ".join(f"{n}x {k}" for k, n in sorted(
                          self.zai.items(), key=lambda x: -x[1])))
             for grund, n in sorted(self.zai_gruende.items(),

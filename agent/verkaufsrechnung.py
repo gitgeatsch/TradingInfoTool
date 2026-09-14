@@ -317,10 +317,110 @@ def _rang(p: dict) -> tuple:
     return (stufe, -v["gegenwert_eur"])
 
 
+def stumme_bestaende(conn, mindesttage: int | None = None,
+                     assetklasse: str = "krypto") -> list:
+    """Gehaltene Positionen, die die Kette NICHT bewerten kann.
+
+    ⚠️⚠️ WARUM ES DIESE FUNKTION GIBT (Schritt 51, 13.09.2026). Drei
+    gehaltene Werte - ASTER, MON, CANTON - haben eine Kursreihe, die
+    kuerzer ist als die Mindestlaenge. Die Kette ist zu ihnen deshalb
+    STUMM: kein Nachkauf, kein Verkauf, keine Begruendung. Gesucht
+    wurde in `agent/` und `ui/` - es gab dafuer keine einzige Zeile.
+    Der Nutzer erfuhr von der Luecke nur, wenn er die Pruefsuite las.
+
+    ⚠️ DIE QUELLE IST `holdings`, NICHT DIE SYMBOLE DES LAUFS - wer die
+    nimmt, sieht genau die Werte nicht, um die es geht.
+
+    ⚠️⚠️ RICHTIGSTELLUNG 14.09. (Review): hier stand, CANTON stehe ,nicht
+    in der Watchlist'. Das stimmt nicht (config.yaml fuehrt es), und der
+    Code UEBERSPRINGT jeden Bestand ohne Watchlist-Eintrag (`_w is None`,
+    weiter unten) - er braucht die Assetklasse aus der Watchlist. Ein
+    gehaltener Wert AUSSERHALB der Watchlist bleibt also weiterhin still:
+    das ist Planpunkt A2 / Befund 2.450-neu, nicht hier geloest.
+
+    ⚠️ DIE GRENZE KOMMT AUS `lade_messreihen.MIN_KERZEN`, importiert
+    statt abgeschrieben - es ist dieselbe Grenze, an der eine Reihe beim
+    Laden verworfen wird, und zwei Kopien liefen frueher oder spaeter
+    auseinander.
+
+    ⚠️⚠️ UND NUR KRYPTO. Das Kriterium ist die USD-Kursreihe in
+    `price_history_ohlc` - Aktien, ETFs und Rohstoffe stehen dort gar
+    nicht, sie werden ueber yfinance gefuehrt. Die erste Fassung ohne
+    Klassenfilter meldete 12 von 28 Bestaenden, davon acht falsch.
+
+    ⚠️ CASH-AEQUIVALENTE FALLEN HERAUS. EURCV braucht einen PREIS
+    fuer die Cash-Quote, aber keine Bewertung (`ist_cash_aequivalent`).
+
+    ⚠️ KEINE SYMBOLLISTE IM CODE. Gefiltert wird ueber
+    EIGENSCHAFTEN, nicht ueber Namen - eine Ausnahmeliste waere die
+    naechste Stelle, die niemand pflegt.
+
+    Rueckgabe je Wert: symbol, tage, grenze, fehlend, menge, gestakt.
+    """
+    try:
+        from lade_messreihen import MIN_KERZEN as _MIN
+    except Exception:                                        # noqa: BLE001
+        _MIN = 400
+    grenze = int(mindesttage or _MIN)
+    try:
+        import config as _cfg
+        _wl = {str(getattr(a, "symbol", "") or "").upper(): a
+               for a in _cfg.get_watchlist()}
+    except Exception:                                        # noqa: BLE001
+        _wl = {}
+    # ⚠⚠ NUR FUER KLASSEN MIT USD-KURSREIHE. Aktien, ETFs und
+    # Rohstoffe stehen nicht in `price_history_ohlc` - dort waere die
+    # Zahl 0 fuer JEDEN Wert und die Meldung reines Rauschen.
+    if str(assetklasse or "").lower() != "krypto":
+        return []
+    aus = []
+    try:
+        zeilen = conn.execute(
+            "SELECT symbol, quantity, staked_quantity FROM holdings "
+            "WHERE quantity > 0").fetchall()
+    except Exception:                                        # noqa: BLE001
+        return []
+    for r in zeilen:
+        sym = str((r["symbol"] if hasattr(r, "keys") else r[0]) or "").upper()
+        if not sym:
+            continue
+        _w = _wl.get(sym)
+        if _w is None:
+            continue
+        # ⚠️ KLASSENREIN: die Sammelmail geht JE Assetklasse raus -
+        # Kryptowerte im Aktienlauf zu nennen waere derselbe Fehler wie
+        # der Aktienbestand in der Krypto-Mail (siehe rollen_lauf).
+        if (str(getattr(_w, "assetklasse", "") or "").lower()
+                != str(assetklasse or "").lower()):
+            continue
+        if getattr(_w, "ist_cash_aequivalent", False):
+            continue
+        try:
+            tage = conn.execute(
+                "SELECT COUNT(DISTINCT date) FROM price_history_ohlc "
+                "WHERE UPPER(symbol)=? AND currency='USD'", (sym,)
+            ).fetchone()[0] or 0
+        except Exception:                                    # noqa: BLE001
+            continue
+        if tage >= grenze:
+            continue
+        aus.append({
+            "symbol": sym,
+            "tage": int(tage),
+            "grenze": grenze,
+            "fehlend": grenze - int(tage),
+            "menge": (r["quantity"] if hasattr(r, "keys") else r[1]) or 0.0,
+            "gestakt": (r["staked_quantity"] if hasattr(r, "keys") else r[2]) or 0.0,
+        })
+    # ⚠️ DER KUERZESTE ZUERST - er ist am laengsten stumm.
+    return sorted(aus, key=lambda x: x["tage"])
+
+
 def sammel_mail(alle: list, modell: str | None = None,
                 zeitpunkt: str | None = None,
                 positionen: list | None = None,
-                gesperrt: list | None = None) -> tuple | None:
+                gesperrt: list | None = None,
+                stumm: list | None = None) -> tuple | None:
     """EINE Mail fuer alle Ausstiege eines Laufs. `None`, wenn keiner anfiel.
 
     NUTZEREINWAND 14.08., NOCH WAEHREND DIESER UMBAU LIEF: *"45 Signale sind
@@ -351,6 +451,10 @@ def sammel_mail(alle: list, modell: str | None = None,
     # ⚠️ AUCH OHNE EINEN EINZIGEN AUFTRAG (Schritt 48a): wenn alle Urteile an
     # der Staking-Sperre haengen, ist genau DAS die Nachricht. Vorher fiel
     # der ganze Lauf hier auf `None` und der Nutzer erfuhr nichts.
+    # ⚠️ `stumm` ALLEIN LOEST KEINE MAIL AUS. Eine Mail, die nur
+    # sagt ,zu drei Werten kann ich nichts sagen', kaeme taeglich und
+    # ohne Anlass - das ist genau der Andrang, gegen den die
+    # Sammelmail gebaut wurde. Sie faehrt mit, wenn ohnehin eine geht.
     if not alle and not gesperrt:
         return None
     posten = sorted(alle, key=_rang)
@@ -484,6 +588,33 @@ def sammel_mail(alle: list, modell: str | None = None,
                    "Information:",
                    "   ob sich das Entstaken lohnt, sagt diese Zeile nicht.", ""]
 
+    # ---- ⚠️⚠️ STUMM: GEHALTEN, ABER NICHT BEWERTBAR (Schritt 51) -------
+    #
+    # Nutzerentscheidung 13.09.2026: *"ja Mailzeile fuer alle drei"* -
+    # also fuer jede gehaltene Position ohne ausreichende Kursreihe.
+    #
+    # ⚠️ WARUM EIN EIGENER ABSCHNITT: hier gibt es NICHT EINMAL ein
+    # Urteil. Bei `gesperrt` existiert eines und ist nur nicht
+    # ausfuehrbar; hier fehlt die Grundlage. Beides zu mischen waere
+    # dieselbe Falschaussage, wegen der die Sperre schon getrennt wurde.
+    if stumm:
+        zeilen += ["", "--- STUMM: GEHALTEN, ABER NICHT BEWERTBAR ---",
+                   "Zu diesen Positionen sagt die Kette NICHTS - weder "
+                   "halten noch verkaufen.",
+                   "Der Grund ist die Datenlage, nicht das Urteil: die "
+                   "Kursreihe ist zu kurz.", ""]
+        for x in stumm:
+            zeile = (f"{x['symbol']:<10} {x['tage']:>4} von "
+                     f"{x['grenze']} Tagen   es fehlen "
+                     f"{x['fehlend']:>3}")
+            if x.get("gestakt"):
+                zeile += "   (gestakt)"
+            zeilen.append(zeile)
+        zeilen += ["",
+                   "⚠️ Das ist KEIN Mangel der Kette und keine Nachlaessigkeit:",
+                   "   es sind junge Werte, ihre Reihe IST vollstaendig.",
+                   "   Keine Quelle macht sie laenger - nur Zeit.", ""]
+
     # ---- SCHRITT 7: DIE POSITIONSFUEHRUNG (01.09.2026) ------------------
     #
     # ⚠️ `agent/positionsfuehrung.py` war seit dem 27.08. gebaut und stand
@@ -533,5 +664,7 @@ def sammel_mail(alle: list, modell: str | None = None,
     # Betreff ist schlimmer als keine Mail, er wird ungelesen weggeklickt.
     if gesperrt:
         kern.append("%dx gestakt - Urteil ohne Auftrag" % len(gesperrt))
+    if stumm:
+        kern.append("%dx stumm - zu kurze Kursreihe" % len(stumm))
     betreff = "TradingInfoTool: " + ", ".join(kern)
     return betreff, "\n".join(zeilen)

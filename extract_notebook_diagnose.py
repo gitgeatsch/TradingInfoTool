@@ -485,6 +485,12 @@ _SPOT_SIGNAL_SPALTEN = (
     "veto_art, "
     "potential_r, potential_schwelle_r, "
     "unabhaengige_faktoren, umgeworfen_durch, umgeworfen_preis_eur, "
+    # ⚠️ SCHRITT 48 (13.09.2026): der Kurs zum Empfehlungszeitpunkt. Ein
+    # AUSSTIEG hielt bis dahin gar nichts fest - die Guetemessung musste
+    # mit dem Tagesschluss rechnen, und bei H3 liegt sie deshalb am
+    # Zufall (2.403). Ohne die Spalte IM EXPORT waere sie am Desktop
+    # nicht auswertbar, und genau dort wird gemessen.
+    "kurs_bei_empfehlung_eur, "
     "umgeworfen_bis, "
     # DIE BELEGE SELBST (14.08.). Bis dahin ging nur ihre ANZAHL in die
     # Datenbank und damit in den Export - "3 unabhaengige Faktoren" ohne die

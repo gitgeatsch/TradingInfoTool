@@ -984,10 +984,33 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 f"Hebelfuehrung uebersprungen: {type(_hfx).__name__}: {_hfx}")
             logger.exception("Hebelfuehrung fuer %s uebersprungen", assetklasse)
 
+    # ⚠️⚠️ GEHALTEN, ABER NICHT BEWERTBAR (Schritt 51, 13.09.2026).
+    #
+    # Nutzerentscheidung: *"ja Mailzeile fuer alle drei"*. Die Kette war
+    # zu Positionen mit zu kurzer Kursreihe STUMM - kein Nachkauf, kein
+    # Verkauf, keine Begruendung, und keine Zeile darueber.
+    #
+    # ⚠️ DIE QUELLE IST `holdings`, NICHT `symbole`: CANTON steht im
+    # Bestand und nicht in der Watchlist des Laufs. Wer die Laufsymbole
+    # nimmt, sieht genau die Werte nicht, um die es geht.
+    #
+    # ⚠️ FAIL-SOFT MIT VERMERK, wie die Positionsfuehrung darueber: eine
+    # Sammelmail zurueckzuhalten, weil eine ZUSATZANGABE fehlt, waere die
+    # falsche Richtung.
+    _stumm = None
+    try:
+        _stumm = VK2.stumme_bestaende(conn, assetklasse=assetklasse) or None
+        if _stumm:
+            ergebnis["stumme_bestaende"] = [x["symbol"] for x in _stumm]
+    except Exception as _stx:                                # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(
+            f"Stumme Bestaende uebersprungen: {type(_stx).__name__}: {_stx}")
+
     _sammel = VK2.sammel_mail(ergebnis.get("ausstiege") or [],
                               modell=modell, zeitpunkt=tag,
                               positionen=_positionen,
-                              gesperrt=ergebnis.get("gesperrt") or None)
+                              gesperrt=ergebnis.get("gesperrt") or None,
+                              stumm=_stumm)
     if _sammel:
         ergebnis.setdefault("mails", []).append(
             {"symbol": "(Sammel)", "betreff": _sammel[0], "text": _sammel[1],
@@ -1480,6 +1503,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     #
     # DAS SCREENING LIEF INS LEERE. `hebel_screening_job` schreibt alle 15
     # Minuten in `hebel_triggers` und `open_interest_snapshot` - 82.655
+    # [⚠️ Stand 01.09. - seit 14.09. schreibt `terminmarkt_job` die Snapshots,
+    #  das Screening ist seit 12.09. aus; Befund 2.452]
     # Zeilen, 1.872 bis 2.664 PRO TAG. Gelesen wurde davon bisher NUR von
     # Rolle G (`zweite_meinung` ruft `positionierung.lage`); die Faktenlage
     # des Assets kannte den Terminmarkt nicht.
@@ -3171,7 +3196,13 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
             prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
             eur_je_usd=None, familien=familien, strategie=strategie,
             instrument=instrument, rechnung=None, modell=modell,
-            z1=z1)
+            z1=z1,
+            # ⚠️ SCHRITT 48 (13.09.2026): der Kurs zum Empfehlungszeitpunkt.
+            # Er lag hier immer schon vor (`kurs_e`), wurde aber nie
+            # geschrieben - und ohne ihn rechnet die Guetemessung mit dem
+            # Tagesschluss (2.403). NUR ERFASSEN: kein Ablauf, keine Mail,
+            # keine Sperre aendert sich dadurch.
+            kurs_bei_empfehlung_eur=kurs_e)
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
         felder["gate_passed"] = 1

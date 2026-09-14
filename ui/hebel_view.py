@@ -255,6 +255,7 @@ class HebelView(ttk.Frame):
             # jeweils anderen Richtung stillschweigend aus der Liste verschwinden lassen,
             # sobald fuer dieselbe Symbol die andere Richtung neuer analysiert wurde.
             signals = db.get_latest_hebel_signal_per_symbol_and_richtung(conn)
+            _rollen = {}
             # BEIDE KETTEN, NICHT NUR DIE ALTE (O-35, 15.08.2026).
             #
             # Diese Ansicht las ausschliesslich `hebel_signals` - die Tabelle
@@ -273,6 +274,12 @@ class HebelView(ttk.Frame):
                 _alt = signals.get(_schluessel)
                 if _alt is None or str(_sig.created_at) > str(_alt.created_at):
                     signals[_schluessel] = _sig
+                    # ⚠️ SCHRITT 32 (2.448): die ZEILE der Rollen-Kette mitnehmen.
+                    # `HebelSignal` kennt `quelle_kette`, `instrument` und die
+                    # Felder der neuen Ansicht nicht, und seine `id` kann mit
+                    # einer `hebel_signals`-id zusammenfallen - der Schluessel
+                    # (Symbol, Richtung) entscheidet, nicht die id.
+                    _rollen[_schluessel] = db.get_signal_by_id(conn, _sig.id)
             kandidaten = db.get_pending_hebel_candidates(conn)
             # ---- SCHRITT 40: SAGEN, DASS DIE QUELLE STILLGELEGT IST -----
             #
@@ -313,6 +320,7 @@ class HebelView(ttk.Frame):
             conn.close()
 
         self._offene_positionen = {(p.symbol, p.richtung): p for p in positions}
+        self._rollen_signale = {k: v for k, v in _rollen.items() if v is not None}
 
         vorher_selected = self.tree.selection()
         vorher_iid = vorher_selected[0] if vorher_selected else None
@@ -365,6 +373,11 @@ class HebelView(ttk.Frame):
             self._rows[iid] = ("signal", sig)
             zeit = format_zeitpunkt_lokal(sig.created_at)
             hebel_text = f"{sig.hebel_final:.1f}x" if sig.hebel_final else "-"
+            # 2.446-gui: Hebelzahl ohne Hebelgeschaeft (vor Paket B) - benannt.
+            from agent import signal_ansicht as _SANS
+            _rz = getattr(self, "_rollen_signale", {}).get((sig.symbol, sig.richtung))
+            if _rz is not None and _SANS.ist_hebel_altbestand(_rz):
+                hebel_text += " (Spot, vor Paket B)"
             these_text = _TRADE_THESIS_LABELS.get(sig.trade_thesis_typ, sig.trade_thesis_typ or "-")
             self.tree.insert(
                 "", "end", iid=iid,
@@ -478,6 +491,12 @@ class HebelView(ttk.Frame):
 
     def _render_kandidat(self, trig) -> None:
         can_analyze = self._any_llm_client_available()
+        # ⚠️ SCHRITT 32 (2.448-knoepfe): der Knopf startet die ALTE
+        # Hebel-Pipeline - die Regel steht in `rollen_job`.
+        _hin = self._alte_analyse_hinweis()
+        if _hin:
+            can_analyze = False
+            self.status_label.config(text=_hin, foreground=theme.info_color())
         self.analyze_button.config(state="normal" if can_analyze else "disabled")
         self.action_label.config(
             text=f"{trig.symbol} {trig.richtung}: Kandidat (wartet auf Analyse)",
@@ -512,6 +531,16 @@ class HebelView(ttk.Frame):
         self.analyze_button.config(state="disabled")  # bereits analysiert, kein erneuter manueller Call noetig
         color = theme.action_color(signal.action)
         self.action_label.config(text=f"{signal.symbol} {signal.richtung}: {signal.action}", foreground=color)
+        # ⚠️⚠️ SCHRITT 32 (14.09.2026, 2.448): die Zeile der Rollen-Kette in
+        # ihrer eigenen Gliederung, dieselbe Ansicht wie im Signale-Reiter.
+        _rz = getattr(self, "_rollen_signale", {}).get((signal.symbol, signal.richtung))
+        if _rz is not None:
+            from agent import signal_ansicht as _SANS
+            self.meta_label.config(text=_SANS.metazeile(_rz))
+            self._set_detail_text("\n".join(_SANS.zeilen(_rz)))
+            self._render_liquiditaetszonen_chart(signal)
+            self._render_signal_stabilitaet_chart(signal)
+            return
         conf_text = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         self.meta_label.config(
             text=(
@@ -836,12 +865,27 @@ class HebelView(ttk.Frame):
             return
         if not self._any_llm_client_available():
             return
+        _hin = self._alte_analyse_hinweis()
+        if _hin:
+            self.status_label.config(text=_hin, foreground=theme.info_color())
+            self.analyze_button.config(state="disabled")
+            return
 
         trig = self._selected_row[1]
         self.analyze_button.config(state="disabled")
         self.status_label.config(text=f"Analysiere {trig.symbol} {trig.richtung} …", foreground=theme.info_color())
         thread = threading.Thread(target=self._run_analysis, args=(trig,), daemon=True)
         thread.start()
+
+    @staticmethod
+    def _alte_analyse_hinweis() -> str | None:
+        """Fail-closed wie im Signale-Reiter: Regel unlesbar -> Knopf zu."""
+        try:
+            from scheduler.rollen_job import alte_analyse_hinweis
+            return alte_analyse_hinweis("krypto")
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Kettenregel nicht lesbar - Knopf bleibt zu")
+            return "Stillgelegt: Kettenregel nicht lesbar"
 
     def _run_analysis(self, trig) -> None:
         """Groq-dann-Mistral-dann-Gemini-Fallback (bewusst ohne Budget-/
@@ -953,7 +997,9 @@ class HebelSignalHistoryDialog(tk.Toplevel):
 
     def __init__(self, parent, symbol: str, richtung: str, history: list) -> None:
         super().__init__(parent)
-        self.title(f"Hebel-Signal-Historie — {symbol} ({richtung})")
+        # Schritt 32 (2.448-reiter): der Verlauf liest `hebel_signals` - die
+        # Tabelle der ALTEN Kette, letzte Zeile 10.08. Der Titel sagt es.
+        self.title(f"Hebel-Signal-Historie — {symbol} ({richtung}) — nur alte Kette")
         self.resizable(True, True)
         self.transient(parent)
         self.grab_set()

@@ -221,6 +221,58 @@ def get_btc_exchange_flow_history(
     return reihe
 
 
+@track_api_health("coinmetrics")
+def get_splycur_history(symbole, tage: int = 30,
+                        session: requests.Session | None = None) -> dict:
+    """Die Umlaufmenge (`SplyCur`) je Symbol - {SYMBOL: [(datum, wert), ...]}.
+
+    ⚠️⚠️ WARUM ES DIESEN ABRUF GIBT (Befund 2.453-turnover, 14.09.2026).
+    Seit Schritt 49B rechnet der Betrieb `turnover` = Binance-Stueckvolumen
+    durch `SplyCur` - dieselbe Groesse wie die Messung (2.419). Gelesen wurde
+    die Umlaufmenge aber aus der MESSDATEI `data/onchain_historie.db`, und
+    die liegt am Notebook bewusst nur als Symbolliste (2.368). Dort waere
+    turnover fuer ALLE Werte ausgefallen, und ohne Job waere er nach 21 Tagen
+    auch am Desktop still verstummt.
+
+    DIESELBE QUELLE WIE DIE MESSUNG: Coin Metrics Community, kostenlos, ohne
+    Schluessel. Nachgeprueft 14.09.: an 1.769 gemeinsamen Tagen stimmen alle
+    Werte mit der Messdatei ueberein, keine Abweichung.
+
+    EIN ABRUF FUER ALLE SYMBOLE (am 14.09.: 66 angefragt, 0,6 s). Symbole ohne
+    Reihe fehlen in der Antwort einfach - BNB, DOT, GAS, NEO, XTZ enden an der
+    Quelle. Folgeseiten (`next_page_url`) werden nachgeladen."""
+    session = session or requests.Session()
+    namen = sorted({str(x).strip().lower() for x in (symbole or []) if x})
+    if not namen:
+        return {}
+    start = (datetime.now(timezone.utc) - timedelta(days=int(tage))).date().isoformat()
+    url = COINMETRICS_BASE_URL
+    # ⚠️ OHNE DIE BEIDEN IGNORE-SCHALTER KIPPT EIN EINZIGES UNBEKANNTES SYMBOL
+    # DEN GANZEN ABRUF (Gegenpruefung 14.09., live nachgesehen): HTTP 400
+    # ,Value ... is not supported' - alle 66 Werte weg statt einem. Mit den
+    # Schaltern kommen die uebrigen, das unbekannte fehlt einfach.
+    params = {"assets": ",".join(namen), "metrics": "SplyCur", "frequency": "1d",
+              "start_time": start, "page_size": 10000,
+              "ignore_unsupported_errors": "true",
+              "ignore_forbidden_errors": "true"}
+    aus: dict = {}
+    for _ in range(20):                      # Deckel gegen eine Endlosschleife
+        response = session.get(url, params=params, timeout=60)
+        response.raise_for_status()
+        daten = response.json()
+        for e in (daten.get("data") or []):
+            wert = e.get("SplyCur")
+            if wert in (None, ""):
+                continue
+            aus.setdefault(str(e.get("asset") or "").upper(), []).append(
+                (str(e["time"]).split("T")[0], float(wert)))
+        weiter = daten.get("next_page_url")
+        if not weiter:
+            break
+        url, params = weiter, None
+    return aus
+
+
 @dataclass
 class StablecoinSupplyReading:
     date: str

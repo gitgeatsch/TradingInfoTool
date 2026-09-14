@@ -137,8 +137,13 @@ def _reihen_roh(db: str, klasse: str, klassen: dict | None = None) -> dict:
     import config as C
     from backtest_llm1_historisch import lade_reihen_aus_db
 
+    # ⚠️ AUCH DER RUECKFALL LIEFERT EINE MENGE - sonst haetten die
+    # beiden Wege verschiedene Formen, und `klasse in kl.get(sym)` waere
+    # bei einem String eine Teilstring-Frage statt einer Mengenfrage
+    # ("krypto" in "krypto_alt" waere True).
     kl = klassen if klassen is not None else {
-        x.symbol: str(getattr(x, "assetklasse", "") or "").lower()
+        x.symbol: frozenset(
+            {str(getattr(x, "assetklasse", "") or "").lower()})
         for x in C.get_watchlist()}
     # ⚠️⚠️ WENN DIE KERZEN IHRE KLASSE SELBST TRAGEN, IST SIE DIE WAHRHEIT.
     #
@@ -166,7 +171,7 @@ def _reihen_roh(db: str, klasse: str, klassen: dict | None = None) -> dict:
     for sym, kerzen in lade_reihen_aus_db(db, assetklasse=klasse).items():
         if sym.startswith("_") or len(kerzen) < 400:
             continue
-        if not _spalte and kl.get(sym) != klasse:
+        if not _spalte and klasse not in (kl.get(sym) or frozenset()):
             continue
         c = np.array([float(k.close) for k in kerzen])
         h = np.array([float(k.high) for k in kerzen])
@@ -187,10 +192,18 @@ def klassen_aus_db(db: str) -> dict | None:
     schlimmste Fall: er wuerde JEDE Reihe verwerfen, und die Messung liefe
     ohne eine einzige Zeile durch (Umbauplan 107)."""
     import sqlite3
+    # ⚠️⚠️ SEIT 13.09. `symbol -> MENGE von Klassen` (Schritt 50 Teil A).
+    # Vorher war es `symbol -> EINE Klasse`, und fuer die sieben
+    # Ticker-Kollisionen (DASH, T, STX, BOND, C, DIA, MDT) stand dort
+    # zwangslaeufig die falsche. Wer `kl.get(sym) == klasse` fragt, muss
+    # jetzt `klasse in kl.get(sym)` fragen.
     try:
         with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as c:
-            return {s: k for s, k in
-                    c.execute("SELECT symbol, assetklasse FROM messreihen")}
+            aus: dict = {}
+            for s, k in c.execute(
+                    "SELECT symbol, assetklasse FROM messreihen"):
+                aus.setdefault(s, set()).add(k)
+            return {s: frozenset(v) for s, v in aus.items()}
     except sqlite3.Error:
         return None
 

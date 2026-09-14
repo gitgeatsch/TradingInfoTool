@@ -96,6 +96,16 @@ class RegimeView(ttk.Frame):
         ttk.Label(
             override_frame, text="Manueller Override (RG-8)", font=("", 9, "bold"),
         ).pack(anchor="w")
+        # ⚠️ SCHRITT 32 (14.09.2026, 2.448-reiter): weder das Regime noch
+        # dieser Override wird von der Rollen-Kette gelesen (am Code geprueft:
+        # kein Leser in rollen_lauf/rolle_*/potential/entscheidungsrechnung).
+        # Ein Knopf, der sichtbar etwas einstellt und nichts bewirkt, muss das
+        # sagen.
+        ttk.Label(
+            override_frame, foreground=theme.warn_color(),
+            text="Wirkt nur auf die ALTE Kette - die Rollen-Kette liest weder "
+                 "Regime noch Override.",
+        ).pack(anchor="w")
         override_row = ttk.Frame(override_frame)
         override_row.pack(anchor="w", pady=(2, 0))
         self._override_var = tk.StringVar()
@@ -216,7 +226,13 @@ class RegimeView(ttk.Frame):
 
         created_at = status.get("created_at")
         stand = format_zeitpunkt_lokal(created_at)
-        self._stand_label.config(text=f"Stand: {stand}")
+        # ⚠️ SCHRITT 32 (14.09.2026, 2.448-reiter): das Regime kommt aus
+        # `signals.regime` - die Rollen-Kette setzt es NIE. Der Stand ist also
+        # der letzte Lauf der ALTEN Kette und bewegt sich nicht mehr. Ohne
+        # diesen Satz sieht ein eingefrorener Wert aus wie ein aktueller.
+        self._stand_label.config(
+            text=f"Stand: {stand} — aus der ALTEN Kette, die Rollen-Kette "
+                 f"setzt kein Regime; der Wert bewegt sich nicht mehr")
 
         score = status.get("regime_score_stetig")
         min_konf = status.get("regime_min_konfidenz_stetig")

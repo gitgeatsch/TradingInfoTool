@@ -46,6 +46,10 @@ hebel_screening_lock = threading.Lock()
 # Lock analog zu hebel_screening_lock, verhindert einen Doppel-Lauf bei
 # ueberlappenden Intervallen (z.B. nach einem verspaeteten Neustart).
 multi_asset_batch_lock = threading.Lock()
+# Terminmarkt-Sammlung (Schritt 54, 14.09.2026) - EIGENER Lock, nicht der des
+# Hebel-Screenings: in jenem Job laeuft auch die Rollen-Kette, und ein langer
+# Umlauf haette das Sammeln sonst uebersprungen. Befund 2.452.
+terminmarkt_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
@@ -54,8 +58,14 @@ _JOB_LOCKS = {
     "signal_batch": signal_batch_lock,
     "hebel_screening": hebel_screening_lock,
     "multi_asset_batch": multi_asset_batch_lock,
+    "terminmarkt": terminmarkt_lock,
 }
 _job_started_at: dict[str, float] = {}
+# Seit wann der Scheduler laeuft - Bezug der Terminmarkt-Frische. Eine App, die
+# aus war, ist kein Datenausfall (`terminmarkt_sammlung.frische`). Gesetzt in
+# `build_scheduler`; der Wert beim Import ist nur die Rueckfallebene.
+_SCHEDULER_START = datetime.now(timezone.utc)
+_TERMINMARKT_MELDEZUSTAND = None
 
 REFRESH_INTERVAL_MINUTES = 15  # Verbrauchsreduzierung: 15 statt 5 Min (siehe Kap. 16/8,
 # Monats-Kontingent-Rechnung 2026-07-06 - 5 Min haette zusammen mit dem taeglichen
@@ -97,6 +107,9 @@ STALENESS_RECHECK_INTERVAL_MINUTES = 15  # 2026-07-23, echter Fund: _history_dat
 # 00:11 waere knapp vor dem ersten Tick noch verpasst worden). Gleicher Takt wie
 # REFRESH_INTERVAL_MINUTES/HEBEL_SCREENING_INTERVAL_MINUTES - keine neue
 # Kadenz-Klasse noetig.
+# Terminmarkt-Sammlung (Schritt 54): derselbe Takt, den `positionierung` seit
+# dem 16.08. voraussetzt - 15 Minuten.
+TERMINMARKT_INTERVAL_MINUTES = 15
 HEBEL_SCREENING_INTERVAL_MINUTES = 15  # muss mit config.yaml hebel_screening.
 # intervall_minuten uebereinstimmen (wie bei allen anderen Jobs ist die Taktung selbst
 # ein Python-Konstante, nur der aktiv-Schalter wird dynamisch aus config.yaml gelesen,
@@ -1100,8 +1113,9 @@ def externe_reihen_job(conn_factory) -> None:
     der Fakt aus, und ein Signal ohne Gegenpruefung sieht aus wie eines, das
     sie bestanden hat ("fail-soft ist fail-silent").
 
-    Dieselbe Arbeitsteilung wie beim Terminmarkt: `hebel_screening` schreibt
-    `open_interest_snapshot`, `positionierung` liest nur.
+    Dieselbe Arbeitsteilung wie beim Terminmarkt: `terminmarkt_job` schreibt
+    `open_interest_snapshot` (seit 14.09., vorher `hebel_screening`),
+    `positionierung` liest nur.
 
     JEDE QUELLE EINZELN GEFANGEN. Faellt die CFTC aus, soll der Boersenfluss
     trotzdem aktuell werden - dasselbe Muster wie in `run_makro_analog_update`.
@@ -1123,6 +1137,37 @@ def externe_reihen_job(conn_factory) -> None:
         from api.cftc_cot import get_cot_long_anteil_history
         from api.onchain import get_btc_exchange_flow_history
         from database import db as DB
+
+        # ⚠️⚠️ DIE UMLAUFMENGE FUER TURNOVER (14.09.2026, Befund
+        # 2.453-turnover). Seit Schritt 49B teilt der Betrieb das Binance-
+        # Stueckvolumen durch `SplyCur`. Gelesen wurde es aus der Messdatei,
+        # die am Notebook nur eine Symbolliste ist - turnover waere dort fuer
+        # alle Werte ausgefallen, und ohne diesen Abruf nach 21 Tagen auch am
+        # Desktop. Welche Symbole: die MESSBASIS von turnover (am Notebook
+        # genau diese Symbolliste). Ein Abruf, 30 Tage Rueckgriff - so holt
+        # der naechste Lauf eine Betriebspause von Wochen wieder auf.
+        # ⚠️ VOR dem 800-Tage-Boersenfluss (Gegenpruefung 14.09.): beim Start
+        # laeuft die Frischepruefung 5 Sekunden spaeter an - der schnelle
+        # Abruf (unter einer Sekunde) soll dann schon geschrieben haben.
+        try:
+            from agent import marktrang as _MR
+            from api.onchain import get_splycur_history
+
+            _symbole = sorted(_MR.messbasis("turnover"))
+            if not _symbole:
+                logger.warning("Umlaufmenge: Messbasis turnover leer - "
+                               "nichts abzufragen")
+            else:
+                _reihen = get_splycur_history(_symbole, tage=30)
+                for _sym, _punkte in _reihen.items():
+                    geschrieben += DB.schreibe_externe_reihe(
+                        conn, _MR.SPLYCUR_QUELLE, _sym, _punkte)
+                _ohne = [x for x in _symbole if x not in _reihen]
+                logger.info("Umlaufmenge: %d von %d Symbolen geholt; ohne "
+                            "Reihe: %s", len(_reihen), len(_symbole),
+                            ", ".join(_ohne) or "keines")
+        except Exception as exc:                             # noqa: BLE001
+            logger.warning("Umlaufmenge nicht auffrischbar: %s", exc)
 
         try:
             reihe = get_btc_exchange_flow_history(tage=800)
@@ -2032,74 +2077,103 @@ def _notify_schneller_wechsel(kategorien: list[dict]) -> None:
         _last_schneller_wechsel_email_sent = time.monotonic()
 
 
-def _notify_oi_abdeckung_warnung(symbol: str, konsekutive_fehlschlaege: int) -> bool:
-    """WARNUNG-E-Mail, wenn ein Symbol wiederholt keine Open-Interest-Daten von
-    KEINER der drei Boersen (Binance/Bybit/OKX) liefert (2026-07-19, echter
-    Notebook-Fund KAS/KAIA/FLOKI/TURBO/CANTON). Anders als die Cash-Veto-Warnung
-    oben (ein globaler Zeitstempel, da RM-4 portfolioweit ist) ist dieser
-    Cooldown pro Symbol DB-persistiert (db.set_oi_abdeckung_gemeldet), nicht
-    in-memory - der Zustand soll einen Neustart ueberleben, da es sich laut
-    Nutzer-Einschaetzung um ein potenziell DAUERHAFTES Problem handelt (nicht
-    nur eine kurze Stoerung wie bei Groq-Erschoepfung).
+def terminmarkt_job(kraken_client, conn_factory, watchlist_provider) -> bool:
+    """Die Terminmarkt-Daten sammeln - alle 15 Minuten, eigener Job (Schritt 54).
 
-    Bewusst KEIN automatisches Abschalten der Hebel-Pruefung fuer das Symbol -
-    nur Sichtbarmachung (E-Mail + GUI-Markierung in ui/app.py), die
-    Entscheidung bleibt beim Nutzer ueber den bestehenden Hebel-Pruefung-Toggle.
+    ⚠️⚠️ WARUM ES IHN GIBT - Befund 2.452. `open_interest_snapshot` war ein
+    NEBENPRODUKT des alten Hebel-Screenings. Seit dessen Abschaltung (12.09.)
+    schrieb sie niemand, und Rolle BC und Rolle G bekamen eingefrorene Saetze
+    als aktuell - bei 13 Werten seit Juli, weil das Screening nur Werte mit
+    erlaubter Hebelpruefung abfragte.
 
-    Gibt zurueck, ob tatsaechlich eine E-Mail verschickt wurde - der Aufrufer
-    (_pruefe_oi_abdeckung_warnung()) markiert das Symbol NUR bei True als
-    gemeldet (db.set_oi_abdeckung_gemeldet), sonst wuerde bei deaktivierter
-    E-Mail oder einem Versandfehler der Cooldown faelschlich anlaufen und eine
-    spaeter (wieder) aktivierte Benachrichtigung bis zu oi_abdeckung_warnung_
-    cooldown_stunden lang unterdruecken, obwohl nie etwas verschickt wurde."""
+    UNABHAENGIG VON `hebel_screening.aktiv` und von `hebel_pruefung_erlaubt`:
+    gesammelt wird fuer ALLE Kryptowerte der Kette (Nutzerentscheidung 14.09.).
+
+    KEINE FEHLERMAIL AUS DEM JOB. Ein Ausfall meldet sich ueber die Frische
+    (`_pruefe_terminmarkt_frische`, ab 6 Stunden) - im Job der Rollen-Kette,
+    damit der Waechter nicht mit dem Bewachten ausfaellt. Eine Mail je
+    15-Minuten-Fehler waere das Muster, nach dem niemand mehr hinsieht."""
+    if not terminmarkt_lock.acquire(blocking=False):
+        logger.info("Terminmarkt-Sammlung: bereits in Ausfuehrung - uebersprungen")
+        return False
+    _job_started_at["terminmarkt"] = time.monotonic()
+    try:
+        from agent import terminmarkt_sammlung as TS
+
+        assets = TS.werte_der_kette(watchlist_provider())
+        conn = conn_factory()
+        try:
+            erg = TS.sammle(conn, assets, kraken_client)
+        finally:
+            conn.close()
+        logger.info(
+            "Terminmarkt-Sammlung: %d Kryptowerte abgefragt, %d mit Daten; "
+            "ohne jede Boerse: %s", erg["werte"], len(erg["mit_daten"]),
+            ", ".join(erg["ohne"]) or "keiner")
+        return True
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Terminmarkt-Sammlung fehlgeschlagen")
+        return False
+    finally:
+        _job_started_at.pop("terminmarkt", None)
+        terminmarkt_lock.release()
+
+
+def _pruefe_terminmarkt_frische(conn_factory, watchlist) -> None:
+    """Die Frische der Terminmarkt-Daten pruefen und einen Ausfall melden.
+
+    ⚠️ LAEUFT IM JOB DER ROLLEN-KETTE, NICHT IM SAMMELJOB. Ein Waechter im
+    selben Job schwiege genau dann, wenn der Job ausfaellt - und die Kette ist
+    der Verbraucher der Daten.
+
+    ERSETZT `_pruefe_oi_abdeckung_warnung` (Nutzerentscheidung 14.09., A): die
+    alte Regel mailte je Wert nach acht Fehlschlaegen in Folge, und zwar jeden
+    Tag neu - mit allen Kryptowerten kaemen taeglich Mails fuer die vier Werte,
+    die keine Boerse fuehrt. Grenzen und Wortlaut: `terminmarkt_sammlung`.
+
+    EIGENER FANG: eine fehlgeschlagene Pruefung darf den Umlauf nicht kosten."""
+    global _TERMINMARKT_MELDEZUSTAND
+    try:
+        from agent import terminmarkt_sammlung as TS
+
+        if _TERMINMARKT_MELDEZUSTAND is None:
+            _TERMINMARKT_MELDEZUSTAND = TS.Meldezustand()
+        symbole = [a.symbol for a in TS.werte_der_kette(watchlist)]
+        conn = conn_factory()
+        try:
+            befund = TS.frische(conn, symbole, app_start=_SCHEDULER_START)
+        finally:
+            conn.close()
+        if befund["gesamt"]:
+            logger.error("Terminmarkt-Daten seit %.1f h nicht aktualisiert",
+                         befund["gesamt_stunden"] or -1)
+        elif befund["einzeln"]:
+            logger.warning("Terminmarkt-Daten veraltet (>= %d h): %s",
+                           int(TS.EINZELWERT_GRENZE_STUNDEN),
+                           ", ".join(e["symbol"] for e in befund["einzeln"]))
+        vorschlag = TS.meldung(befund, _TERMINMARKT_MELDEZUSTAND)
+        if vorschlag is None:
+            return
+        betreff, text, marke = vorschlag
+        if _sende_hinweismail(betreff, text):
+            TS.vormerken(_TERMINMARKT_MELDEZUSTAND, marke)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Terminmarkt-Frischepruefung fehlgeschlagen")
+
+
+def _sende_hinweismail(betreff: str, text: str) -> bool:
+    """Eine Hinweismail mit EIGENEM Betreff - True nur bei echtem Versand.
+
+    Nicht ueber `_notify_job_failure`: dessen Betreff lautet ,Job X
+    fehlgeschlagen', und genau diese Verschleierung hat am 18.08. einen
+    Kettenausfall als Screening-Problem aussehen lassen."""
     import config as config_module
     from api.email_notify import send_notification_email
 
-    config_dict = config_module.load_config()
-    email_cfg = config_dict.get("benachrichtigung", {}).get("email", {})
-    if not email_cfg.get("aktiv", False):
+    email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+    if not email_cfg.get("aktiv", False) or not email_cfg.get("empfaenger"):
         return False
-    empfaenger = email_cfg.get("empfaenger")
-    if not empfaenger:
-        return False
-
-    body = (
-        f"Fuer {symbol} liefert seit {konsekutive_fehlschlaege} aufeinanderfolgenden "
-        "Hebel-Screening-Laeufen KEINE der drei Boersen (Binance/Bybit/OKX) "
-        "Open-Interest-Daten.\n\n"
-        "Moegliche Ursachen: das Symbol ist auf keiner dieser Boersen als Perp/Future "
-        "gelistet, oder ein dauerhaftes API-Problem. Die Hebel-Pruefung fuer dieses "
-        "Symbol laeuft technisch weiter, aber ohne OI-/Long-Short-Ratio-Kontext - "
-        "ein Hebel-Signal fuer dieses Symbol sollte entsprechend vorsichtiger "
-        "bewertet werden.\n\n"
-        "Das System schaltet die Hebel-Pruefung NICHT automatisch ab - bei Bedarf "
-        "manuell ueber den Hebel-Pruefung-Schalter in der Watchlist steuern.\n\n"
-        "Weitere Meldungen fuer dieses Symbol werden fuer die konfigurierte "
-        "Cooldown-Dauer unterdrueckt (Spam-Schutz)."
-    )
-    return send_notification_email(f"TradingInfoTool: WARNUNG - keine OI-Daten fuer {symbol}", body, empfaenger)
-
-
-def _pruefe_oi_abdeckung_warnung(conn_factory, config_dict: dict) -> None:
-    """Nach jedem Hebel-Screening-Lauf: prueft, ob ein Symbol die konfigurierte
-    Fehlschlags-Schwelle ueberschritten hat (config.yaml hebel_screening.
-    oi_abdeckung_schwelle_fehlschlaege) und noch nicht innerhalb des
-    Cooldowns (oi_abdeckung_warnung_cooldown_stunden) gemeldet wurde - siehe
-    db.get_symbole_mit_ueberschrittener_oi_schwelle()."""
-    hebel_cfg = config_dict.get("hebel_screening", {})
-    schwelle = hebel_cfg.get("oi_abdeckung_schwelle_fehlschlaege", 8)
-    cooldown_stunden = hebel_cfg.get("oi_abdeckung_warnung_cooldown_stunden", 24)
-
-    conn = conn_factory()
-    try:
-        status = db.get_oi_abdeckung_status(conn)
-        symbole = db.get_symbole_mit_ueberschrittener_oi_schwelle(conn, schwelle, cooldown_stunden)
-        for symbol in symbole:
-            konsekutive_fehlschlaege = status.get(symbol, {}).get("konsekutive_fehlschlaege", schwelle)
-            if _notify_oi_abdeckung_warnung(symbol, konsekutive_fehlschlaege):
-                db.set_oi_abdeckung_gemeldet(conn, symbol)
-    finally:
-        conn.close()
+    return bool(send_notification_email(betreff, text, email_cfg["empfaenger"]))
 
 
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:
@@ -3386,7 +3460,6 @@ def hebel_screening_job(
                 "Hebel-Screening: %d Assets bewertet, %d Kandidaten (Score >= Schwelle)",
                 len(triggers), len(kandidaten),
             )
-            _pruefe_oi_abdeckung_warnung(conn_factory, config_dict)
         else:
             logger.info("Hebel-Screening deaktiviert (config.yaml hebel_screening.aktiv=false) - "
                         "Screening übersprungen; Positionsabgleich und Rollen-Umlauf laufen weiter")
@@ -3489,6 +3562,10 @@ def hebel_screening_job(
             # lassen, und zwar lautlos: kein Fehler, keine Signale, kein Grund.
             # Gefunden beim Umlegen selbst.
             from scheduler.rollen_job import betriebsart_aus_config, fuehre_umlauf
+            # DER VERBRAUCHER PRUEFT SEINE EINGABE (Schritt 54): sind die
+            # Terminmarkt-Daten ausgefallen, kommt eine Mail - hier und nicht im
+            # Sammeljob, der sonst mit dem Bewachten ausfiele.
+            _pruefe_terminmarkt_frische(conn_factory, watchlist)
             art = betriebsart_aus_config(config_dict)
             logger.info(
                 "Budget-Allocator uebersprungen - die umgestellten Bereiche "
@@ -3999,6 +4076,8 @@ def build_scheduler(
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
     scheduler = BackgroundScheduler()
+    global _SCHEDULER_START
+    _SCHEDULER_START = datetime.now(timezone.utc)
     # Betriebssicherheit (2026-07-12): next_run_time=jetzt, damit Preise nach
     # einem Neustart (egal wie lange die App vorher offline war) nicht erst nach
     # einem vollen Intervall aktualisiert werden - guenstiger Einzelabruf, immer
@@ -4138,6 +4217,21 @@ def build_scheduler(
         ],
         id="hebel_screening",
         next_run_time=_staggered_start(3),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # ⚠️⚠️ TERMINMARKT-SAMMLUNG (Schritt 54, 14.09.2026) - EIGENER JOB.
+    # Bis zum 12.09. schrieb das Hebel-Screening `open_interest_snapshot` als
+    # Nebenprodukt; mit seiner Abschaltung stand die Tabelle still (2.452).
+    # Ein Durchlauf ueber alle Kryptowerte dauert rund 2,5 Minuten (Probe
+    # 14.09.: 143 s fuer 43 Werte) - im Job der Rollen-Kette haette ein langer
+    # Umlauf ihn uebersprungen.
+    scheduler.add_job(
+        terminmarkt_job,
+        "interval",
+        minutes=TERMINMARKT_INTERVAL_MINUTES,
+        args=[kraken_client, db_conn_factory, watchlist_provider],
+        id="terminmarkt",
+        next_run_time=_staggered_start(8),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Multi-Asset-Batch (2026-07-18, siehe agent/multi_asset_batch.py) - eigener,

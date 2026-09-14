@@ -73,7 +73,40 @@ def anlegen(conn, tabelle):
     conn.execute("""CREATE TABLE IF NOT EXISTS %s (
         symbol TEXT NOT NULL, datum TEXT NOT NULL, wert REAL NOT NULL,
         PRIMARY KEY (symbol, datum))""" % tabelle)
+    # ⚠️⚠️ DER ABRUFVERMERK (Schritt 50 Teil B, 13.09.2026, Befund
+    # 2.359-abruf). Bis hierher kam der Abrufstand aus der AENDERUNGSZEIT
+    # der Datei. Die beweist, dass ueberhaupt geschrieben wurde - NICHT,
+    # dass der Abruf vollstaendig war.
+    #
+    # ⚠️ UND EINE `fetched_at`-SPALTE IN DER DATENTABELLE WAERE DIE FALSCHE
+    # LOESUNG GEWESEN, obwohl der Planpunkt sie so beschrieb. Zwei Gruende,
+    # beide vor dem Bau geprueft:
+    #
+    #   (1) `MAX(fetched_at)` sagt exakt dasselbe wie die Dateizeit - wann
+    #       zuletzt geschrieben wurde. Die Frage ist aber, WIE VIELE der
+    #       erwarteten Symbole ein Lauf beruehrt hat.
+    #   (2) Alle INSERTs hier schreiben POSITIONELL (`VALUES (?,?,?)`).
+    #       Eine vierte Spalte haette sie stumm gebrochen.
+    #
+    # ➤ EINE ZEILE JE SYMBOL genuegt und beantwortet genau die Frage.
+    conn.execute("""CREATE TABLE IF NOT EXISTS abruf_symbol (
+        tabelle TEXT NOT NULL, symbol TEXT NOT NULL,
+        zuletzt_ok TEXT NOT NULL, zeilen INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (tabelle, symbol))""")
     conn.commit()
+
+
+def vermerke(conn, tabelle, symbol, zeilen):
+    """Dieses Symbol wurde JETZT erfolgreich geholt.
+
+    ⚠️ NUR BEI ERFOLG rufen. Ein Vermerk nach einem Fehlschlag waere
+    schlimmer als keiner: er liesse einen unvollstaendigen Lauf
+    vollstaendig aussehen - genau der Fehler, den dieser Vermerk finden
+    soll."""
+    conn.execute("INSERT OR REPLACE INTO abruf_symbol "
+                 "(tabelle, symbol, zuletzt_ok, zeilen) VALUES (?,?,?,?)",
+                 (tabelle, str(symbol).upper(),
+                  dt.datetime.now(dt.timezone.utc).isoformat(), int(zeilen)))
 
 
 # ---------------------------------------------------------------------------
@@ -127,6 +160,7 @@ def funding(unsere, pause=0.4):
                 conn.executemany("INSERT OR REPLACE INTO funding VALUES (?,?,?)",
                                  [(basis, t, v) for t, v in je_tag.items()])
                 conn.commit()
+                vermerke(conn, "funding", basis, len(je_tag))
                 ok += 1
         except Exception as e:                       # noqa: BLE001
             print("  %-9s FEHLER: %s" % (basis, str(e)[:50]))
@@ -171,6 +205,7 @@ def onchain(unsere, metrik="AdrActCnt", pause=0.8):
                 conn.executemany("INSERT OR REPLACE INTO %s VALUES (?,?,?)"
                                  % metrik.lower(), zeilen)
                 conn.commit()
+                vermerke(conn, metrik.lower(), asset, len(zeilen))
                 ok += 1
         except Exception as e:                       # noqa: BLE001
             print("  %-9s FEHLER: %s" % (asset, str(e)[:50]))
@@ -238,6 +273,30 @@ def turnover(pause=8.0, tage=365):
     Bann: sie loest sich in unter einer Minute. Wer sie trifft, verliert
     Zeit, nicht den Zugang.
 
+    ⚠️⚠️⚠️ DAS ERGEBNIS DIESER FUNKTION IST NICHT IN BETRIEB
+    GEGANGEN - eine Entscheidung vom 13.09.2026, kein Versaeumnis.
+    `data/markt_historie.db` liegt als BELEG zu 2.416 und 2.417, nicht als
+    Quelle. Zwei Gruende, beide gemessen:
+
+      SURVIVORSHIP  `order=market_cap_desc&per_page=250` liefert die HEUTE
+                    groessten. Gegen `messmenge.V1` gezaehlt enthaelt diese
+                    Menge 4 % eingestellte Reihen - die Messmenge 32 %, die
+                    bisherige Basis `splycur` 29 %. Faktor acht daneben.
+                    Und sie ist keine Obermenge: 33 Symbole fallen weg,
+                    davon 15 noch LAUFENDE (BAT, SUSHI, WBTC, YFI, ZRX).
+                    `messmenge.py` verbietet genau das - "nicht nach
+                    Marktkapitalisierung filtern, gross ist was gross
+                    GEWORDEN ist".
+      LAENGE        366 Tage gegen registrierte 2.636 Kalendertage.
+                    2.414-laenge hat gemessen, dass 341 Tage fuer eine
+                    Fuenftel-Ordnung nicht reichen (5 von 20 Fenstern).
+                    Auch R-R11 ist darauf nicht erfuellbar.
+
+    ⚠️ WARUM SIE TROTZDEM STEHENBLEIBT: geloescht wuerde sie in einem
+    halben Jahr neu gebaut, weil niemand mehr weiss, warum sie nicht taugt.
+    Der Weg, der 2.410 wirklich schliesst, ist der umgekehrte - die
+    ANWENDUNG an die MESSUNG angleichen (Schritt 49 Teil B).
+
     ⚠️ WER ES EILIGER BRAUCHT, nimmt einen CoinGecko-Demo-Schluessel (frei,
     30 Anfragen/Minute, 10.000 im Monat). Das ist eine Abhaengigkeit mehr
     und eine Nutzerentscheidung - ohne ihn geht es auch, nur langsamer."""
@@ -300,6 +359,7 @@ def turnover(pause=8.0, tage=365):
                 conn.executemany(
                     "INSERT OR REPLACE INTO turnover VALUES (?,?,?)", zeilen)
                 conn.commit()
+                vermerke(conn, "turnover", sym, len(zeilen))
                 ok += 1
             else:
                 leer += 1
@@ -325,6 +385,19 @@ if __name__ == "__main__":
         funding(unsere)
     if was in ("onchain", "beides"):
         onchain(unsere)
+    # ⚠️⚠️ `splycur` HATTE BIS ZUM 13.09. KEINEN AUFRUF (Schritt 49 Teil A).
+    # Die Reihe wurde einmal von Hand geholt und lief danach zwoelf Tage
+    # aus dem Takt - unsere Kopie endete am 2026-08-28/29, die Quelle stand
+    # auf dem 2026-09-12. Gemessen wurde der Schaden vorher (2.417-frische):
+    # eine 15 Tage alte Umlaufmenge laesst 98,9 % der Fuenftel unveraendert,
+    # also war es kein Notfall - aber eine Lueecke, die niemand sah, weil es
+    # keinen Aufruf gab, den man haette vergessen koennen.
+    #
+    # ⚠️ NICHT IN "beides": `onchain` laedt `AdrActCnt`, das ist eine ANDERE
+    # Metrik in derselben Datei. Wer beide will, ruft beide - ein "beides",
+    # das drei Dinge tut, waere der naechste stille Nebeneffekt.
+    if was == "splycur":
+        onchain(unsere, metrik="SplyCur")
     # ⚠️ NICHT IN "beides": `turnover` braucht rund zehn Minuten und laedt
     # 250 Symbole, die mit `unsere` nichts zu tun haben - wer "beides" ruft,
     # will die Reihen zu SEINEN Werten auffrischen, nicht den halben Markt.

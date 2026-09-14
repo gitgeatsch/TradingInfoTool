@@ -63,6 +63,38 @@ def bedient_neue_kette(assetklasse: str, config: dict | None = None) -> bool:
     return str(assetklasse or "").strip().lower() in aktiv_fuer(config)
 
 
+def alte_analyse_hinweis(assetklasse: str = "krypto",
+                         config: dict | None = None) -> str | None:
+    """Darf ein Knopf der Oberflaeche die ALTE Pipeline starten? None = ja.
+
+    ⚠️⚠️ SCHRITT 32 (14.09.2026, Befund 2.448-knoepfe, Nutzerentscheidung
+    ,Stilllegen mit Hinweis'). Die Analyseknoepfe in Signale, Hebel und
+    Marktscan riefen `krypto.pipeline.generate_signal`,
+    `signal_batch.run_signal_batch`, `hebel_pipeline.generate_hebel_signal`
+    und `marktscan.generate_candidate_writeup` - OHNE die eine Frage zu
+    stellen, die `bedient_neue_kette` dem alten Weg vorschreibt. Ein Klick
+    haette ein Signal der alten Kette in die Produktion geschrieben, mit
+    echtem Modellaufruf aus dem geteilten Kontingent.
+
+    ⚠️ KEINE FESTE SPERRE, SONDERN DIESELBE REGEL: faellt eine Klasse aus
+    `aktiv_fuer` (der dokumentierte Rueckfallweg), sind ihre Knoepfe von
+    selbst wieder frei - so wie der alte Weg dann wieder uebernimmt."""
+    # ⚠️ DIE ECHTE KONFIGURATION, NICHT DIE CODE-VORGABE. `aktiv_fuer(None)`
+    # liefert `VORGABE_AKTIV_FUER` - und die ist LEER. Die erste Fassung
+    # reichte `None` durch; die Oberflaechenprobe zeigte: jeder Knopf blieb
+    # frei, ein Klick startete die alte Pipeline (auf der Kopie, mit einem
+    # Stellvertreter-Client). Die Oberflaeche hat keine Konfiguration zur
+    # Hand - also wird sie hier gelesen.
+    if config is None:
+        import config as config_module
+        config = config_module.load_config()
+    if not bedient_neue_kette(assetklasse, config):
+        return None
+    return ("Stillgelegt: %s laeuft ueber die Rollen-Kette (automatisch im "
+            "Takt). Dieser Knopf wuerde die ALTE Pipeline starten und ein "
+            "Signal der alten Kette schreiben." % (assetklasse or "?"))
+
+
 # WAS DER ALTE WEG NICHT KANN (28.08.2026) - die Liste ist die Abkapselung.
 #
 # ⚠️ NUTZERVORGABE, die diesen Block ausgeloest hat: *"wenn wir das so lassen,

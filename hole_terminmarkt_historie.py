@@ -119,6 +119,7 @@ erneut versucht - sonst kostete jeder Lauf sie neu.
 import argparse
 import csv
 import io
+import datetime as _dt
 import sqlite3
 import sys
 import time
@@ -164,6 +165,24 @@ CREATE TABLE IF NOT EXISTS abruf_status (
     PRIMARY KEY (symbol, tag, aufloesung));
 CREATE TABLE IF NOT EXISTS messbasis (
     symbol TEXT PRIMARY KEY, gezogen_am TEXT NOT NULL, saat INTEGER NOT NULL);
+-- ⚠️⚠️ DER ABRUFVERMERK JE SYMBOL (Schritt 50 Teil B, 13.09.2026).
+--
+-- ⚠️ WARUM NEBEN `abruf_status`, das doch schon je (Symbol, Tag) fuehrt:
+-- die beiden beantworten VERSCHIEDENE Fragen. `abruf_status` sagt WELCHE
+-- TAGE vorliegen - es macht den Lauf wiederaufnehmbar. `abruf_symbol`
+-- sagt, WANN ein Symbol zuletzt erfolgreich geholt wurde - daraus
+-- entsteht "X von Y erwarteten Symbolen im letzten Lauf beruehrt".
+-- Aus `abruf_status` liesse sich das NICHT ableiten: es traegt keinen
+-- Zeitstempel, nur den Tag, den es beschreibt.
+--
+-- ⚠️ Dieselbe Tabelle liegt in `funding_historie.db` und
+-- `onchain_historie.db` (`hole_fremdreihen.anlegen`) - EIN Format fuer
+-- alle drei Messquellen, damit `datenfrische` nicht drei Sonderwege
+-- braucht.
+CREATE TABLE IF NOT EXISTS abruf_symbol (
+    tabelle TEXT NOT NULL, symbol TEXT NOT NULL,
+    zuletzt_ok TEXT NOT NULL, zeilen INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (tabelle, symbol));
 """
 
 # ⚠️ DIE MESSBASIS IST EINE STICHPROBE MIT FESTER SAAT (01.09.2026).
@@ -418,6 +437,14 @@ def main() -> int:
                     [(sym, st) + w for st, w in sorted(werte.items())])
                 conn.execute("INSERT OR REPLACE INTO abruf_status VALUES (?,?,?,?,?)",
                              (sym, tag, "ok", len(werte), a.aufloesung))
+                # ⚠️ NUR HIER, im Erfolgszweig. Ein Vermerk nach einem
+                # Fehlschlag liesse einen unvollstaendigen Lauf vollstaendig
+                # aussehen - genau das, was er finden soll.
+                conn.execute(
+                    "INSERT OR REPLACE INTO abruf_symbol "
+                    "(tabelle, symbol, zuletzt_ok, zeilen) VALUES (?,?,?,?)",
+                    (ziel, sym, _dt.datetime.now(_dt.timezone.utc).isoformat(),
+                     len(werte)))
                 ok += 1
                 zeilen += len(werte)
             elif stand == "fehlt":

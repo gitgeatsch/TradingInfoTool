@@ -94,6 +94,25 @@ class Quelle:
     # auseinander"). Die Frage ist dieselbe: wie alt ist das, worauf wir
     # uns stuetzen.
     datei: str = ""
+    # ⚠️⚠️ WIE VIELE SYMBOLE EIN VOLLSTAENDIGER LAUF BERUEHRT (Schritt 50
+    # Teil B, 13.09.2026). 0 heisst "keine Erwartung gesetzt" - dann wird
+    # nur der Zeitstempel gemeldet wie bisher.
+    #
+    # ⚠️ DIE ZAHL GEHOERT ZUR MESSBASIS-DEFINITION, NICHT ZU EINER TABELLE.
+    # Beim Bauen selbst hineingetappt: `terminmarkt_tag` hat 100 Symbole,
+    # `terminmarkt` 122 - `MESSBASIS[oi]` ist die VEREINIGUNG und damit
+    # 122. Und `funding_historie` fuehrt 302 Symbole, von denen 300 in
+    # `messmenge.V1` liegen. Wer gegen eine Tabelle zaehlt, meldet einen
+    # Fehlalarm.
+    erwartet: int = 0
+    # ⚠️⚠️ UEBER WELCHE TABELLEN DER VERMERK GEZAEHLT WIRD. Leer heisst
+    # "die eine Tabelle oben". Der Terminmarkt braucht BEIDE: `MESSBASIS`
+    # ist dort die VEREINIGUNG aus `terminmarkt` (stuendlich, 122) und
+    # `terminmarkt_tag` (taeglich, 100). Wer nur die Tagestabelle zaehlt,
+    # meldet 100 von 122 und damit einen Fehlalarm - mir beim Bauen
+    # dieses Feldes selbst passiert, obwohl ich die Falle eine Zeile
+    # darueber aufgeschrieben hatte.
+    vermerk_tabellen: tuple = ()
     # Spalten, wenn die Tabelle keine `quelle`-Spalte hat: (Datum, Abruf).
     spalten: tuple = ()
 
@@ -127,6 +146,12 @@ REGISTRATUR: tuple[Quelle, ...] = (
            "makro_analog", "99 Jahre Makrohistorie"),
     Quelle("coinmetrics", "G", "externe_reihe", 6,
            "externe_reihen", "Boersenfluesse auf der Kette"),
+    # ⚠️ ROLLE "W" - KEINE PROMPTQUELLE, sondern der Nenner des Beitrags
+    # turnover in der Wahrscheinlichkeit (Befund 2.453-turnover, 14.09.).
+    # Taeglich wie die anderen Coin-Metrics-Reihen -> 6 Tage; der Leser
+    # selbst nimmt nichts, was aelter als 21 Tage ist.
+    Quelle("coinmetrics_splycur", "W", "externe_reihe", 6,
+           "externe_reihen", "Umlaufmenge fuer turnover"),
     Quelle("defillama", "G", "externe_reihe", 6,
            "externe_reihen", "Stablecoin-Angebot"),
     Quelle("deribit", "G", "externe_reihe", 6,
@@ -149,8 +174,11 @@ REGISTRATUR: tuple[Quelle, ...] = (
     # Sie hier wegzulassen hiesse, die drei wichtigsten Quellen ausgerechnet
     # aus der Frischepruefung herauszuhalten - weil sie in einer anderen
     # Tabelle stehen.
-    Quelle("terminmarkt", "G", "open_interest_snapshot", 2,
-           "hebel_screening", "Open Interest, Funding, Long-Anteil"),
+    # Rolle BC UND G seit Schritt 5 (01.09.) - BC bekommt die Saetze in die
+    # Faktenlage. Die feinere Frische (2 h Lese-, 6 h/24 h Meldegrenze) liegt
+    # in `positionierung` und `terminmarkt_sammlung`; hier nur das tote Netz.
+    Quelle("terminmarkt", "BC/G", "open_interest_snapshot", 2,
+           "terminmarkt", "Open Interest, Funding, Long-Anteil"),
     Quelle("kursreihe", "A/BC/G", "price_history_ohlc", 4,
            "refresh_ohlc", "die Kerzen selbst"),
     Quelle("bestand", "BC", "holdings", 3,
@@ -197,15 +225,25 @@ REGISTRATUR: tuple[Quelle, ...] = (
     Quelle("funding_reihe", "M", "funding", 21,
            "hole_fremdreihen.py (VON HAND)",
            "Messbasis des Funding-Rangs - 300 Symbole",
-           datei="data/funding_historie.db", spalten=("datum", "")),
+           datei="data/funding_historie.db", spalten=("datum", ""),
+           # messmenge.ABDECKUNG[funding]
+           erwartet=300),
     Quelle("terminmarkt_reihe", "M", "terminmarkt_tag", 21,
            "hole_terminmarkt_historie.py (VON HAND)",
            "Messbasis des Terminmarkt-Rangs - 122 Symbole",
-           datei="data/terminmarkt_historie.db", spalten=("tag", "")),
+           datei="data/terminmarkt_historie.db", spalten=("tag", ""),
+           # MESSBASIS[oi] = Vereinigung beider Tabellen
+           erwartet=122, vermerk_tabellen=("terminmarkt", "terminmarkt_tag")),
     Quelle("onchain_reihe", "M", "splycur", 21,
-           "hole_fremdreihen.py (VON HAND)",
+           # ⚠️ SEIT 13.09. GIBT ES DEN AUFRUF WIRKLICH (Befund 2.418).
+           # Vorher stand hier "VON HAND" und meinte es woertlich: es gab
+           # keinen, die Reihe war einmal manuell geholt worden. Genau
+           # deshalb lief sie zwoelf Tage aus dem Takt, ohne aufzufallen.
+           "hole_fremdreihen.py splycur (VON HAND)",
            "Umlaufmenge - Nenner des Turnover-Rangs, 66 Symbole",
-           datei="data/onchain_historie.db", spalten=("datum", "")),
+           datei="data/onchain_historie.db", spalten=("datum", ""),
+           # messmenge.ABDECKUNG[turnover]
+           erwartet=66),
 )
 
 # Wie der Stand je Tabelle gelesen wird. Bewusst hier und nicht in der
@@ -292,6 +330,36 @@ def _stand_einfach(conn, tabelle: str, datum: str,
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
 
 
+def _abrufvermerk(c, q) -> str | None:
+    """"X von Y Symbolen, zuletzt am ..." - oder None, wenn es ihn nicht gibt.
+
+    ⚠️ Er ist ADDITIV eingefuehrt: solange kein Ladelauf ihn geschrieben
+    hat, gibt es ihn nicht, und der Aufrufer bleibt bei der Dateizeit.
+    Eine leere Tabelle als "0 von 300 beruehrt" zu melden waere ein
+    Fehlalarm ueber die eigene Umstellung.
+    """
+    if not q.erwartet:
+        return None
+    try:
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                         "AND name='abruf_symbol'").fetchone():
+            return None
+        # ⚠️ DISTINCT: ein Symbol, das in BEIDEN Terminmarkt-Tabellen
+        # steht, ist EIN Symbol der Messbasis, nicht zwei.
+        tabs = q.vermerk_tabellen or (q.tabelle,)
+        zeile = c.execute(
+            "SELECT COUNT(DISTINCT symbol), MAX(zuletzt_ok) FROM abruf_symbol "
+            "WHERE tabelle IN (%s)" % ",".join("?" * len(tabs)),
+            tabs).fetchone()
+    except Exception:                                        # noqa: BLE001
+        return None
+    n = int((zeile or (0,))[0] or 0)
+    if not n:
+        return None
+    return "%s (%d von %d Symbolen)" % (
+        str(zeile[1] or "")[:19], n, q.erwartet)
+
+
 def _stand_datei(q) -> tuple[str | None, str | None, int]:
     """Eine Quelle in einer EIGENEN Datei (S-1, 11.09.2026).
 
@@ -344,7 +412,21 @@ def _stand_datei(q) -> tuple[str | None, str | None, int]:
         zeile = c.execute(
             "SELECT MAX(%s), COUNT(*) FROM %s"
             % (datum_spalte, q.tabelle)).fetchone()
+        # ---- ⚠️⚠️ DER ABRUFVERMERK schlaegt die Dateizeit ---------------
+        #
+        # Die mtime beweist, dass GESCHRIEBEN wurde - nicht, dass der
+        # Abruf VOLLSTAENDIG war (2.359-abruf). `abruf_symbol` fuehrt je
+        # Symbol den Zeitpunkt des letzten Erfolgs; daraus wird
+        # "X von Y erwarteten Symbolen".
+        #
+        # ⚠️ FEHLT DIE TABELLE ODER IST SIE LEER, bleibt alles wie bisher.
+        # Sie fuellt sich erst mit dem naechsten Ladelauf - eine leere
+        # Tabelle als "0 von 300" zu melden waere ein Fehlalarm ueber
+        # unsere eigene Umstellung.
+        vermerk = _abrufvermerk(c, q)
         c.close()
+        if vermerk:
+            abruf = vermerk
     except Exception:                                        # noqa: BLE001
         return None, abruf, 0
     if not zeile:

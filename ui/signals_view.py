@@ -40,7 +40,8 @@ _SIGNAL_LIST_COLUMN_DESCRIPTIONS = {
 _SIGNAL_HISTORY_COLUMN_DESCRIPTIONS = {
     "datum": "Zeitpunkt, an dem dieses Signal berechnet wurde.",
     "aktion": "Damals empfohlene Aktion (KAUFEN/NACHKAUFEN/HALTEN/VERKAUFEN/TAUSCHEN).",
-    "konfidenz": "KI-Konfidenz in Prozent zum Zeitpunkt der Berechnung.",
+    "konfidenz": ("Aus welcher Kette das Signal stammt. Nur die ALTE Kette (bis 14.08.) "
+                  "hatte eine KI-Konfidenz in Prozent; die Rollen-Kette hat keine."),
     "anbieter": "LLM-Anbieter:Modell, der dieses Signal berechnet hat.",
     "outcome": (
         "Ergebnis der Selbstverifikation (Backward-Tracking): ob Take-Profit oder "
@@ -184,7 +185,9 @@ class SignalsView(ttk.Frame):
         # daher nicht an self._selected_asset gekoppelt wie compute_button/history_button.
         self.batch_button = ttk.Button(
             toolbar, text="Fällige Signale jetzt berechnen", command=self._on_batch_clicked,
-            state="normal" if self._any_llm_client_available() else "disabled",
+            state="normal" if (self._any_llm_client_available()
+                               and self._alte_analyse_hinweis("krypto") is None)
+            else "disabled",
         )
         self.batch_button.pack(side="left", padx=(6, 0))
         self.status_label = ttk.Label(toolbar, text="", foreground=theme.info_color())
@@ -284,7 +287,7 @@ class SignalsView(ttk.Frame):
             neues_signal = latest_by_symbol.get(vorher_iid)
             if neues_signal != self._current_signal:
                 self._selected_asset = self._asset_by_symbol(vorher_iid)
-                can_compute = self._any_llm_client_available()
+                can_compute = self._kann_berechnen(self._selected_asset)
                 self.compute_button.config(state="normal" if can_compute else "disabled")
                 self.history_button.config(state="normal")
                 self._render_signal(self._selected_asset, neues_signal)
@@ -300,7 +303,7 @@ class SignalsView(ttk.Frame):
             return
         symbol = selected[0]
         self._selected_asset = self._asset_by_symbol(symbol)
-        can_compute = self._any_llm_client_available()
+        can_compute = self._kann_berechnen(self._selected_asset)
         self.compute_button.config(state="normal" if can_compute else "disabled")
         self.history_button.config(state="normal")  # braucht keinen Groq-Key, reine DB-Anzeige
 
@@ -324,6 +327,16 @@ class SignalsView(ttk.Frame):
 
         color = theme.action_color(signal.action)
         self.action_label.config(text=f"{asset.symbol}: {signal.action}", foreground=color)
+        # ⚠️⚠️ SCHRITT 32 (14.09.2026, 2.448): ein Signal der ROLLEN-KETTE in
+        # ihrer eigenen Gliederung - nicht in der Dreiteilung der alten Kette,
+        # deren Felder die neue nie fuellt. `agent/signal_ansicht` sagt selbst,
+        # was nicht gespeichert ist.
+        from agent import signal_ansicht as _SANS
+        if _SANS.ist_rollen_signal(signal):
+            self.meta_label.config(text=_SANS.metazeile(signal))
+            self.gate_label.config(text="")
+            self._set_detail_text("\n".join(_SANS.zeilen(signal)))
+            return
         conf_text = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         self.meta_label.config(
             text=(
@@ -705,9 +718,32 @@ class SignalsView(ttk.Frame):
             conn.close()
         SignalHistoryDialog(self, self._selected_asset, history)
 
+    @staticmethod
+    def _alte_analyse_hinweis(assetklasse: str | None) -> str | None:
+        """Schritt 32 (2.448-knoepfe): die Regel steht in `rollen_job`, nicht
+        hier - eine Regel in einer tkinter-Ansicht kann die Suite nicht
+        pruefen. Fail-closed: ist die Regel nicht lesbar, bleibt der Knopf
+        zu - ein Signal der falschen Kette ist schlimmer als ein Knopf, der
+        einmal nicht geht."""
+        try:
+            from scheduler.rollen_job import alte_analyse_hinweis
+            return alte_analyse_hinweis(assetklasse or "krypto")
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Kettenregel nicht lesbar - Knopf bleibt zu")
+            return "Stillgelegt: Kettenregel nicht lesbar"
+
+    def _kann_berechnen(self, asset) -> bool:
+        if asset is None or not self._any_llm_client_available():
+            return False
+        hinweis = self._alte_analyse_hinweis(getattr(asset, "assetklasse", None))
+        if hinweis:
+            self.status_label.config(text=hinweis, foreground=theme.info_color())
+            return False
+        return True
+
     def _on_compute_clicked(self) -> None:
         asset = self._selected_asset
-        if asset is None or not self._any_llm_client_available():
+        if not self._kann_berechnen(asset):
             return
 
         self.compute_button.config(state="disabled")
@@ -771,7 +807,7 @@ class SignalsView(ttk.Frame):
         self.after(0, self._on_pipeline_done, asset, signal, error)
 
     def _on_pipeline_done(self, asset, signal, error) -> None:
-        can_compute = self._any_llm_client_available()
+        can_compute = self._kann_berechnen(asset)
         self.compute_button.config(state="normal" if can_compute else "disabled")
         if error is not None:
             self.status_label.config(text=f"Fehler: {error}", foreground=theme.danger_color())
@@ -788,6 +824,11 @@ class SignalsView(ttk.Frame):
         # verhindert einen doppelten gleichzeitigen Lauf bei Mehrfach-Klick.
         # Das eigentliche Acquire passiert im Hintergrund-Thread selbst
         # (_run_batch()).
+        _hin = self._alte_analyse_hinweis("krypto")
+        if _hin:
+            self.status_label.config(text=_hin, foreground=theme.info_color())
+            self.batch_button.config(state="disabled")
+            return
         if background.signal_batch_lock.locked():
             self.status_label.config(
                 text="Batch-Berechnung läuft bereits (Scheduler oder vorheriger Klick) …",
@@ -1061,7 +1102,9 @@ class SignalHistoryDialog(tk.Toplevel):
         columns = ("datum", "aktion", "konfidenz", "anbieter", "outcome")
         tree = ttk.Treeview(frame, columns=columns, show="headings", height=14)
         headings = {
-            "datum": "Datum", "aktion": "Aktion", "konfidenz": "Konfidenz",
+            # Schritt 32 (2.448-reiter): die Spalte heisst nach dem, was sie
+            # zeigt - die Rollen-Kette hat keine Konfidenz.
+            "datum": "Datum", "aktion": "Aktion", "konfidenz": "Kette / Konfidenz",
             "anbieter": "Anbieter", "outcome": "Ergebnis",
         }
         for col in columns:
@@ -1073,14 +1116,20 @@ class SignalHistoryDialog(tk.Toplevel):
         self._history_by_item: dict[str, object] = {}
         for signal in history:
             when = format_zeitpunkt_lokal(signal.created_at)
-            konfidenz = f"{signal.confidence_pct:.0f} %" if signal.confidence_pct is not None else "-"
+            if str(getattr(signal, "quelle_kette", "") or "") == "rollen":
+                konfidenz = "Rollen" + ("" if signal.gate_passed else " (Nein-Buchung)")
+            else:
+                konfidenz = ("alt · " + (f"{signal.confidence_pct:.0f} %"
+                                          if signal.confidence_pct is not None else "-"))
             status = signal.outcome_status
             outcome_text = _OUTCOME_LABELS.get(status, "—") if status else "—"
             if status == "take_profit_erreicht" and signal.outcome_realisiertes_crv is not None:
                 outcome_text += f" (CRV {signal.outcome_realisiertes_crv:.2f})"
             item_id = tree.insert(
                 "", "end",
-                values=(when, signal.action, konfidenz, signal.groq_model or "-", outcome_text),
+                values=(when, signal.action, konfidenz,
+                        signal.groq_model or getattr(signal, "modell", None) or "-",
+                        outcome_text),
                 tags=(status or "none",),
             )
             self._history_by_item[item_id] = signal
@@ -1122,7 +1171,7 @@ class LlmAbfrageDialog(tk.Toplevel):
 
         zeitpunkt = format_zeitpunkt_lokal(signal.created_at)
         ttk.Label(
-            frame, text=f"Anbieter: {signal.groq_model or '-'}   ·   Berechnet: {zeitpunkt}",
+            frame, text=f"Anbieter: {signal.groq_model or getattr(signal, 'modell', None) or '-'}   ·   Berechnet: {zeitpunkt}",
             font=("", 10, "bold"),
         ).pack(anchor="w", pady=(0, 8))
 

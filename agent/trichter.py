@@ -180,10 +180,14 @@ def saetze(kurs: float, atr: float, anteil: float = 0.80,
         werte = [spanne(kurs, atr, h, anteil, klasse) for h in horizonte]
     except TrichterUnbekannt:
         return []
+    # ⚠️ KRYPTO HAT KEINE HANDELSTAGE (Schritt 31, 2.446-begriffe a). Die
+    # Kerzen enthalten Wochenenden, die Horizonte sind KALENDERtage. Hier
+    # stand fuer jede Klasse "Handelstagen" - achtmal je Krypto-Mail.
+    tage = "Tagen" if str(klasse or "").lower() == "krypto" else "Handelstagen"
     aus = [f"Uebliche Kursbewegung ({de(100 * anteil, 0)} % der Faelle, "
            f"Richtung offen):"]
     for w in werte:
-        aus.append(f"   in {w['horizont']:>3} Handelstagen "
+        aus.append(f"   in {w['horizont']:>3} {tage} "
                    f"+/- {de(100 * w['weite_relativ'], 1)} %")
 
     # DIE BESCHREIBUNG (Nutzerwunsch 19.08.2026). Eine neue Zahl ohne Satz
@@ -193,7 +197,7 @@ def saetze(kurs: float, atr: float, anteil: float = 0.80,
     aus.append(
         f"   Was das heisst: In {de(100 * anteil, 0)} von 100 vergleichbaren "
         f"Faellen blieb die Kursaenderung binnen "
-        f"{kurz['horizont']} Handelstagen innerhalb dieser Spanne - nach oben "
+        f"{kurz['horizont']} {tage} innerhalb dieser Spanne - nach oben "
         f"wie nach unten. In {de(100 - 100 * anteil, 0)} von 100 nicht.")
     aus.append(
         "   Der Trichter sagt WIE WEIT, nicht WOHIN. Er ist keine Prognose "
@@ -229,7 +233,7 @@ def saetze(kurs: float, atr: float, anteil: float = 0.80,
         aus.append(f"   Ihr Ziel liegt {de(100 * float(ziel_relativ), 1)} % "
                    f"entfernt - " + ("innerhalb" if erreichbar else "JENSEITS")
                    + f" der ueblichen Bewegung von "
-                   f"{de(mittel['horizont'], 0)} Handelstagen.")
+                   f"{de(mittel['horizont'], 0)} {tage}.")
         aus.append(
             "   GUENSTIG: ein Weg dieser Laenge kommt in diesem Zeitraum "
             "gewoehnlich vor." if erreichbar else

@@ -90,6 +90,14 @@ TRENNER = "-" * 68
 # Bauen von 13, sondern erst beim Abgleich ALLER Pakete gegeneinander.
 AKTIONEN_MIT_EINSTIEG = ("KAUFEN", "NACHKAUFEN", "ERÖFFNEN")
 
+# Die Richtungszeile und die Belegmarker - EINMAL, weil seit Schritt 32
+# (14.09.2026) auch die Oberflaeche (`agent/signal_ansicht.py`) sie schreibt.
+# Zwei Schreibweisen derselben Zeile liefen auseinander.
+RICHTUNG_TEXT = {"SHORT": "SHORT - Gewinn bei FALLENDEM Kurs",
+                 "LONG": "LONG - Gewinn bei steigendem Kurs"}
+BELEG_ZEICHEN = {"dafuer": "▲", "dagegen": "▼", "neutral": "●"}
+BELEG_LEGENDE = "(▲ spricht dafuer · ● neutral · ▼ Warnsignal/spricht dagegen)"
+
 
 def eur(wert: float, stellen: int = 0) -> str:
     """Deutsche Schreibweise: Punkt als Tausender, Komma als Dezimaltrenner.
@@ -280,6 +288,91 @@ def _abschnitt(titel: str, zeilen: list[str],
             + list(zeilen) + [""])
 
 
+# ---- ANHANG E: DIE LESEHILFEN (Schritt 31, 13.09.2026) ------------------
+#
+# Befund 2.446-lesbarkeit: ACHT Erklaersaetze standen in JEDER Mail an ihrer
+# Fundstelle - sie erklaeren beim ersten Lesen und stehen in jeder weiteren
+# Mail wieder; der Lebendigkeitssatz sogar zweimal woertlich in derselben.
+#
+# REGEL 3 DES MAILVORSCHLAGS (11.09.): ANHANG STATT WEGLASSEN. Nichts wird
+# gestrichen - die Saetze wandern gesammelt ans Ende, je einmal.
+#
+# ⚠️ WAS HIER NICHT STEHT, UND WARUM:
+#   - Saetze aus `lagebeschreibung` (Widerstand, Marktstruktur, Umschlag):
+#     DIESELBEN liest das Modell. Sie an der Quelle zu aendern waere eine
+#     Promptaenderung (Schritt 33, erst nach der Messung).
+#   - GUENSTIG/UNGUENSTIG-Saetze: sie sind Einordnung, keine Lesehilfe -
+#     und `gesamtbild` zaehlt sie.
+#   - "Das ist eine Beobachtung, keine Bewertung: gemessen ueber 609.527
+#     Einstiege" (Kursmarken): ein MESSERGEBNIS. Regel 1 des Vorschlags: ein
+#     Ergebnis ist keine Luecke.
+#
+# Erkannt wird am ANFANG der Zeile (ohne Einrueckung) - die Saetze kommen
+# aus festen Texten ihrer Module. `_MARKEN_ERKLAERUNG` wird aus
+# `entscheidungsrechnung` gelesen, nicht abgeschrieben.
+LESEHILFE_PERZENTIL = ("Perzentil = Rangplatz in der eigenen Geschichte "
+                       "dieses Werts. \"7. Perzentil\" heisst: nur 7 von 100 "
+                       "Vergleichswerten lagen tiefer, 93 lagen hoeher.")
+
+
+def _lesehilfe_muster() -> tuple:
+    """(Titel, Zeilenanfaenge) - in der Reihenfolge, in der sie im Anhang stehen."""
+    from agent import entscheidungsrechnung as _ER2
+
+    marken = tuple(z.strip() for z in _ER2._MARKEN_ERKLAERUNG)
+    return (("Marken auf dem Weg", marken),
+            ("Uebliche Kursbewegung", ("Was das heisst: In ",
+                                       "Der Trichter sagt WIE WEIT",
+                                       "Nicht zu verwechseln mit "
+                                       "'Schwankungsbreiten'")),
+            ("Lebendigkeit", ("Zu lesen: ueber Wochen STEIGEND",)),
+            ("Merkmalszeile", ("Diese Zeile fasst nur zusammen",)))
+
+
+def lesehilfen_auslagern(zeilen: list[str] | None,
+                         gesammelt: dict) -> list[str]:
+    """Die Zeilen ohne ihre Lesehilfen; die Hilfen landen in `gesammelt`.
+
+    `gesammelt` ist {Titel: [Saetze]} und wird ueber alle Abschnitte einer
+    Mail geteilt - ein Satz, der zweimal vorkommt, steht einmal im Anhang."""
+    muster = _lesehilfe_muster()
+    aus = []
+    for z in list(zeilen or []):
+        t = str(z).strip()
+        treffer = next((titel for titel, anfaenge in muster
+                        if any(t.startswith(a) for a in anfaenge)), None)
+        if treffer is None:
+            aus.append(z)
+            continue
+        liste = gesammelt.setdefault(treffer, [])
+        if t not in liste:
+            liste.append(t)
+    return aus
+
+
+def lesehilfen_anhang(gesammelt: dict, perzentil: bool = False) -> list[str]:
+    """Der Anhangteil E - leer, wenn nichts ausgelagert wurde."""
+    # Im Anhang tragen die Saetze ihren Titel - "Was das heisst:" und "Zu
+    # lesen:" davor waeren doppelt, und "weiter oben" zeigt von hier aus
+    # ins Leere.
+    def _glatt(t: str) -> str:
+        for vorsatz in ("Was das heisst: ", "Zu lesen: "):
+            if t.startswith(vorsatz):
+                t = t[len(vorsatz)].upper() + t[len(vorsatz) + 1:]
+        return (t.replace("'Schwankungsbreiten' weiter oben",
+                          "'Schwankungsbreiten'")
+                 .replace("Diese Zeile fasst", "Die Merkmalszeile fasst"))
+
+    teile = [f"   {titel}: " + " ".join(_glatt(t) for t in gesammelt[titel])
+             for titel, _ in _lesehilfe_muster() if gesammelt.get(titel)]
+    if perzentil:
+        teile.append("   " + LESEHILFE_PERZENTIL)
+    if not teile:
+        return []
+    return (["E  Lesehilfen - dieselben Erklaerungen stehen in jeder Mail, "
+             "deshalb hier gesammelt:"] + teile)
+
+
 # Wie der erste Abschnitt heisst. Frueher fest "DER COIN" - siehe die Notiz
 # an der Verwendungsstelle. "DER WERT" traegt fuer alles, die Absicherung
 # bekommt ihren eigenen Namen, weil sie ausdruecklich KEIN Trade ist
@@ -391,8 +484,36 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # Vorbedingung an anderer Stelle verlaesst, bricht beim naechsten Umbau.
     _dringend_im_betreff = (dringend.startswith(AR.SCHLIESSEN)
                             and aktion not in AKTIONEN_MIT_EINSTIEG)
-    betreff = (f"TradingInfoTool: {symbol} - "
-               + (dringend if _dringend_im_betreff else aktion)
+    # ⚠️⚠️⚠️ DIE RICHTUNG GEHOERT IN DEN BETREFF (Schritt 41, 13.09.2026).
+    #
+    # Gefunden am Pruefstand (`pruefstand_hebelmail.py`, echte Kette auf
+    # einer Kopie der Produktionssicherung): eine SHORT-Empfehlung kam als
+    # "SOL - KAUFEN (Hebel)", mit dem Stop UEBER dem Kurs, beschriftet
+    # "(-11,2 %)", und dem Ziel darunter. Das Wort SHORT stand nur im
+    # Anhang. Wer "KAUFEN" liest und in der Bitpanda-App kauft, eroeffnet
+    # die GEGENPOSITION. ⚠️ Mit der Standardeinstellung `nur_long` geht
+    # eine SHORT-Mail gar nicht hinaus (Schalter am Versand, 2.447-schalter)
+    # - betroffen ist die Stellung ,beide'. Seit dem 22.08. gab es kein SHORT-Signal - der Weg
+    # ist aber offen (S6c), vorher waren es 252.
+    #
+    # Die Richtung kommt aus dem Urteil (bei KAUFEN/NACHKAUFEN seit S6c
+    # Pflicht); fehlt sie, entscheidet die Geometrie: ein Stop ueber dem
+    # Einstieg IST ein Short.
+    _ri = str((urteil or {}).get("richtung") or "").upper()
+    if _ri not in ("LONG", "SHORT"):
+        _st, _ei = (rechnung or {}).get("stop_eur"), (rechnung or {}).get("einstieg_eur")
+        _ri = ("SHORT" if _st is not None and _ei is not None
+               and float(_st) > float(_ei) else
+               ("LONG" if _st is not None and _ei is not None else ""))
+    _hebel_mail = float((rechnung or {}).get("hebel") or 1.0) > 1.0
+    _mit_einstieg = aktion in AKTIONEN_MIT_EINSTIEG and not _dringend_im_betreff
+    _zusatz = [z for z in (
+        "Hebel" if _hebel_mail else "",
+        # SHORT IMMER, auch ohne Hebel - LONG nur beim Hebel, wo die Frage
+        # ueberhaupt offen ist (Spot kennt nur LONG)
+        _ri if _mit_einstieg and (_ri == "SHORT" or (_ri and _hebel_mail)) else "",
+    ) if z]
+    # --- der Kommentar der vorigen Fassung, unveraendert ---
                # ⚠️ DER BETREFF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026).
                #
                # Vorher stand hier `instrument == "hebel"` - also das
@@ -404,9 +525,9 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                # VORGEZOGEN AUS S6. Dort folgt das ganze Etikett der Zahl -
                # Toepfe, Cooldowns, Datenbankwerte. Hier nur der Betreff,
                # weil der Widerspruch sonst in jeder Mail steht.
-               + (" (Hebel)"
-                  if float((rechnung or {}).get("hebel") or 1.0) > 1.0
-                  else ""))
+    betreff = (f"TradingInfoTool: {symbol} - "
+               + (dringend if _dringend_im_betreff else aktion)
+               + (" (%s)" % ", ".join(_zusatz) if _zusatz else ""))
 
     kopf = [titel,
             f"Kurs {preis(kurs_eur)} EUR"
@@ -460,6 +581,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     from agent import wahrscheinlichkeit as _WKM
 
     bewertung, gebuehren, nicht_eingerechnet = [], [], []
+    beitraege_beschrieben = []
     _im_nicht = False
     for z in list(wahrscheinlichkeit or []):
         if z == _WKM.KOPF_NICHT_EINGERECHNET:
@@ -471,6 +593,19 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         _im_nicht = False
         if z.startswith(_WKM.MARKE_TRAEGT) or z.startswith(_WKM.MARKE_ZU_WENIG):
             gebuehren.append(z)
+        # ⚠️ SCHRITT 31 (13.09.2026): WAS EIN BEITRAG MISST, STEHT IM ANHANG D.
+        # `wahrscheinlichkeit.saetze` setzt unter jede Beitragszeile ihre
+        # Beschreibung in Klammern - beim Turnover-Rang 480 Zeichen samt
+        # Audit-Notiz ("beim naechsten Nachrechnen zuerst hier hinsehen").
+        # Sie ist in jeder Mail dieselbe und zerschnitt die Rechnung
+        # 33,3 + 0,8 + 3,1 = 37,3, die Abschnitt 1 zeigen soll. Regel 3:
+        # Anhang statt Weglassen.
+        elif (z.startswith("     (") and z.rstrip().endswith(")")
+              and bewertung and bewertung[-1][3:5].strip()[:1] in ("+", "−")):
+            _name = bewertung[-1][3:55].strip()[1:].strip()
+            # Mit Klammer - der Satz steht woertlich im Anhang, nicht
+            # umformuliert (Paket Mailgliederung, ,NICHTS GESTRICHEN').
+            beitraege_beschrieben.append(f"{_name} {z.strip()}")
         else:
             bewertung.append(z)
 
@@ -648,7 +783,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                  if n else f"Belege ({len(belege)}):",
                  # Dieselbe Legende wie in der alten Mail - der Renderer
                  # erkennt sie an "Warnsignal" und setzt sie kursiv grau.
-                 "(▲ spricht dafuer · ● neutral · ▼ Warnsignal/spricht dagegen)"]
+                 BELEG_LEGENDE]
         # ⚠️ DIE MARKER DES RENDERERS, NICHT EIGENE (17.08.2026,
         # Nutzerhinweis mit einem Beispiel aus der ALTEN Mail).
         #
@@ -658,7 +793,7 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         # Kette schrieb aber "+/-/o" - Zeichen, die der Renderer nicht
         # kennt. Die Farbe war nie weg; der Text hat nur aufgehoert, sie
         # anzufordern.
-        zeichen = {"dafuer": "▲", "dagegen": "▼", "neutral": "●"}
+        zeichen = BELEG_ZEICHEN
         for b in belege:
             drei.append(f"  {zeichen.get(b.get('richtung'), '?')} "
                         f"{b.get('fakt', '')} [{b.get('gewicht', '?')}]")
@@ -700,6 +835,15 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     _projekt = list(termine or [])
     if lebendigkeit:
         _projekt += ([""] if _projekt else []) + list(lebendigkeit)
+    # ⚠️ SCHRITT 31: DIE LESEHILFEN WANDERN IN DEN ANHANG E - vor dem Bau
+    # der Abschnitte, damit der Kopf (`gesamtbild`) schon die gestraffte
+    # Fassung liest. Abschnitt 5 (das Modell) bleibt unberuehrt.
+    _hilfen = {}
+    bewertung = lesehilfen_auslagern(bewertung, _hilfen)
+    zwei = lesehilfen_auslagern(zwei, _hilfen)
+    _lage = lesehilfen_auslagern(_lage, _hilfen)
+    _markt = lesehilfen_auslagern(_markt, _hilfen)
+    _projekt = lesehilfen_auslagern(_projekt, _hilfen)
     _anhang = []
     if nicht_eingerechnet:
         # Die Kopfzeile WOERTLICH wie im Wahrscheinlichkeitsblock - "nichts
@@ -716,6 +860,12 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         _anhang += ([""] if _anhang else []) + [
             "C  Abstand zur Zwangsaufloesung, falls ein Hebel noetig wird:"
         ] + [f"   {z}" for z in hebelgeometrie]
+    if beitraege_beschrieben:
+        _anhang += ([""] if _anhang else []) + [
+            "D  Die eingerechneten Beitraege - was sie messen:"
+        ] + [f"   {z}" for z in beitraege_beschrieben]
+    # E steht erst NACH dem Kopf fest (die Zeile "fasst nur zusammen" kommt
+    # aus `gesamtbild`).
     _abschnitte = (
         _abschnitt("1. DIE BEWERTUNG", bewertung, HERKUNFT["bewertung"])
         + _abschnitt("2. DIE POSITION" if ausstieg else "2. DIE RECHNUNG",
@@ -740,11 +890,23 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     _r = rechnung or {}
     if (aktion in AKTIONEN_MIT_EINSTIEG and not ausstieg_dringend
             and _r.get("stop_eur") is not None):
+        # ⚠️ DIE EMPFEHLUNG STEHT OBEN (Schritt 31, 2.446-lesbarkeit): sie
+        # stand nur im Betreff und in Abschnitt 5, Zeile 115 von 177. Mit
+        # ihrer Herkunft - sie ist das Urteil des Modells, nicht die Rechnung.
+        _blick.append(f"Empfehlung      {aktion} - Urteil des Modells "
+                      f"(Abschnitt 5)")
+        # ⚠️ ZUERST DIE RICHTUNG (Schritt 41) - vor jeder Zahl, weil jede
+        # Zahl darunter nur mit ihr richtig gelesen wird.
+        if _ri == "SHORT" or (_ri and _hebel_mail):
+            _blick.append("Richtung        " + RICHTUNG_TEXT[_ri])
         if _r.get("einstieg_von_eur") is not None:
             _blick.append(f"Einstiegszone   {preis(_r['einstieg_von_eur'])} bis "
                           f"{preis(_r.get('einstieg_bis_eur') or _r['einstieg_von_eur'])} EUR")
+        # ⚠️ DAS VORZEICHEN FOLGT DER RICHTUNG. Hier stand fest "(-x %)" -
+        # bei einem SHORT liegt der Stop UEBER dem Kurs.
+        _stop_vz = "+" if _ri == "SHORT" else "-"
         _blick.append(f"Stop            {preis(_r['stop_eur'])} EUR"
-                      + (f"  (-{_sde(100 * float(_r['stop_relativ']), 1)} %)"
+                      + (f"  ({_stop_vz}{_sde(100 * float(_r['stop_relativ']), 1)} %)"
                          if _r.get("stop_relativ") else ""))
         if _r.get("ziel_von_eur") is not None:
             _blick.append(f"Take-Profit     {preis(_r['ziel_von_eur'])} bis "
@@ -776,10 +938,24 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         if _gb:
             # "Dagegen spricht" steht jetzt als eigener Block darunter - hier
             # nicht ein zweites Mal.
-            _blick += [""] + [z for z in _gb
-                              if not (_gegen and z.startswith("⚠️ Dagegen spricht"))]
+            _blick += [""] + lesehilfen_auslagern(
+                [z for z in _gb
+                 if not (_gegen and z.startswith("⚠️ Dagegen spricht"))],
+                _hilfen)
     except Exception:                                        # noqa: BLE001
         pass
+    # ANHANG E - erst jetzt, weil die Zeile "fasst nur zusammen" aus dem
+    # Kopf kommt. Der Anhang ist der letzte Abschnitt; fehlt er, entsteht er.
+    _e = lesehilfen_anhang(
+        _hilfen, perzentil=any("Perzentil" in z
+                               for z in _abschnitte + _blick + _gegen))
+    if _e:
+        if "--- ANHANG - ZUM NACHSCHLAGEN ---" in _abschnitte:
+            # vor die Leerzeile, mit der `_abschnitt` jeden Abschnitt schliesst
+            _abschnitte = _abschnitte[:-1] + [""] + _e + [""]
+        else:
+            _abschnitte += _abschnitt("ANHANG - ZUM NACHSCHLAGEN", _e,
+                                      HERKUNFT["anhang"])
     _kopfabschnitte = (
         _abschnitt("AUF EINEN BLICK", _blick)
         + _abschnitt("WAS DAGEGEN SPRICHT - je eine Zeile, Einzelheiten weiter "
@@ -797,31 +973,16 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
     # dem Widerspruch in der Ueberschrift (G-b). Beides traegt die neue
     # Gliederung weiter; die EINORDNUNG steht jetzt im Anhang (Teil B).
 
-    # ⚠️ "PERZENTIL" EINMAL ERKLAEREN - AN DER ERSTEN STELLE (20.08.2026).
+    # ⚠️ "PERZENTIL" EINMAL ERKLAEREN (20.08.2026) - SEIT SCHRITT 31 IM
+    # ANHANG E (`LESEHILFE_PERZENTIL`), nicht mehr an der ersten Fundstelle.
     #
-    # Nutzerrueckmeldung: die Perzentile seien "zum Teil nicht oder schwierig
-    # einzuordnen". Zu Recht - das Wort steht an 141 Stellen im System und
-    # wird an keiner erklaert. Und es ist mehrdeutig, wenn man die Konvention
-    # nicht kennt: heisst "7. Perzentil" sieben Prozent daruber oder darunter?
-    #
-    # DIE ANTWORT STEHT IM CODE, nicht in der Vermutung: `marktlage._perzentil`
-    # rechnet `Anteil der Vergleichswerte, die UNTER dem aktuellen liegen`.
-    # Sieben heisst also: nur sieben von hundert lagen tiefer.
-    #
-    # Eine Zeile je Mail, an der ERSTEN Fundstelle - nicht 141 Umschreibungen
-    # und keine Legende am Ende, die niemand liest. Dieselbe Bauform wie beim
-    # Gesamtbild: der fertige Text wird gelesen, nichts neu gerechnet.
-    try:
-        _z = text.split("\n")
-        _i = next((k for k, z in enumerate(_z) if "Perzentil" in z), None)
-        if _i is not None:
-            _z.insert(_i + 1,
-                      "   (Perzentil = Rangplatz in der eigenen Geschichte "
-                      "dieses Werts. \"7. Perzentil\" heisst: nur 7 von 100 "
-                      "Vergleichswerten lagen tiefer, 93 lagen hoeher.)")
-            text = "\n".join(_z)
-    except Exception:                                        # noqa: BLE001
-        pass
+    # Nutzerrueckmeldung 20.08.: die Perzentile seien "zum Teil nicht oder
+    # schwierig einzuordnen". Die Konvention steht im Code:
+    # `marktlage._perzentil` rechnet den Anteil der Vergleichswerte, die UNTER
+    # dem aktuellen liegen - "7. Perzentil" heisst, nur sieben lagen tiefer.
+    # Bis zum 13.09. stand die Erklaerung als eingeschobene Klammer unter der
+    # ersten Fundstelle, in jeder Mail. Sie bleibt einmal je Mail - gesammelt
+    # mit den uebrigen Lesehilfen.
 
     # 93 E: DAS GESAMTBILD steht seit S-4 (11.09.2026) im Abschnitt AUF EINEN
     # BLICK - es liest weiterhin die FERTIGEN Abschnitte und zaehlt die

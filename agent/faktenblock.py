@@ -1,6 +1,22 @@
 # -*- coding: utf-8 -*-
 """Der deterministische Faktenblock fuer die E-Mail (Paket 12, 12.08.2026).
 
+⚠️⚠️ SEIT 13.09.2026 OHNE ETIKETT (Schritt 31, Befund 2.446-etiketten,
+Nutzerentscheidung: *"ja streichen"*). Die drei Zeilen trugen GUENSTIG /
+MITTEL / UNGUENSTIG und den Satz "ueber alle Einstiege gemessen: 29,5 %
+Treffer am guten Ende gegen 17,8 %". Die Zahlen stammen aus einer
+GEPOOLTEN Messung vom 12.08. - vor Tagesklammer und Messstandard. Nach
+Standard gemessen gilt: Schwankung traegt keine Richtung (2.135), Momentum
+traegt nicht (REGISTER_Kandidaten, 09.09.), Volumen ist nie registriert.
+
+Ein Etikett ist eine BEWERTUNG - es sagt, was kommt. Ohne gueltigen Beleg
+gehoert es nicht in die Mail. WERT und BESCHREIBUNG bleiben: sie sind Fakten.
+Die Messwerte in `KERN` und `_urteil()` bleiben stehen, als Rueckweg: traegt
+eine Familie spaeter nach Standard, kommt ihr Etikett mit dem NEUEN Beleg
+zurueck, nicht mit diesem.
+
+Der Rest dieses Kopfs beschreibt die Fassung vom 12.08.
+
 DIE ZWEITE SCHIENE. Nutzer am 12.08.: *"ganz wichtig - nein, es sollen keine
 Zahlen in die Ablaufkette bzw. LLM - aber als Info bzw. wo als Fakt vorhanden
 und sinnvoll ergaenzen (deterministische Schiene kombiniert)."*
@@ -55,16 +71,22 @@ BASIS_TREFFER = 23.5        # ueber alle 20.494 Anker (Umbauplan 12.8)
 # Fall liegt; `gut`/`schlecht` sind die gemessenen Trefferquoten dort.
 KERN = {
     "schwankung": {
-        "titel": "Schwankung",
+        # ⚠️ "SCHWANKUNGSBREITE", NICHT "SCHWANKUNG" (Schritt 31,
+        # 2.446-begriffe b). Der Wert IST eine Schwankungsbreite - ATR 14
+        # durch Kurs -, dieselbe Groesse, in der die Mail alle Abstaende
+        # misst ("0,8 Schwankungsbreiten hoeher"). Unter einem eigenen Wort
+        # sah sie aus wie eine dritte Groesse neben ATR und Trichter.
+        "titel": "Schwankungsbreite",
         "hoch_ist_gut": False, "gut": 29.5, "schlecht": 17.8,
-        "was": "Wie stark der Kurs taeglich schwingt, gemessen an seinem "
-               "eigenen Jahr.",
+        "was": "Wie weit der Kurs an einem gewoehnlichen Tag schwingt (ATR "
+               "14 Tage) - der Massstab fuer die Abstaende in dieser Mail.",
         "richtung": "Ruhig ist besser",
     },
     "momentum": {
         "titel": "Kurs",
         "hoch_ist_gut": True, "gut": 28.0, "schlecht": 18.9,
-        "was": "Wie weit der Kurs unter seinem Hoch der letzten drei Monate "
+        # "drei Monate" stand hier - das Fenster ist MOMENTUM_FENSTER = 60.
+        "was": "Wie weit der Kurs unter seinem Hoch der letzten 60 Tage "
                "steht.",
         "richtung": "Nahe am Hoch ist besser",
     },
@@ -345,14 +367,15 @@ PERZENTIL_NUR_INTERN = {
 }
 
 
-def _block(schluessel: str, wert_text: str, perzentil: float) -> list[str]:
+def _block(schluessel: str, wert_text: str) -> list[str]:
+    """Wert und Beschreibung - KEIN Etikett, KEIN Wirkungssatz (Schritt 31).
+
+    Hier standen zusaetzlich `_urteil(perzentil)` und der Satz "ueber alle
+    Einstiege gemessen: 29,5 % ... gegen 17,8 %". Beides ist eine Bewertung
+    ohne gueltigen Beleg - siehe Modulkopf."""
     k = KERN[schluessel]
-    urteil = _urteil(perzentil, k["hoch_ist_gut"])
-    return [f"{k['titel']:<12} {wert_text:<40} {urteil}",
-            f"  {k['was']}",
-            f"  {k['richtung']} - ueber alle Einstiege gemessen: "
-            f"{_de(k['gut'], 1)} % Treffer am guten Ende gegen "
-            f"{_de(k['schlecht'], 1)} % am anderen, Schnitt {_de(BASIS_TREFFER, 1)} %."]
+    return [f"{k['titel']:<18} {wert_text}",
+            f"  {k['was']}"]
 
 
 def kern(*, atr_relativ: float | None = None,
@@ -371,23 +394,24 @@ def kern(*, atr_relativ: float | None = None,
     die, die er nicht lesen kann, wirkt im Hintergrund."""
     zeilen, luecken = [], []
 
-    if atr_relativ is None or schwankung_perzentil is None:
-        luecken.append("Schwankung")
+    # ⚠️ DAS PERZENTIL ENTSCHEIDET NICHT MEHR, OB DIE ZEILE ERSCHEINT
+    # (Schritt 31). Es bestimmte nur das Etikett, und das ist gestrichen -
+    # ein Wert ohne Perzentil ist trotzdem ein Wert.
+    if atr_relativ is None:
+        luecken.append("Schwankungsbreite")
     else:
-        zeilen += _block("schwankung", f"{_de(100 * atr_relativ, 1)} % je Tag",
-                         schwankung_perzentil)
+        zeilen += _block("schwankung", f"{_de(100 * atr_relativ, 1)} % je Tag")
 
-    if rueckgang_60t is None or momentum_perzentil is None:
+    if rueckgang_60t is None:
         luecken.append("Kursentwicklung")
     else:
         zeilen += [""] if zeilen else []
         zeilen += _block(
             "momentum",
             "auf dem Hoch der letzten 60 Tage" if rueckgang_60t >= -0.001 else
-            f"{_de(abs(100 * rueckgang_60t), 1)} % unter dem 60-Tage-Hoch",
-            momentum_perzentil)
+            f"{_de(abs(100 * rueckgang_60t), 1)} % unter dem 60-Tage-Hoch")
 
-    if volumen_relativ is None or volumen_perzentil is None:
+    if volumen_relativ is None:
         luecken.append("Volumen")
     else:
         zeilen += [""] if zeilen else []
@@ -397,8 +421,7 @@ def kern(*, atr_relativ: float | None = None,
                          # ist es der Umsatz von gestern - ein ganzer Tag statt
                          # eines angefangenen. Das zu verschweigen hiesse, eine
                          # Zahl von gestern als heutige auszugeben.
-                         + (" (Vortag)" if volumen_von_gestern else ""),
-                         volumen_perzentil)
+                         + (" (Vortag)" if volumen_von_gestern else ""))
     return zeilen, luecken
 
 
@@ -455,10 +478,13 @@ def baue(bereich: str, *, kern_werte: dict, zusatz_werte: dict | None = None,
     if luecken:
         # EINE LUECKE IST EINE AUSSAGE. Ein Signal mit zwei Fakten darf nicht
         # aussehen wie eines mit dreien.
-        zeilen += ["", f"Keine Angabe zu: {', '.join(luecken)}. "
-                       + ("Ein Punkt weniger steht" if len(luecken) == 1
-                          else f"{len(luecken)} Punkte weniger stehen")
-                       + " damit hinter dieser Empfehlung."]
+        # ⚠️ OHNE "... STEHT DAMIT HINTER DIESER EMPFEHLUNG" (Schritt 31).
+        # Der Satz behauptete, diese Werte trugen die Empfehlung - sie tun
+        # es nicht, sie sind Lage. Die Luecke bleibt benannt.
+        # Kein Grund dazugeschrieben: `werte_aus_reihe` liefert None bei zu
+        # kurzer Reihe UND bei fehlendem Umsatz - einen davon zu nennen
+        # hiesse, ihn zu raten.
+        zeilen += ["", f"Keine Angabe zu: {', '.join(luecken)}."]
     z = zusatz(bereich, zusatz_werte or {}, symbol)
     if z:
         zeilen += ["", "ZUSATZINFO - nicht gemessen, zur eigenen Einordnung:", ""]

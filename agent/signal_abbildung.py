@@ -252,6 +252,25 @@ SPALTEN_SIGNAL = {
     "potential_schwelle_r": "REAL",
     "umgeworfen_durch": "TEXT",
     "umgeworfen_preis_eur": "REAL",
+    # ⚠️⚠️ DER KURS ZUM ZEITPUNKT DER EMPFEHLUNG (Schritt 48, 13.09.2026).
+    #
+    # WARUM ER FEHLTE UND WAS ER KOSTET: ein EINSTIEG haelt seine Lage in
+    # `entry_usd_von/bis` und `stop_loss_*` fest - ein AUSSTIEG in gar
+    # nichts. `_sende_ausstieg` reichte `rechnung=None` durch, und damit
+    # blieb vom Empfehlungszeitpunkt nur der Zeitstempel.
+    #
+    # Die Folge steht in 2.403: `messe_ausstiegsguete.py` muss mit dem
+    # TAGESSCHLUSS rechnen, und das ist die Untergrenze der Aufloesung -
+    # bei H3 liegt die Guete deshalb am Zufall, obwohl sie bei H10 den
+    # Zufall deutlich schlaegt. Wer den Kurs der Stunde nicht kennt, kann
+    # kurze Horizonte nicht beurteilen.
+    #
+    # ⚠️ NUR ERFASSEN, NICHT BEWERTEN (Nutzervorgabe zu Schritt 48). Die
+    # Spalte aendert keinen Ablauf, keine Mail und keine Sperre. Sie wird
+    # geschrieben, damit in vier Wochen rund 500 auswertbare Faelle
+    # dastehen - wer erst mit dem Umbau anfaengt zu messen, beginnt ihn
+    # mit null Daten.
+    "kurs_bei_empfehlung_eur": "REAL",
     "umgeworfen_bis": "TEXT",
     "lagebild_id": "INTEGER",
     "prompt_stand": "TEXT",                 # jeder Befund gehoert zu einem
@@ -468,6 +487,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             eur_je_usd: float | None = None,
                             familien: dict | None = None,
                             rechnung: dict | None = None,
+                            kurs_bei_empfehlung_eur: float | None = None,
                             modell: str | None = None,
                             instrument: str | None = None,
                             strategie: str | None = None,
@@ -514,6 +534,10 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                         if antwort.get("belege") else None),
         "umgeworfen_durch": antwort.get("umgeworfen_durch"),
         "umgeworfen_preis_eur": antwort.get("umgeworfen_preis_eur"),
+        # ⚠️ AUS DEM AUFRUF, nicht aus der Modellantwort: der Kurs ist eine
+        # Tatsache der Kette, keine Angabe des Modells. Fehlt er, bleibt
+        # die Spalte leer - ein geratener Kurs waere schlimmer als keiner.
+        "kurs_bei_empfehlung_eur": kurs_bei_empfehlung_eur,
         "umgeworfen_bis": _frist_oder_nichts(antwort.get("umgeworfen_bis")),
         # DER FAKTENSATZ IST PFLICHT (Eckpunkt 4). Ohne ihn ist die Empfehlung
         # im Nachhinein nicht mehr pruefbar.

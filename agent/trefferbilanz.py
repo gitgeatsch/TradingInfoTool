@@ -169,9 +169,15 @@ def kosten_r_aus_stop(einstieg: float, stop: float, klasse: str = "krypto",
     ANDERS ALS DIE TREFFERQUOTE IST DAS KEIN SCHAETZWERT: die Gebuehren stehen
     fest, der Stopabstand steht im Signal. Diese Zahl ist gerechnet, nicht
     kalibriert."""
-    if not einstieg or not stop or einstieg <= 0 or stop >= einstieg:
+    # ⚠️ DER ABSTAND, NICHT DIE RICHTUNG (Schritt 31, 13.09.2026). Hier
+    # stand `stop >= einstieg -> None`: bei jedem SHORT (Stop UEBER dem
+    # Einstieg) gab es keine Kosten, der Anhang B rechnete ,noetig 33 von
+    # hundert' und schrieb ,Traegt sich' - waehrend der Kopf derselben Mail
+    # fuer denselben Trade ,Bitpanda 1,50 %: noetig 53,0 %, ZU WENIG' sagte.
+    # Die Gebuehr faellt auf den Abstand an, gleich in welche Richtung.
+    if not einstieg or not stop or einstieg <= 0 or stop == einstieg:
         return None
-    stop_rel = (einstieg - stop) / einstieg
+    stop_rel = abs(einstieg - stop) / einstieg
 
     # VIER KOSTENARTEN, NICHT ZWEI (14.08.2026, Nutzerhinweis: "unterschiedliche
     # Assets haben unterschiedliche Gebuehren, dies muss auch korrekt
@@ -492,7 +498,9 @@ def satz(bewertung: dict, einstieg=None, stop=None,
 
     # Zuerst das Konkrete, wenn wir es haben: was kostet der Trade, gemessen
     # an dem, was er riskiert.
-    if einstieg and stop and einstieg > stop > 0:
+    # ⚠️ AUCH BEI SHORT (Schritt 31): hier stand `einstieg > stop > 0` - der
+    # ganze Kostenblock fehlte bei jedem Short. Siehe `kosten_r_aus_stop`.
+    if einstieg and stop and stop > 0 and einstieg != stop:
         # ⚠️⚠️ AB HIER BEGINNT DIE ZWEITE EBENE (01.09.2026, Nutzervorgabe:
         # *"sauber trennen nach neutraler Begruendung und rechnerischen
         # Kosten im eMail-Text, getrennt fuer 0,3 Standard und 1,5 BP"*).
@@ -508,10 +516,13 @@ def satz(bewertung: dict, einstieg=None, stop=None,
         # wieviel Anbieter ist. Beide Zahlen kommen aus
         # `SAETZE_JE_SEITE_MAILTEXT` - derselben Quelle, aus der auch
         # `wahrscheinlichkeit.saetze()` liest.
-        stop_pct = 100.0 * (einstieg - stop) / einstieg
-        stop_rel = (einstieg - stop) / einstieg
-        zeilen.append(f"Ihr Stop liegt {_de(stop_pct)} % unter dem Einstieg - "
-                      f"so viel riskieren Sie.")
+        stop_pct = 100.0 * abs(einstieg - stop) / einstieg
+        stop_rel = abs(einstieg - stop) / einstieg
+        # ⚠️ HIER STAND "Ihr Stop liegt x % unter dem Einstieg - so viel
+        # riskieren Sie." GESTRICHEN (Schritt 31, 2.446-redundanz): es war
+        # die FUENFTE Nennung desselben Abstands, und bei SHORT war sie
+        # falsch - der Stop liegt dort darueber. Der Abstand steht im Kopf
+        # und in der Rechnung.
 
         # ⚠️ DER HEBEL ENTSCHEIDET UEBER DAS TIER, NICHT DER LAUF (I-1a).
         # Dieselbe Weiche wie in `kosten_r_aus_stop`, aus demselben Grund:
@@ -617,7 +628,20 @@ def satz(bewertung: dict, einstieg=None, stop=None,
         zeilen.append(f"Fuer genau diese Konstellation liegen erst "
                       f"{b['faelle']} eigene Faelle vor - zu wenige fuer eine "
                       f"eigene Zahl.")
-    zeilen.append(f"Damit sich der Trade nach Gebuehren traegt, muessten es "
+    # ⚠️ ZU WELCHEM SATZ (Schritt 31, 2.446-begriffe e): der Kopf nennt zwei
+    # Huerden, 0,30 % und 1,50 % - hier stand ,noetig 53' ohne Satz.
+    # `kosten_r_aus_stop` rechnet ohne `satz_je_seite`, also mit dem
+    # Bitpanda-Satz aus `backward_tracking.kosten_in_r`.
+    # Der Name aus derselben Quelle wie die Kopfzeilen - der Satz, der
+    # dort als Vorgabe (`_KOSTEN_KRYPTO_JE_SEITE`) steht.
+    from agent.krypto.backward_tracking import (
+        SAETZE_JE_SEITE_MAILTEXT as _SJS, _KOSTEN_KRYPTO_JE_SEITE as _KKS)
+    _satzname = next((f" ({n})" for n, v in _SJS if v == _KKS), "")
+    if not (klasse == "krypto" or instrument == "hebel"
+            or (hebel is not None and float(hebel) > 1.0)):
+        _satzname = ""
+    zeilen.append(f"Damit sich der Trade nach Gebuehren{_satzname} "
+                  f"traegt, muessten es "
                   f"{100 * b['breakeven']:.0f} von hundert sein.")
 
     if b["breakeven"] >= 1.0:

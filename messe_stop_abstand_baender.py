@@ -62,6 +62,13 @@ BAENDER = [(0.0, 2.0), (2.0, 3.0), (3.0, 5.0), (5.0, 8.0), (8.0, 12.0), (12.0, 1
 HORIZONTE = (7, 14)
 MIN_N = 15
 BOOTSTRAP = 2000
+# ⚠️⚠️ DIESELBEN STAERKEN WIE IN `messnorm.STAERKEN` - nicht neu erfunden.
+# Eine zweite Leiter waere eine zweite Skala, und Befunde aus beiden waeren
+# nicht vergleichbar.
+STAERKEN = (0.02, 0.05, 0.10, 0.20, 0.40)
+# Positivkontrolle: FUENF Ziehungen, wie die Norm es verlangt. Eine
+# Ziehung kann Saatglueck sein.
+POSITIV_ZIEHUNGEN = 5
 
 
 def lade_reihen(d: dict) -> dict:
@@ -103,6 +110,90 @@ def block_bootstrap(faelle: list[dict], zieh: int = BOOTSTRAP) -> tuple[float, f
     return (mittel[int(0.025 * len(mittel))], mittel[int(0.975 * len(mittel))])
 
 
+def _bootstrap_werte(faelle: list[dict], saat: int) -> tuple[float, float]:
+    """Wie `block_bootstrap`, aber mit waehlbarer Saat.
+
+    ⚠️ Ueber SYMBOLE ziehen, nicht ueber Einzelfaelle - sonst zu enge
+    Intervalle. Dieselbe Regel wie oben; nur die Saat ist frei, damit die
+    Positivkontrolle mehrere Ziehungen fahren kann."""
+    je_symbol = defaultdict(list)
+    for f in faelle:
+        je_symbol[f["symbol"]].append(f["r"])
+    symbole = list(je_symbol)
+    if len(symbole) < 2:
+        return (float("nan"), float("nan"))
+    rng = random.Random(saat)
+    mittel = []
+    for _ in range(BOOTSTRAP):
+        werte = []
+        for _ in range(len(symbole)):
+            werte.extend(je_symbol[rng.choice(symbole)])
+        if werte:
+            mittel.append(statistics.fmean(werte))
+    mittel.sort()
+    return (mittel[int(0.025 * len(mittel))], mittel[int(0.975 * len(mittel))])
+
+
+def _gepflanzt(g: list[dict], bl_ew: float, staerke: float) -> list[dict]:
+    """Die Faelle ZENTRIERT auf die Basislinie, dann um `staerke` versetzt.
+
+    ⚠️⚠️ ZENTRIEREN IST PFLICHT (stehende Vorgabe, 07.09.2026). Wer den
+    Effekt auf die ECHTE Reihe pflanzt, misst nicht die Trennschaerfe:
+    enthaelt sie bereits einen trennbaren Unterschied, bleibt das Ergebnis
+    bei JEDEM Versatz signifikant, und gemeldet wird die kleinste
+    geprueften Zahl. Das heisst dann nur "der echte Effekt ist gross" -
+    nicht "ein Effekt dieser Groesse waere gefunden worden".
+
+        FALSCH   r + staerke
+        RICHTIG  r - mittel(Band) + mittel(Basislinie) + staerke
+
+    ⚠️ DER SCHNELLTEST: bei staerke 0 muss der zentrierte Abstand zur
+    Basislinie EXAKT 0,0000 sein. Genau das prueft `_probe_zentrierung`.
+    """
+    ew = statistics.fmean(x["r"] for x in g)
+    return [{**x, "r": x["r"] - ew + bl_ew + staerke} for x in g]
+
+
+def _probe_zentrierung(g: list[dict], bl_ew: float) -> float:
+    """Die Gegenprobe zur Zentrierung - muss 0,0 liefern."""
+    null = _gepflanzt(g, bl_ew, 0.0)
+    return statistics.fmean(x["r"] for x in null) - bl_ew
+
+
+def trennschaerfe(g: list[dict], bl_ew: float) -> tuple:
+    """Die KLEINSTE gepflanzte Staerke, die noch gefunden wird.
+
+    "Gefunden" heisst: das Bootstrap-Band der ZENTRIERTEN, um `s`
+    versetzten Reihe schliesst die Basislinie aus.
+
+    ⚠️ OHNE SIE IST EIN ,TRAEGT NICHT' NICHT VON ,HAETTEN WIR GAR NICHT
+    SEHEN KOENNEN' ZU UNTERSCHEIDEN. Genau daran ist die alte
+    Stop-Messung nie gescheitert - sie hat es nie gefragt.
+    """
+    for st in STAERKEN:
+        lo, hi = _bootstrap_werte(_gepflanzt(g, bl_ew, st), 20260913)
+        if lo == lo and lo > bl_ew:          # NaN-sicher
+            return st, lo, hi
+    return None, float("nan"), float("nan")
+
+
+def positivkontrolle(g: list[dict], bl_ew: float,
+                     staerke: float = 0.40) -> tuple[int, int]:
+    """Findet die Anlage einen BEKANNTEN Effekt - in wie vielen Ziehungen?
+
+    ⚠️ FUENF Ziehungen mit verschiedenen Saaten. Eine einzelne kann
+    Saatglueck sein; die Norm verlangt deshalb mehrere (`messnorm`,
+    Positivkontrolle 5 Ziehungen).
+    """
+    gefunden = 0
+    for i in range(POSITIV_ZIEHUNGEN):
+        lo, _hi = _bootstrap_werte(_gepflanzt(g, bl_ew, staerke),
+                                   20260913 + 1000 * i)
+        if lo == lo and lo > bl_ew:
+            gefunden += 1
+    return gefunden, POSITIV_ZIEHUNGEN
+
+
 def auswerten(d: dict, reihen: dict, horizont: int, richtung: str | None) -> None:
     je_band: dict = defaultdict(list)
     ohne_reihe = 0
@@ -126,8 +217,9 @@ def auswerten(d: dict, reihen: dict, horizont: int, richtung: str | None) -> Non
     print(titel + f"   ({ohne_reihe} ohne ausreichende Preisreihe verworfen)")
     print("=" * 92)
     print(f"  {'Stop-Band':>12s} | {'n':>4s} | {'EW (R)':>8s} | {'Bootstrap-KI':>18s} | "
-          f"{'Basislinie':>10s} | {'Abstand':>8s} | {'positiv':>7s}")
-    print("  " + "-" * 88)
+          f"{'Basislinie':>10s} | {'Abstand':>8s} | {'positiv':>7s} | "
+          f"{'Trennsch.':>9s} | {'Positivk.':>9s}")
+    print("  " + "-" * 112)
 
     for b in BAENDER:
         g = je_band.get(b, [])
@@ -145,11 +237,27 @@ def auswerten(d: dict, reihen: dict, horizont: int, richtung: str | None) -> Non
         bl = basislinie(reihen, med_stop, med_crv, anteil_short >= 0.5, horizont)
         bl_ew = statistics.fmean(bl) if bl else float("nan")
 
+        # ---- ⚠⚠ TRENNSCHAERFE UND POSITIVKONTROLLE (13.09.2026) -----
+        #
+        # Ohne sie ist ein "nicht trennbar" nicht von "haetten wir gar
+        # nicht sehen koennen" zu unterscheiden - und genau diese Baender
+        # sollen ueber die Stopweite JEDES Signals entscheiden.
+        ts, ts_lo, _ts_hi = trennschaerfe(g, bl_ew)
+        pk, pk_n = positivkontrolle(g, bl_ew)
+        # ⚠ DIE GEGENPROBE ZUR ZENTRIERUNG, in jedem Lauf: bei Staerke 0
+        # muss der Abstand zur Basislinie exakt 0 sein. Ist er es nicht,
+        # pflanzt die Anlage auf die ECHTE Reihe und misst den vorhandenen
+        # Effekt noch einmal (stehende Vorgabe 07.09.).
+        _z = _probe_zentrierung(g, bl_ew)
+        _zwarn = "" if abs(_z) < 1e-9 else "  ⚠ ZENTRIERUNG %+.2e" % _z
+
         label = f"{b[0]:.0f}-{b[1]:.0f} %" if b[1] < 1e9 else f"> {b[0]:.0f} %"
         warn = "" if len(g) >= MIN_N else "  <-- n zu klein"
+        _ts = ("ab %.2f R" % ts) if ts is not None else "> 0,40 R"
         print(f"  {label:>12s} | {len(g):4d} | {ew:+8.3f} | "
               f"[{lo:+6.3f};{hi:+6.3f}] | {bl_ew:+10.3f} | {ew - bl_ew:+8.3f} | "
-              f"{positiv:6.1f} %{warn}")
+              f"{positiv:6.1f} % | {_ts:>9s} | {pk:d} von {pk_n:d}"
+              f"{warn}{_zwarn}")
 
 
 def main() -> None:

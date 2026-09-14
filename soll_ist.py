@@ -107,6 +107,47 @@ class Schritt:
     fertig: bool = False
     hinweis: str = ""
     block: str = ""
+    # ⚠️⚠️ WORAUF DIESER SCHRITT WARTET (13.09.2026, Schritt 46 Teil 2).
+    #
+    # DER GRUND: die Blockordnung vom 12.09. ordnet nach DRINGLICHKEIT und
+    # kennt keine ABHAENGIGKEIT. Folge: `soll_ist` meldete als naechsten
+    # Schritt 28, dessen eigener Text sagt *"ERST NACH DEM ROLLOUT messen
+    # - vorher misst man den alten Stand"*. Ein Plan, der auf einen
+    # Schritt zeigt, der nicht darf, ist so unbrauchbar wie einer ohne
+    # Rangfolge - es ist derselbe Fehler (2.395) eine Ebene tiefer.
+    #
+    # ⚠️ NUR EINTRAGEN, WAS DER SCHRITT SELBST SAGT. Das Feld ist kein
+    # Ort fuer Vermutungen ueber Reihenfolgen; steht die Abhaengigkeit
+    # nicht im Text, gehoert sie erst dorthin.
+    #
+    # ⚠️⚠️ UND NICHT UMSORTIEREN STATTDESSEN: das wuerde die Abhaengigkeit
+    # VERSTECKEN - man saehe die richtige Reihenfolge, aber nicht den
+    # Grund, und beim naechsten Umbau waere sie wieder weg.
+    wartet_auf: tuple = ()
+    # ⚠️⚠️ ALT ODER NEU (13.09.2026, Nutzervorgabe: *"Der PLAN muss klar
+    # zwischen altem und neuem Umbau unterscheiden"*).
+    #
+    # DER GRUND, in seinen Worten: *"das zu LLM kann nicht ganz stimmen -
+    # Hebel soll nicht aus LLM kommen, du vermischt altes mit neuem"*. Er
+    # hatte recht, und die Vermischung war meine: ich hatte den
+    # Widerlegungspreis als tragend fuer den Hebel dargestellt, obwohl er
+    # nur den STOP setzt - und der Stop ist der ALTE Teil der Rechnung,
+    # waehrend `r(q)` der neue ist.
+    #
+    #     neu       gehoert zum Umbau seit dem 22.08.: die Bewertung
+    #               (Potential, Schwelle, Beitraege), `r(q)`, die
+    #               Messnorm, die Toepfe und Deckel. Hier wird GEBAUT.
+    #     alt       stammt aus der Zeit davor und wird AUFGERAEUMT oder
+    #               ERSETZT: die LLM-Rollen (stehen seit 22.08.), die
+    #               Geometrie aus Modellangaben, die alte Hebelkette,
+    #               der Marktscan.
+    #     beides    ein Schritt, der Altes ersetzt UND Neues baut - der
+    #               haeufigste Fall, und er gehoert benannt statt
+    #               gemittelt.
+    #
+    # ⚠️ Leer heisst NICHT eingeordnet und faellt in der Ausgabe auf -
+    # dieselbe Regel wie beim Block.
+    umbau: str = ""
 
 
 # ---- Die Vorgaben, die ueber allem stehen ---------------------------------
@@ -149,10 +190,83 @@ VORGABEN = (
             "er ist; (b) wer eine Tabelle neu rechnet, nennt das "
             "Zeitfenster - es ist ab jetzt eine ANGABE, keine "
             "Selbstverstaendlichkeit; (c) das gilt zunaechst fuer "
-            "`turnover`, geprueft ist nur diese Groesse. ⚠️ Fuer `funding` "
-            "und `schnitt` ist dieselbe Frage OFFEN und gehoert gestellt, "
-            "bevor eine von ihnen neu kalibriert wird.",
-            "Nutzermeinung 13.09.; Befund 2.414"),
+            "`turnover`, geprueft ist nur diese Groesse. "
+            "⚠️⚠️⚠️ RICHTIGSTELLUNG 13.09. (Befund 2.416-norm) - ZWEI "
+            "PUNKTE OBEN WAREN FALSCH. (1) DIE ZAHLEN SIND KEIN BEFUND: "
+            "nackte Fuenftel-Median-Spannen ohne Band, ohne Trennschaerfe, "
+            "ohne Positivkontrolle - nach `messnorm` ist damit keines der "
+            "vier Urteile aussprechbar. Es sind HINWEISE. Wert haben sie, "
+            "weil G2 vom 06.09. dieselbe Richtung NORMGERECHT fand "
+            "(+0,0172 gegen +0,0137) - die Messung REPRODUZIERT, sie "
+            "stuerzt nichts um. (2) FUER `funding` IST DIE FRAGE NICHT "
+            "OFFEN, sie war am 07.09. mit Band und Trennschaerfe "
+            "beantwortet (S-7): `funding` ganz +0,0446 / ab 2022 +0,0157 / "
+            "ab 2024 +0,0182, stabil bis 0,05 R; `oi_aenderung` +0,0296 / "
+            "+0,0296 / +0,0287, stabil bis 0,05 R; `turnover` auf der "
+            "50-%-Menge ab 2022 +0,0598, stabil bis 0,10 R. ➔ KEIN "
+            "TRAGENDER BEITRAG BRAUCHT WEGEN DES ZEITFENSTERS EINE "
+            "NEUKALIBRIERUNG. Was bleibt, ist (b): wer eine Tabelle neu "
+            "rechnet, NENNT das Fenster.",
+            "Nutzermeinung 13.09.; Befunde 2.414, 2.416-norm; S-7 07.09."),
+    Vorgabe("STAND-PRUEFEN-VORHER",
+            "⚠️⚠️⚠️ NUTZERVORGABE 13.09.: *,dieser Fall hat mir wieder "
+            "gezeigt, wie wichtig es ist, dass du die Verbindung zu den "
+            "vorherigen Themen und Ergebnissen hast - schreibe dir fest, "
+            "WANN und WO du vor der Messung und Umsetzung den aktuellen "
+            "Stand und die Dokumentation pruefen sollst. Das Risiko, dass "
+            "Themen auseinanderlaufen, ist hoch.'* "
+            "➔ DER FALL: ich habe in Schritt 47 eine Tabelle ,Quote → "
+            "Kelly → Hebel' gerechnet - genau diese Tabelle gab es seit "
+            "dem 08.09. (2.174-neu), und ihr Hauptbefund war am 11.09. "
+            "behoben. Der Nutzer hat es gemerkt, nicht ich. ⚠️ Der Schaden "
+            "waere nicht die doppelte Arbeit, sondern die doppelte "
+            "AUSSAGE: zwei Zahlenreihen zur selben Frage, die sich "
+            "widersprechen, solange niemand sagt, was dazwischenliegt. "
+            "➔ VIER AUSLOESER: (1) vor JEDER Messung - auch vor einer "
+            ",Nebenrechnung'; eine Nebenrechnung, die der Nutzer als "
+            "Tabelle liest, IST eine Messung. (2) Vor jedem Bau, der eine "
+            "Zahl, Grenze oder Regel setzt. (3) Vor jeder Aussage ueber "
+            "einen Zustand (,X funktioniert nicht', ,Y fehlt', ,nicht "
+            "messbar'). (4) Bevor ein offener Punkt VORGELEGT wird - ist "
+            "er inzwischen beantwortet? "
+            "➔ SECHS ORTE, in dieser Reihenfolge: REGISTER_Befunde (was "
+            "gilt, was abgeloest ist und wodurch) · REGISTER_Kandidaten "
+            "(Registrierungsbasis je Groesse) · REGISTER_Fakten (die "
+            "F-Nummern nach Thema) · `soll_ist` (der Planschritt selbst) · "
+            "DAS MODUL (die Zahl steht mit ihrer Begruendung im Code, nicht "
+            "im Plan) · `Claude_Austauschordner/DB_Backups` (die taegliche "
+            "Produktionssicherung - BEVOR ,nicht messbar' faellt). "
+            "➔ DREI FRAGEN: Gibt es die Zahl schon? (dann REPRODUZIEREN, "
+            "R-R11, nicht neu rechnen) · Ist der Befund abgeloest, und "
+            "wodurch? · Was hat sich seither am CODE geaendert? Eine Zahl "
+            "vom 08.09. gilt nicht fuer einen Stand vom 13.09.",
+            "Nutzervorgabe 13.09.; Befunde 2.432-lehre, 2.424, "
+            "2.422-desktop"),
+    Vorgabe("MESSSTANDARD-VOR-DER-MESSUNG",
+            "⚠️⚠️⚠️ NUTZERVORGABE 13.09.: *,merke dir dauerhaft den "
+            "Messstandard zu beruecksichtigen BEVOR du wieder neue "
+            "Pruefungen und Messungen durchfuehrst.'* ➔ DER ANLASS IST "
+            "EIN FEHLER AM SELBEN TAG: Befund 2.414 und die Vorgabe "
+            "ZEITFENSTER-AB-2023 entstanden aus nackten "
+            "Fuenftel-Median-Spannen - `messnorm` wurde ERST DANACH "
+            "aufgeschlagen. Es fehlten Band, Trennschaerfe und "
+            "Positivkontrolle; und dieselbe Frage war am 07.09. (S-7) "
+            "bereits NORMGERECHT beantwortet. Eine Messung ohne Norm "
+            "kostet nicht nur den Befund - sie erzeugt eine Vorgabe, "
+            "einen Planschritt und eine Entscheidungsgrundlage, die alle "
+            "nachgezogen werden muessen. ➔ DIE REIHENFOLGE VOR JEDEM "
+            "MESSLAUF, NICHT NACH DEM ERGEBNIS: (1) "
+            "`messnorm.standardzeile()` lesen; (2) `frageart` FESTLEGEN "
+            "- markt/geometrie auf dem Messuniversum, `beitrag` auf der "
+            "SELEKTIERTEN Menge, `zaehlung` beliebig aber benannt; (3) "
+            "`messmenge.zeile()` in den Messkopf; (4) REGISTER "
+            "nachschlagen - ist die Frage schon gemessen? (R-R11); (5) "
+            "Zielgroesse aus der geschlossenen Liste, passend zur LAGE; "
+            "(6) Band, Trennschaerfe und Positivkontrolle EINPLANEN, "
+            "nicht nachruesten. ⚠️ Kommt ein Ergebnis ohne Band heraus, "
+            "heisst das Wort dafuer HINWEIS - nie ,Befund', nie "
+            ",traegt', nie ,traegt nicht'.",
+            "Nutzervorgabe 13.09.; Befund 2.416-norm; messnorm.py"),
     Vorgabe("KEINE-TEILLOESUNG",
             "⚠️⚠️ NUTZERVORGABE 12.09. zum P-Scan, gilt aber allgemein: "
             "*,eigene Daten erstellen ist eine Loesung, aber hier haben wir "
@@ -352,8 +466,14 @@ LAGEN = (
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
          blocker="PAKET B baut r(q) (Schritte H-1 bis H-5). Offen "
-                 "danach: A9 - die AUFLOESUNG: die Abstufung springt 1,02x -> 3,90x, "
-                 "weil die Beitraege Fuenftel sind (2.174-grenzen); "
+                 "danach: A9 - die AUFLOESUNG. ✔✔ GROESSTENTEILS GELOEST "
+                 "(13.09., Befund 2.432): der Sprung 1,02x -> 3,90x ist WEG. "
+                 "Nachgerechnet mit demselben Aufbau wie am 08.09.: Spot · 2,00x "
+                 "· 2,46x · 3,12x · 5,00x · 5,00x - eine durchgehende Leiter, "
+                 "VIER von sechs Lagen in der Zielzone (damals zwei). Die "
+                 "r-Klammer aus H-2 kappt die Spitze UND hebt den Boden. "
+                 "⚠️ WAS BLEIBT: die zwei besten Lagen ergeben BEIDE 5,00x - "
+                 "die Obergrenze, nicht die Fuenftel; "
                  "A1 - Band auf binaeren Daten, blockiert die "
                  "TRENNSCHAERFE-Frage. ⚠️ F-220 ist "
                  "ZURUECKGEZOGEN (06.09.) - NICHT mehr zitieren",
@@ -382,6 +502,26 @@ LAGEN = (
 # Die Reihenfolge INNERHALB eines Blocks ist die Liste; die Reihenfolge der
 # BLOECKE ist die Vorgabe. Ein Schritt ohne Block faellt auf - das ist
 # Absicht, sonst sammelt sich hier wieder eine Halde.
+# ⚠️⚠️ ALT GEGEN NEU - die zweite Achse neben dem Block (13.09.2026).
+#
+# NUTZERVORGABE: *"Der PLAN muss klar zwischen altem und neuem Umbau
+# unterscheiden"*. Anlass war meine eigene Vermischung: ich hatte den
+# Widerlegungspreis als tragend fuer den Hebel dargestellt. Richtig ist,
+# dass `r(q)` - der NEUE Teil - den Hebel erzeugt, und der Stop - der ALTE
+# Teil - ihn nur skaliert. In einem Bericht ohne diese Achse sieht beides
+# gleich aus.
+#
+# ⚠️ SIE ERSETZT DEN BLOCK NICHT. Der Block sagt, WANN etwas drankommt;
+# diese Achse sagt, OB gebaut oder aufgeraeumt wird. Ein Schritt kann
+# dringend und trotzdem eine Reparatur sein (Schritt 46), und ein
+# unwichtiger kann Neubau sein.
+UMBAUZEICHEN = {
+    "neu": "NEU",
+    "alt": "alt",
+    "beides": "a+n",
+    "": "?  ",
+}
+
 BLOECKE = (
     ("ERLEDIGT", "abgeschlossen - bleibt als Spur stehen"),
     ("D-BETRIEB", "⚠️ DER DETERMINISTISCHE TEIL, der JETZT laeuft und "
@@ -409,64 +549,321 @@ BLOECKE = (
 # muss - und die erste, die vergessen wird.
 
 REIHENFOLGE = (
+    Schritt(56, "DATENQUELLEN OHNE FRISCHE - DIESELBE KLASSE WIE 2.452",
+            "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f AUS DEM REVIEW VOR DEM ROLLOUT 14.09. (Befund "
+            "2.453). Der Nutzer fragte: ,sind alle Datenquellen aktualisiert?' - "
+            "NEIN. (1) ✔ GELOEST 14.09. (Weg 1, 2.453-turnover-gebaut): Schritt 49B las die "
+            "Umlaufmenge am Notebook aus einer Symbolliste; jetzt holt "
+            "`externe_reihen` sie taeglich von Coin Metrics in die "
+            "Betriebsdatenbank, identisch zur Messung. (2) 2.453-spy: US-Referenz seit 13.08. eingefroren "
+            "(Rolle A). (3) 2.453-bestand: Frischemeldung des Bestands misst die "
+            "Mengenaenderung - Fehlalarm, falscher Jobname. (4) 2.453-rohstoff: bis "
+            "6 Tage Rueckstand. (5) 2.453-cache: Prozess-Zwischenspeicher bis zum "
+            "Neustart. (6) 2.453-kursreihe: Frische je Tabelle statt je Symbol. "
+            "(7) Verdacht 2.453-hebelpos, 2.453-alterlos. (8) 2.453-fredkey: API-"
+            "Schluessel im Klartext in `api_health_status` und im Export. "
+            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
+            "Befunde 2.453, 2.453-turnover-gebaut, 2.453-spy, 2.453-bestand, "
+            "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
+            "2.453-alterlos, 2.453-fredkey",
+            block="D-BETRIEB",
+            umbau="alt"),  # Reparatur
+    Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
+            "\u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Befunde 2.451-*, "
+            "Basisinfos/Plan_Asset_Lebenszyklus_14_09.md) - ENTSCHIEDEN, NICHT "
+            "GEBAUT: (1) Waechter ,gehalten, aber nicht beurteilt' jetzt "
+            "(2.451-absicherung: DBPK seit 22.08. ohne Urteil), R2 in Schritt 33; "
+            "(2) eine Bestandsaenderung hebt Cooldown/Anlass einmal auf "
+            "(2.451-sofort); (3) die taegliche Ausstiegsmail auf POSITIONEN statt "
+            "offene Signale (2.451-verkauf); (4) Verkaufsbestaetigung automatisch, "
+            "aber nur wenn nicht durch Staking erklaert, gespeichert wird die "
+            "VERKAUFTE Stueckzahl (2.451-bestaetigung); (5) Phantombestand melden "
+            "(2.451-phantom); (6) ,im Topf frei' kennzeichnen, spaeter ueber die "
+            "Kaufverknuepfung zaehlen (2.451-topf); (7d) Mail bei anhaltendem "
+            "Ausfall des Hebel-Abgleichs mit aussagekraeftigem Betreff; (7c) ein "
+            "Asset mit Spot- und Hebelposition sauber als ZWEI Positionen - "
+            "Gestaltung vor dem Bau abstimmen (2.451-hebel); VSN aus der "
+            "Stummzeile ausnehmen (2.442-vier). Nebenpunkte: veralteter Test in "
+            "`pruefe_marktrang.py` (2.419-saetze); Planpruefung verschaerfen "
+            "(2.453-plan); Desktop-DB-Schreibzugriff klaeren (2.453-desktopdb). "
+            "\u27a4 Umsetzungsschritte vor dem Bau im Detail abstimmen.",
+            "Befunde 2.451-absicherung, 2.451-sofort, 2.451-verkauf, "
+            "2.451-bestaetigung, 2.451-phantom, 2.451-topf, 2.451-hebel, "
+            "2.442-vier, 2.419-saetze, 2.453-plan, 2.453-desktopdb",
+            block="D-BETRIEB",
+            umbau="neu"),
+    Schritt(54, "TERMINMARKT-FAKTEN EINGEFROREN - REPARATUR",
+            "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f GEFUNDEN 14.09. (Befunde 2.452, "
+            "2.452-alt, 2.452-anlass). Seit 12.09. 03:28 schreibt niemand "
+            "`open_interest_snapshot` (einziger Schreiber war das "
+            "stillgelegte Screening), bei 13 Werten schon seit Juli. "
+            "`positionierung` liest ohne Altersgrenze - Rolle BC und Rolle G "
+            "bekommen eingefrorene Terminmarkt-Saetze als ,letzte 8 Stunden', "
+            "und das Modell begruendet Urteile damit. Reparaturwege wurden "
+            "EINZELN mit dem Nutzer entschieden. "
+            "➤ NUTZERENTSCHEIDUNG 14.09.: Paket aus (1) Sammeln vom Screening "
+            "getrennt, fuer ALLE Kryptowerte der Kette, (2) Altersgrenze und "
+            "Zeitfenster aus der Uhrzeit in `positionierung`, (3) Frische je "
+            "Wert mit Mail bei anhaltendem Ausfall. Offen: die Grenzen - "
+            "gemessene Luecken seit 01.08. vorgelegt (Lesegrenze vs. Meldegrenze). "
+            "➤ NUTZERENTSCHEIDUNG 14.09.: Lesegrenze 2 h, Meldegrenze 6 h, "
+            "EIGENER Job (nicht im Job der Rollen-Kette); Einzelwert-Grenze 24 h. "
+            "Live-Probe 14.09.: 39 von 43 Kryptowerten haben Terminmarkt-Daten "
+            "(37 davon bei Binance, die `positionierung` liest - 2.452-boerse), ohne: CANTON, SUPRA, "
+            "VSN, XNO; ein Durchlauf 143 s. Umsetzungsschritte vorgelegt. "
+            "\u27a4 14.09.: A (alte Warnung ersetzt), B (keine Entwarnung), "
+            "C (Vergleich 100 h) entschieden. GEBAUT UND AM DESKTOP GEPRUEFT "
+            "(2.452-gebaut): eigener Job, Lesegrenze, Meldung, Suite-Paket "
+            "TerminmarktDaten. OFFEN: Einspielen am Notebook als Gesamtpaket und "
+            "Kontrolle dort (nach 30 min Zeilen fuer rund 39 Werte, Logzeile). "
+            "Nebenbefund 2.452-boerse (AIOZ/FLOKI nur ausserhalb Binance) offen.",
+            "Befunde 2.452-gebaut, 2.452-boerse, 2.452-anlass (2.452 und 2.452-alt abgeloest)",
+            block="D-BETRIEB",
+            umbau="alt"),  # Reparatur, kein Neubau
+    Schritt(47, "DER STOP AUF GEMESSENE GRUNDLAGE - VORBEDINGUNG FUER "
+            "ALLES AM HEBEL",
+            "⚠️⚠️ ERGEBNIS DER WIDERLEGUNGSPREIS-MESSUNG (Befunde 2.397, "
+            "2.400). Der Hebel entsteht aus ZWEI Groessen: `hebel = (risiko "
+            "/ STOP) / 500`. Die Quote ist gemessen (r(q), halbes Kelly), "
+            "DER STOP NICHT. Er kommt in 81,5 %% der Faelle aus einer "
+            "Modellangabe, und wo die fehlt, aus `_stop_aus_atr` mit 2,5 x "
+            "ATR - was bei Krypto regelmaessig in den Deckel von 25 %% "
+            "laeuft. ⚠️ EIN STOP VON 25 %% MACHT JEDEN HEBEL UNMOEGLICH: "
+            "ueber die ganze r(q)-Spanne ergibt er 0,72x bis 1,80x. ➔ ZU "
+            "TUN: (1) die vorhandenen Messungen zusammentragen - der "
+            "Rauschbefund (0,75 ATR wird in 57,3 %% der Faelle binnen fuenf "
+            "Handelstagen getroffen, 26.910 Anker) und die Ausstiegsregel "
+            "(495 aufgeloeste Signale, +0,092 R). (2) Daraus die Stopweite "
+            "je Anlageklasse BEGRUENDEN statt sie zu setzen - `stop_ziel_atr` "
+            "2,5 und `stop_max_relativ` 25 %% stehen heute ohne eigenen "
+            "Befund in `GRENZEN`. (3) Gegen die echten Faelle rechnen, "
+            "vorher und nachher, dieselbe Funktion zweimal - so wie "
+            "`messe_widerlegung.py` es vormacht. ⚠️⚠️ ERST WENN DAS STEHT, "
+            "kann der Widerlegungspreis aus der Rechnung genommen und zur "
+            "reinen Gegenbewertung in der Mail werden, wie der Nutzer es "
+            "will. Vorher wuerde die Kette gar keinen Hebel mehr erzeugen. "
+            "✔✔ STAND 13.09. - TEILE (1) UND (3) SIND DA, UND SIE DREHEN "
+            "DIE ANNAHME DIESES SCHRITTS UM. "
+            "(1) DIE MESSUNG GIBT ES SCHON: `messe_stop_abstand_baender.py` "
+            "loest genau die Falle, an der zwei Vormessungen gebrochen sind "
+            "- KEIN Aufloesungsfilter, jedes Signal wird gegen die echte "
+            "Preisreihe neu simuliert. Gelaufen gegen den NB-Export, 1.446 "
+            "Signale, H7: nur ZWEI Baender schliessen die Null aus - unter "
+            "2 % SCHADET der Stop (-0,564 [-0,965;-0,029]), ueber 12 % "
+            "TRAEGT er (+0,230 [+0,014;+0,366]). Dazwischen nichts "
+            "trennbar (2.431). "
+            "(3) VORHER/NACHHER GERECHNET: Stop 12 % -> 3,75x · 15 % -> "
+            "3,00x · 20 % -> 2,25x · 25 % -> Spot. ⚠️⚠️ DAMIT IST DIE "
+            "ANNAHME OBEN FALSCH: ein weiter Stop macht den Hebel NICHT "
+            "unmoeglich, das gilt erst am DECKEL. Zwischen 12 und rund "
+            "22 % erlaubt er 2 bis 3,75x UND liegt im einzigen tragenden "
+            "Band (2.431-fenster). ➔ DER HEBEL BRAUCHT DEN "
+            "WIDERLEGUNGSPREIS NICHT - er braucht einen Stop zwischen 12 "
+            "und 22 %. "
+            "⚠️ HEUTE LIEGT ER NICHT DORT: `stop_ziel_atr` = 2,5 trifft bei "
+            "BTC rund 7,5 %, und 1.195 von 1.446 Signalen (83 %) liegen "
+            "unter 12 %. "
+            "➔ TEIL (2) IST DAMIT KEINE MESSUNG MEHR, SONDERN EINE "
+            "ENTSCHEIDUNG und sie gehoert dem Nutzer: `stop_ziel_atr` von "
+            "2,5 auf einen Wert im tragenden Band anheben? Das aendert die "
+            "Hebelhoehe JEDES Signals und die Stopweite jeder Empfehlung. "
+            "⚠️ WAS VORHER NOCH FEHLT, damit es ein BEFUND ist und nicht "
+            "nur ein starker Hinweis: Trennschaerfe und Positivkontrolle. "
+            "Band und Basislinie sind da, die Menge sind Signale mit Zonen "
+            "statt des Messuniversums (Vorgabe "
+            "MESSSTANDARD-VOR-DER-MESSUNG). "
+            "✔ Paket `Stopgrundlage`, 7 Pruefungen: die vier Grenzen stehen "
+            "fest verdrahtet, der offene Punkt steht IM CODE bei der Zahl, "
+            "und die Hebelrechnung an den gemessenen Baendern ist "
+            "festgehalten. Gegengeprueft mit einer verstellten Grenze. "
+            "⚠⚠⚠ NACHGETRAGEN 13.09. - TRENNSCHAERFE UND POSITIVKONTROLLE "
+            "KIPPEN DAS ERGEBNIS OBEN. Auf Nutzerauftrag nachgezogen, "
+            "ZENTRIERT gepflanzt: Trennschaerfe 0,40 R in vier Baendern, "
+            "0,20 R in einem - und in ZWEI Baendern (2-3 %, 3-5 %) findet "
+            "die Anlage selbst 0,40 R in 0 bzw. 1 von 5 Ziehungen nicht. "
+            "Der groesste gemessene Effekt betraegt +0,230 R und liegt "
+            "damit UNTER der Aufloesung (2.433). "
+            "⚠⚠ UND EIN ZWEITER FEHLER AN DERSELBEN TABELLE: ich hatte "
+            "gegen die NULL verglichen statt gegen das NULLMODELL. Das "
+            "Nullmodell ist die BASISLINIE (derselbe Stop, dasselbe CRV, "
+            "zufaellige Einstiege) - und gegen sie trennt sich KEIN "
+            "einziges der sechs Baender (2.433-nullmodell). "
+            "➤ DAMIT IST MEINE EMPFEHLUNG ZURUECKGEZOGEN: `stop_ziel_atr` "
+            "darf auf dieser Grundlage NICHT geaendert werden, es gibt kein "
+            "nachweislich tragendes Band. "
+            "✔ WAS BLEIBT: das Werkzeug ist jetzt vollstaendig (Band, "
+            "Basislinie, Trennschaerfe, Positivkontrolle, und die "
+            "Zentrierungsprobe laeuft in JEDEM Lauf mit); die zwei Zahlen "
+            "ohne eigenen Befund sind unveraendert benannt; und der "
+            "Zusammenhang Stopweite → Hebel gilt weiter, denn er ist "
+            "Arithmetik. ➤ WAS ES BRAUCHT: mehr Faelle oder eine feinere "
+            "Zielgroesse. Mit 251 Faellen im breitesten Band und 0,40 R "
+            "Aufloesung ist die Frage HEUTE NICHT ENTSCHEIDBAR - und das "
+            "ist ein Ergebnis, kein Zwischenstand (2.433-folge). "
+            "✔✔✔ UND DAMIT WAR ES NICHT ERLEDIGT - NUTZERVORGABE "
+            "KEIN-BEITRAG-FAELLT: *,wenn er faellt, dann suchen wir eine "
+            "Loesung!!‘*. Der Satz ,mit den heutigen Daten nicht "
+            "entscheidbar‘ war ein Zwischenstand, kein Ergebnis. "
+            "➤ DIE URSACHE, MECHANISCH (2.434): der Block-Bootstrap zieht "
+            "ueber SYMBOLE - und das ist richtig, mehrere Signale desselben "
+            "Symbols teilen dieselbe Kursreihe. Die wirksame Stichprobe ist "
+            "damit die SYMBOLZAHL: 251 Faelle im breitesten Band sind 21 "
+            "SYMBOLE. Die KI-Breite folgt genau dem (1,695 bei 13 Symbolen, "
+            "0,351 bei 21). "
+            "➤ DIE LOESUNG (2.434-loesung), und sie ist die des Nutzers: "
+            "HISTORISCH SIMULIEREN statt Signalstichprobe. ⚠ `messnorm` "
+            "verlangt es ohnehin - frageart `geometrie` heisst Menge = "
+            "MESSUNIVERSUM, nicht Signale. Zwei Hebel: (1) 536 Symbole "
+            "statt 21, Bandbreite skaliert mit 1/Wurzel(Symbole); (2) "
+            "GEPAART - jeder Anker mit JEDER Weite, dieselbe Lage nur "
+            "anderer Stop, damit faellt die Auswahl als Stoerquelle weg. "
+            "✔ VORABTEST GELAUFEN (60 Symbole, 2.400 gepaarte Anker): "
+            "Aufloesung von 0,40 R auf 0,03 bis 0,07 R - Faktor 6 bis 13. "
+            "⚠⚠ UND DAS BILD AENDERT SICH (2.434-vorschau): enge Stops "
+            "schaden weiterhin (2 %: -0,132), aber ,ueber 12 % traegt‘ "
+            "reproduziert NICHT - statt +0,230 R stehen dort +0,019 R. Der "
+            "grosse Wert der Signalstichprobe war mit hoher "
+            "Wahrscheinlichkeit AUSWAHL. "
+            "➤ WAS ZU BAUEN IST, in EINEM Zug (KEINE-TEILLOESUNG) - "
+            "Datenweg, Messweg, Nachweis sind bekannt: DATENWEG "
+            "`messe_eigenschaft_beitrag.lade()`, 536 Krypto-Reihen, "
+            "Median 1.429 Handelstage. MESSWEG je Anker und je Weite "
+            "Ziel-vor-Stop mit Mark-to-Market, KEIN Aufloesungsfilter; "
+            "gepaart ueber die Weiten; Tagesklammer wie die Norm sie "
+            "verlangt; beide Richtungen; mehrere Horizonte. NACHWEIS "
+            "Basislinie, Block-Bootstrap ueber Symbole, Trennschaerfe mit "
+            "ZENTRIERT gepflanzten Staerken und Positivkontrolle ueber 5 "
+            "Ziehungen - alles vier steht seit heute in "
+            "`messe_stop_abstand_baender.py` und wird "
+            "wiederverwendet, nicht nachgebaut. "
+            "\u2714\u2714\u2714 GEBAUT, GELAUFEN, GEGENGEPRUEFT - 13.09. ABENDS. "
+            "`messe_stopweite_historisch.py` misst historisch und GEPAART: 534 "
+            "Symbole der Messmenge V1, 32.040 Anker je Lauf, JEDER Anker mit "
+            "JEDER der sechs Weiten, drei Horizonte, beide Richtungen. Die "
+            "Aufloesung faellt von 0,40 R auf 0,010 bis 0,020 R (2.435). "
+            "\u27a4 DAS ERGEBNIS, und es ist das UMGEKEHRTE der Annahme oben: "
+            "ein Feinraster in Ein-Prozent-Schritten zeigt ein INNERES MAXIMUM "
+            "bei 7 bis 9 %% - 5 %% -0,0354 \u00b7 6 %% -0,0177 \u00b7 7 %% -0,0013 \u00b7 "
+            "[8 %% Bezug] \u00b7 9 %% -0,0046 \u00b7 10 %% -0,0127 \u00b7 12 %% -0,0182. "
+            "`stop_ziel_atr` = 2,5 trifft bei Krypto rund 7,5 bis 8 %% - also "
+            "MITTEN HINEIN. \u2714 DIE ZAHL BLEIBT UNVERAENDERT und hat zum "
+            "ersten Mal einen eigenen Befund (2.435-optimum). "
+            "\u26a0\u26a0 DAMIT IST AUCH DER SATZ AUS TEIL (3) OBEN WIDERLEGT: "
+            "der Hebel braucht KEINEN Stop zwischen 12 und 22 %% - dort wird "
+            "das Ergebnis messbar SCHLECHTER. Die Rechnung 12 %% -> 3,75x "
+            "stimmt weiter, sie ist Arithmetik; sie war nie ein Grund "
+            "aufzuweiten. 2.431 und 2.431-fenster sind abgeloest. "
+            "\u2714\u2714 EHRENRUNDE (Nutzerauftrag, `pruefe_stopweite_gegen.py`, "
+            "acht Proben): Aufloesung feiner nachgemessen \u00b7 "
+            "Aufloesungsquote je Weite \u00b7 Gleichtagsregel umgedreht \u00b7 drei "
+            "Saaten \u00b7 drei Bezugspunkte samt Additivitaetsprobe (2,8e-17) \u00b7 "
+            "drei Zeitfenster \u00b7 R-R11 gegen 2.431 \u00b7 Feinraster. "
+            "\u26a0\u26a0\u26a0 UND SIE HAT EINEN FEHLSCHLUSS GEFANGEN "
+            "(2.435-gleichtag): ,enge Stops schaden' haengt VOLLSTAENDIG an "
+            "der Annahme, dass bei einer Kerze, die Stop UND Ziel beruehrt, "
+            "der Stop zuerst kommt. Umgedreht steht bei 2 %% +0,309 statt "
+            "-0,240. Aus TAGESDATEN ist die enge Seite nicht entscheidbar - "
+            "es braeuchte Intraday-Kerzen. Fuer die Entscheidung folgenlos: "
+            "die WEITE Seite ist sich unter beiden Regeln einig. "
+            "\u2714\u2714\u2714 UND DER DECKEL IST AUCH ENTSCHIEDEN - "
+            "`stop_max_relativ` = 25 %% BLEIBT (2.437). Ich hatte ihn als offenen "
+            "Punkt vorgelegt mit dem Satz, er lasse messbar schlechtere Weiten zu. "
+            "\u26a0\u26a0 DAS WAR FALSCH, und der Nutzer hat es aufgedeckt: die "
+            "Zahl -0,041 R stammt aus der UNBEDINGTEN Messung ueber ALLE Anker - "
+            "der Deckel trifft aber nur die schwankungsstarken Lagen. "
+            "\u27a4 DORT NACHGEMESSEN (ATR-Rueckfallstop ueber 25 %%, 30.297 "
+            "Anker, 520 Symbole, gepaart gegen die 25 %%, die diese Lagen HEUTE "
+            "bekommen): LONG bringt enger NICHTS - 8 %% +0,002 \u00b7 10 %% +0,007 "
+            "\u00b7 12 %% +0,003 \u00b7 20 %% -0,005, JEDES Band schliesst die Null "
+            "ein. Und SHORT wuerde SCHADEN - 8 %% -0,026 \u00b7 12 %% -0,029 \u00b7 "
+            "20 %% -0,010, alle fuenf trennbar unter null. Der Grund ist "
+            "einsichtig: ein 8-%%-Stop ist dort rund 0,8 ATR und wird vom Rauschen "
+            "abgeraeumt. "
+            "\u27a4 UND ER IST OHNEHIN KEINE EINGESTELLTE WEITE, SONDERN EINE "
+            "NOTBREMSE (2.437-grund, Nutzerhinweis 13.09.: *,der Deckel war eine "
+            "vorlaeufige Absicherung'*). Der Code sagt es woertlich: *,ein Stop "
+            "von 40 %% faellt durch jede Untergrenze und ruiniert trotzdem die "
+            "Rechnung'*. Sie faengt, was sie fangen soll - 7 von 1.446 "
+            "Modellzonen (0,5 %%) liegen ueber 25 %%. Eine Senkung auf 12 %% wuerde "
+            "252 von 1.446 treffen (17,4 %%): aus der Notbremse wuerde still die "
+            "Stopregel fuer jedes sechste Signal. "
+            "\u26a0\ufe0f WAS STATTDESSEN OFFEN BLEIBT (2.437-atr): nicht der "
+            "Deckel, sondern der ATR-Rueckfall im MITTELFELD. Bei Lagen mit "
+            "ATR-Stop 15 bis 25 %% - 47 %% aller Handelstage, und sie werden NICHT "
+            "gedeckelt - waere enger LONG messbar besser (8 %%: +0,035, Band ueber "
+            "null), SHORT dagegen flach. Eigener Schritt, eigene Gegenpruefung.",
+            "Nutzervorgabe 12.09.; Befunde 2.397, 2.400, 2.400-hebel; Ergebnis 2.435, 2.435-optimum, 2.435-gleichtag, 2.435-deckel",
+            fertig=True,
+            block="D-BETRIEB",
+            umbau="beides"),  # ERSETZT die alte Geometrie aus Modellangaben durch einen gemessenen Stop - Vorbedingung des neuen Hebels
     Schritt(1, "N-46a",
             "Zirkulaerer Verschub als Laengs-Nullpunkt GEBAUT - P1/P2/P3 "
             "sauber (gepflanzt 0,20 R -> +0,0420 gefunden).",
             "n98_n46_laengs_nullpunkt.py; Befund 2.275",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # N-46a - Beitragsmessung des Umbaus
     Schritt(2, "N-46b",
             "✔ ENTSCHIEDEN: die TAGESMISCHUNG gewinnt - Fehlalarm 1,0/"
             "4,0 % gegen Soll 2,5 %, Fundquote auf 6 von 8 Sprossen "
             "besser. N-46 ist mit dem VORHANDENEN Werkzeug geloest.",
-            "Befund 2.282 / 2.282-fund", fertig=True),
+            "Befund 2.282 / 2.282-fund", fertig=True,
+            umbau="neu"),  # N-46b - Beitragsmessung des Umbaus
     Schritt(3, "A2/AKKU",
             "✔ GELOEST: Permutationstest statt Bootstrap-Band. `schnitt` "
             "traegt (+0,0470, 481 Symbole, p 0,000) - der erste gemessene "
             "Beitrag fuer die Akkumulationslage.",
-            "Befund 2.286 / 2.286-schnitt", fertig=True),
+            "Befund 2.286 / 2.286-schnitt", fertig=True,
+            umbau="neu"),  # A2/AKKU - Akkumulationsmass
     Schritt(4, "VIERFACHTEST",
             "⚠️ GEMESSEN, ABER NICHT ERFUELLBAR: Kriterium 4 liefert bei "
             "ALLEN Kandidaten untermaechtig - auch bei der Kontrolle. Es "
             "ist falsch konstruiert (Signifikanztest statt "
             "Streuungszerlegung, Methodik 2.101).",
-            "Befund 2.292 / 2.292-fehlkonstruktion", fertig=True),
+            "Befund 2.292 / 2.292-fehlkonstruktion", fertig=True,
+            umbau="neu"),  # der Vierfachtest ist die Huerde des Umbaus
     Schritt(5, "V1 KRITERIUM 4",
             "✔ ERLEDIGT: Kriterium 4 ist ERFUELLBAR. Die meisten "
             "Kandidaten bestehen es ROH - `schnitt` mit 25,4 %. ⚠️ Der "
             "Befund trifft den BESTAND: `turnover` ist zu 51,2 % eine "
             "Asset-Eigenschaft.",
-            "Befund 2.297 / 2.298", fertig=True),
+            "Befund 2.297 / 2.298", fertig=True,
+            umbau="neu"),  # V1 Kriterium 4
     Schritt(6, "V7 KRITERIUM 3",
             "⚠️ GEMESSEN: nur EIN gedecktes Urteil - `turnover` ist "
             "unabhaengig von `funding` (2 gegen 0 Faecher). Fuer die "
             "KANDIDATEN nicht entscheidbar: die Schichtung kostet die "
             "Macht.",
-            "Befund 2.302 / 2.303", fertig=True),
+            "Befund 2.302 / 2.303", fertig=True,
+            umbau="neu"),  # V7 Kriterium 3
     Schritt(7, "V8 ZWEI SCHICHTEN",
             "⚠️ WIDERLEGT: mit zwei Faechern ist KEIN Urteil gedeckt - "
             "mit fuenf war es eines. Nicht die Macht war der Engpass, "
             "sondern die ZAEHLMETRIK. ✔ Die Vorfrage ist geloest (auf "
             "20 % tragen alle drei Kandidaten).",
-            "Befund 2.308", fertig=True),
+            "Befund 2.308", fertig=True,
+            umbau="neu"),  # V8 zwei Schichten
     Schritt(8, "V2 N-73 AUF DEN BESTAND",
             "✔ GEMESSEN: `funding` besteht N-73 NICHT (2 von 3). "
             "`schnitt` besteht sie BESSER als jeder registrierte "
             "Beitrag - die Zweierlei-Mass-Sorge ist umgekehrt "
             "beantwortet.",
-            "Befund 2.312 / 2.312-antwort", fertig=True),
+            "Befund 2.312 / 2.312-antwort", fertig=True,
+            umbau="neu"),  # V2/N-73 - der Bestand an derselben Huerde gemessen
     Schritt(9, "V9 GESCHICHTET ALS EIN BEFUND",
             "✔ ERLEDIGT: Kriterium 3 ist beantwortet - `funding` erklaert "
             "bei KEINEM Kandidaten etwas. ⚠️ Der Zusatz ,`schnitt` hat "
             "damit ALLE VIER Kriterien' (2.319) ist am 10.09. ABGELOEST "
             "durch 2.325 - er hat DREI.",
-            "Befund 2.316 · 2.319 abgeloest durch 2.325", fertig=True),
+            "Befund 2.316 · 2.319 abgeloest durch 2.325", fertig=True,
+            umbau="neu"),  # V9 geschichtet
     Schritt(10, "S-7 GEKLAERT",
             "✔ ERLEDIGT: S-7 dreifach reproduziert und nur in seinem "
             "eigenen Wortlaut bestaetigt (,unentschieden'). ⚠️⚠️ DABEI "
             "fiel KRITERIUM 2 auf: `n102:135` gab ,Band haelt die Null' "
             "als ✔ aus - je breiter das Band, desto sicherer. Richtig "
             "gemessen FAELLT `schnitt` daran.",
-            "Befunde 2.321 bis 2.330", fertig=True),
+            "Befunde 2.321 bis 2.330", fertig=True,
+            umbau="neu"),  # S-7 Zeitstabilitaet der Beitraege
     Schritt(11, "V11 SCHNITT50",
             "⚠️⚠️ ERLEDIGT, ABER NEGATIV: `schnitt50` besteht N-73 NICHT "
             "(2 von 3; Kriterium 1 mit 100 %% erfuellt). ⚠️⚠️⚠️ Und der "
@@ -474,7 +871,8 @@ REIHENFOLGE = (
             "`schnitt`s Instabilitaet gehoert der AUSWAHL, nicht ihm - "
             "Faktor 6 bei VIERMAL schaerferem Test. BILANZ: es gibt "
             "KEINEN dritten Beitrag.",
-            "Befunde 2.331 bis 2.339", fertig=True),
+            "Befunde 2.331 bis 2.339", fertig=True,
+            umbau="neu"),  # V11 schnitt50
     Schritt(12, "S-1 SAMMLUNG ABSICHERN",
             "✔ ERLEDIGT 11.09.: die drei Messquellen sind in "
             "`datenfrische` registriert (Rolle M), und ein Ausfall wird "
@@ -482,20 +880,23 @@ REIHENFOLGE = (
             "Handlungsanweisung. ⚠️ Offen: sie haben weiter keinen Job "
             "und keine `fetched_at`-Spalte; der Abrufstand kommt aus der "
             "Dateizeit.",
-            "Befunde 2.358/2.359", fertig=True),
+            "Befunde 2.358/2.359", fertig=True,
+            umbau="alt"),  # S-1 - eine Sammlung, die still abriss; Reparatur
     Schritt(13, "S-2 STILLER AUSFALL",
             "✔ ERLEDIGT 11.09.: ein Ausfall ist keine Messbasisluecke "
             "mehr. Teilausfall wird genannt statt weggelassen, "
             "Totalausfall nennt den AUSFALL statt der falschen Ursache. "
             "Vier Faelle, fuenf Dauerpruefungen.",
-            "Befunde 2.357", fertig=True),
+            "Befunde 2.357", fertig=True,
+            umbau="alt"),  # S-2 - stiller Ausfall der bestehenden Anlage
     Schritt(14, "S-3 JOBSPUR",
             "✔ ERLEDIGT 11.09.: jeder Job hinterlaesst eine Spur - der "
             "Ereignis-Horcher lauscht jetzt auch auf EVENT_JOB_EXECUTED. "
             "Vorher fuehrten nur 6 von 21 eine Zeile in `job_laeufe`, und "
             "nach einem Ausfall war nicht feststellbar, was gefehlt hat. "
             "Zentral statt fuenfzehn Kopien.",
-            "Befunde 2.360", fertig=True),
+            "Befunde 2.360", fertig=True,
+            umbau="alt"),  # S-3 - fehlende Jobspur; Reparatur
     # ================================================================
     # AB HIER: DER PRODUKTIVGANG - PAKET B (Nutzerentscheidung 11.09.2026)
     #
@@ -526,7 +927,8 @@ REIHENFOLGE = (
             "CHART war nicht geprueft - zwei Zahlenfehler gefunden und "
             "behoben (2.367). ⚠️ NICHT NACHGEWIESEN: ein Hebelgeschaeft "
             "(Faktor ueber 1,0) - in keinem Lauf entstanden (2.371).",
-            "Befunde 2.362 bis 2.373", fertig=True),
+            "Befunde 2.362 bis 2.373", fertig=True,
+            umbau="neu"),  # E2E vor dem Rollout des neuen Pakets
     Schritt(16, "AKKU-SPERRE",
             "✔ ERLEDIGT 11.09.: Sicherheitsnetz - die Akkumulation ist ohne "
             "gemessenen Beitrag GESPERRT statt durchgewunken "
@@ -534,7 +936,8 @@ REIHENFOLGE = (
             "vermessen'). Bis dahin entschied ueber einen Nachkauf allein "
             "das Sprachmodell (2.370). Einstieg unberuehrt.",
             "Nutzerentscheidung 11.09. (Paket B); Befund 2.374-akku",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # Akku-Sperre bis der Beitrag steht
     Schritt(17, "H-1 PORTFOLIOWERT",
             "✔ ERLEDIGT 11.09.: das KAPITAL ist lesbar, vollstaendig und "
             "ueberwacht. P-3 Option A - das Gestakte zaehlt; fehlende "
@@ -545,7 +948,8 @@ REIHENFOLGE = (
             "Frischepruefung. Gegen die NB-Kopie: 9.942 EUR (10 Tage alt) "
             "-> 18.213 EUR, jeder Tag geschrieben, Index ohne Sprung.",
             "Befunde 2.375, 2.376; Nutzerentscheidung 11.09. (P-3 A)",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # H-1 Portfoliowert als Bezugsgroesse fuer r(q)
     Schritt(18, "H-2 r(q)",
             "✔ ERLEDIGT 11.09.: der Hebel entsteht aus der "
             "Wahrscheinlichkeit - halbes Kelly, geklammert 0,50-1,25 % des "
@@ -556,7 +960,8 @@ REIHENFOLGE = (
             "Mail. Gegenpruefung fand einen Stop-Fehler im ersten Einbau "
             "(behoben, 2.377-gegenpruefung). ⚠️ SCHALTER AUS bis Schritt 19.",
             "Befunde 2.377*; Nutzerentscheidung 11.09. (Paket B)",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # H-2 - r(q) SELBST, der Kern des Hebelumbaus
     Schritt(19, "H-3 HEBELVERTEILUNG",
             "✔ ERLEDIGT 11.09.: `simuliere_hebelverteilung.py` ueber "
             "633.672 echte Anker, Betriebsfall mit Widerlegungspreis. Bei "
@@ -566,7 +971,8 @@ REIHENFOLGE = (
             "bestanden; Stopregel an 1.289 NB-Einstiegen gegengeprueft. "
             "EMPFEHLUNG: Schalter mit dem Rollout (nach H-4, H-5, E2E).",
             "Befunde 2.378*",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # H-3 Hebelverteilung
     Schritt(20, "H-4 POSITIONSFUEHRUNG HEBEL",
             "✔ ERLEDIGT 11.09.: `agent/hebelfuehrung.py` - jede offene "
             "Position aus `hebel_positions` mit ihrem Plan, Liquidation mit "
@@ -582,7 +988,8 @@ REIHENFOLGE = (
             "Hebelverteilung unveraendert. OFFEN (2.379-tage): Tagesreserve "
             "beim Einstieg - erst bei wachsendem Kapital noetig.",
             "Befunde 2.379*, 2.378-korrektur",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # H-4 Positionsfuehrung Hebel
     Schritt(21, "H-5 AGGREGAT-DECKEL",
             "✔ ERLEDIGT 11.09.: `agent/hebel_aggregat.py` - offene Positionen "
             "(bis zum Stop, ohne Stop das Eigenkapital), offene Hebelsignale "
@@ -594,7 +1001,8 @@ REIHENFOLGE = (
             "2.380-fenster). ✔ Position ohne bekannten Stop: Variante B "
             "(Nutzer 11.09., 2.380-ohne-stop).",
             "Befunde 2.380*, 2.379-instrument-korrektur",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # H-5 Aggregat-Deckel
     Schritt(22, "S-4 SPOT SAUBER",
             "✔ ERLEDIGT 11.09.: (a) der Hebelschalter aendert den Spot-Betrag "
             "nicht - 1.436 NB-Einstiege, Betrag ueberall gleich; 33 % verlieren "
@@ -604,7 +1012,8 @@ REIHENFOLGE = (
             "kurze Takt erst ab 2x (2.381). Feinschliff der Mail (Kursmarken "
             "und Rangangaben zusammenlegen) NACH dem Rollout.",
             "Befunde 2.381*",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # S-4 Spot sauber
     Schritt(23, "E2E PAKET B",
             "✔ ERLEDIGT 11.09.: `simuliere_kette.py --nachweis-paket-b` gegen "
             "die NB-Sicherung, 17 Faelle gezeigt - Hebelgeschaeft mit Zeile, "
@@ -617,7 +1026,8 @@ REIHENFOLGE = (
             "begrenzt praktisch nie (2.382-topf); B und die Liquidation "
             "(2.382-liquidation); Rundung des Hebels (2.382-rundung).",
             "Befunde 2.382*",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # E2E Paket B
     Schritt(24, "ROLLOUT PAKET B",
             "✔ ERLEDIGT 12.09.: Gesamtpaket am Notebook (142 Commits, "
             "fast-forward). `ausrollen_paket_b.py --nachrechnen` 13 Punkte, 0 "
@@ -633,7 +1043,8 @@ REIHENFOLGE = (
             "Schreibjob (2.387-job), die fortgeschriebenen Boersentitel "
             "(2.387-fortschreibung).",
             "Basisinfos/Ausrollen_24_08.md; Notebook-Rollout 12.09.",
-            fertig=True),
+            fertig=True,
+            umbau="neu"),  # Rollout Paket B
     Schritt(25, "AKKU-MESSPAKET",
             "(1) 2.286/2.287 reproduzieren (R-R11); (2) Zeitstabilitaet je "
             "Kandidat fuer H90 - Permutationstest je Haelfte, `n68` ist "
@@ -643,7 +1054,8 @@ REIHENFOLGE = (
             "Kandidat: Loesung suchen (KEIN-BEITRAG-FAELLT) - die Sperre "
             "bleibt so lange.",
             "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09.",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Beitrag fuer die Akkumulation - die Lage hat heute keinen
     Schritt(26, "AKKU-BAU",
             "Form REGLER (Fuenftelstufen, nur spot x akkumulation). Eigene "
             "SKALA: `verbilligung` ist ein Rang mit Basisrate 0,500, kein "
@@ -658,13 +1070,15 @@ REIHENFOLGE = (
             "Kostenschutz beheben und in `simuliere_kette` zwei Zellen "
             "nachweisen.",
             "vormals Schritt FORM; Befunde 2.286-schnitt, 2.374",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Bau des Akkumulationsbeitrags
     Schritt(27, "ROLLOUT PAKET 2",
             "Akkumulation aufs Notebook. Der Schalter steht fuer BTC, ETH "
             "und SOL schon an (2.380-akku-schalter) - mit der Registrierung "
             "faellt die Sperre.",
             "Nutzerentscheidung 11.09.",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Rollout des neuen Akkumulationsteils
 
     # ================================================================
     # NACH DEM PRODUKTIVGANG
@@ -677,7 +1091,10 @@ REIHENFOLGE = (
             "noch nicht gesehen hat, und begrenzt praktisch nie; beim Hebel "
             "greift der Aggregat-Deckel.",
             "Nutzervorgabe 11.09.; Befund 2.382-topf",
-            block="D-ABBILDUNG"),
+            block="D-ABBILDUNG",
+            umbau="alt",
+            wartet_auf=(27,),  # ERST NACH DEM ROLLOUT - Schritt 27
+            ),  # Takt und Topf stammen aus der alten Kette, werden gemessen
 
     # ================================================================
     # DAS STANDARDWERKZEUG (Nutzervorschlag 11.09., gestaffelt)
@@ -698,7 +1115,8 @@ REIHENFOLGE = (
             "allein am 11.09. sind fuenf entstanden (n108 bis n112), wo "
             "eines gereicht haette.",
             "Nutzervorschlag 11.09.",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Fehleridentifikation auf der neuen Bewertung
     Schritt(30, "T-3 HISTORISCHE SIMULATION",
             "⚠️⚠️ AUF `bewegung_r` (POTENTIAL), NICHT auf Zielerreichung. "
             "Nutzervorgabe 23.08.: *,Wichtig fuer den guten Trade ist das "
@@ -713,7 +1131,8 @@ REIHENFOLGE = (
             "Kopf.",
             "feedback_potential_statt_zielerreichung; "
             "agent/krypto/backtesting.py",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # historische Simulation gegen `bewegung_r` - neues Erfolgsmass
 
     Schritt(31, "EMAIL STRUKTUR UND INHALTE",
             "⚠️ SETZT AUF SCHRITT 41 AUF (Fachpruefung) - erst pruefen, dann "
@@ -722,17 +1141,54 @@ REIHENFOLGE = (
             "(gleichlautende Luecken zu EINEM Satz, gezaehlt nach GRUND) "
             "und Regel 3 (Anhang statt Weglassen). ⚠️ Vorbehalt aus dem "
             "Vorschlag: die Mail ist lang, WEIL die Bewertung duenn ist - "
-            "nach Schritt 21 schrumpft der Lueckenblock von selbst.",
+            "nach Schritt 21 schrumpft der Lueckenblock von selbst."
+            "\u27a4 SEIT SCHRITT 41 (13.09.) LIEGT DER STOFF VOR: 2.446-redundanz, "
+            "2.446-lesbarkeit, 2.446-begriffe, 2.446-etiketten (Nutzerentscheidung: "
+            "Etiketten streichen oder als ,nicht belegt\u2018 kennzeichnen) und "
+            "2.445-fenster (Haltedauer und sicheres Hebelfenster nebeneinander). "
+            "Pruefwerkzeug: `pruefstand_hebelmail.py`."
+            "✔ FERTIG 13./14.09. (Befund 2.447): Hauptteil 126 -> 111 "
+            "Zeilen, 11.014 -> 8.438 Zeichen. Etiketten gestrichen "
+            "(2.447-etiketten), Kopf mit Empfehlung und Tatsachen, Anhang D "
+            "(Beitraege) und E (Lesehilfen), Tage statt Handelstage bei Krypto, "
+            "Hebelfenster gegen Haltedauer (2.447-fenster). ⚠️⚠️ "
+            "DABEI DREI SHORT-FALSCHAUSSAGEN BEHOBEN (2.447-short). Paket "
+            "`Mailstraffung`. ➤ NICHT angefasst, mit Grund: die Saetze aus "
+            "`lagebeschreibung` (Modelltext -> Schritt 33), die "
+            "Trichter-Etiketten (-> Schritt 52), Regel 2 als Zaehlzeile "
+            "(Grund nur Freitext) - alles in 2.447-offen.",
             "Gesamtplan 11.09. - Mail-Vorschlag",
-            block="D-ABBILDUNG"),
+            fertig=True,
+            block="D-ABBILDUNG",
+            umbau="beides",
+            wartet_auf=(41,),  # 41 sagt: Schritt 31 kommt DANACH und setzt darauf auf
+            ),  # alte Mailstruktur ersetzen, neue Bewertung abbilden
     Schritt(32, "GUI UND UEBERSICHTSSEITE",
             "⚠️ Offen seit 07.09., nie begonnen (E1). ⚠️ Die "
             "Uebersichtsseite EXISTIERT (`remote/status.py`, rund 40 "
             "Aggregatoren) - hier geht es um Erweiterung, nicht Neubau. "
             "Die Bewertungsschwelle steht seit dem 11.09. darin (35 "
-            "Parameter); in der GUI fehlt sie noch.",
+            "Parameter); in der GUI fehlt sie noch."
+            "\u27a4 SEIT SCHRITT 41 (13.09.): 2.446-gui - die alte Dreiteilung mit "
+            "Konfidenz steht in `ui/hebel_view.py` UND `ui/signals_view.py`; die "
+            "Hebelzeilen unter 2x sind Altbestand vor dem Rollout."
+            "➤ GEPRUEFT 14.09. (Befund 2.448): die Oberflaeche ist noch die "
+            "der alten Kette. KEIN Reiter zeigt die neue Bewertung (2.448-reiter); "
+            "JEDER Analyseknopf startet die alte Pipeline und wuerde ein Signal "
+            "der alten Kette in die Produktion schreiben (2.448-knoepfe); "
+            "Gleichlauf mit der Mail geht nur ueber den gespeicherten Mailtext - "
+            "Schemaaenderung, Nutzerentscheidung (2.448-mail); Uebersichtsseite "
+            "gemischt (2.448-uebersicht)."
+            "\u2714 FERTIG 14.09. (Befund 2.448-umsetzung): Analyseknoepfe an die "
+            "Kettenregel gehaengt, Detailansicht der Rollen-Kette aus DB-Feldern "
+            "(`agent/signal_ansicht.py`) in Signale, Hebel und Letzte Bewertung, "
+            "Anzeigen der alten Kette gekennzeichnet. Paket `GuiKette`, "
+            "Oberflaechenprobe 17/17. \u27a4 Was offen bleibt, steht in "
+            "2.448-rest und in Schritt 53.",
             "remote/status.py; Nutzervorgabe 07.09. und 11.09.",
-            block="D-ABBILDUNG"),
+            fertig=True,
+            block="D-ABBILDUNG",
+            umbau="alt"),  # die GUI zeigt noch die alte Dreiteilung
     Schritt(33, "LLM-ROLLEN UND MODELLE",
             "⚠️⚠️ INHALT AM 12.09. GESETZT (Vorgabe LLM-SCHIENE-GANZ): die "
             "GANZE Schiene, nicht einzelne Prompts. (1) Je Rolle "
@@ -748,9 +1204,42 @@ REIHENFOLGE = (
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
             "gelten: nur kostenfreie LLMs · das LLM muss den Zufall "
             "schlagen und messbar sein · kein deterministischer Override "
-            "des LLM-Werturteils.",
+            "des LLM-Werturteils. "
+            "⚠️⚠️ ZWEI ENTSCHEIDUNGEN AUS SCHRITT 44 KOMMEN HIERHER "
+            "(13.09., Befunde 2.427-rollenfrage und 2.422). Sie sind "
+            "GEMESSEN und reproduziert, es fehlt nur die Entscheidung - und "
+            "sie ist keine Messfrage. "
+            "(R1) DARF DAS MODELL EINE EMPFEHLUNG VERHINDERN? Rolle BC "
+            "blockiert an Stufe `aktion` mit NICHTS_TUN: 56 Zellen in 7 "
+            "Tagen, gegen 191 deterministische Verluste derselben Stufe "
+            "(166 ,Ausstieg steht auf SCHLIESSEN', 25 ,gestakt'). Die "
+            "Nutzervorgabe lautet *,die LLM-Stufen sollen eine "
+            "ENTSCHEIDUNGSHILFE sein und nichts blockieren oder aendern' "
+            "(12.09.) - fuer Rolle A und Z.ai gilt sie, fuer Rolle BC "
+            "nicht. "
+            "(R2) BRAUCHT DIE ABSICHERUNG EINE RICHTUNG? Sie ist per "
+            "Konstruktion ein SHORT auf den Markt, und das Modell liefert "
+            "fuer DBPK und 3QSS keine Richtung - ALLE 12 "
+            "Absicherungssignale haben `richtung = NULL`. Weil "
+            "`BRAUCHT_RICHTUNG` seit S6c `(KAUFEN, NACHKAUFEN)` ist, kann "
+            "die Absicherung seit dem 22.08. strukturell nur HALTEN sagen; "
+            "betroffen sind zwei GEHALTENE Positionen. Entweder die "
+            "Absicherung braucht keine Richtung - oder der Prompt muss sie "
+            "fuer diese Klasse liefern. "
+            "⚠️ BEIDE ERST NACH DER MESSUNG entscheiden (Vorgabe "
+            "LLM-SCHIENE-GANZ: *,ohne Messung und Simulation nicht "
+            "sinnvoll'*) - aber sie gehoeren auf die Liste dieses Schritts, "
+            "nicht in den D-Block. "
+            "➤ AUS SCHRITT 31 (2.447-offen, Punkt 1): die Mailsaetze aus "
+            "`lagebeschreibung` gehen DIESELBEN an das Modell - dort stehen "
+            "noch ,Handelstage' fuer Krypto, der Widerstand doppelt zur "
+            "Markenliste der Rechnung und das Umschlag-Perzentil. Wer sie "
+            "strafft, aendert den Prompt - also hier, mit Messung.",
             "Nutzervorgabe 11.09.",
-            block="L-ROLLEN"),
+            block="L-ROLLEN",
+            umbau="alt",
+            wartet_auf=(42,),  # ERST NACH Schritt 42 - ohne Messung ist jede Promptaenderung eine Meinung
+            ),  # die LLM-Rollen stehen seit dem 22.08. - sie werden umgebaut
 
     # ================================================================
     # ⚠️⚠️⚠️ SONDERPUNKT REGIME (Nutzervorgabe 11.09.2026)
@@ -795,7 +1284,8 @@ REIHENFOLGE = (
             "Greed gegen die Akkumulation.",
             "Nutzervorgabe 11.09.; project_regime_immer_baer_kein_vergleich; "
             "NB-Sicherung 11.09.; agent/krypto/regime.py",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Regime als moeglicher neuer Beitrag
     # ================================================================
     # DER HEBEL - die Messung, die Paket B NICHT ersetzt
     #
@@ -814,7 +1304,8 @@ REIHENFOLGE = (
             "bisher sind sie nur gegen `bewegung_r` gefallen, und das VOR "
             "dem Messstandard.",
             "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # A1 blockiert JEDE Messung am neuen Hebel
     Schritt(36, "V12 VOLA UND SCHNITT",
             "⚠️ HYPOTHESE, nicht gemessen: beide fallen an Kriterium 2 "
             "mit fast derselben Zahl (+0,2039 gegen +0,1973). "
@@ -822,14 +1313,22 @@ REIHENFOLGE = (
             "⚠️ Niedrige Dringlichkeit - klaert nur, WARUM zwei "
             "Kandidaten fielen, die ohnehin gefallen sind.",
             "Befund 2.327 - offen",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # vola und schnitt als moegliche neue Beitraege
     Schritt(37, "KALIBRIERUNG",
             "Kalibrierung neu, dann die Hebelhoehe rechnen: erreicht sie "
             "2-5x? ⚠️ Der Engpass ist die AUFLOESUNG, nicht die Staerke - "
-            "die Abstufung springt 1,02x -> 3,90x, weil die Beitraege "
-            "Fuenftel sind (2.174-grenzen).",
+            "die Abstufung sprang 1,02x -> 3,90x, weil die Beitraege "
+            "Fuenftel sind (2.174-grenzen). ✔✔ NACHGEMESSEN AM 13.09. "
+            "(2.432): der Sprung ist WEG - Spot · 2,00x · 2,46x · 3,12x · "
+            "5,00x · 5,00x, vier von sechs Lagen in der Zielzone. Die "
+            "r-Klammer (N-39) hat ihn geschlossen. ⚠️ Offen bleibt nur das "
+            "OBERE Ende: die zwei besten Lagen ergeben beide 5,00x, weil "
+            "die Obergrenze greift - eine bewusste Sicherheitsgrenze, keine "
+            "fehlende Aufloesung.",
             "Plan 05.09.",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # Kalibrierung der neuen Schwelle
     Schritt(42, "T-0 GESAMTKETTE HISTORISCH - ZAHL, GUETE, AUSSAGEKRAFT",
             "⚠️⚠️ MEHRFACH GEFORDERTE NUTZERVORGABE (zuletzt 12.09.): *,eine "
             "historische Pruefung der Gesamtkette - im ersten Schritt sind "
@@ -853,7 +1352,8 @@ REIHENFOLGE = (
             "ist der Beitrag der Modelle unbelegt (2.391) - und die "
             "Entscheidungen aus 2.391-hilfe sind nicht begruendbar.",
             "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*",
-            block="L-ROLLEN"),
+            block="L-ROLLEN",
+            umbau="neu"),  # misst die neue Gesamtkette gegen ein Nullmodell
     Schritt(41, "MAIL UND GUI - FACHPRUEFUNG VOR DER STRAFFUNG",
             "⚠️ NUTZERVORGABE 12.09. nach der ERSTEN echten Hebelmail: *,die "
             "Struktur der eMail ist nicht schlecht, jedoch sehe ich vor lauter "
@@ -878,9 +1378,68 @@ REIHENFOLGE = (
             "geworden? (5) GLEICHLAUF MIT DER GUI (2.390-gui): die Oberflaeche "
             "zeigt die alte Dreiteilung, leere Konfidenz-/Trigger-Spalten und "
             "1,0-1,2x-Zeilen als ,Hebel'. ⚠️ Schritt 31 (Straffung nach Regel "
-            "2 und 3) kommt DANACH und setzt auf diesem Ergebnis auf.",
+            "2 und 3) kommt DANACH und setzt auf diesem Ergebnis auf."
+            "✔ BEGONNEN 13.09. ABENDS - PUNKT (1), ERSTER FUND (2.443). "
+            "Eine echte Hebelrechnung ueber den Betriebsweg gebaut und ihre "
+            "Zahlen nachgerechnet: Stop, Einstiegszone, Ziel, Hebel, Verlust am "
+            "Stop und Gewinn am Ziel stimmen exakt (8 %% Stop aus 2,5 x ATR; "
+            "Ziel 116 = 2 x Risiko; Hebel 2.500/500 = 5,0; Verlust 200 = "
+            "Gewinn 400 / 2). ⚠⚠ ABER ZWEI FRISTEN WIDERSPRECHEN SICH: die "
+            "Mail schreibt ,Haltedauer etwa 25 Handelstage' und zwanzig Zeilen "
+            "spaeter ,hinter dem Stop bis etwa Tag 21' - und vergleicht sie nie. "
+            "In 5 von 14 gerasterten Hebelfaellen liegt die Haltedauer ueber dem "
+            "sicheren Fenster. Verschaerft dadurch, dass die eine Zahl "
+            "HANDELStage zaehlt und die andere KALENDERtage (die Finanzierung "
+            "laeuft taeglich): 25 Handelstage sind rund 35 Kalendertage. "
+            "➤ NICHT GEAENDERT - die Vorgabe dieses Schritts lautet ,erst "
+            "pruefen, DANN straffen'. ⚠️ WAS NOCH AUSSTEHT: der Rest von "
+            "(1), sowie (2) Redundanz, (3) Lesbarkeit, (4) Begriffe und (5) "
+            "Gleichlauf mit der GUI."
+            "⚠⚠⚠ ZWEITER FUND (2.444) - UND ER ERKLAERT DEN ERSTEN: die ,25 Handelstage‘ sind eine KONSTANTE. `_haltedauer_tage = "
+            "(Zielweg/ATR)²`, Stop 2,5 ATR, Ziel bei CRV 2 also 5 ATR, 5² = 25 - "
+            "bei jedem Trade mit ATR-Stop, egal welches Asset. Die Formel misst "
+            "den Weg zum ZIEL, ein Trade endet aber an der ersten Marke. Gemessen "
+            "liegen dagegen vor: 80 %% der Anker loesen bei 8 %% Stop in 10 Tagen "
+            "auf; echte NB-Positionen hielten im Median 0,3 Tage; Betriebshorizont "
+            "3-5 Tage (2.226, D3). ➤ NAECHSTER PRUEFSCHRITT: die Haltedauer "
+            "gegen die eigenen Reihen MESSEN (Zeit bis zur ersten Marke, je Stop "
+            "in ATR) und die Formel ersetzen - erst danach ist 2.443 beurteilbar."
+            "\u2714\u2714 GEMESSEN (2.445) - UND ZWEI MEINER EIGENEN SAETZE OBEN SIND "
+            "FALSCH. `messe_haltedauer.py`, 32.040 Anker, Positivkontrolle 5/5, "
+            "Reproduktion von 2.435 identisch. Median bis zur ERSTEN Marke: 1 ATR "
+            "5 Tage, 2,5 ATR 23 (LONG) / 27 (SHORT) - die Formel sagt 25. "
+            "\u2716 FALSCH war ,die Formel beantwortet die falsche Frage, 25 statt "
+            "5\u2018 (2.444): fuer einen 2,5-ATR-Stop stimmen die 25 Tage auf rund "
+            "10 %%; die 3-5 Tage des Nutzers stimmen fuer 1-ATR-Stops. Die "
+            "Finanzierung in der Mail ist NICHT ueberzeichnet. \u2716 FALSCH war "
+            "auch ,25 Handelstage sind rund 35 Kalendertage\u2018 (2.443): "
+            "Krypto-Kerzen enthalten Wochenenden. \u26a0\ufe0f WAS BLEIBT "
+            "(2.445-fenster, offen): die Mail vergleicht Haltedauer und sicheres "
+            "Hebelfenster nie - ein echter Konflikt aber nur bei "
+            "schwankungsarmen Werten am 5x-Deckel. Und zwei BEGRIFFE sind "
+            "ungenau: ,Handelstage\u2018 (fuer Krypto Kalendertage) und ,bis zum "
+            "Ziel\u2018 (gemeint ist die erste Marke) - beides gehoert in Punkt (4)."
+            "\u2714\u2714\u2714 ABGESCHLOSSEN 13.09. ABENDS - alle fuenf Punkte gepruef"
+            "t, an einer ECHTEN aktuellen Mail (2.446: Pruefstand, echte Kette auf "
+            "einer Kopie der Produktionssicherung). \u26a0\u26a0\u26a0 DER WICHTIGSTE FUND "
+            "WURDE SOFORT BEHOBEN (2.446-richtung): eine SHORT-Empfehlung las sich "
+            "als ,KAUFEN (Hebel)\u2018, Stop ueber dem Kurs mit ,-11,2 %%\u2018 - jetzt "
+            ",KAUFEN (Hebel, SHORT)\u2018, Richtungszeile oben, Plus am Stop. Wie "
+            "2.390-zahlen: eine Falschaussage, kein Straffen. "
+            "(1) ZAHLEN: alle nachgerechnet, alle richtig (2.446-zahlen). "
+            "(2) REDUNDANZ: Stopabstand fuenfmal, Marke 91,15 dreimal (2.446-redundanz). "
+            "(3) LESBARKEIT: 14 Warnzeilen gegen 3 Dafuer-Etiketten - und die drei "
+            "stehen auf einer gepoolten Augustmessung, die das Register nicht traegt "
+            "(2.446-lesbarkeit, 2.446-etiketten). "
+            "(4) BEGRIFFE: Konfidenz und Modell erledigt; offen Handelstage, drei "
+            "Woerter fuer Schwankung, Umschlag doppelt belegt (2.446-begriffe). "
+            "(5) GUI: alte Dreiteilung in ZWEI Reitern (2.446-gui). "
+            "\u27a4 UMSETZUNG: (2)-(4) in Schritt 31, (5) in Schritt 32. Ausserdem "
+            "vorgeschlagen: den Mailtext beim Versand mitschreiben (2.446).",
             "Nutzervorgabe 12.09.; Befunde 2.390*",
-            block="D-ABBILDUNG"),
+            block="D-ABBILDUNG",
+            umbau="beides",
+            fertig=True),  # Fachpruefung von Mail und GUI vor der Straffung
     Schritt(40, "ALTBESTAND STILLLEGEN",
             "✔ ERLEDIGT AM 12.09. (Befunde 2.404*): der Screening-Rang "
             "altert nicht mehr still (`RANG_MAX_ALTER_TAGE`, gemeldet je "
@@ -911,7 +1470,8 @@ REIHENFOLGE = (
             # 39 entscheidbar" beschrieben: ob sie Wert haben, kann vor dem
             # P-Scan niemand sagen. Sie gehoeren also zu 39, nicht als Rest
             # zu 40. Alles, was 40 SELBST leisten kann, ist geleistet.
-            fertig=True, block="D-BETRIEB"),
+            fertig=True, block="D-BETRIEB",
+            umbau="alt"),  # Altbestand der alten Hebelkette aufgeraeumt
     Schritt(39, "P-SCAN - ENTDECKUNG AUS DEM POTENTIAL",
             "⚠️ NUTZERENTSCHEIDUNG 12.09.: *,Marktscan ist fuer mich "
             "klar, trending koennte eine Loesung sein'* - und der Auftrag, "
@@ -1004,7 +1564,8 @@ REIHENFOLGE = (
             "Frage, ob ,auch im Trending' als AUSSCHLUSS taugt. Bis dahin "
             "bleibt der alte Marktscan an.",
             "Nutzerauftrag 12.09.; Befunde 2.385, 2.385-pscan",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="beides"),  # ersetzt den alten Marktscan durch Entdeckung aus dem Potential
     Schritt(46, "D2 - STRAFFEN UND KORREKT ABBILDEN",
             "⚠️ NUTZERVORGABE 12.09. (REIHENFOLGE-12-09): *,ist die "
             "deterministische Ebene sauber und stabil, dann sollten wir "
@@ -1020,130 +1581,227 @@ REIHENFOLGE = (
             "abbilden, sonst ist er Zierde. (3) Erledigte Befunde "
             "schliessen (2.395-erledigt). (4) Trichter, Mail und GUI muessen "
             "DASSELBE sagen - das ist Schritt 41, er gehoert hierher. ⚠️ "
-            "KEINE neue Messung, kein neuer Beitrag, keine LLM-Aenderung.",
+            "KEINE neue Messung, kein neuer Beitrag, keine LLM-Aenderung."
+            "\u2714\u2714\u2714 ERLEDIGT 13.09. ABENDS - DREI TEILE GEBAUT, DER "
+            "VIERTE IST SCHRITT 41 UND BLEIBT ES. "
+            "\u2714 (1) CLAUDE.md: der Satz ,der Selbsttest der Anlage gegen "
+            "bekannte Wahrheit fehlt weiterhin' ist weg - er ist am 08.09. "
+            "gelaufen (2.204). Der Abschnitt nennt jetzt Fehlalarmquote (0 von "
+            "50 Nullwelten), Aufloesung (+0,0293 R bei 80 %% Fundquote) und die "
+            "ZWEI Einschraenkungen, die dazugehoeren: die Dreierregel schliesst "
+            "eine wahre Quote bis 6 %% nicht aus, und ein Selbsttest prueft die "
+            "ANLAGE, nicht die DATEN. \u26a0\ufe0f DABEI FIELEN VIER WEITERE "
+            "VERALTETE ZAHLEN AUF, alle nachgezaehlt: 148 F-Nummern (sind 75) \u00b7 "
+            "85 Methodik-Abschnitte (sind 124) \u00b7 72 %% von 281 Werkzeugen "
+            "Altbestand (sind 176 von 308 = 57 %%) \u00b7 92.000 Zeilen (sind "
+            "107.000). Und das Werkzeugregister widersprach SICH SELBST - "
+            "Kopfzeile 281, Tabelle 308; die 281 war im Generator hart "
+            "hinterlegt und wird jetzt gezaehlt. "
+            "\u27a4 NEUES PAKET `Abbildung` (7 Pruefungen): es vergleicht die "
+            "Zahlen in CLAUDE.md gegen die ERZEUGTEN Register, statt sie zu "
+            "wiederholen - von Hand nachgezogen laufen sie wieder weg. "
+            "\u2714\u2714 (2) DIE RANGFOLGE - und hier war noch ein Fehler drin. Die "
+            "Bloecke vom 12.09. ordnen nach DRINGLICHKEIT, kannten aber keine "
+            "ABHAENGIGKEIT: gemeldet wurde Schritt 28, dessen eigener Text sagt "
+            "*,ERST NACH DEM ROLLOUT messen - vorher misst man den alten "
+            "Stand'*. Das ist derselbe Fehler wie 2.395, eine Ebene tiefer. "
+            "\u27a4 GEBAUT: das Feld `wartet_auf`, drei Eintraege aus den Texten "
+            "selbst (28\u219227 \u00b7 31\u219241 \u00b7 33\u219242), und die Ausgabe zeigt "
+            "Wartende getrennt an. \u26a0\ufe0f NICHT umsortiert - das haette die "
+            "Abhaengigkeit versteckt. \u27a4 UND DIE ORDNUNG IST JETZT EINE "
+            "FUNKTION (`soll_ist.geordnet()`): Plan und Pruefung riefen bis "
+            "eben je eine eigene Sortierung, und als `wartet_auf` dazukam, "
+            "meldete die eine 32 und die andere 28 - ein Test, der seine Kopie "
+            "prueft, merkt so etwas nicht. Fuenf neue Waechter, darunter einer, "
+            "der FINDET, wenn ein Schritt ,ERST NACH' sagt und das Feld nicht "
+            "traegt, und zwei Regeltests auf gestellten Schritten. "
+            "\u2714 (3) BEFUNDE GESCHLOSSEN: 2.146-luecke und 2.343 standen schon "
+            "auf gilt. Dazu 2.399-abbildung (drei seiner vier Punkte sind "
+            "erledigt, der vierte ist 2.390-gui) und 2.400-hebel (,die Quote ist "
+            "gemessen, der Stop nicht' - seit 2.435-optimum und 2.437 stimmt das "
+            "nicht mehr). \u26a0\ufe0f Was davon UEBRIG bleibt, steht als 2.438 und "
+            "wird nicht mitgeschleppt: im Betrieb kommt der Stop in 81,5 %% der "
+            "Faelle aus dem Modell, dessen Median mit 8,0 %% zwar genau auf dem "
+            "Gipfel liegt - ob die EINZELentscheidung traegt, ist nicht gemessen. "
+            "\u26a0\ufe0f\u26a0\ufe0f (4) TRICHTER, MAIL UND GUI - DAS IST SCHRITT 41 UND "
+            "BLEIBT EIN EIGENER SCHRITT. Er steht offen im selben Block "
+            "(D-ABBILDUNG) mit fuenf Unterpunkten (Fachpruefung der Zahlen, "
+            "Redundanz, Lesbarkeit, Begriffe, Gleichlauf mit der GUI). Er ist "
+            "hier BENANNT, nicht erledigt - und 31 wartet nachweislich auf ihn.",
             "Nutzervorgabe 12.09.; Befunde 2.399, 2.399-abbildung",
-            block="D-ABBILDUNG"),
-    Schritt(49, "EINE QUELLE FUER TURNOVER - UND DIE BREITE, DIE DARAUS "
-            "FOLGT",
-            "⚠️⚠️ AUSLOESER IST EIN FEHLER IM LAUFENDEN BETRIEB (Befund "
-            "2.410): der gemessene und der angewendete `turnover` sind nicht "
-            "dieselbe Groesse. Die Formel ist beide Male `Volumen / (Preis x "
-            "Umlaufmenge)`, aber die MENGE kommt aus zwei Quellen - die "
-            "Messung nimmt `splycur` aus `onchain_historie.db`, der Betrieb "
-            "`circulating_supply` von CoinGecko. Von 33 vergleichbaren "
-            "Symbolen weichen 16 (48 %%) ab, teils um 25 bis 74 %% - LINK "
-            "aus der Watchlist um -25,2 %%. Ursache: die Onchain-Werte sind "
-            "runde Zahlen (UNI und LINK je 1.000.000.000) und damit die "
-            "GESAMTAUSGABE, nicht die UMLAUFENDE Menge. ⚠️ Das betrifft "
-            "EINEN DER ZWEI TRAGENDEN BEITRAEGE. "
-            "➔ VIER TEILE, IN EINEM ZUG (Vorgabe KEINE-TEILLOESUNG) - aber "
-            "mit einem ENTSCHEIDUNGSPUNKT nach Teil 2. "
-            "(1) HISTORIE LADEN, ohne neue Abhaengigkeit: `turnover` kuerzt "
-            "sich zu `Volumen / Marktkapitalisierung`, und beides liefert "
-            "CoinGecko `market_chart?days=365` kostenfrei und ohne "
-            "Schluessel - 366 Tage, praktisch geprueft am 12.09. "
-            "(`days=max` verlangt einen Schluessel, HTTP 401). Die "
-            "Funding-Historie ebenso frei: Binance `/fapi/v1/fundingRate`, "
-            "500 Saetze = 166 Tage je Abruf, paginierbar. Rund 233 Aufrufe, "
-            "acht Minuten. ⚠️ KEIN SAMMELN UEBER WOCHEN - die Historie "
-            "existiert bereits, sie wird geholt. "
-            "✔ TEIL 1 FERTIG AM 13.09. (Befund 2.412): 246 Symbole, 365 "
-            "Tage, 81.424 Tagespunkte in `data/markt_historie.db` - gegen "
-            "66 Symbole bisher. "
-            "⚠️ VOR TEIL 2 NACHGELESEN (Befund 2.412-lage): der "
-            "registrierte Stand ist SCHWAECHER als angenommen - 2.191 "
-            "(kippt auf `frei`), 2.192 (,traegt nirgends mehr'), 2.196 "
-            "(,nicht widerlegt, sondern UNENTSCHIEDEN'). Der Anker "
-            "+0,0616 gilt auf der SELEKTIERTEN Menge, nicht auf `frei`. "
-            "(2) ⚠️⚠️ R-R11 ZUERST: den bestehenden Befund ,turnover "
-            "traegt' auf der ALTEN Basis REPRODUZIEREN, dann auf der neuen "
-            "messen. Wer die Basis wechselt und ein anderes Ergebnis "
-            "bekommt, hat nichts widerlegt - er hat etwas anderes gemessen. "
-            "⚠️ HIER LIEGT DER ENTSCHEIDUNGSPUNKT: traegt `turnover` auf "
-            "sauberer Basis NICHT mehr, ist das ein WIDERRUF und kein "
-            "Messfehler - dann faellt die halbe Bewertung, und die Teile 3 "
-            "und 4 entfallen. Das ist ein moegliches Ergebnis und kein "
-            "Grund, trotzdem weiterzubauen. "
-            "✔ TEIL 2 GELAUFEN AM 13.09.: R-R11 erfuellt (2.413, die "
-            "Reproduktion trifft den Anker in 7 Sekunden). ⚠️⚠️ ABER DAS "
-            "ERGEBNIS IST EIN ANDERES ALS ERWARTET (2.413-zerfall): mit "
-            "gemeinsamem Zeitfenster gemessen zerfaellt die Tabelle im "
-            "letzten Jahr auf BEIDEN Basen - alt ueber 341 Tage +3,86 / "
-            "-1,89 / -1,70 / -0,81 / +0,55, neu +1,28 / -1,25 / -0,03 / "
-            "-0,42 / +0,42. Keine Ordnung, Fuenftel 1 schlechter als "
-            "Fuenftel 4. Der Unterschied ist also NICHT die Datenquelle, "
-            "sondern der ZEITRAUM. ⚠️ Und daraus folgt das Dilemma "
-            "(2.413-dilemma), das Teil 3 zu entscheiden hat: die alte Basis "
-            "hat sieben Jahre und die falsche Menge, die neue die richtige "
-            "Groesse und nur ein Jahr. Eine Umstellung kalibrierte die "
-            "Tabelle auf einem SIEBTEL der Historie neu - das tauscht einen "
-            "Fehler in der GROESSE gegen einen Mangel an DATEN. ➔ TEIL 3 IST "
-            "DAMIT EINE ENTSCHEIDUNG, KEIN BAU, und sie gehoert dem Nutzer. "
-            "✔✔ WEG 3 GELAUFEN (Nutzerentscheidung 13.09.: erst die "
-            "GRUENDE finden): der ,Zerfall' hat zwei Ursachen, und keine "
-            "davon ist die Datenquelle. (a) DIE LAENGE (2.414-laenge): von "
-            "20 zufaelligen 341-Tage-Fenstern sind nur 5 geordnet - drei "
-            "Viertel aller Jahresfenster sind es nicht, ganz gleich wann sie "
-            "liegen. Damit reicht die NEUE Basis mit ihren 365 Tagen fuer "
-            "eine eigene Fuenftel-Kalibrierung NICHT. (b) DAS ZEITFENSTER "
-            "(2.414): bis 2022 traegt `turnover` NICHT (+2,77, keine "
-            "Ordnung), ab 2023 STAERKER als im Gesamtschnitt (+8,64, "
-            "geordnet). Die Nutzermeinung ist damit belegt. ⚠️ OFFEN BLEIBT: "
-            "die Spanne des letzten Jahres (+3,31) liegt unter dem Median "
-            "der Zufallsfenster (+10,80) - ob `turnover` zuletzt schwaecher "
-            "wird, braucht eine eigene Messung mit Verteilung. "
-            "📇 UND DIE VERWENDUNG IST GEKLAERT (2.414-verwendung): "
-            "`marktrang.MESSBASIS` liest `SELECT DISTINCT symbol FROM "
-            "splycur` - die 66 Symbole sind nicht nur eine Messgrenze, "
-            "sondern eine BETRIEBSGRENZE. Eine Umstellung veraendert also "
-            "auch, auf welchen Symbolen der Beitrag live wirkt (66 -> 246). "
-            "✔✔ DIE VOLLE AUSWIRKUNG IST GEMESSEN (Nutzerauftrag 13.09., "
-            "Befunde 2.415, 2.415-alle) - ZWEI ENTSCHEIDUNGEN, die getrennt "
-            "gehoeren. ⚠️ ENTSCHEIDUNG A - NEUKALIBRIERUNG auf ab-2023: sie "
-            "ist NICHT neutral, weil die Zeitfensterfrage bei jedem Beitrag "
-            "anders wirkt. turnover +5,70 -> +8,64 (52 %% staerker, "
-            "geordnet) · funding +2,52 -> +1,94 (23 %% schwaecher, in KEINEM "
-            "Fenster geordnet) · schnitt +3,23 -> +3,30 (erstmals geordnet). "
-            "Das verschiebt die GEWICHTE zwischen den zwei Live-Beitraegen - "
-            "eine Aenderung an der Bewertung, nicht an einer Messung. ⚠️⚠️ "
-            "ENTSCHEIDUNG B - BETRIEBSUMSTELLUNG von 66 auf 246 Symbole: "
-            "`marktrang.MESSBASIS` entscheidet, wo der Beitrag wirken darf "
-            "(2.414-verwendung). Sie aendert die Kennzahl fuer ALLE Symbole "
-            "(andere Quelle) UND die Menge der bewerteten. ✔ WAS DAGEGEN "
-            "GEKLAERT IST: das letzte Jahr ist NICHT auffaellig schwach "
-            "(38. Perzentil von 344 Fenstern) - `turnover` wird nicht "
-            "schwaecher, und die neue Basis ist mit 365 Tagen keine "
-            "Kalibrierungsgrundlage, sondern nur eine Betriebsgrundlage. ⚠️ "
-            "NEBENBEFUND, eigenstaendig: `funding` ist in KEINEM Fenster "
-            "monoton (Fuenftel 1 ueber Fuenftel 0) - das gehoert geprueft, "
-            "unabhaengig von jeder Umstellung. "
-            "(3) EINE QUELLE FUER BEIDE SEITEN: `rechne_turnover_beitrag` "
-            "und `marktrang.turnover_werte` auf dieselbe Groesse stellen. "
-            "Danach braucht `turnover` die `onchain_historie.db` nicht mehr "
-            "- ⚠️ die Datei bleibt trotzdem stehen, `adractcnt` haengt noch "
-            "daran (Regel: eine geloeschte Messgrundlage kommt nicht "
-            "zurueck). "
-            "(4) ERST DANN DER P-SCAN, auf der Basis, die dann steht: 233 "
-            "Symbole statt 42, davon rund 112 ausserhalb der Watchlist "
-            "(2.408). Stufen wie in 2.385-pscan - Schatten, messen, dann "
-            "eine Liste, gefiltert auf handelbare Werte (2.405-folge: die "
-            "Handelbarkeit traegt). Die Liste schlaegt BEOBACHTUNG vor, kein "
-            "Handeln (Regel 1). "
-            "⚠️ WAS DIESER SCHRITT NICHT IST: eine Verbreiterung um ihrer "
-            "selbst willen. Teil 1 bis 3 waeren auch ohne P-Scan noetig - "
-            "der Fehler wirkt heute.",
-            "Befunde 2.410, 2.410-loesung, 2.408, 2.409; Nutzerauftrag "
-            "12.09.; Vorgabe KEINE-TEILLOESUNG",
-            block="D-BETRIEB"),
+            block="D-ABBILDUNG",
+            umbau="alt",
+            fertig=True),  # D2 - was falsch abgebildet ist, stammt aus der Zeit davor
+    Schritt(49, "TURNOVER: EINE GROESSE STATT ZWEI",
+            "⚠️⚠️ DER FEHLER, DER HEUTE WIRKT (Befund 2.410): der GEMESSENE "
+            "und der ANGEWENDETE `turnover` sind nicht dieselbe Groesse. "
+            "Beide rechnen `Volumen / (Preis x Umlaufmenge)`, aber die MENGE "
+            "kommt aus zwei Quellen - die Messung nimmt `splycur` (Coin "
+            "Metrics), der Betrieb `circulating_supply` (CoinGecko). 16 von "
+            "33 vergleichbaren Symbolen weichen ab, LINK aus der Watchlist "
+            "um -25,2 %. ⚠️ Betroffen ist EINER DER ZWEI TRAGENDEN "
+            "BEITRAEGE, und er traegt die groessten Stufen im System (+3,15 "
+            "bis -2,40). "
+            "➔ DREI TEILE. (A) `splycur` NACHLADEN - unsere Kopie endet am "
+            "2026-08-28/29, die Quelle steht auf 2026-09-12 (2.417-frische). "
+            "Lueckenschluss, kein Umbau. (B) `marktrang.turnover_werte` auf "
+            "`splycur` UMSTELLEN - danach messen und wirken beide Seiten auf "
+            "derselben Groesse, die registrierte Tabelle bleibt gueltig und "
+            "`MESSBASIS` bleibt per Definition richtig. (C) "
+            "`data/markt_historie.db` NICHT in Betrieb nehmen - sie bleibt "
+            "als Beleg fuer 2.416/2.417 liegen. "
+            "⚠️⚠️ DIE RICHTUNG IST DIE UMGEKEHRTE VON DER, DIE ICH AM 12.09. "
+            "VORGESCHLAGEN HATTE: nicht die Messung auf eine breitere "
+            "Quelle heben, sondern die ANWENDUNG an die Messung angleichen. "
+            "Der Grund in einem Satz: es gibt keine freie historische "
+            "Umlaufmenge - neun Anbieter direkt geprueft, keiner liefert sie "
+            "ohne Schluessel (2.417). Die Kuerzung auf `Volumen / "
+            "Marktkapitalisierung` waere rechnerisch richtig gewesen, aber "
+            "der einzige freie Weg dahin holt die TOP 250 VON HEUTE - ein "
+            "Survivorship-Filter (2.416) - und reicht nur 366 Tage weit "
+            "(2.416-laenge). "
+            "⚠️⚠️⚠️ WAS BESTEHEN BLEIBT UND GENANNT GEHOERT: der registrierte "
+            "Vorbehalt der Groesse - `turnover` deckt 66 von 536 Symbolen "
+            "ab, sein Nullband ist dreimal so breit wie bei den anderen, das "
+            "Urteil wandert mit der Saat (2.408-vorbehalt). Dieser Schritt "
+            "loest den Fehler, NICHT den Vorbehalt. Mit freien Mitteln ist "
+            "der Vorbehalt nicht aufloesbar. "
+            "📇 DIE UNTERSUCHUNG DAZU steht in den Befunden, nicht hier: "
+            "2.410 (der Fehler) · 2.411 bis 2.413 (Ladelauf und R-R11) · "
+            "2.414 (Zeitfenster) · 2.415 (Verteilung) · 2.416 (Survivorship, "
+            "Laenge, Reihenfolge, Norm) · 2.417 (Quellensuche, Frische, "
+            "Naeherung). ⚠️ Der P-Scan war einmal Teil 4 dieses Schritts und "
+            "ist zurueck in Schritt 39 - er haengt an seiner EIGENEN "
+            "Datenfrage. "
+            "✔✔✔ ERLEDIGT AM 13.09. (A) `hole_fremdreihen.py splycur` "
+            "gebaut - es gab bis dahin KEINEN Aufruf; 66 von 66 geladen, bis "
+            "2026-09-12, Messmenge unveraendert (2.418). (B) "
+            "`marktrang.turnover_werte` stellt BEIDE Haelften auf die "
+            "Messquelle um: Binance-Stueckvolumen durch `splycur` mit "
+            "Frischegrenze 21 Tage (2.419). ⚠⚠ DER SCHRITT HAT DABEI EINEN "
+            "ZWEITEN FEHLER GEFUNDEN, den 2.410 zwar nannte und ich zuerst "
+            "uebersah: der ZAEHLER wich staerker ab als der Nenner (57,1 % "
+            "gegen 86,2 % gleiches Fuenftel). Und eine WICHTIGERE "
+            "Nebenwirkung: der Betrieb sieht jetzt 60 statt 33 Symbole - der "
+            "alte Weg las die CoinGecko-Top-250 und verlor damit die Haelfte "
+            "der Messbasis, derselbe Survivorship-Schnitt wie in 2.416, nur "
+            "auf der Anwendungsseite (2.419-breite). ✔ R-R11 vor dem Bau "
+            "erfuellt (2.419-rr11). ✔ Paket Turnoverquelle umgeschrieben, 14 "
+            "Waechter. ⚠ OFFEN GEBLIEBEN und VORGELEGT: 2.419-saetze - zwei "
+            "veraltete Zeilen in `pruefe_marktrang.py`, vor diesem Schritt "
+            "schon rot, gehoeren in einen eigenen Zug.",
+            "Befunde 2.410 bis 2.419-saetze; Nutzerauftraege 12./13.09.; "
+            "Vorgaben KEINE-TEILLOESUNG, MESSSTANDARD-VOR-DER-MESSUNG",
+            fertig=True, block="D-BETRIEB",
+            umbau="neu"),  # turnover ist ein Beitrag des neuen Bewertungswegs
+    Schritt(50, "ZWEI STRUKTURMAENGEL IN DEN MESSDATENBANKEN",
+            "⚠️ Beide stammen aus Schritt 45 und sind dort GEPRUEFT worden - "
+            "sie stehen hier, weil sie Struktur aendern und nicht nebenbei "
+            "gehoeren. "
+            "(A) `messreihen` FUEHRT FUER SIEBEN SYMBOLE DIE FALSCHE KLASSE "
+            "(2.421). Der Primaerschluessel ist `symbol TEXT PRIMARY KEY`, "
+            "kann also nur EINE Klasse je Symbol; `price_history_ohlc` hat "
+            "`(symbol, assetklasse, currency, date)` und fuehrt zwei. "
+            "Betroffen sind Ticker-Kollisionen: BOND, C, DASH, DIA, MDT, "
+            "STX, T. ✔ HEUTE FOLGENLOS - `lade()` liefert die Krypto-Reihe, "
+            "und `_reihen_roh` nimmt die Klasse aus der Spalte (Fix 07.09.). "
+            "➔ ZU TUN: Primaerschluessel auf `(symbol, assetklasse)`, "
+            "`lade_messreihen` schreibt beide, `klassen_aus_db` liefert "
+            "`(symbol, klasse)` statt `symbol -> Klasse`. ⚠️ Es ist ein "
+            "Schemawechsel - Sicherung zuerst, und die "
+            "Pruefung ,keine NEUE Klassenkollision' wird danach auf eine "
+            "LEERE Bekanntenliste gestellt. "
+            "(B) KEINE MESSQUELLE FUEHRT `fetched_at` (2.359-abruf-loesung). "
+            "⚠️⚠️ UND DIE NAHELIEGENDE LOESUNG WAERE DIE FALSCHE: "
+            "`MAX(fetched_at)` sagt genau dasselbe wie die Aenderungszeit "
+            "der Datei - wann zuletzt geschrieben wurde. Die Frage des "
+            "Befundes ist *war der Abruf VOLLSTAENDIG?*, und die beantwortet "
+            "nur eine ZAEHLUNG JE SYMBOL gegen eine Erwartungszahl (funding "
+            "300, terminmarkt 122, splycur 66). ➔ ZU TUN, in EINEM Zug "
+            "(KEINE-TEILLOESUNG): `fetched_at` pro Zeile in den drei "
+            "Ladeskripten, eine Erwartungstabelle, und "
+            "`datenfrische._stand_datei` meldet ,X von Y Symbolen im letzten "
+            "Lauf beruehrt' statt eines Zeitstempels. "
+            "⚠️⚠️ RISIKOPRUEFUNG 13.09., VOR JEDER AENDERUNG - UND SIE HAT "
+            "MEINE EIGENE EINSCHAETZUNG WIDERLEGT. Ich hatte (A) als "
+            "*,Schemawechsel an 5,1 Mio Zeilen`* beschrieben. Falsch: das "
+            "sind die Zeilen von `price_history_ohlc`, und DIE wird gar "
+            "nicht angefasst. `messreihen` hat 1.327 Zeilen, sieben "
+            "Dateien lesen sie (`lade_messreihen`, `uebernehme_messreihen`, "
+            "`simuliere_bremse`, `messe_ueberleben` und drei Pruefskripte), "
+            "und der Wechsel erzeugt GENAU SIEBEN neue Zeilen - eine je "
+            "Ticker-Kollision. ➔ (A) IST DAMIT EIN KLEINER, gut umgrenzter "
+            "Eingriff, kein Risiko fuer die Messbasis. "
+            "⚠️ FUER (B) HAT DIE PRUEFUNG ZWEI DINGE ERGEBEN. (1) Die "
+            "Spalte ist additiv: nur EINE Stelle im ganzen Projekt macht "
+            "`SELECT *` auf eine der drei Tabellen (`pruefe_pakete.py`, "
+            "`FROM terminmarkt`) - die gehoert vorher angesehen, sonst "
+            "stoert eine neue Spalte niemanden. (2) ⚠️ DIE ERWARTUNGSZAHL "
+            "GEHOERT AN DIE MESSBASIS-DEFINITION, NICHT AN EINE TABELLE: "
+            "`terminmarkt_tag` hat 100 Symbole, `terminmarkt` 122, die "
+            "VEREINIGUNG 122 - und genau die ist `MESSBASIS[oi]`. `funding` "
+            "hat 302 Symbole, davon 300 in `messmenge.V1`. Wer gegen eine "
+            "Tabelle zaehlt statt gegen die Messbasis, erzeugt einen "
+            "Fehlalarm - mir ist er beim Pruefen selbst passiert. "
+            "⚠️ REIHENFOLGE BLEIBT: (B) vor (A). Nicht wegen des Risikos - "
+            "das ist bei beiden klein -, sondern weil (B) zeigt, ob die "
+            "Ladelaeufe vollstaendig sind, und (A) danach auf einer "
+            "nachweislich vollstaendigen Basis stattfindet. "
+            "✔✔✔ TEIL B ERLEDIGT AM 13.09. (Befunde 2.425 bis "
+            "2.425-additiv) - ABER NICHT WIE HIER BESCHRIEBEN. ⚠️⚠️ "
+            "`fetched_at` PRO ZEILE WAERE FALSCH GEWESEN, und beides ist vor "
+            "dem Bau geprueft worden: es sagt dasselbe wie die Dateizeit, "
+            "und alle INSERTs der Ladeskripte schreiben POSITIONELL "
+            "(`VALUES (?,?,?)`) - eine vierte Spalte haette sie STUMM "
+            "gebrochen. ➔ GEBAUT WURDE EINE ZEILE JE SYMBOL "
+            "(`abruf_symbol`), in allen drei Messdateien, geschrieben nur "
+            "im Erfolgszweig. ⚠️ `hole_terminmarkt_historie` fuehrte schon "
+            "`abruf_status` je (Symbol, Tag) - das ist keine Dopplung: es "
+            "sagt WELCHE TAGE vorliegen und traegt keinen Zeitstempel. "
+            "✔ AM ECHTEN LAUF NACHGEWIESEN: `datenfrische` meldet jetzt "
+            "*,2026-09-13T10:05:26 (65 von 66 Symbolen)'* - und die fehlende "
+            "ist ZRX, ein echter voruebergehender Abrufausfall, den die "
+            "Dateizeit nicht gesehen haette. ✔ Paket `Abrufvermerk`, 9 "
+            "Pruefungen, gegengeprueft mit einem absichtlich falsch "
+            "platzierten Vermerk. ➔ OFFEN BLEIBT NUR TEIL A. "
+            "✔✔✔ TEIL A ERLEDIGT AM 13.09. (Befunde 2.426 bis "
+            "2.426-pruefungen). Sicherung vorher: "
+            "`data/messdaten_vor_klassenschluessel_13_09.db`, 1,57 GB, "
+            "`quick_check` ok. Migration an einer KOPIE vorabgeprueft, dann "
+            "gelaufen: 1.327 → 1.334 in `messreihen` UND "
+            "`messreihen_status` - letzteres hatte dieselbe Mehrdeutigkeit "
+            "und ist mitgewandert. ⚠️ DIE EIGENTLICHE AENDERUNG WAR NICHT "
+            "DAS SCHEMA, sondern die ZUORDNUNG: `klassen_aus_db` liefert "
+            "jetzt `symbol -> Menge von Klassen` statt einer einzelnen, und "
+            "der Filter fragt `klasse not in ...` statt `!=`. Vier von "
+            "sieben Lesern angepasst. ✔ MESSUNGEN BITGLEICH: `lade()` 536 "
+            "Reihen = V1, DASH weiter die Krypto-Reihe mit 2.722 Punkten, "
+            "`_reihen_roh` je Klasse 536/470/293/35 wie vorher. ✔ Suite "
+            "2.343, dieselben drei bekannten Ausfaelle. ⚠️ Eine Pruefzeile "
+            "hing am WORTLAUT der Filterzeile und fiel durch die "
+            "Verbesserung - Absicht unveraendert, nachgezogen samt "
+            "Begruendung (2.426-pruefungen).",
+            "Befunde 2.421, 2.421-rot, 2.359-abruf-loesung; ausgezogen aus "
+            "Schritt 45 am 13.09.",
+            fertig=True, block="D-BETRIEB",
+            umbau="alt"),  # Strukturmaengel der Messdatenbanken, vor dem Umbau entstanden
     Schritt(45, "DIE VERGESSENEN VIER - AUS DER GEGENPRUEFUNG",
             "⚠️ Aus der Gegenpruefung vom 12.09. (Befund 2.395): vier offene "
             "Punkte standen in KEINEM Schritt. (1) 2.380-annahmen - drei "
             "gesetzte Annahmen sind seit dem 11.09. mit ,zur Abstimmung' "
             "markiert und nie abgestimmt worden, darunter "
-            "`hebelfuehrung.KOPPEL_TAGE`=3 Tage (wie weit ein Signal einer "
+            "`hebelfuehrung.KOPPEL_TAGE` (wie weit ein Signal einer "
             "Position zugerechnet wird). ⚠️ Eine Annahme, die niemand "
             "bestaetigt hat, ist kein Vorgabewert, sondern eine offene "
-            "Frage - Nutzervorgabe ,bei Zweifel in die Abstimmung'. (2) "
+            "Frage - Nutzervorgabe ,bei Zweifel in die Abstimmung'. "
+            "⚠️⚠️ NACHTRAG 13.09.: ALLE DREI WAREN AM 11.09. ENTSCHIEDEN und "
+            "der Befund nur nie nachgezogen. Das Fenster steht seither auf "
+            "24 STUNDEN (2.380-fenster; `KOPPEL_TAGE` = 1.0, bewacht von "
+            "`ausrollen_paket_b`); ohne bekannten Stop gilt VARIANTE B, und "
+            "die hier genannte Annahme ,ganzes Eigenkapital' ist genau die "
+            "vom Nutzer ABGELEHNTE Variante A (2.380-ohne-stop); der "
+            "urspruengliche Stop ist als ,Verlust bis zum Plan-Stop' gebaut "
+            "und mit ,Rest wie empfohlen' angenommen. (2) "
             "2.389-richtung - die Absicherung verliert Signale an der "
             "Richtungspflicht. (3) 2.359-abruf - keine der drei Messquellen "
             "fuehrt `fetched_at`; das gemeldete Alter ist das Datenalter, "
@@ -1154,9 +1812,58 @@ REIHENFOLGE = (
             "und nur nicht nachgezogen (2.395-erledigt): 2.146-luecke (alle "
             "neun Werte haben laengst eine Kursreihe) und 2.343 "
             "(`hebel_signals` ist die Tabelle der ALTEN Pipeline, kein "
-            "Ausfall).",
+            "Ausfall). "
+            "⚠️⚠️ STAND 13.09. - ZWEI DER VIER SIND BEANTWORTET, ZWEI SIND "
+            "AUSGEZOGEN, UND DIE ZWEI ,ERLEDIGTEN' STIMMTEN NICHT GANZ. "
+            "✔ 2.146-luecke: es sind SIEBEN von neun, nicht neun. ASTER und "
+            "MON haben null Punkte - mit 318 bzw. 269 USD-Tagen unter "
+            "`MIN_KERZEN` = 400, weil die Coins erst seit 10/2025 und "
+            "11/2025 existieren. Datenlage-Grenze, in 2.185-rest schon "
+            "registriert. "
+            "✔ 2.343: begruendetes Schweigen - `hebel_analyst` hat KEINE "
+            "Aufrufstelle im Projekt, und das Paket `gesamt` haelt das jetzt "
+            "als Zeile fest (gegengeprueft: mit Testimport rot). "
+            "✔ PUNKT 4 (2.148-sperre / 2.149-prod): die Klassenkollision ist "
+            "real - sieben TICKER-Kollisionen, DASH ist DoorDash UND die "
+            "Kryptowaehrung, T ist AT&T UND Threshold - aber FOLGENLOS: "
+            "`lade()` liefert fuer alle sieben die Krypto-Reihe, und "
+            "`_reihen_roh` ueberspringt den `messreihen`-Filter seit dem "
+            "07.09. (2.421). Der Schemafix ist damit keine SPERRE mehr, "
+            "sondern Aufraeumen - ausgezogen nach Schritt 50. "
+            "➔ PUNKT 3 (2.359-abruf): geprueft, keine der drei Quellen "
+            "fuehrt `fetched_at`. ⚠️ Eine Spalte allein loest es aber NICHT: "
+            "`MAX(fetched_at)` sagt dasselbe wie die Dateizeit. Die Frage "
+            ",war der Abruf VOLLSTAENDIG?' beantwortet nur eine ZAEHLUNG je "
+            "Symbol gegen eine Erwartungszahl - ebenfalls Schritt 50. "
+            "⚠️ WAS IN DIESEM SCHRITT BLEIBT: (1) 2.380-annahmen - drei "
+            "Annahmen, die NUR DER NUTZER entscheiden kann; sie sind ihm am "
+            "13.09. vorgelegt. (2) 2.389-richtung - die Absicherung verlor "
+            "an EINEM Lauf zwei Signale an der Richtungspflicht und am "
+            "naechsten nicht. ⚠️ Am Desktop NICHT pruefbar: die Produktion "
+            "laeuft am Notebook, die Desktop-Kopie hat 5 statt 1.998 Zeilen. "
+            "Es braucht eine Beobachtung ueber mehrere NB-Laeufe, keine "
+            "Codeaenderung ins Blaue. "
+            "⚠️⚠️⚠️ NACHGETRAGEN 13.09. - DAS WAR FALSCH, und der Nutzer "
+            "hat es sofort bemerkt (*,du hast ein DB Backup'*). Unter "
+            "`K:/My Drive/Claude_Austauschordner/DB_Backups` liegen sieben "
+            "Produktionssicherungen, die juengste vom 12.09. 06:46. An ihr "
+            "GEMESSEN (2.422): die Absicherung kann seit dem 22.08. nur noch "
+            "HALTEN sagen. Alle 12 Absicherungssignale haben `richtung = "
+            "NULL`, und `BRAUCHT_RICHTUNG` ist `(KAUFEN, NACHKAUFEN)` - die "
+            "beiden HANDELNDEN Aktionen werden strukturell abgelehnt, HALTEN "
+            "und VERKAUFEN kommen durch. Betroffen sind ZWEI GEHALTENE "
+            "Positionen (3QSS 218,25 Stueck zu 2,05 EUR, DBPK 1.739,16 zu "
+            "0,1713 EUR); in 22 Lauftagen seit dem 22.08. gab es an DREI "
+            "Tagen ein Absicherungssignal, bei DBPK an EINEM. "
+            "➔ DIE URSACHE IST DAMIT BEKANNT und der Punkt ist hier fertig. "
+            "Was bleibt, ist eine ENTSCHEIDUNG und keine Messung: braucht "
+            "die Absicherung ueberhaupt eine Richtung - sie ist per "
+            "Konstruktion ein SHORT auf den Markt - oder muss der Prompt sie "
+            "fuer diese Klasse liefern? Das ist eine ROLLENFRAGE und gehoert "
+            "in den L-Block (Schritt 33), nicht in den D-Block.",
             "Gegenpruefung 12.09.; Befunde 2.395, 2.395-erledigt",
-            block="D-BETRIEB"),
+            fertig=True, block="D-BETRIEB",
+            umbau="alt"),  # vergessene Punkte aus der Zeit vor dem Umbau
     Schritt(44, "DIE KETTE GERADEZIEHEN - TRICHTER, WAECHTER, "
             "ENTSCHEIDUNGSHILFE TRENNEN",
             "✔ PUNKTE 1, 3 UND 4b GEBAUT AM 12.09. (Befund 2.396): vier "
@@ -1265,33 +1972,31 @@ REIHENFOLGE = (
             "misst. Ohne (1) bis (3) misst 42 auf einer Buchhaltung, die "
             "Bewertung und Betriebszustand vermengt. ⚠️⚠️ KEINE STELLE "
             "FAELLT hier weg (KEIN-BEITRAG-FAELLT) - sie werden sichtbar "
-            "und messbar gemacht.",
+            "und messbar gemacht. "
+            "✔✔✔ ERLEDIGT AM 13.09. - DIE BEIDEN RESTPUNKTE SIND ZU. "
+            "(2.396-e2e) DER E2E-NACHWEIS IST ERBRACHT: er war an einer "
+            "NB-Kopie gescheitert, deren Kursreihen nicht bis zum "
+            "Simulationstag reichten. Gegen die PRODUKTIONSSICHERUNG vom "
+            "12.09. 06:46 laeuft er durch - 17 Faelle, 17 gezeigt, 0 offen; "
+            "ONDO wird ein echtes Hebelgeschaeft (3,7x), AKT faellt am "
+            "Aggregat-Deckel auf Spot (2.427). ⚠️ ,Am Notebook wiederholen' "
+            "war nicht noetig - die taegliche Sicherung im Austauschordner "
+            "genuegt; ich hatte den Nachweis zu Unrecht fuer nur dort "
+            "machbar erklaert (2.422-desktop). "
+            "(2.391-hilfe) AUSGEZOGEN IN DEN L-BLOCK, nachdem die Zahlen "
+            "reproduziert wurden: 56 NICHTS_TUN von 247 Verlusten der Stufe "
+            "`aktion` (die uebrigen 191 sind deterministisch), 1.251 am "
+            "Entscheider. ✔ Die zweite ihrer beiden Fragen ist beantwortet - "
+            "der Widerlegungspreis BLEIBT, weil ohne ihn gar kein Hebel mehr "
+            "entsteht (2.397); die Kennzeichnung an der Zahl ist Schritt 41. "
+            "⚠️ Die erste - darf das Modell eine Empfehlung verhindern? - "
+            "gehoert zu Schritt 33, denn dieser Schritt ist ausdruecklich "
+            "AUFRAEUMEN und kein Umbau. "
+            "➔ (4a) bleibt wie vorgesehen in Schritt 41, "
+            "(2.407-namensschatten) ist am 12.09. mit `veto_art` geloest.",
             "Nutzerauftrag 12.09.; Befunde 2.393, 2.393-wirkung, 2.391-hilfe",
-            block="D-BETRIEB"),
-    Schritt(47, "DER STOP AUF GEMESSENE GRUNDLAGE - VORBEDINGUNG FUER "
-            "ALLES AM HEBEL",
-            "⚠️⚠️ ERGEBNIS DER WIDERLEGUNGSPREIS-MESSUNG (Befunde 2.397, "
-            "2.400). Der Hebel entsteht aus ZWEI Groessen: `hebel = (risiko "
-            "/ STOP) / 500`. Die Quote ist gemessen (r(q), halbes Kelly), "
-            "DER STOP NICHT. Er kommt in 81,5 %% der Faelle aus einer "
-            "Modellangabe, und wo die fehlt, aus `_stop_aus_atr` mit 2,5 x "
-            "ATR - was bei Krypto regelmaessig in den Deckel von 25 %% "
-            "laeuft. ⚠️ EIN STOP VON 25 %% MACHT JEDEN HEBEL UNMOEGLICH: "
-            "ueber die ganze r(q)-Spanne ergibt er 0,72x bis 1,80x. ➔ ZU "
-            "TUN: (1) die vorhandenen Messungen zusammentragen - der "
-            "Rauschbefund (0,75 ATR wird in 57,3 %% der Faelle binnen fuenf "
-            "Handelstagen getroffen, 26.910 Anker) und die Ausstiegsregel "
-            "(495 aufgeloeste Signale, +0,092 R). (2) Daraus die Stopweite "
-            "je Anlageklasse BEGRUENDEN statt sie zu setzen - `stop_ziel_atr` "
-            "2,5 und `stop_max_relativ` 25 %% stehen heute ohne eigenen "
-            "Befund in `GRENZEN`. (3) Gegen die echten Faelle rechnen, "
-            "vorher und nachher, dieselbe Funktion zweimal - so wie "
-            "`messe_widerlegung.py` es vormacht. ⚠️⚠️ ERST WENN DAS STEHT, "
-            "kann der Widerlegungspreis aus der Rechnung genommen und zur "
-            "reinen Gegenbewertung in der Mail werden, wie der Nutzer es "
-            "will. Vorher wuerde die Kette gar keinen Hebel mehr erzeugen.",
-            "Nutzervorgabe 12.09.; Befunde 2.397, 2.400, 2.400-hebel",
-            block="D-BEWERTUNG"),
+            fertig=True, block="D-BETRIEB",
+            umbau="beides"),  # alte Trichterbuchhaltung ersetzt, Vier-Felder neu
     Schritt(48, "AUSSTIEG: DEFEKT UND ERFASSUNG - OHNE UMBAU",
             "✔ 48a ERLEDIGT AM 12.09. (Befund 2.402): die gestakte Position "
             "bekommt einen eigenen Mailabschnitt statt Schweigen; Paket "
@@ -1320,9 +2025,38 @@ REIHENFOLGE = (
             "Zielerreichung. ⚠️ NUR ERFASSEN, NICHTS BEWERTEN und nichts "
             "sperren. Bei 15-20 Faellen pro Tag sind das in vier Wochen rund "
             "500 auswertbare Faelle - wer erst mit dem Umbau anfaengt zu "
-            "messen, beginnt ihn mit null Daten.",
+            "messen, beginnt ihn mit null Daten. "
+            "✔✔✔ ERLEDIGT AM 13.09. - BEIDE PUNKTE. "
+            "(1) DER DEFEKT IST GESCHLOSSEN, und zwar vollstaendig: von den "
+            "105 stummen Ausstiegen betreffen 95 Werte, die VOLLSTAENDIG "
+            "GESTAKT sind (HYPE 45, SOL 27, NEAR 7, SUI 7, AVAX 3, VSN 3, "
+            "TAO 2, SEI 1) - sie bekommen seit 48a einen eigenen "
+            "Mailabschnitt. Die uebrigen 10 stehen ALLE am 14.08. zwischen "
+            "07:14 und 07:16, also vier Stunden VOR dem Fix von damals "
+            "(Commit 153b2bd, 11:39). Zwischen dem 14.08. 07:16 und dem "
+            "11.09. gibt es keinen unerklaerten Fall mehr (2.428). ⚠️ Der "
+            "Befund hatte nur 25 der 105 belegt - die restlichen 80 waren "
+            "eine plausible Annahme, keine Zaehlung. "
+            "(2) DIE ERFASSUNG STEHT: `kurs_bei_empfehlung_eur` wird "
+            "mitgeschrieben. Ein Einstieg hielt seine Lage in `entry_*` und "
+            "`stop_loss_*` fest, ein Ausstieg GAR NICHTS - `_sende_ausstieg` "
+            "reichte `rechnung=None` durch, obwohl `kurs_e` dort seit jeher "
+            "vorliegt. Ohne ihn rechnet die Guetemessung mit dem "
+            "Tagesschluss, und bei H3 liegt sie deshalb am Zufall (2.403). "
+            "⚠️⚠️ NUR ERFASSEN: eine Pruefung haelt fest, dass der Wert in "
+            "`entscheidungsrechnung`, `potential`, `wahrscheinlichkeit`, "
+            "`rollen_gate` und `signal_mail` NICHT vorkommt (2.428-"
+            "erfassung). ✔ Paket `Ausstiegserfassung`, 10 Pruefungen, mit "
+            "zwei eingesetzten Defekten gegengeprueft. "
+            "⚠️ DIE SUITE FING DABEI DIE KOPPLUNG zum zweiten Mal an einem "
+            "Tag: eine neue `signals`-Spalte muss in `SPALTEN_SIGNAL`, in "
+            "`models.Signal` UND im NB-Export stehen - ich hatte die dritte "
+            "vergessen (2.428-kopplung). "
+            "➔ WAS BLEIBT: der UMBAU der Verkaufsseite ist Schritt 43, so "
+            "wie der Nutzer es wollte.",
             "Expertenempfehlung 12.09.; Befunde 2.392-stumm, 2.394",
-            block="D-BETRIEB"),
+            fertig=True, block="D-BETRIEB",
+            umbau="beides"),  # alter Defekt geschlossen, Erfassung neu
     Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
             "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
             "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
@@ -1355,9 +2089,10 @@ REIHENFOLGE = (
             "Frage nach einer eigenen Bewertungsstufe fuer den Ausstieg. ⚠️ "
             "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
             "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
-            "davor).",
+            "davor). \u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Plan_Asset_Lebenszyklus_14_09.md, Abschnitt Ausstieg): (A) VERKAUFEN UND REDUZIEREN GEHOEREN GEMESSEN und sauber ins Konzept - WAS ist der Verkaufsgrund: eine BEWERTUNG je Strategie; die noetigen Bewertungen und Urteile werden mit dem Nutzer dimensioniert wie beim Einstieg. \u26a0\ufe0f DIE VERKAUFSBEWERTUNG IST NICHT GELOEST - Stand 14.09. unveraendert 2.392. (B) HEBEL: Schutzschicht = Regeln alle 15 min mit eigenem Betreff und Mailhinweis; Fuehrung = Modell mit Positionskontext, an die OFFENE POSITION gebunden, 1-h-Takt fuer offene Hebeltrades - erst wenn gemessen ist, dass Verkauf/Reduzieren tragen; eigene Positionsfrage mit Intraday-Fakten. (C) KERN/AKKUMULATION: vorerst KEINE Verkaufsaktionen; nachgelagert: bei laengerem Greed u. U. sinnvoll, Fear nicht. (7c) Ein Asset mit Spot- UND Hebelposition = zwei Positionen, zwei Verkaufssignale, keine Sammelmail. \u27a4 DIE DETAILPLANUNG FOLGT NACH DEM ROLLOUT (Nutzerauftrag: Doku lesen, Messdokumente beachten, testen und simulieren).",
             "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="beides"),  # die Ausstiegsseite laeuft an der neuen Bewertung vorbei
     Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5. ⚠️ HIER GEHOERT AUCH DER "
             "DRITTE BEITRAG HIN (Befund 2.409-kandidaten): DefiLlama-TVL ist "
@@ -1370,9 +2105,153 @@ REIHENFOLGE = (
             "`oi_aenderung` (heute nur Sperre) brauchen keine Datenarbeit, "
             "sondern eine MESSUNG.",
             "Kettenplan 09.09.; NACH den Beitraegen wegen R-R9",
-            block="D-BEWERTUNG"),
+            block="D-BEWERTUNG",
+            umbau="neu"),  # K-3 Schwelle und die Kettenpunkte des Umbaus
 
 
+    Schritt(51, "DREI GEHALTENE WERTE OHNE MESSREIHE - UND DAS ALTER DER "
+            "NICHT-KRYPTO-MESSBASEN",
+            "\u26a0\u26a0 DIE DREI ROTEN ZEILEN DER SUITE (2.436), geklaert "
+            "statt nur gezaehlt. Sie sind DATENSTAND, nicht Logik, und "
+            "nicht heute entstanden - `git diff HEAD` zeigt an den "
+            "betroffenen Pruefungen keine Aenderung. "
+            "(1) ASTER (nur 318 USD-Tage) und MON (269) liegen unter der "
+            "Mindestlaenge, CANTON hat auch in der PRODUKTION keine Reihe. "
+            "Alle drei sind GEHALTEN - ohne Messreihe kann die Kette sie "
+            "weder zum Nachkauf noch zum Verkauf bewerten. "
+            "(2) CANTON ist zusaetzlich KERNWERT ohne jeden Beitrag; das "
+            "ist dieselbe Ursache, nicht ein zweiter Fall. Bei Meme- und "
+            "Smallcap-Werten waere es laut Nutzervorgabe unkritisch, bei "
+            "einem Kernwert nicht. "
+            "(3) Die Nicht-Krypto-Messbasen sind 10 Tage alt (Median "
+            "2026-09-03; aktien 470/470, rohstoffe 35/35, themen_etf "
+            "293/293 aelter als 7 Tage). \u26a0\ufe0f Am DESKTOP ist das zu "
+            "erwarten - er faehrt nach stehender Vorgabe nie gegen die "
+            "Produktiv-DB. \u27a4 ZU TUN: (1) und (2) brauchen eine "
+            "Entscheidung zur Mindestlaenge oder eine Quelle fuer CANTON; "
+            "(3) braucht eine Messung AM NOTEBOOK, bevor daraus ueberhaupt "
+            "ein Befund wird - ob es dort auch rot ist, ist NICHT geprueft."
+            "\u2714\u2714 STAND 13.09. ABENDS - ZWEI DER DREI ZEILEN WAREN FEHLER "
+            "IN DER PRUEFUNG, NICHT IN DEN DATEN (2.441). \u26a0\ufe0f Und mein Text "
+            "oben war an zwei Stellen falsch - beides, weil ich eine "
+            "Pruefungsausgabe weitergeschrieben habe, statt sie an der Quelle "
+            "gegenzupruefen. "
+            "\u2716 FALSCH WAR: ,CANTON hat auch in der PRODUKTION keine "
+            "Kursreihe'. Gelesen wird `data/tradinginfotool.db` am DESKTOP, und "
+            "deren OHLC endet am 2026-08-19. In der Produktionssicherung vom "
+            "12.09. hat CANTON 63 USD-Tage ab 2026-05-07, ASTER 342 (nicht 318) "
+            "und MON 293 (nicht 269). \u27a4 ALLE DREI HABEN EINE REIHE - es ist "
+            "derselbe Fall dreimal, zu kurz. \u2714 Die Pruefung nennt die Quelle "
+            "jetzt beim Namen samt Stand. "
+            "\u2716 FALSCH WAR AUCH: ,(3) braucht eine Messung AM NOTEBOOK'. Die "
+            "Nicht-Krypto-Reihen kommen aus yfinance, das der Desktop selbst "
+            "erreicht. Die Meldung war ein WAEHRUNGSFEHLER: "
+            "`FRISCHE_GRENZE_TAGE = 7` traegt die Begruendung ,Krypto handelt "
+            "durchgehend' und wurde auf Maerkte angewandt, die schliessen. Am "
+            "So, 13.09. war die Median-Reihe vom Do, 03.09. - 10 KALENDERtage, "
+            "aber 6 HANDELStage. \u2714 GEBAUT: fuer schliessende Maerkte wird in "
+            "Handelstagen gezaehlt, die Grenze bleibt 7. Die Zeile ist GRUEN, "
+            "regelkonform und nicht durch Lockerung. "
+            "\u2714\u2714 DIE DRITTE ZEILE IST ECHT - loest sich aber grossteils von "
+            "selbst (2.441-warten): keine Quelle macht eine junge Reihe laenger. "
+            "ASTER erreicht die 400 Tage am 2026-11-09, MON am 2026-12-28, "
+            "CANTON erst am 2027-08-15. Fuer zwei von dreien ist WARTEN die "
+            "richtige Antwort. Fuer CANTON nicht - und CANTON ist zugleich der "
+            "einzige KERNWERT der drei. "
+            "\u26a0\u26a0 OFFEN UND NUTZERENTSCHEIDUNG (2.441-still): das eigentliche "
+            "Problem ist nicht die Luecke, sondern ihre STILLE. `agent/` und "
+            "`ui/` durchsucht - es gibt KEINE Mailzeile, keine GUI-Spalte und "
+            "keinen Hinweis fuer ,gehalten, aber nicht bewertbar'. Die Kette ist "
+            "zu diesen Werten stumm: kein Nachkauf, kein Verkauf, keine "
+            "Begruendung. Genau das war der Ursprung des Pakets (Nutzerhinweis "
+            "08.09.). \u26a0\ufe0f NICHT gebaut, und zwar absichtlich: eine neue "
+            "Mailzeile gehoert in Schritt 41, dessen Vorgabe ,erst pruefen, DANN "
+            "straffen' lautet. \u27a4 FRAGE: soll die Mail eine Zeile ,gehalten, "
+            "nicht bewertbar (Grund)' fuehren - fuer alle drei oder nur fuer "
+            "Kernwerte?"
+            "✔✔✔ UND DIE MAILZEILE IST GEBAUT (2.442) - Nutzerentscheidung 13.09.: *,ja Mailzeile fuer alle drei'*. "
+            "`verkaufsrechnung.stumme_bestaende()` liest `holdings` und meldet jede gehaltene Kryptoposition mit zu kurzer USD-Kursreihe im Abschnitt ,STUMM: GEHALTEN, ABER NICHT BEWERTBAR'; der Betreff "
+            "nennt sie mit. ⚠️ Das Laufzeitkriterium ist bewusst ein anderes als in der Suite: das Notebook hat `messdaten.db` planmaessig nicht, also entscheidet die Kursreihenlaenge - mit "
+            "DERSELBEN Grenze, importiert statt abgeschrieben. 13 Pruefungen, davon 10 Regeltests auf einer gestellten DB. "
+            "⚠⚠ ES SIND VIER, NICHT DREI (2.442-vier, offen): gefiltert wird ueber EIGENSCHAFTEN, nicht ueber Namen - CANTON, VSN, MON, "
+            "ASTER. VSN ist der vierte; ihn auszublenden waere dieselbe Stille, die hier behoben wird. Das gehoert dem Nutzer, nicht mir.",
+            "Befund 2.436; pruefe_pakete.py --paket Neuaufnahme",
+            block="D-BETRIEB",
+            umbau="alt",
+            fertig=True),  # Altbestand an Haltepositionen, keine Umbauleistung
+    Schritt(52, "DIE STOPREGEL JENSEITS DER WEITE - DREI FRAGEN AUS "
+            "SCHRITT 47",
+            "\u2714 SCHRITT 47 HAT DIE WEITE GEKLAERT (2.435-optimum: "
+            "inneres Maximum bei 7-9 %%, `stop_ziel_atr` = 2,5 trifft es) "
+            "UND DEN DECKEL (2.437: 25 %% bleibt). Dabei sind DREI Fragen "
+            "entstanden, die alle dieselbe Messanlage benutzen und deshalb "
+            "zusammengehoeren. \u26a0\ufe0f KEINE davon rechtfertigt fuer sich "
+            "einen Eingriff - sie sind Messfragen, keine Reparaturen. "
+            "(1) DER ATR-RUECKFALL IM MITTELFELD (2.437-atr): bei Lagen mit "
+            "ATR-Rueckfallstop 15-25 %% - das sind 47 %% aller Handelstage, "
+            "und sie werden NICHT gedeckelt - waere ein engerer Stop LONG "
+            "messbar besser (8 %%: +0,035, Band ueber null), SHORT dagegen "
+            "flach. Eine Regel, die nur LONG hilft, braucht eine eigene "
+            "Gegenpruefung. "
+            "(2) MODELLSTOP GEGEN REGELSTOP (2.438): im Betrieb kommt der "
+            "Stop in 81,5 %% der Faelle aus dem Widerlegungspreis, nicht aus "
+            "der Regel. Der Median der 1.446 Modellzonen liegt mit 8,0 %% "
+            "genau auf dem Gipfel - ob die EINZELentscheidung traegt, ist "
+            "nicht gemessen. \u27a4 MESSBAR mit dem vorhandenen Werkzeug: je "
+            "Signal den Modellstop gegen den Regelstop am SELBEN Anker, "
+            "gepaart. "
+            "(3) DER BP-SATZ (2.440-was-hilft): beim teuren Satz ist der "
+            "gemessene Optimalstop wirtschaftlich der unguenstigste "
+            "Bereich - Netto bei 8 %% -0,319 R, bei 20 %% -0,136 R. "
+            "Aufweiten halbiert die Luecke (Quotenluecke 12 -> 5 Punkte), "
+            "schliesst sie aber nicht; CRV anheben hilft NICHT (2.440-crv, "
+            "gemessen). \u26a0\u26a0 EINE HANDELSPLATZABHAENGIGE STOPWEITE "
+            "WAERE EINE GEBUEHR IN DER BEWERTUNG DURCH DIE HINTERTUER "
+            "(Regel 2) - das ist eine Nutzerentscheidung, keine Messfolge. "
+            "\u26a0\ufe0f WERKZEUG STEHT: `messe_stopweite_historisch.py` mit "
+            "`atr_band`, `crv` und `stop_zuerst` als Parametern, "
+            "`pruefe_stopweite_gegen.py` mit acht Proben. "
+            "➤ (4) AUS SCHRITT 31 (2.447-offen, Punkt 2): der Trichter "
+            "schreibt zum Stop ausserhalb der 5-Tage-Spanne ,GUENSTIG - wer ihn "
+            "ausloest, hat ein Argument geliefert'. Die Spanne ist gemessen, "
+            "der Halbsatz nicht - und `gesamtbild` zaehlt das Etikett. Dieselbe "
+            "Messanlage beantwortet es: loesen Stops ausserhalb der Spanne "
+            "seltener ohne Grund aus als solche innerhalb?",
+            "Befunde 2.437-atr, 2.438, 2.440-was-hilft; "
+            "messe_stopweite_historisch.py",
+            block="D-BEWERTUNG",
+            umbau="neu"),  # die Stopregel ist der Nenner des neuen Hebels
+    Schritt(53, "GUI UND ANWENDUNGSFAELLE - DIE GROSSE PLANUNG (E1)",
+            "\u26a0\ufe0f\u26a0\ufe0f NUTZERVORGABE 07.09. (Gesamtplan 28.08., Punkt E1): "
+            "die umfangreiche Planung mit GUI, Funktionalitaeten und "
+            "Anwendungsfaellen - neue Assets, Assets fallen weg oder aendern "
+            "sich. \u27a4 AUSGEGLIEDERT AUS SCHRITT 32 (14.09.): 32 hat die "
+            "Oberflaeche an die LAUFENDE Kette angeglichen (2.448-umsetzung), "
+            "diese Planung aber nicht begonnen. Stoff aus 2.448-rest: (1) die "
+            "Anwendungsfaelle selbst; (2) Uebersichtsseite - ,Offene Signale' "
+            "und ,Ausstiegsempfehlungen' ohne Kettentrennung; (3) ein Verlauf der "
+            "Rollen-Hebelzeilen fehlt; (4) die Detailansicht nennt ihre Luecken "
+            "(Trefferquote, Gebuehren, Marktvergleich, Termine) - schliessbar nur "
+            "ueber den gespeicherten Mailtext, am 14.09. dagegen entschieden; "
+            "(5) was mit den stillgelegten alten GUI-Wegen endgueltig geschieht."
+            "➤ GEPRUEFT 14.09. (Befund 2.450): Ist-Aufnahme und Vorschlag in "
+            "`Basisinfos/Plan_Asset_Lebenszyklus_14_09.md` - Luecken 2.450-cache "
+            "(gepullte Watchlist wirkt erst nach Neustart), 2.450-neu (7 von 43 "
+            "ohne Datengrundlage, nur im Log), 2.450-weg (kein Entfernen, "
+            "entfernter Bestand verliert still die Fuehrung), 2.450-aendert "
+            "(kein Bruchschutz). Vorschlag in drei Stufen A Betrieb / B "
+            "Oberflaeche / C Messung - NUTZERENTSCHEIDUNG offen."
+            "\u27a4 14.09.: A1 entschieden (Doku + Hinweis Neustart); Neuaufnahme-"
+            "Ablauf abgestimmt (gehaltene automatisch, config.yaml, Daten "
+            "automatisch, kein Einstieg ohne Messbasis). Positionsfaelle Spot/"
+            "Hebel geprueft (2.451): 2.451-sofort, 2.451-absicherung (DBPK seit "
+            "22.08. ohne Urteil), 2.451-verkauf, 2.451-bestaetigung, 2.451-phantom, "
+            "2.451-topf, 2.451-hebel - am 14.09. ENTSCHIEDEN "
+            "(Punkte 1-6, 7c, 7d; Umsetzung in Schritt 55). VSN wird aus der Stummzeile "
+            "ausgenommen (Nutzerentscheidung zu 2.442-vier).",
+            "Gesamtplan 28.08. E1; Befund 2.448-rest",
+            block="D-ABBILDUNG",
+            umbau="beides"),  # Planung, nicht Angleichung
 )
 
 # ---- Blocker, die benannt sind -------------------------------------------
@@ -1671,6 +2550,46 @@ def abgleich() -> list:
     return ab
 
 
+def geordnet() -> tuple[list, list, list]:
+    """Die offenen Schritte in der geltenden Ordnung: (alle, bereit, wartend).
+
+    ⚠️⚠️ DIE EINZIGE STELLE, DIE DIE REIHENFOLGE KENNT. `main()` UND die
+    Pruefung in `pruefe_pakete` rufen sie - vorher sortierte jede fuer
+    sich, und als `wartet_auf` dazukam, meldete die eine 32 und die
+    andere 28.
+
+    ZWEI ACHSEN, und sie greifen in dieser Reihenfolge:
+
+      1. BLOCK          die Reihenfolge von BLOECKE (Dringlichkeit)
+      2. LISTENPOSITION innerhalb eines Blocks - NICHT die Nummer
+
+    ⚠️ DIE SCHRITTNUMMER IST KEIN RANG. Sie sagt, WANN ein Schritt
+    entstanden ist, nicht wie dringend er ist - Schritt 49 (ein Fehler im
+    laufenden Betrieb) gehoert vor Schritt 44 (halb fertig), obwohl seine
+    Nummer groesser ist.
+
+    ⚠️⚠️ UND DANN FAELLT HERAUS, WER WARTET. Die Blockordnung sortiert
+    nach Dringlichkeit und kannte keine Abhaengigkeit; deshalb meldete
+    der Plan Schritt 28, dessen eigener Text sagt *"ERST NACH DEM ROLLOUT
+    messen - vorher misst man den alten Stand"*. Das ist derselbe Fehler
+    wie 2.395 (keine Rangfolge), eine Ebene tiefer.
+
+    ⚠️ UMSORTIEREN HEISST ZEILEN VERSCHIEBEN. Das ist Absicht: eine
+    zweite Zahl neben der Schrittnummer waere eine zweite Stelle, die
+    gepflegt werden muss - und die erste, die vergessen wird.
+    """
+    _rang = {name: i for i, (name, _) in enumerate(BLOECKE)}
+    _pos = {s.nr: i for i, s in enumerate(REIHENFOLGE)}
+    offen = sorted((s for s in REIHENFOLGE if not s.fertig),
+                   key=lambda s: (_rang.get(s.block, len(BLOECKE)),
+                                  _pos[s.nr]))
+    fertig_nr = {s.nr for s in REIHENFOLGE if s.fertig}
+    wartend = [s for s in offen
+               if any(n not in fertig_nr for n in s.wartet_auf)]
+    bereit = [s for s in offen if s not in wartend]
+    return offen, bereit, wartend
+
+
 def main() -> int:
     kurz = "--kurz" in sys.argv
     ab = abgleich()
@@ -1693,11 +2612,8 @@ def main() -> int:
     # ⚠️⚠️ UMSORTIEREN HEISST ZEILEN VERSCHIEBEN. Das ist Absicht: eine
     # zweite Zahl neben der Schrittnummer waere eine zweite Stelle, die
     # gepflegt werden muss - und die erste, die vergessen wird.
-    _rang = {name: i for i, (name, _) in enumerate(BLOECKE)}
-    _pos = {s.nr: i for i, s in enumerate(REIHENFOLGE)}
-    offen = sorted((s for s in REIHENFOLGE if not s.fertig),
-                   key=lambda s: (_rang.get(s.block, len(BLOECKE)),
-                                  _pos[s.nr]))
+    offen, _bereit, _wartend = geordnet()
+    _fertig_nr = {s.nr for s in REIHENFOLGE if s.fertig}
 
     print("=" * 100)
     print("SOLL / IST — steht der Umbau noch im Plan?")
@@ -1790,11 +2706,23 @@ def main() -> int:
         if not drin:
             continue
         print("   %-14s %s" % (name, warum))
+        # ⚠️⚠️ ALT ODER NEU STEHT AN JEDEM SCHRITT (13.09.2026,
+        # Nutzervorgabe *"Der PLAN muss klar zwischen altem und neuem Umbau
+        # unterscheiden"*). Ohne das Zeichen liest sich eine Reparatur wie
+        # ein Baufortschritt - genau die Vermischung, die der Nutzer
+        # bemaengelt hat.
+        _je = {}
+        for s in drin:
+            _je[s.umbau or "?"] = _je.get(s.umbau or "?", 0) + 1
+        print("   %-14s %s" % ("", "davon " + " · ".join(
+            "%d %s" % (n, UMBAUZEICHEN.get(k, k))
+            for k, n in sorted(_je.items(), key=lambda x: -x[1]))))
         for _r, s in enumerate(drin, 1):
             z = "→" if offen and s is offen[0] else " "
             # DER RANG STEHT DA, sonst haelt ihn jemand fuer die Nummer.
-            print("     %s %d. Schritt %-3d %-14s %s"
-                  % (z, _r, s.nr, s.kennung, s.text[:48]))
+            print("     %s %d. [%s] Schritt %-3d %-14s %s"
+                  % (z, _r, UMBAUZEICHEN.get(s.umbau, "?  "), s.nr,
+                     s.kennung, s.text[:44]))
             if not kurz:
                 print("           %-12s Quelle: %s" % ("", s.quelle))
         print()
@@ -1815,10 +2743,25 @@ def main() -> int:
         print("✔ KEINE ABWEICHUNG — das laufende System entspricht den "
               "Entscheidungen.")
     print()
-    if offen:
+    if _wartend:
+        print("   ⏸ WARTET AUF EINEN ANDEREN SCHRITT — nicht als naechster "
+              "gemeldet:")
+        for s in _wartend:
+            _offen_auf = [n for n in s.wartet_auf if n not in _fertig_nr]
+            print("      Schritt %-3d %-38s wartet auf %s"
+                  % (s.nr, s.kennung[:38],
+                     ", ".join(str(n) for n in _offen_auf)))
+        print()
+    if _bereit:
         print("   NAECHSTER SCHRITT: %d %s — %s"
-              % (offen[0].nr, offen[0].kennung, offen[0].text))
-        print("   Quelle: %s" % offen[0].quelle)
+              % (_bereit[0].nr, _bereit[0].kennung, _bereit[0].text))
+        print("   Quelle: %s" % _bereit[0].quelle)
+    elif offen:
+        # ⚠️ ALLES OFFENE WARTET - das ist KEIN "fertig", sondern eine
+        # Blockade, und sie gehoert benannt statt verschwiegen.
+        print("   ⚠️⚠️ KEIN SCHRITT IST BEREIT — alle %d offenen warten "
+              "auf einen anderen. Das ist eine Blockade, kein Abschluss."
+              % len(offen))
     else:
         print("   Alle Schritte der Reihenfolge sind abgearbeitet.")
     return 1 if ab else 0

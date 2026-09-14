@@ -53,6 +53,43 @@ GRENZEN = {
     # den Bereich, den der Nutzer aus der Praxis nennt ("ca. 10 Prozent") und
     # den der Backtest vom 28.07. als einzigen ueber der Gewinnschwelle ausweist
     # (5-10 %: 31,2 % Trefferquote, +0,31 CRV).
+    #
+    # ⚠️⚠️⚠️ SEIT 13.09.2026 HAT DIESE ZAHL EINEN EIGENEN BEFUND -
+    # UND ER BESTAETIGT SIE (2.435-optimum, Schritt 47).
+    #
+    # ⚠️ ES BRAUCHTE ZWEI ANLAEUFE, und der erste war falsch. Zuerst
+    # wurde auf den SIGNALEN gemessen (`messe_stop_abstand_baender.py`,
+    # 1.446 Signale) und "ueber 12 % traegt, +0,230 R" gemeldet. Das war
+    # ein Auswahleffekt: der Block-Bootstrap zieht ueber SYMBOLE, und die
+    # 251 Faelle im breitesten Band waren 21 Symbole (2.434). Die
+    # Aufloesung lag bei 0,40 R, der gemessene Effekt darunter.
+    #
+    # ⚠️⚠️ GEMESSEN WIRD JETZT HISTORISCH UND GEPAART
+    # (`messe_stopweite_historisch.py`): 534 Symbole der Messmenge,
+    # 32.040 Anker, und JEDER Anker wird mit JEDER Stopweite gerechnet -
+    # dieselbe Lage, nur ein anderer Stop. Damit faellt die Auswahl als
+    # Stoerquelle weg, und die Aufloesung faellt auf 0,010 bis 0,020 R.
+    #
+    # ➤ DAS ERGEBNIS, Feinraster in Ein-Prozent-Schritten, LONG, H10,
+    # gepaart gegen den Betriebspunkt 8 %:
+    #
+    #       5 % -0,0354   6 % -0,0177   7 % -0,0013
+    #     [ 8 % Bezug ]   9 % -0,0046  10 % -0,0127  12 % -0,0182
+    #
+    # Ein echtes INNERES MAXIMUM: 7 bis 9 % sind nicht voneinander
+    # trennbar, alles darum herum ist messbar schlechter. 2,5 x ATR
+    # trifft bei Krypto rund 7,5 bis 8 % - also mitten hinein.
+    #
+    # ⚠️ NACH DER EHRENRUNDE (`pruefe_stopweite_gegen.py`, acht Proben):
+    # die WEITE Seite haelt unter jeder Annahme - beide Gleichtagsregeln,
+    # drei Saaten, drei Bezugspunkte, drei Zeitfenster, beide Richtungen.
+    # In KEINEM Fall ist eine Weite ueber 9 % besser als 8 %.
+    #
+    # ⚠️⚠️ DIE ENGE SEITE IST NICHT ENTSCHIEDEN (2.435-gleichtag): unter
+    # 5 % haengt das Vorzeichen daran, ob eine Tageskerze, die Stop UND
+    # Ziel beruehrt, als Stop oder als Ziel gilt (2 %: -0,240 gegen
+    # +0,309). Aus TAGESDATEN nicht aufloesbar; es braeuchte Intraday-
+    # Kerzen. Fuer diese Zahl folgenlos - sie liegt im Plateau.
     "stop_ziel_atr": 2.5,
     # ⚠️⚠️ VON 0,025 AUF 0,050 ANGEHOBEN (31.08.2026, Nutzerentscheidung).
     #
@@ -161,6 +198,56 @@ GRENZEN = {
     # Position winzig (Risikobudget durch grossen Nenner) und die Haltedauer
     # unbegrenzt. 25 % ist rund 8 x ATR bei Krypto - jenseits davon ist es
     # kein Stop mehr, sondern ein Verzicht auf einen.
+    #
+    # ⚠️⚠️⚠️ DIESE ZAHL IST EINE NOTBREMSE, KEINE EINGESTELLTE WEITE -
+    # und genau so ist sie am 13.09.2026 geprueft und BESTAETIGT worden
+    # (2.437, 2.437-grund).
+    #
+    # ⚠️ DIE FRAGE WAR ZWEIMAL FALSCH GESTELLT. Sie lautet nicht "ist
+    # 25 % die beste Stopweite" - der Kommentar darueber sagt, wofuer es
+    # sie gibt: ein Stop von 40 % faellt durch jede UNTERgrenze und
+    # ruiniert die Rechnung trotzdem. Sie lautet: "faengt die Notbremse
+    # noch, was sie fangen soll?"
+    #
+    # ✔ JA. An den 1.446 Modellzonen des NB-Exports liegen 7 (0,5 %)
+    # ueber 25 %, das Maximum bei 34,5 %. Der Ausreisser existiert, ist
+    # selten, und wird gefangen.
+    #
+    # ⚠️⚠️ UND EINE SENKUNG WAERE MESSBAR FALSCH. Gemessen GENAU DORT,
+    # WO DER DECKEL BINDET (Lagen mit ATR-Rueckfallstop ueber 25 %,
+    # 30.297 Anker, 520 Symbole, gepaart gegen die 25 %, die diese Lagen
+    # heute bekommen):
+    #
+    #     LONG    8 % +0,002 · 10 % +0,007 · 12 % +0,003 · 20 % -0,005
+    #             jedes Band schliesst die Null ein - KEIN Gewinn
+    #     SHORT   8 % -0,026 · 12 % -0,029 · 20 % -0,010
+    #             alle fuenf trennbar UNTER null - enger SCHADET
+    #
+    # ➤ DER GRUND IST EINSICHTIG: das sind die schwankungsstarken Lagen.
+    # Ein 8-%-Stop ist dort rund 0,8 ATR und wird vom Rauschen
+    # abgeraeumt. Der Vorteil aus der kleineren Position steckt in der
+    # R-Rechnung schon drin.
+    #
+    # ⚠️ MEINE EIGENE VORLAGE VOM SELBEN TAG WAR FALSCH (2.435-deckel,
+    # abgeloest): sie nahm die UNBEDINGTE Messung ueber alle Anker
+    # (20 % gegen 8 %: -0,041 R) und uebertrug sie auf diese BEDINGTE
+    # Teilmenge. Der Nutzer hat nachgefragt, und die Nachmessung hat es
+    # umgedreht.
+    #
+    # ⚠️ WAS SIE HEUTE AUSSERDEM TUT, ist gerechnet: bei 25 % ergibt die
+    # ganze r(q)-Spanne 0,72x bis 1,80x - der Deckel SCHNEIDET DEN HEBEL
+    # AB. Genau an dieser Stelle hat 2.397 gemessen, es gaebe ohne den
+    # Widerlegungspreis keinen Hebel mehr. Bei 20 % sind es noch 2,25x.
+    # Das ist Arithmetik (`hebel` ~ 1/stop_rel) und KEIN Grund, den
+    # Deckel zu senken - die Nachmessung oben sagt, dass die so
+    # gehebelten Trades nicht besser laufen.
+    #
+    # ⚠️⚠️ WAS STATTDESSEN OFFEN IST: nicht der Deckel, sondern der
+    # ATR-Rueckfall im MITTELFELD (2.437-atr). Bei Lagen mit
+    # ATR-Rueckfallstop 15-25 % - 47 % aller Handelstage, und sie werden
+    # NICHT gedeckelt - waere enger LONG messbar besser (8 %: +0,035,
+    # Band ueber null), SHORT dagegen flach. Eigener Schritt, eigene
+    # Gegenpruefung, nicht hier.
     "stop_max_relativ": 0.25,
 
     "crv": 2.0,                     # risiko.crv_minimum
@@ -448,8 +535,26 @@ def _haltedauer_tage(weg: float, atr: float) -> int:
 
     Warum trotzdem: die Zahl entscheidet bei Hebel ueber die Finanzierung und
     damit ueber die halbe Kostenrechnung. Eine ausgewiesene Schaetzung ist
-    besser als ein stillschweigendes "ein paar Tage". Sie gehoert gegen die
-    eigenen Reihen nachgerechnet - offener Punkt."""
+    besser als ein stillschweigendes "ein paar Tage".
+
+    ✔ SEIT 13.09.2026 NACHGERECHNET (Befund 2.445, `messe_haltedauer.py`,
+    32.040 Anker ueber 534 Kryptoreihen). Gemessen wird der Median bis zur
+    ERSTEN Marke - Stop oder Ziel -, und die Formel trifft ihn besser, als
+    ihre Herleitung erwarten laesst:
+
+        Stop in ATR    0,75   1,0   1,5   2,0   2,5    3,0
+        gemessen LONG     3     5    10    16    23     33
+        gemessen SHORT    3     5    10    17    27     37
+        diese Formel    2,2   4,0   9,0  16,0  25,0   36,0
+
+    Am Betriebspunkt 2,5 ATR also rund 10 % daneben, bei engen Stops 20-25 %
+    zu kurz. ⚠️ WARUM sie passt, ist NICHT erklaert - die Irrfahrt-Herleitung
+    oben sagt 42 Tage voraus (2.445-mechanismus). Gemessen ist nur Krypto;
+    fuer Aktien und Rohstoffe gibt es keinen Beleg.
+
+    ⚠️ Fuer Krypto sind die Tage KALENDERtage (die Kerzen enthalten
+    Wochenenden) - die Mail schreibt trotzdem "Handelstage" (2.445-fenster,
+    Begriff fuer Schritt 41)."""
     if atr <= 0:
         return GRENZEN["tage_max"]
     return int(min(GRENZEN["tage_max"], max(1, round((weg / atr) ** 2))))
@@ -1118,7 +1223,13 @@ def marken_saetze(e: dict, marken: list | None,
             teile.append(str(m["nach_unten_gedreht"]) + "x nach unten gedreht")
         if m.get("gehalten"):
             teile.append(str(m["gehalten"]) + "x gehalten")
-        z.append("    " + preis(m["preis_eur"]) + " EUR  +"
+        # ⚠️ DAS VORZEICHEN FOLGT DER LAGE (Schritt 31, 13.09.2026). Hier
+        # stand fest "+" - bei einem SHORT liegen die Marken UNTER dem Kurs
+        # und hiessen trotzdem "+1,0 Schwankungsbreiten". Derselbe Fehler wie
+        # die Stopzeile in 2.446-richtung.
+        z.append("    " + preis(m["preis_eur"]) + " EUR  "
+                 + ("-" if float(e["ziel_bis_eur"]) < float(e["einstieg_bis_eur"])
+                    else "+")
                  + _eur(m["abstand_atr"], 1) + " Schwankungsbreiten - "
                  + str(m["beruehrungen"]) + " Umkehrpunkte")
         z.append("      (" + ", ".join(teile) + ")"
@@ -1150,8 +1261,13 @@ def saetze(e: dict, marken: list | None = None,
                  f"{_eur(e['crv'], 1)}, verlangt sind {_eur(GRENZEN['crv'], 1)}")
     z += [
          # "etwa 1 Handelstage" stand in einer echten Mail.
+         # ⚠️ KRYPTO: TAGE, NICHT HANDELSTAGE (Schritt 31, 2.445-fenster) -
+         # gemessen sind Kalendertage, die Kerzen enthalten Wochenenden.
          f"Haltedauer      etwa {e['haltedauer_tage']} "
-         f"{'Handelstag' if e['haltedauer_tage'] == 1 else 'Handelstage'} "
+         + (("Tag" if e['haltedauer_tage'] == 1 else "Tage")
+            if str(e.get("assetklasse") or "").lower() == "krypto" else
+            ("Handelstag" if e['haltedauer_tage'] == 1 else "Handelstage"))
+         + " "
          f"({e.get('haltedauer_quelle', 'geschaetzt')})",
          f"Betrag          {_eur(e['betrag_eur'])} EUR"
          + (f"  - begrenzt durch {e['betrag_gedeckelt_durch']}"
@@ -1179,6 +1295,22 @@ def saetze(e: dict, marken: list | None = None,
                      else ", hinter dem Stop bis etwa Tag "
                      + _eur(e["liquidation_tage_bis_stop"], 0)))
                  + ")")
+        # ⚠️ 2.445-FENSTER (Schritt 31, 13.09.2026): die Mail nannte das
+        # sichere Fenster und die Haltedauer, zwei Zeilen auseinander, und
+        # verglich sie nie. Wo das Fenster KUERZER ist, ueberholt die
+        # Liquidation den Stop, bevor der Trade im Schnitt entschieden ist.
+        # Die Marke `!!` bringt die Zeile in den Kopf ("Was dagegen
+        # spricht") - reine Arithmetik aus zwei Zahlen der Rechnung, keine
+        # Bewertung. Im Normalfall steht nichts zusaetzlich da.
+        if (e.get("liquidation_tage_bis_stop") is not None
+                and e.get("haltedauer_tage")
+                and e["liquidation_tage_bis_stop"]
+                < float(e["haltedauer_tage"])):
+            z.append(f"Sicher bis      Tag "
+                     f"{_eur(max(0.0, e['liquidation_tage_bis_stop']), 0)}"
+                     f"   !! kuerzer als die geschaetzte Haltedauer von "
+                     f"{e['haltedauer_tage']} Tagen - danach liegt die "
+                     f"Liquidation vor dem Stop")
     elif _hq is not None or _hq_luecke:
         # H-2: mit der Hebelrechnung heisst 1,0 nicht mehr "kein Hebel
         # noetig", sondern "die Wahrscheinlichkeit ergibt keinen" - die
@@ -1206,8 +1338,18 @@ def saetze(e: dict, marken: list | None = None,
         from agent import trichter as _TR
         z += _TR.saetze(e.get("einstieg_eur"), e.get("atr"),
                         stop_relativ=e.get("stop_relativ"),
+                        # ⚠️ DER BETRAG, NICHT DIE DIFFERENZ (Schritt 31,
+                        # 13.09.2026). Hier stand `(ziel - einstieg) /
+                        # einstieg` - bei einem SHORT negativ, und
+                        # `trichter.saetze` prueft `ziel_relativ > 0`. Die
+                        # Zielzeile fiel damit bei JEDEM Short still weg, und
+                        # der Kopf der Mail zaehlte ein ,dagegen' weniger:
+                        # derselbe Trade (Stop 11,2 %, Ziel 23 % entfernt)
+                        # hiess LONG ,2 dagegen', SHORT ,1 dafuer, 1 dagegen'.
+                        # Der Trichter ist richtungslos - also ist es der
+                        # Abstand auch.
                         ziel_relativ=(
-                            (e.get("ziel_eur") - e.get("einstieg_eur"))
+                            abs(e.get("ziel_eur") - e.get("einstieg_eur"))
                             / e.get("einstieg_eur")
                             if e.get("ziel_eur") and e.get("einstieg_eur")
                             else None),

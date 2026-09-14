@@ -12,8 +12,9 @@ wurde bewusst nicht nachgebaut, auch nicht durch Website-Scraping.
 Alle drei Quellen sind oeffentliche, kostenlose Markt-Daten-Endpunkte der jeweiligen
 Boersen selbst - kein Account/Key noetig, kein eigener Rate-Limiter. Urspruenglich
 nur bei manuellem "Signal berechnen"-Klick aufgerufen (wenige Calls) - seit 2026-07-14
-zusaetzlich alle 15 Min ueber die komplette Krypto-Watchlist vom Hebel-Screening
-(agent/krypto/hebel_screening.py::fetch_and_store_oi_snapshot()), siehe
+zusaetzlich alle 15 Min ueber die komplette Krypto-Watchlist - seit 14.09. vom eigenen
+Job `terminmarkt_job` (agent/terminmarkt_sammlung.py, Abruf weiter ueber
+agent/krypto/hebel_screening.py::fetch_and_store_oi_snapshot()), siehe
 docs/hebel_positionsformel.md. Weiterhin oeffentliche Endpunkte ohne dokumentiertes
 Rate-Limit, bei Bedarf spaeter nachruesten."""
 from __future__ import annotations

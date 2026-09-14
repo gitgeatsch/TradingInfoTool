@@ -52,14 +52,41 @@ from agent import schreibweise as S
 
 import logging
 import sqlite3
-from datetime import datetime, timezone
+from bisect import bisect_left
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
-# Wie weit zurueck der Open-Interest-Vergleich reicht. Dieselbe Groesse, die
-# `hebel_screening.cfg["oi_lookback_stunden"]` benutzt - dort steht sie als
-# Konfiguration, hier als Vorgabe, falls sie nicht lesbar ist.
+# Wie weit zurueck der Open-Interest-Vergleich reicht - 8 Stunden.
+# ⚠️ Richtigstellung 14.09. (Review): hier stand ,dieselbe Groesse wie
+# `hebel_screening.oi_lookback_stunden`' - dort stehen aber 4 Stunden, und
+# gelesen wird die Konfiguration nicht. Es sind zwei verschiedene Fenster.
 OI_RUECKBLICK_STUNDEN = 8.0
+
+# ⚠️⚠️⚠️ DIE TERMINMARKT-ZAHLEN WERDEN NACH DER UHR GELESEN, NICHT NACH ZEILEN
+# (Schritt 54, 14.09.2026 - Befund 2.452, Nutzerentscheidungen vom selben Tag).
+#
+# BIS HIERHER las `_reihe` die letzten 400 Zeilen, egal wie alt, und das
+# ,8-Stunden'-Fenster war die 32. Zeile. Als das Hebel-Screening am 12.09.
+# abgeschaltet wurde, schrieb niemand mehr - und Rolle BC und Rolle G bekamen
+# weiter ,in den letzten 8 Stunden praktisch unveraendert', bei 13 Werten mit
+# Zahlen aus dem Juli. Das Modell hat damit Urteile begruendet.
+#
+#   LESEGRENZE 2 h     ist der juengste Wert aelter, gibt es KEINE Zahl, sondern
+#                      einen Satz, dass keine aktuelle Angabe vorliegt. Gemessen
+#                      (01.08.-12.09.): zwischen 90 und 120 Minuten liegt fast
+#                      keine Luecke - kurze Aussetzer bleiben darunter, echte
+#                      Ausfaelle weit darueber.
+#   VERGLEICH 100 h    wo eine Zahl ,ungewoehnlich hoch' genannt wird, ist der
+#                      Vergleich die eigene Geschichte der letzten 100 Stunden -
+#                      so viel, wie 400 Zeilen im 15-Minuten-Takt immer sein
+#                      sollten. Nach einer Luecke wuerde sonst mit Wochen alten
+#                      Werten verglichen.
+#   TOLERANZ 30 min    der Vergleichsstand ,vor 8 Stunden' darf so weit
+#                      daneben liegen - zwei ausgefallene Takte.
+LESEGRENZE_STUNDEN = 2.0
+VERGLEICHSZEITRAUM_STUNDEN = 100.0
+FENSTER_TOLERANZ_MINUTEN = 30.0
 
 # Ab wann eine Finanzierungsrate als extrem gilt. NICHT frei gesetzt: es ist
 # das Perzentil der EIGENEN Historie, und 90/10 ist die uebliche Grenze fuer
@@ -67,117 +94,163 @@ OI_RUECKBLICK_STUNDEN = 8.0
 EXTREM_OBEN, EXTREM_UNTEN = 90, 10
 
 
-def _reihe(conn, symbol: str, spalte: str, grenze: int = 400,
-           boerse: str = "binance") -> list:
+def _zeit(text) -> datetime | None:
+    """ISO-Zeitstempel -> Zeitpunkt mit Zeitzone (ohne Angabe: UTC)."""
     try:
-        return [r[0] for r in conn.execute(
-            f"SELECT {spalte} FROM open_interest_snapshot "
+        t = datetime.fromisoformat(str(text))
+    except (TypeError, ValueError):
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def _jetzt(jetzt: datetime | None) -> datetime:
+    if jetzt is None:
+        return datetime.now(timezone.utc)
+    return jetzt if jetzt.tzinfo else jetzt.replace(tzinfo=timezone.utc)
+
+
+def _stunden(von: datetime, bis: datetime) -> float:
+    return (bis - von).total_seconds() / 3600.0
+
+
+def _zeitreihe(conn, symbol: str, spalte: str, jetzt: datetime,
+               boerse: str = "binance") -> list:
+    """[(zeitpunkt, wert)] der letzten 100 Stunden bis `jetzt`, juengste zuerst.
+
+    ⚠️ ERSETZT `_reihe` (letzte 400 Zeilen ohne Alter) - Befund 2.452.
+    `bis = jetzt` gilt auch fuer Nachspielungen an einer Sicherung: kein Wert
+    aus der ,Zukunft' des Stichzeitpunkts."""
+    seit = (jetzt - timedelta(hours=VERGLEICHSZEITRAUM_STUNDEN)).isoformat()
+    try:
+        zeilen = conn.execute(
+            f"SELECT fetched_at, {spalte} FROM open_interest_snapshot "
             "WHERE symbol = ? AND exchange = ? "
-            f"AND {spalte} IS NOT NULL "
-            "ORDER BY fetched_at DESC LIMIT ?", (symbol, boerse, grenze))]
+            f"AND {spalte} IS NOT NULL AND fetched_at >= ? AND fetched_at <= ? "
+            "ORDER BY fetched_at DESC", (symbol, boerse, seit,
+                                         jetzt.isoformat())).fetchall()
     except sqlite3.Error as exc:
         logger.info("Positionierung %s/%s nicht lesbar: %s", symbol, spalte, exc)
         return []
-
-
-# --- DIE BOERSEN LAUFEN AUSEINANDER (16.08.2026) ---------------------------
-#
-# WARUM DAS UEBERHAUPT EIN FAKT IST. Bis heute las diese Datei nur Binance -
-# `exchange = 'binance'` stand fest in der Abfrage. In derselben Tabelle liegen
-# bybit (40.177 Zeilen) und okx (36.681), seit Monaten, kostenlos, vom
-# Hebel-Screening mitgeschrieben.
-#
-# ⚠️ ABER NUR BEIM OPEN INTEREST IST ES EINE ZWEITE ERHEBUNG. Nachgezaehlt am
-# Produktionsbestand:
-#
-#     long_account_pct   41.547 gemeinsame Zeitpunkte, davon 0 verschieden
-#     funding_rate       40.033 gemeinsame Zeitpunkte, davon 0 verschieden
-#     open_interest      41.551 gemeinsame Zeitpunkte, davon ALLE verschieden
-#
-# `hebel_screening._hole_und_speichere` holt die Finanzierungsrate EINMAL bei
-# Kraken und den Long-Anteil EINMAL bei Binance, schreibt aber beide in alle
-# drei Boersenzeilen. Zwei von drei Feldern sind Kopien unter fremdem Etikett.
-# Deshalb wird hier AUSSCHLIESSLICH das Open Interest boersenweise gelesen.
-#
-# UND DIE STUFE HAT SICH GELOHNT: gemessen ueber 8.087 gepaarte Zeitpunkte und
-# 22 Symbole betraegt die Spanne der 8-Stunden-Aenderung im Median 3,0
-# Prozentpunkte, im 90. Perzentil 10,9. In 85 % der Faelle ist sie groesser als
-# ein Punkt. Ein konstantes Feld (R-T6) ist das nicht.
-#
-# NUR AENDERUNGEN, NIE NIVEAUS. Binance fuehrt ein Vielfaches der Kontrakte von
-# OKX; die absoluten Staende zu vergleichen hiesse, Boersengroessen zu messen
-# statt Verhalten. Erst die prozentuale Veraenderung ueber dasselbe Fenster ist
-# vergleichbar - R-T5 in seiner urspruenglichen Form.
-BOERSEN = ("binance", "bybit", "okx")
-
-# AUF MODULEBENE, NICHT IM SATZBAU. Eine Zuordnung, die in der Funktion
-# entsteht, ist genau die Stelle, an der dieses Projekt schon dreimal einen
-# freien Namen erzeugt hat - zuletzt `assetklasse`, zwei Vormittage.
-_BOERSENNAME = {"binance": "Binance", "bybit": "Bybit", "okx": "OKX"}
-
-# Wie viele gemeinsame Zeitpunkte mindestens vorliegen muessen, damit die
-# Spanne ein Perzentil bekommt. Unter dieser Grenze steht eine Zahl ohne
-# Massstab - und die traegt nach R-T1 nicht.
-MINDEST_HISTORIE_DIVERGENZ = 40
-
-
-def _oi_je_boerse(conn, symbol: str, grenze: int = 400) -> dict:
-    """{boerse: {zeitpunkt: open_interest}} - nur Boersen mit genug Reihe."""
-    aus: dict = {}
-    for b in BOERSEN:
-        try:
-            zeilen = conn.execute(
-                "SELECT fetched_at, open_interest FROM open_interest_snapshot "
-                "WHERE symbol = ? AND exchange = ? AND open_interest IS NOT NULL "
-                "ORDER BY fetched_at DESC LIMIT ?", (symbol, b, grenze)).fetchall()
-        except sqlite3.Error as exc:
-            logger.info("Positionierung %s/%s nicht lesbar: %s", symbol, b, exc)
-            continue
-        if len(zeilen) > MINDEST_HISTORIE_DIVERGENZ:
-            aus[b] = {str(t): float(v) for t, v in zeilen}
+    aus = []
+    for t, v in zeilen:
+        z = _zeit(t)
+        if z is not None and v is not None:
+            aus.append((z, float(v)))
     return aus
 
 
-def _divergenz(conn, symbol: str) -> dict | None:
+def _letzter_stand(conn, symbol: str, spalte: str, jetzt: datetime,
+                   boerse: str | tuple = "binance") -> datetime | None:
+    """Der juengste Zeitpunkt ueberhaupt - auch ausserhalb der 100 Stunden.
+
+    Nur fuer den Satz ,letzter Stand vor X': ob eine Groesse VERALTET ist oder
+    NIE da war, sind zwei verschiedene Aussagen."""
+    boersen = (boerse,) if isinstance(boerse, str) else tuple(boerse)
+    try:
+        t = conn.execute(
+            f"SELECT MAX(fetched_at) FROM open_interest_snapshot "
+            f"WHERE symbol = ? AND exchange IN ({','.join('?' * len(boersen))}) "
+            f"AND {spalte} IS NOT NULL AND fetched_at <= ?",
+            (symbol, *boersen, jetzt.isoformat())).fetchone()
+    except sqlite3.Error:
+        return None
+    return _zeit(t[0]) if t and t[0] else None
+
+
+def _vergleichsstand(reihe: list, ziel: datetime):
+    """Der Eintrag, der `ziel` am naechsten liegt - innerhalb der Toleranz.
+
+    `reihe` ist [(zeitpunkt, wert)] juengste zuerst."""
+    bester, abstand = None, None
+    for t, v in reihe:
+        d = abs((t - ziel).total_seconds())
+        if abstand is None or d < abstand:
+            bester, abstand = (t, v), d
+        elif t < ziel:
+            break
+    if bester is None or abstand > FENSTER_TOLERANZ_MINUTEN * 60:
+        return None
+    return bester
+
+
+BOERSEN = ("binance", "bybit", "okx")
+
+_BOERSENNAME = {"binance": "Binance", "bybit": "Bybit", "okx": "OKX"}
+
+# Wie viele Vergleichswerte die Divergenz mindestens braucht.
+MINDEST_HISTORIE_DIVERGENZ = 40
+
+
+def _oi_je_boerse(conn, symbol: str, jetzt: datetime) -> dict:
+    """{boerse: {zeitpunkt: open_interest}} - nur Boersen mit genug Reihe.
+
+    Seit Schritt 54 ueber die letzten 100 Stunden, nicht ueber 400 Zeilen."""
+    aus: dict = {}
+    for b in BOERSEN:
+        reihe = _zeitreihe(conn, symbol, "open_interest", jetzt, boerse=b)
+        if len(reihe) > MINDEST_HISTORIE_DIVERGENZ:
+            aus[b] = {t: v for t, v in reihe}
+    return aus
+
+
+def _divergenz(conn, symbol: str, jetzt: datetime | None = None) -> dict | None:
     """Wie weit laufen die Boersen beim Open Interest auseinander?
 
-    GEPAART AUF DENSELBEN ZEITPUNKTEN. Das Screening schreibt alle drei
+    GEPAART AUF DENSELBEN ZEITPUNKTEN. Die Sammlung schreibt alle drei
     Boersen mit demselben `fetched_at`, ein Schnitt der Zeitschluessel ist
     also verlustarm - und er verhindert, dass ein verpasster Abruf als
-    Meinungsunterschied erscheint."""
-    reihen = _oi_je_boerse(conn, symbol)
+    Meinungsunterschied erscheint.
+
+    ⚠️ SEIT SCHRITT 54 NACH DER UHR: der Vergleichsstand ist der Zeitpunkt
+    rund 8 Stunden vorher (Toleranz 30 min), nicht die 32. Zeile - eine Luecke
+    in der Reihe machte aus ,8 Stunden' sonst beliebig viele. Und der juengste
+    gemeinsame Zeitpunkt muss innerhalb der Lesegrenze liegen."""
+    jetzt = _jetzt(jetzt)
+    reihen = _oi_je_boerse(conn, symbol, jetzt)
     if len(reihen) < 2:
         return None
-    zeiten = sorted(set.intersection(*(set(d) for d in reihen.values())),
-                    reverse=True)
-    schritte = int(OI_RUECKBLICK_STUNDEN * 4)
-    if len(zeiten) <= schritte + MINDEST_HISTORIE_DIVERGENZ:
+    zeiten = sorted(set.intersection(*(set(d) for d in reihen.values())))
+    if not zeiten or _stunden(zeiten[-1], jetzt) > LESEGRENZE_STUNDEN:
         return None
+    toleranz = FENSTER_TOLERANZ_MINUTEN * 60
 
     spannen: list[float] = []
-    jetzt: dict = {}
-    for i in range(len(zeiten) - schritte):
+    aktuell: dict = {}
+    for t in reversed(zeiten):
+        ziel = t - timedelta(hours=OI_RUECKBLICK_STUNDEN)
+        i = bisect_left(zeiten, ziel)
+        partner = [zeiten[k] for k in (i - 1, i) if 0 <= k < len(zeiten)]
+        partner = [p for p in partner
+                   if abs((p - ziel).total_seconds()) <= toleranz]
+        if not partner:
+            continue
+        alt_t = min(partner, key=lambda p: abs((p - ziel).total_seconds()))
         aend = {}
         for b, d in reihen.items():
-            alt = d[zeiten[i + schritte]]
+            alt = d[alt_t]
             if alt:
-                aend[b] = 100.0 * (d[zeiten[i]] - alt) / alt
+                aend[b] = 100.0 * (d[t] - alt) / alt
         if len(aend) < 2:
             continue
         spannen.append(max(aend.values()) - min(aend.values()))
-        if not jetzt:                       # i == 0 ist der aktuelle Stand
-            jetzt = aend
-    if not jetzt or len(spannen) < MINDEST_HISTORIE_DIVERGENZ:
+        if not aktuell:
+            if t != zeiten[-1]:
+                # Der juengste Zeitpunkt hat keinen Vergleichsstand - dann
+                # gibt es KEINE aktuelle Divergenz, und eine aeltere als
+                # aktuelle auszugeben waere derselbe Fehler wie 2.452.
+                return None
+            aktuell = aend
+    if not aktuell or len(spannen) < MINDEST_HISTORIE_DIVERGENZ:
         return None
 
-    hoch = max(jetzt, key=jetzt.get)
-    tief = min(jetzt, key=jetzt.get)
-    return {"hoch_boerse": hoch, "hoch_pct": round(jetzt[hoch], 1),
-            "tief_boerse": tief, "tief_pct": round(jetzt[tief], 1),
-            "spanne_pp": round(jetzt[hoch] - jetzt[tief], 1),
+    hoch = max(aktuell, key=aktuell.get)
+    tief = min(aktuell, key=aktuell.get)
+    return {"hoch_boerse": hoch, "hoch_pct": round(aktuell[hoch], 1),
+            "tief_boerse": tief, "tief_pct": round(aktuell[tief], 1),
+            "spanne_pp": round(aktuell[hoch] - aktuell[tief], 1),
             "spanne_perzentil": _perzentil(spannen, spannen[0]),
-            "n_boersen": len(jetzt), "n_historie": len(spannen),
-            "fenster_stunden": round(schritte / 4.0, 1)}
+            "n_boersen": len(aktuell), "n_historie": len(spannen),
+            "fenster_stunden": OI_RUECKBLICK_STUNDEN}
 
 
 def _perzentil(werte: list, wert: float) -> int | None:
@@ -253,8 +326,9 @@ _fluss_cache: dict[str, list] = {}
 # ⚠️ ROLLE G DARF NICHT SCHREIBEN. `zweite_meinung.rolle_g` oeffnet die
 # Datenbank mit `mode=ro` - ein Schreibversuch von hier aus scheitert immer.
 # Persistenz gehoert deshalb in einen Job (`scheduler/background.py::
-# externe_reihen_job`), genau wie `open_interest_snapshot` vom Screening
-# geschrieben und hier nur gelesen wird.
+# externe_reihen_job`), genau wie `open_interest_snapshot` vom eigenen Job
+# `terminmarkt_job` geschrieben (seit 14.09., vorher vom Screening) und hier
+# nur gelesen wird.
 #
 # DREI STUFEN, IN DIESER REIHENFOLGE:
 #   1. DATENBANK - was der Job hinterlegt hat. Der Normalfall im Betrieb.
@@ -569,8 +643,8 @@ def _optionsmarkt(conn, symbol: str) -> dict | None:
 #
 # Genau dieselbe Ueberlegung, eine Ebene hoeher.
 #
-# `open_interest_snapshot` wird ausschliesslich vom `hebel_screening`
-# fuer Krypto gefuellt - fuer alles andere gibt es diese drei Zahlen
+# `open_interest_snapshot` wird ausschliesslich von `terminmarkt_job`
+# (bis 12.09. vom `hebel_screening`) fuer Krypto gefuellt - fuer alles andere gibt es diese drei Zahlen
 # nicht, und es wird sie auch nicht geben.
 TERMINMARKT_GROESSEN = ("Open Interest", "Finanzierungsrate",
                         "Anteil der Long-Konten")
@@ -586,7 +660,8 @@ def _luecke_melden(name: str, assetklasse: str | None) -> bool:
 
     Richtig ist fail-closed: Open Interest, Finanzierungsrate und
     Long-Anteil stehen ausschliesslich in `open_interest_snapshot`, und
-    die fuellt `hebel_screening` NUR fuer Krypto. Eine neue Assetklasse
+    die fuellt `terminmarkt_job` (bis 12.09. `hebel_screening`) NUR fuer
+    Krypto. Eine neue Assetklasse
     bekaeme diese Zahlen also nicht dadurch, dass wir ihre Abwesenheit
     melden - die Meldung waere in jedem Fall Rauschen.
 
@@ -600,7 +675,8 @@ def _luecke_melden(name: str, assetklasse: str | None) -> bool:
 
 
 def lage(conn, symbol: str, assetklasse: str | None = None,
-         instrument: str | None = None) -> dict:
+         instrument: str | None = None,
+         jetzt: datetime | None = None) -> dict:
     """Die Positionierungslage - oder ein leeres dict, wenn nichts vorliegt.
 
     `assetklasse` entscheidet ueber den Boersenfluss und nichts sonst. Fehlt
@@ -611,9 +687,15 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
     FAIL-SOFT MIT VERMERK: was fehlt, steht unter `fehlt` und wird im Satzbau
     BENANNT. Ein stiller Ausfall waere hier besonders teuer, weil die ganze
     Rolle G auf diesen Zahlen steht - eine leere Antwort saehe aus wie
-    'kein Einwand'."""
+    'kein Einwand'.
+
+    ⚠️⚠️ `jetzt` UND DIE LESEGRENZE (Schritt 54, 14.09.2026, Befund 2.452).
+    Ist der juengste Terminmarkt-Wert aelter als 2 Stunden, steht er unter
+    `veraltet` (mit letztem Stand) statt als Zahl in der Lage. `jetzt` ist fuer
+    Nachspielungen an einer Sicherung; im Betrieb bleibt es leer."""
     sym = str(symbol or "").strip().upper()
     aus: dict = {"symbol": sym, "fehlt": []}
+    jetzt = _jetzt(jetzt)
 
     def _melde(name: str) -> None:
         """Eine Luecke nur melden, wenn es die Groesse hier ueberhaupt
@@ -621,7 +703,26 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
         if _luecke_melden(name, assetklasse):
             aus["fehlt"].append(name)
 
-    oi = _reihe(conn, sym, "open_interest")
+    def _frisch(name: str, reihe: list, spalte: str, boersen) -> list:
+        """Die Reihe, wenn ihr juengster Wert innerhalb der Lesegrenze liegt.
+
+        Sonst: leer, und die Groesse steht unter `veraltet` (hatte Daten) oder
+        unter `fehlt` (nie Daten) - zwei verschiedene Saetze."""
+        if reihe and _stunden(reihe[0][0], jetzt) <= LESEGRENZE_STUNDEN:
+            return reihe
+        stand = reihe[0][0] if reihe else _letzter_stand(
+            conn, sym, spalte, jetzt, boersen)
+        if stand is None:
+            _melde(name)
+        elif _luecke_melden(name, assetklasse):
+            aus.setdefault("veraltet", []).append(
+                {"groesse": name, "stand": stand.isoformat(),
+                 "stunden": round(_stunden(stand, jetzt), 1)})
+        return []
+
+    oi = _frisch("Open Interest",
+                 _zeitreihe(conn, sym, "open_interest", jetzt),
+                 "open_interest", "binance")
     # ⚠️ NICHT MEHR ueber `_reihe`: die Finanzierungsrate stammt von KRAKEN
     # und stand bis zum 16.08. unter allen drei Boersenetiketten. Seit die
     # Etiketten stimmen, weiss genau eine Stelle, wo sie liegt - und sie
@@ -652,49 +753,52 @@ def lage(conn, symbol: str, assetklasse: str | None = None,
     # obwohl ein Spot-Kaeufer keine Finanzierung zahlt. Das war richtig.
     from database import db as _DB
 
-    fund = ([] if str(instrument or "") == "hebel"
-            else _DB.lies_funding_reihe(conn, sym))
-    lang = _reihe(conn, sym, "long_account_pct")
+    fund = [] if str(instrument or "") == "hebel" else [
+        (z, float(v)) for z, v in (
+            (_zeit(t), v) for t, v in _DB.lies_funding_reihe(
+                conn, sym, seit=(jetzt - timedelta(
+                    hours=VERGLEICHSZEITRAUM_STUNDEN)).isoformat(),
+                bis=jetzt.isoformat(), mit_zeit=True))
+        if z is not None and v is not None]
+    if str(instrument or "") != "hebel":
+        fund = _frisch("Finanzierungsrate", fund, "funding_rate",
+                       ("kraken", "binance"))
+    lang = _frisch("Anteil der Long-Konten",
+                   _zeitreihe(conn, sym, "long_account_pct", jetzt),
+                   "long_account_pct", "binance")
 
     if oi:
-        aus["oi_jetzt"] = oi[0]
-        # Der Rueckblick in SCHRITTEN, nicht in Stunden: die Snapshots kommen
-        # im 15-Minuten-Takt des Screenings, acht Stunden sind also rund 32.
-        n = min(len(oi) - 1, int(OI_RUECKBLICK_STUNDEN * 4))
-        if n > 0 and oi[n]:
-            aus["oi_aenderung_pct"] = round(100.0 * (oi[0] - oi[n]) / oi[n], 2)
-            aus["oi_fenster_stunden"] = round(n / 4.0, 1)
-    else:
-        _melde("Open Interest")
+        aus["oi_jetzt"] = oi[0][1]
+        # DER VERGLEICHSSTAND NACH DER UHR (Schritt 54): der Wert rund acht
+        # Stunden vor dem juengsten, nicht die 32. Zeile. Fehlt er (nach einem
+        # Ausfall, nach dem Neustart), wird das gesagt statt verschwiegen.
+        ziel = oi[0][0] - timedelta(hours=OI_RUECKBLICK_STUNDEN)
+        vergleich = _vergleichsstand(oi, ziel)
+        if vergleich and vergleich[1]:
+            aus["oi_aenderung_pct"] = round(
+                100.0 * (oi[0][1] - vergleich[1]) / vergleich[1], 2)
+            aus["oi_fenster_stunden"] = round(
+                _stunden(vergleich[0], oi[0][0]), 1)
+        else:
+            aus["oi_ohne_vergleich"] = True
 
     if fund:
-        aus["funding_jetzt"] = fund[0]
-        aus["funding_n"] = len(fund)
+        werte = [v for _, v in fund]
+        aus["funding_jetzt"] = werte[0]
+        aus["funding_n"] = len(werte)
         # Dieselbe Mindestreihe wie beim Kontenanteil - der Fehler war dort
         # sichtbar, das Muster ist hier dasselbe.
-        if len(fund) >= PERZENTIL_MINDESTREIHE:
-            aus["funding_perzentil"] = _perzentil(fund, fund[0])
-    elif str(instrument or "") != "hebel":
-        # NUR MELDEN, WENN SIE HIER HINGEHOERT. Beim Hebel ist ihre
-        # Abwesenheit Absicht, kein Mangel - "keine Angabe" waere gelogen.
-        _melde("Finanzierungsrate")
+        if len(werte) >= PERZENTIL_MINDESTREIHE:
+            aus["funding_perzentil"] = _perzentil(werte, werte[0])
 
     if lang:
-        aus["long_anteil_pct"] = round(float(lang[0]), 1)
-        aus["long_n"] = len(lang)
-        # Unter der Mindestreihe KEIN Perzentil - lieber die rohe Zahl ohne
-        # Einordnung als eine Einordnung, die keine ist.
-        if len(lang) >= PERZENTIL_MINDESTREIHE:
-            aus["long_perzentil"] = _perzentil(lang, lang[0])
-    else:
-        _melde("Anteil der Long-Konten")
+        werte = [v for _, v in lang]
+        aus["long_anteil_pct"] = round(float(werte[0]), 1)
+        aus["long_n"] = len(werte)
+        if len(werte) >= PERZENTIL_MINDESTREIHE:
+            aus["long_perzentil"] = _perzentil(werte, werte[0])
 
-    # KEIN `fehlt`-VERMERK, WENN SIE AUSBLEIBT. Die Divergenz braucht zwei
-    # Boersen mit langer Reihe; bei den meisten Symbolen gibt es sie, bei
-    # jungen und kleinen nicht. Sie hier zu vermissen hiesse, bei jedem
-    # duennen Wert einen Mangel zu melden, der keiner ist - dieselbe
-    # Ueberlegung wie bei den CSTI-Luecken in `mindestkriterien.PFLICHT_BC`.
-    div = _divergenz(conn, sym)
+    div = _divergenz(conn, sym, jetzt) if oi else None
     if div:
         aus["divergenz"] = div
 
@@ -899,6 +1003,15 @@ def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
     # Arbitrage-Groesse, nicht als Richtungssignal. Eine Deutung waere hier
     # meine Vermutung - Rang 3 der Eignungsleiter (P2) und damit nicht
     # aufnahmefaehig. Der Fakt steht, die Schlussfolgerung zieht das Modell.
+    elif e.get("oi_ohne_vergleich"):
+        # SCHRITT 54: der juengste Wert ist frisch, aber der Stand von vor acht
+        # Stunden fehlt (nach einem Ausfall, in den ersten Stunden nach dem
+        # Neustart). Schweigen saehe aus wie ,keine Bewegung'.
+        z.append(
+            f"Wie sich die offenen Kontrakte am Terminmarkt in den letzten "
+            f"{S.de(OI_RUECKBLICK_STUNDEN, 0)} Stunden veraendert haben, laesst "
+            f"sich noch nicht sagen - es fehlt der Vergleichsstand.")
+
     d = e.get("divergenz")
     if d and d.get("spanne_perzentil") is not None:
         hoch = _BOERSENNAME.get(d["hoch_boerse"], d["hoch_boerse"])
@@ -962,6 +1075,16 @@ def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
             z.append("Bei so niedrigen Raten zahlen die Short-Positionen an "
                      "die Long-Positionen; historisch gingen solche "
                      "Extremwerte haeufig scharfen Erholungen voraus.")
+
+    elif e.get("funding_n") and e.get("funding_jetzt") is not None:
+        # SCHRITT 54: nach einem Ausfall laeuft die Reihe neu an. Beim
+        # Kontenanteil stand dafuer schon immer ein Satz; hier fiel die
+        # Finanzierungsrate bis zur 30. Messung kommentarlos weg - dieselbe
+        # Stille, die 2.452 unsichtbar gemacht hat.
+        z.append(
+            f"Die Finanzierungsrate laesst sich noch nicht einordnen - die "
+            f"eigene Reihe hat erst {e.get('funding_n', 0)} von "
+            f"{PERZENTIL_MINDESTREIHE} noetigen Messungen.")
 
     if e.get("long_anteil_pct") is not None:
         lp = e.get("long_perzentil")
@@ -1139,6 +1262,24 @@ def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
         # sondern eine Angabe ueber den Markt. Verschwiegen wird trotzdem
         # nichts - "fail-soft ist fail-silent".
         z.append(f"Zum Gesamtmarkt liegt keine Angabe vor: {f}.")
+
+    # ⚠️⚠️ VERALTET IST NICHT DASSELBE WIE FEHLT (Schritt 54, Befund 2.452).
+    # Bis zum 14.09. gab es diesen Fall nicht - ein alter Wert wurde als
+    # aktueller ausgegeben. Jetzt steht er als eigener Satz da, mit dem Alter,
+    # damit das Modell weder eine alte Zahl glaubt noch ,keine Angabe' fuer
+    # ,nie vorhanden' haelt. Gleicher Stand = ein Satz.
+    _veraltet: dict = {}
+    for v in (e.get("veraltet") or []):
+        _veraltet.setdefault((v.get("stand") or "")[:16], []).append(v)
+    for _stand, _gruppe in _veraltet.items():
+        _h = max(float(v.get("stunden") or 0) for v in _gruppe)
+        _alter = (f"{int(_h // 24)} Tage" if _h >= 48 else
+                  f"{int(_h)} Stunden" if _h >= 2 else "rund 2 Stunden")
+        _namen = [v["groesse"] for v in _gruppe]
+        _liste = (_namen[0] if len(_namen) == 1 else
+                  ", ".join(_namen[:-1]) + " und " + _namen[-1])
+        z.append(f"Zu diesem Wert liegt keine aktuelle Angabe vor: {_liste} - "
+                 f"der letzte Stand ist {_alter} alt.")
 
     for f in (e.get("fehlt") or []):
         # BENANNT, NICHT VERSCHWIEGEN. Ohne diesen Satz liest das Modell die

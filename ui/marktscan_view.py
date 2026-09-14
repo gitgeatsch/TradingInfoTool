@@ -16,6 +16,7 @@ wuerde die UI einfrieren."""
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -28,6 +29,8 @@ from ui.formatting import format_money
 from ui.heading_tooltip import add_heading_tooltips
 from ui.row_tooltip import add_row_tooltips
 from ui.sortable_tree import make_sortable
+
+logger = logging.getLogger(__name__)
 
 STATUS_LABELS = {
     "neu": "neu",
@@ -61,7 +64,9 @@ _MARKTSCAN_COLUMN_DESCRIPTIONS = {
     "tier": "Marktkapitalisierungs-Stufe (Tier 1 = groß, Tier 3 = klein) - Basis für den Score.",
     "score": "Gesamt-Score aus Stufe A (Basis) + Stufe B (Kontext/Makro) - je höher, desto eher ein Kaufkandidat.",
     "einstufung": "Kaufkandidat, watchlist-würdig oder kein Treffer - Ergebnis der Score-Schwellenwerte.",
-    "potential": "Reifegrad-Score (Momentum abzüglich Streak-/ATH-Malus) - sofort bei Entdeckung verfügbar, unabhängig vom späteren Ergebnis.",
+    # Schritt 32 (2.448-reiter): NICHT das Potential der Bewertung
+    # (`agent/potential.py`, in R) - gleiches Wort, andere Groesse.
+    "potential": "Reifegrad-Score des Marktscans (Momentum abzüglich Streak-/ATH-Malus) - NICHT das Potential der Signalbewertung. Sofort bei Entdeckung verfügbar, unabhängig vom späteren Ergebnis.",
     "bitpanda": "Ob das Asset aktuell auf Bitpanda handelbar ist.",
     "entdeckt": "Datum, an dem der Marktscan dieses Asset erstmals gefunden hat.",
     "status": "Neu, übernommen (in die Watchlist aufgenommen) oder verworfen (manuell abgelehnt).",
@@ -157,7 +162,7 @@ class MarktscanView(ttk.Frame):
         self.tree = ttk.Treeview(left, columns=columns, show="headings", height=20)
         headings = {
             "symbol": "Symbol", "tier": "Tier", "score": "Score", "einstufung": "Einstufung",
-            "potential": "Potential", "bitpanda": "Bitpanda", "entdeckt": "Entdeckt",
+            "potential": "Reifegrad", "bitpanda": "Bitpanda", "entdeckt": "Entdeckt",
             "status": "Status", "outcome": "Erfolg",
         }
         for col in columns:
@@ -293,7 +298,7 @@ class MarktscanView(ttk.Frame):
                 self._selected_candidate = neuer_kandidat
                 if neuer_kandidat is not None:
                     self.writeup_button.config(
-                        state="normal" if (self._groq_client is not None and neuer_kandidat.einstufung == "kaufkandidat") else "disabled"
+                        state="normal" if (self._groq_client is not None and neuer_kandidat.einstufung == "kaufkandidat" and self._alte_analyse_hinweis() is None) else "disabled"
                     )
                     self.watchlist_button.config(
                         state="normal" if neuer_kandidat.einstufung in ("kaufkandidat", "watchlist_wuerdig") else "disabled"
@@ -316,7 +321,7 @@ class MarktscanView(ttk.Frame):
             return
 
         self.writeup_button.config(
-            state="normal" if (self._groq_client is not None and candidate.einstufung == "kaufkandidat") else "disabled"
+            state="normal" if (self._groq_client is not None and candidate.einstufung == "kaufkandidat" and self._alte_analyse_hinweis() is None) else "disabled"
         )
         self.watchlist_button.config(
             state="normal" if candidate.einstufung in ("kaufkandidat", "watchlist_wuerdig") else "disabled"
@@ -372,7 +377,7 @@ class MarktscanView(ttk.Frame):
             )
         if momentum_signale.get("verlaengerungs_malus"):
             gruende.append(f"Verlängerungs-Malus (-{momentum_signale['verlaengerungs_malus']:.0f})")
-        potential_zeile = f"POTENTIAL: {potential_text}"
+        potential_zeile = f"REIFEGRAD (Marktscan, nicht das Potential der Bewertung): {potential_text}"
         if gruende:
             potential_zeile += f" — Grund: {', '.join(gruende)}"
         lines.append(potential_zeile)
@@ -466,7 +471,25 @@ class MarktscanView(ttk.Frame):
         )
         self._refresh_list()
 
+    @staticmethod
+    def _alte_analyse_hinweis() -> str | None:
+        """Schritt 32 (2.448-knoepfe): ,P-5-Begruendung generieren' ist ein
+        Modellaufruf der ALTEN Kette. ,Jetzt scannen' bleibt frei - er ruft
+        kein Modell und tut dasselbe wie der laufende Marktscan-Job (Schritt
+        40: der Marktscan bleibt an). Fail-closed."""
+        try:
+            from scheduler.rollen_job import alte_analyse_hinweis
+            return alte_analyse_hinweis("krypto")
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Kettenregel nicht lesbar - Knopf bleibt zu")
+            return "Stillgelegt: Kettenregel nicht lesbar"
+
     def _on_writeup_clicked(self) -> None:
+        _hin = self._alte_analyse_hinweis()
+        if _hin:
+            self.status_label.config(text=_hin, foreground=theme.info_color())
+            self.writeup_button.config(state="disabled")
+            return
         candidate = self._selected_candidate
         if candidate is None or self._groq_client is None:
             return

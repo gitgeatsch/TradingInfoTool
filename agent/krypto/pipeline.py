@@ -822,8 +822,8 @@ def generate_signal(
     # classify_squeeze_divergenz()/compute_funding_rate_percentile() Docstrings
     # fuer die volle Begruendung, inkl. warum ein EIGENES Lookback-Fenster
     # noetig ist statt Hebels 4h-Trendfolge-Fenster). Rein lokaler DB-Read,
-    # kein zusaetzlicher Netzwerk-Call - die Daten werden vom 15-Min-Hebel-
-    # Screening-Job befuellt, unabhaengig davon, ob dieses Symbol tatsaechlich
+    # kein zusaetzlicher Netzwerk-Call - die Daten werden vom 15-Min-Job
+    # `terminmarkt_job` befuellt (bis 12.09. vom Hebel-Screening-Job), unabhaengig davon, ob dieses Symbol tatsaechlich
     # gehebelt gehandelt wird.
     _oi_cfg = config_dict.get("krypto_oi_fakten", {})
     oi_change_pct = compute_oi_change_pct(

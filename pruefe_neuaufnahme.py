@@ -69,6 +69,33 @@ AUSNAHMEN = {
 # von mehr als einer Woche ist dort nicht erklaerbar.
 FRISCHE_GRENZE_TAGE = 7
 
+# ⚠️⚠️ UND DIESELBE ZAHL IN DER RICHTIGEN WAEHRUNG (13.09.2026, Schritt 51).
+#
+# Die Begruendung oben ist KRYPTO-spezifisch ("handelt durchgehend").
+# Angewandt wurde sie trotzdem auf `aktien`, `rohstoffe` und
+# `themen_etf` - Maerkte, die am Wochenende schliessen. Am So, 13.09.
+# war die Median-Reihe vom Do, 03.09.: 10 KALENDERtage, aber nur 6
+# HANDELStage. Die Klasse wurde als veraltet gemeldet, obwohl sie in der
+# Waehrung, in der die Grenze begruendet ist, INNERHALB liegt.
+#
+# ⚠️ DAS IST KEINE LOCKERUNG. Die Grenze bleibt 7 - gezaehlt wird nur,
+# was der jeweilige Markt ueberhaupt haette liefern koennen. Fuer Krypto
+# sind Kalender- und Handelstage dasselbe, dort aendert sich nichts.
+HANDELSTAGE_KLASSEN = ("aktien", "rohstoffe", "themen_etf")
+
+
+def _alter_tage(von: str, bis, klasse: str) -> int:
+    """Alter in Tagen - fuer schliessende Maerkte in HANDELStagen."""
+    import datetime as _dt
+    a = _dt.date.fromisoformat(von[:10])
+    if klasse not in HANDELSTAGE_KLASSEN:
+        return (bis - a).days
+    n = 0
+    for i in range(1, (bis - a).days + 1):
+        if (a + _dt.timedelta(days=i)).weekday() < 5:
+            n += 1
+    return n
+
 
 def _lies():
     """Watchlist, Bestaende, Messreihen und Beitragsquellen - roh."""
@@ -87,8 +114,11 @@ def _lies():
         "SELECT symbol, COUNT(*) FROM price_history_ohlc GROUP BY symbol")}
     c.close()
     m = sqlite3.connect("file:%s?mode=ro" % MESS, uri=True)
-    mess = {r[0].upper(): r[1] for r in
-            m.execute("SELECT symbol, assetklasse FROM messreihen")}
+    # ⚠️ `symbol -> MENGE` seit dem 13.09. (Schritt 50 Teil A): ein
+    # Ticker kann als Aktie UND als Kryptowaehrung gefuehrt sein.
+    mess: dict = {}
+    for _s, _k in m.execute("SELECT symbol, assetklasse FROM messreihen"):
+        mess.setdefault(_s.upper(), set()).add(_k)
     # ⚠️⚠️ DER STATUS ENTSCHEIDET, OB "ALT" EIN MANGEL IST (08.09.2026).
     # Ein EINGESTELLTES Paar handelt nicht mehr - seine Reihe ist
     # VOLLSTAENDIG, nicht veraltet. Die erste Fassung zaehlte alle 174
@@ -158,12 +188,34 @@ def pruefe(still: bool = False) -> list:
                 _c.close()
             except Exception:                                # noqa: BLE001
                 pass
+            # ⚠️⚠️ NICHT "die Produktion" SAGEN (13.09.2026, Schritt 51).
+            #
+            # Gelesen wird `data/tradinginfotool.db` - am DESKTOP ist das
+            # eine KOPIE, und sie altert. Am 13.09. endete ihr OHLC am
+            # 2026-08-19, waehrend die Produktionssicherung vom 12.09.
+            # fuer CANTON 63 USD-Tage auswies. Die Zeile meldete
+            # "CANTON hat auch in der PRODUKTION keine Kursreihe" - und
+            # das war schlicht falsch. Ein Befund, der eine veraltete
+            # Kopie als Produktion ausgibt, ist schlimmer als keiner.
+            _stand = ""
+            try:
+                _c2 = sqlite3.connect("file:%s?mode=ro" % PROD, uri=True)
+                _stand = (_c2.execute(
+                    "SELECT MAX(date) FROM price_history_ohlc").fetchone()
+                    [0] or "")[:10]
+                _c2.close()
+            except Exception:                                # noqa: BLE001
+                pass
+            _woher = ("lokalen DB (OHLC-Stand %s)" % _stand) if _stand \
+                else "lokalen DB"
             if _usd == 0:
-                grund = "auch in der Produktion KEINE Kursreihe"
+                grund = ("in der %s KEINE Kursreihe - \u26a0\ufe0f gegen die "
+                         "Produktionssicherung gegenpruefen, bevor daraus "
+                         "ein Befund wird" % _woher)
             elif _usd < 400:
-                grund = ("nur %d USD-Tage - unter der 400er-Grenze. Das "
-                         "ist eine DATENLAGE-Grenze, keine "
-                         "Nachlaessigkeit" % _usd)
+                grund = ("nur %d USD-Tage (%s) - unter der 400er-Grenze. "
+                         "Das ist eine DATENLAGE-Grenze, keine "
+                         "Nachlaessigkeit" % (_usd, _woher))
             else:
                 grund = ("%d USD-Tage vorhanden - `uebernehme_messreihen.py` "
                          "kann sie holen" % _usd)
@@ -175,7 +227,7 @@ def pruefe(still: bool = False) -> list:
 
     # ---- FALL 2: FAELLT WEG - nur berichtet ---------------------------
     verwaist = sorted(s for s, k in mess.items()
-                      if k == "krypto" and s not in wl and s not in best)
+                      if "krypto" in k and s not in wl and s not in best)
     sag("")
     sag("  2  FAELLT WEG — in der Messbasis, aber weder Watchlist noch Bestand")
     sag("     %d Symbole. ⚠️ DAS IST KEIN MANGEL: P6 verlangt, dass die"
@@ -207,13 +259,13 @@ def pruefe(still: bool = False) -> list:
         tage = sorted(je_klasse[kl])
         med = tage[len(tage) // 2]
         try:
-            alter = (heute - _d.date.fromisoformat(med[:10])).days
+            alter = _alter_tage(med, heute, kl)
         except ValueError:
             alter = -1
         veraltet = 0
         for t in tage:
             try:
-                if (heute - _d.date.fromisoformat(t[:10])).days > FRISCHE_GRENZE_TAGE:
+                if _alter_tage(t, heute, kl) > FRISCHE_GRENZE_TAGE:
                     veraltet += 1
             except ValueError:
                 veraltet += 1
@@ -224,10 +276,12 @@ def pruefe(still: bool = False) -> list:
                "  ⚠️ VERALTET" if alter > FRISCHE_GRENZE_TAGE else ""))
         if alter > FRISCHE_GRENZE_TAGE:
             maengel.append(
-                "Messbasis `%s`: die MEDIAN-Reihe ist %d Tage alt (%s), "
-                "%d von %d Reihen (%.0f %%) sind aelter als %d Tage"
-                % (kl, alter, med, veraltet, len(tage), anteil,
-                   FRISCHE_GRENZE_TAGE))
+                "Messbasis `%s`: die MEDIAN-Reihe ist %d %s alt (%s), "
+                "%d von %d Reihen (%.0f %%) sind aelter als %d %s"
+                % (kl, alter,
+                   "Handelstage" if kl in HANDELSTAGE_KLASSEN else "Tage",
+                   med, veraltet, len(tage), anteil, FRISCHE_GRENZE_TAGE,
+                   "Handelstage" if kl in HANDELSTAGE_KLASSEN else "Tage"))
 
     # ---- FALL 4: gehalten, aber ohne jeden BEITRAG --------------------
     sag("")

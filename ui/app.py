@@ -75,10 +75,13 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
         "Rollen-Kette kennt Tranchen nicht mehr, der Schalter steuert seither "
         "die Strategie."
     ),
+    # ⚠️ Schritt 32 (2.448-reiter): hier stand das 15-Min-Hebel-Screening der
+    # ALTEN Kette, stillgelegt seit 12.09. Der Schalter wirkt weiter - in der
+    # Rollen-Kette (`asset_schalter`, `rollen_lauf`: Hebel abgeschaltet -> Spot).
     "hebel_pruefung": (
-        "An = wird beim automatischen 15-Min-Hebel-Screening berücksichtigt (OI-Abruf, "
-        "Trendfolge-/Kontra-Scoring, ggf. LLM-Call). Aus = kein neuer Hebel-Trigger für "
-        "dieses Asset mehr, taucht nicht mehr als neuer Kandidat im Hebel-Tab auf. Bereits "
+        "An = die Rollen-Kette darf für dieses Asset ein Hebelgeschäft rechnen. Aus = "
+        "kein Hebel für dieses Asset: ergäbe die Rechnung einen Hebel, wird es als Spot "
+        "geführt. (Das frühere 15-Min-Hebel-Screening ist stillgelegt.) Bereits "
         "offene Hebel-Positionen bleiben davon unberührt und weiterhin risikoüberwacht. "
         "Nur für Krypto-Assets relevant. ⚠ = liefert seit mehreren Läufen in Folge von "
         "keiner der drei Börsen (Binance/Bybit/OKX) Open-Interest-Daten (siehe E-Mail-"
@@ -510,8 +513,10 @@ class TradingInfoToolApp(tk.Tk):
             }
             # OI-Abdeckungs-Warnung (2026-07-19, echter Notebook-Fund KAS/KAIA/
             # FLOKI/TURBO/CANTON) - sichtbare Markierung, wenn ein Symbol
-            # wiederholt keine Open-Interest-Daten liefert (siehe
-            # scheduler/background.py::_pruefe_oi_abdeckung_warnung()).
+            # wiederholt keine Open-Interest-Daten liefert. Den Zaehler fuehrt
+            # seit 14.09. `terminmarkt_sammlung.sammle`; die fruehere Mail
+            # ,8 Fehlschlaege' ist ersetzt durch die Frischemeldung
+            # (`scheduler/background.py::_pruefe_terminmarkt_frische`).
             import config as config_module
 
             hebel_cfg = config_module.load_config().get("hebel_screening", {})
@@ -750,10 +755,17 @@ class TradingInfoToolApp(tk.Tk):
         if signal is None:
             return text or "Noch keine Analyse berechnet."
         when = format_zeitpunkt_lokal(signal.created_at)
-        conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
         if text:
             text += "\n\n"
-        text += f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf})"
+        # Schritt 32 (2.448-reiter): die Rollen-Kette hat keine Konfidenz - hier
+        # stand fuer jede neue Zeile ,Konfidenz -'.
+        from agent import signal_ansicht as _SANS
+        if _SANS.ist_rollen_signal(signal):
+            text += (f"Letztes Signal: {signal.action} ({when}, Rollen-Kette"
+                     + ("" if signal.gate_passed else ", Nein-Buchung") + ")")
+        else:
+            conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
+            text += f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf}, alte Kette)"
         if signal.short_reasoning:
             text += f"\n{signal.short_reasoning}"
         return text

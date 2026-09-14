@@ -42,7 +42,11 @@ UNBEKANNT = ("NOCH KEINE BEWERTUNG MOEGLICH", "KEIN HANDELBARER VORTEIL",
 # Die vier Merkmale und die Zeile, an der man sie erkennt. Reihenfolge wie im
 # Plan: Trichter (immer), Drift (gemessen), Lebendigkeit (Merkmal), Anlass.
 MERKMALE = (
-    ("Schwankungsbreite und Stop", "Uebliche Kursbewegung"),
+    # ⚠️ "UEBLICHE KURSBEWEGUNG", NICHT "SCHWANKUNGSBREITE UND STOP"
+    # (Schritt 31, 2.446-begriffe b). Der Block ist der Trichter - und
+    # "Schwankungsbreite" heisst in dieser Mail die ATR. `trichter.saetze`
+    # warnt selbst davor, beides zu verwechseln; der Kopf tat es.
+    ("Uebliche Kursbewegung", "Uebliche Kursbewegung"),
     ("Rangplatz in der Anlageklasse", "Rangplatz nach"),
     ("Lebendigkeit des Projekts", "Lebendigkeit des Projekts"),
     ("Bekannte Termine", "Bekannte Termine"),
@@ -116,8 +120,10 @@ def saetze(zeilen: list[str]) -> list[str]:
         teile.append(f"{de(b['dagegen'], 0)} dagegen")
     if b["unbekannt"]:
         teile.append(f"{de(b['unbekannt'], 0)} noch nicht bewertbar")
-    aus = [f"Auf einen Blick: von {de(b['vorhanden'], 0)} pruefbaren "
-           f"Merkmalen " + ", ".join(teile) + "."]
+    # "Merkmale", nicht "Auf einen Blick:" (Schritt 31) - die Zeile steht
+    # seit S-4 IM Abschnitt "AUF EINEN BLICK", der Titel stand doppelt.
+    aus = [f"Merkmale        von {de(b['vorhanden'], 0)} pruefbaren "
+           + ", ".join(teile) + "."]
     # ⚠️ WAS DAGEGEN SPRICHT, GEHOERT AN DEN ANFANG DER ZEILE - sonst liest
     # es niemand. Und es ist eine Warnung, keine Sperre.
     dagegen = [n for n, v in b["je_merkmal"].items() if v == "dagegen"]
@@ -138,16 +144,46 @@ MARKE_GRENZE = "!!"
 Z1_ANGESCHLAGEN = "(Z1) hat angeschlagen"
 
 
+# Welche Zeile des Blocks die TATSACHE hinter dem UNGUENSTIG traegt: beim
+# Terminblock die erste (die Termine stehen nach Naehe sortiert, der naechste
+# loest die Warnung aus), sonst die Zeile unmittelbar davor ("Ihr Ziel liegt
+# 22,3 % entfernt - JENSEITS ...").
+KOPF_TATSACHE_ERSTE_ZEILE = ("Bekannte Termine",)
+
+
 def _dagegen_satz(zeilen: list[str], anfang: str) -> str | None:
-    """Der erste UNGUENSTIG-Satz im Block, der mit `anfang` beginnt."""
-    gefunden = False
+    """Die TATSACHE hinter dem ersten UNGUENSTIG im Block - sonst der Satz.
+
+    ⚠️ SCHRITT 31 (13.09.2026, 2.446-redundanz): hier stand der
+    UNGUENSTIG-Satz selbst, gekuerzt am ersten Punkt. Er stand damit im Kopf
+    fast woertlich wie weiter unten, und er sagte das WARUM ohne das WAS:
+    *"ein Weg dieser Laenge ist in diesem Zeitraum die Ausnahme"* - welcher
+    Weg, stand eine Zeile darueber. Der Kopf verspricht "je eine Zeile,
+    Einzelheiten weiter unten": die Zeile ist die Tatsache, die Einordnung
+    steht unten.
+
+    Rueckfall auf den Satz, wenn die Tatsachenzeile keine Zahl traegt - eine
+    Erklaerzeile ist keine Tatsache."""
+    gefunden, block = False, []
     for z in zeilen:
         if z.lstrip().startswith(anfang):
-            gefunden = True
+            gefunden, block = True, []
             continue
         if gefunden:
             if not z.strip():
                 break
+            if DAGEGEN in z:
+                _t = (block[0] if block and anfang.startswith(
+                    KOPF_TATSACHE_ERSTE_ZEILE) else
+                      (block[-1] if block else ""))
+                _t = _t.strip()
+                if "[" in _t:              # Quellenangabe "[federalreserve.gov]"
+                    _t = _t[:_t.index("[")].strip()
+                # `DAFUER` ist Teilwort von `DAGEGEN` - beide ausschliessen
+                # heisst: eine Etikettzeile ist nie die Tatsache.
+                if _t and any(c.isdigit() for c in _t) and DAFUER not in _t:
+                    return _t
+            block.append(z)
             if DAGEGEN in z:
                 s = z.strip().replace("⚠️", "").strip()
                 # AM SATZENDE KUERZEN, nicht mitten im Satz (erster Kettenlauf
