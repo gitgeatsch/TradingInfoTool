@@ -565,11 +565,17 @@ REIHENFOLGE = (
             "Neustart. (6) 2.453-kursreihe: Frische je Tabelle statt je Symbol. "
             "(7) Verdacht 2.453-hebelpos, 2.453-alterlos. (8) 2.453-fredkey: API-"
             "Schluessel im Klartext in `api_health_status` und im Export. "
+            "(9) AUS DER NOTEBOOK-KONTROLLE 14.09. (2.454): 2.454-ampel GELOEST (2.454-ampel-gebaut; Folge "
+            "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
+            "2.454-laufzeit (Export meldet 85 Prozent Ausfall statt 19 h), "
+            "2.454-etfbestand, 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
+            "2.452-boerse (OI nur von Binance) und 2.452-anlass. "
             "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-spy, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey, 2.453-bestand-gebaut, 2.453-veto, "
-            "2.453-export",
+            "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit, 2.454-etfbestand, "
+            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
@@ -618,11 +624,12 @@ REIHENFOLGE = (
             "\u27a4 14.09.: A (alte Warnung ersetzt), B (keine Entwarnung), "
             "C (Vergleich 100 h) entschieden. GEBAUT UND AM DESKTOP GEPRUEFT "
             "(2.452-gebaut): eigener Job, Lesegrenze, Meldung, Suite-Paket "
-            "TerminmarktDaten. OFFEN: Einspielen am Notebook als Gesamtpaket und "
-            "Kontrolle dort (nach 30 min Zeilen fuer rund 39 Werte, Logzeile). "
-            "Nebenbefund 2.452-boerse (AIOZ/FLOKI nur ausserhalb Binance) offen.",
-            "Befunde 2.452-gebaut, 2.452-boerse, 2.452-anlass (2.452 und 2.452-alt abgeloest)",
-            block="D-BETRIEB",
+            "TerminmarktDaten. \u2714 AM NOTEBOOK BESTANDEN 14.09. abends (2.454): "
+            "Pruefskript 8 von 8 OK, Export ohne Auffaelligkeit, Log sauber. Die "
+            "Nebenbefunde 2.452-boerse und 2.452-anlass und die Folge 2.454-ampel "
+            "traegt Schritt 56.",
+            "Befunde 2.452-gebaut, 2.454 (2.452 und 2.452-alt abgeloest)",
+            fertig=True, block="D-BETRIEB",
             umbau="alt"),  # Reparatur, kein Neubau
     Schritt(47, "DER STOP AUF GEMESSENE GRUNDLAGE - VORBEDINGUNG FUER "
             "ALLES AM HEBEL",

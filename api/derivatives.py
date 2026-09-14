@@ -61,16 +61,54 @@ class NoOpenInterestDataError(Exception):
     pro Boerse einzeln ab (P-10-Isolation, unveraendert)."""
 
 
-def _erstes_element(liste: list, exchange: str, symbol: str):
+class SymbolNichtGelistetError(NoOpenInterestDataError):
+    """Die Boerse fuehrt dieses Symbol nicht - die Schnittstelle selbst lief.
+
+    ⚠️ BEFUND 2.454-ampel (14.09.2026). Seit `terminmarkt_job` alle Kryptowerte
+    abfragt, kamen fuer CANTON, SUPRA, VSN, XNO (und AIOZ/FLOKI bei Binance)
+    in jedem Durchlauf Fehler - die Anbieter-Ampel stand dauerhaft auf Rot.
+    `track_api_health` bucht diese Ausnahme deshalb NICHT als Ausfall.
+
+    WORAN ES ERKANNT WIRD - live nachgesehen am 14.09., je Boerse genau EIN
+    Merkmal, nichts geraten:
+
+        Binance Open Interest   HTTP 400, JSON-Code -1121 ,Invalid symbol.'
+        Binance Long-Konten     HTTP 200, leere Liste
+        Bybit                   HTTP 200, retCode 10001 ,Symbol Is Invalid'
+                                oder retCode 0 mit leerer Liste
+        OKX                     HTTP 200, Code 51001 ,Instrument ... doesn't exist'
+
+    Alles andere (Zeitueberschreitung, 5xx, andere Codes, leere Liste bei einem
+    Fehlercode) bleibt ein Fehler und faerbt die Ampel. Ein Datenausfall ueber
+    alle Symbole faellt ausserdem ueber die Terminmarkt-Frische auf."""
+
+    ist_symbol_nicht_gelistet = True
+
+
+def _erstes_element(liste: list, exchange: str, symbol: str, *,
+                    nicht_gelistet: bool = False):
     if not liste:
-        raise NoOpenInterestDataError(f"{exchange}: keine Daten fuer Symbol '{symbol}' (leere Antwort)")
+        klasse = SymbolNichtGelistetError if nicht_gelistet else NoOpenInterestDataError
+        raise klasse(f"{exchange}: keine Daten fuer Symbol '{symbol}' (leere Antwort)")
     return liste[0]
+
+
+def _binance_ungueltiges_symbol(response) -> bool:
+    """HTTP 400 mit Code -1121 - und NUR dann."""
+    if getattr(response, "status_code", None) != 400:
+        return False
+    try:
+        return int((response.json() or {}).get("code")) == -1121
+    except (ValueError, TypeError, AttributeError):
+        return False
 
 
 @track_api_health("binance")
 def get_binance_open_interest(symbol: str = "BTCUSDT", session: requests.Session | None = None) -> OpenInterestReading:
     session = session or requests.Session()
     response = session.get(BINANCE_OI_URL, params={"symbol": symbol}, timeout=15)
+    if _binance_ungueltiges_symbol(response):
+        raise SymbolNichtGelistetError(f"binance: Symbol '{symbol}' nicht gelistet (-1121)")
     response.raise_for_status()
     data = response.json()
     return OpenInterestReading(
@@ -93,7 +131,10 @@ def get_binance_long_short_ratio(
     response.raise_for_status()
     rohdaten = response.json()
     if not rohdaten:
-        raise NoOpenInterestDataError(f"binance: keine Long-Short-Ratio-Daten fuer Symbol '{symbol}' (leere Antwort)")
+        # HTTP 200 mit leerer Liste ist Binances Antwort auf ein unbekanntes
+        # Symbol (14.09. live: XNOUSDT, FLOKIUSDT) - ein Ausfall kaeme als
+        # Fehlerstatus oder Zeitueberschreitung.
+        raise SymbolNichtGelistetError(f"binance: keine Long-Short-Ratio-Daten fuer Symbol '{symbol}' (leere Antwort)")
     data = sorted(rohdaten, key=lambda entry: entry["timestamp"])
     entry = data[-1]
     return LongShortRatioReading(
@@ -116,7 +157,14 @@ def get_bybit_open_interest(symbol: str = "BTCUSDT", session: requests.Session |
     )
     response.raise_for_status()
     data = response.json()
-    entry = _erstes_element(data["result"]["list"], "bybit", symbol)
+    # ZWEI ANTWORTEN FUER ,GIBT ES NICHT' (live 14.09.): retCode 10001 ,params
+    # error: Symbol Is Invalid' (VSN, SUPRA, CANTON) und retCode 0 mit leerer
+    # Liste (XNO). Beide sind kein Ausfall - eng gefasst auf genau diese.
+    if (str(data.get("retCode")) == "10001"
+            and "symbol is invalid" in str(data.get("retMsg") or "").lower()):
+        raise SymbolNichtGelistetError(f"bybit: Symbol '{symbol}' nicht gelistet (10001)")
+    entry = _erstes_element(data["result"]["list"], "bybit", symbol,
+                            nicht_gelistet=str(data.get("retCode")) == "0")
     return OpenInterestReading(
         exchange="bybit", symbol=symbol, open_interest=float(entry["openInterest"]), open_interest_usd=None
     )
@@ -130,6 +178,8 @@ def get_okx_open_interest(inst_id: str = "BTC-USDT-SWAP", session: requests.Sess
     )
     response.raise_for_status()
     data = response.json()
+    if str(data.get("code")) == "51001":
+        raise SymbolNichtGelistetError(f"okx: Instrument '{inst_id}' nicht gelistet (51001)")
     entry = _erstes_element(data["data"], "okx", inst_id)
     return OpenInterestReading(
         exchange="okx", symbol=inst_id, open_interest=float(entry["oi"]), open_interest_usd=float(entry["oiUsd"])

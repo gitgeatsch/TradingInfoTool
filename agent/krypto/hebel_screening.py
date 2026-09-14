@@ -42,6 +42,7 @@ import numpy as np
 
 import database.db as db
 from api.derivatives import (
+    SymbolNichtGelistetError,
     get_binance_long_short_ratio,
     get_binance_open_interest,
     get_bybit_open_interest,
@@ -99,6 +100,11 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
     try:
         lsr = get_binance_long_short_ratio(binance_symbol)
         long_account_pct = lsr.long_account_pct
+    except SymbolNichtGelistetError as exc:
+        # DEBUG statt INFO (14.09.2026, 2.454-rauschen): ein Wert, den die Boerse
+        # nicht fuehrt, ist ein Zustand und kein Ereignis - er kam bisher alle
+        # 15 Minuten ins Log.
+        logger.debug("Binance-Long-Short-Ratio %s: %s", binance_symbol, exc)
     except Exception as exc:
         logger.info("Binance-Long-Short-Ratio-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
@@ -140,6 +146,8 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
             long_account_pct=long_account_pct, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
+    except SymbolNichtGelistetError as exc:
+        logger.debug("Binance-Open-Interest %s: %s", binance_symbol, exc)
     except Exception as exc:
         logger.info("Binance-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
@@ -151,6 +159,8 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
             long_account_pct=None, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
+    except SymbolNichtGelistetError as exc:
+        logger.debug("Bybit-Open-Interest %s: %s", binance_symbol, exc)
     except Exception as exc:
         logger.info("Bybit-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", binance_symbol, exc)
 
@@ -162,6 +172,8 @@ def fetch_and_store_oi_snapshot(conn, asset, kraken_client) -> bool:
             long_account_pct=None, fetched_at=fetched_at,
         ))
         mindestens_eine_boerse_erfolgreich = True
+    except SymbolNichtGelistetError as exc:
+        logger.debug("OKX-Open-Interest %s: %s", asset.symbol, exc)
     except Exception as exc:
         logger.info("OKX-Open-Interest-Abruf fuer %s fehlgeschlagen: %s", asset.symbol, exc)
 

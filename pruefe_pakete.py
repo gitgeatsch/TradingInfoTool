@@ -22986,6 +22986,152 @@ def paket_bestandsfrische() -> None:
            % ([q.job for q in _q], sorted(i for i in _ids if "bitpanda" in i)))
 
 
+def paket_ampel() -> None:
+    """2.454-ampel: ein nicht gelistetes Symbol faerbt die Anbieter-Ampel nicht rot.
+
+    ⚠️ ANLASS: nach dem Rollout vom 14.09.2026 standen Binance, Bybit und OKX
+    in `api_health_status` dauerhaft auf ,fehler' - der Terminmarkt-Job fragt
+    alle Kryptowerte, auch die, die keine Boerse fuehrt. Festgehalten wird, und
+    zwar mit den ANTWORTEN, die die Boersen am 14.09. live gaben:
+
+        1  jede der fuenf ,gibt es nicht'-Antworten wird als nicht gelistet
+           erkannt und bucht WEDER Fehler NOCH Erfolg
+        2  GEGENPROBE: echte Fehler (HTTP 500, anderer Binance-Code, OKX-Code
+           mit leerer Liste, Bybit-Fehlercode ohne ,Symbol Is Invalid',
+           Verbindungsfehler) buchen weiter einen Fehler
+        3  ein Erfolg bucht weiter einen Erfolg
+        4  die Sammlung zaehlt den Wert weiter als ,ohne Daten' (Abdeckung)
+
+    Ohne Netz und ohne Standard-DB: die Buchungen gehen an einen Zaehler."""
+    P = "Ampel"
+    import json as _js
+    from types import SimpleNamespace as _NS
+
+    import api.derivatives as _D
+    import database.api_health as _AH
+
+    class _Antwort:
+        def __init__(self, status, daten):
+            self.status_code = status
+            self._d = daten
+
+        def json(self):
+            return self._d
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                import requests as _rq
+                raise _rq.HTTPError(f"{self.status_code} Fehler")
+
+    class _Sitzung:
+        def __init__(self, antwort=None, fehler=None):
+            self._a, self._f = antwort, fehler
+
+        def get(self, *a, **k):
+            if self._f:
+                raise self._f
+            return self._a
+
+    buchungen = []
+    _echt_db = _AH.db
+    _AH.db = _NS(
+        get_connection=lambda: _NS(close=lambda: None),
+        record_api_health_error=lambda c, q, t, m: buchungen.append(("fehler", q, t)),
+        record_api_health_success=lambda c, q: buchungen.append(("ok", q)))
+
+    def _lauf(fn, arg, antwort=None, fehler=None):
+        del buchungen[:]
+        try:
+            fn(arg, session=_Sitzung(antwort, fehler))
+            art = "ok"
+        except _D.SymbolNichtGelistetError:
+            art = "nicht_gelistet"
+        except Exception:                                    # noqa: BLE001
+            art = "fehler"
+        return art, list(buchungen)
+
+    try:
+        nicht_gelistet = {
+            "Binance OI 400/-1121": (_D.get_binance_open_interest, "XNOUSDT",
+                                     _Antwort(400, {"code": -1121, "msg": "Invalid symbol."})),
+            "Binance Long-Konten []": (_D.get_binance_long_short_ratio, "XNOUSDT",
+                                       _Antwort(200, [])),
+            "Bybit retCode 0 leer": (_D.get_bybit_open_interest, "XNOUSDT",
+                                     _Antwort(200, {"retCode": 0, "retMsg": "OK",
+                                                    "result": {"list": []}})),
+            "Bybit 10001 Symbol Is Invalid": (_D.get_bybit_open_interest, "VSNUSDT",
+                                              _Antwort(200, {"retCode": 10001,
+                                                             "retMsg": "params error: Symbol Is Invalid",
+                                                             "result": {"list": []}})),
+            "OKX 51001": (_D.get_okx_open_interest, "XNO-USDT-SWAP",
+                          _Antwort(200, {"code": "51001", "data": [],
+                                         "msg": "Instrument ID ... doesn't exist."})),
+        }
+        erg1 = {n: _lauf(f, a, antwort=r) for n, (f, a, r) in nicht_gelistet.items()}
+        pruefe(P, "⚠️⚠️⚠️ alle fuenf ,gibt es nicht'-Antworten: nicht gelistet, KEINE Buchung",
+               all(v == ("nicht_gelistet", []) for v in erg1.values()),
+               str(erg1))
+
+        import requests as _rq
+        echte = {
+            "Binance HTTP 500": (_D.get_binance_open_interest, "BTCUSDT",
+                                 _Antwort(500, {}), None),
+            "Binance 400 anderer Code": (_D.get_binance_open_interest, "BTCUSDT",
+                                         _Antwort(400, {"code": -1003, "msg": "Too many requests"}), None),
+            "Bybit 10001 anderer Text": (_D.get_bybit_open_interest, "BTCUSDT",
+                                         _Antwort(200, {"retCode": 10001, "retMsg": "params error: limit",
+                                                        "result": {"list": []}}), None),
+            "OKX anderer Code leer": (_D.get_okx_open_interest, "BTC-USDT-SWAP",
+                                      _Antwort(200, {"code": "50011", "data": [], "msg": "rate"}), None),
+            "Verbindungsfehler": (_D.get_okx_open_interest, "BTC-USDT-SWAP",
+                                  None, _rq.ConnectionError("weg")),
+        }
+        erg2 = {n: _lauf(f, a, antwort=r, fehler=x) for n, (f, a, r, x) in echte.items()}
+        pruefe(P, "⚠️⚠️ GEGENPROBE: echte Fehler buchen weiter einen Fehler (Ampel rot)",
+               all(v[0] == "fehler" and len(v[1]) == 1 and v[1][0][0] == "fehler"
+                   for v in erg2.values()),
+               str(erg2))
+
+        erg3 = _lauf(_D.get_binance_open_interest, "BTCUSDT",
+                     antwort=_Antwort(200, {"symbol": "BTCUSDT", "openInterest": "1.5"}))
+        pruefe(P, "ein Erfolg bucht weiter einen Erfolg",
+               erg3 == ("ok", [("ok", "binance")]), str(erg3))
+    finally:
+        _AH.db = _echt_db
+
+    pruefe(P, "die Ausnahme ist eine Unterart von NoOpenInterestDataError - alte Faenger greifen weiter",
+           issubclass(_D.SymbolNichtGelistetError, _D.NoOpenInterestDataError)
+           and getattr(_D.SymbolNichtGelistetError, "ist_symbol_nicht_gelistet", False),
+           "")
+
+    # 4 DIE SAMMLUNG ZAEHLT DEN WERT WEITER ALS ,OHNE DATEN'
+    import agent.krypto.hebel_screening as _HS
+    import sqlite3 as _sq
+    _echt = {n: getattr(_HS, n) for n in (
+        "get_binance_open_interest", "get_bybit_open_interest",
+        "get_okx_open_interest", "get_binance_long_short_ratio")}
+
+    def _wirf(*a, **k):
+        raise _D.SymbolNichtGelistetError("gibt es nicht")
+
+    for n in _echt:
+        setattr(_HS, n, _wirf)
+    try:
+        _c = _sq.connect(":memory:")
+        _c.execute("CREATE TABLE open_interest_snapshot (symbol TEXT, exchange TEXT, "
+                   "open_interest REAL, open_interest_usd REAL, funding_rate REAL, "
+                   "long_account_pct REAL, fetched_at TEXT)")
+        _ok = _HS.fetch_and_store_oi_snapshot(
+            _c, _NS(symbol="XNO"), _NS(get_funding_rates=lambda fs: []))
+        _n = _c.execute("SELECT COUNT(*) FROM open_interest_snapshot").fetchone()[0]
+    finally:
+        for n, f in _echt.items():
+            setattr(_HS, n, f)
+    pruefe(P, "die Sammlung zaehlt einen nicht gelisteten Wert weiter als ,ohne Daten'",
+           _ok is False and _n == 0,
+           "sonst verschwaende er aus dem Abdeckungszaehler: erfolg=%s, Zeilen=%s" % (_ok, _n))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23032,6 +23178,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "TerminmarktDaten": paket_terminmarkt_daten,
           "Umlaufmenge": paket_umlaufmenge,
           "Bestandsfrische": paket_bestandsfrische,
+          "Ampel": paket_ampel,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

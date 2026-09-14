@@ -54,6 +54,16 @@ def track_api_health(source: str) -> Callable[[F], F]:
                 # jeder andere Client kann es genauso setzen.
                 if getattr(exc, "ist_kontingent_erschoepft", False):
                     raise
+                # ⚠️ EIN NICHT GELISTETES SYMBOL IST KEIN ANBIETERAUSFALL
+                # (14.09.2026, Befund 2.454-ampel). Die Schnittstelle hat
+                # geantwortet - nur fuehrt die Boerse das Symbol nicht. Seit
+                # der Terminmarkt-Job ALLE Kryptowerte fragt, stand die Ampel
+                # fuer Binance, Bybit und OKX dadurch dauerhaft auf Rot, und
+                # ein echter Ausfall waere nicht mehr zu sehen gewesen.
+                # Gebucht wird WEDER Fehler NOCH Erfolg: die Ampel folgt den
+                # Symbolen, die es gibt. Die Ausnahme geht trotzdem weiter.
+                if getattr(exc, "ist_symbol_nicht_gelistet", False):
+                    raise
                 conn = db.get_connection()
                 try:
                     db.record_api_health_error(conn, source, type(exc).__name__, str(exc)[:200])

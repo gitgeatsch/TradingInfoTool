@@ -1106,6 +1106,14 @@
 
 - Quelle: NB-Sicherung 12.09. · Schritt 43
 
+**2.454** — ✔✔ NOTEBOOK-KONTROLLE NACH DEM ROLLOUT BESTANDEN (Commit 15341b8). Pruefskript 8 von 8 OK: Module, Terminmarkt 39 Werte in 30 min, BTC frisch, Umlaufmenge 61, Migration, Datenfrische. Export: Abschnitt Terminmarkt ohne Auffaelligkeit (Leser 37 frisch, 2 nicht bei Binance, 4 nie), Datenfrische 20 von 20 frisch - Bestand frisch mit Job bitpanda_holdings, keine ueberfaelligen Jobs, keine Schema-Drift. Log: `terminmarkt_job` laeuft am Notebook 3 bis 4 min und endet jedes Mal erfolgreich; nach dem Start 20:21 ,Datenfrische: alle 20 Faktenquellen frisch'. Der Start 20:19 endete nach 16 s ohne Fehler (manuell?). Offene Funde: 2.454-ampel (Folge von Schritt 54), -laufzeit, -gemini, -etfbestand, -rauschen, -vix
+
+- Quelle: Schritt 54; Befunde 2.454-*
+
+**2.454-ampel-gebaut** — ✔✔ DIE AMPEL MELDET NUR NOCH ECHTE AUSFAELLE. Neue Ausnahme `api.derivatives.SymbolNichtGelistetError` (Unterart von NoOpenInterestDataError, alte Faenger greifen weiter); `track_api_health` bucht sie WEDER als Fehler NOCH als Erfolg. Erkannt an genau den Antworten, die die Boersen live gaben: Binance OI HTTP 400 Code -1121; Binance Long-Konten HTTP 200 leere Liste; Bybit retCode 10001 ,Symbol Is Invalid' (VSN, SUPRA, CANTON) ODER retCode 0 mit leerer Liste (XNO) - die zweite Bybit-Variante fand erst der Live-Durchlauf; OKX Code 51001. Die Log-Zeile je nicht gelistetem Symbol geht von INFO auf DEBUG (rund 770 Zeilen weniger am Tag). 📏 LIVE: nach einem echten Durchlauf ueber alle 43 Kryptowerte Binance, Bybit und OKX ,ok' OHNE gebuchten Fehler; GEGENPROBE echter Verbindungsfehler -> rot, naechster Erfolg -> gruen. Suite-Paket Ampel: fuenf ,gibt es nicht'-Antworten ohne Buchung, fuenf echte Fehler (HTTP 500, anderer Binance-Code, Bybit 10001 mit anderem Text, OKX-Code mit leerer Liste, Verbindungsfehler) weiter rot, Erfolg weiter gruen, Abdeckungszaehler unveraendert; mit dem alten `api_health.py` wird die Kernpruefung rot. ⚠️ Am Notebook wird die Ampel mit dem ersten erfolgreichen Abruf nach dem Neustart gruen
+
+- Quelle: api/derivatives.py SymbolNichtGelistetError; database/api_health.py; agent/krypto/hebel_screening.py fetch_and_store_oi_snapshot; pruefe_pakete.py Ampel
+
 **2.453** — 📋 REVIEW VOR DEM ROLLOUT (Nutzerauftrag 14.09.: ,tiefes und detailliertes Review und Gegenpruefung - sind alle Datenquellen aktualisiert, alles verdrahtet?'). ⚠️ DAS PAKET IST NICHT NUR SCHRITT 54: seit dem letzten Commit (13.09. 06:09) liegen 122 Befunde und Schritte 31, 32, 41, 48, 49B, 50B, 51, 53, 54 unkommittet, das Notebook laeuft auf dem Stand 13.09. frueh. ✔ Kompiliert, importiert, Scheduler baut 22 Jobs inklusive `terminmarkt`, Migration gegen die NB-Sicherung additiv und wiederholbar (vier neue signals-Spalten beim ersten Umlauf), alte Signale lesbar. ✖ ANTWORT AUF DIE FRAGE ,ALLE DATENQUELLEN AKTUELL': NEIN - 2.453-turnover (Blocker), -spy, -rohstoff, -bestand, -cache, -kursreihe; Verdacht -hebelpos, -alterlos; dazu -fredkey (Sicherheit), -desktopdb, -plan
 
 - Quelle: Schritt 56; Befunde 2.453-*
@@ -2966,6 +2974,26 @@
 
 - Quelle: V10, aus 2.312
 
+**2.454-laufzeit** — ⚠️⚠️ DIE LAUFZEIT-KENNZAHL DES EXPORTS IST FALSCH: ,85,5 %%%% Ausfall, 61,4 von 71,7 Stunden fehlen, 208 Luecken'. Nachgezaehlt am Log: die App lief vom 13.09. 06:00 bis 14.09. 20:00 OHNE eine Luecke ueber 15 Minuten (laengste 13,1 min); echte Ausfaelle im Fenster nur 12.09. 12:33 bis 13.09. 05:48 (17,3 h) und 12.09. 05:30 (1,6 h). Ursache: `_LUECKE_AB_MINUTEN = 8` - begruendet mit ,dichtester Takt 15 Minuten, acht sind grosszuegig'. Das ist umgekehrt: zwischen zwei 15-Minuten-Laeufen schweigt das Log bis zu 15 Minuten, jede Pause zaehlt als Ausfall. Seit das Hebel-Screening (12.09.) nichts mehr loggt, ist die Luecke zwischen den Laeufen die Regel. Mit Schwelle 20 Minuten: 3 Luecken, 19,2 h
+
+- Quelle: extract_notebook_diagnose.py:1322 _LUECKE_AB_MINUTEN, _laufzeit
+
+**2.454-gemini** — ○ GEMINI HTTP 503 (,high demand') OHNE AUSWEICHEN. 34 Antworten 503 am 14.09. ab 16:49; nach drei Versuchen gibt die Kette fuer den Wert auf (6 Urteile: ETH, AVAX, HYPE 2x, XLM, TAO), `waehle_client` wechselt nur nach Kontingent, nicht nach Ausfall. Der Wert wird im naechsten Umlauf (15 min) erneut gefragt (HYPE 18:22 und 18:36) - Verzoegerung, kein Verlust. Zu beobachten, wenn es tagelang anhaelt
+
+- Quelle: scheduler/rollen_job.py waehle_client; api/gemini.py
+
+**2.454-etfbestand** — ⚠️ ETF-BESTAENDE SILBER UND ERDGAS SEIT 494 STUNDEN (20 Tagen) NICHT AKTUALISIERT (Export `externe_reihen.veraltet`). Die Datenfrische prueft `etf_bestand` je Quelle - solange Gold frisch ist, bleiben Silber und Erdgas unsichtbar. Dieselbe Klasse wie 2.452 und 2.453-kursreihe
+
+- Quelle: scheduler/background.py externe_reihen_job (ETF-Bestaende); agent/datenfrische.py
+
+**2.454-rauschen** — ○ LOG-RAUSCHEN, das echte Warnungen verdeckt (14.09.: 1.274 WARNING, 7 ERROR). (1) `mindestkriterien` BC3 fuer die zehn Nicht-Kryptowerte je Umlauf: rund 900 WARNING am Tag - gemeldet wird nur, gesperrt nichts. (2) `backtest_llm1_historisch` ,EURCV keine Tageskerzen' 410x am Tag, steigend (68/222/365/410 vom 11. bis 14.09.). (3) `marktrang` ERROR ,Messbasis schnitt nicht lesbar (data/messdaten.db)' bei JEDEM Start - die Datei fehlt am Notebook bewusst; der Beitrag steht auf 0 Punkten, heute also wirkungslos, fuer die Akkumulation (Paket 2) aber zu klaeren. (4) Absicherung ,NACHKAUFEN ohne Richtung' (3QSS/NQSS/DBPK) = bekannt 2.451-absicherung
+
+- Quelle: agent/mindestkriterien.py melde; scheduler/rollen_job.py:432; agent/marktrang.py schnitt
+
+**2.454-vix** — ○ `yfinance ^VIX: possibly delisted; no price data found` taeglich 03:32 (ERROR). Ob `macro_snapshot.vix_wert` dadurch veraltet, ist NICHT geprueft
+
+- Quelle: api/macro.py (VIX)
+
 **2.453-spy** — ⚠️⚠️ DIE US-MARKTREFERENZ STEHT SEIT 13.08. `_THEMEN_ETF_BENCHMARK_SPY` schreibt nur die ALTE Themen-ETF-Pipeline (`themen_etf/pipeline.py:122-131`), die seit der Umstellung auf die Rollen-Kette nicht mehr laeuft. `marktlage._bis` nimmt die letzte Kerze vor dem Ankertag OHNE Altersgrenze - Rolle A bekommt Saetze zum US-Aktienmarkt aus Daten vom 13.08.; `relative_staerke` laesst den Block nach 7 Tagen still weg. Nachgesehen an der Sicherung: letzte Kerze 2026-08-13. Besteht schon am Notebook, kommt NICHT mit diesem Paket
 
 - Quelle: agent/marktlage.py:78-90; agent/rollen_eingabe.py:411,474; agent/themen_etf/pipeline.py:122-131
@@ -3260,6 +3288,12 @@
 - Quelle: n98_n46_laengs_nullpunkt.py
 - **Abgeloest durch: 2.283**
 - Warum: Es ist UNTERMACHT, kein Nullbefund. Bei der Beharrlichkeit von `schnitt` (0,985) findet die Anlage einen Effekt von 0,03 R in 20 % und von 0,05 R in 50 % der Faelle - die echten Kandidaten liegen genau in diesem Bereich. Ein ,traegt nicht' sagt dort nichts ueber die Welt.
+
+**2.454-ampel** — ⚠️ FOLGE VON SCHRITT 54: DIE ANBIETER-AMPEL FUER BINANCE, BYBIT UND OKX STEHT DAUERHAFT AUF ROT. Der neue Job fragt ALLE Kryptowerte ab - auch die vier, die keine Boerse fuehrt (CANTON, SUPRA, VSN, XNO), und bei Binance AIOZ/FLOKI. Jeder Durchlauf erzeugt dort Fehler, der letzte Fehler ist juenger als der letzte Erfolg -> `api_health_status` ,fehler' (Export: binance/bybit/okx fehler, Erfolg 18:25, Fehler 18:26). Das alte Screening fragte diese Werte nicht (Filter Hebelpruefung). Folge: die Ampel der Uebersichtsseite meldet einen Ausfall, der keiner ist - und ein echter waere nicht mehr zu sehen
+
+- Quelle: agent/krypto/hebel_screening.py fetch_and_store_oi_snapshot; database/api_health.py
+- **Abgeloest durch: 2.454-ampel-gebaut**
+- Warum: nicht gelistete Symbole buchen keinen Ausfall mehr
 
 **2.453-turnover** — ⛔⛔⛔ ROLLOUT-BLOCKER: SCHRITT 49B SCHALTET AM NOTEBOOK DEN TURNOVER-BEITRAG AB. `marktrang.umlaufmengen()` liest `splycur (symbol, datum, wert)` aus `data/onchain_historie.db`. Am Notebook liegt diese Datei BEWUSST nur als SYMBOLLISTE (2.368, Paket vom 02.09., Tabelle `splycur (symbol TEXT)`). Nachgeprueft am Paket im Austauschordner: `no such column: datum`. Die Funktion hat nur try/finally, `raenge()` loggt und laesst turnover weg - EINER DER ZWEI TRAGENDEN BEITRAEGE faellt fuer alle Werte aus, schlechter als heute (dort 33 Werte ueber CoinGecko). Zweitens hat `splycur` keinen Job: nach 21 Tagen ohne `hole_fremdreihen.py splycur` verstummt turnover still - dieselbe Klasse wie 2.452. NUTZERENTSCHEIDUNG NOETIG vor dem Rollout
 
