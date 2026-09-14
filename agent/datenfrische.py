@@ -181,8 +181,11 @@ REGISTRATUR: tuple[Quelle, ...] = (
            "terminmarkt", "Open Interest, Funding, Long-Anteil"),
     Quelle("kursreihe", "A/BC/G", "price_history_ohlc", 4,
            "refresh_ohlc", "die Kerzen selbst"),
+    # ⚠️ JOBNAME KORRIGIERT (14.09.2026, 2.453-bestand): die Scheduler-ID
+    # heisst `bitpanda_holdings`, nicht `refresh_bitpanda_holdings` - die Mail
+    # schickte den Leser zum Suchen nach einem Namen, der im Log nicht steht.
     Quelle("bestand", "BC", "holdings", 3,
-           "refresh_bitpanda_holdings", "was tatsaechlich im Depot liegt"),
+           "bitpanda_holdings", "was tatsaechlich im Depot liegt"),
     # ⚠️⚠️ ROLLE "K" - DAS KAPITAL (H-1, 11.09.2026). Keine Promptquelle,
     # sondern die Bezugsgroesse fuer r x Kapital (P-5). Am Notebook stand
     # sie zehn Tage still, ohne dass es jemand erfuhr (2.341). Drei Tage:
@@ -328,6 +331,39 @@ def _stand_einfach(conn, tabelle: str, datum: str,
     except Exception:                                        # noqa: BLE001
         return None, None, 0
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
+
+
+def _stand_bestand(conn) -> tuple[str | None, str | None, int]:
+    """Der Bestand: Stand und Abruf = der letzte ERFOLGREICHE Abgleich.
+
+    ⚠️⚠️ BEFUND 2.453-bestand (14.09.2026). Bis hierher las diese Quelle
+    `holdings.updated_at` - geschrieben nur bei einer MENGENAENDERUNG. Ein
+    ruhiger Bestand sah nach zwei Tagen aus wie ein toter Job, und die
+    Pruefung mailte ,Handlungsbedarf' (14.09. 19:54, Abgleich lief alle 30
+    Minuten). Ein Bestand gilt fuer den Moment, in dem nachgesehen wurde -
+    deshalb ist der Abgleichszeitpunkt Datenstand UND Abrufstand.
+
+    DREI STUFEN, in dieser Reihenfolge:
+        1  `bitpanda_holdings_synced_at` - gesetzt am Ende jedes erfolgreichen
+           Bestandsabgleichs
+        2  `cash_reserve_synced_at` - der Cash-Abruf laeuft im selben
+           Abgleich mit; nur der UEBERGANG bis zum ersten Lauf nach dem
+           Einspielen, sonst meldete genau dieser Start wieder falsch
+        3  `holdings.updated_at` - nur ohne jeden Bitpanda-Abgleich (von Hand
+           gepflegter Bestand), das fruehere Verhalten"""
+    try:
+        anzahl = int(conn.execute("SELECT COUNT(*) FROM holdings").fetchone()[0] or 0)
+    except Exception:                                        # noqa: BLE001
+        return None, None, 0
+    for schluessel in ("bitpanda_holdings_synced_at", "cash_reserve_synced_at"):
+        try:
+            zeile = conn.execute("SELECT value FROM meta WHERE key = ?",
+                                 (schluessel,)).fetchone()
+        except Exception:                                    # noqa: BLE001
+            zeile = None
+        if zeile and zeile[0]:
+            return str(zeile[0]), str(zeile[0]), anzahl
+    return _stand_einfach(conn, "holdings", *_EINFACH["holdings"])
 
 
 def _abrufvermerk(c, q) -> str | None:
@@ -488,6 +524,8 @@ def pruefe(conn, heute: date | None = None,
             daten, abruf, anzahl = _stand_macro(conn, _SPALTE_MACRO[q.name])
         elif q.tabelle == "makro_historie_monat":
             daten, abruf, anzahl = _stand_monat(conn)
+        elif q.tabelle == "holdings":
+            daten, abruf, anzahl = _stand_bestand(conn)
         elif q.tabelle in _EINFACH:
             daten, abruf, anzahl = _stand_einfach(conn, q.tabelle,
                                                   *_EINFACH[q.tabelle])

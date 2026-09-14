@@ -1460,6 +1460,139 @@ def _datenfrische(conn) -> dict:
     }
 
 
+def _terminmarkt_und_umlaufmenge(conn) -> dict:
+    """Terminmarkt je Wert, was die Kette davon liest, und die Umlaufmenge (14.09.2026).
+
+    ⚠️⚠️⚠️ DER ANLASS - Befund 2.452. Seit dem 12.09. schrieb niemand mehr
+    `open_interest_snapshot`, bei 13 Werten schon seit Juli. Der Export zeigte
+    das NICHT: `oi_historie` sind rohe Zeilen (336.000 sehen gesund aus), und
+    `datenfrische` prueft die Tabelle als Ganzes - solange irgendein Wert frisch
+    ist, bleibt jeder eingefrorene unsichtbar. Nutzervorgabe 14.09.: die
+    Standardpruefung des Notebooks muss die Reparatur (Schritt 54) und die
+    Umlaufmenge (2.453-turnover-gebaut) mitpruefen.
+
+    DREI FRAGEN, jede an der Stelle beantwortet, an der sie im Betrieb entsteht:
+
+        sammlung   hat der Job `terminmarkt` geschrieben - je Wert, nicht je
+                   Tabelle (`terminmarkt_sammlung.frische`, dieselbe Pruefung,
+                   die im Betrieb mailt; hier OHNE App-Start-Bezug, also das
+                   reine Alter)
+        leser      was bekommen Rolle BC und G wirklich - frische Zahl,
+                   ,veraltet' (aelter als 2 h), ,nie' oder ,nicht bei Binance'
+                   (`positionierung` liest OI nur von dort, 2.452-boerse)
+        umlauf     findet `marktrang.umlaufmengen` den Nenner fuer turnover
+
+    NUR LESEND und OHNE NETZ: `positionierung.lage` wird ohne Assetklasse
+    gerufen - mit `krypto` holte sie den Boersenfluss aus dem Netz."""
+    try:
+        import config as _cfg
+        from agent import marktrang as _MR
+        from agent import positionierung as _PO
+        from agent import terminmarkt_sammlung as _TS
+    except Exception as exc:                                 # noqa: BLE001
+        return {"nicht_verfuegbar": f"{type(exc).__name__}: {exc}"}
+
+    jetzt = datetime.now(timezone.utc)
+    aus: dict = {"stand": jetzt.isoformat(timespec="seconds"),
+                 "lesegrenze_stunden": _PO.LESEGRENZE_STUNDEN,
+                 "meldegrenze_stunden": _TS.MELDEGRENZE_STUNDEN,
+                 "einzelwert_grenze_stunden": _TS.EINZELWERT_GRENZE_STUNDEN}
+    auffaellig: list[str] = []
+
+    # ---- sammlung ----------------------------------------------------------
+    werte = _TS.werte_der_kette(_cfg.get_watchlist())
+    symbole = [a.symbol for a in werte]
+    befund = _TS.frische(conn, symbole, jetzt=jetzt)
+    grenze30 = (jetzt - timedelta(minutes=30)).isoformat()
+    frisch30 = conn.execute(
+        "SELECT COUNT(DISTINCT symbol) FROM open_interest_snapshot "
+        "WHERE fetched_at >= ?", (grenze30,)).fetchone()[0]
+    aus["sammlung"] = {
+        "kryptowerte_der_kette": len(symbole),
+        "werte_mit_zeile_letzte_30_min": frisch30,
+        "juengste_zeile": befund["neueste"].isoformat() if befund["neueste"] else None,
+        "gesamt_stunden": (round(befund["gesamt_stunden"], 2)
+                           if befund["gesamt_stunden"] is not None else None),
+        "gesamtausfall": befund["gesamt"],
+        "einzeln_ueber_24h": [{"symbol": e["symbol"],
+                               "stand": e["stand"].isoformat(),
+                               "stunden": round(e["stunden"], 1)}
+                              for e in befund["einzeln"]],
+        "nie": befund["nie"],
+    }
+    if befund["gesamt"]:
+        auffaellig.append("Terminmarkt: seit %.1f h keine neue Zeile - GESAMTAUSFALL"
+                          % (befund["gesamt_stunden"] or 0))
+    elif frisch30 < 35:
+        auffaellig.append("Terminmarkt: nur %d Werte mit Zeile in 30 Minuten "
+                          "(erwartet rund 39)" % frisch30)
+    if befund["einzeln"]:
+        auffaellig.append("Terminmarkt: %d Werte seit ueber 24 h ohne Zeile: %s"
+                          % (len(befund["einzeln"]),
+                             ", ".join(e["symbol"] for e in befund["einzeln"])))
+
+    # ---- leser ---------------------------------------------------------------
+    je_wert = []
+    zaehler: dict = {}
+    for sym in symbole:
+        try:
+            lage = _PO.lage(conn, sym, instrument="spot", jetzt=jetzt)
+        except Exception as exc:                             # noqa: BLE001
+            je_wert.append({"symbol": sym, "leser": "fehler",
+                            "grund": f"{type(exc).__name__}: {exc}"})
+            zaehler["fehler"] = zaehler.get("fehler", 0) + 1
+            continue
+        if lage.get("veraltet"):
+            art = "veraltet"
+        elif lage.get("oi_jetzt") is not None:
+            art = "frisch"
+        elif sym in befund["nie"]:
+            art = "nie"
+        else:
+            art = "nicht_bei_binance"
+        zaehler[art] = zaehler.get(art, 0) + 1
+        je_wert.append({
+            "symbol": sym, "leser": art,
+            "oi_aenderung_pct": lage.get("oi_aenderung_pct"),
+            "oi_ohne_vergleich": bool(lage.get("oi_ohne_vergleich")),
+            "funding_n": lage.get("funding_n"),
+            "funding_perzentil": lage.get("funding_perzentil"),
+            "long_n": lage.get("long_n"),
+            "veraltet": lage.get("veraltet") or [],
+        })
+    aus["leser"] = {"zaehlung": zaehler, "je_wert": je_wert}
+    if zaehler.get("veraltet"):
+        auffaellig.append("Leser: %d Werte bekommen ,keine aktuelle Angabe': %s"
+                          % (zaehler["veraltet"], ", ".join(
+                              w["symbol"] for w in je_wert if w["leser"] == "veraltet")))
+    if zaehler.get("fehler"):
+        auffaellig.append("Leser: %d Werte mit Fehler" % zaehler["fehler"])
+
+    # ---- umlauf --------------------------------------------------------------
+    try:
+        basis = _MR.messbasis("turnover")
+        menge = _MR.umlaufmengen(db_pfad=db.DB_PATH)
+        z = conn.execute(
+            "SELECT COUNT(DISTINCT schluessel), MAX(datum), MAX(geholt_am) "
+            "FROM externe_reihe WHERE quelle = ?", (_MR.SPLYCUR_QUELLE,)).fetchone()
+        aus["umlaufmenge"] = {
+            "messbasis_turnover": len(basis),
+            "werte_in_betriebsdatenbank": z[0] or 0,
+            "datenstand": z[1], "zuletzt_geholt": z[2],
+            "findet_umlaufmengen": len(menge),
+            "ohne_nenner": sorted(set(basis) - set(menge)),
+        }
+        if len(menge) < 55:
+            auffaellig.append("Umlaufmenge: marktrang findet nur %d Werte - "
+                              "turnover faellt fuer den Rest aus" % len(menge))
+    except Exception as exc:                                 # noqa: BLE001
+        aus["umlaufmenge"] = {"nicht_verfuegbar": f"{type(exc).__name__}: {exc}"}
+        auffaellig.append(f"Umlaufmenge nicht pruefbar: {type(exc).__name__}")
+
+    aus["auffaellig"] = auffaellig
+    return aus
+
+
 def _externe_reihen(conn) -> dict:
     """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
 
@@ -2731,6 +2864,18 @@ def main() -> None:
         # gegen eine DB laeuft, die seit einem der letzten Feature-Commits
         # nicht mehr neu gestartet wurde.
         db.init_db(conn)
+        # ⚠️ AUCH DIE SPALTEN DER ROLLEN-KETTE (14.09.2026). `veto_art`,
+        # `potential_r`, `kurs_bei_empfehlung_eur` & Co. legt nicht `init_db`
+        # an, sondern `signal_abbildung.migriere` - beim ersten Umlauf der
+        # Kette. Gegen eine Datenbank, auf der die Kette noch nicht lief, brach
+        # der Export deshalb mit `no such column: veto_art` ab (gefunden beim
+        # Probelauf gegen die Sicherung vom 12.09.). Additiv und wiederholbar,
+        # dieselbe Funktion, die die Kette selbst ruft.
+        try:
+            from agent import signal_abbildung as _SA
+            _SA.migriere(conn)
+        except Exception as exc:  # noqa: BLE001
+            print(f"  Hinweis: Spalten der Rollen-Kette nicht migrierbar: {exc}")
 
         # 1) Holdings-Check: hat der selektive Sync die Einstandspreise
         # korrekt uebernommen?
@@ -2902,6 +3047,12 @@ def main() -> None:
             datenfrische = _datenfrische(conn)
         except Exception as exc:  # noqa: BLE001
             datenfrische = {"nicht_verfuegbar": str(exc)}
+        # SCHRITT 54 / 2.453-turnover (14.09.2026) - eigener try-Block wie
+        # die Abschnitte darueber.
+        try:
+            terminmarkt_und_umlaufmenge = _terminmarkt_und_umlaufmenge(conn)
+        except Exception as exc:  # noqa: BLE001
+            terminmarkt_und_umlaufmenge = {"nicht_verfuegbar": str(exc)}
         # ERFUNDENE ZAHLEN IN DEN BELEGEN (17.08.2026, Nutzerfund A6).
         # Das Modell hat vierzehnmal ein Volumen-Perzentil genannt, das
         # `faktenblock.kern()` bewusst zurueckhaelt. Ob die Promptzeile
@@ -3236,6 +3387,7 @@ def main() -> None:
             "joblaeufe": joblaeufe,
             "laufzeit": laufzeit,
         "datenfrische": datenfrische,
+        "terminmarkt_und_umlaufmenge": terminmarkt_und_umlaufmenge,
         "belege_gegen_fakten": belege_gegen_fakten,
         "spaltendrift": spaltendrift,
         "deep_dive": {
@@ -3365,6 +3517,28 @@ def main() -> None:
               f"Grenze {llm_kontingent['tagesgrenze_je_modell']}/Tag je Modell): "
               + (", ".join(f"{z['source']}={z['anzahl']}" for z in heute)
                  or "heute noch kein Aufruf gebucht"))
+    # ⚠️ DIE DREI BETRIEBSFRAGEN IN DER KONSOLE (14.09.2026). Bis hierher stand
+    # weder die Datenfrische noch der Terminmarkt in der Kurzausgabe - wer nur
+    # die Konsole las, sah den Ausfall vom 12.09. nicht.
+    _tm = terminmarkt_und_umlaufmenge
+    if "nicht_verfuegbar" in _tm:
+        print(f"  Terminmarkt/Umlaufmenge: NICHT PRUEFBAR - {_tm['nicht_verfuegbar']}")
+    else:
+        _sa, _le, _um = _tm["sammlung"], _tm["leser"], _tm.get("umlaufmenge") or {}
+        print(f"  Terminmarkt: {_sa['werte_mit_zeile_letzte_30_min']} von "
+              f"{_sa['kryptowerte_der_kette']} Werten mit Zeile in 30 Min., "
+              f"juengste {str(_sa['juengste_zeile'])[:16]}; Leser {_le['zaehlung']}")
+        print(f"  Umlaufmenge: marktrang findet {_um.get('findet_umlaufmengen', '-')} "
+              f"von {_um.get('messbasis_turnover', '-')} (Stand {_um.get('datenstand', '-')})")
+        for _z in _tm["auffaellig"]:
+            print(f"    [!] {_z}")
+    if isinstance(datenfrische, dict) and datenfrische.get("auffaellig"):
+        print(f"  Datenfrische: {datenfrische['anzahl_auffaellig']} von "
+              f"{datenfrische['anzahl_geprueft']} Quellen auffaellig")
+        for _z in datenfrische["auffaellig"]:
+            print(f"    [!] {_z}")
+    elif isinstance(datenfrische, dict) and "anzahl_geprueft" in datenfrische:
+        print(f"  Datenfrische: alle {datenfrische['anzahl_geprueft']} Quellen unauffaellig")
     if "nicht_verfuegbar" not in spaltendrift:
         offen = {k: v.get("nicht_exportiert") or []
                  for k, v in spaltendrift["spalten"].items()}

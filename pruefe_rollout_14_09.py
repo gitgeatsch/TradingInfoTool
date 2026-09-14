@@ -23,9 +23,18 @@ WAS GEPRUEFT WIRD - je Punkt der Befund, der ihn traegt:
     6  Datenfrische der beiden Quellen
 
 Jede Zeile sagt OK, WARTEN (noch zu frueh) oder FEHLER - mit dem Grund.
+
+⚠️ DIE AUSGABE LANDET ZUSAETZLICH IM AUSTAUSCHORDNER (Nutzervorgabe 14.09.):
+`Claude_Austauschordner/Pruefungen/pruefe_rollout_14_09_<Geraet>.txt`. Der
+Laufwerksbuchstabe ist je Geraet verschieden (Notebook G:, Desktop K:) - er
+wird deshalb NICHT fest eingetragen, sondern ueber
+`extract_notebook_diagnose._google_drive_wurzel()` gesucht, dieselbe Stelle,
+die auch Export und Suite benutzen. Der Geraetename im Dateinamen verhindert,
+dass ein Desktop-Lauf den Notebook-Lauf ueberschreibt.
 """
 from __future__ import annotations
 
+import io
 import sqlite3
 import subprocess
 import sys
@@ -146,5 +155,45 @@ def main() -> int:
     return 1 if fehler else 0
 
 
+class _Mitschrift(io.StringIO):
+    """Schreibt auf die Konsole UND merkt sich den Text."""
+
+    def __init__(self, konsole):
+        super().__init__()
+        self._konsole = konsole
+
+    def write(self, text):
+        self._konsole.write(text)
+        return super().write(text)
+
+    def flush(self):
+        self._konsole.flush()
+
+
+def _in_austauschordner(text: str) -> None:
+    """Best effort - ein fehlendes Laufwerk bricht die Kontrolle nicht ab."""
+    try:
+        import platform
+        from extract_notebook_diagnose import _google_drive_wurzel
+        ziel = _google_drive_wurzel() / "Claude_Austauschordner" / "Pruefungen"
+        ziel.mkdir(parents=True, exist_ok=True)
+        geraet = (platform.node() or "unbekannt").strip() or "unbekannt"
+        pfad = ziel / f"pruefe_rollout_14_09_{geraet}.txt"
+        zeitpunkt = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        kopf = f"# Geraet: {geraet}\n# Geschrieben: {zeitpunkt}\n\n"
+        pfad.write_text(kopf + text, encoding="utf-8")
+        print(f"\n(Volltext geschrieben nach {pfad})")
+    except Exception as exc:                                 # noqa: BLE001
+        print(f"\n(Konnte die Ausgabe nicht in den Austauschordner schreiben: {exc})")
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    _konsole = sys.stdout
+    _mit = _Mitschrift(_konsole)
+    sys.stdout = _mit
+    try:
+        _code = main()
+    finally:
+        sys.stdout = _konsole
+    _in_austauschordner(_mit.getvalue())
+    raise SystemExit(_code)

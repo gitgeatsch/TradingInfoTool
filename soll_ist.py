@@ -556,8 +556,11 @@ REIHENFOLGE = (
             "Umlaufmenge am Notebook aus einer Symbolliste; jetzt holt "
             "`externe_reihen` sie taeglich von Coin Metrics in die "
             "Betriebsdatenbank, identisch zur Messung. (2) 2.453-spy: US-Referenz seit 13.08. eingefroren "
-            "(Rolle A). (3) 2.453-bestand: Frischemeldung des Bestands misst die "
-            "Mengenaenderung - Fehlalarm, falscher Jobname. (4) 2.453-rohstoff: bis "
+            "(Rolle A). (3) \u2714 GELOEST 14.09. (2.453-bestand-gebaut): der "
+            "Fehlalarm Bestand - Frische misst jetzt den Abgleich, Jobname "
+            "korrigiert. \u2714 Dazu gefunden und behoben: 2.453-veto (Export "
+            "brach seit 13.09. ab), 2.453-export (Standardpruefung prueft "
+            "Terminmarkt und Umlaufmenge). (4) 2.453-rohstoff: bis "
             "6 Tage Rueckstand. (5) 2.453-cache: Prozess-Zwischenspeicher bis zum "
             "Neustart. (6) 2.453-kursreihe: Frische je Tabelle statt je Symbol. "
             "(7) Verdacht 2.453-hebelpos, 2.453-alterlos. (8) 2.453-fredkey: API-"
@@ -565,7 +568,8 @@ REIHENFOLGE = (
             "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-spy, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
-            "2.453-alterlos, 2.453-fredkey",
+            "2.453-alterlos, 2.453-fredkey, 2.453-bestand-gebaut, 2.453-veto, "
+            "2.453-export",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",

@@ -382,6 +382,11 @@ def sync_from_bitpanda(
         if raw_transactions or last_holdings_synced is None:
             db.set_bitpanda_holdings_last_synced_unix(conn, max_unix_holdings)
 
+    # ⚠️ DER ABGLEICH IST GELAUFEN - AUCH OHNE MENGENAENDERUNG (14.09.2026,
+    # Befund 2.453-bestand). Die Wallet-Abrufe oben werfen bei einem Fehler,
+    # hier kommt also nur an, wer alles gelesen hat. Ohne diesen Stempel
+    # hielt die Datenfrische einen ruhigen Bestand fuer einen toten Job.
+    db.set_bitpanda_holdings_synced_at(conn, datetime.now(timezone.utc).isoformat())
     return result
 
 

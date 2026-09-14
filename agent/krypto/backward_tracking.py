@@ -1564,6 +1564,19 @@ def _aggregate_resolved_signal_rows(
         "risk_veto = 1 AND action = 'HALTEN' AND " + NUR_RISK_GATE + " "
         "AND (risk_veto_reason IS NULL OR risk_veto_reason NOT LIKE '%Nur Long%') AND "
     ) if veto else ""
+    # ⚠️⚠️ UND DIE HEBEL-TABELLE OHNE `veto_art` (14.09.2026, Befund 2.453-veto).
+    # `veto_art` gibt es NUR in `signals`. Die Zeile oben galt seit dem 12.09.
+    # 17:30 auch fuer `hebel_signals` - `no such column: veto_art` auf JEDER
+    # Datenbank. Folge: der Notebook-Export brach seit dem Pull vom 13.09. ab
+    # (juengste Exportdatei 12.09.), und der Veto-Schatten der Uebersichtsseite
+    # fiel aus. Gefunden beim Probelauf des Exports gegen eine Kopie. Warum
+    # Hebel den Filter nicht braucht, steht schon bei der dritten
+    # NUR_RISK_GATE-Stelle dieses Moduls: `hebel_signals` gehoert der alten
+    # Pipeline und kann keine Entscheider-Zeile enthalten.
+    hebel_filter = (
+        "risk_veto = 1 AND action = 'HALTEN' "
+        "AND (risk_veto_reason IS NULL OR risk_veto_reason NOT LIKE '%Nur Long%') AND "
+    ) if veto else ""
 
     gruppen: dict[tuple[str, str], dict] = {}
     assetklasse_by_symbol = _assetklasse_index(watchlist, "_aggregate_resolved_signal_rows()")
@@ -1606,7 +1619,7 @@ def _aggregate_resolved_signal_rows(
 
     hebel_rows = conn.execute(
         f"SELECT llm_model, {status_col} AS status, {crv_col} AS crv "
-        f"FROM hebel_signals WHERE {filter_clause}{status_col} IN ({placeholders})",
+        f"FROM hebel_signals WHERE {hebel_filter}{status_col} IN ({placeholders})",
         _RESOLVED_OUTCOMES,
     ).fetchall()
     for row in hebel_rows:

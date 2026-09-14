@@ -44,7 +44,7 @@ Danach **die App neu starten** — ein Pull lädt den Code nicht in den laufende
 python pruefe_rollout_14_09.py
 ```
 
-Nur lesend, startet keinen Job, ruft keine Börse auf.
+Nur lesend, startet keinen Job, ruft keine Börse auf. Der Volltext landet zusätzlich in `Claude_Austauschordner/Pruefungen/pruefe_rollout_14_09_<Gerätename>.txt` — der Laufwerksbuchstabe wird je Gerät gesucht (Notebook G:, Desktop K:).
 
 | Zeile | Erwartet |
 |---|---|
@@ -72,9 +72,28 @@ python pruefe_pakete.py --paket Umlaufmenge
 - **In den ersten 8 Stunden** fehlt die OI-Änderung in den Terminmarkt-Sätzen; bei den 13 Juli-Werten fehlt rund 7,5 Stunden die Einordnung von Finanzierungsrate und Kontenanteil. Der Satz sagt das.
 - **Mailbetreffs** der Signale nennen jetzt die Richtung, z. B. „(Hebel, LONG)".
 - **Neue Hinweismails** möglich: „Terminmarkt-Daten seit … nicht aktualisiert" (nur bei echtem Ausfall).
-- **Bekannt, nicht neu:** eine Datenfrische-Meldung zum Bestand kann ein Fehlalarm sein (2.453-bestand, Schritt 56).
+- Der Fehlalarm zum Bestand (Job datenfrische, refresh_bitpanda_holdings) ist mit dem **Nachtrag** behoben (2.453-bestand-gebaut).
 - Die Mail „WARNUNG – keine OI-Daten für X" kommt nicht mehr (ersetzt).
 
 ## 5 · Rückweg, falls nötig
 
 Auf den vorherigen Commit wechseln und die App neu starten. Die neuen Spalten und die neue Quelle in `externe_reihe` stören den alten Code nicht (additiv).
+
+## Nachtrag 14.09. abends — zweiter Pull
+
+Gefunden nach dem Einspielen, alles in einem Commit:
+
+| Was | Wirkung | Befund |
+|---|---|---|
+| Fehlalarm Bestand | die Datenfrische misst den Bitpanda-Abgleich statt der Mengenänderung; Jobname korrigiert | 2.453-bestand-gebaut |
+| **Export brach ab** | `extract_notebook_diagnose.py` scheiterte seit dem Pull vom 13.09. an `veto_art` (auch die Übersichtsseite, Veto-Schatten) | 2.453-veto |
+| Export prüft Schritt 54 | neuer Abschnitt `terminmarkt_und_umlaufmenge`, Auffälligkeiten in der Konsole | 2.453-export |
+
+**Ablauf:** `git pull` → **App neu starten** (Laufzeitcode geändert) → nach 30 Minuten `python pruefe_rollout_14_09.py` → danach der Export:
+
+```
+python extract_notebook_diagnose.py
+```
+
+In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Datenfrische**. Erwartet: Terminmarkt rund 39 Werte in 30 Minuten, Umlaufmenge 61 von 66, Datenfrische ohne `bestand`.
+

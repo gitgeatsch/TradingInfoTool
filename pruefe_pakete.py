@@ -15579,6 +15579,39 @@ def paket_vetoart() -> None:
            "kennzeichnen - an EINER Stelle, sonst laufen die Fassungen "
            "auseinander")
 
+    # ---- ⚠️⚠️ GEGEN DAS ECHTE SCHEMA LAUFEN LASSEN (14.09.2026, 2.453-veto) --
+    #
+    # Die Pruefungen darueber lesen Quelltext und Einzelfunktionen. Keine rief
+    # die Auswertungen gegen die ECHTE Tabellenstruktur - und so blieb drei
+    # Tage unbemerkt, dass der Veto-Filter auch auf `hebel_signals` angewandt
+    # wurde, wo es `veto_art` nicht gibt. Der Notebook-Export brach daran ab.
+    # Speicherdatenbank, Schema aus `init_db` und `signal_abbildung.migriere`
+    # - genau die beiden Wege, die auch am Notebook das Schema bauen.
+    import config as _cfg9
+    import database.db as _DB9
+
+    _mem9 = sqlite3.connect(":memory:")
+    _mem9.row_factory = sqlite3.Row
+    _DB9.init_db(_mem9)
+    SA.migriere(_mem9)
+    _fehler9 = {}
+    for _name9 in ("compute_veto_shadow_performance",
+                   "compute_veto_shadow_performance_nach_grund",
+                   "compute_provider_performance"):
+        _fn9 = getattr(BT, _name9, None)
+        if _fn9 is None:
+            _fehler9[_name9] = "fehlt"
+            continue
+        try:
+            _fn9(_mem9, _cfg9.get_watchlist())
+        except Exception as _exc9:                           # noqa: BLE001
+            _fehler9[_name9] = f"{type(_exc9).__name__}: {_exc9}"
+    _mem9.close()
+    pruefe(P, "⚠️⚠️ die Veto- und Provider-Auswertungen laufen gegen das ECHTE Schema",
+           not _fehler9,
+           "ohne `veto_art` in `hebel_signals` brach der Notebook-Export ab: %s"
+           % (_fehler9 or "alle drei laufen"))
+
 
 def paket_vierfelder() -> None:
     """Schritt 44, 2a/2b - die zwei leeren Felder der Vier-Felder-Messung.
@@ -22866,6 +22899,93 @@ def paket_umlaufmenge() -> None:
            str([(q.name, q.tabelle, q.job) for q in _q]))
 
 
+def paket_bestandsfrische() -> None:
+    """2.453-bestand: die Frische des Bestands misst den ABGLEICH, nicht die Menge.
+
+    ⚠️⚠️ ANLASS: am 14.09.2026 um 19:54 kam ,Job datenfrische fehlgeschlagen -
+    refresh_bitpanda_holdings seit 3 Tagen'. Der Abgleich lief alle 30 Minuten;
+    die Pruefung las `holdings.updated_at`, das nur bei einer MENGENAENDERUNG
+    geschrieben wird, und nannte dazu einen Jobnamen, den es nicht gibt.
+    Festgehalten wird:
+
+        1  ruhiger Bestand + frischer Abgleich = frisch (der Fehlalarm)
+        2  alter Abgleich = abruf (der echte Ausfall wird weiter gemeldet)
+        3  Uebergang ueber `cash_reserve_synced_at`
+        4  ohne jeden Abgleich das fruehere Verhalten
+        5  `sync_from_bitpanda` setzt den Stempel am Ende
+        6  der Jobname ist die echte Scheduler-ID
+
+    Nur Speicherdatenbanken."""
+    P = "Bestandsfrische"
+    import ast as _ast
+    import sqlite3 as _sq
+    from datetime import date as _date, datetime as _dt, timedelta as _td, timezone as _tz
+
+    from agent import datenfrische as _DF
+
+    heute = _date(2026, 9, 14)
+
+    def _stempel(tage):
+        return (_dt(2026, 9, 14, 12, 0, tzinfo=_tz.utc) - _td(days=tage)).isoformat()
+
+    def _lage(updated_tage, sync_tage=None, cash_tage=None):
+        c = _sq.connect(":memory:")
+        c.execute("CREATE TABLE holdings (symbol TEXT, updated_at TEXT)")
+        c.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+        c.execute("INSERT INTO holdings VALUES ('BTC', ?)", (_stempel(updated_tage),))
+        if sync_tage is not None:
+            c.execute("INSERT INTO meta VALUES ('bitpanda_holdings_synced_at', ?)",
+                      (_stempel(sync_tage),))
+        if cash_tage is not None:
+            c.execute("INSERT INTO meta VALUES ('cash_reserve_synced_at', ?)",
+                      (_stempel(cash_tage),))
+        z = [x for x in _DF.pruefe(c, heute=heute, mit_dateien=False)
+             if x["quelle"] == "bestand"][0]
+        c.close()
+        return z
+
+    z1 = _lage(updated_tage=5, sync_tage=0)
+    pruefe(P, "⚠️⚠️⚠️ ruhiger Bestand (Menge 5 Tage unveraendert), Abgleich heute: FRISCH",
+           z1["urteil"] == "frisch",
+           "genau der Fehlalarm vom 14.09. 19:54 - bekommen: %s" % z1["urteil"])
+    z2 = _lage(updated_tage=0, sync_tage=3)
+    pruefe(P, "⚠️⚠️ Abgleich seit 3 Tagen nicht gelaufen: ABRUF - der echte Ausfall bleibt gemeldet",
+           z2["urteil"] == "abruf", "bekommen: %s" % z2["urteil"])
+    z3 = _lage(updated_tage=5, cash_tage=0)
+    pruefe(P, "Uebergang: noch kein Bestandsstempel, Cash-Abgleich frisch: frisch",
+           z3["urteil"] == "frisch",
+           "sonst meldete der erste Start nach dem Einspielen wieder falsch: %s" % z3["urteil"])
+    z4 = _lage(updated_tage=5)
+    pruefe(P, "ohne jeden Bitpanda-Abgleich gilt das fruehere Verhalten (abruf)",
+           z4["urteil"] == "abruf", "bekommen: %s" % z4["urteil"])
+    z5 = _lage(updated_tage=5, sync_tage=0, cash_tage=4)
+    pruefe(P, "der Bestandsstempel hat Vorrang vor dem Cash-Stempel",
+           z5["urteil"] == "frisch", "bekommen: %s" % z5["urteil"])
+
+    _bs = _ast.parse(_quelltext("importer/bitpanda_sync.py"))
+    _fn = next(n for n in _ast.walk(_bs) if isinstance(n, _ast.FunctionDef)
+               and n.name == "sync_from_bitpanda")
+    _setzt = [c for c in _ast.walk(_fn) if isinstance(c, _ast.Call)
+              and isinstance(c.func, _ast.Attribute)
+              and c.func.attr == "set_bitpanda_holdings_synced_at"]
+    _rueck = [n for n in _fn.body if isinstance(n, _ast.Return)]
+    _abruf = [c for c in _ast.walk(_fn) if isinstance(c, _ast.Call)
+              and isinstance(c.func, _ast.Name) and c.func.id == "get_crypto_wallets"]
+    pruefe(P, "⚠️ `sync_from_bitpanda` setzt den Stempel NACH den Wallet-Abrufen, direkt vor dem Ende",
+           len(_setzt) == 1 and _rueck and _abruf
+           and _abruf[0].lineno < _setzt[0].lineno < _rueck[-1].lineno,
+           "ein Stempel vor den Abrufen machte einen gescheiterten Lauf frisch")
+
+    _q = [q for q in _DF.REGISTRATUR if q.name == "bestand"]
+    _bg = _ast.parse(_quelltext("scheduler/background.py"))
+    _ids = {k.value.value for c in _ast.walk(_bg) if isinstance(c, _ast.Call)
+            for k in c.keywords if k.arg == "id" and isinstance(k.value, _ast.Constant)}
+    pruefe(P, "der Jobname in der Registratur ist eine echte Scheduler-ID",
+           len(_q) == 1 and _q[0].job == "bitpanda_holdings" and _q[0].job in _ids,
+           "Registratur %s, Scheduler-IDs mit bitpanda: %s"
+           % ([q.job for q in _q], sorted(i for i in _ids if "bitpanda" in i)))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -22911,6 +23031,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Terminmarkt": paket_terminmarkt,
           "TerminmarktDaten": paket_terminmarkt_daten,
           "Umlaufmenge": paket_umlaufmenge,
+          "Bestandsfrische": paket_bestandsfrische,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

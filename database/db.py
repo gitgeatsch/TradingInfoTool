@@ -2141,6 +2141,36 @@ def set_cash_reserve_synced_at(conn: sqlite3.Connection, timestamp: str) -> None
     conn.commit()
 
 
+def get_bitpanda_holdings_synced_at(conn: sqlite3.Connection) -> str | None:
+    """Wann lief der Bitpanda-BESTANDSabgleich zuletzt ERFOLGREICH? (14.09.2026)
+
+    ⚠️⚠️ WARUM ES DIESEN ZEITSTEMPEL GIBT - Befund 2.453-bestand. Die
+    Datenfrische nahm `holdings.updated_at` als ,letzter Abruf'. Das wird aber
+    nur geschrieben, wenn sich eine MENGE aendert. Ohne Kauf, Verkauf oder
+    Stakingaenderung meldete sie nach zwei Tagen ,Job laeuft nicht' - am
+    14.09. um 19:54 per Mail, obwohl der Abgleich alle 30 Minuten lief.
+
+    Dasselbe Prinzip wie `cash_reserve_synced_at` seit 11.07.: der Stempel sagt
+    ,wann haben wir zuletzt nachgefragt', nicht ,wann hat sich etwas
+    geaendert'. Geschrieben am Ende von `sync_from_bitpanda`, also nur, wenn
+    alle Abrufe durchliefen. None, wenn es noch keinen solchen Lauf gab."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'bitpanda_holdings_synced_at'").fetchone()
+    if not row:
+        return None
+    wert = row["value"] if hasattr(row, "keys") else row[0]
+    return wert if wert is not None else None
+
+
+def set_bitpanda_holdings_synced_at(conn: sqlite3.Connection, timestamp: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('bitpanda_holdings_synced_at', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (timestamp,),
+    )
+    conn.commit()
+
+
 def insert_price_snapshot(conn: sqlite3.Connection, snap: PriceSnapshot) -> None:
     conn.execute(
         "INSERT INTO price_cache "
