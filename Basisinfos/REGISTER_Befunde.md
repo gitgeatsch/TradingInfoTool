@@ -1134,6 +1134,10 @@
 
 - Quelle: extract_notebook_diagnose.py _terminmarkt_und_umlaufmenge, main()
 
+**2.453-kurs-gebaut** — ✔✔ KURSREIHEN: S&P-REFERENZ, NACHLADEN NACH HANDELSTAGEN, FRISCHE JE WERT (Nutzerentscheidung 15.09.: A, B und C zusammen). URSACHE, am Code und am Notebook-Log belegt: (1) die S&P-Reihe lud nur die alte Themen-ETF-Pipeline - Stand 13.08.; (2) der Tagesjob benutzte die Waechter der Pipelines, die erst nach MEHR ALS 5 (Hedge 3) KALENDERTAGEN nachluden - am Montag 14.09. abends ankerten Rohstoffe, Themen-ETF und Hedge auf dem 11.09., Themen-ETF nur 4 von 5 gedeckt; (3) die Frische mass die Tabelle, Krypto verdeckte alles. ➤ GEBAUT: A `_refresh_nicht_aktien_ohlc` laedt `_ensure_benchmark_backfilled` mit; B `staleness.reihe_ist_ueberholt` (letzter Kurs vor dem letzten abgeschlossenen Handelstag, Wochenenden zaehlen nicht) in Themen-ETF, Rohstoffe und Hedge; C `datenfrische._kursreihen_je_wert`: jedes Watchlist-Symbol ohne Cash und jede Referenz (S&P, Rohstoff-Futures, Hedge-Index), Krypto > 2 Tage, Wertpapiere und Referenzen > 3 Handelstage -> Urteil ,werte', das per Mail meldet - mit den Werten beim Namen und OHNE einen Abrufausfall zu behaupten; Werte ohne jede Reihe unter ,ohne_reihe', nicht gemeldet (A2/2.450-neu); Export nennt die Werte. 📏 NACHGESPIELT Sicherung 12.09.: meldet S&P (13.08.), OD7C/H/L/N samt Futures (07.09.), ISOC - die alte Pruefung sagte ,frisch'. 📏 LIVE gegen Kopie: vorher 13 Wertpapier-/Referenzreihen veraltet, nach dem Tagesjob (13 s) keine; S&P, Rohstoffe, Futures, ISOC auf dem 14.09., CEBS/VVMX/X136/DBPK auf dem 11.09. (yfinance ohne Montag fuer diese EU-Kuerzel zu der Uhrzeit, innerhalb der Grenze). Paket Kursreihen: Handelstage, Pipelines, S&P im Job, je Wert, Gegenprobe Tabelle, Mail; mit dem alten Code rot. ⚠️ Kosten: der Tagesjob holt fuer ueberholte Reihen die volle Historie - rund 15 yfinance-Abrufe am Tag
+
+- Quelle: staleness.py; agent/themen_etf/pipeline.py _is_history_stale; agent/rohstoff/pipeline.py _is_rohstoff_history_stale; agent/hedge/pipeline.py _ensure_ohlc_backfilled; scheduler/background.py _refresh_nicht_aktien_ohlc, _melde_datenfrische; agent/datenfrische.py _kursreihen_je_wert; extract_notebook_diagnose.py _datenfrische; pruefe_pakete.py Kursreihen
+
 **2.453-turnover-gebaut** — ✔✔ BLOCKER GELOEST (Weg 1, Nutzerentscheidung 14.09.): DIE UMLAUFMENGE KOMMT TAEGLICH IN DIE BETRIEBSDATENBANK. `api.onchain.get_splycur_history` holt `SplyCur` von Coin Metrics Community - DIESELBE Quelle wie die Messung - in EINEM Abruf fuer die Messbasis von turnover (am 14.09.: 66 angefragt, 61 mit Reihe, 0,6 s; BNB, DOT, GAS, NEO, XTZ enden an der Quelle). Der Job `externe_reihen` (beim Start und taeglich 06:35) schreibt sie als `externe_reihe` quelle `coinmetrics_splycur`, 30 Tage Rueckgriff, eigener Fehlerfang. `marktrang.umlaufmengen` liest ZUERST die Betriebsdatenbank, dann ergaenzend die Messdatei - nur wenn sie Datum und Wert fuehrt; jeder Ort einzeln gefangen, leer = WARNUNG. Die Datenfrische ueberwacht die Quelle (Rolle W, 6 Tage, Job externe_reihen). 📏 IDENTITAET: an 1.769 gemeinsamen Tagen kein abweichender Wert gegenueber der Messdatei; turnover-Fuenftel Notebook-Lage gegen Desktop-Lage 61 von 61 gleich. 📏 NOTEBOOK-LAGE: 61 Werte mit Nenner; vor dem ersten Joblauf leer ohne Fehler. GEGENPROBE: der alte Leser wirft dort `no such column: datum`. Keine Schreibzugriffe auf die Standard-DB. ➤ UNABHAENGIGE GEGENPRUEFUNG 14.09.: kein Pflichtfehler; umgesetzt wurden drei Punkte - (a) ein unbekanntes Symbol kippte den GANZEN Abruf (live: HTTP 400), jetzt `ignore_unsupported_errors`/`ignore_forbidden_errors`, live mit Fremdsymbol 61 Werte; (b) der Abruf laeuft VOR dem 800-Tage-Boersenfluss, damit die Frischepruefung beim Start ihn schon sieht; (c) die Suitepruefung NUR LESEND verlangt auch `uri=True`. Bewusst offen: beide Coin-Metrics-Abrufe teilen eine Gesundheitsampel
 
 - Quelle: api/onchain.py:get_splycur_history; scheduler/background.py:externe_reihen_job; agent/marktrang.py:umlaufmengen, SPLYCUR_QUELLE; agent/datenfrische.py; pruefe_pakete.py Umlaufmenge
@@ -2994,21 +2998,9 @@
 
 - Quelle: api/macro.py (VIX)
 
-**2.453-spy** — ⚠️⚠️ DIE US-MARKTREFERENZ STEHT SEIT 13.08. `_THEMEN_ETF_BENCHMARK_SPY` schreibt nur die ALTE Themen-ETF-Pipeline (`themen_etf/pipeline.py:122-131`), die seit der Umstellung auf die Rollen-Kette nicht mehr laeuft. `marktlage._bis` nimmt die letzte Kerze vor dem Ankertag OHNE Altersgrenze - Rolle A bekommt Saetze zum US-Aktienmarkt aus Daten vom 13.08.; `relative_staerke` laesst den Block nach 7 Tagen still weg. Nachgesehen an der Sicherung: letzte Kerze 2026-08-13. Besteht schon am Notebook, kommt NICHT mit diesem Paket
-
-- Quelle: agent/marktlage.py:78-90; agent/rollen_eingabe.py:411,474; agent/themen_etf/pipeline.py:122-131
-
-**2.453-rohstoff** — ⚠️ DIE ROHSTOFF-REFERENZEN LAUFEN BIS ZU SECHS TAGE HINTERHER. `_ROHSTOFF_HISTORY_STALE_THRESHOLD_TAGE = 5` - nachgeladen wird erst danach. Sicherung 12.09.: `_ROHSTOFF_FUTURES_OD7C/H/L/N` und OD7* enden am 07.09. Rolle A liest den Rohstoff-Referenzsatz ohne Altersangabe. Bestand, nicht neu
-
-- Quelle: agent/rohstoff/pipeline.py:56,217-219
-
 **2.453-cache** — ⚠️ ZWEI PROZESS-ZWISCHENSPEICHER FRIEREN WERTE BIS ZUM NEUSTART EIN. `marktrang._SCHNITT_ZWISCHEN` (200-Tage-Schnitte, Frischepruefung und `eigenkurs` fuer Werte ohne Binance: CANTON, VSN, AIOZ, SUPRA) und `rollen_eingabe._benchmark_speicher` werden einmal je App-Start gerechnet und nie geleert. Das Notebook laeuft tagelang. Bestand, nicht neu
 
 - Quelle: agent/marktrang.py:180-237,341,363; agent/rollen_eingabe.py:420-441
-
-**2.453-kursreihe** — ⚠️ DIE FRISCHE DER KERZENREIHE IST JE TABELLE - DIESELBE BLINDSTELLE WIE 2.452. `kursreihe` misst `MAX(fetched_at)` ueber ganz `price_history_ohlc`; `refresh_aktien_ohlc` schreibt in dieselbe Tabelle. Ein eingefrorener Kryptowert, die SPY-Referenz (2.453-spy) oder ein einzelnes Symbol fallen nicht auf
-
-- Quelle: agent/datenfrische.py (Quelle kursreihe)
 
 **2.453-hebelpos** — ○ VERDACHT: `hebel_positions` und die Liquidationspreise werden nur im Job der Rollen-Kette abgeglichen; ein Bitpanda-Ausfall ist nur eine Logwarnung, es gibt keine Frischepruefung (deckt sich mit 7d, 2.451-hebel)
 
@@ -3307,11 +3299,29 @@
 - **Abgeloest durch: 2.453-turnover-gebaut**
 - Warum: geloest mit Weg 1 (Nutzerentscheidung 14.09.): taeglicher Abruf in die Betriebsdatenbank
 
+**2.453-spy** — ⚠️⚠️ DIE US-MARKTREFERENZ STEHT SEIT 13.08. `_THEMEN_ETF_BENCHMARK_SPY` schreibt nur die ALTE Themen-ETF-Pipeline (`themen_etf/pipeline.py:122-131`), die seit der Umstellung auf die Rollen-Kette nicht mehr laeuft. `marktlage._bis` nimmt die letzte Kerze vor dem Ankertag OHNE Altersgrenze - Rolle A bekommt Saetze zum US-Aktienmarkt aus Daten vom 13.08.; `relative_staerke` laesst den Block nach 7 Tagen still weg. Nachgesehen an der Sicherung: letzte Kerze 2026-08-13. Besteht schon am Notebook, kommt NICHT mit diesem Paket
+
+- Quelle: agent/marktlage.py:78-90; agent/rollen_eingabe.py:411,474; agent/themen_etf/pipeline.py:122-131
+- **Abgeloest durch: 2.453-kurs-gebaut**
+- Warum: Tagesjob laedt S&P-Referenz, Nachladen nach Handelstagen, Frische je Wert
+
+**2.453-rohstoff** — ⚠️ DIE ROHSTOFF-REFERENZEN LAUFEN BIS ZU SECHS TAGE HINTERHER. `_ROHSTOFF_HISTORY_STALE_THRESHOLD_TAGE = 5` - nachgeladen wird erst danach. Sicherung 12.09.: `_ROHSTOFF_FUTURES_OD7C/H/L/N` und OD7* enden am 07.09. Rolle A liest den Rohstoff-Referenzsatz ohne Altersangabe. Bestand, nicht neu
+
+- Quelle: agent/rohstoff/pipeline.py:56,217-219
+- **Abgeloest durch: 2.453-kurs-gebaut**
+- Warum: Tagesjob laedt S&P-Referenz, Nachladen nach Handelstagen, Frische je Wert
+
 **2.453-bestand** — ⚠️⚠️ DIE FRISCHE DES BESTANDS MISST DAS FALSCHE - FEHLALARM. `holdings.updated_at` wird nur geschrieben, wenn sich die MENGE aendert (`bitpanda_sync.py:270-280`); die Datenfrische wertet es mit Zwei-Tage-Grenze als Abruf und MAILT ,Handlungsbedarf'. Sicherung: letzte Aenderung 11.09. 09:42 - ab dem 13.09. ohne Handel wahrscheinlich eine taegliche Fehlmeldung. Dazu ist der registrierte Jobname falsch (`refresh_bitpanda_holdings` statt `bitpanda_holdings`). Die Eskalationsmail steht schon im Commit-Stand
 
 - Quelle: agent/datenfrische.py:156,499; importer/bitpanda_sync.py:270-280
 - **Abgeloest durch: 2.453-bestand-gebaut**
 - Warum: repariert 14.09. nach dem Fehlalarm um 19:54
+
+**2.453-kursreihe** — ⚠️ DIE FRISCHE DER KERZENREIHE IST JE TABELLE - DIESELBE BLINDSTELLE WIE 2.452. `kursreihe` misst `MAX(fetched_at)` ueber ganz `price_history_ohlc`; `refresh_aktien_ohlc` schreibt in dieselbe Tabelle. Ein eingefrorener Kryptowert, die SPY-Referenz (2.453-spy) oder ein einzelnes Symbol fallen nicht auf
+
+- Quelle: agent/datenfrische.py (Quelle kursreihe)
+- **Abgeloest durch: 2.453-kurs-gebaut**
+- Warum: Tagesjob laedt S&P-Referenz, Nachladen nach Handelstagen, Frische je Wert
 
 **2.452** — ⚠️⚠️⚠️ DIE TERMINMARKT-FAKTEN SIND EINGEFROREN - UND WERDEN ALS AKTUELL AUSGEGEBEN. Einziger Schreiber von `open_interest_snapshot` ist `hebel_screening.fetch_and_store_oi_snapshot`, aufgerufen NUR innerhalb von `run_hebel_screening`. Seit `hebel_screening.aktiv: false` (12.09., 2.379-schalter) schreibt ihn niemand: letzte Zeile 2026-09-12T03:28 auf allen vier Boersen (24 Symbole). `positionierung._reihe` liest die letzten 400 Zeilen OHNE Altersgrenze, und das Rueckblickfenster wird aus der ZEILENZAHL gerechnet (32 Zeilen = ,8 Stunden'), nicht aus der Zeit. Folge: Rolle BC (Faktenlage, `rollen_lauf.py:1533`) und Rolle G (`zweite_meinung.py:485`) bekommen fuer jeden Kryptowert Saetze wie ,in den letzten 8 Stunden praktisch unveraendert' aus Daten vom 12.09. ⚠️ Warum es niemand sah: die Datenfrische prueft die TABELLE als Ganzes (`MAX(fetched_at)`), einmal taeglich und mit der Grenze ZWEI TAGE - eine Mail kommt fruehestens nach ueber zwei Tagen Totalausfall und nie fuer einen einzelnen Wert (Richtigstellung 14.09.: zuerst hiess es hier ,meldet nur ins Log'). ⚠️ Die Stilllegungspruefung 2.404-leser fragte ,wer liest das noch' fuer `hebel_triggers`, nicht ,wer SCHREIBT das noch' fuer die Nebenprodukte des Jobs. ✔ NICHT betroffen: OI-Sperre (Stufe 12, `marktrang.oi_werte` live von Binance), Funding-Rang (live), die Finanzierungsrate in BC beim Hebel (`hole_finanzierung`, live)
 

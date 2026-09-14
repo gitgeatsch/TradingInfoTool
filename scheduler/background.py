@@ -388,6 +388,17 @@ def _refresh_nicht_aktien_ohlc(conn, watchlist) -> None:
 
     erledigt, fehlgeschlagen = 0, 0
     je_art: dict[str, int] = {}
+    # ⚠️⚠️ DIE S&P-REFERENZ (15.09.2026, Befund 2.453-spy). Rolle A liest den
+    # breiten US-Aktienmarkt aus `_THEMEN_ETF_BENCHMARK_SPY`, die
+    # Relativstaerke der Themen-ETF ebenfalls. Nachgeladen wurde die Reihe NUR
+    # in der alten Themen-ETF-Pipeline - seit der Rollen-Kette gar nicht mehr,
+    # Stand am Notebook 13.08. Einmal je Lauf, eigener Fang.
+    try:
+        from agent.themen_etf.pipeline import _ensure_benchmark_backfilled
+        _ensure_benchmark_backfilled(conn)
+        je_art["referenz_spy"] = 1
+    except Exception:                                        # noqa: BLE001
+        logger.exception("S&P-Referenz nicht nachladbar")
     for asset in _kandidaten(watchlist):
         if asset.assetklasse == "aktien":
             continue                      # deckt backfill_all_aktien_ohlc() ab
@@ -1471,8 +1482,12 @@ def _melde_datenfrische(conn) -> int:
         # "daten" heisst: wir fragen, der Anbieter liefert nichts. Das
         # kann eine Feiertagswoche sein. Wer das meldet, meldet bald
         # nichts mehr - die Meldung stumpft ab.
+        # ,werte' (15.09.2026, 2.453-kursreihe): die Tabelle lebt, aber
+        # einzelne Kursreihen stehen - die S&P-Referenz stand so einen Monat,
+        # ohne dass eine Meldung kam. Das ist ein Job- oder Quellenfehler je
+        # Wert, kein ruhiger Anbieter - deshalb gemeldet.
         _kritisch = [z for z in schlecht
-                     if z.get("urteil") in ("fehlt", "abruf")]
+                     if z.get("urteil") in ("fehlt", "abruf", "werte")]
         if _kritisch:
             # ⚠️⚠️ NACH JOB GRUPPIEREN, NICHT JE QUELLE AUFLISTEN.
             # Erste Fassung schrieb 18 Zeilen - und acht davon hatten
@@ -1484,8 +1499,12 @@ def _melde_datenfrische(conn) -> int:
             # Der JOB ist die Handlungseinheit - nicht die Quelle. Wer
             # liest, will wissen, WAS er anfassen muss.
             _je_job: dict = {}
+            # ,werte' NICHT in die Job-Zeilen: dort stuende ,seit 0 Tagen
+            # erfolgreich abgerufen' - der Abruf laeuft ja, nur einzelne Reihen
+            # stehen. Sie bekommen ihren eigenen Block weiter unten.
             for z in _kritisch:
-                _je_job.setdefault(z["job"], []).append(z)
+                if z.get("urteil") != "werte":
+                    _je_job.setdefault(z["job"], []).append(z)
             _zeilen = []
             for _job, _qs in sorted(_je_job.items(),
                                     key=lambda x: -len(x[1])):
@@ -1501,6 +1520,20 @@ def _melde_datenfrische(conn) -> int:
                     "\n     %s"
                     % (_job, len(_qs), _wann,
                        ", ".join(q["quelle"] for q in _qs)))
+            for z in _kritisch:
+                if z.get("urteil") != "werte":
+                    continue
+                _zeilen.append(
+                    "KURSREIHEN - %d Wert(e) ohne frische Kurse "
+                    "(Krypto > %d Tage, Wertpapiere und Referenzen > %d "
+                    "Handelstage):\n%s"
+                    % (len(z["veraltete_werte"]),
+                       datenfrische.KURS_GRENZE_KRYPTO_TAGE,
+                       datenfrische.KURS_GRENZE_WERTPAPIER_HANDELSTAGE,
+                       "\n".join("     %-28s Stand %s (%d %s) - Job %s"
+                                 % (v["symbol"], v["stand"], v["alter"],
+                                    v["einheit"], v["job"])
+                                 for v in z["veraltete_werte"])))
             _mess = [z for z in _kritisch if z.get("rolle") == "M"]
             _was_tun = (
                 # ⚠️ "seit ueber zwei Tagen" stimmte nur fuer Jobs - die von
@@ -1525,12 +1558,24 @@ def _melde_datenfrische(conn) -> int:
                     "(hole_fremdreihen.py, hole_terminmarkt_historie.py) "
                     "- sie haben bis heute keinen Job."
                     % (len(_mess), ", ".join(z["quelle"] for z in _mess)))
+            _nur_werte = [z for z in _kritisch if z.get("urteil") == "werte"]
+            if _nur_werte:
+                _was_tun += (
+                    "\n\nZU DEN KURSREIHEN: der Abruf laeuft, aber die genannten "
+                    "Werte bekommen keine neuen Kurse. Im Log nach dem Symbol "
+                    "und dem genannten Job suchen - haeufigste Ursachen: das "
+                    "Kuerzel liefert bei yfinance/Kraken nichts mehr "
+                    "(Umbenennung, Delisting) oder die Reihe wird von keinem "
+                    "Job nachgeladen.")
+            _kopf = ("%d Datenquelle(n) aus %d Job(s) ohne frischen Abruf."
+                     % (len(_kritisch) - len(_nur_werte), len(_je_job))
+                     if _je_job else "Alle Jobs rufen ab.")
+            if _nur_werte:
+                _kopf += (" %d Wert(e) ohne frische Kursreihe."
+                          % sum(len(z["veraltete_werte"]) for z in _nur_werte))
             _notify_job_failure(
                 "datenfrische",
-                "%d Datenquelle(n) aus %d Job(s) ohne frischen Abruf.\n\n"
-                "%s\n\n%s"
-                % (len(_kritisch), len(_je_job),
-                   "\n\n".join(_zeilen), _was_tun))
+                "%s\n\n%s\n\n%s" % (_kopf, "\n\n".join(_zeilen), _was_tun))
             logger.error("Datenfrische: %d Quelle(n) kritisch - "
                          "Meldung verschickt", len(_kritisch))
         return len(schlecht)

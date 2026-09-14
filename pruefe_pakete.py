@@ -23199,6 +23199,130 @@ def paket_laufzeit() -> None:
            "Dauerbetrieb %s h, Ausfall %s h" % (b1.get("ausfall_stunden"), b2.get("ausfall_stunden")))
 
 
+def paket_kursreihen() -> None:
+    """2.453-spy / 2.453-rohstoff / 2.453-kursreihe: frische Kursreihen je Wert.
+
+    ⚠️ ANLASS (Review 14.09.2026): die S&P-Referenz stand seit dem 13.08.,
+    Rohstoffe, Themen-ETF und Hedge ankerten bis zu fuenf Tage hinterher - und
+    die Frischepruefung sagte ,frisch', weil sie die TABELLE mass. Festgehalten:
+
+        1  Handelstage: Werktag vor heute; Alter in Werktagen
+        2  die drei Pipelines laden nach Handelstagen nach, nicht nach 5/3 Tagen
+        3  der Tagesjob laedt die S&P-Referenz mit
+        4  Frische JE WERT: veraltete Reihen werden benannt, Cash und Werte ohne
+           Reihe nicht; GEGENPROBE: die Tabelle als Ganzes haette ,frisch' gesagt
+        5  das Urteil ,werte' geht in die Mail, mit den Werten beim Namen"""
+    P = "Kursreihen"
+    import ast as _ast
+    import sqlite3 as _sq
+    from datetime import date as _date
+    from types import SimpleNamespace as _NS
+
+    import staleness as _ST
+    from agent import datenfrische as _DF
+
+    mo, so, di, fr, do = (_date(2026, 9, 14), _date(2026, 9, 13), _date(2026, 9, 15),
+                          _date(2026, 9, 11), _date(2026, 9, 10))
+    pruefe(P, "letzter abgeschlossener Handelstag: Montag->Freitag, Sonntag->Freitag, Dienstag->Montag",
+           _ST.letzter_abgeschlossener_handelstag(mo) == fr
+           and _ST.letzter_abgeschlossener_handelstag(so) == fr
+           and _ST.letzter_abgeschlossener_handelstag(di) == mo, "")
+    pruefe(P, "ueberholt: Freitagskurs am Montag nein, Donnerstagskurs am Montag ja, ohne Datum ja",
+           not _ST.reihe_ist_ueberholt("2026-09-11", mo)
+           and _ST.reihe_ist_ueberholt("2026-09-10", mo)
+           and _ST.reihe_ist_ueberholt(None, mo), "")
+    pruefe(P, "Alter in Handelstagen: Freitag->Montag 1, Freitag->Mittwoch 3",
+           _ST.handelstage_alter("2026-09-11", mo) == 1
+           and _ST.handelstage_alter("2026-09-11", _date(2026, 9, 16)) == 3, "")
+
+    # 2 + 3 AM QUELLTEXT
+    def _fn(pfad, name):
+        baum = _ast.parse(_quelltext(pfad))
+        return next(n for n in _ast.walk(baum)
+                    if isinstance(n, _ast.FunctionDef) and n.name == name)
+
+    def _ruft(knoten, name):
+        return any(isinstance(c, _ast.Call)
+                   and ((isinstance(c.func, _ast.Name) and c.func.id == name)
+                        or (isinstance(c.func, _ast.Attribute) and c.func.attr == name))
+                   for c in _ast.walk(knoten))
+
+    pruefe(P, "⚠️⚠️ Themen-ETF, Rohstoffe und Hedge laden nach Handelstagen nach",
+           _ruft(_fn("agent/themen_etf/pipeline.py", "_is_history_stale"), "reihe_ist_ueberholt")
+           and _ruft(_fn("agent/rohstoff/pipeline.py", "_is_rohstoff_history_stale"), "reihe_ist_ueberholt")
+           and _ruft(_fn("agent/hedge/pipeline.py", "_ensure_ohlc_backfilled"), "reihe_ist_ueberholt"),
+           "vorher 5 bzw. 3 Kalendertage - am Montagabend ankerten diese Gruppen auf dem Freitag")
+    pruefe(P, "⚠️⚠️ der Tagesjob laedt die S&P-Referenz mit",
+           _ruft(_fn("scheduler/background.py", "_refresh_nicht_aktien_ohlc"),
+                 "_ensure_benchmark_backfilled"),
+           "nur die alte Themen-ETF-Pipeline lud sie - Stand am Notebook 13.08.")
+
+    # 4 FRISCHE JE WERT
+    def _db(zeilen):
+        c = _sq.connect(":memory:")
+        c.execute("CREATE TABLE price_history_ohlc (symbol TEXT, currency TEXT, date TEXT, fetched_at TEXT)")
+        for sym, tag in zeilen:
+            c.execute("INSERT INTO price_history_ohlc VALUES (?, 'USD', ?, ?)",
+                      (sym, tag, "2026-09-14T06:00:00+00:00"))
+        return c
+
+    wl = [_NS(symbol="BTC", assetklasse="krypto", ist_cash_aequivalent=False),
+          _NS(symbol="ETH", assetklasse="krypto", ist_cash_aequivalent=False),
+          _NS(symbol="NEU", assetklasse="krypto", ist_cash_aequivalent=False),
+          _NS(symbol="USDC", assetklasse="krypto", ist_cash_aequivalent=True),
+          _NS(symbol="AAA", assetklasse="aktien", ist_cash_aequivalent=False),
+          _NS(symbol="ROH", assetklasse="rohstoffe", ist_cash_aequivalent=False)]
+    alt = [("BTC", "2026-09-13"), ("ETH", "2026-09-11"), ("USDC", "2026-01-01"),
+           ("AAA", "2026-09-11"), ("_THEMEN_ETF_BENCHMARK_SPY", "2026-08-13"),
+           ("ROH", "2026-09-08"), ("_ROHSTOFF_FUTURES_ROH", "2026-09-11")]
+    c1 = _db(alt)
+    z1 = [x for x in _DF.pruefe(c1, heute=mo, mit_dateien=False, watchlist=wl)
+          if x["quelle"] == "kursreihe"][0]
+    gemeldet = sorted(v["symbol"] for v in z1["veraltete_werte"])
+    pruefe(P, "⚠️⚠️⚠️ veraltete Reihen JE WERT benannt: ETH (3 Tage), ROH (4 Handelstage), S&P (Monat)",
+           z1["urteil"] == "werte"
+           and gemeldet == ["ETH", "ROH", "_THEMEN_ETF_BENCHMARK_SPY"],
+           "Urteil %s, gemeldet %s" % (z1["urteil"], gemeldet))
+    pruefe(P, "Cash-Aequivalent nicht geprueft, Wert ohne Reihe unter ,ohne_reihe' und NICHT gemeldet",
+           "USDC" not in gemeldet and z1["ohne_reihe"] == ["NEU"]
+           and "NEU" not in gemeldet, str(z1["ohne_reihe"]))
+    c1.close()
+    c2 = _db([("BTC", "2026-09-13"), ("ETH", "2026-09-14"), ("AAA", "2026-09-11"),
+              ("_THEMEN_ETF_BENCHMARK_SPY", "2026-09-11"), ("ROH", "2026-09-11"),
+              ("_ROHSTOFF_FUTURES_ROH", "2026-09-11")])
+    z2 = [x for x in _DF.pruefe(c2, heute=mo, mit_dateien=False, watchlist=wl)
+          if x["quelle"] == "kursreihe"][0]
+    c2.close()
+    pruefe(P, "alles frisch (Wertpapiere am Montag mit Freitagskurs): kein Urteil ,werte'",
+           z2["urteil"] == "frisch" and not z2["veraltete_werte"],
+           "%s %s" % (z2["urteil"], z2["veraltete_werte"]))
+    c3 = _db(alt)
+    tabelle = c3.execute("SELECT MAX(date) FROM price_history_ohlc").fetchone()[0]
+    c3.close()
+    pruefe(P, "GEGENPROBE: die TABELLE als Ganzes war im selben Fall frisch",
+           tabelle == "2026-09-13",
+           "genau so blieb die S&P-Referenz einen Monat unbemerkt")
+
+    # 5 DIE MAIL
+    import scheduler.background as _BG
+    gesendet = []
+    _echt_pruefe, _echt_mail = _DF.pruefe, _BG._notify_job_failure
+    try:
+        _DF.pruefe = lambda conn, **k: [dict(z1)]
+        _BG._notify_job_failure = lambda job, text: gesendet.append((job, text))
+        _BG._melde_datenfrische(None)
+    finally:
+        _DF.pruefe, _BG._notify_job_failure = _echt_pruefe, _echt_mail
+    text = gesendet[0][1] if gesendet else ""
+    pruefe(P, "⚠️⚠️ das Urteil ,werte' geht in die Mail - mit den Werten beim Namen",
+           bool(gesendet) and "KURSREIHEN - 3 Wert(e)" in text
+           and "_THEMEN_ETF_BENCHMARK_SPY" in text and "ROH" in text
+           # und sie behauptet KEINEN Abrufausfall, wo keiner ist
+           and "ohne frischen Abruf" not in text
+           and text.startswith("Alle Jobs rufen ab. 3 Wert(e) ohne frische Kursreihe."),
+           text[:300])
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23247,6 +23371,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Bestandsfrische": paket_bestandsfrische,
           "Ampel": paket_ampel,
           "Laufzeit": paket_laufzeit,
+          "Kursreihen": paket_kursreihen,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

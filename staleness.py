@@ -11,6 +11,63 @@ PRICE_STALE_THRESHOLD_MINUTES = 30  # 2x 15-Min-Scheduler-Takt
 HISTORY_STALE_THRESHOLD_DAYS = 2  # 1 Tag Rueckstand ist normal, 2+ deutet auf Ausfall hin
 
 
+# ⚠️⚠️ HANDELSTAGE (15.09.2026, Befunde 2.453-spy / 2.453-rohstoff).
+#
+# Die Wertpapier-Pipelines luden eine Kursreihe erst nach, wenn sie AELTER ALS
+# 5 KALENDERTAGE war (Hedge: 3). Gedacht war das gegen das wiederholte Holen
+# der vollen Historie je Signal. Im Tagesjob hiess es: fast nie. Am Montag,
+# 14.09. abends, ankerten Rohstoffe, Themen-ETF und Hedge auf dem 11.09.; die
+# S&P-Referenz stand seit dem 13.08.
+#
+# JETZT: eine Reihe ist ueberholt, sobald ihr letzter Kurs vor dem LETZTEN
+# ABGESCHLOSSENEN HANDELSTAG liegt - dem Werktag vor heute. Wochenenden zaehlen
+# nicht. Ein Feiertag loest einen Abruf ohne neuen Punkt aus; das kostet einen
+# Aufruf am Tag und ist kein Fehler.
+def letzter_abgeschlossener_handelstag(heute=None):
+    """Der Werktag VOR `heute` - am Montag der Freitag, am Sonntag der Freitag."""
+    from datetime import date, timedelta
+    heute = heute or datetime.now(timezone.utc).date()
+    if isinstance(heute, datetime):
+        heute = heute.date()
+    tag = heute - timedelta(days=1)
+    while tag.weekday() >= 5:
+        tag -= timedelta(days=1)
+    return tag
+
+
+def reihe_ist_ueberholt(letztes_datum, heute=None) -> bool:
+    """True, wenn nachgeladen werden soll - kein Datum heisst immer ja."""
+    if letztes_datum is None:
+        return True
+    try:
+        letztes = datetime.fromisoformat(str(letztes_datum)[:10]).date()
+    except ValueError:
+        return True
+    return letztes < letzter_abgeschlossener_handelstag(heute)
+
+
+def handelstage_alter(letztes_datum, heute=None) -> int | None:
+    """Wie viele Werktage liegen NACH dem letzten Kurs bis einschliesslich heute?
+
+    Freitag -> Montag = 1, Freitag -> Mittwoch = 3. None ohne Datum."""
+    from datetime import timedelta
+    if letztes_datum is None:
+        return None
+    try:
+        tag = datetime.fromisoformat(str(letztes_datum)[:10]).date()
+    except ValueError:
+        return None
+    heute = heute or datetime.now(timezone.utc).date()
+    if isinstance(heute, datetime):
+        heute = heute.date()
+    n = 0
+    while tag < heute:
+        tag += timedelta(days=1)
+        if tag.weekday() < 5:
+            n += 1
+    return n
+
+
 def _parse_utc(timestamp: str) -> datetime:
     dt = datetime.fromisoformat(timestamp)
     if dt.tzinfo is None:

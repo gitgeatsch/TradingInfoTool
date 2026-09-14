@@ -717,11 +717,12 @@ def _ensure_ohlc_backfilled(conn, asset) -> None:
             _rekonstruiere_hedge_reihe(conn, asset)
             return
         letztes = db.get_last_ohlc_date(conn, asset.symbol, "EUR")
-        if letztes is not None:
-            alter = (datetime.now(timezone.utc).date()
-                     - datetime.fromisoformat(str(letztes)).date()).days
-            if alter <= _HEDGE_HISTORY_STALE_THRESHOLD_TAGE:
-                return
+        # ⚠️ SEIT 15.09.2026 NACH HANDELSTAGEN (2.453-rohstoff): bis hierher
+        # erst nach mehr als `_HEDGE_HISTORY_STALE_THRESHOLD_TAGE` (3)
+        # Kalendertagen - DBPK ankerte am Montagabend auf dem Freitag.
+        from staleness import reihe_ist_ueberholt
+        if letztes is not None and not reihe_ist_ueberholt(letztes):
+            return
         punkte = get_full_ohlc_history(asset.yfinance_symbol, asset.symbol, "EUR")
         if punkte:
             db.upsert_ohlc_points(conn, punkte)

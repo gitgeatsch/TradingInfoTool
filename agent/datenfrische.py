@@ -333,6 +333,90 @@ def _stand_einfach(conn, tabelle: str, datum: str,
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
 
 
+# ⚠️⚠️⚠️ KURSREIHEN JE WERT (15.09.2026, Befunde 2.453-kursreihe, 2.453-spy).
+#
+# Bis hierher mass `kursreihe` die TABELLE: `MAX(fetched_at)` ueber ganz
+# `price_history_ohlc`. Krypto wird taeglich geschrieben - und verdeckte damit
+# alles andere. Die S&P-Referenz stand seit dem 13.08., Rohstoffe, Themen-ETF
+# und Hedge liefen bis zu fuenf Tage hinterher; die Pruefung sagte ,frisch'.
+# Dieselbe Blindstelle wie beim Terminmarkt (2.452).
+#
+# JETZT JE WERT: jedes Watchlist-Symbol (ohne Cash-Aequivalente) und jede
+# Referenzreihe, die die Kette liest. Grenzen:
+#
+#   Krypto         2 Kalendertage   (`refresh_ohlc` taeglich, 24/7-Handel)
+#   Wertpapiere    3 Handelstage    (Wochenenden zaehlen nicht; nachgeladen
+#   und Referenzen                   wird seit 15.09. je Handelstag - 3 lassen
+#                                    einen Feiertag und einen Aussetzer zu)
+#
+# ⚠️ EIN WERT OHNE JEDE REIHE WIRD NICHT GEMELDET, sondern unter `ohne_reihe`
+# gefuehrt. Das ist Planpunkt A2 / 2.450-neu (Neuaufnahme), kein Ausfall - eine
+# Meldung jeden Tag dafuer waere Rauschen.
+KURS_GRENZE_KRYPTO_TAGE = 2
+KURS_GRENZE_WERTPAPIER_HANDELSTAGE = 3
+REFERENZ_SPY = "_THEMEN_ETF_BENCHMARK_SPY"
+
+
+def _kursreihen_je_wert(conn, heute, watchlist=None) -> dict:
+    """{geprueft, veraltet: [...], ohne_reihe: [...]} - fail-soft, nie werfend."""
+    from staleness import handelstage_alter
+
+    aus: dict = {"geprueft": 0, "veraltet": [], "ohne_reihe": []}
+    try:
+        if watchlist is None:
+            import config as _cfg
+            watchlist = _cfg.get_watchlist()
+        from agent import assetklassen as _AK
+    except Exception:                                        # noqa: BLE001
+        return aus
+    ziele: dict[str, tuple[str, str]] = {}       # symbol -> (art, job)
+    for a in watchlist or []:
+        if getattr(a, "ist_cash_aequivalent", False):
+            continue
+        try:
+            g = _AK.gruppe(a)
+        except Exception:                                    # noqa: BLE001
+            continue
+        sym = str(a.symbol).upper()
+        if g == "krypto":
+            ziele[sym] = ("krypto", "refresh_ohlc")
+        else:
+            ziele[sym] = ("wertpapier", "refresh_aktien_ohlc")
+            if g in ("aktien", "themen_etf"):
+                ziele[REFERENZ_SPY] = ("referenz", "refresh_aktien_ohlc")
+            if str(getattr(a, "assetklasse", "")).lower() == "rohstoffe":
+                ziele[f"_ROHSTOFF_FUTURES_{sym}"] = ("referenz", "refresh_aktien_ohlc")
+            if g == "hedge":
+                ziele[f"_HEDGE_INDEX_{sym}"] = ("referenz_optional", "refresh_aktien_ohlc")
+    if not ziele:
+        return aus
+    try:
+        platz = ",".join("?" * len(ziele))
+        stand = {str(r[0]).upper(): r[1] for r in conn.execute(
+            f"SELECT symbol, MAX(date) FROM price_history_ohlc "
+            f"WHERE symbol IN ({platz}) GROUP BY symbol", list(ziele))}
+    except Exception:                                        # noqa: BLE001
+        return aus
+    for sym, (art, job) in sorted(ziele.items()):
+        letzt = stand.get(sym)
+        if letzt is None:
+            if art != "referenz_optional":
+                aus["ohne_reihe"].append(sym)
+            continue
+        aus["geprueft"] += 1
+        if art == "krypto":
+            alter = _tage(str(letzt), heute)
+            grenze, einheit = KURS_GRENZE_KRYPTO_TAGE, "Tage"
+        else:
+            alter = handelstage_alter(str(letzt), heute)
+            grenze, einheit = KURS_GRENZE_WERTPAPIER_HANDELSTAGE, "Handelstage"
+        if alter is not None and alter > grenze:
+            aus["veraltet"].append({"symbol": sym, "stand": str(letzt)[:10],
+                                    "alter": alter, "einheit": einheit,
+                                    "grenze": grenze, "job": job})
+    return aus
+
+
 def _stand_bestand(conn) -> tuple[str | None, str | None, int]:
     """Der Bestand: Stand und Abruf = der letzte ERFOLGREICHE Abgleich.
 
@@ -481,7 +565,7 @@ def _stand_extern(conn, quelle: str) -> tuple[str | None, str | None, int]:
 
 
 def pruefe(conn, heute: date | None = None,
-           mit_dateien: bool = True) -> list[dict]:
+           mit_dateien: bool = True, watchlist=None) -> list[dict]:
     """Eine Zeile je Quelle - Stand, Alter, Urteil.
 
     `urteil` ist eines von vier Woertern, und die Reihenfolge ist die der
@@ -556,13 +640,24 @@ def pruefe(conn, heute: date | None = None,
             urteil = "daten"
         else:
             urteil = "frisch"
-        aus.append({
+        zeile = {
             "quelle": q.name, "rolle": q.rolle, "job": q.job,
             "zweck": q.zweck, "zeilen": anzahl,
             "datenstand": daten, "datenalter_tage": alter_daten,
             "abrufstand": abruf, "abrufalter_tage": alter_abruf,
             "max_datenalter_tage": q.max_datenalter, "urteil": urteil,
-        })
+        }
+        # KURSREIHEN JE WERT - eigenes Urteil ,werte', wenn die Tabelle lebt,
+        # aber einzelne Werte stehen (Befund 2.453-kursreihe). Ein Tabellen-
+        # ausfall (,fehlt'/,abruf') bleibt das staerkere Urteil.
+        if q.name == "kursreihe":
+            je_wert = _kursreihen_je_wert(conn, heute, watchlist)
+            zeile["werte_geprueft"] = je_wert["geprueft"]
+            zeile["veraltete_werte"] = je_wert["veraltet"]
+            zeile["ohne_reihe"] = je_wert["ohne_reihe"]
+            if je_wert["veraltet"] and urteil in ("frisch", "daten"):
+                zeile["urteil"] = "werte"
+        aus.append(zeile)
     return aus
 
 

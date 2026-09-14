@@ -114,11 +114,14 @@ def _fixed_signal(symbol: str, action: str, gate_passed: bool, gate_reason: str 
 
 
 def _is_rohstoff_history_stale(last_date: str | None) -> bool:
-    if last_date is None:
-        return True
-    last = datetime.fromisoformat(last_date).date()
-    today = datetime.now(timezone.utc).date()
-    return (today - last).days > _ROHSTOFF_HISTORY_STALE_THRESHOLD_TAGE
+    """⚠️ SEIT 15.09.2026 NACH HANDELSTAGEN (Befund 2.453-rohstoff).
+
+    Bis hierher: aelter als 5 Kalendertage - die Futures-Referenzen und damit
+    die rekonstruierten ETC-Reihen liefen bis zu sechs Tage hinterher (Sicherung
+    12.09.: Stand 07.09.). Jetzt: nachgeladen wird, sobald der letzte
+    abgeschlossene Handelstag fehlt."""
+    from staleness import reihe_ist_ueberholt
+    return reihe_ist_ueberholt(last_date)
 
 
 

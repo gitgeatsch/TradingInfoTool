@@ -1458,7 +1458,14 @@ def _datenfrische(conn) -> dict:
         "auffaellig": [f"{z['quelle']} [{z['urteil']}] Daten {z['datenstand']} "
                        f"({z['datenalter_tage']} T), Abruf "
                        f"{str(z['abrufstand'] or '-')[:10]} "
-                       f"({z['abrufalter_tage']} T)" for z in schlecht],
+                       f"({z['abrufalter_tage']} T)"
+                       # JE WERT (15.09.2026, 2.453-kursreihe): welche Reihen
+                       # stehen - sonst sagt die Zeile nur ,werte'.
+                       + (" - " + ", ".join(
+                           f"{v['symbol']} {v['stand']} ({v['alter']} {v['einheit']})"
+                           for v in z.get("veraltete_werte") or [])
+                          if z.get("veraltete_werte") else "")
+                       for z in schlecht],
         "anzahl_geprueft": len(zeilen),
         "anzahl_auffaellig": len(schlecht),
         # Je Rolle, weil die Folge davon abhaengt: eine tote Quelle der

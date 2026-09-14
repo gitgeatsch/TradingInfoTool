@@ -90,11 +90,15 @@ def _fixed_signal(symbol: str, action: str, gate_passed: bool, gate_reason: str 
 
 
 def _is_history_stale(last_date: str | None) -> bool:
-    if last_date is None:
-        return True
-    last = datetime.fromisoformat(last_date).date()
-    today = datetime.now(timezone.utc).date()
-    return (today - last).days > _THEMEN_ETF_HISTORY_STALE_THRESHOLD_TAGE
+    """⚠️ SEIT 15.09.2026 NACH HANDELSTAGEN (Befunde 2.453-spy, 2.453-rohstoff).
+
+    Bis hierher: aelter als `_THEMEN_ETF_HISTORY_STALE_THRESHOLD_TAGE` (5)
+    Kalendertage. Im Tagesjob hiess das, dass die ETF-Reihen bis zu fuenf Tage
+    hinterherliefen - und die S&P-Referenz, die nur diese Pipeline nachlud, gar
+    nicht mehr. Jetzt: nachgeladen wird, sobald der letzte abgeschlossene
+    Handelstag fehlt (`staleness.reihe_ist_ueberholt`)."""
+    from staleness import reihe_ist_ueberholt
+    return reihe_ist_ueberholt(last_date)
 
 
 def _resolve_asset_currency(asset) -> str:
