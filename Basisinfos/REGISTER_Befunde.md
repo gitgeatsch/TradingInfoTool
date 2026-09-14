@@ -1114,6 +1114,10 @@
 
 - Quelle: api/derivatives.py SymbolNichtGelistetError; database/api_health.py; agent/krypto/hebel_screening.py fetch_and_store_oi_snapshot; pruefe_pakete.py Ampel
 
+**2.454-laufzeit-gebaut** — ✔✔ DIE LAUFZEIT-KENNZAHL STIMMT WIEDER. `_LUECKE_AB_MINUTEN` 8 -> 20 (dichtester Takt 15 Minuten plus 5 fuer gestaffelte Starts und lange Laeufe; am Notebook-Log liegt zwischen 15 und 20 Minuten keine Luecke). `messe_basislinie.py` rechnete dieselbe Kennzahl mit 10 Minuten - liest jetzt dieselbe Konstante. 📏 NACHGESPIELT am Notebook-Log 11.-14.09.: alter Code reproduziert den Export exakt (85,5 %%, 61,4 h, 208 Luecken), neuer Code 26,8 %%, 19,2 h, 3 Luecken - 12.09. 12:33 bis 13.09. 05:48 (17,3 h), 12.09. 05:30 bis 07:08 (1,6 h), 12.09. 08:10 bis 08:31; die Basislinie kommt auf dieselben 19,2 h. Suite-Paket Laufzeit an kuenstlichen Logs mit bekannter Wahrheit: Dauerbetrieb 0, ein Ausfall genau einmal, Grenze 21/19 Minuten, Basislinie gleich; mit dem alten Code 4 von 5 rot. ⚠️ VORBEHALT FUER FRUEHERE ZAHLEN: ,Ausfallzeit 70,2 %%' (17.08., als Treiber der Signalflut nach dem Neustart genannt) und ,51 %%' stammen sehr wahrscheinlich aus derselben Rechnung. Das Log von damals gibt es nicht mehr - NICHT reproduzierbar, also nach R-R11 nicht umgestossen, aber nur unter Vorbehalt zu lesen
+
+- Quelle: extract_notebook_diagnose.py _LUECKE_AB_MINUTEN, _laufzeit; messe_basislinie.py _laufzeit; pruefe_pakete.py Laufzeit
+
 **2.453** — 📋 REVIEW VOR DEM ROLLOUT (Nutzerauftrag 14.09.: ,tiefes und detailliertes Review und Gegenpruefung - sind alle Datenquellen aktualisiert, alles verdrahtet?'). ⚠️ DAS PAKET IST NICHT NUR SCHRITT 54: seit dem letzten Commit (13.09. 06:09) liegen 122 Befunde und Schritte 31, 32, 41, 48, 49B, 50B, 51, 53, 54 unkommittet, das Notebook laeuft auf dem Stand 13.09. frueh. ✔ Kompiliert, importiert, Scheduler baut 22 Jobs inklusive `terminmarkt`, Migration gegen die NB-Sicherung additiv und wiederholbar (vier neue signals-Spalten beim ersten Umlauf), alte Signale lesbar. ✖ ANTWORT AUF DIE FRAGE ,ALLE DATENQUELLEN AKTUELL': NEIN - 2.453-turnover (Blocker), -spy, -rohstoff, -bestand, -cache, -kursreihe; Verdacht -hebelpos, -alterlos; dazu -fredkey (Sicherheit), -desktopdb, -plan
 
 - Quelle: Schritt 56; Befunde 2.453-*
@@ -2974,10 +2978,6 @@
 
 - Quelle: V10, aus 2.312
 
-**2.454-laufzeit** — ⚠️⚠️ DIE LAUFZEIT-KENNZAHL DES EXPORTS IST FALSCH: ,85,5 %%%% Ausfall, 61,4 von 71,7 Stunden fehlen, 208 Luecken'. Nachgezaehlt am Log: die App lief vom 13.09. 06:00 bis 14.09. 20:00 OHNE eine Luecke ueber 15 Minuten (laengste 13,1 min); echte Ausfaelle im Fenster nur 12.09. 12:33 bis 13.09. 05:48 (17,3 h) und 12.09. 05:30 (1,6 h). Ursache: `_LUECKE_AB_MINUTEN = 8` - begruendet mit ,dichtester Takt 15 Minuten, acht sind grosszuegig'. Das ist umgekehrt: zwischen zwei 15-Minuten-Laeufen schweigt das Log bis zu 15 Minuten, jede Pause zaehlt als Ausfall. Seit das Hebel-Screening (12.09.) nichts mehr loggt, ist die Luecke zwischen den Laeufen die Regel. Mit Schwelle 20 Minuten: 3 Luecken, 19,2 h
-
-- Quelle: extract_notebook_diagnose.py:1322 _LUECKE_AB_MINUTEN, _laufzeit
-
 **2.454-gemini** — ○ GEMINI HTTP 503 (,high demand') OHNE AUSWEICHEN. 34 Antworten 503 am 14.09. ab 16:49; nach drei Versuchen gibt die Kette fuer den Wert auf (6 Urteile: ETH, AVAX, HYPE 2x, XLM, TAO), `waehle_client` wechselt nur nach Kontingent, nicht nach Ausfall. Der Wert wird im naechsten Umlauf (15 min) erneut gefragt (HYPE 18:22 und 18:36) - Verzoegerung, kein Verlust. Zu beobachten, wenn es tagelang anhaelt
 
 - Quelle: scheduler/rollen_job.py waehle_client; api/gemini.py
@@ -3294,6 +3294,12 @@
 - Quelle: agent/krypto/hebel_screening.py fetch_and_store_oi_snapshot; database/api_health.py
 - **Abgeloest durch: 2.454-ampel-gebaut**
 - Warum: nicht gelistete Symbole buchen keinen Ausfall mehr
+
+**2.454-laufzeit** — ⚠️⚠️ DIE LAUFZEIT-KENNZAHL DES EXPORTS IST FALSCH: ,85,5 %%%% Ausfall, 61,4 von 71,7 Stunden fehlen, 208 Luecken'. Nachgezaehlt am Log: die App lief vom 13.09. 06:00 bis 14.09. 20:00 OHNE eine Luecke ueber 15 Minuten (laengste 13,1 min); echte Ausfaelle im Fenster nur 12.09. 12:33 bis 13.09. 05:48 (17,3 h) und 12.09. 05:30 (1,6 h). Ursache: `_LUECKE_AB_MINUTEN = 8` - begruendet mit ,dichtester Takt 15 Minuten, acht sind grosszuegig'. Das ist umgekehrt: zwischen zwei 15-Minuten-Laeufen schweigt das Log bis zu 15 Minuten, jede Pause zaehlt als Ausfall. Seit das Hebel-Screening (12.09.) nichts mehr loggt, ist die Luecke zwischen den Laeufen die Regel. Mit Schwelle 20 Minuten: 3 Luecken, 19,2 h
+
+- Quelle: extract_notebook_diagnose.py:1322 _LUECKE_AB_MINUTEN, _laufzeit
+- **Abgeloest durch: 2.454-laufzeit-gebaut**
+- Warum: Schwelle 20 Minuten, eine Definition fuer Export und Basislinie
 
 **2.453-turnover** — ⛔⛔⛔ ROLLOUT-BLOCKER: SCHRITT 49B SCHALTET AM NOTEBOOK DEN TURNOVER-BEITRAG AB. `marktrang.umlaufmengen()` liest `splycur (symbol, datum, wert)` aus `data/onchain_historie.db`. Am Notebook liegt diese Datei BEWUSST nur als SYMBOLLISTE (2.368, Paket vom 02.09., Tabelle `splycur (symbol TEXT)`). Nachgeprueft am Paket im Austauschordner: `no such column: datum`. Die Funktion hat nur try/finally, `raenge()` loggt und laesst turnover weg - EINER DER ZWEI TRAGENDEN BEITRAEGE faellt fuer alle Werte aus, schlechter als heute (dort 33 Werte ueber CoinGecko). Zweitens hat `splycur` keinen Job: nach 21 Tagen ohne `hole_fremdreihen.py splycur` verstummt turnover still - dieselbe Klasse wie 2.452. NUTZERENTSCHEIDUNG NOETIG vor dem Rollout
 

@@ -71,7 +71,11 @@ def _laufzeit(log: list) -> dict:
     for a, b in zip(minuten, minuten[1:]):
         d = (datetime.datetime.strptime(b, fmt)
              - datetime.datetime.strptime(a, fmt)).total_seconds() / 60
-        if d > 10:
+        # DIESELBE SCHWELLE WIE DER EXPORT (14.09.2026, 2.454-laufzeit): hier
+        # standen 10 Minuten - bei einem 15-Minuten-Takt zaehlt das die Pause
+        # zwischen zwei Laeufen als Ausfall. Eine Definition, nicht zwei.
+        import extract_notebook_diagnose as _X
+        if d > _X._LUECKE_AB_MINUTEN:
             luecken.append({"von": a, "bis": b, "minuten": round(d)})
             aus_min += d
     spanne = (datetime.datetime.strptime(minuten[-1], fmt)

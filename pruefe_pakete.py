@@ -23132,6 +23132,73 @@ def paket_ampel() -> None:
            "sonst verschwaende er aus dem Abdeckungszaehler: erfolg=%s, Zeilen=%s" % (_ok, _n))
 
 
+def paket_laufzeit() -> None:
+    """2.454-laufzeit: die Laufzeit-Kennzahl zaehlt Stille zwischen Laeufen nicht als Ausfall.
+
+    ⚠️ ANLASS: der Export vom 14.09.2026 meldete ,85,5 %% Ausfall' - die App lief
+    aber durchgehend; die Schwelle 8 Minuten lag UNTER dem 15-Minuten-Takt.
+    Festgehalten wird an KUENSTLICHEN Logs, deren Wahrheit bekannt ist:
+
+        1  durchgehender Betrieb im 15-Minuten-Takt -> 0 Ausfall
+        2  ein echter Ausfall von 60 Minuten -> genau eine Luecke, 1 h
+        3  die Grenze: 21 Minuten Stille zaehlt, 19 nicht
+        4  GEGENPROBE: mit der alten Schwelle 8 meldet Fall 1 einen Ausfall
+        5  `messe_basislinie` benutzt dieselbe Schwelle"""
+    P = "Laufzeit"
+    from datetime import datetime as _dt, timedelta as _td
+
+    import extract_notebook_diagnose as _X
+    import messe_basislinie as _MB
+
+    def _log(bloecke):
+        """bloecke: Liste von Startzeiten; je Start drei Zeilen innerhalb 90 s."""
+        z = []
+        for t in bloecke:
+            for s_ in (0, 40, 90):
+                z.append((t + _td(seconds=s_)).strftime("%Y-%m-%d %H:%M:%S,000")
+                         + " INFO apscheduler.executors.default: Running job")
+        return z
+
+    t0 = _dt(2026, 9, 14, 6, 0, 0)
+    takt = [t0 + _td(minutes=15 * i) for i in range(24 * 4)]          # 24 h
+    l1 = _X._laufzeit(_log(takt))
+    pruefe(P, "⚠️⚠️⚠️ durchgehender Betrieb im 15-Minuten-Takt: KEIN Ausfall",
+           l1["luecken_gesamt"] == 0 and l1["fehlende_stunden"] == 0,
+           str({k: l1[k] for k in ("luecken_gesamt", "fehlende_stunden", "ausfall_prozent")}))
+
+    mit_ausfall = [t for t in takt if not (t0 + _td(hours=5) < t < t0 + _td(hours=6, minutes=15))]
+    l2 = _X._laufzeit(_log(mit_ausfall))
+    pruefe(P, "⚠️⚠️ ein echter Ausfall wird genau einmal gezaehlt",
+           l2["luecken_gesamt"] == 1 and 1.0 <= l2["fehlende_stunden"] <= 1.3,
+           str({k: l2[k] for k in ("luecken_gesamt", "fehlende_stunden")}))
+
+    # EINZELNE Zeilen, damit die Stille EXAKT 21 und 19 Minuten ist - die
+    # Bloecke oben schreiben 90 s lang (erste Fassung dieser Pruefung maß so
+    # 19,5 statt 21 Minuten und schlug falsch an).
+    grenze = [(t0 + _td(minutes=m)).strftime("%Y-%m-%d %H:%M:%S,000") + " INFO x"
+              for m in (0, 21, 40)]
+    l3 = _X._laufzeit(grenze)
+    pruefe(P, "die Grenze: 21 Minuten Stille zaehlt, 19 nicht",
+           l3["luecken_gesamt"] == 1 and _X._LUECKE_AB_MINUTEN == 20.0,
+           "Luecken %s, Schwelle %s" % (l3["luecken_gesamt"], _X._LUECKE_AB_MINUTEN))
+
+    _alt = _X._LUECKE_AB_MINUTEN
+    try:
+        _X._LUECKE_AB_MINUTEN = 8.0
+        l4 = _X._laufzeit(_log(takt))
+    finally:
+        _X._LUECKE_AB_MINUTEN = _alt
+    pruefe(P, "GEGENPROBE: mit der alten Schwelle 8 wird Dauerbetrieb zum Ausfall",
+           l4["ausfall_prozent"] and l4["ausfall_prozent"] > 50,
+           "sonst prueft Zeile 1 nicht die Schwelle: %s %%" % l4["ausfall_prozent"])
+
+    b1 = _MB._laufzeit(_log(takt))
+    b2 = _MB._laufzeit(_log(mit_ausfall))
+    pruefe(P, "`messe_basislinie` rechnet mit derselben Schwelle",
+           b1.get("ausfall_stunden") == 0 and 1.0 <= (b2.get("ausfall_stunden") or 0) <= 1.3,
+           "Dauerbetrieb %s h, Ausfall %s h" % (b1.get("ausfall_stunden"), b2.get("ausfall_stunden")))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23179,6 +23246,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Umlaufmenge": paket_umlaufmenge,
           "Bestandsfrische": paket_bestandsfrische,
           "Ampel": paket_ampel,
+          "Laufzeit": paket_laufzeit,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

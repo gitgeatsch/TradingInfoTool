@@ -1316,10 +1316,21 @@ _TABELLEN_OHNE = {
 _REIHE_VERALTET_STUNDEN = 48.0
 
 
-# Ab welcher Stille eine Luecke gezaehlt wird. Der dichteste Takt im Betrieb
-# ist das Hebel-Screening mit 15 Minuten; acht Minuten sind also grosszuegig
-# und melden keinen normalen Leerlauf.
-_LUECKE_AB_MINUTEN = 8.0
+# Ab welcher Stille eine Luecke gezaehlt wird.
+#
+# ⚠️⚠️ BIS 14.09.2026 STAND HIER 8 - mit der Begruendung ,der dichteste Takt
+# ist 15 Minuten, acht sind grosszuegig'. Das ist UMGEKEHRT gedacht: laufen
+# alle dichten Jobs im 15-Minuten-Takt, schweigt das Log ZWISCHEN zwei Laeufen
+# bis zu 15 Minuten - und jede dieser Pausen zaehlte als Ausfall. Der Export
+# vom 14.09. meldete ,85,5 %% Ausfall, 61,4 von 71,7 Stunden fehlen', obwohl
+# die App vom 13.09. 06:00 bis 14.09. 20:00 ohne eine einzige Luecke ueber
+# 15 Minuten lief (laengste 13,1 min). Befund 2.454-laufzeit.
+#
+# HERLEITUNG DER 20: dichtester Takt 15 Minuten (refresh_prices,
+# hebel_screening, terminmarkt, staleness_watchdog) plus 5 Minuten fuer
+# gestaffelte Starts und lange Laeufe. Am Notebook-Log 11.-14.09. liegt
+# zwischen 15 und 20 Minuten KEINE Luecke - die Grenze trennt sauber.
+_LUECKE_AB_MINUTEN = 20.0
 
 
 def _joblaeufe(conn) -> dict:

@@ -567,14 +567,14 @@ REIHENFOLGE = (
             "Schluessel im Klartext in `api_health_status` und im Export. "
             "(9) AUS DER NOTEBOOK-KONTROLLE 14.09. (2.454): 2.454-ampel GELOEST (2.454-ampel-gebaut; Folge "
             "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
-            "2.454-laufzeit (Export meldet 85 Prozent Ausfall statt 19 h), "
+            "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
             "2.454-etfbestand, 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
             "2.452-boerse (OI nur von Binance) und 2.452-anlass. "
             "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-spy, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey, 2.453-bestand-gebaut, 2.453-veto, "
-            "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit, 2.454-etfbestand, "
+            "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, 2.454-etfbestand, "
             "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
