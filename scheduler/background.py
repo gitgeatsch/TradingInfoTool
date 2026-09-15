@@ -50,6 +50,10 @@ multi_asset_batch_lock = threading.Lock()
 # Hebel-Screenings: in jenem Job laeuft auch die Rollen-Kette, und ein langer
 # Umlauf haette das Sammeln sonst uebersprungen. Befund 2.452.
 terminmarkt_lock = threading.Lock()
+# Kursreihen der Boersentitel (15.09.2026, Befund 2.387-fortschreibung) - der
+# Tagesjob UND die Eingabepruefung des Portfoliowerts laden ueber denselben Weg;
+# der Lock verhindert, dass beide nach einem Aufwachen gleichzeitig laden.
+refresh_aktien_ohlc_lock = threading.Lock()
 _JOB_LOCKS = {
     "refresh_prices": refresh_prices_lock,
     "refresh_securities": refresh_securities_lock,
@@ -59,6 +63,7 @@ _JOB_LOCKS = {
     "hebel_screening": hebel_screening_lock,
     "multi_asset_batch": multi_asset_batch_lock,
     "terminmarkt": terminmarkt_lock,
+    "refresh_aktien_ohlc": refresh_aktien_ohlc_lock,
 }
 _job_started_at: dict[str, float] = {}
 # Seit wann der Scheduler laeuft - Bezug der Terminmarkt-Frische. Eine App, die
@@ -437,22 +442,186 @@ def refresh_aktien_ohlc_job(conn_factory, watchlist_provider) -> None:
     haette der taegliche Backward-Tracking-Job offene Aktien-Signale zunehmend gegen
     veraltete Kursdaten geprueft, da Phase 1 der Aktien-Pipeline OHLC bisher nur bei
     manuellem Signal-Klick aktualisierte). `watchlist_provider` siehe
-    refresh_prices_job()-Docstring (2026-07-23)."""
+    refresh_prices_job()-Docstring (2026-07-23).
+
+    ⚠️⚠️ SEIT 15.09.2026 TAEGLICH UM 05:30, NICHT MEHR ALLE 24 H AB APP-START
+    (Befund 2.387-fortschreibung). Backward-Tracking (06:00), Portfoliowert
+    (06:30) und Lagebild (06:40) setzen einen naechtlichen Kurs-Refresh voraus -
+    den gab es nicht: am Notebook lief der Job um 22:32 UTC, als der Tag noch
+    nicht als abgeschlossen galt, und der Montagskurs kam erst 24 h spaeter.
+    Um 05:30 Ortszeit ist der Vortag abgeschlossen, und keine Boerse hat offen -
+    es kann keine unfertige Tageskerze gespeichert werden."""
+    if not refresh_aktien_ohlc_lock.acquire(blocking=False):
+        logger.info("Aktien-OHLC-Refresh: laeuft bereits - uebersprungen")
+        return
+    _job_started_at["refresh_aktien_ohlc"] = time.monotonic()
     watchlist = watchlist_provider()
     conn = conn_factory()
     try:
-        results = backfill_all_aktien_ohlc(conn, watchlist)
-        degraded = [r for r in results if r.degraded]
-        logger.info(
-            "Aktien-OHLC-Refresh: %d/%d Assets aktualisiert (%d degradiert)",
-            len(results) - len(degraded), len(results), len(degraded),
-        )
-        _refresh_nicht_aktien_ohlc(conn, watchlist)
+        _lade_wertpapier_kursreihen(conn, watchlist)
     except Exception as exc:
         logger.exception("Aktien-OHLC-Refresh fehlgeschlagen")
         _notify_job_failure("refresh_aktien_ohlc", f"Aktien-OHLC-Refresh fehlgeschlagen: {exc}")
     finally:
         conn.close()
+        _job_started_at.pop("refresh_aktien_ohlc", None)
+        refresh_aktien_ohlc_lock.release()
+
+
+def _lade_wertpapier_kursreihen(conn, watchlist) -> None:
+    """Der eigentliche Ladeweg - Aktien voll, die uebrigen Klassen ueber ihre
+    Pipelines (Staleness-Wache dort), danach der Schlusskurs-Rueckfall fuer
+    Reihen, denen der letzte Handelstag noch fehlt. OHNE Lock: den nimmt der
+    Aufrufer."""
+    from agent import kursluecke as KL
+
+    try:
+        vorher = conn.execute(
+            "SELECT symbol, currency, date, close FROM price_history_ohlc "
+            "WHERE quelle = ?", (KL.QUELLE_SCHNAPPSCHUSS,)).fetchall()
+    except Exception:                                        # noqa: BLE001
+        vorher = []
+    results = backfill_all_aktien_ohlc(conn, watchlist)
+    degraded = [r for r in results if r.degraded]
+    logger.info(
+        "Aktien-OHLC-Refresh: %d/%d Assets aktualisiert (%d degradiert)",
+        len(results) - len(degraded), len(results), len(degraded),
+    )
+    _refresh_nicht_aktien_ohlc(conn, watchlist)
+    # ⚠️ DER RUECKFALL PRUEFT SICH SELBST: jede Ersatzkerze, die der Ladeweg
+    # eben durch Yahoos echte ersetzt hat, steht mit ihrer Abweichung im Log.
+    for e in KL.ersetzte([tuple(z) for z in vorher], conn):
+        (logger.warning if abs(e["abweichung_prozent"]) > KL.ABWEICHUNG_WARNUNG_PROZENT
+         else logger.info)(
+            "Schlusskurs-Rueckfall %s %s durch die echte Tageskerze ersetzt: %.4f -> "
+            "%.4f (%+.2f %%)", e["symbol"], e["datum"], e["ersatz"], e["echt"],
+            e["abweichung_prozent"])
+    _schliesse_kursluecken(conn, watchlist)
+
+
+def _schliesse_kursluecken(conn, watchlist, abfrage=None, jetzt=None) -> list[str]:
+    """Schlusskurs-Rueckfall (15.09.2026, Befund 2.455-kapitalkurse) - fuer jede
+    Nicht-Krypto-Reihe, der nach dem Laden der letzte abgeschlossene Handelstag
+    fehlt. Regel und Grenzen: `agent/kursluecke.py`. Gibt die ergaenzten
+    Symbole zurueck. Fail-soft je Titel."""
+    from agent import kursluecke as KL
+    from agent.hedge.pipeline import ist_hedge_instrument
+    from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS
+    from api.yfinance_history import letzter_handel
+    from staleness import reihe_ist_ueberholt
+
+    abfrage = abfrage or letzter_handel
+    ergaenzt = []
+    for asset in watchlist or []:
+        klasse = str(getattr(asset, "assetklasse", "") or "").lower()
+        ticker = getattr(asset, "yfinance_symbol", None)
+        if klasse == "krypto" or not ticker or ticker in YFINANCE_HISTORY_UNRELIABLE_TICKERS:
+            continue
+        if klasse not in ("aktien", "etf", "rohstoffe") and not ist_hedge_instrument(asset):
+            continue
+        try:
+            letzte = conn.execute(
+                "SELECT date, currency, quelle FROM price_history_ohlc WHERE symbol = ? "
+                "ORDER BY date DESC LIMIT 1", (asset.symbol,)).fetchone()
+            if not letzte or letzte[2] == "rekonstruiert":
+                continue
+            if not reihe_ist_ueberholt(letzte[0], jetzt):
+                continue
+            handel = abfrage(ticker)
+            k = KL.kerze(asset.symbol, letzte[1], handel or {}, letzte[0], jetzt)
+            if k is None:
+                continue
+            db.upsert_ohlc_points(conn, [k], quelle=KL.QUELLE_SCHNAPPSCHUSS)
+            ergaenzt.append(asset.symbol)
+            logger.info(
+                "Kursluecke %s: Tageskerze %s fehlt in Yahoos Historie - Schlusskurs "
+                "%.4f %s aus dem letzten Handel (%s, %s UTC) eingesetzt",
+                asset.symbol, k.date, k.close, k.currency, handel.get("handelsplatz"),
+                handel["zeit_utc"].strftime("%d.%m. %H:%M"))
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Schlusskurs-Rueckfall fuer %s fehlgeschlagen", asset.symbol)
+    return ergaenzt
+
+
+# Wie lange die Eingabepruefung des Portfoliowerts auf einen LAUFENDEN
+# Kursreihen-Job wartet, bevor sie ohne Nachladen weiterrechnet. Ein Lauf dauert
+# rund 15 Sekunden; nach 10 Minuten stimmt etwas anderes nicht.
+_KURSREIHEN_WARTEN_SEKUNDEN = 600
+
+
+def _tageswert_mit_eingabepruefung(conn, watchlist, nachladen=None, abfrage=None) -> dict:
+    """Den Tageswert schreiben - und fehlt einem Boersentitel der Kurs des
+    Handelstages, EINMAL nachladen und neu rechnen (15.09.2026).
+
+    ⚠️ BEFUND 2.387-fortschreibung. Der Kursreihen-Job laeuft um 05:30 vor
+    diesem Job - das ist der Normalfall. Diese Pruefung faengt den Rest: das
+    Notebook schlief um 05:30, beide Jobs holen beim Aufwachen gleichzeitig
+    nach, oder der Tagesjob scheiterte. DER VERBRAUCHER PRUEFT SEINE EINGABE
+    (dasselbe Prinzip wie beim Terminmarkt, Schritt 54).
+
+    Bleibt nach dem Nachladen ein Titel ohne Kurs des Tages - Boersenfeiertag
+    oder Quelle -, steht er als WARNING mit Namen im Log. Am Wochenende passiert
+    hier nichts: dort ist die Fortschreibung richtig."""
+    from agent.portfolio_historie import fehlende_handelstagskurse, schreibe_tageswert
+
+    ergebnis = schreibe_tageswert(conn, watchlist=watchlist)
+    fehlend = fehlende_handelstagskurse(ergebnis, watchlist)
+    if not fehlend:
+        return ergebnis
+    logger.info("Tageswert %s: %d Boersentitel ohne Kurs vom Handelstag (%s) - "
+                "Kursreihen werden einmal nachgeladen",
+                ergebnis["datum"], len(fehlend), ", ".join(fehlend))
+    if nachladen is None:
+        def nachladen(c, w):
+            if not refresh_aktien_ohlc_lock.acquire(timeout=_KURSREIHEN_WARTEN_SEKUNDEN):
+                logger.warning("Kursreihen-Job blockiert seit %d s - Tageswert ohne "
+                               "Nachladen", _KURSREIHEN_WARTEN_SEKUNDEN)
+                return
+            try:
+                _lade_wertpapier_kursreihen(c, w)
+            finally:
+                refresh_aktien_ohlc_lock.release()
+    try:
+        nachladen(conn, watchlist)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Nachladen der Kursreihen fuer den Tageswert fehlgeschlagen")
+        ergebnis["ohne_tageskurs"] = fehlend
+        return ergebnis
+    ergebnis = schreibe_tageswert(conn, watchlist=watchlist, datum=ergebnis["datum"])
+    rest = fehlende_handelstagskurse(ergebnis, watchlist)
+    ergebnis["nachgeladen"] = True
+    # ⚠️ HANDELSPLATZGENAU (15.09.2026, Nutzerfrage ,Unterscheidung der
+    # Handelstage?'). Montag bis Freitag ist nur die Vermutung - ob DIESER Platz
+    # am Bezugstag gehandelt hat, sagt die Quelle: liegt sein letzter Handel VOR
+    # dem Bezugstag, war dort Feiertag oder kein Umsatz. Das ist ein Grund, keine
+    # Stoerung - die Fortschreibung ist dann richtig.
+    from api.yfinance_history import letzter_handel
+    abfrage = abfrage or letzter_handel
+    ticker = {a.symbol: getattr(a, "yfinance_symbol", None) for a in watchlist or []}
+    kein_handel, gestoert = [], []
+    for sym in rest:
+        handel = None
+        try:
+            handel = abfrage(ticker.get(sym)) if ticker.get(sym) else None
+        except Exception:                                    # noqa: BLE001
+            handel = None
+        if handel and handel.get("datum") and handel["datum"] < ergebnis["datum"]:
+            kein_handel.append("%s (%s, letzter Handel %s)" % (
+                sym, handel.get("handelsplatz") or "?", handel["datum"]))
+        else:
+            gestoert.append(sym)
+    ergebnis["ohne_tageskurs"] = gestoert
+    ergebnis["kein_handel"] = kein_handel
+    if kein_handel:
+        logger.info("Tageswert %s: kein Handel am Bezugstag - %s; der letzte "
+                    "Schlusskurs ist richtig", ergebnis["datum"], ", ".join(kein_handel))
+    if gestoert:
+        logger.warning(
+            "Tageswert %s: auch nach dem Nachladen ohne Kurs vom Handelstag, obwohl "
+            "der Handelsplatz gehandelt hat oder keine Angabe liefert: %s - Quelle "
+            "pruefen (der Wert nimmt den letzten Schlusskurs, hoechstens 4 Tage)",
+            ergebnis["datum"], ", ".join(gestoert))
+    return ergebnis
 
 
 def lebendigkeit_job(conn_factory, watchlist_provider) -> bool:
@@ -793,7 +962,9 @@ def portfolio_wert_job(conn_factory, watchlist_provider) -> None:
     conn = conn_factory()
     try:
         watchlist = watchlist_provider()
-        ergebnis = schreibe_tageswert(conn, watchlist=watchlist)
+        # ⚠️ MIT EINGABEPRUEFUNG (15.09.2026, 2.387-fortschreibung): fehlt einem
+        # Boersentitel der Kurs des Handelstages, wird einmal nachgeladen.
+        ergebnis = _tageswert_mit_eingabepruefung(conn, watchlist)
         # ⚠️ NUR WENN GESCHRIEBEN (11.09.2026). An einem verworfenen Tag sind
         # `wert_eur` und `index` None - `%.2f` darauf erzeugte im Log einen
         # ,Logging error' statt einer Aussage. Die Warnung zum verworfenen
@@ -4281,19 +4452,8 @@ def build_scheduler(
         next_run_time=_staggered_start(1),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
-    # Aktien-OHLC-Refresh (2026-07-16, Asset-Verwaltungs-Audit-Fund, siehe
-    # refresh_aktien_ohlc_job()-Docstring) - kein Staleness-Vorab-Check wie bei
-    # refresh_ohlc oben noetig: nur eine Handvoll Aktien-Assets, yfinance-Abruf
-    # ist im Gegensatz zu CoinGecko/Kraken nicht kontingentiert.
-    scheduler.add_job(
-        refresh_aktien_ohlc_job,
-        "interval",
-        hours=OHLC_REFRESH_INTERVAL_HOURS,
-        args=[db_conn_factory, watchlist_provider],
-        id="refresh_aktien_ohlc",
-        next_run_time=_staggered_start(2),
-        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
-    )
+    # Aktien-OHLC-Refresh: registriert WEITER UNTEN als taeglicher Cron um 05:30
+    # (15.09.2026, Befund 2.387-fortschreibung) - er braucht `_nachholen`.
     # Hebel-Screening (2026-07-14, Phase 1) - eigener 15-Min-Takt, unabhaengig vom
     # Preis-Refresh oben (andere Datenquellen: Binance/Bybit/OKX/Kraken statt
     # CoinGecko/yfinance). Aktiv-Schalter wird IM Job-Body geprueft (identisches
@@ -4440,6 +4600,22 @@ def build_scheduler(
         args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
         **_nachholen("backward_tracking", 30),
+    )
+    # Kursreihen der Boersentitel (2026-07-16; seit 15.09.2026 taeglich 05:30,
+    # Befund 2.387-fortschreibung). Vorher alle 24 h AB APP-START - am Notebook
+    # 22:32 UTC, als der Tag noch nicht als abgeschlossen galt: der Portfoliowert
+    # (06:30) rechnete jeden Werktag mit dem Kurs des Vortags. 05:30 liegt vor
+    # Backward-Tracking (06:00), Portfoliowert (06:30) und Lagebild (06:40), der
+    # Vortag ist abgeschlossen und keine Boerse offen. Nachholen beim Start, wenn
+    # er heute noch nicht lief - wie die anderen taeglichen Jobs.
+    scheduler.add_job(
+        refresh_aktien_ohlc_job,
+        "cron",
+        hour=5,
+        minute=30,
+        args=[db_conn_factory, watchlist_provider],
+        id="refresh_aktien_ohlc",
+        **_nachholen("refresh_aktien_ohlc", 10),
     )
     # Portfolio-Wert + Z-3/RM-7 (2026-08-04, Task #612) - taeglich 6:30, aus
     # demselben Grund wie das Backward-Tracking darueber nach dem naechtlichen

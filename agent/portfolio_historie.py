@@ -1079,14 +1079,20 @@ def schreibe_tageswert(
     wert = 0.0
     ohne_kurs = 0
     fortgeschrieben: list[str] = []
+    # Je Symbol, wie alt der verwendete Kurs ist (nur fortgeschriebene, und
+    # ohne Kurs = None) - fuer die Eingabepruefung des Jobs
+    # (`fehlende_handelstagskurse`, Befund 2.387-fortschreibung).
+    alter_je_symbol: dict[str, int | None] = {}
     for symbol, menge in holdings.items():
         kurs, alter = kurs_fort(symbol, tag)
         if kurs is None:
             ohne_kurs += 1
+            alter_je_symbol[symbol] = None
         else:
             wert += menge * kurs
             if alter:
                 fortgeschrieben.append(f"{symbol} ({alter} T)")
+                alter_je_symbol[symbol] = alter
 
     index = 100.0
     if vorzeile and vorzeile["index_wert"] and vorzeile["mengen_json"]:
@@ -1115,7 +1121,8 @@ def schreibe_tageswert(
         )
         return {"datum": tag, "wert_eur": None, "index": None,
                 "symbole_ohne_kurs": ohne_kurs, "geschrieben": False,
-                "abdeckung": abdeckung, "fortgeschrieben": fortgeschrieben}
+                "abdeckung": abdeckung, "fortgeschrieben": fortgeschrieben,
+                "alter_je_symbol": alter_je_symbol}
 
     if fortgeschrieben:
         # SICHTBAR, NICHT STILL: welcher Kurs nicht vom Bezugstag stammt.
@@ -1136,7 +1143,37 @@ def schreibe_tageswert(
     )
     return {"datum": tag, "wert_eur": wert, "index": index,
             "symbole_ohne_kurs": ohne_kurs, "geschrieben": True, "abdeckung": abdeckung,
-            "fortgeschrieben": fortgeschrieben}
+            "fortgeschrieben": fortgeschrieben, "alter_je_symbol": alter_je_symbol}
+
+
+def fehlende_handelstagskurse(ergebnis: dict, watchlist: list) -> list[str]:
+    """Welche BOERSENTITEL haben am Bezugstag keinen Kurs DIESES Tages? (15.09.2026)
+
+    ⚠️⚠️ BEFUND 2.387-fortschreibung. Die Fortschreibung selbst ist richtig -
+    am Wochenende hat ein ETF keinen neuen Kurs. Aber an einem WERKTAG hat er
+    einen, und der Tageswert nahm trotzdem den des Vortags: der Kursreihen-Job
+    lief 24 h nach dem App-Start (am Notebook 22:32 UTC), und
+    `staleness.letzter_abgeschlossener_handelstag` zaehlt den heutigen Tag erst
+    ab Mitternacht UTC - eine Reihe mit Freitagskurs galt am Montagabend als
+    aktuell. Der Tageswert fuer Montag entsteht aber am Dienstag um 04:30 UTC.
+
+    GEMELDET WIRD, WAS AN EINEM MONTAG BIS FREITAG FORTGESCHRIEBEN ODER OHNE KURS
+    IST - fuer jede Klasse ausser Krypto (die kommt aus einem eigenen Job, handelt
+    taeglich und ist hier nicht gemeint) und ausser Cash-Aequivalenten. Ein
+    Boersenfeiertag erscheint hier ebenfalls; der Aufrufer laedt dann einmal
+    nach, und was bleibt, steht als WARNING mit Namen im Log."""
+    tag = ergebnis.get("datum")
+    try:
+        if datetime.strptime(str(tag), "%Y-%m-%d").weekday() >= 5:
+            return []
+    except ValueError:
+        return []
+    klasse = {a.symbol: str(getattr(a, "assetklasse", "") or "").lower()
+              for a in watchlist or []}
+    cash = {a.symbol for a in watchlist or [] if getattr(a, "ist_cash_aequivalent", False)}
+    return sorted(sym for sym, alter in (ergebnis.get("alter_je_symbol") or {}).items()
+                  if sym in klasse and klasse[sym] != "krypto" and sym not in cash
+                  and (alter is None or alter >= 1))
 
 
 def aktuelles_kapital(conn: sqlite3.Connection, heute: str | None = None) -> dict:

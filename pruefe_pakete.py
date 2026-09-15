@@ -23644,6 +23644,267 @@ def paket_hebelabgleich() -> None:
            str(ex)[:160])
 
 
+def paket_kapitalkurse() -> None:
+    """2.387-fortschreibung: der Portfoliowert rechnet an Werktagen mit dem Kurs
+    DIESES Tages - Kursreihen-Job um 05:30 und Eingabepruefung im Portfoliowert.
+
+    ⚠️ ANLASS: der Kursreihen-Job lief 24 h ab App-Start (am Notebook 22:32 UTC).
+    `letzter_abgeschlossener_handelstag` zaehlt den heutigen Tag erst ab
+    Mitternacht UTC - der Montagskurs kam erst 24 h spaeter, der Tageswert fuer
+    Montag entstand dazwischen um 04:30 UTC mit Freitagskursen. Festgehalten:
+
+        1  die Ursache als Regel: Montag 22:32 UTC gilt der Freitag als letzter
+           abgeschlossener Tag, Dienstag 03:30 UTC der Montag
+        2  der Job ist ein Cron um 05:30 mit Nachholen - VOR Backward-Tracking,
+           Portfoliowert und Lagebild
+        3  `fehlende_handelstagskurse`: Werktag ja, Wochenende nein, Krypto und
+           Cash nie, ohne Kurs zaehlt mit
+        4  die ECHTE Eingabepruefung an einer Speicherdatenbank: fehlt der
+           Montagskurs, wird EINMAL nachgeladen und neu gerechnet; hilft das
+           nicht, WARNING mit Namen; am Sonntag kein Nachladen
+        5  ein gemeinsamer Lock fuer Tagesjob und Eingabepruefung
+
+    Speicherdatenbanken, keine Standard-DB, kein Netzabruf (Nachladen gestellt)."""
+    P = "Kapitalkurse"
+    import ast as _ast
+    import logging as _lg
+    import sqlite3 as _sq
+    from datetime import date as _date, datetime as _dt, timezone as _tz
+    from types import SimpleNamespace as _NS
+
+    import database.db as _DB
+    import staleness as _ST
+    from agent import portfolio_historie as _PH
+    from database.models import OhlcPoint as _OP
+
+    # 1 URSACHE
+    mo_abend = _dt(2026, 9, 14, 22, 32, tzinfo=_tz.utc)
+    di_frueh = _dt(2026, 9, 15, 3, 30, tzinfo=_tz.utc)
+    pruefe(P, "⚠️ Ursache: Montag 22:32 UTC gilt eine Freitagsreihe als aktuell, Dienstag 03:30 UTC nicht",
+           not _ST.reihe_ist_ueberholt("2026-09-11", mo_abend)
+           and _ST.reihe_ist_ueberholt("2026-09-11", di_frueh),
+           "letzter abgeschlossener Handelstag: Mo-Abend %s, Di-frueh %s"
+           % (_ST.letzter_abgeschlossener_handelstag(mo_abend),
+              _ST.letzter_abgeschlossener_handelstag(di_frueh)))
+
+    # 2 ZEITPLAN
+    bg_ast = _ast.parse(_quelltext("scheduler/background.py"))
+    fn = {n.name: n for n in _ast.walk(bg_ast) if isinstance(n, _ast.FunctionDef)}
+
+    def _zeit(job_id):
+        for c in _ast.walk(fn["build_scheduler"]):
+            if not (isinstance(c, _ast.Call) and isinstance(c.func, _ast.Attribute)
+                    and c.func.attr == "add_job"):
+                continue
+            kw = {k.arg: k.value for k in c.keywords if k.arg}
+            if isinstance(kw.get("id"), _ast.Constant) and kw["id"].value == job_id:
+                art = c.args[1].value if len(c.args) > 1 and isinstance(c.args[1], _ast.Constant) else None
+                h = kw.get("hour").value if isinstance(kw.get("hour"), _ast.Constant) else None
+                m = kw.get("minute").value if isinstance(kw.get("minute"), _ast.Constant) else None
+                nach = any(k.arg is None and isinstance(k.value, _ast.Call)
+                           and getattr(k.value.func, "id", "") == "_nachholen" for k in c.keywords)
+                return art, h, m, nach
+        return None
+    kr, bt, pw, lb = (_zeit("refresh_aktien_ohlc"), _zeit("backward_tracking"),
+                      _zeit("portfolio_wert"), _zeit("lagebild_reihen"))
+    pruefe(P, "⚠️⚠️ Kursreihen-Job taeglich 05:30 mit Nachholen, nicht mehr 24 h ab App-Start",
+           kr == ("cron", 5, 30, True), str(kr))
+    pruefe(P, "⚠️ und VOR Backward-Tracking, Portfoliowert und Lagebild",
+           None not in (kr, bt, pw, lb)
+           and (kr[1], kr[2]) < (bt[1], bt[2]) < (pw[1], pw[2]) <= (lb[1], lb[2]),
+           "Kursreihen %s, Backward %s, Portfoliowert %s, Lagebild %s" % (kr, bt, pw, lb))
+
+    # 3 WELCHE TITEL FEHLEN
+    wl = [_NS(symbol="CEBS", assetklasse="etf", ist_cash_aequivalent=False, coingecko_id=None),
+          _NS(symbol="OD7H", assetklasse="rohstoffe", ist_cash_aequivalent=False, coingecko_id=None),
+          _NS(symbol="BTC", assetklasse="krypto", ist_cash_aequivalent=False, coingecko_id="bitcoin"),
+          _NS(symbol="EURCV", assetklasse="krypto", ist_cash_aequivalent=True, coingecko_id=None)]
+    mo = {"datum": "2026-09-14", "alter_je_symbol": {"CEBS": 3, "OD7H": None, "BTC": 1, "EURCV": 2}}
+    so = dict(mo, datum="2026-09-13")
+    pruefe(P, "Werktag: ETF fortgeschrieben und Rohstoff ohne Kurs zaehlen; Krypto und Cash nie",
+           _PH.fehlende_handelstagskurse(mo, wl) == ["CEBS", "OD7H"],
+           str(_PH.fehlende_handelstagskurse(mo, wl)))
+    pruefe(P, "Wochenende: keine - dort ist die Fortschreibung richtig",
+           _PH.fehlende_handelstagskurse(so, wl) == [], "")
+
+    # 4 DIE ECHTE EINGABEPRUEFUNG
+    import scheduler.background as _BG
+    wl2 = [_NS(symbol="CEBS", assetklasse="etf", ist_cash_aequivalent=False, coingecko_id=None)]
+
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        _DB.upsert_holding(c, "CEBS", 100.0, source="test")
+        _DB.upsert_ohlc_points(c, [
+            _OP(symbol="CEBS", currency="EUR", date=d, open=k, high=k, low=k, close=k,
+                volume=1.0, fetched_at="2026-09-12T00:00:00+00:00")
+            for d, k in (("2026-09-10", 10.08), ("2026-09-11", 10.14))])
+        c.commit()
+        return c
+
+    def _montagskurs(c, w):
+        aufrufe.append(1)
+        _DB.upsert_ohlc_points(c, [_OP(symbol="CEBS", currency="EUR", date="2026-09-14",
+                                       open=9.745, high=9.745, low=9.745, close=9.745,
+                                       volume=1.0, fetched_at="2026-09-15T03:30:00+00:00")])
+        c.commit()
+
+    class _Fang(_lg.Handler):
+        def __init__(self):
+            super().__init__()
+            self.zeilen = []
+
+        def emit(self, r):
+            if r.levelno >= _lg.WARNING:
+                self.zeilen.append(r.getMessage())
+    fang = _Fang()
+    _BG.logger.addHandler(fang)
+    _echt_gestern = _PH._gestern_utc
+    try:
+        _PH._gestern_utc = lambda: "2026-09-14"
+        aufrufe = []
+        c = _db()
+        e1 = _BG._tageswert_mit_eingabepruefung(c, wl2, nachladen=_montagskurs)
+        wert1 = c.execute("SELECT wert_eur FROM portfolio_wert_historie WHERE datum='2026-09-14'").fetchone()[0]
+        c.close()
+        n1, warn1 = len(aufrufe), list(fang.zeilen)
+
+        aufrufe = []
+        fang.zeilen.clear()
+        c = _db()
+        e2 = _BG._tageswert_mit_eingabepruefung(c, wl2, nachladen=lambda cc, ww: aufrufe.append(1))
+        wert2 = c.execute("SELECT wert_eur FROM portfolio_wert_historie WHERE datum='2026-09-14'").fetchone()[0]
+        c.close()
+        n2, warn2 = len(aufrufe), list(fang.zeilen)
+
+        aufrufe = []
+        _PH._gestern_utc = lambda: "2026-09-13"
+        c = _db()
+        e3 = _BG._tageswert_mit_eingabepruefung(c, wl2, nachladen=lambda cc, ww: aufrufe.append(1))
+        c.close()
+        n3 = len(aufrufe)
+    finally:
+        _PH._gestern_utc = _echt_gestern
+        _BG.logger.removeHandler(fang)
+    pruefe(P, "⚠️⚠️ ECHTE PRUEFUNG: Montag ohne Montagskurs -> einmal nachgeladen, Wert mit Montagskurs",
+           n1 == 1 and abs(wert1 - 974.5) < 0.01 and e1.get("ohne_tageskurs") == [] and not warn1,
+           "Nachladen %dx, Wert %.2f (Freitag waere 1014,00), Warnungen %s" % (n1, wert1, warn1))
+    pruefe(P, "⚠️ hilft das Nachladen nicht: WARNING mit Namen, der Wert bleibt fortgeschrieben",
+           n2 == 1 and abs(wert2 - 1014.0) < 0.01 and e2.get("ohne_tageskurs") == ["CEBS"]
+           and any("CEBS" in z and "Handelstag" in z for z in warn2),
+           "Nachladen %dx, Wert %.2f, Warnungen %s" % (n2, wert2, warn2))
+    pruefe(P, "am Sonntag wird nicht nachgeladen",
+           n3 == 0 and e3.get("geschrieben"), "Nachladen %dx" % n3)
+    pruefe(P, "GEGENPROBE: ohne Nachladen haette der Montag den Freitagskurs genommen",
+           abs(wert2 - 100 * 10.14) < 0.01, "")
+
+    # 6 SCHLUSSKURS-RUECKFALL (2.455-kapitalkurse): Yahoos Tageshistorie hinkte
+    # bei vier Xetra-Titeln, die Kursangabe nicht.
+    from datetime import timedelta as _td
+    from agent import kursluecke as _KL
+    di = _dt(2026, 9, 15, 3, 30, tzinfo=_tz.utc)
+    xetra = {"datum": "2026-09-14", "zeit_utc": _dt(2026, 9, 14, 15, 35, tzinfo=_tz.utc),
+             "kurs": 9.745, "hoch": 9.971, "tief": 9.626, "umsatz": 206323, "waehrung": "EUR",
+             "handelsplatz": "XETRA", "periode_start_datum": "2026-09-15",
+             "periode_ende_utc": _dt(2026, 9, 15, 15, 30, tzinfo=_tz.utc)}
+    gleicher_tag = dict(xetra, periode_start_datum="2026-09-14",
+                        periode_ende_utc=_dt(2026, 9, 14, 15, 30, tzinfo=_tz.utc))
+    pruefe(P, "Sitzung beendet: Platz schon in der naechsten Periode - oder nach deren Ende am selben Tag",
+           _KL.sitzung_beendet(xetra, di)
+           and not _KL.sitzung_beendet(gleicher_tag, _dt(2026, 9, 14, 12, 0, tzinfo=_tz.utc))
+           and _KL.sitzung_beendet(gleicher_tag, _dt(2026, 9, 14, 16, 0, tzinfo=_tz.utc)), "")
+    k = _KL.kerze("CEBS", "EUR", xetra, "2026-09-11", di)
+    pruefe(P, "⚠️ Ersatzkerze: Datum des Handelsplatzes, Schlusskurs, Hoch und Tief der Angabe",
+           k and (k.date, k.close, k.high, k.low) == ("2026-09-14", 9.745, 9.971, 9.626), str(k))
+    veraltet = dict(xetra, datum="2022-09-02", periode_start_datum="2026-09-15")
+    pruefe(P, "keine Ersatzkerze: schon vorhanden, falsche Waehrung, veraltete Angabe (OD7C.SG: 2022), Sitzung offen",
+           _KL.kerze("CEBS", "EUR", xetra, "2026-09-14", di) is None
+           and _KL.kerze("CEBS", "USD", xetra, "2026-09-11", di) is None
+           and _KL.kerze("OD7C", "EUR", veraltet, "2026-09-11", di) is None
+           and _KL.kerze("CEBS", "EUR", gleicher_tag, "2026-09-11",
+                         _dt(2026, 9, 14, 12, 0, tzinfo=_tz.utc)) is None, "")
+    duenn = dict(xetra, hoch=0.0, tief=0.0, kurs=549.1)
+    kd = _KL.kerze("X136", "EUR", duenn, "2026-09-11", di)
+    pruefe(P, "duenner Platz ohne Tageshoch/-tief (X136.MU): der Kurs traegt die Kerze",
+           kd and kd.high == kd.low == kd.close == 549.1, str(kd))
+
+    wl3 = [_NS(symbol="CEBS", assetklasse="etf", yfinance_symbol="CEBS.DE", ist_cash_aequivalent=False, coingecko_id=None),
+           _NS(symbol="BTC", assetklasse="krypto", yfinance_symbol="BTC-EUR", ist_cash_aequivalent=False, coingecko_id="bitcoin"),
+           _NS(symbol="OD7H", assetklasse="rohstoffe", yfinance_symbol="OD7H.SG", ist_cash_aequivalent=False, coingecko_id=None),
+           _NS(symbol="EXH3", assetklasse="etf", yfinance_symbol="EXH3.DE", ist_cash_aequivalent=False, coingecko_id=None)]
+    c = _db()
+    _DB.upsert_ohlc_points(c, [_OP(symbol=s_, currency="EUR", date="2026-09-11", open=1, high=1, low=1,
+                                   close=1.0, volume=1, fetched_at="x") for s_ in ("BTC", "EXH3")])
+    _DB.upsert_ohlc_points(c, [_OP(symbol="OD7H", currency="USD", date="2026-09-11", open=1, high=1,
+                                   low=1, close=1.0, volume=1, fetched_at="x")], quelle="rekonstruiert")
+    gefragt = []
+
+    def _abfrage(t):
+        gefragt.append(t)
+        return dict(xetra) if t == "CEBS.DE" else dict(xetra, datum="2026-09-11")
+    erg = _BG._schliesse_kursluecken(c, wl3, abfrage=_abfrage, jetzt=di)
+    zeile = c.execute("SELECT date, close, quelle FROM price_history_ohlc WHERE symbol='CEBS' "
+                      "ORDER BY date DESC LIMIT 1").fetchone()
+    pruefe(P, "⚠️⚠️ ECHTER RUECKFALL: CEBS bekommt die Montagskerze als ,schnappschuss'; Krypto, "
+              "rekonstruierte Reihe und ,kein Handel am Montag' (EXH3) bleiben unberuehrt",
+           erg == ["CEBS"] and tuple(zeile) == ("2026-09-14", 9.745, "schnappschuss")
+           and sorted(gefragt) == ["CEBS.DE", "EXH3.DE"],
+           "ergaenzt %s, gefragt %s, CEBS %s" % (erg, gefragt, tuple(zeile)))
+    n_vorher = len(gefragt)
+    _BG._schliesse_kursluecken(c, wl3, abfrage=_abfrage, jetzt=di)
+    pruefe(P, "zweiter Lauf: CEBS ist aktuell und wird nicht mehr abgefragt",
+           gefragt[n_vorher:] == ["EXH3.DE"], str(gefragt[n_vorher:]))
+    vorher = [tuple(z) for z in c.execute(
+        "SELECT symbol, currency, date, close FROM price_history_ohlc WHERE quelle='schnappschuss'")]
+    _DB.upsert_ohlc_points(c, [_OP(symbol="CEBS", currency="EUR", date="2026-09-14", open=9.9, high=9.97,
+                                   low=9.62, close=9.75, volume=1, fetched_at="y")])
+    ers = _KL.ersetzte(vorher, c)
+    c.close()
+    pruefe(P, "⚠️ Selbstpruefung: die spaeter gelieferte echte Kerze ersetzt den Rueckfall, die Abweichung wird gerechnet",
+           len(ers) == 1 and abs(ers[0]["abweichung_prozent"] - 0.0513) < 0.001,
+           str(ers))
+    lade = _ast.unparse(fn["_lade_wertpapier_kursreihen"])
+    pruefe(P, "der Ladeweg ruft Rueckfall und Selbstpruefung",
+           "_schliesse_kursluecken(conn, watchlist)" in lade and "KL.ersetzte(" in lade, "")
+
+    # 7 HANDELSPLATZGENAU: Feiertag ist ein Grund, keine WARNING
+    fang.zeilen.clear()
+    _BG.logger.addHandler(fang)
+    try:
+        _PH._gestern_utc = lambda: "2026-09-14"
+        wl4 = [_NS(symbol="CEBS", assetklasse="etf", yfinance_symbol="CEBS.DE", ist_cash_aequivalent=False, coingecko_id=None)]
+        c = _db()
+        e4 = _BG._tageswert_mit_eingabepruefung(c, wl4, nachladen=lambda cc, ww: None,
+                                                abfrage=lambda t: dict(xetra, datum="2026-09-11"))
+        c.close()
+        warn4 = list(fang.zeilen)
+        fang.zeilen.clear()
+        c = _db()
+        e5 = _BG._tageswert_mit_eingabepruefung(c, wl4, nachladen=lambda cc, ww: None,
+                                                abfrage=lambda t: dict(xetra))
+        c.close()
+        warn5 = list(fang.zeilen)
+    finally:
+        _PH._gestern_utc = _echt_gestern
+        _BG.logger.removeHandler(fang)
+    pruefe(P, "⚠️⚠️ Platz hatte am Bezugstag keinen Handel (Feiertag): Grund im Ergebnis, KEINE WARNING",
+           e4.get("ohne_tageskurs") == [] and e4.get("kein_handel") and "XETRA" in e4["kein_handel"][0]
+           and not warn4, "kein_handel %s, Warnungen %s" % (e4.get("kein_handel"), warn4))
+    pruefe(P, "Platz HAT gehandelt, Kurs fehlt trotzdem: WARNING",
+           e5.get("ohne_tageskurs") == ["CEBS"] and any("CEBS" in z for z in warn5), str(warn5))
+
+    # 5 LOCK
+    code_job = _ast.unparse(fn["refresh_aktien_ohlc_job"])
+    code_pw = _ast.unparse(fn["portfolio_wert_job"])
+    code_ep = _ast.unparse(fn["_tageswert_mit_eingabepruefung"])
+    pruefe(P, "ein Lock fuer Tagesjob und Eingabepruefung; der Portfoliowert ruft die Pruefung",
+           "refresh_aktien_ohlc_lock.acquire(blocking=False)" in code_job
+           and "refresh_aktien_ohlc_lock.acquire(timeout=" in code_ep
+           and "_tageswert_mit_eingabepruefung(conn, watchlist)" in code_pw
+           and "refresh_aktien_ohlc" in _BG._JOB_LOCKS, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23695,6 +23956,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kursreihen": paket_kursreihen,
           "Geheimnisse": paket_geheimnisse,
           "HebelAbgleich": paket_hebelabgleich,
+          "Kapitalkurse": paket_kapitalkurse,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

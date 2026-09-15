@@ -99,6 +99,55 @@ def get_full_ohlc_history(ticker: str, symbol: str, currency: str = "USD") -> li
     )
 
 
+def letzter_handel(ticker: str) -> dict | None:
+    """Der LETZTE HANDEL eines Titels laut Yahoo - Tag am Handelsplatz, Kurs,
+    Tageshoch/-tief, Waehrung und die aktuelle Handelsperiode (15.09.2026).
+
+    Fuer den Schlusskurs-Rueckfall (`agent/kursluecke.py`, Befund
+    2.455-kapitalkurse): Yahoos TAGESHISTORIE hinkte bei Xetra-Titeln, die
+    Kursangabe desselben Titels nicht. Gelesen aus `history_metadata`
+    (`regularMarketTime` usw.), das ein kurzer `.history(period="5d")`
+    mitliefert. None bei Fehlschlag oder ohne Zeitangabe."""
+    if ticker in YFINANCE_HISTORY_UNRELIABLE_TICKERS:
+        return None
+    try:
+        return run_with_daemon_timeout(lambda: _fetch_letzter_handel(ticker),
+                                       _YFINANCE_HISTORY_TIMEOUT_SECONDS)
+    except Exception as exc:                                 # noqa: BLE001
+        logger.info("Letzter Handel fuer %s nicht abrufbar: %s", ticker, exc)
+        return None
+
+
+@track_api_health("yfinance")
+def _fetch_letzter_handel(ticker: str) -> dict | None:
+    from zoneinfo import ZoneInfo
+
+    tk = yf.Ticker(ticker)
+    tk.history(period="5d", interval="1d")
+    m = tk.history_metadata or {}
+    zeit = m.get("regularMarketTime")
+    if not zeit:
+        return None
+    zone = ZoneInfo(m.get("exchangeTimezoneName") or "UTC")
+    handel = datetime.fromtimestamp(int(zeit), timezone.utc)
+    periode = ((m.get("currentTradingPeriod") or {}).get("regular") or {})
+    beginn = periode.get("start")
+    ende = periode.get("end")
+    return {
+        "datum": handel.astimezone(zone).date().isoformat(),
+        "zeit_utc": handel,
+        "kurs": m.get("regularMarketPrice"),
+        "hoch": m.get("regularMarketDayHigh"),
+        "tief": m.get("regularMarketDayLow"),
+        "umsatz": m.get("regularMarketVolume"),
+        "waehrung": m.get("currency"),
+        "handelsplatz": m.get("fullExchangeName") or m.get("exchangeName"),
+        "periode_start_datum": (datetime.fromtimestamp(int(beginn), timezone.utc)
+                                .astimezone(zone).date().isoformat() if beginn else None),
+        "periode_ende_utc": datetime.fromtimestamp(int(ende), timezone.utc) if ende else None,
+    }
+
+
 @track_api_health("yfinance")
 def _fetch_ohlc_history(ticker: str, symbol: str, currency: str) -> list[OhlcPoint]:
     hist = yf.Ticker(ticker).history(period="max", interval="1d")
