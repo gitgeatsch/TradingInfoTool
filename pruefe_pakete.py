@@ -24061,6 +24061,118 @@ def paket_hebelstufen() -> None:
            "roh %.2f" % h19["hebel_roh"])
 
 
+# Muster der Bitpanda-Inventur (Schritt 61, Stufe 0.6). Kategorie -> regulaerer
+# Ausdruck; der Schluessel ist die Beschriftung im Inventurblatt.
+BITPANDA_INVENTUR_MUSTER = {
+    "Netz": r"get_fiat_wallets|get_crypto_wallets|get_non_crypto_wallets|get_wallet_transactions|get_trades\(|_authenticated_get|api\.bitpanda\.com/v1|FUSION_API_KEY|BITPANDA_API_KEY|bitpanda_api_key",
+    "Sync": r"sync_from_bitpanda|sync_fiat_cash_from_bitpanda|sync_avg_buy_prices|sync_hebel_positions|auto_add_unknown_hebel_symbols|reconstruct_margin_positions|compute_staked_quantities|compute_avg_buy_prices|apply_decrease",
+    "Zuordnung": r"resolve_bitpanda_symbol_to_watchlist|BITPANDA_SYMBOL_OVERRIDES",
+    "Katalog": r"get_listed_assets|get_listed_non_crypto_assets|is_listed\(|find_listed_asset|get_bitpanda_gelistet_override|BITPANDA_ASSETS_URL",
+    "Bestand schreibt": r"upsert_holding|update_holding_staked_quantity|INSERT INTO holdings|UPDATE holdings|DELETE FROM holdings|set_manual_avg|avg_buy_price_manual_eur\s*=|update_holding",
+    "Bestand liest": r"get_all_holdings|get_holding\(|FROM holdings|staked_quantity|avg_buy_price_eur|avg_buy_price_manual_eur|compute_cost_basis_view",
+    "Cash": r"cash_reserve",
+    "Stempel": r"bitpanda_holdings_synced_at|bitpanda_holdings_last_synced|bitpanda_avg_cost_last_synced|hebel_positions_synced_at|cash_reserve_synced_at",
+    "hebel_positions": r"hebel_positions",
+}
+BITPANDA_INVENTUR_BLATT = "Basisinfos/Bitpanda_Umstellung_Inventur.md"
+
+
+def _bitpanda_inventur_funde(wurzel: str = ".") -> dict:
+    """Datei -> Menge der Kategorien, in denen sie ausserhalb von Kommentaren trifft."""
+    import os as _os
+    import re as _re
+
+    orte = ["agent", "api", "importer", "scheduler", "ui", "database"]
+    einzel = ["main.py", "config.py", "extract_notebook_diagnose.py"]
+    dateien = [_os.path.join(r, f).replace("\\", "/")
+               for o in orte for r, _, fs in _os.walk(_os.path.join(wurzel, o))
+               for f in fs if f.endswith(".py")]
+    dateien += [_os.path.join(wurzel, e).replace("\\", "/") for e in einzel]
+    funde = {}
+    for d in dateien:
+        try:
+            zeilen = open(d, encoding="utf-8").read().splitlines()
+        except OSError:
+            continue
+        kat = set()
+        for z in zeilen:
+            if z.strip().startswith("#"):
+                continue
+            for k, m in BITPANDA_INVENTUR_MUSTER.items():
+                if _re.search(m, z):
+                    kat.add(k)
+        if kat:
+            rel = _os.path.relpath(d, wurzel).replace("\\", "/")
+            funde[rel] = kat
+    return funde
+
+
+def _bitpanda_inventur_blatt(text: str) -> dict:
+    """Datei -> Zelle ,Fundstellen' aus den Tabellenzeilen des Inventurblatts."""
+    zeilen = {}
+    for z in text.splitlines():
+        if z.startswith("| `") and z.count("|") >= 5:
+            teile = z.split("|")
+            zeilen[teile[1].strip().strip("`")] = teile[2]
+    return zeilen
+
+
+def _bitpanda_inventur_abweichungen(funde: dict, blatt: dict) -> tuple:
+    fehlt = sorted(set(funde) - set(blatt))
+    veraltet = sorted(set(blatt) - set(funde))
+    kategorie_fehlt = sorted((d, k) for d, ks in funde.items() if d in blatt
+                             for k in ks if "**%s:**" % k not in blatt[d])
+    return fehlt, veraltet, kategorie_fehlt
+
+
+def paket_bitpanda_inventur() -> None:
+    """Schritt 61, Stufe 0.6: das Inventurblatt ist VOLLSTAENDIG.
+
+    ⚠️ ANLASS: Nutzervorgabe 15.09.2026 - *,der Umbau ist massiv und du musst
+    hier wirklich detailliert in Code und Doku, damit wir nichts vergessen'*.
+    Eine Liste, die niemand gegen den Code prueft, veraltet mit dem ersten
+    Commit. Diese Pruefung sucht mit denselben Mustern und verlangt:
+
+        1  jede Datei mit einer Fundstelle steht im Blatt
+        2  keine Datei steht im Blatt, die nicht mehr trifft
+        3  jede Kategorie, in der eine Datei trifft, steht in IHRER Zeile -
+           faengt an, holdings zu schreiben, wer bisher nur las, wird es rot
+        4  die Gegenprobe greift: ein entfernter Eintrag und eine neue
+           Kategorie werden gefunden
+        5  die Fallen aus Stufe 0 stehen im Blatt (api_health, Cursor,
+           Brutto-Belohnung, Durchschnittspreis, Symbol nicht eindeutig)"""
+    P = "BitpandaInventur"
+    text = _quelltext(BITPANDA_INVENTUR_BLATT)
+    funde = _bitpanda_inventur_funde()
+    blatt = _bitpanda_inventur_blatt(text)
+    fehlt, veraltet, kat = _bitpanda_inventur_abweichungen(funde, blatt)
+    pruefe(P, "⚠️⚠️ jede Datei, die Bitpanda, holdings, Cash oder hebel_positions beruehrt, steht im Inventurblatt",
+           len(funde) > 40 and not fehlt,
+           "%d Dateien im Code; nicht im Blatt: %s" % (len(funde), fehlt))
+    pruefe(P, "keine Datei im Blatt, die nicht mehr trifft",
+           not veraltet, str(veraltet))
+    pruefe(P, "⚠️ jede getroffene Kategorie steht in der Zeile ihrer Datei",
+           not kat, str(kat[:10]))
+
+    # 4 GEGENPROBE am Blatt selbst
+    _ein = sorted(blatt)[0]
+    _ohne = {d: z for d, z in blatt.items() if d != _ein}
+    _f, _v, _k = _bitpanda_inventur_abweichungen(funde, _ohne)
+    _mehr = {d: set(ks) for d, ks in funde.items()}
+    _leser = next(d for d, ks in sorted(_mehr.items()) if "Bestand schreibt" not in ks)
+    _mehr[_leser].add("Bestand schreibt")
+    _f2, _v2, _k2 = _bitpanda_inventur_abweichungen(_mehr, blatt)
+    pruefe(P, "⚠️ Gegenprobe: ein fehlender Eintrag und eine neue Kategorie werden gefunden",
+           _f == [_ein] and (_leser, "Bestand schreibt") in _k2,
+           "fehlend %s · neue Kategorie %s" % (_f, _k2[:3]))
+
+    # 5 FALLEN
+    pruefe(P, "die Fallen aus Stufe 0 stehen im Blatt",
+           all(x in text for x in ("api_health", "Cursor", "fee_amount", "invested_amount / balance",
+                                   "nicht eindeutig", "Assets.xlsx", "signal_bestaetigung")),
+           "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -24114,6 +24226,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "HebelAbgleich": paket_hebelabgleich,
           "Kapitalkurse": paket_kapitalkurse,
           "Hebelstufen": paket_hebelstufen,
+          "BitpandaInventur": paket_bitpanda_inventur,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
