@@ -904,7 +904,7 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
-    yfinance_symbol: OD7H.SG
+    yfinance_symbol: GB00B15KXX56.SG
     hauptgruppe: edelmetalle
     unterkategorie: gold
   - symbol: OD7C
@@ -912,7 +912,7 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     assetklasse: rohstoffe
-    yfinance_symbol: OD7C.SG
+    yfinance_symbol: GB00B15KXQ89.SG
     hauptgruppe: industriemetalle
     unterkategorie: kupfer
   - symbol: OD7L
@@ -931,6 +931,30 @@ watchlist:
     yfinance_symbol: PLTR
     hauptgruppe: technologie_ki
     unterkategorie: ki
+  - symbol: G2X
+    name: VanEck Gold Miners UCITS ETF
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    assetklasse: etf
+    yfinance_symbol: G2X.DE
+    hauptgruppe: edelmetalle
+    unterkategorie: gold
+  - symbol: BW
+    name: Babcock & Wilcox Enterprises Inc
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    assetklasse: aktien
+    yfinance_symbol: BW
+    hauptgruppe: aktien_sektoren
+    unterkategorie: industrie
+  - symbol: ROL
+    name: Rollins Inc
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    assetklasse: aktien
+    yfinance_symbol: ROL
+    hauptgruppe: aktien_sektoren
+    unterkategorie: industrie
   - symbol: VSN
     name: Vision
     rolle: taktisch

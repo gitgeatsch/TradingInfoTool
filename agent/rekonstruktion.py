@@ -5,8 +5,8 @@ YFINANCE_HISTORY_UNRELIABLE_TICKERS steht: fuenf gehaltene Instrumente liefern
 ueber yfinance KEINE Historie, nur einen aktuellen Preis.
 
     OD7N GB00B15KY328.SG   WisdomTree Silver ETC
-    OD7H OD7H.SG           WisdomTree Gold
-    OD7C OD7C.SG           WisdomTree Copper
+    OD7H GB00B15KXX56.SG   WisdomTree Gold      (bis 15.09.2026 OD7H.SG)
+    OD7C GB00B15KXQ89.SG   WisdomTree Copper    (bis 15.09.2026 OD7C.SG)
     OD7L JE00BN7KB334.SG   WisdomTree Natural Gas
     3QSS IE00BLRPRJ20.SG   WisdomTree Nasdaq-100 3x Daily Short
 
@@ -16,6 +16,13 @@ der Portfolio-Bewertung und damit aus Z-3 heraus. Am 06.08. fehlten dadurch
 
 DAS VERFAHREN. Beide Faelle folgen demselben Muster: eine REFERENZREIHE liefert
 die Form, ein ANKERPREIS die Hoehe.
+
+⚠️⚠️ DER ANKER IST SO GUT WIE SEINE KURSANGABE (15.09.2026, Befund
+2.455-kurs-od7-eingefroren). OD7H.SG und OD7C.SG lieferten zwei Jahre den Preis
+vom 02.09.2022 - die Reihen bewegten sich richtig, lagen aber bei der Haelfte.
+Weil jeder Lauf die GANZE Reihe neu verankert, heilt eine Ticker-Korrektur sie
+beim naechsten Lauf ohne Bruch. Ob eine Kursangabe lebt, prueft taeglich
+`agent/kursluecke.py::tote_kursangaben` (Datenfrische, ,Kursreihen').
 
     ETC (ungehebelt):  wert[t] = anker x (referenz[t] / referenz[anker_tag])
     Hebelprodukt:      taegliche Rendite = faktor x Referenzrendite, verkettet

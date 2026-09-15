@@ -24173,6 +24173,163 @@ def paket_bitpanda_inventur() -> None:
            "")
 
 
+def paket_kursangabe() -> None:
+    """2.455-kurs-od7-eingefroren: eine Kursangabe, deren Handel an der Quelle
+    tot ist, wird gefunden - und OD7H/OD7C laufen ueber ein gehandeltes Kuerzel.
+
+    ⚠️ ANLASS: OD7H.SG und OD7C.SG meldeten zwei Jahre den Preis vom
+    02.09.2022. `fetched_at` war frisch, die rekonstruierte Reihe bewegte sich
+    richtig - nur ihr Niveau lag bei der Haelfte (Kapital rund 427 EUR zu
+    niedrig, Stand gegen Einstand OD7H minus 53 statt minus 6 Prozent).
+    Festgehalten:
+
+        1  die Regel: tot ab mehr als 5 Handelstagen; ein anderer Ticker als der
+           der Watchlist und ,keine Angabe' sind KEIN Befund; Krypto und Cash
+           werden nicht gefragt; ein Fehler je Titel bricht nicht ab
+        2  die Abfrage: ,nur fast_info'-Ticker ueberspringt der Rueckfall weiter,
+           die Pruefung der Kursangabe fragt sie
+        3  der Job legt das Ergebnis ab und meldet; die Datenfrische nennt tote
+           Angaben unter ,Kursreihen' (Urteil ,werte') und ist wieder frisch,
+           sobald der Ticker lebt; die Mail sagt, was zu tun ist
+        4  die Neuverankerung heilt ohne Bruch: gleiche Renditen, neuer Anker
+        5  die Konfiguration: OD7H/OD7C ueber ISIN.SG, kein Watchlist-Ticker
+           mehr auf dem toten Kuerzel; G2X, BW, ROL aufgenommen (2.455-bitpanda-
+           zuordnung, Nutzerentscheidung 15.09.)
+
+    Speicherdatenbanken, kein Netzabruf (Abfragen gestellt)."""
+    P = "Kursangabe"
+    import sqlite3 as _sq
+    from datetime import date as _date, datetime as _dt, timezone as _tz
+
+    import api.yfinance_history as _YH
+    import config as _CFG
+    import database.db as _DB
+    import scheduler.background as _BG
+    from agent import datenfrische as _DF
+    from agent import kursluecke as _KL
+    from agent.rekonstruktion import rekonstruiere as _rek
+    from api.yfinance_client import YFINANCE_HISTORY_UNRELIABLE_TICKERS as _UNZ
+    from database.models import OhlcPoint as _OP
+
+    def _wa(symbol, klasse, ticker, cash=False):
+        return _CFG.WatchlistAsset(symbol=symbol, name=symbol, rolle="taktisch",
+                                   beobachtungsstatus="beobachtung", coingecko_id=None,
+                                   assetklasse=klasse, yfinance_symbol=ticker,
+                                   ist_cash_aequivalent=cash)
+
+    heute = _date(2026, 9, 15)
+    jetzt = _dt(2026, 9, 15, 3, 30, tzinfo=_tz.utc)
+    wl = [_wa("OD7H", "rohstoffe", "OD7H.SG"), _wa("CEBS", "etf", "CEBS.DE"),
+          _wa("BTC", "krypto", "BTC-EUR"), _wa("EURCV", "etf", "EURCV.X", cash=True)]
+    stand = {"OD7H": {"ticker": "OD7H.SG", "letzter_handel": "2022-09-02"},
+             "CEBS": {"ticker": "CEBS.DE", "letzter_handel": "2026-09-14"}}
+
+    # 1 REGEL
+    tot = _KL.tote_kursangaben(stand, wl, heute)
+    pruefe(P, "⚠️⚠️ tot: letzter Handel 2022 wird genannt, der von gestern nicht",
+           [t["symbol"] for t in tot] == ["OD7H (Kursangabe OD7H.SG)"]
+           and tot[0]["alter"] > 1000 and tot[0]["art"] == "kursangabe", str(tot))
+    grenze = {"CEBS": {"ticker": "CEBS.DE", "letzter_handel": "2026-09-08"}}
+    ueber = {"CEBS": {"ticker": "CEBS.DE", "letzter_handel": "2026-09-07"}}
+    pruefe(P, "Grenze: 5 Handelstage noch lebendig, 6 tot",
+           not _KL.tote_kursangaben(grenze, wl, heute)
+           and len(_KL.tote_kursangaben(ueber, wl, heute)) == 1
+           and _KL.KURSANGABE_GRENZE_HANDELSTAGE == 5, "")
+    wl_neu = [_wa("OD7H", "rohstoffe", "GB00B15KXX56.SG")]
+    pruefe(P, "⚠️ nach einer Ticker-Umstellung meldet der alte Eintrag nichts; ,keine Angabe' auch nicht",
+           not _KL.tote_kursangaben(stand, wl_neu, heute)
+           and not _KL.tote_kursangaben({"OD7H": {"ticker": "OD7H.SG", "letzter_handel": None}}, wl, heute),
+           "")
+    gefragt = []
+
+    def _abfrage(t):
+        gefragt.append(t)
+        if t == "CEBS.DE":
+            raise RuntimeError("Netz")
+        return {"datum": "2022-09-02"}
+    erg = _KL.kursangaben(wl, _abfrage, jetzt)
+    pruefe(P, "gefragt nur Wertpapiere (nicht Krypto, nicht Cash); ein Fehler ergibt None statt Abbruch",
+           sorted(gefragt) == ["CEBS.DE", "OD7H.SG"]
+           and erg["CEBS"]["letzter_handel"] is None and erg["OD7H"]["letzter_handel"] == "2022-09-02",
+           str(erg))
+
+    # 2 ABFRAGE
+    _alt = _YH._fetch_letzter_handel
+    try:
+        _YH._fetch_letzter_handel = lambda t: {"datum": "2022-09-02"}
+        ohne = _YH.letzter_handel("GB00B15KXX56.SG")
+        mit = _YH.letzter_handel("GB00B15KXX56.SG", auch_nur_fast_info=True)
+    finally:
+        _YH._fetch_letzter_handel = _alt
+    pruefe(P, "⚠️ ,nur fast_info'-Ticker: der Rueckfall fragt nicht, die Kursangaben-Pruefung schon",
+           ohne is None and mit == {"datum": "2022-09-02"}, "%s / %s" % (ohne, mit))
+
+    # 3 JOB, DATENFRISCHE, MAIL
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        _DB.upsert_ohlc_points(c, [
+            _OP(symbol=sy, currency=cu, date=d, open=1, high=1, low=1, close=1.0, volume=1.0,
+                fetched_at="2026-09-15T00:00:00+00:00")
+            for sy, cu in (("OD7H", "USD"), ("_ROHSTOFF_FUTURES_OD7H", "USD"), ("CEBS", "EUR"))
+            for d in ("2026-09-11", "2026-09-14")], quelle="gemessen")
+        return c
+    wl2 = wl[:2]
+    c = _db()
+    tot_job = _BG._pruefe_kursangaben(
+        c, wl2, abfrage=lambda t: {"datum": "2022-09-02" if t == "OD7H.SG" else "2026-09-14"},
+        jetzt=jetzt)
+    import json as _json
+    abgelegt = _json.loads(c.execute("SELECT value FROM meta WHERE key=?",
+                                     (_KL.META_KURSANGABEN,)).fetchone()[0])
+    z = next(x for x in _DF.pruefe(c, heute=heute, mit_dateien=False, watchlist=wl2)
+             if x["quelle"] == "kursreihe")
+    pruefe(P, "⚠️⚠️ Job legt ab und meldet; die Datenfrische sagt ,werte' mit dem toten Kuerzel",
+           len(tot_job) == 1 and set(abgelegt) == {"OD7H", "CEBS"}
+           and z["urteil"] == "werte"
+           and [v["symbol"] for v in z["veraltete_werte"]] == ["OD7H (Kursangabe OD7H.SG)"],
+           "%s / %s" % (z["urteil"], z.get("veraltete_werte")))
+    _BG._pruefe_kursangaben(c, [wl_neu[0], wl[1]],
+                            abfrage=lambda t: {"datum": "2026-09-14"}, jetzt=jetzt)
+    z2 = next(x for x in _DF.pruefe(c, heute=heute, mit_dateien=False, watchlist=[wl_neu[0], wl[1]])
+              if x["quelle"] == "kursreihe")
+    pruefe(P, "und nach der Umstellung auf das gehandelte Kuerzel wieder frisch",
+           z2["urteil"] == "frisch" and not z2["veraltete_werte"], str(z2.get("veraltete_werte")))
+    c.close()
+    q = _quelltext("scheduler/background.py")
+    i = q.index("def _lade_wertpapier_kursreihen")
+    koerper = q[i:q.index("\ndef ", i + 10)]
+    pruefe(P, "verdrahtet: der 05:30-Ladeweg prueft zuletzt die Kursangaben, fail-soft; die Mail sagt, was zu tun ist",
+           koerper.index("_schliesse_kursluecken(conn, watchlist)") < koerper.index("_pruefe_kursangaben(conn, watchlist)")
+           and "except Exception" in koerper[koerper.index("_pruefe_kursangaben(conn, watchlist)") - 60:]
+           and "ZEILEN MIT ,KURSANGABE'" in q
+           and "auch_nur_fast_info=True" in q, "")
+
+    # 4 NEUVERANKERUNG
+    ref = [{"date": "2026-09-%02d" % d, "close": 100.0 + d, "high": 101.0 + d, "low": 99.0 + d}
+           for d in range(1, 11)]
+    alt = {p.date: p.close for p in _rek("X", "USD", ref, anker_preis=20.954)}
+    neu = {p.date: p.close for p in _rek("X", "USD", ref, anker_preis=41.927)}
+    pruefe(P, "⚠️ Neuverankerung: gleiche Renditen, letzter Punkt = neuer Anker, ganze Reihe neu",
+           abs(neu["2026-09-10"] - 41.927) < 1e-9 and len(neu) == len(alt) == 10
+           and all(abs(neu[d] / neu["2026-09-01"] - alt[d] / alt["2026-09-01"]) < 1e-12 for d in alt), "")
+
+    # 5 KONFIGURATION
+    w = {a.symbol: a for a in _CFG.get_watchlist()}
+    tote = {"OD7H.SG", "OD7C.SG"}
+    pruefe(P, "⚠️⚠️ OD7H und OD7C laufen ueber die ISIN in Stuttgart; kein Watchlist-Wert fragt das tote Kuerzel",
+           w["OD7H"].yfinance_symbol == "GB00B15KXX56.SG" and w["OD7C"].yfinance_symbol == "GB00B15KXQ89.SG"
+           and not any(a.yfinance_symbol in tote for a in w.values())
+           and {"GB00B15KXX56.SG", "GB00B15KXQ89.SG"} <= _UNZ,
+           "%s / %s" % (w["OD7H"].yfinance_symbol, w["OD7C"].yfinance_symbol))
+    neu3 = {"G2X": ("etf", "G2X.DE"), "BW": ("aktien", "BW"), "ROL": ("aktien", "ROL")}
+    pruefe(P, "G2X, BW, ROL in der Watchlist - Klasse, Ticker, gueltige Kategorie (Nutzerentscheidung 15.09.)",
+           all(s_ in w and (w[s_].assetklasse, w[s_].yfinance_symbol) == kt
+               and _CFG.get_kategorie_name(w[s_].hauptgruppe, w[s_].unterkategorie)
+               for s_, kt in neu3.items()), "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -24227,6 +24384,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kapitalkurse": paket_kapitalkurse,
           "Hebelstufen": paket_hebelstufen,
           "BitpandaInventur": paket_bitpanda_inventur,
+          "Kursangabe": paket_kursangabe,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

@@ -423,6 +423,23 @@ def _kursreihen_je_wert(conn, heute, watchlist=None) -> dict:
             aus["veraltet"].append({"symbol": sym, "stand": str(letzt)[:10],
                                     "alter": alter, "einheit": einheit,
                                     "grenze": grenze, "job": job})
+    # ⚠️⚠️ DIE KURSANGABE DER QUELLE (15.09.2026, 2.455-kurs-od7-eingefroren).
+    # Eine Reihe kann frisch sein und trotzdem auf einem toten Preis stehen:
+    # die rekonstruierten ETC-Reihen nehmen die Form von der Referenz und die
+    # Hoehe von der Kursangabe - OD7H.SG/OD7C.SG meldeten zwei Jahre den Preis
+    # vom 02.09.2022. Der 05:30-Job legt den letzten Handel je Wert ab; hier
+    # wird er gelesen, damit Mail und Export ihn ohne eigenen Zweig nennen.
+    try:
+        import json as _json
+
+        from agent import kursluecke as _KL
+        zeile = conn.execute("SELECT value FROM meta WHERE key = ?",
+                             (_KL.META_KURSANGABEN,)).fetchone()
+        if zeile and zeile[0]:
+            aus["veraltet"].extend(
+                _KL.tote_kursangaben(_json.loads(zeile[0]), watchlist, heute))
+    except Exception:                                        # noqa: BLE001
+        pass
     return aus
 
 

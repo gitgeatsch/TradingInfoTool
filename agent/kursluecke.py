@@ -30,8 +30,21 @@ oder bei einem duennen Platz schlicht kein Umsatz -, entsteht keine Kerze, und
 die Eingabepruefung des Portfoliowerts nennt das als Grund statt einer WARNING.
 
 NICHT FUER: Krypto (eigener Job, handelt taeglich) und die rekonstruierten
-Reihen (OD7C/H/L/N, 3QSS) - deren Kursangabe ist bei Yahoo veraltet (OD7C.SG:
-letzter Handel 2022), sie haengen an ihrer Referenz.
+Reihen (OD7C/H/L/N, 3QSS) - sie haengen an ihrer Referenz. (Bis 15.09.2026
+stand hier ,deren Kursangabe ist bei Yahoo veraltet (OD7C.SG: letzter Handel
+2022)' - und wurde als Eigenschaft der Instrumente gelesen statt als Fehler
+des Kuerzels. Der Preis war der ANKER der Rekonstruktion; siehe unten.)
+
+⚠️⚠️ DIE KURSANGABE SELBST (15.09.2026, Befund 2.455-kurs-od7-eingefroren).
+OD7H.SG und OD7C.SG meldeten zwei Jahre lang den Preis vom 02.09.2022
+(18,215 / 30,098 EUR statt 36,50 / 47,43). `price_cache.fetched_at` war jede
+Viertelstunde frisch, die rekonstruierte Reihe bewegte sich mit ihrer
+Referenz - nur ihr NIVEAU lag bei der Haelfte. Keine Pruefung sah das, weil
+alle das Abrufalter pruefen, keine das Alter des Handels an der Quelle.
+`kursangaben` fragt deshalb einmal taeglich je Nicht-Krypto-Wert den letzten
+Handel ab (auch fuer ,nur fast_info'-Ticker), `tote_kursangaben` nennt jeden,
+dessen letzter Handel laenger als `KURSANGABE_GRENZE_HANDELSTAGE` zurueckliegt
+- die Datenfrische meldet sie unter ,Kursreihen'.
 """
 from __future__ import annotations
 
@@ -42,6 +55,13 @@ QUELLE_SCHNAPPSCHUSS = "schnappschuss"
 # eine WARNING ist statt einer INFO. Ein Schlusskurs ist ein Schlusskurs - mehr
 # als ein halbes Prozent heisst, dass die Kursangabe nicht der Tagesschluss war.
 ABWEICHUNG_WARNUNG_PROZENT = 0.5
+# Ab wann eine Kursangabe als TOT gilt: eine volle Handelswoche ohne Handel an
+# der Quelle. Bewusst weiter als die Reihengrenze der Datenfrische (3) - ein
+# duenner Platz wie X136.MU handelt nicht jeden Tag, und gesucht wird ein
+# eingefrorenes Kuerzel (Befund: zwei JAHRE), kein ruhiger Tag.
+KURSANGABE_GRENZE_HANDELSTAGE = 5
+# Meta-Schluessel, unter dem der 05:30-Job das Ergebnis ablegt.
+META_KURSANGABEN = "kursangaben_json"
 
 
 def sitzung_beendet(handel: dict, jetzt: datetime | None = None) -> bool:
@@ -101,4 +121,59 @@ def ersetzte(vorher: list, conn) -> list[dict]:
             continue
         aus.append({"symbol": symbol, "datum": datum, "ersatz": alt, "echt": z[0],
                     "abweichung_prozent": 100.0 * (z[0] - alt) / alt})
+    return aus
+
+
+def _wertpapier_ticker(watchlist) -> dict[str, str]:
+    """symbol -> yfinance-Ticker fuer jeden Nicht-Krypto-Wert mit Ticker
+    (ohne Cash-Aequivalente)."""
+    aus = {}
+    for a in watchlist or []:
+        klasse = str(getattr(a, "assetklasse", "") or "krypto").lower()
+        ticker = getattr(a, "yfinance_symbol", None)
+        if klasse == "krypto" or not ticker or getattr(a, "ist_cash_aequivalent", False):
+            continue
+        aus[str(a.symbol).upper()] = str(ticker)
+    return aus
+
+
+def kursangaben(watchlist, abfrage, jetzt: datetime | None = None) -> dict:
+    """{symbol: {ticker, letzter_handel, geprueft_am}} - `letzter_handel` ist
+    der Tag des letzten Handels am Platz oder None (keine Angabe). Fail-soft
+    je Titel: ein Fehler ergibt None, nicht den Abbruch."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    aus = {}
+    for symbol, ticker in sorted(_wertpapier_ticker(watchlist).items()):
+        try:
+            handel = abfrage(ticker) or {}
+        except Exception:                                    # noqa: BLE001
+            handel = {}
+        aus[symbol] = {"ticker": ticker, "letzter_handel": handel.get("datum"),
+                       "geprueft_am": jetzt.isoformat()}
+    return aus
+
+
+def tote_kursangaben(stand: dict, watchlist, heute=None) -> list[dict]:
+    """Die Kursangaben, deren letzter Handel zu lange zurueckliegt - im Format
+    der Datenfrische (`veraltete_werte`), damit Mail und Export sie ohne eigenen
+    Zweig anzeigen.
+
+    ⚠️ NUR, WENN DER TICKER NOCH DER DER WATCHLIST IST. Nach einer Umstellung
+    (OD7H.SG -> GB00B15KXX56.SG) steht bis zum naechsten 05:30-Lauf der alte
+    Eintrag - er waere ein Fehlalarm fuer ein Kuerzel, das niemand mehr fragt.
+    ⚠️ KEINE ANGABE IST KEIN BEFUND: ein Netzfehler um 05:30 soll keine Mail
+    ausloesen; einen toten Abruf findet die Datenfrische ueber den Job."""
+    from staleness import handelstage_alter
+
+    ticker = _wertpapier_ticker(watchlist)
+    aus = []
+    for symbol, e in sorted((stand or {}).items()):
+        if ticker.get(symbol) != e.get("ticker") or not e.get("letzter_handel"):
+            continue
+        alter = handelstage_alter(e["letzter_handel"], heute)
+        if alter is not None and alter > KURSANGABE_GRENZE_HANDELSTAGE:
+            aus.append({"symbol": "%s (Kursangabe %s)" % (symbol, e["ticker"]),
+                        "stand": str(e["letzter_handel"])[:10], "alter": alter,
+                        "einheit": "Handelstage", "grenze": KURSANGABE_GRENZE_HANDELSTAGE,
+                        "job": "refresh_aktien_ohlc", "art": "kursangabe"})
     return aus

@@ -99,7 +99,7 @@ def get_full_ohlc_history(ticker: str, symbol: str, currency: str = "USD") -> li
     )
 
 
-def letzter_handel(ticker: str) -> dict | None:
+def letzter_handel(ticker: str, auch_nur_fast_info: bool = False) -> dict | None:
     """Der LETZTE HANDEL eines Titels laut Yahoo - Tag am Handelsplatz, Kurs,
     Tageshoch/-tief, Waehrung und die aktuelle Handelsperiode (15.09.2026).
 
@@ -107,8 +107,15 @@ def letzter_handel(ticker: str) -> dict | None:
     2.455-kapitalkurse): Yahoos TAGESHISTORIE hinkte bei Xetra-Titeln, die
     Kursangabe desselben Titels nicht. Gelesen aus `history_metadata`
     (`regularMarketTime` usw.), das ein kurzer `.history(period="5d")`
-    mitliefert. None bei Fehlschlag oder ohne Zeitangabe."""
-    if ticker in YFINANCE_HISTORY_UNRELIABLE_TICKERS:
+    mitliefert. None bei Fehlschlag oder ohne Zeitangabe.
+
+    `auch_nur_fast_info` (15.09.2026, Befund 2.455-kurs-od7-eingefroren): der
+    Rueckfall ueberspringt die ,nur fast_info'-Ticker - richtig, ihre Reihe ist
+    rekonstruiert. Die Pruefung der KURSANGABE braucht sie aber gerade: ihr
+    Preis ist der Anker der Rekonstruktion, und OD7H.SG/OD7C.SG lieferten zwei
+    Jahre lang einen Preis vom 02.09.2022. `history_metadata` kommt auch dann,
+    wenn die Historie selbst leer bleibt (live geprueft: OD7N ueber die ISIN)."""
+    if ticker in YFINANCE_HISTORY_UNRELIABLE_TICKERS and not auch_nur_fast_info:
         return None
     try:
         return run_with_daemon_timeout(lambda: _fetch_letzter_handel(ticker),

@@ -497,6 +497,48 @@ def _lade_wertpapier_kursreihen(conn, watchlist) -> None:
             "%.4f (%+.2f %%)", e["symbol"], e["datum"], e["ersatz"], e["echt"],
             e["abweichung_prozent"])
     _schliesse_kursluecken(conn, watchlist)
+    # ⚠️ ZULETZT UND FAIL-SOFT: eine tote Kursangabe darf das Laden nicht
+    # aufhalten - sie wird gemeldet, nicht repariert (2.455-kurs-od7-eingefroren).
+    try:
+        _pruefe_kursangaben(conn, watchlist)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Pruefung der Kursangaben fehlgeschlagen")
+
+
+def _pruefe_kursangaben(conn, watchlist, abfrage=None, jetzt=None) -> list[dict]:
+    """Wie alt ist der letzte HANDEL je Nicht-Krypto-Wert an der Quelle?
+    (15.09.2026, Befund 2.455-kurs-od7-eingefroren)
+
+    ⚠️ ANLASS: OD7H.SG und OD7C.SG meldeten zwei Jahre lang den Preis vom
+    02.09.2022. Das Abrufalter war frisch, die Reihe bewegte sich - nur das
+    Niveau lag bei der Haelfte, und das Kapital um rund 427 EUR zu niedrig.
+
+    Legt das Ergebnis unter `meta.kursangaben_json` ab (die Datenfrische liest
+    es und meldet tote Angaben unter ,Kursreihen') und schreibt je toter Angabe
+    eine WARNING. Regel und Grenze: `agent/kursluecke.py`."""
+    import json as _json
+
+    from agent import kursluecke as KL
+    from api.yfinance_history import letzter_handel
+
+    abfrage = abfrage or (lambda t: letzter_handel(t, auch_nur_fast_info=True))
+    jetzt = jetzt or datetime.now(timezone.utc)
+    stand = KL.kursangaben(watchlist, abfrage, jetzt)
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES (?, ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (KL.META_KURSANGABEN, _json.dumps(stand, ensure_ascii=False)))
+    conn.commit()
+    tot = KL.tote_kursangaben(stand, watchlist, jetzt.date())
+    ohne = sorted(s for s, e in stand.items() if not e.get("letzter_handel"))
+    for t in tot:
+        logger.warning(
+            "Kursangabe tot: %s - letzter Handel %s (%d Handelstage). Der Preis dieses "
+            "Kuerzels ist eingefroren; Ticker in config.yaml auf einen gehandelten Platz "
+            "umstellen.", t["symbol"], t["stand"], t["alter"])
+    logger.info("Kursangaben geprueft: %d Werte, %d tot, %d ohne Angabe%s",
+                len(stand), len(tot), len(ohne), (" (%s)" % ", ".join(ohne)) if ohne else "")
+    return tot
 
 
 def _schliesse_kursluecken(conn, watchlist, abfrage=None, jetzt=None) -> list[str]:
@@ -1742,6 +1784,17 @@ def _melde_datenfrische(conn) -> int:
                     "Kuerzel liefert bei yfinance/Kraken nichts mehr "
                     "(Umbenennung, Delisting) oder die Reihe wird von keinem "
                     "Job nachgeladen.")
+                if any(v.get("art") == "kursangabe"
+                       for z in _nur_werte for v in z["veraltete_werte"]):
+                    # 15.09.2026, 2.455-kurs-od7-eingefroren
+                    _was_tun += (
+                        "\n\nZEILEN MIT ,KURSANGABE': Yahoo meldet fuer dieses "
+                        "Kuerzel seit dem genannten Tag keinen Handel - der Preis "
+                        "ist EINGEFROREN, auch wenn er jede Viertelstunde abgerufen "
+                        "wird. Kapital, Einstandsvergleich und die Hoehe einer "
+                        "rekonstruierten Reihe stimmen dann nicht. Abhilfe: in "
+                        "config.yaml ein gehandeltes Kuerzel eintragen (bei "
+                        "Stuttgart oft die ISIN mit .SG).")
             _kopf = ("%d Datenquelle(n) aus %d Job(s) ohne frischen Abruf."
                      % (len(_kritisch) - len(_nur_werte), len(_je_job))
                      if _je_job else "Alle Jobs rufen ab.")

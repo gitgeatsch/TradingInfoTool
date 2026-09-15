@@ -108,7 +108,8 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `8bedff5` | **Zugangsschlüssel** | FRED-Schlüssel nicht mehr im Klartext in Datenbank, Log und Export; beim Start wird der gespeicherte Eintrag bereinigt | 2.453-fredkey-gebaut | ⏳ Pull ausstehend |
 | `0c22b77` | **Hebel-Abgleich** | Fällt der Abgleich der Hebelpositionen mit Bitpanda 1 Stunde lang aus, kommt eine Mail; die Hebelführungs-Mail nennt dann den Positionsstand | 2.455-hebelabgleich-gebaut | ⏳ Pull ausstehend |
 | `9d5d82f` | **Kapitalkurse** | Kursreihen-Job täglich 05:30 statt 24 h ab Start; der Portfoliowert lädt einen fehlenden Handelstagskurs nach; fehlt er in Yahoos Tageshistorie, kommt der Schlusskurs aus dem letzten Handel des Platzes | 2.455-kapitalkurse-gebaut | ⏳ Pull ausstehend |
-| *(nächster Commit)* | **Hebelstufen** | Hebelmails zeigen den gerechneten Hebel und die einstellbaren Stufen (untere hervorgehoben, obere mit Überschuss oder „NICHT SICHER“); alle Zahlen rechnen mit demselben Hebel | 2.455-hebelstufen-gebaut | ⏳ Pull ausstehend |
+| `ea816c3` | **Hebelstufen** | Hebelmails zeigen den gerechneten Hebel und die einstellbaren Stufen (untere hervorgehoben, obere mit Überschuss oder „NICHT SICHER“); alle Zahlen rechnen mit demselben Hebel | 2.455-hebelstufen-gebaut | ⏳ Pull ausstehend |
+| *(nächster Commit)* | **OD7-Kurse und Kursangabe** | OD7H und OD7C bekommen wieder echte Kurse (ISIN in Stuttgart statt eingefrorenem Kürzel von 2022) – Kapital rund +420 EUR, ohne Indexsprung; eine tägliche Wache meldet jede tote Kursangabe; G2X, BW, ROL in der Watchlist | 2.455-kurs-od7-gebaut | ⏳ Pull ausstehend (K8) |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -123,3 +124,24 @@ Erwartet in der Konsole des Exports zusätzlich (frühestens 15 Minuten nach dem
 - 05:30 `Aktien-OHLC-Refresh …` und gegebenenfalls `Kursluecke CEBS: Tageskerze … fehlt in Yahoos Historie - Schlusskurs … aus dem letzten Handel (XETRA, …) eingesetzt`
 - 06:30 `Tageswert <gestern>` an einem Werktag **ohne** fortgeschriebene Börsentitel; am Wochenende weiter mit (richtig)
 - in den Tagen danach `Schlusskurs-Rueckfall … durch die echte Tageskerze ersetzt: alt -> neu (±x %)` – die Selbstprüfung. Eine WARNING (über 0,5 %) wäre ein Befund.
+
+
+**Nach dem Pull von „OD7-Kurse und Kursangabe“ – ⚠️ `config.yaml` ist betroffen.** Am Notebook hat `Basisinfos/config.yaml` lokale Änderungen (Watchlist, Schalter). Ein einfacher `git pull` bricht dann ab. Sicherer Weg – die lokalen Änderungen bleiben erhalten:
+
+```
+git diff --stat
+git stash
+git pull
+git stash pop
+```
+
+- Meldet `git stash pop` einen **Konflikt** in `config.yaml`: **nichts verwerfen**, die Datei bleibt im Stash – Bildschirmfoto von `git status` und `git diff` schicken, dann lösen wir es gemeinsam.
+- Danach **App neu starten**.
+
+**Woran man es sieht (K8):**
+
+- innerhalb von 15 Minuten nach dem Start: OD7H um 36 EUR, OD7C um 47 EUR in der Portfolio-Ansicht
+- 05:30 `ETC-Reihe fuer OD7H rekonstruiert: … Anker ≈42 USD` (vorher ≈21) und `Kursangaben geprueft: 16 Werte, 0 tot, 0 ohne Angabe`
+- 06:30 `Tageswert <gestern>` rund 420 EUR höher, der Index ohne Sprung
+- der Bitpanda-Abgleich meldet G2X, BW und ROL als neue Bestände
+- ⚠️ eine Zeile `Kursangabe tot: …` wäre ein Befund

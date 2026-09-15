@@ -46,6 +46,13 @@ YFINANCE_HISTORY_UNRELIABLE_TICKERS = frozenset({
     "GB00B15KY328.SG",  # OD7N
     "IE00BLRPRJ20.SG",  # 3QSS
     "JE00BN7KB334.SG",  # OD7L
+    # ⚠️ 15.09.2026 (Befund 2.455-kurs-od7-eingefroren): OD7H.SG und OD7C.SG
+    # liefern seit 02.09.2022 denselben Preis - der Handel an Yahoos Stuttgart-
+    # Kuerzel ist tot. OD7H und OD7C laufen jetzt wie OD7N/OD7L ueber die ISIN
+    # am selben Platz. Die alten Kuerzel bleiben in der Menge, bis beide Geraete
+    # die neue `config.yaml` haben - danach sind sie wirkungslos, nicht schaedlich.
+    "GB00B15KXX56.SG",  # OD7H
+    "GB00B15KXQ89.SG",  # OD7C
     "OD7H.SG",
     "OD7C.SG",
     "X136.BE",  # X136, 2026-07-19 ergaenzt
