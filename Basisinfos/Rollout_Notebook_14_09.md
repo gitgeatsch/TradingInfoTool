@@ -97,3 +97,20 @@ python extract_notebook_diagnose.py
 
 In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Datenfrische**. Erwartet: Terminmarkt rund 39 Werte in 30 Minuten, Umlaufmenge 61 von 66, Datenfrische ohne `bestand`.
 
+
+## Nachtrag 15.09. — die Pulls vom 14. spät bis 15.09.
+
+| Commit | Was | Wirkung | Befund | am Notebook |
+|---|---|---|---|---|
+| `928b04d` | **Ampel** | Binance/Bybit/OKX werden nicht mehr rot, wenn ein Wert dort nur nicht gelistet ist | 2.454-ampel-gebaut | ✔ geprüft 15.09. |
+| `04b69d3` | **Laufzeit-Kennzahl** | die Pause zwischen zwei 15-Minuten-Läufen zählt nicht mehr als Ausfall (26,8 statt 85,5 %) | 2.454-laufzeit-gebaut | ✔ geprüft 15.09. |
+| `f5337da` | **Kursreihen** | S&P-Referenz im Tagesjob, Nachladen nach Handelstagen, Frische je Wert mit Mail | 2.453-kurs-gebaut | ✔ Export 15.09. 00:41: SPY 14.09., 62 Werte frisch |
+| `8bedff5` | **Zugangsschlüssel** | FRED-Schlüssel nicht mehr im Klartext in Datenbank, Log und Export; beim Start wird der gespeicherte Eintrag bereinigt | 2.453-fredkey-gebaut | ⏳ Pull ausstehend |
+
+**Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
+
+```
+python extract_notebook_diagnose.py
+```
+
+Erwartet: der Export enthält den Schlüssel nicht mehr (am Desktop gegengeprüft: 8 Treffer → 0). ⚠️ Die **alten Log-Dateien** am Notebook tragen ihn bis zur Rotation weiter; der Export maskiert sie. Die **bisherigen Exporte und DB-Sicherungen** im Austauschordner enthalten ihn noch — der Schlüssel ist kostenlos, ein neuer ist optional.

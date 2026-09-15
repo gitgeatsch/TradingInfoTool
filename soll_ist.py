@@ -569,13 +569,13 @@ REIHENFOLGE = (
             "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
             "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
             "2.454-etfbestand AUSGEGLIEDERT in Schritt 57 (Ziel am 15.09. entschieden, nachgelagert; im Betrieb ohne Wirkung), 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
-            "2.452-boerse (OI nur von Binance) und 2.452-anlass. "
-            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
+            "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), 2.382-rundung (gerundeter Hebel ueberschreitet das r(q)-Budget um bis zu 2,5 Prozent). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. "
+            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: 2.453-hebelpos, 2.387-fortschreibung, 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass; (G3) BETRIEBSHYGIENE: 2.454-gemini, 2.454-rauschen, 2.454-vix, 2.455-refreshzeit. Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-kurs-gebaut, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey-gebaut, 2.453-bestand-gebaut, 2.453-veto, "
             "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, "
-            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass",
+            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
@@ -594,12 +594,12 @@ REIHENFOLGE = (
             "Asset mit Spot- und Hebelposition sauber als ZWEI Positionen - "
             "Gestaltung vor dem Bau abstimmen (2.451-hebel); VSN aus der "
             "Stummzeile ausnehmen (2.442-vier). Nebenpunkte: veralteter Test in "
-            "`pruefe_marktrang.py` (2.419-saetze); Planpruefung verschaerfen "
+            "`pruefe_marktrang.py` (2.419-saetze); Planpruefung verschaerfen - Review 15.09.: 19 aeltere offene Messfragen ohne Schritt (Liste in 2.455-review) beim Verschaerfen einordnen; Suite-Hygiene 2.455-suite (dauerhaft erwartete rote Zeilen, Nicht-Krypto-Messbasis); "
             "(2.453-plan); Desktop-DB-Schreibzugriff klaeren (2.453-desktopdb). "
             "\u27a4 Umsetzungsschritte vor dem Bau im Detail abstimmen.",
             "Befunde 2.451-absicherung, 2.451-sofort, 2.451-verkauf, "
             "2.451-bestaetigung, 2.451-phantom, 2.451-topf, 2.451-hebel, "
-            "2.442-vier, 2.419-saetze, 2.453-plan, 2.453-desktopdb",
+            "2.442-vier, 2.419-saetze, 2.453-plan, 2.453-desktopdb, 2.455-suite",
             block="D-BETRIEB",
             umbau="neu"),
     Schritt(54, "TERMINMARKT-FAKTEN EINGEFROREN - REPARATUR",
@@ -1056,6 +1056,42 @@ REIHENFOLGE = (
             "Basisinfos/Ausrollen_24_08.md; Notebook-Rollout 12.09.",
             fertig=True,
             umbau="neu"),  # Rollout Paket B
+    Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
+            "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
+            "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
+            "etc.) angehen und ABSCHLIESSEN'*. ⚠️⚠️ WARUM DAS DRINGEND IST "
+            "(Befund 2.392, gemessen): die Ausstiegsseite ist mit 517 "
+            "Empfehlungen seit 14.08. und 15 bis 20 pro Tag der GROESSERE "
+            "Teil des Betriebs - und sie verzweigt an Stufe 9 direkt in die "
+            "Mail. Die Stufen 10 bis 12 sieht sie nie, also gilt fuer sie "
+            "weder das gemessene Potential noch eine Schwelle noch ein "
+            "Deckel. (1) GUETE ZUERST: `outcome_status` taugt fuer Ausstiege "
+            "nicht - 409 von 517 stehen auf ,nicht_anwendbar', der Rest auf "
+            "EINSTIEGS-Kategorien. Es braucht ein eigenes Erfolgsmass fuer "
+            ",war der Verkauf richtig' - Potential, nicht Zielerreichung: "
+            "was hat der Kurs NACH der Empfehlung getan, gegen ein "
+            "Nullmodell (halten). (2) STUMME AUSSTIEGE (2.392-stumm): 105 "
+            "Ausstiege sind als ,reines LLM-Halten' ohne Mail gebucht, bis "
+            "11.09. - den Zweig finden und schliessen. (3) WIEDERHOLUNG: "
+            "SUPRA 12x VERKAUFEN, MON 10x REDUZIEREN in 7 Tagen - greift der "
+            "Cooldown auf der Ausstiegsseite ueberhaupt? (4) DIE FRIST `umgeworfen_bis` (Nutzerentscheidung "
+            "12.09.: *,zur Frist - sollte getrennt fuer die Verkaufsseite "
+            "bzw. Ausstieg gesamtheitlich geplant und umgesetzt werden'*). "
+            "⚠️ SIE IST IN 0 VON 1.280 ZEILEN GESETZT - LLM-1 Rolle BC "
+            "liefert sie nie, und damit laeuft die dritte Pruefung der "
+            "`ausstiegsrechnung` vollstaendig leer. Ihr eigener Kopf "
+            "beziffert, was das kostet: *,15 bis 21 %% aller Faelle laufen "
+            "ohne Entscheidung aus - heute merkt das niemand.'* Zuerst "
+            "klaeren, WARUM sie fehlt (Prompt, Schema oder Vertrag), dann "
+            "gemeinsam mit den anderen Ausstiegsfragen loesen - nicht als "
+            "Einzelfix. (5) ERST DANN die "
+            "Frage nach einer eigenen Bewertungsstufe fuer den Ausstieg. ⚠️ "
+            "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
+            "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
+            "davor). \u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Plan_Asset_Lebenszyklus_14_09.md, Abschnitt Ausstieg): (A) VERKAUFEN UND REDUZIEREN GEHOEREN GEMESSEN und sauber ins Konzept - WAS ist der Verkaufsgrund: eine BEWERTUNG je Strategie; die noetigen Bewertungen und Urteile werden mit dem Nutzer dimensioniert wie beim Einstieg. \u26a0\ufe0f DIE VERKAUFSBEWERTUNG IST NICHT GELOEST - Stand 14.09. unveraendert 2.392. (B) HEBEL: Schutzschicht = Regeln alle 15 min mit eigenem Betreff und Mailhinweis; Fuehrung = Modell mit Positionskontext, an die OFFENE POSITION gebunden, 1-h-Takt fuer offene Hebeltrades - erst wenn gemessen ist, dass Verkauf/Reduzieren tragen; eigene Positionsfrage mit Intraday-Fakten. (C) KERN/AKKUMULATION: vorerst KEINE Verkaufsaktionen; nachgelagert: bei laengerem Greed u. U. sinnvoll, Fear nicht. (7c) Ein Asset mit Spot- UND Hebelposition = zwei Positionen, zwei Verkaufssignale, keine Sammelmail. \u27a4 DIE DETAILPLANUNG FOLGT NACH DEM ROLLOUT (Nutzerauftrag: Doku lesen, Messdokumente beachten, testen und simulieren). \u27a4 NUTZERENTSCHEIDUNG 15.09.: VOR DIE AKKUMULATION GEZOGEN (vor die Schritte 25 bis 27). Grund: die Prioritaet des Nutzers vom 11.09. lautet ,1 Hebel 2 Spot 3 Akkumulation', und die Verkaufsseite betrifft Hebel und Spot; sie laeuft taeglich mit 15 bis 20 Empfehlungen ohne gemessene Guete, waehrend die gesperrte Akkumulation nichts ausloest und damit nicht schadet. Schritt 55 geht voraus (Ausstiegsmail nach Positionen).",
+            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
+            block="D-BEWERTUNG",
+            umbau="beides"),  # die Ausstiegsseite laeuft an der neuen Bewertung vorbei
     Schritt(25, "AKKU-MESSPAKET",
             "(1) 2.286/2.287 reproduzieren (R-R11); (2) Zeitstabilitaet je "
             "Kandidat fuer H90 - Permutationstest je Haelfte, `n68` ist "
@@ -1313,8 +1349,10 @@ REIHENFOLGE = (
             "entschieden hat. ⚠️ DANACH erst sind die VIER "
             "Terminmarkt-Kanaele gegen die RICHTIGE Zielgroesse messbar; "
             "bisher sind sie nur gegen `bewegung_r` gefallen, und das VOR "
-            "dem Messstandard.",
-            "Befunde 2.238 / 2.238-klasse / 2.169 / REGISTER_Kandidaten",
+            "dem Messstandard. \u27a4 AUS DEM REVIEW 15.09.: D3 - ist H20 der richtige "
+            "Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3 bis 5 Tage "
+            "betraegt? Gehoert zur selben Messung der Terminmarkt-Kanaele.",
+            "Befunde 2.238 / 2.238-klasse / 2.169 / D3 / REGISTER_Kandidaten",
             block="D-BEWERTUNG",
             umbau="neu"),  # A1 blockiert JEDE Messung am neuen Hebel
     Schritt(36, "V12 VOLA UND SCHNITT",
@@ -2068,42 +2106,6 @@ REIHENFOLGE = (
             "Expertenempfehlung 12.09.; Befunde 2.392-stumm, 2.394",
             fertig=True, block="D-BETRIEB",
             umbau="beides"),  # alter Defekt geschlossen, Erfassung neu
-    Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
-            "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
-            "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
-            "etc.) angehen und ABSCHLIESSEN'*. ⚠️⚠️ WARUM DAS DRINGEND IST "
-            "(Befund 2.392, gemessen): die Ausstiegsseite ist mit 517 "
-            "Empfehlungen seit 14.08. und 15 bis 20 pro Tag der GROESSERE "
-            "Teil des Betriebs - und sie verzweigt an Stufe 9 direkt in die "
-            "Mail. Die Stufen 10 bis 12 sieht sie nie, also gilt fuer sie "
-            "weder das gemessene Potential noch eine Schwelle noch ein "
-            "Deckel. (1) GUETE ZUERST: `outcome_status` taugt fuer Ausstiege "
-            "nicht - 409 von 517 stehen auf ,nicht_anwendbar', der Rest auf "
-            "EINSTIEGS-Kategorien. Es braucht ein eigenes Erfolgsmass fuer "
-            ",war der Verkauf richtig' - Potential, nicht Zielerreichung: "
-            "was hat der Kurs NACH der Empfehlung getan, gegen ein "
-            "Nullmodell (halten). (2) STUMME AUSSTIEGE (2.392-stumm): 105 "
-            "Ausstiege sind als ,reines LLM-Halten' ohne Mail gebucht, bis "
-            "11.09. - den Zweig finden und schliessen. (3) WIEDERHOLUNG: "
-            "SUPRA 12x VERKAUFEN, MON 10x REDUZIEREN in 7 Tagen - greift der "
-            "Cooldown auf der Ausstiegsseite ueberhaupt? (4) DIE FRIST `umgeworfen_bis` (Nutzerentscheidung "
-            "12.09.: *,zur Frist - sollte getrennt fuer die Verkaufsseite "
-            "bzw. Ausstieg gesamtheitlich geplant und umgesetzt werden'*). "
-            "⚠️ SIE IST IN 0 VON 1.280 ZEILEN GESETZT - LLM-1 Rolle BC "
-            "liefert sie nie, und damit laeuft die dritte Pruefung der "
-            "`ausstiegsrechnung` vollstaendig leer. Ihr eigener Kopf "
-            "beziffert, was das kostet: *,15 bis 21 %% aller Faelle laufen "
-            "ohne Entscheidung aus - heute merkt das niemand.'* Zuerst "
-            "klaeren, WARUM sie fehlt (Prompt, Schema oder Vertrag), dann "
-            "gemeinsam mit den anderen Ausstiegsfragen loesen - nicht als "
-            "Einzelfix. (5) ERST DANN die "
-            "Frage nach einer eigenen Bewertungsstufe fuer den Ausstieg. ⚠️ "
-            "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
-            "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
-            "davor). \u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Plan_Asset_Lebenszyklus_14_09.md, Abschnitt Ausstieg): (A) VERKAUFEN UND REDUZIEREN GEHOEREN GEMESSEN und sauber ins Konzept - WAS ist der Verkaufsgrund: eine BEWERTUNG je Strategie; die noetigen Bewertungen und Urteile werden mit dem Nutzer dimensioniert wie beim Einstieg. \u26a0\ufe0f DIE VERKAUFSBEWERTUNG IST NICHT GELOEST - Stand 14.09. unveraendert 2.392. (B) HEBEL: Schutzschicht = Regeln alle 15 min mit eigenem Betreff und Mailhinweis; Fuehrung = Modell mit Positionskontext, an die OFFENE POSITION gebunden, 1-h-Takt fuer offene Hebeltrades - erst wenn gemessen ist, dass Verkauf/Reduzieren tragen; eigene Positionsfrage mit Intraday-Fakten. (C) KERN/AKKUMULATION: vorerst KEINE Verkaufsaktionen; nachgelagert: bei laengerem Greed u. U. sinnvoll, Fear nicht. (7c) Ein Asset mit Spot- UND Hebelposition = zwei Positionen, zwei Verkaufssignale, keine Sammelmail. \u27a4 DIE DETAILPLANUNG FOLGT NACH DEM ROLLOUT (Nutzerauftrag: Doku lesen, Messdokumente beachten, testen und simulieren).",
-            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
-            block="D-BEWERTUNG",
-            umbau="beides"),  # die Ausstiegsseite laeuft an der neuen Bewertung vorbei
     Schritt(38, "KETTE",
             "K-3 (Schwelle), dann K-2, K-4, K-5. ⚠️ HIER GEHOERT AUCH DER "
             "DRITTE BEITRAG HIN (Befund 2.409-kandidaten): DefiLlama-TVL ist "
@@ -2227,8 +2229,12 @@ REIHENFOLGE = (
             "ausloest, hat ein Argument geliefert'. Die Spanne ist gemessen, "
             "der Halbsatz nicht - und `gesamtbild` zaehlt das Etikett. Dieselbe "
             "Messanlage beantwortet es: loesen Stops ausserhalb der Spanne "
-            "seltener ohne Grund aus als solche innerhalb?",
-            "Befunde 2.437-atr, 2.438, 2.440-was-hilft; "
+            "seltener ohne Grund aus als solche innerhalb? "
+            "\u27a4 (5) AUS DEM REVIEW 15.09.: 2.379-tage - wie lange bleibt ein Hebel "
+            "sicher, bevor die Finanzierung die Liquidation an den Stop schiebt? "
+            "Beim heutigen Kapital keine Handlung noetig (Median 79 Tage); ueber eine "
+            "Tagesreserve beim Einstieg ist zu entscheiden, wenn das Kapital waechst.",
+            "Befunde 2.437-atr, 2.438, 2.440-was-hilft, 2.379-tage; "
             "messe_stopweite_historisch.py",
             block="D-BEWERTUNG",
             umbau="neu"),  # die Stopregel ist der Nenner des neuen Hebels
@@ -2263,6 +2269,22 @@ REIHENFOLGE = (
             "Gesamtplan 28.08. E1; Befund 2.448-rest",
             block="D-ABBILDUNG",
             umbau="beides"),  # Planung, nicht Angleichung
+    Schritt(58, "REGELWERK-DOKUMENTE: WELCHE REGEL GILT HEUTE, UND WO STEHT SIE?",
+            "\u27a4 AUS DEM REVIEW 15.09. (Befund 2.455-regelwerk). Das Manual "
+            "(fuer den Nutzer: jede Regel mit Wert und Begruendung) steht auf dem "
+            "06.09., der Entscheidungslog auf dem 03.09. Seither entstandene Regeln "
+            "stehen nur in Code, Befunden und Plan-Vorgaben - Paket B, Stopweite, "
+            "Terminmarkt- und Kursfrische, Ampel. Die Register beantworten ,was "
+            "wurde festgestellt', nicht ,welche Regel gilt mit welchem Wert'. "
+            "\u27a4 NUTZERENTSCHEIDUNG 15.09.: WEG A - *,zentrale und wichtige Dokumentation duerfen nicht auseinanderlaufen, du benoetigst laufend die Informationen - sorge dafuer, dass du alles auffinden und nachvollziehen kannst'*. Umsetzungsschritte vor dem Bau vorlegen. Die zwei Wege waren: (A) ein Regelblatt, das "
+            "aus dem Code ERZEUGT wird wie die Register - kann nicht veralten, "
+            "braucht je Regel einen Eintrag mit Wert, Quelle und Befund; (B) Manual "
+            "und Log formal stilllegen und die Frage einem bestehenden Register "
+            "uebertragen. \u26a0\ufe0f Nicht: das Manual von Hand nachtragen - "
+            "genau das ist dreimal veraltet (Landkarte 16.08.).",
+            "Befund 2.455-regelwerk; Memory feedback_doku_struktur_zuordnung",
+            block="D-ABBILDUNG",
+            umbau="alt"),  # Dokumentation nachziehen, keine Umbauleistung
     Schritt(57, "ETF-BESTAND DER ROHSTOFFE - TRAEGT DIE INFORMATION?",
             "\u27a4 AUSGEGLIEDERT AUS SCHRITT 56 (15.09., Befund "
             "2.454-etfbestand-quelle). Die Reihe sollte Rolle G fuer Rohstoffe "
