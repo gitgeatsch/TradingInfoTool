@@ -24330,6 +24330,107 @@ def paket_kursangabe() -> None:
                for s_, kt in neu3.items()), "")
 
 
+def paket_preis_ueberlauf() -> None:
+    """2.455-preis-ueberlauf: ein nicht speicherbarer CoinGecko-Wert legt den
+    Krypto-Preisabruf nicht mehr lahm.
+
+    ⚠️ ANLASS (Notebook 15.09.2026 ab 07:49): CoinGecko lieferte das 24h-Volumen
+    von ETH als Ganzzahl 11.489.241.951.787.889.000 - ueber 2^63. SQLite warf
+    `OverflowError`, der Preis-Job schrieb alle Coins in einer Schleife und fiel
+    bei jedem Lauf komplett aus (Backoff bis 60 Minuten). Festgehalten:
+
+        1  `_zahl`: grosse Ganzzahl -> float, Unzahl/NaN/Wahrheitswert -> None
+        2  das ETH-Volumen von 15.09. wird als Datenfehler verworfen (mehr als
+           50-fache Marktkapitalisierung), ein echtes Volumen bleibt; alle
+           Snapshots sind speicherbar
+        3  der Job schreibt je Coin fehlertolerant: ein kaputter Coin fehlt, die
+           uebrigen stehen, KEINE Fehlermail; fallen alle, bleibt es ein Jobfehler
+
+    Wegwerf-Datenbank im Temp-Ordner, kein Netzabruf, keine Mail (Melder gestellt)."""
+    P = "PreisUeberlauf"
+    import logging as _lg
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from types import SimpleNamespace as _NS
+
+    import api.coingecko as _CG
+    import database.db as _DB
+    import scheduler.background as _BG
+    from database.models import PriceSnapshot as _PS
+
+    # 1
+    pruefe(P, "_zahl: Ganzzahl ueber 2^63 wird float, Unzahl, NaN und True werden None",
+           _CG._zahl(11489241951787889000) == 1.1489241951787889e19
+           and isinstance(_CG._zahl(11489241951787889000), float)
+           and _CG._zahl("abc") is None and _CG._zahl(float("nan")) is None
+           and _CG._zahl(True) is None and _CG._zahl(None) is None and _CG._zahl("2.5") == 2.5, "")
+
+    # 2
+    antwort = {
+        "ethereum": {"usd": 2446, "eur": 2100.71, "usd_market_cap": 295000000000,
+                     "usd_24h_vol": 11489241951787889000, "usd_24h_change": -1.2},
+        "bitcoin": {"usd": 77000, "eur": 66575, "usd_market_cap": 1530000000000,
+                    "usd_24h_vol": 31000000000, "usd_24h_change": 0.4},
+    }
+    kl = _CG.CoinGeckoClient.__new__(_CG.CoinGeckoClient)
+    kl.get_simple_prices = lambda ids: antwort
+    wl = [_NS(symbol="ETH", coingecko_id="ethereum"), _NS(symbol="BTC", coingecko_id="bitcoin")]
+    snaps = {x.symbol: x for x in kl.fetch_price_snapshots(wl)}
+    c = _sq.connect(":memory:")
+    c.row_factory = _sq.Row
+    _DB.init_db(c)
+    gespeichert = True
+    try:
+        for x in snaps.values():
+            _DB.insert_price_snapshot(c, x)
+    except Exception:                                            # noqa: BLE001
+        gespeichert = False
+    pruefe(P, "⚠️⚠️ das ETH-Volumen vom 15.09. wird verworfen, BTC behaelt seines - und alles ist speicherbar",
+           snaps["ETH"].volume_24h_usd is None and snaps["ETH"].price_eur == 2100.71
+           and snaps["BTC"].volume_24h_usd == 31000000000.0 and gespeichert,
+           "ETH %s / BTC %s / gespeichert %s" % (snaps["ETH"].volume_24h_usd,
+                                                 snaps["BTC"].volume_24h_usd, gespeichert))
+    c.close()
+
+    # 3
+    pfad = _os.path.join(_tf.gettempdir(), "tit_preis_ueberlauf_%d.db" % _os.getpid())
+
+    def _fabrik():
+        k = _sq.connect(pfad)
+        k.row_factory = _sq.Row
+        return k
+    k0 = _fabrik()
+    _DB.init_db(k0)
+    k0.close()
+    gemeldet = []
+    alt = (_BG._notify_job_failure, _BG._record_job_success_for_backoff, _BG._record_job_failure_for_backoff)
+    _BG._notify_job_failure = lambda job, text: gemeldet.append(job)
+    _BG._record_job_success_for_backoff = lambda job: None
+    _BG._record_job_failure_for_backoff = lambda job: None
+
+    def _snap(sym, preis):
+        return _PS(symbol=sym, coingecko_id=sym.lower(), price_usd=preis, price_eur=preis,
+                   market_cap_usd=None, volume_24h_usd=None, change_24h_pct=None,
+                   fetched_at="2026-09-15T18:00:00+00:00")
+    try:
+        einer = _NS(fetch_price_snapshots=lambda w: [_snap("BTC", 1.0), _snap("ETH", object()), _snap("SOL", 3.0)])
+        _BG.refresh_prices_job(einer, _fabrik, lambda: [1, 2, 3])
+        k = _fabrik()
+        da = sorted(r[0] for r in k.execute("SELECT symbol FROM price_cache"))
+        k.close()
+        alle = _NS(fetch_price_snapshots=lambda w: [_snap("ETH", object())])
+        _BG.refresh_prices_job(alle, _fabrik, lambda: [1])
+    finally:
+        _BG._notify_job_failure, _BG._record_job_success_for_backoff, _BG._record_job_failure_for_backoff = alt
+        try:
+            _os.remove(pfad)
+        except OSError:
+            pass
+    pruefe(P, "⚠️⚠️ ein kaputter Coin fehlt, BTC und SOL stehen, keine Fehlermail; fallen alle, kommt die Mail",
+           da == ["BTC", "SOL"] and gemeldet == ["refresh_prices"], "gespeichert %s, gemeldet %s" % (da, gemeldet))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -24385,6 +24486,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Hebelstufen": paket_hebelstufen,
           "BitpandaInventur": paket_bitpanda_inventur,
           "Kursangabe": paket_kursangabe,
+          "PreisUeberlauf": paket_preis_ueberlauf,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

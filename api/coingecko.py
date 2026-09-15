@@ -30,6 +30,30 @@ RATE_LIMIT_ANONYMOUS_PER_MINUTE = 30
 RATE_LIMIT_WITH_KEY_PER_MINUTE = 100
 DEFAULT_COOLDOWN_SECONDS = 60  # Backoff nach 429, falls kein Retry-After-Header vorhanden
 MAX_COOLDOWN_SECONDS = 300  # Deckel fuer den exponentiellen Backoff (5 Min)
+# Ab welchem Verhaeltnis 24h-Volumen / Marktkapitalisierung ein Volumen als
+# Datenfehler gilt (15.09.2026, Befund 2.455-preis-ueberlauf). ETH meldete
+# 11.489.241.951.787.889.000 USD - das 45-Millionenfache der Marktkapitalisierung.
+# Echte Umschlaege liegen bei wenigen Prozent, selbst Memecoins am Ausbruchstag
+# selten ueber 100 Prozent; 50-fach trennt Datenfehler sicher von Markt.
+MAX_VOLUMEN_ZU_MARKTKAP = 50.0
+
+
+def _zahl(wert):
+    """Eine Zahl aus der Antwort als float - oder None (15.09.2026, 2.455-preis-ueberlauf).
+
+    ⚠️ ANLASS: CoinGecko lieferte das ETH-Volumen als GANZZAHL ueber 2^63.
+    SQLite speichert Ganzzahlen nur bis 2^63-1 - `insert_price_snapshot` warf
+    `OverflowError`, und weil der Preis-Job alle Coins in einer Schleife
+    schreibt, fiel ab 07:49 der ganze Krypto-Preisabruf aus. Als float ist
+    derselbe Wert speicherbar. Nicht-Zahlen und nicht endliche Werte -> None."""
+    import math
+    if wert is None or isinstance(wert, bool):
+        return None
+    try:
+        f = float(wert)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return f if math.isfinite(f) else None
 
 
 @dataclass
@@ -312,15 +336,26 @@ class CoinGeckoClient:
                 # coingecko_id unbekannt/ungueltig oder Coin delisted - nicht abstuerzen,
                 # nur diesen einen Asset ueberspringen.
                 continue
+            marktkap = _zahl(data.get("usd_market_cap"))
+            volumen = _zahl(data.get("usd_24h_vol"))
+            if volumen is not None and marktkap and volumen > MAX_VOLUMEN_ZU_MARKTKAP * marktkap:
+                # SICHTBAR VERWORFEN: das Volumen speist den Umschlag im Prompt
+                # (`rollen_eingabe`, Anteil Volumen/Marktkap.) - ein Datenfehler
+                # stuende dort als Perzentil 100.
+                logger.warning(
+                    "CoinGecko-Volumen fuer %s verworfen: %.3g USD bei %.3g USD "
+                    "Marktkapitalisierung (mehr als %.0f-fach) - Datenfehler der Quelle",
+                    asset.symbol, volumen, marktkap, MAX_VOLUMEN_ZU_MARKTKAP)
+                volumen = None
             snapshots.append(
                 PriceSnapshot(
                     symbol=asset.symbol,
                     coingecko_id=asset.coingecko_id,
-                    price_usd=data.get("usd"),
-                    price_eur=data.get("eur"),
-                    market_cap_usd=data.get("usd_market_cap"),
-                    volume_24h_usd=data.get("usd_24h_vol"),
-                    change_24h_pct=data.get("usd_24h_change"),
+                    price_usd=_zahl(data.get("usd")),
+                    price_eur=_zahl(data.get("eur")),
+                    market_cap_usd=marktkap,
+                    volume_24h_usd=volumen,
+                    change_24h_pct=_zahl(data.get("usd_24h_change")),
                     fetched_at=fetched_at,
                 )
             )

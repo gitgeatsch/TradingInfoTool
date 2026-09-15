@@ -200,9 +200,24 @@ def refresh_prices_job(client, conn_factory, watchlist_provider) -> bool:
     conn = conn_factory()
     try:
         snapshots = client.fetch_price_snapshots(watchlist)
+        # ⚠️ JE COIN FEHLERTOLERANT (15.09.2026, Befund 2.455-preis-ueberlauf):
+        # ein einziger nicht speicherbarer Wert (ETH-Volumen ueber 2^63) riss
+        # ab 07:49 den GANZEN Abruf mit - alle Kryptopreise blieben stehen.
+        # Ein verworfener Coin steht im Log; faellt JEDER, bleibt es ein
+        # Jobfehler mit Mail.
+        verworfen = []
         for snapshot in snapshots:
-            db.insert_price_snapshot(conn, snapshot)
-        logger.info("Preis-Refresh: %d/%d Assets aktualisiert", len(snapshots), len(watchlist))
+            try:
+                db.insert_price_snapshot(conn, snapshot)
+            except Exception as exc_einzel:              # noqa: BLE001
+                verworfen.append(f"{snapshot.symbol} ({type(exc_einzel).__name__}: {exc_einzel})")
+        if verworfen:
+            logger.warning("Preis-Refresh: %d Snapshot(s) nicht gespeichert: %s",
+                           len(verworfen), "; ".join(verworfen))
+            if len(verworfen) == len(snapshots):
+                raise RuntimeError("kein Snapshot speicherbar: " + "; ".join(verworfen[:3]))
+        logger.info("Preis-Refresh: %d/%d Assets aktualisiert",
+                    len(snapshots) - len(verworfen), len(watchlist))
         _record_job_success_for_backoff("refresh_prices")
     except Exception as exc:
         logger.exception("Preis-Refresh fehlgeschlagen")

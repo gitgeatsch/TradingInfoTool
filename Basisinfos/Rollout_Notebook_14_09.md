@@ -109,7 +109,8 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `0c22b77` | **Hebel-Abgleich** | Fällt der Abgleich der Hebelpositionen mit Bitpanda 1 Stunde lang aus, kommt eine Mail; die Hebelführungs-Mail nennt dann den Positionsstand | 2.455-hebelabgleich-gebaut | ⏳ Pull ausstehend |
 | `9d5d82f` | **Kapitalkurse** | Kursreihen-Job täglich 05:30 statt 24 h ab Start; der Portfoliowert lädt einen fehlenden Handelstagskurs nach; fehlt er in Yahoos Tageshistorie, kommt der Schlusskurs aus dem letzten Handel des Platzes | 2.455-kapitalkurse-gebaut | ⏳ Pull ausstehend |
 | `ea816c3` | **Hebelstufen** | Hebelmails zeigen den gerechneten Hebel und die einstellbaren Stufen (untere hervorgehoben, obere mit Überschuss oder „NICHT SICHER“); alle Zahlen rechnen mit demselben Hebel | 2.455-hebelstufen-gebaut | ⏳ Pull ausstehend |
-| *(nächster Commit)* | **OD7-Kurse und Kursangabe** | OD7H und OD7C bekommen wieder echte Kurse (ISIN in Stuttgart statt eingefrorenem Kürzel von 2022) – Kapital rund +420 EUR, ohne Indexsprung; eine tägliche Wache meldet jede tote Kursangabe; G2X, BW, ROL in der Watchlist | 2.455-kurs-od7-gebaut | ⏳ Pull ausstehend (K8) |
+| `ed8f10d` | **OD7-Kurse und Kursangabe** | OD7H und OD7C bekommen wieder echte Kurse (ISIN in Stuttgart statt eingefrorenem Kürzel von 2022) – Kapital rund +420 EUR, ohne Indexsprung; eine tägliche Wache meldet jede tote Kursangabe; G2X, BW, ROL in der Watchlist | 2.455-kurs-od7-gebaut | ⏳ Pull ausstehend (K8) |
+| *(nächster Commit)* | **Krypto-Preisabruf** | Ein unsinnig großer CoinGecko-Wert (ETH-Volumen über 2^63) legte seit 07:49 den ganzen Krypto-Preisabruf lahm; jetzt als Kommazahl, unplausibles Volumen verworfen, jeder Coin einzeln gespeichert | 2.455-preis-ueberlauf | ⏳ Pull ausstehend (K9) |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -145,3 +146,6 @@ git stash pop
 - 06:30 `Tageswert <gestern>` rund 420 EUR höher, der Index ohne Sprung
 - der Bitpanda-Abgleich meldet G2X, BW und ROL als neue Bestände
 - ⚠️ eine Zeile `Kursangabe tot: …` wäre ein Befund
+
+
+**Nach dem Pull von „Krypto-Preisabruf“ (K9):** normaler `git pull` (keine `config.yaml`-Änderung) → **App neu starten**. Erwartet innerhalb von 15 Minuten: `Preis-Refresh: 4x/5x Assets aktualisiert`, keine Zeile `Preis-Refresh fehlgeschlagen`; liefert CoinGecko den ETH-Wert noch, zusätzlich `CoinGecko-Volumen fuer ETH verworfen …` (richtig). Der Backoff des alten Prozesses ist mit dem Neustart weg.
