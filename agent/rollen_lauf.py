@@ -971,7 +971,16 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                 "offen": len(_trades),
                 "empfehlungen": [x.get("empfehlung") for x in _trades]}
             _neu_hf = _HF.neue_meldungen(conn, _trades)
-            _hf_mail = _HF.sammel_mail(_neu_hf, zeitpunkt=tag)
+            # ⚠️ AUF WELCHEM POSITIONSSTAND (15.09.2026, 2.453-hebelpos): ist der
+            # Abgleich mit Bitpanda seit >= 1 Stunde nicht gelungen, sagt die
+            # Mail das. Fail-soft: ohne Angabe bleibt die Mail, wie sie war.
+            _stand_hf = None
+            try:
+                from agent import hebel_abgleich as _HA
+                _stand_hf = _HA.positionsstand_zeile(_HA.frische(conn))
+            except Exception:                                # noqa: BLE001
+                logger.warning("Stand des Hebel-Abgleichs nicht lesbar", exc_info=True)
+            _hf_mail = _HF.sammel_mail(_neu_hf, zeitpunkt=tag, positionsstand=_stand_hf)
             if _hf_mail:
                 ergebnis.setdefault("mails", []).append(
                     {"symbol": "(Hebel)", "betreff": _hf_mail[0],

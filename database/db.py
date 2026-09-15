@@ -2172,6 +2172,31 @@ def set_bitpanda_holdings_synced_at(conn: sqlite3.Connection, timestamp: str) ->
     conn.commit()
 
 
+def get_hebel_positions_synced_at(conn: sqlite3.Connection) -> str | None:
+    """Wann lief der HEBEL-Abgleich mit Bitpanda zuletzt ERFOLGREICH? (15.09.2026)
+
+    ⚠️ Befund 2.453-hebelpos: `hebel_position_last_synced_unix` ist die Zeit der
+    letzten TRANSAKTION und steht ohne Handel still - als Frischemass taugt er
+    nicht. Dieser Stempel sagt ,wann haben wir zuletzt nachgefragt', dasselbe
+    Prinzip wie `bitpanda_holdings_synced_at`. Gesetzt in
+    `hebel_abgleich.stempel_setzen`, None ohne erfolgreichen Lauf."""
+    row = conn.execute(
+        "SELECT value FROM meta WHERE key = 'hebel_positions_synced_at'").fetchone()
+    if not row:
+        return None
+    wert = row["value"] if hasattr(row, "keys") else row[0]
+    return wert if wert is not None else None
+
+
+def set_hebel_positions_synced_at(conn: sqlite3.Connection, timestamp: str) -> None:
+    conn.execute(
+        "INSERT INTO meta (key, value) VALUES ('hebel_positions_synced_at', ?) "
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (timestamp,),
+    )
+    conn.commit()
+
+
 def insert_price_snapshot(conn: sqlite3.Connection, snap: PriceSnapshot) -> None:
     conn.execute(
         "INSERT INTO price_cache "

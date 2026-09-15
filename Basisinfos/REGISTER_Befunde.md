@@ -1114,6 +1114,10 @@
 
 - Quelle: bestand.py; soll_ist.py; pruefe_pakete.py; Basisinfos/Rollout_Notebook_14_09.md; Basisinfos/Test_und_Verifikationsmethodik.md
 
+**2.455-hebelabgleich-gebaut** — ✔✔ HEBEL-ABGLEICH: EIN AUSFALL AB 1 STUNDE KOMMT PER MAIL (Nutzerentscheidungen 7d vom 14.09. und Grenze 1 Stunde vom 15.09.; Befund 2.453-hebelpos). GEBAUT: (1) `agent/hebel_abgleich.py` - Stempel `hebel_positions_synced_at` in `meta` (wann zuletzt ERFOLGREICH abgeglichen; der alte Transaktionsstempel steht ohne Handel still), `frische` mit Grenze 1 Stunde gezaehlt ab dem spaeteren von letztem Erfolg und App-Start, `meldung` einmal je Ausfall ohne Wiederholung und Entwarnung, Fehlertext maskiert, `positionsstand_zeile`. (2) `hebel_screening_job` setzt den Stempel NACH Abgleich und Liquidationspreisen im `try`, merkt den Fehlertext im `except` und ruft danach `_pruefe_hebel_abgleich` - vor dem Umlauf der Rollen-Kette, nur mit Bitpanda-Schluessel. (3) Die Hebelfuehrungs-Mail nennt ,POSITIONSSTAND VOM ...', wenn der Abgleich veraltet ist - ein Fakt, kein Ausloeser; ohne jeden erfolgreichen Abgleich keine Zeile. (4) Datenfrische: Quelle `hebel_abgleich` (Rolle H, totes Netz, findet auch einen stehenden Job; Uebergang ueber `bitpanda_holdings_synced_at` bis zum ersten Lauf). (5) Export: Abschnitt `hebel_abgleich` mit Alter in Stunden und Konsolenzeile. 📏 LIVE gegen die Kopie: der Desktop-Schluessel bekommt von Bitpanda 401 - genau der Fehlerweg: Stempel unveraendert, der Waechter schickt bei 2 Stunden Alter EINE Mail mit dem echten Fehlertext, der zweite Lauf keine; die Datenfrische der Sicherung steht ueber den Uebergang auf ,frisch'. ⚠️ GRENZEN: laeuft die App nicht, kommt keine Mail; der Erfolgsweg ist am Desktop nicht live pruefbar (Schluessel), er ist im Suite-Paket an der echten Funktion und am Notebook nach dem Pull zu sehen (Konsolenzeile ,Hebel-Abgleich: letzter Erfolg ...')
+
+- Quelle: agent/hebel_abgleich.py; scheduler/background.py hebel_screening_job, _pruefe_hebel_abgleich; database/db.py get/set_hebel_positions_synced_at; agent/hebelfuehrung.py sammel_mail; agent/rollen_lauf.py; agent/datenfrische.py _stand_hebel_abgleich; extract_notebook_diagnose.py _hebel_abgleich; pruefe_pakete.py HebelAbgleich
+
 **2.454** — ✔✔ NOTEBOOK-KONTROLLE NACH DEM ROLLOUT BESTANDEN (Commit 15341b8). Pruefskript 8 von 8 OK: Module, Terminmarkt 39 Werte in 30 min, BTC frisch, Umlaufmenge 61, Migration, Datenfrische. Export: Abschnitt Terminmarkt ohne Auffaelligkeit (Leser 37 frisch, 2 nicht bei Binance, 4 nie), Datenfrische 20 von 20 frisch - Bestand frisch mit Job bitpanda_holdings, keine ueberfaelligen Jobs, keine Schema-Drift. Log: `terminmarkt_job` laeuft am Notebook 3 bis 4 min und endet jedes Mal erfolgreich; nach dem Start 20:21 ,Datenfrische: alle 20 Faktenquellen frisch'. Der Start 20:19 endete nach 16 s ohne Fehler (manuell?). Offene Funde: 2.454-ampel (Folge von Schritt 54), -laufzeit, -gemini, -etfbestand, -rauschen, -vix
 
 - Quelle: Schritt 54; Befunde 2.454-*
@@ -3022,10 +3026,6 @@
 
 - Quelle: agent/marktrang.py:180-237,341,363; agent/rollen_eingabe.py:420-441
 
-**2.453-hebelpos** — ○ VERDACHT: `hebel_positions` und die Liquidationspreise werden nur im Job der Rollen-Kette abgeglichen; ein Bitpanda-Ausfall ist nur eine Logwarnung, es gibt keine Frischepruefung (deckt sich mit 7d, 2.451-hebel)
-
-- Quelle: scheduler/background.py hebel_screening_job
-
 **2.453-alterlos** — ○ VERDACHT, NICHT EINZELN GEPRUEFT: weitere Leser ohne Altersgrenze, deren Saetze an ein Modell gehen - `positionierung._etf_bestand`, `_insider`, `_aus_reihe` (DefiLlama, Deribit), `rollen_eingabe.fundamentaldaten` und `umschlag`; manche Saetze tragen ihr Datum, Stablecoin, Optionsmarkt, Fundamentaldaten und Umschlag nicht. Dazu die Cash-Reserve (`toepfe.py:245`) ohne Blick auf `cash_reserve_synced_at`
 
 - Quelle: agent/positionierung.py:450,547,592; agent/rollen_eingabe.py:221,263; agent/toepfe.py:245
@@ -3050,7 +3050,7 @@
 
 - Quelle: Basisinfos/Plan_Asset_Lebenszyklus_14_09.md
 
-**2.451-hebel** — 📋 DIE KLEINEREN HEBEL-FAELLE GEGENGEPRUEFT. 7a TEILSCHLIESSUNG ALS VOLLSCHLIESSUNG: KEIN FEHLER - am echten HYPE-Fall (26.07.) verkaufte Bitpanda 7,70 Stueck zur Tilgung und die restlichen 3,79 im selben Moment; eine Vollschliessung in zwei Buchungen. Produktionstabelle: 188 Positionen, keine offen. ⚠️ Nachspielen mit dem Export 03.08. nicht deckungsgleich (4 statt 184 Schliessungen) - kein Befund daraus. 7b LIQUIDATION NACHTRAEGLICH: bewusst (API meldet keine; 1-%%-Gebuehr, 4 Faelle belegt), Warnung vorher am geschaetzten Preis. 7c SPOT UND HEBEL AUF DEMSELBEN WERT: bewusst Hebel-Vorrang (S6b) - die Verkaufsempfehlung uebergeht den Spot-Bestand; theoretisch, seit Paket B wieder moeglich. 7d HEBEL-ABGLEICH FAELLT AUS: bewusst nur Logwarnung (Vorfall 18.08.), ein laenger anhaltender Ausfall bleibt unbemerkt. ➤ NUTZERENTSCHEIDUNGEN 14.09.: 7d - Mail bei anhaltendem Ausfall mit aussagekraeftigem Betreff und Inhalt; 7c - ein Asset mit zwei Positionen wird sauber getrennt behandelt (Umbau, Gestaltung vor dem Bau abzustimmen)
+**2.451-hebel** — 📋 DIE KLEINEREN HEBEL-FAELLE GEGENGEPRUEFT. 7a TEILSCHLIESSUNG ALS VOLLSCHLIESSUNG: KEIN FEHLER - am echten HYPE-Fall (26.07.) verkaufte Bitpanda 7,70 Stueck zur Tilgung und die restlichen 3,79 im selben Moment; eine Vollschliessung in zwei Buchungen. Produktionstabelle: 188 Positionen, keine offen. ⚠️ Nachspielen mit dem Export 03.08. nicht deckungsgleich (4 statt 184 Schliessungen) - kein Befund daraus. 7b LIQUIDATION NACHTRAEGLICH: bewusst (API meldet keine; 1-%%-Gebuehr, 4 Faelle belegt), Warnung vorher am geschaetzten Preis. 7c SPOT UND HEBEL AUF DEMSELBEN WERT: bewusst Hebel-Vorrang (S6b) - die Verkaufsempfehlung uebergeht den Spot-Bestand; theoretisch, seit Paket B wieder moeglich. 7d HEBEL-ABGLEICH FAELLT AUS: bewusst nur Logwarnung (Vorfall 18.08.), ein laenger anhaltender Ausfall bleibt unbemerkt. ➤ NUTZERENTSCHEIDUNGEN 14.09.: 7d - Mail bei anhaltendem Ausfall mit aussagekraeftigem Betreff und Inhalt; 7c - ein Asset mit zwei Positionen wird sauber getrennt behandelt (Umbau, Gestaltung vor dem Bau abzustimmen). ✔ 7d GEBAUT 15.09. (2.455-hebelabgleich-gebaut) - offen bleibt 7c
 
 - Quelle: importer/bitpanda_margin_positions.py:226-253; agent/rollen_lauf.py:1676; scheduler/background.py:3447
 
@@ -3344,6 +3344,12 @@
 - Quelle: agent/datenfrische.py (Quelle kursreihe)
 - **Abgeloest durch: 2.453-kurs-gebaut**
 - Warum: Tagesjob laedt S&P-Referenz, Nachladen nach Handelstagen, Frische je Wert
+
+**2.453-hebelpos** — ○ VERDACHT: `hebel_positions` und die Liquidationspreise werden nur im Job der Rollen-Kette abgeglichen; ein Bitpanda-Ausfall ist nur eine Logwarnung, es gibt keine Frischepruefung (deckt sich mit 7d, 2.451-hebel). ➤ GEPRUEFT 15.09. (Code, Notebook-Log 12.09. 00:41 bis 15.09. 00:37, Sicherung 14.09. 22:40). TEIL 1 STIMMT, IST ABER HARMLOS: der Abgleich haengt am Job `hebel_screening`, laeuft seit H-4 (11.09.) unabhaengig vom Screening-Schalter - 212 Abgleiche, Abstand im Median 15,0 Minuten. Die zwei langen Luecken (114 und 1.038 Minuten am 12.09.) sind Zeiten, in denen die App nicht lief - im Log steht dort gar nichts. TEIL 2 STIMMT: zwei Ausfaelle in drei Tagen (503 von Bitpanda, 12.09. 07:08 und 14.09. 07:34), jeder EINZELN und im naechsten Lauf nachgeholt - der Abgleich laedt ab der letzten Transaktion und verliert nichts. Ein anhaltender Ausfall bliebe aber unbemerkt: nur eine WARNING je Lauf, kein Zeitstempel des letzten ERFOLGREICHEN Abgleichs (`hebel_position_last_synced_unix` ist die Zeit der letzten TRANSAKTION und steht ohne Handel still - am 14.09. auf dem 11.09.). Die gesamte Bitpanda-Stoerung faenge erst die Datenfrische des Spot-Bestands (Grenze 3 Tage). WIRKUNG HEUTE: KEINE - 0 offene Hebelpositionen, letzte geschlossen am 26.07. WIRKUNG MIT OFFENER POSITION: die Hebelfuehrung fuehrt einen veralteten Bestand (eine geschlossene Position bekaeme weiter Empfehlungen, eine neue keine), und der Aggregat-Deckel zaehlt falsch. Der Liquidationspreis selbst ist unkritisch - die Hebelfuehrung rechnet ihn mit den echten Tagen neu. LOESUNG = Entscheidung 7d vom 14.09. (Mail bei anhaltendem Ausfall), Umsetzungsschritte vorgelegt
+
+- Quelle: scheduler/background.py hebel_screening_job
+- **Abgeloest durch: 2.455-hebelabgleich-gebaut**
+- Warum: Stempel, Mail ab 1 Stunde, Mailzeile, Datenfrische und Export gebaut (15.09.)
 
 **2.453-fredkey** — ⚠️⚠️ SICHERHEIT: DER FRED-SCHLUESSEL STEHT IM KLARTEXT IN DER DATENBANK. `api_health_status.last_error_message` speichert die volle Fehler-URL einschliesslich `api_key=` (Sicherung 12.09., Quelle fred, ein 502) - und diese Tabelle geht in den Notebook-Export im Austauschordner
 

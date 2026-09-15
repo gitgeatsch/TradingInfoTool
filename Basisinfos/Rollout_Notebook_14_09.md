@@ -106,6 +106,7 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `04b69d3` | **Laufzeit-Kennzahl** | die Pause zwischen zwei 15-Minuten-Läufen zählt nicht mehr als Ausfall (26,8 statt 85,5 %) | 2.454-laufzeit-gebaut | ✔ geprüft 15.09. |
 | `f5337da` | **Kursreihen** | S&P-Referenz im Tagesjob, Nachladen nach Handelstagen, Frische je Wert mit Mail | 2.453-kurs-gebaut | ✔ Export 15.09. 00:41: SPY 14.09., 62 Werte frisch |
 | `8bedff5` | **Zugangsschlüssel** | FRED-Schlüssel nicht mehr im Klartext in Datenbank, Log und Export; beim Start wird der gespeicherte Eintrag bereinigt | 2.453-fredkey-gebaut | ⏳ Pull ausstehend |
+| *(nächster Commit)* | **Hebel-Abgleich** | Fällt der Abgleich der Hebelpositionen mit Bitpanda 1 Stunde lang aus, kommt eine Mail; die Hebelführungs-Mail nennt dann den Positionsstand | 2.455-hebelabgleich-gebaut | ⏳ Pull ausstehend |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -113,4 +114,4 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 python extract_notebook_diagnose.py
 ```
 
-Erwartet: der Export enthält den Schlüssel nicht mehr (am Desktop gegengeprüft: 8 Treffer → 0). ⚠️ Die **alten Log-Dateien** am Notebook tragen ihn bis zur Rotation weiter; der Export maskiert sie. Die **bisherigen Exporte und DB-Sicherungen** im Austauschordner enthalten ihn noch — der Schlüssel ist kostenlos, ein neuer ist optional.
+Erwartet in der Konsole des Exports zusätzlich (frühestens 15 Minuten nach dem Start): `Hebel-Abgleich: letzter Erfolg <heute> (vor 0,x h, Grenze 1 h), offen: keine`. Steht dort `noch kein erfolgreicher Lauf`, ist der Abgleich seit dem Start nicht gelungen. Erwartet: der Export enthält den Schlüssel nicht mehr (am Desktop gegengeprüft: 8 Treffer → 0). ⚠️ Die **alten Log-Dateien** am Notebook tragen ihn bis zur Rotation weiter; der Export maskiert sie. Die **bisherigen Exporte und DB-Sicherungen** im Austauschordner enthalten ihn noch — der Schlüssel ist kostenlos, ein neuer ist optional.

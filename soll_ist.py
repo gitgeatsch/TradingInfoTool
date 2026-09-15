@@ -570,12 +570,12 @@ REIHENFOLGE = (
             "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
             "2.454-etfbestand AUSGEGLIEDERT in Schritt 57 (Ziel am 15.09. entschieden, nachgelagert; im Betrieb ohne Wirkung), 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
             "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), 2.382-rundung (gerundeter Hebel ueberschreitet das r(q)-Budget um bis zu 2,5 Prozent). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. "
-            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: 2.453-hebelpos, 2.387-fortschreibung, 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass; (G3) BETRIEBSHYGIENE: 2.454-gemini, 2.454-rauschen, 2.454-vix, 2.455-refreshzeit. Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
+            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: \u2714 GELOEST 15.09. 2.453-hebelpos (2.455-hebelabgleich-gebaut: Mail ab 1 Stunde, Stempel, Mailzeile, Datenfrische, Export), 2.387-fortschreibung, 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass; (G3) BETRIEBSHYGIENE: 2.454-gemini, 2.454-rauschen, 2.454-vix, 2.455-refreshzeit. Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-kurs-gebaut, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey-gebaut, 2.453-bestand-gebaut, 2.453-veto, "
             "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, "
-            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
+            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
@@ -589,7 +589,7 @@ REIHENFOLGE = (
             "aber nur wenn nicht durch Staking erklaert, gespeichert wird die "
             "VERKAUFTE Stueckzahl (2.451-bestaetigung); (5) Phantombestand melden "
             "(2.451-phantom); (6) ,im Topf frei' kennzeichnen, spaeter ueber die "
-            "Kaufverknuepfung zaehlen (2.451-topf); (7d) Mail bei anhaltendem "
+            "Kaufverknuepfung zaehlen (2.451-topf); (7d) \u2714 GEBAUT 15.09. (2.455-hebelabgleich-gebaut): Mail bei anhaltendem "
             "Ausfall des Hebel-Abgleichs mit aussagekraeftigem Betreff; (7c) ein "
             "Asset mit Spot- und Hebelposition sauber als ZWEI Positionen - "
             "Gestaltung vor dem Bau abstimmen (2.451-hebel); VSN aus der "

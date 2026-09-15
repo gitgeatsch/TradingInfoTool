@@ -519,8 +519,13 @@ def vermerke(conn, trades: list, tag: str | None = None) -> None:
         DBM.merke_joblauf(conn, schluessel(t, tag))
 
 
-def sammel_mail(trades: list, zeitpunkt: str | None = None) -> tuple | None:
-    """EINE Mail fuer alle meldepflichtigen Hebelpositionen - oder None."""
+def sammel_mail(trades: list, zeitpunkt: str | None = None,
+                positionsstand: str | None = None) -> tuple | None:
+    """EINE Mail fuer alle meldepflichtigen Hebelpositionen - oder None.
+
+    `positionsstand` (15.09.2026, 2.453-hebelpos): die Zeile aus
+    `hebel_abgleich.positionsstand_zeile`, wenn der Abgleich mit Bitpanda
+    veraltet ist - ein Fakt ueber den Stand, kein Ausloeser."""
     posten = sorted([t for t in trades
                      if str(t.get("empfehlung") or "").split(" · ")[0] in MELDEN],
                     key=_rang)
@@ -533,6 +538,8 @@ def sammel_mail(trades: list, zeitpunkt: str | None = None) -> tuple | None:
             % (len(posten), "en" if len(posten) > 1 else "")]
     if zeitpunkt:
         text.append(str(zeitpunkt))
+    if positionsstand:
+        text += ["", str(positionsstand)]
     text += ["",
              "Ausfuehrung manuell ueber die Bitpanda-App - dieses System "
              "handelt nicht.",

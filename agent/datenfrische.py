@@ -192,6 +192,15 @@ REGISTRATUR: tuple[Quelle, ...] = (
     # der Job schreibt taeglich den Vortag.
     Quelle("kapital", "K", "portfolio_wert_historie", 3,
            "portfolio_wert", "Kapital fuer die Hebelrechnung (r x Kapital)"),
+    # ⚠️⚠️ ROLLE "H" - DIE ECHTEN HEBELPOSITIONEN (15.09.2026, 2.453-hebelpos).
+    # Keine Promptquelle, sondern der Bestand, auf dem Hebelfuehrung und
+    # Aggregat-Deckel stehen. Die FEINE Frische (Mail ab 1 Stunde) liegt in
+    # `hebel_abgleich` und laeuft im Job selbst; hier das TOTE NETZ, das auch
+    # einen Job findet, der gar nicht mehr laeuft. Gelesen wird der Stempel
+    # des letzten ERFOLGREICHEN Abgleichs, nicht die Tabelle - die aendert
+    # sich nur, wenn gehandelt wird.
+    Quelle("hebel_abgleich", "H", "hebel_positions", 1,
+           "hebel_screening", "offene Hebelpositionen bei Bitpanda"),
 
     # ---- ⚠️⚠️⚠️ DIE DREI MESSQUELLEN (S-1, 11.09.2026) ----------------
     #
@@ -564,6 +573,36 @@ def _stand_extern(conn, quelle: str) -> tuple[str | None, str | None, int]:
     return (zeile[0], zeile[1], int(zeile[2] or 0)) if zeile else (None, None, 0)
 
 
+def _stand_hebel_abgleich(conn) -> tuple[str | None, str | None, int]:
+    """Der Hebel-Abgleich: Stand und Abruf = der letzte ERFOLGREICHE Abgleich.
+
+    ZWEI STUFEN:
+        1  `hebel_positions_synced_at` - gesetzt am Ende jedes erfolgreichen
+           Hebel-Abgleichs (`hebel_abgleich.stempel_setzen`)
+        2  `bitpanda_holdings_synced_at` - nur der UEBERGANG bis zum ersten
+           Lauf nach dem Einspielen: derselbe Bitpanda-Zugang, derselbe
+           Endpunkt. Ohne ihn meldete die Datenfrische beim ersten Start
+           ,fehlt', weil ihr Lauf vor dem ersten Abgleich liegen kann.
+
+    Ohne beide: kein Bitpanda-Abgleich je gelaufen -> ,fehlt'. Die Zeilenzahl
+    ist die der Positionen, aber mindestens 1, sobald ein Stempel steht: wer nie
+    mit Hebel gehandelt hat, hat eine leere Tabelle und trotzdem einen
+    funktionierenden Abgleich."""
+    try:
+        anzahl = int(conn.execute("SELECT COUNT(*) FROM hebel_positions").fetchone()[0] or 0)
+    except Exception:                                        # noqa: BLE001
+        anzahl = 0
+    for schluessel in ("hebel_positions_synced_at", "bitpanda_holdings_synced_at"):
+        try:
+            zeile = conn.execute("SELECT value FROM meta WHERE key = ?",
+                                 (schluessel,)).fetchone()
+        except Exception:                                    # noqa: BLE001
+            zeile = None
+        if zeile and zeile[0]:
+            return str(zeile[0]), str(zeile[0]), max(anzahl, 1)
+    return None, None, anzahl
+
+
 def pruefe(conn, heute: date | None = None,
            mit_dateien: bool = True, watchlist=None) -> list[dict]:
     """Eine Zeile je Quelle - Stand, Alter, Urteil.
@@ -610,6 +649,8 @@ def pruefe(conn, heute: date | None = None,
             daten, abruf, anzahl = _stand_monat(conn)
         elif q.tabelle == "holdings":
             daten, abruf, anzahl = _stand_bestand(conn)
+        elif q.tabelle == "hebel_positions":
+            daten, abruf, anzahl = _stand_hebel_abgleich(conn)
         elif q.tabelle in _EINFACH:
             daten, abruf, anzahl = _stand_einfach(conn, q.tabelle,
                                                   *_EINFACH[q.tabelle])

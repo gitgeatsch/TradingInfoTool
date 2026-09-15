@@ -66,6 +66,10 @@ _job_started_at: dict[str, float] = {}
 # `build_scheduler`; der Wert beim Import ist nur die Rueckfallebene.
 _SCHEDULER_START = datetime.now(timezone.utc)
 _TERMINMARKT_MELDEZUSTAND = None
+# Hebel-Abgleich mit Bitpanda (15.09.2026, 2.453-hebelpos / 7d): eine Mail je
+# Ausfall, und der letzte Fehlertext fuer diese Mail.
+_HEBEL_ABGLEICH_MELDEZUSTAND = None
+_HEBEL_ABGLEICH_FEHLER: str | None = None
 
 REFRESH_INTERVAL_MINUTES = 15  # Verbrauchsreduzierung: 15 statt 5 Min (siehe Kap. 16/8,
 # Monats-Kontingent-Rechnung 2026-07-06 - 5 Min haette zusammen mit dem taeglichen
@@ -2206,6 +2210,41 @@ def _pruefe_terminmarkt_frische(conn_factory, watchlist) -> None:
         logger.exception("Terminmarkt-Frischepruefung fehlgeschlagen")
 
 
+def _pruefe_hebel_abgleich(conn_factory) -> None:
+    """Ist der Hebel-Abgleich mit Bitpanda seit >= 1 Stunde ausgefallen? Dann Mail.
+
+    ⚠️ BEFUND 2.453-hebelpos / ENTSCHEIDUNG 7d. Grenze, Wortlaut und Zaehlung
+    ab App-Start: `agent/hebel_abgleich.py`. Nur aufgerufen, wenn ein
+    Bitpanda-Schluessel gesetzt ist - ohne ihn laeuft der Abgleich absichtlich
+    nicht (P-8), das ist kein Ausfall.
+
+    EIGENER FANG: eine fehlgeschlagene Pruefung darf den Umlauf nicht kosten."""
+    global _HEBEL_ABGLEICH_MELDEZUSTAND
+    try:
+        from agent import hebel_abgleich as HA
+
+        if _HEBEL_ABGLEICH_MELDEZUSTAND is None:
+            _HEBEL_ABGLEICH_MELDEZUSTAND = HA.Meldezustand()
+        conn = conn_factory()
+        try:
+            befund = HA.frische(conn, app_start=_SCHEDULER_START)
+        finally:
+            conn.close()
+        if befund["veraltet"]:
+            logger.error("Hebel-Abgleich mit Bitpanda seit %s nicht erfolgreich "
+                         "(offen laut letztem Stand: %s)",
+                         HA._stand_text(befund["stand"]),
+                         ", ".join(befund["offen"]) or "keine")
+        vorschlag = HA.meldung(befund, _HEBEL_ABGLEICH_MELDEZUSTAND,
+                               letzter_fehler=_HEBEL_ABGLEICH_FEHLER)
+        if vorschlag is None:
+            return
+        if _sende_hinweismail(*vorschlag):
+            HA.vormerken(_HEBEL_ABGLEICH_MELDEZUSTAND)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Pruefung des Hebel-Abgleichs fehlgeschlagen")
+
+
 def _sende_hinweismail(betreff: str, text: str) -> bool:
     """Eine Hinweismail mit EIGENEM Betreff - True nur bei echtem Versand.
 
@@ -3477,6 +3516,7 @@ def hebel_screening_job(
     pro Signal nicht mehr aus, zudem 0 jemals aufgeloeste Signale in
     provider_performance seit Mistral Prio-1 ist). Mistral/Gemini/Z.ai decken
     die Kette jetzt allein ab."""
+    global _HEBEL_ABGLEICH_FEHLER
     if not hebel_screening_lock.acquire(blocking=False):
         logger.info("Hebel-Screening: bereits in Ausführung - übersprungen")
         return False
@@ -3521,6 +3561,12 @@ def hebel_screening_job(
                     sync_result.neu_geschlossen,
                 )
                 _refresh_hebel_position_liquidation_prices(conn)
+                # ⚠️ ERST HIER, NACH Abgleich UND Liquidationspreisen: der Stempel
+                # sagt ,zuletzt ERFOLGREICH abgeglichen' (2.453-hebelpos). Ein
+                # Fehler oben springt in den `except` unten und laesst ihn stehen.
+                from agent import hebel_abgleich as _HA
+                _HA.stempel_setzen(conn)
+                _HEBEL_ABGLEICH_FEHLER = None
 
                 # Klassifikations-Redesign (2026-07-16): offene Positionen auf
                 # bisher unbekannten Symbolen automatisch zur Watchlist
@@ -3568,8 +3614,13 @@ def hebel_screening_job(
                     "Kette laeuft weiter. Bestehende Brokerpositionen sind "
                     "in diesem Umlauf moeglicherweise nicht aktuell.",
                     type(exc).__name__, exc)
+                _HEBEL_ABGLEICH_FEHLER = "%s: %s" % (type(exc).__name__, exc)
             finally:
                 conn.close()
+            # ⚠️⚠️ DEGRADIEREN, ABER NICHT STILL (7d, Nutzerentscheidung 14.09.,
+            # Grenze 1 Stunde 15.09.). Die Warnung oben steht je Lauf im Log -
+            # ein ANHALTENDER Ausfall bekommt eine Mail.
+            _pruefe_hebel_abgleich(conn_factory)
 
         # 2026-07-26 (Groq-Entfernung): frueher an "groq_client is not None"
         # gegated, weil Groq urspruenglich die einzige zwingende Voraussetzung

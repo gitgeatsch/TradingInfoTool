@@ -9202,6 +9202,12 @@ def paket_frische() -> None:
                   "berechnet_am TEXT)")
         c.execute("INSERT INTO portfolio_wert_historie VALUES (?, ?)",
                   (stand, stand))
+        # `hebel_abgleich` seit 15.09. (2.453-hebelpos): Stand ist der Stempel
+        # des letzten erfolgreichen Abgleichs in `meta`.
+        c.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+        c.execute("INSERT INTO meta VALUES ('hebel_positions_synced_at', ?)",
+                  (stand,))
+        c.execute("CREATE TABLE hebel_positions (symbol TEXT)")
         c.commit()
         return c
 
@@ -23447,6 +23453,197 @@ def paket_geheimnisse() -> None:
            "")
 
 
+def paket_hebelabgleich() -> None:
+    """2.453-hebelpos / 7d: faellt der Hebel-Abgleich mit Bitpanda anhaltend aus,
+    kommt eine Mail - und die Hebelfuehrung sagt, auf welchem Stand sie steht.
+
+    ⚠️ ANLASS: bis 15.09. stand ein Ausfall nur als WARNING im Log, je Lauf. Es
+    gab keinen Stempel ,zuletzt erfolgreich' - `hebel_position_last_synced_unix`
+    ist die Zeit der letzten Transaktion und steht ohne Handel still.
+    Nutzerentscheidung: Grenze 1 Stunde, eine Mail je Ausfall. Festgehalten:
+
+        1  die Grenze: 59 Minuten nicht, 61 Minuten ja; Zaehlung ab App-Start
+        2  die Meldung: einmal je Ausfall, zurueckgesetzt nach Erholung,
+           Fehlertext maskiert, offene Positionen im Betreff
+        3  die Mailzeile der Hebelfuehrung: nur bei veraltetem Stand
+        4  der ECHTE Waechter `_pruefe_hebel_abgleich` an einer Wegwerfdatei -
+           Mail einmal, nicht zweimal, nach neuem Stempel keine
+        5  die Verdrahtung im Job: Stempel NACH Abgleich und Liquidation, im
+           `try`; Fehlertext im `except`; Waechter danach
+        6  die Datenfrische (totes Netz) und der Export
+
+    Wegwerfdateien und Speicherdatenbanken, keine Standard-DB."""
+    P = "HebelAbgleich"
+    import ast as _ast
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from datetime import date as _date, datetime as _dt, timedelta as _td, timezone as _tz
+
+    import database.db as _DB
+    from agent import datenfrische as _DF
+    from agent import hebel_abgleich as _HA
+    from agent import hebelfuehrung as _HF
+    from database.models import HebelPosition as _HP
+
+    jetzt = _dt(2026, 9, 15, 12, 0, tzinfo=_tz.utc)
+
+    def _db(pfad=":memory:"):
+        c = _sq.connect(pfad)
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        return c
+
+    def _position(c, symbol="HYPE"):
+        _DB.upsert_hebel_position(c, _HP(
+            symbol=symbol, richtung="LONG", status="offen",
+            eroeffnet_am="2026-09-15T08:00:00+00:00",
+            letzte_transaktion_unix_timestamp=1789459200,
+            hebel_effektiv=3.0, positionswert_eur=900.0, kreditbetrag_eur=600.0,
+            eigenkapital_eur=300.0, positionsmenge=20.0))
+        c.commit()
+
+    # 1 GRENZE
+    c = _db()
+    _position(c)
+    _HA.stempel_setzen(c, jetzt - _td(minutes=59))
+    b59 = _HA.frische(c, jetzt=jetzt)
+    _HA.stempel_setzen(c, jetzt - _td(minutes=61))
+    b61 = _HA.frische(c, jetzt=jetzt)
+    pruefe(P, "⚠️⚠️ Grenze 1 Stunde: 59 Minuten kein Ausfall, 61 Minuten Ausfall",
+           not b59["veraltet"] and b61["veraltet"] and b61["offen"] == ["HYPE"],
+           "59 min %s, 61 min %s" % (b59["veraltet"], b61["veraltet"]))
+    _HA.stempel_setzen(c, jetzt - _td(hours=17))
+    b_pause = _HA.frische(c, jetzt=jetzt, app_start=jetzt - _td(minutes=20))
+    pruefe(P, "⚠️ gezaehlt ab App-Start: 17 h alter Stempel, App seit 20 min - kein Ausfall",
+           not b_pause["veraltet"] and round(b_pause["stunden"]) == 17,
+           "eine App, die aus war, ist kein Abgleichsausfall")
+    c2 = _db()
+    b_nie = _HA.frische(c2, jetzt=jetzt, app_start=jetzt - _td(hours=2))
+    b_nie_kurz = _HA.frische(c2, jetzt=jetzt, app_start=jetzt - _td(minutes=30))
+    c2.close()
+    pruefe(P, "noch nie erfolgreich: Ausfall erst 1 Stunde nach dem App-Start",
+           b_nie["veraltet"] and not b_nie_kurz["veraltet"] and b_nie["stand"] is None, "")
+    pruefe(P, "GEGENPROBE: der alte Stempel `hebel_position_last_synced_unix` wird NICHT gelesen",
+           "get_hebel_position_last_synced_unix" not in _quelltext("agent/hebel_abgleich.py")
+           and "get_hebel_position_last_synced_unix" not in _quelltext("agent/datenfrische.py"),
+           "er ist die Zeit der letzten TRANSAKTION und steht ohne Handel still")
+
+    # 2 MELDUNG
+    GEHEIM = "cc1testschluessel0123456789ef"
+    z = _HA.Meldezustand()
+    m1 = _HA.meldung(b61, z, letzter_fehler="HTTPError: 503 for url: https://x?api_key=%s" % GEHEIM)
+    _HA.vormerken(z)
+    m2 = _HA.meldung(b61, z)
+    m_erholt = _HA.meldung(b59, z)
+    m3 = _HA.meldung(b61, z)
+    pruefe(P, "⚠️⚠️ eine Mail je Ausfall - nach Erholung meldet der naechste Ausfall wieder",
+           m1 is not None and m2 is None and m_erholt is None and m3 is not None,
+           "1. %s, 2. %s, erholt %s, neuer Ausfall %s" % (bool(m1), bool(m2), bool(m_erholt), bool(m3)))
+    pruefe(P, "Betreff nennt Abgleich und offene Positionen, Text die Symbole",
+           m1 and "Hebel-Abgleich" in m1[0] and "1 offene Hebelposition " in m1[0] + " "
+           and "HYPE" in m1[1], (m1 or ("",))[0])
+    pruefe(P, "Zahlen in der Mail deutsch geschrieben",
+           m1 and "(vor 1,0 Stunden)" in m1[1], (m1 or ("", ""))[1][:160])
+    pruefe(P, "⚠️ der Fehlertext in der Mail ist maskiert",
+           m1 and GEHEIM not in m1[1] and "api_key=***" in m1[1], "")
+
+    # 3 MAILZEILE HEBELFUEHRUNG
+    trade = {"symbol": "HYPE", "empfehlung": "SCHLIESSEN", "richtung": "LONG"}
+    _zeilen_echt = _HF.zeilen
+    _HF.zeilen = lambda t: ["  %s" % t["symbol"]]
+    try:
+        mit = _HF.sammel_mail([trade], "15.09.", positionsstand=_HA.positionsstand_zeile(b61))
+        ohne = _HF.sammel_mail([trade], "15.09.", positionsstand=_HA.positionsstand_zeile(b59))
+    finally:
+        _HF.zeilen = _zeilen_echt
+    pruefe(P, "⚠️ Hebelfuehrungs-Mail nennt den veralteten Positionsstand - und nur dann",
+           mit and "POSITIONSSTAND VOM" in mit[1] and ohne and "POSITIONSSTAND" not in ohne[1],
+           "")
+    pruefe(P, "ohne jeden erfolgreichen Abgleich (kein Schluessel) keine Zeile",
+           _HA.positionsstand_zeile(b_nie) is None, "")
+    c.close()
+
+    # 4 DER ECHTE WAECHTER an einer Wegwerfdatei
+    import scheduler.background as _BG
+    ordner = _tf.mkdtemp(prefix="hebelabgleich_")
+    pfad = _os.path.join(ordner, "wegwerf.db")
+    c = _db(pfad)
+    _position(c)
+    _HA.stempel_setzen(c, _dt.now(_tz.utc) - _td(hours=3))
+    c.close()
+    gesendet = []
+    _echt_senden, _echt_start, _echt_zustand, _echt_fehler = (
+        _BG._sende_hinweismail, _BG._SCHEDULER_START,
+        _BG._HEBEL_ABGLEICH_MELDEZUSTAND, _BG._HEBEL_ABGLEICH_FEHLER)
+    _BG._sende_hinweismail = lambda b, t: gesendet.append((b, t)) or True
+    _BG._SCHEDULER_START = _dt.now(_tz.utc) - _td(hours=5)
+    _BG._HEBEL_ABGLEICH_MELDEZUSTAND = None
+    _BG._HEBEL_ABGLEICH_FEHLER = "HTTPError: 503 Server Error"
+
+    def _fabrik():
+        k = _sq.connect(pfad)
+        k.row_factory = _sq.Row
+        return k
+    try:
+        _BG._pruefe_hebel_abgleich(_fabrik)
+        n_erst = len(gesendet)
+        _BG._pruefe_hebel_abgleich(_fabrik)
+        n_zweit = len(gesendet)
+        k = _fabrik()
+        _HA.stempel_setzen(k)
+        k.close()
+        _BG._pruefe_hebel_abgleich(_fabrik)
+        n_nach = len(gesendet)
+    finally:
+        _BG._sende_hinweismail, _BG._SCHEDULER_START = _echt_senden, _echt_start
+        _BG._HEBEL_ABGLEICH_MELDEZUSTAND, _BG._HEBEL_ABGLEICH_FEHLER = _echt_zustand, _echt_fehler
+    pruefe(P, "⚠️⚠️ ECHTER WAECHTER: 3 h ohne Abgleich -> eine Mail, beim zweiten Lauf keine, nach Erfolg keine",
+           n_erst == 1 and n_zweit == 1 and n_nach == 1
+           and "503" in gesendet[0][1] and "HYPE" in gesendet[0][0] + gesendet[0][1],
+           "Mails nach Lauf 1/2/3: %d/%d/%d" % (n_erst, n_zweit, n_nach))
+
+    # 5 VERDRAHTUNG IM JOB
+    bg = _quelltext("scheduler/background.py")
+    i_job = bg.index("def hebel_screening_job(")
+    job = bg[i_job:bg.index("\ndef ", i_job + 10)]
+    i_liq = job.find("_refresh_hebel_position_liquidation_prices(conn)")
+    i_stempel = job.find("stempel_setzen(conn)")
+    i_except = job.find("Hebel-Positions-Abgleich uebersprungen")
+    i_fehler = job.find("_HEBEL_ABGLEICH_FEHLER = \"%s: %s\"")
+    i_waechter = job.find("_pruefe_hebel_abgleich(conn_factory)")
+    i_umlauf = job.find("fuehre_umlauf")
+    pruefe(P, "⚠️⚠️ Stempel NACH Abgleich und Liquidation, VOR dem Fehlerzweig; Waechter danach, vor dem Umlauf",
+           0 <= i_liq < i_stempel < i_except < i_fehler < i_waechter < i_umlauf,
+           "Positionen: Liquidation %d, Stempel %d, except %d, Fehlertext %d, Waechter %d, Umlauf %d"
+           % (i_liq, i_stempel, i_except, i_fehler, i_waechter, i_umlauf))
+    rl = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "die Rollen-Kette gibt den Positionsstand an die Hebelfuehrungs-Mail",
+           "positionsstand=_stand_hf" in rl and "positionsstand_zeile(" in rl, "")
+
+    # 6 DATENFRISCHE UND EXPORT
+    heute = _date.today()
+    c = _db()
+    zeile = lambda: [r for r in _DF.pruefe(c, mit_dateien=False) if r["quelle"] == "hebel_abgleich"][0]
+    ohne_stempel = zeile()["urteil"]
+    _DB.set_bitpanda_holdings_synced_at(c, _dt.now(_tz.utc).isoformat())
+    uebergang = zeile()["urteil"]
+    _HA.stempel_setzen(c, _dt.now(_tz.utc) - _td(days=5))
+    tot = zeile()["urteil"]
+    _HA.stempel_setzen(c)
+    frisch = zeile()["urteil"]
+    pruefe(P, "⚠️ Datenfrische: ohne Abgleich ,fehlt', Uebergang frisch, 5 Tage ,abruf', heute frisch",
+           (ohne_stempel, uebergang, tot, frisch) == ("fehlt", "frisch", "abruf", "frisch"),
+           str((ohne_stempel, uebergang, tot, frisch)))
+    import extract_notebook_diagnose as _X
+    ex = _X._hebel_abgleich(c)
+    c.close()
+    pruefe(P, "Export: Abschnitt `hebel_abgleich` mit Alter in Stunden, Grenze und offenen Positionen",
+           ex["alter_stunden"] is not None and ex["meldegrenze_stunden"] == 1.0
+           and not ex["veraltet"] and '"hebel_abgleich": hebel_abgleich' in _quelltext("extract_notebook_diagnose.py"),
+           str(ex)[:160])
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23497,6 +23694,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Laufzeit": paket_laufzeit,
           "Kursreihen": paket_kursreihen,
           "Geheimnisse": paket_geheimnisse,
+          "HebelAbgleich": paket_hebelabgleich,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

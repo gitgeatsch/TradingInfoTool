@@ -1611,6 +1611,31 @@ def _terminmarkt_und_umlaufmenge(conn) -> dict:
     return aus
 
 
+def _hebel_abgleich(conn) -> dict:
+    """Wie aktuell ist der Hebel-Abgleich mit Bitpanda? (15.09.2026, 2.453-hebelpos)
+
+    Dieselbe Pruefung, die im Betrieb ab 1 Stunde mailt
+    (`hebel_abgleich.frische`) - hier OHNE App-Start-Bezug, also das reine
+    Alter des letzten ERFOLGREICHEN Abgleichs. Die Datenfrische zaehlt in
+    Tagen und saehe einen Ausfall von Stunden nicht."""
+    from agent import hebel_abgleich as HA
+
+    b = HA.frische(conn)
+    aus = {"letzter_erfolg": b["stand"].isoformat() if b["stand"] else None,
+           "alter_stunden": None if b["stunden"] is None else round(b["stunden"], 2),
+           "meldegrenze_stunden": HA.MELDEGRENZE_STUNDEN,
+           "veraltet": b["veraltet"], "offen": b["offen"], "auffaellig": []}
+    if b["stand"] is None:
+        aus["auffaellig"].append("Hebel-Abgleich: noch kein erfolgreicher Lauf "
+                                 "mit Zeitstempel (vor dem ersten Lauf nach dem Pull normal)")
+    elif b["veraltet"]:
+        aus["auffaellig"].append("Hebel-Abgleich: letzter Erfolg vor %s h - "
+                                 "offene Positionen laut Stand: %s"
+                                 % (("%.1f" % b["stunden"]).replace(".", ","),
+                                    ", ".join(b["offen"]) or "keine"))
+    return aus
+
+
 def _externe_reihen(conn) -> dict:
     """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
 
@@ -3071,6 +3096,11 @@ def main() -> None:
             terminmarkt_und_umlaufmenge = _terminmarkt_und_umlaufmenge(conn)
         except Exception as exc:  # noqa: BLE001
             terminmarkt_und_umlaufmenge = {"nicht_verfuegbar": str(exc)}
+        # 2.453-hebelpos (15.09.2026) - eigener try-Block wie darueber.
+        try:
+            hebel_abgleich = _hebel_abgleich(conn)
+        except Exception as exc:  # noqa: BLE001
+            hebel_abgleich = {"nicht_verfuegbar": str(exc)}
         # ERFUNDENE ZAHLEN IN DEN BELEGEN (17.08.2026, Nutzerfund A6).
         # Das Modell hat vierzehnmal ein Volumen-Perzentil genannt, das
         # `faktenblock.kern()` bewusst zurueckhaelt. Ob die Promptzeile
@@ -3406,6 +3436,7 @@ def main() -> None:
             "laufzeit": laufzeit,
         "datenfrische": datenfrische,
         "terminmarkt_und_umlaufmenge": terminmarkt_und_umlaufmenge,
+        "hebel_abgleich": hebel_abgleich,
         "belege_gegen_fakten": belege_gegen_fakten,
         "spaltendrift": spaltendrift,
         "deep_dive": {
@@ -3561,6 +3592,15 @@ def main() -> None:
         print(f"  Umlaufmenge: marktrang findet {_um.get('findet_umlaufmengen', '-')} "
               f"von {_um.get('messbasis_turnover', '-')} (Stand {_um.get('datenstand', '-')})")
         for _z in _tm["auffaellig"]:
+            print(f"    [!] {_z}")
+    if "nicht_verfuegbar" in hebel_abgleich:
+        print(f"  Hebel-Abgleich: NICHT PRUEFBAR - {hebel_abgleich['nicht_verfuegbar']}")
+    else:
+        print(f"  Hebel-Abgleich: letzter Erfolg {str(hebel_abgleich['letzter_erfolg'])[:16]} "
+              f"(vor {hebel_abgleich['alter_stunden']} h, Grenze "
+              f"{hebel_abgleich['meldegrenze_stunden']:.0f} h), offen: "
+              f"{', '.join(hebel_abgleich['offen']) or 'keine'}")
+        for _z in hebel_abgleich["auffaellig"]:
             print(f"    [!] {_z}")
     if isinstance(datenfrische, dict) and datenfrische.get("auffaellig"):
         print(f"  Datenfrische: {datenfrische['anzahl_auffaellig']} von "
