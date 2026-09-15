@@ -911,12 +911,24 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
         if _r.get("ziel_von_eur") is not None:
             _blick.append(f"Take-Profit     {preis(_r['ziel_von_eur'])} bis "
                           f"{preis(_r.get('ziel_bis_eur') or _r['ziel_von_eur'])} EUR")
+        # ⚠️ HEBELSTUFEN (15.09.2026, 2.382-rundung): statt einer gerundeten
+        # Zahl die einstellbaren Stufen; das Ergebnis gehoert zur UNTEREN,
+        # hervorgehobenen Stufe - dieselben Zahlen wie in der Rechnung.
+        from agent.entscheidungsrechnung import stufen_kurz as _ER_STUFEN
+        _stufen_zeile = _ER_STUFEN(_r) if _r.get("hebel_stufen") else None
+        _unten_st = next((x for x in (_r.get("hebel_stufen") or [])
+                          if x.get("hervorgehoben")), None)
         if _r.get("betrag_eur") is not None:
             _hb = float(_r.get("hebel") or 1.0)
             _blick.append(f"Betrag          {eur(_r['betrag_eur'])} EUR - "
                           + ("kein Hebel" if _hb <= 1.0
+                             else f"Hebel {_stufen_zeile}" if _stufen_zeile
                              else f"Hebel {_sde(_hb, 1)}x"))
-        if _r.get("verlust_am_stop_eur") is not None:
+        if _unten_st is not None and float(_r.get("hebel") or 1.0) > 1.0:
+            _blick.append(f"Ergebnis        bei {eur(_unten_st['stufe'])}x am Stop "
+                          f"-{eur(_unten_st['verlust_am_stop_eur'])} EUR · am Ziel "
+                          f"+{eur(_unten_st['gewinn_am_ziel_eur'])} EUR")
+        elif _r.get("verlust_am_stop_eur") is not None:
             _blick.append(f"Ergebnis        am Stop -{eur(_r['verlust_am_stop_eur'])} "
                           f"EUR · am Ziel +{eur(_r.get('gewinn_am_ziel_eur') or 0)} EUR")
     else:

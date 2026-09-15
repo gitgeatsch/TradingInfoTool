@@ -2245,6 +2245,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                       or _topf_instrument == "hebel")),
                              hebel_grenze=(_hq_einst["hebel_grenze"]
                                            if _hq_rechnet else None),
+                             # 15.09.2026 (2.382-rundung): die einstellbaren
+                             # Stufen fuer die Mail.
+                             hebel_stufen_liste=_hq_einst.get("hebel_stufen"),
                              stop_min_atr=BE.stop_min_atr(config),
                              # S2, Kapitel 90: die Marke auf der
                              # STOPSEITE. Sie liegt vorerst ungenutzt im

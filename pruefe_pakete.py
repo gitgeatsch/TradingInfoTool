@@ -1277,8 +1277,13 @@ def paket_11() -> None:
            SM.eur(55500.0, 2) == "55.500,00",
            SM.eur(55500.0, 2))
     txt = " ".join(ER.saetze(nah))
+    # ⚠️ 15.09.2026 (2.382-rundung): der Hebel steht jetzt mit zwei Stellen
+    # (,rechnerisch 1,90x') neben den einstellbaren Stufen - geprueft wird
+    # weiter das Komma, nicht die Stellenzahl.
+    import re as _re_k
     pruefe(P, "auch Prozente und Hebel tragen ein Komma",
-           "8,1 %" in txt and "1,9x" in txt, txt[:80])
+           "8,1 %" in txt and bool(_re_k.search(r"\d,\d+x", txt))
+           and not _re_k.search(r"\d\.\d+x", txt), txt[:80])
     pruefe(P, "die Zielregel wird nicht doppelt genannt",
            " ".join(ER.saetze(weit)).count("CRV 2,0") == 1,
            "'CRV 2.0 - CRV 2.0 - naechster Widerstand liegt dahinter'")
@@ -19778,7 +19783,10 @@ def paket_hebel_aus_quote() -> None:
             _falsch_stop.append((round(_s, 5), _rr["stop_relativ"]))
         if ((_rr["etikett"] == "hebel") != _h["ist_hebel"]
                 or (_h["ist_hebel"]
-                    and abs(_rr["hebel"] - round(_h["hebel"], 1)) > 1e-9)):
+                    # 15.09.2026 (2.382-rundung): rechne() rundet nicht mehr -
+                    # derselbe Hebel heisst jetzt DIESELBE Zahl, nicht dieselbe
+                    # Rundung.
+                    and abs(_rr["hebel"] - _h["hebel"]) > 1e-6)):
             _falsch_hebel.append((round(_h["hebel"], 2), _rr["etikett"],
                                   _rr["hebel"]))
     pruefe(P, "⚠️⚠️ die Hebelrechnung benutzt DENSELBEN Stop wie rechne()",
@@ -19862,10 +19870,18 @@ def paket_hebelfuehrung() -> None:
            and abs(_e["liquidation_etwa_eur"] - 100 * (1 - _e["stop_relativ"])) < 1e-4,
            "vorher 1 - 1/Hebel: %r gegen Stop %r"
            % (_e["liquidation_etwa_eur"], 100 * (1 - _e["stop_relativ"])))
-    pruefe(P, "und die Mail sagt, dass sie den Stop schon am ersten Tag erreicht",
-           any("erreicht den Stop schon am ersten Tag" in z for z in _ERh.saetze(_e)),
+    # ⚠️ 15.09.2026 (2.382-rundung): bei RM-11-Bindung ist die gerechnete Zahl
+    # (hier 7,38x) nicht einstellbar. Die Mail zeigt die Stufen: die untere
+    # ist sicher und hervorgehoben, die obere liegt JENSEITS der Grenze und
+    # heisst ,NICHT SICHER' - das ist der Hinweis von 14.07., je Stufe.
+    _st_e = _e.get("hebel_stufen") or []
+    pruefe(P, "und die Mail sagt, welche Stufe den Stop nicht mehr schuetzt",
+           any("NICHT SICHER" in z for z in _ERh.saetze(_e))
+           and any(x["hervorgehoben"] and x["sicher"] for x in _st_e)
+           and any(not x["sicher"] for x in _st_e),
            "Nutzerentscheidung 14.07.: bei der Empfehlung keine Haltedauer "
-           "raten, aber den Hinweis geben")
+           "raten, aber den Hinweis geben - Stufen: %s"
+           % [(x["stufe"], x["sicher"]) for x in _st_e])
     _e2 = _ERh.rechne(kurs=64797, atr=1750, risiko_eur=75, instrument="hebel",
                       betrag_wunsch_eur=500, topf_frei_eur=500)
     _L2 = 1.0 / (1.0 - (1 - M) * _e2["liquidation_etwa_eur"] / 64797)
@@ -21294,18 +21310,36 @@ def paket_mailstraffung() -> None:
            and not any("Handelstag" in z for z in _zl if z.startswith("Haltedauer")))
 
     # ---- (5) 2.445-fenster: Haltedauer gegen sicheres Hebelfenster --------
-    pruefe(P, "⚠️⚠️ REGEL ist das sichere Fenster kuerzer als die Haltedauer, steht es da",
-           float(_rs["liquidation_tage_bis_stop"]) < float(_rs["haltedauer_tage"])
-           and any(z.startswith("Sicher bis") and "!!" in z for z in _zs),
-           "SHORT: Fenster %.1f, Haltedauer %s"
-           % (_rs["liquidation_tage_bis_stop"], _rs["haltedauer_tage"]))
+    # ⚠️ 15.09.2026 (2.382-rundung): das Fenster gilt fuer die STUFE, die man
+    # eroeffnet - die hervorgehobene. Bei 4,0x (SHORT) ist das 3x mit 67 Tagen:
+    # kein Kopfhinweis. Der Fall MIT Hinweis ist 5x an der Grenze (36 Tage
+    # gegen 100 Tage Haltedauer).
+    _hs = next(x for x in _rs["hebel_stufen"] if x["hervorgehoben"])
+    _r5x = _ER.rechne(kurs=100.0, atr=1.0, risiko_eur=227.66, betrag_wunsch_eur=500.0,
+                      hebel_handelbar=True, kostenklasse="krypto",
+                      assetklasse="krypto", hebel_grenze=5.0)
+    _z5x = _ER.saetze(_r5x)
+    _h5x = next(x for x in _r5x["hebel_stufen"] if x["hervorgehoben"])
+    pruefe(P, "⚠️⚠️ REGEL ist das sichere Fenster der EMPFOHLENEN Stufe kuerzer als die Haltedauer, steht es da",
+           (float(_hs["liquidation_tage_bis_stop"]) >= float(_rs["haltedauer_tage"])
+            and not any(z.startswith("Sicher bis") for z in _zs))
+           and float(_h5x["liquidation_tage_bis_stop"]) < float(_r5x["haltedauer_tage"])
+           and any(z.startswith("Sicher bis") and "!!" in z for z in _z5x),
+           "SHORT 3x: Fenster %.1f, Haltedauer %s · 5x: Fenster %.1f, Haltedauer %s"
+           % (_hs["liquidation_tage_bis_stop"], _rs["haltedauer_tage"],
+              _h5x["liquidation_tage_bis_stop"], _r5x["haltedauer_tage"]))
     pruefe(P, "⚠️ und nur dann - im Normalfall keine Zeile mehr",
            float(_rl["liquidation_tage_bis_stop"]) >= float(_rl["haltedauer_tage"])
            and not any(z.startswith("Sicher bis") for z in _zl),
            "LONG: Fenster %.1f, Haltedauer %s"
            % (_rl["liquidation_tage_bis_stop"], _rl["haltedauer_tage"]))
     pruefe(P, "⚠️ und im Kopf, weil `!!` eine Grenze der Rechnung markiert",
-           any(z.startswith("✖  Sicher bis") for z in _GB.dagegen(_zs)))
+           any(z.startswith("✖  Sicher bis") for z in _GB.dagegen(_z5x)))
+    pruefe(P, "⚠️ die NICHT empfohlene Stufe mit kurzem Fenster sagt es in ihrer Zeile - nicht im Kopf",
+           any(" 5x " in z and "kuerzer als die geschaetzte Haltedauer" in z and "!!" not in z
+               for z in _zl)
+           and not any("Sicher bis" in z for z in _GB.dagegen(_zl)),
+           "LONG 4,0x: obere Stufe 5x mit 4 Tagen gegen 25 Tage Haltedauer")
 
     # ---- (6) Kopf: die Tatsache, nicht der halbe Satz ----------------------
     _dz = _GB.dagegen(_zl)
@@ -23905,6 +23939,128 @@ def paket_kapitalkurse() -> None:
            and "refresh_aktien_ohlc" in _BG._JOB_LOCKS, "")
 
 
+def paket_hebelstufen() -> None:
+    """2.382-rundung: EIN Hebel fuer alle Zahlen, in der Mail die einstellbaren
+    Stufen - die untere hervorgehoben, nicht aufgerundet.
+
+    ⚠️ ANLASS: `round(hebel, 1)` - Verlust, Gewinn, Datenbank und Deckel
+    rechneten mit dem gerundeten, Liquidation und ,Tage bis zum Stop' mit dem
+    ungerundeten Wert. Nutzerauskunft 15.09.: bei Bitpanda meist 2x, 3x, 5x,
+    10x, nicht fuer jedes Asset gleich; Nutzerentscheidung: beide Nachbarstufen
+    zeigen, die untere hervorheben. Festgehalten:
+
+        1  eine Zahl: Verlust und Liquidation passen zum selben Hebel
+        2  die Stufenwahl: zwischen zwei Stufen beide, auf einer Stufe eine,
+           an der Grenze keine hoehere, jenseits von RM-11 ,nicht sicher'
+        3  die hervorgehobene Stufe liegt IMMER im Budget - 400 Zufallsfaelle
+        4  die Mail: ,rechnerisch', Pfeil nur an der unteren, Ergebnis der
+           unteren, der Blick-Block ebenso
+        5  Stufen aus der Konfiguration; unter 2x bleibt es Spot"""
+    P = "Hebelstufen"
+    import random as _rnd
+
+    import agent.betraege as _BE
+    import agent.entscheidungsrechnung as _ER
+    import agent.signal_mail as _SM
+    from agent.krypto.hebel_risk_gate import estimate_liquidation_price as _liq
+
+    def _r(risiko, **kw):
+        a = dict(kurs=100.0, atr=1.0, risiko_eur=risiko, betrag_wunsch_eur=500.0,
+                 hebel_handelbar=True, kostenklasse="krypto", assetklasse="krypto",
+                 hebel_grenze=5.0)
+        a.update(kw)
+        return _ER.rechne(**a)
+
+    # 1 EINE ZAHL
+    e = _r(104.5)
+    pruefe(P, "⚠️⚠️ eine Zahl: Verlust am Stop und Liquidation rechnen mit DEMSELBEN Hebel",
+           abs(e["verlust_am_stop_eur"] - e["betrag_eur"] * e["hebel"] * e["stop_relativ"]) < 0.02
+           and abs(e["liquidation_etwa_eur"] - _liq(100.0, e["hebel"], "LONG", 0.0,
+                   sicherheitsmarge_relativ=_ER.GRENZEN["liquidations_marge"])) < 1e-4
+           and abs(e["hebel"] - round(e["hebel"], 1)) > 1e-9,
+           "Hebel %r, Verlust %r" % (e["hebel"], e["verlust_am_stop_eur"]))
+
+    # 2 STUFENWAHL
+    st = [(x["stufe"], x["hervorgehoben"], x["sicher"]) for x in e["hebel_stufen"]]
+    pruefe(P, "⚠️ zwischen zwei Stufen (4,18x): 3x hervorgehoben, 5x mit Ueberschuss",
+           st == [(3.0, True, True), (5.0, False, True)]
+           and e["hebel_stufen"][1]["ueber_budget_prozent"] > 0, str(e["hebel_stufen"]))
+    g = _r(227.66)
+    pruefe(P, "an der Grenze 5x: nur 5x - keine Stufe ueber der Hebelgrenze",
+           [(x["stufe"], x["hervorgehoben"]) for x in g["hebel_stufen"]] == [(5.0, True)], "")
+    rm = _ER.rechne(kurs=100.0, atr=1.0, risiko_eur=400, instrument="hebel",
+                    betrag_wunsch_eur=500, topf_frei_eur=500)
+    pruefe(P, "⚠️ jenseits von RM-11: die obere Stufe heisst ,nicht sicher', die untere ist sicher",
+           rm["hebel_grenze"] == "RM-11 Liquidationsabstand"
+           and [(x["stufe"], x["sicher"]) for x in rm["hebel_stufen"]] == [(5.0, True), (10.0, False)],
+           str([(x["stufe"], x["sicher"]) for x in rm["hebel_stufen"]]))
+    genau = _ER.hebel_stufen(3.0, betrag=500.0, stop_rel=0.05, crv=2.0, risiko_eur=75.0,
+                             kurs=100.0, ist_short=False, sicher=9.0, obergrenze=5.0)
+    klein = _ER.hebel_stufen(1.6, betrag=500.0, stop_rel=0.05, crv=2.0, risiko_eur=40.0,
+                             kurs=100.0, ist_short=False, sicher=9.0, obergrenze=5.0)
+    pruefe(P, "genau auf einer Stufe nur sie; unter der kleinsten nur 2x ohne Hervorhebung",
+           [(x["stufe"], x["hervorgehoben"]) for x in genau] == [(3.0, True)]
+           and [(x["stufe"], x["hervorgehoben"]) for x in klein] == [(2.0, False)]
+           and klein[0]["ueber_budget_prozent"] > 0, "%s / %s" % (genau, klein))
+
+    # 3 BUDGET IMMER GEHALTEN
+    g_ = _rnd.Random(20260915)
+    verstoss, n = [], 0
+    for _ in range(400):
+        kurs = g_.uniform(0.05, 60000.0)
+        try:
+            r = _ER.rechne(kurs=kurs, atr=kurs * g_.uniform(0.005, 0.06),
+                           risiko_eur=g_.uniform(60.0, 240.0), betrag_wunsch_eur=500.0,
+                           hebel_handelbar=True, kostenklasse="krypto",
+                           assetklasse="krypto", hebel_grenze=5.0,
+                           ist_short=g_.random() < 0.3)
+        except _ER.RechnungBlockiert:
+            continue
+        for x in r.get("hebel_stufen") or []:
+            n += 1
+            if x["hervorgehoben"] and (x["verlust_am_stop_eur"] > r["risiko_eur"] + 0.01
+                                       or not x["sicher"] or x["stufe"] > r["hebel"] + 1e-6):
+                verstoss.append((round(r["hebel"], 2), x["stufe"], x["verlust_am_stop_eur"]))
+    pruefe(P, "⚠️⚠️ die hervorgehobene Stufe liegt IMMER im Budget, ist sicher und nie aufgerundet",
+           n > 100 and not verstoss, "%d Stufen, Verstoesse %s" % (n, verstoss[:5]))
+
+    # 4 MAIL
+    zeilen = _ER.saetze(e)
+    pfeile = [z for z in zeilen if "➤" in z]
+    pruefe(P, "⚠️⚠️ Mail: ,rechnerisch 4,18x', Pfeil nur an 3x, Ergebnis gehoert zu 3x",
+           any(z.startswith("Hebel") and "rechnerisch 4,18x" in z for z in zeilen)
+           and len(pfeile) == 1 and " 3x " in pfeile[0] and "im Budget" in pfeile[0]
+           and any(" 5x " in z and "+20 % ueber Budget" in z for z in zeilen)
+           and any(z.startswith("Bei 3x verlieren Sie am Stop 75 EUR") for z in zeilen),
+           " | ".join(z for z in zeilen if "x " in z)[:300])
+    pruefe(P, "und ,NICHT SICHER' steht in der Mail, wo RM-11 die obere Stufe ausschliesst",
+           any("10x" in z and "NICHT SICHER" in z for z in _ER.saetze(rm)), "")
+    _, text = _SM.baue_mail(
+        symbol="ONDO", name="Ondo", kurs_eur=100.0, instrument="hebel", strategie="einstieg",
+        rechnung=e,
+        urteil={"aktion": "KAUFEN", "begruendung": "x", "was_dagegen": "y",
+                "umgeworfen_durch": "z", "unabhaengige_faktoren": 3,
+                "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]},
+        coin_fakten=["Ondo notiert tiefer."], einordnung=["Einordnung."])
+    pruefe(P, "⚠️ Blick-Block der Mail: Stufen in einer Zeile, Ergebnis der unteren Stufe",
+           "Hebel rechnerisch 4,2x - 3x im Budget oder 5x (+20 % ueber Budget)" in text
+           and "Ergebnis        bei 3x am Stop -75 EUR" in text,
+           [z for z in text.splitlines() if z.startswith(("Betrag", "Ergebnis"))])
+
+    # 5 KONFIGURATION UND SPOT-REGEL
+    anders = _r(104.5, hebel_stufen_liste=[2, 4])
+    pruefe(P, "Stufen aus der Konfiguration (Vorgabe 2/3/5/10, im Lauf durchgereicht)",
+           tuple(_BE.HEBEL_AUS_QUOTE_VORGABE["hebel_stufen"]) == (2.0, 3.0, 5.0, 10.0)
+           and [x["stufe"] for x in anders["hebel_stufen"]] == [4.0]
+           and "hebel_stufen_liste=_hq_einst.get(\"hebel_stufen\")" in _quelltext("agent/rollen_lauf.py"),
+           str([x["stufe"] for x in anders["hebel_stufen"]]))
+    h19 = _BE.hebelrechnung(quote=0.40, crv=2.0, kapital_eur=6080.0, stop_rel=0.08,
+                            einstellungen={"aktiv": True})
+    pruefe(P, "⚠️ unter 2x bleibt es Spot - nichts wird aufgerundet",
+           h19["hebel_roh"] < 2.0 and not h19["ist_hebel"] and h19["hebel"] == 1.0,
+           "roh %.2f" % h19["hebel_roh"])
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23957,6 +24113,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Geheimnisse": paket_geheimnisse,
           "HebelAbgleich": paket_hebelabgleich,
           "Kapitalkurse": paket_kapitalkurse,
+          "Hebelstufen": paket_hebelstufen,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

@@ -369,6 +369,81 @@ def stop_relativ(*, kurs: float, atr: float,
                          ist_short, stop_min_atr, marke_stop_eur)[0] / float(kurs)
 
 
+# ⚠️⚠️ DIE HEBELSTUFEN, DIE MAN BEI BITPANDA EINSTELLT (15.09.2026, Befund
+# 2.382-rundung). Nutzerauskunft: *"der Einstieg ist meist 2x, 3x, 5x und 10x
+# und nicht fuer alle Assets gleich"* - gewuenscht eine GENERISCHE, einfache
+# Loesung in der Empfehlung, die tatsaechliche Position entscheidet der Nutzer.
+# Ueberschreibbar in `config.yaml` unter `rollen_kette.hebel_aus_quote.hebel_stufen`.
+HEBEL_STUFEN_VORGABE = (2.0, 3.0, 5.0, 10.0)
+
+
+def hebel_stufen(hebel: float, *, betrag: float, stop_rel: float, crv: float,
+                 risiko_eur: float | None, kurs: float | None, ist_short: bool,
+                 sicher: float, obergrenze: float, stufen=None) -> list[dict]:
+    """Die einstellbaren Stufen um den gerechneten Hebel - hoechstens zwei.
+
+    ⚠️⚠️ NUTZERENTSCHEIDUNG 15.09.2026: BEIDE NACHBARSTUFEN ZEIGEN, DIE UNTERE
+    HERVORHEBEN, NICHT AUFRUNDEN. Aufrunden haette das Risikobudget gesprengt
+    (ONDO 2,09x -> 3x: 44 Prozent darueber) und unter 2x aus einem Spot-Trade einen
+    Hebel gemacht, den die Bewertung verneint (Nutzer 05.09.: ,ein Hebel unter 2
+    ist kein Hebel').
+
+        untere   die hoechste Stufe <= gerechneter Hebel - im Budget, hervorgehoben
+        obere    die naechste Stufe darueber - mit ihrem Ueberschuss ueber das
+                 Budget, und NUR, wenn sie die Hebelgrenze nicht uebersteigt;
+                 liegt ihre Liquidation vor dem Stop, heisst sie ,nicht sicher'
+
+    Trifft der Hebel eine Stufe, gibt es nur sie. Liegt er UNTER der kleinsten
+    Stufe (alter Weg ohne Hebel aus der Quote), gibt es nur die kleinste - ohne
+    Hervorhebung, mit ihrem Ueberschuss."""
+    liste = sorted({float(x) for x in (stufen or HEBEL_STUFEN_VORGABE) if float(x) >= 1.0})
+    if not liste or not betrag or not stop_rel:
+        return []
+    unter = [x for x in liste if x <= hebel + 1e-6]
+    ueber = [x for x in liste if x > hebel + 1e-6]
+    wahl = []
+    if unter:
+        wahl.append((unter[-1], True))
+    if ueber and (not unter or abs(unter[-1] - hebel) > 1e-6):
+        if ueber[0] <= obergrenze + 1e-9:
+            wahl.append((ueber[0], False))
+    aus = []
+    for stufe, hervor in wahl:
+        verlust = betrag * stufe * stop_rel
+        z = {"stufe": stufe, "hervorgehoben": bool(hervor),
+             "verlust_am_stop_eur": round(verlust, 2),
+             "gewinn_am_ziel_eur": round(verlust * crv, 2),
+             "sicher": stufe <= sicher + 1e-9,
+             "ueber_budget_prozent": (round(100.0 * (verlust / risiko_eur - 1.0), 1)
+                                      if risiko_eur else None)}
+        if kurs:
+            z["liquidation_etwa_eur"] = round(estimate_liquidation_price(
+                kurs, stufe, "SHORT" if ist_short else "LONG", 0.0,
+                sicherheitsmarge_relativ=GRENZEN["liquidations_marge"]), 6)
+            z["liquidation_tage_bis_stop"] = tage_bis_liquidation_am_stop(
+                stop_rel, stufe, GRENZEN["liquidations_marge"], ist_short)
+        aus.append(z)
+    return aus
+
+
+def stufen_kurz(e: dict) -> str | None:
+    """Eine Zeile fuer den Blick-Block der Mail: ,rechnerisch 2,8x - 2x im Budget
+    oder 3x (+7 %%)'. None ohne Stufen."""
+    st = e.get("hebel_stufen") or []
+    if not st:
+        return None
+    teile = []
+    for z in st:
+        if z["hervorgehoben"]:
+            teile.append("%sx im Budget" % _eur(z["stufe"], 0))
+        elif not z["sicher"]:
+            teile.append("%sx nicht sicher" % _eur(z["stufe"], 0))
+        else:
+            teile.append("%sx (+%s %% ueber Budget)" % (
+                _eur(z["stufe"], 0), _eur(z["ueber_budget_prozent"] or 0.0, 0)))
+    return ("rechnerisch %sx - " % _eur(e["hebel"], 1)) + " oder ".join(teile)
+
+
 def hebel_sicher(stop_rel: float, ist_short: bool = False) -> float:
     """Der hoechste Hebel, bei dem die Liquidation noch hinter dem Stop liegt
     (RM-11) - dieselbe Zahl, mit der `rechne()` deckelt.
@@ -715,7 +790,10 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            risikobudget_hart: bool = False,
            # H-2 (Paket B, 11.09.2026): die harte Hebelgrenze bis zur
            # Trennschaerfe (Nutzer: 5x). None heisst: nur `hebel_max`.
-           hebel_grenze: float | None = None) -> dict:
+           hebel_grenze: float | None = None,
+           # 15.09.2026 (2.382-rundung): die einstellbaren Hebelstufen fuer
+           # die Mail. None heisst `HEBEL_STUFEN_VORGABE`.
+           hebel_stufen_liste=None) -> dict:
     """Alle Zahlen eines Einstiegs aus drei Eingaben: Kurs, ATR, Risikobudget.
 
     `risiko_eur` ist der Betrag, den DIESER eine Handel im schlechtesten Fall
@@ -993,7 +1071,17 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
                 and 1.0 <= float(hebel_grenze) < GRENZEN["hebel_max"]):
             _obergrenze = float(hebel_grenze)
         hebel = max(1.0, min(hebel_noetig, sicher, _obergrenze))
-        e["hebel"] = round(hebel, 1)
+        # ⚠️⚠️ EINE ZAHL FUER ALLES (15.09.2026, Befund 2.382-rundung). Hier
+        # stand `round(hebel, 1)` - Verlust, Gewinn, Datenbank und Deckel
+        # rechneten mit dem GERUNDETEN, Liquidation und ,Tage bis zum Stop' mit
+        # dem UNGERUNDETEN Wert: zwei Hebel in einer Mail, aufgerundet bis 2,5
+        # Prozent ueber dem r(q)-Budget. Jetzt UNGERUNDET, und alles rechnet mit
+        # derselben Zahl; die Mail zeigt zwei Stellen. Was man bei Bitpanda
+        # EINSTELLT, zeigen die Stufen.
+        # ⚠️ NICHT RUNDEN, AUCH NICHT AUF ZWEI STELLEN (von der Suite gefangen):
+        # bindet RM-11, liegt die Liquidation genau am Stop - aufgerundet um
+        # 0,005 laege sie davor.
+        e["hebel"] = hebel
         # ⚠️ DIESELBE VERDREHUNG WIE IN `dimensioniere` (dort am 22.08.
         # gefunden): `hebel <= hebel_noetig` ist bei LONG immer wahr, weil
         # `hebel` aus einem min() ueber `hebel_noetig` kommt - die beiden
@@ -1023,6 +1111,12 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         # Zahl, die bei der Eroeffnung sagt, wie lange der Hebel sicher ist.
         e["liquidation_tage_bis_stop"] = tage_bis_liquidation_am_stop(
             stop_rel, hebel, GRENZEN["liquidations_marge"], ist_short)
+        # DIE EINSTELLBAREN STUFEN (Nutzerentscheidung 15.09.): beide Nachbarn,
+        # die untere hervorgehoben - siehe `hebel_stufen`.
+        e["hebel_stufen"] = hebel_stufen(
+            hebel, betrag=betrag, stop_rel=stop_rel, crv=crv,
+            risiko_eur=risiko_eur, kurs=kurs, ist_short=ist_short,
+            sicher=sicher, obergrenze=_obergrenze, stufen=hebel_stufen_liste)
     else:
         e["hebel"] = 1.0
         # HARTES BUDGET AUCH OHNE HEBEL (28.08.2026).
@@ -1284,7 +1378,47 @@ def saetze(e: dict, marken: list | None = None,
     # Zeile ist keine Aussage, sondern eine Luecke.
     _hq = e.get("hebel_aus_quote")
     _hq_luecke = e.get("hebel_aus_quote_luecke")
-    if e["hebel"] > 1:
+    if e["hebel"] > 1 and e.get("hebel_stufen"):
+        # ⚠️⚠️ DIE STUFEN STATT EINER GERUNDETEN ZAHL (15.09.2026, Befund
+        # 2.382-rundung, Nutzerentscheidung: beide Nachbarstufen zeigen, die
+        # untere hervorheben, nicht aufrunden). Jede Stufe traegt IHRE Zahlen -
+        # wer 3x eroeffnet, liest die Zahlen von 3x, nicht die von 2,84x.
+        z.append(f"Hebel           rechnerisch {_eur(e['hebel'], 2)}x  "
+                 f"(Grenze: {e['hebel_grenze']}) - einstellbar:")
+        for _st in e["hebel_stufen"]:
+            _marke = "  ➤ " if _st["hervorgehoben"] else "    "
+            _art = ("im Budget" if _st["hervorgehoben"]
+                    else "NICHT SICHER" if not _st["sicher"]
+                    else f"+{_eur(_st['ueber_budget_prozent'] or 0.0, 0)} % ueber Budget")
+            if not _st["sicher"]:
+                z.append(f"{_marke}{_eur(_st['stufe'], 0)}x  {_art} - die Liquidation "
+                         f"laege vor dem Stop")
+                continue
+            _tage = _st.get("liquidation_tage_bis_stop")
+            # Die NICHT hervorgehobene Stufe sagt ein kurzes Fenster in IHRER
+            # Zeile - ohne `!!`, sonst stuende sie im Kopf, obwohl sie nicht die
+            # Empfehlung ist.
+            _kurz = (not _st["hervorgehoben"] and _tage is not None
+                     and e.get("haltedauer_tage")
+                     and _tage < float(e["haltedauer_tage"]))
+            z.append(f"{_marke}{_eur(_st['stufe'], 0)}x  {_art:<22}"
+                     f"am Stop -{_eur(_st['verlust_am_stop_eur'])} EUR · am Ziel "
+                     f"+{_eur(_st['gewinn_am_ziel_eur'])} EUR · Liquidation etwa "
+                     f"{preis(_st['liquidation_etwa_eur'])} EUR"
+                     + ("" if _tage is None
+                        else ", erreicht den Stop schon am ersten Tag" if _tage < 1
+                        else ", hinter dem Stop bis etwa Tag " + _eur(_tage, 0))
+                     + (" - kuerzer als die geschaetzte Haltedauer" if _kurz else ""))
+            # 2.445-FENSTER auch je Stufe - fuer die HERVORGEHOBENE, die
+            # empfohlene; die Marke `!!` bringt die Zeile in den Kopf.
+            if (_st["hervorgehoben"] and _tage is not None
+                    and e.get("haltedauer_tage")
+                    and _tage < float(e["haltedauer_tage"])):
+                z.append(f"Sicher bis      Tag {_eur(max(0.0, _tage), 0)} bei "
+                         f"{_eur(_st['stufe'], 0)}x   !! kuerzer als die geschaetzte "
+                         f"Haltedauer von {e['haltedauer_tage']} Tagen - danach liegt "
+                         f"die Liquidation vor dem Stop")
+    elif e["hebel"] > 1:
         z.append(f"Hebel           {_eur(e['hebel'], 1)}x  (Grenze: {e['hebel_grenze']}; "
                  f"Liquidation etwa {preis(e['liquidation_etwa_eur'])} EUR"
                  # H-4: wie lange der Hebel sicher bleibt - die Finanzierung
@@ -1326,8 +1460,16 @@ def saetze(e: dict, marken: list | None = None,
         z += list(_hq.get("saetze") or [])
     elif _hq_luecke:
         z.append("   " + str(_hq_luecke))
-    z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
-             f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
+    _unten = next((x for x in (e.get("hebel_stufen") or []) if x["hervorgehoben"]), None)
+    if _unten is not None and e["hebel"] > 1:
+        # Die Ergebniszeile gehoert zur HERVORGEHOBENEN Stufe - die gerechnete
+        # Zahl (z. B. 2,84x) laesst sich nicht eroeffnen.
+        z.append(f"Bei {_eur(_unten['stufe'], 0)}x verlieren Sie am Stop "
+                 f"{_eur(_unten['verlust_am_stop_eur'])} EUR, am Ziel gewinnen Sie "
+                 f"{_eur(_unten['gewinn_am_ziel_eur'])} EUR.")
+    else:
+        z.append(f"Am Stop verlieren Sie {_eur(e['verlust_am_stop_eur'])} EUR, "
+                 f"am Ziel gewinnen Sie {_eur(e['gewinn_am_ziel_eur'])} EUR.")
     # DER TRICHTER STEHT NACH DEN SECHS HANDELSPARAMETERN (20.08.2026).
     #
     # Er stand zuerst zwischen Take-Profit und Haltedauer und hat damit den

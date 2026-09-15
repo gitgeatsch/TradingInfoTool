@@ -395,6 +395,14 @@ VORGABEN = (
             "erst nach dem Krypto-Produktivgang. A-1, A-2 und die "
             "N-19-Messbasis sind zurueckgestellt.",
             "Nutzervorgabe 10.09.", "erfuellt"),
+    Vorgabe("KRYPTO-STABIL-UND-KORREKT",
+            "\u26a0\ufe0f\u26a0\ufe0f Bevor weitergearbeitet wird, muss der Krypto-Teil STABIL UND FUNKTIONAL "
+            "KORREKT sein. Deshalb folgt auf die Gesamtmessung (Schritt 59) ein eigener, umfangreicher "
+            "Korrekturschritt (Schritt 60): Fehler beheben, die die Messung und der Betrieb zeigen, und "
+            "Inhalt und Struktur der eMails - erst dann Verkauf, Akkumulation und alles Weitere.",
+            "Nutzervorgabe 15.09.: ,nach dem grossen Punkt 59 einen umfangreichen Zusatzpunkt zur Korrektur "
+            "von Fehlern und eMail Inhalt und Struktur einplanen - bevor wir einfach weiterarbeiten, muss der "
+            "Kryptoteil stabil und funktional korrekt sein'"),
     Vorgabe("BEZUGSGROESSE",
             "Bezugsgroesse fuer `r x Kapital` ist das GESAMTKAPITAL OHNE "
             "CASH - genau `portfolio_wert_historie.wert_eur` (alle "
@@ -569,13 +577,13 @@ REIHENFOLGE = (
             "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
             "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
             "2.454-etfbestand AUSGEGLIEDERT in Schritt 57 (Ziel am 15.09. entschieden, nachgelagert; im Betrieb ohne Wirkung), 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
-            "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), 2.382-rundung (gerundeter Hebel ueberschreitet das r(q)-Budget um bis zu 2,5 Prozent). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. "
-            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: \u2714 GELOEST 15.09. 2.453-hebelpos (2.455-hebelabgleich-gebaut: Mail ab 1 Stunde, Stempel, Mailzeile, Datenfrische, Export), \u2714 GELOEST 15.09. 2.387-fortschreibung (2.455-kapitalkurse-gebaut: Job 05:30, Eingabepruefung, Schlusskurs-Rueckfall handelsplatzgenau), 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass, NEU 2.455-rekonstruktion-heute (rekonstruierte Reihe schreibt eine Kerze mit heutigem Datum); (G3) BETRIEBSHYGIENE: 2.454-gemini, 2.454-rauschen, 2.454-vix, \u2714 2.455-refreshzeit GELOEST 15.09. (Job 05:30, 2.455-kapitalkurse-gebaut). Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
+            "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), \u2714 GELOEST 15.09. 2.382-rundung (2.455-hebelstufen-gebaut: ein ungerundeter Hebel, in der Mail die einstellbaren Stufen, die untere hervorgehoben). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. (12) \u26a0\ufe0f\u26a0\ufe0f AUSSTEHENDE NOTEBOOK-KONTROLLEN (Nutzervorgabe 15.09.: ,anstehende Pruefungen nicht vergessen und sauber in Plan und Memory mitfuehren') - ein Punkt gilt erst als erledigt, wenn er am Notebook bestaetigt ist: (K1) Pull von `2.455-hebelstufen-gebaut` mit Neustart; (K2) Export 16.09. NACH 06:45: 05:30 erster Lauf `refresh_aktien_ohlc` nach neuer Regel, ggf. Zeilen ,Kursluecke ...' (2.455-kapitalkurse-gebaut); (K3) 06:30 `Tageswert 2026-09-15` OHNE fortgeschriebene Boersentitel; (K4) 2.387-job - die Zeile 15.09. schreibt der 06:30-Lauf OHNE Neustart; (K5) in den Tagen danach die Selbstpruefung ,Schlusskurs-Rueckfall ... ersetzt' mit Abweichung unter 0,5 Prozent; (K6) die erste echte Hebelmail nach dem Pull zeigt die Stufen wie am Pruefstand; (K7) Hebel-Abgleich und Datenfrische weiter ohne Alarm. Ablauf und erwartete Zeilen: Basisinfos/Rollout_Notebook_14_09.md, Nachtraege 15.09. "
+            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: \u2714 GELOEST 15.09. 2.453-hebelpos (2.455-hebelabgleich-gebaut: Mail ab 1 Stunde, Stempel, Mailzeile, Datenfrische, Export), \u2714 GELOEST 15.09. 2.387-fortschreibung (2.455-kapitalkurse-gebaut: Job 05:30, Eingabepruefung, Schlusskurs-Rueckfall handelsplatzgenau), 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass, NEU 2.455-rekonstruktion-heute (rekonstruierte Reihe schreibt eine Kerze mit heutigem Datum); (G3) BETRIEBSHYGIENE: NEU 2.455-exportveto (Fehlalarm der Standardpruefung bei Veto-Schatten-Zeilen), 2.454-gemini, 2.454-rauschen, 2.454-vix, \u2714 2.455-refreshzeit GELOEST 15.09. (Job 05:30, 2.455-kapitalkurse-gebaut). Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-kurs-gebaut, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey-gebaut, 2.453-bestand-gebaut, 2.453-veto, "
             "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, "
-            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.455-kapitalkurse-gebaut, 2.455-rekonstruktion-heute, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
+            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.455-kapitalkurse-gebaut, 2.455-rekonstruktion-heute, 2.455-exportveto, 2.455-nb-15-09, 2.455-hebelstufen-gebaut, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
@@ -1056,6 +1064,54 @@ REIHENFOLGE = (
             "Basisinfos/Ausrollen_24_08.md; Notebook-Rollout 12.09.",
             fertig=True,
             umbau="neu"),  # Rollout Paket B
+    Schritt(59, "GESAMTKETTE MESSEN UND BEWERTEN - JE STRATEGIE UND PHASE, DETERMINISTISCH UND LLM",
+            "\u26a0\ufe0f NUTZERVORGABE 15.09.: *,Zu den Hebelsignalen und Krypto insgesamt muss die "
+            "gesamte Ablaufkette und LLMs in einem umfangreichen Planpunkt gemessen und bewertet werden - "
+            "erinnere dich, Ziel: Hebel nur dann, wenn ein optimales Chancen-Risiko-Verhaeltnis vorhanden "
+            "ist. Die Bewertung sollte aber fuer alle Strategien erfolgen (Spot und Akkumulation) sowie "
+            "Unterscheidung Einstieg, Fuehrung und Ausstieg bzw. Reduktion.'* "
+            "\u27a4 DIE MATRIX: STRATEGIE (Spot, Hebel, Akkumulation) x PHASE (Einstieg, Fuehrung, "
+            "Ausstieg/Reduktion) x EBENE (deterministische Stufen der Kette, LLM-Rollen A, BC, G und die "
+            "Gegenpruefung). JE ZELLE DREI FRAGEN: (1) ZAHL - wie viele Empfehlungen, wo faellt was im "
+            "Trichter heraus; (2) GUETE - Potential (`bewegung_r`) gegen ein Nullmodell auf derselben Menge, "
+            "Tagesklammer, nach Messstandard; (3) BEITRAG - was aendert die Stufe oder Rolle gegen die Kette "
+            "ohne sie. FUER DEN HEBEL ZUSAETZLICH: traegt die Quote den Hebel (r(q)), und waere derselbe "
+            "Trade als Spot besser - Vorgabe HEBEL-ZIEL. "
+            "\u27a4 BAUSTEINE, DIE HIER AUFGEHEN ODER ZULIEFERN (nicht doppelt bauen): 42 T-0 "
+            "(Zahl, Guete, LLM-Aussagekraft), 29 T-1 Fehleridentifikation, 30 T-3 historische Simulation auf "
+            "Potential, 43 (1) Guetemass des Ausstiegs, 25 Akku-Messpaket, 35 A1 und 37 Kalibrierung (Hebel), "
+            "52 Stopregel; 33 LLM-Rollen entscheidet ERST DANACH. "
+            "\u27a4 AUSGANGSLAGE 15.09. (2.455-hebelsignale): alle 166 Zeilen der Rollen-Kette seit "
+            "12.09. tragen strategie `einstieg`; die 8 Hebelempfehlungen sind NACHKAUFEN auf gehaltenen Werten "
+            "- Einstieg und Fuehrung sind in den Daten nicht getrennt, die Akkumulation ist gesperrt. "
+            "\u26a0\ufe0f ZUERST DAS MESSDESIGN, dann messen (Vorgaben MESSSTANDARD-VOR-DER-MESSUNG, "
+            "KEINE-TEILLOESUNG, STAND-PRUEFEN-VORHER): je Zelle Population, Zielgroesse, Nullmodell, Datenlage "
+            "und bekannte Blocker (A1 binaeres Band, A8 Live-Menge, A9 Laengsachse) - vorgelegt und abgestimmt, "
+            "bevor eine Zahl gerechnet wird. LLM ist Pruefung, nicht Entscheider.",
+            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Schritte 42, 29, 30, 43, 25, 35, 37, 52, 33",
+            block="D-BEWERTUNG",
+            umbau="beides"),  # misst Alt (LLM-Rollen) und Neu (Bewertung, r(q)) in einer Matrix
+    Schritt(60, "KRYPTO STABIL UND FUNKTIONAL KORREKT - FEHLERKORREKTUR, MAIL-INHALT UND -STRUKTUR",
+            "\u26a0\ufe0f\u26a0\ufe0f NUTZERVORGABE 15.09. (Vorgabe KRYPTO-STABIL-UND-KORREKT): nach Schritt 59 "
+            "ein umfangreicher Zusatzpunkt, BEVOR weitergearbeitet wird. DREI TEILE: (1) FEHLER AUS DER "
+            "MESSUNG - was Schritt 59 je Strategie und Phase als falsch oder wirkungslos zeigt, wird korrigiert, "
+            "nicht nur benannt. (2) FEHLER AUS DEM BETRIEB, schon bekannt: 2.455-hebel-nachkaufen (ein Hebel-"
+            "Einstieg heisst NACHKAUFEN, weil ein Spot-Bestand da ist - fachlich eine neue Position, 7c); die "
+            "Rollen-Kette schreibt fuer alles strategie `einstieg`, Einstieg, Fuehrung und Ausstieg sind in den "
+            "Daten nicht getrennt (2.455-hebelsignale); was aus Schritt 55 und 56 dann noch offen ist. (3) "
+            "eMAIL-INHALT UND -STRUKTUR: auf Grundlage der Fachpruefung (Schritt 41, 2.447-offen) und der "
+            "Messung - was in welche Mail gehoert, je Strategie und Phase, samt Betreff, Reihenfolge und "
+            "Warnungen (Nutzer 12.09.: ,vor lauter Warnungen sehe ich nicht auf einen Blick, was relevant "
+            "ist'). NUTZERHINWEIS 15.09. zur Hebelstufen-Darstellung: ,wichtig fuer den Punkt Ueberarbeitung "
+            "der eMails und Gruppierung, Lesbarkeit' - Grundlage ist die Stufendarstellung "
+            "(2.455-hebelstufen-gebaut); am Pruefstand beobachtet: Betrag und Ergebnis stehen im Blick-Block "
+            "UND in der Rechnung, der Hebel an drei Stellen (Blick, Rechnung, Herleitung). \u26a0\ufe0f Umsetzungsschritte werden nach Schritt 59 im Detail vorgelegt; bis dahin ist "
+            "dieser Schritt die Sammelstelle, damit nichts verloren geht.",
+            "Nutzervorgabe 15.09.; Vorgabe KRYPTO-STABIL-UND-KORREKT; Befunde 2.455-hebel-nachkaufen, "
+            "2.455-hebelsignale, 2.455-hebelstufen-gebaut, 2.447-offen; Schritte 41, 55, 56, 59",
+            block="D-ABBILDUNG",
+            wartet_auf=(59,),
+            umbau="beides"),
     Schritt(43, "VERKAUFSEMPFEHLUNGEN - DIE AUSSTIEGSSEITE ZU ENDE BAUEN",
             "⚠️ NUTZERVORGABE 12.09.: *,nimm noch die Verkaufsempfehlungen in "
             "den Gesamtplan auf - das sollten wir VOR dem Multiasset (Aktien "
@@ -1285,7 +1341,7 @@ REIHENFOLGE = (
             "Nutzervorgabe 11.09.",
             block="L-ROLLEN",
             umbau="alt",
-            wartet_auf=(42,),  # ERST NACH Schritt 42 - ohne Messung ist jede Promptaenderung eine Meinung
+            wartet_auf=(59,),  # ERST NACH der Messung (Schritt 59, darin 42) - ohne Messung ist jede Promptaenderung eine Meinung
             ),  # die LLM-Rollen stehen seit dem 22.08. - sie werden umgebaut
 
     # ================================================================
@@ -1399,8 +1455,11 @@ REIHENFOLGE = (
             "Z.ai (Einwand ja/nein gegen Ausgang). Mit Tagesklammer, mit "
             "Zufallskontrolle, Erfolgsmass POTENTIAL. ⚠️ Ohne diese Messung "
             "ist der Beitrag der Modelle unbelegt (2.391) - und die "
-            "Entscheidungen aus 2.391-hilfe sind nicht begruendbar.",
-            "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*",
+            "Entscheidungen aus 2.391-hilfe sind nicht begruendbar. "
+            "\u27a4 15.09.: IN SCHRITT 59 AUFGEGANGEN (Nutzerentscheidung 15.09.: ,42 geht auf') (Gesamtkette je Strategie "
+            "und Phase) - die LLM-Aussagekraft wird dort in derselben Matrix gemessen.",
+            "Nutzervorgabe mehrfach, zuletzt 12.09.; Befunde 2.391*; Schritt 59",
+            fertig=True,  # 15.09.: in Schritt 59 aufgegangen (Nutzerentscheidung)
             block="L-ROLLEN",
             umbau="neu"),  # misst die neue Gesamtkette gegen ein Nullmodell
     Schritt(41, "MAIL UND GUI - FACHPRUEFUNG VOR DER STRAFFUNG",

@@ -307,6 +307,9 @@ HEBEL_AUS_QUOTE_VORGABE: dict = {
     "hebel_grenze": 5.0,       # Nutzer 11.09.: Deckel 5x bis zur Trennschaerfe
     "aggregat_anteil": 0.03,   # Nutzer 11.09.: alle Hebelrisiken zusammen
                                # hoechstens 3 % des Kapitals (H-5, hebel_aggregat)
+    # Nutzer 15.09.: bei Bitpanda meist 2x, 3x, 5x, 10x - die Mail zeigt die
+    # beiden Nachbarstufen des gerechneten Hebels (2.382-rundung)
+    "hebel_stufen": (2.0, 3.0, 5.0, 10.0),
 }
 
 

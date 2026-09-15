@@ -107,7 +107,8 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `f5337da` | **Kursreihen** | S&P-Referenz im Tagesjob, Nachladen nach Handelstagen, Frische je Wert mit Mail | 2.453-kurs-gebaut | ✔ Export 15.09. 00:41: SPY 14.09., 62 Werte frisch |
 | `8bedff5` | **Zugangsschlüssel** | FRED-Schlüssel nicht mehr im Klartext in Datenbank, Log und Export; beim Start wird der gespeicherte Eintrag bereinigt | 2.453-fredkey-gebaut | ⏳ Pull ausstehend |
 | `0c22b77` | **Hebel-Abgleich** | Fällt der Abgleich der Hebelpositionen mit Bitpanda 1 Stunde lang aus, kommt eine Mail; die Hebelführungs-Mail nennt dann den Positionsstand | 2.455-hebelabgleich-gebaut | ⏳ Pull ausstehend |
-| *(nächster Commit)* | **Kapitalkurse** | Kursreihen-Job täglich 05:30 statt 24 h ab Start; der Portfoliowert lädt einen fehlenden Handelstagskurs nach; fehlt er in Yahoos Tageshistorie, kommt der Schlusskurs aus dem letzten Handel des Platzes | 2.455-kapitalkurse-gebaut | ⏳ Pull ausstehend |
+| `9d5d82f` | **Kapitalkurse** | Kursreihen-Job täglich 05:30 statt 24 h ab Start; der Portfoliowert lädt einen fehlenden Handelstagskurs nach; fehlt er in Yahoos Tageshistorie, kommt der Schlusskurs aus dem letzten Handel des Platzes | 2.455-kapitalkurse-gebaut | ⏳ Pull ausstehend |
+| *(nächster Commit)* | **Hebelstufen** | Hebelmails zeigen den gerechneten Hebel und die einstellbaren Stufen (untere hervorgehoben, obere mit Überschuss oder „NICHT SICHER“); alle Zahlen rechnen mit demselben Hebel | 2.455-hebelstufen-gebaut | ⏳ Pull ausstehend |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
