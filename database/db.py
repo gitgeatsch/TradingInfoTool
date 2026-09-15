@@ -1603,6 +1603,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_price_history_ohlc(conn)
     _migrate_rohstoff_futures_reihen_umziehen(conn)
     _bereinige_gemessene_etc_punkte(conn)
+    _bereinige_schluessel_in_api_health(conn)
     import_holdings_manual_overrides(conn)
     # MUSS VOR DEM ERSTEN KETTENLAUF STEHEN, und `init_db()` laeuft beim
     # App-Start - also vor dem Scheduler. Andernfalls griffe die neue Vorgabe
@@ -4844,9 +4845,42 @@ def record_api_health_success(conn: sqlite3.Connection, source: str) -> None:
     conn.commit()
 
 
+def _bereinige_schluessel_in_api_health(conn: sqlite3.Connection) -> int:
+    """Schon gespeicherte Fehlertexte nachtraeglich maskieren (15.09.2026).
+
+    Befund 2.453-fredkey: am Notebook stand der FRED-Schluessel im Klartext in
+    `api_health_status`. Laeuft bei jedem Start (in `init_db`), idempotent - ein
+    maskierter Text aendert sich nicht mehr. Gibt die Zahl der bereinigten Zeilen
+    zurueck."""
+    from geheimnisse import maskiere
+    try:
+        zeilen = conn.execute(
+            "SELECT source, last_error_message FROM api_health_status "
+            "WHERE last_error_message LIKE '%=%'").fetchall()
+    except sqlite3.Error:
+        return 0
+    n = 0
+    for zeile in zeilen:
+        quelle, text = zeile[0], zeile[1]
+        neu = maskiere(text)
+        if neu != text:
+            conn.execute("UPDATE api_health_status SET last_error_message = ? "
+                         "WHERE source = ?", (neu, quelle))
+            n += 1
+    if n:
+        conn.commit()
+    return n
+
+
 def record_api_health_error(conn: sqlite3.Connection, source: str, error_type: str, error_message: str) -> None:
     """Wie record_api_health_success(), aber fuer einen Fehlschlag - laesst
-    last_success_at unangetastet."""
+    last_success_at unangetastet.
+
+    ⚠️ MASKIERT SELBST (15.09.2026, 2.453-fredkey) - zusaetzlich zu
+    `track_api_health`, damit auch ein anderer Aufrufer keinen Schluessel
+    speichert."""
+    from geheimnisse import maskiere
+    error_message = maskiere(error_message)
     conn.execute(
         "INSERT INTO api_health_status (source, last_error_at, last_error_type, last_error_message) "
         "VALUES (?, ?, ?, ?) "

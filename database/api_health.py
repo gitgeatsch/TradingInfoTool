@@ -66,7 +66,12 @@ def track_api_health(source: str) -> Callable[[F], F]:
                     raise
                 conn = db.get_connection()
                 try:
-                    db.record_api_health_error(conn, source, type(exc).__name__, str(exc)[:200])
+                    # MASKIERT, BEVOR GEKUERZT WIRD (15.09.2026, 2.453-fredkey):
+                    # sonst stuende ein halb abgeschnittener Schluessel in der
+                    # Datenbank - und in jeder Sicherung.
+                    from geheimnisse import maskiere
+                    db.record_api_health_error(conn, source, type(exc).__name__,
+                                               maskiere(str(exc))[:200])
                 finally:
                     conn.close()
                 raise

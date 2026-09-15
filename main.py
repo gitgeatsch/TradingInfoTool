@@ -39,6 +39,13 @@ logging.basicConfig(
         RotatingFileHandler(LOG_PATH, maxBytes=5_000_000, backupCount=3, encoding="utf-8"),
     ],
 )
+# ⚠️⚠️ SCHLUESSEL AUS DEM LOG (15.09.2026, Befund 2.453-fredkey): `requests`
+# schreibt bei HTTP-Fehlern die volle URL samt `api_key=` in die Meldung - die
+# FRED-Warnungen trugen den Schluessel so in die Log-Datei und von dort in den
+# Export im Austauschordner. Maskiert wird die fertige Zeile, auch Tracebacks.
+from geheimnisse import maskiere_handler
+
+maskiere_handler(logging.getLogger().handlers)
 logger = logging.getLogger(__name__)
 
 

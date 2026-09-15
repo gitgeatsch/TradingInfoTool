@@ -3422,6 +3422,18 @@ def main() -> None:
         "auffaelligkeiten": auffaelligkeiten,
     }
 
+    # ⚠️⚠️ KEINE SCHLUESSEL IN DEN AUSTAUSCHORDNER (15.09.2026, 2.453-fredkey).
+    # Die Log-Dateien am Notebook tragen den FRED-Schluessel aus der Zeit vor
+    # der Maskierung noch bis zur Rotation, und die Ampel las ihn aus der
+    # Datenbank. Der Export vom 15.09. enthielt ihn achtmal. Maskiert werden
+    # die Abschnitte, deren Texte aus Log oder Anbieterfehlern stammen.
+    from geheimnisse import maskiere_tief
+    for _abschnitt in ("log_auszug", "job_fehlschlaege",
+                       "groq_erschoepfung_ereignisse", "api_health",
+                       "auffaelligkeiten"):
+        if _abschnitt in payload:
+            payload[_abschnitt] = maskiere_tief(payload[_abschnitt])
+
     ZIEL_ORDNER.mkdir(parents=True, exist_ok=True)
     ziel_datei = ZIEL_ORDNER / "notebook_diagnose.json"
     # ⚠️ STROEMEND UND ATOMAR SCHREIBEN (26.08.2026, MemoryError am Notebook).

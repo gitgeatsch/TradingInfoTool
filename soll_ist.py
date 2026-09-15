@@ -563,18 +563,18 @@ REIHENFOLGE = (
             "Terminmarkt und Umlaufmenge). (4) \u2714 GELOEST 15.09.: 2.453-rohstoff bis "
             "6 Tage Rueckstand. (5) 2.453-cache: Prozess-Zwischenspeicher bis zum "
             "Neustart. (6) \u2714 GELOEST 15.09.: 2.453-kursreihe Frische je Wert. "
-            "(7) Verdacht 2.453-hebelpos, 2.453-alterlos. (8) 2.453-fredkey: API-"
+            "(7) Verdacht 2.453-hebelpos, 2.453-alterlos. (8) \u2714 GELOEST 15.09. (2.453-fredkey-gebaut): 2.453-fredkey: API-"
             "Schluessel im Klartext in `api_health_status` und im Export. "
             "(9) AUS DER NOTEBOOK-KONTROLLE 14.09. (2.454): 2.454-ampel GELOEST (2.454-ampel-gebaut; Folge "
             "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
             "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
-            "2.454-etfbestand, 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
+            "2.454-etfbestand AUSGEGLIEDERT in Schritt 57 (Ziel am 15.09. entschieden, nachgelagert; im Betrieb ohne Wirkung), 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
             "2.452-boerse (OI nur von Binance) und 2.452-anlass. "
             "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-kurs-gebaut, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
-            "2.453-alterlos, 2.453-fredkey, 2.453-bestand-gebaut, 2.453-veto, "
-            "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, 2.454-etfbestand, "
+            "2.453-alterlos, 2.453-fredkey-gebaut, 2.453-bestand-gebaut, 2.453-veto, "
+            "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, "
             "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
@@ -2263,6 +2263,42 @@ REIHENFOLGE = (
             "Gesamtplan 28.08. E1; Befund 2.448-rest",
             block="D-ABBILDUNG",
             umbau="beides"),  # Planung, nicht Angleichung
+    Schritt(57, "ETF-BESTAND DER ROHSTOFFE - TRAEGT DIE INFORMATION?",
+            "\u27a4 AUSGEGLIEDERT AUS SCHRITT 56 (15.09., Befund "
+            "2.454-etfbestand-quelle). Die Reihe sollte Rolle G fuer Rohstoffe "
+            "eine ZWEITE unabhaengige Quelle neben COT geben (G1) - physisch "
+            "eingelagertes Metall als Nachfrage unabhaengig vom Kurs. Sie hat "
+            "diese Groesse NIE geliefert: yfinance gibt einen ruhenden "
+            "Stammdatenwert, fuer SLV und UNG seit 25.08. gar nichts. "
+            "\u27a4 NUTZERENTSCHEIDUNG 15.09. - DAS ZIEL: nicht ,Rolle G eine "
+            "zweite Quelle geben', sondern pruefen, ob ETF-Zu- und Abfluesse "
+            "den weiteren Kursverlauf der Rohstoff-ETCs VORHERSAGEN. Nur dann "
+            "ist eine fragile Emittentenquelle den Aufwand wert (Regel 4: ein "
+            "Fakt ist keine Begruendung - auch nicht fuer eine Gegenpruefung). "
+            "VIER TEILE, in dieser Reihenfolge: (1) DATENLAGE, nur recherchieren: "
+            "gibt es kostenfreie Tages-Historie ueber mehrere Jahre fuer GLD, "
+            "SLV, UNG und CPER? Stand 15.09. angetestet: iShares-SLV-Datei nennt "
+            "Ounces und Shares Outstanding, eine Historie ist nicht bestaetigt; "
+            "SPDR-Archiv liefert PDF; USCF hat eine Historienseite zu UNG, nicht "
+            "ausgewertet. (2) MESSBARKEIT VORAB (Vorgabe "
+            "MESSSTANDARD-VOR-DER-MESSUNG): 4 Werte erlauben keinen Querschnitt, "
+            "die Laengsachse loest erst ab 0,08 R auf (Blocker A9). Ist die Frage "
+            "schon vorher nicht aufloesbar, ist DAS das Ergebnis - dann erst die "
+            "Loesungssuche, keine Messung ins Blaue. (3) MESSUNG nach "
+            "Messstandard, Zeitfenster genannt. (4) ENTSCHEIDUNG: traegt die "
+            "Groesse, die Emittentenquellen in EINEM Zug bauen (Abruf, Frische, "
+            "Leser in `positionierung`, Satz fuer Rolle G - Vorgabe "
+            "KEINE-TEILLOESUNG); traegt sie nicht, den Abruf mit Grund "
+            "stilllegen und nachsehen, wer die Reihe sonst noch liest. "
+            "\u26a0\ufe0f BIS DAHIN: der Abruf bleibt, er ist ohne Wirkung - "
+            "`positionierung._etf_bestand` verlangt 90 Punkte und bildet nie "
+            "einen Satz. \u26a0\ufe0f REIHENFOLGE: SPAETER, weil Rohstoffe "
+            "Multiasset sind (Vorgaben KRYPTO-ZUERST, VERKAUF-VOR-MULTIASSET) "
+            "und das Ergebnis in die Kriterien von Rolle G gehoert (Vorgabe "
+            "LLM-SCHIENE-GANZ, Schritt 33).",
+            "Nutzerentscheidung 15.09.; Befunde 2.454-etfbestand-quelle, 2.283 (A9)",
+            block="SPAETER",
+            umbau="alt"),  # eine Augustquelle klaeren: bauen oder stilllegen
 )
 
 # ---- Blocker, die benannt sind -------------------------------------------

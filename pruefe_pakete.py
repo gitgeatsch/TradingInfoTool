@@ -23323,6 +23323,130 @@ def paket_kursreihen() -> None:
            text[:300])
 
 
+def paket_geheimnisse() -> None:
+    """2.453-fredkey: kein Zugangsschluessel in Datenbank, Log oder Export.
+
+    ⚠️ ANLASS: der FRED-Schluessel stand im Klartext in `api_health_status`, in
+    der Log-Datei und achtmal im Export im Google-Drive-Austauschordner -
+    `requests` nennt bei HTTP-Fehlern die volle URL samt `api_key=`. Festgehalten:
+
+        1  die Regel: Wert maskiert, Parametername und Anbieter bleiben lesbar;
+           Fliesstext und aehnliche Parameternamen unberuehrt
+        2  `track_api_health` speichert maskiert - GEGENPROBE: der Rohtext haette
+           den Schluessel enthalten
+        3  `record_api_health_error` maskiert auch fuer andere Aufrufer
+        4  die Migration bereinigt Altbestand und ist wiederholbar
+        5  das Logging maskiert die fertige Zeile, auch den Traceback
+        6  `main.py` haengt den Formatter an, der Export maskiert seine Abschnitte
+
+    Ein erfundener Schluessel, Speicherdatenbanken, keine Standard-DB."""
+    P = "Geheimnisse"
+    import ast as _ast
+    import io as _io
+    import logging as _lg
+    import sqlite3 as _sq
+    from types import SimpleNamespace as _NS
+
+    import database.api_health as _AH
+    import database.db as _DB
+    import geheimnisse as _G
+
+    GEHEIM = "cc1testschluessel0123456789ef"
+    url = ("502 Server Error: Bad Gateway for url: https://api.stlouisfed.org/fred/"
+           "series/observations?series_id=FEDFUNDS&api_key=%s&file_type=json" % GEHEIM)
+    m = _G.maskiere(url)
+    pruefe(P, "⚠️⚠️⚠️ der Schluessel ist weg, Anbieter und Parametername bleiben lesbar",
+           GEHEIM not in m and "api_key=***&file_type=json" in m and "stlouisfed" in m, m)
+    pruefe(P, "auch `token=` (Finnhub) und mehrere Parameter",
+           _G.maskiere("https://finnhub.io/x?symbol=A&token=%s" % GEHEIM).endswith("token=***")
+           and _G.maskiere("?key=%s&api_key=%s" % (GEHEIM, GEHEIM)).count(GEHEIM) == 0, "")
+    pruefe(P, "Fliesstext und aehnliche Namen bleiben unberuehrt",
+           _G.maskiere("key=value-Paare im Text") == "key=value-Paare im Text"
+           and _G.maskiere("?sort_key=abcdef123") == "?sort_key=abcdef123", "")
+
+    # 2 + 3 SPEICHERN
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        c.execute("CREATE TABLE api_health_status (source TEXT PRIMARY KEY, last_success_at TEXT, "
+                  "last_error_at TEXT, last_error_type TEXT, last_error_message TEXT)")
+        return c
+
+    gespeichert = []
+    _echt_db = _AH.db
+    _AH.db = _NS(get_connection=lambda: _NS(close=lambda: None),
+                 record_api_health_error=lambda c, q, t, msg: gespeichert.append(msg),
+                 record_api_health_success=lambda c, q: None)
+
+    @_AH.track_api_health("fred")
+    def _abruf():
+        raise RuntimeError(url)
+
+    try:
+        try:
+            _abruf()
+        except RuntimeError:
+            pass
+    finally:
+        _AH.db = _echt_db
+    pruefe(P, "⚠️⚠️ `track_api_health` speichert den Fehlertext maskiert",
+           gespeichert and GEHEIM not in gespeichert[0] and "api_key=***" in gespeichert[0],
+           str(gespeichert)[:200])
+    pruefe(P, "GEGENPROBE: der Rohtext der Ausnahme trug den Schluessel",
+           GEHEIM in str(RuntimeError(url)), "")
+
+    c = _db()
+    _DB.record_api_health_error(c, "eia", "HTTPError", "for url: https://api.eia.gov/v2?api_key=%s" % GEHEIM)
+    gesp = c.execute("SELECT last_error_message FROM api_health_status").fetchone()[0]
+    pruefe(P, "`record_api_health_error` maskiert auch fuer andere Aufrufer",
+           GEHEIM not in gesp and "api_key=***" in gesp, gesp)
+
+    # 4 MIGRATION
+    c.execute("INSERT INTO api_health_status (source, last_error_message) VALUES ('fred', ?)", (url,))
+    c.commit()
+    n1 = _DB._bereinige_schluessel_in_api_health(c)
+    rest = [r[0] for r in c.execute("SELECT last_error_message FROM api_health_status")]
+    n2 = _DB._bereinige_schluessel_in_api_health(c)
+    c.close()
+    pruefe(P, "⚠️ die Migration bereinigt Altbestand und ist wiederholbar",
+           n1 == 1 and n2 == 0 and all(GEHEIM not in r for r in rest),
+           "erster Lauf %s, zweiter %s" % (n1, n2))
+
+    # 5 LOGGING
+    puffer = _io.StringIO()
+    h = _lg.StreamHandler(puffer)
+    h.setFormatter(_lg.Formatter("%(levelname)s %(name)s: %(message)s"))
+    _G.maskiere_handler([h])
+    lg = _lg.getLogger("pruefe.geheimnisse")
+    lg.propagate = False
+    lg.addHandler(h)
+    try:
+        lg.warning("FRED-Abruf fehlgeschlagen: %s", url)
+        try:
+            raise RuntimeError(url)
+        except RuntimeError:
+            lg.exception("mit Traceback")
+    finally:
+        lg.removeHandler(h)
+    ausgabe = puffer.getvalue()
+    pruefe(P, "⚠️⚠️ das Logging maskiert Meldung UND Traceback",
+           # ZWEI Masken: die Warnung und die letzte Traceback-Zeile - die
+           # Meldung von `lg.exception` selbst traegt keine URL.
+           GEHEIM not in ausgabe and ausgabe.count("api_key=***") == 2
+           and "Traceback" in ausgabe,
+           "Zeilen mit Maske: %d" % ausgabe.count("api_key=***"))
+
+    # 6 VERDRAHTUNG
+    _main = _ast.parse(_quelltext("main.py"))
+    _ruft = [n for n in _ast.walk(_main) if isinstance(n, _ast.Call)
+             and isinstance(n.func, _ast.Name) and n.func.id == "maskiere_handler"]
+    _export = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "`main.py` haengt den Formatter an, der Export maskiert Log, Fehlschlaege und Ampel",
+           len(_ruft) == 1 and "maskiere_tief(payload[_abschnitt])" in _export
+           and all('"%s"' % a in _export for a in ("log_auszug", "job_fehlschlaege", "api_health")),
+           "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -23372,6 +23496,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Ampel": paket_ampel,
           "Laufzeit": paket_laufzeit,
           "Kursreihen": paket_kursreihen,
+          "Geheimnisse": paket_geheimnisse,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
