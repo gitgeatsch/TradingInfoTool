@@ -557,6 +557,43 @@ BLOECKE = (
 # muss - und die erste, die vergessen wird.
 
 REIHENFOLGE = (
+    Schritt(61, "BITPANDA-ANBINDUNG AUF DIE NEUE SCHNITTSTELLE - BESTAND, CASH, STAKING, HEBEL",
+            "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f NUTZERENTSCHEIDUNG 15.09.: Stufenplan 0 -> 1 -> (2, 3, 4 nach "
+            "Pruefergebnis), EIGENER Schritt vor 55; *,der Umbau ist massiv und du musst hier wirklich detailliert in "
+            "Code und Doku, damit wir nichts vergessen - bei den heiklen Bereichen gehen wir in Abstimmung'*. "
+            "ANLASS: (a) gebundenes Cash unsichtbar (2.455-cash-gesperrt: 3.000 EUR in 11 Fusion-Limit-Orders); (b) "
+            "gestakte Mengen seit 16.07. doppelt, Kapital rund 2.600 EUR zu hoch (2.455-bestand-gestakt); (c) die alte "
+            "API ist abgekuendigt (2.455-cash-messbar). "
+            "\u27a4 STUFE 0 PRUEFEN (nur lesend): 0.1 \u2714 Buchungen vollstaendig nur ueber "
+            "Datumsfenster, der Cursor ist defekt (2.455-bitpanda-stufe0); 0.2 \u2714 Hebelgeschaefte "
+            "enthalten; Bestand aus `asset_balance_after` je Wallet exakt nachbildbar (43 von 43); 0.3 Zuordnung "
+            "Bitpanda-Asset zu Watchlist-Symbol fuer alle Positionen (VST-US, IS0C, CC ...), gegen den Bestand "
+            "geprueft; 0.4 Einstand: `average_buy_price` gegen unseren Einstand je Wert; 0.5 NEAR-/AVAX-Luecke ueber "
+            "die Vorgangsarten klaeren; 0.6 Inventur ALLER Stellen im Code, die Bitpanda lesen oder `holdings`/"
+            "`staked_quantity`/Cash-Schluessel schreiben oder lesen - als Liste im Schritt, damit keine vergessen wird. "
+            "\u27a4 STUFE 1 BESTAND UND CASH: 1.1 eigener lesender Zugang zur neuen API (Ampel, Maskierung, "
+            "Zeitlimit, Datumsfenster statt Cursor, Katalog taeglich gepuffert); 1.2 Bestand je Wert aus der neuen API "
+            "- Menge = verfuegbar im Spot-Wallet, gestakt = Staking-Wallet, Hebel-Wallets getrennt, KEINE Rekonstruktion "
+            "aus Transfer-Markierungen mehr; bei Ausfall bleibt der letzte gute Stand und die Datenfrische meldet; 1.3 "
+            "Cash gesamt/verfuegbar (neue API) und gebunden samt Anzahl, Summe und aeltester offener Order (Fusion, "
+            "Leseschluessel `FUSION_API_KEY`, gueltig bis 15.09.2027); 1.4 Mailzeile ,Cash … davon gebunden … frei' und "
+            "Warnung mit Rufzeichen und Handlung NUR, WENN DIE SPERRE DIE EMPFEHLUNG TRIFFT (Nutzerentscheidung 15.09.), "
+            "Regel A1 (Stand nennen, ab 6 h kein `!!`); 1.5 DATENKORREKTUR: Bestand richtigstellen, Index darf am "
+            "Korrekturtag keinen Kursverlust zeigen, Portfoliowert-Historie RUECKWIRKEND sauber aus den taeglichen "
+            "Wallet-Salden neu rechnen - ohne Kennzeichen (Nutzer: ,ein sauberer Bestand rueckwirkend waere positiv, "
+            "ohne Kennzeichen und Fallstrick'; Sicherung vorher, Vorher/Nachher-Protokoll) - HEIKEL, Umsetzungsschritte "
+            "vorab abstimmen; 1.6 GUI-Cashfeld L3 (Anzeige gesamt/verfuegbar/gebunden/Stand, bearbeitbar nur ohne "
+            "Schluessel als eigener Wert) - Gestaltung vorab abstimmen; 1.7 Schluesselueberwachung (401 -> Mail mit "
+            "Handlung; Fusion-Ablauf 30 Tage vorher erinnern); 1.8 Docstring `toepfe.cash_frei_eur` berichtigen (B1). "
+            "\u27a4 STUFE 2 EINSTAND nach 0.4 - HEIKEL, abstimmen. STUFE 3 HEBEL-ABGLEICH auf die neuen "
+            "Buchungen (0.2 positiv). STUFE 4 Katalog ,gelistet' auf die neue API. "
+            "\u26a0\ufe0f JEDE STUFE: Suite-Paket mit Gegenprobe, Live-Test gegen eine Kopie der Sicherung, Doku "
+            "(Befunde, Plan, Regelblatt Schritt 58), Pull + Neustart + Export am Notebook. Messungen sind vom "
+            "Bestandsfehler NICHT betroffen, ausser: Hebelgroessen 12. bis 14.09. (fuer Schritt 59 vermerken).",
+            "Nutzerentscheidungen 15.09.; Befunde 2.455-cash-gesperrt, 2.455-cash-messbar, 2.455-bestand-gestakt, "
+            "2.455-bitpanda-stufe0, 2.453-alterlos",
+            block="D-BETRIEB",
+            umbau="beides"),  # ersetzt eine alte Anbindung und baut Bestand/Cash neu
     Schritt(56, "DATENQUELLEN OHNE FRISCHE - DIESELBE KLASSE WIE 2.452",
             "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f AUS DEM REVIEW VOR DEM ROLLOUT 14.09. (Befund "
             "2.453). Der Nutzer fragte: ,sind alle Datenquellen aktualisiert?' - "
@@ -577,13 +614,13 @@ REIHENFOLGE = (
             "von Schritt 54 - Ampel Binance/Bybit/OKX dauerhaft rot), "
             "2.454-laufzeit GELOEST (2.454-laufzeit-gebaut: 26,8 statt 85,5 Prozent), "
             "2.454-etfbestand AUSGEGLIEDERT in Schritt 57 (Ziel am 15.09. entschieden, nachgelagert; im Betrieb ohne Wirkung), 2.454-gemini, 2.454-rauschen, 2.454-vix; dazu "
-            "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), \u2714 GELOEST 15.09. 2.382-rundung (2.455-hebelstufen-gebaut: ein ungerundeter Hebel, in der Mail die einstellbaren Stufen, die untere hervorgehoben). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. (12) \u26a0\ufe0f\u26a0\ufe0f AUSSTEHENDE NOTEBOOK-KONTROLLEN (Nutzervorgabe 15.09.: ,anstehende Pruefungen nicht vergessen und sauber in Plan und Memory mitfuehren') - ein Punkt gilt erst als erledigt, wenn er am Notebook bestaetigt ist: (K1) Pull von `2.455-hebelstufen-gebaut` mit Neustart; (K2) Export 16.09. NACH 06:45: 05:30 erster Lauf `refresh_aktien_ohlc` nach neuer Regel, ggf. Zeilen ,Kursluecke ...' (2.455-kapitalkurse-gebaut); (K3) 06:30 `Tageswert 2026-09-15` OHNE fortgeschriebene Boersentitel; (K4) 2.387-job - die Zeile 15.09. schreibt der 06:30-Lauf OHNE Neustart; (K5) in den Tagen danach die Selbstpruefung ,Schlusskurs-Rueckfall ... ersetzt' mit Abweichung unter 0,5 Prozent; (K6) die erste echte Hebelmail nach dem Pull zeigt die Stufen wie am Pruefstand; (K7) Hebel-Abgleich und Datenfrische weiter ohne Alarm. Ablauf und erwartete Zeilen: Basisinfos/Rollout_Notebook_14_09.md, Nachtraege 15.09. "
-            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: \u2714 GELOEST 15.09. 2.453-hebelpos (2.455-hebelabgleich-gebaut: Mail ab 1 Stunde, Stempel, Mailzeile, Datenfrische, Export), \u2714 GELOEST 15.09. 2.387-fortschreibung (2.455-kapitalkurse-gebaut: Job 05:30, Eingabepruefung, Schlusskurs-Rueckfall handelsplatzgenau), 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass, NEU 2.455-rekonstruktion-heute (rekonstruierte Reihe schreibt eine Kerze mit heutigem Datum); (G3) BETRIEBSHYGIENE: NEU 2.455-exportveto (Fehlalarm der Standardpruefung bei Veto-Schatten-Zeilen), 2.454-gemini, 2.454-rauschen, 2.454-vix, \u2714 2.455-refreshzeit GELOEST 15.09. (Job 05:30, 2.455-kapitalkurse-gebaut). Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
+            "2.452-boerse (OI nur von Binance) und 2.452-anlass. (10) AUS DEM REVIEW 15.09. (2.455-review) - VIER PUNKTE MIT DEM VERMERK ,NACH DEM ROLLOUT', die an erledigten Schritten hingen: 2.387-job (Portfoliowert-Job schrieb 01. bis 11.09. nicht; Sicherung 14.09. 22:40: seit dem Rollout 12.09. je Tag eine Zeile - 11.09., 12.09., 13.09.; offen nur, ob der 04:30-Lauf ohne Neustart schreibt, am naechsten Tag an der Zeile 14.09. bestaetigen), 2.387-fortschreibung (Boersentitel fortgeschrieben; Export 14.09.: 38 Symbole, 0 ohne Kurs - gegen 2.453-kurs-gebaut pruefen), \u2714 GELOEST 15.09. 2.382-rundung (2.455-hebelstufen-gebaut: ein ungerundeter Hebel, in der Mail die einstellbaren Stufen, die untere hervorgehoben). (11) 2.455-refreshzeit: Kursreihen-Tagesjob 24 h nach App-Start statt fester Uhrzeit. (12) \u26a0\ufe0f\u26a0\ufe0f AUSSTEHENDE NOTEBOOK-KONTROLLEN (Nutzervorgabe 15.09.: ,anstehende Pruefungen nicht vergessen und sauber in Plan und Memory mitfuehren') - ein Punkt gilt erst als erledigt, wenn er am Notebook bestaetigt ist: (K1) Pull von `2.455-hebelstufen-gebaut` mit Neustart UND Export nach rund 30 Minuten (Nutzervorgabe 15.09.: ,alle groesseren Aenderungen sollten auf Fehler im Betrieb durchgeprueft werden, sonst verschleppen wir Fehler') - geprueft wird: seit dem Start kein neuer ERROR/Traceback in rollen_lauf, entscheidungsrechnung, signal_mail, hebelfuehrung; jeder Umlauf ,0 Fehler'; keine ,uebersprungen'-Zeile der Hebelfuehrung oder Positionsfuehrung; Jobfehler nur mit bekannter Ursache; (K2) Export 16.09. NACH 06:45: 05:30 erster Lauf `refresh_aktien_ohlc` nach neuer Regel, ggf. Zeilen ,Kursluecke ...' (2.455-kapitalkurse-gebaut); (K3) 06:30 `Tageswert 2026-09-15` OHNE fortgeschriebene Boersentitel; (K4) 2.387-job - die Zeile 15.09. schreibt der 06:30-Lauf OHNE Neustart; (K5) in den Tagen danach die Selbstpruefung ,Schlusskurs-Rueckfall ... ersetzt' mit Abweichung unter 0,5 Prozent; (K6) die erste echte Hebelmail nach dem Pull zeigt die Stufen wie am Pruefstand; (K7) Hebel-Abgleich und Datenfrische weiter ohne Alarm. Ablauf und erwartete Zeilen: Basisinfos/Rollout_Notebook_14_09.md, Nachtraege 15.09. "
+            "\u27a4 Reihenfolge und Loesungswege EINZELN mit dem Nutzer. \u27a4 NUTZERENTSCHEIDUNG 15.09. (,Krypto sollte als Gesamtes stabil laufen'): REIHENFOLGE DES RESTS in drei Gruppen - (G1) KAPITAL UND HEBEL: \u27a4 Bestand, Cash und Bitpanda-Anbindung AUSGEGLIEDERT in Schritt 61 (15.09.); \u2714 GELOEST 15.09. 2.453-hebelpos (2.455-hebelabgleich-gebaut: Mail ab 1 Stunde, Stempel, Mailzeile, Datenfrische, Export), \u2714 GELOEST 15.09. 2.387-fortschreibung (2.455-kapitalkurse-gebaut: Job 05:30, Eingabepruefung, Schlusskurs-Rueckfall handelsplatzgenau), 2.382-rundung, 2.387-job; (G2) ALTE FAKTEN ANS MODELL: 2.453-alterlos, 2.453-cache, 2.452-boerse, 2.452-anlass, NEU 2.455-rekonstruktion-heute (rekonstruierte Reihe schreibt eine Kerze mit heutigem Datum), NEU 2.455-cash-gesperrt (Fusion sperrt rund 2.940 EUR, die Schnittstelle zeigt es nicht; GUI-Cashfeld wird ueberschrieben); Punkt 2.453-alterlos wird Punkt fuer Punkt mit dem Nutzer entschieden (Cash: A1, B1, C3 am 15.09.); (G3) BETRIEBSHYGIENE: NEU 2.455-exportveto (Fehlalarm der Standardpruefung bei Veto-Schatten-Zeilen), 2.454-gemini, 2.454-rauschen, 2.454-vix, \u2714 2.455-refreshzeit GELOEST 15.09. (Job 05:30, 2.455-kapitalkurse-gebaut). Jeder Punkt einzeln: pruefen, gegenpruefen, doku.",
             "Befunde 2.453, 2.453-turnover-gebaut, 2.453-kurs-gebaut, 2.453-bestand, "
             "2.453-rohstoff, 2.453-cache, 2.453-kursreihe, 2.453-hebelpos, "
             "2.453-alterlos, 2.453-fredkey-gebaut, 2.453-bestand-gebaut, 2.453-veto, "
             "2.453-export, 2.454-ampel-gebaut, 2.454-laufzeit-gebaut, "
-            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.455-kapitalkurse-gebaut, 2.455-rekonstruktion-heute, 2.455-exportveto, 2.455-nb-15-09, 2.455-hebelstufen-gebaut, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
+            "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.455-kapitalkurse-gebaut, 2.455-rekonstruktion-heute, 2.455-exportveto, 2.455-nb-15-09, 2.455-hebelstufen-gebaut, 2.455-cash-gesperrt, 2.455-cash-messbar, 2.455-bestand-gestakt, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
@@ -1105,7 +1142,7 @@ REIHENFOLGE = (
             "ist'). NUTZERHINWEIS 15.09. zur Hebelstufen-Darstellung: ,wichtig fuer den Punkt Ueberarbeitung "
             "der eMails und Gruppierung, Lesbarkeit' - Grundlage ist die Stufendarstellung "
             "(2.455-hebelstufen-gebaut); am Pruefstand beobachtet: Betrag und Ergebnis stehen im Blick-Block "
-            "UND in der Rechnung, der Hebel an drei Stellen (Blick, Rechnung, Herleitung). \u26a0\ufe0f Umsetzungsschritte werden nach Schritt 59 im Detail vorgelegt; bis dahin ist "
+            "UND in der Rechnung, der Hebel an drei Stellen (Blick, Rechnung, Herleitung). NUTZERVORGABE 15.09.: *,Zur Mailueberarbeitung brauche ich in EINEM Bereich vor allem jene Informationen, die fuer die Empfehlung wichtig sind - aktuell ist dies kaum moeglich'*. Dazu gehoert die Frage, welche Warnungen den Kopf verdienen - Beispiel Cash frei 69 EUR mit `!!` in praktisch jeder Kaufmail (2.453-alterlos, Entscheidung C3). \u26a0\ufe0f Umsetzungsschritte werden nach Schritt 59 im Detail vorgelegt; bis dahin ist "
             "dieser Schritt die Sammelstelle, damit nichts verloren geht.",
             "Nutzervorgabe 15.09.; Vorgabe KRYPTO-STABIL-UND-KORREKT; Befunde 2.455-hebel-nachkaufen, "
             "2.455-hebelsignale, 2.455-hebelstufen-gebaut, 2.447-offen; Schritte 41, 55, 56, 59",
@@ -1301,7 +1338,7 @@ REIHENFOLGE = (
             "keine Rolle `potential`, `funding`, `turnover` oder die "
             "Trefferquote (2.398). (3) Dasselbe fuer den AUSSTIEG - dort "
             "traegt das Modell nachweislich (2.403), beim Einstieg nicht. "
-            "(4) ⚠️ ERST NACH Schritt 42: ohne Messung ist jede "
+            "(4) ⚠️ ERST NACH Schritt 42 [15.09.: Schritt 42 ist in 59 aufgegangen.] ➤ NUTZERKLARSTELLUNG 15.09.: *,die LLM-Kette soll in einem PAKET gemeinsam auf den aktuellen und richtigen Stand gebracht werden - die Einzelmessungen und/oder die gesamte Simulation der Funktion und Wirksamkeit ist wieder umfangreicher'*. Also: keine Rolle einzeln nachbessern, sondern Rolle A (Marktlage), BC und G samt ihrer Fakten und Massstaebe gemeinsam - Fakten wie der Umschlag (2.453-alterlos Punkt B/C) werden hier entschieden, gemessen in Schritt 59.: ohne Messung ist jede "
             "Promptaenderung eine Meinung. "
             "⚠️ NUTZERVORGABE 11.09.: Bewertung und Analyse der Rollen "
             "und Modelle - NACH den eMails. Stehende Vorgaben, die hier "
