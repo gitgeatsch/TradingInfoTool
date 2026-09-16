@@ -24431,6 +24431,282 @@ def paket_preis_ueberlauf() -> None:
            da == ["BTC", "SOL"] and gemeldet == ["refresh_prices"], "gespeichert %s, gemeldet %s" % (da, gemeldet))
 
 
+def _dt_hilfe(jahr, monat, tag, stunde=0):
+    """Ein Zeitpunkt in UTC - fuer Pakete, die Puffer-Alter pruefen."""
+    from datetime import datetime as _d, timezone as _tz
+    return _d(jahr, monat, tag, stunde, tzinfo=_tz.utc)
+
+
+def paket_bitpanda_zugang() -> None:
+    """Schritt 61 Stufe 1.1: der lesende Zugang zur neuen Schnittstelle.
+
+    ⚠️ ER SCHREIBT KEINEN BESTAND - das ist Stufe 1.2. Geprueft wird der Zugang
+    selbst, und zwar an den drei Eigenheiten, die Stufe 0 gemessen hat:
+
+        1  BUCHUNGEN ueber Datumsfenster: vollstaendig, ohne Doppelte, mit
+           Millisekunden-Schritt wenn ein Fenster nichts Neues bringt, `from`
+           fuer den inkrementellen Lauf, Frist statt Haenger
+        2  KATALOG ueber den Cursor - und der Puffer in der Datenbank: einmal
+           holen, einen Tag gelten lassen, bei Fehlschlag den alten Stand
+           behalten (aber nur, wenn es einen gibt)
+        3  FEHLER: 429 wird abgewartet, 401 sagt es im Klartext (die
+           Schluesselueberwachung haengt daran), und der SCHLUESSEL steht in
+           KEINER Meldung
+
+    Kein Netzabruf (Antworten gestellt), Wegwerf-Datenbank - die Ampel schreibt
+    bei jedem Abruf, deshalb wird `db.DB_PATH` umgebogen."""
+    P = "BitpandaZugang"
+    import logging as _lg
+    import os as _os
+    import pathlib as _pl
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from types import SimpleNamespace as _NS
+
+    import api.bitpanda_public as _BP
+    import database.db as _DB
+
+    SCHLUESSEL = "geheim-1234567890"
+
+    class _Sammelhandler(_lg.Handler):
+        """Faengt die Meldungen des Moduls ab - eine Warnung, die niemand
+        pruefen kann, ist keine."""
+
+        def __init__(self):
+            super().__init__()
+            self.texte = []
+
+        def emit(self, record):
+            self.texte.append(record.getMessage())
+
+    class _Antwort:
+        def __init__(self, js, code=200, text="", kopf=None):
+            self._js, self.status_code, self.text, self.headers = js, code, text, kopf or {}
+
+        def json(self):
+            if self._js is None:
+                raise ValueError("kein JSON")
+            return self._js
+
+    def _mit_netz(fn):
+        """`requests.get` stellen und `db.DB_PATH` auf eine Wegwerfdatei biegen."""
+        alt_get, alt_pfad = _BP.requests.get, _DB.DB_PATH
+        pfad = _pl.Path(_tf.gettempdir()) / ("tit_zugang_%d.db" % _os.getpid())
+        k = _sq.connect(pfad)
+        k.row_factory = _sq.Row
+        _DB.init_db(k)
+        k.close()
+        _DB.DB_PATH = pfad
+        _BP.requests.get = fn
+        try:
+            yield_conn = _sq.connect(pfad)
+            yield_conn.row_factory = _sq.Row
+            return yield_conn, (alt_get, alt_pfad, pfad)
+        except Exception:
+            _BP.requests.get, _DB.DB_PATH = alt_get, alt_pfad
+            raise
+
+    def _zurueck(zustand, conn=None):
+        alt_get, alt_pfad, pfad = zustand
+        _BP.requests.get, _DB.DB_PATH = alt_get, alt_pfad
+        if conn is not None:
+            conn.close()
+        try:
+            _os.remove(pfad)
+        except OSError:
+            pass
+
+    # ---- 1 BUCHUNGEN UEBER DATUMSFENSTER ----------------------------------
+    def _vorgang(nr, zeit):
+        return {"operation_id": "op%d" % nr, "operation_type": "buy",
+                "transactions": [{"credited_at": zeit, "asset_amount": {"value": "1"}}]}
+    # 250 Vorgaenge, je Minute einer (neueste zuerst)
+    alle = [_vorgang(i, "2026-09-%02dT%02d:%02d:00.000Z" % (15 - i // 1000, 12 - i // 60, 59 - i % 60))
+            for i in range(250)]
+    gefragt = []
+
+    def _fenster_api(url, headers=None, params=None, timeout=None):
+        gefragt.append(dict(params or {}))
+        menge = alle
+        if params.get("to"):
+            menge = [o for o in menge if o["transactions"][0]["credited_at"] <= params["to"]]
+        if params.get("from"):
+            menge = [o for o in menge if o["transactions"][0]["credited_at"] >= params["from"]]
+        return _Antwort({"data": menge[:params.get("page_size", 100)], "next_cursor": "x", "has_next_page": True})
+    conn, zustand = _mit_netz(_fenster_api)
+    try:
+        geholt = _BP.hole_buchungen(SCHLUESSEL)
+        kennungen = [o["operation_id"] for o in geholt]
+        fenster_voll = list(gefragt)
+        del gefragt[:]
+        teil = _BP.hole_buchungen(SCHLUESSEL, seit="2026-09-15T12:30:00.000Z")
+        fenster_seit = list(gefragt)
+    finally:
+        _zurueck(zustand, conn)
+    pruefe(P, "⚠️⚠️ Buchungen ueber Datumsfenster: alle 250, keine doppelt, neueste zuerst",
+           len(kennungen) == 250 and len(set(kennungen)) == 250
+           and kennungen[0] == "op0" and kennungen[-1] == "op249"
+           and "to" not in fenster_voll[0] and all("to" in g for g in fenster_voll[1:]),
+           "%d geholt, %d Fenster" % (len(kennungen), len(fenster_voll)))
+    pruefe(P, "`from` begrenzt den inkrementellen Lauf",
+           len(teil) == 30 and all(g.get("from") == "2026-09-15T12:30:00.000Z" for g in fenster_seit),
+           "%d Vorgaenge seit 12:30, Fenster %d" % (len(teil), len(fenster_seit)))
+
+    # 150 Vorgaenge auf DERSELBEN Millisekunde, dahinter aeltere: ohne den
+    # Millisekunden-Schritt kaeme der Lauf nie an den aelteren vorbei.
+    gleich = ([_vorgang(i, "2026-09-15T12:00:00.000Z") for i in range(150)]
+              + [_vorgang(9000 + i, "2026-09-15T11:%02d:00.000Z" % i) for i in range(30)])
+    rufe = {"n": 0}
+
+    def _gleich_api(url, headers=None, params=None, timeout=None):
+        rufe["n"] += 1
+        menge = [o for o in gleich
+                 if not params.get("to") or o["transactions"][0]["credited_at"] <= params["to"]]
+        return _Antwort({"data": menge[:100], "has_next_page": True, "next_cursor": "x"})
+    conn, zustand = _mit_netz(_gleich_api)
+    _melder = _lg.getLogger("api.bitpanda_public")
+    _sammler = _Sammelhandler()
+    _melder.addHandler(_sammler)
+    try:
+        g = _BP.hole_buchungen(SCHLUESSEL)
+    finally:
+        _melder.removeHandler(_sammler)
+        _zurueck(zustand, conn)
+    _alte = [o for o in g if o["transactions"][0]["credited_at"].startswith("2026-09-15T11:")]
+    pruefe(P, "⚠️⚠️ eine volle Seite mit DEMSELBEN Zeitpunkt haelt den Lauf nicht auf - und die Grenze wird gemeldet",
+           len(_alte) == 30 and rufe["n"] <= 6
+           and any("denselben Zeitpunkt" in m for m in _sammler.texte),
+           "%d Vorgaenge (%d aeltere), %d Abrufe, Meldungen %s"
+           % (len(g), len(_alte), rufe["n"], _sammler.texte[:1]))
+
+    # Frist: die Uhr laeuft, die Schnittstelle liefert endlos
+    uhr = {"t": 0.0}
+
+    def _endlos_api(url, headers=None, params=None, timeout=None):
+        uhr["t"] += 30.0
+        i = int(uhr["t"])
+        return _Antwort({"data": [_vorgang(i, "2026-09-15T%02d:00:00.000Z" % (23 - i % 24))],
+                         "has_next_page": True})
+    conn, zustand = _mit_netz(_endlos_api)
+    try:
+        b = _BP.hole_buchungen(SCHLUESSEL, jetzt=lambda: uhr["t"], frist_sekunden=120)
+    finally:
+        _zurueck(zustand, conn)
+    pruefe(P, "⚠️ die Gesamtfrist bricht ab, statt einen Job haengen zu lassen",
+           0 < len(b) <= 6, "%d Vorgaenge nach %.0f s" % (len(b), uhr["t"]))
+
+    # ---- 2 KATALOG UND PUFFER --------------------------------------------
+    seiten = [{"data": [{"id": "a%d" % i, "symbol": "S%d" % i, "name": "N%d" % i,
+                         "group": "equity_etf", "isin": "IE%d" % i} for i in range(k * 100, k * 100 + 100)],
+               "next_cursor": "c%d" % (k + 1), "has_next_page": k < 2} for k in range(3)]
+    zaehler = {"n": 0}
+
+    def _katalog_api(url, headers=None, params=None, timeout=None):
+        zaehler["n"] += 1
+        nr = int((params.get("cursor") or "c0")[1:])
+        return _Antwort(seiten[nr])
+    conn, zustand = _mit_netz(_katalog_api)
+    try:
+        eins = _BP.katalog(conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 16, 8))
+        nach_abruf = zaehler["n"]
+        zwei = _BP.katalog(conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 16, 20))   # 12 h spaeter
+        ohne_abruf = zaehler["n"] == nach_abruf
+        drei = _BP.katalog(conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 17, 9))    # 25 h spaeter
+        mit_abruf = zaehler["n"] > nach_abruf
+        stand = _DB.bitpanda_katalog_stand(conn)
+    finally:
+        _zurueck(zustand, conn)
+    pruefe(P, "⚠️⚠️ Katalog: Cursor-Seiten vollstaendig, in der Datenbank gepuffert, einen Tag gueltig",
+           len(eins) == 300 and len(zwei) == 300 and ohne_abruf and mit_abruf and len(drei) == 300
+           and eins["a1"].symbol == "S1" and eins["a1"].isin == "IE1" and stand.startswith("2026-09-1"),
+           "%d Eintraege, %d Abrufe" % (len(eins), zaehler["n"]))
+
+    def _kaputt_api(url, headers=None, params=None, timeout=None):
+        return _Antwort(None, 500, "Serverfehler")
+    conn, zustand = _mit_netz(_katalog_api)
+    try:
+        _BP.katalog(conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 16, 8))
+        _BP.requests.get = _kaputt_api
+        alt_gilt = _BP.katalog(conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 18, 8))
+        leer_conn = _sq.connect(":memory:")
+        leer_conn.row_factory = _sq.Row
+        _DB.init_db(leer_conn)
+        try:
+            _BP.katalog(leer_conn, SCHLUESSEL, jetzt=_dt_hilfe(2026, 9, 18, 8))
+            faellt = False
+        except _BP.BitpandaPublicFehler:
+            faellt = True
+        leer_conn.close()
+    finally:
+        _zurueck(zustand, conn)
+    pruefe(P, "⚠️ faellt der Abruf aus, gilt der alte Katalog weiter - ohne jeden Katalog faellt der Fehler durch",
+           len(alt_gilt) == 300 and faellt, "")
+
+    # ---- 3 FEHLER UND SCHLUESSEL -----------------------------------------
+    folge = [_Antwort(None, 429, "", {"Retry-After": "0"}), _Antwort({"data": []})]
+
+    def _429_api(url, headers=None, params=None, timeout=None):
+        return folge.pop(0)
+    conn, zustand = _mit_netz(_429_api)
+    try:
+        ok_429 = _BP._hole("/portfolio", SCHLUESSEL) == {"data": []}
+    finally:
+        _zurueck(zustand, conn)
+    meldungen = {}
+    for name, antwort in (("401", _Antwort(None, 401, "nope")),
+                          ("500", _Antwort(None, 500, "Fehler mit " + SCHLUESSEL + " im Text")),
+                          ("netz", None)):
+        def _api(url, headers=None, params=None, timeout=None, _a=antwort):
+            if _a is None:
+                raise _BP.requests.RequestException("Verbindung zu %s?key=%s weg" % (url, SCHLUESSEL))
+            return _a
+        conn, zustand = _mit_netz(_api)
+        try:
+            _BP._hole("/portfolio", SCHLUESSEL)
+            meldungen[name] = "KEIN FEHLER"
+        except _BP.BitpandaPublicFehler as exc:
+            meldungen[name] = str(exc)
+        finally:
+            _zurueck(zustand, conn)
+    pruefe(P, "⚠️⚠️ 429 wird abgewartet; 401 sagt es im Klartext; in KEINER Meldung steht der Schluessel",
+           ok_429 and "401" in meldungen["401"] and "abgelaufen" in meldungen["401"]
+           and all(SCHLUESSEL not in m for m in meldungen.values())
+           and "***" in meldungen["500"] and "nicht erreichbar" in meldungen["netz"],
+           str(meldungen))
+    pruefe(P, "die Ampel sieht jeden Abruf (track_api_health) und das Modul schreibt keinen Bestand",
+           "@track_api_health(\"bitpanda_public\")" in _quelltext("api/bitpanda_public.py")
+           and not any(x in _quelltext("api/bitpanda_public.py")
+                       for x in ("upsert_holding", "update_holding", "INSERT INTO holdings",
+                                 "set_cash_reserve")), "")
+
+    # ---- 4 PORTFOLIO UND FIAT --------------------------------------------
+    js = {"data": [
+        {"asset_id": "a1", "balance": {"value": "16.53580199"}, "available_balance": {"value": "16.53580199"},
+         "currency_balance": {"value": "603.56"}, "average_buy_price": {"value": "38.9458"},
+         "invested_amount": {"value": "644.0"}},
+        {"asset_id": "a2", "balance": {"value": "194.30092"}, "available_balance": {"value": "0"},
+         "currency_balance": {"value": "397.09"}, "average_buy_price": {"value": "4.0044"},
+         "invested_amount": {"value": "778.05"}},
+        {"currency_id": "eur", "balance": {"value": "3667.51"}, "available_balance": {"value": "659.99"}}]}
+
+    def _portfolio_api(url, headers=None, params=None, timeout=None):
+        return _Antwort(js)
+    conn, zustand = _mit_netz(_portfolio_api)
+    try:
+        kat = {"a1": _BP.KatalogEintrag("a1", "OD7H", "WisdomTree Gold", "equity_complex_etc", "GB00B15KXX56")}
+        pos = {p.asset_id: p for p in _BP.hole_portfolio(SCHLUESSEL, kat)}
+        fiat = _BP.hole_fiat(SCHLUESSEL)
+    finally:
+        _zurueck(zustand, conn)
+    pruefe(P, "⚠️ Portfolio: Fiat-Zeile faellt nicht in die Positionen; gesamt und verfuegbar getrennt; Fiat mit gebundenem Anteil",
+           set(pos) == {"a1", "a2"} and pos["a1"].symbol == "OD7H" and pos["a1"].wert_eur == 603.56
+           and pos["a2"].menge_gesamt == 194.30092 and pos["a2"].menge_verfuegbar == 0.0
+           and pos["a2"].symbol is None
+           and fiat["eur"] == (3667.51, 659.99)
+           and abs(fiat["eur"][0] - fiat["eur"][1] - 3007.52) < 0.01,
+           str(fiat))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -24487,6 +24763,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "BitpandaInventur": paket_bitpanda_inventur,
           "Kursangabe": paket_kursangabe,
           "PreisUeberlauf": paket_preis_ueberlauf,
+          "BitpandaZugang": paket_bitpanda_zugang,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

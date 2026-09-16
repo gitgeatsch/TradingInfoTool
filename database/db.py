@@ -1602,6 +1602,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_hebel_signal_angefragte_richtung_column(conn)
     _migrate_price_history_ohlc(conn)
     _migrate_rohstoff_futures_reihen_umziehen(conn)
+    _migrate_bitpanda_katalog(conn)
     _bereinige_gemessene_etc_punkte(conn)
     _bereinige_schluessel_in_api_health(conn)
     import_holdings_manual_overrides(conn)
@@ -2307,6 +2308,61 @@ def _migrate_price_history_ohlc(conn: sqlite3.Connection) -> None:
     if "quelle" not in vorhanden:
         conn.execute("ALTER TABLE price_history_ohlc ADD COLUMN quelle TEXT NOT NULL DEFAULT 'gemessen'")
         conn.commit()
+
+
+def _migrate_bitpanda_katalog(conn: sqlite3.Connection) -> None:
+    """Puffer fuer den Katalog der NEUEN Bitpanda-Schnittstelle (16.09.2026,
+    Schritt 61 Stufe 1.1). Additiv und wiederholbar.
+
+    WOFUER: ein voller Abruf kostet 141 Seiten fuer 14.052 Eintraege. Gebraucht
+    wird er taeglich hoechstens einmal - fuer die Zuordnung Bitpanda-Position zu
+    Watchlist-Symbol (`asset_id`, ISIN; Befund 2.455-bitpanda-zuordnung) und
+    spaeter fuer den Listungs-Check (Stufe 4, Befund 2.455-gelistet-katalog).
+
+    ⚠️ DER SCHLUESSEL IST `asset_id`, NICHT DAS SYMBOL: 1.625 Symbole kommen im
+    Katalog mehrfach vor (ROL steht als Aktie zweimal, in alter und neuer
+    Gruppe)."""
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS bitpanda_katalog ("
+        "asset_id TEXT PRIMARY KEY, symbol TEXT NOT NULL, name TEXT, "
+        "gruppe TEXT, isin TEXT, geholt_am TEXT NOT NULL)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_bitpanda_katalog_symbol "
+                 "ON bitpanda_katalog(symbol)")
+    conn.commit()
+
+
+def speichere_bitpanda_katalog(conn: sqlite3.Connection, eintraege, geholt_am: str) -> int:
+    """Katalog ERSETZEN (nicht ergaenzen) - ein zurueckgezogenes Asset darf nicht
+    als Karteileiche weiterleben. Nur bei nicht-leerer Liste, sonst bliebe nach
+    einem halben Abruf nichts uebrig."""
+    _migrate_bitpanda_katalog(conn)
+    zeilen = [(e.asset_id, e.symbol, e.name, e.gruppe, e.isin, geholt_am) for e in eintraege or []]
+    if not zeilen:
+        return 0
+    conn.execute("DELETE FROM bitpanda_katalog")
+    conn.executemany(
+        "INSERT INTO bitpanda_katalog (asset_id, symbol, name, gruppe, isin, geholt_am) "
+        "VALUES (?, ?, ?, ?, ?, ?)", zeilen)
+    conn.commit()
+    return len(zeilen)
+
+
+def lade_bitpanda_katalog(conn: sqlite3.Connection) -> dict:
+    """asset_id -> KatalogEintrag; leer, wenn noch nie geholt."""
+    from api.bitpanda_public import KatalogEintrag
+
+    _migrate_bitpanda_katalog(conn)
+    return {r["asset_id"]: KatalogEintrag(asset_id=r["asset_id"], symbol=r["symbol"],
+                                          name=r["name"] or "", gruppe=r["gruppe"] or "",
+                                          isin=r["isin"])
+            for r in conn.execute("SELECT asset_id, symbol, name, gruppe, isin FROM bitpanda_katalog")}
+
+
+def bitpanda_katalog_stand(conn: sqlite3.Connection) -> str | None:
+    """Wann der gepufferte Katalog geholt wurde - None, wenn es keinen gibt."""
+    _migrate_bitpanda_katalog(conn)
+    row = conn.execute("SELECT MAX(geholt_am) AS m FROM bitpanda_katalog").fetchone()
+    return row["m"] if row and row["m"] else None
 
 
 def _migrate_rohstoff_futures_reihen_umziehen(conn: sqlite3.Connection) -> None:

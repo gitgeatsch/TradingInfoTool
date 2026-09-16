@@ -576,7 +576,7 @@ REIHENFOLGE = (
             "Doppelzaehlung plus Belohnungen brutto minus Provision (2.455-bitpanda-staking-ursache); 0.6 \u2714 "
             "Inventur 53 Dateien in `Basisinfos/Bitpanda_Umstellung_Inventur.md`, Vollstaendigkeit prueft das "
             "Suite-Paket BitpandaInventur - VOR JEDEM BAUSCHRITT dort nachsehen (2.455-bitpanda-inventur). "
-            "\u27a4 STUFE 1 BESTAND UND CASH: 1.1 eigener lesender Zugang zur neuen API (Ampel, Maskierung, "
+            "\u27a4 STUFE 1 BESTAND UND CASH: 1.1 ✔ GEBAUT 16.09. (2.455-zugang-gebaut, `api/bitpanda_public.py`, schreibt keinen Bestand; Katalogpuffer `bitpanda_katalog`) - eigener lesender Zugang zur neuen API (Ampel, Maskierung, "
             "Zeitlimit, Datumsfenster statt Cursor, Katalog taeglich gepuffert; Pruefskripte biegen `db.DB_PATH` um, "
             "weil `api_health` bei jedem Abruf schreibt); 1.2 Bestand je Wert aus der neuen API "
             "- Menge = verfuegbar im Spot-Wallet, gestakt = Staking-Wallet, Hebel-Wallets getrennt, KEINE Rekonstruktion "
