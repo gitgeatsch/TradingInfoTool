@@ -581,9 +581,8 @@ REIHENFOLGE = (
             "weil `api_health` bei jedem Abruf schreibt); 1.2 Bestand je Wert aus der neuen API "
             "- Menge = verfuegbar im Spot-Wallet, gestakt = Staking-Wallet, Hebel-Wallets getrennt, KEINE Rekonstruktion "
             "aus Transfer-Markierungen und nie aus Buchungssummen (Belohnungen sind brutto); bei Ausfall bleibt der "
-            "letzte gute Stand und die Datenfrische meldet; ENTSCHEIDEN mit dem Nutzer: Excel-Import und ,umgesetzt' "
-            "im Signalfenster schreiben heute `holdings` - mit der API als Wahrheit nur ohne Schluessel bzw. als "
-            "Vormerkung; 1.3 "
+            "letzte gute Stand und die Datenfrische meldet; die anderen Schreibwege (Excel-Import, ,umgesetzt') sind "
+            "AUSGEGLIEDERT in Schritt 62 (Nutzerentscheidung 16.09.: eigener Punkt, nachgelagert sauber bewerten); 1.3 "
             "Cash gesamt/verfuegbar (neue API) und gebunden samt Anzahl, Summe und aeltester offener Order (Fusion, "
             "Leseschluessel `FUSION_API_KEY`, gueltig bis 15.09.2027); 1.4 Mailzeile ,Cash … davon gebunden … frei' und "
             "Warnung mit Rufzeichen und Handlung NUR, WENN DIE SPERRE DIE EMPFEHLUNG TRIFFT (Nutzerentscheidung 15.09.), "
@@ -652,6 +651,25 @@ REIHENFOLGE = (
             "2.454-gemini, 2.454-rauschen, 2.454-vix, 2.452-boerse, 2.452-anlass, 2.455-review, 2.455-hebelabgleich-gebaut, 2.455-kapitalkurse-gebaut, 2.455-rekonstruktion-heute, 2.455-exportveto, 2.455-nb-15-09, 2.455-hebelstufen-gebaut, 2.455-cash-gesperrt, 2.455-cash-messbar, 2.455-bestand-gestakt, 2.387-job, 2.387-fortschreibung, 2.382-rundung, 2.455-refreshzeit",
             block="D-BETRIEB",
             umbau="alt"),  # Reparatur
+    Schritt(62, "BESTANDS-SCHREIBWEGE NEBEN DER SCHNITTSTELLE - EXCEL-IMPORT UND ,UMGESETZT'",
+            "\u26a0\ufe0f NUTZERENTSCHEIDUNG 16.09.: aus Schritt 61 Stufe 1.2 ausgegliedert, NACHGELAGERT und "
+            "eigenstaendig zu bewerten (*,u.U. sollten wir den Punkt als eigenen Planpunkt nachgelagert sauber "
+            "bewerten'*). LAGE: drei Wege schreiben heute in `holdings` - der Bitpanda-Abgleich (alle 30 min), der "
+            "Excel-Import aus `Basisinfos/Assets.xlsx` (`importer/excel_import.py`, Quelle `import`) und das "
+            "Signalfenster beim Haken ,umgesetzt' (`ui/signals_view.py`, Quelle `signal_bestaetigung`). Liegt ein "
+            "Bitpanda-Schluessel vor, GEWINNT IMMER der naechste Abgleich: eine Handeingabe haelt hoechstens 30 "
+            "Minuten und verschwindet ohne Meldung - der Nutzer sieht nicht, dass seine Eingabe verworfen wurde. Ohne "
+            "Schluessel (Desktop, abgelaufener oder entfernter Schluessel) sind die Handwege die EINZIGE Quelle. "
+            "\u27a4 ZU BEWERTEN: (a) wofuer der Excel-Weg heute ueberhaupt noch gebraucht wird (Erstbefuellung? "
+            "Werte ausserhalb von Bitpanda?); (b) was ,umgesetzt' bedeuten soll - Bestandsaenderung oder nur Vermerk am "
+            "Signal (die Menge steht im Signal, der Bestand kommt von der Boerse); (c) Verhalten mit und ohne "
+            "Schluessel, jeweils sichtbar statt still; (d) ob eine Handeingabe als eigene Quelle ueberleben darf "
+            "(Vorrang wie `avg_buy_price_manual_eur`) oder nur als Vormerkung bis zum naechsten Abgleich. "
+            "ERST NACH Stufe 1 von Schritt 61 - vorher ist die Bestandsquelle selbst noch in Bewegung.",
+            "Nutzerentscheidung 16.09.; Basisinfos/Bitpanda_Umstellung_Inventur.md (Gruppe A); Schritt 61 Stufe 1.2",
+            block="D-BETRIEB",
+            wartet_auf=(61,),
+            umbau="alt"),  # raeumt bestehende Schreibwege auf
     Schritt(55, "ENTSCHIEDENE UMSETZUNGEN AUS DEN POSITIONSFAELLEN (14.09.)",
             "\u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Befunde 2.451-*, "
             "Basisinfos/Plan_Asset_Lebenszyklus_14_09.md) - ENTSCHIEDEN, NICHT "
