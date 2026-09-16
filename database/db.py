@@ -1603,6 +1603,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_price_history_ohlc(conn)
     _migrate_rohstoff_futures_reihen_umziehen(conn)
     _migrate_bitpanda_katalog(conn)
+    _migrate_bitpanda_wallet_saldo(conn)
     _bereinige_gemessene_etc_punkte(conn)
     _bereinige_schluessel_in_api_health(conn)
     import_holdings_manual_overrides(conn)
@@ -2328,6 +2329,67 @@ def _migrate_bitpanda_katalog(conn: sqlite3.Connection) -> None:
         "gruppe TEXT, isin TEXT, geholt_am TEXT NOT NULL)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_bitpanda_katalog_symbol "
                  "ON bitpanda_katalog(symbol)")
+    conn.commit()
+
+
+def _migrate_bitpanda_wallet_saldo(conn: sqlite3.Connection) -> None:
+    """Letzter bekannter Saldo je Asset und Wallet aus den Buchungen der NEUEN
+    Bitpanda-Schnittstelle (16.09.2026, Schritt 61 Stufe 1.2, Nutzerentscheidung
+    E9). Additiv und wiederholbar.
+
+    WARUM EINE TABELLE UND NICHT NUR `/portfolio`: die Portfolio-Liste kennt nur
+    ,gesamt' und ,verfuegbar'. Was dazwischen liegt, kann Staking sein, eine
+    Hebel-Sicherheit oder ein in einer Order reservierter Coin - nur die
+    Buchungen sagen je Wallet (`wallet_owner`), welches. Jede Buchung traegt
+    `asset_balance_after`; der juengste Wert je Wallet IST der Saldo (Stufe 0:
+    43 von 43 Positionen exakt). Die Tabelle haelt ihn, damit jeder Lauf nur
+    die neuen Buchungen holen muss."""
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS bitpanda_wallet_saldo ("
+        "asset_id TEXT NOT NULL, wallet_owner TEXT NOT NULL, wallet_id TEXT NOT NULL, "
+        "saldo REAL NOT NULL, zeitpunkt TEXT NOT NULL, geaendert_am TEXT NOT NULL, "
+        "PRIMARY KEY (asset_id, wallet_owner, wallet_id))")
+    conn.commit()
+
+
+def lade_bitpanda_wallet_salden(conn: sqlite3.Connection) -> dict:
+    """(asset_id, wallet_owner, wallet_id) -> (saldo, zeitpunkt der Buchung)."""
+    _migrate_bitpanda_wallet_saldo(conn)
+    return {(r["asset_id"], r["wallet_owner"], r["wallet_id"]): (r["saldo"], r["zeitpunkt"])
+            for r in conn.execute(
+                "SELECT asset_id, wallet_owner, wallet_id, saldo, zeitpunkt FROM bitpanda_wallet_saldo")}
+
+
+def speichere_bitpanda_wallet_salden(conn: sqlite3.Connection, salden: dict) -> int:
+    """Schreibt Salden - aber nur, wenn die Buchung NICHT AELTER ist als die gespeicherte.
+
+    ⚠️ `asset_balance_after` ist ein ABSOLUTER Stand, keine Differenz: ein
+    doppelt gelesener oder ueberlappender Zeitraum schadet nicht, solange der
+    juengere Stand gewinnt. Genau darauf beruht die Stunde Ueberlappung beim
+    inkrementellen Abruf."""
+    _migrate_bitpanda_wallet_saldo(conn)
+    jetzt = _now_iso()
+    n = 0
+    for (aid, owner, wid), (saldo, zeit) in (salden or {}).items():
+        cur = conn.execute(
+            "INSERT INTO bitpanda_wallet_saldo (asset_id, wallet_owner, wallet_id, saldo, zeitpunkt, geaendert_am) "
+            "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(asset_id, wallet_owner, wallet_id) DO UPDATE SET "
+            "saldo = excluded.saldo, zeitpunkt = excluded.zeitpunkt, geaendert_am = excluded.geaendert_am "
+            "WHERE excluded.zeitpunkt >= bitpanda_wallet_saldo.zeitpunkt",
+            (aid, owner, wid or "", float(saldo), zeit, jetzt))
+        n += cur.rowcount
+    conn.commit()
+    return n
+
+
+def get_meta_wert(conn: sqlite3.Connection, schluessel: str) -> str | None:
+    row = conn.execute("SELECT value FROM meta WHERE key = ?", (schluessel,)).fetchone()
+    return row["value"] if row else None
+
+
+def set_meta_wert(conn: sqlite3.Connection, schluessel: str, wert: str) -> None:
+    conn.execute("INSERT INTO meta (key, value) VALUES (?, ?) "
+                 "ON CONFLICT(key) DO UPDATE SET value = excluded.value", (schluessel, wert))
     conn.commit()
 
 

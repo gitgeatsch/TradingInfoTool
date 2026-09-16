@@ -1087,12 +1087,16 @@ class TradingInfoToolApp(tk.Tk):
         if not self._bitpanda_api_key:
             return  # defensiver Re-Check, Menuepunkt ist ohne Key ohnehin deaktiviert
 
-        from importer.bitpanda_sync import sync_from_bitpanda
+        from importer.bitpanda_bestand import bestandsabgleich
 
         conn = self._db_conn_factory()
         try:
             try:
-                result = sync_from_bitpanda(conn, self._bitpanda_api_key, self._bitpanda_assets or [])
+                # 16.09.2026 (Schritt 61 Stufe 1.2): derselbe Waehler wie der Job -
+                # neu oder alt nach `bitpanda.bestand_quelle`. Keine Mails aus der
+                # Oberflaeche; die Meldungen stehen im Ergebnisfenster.
+                result = bestandsabgleich(conn, self._bitpanda_api_key,
+                                          listed_assets_holen=lambda: self._bitpanda_assets or [])
             except Exception as exc:
                 messagebox.showerror(
                     "Bestände von Bitpanda abgleichen",

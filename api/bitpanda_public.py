@@ -277,6 +277,12 @@ def _eine_millisekunde_zurueck(zeitpunkt: str) -> str:
 
 def hole_buchungen(api_key: str, seit: str | None = None, jetzt=None,
                    frist_sekunden: float = GESAMTFRIST_BUCHUNGEN_SEKUNDEN) -> list[dict]:
+    """Wie `hole_buchungen_mit_stand`, nur die Liste."""
+    return hole_buchungen_mit_stand(api_key, seit=seit, jetzt=jetzt, frist_sekunden=frist_sekunden)[0]
+
+
+def hole_buchungen_mit_stand(api_key: str, seit: str | None = None, jetzt=None,
+                             frist_sekunden: float = GESAMTFRIST_BUCHUNGEN_SEKUNDEN) -> tuple[list[dict], bool]:
     """Alle Vorgaenge (neueste zuerst), notfalls ab `seit` (ISO-Zeitpunkt).
 
     ⚠️⚠️ UEBER DATUMSFENSTER, NICHT UEBER DEN CURSOR (Befund
@@ -288,6 +294,7 @@ def hole_buchungen(api_key: str, seit: str | None = None, jetzt=None,
     `seit` setzt zusaetzlich `from`; der inkrementelle Lauf holt damit nur
     Neues. Die Gesamtfrist bricht ab, bevor ein Job haengt - dann kommt, was
     da ist, und der Aufrufer sieht es an der Anzahl."""
+    vollstaendig = True
     ende = (jetzt or time.monotonic) if callable(jetzt) else None
     start = (ende() if ende else time.monotonic())
     vorgaenge: dict[str, dict] = {}
@@ -328,6 +335,13 @@ def hole_buchungen(api_key: str, seit: str | None = None, jetzt=None,
         if jetzt_s - start > frist_sekunden:
             logger.warning("Bitpanda-Buchungen: Frist von %.0f s erreicht - %d Vorgaenge geladen, "
                            "aeltester Stand %s", frist_sekunden, len(vorgaenge), bis)
+            vollstaendig = False
             break
+    else:
+        # Notbremse MAX_FENSTER gezogen - ebenfalls unvollstaendig.
+        vollstaendig = False
+    # ⚠️ `vollstaendig` (16.09.2026, Stufe 1.2): ein durch Frist oder Notbremse
+    # abgebrochener Lauf darf den Stand fuer den naechsten inkrementellen Abruf
+    # NICHT vorruecken - sonst fehlten die uebersprungenen Buchungen fuer immer.
     return sorted(vorgaenge.values(),
-                  key=lambda o: _aeltester_zeitpunkt([o]) or "", reverse=True)
+                  key=lambda o: _aeltester_zeitpunkt([o]) or "", reverse=True), vollstaendig

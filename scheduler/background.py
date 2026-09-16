@@ -2019,10 +2019,14 @@ def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
     conn = conn_factory()
     try:
         from api.bitpanda import get_listed_assets
-        from importer.bitpanda_sync import sync_from_bitpanda
+        from importer.bitpanda_bestand import bestandsabgleich
 
-        listed_assets = get_listed_assets()
-        result = sync_from_bitpanda(conn, api_key, listed_assets)
+        # ⚠️ SEIT 16.09.2026 UEBER DEN WAEHLER (Schritt 61 Stufe 1.2, E12): neu =
+        # Salden je Wallet aus der neuen Schnittstelle, alt = der bisherige
+        # Abgleich als Rueckweg (`bitpanda.bestand_quelle: alt`). Der alte
+        # Katalog wird nur noch fuer den alten Weg geholt.
+        result = bestandsabgleich(conn, api_key, listed_assets_holen=get_listed_assets,
+                                  melden=_melde_bitpanda_bestand)
         logger.info(
             "Bitpanda-Bestandsabgleich: %d aktualisiert (%d Zuwächse, %d automatisch "
             "bestätigte Rückgänge, %d Rückgänge weiterhin bestätigungspflichtig, "
@@ -2048,6 +2052,34 @@ def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
         bitpanda_holdings_lock.release()
         _job_started_at.pop("bitpanda_holdings", None)
     return True
+
+
+# Wann eine Bitpanda-Bestandsmeldung zuletzt verschickt wurde, je Schluessel.
+_bitpanda_meldung_gesendet: dict[str, float] = {}
+
+
+def _melde_bitpanda_bestand(meldung) -> bool:
+    """E13 (16.09.2026): eine Bestandsmeldung als Mail - mit Name, Wert, Status
+    und erforderlicher Aktion (`importer.bitpanda_bestand.Meldung`).
+
+    Eigener Betreff statt ,Job fehlgeschlagen' - eine Position ohne
+    Watchlist-Eintrag ist kein Ausfall. Sperrfrist je Meldung
+    (`cooldown_stunden`), damit derselbe Sachverhalt nicht jede halbe Stunde
+    kommt; bei Neustart beginnt sie neu (hoechstens eine Mail je Start)."""
+    import config as config_module
+    from api.email_notify import send_notification_email
+
+    email_cfg = (config_module.load_config().get("benachrichtigung", {}) or {}).get("email", {}) or {}
+    if not email_cfg.get("aktiv", False) or not email_cfg.get("empfaenger"):
+        return False
+    zuletzt = _bitpanda_meldung_gesendet.get(meldung.schluessel)
+    if zuletzt is not None and time.monotonic() - zuletzt < meldung.cooldown_stunden * 3600:
+        return False
+    ok = send_notification_email("TradingInfoTool: Bitpanda-Bestand - %s" % meldung.betreff,
+                                 meldung.text(), email_cfg["empfaenger"])
+    if ok:
+        _bitpanda_meldung_gesendet[meldung.schluessel] = time.monotonic()
+    return bool(ok)
 
 
 def get_lock_status() -> dict[str, dict]:

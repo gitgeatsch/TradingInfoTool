@@ -300,6 +300,23 @@ def get_pruef_mechanismus(hauptgruppe: str, unterkategorie: str | None) -> dict 
     return PRUEF_MECHANISMUS_MAPPING.get(hauptgruppe)
 
 
+def bitpanda_bestand_quelle() -> str:
+    """Welcher Bestandsabgleich laeuft (16.09.2026, Schritt 61 Stufe 1.2, E12).
+
+    `bitpanda.bestand_quelle` in config.yaml: fehlt oder `neu` -> neue
+    Schnittstelle (`importer/bitpanda_bestand.py`); `alt` -> der bisherige
+    Abgleich als Rueckweg OHNE Code-Aenderung. Jeder andere Wert gilt als `neu`
+    und steht als Warnung im Log - ein Tippfehler darf nicht still den alten,
+    fehlerhaften Weg aktivieren."""
+    wert = str(((load_config() or {}).get("bitpanda") or {}).get("bestand_quelle") or "neu").strip().lower()
+    if wert not in ("neu", "alt"):
+        import logging as _lg
+        _lg.getLogger(__name__).warning(
+            "config bitpanda.bestand_quelle = %r ist unbekannt - es gilt 'neu'", wert)
+        return "neu"
+    return wert
+
+
 def get_watchlist() -> list[WatchlistAsset]:
     config = load_config()
     return [

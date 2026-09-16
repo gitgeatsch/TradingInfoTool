@@ -24707,6 +24707,224 @@ def paket_bitpanda_zugang() -> None:
            str(fiat))
 
 
+def paket_bitpanda_bestand() -> None:
+    """Schritt 61 Stufe 1.2: der Bestandsabgleich ueber die neue Schnittstelle -
+    mit den Nutzerentscheidungen E1, E2, E9 bis E13 (16.09.2026).
+
+    Ein kuenstliches Depot, das jede Falle einmal enthaelt:
+
+        ETH     gestakt doppelt in der DB (0,943 statt 0,486), offenes
+                REDUZIEREN, KEIN Verkauf -> Menge korrigiert, Signal bleibt offen
+        SOL     gestakt doppelt, offenes VERKAUFEN, ECHTER Verkauf nach dem
+                Signal -> Menge korrigiert, Signal bestaetigt
+        BTC     Teil in der Hebel-Wallet -> gehoert nicht zu `quantity`
+        OD7H    Zuordnung ueber die ISIN aus `yfinance_symbol`
+        CANTON  Zuordnung ueber den Alias CC
+        LINK    Buchungen und Portfolio passen nicht -> NICHT uebernommen, Mail
+        G2Y     keine Watchlist -> Mail mit Name, Wert, Status, Aktion
+        SPC     Staub (0,03 EUR) ohne Watchlist -> nur Log, keine Mail
+        HYPE    fehlt in der Antwort, Buchungen Saldo 0 -> auf 0, Mail
+        MON     fehlt, aber kein Bitpanda-Asset mit Buchungen -> bleibt stehen
+
+    Dazu: der inkrementelle Stand rueckt nur bei vollstaendigem Abruf vor; faellt
+    ein Abruf aus, bleibt `holdings` unberuehrt (E2); der Schalter waehlt den
+    alten Weg ohne Code-Aenderung (E12). Speicherdatenbank, kein Netzabruf."""
+    P = "BitpandaBestand"
+    import sqlite3 as _sq
+    import types as _ty
+
+    import api.bitpanda_public as _BP
+    import config as _CFG
+    import database.db as _DB
+    import importer.bitpanda_bestand as _BB
+    from database.models import Signal as _Sig
+
+    def _wa(sym, klasse="krypto", yf=None):
+        return _CFG.WatchlistAsset(symbol=sym, name=sym, rolle="taktisch", beobachtungsstatus="beobachtung",
+                                   coingecko_id=None, assetklasse=klasse, yfinance_symbol=yf)
+    wl = [_wa("ETH"), _wa("SOL"), _wa("BTC"), _wa("OD7H", "rohstoffe", "GB00B15KXX56.SG"), _wa("CANTON"),
+          _wa("LINK"), _wa("HYPE"), _wa("MON"), _wa("ALGO")]
+    K = _BP.KatalogEintrag
+    kat = {"a_eth": K("a_eth", "ETH", "Ethereum", "coin"), "a_sol": K("a_sol", "SOL", "Solana", "coin"),
+           "a_btc": K("a_btc", "BTC", "Bitcoin", "coin"),
+           "a_od7": K("a_od7", "OD7H", "WisdomTree Gold", "equity_complex_etc", "GB00B15KXX56"),
+           "a_cc": K("a_cc", "CC", "Canton", "token"), "a_link": K("a_link", "LINK", "Chainlink", "coin"),
+           "a_g2y": K("a_g2y", "G2Y", "Gold Miners Beispiel", "equity_etf", "IE00TEST0001"),
+           "a_spc": K("a_spc", "SPC", "SPACE", "token"), "a_hype": K("a_hype", "HYPE", "Hyperliquid", "coin"),
+           "a_algo": K("a_algo", "ALGO", "Algorand", "coin")}
+
+    def _pos(aid, gesamt, frei, wert):
+        e = kat[aid]
+        return _BP.Position(aid, e.symbol, e.name, e.gruppe, gesamt, frei, wert, None, None)
+    portfolio = [_pos("a_eth", 0.48625 + 0.02594, 0.02594, 1071.7), _pos("a_sol", 3.01198, 0.0, 258.2),
+                 _pos("a_btc", 0.07, 0.05, 4600.0), _pos("a_od7", 16.5358, 16.5358, 603.6),
+                 _pos("a_cc", 1412.97, 1412.97, 113.8), _pos("a_link", 141.9, 141.9, 1339.9),
+                 _pos("a_g2y", 2.0, 2.0, 183.5), _pos("a_spc", 6.29, 6.29, 0.03)]
+
+    def _b(nr, typ, aid, wallet, saldo, zeit, flow="INCOMING", ttyp=None, menge="1"):
+        return {"operation_id": "op%d" % nr, "operation_type": typ, "transactions": [
+            {"asset_amount": {"asset_id": aid, "value": menge}, "asset_balance_after": {"value": str(saldo)},
+             "credited_at": zeit, "flow": flow, "wallet_owner": wallet, "wallet_id": "w-" + wallet,
+             "transaction_type": ttyp}]}
+    vorgaenge = [
+        _b(1, "buy", "a_eth", "shared-default", 0.02594, "2026-09-01T10:00:00.000Z"),
+        _b(2, "stake", "a_eth", "staking-service", 0.48625, "2026-09-01T10:01:00.000Z"),
+        _b(3, "stake", "a_sol", "staking-service", 3.01198, "2026-09-02T10:00:00.000Z"),
+        _b(4, "sell", "a_sol", "shared-default", 0.0, "2026-09-10T12:00:00.000Z", "OUTGOING", None, "2.9"),
+        _b(5, "buy", "a_btc", "shared-default", 0.05, "2026-09-01T09:00:00.000Z"),
+        _b(6, "margin_trading_open_long", "a_btc", "margin-trading", 0.02, "2026-09-03T09:00:00.000Z"),
+        _b(7, "stock_exchange_buy", "a_od7", "stock-exchange", 16.5358, "2026-08-24T09:00:00.000Z"),
+        _b(8, "buy", "a_cc", "shared-default", 1412.97, "2026-08-20T09:00:00.000Z"),
+        _b(9, "buy", "a_link", "shared-default", 140.0, "2026-07-10T09:00:00.000Z"),
+        _b(10, "buy", "a_g2y", "shared-default", 2.0, "2026-09-12T09:00:00.000Z"),
+        _b(11, "onetime_reward", "a_spc", "shared-default", 6.29, "2026-09-12T09:00:00.000Z"),
+        _b(12, "unstake", "a_hype", "staking-service", 0.0, "2026-09-11T09:00:00.000Z", "OUTGOING"),
+        _b(13, "sell", "a_hype", "shared-default", 0.0, "2026-09-11T10:00:00.000Z", "OUTGOING", None, "3.0"),
+        # ALGO fehlt im Portfolio, die Buchungen zeigen aber 5 - eine LUECKENHAFTE Antwort
+        _b(14, "buy", "a_algo", "shared-default", 5.0, "2026-09-09T10:00:00.000Z"),
+    ]
+    zustand = {"vollstaendig": True, "seit": [], "fehler": None}
+
+    def _buchungen(api_key, seit=None, **kw):
+        zustand["seit"].append(seit)
+        if zustand["fehler"]:
+            raise _BP.BitpandaPublicFehler(zustand["fehler"])
+        return list(vorgaenge), zustand["vollstaendig"]
+
+    alt = (_BP.katalog, _BP.hole_portfolio, _BP.hole_fiat, _BP.hole_buchungen_mit_stand,
+           _BB.sync_fiat_cash_from_bitpanda)
+    _BP.katalog = lambda conn, key, **kw: kat
+    _BP.hole_portfolio = lambda key, k=None: list(portfolio)
+    _BP.hole_fiat = lambda key: {"eur": (3467.27, 560.0)}
+    _BP.hole_buchungen_mit_stand = _buchungen
+    _BB.sync_fiat_cash_from_bitpanda = lambda conn, key: _ty.SimpleNamespace(updated=False, old_eur=None, new_eur=None)
+
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        for sym, q, st in (("ETH", 0.02594, 0.94339), ("SOL", 0.0, 5.93146), ("BTC", 0.07, 0.0),
+                           ("OD7H", 16.5358, 0.0), ("CANTON", 1412.97, 0.0), ("LINK", 99.0, 0.0),
+                           ("HYPE", 0.0, 3.01572), ("MON", 560.0, 0.0), ("ALGO", 5.0, 0.0)):
+            _DB.upsert_holding(c, sym, q, source="bitpanda_sync")
+            _DB.update_holding_staked_quantity(c, sym, st)
+        for sym, akt in (("ETH", "REDUZIEREN"), ("SOL", "VERKAUFEN")):
+            _DB.insert_signal(c, _Sig(symbol=sym, created_at="2026-09-05T08:00:00+00:00", action=akt,
+                                      gate_passed=True, gate_reason=None, risk_veto=False, facts_json="{}"))
+        return c
+    gemeldet = []
+    try:
+        c = _db()
+        erg = _BB.abgleich_neu(c, "k", watchlist=wl, melden=gemeldet.append)
+        h = {x.symbol: x for x in _DB.get_all_holdings(c)}
+        sig = {r["symbol"]: r["umgesetzt"] for r in c.execute("SELECT symbol, umgesetzt FROM signals")}
+        stand1 = _DB.get_meta_wert(c, _BB.META_BUCHUNGEN_STAND)
+        synced = _DB.get_bitpanda_holdings_synced_at(c)
+
+        # ---- E1/E9 Mengen
+        pruefe(P, "⚠️⚠️ gestakt doppelt korrigiert: ETH frei 0,02594 / gestakt 0,48625, SOL 0 / 3,01198",
+               abs(h["ETH"].quantity - 0.02594) < 1e-9 and abs(h["ETH"].staked_quantity - 0.48625) < 1e-9
+               and h["SOL"].quantity == 0.0 and abs(h["SOL"].staked_quantity - 3.01198) < 1e-9,
+               "ETH %s/%s SOL %s/%s" % (h["ETH"].quantity, h["ETH"].staked_quantity,
+                                        h["SOL"].quantity, h["SOL"].staked_quantity))
+        pruefe(P, "⚠️ E1: Hebel-Wallet gehoert NICHT zu `quantity` (BTC 0,05 statt 0,07); Boersen-Wallet schon (OD7H)",
+               abs(h["BTC"].quantity - 0.05) < 1e-9 and abs(h["OD7H"].quantity - 16.5358) < 1e-9, "")
+        # ---- E8 Zuordnung
+        pruefe(P, "Zuordnung: OD7H ueber die ISIN, CANTON ueber den Alias CC - beide unveraendert, also nicht neu geschrieben",
+               not any(u.startswith(("OD7H", "CANTON")) for u in erg.updated_holdings)
+               and _BB.zuordnen(kat["a_od7"], {"OD7X"}, {"GB00B15KXX56": "OD7H"}) == "OD7H"
+               and _BB.zuordnen(kat["a_cc"], {"CANTON"}, {}) == "CANTON", str(erg.updated_holdings))
+        # ---- E9 Gegenprobe
+        pruefe(P, "⚠️⚠️ E9: passen Buchungen und Portfolio nicht (LINK), bleibt der alte Stand - mit Meldung",
+               h["LINK"].quantity == 99.0
+               and any(m.schluessel == "bestand_abweichung_a_link" and "NICHT uebernommen" in m.status
+                       for m in gemeldet), str([m.schluessel for m in gemeldet]))
+        # ---- E10 Signale
+        pruefe(P, "⚠️⚠️⚠️ E10: Staking-Korrektur bestaetigt KEIN Signal (ETH offen), ein echter Verkauf schon (SOL)",
+               sig["ETH"] is None and sig["SOL"] == 1
+               and any("ETH" in w and "NICHT als umgesetzt" in w for w in erg.warnings)
+               and any(a.startswith("SOL") for a in erg.auto_confirmed_decreases),
+               "Signale %s" % sig)
+        # ---- E11 verschwunden
+        pruefe(P, "⚠️⚠️ E11: HYPE fehlt, Buchungen Saldo 0 -> 0 mit Meldung; MON ohne Buchungen und ALGO mit Saldo 5 bleiben stehen",
+               (h["HYPE"].quantity or 0) == 0 and (h["HYPE"].staked_quantity or 0) == 0
+               and h["MON"].quantity == 560.0 and h["ALGO"].quantity == 5.0
+               and any(m.schluessel == "verschwunden_HYPE" for m in gemeldet)
+               and any(x.startswith("MON") for x in erg.stale_bitpanda_sync_symbols), "")
+        # ---- E13 Mails
+        m_g2y = next((m for m in gemeldet if m.schluessel == "ohne_watchlist_a_g2y"), None)
+        pruefe(P, "⚠️⚠️ E13: Position ohne Watchlist als Mail MIT Name, Wert, Status und Aktion - Staub nur im Log",
+               m_g2y is not None and "Gold Miners Beispiel" in m_g2y.text() and "183,50 EUR" in m_g2y.text()
+               and "Status:" in m_g2y.text() and "Aktion:" in m_g2y.text() and "Asset hinzufuegen" in m_g2y.aktion
+               and "IE00TEST0001" in m_g2y.name
+               and not any("a_spc" in m.schluessel for m in gemeldet)
+               and any("SPACE" in u for u in erg.unmatched_bitpanda_symbols),
+               m_g2y.text() if m_g2y else "keine Meldung")
+        pruefe(P, "jede Meldung hat Name, Wert, Status und Aktion (keine leeren Felder)",
+               gemeldet and all(m.name and m.wert and m.status and m.aktion for m in gemeldet),
+               "%d Meldungen" % len(gemeldet))
+        # ---- Stempel, Stand, inkrementell
+        zustand["seit"].clear()
+        zweiter = _BB.abgleich_neu(c, "k", watchlist=wl, melden=None)
+        pruefe(P, "Stempel fuer die Datenfrische gesetzt; zweiter Lauf holt ab Stand minus 1 h und schreibt nichts neu",
+               synced is not None and stand1 == "2026-09-12T09:00:00.000Z"
+               and zustand["seit"] == ["2026-09-12T08:00:00Z"] and zweiter.synced_count == 0,
+               "Stand %s, seit %s, synced %d" % (stand1, zustand["seit"], zweiter.synced_count))
+        c.close()
+
+        # ---- unvollstaendiger Abruf: Stand rueckt nicht vor, E11 greift nicht
+        c = _db()
+        zustand["vollstaendig"] = False
+        _BB.abgleich_neu(c, "k", watchlist=wl, melden=None)
+        h2 = {x.symbol: x for x in _DB.get_all_holdings(c)}
+        pruefe(P, "⚠️ unvollstaendiger Abruf: kein Stand fuer den naechsten Lauf, nichts wird auf 0 gesetzt",
+               _DB.get_meta_wert(c, _BB.META_BUCHUNGEN_STAND) is None and h2["HYPE"].staked_quantity > 0, "")
+        c.close()
+        zustand["vollstaendig"] = True
+
+        # ---- E2 Ausfall
+        c = _db()
+        vorher = {x.symbol: (x.quantity, x.staked_quantity) for x in _DB.get_all_holdings(c)}
+        zustand["fehler"] = "nicht erreichbar"
+        try:
+            _BB.abgleich_neu(c, "k", watchlist=wl)
+            geworfen = False
+        except _BP.BitpandaPublicFehler:
+            geworfen = True
+        nachher = {x.symbol: (x.quantity, x.staked_quantity) for x in _DB.get_all_holdings(c)}
+        pruefe(P, "⚠️⚠️ E2: faellt ein Abruf aus, wirft der Abgleich - und `holdings` bleibt unberuehrt",
+               geworfen and vorher == nachher and _DB.get_bitpanda_holdings_synced_at(c) is None, "")
+        c.close()
+        zustand["fehler"] = None
+    finally:
+        (_BP.katalog, _BP.hole_portfolio, _BP.hole_fiat, _BP.hole_buchungen_mit_stand,
+         _BB.sync_fiat_cash_from_bitpanda) = alt
+
+    # ---- E12 Schalter
+    alt_cfg = _CFG._config_cache
+    try:
+        aufrufe = []
+        import importer.bitpanda_sync as _BS
+        alt_sync, alt_neu = _BS.sync_from_bitpanda, _BB.abgleich_neu
+        _BS.sync_from_bitpanda = lambda conn, key, listed: aufrufe.append("alt") or "ALT"
+        _BB.abgleich_neu = lambda conn, key, watchlist=None, melden=None: aufrufe.append("neu") or "NEU"
+        for wert in (None, "neu", "alt", "Alt ", "quatsch"):
+            cfg = dict(alt_cfg or {})
+            cfg["bitpanda"] = {} if wert is None else {"bestand_quelle": wert}
+            _CFG._config_cache = cfg
+            _BB.bestandsabgleich(None, "k", listed_assets_holen=lambda: [])
+    finally:
+        _BS.sync_from_bitpanda, _BB.abgleich_neu = alt_sync, alt_neu
+        _CFG._config_cache = alt_cfg
+    q = _quelltext("scheduler/background.py")
+    pruefe(P, "⚠️ E12: fehlt der Schalter -> neu; `alt` -> alter Weg; Tippfehler -> neu (nie still der alte); Job und GUI nutzen den Waehler",
+           aufrufe == ["neu", "neu", "alt", "alt", "neu"]
+           and "bestandsabgleich(conn, api_key, listed_assets_holen=get_listed_assets" in q
+           and "melden=_melde_bitpanda_bestand" in q
+           and "bestandsabgleich(conn, self._bitpanda_api_key" in _quelltext("ui/app.py"),
+           str(aufrufe))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -24764,6 +24982,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kursangabe": paket_kursangabe,
           "PreisUeberlauf": paket_preis_ueberlauf,
           "BitpandaZugang": paket_bitpanda_zugang,
+          "BitpandaBestand": paket_bitpanda_bestand,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

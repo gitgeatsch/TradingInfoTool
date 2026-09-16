@@ -110,7 +110,8 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `9d5d82f` | **Kapitalkurse** | Kursreihen-Job täglich 05:30 statt 24 h ab Start; der Portfoliowert lädt einen fehlenden Handelstagskurs nach; fehlt er in Yahoos Tageshistorie, kommt der Schlusskurs aus dem letzten Handel des Platzes | 2.455-kapitalkurse-gebaut | ⏳ Pull ausstehend |
 | `ea816c3` | **Hebelstufen** | Hebelmails zeigen den gerechneten Hebel und die einstellbaren Stufen (untere hervorgehoben, obere mit Überschuss oder „NICHT SICHER“); alle Zahlen rechnen mit demselben Hebel | 2.455-hebelstufen-gebaut | ⏳ Pull ausstehend |
 | `ed8f10d` | **OD7-Kurse und Kursangabe** | OD7H und OD7C bekommen wieder echte Kurse (ISIN in Stuttgart statt eingefrorenem Kürzel von 2022) – Kapital rund +420 EUR, ohne Indexsprung; eine tägliche Wache meldet jede tote Kursangabe; G2X, BW, ROL in der Watchlist | 2.455-kurs-od7-gebaut | ✔ Pull + Export 15.09. fehlerfrei; ⏳ 05:30-Teil (K8) |
-| *(nächster Commit)* | **Krypto-Preisabruf** | Ein unsinnig großer CoinGecko-Wert (ETH-Volumen über 2^63) legte seit 07:49 den ganzen Krypto-Preisabruf lahm; jetzt als Kommazahl, unplausibles Volumen verworfen, jeder Coin einzeln gespeichert | 2.455-preis-ueberlauf | ✔ geprüft 15.09. 21:36: 3 Läufe 44/60, keine Fehler |
+| `beddca4` | **Krypto-Preisabruf** | Ein unsinnig großer CoinGecko-Wert (ETH-Volumen über 2^63) legte seit 07:49 den ganzen Krypto-Preisabruf lahm; jetzt als Kommazahl, unplausibles Volumen verworfen, jeder Coin einzeln gespeichert | 2.455-preis-ueberlauf | ✔ geprüft 15.09. 21:36: 3 Läufe 44/60, keine Fehler |
+| *(nächster Commit)* | **Bestand über die neue Bitpanda-Schnittstelle** | Frei und gestakt je Wallet aus den Buchungen; die doppelt gezählten gestakten Mengen werden korrigiert (Kapital rund −2.440 €, ohne Indexsprung); offene Verkaufssignale gelten nur bei echtem Verkauf als umgesetzt; Mails mit Name, Wert, Status und Aktion | 2.455-bestand-neu-gebaut | ⏳ Pull ausstehend (K10) |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -149,3 +150,16 @@ git stash pop
 
 
 **Nach dem Pull von „Krypto-Preisabruf“ (K9):** normaler `git pull` (keine `config.yaml`-Änderung) → **App neu starten**. Erwartet innerhalb von 15 Minuten: `Preis-Refresh: 4x/5x Assets aktualisiert`, keine Zeile `Preis-Refresh fehlgeschlagen`; liefert CoinGecko den ETH-Wert noch, zusätzlich `CoinGecko-Volumen fuer ETH verworfen …` (richtig). Der Backoff des alten Prozesses ist mit dem Neustart weg.
+
+
+**Nach dem Pull von „Bestand über die neue Bitpanda-Schnittstelle“ (K10):** normaler `git pull` → **App neu starten** → nach **30 Minuten** Export.
+
+Erwartet im Log:
+
+- innerhalb von 30 Minuten der erste Lauf, **rund 90 Sekunden** (Katalog und volle Buchungshistorie werden einmal geholt): `Bitpanda-Bestandsabgleich: N aktualisiert …`
+- die Staking-Korrekturen wie im Trockenlauf: ETH gestakt 0,943 → 0,486, SUI 1.554 → 822, TAO 5,82 → 2,99, SOL 5,93 → 3,01, NEAR 267 → 194, AVAX 40,4 → 25,5, HYPE 3,02 → 1,52, BNB 0,159 → 0,124
+- **keine** Zeile `nicht uebernommen`; eine Zeile `NICHT als umgesetzt markiert` für BNB ist **richtig** (Schutz vor falscher Signal-Bestätigung)
+- der zweite Lauf braucht nur wenige Sekunden
+- am nächsten Morgen: Tageswert rund 2.440 € niedriger, **ohne Indexsprung**
+
+**Rückweg, falls etwas nicht stimmt:** in `Basisinfos/config.yaml` einen Abschnitt `bitpanda:` mit `bestand_quelle: alt` eintragen und die App neu starten – dann läuft der alte Abgleich, ohne Code-Änderung. Bitte vorher Bescheid geben.
