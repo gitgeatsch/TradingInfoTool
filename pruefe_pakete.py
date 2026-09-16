@@ -25182,6 +25182,87 @@ def paket_bitpanda_cash() -> None:
     c.close()
 
 
+def paket_papierkorb() -> None:
+    """Google-Drive-Papierkorb (17.09.2026, Nutzermeldung ,Speicherplatz geht aus').
+    Der Export fuehrt Buch ueber rotierte Sicherungen und ueberschriebene
+    Exportfassungen und warnt ab 2 GB; `--papierkorb-geleert` setzt zurueck.
+    Nur Wegwerfordner - der Austauschordner wird nicht beruehrt."""
+    P = "Papierkorb"
+    import gzip as _gz
+    import os as _os
+    import sqlite3 as _sq
+    import subprocess as _sp
+    import sys as _sys
+    import tempfile as _tf
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    from pathlib import Path as _Pa
+
+    import extract_notebook_diagnose as _EX
+
+    with _tf.TemporaryDirectory() as tmp:
+        buch = _Pa(tmp) / "papierkorb_protokoll.json"
+        jetzt = _dt(2026, 9, 17, 8, 0, tzinfo=_tz.utc)
+        MB = 1024 ** 2
+        a = _EX.papierkorb_vermerke([("export_version", "notebook_diagnose.json", 274 * MB),
+                                     ("sicherung_rotiert", "x.db.gz", 132 * MB),
+                                     ("export_version", "leer", 0)], buch, jetzt - _td(days=31))
+        b = _EX.papierkorb_vermerke([("export_version", "notebook_diagnose.json", 274 * MB)], buch, jetzt)
+        pruefe(P, "Eintraege aelter als 30 Tage fallen heraus (Drive leert dann selbst), 0 Byte wird nicht gebucht",
+               a["anzahl"] == 2 and b["anzahl"] == 1 and b["bytes"] == 274 * MB and not b["warnen"],
+               "%s / %s" % (a, b))
+        pruefe(P, "⚠️ erster Lauf: die Zeile sagt, dass fruehere Exporte NICHT erfasst sind und der Papierkorb schon voll sein kann",
+               a["erstmals"] is True and b["erstmals"] is False
+               and "beginnt heute" in _EX.papierkorb_zeile(a) and "beginnt heute" not in _EX.papierkorb_zeile(b),
+               "%s / %s" % (a, b))
+        for i in range(5):
+            c = _EX.papierkorb_vermerke([("export_version", "notebook_diagnose.json", 274 * MB),
+                                         ("sicherung_rotiert", "s%d.db.gz" % i, 132 * MB)], buch,
+                                        jetzt + _td(hours=i))
+        z_warn = _EX.papierkorb_zeile(c)
+        z_ok = _EX.papierkorb_zeile(b)
+        pruefe(P, "⚠️⚠️ ab 2 GB die Warnung mit Handlung (Papierkorb leeren, Versionen, Befehl zum Zuruecksetzen); darunter nur die Zahl",
+               c["warnen"] and "BITTE LEEREN" in z_warn and "--papierkorb-geleert" in z_warn and "2,2 GB" in z_warn
+               and "BITTE" not in z_ok and "0,3 GB" in z_ok, z_warn + " | " + z_ok)
+        _EX.papierkorb_geleert(buch, jetzt + _td(days=1))
+        d = _EX.papierkorb_vermerke([("sicherung_rotiert", "n.db.gz", 132 * MB)], buch, jetzt + _td(days=1, hours=1))
+        pruefe(P, "nach `papierkorb_geleert` beginnt das Buch neu und die Zeile nennt das Datum",
+               d["anzahl"] == 1 and not d["warnen"] and "seit dem Leeren am 2026-09-18" in _EX.papierkorb_zeile(d), str(d))
+        buch.write_text("kein json", encoding="utf-8")
+        e = _EX.papierkorb_vermerke([("sicherung_rotiert", "n.db.gz", 1)], buch, jetzt)
+        pruefe(P, "ein kaputtes Buch bricht den Export nicht ab - es beginnt neu", e["anzahl"] == 1, str(e))
+
+        ordner = _Pa(tmp) / "DB_Backups"
+        ordner.mkdir()
+        for n in ("tradinginfotool_2026-01-01_0000.db.gz", "tradinginfotool_2026-01-02_0000.db.gz"):
+            with _gz.open(ordner / n, "wb") as fh:
+                fh.write(_os.urandom(5000))
+        groessen = sorted((ordner / n).stat().st_size for n in _os.listdir(ordner))
+        quelle = _sq.connect(":memory:")
+        quelle.execute("CREATE TABLE t (x)")
+        quelle.commit()
+        erg = _EX._db_backup(quelle, ordner=ordner, behalten=1)
+        quelle.close()
+        pruefe(P, "⚠️ die Rotation nennt die Groesse jeder geloeschten Sicherung (sonst waere das Buch leer); die ANZAHL bleibt bei `behalten`",
+               erg["erfolg"] and len(erg["geloescht"]) == 2 and sorted(erg.get("geloescht_bytes") or []) == groessen
+               and len(list(ordner.glob("tradinginfotool_*.db.gz"))) == 1, str(erg)[:300])
+
+        umg = dict(_os.environ, TIT_EXPORT_ZIEL=tmp, PYTHONIOENCODING="utf-8")
+        r = _sp.run([_sys.executable, "extract_notebook_diagnose.py", "--papierkorb-geleert"], capture_output=True,
+                    text=True, encoding="utf-8", env=umg, timeout=300)
+        neu = _EX._papierkorb_lese(buch)
+        pruefe(P, "`--papierkorb-geleert` setzt nur das Buch zurueck, ohne Export und ohne Sicherung",
+               r.returncode == 0 and "zurueckgesetzt" in r.stdout and neu["eintraege"] == [] and neu["geleert_am"]
+               and not (_Pa(tmp) / "Notebook_Analysedaten" / "notebook_diagnose.json").exists()
+               and len(list(ordner.glob("tradinginfotool_*.db.gz"))) == 1,
+               (r.stdout[-300:] + r.stderr[-300:]))
+    q = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "verdrahtet: alte Exportgroesse VOR dem Ersetzen gemessen, Buch und Zeile am Ende von `main`, Fehler dort bricht nichts ab",
+           "_export_alt_bytes = ziel_datei.stat().st_size" in q
+           and q.index("_export_alt_bytes = ziel_datei.stat().st_size") < q.index("ziel_tmp.replace(ziel_datei)")
+           and "print(papierkorb_zeile(papierkorb_vermerke(_eintraege)))" in q
+           and "Buchfuehrung nicht moeglich" in q, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25241,6 +25322,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "BitpandaZugang": paket_bitpanda_zugang,
           "BitpandaBestand": paket_bitpanda_bestand,
           "BitpandaCash": paket_bitpanda_cash,
+          "Papierkorb": paket_papierkorb,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

@@ -112,7 +112,8 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `ed8f10d` | **OD7-Kurse und Kursangabe** | OD7H und OD7C bekommen wieder echte Kurse (ISIN in Stuttgart statt eingefrorenem Kürzel von 2022) – Kapital rund +420 EUR, ohne Indexsprung; eine tägliche Wache meldet jede tote Kursangabe; G2X, BW, ROL in der Watchlist | 2.455-kurs-od7-gebaut | ✔ Pull + Export 15.09. fehlerfrei; ⏳ 05:30-Teil (K8) |
 | `beddca4` | **Krypto-Preisabruf** | Ein unsinnig großer CoinGecko-Wert (ETH-Volumen über 2^63) legte seit 07:49 den ganzen Krypto-Preisabruf lahm; jetzt als Kommazahl, unplausibles Volumen verworfen, jeder Coin einzeln gespeichert | 2.455-preis-ueberlauf | ✔ geprüft 15.09. 21:36: 3 Läufe 44/60, keine Fehler |
 | `f5e9990` | **Bestand über die neue Bitpanda-Schnittstelle** | Frei und gestakt je Wallet aus den Buchungen; die doppelt gezählten gestakten Mengen werden korrigiert (Kapital rund −2.440 €, ohne Indexsprung); offene Verkaufssignale gelten nur bei echtem Verkauf als umgesetzt; Mails mit Name, Wert, Status und Aktion | 2.455-bestand-neu-gebaut | ✔ Export 16.09. 19:35: 10 Änderungen wie im Trockenlauf; ⏳ Tageswert am Morgen (K10) |
-| *(nächster Commit)* | **Cash und Mailversand** | Cash gesamt, verfügbar und in offenen Orders gebunden (mit Anzahl und ältester Order); die Kaufmail sagt, ob eine Position nur mit aufgelösten Orders passt; eine gescheiterte Mail wird nach 1 Minute wiederholt und am Signal vermerkt; das Protokoll nennt jede Bestandsänderung | 2.455-cash-gebaut | ⏳ Pull ausstehend (K11) |
+| `cbc9482` | **Cash und Mailversand** | Cash gesamt, verfügbar und in offenen Orders gebunden (mit Anzahl und ältester Order); die Kaufmail sagt, ob eine Position nur mit aufgelösten Orders passt; eine gescheiterte Mail wird nach 1 Minute wiederholt und am Signal vermerkt; das Protokoll nennt jede Bestandsänderung | 2.455-cash-gebaut | ⏳ Pull 17.09., Export läuft (K11) |
+| *(nächster Commit)* | **Papierkorb-Warnung im Export** | Der Export zählt, was er in den Google-Drive-Papierkorb schiebt (alte Sicherungen, alte Exportfassungen), und warnt ab 2 GB; nach dem Leeren einmal `--papierkorb-geleert` | 2.455-drive-papierkorb | ⏳ Pull ausstehend |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -176,3 +177,11 @@ Erwartet im Log:
 - in Kaufmails: `Cash frei 0 EUR !! reicht nur, wenn Sie offene Orders aufloesen (10 Orders, 2.907 EUR gebunden, aelteste vom 04.06.)` – **richtig**, solange die Orders liegen: das verfügbare Cash plus Stablecoins liegt 81 € unter der Reserve von 2.000 €
 - am nächsten Morgen: Spalte Cash im Tageswert rund 3.467 € statt 560 €, Portfoliowert und Index **unverändert**
 - ⚠️ eine Zeile `Empfehlungsmail NICHT zugestellt` wäre ein Befund (dann steht sie auch im Export unter `bitpanda_bestand.auffaellig`)
+
+
+**Nach dem Pull von „Papierkorb-Warnung im Export“:** normaler `git pull` – **kein Neustart nötig** (nur das Exportskript). Beim nächsten Export steht am Ende einmalig `Buchfuehrung beginnt heute …`. Dann:
+
+1. drive.google.com → Papierkorb → **Papierkorb leeren**; bei `notebook_diagnose.json` → Versionen verwalten → alte Versionen löschen
+2. am Notebook einmal `python extract_notebook_diagnose.py --papierkorb-geleert`
+
+Ab dann zeigt jeder Export `Google-Drive-Papierkorb: rund X GB …`; ab 2 GB steht dort `BITTE LEEREN` mit denselben zwei Schritten.

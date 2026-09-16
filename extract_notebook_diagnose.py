@@ -237,6 +237,12 @@ from agent.portfolio_historie import pruefe_z3
 # Argumente jemand anderem und werden ignoriert.
 _EIGENER_AUFRUF = Path(sys.argv[0]).name == Path(__file__).name
 
+# `--papierkorb-geleert` (17.09.2026): VOR den Positionsargumenten herausnehmen,
+# sonst wuerde der Schalter als Symbol gelesen.
+PAPIERKORB_GELEERT = _EIGENER_AUFRUF and "--papierkorb-geleert" in sys.argv
+if PAPIERKORB_GELEERT:
+    sys.argv = [a for a in sys.argv if a != "--papierkorb-geleert"]
+
 
 def _argument(nr: int, standard):
     wert = sys.argv[nr] if len(sys.argv) > nr else None
@@ -2850,6 +2856,93 @@ DB_BACKUP_ORDNER = (
 )
 DB_BACKUP_BEHALTEN = 7
 
+# ⚠️ GOOGLE-DRIVE-PAPIERKORB (17.09.2026, Nutzermeldung ,Speicherplatz geht aus').
+#
+# Die ANZAHL der Sicherungen waechst nicht (Rotation oben, 7). Aber jede
+# rotierte Sicherung (~130 MB) landet im Drive-Papierkorb, und jeder Export
+# ueberschreibt `notebook_diagnose.json` (~270 MB) - die alte Fassung behaelt
+# Drive als Version. Beides zaehlt 30 Tage lang zum Speicher: bei drei bis vier
+# Exporten am Tag rund 1,5 GB taeglich. Den Papierkorb sieht dieses Skript
+# nicht; es fuehrt deshalb Buch ueber das, was es selbst hineinschiebt, und
+# warnt ab der Grenze. Nutzerentscheidung 17.09.: Warnung genuegt, er leert
+# manuell und meldet es mit `python extract_notebook_diagnose.py --papierkorb-geleert`.
+PAPIERKORB_PROTOKOLL = ZIEL_ORDNER.parent / "papierkorb_protokoll.json"
+PAPIERKORB_FRIST_TAGE = 30
+PAPIERKORB_WARNGRENZE_BYTES = 2 * 1024 ** 3
+
+
+def _papierkorb_lese(pfad) -> dict:
+    try:
+        with io.open(pfad, encoding="utf-8") as fh:
+            daten = json.load(fh)
+        if isinstance(daten, dict) and isinstance(daten.get("eintraege"), list):
+            return daten
+    except (OSError, ValueError):
+        pass
+    return {"geleert_am": None, "eintraege": []}
+
+
+def _papierkorb_schreibe(pfad, daten: dict) -> None:
+    pfad = Path(pfad)
+    pfad.parent.mkdir(parents=True, exist_ok=True)
+    tmp = pfad.with_name(pfad.name + ".tmp")
+    with io.open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(daten, fh, indent=1, ensure_ascii=False)
+    tmp.replace(pfad)
+
+
+def papierkorb_vermerke(eintraege, pfad=None, jetzt: datetime | None = None) -> dict:
+    """Traegt ein, was dieser Lauf in Papierkorb oder Versionen geschoben hat
+    (`eintraege` = [(art, name, bytes)]), verwirft Eintraege aelter als die
+    Drive-Frist und gibt {bytes, anzahl, warnen, geleert_am} zurueck."""
+    pfad = pfad or PAPIERKORB_PROTOKOLL
+    jetzt = jetzt or datetime.now(timezone.utc)
+    erstmals = not Path(pfad).exists()
+    daten = _papierkorb_lese(pfad)
+    grenze = jetzt - timedelta(days=PAPIERKORB_FRIST_TAGE)
+    behalten = []
+    for e in daten["eintraege"]:
+        try:
+            if datetime.fromisoformat(e["am"]) >= grenze:
+                behalten.append(e)
+        except (KeyError, TypeError, ValueError):
+            pass
+    for art, name, groesse in eintraege:
+        if groesse:
+            behalten.append({"am": jetzt.isoformat(), "art": art, "name": name, "bytes": int(groesse)})
+    daten["eintraege"] = behalten
+    _papierkorb_schreibe(pfad, daten)
+    summe = sum(int(e.get("bytes") or 0) for e in behalten)
+    return {"bytes": summe, "anzahl": len(behalten), "warnen": summe >= PAPIERKORB_WARNGRENZE_BYTES,
+            "geleert_am": daten.get("geleert_am"), "erstmals": erstmals}
+
+
+def papierkorb_geleert(pfad=None, jetzt: datetime | None = None) -> None:
+    """Der Nutzer hat Papierkorb und alte Versionen geleert - Buch neu beginnen."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    _papierkorb_schreibe(pfad or PAPIERKORB_PROTOKOLL, {"geleert_am": jetzt.isoformat(), "eintraege": []})
+
+
+def papierkorb_zeile(stand: dict) -> str:
+    gb = ("%.1f" % (stand["bytes"] / 1024 ** 3)).replace(".", ",")
+    if stand.get("geleert_am"):
+        seit = "seit dem Leeren am %s" % str(stand["geleert_am"])[:10]
+    else:
+        seit = "in den letzten %d Tagen" % PAPIERKORB_FRIST_TAGE
+    if stand.get("erstmals"):
+        # das Buch beginnt erst jetzt - was frueher hineinging, sieht es nicht
+        return ("  Google-Drive-Papierkorb: Buchfuehrung beginnt heute - fruehere Exporte sind NICHT\n"
+                "      erfasst, der Papierkorb kann schon voll sein. Bitte einmal leeren und danach:\n"
+                "      python extract_notebook_diagnose.py --papierkorb-geleert")
+    if not stand["warnen"]:
+        return ("  Google-Drive-Papierkorb: rund %s GB aus diesen Exporten %s (Grenze %d GB)"
+                % (gb, seit, PAPIERKORB_WARNGRENZE_BYTES // 1024 ** 3))
+    return ("  ⚠️⚠️ GOOGLE-DRIVE-PAPIERKORB: rund %s GB aus diesen Exporten %s - BITTE LEEREN:\n"
+            "      drive.google.com -> Papierkorb -> Papierkorb leeren, und bei notebook_diagnose.json\n"
+            "      -> Versionen verwalten -> alte Versionen loeschen. Danach einmal:\n"
+            "      python extract_notebook_diagnose.py --papierkorb-geleert"
+            % (gb, seit))
+
 
 def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
     """Konsistentes, geprueftes und rotiertes Backup der Produktiv-DB (2026-08-06).
@@ -2930,8 +3023,10 @@ def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
         vorhanden = sorted(ziel.glob("tradinginfotool_*.db.gz"))
         for alt in vorhanden[:-behalten] if behalten > 0 else []:
             try:
+                _groesse = alt.stat().st_size
                 alt.unlink()
                 ergebnis["geloescht"].append(alt.name)
+                ergebnis.setdefault("geloescht_bytes", []).append(_groesse)
             except OSError:
                 pass
         return ergebnis
@@ -2947,6 +3042,11 @@ def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
 
 
 def main() -> None:
+    if PAPIERKORB_GELEERT:
+        # nur das Buch zuruecksetzen - kein Export, keine Sicherung
+        papierkorb_geleert()
+        print(f"Papierkorb-Buch zurueckgesetzt: {PAPIERKORB_PROTOKOLL}")
+        return
     conn = db.get_connection()
     try:
         # 0) Schema aktuell halten (2026-07-20) - rein additive, idempotente
@@ -3538,6 +3638,11 @@ def main() -> None:
     # geschrieben und erst nach vollstaendigem Erfolg umbenannt. Ein
     # Fehlschlag laesst den letzten guten Export unberuehrt.
     ziel_tmp = ziel_datei.with_name(ziel_datei.name + ".tmp")
+    # alte Fassung -> Drive-Version/Papierkorb (Papierkorb-Buch, 17.09.2026)
+    try:
+        _export_alt_bytes = ziel_datei.stat().st_size
+    except OSError:
+        _export_alt_bytes = 0
     try:
         with io.open(ziel_tmp, "w", encoding="utf-8") as _fh:
             json.dump(payload, _fh, indent=2, ensure_ascii=False, default=str)
@@ -3699,6 +3804,13 @@ def main() -> None:
     else:
         print(f"  DB-Backup FEHLGESCHLAGEN: {sicherung['grund']} "
               f"- der Export ist davon unberuehrt")
+    try:
+        _eintraege = [("export_version", "notebook_diagnose.json", _export_alt_bytes)]
+        _eintraege += [("sicherung_rotiert", n, b) for n, b in
+                       zip(sicherung.get("geloescht") or [], sicherung.get("geloescht_bytes") or [])]
+        print(papierkorb_zeile(papierkorb_vermerke(_eintraege)))
+    except Exception as exc:                                   # noqa: BLE001
+        print(f"  Google-Drive-Papierkorb: Buchfuehrung nicht moeglich ({type(exc).__name__}: {exc})")
 
 
 if __name__ == "__main__":
