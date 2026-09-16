@@ -554,6 +554,9 @@ _SPOT_SIGNAL_SPALTEN = (
     # von `paket_export`s eigenem Drift-Waechter am 24.08. gemeldet, siehe
     # gleichlautender Kommentar bei _HEBEL_SIGNAL_SPALTEN.
     "einstieg_erreicht, "
+    # F5 (16.09.2026): Mailversand je Signal - am 16.09. 22:09 vom eigenen
+    # Drift-Waechter gemeldet (K11), im Abschnitt `bitpanda_bestand` nur gezaehlt.
+    "mail_versand, mail_versand_am, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 

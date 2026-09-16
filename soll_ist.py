@@ -1187,7 +1187,7 @@ REIHENFOLGE = (
             "\u26a0\ufe0f\u26a0\ufe0f NUTZERVORGABE 15.09. (Vorgabe KRYPTO-STABIL-UND-KORREKT): nach Schritt 59 "
             "ein umfangreicher Zusatzpunkt, BEVOR weitergearbeitet wird. DREI TEILE: (1) FEHLER AUS DER "
             "MESSUNG - was Schritt 59 je Strategie und Phase als falsch oder wirkungslos zeigt, wird korrigiert, "
-            "nicht nur benannt. (2) FEHLER AUS DEM BETRIEB, schon bekannt: → NUTZERENTSCHEIDUNG 16.09. (1a): wird SOFORT mit Stufe 1.3 von Schritt 61 behoben, nicht erst hier - 2.455-mail-verloren (Versand ohne Auswertung, Wiederholung und Vermerk - eine Empfehlungsmail ging am 16.09. still verloren, die Kettenzeile meldete sie als verschickt); 2.455-hebel-nachkaufen (ein Hebel-"
+            "nicht nur benannt. (2) FEHLER AUS DEM BETRIEB, schon bekannt: → NUTZERENTSCHEIDUNG 16.09. (1a): wird SOFORT mit Stufe 1.3 von Schritt 61 behoben, nicht erst hier - 2.455-mail-verloren (Versand ohne Auswertung, Wiederholung und Vermerk - eine Empfehlungsmail ging am 16.09. still verloren, die Kettenzeile meldete sie als verschickt) - BEHOBEN UND AM NOTEBOOK BESTAETIGT 16.09. 22:09 (K11); NEU 16.09.: 2.454-vix erweitert (yfinance-Vollhistorie ^GSPC, ^IXIC, ^VIX scheitert wiederholt, Folge fuer Drawdown- und Makrofakten ungeprueft - Voranalyse); 2.455-hebel-nachkaufen (ein Hebel-"
             "Einstieg heisst NACHKAUFEN, weil ein Spot-Bestand da ist - fachlich eine neue Position, 7c); die "
             "Rollen-Kette schreibt fuer alles strategie `einstieg`, Einstieg, Fuehrung und Ausstieg sind in den "
             "Daten nicht getrennt (2.455-hebelsignale); was aus Schritt 55 und 56 dann noch offen ist. (3) "
