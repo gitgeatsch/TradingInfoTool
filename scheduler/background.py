@@ -2027,13 +2027,17 @@ def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
         # Katalog wird nur noch fuer den alten Weg geholt.
         result = bestandsabgleich(conn, api_key, listed_assets_holen=get_listed_assets,
                                   melden=_melde_bitpanda_bestand)
-        logger.info(
-            "Bitpanda-Bestandsabgleich: %d aktualisiert (%d Zuwächse, %d automatisch "
-            "bestätigte Rückgänge, %d Rückgänge weiterhin bestätigungspflichtig, "
-            "Staking-Verifikation: %s)",
-            result.synced_count, len(result.updated_holdings), len(result.auto_confirmed_decreases),
-            len(result.decreased_holdings_needs_confirmation), result.staking_verified,
-        )
+        # ⚠️ F6 (16.09.2026, 2.455-bestand-protokoll): der NEUE Abgleich schreibt
+        # sein Protokoll selbst (`bitpanda_bestand._protokoll`). Die Zeile unten
+        # gehoert dem ALTEN Weg - sie nannte beim neuen jede Aenderung ,Zuwachs'.
+        if not hasattr(result, "meldungen"):
+            logger.info(
+                "Bitpanda-Bestandsabgleich: %d aktualisiert (%d Zuwächse, %d automatisch "
+                "bestätigte Rückgänge, %d Rückgänge weiterhin bestätigungspflichtig, "
+                "Staking-Verifikation: %s)",
+                result.synced_count, len(result.updated_holdings), len(result.auto_confirmed_decreases),
+                len(result.decreased_holdings_needs_confirmation), result.staking_verified,
+            )
         if result.decreased_holdings_needs_confirmation:
             symbole = ", ".join(c.symbol for c in result.decreased_holdings_needs_confirmation)
             _notify_job_failure(

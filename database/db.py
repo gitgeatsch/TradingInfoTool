@@ -1037,6 +1037,35 @@ def _migrate_signal_re_evaluierung_faellig_column(conn: sqlite3.Connection) -> N
     conn.commit()
 
 
+# Mailversand je Signal (16.09.2026, Befund 2.455-mail-verloren, Nutzerentscheidung
+# 1a/F5): `zugestellt` oder `nicht_zugestellt`, NULL = kein Versand versucht
+# (probe, unterdrueckt, Mail aus). Am 16.09. 06:51 ging eine REDUZIEREN-Mail
+# verloren, und nichts im System wusste davon.
+_SIGNAL_MAIL_VERSAND_NEW_COLUMNS = {"mail_versand": "TEXT", "mail_versand_am": "TEXT"}
+
+
+def _migrate_signal_mail_versand(conn: sqlite3.Connection) -> None:
+    """Additiv und wiederholbar."""
+    existing = {row["name"] if isinstance(row, sqlite3.Row) else row[1]
+                for row in conn.execute("PRAGMA table_info(signals)")}
+    for column, sql_type in _SIGNAL_MAIL_VERSAND_NEW_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE signals ADD COLUMN {column} {sql_type}")
+    conn.commit()
+
+
+def set_signal_mail_versand(conn: sqlite3.Connection, signal_id, zugestellt) -> None:
+    """Vermerk am Signal. `zugestellt` None heisst: unbekannt (z.B. ein
+    Versandweg ohne Rueckgabewert) - dann wird NICHTS geschrieben, statt
+    ,zugestellt' zu behaupten."""
+    if signal_id is None or zugestellt is None:
+        return
+    _migrate_signal_mail_versand(conn)
+    conn.execute("UPDATE signals SET mail_versand = ?, mail_versand_am = ? WHERE id = ?",
+                 ("zugestellt" if zugestellt else "nicht_zugestellt", _now_iso(), signal_id))
+    conn.commit()
+
+
 _HEBEL_SIGNAL_LLM_HALTEN_NEW_COLUMNS = {"ist_reines_llm_halten": "INTEGER", "original_action": "TEXT"}
 
 
@@ -1591,6 +1620,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     _migrate_signal_veto_shadow_columns(conn)
     _migrate_hebel_signal_veto_shadow_columns(conn)
     _migrate_signal_llm_halten_column(conn)
+    _migrate_signal_mail_versand(conn)
     _migrate_hebel_signal_llm_halten_column(conn)
     _migrate_signal_re_evaluierung_faellig_column(conn)
     _migrate_signal_selbst_halten_columns(conn)

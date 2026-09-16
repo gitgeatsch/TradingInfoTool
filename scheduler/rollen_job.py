@@ -306,6 +306,16 @@ def betriebsart_aus_config(config: dict | None = None) -> str:
     return wert
 
 
+# Abstand vor dem zweiten Versuch (16.09.2026, 2.455-mail-verloren).
+VERSAND_WIEDERHOLEN_SEKUNDEN = 60
+
+
+def _warte(sekunden: float) -> None:
+    """Eigene Stelle, damit die Pruefsuite nicht eine Minute wartet."""
+    import time as _t
+    _t.sleep(sekunden)
+
+
 def baue_versand(config: dict | None = None):
     """Der Versandweg - oder `None`, wenn nicht verschickt werden soll.
 
@@ -349,12 +359,28 @@ def baue_versand(config: dict | None = None):
 
         VORGABEWERT None, damit jeder bestehende Aufruf unveraendert
         weiterlaeuft: der Verkaufs-Sammelversand schickt bewusst kein Bild."""
-        try:
-            return bool(send_notification_email(betreff, text, empfaenger,
-                                                inline_images=bilder or None))
-        except Exception:                                    # noqa: BLE001
-            logger.exception("Versand fehlgeschlagen: %s", betreff)
-            return False
+        # ⚠️⚠️ EINMAL WIEDERHOLEN, DANN LAUT (16.09.2026, Befund
+        # 2.455-mail-verloren). Am 16.09. 06:51 scheiterte der Aufbau zum
+        # Mailserver waehrend einer kurzen Netzstoerung - die REDUZIEREN-Mail
+        # fuer OD7N/OD7H ging verloren, die Kette meldete ,1 Mails'. Eine
+        # Minute Abstand ueberbrueckt eine solche Stoerung; bleibt es beim
+        # Fehlschlag, steht er als ERROR mit Betreff im Log, und der Aufrufer
+        # bekommt False (Vermerk am Signal, Zaehlung im Lauf).
+        for versuch in (1, 2):
+            try:
+                if send_notification_email(betreff, text, empfaenger,
+                                           inline_images=bilder or None):
+                    if versuch == 2:
+                        logger.info("Mail im zweiten Versuch zugestellt: %s", betreff)
+                    return True
+            except Exception:                                # noqa: BLE001
+                logger.exception("Versand fehlgeschlagen: %s", betreff)
+            if versuch == 1:
+                logger.warning("Mail nicht zugestellt, neuer Versuch in %d s: %s",
+                               VERSAND_WIEDERHOLEN_SEKUNDEN, betreff)
+                _warte(VERSAND_WIEDERHOLEN_SEKUNDEN)
+        logger.error("Empfehlungsmail NICHT zugestellt (zwei Versuche): %s", betreff)
+        return False
 
     return versand
 
@@ -486,10 +512,11 @@ def fuehre_bereich(
     anker = ergebnis.get("ankertag") or {}
     logger.info(
         "Rollen-Kette %s/%s (%s): Ankertag %s (%s von %s gedeckt), "
-        "%s Signale, %s Mails, %s Fehler",
+        "%s Signale, %s Mails (%s zugestellt, %s NICHT zugestellt), %s Fehler",
         gruppe, instrument, betriebsart, anker.get("tag"),
         anker.get("gedeckt"), anker.get("gesamt"), len(ergebnis["signale"]),
-        len(ergebnis["mails"]), len(ergebnis["fehler"]))
+        len(ergebnis["mails"]), len(ergebnis.get("mails_zugestellt") or []),
+        len(ergebnis.get("mails_nicht_zugestellt") or []), len(ergebnis["fehler"]))
     if d is not None:
         # DIE DURCHLAESSIGKEIT INS LOG, nicht nur in die Tabelle. Wer morgens
         # nachsieht, warum nichts kam, soll es an einer Zeile erkennen.

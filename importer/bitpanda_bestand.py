@@ -33,12 +33,25 @@ DIE ENTSCHEIDUNGEN DES NUTZERS (16.09.2026), und wo sie im Code stehen:
   E13 Positionen ohne Watchlist-Eintrag und andere Auffaelligkeiten kommen als
       Mail MIT NAME, WERT, STATUS UND ERFORDERLICHER AKTION -> `Meldung`
 
-CASH bleibt in diesem Schritt beim alten Abgleich (`sync_fiat_cash_from_bitpanda`);
-die neue Cash-Logik ist Stufe 1.3.
+CASH (Stufe 1.3, Nutzerentscheidungen F1-F4 vom 16.09.2026) -> `cash_abgleich`:
+  F1  der HEBEL rechnet weiter mit dem Kapital OHNE Cash (P-5 vom 11.09.); Cash
+      wirkt auf die Einsatzgrenze und die Mailzeile, dazu die Anzeige
+  F2  `cash_reserve_fiat_eur` behaelt seine Bedeutung VERFUEGBAR (so hat ihn der
+      alte Abgleich schon befuellt: 659,99 EUR = available) - keiner seiner Leser
+      wird umgedeutet; NEU daneben gesamt, gebunden, Orders, aelteste Order
+  F3  den gebundenen BETRAG liefert die Public API (gesamt - verfuegbar); Anzahl,
+      Kaufbetrag und aelteste Order kommen aus Fusion (`FUSION_API_KEY`) - faellt
+      Fusion aus, bleibt der Betrag richtig und nur die Details fehlen
+  F4  die Mailzeile unterscheidet drei Faelle (`entscheidungsrechnung.saetze`)
+
+PROTOKOLL (F6, Befund 2.455-bestand-protokoll): jede Aenderung, jeder
+Schutzhinweis und die Cash-Lage stehen im Log - am Notebook war nach dem ersten
+Lauf nicht nachzulesen, ob E10 gegriffen hatte.
 """
 from __future__ import annotations
 
 import logging
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -51,7 +64,6 @@ from importer.bitpanda_sync import (
     PlausibleSignalMatch,
     _KAUF_AKTIONEN,
     _VERKAUF_AKTIONEN,
-    sync_fiat_cash_from_bitpanda,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,6 +95,13 @@ META_BUCHUNGEN_STAND = "bitpanda_buchungen_stand"
 # Positionen unter diesem Wert heissen ,Staub' (Belohnungsreste wie SPACE mit
 # 0,03 EUR) - sie stehen im Log, bekommen aber keine Mail.
 STAUB_EUR = 1.0
+# F2/F3 - die neuen Cash-Schluessel neben `cash_reserve_fiat_eur` (= verfuegbar).
+META_CASH_GESAMT = "cash_gesamt_eur"
+META_CASH_GEBUNDEN = "cash_gebunden_eur"
+META_CASH_ORDERS = "cash_orders_anzahl"
+META_CASH_ORDERS_EUR = "cash_orders_kauf_eur"
+META_CASH_AELTESTE = "cash_aelteste_order"
+META_CASH_DETAILS = "cash_details_quelle"      # fusion | differenz
 _ISIN = re.compile(r"^([A-Z]{2}[A-Z0-9]{9}[0-9])(\.|$)")
 _EPS = 1e-9
 
@@ -106,7 +125,7 @@ class Meldung:
 def _eur(x: float | None) -> str:
     if x is None:
         return "unbekannt"
-    return ("%.2f EUR" % x).replace(".", ",")
+    return ("{:,.2f} EUR".format(x)).replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 def _menge(x: float) -> str:
@@ -332,8 +351,9 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
             db.update_holding_staked_quantity(conn, intern, neu_gestakt)
             result.synced_count += 1
             result.updated_holdings.append(
-                "%s: frei %s -> %s, gestakt %s -> %s" % (intern, _menge(alt_frei), _menge(neu_frei),
-                                                        _menge(alt_gestakt), _menge(neu_gestakt)))
+                "%s: frei %s -> %s, gestakt %s -> %s (%s)"
+                % (intern, _menge(alt_frei), _menge(neu_frei), _menge(alt_gestakt), _menge(neu_gestakt),
+                   _art(alt_frei, neu_frei, alt_gestakt, neu_gestakt)))
             _signale(conn, result, intern, aid, alt_frei + alt_gestakt, neu_frei + neu_gestakt, vorgaenge)
 
     # E11 - verschwundene Positionen
@@ -343,12 +363,14 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
         logger.info("Bitpanda-Bestand (neu): Antwort nicht vollstaendig - verschwundene Positionen "
                     "werden in diesem Lauf nicht auf 0 gesetzt")
 
-    # Cash bleibt bis Stufe 1.3 beim alten Weg
-    cash = sync_fiat_cash_from_bitpanda(conn, api_key)
-    result.cash_reserve_updated, result.cash_reserve_old_eur, result.cash_reserve_new_eur = (
-        cash.updated, cash.old_eur, cash.new_eur)
+    # Cash (Stufe 1.3, F1-F4)
+    cash = cash_abgleich(conn, fiat, _fusion_schluessel())
+    result.cash_reserve_updated = cash["geaendert"]
+    result.cash_reserve_old_eur, result.cash_reserve_new_eur = cash["alt_verfuegbar"], cash["verfuegbar"]
+    result.cash = cash  # type: ignore[attr-defined]
 
     db.set_bitpanda_holdings_synced_at(conn, datetime.now(timezone.utc).isoformat())
+    _protokoll(result, cash)
     for m in meldungen:
         if melden is not None:
             try:
@@ -357,6 +379,89 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
                 logger.exception("Meldung %s nicht verschickt", m.schluessel)
     result.meldungen = meldungen  # type: ignore[attr-defined]
     return result
+
+
+def _art(alt_frei, neu_frei, alt_gestakt, neu_gestakt) -> str:
+    """F6: WAS sich geaendert hat - der alte Abgleich nannte jede Aenderung ,Zuwachs'."""
+    summe = (neu_frei + neu_gestakt) - (alt_frei + alt_gestakt)
+    if _stimmt(alt_frei + alt_gestakt, neu_frei + neu_gestakt):
+        return "Umbuchung frei/gestakt"
+    if _stimmt(alt_frei, neu_frei):
+        return "gestakt %s" % ("Zuwachs" if summe > 0 else "Rueckgang")
+    return "Zuwachs" if summe > 0 else "Rueckgang"
+
+
+def _fusion_schluessel() -> str | None:
+    """Der Fusion-Leseschluessel aus der Umgebung (main.py laedt die .env)."""
+    return os.environ.get("FUSION_API_KEY") or None
+
+
+def cash_abgleich(conn, fiat: dict, fusion_key: str | None = None) -> dict:
+    """F1-F3: Cash gesamt, verfuegbar und gebunden speichern.
+
+    Fehlt die EUR-Zeile, wird NICHTS geschrieben (E2 - der letzte gute Stand
+    bleibt) und ein Hinweis zurueckgegeben."""
+    aus = {"geaendert": False, "alt_verfuegbar": db.get_cash_reserve_fiat_eur(conn),
+           "verfuegbar": None, "gesamt": None, "gebunden": None, "orders": None,
+           "orders_eur": None, "aelteste": None, "details": None, "hinweis": None}
+    eur = (fiat or {}).get(BP.EUR_WAEHRUNG_ID)
+    if not eur:
+        aus["hinweis"] = "keine EUR-Zeile in der Antwort - Cash nicht aktualisiert"
+        logger.warning("Bitpanda-Cash (neu): %s", aus["hinweis"])
+        return aus
+    gesamt, verfuegbar = float(eur[0]), float(eur[1])
+    gebunden = round(max(0.0, gesamt - verfuegbar), 2)
+    aus.update(gesamt=round(gesamt, 2), verfuegbar=round(verfuegbar, 2), gebunden=gebunden)
+    aus["geaendert"] = not _stimmt(aus["alt_verfuegbar"] or 0.0, verfuegbar)
+    jetzt = datetime.now(timezone.utc).isoformat()
+    db.set_cash_reserve_fiat_eur(conn, round(verfuegbar, 2))
+    db.set_cash_reserve_synced_at(conn, jetzt)
+    db.set_meta_wert(conn, META_CASH_GESAMT, "%.2f" % gesamt)
+    db.set_meta_wert(conn, META_CASH_GEBUNDEN, "%.2f" % gebunden)
+    details = "differenz"
+    orders = orders_eur = aelteste = None
+    if fusion_key and gebunden > 0:
+        try:
+            from api.bitpanda_fusion import offene_orders
+            o = offene_orders(fusion_key)
+            orders, orders_eur, aelteste, details = o.anzahl, o.kauf_eur, o.aelteste, "fusion"
+        except Exception as exc:                                 # noqa: BLE001
+            logger.warning("Bitpanda-Cash (neu): Fusion-Orders nicht lesbar - Betrag aus der "
+                           "Public API, ohne Details: %s", exc)
+    elif gebunden > 0:
+        logger.info("Bitpanda-Cash (neu): kein FUSION_API_KEY - gebundener Betrag ohne Orderdetails")
+    for key, wert in ((META_CASH_ORDERS, orders), (META_CASH_ORDERS_EUR, orders_eur),
+                      (META_CASH_AELTESTE, aelteste)):
+        db.set_meta_wert(conn, key, "" if wert is None else str(wert))
+    db.set_meta_wert(conn, META_CASH_DETAILS, details)
+    aus.update(orders=orders, orders_eur=orders_eur, aelteste=aelteste, details=details)
+    return aus
+
+
+def _protokoll(result, cash: dict) -> None:
+    """F6: der Lauf steht vollstaendig im Log - Zusammenfassung, jede Aenderung,
+    jede bestaetigte oder geschuetzte Signal-Umsetzung, die Cash-Lage."""
+    logger.info(
+        "Bitpanda-Bestandsabgleich (neu): %d Aenderung(en), %d Signal(e) als umgesetzt bestaetigt, "
+        "%d Hinweis(e), %d Position(en) ohne Watchlist, %d unklar",
+        result.synced_count, len(result.auto_confirmed_decreases), len(result.warnings),
+        len(result.unmatched_bitpanda_symbols), len(result.stale_bitpanda_sync_symbols))
+    for z in result.updated_holdings:
+        logger.info("Bitpanda-Bestand (neu): Aenderung %s", z)
+    for z in result.auto_confirmed_decreases:
+        logger.info("Bitpanda-Bestand (neu): Signal bestaetigt - %s", z)
+    for z in result.warnings:
+        if "NICHT als umgesetzt" in z:
+            logger.info("Bitpanda-Bestand (neu): Schutz E10 - %s", z)
+    for z in result.stale_bitpanda_sync_symbols:
+        logger.info("Bitpanda-Bestand (neu): unklar - %s", z)
+    if cash.get("verfuegbar") is not None:
+        logger.info(
+            "Bitpanda-Cash (neu): verfuegbar %s, gesamt %s, gebunden %s%s",
+            _eur(cash["verfuegbar"]), _eur(cash["gesamt"]), _eur(cash["gebunden"]),
+            (" in %s Orders (Kauf %s, aelteste %s)" % (cash["orders"], _eur(cash["orders_eur"]),
+                                                       str(cash["aelteste"] or "-")[:10])
+             if cash.get("details") == "fusion" else " (ohne Orderdetails)"))
 
 
 def _signale(conn, result, intern, aid, alt_summe, neu_summe, vorgaenge) -> None:

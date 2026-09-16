@@ -773,6 +773,7 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
            instrument: str = "spot", betrag_wunsch_eur: float | None = None,
            topf_frei_eur: float | None = None,
            cash_frei_eur: float | None = None,
+           cash_lage: dict | None = None,
            umgeworfen_preis_eur: float | None = None,
            umgeworfen_tage: int | None = None,
            widerstand: tuple[float, int] | None = None,
@@ -944,6 +945,20 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
     if cash_frei_eur is not None:
         e["cash_frei_eur"] = round(float(cash_frei_eur), 2)
         e["cash_wuerde_ueberschreiten"] = betrag > float(cash_frei_eur)
+        # F4 (16.09.2026): das in offenen Orders GEBUNDENE Cash. Nur Information
+        # fuer die Mailzeile - wie das freie Cash begrenzt es nichts.
+        if cash_lage and cash_lage.get("gebunden_eur") is not None:
+            _geb = float(cash_lage["gebunden_eur"])
+            e["cash_gebunden_eur"] = round(_geb, 2)
+            e["cash_orders_anzahl"] = cash_lage.get("orders_anzahl")
+            e["cash_aelteste_order"] = cash_lage.get("aelteste_order")
+            # ungedeckelt: liegt das verfuegbare Cash UNTER der Reserve, deckt
+            # ein Teil der aufgeloesten Orders erst die Reserve (Livetest 16.09.)
+            e["cash_frei_ungedeckelt_eur"] = round(float(cash_lage.get(
+                "frei_ungedeckelt_eur", cash_frei_eur)), 2)
+            e["cash_reicht_mit_orders"] = betrag <= e["cash_frei_ungedeckelt_eur"] + _geb
+            _alter = cash_lage.get("alter_stunden")
+            e["cash_stand_alt"] = bool(_alter is not None and _alter > CASH_STAND_WARNGRENZE_STUNDEN)
     if betrag > GRENZEN["betrag_max_eur"]:
         betrag, grund = GRENZEN["betrag_max_eur"], "Hoechstbetrag"
     # DIE ABSTUFUNG DARF NICHT ZUM STILLEN FILTER WERDEN (14.08.2026).
@@ -1183,6 +1198,18 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
 
     e["betrag_eur"] = round(betrag, 0)
     e["betrag_gedeckelt_durch"] = grund
+    # TOPF- UND CASH-HINWEIS GEGEN DEN ENDBETRAG (16.09.2026, Livetest 1.3).
+    # Oben wurden sie vor Hoechstbetrag und CRV-Abstufung gesetzt - bei 9.000 EUR
+    # Wunsch stand ,reicht nicht - auch mit aufgeloesten Orders' unter einem
+    # empfohlenen Betrag von 1.000 EUR, der in 2.907 EUR gebundenes Cash passt.
+    # Nur Mailtext, keine Rechnung liest die Felder.
+    if "topf_frei_eur" in e:
+        e["topf_wuerde_ueberschreiten"] = betrag > e["topf_frei_eur"]
+    if "cash_frei_eur" in e:
+        e["cash_wuerde_ueberschreiten"] = betrag > e["cash_frei_eur"]
+        if "cash_gebunden_eur" in e:
+            e["cash_reicht_mit_orders"] = betrag <= (e.get("cash_frei_ungedeckelt_eur", e["cash_frei_eur"])
+                                                     + e["cash_gebunden_eur"])
     # DAS RISIKO ERST JETZT, NACH ALLEN DECKELN (14.08.).
     #
     # Die erste Fassung rechnete es aus dem Betrag VOR der CRV-Abstufung: in
@@ -1331,6 +1358,43 @@ def marken_saetze(e: dict, marken: list | None,
                     if m.get("letzte_beruehrung") else "")
                  + (" - seither durchbrochen" if m.get("gefegt") else ""))
     return z + list(_MARKEN_ERKLAERUNG)
+
+
+# F4/A1 (16.09.2026): aelter als das, und die Cash-Warnung verliert ihr `!!` -
+# ein Stand von gestern ist kein Grund fuer den Kopf der Mail.
+CASH_STAND_WARNGRENZE_STUNDEN = 6.0
+
+
+def cash_zeile(e: dict) -> str:
+    """F4 (Nutzerentscheidung 16.09.2026): die Cash-Zeile in DREI Faellen.
+
+      1  der Betrag passt ins freie Cash      -> Zeile ohne `!!`, gebundenes als Info
+      2  er passt nur mit aufgeloesten Orders  -> `!!` mit Anzahl, Betrag, aeltester Order
+      3  er passt auch dann nicht             -> Hinweis OHNE `!!` - Orders aufloesen
+                                               aendert daran nichts
+    Ist der Stand aelter als 6 Stunden (A1), entfaellt das `!!` in Fall 2.
+
+    ⚠️ ANLASS: ,Cash frei 69 EUR !! reicht fuer diese Position nicht' stand in
+    praktisch jeder Kaufmail (Befund 2.453-alterlos, Entscheidung C3) - obwohl
+    2.907 EUR in offenen Orders lagen, die der Nutzer jederzeit aufloesen kann."""
+    frei = float(e["cash_frei_eur"])
+    geb = float(e.get("cash_gebunden_eur") or 0.0)
+    kopf = "Cash frei       %s EUR" % _eur(frei)
+    if not e.get("cash_wuerde_ueberschreiten"):
+        return kopf + ("   (dazu %s EUR in offenen Orders)" % _eur(geb) if geb > 0 else "")
+    if e.get("cash_reicht_mit_orders"):
+        teile = []
+        if e.get("cash_orders_anzahl"):
+            teile.append("%s Orders" % e["cash_orders_anzahl"])
+        teile.append("%s EUR gebunden" % _eur(geb))
+        if e.get("cash_aelteste_order"):
+            d = str(e["cash_aelteste_order"])[:10]
+            teile.append("aelteste vom %s.%s." % (d[8:10], d[5:7]))
+        alt = e.get("cash_stand_alt")
+        return (kopf + "   " + ("" if alt else "!! ")
+                + "reicht nur, wenn Sie offene Orders aufloesen (%s)" % ", ".join(teile)
+                + (" - Stand aelter als 6 Stunden" if alt else ""))
+    return kopf + "   reicht nicht - auch mit aufgeloesten Orders (%s EUR gebunden) nicht" % _eur(geb)
 
 
 def saetze(e: dict, marken: list | None = None,
@@ -1509,7 +1573,9 @@ def saetze(e: dict, marken: list | None = None,
         lage.append(f"Im Topf frei    {_eur(e['topf_frei_eur'])} EUR"
                     + ("   !! diese Position wuerde ihn ueberschreiten"
                        if e.get("topf_wuerde_ueberschreiten") else ""))
-    if e.get("cash_frei_eur") is not None:
+    if e.get("cash_frei_eur") is not None and "cash_gebunden_eur" in e:
+        lage.append(cash_zeile(e))
+    elif e.get("cash_frei_eur") is not None:
         lage.append(f"Cash frei       {_eur(e['cash_frei_eur'])} EUR"
                     + ("   !! reicht fuer diese Position nicht"
                        if e.get("cash_wuerde_ueberschreiten") else ""))

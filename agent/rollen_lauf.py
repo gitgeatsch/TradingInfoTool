@@ -986,8 +986,15 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                     {"symbol": "(Hebel)", "betreff": _hf_mail[0],
                      "text": _hf_mail[1], "seite": "hebelfuehrung"})
                 if betriebsart == SCHARF and versand is not None:
-                    versand(*_hf_mail)
-                    _HF.vermerke(conn, _neu_hf)
+                    # ⚠️ NUR BEI ZUSTELLUNG VERMERKEN (16.09.2026,
+                    # 2.455-mail-verloren): `vermerke` markiert die Zustaende
+                    # als ,heute gemeldet' - nach einem gescheiterten Versand
+                    # kaeme die Meldung sonst erst morgen wieder.
+                    # `None` (Versandweg ohne Rueckgabe) gilt als zugestellt.
+                    _ok_hf = versand(*_hf_mail)
+                    _zaehle_versand(ergebnis, _hf_mail[0], _ok_hf)
+                    if _ok_hf is not False:
+                        _HF.vermerke(conn, _neu_hf)
         except Exception as _hfx:                            # noqa: BLE001
             ergebnis.setdefault("fehler", []).append(
                 f"Hebelfuehrung uebersprungen: {type(_hfx).__name__}: {_hfx}")
@@ -1042,7 +1049,7 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         _mailt = ((config or {}).get("rollen_kette") or {}).get(
             "verkauf_mailt", True)
         if betriebsart == SCHARF and versand is not None and _mailt:
-            versand(*_sammel)
+            _zaehle_versand(ergebnis, _sammel[0], versand(*_sammel))
         elif betriebsart == SCHARF and not _mailt:
             ergebnis["verkauf_nicht_gemailt"] = len(
                 ergebnis.get("ausstiege") or [])
@@ -1076,6 +1083,10 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
             durchlauf.gegenpruefung_entfaellt("ohne Antwort")
         if zweite:
             ZM.schreibe(conn, kennung, zweite)
+        # F5 (16.09.2026): der Vermerk am Signal wird HIER geschrieben, im
+        # Hauptfaden - der Nebenfaden hat keine Datenbankverbindung.
+        if "zugestellt" in eintrag:
+            _vermerke_versand(conn, kennung, ergebnis, eintrag)
 
     # DER ERSATZ FUER DIE BREMSE, LAUFUEBERGREIFEND (23.08.2026).
     #
@@ -1919,6 +1930,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # RM-4: was nach der Reserve ueberhaupt noch einsetzbar ist. Im
     # Trockenlauf None - er hat keine Verbindung zu einer echten Lage.
     cash_frei = TO.cash_frei_eur(conn, config) if betriebsart != TROCKEN else None
+    # F4 (16.09.2026): dazu das in offenen Orders gebundene Cash - nur fuer die Mailzeile.
+    cash_lage = TO.cash_lage(conn, config) if betriebsart != TROCKEN else None
     # ⚠️ DER TOPF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026).
     #
     # Vorher stand hier `instrument` - also das Etikett des LAUFS. Seit S5
@@ -2217,6 +2230,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                                      instrument, strategie, config,
                                      assetklasse)),
                              topf_frei_eur=frei, cash_frei_eur=cash_frei,
+                             cash_lage=cash_lage,
                              umgeworfen_preis_eur=befund.get("umgeworfen_preis_eur"),
                              # DIE RICHTUNG KOMMT VOM MODELL (Paket 13) und
                              # dreht Stop, Ziel und Liquidation. Bei Spot gibt
@@ -3090,16 +3104,17 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # Gegenpruefungszeilen als gar nicht.
         if (betriebsart == SCHARF and versand is not None
                 and _mail_erlaubt):
-            versand(eintrag["betreff"], eintrag["text"],
-                    eintrag.get("bilder"))
+            eintrag["zugestellt"] = versand(eintrag["betreff"], eintrag["text"],
+                                            eintrag.get("bilder"))
 
     if zai_client is None:
         # Nichts zu warten - dann auch kein Faden. Ein Thread, der sofort
         # zurueckkehrt, ist nur Verwaltung.
         if (betriebsart == SCHARF and versand is not None
                 and _mail_erlaubt):
-            versand(eintrag["betreff"], eintrag["text"],
-                    eintrag.get("bilder"))
+            eintrag["zugestellt"] = versand(eintrag["betreff"], eintrag["text"],
+                                            eintrag.get("bilder"))
+            _vermerke_versand(conn, signal_id, ergebnis, eintrag)
     else:
         import threading
 
@@ -3271,6 +3286,28 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
     except Exception as exc:                                 # noqa: BLE001
         ergebnis.setdefault("fehler", []).append(
             f"{symbol}: Ausstiegszeile nicht geschrieben: {exc}")
+
+
+def _zaehle_versand(ergebnis: dict, betreff: str, zugestellt) -> None:
+    """F5 (16.09.2026): zaehlt ZUGESTELLTE und NICHT zugestellte Mails getrennt -
+    `ergebnis["mails"]` zaehlt die ERZEUGTEN (Befund 2.455-mail-verloren: dort
+    stand ,1 Mails', obwohl sie nie ankam). `None` = unbekannt, nicht gezaehlt."""
+    if zugestellt is True:
+        ergebnis.setdefault("mails_zugestellt", []).append(betreff)
+    elif zugestellt is False:
+        ergebnis.setdefault("mails_nicht_zugestellt", []).append(betreff)
+
+
+def _vermerke_versand(conn, signal_id, ergebnis: dict, eintrag: dict) -> None:
+    """Zaehlen und am Signal vermerken - fail-soft, ein Vermerk darf den Lauf
+    nicht beenden."""
+    zugestellt = eintrag.get("zugestellt")
+    _zaehle_versand(ergebnis, eintrag.get("betreff"), zugestellt)
+    try:
+        from database import db as _DBv
+        _DBv.set_signal_mail_versand(conn, signal_id, zugestellt)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Mailvermerk fuer Signal %s nicht geschrieben", signal_id)
 
 
 def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,

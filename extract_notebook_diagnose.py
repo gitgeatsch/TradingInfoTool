@@ -1636,6 +1636,55 @@ def _hebel_abgleich(conn) -> dict:
     return aus
 
 
+def _bitpanda_bestand(conn) -> dict:
+    """Neuer Bitpanda-Abgleich und Mailversand (16.09.2026, Befunde
+    2.455-bestand-protokoll und 2.455-mail-verloren).
+
+    Die Tabellen `bitpanda_wallet_saldo` und `bitpanda_katalog` standen nach dem
+    Pull als ,nicht_erwaehnt' im Export - Salden und Buchungsstand waren von
+    aussen nicht pruefbar. Dazu die Cash-Lage (F2/F3) und die Zustellung der
+    Empfehlungsmails der letzten drei Tage (F5)."""
+    import config as _cfg
+
+    def meta(k):
+        r = conn.execute("SELECT value FROM meta WHERE key = ?", (k,)).fetchone()
+        return r[0] if r else None
+    aus = {"quelle": _cfg.bitpanda_bestand_quelle(),
+           "buchungen_stand": meta("bitpanda_buchungen_stand"),
+           "abgleich_stand": meta("bitpanda_holdings_synced_at"), "auffaellig": []}
+    try:
+        aus["salden_je_wallet"] = [
+            {"wallet": r[0], "zeilen": r[1], "assets_mit_saldo": r[2]}
+            for r in conn.execute(
+                "SELECT wallet_owner, COUNT(*), SUM(CASE WHEN ABS(saldo) > 1e-9 THEN 1 ELSE 0 END) "
+                "FROM bitpanda_wallet_saldo GROUP BY wallet_owner ORDER BY wallet_owner")]
+        k = conn.execute("SELECT COUNT(*), MAX(geholt_am) FROM bitpanda_katalog").fetchone()
+        aus["katalog"] = {"eintraege": k[0], "stand": k[1]}
+    except Exception as exc:                                 # noqa: BLE001
+        aus["salden_je_wallet"] = {"nicht_lesbar": str(exc)}
+    aus["cash"] = {k: meta(k) for k in ("cash_reserve_fiat_eur", "cash_gesamt_eur", "cash_gebunden_eur",
+                                         "cash_orders_anzahl", "cash_orders_kauf_eur",
+                                         "cash_aelteste_order", "cash_details_quelle",
+                                         "cash_reserve_synced_at")}
+    try:
+        seit = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+        aus["mailversand_3_tage"] = {
+            (r[0] or "ohne_versuch"): r[1] for r in conn.execute(
+                "SELECT mail_versand, COUNT(*) FROM signals WHERE created_at > ? GROUP BY mail_versand",
+                (seit,))}
+        aus["nicht_zugestellt"] = [
+            {"id": r[0], "symbol": r[1], "action": r[2], "created_at": r[3], "vermerkt": r[4]}
+            for r in conn.execute(
+                "SELECT id, symbol, action, created_at, mail_versand_am FROM signals "
+                "WHERE mail_versand = 'nicht_zugestellt' AND created_at > ? ORDER BY created_at", (seit,))]
+        for r in aus["nicht_zugestellt"]:
+            aus["auffaellig"].append("Mail NICHT zugestellt: %s %s vom %s"
+                                     % (r["symbol"], r["action"], str(r["created_at"])[:16]))
+    except Exception as exc:                                 # noqa: BLE001
+        aus["mailversand_3_tage"] = {"nicht_lesbar": str(exc)}
+    return aus
+
+
 def _externe_reihen(conn) -> dict:
     """Sind die Fremdquellen der Rolle G aktuell? (2026-08-16, Schritt 3+4)
 
@@ -3101,6 +3150,11 @@ def main() -> None:
             hebel_abgleich = _hebel_abgleich(conn)
         except Exception as exc:  # noqa: BLE001
             hebel_abgleich = {"nicht_verfuegbar": str(exc)}
+        # 2.455-bestand-protokoll / 2.455-mail-verloren (16.09.2026)
+        try:
+            bitpanda_bestand = _bitpanda_bestand(conn)
+        except Exception as exc:  # noqa: BLE001
+            bitpanda_bestand = {"nicht_verfuegbar": str(exc)}
         # ERFUNDENE ZAHLEN IN DEN BELEGEN (17.08.2026, Nutzerfund A6).
         # Das Modell hat vierzehnmal ein Volumen-Perzentil genannt, das
         # `faktenblock.kern()` bewusst zurueckhaelt. Ob die Promptzeile
@@ -3437,6 +3491,7 @@ def main() -> None:
         "datenfrische": datenfrische,
         "terminmarkt_und_umlaufmenge": terminmarkt_und_umlaufmenge,
         "hebel_abgleich": hebel_abgleich,
+        "bitpanda_bestand": bitpanda_bestand,
         "belege_gegen_fakten": belege_gegen_fakten,
         "spaltendrift": spaltendrift,
         "deep_dive": {

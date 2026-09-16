@@ -24792,12 +24792,14 @@ def paket_bitpanda_bestand() -> None:
         return list(vorgaenge), zustand["vollstaendig"]
 
     alt = (_BP.katalog, _BP.hole_portfolio, _BP.hole_fiat, _BP.hole_buchungen_mit_stand,
-           _BB.sync_fiat_cash_from_bitpanda)
+           _BB._fusion_schluessel)
     _BP.katalog = lambda conn, key, **kw: kat
     _BP.hole_portfolio = lambda key, k=None: list(portfolio)
-    _BP.hole_fiat = lambda key: {"eur": (3467.27, 560.0)}
+    _BP.hole_fiat = lambda key: {_BP.EUR_WAEHRUNG_ID: (3467.27, 560.0)}
     _BP.hole_buchungen_mit_stand = _buchungen
-    _BB.sync_fiat_cash_from_bitpanda = lambda conn, key: _ty.SimpleNamespace(updated=False, old_eur=None, new_eur=None)
+    # Stufe 1.3: Cash laeuft jetzt ueber `cash_abgleich`; OHNE Fusion-Schluessel,
+    # damit die Pruefung nie ins Netz geht.
+    _BB._fusion_schluessel = lambda: None
 
     def _db():
         c = _sq.connect(":memory:")
@@ -24898,7 +24900,7 @@ def paket_bitpanda_bestand() -> None:
         zustand["fehler"] = None
     finally:
         (_BP.katalog, _BP.hole_portfolio, _BP.hole_fiat, _BP.hole_buchungen_mit_stand,
-         _BB.sync_fiat_cash_from_bitpanda) = alt
+         _BB._fusion_schluessel) = alt
 
     # ---- E12 Schalter
     alt_cfg = _CFG._config_cache
@@ -24923,6 +24925,261 @@ def paket_bitpanda_bestand() -> None:
            and "melden=_melde_bitpanda_bestand" in q
            and "bestandsabgleich(conn, self._bitpanda_api_key" in _quelltext("ui/app.py"),
            str(aufrufe))
+
+
+def paket_bitpanda_cash() -> None:
+    """Schritt 61 Stufe 1.3 (Nutzerentscheidungen F1-F6 vom 16.09.2026) samt den
+    zwei Behebungen aus der Notebook-Kontrolle K10.
+
+        1  F2/F3 Cash: verfuegbar bleibt im bisherigen Schluessel, gesamt und
+           gebunden daneben; Fusion liefert Orders, ohne Fusion bleibt der
+           Betrag richtig; ohne EUR-Zeile wird NICHTS geschrieben
+        2  F4 die Mailzeile in drei Faellen, A1 (Stand > 6 h ohne `!!`), der
+           alte Wortlaut ohne Cash-Lage, nur Fall 2 erreicht den Kopf
+        3  F1 die Tageswert-Spalte zeigt Cash gesamt; der Hebel liest sie nicht
+        4  F5 Mail: einmal wiederholen, dann laut; Vermerk am Signal; Zaehlung;
+           Hebelfuehrung vermerkt nur bei Zustellung
+        5  F6 Protokoll und Export
+
+    Speicherdatenbanken, kein Netz, kein Mailserver (Versand gestellt)."""
+    P = "BitpandaCash"
+    import logging as _lg
+    import sqlite3 as _sq
+    from types import SimpleNamespace as _NS
+
+    import agent.entscheidungsrechnung as _ER
+    import agent.gesamtbild as _GB
+    import agent.portfolio_historie as _PH
+    import agent.rollen_lauf as _RL
+    import agent.toepfe as _TO
+    import api.bitpanda_fusion as _FU
+    import api.bitpanda_public as _BP
+    import database.db as _DB
+    import extract_notebook_diagnose as _EX
+    import importer.bitpanda_bestand as _BB
+    import scheduler.rollen_job as _RJ
+    from database.models import Signal as _Sig
+
+    class _Sammler(_lg.Handler):
+        def __init__(self):
+            super().__init__()
+            self.texte = []
+
+        def emit(self, record):
+            self.texte.append((record.levelname, record.getMessage()))
+
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        return c
+
+    FIAT = {_BP.EUR_WAEHRUNG_ID: (3467.27, 560.0)}
+
+    # ---- 1 CASH ----------------------------------------------------------
+    c = _db()
+    a = _BB.cash_abgleich(c, FIAT, None)
+    pruefe(P, "⚠️⚠️ F2: `cash_reserve_fiat_eur` bleibt VERFUEGBAR (560), gesamt 3.467,27 und gebunden 2.907,27 daneben",
+           _DB.get_cash_reserve_fiat_eur(c) == 560.0
+           and _DB.get_meta_wert(c, _BB.META_CASH_GESAMT) == "3467.27"
+           and _DB.get_meta_wert(c, _BB.META_CASH_GEBUNDEN) == "2907.27"
+           and a["details"] == "differenz" and a["orders"] is None, str(a))
+    alt_orders = _FU.offene_orders
+    try:
+        _FU.offene_orders = lambda key: _FU.OffeneOrders(10, 2900.0, "2026-06-04T08:00:00Z", ("BTC-EUR",))
+        f = _BB.cash_abgleich(c, FIAT, "fusion-schluessel")
+
+        def _kaputt(key):
+            raise _FU.FusionFehler("Fusion nicht erreichbar")
+        _FU.offene_orders = _kaputt
+        try:
+            k = _BB.cash_abgleich(c, FIAT, "fusion-schluessel")
+        except Exception as exc:                             # noqa: BLE001
+            k = {"details": "ABBRUCH %s" % exc, "gebunden": None, "orders": None}
+    finally:
+        _FU.offene_orders = alt_orders
+    pruefe(P, "F3: mit Fusion Anzahl, Kaufbetrag und aelteste Order; faellt Fusion aus, bleibt der Betrag und nur die Details fehlen",
+           f["details"] == "fusion" and f["orders"] == 10 and f["orders_eur"] == 2900.0
+           and k["details"] == "differenz" and k["gebunden"] == 2907.27 and k["orders"] is None, "")
+    c2 = _db()
+    _DB.set_cash_reserve_fiat_eur(c2, 123.0)
+    leer = _BB.cash_abgleich(c2, {}, None)
+    pruefe(P, "⚠️ E2: ohne EUR-Zeile wird NICHTS geschrieben - der alte Stand bleibt",
+           _DB.get_cash_reserve_fiat_eur(c2) == 123.0 and _DB.get_meta_wert(c2, _BB.META_CASH_GESAMT) is None
+           and leer["hinweis"], str(leer))
+    lage = _TO.cash_lage(c, {"risiko": {"cash_reserve_min_fixed_eur": 0}})
+    pruefe(P, "`cash_lage`: ohne neuen Abgleich None (alter Weg), danach frei, gebunden, Orders und Stand",
+           _TO.cash_lage(c2) is None and lage and lage["frei_eur"] == 560.0 and lage["gebunden_eur"] == 2907.27
+           and lage["alter_stunden"] is not None and lage["alter_stunden"] < 1, str(lage))
+    c3 = _db()
+    _BB.cash_abgleich(c3, {_BP.EUR_WAEHRUNG_ID: (1560.0, 560.0)}, None)
+    lage3 = _TO.cash_lage(c3, {"risiko": {"cash_reserve_min_fixed_eur": 2000}})
+    r_res = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=1000.0,
+                       umgeworfen_preis_eur=94.0, cash_frei_eur=lage3["frei_eur"], cash_lage=lage3)
+    z_res = [z for z in _ER.saetze(r_res) if z.startswith("Cash frei")]
+    pruefe(P, "⚠️ Livetest 16.09.: unter der Reserve zaehlt das FEHLENDE Cash - 560 verfuegbar, 2.000 Reserve, 1.000 gebunden: 1.000 EUR passt auch mit Orders NICHT (abgeschnitten bei 0 hiess es ,passt')",
+           lage3["frei_eur"] == 0.0 and lage3["frei_ungedeckelt_eur"] == -1440.0
+           and r_res["betrag_eur"] == 1000.0 and r_res.get("cash_reicht_mit_orders") is False
+           and z_res and "reicht nicht" in z_res[0] and "!!" not in z_res[0],
+           "%s / %s %s" % (lage3, r_res["betrag_eur"], z_res))
+    c3.close()
+    pruefe(P, "1.8: der Docstring von `cash_frei_eur` sagt nicht mehr ,SIE BEGRENZT'",
+           "SIE BEGRENZT NICHTS" in (_TO.cash_frei_eur.__doc__ or "")
+           and "knappes Cash macht Positionen kleiner, es macht" not in (_TO.cash_frei_eur.__doc__ or ""), "")
+
+    # ---- 2 MAILZEILE -----------------------------------------------------
+    basis = {"cash_gebunden_eur": 2907.27, "cash_orders_anzahl": 10,
+             "cash_aelteste_order": "2026-06-04T08:00:00Z", "cash_stand_alt": False}
+    z1 = _ER.cash_zeile(dict(basis, cash_frei_eur=800.0, cash_wuerde_ueberschreiten=False, cash_reicht_mit_orders=True))
+    z2 = _ER.cash_zeile(dict(basis, cash_frei_eur=69.0, cash_wuerde_ueberschreiten=True, cash_reicht_mit_orders=True))
+    z2a = _ER.cash_zeile(dict(basis, cash_frei_eur=69.0, cash_wuerde_ueberschreiten=True, cash_reicht_mit_orders=True,
+                              cash_stand_alt=True))
+    z3 = _ER.cash_zeile(dict(basis, cash_frei_eur=69.0, cash_wuerde_ueberschreiten=True, cash_reicht_mit_orders=False))
+    pruefe(P, "⚠️⚠️ F4: passt -> ohne `!!`; nur mit aufgeloesten Orders -> `!!` mit 10 Orders, Betrag, aeltester vom 04.06.; auch dann nicht -> ohne `!!`",
+           "!!" not in z1 and "offenen Orders" in z1
+           and z2.count("!!") == 1 and "10 Orders" in z2 and "2.907 EUR gebunden" in z2 and "04.06." in z2
+           and "!!" not in z3 and "auch mit aufgeloesten Orders" in z3,
+           " | ".join((z1, z2, z3)))
+    pruefe(P, "A1: ist der Stand aelter als 6 Stunden, entfaellt das `!!` - der Hinweis bleibt",
+           "!!" not in z2a and "Stand aelter als 6 Stunden" in z2a and "reicht nur" in z2a, z2a)
+    kopf2 = _GB.dagegen([z2])
+    kopf3 = _GB.dagegen([z1, z3])
+    pruefe(P, "⚠️ nur Fall 2 erreicht den Kopf der Mail - das Dauer-`!!` aus fast jeder Kaufmail ist weg",
+           kopf2 and not kopf3, "%s / %s" % (kopf2, kopf3))
+    r_mit = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=2000.0,
+                       umgeworfen_preis_eur=94.0, cash_frei_eur=300.0,
+                       cash_lage={"gebunden_eur": 2907.27, "orders_anzahl": 10,
+                                  "aelteste_order": "2026-06-04T08:00:00Z", "alter_stunden": 0.2})
+    r_ohne = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=2000.0,
+                        umgeworfen_preis_eur=94.0, cash_frei_eur=300.0)
+    r_alt = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=2000.0,
+                       umgeworfen_preis_eur=94.0, cash_frei_eur=300.0,
+                       cash_lage={"gebunden_eur": 2907.27, "orders_anzahl": 10,
+                                  "aelteste_order": "2026-06-04T08:00:00Z", "alter_stunden": 7.0})
+    pruefe(P, "A1 in `rechne`: 7 Stunden alter Stand setzt `cash_stand_alt`, 0,2 Stunden nicht",
+           r_alt.get("cash_stand_alt") is True and r_mit.get("cash_stand_alt") is False, "")
+    r_deckel = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=9000.0,
+                          umgeworfen_preis_eur=94.0, cash_frei_eur=0.0,
+                          cash_lage={"gebunden_eur": 2907.27, "orders_anzahl": 10,
+                                     "aelteste_order": "2026-06-04T08:00:00Z", "alter_stunden": 0.2})
+    z_deckel = [z for z in _ER.saetze(r_deckel) if z.startswith("Cash frei")]
+    pruefe(P, "⚠️ Livetest 16.09.: der Hinweis rechnet mit dem ENDBETRAG - 9.000 EUR Wunsch, 1.000 EUR empfohlen, passt mit Orders",
+           r_deckel["betrag_eur"] == 1000.0 and r_deckel.get("cash_reicht_mit_orders") is True
+           and z_deckel and "reicht nur" in z_deckel[0], "%s %s" % (r_deckel["betrag_eur"], z_deckel))
+    zeilen_mit = [z for z in _ER.saetze(r_mit) if z.startswith("Cash frei")]
+    zeilen_ohne = [z for z in _ER.saetze(r_ohne) if z.startswith("Cash frei")]
+    pruefe(P, "`rechne` reicht die Lage durch (Betrag unveraendert); ohne Lage der bisherige Wortlaut",
+           r_mit["betrag_eur"] == r_ohne["betrag_eur"] and r_mit.get("cash_reicht_mit_orders") is True
+           and zeilen_mit and "reicht nur" in zeilen_mit[0]
+           and zeilen_ohne and "!! reicht fuer diese Position nicht" in zeilen_ohne[0],
+           "%s / %s" % (zeilen_mit, zeilen_ohne))
+    pruefe(P, "die Kette reicht `cash_lage` an `rechne` weiter",
+           "cash_lage = TO.cash_lage(conn, config)" in _quelltext("agent/rollen_lauf.py")
+           and "cash_lage=cash_lage," in _quelltext("agent/rollen_lauf.py"), "")
+
+    # ---- 3 TAGESWERT-SPALTE ----------------------------------------------
+    pruefe(P, "F1: die Tageswert-Spalte zeigt Cash GESAMT (3.467,27), ohne neuen Abgleich das bisherige Feld; der Hebel liest sie nicht",
+           _PH._cash_gesamt(c) == 3467.27 and _PH._cash_gesamt(c2) == 123.0
+           and "cash_eur" not in _quelltext("agent/portfolio_historie.py").split("def aktuelles_kapital")[1].split("\ndef ")[0],
+           "")
+    c.close()
+    c2.close()
+
+    # ---- 4 MAILVERSAND ---------------------------------------------------
+    import api.email_notify as _EN
+    alt_send, alt_warte = _EN.send_notification_email, _RJ._warte
+    gewartet = []
+    folge = []
+
+    def _send(betreff, text, empfaenger, inline_images=None):
+        x = folge.pop(0)
+        if isinstance(x, Exception):
+            raise x
+        return x
+    sammler = _Sammler()
+    _lg.getLogger("scheduler.rollen_job").addHandler(sammler)
+    try:
+        _EN.send_notification_email = _send
+        _RJ._warte = lambda sek: gewartet.append(sek)
+        versand = _RJ.baue_versand({"benachrichtigung": {"aktiv": True, "email": {"empfaenger": "x@y"}}})
+        folge[:] = [False, True]
+        ok2 = versand("B1", "T")
+        folge[:] = [False, False]
+        aus = versand("B2", "T")
+        folge[:] = [RuntimeError("starttls"), True]
+        ok_exc = versand("B3", "T")
+        folge[:] = [True]
+        ok1 = versand("B4", "T")
+    finally:
+        _EN.send_notification_email, _RJ._warte = alt_send, alt_warte
+        _lg.getLogger("scheduler.rollen_job").removeHandler(sammler)
+    pruefe(P, "⚠️⚠️ F5: ein Fehlschlag wird nach 60 s EINMAL wiederholt; scheitert auch das, False und ERROR mit Betreff",
+           ok2 is True and aus is False and ok_exc is True and ok1 is True
+           and gewartet == [60, 60, 60]
+           and any(l == "ERROR" and "NICHT zugestellt" in t and "B2" in t for l, t in sammler.texte),
+           "gewartet %s, Meldungen %s" % (gewartet, [t for l, t in sammler.texte if l in ("ERROR", "WARNING")][:3]))
+    c = _db()
+    # Zeitpunkt JETZT - der Export sieht nur drei Tage zurueck; ein fester Tag
+    # machte die Pruefung ab dem 19.09. rot, ohne dass sich Code aendert.
+    from datetime import datetime as _dt, timezone as _tz
+    sid = _DB.insert_signal(c, _Sig(symbol="OD7H", created_at=_dt.now(_tz.utc).isoformat(), action="REDUZIEREN",
+                                    gate_passed=True, gate_reason=None, risk_veto=False, facts_json="{}"))
+    erg = {}
+    _RL._vermerke_versand(c, sid, erg, {"betreff": "OD7H - REDUZIEREN", "zugestellt": False})
+    _RL._vermerke_versand(c, None, erg, {"betreff": "ohne Signal", "zugestellt": True})
+    _RL._vermerke_versand(c, sid, erg, {"betreff": "unbekannt", "zugestellt": None})
+    zeile = c.execute("SELECT mail_versand, mail_versand_am FROM signals WHERE id = ?", (sid,)).fetchone()
+    pruefe(P, "⚠️ F5: Vermerk am Signal (`nicht_zugestellt` mit Zeitpunkt), Zaehlung getrennt; unbekannt wird weder gezaehlt noch vermerkt",
+           zeile["mail_versand"] == "nicht_zugestellt" and zeile["mail_versand_am"]
+           and erg.get("mails_nicht_zugestellt") == ["OD7H - REDUZIEREN"] and erg.get("mails_zugestellt") == ["ohne Signal"],
+           "%s %s" % (dict(zeile), erg))
+    q = _quelltext("agent/rollen_lauf.py")
+    pruefe(P, "verdrahtet: beide Einzelversandstellen merken das Ergebnis, der Hauptfaden vermerkt nach dem Warten, "
+              "die Hebelfuehrung vermerkt nur bei Zustellung, die Kettenzeile zaehlt Zustellungen",
+           q.count('eintrag["zugestellt"] = versand(') == 2
+           and '_vermerke_versand(conn, kennung, ergebnis, eintrag)' in q
+           and '_vermerke_versand(conn, signal_id, ergebnis, eintrag)' in q
+           and "if _ok_hf is not False:\n                        _HF.vermerke(conn, _neu_hf)" in q.replace("\r\n", "\n")
+           and "NICHT zugestellt), %s Fehler" in _quelltext("scheduler/rollen_job.py"), "")
+
+    # ---- 5 PROTOKOLL UND EXPORT ------------------------------------------
+    sammler = _Sammler()
+    _lg_bb = _lg.getLogger("importer.bitpanda_bestand")
+    _stufe_alt = _lg_bb.level
+    _lg_bb.setLevel(_lg.INFO)
+    _lg_bb.addHandler(sammler)
+    try:
+        r = _NS(synced_count=2, auto_confirmed_decreases=[], unmatched_bitpanda_symbols=[],
+                stale_bitpanda_sync_symbols=[],
+                updated_holdings=["ETH: frei 0,02594 -> 0,02594, gestakt 0,943 -> 0,486 (gestakt Rueckgang)"],
+                warnings=["BNB: Rueckgang 0,159 -> 0,124 ohne Verkaufsvorgang (...) - REDUZIEREN-Signal vom "
+                          "2026-09-15 NICHT als umgesetzt markiert"])
+        _BB._protokoll(r, {"verfuegbar": 560.0, "gesamt": 3467.27, "gebunden": 2907.27, "orders": 10,
+                           "orders_eur": 2900.0, "aelteste": "2026-06-04T08:00:00Z", "details": "fusion"})
+    finally:
+        _lg_bb.removeHandler(sammler)
+        _lg_bb.setLevel(_stufe_alt)
+    texte = [t for _, t in sammler.texte]
+    pruefe(P, "⚠️ F6: Zusammenfassung, jede Aenderung, der Schutz E10 und die Cash-Lage stehen im Log",
+           any("2 Aenderung(en)" in t for t in texte) and any("Aenderung ETH" in t for t in texte)
+           and any("Schutz E10" in t and "BNB" in t for t in texte)
+           and any("verfuegbar 560,00 EUR" in t and "10 Orders" in t for t in texte), str(texte))
+    pruefe(P, "F6: Aenderungen tragen ihre Art (gestakt Rueckgang, Zuwachs, Umbuchung) statt ,Zuwachs' fuer alles",
+           _BB._art(0.02594, 0.02594, 0.943, 0.486) == "gestakt Rueckgang"
+           and _BB._art(0.59, 2.44, 0, 0) == "Zuwachs" and _BB._art(1.0, 0.0, 0.0, 1.0) == "Umbuchung frei/gestakt"
+           and 'if not hasattr(result, "meldungen"):' in _quelltext("scheduler/background.py"), "")
+    _DB.speichere_bitpanda_wallet_salden(c, {("a1", "staking-service", "w1"): (2.99, "2026-09-16T05:00:00Z"),
+                                            ("a1", "shared-default", "w2"): (0.0, "2026-09-16T05:00:00Z")})
+    _BB.cash_abgleich(c, FIAT, None)
+    ex = _EX._bitpanda_bestand(c)
+    pruefe(P, "⚠️ F6/F5: der Export zeigt Salden je Wallet, Cash-Lage und NICHT zugestellte Mails als Auffaelligkeit",
+           any(w["wallet"] == "staking-service" and w["assets_mit_saldo"] == 1 for w in ex["salden_je_wallet"])
+           and ex["cash"]["cash_gebunden_eur"] == "2907.27"
+           and ex["mailversand_3_tage"].get("nicht_zugestellt") == 1
+           and any("NICHT zugestellt" in a and "OD7H REDUZIEREN" in a for a in ex["auffaellig"])
+           and "bitpanda_wallet_saldo" in _quelltext("extract_notebook_diagnose.py")
+           and "bitpanda_katalog" in _quelltext("extract_notebook_diagnose.py"), str(ex)[:300])
+    c.close()
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
@@ -24983,6 +25240,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "PreisUeberlauf": paket_preis_ueberlauf,
           "BitpandaZugang": paket_bitpanda_zugang,
           "BitpandaBestand": paket_bitpanda_bestand,
+          "BitpandaCash": paket_bitpanda_cash,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

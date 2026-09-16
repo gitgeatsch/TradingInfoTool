@@ -561,6 +561,8 @@ REIHENFOLGE = (
             "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f NUTZERENTSCHEIDUNG 15.09.: Stufenplan 0 -> 1 -> (2, 3, 4 nach "
             "Pruefergebnis), EIGENER Schritt vor 55; *,der Umbau ist massiv und du musst hier wirklich detailliert in "
             "Code und Doku, damit wir nichts vergessen - bei den heiklen Bereichen gehen wir in Abstimmung'*. "
+            "➤ NUTZERENTSCHEIDUNG 16.09. ZUR REIHENFOLGE: aus Stufe 1 zuerst 1.3 (Cash), 1.7 und 1.8, DANN Schritt 59 (Messdesign) - KORREKTUR 16.09.: die dazu gegebene Begruendung ,das Cash geht ins Kapital und damit in die Hebelgroesse' war FALSCH; nach Nutzerentscheidung P-5 (11.09.) rechnet der Hebel mit dem Kapital OHNE Cash, Cash wirkt auf die Einsatzgrenze (`toepfe.cash_frei_eur`) und die Mailwarnung; 1.5 und 1.6 sowie die Punkte aus 56, 55 "
+            "und 62 laufen PARALLEL in Abstimmung, nicht mehr davor (*,ja Reihenfolge passt'*). "
             "ANLASS: (a) gebundenes Cash unsichtbar (2.455-cash-gesperrt: 3.000 EUR in 11 Fusion-Limit-Orders); (b) "
             "gestakte Mengen seit 16.07. doppelt, Kapital netto rund 1.720 EUR zu hoch (2.455-bestand-gestakt, "
             "2.455-bitpanda-zuordnung); (c) die alte "
@@ -578,13 +580,14 @@ REIHENFOLGE = (
             "Suite-Paket BitpandaInventur - VOR JEDEM BAUSCHRITT dort nachsehen (2.455-bitpanda-inventur). "
             "\u27a4 STUFE 1 BESTAND UND CASH: 1.1 ✔ GEBAUT 16.09. (2.455-zugang-gebaut, `api/bitpanda_public.py`, schreibt keinen Bestand; Katalogpuffer `bitpanda_katalog`) - eigener lesender Zugang zur neuen API (Ampel, Maskierung, "
             "Zeitlimit, Datumsfenster statt Cursor, Katalog taeglich gepuffert; Pruefskripte biegen `db.DB_PATH` um, "
-            "weil `api_health` bei jedem Abruf schreibt); 1.2 ✔ GEBAUT 16.09. (2.455-bestand-neu-gebaut; E1, E2, E9-E13; am Notebook K10) Bestand je Wert aus der neuen API "
+            "weil `api_health` bei jedem Abruf schreibt); 1.2 ✔ GEBAUT 16.09. (2.455-bestand-neu-gebaut; E1, E2, E9-E13; am Notebook K10: Mengen ✔ 16.09. 19:35, Protokoll-Luecken 2.455-bestand-protokoll mit 1.3 behoben im Code, am Notebook K11) Bestand je Wert aus der neuen API "
             "- Menge = verfuegbar im Spot-Wallet, gestakt = Staking-Wallet, Hebel-Wallets getrennt, KEINE Rekonstruktion "
             "aus Transfer-Markierungen und nie aus Buchungssummen (Belohnungen sind brutto); bei Ausfall bleibt der "
             "letzte gute Stand und die Datenfrische meldet; die anderen Schreibwege (Excel-Import, ,umgesetzt') sind "
             "AUSGEGLIEDERT in Schritt 62 (Nutzerentscheidung 16.09.: eigener Punkt, nachgelagert sauber bewerten); 1.3 "
+            "✔ GEBAUT 16.09. (2.455-cash-gebaut; F1-F3, F5 Mailversand mit Wiederholung und Vermerk am Signal, F6 Protokoll; am Notebook K11) "
             "Cash gesamt/verfuegbar (neue API) und gebunden samt Anzahl, Summe und aeltester offener Order (Fusion, "
-            "Leseschluessel `FUSION_API_KEY`, gueltig bis 15.09.2027); 1.4 Mailzeile ,Cash … davon gebunden … frei' und "
+            "Leseschluessel `FUSION_API_KEY`, gueltig bis 15.09.2027); 1.4 ✔ GEBAUT 16.09. mit 1.3 (F4 drei Faelle, A1; Hinweis gegen den Endbetrag; am Notebook K11) Mailzeile ,Cash … davon gebunden … frei' und "
             "Warnung mit Rufzeichen und Handlung NUR, WENN DIE SPERRE DIE EMPFEHLUNG TRIFFT (Nutzerentscheidung 15.09.), "
             "Regel A1 (Stand nennen, ab 6 h kein `!!`); 1.5 DATENKORREKTUR: Bestand richtigstellen, Index darf am "
             "Korrekturtag keinen Kursverlust zeigen, Portfoliowert-Historie RUECKWIRKEND sauber aus den taeglichen "
@@ -592,7 +595,7 @@ REIHENFOLGE = (
             "ohne Kennzeichen und Fallstrick'; Sicherung vorher, Vorher/Nachher-Protokoll) - HEIKEL, Umsetzungsschritte "
             "vorab abstimmen; 1.6 GUI-Cashfeld L3 (Anzeige gesamt/verfuegbar/gebunden/Stand, bearbeitbar nur ohne "
             "Schluessel als eigener Wert) - Gestaltung vorab abstimmen; 1.7 Schluesselueberwachung (401 -> Mail mit "
-            "Handlung; Fusion-Ablauf 30 Tage vorher erinnern); 1.8 Docstring `toepfe.cash_frei_eur` berichtigen (B1); "
+            "Handlung; Fusion-Ablauf 30 Tage vorher erinnern); 1.8 ✔ GEBAUT 16.09. mit 1.3 Docstring `toepfe.cash_frei_eur` berichtigen (B1); "
             "1.9 \u2714 GEBAUT 15.09. (vorgezogen, 2.455-kurs-od7-gebaut, am Notebook K8) KURSE OD7H/OD7C, VOR 1.5: Ticker auf ISIN.SG wie OD7N/OD7L (`config.yaml` am Notebook), Reihe neu "
             "verankern, pruefen welche Mails und Fakten seit 18.07. das falsche Niveau trugen, Kursalter "
             "`regularMarketTime` fuer alle Nicht-Krypto-Werte in die Datenfrische (2.455-kurs-od7-eingefroren, Klasse "
@@ -615,6 +618,38 @@ REIHENFOLGE = (
             "2.455-bitpanda-staking-ursache, 2.455-bitpanda-inventur, 2.453-alterlos",
             block="D-BETRIEB",
             umbau="beides"),  # ersetzt eine alte Anbindung und baut Bestand/Cash neu
+    Schritt(59, "GESAMTKETTE MESSEN UND BEWERTEN - JE STRATEGIE UND PHASE, DETERMINISTISCH UND LLM",
+            "⚠️⚠️⚠️ NUTZERHINWEIS 16.09. ZUM LLM-TEIL: *,dieser ist extrem heikel und wir sind auf die Doku und Recherche "
+            "angewiesen, dass alles korrekt umgesetzt wird - weil die LLM-Rollen nicht alle Informationen und in einem "
+            "speziellen Format uebergeben bekommen'*. Fuer die LLM-Ebene der Matrix heisst das: VOR jeder Messung und jeder "
+            "Aenderung am Code nachlesen und festhalten, WAS jede Rolle tatsaechlich bekommt (Faktenauswahl, Format, "
+            "Kuerzung, Reihenfolge) - gemessen wird die Rolle so, wie sie gefuettert wird, nicht wie sie gedacht ist. "
+            "⚠️⚠️ NUTZERVORGABE 15.09.: *,Zu den Hebelsignalen und Krypto insgesamt muss die "
+            "gesamte Ablaufkette und LLMs in einem umfangreichen Planpunkt gemessen und bewertet werden - "
+            "erinnere dich, Ziel: Hebel nur dann, wenn ein optimales Chancen-Risiko-Verhaeltnis vorhanden "
+            "ist. Die Bewertung sollte aber fuer alle Strategien erfolgen (Spot und Akkumulation) sowie "
+            "Unterscheidung Einstieg, Fuehrung und Ausstieg bzw. Reduktion.'* "
+            "\u27a4 DIE MATRIX: STRATEGIE (Spot, Hebel, Akkumulation) x PHASE (Einstieg, Fuehrung, "
+            "Ausstieg/Reduktion) x EBENE (deterministische Stufen der Kette, LLM-Rollen A, BC, G und die "
+            "Gegenpruefung). JE ZELLE DREI FRAGEN: (1) ZAHL - wie viele Empfehlungen, wo faellt was im "
+            "Trichter heraus; (2) GUETE - Potential (`bewegung_r`) gegen ein Nullmodell auf derselben Menge, "
+            "Tagesklammer, nach Messstandard; (3) BEITRAG - was aendert die Stufe oder Rolle gegen die Kette "
+            "ohne sie. FUER DEN HEBEL ZUSAETZLICH: traegt die Quote den Hebel (r(q)), und waere derselbe "
+            "Trade als Spot besser - Vorgabe HEBEL-ZIEL. "
+            "\u27a4 BAUSTEINE, DIE HIER AUFGEHEN ODER ZULIEFERN (nicht doppelt bauen): 42 T-0 "
+            "(Zahl, Guete, LLM-Aussagekraft), 29 T-1 Fehleridentifikation, 30 T-3 historische Simulation auf "
+            "Potential, 43 (1) Guetemass des Ausstiegs, 25 Akku-Messpaket, 35 A1 und 37 Kalibrierung (Hebel), "
+            "52 Stopregel; 33 LLM-Rollen entscheidet ERST DANACH. "
+            "\u27a4 AUSGANGSLAGE 15.09. (2.455-hebelsignale): alle 166 Zeilen der Rollen-Kette seit "
+            "12.09. tragen strategie `einstieg`; die 8 Hebelempfehlungen sind NACHKAUFEN auf gehaltenen Werten "
+            "- Einstieg und Fuehrung sind in den Daten nicht getrennt, die Akkumulation ist gesperrt. "
+            "\u26a0\ufe0f ZUERST DAS MESSDESIGN, dann messen (Vorgaben MESSSTANDARD-VOR-DER-MESSUNG, "
+            "KEINE-TEILLOESUNG, STAND-PRUEFEN-VORHER): je Zelle Population, Zielgroesse, Nullmodell, Datenlage "
+            "und bekannte Blocker (A1 binaeres Band, A8 Live-Menge, A9 Laengsachse) - vorgelegt und abgestimmt, "
+            "bevor eine Zahl gerechnet wird. LLM ist Pruefung, nicht Entscheider.",
+            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Schritte 42, 29, 30, 43, 25, 35, 37, 52, 33",
+            block="D-BEWERTUNG",
+            umbau="beides"),  # misst Alt (LLM-Rollen) und Neu (Bewertung, r(q)) in einer Matrix
     Schritt(56, "DATENQUELLEN OHNE FRISCHE - DIESELBE KLASSE WIE 2.452",
             "\u26a0\ufe0f\u26a0\ufe0f\u26a0\ufe0f AUS DEM REVIEW VOR DEM ROLLOUT 14.09. (Befund "
             "2.453). Der Nutzer fragte: ,sind alle Datenquellen aktualisiert?' - "
@@ -1148,38 +1183,11 @@ REIHENFOLGE = (
             "Basisinfos/Ausrollen_24_08.md; Notebook-Rollout 12.09.",
             fertig=True,
             umbau="neu"),  # Rollout Paket B
-    Schritt(59, "GESAMTKETTE MESSEN UND BEWERTEN - JE STRATEGIE UND PHASE, DETERMINISTISCH UND LLM",
-            "\u26a0\ufe0f NUTZERVORGABE 15.09.: *,Zu den Hebelsignalen und Krypto insgesamt muss die "
-            "gesamte Ablaufkette und LLMs in einem umfangreichen Planpunkt gemessen und bewertet werden - "
-            "erinnere dich, Ziel: Hebel nur dann, wenn ein optimales Chancen-Risiko-Verhaeltnis vorhanden "
-            "ist. Die Bewertung sollte aber fuer alle Strategien erfolgen (Spot und Akkumulation) sowie "
-            "Unterscheidung Einstieg, Fuehrung und Ausstieg bzw. Reduktion.'* "
-            "\u27a4 DIE MATRIX: STRATEGIE (Spot, Hebel, Akkumulation) x PHASE (Einstieg, Fuehrung, "
-            "Ausstieg/Reduktion) x EBENE (deterministische Stufen der Kette, LLM-Rollen A, BC, G und die "
-            "Gegenpruefung). JE ZELLE DREI FRAGEN: (1) ZAHL - wie viele Empfehlungen, wo faellt was im "
-            "Trichter heraus; (2) GUETE - Potential (`bewegung_r`) gegen ein Nullmodell auf derselben Menge, "
-            "Tagesklammer, nach Messstandard; (3) BEITRAG - was aendert die Stufe oder Rolle gegen die Kette "
-            "ohne sie. FUER DEN HEBEL ZUSAETZLICH: traegt die Quote den Hebel (r(q)), und waere derselbe "
-            "Trade als Spot besser - Vorgabe HEBEL-ZIEL. "
-            "\u27a4 BAUSTEINE, DIE HIER AUFGEHEN ODER ZULIEFERN (nicht doppelt bauen): 42 T-0 "
-            "(Zahl, Guete, LLM-Aussagekraft), 29 T-1 Fehleridentifikation, 30 T-3 historische Simulation auf "
-            "Potential, 43 (1) Guetemass des Ausstiegs, 25 Akku-Messpaket, 35 A1 und 37 Kalibrierung (Hebel), "
-            "52 Stopregel; 33 LLM-Rollen entscheidet ERST DANACH. "
-            "\u27a4 AUSGANGSLAGE 15.09. (2.455-hebelsignale): alle 166 Zeilen der Rollen-Kette seit "
-            "12.09. tragen strategie `einstieg`; die 8 Hebelempfehlungen sind NACHKAUFEN auf gehaltenen Werten "
-            "- Einstieg und Fuehrung sind in den Daten nicht getrennt, die Akkumulation ist gesperrt. "
-            "\u26a0\ufe0f ZUERST DAS MESSDESIGN, dann messen (Vorgaben MESSSTANDARD-VOR-DER-MESSUNG, "
-            "KEINE-TEILLOESUNG, STAND-PRUEFEN-VORHER): je Zelle Population, Zielgroesse, Nullmodell, Datenlage "
-            "und bekannte Blocker (A1 binaeres Band, A8 Live-Menge, A9 Laengsachse) - vorgelegt und abgestimmt, "
-            "bevor eine Zahl gerechnet wird. LLM ist Pruefung, nicht Entscheider.",
-            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Schritte 42, 29, 30, 43, 25, 35, 37, 52, 33",
-            block="D-BEWERTUNG",
-            umbau="beides"),  # misst Alt (LLM-Rollen) und Neu (Bewertung, r(q)) in einer Matrix
     Schritt(60, "KRYPTO STABIL UND FUNKTIONAL KORREKT - FEHLERKORREKTUR, MAIL-INHALT UND -STRUKTUR",
             "\u26a0\ufe0f\u26a0\ufe0f NUTZERVORGABE 15.09. (Vorgabe KRYPTO-STABIL-UND-KORREKT): nach Schritt 59 "
             "ein umfangreicher Zusatzpunkt, BEVOR weitergearbeitet wird. DREI TEILE: (1) FEHLER AUS DER "
             "MESSUNG - was Schritt 59 je Strategie und Phase als falsch oder wirkungslos zeigt, wird korrigiert, "
-            "nicht nur benannt. (2) FEHLER AUS DEM BETRIEB, schon bekannt: 2.455-hebel-nachkaufen (ein Hebel-"
+            "nicht nur benannt. (2) FEHLER AUS DEM BETRIEB, schon bekannt: → NUTZERENTSCHEIDUNG 16.09. (1a): wird SOFORT mit Stufe 1.3 von Schritt 61 behoben, nicht erst hier - 2.455-mail-verloren (Versand ohne Auswertung, Wiederholung und Vermerk - eine Empfehlungsmail ging am 16.09. still verloren, die Kettenzeile meldete sie als verschickt); 2.455-hebel-nachkaufen (ein Hebel-"
             "Einstieg heisst NACHKAUFEN, weil ein Spot-Bestand da ist - fachlich eine neue Position, 7c); die "
             "Rollen-Kette schreibt fuer alles strategie `einstieg`, Einstieg, Fuehrung und Ausstieg sind in den "
             "Daten nicht getrennt (2.455-hebelsignale); was aus Schritt 55 und 56 dann noch offen ist. (3) "
@@ -1377,7 +1385,11 @@ REIHENFOLGE = (
             block="D-ABBILDUNG",
             umbau="alt"),  # die GUI zeigt noch die alte Dreiteilung
     Schritt(33, "LLM-ROLLEN UND MODELLE",
-            "⚠️⚠️ INHALT AM 12.09. GESETZT (Vorgabe LLM-SCHIENE-GANZ): die "
+            "⚠️⚠️⚠️ NUTZERHINWEIS 16.09.: *,der LLM-Teil ist extrem heikel und wir sind auf die Doku und "
+            "Recherche angewiesen, dass alles korrekt umgesetzt wird - weil die LLM-Rollen nicht alle Informationen und in "
+            "einem speziellen Format uebergeben bekommen'*. NAMEN NUR NACH R-R1: A Marktanalyst, BC Haendler, G Gegenpruefer (Verlauf und Passung in 2.455-rollennamen; zu entscheiden hier: ob die gerechnete Stufe `entscheider` in der Doku einen eigenen Namen bekommt, damit sie nicht mit der frueheren LLM-Rolle C verwechselt wird). VOR jeder Aenderung: je Rolle schriftlich festhalten, was sie "
+            "HEUTE bekommt (Faktenauswahl, Format, Kuerzung, Reihenfolge, Prompt-Stand) und woher; jede Aenderung erst "
+            "belegt aus Doku und Recherche, dann am Pruefstand mit echter Konfiguration gegengeprueft. ⚠️⚠️ INHALT AM 12.09. GESETZT (Vorgabe LLM-SCHIENE-GANZ): die "
             "GANZE Schiene, nicht einzelne Prompts. (1) Je Rolle "
             "aufschreiben, WELCHE Kriterien sie heute bewertet und mit "
             "welcher Begruendung - Rolle A, Rolle BC, Rolle G getrennt. (2) "

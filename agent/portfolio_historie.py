@@ -1134,7 +1134,10 @@ def schreibe_tageswert(
 
     db.upsert_portfolio_wert(
         conn, tag, wert,
-        cash_eur=db.get_cash_reserve_fiat_eur(conn),
+        # F1 (16.09.2026): die Spalte zeigt das GESAMTE Cash, auch das in offenen
+        # Orders gebundene - es gehoert dem Nutzer. Ohne neuen Abgleich der alte
+        # Wert. Das Kapital fuer den Hebel liest diese Spalte NICHT (P-5).
+        cash_eur=_cash_gesamt(conn),
         symbole_gesamt=len(holdings),
         symbole_ohne_kurs=ohne_kurs,
         quelle=QUELLE_LAUFEND,
@@ -1174,6 +1177,17 @@ def fehlende_handelstagskurse(ergebnis: dict, watchlist: list) -> list[str]:
     return sorted(sym for sym, alter in (ergebnis.get("alter_je_symbol") or {}).items()
                   if sym in klasse and klasse[sym] != "krypto" and sym not in cash
                   and (alter is None or alter >= 1))
+
+
+def _cash_gesamt(conn) -> float:
+    """F1: Cash gesamt (neuer Bitpanda-Abgleich), sonst das bisherige Feld."""
+    try:
+        wert = db.get_meta_wert(conn, "cash_gesamt_eur")
+        if wert not in (None, ""):
+            return float(wert)
+    except Exception:                                        # noqa: BLE001
+        pass
+    return db.get_cash_reserve_fiat_eur(conn)
 
 
 def aktuelles_kapital(conn: sqlite3.Connection, heute: str | None = None) -> dict:

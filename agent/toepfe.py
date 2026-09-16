@@ -204,17 +204,24 @@ STABLECOINS = ("EURCV", "USDC", "USDT", "DAI", "EURC", "EURT")
 VORGABE_RESERVE_EUR = 2000.0
 
 
-def cash_frei_eur(conn, config: dict | None = None) -> float | None:
+def cash_frei_eur(conn, config: dict | None = None, ungedeckelt: bool = False) -> float | None:
     """Wieviel Geld darf ueberhaupt noch eingesetzt werden - RM-4, absolut.
 
     DIE EINE UEBERGREIFENDE REGEL (siehe `UEBERGREIFEND` unten) - und sie war
     bis zum 13.08. dokumentiert und NIRGENDS GEBAUT. Der Kommentar dort
     beschrieb sie samt Wirkung, im Code gab es sie nicht.
 
-    SIE BEGRENZT, SIE VERHINDERT NICHT. Das steht so in der Beschreibung der
-    Regel, und es ist der Unterschied zwischen einem Deckel und einem Veto:
-    knappes Cash macht Positionen kleiner, es macht keine Assetklasse
-    unmoeglich.
+    ⚠️ SIE BEGRENZT NICHTS - SIE STEHT IN DER MAIL (berichtigt 16.09.2026,
+    Schritt 61 Stufe 1.8). Bis hierher stand hier ,SIE BEGRENZT, SIE VERHINDERT
+    NICHT - knappes Cash macht Positionen kleiner'. Das galt bis zum 15.08.;
+    seitdem aendert knappes Cash den Betrag NICHT mehr (Nutzer: ,Deckel laufen
+    nur als Info fuer den User mit im eMail', Suite ,knappes Cash aendert den
+    Betrag NICHT mehr'). Die Zahl erzeugt in `entscheidungsrechnung.saetze` die
+    Zeile ,Cash frei ...' - mit den drei Faellen aus F4.
+
+    WAS ,FREI' IST (F2, 16.09.2026): das VERFUEGBARE Fiat laut Bitpanda (nicht das
+    in offenen Orders gebundene) plus Stablecoins minus Reserve. Das Gebundene
+    liefert `cash_lage` getrennt.
 
     ABSOLUT STATT PROZENTUAL, aus demselben Grund wie alle Deckel hier: ein
     Prozentsatz auf ein Portfolio mit 60-Prozent-Positionen schrumpft genau
@@ -259,7 +266,45 @@ def cash_frei_eur(conn, config: dict | None = None) -> float | None:
         pass
     reserve = ((config or {}).get("risiko") or {}).get(
         "cash_reserve_min_fixed_eur", VORGABE_RESERVE_EUR)
+    if ungedeckelt:
+        return fiat + stabil - float(reserve)
     return max(0.0, fiat + stabil - float(reserve))
+
+
+def cash_lage(conn, config: dict | None = None) -> dict | None:
+    """F3/F4 (16.09.2026): die Cash-Lage fuer die Mailzeile - frei, gebunden,
+    offene Orders, Stand. `None`, wenn der neue Bitpanda-Abgleich noch keinen
+    gebundenen Betrag geschrieben hat (alter Abgleich, erster Lauf): dann bleibt
+    die Mailzeile, wie sie war."""
+    from datetime import datetime as _dt, timezone as _tz
+
+    from database import db as DB
+
+    frei = cash_frei_eur(conn, config)
+    if frei is None:
+        return None
+    # UNGEDECKELT fuer die Frage ,reicht es mit aufgeloesten Orders' (Livetest
+    # 16.09.): `cash_frei_eur` schneidet bei 0 ab - bei 560 EUR verfuegbar und
+    # 2.000 EUR Reserve fehlen 1.440 EUR, die aufgeloeste Orders erst decken.
+    frei_roh = cash_frei_eur(conn, config, ungedeckelt=True)
+    try:
+        geb = DB.get_meta_wert(conn, "cash_gebunden_eur")
+        if geb in (None, ""):
+            return None
+        orders = DB.get_meta_wert(conn, "cash_orders_anzahl")
+        aelteste = DB.get_meta_wert(conn, "cash_aelteste_order") or None
+        stand = DB.get_cash_reserve_synced_at(conn)
+    except Exception:                                        # noqa: BLE001
+        return None
+    alter = None
+    try:
+        z = _dt.fromisoformat(str(stand))
+        alter = (_dt.now(_tz.utc) - (z if z.tzinfo else z.replace(tzinfo=_tz.utc))).total_seconds() / 3600
+    except (TypeError, ValueError):
+        pass
+    return {"frei_eur": float(frei), "frei_ungedeckelt_eur": float(frei_roh), "gebunden_eur": float(geb),
+            "orders_anzahl": int(orders) if orders not in (None, "") else None,
+            "aelteste_order": aelteste, "stand": stand, "alter_stunden": alter}
 
 
 def belegt_eur(conn, instrument: str) -> float:
