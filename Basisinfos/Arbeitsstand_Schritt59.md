@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 17.09.2026 abends · letzter Commit `03e5724` · 0.3 + 0.4 gebaut und geprüft, **Commit ausstehend** · NB gepullt und neu gestartet 18:08, Export 18:43 geprüft
+**Stand:** 17.09.2026 nachts · letzter Commit `c2e6514` (0.3 + 0.4, am NB gepullt) · 0.2 + 0.5 + 0.2b gebaut, Commit ausstehend · NB gepullt und neu gestartet 18:08, Export 18:43 geprüft
 
 ## Zuerst lesen (in dieser Reihenfolge)
 
@@ -20,9 +20,12 @@
 | 0.8 Stillstand und Abgrenzung (Recherche) | ✔ Befunde 2.456-llm-pause, 2.456-etf-knopf, 2.456-abgrenzung |
 | 0.9 ETF-Knöpfe gesperrt | ✔ gebaut `e45aa26` · am NB aktiv · ⏳ K13 Oberflächenblick (Nutzer) |
 | 0.7 + 0.10 Kennzeichnung und `signals.gruppe` | ✔ gebaut `03e5724` · am NB: Spalte da, Drift leer, keine Fehler · ⏳ K14 erste gekennzeichnete Mail |
-| 0.4 Messskripte nur lesend (E1: alle acht) | ✔ gebaut (2.457-nurlesend) · Paket NurLesend 18/18 · Commit ausstehend · offen klein: `backtest_llm1_historisch.py`, `pruefe_rollenkette.py` |
-| 0.3 Protokollfehler Messnorm (`null_ziehungen`) + CLAUDE.md (E2) | ✔ gebaut (2.457-protokoll) · Messstandard 29/29 · Commit ausstehend |
-| 0.2 Befunde W1–W11 · 0.5 Plan bereinigen · 0.2b Basisdokumente nachziehen | offen (Doku, kein Code) |
+| 0.4 Messskripte nur lesend (E1: alle acht) | ✔ gebaut (2.457-nurlesend) · Paket NurLesend 18/18  · offen klein: `backtest_llm1_historisch.py`, `pruefe_rollenkette.py` |
+| 0.3 Protokollfehler Messnorm (`null_ziehungen`) + CLAUDE.md (E2) | ✔ gebaut (2.457-protokoll) · Messstandard 29/29  |
+| 0.2 Befunde W1–W11 | ✔ erledigt: 2.457-w1 … w9 neu, dazu 2.457-n2 (Rahmen-Sätze erreichen BC, sprechen ab ca. Mitte Oktober → Entscheidung N12) und 2.457-n3; W10/W11 als Nachtrag |
+| 0.5 Plan bereinigen | ✔ erledigt: A9 entwirrt, 37 fertig, 42 im Titel, 43/25 Rückverweis, R-R12, 2.414 als Hinweis, KRYPTO-ZUERST offen |
+| 0.2b Basisdokumente | ✔ erledigt: Landkarte an fünf Stellen korrigiert, Manual **nur** Standvermerk (Weg A, Schritt 58), Anforderungen Z. 697, zwei Konzeptdokumente mit Standvermerk |
+| 0.12 tote Mail-Abschnitte „Umfeld“/„Zusatzinfo“ (2.457-w3) | NEU, offen – kleiner Bau vor Phase 1, nur Mail |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
@@ -30,12 +33,12 @@
 
 1. ✔ NB-Export 18:43 geprüft (seit Neustart nur die 2 bekannten marktrang-Tracebacks; Bitpanda, Datenfrische, Hebel-Abgleich ok). Offen: **K13** Nutzerblick, **K14** erste Multiasset-Mail, **K5** Tag 2 (18.09. 05:30)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
-3. Doku-Pakete 0.2 / 0.5 / 0.2b
+3. ✔ Doku-Pakete 0.2 / 0.5 / 0.2b erledigt – als Nächstes **0.12** (Mail-Abschnitte), dann 0.11 vor Phase 8
 4. **Nach Phase 0: Probelauf** einer neuen Sitzung (Anleitung von Charlie, Kontrollfragen gegen diese Datei)
 
 ## Offene Entscheidungen des Nutzers
 
-- keine offen im Moment (N1–N11, D1–D4 entschieden)
+- **N12** (neu): Stablecoin- und Optionsmarkt-Satz erreichen BC trotz `nur_eigen` und fangen ca. Mitte Oktober an zu sprechen – einfrieren, laufen lassen und Zeitpunkt protokollieren, oder bewusst aufnehmen? Spätestens vor Phase 8, Vorarbeit in Phase 1
 
 ## Offene Notebook-Kontrollen
 

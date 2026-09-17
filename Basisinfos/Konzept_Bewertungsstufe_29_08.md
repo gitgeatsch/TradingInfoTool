@@ -12,6 +12,19 @@
 > heisst: vor einem Widerruf **reproduzieren** (R-R11), und nicht
 > als aktuellen Stand zitieren. Was gilt, steht in
 > `REGISTER_Befunde.md`.
+
+> ## ⚠️ STANDVERMERK 17.09.2026 — was hier trägt und was nicht (Schritt 59 Phase 0.2b)
+>
+> **Trägt weiter und wird gebraucht:** das **Vier-Felder-Schema** (Teil 11 § 5):
+> verworfen gegen durchgelassen bei **gleichem** Modellurteil zeigt, ob die
+> Bewertung trägt; Modell-kaufen gegen Modell-halten bei **gleicher** Bewertung
+> zeigt, ob das Modell trägt. Schritt 59 Phase 8 misst genau so.
+>
+> **Überholt:** die Stufennummer (hier 11, heute **12**) und „der Entscheider
+> zählt nur“ (`NUR_ZAEHLEN`) — die Stufe entscheidet.
+>
+> **Zu beachten:** die V-0-Messung (Z. 230–321) stammt aus der Zeit vor dem
+> Messstandard; sie gilt nur mit Reproduktion (R-R11).
 >
 > ⚠️⚠️ **135 Messwerte** in diesem Dokument — hier ist die
 > Verwechslungsgefahr am groessten.

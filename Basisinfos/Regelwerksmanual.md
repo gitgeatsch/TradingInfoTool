@@ -3998,6 +3998,24 @@ Zeile ist deshalb kein Umbau, sondern eine Freischaltung.
 
 ---
 
+> ## ⚠️ STANDVERMERK 17.09.2026 — der Rollenteil unten ist auf dem Stand 29.08.
+>
+> ⚠️ **Bewusst NICHT von Hand nachgetragen** (Nutzerentscheidung 15.09., Weg A,
+> Schritt 58: das geltende Regelblatt wird aus dem Code **erzeugt**, weil ein
+> handgepflegtes Manual dreimal veraltet ist). Dieser Vermerk sagt nur, **was
+> hier nicht mehr stimmt**, damit niemand die alten Sätze anwendet:
+>
+> | Regel | hier | heute |
+> |---|---|---|
+> | R-A1 | Rolle A „ein- bis zweimal täglich“ | Lagebild bis **3 h** gültig, je Umlauf neu |
+> | R-A2 | feste Betragsstaffel (3+ → 500 EUR …) | Betrag aus **r(q)** und Kapital (Paket B, 11.09.) |
+> | R-R6 | „was in A steht, weiß BC“ | BC bekommt **nur Lage und Gleichlauf**, nie die Einstufung je Klasse (2.457-w2) |
+> | R-R3 G3 | „keine G-Quelle im BC-Faktentext“ | seit **01.09.** verletzt: BC bekommt die Terminmarkt-Sätze (2.457-w1) |
+> | G-Abschnitt | „nach der Mail“, „49,8 % der Signale“, Regime bei G | G läuft **nebenläufig nach dem Urteil**, Zahlen von 26.08. sind alt; G wird auch nur mit Rahmen-Sätzen gefragt (2.457-w9) |
+>
+> Verbindlich ist bis zum Regelblatt aus Schritt 58 der **Code**, dazu
+> `Basisinfos/REGISTER_Befunde.md` und der Plan zu Schritt 59.
+
 ### Rolle G — was und warum nach dem Versand geprüft wird
 
 **Was sie prüft:** den Fall auf **anderer** Faktengrundlage als Rolle BC —
@@ -4833,7 +4851,13 @@ Verwandt: **R-R9** (Neukalibrierung bei Beitragswechsel) ·
 `Anforderungen_Umbau_28_08.md` Nachtrag Abschnitt 9 ·
 `Befund_Instrument_nach_S6b_28_08.md` Abschnitt 6
 
-## R-R11 ⚠️ Eine Pflichtkontrolle reproduziert im BAND, nicht in der Zahl (02.09.2026)
+## R-R12 ⚠️ Eine Pflichtkontrolle reproduziert im BAND, nicht in der Zahl (02.09.2026)
+
+> ⚠️ **UMNUMMERIERT AM 17.09.2026** (Schritt 59 Phase 0.5). Diese Regel stand
+> bis dahin ebenfalls unter **R-R11** – dieselbe Nummer wie die
+> Reproduktionspflicht vom 06.09. weiter unten, auf die sich rund 120 Stellen
+> in Code, CLAUDE.md und Basisinfos beziehen. Die jüngere Nummer bleibt
+> deshalb bei der Reproduktionspflicht, die Band-Regel heißt ab jetzt R-R12.
 
 **Anlass F-171.** Jeder Messlauf beginnt mit einer Pflichtkontrolle —
 *„Funding muss +0,0242 R reproduzieren"*, *„Turnover muss +0,0616 R

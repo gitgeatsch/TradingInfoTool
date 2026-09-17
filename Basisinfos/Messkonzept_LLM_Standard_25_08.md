@@ -13,6 +13,21 @@
 > als aktuellen Stand zitieren. Was gilt, steht in
 > `REGISTER_Befunde.md`.
 
+> ## ⚠️ STANDVERMERK 17.09.2026 — was hier trägt und was nicht (Schritt 59 Phase 0.2b)
+>
+> **Trägt weiter:** der Aufbau der Fragen N-7 (F1 Kette gegen gleich großen
+> Zufall, F2 gegen EMA-200, F3 Urteil gegen Vorauswahl), die Zerlegung C1 und
+> die Mindestzahl von 200 Paaren je Arm. Schritt 59 baut darauf auf.
+>
+> **Ersetzt:** die Entscheidungsregel. Hier steht eine Schwelle |t| ≥ 3,05; seit
+> dem 09.09. gilt die Messnorm (Band, Tagesklammer, Nullpunkt aus 40 Ziehungen,
+> Trennschärfe gegen den Nullpunkt) — `messnorm.standardzeile()`. Eine
+> Tagesklammer kennt dieses Dokument nicht.
+>
+> **Überholt:** „der Entscheider zählt nur“ — die Stufe entscheidet seit dem
+> Umbau; die Kette hat heute 12 Stufen. Für die LLM-Ebene gilt zusätzlich, was
+> die Rollen wirklich bekommen (Befunde 2.457-w1 bis 2.457-w9).
+
 ---
 
 # Messkonzept: Funktioniert die LLM-Kette? — und ein Messstandard, der das dauerhaft beantwortet

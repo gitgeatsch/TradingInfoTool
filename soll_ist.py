@@ -394,7 +394,11 @@ VORGABEN = (
             "Multiasset (Aktien, ETF, Rohstoffe, Hedge) ist NACHGELAGERT - "
             "erst nach dem Krypto-Produktivgang. A-1, A-2 und die "
             "N-19-Messbasis sind zurueckgestellt.",
-            "Nutzervorgabe 10.09.", "erfuellt"),
+            "Nutzervorgabe 10.09. ⚠️ 17.09. auf OFFEN zurueckgesetzt "
+            "(Schritt 59 § 1a): die Multiasset-Ketten laufen seit 15.08. "
+            "scharf weiter - gekennzeichnet (2.456-abgrenzung), aber nicht "
+            "nachgelagert. Erfuellt ist die Vorgabe erst, wenn die "
+            "Multiasset-Schiene nach Abschluss Krypto umgebaut ist.", "offen"),
     Vorgabe("KRYPTO-STABIL-UND-KORREKT",
             "\u26a0\ufe0f\u26a0\ufe0f Bevor weitergearbeitet wird, muss der Krypto-Teil STABIL UND FUNKTIONAL "
             "KORREKT sein. Deshalb folgt auf die Gesamtmessung (Schritt 59) ein eigener, umfangreicher "
@@ -474,7 +478,11 @@ LAGEN = (
          "Hebel faellt dynamisch aus der Quote an, Zielzone 2-5x, nur LONG. "
          "KEINE eigene Bewertungsgruppe (Entscheidung 10.09.)",
          blocker="PAKET B baut r(q) (Schritte H-1 bis H-5). Offen "
-                 "danach: A9 - die AUFLOESUNG. ✔✔ GROESSTENTEILS GELOEST "
+                 "danach: die HEBEL-AUFLOESUNG "
+                 "(⚠️ 17.09. entwirrt: hier stand ,A9', aber A9 ist seit "
+                 "10.09. die LAENGS-Achse (2.283); die Aufloesung der "
+                 "Hebelstufung ist eine ANDERE Frage und traegt keine "
+                 "Blockernummer). ✔✔ GROESSTENTEILS GELOEST "
                  "(13.09., Befund 2.432): der Sprung 1,02x -> 3,90x ist WEG. "
                  "Nachgerechnet mit demselben Aufbau wie am 08.09.: Spot · 2,00x "
                  "· 2,46x · 3,12x · 5,00x · 5,00x - eine durchgehende Leiter, "
@@ -647,7 +655,7 @@ REIHENFOLGE = (
             "KEINE-TEILLOESUNG, STAND-PRUEFEN-VORHER): je Zelle Population, Zielgroesse, Nullmodell, Datenlage "
             "und bekannte Blocker (A1 binaeres Band, A8 Live-Menge, A9 Laengsachse) - vorgelegt und abgestimmt, "
             "bevor eine Zahl gerechnet wird. LLM ist Pruefung, nicht Entscheider.",
-            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Schritte 42, 29, 30, 43, 25, 35, 37, 52, 33",
+            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Phase 0.2 (17.09.) Befunde 2.457-w1, 2.457-w2, 2.457-w3, 2.457-w8, 2.457-w9, 2.457-n2, 2.457-n3 - Messdesign muss sie beruecksichtigen (G ab 01.09. getrennt, G nach Rahmen/symboleigen trennen, A-Einstufung wirkungslos, Luecken im Lauftakt aus dem Log, N12 vor Phase 8); Schritte 29, 30, 43, 25, 35, 52, 33 (42 ist aufgegangen)",
             block="D-BEWERTUNG",
             umbau="beides"),  # misst Alt (LLM-Rollen) und Neu (Bewertung, r(q)) in einer Matrix
     Schritt(56, "DATENQUELLEN OHNE FRISCHE - DIESELBE KLASSE WIE 2.452",
@@ -1237,7 +1245,7 @@ REIHENFOLGE = (
             "REIHENFOLGE: dieser Schritt steht VOR jeder Multiasset-Arbeit "
             "(Vorgabe KRYPTO-ZUERST bleibt, VERKAUF-VOR-MULTIASSET kommt "
             "davor). \u27a4 NUTZERENTSCHEIDUNGEN 14.09. (Plan_Asset_Lebenszyklus_14_09.md, Abschnitt Ausstieg): (A) VERKAUFEN UND REDUZIEREN GEHOEREN GEMESSEN und sauber ins Konzept - WAS ist der Verkaufsgrund: eine BEWERTUNG je Strategie; die noetigen Bewertungen und Urteile werden mit dem Nutzer dimensioniert wie beim Einstieg. \u26a0\ufe0f DIE VERKAUFSBEWERTUNG IST NICHT GELOEST - Stand 14.09. unveraendert 2.392. (B) HEBEL: Schutzschicht = Regeln alle 15 min mit eigenem Betreff und Mailhinweis; Fuehrung = Modell mit Positionskontext, an die OFFENE POSITION gebunden, 1-h-Takt fuer offene Hebeltrades - erst wenn gemessen ist, dass Verkauf/Reduzieren tragen; eigene Positionsfrage mit Intraday-Fakten. (C) KERN/AKKUMULATION: vorerst KEINE Verkaufsaktionen; nachgelagert: bei laengerem Greed u. U. sinnvoll, Fear nicht. (7c) Ein Asset mit Spot- UND Hebelposition = zwei Positionen, zwei Verkaufssignale, keine Sammelmail. \u27a4 DIE DETAILPLANUNG FOLGT NACH DEM ROLLOUT (Nutzerauftrag: Doku lesen, Messdokumente beachten, testen und simulieren). \u27a4 NUTZERENTSCHEIDUNG 15.09.: VOR DIE AKKUMULATION GEZOGEN (vor die Schritte 25 bis 27). Grund: die Prioritaet des Nutzers vom 11.09. lautet ,1 Hebel 2 Spot 3 Akkumulation', und die Verkaufsseite betrifft Hebel und Spot; sie laeuft taeglich mit 15 bis 20 Empfehlungen ohne gemessene Guete, waehrend die gesperrte Akkumulation nichts ausloest und damit nicht schadet. Schritt 55 geht voraus (Ausstiegsmail nach Positionen).",
-            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm",
+            "Nutzervorgabe 12.09.; Befunde 2.392, 2.392-stumm; gemessen wird das Guetemass in Schritt 59 Phase 5 (Ausstieg und Reduktion)",
             block="D-BEWERTUNG",
             umbau="beides"),  # die Ausstiegsseite laeuft an der neuen Bewertung vorbei
     Schritt(25, "AKKU-MESSPAKET",
@@ -1248,7 +1256,7 @@ REIHENFOLGE = (
             "`oi_aenderung` UMGEKEHRT -0,0178; (4) Stufen. Faellt ein "
             "Kandidat: Loesung suchen (KEIN-BEITRAG-FAELLT) - die Sperre "
             "bleibt so lange.",
-            "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09.",
+            "Befunde 2.286 bis 2.290; Nutzerentscheidung 11.09.; gemessen wird das Akku-Paket in Schritt 59 Phase 6",
             block="D-BEWERTUNG",
             umbau="neu"),  # Beitrag fuer die Akkumulation - die Lage hat heute keinen
     Schritt(26, "AKKU-BAU",
@@ -1434,7 +1442,7 @@ REIHENFOLGE = (
             "noch ,Handelstage' fuer Krypto, der Widerstand doppelt zur "
             "Markenliste der Rechnung und das Umschlag-Perzentil. Wer sie "
             "strafft, aendert den Prompt - also hier, mit Messung.",
-            "Nutzervorgabe 11.09.",
+            "Nutzervorgabe 11.09.; ➤ EINGEORDNET AUS SCHRITT 59 PHASE 0.2 (17.09.): 2.457-w1 (Terminmarkt im BC-Prompt, Ruecknahme erst hier), 2.457-w2 (A-Einstufung erreicht BC nie), 2.457-w4 (Prompt verlangt Einstieg/Stop), 2.457-w5 (Bestandsfaelle als Einstieg gefragt), 2.457-w6 (Finanzierungsrate ohne Spot-Hinweis), 2.457-w7 (Akkumulation leiht das Urteil), 2.457-w8 (A-Ausfall reisst die Gruppe mit), 2.457-w9 (G auch ohne symboleigene Daten) - jede Aenderung ERST NACH der Basislinienmessung in 59, sonst teilt sie die Messung",
             block="L-ROLLEN",
             umbau="alt",
             wartet_auf=(59,),  # ERST NACH der Messung (Schritt 59, darin 42) - ohne Messung ist jede Promptaenderung eine Meinung
@@ -1526,11 +1534,12 @@ REIHENFOLGE = (
             "r-Klammer (N-39) hat ihn geschlossen. ⚠️ Offen bleibt nur das "
             "OBERE Ende: die zwei besten Lagen ergeben beide 5,00x, weil "
             "die Obergrenze greift - eine bewusste Sicherheitsgrenze, keine "
-            "fehlende Aufloesung.",
-            "Plan 05.09.",
+            "fehlende Aufloesung. ➤ ERLEDIGT 17.09. (Schritt 59 Phase 0.5): die Frage dieses Schritts ist mit 2.432 beantwortet - die Aufloesung ist da, das obere Ende ist eine gewollte Grenze, kein Mangel. Was am Hebel offen bleibt, misst Schritt 59 Phase 4.",
+            "Plan 05.09.; Befunde 2.432, 2.174-grenzen; Schritt 59 Phase 4",
+            fertig=True,
             block="D-BEWERTUNG",
             umbau="neu"),  # Kalibrierung der neuen Schwelle
-    Schritt(42, "T-0 GESAMTKETTE HISTORISCH - ZAHL, GUETE, AUSSAGEKRAFT",
+    Schritt(42, "T-0 GESAMTKETTE HISTORISCH - ZAHL, GUETE, AUSSAGEKRAFT (NICHT GEBAUT - IN SCHRITT 59 AUFGEGANGEN, 15.09.)",
             "⚠️⚠️ MEHRFACH GEFORDERTE NUTZERVORGABE (zuletzt 12.09.): *,eine "
             "historische Pruefung der Gesamtkette - im ersten Schritt sind "
             "Anzahl und Qualitaet der echten Empfehlungen relevant, und dann "
@@ -2437,7 +2446,7 @@ REIHENFOLGE = (
             "und Log formal stilllegen und die Frage einem bestehenden Register "
             "uebertragen. \u26a0\ufe0f Nicht: das Manual von Hand nachtragen - "
             "genau das ist dreimal veraltet (Landkarte 16.08.).",
-            "Befund 2.455-regelwerk; Memory feedback_doku_struktur_zuordnung",
+            "Befund 2.455-regelwerk (inkl. W11: Log endet 24.08., Schlussvermerk 03.09.); Memory feedback_doku_struktur_zuordnung",
             block="D-ABBILDUNG",
             umbau="alt"),  # Dokumentation nachziehen, keine Umbauleistung
     Schritt(57, "ETF-BESTAND DER ROHSTOFFE - TRAEGT DIE INFORMATION?",
@@ -2493,7 +2502,10 @@ BLOCKER = (
            "`pruefe_auswahl` misst unter der Tagesklammer, bei k=2 bleiben "
            "0 verwertbare Tage",
      "K-1a ist dort nicht entscheidbar", "2.273"),
-    ("A9", "Die LAENGS-Achse loest bei beharrlichen Groessen erst ab "
+    ("A9", "⚠️ A9 IST DIE LAENGS-ACHSE - NICHT die Aufloesung der "
+           "Hebelstufung (die hiess am 11.09. versehentlich ebenfalls A9, "
+           "siehe 2.432; entwirrt am 17.09.). "
+           "Die LAENGS-Achse loest bei beharrlichen Groessen erst ab "
            "0,08 R auf: 0,03 R -> 20 %, 0,05 R -> 50 %, 0,08 R -> 90 %. "
            "Die echten Kandidaten liegen bei 0,02 bis 0,05 R",
      "ein ,traegt nicht laengs' ist dort UNTERMACHT, kein Nullbefund",

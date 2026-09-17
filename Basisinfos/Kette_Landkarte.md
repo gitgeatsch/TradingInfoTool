@@ -4,6 +4,24 @@
 Kette — was wird wo deterministisch berechnet, wie und wo bewerten die
 LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 
+> ## ⚠️ STANDKORREKTUR 17.09.2026 — fünf Aussagen dieses Dokuments stimmen nicht mehr
+>
+> Geprüft am Code in Schritt 59 Phase 0.2 (Befunde 2.457-w1 bis 2.457-w9). Der
+> Aufbau der Kette stimmt weiter; falsch sind diese Punkte. Die betroffenen
+> Stellen unten sind einzeln markiert.
+>
+> | Hier steht | Richtig ist seit | Befund |
+> |---|---|---|
+> | „Nichts davon steht im Faktentext von Rolle BC" (Terminmarkt bei Rolle G) | **01.09.2026**: Rolle BC bekommt die eigenen Terminmarkt-Sätze mit — BC und G sind seither **nicht unabhängig** | 2.457-w1 |
+> | „Rolle A blockiert nichts", „0 Verluste", „keine einzige Zelle gestoppt" | Im Regelfall richtig, **aber blind für den Ausfall**: fällt Rolle A aus, bricht die **ganze Gruppe** ab und erscheint in keiner Zählung | 2.457-w8 |
+> | Rolle G „nur bei eigener Grundlage (G5) — ohne symbolspezifische Terminmarktdaten gar nicht" | G wird **auch nur mit Rahmen-Sätzen** gefragt (Börsenfluss, Stablecoin, sogar die Lückenmeldung); gesperrt wird nichts | 2.457-w9 |
+> | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
+> | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
+>
+> Nicht falsch, aber unvollständig: Rolle A liefert **Lage und Gleichlauf** an
+> BC, **nicht** die Einstufung je Klasse (2.457-w2); die Mail-Abschnitte
+> „Umfeld" und „Zusatzinfo" sind tot (2.457-w3).
+
 ⚠️ **Aus dem Code gelesen, nicht aus der Erinnerung.** Die Stufennamen stammen
 aus `agent/rollen_gate.py::STUFEN`, die Aufrufstellen aus `agent/rollen_lauf.py`.
 
@@ -67,7 +85,7 @@ Schwelle 0,080 R). Kein Modell ist daran beteiligt.
 
 **Vom Modell (Rolle BC):** Aktion · Richtung · Begründung · Gegenargument ·
 Belege mit Richtung und Gewicht · Zahl unabhängiger Faktoren · Widerlegung
-(wodurch, welcher Preis, bis wann) · Einstieg und Stop als **Angabe**.
+(wodurch, welcher Preis, bis wann) · Einstieg und Stop als **Angabe**. ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w4: seit 18.08. nicht mehr im Schema, nur noch im Prompttext).
 
 **Gerechnet, nie vom Modell:** Betrag (aus der Zahl unabhängiger Faktoren,
 gedeckelt) · Hebel (`r(q)`, halbes Kelly) · Ziel (CRV 2,0 mechanisch) ·
@@ -96,7 +114,7 @@ sind Felder der alten Kette (Befund 2.390-gui).
 Sie läuft **nebenläufig in einem eigenen Faden**, nach dem Urteil, mit
 **eigenen Fakten**: der Positionierung am Terminmarkt — offene Kontrakte,
 Finanzierungsrate als Perzentil, Anteil der Long-Konten, Marktregime mit Dauer.
-Nichts davon steht im Faktentext von Rolle BC.
+Nichts davon steht im Faktentext von Rolle BC. ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w1: seit 01.09. **doch**).
 
 **Sie hat kein Veto.** Ihr Einwand erscheint in der Mail (Abschnitt 5,
 „DIE GEGENPRÜFUNG") und im Kopf unter „Was dagegen spricht" — er verändert
@@ -104,7 +122,7 @@ weder Aktion noch Betrag noch Hebel. Fällt sie aus, läuft die Kette weiter
 (P-8, fail-soft); im Log steht dann „Z.ai-Rolle G fehlgeschlagen".
 
 **Sie wird nur gefragt, wo es eine eigene Grundlage gibt** (G5): Zu einem Wert
-ohne symbolspezifische Terminmarktdaten wird nicht gefragt.
+ohne symbolspezifische Terminmarktdaten wird nicht gefragt. ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w9: Rahmen-Sätze genügen, gesperrt wird nichts).
 
 ---
 
@@ -135,7 +153,7 @@ keine Aussage darüber, ob ein KAUFEN des Modells besser ausgeht als ein Zufall
 auf derselben Menge.
 
 Das ist die stehende Nutzervorgabe *„das LLM muss den Zufall schlagen, und das
-muss messbar sein"* — offen, und Gegenstand von **Schritt 42**.
+muss messbar sein"* — offen, und Gegenstand von **Schritt 59** (Schritt 42 ist am 15.09.2026 darin aufgegangen).
 
 ---
 
@@ -148,7 +166,7 @@ muss messbar sein"* — offen, und Gegenstand von **Schritt 42**.
 |---|---|---|---|
 | auftrag | 39.471 | 0 | Rechnung |
 | fakten | 38.802 | 669 | Rechnung |
-| lagebild | 38.802 | **0** | Rechnung (Rolle A blockiert nichts) |
+| lagebild | 38.802 | **0** | Rechnung (Rolle A blockiert nichts ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf, 2.457-w8: der Ausfall der ganzen Gruppe kommt hier nicht vor) |
 | anlass | 26.797 | 12.005 | Rechnung |
 | auswahl | 16.242 | 10.555 | Rechnung |
 | terminmarkt | 16.242 | 0 | Rechnung |
@@ -229,7 +247,7 @@ hinein, 202 heraus), aus `gate_durchlaessigkeit` der Notebook-Sicherung.
 | **Wie oft** | **einmal je Umlauf und Gruppe** — nicht je Asset |
 | **Was sie liefert** | ein Lagebild des Marktes: Regime, Rahmen, Text |
 | **Was sie NICHT sieht** | kein einzelnes Asset, keine Position, keinen Betrag |
-| **Wirkung** | **null Verluste** — sie blockiert nichts |
+| **Wirkung** | **null Verluste** — sie blockiert nichts ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w8: Ausfall = ganze Gruppe ohne Mails) |
 
 ---
 
@@ -259,7 +277,7 @@ hinein, 202 heraus), aus `gate_durchlaessigkeit` der Notebook-Sicherung.
 | **Wer** | **Rechnung** — sie prüft das Ergebnis von **LLM-1 Rolle A** |
 | **Modul** | Buchung in `agent/rollen_lauf.py`, direkt nach `fakten` |
 | **Prüft** | Liegt das Lagebild aus Rolle A vor? |
-| **7 Tage** | 38.802 durch, **0 verloren** ➔ *Rolle A hat in sieben Tagen keine einzige Zelle gestoppt* |
+| **7 Tage** | 38.802 durch, **0 verloren** ➔ *Rolle A hat in sieben Tagen keine einzige Zelle gestoppt* ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w8: abgebrochene Läufe sind hier nicht gezählt) |
 
 ### 4 `anlass` — „Faktensatz hat sich geändert"
 
@@ -374,10 +392,10 @@ Das sind **2,7 %** der 2.046 Zellen, die es beurteilt hat.
 |---|---|
 | **Wer** | **Sprachmodell**, zweiter Anbieter |
 | **Modul** | `agent/zweite_meinung.py`, Fakten aus `agent/positionierung.py` |
-| **Eigene Fakten** | offene Kontrakte, Finanzierungsrate als Perzentil, Anteil Long-Konten, Marktregime mit Dauer — **nichts davon steht im Faktentext von Rolle BC** |
+| **Eigene Fakten** | offene Kontrakte, Finanzierungsrate als Perzentil, Anteil Long-Konten, Marktregime mit Dauer — ~~**nichts davon steht im Faktentext von Rolle BC**~~ ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w1) |
 | **Wirkung** | **kein Veto.** Text in der Mail (Abschnitt 5) und im Kopf unter „Was dagegen spricht" |
 | **Ausfall** | fail-soft — die Kette läuft weiter, im Log steht „Z.ai-Rolle G fehlgeschlagen" |
-| **Wann gefragt** | nur bei eigener Grundlage (G5) — ohne symbolspezifische Terminmarktdaten gar nicht |
+| **Wann gefragt** | ~~nur bei eigener Grundlage (G5) — ohne symbolspezifische Terminmarktdaten gar nicht~~ ⚠️ **17.09.2026 überholt** – siehe Standkorrektur am Kopf (2.457-w9) |
 
 ⚠️ **Z1 ist nicht Z.ai.** `gegenpruefer_rollen` (Z1, Stufe 8c) ist eine
 **Rechnung** und prüft die *Treue zur Eingabe*. `zweite_meinung` (Rolle G) ist
@@ -469,7 +487,7 @@ Sie wurde nie abgebildet.
 ## Erster Hinweis auf die Wirkung — ⚠️ kein Befund nach Norm
 
 Roh gezählt an `outcome_status`, **ohne Tagesklammer, ohne Nullmodell**. Er
-steht hier, weil er die Richtung von Schritt 42 vorgibt.
+steht hier, weil er die Richtung von Schritt 59 vorgibt (Schritt 42 ist darin aufgegangen).
 
 | Stelle | wie oft sie anschlägt (7 Tage, 449 Urteile) | trennt sie die Ausgänge? |
 |---|---|---|
@@ -484,5 +502,5 @@ Eingabe nicht steht** — und die Empfehlung geht unverändert hinaus.
 fällt ohne Grund). Es heißt, dass ihr Beitrag **unbelegt** ist.
 
 ➔ **Schritt 44** ordnet (Trichter / Wächter / Entscheidungshilfe trennen),
-**Schritt 42** misst. In dieser Reihenfolge — sonst misst 42 auf einer
+**Schritt 59** misst (Schritt 42 ist darin aufgegangen). In dieser Reihenfolge — sonst misst 59 auf einer
 Buchhaltung, die Bewertung und Betriebszustand vermengt.

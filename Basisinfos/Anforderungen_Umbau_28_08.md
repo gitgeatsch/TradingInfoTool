@@ -694,7 +694,7 @@ trennen."*
 | **Rolle** | zweiter LLM (Z.ai), **Gegenprüfung** des Urteils von Rolle BC |
 | **Stellung** | läuft **NACH** dem Mailbau, steht in **keiner** Trichterstufe |
 | **Ausgabe** | ein eigener Mailabschnitt (`gegenpruefung=`) |
-| **Besonderheit** | ⚠️ **sie sieht als einzige Rolle den Terminmarkt** — die OI-Fakten kommen bei ihr an (geprüft 01.09.: BTC +0,91 %, LINK +0,08 %, TAO −0,42 %, `fehlt: []`) |
+| **Besonderheit** | ⚠️ ~~**sie sieht als einzige Rolle den Terminmarkt**~~ **STANDKORREKTUR 17.09.2026: falsch seit dem 01.09. — Schritt 5 speist dieselben Terminmarkt-Sätze auch in den BC-Prompt ein (siehe Stand 01.09. weiter oben und Befund 2.457-w1). Rolle G ist damit nicht mehr die einzige Rolle mit Terminmarkt; ihre Unabhängigkeit ist aufgehoben.** — die OI-Fakten kommen bei ihr an (geprüft 01.09.: BTC +0,91 %, LINK +0,08 %, TAO −0,42 %, `fehlt: []`) |
 
 ### 8.2 Der Befund — 725 Widersprüche ohne Folge
 

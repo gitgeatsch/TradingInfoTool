@@ -3620,7 +3620,7 @@ es nur für die größeren, älteren Werte. Auf der Zielmenge (512 Werte
 
 | | |
 |---|---|
-| **R-R11 (neu)** | **Eine Pflichtkontrolle gilt als reproduziert, wenn der neue Wert im BAND des registrierten liegt — nicht, wenn die Zahlen gleich sind.** Verschiedene Ankermengen liefern verschiedene Punktschätzer; die bisherige Formulierung („muss +0,0242 R reproduzieren") lädt dazu ein, eine korrekte Messung zu verwerfen oder eine falsche zu glauben |
+| **R-R12** (bis 17.09. ebenfalls R-R11 – umnummeriert, siehe Regelwerksmanual) | **Eine Pflichtkontrolle gilt als reproduziert, wenn der neue Wert im BAND des registrierten liegt — nicht, wenn die Zahlen gleich sind.** Verschiedene Ankermengen liefern verschiedene Punktschätzer; die bisherige Formulierung („muss +0,0242 R reproduzieren") lädt dazu ein, eine korrekte Messung zu verwerfen oder eine falsche zu glauben |
 | **Beim Registrieren** | Zu jeder Beitragszahl gehört ihr **Band**, nicht nur der Punktwert. Bei Turnover fehlt es und ist mit [+0,0203 .. +0,1111] erheblich |
 
 Werkzeuge: `rechne_sperren_zusammen.py` · `messe_volumenanteil.py`
