@@ -281,6 +281,16 @@ def main() -> None:
         # P-8: manuelle Excel-Import/Export- und Fiat-Cash-Eingabe (Portfolio-Tab)
         # bleiben ohne Key voll nutzbar, nur der Live-Abgleich ist deaktiviert.
         logger.info("Kein BITPANDA_API_KEY gesetzt - Bestandsabgleich mit Bitpanda deaktiviert.")
+    # Schritt 61 Stufe 1.7 (G3): fehlt ein Bitpanda-Schluessel, eine Mail je Start -
+    # vorher stand das nur als INFO im Log. Nennt nur die Namen, nie Werte.
+    try:
+        from agent import schluessel_wache as _SW
+        _fehlend = _SW.fehlende_beim_start(dict(os.environ))
+        if _fehlend:
+            logger.warning("Beim Start fehlt: %s - Mail mit Handlung verschickt",
+                           ", ".join(_SW.SCHLUESSEL[k]["variable"] for k in _fehlend))
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Pruefung fehlender Schluessel beim Start fehlgeschlagen")
 
     try:
         watchlist = config.get_watchlist()

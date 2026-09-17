@@ -36,7 +36,8 @@ MAX_SEITEN = 20
 
 
 class FusionFehler(RuntimeError):
-    """Fehler beim Lesen - Text bereits maskiert."""
+    """Fehler beim Lesen - Text bereits maskiert. `schluessel_abgelehnt` nur bei 401 (1.7)."""
+    schluessel_abgelehnt = False
 
 
 @dataclass(frozen=True)
@@ -63,7 +64,9 @@ def _hole(pfad: str, api_key: str, params: dict | None = None) -> dict:
         raise FusionFehler("Fusion %s nicht erreichbar: %s"
                            % (pfad, maskiere(str(exc).replace(api_key, "***")))) from None
     if r.status_code == 401:
-        raise FusionFehler("Fusion: Zugang abgelehnt (401) - Schluessel ungueltig oder abgelaufen")
+        fehler = FusionFehler("Fusion: Zugang abgelehnt (401) - Schluessel ungueltig oder abgelaufen")
+        fehler.schluessel_abgelehnt = True
+        raise fehler
     if r.status_code >= 400:
         raise FusionFehler("Fusion %s antwortete %d: %s"
                            % (pfad, r.status_code, maskiere(r.text[:200].replace(api_key, "***"))))

@@ -25263,6 +25263,258 @@ def paket_papierkorb() -> None:
            and "Buchfuehrung nicht moeglich" in q, "")
 
 
+def paket_schluesselwache() -> None:
+    """Schritt 61 Stufe 1.7 - Schluesselueberwachung (Nutzerentscheidungen G1-G6,
+    16.09.2026). Speicherdatenbanken, Versand gestellt, kein Netz.
+
+    ⚠️⚠️ Nutzervorgabe: keine kritischen Infos in Mail oder Git - geprueft mit
+    einem gepflanzten Schluesselwert, der in keinem Text auftauchen darf."""
+    P = "Schluesselwache"
+    import sqlite3 as _sq
+    from datetime import date as _d, datetime as _dt, timezone as _tz
+
+    import agent.hebel_abgleich as _HA
+    import agent.schluessel_wache as _SW
+    import api.bitpanda_fusion as _FU
+    import api.bitpanda_public as _BP
+    import database.db as _DB
+    import importer.bitpanda_bestand as _BB
+    import scheduler.background as _BG
+
+    GEHEIM = "GEPFLANZT-7f3a9c-SCHLUESSELWERT"
+    post = []
+    alle_mails = []
+
+    def _post(betreff, text):
+        post.append((betreff, text))
+        alle_mails.append((betreff, text))
+        return True
+
+    def _db():
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        return c
+
+    import os as _osu
+    alt_sende = _SW._sende
+    alt_umgebung = {v: _osu.environ.get(v) for v in ("BITPANDA_API_KEY", "FUSION_API_KEY")}
+    _SW._sende = _post           # nie echte Mails aus der Suite
+    # ⚠️ echte Variablen mit gepflanztem Wert - taucht er in einer Mail auf, ist es ein Leck
+    _osu.environ["BITPANDA_API_KEY"] = GEHEIM
+    _osu.environ["FUSION_API_KEY"] = GEHEIM
+    try:
+        # ---- G1/G2 Ablehnung ------------------------------------------------
+        c = _db()
+        t1 = _dt(2026, 9, 17, 6, 0, tzinfo=_tz.utc)
+        a1 = _SW.abgelehnt(c, "bitpanda", t1)
+        a2 = _SW.abgelehnt(c, "bitpanda", _dt(2026, 9, 17, 18, 0, tzinfo=_tz.utc))
+        a3 = _SW.abgelehnt(c, "bitpanda", _dt(2026, 9, 18, 6, 0, tzinfo=_tz.utc))
+        b, t = post[0]
+        pruefe(P, "⚠️⚠️ G2: Mail sofort, am selben Tag keine zweite, am naechsten Tag wieder - mit Wirkung und Handlung",
+               a1 and not a2 and a3 and len(post) == 2 and "abgelehnt - Handlung noetig" in b
+               and "BITPANDA_API_KEY" in t and "WAS DAS BEDEUTET" in t and "neu starten" in t
+               and "nur mit Leserechten" in t and _SW.abgelehnt_seit(c, "bitpanda") == t1.isoformat(),
+               b + " | " + t[:200])
+        post.clear()
+        c2 = _db()
+        _SW._sende = lambda b, t: False
+        f1 = _SW.abgelehnt(c2, "fusion", t1)
+        _SW._sende = _post
+        f2 = _SW.abgelehnt(c2, "fusion", _dt(2026, 9, 17, 7, 0, tzinfo=_tz.utc))
+        pruefe(P, "scheitert der Versand, gilt der Tag NICHT als gemeldet - der naechste Lauf versucht es wieder; Fusion hat einen eigenen Zustand",
+               not f1 and f2 and len(post) == 1 and "FUSION_API_KEY" in post[0][1]
+               and _SW.abgelehnt_seit(c2, "bitpanda") is None, str(post)[:200])
+        post.clear()
+        w0 = _SW.wieder_in_ordnung(c2, "bitpanda")
+        w1 = _SW.wieder_in_ordnung(c2, "fusion")
+        w2 = _SW.wieder_in_ordnung(c2, "fusion")
+        a4 = _SW.abgelehnt(c2, "fusion", _dt(2026, 9, 17, 9, 0, tzinfo=_tz.utc))
+        pruefe(P, "⚠️ G2: Entwarnung nur nach einer Ablehnung, genau einmal; eine neue Ablehnung am selben Tag meldet sofort wieder",
+               not w0 and w1 and not w2 and a4 and "wieder in Ordnung" in post[0][0], str([p[0] for p in post]))
+        post.clear()
+
+        # ---- G3 fehlend beim Start -----------------------------------------
+        _SW._START_GEMELDET = False
+        fe = _SW.fehlende_beim_start({"FUSION_API_KEY": GEHEIM, "BITPANDA_API_KEY": "  "})
+        fe2 = _SW.fehlende_beim_start({"FUSION_API_KEY": GEHEIM})
+        _SW._START_GEMELDET = False
+        fe3 = _SW.fehlende_beim_start({"FUSION_API_KEY": GEHEIM, "BITPANDA_API_KEY": GEHEIM})
+        pruefe(P, "G3: fehlt ein Schluessel (auch nur Leerzeichen), EINE Mail je Start; sind beide da, keine",
+               fe == ["bitpanda"] and fe2 == ["bitpanda"] and fe3 == [] and len(post) == 1
+               and "BITPANDA_API_KEY" in post[0][0], str(post)[:200])
+
+        # ---- G4 Ablauf -------------------------------------------------------
+        post_vor = len(post)
+        c3 = _db()
+        stufen = []
+        for tag in (_d(2027, 8, 15), _d(2027, 8, 16), _d(2027, 8, 20), _d(2027, 9, 8), _d(2027, 9, 9),
+                    _d(2027, 9, 14), _d(2027, 9, 15), _d(2027, 9, 20)):
+            stufen.append(_SW.pruefe_ablauf(c3, {}, heute=tag))
+        betreffe = [b for b, _ in post[post_vor:]]
+        pruefe(P, "⚠️ G4: Fusion 15.09.2027 - Erinnerung bei 30, 7 und 1 Tag und am Ablauftag, jede Stufe genau einmal",
+               stufen == [[], ["fusion"], [], ["fusion"], [], ["fusion"], ["fusion"], []]
+               and "in 30 Tagen" in betreffe[0] and "in 7 Tagen" in betreffe[1] and "in 1 Tag ab" in betreffe[2]
+               and "abgelaufen" in betreffe[3], str(betreffe))
+        eigen = _SW.ablaufdaten({"bitpanda": {"schluessel_ablauf": {"fusion": "2028-09-15", "unbekannt": "2027-01-01"}}})
+        kaputt = _SW.pruefe_ablauf(_db(), {"bitpanda": {"schluessel_ablauf": {"fusion": "irgendwann"}}},
+                                   heute=_d(2027, 9, 1))
+        pruefe(P, "G4: ein neues Datum aus config.yaml ersetzt die Vorgabe, Unbekanntes wird ignoriert, ein kaputtes Datum bricht nichts ab; der Hauptschluessel hat keinen Ablauf",
+               eigen == {"fusion": "2028-09-15"} and kaputt == [] and "bitpanda" not in _SW.ablaufdaten({}), str(eigen))
+
+
+        # ---- G1 Erkennung an den Schnittstellen -----------------------------
+        class _Antwort:
+            def __init__(self, code):
+                self.status_code, self.text, self.headers = code, "Credentials / Access token wrong", {}
+
+            def json(self):
+                return {}
+        import requests as _rq
+        import os as _os
+        import tempfile as _tf
+        from pathlib import Path as _Pa
+        alt_get, alt_pfad = _rq.get, _DB.DB_PATH
+        # ⚠️ api_health schreibt bei jedem Abruf - Wegwerfdatei statt Standard-DB
+        _wegwerf = _Pa(_tf.gettempdir()) / ("tit_schluesselwache_%d.db" % _os.getpid())
+        _k = _sq.connect(_wegwerf)
+        _k.row_factory = _sq.Row
+        _DB.init_db(_k)
+        _k.close()
+        _DB.DB_PATH = _wegwerf
+        ergebnisse = {}
+        try:
+            for code in (401, 500):
+                _rq.get = lambda *a, _c=code, **k: _Antwort(_c)
+                for name, aufruf, fehlerklasse in (("public", lambda: _BP._hole("/portfolio", GEHEIM), _BP.BitpandaPublicFehler),
+                                                   ("fusion", lambda: _FU._hole("/account/orders", GEHEIM), _FU.FusionFehler)):
+                    try:
+                        aufruf()
+                        ergebnisse[(name, code)] = "kein Fehler"
+                    except fehlerklasse as exc:
+                        ergebnisse[(name, code)] = (exc.schluessel_abgelehnt, GEHEIM in str(exc))
+        finally:
+            _rq.get, _DB.DB_PATH = alt_get, alt_pfad
+            try:
+                _os.remove(_wegwerf)
+            except OSError:
+                pass
+        pruefe(P, "⚠️ G1: nur 401 markiert ,Schluessel abgelehnt' (neue Schnittstelle und Fusion), 500 nicht; kein Schluesselwert im Fehlertext",
+               ergebnisse == {("public", 401): (True, False), ("fusion", 401): (True, False),
+                              ("public", 500): (False, False), ("fusion", 500): (False, False)}, str(ergebnisse))
+
+        # ---- Verdrahtung Bestandsjob -----------------------------------------
+        import importer.bitpanda_bestand as _BBmod
+        alt_abgleich, alt_notify = _BBmod.bestandsabgleich, _BG._notify_job_failure
+        benachrichtigt = []
+        c4 = _db()
+
+        class _Ohne(object):
+            def close(self):
+                pass
+
+        def _fabrik():
+            return _Nicht_schliessen(c4)
+
+        class _Nicht_schliessen:
+            def __init__(self, inner):
+                self._c = inner
+
+            def __getattr__(self, n):
+                return getattr(self._c, n)
+
+            def close(self):
+                pass
+
+        def _wirft_abgelehnt(*a, **k):
+            e = _BP.BitpandaPublicFehler("Zugang abgelehnt (401)")
+            e.schluessel_abgelehnt = True
+            raise e
+
+        def _wirft_netz(*a, **k):
+            raise _BP.BitpandaPublicFehler("/portfolio nicht erreichbar")
+
+        class _Ergebnis:
+            meldungen = []
+            decreased_holdings_needs_confirmation = []
+        post.clear()
+        try:
+            _BG._notify_job_failure = lambda job, text: benachrichtigt.append(job)
+            _BBmod.bestandsabgleich = _wirft_abgelehnt
+            _BG.refresh_bitpanda_holdings_job("x", _fabrik)
+            nach_ablehnung = (list(benachrichtigt), len(post), _SW.abgelehnt_seit(c4, "bitpanda"))
+            _BBmod.bestandsabgleich = _wirft_netz
+            _BG.refresh_bitpanda_holdings_job("x", _fabrik)
+            nach_netz = list(benachrichtigt)
+            _BBmod.bestandsabgleich = lambda *a, **k: _Ergebnis()
+            _BG.refresh_bitpanda_holdings_job("x", _fabrik)
+            nach_erfolg = (_SW.abgelehnt_seit(c4, "bitpanda"), [p[0] for p in post])
+        finally:
+            _BBmod.bestandsabgleich, _BG._notify_job_failure = alt_abgleich, alt_notify
+        pruefe(P, "⚠️⚠️ Bestandsjob: Ablehnung -> eigene Mail STATT ,Job fehlgeschlagen'; Netzfehler -> weiter die alte Meldung; Erfolg -> Entwarnung und Zustand geloescht",
+               nach_ablehnung[0] == [] and nach_ablehnung[1] == 1 and nach_ablehnung[2]
+               and nach_netz == ["bitpanda_holdings"]
+               and nach_erfolg[0] is None and any("wieder in Ordnung" in b for b in nach_erfolg[1]),
+               "%s / %s / %s" % (nach_ablehnung, nach_netz, nach_erfolg))
+
+        # ---- Verdrahtung Cash / Fusion ---------------------------------------
+        c5 = _db()
+        alt_oo = _FU.offene_orders
+        post.clear()
+        try:
+            def _fu_abgelehnt(key):
+                e = _FU.FusionFehler("Fusion: Zugang abgelehnt (401)")
+                e.schluessel_abgelehnt = True
+                raise e
+            _FU.offene_orders = _fu_abgelehnt
+            erg = _BB.cash_abgleich(c5, {_BP.EUR_WAEHRUNG_ID: (3467.27, 560.0)}, GEHEIM)
+            zustand = _SW.abgelehnt_seit(c5, "fusion")
+            _FU.offene_orders = lambda key: _FU.OffeneOrders(10, 2900.0, "2026-06-04T08:00:00Z", ("BTC-EUR",))
+            erg2 = _BB.cash_abgleich(c5, {_BP.EUR_WAEHRUNG_ID: (3467.27, 560.0)}, GEHEIM)
+        finally:
+            _FU.offene_orders = alt_oo
+        pruefe(P, "⚠️ Cash: abgelehnter Fusion-Schluessel -> Zustand und Mail (vorher nur WARNING), der Betrag bleibt; wieder angenommen -> Entwarnung",
+               zustand and erg["gebunden"] == 2907.27 and erg["details"] == "differenz"
+               and erg2["details"] == "fusion" and _SW.abgelehnt_seit(c5, "fusion") is None
+               and [b for b, _ in post] and "Fusion" in post[0][0] and "wieder in Ordnung" in post[-1][0],
+               str([b for b, _ in post]))
+
+        # ---- andere Mails nennen die Ursache ---------------------------------
+        z = _HA.Meldezustand()
+        v = _HA.meldung({"veraltet": True, "offen": [], "stunden": 2.0, "stand": None}, z,
+                        ursache=_SW.hinweis_zeile(c4, "bitpanda") or "")
+        c6 = _db()
+        _SW.abgelehnt(c6, "bitpanda", t1)
+        zeile = _SW.hinweis_zeile(c6, "bitpanda")
+        v2 = _HA.meldung({"veraltet": True, "offen": [], "stunden": 2.0, "stand": None}, _HA.Meldezustand(),
+                         ursache=zeile)
+        q = _quelltext("scheduler/background.py")
+        pruefe(P, "Hebel-Abgleich- und Datenfrische-Mail nennen die bekannte Ursache - nur, wenn der Schluessel abgelehnt ist",
+               _SW.hinweis_zeile(c4, "bitpanda") is None and "URSACHE BEKANNT" not in v[1]
+               and zeile and "URSACHE BEKANNT" in v2[1]
+               and 'ursache=_ursache)' in q and '_SW.hinweis_zeile(conn, "bitpanda")' in q
+               and 'z.get("quelle") in ("bestand", "hebel_abgleich")' in q, "")
+        qm = _quelltext("main.py")
+        pruefe(P, "G3 verdrahtet: `main.py` prueft beim Start, fail-soft, und loggt nur Variablennamen",
+               "_SW.fehlende_beim_start(dict(os.environ))" in qm
+               and 'logger.exception("Pruefung fehlender Schluessel beim Start fehlgeschlagen")' in qm, "")
+        # ---- keine Geheimnisse - ueber ALLE Mails des Pakets ------------------
+        alle_texte = " ".join(b + " " + t for b, t in alle_mails)
+        pruefe(P, "⚠️⚠️⚠️ kein Schluesselwert in irgendeiner der %d Mails (gepflanzt in BITPANDA_API_KEY und FUSION_API_KEY), nur Variablennamen" % len(alle_mails),
+               len(alle_mails) >= 12 and GEHEIM not in alle_texte
+               and "BITPANDA_API_KEY" in alle_texte and "FUSION_API_KEY" in alle_texte, "")
+        for cc in (c, c2, c3, c4, c5, c6):
+            cc.close()
+    finally:
+        _SW._sende = alt_sende
+        _SW._START_GEMELDET = False
+        for _v, _w in alt_umgebung.items():
+            if _w is None:
+                _osu.environ.pop(_v, None)
+            else:
+                _osu.environ[_v] = _w
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25323,6 +25575,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "BitpandaBestand": paket_bitpanda_bestand,
           "BitpandaCash": paket_bitpanda_cash,
           "Papierkorb": paket_papierkorb,
+          "Schluesselwache": paket_schluesselwache,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

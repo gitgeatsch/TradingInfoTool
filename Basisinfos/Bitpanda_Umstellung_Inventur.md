@@ -6,7 +6,7 @@
 ⚠️ **Die Liste wird geprueft:** `python pruefe_pakete.py --paket BitpandaInventur` sucht mit denselben Mustern im Code (`agent/ api/ importer/ scheduler/ ui/ database/`, `main.py`, `config.py`, `extract_notebook_diagnose.py`).
 Eine neue Fundstelle ohne Eintrag hier macht die Pruefung rot — **erst hier eintragen, dann bauen.**
 
-Muster (Stand 15.09.2026, 56 Dateien):
+Muster (Stand 15.09.2026, 57 Dateien):
 
 | Kategorie | Bedeutung |
 |---|---|
@@ -40,14 +40,14 @@ Muster (Stand 15.09.2026, 56 Dateien):
 | `ui/portfolio.py` | **Bestand liest:** Modulebene, AvgBuyPriceDialog, __init__, _on_edit_avg_price, refresh<br>**Cash:** __init__, _save_cash_reserve, _update_cash_reserve_synced_label, refresh, reload_cash_reserve_from_db<br>**Stempel:** reload_cash_reserve_from_db | Cash-Eingabefeld (schreibt `cash_reserve_fiat_eur`), Einstand-Dialog manuell, Bestandsanzeige, Stand-Anzeige | 1.6 Cashfeld L3 (abstimmen); Einstand-Dialog Stufe 2; Anzeige gestakt/verfuegbar |
 | `ui/signals_view.py` | **Bestand schreibt:** _on_save_clicked<br>**Bestand liest:** _current_holding_quantity<br>**Cash:** _render_signal | `_on_save_clicked` schreibt holdings bei ,umgesetzt' (Quelle `signal_bestaetigung`); zeigt Cash-Ziel | 1.2 ENTSCHEIDEN: mit API als Wahrheit nur noch Vormerkung, der naechste Abgleich ueberschreibt |
 
-## B · LESEN BESTAND, EINSTAND ODER CASH — Bedeutung halten, nach Stufe 1 gegenpruefen (29)
+## B · LESEN BESTAND, EINSTAND ODER CASH — Bedeutung halten, nach Stufe 1 gegenpruefen (30)
 
 | Datei | Fundstellen (Funktion) | Rolle heute | Umstellung |
 |---|---|---|---|
 | `agent/absicherung_fakten.py` | **Bestand liest:** lage | `lage`: Bestand fuer Absicherungsfakten | nach 1.2 gegenpruefen |
 | `agent/aktien/analyst.py` | **Bestand liest:** Modulebene, _build_haltung_facts, build_facts<br>**Cash:** build_facts | Haltungsfakten, Einstand, Cash | Einstand Stufe 2; nach 1.2 gegenpruefen |
 | `agent/aktien/pipeline.py` | **Katalog:** Modulebene, generate_signal<br>**Bestand liest:** generate_signal | Bestand, Katalog-Veto | nach 1.2; Katalog Stufe 4 |
-| `agent/datenfrische.py` | **Bestand liest:** _stand_bestand<br>**Cash:** _stand_bestand<br>**Stempel:** _stand_bestand, _stand_hebel_abgleich<br>**hebel_positions:** Modulebene, _stand_hebel_abgleich, pruefe | `_stand_bestand` (Stempel `bitpanda_holdings_synced_at`, Cash), `_stand_hebel_abgleich` | Stempel beim neuen Abgleich weiter setzen; 1.7 Schluesselfehler als eigener Zustand |
+| `agent/datenfrische.py` | **Bestand liest:** _stand_bestand<br>**Cash:** _stand_bestand<br>**Stempel:** _stand_bestand, _stand_hebel_abgleich<br>**hebel_positions:** Modulebene, _stand_hebel_abgleich, pruefe | `_stand_bestand` (Stempel `bitpanda_holdings_synced_at`, Cash), `_stand_hebel_abgleich` | Stempel beim neuen Abgleich weiter setzen; 1.7 erledigt 17.09.: Schluesselzustand in `agent/schluessel_wache.py`, die Datenfrische-Mail nennt ihn als Ursache (Text in `scheduler/background._melde_datenfrische`) |
 | `agent/hebel_abgleich.py` | **Sync:** Modulebene<br>**Stempel:** Modulebene, stand, stempel_setzen<br>**hebel_positions:** Modulebene, frische, stand, stempel_setzen | Frische des Hebelabgleichs (Stempel, Meldung) | Stufe 3: Stempel vom neuen Sync |
 | `agent/hedge/analyst.py` | **Bestand liest:** _build_haltung_facts | Haltungsfakten, Einstand | Einstand Stufe 2 |
 | `agent/hedge/pipeline.py` | **Katalog:** generate_signal<br>**Bestand liest:** _compute_portfolio_exposure, generate_signal | Portfolio-Exposure aus Bestand, Katalog-Veto | nach 1.2; Katalog Stufe 4 |
@@ -66,6 +66,7 @@ Muster (Stand 15.09.2026, 56 Dateien):
 | `agent/rohstoff/pipeline.py` | **Katalog:** generate_signal<br>**Bestand liest:** generate_signal | Bestand, Katalog-Veto | nach 1.2; Katalog Stufe 4 |
 | `agent/rollen_eingabe.py` | **Bestand liest:** bestand<br>**hebel_positions:** bestand, gegenbestand_satz | `bestand`: Menge und Wert fuer den Prompt, Gegenbestand Hebel | nach 1.2 Pruefstand-Mail vergleichen |
 | `agent/rollen_lauf.py` | **Bestand liest:** _ein_asset<br>**hebel_positions:** _ein_asset | `_ein_asset`: Menge fuer Mail und Rechnung, Hebelbestand | nach 1.2 Pruefstand-Mail vergleichen |
+| `agent/schluessel_wache.py` | **Netz:** Modulebene | NEU 17.09. (Stufe 1.7): Schluesselueberwachung - Ablehnung (401 der neuen Schnittstelle bzw. Fusion) als eigener Zustand in `meta`, Mail mit Wirkung und Handlung (sofort, dann taeglich, Entwarnung), fehlende Schluessel beim Start, Ablauf-Erinnerung 30/7/1 Tage; nennt nur Variablennamen | Stufe 3: Hebel-Buchungen ueber die neue Schnittstelle - dann auch deren 401 hier melden |
 | `agent/themen_etf/analyst.py` | **Bestand liest:** Modulebene, _build_haltung_facts, build_facts<br>**Cash:** build_facts | Haltungsfakten, Einstand, Cash | Einstand Stufe 2; nach 1.2 gegenpruefen |
 | `agent/themen_etf/pipeline.py` | **Katalog:** generate_signal<br>**Bestand liest:** generate_signal | Bestand, Katalog-Veto | nach 1.2; Katalog Stufe 4 |
 | `agent/toepfe.py` | **Bestand liest:** cash_frei_eur<br>**Cash:** Modulebene, cash_frei_eur, cash_lage<br>**Stempel:** cash_lage | `cash_frei_eur` = verfuegbar + Stablecoins - Reserve (nur Mailinfo); NEU `cash_lage` (frei, gebunden, Orders, Stand-Alter aus dem Abgleichstempel) | 1.3 und 1.8 erledigt 16.09.: gebundenes Cash als eigene Angabe statt abgezogen (F2), Docstring korrigiert |

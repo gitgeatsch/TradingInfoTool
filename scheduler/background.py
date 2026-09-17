@@ -1790,6 +1790,16 @@ def _melde_datenfrische(conn) -> int:
                     "(hole_fremdreihen.py, hole_terminmarkt_historie.py) "
                     "- sie haben bis heute keinen Job."
                     % (len(_mess), ", ".join(z["quelle"] for z in _mess)))
+            # 1.7: ist der Bitpanda-Schluessel abgelehnt, ist das die Ursache
+            # fuer Bestand und Hebelabgleich - nicht ,Job laeuft nicht'.
+            if any(z.get("quelle") in ("bestand", "hebel_abgleich") for z in _kritisch):
+                try:
+                    from agent import schluessel_wache as _SW
+                    _ursache = _SW.hinweis_zeile(conn, "bitpanda")
+                except Exception:                            # noqa: BLE001
+                    _ursache = None
+                if _ursache:
+                    _was_tun += "\n\n" + _ursache
             _nur_werte = [z for z in _kritisch if z.get("urteil") == "werte"]
             if _nur_werte:
                 _was_tun += (
@@ -2047,15 +2057,35 @@ def refresh_bitpanda_holdings_job(api_key, conn_factory) -> bool:
                 "Bitte im Datei-Menü 'Bestände von Bitpanda abgleichen' klicken.",
             )
         _record_job_success_for_backoff("bitpanda_holdings")
+        # 1.7 (G2/G4): Entwarnung nach einer Ablehnung, Ablauf-Erinnerung
+        _schluessel_nach_abgleich(conn, ok=True)
     except Exception as exc:
         logger.exception("Bitpanda-Bestandsabgleich fehlgeschlagen")
-        _notify_job_failure("bitpanda_holdings", f"Bitpanda-Bestandsabgleich fehlgeschlagen: {exc}")
+        if getattr(exc, "schluessel_abgelehnt", False):
+            # 1.7 (G1/G2): eigene Mail mit Handlung statt ,Job fehlgeschlagen'
+            _schluessel_nach_abgleich(conn, ok=False)
+        else:
+            _notify_job_failure("bitpanda_holdings", f"Bitpanda-Bestandsabgleich fehlgeschlagen: {exc}")
         _record_job_failure_for_backoff("bitpanda_holdings")
     finally:
         conn.close()
         bitpanda_holdings_lock.release()
         _job_started_at.pop("bitpanda_holdings", None)
     return True
+
+
+def _schluessel_nach_abgleich(conn, ok: bool) -> None:
+    """Schritt 61 Stufe 1.7 - fail-soft, der Abgleich geht vor."""
+    try:
+        import config as config_module
+        from agent import schluessel_wache as SW
+        if ok:
+            SW.wieder_in_ordnung(conn, "bitpanda")
+            SW.pruefe_ablauf(conn, config_module.load_config())
+        else:
+            SW.abgelehnt(conn, "bitpanda")
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Schluesselueberwachung fehlgeschlagen")
 
 
 # Wann eine Bitpanda-Bestandsmeldung zuletzt verschickt wurde, je Schluessel.
@@ -2503,6 +2533,11 @@ def _pruefe_hebel_abgleich(conn_factory) -> None:
         conn = conn_factory()
         try:
             befund = HA.frische(conn, app_start=_SCHEDULER_START)
+            try:
+                from agent import schluessel_wache as _SW
+                _ursache = _SW.hinweis_zeile(conn, "bitpanda")
+            except Exception:                                # noqa: BLE001
+                _ursache = None
         finally:
             conn.close()
         if befund["veraltet"]:
@@ -2511,7 +2546,8 @@ def _pruefe_hebel_abgleich(conn_factory) -> None:
                          HA._stand_text(befund["stand"]),
                          ", ".join(befund["offen"]) or "keine")
         vorschlag = HA.meldung(befund, _HEBEL_ABGLEICH_MELDEZUSTAND,
-                               letzter_fehler=_HEBEL_ABGLEICH_FEHLER)
+                               letzter_fehler=_HEBEL_ABGLEICH_FEHLER,
+                               ursache=_ursache)
         if vorschlag is None:
             return
         if _sende_hinweismail(*vorschlag):

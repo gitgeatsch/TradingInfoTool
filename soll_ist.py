@@ -594,7 +594,7 @@ REIHENFOLGE = (
             "Wallet-Salden neu rechnen - ohne Kennzeichen (Nutzer: ,ein sauberer Bestand rueckwirkend waere positiv, "
             "ohne Kennzeichen und Fallstrick'; Sicherung vorher, Vorher/Nachher-Protokoll) - HEIKEL, Umsetzungsschritte "
             "vorab abstimmen; 1.6 GUI-Cashfeld L3 (Anzeige gesamt/verfuegbar/gebunden/Stand, bearbeitbar nur ohne "
-            "Schluessel als eigener Wert) - Gestaltung vorab abstimmen; 1.7 Schluesselueberwachung (401 -> Mail mit "
+            "Schluessel als eigener Wert) - Gestaltung vorab abstimmen; 1.7 \u2714 GEBAUT 17.09. (2.455-schluessel-gebaut; G1-G6; am Notebook K12) Schluesselueberwachung (401 -> Mail mit "
             "Handlung; Fusion-Ablauf 30 Tage vorher erinnern); 1.8 ✔ GEBAUT 16.09. mit 1.3 Docstring `toepfe.cash_frei_eur` berichtigen (B1); "
             "1.9 \u2714 GEBAUT 15.09. (vorgezogen, 2.455-kurs-od7-gebaut, am Notebook K8) KURSE OD7H/OD7C, VOR 1.5: Ticker auf ISIN.SG wie OD7N/OD7L (`config.yaml` am Notebook), Reihe neu "
             "verankern, pruefen welche Mails und Fakten seit 18.07. das falsche Niveau trugen, Kursalter "

@@ -391,6 +391,15 @@ def _art(alt_frei, neu_frei, alt_gestakt, neu_gestakt) -> str:
     return "Zuwachs" if summe > 0 else "Rueckgang"
 
 
+def _schluessel_wache(was: str, conn, kennung: str) -> None:
+    """1.7: Schluesselzustand melden - fail-soft, der Abgleich geht vor."""
+    try:
+        from agent import schluessel_wache as SW
+        getattr(SW, was)(conn, kennung)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Schluesselueberwachung (%s, %s) fehlgeschlagen", was, kennung)
+
+
 def _fusion_schluessel() -> str | None:
     """Der Fusion-Leseschluessel aus der Umgebung (main.py laedt die .env)."""
     return os.environ.get("FUSION_API_KEY") or None
@@ -425,9 +434,13 @@ def cash_abgleich(conn, fiat: dict, fusion_key: str | None = None) -> dict:
             from api.bitpanda_fusion import offene_orders
             o = offene_orders(fusion_key)
             orders, orders_eur, aelteste, details = o.anzahl, o.kauf_eur, o.aelteste, "fusion"
+            _schluessel_wache("wieder_in_ordnung", conn, "fusion")
         except Exception as exc:                                 # noqa: BLE001
             logger.warning("Bitpanda-Cash (neu): Fusion-Orders nicht lesbar - Betrag aus der "
                            "Public API, ohne Details: %s", exc)
+            if getattr(exc, "schluessel_abgelehnt", False):
+                # 1.7 (G1): war bis 16.09. nur diese WARNING - still
+                _schluessel_wache("abgelehnt", conn, "fusion")
     elif gebunden > 0:
         logger.info("Bitpanda-Cash (neu): kein FUSION_API_KEY - gebundener Betrag ohne Orderdetails")
     for key, wert in ((META_CASH_ORDERS, orders), (META_CASH_ORDERS_EUR, orders_eur),

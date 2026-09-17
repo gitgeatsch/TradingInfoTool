@@ -114,6 +114,7 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `f5e9990` | **Bestand über die neue Bitpanda-Schnittstelle** | Frei und gestakt je Wallet aus den Buchungen; die doppelt gezählten gestakten Mengen werden korrigiert (Kapital rund −2.440 €, ohne Indexsprung); offene Verkaufssignale gelten nur bei echtem Verkauf als umgesetzt; Mails mit Name, Wert, Status und Aktion | 2.455-bestand-neu-gebaut | ✔ Export 16.09. 19:35: 10 Änderungen wie im Trockenlauf; ⏳ Tageswert am Morgen (K10) |
 | `cbc9482` | **Cash und Mailversand** | Cash gesamt, verfügbar und in offenen Orders gebunden (mit Anzahl und ältester Order); die Kaufmail sagt, ob eine Position nur mit aufgelösten Orders passt; eine gescheiterte Mail wird nach 1 Minute wiederholt und am Signal vermerkt; das Protokoll nennt jede Bestandsänderung | 2.455-cash-gebaut | ✔ Export 16.09. 22:09: Cash mit Orderdetails, Mailzählung und Vermerk wirken; ⏳ Cash-Zeile in der Kaufmail, Tageswert am Morgen (K11) |
 | `95341c9` | **Papierkorb-Warnung im Export** | Der Export zählt, was er in den Google-Drive-Papierkorb schiebt (alte Sicherungen, alte Exportfassungen), und warnt ab 2 GB; nach dem Leeren einmal `--papierkorb-geleert` | 2.455-drive-papierkorb | ✔ Pull 16.09.; Papierkorb geleert; ⏳ `--papierkorb-geleert` und erste Zeile im nächsten Export |
+| *(nächster Commit)* | **Schlüsselüberwachung** | Lehnt Bitpanda einen Schlüssel ab, kommt eine eigene Mail mit Handlung (sofort, dann täglich, Entwarnung wenn es wieder geht); fehlt ein Schlüssel beim Start, eine Mail; Erinnerung 30, 7 und 1 Tag vor dem Ablauf des Fusion-Schlüssels (15.09.2027). Mails nennen nur die Namen der Schlüssel, nie Werte | 2.455-schluessel-gebaut | ⏳ Pull ausstehend (K12) |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -185,3 +186,13 @@ Erwartet im Log:
 2. am Notebook einmal `python extract_notebook_diagnose.py --papierkorb-geleert`
 
 Ab dann zeigt jeder Export `Google-Drive-Papierkorb: rund X GB …`; ab 2 GB steht dort `BITTE LEEREN` mit denselben zwei Schritten.
+
+
+**Nach dem Pull von „Schlüsselüberwachung“ (K12):** normaler `git pull` → **App neu starten** (`main.py` prüft beim Start) → nach **30 Minuten** Export.
+
+Erwartet – im Normalfall passiert **nichts Sichtbares**:
+
+- **keine** Mail „beim Start fehlt …“ (beide Schlüssel stehen in der `.env`); käme sie doch, fehlt der genannte Schlüssel wirklich
+- **keine** Zeile `abgelehnt (BITPANDA_API_KEY)` oder `abgelehnt (FUSION_API_KEY)` im Log
+- der Bestandsabgleich läuft weiter wie bei K11 (`Bitpanda-Cash (neu): … in 10 Orders …`)
+- ⚠️ eine Mail „… abgelehnt – Handlung nötig“ wäre ein echter Befund: dann den Schritten in der Mail folgen

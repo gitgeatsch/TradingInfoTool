@@ -107,7 +107,7 @@ class Meldezustand:
 
 
 def meldung(befund: dict, zustand: Meldezustand,
-            letzter_fehler: str | None = None):
+            letzter_fehler: str | None = None, ursache: str | None = None):
     """(betreff, text) oder None. Der Aufrufer merkt den Versand erst nach
     ERFOLGREICHEM Versand vor (`vormerken`) - scheitert er, versucht es der
     naechste Lauf wieder.
@@ -143,6 +143,9 @@ def meldung(befund: dict, zustand: Meldezustand,
         "WAS ZU TUN IST: Offene Hebelpositionen in der Bitpanda-App selbst "
         "pruefen. Im Log nach ,Hebel-Positions-Abgleich uebersprungen' suchen.",
     ]
+    if ursache:
+        # 1.7: bekannte Ursache (Schluessel abgelehnt) - ohne Schluesselwert
+        zeilen += ["", ursache]
     if letzter_fehler:
         zeilen += ["", "LETZTER FEHLER: " + maskiere(str(letzter_fehler))[:300]]
     zeilen += ["", "Zu diesem Ausfall kommt keine weitere Mail. Sobald ein "

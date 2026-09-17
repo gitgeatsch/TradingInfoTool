@@ -78,7 +78,11 @@ WALLET_ADVANCED = "advanced-trading"
 
 
 class BitpandaPublicFehler(RuntimeError):
-    """Fehler beim Lesen - Text bereits maskiert."""
+    """Fehler beim Lesen - Text bereits maskiert.
+
+    `schluessel_abgelehnt` (1.7, G1): True nur bei 401 - bei dieser Schnittstelle
+    eindeutig ,Credentials / Access token wrong' (anders als die alte v1)."""
+    schluessel_abgelehnt = False
 
 
 @dataclass(frozen=True)
@@ -151,8 +155,10 @@ def _hole(pfad: str, api_key: str, params: dict | None = None) -> dict:
             continue
         if antwort.status_code == 401:
             # Eigener, eindeutiger Text: die Schluesselueberwachung (1.7) haengt daran.
-            raise BitpandaPublicFehler(
+            fehler = BitpandaPublicFehler(
                 "Zugang abgelehnt (401) - der Bitpanda-Schluessel ist ungueltig oder abgelaufen")
+            fehler.schluessel_abgelehnt = True
+            raise fehler
         if antwort.status_code >= 400:
             raise BitpandaPublicFehler("%s antwortete %d: %s"
                                        % (pfad, antwort.status_code,
