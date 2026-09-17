@@ -115,6 +115,7 @@ In der Konsole stehen dann die Zeilen **Terminmarkt**, **Umlaufmenge** und **Dat
 | `cbc9482` | **Cash und Mailversand** | Cash gesamt, verfügbar und in offenen Orders gebunden (mit Anzahl und ältester Order); die Kaufmail sagt, ob eine Position nur mit aufgelösten Orders passt; eine gescheiterte Mail wird nach 1 Minute wiederholt und am Signal vermerkt; das Protokoll nennt jede Bestandsänderung | 2.455-cash-gebaut | ✔ Export 16.09. 22:09 und 17.09. 06:42: Cash mit Orderdetails, Mailzählung und Vermerk wirken, Tageswert-Spalte Cash 3.467,27 € ohne Indexsprung; ⏳ Cash-Zeile in einer Kaufmail (Nutzerblick) |
 | `95341c9` | **Papierkorb-Warnung im Export** | Der Export zählt, was er in den Google-Drive-Papierkorb schiebt (alte Sicherungen, alte Exportfassungen), und warnt ab 2 GB; nach dem Leeren einmal `--papierkorb-geleert` | 2.455-drive-papierkorb | ✔ 17.09.: Buch zurückgesetzt, erster Export gebucht (0,4 GB), weiter 7 Sicherungen |
 | `b417f28` | **Schlüsselüberwachung** | Lehnt Bitpanda einen Schlüssel ab, kommt eine eigene Mail mit Handlung (sofort, dann täglich, Entwarnung wenn es wieder geht); fehlt ein Schlüssel beim Start, eine Mail; Erinnerung 30, 7 und 1 Tag vor dem Ablauf des Fusion-Schlüssels (15.09.2027). Mails nennen nur die Namen der Schlüssel, nie Werte | 2.455-schluessel-gebaut | ✔ Export 17.09. 06:42: keine Startmail, keine Ablehnung, Abgleich läuft (K12) |
+| *(nächster Commit)* | **Analyseknöpfe für ETF gesperrt** | Die Knöpfe „Signal berechnen“ für Themen-ETF (CEBS, EXH3, G2X, ISOC, VVMX, X136) und Absicherungen (DBPK, 3QSS) sind jetzt gesperrt wie bei Krypto, Aktien und Rohstoffen – vorher hätte ein Klick die alte Pipeline mit echtem Modellaufruf gestartet | 2.456-etf-knopf | ⏳ Pull ausstehend (K13) |
 
 **Ablauf für `8bedff5`:** `git pull` → **App neu starten** (Laufzeitcode: `main.py`, `database/db.py`) → danach der Export:
 
@@ -196,3 +197,11 @@ Erwartet – im Normalfall passiert **nichts Sichtbares**:
 - **keine** Zeile `abgelehnt (BITPANDA_API_KEY)` oder `abgelehnt (FUSION_API_KEY)` im Log
 - der Bestandsabgleich läuft weiter wie bei K11 (`Bitpanda-Cash (neu): … in 10 Orders …`)
 - ⚠️ eine Mail „… abgelehnt – Handlung nötig“ wäre ein echter Befund: dann den Schritten in der Mail folgen
+
+
+**Nach dem Pull von „Analyseknöpfe für ETF gesperrt“ (K13):** normaler `git pull` → **App neu starten** (Oberfläche). Dann im Reiter **Signale** nacheinander **DBPK** und **G2X** auswählen – **nicht klicken**:
+
+- neben dem Knopf steht `Stillgelegt: hedge läuft über die Rollen-Kette …` bzw. `… themen_etf …`
+- der Knopf „Signal berechnen“ ist grau bzw. reagiert nur mit diesem Hinweis
+- zur Gegenprobe BTC auswählen: derselbe Hinweis mit `krypto` (war schon vorher so)
+- ⚠️ ist der Knopf bei DBPK oder G2X frei, bitte **nicht klicken** und Bildschirmfoto schicken

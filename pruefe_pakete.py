@@ -21450,6 +21450,36 @@ def paket_guikette() -> None:
            and _RJ.alte_analyse_hinweis("aktien", {"rollen_kette": {"aktiv_fuer": ["aktien"]}}),
            "keine feste Sperre: der dokumentierte Rueckfallweg bleibt bedienbar")
 
+    # ---- (1b) Watchlist-Klasse `etf` (17.09.2026, 2.456-etf-knopf) ----------
+    # `aktiv_fuer` fuehrt Gruppen, die Watchlist nur `etf`. Bis 17.09. war
+    # `alte_analyse_hinweis("etf")` immer None - die Knoepfe fuer Themen-ETF und
+    # Absicherung starteten die alte Pipeline mit echtem Modellaufruf.
+    _nur = lambda *g: {"rollen_kette": {"aktiv_fuer": list(g)}}
+    pruefe(P, "⚠️⚠️ REGEL die Watchlist-Klasse `etf` ist mit der echten config.yaml GESPERRT",
+           _RJ.alte_analyse_hinweis("etf") is not None,
+           "vorher None: Themen-ETF- und Absicherungsknoepfe starteten die alte Pipeline")
+    pruefe(P, "⚠️ REGEL `etf` fail-closed: gesperrt, sobald themen_etf ODER hedge die neue Kette nutzt; frei nur, wenn keine von beiden",
+           _RJ.alte_analyse_hinweis("etf", _nur("themen_etf")) is not None
+           and _RJ.alte_analyse_hinweis("etf", _nur("hedge")) is not None
+           and _RJ.alte_analyse_hinweis("etf", _nur("krypto", "aktien")) is None
+           and _RJ.alte_analyse_hinweis("themen_etf", _nur("hedge")) is None
+           and _RJ.alte_analyse_hinweis("hedge", _nur("hedge")) is not None,
+           "der Rueckfallweg je Gruppe bleibt ueber die genaue Gruppe bedienbar")
+    import config as _cfg_g
+    from agent import assetklassen as _AKg
+    _wl = {a.symbol.upper(): a for a in _cfg_g.get_watchlist()}
+    _gr = {s: _AKg.gruppe(_wl[s]) for s in ("DBPK", "3QSS", "G2X", "X136") if s in _wl}
+    pruefe(P, "`assetklassen.gruppe` trennt die ETF der echten Watchlist: DBPK/3QSS -> hedge, G2X/X136 -> themen_etf - und jede dieser Gruppen ist gesperrt",
+           _gr == {"DBPK": "hedge", "3QSS": "hedge", "G2X": "themen_etf", "X136": "themen_etf"}
+           and all(_RJ.alte_analyse_hinweis(g) is not None for g in _gr.values()),
+           str(_gr))
+    _sv = _quelltext("ui/signals_view.py")
+    _kb = _sv[_sv.find("def _kann_berechnen("):_sv.find("def _on_compute_clicked(")]
+    pruefe(P, "⚠️ OBERFLAECHE `_kann_berechnen` uebergibt die GRUPPE (`assetklassen.gruppe`), nicht das Watchlist-Feld",
+           "_gruppe(asset)" in _kb and "_alte_analyse_hinweis(_klasse)" in _kb
+           and '_alte_analyse_hinweis(getattr(asset, "assetklasse"' not in _kb,
+           "")
+
     # ---- (2) jeder Analyseknopf fragt sie, BEVOR er etwas startet ----------
     def _vor_start(pfad, handler, start):
         q = _quelltext(pfad)

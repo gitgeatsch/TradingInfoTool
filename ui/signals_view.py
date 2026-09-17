@@ -735,7 +735,17 @@ class SignalsView(ttk.Frame):
     def _kann_berechnen(self, asset) -> bool:
         if asset is None or not self._any_llm_client_available():
             return False
-        hinweis = self._alte_analyse_hinweis(getattr(asset, "assetklasse", None))
+        # DIE GRUPPE, NICHT DAS WATCHLIST-FELD (17.09.2026, 2.456-etf-knopf):
+        # `aktiv_fuer` fuehrt Gruppen (`themen_etf`, `hedge`), die Watchlist nur
+        # `etf` - mit dem Feld blieben Themen-ETF und Absicherung ungesperrt.
+        # Dieselbe Funktion, nach der die Kette ihre Laeufe bildet.
+        try:
+            from agent.assetklassen import gruppe as _gruppe
+            _klasse = _gruppe(asset)
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Gruppe nicht bestimmbar - Regel mit Watchlist-Klasse")
+            _klasse = getattr(asset, "assetklasse", None)
+        hinweis = self._alte_analyse_hinweis(_klasse)
         if hinweis:
             self.status_label.config(text=hinweis, foreground=theme.info_color())
             return False

@@ -88,7 +88,21 @@ def alte_analyse_hinweis(assetklasse: str = "krypto",
     if config is None:
         import config as config_module
         config = config_module.load_config()
-    if not bedient_neue_kette(assetklasse, config):
+    # ⚠️⚠️ WATCHLIST-KLASSE `etf` IST KEINE GRUPPE (17.09.2026, Befund
+    # 2.456-etf-knopf, Schritt 59 Phase 0.9). In `aktiv_fuer` stehen die
+    # GRUPPEN `themen_etf` und `hedge`; die Oberflaeche uebergab das
+    # Watchlist-Feld `etf` - `bedient_neue_kette("etf")` war immer False, und
+    # die Knoepfe fuer Themen-ETF und Absicherung blieben frei: ein Klick
+    # startete die alte Pipeline mit echtem Modellaufruf. Aus dem Klassennamen
+    # allein ist nicht erkennbar, welche der beiden Gruppen gemeint ist - also
+    # FAIL-CLOSED: gesperrt, sobald EINE von beiden ueber die neue Kette laeuft.
+    # Genau ist die Oberflaeche selbst, sie uebergibt `assetklassen.gruppe()`.
+    klasse = str(assetklasse or "").strip().lower()
+    if klasse == "etf":
+        bedient = any(bedient_neue_kette(g, config) for g in ("themen_etf", "hedge"))
+    else:
+        bedient = bedient_neue_kette(klasse, config)
+    if not bedient:
         return None
     return ("Stillgelegt: %s laeuft ueber die Rollen-Kette (automatisch im "
             "Takt). Dieser Knopf wuerde die ALTE Pipeline starten und ein "
