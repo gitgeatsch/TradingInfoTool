@@ -24,7 +24,7 @@ def main() -> int:
         except Exception as e:                               # noqa: BLE001
             print("  %-12s FEHLER: %s" % (name, e))
 
-    c = sqlite3.connect("data/tradinginfotool.db")
+    c = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     beobachtet = {r[0] for r in c.execute(
         "SELECT DISTINCT symbol FROM holdings") if r[0]}
     beobachtet |= {r[0] for r in c.execute(

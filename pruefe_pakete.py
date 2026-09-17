@@ -22136,6 +22136,35 @@ def paket_messstandard() -> None:
             and "trennschaerfe_in_r=ts_r" in quelle_c),
            "ohne sie ist die Schranke nicht mehr zurueckzurechnen")
 
+    # ---- Schritt 59 Phase 0.3 (17.09.2026): das PROTOKOLL nennt die Zahl, ---
+    # mit der gerechnet wurde. Bis dahin stand im Messkopf jeder Messung seit
+    # 09.09. ,5 Ziehungen', gerechnet wurde der Nullpunkt aus 40. Am Lauf
+    # geprueft, nicht am Quelltext - Kunstdaten, keine Datenbank.
+    import numpy as _np03
+    _r03 = _np03.random.default_rng(7)
+    _welt03 = {"2025-%03d" % _t: [{"kennzahl": float(_r03.normal()),
+                                   "in_r": float(_r03.normal()),
+                                   "sym": "S%d" % (_i % 20)}
+                                  for _i in range(30)]
+               for _t in range(200)}
+    import contextlib as _cl03
+    with _cl03.redirect_stdout(io.StringIO()):
+        _b03 = _N.pruefe("protokollprobe", _welt03,
+                         lage=_N.Lage("spot", "einstieg"),
+                         zielgroesse="bewegung_r", menge="frei",
+                         frageart="markt",
+                         rng=_np03.random.default_rng(_N.SAAT),
+                         staerken=(0.05, 0.40))
+    _z03 = [z for z in _b03.protokoll.zeilen() if "Nullpunkt" in z]
+    pruefe(P, "⚠️ das Messprotokoll nennt die Nullziehungen, mit denen GERECHNET wurde (0.3)",
+           _b03.protokoll.null_ziehungen == _N.NULL_ZIEHUNGEN
+           and _b03.protokoll.positiv_ziehungen == _N.ZIEHUNGEN
+           and bool(_z03) and ("%d Ziehungen" % _N.NULL_ZIEHUNGEN) in _z03[0],
+           "Protokoll %s/%s, Kopfzeile %r - bis 17.09. stand dort 5, "
+           "gerechnet wurde mit 40 (Befund 2.457-protokoll)"
+           % (_b03.protokoll.null_ziehungen, _b03.protokoll.positiv_ziehungen,
+              _z03[0].strip() if _z03 else None))
+
     # ---- ⚠️ Und die Ehrlichkeit ueber das, was NICHT erledigt ist --------
     pruefe(P, "⚠️ der offene Rest steht im Modul, nicht nur im Plan",
            "GEMISCHTE" in quelle_a and "Selbsttest" in quelle_a,
@@ -25648,6 +25677,90 @@ def paket_abgrenzung() -> None:
            "gruppe, " in _EX._SPOT_SIGNAL_SPALTEN, "")
 
 
+NUR_LESEND_SKRIPTE = ("messe_ausstiegsguete.py", "messe_marktscan_wert.py",
+                      "messe_sentiment_je_horizont.py", "messe_top_fakten.py",
+                      "pruefe_marktlage.py", "pruefe_n8_gegenpruefung.py",
+                      "pruefe_n8_live_abdeckung.py",
+                      "messe_basislinie_aufloesung.py")
+
+
+def paket_nur_lesend() -> None:
+    """Schritt 59 Phase 0.4 (17.09.2026) - Mess- und Pruefskripte oeffnen die
+    Produktionsdatenbank NUR LESEND (Nutzerentscheidung E1, Befund
+    2.457-nurlesend).
+
+    Acht Skripte haben `data/tradinginfotool.db` mit `sqlite3.connect(pfad)`
+    bzw. `db.get_connection()` geoeffnet - beschreibbar, und `get_connection`
+    setzt zusaetzlich den WAL-Modus. Keins schrieb nachweislich; es haette
+    aber nur eine Zeile gebraucht (CLAUDE.md: am NB ist die Datei die
+    Produktion).
+
+    ⚠️ Geprueft wird am SEITENEFFEKT, nicht am Wort `mode=ro`: jeder
+    Oeffnungsausdruck wird aus dem Skript gelesen, gegen eine Wegwerfdatei
+    ausgewertet und muss einen Schreibversuch abweisen.
+
+    Offen und bewusst nicht hier: `backtest_llm1_historisch.py` und
+    `pruefe_rollenkette.py` (eigener kleiner Punkt nach Einzelpruefung)."""
+    P = "NurLesend"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import types as _ty
+
+    wurzel = Path(__file__).resolve().parent
+    ausdruecke = {}
+    for name in NUR_LESEND_SKRIPTE:
+        baum = _AST.parse((wurzel / name).read_text(encoding="utf-8"))
+        offen = []
+        for k in _AST.walk(baum):
+            if (isinstance(k, _AST.Call) and isinstance(k.func, _AST.Attribute)
+                    and k.func.attr in ("connect", "get_connection")):
+                offen.append(k)
+        ausdruecke[name] = offen
+        pruefe(P, "%s oeffnet die Datenbank genau einmal und nie ueber `get_connection`" % name,
+               len(offen) == 1 and offen[0].func.attr == "connect",
+               "%d Oeffnungen: %s" % (len(offen), [_AST.unparse(k)[:80] for k in offen]))
+
+    alt = _os.getcwd()
+    with _tf.TemporaryDirectory() as tmp:
+        _os.makedirs(_os.path.join(tmp, "data"))
+        rel = "data/tradinginfotool.db"
+        voll = _os.path.join(tmp, rel)
+        c = _sq.connect(voll)
+        c.execute("CREATE TABLE t (x)")
+        c.commit()
+        c.close()
+        vorher = Path(voll).read_bytes()
+        _os.chdir(tmp)
+        try:
+            for name, offen in ausdruecke.items():
+                if len(offen) != 1:
+                    continue
+                umgebung = {"sqlite3": _sq, "_sq": _sq, "DB": rel,
+                            "a": _ty.SimpleNamespace(db=rel),
+                            "db": _ty.SimpleNamespace(DB_PATH=Path(voll))}
+                abgewiesen, grund = False, ""
+                try:
+                    con = eval(compile(_AST.Expression(offen[0]), name, "eval"), umgebung)
+                    try:
+                        con.execute("SELECT count(*) FROM t").fetchone()
+                        con.execute("INSERT INTO t VALUES (1)")
+                        con.commit()
+                        grund = "Schreibversuch ging DURCH"
+                    except _sq.OperationalError as e:
+                        abgewiesen, grund = "readonly" in str(e), str(e)
+                    finally:
+                        con.close()
+                except Exception as e:  # noqa: BLE001 - Befund, nicht Absturz
+                    grund = "nicht auswertbar: %s" % e
+                pruefe(P, "⚠️ %s: liest die Datei und weist einen Schreibversuch ab" % name,
+                       abgewiesen, grund)
+        finally:
+            _os.chdir(alt)
+        pruefe(P, "und die Wegwerfdatei ist danach bytegleich",
+               Path(voll).read_bytes() == vorher, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25710,6 +25823,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Papierkorb": paket_papierkorb,
           "Schluesselwache": paket_schluesselwache,
           "Abgrenzung": paket_abgrenzung,
+          "NurLesend": paket_nur_lesend,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

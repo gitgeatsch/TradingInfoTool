@@ -277,7 +277,9 @@ SAAT = 20260906
 #
 # "Die Basis steht" waere deshalb eine Behauptung, kein Befund. Was sie
 # rechtfertigen wuerde, ist ein Selbsttest der ganzen Anlage gegen
-# bekannte Wahrheit - Fehlalarm- UND Fundquote. Der fehlt.
+# bekannte Wahrheit - Fehlalarm- UND Fundquote. ➤ NACHTRAG 17.09.2026: er ist
+# am 08.09. gelaufen (`selbsttest_messanlage.py`, Befund 2.204: 0 von 50
+# Nullwelten Fehlalarm, Aufloesung +0,0293 R bei 80 % Fundquote).
 # ============================================================================
 MESSSTANDARD_AB = "2026-09-09"
 NULL_ZIEHUNGEN = 40
@@ -815,7 +817,11 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
             wirkung_funktion="messe_regel_wirksamkeit.wirkung",
             band_funktion="messe_bewertungskennzahl.urteil_tage",
             null_konstruktion="Raenge je Tag gemischt",
-            null_ziehungen=ZIEHUNGEN,
+            # ⚠️ 17.09.2026 (Schritt 59 Phase 0.3): hier stand `ZIEHUNGEN` (5) -
+            # gerechnet wird der Nullpunkt aber aus NULL_ZIEHUNGEN (40, Schleife
+            # oben). Jeder Messkopf seit 09.09. nannte 5; die Urteile sind
+            # unberuehrt, nur das Protokoll untertrieb.
+            null_ziehungen=NULL_ZIEHUNGEN,
             positiv_konstruktion="in die gemischte Welt gepflanzt, "
                                  "auf die Gesperrten",
             positiv_ziehungen=ZIEHUNGEN, positiv_treffer=treffer,

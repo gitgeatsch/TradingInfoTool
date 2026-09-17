@@ -85,7 +85,7 @@ def main() -> int:
     a = p.parse_args()
     _deutsch_ausgeben()
 
-    con = sqlite3.connect(a.db)
+    con = sqlite3.connect("file:%s?mode=ro" % a.db, uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     faelle = list(con.execute("""
         SELECT symbol, einstufung, outcome_return_pct,
                date(outcome_gestartet_am), date(outcome_geprueft_am),

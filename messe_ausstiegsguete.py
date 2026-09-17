@@ -112,7 +112,7 @@ def main() -> int:
     a = p.parse_args()
     _deutsch_ausgeben()
 
-    con = sqlite3.connect(a.db)
+    con = sqlite3.connect("file:%s?mode=ro" % a.db, uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     zeilen_db = list(con.execute(
         "SELECT id, symbol, date(created_at) AS tag, action, "
         "       COALESCE(ist_reines_llm_halten, 0) AS stumm "

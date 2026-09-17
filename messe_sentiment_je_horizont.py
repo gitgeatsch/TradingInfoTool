@@ -53,7 +53,7 @@ CRV = 2.0
 
 
 def lade() -> tuple[np.ndarray, ...]:
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     rows = con.execute("""
         SELECT p.date, p.high, p.low, p.close, m.fear_greed_value
         FROM price_history_ohlc p

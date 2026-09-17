@@ -220,7 +220,11 @@ def main() -> int:
     ziel = open(pfad, "w", encoding="utf-8")
     alt = sys.stdout
     sys.stdout = Tee(ziel)
-    conn = db.get_connection()
+    # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - `db.get_connection()`
+    # oeffnet beschreibbar und setzt den WAL-Modus; das Skript liest nur.
+    import sqlite3 as _sq
+    conn = _sq.connect("file:%s?mode=ro" % db.DB_PATH.as_posix(), uri=True)
+    conn.row_factory = _sq.Row
     try:
         if hinweis:
             print(f"HINWEIS: {hinweis}")

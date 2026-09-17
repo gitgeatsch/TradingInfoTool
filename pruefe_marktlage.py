@@ -31,7 +31,7 @@ DB = "data/tradinginfotool.db"
 
 def lade(symbol: str) -> list[OhlcPoint]:
     """Eine Waehrung je Symbol - USD bevorzugt, sonst EUR (7.17)."""
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     try:
         for w in ("USD", "EUR"):
             zeilen = con.execute(

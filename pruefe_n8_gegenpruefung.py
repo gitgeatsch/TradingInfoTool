@@ -44,7 +44,7 @@ def main() -> int:
     print("=" * 96)
     print("G2  WELCHER CRV LAEUFT WIRKLICH?  (aus den Produktivsignalen)")
     print("=" * 96)
-    c = sqlite3.connect("data/tradinginfotool.db")
+    c = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     sp = [r[0] for r in c.execute(
         "SELECT crv FROM signals WHERE crv IS NOT NULL AND crv > 0")] \
         if any(x[1] == "crv" for x in c.execute("PRAGMA table_info(signals)")) \

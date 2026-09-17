@@ -51,7 +51,7 @@ FUENFTEL = 5
 
 
 def lade_symbole() -> dict:
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)  # Schritt 59 Phase 0.4 (17.09.2026): nur lesend - NB = Produktion
     syms = [r[0] for r in con.execute(
         "SELECT symbol FROM price_history_ohlc WHERE currency='USD' "
         "GROUP BY symbol HAVING COUNT(*) >= ?", (MIN_TAGE,))]
