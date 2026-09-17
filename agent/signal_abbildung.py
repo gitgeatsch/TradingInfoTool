@@ -151,6 +151,13 @@ SPALTEN_SIGNAL = {
     # dieser Stelle angelegt (`quelle_kette`, `belege_json`, ...). Eine zweite
     # Migration in db.py waere eine zweite Definition derselben Spalte.
     "strategie": "TEXT",
+    # ⚠️ 17.09.2026 (Schritt 59 Phase 0.10, Befund 2.456-abgrenzung): DIE
+    # GRUPPE DES LAUFS (krypto, aktien, rohstoffe, themen_etf, hedge). Vorher
+    # war eine Aktien- oder ETF-Zeile nur ueber Symbol -> heutige Watchlist
+    # von Krypto zu trennen, und die Watchlist aendert sich. Altzeilen bleiben
+    # LEER (Nutzerentscheidung D3) - eine Nachfuellung ginge nur ueber genau
+    # diese unsichere Zuordnung.
+    "gruppe": "TEXT",
     # P1 (24.08.2026): DAS URTEIL VON Z1 GEHOERT AN DIE ZEILE.
     #
     # ⚠️ DER BEFUND: Z1 (`gegenpruefer_rollen`) ist die einzige
@@ -491,7 +498,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             modell: str | None = None,
                             instrument: str | None = None,
                             strategie: str | None = None,
-                            z1: dict | None = None) -> dict:
+                            z1: dict | None = None,
+                            gruppe: str | None = None) -> dict:
     """Die Spaltenwerte fuer EIN Signal aus der Antwort der Rollen-Kette.
 
     SCHREIBT NICHT - der Aufrufer entscheidet, ob und wann. Diese Trennung ist
@@ -518,6 +526,8 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         # Strategie getrennt messen" dauerhaft unmoeglich.
         "strategie": (str(strategie).strip().lower()
                       if strategie else None),
+        # 17.09.2026 (2.456-abgrenzung): die GRUPPE des Laufs mit an die Zeile.
+        "gruppe": (str(gruppe).strip().lower() if gruppe else None),
         # P1: leere Zeichenkette heisst "geprueft und sauber", None
         # heisst "nicht gelaufen". Der Unterschied ist die halbe
         # Aussage.

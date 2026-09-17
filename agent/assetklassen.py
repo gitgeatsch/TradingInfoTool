@@ -73,6 +73,37 @@ INSTRUMENTE_JE_GRUPPE = {
 # nicht als Etikett - genau das tut `dimensioniere(hebel_handelbar=False)`.
 HEBEL_HANDELBAR_JE_GRUPPE = {"krypto": True}
 
+# ⚠️ KENNZEICHNUNG DER NICHT VERMESSENEN BEREICHE (17.09.2026, Schritt 59
+# Phase 0.7/0.10, Nutzerentscheidungen N1 und N11, Befund 2.456-abgrenzung).
+# Die gemessene Bewertung gibt es nur fuer Krypto; Aktien, Rohstoffe,
+# Themen-ETF und Absicherung laufen bis zur Multiasset-Schiene UNVERAENDERT
+# weiter, werden aber in Mail und Daten erkennbar abgegrenzt.
+ANZEIGENAME_JE_GRUPPE = {
+    "krypto": "Krypto",
+    "aktien": "Aktien",
+    "rohstoffe": "Rohstoffe",
+    "themen_etf": "Themen-ETF",
+    "hedge": "Absicherung",
+}
+
+
+def anzeigename(gruppe: str | None) -> str:
+    g = str(gruppe or "").strip().lower()
+    return ANZEIGENAME_JE_GRUPPE.get(g, g or "?")
+
+
+def nicht_vermessen(gruppe: str | None, vermessen: bool | None = None) -> bool:
+    """Braucht die Empfehlung die Kennzeichnung ,nicht vermessen'?
+
+    `vermessen` kommt aus der Entscheiderstufe (`potential.vermessen`) - die
+    EINE Stelle, die das weiss. Fehlt der Merker (keine Potentialrechnung),
+    entscheidet die Gruppe FAIL-CLOSED: alles ausser Krypto gilt als nicht
+    vermessen. Krypto ohne Merker bleibt ungekennzeichnet - dort gibt es die
+    gemessene Bewertung, und eine fehlende Rechnung ist ein anderer Befund."""
+    if vermessen is not None:
+        return not vermessen
+    return str(gruppe or "").strip().lower() not in ("", "krypto")
+
 
 def hebel_handelbar(gruppe: str) -> bool:
     """Darf diese Gruppe gehebelt handeln?

@@ -1026,7 +1026,9 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                               modell=modell, zeitpunkt=tag,
                               positionen=_positionen,
                               gesperrt=ergebnis.get("gesperrt") or None,
-                              stumm=_stumm)
+                              stumm=_stumm,
+                              # 17.09.2026 (D4): Bereich ohne gemessene Bewertung
+                              gruppe=assetklasse)
     if _sammel:
         ergebnis.setdefault("mails", []).append(
             {"symbol": "(Sammel)", "betreff": _sammel[0], "text": _sammel[1],
@@ -2870,6 +2872,9 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # einer Spot-Mail mit Hebel 1,0 war er mitten in der Lage
             # (Befund 2.372, Punkt 5). Gestrichen wird er nicht.
             hebelgeometrie=_bloecke.get("hebelgeometrie") or None,
+            # 17.09.2026 (N1/N11): der Merker der Entscheiderstufe - die EINE
+            # Stelle, die weiss, ob diese Klasse vermessen ist.
+            vermessen=(_potential.vermessen if _potential is not None else None),
             # DIESELBEN SAETZE AN MODELL UND NUTZER. Bei der Absicherung
             # steht die Portfoliolage VOR dem Marktumfeld: sie ist der Grund
             # der Entscheidung, das Umfeld nur ihr Hintergrund.
@@ -2982,6 +2987,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         eur_je_usd=RE.fx_eur_je_usd(symbol, reihe, idx, db),
         # S-2 (23.08.2026): der AUFTRAG geht mit, nicht nur das Instrument.
         strategie=strategie,
+        # 17.09.2026 (2.456-abgrenzung): die Gruppe des Laufs an die Zeile.
+        gruppe=assetklasse,
         # P1 (24.08.2026): das Urteil von Z1 auch - es lief bisher,
         # ging in die Mail und war trotzdem nie messbar.
         z1=z1,
@@ -3223,7 +3230,7 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
             prompt_stand=getattr(RT2, "PROMPT_STAND", "?"),
             eur_je_usd=None, familien=familien, strategie=strategie,
             instrument=instrument, rechnung=None, modell=modell,
-            z1=z1,
+            z1=z1, gruppe=assetklasse,
             # ⚠️ SCHRITT 48 (13.09.2026): der Kurs zum Empfehlungszeitpunkt.
             # Er lag hier immer schon vor (`kurs_e`), wurde aber nie
             # geschrieben - und ohne ihn rechnet die Guetemessung mit dem
@@ -3386,7 +3393,8 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             # Folge waere gewesen: der Hebel-Cooldown (`hebel IS NOT NULL`)
             # findet sie nicht und fragt dasselbe Symbol alle 15 Minuten neu.
             instrument=instrument,
-            familien=kern, rechnung=rechnung, modell=modell)
+            familien=kern, rechnung=rechnung, modell=modell,
+            gruppe=assetklasse)
         # DIE ZONEN KAMEN FRUEHER HIER NACHTRAEGLICH DAZU, weil
         # `felder_aus_entscheidung` sie aus der ANTWORT nahm und ein NICHTS_TUN
         # keine nennt. Das war ein Flicken an EINEM von zwei Wegen - der

@@ -25545,6 +25545,109 @@ def paket_schluesselwache() -> None:
                 _osu.environ[_v] = _w
 
 
+def paket_abgrenzung() -> None:
+    """Schritt 59 Phase 0.7/0.10 (17.09.2026) - Multiasset sauber abgrenzen und
+    kennzeichnen (Nutzerentscheidungen N1, N11, D1-D4; Befund 2.456-abgrenzung).
+
+        1  Gruppe je Signalzeile (`signals.gruppe`), alle drei Schreibwege
+        2  Einzelmail: Betreff und erste Zeile ,nicht vermessen' fuer Aktien,
+           Rohstoffe, Themen-ETF, Absicherung - Krypto unveraendert
+        3  Verkaufs-Sammelmail: Bereich im Betreff und Kopf
+        4  Export kennt die Spalte
+
+    Speicherdatenbanken, keine Modellaufrufe."""
+    P = "Abgrenzung"
+    import sqlite3 as _sq
+
+    import agent.assetklassen as _AK
+    import agent.entscheidungsrechnung as _ER
+    import agent.signal_abbildung as _SA
+    import agent.signal_mail as _SM
+    import agent.verkaufsrechnung as _VK
+    import database.db as _DB
+
+    # ---- Regel -------------------------------------------------------------
+    pruefe(P, "⚠️ `nicht_vermessen`: der Merker der Entscheiderstufe gilt; ohne ihn fail-closed nach Gruppe (alles ausser Krypto)",
+           _AK.nicht_vermessen("krypto") is False and _AK.nicht_vermessen("aktien") is True
+           and _AK.nicht_vermessen("themen_etf") is True and _AK.nicht_vermessen("hedge") is True
+           and _AK.nicht_vermessen("aktien", vermessen=True) is False
+           and _AK.nicht_vermessen("krypto", vermessen=False) is True
+           and _AK.anzeigename("themen_etf") == "Themen-ETF" and _AK.anzeigename("hedge") == "Absicherung", "")
+
+    # ---- 1 Daten -----------------------------------------------------------
+    c = _sq.connect(":memory:")
+    c.row_factory = _sq.Row
+    _DB.init_db(c)
+    _SA.migriere(c)
+    spalten = {r[1] for r in c.execute("PRAGMA table_info(signals)")}
+    f1 = _SA.felder_aus_entscheidung({"aktion": "NACHKAUFEN"}, fakten={}, gruppe=" Themen_ETF ")
+    f0 = _SA.felder_aus_entscheidung({"aktion": "NACHKAUFEN"}, fakten={})
+    try:
+        sid = _SA.schreibe_signal(c, f1, symbol="G2X")
+        geschrieben = c.execute("SELECT gruppe FROM signals WHERE id = ?", (sid,)).fetchone()[0]
+    except Exception as exc:                                 # noqa: BLE001
+        geschrieben = "ABBRUCH %s" % exc
+    c.close()
+    pruefe(P, "⚠️⚠️ `signals.gruppe` wird angelegt und geschrieben (normalisiert); ohne Gruppe bleibt sie leer",
+           "gruppe" in spalten and f1.get("gruppe") == "themen_etf" and f0.get("gruppe") is None
+           and geschrieben == "themen_etf", "%s / %s" % (f1.get("gruppe"), geschrieben))
+    q = _quelltext("agent/rollen_lauf.py")
+    aufrufe = q.split("felder_aus_entscheidung(")[1:]
+    pruefe(P, "⚠️ alle drei Schreibwege (Einstieg, Ausstieg, Nein-Zeile) geben die Gruppe des Laufs mit",
+           len(aufrufe) == 3 and all("gruppe=assetklasse" in a[:1800] for a in aufrufe),
+           "%d Aufrufe" % len(aufrufe))
+
+    # ---- 2 Einzelmail ------------------------------------------------------
+    r = _ER.rechne(kurs=100.0, atr=3.0, risiko_eur=1.0, instrument="spot", betrag_wunsch_eur=500.0,
+                   umgeworfen_preis_eur=94.0)
+    urteil = {"aktion": "NACHKAUFEN", "richtung": "LONG", "begruendung": "x", "was_dagegen": "y",
+              "umgeworfen_durch": "z", "unabhaengige_faktoren": 2,
+              "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]}
+
+    def _mail(**k):
+        return _SM.baue_mail(symbol="X", name="X", kurs_eur=100.0, instrument="spot", strategie="einstieg",
+                             rechnung=r, urteil=urteil, **k)
+    b_alt, t_alt = _mail()
+    b_kr, t_kr = _mail(assetklasse="krypto", vermessen=True)
+    b_kr0, t_kr0 = _mail(assetklasse="krypto")
+    b_et, t_et = _mail(assetklasse="themen_etf", vermessen=False)
+    b_ak, t_ak = _mail(assetklasse="aktien")
+    b_ak1, t_ak1 = _mail(assetklasse="aktien", vermessen=True)
+    b_he, t_he = _mail(assetklasse="hedge", vermessen=False)
+    pruefe(P, "⚠️⚠️ D2: Krypto-Mail UNVERAENDERT (Betreff und erste Zeilen wie ohne Gruppe)",
+           b_kr == b_alt and b_kr0 == b_alt and "NICHT VERMESSEN" not in t_kr and "NICHT VERMESSEN" not in t_kr0,
+           b_kr)
+    zweite = t_et.splitlines()[1] if len(t_et.splitlines()) > 1 else ""
+    pruefe(P, "⚠️⚠️ D1: Themen-ETF - Betreff endet auf ,Themen-ETF, nicht vermessen', die ZWEITE Zeile nennt den Grund",
+           b_et == b_alt + " · Themen-ETF, nicht vermessen"
+           and zweite.startswith("⚠️ NICHT VERMESSEN – für Themen-ETF")
+           and "allein auf dem Urteil des Sprachmodells" in zweite, b_et + " | " + zweite[:90])
+    pruefe(P, "Aktien ohne Merker fail-closed gekennzeichnet; mit Merker ,vermessen' nicht; Absicherung heisst ,Absicherung'",
+           b_ak.endswith("· Aktien, nicht vermessen") and "NICHT VERMESSEN – für Aktien" in t_ak
+           and b_ak1 == b_alt and "NICHT VERMESSEN" not in t_ak1
+           and b_he.endswith("· Absicherung, nicht vermessen"), b_ak + " | " + b_he)
+    pruefe(P, "die Kette gibt den Merker der Entscheiderstufe an die Mail",
+           "vermessen=(_potential.vermessen if _potential is not None else None)" in q, "")
+
+    # ---- 3 Sammelmail ------------------------------------------------------
+    auftrag = {"symbol": "VST", "begruendung": "Test",
+               "verkauf": _VK.rechne(aktion="VERKAUFEN", menge=10.0, kurs_eur=20.0, einstand_eur=15.0)}
+    s_alt = _VK.sammel_mail([auftrag], zeitpunkt="2026-09-17")
+    s_kr = _VK.sammel_mail([auftrag], zeitpunkt="2026-09-17", gruppe="krypto")
+    s_ak = _VK.sammel_mail([auftrag], zeitpunkt="2026-09-17", gruppe="aktien")
+    pruefe(P, "⚠️ D4: Verkaufs-Sammelmail - Aktien mit Bereich in Betreff und erster Zeile, Krypto unveraendert",
+           s_kr == s_alt and s_ak[0] == s_alt[0] + " · Aktien"
+           and s_ak[1].splitlines()[0] == "Bereich Aktien – ohne gemessene Bewertung",
+           "%s | %s" % (s_ak[0], s_ak[1].splitlines()[0]))
+    pruefe(P, "die Kette gibt die Gruppe an die Sammelmail",
+           "gruppe=assetklasse)" in q[q.find("VK2.sammel_mail("):q.find("VK2.sammel_mail(") + 400], "")
+
+    # ---- 4 Export ----------------------------------------------------------
+    import extract_notebook_diagnose as _EX
+    pruefe(P, "der Export fuehrt `gruppe` in der Signalliste (Spaltendrift bleibt leer)",
+           "gruppe, " in _EX._SPOT_SIGNAL_SPALTEN, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25606,6 +25709,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "BitpandaCash": paket_bitpanda_cash,
           "Papierkorb": paket_papierkorb,
           "Schluesselwache": paket_schluesselwache,
+          "Abgrenzung": paket_abgrenzung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

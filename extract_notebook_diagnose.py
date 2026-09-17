@@ -557,6 +557,8 @@ _SPOT_SIGNAL_SPALTEN = (
     # F5 (16.09.2026): Mailversand je Signal - am 16.09. 22:09 vom eigenen
     # Drift-Waechter gemeldet (K11), im Abschnitt `bitpanda_bestand` nur gezaehlt.
     "mail_versand, mail_versand_am, "
+    # 17.09.2026 (2.456-abgrenzung): die Gruppe des Laufs, Altzeilen leer.
+    "gruppe, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 

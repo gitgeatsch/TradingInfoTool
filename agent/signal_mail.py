@@ -449,7 +449,11 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
               marktrang: list[str] | None = None,
               marktvergleich: list[str] | None = None,
               termine: list[str] | None = None,
-              hebelgeometrie: list[str] | None = None) -> tuple[str, str]:
+              hebelgeometrie: list[str] | None = None,
+              # 17.09.2026 (Schritt 59 Phase 0.7/0.10, N1/N11): der Merker
+              # der Entscheiderstufe (`potential.vermessen`). None = keine
+              # Potentialrechnung - dann entscheidet die Gruppe fail-closed.
+              vermessen: bool | None = None) -> tuple[str, str]:
     """Betreff und Text. Reine Formatierung - hier wird nichts gerechnet.
 
     `rechnung` kommt aus `entscheidungsrechnung.rechne()`, `urteil` ist die
@@ -529,7 +533,22 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                + (dringend if _dringend_im_betreff else aktion)
                + (" (%s)" % ", ".join(_zusatz) if _zusatz else ""))
 
+    # ⚠️ NICHT VERMESSEN - SICHTBAR IN BETREFF UND ERSTER ZEILE (17.09.2026,
+    # Schritt 59 Phase 0.7/0.10, Nutzerentscheidungen N1, N11, D1, D2). Fuer
+    # Aktien, Rohstoffe, Themen-ETF und Absicherung gibt es keine gemessene
+    # Bewertung; die Entscheiderstufe laesst sie durch, und die Empfehlung
+    # beruht allein auf Rolle Haendler. Krypto bleibt unveraendert.
+    from agent import assetklassen as _AKM
+    _nicht_vermessen = _AKM.nicht_vermessen(assetklasse, vermessen)
+    _bereich = _AKM.anzeigename(assetklasse)
+    if _nicht_vermessen:
+        betreff += " · %s, nicht vermessen" % _bereich
+
     kopf = [titel,
+            *(["⚠️ NICHT VERMESSEN – für %s gibt es noch keine gemessene "
+               "Bewertung. Diese Empfehlung beruht allein auf dem Urteil des "
+               "Sprachmodells (Rolle Händler); Potential und Schwelle wurden "
+               "nicht geprüft." % _bereich] if _nicht_vermessen else []),
             f"Kurs {preis(kurs_eur)} EUR"
             + (f" · {zeitpunkt}" if zeitpunkt else "")
             + (f" · Modell {modell}" if modell else ""),

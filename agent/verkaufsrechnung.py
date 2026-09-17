@@ -420,7 +420,8 @@ def sammel_mail(alle: list, modell: str | None = None,
                 zeitpunkt: str | None = None,
                 positionen: list | None = None,
                 gesperrt: list | None = None,
-                stumm: list | None = None) -> tuple | None:
+                stumm: list | None = None,
+                gruppe: str | None = None) -> tuple | None:
     """EINE Mail fuer alle Ausstiege eines Laufs. `None`, wenn keiner anfiel.
 
     NUTZEREINWAND 14.08., NOCH WAEHREND DIESER UMBAU LIEF: *"45 Signale sind
@@ -495,6 +496,14 @@ def sammel_mail(alle: list, modell: str | None = None,
     if gesperrt:
         kopf.insert(0, "%d Position%s mit Urteil, aber GESPERRT durch Staking"
                     % (len(gesperrt), "en" if len(gesperrt) > 1 else ""))
+    # ⚠️ BEREICH OHNE GEMESSENE BEWERTUNG (17.09.2026, Schritt 59 Phase
+    # 0.7/0.10, Nutzerentscheidung D4): Aktien-, Rohstoff-, Themen-ETF- und
+    # Absicherungs-Verkaufsvorschlaege waren von Krypto nicht zu unterscheiden.
+    from agent import assetklassen as _AKV
+    _bereich_nv = (_AKV.anzeigename(gruppe)
+                   if gruppe and _AKV.nicht_vermessen(gruppe) else None)
+    if _bereich_nv:
+        kopf.insert(0, "Bereich %s – ohne gemessene Bewertung" % _bereich_nv)
     zeilen = list(kopf)
     if alle:
         zeilen += ["--- WAS ZU TUN IST ---"]
@@ -667,4 +676,6 @@ def sammel_mail(alle: list, modell: str | None = None,
     if stumm:
         kern.append("%dx stumm - zu kurze Kursreihe" % len(stumm))
     betreff = "TradingInfoTool: " + ", ".join(kern)
+    if _bereich_nv:
+        betreff += " · %s" % _bereich_nv
     return betreff, "\n".join(zeilen)
