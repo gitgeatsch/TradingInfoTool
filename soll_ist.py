@@ -619,7 +619,7 @@ REIHENFOLGE = (
             block="D-BETRIEB",
             umbau="beides"),  # ersetzt eine alte Anbindung und baut Bestand/Cash neu
     Schritt(59, "GESAMTKETTE MESSEN UND BEWERTEN - JE STRATEGIE UND PHASE, DETERMINISTISCH UND LLM",
-            "⚠️⚠️⚠️ NUTZERHINWEIS 16.09. ZUM LLM-TEIL: *,dieser ist extrem heikel und wir sind auf die Doku und Recherche "
+            "➤ PLAN 17.09. ABGESTIMMT (Nutzer: ,ja N1 bis N10 wie empfohlen', schrittweise mit Abstimmung, Details koennen sich aendern; KRYPTO ZUERST vollstaendig, Multiasset-Schiene danach im Block SPAETER; Stillstand der Produktion fuer LLM-Messungen § 6a): `Basisinfos/Plan_Schritt59_Gesamtkette_17_09.md` (Bewertungsstand je Strategie, Ist-Stand Kette und LLM-Rollen am Code, Abgleich der 18 Basisdokumente, Datenlage, Messdesign je Zelle, Phasen 0-9, Entscheidungen N1-N10) - KERN: gemessene Bewertung nur Krypto x Spot x Einstieg; Aktien/ETF/Rohstoffe werden allein von Rolle BC entschieden; LLM-Umbau (33) bleibt danach. ⚠️⚠️⚠️ NUTZERHINWEIS 16.09. ZUM LLM-TEIL: *,dieser ist extrem heikel und wir sind auf die Doku und Recherche "
             "angewiesen, dass alles korrekt umgesetzt wird - weil die LLM-Rollen nicht alle Informationen und in einem "
             "speziellen Format uebergeben bekommen'*. Fuer die LLM-Ebene der Matrix heisst das: VOR jeder Messung und jeder "
             "Aenderung am Code nachlesen und festhalten, WAS jede Rolle tatsaechlich bekommt (Faktenauswahl, Format, "
