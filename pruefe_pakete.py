@@ -21865,6 +21865,147 @@ def paket_register() -> None:
                                         _B._methodikblatt)))
 
 
+def paket_sperre() -> None:
+    """Misst `phase3_sperre.py` die Wiederholungssperre so, wie sie live wirkt?
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT. Die Sperre ist die groesste
+    Verlustquelle der Kette (im NB-Export vom 18.09.: 154 von 372 Zellen,
+    und 100 % derer, die `anlass` und `auswahl` ueberlebt haben). Eine
+    Messung, die sie um einen Tag falsch nachbildet, entscheidet ueber die
+    haelfte aller Fragen, die das System je stellt.
+
+    ⚠️ DREI DER FUENF PRUEFUNGEN HABEN BEIM BAU ETWAS GEFUNDEN:
+
+        - die Uhr wurde an Tagen, die aus der Wertung fielen, NICHT
+          gestellt (der `continue` stand vor der Buchung) - die Sperre war
+          im Modell schwaecher als live, ausgerechnet bei langen Laengen
+        - die Nullwelt muss GLEICH VIELE sperren, sonst misst man die
+          Stichprobengroesse statt die Sperre
+        - `k=0` muss die Kettenmessung EXAKT reproduzieren - sonst ist die
+          Sperrmessung nicht an 2.460-kette anschlussfaehig
+    """
+    P = "Sperre"
+    import numpy as _np
+    import phase3_sperre as _PS
+    import phase3_kette as _PK
+
+    # ---- Eine kleine Kunstwelt mit bekannter Wahrheit --------------------
+    #
+    # ⚠️ KUNSTDATEN, NICHT DIE MESSBASIS: hier wird die MECHANIK geprueft,
+    # und die muss auf einer Welt gelten, deren Antwort man vorher kennt
+    # (Vorabtest-Regel). Ein Lauf ueber die echten Reihen wuerde 20 s
+    # dauern und nichts beweisen, was hier nicht schaerfer steht.
+    def _welt(n_tage=12, n_sym=30, offen=12, schritt=4, duenn=None):
+        """Eine Welt, in der die freie Menge ROTIERT.
+
+        ⚠️ WARUM NICHT EINFACH ALLES FREI (erster Versuch, 18.09.): dann
+        sperrt `k=1` am zweiten Tag ALLES, der Tag faellt aus der Wertung,
+        niemand wird als gefragt gebucht - und die Sperre schaltet sich im
+        Wechsel selbst ab. Das ist kein Fehler des Codes, sondern eine
+        Welt ohne Ueberlappung. Gemessen werden soll aber der Normalfall:
+        die freie Menge ueberschneidet sich von Tag zu Tag TEILWEISE.
+
+        ⚠️ UND SIE MUSS UEBER DREI TAGE UEBERLAPPEN (18.09., zweiter
+        Anlauf): ein Symbol, das an Tag d gesperrt wird, muss an Tag
+        d+1 wieder frei sein - sonst bleibt unsichtbar, ob die Uhr die
+        GESPERRTEN mitbucht. Mit Schritt 3 von 6 fiel genau diese
+        Mutation durch die Pruefung hindurch."""
+        tage = []
+        for i in range(n_tage):
+            syms = ["S%02d" % j for j in range(n_sym)]
+            y = _np.arange(n_sym, dtype=float) / 10.0
+            m = _np.ones(n_sym, bool)
+            frei = _np.zeros(n_sym, bool)
+            breite = (duenn or {}).get(i, offen)
+            for j in range(breite):
+                frei[(i * schritt + j) % n_sym] = True
+            tage.append(("2026-01-%02d" % (i + 1), syms, y, m, frei))
+        return tage
+
+    w = _welt()
+    _, z0 = _PS.sperre(w, 0)
+    pruefe(P, "k=0 sperrt nichts - der Stand ohne Sperre",
+           sum(z0["gesperrt"]) == 0,
+           "sonst ist der Bezugspunkt der ganzen Messung verschoben")
+
+    _, z1 = _PS.sperre(w, 1)
+    # Tag 0 sperrt nichts (niemand war vorher dran), ab Tag 1 alle 10.
+    # Tag 0 sperrt nichts. Danach ueberlappen sich zwei aufeinander
+    # folgende Tage in genau `offen - schritt` = 3 Symbolen - und genau
+    # die muessen gesperrt sein.
+    # Tag 0 sperrt nichts. Tag 1 ueberschneidet sich mit Tag 0 in 8
+    # Symbolen; ab Tag 2 sind es 4, weil die an Tag 1 GESPERRTEN dort nicht
+    # gebucht wurden und ihre Uhr zwei Tage alt ist.
+    #
+    # ⚠️ GENAU DARAN HAENGT MUTATION M2: bucht die Uhr faelschlich auch die
+    # Gesperrten, steht ab Tag 2 eine 8 statt einer 4.
+    pruefe(P, "k=1 sperrt die Ueberschneidung - und bucht die Gesperrten NICHT",
+           z1["gesperrt"][:5] == [0, 8, 4, 4, 4],
+           "erwartet [0, 8, 4, 4, 4], gemessen %s" % z1["gesperrt"][:5])
+
+    # ---- DIE UHR AN NICHT GEWERTETEN TAGEN -------------------------------
+    #
+    # Tag 1 ist duenn (2 Anker frei) und faellt aus der WERTUNG. Gefragt
+    # wurde dort trotzdem - also muessen diese beiden Symbole an Tag 2
+    # gesperrt sein. Stand der `continue` vor der Buchung, sind sie frei.
+    # Tag 1 ist duenn: 5 frei, 3 davon gesperrt -> 2 uebrig, das ist
+    # unter MINDEST_FREI, der Tag faellt aus der WERTUNG. GEFRAGT wurde
+    # dort trotzdem - also muessen diese 2 an Tag 2 gesperrt sein.
+    # Tag 1 ist duenn: 10 frei, 8 davon gesperrt -> 2 uebrig, das ist
+    # unter MINDEST_FREI, der Tag faellt aus der WERTUNG. GEFRAGT wurde
+    # dort trotzdem - also muessen diese 2 an Tag 2 gesperrt sein.
+    wd = _welt(duenn={1: 10})
+    _, zd = _PS.sperre(wd, 1)
+    pruefe(P, "die Uhr wird auch an Tagen gestellt, die aus der Wertung fallen",
+           zd["gesperrt"][1] == 8 and zd["gesperrt"][2] == 2,
+           "an Tag 2 muessen die 2 gefragten Anker von Tag 1 gesperrt sein, "
+           "gemessen %s" % zd["gesperrt"][:3])
+
+    # ---- DIE NULLWELT ----------------------------------------------------
+    echt, ze = _PS.sperre(w, 2)
+    zahlen = dict(zip([x[0] for x in w], ze["gesperrt"]))
+    _, zn = _PS.sperre(w, 2, zahlen=zahlen,
+                       rng=_np.random.default_rng(_PS.messnorm.SAAT))
+    pruefe(P, "die Nullwelt sperrt GLEICH VIELE je Tag",
+           zn["gesperrt"] == ze["gesperrt"],
+           "sonst misst der Vergleich die Stichprobengroesse, nicht die "
+           "Sperre - gemessen %s gegen %s"
+           % (zn["gesperrt"][:4], ze["gesperrt"][:4]))
+
+    # ---- GEPFLANZT WIRD IN DIE GESPERRTEN --------------------------------
+    #
+    # Ohne Sperre gibt es nichts zu pflanzen: k=0 muss mit und ohne
+    # `pflanze` dasselbe liefern. Mit Sperre muss sich etwas bewegen.
+    # ⚠️ NICHT UEBER k=0 (18.09., nach der Gegenpruefung): sonst faellt
+    # diese Pruefung zusammen mit "k=0 sperrt nichts", und eine Mutation,
+    # die beide rot macht, sagt nicht mehr, welche greift. Der Fall "nichts
+    # zu pflanzen" kommt hier aus einer Welt OHNE Ueberschneidung.
+    ohne = _welt(offen=10, schritt=10, n_sym=30)
+    a0, _ = _PS.sperre(ohne, 1)
+    a0p, _ = _PS.sperre(ohne, 1, pflanze=0.40)
+    a2, _ = _PS.sperre(w, 2)
+    a2p, _ = _PS.sperre(w, 2, pflanze=0.40)
+    pruefe(P, "die Positivkontrolle pflanzt in die GESPERRTEN, nicht in die Freien",
+           a0 == a0p and any(abs(a2[t] - a2p[t]) > 1e-9 for t in a2),
+           "ohne Sperre darf sich nichts bewegen, mit Sperre muss es das")
+
+    # ---- KEINE KOPIE DER KETTE -------------------------------------------
+    #
+    # ⚠️ DIE STAERKSTE PRUEFUNG: die Sperrmessung baut die Kette nicht nach,
+    # sie ruft sie. Faellt das auseinander, misst `phase3_sperre` eine
+    # andere Kette als 2.460-kette - und kein Vergleich gilt mehr.
+    quelle = _quelltext("phase3_sperre.py")
+    pruefe(P, "die Sperrmessung ruft die Kette, sie baut sie nicht nach",
+           "PK.tag_maske(" in quelle
+           and "_auswahl_maske" not in quelle
+           and "RW.GRENZE" not in quelle,
+           "eine zweite Kettenfassung ist die Kopierfalle")
+    pruefe(P, "und `tag_maske` ist in `phase3_kette` die gemeinsame Quelle",
+           hasattr(_PK, "tag_maske")
+           and "gebaut = tag_maske(" in _quelltext("phase3_kette.py"),
+           "sonst benutzt die Kettenmessung wieder ihren eigenen Zweig")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -26608,6 +26749,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Stufen": paket_beitrag_stufen,
           "Kalibrierung": paket_kalibrierung,
           "Neuaufnahme": paket_neuaufnahme,
+          "Sperre": paket_sperre,
           "Messstandard": paket_messstandard}
 
 

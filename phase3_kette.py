@@ -43,6 +43,38 @@ ZIEHUNGEN = messnorm.NULL_ZIEHUNGEN          # 40 - der Messstandard
 VORBEHALT = "gilt auf der Stellvertretermenge, NICHT auf der Live-Menge (N3 b)"
 
 
+def tag_maske(w: dict, mom: dict, anteil: float, stufen: tuple, tag: str,
+              zeilen: list, mische=None):
+    """EIN Tag durch die Kette. Gibt (syms, y, gewaehlt, frei) oder None.
+
+    ⚠️ HERAUSGEZOGEN AM 18.09.2026 fuer die Sperrmessung (`phase3_sperre.py`).
+    Die Sperre ist eine WEITERE Stufe und braucht genau diese Masken - sie
+    dort nachzubauen waere die Kopierfalle, die dieses Projekt schon mehrfach
+    erwischt hat. `kette()` ruft dieselbe Funktion; wer sie aendert, aendert
+    beide Messungen zugleich."""
+    if tag < AB or len(zeilen) < 12:
+        return None
+    syms = [x["sym"] for x in zeilen]
+    y = np.array([x["in_r"] for x in zeilen], float)
+    m = A._auswahl_maske(zeilen, mom.get(tag) or {}, anteil, None)
+    if m is None or m.sum() < 6:
+        return None
+    frei = m.copy()
+    for a in stufen:
+        zt = {x["sym"]: x["kennzahl"] for x in w[a].get(tag, [])}
+        kz = np.array([zt.get(s, np.nan) for s in syms], float)
+        ok = np.isfinite(kz)
+        if ok.sum() < 12:
+            continue                         # ⚠️ keine Datenlage -> keine Sperre
+        r = np.full(len(syms), np.nan)
+        rr = RW.rang(kz[ok])
+        if mische is not None:
+            rr = mische.permutation(rr)
+        r[ok] = rr
+        frei &= ~(np.nan_to_num(r, nan=0.0) >= RW.GRENZE)
+    return syms, y, m, frei
+
+
 def kette(w: dict, mom: dict, anteil: float, stufen: tuple,
           mische=None, pflanze: float = 0.0) -> tuple[dict, dict]:
     """Die Kette Stufe fuer Stufe. Gibt (Wirkung je Tag, Zaehlung) zurueck.
@@ -53,27 +85,11 @@ def kette(w: dict, mom: dict, anteil: float, stufen: tuple,
     aus: dict = {}
     z = {"gewaehlt": [], "uebrig": [], "gesperrt": []}
     for tag, zeilen in w[stufen[0]].items():
-        if tag < AB or len(zeilen) < 12:
+        gebaut = tag_maske(w, mom, anteil, stufen, tag, zeilen, mische)
+        if gebaut is None:
             continue
-        syms = [x["sym"] for x in zeilen]
-        y = np.array([x["in_r"] for x in zeilen], float)
-        m = A._auswahl_maske(zeilen, mom.get(tag) or {}, anteil, None)
-        if m is None or m.sum() < 6:
-            continue
+        syms, y, m, frei = gebaut
         z["gewaehlt"].append(int(m.sum()))
-        frei = m.copy()
-        for a in stufen:
-            zt = {x["sym"]: x["kennzahl"] for x in w[a].get(tag, [])}
-            kz = np.array([zt.get(s, np.nan) for s in syms], float)
-            ok = np.isfinite(kz)
-            if ok.sum() < 12:
-                continue                     # ⚠️ keine Datenlage -> keine Sperre
-            r = np.full(len(syms), np.nan)
-            rr = RW.rang(kz[ok])
-            if mische is not None:
-                rr = mische.permutation(rr)
-            r[ok] = rr
-            frei &= ~(np.nan_to_num(r, nan=0.0) >= RW.GRENZE)
         if frei.sum() < 3 or m.sum() == frei.sum():
             continue
         z["uebrig"].append(int(frei.sum()))
