@@ -724,15 +724,29 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     #     BTC  (dca an)   -> {akkumulation, einstieg}   zwei Fragen
     #     LINK (dca aus)  -> {einstieg}                 eine Frage
     _zellen_je_symbol: dict = {}
+    # ⚠️ 18.09.2026 (Paket 1.6): die GESPERRTEN kommen mit - nicht als Zelle,
+    # sondern als Zeile in der Spur. Sonst ist die Sperre zwar bekannt, ihre
+    # Menge aber nicht (Nutzerentscheidung B5).
+    _gesperrt: list = []
     try:
-        for _z in _AKL.zellen(_wl, conn):
+        for _z in _AKL.zellen(_wl, conn, mit_gesperrten=True):
+            if _z.get("gesperrt"):
+                _gesperrt.append(_z)
+                continue
             _vorhandene = _zellen_je_symbol.setdefault(_z["symbol"], [])
             if _z["strategie"] not in _vorhandene:
                 _vorhandene.append(_z["strategie"])
     except Exception:                                        # noqa: BLE001
         logger.exception("Zellen nicht bestimmbar - Rueckfall auf eine "
                          "Strategie je Asset")
-        _zellen_je_symbol = {}
+        _zellen_je_symbol, _gesperrt = {}, []
+    for _g in _gesperrt:
+        # Die Zelle laeuft NICHT an - sie bekommt nur ihre Zeile, damit die
+        # Sperre eine Zahl hat.
+        durchlauf.gesperrt(_g["symbol"], gruppe=_g.get("gruppe"),
+                           instrument=_g.get("instrument"),
+                           strategie=_g.get("strategie"),
+                           grund=_g.get("warum") or "gesperrt")
 
     # ⚠️ DIE REIHENFOLGE IST FESTGELEGT, NICHT ZUFAELLIG: `einstieg` zuerst.
     # Das Modellurteil wird EINMAL je Asset geholt (Schritt 4) und von der

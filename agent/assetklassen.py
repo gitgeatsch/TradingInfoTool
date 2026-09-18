@@ -169,7 +169,8 @@ def laeufe(watchlist=None) -> list[tuple[str, str, list[str]]]:
     return aus
 
 
-def zellen(watchlist=None, conn=None) -> list[dict]:
+def zellen(watchlist=None, conn=None, *,
+           mit_gesperrten: bool = False) -> list[dict]:
     """⚠️⚠️ DAS ZELLENMODELL — Schritt 3, 01.09.2026. NOCH OHNE AUFRUFER.
 
     Nutzervorgabe 31.08., woertlich: *„Asset z. B. LINK kommt in die
@@ -241,6 +242,20 @@ def zellen(watchlist=None, conn=None) -> list[dict]:
                     continue
                 for strategie in HA.ERLAUBTE_PAARE.get(instrument, ()):
                     if strategie == "akkumulation" and sym not in dca_erlaubt:
+                        # ⚠️ 18.09.2026 (Schritt 59 Phase 1, Paket 1.6,
+                        # Nutzerentscheidung B5): die Sperre ist bekannt, ihre
+                        # MENGE nicht. Wer sie still ueberspringt, hat spaeter
+                        # keinen Vorher-Vergleich, wenn Schritt 26 sie aufhebt.
+                        #
+                        # Der Vorgabewert bleibt `False` - kein bestehender
+                        # Leser bekommt dadurch eine Zeile mehr.
+                        if mit_gesperrten:
+                            aus.append({
+                                "symbol": sym, "gruppe": gruppe,
+                                "instrument": instrument,
+                                "strategie": strategie, "gesperrt": True,
+                                "warum": "Akkumulation fuer dieses Asset "
+                                         "nicht freigeschaltet (dca_erlaubt)"})
                         continue
                     # ⚠️ SWING IST AKTUELL KEIN THEMA (Nutzerentscheidung
                     # 31.08.: *"nur Einstieg reicht, Swing aktuell kein

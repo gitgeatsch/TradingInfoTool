@@ -26160,13 +26160,105 @@ def paket_protokoll() -> None:
            "ohne ihn ist spaeter nicht zu sehen, welche Zelle zur Empfehlung wurde")
     _qex = io.open("extract_notebook_diagnose.py", encoding="utf-8").read()
     pruefe(P, "und der Export liest die Tabelle WIRKLICH (Name an allen Stellen gleich)",
-           ('aus["zellen_lauf"]' in _qex
+           (_qex.count('aus["zellen_lauf"]') >= 2
             and _qex.count("FROM zellen_lauf") >= 3
             # ⚠️ AUCH DIE WEICHE: steht im `if` ein anderer Name als in der
             # Abfrage, nimmt der Export still den Leer-Zweig - und am
             # Notebook sieht alles normal aus.
             and 'if "zellen_lauf" in vorhanden' in _qex),
            "ein Tippfehler im Namen faellt sonst erst am Notebook auf")
+
+    # ---- 6 DIE FUEHRUNG (Paket 1.4, B1/B2) --------------------------------
+    import agent.fuehrung_protokoll as _FP
+
+    _erg = {"empfehlungen": [{"symbol": "LINK", "signal_id": 12, "tier": "krypto",
+                              "ist_hebel": False, "richtung": "LONG",
+                              "ur_aktion": "KAUFEN", "seit": "2026-09-01",
+                              "entry": 10.0, "stop_bisher": 9.0,
+                              "stop_empfohlen": 9.6, "sichert_r": 0.6,
+                              "mfe_r": 1.4, "begruendung": "MFE 1,4 R"}],
+            "alle": [{"symbol": "LINK", "signal_id": 12, "mfe_r": 1.4},
+                     {"symbol": "BTC", "signal_id": 13, "tier": "krypto",
+                      "ist_hebel": False, "richtung": "LONG", "entry": 50.0,
+                      "stop": 47.0, "mfe_r": 0.2, "ist_bestand": True}]}
+    tmp3 = _tf.mkdtemp()
+    try:
+        con3 = _sq.connect(_os.path.join(tmp3, "f.db"))
+        pruefe(P, "die Migration legt `fuehrung_lauf` an und ist wiederholbar",
+               _FP.migriere(con3) and _FP.migriere(con3) == [], "")
+        n3 = _FP.schreibe(con3, _erg, "2026-09-18T05:23:00")
+        _c3 = con3.execute("SELECT art, symbol, signal_id, stop_bisher, "
+                           "stop_empfohlen, sichert_r, mfe_r FROM fuehrung_lauf "
+                           "ORDER BY id")
+        _n3 = [x[0] for x in _c3.description]
+        rows3 = [dict(zip(_n3, r)) for r in _c3.fetchall()]
+        pruefe(P, "⚠️⚠️ die Empfehlung wird mit altem UND neuem Stop festgehalten",
+               n3 == 2 and rows3[0]["art"] == "empfehlung"
+               and rows3[0]["stop_bisher"] == 9.0
+               and rows3[0]["stop_empfohlen"] == 9.6
+               and rows3[0]["sichert_r"] == 0.6,
+               "116 solche Empfehlungen gingen am 18.09. in eine Mail und in "
+               "keine Zeile (%s)" % rows3[:1])
+        pruefe(P, "⚠️ und die GEPRUEFTE Position ohne Empfehlung ebenfalls (B2)",
+               rows3[1]["art"] == "geprueft" and rows3[1]["symbol"] == "BTC"
+               and rows3[1]["stop_empfohlen"] is None,
+               "ohne den Vergleichsarm ist nie zu sagen, ob Nachziehen besser "
+               "war als Nichtstun - derselbe Fehler wie in 2.401")
+        pruefe(P, "eine Position erscheint NICHT doppelt (Empfehlung schlaegt Pruefung)",
+               len([r for r in rows3 if r["symbol"] == "LINK"]) == 1, str(rows3))
+        pruefe(P, "ohne Ergebnis wird nichts geschrieben",
+               _FP.schreibe(con3, {}, "2026-09-18T05:23:00") == 0, "")
+        con3.close()
+    finally:
+        _sh.rmtree(tmp3, ignore_errors=True)
+
+    q3 = io.open("scheduler/background.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ der Ausstiegs-Job protokolliert VOR dem Mailversand",
+           q3.index("fuehrung_protokoll") < q3.index("_sende_ausstiegs_email(empfehlungen"),
+           "erst sichern, dann senden - eine Mail, die scheitert, darf die "
+           "Messung nicht mitnehmen")
+    pruefe(P, "⚠️ und ein Ausfall der Ablage verhindert die Mail NICHT",
+           "Fuehrungs-Protokoll nicht geschrieben" in q3, "")
+
+    # ---- 7 DIE GESPERRTE AKKUMULATION (Paket 1.6, B5) ---------------------
+    _d6 = _RG.Durchlauf("rollen")
+    _d6.gesperrt("BTC", gruppe="krypto", instrument="spot",
+                 strategie="akkumulation", grund="dca nicht freigeschaltet")
+    pruefe(P, "⚠️ die gesperrte Zelle bekommt eine Zeile, zaehlt aber NICHT als Durchlauf",
+           _d6.zellen[0]["ergebnis"] == "gesperrt" and _d6.hinein == 0
+           and sum(_d6.verloren_je_stufe.values()) == 0,
+           "sonst waeren alte und neue Laeufe nicht mehr vergleichbar (R-R11)")
+    pruefe(P, "und sie steht trotz Stufe `auftrag` in der Spur",
+           _RG._protokollwuerdig(_d6.zellen[0]), "")
+    tmp6 = _tf.mkdtemp()
+    try:
+        con6 = _sq.connect(_os.path.join(tmp6, "s.db"))
+        _RG.migriere_zellen(con6)
+        n_a = _RG.schreibe_zellen(con6, _d6, "2026-09-18T05:00:00", 1)
+        n_b = _RG.schreibe_zellen(con6, _d6, "2026-09-18T05:15:00", 2)
+        n_c = _RG.schreibe_zellen(con6, _d6, "2026-09-19T05:00:00", 3)
+        pruefe(P, "⚠️⚠️ die Sperre ist ein ZUSTAND: hoechstens EINE Zeile je Tag und Zelle",
+               (n_a, n_b, n_c) == (1, 0, 1),
+               "an der Mengenprobe gefunden: je Lauf geschrieben waren es 540 "
+               "Zeilen aus fuenf Laeufen - hochgerechnet ueber 50.000 am Tag "
+               "(gemessen: %s)" % str((n_a, n_b, n_c)))
+        con6.close()
+    finally:
+        _sh.rmtree(tmp6, ignore_errors=True)
+    import agent.assetklassen as _AK6
+    import inspect as _insp6
+    _qak = _insp6.getsource(_AK6.zellen)
+    pruefe(P, "⚠️ `zellen()` liefert die Gesperrten nur AUF ANFRAGE (Vorgabewert unveraendert)",
+           "mit_gesperrten: bool = False" in _qak and '"gesperrt": True' in _qak,
+           "sonst bekaeme jeder bestehende Leser ploetzlich mehr Zellen")
+    pruefe(P, "die Kette fragt sie an und laesst sie NICHT mitlaufen",
+           "mit_gesperrten=True" in q2 and 'if _z.get("gesperrt")' in q2, "")
+    _qex6 = io.open("extract_notebook_diagnose.py", encoding="utf-8").read()
+    pruefe(P, "und der Export fuehrt auch die Fuehrungstabelle",
+           _qex6.count('aus["fuehrung_lauf"]') >= 2
+           and 'if "fuehrung_lauf" in vorhanden' in _qex6
+           and _qex6.count("FROM fuehrung_lauf") >= 3, "")
+
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),

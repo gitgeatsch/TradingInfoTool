@@ -2326,6 +2326,24 @@ def _rollen_kette(conn) -> dict:
     else:
         aus["zellen_lauf"] = {"nicht_vorhanden": "Tabelle fehlt - Pull/Neustart?"}
 
+    # DIE FUEHRUNG (18.09.2026, Paket 1.4). 116 Stop-Empfehlungen an einem
+    # Morgen standen in keiner Zeile - jetzt schon, samt der geprueften
+    # Positionen ohne Empfehlung (der Vergleichsarm).
+    if "fuehrung_lauf" in vorhanden:
+        aus["fuehrung_lauf"] = {
+            "anzahl_gesamt": conn.execute(
+                "SELECT COUNT(*) FROM fuehrung_lauf").fetchone()[0],
+            "je_tag": [dict(r) for r in conn.execute(
+                "SELECT date(erfasst_am) tag, art, COUNT(*) n, "
+                "ROUND(AVG(sichert_r), 3) sichert_r_mittel FROM fuehrung_lauf "
+                "GROUP BY 1, 2 ORDER BY 1 DESC LIMIT 14")],
+            "zuletzt": [dict(r) for r in conn.execute(
+                "SELECT erfasst_am, art, symbol, signal_id, tier, richtung, "
+                "stop_bisher, stop_empfohlen, sichert_r, mfe_r "
+                "FROM fuehrung_lauf ORDER BY id DESC LIMIT 20")]}
+    else:
+        aus["fuehrung_lauf"] = {"nicht_vorhanden": "Tabelle fehlt - Pull/Neustart?"}
+
     # --- DER AUSWAHL-SCHATTEN (A1, 23.08.2026) -----------------------------
     #
     # `paket_export`s eigener Drift-Waechter meldete diese Tabelle am

@@ -842,6 +842,23 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
     finally:
         conn.close()
 
+    # ⚠️ 18.09.2026 (Schritt 59 Phase 1, Paket 1.4): die Fuehrung wird
+    # PROTOKOLLIERT, bevor sie in die Mail geht - Empfehlungen UND gepruefte
+    # Positionen ohne Empfehlung (der Vergleichsarm, B2). Eigener Fehlerfang:
+    # eine Messung darf die Mail nicht verhindern.
+    try:
+        from agent import fuehrung_protokoll as _FP
+
+        _c1 = conn_factory()
+        try:
+            _n = _FP.schreibe(_c1, ergebnis or {},
+                              datetime.now(timezone.utc).isoformat())
+            logger.info("Fuehrung protokolliert: %d Zeilen", _n)
+        finally:
+            _c1.close()
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Fuehrungs-Protokoll nicht geschrieben")
+
     empfehlungen = (ergebnis or {}).get("empfehlungen") or []
     geprueft = (ergebnis or {}).get("geprueft")
     if not empfehlungen:

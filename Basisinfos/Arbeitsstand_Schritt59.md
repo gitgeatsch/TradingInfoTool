@@ -29,6 +29,7 @@
 | 0.13 Datenarchäologie | ✔ erledigt (2.458-archaeologie, 2.458-fallzahl): Trichter seit 14.08. vorhanden, **Potential nicht rekonstruierbar**, laufender Prompt-Stand nur 24 entschiedene Fälle |
 | **Phase 1 Teil 1** (1.7 + 1.2 + 1.3) | ✔ gebaut (2.458-protokoll-1): Kurs an allen drei Schreibwegen, Potential auch bei durchgelassenen, neue Spalte `phase` · Paket Protokoll 15/15, 8 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K17 |
 | **Phase 1 Teil 2** (1.1 Spur je Zelle) | ✔ gebaut (2.458-protokoll-2): neue Tabelle `zellen_lauf`, Filter ab `urteil` + `auswahl`, ~193 Zeilen/Tag · Paket Protokoll 29/29, 8 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K18 |
+| **Phase 1 Teil 3** (1.4 Führung, 1.6 Sperre) | ✔ gebaut (2.458-protokoll-3): Tabelle `fuehrung_lauf` mit Empfehlungen **und** Vergleichsarm; gesperrte Akkumulation höchstens eine Zeile je Tag · Paket Protokoll 42/42, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K19 |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
@@ -37,7 +38,7 @@
 1. ✔ **NB-Export 18.09. 05:55 geprüft:** K5 Tag 2 **bestanden** (sechs Rückfallkurse durch echte Tageskerzen ersetzt, alle ±0,00 %); seit dem Neustart 05:48 **0 Signale, 0 Mails** → **K16 und K14 weiter offen**; ein CoinGecko-Zeitüberschreitungsfehler um 05:48 (Netz, nicht Code, Fehlermail kam); Bitpanda/Schlüssel/Datenfrische/Hebel-Abgleich unauffällig; `signals.gruppe` befüllt (25 krypto, 2 aktien, 1 rohstoffe, 1 themen_etf)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
 3. ✔ 0.12 gebaut – Phase 0 ist damit bis auf **0.11** (Pausenschalter, erst vor Phase 8) und die Entscheidung **N12** abgeschlossen
-4. ✔ Phase 1 Teil 1 und Teil 2 gebaut (Commit ausstehend) – als Nächstes **1.4–1.6** (Führungs- und Ausstiegszellen, Zeile bei Sperre); erste Beobachtung aus der Spur: 5 von 20 Zellen enden auf `aktion` ohne Signal, dort fehlt die Endstufe
+4. ✔ Phase 1 Teile 1–3 gebaut (Commit ausstehend) – offen bleibt nur **1.5** (eigene Ausgangskategorien für Ausstiege, Befund 2.401): das größere Stück, weil dort eine Nachverfolgung über Tage entsteht
 4. **Nach Phase 0: Probelauf** einer neuen Sitzung (Anleitung von Charlie, Kontrollfragen gegen diese Datei)
 
 ## Offene Entscheidungen des Nutzers
@@ -47,9 +48,10 @@
 ## Offene Notebook-Kontrollen
 
 - ✔ **K13** ETF-Knöpfe gesperrt (G2X per Bildschirmfoto bestätigt)
-- **K14** Multiasset-Mails gekennzeichnet, Krypto unverändert; Export `signals.gruppe`
+- ✔ **K14** BESTÄTIGT 18.09.: Sammelmails mit `· Rohstoffe` / `· Themen-ETF` / `· Aktien`, Krypto ohne Zusatz · alt:, Krypto unverändert; Export `signals.gruppe`
+- **K19** (nach Pull und Neustart): Tabelle `fuehrung_lauf` entsteht; am Morgen nach dem Ausstiegs-Job stehen dort Empfehlungen **und** geprüfte Positionen; gesperrte Akkumulation höchstens eine Zeile je Tag
 - **K18** (nach Pull und Neustart): Tabelle `zellen_lauf` entsteht, rund 200 Zeilen/Tag, Gründe im Klartext, Verweis auf Signalzeilen gefüllt
-- **K17** (nach Pull und Neustart): erste Zeilen mit `phase`, `potential_r` und `kurs_bei_empfehlung_eur` im Export – und die Spaltendrift bleibt leer
+- ✔ **K17** BESTÄTIGT 18.09.: `phase`, Kurs und Spalte da (`potential_r` beim Verkauf leer – richtig) · alt:: erste Zeilen mit `phase`, `potential_r` und `kurs_bei_empfehlung_eur` im Export – und die Spaltendrift bleibt leer
 - **K16** (nach Pull **und Neustart**): erste Mail mit Abschnitt „Umfeld“ – Marktlage von Rolle A, bei Krypto der Gleichlauf, Einstufung der Klasse mit Begründung; bei Krypto zusätzlich Kontenanteil/Put-Skew unter Zusatzinfo
 - ✔ **K5** Selbstprüfung Schlusskurse: Tag 1 und Tag 2 bestanden (18.09.) – erledigt
 - **K6** Hebelstufen im Text einer Hebelmail (Nutzerblick)

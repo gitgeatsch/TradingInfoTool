@@ -379,6 +379,20 @@ class Durchlauf:
         if _z is not None:
             _z["notizen"].append("%s: %s" % (stufe, text))
 
+    def gesperrt(self, symbol: str, *, gruppe=None, instrument=None,
+                 strategie=None, grund: str = "gesperrt") -> None:
+        """Eine Zelle, die gar nicht erst anlaeuft (18.09.2026, Paket 1.6).
+
+        ⚠️ SIE ZAEHLT NICHT ALS DURCHLAUF: `hinein`, `bestanden` und
+        `verloren` bleiben unberuehrt - sonst waeren alte und neue Laeufe
+        nicht mehr vergleichbar (R-R11). Sie bekommt allein ihre Zeile in der
+        Spur, damit die Sperre eine MENGE hat."""
+        self.zellen.append({"symbol": symbol, "gruppe": gruppe,
+                            "instrument": instrument, "strategie": strategie,
+                            "stufe": "auftrag", "ergebnis": "gesperrt",
+                            "grund": grund, "art": "", "signal_id": None,
+                            "notizen": []})
+
     def signal(self, symbol: str, signal_id) -> None:
         """Der Verweis auf die geschriebene Signalzeile (18.09.2026).
 
@@ -691,6 +705,10 @@ def _protokollwuerdig(zelle: dict) -> bool:
     stufe = zelle.get("stufe")
     if stufe is None:
         return False
+    # Die gesperrte Zelle steht auf `auftrag` und gehoert TROTZDEM hinein -
+    # sie ist der Mengennachweis der Sperre (Paket 1.6, B5).
+    if zelle.get("ergebnis") == "gesperrt":
+        return True
     if stufe in PROTOKOLL_IMMER:
         return True
     try:
@@ -734,12 +752,41 @@ def schreibe_zellen(conn, durchlauf, zeitpunkt: str, lauf_id=None) -> int:
     Signal; scheitert das Schreiben, verliert man die Spur DIESES Laufs und
     sonst nichts. Der Aufrufer faengt deshalb breit - und meldet es."""
     migriere_zellen(conn)
+    # ⚠️⚠️ DIE SPERRE IST EIN ZUSTAND, KEIN EREIGNIS (18.09.2026, an der
+    # Mengenprobe gefunden). Die erste Fassung schrieb sie je LAUF - im
+    # Pruefstand waren das 540 Zeilen aus fuenf Laeufen, hochgerechnet ueber
+    # 50.000 am Tag. Das haette die Mengenentscheidung (Z1: rund 200 Zeilen)
+    # gesprengt, und zwar mit einer Angabe, die sich fast nie aendert.
+    #
+    # Deshalb: eine gesperrte Zelle bekommt HOECHSTENS EINE Zeile JE TAG.
+    # Die Sperre behaelt ihre Menge, die Ablage bleibt klein.
+    _tag = str(zeitpunkt)[:10]
+    _schon = set()
+    try:
+        _schon = {(r[0], r[1]) for r in conn.execute(
+            f"SELECT symbol, strategie FROM {TABELLE_ZELLEN} "
+            f"WHERE ergebnis='gesperrt' AND substr(erfasst_am,1,10)=?",
+            (_tag,))}
+    except Exception:                                        # noqa: BLE001
+        _schon = set()
+
+    def _nimm(z: dict) -> bool:
+        if not _protokollwuerdig(z):
+            return False
+        if z.get("ergebnis") != "gesperrt":
+            return True
+        schluessel = (z.get("symbol"), z.get("strategie"))
+        if schluessel in _schon:
+            return False
+        _schon.add(schluessel)
+        return True
+
     zeilen = [(lauf_id, zeitpunkt, z.get("gruppe"), z["symbol"],
                z.get("instrument"), z.get("strategie"), z["stufe"],
                z["ergebnis"], (z.get("grund") or "")[:400],
                z.get("art") or "", z.get("signal_id"),
                " · ".join(z.get("notizen") or [])[:400] or None)
-              for z in durchlauf.zellen if _protokollwuerdig(z)]
+              for z in durchlauf.zellen if _nimm(z)]
     if not zeilen:
         return 0
     conn.executemany(
