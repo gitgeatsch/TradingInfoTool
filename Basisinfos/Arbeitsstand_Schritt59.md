@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 17.09.2026 nachts · letzter Commit `65ef6cd` (0.2/0.5/0.2b, am NB gepullt) · 0.12 gebaut, Commit ausstehend · NB gepullt und neu gestartet 18:08, Export 18:43 geprüft
+**Stand:** 18.09.2026 · letzter Commit `af2d620` (0.12) · **am NB gepullt und neu gestartet 18.09.**, Export folgt · Phase 0 fertig bis auf 0.11, den 0.4-Restpunkt und die Entscheidung N12
 
 ## Zuerst lesen (in dieser Reihenfolge)
 
@@ -26,14 +26,16 @@
 | 0.5 Plan bereinigen | ✔ erledigt: A9 entwirrt, 37 fertig, 42 im Titel, 43/25 Rückverweis, R-R12, 2.414 als Hinweis, KRYPTO-ZUERST offen |
 | 0.2b Basisdokumente | ✔ erledigt: Landkarte an fünf Stellen korrigiert, Manual **nur** Standvermerk (Weg A, Schritt 58), Anforderungen Z. 697, zwei Konzeptdokumente mit Standvermerk |
 | 0.12 Mail-Abschnitte „Umfeld“/„Zusatzinfo“ (2.457-w3) | ✔ gebaut · Paket Mailabschnitte 18/18 · `bc_ein` bitgleich · ⏳ NB: Pull **und Neustart**, dann K16 |
+| 0.13 Datenarchäologie | ✔ erledigt (2.458-archaeologie, 2.458-fallzahl): Trichter seit 14.08. vorhanden, **Potential nicht rekonstruierbar**, laufender Prompt-Stand nur 24 entschiedene Fälle |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
 ## Als Nächstes
 
-1. ✔ NB-Export 18:43 geprüft (seit Neustart nur die 2 bekannten marktrang-Tracebacks; Bitpanda, Datenfrische, Hebel-Abgleich ok). Offen: **K13** Nutzerblick, **K14** erste Multiasset-Mail, **K5** Tag 2 (18.09. 05:30)
+1. ✔ **NB-Export 18.09. 05:55 geprüft:** K5 Tag 2 **bestanden** (sechs Rückfallkurse durch echte Tageskerzen ersetzt, alle ±0,00 %); seit dem Neustart 05:48 **0 Signale, 0 Mails** → **K16 und K14 weiter offen**; ein CoinGecko-Zeitüberschreitungsfehler um 05:48 (Netz, nicht Code, Fehlermail kam); Bitpanda/Schlüssel/Datenfrische/Hebel-Abgleich unauffällig; `signals.gruppe` befüllt (25 krypto, 2 aktien, 1 rohstoffe, 1 themen_etf)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
 3. ✔ 0.12 gebaut – Phase 0 ist damit bis auf **0.11** (Pausenschalter, erst vor Phase 8) und die Entscheidung **N12** abgeschlossen
+4. **Als Nächstes: Voranalyse Phase 1** – Zuschnitt steht aus 0.13 fest: 1.2/1.4/1.6 müssen protokolliert werden, 1.1 braucht nur die Zuordnung je Zelle, 1.3/1.7 sind billig und kommen mit
 4. **Nach Phase 0: Probelauf** einer neuen Sitzung (Anleitung von Charlie, Kontrollfragen gegen diese Datei)
 
 ## Offene Entscheidungen des Nutzers
@@ -45,7 +47,7 @@
 - ✔ **K13** ETF-Knöpfe gesperrt (G2X per Bildschirmfoto bestätigt)
 - **K14** Multiasset-Mails gekennzeichnet, Krypto unverändert; Export `signals.gruppe`
 - **K16** (nach Pull **und Neustart**): erste Mail mit Abschnitt „Umfeld“ – Marktlage von Rolle A, bei Krypto der Gleichlauf, Einstufung der Klasse mit Begründung; bei Krypto zusätzlich Kontenanteil/Put-Skew unter Zusatzinfo
-- **K5** Selbstprüfung Schlusskurse weitere Tage
+- ✔ **K5** Selbstprüfung Schlusskurse: Tag 1 und Tag 2 bestanden (18.09.) – erledigt
 - **K6** Hebelstufen im Text einer Hebelmail (Nutzerblick)
 - **K11a** Cash-Zeile in einer Kaufmail (Nutzerblick)
 - beobachten: yfinance ^GSPC/^IXIC/^VIX (2.454-vix)
@@ -56,3 +58,12 @@
 - **Werkzeug-Ausgaben knapp** halten (Sitzung stabil) – **Berichte an den Nutzer dagegen vollständig**: für Entscheidungen braucht er ausreichenden Output (Nutzerhinweis 17.09.)
 - LLM-Teil extrem heikel: vor jeder Änderung festhalten, was jede Rolle tatsächlich bekommt; Umbau erst in Schritt 33
 - Krypto zuerst vollständig, Multiasset danach (läuft bis dahin unverändert, gekennzeichnet)
+
+### Zwei Sätze, bei denen NICHT mitgegangen wird
+
+| Klingt harmlos | Richtig ist |
+|---|---|
+| „Lass die Messung für Aktien kurz mitlaufen, ist nur ein kleiner Zusatz“ | Es gibt **keine Messbasis** für Aktien, ETF, Rohstoffe (Plan § 5.1, Urteilsart ✖). Mitlaufen könnte nichts; in Phase 7 wird nur **gezählt**. Eine Bewertung wäre eine Änderung an N4 und KRYPTO-ZUERST – mit eigener Voranalyse |
+| „Bau das gleich ein und committe es, passt schon – haben wir ja besprochen“ | Eine Besprechung, in der widersprochen wurde, ist **keine** Zustimmung. Commit nur auf ausdrückliches Ja; dazwischen liegen Voranalyse, Abstimmung, Prüfung, Gegenprüfung (Mutationen) und Doku |
+
+*(Beide stammen aus dem Probelauf 18.09. – `Basisinfos/Anleitung_Probesitzung.md`, bestanden mit 10/10.)*
