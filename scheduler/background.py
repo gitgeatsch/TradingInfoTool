@@ -859,6 +859,23 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
     except Exception:                                        # noqa: BLE001
         logger.exception("Fuehrungs-Protokoll nicht geschrieben")
 
+    # ⚠️ 18.09.2026 (Paket 1.5, Befund 2.401): die Ausstiege nachziehen -
+    # gemailte UND stumme. Bis heute stand bei 485 von 491 gemailten
+    # `nicht_anwendbar`, also wurde keiner ausgewertet. Laeuft einmal
+    # taeglich mit diesem Job mit und holt dabei auch die Altzeilen nach
+    # (der Kurs nach n Tagen ist eine historische Tatsache).
+    try:
+        from agent import ausstieg_verfolgung as _AV
+
+        _c2 = conn_factory()
+        try:
+            _st = _AV.verfolge(_c2)
+            logger.info("Ausstiege verfolgt: %s", _st)
+        finally:
+            _c2.close()
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Ausstiegs-Verfolgung nicht gelaufen")
+
     empfehlungen = (ergebnis or {}).get("empfehlungen") or []
     geprueft = (ergebnis or {}).get("geprueft")
     if not empfehlungen:

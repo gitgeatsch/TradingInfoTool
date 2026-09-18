@@ -159,6 +159,19 @@ SPALTEN_SIGNAL = {
     # sie umzudeuten haette jede bestehende Auswertung still veraendert
     # (Vorgabe: umgedeutete Zahl, ALLE Leser nachziehen).
     "phase": "TEXT",
+    # ⚠️ DIE AUSSTIEGSSEITE (18.09.2026, Paket 1.5, Befund 2.401):
+    # von 491 gemailten Ausstiegen stehen 485 auf `nicht_anwendbar` -
+    # sie werden NIE ausgewertet, waehrend die 120 stummen lueckenlos
+    # verfolgt werden. Der Grund ist die fehlende Kategorie: der
+    # Hauptarm kennt nur EINSTIEGS-Kategorien. Diese Felder sind die
+    # eigene Maschine dafuer - dieselbe Bauform wie beim Schatten-Arm
+    # `selbst_halten_outcome_*` (seit 31.07.).
+    "ausstieg_outcome_status": "TEXT",
+    "ausstieg_outcome_geprueft_am": "TEXT",
+    "ausstieg_kurs_eur": "REAL",
+    "ausstieg_kurs_quelle": "TEXT",
+    "ausstieg_bewegung_5_pct": "REAL",
+    "ausstieg_bewegung_20_pct": "REAL",
     # ⚠️ 17.09.2026 (Schritt 59 Phase 0.10, Befund 2.456-abgrenzung): DIE
     # GRUPPE DES LAUFS (krypto, aktien, rohstoffe, themen_etf, hedge). Vorher
     # war eine Aktien- oder ETF-Zeile nur ueber Symbol -> heutige Watchlist

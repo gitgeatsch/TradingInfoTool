@@ -490,6 +490,12 @@ class Signal:
     # Laufs - krypto | aktien | rohstoffe | themen_etf | hedge; Altzeilen leer.
     gruppe: str | None = None
     phase: str | None = None
+    ausstieg_outcome_status: str | None = None
+    ausstieg_outcome_geprueft_am: str | None = None
+    ausstieg_kurs_eur: float | None = None
+    ausstieg_kurs_quelle: str | None = None
+    ausstieg_bewegung_5_pct: float | None = None
+    ausstieg_bewegung_20_pct: float | None = None
     # L3a (28.08.2026): DIE LIQUIDATION AN DER ZEILE.
     #
     # ⚠️ DERSELBE FEHLER WIE BEI `strategie` DARUEBER, eine Stufe spaeter.

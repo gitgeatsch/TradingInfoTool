@@ -558,7 +558,9 @@ _SPOT_SIGNAL_SPALTEN = (
     # Drift-Waechter gemeldet (K11), im Abschnitt `bitpanda_bestand` nur gezaehlt.
     "mail_versand, mail_versand_am, "
     # 17.09.2026 (2.456-abgrenzung): die Gruppe des Laufs, Altzeilen leer.
-    "gruppe, phase, "
+    "gruppe, phase, ausstieg_outcome_status, ausstieg_outcome_geprueft_am, "
+        "ausstieg_kurs_eur, ausstieg_kurs_quelle, "
+        "ausstieg_bewegung_5_pct, ausstieg_bewegung_20_pct, "
     + _VOLLSTAENDIGKEITS_SPALTEN
 )
 

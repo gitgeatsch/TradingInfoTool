@@ -26259,6 +26259,124 @@ def paket_protokoll() -> None:
            and 'if "fuehrung_lauf" in vorhanden' in _qex6
            and _qex6.count("FROM fuehrung_lauf") >= 3, "")
 
+    # ---- 8 DIE AUSSTIEGE (Paket 1.5, C1-C5; Befund 2.401) -----------------
+    import agent.ausstieg_verfolgung as _AV
+
+    pruefe(P, "⚠️ die Ausstiegsfelder stehen in SPALTEN_SIGNAL, models UND im Export",
+           all(f in _SA.SPALTEN_SIGNAL for f in
+               ("ausstieg_outcome_status", "ausstieg_kurs_eur",
+                "ausstieg_kurs_quelle", "ausstieg_bewegung_5_pct",
+                "ausstieg_bewegung_20_pct"))
+           and "ausstieg_outcome_status" in getattr(_MO.Signal, "__dataclass_fields__", {})
+           and "ausstieg_bewegung_20_pct" in _EXP._SPOT_SIGNAL_SPALTEN, "")
+    pruefe(P, "zwei Horizonte: 5 und 20 Handelstage (C2)",
+           _AV.HORIZONTE == (5, 20),
+           "20 ist der Horizont der Messnorm, 5 faengt den kurzfristigen Fall")
+
+    _reihe = [("2026-09-01", 100.0)] + [("2026-09-%02d" % (t + 2), 90.0)
+                                        for t in range(1, 25)]
+    _start, _pct, _q = _AV.bewegung(_reihe, "2026-09-01", 20)
+    pruefe(P, "⚠️⚠️ RICHTUNGSBEREINIGT: faellt der Kurs nach dem Verkauf, ist die Zahl POSITIV",
+           _start == 100.0 and _pct == 10.0,
+           "ein Ausstieg ist gut, wenn der Kurs danach faellt - wer das "
+           "Vorzeichen andersherum legt, liest jede Auswertung verkehrt (%s)"
+           % _pct)
+    _steigt = [("2026-09-01", 100.0)] + [("2026-09-%02d" % (t + 2), 110.0)
+                                         for t in range(1, 25)]
+    pruefe(P, "und steigt er, ist sie NEGATIV - der Verkauf war teuer",
+           _AV.bewegung(_steigt, "2026-09-01", 20)[1] == -10.0, "")
+    pruefe(P, "der eigene Ausstiegskurs schlaegt den Tagesschluss, und die Herkunft steht dabei",
+           _AV.bewegung(_reihe, "2026-09-01", 20, 50.0)[2] == "empfehlung"
+           and _AV.bewegung(_reihe, "2026-09-01", 20)[2] == "tagesschluss",
+           "eine stille Naeherung hat hier schon mehrfach als echter Wert "
+           "weitergelebt - sie gehoert in die ZEILE, nicht in die Doku")
+    pruefe(P, "reicht die Reihe nicht, gibt es KEINE Zahl statt einer falschen",
+           _AV.bewegung(_reihe[:3], "2026-09-01", 20)[1] is None, "")
+
+    tmp8 = _tf.mkdtemp()
+    try:
+        con8 = _sq.connect(_os.path.join(tmp8, "a.db"))
+        con8.row_factory = _sq.Row
+        import database.db as _DBP8
+        _DBP8.init_db(con8)
+        _SA.migriere(con8)
+        con8.executemany(
+            "INSERT INTO signals (symbol, action, created_at, quelle_kette, "
+            "gate_passed, facts_json) VALUES (?,?,?,'rollen',1,'{}')",
+            [("AAA", "VERKAUFEN", "2026-09-01T10:00:00"),
+             ("AAA", "KAUFEN", "2026-09-01T10:00:00"),
+             ("ZZZ", "REDUZIEREN", "2026-09-01T10:00:00")])
+        con8.executemany(
+            "INSERT INTO price_history_ohlc (symbol, currency, date, open, "
+            "high, low, close, volume, fetched_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            [("AAA", "EUR", d, 100.0, 100.0, 100.0, k, 0.0, "x")
+             for d, k in _reihe])
+        con8.commit()
+        st = _AV.verfolge(con8)
+        zeilen = {r["symbol"] + r["action"]: dict(r) for r in con8.execute(
+            "SELECT symbol, action, ausstieg_outcome_status, ausstieg_kurs_quelle, "
+            "ausstieg_bewegung_20_pct FROM signals")}
+        pruefe(P, "⚠️ verfolgt werden VERKAUFEN und REDUZIEREN - ein KAUFEN bleibt unberuehrt",
+               st["geprueft"] == 2
+               and zeilen["AAAKAUFEN"]["ausstieg_outcome_status"] is None,
+               str(st))
+        pruefe(P, "der gemessene Ausstieg traegt Status, Herkunft und Bewegung",
+               zeilen["AAAVERKAUFEN"]["ausstieg_outcome_status"] == "gemessen"
+               and zeilen["AAAVERKAUFEN"]["ausstieg_bewegung_20_pct"] == 10.0,
+               str(zeilen["AAAVERKAUFEN"]))
+        pruefe(P, "⚠️ ohne Kursreihe wird gekennzeichnet statt geraten oder abgestuerzt",
+               zeilen["ZZZREDUZIEREN"]["ausstieg_outcome_status"] == "keine_kursreihe"
+               and st["ohne_reihe"] == 1, str(st))
+        st2 = _AV.verfolge(con8)
+        pruefe(P, "ein zweiter Lauf fasst die fertigen Zeilen nicht mehr an",
+               st2["geprueft"] == 0, str(st2))
+        # ⚠️ DER HALBFERTIGE FALL - er kam aus einer Gegenprobe, die zuerst
+        # gruen durchlief: mit voller Kursreihe ist JEDE Zeile fertig, der
+        # Fehler blieb unsichtbar. Hier reicht die Reihe nur fuer 5 Tage.
+        con8.execute(
+            "INSERT INTO signals (symbol, action, created_at, quelle_kette, "
+            "gate_passed, facts_json) VALUES ('KURZ','VERKAUFEN',"
+            "'2026-09-01T10:00:00','rollen',1,'{}')")
+        con8.executemany(
+            "INSERT INTO price_history_ohlc (symbol, currency, date, open, "
+            "high, low, close, volume, fetched_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            [("KURZ", "EUR", d, 100.0, 100.0, 100.0, k, 0.0, "x")
+             for d, k in _reihe[:9]])
+        con8.commit()
+        _AV.verfolge(con8)
+        _kurz = dict(con8.execute(
+            "SELECT ausstieg_outcome_status, ausstieg_bewegung_5_pct, "
+            "ausstieg_bewegung_20_pct FROM signals WHERE symbol='KURZ'").fetchone())
+        pruefe(P, "⚠️⚠️ ein halber Horizont gilt NICHT als fertig - die Zeile bleibt offen",
+               _kurz["ausstieg_outcome_status"] == "offen"
+               and _kurz["ausstieg_bewegung_5_pct"] is not None
+               and _kurz["ausstieg_bewegung_20_pct"] is None,
+               "sonst stuende ein Teilergebnis da, das spaeter niemand "
+               "nachzieht (%s)" % _kurz)
+        con8.close()
+    finally:
+        _sh.rmtree(tmp8, ignore_errors=True)
+
+    _qb8 = io.open("scheduler/background.py", encoding="utf-8").read()
+    pruefe(P, "der taegliche Job zieht die Ausstiege nach, und ein Ausfall haelt ihn nicht an",
+           "ausstieg_verfolgung" in _qb8
+           and "Ausstiegs-Verfolgung nicht gelaufen" in _qb8, "")
+    _qav = io.open("agent/ausstieg_verfolgung.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ die Verfolgung URTEILT NICHT - keine Schwelle, kein Nullmodell, keine Norm",
+           # ⚠️ AM CODE, NICHT AM TEXT: die erste Fassung suchte die Woerter
+           # im ganzen Modul - und fiel ueber den eigenen Kommentar, der
+           # sagt, dass die Norm NICHT hier gilt. Geprueft wird jetzt, was
+           # zaehlt: kein Import der Messanlage, keine Schwellenkonstante.
+           (not [k for k in _AST.walk(_AST.parse(_qav))
+                 if isinstance(k, (_AST.Import, _AST.ImportFrom))
+                 and "messnorm" in _AST.unparse(k)]
+            and not [z for z in _AST.walk(_AST.parse(_qav))
+                     if isinstance(z, _AST.Name)
+                     and "SCHWELLE" in z.id.upper()]),
+           "die BEWERTUNG der Ausstiegsseite ist Phase 5 und braucht die "
+           "Messnorm - wer hier Durchschnitte bildet, misst ohne Norm")
+
+
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
