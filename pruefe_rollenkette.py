@@ -249,7 +249,7 @@ def lauf(symbol: str, datum: str | None, reihen: dict, anbieter: str | None,
     if kosten is None:
         zeige("ENTSCHEIDER", ["keine Zonen - keine Kostenrechnung moeglich"])
         return
-    con = sqlite3.connect(DB)
+    con = sqlite3.connect("file:%s?mode=ro" % DB, uri=True)  # Schritt 59 Phase 0.4 (18.09.2026): nur lesend - NB = Produktion
     try:
         bilanz = TB.zaehle(con)
     finally:

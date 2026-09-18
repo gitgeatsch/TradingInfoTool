@@ -778,7 +778,9 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
         if max_aufrufe is not None and ergebnis["aufrufe"] >= max_aufrufe:
             ergebnis.setdefault("budget_gestoppt", []).append(symbol)
             continue
-        durchlauf.beginne(symbol)
+        durchlauf.beginne(symbol, gruppe=assetklasse,
+                          instrument=instrument,
+                          strategie=_zelle_strategie)
         _vor_aufrufe = ergebnis["aufrufe"]
         _vor_signale = len(ergebnis.get("signale") or [])
         # A (27.08.2026): DIE STRATEGIE GEHOERT ZUM ASSET, NICHT ZUM LAUF.
@@ -1112,7 +1114,16 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                     assetklasse, _stumm["laeufe"])
         except Exception:                                    # noqa: BLE001
             logger.exception("Stummzaehler fuer %s", assetklasse)
-        RG.schreibe(conn, durchlauf, _jetzt())
+        _lauf_id = RG.schreibe(conn, durchlauf, _jetzt())
+        # ⚠️ DIE SPUR JE ZELLE (Paket 1.1). Eigener Fehlerfang: ein Protokoll
+        # darf den Lauf nicht anhalten - es ist eine Messung, kein Signal.
+        try:
+            _n_zellen = RG.schreibe_zellen(conn, durchlauf, _jetzt(), _lauf_id)
+            ergebnis["zellen_protokolliert"] = _n_zellen
+        except Exception as _zx:                             # noqa: BLE001
+            logger.exception("Zellen-Protokoll nicht geschrieben")
+            ergebnis.setdefault("fehler", []).append(
+                "Zellen-Protokoll: %s: %s" % (type(_zx).__name__, _zx))
     return ergebnis
 
 
@@ -3202,6 +3213,8 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                     instrument=instrument, strategie=strategie,
                     ergebnis=ergebnis, woher="Signalzeile")
     signal_id = SA.schreibe_signal(conn, felder, symbol=symbol)
+    # 18.09.2026 (Paket 1.1): nur der VERWEIS - die Zahlen bleiben in `signals`.
+    durchlauf.signal(symbol, signal_id)
     eintrag["signal_id"] = signal_id
     # ⚠️ ERST HIER, WEIL ERST HIER DIE `signal_id` FESTSTEHT. Ohne sie
     # laesst sich die Zeile spaeter nicht mit dem Ausgang verbinden - und

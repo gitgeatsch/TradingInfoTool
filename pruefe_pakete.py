@@ -25677,7 +25677,8 @@ def paket_abgrenzung() -> None:
            "gruppe, " in _EX._SPOT_SIGNAL_SPALTEN, "")
 
 
-NUR_LESEND_SKRIPTE = ("messe_ausstiegsguete.py", "messe_marktscan_wert.py",
+NUR_LESEND_SKRIPTE = ("backtest_llm1_historisch.py", "pruefe_rollenkette.py",
+                      "messe_ausstiegsguete.py", "messe_marktscan_wert.py",
                       "messe_sentiment_je_horizont.py", "messe_top_fakten.py",
                       "pruefe_marktlage.py", "pruefe_n8_gegenpruefung.py",
                       "pruefe_n8_live_abdeckung.py",
@@ -25717,8 +25718,12 @@ def paket_nur_lesend() -> None:
                     and k.func.attr in ("connect", "get_connection")):
                 offen.append(k)
         ausdruecke[name] = offen
-        pruefe(P, "%s oeffnet die Datenbank genau einmal und nie ueber `get_connection`" % name,
-               len(offen) == 1 and offen[0].func.attr == "connect",
+        # ⚠️ 18.09.2026: NICHT "genau eine" Oeffnung - `backtest_llm1_historisch`
+        # hat zwei (Waehrungsabfrage und Reihenladen), und beide sind richtig.
+        # Geprueft wird, was zaehlt: JEDE Oeffnung geht ueber `connect`, keine
+        # ueber `get_connection` (das oeffnet beschreibbar und setzt WAL).
+        pruefe(P, "%s oeffnet die Datenbank nur ueber `connect`, nie ueber `get_connection`" % name,
+               bool(offen) and all(k.func.attr == "connect" for k in offen),
                "%d Oeffnungen: %s" % (len(offen), [_AST.unparse(k)[:80] for k in offen]))
 
     alt = _os.getcwd()
@@ -25734,14 +25739,32 @@ def paket_nur_lesend() -> None:
         _os.chdir(tmp)
         try:
             for name, offen in ausdruecke.items():
-                if len(offen) != 1:
+                if not offen:
                     continue
+                # ⚠️ `db` heisst nicht ueberall dasselbe: in
+                # `messe_basislinie_aufloesung` ist es das MODUL (db.DB_PATH),
+                # in `backtest_llm1_historisch` der PFAD. Wer hier eine
+                # Umgebung fuer alle baut, prueft am Ende nur eine Haelfte.
                 umgebung = {"sqlite3": _sq, "_sq": _sq, "DB": rel,
                             "a": _ty.SimpleNamespace(db=rel),
-                            "db": _ty.SimpleNamespace(DB_PATH=Path(voll))}
+                            "db": (_ty.SimpleNamespace(DB_PATH=Path(voll))
+                                   if "basislinie" in name else rel)}
                 abgewiesen, grund = False, ""
                 try:
-                    con = eval(compile(_AST.Expression(offen[0]), name, "eval"), umgebung)
+                    # jede Oeffnung des Skripts einzeln pruefen - eine reicht
+                    # nicht, wenn daneben eine zweite beschreibbar aufmacht
+                    con = None
+                    for _k in offen[:-1]:
+                        _c2 = eval(compile(_AST.Expression(_k), name, "eval"), umgebung)
+                        try:
+                            _c2.execute("INSERT INTO t VALUES (1)")
+                            _c2.commit()
+                            raise AssertionError("zweite Oeffnung schreibt")
+                        except _sq.OperationalError:
+                            pass
+                        finally:
+                            _c2.close()
+                    con = eval(compile(_AST.Expression(offen[-1]), name, "eval"), umgebung)
                     try:
                         con.execute("SELECT count(*) FROM t").fetchone()
                         con.execute("INSERT INTO t VALUES (1)")
@@ -26019,6 +26042,131 @@ def paket_protokoll() -> None:
            "Messung die verworfenen Faelle mit nichts")
     pruefe(P, "und die alte Einzelrechnung im Nein-Pfad ist weg (eine Quelle, eine Rechnung)",
            q.count("_PT3.rechne(") == 0 and "from agent import potential as _PT" in q, "")
+
+    # ---- 5 DIE SPUR JE ZELLE (Paket 1.1, Nutzerentscheidungen A1-A5) ------
+    import agent.rollen_gate as _RG
+
+    pruefe(P, "⚠️ die Spur liegt in einer EIGENEN Tabelle, nicht in `signals`",
+           _RG.TABELLE_ZELLEN == "zellen_lauf"
+           and "zellen_lauf" not in _SA.SPALTEN_SIGNAL,
+           "`signals` fuehrt Empfehlungen - eine Zelle, die an Stufe 9 "
+           "scheitert, ist keine")
+    pruefe(P, "⚠️ und der Filter nimmt alles ab `urteil` PLUS die Auswahl (A5)",
+           _RG._protokollwuerdig({"stufe": "urteil"})
+           and _RG._protokollwuerdig({"stufe": "entscheider"})
+           and _RG._protokollwuerdig({"stufe": "auswahl"})
+           and not _RG._protokollwuerdig({"stufe": "anlass"})
+           and not _RG._protokollwuerdig({"stufe": "wiederholung"})
+           and not _RG._protokollwuerdig({"stufe": None}),
+           "Anlass und Wiederholung stehen je Symbol schon in "
+           "`anlass_beobachtung` - die Auswahl steht nirgends")
+
+    _d = _RG.Durchlauf("rollen")
+    _d.beginne("LINK", gruppe="krypto", instrument="spot", strategie="einstieg")
+    _d.bestanden("LINK", "urteil")
+    _d.notiz("LINK", "terminmarkt", "kein OI-Rang")
+    _d.bestanden("LINK", "entscheider")
+    _d.signal("LINK", 4711)
+    _d.beginne("BTC", gruppe="krypto", instrument="spot", strategie="einstieg")
+    _d.verloren("BTC", "urteil", "keine Antwort")
+    _d.beginne("XLM", gruppe="krypto", instrument="spot", strategie="einstieg")
+    _d.verloren("XLM", "anlass", "Faktensatz unveraendert seit 0.2 h")
+    _d.beginne("SOL", gruppe="krypto", instrument="spot", strategie="einstieg")
+    _d.verloren("SOL", "auswahl", "Rang 37 von 41")
+    pruefe(P, "die Zelle merkt sich Gruppe, Instrument und Strategie",
+           [z["gruppe"] for z in _d.zellen] == ["krypto"] * 4
+           and _d.zellen[0]["strategie"] == "einstieg", "")
+    pruefe(P, "⚠️ und die SUMMEN bleiben unveraendert (alte Laeufe vergleichbar, R-R11)",
+           _d.verloren_je_stufe["urteil"] == 1
+           and _d.bestanden_je_stufe["entscheider"] == 1
+           and _d.hinein == 4, "")
+
+    tmp2 = _tf.mkdtemp()
+    try:
+        pfad2 = _os.path.join(tmp2, "spur.db")
+        con2 = _sq.connect(pfad2)
+        neu2 = _RG.migriere_zellen(con2)
+        pruefe(P, "die Migration legt `zellen_lauf` an und ist wiederholbar",
+               neu2 and _RG.migriere_zellen(con2) == [], str(neu2))
+        n = _RG.schreibe_zellen(con2, _d, "2026-09-18T12:00:00", 99)
+        _cur2 = con2.execute("SELECT symbol, stufe, ergebnis, grund, "
+                             "signal_id, notizen, lauf_id FROM zellen_lauf "
+                             "ORDER BY id")
+        _namen = [c[0] for c in _cur2.description]
+        zeilen = [dict(zip(_namen, r)) for r in _cur2.fetchall()]
+        pruefe(P, "⚠️⚠️ geschrieben werden GENAU die drei protokollwuerdigen Zellen",
+               n == 3 and {z["symbol"] for z in zeilen} == {"LINK", "BTC", "SOL"},
+               "%d Zeilen: %s (XLM fiel am Anlass - der steht in "
+               "`anlass_beobachtung`)" % (n, [z["symbol"] for z in zeilen]))
+        _link = [z for z in zeilen if z["symbol"] == "LINK"][0]
+        pruefe(P, "die durchgelaufene Zelle traegt Stufe, Ergebnis und den VERWEIS",
+               _link["stufe"] == "entscheider" and _link["ergebnis"] == "durch"
+               and _link["signal_id"] == 4711 and _link["lauf_id"] == 99,
+               str(_link))
+        pruefe(P, "die verlorene Zelle traegt ihren Grund im Klartext",
+               [z for z in zeilen if z["symbol"] == "BTC"][0]["grund"]
+               == "keine Antwort", "")
+        pruefe(P, "und eine Notiz geht nicht verloren",
+               "terminmarkt" in (_link["notizen"] or ""), str(_link["notizen"]))
+        con2.close()
+    finally:
+        _sh.rmtree(tmp2, ignore_errors=True)
+
+    # ⚠️ EIN PROTOKOLL DARF DEN LAUF NICHT ANHALTEN - am Seiteneffekt gezeigt
+    class _KaputtCon:
+        description = ()
+
+        def execute(self, *a, **k):
+            raise RuntimeError("Datenbank weg")
+
+        executemany = execute
+
+        def commit(self):
+            pass
+
+    try:
+        _RG.schreibe_zellen(_KaputtCon(), _d, "2026-09-18T12:00:00", 1)
+        _hielt = False
+    except Exception:                                        # noqa: BLE001
+        _hielt = True
+    q2 = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ faellt das Schreiben aus, faengt es die KETTE ab (nicht die Funktion)",
+           _hielt and "RG.schreibe_zellen(conn, durchlauf" in q2
+           and "Zellen-Protokoll: %s: %s" in q2,
+           "die Funktion darf werfen - der Lauf darf nicht stehenbleiben")
+    pruefe(P, "die Kette meldet die Zahl der protokollierten Zellen",
+           'ergebnis["zellen_protokolliert"]' in q2, "")
+    import extract_notebook_diagnose as _EXP2
+    # ⚠️ 18.09.2026: DIESE DREI PRUEFUNGEN KAMEN AUS DEN GEGENPROBEN.
+    # Die erste Fassung prueften Durchlauf und Tabelle, aber NICHT, ob die
+    # Kette den Kontext und den Verweis ueberhaupt uebergibt - drei
+    # Mutationen liefen deshalb gruen durch. Ein Test, den der Fehler nicht
+    # rot macht, ist keiner.
+    _baum2 = _AST.parse(q2)
+    _beginne = [k for k in _AST.walk(_baum2)
+                if isinstance(k, _AST.Call) and isinstance(k.func, _AST.Attribute)
+                and k.func.attr == "beginne"]
+    pruefe(P, "⚠️ die KETTE uebergibt Gruppe, Instrument und Strategie an die Zelle",
+           bool(_beginne) and all({w.arg for w in k.keywords}
+                                  >= {"gruppe", "instrument", "strategie"}
+                                  for k in _beginne),
+           "ohne Kontext steht in der Spur ein Symbol ohne Zugehoerigkeit")
+    _verweis = [k for k in _AST.walk(_baum2)
+                if isinstance(k, _AST.Call) and isinstance(k.func, _AST.Attribute)
+                and k.func.attr == "signal" and isinstance(k.func.value, _AST.Name)
+                and k.func.value.id == "durchlauf"]
+    pruefe(P, "⚠️ und sie setzt den Verweis auf die geschriebene Signalzeile",
+           len(_verweis) >= 1,
+           "ohne ihn ist spaeter nicht zu sehen, welche Zelle zur Empfehlung wurde")
+    _qex = io.open("extract_notebook_diagnose.py", encoding="utf-8").read()
+    pruefe(P, "und der Export liest die Tabelle WIRKLICH (Name an allen Stellen gleich)",
+           ('aus["zellen_lauf"]' in _qex
+            and _qex.count("FROM zellen_lauf") >= 3
+            # ⚠️ AUCH DIE WEICHE: steht im `if` ein anderer Name als in der
+            # Abfrage, nimmt der Export still den Leer-Zweig - und am
+            # Notebook sieht alles normal aus.
+            and 'if "zellen_lauf" in vorhanden' in _qex),
+           "ein Tippfehler im Namen faellt sonst erst am Notebook auf")
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),

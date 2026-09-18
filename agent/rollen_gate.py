@@ -283,15 +283,41 @@ class Durchlauf:
         self.zai: dict[str, int] = {}
         self.zai_symbole: list = []
         self.zai_gruende: dict[str, int] = {}
+        # ⚠️⚠️ DIE SPUR JE ZELLE (18.09.2026, Schritt 59 Phase 1, Paket 1.1).
+        #
+        # Bis heute sind hier NUR Summen entstanden: `bestanden`, `verloren`
+        # und `gruende` je Stufe, eine Zeile je Lauf. Je Symbol blieb allein
+        # `letzte_stufe` uebrig. Die Angaben JE ZELLE kamen also an - und
+        # wurden im selben Augenblick zusammengezaehlt (2.458-archaeologie).
+        #
+        # ⚠️ NICHTS WIRD ZUSAETZLICH GEMESSEN. Dieselben drei Meldepunkte
+        # (`bestanden`, `verloren`, `notiz`) haengen ihre Angabe jetzt auch
+        # an die Zelle, aus der sie stammt.
+        self.zellen: list[dict] = []
+        self._zelle_je_symbol: dict[str, dict] = {}
 
-    def beginne(self, symbol: str) -> None:
+    def beginne(self, symbol: str, *, gruppe: str | None = None,
+                instrument: str | None = None,
+                strategie: str | None = None) -> None:
         self.hinein += 1
         self._offen.add(symbol)
+        # ⚠️ EIN SYMBOL KANN ZWEI ZELLEN HABEN (Einstieg und Akkumulation,
+        # `_paare`). Jede bekommt einen eigenen Eintrag; die Meldungen gehen
+        # an die zuletzt begonnene - dieselbe Reihenfolge, in der die Kette
+        # sie abarbeitet.
+        zelle = {"symbol": symbol, "gruppe": gruppe, "instrument": instrument,
+                 "strategie": strategie, "stufe": None, "ergebnis": "offen",
+                 "grund": "", "art": "", "signal_id": None, "notizen": []}
+        self.zellen.append(zelle)
+        self._zelle_je_symbol[symbol] = zelle
 
     def bestanden(self, symbol: str, stufe: str) -> None:
         self._pruefe(stufe)
         if symbol in self._offen:
             self.bestanden_je_stufe[stufe] += 1
+            _z = self._zelle_je_symbol.get(symbol)
+            if _z is not None:
+                _z["stufe"], _z["ergebnis"] = stufe, "durch"
             # WIE WEIT DIESES SYMBOL GEKOMMEN IST. Gebraucht, wenn ein Asset
             # mit einer Ausnahme abbricht: die Stufe muss stimmen, sonst zeigt
             # die Tabelle auf die falsche Stelle - und genau dafuer gibt es sie.
@@ -313,6 +339,10 @@ class Durchlauf:
         # diese Buchhaltung beseitigen soll.
         _a = art_fuer(stufe, art)
         self.verloren_je_stufe[stufe] += 1
+        _z = self._zelle_je_symbol.get(symbol)
+        if _z is not None:
+            _z["stufe"], _z["ergebnis"] = stufe, "verloren"
+            _z["grund"], _z["art"] = grund or "", _a or ""
         self.arten[stufe][_a] = self.arten[stufe].get(_a, 0) + 1
         if grund:
             self.gruende[stufe][grund] = self.gruende[stufe].get(grund, 0) + 1
@@ -345,6 +375,20 @@ class Durchlauf:
             return
         self.notizen.setdefault(stufe, {})
         self.notizen[stufe][text] = self.notizen[stufe].get(text, 0) + 1
+        _z = self._zelle_je_symbol.get(symbol)
+        if _z is not None:
+            _z["notizen"].append("%s: %s" % (stufe, text))
+
+    def signal(self, symbol: str, signal_id) -> None:
+        """Der Verweis auf die geschriebene Signalzeile (18.09.2026).
+
+        ⚠️ SO BLEIBT DIE ABLAGE GETRENNT: was die Kette TAT, steht in
+        `zellen_lauf`; was sie EMPFAHL, in `signals`. Doppelte Ablage
+        derselben Zahlen waere die Stelle, an der zwei Wahrheiten
+        entstehen - hier steht nur der Verweis."""
+        _z = self._zelle_je_symbol.get(symbol)
+        if _z is not None and signal_id is not None:
+            _z["signal_id"] = int(signal_id)
 
     def gegenpruefung(self, symbol: str, einwand) -> None:
         """LLM-2 Rolle G (Z.ai) - VERMERKEN, nicht filtern (Schritt 44, 4b).
@@ -612,3 +656,95 @@ def schreibe(conn, durchlauf: Durchlauf, zeitpunkt: str) -> int:
          durchlauf.heraus, durchlauf.als_json()))
     conn.commit()
     return int(cur.lastrowid)
+
+
+# ---------------------------------------------------------------------------
+# DIE SPUR JE ZELLE (18.09.2026, Schritt 59 Phase 1, Paket 1.1)
+# ---------------------------------------------------------------------------
+#
+# ⚠️⚠️ WARUM EINE EIGENE TABELLE (Nutzerentscheidung A1):
+#
+#   `gate_durchlaessigkeit` fuehrt SUMMEN je Lauf. Die Spur dort ins JSON zu
+#   haengen haette jede Laufzeile vervielfacht und waere nicht abfragbar -
+#   man muesste 15.496 JSON-Bloecke lesen, um eine Frage zu beantworten.
+#
+#   `signals` fuehrt EMPFEHLUNGEN. Eine Zelle, die an Stufe 9 scheitert, ist
+#   keine - sie dort abzulegen haette genau die Vermischung erzeugt, die
+#   Schritt 44 gerade getrennt hat.
+#
+# ⚠️ WELCHE ZELLEN (Nutzerentscheidung A5, mit Mengenprobe belegt):
+#
+#   Alles ab der Stufe `urteil` - dort beginnt, was die Messung braucht -
+#   PLUS die Verluste an `auswahl`. Der Anlass und die Wiederholung stehen
+#   bereits je Symbol in `anlass_beobachtung`; die AUSWAHL steht nirgends,
+#   und sie verwirft 36.702 Zellen.
+#
+#   Gemessen an den letzten 14 Tagen: rund 193 statt 4.965 Zeilen je Tag -
+#   3,9 % der vollen Menge, rund 70.000 im Jahr.
+TABELLE_ZELLEN = "zellen_lauf"
+PROTOKOLL_AB = "urteil"
+PROTOKOLL_IMMER = ("auswahl",)
+
+
+def _protokollwuerdig(zelle: dict) -> bool:
+    """Gehoert diese Zelle in die Spur? (A5)"""
+    stufe = zelle.get("stufe")
+    if stufe is None:
+        return False
+    if stufe in PROTOKOLL_IMMER:
+        return True
+    try:
+        return (STUFEN_NAMEN.index(stufe)
+                >= STUFEN_NAMEN.index(PROTOKOLL_AB))
+    except ValueError:
+        return False
+
+
+def migriere_zellen(conn) -> list[str]:
+    """Additiv und idempotent, wie jede Migration hier."""
+    getan = []
+    vorhanden = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    if TABELLE_ZELLEN not in vorhanden:
+        conn.execute(f"""CREATE TABLE {TABELLE_ZELLEN} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lauf_id INTEGER,
+            erfasst_am TEXT NOT NULL,
+            gruppe TEXT,
+            symbol TEXT NOT NULL,
+            instrument TEXT,
+            strategie TEXT,
+            stufe TEXT NOT NULL,
+            ergebnis TEXT NOT NULL,
+            grund TEXT,
+            art TEXT,
+            signal_id INTEGER,
+            notizen TEXT)""")
+        conn.execute(f"CREATE INDEX idx_zellen_zeit ON {TABELLE_ZELLEN}(erfasst_am)")
+        conn.execute(f"CREATE INDEX idx_zellen_symbol ON {TABELLE_ZELLEN}(symbol)")
+        getan.append(f"Tabelle {TABELLE_ZELLEN} angelegt")
+    conn.commit()
+    return getan
+
+
+def schreibe_zellen(conn, durchlauf, zeitpunkt: str, lauf_id=None) -> int:
+    """Die Spur je Zelle - GEBUENDELT am Ende des Laufs (A3).
+
+    ⚠️ SIE DARF DEN LAUF NIE ANHALTEN. Ein Protokoll ist eine Messung, kein
+    Signal; scheitert das Schreiben, verliert man die Spur DIESES Laufs und
+    sonst nichts. Der Aufrufer faengt deshalb breit - und meldet es."""
+    migriere_zellen(conn)
+    zeilen = [(lauf_id, zeitpunkt, z.get("gruppe"), z["symbol"],
+               z.get("instrument"), z.get("strategie"), z["stufe"],
+               z["ergebnis"], (z.get("grund") or "")[:400],
+               z.get("art") or "", z.get("signal_id"),
+               " · ".join(z.get("notizen") or [])[:400] or None)
+              for z in durchlauf.zellen if _protokollwuerdig(z)]
+    if not zeilen:
+        return 0
+    conn.executemany(
+        f"INSERT INTO {TABELLE_ZELLEN} (lauf_id, erfasst_am, gruppe, symbol, "
+        f"instrument, strategie, stufe, ergebnis, grund, art, signal_id, "
+        f"notizen) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", zeilen)
+    conn.commit()
+    return len(zeilen)

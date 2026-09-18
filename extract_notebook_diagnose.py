@@ -2305,6 +2305,27 @@ def _rollen_kette(conn) -> dict:
         aus["gate_durchlaessigkeit"] = {
             "nicht_vorhanden": "Tabelle fehlt (aeltere Datei)"}
 
+    # DIE SPUR JE ZELLE (18.09.2026, Schritt 59 Phase 1, Paket 1.1). Ohne sie
+    # im Export sehe ich am Desktop nie, ob am Notebook wirklich Zeilen
+    # entstehen - und genau das ist die Kontrolle K18.
+    if "zellen_lauf" in vorhanden:
+        aus["zellen_lauf"] = {
+            "anzahl_gesamt": conn.execute(
+                "SELECT COUNT(*) FROM zellen_lauf").fetchone()[0],
+            "je_tag": [dict(r) for r in conn.execute(
+                "SELECT date(erfasst_am) tag, COUNT(*) zeilen, "
+                "COUNT(signal_id) mit_signal FROM zellen_lauf "
+                "GROUP BY 1 ORDER BY 1 DESC LIMIT 7")],
+            "je_stufe": [dict(r) for r in conn.execute(
+                "SELECT stufe, ergebnis, COUNT(*) n FROM zellen_lauf "
+                "GROUP BY 1,2 ORDER BY n DESC LIMIT 12")],
+            "zuletzt": [dict(r) for r in conn.execute(
+                "SELECT erfasst_am, gruppe, symbol, instrument, strategie, "
+                "stufe, ergebnis, substr(COALESCE(grund,''),1,120) grund, "
+                "signal_id FROM zellen_lauf ORDER BY id DESC LIMIT 25")]}
+    else:
+        aus["zellen_lauf"] = {"nicht_vorhanden": "Tabelle fehlt - Pull/Neustart?"}
+
     # --- DER AUSWAHL-SCHATTEN (A1, 23.08.2026) -----------------------------
     #
     # `paket_export`s eigener Drift-Waechter meldete diese Tabelle am

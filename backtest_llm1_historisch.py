@@ -167,7 +167,10 @@ def lade_reihen_aus_db(db: str = "data/tradinginfotool.db",
     WER DIE WAEHRUNG BRAUCHT, muss sie erfragen koennen: `waehrung_je_symbol()`.
     Eine EUR-Reihe darf nicht noch einmal nach EUR umgerechnet werden."""
     import sqlite3
-    c = sqlite3.connect(db)
+    # ⚠️ NUR LESEND, und hier besonders: diese Funktion laeuft im BETRIEB -
+    # `rollen_eingabe` und `rollen_job` rufen sie bei jedem Lauf. Sie fragt
+    # nur ab (SELECT, PRAGMA), also gehoert sie an eine Leseverbindung.
+    c = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
     # ⚠️⚠️ DER ASSETKLASSEN-FILTER (07.09.2026).
     #
     # Diese Abfrage gruppierte nach `(symbol, currency)` und las die Spalte
