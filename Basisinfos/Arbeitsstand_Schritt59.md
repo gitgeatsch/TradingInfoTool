@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 18.09.2026 · letzter Commit `086dd0b` (Phase 1: 1.7/1.2/1.3, 1.1, 1.4, 1.6) · am NB gepullt und neu gestartet · ⚠️ **Nutzer unterwegs, Verbindung unsicher** – Arbeiten laufen am Desktop, die Notebook-Kontrollen **K14, K16, K17, K6, K11a** werden beim nächsten Pull **gebündelt** geprüft
+**Stand:** 18.09.2026 · letzter Commit `e02e9e5` (Phase 1 vollständig: 1.1–1.7) · am NB gepullt und neu gestartet · ⚠️ **Nutzer unterwegs, Verbindung unsicher** – Arbeiten laufen am Desktop, die Notebook-Kontrollen **K14, K16, K17, K6, K11a** werden beim nächsten Pull **gebündelt** geprüft
 
 ## Zuerst lesen (in dieser Reihenfolge)
 
@@ -31,6 +31,7 @@
 | **Phase 1 Teil 2** (1.1 Spur je Zelle) | ✔ gebaut (2.458-protokoll-2): neue Tabelle `zellen_lauf`, Filter ab `urteil` + `auswahl`, ~193 Zeilen/Tag · Paket Protokoll 29/29, 8 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K18 |
 | **Phase 1 Teil 3** (1.4 Führung, 1.6 Sperre) | ✔ gebaut (2.458-protokoll-3): Tabelle `fuehrung_lauf` mit Empfehlungen **und** Vergleichsarm; gesperrte Akkumulation höchstens eine Zeile je Tag · Paket Protokoll 42/42, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K19 |
 | **Phase 1 Teil 4** (1.5 Ausstiege) | ✔ gebaut (2.458-protokoll-4, schließt 2.401): zwei Horizonte, richtungsbereinigt, rückwirkend – 224 von 611 Ausstiegen sofort gemessen · Paket Protokoll 55/55, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K20 |
+| **Phase 2** Live-Zählung | ✔ Werkzeug gebaut (2.459-zaehlung): `zaehle_kette.py`, 6 Sichten · Paket Zaehlung 11/11, 7 Mutationen rot · ⏳ vollständiger Lauf nach K19/K20 |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
@@ -39,7 +40,7 @@
 1. ✔ **NB-Export 18.09. 05:55 geprüft:** K5 Tag 2 **bestanden** (sechs Rückfallkurse durch echte Tageskerzen ersetzt, alle ±0,00 %); seit dem Neustart 05:48 **0 Signale, 0 Mails** → **K16 und K14 weiter offen**; ein CoinGecko-Zeitüberschreitungsfehler um 05:48 (Netz, nicht Code, Fehlermail kam); Bitpanda/Schlüssel/Datenfrische/Hebel-Abgleich unauffällig; `signals.gruppe` befüllt (25 krypto, 2 aktien, 1 rohstoffe, 1 themen_etf)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
 3. ✔ 0.12 gebaut – Phase 0 ist damit bis auf **0.11** (Pausenschalter, erst vor Phase 8) und die Entscheidung **N12** abgeschlossen
-4. ✔ **Phase 1 ist vollständig gebaut** (1.1–1.7, Commit ausstehend) – als Nächstes die Notebook-Kontrollen K16/K18/K19/K20 und danach **Phase 2** (Live-Zählung, Frageart `zaehlung`, nur HINWEIS)
+4. ✔ Phase 1 vollständig, Phase 2 Werkzeug gebaut – als Nächstes: K18 ✔, **K19/K20 morgen früh**, dann die vollständige Zählung; danach **Phase 3** (erste Normurteile, braucht Entscheidung **N3**)
 4. **Nach Phase 0: Probelauf** einer neuen Sitzung (Anleitung von Charlie, Kontrollfragen gegen diese Datei)
 
 ## Offene Entscheidungen des Nutzers
@@ -52,7 +53,7 @@
 - ✔ **K14** BESTÄTIGT 18.09.: Sammelmails mit `· Rohstoffe` / `· Themen-ETF` / `· Aktien`, Krypto ohne Zusatz · alt:, Krypto unverändert; Export `signals.gruppe`
 - **K20** (nach Pull und Neustart): Ausstiegsfelder gefüllt – nach dem ersten Lauf sollten rund 220 Altzeilen `ausstieg_outcome_status='gemessen'` tragen; Spaltendrift leer
 - **K19** (nach Pull und Neustart): Tabelle `fuehrung_lauf` entsteht; am Morgen nach dem Ausstiegs-Job stehen dort Empfehlungen **und** geprüfte Positionen; gesperrte Akkumulation höchstens eine Zeile je Tag
-- **K18** (nach Pull und Neustart): Tabelle `zellen_lauf` entsteht, rund 200 Zeilen/Tag, Gründe im Klartext, Verweis auf Signalzeilen gefüllt
+- ✔ **K18** BESTÄTIGT 18.09.: 273 Zeilen am ersten Tag (202 `auswahl`, 54 gesperrt, 15 ab `aktion`), Gründe im Klartext, 1 Signalverweis
 - ✔ **K17** BESTÄTIGT 18.09.: `phase`, Kurs und Spalte da (`potential_r` beim Verkauf leer – richtig) · alt:: erste Zeilen mit `phase`, `potential_r` und `kurs_bei_empfehlung_eur` im Export – und die Spaltendrift bleibt leer
 - **K16** (nach Pull **und Neustart**): erste Mail mit Abschnitt „Umfeld“ – Marktlage von Rolle A, bei Krypto der Gleichlauf, Einstufung der Klasse mit Begründung; bei Krypto zusätzlich Kontenanteil/Put-Skew unter Zusatzinfo
 - ✔ **K5** Selbstprüfung Schlusskurse: Tag 1 und Tag 2 bestanden (18.09.) – erledigt

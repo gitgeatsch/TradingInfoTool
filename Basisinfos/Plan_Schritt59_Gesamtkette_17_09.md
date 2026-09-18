@@ -317,6 +317,8 @@ Prüfung: Prüfpaket mit Mutationen, Standard-DB-Wächter, Trockenlauf gegen NB-
 
 ### Phase 2 – Live-Zählung (Frageart `zaehlung`, nur HINWEIS)
 
+✔ **WERKZEUG GEBAUT 18.09.** (2.459-zaehlung): `zaehle_kette.py`, sechs Sichten, nur lesend; Schichtung nach Prompt-Stand und an der Linie 01.09. ist im Werkzeug erzwungen, Krypto und Nicht-Krypto getrennt, keine Quote unter zehn Fällen. Paket Zaehlung 11/11, 7 Mutationen rot. **Vollständig laufen lassen, sobald K19/K20 am Notebook bestätigt sind** – Führung und Ausstiege tragen erst dann bei.
+
 Trichter je Stufe und Art über die Läufe; Entscheider-Vierfeld (durchgelassen vs. verworfen, Ausgang); BC NICHTS_TUN vs. Kauf; G-Einwand vs. Folge; Nicht-Krypto getrennt. Ausgabe als Tabelle mit Zeitfenster und Hinweis-Kennzeichen. **Keine Güte-Urteile.**
 
 ### Phase 3 – Historische Messung der deterministischen Kette (Normurteile)

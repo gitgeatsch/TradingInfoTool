@@ -26379,6 +26379,101 @@ def paket_protokoll() -> None:
 
 
 
+
+
+def paket_zaehlung() -> None:
+    """Schritt 59 Phase 2 (18.09.2026) - die Live-Zaehlung (D1-D6).
+
+    ⚠️⚠️ EINE ZAEHLUNG IST KEIN URTEIL. Die Messnorm verlangt fuer die
+    Frageart `zaehlung` genau eines: SAGEN, WORUEBER gezaehlt wird. Dieses
+    Paket bewacht deshalb nicht die Zahlen (die aendern sich taeglich),
+    sondern die drei Eigenschaften, ohne die eine Zaehlung zur Behauptung
+    wird: der VORBEHALT an jeder Zahl, die MENGE an jedem Block, und die
+    SCHICHTUNG (Prompt-Stand, Linie 01.09., Krypto getrennt).
+
+    ⚠️ Die Schichtung ist nicht Kosmetik: 3.431 Zeilen stammen aus einem
+    anderen Prompt-Stand als die 266 heutigen, und seit dem 01.09. sieht BC
+    dieselben Terminmarktdaten wie G (2.457-w1). Wer beides zusammenzieht,
+    zaehlt zwei verschiedene Ketten als eine."""
+    P = "Zaehlung"
+    import os as _os
+    import shutil as _sh
+    import sqlite3 as _sq
+    import subprocess as _sub
+    import tempfile as _tf
+
+    import zaehle_kette as _ZK
+
+    q = io.open("zaehle_kette.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ die Zaehlung URTEILT NICHT - keine Norm, keine Schwellenkonstante",
+           (not [k for k in _AST.walk(_AST.parse(q))
+                 if isinstance(k, (_AST.Import, _AST.ImportFrom))
+                 and "messnorm" in _AST.unparse(k)]
+            and not [x for x in _AST.walk(_AST.parse(q))
+                     if isinstance(x, _AST.Name) and "SCHWELLE" in x.id.upper()]),
+           "die Bewertung kommt in Phase 3 und 8 - wer hier eine Schwelle "
+           "einbaut, hat aus der Zaehlung ein Urteil gemacht")
+    pruefe(P, "der Vorbehalt ist EIN Text, der ueberall benutzt wird",
+           _ZK.VORBEHALT.startswith("HINWEIS, kein Urteil")
+           and q.count("VORBEHALT") >= 4,
+           "zwei Fassungen desselben Vorbehalts laufen auseinander")
+    pruefe(P, "⚠️ jeder Block nennt seine MENGE und traegt den Vorbehalt",
+           "Menge:" in q and q.count("_kopf(") >= 7,
+           "eine Zaehlung, die nicht sagt, worueber sie zaehlt, ist keine")
+    pruefe(P, "⚠️ die Datenbank wird NUR LESEND geoeffnet",
+           'mode=ro' in q and "uri=True" in q, "")
+    pruefe(P, "die Linie 01.09. steht als benannte Groesse im Code",
+           _ZK.LINIE_G == "2026-09-01" and "2.457-w1" in q,
+           "sie ist der Tag, an dem Rolle G ihre Unabhaengigkeit verlor")
+    pruefe(P, "⚠️ unter zehn Faellen gibt es KEINE Quote",
+           _ZK._quote(1, 2).strip() == "-" and _ZK._quote(5, 10) == "  50 %",
+           "1 von 2 = 50 % taeuscht eine Genauigkeit vor, die die Menge nicht "
+           "hergibt - keine Schwelle, sondern Ehrlichkeit ueber die Menge")
+
+    tmpz = _tf.mkdtemp()
+    try:
+        pfad = _os.path.join(tmpz, "z.db")
+        con = _sq.connect(pfad)
+        con.row_factory = _sq.Row
+        import database.db as _DBZ
+        _DBZ.init_db(con)
+        import agent.signal_abbildung as _SAZ
+        _SAZ.migriere(con)
+        con.executemany(
+            "INSERT INTO signals (symbol, action, created_at, quelle_kette, "
+            "gate_passed, facts_json, prompt_stand, outcome_status, "
+            "zai_gegenpruefung_urteil) VALUES (?,?,?,'rollen',?,'{}',?,?,?)",
+            [("AAA", "KAUFEN", "2026-08-20T10:00:00", 1, "alt",
+              "take_profit_erreicht", "ja"),
+             ("BBB", "KAUFEN", "2026-09-05T10:00:00", 1, "neu",
+              "stop_loss_erreicht", "ja")])
+        con.commit()
+        con.close()
+        aus = _sub.run([sys.executable, "zaehle_kette.py", "--db", pfad],
+                       capture_output=True, text=True, encoding="utf-8",
+                       errors="replace",
+                       env=dict(_os.environ, PYTHONIOENCODING="utf-8"))
+        text = aus.stdout
+        pruefe(P, "⚠️⚠️ der Lauf beendet sich sauber, auch wenn Tabellen fehlen",
+               aus.returncode == 0 and "fehlt" in text,
+               "eine Zaehlung darf an einer fehlenden Tabelle nicht "
+               "zerbrechen - sie sagt, DASS die Tabelle fehlt (rc=%s)"
+               % aus.returncode)
+        # ⚠️ JE BLOCK PRUEFEN, NICHT IM GANZEN TEXT: die erste Fassung
+        # suchte die Staende irgendwo in der Ausgabe - und lief gruen durch,
+        # als das VIERFELD sie zusammenzog, weil Block 3 sie noch fuehrte.
+        _vier = text.split("2  DAS VIERFELD")[-1].split("3  WAS ROLLE BC")[0]
+        pruefe(P, "⚠️ die beiden Prompt-Staende erscheinen im VIERFELD getrennt",
+               "alt" in _vier and "neu" in _vier,
+               "sonst mischt die Quote zwei Modelle (%s)" % _vier[-200:])
+        pruefe(P, "⚠️ und die Linie 01.09. trennt die G-Zahlen",
+               "vor 2026-09-01 (unabhaengig)" in text
+               and "ab 2026-09-01 (NICHT unabh.)" in text, "")
+        pruefe(P, "der Vorbehalt steht im Kopf UND am Ende",
+               text.count(_ZK.VORBEHALT) >= 3, str(text.count(_ZK.VORBEHALT)))
+    finally:
+        _sh.rmtree(tmpz, ignore_errors=True)
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -26444,6 +26539,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "NurLesend": paket_nur_lesend,
           "Mailabschnitte": paket_mailabschnitte,
           "Protokoll": paket_protokoll,
+          "Zaehlung": paket_zaehlung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,
