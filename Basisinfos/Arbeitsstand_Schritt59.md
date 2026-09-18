@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 17.09.2026 nachts · letzter Commit `c2e6514` (0.3 + 0.4, am NB gepullt) · 0.2 + 0.5 + 0.2b gebaut, Commit ausstehend · NB gepullt und neu gestartet 18:08, Export 18:43 geprüft
+**Stand:** 17.09.2026 nachts · letzter Commit `65ef6cd` (0.2/0.5/0.2b, am NB gepullt) · 0.12 gebaut, Commit ausstehend · NB gepullt und neu gestartet 18:08, Export 18:43 geprüft
 
 ## Zuerst lesen (in dieser Reihenfolge)
 
@@ -25,7 +25,7 @@
 | 0.2 Befunde W1–W11 | ✔ erledigt: 2.457-w1 … w9 neu, dazu 2.457-n2 (Rahmen-Sätze erreichen BC, sprechen ab ca. Mitte Oktober → Entscheidung N12) und 2.457-n3; W10/W11 als Nachtrag |
 | 0.5 Plan bereinigen | ✔ erledigt: A9 entwirrt, 37 fertig, 42 im Titel, 43/25 Rückverweis, R-R12, 2.414 als Hinweis, KRYPTO-ZUERST offen |
 | 0.2b Basisdokumente | ✔ erledigt: Landkarte an fünf Stellen korrigiert, Manual **nur** Standvermerk (Weg A, Schritt 58), Anforderungen Z. 697, zwei Konzeptdokumente mit Standvermerk |
-| 0.12 tote Mail-Abschnitte „Umfeld“/„Zusatzinfo“ (2.457-w3) | NEU, offen – kleiner Bau vor Phase 1, nur Mail |
+| 0.12 Mail-Abschnitte „Umfeld“/„Zusatzinfo“ (2.457-w3) | ✔ gebaut · Paket Mailabschnitte 18/18 · `bc_ein` bitgleich · ⏳ NB: Pull **und Neustart**, dann K16 |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
@@ -33,7 +33,7 @@
 
 1. ✔ NB-Export 18:43 geprüft (seit Neustart nur die 2 bekannten marktrang-Tracebacks; Bitpanda, Datenfrische, Hebel-Abgleich ok). Offen: **K13** Nutzerblick, **K14** erste Multiasset-Mail, **K5** Tag 2 (18.09. 05:30)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
-3. ✔ Doku-Pakete 0.2 / 0.5 / 0.2b erledigt – als Nächstes **0.12** (Mail-Abschnitte), dann 0.11 vor Phase 8
+3. ✔ 0.12 gebaut – Phase 0 ist damit bis auf **0.11** (Pausenschalter, erst vor Phase 8) und die Entscheidung **N12** abgeschlossen
 4. **Nach Phase 0: Probelauf** einer neuen Sitzung (Anleitung von Charlie, Kontrollfragen gegen diese Datei)
 
 ## Offene Entscheidungen des Nutzers
@@ -44,6 +44,7 @@
 
 - ✔ **K13** ETF-Knöpfe gesperrt (G2X per Bildschirmfoto bestätigt)
 - **K14** Multiasset-Mails gekennzeichnet, Krypto unverändert; Export `signals.gruppe`
+- **K16** (nach Pull **und Neustart**): erste Mail mit Abschnitt „Umfeld“ – Marktlage von Rolle A, bei Krypto der Gleichlauf, Einstufung der Klasse mit Begründung; bei Krypto zusätzlich Kontenanteil/Put-Skew unter Zusatzinfo
 - **K5** Selbstprüfung Schlusskurse weitere Tage
 - **K6** Hebelstufen im Text einer Hebelmail (Nutzerblick)
 - **K11a** Cash-Zeile in einer Kaufmail (Nutzerblick)

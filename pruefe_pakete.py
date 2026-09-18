@@ -25761,6 +25761,124 @@ def paket_nur_lesend() -> None:
                Path(voll).read_bytes() == vorher, "")
 
 
+def paket_mailabschnitte() -> None:
+    """Schritt 59 Phase 0.12 (17.09.2026) - die zwei toten Mailabschnitte
+    (Befund 2.457-w3, Nutzerentscheidungen X1-X4).
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT. Beide Abschnitte lasen
+    `bc_ein["fakten_roh"]` - einen Schluessel, den KEINE Codestelle setzt; er
+    stammt aus der alten Pipeline. Der Mailbau warf deshalb seit dem Umbau
+    still zwei Abschnitte weg: die Marktlage von Rolle A und den
+    Zusatzinfo-Block. Ein Defekt, der wie ein Normalzustand aussieht, faellt
+    nur auf, wenn ihn eine Pruefung benennt.
+
+    ⚠️ DIE WICHTIGSTE PRUEFUNG IST DIE LETZTE: der Mailweg darf die
+    MODELLEINGABE nicht beruehren. Stuende in `bc_ein` ein Schluessel mehr,
+    aenderte sich der Anlass-Fingerabdruck und damit die Ausloeserate
+    (Umbauplan 92.8) - eine Anzeigekorrektur wuerde zur Messungsaenderung."""
+    P = "Mailabschnitte"
+    import agent.rollen_lauf as _RL
+    import agent.faktenblock_quellen as _FQ
+    import agent.signal_mail as _SM
+
+    # ---- 1 Die Einstufung von Rolle A fuer die Mail ------------------------
+    lagebild = {"lage": "Die Leitmaerkte laufen auseinander",
+                "klassen": [{"klasse": "krypto", "einstufung": "guenstig",
+                             "warum": "10 % unter dem Hoch"},
+                            {"klasse": "aktien", "einstufung": "gemischt",
+                             "warum": ""}]}
+    pruefe(P, "die eigene Klasse wird gefunden, samt Begruendung",
+           (_RL._klasse_einstufung(lagebild, "krypto") or {}).get("warum")
+           == "10 % unter dem Hoch", "")
+    pruefe(P, "⚠️ `themen_etf` und `hedge` folgen `aktien` - wie im Prompt",
+           all((_RL._klasse_einstufung(lagebild, k) or {}).get("klasse") == "aktien"
+               for k in ("themen_etf", "hedge", "etf")),
+           "sonst laufen Mail und Modelleingabe auseinander")
+    pruefe(P, "eine unbekannte Klasse wird NICHT geraten",
+           _RL._klasse_einstufung(lagebild, "rohstoffe") is None, "")
+    pruefe(P, "ohne Lagebild faellt der Abschnitt weg statt leer zu stehen",
+           _RL._klasse_einstufung(None, "krypto") is None
+           and _RL._klasse_einstufung({"klassen": [{"klasse": "krypto"}]},
+                                      "krypto") is None, "")
+
+    # ---- 2 Die Zusatzquelle -----------------------------------------------
+    tm = {"long_anteil_pct": 61.4, "funding_jetzt": 0.0001,
+          "optionsmarkt": {"skew": {"wert": 3.2, "perzentil": 88},
+                           "dvol": {"wert": 55.0}}}
+    quelle = _RL._zusatzquelle(tm)
+    pruefe(P, "Kontenanteil und Schieflage kommen aus dem LAUFENDEN Abruf",
+           quelle.get("antizyklisch", {}).get("long_konten_anteil_prozent") == 61.4
+           and quelle.get("optionsmarkt", {}).get("skew_prozentpunkte") == 3.2,
+           str(quelle))
+    pruefe(P, "⚠️ die Finanzierungsrate bleibt DRAUSSEN (Einheit unbelegt, 2.457-w6)",
+           "funding_rate_aktuell" not in str(quelle),
+           "eine Euro-Zahl, die um den Faktor drei danebenliegen kann, gehoert "
+           "nicht in eine Mail")
+    pruefe(P, "ohne Terminmarkt bleibt die Quelle leer statt zu raten",
+           _RL._zusatzquelle(None) == {} and _RL._zusatzquelle({}) == {}, "")
+    werte, fehlt = _FQ.abbilden(quelle, bereich="krypto_spot",
+                                position_eur=500.0, hebel=2.0)
+    pruefe(P, "⚠️ und `faktenblock_quellen` FINDET sie jetzt (vorher: alles leer)",
+           werte.get("retail_long_pct") == 61.4 and werte.get("put_skew") == 3.2,
+           "gefunden %s, fehlt %s" % (werte, fehlt))
+    pruefe(P, "was fehlt, wird benannt statt verschluckt",
+           set(fehlt) == {"funding_eur_tag", "btc_relativwert_pct"}, str(fehlt))
+
+    # ---- 3 Der Mailtext ----------------------------------------------------
+    q = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    pruefe(P, "⚠️⚠️ NIEMAND liest mehr `fakten_roh` (den Schluessel setzt keiner)",
+           "fakten_roh" not in q.replace("# ", "").split("def _ein_asset")[-1]
+           or 'get("fakten_roh")' not in q,
+           "der Leser eines nie gesetzten Schluessels ist ein stiller Ausfall")
+    pruefe(P, "die Mail liest die Beurteilung eine Ebene hoeher",
+           'bc_ein.get("marktlage_beurteilung")' in q, "")
+    pruefe(P, "der Gleichlauf steht nur in Kryptomails",
+           '_mb.get("gleichlauf") and str(assetklasse or "").lower() == "krypto"' in q,
+           "in einer Rohstoffmail waere er Rahmen ohne Bezug")
+    import agent.entscheidungsrechnung as _ER012
+    _rechnung = _ER012.rechne(kurs=55500, atr=1677, risiko_eur=75,
+                              instrument="hebel", betrag_wunsch_eur=500,
+                              topf_frei_eur=500, umgeworfen_preis_eur=51000,
+                              widerstand=(70000, 2))
+    _urteil = {"aktion": "KAUFEN", "begruendung": "x", "was_dagegen": "y",
+               "umgeworfen_durch": "z", "unabhaengige_faktoren": 3,
+               "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]}
+    _mail = dict(symbol="BTC", name="Bitcoin", kurs_eur=55500.0,
+                 instrument="hebel", strategie="swing", rechnung=_rechnung,
+                 urteil=_urteil)
+    betreff, text = _SM.baue_mail(
+        lage_fakten=["Die Leitmaerkte laufen auseinander",
+                     "Krypto: guenstig (Einstufung von Rolle A; dem Haendler "
+                     "lag sie nicht vor)"], **_mail)
+    pruefe(P, "⚠️ der Abschnitt Umfeld steht in der fertigen Mail",
+           "Umfeld:" in text and "Einstufung von Rolle A" in text,
+           text[:200])
+    _, text_ohne = _SM.baue_mail(lage_fakten=None, **_mail)
+    pruefe(P, "und ohne Angaben steht KEINE leere Ueberschrift da",
+           "Umfeld:" not in text_ohne, "")
+    pruefe(P, "die Befundnummer steht im Code, NICHT in der Mail",
+           "2.457-w2" in q and "2.457-w2" not in text, "")
+
+    # ---- 4 ⚠️ Die Modelleingabe bleibt unberuehrt --------------------------
+    baum = _AST.parse(q)
+    schreiber = []
+    for k in _AST.walk(baum):
+        if isinstance(k, _AST.Assign):
+            for ziel in k.targets:
+                if (isinstance(ziel, _AST.Subscript)
+                        and isinstance(ziel.value, _AST.Name)
+                        and ziel.value.id == "bc_ein"):
+                    schreiber.append(_AST.unparse(ziel))
+    pruefe(P, "⚠️⚠️ der Mailweg schreibt NICHTS in `bc_ein` "
+              "(sonst aendert sich der Anlass-Fingerabdruck)",
+           sorted(set(schreiber)) == ["bc_ein['absicherungslage']",
+                                      "bc_ein['marktlage_beurteilung']",
+                                      "bc_ein['terminmarkt']"],
+           "Schreibzugriffe: %s" % sorted(set(schreiber)))
+    pruefe(P, "und der Terminmarkt wird fuer die Mail nur WEITERGEREICHT, nicht neu geholt",
+           q.count("_PO5.lage(") == 1 and "_tm_fuer_mail = _tm or None" in q, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25824,6 +25942,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Schluesselwache": paket_schluesselwache,
           "Abgrenzung": paket_abgrenzung,
           "NurLesend": paket_nur_lesend,
+          "Mailabschnitte": paket_mailabschnitte,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

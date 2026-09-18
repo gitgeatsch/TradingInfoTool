@@ -1133,6 +1133,63 @@ def _war_bestand(symbol, db, instrument) -> bool:
         return False
 
 
+def _klasse_einstufung(lagebild: dict | None, assetklasse: str | None) -> dict | None:
+    """Die Einstufung von Rolle A ZUR EIGENEN KLASSE - fuer die MAIL.
+
+    ⚠️ 17.09.2026 (Schritt 59 Phase 0.12). Rolle A liefert je Klasse
+    `einstufung` und `warum` (`rolle_analyst.validiere`). Der Haendler bekommt
+    das NICHT (Befund 2.457-w2) - der Leser bekam es bisher ebenfalls nicht,
+    weil der Mailbau am falschen Schluessel las (2.457-w3).
+
+    ⚠️ `etf` und `hedge` folgen `aktien` - dieselbe Zuordnung wie in
+    `rollen_eingabe.baue_befund_eingabe`, damit Mail und Prompt nicht
+    auseinanderlaufen. Was nicht zugeordnet werden kann, faellt weg; eine
+    geratene Klasse waere schlimmer als keine."""
+    if not isinstance(lagebild, dict):
+        return None
+    ziel = {"etf": "aktien", "themen_etf": "aktien",
+            "hedge": "aktien"}.get(str(assetklasse or "").lower(),
+                                   str(assetklasse or "").lower())
+    for eintrag in (lagebild.get("klassen") or []):
+        if isinstance(eintrag, dict) and str(eintrag.get("klasse")) == ziel:
+            return eintrag if eintrag.get("einstufung") else None
+    return None
+
+
+def _zusatzquelle(tm: dict | None) -> dict:
+    """Die Rohwerte fuer den Zusatzinfo-Block - aus dem, was DIESER Lauf hat.
+
+    ⚠️ 17.09.2026 (Schritt 59 Phase 0.12, Befund 2.457-w3).
+    `faktenblock_quellen` sucht in der Struktur der ALTEN Pipeline. Diese
+    Funktion bildet genau die Werte darauf ab, die die Rollen-Kette
+    TATSAECHLICH geholt hat - kein zweiter Abruf, keine zweite Rechnung.
+
+    ⚠️⚠️ WAS BEWUSST FEHLT, und warum es nicht geraten wird:
+
+      `funding_eur_tag` - die Einheit der gespeicherten Rate ist nicht
+          belegt (Boersen liefern ueblicherweise je Acht-Stunden-Fenster,
+          `_funding_eur_tag` rechnet mit einem STUNDENsatz). Eine Euro-Zahl,
+          die um den Faktor drei danebenliegen kann, gehoert nicht in eine
+          Mail. Gehoert zu Befund 2.457-w6 (Schritt 33).
+      `btc_relativwert_pct` - die Kette misst die relative Staerke gegen den
+          S&P-500-ETF (`BENCHMARK_SYMBOL`), nicht gegen Bitcoin. Denselben
+          Wert unter anderem Namen zu zeigen waere eine falsche Aussage.
+      Aktien, Rohstoffe, Absicherung - fuer KGV, Insidersaldo,
+          Leerverkaufsquote, Analystentrend, Lagerbestand, COT und das
+          Bestandsrisiko holt die neue Kette nichts. Der Block bleibt dort
+          leer, und die Protokollzeile sagt, WAS fehlt."""
+    aus: dict = {}
+    if not isinstance(tm, dict):
+        return aus
+    if tm.get("long_anteil_pct") is not None:
+        aus.setdefault("antizyklisch", {})["long_konten_anteil_prozent"] = (
+            tm["long_anteil_pct"])
+    skew = ((tm.get("optionsmarkt") or {}).get("skew") or {}).get("wert")
+    if skew is not None:
+        aus.setdefault("optionsmarkt", {})["skew_prozentpunkte"] = skew
+    return aus
+
+
 def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                urteil_memo=None, ist_taktisch=False,
                durchlauf, betriebsart, client, modell, conn, db, config,
@@ -1552,12 +1609,16 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # ⚠️ FAIL-SOFT MIT VERMERK: fehlt der Terminmarkt, laeuft der Rest
     # weiter - aber der Ausfall steht im Lauf. Ein stiller Ausfall saehe
     # aus wie "keine Bewegung am Terminmarkt", und das ist etwas anderes.
+    # ⚠️ 17.09.2026 (Phase 0.12): `_tm` wird jetzt AUCH von der Mail gelesen
+    # (Zusatzinfo-Block). Die Abfrage bleibt dieselbe - kein zweiter Abruf.
+    _tm_fuer_mail = None
     if str(assetklasse or "").lower() == "krypto":
         try:
             from agent import positionierung as _PO5
 
             _tm = _PO5.lage(conn, symbol, assetklasse=assetklasse,
                             instrument=instrument)
+            _tm_fuer_mail = _tm or None
             _tm_saetze = _PO5.saetze(_tm, nur_eigen=True) if _tm else []
             if _tm_saetze:
                 bc_ein["terminmarkt"] = _tm_saetze
@@ -2574,11 +2635,29 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         durchlauf.bestanden(symbol, "entscheider")
 
     # --- Die Mail ---
-    # UND HIER `faktenblock_quellen` - das zweite Modul ohne Aufrufer.
-    zusatz, _fehlt = FQ.abbilden(bc_ein.get("fakten_roh"),
+    # `faktenblock_quellen` - ⚠️⚠️ ES HATTE EINEN AUFRUFER, NUR NIE DATEN
+    # (richtiggestellt 17.09.2026, Schritt 59 Phase 0.12, Befund 2.457-w3).
+    # Der frueher hier stehende Kommentar "das zweite Modul ohne Aufrufer" war
+    # falsch: der Aufruf steht seit dem Umbau da, er bekam mit
+    # `bc_ein["fakten_roh"]` aber einen Schluessel, den niemand setzt. Das
+    # Modul sucht ausserdem in der Struktur der ALTEN Pipeline
+    # (`antizyklisch...`, `optionsmarkt...`); die Rollen-Kette arbeitet mit
+    # fertigen Saetzen. Der Block blieb deshalb IMMER leer, und die Liste der
+    # fehlenden Werte wurde weggeworfen.
+    #
+    # ⚠️ KEINE NEUE ABFRAGE. Gefuellt wird nur aus Werten, die dieser Lauf
+    # ohnehin geholt hat: `_tm` (Terminmarkt und Optionsmarkt, nur Krypto) und
+    # die Rohwerte aus `baue_fall` (`_fakten_roh`). `bc_ein` bleibt
+    # unveraendert - stuende dort ein Schluessel mehr, aenderte sich der
+    # Anlass-Fingerabdruck und damit die Ausloeserate (Umbauplan 92.8).
+    zusatz, _fehlt = FQ.abbilden(_zusatzquelle(_tm_fuer_mail),
                                  bereich=_bereich(assetklasse, instrument),
                                  position_eur=rechnung["betrag_eur"],
                                  hebel=rechnung.get("hebel"))
+    if _fehlt:
+        # NICHT STILL VERSCHLUCKEN (das war der zweite Teil des Fehlers).
+        logger.info("Zusatzinfo %s: %d von %d Werten fehlen (%s)", symbol,
+                    len(_fehlt), len(_fehlt) + len(zusatz), ", ".join(_fehlt))
     block = FB.baue(_bereich(assetklasse, instrument), kern_werte=kern,
                     zusatz_werte=zusatz, symbol=symbol) if kern else []
     # DIE MAIL ALS BAUPLAN, NICHT ALS FERTIGER TEXT. Die Zeilen der zweiten
@@ -2624,14 +2703,40 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
 
     # DAS UMFELD - das Lagebild, das Rolle A einmal je Lauf rechnet. Es ging
     # bisher NUR ins Modell; der Leser sah das Urteil, nicht die Lage.
+    #
+    # ⚠️⚠️ REPARIERT AM 17.09.2026 (Schritt 59 Phase 0.12, Befund 2.457-w3).
+    # Hier stand `bc_ein["fakten_roh"]["marktlage_beurteilung"]`. Den Schluessel
+    # `fakten_roh` SETZT NIEMAND - er stammt aus der alten Pipeline. Die
+    # Rollen-Kette legt die Beurteilung eine Ebene hoeher ab
+    # (`bc_ein["marktlage_beurteilung"]`, gesetzt weiter oben in dieser Datei).
+    # Der Abschnitt war deshalb seit dem Umbau LEER: die Marktlage von Rolle A
+    # stand in keiner Mail. Zweiter Fehler in derselben Zeile: gefragt wurde
+    # nach `klasse.beurteilung`, `rolle_analyst` liefert `einstufung`/`warum`.
+    #
+    # ⚠️ GELESEN WIRD AUS `lagebild`, NICHT AUS `bc_ein`. Die Einstufung je
+    # Klasse erreicht den Haendler naemlich gar nicht (Befund 2.457-w2) - in
+    # der MAIL ist sie ausdruecklich erwuenscht (Regel 3: "in der Mail
+    # erwuenscht - das ist Information, kein Ausloeser"). Damit niemand daraus
+    # schliesst, das Modell haette sie gesehen, steht der Unterschied dabei.
     _lage = []
-    _mb = (bc_ein.get("fakten_roh") or {}).get("marktlage_beurteilung") or {}
+    _mb = bc_ein.get("marktlage_beurteilung") or {}
     if _mb.get("lage"):
         _lage.append(str(_mb["lage"]))
-    _kl = _mb.get("klasse") or {}
-    if _kl.get("beurteilung"):
-        _lage.append(f"{_kl.get('klasse', '?').capitalize()}: "
-                     f"{_kl['beurteilung']}")
+    # Der Gleichlauf misst die KRYPTOwerte - in einer Rohstoff- oder
+    # ETF-Mail waere er Rahmen ohne Bezug (dieselbe Regel wie bei
+    # `nur_eigen`: was nicht zum Wert gehoert, gehoert nicht daneben).
+    if _mb.get("gleichlauf") and str(assetklasse or "").lower() == "krypto":
+        _lage.append("Gleichlauf der Kryptowerte: %s" % _mb["gleichlauf"])
+    _kl = _klasse_einstufung(lagebild, assetklasse)
+    if _kl:
+        # ⚠️ KEINE BEFUNDNUMMER IN DIE MAIL. Dass der Haendler diese
+        # Einstufung nicht bekommt, ist fuer den Leser eine Herkunftsangabe,
+        # keine Fussnote; die Fundstelle steht in 2.457-w2.
+        _lage.append(
+            "%s: %s%s (Einstufung von Rolle A; dem Haendler lag sie nicht vor)"
+            % (str(_kl.get("klasse", "?")).capitalize(),
+               _kl.get("einstufung", "?"),
+               " - %s" % _kl["warum"] if _kl.get("warum") else ""))
 
     # 93 D: BEKANNTE TERMINE - Anzeige, kein Gate. Das Deckelproblem ist
     # durch die Bauform geloest: diese Zeilen sperren nichts, und sie sagen
