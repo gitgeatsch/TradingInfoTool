@@ -325,8 +325,8 @@ Trichter je Stufe und Art über die Läufe; Entscheider-Vierfeld (durchgelassen 
 
 Werkzeug aus Schritt 29/30 (Basis `simuliere_kette.py`/N-67-Muster), Zielgröße `bewegung_r`, ab 2023.
 
-1. **R-R11:** `funding`, `turnover`, `oi_aenderung` in der Kette reproduzieren.
-2. Kette gesamt gegen Nullwelten.
+1. **R-R11:** `funding`, `turnover`, `oi_aenderung` in der Kette reproduzieren. · ✔ **ERLEDIGT 18.09.** (2.460-repro): alle drei reproduziert (+0,0249 / +0,0639 / +0,0126); ⚠️ Normurteil ab 2023 (2.460-norm): nur `oi_aenderung` trägt einzeln, funding und turnover liegen unter ihrer Trennschärfe — Ursache ist die Datenlage (turnover: 59 Symbole)
+2. Kette gesamt gegen Nullwelten. · ✔ **ERLEDIGT 18.09.** (2.460-kette): **TRÄGT** — +0,0403 R gegen Nullpunkt +0,0048 (achtfach), entzerrt +0,0445, Trennschärfe 0,02 R. ⚠️ Trennschärfe optimistisch (2.198); gemessen ist nur der Bewertungskern, kein LLM
 3. Beitrag je Stufe (auswahl, terminmarkt, entscheider) als „mit gegen ohne“.
 4. Wiederholungssperre als Hinweis + Nutzerfrage Regel 1.
 5. ⚠️ **NEU 18.09. (2.459-ungemessen): die vier ungemessenen Größen der Modelleingabe messen** – `referenz_spy` (relative Stärke gegen den S&P-500-ETF, **läuft live mit**), `fundamental_wachstum` (Gewinn-/Umsatzwachstum bei Aktien, **läuft live mit**), `stablecoin_kapital` und `optionsmarkt_dvol_skew` (stumm, seit 18.09. aus dem BC-Prompt gefiltert). ⚠️ Für `referenz_spy` **vor** der Messung klären, gegen welchen Maßstab gemessen wird – der S&P-500-ETF ist für Krypto ein fremder. ⚠️ Für `fundamental_wachstum` gibt es keine Messbasis (Aktien) – gehört in die Multiasset-Schiene.

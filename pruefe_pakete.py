@@ -26237,6 +26237,25 @@ def paket_protokoll() -> None:
         n_a = _RG.schreibe_zellen(con6, _d6, "2026-09-18T05:00:00", 1)
         n_b = _RG.schreibe_zellen(con6, _d6, "2026-09-18T05:15:00", 2)
         n_c = _RG.schreibe_zellen(con6, _d6, "2026-09-19T05:00:00", 3)
+        # ⚠️ AUCH DIE AUSWAHL IST EIN ZUSTAND (18.09. nachkorrigiert): im
+        # Betrieb kamen 802 Auswahl-Verluste an EINEM Tag zusammen, weil
+        # jeder der 1.447 Laeufe dasselbe Symbol erneut verwarf. Die
+        # Verlustquote je Lauf steht in `gate_durchlaessigkeit`; hier genuegt
+        # eine Zeile je Symbol und Tag.
+        _d6b = _RG.Durchlauf("rollen")
+        _d6b.beginne("LINK", gruppe="krypto", instrument="spot",
+                     strategie="einstieg")
+        _d6b.verloren("LINK", "auswahl", "Rang 33 von 41")
+        _d6b.beginne("BTC", gruppe="krypto", instrument="spot",
+                     strategie="einstieg")
+        _d6b.verloren("BTC", "urteil", "keine Antwort")
+        _aw_a = _RG.schreibe_zellen(con6, _d6b, "2026-09-20T05:00:00", 4)
+        _aw_b = _RG.schreibe_zellen(con6, _d6b, "2026-09-20T05:15:00", 5)
+        pruefe(P, "⚠️⚠️ auch die AUSWAHL ist ein Zustand - eine Zeile je Symbol und Tag",
+               (_aw_a, _aw_b) == (2, 1),
+               "der zweite Lauf darf nur noch die Urteilszeile schreiben, "
+               "nicht den Auswahl-Verlust erneut (gemessen: %s)"
+               % str((_aw_a, _aw_b)))
         pruefe(P, "⚠️⚠️ die Sperre ist ein ZUSTAND: hoechstens EINE Zeile je Tag und Zelle",
                (n_a, n_b, n_c) == (1, 0, 1),
                "an der Mengenprobe gefunden: je Lauf geschrieben waren es 540 "

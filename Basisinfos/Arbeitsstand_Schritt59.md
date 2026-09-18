@@ -40,6 +40,7 @@
 | **Phase 1 Teil 3** (1.4 Führung, 1.6 Sperre) | ✔ gebaut (2.458-protokoll-3): Tabelle `fuehrung_lauf` mit Empfehlungen **und** Vergleichsarm; gesperrte Akkumulation höchstens eine Zeile je Tag · Paket Protokoll 42/42, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K19 |
 | **Phase 1 Teil 4** (1.5 Ausstiege) | ✔ gebaut (2.458-protokoll-4, schließt 2.401): zwei Horizonte, richtungsbereinigt, rückwirkend – 224 von 611 Ausstiegen sofort gemessen · Paket Protokoll 55/55, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K20 |
 | **Phase 2** Live-Zählung | ✔ Werkzeug gebaut (2.459-zaehlung): `zaehle_kette.py`, 6 Sichten · Paket Zaehlung 11/11, 7 Mutationen rot · ⏳ vollständiger Lauf nach K19/K20 |
+| **Phase 3** Schritt 1+2 | ✔ Reproduktion (2.460-repro) · Normurteil einzeln (2.460-norm: nur `oi_aenderung` trägt) · **Kette TRÄGT** (2.460-kette, +0,0403 R gegen Nullpunkt +0,0048) · ⏳ offen: Beitrag je Stufe, Wiederholungssperre, die vier ungemessenen Größen |
 | **Ungemessene Größen in der BC-Eingabe** | ✔ eingeordnet (2.459-ungemessen): vier Größen nie gemessen – zwei stumme jetzt gefiltert (folgenlos), zwei laufende unangetastet bis nach der Basislinie; alle vier als Kandidaten registriert, Messung in Phase 3, Entscheidung in Schritt 33 |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
@@ -62,7 +63,7 @@
 - ✔ **K14** BESTÄTIGT 18.09.: Sammelmails mit `· Rohstoffe` / `· Themen-ETF` / `· Aktien`, Krypto ohne Zusatz · alt:, Krypto unverändert; Export `signals.gruppe`
 - **K20** (nach Pull und Neustart): Ausstiegsfelder gefüllt – nach dem ersten Lauf sollten rund 220 Altzeilen `ausstieg_outcome_status='gemessen'` tragen; Spaltendrift leer
 - **K19** (nach Pull und Neustart): Tabelle `fuehrung_lauf` entsteht; am Morgen nach dem Ausstiegs-Job stehen dort Empfehlungen **und** geprüfte Positionen; gesperrte Akkumulation höchstens eine Zeile je Tag
-- ✔ **K18** BESTÄTIGT 18.09.: 273 Zeilen am ersten Tag (202 `auswahl`, 54 gesperrt, 15 ab `aktion`), Gründe im Klartext, 1 Signalverweis
+- ✔ **K18** BESTÄTIGT 18.09.: Spur läuft · ⚠️ 882 statt 250 Zeilen am Tag (meine Schätzung war falsch gerechnet) → Tagesregel jetzt auch für `auswahl`, rund 110/Tag
 - ✔ **K17** BESTÄTIGT 18.09.: `phase`, Kurs und Spalte da (`potential_r` beim Verkauf leer – richtig) · alt:: erste Zeilen mit `phase`, `potential_r` und `kurs_bei_empfehlung_eur` im Export – und die Spaltendrift bleibt leer
 - **K16** (nach Pull **und Neustart**): erste Mail mit Abschnitt „Umfeld“ – Marktlage von Rolle A, bei Krypto der Gleichlauf, Einstufung der Klasse mit Begründung; bei Krypto zusätzlich Kontenanteil/Put-Skew unter Zusatzinfo
 - ✔ **K5** Selbstprüfung Schlusskurse: Tag 1 und Tag 2 bestanden (18.09.) – erledigt

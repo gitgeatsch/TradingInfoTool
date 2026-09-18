@@ -760,22 +760,37 @@ def schreibe_zellen(conn, durchlauf, zeitpunkt: str, lauf_id=None) -> int:
     #
     # Deshalb: eine gesperrte Zelle bekommt HOECHSTENS EINE Zeile JE TAG.
     # Die Sperre behaelt ihre Menge, die Ablage bleibt klein.
+    # ⚠️⚠️ ZWEI ZUSTANDSGROESSEN, EINE REGEL (18.09.2026, an der zweiten
+    # Mengenprobe korrigiert). Zuerst betraf sie nur die Sperre; am Abend
+    # zeigte der Betrieb 882 statt der geschaetzten 250 Zeilen an EINEM Tag -
+    # 802 davon Verluste an der AUSWAHL. Die Schaetzung war falsch gerechnet
+    # (36.702 Verluste aus 34 Tagen sind rund 1.000 je Tag, nicht 60).
+    #
+    # Der Rang eines Symbols aendert sich im Tagesverlauf kaum, und die
+    # Verlustquote JE LAUF steht ohnehin in `gate_durchlaessigkeit`. Eine
+    # Zeile je Symbol und Tag genuegt also - sie sagt DASS und WARUM der Wert
+    # an der Auswahl scheiterte, ohne dieselbe Aussage zwanzigmal zu
+    # wiederholen. Rund 110 statt 880 Zeilen je Tag.
+    ZUSTAENDE = ("gesperrt", "verloren")
+    NUR_EINMAL_JE_TAG = {"auftrag", "auswahl"}
     _tag = str(zeitpunkt)[:10]
     _schon = set()
     try:
-        _schon = {(r[0], r[1]) for r in conn.execute(
-            f"SELECT symbol, strategie FROM {TABELLE_ZELLEN} "
-            f"WHERE ergebnis='gesperrt' AND substr(erfasst_am,1,10)=?",
-            (_tag,))}
+        _schon = {(r[0], r[1], r[2]) for r in conn.execute(
+            f"SELECT symbol, strategie, stufe FROM {TABELLE_ZELLEN} "
+            f"WHERE stufe IN ({','.join('?' * len(NUR_EINMAL_JE_TAG))}) "
+            f"AND ergebnis IN (?,?) AND substr(erfasst_am,1,10)=?",
+            (*sorted(NUR_EINMAL_JE_TAG), *ZUSTAENDE, _tag))}
     except Exception:                                        # noqa: BLE001
         _schon = set()
 
     def _nimm(z: dict) -> bool:
         if not _protokollwuerdig(z):
             return False
-        if z.get("ergebnis") != "gesperrt":
+        if (z.get("stufe") not in NUR_EINMAL_JE_TAG
+                or z.get("ergebnis") not in ZUSTAENDE):
             return True
-        schluessel = (z.get("symbol"), z.get("strategie"))
+        schluessel = (z.get("symbol"), z.get("strategie"), z.get("stufe"))
         if schluessel in _schon:
             return False
         _schon.add(schluessel)
