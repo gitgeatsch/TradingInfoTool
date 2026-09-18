@@ -26248,6 +26248,50 @@ def paket_protokoll() -> None:
     import agent.assetklassen as _AK6
     import inspect as _insp6
     _qak = _insp6.getsource(_AK6.zellen)
+
+    # ---- 9 ⚠️ KEINE UNGEMESSENE GROESSE IN DER MODELLEINGABE (2.459-ungemessen)
+    import agent.positionierung as _PO9
+
+    _lage9 = {"stablecoin": {"perzentil": 97, "n": 300},
+              "optionsmarkt": {"dvol": {"perzentil": 96, "n": 300},
+                               "skew": {"perzentil": 88, "n": 300, "wert": 3.2}},
+              "boersenfluss": {"perzentil": 95, "n": 300, "netto": 5.0,
+                               "datum": "2026-09-18"}}
+    _alle9 = _PO9.saetze(dict(_lage9))
+    _eigen9 = _PO9.saetze(dict(_lage9), nur_eigen=True)
+    # ⚠️ AM VERHALTEN, NICHT AM SUCHWORT: die erste Fassung suchte "DVOL" im
+    # Text - und lief gruen durch, als der Optionsmarkt zurueckkam, weil sein
+    # Satz von der Schwankung spricht, nicht von DVOL. Hier steht NUR der
+    # Rahmen in der Lage: was `nur_eigen` daraus macht, muss LEER sein.
+    _nur_rahmen9 = {"stablecoin": {"perzentil": 97, "n": 300},
+                    "optionsmarkt": {"dvol": {"perzentil": 96, "n": 300},
+                                     "skew": {"perzentil": 88, "n": 300,
+                                              "wert": 3.2}}}
+    pruefe(P, "⚠️⚠️ Stablecoin und Optionsmarkt erreichen Rolle BC NICHT mehr",
+           _PO9.saetze(dict(_nur_rahmen9), nur_eigen=True) == []
+           and len(_PO9.saetze(dict(_nur_rahmen9))) >= 2,
+           "beide sind NIE gemessen worden - eine Groesse ohne Messung "
+           "gehoert nicht in die Modelleingabe (R-R4/P1). Heute stumm, ab "
+           "Mitte Oktober waeren sie ploetzlich drin (2.457-n2): %s"
+           % _PO9.saetze(dict(_nur_rahmen9), nur_eigen=True))
+    pruefe(P, "⚠️ Rolle G bekommt den Rahmen weiterhin - sie beurteilt die LAGE",
+           len(_alle9) >= 3 and any("Stablecoin" in x for x in _alle9),
+           "der Rahmen ist fuer G richtig und fuer BC falsch - das ist der "
+           "Unterschied, den `nur_eigen` macht")
+    import bestand as _BE9
+    _namen9 = {k.name for k in _BE9.KANDIDATEN}
+    pruefe(P, "⚠️ und alle vier ungemessenen Groessen sind REGISTRIERT",
+           {"stablecoin_kapital", "optionsmarkt_dvol_skew",
+            "referenz_spy (relative Staerke)",
+            "fundamental_wachstum (Aktien)"} <= _namen9,
+           "was nicht im Kandidatenblatt steht, wird beim naechsten Mal "
+           "wieder uebersehen: %s" % sorted(_namen9)[:6])
+    pruefe(P, "die zwei LAUFENDEN bleiben unangetastet (Eingabe waehrend der Messung)",
+           all(k.zustand == "offen" for k in _BE9.KANDIDATEN
+               if k.name.startswith(("referenz_spy", "fundamental_wachstum"))),
+           "eine Eingabeaenderung mitten in der Basislinie teilt die Messung "
+           "- ihre Entscheidung gehoert zu Schritt 33")
+
     pruefe(P, "⚠️ `zellen()` liefert die Gesperrten nur AUF ANFRAGE (Vorgabewert unveraendert)",
            "mit_gesperrten: bool = False" in _qak and '"gesperrt": True' in _qak,
            "sonst bekaeme jeder bestehende Leser ploetzlich mehr Zellen")

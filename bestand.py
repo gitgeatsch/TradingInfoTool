@@ -168,6 +168,85 @@ def messbasis(name: str) -> tuple:
 KANDIDATEN = (
     Kandidat(
         menge="frei", fenster="voll",
+        name="referenz_spy (relative Staerke)",
+        hypothese=("Ein Wert, der besser laeuft als der breite Markt, laeuft "
+                   "weiter besser - relative Staerke gegen den S&P-500-ETF "
+                   "ueber 30 und 90 Tage."),
+        form="regler",
+        basis="⚠️ KEINE - nie gemessen",
+        wert="-",
+        live="agent/rollen_eingabe.relative_staerke -> Block `referenz` im "
+             "BC-Faktentext (LAEUFT, ungemessen)",
+        zustand="offen",
+        kette=(
+            ("18.09.", "⚠️ REGISTRIERT, WEIL SIE LAEUFT: die Groesse steht "
+                       "seit dem Umbau in der Faktenlage von Rolle BC, ohne "
+                       "je gemessen worden zu sein (2.459-ungemessen). "
+                       "Aufnahme war Verfuegbarkeit, nicht Messung - genau "
+                       "das verbietet R-R4/P1"),
+            ("18.09.", "Nicht stillgelegt: sie laeuft LIVE, und eine "
+                       "Eingabeaenderung mitten in der Basislinie teilt die "
+                       "Messung. Entscheidung gehoert zu Schritt 33"),
+        ),
+        warnung="Benchmark ist der S&P-500-ETF - fuer Krypto ein fremder "
+                "Massstab. Vor einer Messung klaeren, gegen WAS verglichen "
+                "werden soll."),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="fundamental_wachstum (Aktien)",
+        hypothese=("Gewinn- und Umsatzwachstum sagen etwas ueber die "
+                   "Folgebewegung einer Aktie."),
+        form="regler",
+        basis="⚠️ KEINE - nie gemessen",
+        wert="-",
+        live="agent/rollen_eingabe.fundamentaldaten -> Block `fundamental` "
+             "im BC-Faktentext, nur Aktien (LAEUFT, ungemessen)",
+        zustand="offen",
+        kette=(
+            ("18.09.", "⚠️ REGISTRIERT, WEIL SIE LAEUFT (2.459-ungemessen). "
+                       "Fuer Aktien gibt es ohnehin keine Messbasis - die "
+                       "Groesse gehoert damit in die Multiasset-Schiene"),
+        ),
+        warnung="Nicht-Krypto: keine Messbasis vorhanden (§ 1a). Eine "
+                "Messung braucht zuerst eine eigene Basis."),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="stablecoin_kapital",
+        hypothese=("Viel Kapital in Stablecoins ist wartende Kaufkraft - "
+                   "hohe Perzentile sprechen fuer steigende Kurse."),
+        form="regler",
+        basis="⚠️ KEINE - nie gemessen",
+        wert="-",
+        live="agent/positionierung (Rahmen-Satz) - erreicht Rolle G; bei "
+             "Rolle BC ein LECK, das ab etwa Mitte Oktober aufgeht",
+        zustand="offen",
+        kette=(
+            ("18.09.", "⚠️ Die Deutung ,Stablecoin = Kaufkraft` steht im "
+                       "Code ausdruecklich als UNGEMESSEN (P2 Rang 3). "
+                       "Registriert und aus dem BC-Prompt gefiltert, solange "
+                       "sie nicht gemessen ist (2.459-ungemessen)"),
+        ),
+        warnung="Rahmen, nicht Asset: misst den Gesamtmarkt, nicht den Wert."),
+    Kandidat(
+        menge="frei", fenster="voll",
+        name="optionsmarkt_dvol_skew",
+        hypothese=("Erwartete Schwankung und Schieflage der "
+                   "Absicherungskosten sagen etwas ueber die Folgebewegung."),
+        form="regler",
+        basis="⚠️ KEINE - nie gemessen",
+        wert="-",
+        live="agent/positionierung (Rahmen-Satz, Deribit) - erreicht Rolle "
+             "G; bei Rolle BC ein LECK, das ab etwa Mitte Oktober aufgeht",
+        zustand="offen",
+        kette=(
+            ("18.09.", "⚠️ Registriert und aus dem BC-Prompt gefiltert, "
+                       "solange sie nicht gemessen ist (2.459-ungemessen). "
+                       "Reihen noch zu kurz - deshalb heute stumm"),
+        ),
+        warnung="Rahmen, nicht Asset. Deribit liefert nur fuer wenige "
+                "Symbole (SOL liefert nichts)."),
+    Kandidat(
+        menge="frei", fenster="voll",
         name="funding",
         hypothese=("Querschnittsrang der Finanzierungsrate: wer heute am "
                    "wenigsten zahlt. Viel Funding heisst ueberhitzt."),
@@ -3289,6 +3368,8 @@ BEFUNDE = (
                'agent/fuehrung_protokoll.py; scheduler/background.py ausstiegs_job; agent/rollen_gate.py gesperrt, _nimm; agent/assetklassen.py zellen(mit_gesperrten); agent/rollen_lauf.py; extract_notebook_diagnose.py; pruefe_pakete.py Paket Protokoll', '', '', 'Code 18.09.; Mengenprobe am Pruefstand gegen die NB-Kopie 17.09. 04:41; Mailzaehlung aus dem NB-Log 18.09. 05:23'),
     Befundlage('2.458-protokoll-4', '✔✔ DIE AUSSTIEGE WERDEN VERFOLGT - 2.401 IST IM CODE GESCHLOSSEN (Schritt 59 Phase 1 Paket 1.5, Nutzerentscheidungen C1-C5 vom 18.09.). LAGE: von 491 GEMAILTEN Ausstiegen standen 485 auf `nicht_anwendbar` - keiner wurde ausgewertet; die 120 stummen dagegen lueckenlos. Der Grund war die fehlende Kategorie: der Hauptarm kennt nur EINSTIEGS-Kategorien, ein Verkauf passt in keine davon. GEBAUT: neues Modul `agent/ausstieg_verfolgung.py` und sechs Felder an `signals` (`ausstieg_outcome_status`, `_geprueft_am`, `ausstieg_kurs_eur`, `ausstieg_kurs_quelle`, `ausstieg_bewegung_5_pct`, `ausstieg_bewegung_20_pct`) - dieselbe Bauform wie der Schatten-Arm seit 31.07. (C1). ZWEI HORIZONTE 5 und 20 Handelstage (C2; 20 ist der Horizont der Messnorm, 5 faengt den kurzfristigen Rueckkauffall). GROESSE: Prozent gegen den Ausstiegskurs, RICHTUNGSBEREINIGT - faellt der Kurs danach, ist die Zahl positiv (C3; R braeuchte einen Stop, und eine verkaufte Position hat keinen). VERFOLGT WERDEN gemailte UND stumme Ausstiege (C4, der Vergleichsarm). ⚠️ RUECKWIRKEND (C5) - und hier liegt der Unterschied zum Potential: der Kurs nach n Tagen ist eine HISTORISCHE TATSACHE, kein Modellwert; die Kursreihen liegen vollstaendig vor. Erster Lauf gegen die NB-Kopie: 611 Ausstiege geprueft, 224 VOLLSTAENDIG GEMESSEN, 387 noch zu jung, 0 Fehler, 0,2 s. ⚠️ DIE NAEHERUNG STEHT IN DER ZEILE: der eigene Ausstiegskurs liegt nur in 44 Zeilen vor, fuer die uebrigen wird der Tagesschluss genommen und die Zeile traegt `ausstieg_kurs_quelle=tagesschluss`. ⚠️⚠️ DIESES PAKET URTEILT NICHT - kein Band, kein Nullmodell, keine Schwelle; die BEWERTUNG der Ausstiegsseite ist Phase 5 und braucht die Norm (eine Pruefung haelt fest, dass das Modul die Messanlage nicht importiert). ERSTE ZAHLEN, ausdruecklich als HINWEIS ohne Norm: ueber 224 gemessene Ausstiege Mittel 5 Tage -2,29 % und 20 Tage -0,85 % - negativ heisst, der Kurs STIEG nach dem Ausstieg. Das ist eine Zaehlung, kein Befund. NACHWEIS: Paket Protokoll 55 Pruefungen, 10 Mutationen je rot; ⚠️ eine davon lief zuerst gruen durch (,Teilergebnis gilt als fertig`), weil die Pruefdaten immer eine volle Kursreihe hatten - der halbfertige Fall kam danach dazu. Die Suite fand ausserdem zwei Spalten, die im Export fehlten (Spaltendrift). Am Notebook offen: K20', 'offen',
                'agent/ausstieg_verfolgung.py; agent/signal_abbildung.py SPALTEN_SIGNAL; database/models.py; scheduler/background.py ausstiegs_job; extract_notebook_diagnose.py; pruefe_pakete.py Paket Protokoll; Befund 2.401', '', '', 'Code 18.09.; Lauf gegen die NB-Kopie 17.09. 04:41 (611 Zeilen, 224 gemessen); Kursreihen aus `price_history_ohlc`'),
+    Befundlage('2.459-ungemessen', '⚠️⚠️ NICHT EIN EINZELFALL, SONDERN EINE KLASSE: VIER GROESSEN STEHEN IN DER MODELLEINGABE, OHNE JE GEMESSEN WORDEN ZU SEIN (18.09., aus der Nutzerfrage ,sind die zusaetzlichen Informationen valide oder nicht?`). Geprueft wurde, was Rolle BC heute an Fakten bekommt, gegen das Kandidatenblatt und `wahrscheinlichkeit.BEITRAEGE`. GEMESSEN UND IN ORDNUNG: Umschlag (turnover, traegt), Finanzierungsrate (funding, traegt - aber ohne Spot-Hinweis, 2.457-w6), Volumenanteil (traegt), `oi_aenderung` (traegt). ⚠️ UNGEMESSEN UND TROTZDEM DRIN: (1) `referenz_spy` - relative Staerke gegen den S&P-500-ETF, laeuft LIVE im Block `referenz`; (2) `fundamental_wachstum` - Gewinn- und Umsatzwachstum bei Aktien, laeuft LIVE; (3) `stablecoin_kapital` und (4) `optionsmarkt_dvol_skew` - heute stumm, sprechen laut 2.453-alterlos ab etwa Mitte Oktober und rutschen dann durch den `nur_eigen`-Filter (2.457-n2). DAZU drei Groessen, die ausdruecklich ,traegt nicht` GEMESSEN sind (`long_bias`, `top_bias`, `taker_bias`) und ueber Schritt 5 trotzdem im BC-Prompt stehen (W1, 2.457-w1). ⚠️ DAS MUSTER IST IMMER DASSELBE: die Groesse war technisch verfuegbar, also wurde sie eingespeist - statt sie zuerst zu messen und dann zu entscheiden. Das verletzt R-R4/P1 (,Verfuegbarkeit ist kein Aufnahmegrund; Aufnehmen ist ein Tausch`) und R-T9 (,was dasteht, wiegt`). EINORDNUNG (Nutzerentscheidung 18.09.): die beiden STUMMEN Groessen werden JETZT aus dem BC-Prompt gefiltert - das ist eine Fehlerkorrektur und heute folgenlos, weil kein Satz entsteht; die beiden LAUFENDEN bleiben unberuehrt, weil eine Eingabeaenderung mitten in der Basislinienmessung die Messung teilen wuerde - ihre Entscheidung gehoert zu Schritt 33, zusammen mit W1. Alle vier sind ab jetzt im Kandidatenblatt registriert und werden in Phase 3 gemessen. ➤ N12 ENTFAELLT ALS ENTSCHEIDUNG: die Frage war falsch gestellt (,einfrieren oder laufen lassen?`) - richtig ist ,gemessen oder nicht?`, und die Antwort folgt aus der stehenden Regel', 'offen',
+               'agent/lagebeschreibung.geteilt (Bloecke referenz, fundamental); agent/rollen_eingabe.relative_staerke, fundamentaldaten; agent/positionierung.saetze (nur_eigen); bestand.KANDIDATEN; Befunde 2.457-w1, 2.457-n2, 2.453-alterlos', '', '', 'Abgleich 18.09.: die Bloecke aus `lagebeschreibung.geteilt` gegen KANDIDATEN und `wahrscheinlichkeit.BEITRAEGE`'),
     Befundlage('2.459-zaehlung', '✔ DAS ZAEHLWERKZEUG STEHT - PHASE 2 GEBAUT (Schritt 59, Nutzerentscheidungen D1-D6 vom 18.09.). `zaehle_kette.py` zaehlt sechs Sichten, NUR LESEND: Trichter je Stufe und Gruppe (aus `zellen_lauf`), Vierfeld durchgelassen gegen verworfen mit Ausgang, BC-Aktion gegen Ausgang, Rolle G Einwand gegen Folge, Fuehrung (Empfehlungen und geprueft), Ausstiege (Bewegung nach 5 und 20 Tagen). ⚠️⚠️ ES IST EINE ZAEHLUNG, KEIN URTEIL - Frageart `zaehlung` verlangt nur, zu SAGEN, worueber gezaehlt wird; der Vorbehalt steht an JEDEM Block und am Ende, nicht in einer Fussnote (in diesem Projekt sind Quotentabellen schon zweimal als Befund gelesen worden). ZWEI SCHICHTUNGEN SIND PFLICHT und im Werkzeug erzwungen: je PROMPT-STAND (3.431 Zeilen alt gegen 266 heute - sonst mischt die Quote zwei Modelle) und an der LINIE 01.09. (seither sieht BC dieselben Terminmarktdaten wie G, 2.457-w1 - davor 177 entschiedene Faelle, danach 29). Krypto und Nicht-Krypto stehen in getrennten Bloecken (D3). Unter zehn Faellen gibt es KEINE Quote - keine Schwelle, sondern Ehrlichkeit ueber die Menge. ERSTE AUSGABE gegen die NB-Kopie (ausdruecklich HINWEIS, kein Befund): Vierfeld im Stand 2026-08-17e - durchgelassen 99 Ziel / 119 Stop (45 %), verworfen 91 / 223 (29 %); Rolle G vor dem 01.09. mit Einwand 43/47 (48 %) gegen ohne Einwand 33/33 (50 %); REDUZIEREN 0 Ziel / 50 Stop. Was davon TRAEGT, sagt erst die Messnorm in Phase 3 und 8. NACHWEIS: Paket Zaehlung 11 Pruefungen, 7 Mutationen je rot; ⚠️ eine lief zuerst gruen durch (Schichtung im Vierfeld entfernt), weil die Pruefung den GANZEN Text absuchte statt den Block - nachgeschaerft', 'gilt',
                'zaehle_kette.py; pruefe_pakete.py Paket Zaehlung; Quellen: signals, zellen_lauf, fuehrung_lauf, Ausstiegsfelder', '', '', 'Lauf gegen die NB-Kopie 17.09. 04:41 mit den Feldern aus Phase 1; messnorm FRAGEARTEN[zaehlung]'),
     Befundlage('2.455-rollennamen', '✔ DIE LLM-ROLLEN: NAMENSVERLAUF UND OB DER NAME ZUR AUFGABE PASST (Nutzerfrage 16.09., aus den Quellen geklaert). VERLAUF: (1) bis 09.08. EIN grosser Aufruf je Asset. (2) 10.08. Rollenkonzept-Entwurf: Rolle A Analyst (Marktlage), Rolle B TRADER/HAENDLER (Aufbau und Vergleich), Rolle C ENTSCHEIDER (handeln) - die Erinnerung des Nutzers stimmt. (3) 10.08. Nutzerentscheidung: B und C in EINEM Aufruf, weil getrennt rund 162 Aufrufe am Tag - seitdem Rolle BC ,Trader und Entscheider` (`agent/rolle_trader.py`). (4) Im Arbeitsstand-Dokument (Abschnitt 7, Rollen-Umbau 10.08.) ein Nachtrag: Rolle A heisse intern Lagebild, B/BC Befund bzw. Entscheidung - ausdruecklich ,nur unsere Bezeichnungen, nie im Prompt`; daher stammen die Datenobjekte `lagebild` und `befund` im Code. (5) 12.08. Umbauplan: Z.ai soll als ,Rolle C` Gegenrede werden - der Buchstabe C war damit doppelt vergeben. (6) 16.08. Z.ai als ,Rolle C` gebaut. (7) 17.08. Entscheidungslog: ,Z.ai heisst ab jetzt Rolle G`, Grund die Doppelbelegung; im Umbauplan stand ,Rolle C` danach noch fuenfmal. (8) 17.08. VERBINDLICH Regelwerksmanual R-R1: A = Marktanalyst, BC = Haendler, G = Gegenpruefer; B beurteilt, C handelt. (9) 12.09. Kette-Landkarte: die GERECHNETE Stufe 12 heisst `entscheider` - keine LLM-Rolle. IST-STAND AM CODE: Prompt BC beginnt mit ,Du bist ein erfahrener Haendler und triffst eine Entscheidung`; im Code keine Umbenennung seit 17.08. PASST DER NAME? Rolle A Marktanalyst - ja (Marktlage je Klasse, kein Einzelwert). Rolle G Gegenpruefer - ja (fremde Fakten, kein Veto). Rolle BC Haendler - JA fuer das, was sie liefert (Aktion, Richtung, Begruendung, Gegenargument, Belege, Widerlegung). ⚠️ ABER das C = Entscheider stimmt nur noch halb: Betrag, Hebel, Ziel und Stopweite sind GERECHNET, ob eine Empfehlung hinausgeht entscheidet die gerechnete Stufe `entscheider` (Potential-Schwelle, rund 92 Prozent Filter). BC kann eine Empfehlung aber VERHINDERN (NICHTS_TUN/HALTEN, 56 Zellen in 7 Tagen) und beeinflusst ueber den Widerlegungspreis die Stopweite und damit Betrag und Hebel. ZWEI FALLEN BLEIBEN: (a) der Begriff Entscheider steht fuer die fruehere LLM-Rolle C UND fuer die gerechnete Stufe 12; (b) die Nutzervorgabe ,LLM ist Pruefung, nicht Entscheider` gegen das Blockierrecht von BC - offene Entscheidung R1 in Schritt 33. Am 16.09. hatte ich BC ,Befund und Urteil` genannt: das war die interne Datenbezeichnung, nicht der Rollenname - korrigiert, Regel: Rollennamen nur nach R-R1', 'gilt',

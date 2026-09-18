@@ -1216,7 +1216,24 @@ def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
             f"Wie stark, steht im {p_}. Perzentil der letzten {eb['n']} "
             f"Messungen - {wie}.")
 
-    st = e.get("stablecoin")
+    # ⚠️⚠️ RAHMEN, NICHT ASSET - und UNGEMESSEN (18.09.2026, 2.459-ungemessen).
+    #
+    # Der Kommentar in `rollen_lauf` sagt, an Rolle BC gingen ,NUR DIE
+    # ASSET-EIGENEN SAETZE`. Dieser hier und der Optionsmarkt-Satz unten sind
+    # aber durchgerutscht (2.457-n2). Heute faellt das nicht auf, weil beide
+    # Reihen zu kurz sind und gar kein Satz entsteht - ab etwa Mitte Oktober
+    # (2.453-alterlos) waeren sie ploetzlich im BC-Prompt, ohne Commit, ohne
+    # neuen Prompt-Stand und ohne Entscheidung.
+    #
+    # ⚠️ KEINE STILLLEGUNG, SONDERN DIE REGEL: eine Groesse, die nie gegen
+    # eine Folgebewegung gemessen wurde, gehoert nicht in die Modelleingabe
+    # (R-R4/P1: Verfuegbarkeit ist kein Aufnahmegrund; R-T9: was dasteht,
+    # wiegt). Beide sind jetzt im Kandidatenblatt registriert und werden in
+    # Phase 3 gemessen; traegt eine, kommt sie in Schritt 33 bewusst hinein.
+    #
+    # ROLLE G BLEIBT UNVERAENDERT - sie beurteilt die LAGE und braucht den
+    # Rahmen. Nur die Faktenlage eines einzelnen Assets braucht ihn nicht.
+    st = None if nur_eigen else e.get("stablecoin")
     if st:
         p_ = st["perzentil"]
         wie = ("aussergewoehnlich viel" if p_ >= EXTREM_OBEN else
@@ -1229,7 +1246,7 @@ def saetze(e: dict, nur_eigen: bool = False) -> list[str]:
             f"steht im {p_}. Perzentil der letzten {st['n']} Messungen "
             f"- {wie}.")
 
-    op = e.get("optionsmarkt") or {}
+    op = ({} if nur_eigen else e.get("optionsmarkt")) or {}
     dvol = op.get("dvol")
     if dvol:
         p_ = dvol["perzentil"]

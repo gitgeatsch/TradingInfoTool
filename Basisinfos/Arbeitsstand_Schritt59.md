@@ -32,6 +32,7 @@
 | **Phase 1 Teil 3** (1.4 Führung, 1.6 Sperre) | ✔ gebaut (2.458-protokoll-3): Tabelle `fuehrung_lauf` mit Empfehlungen **und** Vergleichsarm; gesperrte Akkumulation höchstens eine Zeile je Tag · Paket Protokoll 42/42, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K19 |
 | **Phase 1 Teil 4** (1.5 Ausstiege) | ✔ gebaut (2.458-protokoll-4, schließt 2.401): zwei Horizonte, richtungsbereinigt, rückwirkend – 224 von 611 Ausstiegen sofort gemessen · Paket Protokoll 55/55, 10 Mutationen rot · ⏳ NB: Pull **und Neustart**, dann K20 |
 | **Phase 2** Live-Zählung | ✔ Werkzeug gebaut (2.459-zaehlung): `zaehle_kette.py`, 6 Sichten · Paket Zaehlung 11/11, 7 Mutationen rot · ⏳ vollständiger Lauf nach K19/K20 |
+| **Ungemessene Größen in der BC-Eingabe** | ✔ eingeordnet (2.459-ungemessen): vier Größen nie gemessen – zwei stumme jetzt gefiltert (folgenlos), zwei laufende unangetastet bis nach der Basislinie; alle vier als Kandidaten registriert, Messung in Phase 3, Entscheidung in Schritt 33 |
 | 0.11 Pausenschalter nur für Modellaufrufe | offen, erst vor Phase 8 |
 | Phase 1 Protokollierung | danach – eigene Voranalyse |
 
@@ -45,7 +46,7 @@
 
 ## Offene Entscheidungen des Nutzers
 
-- **N12** (neu): Stablecoin- und Optionsmarkt-Satz erreichen BC trotz `nur_eigen` und fangen ca. Mitte Oktober an zu sprechen – einfrieren, laufen lassen und Zeitpunkt protokollieren, oder bewusst aufnehmen? Spätestens vor Phase 8, Vorarbeit in Phase 1
+- ~~N12~~ **entfällt** – war falsch gestellt; die Regel R-R4/P1 beantwortet sie (2.459-ungemessen). Offen bleibt **N3** (A8): Bewertung gilt nur auf der Stellvertretermenge – **(b) bestätigt 18.09.**
 
 ## Offene Notebook-Kontrollen
 

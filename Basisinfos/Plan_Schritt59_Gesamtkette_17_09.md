@@ -329,6 +329,7 @@ Werkzeug aus Schritt 29/30 (Basis `simuliere_kette.py`/N-67-Muster), Zielgröße
 2. Kette gesamt gegen Nullwelten.
 3. Beitrag je Stufe (auswahl, terminmarkt, entscheider) als „mit gegen ohne“.
 4. Wiederholungssperre als Hinweis + Nutzerfrage Regel 1.
+5. ⚠️ **NEU 18.09. (2.459-ungemessen): die vier ungemessenen Größen der Modelleingabe messen** – `referenz_spy` (relative Stärke gegen den S&P-500-ETF, **läuft live mit**), `fundamental_wachstum` (Gewinn-/Umsatzwachstum bei Aktien, **läuft live mit**), `stablecoin_kapital` und `optionsmarkt_dvol_skew` (stumm, seit 18.09. aus dem BC-Prompt gefiltert). ⚠️ Für `referenz_spy` **vor** der Messung klären, gegen welchen Maßstab gemessen wird – der S&P-500-ETF ist für Krypto ein fremder. ⚠️ Für `fundamental_wachstum` gibt es keine Messbasis (Aktien) – gehört in die Multiasset-Schiene.
 
 Gegenprüfung: `selbsttest_messanlage.py` (Anlage), Positivkontrolle je Lauf, Nullwelten-Fehlalarm, Messkopf mit `messmenge.zeile()`.
 **Voraussetzung:** Entscheidung **N3** (A8).
@@ -351,6 +352,8 @@ Gütemaß „war der Verkauf richtig?“ gegen Nullmodell „halten“, historis
 ### Phase 7 – Nicht-Krypto: nur Zählung in 59 — *Bewertung in die Multiasset-Schiene (§ 1a)*
 
 In Schritt 59 nur: Trichter und Anzahl der Nicht-Krypto- und Absicherungsempfehlungen zählen, N1-Kennzeichnung prüfen. **Die eigentliche Bewertung** (Messbasis Aktien/Themen-ETF/Rohstoffe, Kandidaten aus Kursreihe und Fundamentaldaten, Absicherung als Portfoliofrage, Rollenfrage R2) wird ein **eigener Schritt im Block SPÄTER**, begonnen erst nach Abschluss der Krypto-Kette.
+
+⚠️ **Für Schritt 33 vorgemerkt (18.09., 2.459-ungemessen):** `referenz_spy` und `fundamental_wachstum` laufen heute **ungemessen** in der BC-Eingabe mit. Sie bleiben **unangetastet**, bis die Basislinie steht – eine Eingabeänderung mitten in der Messung würde sie teilen. Danach: aufnehmen, wenn sie tragen, sonst entfernen. Zusammen mit **W1** zu entscheiden.
 
 ### Phase 8 – LLM-Ebene als Basislinie (misst, ändert nichts)
 
@@ -429,7 +432,7 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 | **N7** | LLM historisch mit echten Aufrufen testen? | ja (Kontingent, Vorwissen prüfen) / nein | **nein vorerst** – erst Live-Basislinie (Phase 8) |
 | **N8** | Wiederholungssperre (Uhr, 94 % Filter) gegen Regel 1 | in 59 messen und dann entscheiden / sofort diskutieren | **in Phase 3 als Hinweis messen**, Entscheidung danach |
 | **N9** | Reihenfolge der Bewertungsphasen 4–6 | Hebel → Ausstieg → Akkumulation (Priorität 11.09./15.09.) | **so**, mit Phase 3 als gemeinsamer Grundlage |
-| **N12** (neu 17.09., aus 2.457-n2) | Der Stablecoin-Satz und der Optionsmarkt-Satz (DVOL/Skew) erreichen Rolle BC trotz `nur_eigen`; beide sind heute stumm und fangen laut 2.453-alterlos etwa **Mitte Oktober** an zu sprechen. Dann ändert sich die BC-Eingabe **mitten in der Basislinie**, ohne Commit und ohne neuen Prompt-Stand. | (a) beide Sätze bis zum Ende der Basislinie **stumm halten** (Eingabe einfrieren) · (b) **laufen lassen** und den Zeitpunkt protokollieren, Messung davor/danach trennen · (c) sie **absichtlich** in `nur_eigen` aufnehmen und als Eingabeänderung mit neuem Prompt-Stand führen | **offen** – spätestens vor Phase 8 zu entscheiden; Vorarbeit in Phase 1 (die Protokollierung kann festhalten, welche Sätze BC bekommen hat) |
+| ~~**N12**~~ **ENTFÄLLT als Entscheidung** (18.09.) | Die Frage war falsch gestellt: nicht *einfrieren oder laufen lassen*, sondern **gemessen oder nicht** – und die Antwort folgt aus der stehenden Regel **R-R4/P1** (*Verfügbarkeit ist kein Aufnahmegrund; Aufnehmen ist ein Tausch*). Beide Sätze sind **nie gemessen** worden. | **Ersetzt durch vier Schritte** (2.459-ungemessen): (1) alle vier ungemessenen Größen als **Kandidaten registriert**; (2) die zwei **stummen** (Stablecoin, Optionsmarkt) aus dem BC-Prompt **gefiltert** – Fehlerkorrektur, heute folgenlos, weil kein Satz entsteht; (3) in **Phase 3 messen**; (4) in **Schritt 33** bewusst entscheiden | ✔ erledigt 18.09. |
 
 ---
 

@@ -4,7 +4,7 @@
 
 ⚠️ **Wofuer dieses Blatt existiert:** am 06.09.2026 wurden drei Kandidaten auf der FALSCHEN Basis gemessen, weil ihre Registrierungsbasen ueber `wahrscheinlichkeit.BEITRAEGE`, Memory-Dateien, Befundkarte und Methodik verstreut lagen. Und `schnitt` wurde mit `schnitt50` verwechselt. Beides waere mit diesem Blatt nicht passiert (R-R11).
 
-⚠️⚠️ **VOR ODER NACH DEM UMBAU?** Die Grenze ist der Messstandard vom 08./09.09.2026. **7 von 18 Blaettern stammen von davor** — ihre Urteile haben die Norm nicht gesehen (anderer Nullpunkt, andere Trennschaerfe, kuerzere Leiter).
+⚠️⚠️ **VOR ODER NACH DEM UMBAU?** Die Grenze ist der Messstandard vom 08./09.09.2026. **7 von 22 Blaettern stammen von davor** — ihre Urteile haben die Norm nicht gesehen (anderer Nullpunkt, andere Trennschaerfe, kuerzere Leiter).
 
 ⚠️ Das Datum ist ein **Anhalt, kein Urteil**: ein altes Ergebnis kann richtig sein. Es sagt nur, dass es unter anderen Regeln entstanden ist und vor einem Widerruf reproduziert gehoert (R-R11).
 
@@ -12,6 +12,10 @@
 
 | | Kandidat | Form | Zustand | Umbauseite | letzte Messung | Registrierungsbasis |
 |---|---|---|---|---|---|---|
+| ○ | **`referenz_spy (relative Staerke)`** | regler | offen | ✔ nach | 18.09. | ⚠️ KEINE - nie gemessen |
+| ○ | **`fundamental_wachstum (Aktien)`** | regler | offen | ✔ nach | 18.09. | ⚠️ KEINE - nie gemessen |
+| ○ | **`stablecoin_kapital`** | regler | offen | ✔ nach | 18.09. | ⚠️ KEINE - nie gemessen |
+| ○ | **`optionsmarkt_dvol_skew`** | regler | offen | ✔ nach | 18.09. | ⚠️ KEINE - nie gemessen |
 | ✔ | **`funding`** | regler | traegt | ✔ nach | 11.09. | H20 · 2.369 Kalendertage · 290 Symbole · 6,3 Jahre |
 | ✔ | **`turnover`** | regler | traegt | ✔ nach | 11.09. | H20 · 2.636 Kalendertage |
 | ✔ | **`oi_aenderung`** | schalter | traegt | ✔ nach | 11.09. | H20 · 1.702 Kalendertage · 117 Symbole · 126.491 Anker |
@@ -34,6 +38,91 @@
 ### ⚠️ Diese Blaetter stammen von VOR dem Messstandard
 
 `vola ODER turnover`, `akkumulationsmass (= schnitt, H90)`, `H (Vorfilter)`, `oi_je_umsatz`, `long_bias`, `top_bias`, `taker_bias`
+
+---
+
+## ○ `referenz_spy (relative Staerke)`
+
+**Hypothese:** Ein Wert, der besser laeuft als der breite Markt, laeuft weiter besser - relative Staerke gegen den S&P-500-ETF ueber 30 und 90 Tage.
+
+| | |
+|---|---|
+| **Form** | regler |
+| **Registrierungsbasis** | ⚠️ KEINE - nie gemessen |
+| **Wert** | - |
+| **Live** | agent/rollen_eingabe.relative_staerke -> Block `referenz` im BC-Faktentext (LAEUFT, ungemessen) |
+| **Zustand** | **offen** |
+| **Umbauseite** | ✔ **nach** dem Messstandard (letzte Messung 18.09.) |
+
+**Die Messkette:**
+
+- **18.09.** — ⚠️ REGISTRIERT, WEIL SIE LAEUFT: die Groesse steht seit dem Umbau in der Faktenlage von Rolle BC, ohne je gemessen worden zu sein (2.459-ungemessen). Aufnahme war Verfuegbarkeit, nicht Messung - genau das verbietet R-R4/P1
+- **18.09.** — Nicht stillgelegt: sie laeuft LIVE, und eine Eingabeaenderung mitten in der Basislinie teilt die Messung. Entscheidung gehoert zu Schritt 33
+
+⚠️ Benchmark ist der S&P-500-ETF - fuer Krypto ein fremder Massstab. Vor einer Messung klaeren, gegen WAS verglichen werden soll.
+
+---
+
+## ○ `fundamental_wachstum (Aktien)`
+
+**Hypothese:** Gewinn- und Umsatzwachstum sagen etwas ueber die Folgebewegung einer Aktie.
+
+| | |
+|---|---|
+| **Form** | regler |
+| **Registrierungsbasis** | ⚠️ KEINE - nie gemessen |
+| **Wert** | - |
+| **Live** | agent/rollen_eingabe.fundamentaldaten -> Block `fundamental` im BC-Faktentext, nur Aktien (LAEUFT, ungemessen) |
+| **Zustand** | **offen** |
+| **Umbauseite** | ✔ **nach** dem Messstandard (letzte Messung 18.09.) |
+
+**Die Messkette:**
+
+- **18.09.** — ⚠️ REGISTRIERT, WEIL SIE LAEUFT (2.459-ungemessen). Fuer Aktien gibt es ohnehin keine Messbasis - die Groesse gehoert damit in die Multiasset-Schiene
+
+⚠️ Nicht-Krypto: keine Messbasis vorhanden (§ 1a). Eine Messung braucht zuerst eine eigene Basis.
+
+---
+
+## ○ `stablecoin_kapital`
+
+**Hypothese:** Viel Kapital in Stablecoins ist wartende Kaufkraft - hohe Perzentile sprechen fuer steigende Kurse.
+
+| | |
+|---|---|
+| **Form** | regler |
+| **Registrierungsbasis** | ⚠️ KEINE - nie gemessen |
+| **Wert** | - |
+| **Live** | agent/positionierung (Rahmen-Satz) - erreicht Rolle G; bei Rolle BC ein LECK, das ab etwa Mitte Oktober aufgeht |
+| **Zustand** | **offen** |
+| **Umbauseite** | ✔ **nach** dem Messstandard (letzte Messung 18.09.) |
+
+**Die Messkette:**
+
+- **18.09.** — ⚠️ Die Deutung ,Stablecoin = Kaufkraft` steht im Code ausdruecklich als UNGEMESSEN (P2 Rang 3). Registriert und aus dem BC-Prompt gefiltert, solange sie nicht gemessen ist (2.459-ungemessen)
+
+⚠️ Rahmen, nicht Asset: misst den Gesamtmarkt, nicht den Wert.
+
+---
+
+## ○ `optionsmarkt_dvol_skew`
+
+**Hypothese:** Erwartete Schwankung und Schieflage der Absicherungskosten sagen etwas ueber die Folgebewegung.
+
+| | |
+|---|---|
+| **Form** | regler |
+| **Registrierungsbasis** | ⚠️ KEINE - nie gemessen |
+| **Wert** | - |
+| **Live** | agent/positionierung (Rahmen-Satz, Deribit) - erreicht Rolle G; bei Rolle BC ein LECK, das ab etwa Mitte Oktober aufgeht |
+| **Zustand** | **offen** |
+| **Umbauseite** | ✔ **nach** dem Messstandard (letzte Messung 18.09.) |
+
+**Die Messkette:**
+
+- **18.09.** — ⚠️ Registriert und aus dem BC-Prompt gefiltert, solange sie nicht gemessen ist (2.459-ungemessen). Reihen noch zu kurz - deshalb heute stumm
+
+⚠️ Rahmen, nicht Asset. Deribit liefert nur fuer wenige Symbole (SOL liefert nichts).
 
 ---
 
