@@ -11,6 +11,14 @@
 3. Memory `project_schritt59_gesamtkette_messen.md` und `project_ausstehende_nb_kontrollen.md`
 4. `Basisinfos/Rollout_Notebook_14_09.md` – was am Notebook woran zu erkennen ist
 
+## ⭐ Das Ziel: Meilenstein M1 — Krypto-Einstieg investierbar
+
+**Nutzerdefinition 18.09.:** technisch stabil · fachlich gemessen · rudimentäre Wirksamkeit belegt — **dann** wieder investieren. Priorität: der **Einstieg** (Spot, Hebel, Akkumulation), durchgängig über deterministische Komponenten **und** LLM. Sieben Abnahmekriterien in `Plan_Schritt59` § 11, als Vorgabe `M1-KRYPTO-EINSTIEG` in `soll_ist`.
+
+⚠️ **Der Engpass ist das LLM-Kontingent** (2.459-llm-budget): 500/Tag je Modell, der Betrieb braucht im Mittel 245 (Spitze 565 — über der Grenze). Ohne Produktionsstillstand ist die LLM-Messung nicht planbar. Zuerst ein **Kalibrierlauf** (50 Anker, halber Stillstandstag), dann wird der Hauptlauf dimensioniert (**N13**).
+
+**Weg:** Phase 3 (Spot) → Phase 4 (Hebel) → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
+
 ## Wo wir stehen
 
 | Paket | Stand |

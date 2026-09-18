@@ -415,6 +415,108 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 
 ---
 
+## 11 Meilenstein M1 — Krypto-Einstieg investierbar (Nutzerdefinition 18.09.)
+
+> **Erst wenn M1 steht, wird wieder Geld nach den Empfehlungen investiert.**
+> Nutzerwortlaut: *„technisch stabil, fachlich richtig bzw. gemessen, optimal
+> mit rudimentärer Wirksamkeit (was wir messen und simulieren können, der Rest
+> muss später im Echtsystem getrackt werden)"*. Priorität: **der EINSTIEG** —
+> er ist die Voraussetzung für einen erfolgreichen Ausstieg, nicht umgekehrt.
+
+### 11.1 Die sieben Abnahmekriterien
+
+| # | Kriterium | Erfüllt, wenn | liefert |
+|---|---|---|---|
+| 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" | Phase 3 |
+| 2 | **Hebel gemessen** | Trägt die Quote den Hebel (r(q))? Zielzone 2–5x belegt; Blocker **A1** entschieden | Phase 4 |
+| 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch | Phase 6 / Schritte 25–27 |
+| 4 | **LLM-Kette gemessen** | **Gepaarter Versuch** auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall. **Produktiv geht die gemessene Fassung** | Phase 8 (neu zugeschnitten) |
+| 5 | **Durchgängig am Papier** | Je Stufe Quelle, Messstand, Kennzeichnung; keine ungemessene Größe in der Eingabe oder ausdrücklich ausgewiesen (2.459-ungemessen) | Phase 9 |
+| 6 | **Betrieb sauber** | Protokollierung läuft (✔ Phase 1), Sperren begründet, Mail korrekt | Schritt 60 |
+| 7 | **Rudimentäre Wirksamkeit** | Simulation: **nicht schlechter als das Nullmodell** bei tragbarer Auslöserate | Phase 9 |
+
+⚠️ **Nicht in M1:** Ausstieg fertig bewertet (Schritt 43), Multiasset (§ 1a),
+der volle Rollenumbau (Schritt 33 über Kriterium 4 hinaus).
+
+### 11.2 Warum die alte LLM-Rolle nicht eigens vermessen wird
+
+**Nutzerfrage 18.09.:** *„ob wir zu viel Zeit für eine Messung der alten
+LLM-Rollen verschwenden sollten, statt mit den tragenden Bewertungen eine
+optimierte zu bauen und zu messen."* — **Fachlich bestätigt**, mit einer
+Präzisierung:
+
+- Eine Basislinie der **heutigen** Rolle aus Live-Daten ist nicht zu haben:
+  der laufende Prompt-Stand `2026-09-11a` trägt **24 entschiedene Fälle**
+  (2.458-fallzahl). Das dauert Monate.
+- „Besser" braucht trotzdem einen Bezugspunkt. Der ist längst gesetzt und
+  heißt **nicht** „alte Rolle", sondern **gleich großer Zufall**
+  (Anforderungen § 8.3).
+- Deshalb **ein** Versuch mit drei Armen statt zwei Messungen: **A** heutige
+  Rolle · **B** neue Fassung mit gemessener Bewertung · **N** Zufall. Gleiche
+  Anker, gleiche Horizonte, je eigener Prompt-Stand. Arm A kostet nur einen
+  Durchlauf mehr je Anker — die Anker, Kursreihen und Auswertung entstehen
+  ohnehin einmal.
+
+⚠️ **Drei Bedingungen:** (1) die deterministische Messung (Phase 3/4) muss
+**vorher** fertig sein — Arm B wird mit ihren Ergebnissen gefüttert; (2)
+**Vorwissen des Modells** ausschließen (historische Anker können bekannt
+sein) — vorab prüfen, nicht hinterher entschuldigen; (3) Budget und
+Stillstand nach § 11.3.
+
+### 11.3 ⚠️ Kontingent, Taktung und Stillstand — der eigentliche Engpass
+
+**Gemessen am NB-Export 18.09.** (Befund 2.459-llm-budget):
+
+| | |
+|---|---|
+| Tagesgrenze je Modell | **500** |
+| Gemini im Betrieb | **245/Tag** im Mittel, ⚠️ **Spitze 565** am 09.09. (über der Grenze) |
+| Z.ai (Rolle G) | 21/Tag |
+| freier Kopf | im Mittel ~255/Tag — **an Spitzentagen null** |
+
+**Daraus folgt: ohne Produktionsstillstand ist die LLM-Messung nicht
+planbar.** Sie würde an einem beliebigen Tag mitten im Lauf am Kontingent
+scheitern.
+
+**Budget des gepaarten Versuchs** (zwei LLM-Arme; das Nullmodell kostet
+nichts), gerechnet auf der Doku-Größe *„0,10 R brauchen 695 Paare"*:
+
+| kleinster Effekt, den wir finden wollen | Paare | Aufrufe (3 Wdh.) | **Stillstand** |
+|---|---|---|---|
+| 0,10 R | 695 | 4.170 | **8,3 Tage** |
+| 0,15 R | 308 | 1.848 | **3,7 Tage** |
+| 0,20 R | 173 | 1.038 | **2,1 Tage** |
+| 0,30 R | 77 | 462 | **0,9 Tage** |
+
+**Zuschnitt, der daraus folgt:**
+
+1. **Kalibrierlauf zuerst** — 50 Anker, 300 Aufrufe, ein **halber**
+   Stillstandstag. Er misst die tatsächliche Streuung und die Flip-Rate.
+2. **Dann erst** wird der Hauptlauf dimensioniert. Wer die Größe vorher
+   festlegt, rät sie.
+3. **Stillstandsfenster** in Nacht und Wochenende, dem Nutzer vorher
+   angekündigt. Stillstand heißt: keine Signale, keine Mails, keine
+   Bestandsführung in dieser Zeit (§ 6a).
+4. **Zeitabstand** zwischen den Fenstern: mindestens ein voller Betriebstag,
+   damit die Kette ihren normalen Takt zeigt und der Bestand nachzieht.
+
+⚠️ **Offen und nach dem Kalibrierlauf zu entscheiden (N13):** Welchen
+kleinsten Effekt wollen wir finden können? Davon hängen Stillstand und Dauer
+ab — 0,10 R kostet acht Tage Stillstand, 0,20 R zwei.
+
+### 11.4 Reihenfolge bis M1
+
+```
+Phase 3 (Spot)  ──►  Phase 4 (Hebel)  ──┐
+                                        ├──►  Phase 8 gepaart (A/B/N)  ──►  Phase 9  ──►  Schritt 60  ──►  ABNAHME M1
+Phase 6 (Akku, 25–27)  ─────────────────┘
+```
+
+**Nicht auf dem Weg zu M1:** Phase 5 (Ausstieg), Phase 7 (Nicht-Krypto
+zählen), Multiasset-Schiene. Sie bleiben im Plan, aber hinter M1.
+
+---
+
 ## 8 Entscheidungen für den Nutzer
 
 **Nutzerentscheidung 17.09.: N1 bis N10 wie empfohlen.** Nachträglich angepasst durch § 1a: **N4** – Nicht-Krypto nicht als eigener D-Schritt, sondern als Multiasset-Schiene im Block SPÄTER nach Abschluss Krypto (folgt dem Nutzervorschlag 17.09.; bei Abstimmung bestätigen). **N11 neu offen.**
@@ -433,6 +535,7 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 | **N8** | Wiederholungssperre (Uhr, 94 % Filter) gegen Regel 1 | in 59 messen und dann entscheiden / sofort diskutieren | **in Phase 3 als Hinweis messen**, Entscheidung danach |
 | **N9** | Reihenfolge der Bewertungsphasen 4–6 | Hebel → Ausstieg → Akkumulation (Priorität 11.09./15.09.) | **so**, mit Phase 3 als gemeinsamer Grundlage |
 | ~~**N12**~~ **ENTFÄLLT als Entscheidung** (18.09.) | Die Frage war falsch gestellt: nicht *einfrieren oder laufen lassen*, sondern **gemessen oder nicht** – und die Antwort folgt aus der stehenden Regel **R-R4/P1** (*Verfügbarkeit ist kein Aufnahmegrund; Aufnehmen ist ein Tausch*). Beide Sätze sind **nie gemessen** worden. | **Ersetzt durch vier Schritte** (2.459-ungemessen): (1) alle vier ungemessenen Größen als **Kandidaten registriert**; (2) die zwei **stummen** (Stablecoin, Optionsmarkt) aus dem BC-Prompt **gefiltert** – Fehlerkorrektur, heute folgenlos, weil kein Satz entsteht; (3) in **Phase 3 messen**; (4) in **Schritt 33** bewusst entscheiden | ✔ erledigt 18.09. |
+| **N13** (neu 18.09.) | Welchen **kleinsten Effekt** soll die LLM-Messung finden können? Davon hängt der Produktionsstillstand ab: 0,10 R = 8,3 Tage · 0,15 R = 3,7 · 0,20 R = 2,1 · 0,30 R = 0,9 (Befund 2.459-llm-budget) | **Nach dem Kalibrierlauf entscheiden** (50 Anker, ein halber Stillstandstag) – er misst Streuung und Flip-Rate, erst dann ist die Größe begründet statt geraten | offen, nicht vorher |
 
 ---
 

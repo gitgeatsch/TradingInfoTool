@@ -152,6 +152,29 @@ class Schritt:
 
 # ---- Die Vorgaben, die ueber allem stehen ---------------------------------
 VORGABEN = (
+    Vorgabe("M1-KRYPTO-EINSTIEG",
+            "MEILENSTEIN M1 (Nutzerdefinition 18.09.2026): wieder investieren "
+            "erst, wenn der KRYPTO-EINSTIEG (Spot, Hebel, Akkumulation) "
+            "technisch stabil, fachlich gemessen und mit rudimentaerer "
+            "Wirksamkeit belegt ist - durchgaengig ueber deterministische "
+            "Komponenten UND LLM. Sieben Abnahmekriterien: (1) Spot-Einstieg "
+            "gemessen (Beitraege reproduziert nach R-R11, Kette gegen "
+            "Nullmodell, Beitrag je Stufe); (2) Hebel gemessen (traegt die "
+            "Quote den Hebel, Zielzone 2-5x; Blocker A1); (3) Akkumulation "
+            "gemessen und freigeschaltet (Schritte 25-27); (4) LLM-Kette "
+            "gemessen IM GEPAARTEN VERSUCH - neue Fassung mit gemessener "
+            "Bewertung gegen die heutige Rolle gegen gleich grossen Zufall, "
+            "auf denselben Ankern; produktiv geht die GEMESSENE Fassung; "
+            "(5) durchgaengig am Papier (je Stufe Quelle, Messstand, "
+            "Kennzeichnung; keine ungemessene Groesse in der Eingabe oder "
+            "ausdruecklich ausgewiesen); (6) Betrieb sauber (Protokollierung "
+            "laeuft, Sperren begruendet, Mail korrekt); (7) rudimentaere "
+            "Wirksamkeit (Simulation: nicht schlechter als das Nullmodell bei "
+            "tragbarer Ausloeserate). ⚠️ NICHT in M1: Ausstieg fertig "
+            "bewertet, Multiasset, der volle Rollenumbau - der Einstieg ist "
+            "die Voraussetzung fuer den Ausstieg, nicht umgekehrt.",
+            "Nutzerdefinition 18.09.2026 (,MEILENSTEIN`); Plan_Schritt59 § 11",
+            "offen"),
     Vorgabe("HEBEL-ZIEL",
             "Die Wahrscheinlichkeit auf positives Chance-Risiko-Verhaeltnis "
             "soll den Hebel DYNAMISCH erzeugen. Zielzone 2-5x. "
