@@ -655,7 +655,7 @@ REIHENFOLGE = (
             "KEINE-TEILLOESUNG, STAND-PRUEFEN-VORHER): je Zelle Population, Zielgroesse, Nullmodell, Datenlage "
             "und bekannte Blocker (A1 binaeres Band, A8 Live-Menge, A9 Laengsachse) - vorgelegt und abgestimmt, "
             "bevor eine Zahl gerechnet wird. LLM ist Pruefung, nicht Entscheider.",
-            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Phase 0.2 (17.09.) Befunde 2.457-w1, 2.457-w2, 2.457-w3, 2.457-w8, 2.457-w9, 2.457-n2, 2.457-n3 - Messdesign muss sie beruecksichtigen (G ab 01.09. getrennt, G nach Rahmen/symboleigen trennen, A-Einstufung wirkungslos, Luecken im Lauftakt aus dem Log, N12 vor Phase 8); Schritte 29, 30, 43, 25, 35, 52, 33 (42 ist aufgegangen)",
+            "Nutzervorgabe 15.09. (Position vor 43 und 42 darin bestaetigt); Vorgabe HEBEL-ZIEL; Befunde 2.455-hebelsignale, 2.391*; Phase 1 laeuft: 2.458-protokoll-1 (Kurs, Potential und Phase je Zeile, NB-Kontrolle K17), danach 1.1 Zuordnung je Zelle; hier bleiben auch 2.456-abgrenzung (Multiasset-Schiene nach Krypto), 2.456-etf-knopf und 2.456-llm-pause (Paket 0.11 vor Phase 8) eingeordnet; Phase 0.2 (17.09.) Befunde 2.457-w1, 2.457-w2, 2.457-w3, 2.457-w8, 2.457-w9, 2.457-n2, 2.457-n3 - Messdesign muss sie beruecksichtigen (G ab 01.09. getrennt, G nach Rahmen/symboleigen trennen, A-Einstufung wirkungslos, Luecken im Lauftakt aus dem Log, N12 vor Phase 8); Schritte 29, 30, 43, 25, 35, 52, 33 (42 ist aufgegangen)",
             block="D-BEWERTUNG",
             umbau="beides"),  # misst Alt (LLM-Rollen) und Neu (Bewertung, r(q)) in einer Matrix
     Schritt(56, "DATENQUELLEN OHNE FRISCHE - DIESELBE KLASSE WIE 2.452",

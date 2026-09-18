@@ -1116,6 +1116,72 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
     return ergebnis
 
 
+def _phase_fuer(aktion, strategie, hat_bestand: bool) -> str:
+    """Einstieg · Fuehrung · Ausstieg · Akkumulation - fuer EINE Zeile.
+
+    ⚠️ 18.09.2026 (Schritt 59 Phase 1, Paket 1.3, Befund 2.458-archaeologie).
+    Bis heute stand in jeder Zeile `strategie='einstieg'` - auch bei 1.730
+    NACHKAUFEN auf gehaltenen Werten. Damit war in den Daten nicht zu
+    trennen, was die Vorgabe des Nutzers ausdruecklich trennt: *,Einstieg,
+    Fuehrung und Ausstieg bzw. Reduktion'*.
+
+    ⚠️ ABGELEITET, NICHT GERATEN: die Aktion sagt die Richtung, der Bestand
+    sagt, ob es ein Anfang oder eine Fortsetzung ist. Beides liegt an der
+    Schreibstelle vor. Fehlt der Bestand (Abfrage faellt aus), gilt ,kein
+    Bestand' - dieselbe Richtung wie bei `_war_bestand`, damit eine Luecke
+    nicht zur Fuehrung umgedeutet wird."""
+    a = str(aktion or "").strip().upper()
+    if str(strategie or "").strip().lower() == "akkumulation":
+        return "akkumulation"
+    if a in ("VERKAUFEN", "REDUZIEREN"):
+        return "ausstieg"
+    if a == "NACHKAUFEN":
+        return "fuehrung"
+    if hat_bestand:
+        # HALTEN, KAUFEN oder EROEFFNEN auf einem gehaltenen Wert ist die
+        # Frage nach der Fortsetzung, nicht nach dem Anfang.
+        return "fuehrung"
+    return "einstieg"
+
+
+def _potential_dazu(felder: dict, *, rechnung, marktraenge, symbol,
+                    assetklasse, instrument, strategie, ergebnis,
+                    woher: str) -> None:
+    """`potential_r` und die Schwelle an eine Zeile haengen.
+
+    ⚠️ 18.09.2026 (Paket 1.2). Diese Rechnung stand nur im Nein-Pfad: 59 der
+    67 gespeicherten Werte stammen von dort, der Hauptpfad rechnete sie GAR
+    NICHT. Gemessen werden kann eine Bewertung aber erst, wenn sie auch an
+    den DURCHGELASSENEN Faellen steht - sonst vergleicht man die verworfenen
+    mit nichts (Vier-Felder-Schema, Konzept_Bewertungsstufe Teil 11 § 5).
+
+    ⚠️ SIE ENTSCHEIDET NICHTS: kein Filter, keine Mail, keine Sperre. Faellt
+    sie aus, bleibt das Feld leer - ein fehlender Wert ist kein Nullwert -
+    und der Ausfall wird gemeldet (N-40)."""
+    if not rechnung or rechnung.get("crv") is None:
+        return
+    try:
+        from agent import potential as _PT
+
+        _mr = (marktraenge or {}).get(symbol) or {}
+        _pot = _PT.rechne(
+            crv=rechnung["crv"],
+            stop_relativ=rechnung.get("stop_relativ"),
+            klasse=assetklasse, instrument=instrument,
+            strategie=strategie,
+            merkmale={k: _mr[k] for k in ("funding_fuenftel",
+                                          "turnover_fuenftel",
+                                          "schnitt_fuenftel")
+                      if _mr.get(k) is not None} or None)
+        if _pot is not None and _pot.bewertbar:
+            felder["potential_r"] = round(float(_pot.wert_r), 6)
+            felder["potential_schwelle_r"] = round(float(_pot.schwelle), 6)
+    except Exception as _px:                                 # noqa: BLE001
+        ergebnis.setdefault("fehler", []).append(
+            "%s: Potential (%s): %s: %s"
+            % (symbol, woher, type(_px).__name__, _px))
+
+
 def _war_bestand(symbol, db, instrument) -> bool:
     """Haelt der Nutzer diesen Wert? Fuer die Leerlaufwache (L1).
 
@@ -3107,7 +3173,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # DIE DREI GEMESSENEN FAMILIEN - dieselben Werte, die oben schon in den
         # Faktenblock der Mail gingen. Sie sind das einzige Material fuer den
         # Konstellationsschluessel, das NICHT die Entscheidung wiederholt.
-        familien=kern)
+        familien=kern,
+        # ⚠️ PHASE 1 (18.09.2026): der Kurs zum Empfehlungszeitpunkt stand
+        # bisher NUR in der Verkaufszeile (44 von 4.209). Ohne ihn rechnet
+        # jede Guetemessung mit dem Tagesschluss - der Unterschied ist genau
+        # die Bewegung des Tages (2.403).
+        kurs_bei_empfehlung_eur=kurs_e,
+        # UND DIE PHASE (Paket 1.3, 2.458-archaeologie).
+        phase=_phase_fuer(befund.get("aktion"), strategie,
+                          _war_bestand(symbol, db, instrument)))
     # P1a (19.08.2026): die auffaelligen Perzentilzeilen der FERTIGEN Mail
     # mitschreiben - dieselbe Quelle, die der Leser sieht. Sie neu zu
     # bestimmen waere die zweite Stelle, an der beide auseinanderlaufen.
@@ -3121,6 +3195,12 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         ergebnis.setdefault("fehler", []).append(
             f"{symbol}: Auffaelligkeiten nicht notiert: {exc}")
 
+    # ⚠️ PHASE 1 (18.09.2026, Paket 1.2): das Potential AUCH hier - bisher
+    # stand es nur an der Nein-Zeile, also nur bei den verworfenen Faellen.
+    _potential_dazu(felder, rechnung=rechnung, marktraenge=marktraenge,
+                    symbol=symbol, assetklasse=assetklasse,
+                    instrument=instrument, strategie=strategie,
+                    ergebnis=ergebnis, woher="Signalzeile")
     signal_id = SA.schreibe_signal(conn, felder, symbol=symbol)
     eintrag["signal_id"] = signal_id
     # ⚠️ ERST HIER, WEIL ERST HIER DIE `signal_id` FESTSTEHT. Ohne sie
@@ -3341,7 +3421,10 @@ def _sende_ausstieg(*, symbol, befund, verkauf, kurs_e, instrument, strategie,
             # geschrieben - und ohne ihn rechnet die Guetemessung mit dem
             # Tagesschluss (2.403). NUR ERFASSEN: kein Ablauf, keine Mail,
             # keine Sperre aendert sich dadurch.
-            kurs_bei_empfehlung_eur=kurs_e)
+            kurs_bei_empfehlung_eur=kurs_e,
+            # 18.09.2026 (Paket 1.3): ein Verkauf ist immer die Ausstiegs-
+            # phase - unabhaengig davon, welche Strategie ihn ausgeloest hat.
+            phase=_phase_fuer(befund.get("aktion"), strategie, True))
         # `gate_passed = 1`, weil es eine HANDLUNG ist - anders als die
         # Nein-Buchung, die eine Messung ist.
         felder["gate_passed"] = 1
@@ -3499,7 +3582,13 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
             # findet sie nicht und fragt dasselbe Symbol alle 15 Minuten neu.
             instrument=instrument,
             familien=kern, rechnung=rechnung, modell=modell,
-            gruppe=assetklasse)
+            gruppe=assetklasse,
+            # ⚠️ PHASE 1 (18.09.2026): Kurs und Phase auch an der Nein-Zeile -
+            # sie ist der KONTROLLARM der Messung und muss dieselben Felder
+            # tragen wie die Signalzeile, sonst vergleicht man Ungleiches.
+            kurs_bei_empfehlung_eur=kurs_e,
+            phase=_phase_fuer(befund.get("aktion"), strategie,
+                              _war_bestand(symbol, db, instrument)))
         # DIE ZONEN KAMEN FRUEHER HIER NACHTRAEGLICH DAZU, weil
         # `felder_aus_entscheidung` sie aus der ANTWORT nahm und ein NICHTS_TUN
         # keine nennt. Das war ein Flicken an EINEM von zwei Wegen - der
@@ -3548,29 +3637,10 @@ def _schreibe_nein(*, symbol, befund, kurs_e, atr_e, tag, reihe, idx,
         # Abbruch - nur zwei Zahlen mehr in einer Zeile, die ohnehin
         # geschrieben wird. Faellt die Rechnung aus, bleibt das Feld leer;
         # ein fehlender Wert ist kein Nullwert.
-        try:
-            from agent import potential as _PT3
-
-            _mr3 = (marktraenge or {}).get(symbol) or {}
-            _pot3 = _PT3.rechne(
-                crv=rechnung["crv"],
-                stop_relativ=rechnung.get("stop_relativ"),
-                klasse=assetklasse, instrument=instrument,
-                strategie=strategie,
-                merkmale={k: _mr3[k] for k in ("funding_fuenftel",
-                                               "turnover_fuenftel",
-                                               "schnitt_fuenftel")
-                          if _mr3.get(k) is not None} or None)
-            if _pot3 is not None and _pot3.bewertbar:
-                felder["potential_r"] = round(float(_pot3.wert_r), 6)
-                felder["potential_schwelle_r"] = round(
-                    float(_pot3.schwelle), 6)
-        except Exception as _px:                             # noqa: BLE001
-            # EINE MESSUNG DARF DEN LAUF NICHT ANHALTEN - aber sie muss
-            # sagen, wenn sie ausfaellt (N-40).
-            ergebnis.setdefault("fehler", []).append(
-                f"{symbol}: Potential fuer die Nein-Zeile: "
-                f"{type(_px).__name__}: {_px}")
+        _potential_dazu(felder, rechnung=rechnung, marktraenge=marktraenge,
+                        symbol=symbol, assetklasse=assetklasse,
+                        instrument=instrument, strategie=strategie,
+                        ergebnis=ergebnis, woher="Nein-Zeile")
         felder["gate_passed"] = 0        # es ist kein Signal, es ist eine Messung
         kennung = SA.schreibe_signal(conn, felder, symbol=symbol)
         ergebnis.setdefault("nein_gemessen", []).append(

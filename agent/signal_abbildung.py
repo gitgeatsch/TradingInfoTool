@@ -151,6 +151,14 @@ SPALTEN_SIGNAL = {
     # dieser Stelle angelegt (`quelle_kette`, `belege_json`, ...). Eine zweite
     # Migration in db.py waere eine zweite Definition derselben Spalte.
     "strategie": "TEXT",
+    # ⚠️ PHASE 1 (18.09.2026, Paket 1.3): WELCHE PHASE des Handels.
+    # `strategie` steht seit dem 23.08. in jeder Zeile - und traegt in
+    # ALLEN 2.344 Zeilen den Wert `einstieg`, auch bei 1.730 NACHKAUFEN
+    # und 464 REDUZIEREN (2.455-hebelsignale). Eine Groesse, die nur
+    # einen Wert kennt, trennt nichts. `strategie` bleibt unberuehrt -
+    # sie umzudeuten haette jede bestehende Auswertung still veraendert
+    # (Vorgabe: umgedeutete Zahl, ALLE Leser nachziehen).
+    "phase": "TEXT",
     # ⚠️ 17.09.2026 (Schritt 59 Phase 0.10, Befund 2.456-abgrenzung): DIE
     # GRUPPE DES LAUFS (krypto, aktien, rohstoffe, themen_etf, hedge). Vorher
     # war eine Aktien- oder ETF-Zeile nur ueber Symbol -> heutige Watchlist
@@ -495,6 +503,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
                             familien: dict | None = None,
                             rechnung: dict | None = None,
                             kurs_bei_empfehlung_eur: float | None = None,
+                            phase: str | None = None,
                             modell: str | None = None,
                             instrument: str | None = None,
                             strategie: str | None = None,
@@ -548,6 +557,7 @@ def felder_aus_entscheidung(antwort: dict, *, fakten: dict,
         # Tatsache der Kette, keine Angabe des Modells. Fehlt er, bleibt
         # die Spalte leer - ein geratener Kurs waere schlimmer als keiner.
         "kurs_bei_empfehlung_eur": kurs_bei_empfehlung_eur,
+        "phase": (str(phase).strip().lower() or None) if phase else None,
         "umgeworfen_bis": _frist_oder_nichts(antwort.get("umgeworfen_bis")),
         # DER FAKTENSATZ IST PFLICHT (Eckpunkt 4). Ohne ihn ist die Empfehlung
         # im Nachhinein nicht mehr pruefbar.

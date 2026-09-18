@@ -25879,6 +25879,148 @@ def paket_mailabschnitte() -> None:
            q.count("_PO5.lage(") == 1 and "_tm_fuer_mail = _tm or None" in q, "")
 
 
+def paket_protokoll() -> None:
+    """Schritt 59 Phase 1, Teil 1 (18.09.2026) - was die Kette MITSCHREIBT
+    (Nutzerentscheidungen Z1-Z5; Befund 2.458-archaeologie).
+
+    ⚠️⚠️ WARUM: Die Datenarchaeologie hat gezeigt, dass sich die Bewertung
+    NICHT rekonstruieren laesst - das Ziel steht nirgends, und `marktrang`
+    kennt keinen Stichtag. Was jetzt nicht mitgeschrieben wird, ist fuer die
+    Messung dauerhaft verloren. Drei Luecken werden hier geschlossen:
+
+        `kurs_bei_empfehlung_eur`  stand in 44 von 4.209 Zeilen (nur Verkauf)
+        `potential_r`              wurde NUR im Nein-Pfad gerechnet (59 Werte)
+        Phase                      `strategie` trug in ALLEN Zeilen `einstieg`
+
+    ⚠️ Keine dieser Groessen entscheidet etwas. Sie werden erfasst, nicht
+    angewandt - eine Messung darf den Lauf nie anhalten (N-40)."""
+    P = "Protokoll"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import shutil as _sh
+
+    import agent.rollen_lauf as _RL
+    import agent.signal_abbildung as _SA
+    import database.models as _MO
+    import extract_notebook_diagnose as _EXP
+
+    # ---- 1 Die Spalte entsteht und wird gelesen ---------------------------
+    pruefe(P, "⚠️ `phase` ist in SPALTEN_SIGNAL, in models.Signal UND im Export",
+           "phase" in _SA.SPALTEN_SIGNAL
+           and "phase" in getattr(_MO.Signal, "__dataclass_fields__", {})
+           and "phase" in _EXP._SPOT_SIGNAL_SPALTEN,
+           "Paket 15 verlangt alle drei zusammen - eine Spalte ohne Feld ist "
+           "eine Spalte, die niemand liest")
+    pruefe(P, "und `strategie` bleibt unveraendert daneben stehen",
+           "strategie" in _SA.SPALTEN_SIGNAL,
+           "sie umzudeuten haette jede bestehende Auswertung still geaendert")
+
+    tmp = _tf.mkdtemp()
+    try:
+        pfad = _os.path.join(tmp, "wegwerf.db")
+        con = _sq.connect(pfad)
+        con.row_factory = _sq.Row      # `init_db` liest Spalten ueber den Namen
+        # ⚠️ DAS ECHTE SCHEMA, keine Nachbildung: `init_db` baut die Tabelle
+        # so, wie sie am Notebook steht. Eine selbst gebaute Tabelle haette
+        # nur die Spalten, an die man gerade denkt - die Pruefung liefe dann
+        # gegen die eigene Annahme statt gegen den Betrieb.
+        import database.db as _DBP
+        _DBP.init_db(con)
+        neu = _SA.migriere(con)
+        vorhanden = {r[1] for r in con.execute("PRAGMA table_info(signals)")}
+        pruefe(P, "die Migration legt die Spalte an (additiv, ohne Datenverlust)",
+               "phase" in vorhanden and "signals.phase" in neu, str(neu[:3]))
+        pruefe(P, "und sie ist wiederholbar - ein zweiter Lauf legt nichts erneut an",
+               _SA.migriere(con) == [], "")
+        felder = _SA.felder_aus_entscheidung(
+            {"aktion": "NACHKAUFEN", "begruendung": "x", "richtung": "LONG"},
+            fakten={"asset": "LINK"}, prompt_stand="probe", instrument="spot",
+            strategie="einstieg", kurs_bei_empfehlung_eur=12.34, phase="fuehrung")
+        pruefe(P, "der Schreibweg nimmt Kurs und Phase entgegen",
+               felder.get("phase") == "fuehrung"
+               and felder.get("kurs_bei_empfehlung_eur") == 12.34, str(felder)[:120])
+        kennung = _SA.schreibe_signal(con, felder, symbol="LINK")
+        zeile = con.execute("SELECT phase, kurs_bei_empfehlung_eur FROM signals "
+                            "WHERE id=?", (kennung,)).fetchone()
+        pruefe(P, "⚠️ und der LESEPFAD liefert beides an einer echten Zeile zurueck",
+               tuple(zeile) == ("fuehrung", 12.34), str(tuple(zeile)))
+        con.close()
+    finally:
+        # Windows haelt die Datei kurz fest - ein Rest im Temp ist kein Befund.
+        _sh.rmtree(tmp, ignore_errors=True)
+
+    # ---- 2 Die Phase wird abgeleitet, nicht geraten -----------------------
+    faelle = [
+        (("NACHKAUFEN", "einstieg", True), "fuehrung"),
+        (("NACHKAUFEN", "einstieg", False), "fuehrung"),
+        (("KAUFEN", "einstieg", False), "einstieg"),
+        (("EROEFFNEN", "einstieg", True), "fuehrung"),
+        (("VERKAUFEN", "einstieg", True), "ausstieg"),
+        (("REDUZIEREN", "einstieg", True), "ausstieg"),
+        (("HALTEN", "akkumulation", True), "akkumulation"),
+        (("KAUFEN", "akkumulation", False), "akkumulation"),
+    ]
+    falsch = [(a, _RL._phase_fuer(*a), soll) for a, soll in faelle
+              if _RL._phase_fuer(*a) != soll]
+    pruefe(P, "⚠️ die Phase folgt Aktion, Strategie und Bestand - alle acht Faelle",
+           not falsch, str(falsch[:3]))
+    pruefe(P, "⚠️ eine fehlende Bestandsangabe wird NICHT zur Fuehrung",
+           _RL._phase_fuer("HALTEN", "einstieg", False) == "einstieg",
+           "im Zweifel kein Bestand - dieselbe Richtung wie `_war_bestand`")
+
+    # ---- 3 Das Potential haengt an BEIDEN Zeilenarten ---------------------
+    erg = {}
+    felder = {}
+    _RL._potential_dazu(felder, rechnung={"crv": 2.4, "stop_relativ": 0.08},
+                        marktraenge={"LINK": {"funding_fuenftel": 4,
+                                              "turnover_fuenftel": 3,
+                                              "schnitt_fuenftel": 2}},
+                        symbol="LINK", assetklasse="krypto", instrument="spot",
+                        strategie="einstieg", ergebnis=erg, woher="Probe")
+    pruefe(P, "⚠️ `potential_r` und die Schwelle entstehen aus der echten Rechnung",
+           isinstance(felder.get("potential_r"), float)
+           and isinstance(felder.get("potential_schwelle_r"), float), str(felder))
+    leer = {}
+    _RL._potential_dazu(leer, rechnung=None, marktraenge=None, symbol="LINK",
+                        assetklasse="krypto", instrument="spot",
+                        strategie="einstieg", ergebnis=erg, woher="Probe")
+    pruefe(P, "ohne Rechnung bleibt das Feld LEER statt null zu werden",
+           leer == {}, "ein fehlender Wert ist kein Nullwert")
+    kaputt, erg2 = {}, {}
+    _RL._potential_dazu(kaputt, rechnung={"crv": "unsinn"}, marktraenge=None,
+                        symbol="LINK", assetklasse="krypto", instrument="spot",
+                        strategie="einstieg", ergebnis=erg2, woher="Probe")
+    pruefe(P, "⚠️ ein Ausfall haelt den Lauf NICHT an, wird aber gemeldet (N-40)",
+           kaputt == {} and any("Potential" in x for x in erg2.get("fehler", [])),
+           str(erg2)[:120])
+
+    # ---- 4 ⚠️ Alle DREI Schreibwege tragen dieselben Felder ---------------
+    q = io.open("agent/rollen_lauf.py", encoding="utf-8").read()
+    baum = _AST.parse(q)
+    rufe = [k for k in _AST.walk(baum)
+            if isinstance(k, _AST.Call) and isinstance(k.func, _AST.Attribute)
+            and k.func.attr == "felder_aus_entscheidung"]
+    mit_kurs = [k for k in rufe if any(w.arg == "kurs_bei_empfehlung_eur" for w in k.keywords)]
+    mit_phase = [k for k in rufe if any(w.arg == "phase" for w in k.keywords)]
+    pruefe(P, "⚠️⚠️ JEDER Schreibweg gibt Kurs und Phase mit - Signal, Verkauf, Nein-Zeile",
+           len(rufe) == 3 and len(mit_kurs) == 3 and len(mit_phase) == 3,
+           "%d Schreibwege, davon mit Kurs %d, mit Phase %d - eine Zeile ohne "
+           "diese Felder waere spaeter nicht vergleichbar"
+           % (len(rufe), len(mit_kurs), len(mit_phase)))
+    pot_rufe = [k for k in _AST.walk(baum)
+                if isinstance(k, _AST.Call) and isinstance(k.func, _AST.Name)
+                and k.func.id == "_potential_dazu"]
+    pruefe(P, "⚠️ das Potential haengt an der SIGNALzeile und an der NEIN-Zeile",
+           len(pot_rufe) == 2
+           and {w.value.value for k in pot_rufe for w in k.keywords
+                if w.arg == "woher"} == {"Signalzeile", "Nein-Zeile"},
+           "vorher stand es nur an der Nein-Zeile - dann vergleicht die "
+           "Messung die verworfenen Faelle mit nichts")
+    pruefe(P, "und die alte Einzelrechnung im Nein-Pfad ist weg (eine Quelle, eine Rechnung)",
+           q.count("_PT3.rechne(") == 0 and "from agent import potential as _PT" in q, "")
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -25943,6 +26085,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Abgrenzung": paket_abgrenzung,
           "NurLesend": paket_nur_lesend,
           "Mailabschnitte": paket_mailabschnitte,
+          "Protokoll": paket_protokoll,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
           "Stufen": paket_beitrag_stufen,

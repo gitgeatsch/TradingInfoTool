@@ -489,6 +489,7 @@ class Signal:
     # 17.09.2026 (Schritt 59 Phase 0.10, 2.456-abgrenzung): die Gruppe des
     # Laufs - krypto | aktien | rohstoffe | themen_etf | hedge; Altzeilen leer.
     gruppe: str | None = None
+    phase: str | None = None
     # L3a (28.08.2026): DIE LIQUIDATION AN DER ZEILE.
     #
     # ⚠️ DERSELBE FEHLER WIE BEI `strategie` DARUEBER, eine Stufe spaeter.
