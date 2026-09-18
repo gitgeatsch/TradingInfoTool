@@ -22006,6 +22006,173 @@ def paket_sperre() -> None:
            "sonst benutzt die Kettenmessung wieder ihren eigenen Zweig")
 
 
+def paket_uhr() -> None:
+    """Laeuft die Wiederholungssperre je ZELLE - oder je Asset? (S1, 18.09.2026)
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT. Bis zum 18.09. las `gesperrt_bis` die
+    juengste Signalzeile eines Symbols OHNE nach der Strategie zu fragen.
+    Die Topftrennung darueber greift seit S6b nicht mehr (eine Gruppe, ein
+    Lauf), also teilten sich alle Fragen eines Assets eine Uhr:
+
+        letztes Signal akkumulation  ->  Frage `einstieg` gesperrt 15 h
+
+    Die langfristige Frage sperrte die taktische - gegen A2 vom 28.08.
+    (*zwei Positionen, zwei Horizonte, zwei Fragen*).
+
+    ⚠️ HEUTE FOLGENLOS, MORGEN NICHT: in der Produktionssicherung vom
+    18.09. gibt es KEINE einzige `akkumulation`-Zeile (2.419 `einstieg`,
+    1.865 ohne Strategie aus der Zeit vor dem 23.08.), weil die
+    Akkumulation seit dem 11.09. gesperrt ist. Der Fehler wirkt in dem
+    Moment, in dem sie freigeschaltet wird - und das ist M1-Kriterium 3.
+    Deshalb steht die Pruefung jetzt, nicht dann.
+    """
+    P = "Uhr"
+    import datetime as _dt
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+
+    import database.db as _db
+    from agent import signal_abbildung as _SA
+    from agent import wiederholung as _WH
+
+    # ⚠️ WEGWERF-DB: `db.DB_PATH` wird umgebogen, die Produktion bleibt
+    # unberuehrt (Paket "Standard-DB" prueft das und wuerde es melden).
+    _alt = _db.DB_PATH
+    ordner = _tf.mkdtemp()
+    _db.DB_PATH = _os.path.join(ordner, "uhr.db")
+    con = _sq.connect(_db.DB_PATH)
+    con.row_factory = _sq.Row
+    try:
+        _db.init_db(con)
+        _SA.migriere(con)
+        spalten = {r[1] for r in con.execute("PRAGMA table_info(signals)")}
+        # ⚠️ OHNE DIESE ZEILE WAERE DAS GANZE PAKET WERTLOS: fehlt
+        # `quelle_kette`, gibt `gesperrt_bis` fail-soft "frei" zurueck -
+        # und jede Pruefung unten waere gruen, ohne etwas zu pruefen.
+        pruefe(P, "das Pruefschema ist vollstaendig - kein Fail-soft",
+               {"quelle_kette", "strategie", "hebel"} <= spalten,
+               "fehlt eine Spalte, meldet `gesperrt_bis` pauschal frei")
+
+        jetzt = _dt.datetime(2026, 9, 18, 12, 0, tzinfo=_dt.timezone.utc)
+        cfg = {"budget_allocator": {"spot_cooldown_stunden": 15.0,
+                                    "cooldown_stunden": 3.5}}
+
+        def setze(strategie, hebel=None, stunden_her=4):
+            con.execute("DELETE FROM signals")
+            con.execute(
+                "INSERT INTO signals (symbol, created_at, action, gate_passed,"
+                " facts_json, quelle_kette, hebel, strategie)"
+                " VALUES (?,?,?,?,?,?,?,?)",
+                ("BTC", (jetzt - _dt.timedelta(hours=stunden_her)).isoformat(),
+                 "KAUFEN", 1, "{}", "rollen", hebel, strategie))
+            con.commit()
+
+        def frage(strategie):
+            return _WH.gesperrt_bis(con, "BTC", "spot", config=cfg,
+                                    gruppe="krypto", jetzt=jetzt.isoformat(),
+                                    strategie=strategie)
+
+        # ---- DIE EIGENTLICHE FRAGE ---------------------------------------
+        setze("akkumulation")
+        pruefe(P, "⚠️ eine Akkumulation sperrt die TAKTISCHE Frage nicht mehr",
+               frage("einstieg") is None,
+               "zwei Horizonte sind zwei Fragen (A2, 28.08.) - gemessen: %s"
+               % frage("einstieg"))
+        pruefe(P, "und sie sperrt ihre EIGENE Frage weiterhin (48 h)",
+               frage("akkumulation") is not None,
+               "sonst waere aus der Trennung eine Abschaltung geworden")
+
+        setze("einstieg")
+        pruefe(P, "ein Einstieg sperrt seine eigene Frage weiterhin",
+               frage("einstieg") is not None,
+               "die Sperre an der eigenen Zelle darf sich nicht lockern")
+        pruefe(P, "und er sperrt die Akkumulationsfrage nicht mehr",
+               frage("akkumulation") is None,
+               "auch diese Richtung gehoert getrennt")
+
+        # ---- DER HEBEL DES LETZTEN SIGNALS - JE ZELLE ---------------------
+        #
+        # Ein gehebeltes EINSTIEGS-Signal verkuerzt die Einstiegsfrage auf
+        # 3,5 h (nach 4 h also frei). Die Akkumulationsfrage darf davon
+        # nichts merken - sie hat ihre eigene Uhr.
+        # ⚠️ ZWEI ZEILEN, UNTERSCHIEDLICH ALT - erst dann ist die Pruefung
+        # entscheidend. Die erste Fassung setzte nur EINE Zeile; dass die
+        # andere Frage frei war, lag dann an der Trennung und nicht am
+        # Hebel, und die Pruefung wiederholte nur die vorige.
+        #
+        #     akkumulation  vor 4 h, ohne Hebel   -> 48 h, gesperrt
+        #     einstieg      vor 6 h, Hebel 3,0x   ->  3,5 h, frei
+        #
+        # Ohne die Trennung lese die Einstiegsfrage die JUENGERE Zeile
+        # (Akkumulation, ohne Hebel) und waere mit 15 h gesperrt.
+        con.execute("DELETE FROM signals")
+        for strat, hebel, her in (("akkumulation", None, 4),
+                                  ("einstieg", 3.0, 6)):
+            con.execute(
+                "INSERT INTO signals (symbol, created_at, action, gate_passed,"
+                " facts_json, quelle_kette, hebel, strategie)"
+                " VALUES (?,?,?,?,?,?,?,?)",
+                ("BTC", (jetzt - _dt.timedelta(hours=her)).isoformat(),
+                 "KAUFEN", 1, "{}", "rollen", hebel, strat))
+        con.commit()
+        pruefe(P, "der Hebel des letzten Signals wirkt nur in SEINER Zelle",
+               frage("einstieg") is None and frage("akkumulation") is not None,
+               "erwartet: einstieg frei (3,5 h nach 6 h), akkumulation "
+               "gesperrt (48 h) - gemessen: einstieg %s / akkumulation %s"
+               % (frage("einstieg"), frage("akkumulation")))
+
+        # ---- DER ALTBESTAND ----------------------------------------------
+        #
+        # 1.865 Zeilen der Produktion haben keine Strategie. Sie gehoeren
+        # keiner Zelle - also sperren sie beide, statt ins Leere zu fallen.
+        setze(None)
+        pruefe(P, "eine Zeile OHNE Strategie sperrt beide Fragen",
+               frage("einstieg") is not None
+               and frage("akkumulation") is not None,
+               "sonst waeren 1.865 Altzeilen still wirkungslos geworden")
+
+        # ---- DER STILLE AUSFALL MELDET SICH ------------------------------
+        #
+        # ⚠️ Der Rueckfall auf "keine Sperre" ist Absicht - aber er war
+        # stumm. Seit S1 steht ein Parameter in der Abfrage; passt er
+        # nicht, waere die staerkste Sperre der Kette lautlos aus.
+        import logging as _log
+
+        class _Kaputt:
+            def execute(self, *a, **k):
+                raise RuntimeError("Schema kaputt")
+
+        _puffer = []
+
+        class _Fang(_log.Handler):
+            def emit(self, satz):
+                _puffer.append(satz.getMessage())
+
+        _l = _log.getLogger("agent.wiederholung")
+        _h = _Fang()
+        _l.addHandler(_h)
+        try:
+            _frei = _WH.gesperrt_bis(_Kaputt(), "BTC", "spot", config=cfg,
+                                     gruppe="krypto", strategie="einstieg")
+        finally:
+            _l.removeHandler(_h)
+        pruefe(P, "⚠️ faellt die Abfrage aus, steht es im Log - nicht nur im Nichts",
+               _frei is None and any("fail-soft" in x for x in _puffer),
+               "fail-soft ja, fail-silent nein - gemeldet: %s" % (_puffer or "NICHTS"))
+
+        # ---- RUECKWAERTSKOMPATIBILITAET ----------------------------------
+        setze("akkumulation")
+        pruefe(P, "ohne `strategie` rechnet die Funktion wie vorher",
+               _WH.gesperrt_bis(con, "BTC", "spot", config=cfg,
+                                gruppe="krypto",
+                                jetzt=jetzt.isoformat()) is not None,
+               "ein Aufrufer ohne Strategie darf nicht ploetzlich frei sehen")
+    finally:
+        con.close()
+        _db.DB_PATH = _alt
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -26750,6 +26917,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kalibrierung": paket_kalibrierung,
           "Neuaufnahme": paket_neuaufnahme,
           "Sperre": paket_sperre,
+          "Uhr": paket_uhr,
           "Messstandard": paket_messstandard}
 
 

@@ -258,14 +258,67 @@ def gesperrt_bis(conn, symbol: str, instrument: str, *,
         # Grund, heute frueher zu fragen.
         _hat_hebel = "hebel" in spalten
         _felder = "created_at" + (", hebel" if _hat_hebel else "")
+        # ⚠️⚠️ DIE UHR LAEUFT JE ZELLE, NICHT JE ASSET (S1, 18.09.2026).
+        #
+        # DER FUND, der das ausgeloest hat (Befund 2.461-uhr, Nutzerhinweis
+        # *"achte darauf, dass die Spot-Sperre nicht auch Hebel mitsperrt"*):
+        # diese Abfrage fragte nur nach `symbol`. Die Topftrennung darueber
+        # greift seit S6b nicht mehr (eine Gruppe, ein Lauf), also las JEDE
+        # Frage dieselbe juengste Zeile. Nachgestellt:
+        #
+        #     letztes Signal akkumulation -> Frage `einstieg` gesperrt 15 h
+        #
+        # Die langfristige Frage sperrte damit die taktische. Das ist genau
+        # der Fall, den A2 vom 28.08. offenhaelt: *"Ein Kern-Asset soll
+        # beides koennen - langfristig aufbauen und kurzfristig gehebelt
+        # handeln. Das sind zwei Positionen, zwei Horizonte, zwei Fragen."*
+        #
+        # ⚠️ NACH STRATEGIE, NICHT NACH INSTRUMENT. Das Instrument einer
+        # Zelle ist ein WUNSCH - welches es wird, faellt erst aus der
+        # Rechnung an (Kapitel 88). Ein Signal, das als `hebel` gespeichert
+        # wurde, ist die Antwort auf die Spot-Frage; wer danach filterte,
+        # wuerde dieselbe Frage sofort wieder stellen. Die STRATEGIE dagegen
+        # steht vor dem Urteil fest und benennt den Horizont.
+        #
+        # ⚠️ EINE ZEILE OHNE STRATEGIE SPERRT BEIDE. Sie gehoert keiner
+        # Zelle, und wir wissen nicht, welche Frage sie beantwortet hat -
+        # also gilt sie fuer alle. In der Produktion sind das 1.865 Zeilen,
+        # alle aelter als der 23.08.2026; bei 12 bis 48 Stunden Sperre wirkt
+        # der Zweig faktisch nie. Er steht fuer den Fall, dass er es doch tut.
+        #
+        # ⚠️ OHNE `strategie` RECHNET DIE FUNKTION WIE VORHER - jeder
+        # bestehende Aufrufer bleibt unveraendert gueltig.
+        _felder_p: list = [symbol]
+        _s_filter = str(strategie or "").strip().lower()
+        if _s_filter and "strategie" in spalten:
+            bedingung += (" AND (LOWER(COALESCE(strategie, '')) = ? "
+                          "OR strategie IS NULL OR strategie = '')")
+            _felder_p.append(_s_filter)
         zeile = conn.execute(
             f"SELECT {_felder} FROM signals WHERE symbol = ? "
             f"AND quelle_kette = 'rollen' AND {bedingung} "
             f"ORDER BY created_at DESC LIMIT 1",
-            (symbol,)).fetchone()
+            tuple(_felder_p)).fetchone()
         _hebel_zuletzt = (zeile[1] if (zeile and _hat_hebel and len(zeile) > 1)
                           else None)
     except Exception:                                        # noqa: BLE001
+        # ⚠️⚠️ FAIL-SOFT BLEIBT, FAIL-SILENT NICHT (18.09.2026, S1).
+        #
+        # Der Rueckfall auf "keine Sperre" ist Absicht (siehe Docstring) -
+        # aber er war STUMM. Seit S1 baut diese Funktion eine Bedingung MIT
+        # Parameter; passen Bedingung und Parameterliste nicht zusammen,
+        # wirft SQLite, dieser Zweig faengt es, und die staerkste Sperre der
+        # Kette ist vollstaendig aus, ohne dass irgendwo etwas steht.
+        #
+        # ⚠️ GEFUNDEN DURCH DIE GEGENPRUEFUNG, nicht durch Nachdenken:
+        # Mutation M5 (Parameter nicht mitgegeben) machte in der Suite sechs
+        # Pruefungen rot - im Betrieb haette dieselbe Aenderung nichts
+        # gemeldet und einfach jede Frage durchgelassen.
+        import logging
+        logging.getLogger(__name__).exception(
+            "Wiederholungssperre nicht bestimmbar fuer %s/%s - KEINE Sperre "
+            "(fail-soft). Das ist ein Fehler, kein Normalfall.",
+            symbol, instrument)
         return None
     if not zeile or not zeile[0]:
         return None
