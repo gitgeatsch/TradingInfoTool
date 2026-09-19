@@ -21701,6 +21701,31 @@ def paket_register() -> None:
     """
     P = "Register"
 
+    # ---- ⚠️⚠️ JEDE KENNUNG NUR EINMAL (19.09.2026) ---------------------
+    #
+    # DER FALL, DER DAS AUSGELOEST HAT: unter `2.141` standen ZWEI
+    # verschiedene Befunde - einer abgeloest (durch 2.143, auf der freien
+    # Menge gemessen), einer geltend. Ein Nachschlagen traf zufaellig einen
+    # von beiden, und R-R11 (erst reproduzieren, dann widerlegen) laeuft ins
+    # Leere, wenn nicht feststeht, WELCHER Befund gemeint ist.
+    #
+    # ⚠️ DAS REGISTER MELDET ES NICHT: es prueft die UEBEREINSTIMMUNG von
+    # Blatt und Modul, nicht die Eindeutigkeit der Schluessel. Genau
+    # deshalb steht die Zeile hier.
+    #
+    # ⚠️ Am selben Tag gab es den zweiten Fall derselben Klasse: ein
+    # Doku-Skript lief zweimal und trug zwei Befunde doppelt ein (es
+    # schrieb `bestand.py` und scheiterte DANACH an einem anderen Anker).
+    # Beide Faelle faengt diese eine Zeile.
+    import bestand as _bst
+    import collections as _c
+    _doppelt = {k: n for k, n in
+                _c.Counter(b.kennung for b in _bst.BEFUNDE).items() if n > 1}
+    pruefe(P, "⚠️⚠️ jede Befund-Kennung kommt genau EINMAL vor",
+           not _doppelt,
+           "zwei Befunde unter einer Kennung machen jedes Nachschlagen "
+           "zufaellig und R-R11 unanwendbar - gefunden: %s" % (_doppelt or "-"))
+
     # ---- ⚠️⚠️⚠️ DIE ARGUMENTVERSCHIEBUNG (13.09.2026) -------------------
     #
     # AN EINEM TAG ZWEIMAL DIESELBE KLASSE. Am 12.09. war es ein Komma in
