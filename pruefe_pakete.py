@@ -23245,6 +23245,60 @@ def paket_entscheiderstufe() -> None:
            "ihrer Schwelle")
 
 
+def paket_terminmarktstufe() -> None:
+    """Haelt die LAGE der Stufe `terminmarkt` fest (Phase 3 Punkt 3c).
+
+    ⚠️ HIER WIRD NICHTS NEU GEMESSEN. `oi_aenderung` ist als Groesse
+    registriert und reproduziert (2.460-repro). Was fehlte, war die
+    WIRKUNG der Stufe - und die haengt an drei Bedingungen im Code.
+
+    ⚠️⚠️ UND AN EINER LUECKE: die Stufe wird im Trichter GAR NICHT
+    protokolliert. Null Eintraege in `zellen_lauf` sagen deshalb nichts
+    ueber sie aus - genau die Falle aus dem Fakt ,kein Hebelsignal war
+    eine falsche Spalte`.
+    """
+    P = "Terminmarktstufe"
+    from agent import rollen_gate as _G
+
+    _q = _quelltext("agent/rollen_lauf.py")
+    _st = _q.split('durchlauf.bestanden(symbol, "terminmarkt")')[0][-3000:]
+
+    pruefe(P, "⚠️ die Stufe greift NUR fuer die Strategie `einstieg`",
+           'if str(strategie or "") != "einstieg":' in _st,
+           "die Messung ankert auf einem EINSTIEG; ueber die Akkumulation "
+           "sagt sie nichts, und beim Bestand steht die Ausstiegsfrage an")
+    pruefe(P, "⚠️ und NICHT bei vorhandenem Bestand",
+           "elif _hat_bestand:" in _st,
+           "wer hier sperrt, unterdrueckt Verkaufssignale - derselbe Grund, "
+           "aus dem `auswahl` den Bestand ausnimmt")
+    pruefe(P, "ein Wert OHNE OI-Rang wird nicht gesperrt, sondern vermerkt",
+           "elif _oi_f is None:" in _st,
+           "ein Wert ohne Rang ist nicht schlecht, sondern unbekannt - eine "
+           "Sperre daraus waere eine Sperre nach DATENLAGE (Regel 4)")
+    pruefe(P, "gesperrt wird allein das hoechste Fuenftel",
+           "elif _oi_f >= 4:" in _st,
+           "die Monotonie ueber die Fuenftel ist gefallen; belastbar ist "
+           "allein Fuenftel 4 (H-4c/F-168)")
+
+    # ---- ⚠️⚠️ DIE LUECKE, DIE DEN BEFUND TRAEGT --------------------------
+    _namen = list(_G.STUFEN_NAMEN)
+    _wird_protokolliert = (
+        "terminmarkt" in _G.PROTOKOLL_IMMER
+        or (_namen.index("terminmarkt") >= _namen.index(_G.PROTOKOLL_AB)))
+    pruefe(P, "⚠️⚠️ BEKANNTE LUECKE: `terminmarkt` steht NICHT im Trichter",
+           not _wird_protokolliert,
+           "`PROTOKOLL_AB` steht auf %r und `PROTOKOLL_IMMER` auf %s - die "
+           "Stufe liegt davor. Folge: null Eintraege in `zellen_lauf` sind "
+           "KEIN Beleg fuer null Wirkung. ⚠️ FAELLT DIESE ZEILE, ist die "
+           "Luecke geschlossen - dann gehoert Befund 2.481-terminmarktstufe "
+           "nachgezogen und die Wirkung aus dem Trichter GEMESSEN statt aus "
+           "dem Code gelesen" % (_G.PROTOKOLL_AB, list(_G.PROTOKOLL_IMMER)))
+    pruefe(P, "⚠️ und `auswahl` steht ausdruecklich drin - der Vergleich",
+           "auswahl" in _G.PROTOKOLL_IMMER,
+           "sie liegt ebenfalls vor `urteil` und wurde eigens aufgenommen; "
+           "fuer `terminmarkt` ist das nie geschehen")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27999,6 +28053,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Verkaufsbasis": paket_verkaufsbasis,
           "Auswahlstufe": paket_auswahlstufe,
           "Entscheiderstufe": paket_entscheiderstufe,
+          "Terminmarktstufe": paket_terminmarktstufe,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
