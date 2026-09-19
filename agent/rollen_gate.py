@@ -697,7 +697,21 @@ def schreibe(conn, durchlauf: Durchlauf, zeitpunkt: str) -> int:
 #   3,9 % der vollen Menge, rund 70.000 im Jahr.
 TABELLE_ZELLEN = "zellen_lauf"
 PROTOKOLL_AB = "urteil"
-PROTOKOLL_IMMER = ("auswahl",)
+# ⚠️⚠️ `terminmarkt` KAM AM 19.09.2026 DAZU (Befund 2.481-terminmarktstufe).
+#
+# Die Stufe liegt vor `PROTOKOLL_AB` und wurde deshalb NIE aufgezeichnet.
+# In 1.225 Zeilen `zellen_lauf` vom 18. und 19.09. kam sie null mal vor -
+# und diese Null war KEIN Beleg fuer null Wirkung, sondern fuer eine
+# Protokollluecke. Ein Ausfall der Stufe waere unsichtbar geblieben, und
+# ihre Wirkung liess sich nur aus dem CODE lesen statt MESSEN.
+#
+# ⚠️ DIE MENGE BLEIBT KLEIN, und das ist nachgerechnet: `Durchlauf` haelt
+# EINE Zelle je Symbol (`_zelle_je_symbol`), und `bestanden`/`verloren`
+# ueberschreiben Stufe und Ergebnis. Geschrieben wird also nur, wo eine
+# Zelle ENDET. Heute endet dort praktisch keine (4 von 508 Zeilen seit dem
+# 11.09. sind ueberhaupt Einstiege ohne Bestand) - die Aenderung kostet
+# null Zeilen und liefert genau die, die bisher fehlten.
+PROTOKOLL_IMMER = ("auswahl", "terminmarkt")
 
 
 def _protokollwuerdig(zelle: dict) -> bool:
@@ -772,7 +786,15 @@ def schreibe_zellen(conn, durchlauf, zeitpunkt: str, lauf_id=None) -> int:
     # an der Auswahl scheiterte, ohne dieselbe Aussage zwanzigmal zu
     # wiederholen. Rund 110 statt 880 Zeilen je Tag.
     ZUSTAENDE = ("gesperrt", "verloren")
-    NUR_EINMAL_JE_TAG = {"auftrag", "auswahl"}
+    # ⚠️ `terminmarkt` STEHT HIER MIT (19.09.2026), obwohl die Sperre
+    # heute kaum greift. Der Grund ist derselbe wie bei `auswahl`: das
+    # OI-Fuenftel eines Symbols aendert sich im Tagesverlauf kaum, und
+    # die Quote je Lauf steht ohnehin in `gate_durchlaessigkeit`. Wer
+    # die Stufe erst aufnimmt und die Mengenregel spaeter nachzieht,
+    # baut die Falle wieder auf, die am 18.09. ZWEIMAL zugeschnappt
+    # ist (540 Zeilen aus fuenf Laeufen, dann 882 statt 250 an einem
+    # Tag).
+    NUR_EINMAL_JE_TAG = {"auftrag", "auswahl", "terminmarkt"}
     _tag = str(zeitpunkt)[:10]
     _schon = set()
     try:

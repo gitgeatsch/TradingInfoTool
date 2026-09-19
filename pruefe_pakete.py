@@ -23285,18 +23285,29 @@ def paket_terminmarktstufe() -> None:
     _wird_protokolliert = (
         "terminmarkt" in _G.PROTOKOLL_IMMER
         or (_namen.index("terminmarkt") >= _namen.index(_G.PROTOKOLL_AB)))
-    pruefe(P, "⚠️⚠️ BEKANNTE LUECKE: `terminmarkt` steht NICHT im Trichter",
-           not _wird_protokolliert,
-           "`PROTOKOLL_AB` steht auf %r und `PROTOKOLL_IMMER` auf %s - die "
-           "Stufe liegt davor. Folge: null Eintraege in `zellen_lauf` sind "
-           "KEIN Beleg fuer null Wirkung. ⚠️ FAELLT DIESE ZEILE, ist die "
-           "Luecke geschlossen - dann gehoert Befund 2.481-terminmarktstufe "
-           "nachgezogen und die Wirkung aus dem Trichter GEMESSEN statt aus "
-           "dem Code gelesen" % (_G.PROTOKOLL_AB, list(_G.PROTOKOLL_IMMER)))
-    pruefe(P, "⚠️ und `auswahl` steht ausdruecklich drin - der Vergleich",
+    # ⚠️⚠️ DIE LUECKE IST GESCHLOSSEN (19.09.2026) - die Pruefung hat
+    # sich mit ihr gedreht. Bis zum Eingriff stand hier `not
+    # _wird_protokolliert` als BEKANNTE LUECKE, mit dem Vermerk: faellt
+    # die Zeile, gehoert 2.481 nachgezogen. Genau das ist geschehen.
+    pruefe(P, "⚠️⚠️ `terminmarkt` steht jetzt im Trichter",
+           _wird_protokolliert,
+           "bis zum 19.09. lag die Stufe vor `PROTOKOLL_AB` (%r) und wurde "
+           "NIE aufgezeichnet - null Eintraege waren KEIN Beleg fuer null "
+           "Wirkung, sondern fuer eine Protokollluecke. Jetzt: "
+           "PROTOKOLL_IMMER = %s"
+           % (_G.PROTOKOLL_AB, list(_G.PROTOKOLL_IMMER)))
+    pruefe(P, "⚠️ und `auswahl` steht weiter drin",
            "auswahl" in _G.PROTOKOLL_IMMER,
-           "sie liegt ebenfalls vor `urteil` und wurde eigens aufgenommen; "
-           "fuer `terminmarkt` ist das nie geschehen")
+           "sie war der Vorlaeufer: ebenfalls vor `urteil` gelegen und "
+           "eigens aufgenommen")
+    # ---- ⚠️ DIE MENGENREGEL WURDE MITGEZOGEN ----------------------------
+    _q2 = _quelltext("agent/rollen_gate.py")
+    pruefe(P, "⚠️⚠️ und die Mengenregel gilt auch fuer sie",
+           '"terminmarkt"' in _q2.split("NUR_EINMAL_JE_TAG = {")[1][:80],
+           "eine neue Stufe im Trichter OHNE die Regel ,eine Zeile je Symbol "
+           "und Tag` baut die Falle wieder auf, die am 18.09. ZWEIMAL "
+           "zugeschnappt ist - 540 Zeilen aus fuenf Laeufen, dann 882 statt "
+           "250 an einem Tag")
 
 
 def paket_messstandard() -> None:
