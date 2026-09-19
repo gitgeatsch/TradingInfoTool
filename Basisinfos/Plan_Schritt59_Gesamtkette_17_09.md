@@ -545,7 +545,7 @@ Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
 
 | Block | Inhalt | wartet auf | Wirkung |
 |---|---|---|---|
-| **V0** | Verkaufsausgang von **Empfehlung** auf **Information** herabstufen (Mailinfo-Block, gekennzeichnet, keine Zeile verschwindet) | nichts | ⚠️ **löst den Blocker** — der Widerspruch verschwindet, S3 wird wieder möglich |
+| **V0** | Verkaufsausgang von **Empfehlung** auf **Information** herabstufen | — | ✔ **GEBAUT 19.09.** (2.469-v0-gebaut): Kopfzeile und Betreff gekennzeichnet, Überschrift „WAS ZU TUN IST“ → „WAS DAS MODELL VORSCHLÄGT“; **keine Zeile verschwindet**. ⚠️ Geführt als **bekannter Betriebsfehler** nach Muster 16.09., **nicht** als Vorgriff auf Schritt 60 (Nutzerentscheidung 19.09.: „B + Fehlerkorrektur“) |
 | **V1** | eigene Zelle `strategie = halten` für Bestände | nichts (S1 liegt vor: Uhr je Zelle, 2.462-uhr-getrennt) | die Verkaufsfrage entsteht eigenständig statt als Nebenprodukt |
 | **V2** | **Basislinie messen** aus `ausstieg_verfolgung` (H5/H20, richtungsbereinigt) | ein Lauf des `ausstiegs_job` (täglich 7:15) | erste Zahl darüber, ob ein Verkauf richtig war |
 | **V3** | Bewertung bauen: **V3a** gelten die Beiträge für die Haltefrage (2.220-haltefrage)? · **V3b** Potential/Schwelle/Deckel für den Ausstieg, der `return` fällt | V2 | die Verkaufsseite wird gebremst wie die Kaufseite |
@@ -564,6 +564,17 @@ Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
 Tagesklammer rund 15 Tage — das trägt einen **Hinweis und eine Basislinie**, kein
 Normurteil. Und gemessen wird damit, ob **das Modell** richtig lag, nicht ob eine
 Bewertung trägt. Genau das ist der Arm „heutige Rolle" des gepaarten Versuchs.
+
+### Zwei Vermerke, damit nichts verlorengeht
+
+1. **Schritt 60 behält V0 als Prüfpunkt**, obwohl V0 vorgezogen wurde: dort ist
+   zu prüfen, ob die Kennzeichnung nach dem Umbau von Mailinhalt und -struktur
+   noch an der richtigen Stelle steht. Ein Vermerk „nach dem Rollout“ an einem
+   erledigten Schritt geht sonst verloren.
+2. ⚠️ **M1-Kriterium 6** lautet „Betrieb sauber (Protokollierung läuft, Sperren
+   begründet, **Mail korrekt**)“. Mit V0 ist die Verkaufsmail **korrekt
+   gekennzeichnet**, aber weiterhin **ungemessen** — vollständig abnahmefähig
+   ist das Kriterium erst mit V3. Das gehört bei der M1-Abnahme genannt.
 
 ### Verhältnis zu M1
 

@@ -416,6 +416,17 @@ def stumme_bestaende(conn, mindesttage: int | None = None,
     return sorted(aus, key=lambda x: x["tage"])
 
 
+# ⚠️⚠️ DER SATZ, DER DIE VERKAUFSSEITE EINORDNET (V0, 19.09.2026).
+#
+# Er steht als KONSTANTE, nicht als Zeichenkette im Text: eine Aussage
+# dieses Gewichts muss auffindbar sein und an EINER Stelle stehen - sonst
+# steht sie morgen in zwei Fassungen da (die Kopierfalle, die dieses
+# Projekt schon mehrfach erwischt hat).
+VERKAUF_OHNE_BEWERTUNG = (
+    "⚠️ VERKAUFSSEITE OHNE GEMESSENE BEWERTUNG - dies ist eine INFORMATION, "
+    "keine Empfehlung. Die Entscheidung liegt bei Ihnen.")
+
+
 def sammel_mail(alle: list, modell: str | None = None,
                 zeitpunkt: str | None = None,
                 positionen: list | None = None,
@@ -488,6 +499,31 @@ def sammel_mail(alle: list, modell: str | None = None,
                  "DIES IST KEINE GEWINNMITNAHME. Das Modell haelt diese Positionen",
                  "fuer schwaecher als die Alternative - mehr sagt es nicht.",
                  "Ausfuehrung manuell ueber die Bitpanda-App.", ""]
+    # ⚠️⚠️ V0 (19.09.2026): DIE VERKAUFSSEITE IST INFORMATION, KEINE EMPFEHLUNG.
+    #
+    # DER GRUND STEHT IN ZWEI BEFUNDEN. 2.392: der Ausstieg verzweigt in
+    # `rollen_lauf` an Stufe 9 mit einem blanken `return` - `geometrie`,
+    # `risikoschicht` und `entscheider` werden NIE erreicht. Damit gilt fuer
+    # ihn nichts von dem, was die Einstiegsseite traegt: kein gemessenes
+    # Potential, keine Schwelle je Datenlage, kein Deckel, keine
+    # Trefferquote. 2.467-verkauf-blockiert: es gibt nicht einmal eine eigene
+    # Verkaufsfrage - alle Zeilen tragen `strategie=einstieg`, und an 8,8 %
+    # der Symbol-Tage stehen NACHKAUFEN und REDUZIEREN nebeneinander.
+    #
+    # ⚠️ WAS DIESER BLOCK NICHT TUT: er unterdrueckt keine Zeile und keine
+    # Zahl. Alles bleibt sichtbar, gebucht und messbar (das Messmaterial fuer
+    # Paket V2 entsteht genau hier). Er nimmt nur den Anspruch zurueck, eine
+    # begruendete Empfehlung zu sein.
+    #
+    # ⚠️ NICHT NACH GRUPPE UNTERSCHIEDEN - anders als `_bereich_nv` darueber.
+    # Dort geht es um Assetklassen ohne gemessene Bewertung; hier um die
+    # VERKAUFSSEITE, und die ist in JEDER Gruppe ungemessen, auch in Krypto.
+    #
+    # Nutzerentscheidung 19.09.: als bekannter Betriebsfehler sofort
+    # behandelt, nach dem Muster der Entscheidung vom 16.09. - nicht als
+    # vorgezogener Teil von Schritt 60.
+    if alle or gesperrt:
+        kopf.insert(0, VERKAUF_OHNE_BEWERTUNG)
     else:
         kopf += ["",
                  "KEIN AUSFUEHRBARER AUFTRAG in diesem Lauf - alle Urteile",
@@ -506,7 +542,11 @@ def sammel_mail(alle: list, modell: str | None = None,
         kopf.insert(0, "Bereich %s – ohne gemessene Bewertung" % _bereich_nv)
     zeilen = list(kopf)
     if alle:
-        zeilen += ["--- WAS ZU TUN IST ---"]
+        # ⚠️ V0 (19.09.2026): NICHT MEHR "WAS ZU TUN IST". Der Kopf sagt
+        # "Information, keine Empfehlung" - eine Ueberschrift, die eine
+        # Handlung anordnet, nimmt das im selben Atemzug zurueck. Der Satz
+        # beschreibt jetzt, WER etwas sagt, nicht was der Leser tun soll.
+        zeilen += ["--- WAS DAS MODELL VORSCHLAEGT ---"]
     for p in posten:
         v = p["verkauf"]
         if "anteil" not in v:
@@ -676,6 +716,10 @@ def sammel_mail(alle: list, modell: str | None = None,
     if stumm:
         kern.append("%dx stumm - zu kurze Kursreihe" % len(stumm))
     betreff = "TradingInfoTool: " + ", ".join(kern)
+    # ⚠️ AUCH IM BETREFF (V0): wer die Mail im Postfach ueberfliegt, sieht
+    # sonst "3 Verkaufsvorschlaege" und liest eine Empfehlung.
+    if alle or gesperrt:
+        betreff += " · INFORMATION, keine Empfehlung"
     if _bereich_nv:
         betreff += " · %s" % _bereich_nv
     return betreff, "\n".join(zeilen)

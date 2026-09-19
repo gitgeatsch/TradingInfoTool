@@ -16046,9 +16046,15 @@ def paket_gestakt() -> None:
     pruefe(P, "⚠️ ohne Auftrag steht auch kein ,Ausfuehrung manuell' darin",
            "Ausfuehrung manuell" not in text,
            "eine Anweisung ins Leere: es gibt nichts auszufuehren")
+    # ⚠️ UEBERSCHRIFT UMBENANNT (V0, 19.09.2026): aus "WAS ZU TUN IST"
+    # wurde "WAS DAS MODELL VORSCHLAEGT" - die Verkaufsseite ist
+    # Information, keine Empfehlung (2.469-v0-gebaut). Die ABSICHT
+    # dieser Pruefungen ist unveraendert: die Trennung der Abschnitte.
+    # ⚠️ Die Ausfall- und Terminmarktmeldungen behalten "WAS ZU TUN
+    # IST" - dort ist tatsaechlich etwas zu tun.
     pruefe(P, "der gesperrte Abschnitt ist von der Auftragsliste getrennt",
            "GESPERRT: DIE MENGE IST GESTAKT" in text
-           and "WAS ZU TUN IST" not in text,
+           and "WAS DAS MODELL VORSCHLAEGT" not in text,
            "sie zwischen die ausfuehrbaren Zeilen zu mischen waere dieselbe "
            "Falschaussage, wegen der die Hebelaenderungen getrennt wurden")
 
@@ -16058,7 +16064,7 @@ def paket_gestakt() -> None:
                                     kurs_eur=20.0, einstand_eur=15.0)}
     m2 = VK.sammel_mail([auftrag], zeitpunkt="2026-09-12")
     pruefe(P, "⚠️ ein Lauf OHNE gesperrte Faelle sieht aus wie immer",
-           bool(m2) and "WAS ZU TUN IST" in m2[1]
+           bool(m2) and "WAS DAS MODELL VORSCHLAEGT" in m2[1]
            and "GESPERRT" not in m2[1]
            and "Ausfuehrung manuell" in m2[1],
            "die Aenderung ist additiv - wer keine gestakte Position hat, "
@@ -16066,7 +16072,8 @@ def paket_gestakt() -> None:
     m3 = VK.sammel_mail([auftrag], zeitpunkt="2026-09-12",
                         gesperrt=[{"symbol": "SOL", "gesperrt": voll}])
     pruefe(P, "und beides zusammen steht in EINER Mail",
-           bool(m3) and "WAS ZU TUN IST" in m3[1] and "GESPERRT" in m3[1]
+           bool(m3) and "WAS DAS MODELL VORSCHLAEGT" in m3[1]
+           and "GESPERRT" in m3[1]
            and "Verkaufsvorschlaege" in m3[0] and "gestakt" in m3[0],
            "zwei Mails zum selben Lauf waeren der Fehler vom 14.08.")
     pruefe(P, "leer bleibt leer",
@@ -19027,7 +19034,7 @@ def paket_zellen() -> None:
            "eine leere Ueberschrift ist eine Zeile, die etwas verspricht "
            "und nichts haelt")
     pruefe(P, "die Vorschlaege bleiben daneben stehen, nicht darunter",
-           _mit and _mit[1].index("WAS ZU TUN IST")
+           _mit and _mit[1].index("WAS DAS MODELL VORSCHLAEGT")
            < _mit[1].index("WAS SIE HALTEN") < _mit[1].index("WARUM"),
            "was zu TUN ist und was man HAT sind zwei Befunde, keine zwei "
            "Meinungen - sie gehoeren nebeneinander und in dieser Reihenfolge")
@@ -22391,6 +22398,79 @@ def paket_hochrechnung() -> None:
     pruefe(P, "⚠️ und der gescheiterte Nachbau steht im Modul, nicht nur im Chat",
            "23,7" in quelle and "60,6" in quelle and "k = 2" in quelle,
            "ein Fehlversuch, der nirgends steht, wird wiederholt")
+
+
+def paket_verkaufskennzeichnung() -> None:
+    """Ist die Verkaufsmail als INFORMATION gekennzeichnet? (V0, 19.09.2026)
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Die Verkaufsseite umgeht drei von vier
+    Filtern (2.392: nach `_sende_ausstieg` steht ein blankes `return`) und
+    hat keine eigene Frage (2.467-verkauf-blockiert: alle Zeilen tragen
+    `strategie=einstieg`). Sie gibt trotzdem Saetze aus, die wie
+    Empfehlungen klingen. V0 nimmt den Anspruch zurueck - ohne eine Zeile
+    oder eine Zahl zu unterdruecken, weil genau hier das Messmaterial fuer
+    Block V2 entsteht.
+
+    ⚠️ Die Pruefung sieht auf das VERHALTEN der Mail, nicht auf ein
+    Suchwort im Quelltext: was der Leser bekommt, ist der Gegenstand.
+    """
+    P = "Verkaufskennzeichnung"
+    from agent import verkaufsrechnung as _V
+
+    def _mail(**kw):
+        p = _V.rechne(aktion="REDUZIEREN", menge=10.0, kurs_eur=50.0,
+                      einstand_eur=60.0)
+        return _V.sammel_mail([{"symbol": "LINK", "verkauf": p,
+                                "begruendung": "Modelltext"}], **kw)
+
+    betreff, text = _mail(gruppe="krypto")
+
+    pruefe(P, "⚠️ der Kopf sagt INFORMATION, keine Empfehlung",
+           text.split("\n")[0] == _V.VERKAUF_OHNE_BEWERTUNG,
+           "und zwar als ERSTE Zeile - wer weiterscrollt, hat sie sonst nicht "
+           "gesehen. Gemessen: %r" % text.split("\n")[0][:80])
+    pruefe(P, "⚠️ und der Betreff ebenfalls",
+           "INFORMATION, keine Empfehlung" in betreff,
+           "im Postfach steht sonst nur ,1 Verkaufsvorschlaege` - "
+           "gemessen: %r" % betreff)
+    pruefe(P, "⚠️ keine Ueberschrift ordnet mehr eine Handlung an",
+           "WAS ZU TUN IST" not in text and "WAS DAS MODELL VORSCHLAEGT" in text,
+           "ein Kopf ,keine Empfehlung` und eine Zeile ,was zu tun ist` "
+           "nehmen einander zurueck")
+
+    # ---- Es darf NICHTS verschwinden -------------------------------------
+    #
+    # ⚠️ DAS IST DIE ANDERE HAELFTE VON V0: die Kennzeichnung nimmt den
+    # Anspruch, nicht den Inhalt. Verschwaende sie Zahlen, waere das
+    # Messmaterial fuer V2 weg.
+    # ⚠️ ,Stand` war hier zu allgemein - das Wort steht auch ausserhalb
+    # der Postenzeile, die Pruefung fiel deshalb bei Mutation M5 nicht.
+    # Gesucht wird, was NUR aus der Zeile kommen kann.
+    # ⚠️ ZWEIMAL NACHGESCHAERFT: ,Stand` steht auch ausserhalb der
+    # Postenzeile, und ,166,67 EUR` steht zusaetzlich im KOPF (Summe) -
+    # beide ueberlebten die Mutation zu Recht. Geprueft wird jetzt nur,
+    # was ausschliesslich aus der Zeile selbst kommen kann.
+    for stueck in ("LINK", "REDUZIEREN", "ein Drittel", "-16,7 %"):
+        pruefe(P, "die Zeile bleibt vollstaendig: %s" % stueck,
+               stueck in text,
+               "V0 kennzeichnet, es unterdrueckt nicht - sonst versiegt das "
+               "Messmaterial fuer Block V2")
+
+    # ---- Der Satz steht an EINER Stelle ----------------------------------
+    pruefe(P, "der Satz ist eine Konstante, keine Zeichenkette im Text",
+           isinstance(getattr(_V, "VERKAUF_OHNE_BEWERTUNG", None), str)
+           and "INFORMATION" in _V.VERKAUF_OHNE_BEWERTUNG,
+           "eine Aussage dieses Gewichts muss auffindbar sein und an einer "
+           "Stelle stehen")
+
+    # ---- Ohne Ausstieg keine Kennzeichnung -------------------------------
+    #
+    # Eine Mail, die es gar nicht gibt, braucht keinen Hinweis; und der
+    # Hinweis darf keine Mail ausloesen.
+    pruefe(P, "ohne Ausstieg entsteht weiterhin GAR KEINE Mail",
+           _V.sammel_mail([], gruppe="krypto") is None,
+           "die Kennzeichnung darf keine Mail erzeugen, die es sonst nicht "
+           "gaebe")
 
 
 def paket_messstandard() -> None:
@@ -27140,6 +27220,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Uhr": paket_uhr,
           "Takt": paket_takt,
           "Anlassschwelle": paket_anlassschwelle,
+          "Verkaufskennzeichnung": paket_verkaufskennzeichnung,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
