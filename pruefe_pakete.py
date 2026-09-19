@@ -22928,6 +22928,167 @@ def paket_verkaufsbasis() -> None:
            "eine Zielmarke, die nicht im Befund steht, prueft nichts")
 
 
+def paket_auswahlstufe() -> None:
+    """Misst `phase3_stufen.py` WAS TRAEGT DIE STUFE `auswahl`?
+
+    ⚠️ ZWEI FEHLER IM EIGENEN BAU, beide beim Pruefen gefunden und hier
+    festgenagelt: (1) der TRAEGER bestimmte die Ankermenge - mit `funding`
+    lief die Messung auf 211,8 statt 340,3 Ankern je Tag, also auf der
+    funding-gedeckten Teilmenge (Auswahl nach Datenlage, Regel 4);
+    (2) der BEZUG waren ALLE Anker statt der WAEHLBAREN - Symbole ohne
+    250-Tage-Momentum standen im Nenner, obwohl sie nie haetten gewaehlt
+    werden koennen.
+    """
+    P = "Auswahlstufe"
+    import numpy as _np
+
+    import phase3_stufen as _ST
+
+    # ---- Eine Kunstwelt mit bekannter Wahrheit ---------------------------
+    #
+    # 20 Werte je Tag, Momentum = Index. Die obersten nach Momentum sind
+    # zugleich die mit dem besseren Ergebnis - die Auswahl muss POSITIV sein.
+    def _welt(gut_oben=True, ohne_momentum=0, n_sym=20, anteil=0.20,
+              n_tage=200):
+        """⚠️ DIE GUTEN MUESSEN WAEHLBAR SEIN - erste Fassung war falsch.
+
+        Sie legte die guten Werte auf die hoechsten Indizes UND machte
+        genau die momentumlos: die Auswahl konnte sie nie erreichen, und
+        die Pruefung meldete 0,0 statt 2,0. Jetzt sind die Guten die
+        obersten der WAEHLBAREN, und die Momentumlosen liegen dahinter."""
+        je, mom = {}, {}
+        n_sel = n_sym - ohne_momentum
+        k = max(1, int(round(n_sel * anteil)))
+        for t in range(n_tage):
+            tag = "2023-%02d-%02d" % (t // 28 + 1, t % 28 + 1)
+            zeilen, m = [], {}
+            for i in range(n_sym):
+                if i < n_sel:
+                    oben = i >= n_sel - k
+                    erg = (+1.0 if oben == gut_oben else -1.0)
+                    m["S%02d" % i] = float(i)
+                else:
+                    # ⚠️ Ohne Momentum, und ausgesprochen schlecht: wer
+                    # faelschlich gegen ALLE vergleicht, bekommt dadurch
+                    # ein anderes Ergebnis.
+                    erg = -5.0
+                zeilen.append({"sym": "S%02d" % i, "kennzahl": float(i),
+                               "in_r": erg})
+            je[tag] = zeilen
+            mom[tag] = m
+        return je, mom
+
+    je, mom = _welt(True)
+    gut = _ST.wirkung(je, mom, 0.20)
+    je2, mom2 = _welt(False)
+    schlecht = _ST.wirkung(je2, mom2, 0.20)
+    pruefe(P, "⚠️⚠️ gewaehlt minus waehlbar - das Vorzeichen stimmt",
+           gut and all(v > 0 for v in gut.values())
+           and schlecht and all(v < 0 for v in schlecht.values()),
+           "sind die oben Gewaehlten die besseren, traegt die Auswahl und "
+           "der Wert ist POSITIV. Gemessen: %s / %s"
+           % (sorted(set(gut.values()))[:2],
+              sorted(set(schlecht.values()))[:2]))
+
+    # ---- ⚠️ DER BEZUG SIND DIE WAEHLBAREN -------------------------------
+    #
+    # Fuenf Werte ohne Momentumwert, alle mit -5,0. Wer gegen ALLE
+    # vergleicht, bekommt dadurch ein ganz anderes Ergebnis - obwohl diese
+    # Werte nie haetten gewaehlt werden koennen.
+    # ⚠️ ZWEIMAL NACHGESCHAERFT, und beide Male aus demselben Grund: die
+    # Kunstwelt muss BEIDE Schranken der Messung erfuellen und trotzdem den
+    # Fehler zeigen. (1) Bei fuenf von zwanzig Momentumlosen blieb der
+    # Median der Gesamtmenge gleich - der Fehler war unsichtbar; sie
+    # muessen ueber die MITTE reichen. (2) Bei neun von zwanzig blieben
+    # nur elf Waehlbare, und 20 %% davon sind zwei - die Messung verlangt
+    # mindestens drei Gewaehlte und lieferte `nan`. 22 von 40 erfuellt
+    # beides: 18 Waehlbare, vier Gewaehlte, und der Median der Gesamtmenge
+    # liegt bei -5,0 statt -1,0.
+    je3, mom3 = _welt(True, ohne_momentum=22, n_sym=40)
+    ohne = _ST.wirkung(je3, mom3, 0.20)
+    pruefe(P, "⚠️⚠️ der Bezug sind die WAEHLBAREN, nicht alle Anker",
+           ohne and abs(_np.mean(list(ohne.values()))
+                        - _np.mean(list(gut.values()))) < 1e-9,
+           "Werte ohne 250-Tage-Momentum koennen nie gewaehlt werden - sie "
+           "gehoeren auch nicht in den Nenner. Mit ihnen %.4f, ohne sie %.4f"
+           % (_np.mean(list(ohne.values())), _np.mean(list(gut.values()))))
+
+    # ---- Die Nullwelt waehlt gleich viele, aber andere -------------------
+    null = _ST.wirkung(je, mom, 0.20, rng=_np.random.default_rng(1))
+    pruefe(P, "⚠️ die Nullwelt waehlt ZUFAELLIG, nicht nach Momentum",
+           null and abs(_np.mean(list(null.values())))
+           < abs(_np.mean(list(gut.values()))),
+           "sonst misst der Vergleich, DASS ausgewaehlt wurde, nicht WONACH "
+           "- echt %.3f gegen null %.3f"
+           % (_np.mean(list(gut.values())), _np.mean(list(null.values()))))
+
+    # ---- Die Positivkontrolle pflanzt in die GEWAEHLTEN ------------------
+    o = _np.mean(list(_ST.wirkung(je, mom, 0.20).values()))
+    m1 = _np.mean(list(_ST.wirkung(je, mom, 0.20, pflanze=0.5).values()))
+    m2 = _np.mean(list(_ST.wirkung(je, mom, 0.20, pflanze=1.0).values()))
+    pruefe(P, "⚠️ die Positivkontrolle hebt die Auswahl, und zwar monoton",
+           m1 > o and m2 > m1,
+           "sie muss die GEWAEHLTEN besser machen; in die Waehlbaren zu "
+           "pflanzen hiesse, den Effekt teilweise selbst aufzuheben "
+           "(0,0 -> %.3f, 0,5 -> %.3f, 1,0 -> %.3f)" % (o, m1, m2))
+
+    # ---- Der Anteil ist ein Regler ---------------------------------------
+    # ⚠️ EIGENE, GROESSERE WELT: 5 %% von 20 Werten ist EINER, und die
+    # Messung verlangt mindestens drei Gewaehlte - die Zelle war leer und
+    # die Pruefung verglich mit `nan`.
+    jeg, momg = _welt(True, n_sym=80)
+    t5 = _ST.besetzung(jeg, momg, 0.05)
+    t50 = _ST.besetzung(jeg, momg, 0.50)
+    pruefe(P, "der Anteil ist ein Regler, keine Zierde",
+           t5[1] < t50[1],
+           "sonst waere der Verlauf ueber die Anteile ein Etikett - "
+           "5 %% waehlt %.1f, 50 %% waehlt %.1f" % (t5[1], t50[1]))
+    # ⚠️ NACHGESCHAERFT DURCH DIE GEGENPRUEFUNG: in der grossen Welt bindet
+    # die Schranke `m.sum() < 3` gar nicht - eine Besetzung OHNE sie kaeme
+    # auf dieselbe Tageszahl, und die Pruefung saehe gruen aus. In der
+    # kleinen Welt sind 5 %% von 20 genau EINER, die Messung verwirft den
+    # Tag, und beide muessen dann NULL Tage zaehlen.
+    t5k = _ST.besetzung(je, mom, 0.05)
+    pruefe(P, "⚠️ und die Besetzung zaehlt dieselben Tage wie die Messung",
+           t5[0] == len(_ST.wirkung(jeg, momg, 0.05)) and t5[0] > 0
+           and t5k[0] == len(_ST.wirkung(je, mom, 0.05)) and t5k[0] == 0
+           and t50[0] == len(_ST.wirkung(jeg, momg, 0.50)),
+           "eine Besetzung, die eine andere Menge beschreibt als die "
+           "gemessene, ist irrefuehrender als keine (%d/%d gegen %d/%d)"
+           % (t5[0], len(_ST.wirkung(jeg, momg, 0.05)),
+              t50[0], len(_ST.wirkung(jeg, momg, 0.50)))
+           + " · kleine Welt %d gegen %d"
+           % (t5k[0], len(_ST.wirkung(je, mom, 0.05))))
+
+    # ---- Der Mehrfachvergleich wird beziffert ----------------------------
+    pruefe(P, "⚠️⚠️ der familienweite Fehlalarm wird gerechnet, nicht "
+           "geschaetzt",
+           abs(_ST.familienfehler(1) - 0.025) < 1e-9
+           and abs(_ST.familienfehler(4) - (1 - 0.975 ** 4)) < 1e-9,
+           "`messnorm.Befund` fuehrt `hypothesen`, verrechnet es aber "
+           "nirgends - bei vier Zellen traegt rund %.1f %% zufaellig"
+           % (100 * _ST.familienfehler(4)))
+
+    # ---- Aufbau und Deklaration ------------------------------------------
+    quelle = _quelltext("phase3_stufen.py")
+    pruefe(P, "⚠️ die echte Auswahlfunktion wird aufgerufen, nicht nachgebaut",
+           "A._auswahl_maske(" in quelle,
+           "eine nachgebaute Auswahl ist am 19.09. schon durchgefallen "
+           "(2.466: 23,7 %% statt 60,6 %%)")
+    pruefe(P, "⚠️⚠️ der Traeger ist kursbasiert, nicht datengefiltert",
+           _ST.TRAEGER not in ("funding", "turnover", "oi_aenderung")
+           and _ST.TRAEGER_PROBE not in ("funding", "turnover",
+                                         "oi_aenderung"),
+           "`baue` verwirft jede Zeile ohne Kennzahl - mit `funding` lief "
+           "die Messung auf 211,8 statt 340,3 Ankern je Tag (Traeger: "
+           "%r / %r)" % (_ST.TRAEGER, _ST.TRAEGER_PROBE))
+    pruefe(P, "⚠️ die Hauptfrage ist vorab deklariert, H5 ist nachrangig",
+           len(_ST.HAUPT) == 4 and _ST.NEBEN_HORIZONT != 20,
+           "wer nachtraeglich die beste Zelle zur Hauptfrage erklaert, hat "
+           "den Mehrfachvergleich umgangen (Haupt: %s, nachrangig H%d)"
+           % (list(_ST.HAUPT), _ST.NEBEN_HORIZONT))
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27680,6 +27841,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Haltelage": paket_haltelage,
           "Verkaufsregel": paket_verkaufsregel,
           "Verkaufsbasis": paket_verkaufsbasis,
+          "Auswahlstufe": paket_auswahlstufe,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

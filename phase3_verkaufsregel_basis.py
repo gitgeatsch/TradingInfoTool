@@ -115,7 +115,7 @@ def messe(je_tag: dict, menge: dict, block: int, mindest: int = 1) -> tuple:
 SAATEN = (0, 7, 13, 23, 37)
 
 
-def stabilitaet(je_tag: dict, menge: dict, block: int, mindest: int) -> str:
+def stabilitaet(echt: dict, nullwelt, block: int) -> str:
     """⚠️⚠️ TRAEGT DAS URTEIL AUCH MIT EINER ANDEREN SAAT?
 
     DER ANLASS (19.09.2026): H5 kam auf TRAEGT, aber mit einem Abstand von
@@ -127,15 +127,18 @@ def stabilitaet(je_tag: dict, menge: dict, block: int, mindest: int) -> str:
     ⚠️ Die Positivkontrolle bleibt hier aussen vor - sie entscheidet das
     TRAEGT nicht, das tut allein Band gegen Nullgrenze. Wer sie mitzieht,
     verlaengert den Lauf um das Fuenffache ohne Erkenntnisgewinn."""
+    # ⚠️ `nullwelt` IST EINE FUNKTION, KEINE MENGE (verallgemeinert
+    # 19.09.2026 fuer Phase 3). Vorher hing die Probe an der Verkaufsregel;
+    # die naechste Messung haette sie nachgebaut - und eine zweite Fassung
+    # der Saatprobe waere genau die Kopie, gegen die dieses Projekt seine
+    # Regeln hat. `nullwelt(rng)` liefert die Tageswerte EINER Nullwelt.
     treffer, zeilen = 0, []
-    echt = regel(je_tag, menge, mindest_verkauft=mindest)
     for k in SAATEN:
         saat = messnorm.SAAT + k
         b = band(echt, block, zieh=300, saat=saat)
         nullwerte = []
         for i in range(NULL_ZIEHUNGEN):
-            n = regel(je_tag, menge, rng=np.random.default_rng(saat + i),
-                      mindest_verkauft=mindest)
+            n = nullwelt(np.random.default_rng(saat + i))
             nb = band(n, block, zieh=300, saat=saat + i)
             if nb:
                 nullwerte.append(nb[0])
@@ -222,7 +225,11 @@ def main() -> int:
         _drin, raus = geteilt(mom, halte)
         block = messnorm._block(horizont)
         print("     %-34s %s"
-              % (titel, stabilitaet(je_tag, raus, block, mindest)))
+              % (titel, stabilitaet(
+                  regel(je_tag, raus, mindest_verkauft=mindest),
+                  lambda r, _j=je_tag, _m=raus, _d=mindest: regel(
+                      _j, _m, rng=r, mindest_verkauft=_d),
+                  block)))
 
     # ---- R-R11 ----------------------------------------------------------
     print("\n  %s" % ("=" * 114))

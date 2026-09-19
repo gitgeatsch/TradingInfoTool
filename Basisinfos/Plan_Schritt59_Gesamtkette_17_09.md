@@ -327,7 +327,7 @@ Werkzeug aus Schritt 29/30 (Basis `simuliere_kette.py`/N-67-Muster), Zielgröße
 
 1. **R-R11:** `funding`, `turnover`, `oi_aenderung` in der Kette reproduzieren. · ✔ **ERLEDIGT 18.09.** (2.460-repro): alle drei reproduziert (+0,0249 / +0,0639 / +0,0126); ⚠️ Normurteil ab 2023 (2.460-norm): nur `oi_aenderung` trägt einzeln, funding und turnover liegen unter ihrer Trennschärfe — Ursache ist die Datenlage (turnover: 59 Symbole)
 2. Kette gesamt gegen Nullwelten. · ✔ **ERLEDIGT 18.09.** (2.460-kette): **TRÄGT** — +0,0403 R gegen Nullpunkt +0,0048 (achtfach), entzerrt +0,0445, Trennschärfe 0,02 R. ⚠️ Trennschärfe optimistisch (2.198); gemessen ist nur der Bewertungskern, kein LLM
-3. Beitrag je Stufe (auswahl, terminmarkt, entscheider) als „mit gegen ohne“.
+3. Beitrag je Stufe (auswahl, terminmarkt, entscheider) als „mit gegen ohne“. · ⛔ **`auswahl` GEMESSEN 19.09.** (2.479-auswahlstufe): **keine Zelle trägt** — bei H20 ist die Anlage mit Trennschärfe 0,40 R zu grob für ein Urteil, bei H5 löst sie auf (0,05–0,10 R) und die Wirkungen liegen bei −0,008 bis −0,021 R, also darunter. ➔ Die Auswahl ist kein **Qualitätsfilter**, sondern eine **Mengensteuerung** (LLM-Kontingent); konsistent damit, dass `momentum` im Register als Kandidat nicht trägt. ⚠️ Das ist die QUALITÄTSfrage — die WIRKUNGSfrage steht in F-182 (null zusätzliche Werte). ⏳ offen: `entscheider` (nächstes Paket), `terminmarkt` als Doku
 4. Wiederholungssperre als Hinweis + Nutzerfrage Regel 1. · ✔ **ERLEDIGT 18.09.** (2.461-sperre): **keine Sperrlänge trägt** – jede liegt unter dem Nullpunkt ihrer eigenen Nullwelt (gleich viele zufällig gesperrt), Trennschärfe 0,10–0,20 R; die Kosten: 43 % der Anker bei einem Tag, 87 % bei zwanzig. ⚠️ Die Live-Werte 3,5 h und 12 h liegen **unter der Tagesauflösung** und bleiben ungemessen (2.461-sperre-auflösung). ⚠️ Getrennt davon: **ein Asset hatte eine einzige Uhr** – die Akkumulationsfrage sperrte die taktische mit (2.461-uhr, Nutzerhinweis 18.09.) · ✔ **BEHOBEN 18.09. (S1, 2.462-uhr-getrennt):** die Uhr läuft je Zelle (Filter nach Strategie); am laufenden Betrieb ändert sich **nichts**, weil es keine `akkumulation`-Signale gibt – die Wirkung setzt mit der Freischaltung der Akkumulation ein (M1-Kriterium 3). Dabei gefunden: der Fail-soft-Zweig war stumm (2.462-fail-soft)
 5. ⚠️ **NEU 18.09. (2.459-ungemessen): die vier ungemessenen Größen der Modelleingabe messen** – `referenz_spy` (relative Stärke gegen den S&P-500-ETF, **läuft live mit**), `fundamental_wachstum` (Gewinn-/Umsatzwachstum bei Aktien, **läuft live mit**), `stablecoin_kapital` und `optionsmarkt_dvol_skew` (stumm, seit 18.09. aus dem BC-Prompt gefiltert). ⚠️ Für `referenz_spy` **vor** der Messung klären, gegen welchen Maßstab gemessen wird – der S&P-500-ETF ist für Krypto ein fremder. ⚠️ Für `fundamental_wachstum` gibt es keine Messbasis (Aktien) – gehört in die Multiasset-Schiene.
 
@@ -554,6 +554,35 @@ Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
 | **V3b-1b** | ✔ **GEMESSEN 19.09.** (2.477): die drei Auswege B1 (H5), B2 (Haltefenster 120) und B3 (Mindestbesetzung 3) — **keiner schließt das Band**. B1 und B3+B1 kamen auf TRÄGT, fielen aber an der **Saatprobe** (4 von 5 bzw. **1 von 5** Saaten, 2.477-stabilitaet); B2 und B3 verschlechtern die Trennschärfe von 0,02 auf 0,05 bzw. **0,10 R**. ✔ R-R11: die Basis reproduziert auf die vierte Nachkommastelle. ✔ Die **Blocklänge ist jetzt nachgemessen** statt gesetzt (2.477-block, Autokorrelation +0,002 bis +0,060 bei Grenze 0,15) | V3b-1 ✔ | ➔ **Weg A ist nicht mehr eine Empfehlung, sondern was übrig bleibt** |
 | **V3b-2** | Potential/Schwelle/Deckel für den Ausstieg; der `return` nach `_sende_ausstieg` fällt | V3b-1b ✔ | ➔ **WEG A, gemessen begründet:** die Schwelle steht auf der **ganzen Haltemenge** (+0,0791 R, Band schließt die Null mit 0,0555 R Abstand aus), und der Vorbehalt läuft mit — die Regel wirkt dort am schwächsten, wo sie gebraucht wird |
 
+### ⛔ PAKET V IST GESCHLOSSEN — der Rest geht an Schritt 43, nach M1
+
+**Nutzerentscheidung 19.09.2026** auf die Frage *passt das in unseren Hauptplan mit
+dem M1 Meilenstein?* — und die Antwort stand bereits in diesem Plan:
+**§ 11.1 führt den Ausstieg ausdrücklich unter *nicht in M1***.
+
+| | |
+|---|---|
+| **Warum Paket V überhaupt begann** | die ungemessene Verkaufsseite **blockierte** die Freigabe der gemessenen Einstiegsseite (2.467) |
+| **Warum es hier endet** | dieser Blocker ist mit **V0 erledigt** (2.469): die Verkaufsmail ist Information, die Entscheidung liegt beim Nutzer, es verschwindet keine Zeile. ⚠️ Ein gelöster Blocker beendet den Umweg |
+| **Was mitgeht** | **V3b-2** (der Eingriff) und **V4** (die systematische Ausstiegsmessung) → Schritt 43 |
+| **Was bleibt** | V0 läuft; 2.470 bis 2.477 sind die Grundlage, auf der V4 ohne Vorarbeit startet |
+
+⚠️ **V4 ist der größere Teil, und der Grund ist ernüchternd:** von **vier**
+Verkaufsfällen ist **einer teilweise** bewertet (Fall 1 *es gibt Besseres*).
+**Fall 3 (Gewinnmitnahme) und Fall 4 (Absicherung)** — die beiden, die der Nutzer
+selbst genannt hat — haben **keine Grundlage**. Von 22 registrierten Kandidaten
+sind **alle** auf der Einstiegsfrage registriert; für den Ausstieg sind **drei** je
+geprüft. Drawdown vom Hoch, ATH-Abstand, Fear & Greed, Haltedauer, unrealisierter
+Gewinn und Positionsgröße fehlen als Kandidaten **ganz**. Und die Literaturrecherche
+(2.472) beantwortete, **wie** man einen Ausstieg bewertet — nicht, **welche Signale**
+funktionieren.
+
+✔ **Machbar ohne Wartezeit** (Datenlage am 19.09. geprüft): Fear & Greed **3.149
+Tage** ab 2018, Drawdown und ATH-Abstand aus den OHLC ableitbar, Zinsen **2.441
+Tage**. ⛔ Nicht messbar: BTC-Dominanz (70 Tage), VIX (58), Dollar-Index (48).
+Fall 3 und 4 werden **historisch** gemessen, nicht auf der wachsenden
+Signalstichprobe. **Umfang geschätzt 5–6 Pakete.**
+
 ### Datenlage für V2 — sie liegt bereits vor
 
 | | |
@@ -575,10 +604,13 @@ Bewertung trägt. Genau das ist der Arm „heutige Rolle" des gepaarten Versuchs
    zu prüfen, ob die Kennzeichnung nach dem Umbau von Mailinhalt und -struktur
    noch an der richtigen Stelle steht. Ein Vermerk „nach dem Rollout“ an einem
    erledigten Schritt geht sonst verloren.
-2. ⚠️ **M1-Kriterium 6** lautet „Betrieb sauber (Protokollierung läuft, Sperren
-   begründet, **Mail korrekt**)“. Mit V0 ist die Verkaufsmail **korrekt
-   gekennzeichnet**, aber weiterhin **ungemessen** — vollständig abnahmefähig
-   ist das Kriterium erst mit V3. Das gehört bei der M1-Abnahme genannt.
+2. ✔ **M1-Kriterium 6 ist mit V0 erfüllbar** — ⚠️ **hier stand am Vormittag
+   des 19.09. das Gegenteil** (*vollständig abnahmefähig erst mit V3*). Das war
+   falsch und ist gestrichen (Befund 2.478-paket-v-nach-m1): Kriterium 6 heißt
+   **Mail korrekt**, und mit V0 ist sie korrekt — als Information gekennzeichnet,
+   ohne Handlungsanspruch. Dass der Ausstieg **ungemessen** ist, gehört nicht zu
+   M1; § 11.1 führt ihn ausdrücklich unter *nicht in M1*. Der Vermerk hätte die
+   Abnahme an etwas gehängt, was der Plan ausschließt.
 
 ### Verhältnis zu M1
 
