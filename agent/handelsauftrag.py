@@ -56,7 +56,12 @@ INSTRUMENTE = ("spot", "hebel", "absicherung")
 #                 Ausstiegskriterium. Wo Einstieg und Swing einen Stop haben,
 #                 hat die Akkumulation nur die Frage "wann traegt die Erwartung
 #                 nicht mehr".
-STRATEGIEN = ("einstieg", "swing", "akkumulation")
+# ⚠️ `halten` GEHOERT HIER MIT HINEIN (19.09.2026, V3a). `ERLAUBTE_PAARE`
+# und diese Liste muessen dasselbe kennen - wer nur eine von beiden
+# ergaenzt, hat die zweite Liste gebaut, vor der der Modulkopf warnt.
+# Gefunden von der Suite: `pruefe()` warf bei `spot x halten` ueber die
+# STRATEGIEN-Abfrage, obwohl das Paar erlaubt ist.
+STRATEGIEN = ("einstieg", "swing", "akkumulation", "halten")
 
 
 def ist_hebelgeschaeft(rechnung=None, instrument=None) -> bool:
@@ -121,8 +126,30 @@ def ist_hebelgeschaeft(rechnung=None, instrument=None) -> bool:
 #                          Trailing-Stops auf Spot, gehoert das Paar zurueck -
 #                          die Mechanik dafuer liegt in `ausstiegsrechnung`
 #                          bereits fertig.
+# ⚠️⚠️ `halten` IST EINE MESSLAGE, KEINE HANDLUNG (19.09.2026, V3a,
+# Nutzerentscheidung a).
+#
+# WARUM ES HIER STEHEN MUSS: `messnorm.Lage` laesst nur ERKLAERTE Paare zu -
+# ohne diesen Eintrag ist die Haltefrage nicht MESSBAR. Genau daran ist
+# 2.220-haltefrage seit dem 24.08. haengengeblieben: *"alle Beitraege sind
+# fuer die Lage spot x einstieg gemessen; ob sie fuer die HALTEFRAGE gelten,
+# ist nie geprueft worden"* - sie konnte es nicht werden.
+#
+# ⚠️⚠️ UND WARUM SIE TROTZDEM NIE EINE ZELLE WIRD. Halten ist der
+# RUHEZUSTAND, nicht eine Handlung. Nutzervorgabe 19.09.: *"halten ist
+# wichtig zum messen, aber es soll keine Handlung, also Empfehlung werden"*
+# - und die Begruendung dahinter ist zwingend:
+#
+#     Gibt es keine Bewertung fuer Einstieg, Nachkauf, Hebel oder
+#     Akkumulation UND keine fuer den Verkauf, dann ist die Folge OHNEHIN
+#     halten. Eine Empfehlung "halten" waere die Mitteilung, dass nichts
+#     passiert.
+#
+# ➔ `assetklassen.zellen()` gibt `halten` deshalb NIE aus - dort ausdruecklich
+# verdrahtet und von einer Pruefung bewacht. Hier steht das Paar allein,
+# damit die MESSUNG eine Lage hat.
 ERLAUBTE_PAARE = {
-    "spot": ("einstieg", "akkumulation"),
+    "spot": ("einstieg", "akkumulation", "halten"),
     "hebel": ("einstieg", "swing"),
     "absicherung": ("einstieg",),
 }
@@ -133,7 +160,10 @@ ERLAUBTE_PAARE = {
 # kein nahes. Die Frage ist, ob es einen einzelnen Zeitpunkt und einen Abbruch
 # gibt. Bei Akkumulation nicht: ein Stop wuerde die Staffelung genau dann
 # aufheben, wenn sie am guenstigsten kauft.
-_MIT_KURSEN = {("spot", "akkumulation"): False}
+_MIT_KURSEN = {("spot", "akkumulation"): False,
+               # ⚠️ Eine Haltefrage hat keinen Einstiegskurs und keinen Stop -
+               # sie fragt nach einer Position, die es schon gibt.
+               ("spot", "halten"): False}
 
 
 class AuftragUngueltig(ValueError):
@@ -225,6 +255,20 @@ _SATZ_STRATEGIE = {
                     "Deshalb gibt es hier keinen einzelnen Einstiegszeitpunkt "
                     "und keinen Stop; beendet wird sie erst, wenn die "
                     "Erwartung selbst nicht mehr traegt.",
+    # ⚠️⚠️ `halten` IST EINE MESSLAGE - DIESER SATZ GEHT NIE AN EIN MODELL
+    # (19.09.2026, V3a). Der Eintrag steht hier, weil `saetze()` sonst mit
+    # KeyError abbricht - der DRITTE Leser der Strategieliste nach
+    # ERLAUBTE_PAARE und STRATEGIEN. Genau davor warnt der Modulkopf mit
+    # "drei Quellen, keine zweite Liste"; heute hat die Suite alle drei
+    # nacheinander gefunden.
+    #
+    # ⚠️ Der Satz ist bewusst eine BESCHREIBUNG, keine Frage: `halten`
+    # erzeugt keine Zelle (`assetklassen.zellen` sperrt es), also wird nie
+    # ein Prompt daraus gebaut. Stuende hier eine Frage, waere sie eine
+    # Einladung, es doch zu tun.
+    "halten": "MESSLAGE, keine Handlung: die Frage nach einer Position, die "
+              "bereits besteht. Halten ist der Ruhezustand - wenn weder ein "
+              "Einstieg noch ein Verkauf begruendet ist, wird gehalten.",
 }
 
 

@@ -22586,6 +22586,81 @@ def paket_verkaufsbasislinie() -> None:
            "die Verkaufslogik")
 
 
+def paket_haltelage() -> None:
+    """Ist `halten` eine MESSLAGE - und bleibt es eine? (V3a, 19.09.2026)
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT. `spot x halten` steht in
+    `ERLAUBTE_PAARE`, weil `messnorm.Lage` nur erklaerte Paare zulaesst und
+    die Haltefrage sonst nicht MESSBAR waere (2.220-haltefrage hing seit dem
+    24.08. genau daran). Dieselbe Liste liest aber `assetklassen.zellen()` -
+    ohne Guard entstuenden SOFORT rund 40 zusaetzliche Zellen je Lauf, jede
+    mit demselben Prompt wie der Einstieg (2.471).
+
+    ⚠️ UND DER GRUND IST NICHT NUR TECHNISCH. Nutzervorgabe 19.09.: *"halten
+    ist wichtig zum messen, aber es soll keine Handlung, also Empfehlung
+    werden."* Halten ist der RUHEZUSTAND: gibt es keine Bewertung fuer
+    Einstieg, Nachkauf, Hebel oder Akkumulation UND keine fuer den Verkauf,
+    wird ohnehin gehalten. Eine Empfehlung "halten" waere die Mitteilung,
+    dass nichts passiert.
+    """
+    P = "Haltelage"
+    import io as _io
+    import messnorm as _N
+    from agent import assetklassen as _AK
+    from agent import handelsauftrag as _HA
+
+    # ---- 1) Die Lage ist erklaert ----------------------------------------
+    try:
+        _lage = _N.Lage("spot", "halten")
+        _geht = True
+    except ValueError:
+        _lage, _geht = None, False
+    pruefe(P, "⚠️ `spot x halten` ist als MESSLAGE erklaert",
+           _geht and "halten" in _HA.ERLAUBTE_PAARE["spot"],
+           "ohne sie weist `messnorm.Lage` jede Messung der Haltefrage "
+           "zurueck - genau daran hing 2.220-haltefrage")
+
+    # ---- 2) ...und wird trotzdem NIE eine Zelle --------------------------
+    #
+    # ⚠️ AM VERHALTEN GEPRUEFT, nicht am Quelltext: was zaehlt, ist die
+    # Liste, die `zellen()` zurueckgibt.
+    class _W:
+        def __init__(self, sym):
+            self.symbol = sym
+            self.assetklasse = "krypto"
+            self.asset_type = "krypto"
+
+    _zellen = _AK.zellen([_W("BTC"), _W("ETH"), _W("LINK")], None)
+    _strat = sorted({z["strategie"] for z in _zellen})
+    pruefe(P, "⚠️⚠️ `halten` erzeugt KEINE Zelle - es ist keine Handlung",
+           "halten" not in _strat and _zellen,
+           "Halten ist der Ruhezustand; eine Empfehlung dazu waere die "
+           "Mitteilung, dass nichts passiert. Gemessen: %s" % _strat)
+    pruefe(P, "und die anderen Strategien bleiben unveraendert Zellen",
+           "einstieg" in _strat and "akkumulation" in _strat,
+           "der Guard darf nur `halten` treffen - gemessen: %s" % _strat)
+
+    # ---- 3) Eine Haltefrage hat keinen Einstiegskurs ---------------------
+    pruefe(P, "`mit_kursen` ist fuer die Haltefrage FALSCH",
+           _HA.mit_kursen("spot", "halten") is False
+           and _HA.mit_kursen("spot", "einstieg") is True,
+           "sie fragt nach einer Position, die es schon gibt - Einstieg und "
+           "Stop waeren erfunden")
+
+    # ---- 4) Der Grund steht im Code, nicht nur im Chat -------------------
+    # ⚠️ AUF DIE BEGRUENDUNG PRUEFEN, NICHT AUF DIE IF-ZEILE. Die erste
+    # Fassung suchte `if strategie == "halten":` - damit riss jede Mutation
+    # am Guard auch diese Pruefung mit, und sie sagte nichts Eigenes mehr.
+    # Bewacht werden soll, dass der GRUND dasteht; er ist das, was beim
+    # naechsten Aufraeumen fehlt. ⚠️ Deshalb der ROHE Quelltext -
+    # `_quelltext` entfernt Kommentarzeilen, und genau die sind gemeint.
+    _roh = _io.open("agent/assetklassen.py", encoding="utf-8").read()
+    pruefe(P, "⚠️ der Guard traegt seine Begruendung im Code",
+           "Halten ist der RUHEZUSTAND" in _roh,
+           "ein Guard ohne Begruendung wird beim naechsten Aufraeumen "
+           "entfernt - und dann entstehen 40 Zellen je Lauf")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27335,6 +27410,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Anlassschwelle": paket_anlassschwelle,
           "Verkaufskennzeichnung": paket_verkaufskennzeichnung,
           "Verkaufsbasislinie": paket_verkaufsbasislinie,
+          "Haltelage": paket_haltelage,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

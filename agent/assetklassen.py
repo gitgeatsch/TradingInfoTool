@@ -241,6 +241,24 @@ def zellen(watchlist=None, conn=None, *,
                 if instrument == "hebel" and sym not in hebel_erlaubt:
                     continue
                 for strategie in HA.ERLAUBTE_PAARE.get(instrument, ()):
+                    # ⚠️⚠️ `halten` IST KEINE ZELLE (19.09.2026, V3a).
+                    #
+                    # Das Paar `spot x halten` steht in `ERLAUBTE_PAARE`, weil
+                    # `messnorm.Lage` nur erklaerte Paare zulaesst und die
+                    # Haltefrage sonst nicht MESSBAR waere. Eine Zelle daraus
+                    # zu machen waere das Gegenteil dessen, was gemeint ist:
+                    #
+                    #   Halten ist der RUHEZUSTAND. Wenn weder ein Einstieg
+                    #   noch ein Verkauf begruendet ist, wird gehalten - ganz
+                    #   ohne Frage, ohne Modellaufruf und ohne Mail. Eine
+                    #   Empfehlung "halten" waere die Mitteilung, dass nichts
+                    #   passiert.
+                    #
+                    # ⚠️ OHNE DIESE ZEILE entstuenden mit dem Eintrag oben
+                    # SOFORT rund 40 zusaetzliche Zellen je Lauf, jede mit
+                    # demselben Prompt wie der Einstieg (2.471).
+                    if strategie == "halten":
+                        continue
                     if strategie == "akkumulation" and sym not in dca_erlaubt:
                         # ⚠️ 18.09.2026 (Schritt 59 Phase 1, Paket 1.6,
                         # Nutzerentscheidung B5): die Sperre ist bekannt, ihre
