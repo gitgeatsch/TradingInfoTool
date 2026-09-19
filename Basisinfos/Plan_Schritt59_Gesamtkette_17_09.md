@@ -517,6 +517,73 @@ zählen), Multiasset-Schiene. Sie bleiben im Plan, aber hinter M1.
 
 ---
 
+## 12 Paket V — die Verkaufsseite (19.09.2026)
+
+**Auslöser:** Nutzerfrage *„fachlich macht es kaum Sinn, über den Takt Verkaufsmails
+zu erzeugen und dann eine Empfehlung für den Nachkauf"* → Befunde
+**2.467-verkauf-blockiert** und **2.467-nur-eine-lage**.
+
+### Die Diagnose
+
+Verkauf und Einstieg sind an **drei** Stellen gekoppelt: dieselbe **Zelle**
+(`strategie=einstieg`), derselbe **Modellaufruf** (Rolle BC liefert beide
+Richtungen), dieselbe **Bremse** (Wiederholungssperre). Belegt:
+
+| | |
+|---|---|
+| keine eigene Frage | 126 REDUZIEREN + 47 VERKAUFEN seit 11.09., **alle** unter `strategie=einstieg` |
+| drei Filter umgangen | nach `_sende_ausstieg(...)` steht ein blankes `return` ([rollen_lauf.py:1992](../agent/rollen_lauf.py)) — `geometrie`, `risikoschicht`, `entscheider` werden nie erreicht |
+| Widerspruch real | **23 von 260 Symbol-Tagen (8,8 %)** tragen NACHKAUFEN *und* REDUZIEREN |
+| keine Güte | 2.392: von 517 Ausstiegen 409 auf `nicht_anwendbar`, der Rest mit **Einstiegs**-Kategorien |
+
+⚠️ **Die Folge:** die Wiederholungssperre ist heute — ungewollt — die **einzige
+Bremse der ungemessenen Seite**. Ihre Lockerung (S3) würde den Teil ohne
+Bewertung überproportional verstärken. **S3 ist deshalb zurückgestellt**, die
+Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
+
+### Die vier Blöcke — keiner wartet auf den anderen
+
+| Block | Inhalt | wartet auf | Wirkung |
+|---|---|---|---|
+| **V0** | Verkaufsausgang von **Empfehlung** auf **Information** herabstufen (Mailinfo-Block, gekennzeichnet, keine Zeile verschwindet) | nichts | ⚠️ **löst den Blocker** — der Widerspruch verschwindet, S3 wird wieder möglich |
+| **V1** | eigene Zelle `strategie = halten` für Bestände | nichts (S1 liegt vor: Uhr je Zelle, 2.462-uhr-getrennt) | die Verkaufsfrage entsteht eigenständig statt als Nebenprodukt |
+| **V2** | **Basislinie messen** aus `ausstieg_verfolgung` (H5/H20, richtungsbereinigt) | ein Lauf des `ausstiegs_job` (täglich 7:15) | erste Zahl darüber, ob ein Verkauf richtig war |
+| **V3** | Bewertung bauen: **V3a** gelten die Beiträge für die Haltefrage (2.220-haltefrage)? · **V3b** Potential/Schwelle/Deckel für den Ausstieg, der `return` fällt | V2 | die Verkaufsseite wird gebremst wie die Kaufseite |
+
+### Datenlage für V2 — sie liegt bereits vor
+
+| | |
+|---|---|
+| Ausstiege gesamt | **668** (14.08.–18.09.) |
+| davon mit vollem **H20** | **261** (28 Symbole) |
+| davon mit vollem **H5** | **519** (36 Symbole) |
+| Werkzeug | ✔ `agent/ausstieg_verfolgung.py`, verdrahtet in [background.py:872](../scheduler/background.py) (`ausstiegs_job`, 7:15) |
+| Werte bisher | ⚠️ **keine** — der Export vom 19.09. 07:55 trägt ein DB-Fenster bis 05:51, also **vor** dem Job |
+
+⚠️ **Was V2 leisten kann und was nicht:** 261 Anker über 34 Tage ergeben unter der
+Tagesklammer rund 15 Tage — das trägt einen **Hinweis und eine Basislinie**, kein
+Normurteil. Und gemessen wird damit, ob **das Modell** richtig lag, nicht ob eine
+Bewertung trägt. Genau das ist der Arm „heutige Rolle" des gepaarten Versuchs.
+
+### Verhältnis zu M1
+
+M1 ist der **Krypto-Einstieg**; der Ausstieg ist ausdrücklich **nicht** enthalten.
+**V0 und V1 sind Voraussetzung dafür, dass M1 weiterläuft** (ohne sie sabotiert die
+ungemessene Seite jede Freigabe). **V2 läuft parallel.** **V3 folgt nach M1.**
+
+### Der Preis, der zu benennen ist
+
+Zwischen V0 und V3 gibt es **keine Verkaufsempfehlung** mehr — nur Information mit
+allen Zahlen (Kurs, P&L, Modelltext), ohne Handlungsanspruch. Verkaufsentscheidungen
+trifft der Nutzer in dieser Zeit selbst. Das folgt aus seiner eigenen Einschätzung
+vom 19.09.: *„Die Verkaufsseite ist heute unbrauchbar."*
+
+### Wovon abgeraten wird
+
+- **Verkaufsseite ganz abschalten** → das Messmaterial versiegt, V2 und V3 werden unmöglich.
+- **Sperre trotzdem jetzt lockern** → verstärkt die ungemessene Seite, solange V0 fehlt.
+- **Verkaufsbewertung auf die Einstiegsbeiträge stellen, ohne V3a** → dieselbe ungeprüfte Annahme, die am 19.09. bei der Auswahl-Nachbildung durchgefallen ist.
+
 ## 8 Entscheidungen für den Nutzer
 
 **Nutzerentscheidung 17.09.: N1 bis N10 wie empfohlen.** Nachträglich angepasst durch § 1a: **N4** – Nicht-Krypto nicht als eigener D-Schritt, sondern als Multiasset-Schiene im Block SPÄTER nach Abschluss Krypto (folgt dem Nutzervorschlag 17.09.; bei Abstimmung bestätigen). **N11 neu offen.**
