@@ -546,9 +546,9 @@ Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
 | Block | Inhalt | wartet auf | Wirkung |
 |---|---|---|---|
 | **V0** | Verkaufsausgang von **Empfehlung** auf **Information** herabstufen | — | ✔ **GEBAUT 19.09.** (2.469-v0-gebaut): Kopfzeile und Betreff gekennzeichnet, Überschrift „WAS ZU TUN IST“ → „WAS DAS MODELL VORSCHLÄGT“; **keine Zeile verschwindet**. ⚠️ Geführt als **bekannter Betriebsfehler** nach Muster 16.09., **nicht** als Vorgriff auf Schritt 60 (Nutzerentscheidung 19.09.: „B + Fehlerkorrektur“) |
-| **V1** | eigene Zelle `strategie = halten` für Bestände | nichts (S1 liegt vor: Uhr je Zelle, 2.462-uhr-getrennt) | die Verkaufsfrage entsteht eigenständig statt als Nebenprodukt |
+| **V1** | eigene Zelle `strategie = halten` **und** die dazugehörige Frage | V2b und V3a | ⛔ **ZURÜCKGESTELLT 19.09.** (2.471-zelle-ist-keine-frage): der Prompt kennt die Strategie praktisch nicht — eine eigene Zelle allein wäre eine **Verdopplung der Aufrufe mit identischer Frage**. Zelle und Frage gehören zusammen, und die Frage steht erst nach V2b/V3a fest |
 | **V2** | **Basislinie messen** | — | ✔ **GEMESSEN 19.09.** (2.470-verkauf-basislinie): H5 **−0,2518 R**, Band [−0,4120 .. −0,0072] — **die Null ist ausgeschlossen**, der Kurs steigt nach den Ausstiegen. ⚠️ Nach **Schwäche** verkauft: −0,3813 R (entzerrt −0,3872); nach **Anstieg**: unauffällig. H20 ohne Band |
-| **V2b** | ⏳ **Methodik-Recherche VOR V3** (Nutzerfrage 19.09.): wie misst man üblicherweise, ob ein Ausstieg gut war — Folgebewegung, Opportunitätskosten, Exit-Effizienz gegen das spätere Hoch? **Methodisches** Wissen, keine Marktbehauptung. Soll verhindern, dass wir eine Kennzahl erfinden, die anderswo als irreführend bekannt ist (Beispiel aus dem eigenen Bestand: MFE ist kein Erfolgsmaß bei variablem Stop) | V2 | die Zielgröße von V3 steht erst danach fest |
+| **V2b** | ✔ **ERLEDIGT 19.09.** (2.472-methodik-ausstieg): maßgeblich ist *Selling Fast and Buying Slow* (Journal of Finance 2023) — Käufe schlagen den Kontrafaktor um >120 bp/Jahr, **Verkäufe unterliegen einer zufälligen Verkaufsstrategie um 70–150 bp/Jahr**. ⚠️ **Der Kontrafaktor ist die alternative VERKAUFSENTSCHEIDUNG** (behalten minus verkauft), nicht der alternative Zeitpunkt — das korrigiert unsere Nullwelt aus V2. ⚠️ Exit-Effizienz (Ergebnis ÷ MFE) wird **nicht** Zielgröße — aber aus eigenen Gründen: sie misst die **Haltedauer**, nicht die Verkaufsentscheidung, und ist entartet, wo es keine günstige Auslenkung gab. Die bekannte MFE-Falle („kein Erfolgsmaß bei variablem Stop“) betrifft den **Einstieg** und überträgt sich **nicht** eins zu eins — beim stoplosen Spot-Ausstieg gibt es kein R | — | ➔ **Zielgröße für V3 steht: verkauft gegen behalten, gleicher Horizont** |
 | **V3** | Bewertung bauen: **V3a** gelten die Beiträge für die Haltefrage (2.220-haltefrage)? · **V3b** Potential/Schwelle/Deckel für den Ausstieg, der `return` fällt | V2 | die Verkaufsseite wird gebremst wie die Kaufseite |
 
 ### Datenlage für V2 — sie liegt bereits vor
@@ -582,6 +582,31 @@ Bewertung trägt. Genau das ist der Arm „heutige Rolle" des gepaarten Versuchs
 M1 ist der **Krypto-Einstieg**; der Ausstieg ist ausdrücklich **nicht** enthalten.
 **V0 und V1 sind Voraussetzung dafür, dass M1 weiterläuft** (ohne sie sabotiert die
 ungemessene Seite jede Freigabe). **V2 läuft parallel.** **V3 folgt nach M1.**
+
+### ⚠️ Nutzervorgabe 19.09. — die Verkaufsfrage muss fachlich sauber sein
+
+> *„Diese müssen sauber fachlich aufgesetzt sein. Sollte eine Frage, z. B.
+> Absicherung, nicht ausreichend bewertbar sein, müssen wir eine Lösung
+> suchen. Im schlimmsten Fall gibt es keine Ausstiegsbewertung — aber wenn
+> das System die Verkaufsseite nicht leistet, dann müssen wir damit
+> umgehen."*
+
+⚠️ Damit ist **kein Ergebnis vorweggenommen**: keine Ausstiegsbewertung ist ein
+zulässiges Ergebnis, nicht ein Scheitern. Die Verkaufsseite bliebe dann
+dauerhaft **Information** (V0 ist gebaut), die Entscheidung beim Nutzer.
+
+**Drei mögliche Bauformen, vom Nutzer benannt (19.09.) — offen:**
+
+| # | Form | |
+|---|---|---|
+| 1 | nur **deterministischer** Ausstieg/Reduktion | |
+| 2 | **deterministisch mit LLM** und Rollen | |
+| 3 | nur **LLM-Rollen** mit eigener, fachlich korrekter Frage | |
+
+⚠️ Die Frage ist **nicht global** zu beantworten, sondern **je
+Verkaufsfall** (siehe die vier Fälle in V2) — Fall 1 (es gibt
+Besseres) steht auf einer gemessenen Grundlage, Fall 4
+(Absicherung) auf keiner.
 
 ### Der Preis, der zu benennen ist
 
