@@ -22706,6 +22706,102 @@ def paket_haltelage() -> None:
            "entfernt - und dann entstehen 40 Zellen je Lauf")
 
 
+def paket_verkaufsregel() -> None:
+    """Misst `phase3_verkaufsregel.py` BEHALTEN MINUS VERKAUFT? (V3b-1)
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Die Zielgroesse ist neu und sie ist die
+    entscheidende Weiche: nicht die Bewegung NACH dem Verkauf (das war V2,
+    2.470), sondern der Vergleich mit der ALTERNATIVE - Rendite der
+    behaltenen minus Rendite der verkauften Werte (2.472, Journal of
+    Finance 2023). Ein gedrehtes Vorzeichen macht hier aus jedem schlechten
+    Verkauf einen guten.
+    """
+    P = "Verkaufsregel"
+    import numpy as _np
+
+    import phase3_verkaufsregel as _VR
+
+    # ---- Eine Kunstwelt mit bekannter Wahrheit ---------------------------
+    #
+    # Zehn Werte, Kennzahl 0..9. Das oberste Fuenftel (Rang >= 0,80) sind
+    # die zwei hoechsten - und genau die bekommen das schlechte Ergebnis.
+    # Wer sie verkauft, hat recht: behalten minus verkauft muss POSITIV sein.
+    def _welt(schlecht_oben=True, n_tage=40):
+        aus = {}
+        for t in range(n_tage):
+            zeilen = []
+            for i in range(10):
+                erg = (-1.0 if (i >= 8) == schlecht_oben else +1.0)
+                zeilen.append({"sym": "S%d" % i, "kennzahl": float(i),
+                               "in_r": erg})
+            aus["2023-%02d-%02d" % (t // 28 + 1, t % 28 + 1)] = zeilen
+        return aus
+
+    menge = {t: {"S%d" % i for i in range(10)} for t in _welt()}
+
+    gut = _VR.regel(_welt(True), menge)
+    schlecht = _VR.regel(_welt(False), menge)
+    pruefe(P, "⚠️⚠️ behalten minus verkauft - das Vorzeichen stimmt",
+           all(v > 0 for v in gut.values())
+           and all(v < 0 for v in schlecht.values()),
+           "sind die Verkauften die schlechteren, war der Verkauf richtig "
+           "und der Wert POSITIV. Gemessen: %s / %s"
+           % (sorted(set(gut.values()))[:2], sorted(set(schlecht.values()))[:2]))
+
+    # ---- Die Nullwelt verkauft gleich viele, aber andere -----------------
+    n_echt = _VR.regel(_welt(True), menge)
+    n_null = _VR.regel(_welt(True), menge,
+                       rng=_np.random.default_rng(1))
+    pruefe(P, "⚠️ die Nullwelt verkauft ZUFAELLIG, nicht nach der Kennzahl",
+           n_null and abs(_np.mean(list(n_null.values()))) <
+           abs(_np.mean(list(n_echt.values()))),
+           "sonst misst der Vergleich, DASS verkauft wurde, nicht WONACH - "
+           "echt %.3f gegen null %.3f"
+           % (_np.mean(list(n_echt.values())), _np.mean(list(n_null.values()))))
+
+    # ---- Die Positivkontrolle verschiebt um genau die Staerke ------------
+    #
+    # ⚠️ NACHGESCHAERFT AM 19.09.2026 DURCH DIE GEGENPRUEFUNG. Die erste
+    # Fassung hiess "pflanzt in die VERKAUFTEN" - und keine Mutation konnte
+    # sie zu Fall bringen. Der Grund ist Arithmetik: die Zielgroesse ist eine
+    # DIFFERENZ, also verschiebt -p in die Verkauften sie um genau so viel
+    # wie +p in die Behaltenen. Die Prueferei behauptete etwas, das sie gar
+    # nicht pruefen konnte. Was WIRKLICH schiefgehen kann, ist zweierlei:
+    # in ALLE pflanzen (die Differenz bleibt 0, die Trennschaerfe findet nie
+    # etwas und jeder Nullbefund waere ein Artefakt), oder in die falsche
+    # RICHTUNG pflanzen (dann macht die Kontrolle den Verkauf schlechter,
+    # statt ihn zu bestaetigen). Genau das steht jetzt hier.
+    ohne = _np.mean(list(_VR.regel(_welt(True), menge).values()))
+    mit = _np.mean(list(_VR.regel(_welt(True), menge, pflanze=0.5).values()))
+    pruefe(P, "⚠️ die Positivkontrolle verschiebt um GENAU die Staerke, "
+           "mit dem richtigen Vorzeichen",
+           abs((mit - ohne) - 0.5) < 1e-9,
+           "in ALLE gepflanzt hebt sich weg (0,0), falsch herum gepflanzt "
+           "dreht das Vorzeichen - gemessen %+.4f statt %+.4f"
+           % (mit - ohne, 0.5))
+
+    # ---- Die Menge begrenzt den Rang -------------------------------------
+    #
+    # ⚠️ Wer innerhalb der Haltemenge verkauft, vergleicht mit dem, was er
+    # HAELT - nicht mit dem ganzen Markt. Eine Verengung auf die Haelfte
+    # muss deshalb ein anderes Ergebnis liefern.
+    halb = {t: {"S%d" % i for i in range(6)} for t in _welt()}
+    e_halb = _VR.regel(_welt(True), halb)
+    pruefe(P, "⚠️ der Rang wird INNERHALB der Menge gebildet",
+           e_halb and _np.mean(list(e_halb.values())) != ohne,
+           "sonst waere die Haltemenge nur ein Filter und kein Bezug")
+
+    # ---- Das Urteil folgt der Norm ---------------------------------------
+    quelle = _quelltext("phase3_verkaufsregel.py")
+    pruefe(P, "⚠️ das Urteil prueft ERST das Band, DANN die Trennschaerfe",
+           quelle.index("elif b[1] > oben:") < quelle.index("abs(wirkung) <"),
+           "die erste Fassung schrieb ,TRAEGT NICHT bis 0,02 R` bei einer "
+           "Wirkung von +0,1382 - das ist der Fall NICHT TRENNBAR")
+    pruefe(P, "⚠️ und die obere Nullgrenze steht in der Ausgabe",
+           "(oben %+.4f)" in quelle,
+           "ohne sie ist das Urteil nicht nachpruefbar")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27456,6 +27552,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Verkaufskennzeichnung": paket_verkaufskennzeichnung,
           "Verkaufsbasislinie": paket_verkaufsbasislinie,
           "Haltelage": paket_haltelage,
+          "Verkaufsregel": paket_verkaufsregel,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
