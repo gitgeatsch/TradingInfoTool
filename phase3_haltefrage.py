@@ -90,6 +90,34 @@ def haltemenge(mom: dict) -> dict:
     return aus
 
 
+def geteilt(mom: dict, halte: dict) -> tuple:
+    """Die Haltemenge in zwei Teile - das ist die entscheidende Frage.
+
+    ⚠️⚠️ WARUM (offene Frage aus 2.473-haltefrage-gemessen): die
+    Haltemenge ueberlappt mit der Einstiegsauswahl. Traegt ein Beitrag
+    nur auf dem ueberlappenden Teil, hat man die EINSTIEGSFRAGE
+    gemessen und sie Haltefrage genannt.
+
+        NOCH IN DER AUSWAHL   heute unter den obersten 20 % - hier ist
+                              die Frage dieselbe wie beim Einstieg
+        NICHT MEHR DRIN       gehalten, aber heute nicht mehr
+                              kaufenswert - DAS ist die eigentliche
+                              Haltefrage: halten oder verkaufen?
+
+    Nur der zweite Teil beantwortet sie eigenstaendig."""
+    drin, raus = {}, {}
+    for tag, menge in halte.items():
+        werte = mom.get(tag) or {}
+        if len(werte) < 5:
+            continue
+        k = max(1, int(round(len(werte) * ANTEIL_KAUF)))
+        heute = {x for x, _ in sorted(werte.items(),
+                                      key=lambda y: -y[1])[:k]}
+        drin[tag] = menge & heute
+        raus[tag] = menge - heute
+    return drin, raus
+
+
 def main() -> int:
     t0 = time.time()
     nur_arten = sys.argv[1:] or ["funding", "turnover", "oi_aenderung"]
@@ -135,6 +163,31 @@ def main() -> int:
             print("   Urteil (HALTEN): %s" % b.urteil)
         print("   ⚠️ %s" % VORBEHALT)
         print("   (%.0f s)" % (time.time() - t1))
+    # ---- DIE ENTSCHEIDENDE ZERLEGUNG -------------------------------
+    drin, raus = geteilt(mom, halte)
+    n_drin = float(np.mean([len(v) for v in drin.values() if v]))
+    n_raus = float(np.mean([len(v) for v in raus.values() if v]))
+    print(chr(10) + "=" * 100)
+    print("  MISST DIE HALTEMENGE ETWAS ANDERES ALS DIE EINSTIEGSAUSWAHL?")
+    print("  Haltemenge %.0f je Tag · davon heute noch in der Auswahl %.0f · nicht mehr %.0f"
+          % (float(np.mean(groessen)), n_drin, n_raus))
+    print("  ⚠️ Nur der zweite Teil ist die eigentliche Haltefrage.")
+    for art in nur_arten:
+        je_tag = R._ab(R.K.baue(reihen, art, R._zusatz(art),
+                                horizont=R.HORIZONT), AB_2023)
+        for name, menge in (("noch in der Auswahl", drin),
+                            ("NICHT MEHR in der Auswahl", raus)):
+            try:
+                bt = MA.pruefe_auswahl(
+                    art, je_tag, mom, lage=LAGE, menge="frei",
+                    rng=np.random.default_rng(messnorm.SAAT),
+                    horizont=R.HORIZONT, nur=menge,
+                    zielgroesse="bewegung_r")
+            except ValueError as x:
+                print("     %-13s %-27s ⚠️ %s" % (art, name, x))
+                continue
+            print("     %-13s %-27s %s" % (art, name, bt.zeile()[38:]))
+
 
     print("\n" + "=" * 100)
     print("  LESEART: ein Beitrag ,traegt` hier, wenn sein oberstes Fuenftel")

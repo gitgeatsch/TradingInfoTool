@@ -22647,6 +22647,26 @@ def paket_haltelage() -> None:
            "sie fragt nach einer Position, die es schon gibt - Einstieg und "
            "Stop waeren erfunden")
 
+    # ---- 3b) Die Zerlegung der Haltemenge --------------------------------
+    #
+    # ⚠️ SIE ENTSCHEIDET, OB DIE HALTEFRAGE EIGENSTAENDIG IST: traegt ein
+    # Beitrag nur auf dem Teil, der heute noch in der Auswahl steht, hat man
+    # die Einstiegsfrage gemessen und sie Haltefrage genannt.
+    import phase3_haltefrage as _HF
+    _mom = {"t1": {"A": 9.0, "B": 8.0, "C": 7.0, "D": 6.0, "E": 5.0,
+                   "F": 4.0, "G": 3.0, "H": 2.0, "I": 1.0, "J": 0.5}}
+    _halte = {"t1": {"A", "B", "E", "F", "J"}}
+    _drin, _raus = _HF.geteilt(_mom, _halte)
+    pruefe(P, "⚠️ die Zerlegung ist vollstaendig und ueberschneidungsfrei",
+           _drin["t1"] | _raus["t1"] == _halte["t1"]
+           and not (_drin["t1"] & _raus["t1"]),
+           "sonst zaehlt ein Wert doppelt oder faellt heraus - gemessen "
+           "drin %s / raus %s" % (sorted(_drin["t1"]), sorted(_raus["t1"])))
+    pruefe(P, "und sie trennt nach der HEUTIGEN Auswahl",
+           _drin["t1"] == {"A", "B"} and _raus["t1"] == {"E", "F", "J"},
+           "bei 10 Werten sind die obersten 20 %% A und B - gemessen "
+           "drin %s" % sorted(_drin["t1"]))
+
     # ---- 4) Der Grund steht im Code, nicht nur im Chat -------------------
     # ⚠️ AUF DIE BEGRUENDUNG PRUEFEN, NICHT AUF DIE IF-ZEILE. Die erste
     # Fassung suchte `if strategie == "halten":` - damit riss jede Mutation
