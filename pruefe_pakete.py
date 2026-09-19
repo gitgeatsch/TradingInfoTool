@@ -23089,6 +23089,162 @@ def paket_auswahlstufe() -> None:
            % (list(_ST.HAUPT), _ST.NEBEN_HORIZONT))
 
 
+def paket_entscheiderstufe() -> None:
+    """Misst `phase3_entscheider.py` WAS TRAEGT DIE STUFE `entscheider`?
+
+    ⚠️ DIE GEFAEHRLICHSTE STELLE IST NICHT DIE RECHNUNG, SONDERN DIE
+    NULLWELT. `traegt_hier` setzt `bewertbar` voraus, und bewertbar ist
+    nur, wer an einer Terminboerse gelistet ist. Eine Nullwelt aus ALLEN
+    Erreichenden misst deshalb zwei Dinge auf einmal - die Bewertung und
+    die Datenlage. Gemessen: der Datenlagenanteil betraegt +0,0461 R von
+    +0,2137 R roh.
+    """
+    P = "Entscheiderstufe"
+    import numpy as _np
+
+    import phase3_entscheider as _EN
+
+    # ---- Eine Kunstwelt mit bekannter Wahrheit ---------------------------
+    #
+    # 20 Anker je Tag; die Durchgelassenen sind die guten. `masken` wird
+    # NICHT nachgebaut - die Kunstwelt setzt die Masken direkt.
+    def _mk(gut_durch=True, n_tage=200, bewertbar_teil=20):
+        aus = {}
+        for t in range(n_tage):
+            y = _np.array([+1.0 if i >= 16 else -1.0 for i in range(20)],
+                          float)
+            if not gut_durch:
+                y = -y
+            m = _np.ones(20, bool)
+            durch = _np.zeros(20, bool)
+            durch[16:] = True
+            bew = _np.zeros(20, bool)
+            bew[:bewertbar_teil] = True
+            bew[16:] = True          # die Durchgelassenen sind immer bewertbar
+            aus["2023-%02d-%02d" % (t // 28 + 1, t % 28 + 1)] = (y, m, durch,
+                                                                 bew)
+        return aus
+
+    gut = _EN.wirkung(_mk(True))
+    schlecht = _EN.wirkung(_mk(False))
+    pruefe(P, "⚠️⚠️ durchgelassen minus erreichend - das Vorzeichen stimmt",
+           gut and all(v > 0 for v in gut.values())
+           and schlecht and all(v < 0 for v in schlecht.values()),
+           "sind die Durchgelassenen die besseren, traegt die Stufe und der "
+           "Wert ist POSITIV. Gemessen: %s / %s"
+           % (sorted(set(gut.values()))[:2],
+              sorted(set(schlecht.values()))[:2]))
+
+    # ---- Die Nullwelt laesst gleich viele durch --------------------------
+    null = _EN.wirkung(_mk(True), rng=_np.random.default_rng(1))
+    pruefe(P, "⚠️ die Nullwelt laesst ZUFAELLIG durch, nicht nach Bewertung",
+           null and abs(_np.mean(list(null.values())))
+           < abs(_np.mean(list(gut.values()))),
+           "sonst misst der Vergleich, DASS gefiltert wurde, nicht WONACH - "
+           "echt %.3f gegen null %.3f"
+           % (_np.mean(list(gut.values())), _np.mean(list(null.values()))))
+
+    # ---- ⚠️⚠️ DIE DATENLAGEN-KONTROLLE ----------------------------------
+    #
+    # Nur 8 der 20 sind bewertbar (plus die 4 Durchgelassenen). Eine
+    # Nullwelt aus den Bewertbaren muss ein ANDERES Ergebnis liefern als
+    # eine aus allen - sonst ist die Kontrolle wirkungslos.
+    mkw = _mk(True, bewertbar_teil=8)
+    n_alle = _EN.wirkung(mkw, rng=_np.random.default_rng(3))
+    n_bew = _EN.wirkung(mkw, rng=_np.random.default_rng(3),
+                        aus_bewertbaren=True)
+    pruefe(P, "⚠️⚠️ die Nullwelt kann NUR aus den Bewertbaren ziehen",
+           n_alle and n_bew and _np.mean(list(n_bew.values()))
+           != _np.mean(list(n_alle.values())),
+           "ohne diese Kontrolle misst der Befund die DATENLAGE mit - wer "
+           "ein Merkmal hat, ist an einer Terminboerse gelistet, und das "
+           "ist kein Beitrag (alle %.3f gegen bewertbar %.3f)"
+           % (_np.mean(list(n_alle.values())),
+              _np.mean(list(n_bew.values()))))
+
+    # ---- Die Positivkontrolle pflanzt in die Durchgelassenen -------------
+    o = _np.mean(list(_EN.wirkung(_mk(True)).values()))
+    m1 = _np.mean(list(_EN.wirkung(_mk(True), pflanze=0.5).values()))
+    m2 = _np.mean(list(_EN.wirkung(_mk(True), pflanze=1.0).values()))
+    pruefe(P, "⚠️ die Positivkontrolle hebt die Stufe, und zwar monoton",
+           m1 > o and m2 > m1,
+           "sie muss die DURCHGELASSENEN besser machen (0,0 -> %.3f, "
+           "0,5 -> %.3f, 1,0 -> %.3f)" % (o, m1, m2))
+
+    # ---- Die Besetzung nennt auch die Bewertbaren ------------------------
+    tage, md, me, mn, mb = _EN.besetzung(_mk(True, bewertbar_teil=8))
+    pruefe(P, "⚠️ die Besetzung weist die BEWERTBAREN eigens aus",
+           tage > 0 and md < mb < me,
+           "ohne sie ist der Datenlagenanteil nicht lesbar - durchgelassen "
+           "%.1f, bewertbar %.1f, erreichend %.1f" % (md, mb, me))
+
+    # ---- ⚠️⚠️ `masken` SELBST - die Pruefung lief bisher daran vorbei ----
+    #
+    # Die Kunstwelten oben setzen die Masken direkt; `masken()` wurde nie
+    # aufgerufen, und eine Mutation DARIN blieb unsichtbar (Gegenpruefung
+    # 19.09.). Hier laeuft sie mit der echten `potential.rechne`.
+    _n, _t = 60, 20          # 20 %% von 60 sind 12 - genau MIND_ANKER
+    _je, _mom, _ft = {}, {}, {}
+    for _i in range(_t):
+        _tag = "2023-%02d-%02d" % (_i // 28 + 1, _i % 28 + 1)
+        _je[_tag] = [{"sym": "S%02d" % k, "kennzahl": float(k),
+                      "in_r": float(k % 3) - 1.0} for k in range(_n)]
+        _mom[_tag] = {"S%02d" % k: float(k) for k in range(_n)}
+        # ⚠️ Nur die obersten 20 bekommen Merkmale - die uebrigen sind
+        # NICHT bewertbar, genau wie Coins ohne Terminmarkt.
+        _ft[_tag] = {"S%02d" % k: {"funding_fuenftel": k % 5}
+                     for k in range(_n - 20, _n)}
+    _mk = _EN.masken(_je, _mom, _ft, 2.0)
+    _ok_teil = all((d & ~b).sum() == 0 for _y, _m, d, b in _mk.values())
+    _ok_echt = any(b.sum() > d.sum() for _y, _m, d, b in _mk.values())
+    pruefe(P, "⚠️⚠️ `masken` fuehrt `bewertbar` WEITER als `durchgelassen`",
+           _mk and _ok_teil and _ok_echt,
+           "wer `bewertbar` erst im Durchlasszweig setzt, macht beide "
+           "Mengen gleich - und der Datenlagenanteil misst dann null "
+           "(%d Tage, Teilmenge %s, echt groesser %s)"
+           % (len(_mk), _ok_teil, _ok_echt))
+    pruefe(P, "⚠️ und wer kein Merkmal hat, ist NICHT bewertbar",
+           _mk and all(not b[:_n - 20].any() for _y, _m, _d, b in _mk.values()),
+           "sonst zaehlt ein Wert ohne jede Datengrundlage als bewertet - "
+           "das waere eine Sperre nach Datenlage mit umgekehrtem Vorzeichen")
+
+    # ---- ⚠️ DER STOPABSTAND FAELLT WIRKLICH HERAUS -----------------------
+    #
+    # Der Docstring behauptet es; hier wird es an der ECHTEN Funktion
+    # geprueft. Gebuehrenfrei geht `stop_relativ` nur in `kosten_r` ein.
+    from agent import potential as _PT
+    _a = _PT.rechne(crv=2.0, stop_relativ=0.05, klasse="krypto",
+                    merkmale={"funding_fuenftel": 0})
+    _b = _PT.rechne(crv=2.0, stop_relativ=0.20, klasse="krypto",
+                    merkmale={"funding_fuenftel": 0})
+    pruefe(P, "⚠️⚠️ der Stopabstand faellt gebuehrenfrei heraus",
+           abs(_a.wert_r - _b.wert_r) < 1e-12,
+           "sonst waere er ein zweiter freier Parameter und die Messung "
+           "haengt an zwei kalibrierten Zahlen statt an einer "
+           "(%.6f gegen %.6f)" % (_a.wert_r, _b.wert_r))
+
+    # ---- Aufbau ----------------------------------------------------------
+    quelle = _quelltext("phase3_entscheider.py")
+    pruefe(P, "⚠️ die Betriebsfunktion wird aufgerufen, nicht nachgebaut",
+           "PT.rechne(" in quelle and "p.traegt_hier" in quelle,
+           "`traegt_hier` IST die Betriebsentscheidung; ein Nachbau ist am "
+           "19.09. schon durchgefallen (2.466)")
+    pruefe(P, "⚠️ die Fuenftel kommen aus den echten Rangfunktionen",
+           "MR._rang(" in quelle and "MR._fuenftel(" in quelle,
+           "`marktrang.raenge()` waere ein Netzaufruf und wuerde ueber "
+           "`api_health` in die Datenbank schreiben")
+    pruefe(P, "⚠️⚠️ die CRV-Empfindlichkeit berichtet den SCHLECHTESTEN Wert",
+           len(_EN.CRV_LEITER) >= 5
+           and "(bb[1] - o2) < schlechtester[1]" in quelle,
+           "eine Pruefung auf EINEM Parameterwert ist keine - und wer den "
+           "besten berichtet, hat gesucht statt gemessen (Leiter: %s)"
+           % (list(_EN.CRV_LEITER),))
+    pruefe(P, "die Zielquote stammt aus der Produktion, nicht aus der Luft",
+           abs(_EN.ZIEL_QUOTE - 46.0 / 132.0) < 1e-12,
+           "Sicherung 19.09. 12:09: 46 von 132 Zeilen mit Potential ueber "
+           "ihrer Schwelle")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27842,6 +27998,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Verkaufsregel": paket_verkaufsregel,
           "Verkaufsbasis": paket_verkaufsbasis,
           "Auswahlstufe": paket_auswahlstufe,
+          "Entscheiderstufe": paket_entscheiderstufe,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

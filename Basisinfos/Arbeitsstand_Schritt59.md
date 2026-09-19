@@ -23,7 +23,7 @@
 
 | Paket | Stand |
 |---|---|
-| **Phase 3 Punkt 3 – Stufe `auswahl`** | ⛔ **gemessen 19.09.** (2.479): keine Zelle trägt; bei H20 ist die Anlage zu grob (0,40 R), bei H5 löst sie auf und die Wirkung liegt darunter. ➔ Mengensteuerung, kein Qualitätsfilter. ⚠️ Zwei eigene Aufbaufehler gefunden (2.479-eigene-fehler: Träger filterte die Ankermenge, Bezug waren alle statt der Wählbaren). Paket Auswahlstufe 10/10, 10 Mutationen · ⏳ offen: `entscheider`, dann `terminmarkt` |
+| **Phase 3 Punkt 3 – Stufe `auswahl`** | ⛔ **gemessen 19.09.** (2.479): keine Zelle trägt; bei H20 ist die Anlage zu grob (0,40 R), bei H5 löst sie auf und die Wirkung liegt darunter. ➔ Mengensteuerung, kein Qualitätsfilter. ⚠️ Zwei eigene Aufbaufehler gefunden (2.479-eigene-fehler: Träger filterte die Ankermenge, Bezug waren alle statt der Wählbaren). Paket Auswahlstufe 10/10, 10 Mutationen · ✔ **`entscheider` gemessen** (2.480): **+0,2137 R → TRÄGT**, auch gegen die strengere Nullwelt aus den Bewertbaren; Datenlagenanteil +0,0461 R; 8 von 8 CRV-Werten. Paket Entscheiderstufe 12/12, 10 Mutationen · ⏳ offen: `terminmarkt` als Doku |
 | Plan, Entscheidungen N1–N11, D1–D4 | ✔ abgestimmt |
 | 0.6 Sperrzeiten am NB | ✔ belegt (Krypto 12 h, gehebelt ab 2x 3,5 h, Multiasset 24 h, G = Z.ai) |
 | 0.8 Stillstand und Abgrenzung (Recherche) | ✔ Befunde 2.456-llm-pause, 2.456-etf-knopf, 2.456-abgrenzung |
