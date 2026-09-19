@@ -22317,6 +22317,82 @@ def paket_anlassschwelle() -> None:
            "nie gelaufen ist")
 
 
+def paket_hochrechnung() -> None:
+    """Prueft `phase3_hochrechnung.py` die Annahme, auf der es steht?
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Eine Hochrechnung ist keine Messung, und
+    ihr Wert haengt vollstaendig an der Annahme, dass sich die spaeteren
+    Stufen gegenueber der kleineren Menge gleich verhalten. Dieses Paket
+    prueft, dass die Pruefung dieser Annahme funktioniert - und dass sie
+    eine Kopplung findet, wenn es eine gibt.
+
+    ⚠️ DER ERSTE VERSUCH DER MESSUNG IST GESCHEITERT, und die Lehre steht
+    im Modulkopf: der Nachbau der Auswahlstufe traf 23,7 % statt der
+    beobachteten 60,6 %, weil `agent/auswahl.py` k = 2 waehlt (nicht 20 %)
+    und Bestandspositionen sie immer passieren.
+    """
+    P = "Hochrechnung"
+    import datetime as _dt
+
+    import phase3_hochrechnung as _H
+
+    def _b(tag, sym, n_bloecke):
+        return {"zeit": _dt.datetime.fromisoformat(tag + "T12:00:00"),
+                "symbol": sym, "gleich_asset": False, "gleich_voll": False,
+                "alter_stunden": 1.0,
+                "geaenderte_bloecke": ["b%d" % i for i in range(n_bloecke)]}
+
+    # ---- quer(): findet sie eine gepflanzte Kopplung? --------------------
+    #
+    # Kunstwelt A: Rangplatz haengt STRENG an der Zahl der Bloecke.
+    rang = {"2026-09-01": {"S%02d" % i: i / 9.0 for i in range(10)}}
+    gekoppelt = [_b("2026-09-01", "S%02d" % i, i)
+                 for i in range(10) for _ in range(60)]
+    r, paare = _H.quer(gekoppelt, rang)
+    pruefe(P, "⚠️ eine gepflanzte Kopplung wird gefunden",
+           r is not None and r > 0.9,
+           "sonst prueft die Annahmepruefung nichts - gemessen %s" % r)
+
+    # Kunstwelt B: Rangplatz haengt NICHT an der Zahl der Bloecke.
+    unabhaengig = [_b("2026-09-01", "S%02d" % ((i * 7) % 10), i % 4)
+                   for i in range(600)]
+    r2, _ = _H.quer(unabhaengig, rang)
+    pruefe(P, "und bei Unabhaengigkeit meldet sie (fast) null",
+           r2 is not None and abs(r2) < 0.25,
+           "gemessen %s" % r2)
+
+    pruefe(P, "unter 500 Paaren gibt es KEIN Urteil, statt eines duennen",
+           _H.quer(gekoppelt[:100], rang)[0] is None,
+           "eine Korrelation aus 100 Punkten ist keine Annahmepruefung")
+
+    # ---- Die Groessen stehen benannt --------------------------------------
+    # ⚠️ NICHT AUF EINEN WERT PRUEFEN, SONDERN AUF DIE HERKUNFT. Hier stand
+    # `== 500`, und genau diese 500 waren der Fehler: sie sind der ERSTE von
+    # vier Toepfen, nicht das Kontingent. Die Pruefung haette ihn zementiert.
+    from scheduler.rollen_job import KETTE as _K, RESERVE_ANTEIL as _R
+    _erwartet = sum(int(x * (1.0 - _R)) for _q, _m, x in _K)
+    pruefe(P, "⚠️ das Kontingent kommt aus der ECHTEN Topfleiter, nicht aus einer Zahl",
+           _H.KONTINGENT == _erwartet and _H.KONTINGENT > 1000,
+           "vier Toepfe ergeben %d nutzbare Aufrufe je Tag - gemessen %d"
+           % (_erwartet, _H.KONTINGENT))
+    pruefe(P, "und die Quergrenze ist benannt, nicht eingestreut",
+           0 < _H.QUER_GRENZE < 0.2,
+           "eine Zahl ohne Namen wird nicht wiedergefunden")
+    pruefe(P, "⚠️ und der Vorbehalt sagt HOCHRECHNUNG, nicht Messung",
+           "keine messung" in _H.VORBEHALT.lower(),
+           "wer eine Hochrechnung als Messung ausgibt, erzeugt einen Befund, "
+           "den niemand reproduzieren kann")
+
+    # ---- Die Quoten kommen aus dem Betrieb --------------------------------
+    quelle = _quelltext("phase3_hochrechnung.py")
+    pruefe(P, "die Quoten kommen aus `gate_durchlaessigkeit`, nicht aus einer Vorgabe",
+           "gate_durchlaessigkeit" in quelle and "daten_json" in quelle,
+           "eine gesetzte Quote waere eine zweite Wahrheit neben dem Betrieb")
+    pruefe(P, "⚠️ und der gescheiterte Nachbau steht im Modul, nicht nur im Chat",
+           "23,7" in quelle and "60,6" in quelle and "k = 2" in quelle,
+           "ein Fehlversuch, der nirgends steht, wird wiederholt")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27064,6 +27140,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Uhr": paket_uhr,
           "Takt": paket_takt,
           "Anlassschwelle": paket_anlassschwelle,
+          "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
 
