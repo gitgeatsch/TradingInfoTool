@@ -22802,6 +22802,132 @@ def paket_verkaufsregel() -> None:
            "ohne sie ist das Urteil nicht nachpruefbar")
 
 
+def paket_verkaufsbasis() -> None:
+    """Misst `phase3_verkaufsregel_basis.py` SCHLIESST EINE BREITERE BASIS?
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Drei Regler werden hier verstellt -
+    Horizont, Haltefenster, Mindestbesetzung - und jeder von ihnen aendert
+    die FRAGE mit, nicht nur die Genauigkeit. Ein Regler, der still auf
+    seiner Vorgabe haengenbleibt, sieht aus wie ein Ergebnis.
+    """
+    P = "Verkaufsbasis"
+    import numpy as _np
+
+    import phase3_haltefrage as _HF
+    import phase3_verkaufsregel as _VR
+    import phase3_verkaufsregel_basis as _VB
+
+    # ---- Das Haltefenster ist wirklich ein Regler ------------------------
+    #
+    # ⚠️ DIE WELT MUSS LANG GENUG SEIN, UM DIE VORGABE ZU PRUEFEN
+    # (nachgeschaerft 19.09.2026 durch die Gegenpruefung): die erste Fassung
+    # hatte 40 Tage und 20 Werte - nach 30 Tagen war jeder Wert einmal
+    # oben, und ein Fenster von 30 sammelte dasselbe wie eines von 60. Eine
+    # verstellte VORGABE (60 -> 30) blieb damit unsichtbar.
+    #
+    # Jetzt: 200 Tage, je 10 anwesende Werte aus einem Vorrat von 200, und
+    # jeder Tag bringt zwei FRISCHE nach oben. Ein Fenster von w sammelt
+    # rund 2w verschiedene - 30 und 60 koennen sich nicht mehr gleichen.
+    mom = {}
+    for t in range(200):
+        anwesend = {"S%03d" % ((t * 2 + j) % 200): float(j) for j in range(10)}
+        mom["2023-%02d-%02d" % (t // 28 + 1, t % 28 + 1)] = anwesend
+    eng = _HF.haltemenge(mom, 3)
+    weit = _HF.haltemenge(mom, 20)
+    letzter = sorted(mom)[-1]
+    pruefe(P, "⚠️ das Haltefenster ist ein Regler, keine Zierde",
+           len(weit[letzter]) > len(eng[letzter]),
+           "sonst misst B2 dieselbe Menge wie die Basis und das Ergebnis "
+           "waere ein Etikett - eng %d, weit %d"
+           % (len(eng[letzter]), len(weit[letzter])))
+    pruefe(P, "⚠️⚠️ und die VORGABE bleibt unveraendert (R-R11)",
+           _HF.haltemenge(mom) == _HF.haltemenge(mom, _HF.HALTE_FENSTER),
+           "jeder bestehende Aufruf muss weiter dasselbe rechnen - sonst "
+           "verschiebt der neue Parameter still die Basis von 2.473 bis 2.476")
+
+    # ---- Die Mindestbesetzung greift wirklich ----------------------------
+    #
+    # Zehn Tage mit 6 Werten (dort sind 2 das oberste Fuenftel) und zehn
+    # mit 30 (dort sind es 6). Bei mindest=3 muessen die schmalen Tage weg.
+    je_tag, menge = {}, {}
+    for t in range(40):
+        tag = "2023-02-%02d" % (t + 1)
+        n = 6 if t % 2 else 30
+        je_tag[tag] = [{"sym": "S%02d" % i, "kennzahl": float(i),
+                        "in_r": float(i % 3) - 1.0} for i in range(n)]
+        menge[tag] = {"S%02d" % i for i in range(n)}
+    viele = _VR.regel(je_tag, menge, mindest_verkauft=1)
+    wenige = _VR.regel(je_tag, menge, mindest_verkauft=3)
+    pruefe(P, "⚠️ die Mindestbesetzung der VERKAUFTEN Seite greift",
+           len(wenige) < len(viele),
+           "die kleine Seite ist das oberste Fuenftel und damit viermal "
+           "duenner besetzt - genau davor warnt die Vorgabe vom 07.09. "
+           "(min 1: %d Tage, min 3: %d Tage)" % (len(viele), len(wenige)))
+    pruefe(P, "⚠️⚠️ und die VORGABE 1 rechnet wie vorher (R-R11)",
+           _VR.regel(je_tag, menge) == viele,
+           "sonst waere 2.476 mit dem Einbau des Parameters still "
+           "umgeschrieben worden")
+
+    # ---- Die Besetzung wird BERICHTET, nicht behauptet -------------------
+    tage, mv, mb, minv = _VR.besetzung(je_tag, menge, 1)
+    pruefe(P, "⚠️⚠️ die Besetzung je Gruppe und Tag wird ausgewiesen",
+           tage > 0 and mv > 0 and mb > mv and minv >= 1,
+           "stehende Vorgabe 07.09.: VOR jeder Gruppenstatistik die "
+           "Besetzung ausgeben, bevor irgendeine Zahl gedeutet wird - "
+           "bekommen: %d Tage, verkauft %.1f (kleinster %d), behalten %.1f"
+           % (tage, mv, minv, mb))
+    # ⚠️ GEPRUEFT WIRD BEI BEIDEN EINSTELLUNGEN - und die zweite ist die,
+    # die zaehlt (nachgeschaerft 19.09.2026): bei min 1 bindet die Sperre in
+    # dieser Welt gar nicht, eine Besetzung OHNE Sperre kaeme auf dieselbe
+    # Zahl und die Pruefung saehe grun aus. Erst bei min 3 trennt sie sich.
+    tage3 = _VR.besetzung(je_tag, menge, 3)[0]
+    pruefe(P, "und sie zaehlt dieselben Tage wie die Messung - bei BEIDEN "
+           "Einstellungen",
+           tage == len(viele) and tage3 == len(wenige),
+           "eine Besetzung, die eine andere Menge beschreibt als die "
+           "gemessene, ist irrefuehrender als keine (min 1: %d gegen %d, "
+           "min 3: %d gegen %d)"
+           % (tage, len(viele), tage3, len(wenige)))
+
+    # ---- Die Blocklaenge wird BELEGT ------------------------------------
+    quelle = _quelltext("phase3_verkaufsregel.py")
+    pruefe(P, "⚠️⚠️ die Blocklaenge wird nachgeprueft, nicht gesetzt",
+           "messnorm.pruefe_block(" in quelle,
+           "`_block` schreibt es seit dem Bau vor, und `messnorm.pruefe()` "
+           "hat am 06.09. genau das an sich selbst gefunden - die erste "
+           "Fassung dieses Moduls hat sie gesetzt")
+    text = _VR.blockpruefung({("2023-%02d-%02d" % (i // 28 + 1, i % 28 + 1)):
+                              float(i % 7) for i in range(200)}, 15)
+    pruefe(P, "und die Autokorrelation steht mit ihrer Grenze in der Ausgabe",
+           "Autokorrelation" in text and "0,15" in text,
+           "ohne die Grenze ist die Zahl nicht lesbar - bekommen: %s" % text)
+
+    # ---- Die Stabilitaetsprobe prueft mehr als EINE Saat -----------------
+    qb = _quelltext("phase3_verkaufsregel_basis.py")
+    pruefe(P, "⚠️⚠️ die Stabilitaetsprobe laeuft ueber MEHRERE Saaten",
+           len(set(_VB.SAATEN)) >= 5 and "messnorm.SAAT + k" in qb,
+           "H5 kam auf TRAEGT mit 0,0006 R Abstand - mit fuenf Saaten "
+           "tragen davon nur noch 4 von 5, bei min 3 sogar nur 1 von 5. "
+           "Ein Urteil aus EINER Saat ist an der Grenze keins "
+           "(Saaten: %s)" % (sorted(set(_VB.SAATEN)),))
+    pruefe(P, "⚠️ und sie weist den ABSTAND je Saat aus, nicht nur das Urteil",
+           "b[1] - oben" in qb,
+           "ein ,4 von 5` ohne die Abstaende verschweigt, ob es knapp war")
+
+    # ---- R-R11 ist eingebaut, nicht nur erwaehnt ------------------------
+    pruefe(P, "⚠️⚠️ die Basis wird reproduziert, bevor die Varianten gelten",
+           "BASIS_SOLL" in qb and "TOLERANZ" in qb
+           and "return 0 if alles_ok else 1" in qb,
+           "wer die Basis aendert und ein anderes Ergebnis bekommt, hat "
+           "nichts widerlegt - und ein Lauf, der sie nicht reproduziert, "
+           "muss FEHLSCHLAGEN, nicht nur warnen")
+    pruefe(P, "und die Zielmarken sind die registrierten Werte aus 2.476",
+           abs(_VB.BASIS_SOLL["ganze Haltemenge"] - 0.0791) < 1e-9
+           and abs(_VB.BASIS_SOLL["nicht mehr in der Auswahl"]
+                   - 0.0178) < 1e-9,
+           "eine Zielmarke, die nicht im Befund steht, prueft nichts")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27553,6 +27679,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Verkaufsbasislinie": paket_verkaufsbasislinie,
           "Haltelage": paket_haltelage,
           "Verkaufsregel": paket_verkaufsregel,
+          "Verkaufsbasis": paket_verkaufsbasis,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

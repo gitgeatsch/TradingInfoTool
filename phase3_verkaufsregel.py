@@ -66,12 +66,28 @@ VORBEHALT = ("gilt auf der Stellvertretermenge (N3 b); die Haltemenge ist ein "
              "Stellvertreter des echten Bestands")
 
 
-def regel(je_tag: dict, menge: dict, rng=None, pflanze: float = 0.0) -> dict:
+def regel(je_tag: dict, menge: dict, rng=None, pflanze: float = 0.0,
+          mindest_verkauft: int = 1) -> dict:
     """tag -> (behalten minus verkauft) in R.
 
     `rng` macht daraus die NULLWELT: gleich viele werden verkauft, aber
     zufaellig gewaehlte. Ohne sie misst man, DASS verkauft wurde, nicht
-    WONACH."""
+    WONACH.
+
+    ⚠️⚠️ `mindest_verkauft` - DIE BESETZUNG DER KLEINEN SEITE (nachgetragen
+    19.09.2026). Die verkaufte Seite ist das oberste Fuenftel und damit
+    VIERMAL KLEINER als die behaltene. Genau davor warnt die stehende
+    Vorgabe vom 07.09.: `median(Gruppe) minus median(Rest)` ist bei
+    UNGLEICH grossen Gruppen verzerrt, und unter zwei Ankern je Gruppe ist
+    die Statistik nicht brauchbar - dort kamen +0,10 bis +0,16 R aus einer
+    Welt ohne jede Information. Die erste Fassung liess `verkauft >= 1` zu,
+    also Tage mit einem EINZIGEN verkauften Wert.
+
+    ⚠️ DIE VERZERRUNG IST NICHT DER FEHLER - sie steckt gleichermassen in
+    der Nullwelt und wird durch den Vergleich mit ihr abgezogen. Der Fehler
+    waere, sie nicht zu KENNEN. Die Vorgabe von 1 laesst jeden bestehenden
+    Aufruf unveraendert rechnen (R-R11); wer sie hochsetzt, misst dieselbe
+    Frage auf besser besetzten Tagen."""
     aus = {}
     for tag, zeilen in je_tag.items():
         if tag < AB_2023:
@@ -95,7 +111,8 @@ def regel(je_tag: dict, menge: dict, rng=None, pflanze: float = 0.0) -> dict:
             verkauft = np.zeros(len(kz), bool)
             verkauft[rng.choice(len(kz), min(n, len(kz) - 1),
                                 replace=False)] = True
-        if verkauft.sum() < 1 or (~verkauft).sum() < MINDEST_JE_SEITE:
+        if (verkauft.sum() < max(1, int(mindest_verkauft))
+                or (~verkauft).sum() < MINDEST_JE_SEITE):
             continue
         y2 = y.copy()
         if pflanze:
@@ -112,6 +129,52 @@ def regel(je_tag: dict, menge: dict, rng=None, pflanze: float = 0.0) -> dict:
         aus[tag] = (float(np.median(y2[~verkauft]))
                     - float(np.median(y2[verkauft])))
     return aus
+
+
+def besetzung(je_tag: dict, menge: dict, mindest_verkauft: int = 1) -> tuple:
+    """Wie viele Werte stehen je Tag auf jeder Seite? (Tage, verkauft, behalten)
+
+    ⚠️ STEHENDE VORGABE (07.09.2026): *vor jeder Gruppenstatistik die
+    Besetzung je Gruppe und Tag ausgeben, bevor irgendeine Zahl gedeutet
+    wird.* V3b-1 hat das nicht getan - nachgetragen am 19.09."""
+    v, b = [], []
+    for tag, zeilen in je_tag.items():
+        if tag < AB_2023:
+            continue
+        erlaubt = menge.get(tag) or set()
+        z = [x for x in zeilen if x["sym"] in erlaubt]
+        kz = np.array([x["kennzahl"] for x in z], float)
+        y = np.array([x["in_r"] for x in z], float)
+        if len(z) < 2 * MINDEST_JE_SEITE:
+            continue
+        ok = np.isfinite(kz) & np.isfinite(y)
+        if ok.sum() < 2 * MINDEST_JE_SEITE:
+            continue
+        kz = kz[ok]
+        verkauft = RW.rang(kz) >= RW.GRENZE
+        if (verkauft.sum() < max(1, int(mindest_verkauft))
+                or (~verkauft).sum() < MINDEST_JE_SEITE):
+            continue
+        v.append(int(verkauft.sum()))
+        b.append(int((~verkauft).sum()))
+    return (len(v), float(np.mean(v)) if v else float("nan"),
+            float(np.mean(b)) if b else float("nan"),
+            int(np.min(v)) if v else 0)
+
+
+def blockpruefung(echt: dict, block: int) -> str:
+    """⚠️ DIE BLOCKLAENGE WIRD BELEGT, NICHT GESETZT (nachgetragen 19.09.2026).
+
+    `messnorm._block` schreibt es seit dem Bau vor: *die Blocklaenge wird je
+    Messung NACHGEPRUEFT, nicht angenommen. Wer sie nur setzt, hat sie
+    geraten.* Die erste Fassung dieses Moduls hat sie gesetzt - derselbe
+    Fehler, den `messnorm.pruefe()` am 06.09. an sich selbst gefunden hat
+    (Schritt 4a, G1). Ein zu kurzer Block macht das Band ZU ENG, und genau
+    an einer Bandbreite haengt hier das Urteil.
+    """
+    bp = messnorm.pruefe_block(echt, block)
+    return ("Block %d · Autokorrelation %+.3f (Grenze 0,15) · %s"
+            % (block, bp["ak"], bp["grund"]))
 
 
 def urteil(name: str, echt: dict, nullwerte: list, block: int,
@@ -208,8 +271,9 @@ def main() -> int:
                 ts = staerke
                 break
         urteil(name, echt, nullwerte, block, ts)
-        print("     %-30s Positivkontrolle: Trennschaerfe %s"
-              % ("", ("%.2f R" % ts) if ts else "KEINE"))
+        print("     %-30s Positivkontrolle: Trennschaerfe %s · %s"
+              % ("", ("%.2f R" % ts) if ts else "KEINE",
+                 blockpruefung(echt, block)))
 
     print("\n  LESEART")
     print("     R          behalten minus verkauft. POSITIV = der Verkauf war")

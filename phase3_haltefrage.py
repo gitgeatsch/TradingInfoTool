@@ -64,12 +64,23 @@ VORBEHALT = ("Haltemenge ist ein STELLVERTRETER - der echte Bestand ist "
 __doc__ = __doc__ % (HALTE_FENSTER, HALTE_FENSTER)
 
 
-def haltemenge(mom: dict) -> dict:
+def haltemenge(mom: dict, fenster: int | None = None) -> dict:
     """tag -> Menge der Symbole, die man an diesem Tag halten wuerde.
 
     ⚠️ ROLLIEREND, NICHT AM STICHTAG: wer heute nicht mehr unter den besten
     20 % ist, wird nicht sofort verkauft - genau darum geht ja die Frage.
-    Deshalb ein Fenster von HALTE_FENSTER Tagen."""
+    Deshalb ein Fenster von HALTE_FENSTER Tagen.
+
+    ⚠️ `fenster` IST EIN PARAMETER, SEIT DIE BREITE SELBST ZUR FRAGE WURDE
+    (19.09.2026, V3b-1 Variante B2). Die Vorgabe bleibt HALTE_FENSTER,
+    damit jeder bestehende Aufruf unveraendert dasselbe rechnet - dieselbe
+    Konstruktion wie beim Horizont in `messe_kandidaten_als_regel.baue`.
+
+    ⚠️⚠️ WER IHN HOCHDREHT, AENDERT DIE FRAGE MIT: je weiter das Fenster,
+    desto laenger gilt ein Wert als gehalten - und desto weniger
+    beschreibt die Menge noch ein Portfolio. Das ist kein freier Regler,
+    sondern eine Aussage ueber den Stellvertreter."""
+    breite = int(fenster or HALTE_FENSTER)
     tage = sorted(mom)
     gewaehlt = {}
     for t in tage:
@@ -82,7 +93,7 @@ def haltemenge(mom: dict) -> dict:
                                             key=lambda x: -x[1])[:k]}
     aus = {}
     for i, t in enumerate(tage):
-        fenster = tage[max(0, i - HALTE_FENSTER + 1):i + 1]
+        fenster = tage[max(0, i - breite + 1):i + 1]
         menge = set()
         for f in fenster:
             menge |= gewaehlt[f]
