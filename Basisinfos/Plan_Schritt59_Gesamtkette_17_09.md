@@ -547,7 +547,8 @@ Messung dazu (2.464-warten, 2.466-hochrechnung) gilt unverändert weiter.
 |---|---|---|---|
 | **V0** | Verkaufsausgang von **Empfehlung** auf **Information** herabstufen | — | ✔ **GEBAUT 19.09.** (2.469-v0-gebaut): Kopfzeile und Betreff gekennzeichnet, Überschrift „WAS ZU TUN IST“ → „WAS DAS MODELL VORSCHLÄGT“; **keine Zeile verschwindet**. ⚠️ Geführt als **bekannter Betriebsfehler** nach Muster 16.09., **nicht** als Vorgriff auf Schritt 60 (Nutzerentscheidung 19.09.: „B + Fehlerkorrektur“) |
 | **V1** | eigene Zelle `strategie = halten` für Bestände | nichts (S1 liegt vor: Uhr je Zelle, 2.462-uhr-getrennt) | die Verkaufsfrage entsteht eigenständig statt als Nebenprodukt |
-| **V2** | **Basislinie messen** aus `ausstieg_verfolgung` (H5/H20, richtungsbereinigt) | ein Lauf des `ausstiegs_job` (täglich 7:15) | erste Zahl darüber, ob ein Verkauf richtig war |
+| **V2** | **Basislinie messen** | — | ✔ **GEMESSEN 19.09.** (2.470-verkauf-basislinie): H5 **−0,2518 R**, Band [−0,4120 .. −0,0072] — **die Null ist ausgeschlossen**, der Kurs steigt nach den Ausstiegen. ⚠️ Nach **Schwäche** verkauft: −0,3813 R (entzerrt −0,3872); nach **Anstieg**: unauffällig. H20 ohne Band |
+| **V2b** | ⏳ **Methodik-Recherche VOR V3** (Nutzerfrage 19.09.): wie misst man üblicherweise, ob ein Ausstieg gut war — Folgebewegung, Opportunitätskosten, Exit-Effizienz gegen das spätere Hoch? **Methodisches** Wissen, keine Marktbehauptung. Soll verhindern, dass wir eine Kennzahl erfinden, die anderswo als irreführend bekannt ist (Beispiel aus dem eigenen Bestand: MFE ist kein Erfolgsmaß bei variablem Stop) | V2 | die Zielgröße von V3 steht erst danach fest |
 | **V3** | Bewertung bauen: **V3a** gelten die Beiträge für die Haltefrage (2.220-haltefrage)? · **V3b** Potential/Schwelle/Deckel für den Ausstieg, der `return` fällt | V2 | die Verkaufsseite wird gebremst wie die Kaufseite |
 
 ### Datenlage für V2 — sie liegt bereits vor

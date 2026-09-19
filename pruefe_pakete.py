@@ -22473,6 +22473,119 @@ def paket_verkaufskennzeichnung() -> None:
            "gaebe")
 
 
+def paket_verkaufsbasislinie() -> None:
+    """Misst `phase3_verkauf.py` die Verkaufsseite richtig herum? (V2)
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Die Verkaufsseite hatte bis zum 19.09.
+    KEINE einzige Zahl (2.392). Die erste Zahl ist die gefaehrlichste: sie
+    wird zur Basislinie, gegen die alles Spaetere antritt. Ein Vorzeichen-
+    fehler hier drehte jede spaetere Aussage um.
+
+    ⚠️ ZWEI FEHLER HAT DER BAU SELBST PRODUZIERT, beide stehen im Modul:
+    die Menge war auf `status='gemessen'` gefiltert (das heisst BEIDE
+    Horizonte fertig - fuer H5 fiel damit die Haelfte weg und das Band
+    darunter), und jeder Lauf packte eine 140-MB-Sicherung in ein neues
+    Temp-Verzeichnis (19 GB an einem Tag, bis die Platte voll war).
+    """
+    P = "Verkaufsbasislinie"
+    import datetime as _dt
+
+    import phase3_takt as _T
+    import phase3_verkauf as _VB
+
+    # ---- Eine Kunstwelt mit bekanntem Verlauf ----------------------------
+    t0 = _dt.datetime(2026, 9, 1, 12, 0)
+    zeiten = [t0 + _dt.timedelta(minutes=15 * i) for i in range(800)]
+    faellt = [100.0 * (1.0 - 0.01 * (i / 96.0)) for i in range(800)]
+    steigt = [100.0 * (1.0 + 0.01 * (i / 96.0)) for i in range(800)]
+    kurse = {"FAELLT": (zeiten, faellt), "STEIGT": (zeiten, steigt)}
+    atr = {"FAELLT": 0.10 / _T.STOP_ATR, "STEIGT": 0.10 / _T.STOP_ATR}
+
+    def _a(sym, tag=0, aktion="VERKAUFEN"):
+        return {"symbol": sym, "zeit": t0 + _dt.timedelta(days=tag),
+                "aktion": aktion, "tagesschluss": {5: None, 20: None}}
+
+    # ---- Das Vorzeichen: DIE gefaehrlichste Stelle -----------------------
+    ab = _VB.bewegung_nach(kurse, atr, [_a("FAELLT")], 5)
+    auf = _VB.bewegung_nach(kurse, atr, [_a("STEIGT")], 5)
+    w_ab = list(ab.values())[0][0]
+    w_auf = list(auf.values())[0][0]
+    pruefe(P, "⚠️⚠️ faellt der Kurs nach dem Ausstieg, ist der Wert POSITIV",
+           w_ab > 0 and w_auf < 0,
+           "der Verkauf war dann richtig - ein gedrehtes Vorzeichen wuerde "
+           "jede spaetere Aussage umkehren. Gemessen: faellt %+.4f / "
+           "steigt %+.4f" % (w_ab, w_auf))
+    pruefe(P, "und beide Richtungen sind gleich gross",
+           abs(abs(w_ab) - abs(w_auf)) < 0.02,
+           "sonst zaehlt eine Richtung mehr als die andere - gemessen "
+           "%+.4f gegen %+.4f" % (w_ab, w_auf))
+    pruefe(P, "die Einheit ist R, nicht Prozent",
+           abs(w_ab - 0.5) < 0.02,
+           "5 Tage x 1 %% je 96 Viertelstunden = 5 %% bei 10 %% Stopweite "
+           "sind 0,5 R... gemessen %+.4f" % w_ab)
+
+    # ---- Die Tagesklammer -------------------------------------------------
+    # ⚠️ ZWEI GEGENLAEUFIGE WERTE AM SELBEN TAG - erst damit ist die
+    # Pruefung scharf. Die erste Fassung zaehlte nur die SCHLUESSEL; eine
+    # Tagesklammer, die statt des Medians den ersten Wert nimmt, waere
+    # durchgerutscht (Mutation M3, 19.09.).
+    viele = [_a("FAELLT"), _a("STEIGT"), _a("FAELLT"), _a("STEIGT")]
+    roh = _VB.bewegung_nach(kurse, atr, viele, 5)
+    geklammert = _VB.je_tag(roh)
+    wert = list(geklammert.values())[0] if geklammert else None
+    pruefe(P, "⚠️ die Tagesklammer macht aus vier Werten EINEN - den MEDIAN",
+           len(geklammert) == 1 and isinstance(wert, float)
+           and abs(wert) < 0.05,
+           "zwei mal +0,5 und zwei mal -0,5 ergeben 0 - wer den ersten Wert "
+           "nimmt, bekommt +0,5. Gemessen: %s" % wert)
+
+    # ---- Die Nullwelt verschiebt den ZEITPUNKT ----------------------------
+    ohne = _VB.bewegung_nach(kurse, atr, [_a("FAELLT")], 5)
+    mit = _VB.bewegung_nach(kurse, atr, [_a("FAELLT")], 5, versatz={0: 3.0})
+    pruefe(P, "die Nullwelt verschiebt den Zeitpunkt, nicht den Horizont",
+           list(ohne)[0] != list(mit)[0]
+           and abs(list(mit.values())[0][0] - list(ohne.values())[0][0]) < 0.03,
+           "ein anderer Tag, aber dieselbe Strecke - sonst misst die "
+           "Nullwelt einen anderen Horizont")
+
+    # ---- Kein Band, wo keines bildbar ist ---------------------------------
+    quelle = _quelltext("phase3_verkauf.py")
+
+    def _rumpf(fn):
+        """Der Code einer Funktion OHNE ihren Docstring.
+
+        ⚠️ `_quelltext` entfernt Kommentarzeilen, aber keine Docstrings.
+        Dieses Projekt schreibt Entferntes ausfuehrlich auf - eine Pruefung
+        auf ,kommt nicht mehr vor` findet sonst die Grabinschrift und meldet
+        einen Fehler, den es nicht gibt (passiert am 19.09. zweimal)."""
+        import inspect as _i
+        q = _i.getsource(fn)
+        return q.split(chr(34) * 3)[-1] if chr(34) * 3 in q else q
+    pruefe(P, "⚠️ wo `band()` nicht bildbar ist, steht KEIN BAND statt einer Spanne",
+           "KEIN BAND (%d Tage, %d noetig)" in quelle
+           and "genug = tage >= 2 * block" in quelle,
+           "eine erfundene Spanne ist schlimmer als keine")
+
+    # ---- Die Menge ist NICHT auf `gemessen` gefiltert ---------------------
+    pruefe(P, "⚠️ die Menge ist nicht auf `status=gemessen` gefiltert",
+           "ausstieg_outcome_status" not in _rumpf(_VB.lade_ausstiege),
+           "das hiesse BEIDE Horizonte fertig - fuer H5 faellt damit die "
+           "Haelfte weg und das Band darunter (Fehler vom 19.09.)")
+
+    # ---- Die Sicherung wird nicht je Lauf neu ausgepackt ------------------
+    pruefe(P, "⚠️ die Sicherung wird wiederverwendet, nicht je Lauf ausgepackt",
+           "tit_sicherungen" in _rumpf(_VB.neueste_sicherung)
+           and "mkdtemp()" not in _rumpf(_VB.neueste_sicherung),
+           "140 MB je Lauf haben am 19.09. die Systemplatte gefuellt")
+
+    # ---- Der Vorbehalt ----------------------------------------------------
+    pruefe(P, "⚠️ der Vorbehalt sagt: gemessen wird das MODELL, nicht eine Bewertung",
+           "modell" in _VB.VORBEHALT.lower()
+           and "bewertung" in _VB.VORBEHALT.lower(),
+           "wer das verwechselt, haelt die Basislinie fuer ein Urteil ueber "
+           "die Verkaufslogik")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -27221,6 +27334,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Takt": paket_takt,
           "Anlassschwelle": paket_anlassschwelle,
           "Verkaufskennzeichnung": paket_verkaufskennzeichnung,
+          "Verkaufsbasislinie": paket_verkaufsbasislinie,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
