@@ -22173,6 +22173,72 @@ def paket_uhr() -> None:
         _db.DB_PATH = _alt
 
 
+def paket_takt() -> None:
+    """Misst `phase3_takt.py`, was es zu messen vorgibt? (S3, 19.09.2026)
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Das Ergebnis der Messung ist eine NULL
+    ("Warten kostet nichts"). Ein Nullergebnis ist nur so viel wert wie die
+    Kontrolle, die es begleitet - deshalb wird hier auf Kunstdaten geprueft,
+    ob der Aufbau einen bekannten Betrag ueberhaupt findet, ob er die
+    Richtung dreht und ob er nichts erfindet, wo kein Kurspunkt ist.
+    """
+    P = "Takt"
+    import datetime as _dt
+
+    import phase3_takt as _T
+
+    # ---- Eine Kunstwelt: 15-Minuten-Raster, bekannter Verlauf ------------
+    t0 = _dt.datetime(2026, 9, 1, 12, 0)
+    zeiten = [t0 + _dt.timedelta(minutes=15 * i) for i in range(200)]
+    # Kurs steigt gleichmaessig um 1 % je Stunde
+    preise = [100.0 * (1.0 + 0.01 * (i / 4.0)) for i in range(200)]
+    kurse = {"KUNST": (zeiten, preise)}
+    # ATR so gewaehlt, dass eine Stopweite (2,5 x ATR) genau 10 % ist
+    atr = {"KUNST": 0.10 / _T.STOP_ATR}
+
+    # ---- kurs_bei: Toleranz statt Interpolation --------------------------
+    pruefe(P, "`kurs_bei` trifft den Punkt im Raster",
+           _T.kurs_bei(zeiten, preise, t0) == 100.0,
+           "sonst stimmt schon der Ausgangspunkt nicht")
+    pruefe(P, "⚠️ und erfindet KEINEN Zwischenwert ausserhalb der Toleranz",
+           _T.kurs_bei(zeiten, preise,
+                       t0 - _dt.timedelta(hours=5)) is None,
+           "ein interpolierter Kurs saehe aus wie eine Messung")
+
+    # ---- Die Rechnung in R -----------------------------------------------
+    #
+    # Nach 1 h ist der Kurs um 1 % gestiegen, die Stopweite ist 10 % ->
+    # die Bewegung betraegt genau 0,1 R.
+    e = _T.bewegung(kurse, atr, [("KUNST", t0, +1.0)])
+    pruefe(P, "die Bewegung wird in R gerechnet (Stopweite als Einheit)",
+           abs(e[1.0][0] - 0.1) < 1e-9,
+           "1 %% Bewegung bei 10 %% Stopweite sind 0,1 R - gemessen %s"
+           % e[1.0])
+
+    # ---- Die Richtung ----------------------------------------------------
+    v = _T.bewegung(kurse, atr, [("KUNST", t0, -1.0)])
+    pruefe(P, "⚠️ ein Verkaufssignal dreht das Vorzeichen",
+           abs(v[1.0][0] + 0.1) < 1e-9,
+           "steigt der Kurs nach einem VERKAUFEN, war Warten GUT - "
+           "gemessen %s" % v[1.0])
+
+    # ---- Ohne ATR keine Zahl ---------------------------------------------
+    pruefe(P, "ohne R-Einheit faellt der Fall weg, statt roh zu zaehlen",
+           _T.bewegung(kurse, {}, [("KUNST", t0, +1.0)])[1.0] == [],
+           "eine Prozentzahl ohne Stopbezug waere mit nichts vergleichbar")
+
+    # ---- Die Groessen stehen benannt im Modul ----------------------------
+    pruefe(P, "Stopweite, Horizonte und Toleranz sind benannt, nicht eingestreut",
+           (_T.STOP_ATR == 2.5 and 24.0 in _T.STUNDEN
+            and _T.TOLERANZ_MIN > 0 and _T.NULL_ZIEHUNGEN >= 40),
+           "eine Zahl ohne Namen wird nicht wiedergefunden (Messstandard)")
+    pruefe(P, "⚠️ und der Vorbehalt zur kurzen Basis steht im Modul",
+           ("r-r11" in _T.VORBEHALT.lower()
+            and "regime" in _T.VORBEHALT.lower()
+            and "hinweis" in _T.VORBEHALT.lower()),
+           "71 Tage sind eine ANDERE Basis - das gehoert an jede Ausgabe")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -26918,6 +26984,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Neuaufnahme": paket_neuaufnahme,
           "Sperre": paket_sperre,
           "Uhr": paket_uhr,
+          "Takt": paket_takt,
           "Messstandard": paket_messstandard}
 
 
