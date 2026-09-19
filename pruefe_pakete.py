@@ -22239,6 +22239,84 @@ def paket_takt() -> None:
            "71 Tage sind eine ANDERE Basis - das gehoert an jede Ausgabe")
 
 
+def paket_anlassschwelle() -> None:
+    """Misst `phase3_anlass.py` die echte Schwelle - oder eine Nachbildung?
+
+    ⚠️ WARUM ES DIESES PAKET GIBT. Die Anlass-Stufe ist die einzige Bremse
+    der Kette, die keine Luecke hinterlaesst (2.464-unterdrueckung), und
+    damit der Kandidat, der die Wiederholungssperre ersetzen koennte. Eine
+    Messung, die ihre Regler nur NACHBILDET statt sie zu benutzen, wuerde
+    ueber etwas urteilen, das so nie gelaufen ist.
+    """
+    P = "Anlassschwelle"
+    import datetime as _dt
+
+    import numpy as _np
+
+    from agent import anlass as _A
+    import phase3_anlass as _PA
+
+    def _b(gleich, bloecke, alter=1.0):
+        return {"zeit": _dt.datetime(2026, 9, 1, 12, 0), "symbol": "KUNST",
+                "gleich_asset": gleich, "gleich_voll": gleich,
+                "alter_stunden": alter, "geaenderte_bloecke": list(bloecke)}
+
+    # 0 gleicher Abdruck · 1 nur marken · 2 marken+umschlag · 3 drei Bloecke
+    welt = [_b(True, []), _b(False, ["marken"]),
+            _b(False, ["marken", "umschlag"]),
+            _b(False, ["marken", "umschlag", "bestand"])]
+
+    m1 = _PA.sperrt_maske(welt, [], 1)
+    pruefe(P, "ein unveraenderter Faktensatz wird immer gesperrt",
+           bool(m1[0]),
+           "das ist die Grundbedeutung der Stufe, unabhaengig von den Reglern")
+    pruefe(P, "und eine einzelne Blockaenderung kommt heute durch",
+           not m1[1],
+           "`mindest_bloecke: 1` ist der laufende Stand")
+
+    # ---- Die Regler koennen nur MEHR sperren -----------------------------
+    m2 = _PA.sperrt_maske(welt, [], 2)
+    m3 = _PA.sperrt_maske(welt, ["marken"], 1)
+    pruefe(P, "⚠️ schaerfere Regler sperren eine OBERMENGE, nie weniger",
+           bool(_np.all(m2 >= m1)) and bool(_np.all(m3 >= m1)),
+           "sonst waere aus der Feinjustierung eine Lockerung geworden")
+    pruefe(P, "`mindest_bloecke` wirkt (2 sperrt die Einzeleaenderung)",
+           bool(m2[1]) and not bool(m2[2]),
+           "gemessen: %s" % m2.tolist())
+    pruefe(P, "`ignoriere_bloecke` wirkt (marken zaehlt nicht mehr)",
+           bool(m3[1]) and not bool(m3[2]),
+           "eine Lage, die sich NUR in marken bewegt hat, ist dann keine "
+           "neue Frage - gemessen: %s" % m3.tolist())
+
+    # ---- Die Zielgroesse ist der BETRAG ----------------------------------
+    t0 = _dt.datetime(2026, 9, 1, 12, 0)
+    zeiten = [t0 + _dt.timedelta(minutes=15 * i) for i in range(60)]
+    hoch = [100.0 * (1.0 + 0.01 * (i / 4.0)) for i in range(60)]
+    runter = [100.0 * (1.0 - 0.01 * (i / 4.0)) for i in range(60)]
+    import phase3_takt as _T
+    atr = {"HOCH": 0.10 / _T.STOP_ATR, "RUNTER": 0.10 / _T.STOP_ATR}
+    beob = [dict(_b(False, ["umschlag"]), symbol="HOCH", zeit=t0),
+            dict(_b(False, ["umschlag"]), symbol="RUNTER", zeit=t0)]
+    w = _PA.bewegung_betrag({"HOCH": (zeiten, hoch),
+                             "RUNTER": (zeiten, runter)}, atr, beob)
+    v = w[6.0]
+    pruefe(P, "⚠️ gemessen wird der BETRAG, nicht die Richtung",
+           abs(v[0] - v[1]) < 1e-9 and v[0] > 0,
+           "eine Beobachtung ist noch kein Signal und hat keine Richtung - "
+           "gemessen %s" % v.tolist())
+
+    # ---- Ohne Nullwelt kein Urteil ---------------------------------------
+    quelle = _quelltext("phase3_anlass.py")
+    pruefe(P, "⚠️ ohne bildbare Nullwelt steht KEIN URTEIL da, nicht ,Zufall`",
+           "KEIN URTEIL" in quelle and "len(null) < NULL_ZIEHUNGEN" in quelle,
+           "sperrt eine Variante fast alles, bleibt kein Rest zum Vergleichen "
+           "- die erste Fassung schrieb dort trotzdem ,wie Zufall`")
+    pruefe(P, "und die Varianten laufen durch die ECHTE `anlass.sperrt()`",
+           "A.sperrt(" in quelle and hasattr(_A, "sperrt"),
+           "eine Nachbildung der Regler wuerde ueber etwas urteilen, das so "
+           "nie gelaufen ist")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -26985,6 +27063,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Sperre": paket_sperre,
           "Uhr": paket_uhr,
           "Takt": paket_takt,
+          "Anlassschwelle": paket_anlassschwelle,
           "Messstandard": paket_messstandard}
 
 
