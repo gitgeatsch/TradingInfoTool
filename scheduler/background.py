@@ -1402,6 +1402,12 @@ def _aktien_reihen(conn) -> int:
 # GEMESSEN am 20.09.: 493 Paare, ein Aufruf je Paar, 0,242 s und Gewicht 1
 # - rund 2 Minuten und 493 Gewichtspunkte gegen eine Grenze von 2.400 je
 # Minute. Am Notebook 0 Rate-Limit-Treffer in 72 Stunden.
+#
+# ⚠️⚠️ AM NOTEBOOK NACHGEMESSEN: Erstbefuellung 325 s, taeglicher
+# Nachlauf 167 s. Wer hier ,ein paar Sekunden` erwartet, hat einen
+# Probelauf mit wenigen Paaren hochgerechnet - genau der Fehler stand
+# am 20.09. an vier Stellen in der Doku. Es sind 493 Paare, und jedes
+# kostet einen Abruf.
 BETRIEBSREIHEN_DB = "data/messdaten.db"
 BETRIEBSREIHEN_TAGE = 500      # 200 fuer den Schnitt, Rest Puffer
 BETRIEBSREIHEN_MINDEST = 220   # BETRIEBSgrenze, nicht die Messgrenze (400)

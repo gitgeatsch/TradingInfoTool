@@ -823,7 +823,7 @@ Transfer, sondern ein eigener Job.
 |---|---|
 | **Job** | `betriebsreihen_job`, täglich **03:30 UTC** (vor dem Jobcluster 04:00–04:38 und vor dem 05:30-Kursjob) |
 | **Was** | ruft `lade_messreihen.main()` mit `--seit-letztem --behalte-tage 500 --mindest 220 --betriebskopie` |
-| **Kosten** | ein Binance-Aufruf je Paar, Gewicht 1 → rund 493 gegen 2.400/Minute; Nachlauf **2 Sekunden**, Erstbefüllung **146 Sekunden** |
+| **Kosten** | ein Binance-Aufruf je Paar, Gewicht 1 → rund 493 gegen 2.400/Minute; **Nachlauf rund 167 s**, Erstbefüllung **146–325 s** (am Notebook langsamer als am Desktop) |
 | **Platz** | **30 MB** statt 1,5 GB |
 | **Nachweis** | der Job meldet nicht „fertig“, sondern *wie viele Symbole `schnitt` danach liefert* |
 
