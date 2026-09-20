@@ -374,9 +374,85 @@ dann entsteht keine Nacharbeit.
 ### Phase 4 – Hebel (Einstieg und Führung)
 
 1. **A1 lösen** (Schritt 35): Fehlalarmquote der Barrieren-Anlage auf Nullwelten, Eichung `barriere`. · ✔✔✔ **GEFALLEN 20.09.** (2.485-a1-gefallen): **1 von 100 Fehlalarmen auf BEIDEN Zielgrößen** bei Sollwert 5 %. Die Blocklänge ist nicht die Ursache (Autokorrelation ±0,03), die Überschlagsrechnung aus 2.238 teilte durch √Blöcke statt √Tage (Faktor √60 = 7,75), und die Beobachtung reproduziert sich nicht: `zufall` auf `barriere` **trägt heute nicht** (+0,0008 R, Band schließt die Null ein). ⚠️ Die Anlage ist eher **übervorsichtig** (1 % statt 5 %) — das erklärt mit, warum so wenig trägt. ➔ **Der Hebel ist messbar**
-2. Danach: Hebel-Einstieg auf `barriere`; r(q)-Simulation; „derselbe Trade als Spot“.
+2. **Punkt 2 — ausformuliert nach der Abstimmung 20.09.2026.**
+
+   > ⚠️⚠️ **Die Frage lautet nicht „Hebel auf `barriere`“ — das war meine
+   > Verkürzung. Der Nutzerauftrag steht seit 28.08./05.09. im Code:**
+   >
+   > *„die Wahrscheinlichkeit auf positive Risiko und Chance soll auch den
+   > Hebel **dynamisch erzeugen**“*, Zielzone **2–5x**.
+   >
+   > **Präzisierung 20.09. (Nutzerwortlaut):** *„Ein Handel mit Hebel und
+   > erhöhtem Risiko 2–5 wird durch die bestehende hohe Wahrscheinlichkeit
+   > **eines kurzen starken Anstiegs** dynamisch erzeugt. Meist sogar
+   > kleiner als 2 Tage aber das kannst du erheben welches Fenster
+   > (Horizont) das beste ist.“*
+
+   ⚠️ **Das ist eine Barrieren-Quote** — Ziel (stark) **vor** Stop, in einem
+   kurzen Fenster. Genau die Größe, die die Potentialformel meint und die
+   bis zum 20.09. nicht messbar war (**N10**: *„die Quote der
+   Potentialformel ist eine Barrieren-Quote, unser Randmaß eine
+   Horizont-Quote — verwandt, nicht identisch“*). **A1 hat sie freigegeben.**
+
+   **Ist-Stand:** die Rechnung ist gebaut (`betraege.hebelrechnung`,
+   `r(q)` = halbes Kelly geklammert 0,5–1,25 %, `hebel = nominal /
+   Hebelnenner`, `hebel_ab` 2,0, `hebel_grenze` 5,0, Aggregat 3 %) und steht
+   auf **`aktiv: False`** — mit zwei im Code genannten Vorbedingungen:
+   A1 (✔ gefallen) und **die Simulation der Hebelverteilung** (dieser Punkt).
+
+   **Die Reihenfolge, abgestimmt:**
+
+   | # | | Warum |
+   |---|---|---|
+   | **2a** | **`schnitt` neu messen** | seine `null`-Registrierung in `wahrscheinlichkeit.BEITRAEGE` zitiert eine Quelle vom 31.08., die mit **2.153** abgelöst ist; er hat als einziger **100 % Abdeckung** und geht direkt in die Quote |
+   | **2b** | **Das beste Fenster erheben** — `barriere` über **H1 · H2 · H3 · H5 · H7** × Zielhöhe **1,0 · 1,5 · 2 · 2,5 · 3 R** | beantwortet „welches Fenster“ **und** „welche Zielhöhe“; schließt **N10**, berührt **D3** und **N2** |
+   | **2c** | **Die Simulation** — welche Hebel fallen an, liegen sie in 2–5x | erst danach sinnvoll: vorher stünde sie auf einer Quote mit offenem Beitrag und ungeklärtem Horizont |
+   | **2d** | ⚠️ **NEU: die Stufenfrage** (eigener Punkt, Nutzerentscheidung 20.09.) | trägt die **obere** Stufe trotz Budgetüberschuss besser als die untere? Bei 4,17x fährt die Praxis heute 3,0x — **28 % weniger Hebel als gerechnet**. Nie gemessen |
+
+   ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
+   20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im
+   Median bei **1,37** (Hebel) bzw. **1,87** (Spot) — **1.113 von 1.446**
+   Hebelsignalen liegen unter dem konfigurierten Mindestwert 2,0
+   (2.488-crv-breakeven). Eine Leiter, die bei 1,5 beginnt, schlösse den
+   tatsächlichen Arbeitspunkt aus und könnte die Frage *„ist Z-2 richtig
+   gesetzt?“* gar nicht beantworten.
+
+   ⚠️ **Was daraus NICHT folgt:** ein Ergebnis unter 2 R ändert **Z-2 nicht**.
+   Es wäre ein Anlass, den Grundsatz zu prüfen — mit eigener Vorlage, eigener
+   Entscheidung. Die Messung darf die Regel sehen, nicht ersetzen.
+
+   ⚠️ **Gebaut wird vor 2a nichts.** Erst messen, dann `aktiv` umlegen.
 3. Führung: nach Phase 1 (1.4) Regeln der Hebelführung gegen „halten“; Stopregel mit Schritt 52.
 4. Vorher zulässig: nur HINWEIS „Spot gegen Hebel auf `bewegung_r`“ (Entscheidung **N6**).
+
+### ⚠️⚠️ TAKT UND COOLDOWN — festgeschrieben bis alles andere grün ist
+
+**Nutzerentscheidung 20.09.2026 (A3):** Takt und Cooldown bleiben
+**unverändert**. Angepasst werden sie **erst, wenn die übrigen Punkte und
+Phasen auf grün stehen** — nicht vorher, und nicht einzeln.
+
+> ⚠️⚠️ **Nutzerwortlaut, und er ist die Begründung:** *„es geht nicht um
+> mehr signale sondern GUTE.“*
+
+**Die Lage, gemessen — damit niemand sie neu herleiten muss:**
+
+| | |
+|---|---|
+| Was der Cooldown kostet | **3.304 von 3.304** Verlusten an der Stufe `wiederholung` sind Cooldown — **95 %** der Zellen, die bis dorthin kommen |
+| Was durchkommt | **1 bis 7 Signale am Tag** bei 200–500 Läufen (17.–20.09.) |
+| Was gemessen ist | **2.461-sperre: KEINE Länge trägt** — 1/2/3/5/10/20 Tage alle unter dem Nullpunkt ihrer eigenen Nullwelt |
+| Warum sie trotzdem stand | **2.467**: sie war „die einzige Bremse der ungemessenen Verkaufsseite“ |
+| Warum dieser Grund gefallen ist | **V0 (2.469)**: die Verkaufsmail ist seit 19.09. INFORMATION statt Empfehlung; **2.478** stellt es fest |
+| ⚠️ Warum sie **trotzdem bleibt** | ohne sie kämen **2.257 Zellen/Tag** beim Modell an — das **1,2-fache** des Kontingents (2.466). Und: eine kürzere Sperre bringt **mehr** Signale, nicht **bessere** |
+
+➔ **Der Hebel für Qualität ist der `entscheider`, nicht der Cooldown.**
+Er ist der einzige Filter, der mit **+0,2137 R** gemessen trägt
+(2.480) — und er ist es, der in Phase 4 und 8 geschärft wird.
+
+⚠️ **Wer den Cooldown anfassen will, prüft vorher drei Dinge:**
+1. Stehen Phase 4, 6, 8 und 9 auf grün? Wenn nein: nicht anfassen.
+2. Ist die **Qualität** gemessen gestiegen — oder nur die Zahl?
+3. Trägt das Kontingent die neue Rate (2.466, vier Töpfe)?
 
 ### Phase 5 – Ausstieg und Reduktion (Schritt 43 (1))
 
