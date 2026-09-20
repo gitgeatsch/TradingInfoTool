@@ -23858,6 +23858,114 @@ def paket_a1eichung() -> None:
            "nicht der Markt - genau daran ist A1 aufgefallen")
 
 
+def paket_gatedatenstand() -> None:
+    """Sagt die Diagnose, WIE ALT die Quelle ihrer Gate-Zahlen ist?
+
+    ⚠️⚠️ ANLASS 20.09.2026 (2.492-juli-fund-gefallen). Ich habe aus dem
+    NB-Export 156 Hebel-Gate-Ablehnungen wegen ,Historie veraltet
+    (2026-07-20)` als AKTUELLES Problem gemeldet. Sie stammten vom 20.
+    bis 23. Juli; `hebel_signals` hat als letzte Zeile den 2026-08-10.
+
+    ⚠️ Der Export sagte es bereits - `hebel_gate_reason_letzte_tage`
+    mit `anzahl_zeilen_im_fenster: 0`. Aber das Feld steht WEITER UNTEN
+    und ist leer, also unauffaellig. Wer von oben liest, bekommt zuerst
+    die tote Zahl. Deshalb pruefen wir hier auch die REIHENFOLGE.
+    """
+    P = "GateDatenstand"
+    import extract_notebook_diagnose as _X
+    from datetime import datetime, timedelta, timezone
+
+    def _stempel(tage):
+        return (datetime.now(timezone.utc)
+                - timedelta(days=tage)).isoformat()
+
+    pruefe(P, "⚠️ die Funktion `_gate_datenstand` gibt es",
+           hasattr(_X, "_gate_datenstand"),
+           "ohne sie steht der Abschnitt wieder ohne Datenstand da")
+
+    # ---- ⚠️⚠️ DIE REIHENFOLGE IM GEBAUTEN LITERAL, nicht im Kommentar -
+    #
+    # Gelesen wird der AST des Woerterbuchs, das der Export wirklich
+    # baut - nicht ein Fundstueck im Quelltext. Genau daran ist am
+    # 20.09. eine andere Pruefung gescheitert (2.485-eigener-
+    # rechenfehler): sie wurde im DOCSTRING fuendig, der AUFRUF haette
+    # fehlen koennen.
+    import ast as _ast
+    _baum = _ast.parse(_quelltext("extract_notebook_diagnose.py"))
+    _schluessel = []
+    for _k in _ast.walk(_baum):
+        if not isinstance(_k, _ast.Dict):
+            continue
+        for _s, _w in zip(_k.keys, _k.values):
+            if (isinstance(_s, _ast.Constant)
+                    and _s.value == "gate_veto_haeufigkeit"
+                    and isinstance(_w, _ast.Dict)):
+                _schluessel = [x.value for x in _w.keys
+                               if isinstance(x, _ast.Constant)]
+    pruefe(P, "⚠️⚠️ `datenstand` steht ZUERST im Abschnitt",
+           _schluessel[:1] == ["datenstand"],
+           "die Reihenfolge IST die halbe Massnahme - wer den Abschnitt "
+           "von oben liest, soll das Alter der Quelle sehen, BEVOR er "
+           "eine All-Time-Zahl liest (bekommen: %s)" % (_schluessel[:3],))
+    pruefe(P, "   und die All-Time-Zahl kommt danach, nicht davor",
+           "hebel_gate_reason" in _schluessel
+           and _schluessel.index("datenstand")
+           < _schluessel.index("hebel_gate_reason"),
+           "sonst ist der Datenstand nur Zierde (bekommen: %s)"
+           % (_schluessel[:4],))
+
+    # ---- Das Verhalten, auf Kunstdaten --------------------------------
+    _frisch = _X._gate_datenstand([{"created_at": _stempel(1)}], "signals")
+    pruefe(P, "⚠️ eine FRISCHE Quelle bekommt KEINE Warnung",
+           _frisch["warnung"] is None,
+           "sonst stuende die Warnung ueberall und waere wertlos "
+           "(bekommen: %s)" % (_frisch,))
+
+    _tot = _X._gate_datenstand(
+        [{"created_at": _stempel(_X.GATE_VETO_FENSTER_TAGE + 30)}],
+        "hebel_signals")
+    pruefe(P, "⚠️⚠️ eine TOTE Quelle wird gewarnt - mit Tagen UND Tabelle",
+           bool(_tot["warnung"]) and "hebel_signals" in _tot["warnung"]
+           and str(_tot["alter_tage"]) in _tot["warnung"],
+           "ohne Tabellenname und Alter muss der Leser selbst suchen, "
+           "welche Quelle gemeint ist (bekommen: %s)" % (_tot,))
+    pruefe(P, "   und sie sagt, WOHIN stattdessen zu sehen ist",
+           "_letzte_tage" in (_tot["warnung"] or ""),
+           "eine Warnung ohne Ausweg laesst den Leser stehen")
+
+    # ---- ⚠️ DIE SCHWELLE IST ABGELEITET, NICHT GESETZT ----------------
+    #
+    # Sie muss `GATE_VETO_FENSTER_TAGE` sein - dasselbe Fenster, das
+    # dieser Abschnitt ohnehin auswertet. Eine zweite eigene Zahl liefe
+    # irgendwann auseinander, und dann warnt der Datenstand fuer ein
+    # Fenster, das es nicht mehr gibt.
+    _rand = _X._gate_datenstand(
+        [{"created_at": _stempel(_X.GATE_VETO_FENSTER_TAGE)}], "signals")
+    _drueber = _X._gate_datenstand(
+        [{"created_at": _stempel(_X.GATE_VETO_FENSTER_TAGE + 1)}],
+        "signals")
+    pruefe(P, "⚠️⚠️ die Schwelle IST `GATE_VETO_FENSTER_TAGE`, keine eigene Zahl",
+           _rand["warnung"] is None and bool(_drueber["warnung"]),
+           "genau auf dem Fenster noch still, einen Tag darueber laut - wer hier eine eigene Konstante setzt, laesst zwei Zahlen auseinanderlaufen "
+           "(Rand: %s / darueber: %s)" % (_rand["warnung"], _drueber["warnung"]))
+
+    _leer = _X._gate_datenstand([], "hebel_signals")
+    pruefe(P, "⚠️ eine LEERE Quelle meldet das, statt still null zu sein",
+           bool(_leer["warnung"]) and _leer["juengste_zeile"] is None,
+           "fail-soft ist fail-silent (bekommen: %s)" % (_leer,))
+
+    _kaputt = _X._gate_datenstand([{"created_at": "kein Datum"}], "signals")
+    pruefe(P, "⚠️ ein unlesbarer Zeitstempel kippt den Export nicht",
+           _kaputt["alter_tage"] is None,
+           "ein Exportabbruch wegen einer kaputten Zeile waere teurer "
+           "als die fehlende Zahl (bekommen: %s)" % (_kaputt,))
+    pruefe(P, "   ⚠️⚠️ und er WARNT trotzdem - sonst ist er still kaputt",
+           bool(_kaputt["warnung"]) and "UNBEKANNT" in _kaputt["warnung"],
+           "ein Datenstand ohne Alter ist genau die Zahl, der man nicht "
+           "ansieht, ob sie von heute ist - also das, was dieser "
+           "Abschnitt verhindern soll (bekommen: %s)" % (_kaputt,))
+
+
 def paket_messbasen() -> None:
     """Zeigt die Diagnose, WELCHE Messbasis in welcher Form am Geraet liegt?
 
@@ -29070,6 +29178,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Referenzstaerke": paket_referenzstaerke,
           "Diagnoseumfang": paket_diagnoseumfang,
           "A1Eichung": paket_a1eichung,
+          "GateDatenstand": paket_gatedatenstand,
           "Messbasen": paket_messbasen,
           "Betriebsreihen": paket_betriebsreihen,
           "Hochrechnung": paket_hochrechnung,

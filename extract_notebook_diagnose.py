@@ -707,6 +707,66 @@ def haeufigkeit_nach_muster(rows, feld: str) -> dict:
     return dict(zaehler.most_common())
 
 
+def _gate_datenstand(rows: list[dict], tabelle: str) -> dict:
+    """Wie ALT ist die Quelle, aus der die Zahlen darunter stammen?
+
+    ⚠️⚠️ ANLASS 20.09.2026 (2.492-juli-fund-gefallen). Ich habe die
+    All-Time-Zahlen aus `hebel_gate_reason` als AKTUELLEN Zustand
+    gelesen und dem Nutzer 156 Hebel-Gate-Ablehnungen als Problem
+    gemeldet. Sie stammten vom 20. bis 23. JULI; `hebel_signals`
+    hat als letzte Zeile den 2026-08-10, seit der Aufloesung der
+    alten Hebelkette schreibt dort niemand mehr.
+
+    ⚠️ Das Zeitfenster daneben sagte es bereits
+    (`anzahl_zeilen_im_fenster: 0`) - aber es steht WEITER UNTEN
+    und ist leer, also unauffaellig. Wer den Abschnitt von oben
+    liest, bekommt zuerst die tote Zahl.
+
+    ⚠️⚠️ DIESELBE KLASSE WIE 2.452 (,die Terminmarkt-Fakten sind
+    eingefroren und werden als aktuell ausgegeben`). Die stehende
+    Regel dazu heisst ,Stilllegung: wer SCHREIBT das noch` - und
+    sie verlangt die Frische JE QUELLE, nicht je Abschnitt.
+
+    ⚠️ DIE SCHWELLE WIRD NICHT NEU GESETZT: gewarnt wird, sobald die
+    juengste Zeile aelter ist als `GATE_VETO_FENSTER_TAGE` - genau
+    das Fenster, das dieser Abschnitt ohnehin auswertet. Eine
+    zweite, eigene Zahl liefe irgendwann auseinander.
+    """
+    stempel = sorted(str(r.get("created_at") or "") for r in rows
+                     if r.get("created_at"))
+    if not stempel:
+        return {"tabelle": tabelle, "zeilen": len(rows),
+                "juengste_zeile": None, "alter_tage": None,
+                "warnung": "keine Zeile mit Zeitstempel - die "
+                "Zahlen darunter sind nicht datierbar"}
+    juengste = stempel[-1]
+    try:
+        _d = datetime.fromisoformat(juengste.replace("Z", "+00:00"))
+        if _d.tzinfo is None:
+            _d = _d.replace(tzinfo=timezone.utc)
+        alter = (datetime.now(timezone.utc) - _d).days
+    except Exception:                                    # noqa: BLE001
+        alter = None
+    warnung = None
+    if alter is None:
+        # ⚠️ NICHT still lassen: ohne Alter ist der Datenstand genau das,
+        # was er verhindern soll - eine Zahl, der man nicht ansieht, ob
+        # sie von heute ist. Gefunden an der eigenen Pruefausgabe.
+        warnung = ("der Zeitstempel `%s` ist nicht lesbar - das Alter "
+                   "dieser Quelle ist UNBEKANNT, die Zahlen darunter "
+                   "sind damit nicht datierbar" % juengste[:40])
+    elif alter > GATE_VETO_FENSTER_TAGE:
+        warnung = (
+            "seit %d Tagen keine neue Zeile in `%s` - die ALL-TIME-"
+            "Zahlen in diesem Abschnitt beschreiben einen "
+            "VERGANGENEN Zustand, nicht den heutigen. Das "
+            "gefensterte Feld `*_letzte_tage` ist die Zahl, die "
+            "zaehlt." % (alter, tabelle))
+    return {"tabelle": tabelle, "zeilen": len(rows),
+            "juengste_zeile": juengste, "alter_tage": alter,
+            "warnung": warnung}
+
+
 def _gate_veto_analyse(rows: list[dict], feld: str, seit_tagen: int | None = None) -> dict:
     """Erweiterte Gate-/Risk-Veto-Auswertung (2026-07-28-Fund): haeufigkeit() aggregiert
     ausschliesslich global und ALL-TIME (signals/hebel_signals werden ohne Datumsfilter
@@ -3798,6 +3858,17 @@ def main() -> None:
         "hebel_positions": [row_to_dict(r) for r in hebel_positions],
         "spot_signals": spot_rows,
         "gate_veto_haeufigkeit": {
+            # ⚠️⚠️ DER DATENSTAND STEHT ZUERST (20.09.2026,
+            # 2.492-juli-fund-gefallen) - und die Reihenfolge ist die
+            # halbe Massnahme: wer den Abschnitt von oben liest, soll
+            # das Alter der Quelle sehen, BEVOR er eine All-Time-Zahl
+            # liest. `hebel_signals` ist seit dem 10.08. tot, und ich
+            # habe ihre Zahlen als heutigen Zustand gemeldet.
+            "datenstand": {
+                "hinweis": "Alter der Quellen, aus denen die Zahlen darunter stammen - eine Zahl ohne Datenstand ist kein Befund",
+                "hebel": _gate_datenstand(hebel_rows, "hebel_signals"),
+                "spot": _gate_datenstand(spot_rows, "signals"),
+            },
             # bestehende reine Text-Aggregation - all-time, KEIN Symbol-/Zeitbezug
             # (siehe _gate_veto_analyse()-Docstring fuer die Einschraenkung).
             "hebel_gate_reason": haeufigkeit(hebel_rows, "gate_reason"),
