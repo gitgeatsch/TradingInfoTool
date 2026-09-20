@@ -19896,7 +19896,7 @@ def paket_hebelfuehrung() -> None:
     _st_e = _e.get("hebel_stufen") or []
     pruefe(P, "und die Mail sagt, welche Stufe den Stop nicht mehr schuetzt",
            any("NICHT SICHER" in z for z in _ERh.saetze(_e))
-           and any(x["hervorgehoben"] and x["sicher"] for x in _st_e)
+           and any(x["im_budget"] and x["sicher"] for x in _st_e)
            and any(not x["sicher"] for x in _st_e),
            "Nutzerentscheidung 14.07.: bei der Empfehlung keine Haltedauer "
            "raten, aber den Hinweis geben - Stufen: %s"
@@ -21333,12 +21333,12 @@ def paket_mailstraffung() -> None:
     # eroeffnet - die hervorgehobene. Bei 4,0x (SHORT) ist das 3x mit 67 Tagen:
     # kein Kopfhinweis. Der Fall MIT Hinweis ist 5x an der Grenze (36 Tage
     # gegen 100 Tage Haltedauer).
-    _hs = next(x for x in _rs["hebel_stufen"] if x["hervorgehoben"])
+    _hs = next(x for x in _rs["hebel_stufen"] if x["im_budget"])
     _r5x = _ER.rechne(kurs=100.0, atr=1.0, risiko_eur=227.66, betrag_wunsch_eur=500.0,
                       hebel_handelbar=True, kostenklasse="krypto",
                       assetklasse="krypto", hebel_grenze=5.0)
     _z5x = _ER.saetze(_r5x)
-    _h5x = next(x for x in _r5x["hebel_stufen"] if x["hervorgehoben"])
+    _h5x = next(x for x in _r5x["hebel_stufen"] if x["im_budget"])
     pruefe(P, "⚠️⚠️ REGEL ist das sichere Fenster der EMPFOHLENEN Stufe kuerzer als die Haltedauer, steht es da",
            (float(_hs["liquidation_tage_bis_stop"]) >= float(_rs["haltedauer_tage"])
             and not any(z.startswith("Sicher bis") for z in _zs))
@@ -26474,13 +26474,13 @@ def paket_hebelstufen() -> None:
            "Hebel %r, Verlust %r" % (e["hebel"], e["verlust_am_stop_eur"]))
 
     # 2 STUFENWAHL
-    st = [(x["stufe"], x["hervorgehoben"], x["sicher"]) for x in e["hebel_stufen"]]
+    st = [(x["stufe"], x["im_budget"], x["sicher"]) for x in e["hebel_stufen"]]
     pruefe(P, "⚠️ zwischen zwei Stufen (4,18x): 3x hervorgehoben, 5x mit Ueberschuss",
            st == [(3.0, True, True), (5.0, False, True)]
            and e["hebel_stufen"][1]["ueber_budget_prozent"] > 0, str(e["hebel_stufen"]))
     g = _r(227.66)
     pruefe(P, "an der Grenze 5x: nur 5x - keine Stufe ueber der Hebelgrenze",
-           [(x["stufe"], x["hervorgehoben"]) for x in g["hebel_stufen"]] == [(5.0, True)], "")
+           [(x["stufe"], x["im_budget"]) for x in g["hebel_stufen"]] == [(5.0, True)], "")
     rm = _ER.rechne(kurs=100.0, atr=1.0, risiko_eur=400, instrument="hebel",
                     betrag_wunsch_eur=500, topf_frei_eur=500)
     pruefe(P, "⚠️ jenseits von RM-11: die obere Stufe heisst ,nicht sicher', die untere ist sicher",
@@ -26492,8 +26492,8 @@ def paket_hebelstufen() -> None:
     klein = _ER.hebel_stufen(1.6, betrag=500.0, stop_rel=0.05, crv=2.0, risiko_eur=40.0,
                              kurs=100.0, ist_short=False, sicher=9.0, obergrenze=5.0)
     pruefe(P, "genau auf einer Stufe nur sie; unter der kleinsten nur 2x ohne Hervorhebung",
-           [(x["stufe"], x["hervorgehoben"]) for x in genau] == [(3.0, True)]
-           and [(x["stufe"], x["hervorgehoben"]) for x in klein] == [(2.0, False)]
+           [(x["stufe"], x["im_budget"]) for x in genau] == [(3.0, True)]
+           and [(x["stufe"], x["im_budget"]) for x in klein] == [(2.0, False)]
            and klein[0]["ueber_budget_prozent"] > 0, "%s / %s" % (genau, klein))
 
     # 3 BUDGET IMMER GEHALTEN
@@ -26511,7 +26511,7 @@ def paket_hebelstufen() -> None:
             continue
         for x in r.get("hebel_stufen") or []:
             n += 1
-            if x["hervorgehoben"] and (x["verlust_am_stop_eur"] > r["risiko_eur"] + 0.01
+            if x["im_budget"] and (x["verlust_am_stop_eur"] > r["risiko_eur"] + 0.01
                                        or not x["sicher"] or x["stufe"] > r["hebel"] + 1e-6):
                 verstoss.append((round(r["hebel"], 2), x["stufe"], x["verlust_am_stop_eur"]))
     pruefe(P, "⚠️⚠️ die hervorgehobene Stufe liegt IMMER im Budget, ist sicher und nie aufgerundet",
@@ -26520,9 +26520,16 @@ def paket_hebelstufen() -> None:
     # 4 MAIL
     zeilen = _ER.saetze(e)
     pfeile = [z for z in zeilen if "➤" in z]
-    pruefe(P, "⚠️⚠️ Mail: ,rechnerisch 4,18x', Pfeil nur an 3x, Ergebnis gehoert zu 3x",
-           any(z.startswith("Hebel") and "rechnerisch 4,18x" in z for z in zeilen)
-           and len(pfeile) == 1 and " 3x " in pfeile[0] and "im Budget" in pfeile[0]
+    # ⚠️⚠️ GEAENDERT 20.09.2026 (Nutzerentscheidung): der Pfeil steht an der
+    # EMPFEHLUNG, nicht an einer Stufe. Vorher markierte er bei 4,18x die
+    # 3x - also 28 Prozent weniger Hebel, als die Rechnung sagt. Begruendung
+    # des Nutzers: *,die Durchfuehrung liegt ohnehin bei mir - nicht alle
+    # Hebel sind fuer alle Assets verfuegbar.`*
+    pruefe(P, "⚠️⚠️ Mail: Pfeil an der EMPFEHLUNG 4,18x, keine Stufe markiert",
+           len(pfeile) == 1 and "EMPFEHLUNG 4,18x" in pfeile[0]
+           and pfeile[0].startswith("Hebel")
+           and any(" 3x " in z and "im Budget" in z and "➤" not in z
+                   for z in zeilen)
            and any(" 5x " in z and "+20 % ueber Budget" in z for z in zeilen)
            and any(z.startswith("Bei 3x verlieren Sie am Stop 75 EUR") for z in zeilen),
            " | ".join(z for z in zeilen if "x " in z)[:300])
@@ -26535,8 +26542,13 @@ def paket_hebelstufen() -> None:
                 "umgeworfen_durch": "z", "unabhaengige_faktoren": 3,
                 "belege": [{"fakt": "a", "richtung": "dafuer", "gewicht": "hoch"}]},
         coin_fakten=["Ondo notiert tiefer."], einordnung=["Einordnung."])
-    pruefe(P, "⚠️ Blick-Block der Mail: Stufen in einer Zeile, Ergebnis der unteren Stufe",
-           "Hebel rechnerisch 4,2x - 3x im Budget oder 5x (+20 % ueber Budget)" in text
+    # ⚠️ Seit 20.09.2026 heisst die gerechnete Zahl EMPFEHLUNG und die
+    # Stufen heissen EINSTELLBAR - die Wahl liegt beim Nutzer. Die
+    # Ergebniszeile bleibt bei der Stufe IM BUDGET: die gerechneten
+    # 4,18x lassen sich nicht eroeffnen.
+    pruefe(P, "⚠️ Blick-Block: Empfehlung und einstellbare Stufen in einer Zeile",
+           "Hebel Empfehlung 4,2x - einstellbar 3x im Budget oder 5x "
+           "(+20 % ueber Budget)" in text
            and "Ergebnis        bei 3x am Stop -75 EUR" in text,
            [z for z in text.splitlines() if z.startswith(("Betrag", "Ergebnis"))])
 

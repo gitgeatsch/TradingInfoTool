@@ -382,16 +382,26 @@ def hebel_stufen(hebel: float, *, betrag: float, stop_rel: float, crv: float,
                  sicher: float, obergrenze: float, stufen=None) -> list[dict]:
     """Die einstellbaren Stufen um den gerechneten Hebel - hoechstens zwei.
 
-    ⚠️⚠️ NUTZERENTSCHEIDUNG 15.09.2026: BEIDE NACHBARSTUFEN ZEIGEN, DIE UNTERE
-    HERVORHEBEN, NICHT AUFRUNDEN. Aufrunden haette das Risikobudget gesprengt
+    ⚠️⚠️ NUTZERENTSCHEIDUNG 15.09.2026: BEIDE NACHBARSTUFEN ZEIGEN,
+    NICHT AUFRUNDEN. Aufrunden haette das Risikobudget gesprengt
     (ONDO 2,09x -> 3x: 44 Prozent darueber) und unter 2x aus einem Spot-Trade einen
     Hebel gemacht, den die Bewertung verneint (Nutzer 05.09.: ,ein Hebel unter 2
     ist kein Hebel').
 
-        untere   die hoechste Stufe <= gerechneter Hebel - im Budget, hervorgehoben
+        untere   die hoechste Stufe <= gerechneter Hebel - sie liegt IM BUDGET
         obere    die naechste Stufe darueber - mit ihrem Ueberschuss ueber das
                  Budget, und NUR, wenn sie die Hebelgrenze nicht uebersteigt;
                  liegt ihre Liquidation vor dem Stop, heisst sie ,nicht sicher'
+
+    ⚠️⚠️ AENDERUNG 20.09.2026 - DAS FELD HEISST JETZT `im_budget`, NICHT
+    MEHR `hervorgehoben`. Nutzerentscheidung: *,Hervorhebung fuer die
+    Empfehlung, die Durchfuehrung liegt ohnehin bei mir - nicht alle
+    Hebel sind fuer alle Assets verfuegbar.`*
+
+    Die EMPFEHLUNG ist der GERECHNETE Hebel. Keine Stufe ist mehr ,die
+    richtige`: welche einstellbar ist, haengt am Asset und weiss diese
+    Rechnung nicht. `im_budget` bleibt als SACHAUSSAGE (passt ins
+    Risikobudget), sie ist keine Empfehlung mehr
 
     Trifft der Hebel eine Stufe, gibt es nur sie. Liegt er UNTER der kleinsten
     Stufe (alter Weg ohne Hebel aus der Quote), gibt es nur die kleinste - ohne
@@ -410,7 +420,7 @@ def hebel_stufen(hebel: float, *, betrag: float, stop_rel: float, crv: float,
     aus = []
     for stufe, hervor in wahl:
         verlust = betrag * stufe * stop_rel
-        z = {"stufe": stufe, "hervorgehoben": bool(hervor),
+        z = {"stufe": stufe, "im_budget": bool(hervor),
              "verlust_am_stop_eur": round(verlust, 2),
              "gewinn_am_ziel_eur": round(verlust * crv, 2),
              "sicher": stufe <= sicher + 1e-9,
@@ -427,21 +437,24 @@ def hebel_stufen(hebel: float, *, betrag: float, stop_rel: float, crv: float,
 
 
 def stufen_kurz(e: dict) -> str | None:
-    """Eine Zeile fuer den Blick-Block der Mail: ,rechnerisch 2,8x - 2x im Budget
-    oder 3x (+7 %%)'. None ohne Stufen."""
+    """Eine Zeile fuer den Blick-Block: ,Empfehlung 2,8x - einstellbar 2x
+    im Budget oder 3x (+7 %%)'. None ohne Stufen.
+
+    ⚠️ Seit 20.09.2026 heisst die gerechnete Zahl EMPFEHLUNG und die
+    Stufen heissen EINSTELLBAR - die Wahl liegt beim Nutzer."""
     st = e.get("hebel_stufen") or []
     if not st:
         return None
     teile = []
     for z in st:
-        if z["hervorgehoben"]:
+        if z["im_budget"]:
             teile.append("%sx im Budget" % _eur(z["stufe"], 0))
         elif not z["sicher"]:
             teile.append("%sx nicht sicher" % _eur(z["stufe"], 0))
         else:
             teile.append("%sx (+%s %% ueber Budget)" % (
                 _eur(z["stufe"], 0), _eur(z["ueber_budget_prozent"] or 0.0, 0)))
-    return ("rechnerisch %sx - " % _eur(e["hebel"], 1)) + " oder ".join(teile)
+    return ("Empfehlung %sx - einstellbar " % _eur(e["hebel"], 1)) + " oder ".join(teile)
 
 
 def hebel_sicher(stop_rel: float, ist_short: bool = False) -> float:
@@ -1127,7 +1140,8 @@ def rechne(*, kurs: float | None, atr: float | None, risiko_eur: float | None,
         e["liquidation_tage_bis_stop"] = tage_bis_liquidation_am_stop(
             stop_rel, hebel, GRENZEN["liquidations_marge"], ist_short)
         # DIE EINSTELLBAREN STUFEN (Nutzerentscheidung 15.09.): beide Nachbarn,
-        # die untere hervorgehoben - siehe `hebel_stufen`.
+        # keine davon hervorgehoben - empfohlen wird der gerechnete Hebel
+        # (20.09.2026); siehe `hebel_stufen`.
         e["hebel_stufen"] = hebel_stufen(
             hebel, betrag=betrag, stop_rel=stop_rel, crv=crv,
             risiko_eur=risiko_eur, kurs=kurs, ist_short=ist_short,
@@ -1447,11 +1461,19 @@ def saetze(e: dict, marken: list | None = None,
         # 2.382-rundung, Nutzerentscheidung: beide Nachbarstufen zeigen, die
         # untere hervorheben, nicht aufrunden). Jede Stufe traegt IHRE Zahlen -
         # wer 3x eroeffnet, liest die Zahlen von 3x, nicht die von 2,84x.
-        z.append(f"Hebel           rechnerisch {_eur(e['hebel'], 2)}x  "
-                 f"(Grenze: {e['hebel_grenze']}) - einstellbar:")
+        # ⚠️⚠️ DIE EMPFEHLUNG IST DER GERECHNETE HEBEL (20.09.2026).
+        # Vorher trug die untere Stufe das ➤ - damit stand dort ,das
+        # ist die Empfehlung`, obwohl die Rechnung etwas anderes sagt:
+        # bei 4,17x wurde 3,0x markiert, also 28 Prozent weniger Hebel.
+        # Nutzerentscheidung: *,die Durchfuehrung liegt ohnehin bei mir
+        # - nicht alle Hebel sind fuer alle Assets verfuegbar.`*
+        z.append(f"Hebel           ➤ EMPFEHLUNG {_eur(e['hebel'], 2)}x  "
+                 f"(Grenze: {e['hebel_grenze']})")
+        z.append("                einstellbare Stufen - welche, haengt "
+                 "vom Asset ab:")
         for _st in e["hebel_stufen"]:
-            _marke = "  ➤ " if _st["hervorgehoben"] else "    "
-            _art = ("im Budget" if _st["hervorgehoben"]
+            _marke = "    "
+            _art = ("im Budget" if _st["im_budget"]
                     else "NICHT SICHER" if not _st["sicher"]
                     else f"+{_eur(_st['ueber_budget_prozent'] or 0.0, 0)} % ueber Budget")
             if not _st["sicher"]:
@@ -1459,10 +1481,14 @@ def saetze(e: dict, marken: list | None = None,
                          f"laege vor dem Stop")
                 continue
             _tage = _st.get("liquidation_tage_bis_stop")
-            # Die NICHT hervorgehobene Stufe sagt ein kurzes Fenster in IHRER
-            # Zeile - ohne `!!`, sonst stuende sie im Kopf, obwohl sie nicht die
-            # Empfehlung ist.
-            _kurz = (not _st["hervorgehoben"] and _tage is not None
+            # ⚠⚠ ZURUECKGENOMMEN AM 20.09., NOCH BEIM BAUEN: ich hatte
+            # vorgeschlagen, die `!!`-Warnung fuer JEDE Stufe in den Kopf zu
+            # heben. Die eigene Pruefung hat gezeigt, warum das falsch ist -
+            # die OBERE Stufe hat fast immer ein kuerzeres Fenster (Testfall:
+            # 5x mit 4 Tagen gegen 25 Tage Haltedauer). Im Kopf staende die
+            # Warnung dann bei JEDEM Hebelsignal; das ist Laerm, nicht
+            # Information. Sie bleibt in IHRER Zeile.
+            _kurz = (not _st["im_budget"] and _tage is not None
                      and e.get("haltedauer_tage")
                      and _tage < float(e["haltedauer_tage"]))
             z.append(f"{_marke}{_eur(_st['stufe'], 0)}x  {_art:<22}"
@@ -1473,9 +1499,11 @@ def saetze(e: dict, marken: list | None = None,
                         else ", erreicht den Stop schon am ersten Tag" if _tage < 1
                         else ", hinter dem Stop bis etwa Tag " + _eur(_tage, 0))
                      + (" - kuerzer als die geschaetzte Haltedauer" if _kurz else ""))
-            # 2.445-FENSTER auch je Stufe - fuer die HERVORGEHOBENE, die
-            # empfohlene; die Marke `!!` bringt die Zeile in den Kopf.
-            if (_st["hervorgehoben"] and _tage is not None
+            # 2.445-FENSTER im Kopf NUR fuer die Stufe IM BUDGET - das ist
+            # die, die realistisch gefahren wird. Die obere sagt es in ihrer
+            # eigenen Zeile (`_kurz` oben); im Kopf waere es bei jedem
+            # Hebelsignal zu lesen und damit wertlos.
+            if (_st["im_budget"] and _tage is not None
                     and e.get("haltedauer_tage")
                     and _tage < float(e["haltedauer_tage"])):
                 z.append(f"Sicher bis      Tag {_eur(max(0.0, _tage), 0)} bei "
@@ -1524,7 +1552,7 @@ def saetze(e: dict, marken: list | None = None,
         z += list(_hq.get("saetze") or [])
     elif _hq_luecke:
         z.append("   " + str(_hq_luecke))
-    _unten = next((x for x in (e.get("hebel_stufen") or []) if x["hervorgehoben"]), None)
+    _unten = next((x for x in (e.get("hebel_stufen") or []) if x["im_budget"]), None)
     if _unten is not None and e["hebel"] > 1:
         # Die Ergebniszeile gehoert zur HERVORGEHOBENEN Stufe - die gerechnete
         # Zahl (z. B. 2,84x) laesst sich nicht eroeffnen.

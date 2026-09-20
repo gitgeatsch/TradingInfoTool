@@ -932,11 +932,13 @@ def baue_mail(*, symbol: str, name: str | None, kurs_eur: float,
                           f"{preis(_r.get('ziel_bis_eur') or _r['ziel_von_eur'])} EUR")
         # ⚠️ HEBELSTUFEN (15.09.2026, 2.382-rundung): statt einer gerundeten
         # Zahl die einstellbaren Stufen; das Ergebnis gehoert zur UNTEREN,
-        # hervorgehobenen Stufe - dieselben Zahlen wie in der Rechnung.
+        # Stufe IM BUDGET - dieselben Zahlen wie in der Rechnung.
+        # ⚠⚠ SEIT 20.09.2026 ist das keine EMPFEHLUNG mehr, sondern
+        # eine Sachaussage: empfohlen wird der gerechnete Hebel.
         from agent.entscheidungsrechnung import stufen_kurz as _ER_STUFEN
         _stufen_zeile = _ER_STUFEN(_r) if _r.get("hebel_stufen") else None
         _unten_st = next((x for x in (_r.get("hebel_stufen") or [])
-                          if x.get("hervorgehoben")), None)
+                          if x.get("im_budget")), None)
         if _r.get("betrag_eur") is not None:
             _hb = float(_r.get("hebel") or 1.0)
             _blick.append(f"Betrag          {eur(_r['betrag_eur'])} EUR - "
