@@ -2,7 +2,7 @@
 
 *Erzeugt aus `bestand.py`. **Nicht von Hand aendern.***
 
-⚠️ **Wofuer:** die Methodik hat **124** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
+⚠️ **Wofuer:** die Methodik hat **126** nummerierte Abschnitte und ist chronologisch gewachsen — sie steht nicht einmal in numerischer Reihenfolge. Der Inhalt wird bewusst NICHT umgeschrieben: die Chronologie ist selbst ein Beleg dafuer, wann was gelernt wurde. Hier ist nur der Zugang.
 
 Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`.
 
@@ -37,7 +37,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10152 |
 | **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10488 |
 
-## Block, Bootstrap und Abhaengigkeit (42)
+## Block, Bootstrap und Abhaengigkeit (44)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -83,6 +83,8 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9454 |
 | **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9756 |
 | **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10345 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10595 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10671 |
 
 ## Trennschaerfe und Positivkontrolle (19)
 
@@ -108,7 +110,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10345 |
 | **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10488 |
 
-## Zielgroesse und MASSSTAB (49)
+## Zielgroesse und MASSSTAB (50)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -161,8 +163,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9314 |
 | **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10152 |
 | **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10262 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10671 |
 
-## Auswahl, Menge und Universum (51)
+## Auswahl, Menge und Universum (52)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -217,6 +220,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9978 |
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10063 |
 | **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10262 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10595 |
 
 ## Kombination, Schichtung, Redundanz (19)
 
@@ -268,7 +272,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9659 |
 | **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 9978 |
 
-## Marktbefunde (43)
+## Marktbefunde (44)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -315,8 +319,9 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9659 |
 | **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9857 |
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10063 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10595 |
 
-## Pruefdisziplin und Urteilslogik (21)
+## Pruefdisziplin und Urteilslogik (22)
 
 | Abschnitt | Titel | Zeile |
 |---|---|---|
@@ -341,6 +346,7 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10063 |
 | **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10345 |
 | **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10488 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10671 |
 
 ## Ohne Thema zugeordnet (11)
 

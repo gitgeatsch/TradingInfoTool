@@ -2,7 +2,9 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 18.09.2026 · letzter Commit `e02e9e5` (Phase 1 vollständig: 1.1–1.7) · am NB gepullt und neu gestartet · ⚠️ **Nutzer unterwegs, Verbindung unsicher** – Arbeiten laufen am Desktop, die Notebook-Kontrollen **K14, K16, K17, K6, K11a** werden beim nächsten Pull **gebündelt** geprüft
+**Stand:** 20.09.2026 · letzter Commit `1b743e3` (**A1 gefallen** – die Messanlage ist auf `barriere` geeicht) · Prüfsuite **2988 Prüfungen, 3 rot** (alle im Paket `Neuaufnahme`, reiner Desktop-Datenstand, kein Codefehler)
+
+**Am Notebook:** letzter Pull `7490586` (schlanke Diagnose) · Laufzeitcode aus `02eca50` (terminmarkt-Protokoll) und `f92205f` (Laufzeitwächter) ist **gepullt und neu gestartet**. ⚠️ Für den nächsten **Export** ist **kein Pull nötig** – die schlanke Diagnose liegt seit `7490586` dort. `1b743e3` enthält **keinen Laufzeitcode** (Messskript, Befunde, Dokumente).
 
 ## Zuerst lesen (in dieser Reihenfolge)
 
@@ -72,6 +74,12 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 
 ## Als Nächstes
 
+1. ⏳ **NB-Export (schlank) – er ist zugleich Kontrolle K26.** Nach dem Export zuerst: ist die Diagnose **rund 8 MB statt 295 MB**, stehen die **Timeouts** still, und trägt sie das Feld `diagnose_umfang`? Danach in dieser Reihenfolge **K21, K25, K16, K6, K11a**.
+2. ⏳ **Entscheidung des Nutzers offen: Phase 4 Punkt 2, Vorschlag E1–E5** (Hebel-Einstieg auf `barriere`, r(q)-Simulation, *derselbe Trade als Spot*). Ohne diese Antwort wird nicht gebaut.
+3. Danach **Phase 4** weiter → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → **Abnahme M1**.
+
+### Erledigt (Chronik)
+
 1. ✔ **NB-Export 18.09. 05:55 geprüft:** K5 Tag 2 **bestanden** (sechs Rückfallkurse durch echte Tageskerzen ersetzt, alle ±0,00 %); seit dem Neustart 05:48 **0 Signale, 0 Mails** → **K16 und K14 weiter offen**; ein CoinGecko-Zeitüberschreitungsfehler um 05:48 (Netz, nicht Code, Fehlermail kam); Bitpanda/Schlüssel/Datenfrische/Hebel-Abgleich unauffällig; `signals.gruppe` befüllt (25 krypto, 2 aktien, 1 rohstoffe, 1 themen_etf)
 2. ✔ 0.4 + 0.3 gebaut – Commit auf Ja, NB nur Pull (kein Neustart)
 3. ✔ 0.12 gebaut – Phase 0 ist damit bis auf **0.11** (Pausenschalter, erst vor Phase 8) und die Entscheidung **N12** abgeschlossen
@@ -80,9 +88,17 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 
 ## Offene Entscheidungen des Nutzers
 
+- ⏳ **Phase 4 Punkt 2 (E1–E5)** – vorgelegt am 20.09., **noch nicht beantwortet**. Es ist die einzige Entscheidung, die den Weg zu M1 gerade blockiert.
+- ~~N3~~ **beantwortet 18.09.** – (b) bestätigt: die Bewertung gilt nur auf der Stellvertretermenge
 - ~~N12~~ **entfällt** – war falsch gestellt; die Regel R-R4/P1 beantwortet sie (2.459-ungemessen). Offen bleibt **N3** (A8): Bewertung gilt nur auf der Stellvertretermenge – **(b) bestätigt 18.09.**
 
 ## Offene Notebook-Kontrollen
+
+⚠️ **Beim nächsten Export zuerst diese drei** – sie belegen, dass die Bauten vom 19./20.09. im Betrieb wirklich greifen:
+
+- **K26** (nach dem nächsten Export): ist die Diagnose **rund 8 MB** statt 295 MB, steht `diagnose_umfang` darin, und **bleiben die Zeitüberschreitungen aus**? ➔ belegt 2.484-schlank
+- **K25** (nach dem nächsten **geplanten** Neustart): kommt **keine** Stillstandsmail? Und kommt beim **nächsten echten** Ausfall über 45 min eine, mit Spur in `api_health`? ➔ belegt 2.482-waechter
+- **K21** (nach dem Export): steht eine **`terminmarkt`-Zeile** in `zellen_lauf` – oder bleibt sie **zu Recht** leer (die Stufe greift nur in 4 von 508 Zeilen)? Höchstens **eine** Zeile je Symbol und Tag. ➔ belegt 2.481
 
 - ✔ **K13** ETF-Knöpfe gesperrt (G2X per Bildschirmfoto bestätigt)
 - ✔ **K14** BESTÄTIGT 18.09.: Sammelmails mit `· Rohstoffe` / `· Themen-ETF` / `· Aktien`, Krypto ohne Zusatz · alt:, Krypto unverändert; Export `signals.gruppe`

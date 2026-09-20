@@ -297,6 +297,7 @@ hinein, 202 heraus), aus `gate_durchlaessigkeit` der Notebook-Sicherung.
 | **Modul** | `agent/auswahl.py`, Rangbildung in `agent/marktrang.py` |
 | **Prüft** | Querschnittsrang in der Assetklasse; **Bestandspositionen sind ausgenommen** — die Verkaufsfrage darf die Auswahl nicht sperren |
 | **7 Tage** | 16.242 durch, **10.555 verloren** |
+| **Gemessen 19.09.2026** | ⛔ **trägt nicht** (2.479): keine Zelle schließt das Band. Bei H20 ist die Anlage zu grob (0,40 R), bei H5 löst sie auf und die Wirkung liegt darunter. ➔ **Mengensteuerung, kein Qualitätsfilter** — sie spart Modellaufrufe, sie wählt nicht besser |
 
 ### 6 `terminmarkt` — „OI-Aufbau nicht im obersten Fünftel"
 
@@ -306,6 +307,8 @@ hinein, 202 heraus), aus `gate_durchlaessigkeit` der Notebook-Sicherung.
 | **Modul** | `agent/positionierung.py`, Fünftel-Rang über `open_interest_snapshot` (Grundlage F-168) |
 | **Prüft** | den **Zeitpunkt**, nicht das Asset: ist der Terminmarkt überhitzt? |
 | **7 Tage** | 16.242 durch, 0 verloren |
+| **Gemessen 19.09.2026** | ⚠️ **im Betrieb fast wirkungslos** (2.481): sie greift in **4 von 508** Zeilen. Die Größe ist als Kandidat registriert |
+| **Geändert 19.09.2026** | Die Stufe war **nicht protokolliert** — die Null oben ist deshalb auch eine Lücke. Seither steht sie in `rollen_gate.PROTOKOLL_IMMER` **und** in `NUR_EINMAL_JE_TAG` (höchstens eine Zeile je Symbol und Tag). ⏳ Kontrolle **K21** am Notebook |
 
 ### 7 `wiederholung` — „nicht kürzlich schon gefragt"
 

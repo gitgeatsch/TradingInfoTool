@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 85 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 126 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -17,7 +17,7 @@ Dokuments). Ziel: eine feste, wiederholbare Vorgehensweise für (A) synthetische
 Tests hier am Gerät und (B) die Analyse echter Notebook-Exporte, inklusive
 Lerneffekt über die Zeit.
 
-Stand: 2026-07-28. Bei Bedarf ergänzen, nicht neu erfinden.
+Stand: 2026-09-20 (letzter Abschnitt 2.485). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
 
 ---
 
@@ -10590,3 +10590,130 @@ besser ist als ihre Teile.
 
 ⚠️ Die Kalibrierung „0,080 → 16,5 % Durchlass" sagt, wie **streng** die
 Schwelle ist — **nicht, was dabei herauskommt.**
+---
+
+## 2.477 ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gefallen sind
+
+**Warum dieser Abschnitt:** An zwei Tagen sind vier Urteile gekippt — keines
+davon, weil sich der Markt anders verhielt, sondern weil die **Messung**
+nicht hielt, was sie behauptete. Zwei davon waren eigene Aufbaufehler, die
+ich selbst gefunden habe (2.479-eigene-fehler), zwei kamen erst durch eine
+zusätzliche Probe heraus (2.477-stabilitaet). Die sieben Prüfungen unten
+sind der Ertrag; sie gehören **vor** das Urteil, nicht danach.
+
+⚠️ Sie ersetzen nichts aus 2.188 (Messstandard) oder 2.216 (Nullbezug) —
+sie kommen dazu.
+
+### 1 Die Saatprobe — ein TRÄGT, das an der Saat hängt, ist kein TRÄGT
+
+Das Band wird aus einem Blockbootstrap gezogen, und der hängt am
+Zufallsstartwert. Liegt das Urteil **knapp** an der Grenze, entscheidet die
+Saat. Prüfung: dieselbe Messung mit **fünf** Saaten (`SAATEN = (0, 7, 13,
+23, 37)`); es gilt nur, was **fünfmal** trägt.
+
+> Am 19.09. fielen so **beide** TRÄGT-Urteile aus der B1/B2/B3-Reihe —
+> eines trug 1 von 5, das andere 4 von 5 (2.477-stabilitaet). Ohne die
+> Probe wäre eine Verkaufsregel auf einem Zufallsstartwert gebaut worden.
+
+### 2 Die Blocklänge wird **belegt**, nicht gesetzt
+
+`messnorm._block(h) = max(15, 3·h)` ist eine **Vorgabe**, kein Befund. Sie
+stimmt nur, wenn die Tagesreste darüber hinaus nicht mehr zusammenhängen.
+Prüfung: `messnorm.pruefe_block()` misst die Autokorrelation der
+Blockmittel gegen die Grenze 0,15 und gibt sie **mit der Zahl** aus.
+
+⚠️ Eine zu kurze Blocklänge erzeugt zu enge Bänder — genau der Vorwurf,
+der zwei Wochen lang als 2.238 im Register stand und den Hebel blockierte.
+
+### 3 Die Besetzung steht **vor** der Deutung
+
+Eine Zelle mit einem einzigen Ereignis liefert eine Zahl, aber keine
+Messung. Prüfung: `besetzung()` gibt je Zelle aus, **wie viele** Fälle
+tatsächlich hineingehen, und `mindest_verkauft` wirft zu dünne Zellen
+vorher hinaus.
+
+### 4 Die Nullwelt zieht aus der **bewertbaren** Menge
+
+Zieht die Nullwelt aus **allen** Ankern, obwohl das Urteil nur für die
+bewertbaren gebildet wird, dann misst der Unterschied die
+**Verfügbarkeit einer Bewertung** mit — nicht die Bewertung.
+
+> Kontrolle am 20.09.: `entscheider` trägt mit +0,2137 R **auch** gegen die
+> strengere Nullwelt aus den Bewertbaren (2.480-nullwelt-bewertbar). Das
+> Urteil hielt — die Kontrolle war trotzdem nötig, denn ohne sie wäre
+> nicht zu sagen gewesen, welche der beiden Größen gemessen wurde.
+
+### 5 Der **Träger** bestimmt die Ankermenge — und damit das Ergebnis
+
+Wer eine Stufe an einer Größe aufhängt, die nur auf einem Teil der Werte
+existiert, misst still auf einer kleineren Menge.
+
+> `funding` als Träger ergab **211,8** Anker je Tag, ein kursbasierter
+> Träger **340,3** (2.479-eigene-fehler). Abhilfe: Träger **kursbasiert**
+> wählen und mit einer **Trägerprobe** zeigen, dass der Wechsel des
+> Trägers das Ergebnis nicht verschiebt (gemessen: 0,0000 R).
+
+### 6 Der **Bezug** ist die wählbare Menge, nicht die ganze
+
+Eine Auswahlstufe ist daran zu messen, ob sie **aus den Wählbaren** besser
+greift als der Zufall — nicht daran, wie sie gegen alle Anker dasteht. Der
+Vergleich gegen alle schreibt ihr die Wirkung der Vorstufen gut.
+
+### 7 Das Familienrisiko wird **ausgewiesen**
+
+Wer n Zellen prüft, findet bei 2,5 % je Zelle mit
+`familienfehler(n) = 1 − (1 − 0,025)^n` irgendwo etwas. Die Zahl gehört in
+die Ausgabe, damit ein einzelnes TRÄGT aus zwanzig Zellen nicht wie ein
+einzelnes TRÄGT aus einer gelesen wird.
+
+---
+
+## 2.485 ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026)
+
+**Der Fall:** Befund 2.238 behauptete seit dem 09.09., das Band sei auf
+**binären** Zielgrößen (`barriere`) rund **viermal zu eng** — deshalb trage
+dort sogar `zufall`. Das war der Engpass A1: solange er stand, war der
+**Hebel nicht messbar**.
+
+Am 20.09. wurde zuerst versucht, das mit einer Überschlagsrechnung zu
+klären. Zweimal — und es kamen zwei Antworten heraus:
+
+| Rechnung | Faktor | liest sich als |
+|---|---|---|
+| σ / √**Blöcke** | 3,2 bis 10,5 | „viermal zu eng" — 2.238 bestätigt |
+| σ / √**Tage** | 0,42 bis 1,35 | „passt" — 2.238 widerlegt |
+
+⚠️⚠️ **Welche stimmt, hängt genau an der Frage, die geprüft werden soll:**
+wie stark die Tage voneinander abhängen. Die Anlage trifft dazu eine
+Annahme — und beide Formeln treffen dieselbe Art von Annahme. Eine Anlage
+mit einer Rechnung zu prüfen, die dieselbe Voraussetzung macht wie die
+Anlage, ist **keine Prüfung, sondern eine Wiederholung**.
+
+⚠️ Erschwerend: ich hatte beim ersten Anlauf **denselben Rechenfehler
+gemacht wie 2.238** (durch √Blöcke statt √Tage, dazu 1,96 statt 1,645) und
+damit den Befund **bestätigt** (2.485-eigener-rechenfehler). Deshalb stehen
+im Werkzeug heute **beide** Formeln nebeneinander, und die falsche ist als
+falsch beschriftet.
+
+➔ **DAS VERFAHREN, DAS KEINE FORMEL VORAUSSETZT:** die **Fehlalarmquote**.
+Man baut Welten **ohne** Effekt und zählt, wie oft die Anlage TRÄGT sagt.
+Das ist dasselbe Verfahren, das am 08.09. den Selbsttest (2.204) und am
+09.09. den Nullbezug (2.216) entschieden hat.
+
+**Ergebnis:** 100 Nullwelten je Arm, zwei Arme auf **denselben** Welten —
+`bewegung_r` (stetig, Vergleichsarm) und `barriere` (binär, die Frage).
+**1 von 100** auf beiden, Sollwert 5 %. 2.238 ist **abgelöst**, A1 ist
+gefallen.
+
+⚠️ **Der Vergleichsarm ist Pflicht.** Ohne ihn wäre eine hohe Quote nicht
+der **Zielgröße** zuzuordnen — sie könnte am Prüfstand liegen.
+
+⚠️ **Was daraus NICHT folgt:** warum die Messung am 09.09. anders ausfiel,
+ist **nicht geklärt**. Eine Vermutung wäre hier keine Erklärung.
+
+### Zwei Fallen der **Gegenprüfung**, am selben Tag gefunden
+
+| Falle | Warum sie täuscht | Richtig |
+|---|---|---|
+| Die Mutation **löscht ihren Anker** | Die Prüfung wird rot, weil der Text fehlt — nicht, weil sie greift. Sie hätte auch nie gegriffen | Die Mutation dreht **Reihenfolge oder Bedeutung** und **lässt den Anker stehen** |
+| Die Prüfung sättigt sich am **Docstring** | `_quelltext` filtert Kommentarzeilen, aber **nicht** den Docstring. „Die Überlappung ist gesetzt" war grün, weil sie im Docstring **beschrieben** stand — der Aufruf hätte fehlen können | Für **Verhalten** ohne Docstring prüfen (`ueberlappung=HORIZONT` im Aufruf). Für **Angaben**, die ein Mensch lesen soll (z. B. Laufzeit), gehört der Text umgekehrt **in den Docstring** — im Kommentar sieht ihn keine Prüfung |
