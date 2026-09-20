@@ -23890,21 +23890,66 @@ def paket_messbasen() -> None:
            "zweimal gepflegt - eine eigene Liste liefe irgendwann "
            "auseinander, genau wie `baue_messbasis_paket.QUELLEN` es "
            "ausdruecklich verbietet (bekommen: %s)" % (sorted(_je),))
+    # ---- ⚠️⚠️⚠️ AM NOTEBOOK GIBT ES EINE VIERTE FORM ------------------
+    #
+    # Gefunden am 20.09.2026 auf die Nutzerfrage, wann die Pruefdateien
+    # gebraucht werden - und dabei fiel auf, dass die Suite am Notebook
+    # seit dem 12.09. nicht mehr gelaufen ist.
+    #
+    # ⚠️ Die drei Pruefungen unten zaehlten Formen AUF. Als am 20.09.
+    # `betriebskopie` dazukam, wurde die erste am Notebook ROT und die
+    # beiden anderen BLIND - sie filtern auf `voll` und uebersprangen
+    # damit genau die Datei, um die es geht. Am Desktop faellt das nicht
+    # auf, weil dort `voll` steht.
+    #
+    # ➔ Die Formen stehen jetzt an EINER Stelle, und die beiden
+    #   Inhaltspruefungen fragen, was eine Form TRAEGT - nicht, wie sie
+    #   heisst.
+    _FORMEN = ("voll", "betriebskopie", "symbolliste", "fehlt",
+               "nicht lesbar")
+
+    # ⚠️⚠️ DIE LISTE WIRD GEGEN DEN QUELLTEXT GEPRUEFT, nicht gepflegt.
+    # Sonst veraltet sie beim naechsten Mal genauso - und am Desktop
+    # merkt es wieder niemand, weil dort nur `voll` vorkommt.
+    import re as _re2
+    _muster = chr(122) + chr(92) + chr(91) + chr(34) + "form" + chr(34) + chr(92) + chr(93) + ' = "([a-z ]+)"'
+    _gesetzt = set(_re2.findall(_muster, _q))
+    pruefe(P, "⚠️⚠️⚠️ die Formenliste ist vollstaendig",
+           _gesetzt and _gesetzt <= set(_FORMEN),
+           "jede Form, die `_messbasen()` setzen kann, muss hier stehen - "
+           "sonst ist die Pruefung am Notebook rot oder blind, waehrend "
+           "sie am Desktop gruen bleibt. Im Code gesetzt: %s · hier "
+           "bekannt: %s" % (sorted(_gesetzt), sorted(_FORMEN)))
     pruefe(P, "⚠️ jede Zeile sagt die FORM",
-           all(z.get("form") in ("voll", "symbolliste", "fehlt",
-                                 "nicht lesbar") for z in _je.values()),
-           "ohne die Form ist die Zeile wertlos: `symbolliste` ist am "
-           "Notebook der Sollzustand, `fehlt` ist es nur fuer messdaten.db "
+           all(z.get("form") in _FORMEN for z in _je.values()),
+           "ohne die Form ist die Zeile wertlos: `symbolliste` und "
+           "`betriebskopie` sind am Notebook der Sollzustand, `fehlt` "
+           "war es fuer messdaten.db bis zum Schnitt-Job "
            "(bekommen: %s)" % ([z.get("form") for z in _je.values()],))
-    pruefe(P, "⚠️⚠️ und bei voller Datei das ALTER der Daten, nicht der Datei",
+    # ⚠️⚠️⚠️ OHNE FORMENLISTE (Gegenpruefung 20.09.). Zwei Anlaeufe
+    # davor waren beide falsch: erst filterte die Pruefung auf `voll`
+    # und war am Notebook BLIND; dann leitete sie die Formen aus einem
+    # 900-Zeichen-Fenster im Quelltext ab - bei 1.400 Zeichen liefert
+    # dasselbe Verfahren ein FALSCHES Ergebnis. Eine Pruefung, die an
+    # einer Zeichenzahl haengt, ist der naechste Fehler.
+    #
+    # ➔ Sie braucht die Form gar nicht: wer ein DATUM meldet, muss
+    #   auch das ALTER melden. Das gilt fuer jede Form, heute und
+    #   nach der naechsten.
+    pruefe(P, "⚠️⚠️ wer ein Datum meldet, meldet auch das ALTER",
            all("datenalter_tage" in z for z in _je.values()
-               if z.get("form") == "voll"),
-           "`datenfrische` faellt fuer diese Dateien das Urteil `liste` und "
-           "meldet nur das ABRUFalter - das Alter der DATEN stand bis zum "
-           "20.09. in keiner Ueberwachung (2.486-messbasis-alt)")
-    pruefe(P, "⚠️ die Symbolzahl steht dabei",
+               if "juengste_daten" in z),
+           "`datenfrische` faellt fuer diese Dateien das Urteil `liste` "
+           "und meldet nur das ABRUFalter - das Alter der DATEN stand "
+           "bis zum 20.09. in keiner Ueberwachung (2.486-messbasis-alt). "
+           "⚠️ Formunabhaengig geprueft: die Betriebskopie am Notebook "
+           "meldet ein Datum und muss deshalb auch ein Alter melden, "
+           "obwohl sie nicht `voll` heisst")
+    # ⚠️ Ebenso ohne Formenliste: jede LESBARE Datei zaehlt ihre
+    # Symbole. Nur `fehlt` und `nicht lesbar` koennen es nicht.
+    pruefe(P, "⚠️ jede lesbare Datei nennt ihre Symbolzahl",
            all(isinstance(z.get("symbole"), int) for z in _je.values()
-               if z.get("form") in ("voll", "symbolliste")),
+               if z.get("form") not in ("fehlt", "nicht lesbar")),
            "sie ist der einzige Weg zu sehen, ob eine Symbolliste am "
            "Notebook von der Messbasis am Desktop abgewichen ist - "
            "uebertragen wird von Hand, ohne Ausloeser")
@@ -23956,6 +24001,7 @@ def paket_betriebsreihen() -> None:
     import extract_notebook_diagnose as _X
 
     _qb = _quelltext("scheduler/background.py")
+    _q2 = _quelltext("pruefe_pakete.py")
     _ql = _quelltext("lade_messreihen.py")
     _qh = _quelltext("backtest_llm1_historisch.py")
 
@@ -24111,6 +24157,21 @@ def paket_betriebsreihen() -> None:
     if _os.path.exists(_p):
         _os.remove(_p)
     def _lauf(args):
+        """⚠️⚠️⚠️ NIE OHNE EIGENEN PFAD (20.09.2026, 2.487-nb-blind).
+
+        Ohne `--db` laeuft der Lader gegen die Vorgabe
+        `data/messdaten.db`. Am Desktop ist das die volle Messbasis ohne
+        Marke - die Sperre greift, die Pruefung ist gruen. AM NOTEBOOK
+        traegt dieselbe Datei die Marke `_nur_betrieb`: die Sperre greift
+        NICHT, und `main()` laeuft DURCH - 493 Binance-Abrufe und ein
+        Schreibzugriff auf die Betriebsdatei, ausgeloest von einer
+        PRUEFUNG.
+        """
+        if "--db" not in args:
+            raise AssertionError(
+                "Aufruf ohne --db: am Notebook wuerde diese Pruefung in "
+                "die Betriebsdatei schreiben (2.487-nb-blind). "
+                "Bekommen: %s" % (args,))
         try:
             _LM.main(args)
             return ""
@@ -24122,11 +24183,63 @@ def paket_betriebsreihen() -> None:
            "`--behalte-tage 500` auf der vollen Messbasis loescht 4,3 "
            "Millionen Zeilen unwiederbringlich - und jeder Befund darauf "
            "waere nicht mehr reproduzierbar (R-R11)")
+    # ⚠️⚠️⚠️ GEGEN EINE WEGWERFDATEI, NICHT GEGEN `data/messdaten.db`
+    # (20.09.2026, auf Nutzerfrage nach den Pruefdateien gefunden).
+    #
+    # Die erste Fassung rief `lade_messreihen` OHNE `--db`, also gegen die
+    # Vorgabe. Am Desktop ist das die volle Messbasis ohne Marke - die
+    # Sperre greift, die Pruefung ist gruen. AM NOTEBOOK traegt dieselbe
+    # Datei die Marke `_nur_betrieb`: die Sperre greift NICHT, die
+    # Pruefung waere rot - und `main()` liefe durch und startete einen
+    # echten Ladelauf mit 493 Binance-Abrufen und Schreibzugriff.
+    #
+    # ⚠️ Eine Pruefung mit Seiteneffekt auf die Betriebsdatei. Genau die
+    # Klasse ,NB rot, Desktop gruen` - und hier mit Schaden.
+    _voll = _os.path.join(_tmp.gettempdir(), "pruef_volle_messbasis.db")
+    if _os.path.exists(_voll):
+        _os.remove(_voll)
+    _c0 = _sq.connect(_voll)
+    _c0.executescript(_LM.SCHEMA)
+    _c0.execute(
+        "INSERT INTO price_history_ohlc VALUES "
+        "('X','krypto','USD','2026-01-01',1,1,1,1,1,'x','t')")
+    _c0.commit()
+    _c0.close()
     pruefe(P, "⚠️⚠️⚠️ und `--betriebskopie` auf der vollen Messbasis auch",
            "volle Messbasis, keine Betriebskopie" in _lauf(
-               ["--betriebskopie", "--behalte-tage", "500"]),
+               ["--db", _voll, "--betriebskopie", "--behalte-tage", "500"]),
            "der Job zeigt auf denselben Pfad wie die Messbasis am Desktop. "
            "Ohne diesen Riegel haette ein Probelauf hier sie gekuerzt")
+
+    # ⚠️⚠️⚠️ KEIN AUFRUF OHNE EIGENEN PFAD - ERZWUNGEN, NICHT GESUCHT
+    # (20.09.2026, 2.487-nb-blind).
+    #
+    # Ohne `--db` laeuft der Lader gegen die Vorgabe. Am Desktop greift
+    # die Sperre, alles gruen. AM NOTEBOOK traegt dieselbe Datei die
+    # Marke `_nur_betrieb`: die Sperre greift NICHT, `main()` laeuft
+    # DURCH - 493 Binance-Abrufe und ein Schreibzugriff, ausgeloest von
+    # einer PRUEFUNG.
+    #
+    # ⚠️⚠️ DREI ANLAEUFE MIT EINER QUELLTEXTSUCHE SIND GESCHEITERT: sie
+    # fand sich selbst; dann traf der Suchbegriff nie und meldete
+    # ,Aufrufe: 0`; dann traf er `durchlauf(` und `ablauf(`. Das war das
+    # Signal, dass die Textsuche hier das falsche Werkzeug ist.
+    #
+    # ➔ Die Bedingung steht jetzt IM HELFER `_lauf`, der bei fehlendem
+    #   `--db` wirft. Hier wird nur nachgewiesen, dass er das tut - eine
+    #   Verhaltenspruefung statt einer Suche.
+    _erzwungen = False
+    try:
+        _lauf(["--betriebskopie", "--behalte-tage", "500"])
+    except AssertionError:
+        _erzwungen = True
+    except BaseException:                                # noqa: BLE001
+        _erzwungen = False
+    pruefe(P, "⚠️⚠️⚠️ keine Pruefung ruft den Lader ohne eigenen Pfad",
+           _erzwungen,
+           "sonst schriebe diese Pruefung am Notebook in die "
+           "Betriebsdatei. `_lauf` wirft deshalb selbst, statt es dem "
+           "Aufrufer zu ueberlassen")
 
     # ---- E2  Die Trennung an ihrem Engpass -------------------------------
     pruefe(P, "⚠️⚠️⚠️ eine Messung bricht auf der Betriebskopie AB",
