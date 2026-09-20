@@ -674,6 +674,45 @@ dann entsteht keine Nacharbeit.
    ungemessen. Sechs Spalten in `signals` wären eine **Schemaänderung am
    Betrieb** (**2.496-hebel-roh-fehlt**, Schritt 66).
 
+   ### ✔✔ PUNKT C — DIE `turnover`-LÜCKE IST NICHT NEUTRAL
+
+   ⚠️ **C ist keine Quellenfrage** — das war schon entschieden. Die Suche
+   ist am 13.09. beendet worden (2.417): neun Anbieter an der Quelle
+   geprüft, freie historische Umlaufmenge gibt es nicht, `turnover` bleibt
+   auf **66 von 536** Symbolen.
+
+   **Offen war, was die Bewertung tut, wenn der Wert fehlt:** sie setzt
+   `punkte = 0.0` und markiert `luecke=True`. Die **Schwelle** wird je
+   Datenlage ausgeglichen — die **Quote** nicht, und damit der **Hebel**
+   nicht.
+
+   #### ⚠️⚠️⚠️ Eine Lücke von 0,0 Punkten ist nicht die Mitte
+
+   `turnover_fuenftel` trägt **+3,15 / +0,83 / +0,22 / −1,79 / −2,40**.
+   Null liegt zwischen Fünftel 2 und 3 — das beste Fünftel **verliert
+   3,15 Punkte**, das schlechteste wird um **2,40 geschont**.
+
+   **Gemessen an den 16 echten Hebelsignalen:** 13 entstanden **ohne**
+   `turnover`-Wert (nur BTC und BNB haben eine Reihe).
+
+   | | |
+   |---|---|
+   | bei **13 von 13** | liegt der heutige Hebel **unterhalb der gesamten Spanne** — Abstand im Median **+0,45 Stufen** |
+   | ⚠️⚠️ bei **2 von 5 Rängen** (40 %) | entstünde **gar kein Hebel** — es wäre Spot |
+
+   ➔ **Die Lücke wirkt in beide Richtungen falsch:** sie lässt
+   Hebelgeschäfte zu, die eine vollständige Bewertung womöglich nicht
+   zugelassen hätte — und setzt den Hebel zu niedrig an, wenn sie zulässt.
+
+   ⚠️ **Das ist eine Schranke, keine Fehlerschätzung.** Der wahre Rang der
+   13 ist unbekannt; die Spanne sagt, **wie viel auf dem Spiel steht**,
+   nicht wie falsch die Zahl ist.
+
+   **Zu entscheiden (Nutzer, keine Messfrage):** darf ein Signal mit
+   fehlendem tragenden Beitrag überhaupt ein **Hebel**geschäft werden?
+   Heute ist die Lücke stillschweigend zugunsten des Trades aufgelöst.
+   Befund **2.497-turnover-luecke**, Schritt 66.
+
    ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
    20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im
    Median bei **1,37** (Hebel) bzw. **1,87** (Spot) — **1.113 von 1.446**
