@@ -29,6 +29,22 @@
 
 ➔ **Phase 4 Punkt 2 ist frei**: Hebel-Einstieg auf `barriere`, r(q)-Simulation, *derselbe Trade als Spot*.
 
+## ✔✔ `schnitt` rechnet wieder — und das Notebook kann ihn jetzt auch
+
+⚠️⚠️ **Gefunden auf Nutzerfrage nach den Zusatzdatenbanken** (2.486-schnitt-tot): `marktrang.schnitte()` gab seit dem **18.09.** **null** Symbole zurück — die Messbasis war 12 Tage alt, die eingebaute Grenze liegt bei 10. Gemeldet wurde das nur ins Log; `datenfrische` kannte `messdaten.db` als Quelle **gar nicht**.
+
+✔ **Aufgefrischt** (2.487-auffrischung): 493 Paare, 348 brauchbar, 544.136 Kerzen, 271 s. Vorher gesichert nach R-R11 (`messdaten_vor_auffrischung_20_09.db`). `schnitte()` liefert jetzt **537** statt 0; die Suite nennt Krypto nicht mehr als veraltet.
+
+✔ **Schnitt-Job gebaut** (2.487-schnittjob, Nutzerentscheidung *„C ist die einzige brauchbare Variante“*): `betriebsreihen_job` holt die Reihen **täglich 03:30 UTC** selbst von Binance — **146 s** Erstbefüllung, **2 s** Nachlauf, **30 MB** statt 1,5 GB, Gewicht 493 gegen 2.400/Minute. Paket Betriebsreihen 17/17, 16 Mutationen.
+
+⚠️⚠️⚠️ **Die Trennung** (Nutzervorgabe *„die Trennung ist erforderlich“*): die NB-Datei trägt die Marke `_nur_betrieb`, und `lade_reihen_aus_db` **bricht ab** — dort gehen **32 Messskripte** durch. Dazu zwei Riegel am Erzeuger. Festgehalten in CLAUDE.md, Regelwerksmanual § 6 und Memory `feedback_betriebskopie_ist_keine_messbasis`.
+
+⚠️⚠️ **Offen und nicht gelöst:** die Grundgesamtheit ist am Notebook eine **andere** — **398** Symbole gegen **517** am Desktop. Ein Fünftel über 398 ist nicht dasselbe wie über 517. Heute folgenlos (`schnitt` ist zurückgenommen), **vor** einer Freischaltung zu entscheiden — und das ist **M1-Kriterium 3**, die Akkumulation.
+
+⚠️ **Drei eigene Fehler, alle von der Prüfung gefangen:** `DB` statt `db` (NameError zur Laufzeit, derselbe wie im Laufzeitwächter), `SystemExit` fällt nicht unter `except Exception` (hätte den Scheduler-Thread mitgerissen — am Desktop bei **jedem** Lauf), und `sys.stdout.reconfigure()` gibt es als Dienst nicht.
+
+⚠️ **Laufzeitcode: NB braucht Pull UND Neustart**, danach **K27**.
+
 ## ✔ Betriebsvorfall 20.09. — die Netzaussetzer sind erklärt
 
 **Es war die Diagnose, nicht der Pull** (2.484-ursache). Der Nutzer hat es getrennt geprüft: *Pull ohne Diagnose blieb ruhig*. 295 MB Upload auf einen Drive-Ordner sättigen die Leitung; die Abrufe der laufenden Anwendung scheitern am 15-Sekunden-Zeitlimit — Terminmarkt 4/43, +48 Jobfehler.
@@ -96,6 +112,7 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 
 ⚠️ **Beim nächsten Export zuerst diese drei** – sie belegen, dass die Bauten vom 19./20.09. im Betrieb wirklich greifen:
 
+- **K27** (nach Pull **und Neustart**, am Morgen danach): läuft der `betriebsreihen_job` um **03:30 UTC**? Erwartet im Log: `⚠️ BETRIEBSKOPIE - Marke \`_nur_betrieb\` gesetzt (500 Tage, mindestens 220 Kerzen)` und danach `Betriebsreihen: nachgezogen in N s - \`schnitt\` liefert jetzt M Symbole` mit **M > 300**. Im Export: Abschnitt `messbasen`, Größe `schnitt` mit **Form `betriebskopie`**, rund 30 MB, `datenalter_tage` 0 oder 1 — und `wirkung.schnitt_symbole` > 300. ⚠️ **Eine Null dort ist ein Befund.** Der erste Lauf dauert rund 150 s, die folgenden Sekunden. ➔ belegt 2.487-schnittjob
 - **K26** (nach dem nächsten Export): ist die Diagnose **rund 8 MB** statt 295 MB, steht `diagnose_umfang` darin, und **bleiben die Zeitüberschreitungen aus**? ➔ belegt 2.484-schlank
 - **K25** (nach dem nächsten **geplanten** Neustart): kommt **keine** Stillstandsmail? Und kommt beim **nächsten echten** Ausfall über 45 min eine, mit Spur in `api_health`? ➔ belegt 2.482-waechter
 - **K21** (nach dem Export): steht eine **`terminmarkt`-Zeile** in `zellen_lauf` – oder bleibt sie **zu Recht** leer (die Stufe greift nur in 4 von 508 Zeilen)? Höchstens **eine** Zeile je Symbol und Tag. ➔ belegt 2.481

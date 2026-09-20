@@ -1381,6 +1381,85 @@ def _aktien_reihen(conn) -> int:
     return geschrieben
 
 
+# ---------------------------------------------------------------------------
+# ⚠️⚠️ DIE BETRIEBSKOPIE DER KURSREIHEN (20.09.2026, Nutzerentscheidung C)
+# ---------------------------------------------------------------------------
+#
+# WOZU. `marktrang.schnitte()` rechnet aus `data/messdaten.db` den
+# 200-Tage-Schnitt und daraus den Querschnittsrang. Die Datei lag am
+# Notebook nie - entschieden am 02.09., weil `schnitt` damals kein Beitrag
+# mehr war. Damit war er dort nicht rechenbar.
+#
+# ⚠️ WARUM DAS JETZT GEAENDERT WIRD: `schnitt` ist mit +0,1759 R der
+# staerkste gemessene Beitrag, hat als einziger 100 % Abdeckung und ist
+# dieselbe Achse wie `UNTER_SMA`, das Akkumulationsmass - M1-Kriterium 3.
+#
+# ⚠️⚠️ UND WARUM KEIN TRANSFER: der 200-Tage-Schnitt wandert taeglich, und
+# `SCHNITT_FRISCHE_TAGE` laesst hoechstens zehn Tage altes Material zu.
+# Eine einmalige Uebertragung traegt zehn Tage, dann faellt er wieder
+# still aus - genau das ist am 18.09. passiert (2.486-schnitt-tot).
+#
+# GEMESSEN am 20.09.: 493 Paare, ein Aufruf je Paar, 0,242 s und Gewicht 1
+# - rund 2 Minuten und 493 Gewichtspunkte gegen eine Grenze von 2.400 je
+# Minute. Am Notebook 0 Rate-Limit-Treffer in 72 Stunden.
+BETRIEBSREIHEN_DB = "data/messdaten.db"
+BETRIEBSREIHEN_TAGE = 500      # 200 fuer den Schnitt, Rest Puffer
+BETRIEBSREIHEN_MINDEST = 220   # BETRIEBSgrenze, nicht die Messgrenze (400)
+
+
+def betriebsreihen_job(conn_factory) -> None:
+    """Zieht die Kursreihen fuer `schnitt` nach - taeglich, inkrementell.
+
+    ⚠️⚠️ DIE DATEI IST EINE BETRIEBSKOPIE UND KENNZEICHNET SICH SELBST
+    (`_nur_betrieb`). Sie traegt nur die letzten Tage und keine
+    eingestellten Werte; jede Messung darauf waere ueberlebensverzerrt.
+    `backtest_llm1_historisch.lade_reihen_aus_db` bricht deshalb ab, wenn
+    jemand es doch versucht - 32 Messskripte gehen durch diese Stelle.
+
+    ⚠️ Schreibt NICHT in die Produktionsdatenbank. `lade_messreihen.py`
+    sperrt das hart; hier steht der Pfad ohnehin fest.
+    """
+    import lade_messreihen as LM
+    t0 = time.time()
+    try:
+        LM.main(["--db", BETRIEBSREIHEN_DB, "--schreiben", "--betriebskopie",
+                 "--behalte-tage", str(BETRIEBSREIHEN_TAGE),
+                 "--mindest", str(BETRIEBSREIHEN_MINDEST), "--seit-letztem"])
+    except SystemExit as stop:
+        # ⚠️⚠️ `lade_messreihen` WIRFT SystemExit, NICHT Exception - und das
+        # faengt `except Exception` nicht (SystemExit erbt von
+        # BaseException). Ohne diesen Zweig haette die Sperre gegen das
+        # Kuerzen der vollen Messbasis den Scheduler-Thread mitgerissen.
+        #
+        # ⚠️ AM DESKTOP IST GENAU DAS DER NORMALFALL: dort liegt unter
+        # demselben Pfad die volle Messbasis, und die darf dieser Job
+        # nicht anfassen. Kein Fehler, sondern der Schutz bei der Arbeit -
+        # deshalb eine Warnung und KEINE Fehlermail.
+        logger.warning("Betriebsreihen: abgelehnt - %s", stop)
+        return
+    except Exception as exc:                                 # noqa: BLE001
+        logger.exception("Betriebsreihen: Nachlauf fehlgeschlagen")
+        _notify_job_failure("betriebsreihen",
+                            "%s: %s" % (type(exc).__name__, exc))
+        return
+    # ⚠️ DER NACHWEIS IST DAS ERGEBNIS, NICHT DER DURCHLAUF: gemeldet wird,
+    # ob `schnitte()` danach wirklich Werte liefert. Ein Job, der laeuft
+    # und nichts bewirkt, sieht sonst aus wie Erfolg.
+    try:
+        import agent.marktrang as _MR
+        _MR._SCHNITT_ZWISCHEN.pop("werte", None)
+        _n = len(_MR.schnitte())
+    except Exception:                                        # noqa: BLE001
+        _n = -1
+    logger.info("Betriebsreihen: nachgezogen in %.0f s - `schnitt` liefert "
+                "jetzt %d Symbole", time.time() - t0, _n)
+    try:
+        with conn_factory() as conn:
+            db.merke_joblauf(conn, "betriebsreihen")
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Betriebsreihen: Jobmarke nicht geschrieben")
+
+
 def externe_reihen_job(conn_factory) -> None:
     """Die Fremdquellen der Rolle G auffrischen (2026-08-16, Schritt 3).
 
@@ -4969,6 +5048,28 @@ def build_scheduler(
         args=[db_conn_factory, fred_api_key],
         id="makro_analog",
         next_run_time=_staggered_start(4),
+        misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # ⚠️ DIE BETRIEBSKOPIE DER KURSREIHEN (20.09.2026) - taeglich 03:30 UTC.
+    # Der Zeitpunkt ist nicht beliebig: zwischen 04:00 und 04:38 draengen
+    # sich zwoelf Jobs, davor ist frei. Und er liegt VOR dem 05:30-Kursjob,
+    # damit `schnitt` schon steht, wenn die Kette laeuft.
+    scheduler.add_job(
+        betriebsreihen_job,
+        "cron",
+        hour=3,
+        minute=30,
+        args=[db_conn_factory],
+        id="betriebsreihen",
+        # ⚠️ INDEX 9, NICHT 6: bei 6 starten schon drei andere Jobs, und
+        # dieser ist der schwerste - die ERSTbefuellung holt 493 Paare in
+        # rund 150 s. Er gehoert ans Ende der Staffelung, damit er nicht
+        # mit yfinance und dem Bestandsabgleich zusammenfaellt (derselbe
+        # Grund wie 2026-07-31: ,database is locked` 24 s nach Neustart).
+        # ⚠️ Der Sofortstart ist Absicht: sonst stuende `schnitt` nach
+        # einem Neustart bis 03:30 UTC nicht zur Verfuegung. Nach der
+        # Erstbefuellung dauert der Nachlauf nur noch 2 Sekunden.
+        next_run_time=_staggered_start(9),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Fremdquellen der Rolle G (2026-08-16) - taeglich um 06:35, also VOR den

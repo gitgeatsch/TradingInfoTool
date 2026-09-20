@@ -256,6 +256,30 @@ REGISTRATUR: tuple[Quelle, ...] = (
            datei="data/onchain_historie.db", spalten=("datum", ""),
            # messmenge.ABDECKUNG[turnover]
            erwartet=66),
+    # ---- ⚠️⚠️ DIE EINE, DIE WIRKLICH AUSGELESEN WIRD (20.09.2026) ----
+    #
+    # `messdaten.db` stand in KEINER Quelle - 21 wurden geprueft, diese
+    # nicht. Genau deshalb hat niemand gemerkt, dass `schnitt` am 18.09.
+    # still ausfiel: `marktrang.schnitte()` gibt lieber nichts zurueck als
+    # einen alten Schnitt (Grenze `SCHNITT_FRISCHE_TAGE` = 10 Tage), und
+    # diese Entscheidung ging nur ins Log (Befund 2.486-schnitt-tot).
+    #
+    # ⚠️ DREI TAGE, NICHT ZEHN: die Meldung soll VOR dem Ausfall kommen,
+    # nicht danach. Bei einem taeglichen Job sind drei Tage bereits drei
+    # verpasste Laeufe.
+    Quelle("schnitt_reihe", "M", "price_history_ohlc", 3,
+           "betriebsreihen_job (taeglich 03:30 UTC) / lade_messreihen.py",
+           "Kursreihen fuer den 200-Tage-Schnitt - die einzige Messdatei, "
+           "die wirklich ausgelesen wird",
+           datei="data/messdaten.db", spalten=("date", ""),
+           # ⚠️⚠️ 536 IST DIE MESSBASIS (messmenge.ABDECKUNG
+           # ["kursreihen"]), nicht die Zahl der heute handelbaren
+           # Paare (493). Am Notebook traegt die BETRIEBSKOPIE nur
+           # 398 - und genau das soll man sehen: ein Fuenftel ueber
+           # 398 ist nicht dasselbe wie ueber 536. Die Zeile
+           # ,398 von 536` IST der offene Punkt aus
+           # 2.487-schnittjob, nicht ein Fehlalarm.
+           erwartet=536),
 )
 
 # Wie der Stand je Tabelle gelesen wird. Bewusst hier und nicht in der

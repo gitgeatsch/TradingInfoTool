@@ -2954,13 +2954,39 @@ def _messbasen() -> dict:
             c = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
             try:
                 z["symbole"] = len(c.execute(abfrage).fetchall())
-                liste = c.execute(
-                    "SELECT 1 FROM sqlite_master WHERE type='table' "
-                    "AND name='_nur_symbolliste'").fetchone()
-                if liste:
+                marken = {r[0] for r in c.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' "
+                    "AND name IN ('_nur_symbolliste','_nur_betrieb')")}
+                if "_nur_symbolliste" in marken:
                     z["form"] = "symbolliste"
                     z["hinweis"] = ("Sollzustand am Notebook - die Werte "
                                     "kommen live (2.368, 2.453-turnover)")
+                elif "_nur_betrieb" in marken:
+                    # ⚠️⚠️ DIE BETRIEBSKOPIE (20.09.2026). Sie sieht aus wie
+                    # die Messbasis und ist es nicht - gekuerzt, ohne
+                    # eingestellte Werte. Deshalb steht hier eine EIGENE
+                    # Form, nicht `voll`: wer sie mit `voll` verwechselt,
+                    # haelt eine Attrappe fuer die Wahrheit.
+                    z["form"] = "betriebskopie"
+                    _m = c.execute("SELECT behalte_tage, mindest_kerzen, "
+                                   "gebaut_am FROM _nur_betrieb "
+                                   "LIMIT 1").fetchone() or (None, None, None)
+                    z["behalte_tage"], z["mindest_kerzen"] = _m[0], _m[1]
+                    z["marke_gebaut_am"] = _m[2]
+                    z["hinweis"] = ("Sollzustand am Notebook - taeglich vom "
+                                    "`betriebsreihen_job` nachgezogen. "
+                                    "NICHT messen (Survivorship, fehlende "
+                                    "Historie)")
+                    _t, _sp = DATUM[groesse]
+                    _mx = c.execute("SELECT MAX(%s) FROM %s"
+                                    % (_sp, _t)).fetchone()[0]
+                    z["juengste_daten"] = str(_mx)[:19] if _mx else None
+                    try:
+                        z["datenalter_tage"] = (
+                            heute - datetime.strptime(
+                                str(_mx)[:10], "%Y-%m-%d").date()).days
+                    except Exception:                        # noqa: BLE001
+                        z["datenalter_tage"] = None
                 else:
                     z["form"] = "voll"
                     tab, sp = DATUM[groesse]
@@ -2979,10 +3005,25 @@ def _messbasen() -> dict:
             z["form"] = "nicht lesbar"
             z["grund"] = "%s: %s" % (type(exc).__name__, exc)
         aus.append(z)
+    # ---- ⚠️⚠️ DER NACHWEIS IST DIE WIRKUNG, NICHT DIE DATEI ----------
+    #
+    # Eine Datei kann daliegen und trotzdem nichts leisten: am 18.09. war
+    # `messdaten.db` vorhanden, aber 12 Tage alt - und `schnitte()` gibt
+    # ab 10 Tagen NICHTS zurueck. Die Zeile unten ist die einzige, die das
+    # sichtbar macht (Befund 2.486-schnitt-tot).
+    wirkung = {}
+    try:
+        import agent.marktrang as _MR2
+        _MR2._SCHNITT_ZWISCHEN.pop("werte", None)
+        wirkung["schnitt_symbole"] = len(_MR2.schnitte())
+        wirkung["frischegrenze_tage"] = _MR2.SCHNITT_FRISCHE_TAGE
+    except Exception as exc:                                 # noqa: BLE001
+        wirkung["grund"] = "%s: %s" % (type(exc).__name__, exc)
     return {"hinweis": "welche Messbasis liegt an DIESEM Geraet und in "
-                       "welcher Form - `symbolliste` ist am Notebook der "
-                       "Sollzustand, nicht ein Mangel",
-            "je_groesse": aus}
+                       "welcher Form - `symbolliste` und `betriebskopie` "
+                       "sind am Notebook der Sollzustand, nicht ein Mangel",
+            "je_groesse": aus,
+            "wirkung": wirkung}
 
 
 def _marktrang_ausfaelle(zeilen: list) -> dict:

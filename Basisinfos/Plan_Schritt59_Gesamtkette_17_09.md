@@ -466,7 +466,7 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 |---|---|---|---|
 | 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" | Phase 3 |
 | 2 | **Hebel gemessen** | Trägt die Quote den Hebel (r(q))? Zielzone 2–5x belegt; Blocker **A1** entschieden | Phase 4 |
-| 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch | Phase 6 / Schritte 25–27 |
+| 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch. ⚠⚠ **NEU 20.09.:** das Mass ist `schnitt`/`UNTER_SMA`, und das Notebook rechnet es seit dem Schnitt-Job (2.487-schnittjob) — **aber auf einer anderen Grundgesamtheit** (398 statt 517 Symbole). Ein Fünftel über 398 ist nicht dasselbe wie über 517. **Vor** der Freischaltung zu entscheiden: die eingestellten Werte mit in die Betriebskopie, oder auf der Betriebsmenge neu messen | Phase 6 / Schritte 25–27 |
 | 4 | **LLM-Kette gemessen** | **Gepaarter Versuch** auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall. **Produktiv geht die gemessene Fassung** | Phase 8 (neu zugeschnitten) |
 | 5 | **Durchgängig am Papier** | Je Stufe Quelle, Messstand, Kennzeichnung; keine ungemessene Größe in der Eingabe oder ausdrücklich ausgewiesen (2.459-ungemessen) | Phase 9 |
 | 6 | **Betrieb sauber** | Protokollierung läuft (✔ Phase 1), Sperren begründet, Mail korrekt | Schritt 60 |

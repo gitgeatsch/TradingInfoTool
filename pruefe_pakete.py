@@ -15265,15 +15265,21 @@ def paket_abrufvermerk() -> None:
     from agent import marktrang as _MR
     import messmenge as _mm
     _erw = {q.name: q for q in _DF.REGISTRATUR if getattr(q, "erwartet", 0)}
-    pruefe(P, "⚠️ alle drei Messquellen haben eine Erwartungszahl",
-           len(_erw) == 3,
+    pruefe(P, "⚠️ alle VIER Messquellen haben eine Erwartungszahl",
+           len(_erw) == 4,
            "ohne sie meldet der Vermerk nur einen Zeitstempel: %s"
            % sorted(_erw))
     pruefe(P, "⚠️⚠️ und sie stimmt mit der MESSBASIS ueberein, nicht mit "
               "einer Tabelle",
            _erw["onchain_reihe"].erwartet == _mm.ABDECKUNG["turnover"]
            and _erw["funding_reihe"].erwartet == _mm.ABDECKUNG["funding"]
-           and _erw["terminmarkt_reihe"].erwartet == _mm.ABDECKUNG["terminmarkt"],
+           and _erw["terminmarkt_reihe"].erwartet == _mm.ABDECKUNG["terminmarkt"]
+           # ⚠️ Auch die vierte zaehlt gegen die MESSBASIS (536),
+           # nicht gegen die 493 heute handelbaren Paare. Am
+           # Notebook zeigt die Betriebskopie dann ,398 von 536` -
+           # der offene Punkt aus 2.487-schnittjob, sichtbar statt
+           # verschwiegen.
+           and _erw["schnitt_reihe"].erwartet == _mm.ABDECKUNG["kursreihen"],
            "die Messbasis ist die Vereinigung, die Tabelle nur ein Teil "
            "davon - onchain %d/%d, funding %d/%d, terminmarkt %d/%d"
            % (_erw["onchain_reihe"].erwartet, _mm.ABDECKUNG["turnover"],
@@ -17642,11 +17648,17 @@ def paket_terminmarkt() -> None:
     # Frischepruefung, die es seit dem 17.08. gibt.
     from agent import datenfrische as _DF
     _mess = [q for q in _DF.REGISTRATUR if q.rolle == "M"]
-    pruefe(P, "⚠️⚠️ die drei MESSQUELLEN sind in `datenfrische` "
-           "registriert", len(_mess) == 3,
-           "sie speisen die Messbasis von funding, turnover und der "
-           "OI-Sperre - die einzigen drei Groessen, die live Punkte "
-           "geben oder sperren. Gefunden: %s"
+    # ⚠️ SEIT 20.09.2026 SIND ES VIER, und die vierte ist anderer
+    # Art: die drei ersten liefern nur die SYMBOLLISTE (die Werte
+    # kommen live), `schnitt_reihe` liefert die KURSREIHEN selbst.
+    # Sie stand in keiner Registratur - deshalb fiel `schnitt` am
+    # 18.09. still aus (2.486-schnitt-tot).
+    pruefe(P, "⚠️⚠️ die VIER MESSQUELLEN sind in `datenfrische` "
+           "registriert", len(_mess) == 4,
+           "drei speisen die Symbollisten von funding, turnover und "
+           "der OI-Sperre; die vierte (`schnitt_reihe`) speist die "
+           "Kursreihen des Schnittabstands und ist die EINZIGE, die "
+           "wirklich ausgelesen wird. Gefunden: %s"
            % ([q.name for q in _mess] or "KEINE"))
     pruefe(P, "und jede nennt ihre eigene DATEI",
            all(q.datei and q.spalten for q in _mess),
@@ -23925,6 +23937,157 @@ def paket_messbasen() -> None:
            "jemand die Zeile `fehlt` als belanglos")
 
 
+def paket_betriebsreihen() -> None:
+    """Prueft E1-E5: die Betriebskopie der Kursreihen und ihre Trennung.
+
+    ⚠️⚠️ DER KERN IST DIE TRENNUNG (Nutzervorgabe 20.09.2026: *"die
+    Trennung ist erforderlich"*). Am Notebook liegt eine GEKUERZTE
+    `messdaten.db` - ohne Historie, ohne eingestellte Werte. Sie sieht aus
+    wie die Messbasis. Wer darauf misst, bekommt ein stilles Fehlergebnis.
+    """
+    P = "Betriebsreihen"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tmp
+
+    import lade_messreihen as _LM
+    import scheduler.background as _BG
+    import agent.datenfrische as _DF
+    import extract_notebook_diagnose as _X
+
+    _qb = _quelltext("scheduler/background.py")
+    _ql = _quelltext("lade_messreihen.py")
+    _qh = _quelltext("backtest_llm1_historisch.py")
+
+    # ---- E4  Der Job haengt im Takt --------------------------------------
+    # ⚠️⚠️ IM BLOCK DIESES JOBS, NICHT IM GANZEN MODUL (Gegenpruefung
+    # 20.09.): die erste Fassung suchte `hour=3,` irgendwo - und blieb
+    # gruen, als die Mutation den Job auf 04:30 legte, mitten in den
+    # Cluster. `hour=3,` steht auch bei anderen Jobs.
+    _blk = ""
+    for _teil in _qb.split("scheduler.add_job("):
+        if 'id="betriebsreihen"' in _teil.split(")")[0] + _teil[:400]:
+            _blk = _teil[:400]
+            break
+    pruefe(P, "⚠️⚠️ der Tagesjob ist eingetragen, nicht nur geschrieben",
+           'id="betriebsreihen",' in _blk and "hour=3," in _blk
+           and "minute=30," in _blk,
+           "eine Jobfunktion ohne `add_job` ist toter Code - genau der "
+           "Fall, den 2.482-marktrang schon einmal hatte. 03:30 UTC liegt "
+           "VOR dem Jobcluster 04:00-04:38 und vor dem 05:30-Kursjob")
+    pruefe(P, "⚠️⚠️ er ruft den ECHTEN Lader, keine Kopie",
+           "LM.main([" in _qb and "import lade_messreihen as LM" in _qb,
+           "ein nachgebauter Ablauf ist die naechste Stelle, die "
+           "auseinanderlaeuft - stehende Vorgabe: der Test ruft den "
+           "echten Code")
+    pruefe(P, "⚠️⚠️⚠️ SystemExit wird EIGEN gefangen",
+           "except SystemExit as stop:" in _qb,
+           "`lade_messreihen` wirft SystemExit, und das faengt `except "
+           "Exception` NICHT (BaseException). Ohne diesen Zweig reisst die "
+           "Sperre gegen das Kuerzen der Messbasis den Scheduler-Thread "
+           "mit - am DESKTOP ist das der Normalfall")
+    # ⚠️ OHNE DEN VORBEHALT STUERZT DIE PRUEFUNG AB, wenn eine Mutation
+    # den Zweig entfernt - IndexError statt rot, und die ganze Suite haengt
+    # (dieselbe Falle wie `lies()` mit SystemExit, 2.484).
+    _zw = (_qb.split("except SystemExit as stop:", 1)[1]
+              .split("except Exception", 1)[0]
+           if "except SystemExit as stop:" in _qb else "_notify_job_failure")
+    pruefe(P, "⚠️ und der Desktop-Fall loest KEINE Fehlermail aus",
+           _zw.count("_notify_job_failure") == 0,
+           "am Desktop liegt unter demselben Pfad die volle Messbasis; die "
+           "Ablehnung ist der Schutz bei der Arbeit, kein Stoerfall")
+    pruefe(P, "⚠️⚠️ der Job meldet die WIRKUNG, nicht den Durchlauf",
+           "schnitte()" in _qb.split("def betriebsreihen_job", 1)[1]
+                              .split("def ", 1)[0],
+           "eine Datei kann daliegen und nichts leisten - am 18.09. war sie "
+           "da und 12 Tage alt, und `schnitte()` gab NICHTS zurueck. Ein "
+           "Job, der nur ,fertig` meldet, haette das wiederholt")
+    pruefe(P, "⚠️ `db` heisst `db`, nicht `DB`",
+           "db.merke_joblauf(conn, \"betriebsreihen\")" in _qb,
+           "im Modul ist es `import database.db as db`; `DB` waere ein "
+           "NameError ZUR LAUFZEIT - der Import faellt nicht auf. "
+           "Derselbe Fehler wie am 20.09. im Laufzeitwaechter")
+
+    # ---- E1  Die beiden Sperren gegen das Kuerzen ------------------------
+    _p = _os.path.join(_tmp.gettempdir(), "pruef_betriebsreihen.db")
+    if _os.path.exists(_p):
+        _os.remove(_p)
+    def _lauf(args):
+        try:
+            _LM.main(args)
+            return ""
+        except SystemExit as e:
+            return str(e)
+    pruefe(P, "⚠️⚠️⚠️ `--behalte-tage` ohne `--betriebskopie` wird abgelehnt",
+           "nur fuer die BETRIEBSKOPIE" in _lauf(
+               ["--db", _p, "--behalte-tage", "500"]),
+           "`--behalte-tage 500` auf der vollen Messbasis loescht 4,3 "
+           "Millionen Zeilen unwiederbringlich - und jeder Befund darauf "
+           "waere nicht mehr reproduzierbar (R-R11)")
+    pruefe(P, "⚠️⚠️⚠️ und `--betriebskopie` auf der vollen Messbasis auch",
+           "volle Messbasis, keine Betriebskopie" in _lauf(
+               ["--betriebskopie", "--behalte-tage", "500"]),
+           "der Job zeigt auf denselben Pfad wie die Messbasis am Desktop. "
+           "Ohne diesen Riegel haette ein Probelauf hier sie gekuerzt")
+
+    # ---- E2  Die Trennung an ihrem Engpass -------------------------------
+    pruefe(P, "⚠️⚠️⚠️ eine Messung bricht auf der Betriebskopie AB",
+           "_nur_betrieb" in _qh and "raise RuntimeError(" in _qh,
+           "`lade_reihen_aus_db` ist die Stelle, durch die 32 Messskripte "
+           "ihre Reihen holen. Eine Warnung genuegt nicht - wer misst, "
+           "bekaeme sonst ein Ergebnis, und zwar ein falsches")
+    _c = _sq.connect(":memory:")
+    _c.executescript(_LM.BETRIEB_MARKE)
+    pruefe(P, "⚠️ die Marke traegt Aufbewahrung UND Mindestkerzen",
+           {"behalte_tage", "mindest_kerzen"} <= {
+               r[1] for r in _c.execute("PRAGMA table_info(_nur_betrieb)")},
+           "eine gesenkte Mindestgrenze (220 statt 400), die niemand sieht, "
+           "waere genau die Falle, gegen die die Marke gebaut ist")
+    _c.close()
+
+    # ---- E1  Die Mindestlaenge gilt der REIHE ----------------------------
+    pruefe(P, "⚠️⚠️ im Nachlauf gilt die Mindestlaenge NICHT dem Nachlauf",
+           "_mindest = 1 if (a.seit_letztem and sym in stand)" in _ql,
+           "der Nachlauf holt zwei Kerzen; mit `mindest=220` fielen ALLE "
+           "Reihen als ,zu kurz` durch - genau so gemessen am 20.09. bei "
+           "der Wirkungspruefung. Die gespeicherte Reihe hat die Grenze "
+           "beim ersten Laden bestanden")
+    pruefe(P, "⚠️ nach dem Kuerzen wird aufgeraeumt",
+           'conn.execute("VACUUM")' in _ql,
+           "ohne VACUUM bleiben die geloeschten Seiten belegt - gemessen "
+           "3.006 Zeilen in einer 2,75-MB-Datei. Am Notebook zaehlt jedes MB")
+
+    # ---- E5  Die Ueberwachung -------------------------------------------
+    _q5 = [x for x in _DF.REGISTRATUR if x.name == "schnitt_reihe"]
+    pruefe(P, "⚠️⚠️⚠️ `messdaten.db` steht endlich in der Datenfrische",
+           bool(_q5) and _q5[0].datei == "data/messdaten.db",
+           "sie stand in KEINER der 21 Quellen - deshalb hat niemand "
+           "gemerkt, dass `schnitt` am 18.09. still ausfiel "
+           "(2.486-schnitt-tot)")
+    import agent.marktrang as _MR
+    pruefe(P, "⚠️⚠️ und sie meldet VOR dem Ausfall, nicht danach",
+           bool(_q5) and _q5[0].max_datenalter < _MR.SCHNITT_FRISCHE_TAGE,
+           "`schnitte()` gibt ab %d Tagen NICHTS mehr zurueck. Eine "
+           "Meldung erst dort waere die Nachricht vom Schaden, nicht die "
+           "Warnung davor (Grenze hier: %s)"
+           % (_MR.SCHNITT_FRISCHE_TAGE,
+              _q5[0].max_datenalter if _q5 else "-"))
+
+    # ---- Die Diagnose zeigt es -------------------------------------------
+    _qx = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "⚠️⚠️ die Diagnose kennt die Form `betriebskopie`",
+           '"_nur_betrieb"' in _qx and 'z["form"] = "betriebskopie"' in _qx,
+           "wer sie als `voll` ausweist, haelt eine Attrappe fuer die "
+           "Wahrheit - und genau davor warnt `baue_messbasis_paket.py` seit "
+           "dem 02.09.")
+    _r = _X._messbasen()
+    pruefe(P, "⚠️⚠️ und sie weist die WIRKUNG aus",
+           "wirkung" in _r and "schnitt_symbole" in (_r.get("wirkung") or {}),
+           "die Zahl, an der man sieht, ob `schnitt` wirklich rechnet - "
+           "am 18.09. waere sie 0 gewesen (bekommen: %s)"
+           % ((_r.get("wirkung") or {}).get("schnitt_symbole"),))
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28685,6 +28848,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Diagnoseumfang": paket_diagnoseumfang,
           "A1Eichung": paket_a1eichung,
           "Messbasen": paket_messbasen,
+          "Betriebsreihen": paket_betriebsreihen,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

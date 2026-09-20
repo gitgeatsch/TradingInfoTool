@@ -717,6 +717,141 @@ automatisch UND optional KI-gestützt läuft (siehe oben).
 
 ---
 
+### ⚠️⚠️ Von Hand gepflegt — die vier Messbasis-Datenbanken (Nachtrag 20.09.2026)
+
+**Warum dieser Abschnitt nachgetragen wurde:** Dieses Kapitel heißt „was wann
+wie **automatisch vs. manuell** passiert" — und der manuelle Teil fehlte. Am
+20.09. war die Frage *„wie werden diese Datenbanken aktualisiert und wozu
+brauchen wir sie am Notebook?"* nur durch Lesen von `marktrang.py`,
+`baue_messbasis_paket.py` und 147 Logzeilen zu beantworten. Das ist der
+falsche Weg: **die Doku muss sagen, wozu und wie.**
+
+#### Die vier Dateien
+
+`*.db` steht in `.gitignore`. **Ein `git pull` bringt Code, keine Daten.**
+
+| Datei | Wozu der Betrieb sie liest | Desktop | Notebook |
+|---|---|---|---|
+| `data/funding_historie.db` | **Symbolliste** für den Funding-Rang | 21 MB | 12 KB |
+| `data/onchain_historie.db` | **Symbolliste** für den Turnover-Rang | 21 MB | 12 KB |
+| `data/terminmarkt_historie.db` | **Symbolliste** für den OI-Rang | 492 MB | 16 KB |
+| `data/messdaten.db` | **echte Kursreihen** für den 200-Tage-Schnitt | 1,5 GB | fehlt |
+
+#### ⚠️⚠️ Wozu — und warum eine Symbolliste genügt
+
+Der Rang entsteht **über den Markt**, abgelesen wird er für unsere Werte.
+`marktrang.raenge()` macht in dieser Reihenfolge:
+
+1. `roh = holen()` — holt den **ganzen Markt live** in einem Abruf
+   (Binance führt rund 3.700 Paare).
+2. `basis = messbasis(name)` — liest die **Symbolliste** aus der Datei.
+3. `werte = {s: w for s, w in roh.items() if s in basis}` — **grenzt den
+   Markt auf die Messbasis ein.**
+4. `rang = _rang(werte)` · `_fuenftel(...)` — das Fünftel, mit dem die
+   Bewertung rechnet.
+
+> **Die Datei liefert die Grundgesamtheit, nicht die Werte.** Die Werte sind
+> immer live: Funding von Binance, OI von den Börsen, Umlaufmenge seit dem
+> 14.09. von Coin Metrics.
+
+⚠️ **Deshalb darf sich die Liste NICHT laufend ändern.** Der registrierte
+Beitrag (z. B. Funding +0,0249 R) wurde auf **genau dieser** Grundgesamtheit
+gemessen — 302 Symbole, nicht 3.700. Würde die Liste mit dem Markt
+mitwachsen, wäre das Fünftel eines Wertes etwas anderes als das, was
+gemessen wurde, und zwar **still**. Ein automatischer Abgleich wäre hier
+kein Komfort, sondern ein Fehler.
+
+➔ **Ein Wechsel der Symbolliste ist eine Änderung der Messbasis** und
+unterliegt der Reproduktionspflicht **R-R11**: zuerst reproduzieren, dann
+ändern.
+
+✔ Geprüft am 20.09.2026: die drei Listen am Notebook sind **zeichengleich**
+mit den heutigen Desktop-Mengen — 302 / 122 / 66, kein Symbol Unterschied.
+Dateidatum 02.09. ist deshalb **richtig**, nicht veraltet.
+
+#### Wie sie aktualisiert werden
+
+**Am Desktop laufen alle drei Schritte VON HAND** — es gibt dort keinen Job und
+keinen Auslöser. ⚠️ **Am Notebook ist das seit dem 20.09.2026 anders:** die
+Kursreihen zieht der Job `betriebsreihen_job` täglich um **03:30 UTC** nach
+(siehe unten, „Der Sonderfall `schnitt`“). Die drei Symbollisten bleiben
+Handarbeit.
+
+| Schritt | Befehl | Was er tut |
+|---|---|---|
+| 1 Messreihen | `python lade_messreihen.py` | Tageskerzen aller USDT-Spotpaare von Binance in `messdaten.db` |
+| 2 Fremdreihen | `python hole_fremdreihen.py` · `hole_terminmarkt_historie.py` · `hole_umlaufmenge.py` | Funding, Terminmarkt, Umlaufmenge in die drei Historien-Dateien |
+| 3 Paket fürs NB | `python baue_messbasis_paket.py --ziel "K:/My Drive/Claude_Austauschordner/Messbasis"` | schrumpft die drei auf Symbollisten (176 MB → 40 KB) und markiert jede mit der Tabelle `_nur_symbolliste` |
+
+⚠️ Schritt 3 ist nur nötig, wenn sich in Schritt 2 die **Symbolmenge**
+geändert hat — nicht bei jeder neuen Zeile. Danach die drei Dateien am
+Notebook nach `data/` kopieren.
+
+#### Was passiert, wenn etwas fehlt oder veraltet
+
+| Fall | Folge | Wie du es merkst |
+|---|---|---|
+| Symbolliste **fehlt** | `messbasis()` liefert leer → die Größe wird übersprungen, das Potential liegt bei 0,000, **Stufe 11 sperrt alles** | ⚠️ **lautlos** — das war der „gefährliche Knoten" vom 02.09. Deshalb gibt es das Paket |
+| Symbolliste **zu alt** | Datenfrische meldet nach **21 Tagen** (Rolle M) | Mail und Diagnose-Abschnitt `datenfrische` |
+| `messdaten.db` **fehlt** | `schnitt` entfällt — am Notebook der **abgesprochene** Zustand | einmal je Prozess ein Hinweis (2.389-log) |
+| `messdaten.db` **älter als 10 Tage** | ⚠️⚠️ `schnitte()` gibt **gar nichts** zurück — „lieber nichts als einen alten Schnitt" | **nur eine Logzeile.** `datenfrische` kennt diese Datei nicht (Befund 2.486-schnitt-tot, genau so am 18.09. passiert) |
+
+#### ⚠️⚠️ Der Sonderfall `schnitt` — die einzige echte Geräteabhängigkeit
+
+`schnitt` braucht **keine Symbolliste, sondern Kursreihen**: `schnitte()`
+liest `SELECT symbol, close … ORDER BY symbol, date` und bildet daraus je
+Symbol den 200-Tage-Schnitt, dann den Querschnittsrang über 536 Krypto-Werte.
+
+⚠️ Er ist mit **+0,1759 R** der stärkste gemessene Beitrag, hat als einziger
+**100 % Abdeckung** und ist dieselbe Achse wie `UNTER_SMA`, das
+**Akkumulationsmaß** — also M1-Abnahmekriterium 3.
+
+**Gemessen am 20.09.:** die 1,5 GB werden dafür *nicht* gebraucht. Für 220
+Tage genügen **83.926 Zeilen mit `symbol`, `date`, `close` — rund 3 MB**.
+
+⚠️ **Aber es ist keine einmalige Sache.** Der 200-Tage-Schnitt wandert
+täglich, und `SCHNITT_FRISCHE_TAGE = 10` lässt höchstens zehn Tage altes
+Material zu. Eine einmalige Übertragung trägt also **zehn Tage**, dann fällt
+`schnitt` wieder still aus.
+
+#### ✔ Die Lösung seit 20.09.2026: das Notebook holt selbst
+
+**Nutzerentscheidung:** *„C ist die einzige brauchbare Variante“* — kein
+Transfer, sondern ein eigener Job.
+
+| | |
+|---|---|
+| **Job** | `betriebsreihen_job`, täglich **03:30 UTC** (vor dem Jobcluster 04:00–04:38 und vor dem 05:30-Kursjob) |
+| **Was** | ruft `lade_messreihen.main()` mit `--seit-letztem --behalte-tage 500 --mindest 220 --betriebskopie` |
+| **Kosten** | ein Binance-Aufruf je Paar, Gewicht 1 → rund 493 gegen 2.400/Minute; Nachlauf **2 Sekunden**, Erstbefüllung **146 Sekunden** |
+| **Platz** | **30 MB** statt 1,5 GB |
+| **Nachweis** | der Job meldet nicht „fertig“, sondern *wie viele Symbole `schnitt` danach liefert* |
+
+#### ⚠️⚠️⚠️ DIE TRENNUNG: Betriebskopie ist keine Messbasis
+
+**Nutzervorgabe 20.09.2026:** *„die Trennung ist erforderlich“*
+
+Die Datei am Notebook trägt **nur die letzten 500 Tage** und **keine eingestellten
+Werte**. Sie sieht aus wie die Messbasis. Wer darauf misst, bekommt ein
+Ergebnis — ein falsches, und ohne jeden Hinweis (Survivorship, fehlende
+Historie).
+
+➔ Deshalb **kennzeichnet sie sich selbst** mit der Tabelle `_nur_betrieb`, und
+`backtest_llm1_historisch.lade_reihen_aus_db` — die Stelle, durch die **32
+Messskripte** ihre Reihen holen — **bricht dort ab** statt still zu rechnen.
+
+⚠️ Zwei weitere Riegel: `--behalte-tage` wirkt nur zusammen mit
+`--betriebskopie`, und `--betriebskopie` verweigert sich auf einer Datei, die
+Zeilen enthält und **keine** Marke trägt — also auf der vollen Messbasis.
+Beides ist unumkehrbar, und die Befunde darauf wären nicht mehr reproduzierbar
+(R-R11).
+
+⚠️⚠️ **Offen und ausdrücklich nicht gelöst:** die Grundgesamtheit ist am
+Notebook eine **andere** — Desktop 517 Symbole im Rang, Betriebskopie **398**.
+Ein Fünftel über 398 ist nicht dasselbe wie über 517. Heute folgenlos, weil
+`schnitt` kein scharfer Beitrag ist; **vor** einer Freischaltung zu entscheiden.
+
+
 ## 7. Backward-Tracking im Detail — wie Signal-Ergebnisse geprüft werden
 
 **Zweck:** Schritt 2 der Selbstverifikations-Vision (Schritt 1 war dieses Manual

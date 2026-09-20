@@ -171,6 +171,37 @@ def lade_reihen_aus_db(db: str = "data/tradinginfotool.db",
     # `rollen_eingabe` und `rollen_job` rufen sie bei jedem Lauf. Sie fragt
     # nur ab (SELECT, PRAGMA), also gehoert sie an eine Leseverbindung.
     c = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
+    # ---- ⚠️⚠️⚠️ BETRIEBSKOPIE IST KEINE MESSBASIS (20.09.2026) ------
+    #
+    # Nutzervorgabe: *"die Trennung ist erforderlich"*.
+    #
+    # Seit dem 20.09. haelt das Notebook eine EIGENE `messdaten.db`, die
+    # ein taeglicher Job fuellt - aber nur die letzten Tage, weil der
+    # 200-Tage-Schnitt nicht mehr braucht und 1,5 GB dort nicht liegen
+    # sollen. Diese Datei sieht aus wie die Messbasis und ist es NICHT:
+    # ihr fehlt die Historie, und ihr fehlen die EINGESTELLTEN Werte
+    # (Survivorship, Kapitel 120.3).
+    #
+    # ⚠️ Wer darauf misst, bekommt ein Ergebnis - ein falsches, und ohne
+    # jeden Hinweis. Derselbe Fehlertyp, den `baue_messbasis_paket.py`
+    # mit `_nur_symbolliste` schon einmal abgewehrt hat: *"eine
+    # verkleinerte Datenbank, die aussieht wie eine echte, ist eine
+    # Falle"*.
+    #
+    # DESHALB HIER: 32 Messskripte holen ihre Reihen durch diese
+    # Funktion. Eine Stelle, ein Abbruch, kein stilles Weiterrechnen.
+    if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                 "AND name='_nur_betrieb'").fetchone():
+        _mark = c.execute("SELECT hinweis FROM _nur_betrieb "
+                          "LIMIT 1").fetchone()
+        c.close()
+        raise RuntimeError(
+            "%s ist eine BETRIEBSKOPIE (Marke `_nur_betrieb`) und keine "
+            "Messbasis - sie traegt nur die letzten Tage und keine "
+            "eingestellten Werte. Messen wuerde ein stilles Fehlergebnis "
+            "liefern. Volle Messbasis: `python lade_messreihen.py "
+            "--schreiben`. %s" % (db, (_mark or ("",))[0]))
+
     # ⚠️⚠️ DER ASSETKLASSEN-FILTER (07.09.2026).
     #
     # Diese Abfrage gruppierte nach `(symbol, currency)` und las die Spalte

@@ -42,10 +42,11 @@ JEDE REIHE WIRD GEPRUEFT, BEVOR SIE GESCHRIEBEN WIRD:
 from __future__ import annotations
 
 import argparse
+import os
 import sqlite3
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 
@@ -54,6 +55,86 @@ KLINES = "https://api.binance.com/api/v3/klines"
 MAX_KERZEN = 1000
 MIN_KERZEN = 400
 PRODUKTION = "data/tradinginfotool.db"
+
+# ---------------------------------------------------------------------------
+# ⚠️⚠️⚠️ DIE BETRIEBSKOPIE - UND WARUM SIE SICH SELBST KENNZEICHNET
+# ---------------------------------------------------------------------------
+#
+# Nutzerentscheidung 20.09.2026: *"C ist die einzige brauchbare Variante"*
+# und *"die Trennung ist erforderlich"*.
+#
+# Das Notebook braucht `messdaten.db` fuer EINE Sache: `marktrang.schnitte()`
+# rechnet daraus den 200-Tage-Schnitt. Dafuer genuegen die letzten Monate -
+# gemessen 83.926 Zeilen fuer 220 Tage, rund 3 MB gegen 1,5 GB. Die volle
+# Historie dort vorzuhalten waere weder noetig noch uebertragbar.
+#
+# ⚠️⚠️ ABER EINE GEKUERZTE DATEI SIEHT AUS WIE DIE ECHTE. Ihr fehlt die
+# Historie, und ihr fehlen die EINGESTELLTEN Werte - ohne die ist jede
+# Messung ueberlebensverzerrt (Kapitel 120.3). Wer darauf misst, bekommt ein
+# Ergebnis; ein falsches, und ohne jeden Hinweis.
+#
+# ➔ DESHALB TRAEGT SIE EINE MARKE, genau wie `_nur_symbolliste` in
+#   `baue_messbasis_paket.py`: *"eine verkleinerte Datenbank, die aussieht
+#   wie eine echte, ist eine Falle"*. Gelesen wird sie an der Stelle, durch
+#   die 32 Messskripte gehen - `backtest_llm1_historisch.lade_reihen_aus_db`
+#   bricht dort ab statt still zu rechnen.
+BETRIEB_MARKE = """
+CREATE TABLE IF NOT EXISTS _nur_betrieb (
+    hinweis TEXT NOT NULL, behalte_tage INTEGER NOT NULL,
+    mindest_kerzen INTEGER NOT NULL, gebaut_am TEXT NOT NULL,
+    herkunft TEXT NOT NULL);
+"""
+BETRIEB_HINWEIS = (
+    "BETRIEBSKOPIE - nur die letzten %d Tage, ohne eingestellte Werte. "
+    "NICHT fuer Messungen (Survivorship, fehlende Historie). Volle "
+    "Messbasis: python lade_messreihen.py --schreiben")
+
+
+def ist_betriebskopie(conn) -> bool:
+    """Traegt diese Datei die Marke? Eine Stelle, alle fragen hier."""
+    return bool(conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' "
+        "AND name='_nur_betrieb'").fetchone())
+
+
+def setze_marke(conn, behalte_tage: int, mindest: int) -> None:
+    conn.executescript(BETRIEB_MARKE)
+    conn.execute("DELETE FROM _nur_betrieb")
+    conn.execute("INSERT INTO _nur_betrieb VALUES (?,?,?,?,?)",
+                 (BETRIEB_HINWEIS % behalte_tage, int(behalte_tage),
+                  int(mindest),
+                  datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                  "lade_messreihen.py --betriebskopie"))
+    conn.commit()
+
+
+def letzte_tage(conn, klasse: str) -> dict:
+    """Symbol -> juengstes gespeichertes Datum. Grundlage von --seit-letztem."""
+    try:
+        return {r[0]: r[1] for r in conn.execute(
+            "SELECT symbol, MAX(date) FROM price_history_ohlc "
+            "WHERE assetklasse=? AND currency='USD' GROUP BY symbol",
+            (klasse,))}
+    except sqlite3.OperationalError:
+        return {}
+
+
+def kuerze(conn, klasse: str, behalte_tage: int) -> int:
+    """Alles aelter als N Tage weg - NUR in der Betriebskopie."""
+    grenze = (datetime.now(timezone.utc).date()
+              - timedelta(days=int(behalte_tage))).isoformat()
+    c = conn.execute("DELETE FROM price_history_ohlc "
+                     "WHERE assetklasse=? AND date < ?", (klasse, grenze))
+    weg = c.rowcount or 0
+    conn.commit()
+    # ⚠️ OHNE VACUUM BLEIBEN DIE SEITEN BELEGT. Gemessen am 20.09.:
+    # 3.006 Zeilen in einer 2,75-MB-Datei, weil 14.646 geloeschte
+    # Seiten stehenblieben. Auf dem Notebook zaehlt jedes MB - und
+    # eine Datei, die groesser ist als ihr Inhalt, laedt zu der
+    # falschen Annahme ein, sie trage mehr als sie traegt.
+    if weg:
+        conn.execute("VACUUM")
+    return weg
 KLASSE = "krypto"          # Vorgabe; --klasse setzt sie um
 
 # ⚠️⚠️ `symbol` ist ueber die vier Klassen hinweg KEINE eindeutige Kennung
@@ -197,12 +278,39 @@ def hole_alles(s: requests.Session, paar: str) -> list[tuple]:
     return aus
 
 
-def pruefe(rohe: list[tuple], paar: str) -> tuple[bool, str]:
+def hole_ab(s: requests.Session, paar: str, ab_ms: int) -> list[tuple]:
+    """Nur die Kerzen ab `ab_ms` - der Nachlauf fuer den taeglichen Job.
+
+    ⚠️ EIN Aufruf mit kleinem `limit` statt drei mit 1.000. Gemessen am
+    20.09.: 0,242 s je Paar gegen 0,48 s, und Gewicht 1 statt 5. Fuer 493
+    Paare sind das 2 Minuten und rund 493 Gewichtspunkte gegen eine Grenze
+    von 2.400 je Minute.
+    """
+    r = s.get(KLINES, params={"symbol": paar, "interval": "1d",
+                              "limit": MAX_KERZEN, "startTime": int(ab_ms)},
+              timeout=20)
+    r.raise_for_status()
+    d = r.json()
+    return d if isinstance(d, list) else []
+
+
+def pruefe(rohe: list[tuple], paar: str,
+           mindest: int = MIN_KERZEN) -> tuple[bool, str]:
     """⚠️ Eine Quelle, die sich nicht selbst prueft, verlaesst sich darauf,
     dass eine spaetere Stufe ihren Fehler faengt."""
-    if len(rohe) < MIN_KERZEN:
+    # ⚠️ `mindest` ist die MESSGRENZE (400 Kerzen), nicht die
+    # Betriebsgrenze. Der Nachlauf holt fuenf Kerzen und muesste daran
+    # jedes Mal scheitern - deshalb setzt er sie herunter UND vermerkt das
+    # in der Marke `_nur_betrieb`. Eine gesenkte Grenze, die niemand sieht,
+    # waere genau die Falle, gegen die die Marke gebaut ist.
+    if len(rohe) < mindest:
         return False, f"nur {len(rohe)} Kerzen"
     tage = [_tag(int(z[0])) for z in rohe]
+    if len(tage) < 2:
+        # ⚠️ Eine einzelne Kerze hat keinen Abstand - die Luecken- und
+        # Doppelpruefung unten braucht mindestens zwei. Plausibel muss sie
+        # trotzdem sein, deshalb kein frueher Ausstieg.
+        return _plausibel(rohe, paar)
     if len(set(tage)) != len(tage):
         return False, "doppelte Daten"
     from datetime import date
@@ -210,6 +318,19 @@ def pruefe(rohe: list[tuple], paar: str) -> tuple[bool, str]:
     ab = sorted((dt[i + 1] - dt[i]).days for i in range(len(dt) - 1))
     if ab[len(ab) // 2] != 1:
         return False, f"Median-Abstand {ab[len(ab) // 2]} Tage"
+    return _plausibel(rohe, paar)
+
+
+def _plausibel(rohe: list[tuple], paar: str) -> tuple[bool, str]:
+    """high >= low, alle Preise groesser null.
+
+    ⚠️ EIGENE FUNKTION SEIT 20.09.2026: der taegliche Nachlauf holt
+    manchmal eine EINZIGE Kerze. Die Luecken- und Doppelpruefung
+    braucht mindestens zwei und wuerde sie abweisen - plausibel muss
+    sie aber trotzdem sein. Ohne diese Trennung waere die Wahl
+    gewesen: entweder die Einzelkerze verwerfen oder sie ungeprueft
+    schreiben.
+    """
     for z in rohe:
         o, h, l, c = float(z[1]), float(z[2]), float(z[3]), float(z[4])
         if not (h >= l and min(o, h, l, c) > 0):
@@ -330,7 +451,11 @@ def yf_hole_alles(ticker: str) -> list[tuple]:
     return aus
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    """⚠️ `argv` seit 20.09.2026: der Tagesjob am Notebook ruft diese
+    Funktion direkt auf, statt den Ablauf nachzubauen. Eine Kopie waere
+    die naechste Stelle, die auseinanderlaeuft - und die stehende Vorgabe
+    verlangt, dass der Test den ECHTEN Code ruft."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/messdaten.db")
     ap.add_argument("--schreiben", action="store_true",
@@ -341,19 +466,72 @@ def main() -> int:
                          "(yfinance). Das Portfolio ist NICHT die Messbasis.")
     ap.add_argument("--wieviele", type=int, default=500,
                     help="Obergrenze je Klasse bei den yfinance-Quellen")
+    # ---- ⚠️ DER BETRIEBSMODUS (20.09.2026, Nutzerentscheidung C) -----
+    ap.add_argument("--seit-letztem", action="store_true",
+                    dest="seit_letztem",
+                    help="nur die Kerzen seit dem juengsten gespeicherten "
+                         "Datum holen - ein Aufruf je Paar statt drei")
+    ap.add_argument("--behalte-tage", type=int, default=0,
+                    dest="behalte_tage",
+                    help="nach dem Schreiben alles Aeltere loeschen. "
+                         "NUR zusammen mit --betriebskopie")
+    ap.add_argument("--betriebskopie", action="store_true",
+                    help="diese Datei ist eine BETRIEBSKOPIE und wird mit "
+                         "`_nur_betrieb` markiert - Messungen brechen "
+                         "darauf ab")
+    ap.add_argument("--mindest", type=int, default=MIN_KERZEN,
+                    help="Mindestkerzen je Reihe (Vorgabe %d, die "
+                         "MESSgrenze). Der Betrieb braucht nur den "
+                         "200-Tage-Schnitt" % MIN_KERZEN)
     ap.add_argument("--status", default="TRADING",
                     choices=("TRADING", "BREAK"),
                     help="TRADING sind die heute handelnden, BREAK die "
                          "EINGESTELLTEN - ohne sie ist jede Messung "
                          "ueberlebensverzerrt (Kapitel 120.3)")
-    a = ap.parse_args()
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    a = ap.parse_args(argv)
+    # ⚠️⚠️ NICHT JEDES stdout LAESST SICH UMSTELLEN (20.09.2026, von der
+    # eigenen Pruefsuite gefangen). Seit der Tagesjob `main()` direkt ruft,
+    # laeuft diese Zeile auch dort, wo stdout ersetzt ist - in der Suite ein
+    # Mitschnitt-Objekt, am Notebook moeglicherweise die Dienstumleitung.
+    # `reconfigure` gibt es dort nicht, und der Job waere mit einem
+    # AttributeError gestorben, bevor er eine Kerze geholt hat.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
     # ⚠️ HARTE SPERRE. Ein Tippfehler im Pfad wuerde sonst 484 fremde Symbole
     # in die Produktionsdatenbank schreiben.
     if PRODUKTION in a.db.replace("\\", "/"):
         raise SystemExit(f"'{a.db}' ist die Produktionsdatenbank. Diese "
                          f"Messreihen gehoeren in eine eigene Datei.")
+
+    # ---- ⚠️⚠️⚠️ NIEMAND KUERZT DIE MESSBASIS AUS VERSEHEN ------------
+    #
+    # `--behalte-tage 500` auf der vollen `messdaten.db` wuerde 4,3
+    # Millionen Zeilen loeschen - unwiederbringlich, und die Befunde, die
+    # darauf stehen, waeren nicht mehr reproduzierbar (R-R11). Deshalb
+    # zwei Riegel statt eines Hinweises.
+    if a.behalte_tage and not a.betriebskopie:
+        raise SystemExit(
+            "--behalte-tage kuerzt die Datei. Das ist nur fuer die "
+            "BETRIEBSKOPIE gedacht - bitte zusammen mit --betriebskopie "
+            "aufrufen, dann traegt die Datei auch die Marke.")
+    if a.betriebskopie and os.path.exists(a.db):
+        _c = sqlite3.connect("file:%s?mode=ro" % a.db, uri=True)
+        _schon = ist_betriebskopie(_c)
+        try:
+            _n = _c.execute("SELECT COUNT(*) FROM "
+                            "price_history_ohlc").fetchone()[0]
+        except sqlite3.OperationalError:
+            _n = 0
+        _c.close()
+        if not _schon and _n > 0:
+            raise SystemExit(
+                "'%s' enthaelt %d Zeilen und traegt KEINE Marke - das ist "
+                "die volle Messbasis, keine Betriebskopie. Sie zu kuerzen "
+                "waere unumkehrbar. Fuer die Betriebskopie einen eigenen "
+                "Pfad angeben (--db)." % (a.db, _n))
 
     _yf = a.klasse in YF_KLASSEN
     s = None if _yf else requests.Session()
@@ -374,6 +552,20 @@ def main() -> int:
     if a.schreiben:
         conn = sqlite3.connect(a.db)
         conn.executescript(SCHEMA)
+        # ⚠️ Die Marke ZUERST - faellt der Lauf danach aus, ist die Datei
+        # trotzdem als das gekennzeichnet, was sie ist.
+        if a.betriebskopie:
+            setze_marke(conn, a.behalte_tage, a.mindest)
+            print("  ⚠️ BETRIEBSKOPIE - Marke `_nur_betrieb` gesetzt "
+                  "(%d Tage, mindestens %d Kerzen). Messungen brechen auf "
+                  "dieser Datei ab." % (a.behalte_tage, a.mindest))
+
+    # ⚠️ Der Nachlauf braucht den Stand je Symbol - EINE Abfrage, nicht
+    # eine je Paar.
+    stand = letzte_tage(conn, a.klasse) if (conn is not None
+                                            and a.seit_letztem) else {}
+    if a.seit_letztem:
+        print("  Nachlauf: %d Reihen haben schon einen Stand" % len(stand))
 
     jetzt = datetime.now(timezone.utc).isoformat()
     ok = zeilen = 0
@@ -383,7 +575,23 @@ def main() -> int:
     for i, paar in enumerate(liste):
         sym = paar if _yf else paar[:-4]     # 'BTCUSDT' -> 'BTC'
         try:
-            rohe = yf_hole_alles(paar) if _yf else hole_alles(s, paar)
+            if a.seit_letztem and not _yf and sym in stand:
+                # ⚠️ EINEN TAG ZURUECK: die letzte gespeicherte Kerze kann
+                # von einem noch laufenden Tag stammen. Sie wird ohnehin
+                # per INSERT OR REPLACE ueberschrieben.
+                _ab = ((date.fromisoformat(stand[sym])
+                        - timedelta(days=1)).toordinal()
+                       - date(1970, 1, 1).toordinal()) * 86_400_000
+                rohe = hole_ab(s, paar, _ab)
+            elif a.seit_letztem and not _yf:
+                # Neu in der Betriebskopie: nur so weit zurueck, wie sie
+                # aufbewahrt - nicht die ganze Historie.
+                _tage = a.behalte_tage or 500
+                _ab = ((date.today() - timedelta(days=_tage)).toordinal()
+                       - date(1970, 1, 1).toordinal()) * 86_400_000
+                rohe = hole_ab(s, paar, _ab)
+            else:
+                rohe = yf_hole_alles(paar) if _yf else hole_alles(s, paar)
             # ⚠️⚠️ `pruefe()` GEHOERT IN DENSELBEN VERSUCH (03.09.2026,
             # N-19). Sie stand bisher AUSSERHALB des try/except - und war
             # damit der eigentliche Grund fuer den fruehen Absturz des
@@ -394,7 +602,16 @@ def main() -> int:
             # ("Invalid argument") - und das riss bisher den GESAMTEN Lauf
             # ab, statt nur dieses eine Symbol abzulehnen. Bei hunderten
             # Symbolen genuegt EINES mit einer schlechten Kerze.
-            gut, grund = pruefe(rohe, paar)
+            # ⚠️⚠️ DIE MINDESTLAENGE GILT DER REIHE, NICHT DEM
+            # NACHLAUF (gefunden bei der Wirkungspruefung 20.09.).
+            # Die erste Fassung gab `mindest` auch im Nachlauf
+            # weiter - der holt zwei Kerzen, und alle sechs
+            # Testreihen fielen als ,zu kurz` durch. Die
+            # gespeicherte Reihe hat die Grenze beim ERSTEN Laden
+            # bestanden; der Nachlauf muss nur plausibel sein.
+            _mindest = 1 if (a.seit_letztem and sym in stand) \
+                else a.mindest
+            gut, grund = pruefe(rohe, paar, mindest=_mindest)
         except Exception as e:               # noqa: BLE001
             abgelehnt.append((sym, f"{type(e).__name__}"))
             continue
@@ -463,6 +680,10 @@ def main() -> int:
               f"Klasse, die Kerzen wurden trotzdem getrennt gespeichert):")
         for sym, alt, neu in kollisionen:
             print(f"    {sym}: bleibt {alt}, wollte {neu}")
+    if conn is not None and a.behalte_tage:
+        _weg = kuerze(conn, a.klasse, a.behalte_tage)
+        print(f"\n  gekuerzt auf {a.behalte_tage} Tage - "
+              f"{_weg} alte Zeilen geloescht")
     if conn is not None:
         conn.close()
         print(f"\n  geschrieben nach {a.db}")
