@@ -3841,13 +3841,25 @@ def main() -> None:
         _mb = ziel_datei.stat().st_size / 1e6
     except OSError:
         _mb = float("nan")
+    # ⚠️⚠️ NUR ASCII IN DER KONSOLENAUSGABE (korrigiert 20.09.2026, am
+    # Notebook sofort aufgefallen). Meine erste Fassung schrieb ein
+    # Haekchen und ein Warnzeichen - die Windows-Konsole laeuft dort mit
+    # CP1252, und `UnicodeEncodeError: charmap codec can't encode
+    # character '✔'` hat die GANZE Diagnose lahmgelegt. Ausgerechnet
+    # die Zeile, die vor dem Vergessen warnen sollte.
+    #
+    # ⚠️ NICHT `sys.stdout.reconfigure` - das aendert das Verhalten fuer
+    # ALLE Ausgaben dieses Prozesses, auch fuer fremde Bibliotheken. Die
+    # DATEI wird weiter in UTF-8 geschrieben; nur die Konsole bleibt bei
+    # dem, was sie kann. Der Rest dieser Datei haelt sich seit jeher daran
+    # - die Regel stand nur nirgends.
     if VOLL:
-        print("⚠️ VOLLE Diagnose (%.0f MB) - ihr Upload stoert den "
+        print("!! VOLLE Diagnose (%.0f MB) - ihr Upload stoert den "
               "laufenden Betrieb (2.484)." % _mb)
         print("   Nur so lassen, solange ein Messskript die Rohdaten "
               "braucht.")
     else:
-        print("✔ SCHLANKE Diagnose (%.0f MB). Ausgelassen: %s."
+        print("OK SCHLANKE Diagnose (%.0f MB). Ausgelassen: %s."
               % (_mb, ", ".join(_ausgelassen) if _ausgelassen else "nichts"))
         print("   Fuer Messskripte mit Rohdatenbedarf: python "
               "extract_notebook_diagnose.py --voll")

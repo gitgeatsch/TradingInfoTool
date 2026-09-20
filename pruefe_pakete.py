@@ -23650,6 +23650,39 @@ def paket_diagnoseumfang() -> None:
     # ⚠️ `find` UND NICHT `index` - dieselbe Lehre wie 2.476: eine Mutation,
     # die den Anker entfernt, darf die Pruefung FALLEN lassen, nicht
     # abstuerzen.
+    # ---- ⚠️⚠️⚠️ DIE KONSOLENAUSGABE MUSS ASCII SEIN --------------------
+    #
+    # AM 20.09.2026 SOFORT AM NOTEBOOK AUFGEFALLEN: meine erste Fassung
+    # schrieb ein Haekchen (U+2714) und ein Warnzeichen in die
+    # Konsolenausgabe. Die Windows-Konsole dort laeuft mit CP1252 -
+    # `UnicodeEncodeError: charmap codec cannot encode character` hat die
+    # GANZE Diagnose lahmgelegt. Ausgerechnet die Zeile, die vor dem
+    # Vergessen warnen sollte.
+    #
+    # ⚠️ DIESES SKRIPT LAEUFT AUF DER NOTEBOOK-KONSOLE - anders als die
+    # Pruefsuite, die ihre Ausgabe in eine UTF-8-Datei schreibt. Der Rest
+    # der Datei hielt sich seit jeher an ASCII; die Regel stand nur
+    # nirgends, und deshalb konnte ich sie brechen.
+    #
+    # ⚠️ Geprueft werden nur `print`-Zeilen. Kommentare und Docstrings
+    # duerfen Sonderzeichen tragen - sie werden nie ausgegeben.
+    _unausgebbar = []
+    for _nr, _z in enumerate(
+            _io.open("extract_notebook_diagnose.py",
+                     encoding="utf-8").read().splitlines(), 1):
+        if not _z.strip().startswith("print("):
+            continue
+        _sonder = sorted({_c for _c in _z if ord(_c) > 127})
+        if _sonder:
+            _unausgebbar.append((_nr, "".join(_sonder)))
+    pruefe(P, "⚠️⚠️⚠️ die Konsolenausgabe der Diagnose ist ASCII",
+           not _unausgebbar,
+           "die Notebook-Konsole laeuft mit CP1252; ein Sonderzeichen in "
+           "einer `print`-Zeile wirft dort `UnicodeEncodeError` und legt "
+           "die GANZE Diagnose lahm - am 20.09. genau so passiert. Die "
+           "DATEI bleibt UTF-8, nur die Konsole nicht. Gefunden: %s"
+           % (_unausgebbar[:5],))
+
     _i_fassung = _q.find("SCHLANKE Diagnose")
     _i_datei = _q.find("Geschrieben:")
     pruefe(P, "⚠️⚠️ und die KONSOLE nennt die Fassung VOR allem anderen",
