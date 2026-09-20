@@ -331,6 +331,19 @@ Werkzeug aus Schritt 29/30 (Basis `simuliere_kette.py`/N-67-Muster), Zielgröße
 4. Wiederholungssperre als Hinweis + Nutzerfrage Regel 1. · ✔ **ERLEDIGT 18.09.** (2.461-sperre): **keine Sperrlänge trägt** – jede liegt unter dem Nullpunkt ihrer eigenen Nullwelt (gleich viele zufällig gesperrt), Trennschärfe 0,10–0,20 R; die Kosten: 43 % der Anker bei einem Tag, 87 % bei zwanzig. ⚠️ Die Live-Werte 3,5 h und 12 h liegen **unter der Tagesauflösung** und bleiben ungemessen (2.461-sperre-auflösung). ⚠️ Getrennt davon: **ein Asset hatte eine einzige Uhr** – die Akkumulationsfrage sperrte die taktische mit (2.461-uhr, Nutzerhinweis 18.09.) · ✔ **BEHOBEN 18.09. (S1, 2.462-uhr-getrennt):** die Uhr läuft je Zelle (Filter nach Strategie); am laufenden Betrieb ändert sich **nichts**, weil es keine `akkumulation`-Signale gibt – die Wirkung setzt mit der Freischaltung der Akkumulation ein (M1-Kriterium 3). Dabei gefunden: der Fail-soft-Zweig war stumm (2.462-fail-soft)
 5. ⚠️ **NEU 18.09. (2.459-ungemessen): die vier ungemessenen Größen der Modelleingabe messen** – `referenz_spy` (relative Stärke gegen den S&P-500-ETF, **läuft live mit**), `fundamental_wachstum` (Gewinn-/Umsatzwachstum bei Aktien, **läuft live mit**), `stablecoin_kapital` und `optionsmarkt_dvol_skew` (stumm, seit 18.09. aus dem BC-Prompt gefiltert). ⚠️ Für `referenz_spy` **vor** der Messung klären, gegen welchen Maßstab gemessen wird – der S&P-500-ETF ist für Krypto ein fremder. ⚠️ Für `fundamental_wachstum` gibt es keine Messbasis (Aktien) – gehört in die Multiasset-Schiene.
 
+✔ **ERLEDIGT 20.09.** (2.483-referenz, 2.483-datenlage): von den vier Größen ist **eine messbar**.
+
+| Größe | Ergebnis |
+|---|---|
+| `referenz_spy` | ⛔ **nicht trennbar** (+0,0308 R / +0,0513 R) — und der Grund ist der Befund: `rel_X` ist im **Querschnittsrang rangidentisch** mit der reinen Kursrendite (Rangkorrelation **0,999999**), weil der Marktabzug für alle Werte desselben Tages gleich ist. ⚠️ Keine Aussage über die **Hypothese**, sondern über die **Verwendungsform** |
+| `fundamental_wachstum` | ⛔ **raus aus Phase 3** (E4) — Aktien-Größe, keine Krypto-Messbasis → Multiasset-Schiene |
+| `stablecoin_kapital` | ⛔ **34 Punkte** — nicht messbar |
+| `optionsmarkt_dvol_skew` | ⛔ **34 Punkte** — nicht messbar |
+
+⚠️ **Warten hilft nicht:** 20 Blöcke bei H20 sind **1.200 Tage** → 2029. Die Schwelle *Mitte Oktober* aus 2.453-alterlos gilt fürs **Sprechen**, nicht fürs **Messen**.
+
+✔ **E5 — Historie beschaffen statt warten:** DefiLlama führt Stablecoin-Reihen seit 2018, Deribit DVOL seit 2021. ⚠️ **Nutzerhinweis 20.09.:** der **Optionsmarkt** könnte künftig etwas beitragen — er ist die einzige Größe im Bestand, die etwas über die **Erwartung** des Marktes sagt statt über seine Vergangenheit. Deshalb **vor** der Stablecoin-Reihe.
+
 Gegenprüfung: `selbsttest_messanlage.py` (Anlage), Positivkontrolle je Lauf, Nullwelten-Fehlalarm, Messkopf mit `messmenge.zeile()`.
 **Voraussetzung:** Entscheidung **N3** (A8).
 

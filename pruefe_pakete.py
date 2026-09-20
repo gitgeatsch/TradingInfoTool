@@ -23425,6 +23425,125 @@ def paket_laufzeitwaechter() -> None:
            "ein fehlender Abschnitt liest sich wie ,nicht geprueft`")
 
 
+def paket_referenzstaerke() -> None:
+    """Misst `phase3_referenz.py` TRAEGT `referenz_spy`? (Phase 3 Punkt 5)
+
+    ⚠️⚠️ DIE WICHTIGSTE PRUEFUNG IST DIE LETZTE: `rel_X` ist im
+    Tagesquerschnitt RANGIDENTISCH mit der reinen Kursrendite. Der Abzug
+    des breiten Marktes ist fuer alle Werte desselben Tages DIESELBE Zahl
+    und faellt im Rang heraus. Wer das nicht weiss, liest den Nullbefund
+    als Aussage ueber die Hypothese - dabei ist es eine Aussage ueber die
+    VERWENDUNGSFORM.
+    """
+    P = "Referenzstaerke"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+
+    import bestand as _B
+    import phase3_referenz as _PR
+    from agent import rollen_eingabe as _RE
+
+    # ---- Die Hypothese wird GEZOGEN --------------------------------------
+    # ⚠️ GEPRUEFT WIRD DIE HERKUNFT, NICHT DER INHALT (nachgeschaerft
+    # 20.09. durch die Gegenpruefung). Die erste Fassung verlangte nur, dass
+    # die Woerter `breite` und `markt` vorkommen - eine im Skript GETIPPTE
+    # Hypothese mit denselben Woertern kam anstandslos durch. Damit haette
+    # genau das passieren koennen, wogegen die Pruefung gebaut ist: Blatt
+    # und Messung driften auseinander, und niemand merkt es.
+    h = _PR.hypothese()
+    _blatt = next((k.hypothese for k in _B.KANDIDATEN
+                   if k.name.startswith("referenz_spy")), None)
+    pruefe(P, "⚠️⚠️ die Hypothese kommt aus dem Kandidatenblatt, nicht aus "
+           "dem Messskript",
+           _blatt is not None and h == _blatt,
+           "am 19.09. wurde die Stufe `auswahl` gemessen, OHNE dass ihre "
+           "registrierte Hypothese auftauchte - sie stand die ganze Zeit im "
+           "Blatt `momentum`. Verlangt ist IDENTITAET mit dem Blatt, nicht "
+           "Aehnlichkeit. Bekommen: %r gegen %r"
+           % (h[:60], (_blatt or "")[:60]))
+
+    # ---- Die echte Betriebsfunktion --------------------------------------
+    quelle = _quelltext("phase3_referenz.py")
+    pruefe(P, "⚠️ die Betriebsfunktion rechnet, nicht ein Nachbau",
+           "RE.relative_staerke(" in quelle,
+           "sie bildet Kalendertage auf Boersentage ab (`_stand_am`: nie der "
+           "naechstgelegene, immer der juengste mit Datum kleiner gleich) - "
+           "das nachzubauen ist die Falle aus 2.466 und 2.479-eigene-fehler")
+    pruefe(P, "⚠️ und sie bekommt eine WEGWERFDATENBANK, nicht die Standard-DB",
+           "tempfile.mkdtemp(" in quelle and "MESSBASIS" in quelle,
+           "die Standard-DB ist am Notebook die PRODUKTION")
+    pruefe(P, "die Wegwerfdatei traegt den Namen, den die Funktion erwartet",
+           "RE.BENCHMARK_SYMBOL" in quelle,
+           "in der Messbasis heisst dieselbe Reihe `SPY`; statt die Funktion "
+           "umzubauen, bekommt sie eine Datei, die aussieht wie die, die sie "
+           "kennt")
+
+    # ---- Die Abdeckung steht vor dem Urteil ------------------------------
+    pruefe(P, "⚠️ die Abdeckung wird ausgewiesen, bevor geurteilt wird",
+           "ohne_wert" in quelle and "MEHR ALS DIE HAELFTE OHNE WERT" in quelle,
+           "faellt die Haelfte der Anker aus, misst man eine Teilmenge und "
+           "nennt sie die Menge")
+
+    # ---- Die Norm urteilt, nicht das Skript ------------------------------
+    pruefe(P, "⚠️ das Urteil kommt aus `messnorm_auswahl`, nicht aus dem Skript",
+           "MA.pruefe_auswahl(" in quelle,
+           "eine Nachbildung der Norm waere eine zweite Norm")
+    pruefe(P, "⚠️⚠️ und NICHT auf der freien Menge (F-212)",
+           _PR.MENGE != "frei",
+           "ein Beitragsurteil auf der freien Menge weist die Norm selbst ab "
+           "- dort wirken die Beitraege auf 1,5 %% der Anker (Menge: %r)"
+           % (_PR.MENGE,))
+
+    # ---- ⚠️⚠️ DER KERN: der Marktabzug faellt im Rang heraus -------------
+    #
+    # Eine Kunstwelt mit EINEM Tag: fuenf Werte mit verschiedenen Renditen,
+    # dazu eine Vergleichsreihe. Der Rang nach `rel_30` muss derselbe sein
+    # wie der Rang nach der reinen Rendite - an echten Daten gemessen:
+    # Rangkorrelation 0,999999.
+    _d = _tf.mkdtemp()
+    _p = _os.path.join(_d, "bm.db")
+    _c = _sq.connect(_p)
+    try:
+        _c.execute("CREATE TABLE price_history_ohlc "
+                   "(symbol TEXT, date TEXT, close REAL)")
+        _c.executemany(
+            "INSERT INTO price_history_ohlc VALUES (?,?,?)",
+            [(_RE.BENCHMARK_SYMBOL, "2025-%02d-%02d" % (t // 28 + 1,
+                                                        t % 28 + 1),
+              100.0 + t) for t in range(60)])
+        _c.commit()
+    finally:
+        _c.close()
+
+    def _reihe(faktor):
+        return [_PR._Kerze("2025-%02d-%02d" % (t // 28 + 1, t % 28 + 1),
+                           100.0 * (faktor ** t)) for t in range(60)]
+
+    _roh, _rel = [], []
+    for f in (0.99, 0.995, 1.0, 1.005, 1.01):
+        r = _reihe(f)
+        i = 40
+        _rel.append(_RE.relative_staerke(r, i, db=_p, fenster=(30,))["rel_30"])
+        _roh.append(100.0 * (r[i].close / r[i - 30].close - 1.0))
+    _gleich = ([x for _, x in sorted(zip(_rel, range(5)))]
+               == [x for _, x in sorted(zip(_roh, range(5)))])
+    pruefe(P, "⚠️⚠️ der Marktabzug faellt im TAGESQUERSCHNITT heraus - "
+           "der Rang ist derselbe",
+           _gleich,
+           "`rel_X` ist Kryptorendite minus Marktrendite, und die "
+           "Marktrendite ist am selben Tag fuer ALLE Werte dieselbe. Im Rang "
+           "bleibt die reine Rendite uebrig - an echten Daten Rangkorrelation "
+           "0,999999. ➔ Der Nullbefund sagt etwas ueber die VERWENDUNGSFORM, "
+           "nicht ueber die Hypothese (rel %s gegen roh %s)"
+           % ([round(x, 2) for x in _rel], [round(x, 2) for x in _roh]))
+    pruefe(P, "⚠️ und die Abstaende sind es NICHT - der Abzug ist wirksam, "
+           "nur rangneutral",
+           all(abs(a - b) > 1e-9 for a, b in zip(_rel, _roh)),
+           "waeren auch die Werte gleich, rechnete die Funktion den Markt gar "
+           "nicht ein - dann waere der Befund ein Bau-, kein Sachbefund")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28181,6 +28300,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Entscheiderstufe": paket_entscheiderstufe,
           "Terminmarktstufe": paket_terminmarktstufe,
           "Laufzeitwaechter": paket_laufzeitwaechter,
+          "Referenzstaerke": paket_referenzstaerke,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
