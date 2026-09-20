@@ -23975,6 +23975,34 @@ def paket_betriebsreihen() -> None:
            "eine Jobfunktion ohne `add_job` ist toter Code - genau der "
            "Fall, den 2.482-marktrang schon einmal hatte. 03:30 UTC liegt "
            "VOR dem Jobcluster 04:00-04:38 und vor dem 05:30-Kursjob")
+    # ---- ⚠️⚠️⚠️ DIE STARTREIHENFOLGE (20.09.2026, am Notebook
+    # gemessen). `lagebild_reihen_job` ruft `_melde_datenfrische`. Lief
+    # der Nachlauf spaeter, sah die Datenfrische `schnitt_reihe` als
+    # [fehlt] und verschickte die Mail ,Job datenfrische
+    # fehlgeschlagen` - DREI SEKUNDEN bevor der Job anfing, die Datei zu
+    # bauen. Ein Fehlalarm, selbst erzeugt.
+    #
+    # ⚠️ GEPRUEFT WIRD DIE ABHAENGIGKEIT, NICHT DIE ZAHL: wer die Indizes
+    # umsortiert, soll hier scheitern und nicht am Notebook mit einer
+    # Mail um 8 Uhr morgens.
+    import re as _re
+
+    def _index(jobid):
+        for _t in _qb.split("scheduler.add_job("):
+            if ('id="%s"' % jobid) in _t[:600]:
+                _m = _re.search(r"_staggered_start\((\d+)\)", _t[:600])
+                return int(_m.group(1)) if _m else None
+        return None
+
+    _ib, _il = _index("betriebsreihen"), _index("lagebild_reihen")
+    pruefe(P, "⚠️⚠️⚠️ der Nachlauf startet VOR der Datenfrische",
+           _ib is not None and _il is not None and _ib < _il,
+           "`lagebild_reihen` ruft `_melde_datenfrische`. Startet der "
+           "Nachlauf spaeter, meldet sie die Datei als [fehlt] und "
+           "verschickt eine Fehlermail, waehrend der Job sie gerade "
+           "baut - genau so passiert am 20.09. um 08:50:30 "
+           "(betriebsreihen=%s, lagebild_reihen=%s)" % (_ib, _il))
+
     pruefe(P, "⚠️⚠️ er ruft den ECHTEN Lader, keine Kopie",
            "LM.main([" in _qb and "import lade_messreihen as LM" in _qb,
            "ein nachgebauter Ablauf ist die naechste Stelle, die "

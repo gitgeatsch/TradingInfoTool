@@ -5061,15 +5061,29 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory],
         id="betriebsreihen",
-        # ⚠️ INDEX 9, NICHT 6: bei 6 starten schon drei andere Jobs, und
-        # dieser ist der schwerste - die ERSTbefuellung holt 493 Paare in
-        # rund 150 s. Er gehoert ans Ende der Staffelung, damit er nicht
-        # mit yfinance und dem Bestandsabgleich zusammenfaellt (derselbe
-        # Grund wie 2026-07-31: ,database is locked` 24 s nach Neustart).
-        # ⚠️ Der Sofortstart ist Absicht: sonst stuende `schnitt` nach
-        # einem Neustart bis 03:30 UTC nicht zur Verfuegung. Nach der
-        # Erstbefuellung dauert der Nachlauf nur noch 2 Sekunden.
-        next_run_time=_staggered_start(9),
+        # ⚠️⚠️⚠️ INDEX 2, UND DAS IST KEINE GESCHMACKSFRAGE (20.09.2026,
+        # am Notebook gemessen). Erst stand hier 9. Ergebnis beim ersten
+        # Neustart: `lagebild_reihen_job` (Index 6) ruft
+        # `_melde_datenfrische`, sah `schnitt_reihe` als [fehlt] und
+        # verschickte um 08:50:30 die Mail ,Job datenfrische
+        # fehlgeschlagen` - DREI SEKUNDEN bevor dieser Job um 08:50:31
+        # anfing, die Datei zu bauen. Ein Fehlalarm, den wir selbst
+        # erzeugt haben.
+        #
+        # ⚠️ DER JOB MUSS ALSO VOR INDEX 6 LIEGEN. Er braucht nur ein
+        # paar Sekunden Vorsprung: `datenfrische` liest MAX(date), und
+        # das erste Symbol landet binnen Sekunden - die volle Befuellung
+        # (325 s am Notebook) darf ruhig weiterlaufen.
+        #
+        # ⚠️ Die frueher hier notierte Sorge um ,database is locked` war
+        # unbegruendet: dieser Job schreibt in `messdaten.db`, NICHT in
+        # die Produktionsdatenbank, und seine 493 Abrufe sind
+        # sequenziell verteilt, kein Schwall (gemessen: 0
+        # Rate-Limit-Treffer).
+        #
+        # ⚠️ Der Sofortstart bleibt Absicht: sonst stuende `schnitt` nach
+        # einem Neustart bis 03:30 UTC nicht zur Verfuegung.
+        next_run_time=_staggered_start(2),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
     )
     # Fremdquellen der Rolle G (2026-08-16) - taeglich um 06:35, also VOR den
