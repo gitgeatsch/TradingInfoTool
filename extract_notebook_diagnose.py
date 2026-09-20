@@ -2905,6 +2905,86 @@ def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
     return ergebnis
 
 
+def _messbasen() -> dict:
+    """In welcher FORM liegt jede Messbasis an DIESEM Geraet?
+
+    ⚠️⚠️ WARUM ES DIESEN ABSCHNITT GIBT (20.09.2026, Befund
+    2.486-nb-abhaengigkeit, Nutzerhinweis ,kritische Abhaengigkeit`).
+    Der Produktionscode liest VIER Datenbanken, die `git pull` nicht
+    bringt - `*.db` steht in `.gitignore`. Drei davon liegen am Notebook
+    absichtlich nur als SYMBOLLISTE (`baue_messbasis_paket.py`, 2.368),
+    weil `marktrang.MESSBASIS` sie nur nach `SELECT DISTINCT symbol`
+    fragt; die Werte kommen live. Die vierte, `messdaten.db`, fehlt dort
+    ganz - entschieden am 02.09., weil `schnitt` kein Beitrag mehr ist.
+
+    ⚠️ NICHTS DAVON STAND IN DER DIAGNOSE. Am 20.09. musste die Lage aus
+    dem Quelltext, dem Austauschordner und 147 Logzeilen neu hergeleitet
+    werden, obwohl sie seit dem 02.09. feststeht. Diese vier Zeilen
+    ersparen das beim naechsten Mal.
+
+    ⚠️⚠️ UND SIE SIND DIE FRUEHWARNUNG FUER DEN EINEN FALL, DER WEH TUT:
+    `schnitt` ist mit +0,1858 R der staerkste gemessene Beitrag. Wird er
+    je scharfgeschaltet, braucht das Notebook 1,5 GB, die sich weder
+    pullen noch ueber den Austauschordner schieben lassen.
+
+    Nur lesend (`mode=ro`), je Datei gekapselt - eine fehlende oder
+    kaputte Datei ist hier ein ERGEBNIS, kein Fehler.
+    """
+    import agent.marktrang as _MR
+
+    # (Groesse, Datumsspalte) - die Datei kommt aus `marktrang.MESSBASIS`,
+    # damit sie nicht zweimal gepflegt wird (R-R11: dieselbe Quelle).
+    DATUM = {"funding": ("funding", "datum"),
+             "turnover": ("splycur", "datum"),
+             "oi": ("terminmarkt_tag", "tag"),
+             "schnitt": ("price_history_ohlc", "date")}
+    heute = datetime.now(timezone.utc).date()
+    aus = []
+    for groesse, (datei, abfrage) in sorted(_MR.MESSBASIS.items()):
+        z = {"groesse": groesse, "datei": datei}
+        if not os.path.exists(datei):
+            z["form"] = "fehlt"
+            z["hinweis"] = ("am Notebook der Sollzustand fuer messdaten.db "
+                            "(2.368: `schnitt` ist kein Beitrag) - fuer jede "
+                            "ANDERE Datei ein Ausfall")
+            aus.append(z)
+            continue
+        try:
+            z["mb"] = round(os.path.getsize(datei) / 1024 ** 2, 1)
+            c = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
+            try:
+                z["symbole"] = len(c.execute(abfrage).fetchall())
+                liste = c.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' "
+                    "AND name='_nur_symbolliste'").fetchone()
+                if liste:
+                    z["form"] = "symbolliste"
+                    z["hinweis"] = ("Sollzustand am Notebook - die Werte "
+                                    "kommen live (2.368, 2.453-turnover)")
+                else:
+                    z["form"] = "voll"
+                    tab, sp = DATUM[groesse]
+                    mx = c.execute("SELECT MAX(%s) FROM %s"
+                                   % (sp, tab)).fetchone()[0]
+                    z["juengste_daten"] = str(mx)[:19] if mx else None
+                    try:
+                        z["datenalter_tage"] = (
+                            heute - datetime.strptime(
+                            str(mx)[:10], "%Y-%m-%d").date()).days
+                    except Exception:                        # noqa: BLE001
+                        z["datenalter_tage"] = None
+            finally:
+                c.close()
+        except Exception as exc:                             # noqa: BLE001
+            z["form"] = "nicht lesbar"
+            z["grund"] = "%s: %s" % (type(exc).__name__, exc)
+        aus.append(z)
+    return {"hinweis": "welche Messbasis liegt an DIESEM Geraet und in "
+                       "welcher Form - `symbolliste` ist am Notebook der "
+                       "Sollzustand, nicht ein Mangel",
+            "je_groesse": aus}
+
+
 def _marktrang_ausfaelle(zeilen: list) -> dict:
     """Wie oft ist die Bewertungsgrundlage komplett ausgefallen?
 
@@ -3757,6 +3837,7 @@ def main() -> None:
         "log_auszug": log_zeilen,
         "job_fehlschlaege": job_fehlschlaege,
         "marktrang_ausfaelle": _marktrang_ausfaelle(log_zeilen),
+        "messbasen": _messbasen(),
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

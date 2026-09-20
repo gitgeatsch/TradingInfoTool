@@ -23846,6 +23846,85 @@ def paket_a1eichung() -> None:
            "nicht der Markt - genau daran ist A1 aufgefallen")
 
 
+def paket_messbasen() -> None:
+    """Zeigt die Diagnose, WELCHE Messbasis in welcher Form am Geraet liegt?
+
+    ⚠️ Anlass 20.09.2026 (2.486-nb-abhaengigkeit): die Geraeteaufteilung
+    steht seit dem 02.09. fest, stand aber in keinem Abschnitt der
+    Diagnose - sie musste aus Quelltext, Austauschordner und 147
+    Logzeilen neu hergeleitet werden.
+    """
+    P = "Messbasen"
+    import agent.marktrang as _MR
+    import extract_notebook_diagnose as _X
+
+    _q = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "⚠️⚠️ der Abschnitt `messbasen` steht in der Ausgabe",
+           '"messbasen": _messbasen(),' in _q,
+           "ohne den Aufruf ist die Funktion tot - genau der Fall, den "
+           "2.482-marktrang schon einmal hatte")
+    pruefe(P, "⚠️⚠️ und er ist NICHT unter den ausgelassenen Abschnitten",
+           "messbasen" not in _X.GROSSE_ABSCHNITTE,
+           "er ist rund 800 Byte gross; waere er ausgelassen, haette die "
+           "schlanke Diagnose dieselbe Luecke wie bei K20 (2.486-k20-"
+           "luecke) - ein Abschnitt, der nur in der vollen Fassung steht, "
+           "ist fuer den Betrieb nicht da")
+
+    _r = _X._messbasen()
+    _je = {z["groesse"]: z for z in _r["je_groesse"]}
+    pruefe(P, "⚠️⚠️ er deckt GENAU die vier Messbasen des Betriebs ab",
+           set(_je) == set(_MR.MESSBASIS),
+           "die Dateien kommen aus `marktrang.MESSBASIS` und werden nicht "
+           "zweimal gepflegt - eine eigene Liste liefe irgendwann "
+           "auseinander, genau wie `baue_messbasis_paket.QUELLEN` es "
+           "ausdruecklich verbietet (bekommen: %s)" % (sorted(_je),))
+    pruefe(P, "⚠️ jede Zeile sagt die FORM",
+           all(z.get("form") in ("voll", "symbolliste", "fehlt",
+                                 "nicht lesbar") for z in _je.values()),
+           "ohne die Form ist die Zeile wertlos: `symbolliste` ist am "
+           "Notebook der Sollzustand, `fehlt` ist es nur fuer messdaten.db "
+           "(bekommen: %s)" % ([z.get("form") for z in _je.values()],))
+    pruefe(P, "⚠️⚠️ und bei voller Datei das ALTER der Daten, nicht der Datei",
+           all("datenalter_tage" in z for z in _je.values()
+               if z.get("form") == "voll"),
+           "`datenfrische` faellt fuer diese Dateien das Urteil `liste` und "
+           "meldet nur das ABRUFalter - das Alter der DATEN stand bis zum "
+           "20.09. in keiner Ueberwachung (2.486-messbasis-alt)")
+    pruefe(P, "⚠️ die Symbolzahl steht dabei",
+           all(isinstance(z.get("symbole"), int) for z in _je.values()
+               if z.get("form") in ("voll", "symbolliste")),
+           "sie ist der einzige Weg zu sehen, ob eine Symbolliste am "
+           "Notebook von der Messbasis am Desktop abgewichen ist - "
+           "uebertragen wird von Hand, ohne Ausloeser")
+
+    # ---- ⚠️ Nur lesend - das Paket darf nichts anfassen -----------------
+    pruefe(P, "⚠️⚠️⚠️ jede Datei wird mit `mode=ro` geoeffnet",
+           _q.count("sqlite3.connect(\"file:%s?mode=ro\" % datei") == 1,
+           "am Notebook liegt die Produktion; ein Schreibzugriff waere ein "
+           "Verstoss gegen die stehende Vorgabe (Befund 2.449)")
+    # ⚠️⚠️ AM QUELLTEXT, NICHT AM LAUF (Gegenpruefung 20.09.): hier am
+    # Desktop existieren ALLE vier Dateien - der Zweig fuer die fehlende
+    # laeuft nie, und eine Pruefung des Ergebnisses kann ihn deshalb gar
+    # nicht sehen. Mutation M8 blieb genau daran gruen.
+    _zweig = (_q.split("if not os.path.exists(datei):", 1)[1]
+              .split("try:", 1)[0] if "if not os.path.exists(datei):" in _q
+              else "")
+    pruefe(P, "⚠️⚠️ eine fehlende Datei ist ein ERGEBNIS, kein Fehler",
+           bool(_zweig) and "aus.append(z)" in _zweig
+           and "continue" in _zweig and "raise" not in _zweig,
+           "am Notebook FEHLT `messdaten.db` mit Absicht (2.368). Wer das "
+           "als Ausnahme wirft, nimmt die ganze Diagnose mit - dieselbe "
+           "Falle wie `lies()` mit SystemExit (2.484)")
+
+    # ---- ⚠️ Der Zweck: die Zahl, die wehtut, muss drinstehen ------------
+    pruefe(P, "⚠️⚠️ der Docstring nennt den Fall, der wehtut (`schnitt`)",
+           "schnitt" in (_X._messbasen.__doc__ or "")
+           and "1,5 GB" in (_X._messbasen.__doc__ or ""),
+           "der staerkste gemessene Beitrag (+0,1858 R) ist der einzige, "
+           "den das Notebook NICHT rechnen kann. Ohne diesen Satz liest "
+           "jemand die Zeile `fehlt` als belanglos")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28605,6 +28684,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Referenzstaerke": paket_referenzstaerke,
           "Diagnoseumfang": paket_diagnoseumfang,
           "A1Eichung": paket_a1eichung,
+          "Messbasen": paket_messbasen,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

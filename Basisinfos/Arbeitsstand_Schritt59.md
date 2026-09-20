@@ -39,7 +39,7 @@
 
 Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren brechen im selben Fenster ab; die letzte Protokollzeile ist ein **erfolgreich** beendeter Job — kein Fehler, kein Traceback. Der Prozess wurde **von außen** beendet.
 
-⚠️ **Offen und nur am Gerät zu klären:** das **Windows-Ereignisprotokoll (System)** des Notebooks um **14:06 lokal**. Standby, Neustart oder Speichermangel? Der Nutzerhinweis auf einen **Netzwerkausfall am Nachmittag** erklärt die Timeouts, aber **nicht** den Stillstand — möglich ist eine gemeinsame Ursache (Ruhezustand).
+⛔ **Die Ursache wird NICHT weiter verfolgt** (Nutzerentscheidung 20.09.: *„streiche den Punkt mit Windows Ereignisprotokoll, das prüfe ich nicht“*). Der Stillstand bleibt damit **unerklärt** — der Laufzeitwächter meldet den nächsten, die Ursache des einen vom 19.09. bleibt offen. Der Nutzerhinweis auf einen **Netzwerkausfall am Nachmittag** erklärt die Timeouts, aber **nicht** den Stillstand — möglich ist eine gemeinsame Ursache (Ruhezustand).
 
 ✔ **Gebaut**: Laufzeitwächter im `staleness_watchdog` (2.482-waechter, Schwelle 45 min, eine Meldung je Lücke, Spur in `api_health`) · Marktrang-Zähler in der Diagnose (2.482-marktrang) · Paket Laufzeitwächter 12/12, 9 Mutationen · ⚠️ **Laufzeitcode: NB braucht Pull UND Neustart**, danach **K25** (kommt beim nächsten geplanten Neustart eine Stillstandsmail?)
 
