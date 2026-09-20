@@ -822,9 +822,9 @@ Transfer, sondern ein eigener Job.
 | | |
 |---|---|
 | **Job** | `betriebsreihen_job`, täglich **03:30 UTC** (vor dem Jobcluster 04:00–04:38 und vor dem 05:30-Kursjob) |
-| **Was** | ruft `lade_messreihen.main()` mit `--seit-letztem --behalte-tage 500 --mindest 220 --betriebskopie` |
-| **Kosten** | ein Binance-Aufruf je Paar, Gewicht 1 → rund 493 gegen 2.400/Minute; **Nachlauf rund 167 s**, Erstbefüllung **146–325 s** (am Notebook langsamer als am Desktop) |
-| **Platz** | **30 MB** statt 1,5 GB |
+| **Was** | ruft `lade_messreihen.main()` **zweimal** — einmal je Zustand (`TRADING`, `BREAK`) — mit `--seit-letztem --behalte-tage 500 --mindest 400 --betriebskopie` |
+| **Kosten** | ein Binance-Aufruf je Paar, Gewicht 1 → **705** Paare (493 handelnd + 212 eingestellt) gegen 2.400/Minute; Erstbefüllung **rund 230 s**, täglicher Nachlauf in derselben Größenordnung |
+| **Platz** | **40 MB** statt 1,5 GB |
 | **Nachweis** | der Job meldet nicht „fertig“, sondern *wie viele Symbole `schnitt` danach liefert* |
 
 #### ⚠️⚠️⚠️ DIE TRENNUNG: Betriebskopie ist keine Messbasis
@@ -846,10 +846,37 @@ Zeilen enthält und **keine** Marke trägt — also auf der vollen Messbasis.
 Beides ist unumkehrbar, und die Befunde darauf wären nicht mehr reproduzierbar
 (R-R11).
 
-⚠️⚠️ **Offen und ausdrücklich nicht gelöst:** die Grundgesamtheit ist am
-Notebook eine **andere** — Desktop 517 Symbole im Rang, Betriebskopie **398**.
-Ein Fünftel über 398 ist nicht dasselbe wie über 517. Heute folgenlos, weil
-`schnitt` kein scharfer Beitrag ist; **vor** einer Freischaltung zu entscheiden.
+#### ⚠️⚠️⚠️ Die Grundgesamtheit — gemessen, nicht entschieden
+
+Die erste Fassung lud nur `TRADING`. **Gemessen** (2.487-grundgesamtheit):
+
+| | nur TRADING | beide Zustände |
+|---|---|---|
+| Werte im Rang | 398 | **515** |
+| der Messbasis fehlend | 167 | **0** |
+| Kettenwerte mit anderem Fünftel | **18 von 31** | **0 von 29** |
+| über alle Werte | 52,6 % | **0,8 %** |
+
+⚠️ Die 167 Fehlenden lagen im Median **65 % unter** ihrem eigenen 200-Tage-Schnitt
+(übrige: +1,5 %) — sie sind der **Boden** der Verteilung. Fehlt der Boden, rückt
+jeder Verbleibende im Perzentil nach unten; alle 18 wechselten nach unten.
+
+➔ **Deshalb drei Dinge, und jedes einzeln nötig:**
+
+| | |
+|---|---|
+| beide Zustände | ohne die eingestellten fehlt der Boden |
+| Aufbewahrung **je Symbol** | eine absolute Grenze gegen heute löscht jede eingestellte Reihe **vollständig** |
+| Mindestlänge **400**, nicht 220 | mit 220 hatte die Kopie 53 Symbole **mehr** als die Messbasis — dieselbe Entkopplung, nur andersherum |
+
+⚠️ **Nachrechnen geht jederzeit:** `python messe_grundgesamtheit.py <pfad-zur-betriebskopie>` — vier Sekunden.
+
+⚠️ **Ein Rest bleibt, und er spricht für die Betriebskopie:** zwei Kettenwerte
+(MORPHO, PLUME) fehlen ihr, weil Binance sie nicht mehr listet. Ihre Reihe in
+der **Messbasis** endet am 19.08. — sie bekämen dort einen Rang aus einem
+heutigen Kurs geteilt durch einen Schnitt von vor einem Monat. Die Messdatei
+prüft die Frische nur **global**, die Ergänzung aus der Produktions-DB **je
+Symbol** (2.487-schnitt-frische, offen).
 
 
 ## 7. Backward-Tracking im Detail — wie Signal-Ergebnisse geprüft werden

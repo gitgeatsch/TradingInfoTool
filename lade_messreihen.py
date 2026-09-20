@@ -119,13 +119,53 @@ def letzte_tage(conn, klasse: str) -> dict:
         return {}
 
 
-def kuerze(conn, klasse: str, behalte_tage: int) -> int:
-    """Alles aelter als N Tage weg - NUR in der Betriebskopie."""
-    grenze = (datetime.now(timezone.utc).date()
-              - timedelta(days=int(behalte_tage))).isoformat()
-    c = conn.execute("DELETE FROM price_history_ohlc "
-                     "WHERE assetklasse=? AND date < ?", (klasse, grenze))
+def kuerze(conn, klasse: str, behalte_tage: int,
+           mindest: int = 0) -> int:
+    """Je Symbol die letzten N Tage behalten - NUR in der Betriebskopie.
+
+    ⚠️⚠️ JE SYMBOL, NICHT ABSOLUT (20.09.2026, Befund
+    2.487-grundgesamtheit). Die erste Fassung rechnete die Grenze
+    gegen HEUTE. Das geht gut, solange alle Reihen bis heute laufen -
+    und loescht ein EINGESTELLTES Paar VOLLSTAENDIG, dessen letzte
+    Kerze zwei Jahre zurueckliegt.
+
+    ⚠️ Genau die duerfen nicht fehlen: gemessen am 20.09. verschieben
+    sie 18 von 31 Fuenfteln, weil sie den BODEN der Verteilung bilden
+    (Median -0,6551 gegen +0,0145 bei den uebrigen). Ohne sie rechnet
+    der Betrieb auf einer anderen Grundgesamtheit als die Messung.
+    """
+    # ⚠️ Der Modifikator als PARAMETER, nicht zusammengestueckelt -
+    # `date(x, :mod)` ist eine Stelle weniger, an der Anfuehrungs-
+    # zeichen schiefgehen koennen.
+    c = conn.execute(
+        "DELETE FROM price_history_ohlc "
+        "WHERE assetklasse = :k AND date < ("
+        "    SELECT date(MAX(p2.date), :mod) "
+        "    FROM price_history_ohlc p2 "
+        "    WHERE p2.symbol = price_history_ohlc.symbol "
+        "      AND p2.assetklasse = price_history_ohlc.assetklasse "
+        "      AND p2.currency = price_history_ohlc.currency)",
+        {"k": klasse, "mod": "-%d day" % int(behalte_tage)})
     weg = c.rowcount or 0
+    # ---- ⚠️⚠️ UND ZU KURZE REIHEN GANZ WEG (20.09.2026) -------------
+    #
+    # Gemessen: die Betriebskopie hatte 53 Symbole MEHR als die
+    # Messbasis - alle mit unter 400 Kerzen, also solche, die die
+    # Messung selbst abweist. Das ist dieselbe Entkopplung wie die
+    # fehlenden eingestellten Werte, nur in die andere Richtung.
+    #
+    # ⚠️ `--mindest` filtert beim SCHREIBEN. Ein einmal geschriebenes
+    # Symbol bliebe sonst fuer immer drin, auch wenn die Grenze spaeter
+    # steigt. Deshalb hier, nach dem Zuschnitt.
+    if mindest:
+        c2 = conn.execute(
+            "DELETE FROM price_history_ohlc "
+            "WHERE assetklasse = :k AND symbol IN ("
+            "    SELECT symbol FROM price_history_ohlc "
+            "    WHERE assetklasse = :k "
+            "    GROUP BY symbol, currency HAVING COUNT(*) < :m)",
+            {"k": klasse, "m": int(mindest)})
+        weg += c2.rowcount or 0
     conn.commit()
     # ⚠️ OHNE VACUUM BLEIBEN DIE SEITEN BELEGT. Gemessen am 20.09.:
     # 3.006 Zeilen in einer 2,75-MB-Datei, weil 14.646 geloeschte
@@ -568,7 +608,7 @@ def main(argv: list[str] | None = None) -> int:
         print("  Nachlauf: %d Reihen haben schon einen Stand" % len(stand))
 
     jetzt = datetime.now(timezone.utc).isoformat()
-    ok = zeilen = 0
+    ok = zeilen = unveraendert = 0
     abgelehnt: list[tuple[str, str]] = []
     kollisionen: list[tuple[str, str, str]] = []
     t0 = time.time()
@@ -584,12 +624,18 @@ def main(argv: list[str] | None = None) -> int:
                        - date(1970, 1, 1).toordinal()) * 86_400_000
                 rohe = hole_ab(s, paar, _ab)
             elif a.seit_letztem and not _yf:
-                # Neu in der Betriebskopie: nur so weit zurueck, wie sie
-                # aufbewahrt - nicht die ganze Historie.
-                _tage = a.behalte_tage or 500
-                _ab = ((date.today() - timedelta(days=_tage)).toordinal()
-                       - date(1970, 1, 1).toordinal()) * 86_400_000
-                rohe = hole_ab(s, paar, _ab)
+                # ⚠️⚠️ NEU IN DER KOPIE HEISST: GANZE HISTORIE (Korrektur
+                # 20.09.2026, beim Wirkungsnachweis gefunden). Die erste
+                # Fassung holte nur die letzten `behalte_tage` - fuer ein
+                # vor zwei Jahren EINGESTELLTES Paar gibt es dort nichts,
+                # und 159 von 212 fielen als ,zu kurz` durch. Also genau
+                # die Werte, wegen derer die Grundgesamtheit erweitert
+                # wurde (2.487-grundgesamtheit).
+                #
+                # ⚠️ Teuer ist das nur EINMAL je Symbol; danach greift der
+                # Nachlauf. Und `kuerze()` rechnet je Symbol, schneidet
+                # also auch eine alte Reihe korrekt auf ihre letzten Tage.
+                rohe = hole_alles(s, paar)
             else:
                 rohe = yf_hole_alles(paar) if _yf else hole_alles(s, paar)
             # ⚠️⚠️ `pruefe()` GEHOERT IN DENSELBEN VERSUCH (03.09.2026,
@@ -611,6 +657,14 @@ def main(argv: list[str] | None = None) -> int:
             # bestanden; der Nachlauf muss nur plausibel sein.
             _mindest = 1 if (a.seit_letztem and sym in stand) \
                 else a.mindest
+            # ⚠️ NICHTS NEUES IST KEIN FEHLER (20.09.2026). Ein
+            # EINGESTELLTES Paar liefert im Nachlauf null Kerzen -
+            # die erste Fassung haette es taeglich als ,zu kurz`
+            # abgelehnt und 174 Falschmeldungen erzeugt. Die Reihe
+            # steht ja bereits in der Datei.
+            if a.seit_letztem and sym in stand and not rohe:
+                unveraendert += 1
+                continue
             gut, grund = pruefe(rohe, paar, mindest=_mindest)
         except Exception as e:               # noqa: BLE001
             abgelehnt.append((sym, f"{type(e).__name__}"))
@@ -666,6 +720,9 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"\n  {ok} von {len(liste)} Reihen brauchbar, {zeilen} Kerzen, "
           f"{time.time() - t0:.0f} s")
+    if unveraendert:
+        print(f"  {unveraendert} Reihen ohne neue Kerze - unveraendert "
+              f"(eingestellt, oder heute noch kein Schluss)")
     if abgelehnt:
         print(f"\n  {len(abgelehnt)} abgelehnt - die Gruende, gezaehlt:")
         zaehl: dict = {}
@@ -681,7 +738,8 @@ def main(argv: list[str] | None = None) -> int:
         for sym, alt, neu in kollisionen:
             print(f"    {sym}: bleibt {alt}, wollte {neu}")
     if conn is not None and a.behalte_tage:
-        _weg = kuerze(conn, a.klasse, a.behalte_tage)
+        _weg = kuerze(conn, a.klasse, a.behalte_tage,
+                      mindest=a.mindest)
         print(f"\n  gekuerzt auf {a.behalte_tage} Tage - "
               f"{_weg} alte Zeilen geloescht")
     if conn is not None:

@@ -1410,7 +1410,39 @@ def _aktien_reihen(conn) -> int:
 # kostet einen Abruf.
 BETRIEBSREIHEN_DB = "data/messdaten.db"
 BETRIEBSREIHEN_TAGE = 500      # 200 fuer den Schnitt, Rest Puffer
-BETRIEBSREIHEN_MINDEST = 220   # BETRIEBSgrenze, nicht die Messgrenze (400)
+# ⚠️⚠️ 400, NICHT 220 - UND DAS IST GEMESSEN (20.09.2026). Zuerst stand
+# hier 220 mit der Begruendung ,der Betrieb braucht nur die 200 Tage des
+# Schnitts`. Technisch stimmt das - aber die Betriebskopie hatte damit 53
+# Symbole MEHR als die Messbasis, alle mit unter 400 Kerzen. Dieselbe
+# Entkopplung wie die fehlenden eingestellten Werte, nur andersherum.
+#
+# ⚠️ Ein Rang fuer einen Wert, den die MESSUNG nie enthielt, ist keine
+# Bewertung, sondern eine Extrapolation. Die Grenze ist deshalb
+# `lade_messreihen.MIN_KERZEN` - dieselbe Zahl, eine Quelle.
+BETRIEBSREIHEN_MINDEST = 400
+
+# ⚠️⚠️⚠️ BEIDE ZUSTAENDE, UND DAS IST GEMESSEN (20.09.2026, Befund
+# 2.487-grundgesamtheit). Zuerst lud dieser Job nur `TRADING`. Die
+# Folge: 18 von 31 Kryptowerten der Kette bekamen ein ANDERES
+# Fuenftel als auf der Messbasis - und zwar alle achtzehn ein
+# niedrigeres.
+#
+# DIE URSACHE IST GEMESSEN, nicht vermutet: die 167 fehlenden Werte
+# liegen im Median 65 Prozent UNTER ihrem eigenen 200-Tage-Schnitt
+# (gegen +0,0145 bei den uebrigen). Sie sind der BODEN der
+# Verteilung. Faellt der Boden weg, rueckt jeder Verbleibende im
+# Perzentil nach unten.
+#
+# ⚠️ `BREAK` ist nicht gleich gescheitert - darin stecken auch
+# Umbenennungen (BCC -> BCH, VEN -> VET). Die Gruppe ist heterogen;
+# das gehoert in jeden Befund, der auf ihr steht
+# (`lade_messreihen.paare`).
+#
+# ⚠️⚠️ DER BETRIEB MUSS DIESELBE GRUNDGESAMTHEIT HABEN WIE DIE
+# MESSUNG. Sonst rechnet er nicht mit der Groesse, die gemessen
+# wurde - und der registrierte Beitrag (+0,1759 R) gilt fuer etwas
+# anderes als das, was laeuft.
+BETRIEBSREIHEN_STATUS = ("TRADING", "BREAK")
 
 
 def betriebsreihen_job(conn_factory) -> None:
@@ -1428,9 +1460,17 @@ def betriebsreihen_job(conn_factory) -> None:
     import lade_messreihen as LM
     t0 = time.time()
     try:
-        LM.main(["--db", BETRIEBSREIHEN_DB, "--schreiben", "--betriebskopie",
-                 "--behalte-tage", str(BETRIEBSREIHEN_TAGE),
-                 "--mindest", str(BETRIEBSREIHEN_MINDEST), "--seit-letztem"])
+        # ⚠️ ZWEI DURCHGAENGE, EINER JE ZUSTAND. Getrennt, damit
+        # `messreihen_status` weiterhin ,handelnd` gegen
+        # ,eingestellt` unterscheidet - eine gemeinsame Liste
+        # verloere genau die Kennzeichnung, wegen der die
+        # eingestellten ueberhaupt dabei sind.
+        for _status in BETRIEBSREIHEN_STATUS:
+            LM.main(["--db", BETRIEBSREIHEN_DB, "--schreiben",
+                     "--betriebskopie", "--status", _status,
+                     "--behalte-tage", str(BETRIEBSREIHEN_TAGE),
+                     "--mindest", str(BETRIEBSREIHEN_MINDEST),
+                     "--seit-letztem"])
     except SystemExit as stop:
         # ⚠️⚠️ `lade_messreihen` WIRFT SystemExit, NICHT Exception - und das
         # faengt `except Exception` nicht (SystemExit erbt von

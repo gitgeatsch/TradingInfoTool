@@ -39,7 +39,7 @@
 
 ⚠️⚠️⚠️ **Die Trennung** (Nutzervorgabe *„die Trennung ist erforderlich“*): die NB-Datei trägt die Marke `_nur_betrieb`, und `lade_reihen_aus_db` **bricht ab** — dort gehen **32 Messskripte** durch. Dazu zwei Riegel am Erzeuger. Festgehalten in CLAUDE.md, Regelwerksmanual § 6 und Memory `feedback_betriebskopie_ist_keine_messbasis`.
 
-⚠️⚠️ **Offen und nicht gelöst:** die Grundgesamtheit ist am Notebook eine **andere** — **398** Symbole gegen **517** am Desktop. Ein Fünftel über 398 ist nicht dasselbe wie über 517. Heute folgenlos (`schnitt` ist zurückgenommen), **vor** einer Freischaltung zu entscheiden — und das ist **M1-Kriterium 3**, die Akkumulation.
+⚠️✔✔ **Grundgesamtheit gelöst 20.09.** (2.487-grundgesamtheit) — und sie war nie eine Entscheidung, sondern eine **Messung** (Nutzerhinweis: *„ist das eine Entscheidung?“*). Gemessen: nur `TRADING` verschob **18 von 31** Kettenfünfteln, alle nach unten, weil die 167 Fehlenden im Median 65 % **unter** ihrem Schnitt liegen — der **Boden** der Verteilung. Nach dem Umbau (beide Zustände · Aufbewahrung **je Symbol** · Mindestlänge **400** statt 220): **0 von 29**, über alle Werte 0,8 % statt 52,6 %. Paket Betriebsreihen 23/23. ⚠ Kosten: 705 Paare, ~230 s, 40 MB. ⚠ **Laufzeitcode — NB braucht Pull und Neustart.**
 
 ⚠️ **Drei eigene Fehler, alle von der Prüfung gefangen:** `DB` statt `db` (NameError zur Laufzeit, derselbe wie im Laufzeitwächter), `SystemExit` fällt nicht unter `except Exception` (hätte den Scheduler-Thread mitgerissen — am Desktop bei **jedem** Lauf), und `sys.stdout.reconfigure()` gibt es als Dienst nicht.
 

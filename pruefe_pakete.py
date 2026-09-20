@@ -24036,6 +24036,76 @@ def paket_betriebsreihen() -> None:
            "NameError ZUR LAUFZEIT - der Import faellt nicht auf. "
            "Derselbe Fehler wie am 20.09. im Laufzeitwaechter")
 
+    # ---- ⚠️⚠️⚠️ DIE GRUNDGESAMTHEIT (2.487-grundgesamtheit) ------------
+    #
+    # Gemessen am 20.09.: laedt die Betriebskopie nur `TRADING`, bekommen
+    # 18 von 31 Kryptowerten der Kette ein ANDERES Fuenftel als auf der
+    # Messbasis - alle achtzehn ein niedrigeres. Die 167 Fehlenden liegen
+    # im Median 65 Prozent unter ihrem eigenen Schnitt und bilden den
+    # BODEN der Verteilung.
+    pruefe(P, "⚠️⚠️⚠️ die Betriebskopie laedt BEIDE Zustaende",
+           set(_BG.BETRIEBSREIHEN_STATUS) == {"TRADING", "BREAK"},
+           "ohne die EINGESTELLTEN rechnet der Betrieb auf einer anderen "
+           "Grundgesamtheit als die Messung - der registrierte Beitrag "
+           "(+0,1759 R) gilt dann fuer etwas anderes als das, was laeuft "
+           "(bekommen: %s)" % (_BG.BETRIEBSREIHEN_STATUS,))
+    pruefe(P, "⚠️⚠️ und der Job faehrt sie in ZWEI Durchgaengen",
+           "for _status in BETRIEBSREIHEN_STATUS:" in _qb
+           and '"--status", _status,' in _qb,
+           "getrennt, damit `messreihen_status` weiter ,handelnd` gegen "
+           "aeingestellt` unterscheidet - eine gemeinsame Liste verloere "
+           "genau die Kennzeichnung, wegen der die eingestellten dabei "
+           "sind")
+
+    # ---- ⚠️⚠️ UND DIE KUERZUNG DARF SIE NICHT WIEDER WEGWERFEN --------
+    #
+    # Hier wird die ECHTE Funktion an einer Kunstdatenbank gemessen, nicht
+    # der Quelltext gelesen: eine EINGESTELLTE Reihe endet vor zwei
+    # Jahren, eine laufende heute. Nach dem Kuerzen muessen BEIDE ihre
+    # letzten Tage behalten.
+    import datetime as _dt
+
+    _c = _sq.connect(":memory:")
+    _c.executescript(_LM.SCHEMA)
+    _h = _dt.date.today()
+    for _sym, _ab in (("LAEUFT", 0), ("EINGESTELLT", 700)):
+        for _i in range(900):
+            _c.execute(
+                "INSERT INTO price_history_ohlc VALUES "
+                "(?,?,?,?,1,1,1,1,1,?,?)",
+                (_sym, "krypto", "USD",
+                 (_h - _dt.timedelta(days=_ab + _i)).isoformat(),
+                 "x", "t"))
+    _c.commit()
+    _LM.kuerze(_c, "krypto", 500)
+    _nach = dict(_c.execute(
+        "SELECT symbol, COUNT(*) FROM price_history_ohlc GROUP BY symbol").fetchall())
+    _c.close()
+    pruefe(P, "⚠️⚠️⚠️ die Kuerzung rechnet JE SYMBOL, nicht gegen heute",
+           _nach.get("EINGESTELLT", 0) == 501
+           and _nach.get("LAEUFT", 0) == 501,
+           "eine absolute Grenze loescht jede eingestellte Reihe VOLLSTAENDIG - "
+           "und damit genau die Werte, wegen derer die Grundgesamtheit "
+           "ueberhaupt erweitert wurde. Bekommen: %s" % (_nach,))
+    # ⚠️⚠️ BEIM WIRKUNGSNACHWEIS GEFUNDEN (20.09.): die erste Fassung
+    # holte fuer ein der Kopie UNBEKANNTES Symbol nur die letzten
+    # `behalte_tage`. Ein vor zwei Jahren eingestelltes Paar hat dort
+    # NICHTS - 159 von 212 fielen als ,zu kurz` durch, also genau die
+    # Werte, wegen derer die Grundgesamtheit erweitert wurde.
+    pruefe(P, "⚠️⚠️⚠️ ein neues Symbol bekommt die GANZE Historie",
+           "rohe = hole_alles(s, paar)" in
+           _ql.split("elif a.seit_letztem and not _yf:", 1)[-1][:900],
+           "sonst faellt jedes eingestellte Paar durch, dessen Handel "
+           "laenger zurueckliegt als die Aufbewahrung. Teuer ist das nur "
+           "EINMAL je Symbol - danach greift der Nachlauf, und `kuerze()` "
+           "schneidet die Reihe je Symbol korrekt zu")
+    pruefe(P, "⚠️ und ein leerer Nachlauf ist kein abgelehnter Wert",
+           "unveraendert += 1" in _ql
+           and "if a.seit_letztem and sym in stand and not rohe:" in _ql,
+           "ein eingestelltes Paar liefert taeglich null neue Kerzen - ohne "
+           "diesen Zweig meldete der Job 212 Ablehnungen am Tag, und eine "
+           "echte Ablehnung ginge darin unter")
+
     # ---- E1  Die beiden Sperren gegen das Kuerzen ------------------------
     _p = _os.path.join(_tmp.gettempdir(), "pruef_betriebsreihen.db")
     if _os.path.exists(_p):
