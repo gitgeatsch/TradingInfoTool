@@ -108,6 +108,11 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - ~~N3~~ **beantwortet 18.09.** – (b) bestätigt: die Bewertung gilt nur auf der Stellvertretermenge
 - ~~N12~~ **entfällt** – war falsch gestellt; die Regel R-R4/P1 beantwortet sie (2.459-ungemessen). Offen bleibt **N3** (A8): Bewertung gilt nur auf der Stellvertretermenge – **(b) bestätigt 18.09.**
 
+## Beobachtet, nicht aufgemacht (20.09.)
+
+- **11 Mails im 72-Stunden-Fenster NICHT zugestellt** — sieben am 19.09. (07:06, 2× 09:05, 2× 12:15/12:16, 2× 20:32), vier am 20.09. (02:18, 2× 02:44, 02:59). ✔ Zeitlich deckungsgleich mit den bekannten Netzereignissen: Aussetzer und Stillstand am 19.09., 288-MB-Diagnose am 20.09. bis 03:00. **Seit 03:00 keine mehr, seit dem letzten Neustart 0 ERROR insgesamt.** ⚠ Die Ursache steht nicht im Logauszug (kein SMTP-Fehler sichtbar). Erfasst sind sie über `mail_versand` (1.3), also nicht spurlos. **Kein eigener Befund** — wenn es ohne Netzereignis wiederkommt, ist es einer.
+- **84 yfinance-Indexfehler** (^GSPC/^IXIC/^VIX/^TNX) im Fenster — bekannt als 2.454-vix, Status *beobachten*. Nicht auf dem Krypto-Pfad von M1.
+
 ## Offene Notebook-Kontrollen
 
 ⚠️ **Beim nächsten Export zuerst diese drei** – sie belegen, dass die Bauten vom 19./20.09. im Betrieb wirklich greifen:
