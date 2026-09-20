@@ -19,6 +19,14 @@
 
 **Weg:** Phase 3 (Spot) → Phase 4 (Hebel) → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
 
+## ✔✔✔ A1 ist gefallen — der Hebel ist messbar
+
+**2.485-a1-gefallen (20.09.):** die Messanlage ist auf `barriere` geeicht. **1 von 100 Fehlalarmen auf BEIDEN Zielgrößen** (Sollwert 5 %). Drei unabhängige Wege: Blocklänge unauffällig (±0,03), die Überschlagsrechnung aus 2.238 teilte durch √Blöcke statt √Tage, und `zufall` auf `barriere` **trägt heute nicht** (+0,0008 R). 2.238 ist auf **abgelöst** gesetzt.
+
+⚠️ Die Anlage ist eher **übervorsichtig** (1 % statt 5 %) — das erklärt mit, warum so wenig trägt. ⚠️ Und **warum** die Messung am 09.09. anders ausfiel, ist **nicht geklärt**; ich stelle keine Vermutung als Erklärung hin. Paket A1Eichung 12/12, 10 Mutationen.
+
+➔ **Phase 4 Punkt 2 ist frei**: Hebel-Einstieg auf `barriere`, r(q)-Simulation, *derselbe Trade als Spot*.
+
 ## ✔ Betriebsvorfall 20.09. — die Netzaussetzer sind erklärt
 
 **Es war die Diagnose, nicht der Pull** (2.484-ursache). Der Nutzer hat es getrennt geprüft: *Pull ohne Diagnose blieb ruhig*. 295 MB Upload auf einen Drive-Ordner sättigen die Leitung; die Abrufe der laufenden Anwendung scheitern am 15-Sekunden-Zeitlimit — Terminmarkt 4/43, +48 Jobfehler.

@@ -49,6 +49,29 @@ weniger, fuer eine Feinjustierung nicht.
 die Welt rund H mal zu viele unabhaengige Beobachtungen und bescheinigt
 der Anlage eine Praezision, die sie nicht hat.
 
+## ⚠️ LIMITS UND DAUER - NACHGEMESSEN, NICHT GESCHAETZT
+
+⚠️ Die stehende Vorgabe verlangt beides VOR dem Lauf. Am 20.09. wurde sie
+erst nachgeholt, als der Nutzer schon wartete. Deshalb steht sie jetzt
+hier - und im DOCSTRING, nicht in einem Kommentar: `_quelltext` filtert
+Kommentarzeilen, und eine Pruefung haette die Angabe dort nie gesehen
+(dieselbe Falle wie 2.470-drei-eigene-fehler).
+
+    bewegung_r   22,2 s je Ziehung   ->  100 Ziehungen = 0,6 h
+    barriere     19,5 s je Ziehung   ->  100 Ziehungen = 0,5 h
+    ------------------------------------------------------------
+    gesamt                                              rund 1,1 h
+
+⚠️ WOHER DIE KOSTEN KOMMEN: je Ziehung baut `welt()` 1.500 Tage mit 150
+Symbolen, und `pruefe_auswahl` rechnet darauf 40 Nullwelten plus 5
+Ziehungen Positivkontrolle - jede mit einem Blockbootstrap ueber 2.000
+Wiederholungen (Normvorgabe). Das sind rund 46 Baender je Ziehung.
+
+⚠️⚠️ WER DIE ZIEHUNGSZAHL AENDERT, AENDERT DIE LAUFZEIT LINEAR - und wer
+sie unter 50 senkt, verliert die Aufloesung: bei 50 sind es ±3
+Prozentpunkte, bei 100 noch ±2. Fuer die Frage "ueber oder unter 5 %" ist
+das der Unterschied zwischen Antwort und Vermutung.
+
 Nur lesend, kein LLM, keine Datenbank.
 """
 from __future__ import annotations

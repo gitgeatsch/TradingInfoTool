@@ -373,7 +373,7 @@ dann entsteht keine Nacharbeit.
 
 ### Phase 4 – Hebel (Einstieg und Führung)
 
-1. **A1 lösen** (Schritt 35): Fehlalarmquote der Barrieren-Anlage auf Nullwelten, Eichung `barriere`.
+1. **A1 lösen** (Schritt 35): Fehlalarmquote der Barrieren-Anlage auf Nullwelten, Eichung `barriere`. · ✔✔✔ **GEFALLEN 20.09.** (2.485-a1-gefallen): **1 von 100 Fehlalarmen auf BEIDEN Zielgrößen** bei Sollwert 5 %. Die Blocklänge ist nicht die Ursache (Autokorrelation ±0,03), die Überschlagsrechnung aus 2.238 teilte durch √Blöcke statt √Tage (Faktor √60 = 7,75), und die Beobachtung reproduziert sich nicht: `zufall` auf `barriere` **trägt heute nicht** (+0,0008 R, Band schließt die Null ein). ⚠️ Die Anlage ist eher **übervorsichtig** (1 % statt 5 %) — das erklärt mit, warum so wenig trägt. ➔ **Der Hebel ist messbar**
 2. Danach: Hebel-Einstieg auf `barriere`; r(q)-Simulation; „derselbe Trade als Spot“.
 3. Führung: nach Phase 1 (1.4) Regeln der Hebelführung gegen „halten“; Stopregel mit Schritt 52.
 4. Vorher zulässig: nur HINWEIS „Spot gegen Hebel auf `bewegung_r`“ (Entscheidung **N6**).

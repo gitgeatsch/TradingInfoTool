@@ -23729,6 +23729,123 @@ def paket_diagnoseumfang() -> None:
            % (len(_ohne), _ohne[:6]))
 
 
+def paket_a1eichung() -> None:
+    """Misst die A1-Klaerung: ist die Anlage auf `barriere` geeicht?
+
+    ⚠️ A1 war der Engpass des Hebels: laut 2.238 sei das Band auf binaeren
+    Daten VIERMAL ZU ENG, und deshalb trage dort sogar `zufall`. Geprueft
+    wurde das auf drei unabhaengigen Wegen - Blocklaenge, Fehlalarmquote,
+    Reproduktion der Beobachtung.
+    """
+    P = "A1Eichung"
+    import numpy as _np
+
+    import phase4_a1_selbsttest as _ST
+    import selbsttest_welt as _SW
+
+    # ---- Die binaere Welt ------------------------------------------------
+    _je, _ = _SW.welt(_np.random.default_rng(1), staerke=0.0, binaer=True,
+                      crv=2.0)
+    _tag = sorted(_je)[0]
+    _y = _np.array([z["in_r"] for z in _je[_tag]], float)
+    pruefe(P, "⚠️⚠️ die binaere Welt ist wirklich binaer",
+           set(_np.unique(_y)) <= {0.0, 1.0},
+           "`barriere` fragt ZIEL VOR STOP - das ist 0 oder 1. Eine stetige "
+           "Groesse mit der Mittel-Statistik zu messen waere eine andere "
+           "Frage (bekommen: %s)" % (sorted(set(_np.unique(_y)))[:4],))
+    pruefe(P, "⚠️⚠️ und sie trifft die KONSTRUKTIONSBEDINGTE Quote 1/(1+CRV)",
+           abs(float(_y.mean()) - 1.0 / 3.0) < 0.02,
+           "ein Barrierensystem auf driftfreiem Pfad hat brutto "
+           "Erwartungswert NULL - bei CRV 2 trifft der Stop in zwei von "
+           "drei Faellen zuerst. Das ist Arithmetik, kein Messergebnis "
+           "(bekommen %.3f, erwartet %.3f)" % (_y.mean(), 1.0 / 3.0))
+
+    # ---- ⚠️ Die eingebaute Wahrheit ueberlebt die Binarisierung ----------
+    _jb, _ = _SW.welt(_np.random.default_rng(5), staerke=1.0, binaer=True)
+    _js, _ = _SW.welt(_np.random.default_rng(5), staerke=1.0)
+    _t = sorted(_jb)[0]
+    _kb = _np.array([z["kennzahl"] for z in _jb[_t]], float)
+    _yb = _np.array([z["in_r"] for z in _jb[_t]], float)
+    _ys = _np.array([z["in_r"] for z in _js[_t]], float)
+    import messe_regel_wirksamkeit as _RW
+    _oben = _RW.rang(_kb) >= _RW.GRENZE
+    pruefe(P, "⚠️⚠️ und die GEPFLANZTE Wahrheit ueberlebt die Binarisierung",
+           _yb[_oben].mean() < _yb[~_oben].mean()
+           and _ys[_oben].mean() < _ys[~_oben].mean(),
+           "gepflanzt wird auf der stetigen Groesse und DANN geschnitten - "
+           "wer die Reihenfolge dreht, misst eine Welt ohne Effekt "
+           "(binaer %.3f gegen %.3f, stetig %.3f gegen %.3f)"
+           % (_yb[_oben].mean(), _yb[~_oben].mean(),
+              _ys[_oben].mean(), _ys[~_oben].mean()))
+
+    # ---- ⚠️ R-R11: die Vorgabe von `welt()` bleibt unveraendert ----------
+    _a, _ = _SW.welt(_np.random.default_rng(3), staerke=0.0)
+    _b, _ = _SW.welt(_np.random.default_rng(3), staerke=0.0, binaer=False)
+    pruefe(P, "⚠️⚠️ die VORGABE von `welt()` rechnet unveraendert (R-R11)",
+           [z["in_r"] for z in _a[sorted(_a)[0]]]
+           == [z["in_r"] for z in _b[sorted(_b)[0]]],
+           "der neue Parameter darf keine einzige frueher gemessene Zahl "
+           "verschieben - sonst waeren die Selbsttests vom 08.09. still "
+           "umgeschrieben")
+
+    # ---- Der Aufbau des Selbsttests --------------------------------------
+    _q = _quelltext("phase4_a1_selbsttest.py")
+    pruefe(P, "⚠️⚠️ ZWEI Arme - der Vergleichsarm ist Pflicht",
+           len(_ST.ARME) == 2
+           and {a[2] for a in _ST.ARME} == {"bewegung_r", "barriere"},
+           "ohne den stetigen Arm waere eine hohe Quote nicht der "
+           "ZIELGROESSE zuzuordnen - sie koennte am Pruefstand liegen "
+           "(Arme: %s)" % ([a[2] for a in _ST.ARME],))
+    pruefe(P, "⚠️ `barriere` laeuft in der Lage, in der ein Stop den Trade "
+           "beendet",
+           any(a[2] == "barriere" and a[1].stop_beendet for a in _ST.ARME),
+           "die Norm weist `barriere` sonst selbst ab - sie gilt nur dort, "
+           "wo ein Stop den Trade wirklich beendet")
+    # ⚠️⚠️ OHNE DOCSTRING PRUEFEN - gefunden von der Gegenpruefung
+    # (20.09.2026). Die erste Fassung suchte in `_quelltext`, und dort steht
+    # auch der DOCSTRING: die Zeile "`ueberlappung=HORIZONT` ist PFLICHT"
+    # liess die Pruefung gruen bleiben, obwohl der AUFRUF entfernt war. Eine
+    # Pruefung, die im Docstring fuendig wird, prueft die ABSICHT, nicht den
+    # BAU - dasselbe Muster wie 2.470-drei-eigene-fehler, nur umgekehrt.
+    _code = _quelltext("phase4_a1_selbsttest.py")
+    _ohne_doc = (_code.split(chr(34) * 3, 2)[-1]
+                 if _code.count(chr(34) * 3) >= 2 else _code)
+    pruefe(P, "⚠️⚠️ die Ueberlappung ist im AUFRUF gesetzt, nicht nur "
+           "im Docstring",
+           "ueberlappung=HORIZONT" in _ohne_doc,
+           "ohne sie hat die Welt rund H mal zu viele unabhaengige "
+           "Beobachtungen und bescheinigt der Anlage eine Praezision, die "
+           "sie nicht hat (selbsttest_welt)")
+    pruefe(P, "⚠️ 100 Ziehungen, nicht 50",
+           _ST.ZIEHUNGEN >= 100,
+           "bei 50 ist die Aufloesung ±3 Prozentpunkte, bei 100 noch ±2 - "
+           "fuer die Frage ,ueber oder unter 5 %%` ist das der Unterschied "
+           "zwischen Antwort und Vermutung (bekommen: %d)" % _ST.ZIEHUNGEN)
+    pruefe(P, "⚠️⚠️ die LAUFZEIT steht im Modul, nicht im Kopf",
+           "s je Ziehung" in _q and "rund 1,1 h" in _q,
+           "die stehende Vorgabe verlangt Limits und Dauer VOR dem Lauf - "
+           "am 20.09. wurde sie erst nachgeholt, als der Nutzer wartete")
+
+    # ---- Die Blockmessung baut die Barriere nicht nach -------------------
+    _qb = _quelltext("phase4_a1_block.py")
+    pruefe(P, "⚠️⚠️ die Barriere wird aufgerufen, nicht nachgebaut",
+           "K1C.barriere_je_tag(" in _qb,
+           "sie laeuft auf der PRODUKTIONSGEOMETRIE; ein Nachbau waere ein "
+           "zweiter Massstab und zerstoerte den Vergleich mit 2.238 (R-R11)")
+    pruefe(P, "⚠️⚠️ und BEIDE Erwartungsformeln stehen in der Ausgabe",
+           "erw_tage" in _qb and "erw_bloecke" in _qb
+           and "DIE SPALTE RECHTS IST DIE FALSCHE RECHNUNG" in _qb,
+           "die Rechnung mit der BLOCKZAHL im Nenner steckt vermutlich in "
+           "2.238 und ergibt Faktor 3,2 bis 10,5; mit der TAGESZAHL sind es "
+           "0,42 bis 1,35. Wer nur eine zeigt, verkauft eine Formel als "
+           "Befund")
+    pruefe(P, "⚠️ `zufall` ist als Zeuge dabei",
+           "zufall" in _ST.__doc__ or "zufall" in str(
+               getattr(__import__("phase4_a1_block"), "KANDIDATEN", ())),
+           "er darf NIE tragen; tut er es doch, ist die Anlage kaputt und "
+           "nicht der Markt - genau daran ist A1 aufgefallen")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28487,6 +28604,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Laufzeitwaechter": paket_laufzeitwaechter,
           "Referenzstaerke": paket_referenzstaerke,
           "Diagnoseumfang": paket_diagnoseumfang,
+          "A1Eichung": paket_a1eichung,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 
