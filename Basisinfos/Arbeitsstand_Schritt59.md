@@ -19,6 +19,14 @@
 
 **Weg:** Phase 3 (Spot) → Phase 4 (Hebel) → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
 
+## ⚠️ Betriebsvorfall 19.09. — sechs Stunden Stillstand
+
+Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren brechen im selben Fenster ab; die letzte Protokollzeile ist ein **erfolgreich** beendeter Job — kein Fehler, kein Traceback. Der Prozess wurde **von außen** beendet.
+
+⚠️ **Offen und nur am Gerät zu klären:** das **Windows-Ereignisprotokoll (System)** des Notebooks um **14:06 lokal**. Standby, Neustart oder Speichermangel? Der Nutzerhinweis auf einen **Netzwerkausfall am Nachmittag** erklärt die Timeouts, aber **nicht** den Stillstand — möglich ist eine gemeinsame Ursache (Ruhezustand).
+
+✔ **Gebaut**: Laufzeitwächter im `staleness_watchdog` (2.482-waechter, Schwelle 45 min, eine Meldung je Lücke, Spur in `api_health`) · Marktrang-Zähler in der Diagnose (2.482-marktrang) · Paket Laufzeitwächter 12/12, 9 Mutationen · ⚠️ **Laufzeitcode: NB braucht Pull UND Neustart**, danach **K25** (kommt beim nächsten geplanten Neustart eine Stillstandsmail?)
+
 ## Wo wir stehen
 
 | Paket | Stand |

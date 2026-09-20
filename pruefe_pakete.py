@@ -23310,6 +23310,121 @@ def paket_terminmarktstufe() -> None:
            "250 an einem Tag")
 
 
+def paket_laufzeitwaechter() -> None:
+    """Misst den Waechter gegen Laufzeitluecken (E1-E5 zu Befund 2.482).
+
+    ⚠️ DIE FUNKTIONEN WERDEN AUFGERUFEN, NICHT NUR IMPORTIERT. Beim Bau
+    stand hier `DB.letzter_joblauf` - `DB` ist in `scheduler/background.py`
+    aber nur LOKAL in anderen Funktionen gebunden, modulweit heisst es
+    `db`. Der Import des Moduls zeigte das NICHT; erst der Aufruf waere im
+    Betrieb mit NameError gescheitert.
+
+    ⚠️⚠️ ALLES LAEUFT AUF EINER WEGWERFDATENBANK. Die Standard-DB ist am
+    Notebook die PRODUKTION.
+    """
+    P = "Laufzeitwaechter"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+
+    import scheduler.background as _B
+    import extract_notebook_diagnose as _X
+
+    _d = _tf.mkdtemp()
+    _conn = _sq.connect(_os.path.join(_d, "probe.db"))
+    _conn.row_factory = _sq.Row
+    try:
+        erst = _B._laufzeitluecke(_conn)
+        gleich = _B._laufzeitluecke(_conn)
+        pruefe(P, "⚠️⚠️ kein Lebenszeichen heisst NIE GELAUFEN, keine Luecke",
+               erst is None,
+               "beim allerersten Start gibt es keine Luecke, sondern keinen "
+               "Vergleich - wer daraus eine Meldung macht, alarmiert bei "
+               "jeder Neuinstallation (bekommen: %r)" % (erst,))
+        pruefe(P, "⚠️ und ein durchlaufender Betrieb meldet nichts",
+               gleich is None,
+               "zwei Aufrufe kurz hintereinander sind keine Luecke "
+               "(bekommen: %r)" % (gleich,))
+
+        # ---- Eine kuenstlich alte Spur ----------------------------------
+        _conn.execute("UPDATE job_laeufe SET zuletzt_am=? WHERE job_id=?",
+                      ("2026-09-19T08:00:00+00:00", _B.LEBENSZEICHEN_JOB))
+        _conn.commit()
+        alt = _B._laufzeitluecke(_conn)
+        danach = _B._laufzeitluecke(_conn)
+        pruefe(P, "⚠️⚠️ eine echte Luecke wird erkannt",
+               alt is not None and alt > _B.LAUFZEIT_LUECKE_AB_MINUTEN,
+               "genau dafuer ist der Waechter da - am 19.09. waren es 6,38 "
+               "Stunden, und niemand hat es bemerkt (bekommen: %r)" % (alt,))
+        pruefe(P, "⚠️⚠️ und GENAU EINMAL - der Zeitstempel wird sofort neu "
+               "gesetzt",
+               danach is None,
+               "wer ihn nur im Luecken-Fall schreibt, meldet dieselbe Luecke "
+               "alle 15 Minuten wieder (bekommen: %r)" % (danach,))
+
+        # ---- Die Schwelle trennt Wartung von Ausfall ---------------------
+        pruefe(P, "⚠️ die Schwelle liegt ueber der Dauer eines Neustarts",
+               _B.LAUFZEIT_LUECKE_AB_MINUTEN >= 30.0,
+               "die Diagnose rechnet mit 20 Minuten und SCHAUT ZURUECK - "
+               "diese Meldung geht an den Nutzer, und der Wartungsneustart "
+               "vom 19.09. haette bei 20 Minuten eine Ausfallmeldung erzeugt "
+               "(Schwelle: %.0f)" % _B.LAUFZEIT_LUECKE_AB_MINUTEN)
+    finally:
+        _conn.close()
+
+    # ---- Der Waechter haengt im Watchdog, nicht irgendwo ----------------
+    quelle = _quelltext("scheduler/background.py")
+    _wd = quelle.split("def staleness_watchdog_job(")[1][:2500]
+    pruefe(P, "⚠️⚠️ der Waechter laeuft im staleness_watchdog - im 15-Min-Takt",
+           "_laufzeitluecke(conn)" in _wd,
+           "eine Erkennung, die nur auf Anforderung rechnet, ist keine "
+           "Ueberwachung - genau das war der Zustand am 19.09.")
+    # ⚠️ `find` UND NICHT `index` (nachgeschaerft 19.09. durch die
+    # Gegenpruefung): faellt der Aufruf ganz weg, wirft `index` eine
+    # ValueError - dann STUERZT das Paket ab, statt rot zu werden, und der
+    # Nachweis ist keiner. Dieselbe Lehre wie 2.476-positivkontrolle.
+    _i1 = _wd.find("_laufzeitluecke(conn)")
+    _i2 = _wd.find("_history_data_is_stale(conn")
+    pruefe(P, "⚠️ und ZUERST, vor den Frischepruefungen",
+           _i1 >= 0 and _i2 >= 0 and _i1 < _i2,
+           "faellt eine Frischepruefung aus, soll die Luecke trotzdem "
+           "gemeldet sein (Fundstellen: %d / %d)" % (_i1, _i2))
+    pruefe(P, "⚠️⚠️ und er benutzt den MODULWEITEN Namen `db`",
+           "DB.letzter_joblauf" not in quelle
+           and "db.letzter_joblauf(conn, LEBENSZEICHEN_JOB)" in quelle,
+           "`DB` ist hier nur LOKAL in anderen Funktionen gebunden - mit ihm "
+           "waere der Waechter erst IM BETRIEB gescheitert, und der Import "
+           "des Moduls haette es nicht gezeigt")
+
+    # ---- Die Spur geht auch in die Datenbank ----------------------------
+    _ml = quelle.split("def _melde_laufzeitluecke(")[1][:2500]
+    pruefe(P, "⚠️ die Luecke wird auch in `api_health` vermerkt, nicht nur "
+           "gemailt",
+           "record_api_health_error(" in _ml,
+           "steht sie nur in der Mail, findet die Diagnose den Ausfall "
+           "spaeter nicht wieder - genau daran ist die Ursachensuche am "
+           "19.09. gescheitert")
+    pruefe(P, "⚠️ und die Meldung sagt, WO die Ursache steht",
+           "Windows-Ereignisprotokoll" in _ml,
+           "der Prozess wurde von aussen beendet; in unseren Daten steht "
+           "die Ursache nicht, und eine Meldung ohne diesen Hinweis "
+           "schickt den Nutzer ins Leere")
+
+    # ---- E5: der Marktrang-Zaehler ---------------------------------------
+    _z = _X._marktrang_ausfaelle([
+        "2026-09-19 09:05:11 ERROR agent.rollen_lauf: MARKTRANG AUSGEFALLEN",
+        "2026-09-19 10:00:00 INFO nichts",
+        "2026-09-19 20:35:47 ERROR agent.rollen_lauf: MARKTRANG AUSGEFALLEN"])
+    pruefe(P, "⚠️⚠️ der Marktrang-Ausfall wird GEZAEHLT",
+           _z["anzahl"] == 2 and len(_z["zeitpunkte"]) == 2,
+           "faellt `marktrang` aus, sperrt die Entscheiderstufe den GANZEN "
+           "Lauf - und der meldet dann `0 Signale, 0 Fehler`, sieht also aus "
+           "wie ein ruhiger Markt (bekommen: %s)" % (_z,))
+    pruefe(P, "und bei einem stillen Fenster steht null da, nicht nichts",
+           _X._marktrang_ausfaelle([]) == {"anzahl": 0, "zeitpunkte": []},
+           "ein fehlender Abschnitt liest sich wie ,nicht geprueft`")
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28065,6 +28180,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Auswahlstufe": paket_auswahlstufe,
           "Entscheiderstufe": paket_entscheiderstufe,
           "Terminmarktstufe": paket_terminmarktstufe,
+          "Laufzeitwaechter": paket_laufzeitwaechter,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

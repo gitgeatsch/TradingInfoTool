@@ -4412,6 +4412,130 @@ def _melde_datenausfall(veraltet: int, gesamt: int) -> bool:
         return False
 
 
+# ⚠️⚠️ DIE LAUFZEITLUECKE - GEBAUT AM 19.09.2026 NACH EINEM SECHS-STUNDEN-
+# STILLSTAND (Befund 2.482).
+#
+# DER VORFALL: am 19.09. verschwand die Anwendung um 14:06:49 lokal spurlos
+# und kam erst um 20:29:51 mit einem KALTSTART zurueck. Die letzte Zeile im
+# Protokoll war ein erfolgreich beendeter Job, der seinen Folgetermin auf
+# 14:19:44 setzte. Kein ERROR, kein Traceback, kein Herunterfahren - der
+# Prozess hat sich nicht beendet, er WURDE beendet.
+#
+# ⚠️ BEMERKT HAT ES NIEMAND. Sechs Stunden ohne Signale, ohne Kursabrufe,
+# ohne Sicherungen - und keine Meldung. Der Nutzer hat es ueber eine
+# Diagnose gefunden, die er von Hand anstiess.
+#
+# ⚠️⚠️ UND DIE ERKENNUNG GAB ES BEREITS: `extract_notebook_diagnose.py`
+# rechnet den Block `laufzeit` (Schwelle 20 Minuten) und hat die Luecke
+# korrekt ausgewiesen - 6,38 Stunden, 10,2 Prozent Ausfall ueber drei Tage.
+# Sie lief nur NICHT VON SELBST. Eine Erkennung, die auf Anforderung
+# rechnet, ist keine Ueberwachung.
+#
+# WIE ES HIER FUNKTIONIERT: der Watchdog schreibt bei jedem Lauf ein
+# LEBENSZEICHEN in `job_laeufe`. Beim naechsten Lauf vergleicht er, wie
+# lange das her ist. Laeuft die Anwendung durch, sind das 15 Minuten; war
+# sie weg, ist es die Dauer der Luecke - und die kennt nur sie selbst.
+#
+# ⚠️ GENAU EINE MELDUNG JE LUECKE, und zwar ohne Sperrzeit: der
+# Zeitstempel wird SOFORT nach der Meldung neu gesetzt, also sieht der
+# naechste Lauf wieder 15 Minuten. Eine Sperre nach Uhr (wie bei
+# `_melde_datenausfall`) waere hier falsch - zwei echte Luecken kurz
+# hintereinander sind zwei Meldungen wert.
+LAUFZEIT_LUECKE_AB_MINUTEN = 45.0
+"""⚠️ 45 UND NICHT 20 (die Schwelle der Diagnose).
+
+Die Diagnose SCHAUT ZURUECK und darf streng sein. Diese Meldung geht an
+den Nutzer, und ein geplanter Neustart - Pull, Neustart, wie am 19.09. -
+dauert Minuten. Bei 20 Minuten haette der Wartungsneustart desselben
+Tages eine Ausfallmeldung erzeugt. 45 trennt Wartung von Ausfall; die
+6,38 Stunden faengt sie unveraendert."""
+
+LEBENSZEICHEN_JOB = "lebenszeichen"
+
+
+def _laufzeitluecke(conn) -> float | None:
+    """Minuten seit dem letzten Lebenszeichen - oder None.
+
+    ⚠️ SETZT DEN ZEITSTEMPEL IMMER NEU, auch wenn keine Luecke vorliegt.
+    Wer ihn nur im Luecken-Fall schreibt, misst beim naechsten Lauf gegen
+    einen veralteten Stand und meldet dieselbe Luecke noch einmal.
+
+    ⚠️ KEIN LEBENSZEICHEN heisst NIE GELAUFEN, nicht 'lange weg' - beim
+    allerersten Start gibt es keine Luecke, sondern keinen Vergleich."""
+    from datetime import datetime, timezone
+
+    # ⚠️ `db`, NICHT `DB` - der Modulname ist in Zeile 13 klein
+    # gebunden; `DB` existiert nur LOKAL in anderen Funktionen. Mit
+    # `DB` waere das hier erst IM BETRIEB mit NameError gescheitert,
+    # und der Import des Moduls haette es nicht gezeigt.
+    vorher = db.letzter_joblauf(conn, LEBENSZEICHEN_JOB)
+    db.merke_joblauf(conn, LEBENSZEICHEN_JOB)
+    if not vorher:
+        return None
+    try:
+        t = datetime.fromisoformat(str(vorher))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        minuten = (datetime.now(timezone.utc) - t).total_seconds() / 60.0
+    except (ValueError, TypeError) as exc:
+        logger.info("Lebenszeichen nicht lesbar (%s): %s", vorher, exc)
+        return None
+    return minuten if minuten > LAUFZEIT_LUECKE_AB_MINUTEN else None
+
+
+def _melde_laufzeitluecke(conn, minuten: float, seit: str) -> bool:
+    """True, wenn eine Nachricht rausging."""
+    from api.email_notify import send_notification_email
+    import config as config_module
+
+    stunden = minuten / 60.0
+    text = chr(10).join([
+        "Die Anwendung war %.1f Stunden lang nicht in Betrieb "
+        "(zuletzt gesehen: %s)." % (stunden, seit),
+        "",
+        "Was das heisst: in dieser Zeit sind KEINE Signale entstanden, "
+        "keine Kurse abgerufen und keine Sicherungen geschrieben. Es ist "
+        "nichts falsch gelaufen - es ist nichts gelaufen.",
+        "",
+        "Ohne diese Nachricht waere das nicht zu erkennen: eine stille "
+        "Anwendung sieht von aussen aus wie eine ruhige Marktlage.",
+        "",
+        "WO DIE URSACHE STEHT: nicht in diesen Daten. Beendet sich die "
+        "Anwendung selbst, hinterlaesst sie einen Fehler im Protokoll. "
+        "Fehlt der, wurde sie von aussen beendet - Standby oder "
+        "Ruhezustand des Geraets, ein Neustart, eine Abmeldung oder "
+        "Speichermangel. Das steht im Windows-Ereignisprotokoll (System) "
+        "zum genannten Zeitpunkt.",
+        "",
+        "War es ein geplanter Neustart, ist diese Nachricht der Beleg "
+        "dafuer, dass die Ueberwachung greift.",
+    ])
+    try:
+        empfaenger = config_module.get_config().get(
+            "benachrichtigung", {}).get("email")
+    except Exception:                                        # noqa: BLE001
+        empfaenger = None
+    # ⚠️ DIE SPUR GEHOERT AUCH IN DIE DATENBANK, nicht nur in die Mail -
+    # sonst findet die Diagnose den Ausfall spaeter nicht wieder, und genau
+    # daran ist die Ursachensuche am 19.09. gescheitert.
+    try:
+        db.record_api_health_error(
+            conn, "anwendung", "Laufzeitluecke",
+            "%.1f Stunden ohne Betrieb, zuletzt gesehen %s"
+            % (stunden, seit))
+        conn.commit()
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Laufzeitluecke nicht in api_health vermerkt")
+    try:
+        send_notification_email(
+            "TradingInfoTool: %.1f STUNDEN STILLSTAND - die Anwendung war weg"
+            % stunden, text, empfaenger)
+        return True
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Laufzeitluecke konnte nicht gemeldet werden")
+        return False
+
+
 def _ohlc_data_is_stale(conn, watchlist) -> bool:
     """Analog zu _history_data_is_stale(), fuer den Kraken-OHLC-Job. Prueft nur
     Assets/Waehrungen mit echtem Kraken-Listing (KRAKEN_PAIR_MAP) - fehlende
@@ -4473,6 +4597,16 @@ def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
     watchlist = watchlist_provider()
     conn = conn_factory()
     try:
+        # ⚠️ ZUERST DAS LEBENSZEICHEN, vor allem anderen: faellt eine der
+        # Frischepruefungen aus, soll die Luecke trotzdem gemeldet sein.
+        _seit = db.letzter_joblauf(conn, LEBENSZEICHEN_JOB)
+        _luecke = _laufzeitluecke(conn)
+        if _luecke is not None:
+            logger.warning(
+                "⚠️ LAUFZEITLUECKE: die Anwendung war %.1f Stunden nicht in "
+                "Betrieb (zuletzt gesehen %s) - in dieser Zeit sind keine "
+                "Signale entstanden", _luecke / 60.0, _seit)
+            _melde_laufzeitluecke(conn, _luecke, str(_seit))
         history_stale = _history_data_is_stale(conn, watchlist)
         ohlc_stale = _ohlc_data_is_stale(conn, watchlist)
         preise_veraltet, preise_gesamt = _preis_daten_veraltet(conn, watchlist)

@@ -2823,6 +2823,30 @@ def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
     return ergebnis
 
 
+def _marktrang_ausfaelle(zeilen: list) -> dict:
+    """Wie oft ist die Bewertungsgrundlage komplett ausgefallen?
+
+    ⚠️⚠️ WARUM DAS EIGENS GEZAEHLT WIRD (19.09.2026, E5 zu Befund 2.482).
+    Faellt `marktrang` aus, fehlen Funding UND Turnover fuer ALLE Symbole;
+    jedes Potential liegt dann bei 0,000 und die Entscheiderstufe sperrt
+    den ganzen Lauf. Das ist RICHTIG GEBAUT - keine Empfehlung ohne
+    Grundlage - aber es sieht von aussen aus wie ein ruhiger Markt: der
+    Lauf meldet `0 Signale` und `0 Fehler`.
+
+    ⚠️ GEZAEHLT, NICHT GEMELDET. Gemessen am 19.09.: zweimal in 72 Stunden,
+    beide Male ein Netzaussetzer von Minuten, und die Kette erholt sich im
+    naechsten Lauf. Eine Mail je Vorfall waere Laerm; eine Zahl, die
+    stillschweigend waechst, waere eine Luecke. Deshalb hier.
+    """
+    treffer = []
+    for z in zeilen or ():
+        if "MARKTRANG AUSGEFALLEN" not in str(z):
+            continue
+        t = str(z)[:19]
+        treffer.append(t if t[:2] == "20" else "")
+    return {"anzahl": len(treffer), "zeitpunkte": treffer[-20:]}
+
+
 def _job_fehlschlaege_aus_log(zeilen: list[str]) -> list[dict]:
     """Extrahiert nur die eigentliche Fehlermeldungszeile (nicht den vollen
     Traceback, der bleibt im rohen log_auszug einsehbar) fuer jeden erkannten
@@ -3650,6 +3674,7 @@ def main() -> None:
         "log_fenster_stunden": LOG_FENSTER_STUNDEN,
         "log_auszug": log_zeilen,
         "job_fehlschlaege": job_fehlschlaege,
+        "marktrang_ausfaelle": _marktrang_ausfaelle(log_zeilen),
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }
