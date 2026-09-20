@@ -243,6 +243,88 @@ PAPIERKORB_GELEERT = _EIGENER_AUFRUF and "--papierkorb-geleert" in sys.argv
 if PAPIERKORB_GELEERT:
     sys.argv = [a for a in sys.argv if a != "--papierkorb-geleert"]
 
+# ⚠️⚠️ `--voll` - DER GRUND IST EIN BETRIEBSFEHLER, KEIN SPEICHERPLATZ
+# (20.09.2026, Befund 2.484).
+#
+# Die Datei war zuletzt 295 MB gross und geht auf einen Drive-Ordner. Der
+# Upload saettigt die Leitung des Notebooks, und die Abrufe der LAUFENDEN
+# Anwendung laufen mit ihrem 15-Sekunden-Zeitlimit ins Leere: Terminmarkt
+# 4 von 43 statt 39, Jobfehlschlaege plus 48. Am 20.09. am Geraet
+# nachgewiesen - ein Pull OHNE Diagnose blieb ruhig.
+#
+# ⚠️ WIEDERVORLAGE, KEIN NEUER VORSCHLAG. Am 17.09. stand dasselbe schon
+# einmal zur Entscheidung (2.455-drive-papierkorb, "Export verkleinern")
+# und wurde NICHT gewuenscht - damals ging es um Speicherplatz, und eine
+# Warnung genuegte. Der Grund ist jetzt ein anderer.
+#
+# ⚠️⚠️ WARUM SCHLANK DIE VORGABE IST UND NICHT UMGEKEHRT: was man
+# anfordern muss, fordert man nicht an; was man abschalten muss, vergisst
+# man. Die grossen Abschnitte braucht kein Mensch beim Nachsehen - sie
+# braucht ein MESSSKRIPT, und das weiss, dass es sie braucht.
+VOLL = _EIGENER_AUFRUF and "--voll" in sys.argv
+if VOLL:
+    sys.argv = [a for a in sys.argv if a != "--voll"]
+
+GROSSE_ABSCHNITTE = ("rohdaten_fuer_backtest", "spot_signals",
+                     "hebel_signals", "preishistorie_ueberholte_symbole",
+                     "preishistorie_signal_symbole", "deep_dive")
+"""Die sechs, die 94 %% der Datei ausmachen - gemessen am 20.09.2026:
+
+    rohdaten_fuer_backtest            193,0 MB   65,4 %%
+    spot_signals                       47,9 MB   16,2 %%
+    preishistorie_ueberholte_symbole   17,4 MB    5,9 %%
+    hebel_signals                      15,1 MB    5,1 %%
+    deep_dive                           6,9 MB    2,3 %%
+    preishistorie_signal_symbole        4,3 MB    1,4 %%
+    ----------------------------------------------------
+    alle 61 uebrigen zusammen            3,0 MB    1,0 %%
+
+⚠️ SIE WERDEN NICHT GELOESCHT, SONDERN ERSETZT - durch einen Satz, der
+sagt, wie man sie bekommt. Wer sie liest (`analyse_score_komponenten`,
+`backtest_budget_allocator_sla`, `backtest_coingecko_marktscan_kosten`,
+`messe_akkumulation_az4`, `backtest_llm1_historisch` und weitere), bekommt
+damit einen HINWEIS statt eines `KeyError`."""
+
+AUSGELASSEN = ("__ausgelassen__: dieser Abschnitt ist in der schlanken "
+               "Diagnose nicht enthalten. Fuer die vollstaendige Fassung: "
+               "python extract_notebook_diagnose.py --voll")
+
+
+def lies(pfad=None, braucht=()) -> dict:
+    """Die Diagnose lesen - und SAGEN, wenn ein Abschnitt fehlt.
+
+    ⚠️ WOFUER (20.09.2026): seit die schlanke Fassung die Vorgabe ist,
+    koennen die grossen Abschnitte fehlen. Ohne diesen Helfer scheitert ein
+    Messskript mit `TypeError: string indices must be integers` - einer
+    Meldung, die NICHT sagt, was zu tun ist. Mit ihm steht da, dass
+    `--voll` fehlt.
+
+    `braucht` nennt die Abschnitte, ohne die das Skript nicht arbeiten
+    kann. Fehlt einer, bricht es mit einer lesbaren Meldung ab statt
+    mitten in der Rechnung.
+
+    ⚠️ DIE MESSSKRIPTE WURDEN NICHT ALLE UMGEBAUT. Es sind ueber fuenfzehn,
+    und ein Umbau ohne eigene Pruefung waere riskanter als der Nutzen. Wer
+    eines das naechste Mal anfasst, nimmt diesen Helfer.
+    """
+    import json as _json
+
+    ziel = Path(pfad) if pfad else (ZIEL_ORDNER / "notebook_diagnose.json")
+    with io.open(ziel, encoding="utf-8") as fh:
+        d = _json.load(fh)
+    fehlt = [a for a in (braucht or ())
+             if isinstance(d.get(a), str)
+             and str(d.get(a)).startswith("__ausgelassen__")]
+    if fehlt:
+        raise SystemExit(
+            "Diese Diagnose ist die SCHLANKE Fassung, und dieses Skript "
+            "braucht: %s.%s   Abhilfe am Notebook: python "
+            "extract_notebook_diagnose.py --voll%s   (Vorgabe ist schlank, "
+            "weil die volle Fassung rund 295 MB hat und ihr Upload den "
+            "laufenden Betrieb stoert - Befund 2.484)"
+            % (", ".join(fehlt), chr(10), chr(10)))
+    return d
+
 
 def _argument(nr: int, standard):
     wert = sys.argv[nr] if len(sys.argv) > nr else None
@@ -3691,6 +3773,28 @@ def main() -> None:
         if _abschnitt in payload:
             payload[_abschnitt] = maskiere_tief(payload[_abschnitt])
 
+    # ---- ⚠️ DIE SCHLANKE FASSUNG (20.09.2026) --------------------------
+    #
+    # ⚠️ HIER UND NICHT IN DEN BAUERN: die Abschnitte werden weiter
+    # GEBAUT, nur nicht GESCHRIEBEN. Wer sie im Bauer abschaltet, spart
+    # zwar Rechenzeit, aendert aber, WAS die Diagnose gesehen hat - und
+    # dann melden Abschnitte wie `auffaelligkeiten` plotzlich anderes,
+    # weil ihre Grundlage fehlt. Das Ziel ist die DATEIGROESSE, nicht die
+    # Laufzeit.
+    _ausgelassen = []
+    if not VOLL:
+        for _gross in GROSSE_ABSCHNITTE:
+            if _gross in payload:
+                _ausgelassen.append(_gross)
+                payload[_gross] = AUSGELASSEN
+    payload["diagnose_umfang"] = {
+        "voll": bool(VOLL),
+        "ausgelassen": _ausgelassen,
+        "hinweis": ("vollstaendig" if VOLL else
+                    "schlank - fuer die grossen Abschnitte: "
+                    "python extract_notebook_diagnose.py --voll"),
+    }
+
     ZIEL_ORDNER.mkdir(parents=True, exist_ok=True)
     ziel_datei = ZIEL_ORDNER / "notebook_diagnose.json"
     # ⚠️ STROEMEND UND ATOMAR SCHREIBEN (26.08.2026, MemoryError am Notebook).
@@ -3727,6 +3831,26 @@ def main() -> None:
             pass
         raise
 
+    # ⚠️⚠️ DIE FASSUNG STEHT GANZ OBEN IN DER AUSGABE (20.09.2026).
+    #
+    # Nutzervorgabe: *den Schalter so bauen, dass du ihn zukuenftig nicht
+    # vergisst oder uebersiehst.* Eine Zeile am Ende einer langen Ausgabe
+    # wird ueberlesen - diese steht VOR allem anderen und nennt die
+    # Groesse, damit der Unterschied sichtbar ist und nicht nur behauptet.
+    try:
+        _mb = ziel_datei.stat().st_size / 1e6
+    except OSError:
+        _mb = float("nan")
+    if VOLL:
+        print("⚠️ VOLLE Diagnose (%.0f MB) - ihr Upload stoert den "
+              "laufenden Betrieb (2.484)." % _mb)
+        print("   Nur so lassen, solange ein Messskript die Rohdaten "
+              "braucht.")
+    else:
+        print("✔ SCHLANKE Diagnose (%.0f MB). Ausgelassen: %s."
+              % (_mb, ", ".join(_ausgelassen) if _ausgelassen else "nichts"))
+        print("   Fuer Messskripte mit Rohdatenbedarf: python "
+              "extract_notebook_diagnose.py --voll")
     print(f"Geschrieben: {ziel_datei}")
     print(f"  Holdings: {len(holdings)}, Hebel-Signale: {len(hebel_rows)}, "
           f"Spot-Signale: {len(spot_rows)}, Hebel-Positionen: {len(hebel_positions)}")

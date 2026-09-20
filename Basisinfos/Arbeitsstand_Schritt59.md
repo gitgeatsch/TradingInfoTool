@@ -19,6 +19,12 @@
 
 **Weg:** Phase 3 (Spot) → Phase 4 (Hebel) → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
 
+## ✔ Betriebsvorfall 20.09. — die Netzaussetzer sind erklärt
+
+**Es war die Diagnose, nicht der Pull** (2.484-ursache). Der Nutzer hat es getrennt geprüft: *Pull ohne Diagnose blieb ruhig*. 295 MB Upload auf einen Drive-Ordner sättigen die Leitung; die Abrufe der laufenden Anwendung scheitern am 15-Sekunden-Zeitlimit — Terminmarkt 4/43, +48 Jobfehler.
+
+✔ **Gebaut** (2.484-schlank): Diagnose **schlank als Vorgabe** (~8 MB statt 295), `--voll` für Messskripte, Lesehelfer mit lesbarer Meldung, drei Wächter gegen das Vergessen. Paket Diagnoseumfang 20/20, 9 Mutationen · ⚠️ **kein Laufzeitmodul** — Pull genügt, kein Neustart · ⏳ **K26**: ist die nächste Diagnose rund 8 MB, und bleiben die Timeouts aus?
+
 ## ⚠️ Betriebsvorfall 19.09. — sechs Stunden Stillstand
 
 Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren brechen im selben Fenster ab; die letzte Protokollzeile ist ein **erfolgreich** beendeter Job — kein Fehler, kein Traceback. Der Prozess wurde **von außen** beendet.

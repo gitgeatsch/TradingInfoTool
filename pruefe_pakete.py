@@ -23544,6 +23544,158 @@ def paket_referenzstaerke() -> None:
            "nicht ein - dann waere der Befund ein Bau-, kein Sachbefund")
 
 
+def paket_diagnoseumfang() -> None:
+    """Misst die schlanke Diagnose (D1-D5 zu Befund 2.484).
+
+    ⚠️ WARUM ES DAS GIBT: die volle Diagnose hat 295 MB und geht auf einen
+    Drive-Ordner. Ihr Upload saettigt die Leitung des Notebooks, und die
+    Abrufe der LAUFENDEN Anwendung laufen in ihr 15-Sekunden-Zeitlimit -
+    Terminmarkt 4 von 43 statt 39, Jobfehlschlaege plus 48. Am 20.09. am
+    Geraet nachgewiesen: ein Pull OHNE Diagnose blieb ruhig.
+    """
+    P = "Diagnoseumfang"
+    import io as _io
+    import json as _json
+    import os as _os
+    import tempfile as _tf
+
+    import extract_notebook_diagnose as _X
+
+    # ---- ⚠️⚠️ SCHLANK IST DIE VORGABE ------------------------------------
+    pruefe(P, "⚠️⚠️ die Vorgabe ist SCHLANK, nicht voll",
+           _X.VOLL is False,
+           "was man anfordern muss, fordert man nicht an; was man "
+           "abschalten muss, vergisst man. Genau deshalb ist der Schalter "
+           "`--voll` und nicht `--schlank`")
+    pruefe(P, "⚠️ und `--voll` ist der Weg zur vollen Fassung",
+           "--voll" in _quelltext("extract_notebook_diagnose.py"),
+           "ohne ihn koennten die Messskripte ihre Rohdaten nicht mehr "
+           "bekommen - und DIE sind der Grund, warum nichts geloescht wird")
+
+    # ---- Die sechs Grossen sind die richtigen ---------------------------
+    pruefe(P, "⚠️ ausgelassen werden genau die sechs grossen Abschnitte",
+           set(_X.GROSSE_ABSCHNITTE) == {
+               "rohdaten_fuer_backtest", "spot_signals", "hebel_signals",
+               "preishistorie_ueberholte_symbole",
+               "preishistorie_signal_symbole", "deep_dive"},
+           "sie machen 94 %% der Datei aus (gemessen 20.09.); die 61 "
+           "uebrigen zusammen 3,0 MB. Bekommen: %s"
+           % (sorted(_X.GROSSE_ABSCHNITTE),))
+    for _noetig in ("laufzeit", "job_fehlschlaege", "auffaelligkeiten",
+                    "api_health", "log_auszug", "marktrang_ausfaelle",
+                    "joblaeufe", "datenfrische"):
+        pruefe(P, "⚠️ `%s` bleibt in der schlanken Fassung" % _noetig,
+               _noetig not in _X.GROSSE_ABSCHNITTE,
+               "genau diese Abschnitte haben am 19. und 20.09. den "
+               "Stillstand und den Marktrang-Ausfall aufgeklaert - ohne sie "
+               "waere die schlanke Fassung nutzlos")
+
+    # ---- Der Platzhalter sagt, was zu tun ist ---------------------------
+    pruefe(P, "⚠️⚠️ der ausgelassene Abschnitt nennt den Weg zur vollen "
+           "Fassung",
+           "--voll" in _X.AUSGELASSEN
+           and _X.AUSGELASSEN.startswith("__ausgelassen__"),
+           "ein leerer oder fehlender Abschnitt liest sich wie ,nichts "
+           "gefunden` - und das ist etwas anderes als ,nicht enthalten`")
+
+    # ---- Der Lesehelfer bricht LESBAR ab --------------------------------
+    _d = _tf.mkdtemp()
+    _p = _os.path.join(_d, "diag.json")
+    _io.open(_p, "w", encoding="utf-8").write(_json.dumps(
+        {"laufzeit": {"a": 1}, "rohdaten_fuer_backtest": _X.AUSGELASSEN}))
+    # ⚠️⚠️ JEDER Aufruf von `lies` wird hier abgesichert (gefunden von der
+    # Gegenpruefung, 20.09.2026). `lies` bricht mit `SystemExit` ab - fuer
+    # ein MESSSKRIPT richtig, in einer PRUEFUNG toedlich: es beendet die
+    # ganze Suite still, ohne roten Eintrag und ohne Abbruchvermerk. Eine
+    # Fehlfunktion, die die Pruefung UNSICHTBAR macht, ist schlimmer als
+    # die Fehlfunktion selbst.
+    def _lies(*a, **k):
+        try:
+            return _X.lies(*a, **k)
+        except SystemExit:
+            return None
+
+    _ok = _lies(_p)
+    pruefe(P, "der Lesehelfer liest die Datei",
+           isinstance(_ok, dict) and "laufzeit" in _ok,
+           "ohne ihn muesste jedes Messskript selbst pruefen")
+    _gemeldet = None
+    try:
+        _X.lies(_p, braucht=("rohdaten_fuer_backtest",))
+    except SystemExit as _x:
+        _gemeldet = str(_x)
+    pruefe(P, "⚠️⚠️ und er sagt BEIM FEHLEN, was zu tun ist",
+           _gemeldet is not None and "--voll" in _gemeldet
+           and "rohdaten_fuer_backtest" in _gemeldet,
+           "ohne ihn scheitert ein Messskript mit `TypeError: string "
+           "indices must be integers` - einer Meldung, die NICHT sagt, was "
+           "zu tun ist (bekommen: %r)" % ((_gemeldet or "")[:80],))
+    pruefe(P, "⚠️ und er laesst durch, was nicht gebraucht wird",
+           _lies(_p, braucht=("laufzeit",)) is not None,
+           "ein Helfer, der bei JEDEM ausgelassenen Abschnitt abbricht, "
+           "macht die schlanke Fassung unbrauchbar")
+
+    # ---- ⚠️ Ausgelassen wird beim SCHREIBEN, nicht beim BAUEN -----------
+    _q = _quelltext("extract_notebook_diagnose.py")
+    pruefe(P, "⚠️⚠️ ausgelassen wird beim SCHREIBEN, nicht beim BAUEN",
+           "payload[_gross] = AUSGELASSEN" in _q,
+           "wer die Abschnitte im Bauer abschaltet, aendert WAS die "
+           "Diagnose gesehen hat - dann melden Abschnitte wie "
+           "`auffaelligkeiten` anderes, weil ihre Grundlage fehlt. Das Ziel "
+           "ist die DATEIGROESSE, nicht die Laufzeit")
+    pruefe(P, "⚠️ und die Datei sagt selbst, welche Fassung sie ist",
+           '"diagnose_umfang"' in _q and '"ausgelassen"' in _q,
+           "wer sie spaeter liest, muss erkennen koennen, ob etwas fehlt "
+           "oder ob es nichts gab")
+    # ⚠️ `find` UND NICHT `index` - dieselbe Lehre wie 2.476: eine Mutation,
+    # die den Anker entfernt, darf die Pruefung FALLEN lassen, nicht
+    # abstuerzen.
+    _i_fassung = _q.find("SCHLANKE Diagnose")
+    _i_datei = _q.find("Geschrieben:")
+    pruefe(P, "⚠️⚠️ und die KONSOLE nennt die Fassung VOR allem anderen",
+           _i_fassung >= 0 and _i_datei >= 0 and _i_fassung < _i_datei,
+           "Nutzervorgabe 20.09.: den Schalter so bauen, dass er nicht "
+           "vergessen oder uebersehen wird. Eine Zeile am ENDE einer langen "
+           "Ausgabe wird ueberlesen")
+
+    # ---- ⚠️⚠️⚠️ DER WAECHTER GEGEN DAS VERGESSEN ------------------------
+    #
+    # 25 Messskripte lesen einen der grossen Abschnitte, ohne den
+    # Lesehelfer zu benutzen. Sie alle umzubauen waere ein Eingriff in 25
+    # Werkzeuge ohne eigene Pruefung - riskanter als der Nutzen.
+    #
+    # ⚠️ ABER DIE ZAHL DARF NICHT WACHSEN. Wer ein NEUES Skript schreibt,
+    # das die Diagnose liest, soll den Helfer nehmen - sonst scheitert es
+    # spaeter mit `TypeError: string indices must be integers`, einer
+    # Meldung, die nicht sagt, was zu tun ist. Genau das ist die Sorte
+    # Fehler, die man erst Monate spaeter bemerkt.
+    #
+    # ⚠️ Faellt diese Zeile mit einer KLEINEREN Zahl, ist ein Skript
+    # umgestellt worden - dann gehoert die Obergrenze nachgezogen, nicht
+    # die Pruefung entfernt.
+    _gross = set(_X.GROSSE_ABSCHNITTE)
+    _ohne = []
+    for _f in sorted(_os.listdir(".")):
+        if not _f.endswith(".py") or _f == "extract_notebook_diagnose.py":
+            continue
+        try:
+            _t = _io.open(_f, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        if "notebook_diagnose" not in _t:
+            continue
+        if any(('["%s"]' % _g) in _t or ("['%s']" % _g) in _t
+               for _g in _gross) and "lies(" not in _t:
+            _ohne.append(_f)
+    pruefe(P, "⚠️⚠️⚠️ die Zahl der Leser OHNE Lesehelfer waechst nicht "
+           "(hoechstens 25)",
+           len(_ohne) <= 25,
+           "jedes neue Skript, das einen grossen Abschnitt ohne "
+           "`lies(braucht=...)` liest, scheitert spaeter mit einer Meldung, "
+           "die nicht sagt was zu tun ist. Gefunden: %d - %s"
+           % (len(_ohne), _ohne[:6]))
+
+
 def paket_messstandard() -> None:
     """Steht der Messstandard vom 08.09.2026 - ueberall? (08.09.2026)
 
@@ -28301,6 +28453,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Terminmarktstufe": paket_terminmarktstufe,
           "Laufzeitwaechter": paket_laufzeitwaechter,
           "Referenzstaerke": paket_referenzstaerke,
+          "Diagnoseumfang": paket_diagnoseumfang,
           "Hochrechnung": paket_hochrechnung,
           "Messstandard": paket_messstandard}
 

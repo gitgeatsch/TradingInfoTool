@@ -70,7 +70,9 @@ def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
          je_tag_n: int = JE_TAG, phi: float = PHI,
          kennzahl_ak: float = 0.0,
          staerke_streuung: float = 0.0,
-         ueberlappung: int = 0) -> tuple[dict, dict]:
+         ueberlappung: int = 0,
+         binaer: bool = False,
+         crv: float = 2.0) -> tuple[dict, dict]:
     """Eine Welt mit bekannter Wahrheit -> (je_tag, mom).
 
     `staerke = 0` heisst: die Kennzahl sagt NICHTS ueber das Ergebnis.
@@ -214,6 +216,30 @@ def welt(rng, *, staerke: float = 0.0, tage: int = TAGE,
             if staerke_streuung:
                 s_t += float(rng.normal(0.0, staerke_streuung))
             y = y - s_t * oben
+        if binaer:
+            # ⚠️⚠️ DER BINAERE AUSGANG - fuer die Zielgroesse `barriere`
+            # (dazugekommen 20.09.2026 fuer A1).
+            #
+            # `barriere` fragt: ZIEL VOR STOP? Das ist 0 oder 1, und die
+            # Norm rechnet dort MITTEL statt Median (der Median einer
+            # binaeren Groesse waere 0 oder 1, die Differenz fast immer
+            # exakt null - die Statistik waere entartet).
+            #
+            # ⚠️ DIE SCHWELLE IST NICHT FREI: bei CRV 2 liegt das Ziel
+            # doppelt so weit weg wie der Stop, also trifft der Stop in
+            # rund zwei von drei Faellen zuerst. Ein Barrierensystem auf
+            # driftfreiem Pfad hat brutto Erwartungswert NULL - die
+            # Trefferquote ist 1/(1+CRV), per Konstruktion und nicht als
+            # Messergebnis (stehender Befund zum Barrierensystem).
+            #
+            # Umgesetzt wird das als Quantilschnitt auf derselben
+            # Groesse `y`: die obersten 1/(1+CRV) bekommen 1, der Rest 0.
+            # Damit bleibt die EINGEBAUTE WAHRHEIT erhalten - wer bei
+            # `y` oben steht, steht auch hier oben -, und die Skala wird
+            # binaer.
+            quote = 1.0 / (1.0 + float(crv))
+            schwelle = float(np.quantile(y, 1.0 - quote))
+            y = (y >= schwelle).astype(float)
         je_tag[tag] = [{"sym": syms[i], "kennzahl": float(kz[i]),
                         "in_r": float(y[i])} for i in range(je_tag_n)]
         # Die AUSWAHL ist unabhaengig vom Effekt - der saubere Grundfall.
