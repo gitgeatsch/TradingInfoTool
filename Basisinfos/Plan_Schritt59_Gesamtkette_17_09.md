@@ -618,6 +618,62 @@ dann entsteht keine Nacharbeit.
    sinnlos, aber eng**: sie kann nur zeigen, welche Hebel aus der *heutigen*
    Quote fallen — nicht, ob ein kurzer Hebel begründbar ist.
 
+   ### ✔✔ 2c IST GELAUFEN — DER HEBEL FOLGT DEM STOP, NICHT DER QUOTE
+
+   ⚠️ **Die Planfrage war zur Hälfte tautologisch.** *„Liegen sie in 2–5x“* kann nicht anders ausgehen: `hebel_ab` 2,0 schiebt alles Kleinere
+   nach Spot, `hebel_grenze` 5,0 deckelt alles Größere. Gefragt ist die
+   **Kennlinie** — und die ist schmal.
+
+   | | |
+   |---|---|
+   | **Das steuernde Fenster** | q von **0,334 bis 0,350** — rund **1,7 Prozentpunkte** |
+   | darunter | kein Hebel (wird Spot) |
+   | darüber | `r` klebt an `r_max`; bei Stop 12 % steht der Hebel auf **3,75 für JEDE Quote von 0,36 bis 0,60** |
+
+   ✔✔ **An den 16 echten Signalen bestätigt:** die nirgends gespeicherte
+   Quote lässt sich aus `hebel`, `position_size_eur` und
+   `verlust_am_stop_eur` zurückrechnen — **alle 16 liegen im Fenster**,
+   zwischen 0,3409 und 0,3466.
+
+   #### ➤ Die Zerlegung entscheidet
+
+   | | Spanne | Faktor |
+   |---|---|---|
+   | **Quote** | 0,3409 – 0,3466 | **1,02** |
+   | `r` | 0,00567 – 0,00999 | 1,76 |
+   | **Stop** | 5,1 % – 16,2 % | **3,16** |
+   | Hebel | 2,20 – 5,00 | 2,27 |
+
+   **Die Quote ist praktisch konstant, die Stopweite streut um das
+   Dreifache — der Hebel folgt dem STOP.** ⚠️⚠️ Das widerspricht der
+   Vorgabe *„die Wahrscheinlichkeit … soll auch den Hebel dynamisch
+   erzeugen“* — nicht in der Absicht, aber im Ergebnis.
+
+   ⚠️ **Eine Achse fehlte im Plan:** `nominal = r × Kapital / Stop` — der
+   Hebel hängt **linear am Kapital**. Bei 5.000 € entsteht ab Stop 8 %
+   überhaupt kein Hebel, bei 30.000 € noch bei 25 % Stop.
+
+   #### ⚠️⚠️⚠️ Und die Klammer bleibt — jetzt mit Zahl
+
+   Der Code begründet sie mit *„solange die Trennschärfe nicht gemessen
+   ist (A1)“*. **A1 ist gefallen** — die genannte Vorbedingung ist
+   erfüllt. Die Messung spricht trotzdem **gegen** ein Öffnen:
+
+   1. **Kelly ist am Breakeven extrem steil**: 0,57 Prozentpunkte Quote
+      (0,3409 → 0,3466) verändern `r` um **Faktor 1,76**.
+   2. **Die Anlage löst das nicht auf**: die Trennschärfe auf `barriere`
+      liegt nach 2b bei **0,004 bis 0,010** — in derselben Größenordnung
+      wie das **gesamte** Arbeitsfenster von 0,017.
+
+   ➔ **Die Quote ist nicht genauer bekannt, als das Fenster breit ist.**
+   Befund **2.496-klammer-bleibt**.
+
+   ⚠️ **Offen und zu entscheiden:** `hebel_roh` und vier Flags werden
+   gerechnet und **nicht geschrieben** — wie oft der Deckel greift, wie
+   oft das Aggregat bindet, wie oft die Liquidation bindet, ist
+   ungemessen. Sechs Spalten in `signals` wären eine **Schemaänderung am
+   Betrieb** (**2.496-hebel-roh-fehlt**, Schritt 66).
+
    ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
    20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im
    Median bei **1,37** (Hebel) bzw. **1,87** (Spot) — **1.113 von 1.446**
