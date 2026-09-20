@@ -2487,6 +2487,40 @@ REIHENFOLGE = (
             "Befund 2.455-regelwerk (inkl. W11: Log endet 24.08., Schlussvermerk 03.09.); Memory feedback_doku_struktur_zuordnung",
             block="D-ABBILDUNG",
             umbau="alt"),  # Dokumentation nachziehen, keine Umbauleistung
+    Schritt(66, "PHASE 4 - DIE VIER OFFENEN BEFUNDE AUS DEM HEBEL-TAG",
+            "\u27a4 EINGEORDNET 20.09.2026, nachdem die Suite sie als "
+            "Rueckstand gemeldet hat (AUFRAEUMEN-VOR-NEUBAU). Vier "
+            "Befunde sind an einem Tag offen entstanden und gehoeren "
+            "nicht ,irgendwann`, sondern hierher. (1) 2.491-loesungssuche "
+            "- der Nullbefund im kurzen Fenster ist ein Zwischenstand; "
+            "der Weg ist Intraday (stuendlicher Terminmarkt seit 2021, "
+            "15-Minuten-Kurse in `price_cache`, 2.463). \u26a0\u26a0 "
+            "ZUERST die Eichung der Messnorm auf dieser Zeitaufloesung - "
+            "der Selbsttest lief auf TAGESdaten, das ist ein A1-Fall. "
+            "(2) 2.490-regime-offen - Nutzerbeobachtung, ob das Fenster "
+            "ab 2023 ein Regime ist oder zwei; pruefbar ueber die "
+            "BTC-Dominanz, die im System liegt. \u26a0 Keine Massnahme "
+            "abgeleitet: ein Fenster nach dem Ergebnis zu waehlen waere "
+            "Suchpreis. (3) 2.488-crv-breakeven - die CRV-Baender "
+            "normgerecht nachmessen (Band, Nullwelt, Tagesklammer), "
+            "BEVOR sie irgendwo zitiert werden. (4) 2.494-sweet-spot - "
+            "die messbare Fassung der Nutzerfrage nach dem Cooldown: die "
+            "Laenge, ab der eine Verlaengerung keine Signale mit NEUER "
+            "Begruendung mehr kostet. \u26a0\u26a0 NICHT JETZT "
+            "umzusetzen - A3 haelt Takt und Cooldown fest, bis die "
+            "uebrigen Punkte gruen sind. \u26a0\u26a0 AUSGERICHTET AUF "
+            "DEN HEBEL (Nutzerpraezisierung 20.09.): der Sweet Spot "
+            "orientiert sich an den kuerzesten und kritischen Trades, "
+            "also am Hebel - die Spot-Zahlen sind NOTIZ, kein "
+            "Handlungsbedarf. (5) 2.495-spot-hebel-verhaeltnis - NUR "
+            "NOTIERT, kein Befund: die Zahlen (443 Spot gegen 14 "
+            "Hebel in sieben Tagen) stehen als FRAGESTELLUNG zum "
+            "Spot-Handel da, ohne Ableitung und ohne "
+            "Handlungsbedarf.",
+            "Befunde 2.491-loesungssuche, 2.490-regime-offen, "
+            "2.488-crv-breakeven, 2.494-sweet-spot; Plan Schritt 59 "
+            "Phase 4; Nutzerentscheidung A3",
+            block="D-BEWERTUNG", umbau="neu"),
     Schritt(57, "ETF-BESTAND DER ROHSTOFFE - TRAEGT DIE INFORMATION?",
             "\u27a4 AUSGEGLIEDERT AUS SCHRITT 56 (15.09., Befund "
             "2.454-etfbestand-quelle). Die Reihe sollte Rolle G fuer Rohstoffe "

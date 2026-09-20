@@ -1250,6 +1250,18 @@
 
 - Quelle: agent/entscheidungsrechnung.py (hebel_stufen: Feld im_budget; saetze: Pfeil an der Empfehlung; stufen_kurz); agent/signal_mail.py; pruefe_pakete.py Pakete Hebelstufen und Mailstraffung
 
+**2.494-hebel-aktiv-live** — ⚠⚠⚠ DER HEBEL IST SEIT DEM 12.09. SCHARF - DIE CODE-VORGABE SAGT DAS GEGENTEIL (gefunden 20.09.2026 auf Nutzerfrage nach Takt und Cooldown). `config.yaml rollen_kette.hebel_aus_quote.aktiv` steht auf **true**; `agent/betraege.py:302` fuehrt `"aktiv": False` mit dem Kommentar *,AUS, bis Schritt 19 die Hebelverteilung simuliert hat - der Plan verlangt die Simulation VOR dem Scharfschalten`*. ➤ DIE VORBEDINGUNG WURDE NICHT ERFUELLT, SONDERN UEBERHOLT: A1 fiel erst am 20.09., die Simulation (Planpunkt 2c) steht bis heute aus - scharfgeschaltet ist er seit dem 12.09. ⚠⚠ UND ICH HABE DEN FEHLER WEITERGEREICHT: in meinem Ueberblick vom selben Tag stand *,2c ist der letzte Blocker vor der Freischaltung`* - aus dem Code gelesen, nicht aus der laufenden Konfiguration. Genau die Regel ,Code-Vorgabe ist nicht der laufende Wert`, die im Memory steht. ➤ ZU TUN: der Kommentar in `betraege.py` beschreibt einen Zustand, den es nicht mehr gibt, und muss nachgezogen werden. Und 2c aendert seinen Charakter - es ist keine Vorbedingung mehr, sondern eine Messung am laufenden Betrieb
+
+- Quelle: Basisinfos/config.yaml rollen_kette.hebel_aus_quote.aktiv; agent/betraege.py HEBEL_AUS_QUOTE_VORGABE; Plan Schritt 59 Phase 4 Punkt 2c
+
+**2.494-hebelsignale-live** — ✔ DIE HEBELKETTE LAEUFT - 16 SIGNALE SEIT DEM 12.09., ALLE IN DER ZIELZONE (20.09.2026, Produktionssicherung 14:32). Je Tag 1 bis 3, alle mit Aktion NACHKAUFEN, Hebel zwischen 2,2x und 5,0x - also vollstaendig in der vom Nutzer gesetzten Zone 2 bis 5. Davor, vom 06. bis 11.09., gab es KEIN einziges Hebelsignal; der Sprung faellt mit dem Paket-B-Rollout zusammen. ➤ DAMIT IST DIE HAELFTE VON PLANPUNKT 2c SCHON BEANTWORTET - die Frage *,welche Hebel fallen an, liegen sie in 2-5x`* hat 16 echte Faelle statt einer Simulation. ⚠ ZUSTELLUNG: 7 der 14 Hebelsignale der letzten sieben Tage wurden zugestellt (50 Prozent), bei Spot 16 von 443 (3,6 Prozent) - Faktor 14. Ob das an der Aktion liegt (NACHKAUFEN gegen HALTEN), am Cooldown oder an etwas anderem, ist NICHT geklaert und wird hier nicht gedeutet. ⚠⚠ FUER K6: die letzte Hebelmail ging am 20.09. um 01:11 (BEAMX 2,51x) - also VOR dem Pull mit der ➤ EMPFEHLUNG-Aenderung. Sie traegt noch die alte Darstellung. Die naechste Hebelmail beantwortet K6 ohne weiteres Zutun
+
+- Quelle: tradinginfotool_2026-09-20_1432.db.gz (signals, instrument='hebel', mail_versand); Befund 2.427 (Paket-B-Rollout); K6
+
+**2.494-takt-taktet-spot** — ⚠⚠⚠ DIE UHR TAKTET DIE SPOT-SEITE: 57,7 PROZENT DER ABSTAENDE KLEBEN BEI 3,5 STUNDEN (20.09.2026, Nutzerfrage *,die Begruendung soll einen Trade starten nicht die Zeit bzw. Takt`*). Gemessen ueber 30 Tage: die Abstaende zwischen zwei aufeinander folgenden Signalen DESSELBEN Symbols, gegen jede konfigurierte Cooldown-Stufe. SPOT: 3.087 Signale, 57 Symbole, 3.030 Abstaende, Median 3,75 h, 10. Perzentil 3,51 h. Im Band 3,5 bis 4,0 h liegen 1.749 = 57,7 Prozent. Zum Vergleich die konfigurierten SPOT-Stufen: re-Evaluierung 1 h -> 0,5 %; Kern und gehalten 8 h -> 0,2 %; Spot regulaer 15 h -> 0,8 %; ausgemustert 120 h -> 0,0 %. ➤ ES IST DER HEBEL-WERT `cooldown_stunden` 3,5, NICHT `spot_cooldown_stunden` - deckungsgleich mit F-214 (,Cooldown 3,5 h, kein Bug`). ⚠⚠ WAS DAS HEISST: bei mehr als der Haelfte der Spot-Signale hat die SPERRE den Zeitpunkt bestimmt, nicht die Bewertung. Das Signal kam, sobald die Uhr es zuliess. Das ist Regel 1 (,der Takt ist nie Signalgeber`) in der PRAXIS verletzt, nicht in der Absicht - und ,Cooldown abgelaufen` ist in CLAUDE.md ausdruecklich als Beispiel fuer einen Fakt genannt, der keine Begruendung ist (Regel 4). ✔ BEIM HEBEL IST ES ANDERS: 9 Abstaende, Median 4,82 Cooldowns (rund 17 h), nur 2 von 9 (22 Prozent) im Band, KEINER darunter - die Sperre wird nie uebergangen. ⚠ Aber neun Abstaende sind wenig; das ist ein Hinweis, kein Befund. ⚠⚠ ZWEI EIGENE FEHLER IN DIESER MESSUNG, beide gefunden und behoben: (1) der erste Lauf setzte fuer Spot PAUSCHAL 15 h an und meldete ,89,2 Prozent unter einem Cooldown` - das sah aus wie ein uebergangener Riegel und war meine eigene Annahme; Spot hat VIER Stufen. (2) Das Fazit stand als fester Text im Werkzeug (,klebt keine Stufe`) und war falsch, sobald die 3,5-h-Stufe dazukam. Es wird jetzt GERECHNET. ⚠ WAS DIE MESSUNG NICHT KANN: sie sieht nur die durchgekommenen Signale. Ob die Bewertung zwischen zwei Signalen unter die Schwelle fiel und wieder darueber stieg, steht hier nicht - dafuer braeuchte es das Trichterprotokoll je Lauf. Ein hoher Anteil ist ein STARKER HINWEIS, kein Beweis. ⚠ KEINE AENDERUNG ABGELEITET: A3 gilt, Takt und Cooldown bleiben fest, bis die uebrigen Punkte gruen sind
+
+- Quelle: phase4_takt_oder_begruendung.py (20.09.2026); config.yaml cooldown_stunden 3.5, spot_cooldown_stunden 15 / _kern 8 / _ausgemustert 120 / _re_evaluierung 1; F-214; Plan A3
+
 **2.493-2d-falsch-gestellt** — ⚠⚠⚠ 2d IST FALSCH GESTELLT - DIE OBERE STUFE KANN GAR NICHT BESSER TRAGEN (20.09.2026, Voranalyse vor der Messung). Die Planzeile lautete *,traegt die obere Stufe trotz Budgetueberschuss besser als die untere?`*. Am Code entschieden, ohne eine Messung: `hebel_stufen` rechnet `verlust = betrag x stufe x stop_rel` und `gewinn_am_ziel_eur = verlust x crv`. DIE STUFE SKALIERT BEIDE SEITEN GLEICH; das Verhaeltnis ist `crv`, unabhaengig von der Stufe. Je eingesetztem Risiko ist die obere Stufe also weder besser noch schlechter - dieselbe Sache wie ,gebuehrenfrei sind Hebel und Spot dasselbe Geschaeft, der Hebel kuerzt sich aus R heraus`. ➤ WAS DIE STUFE WIRKLICH AENDERT, sind zwei Dinge: das EUR-Risiko (linear, `ueber_budget_prozent` - eine Rechnung) und die NAEHE DER LIQUIDATION. Nur das zweite ist eine echte Asymmetrie: eine liquidierte Position verliert MEHR als den Stop-Verlust. Die obere Stufe traegt also ein Risiko, das die untere nicht hat - und ob sie es traegt, entscheidet eine einzige Konstante. ⚠ DIE LEHRE: die Prueffrage ,BEWERTUNG oder FAKT?` gilt auch fuer Planpunkte, nicht nur fuer Vorschlaege. 2d haette als Messung Aufwand gekostet und nichts entschieden
 
 - Quelle: agent/entscheidungsrechnung.hebel_stufen; Plan Schritt 59 Phase 4 Punkt 2d; Memory horizont-achse-fehlt (der Hebel kuerzt sich aus R heraus)
@@ -3322,6 +3334,11 @@
 
 - Quelle: Methodik 2.119 · R-R11
 
+**D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt? ➤ BEANTWORTET 20.09.2026 (Phase 4 Punkt 2b) - und die Antwort ist ZWEISEITIG. Auf `barriere` ab 2023 traegt `oi_aenderung` im RICHTUNGSkanal bei H1, H2, H3 und H5 (+0,0071 bis +0,0038, vier benachbarte Horizonte, monoton fallend - eine FORM), bei H7 und H20 nicht mehr. Auf der QUOTE traegt er auf KEINEM Horizont und hat im kurzen Fenster das umgekehrte Vorzeichen. ⚠⚠ WAS DARAUS NICHT FOLGT: dass die Sperre auf H5 umgestellt gehoert. Sie ist auf `bewegung_r` registriert (+0,0145 bei H20, reproduziert +0,0126) - dort IST H20 der Geltungsbereich. Eine Umstellung stuende auf dem Richtungskanal einer ANDEREN Zielgroesse; das waere eine neue Registrierung, keine Nachjustierung. ➤ ENTSCHIEDEN: fuer die registrierte Groesse bleibt H20 richtig; dass ein kurzer Horizont auf einem anderen Mass mehr zeigt, ist ein Hinweis fuer einen kuenftigen Beitrag
+
+- Quelle: Methodik 2.119; Befund 2.491-horizontprofil
+- Warum: ENTWURFSfrage, keine Messfrage - Nutzerentscheidung
+
 **2.120** — `vola` ist kein Mitlaeufer, aber nicht reif: funding erklaert 3 % (p=0,325), turnover 18 % (p=0,025); der Rest ist im Schichtentest nicht trennbar
 
 - Quelle: Methodik 2.120
@@ -3355,6 +3372,14 @@
 
 - Quelle: Methodik 2.126
 - Warum: auf der FREIEN Menge sind beide unabhaengig (20,3 % gegen 20,0 %) - die Ueberschneidung entsteht ausschliesslich durch die Auswahl
+
+**N10** — Die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote ➤➤ BESTAETIGT UND BEZIFFERT 20.09.2026 (Phase 4 Punkt 2b): die beiden Masse verhalten sich MESSBAR verschieden - derselbe Kandidat kehrt das Vorzeichen um. `oi_aenderung` auf der Barrieren-RICHTUNG P(Ziel|aufgeloest): H1 +0,0071, H2 +0,0071, H3 +0,0069, H5 +0,0038 - alle vier TRAGEND. Derselbe Kandidat auf der Barrieren-QUOTE P(Ziel), also `q` der Potentialformel: H1 -0,0051, H2 -0,0052, H3 -0,0043, H5 -0,0030 - keiner tragend. Und `turnover` traegt auf der Quote bei H20 (+0,0103), waehrend er auf `bewegung_r` ab 2023 unter seiner Trennschaerfe bleibt (2.460-norm). ✔ DER MECHANISMUS IST GEMESSEN (2.491-mechanismus): die behaltene Gruppe loest SELTENER auf (+0,055 Abstand bei H1, nur +0,008 bei H20) - weniger Aufloesung senkt die unbedingte Quote und hebt die bedingte. ⚠ FOLGE FUER DEN BAU: wer `q` aus einer Horizont-Groesse speist, speist es mit dem falschen Mass - und der Fehler ist im KURZEN Fenster am groessten, also genau dort, wo der Hebel gefragt ist
+
+- Quelle: Methodik 2.121; Befunde 2.491-horizontprofil, 2.491-mechanismus
+
+**N2** — Warum traegt `schnitt50` bei H5, aber nicht bei H2 und H20? ➤➤ METHODISCH AUFGELOEST 20.09.2026 (Phase 4 Punkt 2b) - DIE FRAGE SETZT ETWAS VORAUS, DAS NICHT GESICHERT IST. Sie unterstellt, dass er bei H5 TRAEGT. In einer Familie von sechs Horizonten liegt der familienweite Fehlalarm bei rund 14 Prozent (`phase3_stufen.familienfehler`); eine EINZELZELLE ohne tragende Nachbarn ist nach der Formregel aus 2.208-n86 ein HINWEIS, kein Befund - dort traegt `schnitt` bei fuenf von sechs Horizonten MIT MONOTON WACHSENDER Wirkung, und genau das macht den Unterschied. ✔ DIESELBE GESTALT TRAT IN 2b AUF und wurde vorab so beurteilt: `schnitt` traegt im Richtungskanal NUR bei H1 (+0,0201), die Nachbarn nicht - ausgewiesen als Hinweis. ➤ DIE ANTWORT AUF N2 LAUTET DESHALB: es ist nicht gesichert, dass `schnitt50` bei H5 traegt. Wer die Frage beantworten will, muss ZUERST zeigen, dass die Zelle eine Form hat - benachbarte Horizonte mit gleichgerichteter Wirkung
+
+- Quelle: Schritt 4a; Befunde 2.491-horizontprofil, 2.208-n86
 
 ## ○ WAS OFFEN IST
 
@@ -3493,6 +3518,14 @@
 **2.488-crv-breakeven** — ⚠⚠ DER HEBEL TRAEGT SICH IN KEINEM CRV-BAND, SPOT DAGEGEN DEUTLICH - UND DIESE AUSWERTUNG STAND IN KEINEM BEFUND (registriert 20.09.2026 auf Nutzerfrage ,was bedeutet 2R und CRV 2 - ist das nur aktueller Code und u.U. veraltet, sind das Festlegungen?`). ⚠⚠⚠ DAS IST EIN HINWEIS, KEIN BEFUND NACH DER NORM: die Auswertung `crv_breakeven_baender` laeuft seit Wochen in jedem NB-Export mit, hat aber KEIN Band, KEINE Nullwelt und KEINE Tagesklammer. Sie wird hier registriert, damit sie nicht beim naechsten Mal als Messung zitiert wird - genau das war die Gefahr. WAS SIE RECHNET: kumulative Inzidenz nach Aalen-Johansen (Zensierung beruecksichtigt) auf `ziel_erreicht`, je CRV-Band, gegen den rechnerischen Breakeven 1/(1+CRV). ZAHLEN AUS DEM EXPORT 20.09. (H7, mit Halten): HEBEL 1.446 Signale - Band 0-2,0 n=1113 CRV-Median 1,37 Ziel 39,0 gegen Breakeven 42,1 also -3,2 pp; 2,0-2,5 n=164 -4,8 pp; 2,5-3,0 n=69 +1,3 pp; 3,0-4,0 n=49 -0,9 pp; ueber 4,0 n=51 -4,2 pp. SPOT 4.692 Signale - Band 0-2,0 n=4438 CRV-Median 1,87 Ziel 59,1 gegen 34,8 also +24,3 pp; 2,0-2,5 +15,7 pp; 2,5-3,0 +8,6 pp; 3,0-4,0 -3,3 pp. ➤ DREI AUSSAGEN, ALLE MIT VORBEHALT: (1) DAS ERREICHTE CRV IST NICHT 2,0 - der Median liegt beim Hebel bei 1,37 und bei Spot bei 1,87; 1.113 von 1.446 Hebelsignalen liegen UNTER dem konfigurierten Mindestwert. (2) DER HEBEL TRAEGT SICH IN KEINEM BAND ausser 2,5-3,0, und dort nur mit +1,3 pp bei n=69 - Spot dagegen mit +24,3 pp bei n=4.438. (3) JE HOEHER DAS CRV, DESTO SCHLECHTER, bei beiden Instrumenten monoton ab 2,5. ⚠⚠ WOHER DIE 2,0 KOMMT: `config.yaml risiko.crv_minimum: 2.0` mit dem Kommentar ,Z-2: Mindest-Chance-Risiko-Verhaeltnis (2:1)` - eine REGEL aus dem Regelwerksmanual, kein Messergebnis. Und das ZIEL ist ohnehin nicht 2 R: `entscheidungsrechnung` setzt es ,kurz unter den naechsten Widerstand` und begruendet das ausdruecklich mit ,WARUM NICHT EINFACH 2 R`. Die 2,0 ist ein FILTER (mindestens), keine Rechengroesse. ⚠ WAS DARAUS NICHT FOLGT: dass das CRV gesenkt gehoert. Ohne Band ist nicht entscheidbar, ob die Unterschiede ueber dem Zufall liegen; und die Zensierung ist beruecksichtigt, die AUSWAHL der Signale aber nicht (es sind die, die die Kette erzeugt hat, nicht eine gezogene Menge). ➤ ZU TUN: vor jeder Verwendung normgerecht nachmessen - Band, Nullwelt, Tagesklammer. Vorgemerkt fuer Phase 4
 
 - Quelle: extract_notebook_diagnose.py (crv_breakeven_baender, kumulative_inzidenz_aalen_johansen); config.yaml risiko.crv_minimum; agent/entscheidungsrechnung.py GRENZEN['crv'] und der Zielkurs aus `_niveaus()`; Regelwerksmanual Z-2
+
+**2.495-spot-hebel-verhaeltnis** — ⚠ NOTIERTE FRAGESTELLUNG ZUM SPOT-HANDEL - KEIN BEFUND (20.09.2026, Nutzer: *,Nur notieren - befund ist zu weit gegriffen, lassen wir als Fragestellung zu spot handel stehen.`*). DIE ZAHLEN, gemessen an der Produktionssicherung 20.09. 14:32: in sieben Tagen 443 Spot- gegen 14 Hebelsignale; am 20.09. 30 gegen 1; ueber 14 Tage Spot 50 bis 85 je Tag, Hebel 0 bis 3, vor dem 12.09. gar keine Hebelsignale. DIE FRAGESTELLUNG, im Wortlaut des Nutzers: *,eigentlich sollten mehr hebel als Spot entstehen wenn man so wie ich Spot verstehe als laengerfristig kaufe, halte und verkaufe.`* ➤ MEHR STEHT HIER NICHT. Ob die Verteilung falsch ist, haengt daran, was Spot und Hebel bedeuten SOLLEN - das ist eine Nutzerentscheidung ueber Rollen, keine Messfrage, und sie ist nicht gestellt. ⚠ Der mechanische Zusammenhang ist bekannt und nicht strittig: der Hebel entsteht aus der Quote und nur oberhalb `hebel_ab` 2,0, alles darunter wird Spot. ⚠⚠ AUSDRUECKLICH KEINE ABLEITUNG: kein Handlungsbedarf, keine Schwellenaenderung, keine Bewertung der heutigen Verteilung
+
+- Quelle: signals aus tradinginfotool_2026-09-20_1432.db.gz (instrument, 7 und 14 Tage); config.yaml rollen_kette.hebel_aus_quote.hebel_ab; Nutzernotiz 20.09.2026
+
+**2.494-sweet-spot** — ⚠ OFFEN: DER SWEET SPOT DES COOLDOWNS IST MESSBAR - NUTZERPRAEZISIERUNG 20.09.2026. Wortlaut: *,es soll nicht zu oft geprueft werden aber auch nicht zu lange warten - also sollte es einen sweet spot geben - meine Meinung.`* ➤ DAS IST EINE ANDERE ROLLE ALS ,SIGNALGEBER`, und in dieser Rolle ist der Cooldown zulaessig: er bestimmt, WIE OFT geprueft wird. Die Spannung entsteht erst, wenn die Bewertung dauerhaft ueber der Schwelle liegt - dann feuert das Signal bei JEDEM Pruefzeitpunkt erneut, und der Pruaeftakt bestimmt die Signalrate (2.494-takt-taktet-spot: 57,7 Prozent). ➤➤ DIE MESSBARE FASSUNG DES SWEET SPOTS: die Laenge, ab der eine Verlaengerung KEINE Signale mit NEUER Begruendung mehr kostet, sondern nur noch WIEDERHOLUNGEN entfernt. ⚠⚠⚠ AUSGERICHTET AUF DEN HEBEL, NICHT AUF SPOT (Nutzerpraezisierung 20.09.2026): *,der Sweet spot muss sich an die kuerzesten und kritischen trades orientieren und aus sicherheitsgruenden - also Hebel.`* Die 57,7 Prozent aus 2.494-takt-taktet-spot sind damit KEIN Handlungsbedarf, sondern eine NOTIZ: *,Das Spot Thema kaufen und nachkaufen - bewertung nur als notiz fuer spaeter bzw. als Anmerkung.`* ➤ MASSGEBLICH IST DIE HEBELSEITE, und dort ist die Datenlage heute duenn: neun Abstaende, Median 4,82 Cooldowns, zwei im Verdachtsband. Fuer eine Sweet-Spot-Bestimmung reicht das nicht - sie braucht mehr Hebelgeschaefte oder einen laengeren Zeitraum. ⚠ UND DIE RICHTUNG DES FEHLERS IST BEIM HEBEL EINE ANDERE: zu kurz heisst dort nicht ,eine Mail zu viel`, sondern eine Position mit Liquidationsrisiko, die zu frueh wieder aufgemacht wird. Deshalb ,aus Sicherheitsgruenden` Pruefbar, indem man bei jedem Abstandspaar vergleicht, ob sich Aktion, Potential und Beitragsfuenftel geaendert haben. Bleibt die Begruendung gleich, war das zweite Signal eine Wiederholung und der Cooldown zu kurz. ⚠ DER VERDACHT IST SCHON REGISTRIERT: 83,6 Prozent Wiederholung. ⚠⚠ NICHT JETZT UMZUSETZEN: A3 (Nutzerentscheidung 20.09.) haelt Takt und Cooldown fest, bis die uebrigen Punkte und Phasen gruen sind - *,es geht nicht um mehr signale sondern GUTE`*. Diese Messung gehoert dorthin, wo der Cooldown wieder aufgemacht wird, nicht davor
+
+- Quelle: Nutzerpraezisierung 20.09.2026; Befunde 2.494-takt-taktet-spot, F-214, Redundanz 83,6 %; Plan A3
 
 **2.491-loesungssuche** — ⚠⚠ DER NULLBEFUND IM KURZEN FENSTER IST EIN ZWISCHENSTAND - DAS WORAN UND DER WEG (20.09.2026, Regel ,kein Beitrag faellt ohne Loesungssuche`). WORAN ES LIEGT, benennbar und nicht vermutet: alle vier Beitraege sind TAGESQUERSCHNITTSRAENGE (funding, turnover, oi_aenderung, schnitt) - Groessen mit langsamer Dynamik, gebildet aus einem Wert je Symbol und Tag. Ein ,kurzer starker Anstieg` ist ein Ereignis auf Stunden-Skala. Bei H1 loesen nur 20,9 Prozent der Anker auf; die Frage wird auf einem Fuenftel der Daten gestellt und mit Groessen beantwortet, die sich in diesem Fenster kaum bewegen. ➤ DER WEG LIEGT IM SYSTEM UND IST NICHT ZU BESCHAFFEN: stuendlicher Terminmarkt seit 2021 und 15-Minuten-Kurse in `price_cache` (2.463). Damit waere ein kurzer Horizont mit Groessen derselben Zeitaufloesung messbar, statt mit Tagesraengen. ⚠ VORHER ZU KLAEREN, in dieser Reihenfolge: (1) reicht die HISTORIE der Intraday-Quellen fuer 20 Bloecke? (2) gibt es die Groessen dort ueberhaupt je Symbol, oder nur fuer die 122 Terminmarktwerte? (3) ist die Messnorm auf dieser Zeitaufloesung geeicht - der Selbsttest lief auf TAGESdaten, und eine Blocklaenge `3 x Horizont` in Stunden ist nicht dasselbe wie in Tagen. ⚠⚠ PUNKT 3 IST EIN A1-FALL: die Anlage auf einer neuen Datenart einzusetzen, ohne ihre Fehlalarmquote dort zu kennen, ist genau der Fehler, der 2.238 elf Tage lang gehalten hat
 
@@ -3666,11 +3699,6 @@
 
 - Quelle: Methodik 2.138
 
-**D3** — Ist H20 der richtige Horizont fuer die OI-Sperre, wenn der Betriebshorizont 3-5 Tage betraegt?
-
-- Quelle: Methodik 2.119
-- Warum: ENTWURFSfrage, keine Messfrage - Nutzerentscheidung
-
 **N11** — Die Durchlassquote haengt an der SCHIEFE der Beitragsstufen, nicht am Asset: funding laesst 2 von 5 Fuenfteln durch, turnover nur 1 von 5
 
 - Quelle: Methodik 2.122
@@ -3700,10 +3728,6 @@
 - Quelle: F-180/F-182 · Methodik 2.126
 - Warum: jede weitere Sperre verschaerft ein System, dessen Problem nicht Durchlaessigkeit ist
 
-**N10** — Die Potentialformel meint eine BARRIEREN-Quote, das Randmass eine HORIZONT-Quote
-
-- Quelle: Methodik 2.121
-
 **N6** — `turnover` traegt auch am RAND (+0,01389 bei H20), registriert ist er nur am Mittel
 
 - Quelle: Methodik 2.119
@@ -3712,10 +3736,6 @@
 
 - Quelle: Methodik 2.120
 - Warum: messe_kandidaten_als_regel.geschichtet() hatte nie eine Positivkontrolle
-
-**N2** — Warum traegt `schnitt50` bei H5, aber nicht bei H2 und H20?
-
-- Quelle: Schritt 4a
 
 ## ↩ WAS ABGELOEST IST
 
