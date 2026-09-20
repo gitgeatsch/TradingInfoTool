@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 126 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 127 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -10668,6 +10668,45 @@ die Ausgabe, damit ein einzelnes TRÄGT aus zwanzig Zellen nicht wie ein
 einzelnes TRÄGT aus einer gelesen wird.
 
 ---
+
+## 2.490 ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026)
+
+Ein alarmierender Kontrollbefund (`zufall` trägt) liest sich wie ein
+**Defekt der Anlage**. Am 09.09. wurde genau das geschlossen — 2.238:
+*„das Band ist viermal zu eng“*. Das war falsch (2.485), und der
+wirkliche Grund stand daneben:
+
+| Menge | Anker/Tag | Wirkung | Band | Urteil |
+|---|---|---|---|---|
+| `frei` | ≈ 226 | **+0,0007** | +0,0003 .. +0,0014 | **TRÄGT** |
+| nach Datenlage | ≈ 45 | **+0,0009** | −0,0013 .. +0,0029 | trägt nicht |
+
+⚠️ **Die Wirkung ist dieselbe. Nur das Band schrumpft.** Auf einer sehr
+breiten Menge wird selbst Rauschen auflösbar — und die Kontrolle schlägt
+an, ohne dass mit der Anlage etwas wäre.
+
+### Die Reihenfolge, in der zu prüfen ist
+
+| # | |
+|---|---|
+| **1** | **Auf welcher Menge lief es?** Steht `frei` dort, wo ein **Beitrags**urteil gefragt ist, ist der Lauf ohnehin F-212-widrig — unabhängig vom Ergebnis |
+| **2** | Denselben Lauf mit `menge_nach_datenlage` wiederholen — die **Vorhersage vorher aussprechen**, sonst ist es nachträgliches Auswählen |
+| **3** | **Erst wenn die Kontrolle auch dort trägt**, ist die Anlage verdächtig. Dann entscheidet die Fehlalarmquote auf Nullwelten (2.485), keine Formel |
+
+### ⚠️⚠️ Und der Riegel dagegen hing am falschen Feld
+
+`messnorm.py:527` weist ein Beitragsurteil auf der freien Menge ab — aber
+nur über `frageart='beitrag'`. `k1c_hebel_barriere.py` übergab
+`verwendung='Beitrag'`, **ein anderes Feld**. Der Schutz stand seit dem
+07.09. da und hat **nie** gefeuert; elf Tage lang lief darunter ein
+Beitragsurteil auf `frei`.
+
+> **Dieselbe Gestalt wie 2.449** (der Schutz in Paket 15 stand da und
+> griff nie): ⚠️ **ein Schutz gilt erst, wenn er am Seiteneffekt
+> nachgewiesen ist** — nicht, wenn er im Quelltext steht.
+
+**Belege:** Befunde 2.490-k1c-menge, 2.237, 2.238, 2.485-a1-gefallen ·
+F-212 · `messnorm_auswahl.menge_nach_datenlage`
 
 ## 2.485 ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026)
 

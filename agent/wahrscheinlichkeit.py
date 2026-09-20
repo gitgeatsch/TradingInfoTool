@@ -534,12 +534,54 @@ BEITRAEGE = (
         # und wer sie wieder aufnehmen will, findet hier, was schiefging.
         zustand="null", punkte=0.0, merkmal="schnitt_fuenftel",
         stufen=None, klammer="gepoolt",
-        quelle=("messe_kandidaten_als_regel.py --horizonte 1,2,3,5,10,20, "
-                "31.08.2026: bei keinem Horizont trennbar, H20 -0,0221 R"),
-        warum=("Als MERKMAL zeigt der Abstand zum eigenen 200-Tage-Schnitt "
-               "einen Zusammenhang - als REGEL traegt er nicht, auf keinem "
-               "Horizont. Die urspruengliche Zahl entstand aus einer "
-               "gepoolten Rechnung ohne Tagesklammer"),
+        # ⚠️⚠️ BEGRUENDUNG NACHGEZOGEN 20.09.2026 (2.490-schnitt-begruendung).
+        #
+        # Hier stand als Quelle die Messung vom 31.08. (,bei keinem
+        # Horizont trennbar, H20 -0,0221 R`). Die ist seit dem 07.09.
+        # durch 2.153 ABGELOEST: sie lief auf 1.314 Symbolen inklusive
+        # 798 Nicht-Krypto, und reproduziert drehen ALLE Vorzeichen
+        # (H5 -0,0069 -> +0,0092).
+        #
+        # ⚠️ Das URTEIL `null` bleibt trotzdem richtig - der tragende
+        # Grund ist ein anderer und ein staerkerer. `schnitt` TRAEGT
+        # (2.219-schnitt nennt ihn den robustesten Kandidaten, er
+        # traegt auf allen drei Mengen). Er scheitert an der FORM und
+        # an der REDUNDANZ, nicht an der Signifikanz:
+        #
+        #   FORM       die fuenf Stufen sind ein BUCKEL mit Hochpunkt
+        #              bei Fuenftel 2 (+4,07 / +5,55 / +9,49 / +1,71 /
+        #              -4,65), DREIMAL in derselben Gestalt gemessen
+        #              (27.08., 31.08., 07.09.). Die Vorabfestlegung
+        #              verlangt Monotonie fuer einen REGLER - und
+        #              genau als Regler stuende er in dieser Liste.
+        #              (2.158, 2.208-aber)
+        #   REDUNDANZ  seine Wirkung ist zu VIER FUENFTELN ein
+        #              Auswahl-Artefakt: +0,1858 auf der Momentummenge
+        #              gegen +0,0366 auf Zufallsmengen. Spearman zur
+        #              Auswahl +0,418 INNERHALB der Auswahl. Ein
+        #              Beitrag, der die getroffene Auswahl wiederholt,
+        #              bringt der Kette wenig Neues. (2.222, V11)
+        #
+        # ⚠️ WAS DAS NICHT HEISST: dass die Groesse nirgends taugt. Als
+        # SPERRE (oberstes Fuenftel) ist sie gemessen und traegt
+        # ZUSAETZLICH zu funding+turnover: +0,0397 R. Eine Sperre
+        # verlangt keine Monotonie - eine Stufentabelle schon.
+        #
+        # ⚠️ Und auf `barriere` (Hebel, ab 2023) traegt er ebenfalls
+        # nicht: +0,0023, traegt nicht bis 0,0045 R (2.490-barriere-
+        # niemand). Dort traegt allerdings KEIN Beitrag.
+        quelle=("2.158 (Buckel, dreimal) + 2.222 (vier Fuenftel Auswahl-"
+                "Artefakt) + 2.158-redundanz (Spearman +0,418 in der "
+                "Auswahl). ⚠️ NICHT mehr die 31.08.-Messung - die ist "
+                "durch 2.153 abgeloest (kontaminierte Basis)"),
+        warum=("Er TRAEGT - 2.219-schnitt nennt ihn den robustesten "
+               "Kandidaten. Er scheitert an der FORM: als REGLER "
+               "braucht er Monotonie, seine fuenf Stufen sind aber ein "
+               "Buckel mit Hochpunkt bei Fuenftel 2, dreimal so "
+               "gemessen. Dazu bildet er zu vier Fuenfteln die AUSWAHL "
+               "der Kette nach. Als SPERRE dagegen traegt er "
+               "zusaetzlich (+0,0397 R) - das ist eine andere Form und "
+               "gehoert in eine Trichterstufe, nicht hierher"),
         klassen=("krypto",)),
     Beitrag(
         name="Lebendigkeit des Projekts",

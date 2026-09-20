@@ -68,7 +68,58 @@ kein Breakeven**. Regel 2.
 
 ⚠️ Ein Nullbefund ist hier die Regel, kein Ausreisser.
 
-    python k1c_hebel_barriere.py
+## ⚠️⚠️⚠️ DIE MENGE ENTSCHEIDET HIER DAS URTEIL - GEMESSEN 20.09.2026
+
+Der Lauf stand seit dem 09.09. fest auf `menge='frei'`. Das ist ein
+Verstoss gegen **F-212** (Beitragsurteile gehoeren auf die
+SELEKTIERTE Menge), und `messnorm.py:527` weist ihn auch ab - aber
+nur ueber `frageart='beitrag'`. Hier wird `verwendung='Beitrag'`
+uebergeben, und **das ist ein anderes Feld**. Der Riegel griff nie.
+
+⚠️ Es ist kein Schoenheitsfehler, es kippt das Urteil der
+KONTROLLE - und damit den ganzen Lauf:
+
+    zufall auf `frei`    +0,0007  [+0,0003 .. +0,0014]  2.945 Tage  TRAEGT
+    zufall auf `20%`     +0,0008  [-0,0010 .. +0,0025]  2.459 Tage  traegt nicht
+
+**Die Wirkung ist dieselbe.** Was sich unterscheidet, ist das BAND:
+auf `frei` liegen rund 226 Anker je Tag, auf der selektierten Menge
+rund 45. Ein engeres Band laesst dieselbe Winzigkeit ,tragen`.
+
+⚠️ **Damit ist 2.237 erklaert, ohne 2.485 zu widersprechen** - die
+beiden Befunde stehen auf VERSCHIEDENEN Mengen, und beide sind
+richtig. Was falsch war, ist die Vorgabe dieses Werkzeugs.
+
+## Die Mengen, die es kennt
+
+    --menge frei     die alte Vorgabe - fuer die Reproduktion (R-R11)
+    --menge 20%      eine feste selektierte Menge
+    --menge auto     ⭐ je Kandidat die SCHMALSTE, die die Datenlage
+                     traegt (`menge_nach_datenlage`: mindestens
+                     MIND_ANKER je Tag UND 20 Bloecke). Gemessen am
+                     07.09.: turnover 50 %, funding 10 %, oi 20 % -
+                     wer alle auf dieselbe Menge zwingt, misst bei
+                     einem von ihnen Rauschen
+
+⚠️ Gibt `menge_nach_datenlage` **None** zurueck, ist die Frage auf
+dieser Datenlage nicht als Beitragsfrage zu stellen. Das ist ein
+ERGEBNIS und wird als solches ausgewiesen, nicht uebersprungen.
+
+## ⚠️⚠️ UND DAS ZEITFENSTER - sonst ist der Vergleich unzulaessig
+
+Der Vergleich, auf den **2.291-ausloeser** zielt (*,traegt ein
+Beitrag auf `barriere` ANDERS als auf `bewegung_r`?`*), geht nur
+auf **demselben Fenster**. Die Gegenseite **2.460-norm** laeuft
+**ab 2023**; dieser Lauf umfasst ohne `--ab` rund acht Jahre.
+
+⚠️ Die stehende Vorgabe ZEITFENSTER-AB-2023 sagt dazu woertlich,
+die lange Tabelle *,mittelt eine gute und eine schlechte Haelfte`*
+(+8,64 gegen +2,77). Wer ohne `--ab` mit 2.460-norm vergleicht,
+vergleicht zwei verschiedene Maerkte.
+
+    python k1c_hebel_barriere.py                # wie bisher (frei, ganzes Fenster)
+    python k1c_hebel_barriere.py --menge auto   # Zelle 2
+    python k1c_hebel_barriere.py --menge auto --ab 2023-01-01   # Zelle 3
 """
 from __future__ import annotations
 
@@ -149,7 +200,31 @@ def kurz(u: str) -> str:
     return u.split(" (")[0].split(" - ")[0][:26]
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    # ⚠️ VORGABE `frei` - damit ein Aufruf ohne Argument weiter
+    # BITGLEICH den 09.09.-Lauf rechnet (R-R11, Reproduktion von
+    # 2.237). Die Vorgabe ist falsch nach F-212; sie bleibt
+    # trotzdem, weil sonst der Vergleichspunkt verschwindet.
+    args = list(sys.argv[1:] if argv is None else argv)
+    wunsch = "frei"
+    if "--menge" in args:
+        wunsch = args[args.index("--menge") + 1]
+    if wunsch != "auto" and wunsch not in MA.MENGEN:
+        print("unbekannte Menge %r - erlaubt: auto, %s"
+              % (wunsch, ", ".join(MA.MENGEN)))
+        return 2
+    # ⚠️ Leer = ganzes Fenster. Das ist die alte Lage und bleibt die
+    # Vorgabe, damit Zelle 1 reproduzierbar bleibt - NICHT, weil es
+    # das richtige Fenster waere (ZEITFENSTER-AB-2023).
+    ab = ""
+    if "--ab" in args:
+        ab = args[args.index("--ab") + 1]
+    # ⚠️ SAATPROBE (Methodik 2.477). Die Vorgabe 20260909 ist die des
+    # Erstlaufs und bleibt, damit Zelle 1 reproduzierbar ist. Ein
+    # Urteil - erst recht ein NULLBEFUND - darf nicht an ihr haengen.
+    saat = 20260909
+    if "--saat" in args:
+        saat = int(args[args.index("--saat") + 1])
     t0 = time.time()
     reihen = B.lade()
     mom = momentum250(reihen)
@@ -175,9 +250,19 @@ def main() -> int:
     print("     Beitrag die TREFFERQUOTE verschiebt. Neutral, ohne "
           "Gebuehren (Regel 2).")
     print()
-    print("  %-14s %9s %20s %9s %8s %7s  %s"
-          % ("Kandidat", "Wirkung", "Band", "Bezug", "Tage", "Bloecke",
-             "Urteil"))
+    print("  Menge: %s%s" % (
+        wunsch,
+        ("  ⚠️ F-212-WIDRIG - nur fuer die Reproduktion von 2.237"
+         if wunsch == "frei" else "")))
+    print("  Fenster: %s" % (
+        ("ab %s" % ab) if ab else
+        "GANZ (⚠️ nicht mit 2.460-norm vergleichbar - die laeuft ab 2023)"))
+    print("  Saat: %d%s" % (saat, "" if saat == 20260909
+                            else "  (Saatprobe, nicht der Erstlauf)"))
+    print()
+    print("  %-14s %6s %9s %20s %9s %8s %7s  %s"
+          % ("Kandidat", "Menge", "Wirkung", "Band", "Bezug", "Tage",
+             "Bloecke", "Urteil"))
 
     erg, anteil = {}, None
     for kand in KANDIDATEN:
@@ -187,21 +272,36 @@ def main() -> int:
             print("  %-14s -> %s" % (kand, str(exc)[:60]))
             continue
         je, anteil = barriere_je_tag(je0, reihen, HORIZONT)
+        # ⚠️ NACH der Umrechnung filtern, nicht davor: `barriere_je_reihe`
+        # braucht die Kurse VOR dem Fenster nicht, aber die ATR-Spanne
+        # schon. Wer die Reihe vorher kuerzt, misst eine andere Geometrie.
+        if ab:
+            je = {t: z for t, z in je.items() if str(t)[:10] >= ab}
         if not je:
             print("  %-14s -> leere Welt nach der Umrechnung" % kand)
             continue
+        # ⚠️ `auto` fragt die DATENLAGE, nicht den Geschmack. Gibt sie
+        # None, ist die Frage hier nicht als Beitragsfrage zu stellen -
+        # das wird ausgewiesen, nicht stillschweigend weggelassen.
+        _m = wunsch
+        if wunsch == "auto":
+            _m = MA.menge_nach_datenlage(je, mom, horizont=HORIZONT)
+            if _m is None:
+                print("  %-14s %6s -> KEINE Menge haelt Anker UND Bloecke - die Frage"
+                      "%s      ist auf dieser Datenlage keine Beitragsfrage" % (kand, "-", chr(10)), flush=True)
+                continue
         try:
             b = MA.pruefe_auswahl(
-                kand, je, mom, lage=lage, menge="frei",
-                rng=np.random.default_rng(20260909), horizont=HORIZONT,
+                kand, je, mom, lage=lage, menge=_m,
+                rng=np.random.default_rng(saat), horizont=HORIZONT,
                 hypothese="K-1c Hebel", verwendung="Beitrag",
                 zielgroesse="barriere")
         except Exception as exc:                             # noqa: BLE001
             print("  %-14s -> %s" % (kand, str(exc)[:70]))
             continue
         erg[kand] = b
-        print("  %-14s %+9.4f [%+.4f..%+.4f] %+9.4f %8d %7d  %s"
-              % (kand, b.wirkung, b.unten, b.oben, b.bezugswert,
+        print("  %-14s %6s %+9.4f [%+.4f..%+.4f] %+9.4f %8d %7d  %s"
+              % (kand, _m, b.wirkung, b.unten, b.oben, b.bezugswert,
                  b.n_tage, b.n_bloecke, kurz(b.urteil)), flush=True)
 
     # ---- Urteil ---------------------------------------------------------

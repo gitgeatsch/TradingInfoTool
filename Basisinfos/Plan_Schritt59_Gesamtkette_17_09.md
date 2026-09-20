@@ -388,6 +388,21 @@ dann entsteht keine Nacharbeit.
    > kleiner als 2 Tage aber das kannst du erheben welches Fenster
    > (Horizont) das beste ist.“*
 
+   > ⚠️⚠️ **RICHTIGSTELLUNG 20.09. — die „2 Tage“ sind KEINE Vorgabe.**
+   > Nutzerwortlaut: *„das ist keine Vorgabe von mir sondern war ein
+   > Ergebnis **deiner Erhebung** an das ich mich erinnere ... darum
+   > **erhebe selbst** den passenden Horizont den wir benötigen.“*
+   >
+   > **Die Zahl ist F-202**, zitiert in **2.241-nur-hebel**: *„die 2,0
+   > Tage mediane Dauer (F-202) stammen aus Trades MIT Barrieren“* —
+   > eine **mediane Dauer bis zur Entscheidung**, keine Fenstervorgabe.
+   > Sie entstand im MFE-Zusammenhang, der nicht mehr gilt
+   > (`mfe_kein_erfolgsmass_bei_variablem_stop`).
+   >
+   > ➔ **Der Horizont wird in 2b ERHOBEN, nicht gesetzt.** Ich hatte ihn
+   > als Nutzervorgabe geführt — das hätte eine eigene Messung
+   > unantastbar gemacht, statt sie der nächsten auszusetzen.
+
    ⚠️ **Das ist eine Barrieren-Quote** — Ziel (stark) **vor** Stop, in einem
    kurzen Fenster. Genau die Größe, die die Potentialformel meint und die
    bis zum 20.09. nicht messbar war (**N10**: *„die Quote der
@@ -404,10 +419,128 @@ dann entsteht keine Nacharbeit.
 
    | # | | Warum |
    |---|---|---|
-   | **2a** | **`schnitt` neu messen** | seine `null`-Registrierung in `wahrscheinlichkeit.BEITRAEGE` zitiert eine Quelle vom 31.08., die mit **2.153** abgelöst ist; er hat als einziger **100 % Abdeckung** und geht direkt in die Quote |
+   | **2a** | ⚠️⚠️ **NEU GEFASST 20.09. — K-1c neu laufen lassen** (Nutzerentscheidung A) | siehe den Kasten unter der Tabelle |
    | **2b** | **Das beste Fenster erheben** — `barriere` über **H1 · H2 · H3 · H5 · H7** × Zielhöhe **1,0 · 1,5 · 2 · 2,5 · 3 R** | beantwortet „welches Fenster“ **und** „welche Zielhöhe“; schließt **N10**, berührt **D3** und **N2** |
    | **2c** | **Die Simulation** — welche Hebel fallen an, liegen sie in 2–5x | erst danach sinnvoll: vorher stünde sie auf einer Quote mit offenem Beitrag und ungeklärtem Horizont |
    | **2d** | ⚠️ **NEU: die Stufenfrage** (eigener Punkt, Nutzerentscheidung 20.09.) | trägt die **obere** Stufe trotz Budgetüberschuss besser als die untere? Bei 4,17x fährt die Praxis heute 3,0x — **28 % weniger Hebel als gerechnet**. Nie gemessen |
+
+   ### ⚠️⚠️⚠️ 2a stand auf der falschen Frage — was das Faktenregister zeigt
+
+   Die alte Zeile lautete *„`schnitt` neu messen — seine `null`-Registrierung
+   zitiert eine Quelle vom 31.08., die mit 2.153 abgelöst ist“*. Der erste Teil
+   stimmt, der zweite Schluss nicht: **`schnitt` ist nicht unvermessen, er ist
+   fünfmal vermessen.**
+
+   | Frage | Stand | Fundstelle |
+   |---|---|---|
+   | Trägt er überhaupt? | ✔ **ja, der robusteste** — auf allen drei Mengen (10/20/50 %) | 2.219-schnitt |
+   | Als **Regler** (5 Stufen)? | ✖ **Buckel**, Hochpunkt bei Fünftel 2 — **dreimal** dieselbe Form (27.08./31.08./07.09.) | 2.158 |
+   | Als **Sperre/Schalter**? | ✔ **schon gemessen**: +0,1759 R allein, **+0,0397 R zusätzlich** nach funding+turnover | 2.155–2.159 |
+   | Zeitstabil (Kriterium 2)? | ✖ **fällt** — nachgewiesener Unterschied, kein „nicht trennbar“ | S-7, 10.09. |
+   | …wem gehört der Ausfall? | ⚠️ **der AUSWAHL**, nicht `schnitt` — Zufallsauswahl +0,1973 → **+0,03**, Faktor 6 | V11, 11.09. |
+   | Der eigentliche Einwand | ⚠️⚠️ **4/5 Auswahlartefakt**, Spearman **+0,418 innerhalb** der Auswahl | 2.222 · 2.158-redundanz |
+   | Bilanz 11.09. | ⛔ **„es gibt keinen dritten Beitrag“** | V11 |
+
+   ➔ Eine Neumessung auf `bewegung_r` wäre die **sechste Wiederholung**. Was
+   aus der alten Zeile bleibt, ist eine **Code-Korrektur, keine Messung**:
+   `wahrscheinlichkeit.BEITRAEGE` nennt als Grund die gefallene 31.08.-Quelle,
+   während der tragende Grund **2.158** (Form) und **2.222** (Redundanz) ist.
+
+   ### ✔✔ 2a IST GELAUFEN — ERGEBNIS 20.09.2026
+
+   Drei Zellen, **alle drei vorab benannt**, Werkzeug `k1c_hebel_barriere.py`
+   (neu: `--menge`, `--ab`, `--saat`; die Vorgaben blieben alt, damit die
+   Reproduktion möglich bleibt).
+
+   | Zelle | Aufbau | Ergebnis |
+   |---|---|---|
+   | **1** | unverändert (H20, `frei`, ganzes Fenster) | ⚠️ **2.237 reproduziert** — `zufall` trägt wieder (+0,0007). Lauf ungültig |
+   | **2** | `--menge auto` | ✔ `zufall` **still** (+0,0009, Band 3× breiter). Nur `oi_aenderung` trägt |
+   | **3** | `--menge auto --ab 2023-01-01` | ✔ Kontrolle still — **kein einziger Beitrag trägt** |
+
+   ⚠️⚠️⚠️ **Zelle 1 hat 2.237 nicht nur reproduziert, sondern erklärt — und
+   die Ursache ist die MENGE, nicht das Band.** 2.485 maß `zufall` auf 20 %
+   (trägt nicht), K-1c auf `frei` (trägt). **Die Wirkung ist dieselbe**
+   (+0,0008 gegen +0,0007) — verschieden ist nur das Band, weil auf `frei`
+   rund 226 Anker je Tag liegen statt 45. Beide Befunde sind richtig; falsch
+   war die **Vorgabe des Werkzeugs**.
+
+   ⚠️ **Warum sie falsch stehen konnte:** `messnorm.py:527` weist ein
+   Beitragsurteil auf der freien Menge ab (F-212) — aber nur über
+   `frageart='beitrag'`. Das Werkzeug übergibt `verwendung='Beitrag'`, **ein
+   anderes Feld**. Der Riegel stand da und griff nie (**2.490-k1c-menge**).
+
+   #### ➤ Die Antwort auf 2.291-auslöser
+
+   | | `bewegung_r` (2.460-norm) | `barriere` (2a, Zelle 3) |
+   |---|---|---|
+   | Fenster | ab 2023 | ab 2023 |
+   | trägt | **nur `oi_aenderung`** (+0,0433) | **keiner** — `oi_aenderung` +0,0030, trägt nicht bis 0,0098 |
+
+   ➔ **Der Hebel bekommt KEINE eigene Bewertung.** Nicht weil die Beiträge
+   dort *gleich* wirken, sondern weil **keiner** dort messbar wirkt — es gibt
+   nichts, worauf eine eigene Bewertung stehen könnte. **2.291-entscheidung**
+   (der Hebel kommt aus dem Spot-Weg) steht damit auf einer Messung statt auf
+   einer Vorbedingung. Befund **2.490-barriere-niemand**.
+
+   ✔ **Saatprobe** (2.477): drei Saaten, alle fünf Kandidaten auf vier
+   Nachkommastellen identisch. Das Urteil hängt nicht an der Ziehung.
+
+   #### ⚠️⚠️ Was daraus NICHT folgt — und das ist der wichtigere Teil
+
+   **Die Frage des Nutzers ist damit nicht verneint.** Gemessen wurde **ein**
+   Fenster (H20) und **eine** Zielhöhe (CRV 2,0). Der Hebel ist als *„kurzer
+   starker Anstieg“* beschrieben — H20 ist dafür möglicherweise das falsche
+   Fenster. Ein Nullbefund ist **Zwischenstand**, nicht Endstand.
+
+   ➔ **2b wird dadurch nicht kleiner, sondern die eigentliche Frage.**
+
+   ⚠️ **Zwei Vorbehalte, die an 2b hängen:**
+
+   | | |
+   |---|---|
+   | **Blockzahl** | ab 2023 bleiben nur **21 Blöcke** (gefordert 20). *„Trägt nicht bis 0,0098“* heißt: kleinere Effekte kann die Anlage hier nicht auflösen — das ist mehr als das Dreifache der gemessenen Wirkung |
+   | **Regime** | ⚠️ **Nutzerbeobachtung 20.09., ausdrücklich als Meinung gekennzeichnet:** *„2017 bis 2023 bzw. ab 2023 bis heute ist ein anderer Markt … 2024-2025 gab es keine echte Altcoin-Rally, BTC-Dominanz ist nicht ausreichend gefallen“*. Mischt das Fenster ab 2023 selbst zwei Regime, ist der Nullbefund über ein gemitteltes Regime gerechnet. **Prüfbar** (BTC-Dominanz liegt im System) — Befund **2.490-regime-offen**, keine Maßnahme abgeleitet |
+
+   ⚠️ **Erledigt nebenbei:** die `null`-Registrierung von `schnitt` nannte
+   eine **abgelöste** Quelle. Das Urteil bleibt, die Begründung ist
+   nachgezogen (Form + Redundanz statt 31.08.-Messung) —
+   **2.490-schnitt-begruendung**.
+
+   ### ✔ Was seit dem 11.09. WIRKLICH neu ist — und es ist genau eine Sache
+
+   **Alle** diese Messungen liefen auf `bewegung_r`. Seit dem 20.09. ist
+   `barriere` messbar (A1 gefallen, 2.485). Und das war **vorab vorgemerkt**:
+
+   > **2.291-auslöser (gilt, 10.09. — also VOR A1, damit kein Suchpreis):**
+   > *„sobald A1 behoben und `barriere` messbar ist, wird gemessen, ob ein
+   > Beitrag auf `barriere` **anders** wirkt als auf `bewegung_r`. Trägt er
+   > dort anders, bekommt der Hebel seine eigene Bewertung — sonst nicht.
+   > ⚠️ Das ist eine **Messfrage mit einem Datum**, kein offener Vorbehalt.“*
+
+   Der Lauf **existiert bereits**: `k1c_hebel_barriere.py`, Kandidaten
+   `funding · turnover · oi_aenderung · schnitt · zufall`, auf
+   Produktionsgeometrie. Er ist **ungültig** (**2.237**: die Kontrolle
+   `zufall` trug) — und seine Ursache **2.238** ist am 20.09. durch
+   **2.485-a1-gefallen** abgelöst worden, mit der ausdrücklichen
+   Feststellung *„`zufall` auf `barriere` trägt heute NICHT“*.
+
+   **Zwei Zellen, beide vorab benannt (keine nachträgliche Auswahl):**
+
+   | Zelle | | Warum in dieser Reihenfolge |
+   |---|---|---|
+   | **1** | K-1c **unverändert** (H20, `menge=frei`) | **R-R11**: nur ein unveränderter Lauf kann 2.237 reproduzieren oder kippen. Wer zuerst die Menge ändert, hat nichts widerlegt — er hat etwas anderes gemessen |
+   | **2** | derselbe Lauf auf der **selektierten** Menge | **F-212**: auf der freien Menge wirken Beiträge auf 1,5 % der Anker, ein Nullbefund ist dort *vorprogrammiert*. Erst diese Zelle kann die Frage beantworten |
+
+   ⚠️ **Der Befund dazu, den ich selbst gefunden habe:** `messnorm.py:527`
+   weist ein Beitragsurteil auf der freien Menge ab — aber nur über
+   `frageart='beitrag'`. `k1c_hebel_barriere.py` übergibt
+   `verwendung='Beitrag'`, und **das ist ein anderes Feld**. Der Riegel
+   greift dort nicht.
+
+   ⚠️ **Was auch ein Treffer NICHT bedeutet:** `schnitt` wäre damit nicht als
+   Regler rehabilitiert. Der Buckel ist dreimal dieselbe Form, und die
+   Redundanz zur Auswahl (4/5) besteht unabhängig von der Zielgröße.
 
    ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
    20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im
