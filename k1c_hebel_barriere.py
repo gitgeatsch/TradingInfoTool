@@ -143,12 +143,33 @@ from messe_beitrag_auf_auswahl import momentum250            # noqa: E402
 KANDIDATEN = ("funding", "turnover", "oi_aenderung", "schnitt", "zufall")
 
 
-def barriere_je_reihe(reihe, H: int):
+def barriere_je_reihe(reihe, H: int, crv: float | None = None,
+                      ungeloest: float | None = None):
     """Ziel vor Stop, auf der PRODUKTIONSGEOMETRIE -> {tag: 1.0/0.0}.
 
     ⚠️ Genau die Geometrie, die `entscheidungsrechnung` baut - sonst misst
     der Test etwas anderes als das, was die App vorschlaegt.
+
+    crv        Zielhoehe in Stop-Abstaenden. None = `GRENZEN['crv']`,
+               also die Produktionsvorgabe 2,0. 2b variiert sie.
+
+    ungeloest  ⚠️⚠️ WAS MIT ANKERN GESCHIEHT, bei denen im Fenster
+               WEDER Ziel noch Stop faellt. Das ist keine Feinheit,
+               es ist die Frage nach dem MASS:
+
+                 None   sie fallen HERAUS -> gemessen wird
+                        P(Ziel | aufgeloest), der RICHTUNGSKANAL.
+                        Die alte und weiter die VORGABE.
+                 0.0    sie zaehlen als VERFEHLT -> gemessen wird
+                        die unbedingte QUOTE. Das ist `q` der
+                        Potentialformel (2.139-quote).
+
+               ⚠️ Die beiden koennen GEGENEINANDER laufen: `turnover`
+               traegt Richtung (+0,00512), auf der Quote nicht, weil
+               sein Aufloesungskanal (-0,00218) dagegenhaelt (2.136).
+               Wer nur eines misst, kann das nicht sehen.
     """
+    crv = float(GRENZEN["crv"] if crv is None else crv)
     tage = [x[0] for x in reihe]
     c = np.array([x[1] for x in reihe], float)
     h = np.array([x[2] for x in reihe], float)
@@ -164,7 +185,7 @@ def barriere_je_reihe(reihe, H: int):
         if stop_abstand <= 0:
             continue
         stop = c[i] - stop_abstand
-        ziel = c[i] + GRENZEN["crv"] * stop_abstand
+        ziel = c[i] + crv * stop_abstand
         for j in range(i + 1, min(i + 1 + H, len(c))):
             if t[j] <= stop:
                 aus[tage[i]] = 0.0
@@ -172,14 +193,25 @@ def barriere_je_reihe(reihe, H: int):
             if h[j] >= ziel:
                 aus[tage[i]] = 1.0
                 break
-        # ⚠️ Faellt keines im Fenster, bleibt der Anker AUSSEN - und das
-        # wird unten als Anteil ausgewiesen, nicht verschwiegen.
+        else:
+            # ⚠️ Faellt im Fenster KEINES von beiden: mit
+            # `ungeloest=None` bleibt der Anker aussen (Richtungskanal,
+            # alte Vorgabe), mit 0.0 zaehlt er als verfehlt (Quote).
+            # Der Anteil wird so oder so ausgewiesen, nicht verschwiegen.
+            if ungeloest is not None:
+                aus[tage[i]] = float(ungeloest)
     return aus
 
 
-def barriere_je_tag(je_tag: dict, reihen: dict, H: int):
-    """Ersetzt `in_r` durch den Barrierenausgang. -> (je_tag, Anteil geloest)"""
-    je_sym = {s: barriere_je_reihe(v, H) for s, v in reihen.items()}
+def barriere_je_tag(je_tag: dict, reihen: dict, H: int,
+                    crv: float | None = None,
+                    ungeloest: float | None = None):
+    """Ersetzt `in_r` durch den Barrierenausgang. -> (je_tag, Anteil geloest)
+
+    ⚠️ `crv` und `ungeloest` reicht sie nur durch - die Bedeutung
+    steht bei `barriere_je_reihe`."""
+    je_sym = {s: barriere_je_reihe(v, H, crv, ungeloest)
+              for s, v in reihen.items()}
     neu, drin, gesamt = {}, 0, 0
     for tag, zeilen in je_tag.items():
         z = []

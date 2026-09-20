@@ -542,6 +542,82 @@ dann entsteht keine Nacharbeit.
    Regler rehabilitiert. Der Buckel ist dreimal dieselbe Form, und die
    Redundanz zur Auswahl (4/5) besteht unabhängig von der Zielgröße.
 
+   ### ✔✔ 2b IST GELAUFEN — DAS BESTE FENSTER IST H20, NICHT 1–2 TAGE
+
+   Gemessen 20.09.: H1·2·3·5·7·20 × Zielhöhe 2,0 R (Regel Z-2), ab 2023,
+   Menge je Kandidat nach Datenlage, **beide Kanäle**, 60 Messungen, 37 min.
+
+   ⚠️⚠️ **Keine vorab gewählte Hauptzelle** — mein erster Entwurf (H2×2,0 R)
+   war methodisch der schlechtere Weg, und der Nutzer hat danach gefragt
+   (*„ist das überhaupt eine Entscheidung?“*). Geurteilt wird nach **FORM**
+   über benachbarte Horizonte, wie in **2.208-n86**: benachbarte Horizonte
+   teilen dieselben Anker, ein Zufallstreffer springt nicht als glatte Kurve
+   durch sechs Zellen. Familienfehler 14 % statt 53 %.
+
+   #### Der Kernbefund: eine Vorzeichendrehung zwischen den Kanälen
+
+   | H | **Richtung** P(Ziel \| aufgelöst) | **Quote** P(Ziel) ← *das ist `q`* |
+   |---|---|---|
+   | 1 | **+0,0071** ✔ trägt | **−0,0051** |
+   | 2 | **+0,0071** ✔ trägt | **−0,0052** |
+   | 3 | **+0,0069** ✔ trägt | −0,0043 |
+   | 5 | **+0,0038** ✔ trägt | −0,0030 |
+   | 7 | +0,0019 | −0,0025 |
+   | 20 | +0,0030 | +0,0013 |
+
+   `oi_aenderung` trägt auf der **Richtung** bei vier benachbarten Horizonten
+   — eine echte Form. Auf der **Quote** trägt er nirgends und hat im kurzen
+   Fenster das **andere Vorzeichen**. Das reproduziert **2.136/2.139-quote**
+   auf einem neuen Kandidaten und einer neuen Achse.
+
+   **Auf der Quote trägt nur `turnover` bei H20** (+0,0103 [+0,0052 ..
+   +0,0163]), am Ende einer streng monotonen Kurve (−0,0050 → +0,0103). Nach
+   der vorab gesetzten Regel formal ein **Hinweis** — keine tragenden
+   Nachbarn. Alle Kandidaten steigen auf der Quote mit dem Horizont, `zufall`
+   bleibt flach.
+
+   #### ✔✔ Der Mechanismus ist GEMESSEN, nicht erzählt
+
+   P(aufgelöst) je Fünftel, Tagesklammer — die **behaltene** Gruppe (Fünftel
+   1–4, `GRENZE` 0,80) löst **seltener** auf als das gesperrte oberste:
+
+   | | H1 | H2 | H3 | H20 |
+   |---|---|---|---|---|
+   | `oi_aenderung` (5 minus 1) | **+0,055** | +0,051 | +0,043 | +0,008 |
+   | `turnover` | **+0,101** | +0,120 | +0,115 | −0,025 |
+   | ✔ `zufall` | +0,002 | +0,001 | −0,000 | +0,001 |
+
+   Weniger Auflösung senkt die unbedingte Quote und hebt die bedingte
+   Trefferquote — und der Unterschied **verschwindet bei H20**, genau dort,
+   wo die Quotenwirkungen ins Plus drehen. Befund **2.491-mechanismus**.
+
+   ⚠️ **Ein eigener Fehler dabei:** ich las die Tabelle zuerst als „oberstes
+   gegen unterstes Fünftel“ und hielt meine Erklärung für widerlegt. Sie war
+   es nicht — ich hatte nicht geprüft, **welche Seite die Messung als „frei“
+   behandelt** (`oben_sperren=True`, GRENZE 0,80).
+
+   #### ⚠️⚠️ Was NICHT folgt — und was daraus für 2c wird
+
+   **Nicht**, dass ein kurzer Hebeltrade schlecht wäre. Es folgt, dass
+   **unsere vier Beiträge einen kurzen starken Anstieg nicht vorhersagen** —
+   eine Aussage über unsere Quellen, nicht über den Markt.
+
+   **Das WORAN** (Regel „kein Beitrag fällt ohne Lösungssuche“): alle vier
+   sind **Tagesquerschnittsränge**, ein Wert je Symbol und Tag. Der „kurze
+   starke Anstieg“ ist ein Stundenereignis.
+
+   **Der Weg liegt im System:** stündlicher Terminmarkt seit 2021,
+   15-Minuten-Kurse in `price_cache` (**2.463**). ⚠️ Vorher zu klären: reicht
+   die Historie für 20 Blöcke? Gibt es die Größen dort je Symbol? Und —
+   **das ist ein A1-Fall** — ist die Messnorm auf dieser Zeitauflösung
+   geeicht? Der Selbsttest lief auf **Tages**daten. Befund
+   **2.491-loesungssuche** (offen).
+
+   ⚠️ **Folge für 2c:** die Simulation stünde heute auf einer Quote, die im
+   kurzen Fenster von keinem Beitrag bewegt wird. Sie ist damit **nicht
+   sinnlos, aber eng**: sie kann nur zeigen, welche Hebel aus der *heutigen*
+   Quote fallen — nicht, ob ein kurzer Hebel begründbar ist.
+
    ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
    20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im
    Median bei **1,37** (Hebel) bzw. **1,87** (Spot) — **1.113 von 1.446**
