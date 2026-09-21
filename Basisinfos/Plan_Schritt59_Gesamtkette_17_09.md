@@ -911,9 +911,52 @@ Zufall, sondern in der Deckung.**
 
 | # | | Stand |
 |---|---|---|
-| 1 | **Mitläufertest** — trägt die LAGE noch, wenn die EIGENSCHAFT festgehalten wird? (Prüflisten-Frage 1, Methodik 2.80) | gebaut, **nicht gelaufen** |
-| 2 | **Die Deckung lösen** — zirkulärer Verschub (2.286) braucht keine Blöcke, ist aber nur für die Akkumulation validiert; Übertragung verlangt denselben Selbsttest wie der Bootstrap (2.204/2.485) | offen |
+| 1 | **Mitläufertest** (Prüflisten-Frage 1, Methodik 2.80) | ✔✔ **erledigt 21.09., zwei Pfade** |
+| 2 | **Die Deckung lösen** — zirkulärer Verschub (2.286) braucht keine Blöcke, ist aber nur für die Akkumulation validiert; Übertragung verlangt denselben Selbsttest wie der Bootstrap (2.204/2.485) | **offen — jetzt der Engpass** |
 | 3 | **Erst dann** die Nennerfrage aus Schritt 67 | wartet |
+| 4 | ⚠️ **Regel-3-Entscheidung** beim Hebel — Nutzerfrage, keine Messfrage | **offen** |
+
+#### ✔✔ Punkt 1 — keiner ist ein Mitläufer, beide tragen eigenständig
+
+**Pfad 1** (`geschichtet` + 40 Nullwelten statt *einer* Negativkontrolle):
+die Lage trägt innerhalb der Eigenschafts-Fünftel bei H2/H3/H5, Verlust
+gegenüber einer Zufallsschichtung nur **2–10 %**. ⚠️ Die Eigenschaft trägt
+dort nirgends — **auch nicht in ihrer eigenen Zufallskontrolle**, war also
+auf jenem Pfad nie nachweisbar; der Test sagt über sie **nichts**.
+
+**Pfad 2** (Normpfad mit **stetiger** Residualisierung, damit die
+Trennschärfe erhalten bleibt):
+
+| Arm | H2 | H3 | H5 |
+|---|---|---|---|
+| **A** Lage ohne Eigenschaft | +0,0165 ✔ | +0,0221 ✔ | 19 Blöcke |
+| **C** Lage ohne Zufall | +0,0140 | +0,0243 ✔ | 19 Blöcke |
+| **B** Eigenschaft ohne Lage | +0,0164 ✔ | +0,0213 ✔ | +0,0372 ✔ |
+| **D** Eigenschaft ohne Zufall | +0,0139 ✔ | +0,0122 | +0,0261 |
+
+✔ Beide Zufallskontrollen reproduzieren die unresidualisierte Messung —
+erst das macht die Tabelle lesbar.
+**A ≈ C** → die Eigenschaft nimmt der Lage nichts.
+**B > D** (+18/+75/+43 %) → das Herausrechnen der Lage **schärft** die
+Eigenschaft; eine verrauschte Störgröße herauszunehmen erhöht die
+Präzision.
+
+➔ **Beide tragen → TRENNEN, nicht mitteln.**
+
+⚠️⚠️ **Daraus folgt für den Hebel NICHT, dass die Eigenschaft bleiben
+darf.** Regel 3 verbietet den Asset-Rang beim Hebel nicht, *weil* er
+nichts beiträgt, sondern **weil er ein Asset-Vorurteil ist** — eine
+Regelfrage, keine Messfrage. Das ist Punkt 4.
+
+#### ⚠️⚠️⚠️ Drei eigene Werkzeugfehler auf dem Weg — alle durch die eigene Gegenprüfung gefunden
+
+| | |
+|---|---|
+| **a** | Residualisierung über **Ränge** erzeugte Gleichstände, die es vorher nicht gab — nur **38 %** der Werte je Tag verschieden. Die Reihenfolgeprobe **drehte ein Urteil**. Behoben durch eine stetige Konstruktion; Raster danach 100 %, Wirkungen byteidentisch |
+| **b** | Die erste Reihenfolgeprobe saß **vor** der Residualisierung, wo die Werte noch stetig sind. Ihr byteidentisches Ergebnis sah nach Stabilität aus — **ein Schalter, der nichts anfasst** (dieselbe Klasse wie `--nullsaat`) |
+| **c** | Die erste Mutation schichtete die Größe nach **sich selbst** und brach nicht — *erwartbar*, kein Werkzeugfehler. **Eine Mutation, die auch bei intaktem Werkzeug nicht bricht, prüft nichts.** Ersetzt durch Zufallsschichten, und zwar auf **beiden** Seiten |
+
+**Methodik 2.507** hält das fest.
 
 ⚠️ Auf dem geschichteten Pfad gibt es **keine Trennschärfe** — dort ist
 nur ein **positiver** Befund deutbar.

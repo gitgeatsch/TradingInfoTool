@@ -87,8 +87,16 @@ def schichtprobe(je_tag, schicht, block, ziehungen, saat):
     """Wirkung INNERHALB der Schicht, gegen 40 geschichtete Nullwelten."""
     rng = np.random.default_rng(saat)
     d = K.geschichtet(je_tag, schicht)
-    if len(d) < block + 30:
-        return None
+    # ⚠⚠ DIE BLOCKSPERRE FEHLTE. `urteil_tage` rechnet ein Band aus
+    # so vielen Bloecken, wie da sind - `messnorm` verweigert unter 20
+    # ("bei 5 Bloecken 19,5 % Fehlalarme statt 5 %"). Auf dem
+    # geschichteten Pfad gibt es diese Sperre nicht, also muss sie hier
+    # stehen. Genau die Klasse Fehler, die am selben Tag als
+    # 2.506-randlage registriert wurde - und ich haette sie beinahe
+    # wiederholt.
+    bloecke = len(d) // block if block else 0
+    if len(d) < block + 30 or bloecke < 20:
+        return {"zuwenig": bloecke, "tage": len(d)}
     haupt = band("netto", d, rng, block)
     if haupt is None:
         return None
@@ -178,15 +186,55 @@ def main(argv=None) -> int:
         print()
         print("     %-46s %9s %20s %9s %6s  %s"
               % ("Zelle", "Wirkung", "Band", "Nullpkt", "Tage", "Urteil"))
+        # ⚠⚠ DIE DRITTE ZEILE IST DIE KONTROLLE - UND SIE IST DER
+        # ZWEITE ANLAUF.
+        #
+        # ERSTER ANLAUF, VERWORFEN (21.09.2026): die LAGE nach SICH
+        # SELBST schichten, in der Erwartung, der Effekt breche
+        # zusammen. Er brach nicht - und das war KEIN Werkzeugfehler,
+        # sondern ein Denkfehler von mir. `geschichtet` sperrt
+        # INNERHALB jedes Fuenftels erneut die obersten `GRENZE`; bei
+        # Schichtung nach sich selbst bleibt die Ordnung erhalten und
+        # die Regel wirkt auf feinerem Raster weiter. Der Effekt
+        # schrumpfte folgerichtig auf rund ein Drittel (+0,0128 ->
+        # +0,0040), ohne zu verschwinden. Eine Mutation, die auch bei
+        # intaktem Werkzeug nicht bricht, pruefte nichts.
+        #
+        # ZWEITER ANLAUF, DIESER: nach einer ZUFALLSGROESSE schichten.
+        # Zufallsfaecher tragen keine Information - das Ergebnis muss
+        # dann dem UNGESCHICHTETEN entsprechen. Weicht die Schichtung
+        # nach der EIGENSCHAFT davon ab, hat die Eigenschaft
+        # tatsaechlich etwas herausgerechnet; stimmen beide ueberein,
+        # ist die Rede von "eigenstaendig" leer.
+        #
+        # ⚠ Das ist die Kontrolle, die selbst geprueft ist
+        # (`kontrollen-muessen-selbst-geprueft-werden`).
+        # ⚠⚠ ZWEI Zufallsschichten, nicht eine. Die erste Fassung
+        # gab nur der LAGE eine Kontrolle. Damit war nicht zu
+        # unterscheiden, ob die EIGENSCHAFT DURCH die Schichtung faellt
+        # oder auf diesem Pfad NIE getragen hat - ein voreiliger
+        # Schluss waere die Folge gewesen. Jede Zeile bekommt ihre
+        # eigene Zufallskontrolle.
+        _z = np.random.default_rng(saat + 77)
+        zufall_l = {t: {x["sym"]: float(_z.random()) for x in z}
+                    for t, z in gem_l.items()}
+        zufall_a = {t: {x["sym"]: float(_z.random()) for x in z}
+                    for t, z in gem_a.items()}
         for titel, je, schicht in (
                 ("LAGE innerhalb der EIGENSCHAFTS-Fuenftel", gem_l,
                  a_je_tag),
                 ("EIGENSCHAFT innerhalb der LAGE-Fuenftel", gem_a,
-                 l_je_tag)):
+                 l_je_tag),
+                ("KONTROLLE LAGE in ZUFALLS-Fuenfteln", gem_l,
+                 zufall_l),
+                ("KONTROLLE EIGENSCHAFT in ZUFALLS-Fuenfteln", gem_a,
+                 zufall_a)):
             r = schichtprobe(je, schicht, block, ziehungen, saat)
-            if r is None:
-                print("     %-46s -> zu wenige Tage fuer ein Band"
-                      % titel)
+            if r is None or "zuwenig" in r:
+                print("     %-46s -> KEIN BEFUND: nur %s Bloecke von 20 "
+                      "gefordert (%s Tage)"
+                      % (titel, (r or {}).get("zuwenig", "?"),
+                         (r or {}).get("tage", "?")))
                 continue
             traegt = r["unten"] > r["null"]
             print("     %-46s %+9.4f [%+.4f..%+.4f] %+9.4f %6d  %s"

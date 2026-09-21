@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 129 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 130 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -17,7 +17,7 @@ Dokuments). Ziel: eine feste, wiederholbare Vorgehensweise für (A) synthetische
 Tests hier am Gerät und (B) die Analyse echter Notebook-Exporte, inklusive
 Lerneffekt über die Zeit.
 
-Stand: 2026-09-21 (letzter Abschnitt 2.506). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
+Stand: 2026-09-21 (letzter Abschnitt 2.507). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
 
 ---
 
@@ -10924,3 +10924,75 @@ Zelle gar kein Urteil hat.
 
 **Ausführlich:** Befunde 2.506-zerlegung, -verwaesserung, -randlage,
 -formzaehlung · Schritt 68
+
+---
+
+## 2.507 ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026)
+
+**Auslöser:** Die Frage, ob einer der beiden Teile von `turnover` nur ein
+Mitläufer des anderen ist. Zwei Pfade, und der zweite hat mich beinahe
+einen falschen Befund melden lassen.
+
+### Der Aufbau — Schicht in die GRÖSSE statt in die Messung
+
+Der Haus-Mitläufertest (`geschichtet`) misst die Regel *innerhalb* der
+Fünftel einer zweiten Größe. Er kann aber **keine Trennschärfe** — ein
+Nullbefund dort ist nicht deutbar.
+
+Damit der Normpfad (`pruefe_auswahl`, mit Trennschärfe) anwendbar bleibt,
+wandert die Schicht in die **Größe**: je Tag nach der Schicht in Fünftel,
+und der Kandidat bekommt seinen Platz *innerhalb seines Faches* als neuen
+Wert.
+
+### ⚠️⚠️ Die Falle: „Platz im Fach" als **Rang**
+
+| | |
+|---|---|
+| 370 Symbole, 5 Fächer → 74 je Fach | Ränge auf einem Raster von 1/73 |
+| über die Fächer hinweg wiederholen sich dieselben Werte | **gemessen: nur 38 % der Werte je Tag verschieden** |
+
+`W.rang` bricht Gleichstände **nach der Reihenfolge**. Bei einer Auswahl
+der obersten 20 % entscheidet das am Rand über die Zugehörigkeit.
+
+➔ **Die Reihenfolgeprobe — dieselben Werte, nur umsortiert — hat ein
+Urteil gedreht** (TRÄGT → trägt nicht).
+
+### ⚠️ Und die erste Probe saß an der falschen Stelle
+
+Sie mischte **vor** der Residualisierung, wo die Werte noch stetig sind.
+Dort gibt es keine Gleichstände — die Mischung änderte nichts, und das
+byteidentische Ergebnis **sah nach Stabilität aus**.
+
+> Dieselbe Fehlerklasse wie bei `--nullsaat` am selben Tag: **ein
+> Schalter, der nichts anfasst, belegt nichts.**
+
+Die Gleichstände *entstehen* durch die Residualisierung und wirken erst
+**danach**, im Querschnittsrang. Dort gehört die Probe hin.
+
+### ✔ Die Lösung: stetig statt Rang
+
+Statt des Rangs im Fach die **standardisierte Abweichung vom Fachmedian**
+(durch den Quartilsabstand). Lage und Streuung des Faches sind heraus,
+die Größe bleibt **stetig**.
+
+| | Rang-Residualisierung | stetige Residualisierung |
+|---|---|---|
+| Raster | 38 % | **100 %** |
+| Reihenfolgeprobe | **kippt ein Urteil** | **byteidentische Wirkungen** |
+
+➔ **Der Anteil verschiedener Werte je Tag gehört in die Ausgabe.** Er
+macht die Falle sichtbar, bevor man urteilt.
+
+### ⚠️ Zwei weitere Fehlgriffe desselben Tages, beide lehrreich
+
+| Fehlgriff | Warum er nichts wert war |
+|---|---|
+| **Mutation: die Größe nach sich selbst schichten** | Sie brach nicht — und das war *kein* Werkzeugfehler. `geschichtet` sperrt *innerhalb* jedes Fünftels erneut; die Ordnung bleibt, die Regel wirkt auf feinerem Raster weiter. **Eine Mutation, die auch bei intaktem Werkzeug nicht bricht, prüft nichts** |
+| **Zufallskontrolle nur auf EINER Seite** | Dann ist nicht zu unterscheiden, ob ein Arm *durch* die Schichtung fällt oder ohnehin nie getragen hat. **Eine Kontrolle gehört an jede Seite des Vergleichs, nicht an die interessante** |
+
+Die zweite Regel hat das Ergebnis gedreht: erst mit beiden Kontrollen
+zeigte sich, dass die eine Größe auf dem geschichteten Pfad **nie**
+nachweisbar war — der Test sagte über sie also gar nichts.
+
+**Ausführlich:** Befunde 2.507-eigenstaendig, -gleichstaende, -kontrolle ·
+Schritt 68
