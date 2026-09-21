@@ -23927,6 +23927,58 @@ def paket_nennersperre() -> None:
            "als der Fehler, den sie behebt. Ohne %d, mit %d"
            % (len(_rest_ohne), len(_rest_mit)))
 
+    # ---- ⚠⚠ DER BETRIEBSWEG, GERAETEUNABHAENGIG ---------------
+    #
+    # `umlaufmengen` liest aus ZWEI Orten: `externe_reihe` in der
+    # Betriebsdatenbank (der Weg am NOTEBOOK) und die Messdatei (der
+    # Rueckfall am DESKTOP). Am Desktop ist der erste LEER (0 Symbole
+    # gemessen), am Notebook traegt die Messdatei nur die Symbolliste.
+    # Ein Nachweis, der nur den lokal gefuellten Weg prueft, ist am
+    # anderen Geraet BLIND - genau die Klasse
+    # `pruefung-zaehlt-zustaende-auf`.
+    #
+    # Deshalb hier eine WEGWERFDATEI mit genau der Tabelle, die der
+    # Betrieb liest. Sie haengt an keinem Geraetezustand, und die
+    # Produktionsdatenbank wird nicht angefasst.
+    import datetime as _dt
+    import sqlite3 as _sq
+    import tempfile as _tf
+    _weg = _os.path.join(_tf.gettempdir(), "_pruef_externe_reihe.db")
+    _keine = "data/_gibt_es_nicht_.db"
+    try:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
+        _c = _sq.connect(_weg)
+        _c.execute("CREATE TABLE externe_reihe (quelle TEXT, "
+                   "schluessel TEXT, datum TEXT, wert REAL)")
+        _heute = _dt.date.today().isoformat()
+        _zeilen = [(_s, 1.0e9) for _s in _vorher] + [("BTC", 2.0e7)]
+        for _s, _w in _zeilen:
+            _c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?)",
+                       (_MR.SPLYCUR_QUELLE, _s, _heute, _w))
+        _c.commit()
+        _c.close()
+        _v2 = _MR.NENNER_WIDERLEGT
+        try:
+            _bmit = _MR.umlaufmengen(db_pfad=_weg, datei=_keine)
+            _MR.NENNER_WIDERLEGT = {}
+            _bohne = _MR.umlaufmengen(db_pfad=_weg, datei=_keine)
+        finally:
+            _MR.NENNER_WIDERLEGT = _v2
+        pruefe(P, "⚠⚠ und sie greift auch auf dem BETRIEBSWEG "
+                  "(externe_reihe)",
+               all(_s in _bohne for _s in _v2)
+               and not any(_s in _bmit for _s in _v2)
+               and "BTC" in _bmit,
+               "am Notebook kommen die Mengen aus `externe_reihe`, "
+               "nicht aus der Messdatei - ohne diesen Nachweis waere "
+               "die Sperre DORT ungeprueft. ohne %d, mit %d, "
+               "Kontrolle BTC drin: %s"
+               % (len(_bohne), len(_bmit), "BTC" in _bmit))
+    finally:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
+
     # ⚠ Die Sperre steht NACH dem Zusammenfuehren beider Quellen -
     # davor haette sie nur einen der beiden Wege getroffen.
     _q = _quelltext("agent/marktrang.py")
