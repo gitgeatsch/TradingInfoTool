@@ -28,6 +28,21 @@ Grund fuer die Halbierung ("geschrumpft"), dieselbe Vorsicht wie bei
 
 ---
 
+⚠️⚠️⚠️ DIESES WERKZEUG MISST `umschlag_gesamt` - Volumen durch
+GESAMTAUSGABE (`data/onchain_historie.db`, Coin Metrics `SplyCur`).
+NICHT `umschlag_frei`.
+
+Der Unterschied ist keine Feinheit: die beiden Groessen liegen im Median
+25 Prozent auseinander, und ein Nennerwechsel verschiebt 76,7 Prozent
+aller Fuenftel (2.505-rangwirkung). Die Namenstabelle steht in
+`marktrang.UMSCHLAG_GROESSEN`.
+
+⚠️⚠️ WARUM DER VERMERK HIER STEHT: am 21.09.2026 habe ich die unten
+genannte Zahl `H2 Turnover +0,0107 R` als Machbarkeitsargument fuer die
+NEUE Quelle benutzt. Sie gehoert zur ALTEN. Der Nutzer hat es gemerkt
+(*„kontrolliere ob das das alte oder neue Turnover ist"*) - und genau
+deshalb gibt es die Namen jetzt.
+
 # ERWEITERUNG 01.09.2026 — DIE TABELLE JE HORIZONT
 
 ⚠️ DIESER ABSCHNITT IST DIE VORABFESTLEGUNG.

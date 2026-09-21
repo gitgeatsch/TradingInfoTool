@@ -583,6 +583,10 @@ def main():
 
     reihen = B.lade()
     rng = np.random.default_rng(20260830)
+    # ⚠️⚠️ DAS IST `umschlag_gesamt` (Volumen durch GESAMTAUSGABE).
+    # Wer hier `data/umlaufmenge_cg.db` einsetzt, misst `umschlag_frei` -
+    # eine ANDERE Groesse, 25 Prozent Medianunterschied, 76,7 Prozent
+    # Fuenftelwechsel. Namenstabelle: `marktrang.UMSCHLAG_GROESSEN`.
     menge = MB.reihe("data/onchain_historie.db", "splycur")
     funding = F.lade_funding()
 

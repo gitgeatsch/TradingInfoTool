@@ -11144,3 +11144,59 @@ Grenzen. Gemessen: **3,26 %** der Symbol-Tage wechseln ein Fünftel,
 
 **Ausführlich:** Befunde 2.509-nennersperre, 2.509-kein-schreiber ·
 Paket `Nennersperre` · Schritt 67
+
+---
+
+## 2.510 ⚠️⚠️⚠️ EINE PRÜFUNG, DIE ZWEI GRÖSSEN VERGLEICHT, FÄNGT KEINEN FEHLER, DER BEIDE GLEICH VERSCHIEBT (21.09.2026)
+
+**Anlass:** Befund 2.510. Zwei Messwerkzeuge fragten die **Symbolliste**
+der Messdatei ab statt des Betriebswegs — die Liste kennt die
+**Frischegrenze** nicht. BNB steht darin, sein letzter Wert ist von
+2019. Gemeldet waren *„3 von 16 Hebelsignalen mit Wert"*, richtig ist
+**1 von 16**.
+
+Behoben wurde das an der Wurzel (ein Helfer statt zwei Kopien). **Der
+lehrreiche Teil ist die Prüfung, die ich dafür gebaut habe — sie fing
+den Fehler zuerst nicht.**
+
+### Das erste Loch: die falsche Ebene
+
+Meine Prüfung rief `umlaufmengen` und wies nach, dass ein veralteter
+Wert herausfällt. Dann verglich sie die beiden Werkzeuge mit dem Helfer.
+**Beides war grün, als ich den Fehler in den Helfer selbst einbaute:**
+
+| | |
+|---|---|
+| Die Seiteneffekt-Prüfung | traf die Ebene **darunter** (`umlaufmengen`) |
+| Der Werkzeugvergleich | verschob sich **mit** — beide Seiten lieferten dieselbe falsche Menge |
+
+> ⚠️⚠️ **Ein Vergleich zweier Grössen ist blind gegen jede Ursache, die
+> beide gleich verschiebt.** Der Seiteneffekt-Nachweis muss auf **der
+> Ebene** ansetzen, die geschützt werden soll — nicht eine darunter.
+
+### Das zweite Loch: die Kunstdaten deckten den Prüfling
+
+Der Helfer schneidet zwei Mengen (`frische Werte ∩ Messbasis`). Meine
+Kunstdaten enthielten **genau** die Messbasis-Symbole — also war der
+Schnitt wirkungslos, und die Mutation *„Messbasis ignorieren"* blieb
+grün.
+
+> ⚠️ **Kunstdaten müssen mindestens einen Fall enthalten, den jede
+> beteiligte Bedingung EINZELN aussortiert.** Ein drittes Symbol,
+> frisch aber ausserhalb der Messbasis, schliesst die Lücke.
+
+### Die Regel
+
+| # | |
+|---|---|
+| **1** | Jede Schutzbedingung bekommt einen Nachweis **auf ihrer eigenen Ebene** |
+| **2** | Die Mutationsprobe wird **gegen den Prüfling selbst** gefahren, nicht nur gegen seine Zulieferer |
+| **3** | Kunstdaten enthalten je Bedingung **einen Fall, den nur sie fängt** |
+
+✔ Nach beiden Korrekturen: **5 von 5 Mutationen gefangen** (Paket
+`Verfuegbarkeit`). Vorher 3 von 5 — und die beiden Entkommenen waren
+genau die, die den Prüfling betrafen.
+
+⚠️ **Verwandt, aber nicht dasselbe:** 2.509 verlangt den Nachweis am
+Seiteneffekt statt am Quelltext. Hier ist er vorhanden **und trotzdem
+blind** — weil er auf der falschen Ebene sitzt.

@@ -803,6 +803,84 @@ def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
     return aus
 
 
+# ---------------------------------------------------------------------------
+# ⚠️⚠️⚠️ DIE ZWEI UMSCHLAGGROESSEN - UND WARUM SIE NAMEN BRAUCHEN
+# ---------------------------------------------------------------------------
+#
+# NUTZERVORGABE 21.09.2026, woertlich: *„ich bekomme schon angst wenn du
+# turnover schreibst - können wir das auf ALT oder eine neue korrekte
+# Bezeichnung dafür finden"*. Der Anlass war ein Fehler von mir: ich hatte
+# im selben Bericht eine Messung der ALTEN Groesse (+0,0107 R bei H2, aus
+# `rechne_turnover_beitrag.py` auf `splycur`) als Machbarkeitsargument
+# fuer die NEUE benutzt. Beide hiessen bei mir "turnover".
+#
+# ⚠️⚠️ DER UNTERSCHIED STECKT ALLEIN IM NENNER, und er ist keine
+# Feinheit: die beiden Groessen unterscheiden sich im Median um 25 Prozent
+# (bei XLM um 67), und ein Wechsel verschiebt 76,7 Prozent aller Fuenftel
+# (2.505-rangwirkung). Eine Umrechnung gibt es NICHT - das Verhaeltnis ist
+# je Coin verschieden, es ist kein Faktor.
+#
+#     umschlag_gesamt   Volumen / GESAMTAUSGABE     <- das ist LIVE
+#     umschlag_frei     Volumen / FREIER UMLAUF     <- Alternative, nicht im Betrieb
+#
+# ⚠️ DAS CODEFELD HEISST WEITER `turnover_fuenftel`. Es umzubenennen
+# waere ein Eingriff an 70 Stellen ohne fachlichen Gewinn - das Feld ist
+# eindeutig, es IST das Live-Mass. Diese Tabelle sagt, WELCHE Groesse
+# dahintersteht; sie ersetzt keinen Namen, sie macht ihn nachschlagbar.
+UMSCHLAG_GROESSEN = {
+    "umschlag_gesamt": {
+        "nenner": "Gesamtausgabe auf dem Ledger",
+        "quelle": "Coin Metrics Community API, Metrik `SplyCur`",
+        "datei": "data/onchain_historie.db",
+        "betriebsweg": "externe_reihe, quelle=" + SPLYCUR_QUELLE,
+        "symbole": 66,
+        "live": True,
+        "codefeld": "turnover_fuenftel",
+        "stufen_registriert": True,
+        "warnung": (
+            "⚠️ Es ist definitorisch die FALSCHE Groesse (2.500): "
+            "`SplyCur` ist die GESAMTAUSGABE, nicht der freie Umlauf - "
+            "bei LINK und UNI glatte 1.000.000.000. Der gemessene Anteil "
+            "dieses Fehlers ist allerdings KLEIN (+0,0071 R gegen "
+            "+0,0258 R fuer die Menge, 2.505-abdeckung-traegt)."),
+    },
+    "umschlag_frei": {
+        "nenner": "freier Umlauf = Marktkapitalisierung / Preis",
+        "quelle": "CoinGecko `market_chart`, kein Schluessel",
+        "datei": "data/umlaufmenge_cg.db",
+        "betriebsweg": None,
+        "symbole": 375,
+        "live": False,
+        "codefeld": None,
+        "stufen_registriert": False,
+        "warnung": (
+            "⚠️⚠️ NICHT FERTIG VERMESSEN. Geprueft sind Abruf, "
+            "Nennerfehler, Kalibrierung auf H2/H3/H5 und die Rangwirkung. "
+            "ES FEHLEN: die Messung auf der SELEKTIERTEN Menge "
+            "(Registerauflage), eine Stufentabelle, und H20 - der "
+            "Horizont der registrierten Anwendung. Das einzige TRAEGT "
+            "steht auf FESTER Menge 50 Prozent mit Abstaenden von 0,0009 "
+            "und 0,0030 R; unter der Menge nach Datenlage traegt es "
+            "nicht. Auf `barriere` traegt kein Arm."),
+    },
+}
+
+
+def umschlag_name(datei: str) -> str:
+    """Welche der beiden Groessen steckt hinter dieser Datei?
+
+    ⚠️ ABGELEITET, NICHT AUFGEZAEHLT. Wer eine dritte Quelle einhaengt,
+    bekommt hier `unbekannt` und muss sie eintragen - eine stille
+    Verwechslung ist damit ausgeschlossen
+    (`pruefung-zaehlt-zustaende-auf`).
+    """
+    p = str(datei or "").replace(chr(92), "/").lower()
+    for name, d in UMSCHLAG_GROESSEN.items():
+        if d["datei"].lower() in p:
+            return name
+    return "unbekannt"
+
+
 def turnover_verfuegbar(*, db_pfad=None,
                         datei: str = "data/onchain_historie.db") -> set:
     """Die Symbole, fuer die `turnover` im BETRIEB einen Wert bekommt.

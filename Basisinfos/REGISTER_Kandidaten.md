@@ -156,7 +156,7 @@
 
 ## ✔ `turnover`
 
-**Hypothese:** Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst eher ueberbewertet.
+**Hypothese:** Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst eher ueberbewertet. ⚠⚠ DIE UMLAUFMENGE IST DIE GESAMTAUSGABE, nicht der freie Umlauf: dieser Kandidat ist `umschlag_gesamt` (Coin Metrics `SplyCur`, data/onchain_historie.db, 66 Symbole). Die Alternative `umschlag_frei` (CoinGecko, 375 Symbole) ist eine ANDERE Groesse - Median 25 Prozent Unterschied, 76,7 Prozent Fuenftelwechsel, keine Umrechnung. Tabelle: `marktrang.UMSCHLAG_GROESSEN`, Befund 2.512-benennung-umschlag.
 
 | | |
 |---|---|

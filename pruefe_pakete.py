@@ -23990,6 +23990,66 @@ def paket_verfuegbarkeit():
     #
     # Aufgerufen, nicht gelesen. Wer wieder auf `MESSBASIS["turnover"]`
     # umschwenkt, liefert hier eine ANDERE Menge und faellt auf.
+    # ---- ⚠⚠⚠ WELCHE UMSCHLAGGROESSE STECKT HINTER DEM CODEFELD? ----
+    #
+    # NUTZERVORGABE 21.09.2026: *„ich bekomme schon angst wenn du
+    # turnover schreibst"* - nachdem ich im selben Bericht eine Messung
+    # der ALTEN Groesse als Argument fuer die NEUE benutzt hatte.
+    #
+    # ⚠⚠ DIE ZUORDNUNG WIRD HIER ABGELEITET, NICHT AUFGEZAEHLT: die
+    # Vorgabe von `umlaufmengen(datei=...)` kommt aus der SIGNATUR, und
+    # `umschlag_name` bildet sie auf die Groesse ab. Wer die Vorgabe
+    # aendert, ohne die Tabelle nachzuziehen, faellt hier auf - eine
+    # Textsuche nach Dateinamen wuerde still veralten.
+    import inspect as _insp
+    _tab = getattr(_MR, "UMSCHLAG_GROESSEN", None)
+    pruefe(P, "⚠ die Namenstabelle `UMSCHLAG_GROESSEN` gibt es",
+           isinstance(_tab, dict) and len(_tab) >= 2,
+           "ohne sie heissen zwei verschiedene Groessen wieder gleich - "
+           "und genau daraus entstand der Fehler vom 21.09.")
+
+    if isinstance(_tab, dict):
+        _live = [n for n, d in _tab.items() if d.get("live")]
+        pruefe(P, "⚠⚠ GENAU EINE Groesse ist als `live` markiert",
+               len(_live) == 1,
+               "zwei live heisst, niemand weiss mehr, welche im Betrieb "
+               "rechnet; keine heisst, die Tabelle beschreibt den "
+               "Betrieb nicht. live: %s" % _live)
+
+        _vorgabe = _insp.signature(_MR.umlaufmengen).parameters[
+            "datei"].default
+        _name = _MR.umschlag_name(_vorgabe)
+        pruefe(P, "⚠⚠⚠ und der BETRIEBSWEG nimmt genau diese Groesse",
+               _name == (_live[0] if _live else None),
+               "abgeleitet aus der Signatur von `umlaufmengen`, nicht "
+               "aufgezaehlt. Vorgabe %r -> %s, als live markiert: %s. "
+               "Laufen die auseinander, rechnet der Betrieb mit einer "
+               "anderen Groesse, als die Doku behauptet - das ist 2.410 "
+               "in der Benennung" % (_vorgabe, _name, _live))
+
+        _ohne = [n for n, d in _tab.items()
+                 if not str(d.get("warnung") or "").strip()]
+        pruefe(P, "⚠ jede Groesse traegt ihren VORBEHALT",
+               not _ohne,
+               "`umschlag_gesamt` ist definitorisch die falsche Groesse "
+               "(2.500), `umschlag_frei` ist nicht fertig vermessen. Wer "
+               "eine davon ohne Vorbehalt liest, haelt sie fuer "
+               "einsatzbereit. Ohne: %s" % _ohne)
+
+        _feld = [d.get("codefeld") for d in _tab.values() if d.get("live")]
+        pruefe(P, "⚠⚠ die live-Groesse nennt ihr CODEFELD",
+               _feld and _feld[0] == "turnover_fuenftel",
+               "das Feld heisst weiter `turnover_fuenftel` - es "
+               "umzubenennen waere ein Eingriff an rund 70 Stellen ohne "
+               "fachlichen Gewinn. Die Tabelle sagt statt dessen, WELCHE "
+               "Groesse dahintersteht. bekommen: %s" % _feld)
+
+        pruefe(P, "⚠⚠ eine FREMDE Datei bekommt `unbekannt`",
+               _MR.umschlag_name("data/messdaten.db") == "unbekannt"
+               and _MR.umschlag_name("") == "unbekannt",
+               "wer eine dritte Quelle einhaengt, muss sie eintragen - "
+               "sonst waere die Verwechslung wieder still moeglich")
+
     _soll = _MR.turnover_verfuegbar()
     pruefe(P, "⚠ der Helfer liefert ueberhaupt Symbole",
            len(_soll) > 0,

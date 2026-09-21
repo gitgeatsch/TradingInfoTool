@@ -748,14 +748,77 @@ dann entsteht keine Nacharbeit.
    **eine** Richtung: er liess die Lücke kleiner aussehen, als sie
    ist.
 
-   #### Schritt 67 — Stand 21.09.2026
+   ### ⚠️⚠️⚠️ NEU EINGEORDNET AM 21.09.2026 — ES IST KEINE HEBELFRAGE
+
+   Dieser Abschnitt stand unter der Überschrift *„Umgang mit der Lücke"*
+   und war Teil der **Hebelkette** (Phase 4, Punkt C). **Das war die
+   falsche Einordnung**, und der Nutzer hat sie aufgelöst:
+   *„jetzt reden wir über den EINSTIEG und nicht die Hebelerzeugung …
+   wenn du Turnover als Problem siehst und es ist eines DANN für das
+   ganze SYSTEM und es dürfte auch kein SPOT entstehen!!"*
+
+   | | |
+   |---|---|
+   | `umschlag_gesamt` ist registriert für | **`strategie='einstieg'`**, Instrumente offen |
+   | wirkt also bei | **spot UND hebel**, mit **identisch** +3,15 Punkten (Fünftel 0) |
+   | fehlt bei **spot × einstieg** | **2.033 von 2.532** Signalen (80,3 %) |
+   | fehlt bei **hebel × einstieg** | 15 von 16 |
+
+   ➤ Die Hebelzahl ist die **auffälligere**, die Spotzahl die
+   **folgenreichere** — 158-mal so viele Signale. `2.498` (Abschlag
+   ~80 %) ist damit **als Lösung gegenstandslos**; er behandelt ein
+   Symptom der Hebelhöhe, nicht das Entstehen der Signale.
+
+   ### ⚠️⚠️ Und die eigentliche Folge: die Schwelle belohnt die Lücke
+
+   `Potential.schwelle` ist ein **Anteil der bei dieser Datenlage
+   erreichbaren Spanne** (Nutzerentscheidung 31.08., gedacht **gegen**
+   eine Sperre nach Datenlage). Fehlt `umschlag_gesamt`, sinkt sie von
+   **0,0800** auf **0,0234** — auf **29,2 %**.
+
+   | funding | ohne Wert | mit Wert | Wirkung der Lücke |
+   |---|---|---|---|
+   | 0, 1 | SIGNAL | 1 von 5 | **Vorteil** (20 % → 100 %) |
+   | 2 | kein Signal | 1 von 5 | Nachteil |
+   | 3, 4 | kein Signal | 0 von 5 | folgenlos |
+
+   Am Betrieb: **123 von 155** Signalen der neuen Kette liefen auf der
+   gesenkten Schwelle. ⚠️ **Zwei Einschränkungen:** alle 155 sind
+   **Bestandsentscheidungen**, keine Neueinstiege — und 65–70 % liegen
+   sogar *unter* ihrer eigenen gesenkten Schwelle. Die Senkung schadet
+   also **heute nicht nachweisbar**, aber **sobald das System eröffnet**.
+
+   ⚠️⚠️⚠️ **Der Zielkonflikt, der dahintersteckt:** ohne die Senkung
+   wären am 31.08. 36 von 43 Werten dauerhaft gesperrt gewesen — eine
+   **Sperre** nach Datenlage (Regel 4). Mit ihr entsteht ein **Vorteil**
+   nach Datenlage (F-218). **Beides ist „Datenlage statt Qualität", nur
+   in entgegengesetzte Richtungen.** Der Ausweg ist nicht die Regel,
+   sondern die **Abdeckung**: bei 91 % beträfe die Senkung nur noch 9 %.
+
+   ➤ **Daraus die Reihenfolge, Nutzerentscheidung 21.09.:** zuerst die
+   **Datenfrage** (sie erledigt die Schwellenfrage mit), dann die
+   Schwelle. Nicht umgekehrt.
+
+   #### Schritt 67 — Stand 21.09.2026
 
    | # | | |
    |---|---|---|
    | 1 | **Vollabruf** nach `data/umlaufmenge_cg.db` | ✔ 71 Min, 321 ok |
    | 2 | **Nachzug** über den **Preisverlauf** | ✔ 55 von 73, **0 mehrdeutig** |
    | 3 | **Kalibrierung** H2/H3/H5, `bewegung_r` und `barriere` | ✔ gerechnet |
-   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
+   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
+   | 5 | **Benennung** `umschlag_gesamt` / `umschlag_frei` | ✔ 21.09., 2.512 |
+   | 6 | `umschlag_frei` auf der **selektierten Menge** messen | ⛔ **offen — Registerauflage** |
+   | 7 | **Stufentabelle** für `umschlag_frei` | ⛔ offen |
+
+   ⚠️⚠️ **Punkt 6 ist keine Formalie.** Das Kandidatenregister sagt
+   wörtlich: *„WER DIESE TABELLE ÄNDERN WILL, MUSS AUF DER SELEKTIERTEN
+   MENGE MESSEN"* — weil die Beiträge laut F-212 nur auf **1,5 %** der
+   Anker wirken und auf der freien Menge zuverlässig ein Nullbefund
+   herauskommt. Die bisherige Kalibrierung lief auf *fester Menge 50 %*,
+   nicht auf der selektierten.
+
+
 
    **Erreicht:** 375 Symbole · **91 %** der im Fenster *handelbaren* Werte
    (Ziel war 80 %) · **36** eingestellte Werte mit Reihe statt null.

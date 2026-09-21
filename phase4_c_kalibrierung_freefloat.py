@@ -21,9 +21,16 @@ nichts widerlegt - er hat etwas anderes gemessen.*
 
 ## Deshalb DREI Arme, vorab benannt
 
-    ALT       `SplyCur`,    nur die Symbole, die BEIDE Quellen haben
-    NEU       Free Float,   DIESELBEN Symbole
-    NEU-VOLL  Free Float,   alle, die sie hat
+    ALT       `umschlag_gesamt`, nur die Symbole, die BEIDE haben
+    NEU       `umschlag_frei`,   DIESELBEN Symbole
+    NEU-VOLL  `umschlag_frei`,   alle, die sie hat
+
+⚠️⚠️ DIE NAMEN SEIT 21.09.2026 (Nutzervorgabe): `umschlag_gesamt` ist
+Volumen durch GESAMTAUSGABE und laeuft LIVE; `umschlag_frei` ist Volumen
+durch FREIEN UMLAUF und ist NICHT im Betrieb. ,ALT` und ,NEU` bleiben als
+Armnamen stehen, weil die Befunde 2.505-* sie so nennen - aber sie sagen
+nur, welcher Arm gemeint ist, nicht WAS gemessen wird. Die Tabelle steht
+in `marktrang.UMSCHLAG_GROESSEN`.
 
 ALT gegen NEU trennt die GROESSE. NEU gegen NEU-VOLL trennt die MENGE.
 Ohne diese Trennung ist jede Differenz uninterpretierbar.
