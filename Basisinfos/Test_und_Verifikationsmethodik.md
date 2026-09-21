@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 127 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 129 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -17,7 +17,7 @@ Dokuments). Ziel: eine feste, wiederholbare Vorgehensweise für (A) synthetische
 Tests hier am Gerät und (B) die Analyse echter Notebook-Exporte, inklusive
 Lerneffekt über die Zeit.
 
-Stand: 2026-09-20 (letzter Abschnitt 2.485). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
+Stand: 2026-09-21 (letzter Abschnitt 2.506). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
 
 ---
 
@@ -10757,3 +10757,170 @@ ist **nicht geklärt**. Eine Vermutung wäre hier keine Erklärung.
 |---|---|---|
 | Die Mutation **löscht ihren Anker** | Die Prüfung wird rot, weil der Text fehlt — nicht, weil sie greift. Sie hätte auch nie gegriffen | Die Mutation dreht **Reihenfolge oder Bedeutung** und **lässt den Anker stehen** |
 | Die Prüfung sättigt sich am **Docstring** | `_quelltext` filtert Kommentarzeilen, aber **nicht** den Docstring. „Die Überlappung ist gesetzt" war grün, weil sie im Docstring **beschrieben** stand — der Aufruf hätte fehlen können | Für **Verhalten** ohne Docstring prüfen (`ueberlappung=HORIZONT` im Aufruf). Für **Angaben**, die ein Mensch lesen soll (z. B. Laufzeit), gehört der Text umgekehrt **in den Docstring** — im Kommentar sieht ihn keine Prüfung |
+
+---
+
+## 2.502 ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTROLLE** (21.09.2026)
+
+**Auslöser:** Der Vollabruf der Umlaufmenge (CoinGecko, 334 Symbole,
+121.732 Punkte) sah sauber aus: Größenordnungen stimmten (BTC 2,009e7,
+ETH 1,221e8), 72 % der Reihen hatten keinen einzigen Sprung, die Punkte
+je Symbol lagen im Median bei 365 von 366.
+
+⚠️ **Genau das ist die Falle.** Eine Datei mit 121.732 Zeilen sieht
+immer gut aus, und „Größenordnung stimmt" ist keine Prüfung — es ist
+eine Erinnerungsabfrage an den Prüfenden.
+
+### Die drei Fragen, die den Fehler gefunden haben
+
+Jede einzeln, jede mit **Kontrolle** — ohne Kontrolle weiß man nicht, ob
+das Gefundene überhaupt selten ist.
+
+| # | Frage | Kontrolle | Ergebnis |
+|---|---|---|---|
+| **1** | **Terminhäufung** — auf wie viele Tage verteilen sich die Ausschläge? | die 365 Tage des Fensters | 135 von 279 Sprüngen auf **fünf** Tagen (48 %) |
+| **2** | **Rundheit** — wie oft landet der Wert auf 1/2/2,5/5 × 10ᵏ? | **alle übrigen Punkte derselben Reihen** | 25 % gegen 7,2 % = **3,5×** |
+| **3** | **Rückkehr** — ist er binnen drei Tagen wieder auf ±2 % des Vorwerts? | — (die Frage ist selbst die Kontrolle) | **45 %** |
+
+**Einzeln wäre jede erklärbar.** Termine können sich häufen, wenn
+Projekte Quartalstermine teilen. Runde Zahlen kommen vor. Rückkehr kann
+eine Korrektur sein. **Zusammen nicht:** eine Umlaufmenge, die viermal
+im Jahr auf exakt dieselbe runde Zahl springt und jedes Mal
+zurückkommt, ist keine Umlaufmenge.
+
+### Die Regel, die daraus folgt
+
+> **Prüfe eine neue Quelle auf MUSTER, die der beschriebene Vorgang
+> nicht erzeugen kann — nicht auf Werte, die man wiedererkennt.**
+
+Ein Wert, den man wiedererkennt, prüft das eigene Gedächtnis. Ein
+Muster, das der Vorgang nicht erzeugen kann, prüft die Quelle.
+
+| Der Vorgang | Was er **nicht** erzeugt |
+|---|---|
+| Emission / Unlock | Rückkehr auf den Vorwert |
+| Projektereignis | gemeinsamer Stichtag über 39 Projekte |
+| Marktvorgang | exakt 1.000.000.000 |
+
+### ⚠️ Und die Korrektur gehört in dieselbe Form: SPITZE gegen STUFE
+
+**Ausgeworfen, nicht geglättet.** Ein interpolierter Ersatzwert wäre
+eine Erfindung; ein fehlender Tag heißt schlicht, dass das Symbol an
+diesem Tag nicht in den Rang eingeht.
+
+Ein Punkt fällt, wenn er **gleichzeitig** beides ist:
+
+1. weit vom Umfeldmedian weg (≥ Grenze gegen die *n* Tage davor **und**
+   danach),
+2. **von Ruhe umgeben** — die beiden Umfeldmediane liegen untereinander
+   näher als die halbe Grenze.
+
+⚠️ **Punkt 2 ist der ganze Trick.** Er trennt **Spitze** von **Stufe**:
+ein echter Unlock hebt das Niveau dauerhaft, dann weichen die
+Umfeldmediane voneinander ab und der Punkt **bleibt**. Eine Emission
+ist ein echter Vorgang und darf nicht wegkorrigiert werden.
+
+⚠️ **Strukturell, kein Datumskatalog.** Vier Termine aufzuzählen wäre
+beim fünften still veraltet — die Regel aus
+`pruefung-zaehlt-zustaende-auf`.
+
+### ⚠️⚠️ Der Vorabtest muss die **Nicht**-Fälle enthalten
+
+Sieben Kunstfälle mit bekannter Wahrheit, und die **drei wichtigsten
+sind die, die nicht gefiltert werden dürfen**: echte Stufe, stetige
+Emission, Schwankung unter der Grenze. Ein Filter, der alles auswirft,
+ist genauso falsch wie einer, der nichts findet — aber nur die zweite
+Sorte fällt von allein auf.
+
+### Zwei eigene Fehlgriffe desselben Tages, als Warnung
+
+| Fehlgriff | Warum er nichts wert war |
+|---|---|
+| „XRP liegt außerhalb des erwarteten Bereichs" | Das **Erwartungsband war meins**, nicht gemessen. XRP zeigte 0,629 gegen die alte Quelle — das ist exakt der Free-Float-Effekt, also ein **Beleg**, kein Fehler |
+| „Hängen die Sprünge am Alter der Token?" | **Zirkulär.** `MIND_PUNKTE = 300` hatte die jungen Token vorher entfernt; übrig blieben vier. Die Frage wurde an einer Menge gestellt, die schon nach dem Merkmal gefiltert war |
+
+⚠️ **Der zweite ist der gefährlichere**, weil er ein Ergebnis liefert —
+„75 % gegen 72 %, kein Unterschied" — und wie eine Antwort aussieht.
+
+**Ausführlich:** Befunde 2.502-mengenspitzen, 2.501-buendelpaare ·
+`hole_umlaufmenge_cg.entferne_spitzen` · Schritt 67
+
+---
+
+## 2.506 ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄGT (21.09.2026)
+
+**Auslöser:** Zwei Nutzerfragen zu `turnover`. Die zweite hat den Aufbau
+gedreht: *„ist der Wert tatsächlich Handelsvolumen je Umlaufmenge?"*
+
+### Der Prüfgriff: die Größe in Logarithmen zerlegen
+
+Jede Verhältnisgröße ist in Logarithmen eine **Differenz**. Und dann ist
+messbar, welcher Term die Arbeit macht:
+
+```
+log (A / B)  =  log A  −  log B
+```
+
+| | zeitlich, innerhalb eines Symbols | querschnittlich, zwischen Symbolen |
+|---|---|---|
+| `turnover` | fast nur **Zähler** (σ 0,8312) | fast nur **Nenner** (σ 0,0212) |
+
+**39 : 1.** Der Nenner ist je Asset praktisch eine Konstante — die Größe
+ist damit ein **Zählermaß mit einem Asset-Festwert**.
+
+> **Die Frage, die daraus folgt:** misst der Querschnittsrang, *welches*
+> Objekt es ist, oder in welchem *Zustand* es ist? Das sind zwei
+> verschiedene Indikatoren, und die registrierte Hypothese meint immer
+> nur einen davon.
+
+### Die saubere Zerlegung — nachlaufend, ohne Lookahead
+
+```
+log x(t)  =  m(t)              +  ( log x(t) − m(t) )
+             EIGENSCHAFT          LAGE / ZUSTAND
+             (nachlaufender        (Abstand dazu)
+              Schnitt, HEUTE
+              ausgeschlossen)
+```
+
+⚠️ Der Schnitt muss den **heutigen Tag ausschließen**. Ein Fenster, das
+ihn enthält, schrumpft den Abstand systematisch und macht die Lage
+künstlich klein.
+
+⚠️ Das ist dieselbe Form wie `schnitt` (Abstand zum eigenen 200-Tage-
+Schnitt) — im Haus bereits registriert und validiert.
+
+### ⚠️⚠️ Der Preis, und er ist der eigentliche Befund
+
+**Die Zerlegung verbraucht Tage am Anfang des Fensters** — und bei einem
+knappen Fenster entscheidet das über Urteil oder kein Urteil:
+
+| Rückblick | Blöcke | Ergebnis |
+|---|---|---|
+| 60 Tage | **20** | Urteile möglich |
+| **90 Tage** | **18** | **KEIN BEFUND in allen sechs Zellen** |
+
+**Bei praktisch gleicher Wirkung** (+0,0242 gegen +0,0238). Es fällt
+nicht der Effekt, es fällt die **Deckung**.
+
+> **Die Regel:** Bei einem knappen Fenster ist jede Konstruktion, die
+> Tage verbraucht (Rückblick, Vorlauf, Mindestlänge), potentiell
+> **urteilsvernichtend**. Sie gehört **vor** dem Lauf durchgerechnet:
+> `20 × _block(H) + Rückblick + Horizont` gegen die verfügbaren Tage.
+
+⚠️ Und sie ist von der Saatprobe **nicht** zu finden: über vier
+Bootstrap-Saaten kippte kein Urteil. Die Fragilität sitzt nicht im
+Zufall, sondern in der Deckung — das sind zwei verschiedene Prüfungen.
+
+### ⚠️ Ein Werkzeugfehler, der hierher gehört
+
+`messnorm.urteil` prüft die Blockzahl **vor** `traegt`. Eine Zelle mit 19
+Blöcken meldet `KEIN BEFUND` und hat trotzdem `traegt == True`. **Wer
+über `b.traegt` zählt, zählt Zellen mit, die die Norm nicht beurteilt** —
+meine Formzählung meldete dadurch „3 von 3" für einen Arm, dessen dritte
+Zelle gar kein Urteil hat.
+
+➔ Formzählung immer gegen `urteil`, nicht gegen `traegt`.
+
+**Ausführlich:** Befunde 2.506-zerlegung, -verwaesserung, -randlage,
+-formzaehlung · Schritt 68

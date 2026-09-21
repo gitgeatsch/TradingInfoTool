@@ -676,10 +676,30 @@ dann entsteht keine Nacharbeit.
 
    ### ✔✔ PUNKT C — DIE `turnover`-LÜCKE IST NICHT NEUTRAL
 
-   ⚠️ **C ist keine Quellenfrage** — das war schon entschieden. Die Suche
-   ist am 13.09. beendet worden (2.417): neun Anbieter an der Quelle
-   geprüft, freie historische Umlaufmenge gibt es nicht, `turnover` bleibt
-   auf **66 von 536** Symbolen.
+   ⚠️⚠️⚠️ **DIESER ABSATZ IST ÜBERHOLT — nachgetragen 21.09.2026.**
+   Er stand hier so: *„C ist keine Quellenfrage — das war schon
+   entschieden. Die Suche ist am 13.09. beendet worden (2.417): neun
+   Anbieter an der Quelle geprüft, freie historische Umlaufmenge gibt es
+   nicht, `turnover` bleibt auf 66 von 536 Symbolen."*
+
+   **Es war doch eine Quellenfrage — und obendrein eine Größenfrage.**
+   Der Nutzerauftrag vom 20.09. (*„geh breit und detailliert auf
+   Recherche wo wir zu brauchbaren daten kommen"*) hat zwei Dinge
+   gefunden, die der Abschluss vom 13.09. nicht kannte:
+
+   | | |
+   |---|---|
+   | **die Größe war die falsche** | Coin Metrics `SplyCur` ist die **Gesamtausgabe** auf dem Ledger, nicht der freie Umlauf — Median 25 % Unterschied, bei XLM 67 % (2.500-splycur-ist-gesamtausgabe). Die passende Größe heißt `SplyFF` und ist kostenpflichtig (403) |
+   | **die Menge gibt es frei** | CoinGecko `market_chart` liefert Marktkapitalisierung und Preis; ihr Quotient **ist** die Umlaufmenge. 365 Tage täglich, kein Schlüssel, **99 %** der im Fenster handelbaren Werte |
+
+   ⚠️ **2.417 ist damit nicht widerlegt, sondern eingegrenzt.** Die Suche
+   am 13.09. galt der **mehrjährigen** Historie (2.636 Kalendertage) und
+   ist daran zu Recht gescheitert. 365 Tage sind für H20 zu wenig — für
+   **H2 bis H5** reichen sie. Die Frage war enger gestellt als nötig.
+
+   ➔ **Der Stand „66 von 536" ist der Stand der alten Quelle** und bleibt
+   für die registrierte Beitragstabelle gültig. Was daraus wird,
+   entscheidet **Schritt 67**; bis dahin gilt alles Folgende unverändert.
 
    **Offen war, was die Bewertung tut, wenn der Wert fehlt:** sie setzt
    `punkte = 0.0` und markiert `luecke=True`. Die **Schwelle** wird je
@@ -712,6 +732,240 @@ dann entsteht keine Nacharbeit.
    fehlendem tragenden Beitrag überhaupt ein **Hebel**geschäft werden?
    Heute ist die Lücke stillschweigend zugunsten des Trades aufgelöst.
    Befund **2.497-turnover-luecke**, Schritt 66.
+
+   ⚠️⚠️ **NICHT MEHR HIER ZU ENTSCHEIDEN, SONDERN NACH SCHRITT 67**
+   (21.09.). Die Recherche hat die Lücke nicht verwaltet, sondern ihre
+   **Ursache** gefunden. Wer jetzt eine Regel für den Umgang mit der
+   Lücke baut, baut sie für einen Zustand, der gleich nicht mehr gilt —
+   13 von 16 Hebelsignalen ohne `turnover` ist die Zahl der **alten**
+   Quelle, nicht die der Sache.
+
+   #### Schritt 67 — Stand 21.09.2026
+
+   | # | | |
+   |---|---|---|
+   | 1 | **Vollabruf** nach `data/umlaufmenge_cg.db` | ✔ 71 Min, 321 ok |
+   | 2 | **Nachzug** über den **Preisverlauf** | ✔ 55 von 73, **0 mehrdeutig** |
+   | 3 | **Kalibrierung** H2/H3/H5, `bewegung_r` und `barriere` | ✔ gerechnet |
+   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
+
+   **Erreicht:** 375 Symbole · **91 %** der im Fenster *handelbaren* Werte
+   (Ziel war 80 %) · **36** eingestellte Werte mit Reihe statt null.
+
+   ### ⚠️⚠️ Die Kalibrierung hat das Argument verschoben
+
+   Der Anlass war die **Größe** (2.500: `SplyCur` ist die Gesamtausgabe).
+   Gemessen ist der Größeneffekt klein — es ist die **Abdeckung**, die
+   trägt:
+
+   | auf `bewegung_r` | H2 | H3 | H5 | Median |
+   |---|---|---|---|---|
+   | **GRÖSSE** (NEU − ALT, gleiche 47 Symbole) | +0,0067 | +0,0086 | +0,0071 | **+0,0071 R** |
+   | **MENGE** (NEU-VOLL − NEU, gleiche Größe) | +0,0064 | +0,0258 | +0,0292 | **+0,0258 R** |
+
+   Die **Form** bestätigt es unabhängig — und kippt dabei meine erste
+   Lesart:
+
+   | Stufentabelle | H2 | H3 | H5 |
+   |---|---|---|---|
+   | ALT (`SplyCur`, 44 Sym.) | nicht monoton | nicht monoton | nicht monoton |
+   | **NEU-GEM** (Free Float, **dieselben 47**) | nicht monoton | nicht monoton | nicht monoton |
+   | NEU (Free Float, 375 Sym.) | nicht monoton | **monoton** | **monoton** |
+
+   ⚠️ Ohne den dritten Arm hätte hier gestanden *„der freie Umlauf
+   liefert die registrierte Form"* — und das wäre **falsch** gewesen.
+   `NEU-GEM` sieht aus wie `ALT`. Die monotone Form kommt aus der
+   **Menge**, nicht aus der Größe.
+
+   ➔ **Das Argument für den Wechsel ist die Abdeckung, nicht die
+   Definition.** 2.500 bleibt richtig, aber seine messbare Folge ist
+   klein. ⚠️ Beide sind im Betrieb nicht zu trennen: die 375 Symbole
+   gibt es nur mit der neuen Quelle.
+
+   ### ⚠️⚠️⚠️ Der Preis steht fest — und er ist hoch
+
+   | Rangwirkung eines Wechsels | Symbol-Tage mit anderem Fünftel |
+   |---|---|
+   | **nur die Größe** (gleiche 47) | **25,6 %** · 14,3 % um zwei Stufen · Richtung ausgeglichen |
+   | **wie der Betrieb es sähe** (46 → 375) | **76,7 %** · 48,1 % um zwei Stufen · **10.946 ↓ gegen 348 ↑** |
+
+   `LTC`, `ADA`, `DOGE`, `NEO`, `GAS` wechseln an **100 %** ihrer Tage.
+   Ursache wie bei 2.487: die neuen Microcaps haben hohen Umschlag, die
+   bisher geführten Großwerte rutschen geschlossen nach unten. Zur
+   Einordnung: die Frischegrenze im Haus akzeptiert **6,5 %**.
+
+   ➔ Die registrierte Stufentabelle steht auf den **alten** Rängen.
+   **Ein Wechsel ohne Neukalibrierung ist ausgeschlossen.**
+
+   ### ⚠️⚠️ Und die Neukalibrierung ist in einem Jahr nicht zu haben
+
+   Unter der Menge nach Datenlage trägt **kein** Arm — **auch der alte
+   nicht**, und der lief ausdrücklich als *Maßstab für das Fenster* mit.
+   Ein TRÄGT gibt es nur auf fester Menge 50 %: H2 +0,0073
+   [+0,0009…+0,0187] und H3 +0,0131 [+0,0030…+0,0299], stabil über
+   **5 Bootstrap- und 4 Nullwelt-Saaten** — aber mit Abständen von
+   0,0009 und 0,0030 R und abhängig vom Mengenparameter.
+
+   #### ➤➤ Die Vorlage — vier Wege, einer davon nicht exklusiv
+
+   | | Weg | dafür | dagegen |
+   |---|---|---|---|
+   | **A** | **nicht wechseln** | R-R11 gewahrt, die Tabelle bleibt gültig | die Lücke aus 2.497 bleibt, 66 Symbole |
+   | **B** | wechseln **und neu kalibrieren** | saubere Größe, 91 % Abdeckung | **in einem Jahr nicht belegbar** |
+   | **C** | wechseln, **Stufen aussetzen** | kein falsch kalibrierter Zuschlag | verliert einen tragenden Beitrag |
+   | **D** | **parallel weitersammeln** | kostet fast nichts, hält alles offen | löst 2.497 heute nicht |
+
+   ⚠️ **D schließt keinen der anderen aus** und ist die einzige Quelle
+   künftiger Auflösung: ein täglicher Job, der die Free-Float-Reihe
+   fortschreibt, bis das Fenster lang genug ist.
+
+   ### ⛔ Offen und davon unabhängig: die alte Quelle selbst
+
+   | | NEU (Free Float) | ALT (`SplyCur`) | Verhältnis |
+   |---|---|---|---|
+   | **KNC** | 2,0923e8 | 1,1264e7 | **18,6** |
+   | **XVG** | 1,6522e**10** | 1,6522e**12** | **0,010** |
+
+   ⚠️ Ein Free Float kann nur *kleiner* sein als die Gesamtausgabe — ein
+   Verhältnis **über 1** ist kein Free-Float-Effekt, sondern ein Fehler
+   in einer der beiden Quellen. Bei XVG ist die **Mantisse identisch**
+   (1,6522), also ein reiner Skalenfehler um Faktor 100. XVG wechselt
+   dadurch an **357 von 357** Tagen das Fünftel.
+
+   ✔✔ **ENTSCHIEDEN 21.09. — und in beiden Fällen hat die *alte* Quelle
+   unrecht.** Gegen CoinMarketCap belegt: XVG hat **16.521.951.235**
+   umlaufend (Max 16,5 Mrd.) → CoinGecko stimmt, Coin Metrics liegt um
+   **Faktor 100** daneben. KNC hat **209.230.859** umlaufend →
+   CoinGecko stimmt, Coin Metrics führt 11,3 Mio (plausibel der
+   Legacy-Vertrag vor der Migration 2021, aber das ist Vermutung).
+
+   ⚠️ Der hausinterne dritte Zeuge (`price_cache.market_cap_usd`) konnte
+   es **nicht** entscheiden — er deckt nur 7 Symbole und ist
+   CoinGecko-nah.
+
+---
+
+## ⚠️⚠️⚠️ SCHRITT 68 — `turnover` ist ZWEI GRÖSSEN IN EINEM NAMEN (21.09.)
+
+**Ausgelöst durch zwei Nutzerfragen**, und die zweite hat den ganzen
+Aufbau gedreht: *„ist der Wert tatsächlich Handelsvolumen je
+Umlaufmenge? Dann lag ich falsch mit statisch und wir reden von
+unterschiedlichen Hypothesen und auch Indikatoren."*
+
+**Am Code geprüft, nicht am Registerblatt** — `messe_kandidaten_als_regel:262`
+und `agent/marktrang:774` rechnen beide buchstäblich Stückvolumen /
+Umlaufmenge.
+
+```
+log turnover(t) = log Volumen(t)  −  log Menge(t)
+                  Streuung 0,8312    Streuung 0,0212     →  39 : 1
+```
+
+Der Nenner ist je Asset praktisch eine **Konstante**. Der
+Querschnittsrang kodiert erheblich, *welches* Asset es ist — nicht, in
+welchem *Zustand*. Das Registerblatt sagt aber *„viel **Aufmerksamkeit**
+heißt eher überbewertet"*, und Aufmerksamkeit ist ein Zustand.
+
+⚠️⚠️ **Warum das systemrelevant ist:** `turnover_fuenftel` trägt die
+**größten Stufen im System** (+3,15 … −2,40) → Quote → halbes Kelly →
+**Hebelbetrag**. Ein Asset-Festwert sizet den Hebel, und **Regel 3** sagt
+*„beim HEBEL kein Asset-Rang"*. (Regel 3 verbietet den
+Querschnittsvergleich nicht — F-227 — und in der **Mail** ist die
+Eigenschaft erwünscht. Es geht allein um den Hebel.)
+
+### Gemessen (Zerlegung mit nachlaufendem 60-Tage-Schnitt, ohne Lookahead)
+
+| Arm | H2 | H3 | Abstand zum Nullpunkt bei H3 |
+|---|---|---|---|
+| **LAGE** (Zustand) | +0,0154 **TRÄGT** | +0,0242 **TRÄGT** | **+0,0131** |
+| **EIGENSCHAFT** | +0,0134 **TRÄGT** | +0,0134 **TRÄGT** | **+0,0005** |
+| `turnover` heute | trägt nicht | TRÄGT | |
+| **Verwässerung** | **trägt nicht** | **trägt nicht** | — |
+
+➔ **Beide tragen** → nach der Vorabfestlegung: **trennen, nicht
+mitteln**. Der Unterschied liegt in der Deutlichkeit — Faktor 26.
+
+✔✔ **Die Verwässerungsfrage ist beantwortet:** die Emissionsdynamik
+trägt als eigener Kandidat in **keiner einzigen Zelle** (6 von 6, zwei
+Mengen). Der Mechanismus ist real — 180 von 375 Symbolen wuchsen >5 %,
+Median +22,3 % — aber er ersäuft im Rauschen des Zählers. **Die
+Trennlinie ist nicht das Emissionsmodell.**
+
+⚠️ **Die Nutzerfalle wurde umgangen:** gefragt wurde nicht *„ist
+Verwässerung schlecht für den Kurs"* (Markt), sondern *„trägt sie in
+unserer Anlage"* (System).
+
+### ⛔⛔ Aber nichts davon ist registrierungsreif
+
+| Rückblick | Blöcke | Ergebnis |
+|---|---|---|
+| 60 Tage | **20** | Urteile möglich |
+| **90 Tage** | **18** | **KEIN BEFUND in allen sechs Zellen** |
+
+…bei praktisch **gleicher Wirkung** (+0,0242 gegen +0,0238). Die
+Blockzahlen liegen bei 18, 19 und 20 — die Grenze ist 20. Über vier
+Bootstrap-Saaten kippt kein Urteil; **die Fragilität sitzt nicht im
+Zufall, sondern in der Deckung.**
+
+### Zu tun, in dieser Reihenfolge
+
+| # | | Stand |
+|---|---|---|
+| 1 | **Mitläufertest** — trägt die LAGE noch, wenn die EIGENSCHAFT festgehalten wird? (Prüflisten-Frage 1, Methodik 2.80) | gebaut, **nicht gelaufen** |
+| 2 | **Die Deckung lösen** — zirkulärer Verschub (2.286) braucht keine Blöcke, ist aber nur für die Akkumulation validiert; Übertragung verlangt denselben Selbsttest wie der Bootstrap (2.204/2.485) | offen |
+| 3 | **Erst dann** die Nennerfrage aus Schritt 67 | wartet |
+
+⚠️ Auf dem geschichteten Pfad gibt es **keine Trennschärfe** — dort ist
+nur ein **positiver** Befund deutbar.
+
+⚠️⚠️ **R-R11 durchgehend:** H2–H5, 365 Tage, freier Umlauf gegen H20,
+2.636 Tage, Gesamtausgabe. Diese Messreihe kann die laufende Tabelle
+**weder bestätigen noch umstoßen** — sie schärft die **Frage**.
+
+   ⚠️⚠️ **Drei Arme, vorab benannt — weil sich ZWEI Dinge geändert
+   haben.** Ein anderes Ergebnis ließe sich sonst beiden zuschreiben, und
+   **R-R11** verlangt ausdrücklich: *wer die Basis ändert und etwas
+   anderes bekommt, hat nichts widerlegt — er hat etwas anderes
+   gemessen.*
+
+   | Arm | Nenner | Symbole | trennt |
+   |---|---|---|---|
+   | **ALT** | `SplyCur` | nur die gemeinsamen | — |
+   | **NEU** | Free Float | **dieselben** | ALT↔NEU = die **Größe** |
+   | **NEU-VOLL** | Free Float | alle | NEU↔NEU-VOLL = die **Menge** |
+
+   ⚠️ **Was diese Messung nicht kann, vor dem Lauf gesagt:** das Fenster
+   ist **ein Jahr**. `_block(H) = max(15, 3 × H)` — bei H2 und H3 bindet
+   der **Boden 15**, alle drei Horizonte brauchen dieselben **300
+   Ankertage** (2.501-block-boden). H20 bräuchte 1.200 und ist
+   ausgeschlossen. **Fällt der ALT-Arm hier durch, ist das kein Widerruf
+   der registrierten Tabelle** — er ist der **Maßstab für das Fenster**,
+   nicht der Angeklagte.
+
+   ⚠️⚠️ **Wechselt der Nenner, ziehen BEIDE Seiten nach** — Betrieb *und*
+   Messbasis, und die Wirkung wird **gemessen** (wie viele Werte wechseln
+   das Fünftel), nicht geschätzt. Die Grundgesamtheit ist keine
+   Stellschraube.
+
+   ⚠️⚠️ **Der Nebenbefund, der die Lösung selbst gefährdet**
+   (2.501-buendelpaare): die Binance-**Bündelpaare** handeln Vielfache
+   (`1000CAT` = 1000 × CAT, `1MBABYDOGE` = 10⁶ × BABYDOGE), CoinGecko
+   führt den Einzeltoken. `turnover` ist **Stück / Menge** — und die
+   Stücke sind Bündel.
+
+   **Nachgemessen am selben Tag**, statt es offen zu lassen:
+
+   | | |
+   |---|---|
+   | `splycur` (alte Quelle) | 66 Symbole, **kein einziges** Bündelpaar |
+   | Messmenge V1 | **4** Bündelpaare: 1000CAT, 1000CHEEMS, 1000SATS, 1MBABYDOGE |
+   | Betrieb heute | **nicht betroffen** — `turnover_werte` überspringt jedes Symbol ohne Menge |
+
+   ⚠️⚠️ **Genau deshalb wird die Falle durch die Lösung scharf.** Die
+   neue Quelle deckt ~99 % — also auch diese vier. Der Faktor gehört in
+   `marktrang` **und** in `messe_kandidaten_als_regel`, **bevor** der
+   Nenner wechselt, nicht danach. Sonst wandert der Fehler mit der
+   Lösung ein.
 
    ⚠️⚠️ **Warum die Leiter bei 1,0 R beginnt** (meine fachliche Entscheidung,
    20.09., der Nutzer hat sie mir überlassen): das **erreichte** CRV liegt im

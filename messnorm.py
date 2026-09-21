@@ -634,9 +634,32 @@ class Befund:
                     % (self.trennschaerfe, einheit,
                        ("" if self.trennschaerfe_in_r is None
                         else " = %.2f gepflanzt" % self.trennschaerfe_in_r)))
+        # ⚠️⚠️ DER SATZ HIESS BIS 21.09.2026 „aber das Band schliesst die
+        # Null ein" - und war damit ZWEIMAL ungenau (2.503-urteilstext):
+        #
+        #   1 DER BEZUG IST NICHT DIE NULL, sondern der NULLPUNKT (der
+        #     Mittelwert der Nullwelten). Genau diese Unterscheidung ist
+        #     der Messstandard vom 08.09.; der Satz nahm sie zurueck. Bei
+        #     2.473 stand `turnover` mit Band [+0,0006 .. +0,1364] da -
+        #     das schliesst die Null sehr wohl aus, nur eben nicht den
+        #     Nullpunkt +0,0091.
+        #   2 BEI NEGATIVER WIRKUNG WAR ER SCHLICHT FALSCH. `traegt` ist
+        #     einseitig (`unten > bezugswert`); ein Band, das GANZ
+        #     UNTERHALB des Nullpunkts liegt, schliesst ihn aus - nur in
+        #     die andere Richtung. Am 21.09. dreimal so ausgegeben.
+        #
+        # ⚠️ Ein Band unterhalb des Nullpunkts ist KEIN Beleg fuer die
+        # Gegenrichtung - die waere eigens zu messen (so wie
+        # `messe_kandidaten_als_regel` es fuer AMIHUD tut).
         return ("NICHT TRENNBAR - Wirkung %+.4f ueber der Trennschaerfe "
-                "%.4f %s, aber das Band schliesst die Null ein"
-                % (self.wirkung, self.trennschaerfe, einheit))
+                "%.4f %s, aber das Band [%+.4f .. %+.4f] schliesst den "
+                "Nullpunkt %+.4f nicht nach oben aus%s"
+                % (self.wirkung, self.trennschaerfe, einheit, self.unten,
+                   self.oben, self.bezugswert,
+                   "" if self.wirkung >= 0 else
+                   " ⚠ die Wirkung ist NEGATIV - in der gepruefen "
+                   "Richtung traegt sie nicht, und das ist kein Beleg "
+                   "fuer die Gegenrichtung"))
 
     def zeile(self) -> str:
         return ("%-16s %-28s %-11s %-6s %+8.4f R [%+.4f .. %+.4f] · "
