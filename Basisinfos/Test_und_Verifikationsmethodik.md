@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 131 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 132 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -17,7 +17,7 @@ Dokuments). Ziel: eine feste, wiederholbare Vorgehensweise für (A) synthetische
 Tests hier am Gerät und (B) die Analyse echter Notebook-Exporte, inklusive
 Lerneffekt über die Zeit.
 
-Stand: 2026-09-21 (letzter Abschnitt 2.508). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
+Stand: 2026-09-21 (letzter Abschnitt 2.509). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
 
 ---
 
@@ -11080,3 +11080,67 @@ in die Irre geführt. Sie wird jetzt ausdrücklich **nicht** gedruckt.
 
 **Ausführlich:** Befunde 2.508-hebelstufung-traegt, -nullbezug-sizing,
 -schalter-zurueckgezogen, -risikobudget · Schritt 68
+
+---
+
+## 2.509 ⚠️⚠️ WENN KEINE SCHWELLE TRIFFT, IST DIE LISTE ZULÄSSIG — ABER NUR MIT ERZEUGER UND SEITENEFFEKT (21.09.2026)
+
+**Auslöser:** Zwei Symbole standen im laufenden `turnover`-Nenner
+nachweislich falsch (XVG Faktor 100, KNC Faktor 18,6) und gingen täglich
+in den Rang ein — bei dem Beitrag mit den größten Stufen im System.
+
+### Die Hausregel sagt: **nicht aufzählen**
+
+> *„Was aufgezählt wird, veraltet still. Entweder aus dem Quelltext
+> ableiten oder die Prüfung so stellen, dass sie die Aufzählung nicht
+> braucht."*
+
+Also wurde **zuerst nach einer Schwelle gesucht** — und es gibt keine:
+
+| Sperre | trifft |
+|---|---|
+| Decke 1,0 (2.504-umschlagdecke) | **keinen** von beiden |
+| unter dem 1. Perzentil | keinen — der eine liegt bei **3 %** |
+| über dem 99. Perzentil | nur **einen** |
+
+Beide liegen an den Rändern, aber **nicht weit genug draußen**. Eine
+Schwelle, die sie fängt, nimmt gesunde Symbole mit — und das wäre
+schlimmer als der Fehler, den sie behebt.
+
+### ➤ Der dritte, zulässige Fall
+
+> Eine Liste ist zulässig, wenn sie ein **Messergebnis** ist und nicht
+> eine Setzung. Drei Bedingungen, alle drei:
+
+| # | | im Anwendungsfall |
+|---|---|---|
+| **1** | Eine **strukturelle Regel** hat sie erzeugt — nicht ein Verdacht | *ein freier Umlauf kann nicht größer sein als die Gesamtausgabe* |
+| **2** | Der **Erzeuger liegt daneben** und ist wiederholbar | zwei Prüfskripte, benannt im Code |
+| **3** | Jeder Eintrag trägt **seinen Beleg** — inklusive einer Bestätigung von **außen** | beide Werte, beide Quellen, CoinMarketCap |
+
+Das ist dasselbe Muster wie die Register aus `bestand.py`: *nie von Hand
+ändern — die Änderung gehört ins Modul.*
+
+### ⚠️⚠️ Und der Schutz gilt erst am **Seiteneffekt**
+
+> *„Ein Schutz gilt erst, wenn er am Seiteneffekt nachgewiesen ist — der
+> alte in Paket 15 stand da und griff nie."*
+
+Deshalb liest die Prüfung **nicht den Quelltext**, sondern ruft die
+Funktion **zweimal** — mit und ohne Sperrliste:
+
+| | |
+|---|---|
+| waren sie **ohne** Sperre überhaupt da? | sonst prüft der Test nichts — die Falle *„die Mutation löscht ihren Anker"* |
+| sind sie **mit** Sperre weg? | der eigentliche Nachweis |
+| sind die **übrigen unverändert**? | eine Sperre, die mitnimmt, ist schlimmer als der Fehler |
+| steht die Sperre **nach** allen Quellen? | davor träfe sie nur einen Weg, und der Fehler käme über den anderen zurück |
+
+### ⚠️ Der Preis gehört gemessen, nicht geschätzt
+
+Ein Rang ist ein Perzentil — wer Symbole entfernt, verschiebt **alle**
+Grenzen. Gemessen: **3,26 %** der Symbol-Tage wechseln ein Fünftel,
+**keines** zwei. Die Frischegrenze im Haus akzeptiert 6,5 %.
+
+**Ausführlich:** Befunde 2.509-nennersperre, 2.509-kein-schreiber ·
+Paket `Nennersperre` · Schritt 67

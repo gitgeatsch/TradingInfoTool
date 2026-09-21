@@ -553,8 +553,94 @@ def pruefe_nenner(ziel):
     return 0
 
 
+BULK = 120               # ids je `/coins/markets`-Abruf
+
+
+def taeglich(ziel):
+    """EINEN Punkt je Symbol nachtragen - zwei Abrufe statt 332.
+
+    ⚠⚠ WARUM DAS NOETIG IST (2.509-kein-schreiber): die Reihe
+    hat keinen Schreiber. CoinGecko gibt zwar 365 Tage rueckwirkend,
+    ein spaeterer Vollabruf holt sie also wieder - VERLOREN GEHEN NUR
+    DIE SYMBOLE, DIE IN DER ZWISCHENZEIT EINGESTELLT WERDEN. Und genau
+    die waren der Grund fuer den Nachzug (Ueberlebensverzerrung). Der
+    gemessene Schwund liegt bei rund 15 Prozent im Jahr und trifft
+    nicht zufaellig: eingestellt wird, was klein und illiquide ist -
+    der Boden der Verteilung.
+
+    ⚠⚠ ZWEI ENDPUNKTE, EINE GROESSE - VOR dem Bau geprueft.
+    Der Vollabruf rechnet `Marktkapitalisierung / Preis` aus
+    `market_chart`; hier kommt `circulating_supply` aus
+    `/coins/markets`. Zwei verschieden ABGELEITETE Werte in EINER
+    Reihe waeren derselbe Fehler wie 2.500-ergaenzung-ausgeschlossen,
+    nur innerhalb einer Quelle. GEMESSEN an 119 Symbolen: Median-
+    Abweichung 0,000 Prozent, einer ueber 1 Prozent (CAKE, ein echter
+    Burn). Dieselbe Groesse.
+
+    ⚠ Der Buendelfaktor gilt hier genauso (2.501-buendelpaare).
+    ⚠ Der Spitzenfilter NICHT - der braucht Nachbarn und laeuft
+    beim LESEN (`menge_neu`), nicht beim Schreiben.
+    """
+    t0 = time.time()
+    print("=" * 100)
+    print("TAGESFORTSCHREIBUNG DER UMLAUFMENGE")
+    print("=" * 100)
+    c = baue(ziel)
+    ids = {}
+    for sym, cid in c.execute(
+            "SELECT symbol, coingecko_id FROM abruf_symbol "
+            " WHERE urteil = 'ok' AND coingecko_id IS NOT NULL"):
+        ids[sym] = cid
+    if not ids:
+        print("  nichts fortzuschreiben - erst den Vollabruf laufen "
+              "lassen")
+        return 1
+    heute = dt.date.today().isoformat()
+    schon = {r[0] for r in c.execute(
+        "SELECT symbol FROM umlaufmenge WHERE datum = ?", (heute,))}
+    offen = sorted(s for s in ids if s not in schon)
+    print("  bekannte Symbole %d · heute schon da %d · zu holen %d"
+          % (len(ids), len(schon), len(offen)))
+    if not offen:
+        print("  heute ist alles da")
+        return 0
+    paare = [(s, ids[s]) for s in offen]
+    geschrieben = ohne = 0
+    for i in range(0, len(paare), BULK):
+        teil = paare[i:i + BULK]
+        st, d = hole("%s/coins/markets?vs_currency=usd&ids=%s&per_page=250"
+                     % (CG, ",".join(x[1] for x in teil)))
+        if not isinstance(d, list):
+            print("  ⚠ Abruf %d fehlgeschlagen (%s) - beim naechsten "
+                  "Lauf erneut" % (i // BULK + 1, st))
+            time.sleep(_PAUSE[0])
+            continue
+        je_id = {e.get("id"): e.get("circulating_supply") for e in d}
+        for sym, cid in teil:
+            w = je_id.get(cid)
+            if not w or float(w) <= 0:
+                ohne += 1
+                continue
+            faktor, _b = vervielfacher(sym)
+            c.execute("INSERT OR REPLACE INTO umlaufmenge VALUES (?,?,?)",
+                      (sym, heute, float(w) / faktor))
+            geschrieben += 1
+        c.commit()
+        time.sleep(_PAUSE[0])
+    print("  geschrieben %d · ohne Wert %d · Abrufe %d · "
+          "Dauer %.1f min"
+          % (geschrieben, ohne, (len(paare) + BULK - 1) // BULK,
+             (time.time() - t0) / 60.0))
+    r = c.execute("SELECT COUNT(DISTINCT symbol), COUNT(*), MAX(datum) "
+                  "FROM umlaufmenge").fetchone()
+    print("  in der Datei: %d Symbole · %d Punkte · bis %s" % r)
+    return 0
+
+
 def main() -> int:
     ziel = _arg("--ziel", ZIEL_VORGABE)
+    if "--taeglich" in sys.argv[1:]:
+        return taeglich(ziel)
     if "--nachzug" in sys.argv[1:]:
         return nachzug(ziel, int(_arg("--nur", "0") or 0))
     if "--pruefe-nenner" in sys.argv[1:]:

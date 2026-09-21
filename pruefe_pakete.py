@@ -23858,6 +23858,86 @@ def paket_a1eichung() -> None:
            "nicht der Markt - genau daran ist A1 aufgefallen")
 
 
+def paket_nennersperre() -> None:
+    """Greift die Sperre fuer widerlegte Nenner - am SEITENEFFEKT?
+
+    ⚠⚠ ANLASS 21.09.2026 (2.509-nennersperre). Zwei Symbole standen
+    im laufenden `turnover`-Nenner nachweislich falsch: XVG um den
+    Faktor 100 zu hoch, KNC um 18,6 zu niedrig - beide frisch, beide
+    taeglich im Rang. Weil `turnover_fuenftel` die groessten Stufen im
+    System traegt (+3,15 bis -2,40), bekam XVG dauerhaft den hoechsten
+    Zuschlag und KNC den hoechsten Abzug, aus einem Datenfehler.
+
+    ⚠ Die Hausregel: *„Ein Schutz gilt erst, wenn er am Seiteneffekt
+    nachgewiesen ist - der alte in Paket 15 stand da und griff nie."*
+    Deshalb wird hier nicht der Quelltext gelesen, sondern die Funktion
+    ZWEIMAL gerufen - mit und ohne Sperrliste.
+    """
+    P = "Nennersperre"
+    import agent.marktrang as _MR
+
+    pruefe(P, "⚠ die Sperrliste gibt es und ist nicht leer",
+           bool(getattr(_MR, "NENNER_WIDERLEGT", None)),
+           "eine leere Liste waere dasselbe wie keine Sperre - und "
+           "wuerde unbemerkt bleiben")
+
+    _leer = [s for s, g in getattr(_MR, "NENNER_WIDERLEGT", {}).items()
+             if not g or len(str(g)) < 60]
+    pruefe(P, "⚠⚠ jeder Eintrag traegt seine BEGRUENDUNG",
+           not _leer,
+           "wer hier etwas eintraegt, braucht zwei Quellen, eine "
+           "unmoegliche Richtung und eine Bestaetigung von aussen. Ohne "
+           "Grund im Code ist es eine Setzung. Ohne Grund: %s" % _leer)
+
+    # ---- ⚠⚠ DER SEITENEFFEKT, nicht der Quelltext --------------
+    _datei = "data/onchain_historie.db"
+    _kein_betrieb = "data/_gibt_es_nicht_.db"
+    import os as _os
+    if not _os.path.exists(_datei):
+        pruefe(P, "⚠ Messdatei fuer den Seiteneffekt vorhanden",
+               False, "ohne %s ist der Nachweis nicht zu fuehren - am "
+                      "Notebook liegt dort nur die Symbolliste" % _datei)
+        return
+    _vorher = _MR.NENNER_WIDERLEGT
+    try:
+        _mit = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
+        _MR.NENNER_WIDERLEGT = {}
+        _ohne = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
+    finally:
+        _MR.NENNER_WIDERLEGT = _vorher
+
+    _war_da = sorted(s for s in _vorher if s in _ohne)
+    pruefe(P, "⚠ die gesperrten Symbole waren OHNE Sperre ueberhaupt da",
+           bool(_war_da),
+           "waren sie es nicht, prueft dieser Test nichts - genau die "
+           "Falle ,die Mutation loescht ihren Anker`. Gefunden: %s"
+           % _war_da)
+
+    _noch_da = sorted(s for s in _vorher if s in _mit)
+    pruefe(P, "⚠⚠ und MIT Sperre sind sie weg",
+           not _noch_da,
+           "die Sperre greift nicht: %s stehen weiter im Nenner"
+           % _noch_da)
+
+    _rest_ohne = {s: w for s, w in _ohne.items() if s not in _vorher}
+    _rest_mit = {s: w for s, w in _mit.items() if s not in _vorher}
+    pruefe(P, "⚠ und sie nimmt NICHTS mit",
+           _rest_ohne == _rest_mit,
+           "eine Sperre, die gesunde Symbole mitnimmt, ist schlimmer "
+           "als der Fehler, den sie behebt. Ohne %d, mit %d"
+           % (len(_rest_ohne), len(_rest_mit)))
+
+    # ⚠ Die Sperre steht NACH dem Zusammenfuehren beider Quellen -
+    # davor haette sie nur einen der beiden Wege getroffen.
+    _q = _quelltext("agent/marktrang.py")
+    _i_sperre = _q.find("gesperrt = sorted(set(aus) & set(NENNER_WIDERLEGT))")
+    _i_datei = _q.find("for sym, wert in datei_werte.items():")
+    pruefe(P, "⚠⚠ die Sperre steht NACH beiden Quellen",
+           _i_sperre > _i_datei > 0,
+           "davor haette sie nur einen Weg getroffen, und der Fehler "
+           "waere ueber den anderen wieder hereingekommen")
+
+
 def paket_gatedatenstand() -> None:
     """Sagt die Diagnose, WIE ALT die Quelle ihrer Gate-Zahlen ist?
 
@@ -29179,6 +29259,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Diagnoseumfang": paket_diagnoseumfang,
           "A1Eichung": paket_a1eichung,
           "GateDatenstand": paket_gatedatenstand,
+          "Nennersperre": paket_nennersperre,
           "Messbasen": paket_messbasen,
           "Betriebsreihen": paket_betriebsreihen,
           "Hochrechnung": paket_hochrechnung,

@@ -640,6 +640,61 @@ def _coingecko_namen() -> dict:
     return aus
 
 
+# ⚠️⚠️⚠️ NENNER, DIE GEGEN EINE ZWEITE QUELLE WIDERLEGT SIND (21.09.2026)
+#
+# WARUM DAS HIER EINE LISTE IST UND KEINE SCHWELLE. Die Hausregel sagt:
+# was aufgezaehlt wird, veraltet still. Deshalb wurde ZUERST nach einer
+# strukturellen Sperre gesucht - und es gibt keine
+# (`phase4_c_plausibilitaet_nenner.py`, Voranalyse vor dem Bau):
+#
+#     Decke 1,0 (2.504-umschlagdecke)     trifft KEINEN von beiden
+#     unter dem 1. Perzentil              trifft KEINEN - XVG liegt bei 3 %
+#     ueber dem 99. Perzentil             trifft nur KNC
+#
+# Beide liegen an den Raendern, aber nicht weit genug draussen. Eine
+# Schwelle, die sie faengt, nimmt gesunde Symbole mit - und das waere
+# schlimmer als der Fehler, den sie behebt.
+#
+# ⚠️ DIESE LISTE IST EIN MESSERGEBNIS, KEINE SETZUNG - wie die Register
+# aus `bestand.py`. Der Erzeuger steht daneben und ist wiederholbar:
+# `phase4_c_sind_es_dieselbe_groesse.py` und
+# `phase4_c_alte_coins_konvergieren.py` halten die Betriebsquelle gegen
+# den freien Umlauf von CoinGecko. Die STRUKTURELLE Regel dahinter:
+#
+#     Ein FREIER UMLAUF kann nicht GROESSER sein als die
+#     GESAMTAUSGABE. Wo das Verhaeltnis ueber 1 liegt, ist eine der
+#     beiden Quellen falsch - das ist kein Free-Float-Effekt.
+#
+# Welche der beiden falsch liegt, wurde AUSSERHALB belegt (CoinMarketCap,
+# 21.09.2026), nicht geraten. In beiden Faellen ist es die Betriebsquelle.
+#
+# ⚠️⚠️ DIE WIRKUNG WAR GROSS UND DAUERHAFT: `turnover_fuenftel` traegt die
+# groessten Stufen im System (+3,15 bis -2,40). XVG stand durch die 100fach
+# zu hohe Menge dauerhaft im UNTERSTEN Fuenftel und bekam taeglich +3,15
+# Punkte; KNC dauerhaft im obersten und -2,40. Beides aus einem
+# Datenfehler, nicht aus dem Markt.
+#
+# ⚠️ DER PREIS IST GEMESSEN, nicht geschaetzt: das Entfernen verschiebt
+# bei den UEBRIGEN Symbolen 3,26 % der Symbol-Tage um ein Fuenftel, KEINES
+# um zwei. Die Frischegrenze im Haus akzeptiert 6,5 %.
+#
+# ⚠️ WER HIER ETWAS EINTRAEGT, braucht denselben Beleg: zwei Quellen, eine
+# unmoegliche Richtung, und eine Bestaetigung von aussen. Ein Verdacht
+# reicht nicht.
+NENNER_WIDERLEGT = {
+    "XVG": ("SplyCur 1,6522e12 gegen freien Umlauf 1,6522e10 - IDENTISCHE "
+            "Mantisse, reiner Faktor 100. CoinMarketCap: 16.521.951.235 "
+            "umlaufend, Maximum 16,5 Mrd. Die Betriebsquelle liegt um den "
+            "Faktor 100 zu hoch (21.09.2026)"),
+    "KNC": ("SplyCur 1,1264e7 gegen freien Umlauf 2,0923e8 - Verhaeltnis "
+            "18,6, also freier Umlauf GROESSER als die Gesamtausgabe und "
+            "damit unmoeglich. CoinMarketCap: 209.230.859 umlaufend. "
+            "Vermutlich der Legacy-Vertrag vor der Migration 2021, aber das "
+            "ist NICHT belegt - belegt ist nur, dass der Wert falsch ist "
+            "(21.09.2026)"),
+}
+
+
 def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
                  db_pfad=None, datei: str = "data/onchain_historie.db") -> dict:
     """Die Umlaufmenge aus DERSELBEN Quelle, mit der gemessen wurde.
@@ -722,6 +777,23 @@ def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
         logger.info("Marktrang: Messdatei %s ohne Umlaufmenge: %s", datei, exc)
     for sym, wert in datei_werte.items():
         aus.setdefault(sym, wert)
+
+    # ⚠️⚠️ ERST HIER, nachdem BEIDE Quellen zusammengefuehrt sind. Weiter
+    # oben haette die Sperre nur einen der beiden Wege getroffen - und der
+    # Fehler waere ueber den anderen wieder hereingekommen.
+    #
+    # ⚠️ NICHT STILL. Ein weggefallener Nenner heisst, dass `turnover` fuer
+    # dieses Symbol heute fehlt, und das ist eine Datenlage, die man sehen
+    # muss (`fail-soft-ist-fail-silent`).
+    gesperrt = sorted(set(aus) & set(NENNER_WIDERLEGT))
+    for sym in gesperrt:
+        aus.pop(sym, None)
+    if gesperrt:
+        logger.info(
+            "Marktrang: %d Nenner gesperrt, weil gegen eine zweite Quelle "
+            "widerlegt (%s) - turnover faellt fuer sie aus, siehe "
+            "marktrang.NENNER_WIDERLEGT",
+            len(gesperrt), ", ".join(gesperrt))
 
     if not aus:
         logger.warning(
