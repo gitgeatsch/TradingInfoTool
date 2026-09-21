@@ -740,6 +740,14 @@ dann entsteht keine Nacharbeit.
    13 von 16 Hebelsignalen ohne `turnover` ist die Zahl der **alten**
    Quelle, nicht die der Sache.
 
+   ⚠⚠ **Berichtigt am 21.09.:** es sind **15 von 16**, nicht 13
+   (`2.510-messliste-ohne-frische`). Das alte Messinstrument fragte
+   die **Symbolliste** der Messdatei ab, und die kennt die
+   **Frischegrenze** nicht — BNB steht darin, sein letzter
+   Coin-Metrics-Wert ist vom **22.04.2019**. Der Fehler ging in
+   **eine** Richtung: er liess die Lücke kleiner aussehen, als sie
+   ist.
+
    #### Schritt 67 — Stand 21.09.2026
 
    | # | | |

@@ -67,12 +67,30 @@ def _pfad(flagge: str, vorgabe: str) -> str:
 
 
 def _turnover_symbole() -> set:
-    """Die Symbole MIT `turnover`-Reihe - aus `marktrang.MESSBASIS`,
-    nicht aus einer eigenen Liste (die liefe auseinander)."""
+    """Die Symbole, fuer die `turnover` im BETRIEB einen Wert bekommt.
+
+    ⚠️⚠️ BERICHTIGT AM 21.09.2026 (Befund 2.510) - UND DAS HAT DAS
+    ERGEBNIS DIESES WERKZEUGS GEAENDERT.
+
+    Hier stand `MR.MESSBASIS["turnover"]`, also die SYMBOLLISTE der
+    Messdatei. Die kennt die FRISCHEGRENZE nicht. BNB steht darin, sein
+    letzter Wert bei Coin Metrics ist aber vom 22.04.2019 - 2.709 Tage
+    alt. Der Betrieb verwirft ihn (`umlaufmengen`, Grenze 21 Tage),
+    dieses Werkzeug zaehlte ihn mit.
+
+        gemeldet   3 von 16 Hebelsignalen mit turnover-Wert  (19 %)
+        richtig    1 von 16                                  ( 6 %)
+
+    ⚠️ Der Fehler ging in EINE Richtung: er liess die Luecke KLEINER
+    aussehen, als sie ist - also genau die Richtung, die eine
+    Entscheidung gegen den Hebel erschwert haette.
+
+    ⚠️⚠️ Die Bedingung steht jetzt im HELFER `marktrang.
+    turnover_verfuegbar`, nicht mehr hier - sonst laeuft sie beim
+    naechsten Werkzeug wieder auseinander.
+    """
     import agent.marktrang as MR
-    datei, sql = MR.MESSBASIS["turnover"]
-    c = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
-    return {r[0].upper() for r in c.execute(sql)}
+    return MR.turnover_verfuegbar()
 
 
 def _hebel(zuschlag_punkte: float, stop: float) -> tuple:

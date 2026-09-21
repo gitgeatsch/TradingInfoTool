@@ -23858,6 +23858,176 @@ def paket_a1eichung() -> None:
            "nicht der Markt - genau daran ist A1 aufgefallen")
 
 
+def paket_verfuegbarkeit():
+    """⚠⚠⚠ IST `turnover` DORT VERFUEGBAR, WO ES GEBRAUCHT WIRD?
+
+    ANLASS (21.09.2026, Befund 2.510). Zwei Messwerkzeuge fragten die
+    SYMBOLLISTE der Messdatei ab (`MESSBASIS["turnover"]`) statt des
+    Betriebswegs. Die Liste kennt die FRISCHEGRENZE nicht: BNB steht
+    darin, sein letzter Coin-Metrics-Wert ist vom 22.04.2019, also
+    2.709 Tage alt. Gemeldet wurden "3 von 16 Hebelsignalen mit
+    turnover-Wert", richtig ist 1 von 16.
+
+    ⚠ Dieselbe Fehlerklasse wie 2.410: gemessen wurde etwas anderes,
+    als angewandt wird. Der Fehler ging in EINE Richtung - er liess die
+    Luecke kleiner aussehen, als sie ist.
+
+    ⚠⚠ WIE HIER GEPRUEFT WIRD, UND WARUM SO. Nicht durch Textsuche
+    nach `MESSBASIS["turnover"]` - eine Aufzaehlung veraltet still, und
+    das naechste Werkzeug stuende nicht darin. Stattdessen:
+
+      1  der Helfer wird am SEITENEFFEKT nachgewiesen, mit einer
+         WEGWERFDATEI - ein altes Symbol muss herausfallen, ein
+         frisches bleiben
+      2  die beiden Werkzeuge werden AUFGERUFEN und ihr Ergebnis gegen
+         den Helfer gehalten - wer wieder auf die Liste umschwenkt,
+         faellt hier auf
+
+    ⚠⚠ GERAETEUNABHAENGIG. Die Wegwerfdatei haengt an keinem
+    Geraetezustand: am Desktop liegt die volle Messdatei, am Notebook
+    nur die Symbolliste ohne `datum` und `wert`. Eine Pruefung gegen
+    die echte Datei waere dort BLIND - genau die Klasse
+    `pruefung-zaehlt-zustaende-auf`. Die Produktionsdatenbank wird
+    nicht angefasst.
+    """
+    P = "Verfuegbarkeit"
+    import datetime as _dt
+    import importlib as _il
+    import importlib.util as _ilu   # noqa: F401  (fuer find_spec)
+    import io as _io
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import agent.marktrang as _MR
+
+    pruefe(P, "⚠ den Helfer `turnover_verfuegbar` gibt es",
+           callable(getattr(_MR, "turnover_verfuegbar", None)),
+           "ohne ihn steht die Frischebedingung wieder in jedem "
+           "Werkzeug einzeln - und laeuft auseinander")
+
+    pruefe(P, "⚠ die Frischegrenze ist gesetzt und endlich",
+           isinstance(getattr(_MR, "SPLYCUR_FRISCHE_TAGE", None), int)
+           and 0 < _MR.SPLYCUR_FRISCHE_TAGE < 400,
+           "eine fehlende oder unendliche Grenze waere dasselbe wie "
+           "keine Pruefung. Grenze: %r"
+           % getattr(_MR, "SPLYCUR_FRISCHE_TAGE", None))
+
+    # ---- ⚠⚠ DER SEITENEFFEKT-NACHWEIS MIT WEGWERFDATEI ----------
+    _weg = _os.path.join(_tf.gettempdir(), "_pruef_frische_splycur.db")
+    _keine_db = "data/_gibt_es_nicht_.db"
+    try:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
+        _c = _sq.connect(_weg)
+        _c.execute("CREATE TABLE splycur (symbol TEXT, datum TEXT, "
+                   "wert REAL)")
+        _heute = _dt.date.today()
+        _frisch = _heute.isoformat()
+        # doppelt so alt wie die Grenze - unabhaengig von ihrem Wert
+        _alt = (_heute - _dt.timedelta(
+            days=2 * _MR.SPLYCUR_FRISCHE_TAGE + 1)).isoformat()
+        _c.execute("INSERT INTO splycur VALUES ('FRISCHSYM', ?, 1.0e9)",
+                   (_frisch,))
+        _c.execute("INSERT INTO splycur VALUES ('ALTSYM', ?, 1.0e9)",
+                   (_alt,))
+        # ⚠⚠ FREMDSYM ist FRISCH, steht aber NICHT in der Messbasis.
+        # Ohne dieses dritte Symbol entkommt eine Mutation: nimmt der
+        # Helfer die Messbasis gar nicht mehr dazu, faellt es keinem
+        # auf, solange die Kunstdaten GENAU der Messbasis entsprechen.
+        # Gefunden durch Mutation 4, nicht gedacht.
+        _c.execute("INSERT INTO splycur VALUES ('FREMDSYM', ?, 1.0e9)",
+                   (_frisch,))
+        _c.commit()
+        _c.close()
+        _m = _MR.umlaufmengen(db_pfad=_keine_db, datei=_weg)
+        pruefe(P, "⚠⚠ ein VERALTETER Nenner faellt heraus - am "
+                  "Seiteneffekt",
+               "FRISCHSYM" in _m and "FREMDSYM" in _m
+               and "ALTSYM" not in _m,
+               "das ist der ganze Fehler von 2.510: BNB stand in der "
+               "Symbolliste, sein Wert war 2.709 Tage alt. Faellt "
+               "diese Zeile, zaehlt der Betrieb wieder tote Reihen "
+               "mit. bekommen: %s" % sorted(_m))
+
+        # ---- ⚠⚠⚠ UND JETZT DER HELFER SELBST ------------------------
+        #
+        # GEFUNDEN DURCH MUTATION, nicht gedacht: die Zeilen darueber
+        # pruefen `umlaufmengen`, nicht `turnover_verfuegbar`. Baut man
+        # den Fehler IN DEN HELFER ein (die Frischepruefung weglassen
+        # und gleich `messbasis` nehmen), bleiben sie gruen - und der
+        # Werkzeugvergleich weiter unten auch, weil dann BEIDE Seiten
+        # dieselbe falsche Menge liefern.
+        #
+        # ⚠ EINE PRUEFUNG, DIE ZWEI GROESSEN VERGLEICHT, FAENGT KEINEN
+        # FEHLER, DER BEIDE GLEICH VERSCHIEBT. Das ist die Lehre, und
+        # sie hat hier drei Minuten gekostet statt eines falschen
+        # Befundes.
+        #
+        # ⚠ `messbasis` wird umgebogen, weil der Helfer mit ihr
+        # schneidet - sonst faende er die Kunstsymbole nie.
+        _echt = _MR.messbasis
+        try:
+            _MR.messbasis = lambda _n: set(["FRISCHSYM", "ALTSYM"])
+            _h = _MR.turnover_verfuegbar(db_pfad=_keine_db, datei=_weg)
+        finally:
+            _MR.messbasis = _echt
+        pruefe(P, "⚠⚠⚠ und der HELFER SELBST verwirft ihn auch",
+               "FRISCHSYM" in _h and "ALTSYM" not in _h,
+               "wer die Frischebedingung aus dem Helfer nimmt, faellt "
+               "NUR hier auf. bekommen: %s" % sorted(_h))
+        pruefe(P, "⚠⚠ und er bleibt auf der MESSBASIS",
+               "FREMDSYM" not in _h,
+               "FREMDSYM ist frisch, steht aber nicht in der "
+               "Messbasis. Wer den Schnitt weglaesst, bewertet "
+               "Symbole, auf denen der Beitrag nie gemessen wurde - "
+               "und der Rang entstuende ueber eine andere Menge als "
+               "die registrierte. bekommen: %s" % sorted(_h))
+    finally:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
+
+    # ---- ⚠⚠ RUFEN DIE WERKZEUGE DEN HELFER WIRKLICH? ------------
+    #
+    # Aufgerufen, nicht gelesen. Wer wieder auf `MESSBASIS["turnover"]`
+    # umschwenkt, liefert hier eine ANDERE Menge und faellt auf.
+    _soll = _MR.turnover_verfuegbar()
+    pruefe(P, "⚠ der Helfer liefert ueberhaupt Symbole",
+           len(_soll) > 0,
+           "leer hiesse, turnover faellt fuer ALLE Werte aus - dann "
+           "waere die Frage nach der Luecke gegenstandslos. Anzahl: "
+           "%d" % len(_soll))
+
+    for _name in ("phase4_c_turnover_luecke", "phase4_c_betrag_bei_luecke"):
+        try:
+            _mod = _il.import_module(_name)
+        except Exception as _exc:                            # noqa: BLE001
+            pruefe(P, "⚠ %s ist ladbar" % _name, False,
+                   "das Werkzeug traegt einen Befund - laesst es sich "
+                   "nicht laden, ist der Befund nicht nachrechenbar. "
+                   "%s" % _exc)
+            continue
+        _fn = getattr(_mod, "_turnover_symbole", None)
+        if not callable(_fn):
+            # `phase4_c_betrag_bei_luecke` hat keine eigene Funktion -
+            # dort steht der Aufruf in `main`. Dann gilt die
+            # Quelltextbedingung als schwaecherer Ersatz, und das wird
+            # hier auch so gesagt.
+            _quelle = _il.util.find_spec(_name).origin
+            _txt = _io.open(_quelle, encoding="utf-8").read()
+            pruefe(P, "⚠ %s nimmt NICHT die Symbolliste" % _name,
+                   'MESSBASIS["turnover"]' not in _txt
+                   and "turnover_verfuegbar" in _txt,
+                   "schwaechere Form der Pruefung (Quelltext statt "
+                   "Aufruf), weil das Werkzeug keine eigene Funktion "
+                   "hat. Wer sie einbaut, bekommt hier die starke Form")
+            continue
+        pruefe(P, "⚠⚠ %s fragt denselben Helfer" % _name,
+               _fn() == _soll,
+               "verschiedene Mengen heissen: ein Werkzeug misst "
+               "wieder etwas anderes, als der Betrieb anwendet - "
+               "genau 2.410 und 2.510")
+
+
 def paket_nennersperre() -> None:
     """Greift die Sperre fuer widerlegte Nenner - am SEITENEFFEKT?
 
@@ -29312,6 +29482,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "A1Eichung": paket_a1eichung,
           "GateDatenstand": paket_gatedatenstand,
           "Nennersperre": paket_nennersperre,
+          "Verfuegbarkeit": paket_verfuegbarkeit,
           "Messbasen": paket_messbasen,
           "Betriebsreihen": paket_betriebsreihen,
           "Hochrechnung": paket_hochrechnung,

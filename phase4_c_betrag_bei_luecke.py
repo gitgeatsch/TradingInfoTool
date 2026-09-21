@@ -112,9 +112,11 @@ def main() -> int:
                        if b.merkmal == "turnover_fuenftel"))
     basis = WK.basisrate(CRV)
     import agent.marktrang as MR
-    datei, sql = MR.MESSBASIS["turnover"]
-    mit = {r[0].upper() for r in sqlite3.connect(
-        "file:%s?mode=ro" % datei, uri=True).execute(sql)}
+    # ⚠️⚠️ BERICHTIGT 21.09.2026 (Befund 2.510). Hier stand die
+    # SYMBOLLISTE der Messdatei, die die Frischegrenze nicht kennt -
+    # dieselbe Stelle wie in `phase4_c_turnover_luecke.py`. Der
+    # Abschlag wurde dadurch ueber 13 statt ueber 15 Signale gemittelt.
+    mit = MR.turnover_verfuegbar()
 
     print("=" * 104)
     print("PUNKT C, TEIL 2 - WELCHER BETRAG IST BEI EINER LUECKE ZULAESSIG?")

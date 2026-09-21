@@ -803,6 +803,38 @@ def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
     return aus
 
 
+def turnover_verfuegbar(*, db_pfad=None,
+                        datei: str = "data/onchain_historie.db") -> set:
+    """Die Symbole, fuer die `turnover` im BETRIEB einen Wert bekommt.
+
+    ⚠️⚠️ WARUM ES DIESEN HELFER GIBT (21.09.2026, Befund 2.510).
+    Zwei Messwerkzeuge fragten stattdessen die SYMBOLLISTE der Messbasis
+    ab (`MESSBASIS["turnover"]`) - und die kennt die FRISCHEGRENZE
+    nicht. Folge: `phase4_c_turnover_luecke.py` meldete "3 von 16
+    Hebelsignalen haben einen turnover-Wert"; richtig ist 1 von 16. BNB
+    steht in der Liste, sein letzter Wert ist aber vom 22.04.2019, also
+    2.709 Tage alt. Genau davor warnt der Docstring von `umlaufmengen`
+    seit dem 13.09. - er wurde nur nicht gelesen.
+
+    ⚠️ DIESELBE FEHLERKLASSE WIE 2.410: gemessen wurde etwas anderes,
+    als angewandt wird. Deshalb steht die Bedingung jetzt HIER, an
+    EINER Stelle, statt in jedem Werkzeug neu - und sie zaehlt keine
+    Symbole auf, sondern leitet sie aus den beiden Quellen ab.
+
+    ⚠️⚠️ ES IST EINE OBERE SCHRANKE, und das ist Absicht. Der Betrieb
+    schneidet zusaetzlich mit den Binance-USDT-Paaren
+    (`turnover_werte`), und das ist ein NETZABRUF - in einem Messlauf
+    oder einer Suite-Pruefung waere er ein Seiteneffekt am falschen
+    Ort. Wer die genaue Menge braucht, ruft `turnover_werte()`; wer
+    wissen will, fuer WELCHE Symbole ueberhaupt ein frischer Nenner da
+    ist, ist hier richtig. Die Schranke liegt auf der sicheren Seite:
+    sie meldet eher zu VIEL Abdeckung als zu wenig.
+    """
+    menge = set(umlaufmengen(db_pfad=db_pfad, datei=datei))
+    basis = messbasis("turnover")
+    return (menge & basis) if basis else menge
+
+
 def turnover_werte(symbole=None) -> dict:
     """Handelsvolumen je Umlaufmenge, fuer den GANZEN Markt.
 
