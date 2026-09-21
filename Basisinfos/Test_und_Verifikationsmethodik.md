@@ -1,6 +1,6 @@
 # Test- und Verifikationsmethodik
 
-> 📇 **Dieses Dokument hat 130 nummerierte Abschnitte und ist
+> 📇 **Dieses Dokument hat 131 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in
 > **`REGISTER_Methodik_Themen.md`** (erzeugt aus `bestand.py`).
@@ -17,7 +17,7 @@ Dokuments). Ziel: eine feste, wiederholbare Vorgehensweise für (A) synthetische
 Tests hier am Gerät und (B) die Analyse echter Notebook-Exporte, inklusive
 Lerneffekt über die Zeit.
 
-Stand: 2026-09-21 (letzter Abschnitt 2.507). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
+Stand: 2026-09-21 (letzter Abschnitt 2.508). ⚠️ Das Dokument **wächst chronologisch** — bei Bedarf hinten ergänzen, nicht neu erfinden und nicht umsortieren. Wer eine Zahl im Kopf ändert (Abschnittszahl, Stand), zieht `python bestand.py` nach: das Register prüft beides.
 
 ---
 
@@ -10996,3 +10996,87 @@ nachweisbar war — der Test sagte über sie also gar nichts.
 
 **Ausführlich:** Befunde 2.507-eigenstaendig, -gleichstaende, -kontrolle ·
 Schritt 68
+
+---
+
+## 2.508 ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09.2026)
+
+**Auslöser:** Die Nutzerfrage *„miss ob der Hebel besser wird oder
+schadet"* — und die Erkenntnis, dass ich dreimal „das kann ich nicht
+behaupten" geschrieben hatte, wo eine Messung möglich war.
+
+### Der Aufbau: Sizing misst man am **Logwachstum**
+
+```
+Kapitalfaktor = 1 + r · R        r = Risikoanteil, R = Ergebnis in R
+Beitrag       = ln(1 + r · R)
+```
+
+Eine Regel, die den **Mittelwert** hebt und das **Wachstum** senkt, hat
+geschadet — und nur dieses Maß zeigt das. Genau deshalb rechnet das
+System mit halbem Kelly.
+
+### ⚠️ Falle 1: zwei Sizing-Regeln sind nur bei **gleichem Risikobudget** vergleichbar
+
+Der erste Lauf verglich rohe Summen. **FLACH gewann haushoch** (250 gegen
+167) — weil es bei *jeder* Gelegenheit mit dem *doppelten* Risiko
+einsteigt, während die Vergleichsregel die Hälfte auslässt.
+
+> Gemessen war der größere **Einsatz**, nicht die bessere **Regel**.
+
+Korrektur nach Kelly-Standard: jede Regel bekommt dasselbe
+Gesamtrisikobudget, nur anders verteilt. **Danach dreht sich das Bild
+vollständig** (167 gegen 142).
+
+### ⚠️⚠️ Falle 2 — die schwerere: der Bezug ist **nicht die Null**
+
+Die Mutation (dieselbe Rechnung mit **durchgemischten** Ergebnissen)
+musste auf null fallen. Sie tat es **nicht**: über drei Saaten
+−0,000091 / −0,000272 / −0,000164, konsistent negativ.
+
+**Der Grund ist kein Bug, sondern Jensen:**
+
+```
+ln(1 + rR)  ≈  r·E[R]  −  r²·Var(R)/2
+                          └── QUADRATISCH in r ──┘
+```
+
+Eine Regel mit **konzentriertem** Einsatz hat bei gleichem `E[r]` das
+höhere `E[r²]` und damit den größeren Abzug. Der Unterschied zwischen
+zwei Sizing-Regeln enthält also einen Anteil, der **nur von der
+Konzentration** kommt — und der geht **gegen** die konzentrierte Regel.
+
+| geprüft gegen | belegte Vergleiche |
+|---|---|
+| die **Null** | **0 von 8** |
+| den **Nullpunkt** (Mittel aus 40 Mischungen) | **4 von 8** |
+
+⚠️⚠️ **Ich hatte dem Nutzer bereits gemeldet, die Hebelstufung sei nicht
+nachweislich besser als flaches Sizing. Das war falsch.**
+
+> **Die Hausregel hätte den Fehler verhindert.** Der Messstandard vom
+> 08.09. hält fest: der Bezug ist der **Nullpunkt**, nicht die Null. Ich
+> habe ihn für die Normmessungen angewandt und für die eigene
+> Simulation vergessen.
+
+➔ **Wo immer eine eigene Simulation zwei Regeln vergleicht, braucht sie
+denselben Nullpunkt wie die Norm** — und als **Mittelwert** aus vielen
+Mischungen, nicht aus einer: eine einzelne wanderte um den Faktor drei.
+
+### ✔ Und die Mutation ist damit keine Prüfung mehr, sondern der Bezug
+
+Das ist die saubere Auflösung: was die Mutation misst, **ist** der
+Nullpunkt. Sie gegen null zu prüfen und „bricht nicht" zu melden, wäre
+die falsche Frage gewesen.
+
+⚠️ Die einzelne Mischung bleibt in der Ausgabe stehen — ausdrücklich als
+**Anschauung**, nicht als Prüfung.
+
+### ⚠️ Ein dritter, kleinerer Fund: bedeutungslose Zahlen gehören nicht in die Ausgabe
+
+Der Arm „nur Entscheidung" trägt als Rohwert eine **Flagge** (1,0), keinen
+Risikoanteil — seine Rohsumme war −267.726 und hätte den nächsten Leser
+in die Irre geführt. Sie wird jetzt ausdrücklich **nicht** gedruckt.
+
+**Ausführlich:** Befunde 2.508-hebelstufung-traegt, -nullbezug-sizing,
+-schalter-zurueckgezogen, -risikobudget · Schritt 68

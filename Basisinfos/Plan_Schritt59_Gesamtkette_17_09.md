@@ -914,7 +914,58 @@ Zufall, sondern in der Deckung.**
 | 1 | **Mitläufertest** (Prüflisten-Frage 1, Methodik 2.80) | ✔✔ **erledigt 21.09., zwei Pfade** |
 | 2 | **Die Deckung lösen** — zirkulärer Verschub (2.286) braucht keine Blöcke, ist aber nur für die Akkumulation validiert; Übertragung verlangt denselben Selbsttest wie der Bootstrap (2.204/2.485) | **offen — jetzt der Engpass** |
 | 3 | **Erst dann** die Nennerfrage aus Schritt 67 | wartet |
-| 4 | ⚠️ **Regel-3-Entscheidung** beim Hebel — Nutzerfrage, keine Messfrage | **offen** |
+| 4 | **Regel-3-Frage** beim Hebel | ✔✔ **gemessen 21.09. — gegen meinen eigenen Vorschlag** |
+
+#### ✔✔✔ Punkt 4 — die Hebelstufung trägt, und `turnover` wegzulassen schadet
+
+Auf die Nutzerfrage *„miss ob der Hebel besser wird oder schadet"* wurde
+das **Logwachstum** `ln(1+r·R)` gerechnet — mit den **echten**
+Betriebsfunktionen, 76.853 Anker, 2.401 Tage, 40 Blöcke, drei Saaten,
+bei **gleichem Risikobudget**.
+
+| Vergleich | Wirkung | Nullpunkt | |
+|---|---|---|---|
+| **ALT − FLACH** | +0,000385 | −0,000228 | ✔ **BELEGT** |
+| **ALT − ZUFALL** | +0,000368 | −0,000213 | ✔ **BELEGT** |
+| **GATE − FLACH** *(nur Entscheidung)* | +0,000270 | −0,000203 | ✔ **BELEGT** |
+| **ALT − GATE** *(nur Stufung)* | +0,000115 | −0,000025 | ✔ **BELEGT** |
+| **OHNE turnover − ALT** | **−0,000349** | +0,000087 | ✔ **BELEGT — schlechter** |
+| SCHALTER − ALT | −0,000355 | +0,000011 | knapp nicht belegt |
+| KLAMMER WEIT − ALT | +0,000017 | −0,000126 | nicht belegt |
+
+➔ Die Hebelregel tut **zwei** Dinge und **beide tragen**: die
+**Entscheidung** (49,4 % der Anker bekommen r=0) trägt rund **doppelt**
+so viel wie die **Stufung**.
+➔ Die **Klammer** 0,5–1,25 % ist **nicht** der Engpass.
+
+⛔ **Mein Schalter-Vorschlag ist zurückgezogen** — er wächst auf
+**Zufallsniveau** (142,04 gegen ZUFALL 142,68, ALT 167,15).
+
+⚠️⚠️ **Der Regel-3-Konflikt bleibt — als benannter Zielkonflikt.** Die
+Vorgabe verlangt etwas, das die Messung als wachstumsmindernd ausweist.
+Registrieren und beobachten, nicht stillschweigend auflösen.
+
+#### ⚠️⚠️⚠️ Und ein eigener Fehler gehört dazu (2.508-nullbezug-sizing)
+
+```
+geprüft gegen die NULL       →  0 von 8 Vergleichen belegt
+geprüft gegen den NULLPUNKT  →  4 von 8 belegt
+```
+
+Der Unterschied zweier Sizing-Regeln enthält einen **Jensen**-Anteil
+(`ln(1+rR) ≈ r·E[R] − r²·Var(R)/2`, quadratisch in r), der **nur von der
+Konzentration** des Einsatzes kommt — und **gegen** die konzentrierte
+Regel geht.
+
+⚠️ Ich hatte bereits gemeldet, *„die Hebelstufung ist nicht nachweislich
+besser als flaches Sizing"*. **Das war falsch.** Die Hausregel vom 08.09.
+(Bezug = Nullpunkt, nicht Null) hätte es verhindert — **eine eigene
+Simulation erbt sie nicht automatisch.**
+
+⚠️ Ein zweiter Konstruktionsfehler im ersten Lauf: die rohen Summen
+verglichen, wo FLACH mit doppeltem Risiko bei jeder Gelegenheit einstieg.
+Gemessen war der größere **Einsatz**, nicht die bessere **Regel**. Erst
+bei gleichem Budget dreht sich das Bild (167 gegen 142).
 
 #### ✔✔ Punkt 1 — keiner ist ein Mitläufer, beide tragen eigenständig
 
