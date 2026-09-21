@@ -1,5 +1,43 @@
 # -*- coding: utf-8 -*-
-"""PHASE 4 · PUNKT C - TRAEGT `turnover` AUF DEM FREIEN UMLAUF?
+"""
+## ⚠️⚠️⚠️ VORABFESTLEGUNG DES LAUFS VOM 21.09.2026 (`--alle-mengen`)
+
+Nutzerauftrag: *„dann der Messlauf auf der selektierten korrekten Menge
+nach messregelwerk"*. Zwei Auflagen treffen hier zusammen:
+
+  Kandidatenregister  „WER DIESE TABELLE AENDERN WILL, MUSS AUF DER
+                      SELEKTIERTEN MENGE MESSEN" - auf der freien Menge
+                      wirken die Beitraege laut F-212 nur auf 1,5 % der
+                      Anker, dort kommt zuverlaessig ein Nullbefund heraus
+  `menge-folgt-der-datenlage`  „Die Zulaessigkeit SORTIERT AUS, was zu
+                      duenn ist. Das URTEIL muss ueber ALLE zulaessigen
+                      Mengen halten."
+
+⚠️⚠️ DER LAUF VOM 21.09. FRUEH ERFUELLTE BEIDES NICHT: er lief auf
+`menge_nach_datenlage` (der SCHMALSTEN) und zusaetzlich auf einer FESTEN
+Menge 50 %. Das einzige TRAEGT stand auf der festen Menge - also auf
+genau einer, ohne Robustheitsnachweis.
+
+### Was als Ergebnis gilt - VOR dem Lauf festgelegt
+
+| Ergebnis fuer Arm NEU-VOLL (`umschlag_frei`) | Deutung |
+|---|---|
+| traegt auf **allen** zulaessigen Mengen, mind. ein Horizont | ✔ **tragfaehig** |
+| traegt auf **einigen, nicht allen** | ⚠️ **nicht robust** - das ist ein BEFUND, kein Grund zur Mengenwahl |
+| traegt auf **keiner** | ✖ im 365-Tage-Fenster **nicht nachweisbar** |
+
+⚠️ DER ALT-ARM (`umschlag_gesamt`) LAEUFT ALS MASSSTAB FUER DAS FENSTER
+MIT, nicht als Angeklagter. Sein Durchfallen ist KEIN Widerruf der
+registrierten Tabelle (R-R11) - die steht auf H20 und 2.636 Tagen, hier
+sind es H2 bis H5 und ein Jahr.
+
+⚠️⚠️ UND WAS DIESER LAUF NICHT BEANTWORTEN KANN: ob die Stufen
+(+3,15 ... -2,40) fuer `umschlag_frei` gelten. Das waere eine eigene
+Rechnung (`rechne_turnover_beitrag.py --horizont N` auf der neuen
+Quelle), und sie setzt voraus, dass hier ueberhaupt etwas traegt.
+
+## Vorab festgelegt
+PHASE 4 · PUNKT C - TRAEGT `turnover` AUF DEM FREIEN UMLAUF?
 
 ⚠️ Der Nenner von `turnover`. Bisher Coin Metrics `SplyCur` = die
 GESAMTAUSGABE auf dem Ledger (2.500-splycur-ist-gesamtausgabe), 61
@@ -204,6 +242,11 @@ def main(argv=None) -> int:
     # laufen ALLE Arme auf demselben Auswahlanteil, und erst dann ist
     # die Differenz zwischen ihnen die Groesse bzw. die Menge allein.
     fest_menge = _arg(args, "--feste-menge", "")
+    # ⚠️⚠️ `--alle-mengen`: das Urteil ueber JEDE zulaessige
+    # Menge, wie es `menge-folgt-der-datenlage` verlangt. Ohne die
+    # Flagge bleibt das alte Verhalten (eine Menge), damit die
+    # Laeufe vom 21.09. frueh reproduzierbar bleiben (R-R11).
+    alle_mengen = "--alle-mengen" in args
     # ⚠⚠ DIE SAATPROBE ERREICHTE NUR DEN BOOTSTRAP (21.09.2026).
     # `--saat` geht in das `rng`, mit dem `urteil_tage` zieht. Die 40
     # NULLWELTEN werden in `messnorm.pruefe` dagegen mit der
@@ -325,27 +368,49 @@ def main(argv=None) -> int:
                 # mischt die Differenz Symbolmenge UND Auswahlanteil.
                 # Genau die Falle "die Grundgesamtheit ist keine
                 # Stellschraube", hier im eigenen Vergleich.
-                menge = (fest_menge or
-                         MA.menge_nach_datenlage(je, mom, horizont=H))
-                if menge is None:
+                # ⚠️⚠️⚠️ ALLE ZULAESSIGEN MENGEN, NICHT NUR EINE
+                # (21.09.2026, Nutzerauftrag "nach messregelwerk").
+                #
+                # `menge-folgt-der-datenlage`: *„Die Zulaessigkeit
+                # SORTIERT AUS, was zu duenn ist. Das URTEIL muss ueber
+                # ALLE zulaessigen Mengen halten. Wer nur auf einer
+                # traegt, ist nicht robust - und das ist ein Befund,
+                # kein Grund zur Mengenwahl."*
+                #
+                # ⚠️ `--feste-menge` bleibt daneben bestehen: fuer den
+                # ARMVERGLEICH muessen alle Arme denselben Auswahlanteil
+                # haben, sonst mischt die Differenz Symbolmenge UND
+                # Auswahlanteil.
+                if alle_mengen:
+                    _kand = MA.zulaessige_mengen(je, mom, horizont=H)
+                elif fest_menge:
+                    _kand = [fest_menge]
+                else:
+                    _m = MA.menge_nach_datenlage(je, mom, horizont=H)
+                    _kand = [_m] if _m else []
+                if not _kand:
                     print("  %-9s %3d %6d %6s -> KEINE Menge haelt Anker UND "
                           "Bloecke" % (name, H, syms, "-"))
                     continue
-                try:
-                    b = MA.pruefe_auswahl(
-                        "turnover", je, mom, lage=lagen[ziel],
-                        menge=menge,
-                        rng=np.random.default_rng(saat), horizont=H,
-                        hypothese="C Kalibrierung Free Float",
-                        verwendung="Beitrag", zielgroesse=ziel)
-                except Exception as exc:                   # noqa: BLE001
-                    print("  %-9s %3d -> %s" % (name, H, str(exc)[:66]))
-                    continue
-                ergebnis.setdefault((ziel, name), {})[H] = b
-                print("  %-9s %3d %6d %6s %+9.4f [%+.4f..%+.4f] %+9.4f %7d  %s"
-                      % (name, H, syms, menge, b.wirkung, b.unten, b.oben,
-                         b.bezugswert, b.n_bloecke, kurz(b.urteil)),
-                      flush=True)
+                for menge in _kand:
+                    try:
+                        b = MA.pruefe_auswahl(
+                            "turnover", je, mom, lage=lagen[ziel],
+                            menge=menge,
+                            rng=np.random.default_rng(saat), horizont=H,
+                            hypothese="C Kalibrierung Free Float",
+                            verwendung="Beitrag", zielgroesse=ziel)
+                    except Exception as exc:               # noqa: BLE001
+                        print("  %-9s %3d %6s -> %s"
+                              % (name, H, menge, str(exc)[:58]))
+                        continue
+                    ergebnis.setdefault((ziel, name), {})[(H, menge)] = b
+                    print("  %-9s %3d %6d %6s %+9.4f [%+.4f..%+.4f] "
+                          "%+9.4f %7d  %s"
+                          % (name, H, syms, menge, b.wirkung, b.unten,
+                             b.oben, b.bezugswert, b.n_bloecke,
+                             kurz(b.urteil)),
+                          flush=True)
             print()
 
     # ---- DIE AUSWERTUNG ------------------------------------------------
@@ -359,31 +424,45 @@ def main(argv=None) -> int:
             if not je_h:
                 print("    %-9s keine auswertbare Zelle" % name)
                 continue
-            traegt = sorted(h for h, b in je_h.items() if b.traegt)
-            zeile = " ".join("H%d:%+.4f%s" % (h, je_h[h].wirkung,
-                                              "*" if je_h[h].traegt else "")
-                             for h in sorted(je_h))
-            print("    %-9s %s   traegt bei %s"
-                  % (name, zeile,
-                     ("H" + ", H".join(str(h) for h in traegt)) if traegt
-                     else "KEINEM Horizont"))
+            # ⚠️⚠️ DER SCHLUESSEL IST (Horizont, Menge), seit
+            # `--alle-mengen` (21.09.2026). Vorher war es nur der
+            # Horizont - die erste Fassung dieser Zeile stuerzte
+            # deshalb ab, und das war gut so: ein stilles Zusammen-
+            # fassen ueber Mengen haette die Robustheitsfrage genau
+            # verdeckt, um die es hier geht.
+            traegt = sorted(k for k, b in je_h.items() if b.traegt)
+            zeile = " ".join(
+                "H%d/%s:%+.4f%s" % (k[0], k[1], je_h[k].wirkung,
+                                    "*" if je_h[k].traegt else "")
+                for k in sorted(je_h))
+            print("    %-9s %s" % (name, zeile))
+            print("    %-9s traegt auf %d von %d zulaessigen Zellen%s"
+                  % ("", len(traegt), len(je_h),
+                     (": " + ", ".join("H%d/%s" % k for k in traegt))
+                     if traegt else " - KEINER"))
         a = ergebnis.get((ziel, "ALT"), {})
         n = ergebnis.get((ziel, "NEU"), {})
         v = ergebnis.get((ziel, "NEU-VOLL"), {})
-        beide = sorted(set(a) & set(n))
-        if beide:
-            d = [n[h].wirkung - a[h].wirkung for h in beide]
-            print("    ➤ GROESSE (NEU minus ALT, gleiche Symbole): "
-                  "%s · Median %+.4f R"
-                  % (" ".join("H%d:%+.4f" % (h, n[h].wirkung - a[h].wirkung)
-                              for h in beide), float(np.median(d))))
-        beide2 = sorted(set(n) & set(v))
-        if beide2:
-            d2 = [v[h].wirkung - n[h].wirkung for h in beide2]
-            print("    ➤ MENGE (NEU-VOLL minus NEU, gleiche Groesse): "
-                  "%s · Median %+.4f R"
-                  % (" ".join("H%d:%+.4f" % (h, v[h].wirkung - n[h].wirkung)
-                              for h in beide2), float(np.median(d2))))
+        # ⚠️⚠️ DER VERGLEICH LAEUFT UEBER (Horizont, Menge) - nur
+        # ZELLEN MIT GLEICHER MENGE sind vergleichbar. Wer ueber
+        # verschiedene Mengen differenziert, mischt Symbolmenge UND
+        # Auswahlanteil; genau die Falle, vor der der Block weiter oben
+        # warnt ("die Grundgesamtheit ist keine Stellschraube").
+        def _paar(links, rechts, titel):
+            gemeinsam = sorted(set(links) & set(rechts))
+            if not gemeinsam:
+                return
+            d = [rechts[k].wirkung - links[k].wirkung for k in gemeinsam]
+            print("    ➤ %s: %s · Median %+.4f R"
+                  % (titel,
+                     " ".join("H%d/%s:%+.4f"
+                              % (k[0], k[1],
+                                 rechts[k].wirkung - links[k].wirkung)
+                              for k in gemeinsam),
+                     float(np.median(d))))
+
+        _paar(a, n, "GROESSE (NEU minus ALT, gleiche Symbole)")
+        _paar(n, v, "MENGE (NEU-VOLL minus NEU, gleiche Groesse)")
         print()
     print("  ⚠️ EIN VORZEICHEN IST KEIN BEFUND. Getragen hat, was das Band "
           "vom Nullpunkt")

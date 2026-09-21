@@ -88,12 +88,31 @@ import messe_kandidaten_als_regel as K
 import argparse as _ap
 _a = _ap.ArgumentParser()
 _a.add_argument("--horizont", type=int, default=20)
-HOR = _a.parse_known_args()[0].horizont
+# ⚠️⚠️ WELCHE UMSCHLAGGROESSE (21.09.2026, Befund 2.512).
+# Vorgabe bleibt `gesamt` - das ist die registrierte und live
+# laufende Groesse, und jeder alte Aufruf muss dasselbe liefern
+# wie vorher (R-R11).
+_a.add_argument("--umschlag", choices=("gesamt", "frei"),
+                default="gesamt")
+_p = _a.parse_known_args()[0]
+HOR, UMSCHLAG = _p.horizont, _p.umschlag
 CRV = 2.0
-print("HORIZONT H%d" % HOR)
+print("HORIZONT H%d   GROESSE `umschlag_%s`" % (HOR, UMSCHLAG))
 
 reihen = B.lade()
-menge = MB.reihe("data/onchain_historie.db", "splycur")
+if UMSCHLAG == "frei":
+    # ⚠️ DIESELBE Aufbereitung wie in der Kalibrierung, nicht
+    # eine zweite: `menge_neu` wirft die Tagesartefakte der Quelle
+    # aus (2.502-mengenspitzen). Wer hier roh laedt, rechnet eine
+    # andere Tabelle als die, die gemessen wurde.
+    import phase4_c_kalibrierung_freefloat as _KF
+    menge, _weg, _ges = _KF.menge_neu(_KF.MENGE_DB, True)
+    print("  Quelle: %s · %d Symbole · %d von %d Punkten ausgeworfen"
+          % (_KF.MENGE_DB, len(menge), _weg, _ges))
+else:
+    menge = MB.reihe("data/onchain_historie.db", "splycur")
+    print("  Quelle: data/onchain_historie.db · %d Symbole"
+          % len(menge))
 je_tag = K.baue(reihen, "turnover", menge, horizont=HOR)
 
 sammel = {k: [] for k in range(5)}
@@ -125,6 +144,43 @@ for k in range(5):
     stufen.append(round(roh / 2.0, 2))
     print("     %d     %+.4f R    %+.4f R      %+5.2f       %+5.2f"
           % (k, werte[k], ab, roh, roh / 2.0))
+print()
+# ---- ⚠️⚠️⚠️ DIE VORABFESTLEGUNG VOM 01.09.2026, HIER GEPRUEFT
+#
+#   "nutzbar = die Stufen sind MONOTON ueber die Fuenftel und die
+#    Spanne ist groesser als null; nicht nutzbar = sonst."
+#
+# ⚠️ Sie steht seit dem 01.09. im Modulkopf und wurde bis
+# zum 21.09.2026 NIE GERECHNET - man musste die Zahlen von Hand
+# ansehen. Genau daran ist der Schnittabstand am 31.08. gescheitert:
+# die Bedingung stand da, und ich habe ihn trotzdem registriert.
+_fallend = all(stufen[i] >= stufen[i + 1] for i in range(4))
+_steigend = all(stufen[i] <= stufen[i + 1] for i in range(4))
+_spanne = abs(stufen[0] - stufen[4])
+print()
+print("=" * 74)
+print("  VORABFESTLEGUNG (01.09.2026): monoton UND Spanne > 0")
+print("=" * 74)
+print("  Stufen        %s" % (tuple(stufen),))
+print("  monoton       %s"
+      % ("JA, fallend" if _fallend else
+         "JA, steigend" if _steigend else
+         "⚠️ NEIN - Zickzack"))
+print("  Spanne        %.2f Punkte" % _spanne)
+_nutzbar = (_fallend or _steigend) and _spanne > 0
+print()
+print("  ==> %s"
+      % ("✔✔ NUTZBAR - die Tabelle erfuellt die Vorabfestlegung"
+         if _nutzbar else
+         "⚠️ NICHT NUTZBAR - die Zelle bekommt KEINEN Beitrag "
+         "und laeuft mit der Notiz 'nicht vermessen' durch"))
+print()
+print("  ⚠️ Eine monotone Tabelle ist noch kein TRAEGT. Ob die Groesse "
+      "auf diesem Horizont ueberhaupt WIRKT, beantwortet")
+print("     `phase4_c_kalibrierung_freefloat`, nicht diese Rechnung -"
+      " sie setzt die Wirkung voraus")
+print("     und verteilt sie auf Stufen.")
+
 print()
 print("  Spanne unterstes gegen oberstes Fuenftel: %+.2f Punkte roh, %+.2f geschrumpft"
       % (100 * (werte[0] - werte[4]) * faktor,
