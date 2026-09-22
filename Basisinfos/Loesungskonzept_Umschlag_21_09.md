@@ -182,7 +182,60 @@ Reglerwirkung nicht.
 
 ---
 
-## 8. Der Vorschlag — Stand nach der Korrektur
+## 8. ✔✔ NACHTRAG 21.09. — die Ordnung trägt, ein Regler ist gerechtfertigt
+
+**Auftrag:** *„dann Reglerwirkung messen"*. Beim Nachsehen: **die gab es
+im ganzen Haus noch nie.** Jeder Beitrag ist mit einer **Sperr**wirkung
+registriert; angewandt wird ein **Regler**.
+
+### Gemessen: Wirkung bei wachsender Sperrbreite
+
+Wer nur im obersten Fünftel schlecht ist, bringt ab 20 % nichts mehr
+dazu. Wer eine echte Ordnung hat, trägt weiter.
+
+| netto (Nullwert abgezogen) | 20 % | 40 % | 60 % | 80 % |
+|---|---|---|---|---|
+| **`umschlag_naeherung`** | +0,0169 | +0,0251 | +0,0299 | **+0,0457** |
+| `umschlag_gesamt` (live) | +0,0173 | +0,0304 | +0,0405 | **+0,0848** |
+
+➤ **Beide steigen durchgehend — die Ordnung trägt.**
+
+⚠️⚠️ **Die Zufallskontrolle war Pflicht und hätte mir fast gefehlt.**
+`median-minus-median-verzerrt` hält fest: bei kleinen Gruppen ist die
+Statistik auch **ohne** Information positiv — und je breiter die Sperre,
+desto kleiner die freie Gruppe. Nullwert gemessen (5 Ziehungen je
+Breite): +0,0003 bis +0,0025 bei der Näherung, +0,0018 bis +0,0106 beim
+Original. **Klein genug, aber nicht null** — die Regel verlangt ihn
+*abgezogen*, nicht danebengestellt.
+
+✔ Besetzung geprüft: bei 80 % Sperrbreite bleiben **57,9** freie Anker
+je Tag (Näherung) gegen **9,6** (Original) — und genau dort ist der
+Nullwert viermal so gross.
+
+### ⛔ Damit fällt meine Schalter-These
+
+Sie stand auf der **Stufentabelle** (75 % der Spanne im obersten
+Fünftel) — das ist eine Aussage über die **Punktzuordnung**, nicht über
+die Information.
+
+⚠️ **Die Auflösung:** die Ordnung **trägt**, aber die H5-Tabelle
+**bildet sie nicht ab** — sie gibt den Fünfteln 0, 1 und 2 fast gleiche
+Punkte (+0,37 / +0,33 / +0,33), obwohl Fünftel 0 messbar besser ist.
+**Das ist ein Befund über die Tabelle, nicht über die Grösse.**
+
+### Und damit steht der B4-Vergleich
+
+| Beitrag | Wirkung | Häufigkeit | effektiv |
+|---|---:|---:|---:|
+| `funding` (live) | +0,0246 | **86,2 %** | +0,0212 |
+| `turnover` (live) | +0,0616 | **19,6 %** | +0,0121 |
+| **`umschlag_naeherung`** | +0,0172 | **62,9 %** | **+0,0108** |
+
+➤ **Kleinere Wirkung, dreifache Häufigkeit — effektiv praktisch gleich.**
+
+---
+
+## 9. Der Vorschlag — Stand nach beiden Korrekturen
 
 | # | Schritt | Lage |
 |---|---|---|
