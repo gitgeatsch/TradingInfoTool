@@ -87,11 +87,14 @@ import messe_funding_niveau as F                            # noqa: E402
 import messe_kandidaten_als_regel as K                      # noqa: E402
 import phase4_c_kalibrierung_freefloat as KF                # noqa: E402
 import phase4_c_naeherung_konstante_menge as NK             # noqa: E402
+import messnorm_auswahl as MA                             # noqa: E402
+from messe_beitrag_auf_auswahl import _auswahl_maske      # noqa: E402
 
 CRV = 2.0
 NEU_TAB = (2.32, 0.50, 0.34, -0.11, -3.06)      # H20, ab 2023 (2.517)
 BLOCK = 60              # = messnorm._block(20)
 ZIEH = 400
+NULL = 40               # Nullziehungen - die Norm fuehrt 40, nicht 3
 
 
 def _arg(a, f, v):
@@ -198,14 +201,36 @@ def main(argv=None) -> int:
           % (100.0 * n_alt / max(1, n_ges)))
     print()
 
-    def lauf(modus, mische=None):
-        """modus 'gewinn' = Anteil in_r > 0 · 'hoehe' = Median in_r."""
+    mom = KF.momentum250(reihen)
+    zulaessig = MA.zulaessige_mengen(je, mom, horizont=H)
+    print("  ZULAESSIGE MENGEN (Datenlage, `messnorm_auswahl`): %s"
+          % (", ".join(zulaessig) or "KEINE"))
+    print("  ⚠ `frei` ist die MARKTfrage (P6), kein Beitragsurteil -")
+    print("     das Urteil muss auf den SELEKTIERTEN Mengen halten.")
+    print()
+
+    def lauf(modus, menge, mische=None):
+        """modus 'gewinn' = Anteil in_r > 0 · 'hoehe' = Median in_r.
+
+        `menge` ist ein Name aus `messnorm_auswahl.MENGEN`. Angewandt
+        wird GENAU die Maske des Hauses (`_auswahl_maske`, Momentum 250),
+        nicht eine nachgebaute - sonst misst diese Datei eine andere
+        Auswahl als die Norm.
+        """
         rng = np.random.default_rng(mische) if mische is not None else None
+        anteil = MA.MENGEN[menge]
         tage, q = {}, ([], [], [], [])
         for tag, z in je.items():
             fu_r = r_fu.get(tag)
             if not fu_r:
                 continue
+            if anteil < 1.0:
+                if len(z) < 12:
+                    continue
+                maske = _auswahl_maske(z, mom.get(tag) or {}, anteil, None)
+                if maske is None or not maske.any():
+                    continue
+                z = [x for x, ok in zip(z, maske) if ok]
             ta, tn = r_alt.get(tag, {}), r_neu.get(tag, {})
             if rng is not None:
                 # ⚠️⚠️ KOPIE, NICHT IN PLACE. Mein erster Entwurf rechnete
@@ -237,7 +262,7 @@ def main(argv=None) -> int:
                         >= (sch_alt if nn is not None
                             else sch_alt * max(FU_TAB) / voll_alt):
                     yc.append(y)
-            if len(alle) < 12 or not ya or not yb or not yc:
+            if len(alle) < MA.MIND_ANKER or not ya or not yb or not yc:
                 continue
             mit = (np.mean if modus == "gewinn" else np.median)
             m = float(mit(alle))
@@ -248,79 +273,92 @@ def main(argv=None) -> int:
             q[3].append(m)
         return tage, [st.mean(x) if x else 0.0 for x in q]
 
-    def zeige(modus, titel, einheit, skala):
-        tage, anteile = lauf(modus)
+    def zeile(modus, menge, skala, saat):
+        tage, anteile = lauf(modus, menge)
+        # ⚠️⚠️ 20 BLOECKE, NICHT WENIGER. `messnorm._block(20)` gibt 60
+        # Tage; die Norm fordert 20 Bloecke, also 1.200 auswertbare Tage.
+        # `zulaessige_mengen` zaehlt auf der ROHEN Ankermenge - hier
+        # fallen zusaetzlich Tage ohne funding-Rang weg, und dann hat
+        # `5%` nur noch 12 Bloecke. Wer das uebergeht, faellt ein Urteil,
+        # das die eigene Norm nicht traegt (erste Fassung tat es).
         if not tage:
-            print("  \u26d4 %s: keine auswertbaren Tage" % titel)
-            return
+            return None
+        if len(tage) // BLOCK < 20:
+            return {"duenn": len(tage) // BLOCK, "tage": len(tage)}
         t = sorted(tage)
-        mw = [st.mean([tage[x][i] for x in t]) for i in range(3)]
-        basis = anteile[3]
-        print("  " + "=" * 84)
-        print("  %s   (%d Tage)" % (titel, len(t)))
-        print("  " + "=" * 84)
-        print("  %-34s %12s %12s %12s"
-              % ("", "A HEUTE", "B LOESUNG", "C NUR MENGE"))
-        print("  " + "-" * 76)
-        print("  %-34s %11.1f %% %11.1f %% %11.1f %%"
-              % ("Auswahlanteil je Tag", 100 * anteile[0],
-                 100 * anteile[1], 100 * anteile[2]))
-        f = "%11.1f %%" if skala == 100 else "%13.4f"
-        print(("  %-34s " + f + " " + f + " " + f)
-              % ((titel.split("  ")[0],) + tuple(
-                  skala * (basis + m) for m in mw)))
-        print(("  %-34s " + f) % ("dasselbe fuer ALLE Anker",
-                                  skala * basis))
-        print("  " + "-" * 76)
-        print("  %-34s %+12.2f %+12.2f %+12.2f"
-              % ("Vorsprung in " + einheit,
-                 skala * mw[0], skala * mw[1], skala * mw[2]))
-        print()
-        for name, i in (("B minus A  (ganze Aenderung)", 1),
-                        ("C minus A  (Abdeckung allein)", 2)):
-            d = np.array([tage[x][i] - tage[x][0] for x in t]) * skala
-            m, u, o = band(d, saat)
-            print("  %-32s %+7.2f %s  [%+6.2f .. %+6.2f]  %s"
-                  % (name, m, einheit, u, o,
-                     "\u2714 TRAEGT" if u > 0 else
-                     "\u2716 SCHLECHTER" if o < 0 else
-                     "\u26a0 nicht trennbar"))
+        d = np.array([tage[x][1] - tage[x][0] for x in t]) * skala
+        m, u, o = band(d, saat)
         nk = []
-        for ms in (11, 22, 33):
-            tg, _a = lauf(modus, mische=ms)
+        for ms in range(NULL):
+            tg, _a = lauf(modus, menge, mische=1000 + ms)
             if tg:
                 nk.append(skala * st.mean(
                     [v[1] - v[0] for v in tg.values()]))
-        if nk:
-            print("  %-32s %s  Mittel %+6.2f %s"
-                  % ("NULLKONTROLLE (gemischt)",
-                     " ".join("%+6.2f" % x for x in nk),
-                     st.mean(nk), einheit))
-        d = np.array([tage[x][1] - tage[x][0] for x in t]) * skala
-        ist = band(d, saat)[0]
-        gef = []
-        print()
-        print("  POSITIVKONTROLLE auf die DIFFERENZ (2.105):")
-        for auf in ([0.0, 0.5, 1.0, 2.0, 5.0] if skala == 100
-                    else [0.0, 0.01, 0.02, 0.05]):
-            m, u, o = band(d + auf, saat)
-            if auf > 0 and u > 0:
-                gef.append(auf)
-            print("    %-18s %+7.2f  [%+6.2f .. %+6.2f]  %s"
-                  % (("+%.2f %s" % (auf, einheit)) if auf
-                     else "nichts (Ist-Lage)", m, u, o,
-                     "TRAEGT" if u > 0 else "nicht trennbar"))
-        if gef:
-            print("    \u27a4 Die Anlage findet eine WAHRE Differenz ab "
-                  "%+.2f %s" % (ist + min(gef), einheit))
+        null = st.mean(nk) if nk else 0.0
+        return dict(tage=len(t), anker=anteile[3], q=anteile,
+                    a=skala * (anteile[3] + st.mean([tage[x][0] for x in t])),
+                    b=skala * (anteile[3] + st.mean([tage[x][1] for x in t])),
+                    alle=skala * anteile[3], diff=m, u=u, o=o, null=null,
+                    netto=m - null, bloecke=len(d) // BLOCK)
+
+    def tabelle(modus, titel, einheit, skala, fmt):
+        print("  " + "=" * 96)
+        print("  %s   (Nullkontrolle %d Ziehungen)" % (titel, NULL))
+        print("  " + "=" * 96)
+        print("  %-6s %6s %7s %8s %8s %8s %9s %-18s %7s  %s"
+              % ("Menge", "Tage", "Bloecke", "A HEUTE", "B LSG",
+                 "ALLE", "DIFF", "Band", "NULLPKT",
+                 "Urteil GEGEN DEN NULLPUNKT"))
+        print("  " + "-" * 96)
+        aus = {}
+        for menge in ("5%", "10%", "20%", "50%", "frei"):
+            r = zeile(modus, menge, skala, saat)
+            if r is None:
+                print("  %-6s %s" % (menge, "keine auswertbaren Tage"))
+                continue
+            if "duenn" in r:
+                print("  %-6s %6d %7d   -- ZU DUENN: die Norm fordert 20 "
+                      "Bloecke, kein Urteil --"
+                      % (menge, r["tage"], r["duenn"]))
+                continue
+            # ⚠⚠ GEGEN DEN NULLPUNKT, NICHT GEGEN NULL -
+            # der Messstandard vom 08.09. im Wortlaut. Die erste
+            # Fassung pruefte `u > 0` und haette die HOEHE auf allen
+            # drei Mengen als TRAGEND gemeldet, obwohl der Nullwert
+            # dort ueber der unteren Bandgrenze liegt (10 %: Nullpunkt
+            # +0,15 gegen Bandgrenze +0,01).
+            traegt = r["u"] > r["null"]
+            aus[menge] = traegt
+            print(("  %-6s %6d %7d " + fmt + " " + fmt + " " + fmt
+                   + " %+9.2f [%+7.2f..%+7.2f] %+7.2f  %s")
+                  % (menge, r["tage"], r["bloecke"], r["a"], r["b"],
+                     r["alle"], r["diff"], r["u"], r["o"], r["null"],
+                     ("✔ TRAEGT" if traegt else
+                      "✖ SCHLECHTER" if r["o"] < r["null"] else
+                      "⚠ nicht trennbar")
+                     + ("" if menge != "frei" else "  (MARKTfrage)")))
+        print("  " + "-" * 96)
+        sel = {k: v for k, v in aus.items() if k != "frei"
+               and k in zulaessig}
+        if not sel:
+            print("  ⛔ KEINE selektierte Menge ist zulaessig - die "
+                  "Frage ist hier nicht als Beitragsfrage zu stellen")
+        elif all(sel.values()):
+            print("  ✔✔ TRAEGT AUF ALLEN %d ZULAESSIGEN "
+                  "SELEKTIERTEN MENGEN (%s)"
+                  % (len(sel), ", ".join(sorted(sel))))
+        elif any(sel.values()):
+            print("  ⚠ NICHT ROBUST - traegt nur auf %s von %s"
+                  % (", ".join(k for k, v in sel.items() if v) or "keiner",
+                     ", ".join(sorted(sel))))
         else:
-            print("    \u26a0 Die Anlage findet KEINE aufgepraegte "
-                  "Staerke - diese Messung sagt nichts")
+            print("  ✖ TRAEGT AUF KEINER zulaessigen selektierten "
+                  "Menge - das `frei`-Ergebnis war eine MARKTantwort")
         print()
 
-    zeige("gewinn", "GEWINNANTEIL  (Anteil mit in_r > 0)",
-          "Pp", 100)
-    zeige("hoehe", "HOEHE  (Median in_r)", "R", 1)
+    tabelle("gewinn", "GEWINNANTEIL in Prozent  (Anteil mit in_r > 0)",
+            "Pp", 100, "%7.1f%%")
+    tabelle("hoehe", "HOEHE  (Median in_r)", "R", 1, "%8.4f")
 
     print("  Dauer %.1f Minuten" % ((time.time() - t0) / 60.0))
     return 0
