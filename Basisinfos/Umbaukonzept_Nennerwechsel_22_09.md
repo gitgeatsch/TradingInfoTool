@@ -189,8 +189,8 @@ S3  Herkunftsmarke + Riegel fuer den Buendelfaktor (T6)
 S4  Betriebsweg + Scheduler (T1, T4, T7)   <- GEBAUT 22.09., 2.527 (live=False)
 S5  Grundgesamtheit messen (P3)          <- ERLEDIGT 22.09., 2.525
 S6  Schwelle 0,060 + KALIBRIERT_FUER (T5)          ← im SELBEN Commit wie S4
-S7  Doku-Abgleich (Abschnitt 2)
-S8  Simulation + Suite + Betrieb (P4, P6, P7)
+S7  Doku-Abgleich                        <- ERLEDIGT 22.09., 2.531 (Abschnitt 2)
+S8  Betrieb geprueft                     <- 22.09. aktiv (2.532); der Nachweis am ersten neuen Signal steht aus
 ```
 
 ⚠️ **S1 bis S3 sind wirkungslos und deshalb sicher** — sie können vor

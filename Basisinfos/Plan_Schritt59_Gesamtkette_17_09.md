@@ -412,8 +412,15 @@ dann entsteht keine Nacharbeit.
    **Ist-Stand:** die Rechnung ist gebaut (`betraege.hebelrechnung`,
    `r(q)` = halbes Kelly geklammert 0,5–1,25 %, `hebel = nominal /
    Hebelnenner`, `hebel_ab` 2,0, `hebel_grenze` 5,0, Aggregat 3 %) und steht
-   auf **`aktiv: False`** — mit zwei im Code genannten Vorbedingungen:
-   A1 (✔ gefallen) und **die Simulation der Hebelverteilung** (dieser Punkt).
+   im **Code** auf `aktiv: False` — mit zwei Vorbedingungen: A1 (✔ gefallen)
+   und **die Simulation der Hebelverteilung** (dieser Punkt).
+
+   ⚠⚠⚠ **RICHTIGSTELLUNG 22.09.2026: DIE RECHNUNG IST SCHARF.**
+   `Basisinfos/config.yaml` setzt `rollen_kette.hebel_aus_quote.aktiv: true`
+   und ueberschreibt damit den Code-Vorgabewert. Belegt im Betrieb: **21
+   Hebelsignale seit dem 12.09.**, Faktoren 2,37 bis 3,52 (Befund **2.534**).
+   ⚠ Genau die Falle `codevorgabe-ist-nicht-der-laufende-wert` — dieser Plan
+   hat den Vorgabewert fuer den laufenden gehalten.
 
    **Die Reihenfolge, abgestimmt:**
 
@@ -1351,6 +1358,30 @@ In Schritt 59 nur: Trichter und Anzahl der Nicht-Krypto- und Absicherungsempfehl
 ### Phase 8 – LLM-Ebene als Basislinie (misst, ändert nichts)
 
 Die Fragen aus § 5.2 auf den Live-Daten plus Phase-1-Protokoll, alle als HINWEIS mit ausgewiesener Datenlänge; BC bei Nicht-Krypto zuerst (einzige Entscheidung). Optional LLM historisch (`backtest_llm1_historisch.py`) nur nach Entscheidung **N7** (Kontingent, Vorwissen-Problem).
+
+### ⚠️⚠️⚠️ DER HEBEL IST AM 22.09. MITGEWECHSELT — E4 WAR NICHT EINZUHALTEN
+
+Meine Entscheidungsvorlage E4 lautete *„erst Spot, der Hebel geht nicht
+mit"*. **Das war nicht einzuhalten** — aus dem Grund, den dieser Plan zwei
+Abschnitte weiter oben selbst festhält: **es gibt keine eigene
+Hebelbewertung** (Regel 3, 2a).
+
+`agent/rollen_lauf.py` Z. 2143 rechnet die **Quote für den Hebel** aus
+denselben Merkmalen wie die Spot-Bewertung, `turnover_fuenftel` inbegriffen
+— *„ohne Quote keine Hebelrechnung, der Trade wird als Spot gerechnet"*.
+
+| | |
+|---|---|
+| **Richtung gemessen** | 11 von 16 Hebelsignalen bekommen einen höheren Faktor, Median **1,00 → 3,49**, SOL/BTC/BNB an der Deckelgrenze 5,00 (**2.517**) |
+| ⚠️ **Wert NICHT gemessen** | die Simulation lief auf der **alten** Schwelle; unter 0,060 ist der genaue Faktor offen |
+| ✔ **Akut unkritisch** | `hebel_signals` endet am 10.08., **0 offene Hebelpositionen**; bis M1 wird ohnehin nicht investiert |
+| ✔ **Fachlich gedeckt** | die Hebelstufung **mit** turnover ist gemessen besser als ohne (**2.508**) |
+| ⚠️ **Was bleibt** | die Mails empfehlen weiter, und 3,49 statt 1,00 ist eine **andere** Empfehlung — eine Risikoänderung, die aus einer Spot-Entscheidung mitgefallen ist |
+
+➤ **Gehört an M1-Kriterium 2.** Vor einer Freigabe des Hebels ist der Faktor
+unter der **jetzigen** Konfiguration zu messen, nicht unter der vom 21.09.
+
+**Befund 2.533-hebel-ist-mitgewechselt**
 
 ### ⏳ VORGEMERKT — Trigger ohne Kursreaktion (eingeordnet 22.09.2026)
 
