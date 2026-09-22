@@ -138,11 +138,56 @@ die vier oberen, die alle nahe null liegen.
 
 ---
 
-## 7. Der Vorschlag — drei Stufen, jede einzeln entscheidbar
+## 7. ⛔ KORREKTUR 21.09. — die Sperre fällt an B4
+
+**Nutzereinwand:** *„als Sperre registrieren — kann ich so nicht
+entscheiden. Dazu brauche ich die Entscheidungsgrundlage."* **Berechtigt.**
+Gemessen war die *statistische* Wirkung, nicht die **Folge im Betrieb**.
+
+### An den echten Signalen nachgemessen (2.550 Einstiege, 41 Symbole)
+
+| | Signale | Anteil |
+|---|---:|---:|
+| hätten mit Näherung einen Wert | **1.605** | **62,9 %** |
+| haben heute einen Wert | 500 | 19,6 % |
+| ⚠️ **würde die Sperre treffen** | **20** | **0,8 %** |
+
+Betroffen: **TURBO** (13) und **BEAMX** (7). Der Grund: unsere
+Watchlist-Werte liegen selten im obersten Umschlag-Fünftel des Marktes —
+die Momentum-Auswahl sortiert sie vorher aus.
+
+### ➤ Damit fällt die Sperre an R-R8/B4
+
+```
+Wirkung  +0,0172 R  ×  Häufigkeit 0,8 %  =  effektiv +0,00014 R
+```
+
+⚠️ **Meine Empfehlung war voreilig.** Sie stand auf der **Messmenge**
+(366 Symbole, dort trägt die Sperre), nicht auf der **Betriebsmenge**
+(41 Symbole, dort trifft sie fast nichts).
+
+### ✔ Was statt dessen zählt — und es ist mehr, nicht weniger
+
+| Signale auf **gesenkter** Schwelle | |
+|---|---|
+| heute | **80,4 %** |
+| mit Näherung | **37,1 %** |
+
+**Das halbiert die Fälle, in denen die Datenlücke die Latte senkt.**
+
+⛔ **Was dafür fehlt:** die Wirkung der Näherung **als Regler** ist
+**nicht gemessen** — `messnorm` rechnet mit `oben_sperren=True`, also
+die *Sperr*wirkung. Die Stufentabelle auf H5 existiert, ihre
+Reglerwirkung nicht.
+
+---
+
+## 8. Der Vorschlag — Stand nach der Korrektur
 
 | # | Schritt | Lage |
 |---|---|---|
-| **1** | `umschlag_naeherung` als **Sperre** registrieren (oberstes Fünftel), nicht als Regler | ⚠️ **Nutzerentscheidung** — Wirkung belegt, Form belegt, **B6 erfüllt**, Saatprobe bestanden |
+| **1** | ~~als **Sperre** registrieren~~ | ⛔ **VERWORFEN 21.09.** — fällt an B4: trifft nur **0,8 %** der Signale, effektiv +0,00014 R |
+| **1b** | Die **Abdeckung** nutzen — Signale mit Wert von 500 auf 1.605 | ⚠️ **dafür fehlt die REGLER-Wirkung**, gemessen ist nur die Sperrwirkung |
 | **2** | `umschlag_gesamt` als Regler **belassen**, wo er Daten hat | keine Änderung |
 | **3** | Die **Schwellenfrage** getrennt behandeln | unabhängig von 1 und 2 |
 
