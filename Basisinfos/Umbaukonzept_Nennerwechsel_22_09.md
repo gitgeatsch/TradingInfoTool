@@ -138,7 +138,7 @@ Zustand, und `pruefe_pakete.py` kann ihn gegen den Code prüfen. Wer dort
 |---|---|---|
 | **P1** | **Bitgleichheit vorher/nachher bei UNVERÄNDERTER Quelle** | jeder alte Aufruf liefert dasselbe — sonst ist der Umbau nicht additiv |
 | **P2** | **Seiteneffekt-Nachweis je Riegel** (Mutation) | Riegel abschalten → Prüfung muss rot werden. Ein Riegel, der nie greift, ist keiner |
-| **P3** | **Grundgesamtheit gemessen** | `messe_grundgesamtheit.py` — wie viele Werte wechseln das Fünftel? |
+| **P3** | ✔ **Grundgesamtheit gemessen (22.09., 2.525)** | `phase4_c_fuenftelwechsel_nenner.py` — ⚠️ nicht `messe_grundgesamtheit.py`, die misst `schnitt`. **59 %** der gemeinsamen Symbol-Tage wechseln das Fünftel auf der 20-%-Menge, **53.113 bekommen erstmals eines**. Die Größe allein macht 65,5 % (richtungsneutral), die **Menge kippt die Richtung** auf 4,35:1 nach unten |
 | **P4** | **Betriebssimulation an echten Signalen** | wie 2.517: Werte mit/ohne, Durchlass, Hebel — gegen die NB-Sicherung |
 | **P5** | **R-R9 grün** | `kalibrierung_gilt()` muss nach dem Schritt `True` sein |
 | **P6** | **Volle Suite** | 3.052 Prüfungen, nur die drei bekannten Datenstands-Zeilen rot |
@@ -157,7 +157,7 @@ S1  Fingerabdruck um den Nenner erweitern (T2)     ← ohne Wirkung, aber Voraus
 S2  NENNER_WIDERLEGT je Quelle (T3)                ← ohne Wirkung
 S3  Herkunftsmarke + Riegel fuer den Buendelfaktor (T6)
 S4  Betriebsweg + Scheduler umstellen (T1, T4)     ← HIER wirkt es
-S5  Grundgesamtheit messen (P3)
+S5  Grundgesamtheit messen (P3)          <- ERLEDIGT 22.09., 2.525
 S6  Schwelle 0,060 + KALIBRIERT_FUER (T5)          ← im SELBEN Commit wie S4
 S7  Doku-Abgleich (Abschnitt 2)
 S8  Simulation + Suite + Betrieb (P4, P6, P7)

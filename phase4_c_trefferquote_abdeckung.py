@@ -124,33 +124,22 @@ def band(werte, saat):
     return (float(np.mean(werte)), z[int(.05 * ZIEH)], z[int(.95 * ZIEH)])
 
 
-def main(argv=None) -> int:
-    args = list(sys.argv[1:] if argv is None else argv)
-    H = int(_arg(args, "--horizont", "20"))
-    saat = int(_arg(args, "--saat", "20260922"))
-    t0 = time.time()
+def baue_raenge(H: int):
+    """Anker und Raenge je Tag - EINE Stelle fuer alle Messungen darauf.
 
-    ALT_TAB = next(b.stufen for b in WK.BEITRAEGE
-                   if b.merkmal == "turnover_fuenftel")
-    FU_TAB = next(b.stufen for b in WK.BEITRAEGE
-                  if b.merkmal == "funding_fuenftel")
-    voll_alt = max(FU_TAB) + max(ALT_TAB)
-    voll_neu = max(FU_TAB) + max(NEU_TAB)
-    sch_alt = P.SCHWELLE_VORGABE
-    sch_neu = P.SCHWELLE_VORGABE * (
-        potential(max(FU_TAB), max(NEU_TAB))
-        / potential(max(FU_TAB), max(ALT_TAB)))
+    ⚠⚠ HERAUSGELOEST AM 22.09.2026, weil eine zweite Messung
+    (Fuenftelwechsel beim Nennerwechsel, S5) dieselben Raenge braucht.
+    Eine Kopie waere zwei Stellen zum Auseinanderlaufen
+    (`test-ruft-echten-code-nicht-kopie`).
 
-    print("=" * 100)
-    print("WIE VIEL PROZENT MEHR? - Lueckenrabatt gegen Abdeckung  "
-          "(bewegung_r, H%d)" % H)
-    print("=" * 100)
-    print("  A HEUTE    %s  Schwelle %.4f" % (ALT_TAB, sch_alt))
-    print("  B LOESUNG  %s  Schwelle %.4f" % (NEU_TAB, sch_neu))
-    print("  C NUR MENGE  ALT-Tabelle auf der Naeherungs-Abdeckung")
-    print("  ⚠️ Auswahlanteil NICHT angeglichen - er ist Teil des Effekts.")
-    print()
+    -> (je, r_neu, r_alt, r_fu, reihen, mom)
 
+        je      Ankertage mit `in_r`, Fenster ab `NK.AB`
+        r_neu   turnover-Fuenftel auf der NAEHERUNGSmenge
+        r_alt   turnover-Fuenftel auf `splycur` (die heutige Betriebsgroesse)
+        r_fu    funding-Fuenftel
+        mom     Momentum 250, fuer `messnorm_auswahl._auswahl_maske`
+    """
     reihen = B.lade()
     heute, _r = NK.mengen_heute()
     umst = NK.umstellungen(reihen)
@@ -191,6 +180,37 @@ def main(argv=None) -> int:
         wf = [(s, d[tag]) for s, d in fund.items() if tag in d]
         if len(wf) >= 12:
             r_fu[tag] = fuenftel(wf)
+    return je, r_neu, r_alt, r_fu, reihen, KF.momentum250(reihen)
+
+
+def main(argv=None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    H = int(_arg(args, "--horizont", "20"))
+    saat = int(_arg(args, "--saat", "20260922"))
+    t0 = time.time()
+
+    ALT_TAB = next(b.stufen for b in WK.BEITRAEGE
+                   if b.merkmal == "turnover_fuenftel")
+    FU_TAB = next(b.stufen for b in WK.BEITRAEGE
+                  if b.merkmal == "funding_fuenftel")
+    voll_alt = max(FU_TAB) + max(ALT_TAB)
+    voll_neu = max(FU_TAB) + max(NEU_TAB)
+    sch_alt = P.SCHWELLE_VORGABE
+    sch_neu = P.SCHWELLE_VORGABE * (
+        potential(max(FU_TAB), max(NEU_TAB))
+        / potential(max(FU_TAB), max(ALT_TAB)))
+
+    print("=" * 100)
+    print("WIE VIEL PROZENT MEHR? - Lueckenrabatt gegen Abdeckung  "
+          "(bewegung_r, H%d)" % H)
+    print("=" * 100)
+    print("  A HEUTE    %s  Schwelle %.4f" % (ALT_TAB, sch_alt))
+    print("  B LOESUNG  %s  Schwelle %.4f" % (NEU_TAB, sch_neu))
+    print("  C NUR MENGE  ALT-Tabelle auf der Naeherungs-Abdeckung")
+    print("  ⚠️ Auswahlanteil NICHT angeglichen - er ist Teil des Effekts.")
+    print()
+
+    je, r_neu, r_alt, r_fu, reihen, mom = baue_raenge(H)
 
     n_ges = sum(len(z) for z in je.values())
     n_alt = sum(1 for t, z in je.items() for x in z
@@ -201,7 +221,6 @@ def main(argv=None) -> int:
           % (100.0 * n_alt / max(1, n_ges)))
     print()
 
-    mom = KF.momentum250(reihen)
     zulaessig = MA.zulaessige_mengen(je, mom, horizont=H)
     print("  ZULAESSIGE MENGEN (Datenlage, `messnorm_auswahl`): %s"
           % (", ".join(zulaessig) or "KEINE"))
