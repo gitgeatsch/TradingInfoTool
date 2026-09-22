@@ -1278,9 +1278,32 @@ Er ist der einzige Filter, der mit **+0,2137 R** gemessen trägt
 (2.480) — und er ist es, der in Phase 4 und 8 geschärft wird.
 
 ⚠️ **Wer den Cooldown anfassen will, prüft vorher drei Dinge:**
-1. Stehen Phase 4, 6, 8 und 9 auf grün? Wenn nein: nicht anfassen.
-2. Ist die **Qualität** gemessen gestiegen — oder nur die Zahl?
-3. Trägt das Kontingent die neue Rate (2.466, vier Töpfe)?
+
+| # | Prüfpunkt | Stand 22.09.2026 |
+|---|---|---|
+| **1** | Stehen Phase 4, 6, 8 und 9 auf grün? | ⛔ **nein — also nicht anfassen** |
+| **2** | Ist die **Qualität** gemessen gestiegen — oder nur die Zahl? | ✔ **JA, seit 22.09.** — `umschlag_naeherung` hebt den Gewinnanteil um **+2,8 bis +4,2 Prozentpunkte**, auf allen drei zulässigen selektierten Mengen, gegen den Nullpunkt (**2.520**). Das ist der erste der drei Punkte auf grün |
+| **3** | Trägt das Kontingent die neue Rate (2.466, vier Töpfe)? | ⏳ offen — die Lösung **senkt** den Durchlass (532 → 399 Signale, −25 %) und entlastet es damit eher |
+
+#### ⚠️⚠️ UND DIE SCHWELLE IST NICHT DER HEBEL FÜR DIE SIGNALZAHL (22.09.)
+
+Beim Nachrechnen der R-R9-Zielgröße kam heraus, dass drei Zahlen im Umlauf
+waren, die **verschiedene Stufen** messen:
+
+| Zahl | gemessen wo | was dort filtert |
+|---|---|---|
+| **48,1 Mails/Tag** | Messbasis-Simulation 31.08. | **nur die Schwelle** |
+| **16,4 % Durchlass** | Messbasis (Anker) | **nur die Schwelle** |
+| **1–7 Signale/Tag** | echter Betrieb 17.–20.09. | **alle Stufen**, davon 95 % Cooldown |
+| ~~6 Empfehlungen/Woche~~ | ⛔ nirgends | `Durchlass × 35`, Faktor nicht hergeleitet |
+
+➤ **Die Betriebsrate hängt am Cooldown, nicht an der Schwelle.** Deshalb ist
+die Wochenzahl zurückgezogen (Korrektur an **2.155**), und die Zielgröße von
+R-R9 bleibt der **Durchlass auf der Messbasis**.
+
+⚠️ **Folge für A3:** eine Neukalibrierung der Schwelle darf die Signalrate
+nicht durch die Hintertür steuern. Sie hält die **Strenge** konstant —
+gerechnet (**2.521**): 0,060 statt 0,080, gleicher Durchlass 16,1 %.
 
 ### Phase 5 – Ausstieg und Reduktion (Schritt 43 (1))
 

@@ -465,7 +465,25 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 #
 # ⚠️ DIE ENTSCHEIDUNG, woertlich: "0,080 vorerst festschreiben."
 #
-#     Schwelle 0,080  ->  16,4 % Durchlass  ->  rund 6 Empfehlungen/Woche
+#     Schwelle 0,080  ->  16,4 % Durchlass
+#
+# ⛔⛔ DIE ZAHL "rund 6 EMPFEHLUNGEN/WOCHE" IST ZURUECKGEZOGEN (22.09.2026,
+# Befund 2.155-Korrektur). Sie stand hier und in der Tabelle unten und
+# war NICHT gemessen: alle vier Zeilen sind `Durchlass x 35`, und der
+# Faktor 35 - fuenf Kandidaten je Tag an der Bewertungsstufe - ist
+# nirgends hergeleitet.
+#
+# ⚠⚠ SCHLIMMER: er ist an der FALSCHEN STUFE angesetzt. Die
+# Betriebsrate bestimmt nicht die Schwelle, sondern der COOLDOWN -
+# 3.304 von 3.304 Verlusten an der Stufe `wiederholung` sind Cooldown.
+# Deshalb widerspricht die Zahl auch zweien, die gemessen SIND: 48,1
+# Mails/Tag in der Tabelle vom 31.08. (dort filtert nur die Schwelle)
+# und 1 bis 7 Signale/Tag im Betrieb 17.-20.09. (dort filtert alles).
+#
+# ✔ GUELTIG BLEIBT DER DURCHLASS AUF DER MESSBASIS. Er sagt, WIE
+# STRENG die Schwelle ist - und genau das ist die Zielgroesse von R-R9.
+# Wer eine Empfehlungszahl braucht, ZAEHLT sie; sie ist nicht zu
+# schaetzen.
 #
 # ⚠️ DIE PROZENTZAHL GILT FUER DIE MESSBASIS, NICHT FUER DIE KETTE. Dort
 # filtert Stufe 5 schon auf k=2 von rund 41 Werten; an der Bewertungsstufe
@@ -474,10 +492,10 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 #
 # DIE ALTERNATIVEN, gemessen (`messe_schwelle_kalibrierung.py`):
 #
-#     0,005   54 %   ~19 Empfehlungen/Woche
-#     0,010   32 %   ~11        ⚠️ Ertrag SCHLECHTER als ohne Schwelle
-#     0,020   19 %    ~7
-#     0,080   16 %    ~6        <- gewaehlt
+#     0,005   54 %   (Wochenzahl zurueckgezogen, s.o.)
+#     0,010   32 %   ⚠️ Ertrag SCHLECHTER als ohne Schwelle
+#     0,020   19 %
+#     0,080   16 %   <- gewaehlt 07.09.
 #
 # ⚠️ HAERTER FILTERN HAT SICH ALS SCHAEDLICH GEMESSEN (bei 0,010: -0,0558
 # je verworfenem Signal). Die Schwelle nach oben zu treiben bringt nichts.
@@ -492,6 +510,14 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # samt Durchlass und Alter (`schwellenzeile()`). Beides gibt es seit dem
 # 07.09., weil eine zentrale Einstellung, die nur in der Doku steht,
 # zuverlaessig vergessen wird - Nutzerhinweis desselben Tages.
+# ⚠⚠ GERECHNET, ABER NICHT GESETZT (22.09.2026, Befund
+# 2.521-schwelle-neu): mit der Beitragslage aus `umschlag_naeherung`
+# (Stufen 2,32/0,50/0,34/-0,11/-3,06) laesst 0,080 nur noch 5,4 %
+# durch. Dieselbe Zielgroesse - 16,4 % Durchlass - trifft dort ein
+# PLATEAU zwischen 0,055 und 0,065 (16,1 %, je verworfenem +0,1085,
+# der beste Wert des Rasters). Die Plateaumitte waere 0,060.
+# ⚠ Gesetzt wird das ERST mit dem Nennerwechsel, nicht davor -
+# die Zahl hier gilt fuer die Lage, die heute laeuft.
 SCHWELLE_VORGABE = 0.080
 KALIBRIERT_AM = "2026-08-31"
 """Wann die Schwelle zuletzt KALIBRIERT wurde (nicht: zuletzt angefasst).

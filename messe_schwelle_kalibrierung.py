@@ -99,11 +99,27 @@ def fuenftel(werte):
     return np.minimum((r * 5).astype(int), 4)
 
 
-def baue():
-    """Je Kalendertag: Potential und Ergebnis je Symbol."""
+def baue(menge=None):
+    """Je Kalendertag: Potential und Ergebnis je Symbol.
+
+    ⚠⚠ `menge` IST DER NENNER VON `turnover` - und damit die
+    GRUNDGESAMTHEIT (22.09.2026). Ohne Angabe bleibt es `SplyCur`, also
+    genau die Konstruktion, auf der die Schwelle 0,080 am 31.08.
+    kalibriert und am 07.09. festgeschrieben wurde. Wer eine andere
+    Menge uebergibt, kalibriert auf einer ANDEREN Grundgesamtheit - die
+    Zahlen sind dann untereinander vergleichbar, aber NICHT mit den
+    registrierten.
+
+    ⚠ Nachgetragen, damit die Kalibrierung fuer `umschlag_naeherung`
+    DIESELBE Funktion benutzt statt einer Kopie
+    (`test-ruft-echten-code-nicht-kopie`). Die Vorgabe `None` laesst das
+    Verhalten unveraendert - nachgewiesen am Seiteneffekt: der Lauf ohne
+    Parameter liefert weiterhin 16,4 Prozent bei 0,080 (R-R11).
+    """
     reihen = B.lade()
     funding = F.lade_funding()
-    menge = MB.reihe("data/onchain_historie.db", "splycur")
+    if menge is None:
+        menge = MB.reihe("data/onchain_historie.db", "splycur")
     tu = K.baue(reihen, "turnover", menge)          # Turnover-Anker
     je_tag = {}
     for tag, zeilen in tu.items():
@@ -146,8 +162,39 @@ def bewerte(je_tag, mit_h=True, saat=20260830):
     return je_tag
 
 
+def naeherungsmenge():
+    """Die heutige Umlaufmenge rueckwaerts konstant - wie in 2.515.
+
+    ⚠ IMPORTIERT, NICHT NACHGEBAUT: Driftgrenze und
+    Umstellungsfilter kommen aus `phase4_c_naeherung_konstante_menge`."""
+    import phase4_c_naeherung_konstante_menge as NK
+    reihen = B.lade()
+    heute, _ = NK.mengen_heute()
+    umst = NK.umstellungen(reihen)
+    aus = {}
+    for sym, m in heute.items():
+        if sym in umst:
+            continue
+        z = reihen.get(sym)
+        if z:
+            aus[sym] = {str(x[0])[:10]: m for x in z}
+    return aus
+
+
 def main():
-    je_tag = bewerte(baue())
+    global TURNOVER_STUFEN
+    args = sys.argv[1:]
+    naeh = ("--umschlag" in args
+            and args[args.index("--umschlag") + 1] == "naeherung")
+    global SCHWELLEN
+    if "--schwellen" in args:
+        SCHWELLEN = tuple(sorted(
+            float(x) for x in
+            args[args.index("--schwellen") + 1].split(",")))
+    if "--stufen" in args:
+        TURNOVER_STUFEN = tuple(
+            float(x) for x in args[args.index("--stufen") + 1].split("/"))
+    je_tag = bewerte(baue(naeherungsmenge() if naeh else None))
     alle = [x for z in je_tag.values() for x in z]
     n = len(alle)
     print("=" * 88)
@@ -155,6 +202,9 @@ def main():
     print("=" * 88)
     print("%d Anker, %d Kalendertage, Horizont %d, CRV %.1f"
           % (n, len(je_tag), HORIZONT, CRV))
+    print("NENNER: %s" % ("umschlag_naeherung - ANDERE Grundgesamtheit"
+                          if naeh else
+                          "SplyCur - die REGISTRIERTE Konstruktion"))
     p = [x["potential"] for x in alle]
     print("Potential: Median %+.4f R   Spanne %+.4f .. %+.4f"
           % (st.median(p), min(p), max(p)))
