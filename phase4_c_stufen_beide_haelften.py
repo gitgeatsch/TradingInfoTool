@@ -46,7 +46,11 @@ import messe_kandidaten_als_regel as K                      # noqa: E402
 import phase4_c_kalibrierung_freefloat as KF                # noqa: E402
 
 CRV = 2.0
-HOR = 3
+# ⚠️ H5 ist der Horizont, auf dem die Naeherung MONOTON ist
+# und auf allen zulaessigen Mengen TRAEGT. Ueber --horizont
+# aenderbar, damit H3 und H20 nachrechenbar bleiben.
+HOR = (int(sys.argv[sys.argv.index("--horizont") + 1])
+       if "--horizont" in sys.argv else 5)
 
 
 def stufen_aus(je_tag: dict) -> tuple:
@@ -93,6 +97,21 @@ def main() -> int:
     print("=" * 100)
     reihen = B.lade()
     quellen = []
+    # ⚠️⚠️ DIE NAEHERUNG DAZU (21.09.2026): sie ist der
+    # Kandidat, der auf H5 monoton ist UND auf allen zulaessigen
+    # Mengen traegt. Genau ihre Form muss ueber beide Haelften
+    # halten - bei `umschlag_frei` tat sie das nicht.
+    import phase4_c_naeherung_konstante_menge as NK
+    _h, _raus = NK.mengen_heute()
+    _umst = NK.umstellungen(reihen)
+    _naeh = dict()
+    for _s, _m in _h.items():
+        if _s in _umst:
+            continue
+        _z = reihen.get(_s)
+        if _z:
+            _naeh[_s] = dict((str(_x[0])[:10], _m) for _x in _z)
+    quellen.append(("umschlag_naeherung", _naeh))
     neu, _w, _g = KF.menge_neu(KF.MENGE_DB, True)
     quellen.append(("umschlag_frei", neu))
     quellen.append(("umschlag_gesamt",

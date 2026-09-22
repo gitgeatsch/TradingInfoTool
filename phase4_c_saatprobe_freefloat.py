@@ -50,8 +50,13 @@ import messnorm_auswahl as MA                               # noqa: E402
 import phase4_c_kalibrierung_freefloat as KF                # noqa: E402
 
 # ⚠️ GENAU DIE ZELLEN AUS DEM HAUPTLAUF, nicht neu gesucht.
-ZELLEN = ((2, "50%"), (2, "frei"), (3, "10%"),
-          (3, "50%"), (3, "frei"), (5, "frei"))
+# ⚠️⚠️ UMGESTELLT AUF DIE NAEHERUNG (21.09.2026). Die
+# Zellen stammen aus `phase4_c_naeherung_konstante_menge`: auf H5
+# traegt sie auf ALLEN fuenf zulaessigen Mengen - genau das ist zu
+# pruefen, denn dort ist die Vorabfestlegung erfuellt.
+ZELLEN = ((5, "5%"), (5, "10%"), (5, "20%"),
+          (5, "50%"), (5, "frei"))
+NAEHERUNG = True
 BOOT_SAATEN = (20260921, 1, 7, 99, 4242)
 NULL_SAATEN = (20260921, 5, 77, 31415)
 ZIEL = "bewegung_r"
@@ -70,9 +75,23 @@ def main() -> int:
     print("     Neue zu suchen waere Suchpreis (2.208-n86).")
     print()
 
-    neu, _weg, _ges = KF.menge_neu(KF.MENGE_DB, True)
+    if NAEHERUNG:
+        import phase4_c_naeherung_konstante_menge as _NK
+        _reihen0 = B.lade()
+        _h, _r = _NK.mengen_heute()
+        _um = _NK.umstellungen(_reihen0)
+        neu = dict()
+        for _s, _m in _h.items():
+            if _s in _um:
+                continue
+            _z = _reihen0.get(_s)
+            if _z:
+                neu[_s] = dict((str(_x[0])[:10], _m) for _x in _z)
+    else:
+        neu, _weg, _ges = KF.menge_neu(KF.MENGE_DB, True)
     tage = sorted({t for d in neu.values() for t in d})
-    ab = tage[0] if tage else "2025-01-01"
+    import phase4_c_naeherung_konstante_menge as _NK2
+    ab = _NK2.AB if NAEHERUNG else (tage[0] if tage else "2025-01-01")
     reihen = B.lade()
     mom = KF.momentum250(reihen)
     lage = N.Lage(instrument="spot", strategie="einstieg")

@@ -810,6 +810,29 @@ dann entsteht keine Nacharbeit.
    | 5 | **Benennung** `umschlag_gesamt` / `umschlag_frei` | ✔ 21.09., 2.512 |
    | 6 | `umschlag_frei` auf der **selektierten Menge** messen | ⛔ **offen — Registerauflage** |
    | 7 | **Stufentabelle** für `umschlag_frei` | ⛔ offen |
+   | 8 | **`umschlag_naeherung`** messen | ✔ **21.09. — trägt** |
+   | 9 | Als **Sperre** registrieren? | ⚠️ **Nutzerentscheidung** |
+
+   ### ✔✔ DIE LÖSUNG IST GEFUNDEN (21.09., 2.515)
+
+   `turnover = Volumen / (Preis × Menge)` — **Preis und Volumen liegen
+   für die volle Historie vor**, es fehlt allein die Menge. Die heutige
+   Menge rückwärts konstant angesetzt löst **beide** Engpässe:
+
+   | | vorher | mit Näherung |
+   |---|---:|---:|
+   | Symbole | 59 | **366** |
+   | Ankertage | 365 | **2.956** |
+   | Blöcke | 23 | **90** |
+   | trägt auf | — | **14 von 15 Zellen** |
+
+   **Näherungsfehler Median −0,0008 R** (praktisch null), **Mengengewinn
+   +0,0022 R**. Auf `barriere` trägt sie auf 8 von 15 — dort trug bisher
+   **nichts** (2.490).  ⚠️ **Aber es ist ein SCHALTER, kein Regler**
+   (75 % der Spanne im obersten Fünftel gegen 12 % beim Original) — sie
+   ersetzt die Tabelle **nicht**, sie ergänzt sie.
+
+   ➤ Vollständig: `Basisinfos/Loesungskonzept_Umschlag_21_09.md`
 
    ⚠️⚠️ **Punkt 6 ist keine Formalie.** Das Kandidatenregister sagt
    wörtlich: *„WER DIESE TABELLE ÄNDERN WILL, MUSS AUF DER SELEKTIERTEN

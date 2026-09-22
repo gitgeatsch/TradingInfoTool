@@ -92,7 +92,8 @@ _a.add_argument("--horizont", type=int, default=20)
 # Vorgabe bleibt `gesamt` - das ist die registrierte und live
 # laufende Groesse, und jeder alte Aufruf muss dasselbe liefern
 # wie vorher (R-R11).
-_a.add_argument("--umschlag", choices=("gesamt", "frei"),
+_a.add_argument("--umschlag",
+                choices=("gesamt", "frei", "naeherung"),
                 default="gesamt")
 _p = _a.parse_known_args()[0]
 HOR, UMSCHLAG = _p.horizont, _p.umschlag
@@ -100,7 +101,26 @@ CRV = 2.0
 print("HORIZONT H%d   GROESSE `umschlag_%s`" % (HOR, UMSCHLAG))
 
 reihen = B.lade()
-if UMSCHLAG == "frei":
+if UMSCHLAG == "naeherung":
+    # ⚠️⚠️ DIE NAEHERUNG (2.417-naeherung, gemessen 21.09.):
+    # heutige Menge rueckwaerts konstant. Loest Abdeckung UND
+    # Fensterlaenge - damit ist H20 ueberhaupt erst rechenbar.
+    # ⚠️ Ausschluesse aus dem Messwerkzeug uebernommen, nicht
+    # neu gesetzt: Mengendrift > 6,53 (= Breite eines Fuenftels) und
+    # Preissprung > 5 (Umstellungen, `pruefe_datenqualitaet`).
+    import phase4_c_naeherung_konstante_menge as _NK
+    _h, _raus = _NK.mengen_heute()
+    _umst = _NK.umstellungen(reihen)
+    menge = {}
+    for _s, _m in _h.items():
+        if _s in _umst:
+            continue
+        _z = reihen.get(_s)
+        if _z:
+            menge[_s] = {str(_x[0])[:10]: _m for _x in _z}
+    print("  Quelle: NAEHERUNG · %d Symbole · %d Driftausschluesse · "
+          "%d Umstellungen" % (len(menge), len(_raus), len(_umst)))
+elif UMSCHLAG == "frei":
     # ⚠️ DIESELBE Aufbereitung wie in der Kalibrierung, nicht
     # eine zweite: `menge_neu` wirft die Tagesartefakte der Quelle
     # aus (2.502-mengenspitzen). Wer hier roh laedt, rechnet eine
