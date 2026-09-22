@@ -96,7 +96,21 @@ _a.add_argument("--umschlag",
                 choices=("gesamt", "frei", "naeherung"),
                 default="gesamt")
 _p = _a.parse_known_args()[0]
-HOR, UMSCHLAG = _p.horizont, _p.umschlag
+# ⚠️⚠️⚠️ DAS ZEITFENSTER (21.09.2026, Befund 2.517).
+# Bis heute rechnete dieses Werkzeug ueber die GANZE Historie, die
+# WIRKUNG wird aber auf einem Fenster gemessen (`zeitfenster-ab-
+# 2023`). Tabelle und Wirkung standen damit auf VERSCHIEDENEN
+# Fenstern - und das aendert die Stufen erheblich: bei
+# `umschlag_naeherung` H5 liegt Fuenftel 0 ueber die ganze Historie
+# bei -0,0810 und ab 2023 bei -0,0745, waehrend Fuenftel 1 von
+# -0,0830 auf -0,1052 faellt. Aus einer flachen Tabelle wird eine
+# geordnete.
+#
+# ⚠️ VORGABE BLEIBT LEER (ganze Historie), damit jeder alte
+# Aufruf dasselbe liefert wie vorher (R-R11).
+_a.add_argument("--ab", default="")
+_p = _a.parse_known_args()[0]
+HOR, UMSCHLAG, AB = _p.horizont, _p.umschlag, _p.ab
 CRV = 2.0
 print("HORIZONT H%d   GROESSE `umschlag_%s`" % (HOR, UMSCHLAG))
 
@@ -134,6 +148,11 @@ else:
     print("  Quelle: data/onchain_historie.db · %d Symbole"
           % len(menge))
 je_tag = K.baue(reihen, "turnover", menge, horizont=HOR)
+if AB:
+    # ⚠️ Dieselbe Beschneidung wie im Messwerkzeug - nicht
+    # eine zweite, die auseinanderlaufen koennte.
+    je_tag = {t: z for t, z in je_tag.items() if t >= AB}
+    print("  Fenster ab %s: %d Ankertage" % (AB, len(je_tag)))
 
 sammel = {k: [] for k in range(5)}
 for z in je_tag.values():

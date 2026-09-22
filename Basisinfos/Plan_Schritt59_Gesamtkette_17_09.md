@@ -1006,8 +1006,10 @@ Zufall, sondern in der Deckung.**
 | # | | Stand |
 |---|---|---|
 | 1 | **Mitläufertest** (Prüflisten-Frage 1, Methodik 2.80) | ✔✔ **erledigt 21.09., zwei Pfade** |
-| 2 | **Die Deckung lösen** — zirkulärer Verschub (2.286) braucht keine Blöcke, ist aber nur für die Akkumulation validiert; Übertragung verlangt denselben Selbsttest wie der Bootstrap (2.204/2.485) | **offen — jetzt der Engpass** |
-| 3 | **Erst dann** die Nennerfrage aus Schritt 67 | wartet |
+| 2 | **Die Deckung lösen** | ✔✔✔ **gelöst 21.09. auf anderem Weg** — nicht über den zirkulären Verschub, sondern über MEHR DATEN: `umschlag_naeherung` bringt **90 Blöcke** statt 20 (2.515). ⚠ Auf dem Messfenster ab 2023 sind es **22** — die Fragilität ist kleiner, nicht verschwunden |
+| 3 | Die **Nennerfrage** aus Schritt 67 | ⚠️⚠️ **sie wird durch die Näherung ENTSCHIEDEN, nicht umgangen** — deren Nenner ist `Marktkap. / Preis`, also der FREIE UMLAUF. Entschärft durch 2.518 (kein Ergebnisunterschied), aber sie gehört **benannt** → Voranalyse E2 |
+| 5 | **Qualität gegen die registrierte Tabelle** | ✔✔ **gemessen 22.09. — KEIN Unterschied, Nullbefund BELEGT** (2.518) |
+| 6 | **Voranalyse für die Betriebsnutzung** | ✔✔ **fertig 22.09.**, `Basisinfos/Voranalyse_Umschlag_Nutzung_22_09.md` — sechs Codepunkte, sechs offene Fragen, fünf Entscheidungen |
 | 4 | **Regel-3-Frage** beim Hebel | ✔✔ **gemessen 21.09. — gegen meinen eigenen Vorschlag** |
 
 #### ✔✔✔ Punkt 4 — die Hebelstufung trägt, und `turnover` wegzulassen schadet
@@ -1170,6 +1172,86 @@ nur ein **positiver** Befund deutbar.
    ⚠️ **Gebaut wird vor 2a nichts.** Erst messen, dann `aktiv` umlegen.
 3. Führung: nach Phase 1 (1.4) Regeln der Hebelführung gegen „halten“; Stopregel mit Schritt 52.
 4. Vorher zulässig: nur HINWEIS „Spot gegen Hebel auf `bewegung_r`“ (Entscheidung **N6**).
+
+
+### ⚠️⚠️⚠️ EINORDNUNG VON SCHRITT 68 IM GESAMTPLAN (22.09.2026)
+
+**Nutzerauftrag:** *„das ganze muss auch im Gesamt Umbauplan richtig
+eingeordnet werden"*. Hier steht, **wohin** die Umschlag-Arbeit gehört —
+und, genauso wichtig, **wohin nicht**.
+
+#### Was Schritt 68 tatsächlich löst
+
+> **Es ist ein ABDECKUNGSPAKET, kein Bewertungspaket.**
+
+Das ist keine Formulierung, sondern ein Messergebnis. Befund **2.518**
+vergleicht die neue Tabelle bei **gleichem Auswahlanteil** gegen die
+registrierte: Differenz **+0,0453 R**, Band **[−0,0122 .. +0,1067]**,
+nicht trennbar — und die Positivkontrolle auf die Differenz (Methodik
+2.105) **findet ab +0,02 R**. Die Anlage könnte etwas sehen; sie sieht
+nichts.
+
+| | vorher | nachher |
+|---|---|---|
+| Signale **mit** Umschlagwert | 424 (16,6 %) | **1.504 (59,0 %)** |
+| Signale auf **gesenkter** Schwelle | 2.126 | **1.046** |
+| Durchlass | 532 (20,9 %) | 399 (15,6 %) |
+| Ergebnisqualität | — | ⚠️ **unverändert, belegt** |
+
+#### Wo es im Meilenstein M1 sitzt
+
+| M1-Kriterium | Betroffen? | Wie |
+|---|---|---|
+| **1 Spot-Einstieg gemessen** | ✔ **ja, unmittelbar** | die Schwellensenkung fällt bei der Hälfte der Fälle weg — *„Beitrag je Stufe mit gegen ohne"* wird damit erst belastbar |
+| **2 Hebel gemessen** | ⚠️ **ja, aber NICHT in diesem Paket** | der Hebel-Median springt 1,00 → 3,49. Das gehört an Phase 4, nach dem A1-Nachweis — nicht an einen Datenumbau |
+| **3 Akkumulation** | ⚠️ mittelbar | `turnover` ist dort ein Beitrag; der Nennerwechsel wirkt auch hier |
+| **5 Durchgängig am Papier** | ✔ ja | *„keine ungemessene Größe in der Eingabe"* — 41 % der Signale ohne Wert waren genau das |
+| **7 Rudimentäre Wirksamkeit** | ⚠️ **hier ist der Preis** | mehr Daten heißen **weniger** Signale (532 → 399). Die Auslöserate sinkt, die Qualität bleibt gleich |
+
+⛔ **Nicht betroffen:** Kriterium 4 (LLM), Kriterium 6 (Betrieb),
+Phase 5 (Ausstieg), Phase 7 (Nicht-Krypto), die Multiasset-Schiene.
+
+#### ⚠️ Warum es NICHT vorgezogen wird
+
+Die Versuchung ist da — 59 % statt 17 % Abdeckung liest sich wie ein
+Durchbruch. Drei Gründe dagegen:
+
+1. **Es verbessert kein einziges Urteil** (2.518). Was besser wird, ist
+   die *Vollständigkeit der Eingabe*, und die zahlt auf Kriterium 5 ein,
+   nicht auf Kriterium 7.
+2. **Der Nennerwechsel ist eine eigene Entscheidung** (Voranalyse E2).
+   Er darf nicht als Nebenwirkung eines Abdeckungspakets passieren.
+3. ⚠️⚠️ **Die Driftsperre fehlt im Betrieb.** Das Messwerkzeug wirft
+   Symbole mit Mengendrift über Faktor 6,53 heraus; `turnover_werte()`
+   hat keine solche Prüfung. **Der Faktor gehört in `marktrang` und in
+   `messe_kandidaten_als_regel`, BEVOR der Nenner wechselt** — sonst
+   wandert der Fehler mit der Lösung ein. Dieselbe Falle steht seit dem
+   20.09. weiter oben in diesem Kapitel; sie wird durch die Lösung
+   **scharf**, nicht entschärft.
+
+#### Der Platz in der Reihenfolge bis M1
+
+```
+Phase 3 (Spot)  ──►  Phase 4 (Hebel)  ──┐
+   ▲                                    ├──►  Phase 8  ──►  Phase 9  ──►  M1
+   │                                    │
+   └── Schritt 68 (Abdeckung)           │
+       gehört HIERHIN, vor Phase 3      │
+                                        │
+Phase 6 (Akku, 25–27)  ─────────────────┘
+```
+
+**Begründung:** Phase 3 misst *„Beitrag je Stufe mit gegen ohne"*. Solange
+41 % der Signale den Beitrag über eine **gesenkte Schwelle** bekommen,
+misst Phase 3 zwei verschiedene Regeln in einer Zahl. Schritt 68 räumt
+das aus — deshalb davor, und deshalb **nicht** als eigener Meilenstein.
+
+#### Was zu tun bleibt
+
+Sechs Codepunkte, sechs offene Fragen und fünf Entscheidungen stehen in
+**`Basisinfos/Voranalyse_Umschlag_Nutzung_22_09.md`**. ⚠️ **Gebaut ist
+davon nichts** — die Voranalyse ist der Stand vor der Abstimmung, kein
+begonnener Umbau.
 
 ### ⚠️⚠️ TAKT UND COOLDOWN — festgeschrieben bis alles andere grün ist
 
