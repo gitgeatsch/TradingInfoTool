@@ -24436,6 +24436,39 @@ def paket_nennertrennung() -> None:
                _MR.umlaufmengen_frei(datei=_weg).get("PRUEF") == 1.0,
                "sonst prueft die Zeile darueber nichts - die Mutation "
                "haette ihren eigenen Anker geloescht")
+        # ---- ⚠⚠ BETRIEBSKOPIE IST KEINE MESSBASIS ------
+        #
+        # Am Notebook liegt eine SCHLANKE Mengendatei (14 Tage statt
+        # 365, `baue_nb_umlaufmenge.py`), damit der Betrieb dort
+        # rechnen kann. Sie sieht aus wie die Messbasis. Der
+        # MESSleser muss sie ABWEISEN, der BETRIEBSleser nicht.
+        #
+        # ⚠ GEBAUT, NICHT GESUCHT: die Probe legt eine eigene
+        # Wegwerfdatei an. Eine, die die echte Datei sucht, waere am
+        # anderen Geraet blind (`pruefung-zaehlt-zustaende-auf`).
+        _c5 = _sq.connect(_weg)
+        _c5.execute("CREATE TABLE IF NOT EXISTS _nur_betrieb (hinweis TEXT, tage INTEGER, gebaut_am TEXT)")
+        _c5.execute("INSERT INTO _nur_betrieb VALUES (?,?,?)",
+                    ("Pruefkopie", 14, _dt.date.today().isoformat()))
+        _c5.commit()
+        _c5.close()
+        import phase4_c_naeherung_konstante_menge as _NK
+        _weist_ab = False
+        try:
+            _NK.mengen_heute(_weg)
+        except SystemExit:
+            _weist_ab = True
+        except Exception:                                # noqa: BLE001
+            _weist_ab = False
+        pruefe(P, "⚠⚠ SEITENEFFEKT: der MESSleser weist eine BETRIEBSKOPIE ab",
+               _weist_ab,
+               "sie traegt 14 Tage statt 365 und saehe wie die Messbasis aus - "
+               "genau der Fall `betriebskopie-ist-keine-messbasis`. Eine Warnung "
+               "uebersieht man, einen Abbruch nicht")
+        pruefe(P, "⚠ und der BETRIEBSleser benutzt sie weiter",
+               _MR.umlaufmengen_frei(datei=_weg).get("PRUEF") == 1.0,
+               "dafuer ist sie da - ein Riegel, der beide Leser sperrt, "
+               "legt den Betrieb still")
     finally:
         if _os.path.exists(_weg):
             _os.remove(_weg)

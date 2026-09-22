@@ -83,7 +83,8 @@ import sqlite3
 import sys
 import time
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 os.chdir("D:/CLAUDE_Projects/SoftwareProjekte/TradingInfoTool")
 sys.path.insert(0, "D:/CLAUDE_Projects/SoftwareProjekte/TradingInfoTool")
 
@@ -106,9 +107,35 @@ def _arg(a, f, v):
     return a[a.index(f) + 1] if f in a else v
 
 
-def mengen_heute() -> dict:
-    """Die JUENGSTE Menge je Symbol - und die Driftpruefung dazu."""
-    c = sqlite3.connect("file:data/umlaufmenge_cg.db?mode=ro", uri=True)
+def mengen_heute(datei: str = "data/umlaufmenge_cg.db") -> dict:
+    """Die JUENGSTE Menge je Symbol - und die Driftpruefung dazu.
+
+    ⚠⚠⚠ EINE BETRIEBSKOPIE WIRD HIER ABGEWIESEN
+    (22.09.2026). Am Notebook liegt eine SCHLANKE Fassung dieser
+    Datei - 14 Tage statt 365, gebaut von `baue_nb_umlaufmenge.py`,
+    damit der Betrieb dort rechnen kann. Sie SIEHT AUS wie die
+    Messbasis und ist es nicht.
+
+    Genau dieser Fall hat schon einmal Schaden angerichtet
+    (`betriebskopie-ist-keine-messbasis`). Deshalb traegt die Kopie
+    die Markertabelle `_nur_betrieb`, und hier wird ABGEBROCHEN -
+    nicht gewarnt. Eine Warnung uebersieht man; einen Abbruch nicht.
+
+    ⚠ Der BETRIEBSleser (`marktrang.umlaufmengen_frei`) darf
+    sie benutzen - dafuer ist sie da. Der Riegel sitzt hier, wo
+    GEMESSEN wird.
+    """
+    c = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
+    if c.execute("SELECT name FROM sqlite_master WHERE type='table' "
+                 "AND name='_nur_betrieb'").fetchone():
+        hinweis = (c.execute("SELECT hinweis FROM _nur_betrieb")
+                   .fetchone() or ["(ohne Hinweis)"])[0]
+        c.close()   # ⚠ sonst bleibt die Datei gesperrt - die Suite
+        #             konnte ihre Wegwerfdatei nicht loeschen
+        raise SystemExit(
+            "⛔ %s ist eine BETRIEBSKOPIE, keine Messbasis. %s "
+            "Die volle Historie liegt am Desktop unter demselben "
+            "Namen." % (datei, hinweis))
     reihen: dict = {}
     for s, w in c.execute(
             "SELECT u.symbol, u.wert FROM umlaufmenge u "

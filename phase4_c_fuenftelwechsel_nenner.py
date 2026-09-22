@@ -43,7 +43,8 @@ import collections
 import os
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):        # ⚠ Suite ersetzt stdout
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 os.chdir("D:/CLAUDE_Projects/SoftwareProjekte/TradingInfoTool")
 sys.path.insert(0, "D:/CLAUDE_Projects/SoftwareProjekte/TradingInfoTool")
 
