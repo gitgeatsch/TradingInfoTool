@@ -4230,7 +4230,13 @@ def paket_export() -> None:
     voll = io.open("pruefe_export_vollcheck.py", encoding="utf-8").read()
 
     pruefe(P, "der Kennzahlen-Katalog hat Punkt 16 (Durchlaessigkeit)",
-           '16. Rollen-Kette' in std and 'd.get("rollen_kette")' in std,
+           # ⚠ NICHT die AUFRUFFORM festnageln (22.09.): hier stand
+           # `d.get("rollen_kette")`. Am 22.09. wurde der Zugriff auf
+           # einen Leser umgestellt, der den Platzhalter der schlanken
+           # Diagnose kennt - und die Pruefung wurde rot, obwohl Punkt 16
+           # unveraendert da ist. Gefragt ist, DASS er den Abschnitt
+           # liest, nicht WIE.
+           '16. Rollen-Kette' in std and '"rollen_kette"' in std,
            "Punkte 1-15 messen AUFGELOESTE Signale - dieser misst, ob "
            "ueberhaupt eines entsteht")
     pruefe(P, "er meldet den Deadloop-Zustand", "Deadloop-Zustand" in std)
