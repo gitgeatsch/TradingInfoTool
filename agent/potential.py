@@ -665,8 +665,14 @@ def schwellenzeile(mit_datenlage=None) -> str:
 # enthielt, ist die Schwelle 0,010 R durch seinen Wegfall NICHT
 # ungueltig geworden. Sie gilt fuer genau die Beitragslage, die jetzt
 # wieder besteht.
+# ⚠️ AM 22.09.2026 UM DEN NENNER ERWEITERT (S1) - der Wert selbst hat
+# sich NICHT geaendert, nur seine Beschreibung ist jetzt vollstaendig.
+# `@umschlag_gesamt` heisst: kalibriert auf der GESAMTAUSGABE (`SplyCur`).
+# Wechselt der Nenner, faellt `kalibrierung_gilt()` sofort - und genau
+# das soll es.
 KALIBRIERT_FUER = ("funding_fuenftel:0.82/1.30/0.12/-0.54/-1.70 "
-                   "turnover_fuenftel:3.15/0.83/0.22/-1.79/-2.40")
+                   "turnover_fuenftel@umschlag_gesamt:"
+                   "3.15/0.83/0.22/-1.79/-2.40")
 """Die Beitragslage, fuer die SCHWELLE_VORGABE kalibriert wurde.
 
 ⚠️ WIRD BEI JEDER AENDERUNG AN `wahrscheinlichkeit.BEITRAEGE` MITGEZOGEN -
@@ -676,22 +682,62 @@ Der Ablauf steht in `Regelwerksmanual.md` R-R9, das Verfahren in
 """
 
 
+def _nennerkennung(merkmal: str):
+    """Welche GROESSE steht heute hinter diesem Merkmal? (22.09.2026, S1)
+
+    ⚠️⚠️ WARUM ES DAS BRAUCHT - DAS LOCH, DAS ES SCHLIESST. Der
+    Fingerabdruck bildete bis heute nur die STUFEN ab. Ein Beitrag kann
+    aber dieselben Stufen behalten und trotzdem etwas voellig anderes
+    messen: `turnover` ist Volumen durch Umlaufmenge, und diese Menge
+    gibt es in ZWEI Groessen (Gesamtausgabe gegen freien Umlauf,
+    Befund 2.512). EIN NENNERWECHSEL WAERE DURCH `kalibrierung_gilt()`
+    UNBEMERKT DURCHGEKOMMEN - die Schwelle haette weiter "passt"
+    gemeldet, obwohl sie fuer eine andere Groesse kalibriert ist.
+
+    ⚠️ ABGELEITET, NICHT AUFGEZAEHLT (`pruefung-zaehlt-zustaende-auf`):
+    die Zuordnung kommt aus `marktrang.UMSCHLAG_GROESSEN` ueber
+    `codefeld` und `live`. Wer eine dritte Groesse einhaengt, taucht hier
+    automatisch auf.
+
+    ⚠️ ZWEI LIVE-GROESSEN AUF DEMSELBEN CODEFELD BRECHEN AB. Das waere
+    keine Feinheit, sondern hiesse, dass niemand mehr sagen kann, was der
+    Beitrag misst.
+    """
+    from agent import marktrang as _MR
+    treffer = [name for name, d in _MR.UMSCHLAG_GROESSEN.items()
+               if d.get("codefeld") == merkmal and d.get("live")]
+    if len(treffer) > 1:
+        raise RuntimeError(
+            "Zwei Umschlaggroessen sind gleichzeitig live auf %r: %s - "
+            "dann ist nicht bestimmt, was der Beitrag misst."
+            % (merkmal, ", ".join(sorted(treffer))))
+    return treffer[0] if treffer else None
+
+
 def beitragslage() -> str:
     """Fingerabdruck der heute TRAGENDEN Beitraege.
 
     Nur `traegt` zaehlt - ein Beitrag im Zustand `null` oder `noch_nicht`
     verschiebt keine Potentialwerte und braucht deshalb keine Neukalibrierung.
+
+    ⚠️⚠️ SEIT 22.09.2026 STEHT DER NENNER MIT DRIN - siehe
+    `_nennerkennung`. Die Form ist `merkmal@groesse:stufen`; ohne
+    bekannten Nenner bleibt es `merkmal:stufen` wie bisher.
     """
     from agent import wahrscheinlichkeit as WK
     teile = []
     for b in WK.BEITRAEGE:
         if b.zustand != "traegt":
             continue
+        kenn = b.merkmal or b.name
+        nenner = _nennerkennung(kenn)
+        if nenner:
+            kenn = "%s@%s" % (kenn, nenner)
         if b.stufen:
-            teile.append("%s:%s" % (b.merkmal or b.name,
+            teile.append("%s:%s" % (kenn,
                                     "/".join("%.2f" % x for x in b.stufen)))
         else:
-            teile.append("%s:%.1f" % (b.merkmal or b.name, b.punkte))
+            teile.append("%s:%.1f" % (kenn, b.punkte))
     return " ".join(sorted(teile))
 
 

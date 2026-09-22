@@ -1305,6 +1305,35 @@ R-R9 bleibt der **Durchlass auf der Messbasis**.
 nicht durch die Hintertür steuern. Sie hält die **Strenge** konstant —
 gerechnet (**2.521**): 0,060 statt 0,080, gleicher Durchlass 16,1 %.
 
+#### ⚠️⚠️ HIER ANGESETZT: „WENIGER SIGNALE" DURCH DEN UMSCHLAG-UMBAU
+
+**Nutzerentscheidung 22.09.2026:** das Signalthema des Umschlag-Umbaus
+gehört **an diese Stelle** — nicht in den Umbau selbst.
+
+> **Nutzerwortlaut:** *„setze das Signalthema im Gesamtplan bei Prüftakt
+> und cooldown an, **weniger Signale ist erst danach ersichtlich**."*
+
+**Die Lage:** Die Betriebssimulation weist einen Rückgang des Durchlasses
+von **532 auf 399 Signale (−25 %)** aus (2.517-betriebssimulation).
+
+⚠️ **Diese Zahl ist noch nicht belastbar als Betriebsaussage**, und zwar
+aus demselben Grund, aus dem die „6 Empfehlungen/Woche" gefallen sind:
+sie stammt aus einer Rechnung **an der Bewertungsstufe**. Was am Ende
+ankommt, entscheidet der **Cooldown** — 3.304 von 3.304 Verlusten an
+`wiederholung`. Solange er unverändert steht (A3), ist der Nettoeffekt
+auf die Signalzahl **nicht ersichtlich**.
+
+| | |
+|---|---|
+| **Was gilt** | die Bewertung wird strenger, weil der Lückenrabatt entfällt — **gemessen** |
+| **Was NICHT gilt** | „das System liefert 25 % weniger Signale" — das ist an der falschen Stufe gerechnet |
+| **Wann es sichtbar wird** | erst wenn Takt und Cooldown behandelt werden, also **nach** Prüfpunkt 1 |
+
+➤ **Der Umschlag-Umbau wird deshalb NICHT mit einer Signalzahl begründet
+oder bestritten.** Er wird mit der **Qualität** begründet (+2,8 bis
++4,2 Pp, 2.520). Die Signalzahl ist eine Folge, die hier gemessen wird —
+später, an dieser Stelle, zusammen mit dem Kontingent (Prüfpunkt 3).
+
 ### Phase 5 – Ausstieg und Reduktion (Schritt 43 (1))
 
 Gütemaß „war der Verkauf richtig?“ gegen Nullmodell „halten“, historisch neu bauen; Live-Hinweis 2.403 reproduzieren (R-R11); REDUZIEREN und VERKAUFEN getrennt; Hebel-Ausstieg getrennt (7c).

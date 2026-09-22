@@ -148,14 +148,32 @@ def baue(ziel):
     CREATE TABLE IF NOT EXISTS _quelle (
         hinweis TEXT, groesse TEXT, tage INTEGER, gebaut_am TEXT);
     """)
+    # ⚠️⚠️ DIE HERKUNFTSMARKE FUER DEN BUENDELFAKTOR (22.09.2026, S3).
+    #
+    # `vervielfacher` teilt die Menge durch den Buendelfaktor, damit sie
+    # zum Binance-BUENDELvolumen passt. Wer die Datei spaeter liest, kann
+    # dem Zahlenwert NICHT ansehen, ob das geschehen ist - und eine
+    # zweite Anwendung machte ihn tausendfach zu klein (Befund 2.522).
+    # Deshalb schreibt der Erzeuger es hin. Nachtraeglich per ALTER, damit
+    # eine bestehende Datei nicht neu gebaut werden muss.
+    #
+    # ⚠️ EINE ALTE ZEILE BEKOMMT DIE MARKE NICHT GESCHENKT. Sie bleibt
+    # NULL, und der Leser liest das als "nicht geprueft" - eine Marke,
+    # die man sich selbst ausstellt, ist keine.
+    if "buendelfaktor" not in {r[1] for r in
+                               c.execute("PRAGMA table_info(_quelle)")}:
+        c.execute("ALTER TABLE _quelle ADD COLUMN buendelfaktor TEXT")
     if not c.execute("SELECT 1 FROM _quelle").fetchone():
         c.execute(
-            "INSERT INTO _quelle VALUES (?,?,?,?)",
+            "INSERT INTO _quelle (hinweis, groesse, tage, gebaut_am, "
+            "buendelfaktor) VALUES (?,?,?,?,?)",
             ("CoinGecko market_chart, Menge = Marktkapitalisierung / Preis. "
              "⚠️ FREE FLOAT - NICHT dieselbe Groesse wie Coin Metrics "
              "`SplyCur` (Gesamtausgabe auf dem Ledger). Die beiden duerfen "
              "nicht im selben Nenner gemischt werden.",
-             "free_float", TAGE, dt.datetime.now(dt.timezone.utc).isoformat()))
+             "free_float", TAGE,
+             dt.datetime.now(dt.timezone.utc).isoformat(),
+             "angewandt (hole_umlaufmenge_cg.vervielfacher)"))
     c.commit()
     return c
 

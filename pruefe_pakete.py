@@ -24111,8 +24111,14 @@ def paket_nennersperre() -> None:
            "eine leere Liste waere dasselbe wie keine Sperre - und "
            "wuerde unbemerkt bleiben")
 
-    _leer = [s for s, g in getattr(_MR, "NENNER_WIDERLEGT", {}).items()
-             if not g or len(str(g)) < 60]
+    # ⚠️ SEIT 22.09. IST DIE LISTE ZWEISTUFIG: {Groesse: {Symbol: Grund}}.
+    # Eine leere Groesse ist KEIN Mangel - fuer den freien Umlauf ist
+    # bisher nichts widerlegt, und das ist eine Aussage.
+    _leer = [
+        "%s/%s" % (_g, _sym)
+        for _g, _d in getattr(_MR, "NENNER_WIDERLEGT", {}).items()
+        for _sym, _grund in (_d or {}).items()
+        if not _grund or len(str(_grund)) < 60]
     pruefe(P, "⚠⚠ jeder Eintrag traegt seine BEGRUENDUNG",
            not _leer,
            "wer hier etwas eintraegt, braucht zwei Quellen, eine "
@@ -24129,28 +24135,31 @@ def paket_nennersperre() -> None:
                       "Notebook liegt dort nur die Symbolliste" % _datei)
         return
     _vorher = _MR.NENNER_WIDERLEGT
+    # ⚠️ SEIT 22.09. ZWEISTUFIG. Dieser Nachweis gilt der Groesse, die
+    # der Betrieb heute benutzt - `umlaufmengen` liest `splycur`.
+    _gesperrt = _vorher.get("umschlag_gesamt", {})
     try:
         _mit = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
-        _MR.NENNER_WIDERLEGT = {}
+        _MR.NENNER_WIDERLEGT = {"umschlag_gesamt": {}}
         _ohne = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
     finally:
         _MR.NENNER_WIDERLEGT = _vorher
 
-    _war_da = sorted(s for s in _vorher if s in _ohne)
+    _war_da = sorted(s for s in _gesperrt if s in _ohne)
     pruefe(P, "⚠ die gesperrten Symbole waren OHNE Sperre ueberhaupt da",
            bool(_war_da),
            "waren sie es nicht, prueft dieser Test nichts - genau die "
            "Falle ,die Mutation loescht ihren Anker`. Gefunden: %s"
            % _war_da)
 
-    _noch_da = sorted(s for s in _vorher if s in _mit)
+    _noch_da = sorted(s for s in _gesperrt if s in _mit)
     pruefe(P, "⚠⚠ und MIT Sperre sind sie weg",
            not _noch_da,
            "die Sperre greift nicht: %s stehen weiter im Nenner"
            % _noch_da)
 
-    _rest_ohne = {s: w for s, w in _ohne.items() if s not in _vorher}
-    _rest_mit = {s: w for s, w in _mit.items() if s not in _vorher}
+    _rest_ohne = {s: w for s, w in _ohne.items() if s not in _gesperrt}
+    _rest_mit = {s: w for s, w in _mit.items() if s not in _gesperrt}
     pruefe(P, "⚠ und sie nimmt NICHTS mit",
            _rest_ohne == _rest_mit,
            "eine Sperre, die gesunde Symbole mitnimmt, ist schlimmer "
@@ -24182,7 +24191,7 @@ def paket_nennersperre() -> None:
         _c.execute("CREATE TABLE externe_reihe (quelle TEXT, "
                    "schluessel TEXT, datum TEXT, wert REAL)")
         _heute = _dt.date.today().isoformat()
-        _zeilen = [(_s, 1.0e9) for _s in _vorher] + [("BTC", 2.0e7)]
+        _zeilen = [(_s, 1.0e9) for _s in _gesperrt] + [("BTC", 2.0e7)]
         for _s, _w in _zeilen:
             _c.execute("INSERT INTO externe_reihe VALUES (?,?,?,?)",
                        (_MR.SPLYCUR_QUELLE, _s, _heute, _w))
@@ -24191,14 +24200,14 @@ def paket_nennersperre() -> None:
         _v2 = _MR.NENNER_WIDERLEGT
         try:
             _bmit = _MR.umlaufmengen(db_pfad=_weg, datei=_keine)
-            _MR.NENNER_WIDERLEGT = {}
+            _MR.NENNER_WIDERLEGT = {"umschlag_gesamt": {}}
             _bohne = _MR.umlaufmengen(db_pfad=_weg, datei=_keine)
         finally:
             _MR.NENNER_WIDERLEGT = _v2
         pruefe(P, "⚠⚠ und sie greift auch auf dem BETRIEBSWEG "
                   "(externe_reihe)",
-               all(_s in _bohne for _s in _v2)
-               and not any(_s in _bmit for _s in _v2)
+               all(_s in _bohne for _s in _gesperrt)
+               and not any(_s in _bmit for _s in _gesperrt)
                and "BTC" in _bmit,
                "am Notebook kommen die Mengen aus `externe_reihe`, "
                "nicht aus der Messdatei - ohne diesen Nachweis waere "
@@ -24212,12 +24221,144 @@ def paket_nennersperre() -> None:
     # ⚠ Die Sperre steht NACH dem Zusammenfuehren beider Quellen -
     # davor haette sie nur einen der beiden Wege getroffen.
     _q = _quelltext("agent/marktrang.py")
-    _i_sperre = _q.find("gesperrt = sorted(set(aus) & set(NENNER_WIDERLEGT))")
+    _i_sperre = _q.find("gesperrt = sorted(set(aus) & set(nenner_widerlegt(")
     _i_datei = _q.find("for sym, wert in datei_werte.items():")
     pruefe(P, "⚠⚠ die Sperre steht NACH beiden Quellen",
            _i_sperre > _i_datei > 0,
            "davor haette sie nur einen Weg getroffen, und der Fehler "
            "waere ueber den anderen wieder hereingekommen")
+
+
+def paket_nennertrennung() -> None:
+    """Halten Fingerabdruck und Herkunftsmarke den NENNER auseinander?
+
+    ⚠️⚠️⚠️ ANLASS (22.09.2026, S1 und S3 des Umbaukonzepts). `turnover`
+    ist Volumen durch Umlaufmenge, und diese Menge gibt es in ZWEI
+    Groessen: Gesamtausgabe (`SplyCur`) und freier Umlauf (CoinGecko).
+    Vor dem Umbau war das System an zwei Stellen blind dafuer:
+
+      S1  `potential.beitragslage()` bildete nur die STUFEN ab. Ein
+          Nennerwechsel bei gleichen Stufen waere durch R-R9 unbemerkt
+          durchgekommen - die Schwelle haette weiter "passt" gemeldet.
+      S3  Der Buendelfaktor (`1000CAT` = 1000 x CAT) wird im ABRUF
+          angewandt. Dem Zahlenwert sieht man das nicht an, und eine
+          zweite Anwendung machte die Menge tausendfach zu klein.
+
+    ⚠️ ALLES HIER IST SEITENEFFEKT, kein Quelltextlesen. Jede Zeile
+    schaltet den Schutz ab und prueft, dass die Suite es merkt.
+    """
+    P = "Nennertrennung"
+    import agent.marktrang as _MR
+    import agent.potential as _PT
+
+    # ---- S1: der Nenner steht im Fingerabdruck ---------------------
+    _lage = _PT.beitragslage()
+    pruefe(P, "⚠⚠ der Fingerabdruck nennt den NENNER",
+           "@" in _lage,
+           "ohne ihn koennte die Mengenquelle wechseln, ohne dass R-R9 "
+           "es bemerkt. Lage: %s" % _lage)
+
+    pruefe(P, "⚠ und R-R9 steht trotzdem auf gruen",
+           _PT.kalibrierung_gilt()[0],
+           "die Erweiterung war OHNE Wirkung auf die Schwelle - "
+           "`KALIBRIERT_FUER` wurde im selben Schritt mitgezogen")
+
+    _alt = _MR.UMSCHLAG_GROESSEN.get("umschlag_gesamt")
+    if not _alt:
+        pruefe(P, "⚠ `umschlag_gesamt` ist eingetragen", False,
+               "ohne sie ist dieser Nachweis nicht zu fuehren")
+        return
+    try:
+        _MR.UMSCHLAG_GROESSEN["umschlag_gesamt"] = dict(_alt, live=False)
+        _rot = not _PT.kalibrierung_gilt()[0]
+    finally:
+        _MR.UMSCHLAG_GROESSEN["umschlag_gesamt"] = _alt
+    pruefe(P, "⚠⚠ SEITENEFFEKT: faellt der Nenner weg, faellt R-R9",
+           _rot,
+           "bleibt sie gruen, bildet der Fingerabdruck den Nenner NICHT "
+           "ab und der Schutz steht nur da (`gruene-suite-ist-kein-"
+           "wirkungsnachweis`)")
+
+    pruefe(P, "⚠ und danach ist sie wieder gruen",
+           _PT.kalibrierung_gilt()[0],
+           "die Mutation hat ihren eigenen Anker nicht geloescht")
+
+    _altf = _MR.UMSCHLAG_GROESSEN.get("umschlag_frei")
+    _bruch = False
+    if _altf:
+        try:
+            _MR.UMSCHLAG_GROESSEN["umschlag_frei"] = dict(
+                _altf, live=True, codefeld=_alt.get("codefeld"))
+            try:
+                _PT.beitragslage()
+            except RuntimeError:
+                _bruch = True
+        finally:
+            _MR.UMSCHLAG_GROESSEN["umschlag_frei"] = _altf
+    pruefe(P, "⚠⚠ zwei LIVE-Groessen auf einem Codefeld brechen ab",
+           _bruch,
+           "sonst waere nicht mehr bestimmt, was der Beitrag misst - und "
+           "der Fingerabdruck naehme still eine der beiden")
+
+    # ---- S2: die Sperre haengt an der GROESSE, nicht am Pfad --------
+    _kaputt = False
+    try:
+        _MR.umlaufmengen(db_pfad="data/_gibt_es_nicht_.db",
+                         datei="data/_gibt_es_nicht_.db",
+                         groesse="_erfunden_")
+    except KeyError:
+        _kaputt = True
+    pruefe(P, "⚠⚠ eine unbekannte GROESSE bricht ab",
+           _kaputt,
+           "ein stilles leeres Ergebnis haette die Nennersperre "
+           "abgeschaltet, ohne dass es jemand sieht")
+
+    _weg_laeuft = True
+    try:
+        _MR.umlaufmengen(db_pfad="data/_gibt_es_nicht_.db",
+                         datei="data/_gibt_es_nicht_.db")
+    except Exception:                                        # noqa: BLE001
+        _weg_laeuft = False
+    pruefe(P, "⚠⚠ ein WEGWERFPFAD laeuft durch",
+           _weg_laeuft,
+           "die Groesse haengt am LESER, nicht am Dateinamen. Die erste "
+           "Fassung riet sie aus dem Pfad - und liess drei Pakete "
+           "abbrechen, weil die Suite mit Wegwerfpfaden ruft")
+
+    # ---- S3: die Herkunftsmarke, gegen eine WEGWERFDATEI ------------
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import importlib.util as _iu
+    _weg = _os.path.join(_tf.gettempdir(), "_pruef_buendelmarke.db")
+    try:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
+        _spec = _iu.spec_from_file_location("_hz", "hole_umlaufmenge_cg.py")
+        _hz = _iu.module_from_spec(_spec)
+        _spec.loader.exec_module(_hz)
+        _hz.baue(_weg).close()
+        pruefe(P, "⚠⚠ der ERZEUGER schreibt die Buendelmarke",
+               _MR.buendelfaktor_stand(_weg) is not None,
+               "ohne sie kann ein Leser nicht wissen, ob der Faktor schon "
+               "angewandt ist - und eine zweite Anwendung macht die Menge "
+               "tausendfach zu klein (2.522)")
+
+        _c = _sq.connect(_weg)
+        _c.execute("UPDATE _quelle SET buendelfaktor = NULL")
+        _c.commit()
+        _c.close()
+        pruefe(P, "⚠⚠ SEITENEFFEKT: ohne Marke meldet der Leser `None`",
+               _MR.buendelfaktor_stand(_weg) is None,
+               "meldet er trotzdem etwas, liest er nicht die Marke")
+
+        _hz.baue(_weg).close()
+        pruefe(P, "⚠ und ein zweiter Lauf stellt sie NICHT selbst aus",
+               _MR.buendelfaktor_stand(_weg) is None,
+               "eine Marke, die sich das Werkzeug selbst gibt, ist keine")
+    finally:
+        if _os.path.exists(_weg):
+            _os.remove(_weg)
 
 
 def paket_gatedatenstand() -> None:
@@ -29542,6 +29683,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "A1Eichung": paket_a1eichung,
           "GateDatenstand": paket_gatedatenstand,
           "Nennersperre": paket_nennersperre,
+          "Nennertrennung": paket_nennertrennung,
           "Verfuegbarkeit": paket_verfuegbarkeit,
           "Messbasen": paket_messbasen,
           "Betriebsreihen": paket_betriebsreihen,

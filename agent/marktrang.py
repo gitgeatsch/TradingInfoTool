@@ -682,6 +682,19 @@ def _coingecko_namen() -> dict:
 # unmoegliche Richtung, und eine Bestaetigung von aussen. Ein Verdacht
 # reicht nicht.
 NENNER_WIDERLEGT = {
+  # ⚠️⚠️⚠️ JE GROESSE, NICHT GLOBAL (22.09.2026, S2 des Umbaukonzepts).
+  #
+  # Beide Eintraege unten sind gegen die BETRIEBSQUELLE `SplyCur` belegt -
+  # und in beiden Faellen ist der FREIE UMLAUF der richtige Wert
+  # (CoinMarketCap 16.521.951.235 fuer XVG, 209.230.859 fuer KNC). Nach
+  # dem Nennerwechsel waeren es also ZWEI GESUNDE SYMBOLE, und der
+  # gemessene Preis der Sperre (3,26 % der Symbol-Tage verschieben ein
+  # Fuenftel) fiele grundlos an.
+  #
+  # ⚠️ Deshalb wird die Liste an die GROESSE gebunden und NICHT geloescht -
+  # sonst fehlte sie bei einem Rueckwechsel. `nenner_widerlegt()` holt die
+  # passende; eine unbekannte Groesse bricht dort ab.
+  "umschlag_gesamt": {
     "XVG": ("SplyCur 1,6522e12 gegen freien Umlauf 1,6522e10 - IDENTISCHE "
             "Mantisse, reiner Faktor 100. CoinMarketCap: 16.521.951.235 "
             "umlaufend, Maximum 16,5 Mrd. Die Betriebsquelle liegt um den "
@@ -692,11 +705,65 @@ NENNER_WIDERLEGT = {
             "Vermutlich der Legacy-Vertrag vor der Migration 2021, aber das "
             "ist NICHT belegt - belegt ist nur, dass der Wert falsch ist "
             "(21.09.2026)"),
+  },
+  # ⚠️ LEER IST EINE AUSSAGE, KEINE LUECKE: fuer den freien Umlauf ist
+  # bisher KEIN Nenner widerlegt worden. Wer hier etwas eintraegt,
+  # braucht denselben Beleg wie oben - zwei Quellen, eine unmoegliche
+  # Richtung, eine Bestaetigung von aussen.
+  "umschlag_frei": {},
 }
 
 
+def nenner_widerlegt(groesse: str) -> dict:
+    """Die widerlegten Nenner GENAU DIESER Groesse.
+
+    ⚠️⚠️ EINE UNBEKANNTE GROESSE BRICHT AB, sie liefert keine leere
+    Menge. Ein stilles `{}` haette die Sperre abgeschaltet, ohne dass es
+    jemand sieht - und genau so verschwinden Schutzmassnahmen
+    (`fail-soft-ist-fail-silent`).
+    """
+    if groesse not in NENNER_WIDERLEGT:
+        raise KeyError(
+            "Unbekannte Umschlaggroesse %r - fuer sie ist nicht "
+            "entschieden, welche Nenner widerlegt sind. Eintragen in "
+            "marktrang.NENNER_WIDERLEGT, nicht uebergehen." % groesse)
+    return NENNER_WIDERLEGT[groesse]
+
+
+def buendelfaktor_stand(datei: str = "data/umlaufmenge_cg.db") -> str | None:
+    """Sagt die Mengendatei, dass der Buendelfaktor angewandt wurde?
+
+    ⚠️⚠️ WOZU (Befund 2.522): Binance handelt Buendel (`1000CAT` = 1000 x
+    CAT), die Mengenquelle fuehrt den Einzeltoken. Der Faktor gehoert
+    GENAU EINMAL angewandt - er sitzt im Abruf
+    (`hole_umlaufmenge_cg.vervielfacher`). Eine ZWEITE Anwendung im
+    Betrieb machte die Menge tausendfach zu klein.
+
+    ⚠️ Diese Funktion WENDET NICHTS AN. Sie liest nur die Marke, die der
+    Erzeuger hinterlaesst. `None` heisst *nicht geprueft* - und der Leser,
+    der die Menge benutzt, hat daraus seine Folge zu ziehen (S4).
+    """
+    import sqlite3
+    try:
+        conn = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
+    except sqlite3.Error:
+        return None
+    try:
+        spalten = {r[1] for r in conn.execute("PRAGMA table_info(_quelle)")}
+        if "buendelfaktor" not in spalten:
+            return None
+        zeile = conn.execute(
+            "SELECT buendelfaktor FROM _quelle").fetchone()
+        return (zeile or [None])[0]
+    except sqlite3.Error:
+        return None
+    finally:
+        conn.close()
+
+
 def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
-                 db_pfad=None, datei: str = "data/onchain_historie.db") -> dict:
+                 db_pfad=None, datei: str = "data/onchain_historie.db",
+                 groesse: str = "umschlag_gesamt") -> dict:
     """Die Umlaufmenge aus DERSELBEN Quelle, mit der gemessen wurde.
 
     ⚠️ NUR DER LETZTE PUNKT JE SYMBOL, und nur wenn er frisch genug ist.
@@ -785,7 +852,20 @@ def umlaufmengen(hoechstalter: int = SPLYCUR_FRISCHE_TAGE, *,
     # ⚠️ NICHT STILL. Ein weggefallener Nenner heisst, dass `turnover` fuer
     # dieses Symbol heute fehlt, und das ist eine Datenlage, die man sehen
     # muss (`fail-soft-ist-fail-silent`).
-    gesperrt = sorted(set(aus) & set(NENNER_WIDERLEGT))
+    # ⚠️⚠️ DIE GROESSE IST EIN PARAMETER, KEIN PFADRATEN (22.09.2026).
+    #
+    # Mein erster Entwurf holte sie mit `umschlag_name(datei)` aus dem
+    # DATEINAMEN. Die volle Suite hat ihn in derselben Stunde widerlegt:
+    # sie ruft diese Funktion mit WEGWERFPFADEN, wie die Hausregel es
+    # verlangt - und jeder davon hiess dann `unbekannt` und brach ab.
+    # DREI PAKETE FIELEN AUS, 21 Pruefungen liefen gar nicht mehr.
+    #
+    # Richtig ist: diese Funktion liest die Tabelle `splycur`, und die
+    # FUEHRT die Gesamtausgabe - unabhaengig davon, welche Kopie der
+    # Datei gerade danebenliegt. Die Groesse haengt am LESER, nicht am
+    # Dateinamen. Ein zweiter Leser fuer den freien Umlauf (S4) uebergibt
+    # seine eigene.
+    gesperrt = sorted(set(aus) & set(nenner_widerlegt(groesse)))
     for sym in gesperrt:
         aus.pop(sym, None)
     if gesperrt:
