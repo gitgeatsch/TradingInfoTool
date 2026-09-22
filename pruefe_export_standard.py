@@ -27,6 +27,33 @@ def z(wert, stellen=1):
     return "-" if wert is None else f"{wert:.{stellen}f}"
 
 
+AUSGELASSEN = []
+"""Welche Abschnitte die SCHLANKE Diagnose nicht enthaelt."""
+
+
+def hole(d, schluessel, vorgabe=None):
+    """Einen Abschnitt lesen - und den PLATZHALTER erkennen.
+
+    ⚠⚠⚠ SEIT DER SCHLANKEN DIAGNOSE (20.09.2026) steht
+    in ausgelassenen Abschnitten ein STRING, keine Liste und kein
+    Dict: `"__ausgelassen__: ... python extract_notebook_diagnose.py
+    --voll"`. Dieser Katalog hat das nicht gewusst und ist an
+    `spot_signals` mit `AttributeError` GESTORBEN - Punkt 8 bis 15
+    wurden seither NIE geprueft, ohne dass es auffiel (gefunden
+    22.09.2026).
+
+    ⚠ Er liefert jetzt die Vorgabe und MERKT SICH, was fehlte.
+    Am Ende steht, welche Punkte `--voll` braeuchten - ein
+    ausgelassener Abschnitt ist eine Aussage, kein leeres Ergebnis.
+    """
+    v = d.get(schluessel, vorgabe)
+    if isinstance(v, str) and v.startswith("__ausgelassen__"):
+        if schluessel not in AUSGELASSEN:
+            AUSGELASSEN.append(schluessel)
+        return vorgabe
+    return v
+
+
 def main() -> None:
     pfad = sys.argv[1] if len(sys.argv) > 1 else STANDARD
     d = json.load(io.open(pfad, encoding="utf-8"))
@@ -41,13 +68,31 @@ def main() -> None:
     print("=" * 78)
 
     # 1 LLM-Budget
-    calls = d.get("llm_calls_heute", {})
+    # ⚠⚠⚠ ZWEI ZAEHLER FUER DIESELBE GROESSE, EINER TOT (22.09.2026).
+    #
+    # `llm_calls_heute` meldete {groq 0, mistral 0, gemini 0,
+    # openrouter 0} - und kennt `zai` gar nicht. `llm_aufrufe_heute`
+    # meldete im SELBEN Export gemini 84 und zai 18. Punkt 1 hat
+    # damit einen FEHLALARM erzeugt ("keine LLM-Calls"), waehrend die
+    # Kette normal lief.
+    #
+    # ⚠ Gelesen wird jetzt der reichere der beiden, und die
+    # Abweichung wird GEMELDET statt verschwiegen - ein toter Zaehler
+    # faellt sonst nie auf.
+    _alt = hole(d, "llm_calls_heute", {}) or {}
+    _neu = hole(d, "llm_aufrufe_heute", {}) or {}
+    calls = _neu if sum(_neu.values() or [0]) >= sum(
+        _alt.values() or [0]) else _alt
+    if _alt and _neu and _alt != _neu:
+        melde("zwei LLM-Zaehler weichen ab: llm_calls_heute=%s gegen "
+              "llm_aufrufe_heute=%s - gelesen wird der reichere"
+              % (_alt, _neu))
     print(f"\n 1. LLM-Calls heute: {calls}")
     if calls.get("mistral", 0) > 350:
         melde(f"Mistral bei {calls['mistral']} - Limit 400 rueckt naeher")
 
     # 2 Signal-Volumen
-    sv = d.get("signal_volumen_heute", {})
+    sv = hole(d, "signal_volumen_heute", {})
     print(f"\n 2. Signal-Volumen heute: {sv}")
     # DER WIDERSPRUCH, DER DEN TOTEN ZAEHLER VERRATEN HAETTE (17.08.2026).
     #
@@ -60,7 +105,7 @@ def main() -> None:
     # Ausfall der Kette. Beides gehoert gemeldet, und zwar hier.
     rk = (sv or {}).get("rollen_kette") or {}
     aufrufe = sum(int(v or 0) for v in
-                  (d.get("llm_aufrufe_heute") or {}).values())
+                  (hole(d, "llm_aufrufe_heute") or {}).values())
     if rk.get("nicht_verfuegbar"):
         melde(f"Rollen-Urteile nicht zaehlbar: {rk['nicht_verfuegbar']}")
     elif aufrufe > 20 and int(rk.get("gesamt") or 0) == 0:
@@ -74,7 +119,7 @@ def main() -> None:
         print(f"     Aktionen: {rk.get('aktionen')}")
 
     # 3 Provider-Performance
-    pp = d.get("provider_performance", {})
+    pp = hole(d, "provider_performance", {})
     print(f"\n 3. Provider-Performance: {len(pp)} Gruppen")
 
     # 4 Konfidenz-Kalibrierung
@@ -85,7 +130,7 @@ def main() -> None:
     # weiter im Export stehen; fuer Signale mit quelle_kette='rollen' ist er
     # leer, und das ist kein Fehlstand. Der Nachfolger steht unter Punkt 16.
     print("\n 4. Konfidenz-Kalibrierung (nur ALTE Kette, siehe 16.):")
-    for tier, baender in (d.get("konfidenz_kalibrierung") or {}).items():
+    for tier, baender in (hole(d, "konfidenz_kalibrierung") or {}).items():
         for band, w in (baender or {}).items():
             if not isinstance(w, dict):
                 continue
@@ -97,7 +142,7 @@ def main() -> None:
                   f"(Delta {z(diff)} pp)")
 
     # 5 Z.ai
-    zg = d.get("zai_gegenpruefung_verlauf", {})
+    zg = hole(d, "zai_gegenpruefung_verlauf", {})
     print(f"\n 5. Z.ai-Gegenpruefung: {len(zg)} Bloecke")
 
     # 6 Gate-Vetos - NACH MUSTER, nicht nach exaktem Text.
@@ -114,7 +159,7 @@ def main() -> None:
     # er aus den Rohschluesseln abgeleitet, damit die Auswertung nicht erst
     # auf einen neuen Export warten muss.
     print("\n 6. Gate-/Veto-Haeufigkeit (Hebel, letzte Tage) - nach MUSTER:")
-    gv = d.get("gate_veto_haeufigkeit", {})
+    gv = hole(d, "gate_veto_haeufigkeit", {})
     fuer = gv.get("hebel_risk_veto_reason_muster")
     roh = gv.get("hebel_risk_veto_reason_letzte_tage") or gv.get("hebel_risk_veto_reason") or {}
     if not fuer and isinstance(roh, dict):
@@ -133,7 +178,7 @@ def main() -> None:
             print(f"      [{len(roh)} Rohtexte -> {len(fuer)} Muster]")
 
     # 7 Log-Auffaelligkeiten
-    lg = [l for l in d.get("log_auszug", []) if isinstance(l, str)]
+    lg = [l for l in hole(d, "log_auszug", []) or [] if isinstance(l, str)]
     tb = sum(1 for l in lg if "Traceback" in l)
     crit = sum(1 for l in lg if "CRITICAL" in l)
     err = sum(1 for l in lg if " ERROR " in l)
@@ -171,14 +216,24 @@ def main() -> None:
         ursache = (f" - haeufigste Ursache {haeufigste[0][1]}x "
                    f"{haeufigste[0][0]}" if haeufigste else "")
         melde(f"{tb} Tracebacks im Log-Fenster{spanne}{ursache}")
-    jf = d.get("job_fehlschlaege", [])
+    jf = hole(d, "job_fehlschlaege", []) or []
     if jf:
-        arten = Counter((str(x.get("job") or x.get("name") or "?")) for x in jf
-                        if isinstance(x, dict))
-        melde(f"{len(jf)} Job-Fehlschlaege: {dict(arten.most_common(5))}")
+        # ⚠ `job`/`name` gibt es in diesen Zeilen nicht - der
+        # Text steht in `nachricht`. Die Gruppierung meldete deshalb
+        # stur {"?": 60} und sagte damit nichts (22.09.2026).
+        arten = Counter(
+            (str(x.get("job") or x.get("name")
+                 or x.get("nachricht") or "?"))[:58]
+            for x in jf if isinstance(x, dict))
+        _tage = sorted({str(x.get("zeitstempel"))[:10] for x in jf
+                        if isinstance(x, dict) and x.get("zeitstempel")})
+        melde("%d Job-Fehlschlaege an %s: %s"
+              % (len(jf), ", ".join(_tage) or "?",
+                 "; ".join("%dx %s" % (n, k)
+                           for k, n in arten.most_common(3))))
 
     # 8 Wartezeit bis Aufloesung
-    hs = d.get("hebel_signals", [])
+    hs = hole(d, "hebel_signals", []) or []
     dauern = []
     for s in hs:
         a, b = s.get("created_at"), s.get("outcome_entschieden_am")
@@ -203,7 +258,7 @@ def main() -> None:
     print(f"\n10. Fazit-Selbsteinschaetzung (Hebel): {dict(ff)}")
 
     # 11 Z-3
-    z3 = d.get("z3_status", {})
+    z3 = hole(d, "z3_status", {})
     print(f"\n11. Z-3: aktuell {z(z3.get('aktuell_prozent'), 2)} % / Schwelle "
           f"{z3.get('schwelle_prozent')} % / ausgeloest={z3.get('ausgeloest')} / "
           f"{z3.get('tage_historie')} Tage")
@@ -214,7 +269,7 @@ def main() -> None:
         melde(f"{fx} verworfene FX-Ableitungen im Log - Z-3-Wert pruefen")
 
     # 12 Ausstiegsempfehlungen
-    ae = (d.get("ausstiegs_empfehlungen") or {}).get("empfehlungen") or []
+    ae = (hole(d, "ausstiegs_empfehlungen") or {}).get("empfehlungen") or []
     offen_r = sum(x.get("sichert_r") or 0 for x in ae)
     print(f"\n12. Ausstiegsempfehlungen: {len(ae)}, zusammen {offen_r:.1f} R ungesichert")
     for x in sorted(ae, key=lambda y: -(y.get("mfe_r") or 0))[:3]:
@@ -222,7 +277,7 @@ def main() -> None:
               f"-> sichert {z(x.get('sichert_r'), 2)} R")
 
     # 13 Score-Komponenten
-    rb = d.get("rohdaten_fuer_backtest", {})
+    rb = hole(d, "rohdaten_fuer_backtest", {})
     print(f"\n13. Score-Rohdaten: {len(rb.get('hebel_triggers_alle') or [])} Trigger gesamt, "
           f"{len(rb.get('hebel_triggers_kandidaten') or [])} Kandidaten")
 
@@ -233,7 +288,7 @@ def main() -> None:
         melde(f"Makro-Historie nur {len(mh)} Zeilen - Fenster bei jedem Mischen beachten")
 
     # 15 Watchlist-Stammdaten
-    ws = d.get("watchlist_stammdaten") or {}
+    ws = hole(d, "watchlist_stammdaten") or {}
     print(f"\n15. Watchlist-Stammdaten: {len(ws)} Symbole")
     if not ws:
         melde("watchlist_stammdaten FEHLT - jede Spot-Auswertung waere ein Mischtopf")
@@ -244,7 +299,7 @@ def main() -> None:
     # identisch aus, egal an welcher Stufe es verschwand: am Ankertag, am
     # Urteil, an der Geometrie oder an der Rechnung. Die Durchlaessigkeit sagt
     # WO - und damit, ob ein Fund ein Modell- oder ein Rechenproblem ist.
-    rk = d.get("rollen_kette") or {}
+    rk = hole(d, "rollen_kette") or {}
     laeufe = (rk.get("gate_durchlaessigkeit") or {}).get("laeufe") or []
     print(f"\n16. Rollen-Kette: {len(laeufe)} Laeufe, "
           f"{(rk.get('lagebilder') or {}).get('anzahl_gesamt', 0)} Lagebilder")
@@ -289,7 +344,7 @@ def main() -> None:
                   f"{dict(regeln.most_common())}. Verwirft nichts, steht aber")
 
     # Zusatz: sind die neuen Fakt-Bloecke angekommen?
-    fk = d.get("hebel_faktensaetze") or {}
+    fk = hole(d, "hebel_faktensaetze") or {}
     bjt = fk.get("bloecke_je_tag")
     print(f"\n +. Fakt-Ankunft (neuer Block seit 06.08.): "
           f"{'vorhanden' if bjt else 'NOCH NICHT im Export - Notebook hat den neuen Stand nicht'}")
@@ -308,5 +363,23 @@ def main() -> None:
         print(f"  - {f}")
 
 
+def schlussbericht():
+    """⚠ Ein ausgelassener Abschnitt ist eine AUSSAGE."""
+    print()
+    print("=" * 78)
+    if AUSGELASSEN:
+        print("  ⚠ SCHLANKE DIAGNOSE - %d Abschnitte fehlten, "
+              "die zugehoerigen Punkte sind UNGEPRUEFT:"
+              % len(AUSGELASSEN))
+        for k in AUSGELASSEN:
+            print("      %s" % k)
+        print("    Volle Fassung: python extract_notebook_diagnose.py --voll")
+        print("    ⚠ Sie stoert den Betrieb (295 MB Upload) - "
+              "nur anfordern, wenn ein Punkt daran haengt.")
+    else:
+        print("  ✔ VOLLE DIAGNOSE - alle Abschnitte lagen vor")
+
+
 if __name__ == "__main__":
     main()
+    schlussbericht()
