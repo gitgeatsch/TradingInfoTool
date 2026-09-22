@@ -24004,18 +24004,52 @@ def paket_verfuegbarkeit():
         #
         # ⚠ `messbasis` wird umgebogen, weil der Helfer mit ihr
         # schneidet - sonst faende er die Kunstsymbole nie.
+        # ⚠️⚠️ SEIT S6 LIEST DER HELFER DIE LIVE-GROESSE (22.09.2026).
+        # Ist das der freie Umlauf, ignoriert er `datei` - dann prueft
+        # diese Zeile den TOTEN Pfad und ist blind. Deshalb wird die
+        # Frischeprobe auf der Quelle gefahren, die GERADE GILT.
         _echt = _MR.messbasis
+        _weg_frei = _os.path.join(_tf.gettempdir(), "_pruef_frei.db")
         try:
             _MR.messbasis = lambda _n: set(["FRISCHSYM", "ALTSYM"])
-            _h = _MR.turnover_verfuegbar(db_pfad=_keine_db, datei=_weg)
+            if _MR.live_groesse() == "umschlag_frei":
+                if _os.path.exists(_weg_frei):
+                    _os.remove(_weg_frei)
+                _cf = _sq.connect(_weg_frei)
+                _cf.executescript(
+                    "CREATE TABLE umlaufmenge (symbol TEXT, datum TEXT, "
+                    "wert REAL, PRIMARY KEY (symbol, datum));"
+                    "CREATE TABLE _quelle (hinweis TEXT, groesse TEXT, "
+                    "tage INTEGER, gebaut_am TEXT, buendelfaktor TEXT);")
+                _cf.execute("INSERT INTO _quelle VALUES (?,?,?,?,?)",
+                            ("Pruefkopie", "free_float", 365, "-",
+                             "angewandt"))
+                _heute2 = _dt.date.today().isoformat()
+                _alt2 = (_dt.date.today()
+                         - _dt.timedelta(days=99)).isoformat()
+                _cf.executemany(
+                    "INSERT INTO umlaufmenge VALUES (?,?,?)",
+                    [("FRISCHSYM", _heute2, 1.0), ("ALTSYM", _alt2, 1.0),
+                     ("FREMDSYM", _heute2, 1.0)])
+                _cf.commit()
+                _cf.close()
+                _h = _MR.turnover_verfuegbar(frei_datei=_weg_frei)
+            else:
+                _h = _MR.turnover_verfuegbar(db_pfad=_keine_db, datei=_weg)
         finally:
             _MR.messbasis = _echt
+            if _os.path.exists(_weg_frei):
+                _os.remove(_weg_frei)
         pruefe(P, "⚠⚠⚠ und der HELFER SELBST verwirft ihn auch",
                "FRISCHSYM" in _h and "ALTSYM" not in _h,
                "wer die Frischebedingung aus dem Helfer nimmt, faellt "
                "NUR hier auf. bekommen: %s" % sorted(_h))
+        # ⚠️ AUF DEM FREIEN UMLAUF GIBT ES KEINEN MESSBASIS-SCHNITT -
+        # dort IST die Quelle die Basis (S7). Die Zeile prueft deshalb
+        # nur noch den Weg, auf dem sie etwas bedeutet.
         pruefe(P, "⚠⚠ und er bleibt auf der MESSBASIS",
-               "FREMDSYM" not in _h,
+               _MR.live_groesse() == "umschlag_frei"
+               or "FREMDSYM" not in _h,
                "FREMDSYM ist frisch, steht aber nicht in der "
                "Messbasis. Wer den Schnitt weglaesst, bewertet "
                "Symbole, auf denen der Beitrag nie gemessen wurde - "

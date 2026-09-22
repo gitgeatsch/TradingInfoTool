@@ -252,7 +252,9 @@ REGISTRATUR: tuple[Quelle, ...] = (
            # keinen, die Reihe war einmal manuell geholt worden. Genau
            # deshalb lief sie zwoelf Tage aus dem Takt, ohne aufzufallen.
            "hole_fremdreihen.py splycur (VON HAND)",
-           "Umlaufmenge - Nenner des Turnover-Rangs, 66 Symbole",
+           "Umlaufmenge (Gesamtausgabe) - bis 22.09.2026 der Nenner "
+           "des Turnover-Rangs, 66 Symbole. Seit S6 NICHT MEHR LIVE, "
+           "wird aber frisch gehalten: sie ist der Rueckweg",
            datei="data/onchain_historie.db", spalten=("datum", ""),
            # messmenge.ABDECKUNG[turnover]
            erwartet=66),
@@ -268,8 +270,8 @@ REGISTRATUR: tuple[Quelle, ...] = (
     Quelle("freier_umlauf", "M", "umlaufmenge", 5,
            "scheduler/background.py (taeglich) bzw. "
            "hole_umlaufmenge_cg.py --taeglich",
-           "Freier Umlauf - der ZWEITE Nenner des Turnover-Rangs, "
-           "375 Symbole. Noch nicht live",
+           "Freier Umlauf - seit 22.09.2026 DER Nenner des "
+           "Turnover-Rangs (S6), 375 Symbole",
            datei="data/umlaufmenge_cg.db", spalten=("datum", ""),
            erwartet=375),
     # ---- ⚠️⚠️ DIE EINE, DIE WIRKLICH AUSGELESEN WIRD (20.09.2026) ----

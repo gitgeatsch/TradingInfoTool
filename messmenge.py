@@ -58,6 +58,22 @@ KRITERIUM = ("alle Krypto-Symbole der Messbasis mit mehr als "
              "Liquiditaet oder Leistung")
 
 # ⚠️ Abdeckung je Zusatzquelle, festgehalten am Tag des Einfrierens.
+# ⚠⚠⚠ `turnover: 66` IST SEIT DEM 22.09.2026 NICHT
+# MEHR DIE BETRIEBSZAHL (S6, Befund 2.530). Der Betrieb rechnet mit dem
+# FREIEN UMLAUF und findet dort 374 Symbole.
+#
+# DIESE ZAHL BLEIBT TROTZDEM STEHEN, und zwar mit Absicht: sie gehoert
+# zur MESSMENGE V1 und zu `marktrang.MESSBASIS["turnover"]`, also zur
+# GRUNDGESAMTHEIT der Messungen. CLAUDE.md dazu im Wortlaut: *"Die
+# Grundgesamtheit wird NICHT beilaeufig geaendert"* - wer sie anfasst,
+# MISST die Wirkung (wie viele Werte wechseln das Fuenftel) und zieht
+# BEIDE Seiten nach, Betrieb und Messbasis.
+#
+# ⚠ DAS IST EIN OFFENER PUNKT, KEIN VERSEHEN: die Messungen 2.515
+# bis 2.521 liefen bereits auf der Naeherungsmenge (366 Symbole), nicht
+# auf dieser hier. Solange beides nebeneinandersteht, ist `ABDECKUNG`
+# die Zahl der MESSMENGE und nicht die des Betriebs - und genau so ist
+# sie zu lesen.
 ABDECKUNG = {"kursreihen": 536, "funding": 300, "terminmarkt": 122,
              "turnover": 66, "eingestellt": 174}
 

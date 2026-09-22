@@ -934,6 +934,9 @@ UMSCHLAG_GROESSEN = {
         "codefeld": None,     # ⚠️ seit 22.09. nicht mehr live
         "stufen_registriert": True,
         "warnung": (
+            "⚠️ SEIT 22.09.2026 NICHT MEHR LIVE (S6) - abgeloest vom "
+            "freien Umlauf. Die Quelle wird weiter frisch gehalten "
+            "(Scheduler), damit ein Rueckweg offen bleibt. --- "
             "⚠️ Es ist definitorisch die FALSCHE Groesse (2.500): "
             "`SplyCur` ist die GESAMTAUSGABE, nicht der freie Umlauf - "
             "bei LINK und UNI glatte 1.000.000.000. Der gemessene Anteil "
@@ -955,7 +958,16 @@ UMSCHLAG_GROESSEN = {
         "codefeld": "turnover_fuenftel",
         "stufen_registriert": True,
         "warnung": (
-            "⚠️⚠️ NICHT FERTIG VERMESSEN. Geprueft sind Abruf, "
+            "⚠️ SEIT 22.09.2026 LIVE (S6). Gemessen ist: Gewinnanteil "
+            "+2,8 bis +4,2 Prozentpunkte auf allen drei zulaessigen "
+            "selektierten Mengen (2.520), Stufentabelle H20 ab 2023 "
+            "(2.517), Schwelle 0,060 kalibriert (2.521), "
+            "Fuenftelwechsel 59 Prozent auf der Betriebsmenge (2.525). "
+            "⚠️ OFFEN BLEIBT: `MESSBASIS['turnover']` und "
+            "`messmenge.ABDECKUNG['turnover']` zeigen weiter auf "
+            "`splycur` (66) - das ist die GRUNDGESAMTHEIT und wird "
+            "nicht beilaeufig geaendert. --- FRUEHERER STAND: "
+            "⚠️⚠️ NICHT FERTIG VERMESSEN. Geprueft waren Abruf, "
             "Nennerfehler, Kalibrierung auf H2/H3/H5 und die Rangwirkung. "
             "ES FEHLEN: die Messung auf der SELEKTIERTEN Menge "
             "(Registerauflage), eine Stufentabelle, und H20 - der "
@@ -983,7 +995,8 @@ def umschlag_name(datei: str) -> str:
 
 
 def turnover_verfuegbar(*, db_pfad=None,
-                        datei: str = "data/onchain_historie.db") -> set:
+                        datei: str = "data/onchain_historie.db",
+                        frei_datei: str = FREEFLOAT_DATEI) -> set:
     """Die Symbole, fuer die `turnover` im BETRIEB einen Wert bekommt.
 
     ⚠️⚠️ WARUM ES DIESEN HELFER GIBT (21.09.2026, Befund 2.510).
@@ -1009,6 +1022,25 @@ def turnover_verfuegbar(*, db_pfad=None,
     ist, ist hier richtig. Die Schranke liegt auf der sicheren Seite:
     sie meldet eher zu VIEL Abdeckung als zu wenig.
     """
+    # ⚠️⚠️⚠️ ER FOLGT DER LIVE-GROESSE (22.09.2026, S7). Bis zum
+    # Nennerwechsel gab es nur eine Quelle, und dieser Helfer las sie
+    # direkt. Nach S6 rechnet der Betrieb mit dem FREIEN UMLAUF - haette
+    # der Helfer weiter `splycur` gelesen, meldeten alle Messwerkzeuge
+    # 59 statt 374 Symbole. Das ist WOERTLICH die Fehlerklasse 2.510:
+    # gemessen wird etwas anderes, als angewandt wird.
+    #
+    # ⚠️ Beim freien Umlauf entfaellt der Schnitt mit `MESSBASIS` - dort
+    # IST die Quelle die Basis. Ein Schnitt mit der alten Symbolliste
+    # wuerde die neue Abdeckung wieder auf 66 zurueckschneiden.
+    # ⚠️⚠️ `frei_datei` IST KEIN SCHMUCK. Meine erste Fassung rief
+    # `umlaufmengen_frei()` ohne Parameter - der Pfad war damit fest
+    # verdrahtet und aus einer Suite-Pruefung nicht erreichbar. Die
+    # Hausregel dazu ist eindeutig: *„Jedes Werkzeug bekommt einen
+    # WEGWERFPFAD, nie die Vorgabe"*. Die Frischepruefung des neuen
+    # Pfades waere sonst ungeprueft geblieben - genau die Luecke, die
+    # 2.510 auf der alten Seite hinterlassen hatte.
+    if live_groesse() == "umschlag_frei":
+        return set(umlaufmengen_frei(datei=frei_datei))
     menge = set(umlaufmengen(db_pfad=db_pfad, datei=datei))
     basis = messbasis("turnover")
     return (menge & basis) if basis else menge

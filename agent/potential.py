@@ -510,7 +510,11 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # samt Durchlass und Alter (`schwellenzeile()`). Beides gibt es seit dem
 # 07.09., weil eine zentrale Einstellung, die nur in der Doku steht,
 # zuverlaessig vergessen wird - Nutzerhinweis desselben Tages.
-# ⚠⚠ GERECHNET, ABER NICHT GESETZT (22.09.2026, Befund
+# ⚠⚠ GESETZT AM 22.09.2026 (S6). Der Block unten beschreibt, WIE
+# die Zahl entstand - er stand hier zuerst als blosses Messergebnis,
+# bevor entschieden war. Die Entscheidung ist gefallen, die Herleitung
+# gilt unveraendert. ---- URSPRUENGLICH: GERECHNET, ABER NICHT GESETZT
+# (22.09.2026, Befund
 # 2.521-schwelle-neu): mit der Beitragslage aus `umschlag_naeherung`
 # (Stufen 2,32/0,50/0,34/-0,11/-3,06) laesst 0,080 nur noch 5,4 %
 # durch. Dieselbe Zielgroesse - 16,4 % Durchlass - trifft dort ein
