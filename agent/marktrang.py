@@ -930,8 +930,8 @@ UMSCHLAG_GROESSEN = {
         "datei": "data/onchain_historie.db",
         "betriebsweg": "externe_reihe, quelle=" + SPLYCUR_QUELLE,
         "symbole": 66,
-        "live": True,
-        "codefeld": "turnover_fuenftel",
+        "live": False,        # ⚠️ ABGELOEST 22.09.2026 (S6)
+        "codefeld": None,     # ⚠️ seit 22.09. nicht mehr live
         "stufen_registriert": True,
         "warnung": (
             "⚠️ Es ist definitorisch die FALSCHE Groesse (2.500): "
@@ -951,9 +951,9 @@ UMSCHLAG_GROESSEN = {
         # uebrig bleiben.
         "betriebsweg": "marktrang.umlaufmengen_frei() aus " + FREEFLOAT_DATEI,
         "symbole": 375,
-        "live": False,
-        "codefeld": None,
-        "stufen_registriert": False,
+        "live": True,         # ⚠️⚠️ SCHARF SEIT 22.09.2026 (S6)
+        "codefeld": "turnover_fuenftel",
+        "stufen_registriert": True,
         "warnung": (
             "⚠️⚠️ NICHT FERTIG VERMESSEN. Geprueft sind Abruf, "
             "Nennerfehler, Kalibrierung auf H2/H3/H5 und die Rangwirkung. "

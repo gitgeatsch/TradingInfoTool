@@ -1834,7 +1834,7 @@ deribit_optionsmarkt:
 # Schwelle kaemen mehr Signale durch, ohne dass sich ihre Qualitaet
 # geaendert haette.
 bewertung:
-  potential_schwelle_r: 0.080            # kalibriert 2026-08-31, festgeschrieben 2026-09-07
+  potential_schwelle_r: 0.060            # kalibriert 2026-09-22 (S6, Nennerwechsel), Zielquote 16,4 %
 
 signal_fazit:
   konsistenz_schwelle_niedrig: 55        # Fazit "ja" unter dieser Konfidenz -> Hinweis.

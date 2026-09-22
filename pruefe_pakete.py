@@ -24055,16 +24055,32 @@ def paket_verfuegbarkeit():
                "rechnet; keine heisst, die Tabelle beschreibt den "
                "Betrieb nicht. live: %s" % _live)
 
-        _vorgabe = _insp.signature(_MR.umlaufmengen).parameters[
-            "datei"].default
-        _name = _MR.umschlag_name(_vorgabe)
+        # ⚠️⚠️ AM SEITENEFFEKT, NICHT AN EINER SIGNATUR (22.09.2026).
+        #
+        # Hier stand: lies die Vorgabe von `umlaufmengen(datei=...)` und
+        # leite daraus die Groesse ab. Das galt, solange es EINEN Leser
+        # gab. Seit S4 waehlt `mengen_fuer_betrieb()` zwischen ZWEI
+        # Lesern - die Vorgabe des einen sagt dann nichts mehr ueber den
+        # Betrieb, und die Pruefung wurde beim Umschalten rot, obwohl
+        # alles stimmte.
+        #
+        # Gefragt wird jetzt, was der Betrieb TATSAECHLICH liest.
+        try:
+            _betrieb = _MR.mengen_fuer_betrieb()
+            _erwartet = (_MR.umlaufmengen_frei()
+                         if _live and _live[0] == "umschlag_frei"
+                         else _MR.umlaufmengen())
+            _passt = set(_betrieb) == set(_erwartet)
+            _wie = "%d Symbole" % len(_betrieb)
+        except Exception as _e:                              # noqa: BLE001
+            _passt, _wie = False, "%s: %s" % (type(_e).__name__, _e)
         pruefe(P, "⚠⚠⚠ und der BETRIEBSWEG nimmt genau diese Groesse",
-               _name == (_live[0] if _live else None),
-               "abgeleitet aus der Signatur von `umlaufmengen`, nicht "
-               "aufgezaehlt. Vorgabe %r -> %s, als live markiert: %s. "
-               "Laufen die auseinander, rechnet der Betrieb mit einer "
-               "anderen Groesse, als die Doku behauptet - das ist 2.410 "
-               "in der Benennung" % (_vorgabe, _name, _live))
+               _passt,
+               "`mengen_fuer_betrieb` muss die Mengen der LIVE-Groesse "
+               "liefern. Laufen sie auseinander, rechnet der Betrieb mit "
+               "einer anderen Groesse, als die Tabelle behauptet - das "
+               "ist 2.410 in der Benennung. live=%s, geliefert: %s"
+               % (_live, _wie))
 
         _ohne = [n for n, d in _tab.items()
                  if not str(d.get("warnung") or "").strip()]
@@ -24302,16 +24318,22 @@ def paket_nennertrennung() -> None:
            "die Erweiterung war OHNE Wirkung auf die Schwelle - "
            "`KALIBRIERT_FUER` wurde im selben Schritt mitgezogen")
 
-    _alt = _MR.UMSCHLAG_GROESSEN.get("umschlag_gesamt")
-    if not _alt:
-        pruefe(P, "⚠ `umschlag_gesamt` ist eingetragen", False,
-               "ohne sie ist dieser Nachweis nicht zu fuehren")
-        return
+    # ⚠️⚠️ DIE LIVE-GROESSE WIRD GEFRAGT, NICHT BENANNT (22.09.2026).
+    # Hier stand `umschlag_gesamt` fest. Am 22.09. wurde auf
+    # `umschlag_frei` umgeschaltet - die Mutation traf damit eine ohnehin
+    # abgeschaltete Groesse, bewirkte nichts, und die Pruefung wurde rot,
+    # obwohl der Schutz intakt war (`pruefung-zaehlt-zustaende-auf`).
     try:
-        _MR.UMSCHLAG_GROESSEN["umschlag_gesamt"] = dict(_alt, live=False)
+        _lname = _MR.live_groesse()
+    except Exception as _e:                                  # noqa: BLE001
+        pruefe(P, "⚠ genau eine Umschlaggroesse ist live", False, str(_e))
+        return
+    _alt = _MR.UMSCHLAG_GROESSEN[_lname]
+    try:
+        _MR.UMSCHLAG_GROESSEN[_lname] = dict(_alt, live=False)
         _rot = not _PT.kalibrierung_gilt()[0]
     finally:
-        _MR.UMSCHLAG_GROESSEN["umschlag_gesamt"] = _alt
+        _MR.UMSCHLAG_GROESSEN[_lname] = _alt
     pruefe(P, "⚠⚠ SEITENEFFEKT: faellt der Nenner weg, faellt R-R9",
            _rot,
            "bleibt sie gruen, bildet der Fingerabdruck den Nenner NICHT "
@@ -24322,18 +24344,21 @@ def paket_nennertrennung() -> None:
            _PT.kalibrierung_gilt()[0],
            "die Mutation hat ihren eigenen Anker nicht geloescht")
 
-    _altf = _MR.UMSCHLAG_GROESSEN.get("umschlag_frei")
+    # ⚠️ Die ZWEITE Groesse ist die, die gerade NICHT live ist - auch
+    # das wird gefragt, nicht benannt.
+    _zname = next((n for n in _MR.UMSCHLAG_GROESSEN if n != _lname), None)
+    _altf = _MR.UMSCHLAG_GROESSEN.get(_zname) if _zname else None
     _bruch = False
     if _altf:
         try:
-            _MR.UMSCHLAG_GROESSEN["umschlag_frei"] = dict(
+            _MR.UMSCHLAG_GROESSEN[_zname] = dict(
                 _altf, live=True, codefeld=_alt.get("codefeld"))
             try:
                 _PT.beitragslage()
             except RuntimeError:
                 _bruch = True
         finally:
-            _MR.UMSCHLAG_GROESSEN["umschlag_frei"] = _altf
+            _MR.UMSCHLAG_GROESSEN[_zname] = _altf
     pruefe(P, "⚠⚠ zwei LIVE-Groessen auf einem Codefeld brechen ab",
            _bruch,
            "sonst waere nicht mehr bestimmt, was der Beitrag misst - und "

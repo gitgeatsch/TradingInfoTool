@@ -163,7 +163,7 @@
 | **Form** | regler |
 | **Registrierungsbasis** | H20 · 2.636 Kalendertage |
 | **Wert** | +0,0616 R [+0,0203 .. +0,1111] |
-| **Live** | agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel · Stufen (+3.15, +0.83, +0.22, -1.79, -2.40) · 07.09. entzerrt NACHGERECHNET und bestaetigt (Querschnitt +3,13/+0,76/+0,22/-1,73/-2,38, Methodik 2.165) |
+| **Live** | agent/wahrscheinlichkeit.BEITRAEGE · merkmal turnover_fuenftel · Stufen (+2.32, +0.50, +0.34, -0.11, -3.06) · ⚠️ UMGESTELLT 22.09.2026 (S6): Nenner jetzt FREIER UMLAUF (CoinGecko, 366 Symbole) statt Gesamtausgabe (SplyCur, 66). Schwelle im selben Schritt 0,080 -> 0,060 (R-R9, Befund 2.521). VORHER: Stufen (+3.15, +0.83, +0.22, -1.79, -2.40), am 07.09. entzerrt nachgerechnet (Querschnitt +3,13/+0,76/+0,22/-1,73/-2,38) |
 | **Zustand** | **traegt** |
 | **Umbauseite** | ✔ **nach** dem Messstandard (letzte Messung 11.09.) |
 

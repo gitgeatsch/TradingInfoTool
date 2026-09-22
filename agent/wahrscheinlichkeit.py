@@ -440,8 +440,28 @@ BEITRAEGE = (
     Beitrag(
         name="Turnover-Rang im Markt",
         zustand="traegt", punkte=0.0, merkmal="turnover_fuenftel",
-        stufen=(+3.15, +0.83, +0.22, -1.79, -2.40), klammer="tag",
-        quelle=("rechne_turnover_beitrag.py, 2.636 Kalendertage; "
+        # ⚠️⚠️⚠️ UMGESTELLT AM 22.09.2026 (S6). Die Stufen stehen
+        # jetzt auf `umschlag_frei` (freier Umlauf, 366 Symbole,
+        # Fenster ab 2023) statt auf `umschlag_gesamt` (Gesamtausgabe,
+        # 66 Symbole, ganze Historie).
+        #
+        # ⚠️ NICHT WEIL SIE BESSER MESSEN - bei gleichem Auswahlanteil ist
+        # kein Unterschied nachweisbar (2.518). Sondern weil der
+        # LUECKENRABATT verschwindet: heute bekommen 83 % der Anker keine
+        # Umschlagzahl und dafuer eine auf 29,2 % gesenkte Schwelle.
+        # Gemessen: Gewinnanteil +2,8 bis +4,2 Prozentpunkte auf allen
+        # drei zulaessigen selektierten Mengen (2.520).
+        #
+        # ⚠️⚠️ DIE SCHWELLE IST IM SELBEN SCHRITT MITGEZOGEN (R-R9) -
+        # 0,080 auf 0,060. Von der alten Rangordnung bleiben nach dem
+        # Nennerwechsel nur rund 13 Prozent uebrig (2.525); eine alte
+        # Schwelle auf neuen Raengen waere eine andere Strenge.
+        stufen=(+2.32, +0.50, +0.34, -0.11, -3.06), klammer="tag",
+        quelle=("rechne_turnover_beitrag.py --umschlag naeherung "
+                "--ab 2023-01-01, H20; Nenner: freier Umlauf "
+                "(CoinGecko), 366 Symbole, 2.956 Tage. Gewinnanteil "
+                "+2,8 bis +4,2 Pp auf den selektierten Mengen (2.520). "
+                "VORHER: umschlag_gesamt (+3,15/+0,83/+0,22/-1,79/-2,40), "
                 "Regelwirkung +0,0616 R [+0,0203 .. +0,1111]"),
         warum=("Handelsvolumen je Umlaufmenge - viel Aufmerksamkeit heisst "
                "eher ueberbewertet. Zu 92 % additiv zu Funding "

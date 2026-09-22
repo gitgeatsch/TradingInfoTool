@@ -518,8 +518,8 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
 # der beste Wert des Rasters). Die Plateaumitte waere 0,060.
 # ⚠ Gesetzt wird das ERST mit dem Nennerwechsel, nicht davor -
 # die Zahl hier gilt fuer die Lage, die heute laeuft.
-SCHWELLE_VORGABE = 0.080
-KALIBRIERT_AM = "2026-08-31"
+SCHWELLE_VORGABE = 0.060
+KALIBRIERT_AM = "2026-09-22"
 """Wann die Schwelle zuletzt KALIBRIERT wurde (nicht: zuletzt angefasst).
 
 ⚠️ Die Durchlassquote wurde am 07.09. FESTGELEGT, die ZAHL stammt aber aus
@@ -671,8 +671,8 @@ def schwellenzeile(mit_datenlage=None) -> str:
 # Wechselt der Nenner, faellt `kalibrierung_gilt()` sofort - und genau
 # das soll es.
 KALIBRIERT_FUER = ("funding_fuenftel:0.82/1.30/0.12/-0.54/-1.70 "
-                   "turnover_fuenftel@umschlag_gesamt:"
-                   "3.15/0.83/0.22/-1.79/-2.40")
+                   "turnover_fuenftel@umschlag_frei:"
+                   "2.32/0.50/0.34/-0.11/-3.06")
 """Die Beitragslage, fuer die SCHWELLE_VORGABE kalibriert wurde.
 
 ⚠️ WIRD BEI JEDER AENDERUNG AN `wahrscheinlichkeit.BEITRAEGE` MITGEZOGEN -
