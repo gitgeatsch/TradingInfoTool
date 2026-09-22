@@ -1555,7 +1555,12 @@ def externe_reihen_job(conn_factory) -> None:
             from agent import marktrang as _MR
             from api.onchain import get_splycur_history
 
-            _symbole = sorted(_MR.messbasis("turnover"))
+            # ⚠⚠ SEIT 22.09. `splycur_symbole()` STATT
+            # `messbasis("turnover")` (P1). Die Messbasis zeigt jetzt auf
+            # den freien Umlauf (375 Symbole); dieser Job holt aber bei
+            # Coin Metrics, und das fuehrt die meisten davon nicht. Er
+            # pflegt die SplyCur-Reihe - den Rueckweg.
+            _symbole = sorted(_MR.splycur_symbole())
             if not _symbole:
                 logger.warning("Umlaufmenge: Messbasis turnover leer - "
                                "nichts abzufragen")

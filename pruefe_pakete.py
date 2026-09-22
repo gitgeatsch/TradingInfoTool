@@ -15287,7 +15287,11 @@ def paket_abrufvermerk() -> None:
            "Zahl: %s (mit Zahl: %s)" % (_ohne_erw, sorted(_erw)))
     pruefe(P, "⚠️⚠️ und sie stimmt mit der MESSBASIS ueberein, nicht mit "
               "einer Tabelle",
-           _erw["onchain_reihe"].erwartet == _mm.ABDECKUNG["turnover"]
+           # ⚠️ SEIT 22.09. HAENGT `ABDECKUNG[turnover]` AN DER
+           # LIVE-Quelle (P1) - das ist `freier_umlauf`, nicht mehr
+           # `onchain_reihe`. Die alte Quelle behaelt ihre eigene
+           # Erwartungszahl (66); sie ist der Rueckweg.
+           _erw["freier_umlauf"].erwartet == _mm.ABDECKUNG["turnover"]
            and _erw["funding_reihe"].erwartet == _mm.ABDECKUNG["funding"]
            and _erw["terminmarkt_reihe"].erwartet == _mm.ABDECKUNG["terminmarkt"]
            # ⚠️ Auch die vierte zaehlt gegen die MESSBASIS (536),
@@ -15331,8 +15335,15 @@ def paket_abrufvermerk() -> None:
         _c.close()
         if _da:
             _stand, _abruf, _n = _DF._stand_datei(_erw["onchain_reihe"])
+            # ⚠️⚠️ GEGEN DIE ERWARTUNG DER QUELLE, NICHT GEGEN
+            # `ABDECKUNG` (22.09.2026, P1). Hier stand
+            # `ABDECKUNG["turnover"]`. Solange beide dasselbe meinten (66),
+            # war das gleichgueltig; seit die Abdeckung am FREIEN UMLAUF
+            # haengt (375) und dieser Vermerk an der SPLYCUR-Reihe (66),
+            # verglich die Zeile zwei verschiedene Mengen.
             pruefe(P, "⚠️⚠️ und der gemeldete Abrufstand NENNT die Symbolzahl",
-                   "von %d Symbolen" % _mm.ABDECKUNG["turnover"] in (_abruf or ""),
+                   "von %d Symbolen" % _erw["onchain_reihe"].erwartet
+                   in (_abruf or ""),
                    "sonst ist er wieder nur ein Zeitstempel: %r" % (_abruf,))
 
 
@@ -15406,11 +15417,21 @@ def paket_turnoverquelle() -> None:
 
     # ---- die Messseite bleibt, wie sie ist ------------------------------
     from agent import marktrang as MR
-    pruefe(P, "⚠️ die MESSBASIS von turnover ist weiterhin `splycur`",
-           MR.MESSBASIS["turnover"][0] == "data/onchain_historie.db",
+    # ⚠️⚠️ DIE BEDINGUNG BLEIBT, DER NAME NICHT (22.09.2026, P1).
+    # Hier stand `== "data/onchain_historie.db"`. Die Absicht war nie
+    # "splycur fuer immer", sondern: die MESSBASIS ist die Menge, auf der
+    # die REGISTRIERTE Tabelle entstanden ist - und eine Umstellung ohne
+    # Neukalibrierung waere 2.416-reihenfolge. Am 22.09. ist die Tabelle
+    # auf der Naeherungsmenge entstanden UND die Schwelle im selben
+    # Schritt nachgezogen (0,060). Gefragt wird deshalb, ob MESSBASIS und
+    # LIVE-Groesse dieselbe Datei meinen.
+    _lg = MR.UMSCHLAG_GROESSEN[MR.live_groesse()]["datei"]
+    pruefe(P, "⚠️ die MESSBASIS von turnover ist die Menge der LIVE-Groesse",
+           MR.MESSBASIS["turnover"][0] == _lg,
            "sie IST definiert als die Menge, auf der die Tabelle entstanden "
-           "ist - eine Umstellung ohne Neukalibrierung waere 2.416-"
-           "reihenfolge")
+           "ist. Laufen Messbasis und Betrieb auseinander, misst jede "
+           "Messung eine andere Kette (F-212). MESSBASIS %r, live %r"
+           % (MR.MESSBASIS["turnover"][0], _lg))
 
     # ---- TEIL B: der BETRIEB rechnet dieselbe Groesse wie die MESSUNG ---
     #
@@ -26136,9 +26157,16 @@ def paket_umlaufmenge() -> None:
                  and not _rufe(t, "get_btc_exchange_flow_history")]
     pruefe(P, "⚠️⚠️ `externe_reihen_job` holt die Umlaufmenge und schreibt sie "
            "unter `SPLYCUR_QUELLE`",
+           # ⚠️ SEIT 22.09. `splycur_symbole` STATT `messbasis` (P1) -
+           # die Messbasis zeigt jetzt auf den freien Umlauf, dieser Job
+           # holt aber bei Coin Metrics. Gefragt ist, DASS er seine Liste
+           # aus einer Funktion nimmt statt sie fest zu verdrahten.
            len(_abruf) == 1 and len(_schreib) == 1
-           and _rufe(_job, "messbasis"),
-           "ohne diesen Abruf gaebe es am Notebook keinen Nenner")
+           and (_rufe(_job, "splycur_symbole")
+                or _rufe(_job, "messbasis")),
+           "ohne diesen Abruf gaebe es am Notebook keinen Nenner, und "
+           "ohne die Liste aus einer Funktion holt er die falschen "
+           "Symbole")
     pruefe(P, "mit eigenem Fehlerfang - ein Coin-Metrics-Ausfall nimmt die "
            "anderen Quellen nicht mit", bool(_gefangen), "")
 

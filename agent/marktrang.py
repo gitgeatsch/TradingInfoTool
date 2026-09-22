@@ -399,8 +399,18 @@ MESSBASIS = {"funding": ("data/funding_historie.db",
              # ⚠️ `splycur` ist die Umlaufmenge - die Turnover-Messung
              # brauchte sie als Nenner, und nur wo sie vorliegt, ist die
              # Kennzahl ueberhaupt entstanden.
-             "turnover": ("data/onchain_historie.db",
-                          "SELECT DISTINCT symbol FROM splycur"),
+             # ⚠⚠⚠ UMGESTELLT AM 22.09.2026 (P1). `MESSBASIS`
+             # ist definiert als DIE MENGE, AUF DER DIE TABELLE ENTSTANDEN
+             # IST - und die registrierte Tabelle
+             # (+2,32/+0,50/+0,34/-0,11/-3,06) ist auf der Naeherungsmenge
+             # entstanden, nicht auf `splycur`. Die Neukalibrierung hat im
+             # selben Schritt stattgefunden (Schwelle 0,060, Befund 2.521);
+             # ohne sie waere die Umstellung 2.416-reihenfolge gewesen.
+             #
+             # ⚠ Wer die SplyCur-Symbolliste braucht, ruft
+             # `splycur_symbole()` - der Scheduler tut das seit heute.
+             "turnover": ("data/umlaufmenge_cg.db",
+                          "SELECT DISTINCT symbol FROM umlaufmenge"),
              # ⚠️ Der Schnittabstand kommt aus den KURSREIHEN selbst -
              # die Messbasis ist dieselbe Datei, aus der auch der
              # Schnitt stammt. Deshalb genuegt die Symbolliste.
@@ -994,6 +1004,39 @@ def umschlag_name(datei: str) -> str:
     return "unbekannt"
 
 
+def splycur_symbole(datei: str = "data/onchain_historie.db") -> set:
+    """Die Symbole, die die SplyCur-REIHE fuehrt - quellenbezogen.
+
+    ⚠⚠⚠ WARUM ES DAS BRAUCHT (22.09.2026, P1). Bis heute war
+    `MESSBASIS["turnover"]` DIESELBE Liste, und zwei Aufrufer haben sie aus
+    verschiedenen Gruenden benutzt:
+
+        der SCHEDULER  *welche Symbole hole ich bei Coin Metrics?*
+        die MESSUNG    *auf welcher Menge ist die Tabelle entstanden?*
+
+    Solange es einen Nenner gab, war das dieselbe Antwort. Seit dem
+    Nennerwechsel ist es das NICHT mehr: die Messbasis wandert auf den
+    freien Umlauf, die SplyCur-Reihe bleibt, was sie ist. Haette der
+    Scheduler weiter `messbasis("turnover")` gefragt, wuerde er 375
+    Symbole bei Coin Metrics anfragen, das die meisten gar nicht fuehrt.
+
+    ⚠ Die Reihe bleibt im Betrieb - sie ist der RUECKWEG.
+    """
+    import sqlite3
+    try:
+        conn = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
+    except sqlite3.Error:
+        return set()
+    try:
+        return {str(r[0]).upper() for r in conn.execute(
+            "SELECT DISTINCT symbol FROM splycur") if r[0]}
+    except sqlite3.Error as exc:
+        logger.info("Marktrang: SplyCur-Symbolliste nicht lesbar: %s", exc)
+        return set()
+    finally:
+        conn.close()
+
+
 def turnover_verfuegbar(*, db_pfad=None,
                         datei: str = "data/onchain_historie.db",
                         frei_datei: str = FREEFLOAT_DATEI) -> set:
@@ -1041,8 +1084,13 @@ def turnover_verfuegbar(*, db_pfad=None,
     # 2.510 auf der alten Seite hinterlassen hatte.
     if live_groesse() == "umschlag_frei":
         return set(umlaufmengen_frei(datei=frei_datei))
+    # ⚠⚠ DER SCHNITT GEHT GEGEN DIE QUELLE, NICHT GEGEN
+    # `MESSBASIS` (22.09.2026, P1). Die Messbasis zeigt seit heute auf den
+    # FREIEN UMLAUF; ein Schnitt damit wuerde auf dem Rueckweg die falsche
+    # Menge liefern. Gefragt ist hier: welche Symbole fuehrt die Quelle,
+    # die gerade gelesen wird.
     menge = set(umlaufmengen(db_pfad=db_pfad, datei=datei))
-    basis = messbasis("turnover")
+    basis = splycur_symbole(datei)
     return (menge & basis) if basis else menge
 
 

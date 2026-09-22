@@ -75,16 +75,47 @@ KRITERIUM = ("alle Krypto-Symbole der Messbasis mit mehr als "
 # die Zahl der MESSMENGE und nicht die des Betriebs - und genau so ist
 # sie zu lesen.
 ABDECKUNG = {"kursreihen": 536, "funding": 300, "terminmarkt": 122,
-             "turnover": 66, "eingestellt": 174}
+             "turnover": 375, "eingestellt": 174}
+# ⚠⚠ `turnover` VON 66 AUF 375 (22.09.2026, P1). Gemessen, nicht
+# gesetzt: 375 der 536 V1-Symbole stehen in `umlaufmenge_cg.db`. Die alten
+# 66 sind nicht enthalten - 19 davon fehlen in der neuen Quelle (ALPHA,
+# ANT, BAL, BTG, BUSD, ELF, FTT, FUN, MKR, OMG und neun weitere), 309
+# kommen dazu.
+
+
+def _nennername() -> str:
+    """Welche UMSCHLAGGROESSE steckt hinter der turnover-Zahl?
+
+    ⚠⚠ P3 (22.09.2026). Der Kopf nannte nur eine Zahl -
+    "Turnover 66" - und stand so ueber jedem Messergebnis. Seit es
+    ZWEI Nenner gibt (Gesamtausgabe und freier Umlauf), sagt eine
+    nackte Zahl nicht mehr, WAS gemessen wurde. Genau daraus ist der
+    Fehler vom 21.09. entstanden (2.512: `turnover` hiess zwei
+    Groessen).
+
+    ⚠ ABGELEITET aus `marktrang.live_groesse()`, nicht gesetzt.
+    Fail-soft ausnahmsweise: ein Messkopf darf keinen Lauf abbrechen -
+    aber er sagt dann auch, dass er es nicht weiss.
+    """
+    try:
+        from agent import marktrang as _MR
+        return " (%s)" % _MR.live_groesse()
+    except Exception:                                        # noqa: BLE001
+        return " (Nenner unbekannt)"
 
 
 def zeile() -> str:
     """Die Messmenge IN KLARTEXT - fuer jeden Messkopf und Befund."""
+    # ⚠⚠ P3 (22.09.2026): DER KOPF NENNT JETZT AUCH DEN
+    # BETRIEB. Er stand ueber jedem Messergebnis und meldete `Turnover 66`,
+    # waehrend der Betrieb mit 374 rechnete - wer ihn las, hielt das
+    # Ergebnis fuer eine Messung auf 66 Symbolen. MESSmenge und
+    # BETRIEBSmenge sind zwei Zahlen, und beide gehoeren hin.
     return ("Messmenge Krypto %s (gesetzt %s): %d Symbole, davon %d "
-            "eingestellt · Funding %d · Terminmarkt %d · Turnover %d"
+            "eingestellt · Funding %d · Terminmarkt %d · Turnover %d%s"
             % (VERSION, GESETZT_AM, len(V1), ABDECKUNG["eingestellt"],
                 ABDECKUNG["funding"], ABDECKUNG["terminmarkt"],
-                ABDECKUNG["turnover"]))
+                ABDECKUNG["turnover"], _nennername()))
 
 
 V1 = frozenset((

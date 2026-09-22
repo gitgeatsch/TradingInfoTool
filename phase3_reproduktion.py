@@ -57,11 +57,56 @@ REGISTRIERT = {
 }
 
 
-def _zusatz(art: str):
-    """Die Zusatzquelle je Beitrag - dieselbe wie in der Kette."""
+def naeherungsmenge() -> dict:
+    """Die Naeherungsmenge - heutige Umlaufmenge rueckwaerts konstant.
+
+    ⚠⚠ IMPORTIERT, NICHT NACHGEBAUT: Driftgrenze und
+    Umstellungsfilter kommen aus `phase4_c_naeherung_konstante_menge`.
+    Das ist GENAU die Menge, auf der die seit dem 22.09. registrierte
+    Stufentabelle entstanden ist (Befund 2.515).
+    """
+    import messe_eigenschaft_beitrag as _B
+    import phase4_c_naeherung_konstante_menge as _NK
+    reihen = _B.lade()
+    heute, _ = _NK.mengen_heute()
+    umst = _NK.umstellungen(reihen)
+    aus = {}
+    for sym, m in heute.items():
+        if sym in umst:
+            continue
+        z = reihen.get(sym)
+        if z:
+            aus[sym] = {str(x[0])[:10]: m for x in z}
+    return aus
+
+
+def _zusatz(art: str, quelle: str = "gesamt"):
+    """Die Zusatzquelle je Beitrag - dieselbe wie in der Kette.
+
+    ⚠⚠⚠ `quelle` IST SEIT DEM 22.09. EIN PARAMETER (P2).
+    Hier stand der Pfad `data/onchain_historie.db` FEST im Quelltext -
+    und nach dem Nennerwechsel haette jede Wiederholung genau die
+    Datenlage gemessen, WEGEN DER sie wiederholt wird.
+
+    ⚠ DIE VORGABE BLEIBT `gesamt`. R-R11 verlangt, den registrierten
+    Befund ZUERST zu reproduzieren; ein geaenderter Vorgabewert haette
+    das stillschweigend unmoeglich gemacht.
+
+        gesamt  `SplyCur` (Gesamtausgabe, 66 Symbole) - die Basis von
+                2.460-norm
+        frei    die Naeherungsmenge (freier Umlauf, 366 Symbole) - die
+                Basis der seit 22.09. registrierten Tabelle
+    """
     if art == "funding":
         return F.lade_funding()
     if art == "turnover":
+        if quelle == "frei":
+            return naeherungsmenge()
+        if quelle != "gesamt":
+            raise ValueError(
+                "Unbekannte turnover-Quelle %r - erlaubt sind 'gesamt' "
+                "und 'frei'. Ein stiller Rueckfall auf die Vorgabe waere "
+                "genau der Fehler, den P2 behebt." % quelle)
         return MB.reihe("data/onchain_historie.db", "splycur")
     if art in ("oi_aenderung", "long_bias", "top_bias", "taker_bias"):
         # ⚠️ 18.09.: hier stand `None` - und die Messung lief mit NULL Tagen

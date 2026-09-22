@@ -61,7 +61,16 @@ def urteile(name: str, je_tag: dict, mom: dict, menge: str):
 
 
 def main() -> int:
-    nur = sys.argv[1:] or ["funding", "turnover", "oi_aenderung"]
+    # ⚠⚠ `--quelle frei` misst turnover auf der NAEHERUNGSmenge
+    # (P2, 22.09.2026). Ohne Angabe bleibt es `gesamt` - also genau die
+    # Basis von 2.460-norm, damit die Reproduktion moeglich bleibt (R-R11).
+    args = sys.argv[1:]
+    quelle = "gesamt"
+    if "--quelle" in args:
+        i = args.index("--quelle")
+        quelle = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    nur = args or ["funding", "turnover", "oi_aenderung"]
     print("=" * 100)
     print("PHASE 3 · SCHRITT 1b - NORMURTEIL ZU DEN DREI BEITRAEGEN")
     print("=" * 100)
@@ -79,10 +88,13 @@ def main() -> int:
 
     for art in nur:
         t0 = time.time()
-        je_tag = R._ab(R.K.baue(reihen, art, R._zusatz(art),
+        je_tag = R._ab(R.K.baue(reihen, art, R._zusatz(art, quelle),
                                 horizont=R.HORIZONT), AB_2023)
         print("\n" + "-" * 100)
-        print("  %s - %d Tage ab %s" % (art.upper(), len(je_tag), AB_2023))
+        print("  %s - %d Tage ab %s%s"
+              % (art.upper(), len(je_tag), AB_2023,
+                 ("  \u26a0 QUELLE: %s" % quelle)
+                 if art == "turnover" else ""))
         b = urteile(art, je_tag, mom, MENGE)
         if b is None:
             continue
