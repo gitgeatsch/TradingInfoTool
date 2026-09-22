@@ -24356,6 +24356,21 @@ def paket_nennertrennung() -> None:
         pruefe(P, "⚠ und ein zweiter Lauf stellt sie NICHT selbst aus",
                _MR.buendelfaktor_stand(_weg) is None,
                "eine Marke, die sich das Werkzeug selbst gibt, ist keine")
+
+        # ⚠️⚠️ ABER WENN ER ZEILEN SCHREIBT, MUSS ER STEMPELN (22.09.).
+        # Die erste Fassung setzte die Marke nur beim ANLEGEN - eine
+        # bestehende Datei bekam sie nie, auch nicht nach vollem
+        # Neuabruf. Der Riegel haette sie dauerhaft abgelehnt.
+        _c2 = _sq.connect(_weg)
+        _hz.speichere(_c2, "PRUEF", "pruef-id", "TRADING",
+                      [("PRUEF", "2026-09-22", 1.0)] * _hz.MIND_PUNKTE,
+                      0, 0, 0.0)
+        _c2.close()
+        pruefe(P, "⚠⚠ SEITENEFFEKT: wer Zeilen SCHREIBT, stempelt",
+               _MR.buendelfaktor_stand(_weg) == _hz.BUENDELMARKE,
+               "sonst bleibt eine bestehende Datei fuer immer unmarkiert "
+               "- und der Riegel lehnt sie ab, ohne dass jemand sieht "
+               "warum. Gelesen: %r" % (_MR.buendelfaktor_stand(_weg),))
     finally:
         if _os.path.exists(_weg):
             _os.remove(_weg)

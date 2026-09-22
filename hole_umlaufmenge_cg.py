@@ -173,7 +173,7 @@ def baue(ziel):
              "nicht im selben Nenner gemischt werden.",
              "free_float", TAGE,
              dt.datetime.now(dt.timezone.utc).isoformat(),
-             "angewandt (hole_umlaufmenge_cg.vervielfacher)"))
+             BUENDELMARKE))
     c.commit()
     return c
 
@@ -231,12 +231,34 @@ def zerlege(sym, d, faktor=1.0):
     return reihe, weg, spruenge, groesster
 
 
+BUENDELMARKE = "angewandt (vervielfacher, ab 21.09.2026)"
+"""Was in `_quelle.buendelfaktor` steht, wenn der Faktor angewandt wurde."""
+
+
+def markiere_buendelfaktor(c) -> None:
+    """Die Herkunftsmarke setzen - AN DER STELLE, DIE SCHREIBT.
+
+    ⚠⚠⚠ DIE ERSTE FASSUNG SETZTE SIE NUR BEIM ANLEGEN
+    (`baue`, INSERT nur wenn `_quelle` leer ist). Eine BESTEHENDE Datei
+    bekam sie damit NIE - auch nicht nach einem vollen Neuabruf. Der
+    Riegel haette sie dauerhaft abgelehnt, und niemand haette gesehen,
+    warum (22.09.2026).
+
+    ⚠ SIE WIRD NICHT AUF VERDACHT GESETZT: gerufen wird sie nur
+    dort, wo gerade Mengenzeilen geschrieben wurden - und die kommen
+    ausnahmslos durch `vervielfacher`. Wer die Datei nur oeffnet,
+    stempelt nichts.
+    """
+    c.execute("UPDATE _quelle SET buendelfaktor = ?", (BUENDELMARKE,))
+
+
 def speichere(c, sym, cid, stat, reihe, weg, spruenge, groesster):
     """Reihe ablegen und das Urteil protokollieren. Gibt das Urteil."""
     urteil = "ok" if len(reihe) >= MIND_PUNKTE else "verworfen"
     if urteil == "ok":
         c.executemany("INSERT OR REPLACE INTO umlaufmenge VALUES (?,?,?)",
                       reihe)
+        markiere_buendelfaktor(c)
     c.execute("INSERT OR REPLACE INTO abruf_symbol "
               "VALUES (?,?,?,?,?,?,?,?,?)",
               (sym, cid, stat, len(reihe), weg, spruenge,
@@ -642,6 +664,7 @@ def taeglich(ziel):
             faktor, _b = vervielfacher(sym)
             c.execute("INSERT OR REPLACE INTO umlaufmenge VALUES (?,?,?)",
                       (sym, heute, float(w) / faktor))
+            markiere_buendelfaktor(c)
             geschrieben += 1
         c.commit()
         time.sleep(_PAUSE[0])
