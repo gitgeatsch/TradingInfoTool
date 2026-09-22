@@ -1379,6 +1379,45 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 ⚠️ **Nicht in M1:** Ausstieg fertig bewertet (Schritt 43), Multiasset (§ 1a),
 der volle Rollenumbau (Schritt 33 über Kriterium 4 hinaus).
 
+
+### ⚠️⚠️⚠️ PRIORITÄT BIS M1 — HEBEL ZUERST, SPOT LÄUFT MIT (22.09.2026)
+
+> **Nutzerwortlaut:** *„aktuell ist spot und akkumulation getrennt und
+> beides funktioniert nicht — die Punkte müssen nach M1 behandelt werden.
+> Darum ist **HEBEL das primärziel bis M1** — Spot muss mit da du das so
+> gebaut hast."*
+
+#### Warum Spot mitläuft und nicht eigens betrieben wird
+
+| Stufe | | |
+|---|---|---|
+| **1** | **Einstiegsbewertung** | neutral, gilt für Spot **und** Hebel **gleich** (Regel 3). `funding` + `turnover` → Quote → Potential |
+| **2** | Kommt ein Signal? | |
+| **3** | **Risiko- und Hebelrechnung** | `hebel = verlustanteil / stop_rel`, gedeckelt (`entscheidungsrechnung.py` Z. 182, 1698). **Dynamisch je Trade — hier kommt die Haltedauer ins Spiel** |
+| **4** | **Spot** | eher langfristig → Akkumulation |
+
+➤ **Der Hebel bekommt keine eigene Bewertung** (2a). Deshalb ist „Hebel
+zuerst" keine zweite Messschiene, sondern eine **Priorisierung derselben
+Einstiegsbewertung** — Spot fällt zwangsläufig mit ab.
+
+#### ⛔ Was damit ausdrücklich NACH M1 gehört
+
+**Spot-Langfrist und Akkumulation.** Der heutige Zustand ist nach
+Nutzerurteil *„ein kaputtes DCA"*. Das Maß `schnitt`/`UNTER_SMA` ist seit
+dem 11.09. gesperrt; die Sperre fällt erst mit der Registrierung
+(M1-Kriterium 3). ⚠️ Das ist **kein** Grund, Kriterium 3 aus M1 zu
+nehmen — es bleibt drin. Was nach M1 geht, ist der **Umbau** der
+Spot-Langfristlogik, nicht ihre Vermessung.
+
+#### ⚠️ Zwei eigene Fehllesungen, die hier geendet haben
+
+| | |
+|---|---|
+| **H3 für die Einstiegsbewertung** | ⛔ zurückgezogen. 2.513-horizont trägt seine eigene Einschränkung: *„die 555 Fälle sind BESTANDSENTSCHEIDUNGEN; Neueinstiege gibt es seit A1 praktisch nicht"* — gemessen war die **Führung**, nicht der **Einstieg** |
+| **`barriere`-Messung des Beitrags** | ⛔ zurückgezogen. Sie fragt nach einer eigenen **Hebel**-Bewertung. Regel 3 verbietet sie, und **2a** hat sie beantwortet |
+
+**Befunde:** 2.519-prioritaet-hebel · 2.519-gewinnanteil · 2.519-eine-regel
+
 ### 11.2 Warum die alte LLM-Rolle nicht eigens vermessen wird
 
 **Nutzerfrage 18.09.:** *„ob wir zu viel Zeit für eine Messung der alten
