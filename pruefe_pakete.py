@@ -15265,10 +15265,20 @@ def paket_abrufvermerk() -> None:
     from agent import marktrang as _MR
     import messmenge as _mm
     _erw = {q.name: q for q in _DF.REGISTRATUR if getattr(q, "erwartet", 0)}
-    pruefe(P, "⚠️ alle VIER Messquellen haben eine Erwartungszahl",
-           len(_erw) == 4,
-           "ohne sie meldet der Vermerk nur einen Zeitstempel: %s"
-           % sorted(_erw))
+    # ⚠️⚠️ ABGELEITET, NICHT GEZAEHLT (22.09.2026). Hier stand
+    # `len(_erw) == 4`. Am 22.09. kam eine FUENFTE Messquelle dazu
+    # (`freier_umlauf`, der zweite Nenner) - und die Pruefung wurde rot,
+    # obwohl nichts kaputt war. Eine Pruefung, die Zustaende AUFZAEHLT,
+    # veraltet still (`pruefung-zaehlt-zustaende-auf`).
+    #
+    # Die Absicht war nie "es sind genau vier", sondern "keine steht ohne
+    # Erwartungszahl da". Genau das wird jetzt gefragt.
+    _ohne_erw = sorted(q.name for q in _DF.REGISTRATUR
+                       if q.rolle == "M" and not getattr(q, "erwartet", 0))
+    pruefe(P, "⚠️ JEDE Messquelle hat eine Erwartungszahl",
+           not _ohne_erw,
+           "ohne sie meldet der Vermerk nur einen Zeitstempel. Ohne "
+           "Zahl: %s (mit Zahl: %s)" % (_ohne_erw, sorted(_erw)))
     pruefe(P, "⚠️⚠️ und sie stimmt mit der MESSBASIS ueberein, nicht mit "
               "einer Tabelle",
            _erw["onchain_reihe"].erwartet == _mm.ABDECKUNG["turnover"]
@@ -15419,10 +15429,22 @@ def paket_turnoverquelle() -> None:
            "CoinGecko-USD-Volumen ueber alle Boersen ist eine andere "
            "Groesse - gemessen 57,1 % gleiches Fuenftel, 28,6 % "
            "Randwechsel")
-    pruefe(P, "⚠️⚠️ der NENNER kommt aus der Messquelle (`splycur`)",
-           "umlaufmengen()" in _code and "circulating_supply" not in _code,
-           "`circulating_supply` ist eine zweite Quelle fuer dieselbe "
-           "Groesse - genau der Fehler aus 2.410")
+    # ⚠️ SEIT 22.09. UEBER `mengen_fuer_betrieb()` (S4). Die Absicht
+    # bleibt dieselbe: der Nenner kommt aus EINER Quelle, und die beiden
+    # Groessen werden nie gemischt. Durchgesetzt wird das jetzt im Code -
+    # `live_groesse()` bricht ab, wenn nicht genau eine live ist.
+    pruefe(P, "⚠️⚠️ der NENNER kommt aus EINER Quelle, nie gemischt",
+           ("mengen_fuer_betrieb()" in _code
+            and "circulating_supply" not in _code),
+           "zwei Quellen fuer dieselbe Groesse ist der Fehler aus 2.410; "
+           "`mengen_fuer_betrieb` gibt die eine ODER die andere zurueck, "
+           "nie eine Vereinigung")
+    _mg = _quelltext("agent/marktrang.py").split(
+        "def mengen_fuer_betrieb(")[1].split(chr(10) + "def ")[0]
+    pruefe(P, "⚠️⚠️ und die Wahl bricht ab, wenn es nicht GENAU EINE ist",
+           "live_groesse()" in _mg,
+           "zwei gleichzeitig live hiesse, dass niemand mehr sagen kann, "
+           "was `turnover_fuenftel` misst")
     pruefe(P, "⚠️ und GENAU die Paarung, die auch gemessen wurde",
            'endswith("USDT")' in _code,
            "`lade_messreihen` holt `<SYM>USDT`. Eine andere Notierung "
@@ -17653,13 +17675,24 @@ def paket_terminmarkt() -> None:
     # kommen live), `schnitt_reihe` liefert die KURSREIHEN selbst.
     # Sie stand in keiner Registratur - deshalb fiel `schnitt` am
     # 18.09. still aus (2.486-schnitt-tot).
-    pruefe(P, "⚠️⚠️ die VIER MESSQUELLEN sind in `datenfrische` "
-           "registriert", len(_mess) == 4,
-           "drei speisen die Symbollisten von funding, turnover und "
-           "der OI-Sperre; die vierte (`schnitt_reihe`) speist die "
-           "Kursreihen des Schnittabstands und ist die EINZIGE, die "
-           "wirklich ausgelesen wird. Gefunden: %s"
-           % ([q.name for q in _mess] or "KEINE"))
+    # ⚠️⚠️ AUS `MESSBASIS` ABGELEITET, NICHT GEZAEHLT (22.09.2026).
+    # Hier stand `len(_mess) == 4`. Die eigentliche Frage ist nicht, WIE
+    # VIELE registriert sind, sondern ob KEINE MESSBASIS OHNE
+    # Frischepruefung dasteht - genau daran ist `schnitt` am 18.09. still
+    # ausgefallen. Zusaetzliche Quellen (seit 22.09. `freier_umlauf`)
+    # sind erlaubt und duerfen die Pruefung nicht roeten.
+    import os as _os2
+    from agent import marktrang as _MR2
+    _dat = {_os2.path.basename(str(q.datei or "")).lower() for q in _mess}
+    _fehlt = sorted(
+        k for k, v in _MR2.MESSBASIS.items()
+        if _os2.path.basename(str(v[0])).lower() not in _dat)
+    pruefe(P, "⚠️⚠️ JEDE MESSBASIS hat eine Messquelle in `datenfrische`",
+           not _fehlt,
+           "ohne Frischepruefung faellt eine Messbasis lautlos aus - so "
+           "ist `schnitt` am 18.09. gestorben (2.486-schnitt-tot). Ohne "
+           "Quelle: %s · registriert: %s"
+           % (_fehlt, [q.name for q in _mess] or "KEINE"))
     pruefe(P, "und jede nennt ihre eigene DATEI",
            all(q.datei and q.spalten for q in _mess),
            "sie liegen NICHT in der Betriebsdatenbank - ohne `datei` "
@@ -24326,6 +24359,7 @@ def paket_nennertrennung() -> None:
            "abbrechen, weil die Suite mit Wegwerfpfaden ruft")
 
     # ---- S3: die Herkunftsmarke, gegen eine WEGWERFDATEI ------------
+    import datetime as _dt
     import os as _os
     import sqlite3 as _sq
     import tempfile as _tf
@@ -24371,6 +24405,37 @@ def paket_nennertrennung() -> None:
                "sonst bleibt eine bestehende Datei fuer immer unmarkiert "
                "- und der Riegel lehnt sie ab, ohne dass jemand sieht "
                "warum. Gelesen: %r" % (_MR.buendelfaktor_stand(_weg),))
+        # ---- ⚠️⚠️ DER S4-RIEGEL: unmarkierte Datei -> ABBRUCH -------
+        #
+        # `umlaufmengen_frei` darf eine Datei ohne Buendelfaktor-Marke
+        # NICHT benutzen. Ein stilles leeres Ergebnis saehe aus wie eine
+        # Datenlage; eine falsche Menge ist schlimmer als keine (2.522).
+        _c3 = _sq.connect(_weg)
+        _c3.execute("UPDATE _quelle SET buendelfaktor = NULL")
+        _c3.execute("INSERT OR REPLACE INTO umlaufmenge VALUES (?,?,?)",
+                    ("PRUEF", _dt.date.today().isoformat(), 1.0))
+        _c3.commit()
+        _c3.close()
+        _bricht = False
+        try:
+            _MR.umlaufmengen_frei(datei=_weg)
+        except RuntimeError:
+            _bricht = True
+        pruefe(P, "⚠⚠ SEITENEFFEKT: unmarkierte Mengendatei -> ABBRUCH",
+               _bricht,
+               "ohne Marke ist nicht nachgewiesen, ob der Buendelfaktor "
+               "angewandt wurde - und er wirkt bis 10^6. Ein leeres "
+               "Ergebnis waere `fail-soft-ist-fail-silent`")
+
+        _c4 = _sq.connect(_weg)
+        _c4.execute("UPDATE _quelle SET buendelfaktor = ?",
+                    (_hz.BUENDELMARKE,))
+        _c4.commit()
+        _c4.close()
+        pruefe(P, "⚠ und MIT Marke laeuft sie durch",
+               _MR.umlaufmengen_frei(datei=_weg).get("PRUEF") == 1.0,
+               "sonst prueft die Zeile darueber nichts - die Mutation "
+               "haette ihren eigenen Anker geloescht")
     finally:
         if _os.path.exists(_weg):
             _os.remove(_weg)

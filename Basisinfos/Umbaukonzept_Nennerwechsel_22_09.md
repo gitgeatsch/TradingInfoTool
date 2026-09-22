@@ -113,6 +113,36 @@ Fall.**
 **Zu tun:** nur der Herkunftsnachweis — `_quelle` bekommt ein Feld
 `buendelfaktor`, und der Leser bricht ab, wenn es fehlt.
 
+### ⚠️⚠️ T7 — DIE VERSORGUNG DES NOTEBOOKS (nachgetragen 22.09., Nutzerfrage)
+
+**Die Frage:** *„Brauchen wir das auch am NB bzw. Produktion?"* — **ja**, und
+das fehlte im Konzept.
+
+`data/umlaufmenge_cg.db` steht in `.gitignore` (`*.db`). **Ein Pull bringt
+Code, keine Daten.** Am Notebook gibt es die Datei also nicht — und ohne sie
+fiele `turnover` dort **komplett** aus.
+
+#### ✔ Aber es braucht dort nur einen Bruchteil
+
+| | Desktop (Messung) | Notebook (Betrieb) |
+|---|---|---|
+| **Historie** | 137.748 Punkte, 8,3 MB — für die Kalibrierung der Stufentabelle | ⛔ **nicht nötig** |
+| **heutiger Wert je Symbol** | fällt nebenbei an | ✔ **das allein zählt** — `turnover_werte` rechnet Volumen(heute) / Menge(heute) |
+| **Symbol → `coingecko_id`** | 407 Zeilen in `abruf_symbol` | ✔ **nötig**, sonst weiß der Tagesjob nicht, was er abfragen soll |
+
+➤ **Am Notebook genügt der Tagesjob plus die ID-Zuordnung** (wenige KB) —
+dasselbe Muster wie die Messbasis-Dateien mit `_nur_symbolliste`.
+
+#### ✔ Und der Tageslauf ist billig
+
+Gemessen am 22.09.: **0,8 Minuten**, 4 Abrufe (BULK 250), 373 von 375
+Symbolen. ⚠️ **Nicht** die 71 Minuten des Vollabrufs — die gelten nur für
+die Historie.
+
+⚠️ Der Tageslauf **stempelt** dabei die Herkunftsmarke (S3), weil er Zeilen
+schreibt. Am Desktop ist sie seit dem 22.09. gesetzt; am Notebook entsteht
+sie beim ersten Lauf dort.
+
 ---
 
 ## 2. Code gegen Doku — der Abgleich
@@ -156,7 +186,7 @@ bloß dastehen — *„der alte in Paket 15 stand da und griff nie."*
 S1  Fingerabdruck um den Nenner erweitern (T2)     ← ohne Wirkung, aber Voraussetzung
 S2  NENNER_WIDERLEGT je Quelle (T3)                ← ohne Wirkung
 S3  Herkunftsmarke + Riegel fuer den Buendelfaktor (T6)
-S4  Betriebsweg + Scheduler umstellen (T1, T4)     ← HIER wirkt es
+S4  Betriebsweg + Scheduler (T1, T4, T7)   <- GEBAUT 22.09., 2.527 (live=False)
 S5  Grundgesamtheit messen (P3)          <- ERLEDIGT 22.09., 2.525
 S6  Schwelle 0,060 + KALIBRIERT_FUER (T5)          ← im SELBEN Commit wie S4
 S7  Doku-Abgleich (Abschnitt 2)

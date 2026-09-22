@@ -184,6 +184,22 @@ SPLYCUR_FRISCHE_TAGE = 21
 # Messdatei ist nur noch der Rueckfall am Desktop - am Notebook liegt sie als
 # Symbolliste ohne Datum und Wert.
 SPLYCUR_QUELLE = "coinmetrics_splycur"
+
+FREEFLOAT_DATEI = "data/umlaufmenge_cg.db"
+FREEFLOAT_FRISCHE_TAGE = 5
+"""Wie alt darf die freie Umlaufmenge hoechstens sein? (22.09.2026, S4)
+
+⚠️ DEUTLICH STRENGER ALS `SPLYCUR_FRISCHE_TAGE` (21), und das hat einen
+Grund: `SplyCur` wird von Coin Metrics WOECHENTLICH gepflegt, der freie
+Umlauf dagegen TAEGLICH fortgeschrieben (`hole_umlaufmenge_cg.py
+--taeglich`, gemessen 0,8 Minuten fuer 373 Symbole). Eine Quelle, die
+taeglich laufen soll, darf nicht drei Wochen alt werden, ohne dass es
+auffaellt.
+
+⚠️ 5 statt 1 oder 2, damit ein Wochenende plus ein Ausfalltag die
+Bewertung nicht stillegt - der Umlauf ist traege, ein paar Tage kosten
+fast nichts (der Naeherungsfehler ueber JAHRE liegt bei -0,0008 R,
+Befund 2.515)."""
 _SCHNITT_ZWISCHEN: dict = {}
 
 
@@ -928,7 +944,12 @@ UMSCHLAG_GROESSEN = {
         "nenner": "freier Umlauf = Marktkapitalisierung / Preis",
         "quelle": "CoinGecko `market_chart`, kein Schluessel",
         "datei": "data/umlaufmenge_cg.db",
-        "betriebsweg": None,
+        # ⚠️ GEBAUT AM 22.09.2026 (S4), ABER NICHT SCHARF. `live` bleibt
+        # False, bis S6 die Schwelle mitzieht - ein Nennerwechsel ohne
+        # Neukalibrierung ist nach R-R9 unvollstaendig, und 2.525 hat
+        # gemessen, dass von der alten Rangordnung nur rund 13 Prozent
+        # uebrig bleiben.
+        "betriebsweg": "marktrang.umlaufmengen_frei() aus " + FREEFLOAT_DATEI,
         "symbole": 375,
         "live": False,
         "codefeld": None,
@@ -1016,7 +1037,7 @@ def turnover_werte(symbole=None) -> dict:
     enthaelt nur das Volumen bis zum Abruf - gemessen 19 bis 39 % eines
     ganzen Tages (2.418-teilkerze).
     """
-    menge = umlaufmengen()
+    menge = mengen_fuer_betrieb()
     if not menge:
         logger.info("Marktrang: keine frische Umlaufmenge - kein Umschlag")
         return {}
@@ -1035,6 +1056,102 @@ def turnover_werte(symbole=None) -> dict:
         if volumen and float(volumen) > 0:
             aus[basis] = float(volumen) / menge[basis]
     return aus
+
+
+def live_groesse() -> str:
+    """Welche Umschlaggroesse benutzt der BETRIEB heute? (22.09.2026, S4)
+
+    ⚠️⚠️ GENAU EINE. Zwei gleichzeitig hiesse, dass niemand mehr sagen
+    kann, was `turnover_fuenftel` misst - und der Fingerabdruck
+    (`potential.beitragslage`) naehme still eine der beiden. Keine
+    hiesse, dass der Beitrag ohne Nenner dasteht. Beides bricht ab.
+    """
+    live = sorted(n for n, d in UMSCHLAG_GROESSEN.items() if d.get("live"))
+    if len(live) != 1:
+        raise RuntimeError(
+            "Es muss GENAU EINE Umschlaggroesse live sein, gefunden: %s. "
+            "Siehe marktrang.UMSCHLAG_GROESSEN." % (", ".join(live) or "keine"))
+    return live[0]
+
+
+def umlaufmengen_frei(hoechstalter: int = FREEFLOAT_FRISCHE_TAGE, *,
+                      datei: str = FREEFLOAT_DATEI) -> dict:
+    """Die FREIE Umlaufmenge je Symbol - der zweite Betriebsweg.
+
+    ⚠️⚠️⚠️ DER HERKUNFTSRIEGEL IST KEINE FORMALIE (Befund 2.522).
+    Binance handelt Buendel (`1000CAT` = 1000 x CAT), die Quelle fuehrt
+    den Einzeltoken. Der Faktor wird im ABRUF angewandt; dem Zahlenwert
+    sieht man das NICHT an. Wer eine unmarkierte Datei benutzt, riskiert
+    eine Menge, die um bis zu 10^6 danebenliegt - in BEIDE Richtungen,
+    je nachdem, ob der Faktor fehlt oder doppelt wirkt.
+
+    ⚠️ DESHALB: ABBRUCH, keine leere Rueckgabe. Ein stilles `{}` liesse
+    `turnover` ausfallen und saehe aus wie eine Datenlage
+    (`fail-soft-ist-fail-silent`).
+
+    ⚠️ HIER WIRD DER FAKTOR NICHT ANGEWANDT. Er sitzt im Erzeuger, und
+    genau einmal ist genau richtig.
+    """
+    import datetime as _dt
+    import sqlite3          # ⚠ lokal, wie im ganzen Modul
+    marke = buendelfaktor_stand(datei)
+    if not marke:
+        raise RuntimeError(
+            "Die Mengendatei %s traegt keine Buendelfaktor-Marke. Sie "
+            "entsteht, sobald `hole_umlaufmenge_cg.py --taeglich` "
+            "einmal Zeilen geschrieben hat (0,8 Minuten). Ohne sie ist "
+            "nicht nachgewiesen, ob der Faktor angewandt wurde - und "
+            "eine falsche Menge ist schlimmer als keine (2.522)." % datei)
+    grenze = (_dt.date.today()
+              - _dt.timedelta(days=int(hoechstalter))).isoformat()
+    aus = {}
+    try:
+        conn = sqlite3.connect("file:%s?mode=ro" % datei, uri=True)
+    except sqlite3.Error as exc:
+        logger.warning("Marktrang: freie Umlaufmenge nicht lesbar (%s): %s",
+                       datei, exc)
+        return {}
+    try:
+        for sym, wert in conn.execute(
+                "SELECT u.symbol, u.wert FROM umlaufmenge u JOIN ("
+                "  SELECT symbol, MAX(datum) AS m FROM umlaufmenge "
+                "  GROUP BY symbol) x "
+                "  ON x.symbol = u.symbol AND x.m = u.datum "
+                "WHERE u.wert > 0 AND u.datum >= ?", (grenze,)):
+            aus[str(sym).upper()] = float(wert)
+    except sqlite3.Error as exc:
+        logger.warning("Marktrang: freie Umlaufmenge unlesbar: %s", exc)
+        return {}
+    finally:
+        conn.close()
+
+    # ⚠️ Dieselbe Sperre wie auf dem alten Weg - aber die der EIGENEN
+    # Groesse. Fuer den freien Umlauf ist bisher kein Nenner widerlegt;
+    # das ist eine Aussage, keine Luecke.
+    gesperrt = sorted(set(aus) & set(nenner_widerlegt("umschlag_frei")))
+    for sym in gesperrt:
+        aus.pop(sym, None)
+    if gesperrt:
+        logger.info("Marktrang: %d Nenner gesperrt (freier Umlauf): %s",
+                    len(gesperrt), ", ".join(gesperrt))
+    if not aus:
+        logger.warning(
+            "Marktrang: KEINE freie Umlaufmenge juenger als %s in %s - "
+            "turnover faellt heute aus. Abhilfe: "
+            "`python hole_umlaufmenge_cg.py --taeglich`", grenze, datei)
+    return aus
+
+
+def mengen_fuer_betrieb() -> dict:
+    """Die Umlaufmenge der HEUTE LIVE-Groesse - eine Stelle, ein Weg.
+
+    ⚠️ `turnover_werte` fragt nur noch hier. Vorher stand `umlaufmengen()`
+    direkt darin, und ein Wechsel haette bedeutet, die Aufrufstelle zu
+    aendern - also genau die Art Umbau, bei der man eine zweite
+    Aufrufstelle uebersieht.
+    """
+    g = live_groesse()
+    return umlaufmengen() if g == "umschlag_gesamt" else umlaufmengen_frei()
 
 
 def raenge(symbole, *, mit_turnover: bool = True) -> dict:

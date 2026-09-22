@@ -256,6 +256,22 @@ REGISTRATUR: tuple[Quelle, ...] = (
            datei="data/onchain_historie.db", spalten=("datum", ""),
            # messmenge.ABDECKUNG[turnover]
            erwartet=66),
+    # ---- ⚠️⚠️ DER ZWEITE NENNER (22.09.2026, S4/T7) ----
+    #
+    # Der freie Umlauf. Noch NICHT live (`UMSCHLAG_GROESSEN`), aber die
+    # Reihe laeuft schon - und eine Reihe ohne Frischegrenze faellt
+    # lautlos aus. Genau das ist `onchain_reihe` zwoelf Tage lang
+    # passiert, bevor es jemand merkte.
+    #
+    # ⚠️ 5 Tage, nicht 21: dieser Job laeuft TAEGLICH (0,8 Minuten,
+    # 4 Abrufe). Wer taeglich laeuft, darf nicht drei Wochen alt werden.
+    Quelle("freier_umlauf", "M", "umlaufmenge", 5,
+           "scheduler/background.py (taeglich) bzw. "
+           "hole_umlaufmenge_cg.py --taeglich",
+           "Freier Umlauf - der ZWEITE Nenner des Turnover-Rangs, "
+           "375 Symbole. Noch nicht live",
+           datei="data/umlaufmenge_cg.db", spalten=("datum", ""),
+           erwartet=375),
     # ---- ⚠️⚠️ DIE EINE, DIE WIRKLICH AUSGELESEN WIRD (20.09.2026) ----
     #
     # `messdaten.db` stand in KEINER Quelle - 21 wurden geprueft, diese

@@ -1571,6 +1571,39 @@ def externe_reihen_job(conn_factory) -> None:
         except Exception as exc:                             # noqa: BLE001
             logger.warning("Umlaufmenge nicht auffrischbar: %s", exc)
 
+        # ⚠️⚠️ DER ZWEITE NENNER: DER FREIE UMLAUF (22.09.2026, S4/T7).
+        #
+        # `data/umlaufmenge_cg.db` steht in `.gitignore` - ein Pull bringt
+        # sie NICHT ans Notebook. Fuer den BETRIEB braucht es dort aber
+        # ohnehin nur den HEUTIGEN Wert je Symbol, nicht die Historie:
+        # `turnover_werte` rechnet Volumen(heute) / Menge(heute).
+        #
+        # Dieser Job holt genau das - gemessen 0,8 Minuten und 4 Abrufe
+        # fuer 373 Symbole (BULK 250). Die 71 Minuten des Vollabrufs
+        # gelten nur fuer die Historie, und die wird am DESKTOP gebraucht.
+        #
+        # ⚠️ Er laeuft AUCH, solange `umschlag_frei` nicht live ist -
+        # damit die Reihe schon steht, wenn umgeschaltet wird. Vier
+        # Abrufe am Tag sind kein Kontingentthema.
+        #
+        # ⚠️⚠️ OHNE DIE SYMBOL-ZUORDNUNG (`abruf_symbol`) findet er
+        # nichts und sagt das. Am Notebook entsteht sie nicht von selbst -
+        # die Datei kommt per USB (Nutzerentscheidung 22.09.). Ein
+        # stilles Nichts waere hier das Schlimmste.
+        try:
+            import os as _os      # ⚠️ lokal - `finde_freie_namen` sonst rot
+            import hole_umlaufmenge_cg as _HU
+            _ziel = _MR.FREEFLOAT_DATEI
+            if not _os.path.exists(_ziel):
+                logger.warning(
+                    "Freier Umlauf: %s fehlt - der Tagesjob kann nichts "
+                    "fortschreiben. Die Datei kommt per USB vom Desktop "
+                    "(Umbaukonzept T7)", _ziel)
+            else:
+                _HU.taeglich(_ziel)
+        except Exception as exc:                             # noqa: BLE001
+            logger.warning("Freier Umlauf nicht auffrischbar: %s", exc)
+
         try:
             reihe = get_btc_exchange_flow_history(tage=800)
             geschrieben += DB.schreibe_externe_reihe(

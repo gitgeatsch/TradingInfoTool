@@ -1762,6 +1762,58 @@ def _terminmarkt_und_umlaufmenge(conn) -> dict:
         aus["umlaufmenge"] = {"nicht_verfuegbar": f"{type(exc).__name__}: {exc}"}
         auffaellig.append(f"Umlaufmenge nicht pruefbar: {type(exc).__name__}")
 
+    # ---- ⚠️⚠️ DER ZWEITE NENNER (22.09.2026, S4/T7) -----------------------
+    #
+    # `data/umlaufmenge_cg.db` steht in `.gitignore` - ein Pull bringt sie
+    # NICHT ans Notebook, sie kommt per USB. Der Export muss deshalb sagen,
+    # ob sie DORT ueberhaupt liegt, wie frisch sie ist und ob sie die
+    # Buendelfaktor-Marke traegt. Ohne diese drei Angaben wuerde ein
+    # Umschalten am Notebook blind passieren.
+    #
+    # ⚠️ Er meldet auch, solange `umschlag_frei` NICHT live ist - genau
+    # dann braucht man die Angabe, um zu entscheiden, ob man umschalten
+    # kann.
+    try:
+        import sqlite3 as _sq3
+        _ffd = getattr(_MR, "FREEFLOAT_DATEI", "data/umlaufmenge_cg.db")
+        _ff = {"datei": _ffd, "live": _MR.live_groesse() == "umschlag_frei",
+               "vorhanden": os.path.exists(_ffd)}
+        if _ff["vorhanden"]:
+            _ff["buendelmarke"] = _MR.buendelfaktor_stand(_ffd)
+            _c = _sq3.connect("file:%s?mode=ro" % _ffd, uri=True)
+            try:
+                _r = _c.execute(
+                    "SELECT COUNT(DISTINCT symbol), MAX(datum) "
+                    "FROM umlaufmenge").fetchone()
+                _ff["symbole"], _ff["datenstand"] = _r[0] or 0, _r[1]
+                _ff["zuordnung_symbole"] = _c.execute(
+                    "SELECT COUNT(*) FROM abruf_symbol").fetchone()[0]
+            finally:
+                _c.close()
+            try:
+                _ff["findet_mengen"] = len(_MR.umlaufmengen_frei())
+            except Exception as _e2:                         # noqa: BLE001
+                _ff["findet_mengen"] = 0
+                _ff["riegel"] = f"{type(_e2).__name__}: {_e2}"
+            if not _ff.get("buendelmarke"):
+                auffaellig.append(
+                    "Freier Umlauf: keine Buendelfaktor-Marke - der Riegel "
+                    "laesst die Datei nicht durch. Abhilfe: "
+                    "`python hole_umlaufmenge_cg.py --taeglich`")
+            elif not _ff.get("findet_mengen"):
+                auffaellig.append(
+                    "Freier Umlauf: 0 frische Mengen (Stand %s) - der "
+                    "Tagesjob laeuft nicht" % _ff.get("datenstand"))
+        elif _ff["live"]:
+            auffaellig.append(
+                "Freier Umlauf ist LIVE, aber %s fehlt - turnover faellt "
+                "komplett aus. Die Datei kommt per USB (Umbaukonzept T7)"
+                % _ffd)
+        aus["freier_umlauf"] = _ff
+    except Exception as exc:                                 # noqa: BLE001
+        aus["freier_umlauf"] = {
+            "nicht_verfuegbar": f"{type(exc).__name__}: {exc}"}
+
     aus["auffaellig"] = auffaellig
     return aus
 
