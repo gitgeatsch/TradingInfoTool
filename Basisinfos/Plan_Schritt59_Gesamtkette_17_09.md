@@ -799,14 +799,14 @@ dann entsteht keine Nacharbeit.
    **Datenfrage** (sie erledigt die Schwellenfrage mit), dann die
    Schwelle. Nicht umgekehrt.
 
-   #### Schritt 67 — Stand 21.09.2026
+   #### Schritt 67 — Stand 21.09.2026
 
    | # | | |
    |---|---|---|
    | 1 | **Vollabruf** nach `data/umlaufmenge_cg.db` | ✔ 71 Min, 321 ok |
    | 2 | **Nachzug** über den **Preisverlauf** | ✔ 55 von 73, **0 mehrdeutig** |
    | 3 | **Kalibrierung** H2/H3/H5, `bewegung_r` und `barriere` | ✔ gerechnet |
-   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
+   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
    | 5 | **Benennung** `umschlag_gesamt` / `umschlag_frei` | ✔ 21.09., 2.512 |
    | 6 | `umschlag_frei` auf der **selektierten Menge** messen | ⛔ **offen — Registerauflage** |
    | 7 | **Stufentabelle** für `umschlag_frei` | ⛔ offen |
@@ -841,7 +841,7 @@ dann entsteht keine Nacharbeit.
    herauskommt. Die bisherige Kalibrierung lief auf *fester Menge 50 %*,
    nicht auf der selektierten.
 
-
+
 
    **Erreicht:** 375 Symbole · **91 %** der im Fenster *handelbaren* Werte
    (Ziel war 80 %) · **36** eingestellte Werte mit Reihe statt null.
@@ -1351,6 +1351,46 @@ In Schritt 59 nur: Trichter und Anzahl der Nicht-Krypto- und Absicherungsempfehl
 ### Phase 8 – LLM-Ebene als Basislinie (misst, ändert nichts)
 
 Die Fragen aus § 5.2 auf den Live-Daten plus Phase-1-Protokoll, alle als HINWEIS mit ausgewiesener Datenlänge; BC bei Nicht-Krypto zuerst (einzige Entscheidung). Optional LLM historisch (`backtest_llm1_historisch.py`) nur nach Entscheidung **N7** (Kontingent, Vorwissen-Problem).
+
+### ⏳ VORGEMERKT — Trigger ohne Kursreaktion (eingeordnet 22.09.2026)
+
+**Herkunft:** ein Memory-Kapitel vom 09.08. (*„Trigger ohne Kursreaktion"*),
+das in **keinem Index** stand und beim Aufräumen des Memory aufgetaucht ist.
+Nutzervorgabe damals: *als eigenes Kapitel mitführen, statt es mit einer
+schnellen Regel zu füllen.* **Nichts davon ist gebaut oder gemessen.**
+
+**Der Befund:** KAIA — 11 Signale, 0 Treffer, Median MFE −0,01 R, in **keinem**
+Fall MFE ≥ 1 R; 82 % der Verluste von Anfang an in die falsche Richtung.
+Zum Vergleich alle Verluste: 40 % erreichten MFE ≥ 1 R (Ausstiegsproblem),
+nur 22 % waren von Anfang an falsch. **KAIA ist der Gegenfall zum
+Gesamtmuster** — die Ebene ist **Screening**, oberhalb des LLM.
+
+#### ⚠️ Warum es hier steht und nicht weiter vorn
+
+Es ist eine Frage nach der **Einstiegsqualität**, also **M1-Kriterium 7**
+(*rudimentäre Wirksamkeit: nicht schlechter als das Nullmodell*). Es ist
+**kein** Blocker für Kriterium 1 oder 2.
+
+⚠️⚠️ **Und es ist teilweise überholt.** Von den vier Ansätzen des Kapitels
+ist **Ansatz 3 (Liquidität/Handelbarkeit als Screening-Kriterium vor dem
+LLM)** inzwischen in der Kette: `volumenanteil` trägt registriert, und
+`turnover`/`umschlag` ist genau ein Handelbarkeitsmaß. Wer das Kapitel
+aufnimmt, muss zuerst prüfen, **was davon schon wirkt** — sonst misst er
+etwas zum zweiten Mal.
+
+#### Was davon gilt, wenn es aufgenommen wird
+
+| | |
+|---|---|
+| ⛔ **Ausgeschlossen, nicht neu vorschlagen** | Wiedereinstiegssperre je Symbol (verworfen 09.08.: *„eine Sperre verdeckt den Defekt"*) · *„Vorgängertrade war ein Fehlschlag"* im Prompt (Credit-Assignment) · ADX/Choppiness-Filter (02.08. geschlossen — der Effekt war Marktmechanik, der **Zufallseinstieg** wird in Trendphasen selbst um 11,1 Punkte besser) |
+| ✔ **Reihenfolge, falls aufgenommen** | Ansatz 4 (Auswertung je `trigger_zweig`, kostenlos) → Ansatz 1 (*ist „kein Impuls" überhaupt vorher erkennbar?* — entscheidet, ob es weitergeht) → 3 → 2 |
+| ⚠️ **Pflichtauflage** | matched Basislinie je Bucket (gleiche Richtung, Stop, CRV, Zeitraum) — sonst misst man Marktmechanik und nennt es Signalqualität |
+
+⚠️ **Die Zahlen stammen aus der ALTEN Pipeline** (MFE, `trigger_zweig`, 23
+Symbole, 92 aufgelöste Fälle). Vor einer Messung ist zu klären, ob sie in der
+heutigen Kette überhaupt reproduzierbar sind (R-R11).
+
+**Quelle:** Memory `project_kapitel_trigger_ohne_kursreaktion`.
 
 ### Phase 9 – Zusammenführung und Entscheidungsvorlage
 
