@@ -55,11 +55,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import messe_beitrag_auf_auswahl as A                        # noqa: E402
-import messe_bewertungskennzahl as MB                        # noqa: E402
 import messe_eigenschaft_beitrag as B                        # noqa: E402
-import messe_funding_niveau as F                             # noqa: E402
 import messe_kandidaten_als_regel as K                       # noqa: E402
 import messe_regel_wirksamkeit as RW                         # noqa: E402
+import phase3_reproduktion as R3                             # noqa: E402
 from messe_beitrag_auf_auswahl import momentum250            # noqa: E402
 from messnorm import _block                                   # noqa: E402
 from messnorm_auswahl import MENGEN                           # noqa: E402
@@ -69,10 +68,33 @@ HORIZONT, MENGE = 20, "20%"
 ZIEH, SAAT = 20, 20260907
 
 
-def welten(reihen):
-    """Je Kandidat die Tageswelt - dieselbe Ladung fuer alle."""
-    zus = {"funding": F.lade_funding(),
-           "turnover": MB.reihe("data/onchain_historie.db", "splycur")}
+
+def _quelle_aus_argv() -> str:
+    """`--quelle gesamt|frei`, Vorgabe `gesamt`.
+
+    ⚠⚠ DIE VORGABE BLEIBT DIE ALTE (22.09.2026). R-R11
+    verlangt, einen registrierten Befund zuerst zu
+    REPRODUZIEREN - ein geaenderter Vorgabewert haette das
+    stillschweigend unmoeglich gemacht.
+    """
+    a = sys.argv[1:]
+    return a[a.index("--quelle") + 1] if "--quelle" in a else "gesamt"
+
+
+def welten(reihen, quelle: str = "gesamt"):
+    """Je Kandidat die Tageswelt - dieselbe Ladung fuer alle.
+
+    ⚠⚠⚠ DIE ZUSATZQUELLEN KOMMEN SEIT DEM 22.09. AUS
+    `phase3_reproduktion._zusatz` - hier stand eine KOPIE mit dem Pfad
+    `data/onchain_historie.db` fest im Quelltext. Nach dem Nennerwechsel
+    haette diese Datei weiter den abgeschalteten Nenner gemessen, und
+    zwar ohne zu klagen: sie laeuft durch, liefert Zahlen und nennt sie
+    `turnover`.
+
+    ⚠ Zwei Kopien derselben Ladung sind zwei Stellen zum
+    Auseinanderlaufen (`test-ruft-echten-code-nicht-kopie`).
+    """
+    zus = {a: R3._zusatz(a, quelle) for a in ("funding", "turnover")}
     return {a: K.baue(reihen, a, zus.get(a), horizont=HORIZONT)
             for a in ("schnitt", "funding", "turnover", "zufall")}
 
@@ -135,7 +157,7 @@ def main() -> int:
     print("=" * 96)
     reihen = B.lade()
     mom = momentum250(reihen)
-    w = welten(reihen)
+    w = welten(reihen, _quelle_aus_argv())
     anteil = MENGEN[MENGE]
     block = _block(HORIZONT)
     print("  %d Reihen . Menge %s . Block %d . %d Nullziehungen"

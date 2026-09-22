@@ -123,7 +123,13 @@ def main() -> int:
     mom = momentum250(reihen)
     print("  %d Reihen · %d Tage mit Auswahl" % (len(reihen), len(mom)))
     print("  Welten je Beitrag bauen ...")
-    w = {a: R.K.baue(reihen, a, R._zusatz(a), horizont=R.HORIZONT)
+    # ⚠⚠ `--quelle frei` misst turnover auf der
+    # NAEHERUNGSmenge (22.09.2026). Ohne Angabe bleibt es `gesamt` -
+    # also die Basis von 2.460-kette, damit R-R11 moeglich bleibt.
+    _q = sys.argv[sys.argv.index("--quelle") + 1] \
+        if "--quelle" in sys.argv else "gesamt"
+    print("  turnover-Quelle: %s" % _q)
+    w = {a: R.K.baue(reihen, a, R._zusatz(a, _q), horizont=R.HORIZONT)
          for a in ("funding", "turnover", "oi_aenderung")}
     print("  fertig (%.0f s)" % (time.time() - t0))
 
