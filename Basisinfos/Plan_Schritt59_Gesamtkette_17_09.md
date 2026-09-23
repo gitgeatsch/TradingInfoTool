@@ -1435,6 +1435,47 @@ völlig flach.
 ➤ **Fünf unabhängige Wege zur Form:** V4 (30.08.) · N-56 (06.09.) ·
 2.133/N23 (06.09.) · 2.553 (23.09.) · 2.554 (23.09.).
 
+#### ✔✔✔ UND DAMIT ABGESCHLOSSEN — DIE GEGENRICHTUNG IST AUCH GEMESSEN (2.556)
+
+Vorabfestlegung 5 hat Hypothese B geprüft (*„funding wirkt nur, wenn der
+Markt überhitzt ist"*) — mit `messnorm.pruefe()`, der **einen** Messung.
+
+| Stufe | |
+|---|---|
+| **S0** Machbarkeit | ✔ findet gepflanzte 0,10 R — knapp bestanden |
+| **S1** R-R11 | ✔ **+0,02286 R** [+0,00998 … +0,03689], 35 Blöcke — der 30.08.-Wert +0,0234 reproduziert |
+| **S2** Zustände | **heiss +0,08432** ✔ · mittel +0,01573 ✖ · ruhig +0,00823 ✖ — **Faktor 10**, und diesmal auf der **Regel**-Skala |
+| **S3** B6 | ⛔ nicht sauber prüfbar — je Hälfte nur **2 Blöcke** |
+
+### ➤➤➤ Die Antwort steckt in S4, und sie ist Arithmetik
+
+| | Anteil | Wirkung | effektiv |
+|---|---|---|---|
+| **unbedingt (heute)** | 100 % | +0,02286 | **+0,02286** |
+| nur `heiss` | 13,7 % | +0,08432 | **+0,01156** |
+
+✔ Selbstkontrolle: die Summe der drei Zustände ergibt **exakt** die
+Gesamtwirkung.
+
+> **Der Zustandsschalter wäre nur halb so gut** — er wirft die Wirkung der
+> übrigen 86,3 % der Tage weg.
+
+➔ **Die unbedingte Sperre des obersten Rangfünftels ist die richtige
+Bauform.** Hypothese B ist im praktischen Sinn widerlegt, obwohl ihr Kern
+belegt ist. **Das ist ein Ergebnis, kein Nullbefund.**
+
+⚠️⚠️ **Die verallgemeinerbare Lehre:** ein Zustandsschalter lohnt nur,
+wenn ein Zustand die Wirkung **umkehrt** — nicht, wenn er sie bloß
+abschwächt. Das ist vorab entscheidbar und gehört in jede künftige
+Vorabfestlegung.
+
+⛔ **Drei Korrekturen, alle in der Vorbereitung gefunden:** der „Faktor
+6,3" stand auf der **Merkmals**-Skala (R-R8 B3) und auf **1,7 Blöcken**;
+und die **absolute** Zustandsdefinition ist nach Z3 **unzulässig** —
+letzte Episode 2024-12-09.
+
+➤ **Damit ist die funding-Form abgeschlossen.** Offen bleibt nichts.
+
 ⚠️ Was das **nicht** ist: ein Grund, `funding` abzuschalten. Der Beitrag
 trägt auf der vollen Menge, in beiden Fenstern (2.549).
 
