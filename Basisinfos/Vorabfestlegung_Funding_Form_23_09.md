@@ -1,0 +1,186 @@
+# Vorabfestlegung — hat der Funding-Beitrag die richtige FORM?
+
+*Geschrieben am 23.09.2026, **vor** der Messung. Nutzervorgabe: „wir
+benötigen vorab die richtige Fragestellung und Hypothese".*
+
+---
+
+## 1 Der Anlass
+
+Die Live-Stufentabelle von `funding` ist **nicht monoton**:
+
+```
+Fünftel      0        1        2        3        4
+Wirkung   -0,0639  -0,0262  -0,0962  -0,1476  -0,2127     (R, H20)
+Stufen     +0,82    +1,30    +0,12    -0,54    -1,70      (Punkte)
+```
+
+Das Maximum liegt bei **Fünftel 1**, nicht bei 0. `rechne_funding_beitrag.py`
+legt jedoch vorab fest: *„nutzbar: die Stufen sind MONOTON über die
+Fünftel — nicht nutzbar: sonst."*
+
+**Gemessen ist bereits** (23.09., `funding_buckel.py`):
+
+| | |
+|---|---|
+| Buckel in der **ersten** Hälfte | +0,0291 R |
+| Buckel in der **zweiten** Hälfte | +0,0465 R |
+| Blockbootstrap auf die Differenz | +0,0337 R, Band **[−0,0234 .. +0,0910]** |
+
+➤ **Richtung stabil, statistisch nicht von null zu trennen.**
+
+## 2 ⚠️⚠️ Die Fragestellung — und was sie NICHT ist
+
+> **Ist die Wirkung von `funding` im Querschnittsrang monoton, oder hat
+> sie ein Maximum innerhalb der Verteilung?**
+
+Das ist eine **Formfrage**, keine Beitragsfrage.
+
+| | |
+|---|---|
+| **Nicht gefragt** | ob `funding` trägt — das ist gemessen (2.549: auf der vollen Menge, beide Fenster) |
+| **Nicht gefragt** | ob die Stufen „besser" werden — das wäre eine Optimierung ohne Kriterium |
+| **Gefragt** | wo das Maximum der Wirkung liegt, und ob die Gruppenbildung es erzeugt |
+
+## 3 Die Hypothesen — vor der Messung benannt
+
+### H0 — die heutige Vorabfestlegung
+
+> Die Wirkung ist **monoton fallend** im Funding-Rang. Das Maximum liegt
+> am unteren Ende (Fünftel 0 = niedrigstes Funding).
+
+Begründung: wer am wenigsten Finanzierung zahlt, hat die günstigste Lage.
+Diese Erwartung steht hinter der Monotonie-Bedingung im Werkzeug.
+
+### H1 — aus der Praxisliteratur abgeleitet
+
+> Die Wirkung ist **nicht monoton**. Das Maximum liegt bei **moderat
+> niedrigem**, nicht bei extrem niedrigem Funding.
+
+Begründung (Recherche 23.09.): *„Extreme readings in **either direction**
+have historically preceded mean reversions … because extreme rates mark a
+**crowded, leveraged position**."* Extrem negatives Funding ist
+Short-Crowding bzw. Kapitulation — also selbst ein Risikozustand, keine
+günstige Lage.
+
+⚠️ **Das Gewicht dieser Quellen ist begrenzt und das gehört hier
+hingeschrieben:** es sind Broker- und Marktkommentare (Kraken, Phemex,
+MetaMask, Yellow, BitMEX). Die akademische Literatur zur Cross-Section von
+Kryptorenditen führt **Size, Momentum, Trend und Value** — Funding ist
+dort **kein etablierter Faktor**. Die einzige gefundene Funding-Arbeit
+stützt sich auf **acht Tage** Daten.
+
+➔ **H1 ist eine Hypothese aus der Praxis, kein Befund.** Sie wird hier
+geprüft, nicht vorausgesetzt.
+
+### H2 — die Artefakt-Hypothese
+
+> Der Buckel entsteht durch die **Gruppenbildung**. Die Funding-Verteilung
+> ist stark schief; ein Rangschnitt in fünf gleich große Gruppen legt die
+> unterste Grenze mitten in eine dichte Region, und Fünftel 0 und 1
+> enthalten sachlich dasselbe.
+
+## 4 ⚠️⚠️⚠️ Die Entscheidungsregel — VORAB, nicht nach den Zahlen
+
+Zwei **unabhängige** Wege, dieselbe Frage:
+
+| | Weg | Was ihn unabhängig macht |
+|---|---|---|
+| **A** | dieselbe Messung in **Dezilen** statt Fünfteln | andere Gruppengrenzen; ein Schnittartefakt verschiebt sich, ein echtes Maximum bleibt |
+| **B** | Wirkung gegen das **absolute Funding-Niveau** statt gegen den Rang | kommt ohne Gruppenbildung aus |
+
+**Vorab festgelegt, was welches Ergebnis bedeutet:**
+
+| A zeigt Maximum im Inneren | B zeigt Maximum im Inneren | → Schluss |
+|---|---|---|
+| ja | ja | **H1 gestützt** — die Form ist nicht monoton. Die Stufen bleiben, die **Vorabfestlegung** im Werkzeug wird korrigiert |
+| nein | nein | **H0 gestützt** — der Buckel ist ein Fünftel-Artefakt. Fünftel 0+1 werden zusammengefasst, Stufen monoton |
+| ja | nein *(oder umgekehrt)* | **nichts entschieden** — die Wege widersprechen sich. Dann bleibt alles unverändert und der Punkt wird als offen geführt |
+
+⚠️ **„Maximum im Inneren" heißt:** die Gruppe mit der höchsten Wirkung ist
+**nicht** die unterste, **und** ihr Abstand zur untersten übersteigt die
+Trennschärfe der Messung. Ein Abstand darunter zählt als „am Rand".
+
+## 5 Der Messstandard — er gilt hier vollständig
+
+```
+Messstandard ab 2026-09-09: Bezug = nullpunkt | Nullwelten = 90. Perzentil
+über 40 Ziehungen | Trennschärfe gegen denselben Bezug | gepflanzte
+Stärken bis 0,40 R | Positivkontrolle 5 Ziehungen
+```
+
+| | |
+|---|---|
+| Nullpunkt | Mittelwert der Nullwelten, **nicht** null |
+| Band | Blockbootstrap, Blocklänge `messnorm._block(H20)` = **60** |
+| Trennschärfe | gegen den Nullpunkt, Positivkontrolle über ein künstliches Merkmal |
+| **Beide Historienhälften** | R-R8 **B6** — beide Wege werden je Hälfte ausgewiesen |
+| Häufigkeit | R-R8 **B4** — je Gruppe die Zahl der Symbol-Tage |
+
+⚠️ **Die Zielgröße ist `bewegung_r` auf H20** — dieselbe wie in der
+Registrierung. Ein Wechsel würde die Frage verändern.
+
+## 6 Was aus dem Ergebnis NICHT folgt
+
+- **Keine** Aussage über den Beitrag selbst — er trägt (2.549)
+- **Keine** Neukalibrierung der Schwelle, solange die Stufen unverändert
+  bleiben. Ändern sie sich, greift **R-R9** zwingend
+- **Keine** Übertragung auf `turnover` — dessen Stufen sind monoton
+
+## 7 Reihenfolge
+
+1. Weg **A** (Dezile), beide Hälften
+2. Weg **B** (absolutes Niveau), beide Hälften
+3. Entscheidung nach der Tabelle in § 4 — **ohne Nachverhandlung**
+4. Erst danach: Bau, R-R9, Gegenprüfung, Betrieb
+
+---
+
+*Diese Festlegung wird nicht mehr geändert. Weicht die Messung ab, wird
+die Abweichung benannt — nicht die Festlegung angepasst.*
+
+---
+
+# ERGEBNIS — 23.09.2026, nach der Messung
+
+## Die Entscheidung nach § 4: **NICHTS ENTSCHIEDEN**
+
+| Weg | Ergebnis |
+|---|---|
+| **A** Dezile auf dem Rang | Maximum bei Dezil **1**, Abstand +0,1278 R **[+0,0660 .. +0,1879]** → Null ausgeschlossen, **belegt** |
+| **B** Gruppen nach absolutem Niveau | ⛔ **unbrauchbar** — zwei Dezile leer, eines mit dem Vierfachen |
+
+➔ Die Regel in § 4 sagt für diesen Fall: **alles bleibt unverändert, der
+Punkt wird als offen geführt, keine Nachverhandlung.** So wird verfahren.
+
+## ⛔⛔ Der eigentliche Ertrag: die Rangbildung ist bei Bindungen willkürlich
+
+**35,4 % aller Funding-Werte sind exakt +0,0003** — die Standardrate der
+Börse. Je Kalendertag macht der häufigste Wert im **Median 32,5 %** aus,
+an Spitzentagen **93,3 %**.
+
+`argsort(argsort(w))` vergibt bei gleichen Werten Ränge nach
+**Array-Position**. Nachgewiesen: sechs identische Werte landen in **drei
+verschiedenen Fünfteln**. Assets mit exakt derselben Funding-Rate bekommen
+verschiedene Bewertungspunkte.
+
+## Zwei Alternativen geprüft — beide schlechter
+
+| | Ergebnis |
+|---|---|
+| **Durchschnittsrang** (korrekte Bindungsbehandlung) | wird **unruhiger**: −0,0619 / −0,0578 / **+0,0111** / −0,1733 / −0,0727; Fünftel 4 besser als 3, Gruppen 68k–84k statt gleich groß |
+| **Dreiteilung** unter/auf/über Standardrate | Richtung **umgekehrt** (über Standard am besten), **alle** Bänder schließen die Null ein, Hälften widersprechen sich |
+
+## ⚠️ Was das unbequem macht
+
+**Die einzige Form mit belegtem Ergebnis ist genau die, die Bindungen
+willkürlich aufteilt.** Keine Alternative ist belegt besser.
+
+➔ **Die heutige Stufentabelle bleibt** — nicht weil sie gut ist, sondern
+weil keine Änderung belegt ist. Der **Bindungsbefund** bleibt als Risiko
+stehen; er betrifft die Live-Bewertung, nicht nur diese Frage.
+
+⚠️ **Nicht geprüft:** ob `turnover` ebenfalls betroffen ist. Seine Werte
+sind stetig — aber das ist eine Vermutung, keine Messung.
+
+Befund **2.550-funding-form-nicht-entscheidbar**.
