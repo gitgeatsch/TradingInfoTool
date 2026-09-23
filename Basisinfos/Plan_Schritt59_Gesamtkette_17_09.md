@@ -1255,10 +1255,33 @@ das aus — deshalb davor, und deshalb **nicht** als eigener Meilenstein.
 
 #### Was zu tun bleibt
 
-Sechs Codepunkte, sechs offene Fragen und fünf Entscheidungen stehen in
-**`Basisinfos/Voranalyse_Umschlag_Nutzung_22_09.md`**. ⚠️ **Gebaut ist
-davon nichts** — die Voranalyse ist der Stand vor der Abstimmung, kein
-begonnener Umbau.
+~~Sechs Codepunkte, sechs offene Fragen und fünf Entscheidungen stehen in
+`Basisinfos/Voranalyse_Umschlag_Nutzung_22_09.md`. Gebaut ist davon
+nichts.~~
+
+✔✔ **ERLEDIGT 22.09.2026.** S1–S8 sind gebaut, der Nennerwechsel ist
+live und am Notebook belegt; seit dem 22.09. 17:50 UTC tragen die Signale
+die neue Schwelle (2.540). Die Voranalyse ist damit abgearbeitet.
+
+#### ⚠️⚠️⚠️ WAS IN PHASE 4 WIRKLICH NOCH OFFEN IST (Stand 23.09.2026)
+
+| | | |
+|---|---|---|
+| **Betriebswirkung** | ⏳ **aufgesetzt, nicht deutbar** | `phase4_betriebswirkung.py`; die Umschaltung liegt erst **7,9 Stunden** zurück, und die Zuschreibungskontrolle schlägt an (2.545) — der nächste Export trägt mehr |
+| **M1-Kriterium 2, erste Hälfte** | ⚠️ **NICHT BEANTWORTET** (berichtigt 23.09.) | *„Trägt die Quote den Hebel (r(q))?"* — ~~gemessen verneint~~. **Die Messung taugt dafür nicht:** die Quote ist zurückgerechnet aus dem **geklammerten** `r`, also kann sie per Konstruktion nur zwischen 0,340 und 0,350 liegen (Faktor 1,029) — gemessen wurde 1,02. Und 21 der 22 Signale stammen aus der **alten** Kalibrierung. ➔ Was gilt, ist strukturell: solange `r` auf Faktor 2,5 geklammert ist und der Stop frei streut, **kann** die Quote nicht dominieren. Die Klammer schneidet die Wirkung ab — sie fehlt nicht |
+| **M1-Kriterium 2, zweite Hälfte** | ⚠️ **tautologisch** | *„Zielzone 2–5x belegt"* — `hebel_ab` 2,0 und `hebel_grenze` 5,0 **erzwingen** sie. Dass die Werte dort liegen, ist keine Aussage |
+| `hebel_roh` und vier Flags | ⛔ werden gerechnet, **nicht geschrieben** | die reale Verteilung ist am Betrieb nicht auswertbar (2.496, Klasse 2.459-ungemessen). Schemaänderung = Nutzerentscheidung |
+
+⚠️⚠️ **Daraus folgt eine Frage, die nur der Nutzer beantworten kann:**
+Kriterium 2 ist in seiner heutigen Formulierung **nicht erfüllbar** — die
+eine Hälfte ist verneint, die andere per Konstruktion wahr. Drei Wege
+stehen offen, und keiner ist meiner:
+
+| | | |
+|---|---|---|
+| **A** | den Hebel umbauen, bis die Quote ihn trägt | ⚠️ die Klammer `r_min`/`r_max` ist der Grund, dass sie es nicht tut — und sie steht aus gutem Grund (2.496-klammer-bleibt: die Quote ist nicht genauer bekannt, als das Fenster breit ist) |
+| **B** | das Kriterium neu fassen | z. B. *„der Hebel ist nachvollziehbar und gedeckelt"* statt *„die Quote trägt ihn"* |
+| **C** | annehmen, dass der **Stop** den Hebel trägt | dann ist zu belegen, dass die **Stopweite** ihrerseits gemessen ist — sie ist es (2.431/Stopweite: 8 % ist der Gipfel) |
 
 ### ⚠️⚠️ TAKT UND COOLDOWN — festgeschrieben bis alles andere grün ist
 

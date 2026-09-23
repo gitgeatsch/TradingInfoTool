@@ -18,6 +18,19 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️⚠️ NACHTRAG 23.09.2026 — zwei weitere Aussagen sind überholt
+>
+> | Hier steht | Richtig ist seit | Befund |
+> |---|---|---|
+> | „Schwelle **0,080** R" (bei `entscheider`) | **22.09.2026**: die Schwelle ist auf **0,060** neukalibriert (bzw. 0,021547 bei dünner Datenlage). Im Betrieb belegt — die Signale tragen sie seit 22.09. 17:50 UTC | 2.540 |
+> | `turnover` aus der **Gesamtausgabe** (`umschlag_gesamt`, 59–66 Symbole) | **22.09.2026**: der Betriebsnenner ist der **freie Umlauf** (`umschlag_frei`, 374 Symbole live). Die Stufen sind neu: (+2,32 / +0,50 / +0,34 / −0,11 / −3,06) | 2.532, 2.540 |
+>
+> ⚠️ **Die Stufe `entscheider` bleibt deterministisch** — daran ändert die
+> Neukalibrierung nichts. Gemessen am 23.09.: sie verliert 136 von 177, und
+> **kein einziger Grund** ist ein Modellurteil (73× „keine Datengrundlage",
+> Rest „Potential unter der Schwelle"). Der Satz „Kein Modell ist daran
+> beteiligt" stimmt also weiter (2.545-llm-verhindert-27-mal).
+>
 > Nicht falsch, aber unvollständig: Rolle A liefert **Lage und Gleichlauf** an
 > BC, **nicht** die Einstufung je Klasse (2.457-w2); die Mail-Abschnitte
 > „Umfeld" und „Zusatzinfo" sind tot (2.457-w3).

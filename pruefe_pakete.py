@@ -21051,6 +21051,47 @@ def paket_abbildung() -> None:
            "mitgezaehlt zu werden. Kopf: %s, Tabelle: %s"
            % (_kopf, _w_reg.group(2) if _w_reg else None))
 
+    # ---- ZUSTANDSDOKUMENTE GEGEN DEN LAUFENDEN WERT (23.09.2026) -------
+    #
+    # ⚠️⚠️ ANLASS: `Kette_Landkarte.md` trug *„Schwelle 0,080 R"* als
+    # IST-Zustand - sechs Tage nach der Neukalibrierung auf 0,060.
+    # Gefunden hat es der NUTZER, nicht die Suite. Ein Dokument, das den
+    # Ablauf der Kette erklaert und dabei die falsche Schwelle nennt,
+    # schickt jeden Leser mit einer falschen Zahl weiter.
+    #
+    # ⚠️ GEPRUEFT WERDEN NUR ZUSTANDSDOKUMENTE. Befundmappen
+    # (`Fakten_Entscheidungsmappe`, `Test_und_Verifikationsmethodik`)
+    # halten fest, was WANN gemessen wurde - ihre alten Zahlen sind
+    # richtig und bleiben stehen. Sie hier mitzupruefen hiesse, Geschichte
+    # umzuschreiben.
+    #
+    # ⚠️ DER SOLLWERT WIRD ABGELEITET, nicht gefuehrt: er kommt aus
+    # `potential.SCHWELLE_VORGABE`. Aendert sich die Schwelle wieder,
+    # zieht die Pruefung von selbst nach.
+    import os as _osd                                     # noqa: PLC0415
+    from agent import potential as _POT                    # noqa: PLC0415
+    _soll = float(_POT.SCHWELLE_VORGABE)
+    _soll_txt = ("%.3f" % _soll).replace(".", ",")
+
+    for _dok in ("Basisinfos/Kette_Landkarte.md",
+                 "Basisinfos/Arbeitsstand_Schritt59.md"):
+        try:
+            _t = io.open(_dok, encoding="utf-8").read()
+        except OSError:
+            pruefe(P, "⚠️ Zustandsdokument %s ist lesbar" % _dok, False,
+                   "es wird in dieser Pruefung erwartet")
+            continue
+        # Nennt es eine Schwelle? Dann muss der LAUFENDE Wert vorkommen.
+        _nennt_alte = "Schwelle 0,080" in _t or "Schwelle 0,0800" in _t
+        _nennt_neue = _soll_txt in _t
+        pruefe(P, "⚠️⚠️ %s nennt die LAUFENDE Schwelle (%s)"
+               % (_osd.path.basename(_dok), _soll_txt),
+               (not _nennt_alte) or _nennt_neue,
+               "es fuehrt 0,080 als Ist-Zustand und nennt %s nirgends - "
+               "ein Leser bekommt die Schwelle von vorgestern. Entweder "
+               "die Zahl nachziehen oder als historisch kennzeichnen"
+               % _soll_txt)
+
     # ---- die geschlossene Luecke ---------------------------------------
     pruefe(P, "⚠️⚠️⚠️ CLAUDE.md fuehrt den Selbsttest NICHT mehr als fehlend",
            "fehlt weiterhin" not in _md,
