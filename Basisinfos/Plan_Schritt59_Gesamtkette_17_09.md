@@ -1274,11 +1274,43 @@ Phasen auf grün stehen** — nicht vorher, und nicht einzeln.
 | | |
 |---|---|
 | Was der Cooldown kostet | **3.304 von 3.304** Verlusten an der Stufe `wiederholung` sind Cooldown — **95 %** der Zellen, die bis dorthin kommen |
+| ⚠️⚠️ **Und er ist nicht allein** (23.09., 2.539) | über **alle zwölf** Stufen gemessen — nicht nur über `wiederholung`: |
 | Was durchkommt | **1 bis 7 Signale am Tag** bei 200–500 Läufen (17.–20.09.) |
 | Was gemessen ist | **2.461-sperre: KEINE Länge trägt** — 1/2/3/5/10/20 Tage alle unter dem Nullpunkt ihrer eigenen Nullwelt |
 | Warum sie trotzdem stand | **2.467**: sie war „die einzige Bremse der ungemessenen Verkaufsseite“ |
 | Warum dieser Grund gefallen ist | **V0 (2.469)**: die Verkaufsmail ist seit 19.09. INFORMATION statt Empfehlung; **2.478** stellt es fest |
 | ⚠️ Warum sie **trotzdem bleibt** | ohne sie kämen **2.257 Zellen/Tag** beim Modell an — das **1,2-fache** des Kontingents (2.466). Und: eine kürzere Sperre bringt **mehr** Signale, nicht **bessere** |
+
+#### ⚠️⚠️⚠️ ÜBER ALLE STUFEN GEMESSEN (23.09.2026, 2.539) — `anlass` FEHLTE HIER
+
+Bis zum 23.09. nannte dieser Abschnitt **nur** `wiederholung`. Der Grund
+war kein Versäumnis in der Sache, sondern ein **Anzeigefehler**:
+`pruefe_export_standard` zeigte acht von zwölf Kettenstufen, und die vier
+fehlenden waren genau die sperrenden. Daraus war zusätzlich der falsche
+offene Fall *„N hinein, 0 heraus"* entstanden (2.539, behoben).
+
+**Alle 30 Läufe des NB-Exports vom 23.09., 72 h: 372 Anker hinein, 1 heraus.**
+
+| Stufe | verloren | Anteil am Verlust | Sperrquote | Grund |
+|---|---|---|---|---|
+| `wiederholung` | 133 | **35,8 %** | 92,4 % | **Cooldown** |
+| `anlass` | 124 | **33,4 %** | 33,3 % | „Faktensatz unverändert seit 0,2 h" |
+| `auswahl` | 104 | 28,0 % | 41,9 % | Momentum-Rang |
+| `geometrie` | 9 | 2,4 % | 90,0 % | „taktische Zelle ohne Hebel" |
+
+➔ **`anlass` + `wiederholung` = 257 von 371 Verlusten (69 %)** — beides
+**Takt-Sperren**, keine inhaltlichen Urteile. Die **bewertenden** Stufen
+sperren fast nichts: `urteil` 0 verloren, `aktion` 1, `risikoschicht` 0,
+`entscheider` 0.
+
+⚠️⚠️ **Folge für A3, und sie ändert den Zuschnitt:** wer nur den
+**Cooldown** anfasst, löst **die Hälfte**. Der Takt hat zwei Stellschrauben,
+und die zweite (`anlass`, die Faktensatz-Frische) ist fast gleich groß.
+Beide gehören in dieselbe Behandlung.
+
+⚠️ **Was das NICHT ist:** eine Bewertung. Es ist ein **Fakt** über den
+Durchlass. Und es ist ein 72-Stunden-Fenster — `hinein` zählt Anker **je
+Lauf**, also mehrfach dieselben Assets; eine Tagesrate folgt daraus nicht.
 
 ➔ **Der Hebel für Qualität ist der `entscheider`, nicht der Cooldown.**
 Er ist der einzige Filter, der mit **+0,2137 R** gemessen trägt
@@ -1289,8 +1321,39 @@ Er ist der einzige Filter, der mit **+0,2137 R** gemessen trägt
 | # | Prüfpunkt | Stand 22.09.2026 |
 |---|---|---|
 | **1** | Stehen Phase 4, 6, 8 und 9 auf grün? | ⛔ **nein — also nicht anfassen** |
-| **2** | Ist die **Qualität** gemessen gestiegen — oder nur die Zahl? | ✔ **JA, seit 22.09.** — `umschlag_naeherung` hebt den Gewinnanteil um **+2,8 bis +4,2 Prozentpunkte**, auf allen drei zulässigen selektierten Mengen, gegen den Nullpunkt (**2.520**). Das ist der erste der drei Punkte auf grün |
+| **2** | Ist die **Qualität** gemessen gestiegen — oder nur die Zahl? | ⚠️ **TEILS — und die Einschränkung ist am 23.09. dazugekommen.** ✔ Auf der **Trefferquote selektierter Mengen** gilt 2.520 unverändert: `umschlag_naeherung` hebt den Gewinnanteil um **+2,8 bis +4,2 Pp**, auf allen drei zulässigen Mengen, gegen den Nullpunkt. ⛔ Auf der **KETTE** ist derselbe Gewinn **NICHT BELEGT** (2.537): gepaart über 1.338 gemeinsame Tage +0,0479 R bei einer Trennschärfe von 0,100 R. Siehe den Kasten unten |
 | **3** | Trägt das Kontingent die neue Rate (2.466, vier Töpfe)? | ⏳ offen — die Lösung **senkt** den Durchlass (532 → 399 Signale, −25 %) und entlastet es damit eher |
+
+#### ⚠️⚠️ PRÜFPUNKT 2 GENAUER: ZWEI FRAGEN, ZWEI ANTWORTEN (23.09.2026)
+
+Der Prüfpunkt stand seit dem 22.09. auf grün. Am 23.09. kam eine zweite
+Messung dazu, und beide gelten — sie messen **Verschiedenes**:
+
+| Messung | Gegenstand | Ergebnis |
+|---|---|---|
+| **2.520** | **Trefferquote** auf selektierten Mengen | ✔ **+2,8 bis +4,2 Pp** gegen den Nullpunkt |
+| **2.537** | die **Kette** aus funding + turnover + oi_aenderung, gepaart | ⛔ Differenz **+0,0479 R** bei Trennschärfe **0,100 R** → **nicht belegt** |
+
+⚠️⚠️ **Warum das kein Widerspruch ist:** die Bänder der beiden
+Einzelläufe überlappen (`gesamt` +0,0401 [+0,0134 .. +0,0662], `frei`
++0,0880 [+0,0316 .. +0,1509]), und der **gepaarte** Test war hier
+**fünfmal gröber** als jeder Einzellauf — Korrelation der Tagesreihen nur
++0,657, die `frei`-Reihe streut selbst deutlich stärker (0,4348 gegen
+0,3005). Die neue Quelle liefert **höhere Wirkung UND mehr Streuung**.
+
+➤ **Was gilt:** beide Quellen tragen (je eigenes Normurteil, Trennschärfe
+0,02 R). Was **nicht** gilt: „die neue Quelle ist besser" — ein höherer
+Punktschätzer ist keine Aussage. Und ebensowenig „sie ist gleich gut".
+
+✔ **Das bestätigt den Umbau, statt ihn zu stören:** S6 war ausdrücklich
+ein **Abdeckungs**paket, kein Qualitätspaket. Auf der Kettenebene kommt
+dasselbe heraus — mehr Abdeckung, kein belegter Qualitätsgewinn, **kein
+Verlust**.
+
+⚠️ **Folge für A3:** Prüfpunkt 2 bleibt **nicht** pauschal grün. Er ist
+auf der Trefferquote grün und auf der Kette **offen** — und die
+Entscheidung, welche der beiden Größen zählt, gehört dem Nutzer, nicht
+einer Formel.
 
 #### ⚠️⚠️ UND DIE SCHWELLE IST NICHT DER HEBEL FÜR DIE SIGNALZAHL (22.09.)
 

@@ -17,6 +17,17 @@ import statistics
 import sys
 from collections import Counter
 
+# ⚠️⚠️ OHNE DAS BRICHT DER SCHLUSSBERICHT AB (23.09.2026, am Lauf
+# gefunden). Windows gibt hier cp1252 vor; das erste ⚠ im Text wirft
+# UnicodeEncodeError. Getroffen hat es ausgerechnet die Zeile, die sagt,
+# WELCHE PUNKTE WEGEN DER SCHLANKEN DIAGNOSE UNGEPRUEFT BLIEBEN - der
+# Lauf sah bis dahin vollstaendig aus und meldete "AUFFAELLIGKEITEN: 4",
+# obwohl sechs Abschnitte gar nicht geprueft worden waren.
+# ⚠️ Ein Abbruch NACH dem Ergebnis ist gefaehrlicher als einer davor:
+# man liest die Zahlen und merkt nicht, dass der Vorbehalt fehlt.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 STANDARD = (r'K:\My Drive\Claude_Austauschordner\Notebook_Analysedaten'
             r'\notebook_diagnose.json')
 WARN = "  [!]"
@@ -277,15 +288,64 @@ def main() -> None:
               f"-> sichert {z(x.get('sichert_r'), 2)} R")
 
     # 13 Score-Komponenten
+    # ⚠️⚠️⚠️ EIN AUSGELASSENER ABSCHNITT DARF KEINEN BEFUND ERZEUGEN
+    # (23.09.2026). Punkt 13 und 14 lesen beide aus
+    # `rohdaten_fuer_backtest` - und der ist in der SCHLANKEN Diagnose
+    # ausgelassen. Sie meldeten dann "0 Trigger, 0 Kandidaten" und
+    # "Makro-Historie nur 0 Zeilen" als AUFFAELLIGKEIT, obwohl gar nichts
+    # gemessen worden war.
+    #
+    # ⛔ Beim Nutzer kam das als Datenproblem an ("warum keine Makro
+    # historie, nutzen wir diese nicht?"). Nachgesehen: `datenfrische`
+    # meldet fuer dieselbe Sache 1.186 Zeilen, Abruf 1 Tag alt, Urteil
+    # "frisch". Die Daten waren immer da.
+    #
+    # ⚠️ Das ist derselbe Fehlertyp wie 2.539: eine Zeile, die aussieht,
+    # als haette sie geprueft. Ein Fehlalarm kostet mehr als eine Luecke,
+    # weil er Arbeit ausloest.
+    # ⚠️ ERST HOLEN, DANN FRAGEN: `AUSGELASSEN` wird von `hole()` gefuellt.
+    # Meine erste Fassung fragte davor - da stand der Schluessel noch nicht
+    # drin, und der Fehlalarm blieb genau so stehen wie vorher.
     rb = hole(d, "rohdaten_fuer_backtest", {})
-    print(f"\n13. Score-Rohdaten: {len(rb.get('hebel_triggers_alle') or [])} Trigger gesamt, "
-          f"{len(rb.get('hebel_triggers_kandidaten') or [])} Kandidaten")
+    _rb_da = "rohdaten_fuer_backtest" not in AUSGELASSEN
+    if _rb_da:
+        print(f"\n13. Score-Rohdaten: "
+              f"{len(rb.get('hebel_triggers_alle') or [])} Trigger gesamt, "
+              f"{len(rb.get('hebel_triggers_kandidaten') or [])} Kandidaten")
+    else:
+        print("\n13. Score-Rohdaten: UNGEPRUEFT - `rohdaten_fuer_backtest` "
+              "fehlt (schlanke Diagnose)")
 
     # 14 Makro-/OI-Reichweite
-    mh, oi = rb.get("macro_historie") or [], rb.get("oi_historie") or []
-    print(f"\n14. Makro-Historie {len(mh)} Zeilen, OI-Historie {len(oi)} Zeilen")
-    if len(mh) < 40:
-        melde(f"Makro-Historie nur {len(mh)} Zeilen - Fenster bei jedem Mischen beachten")
+    if _rb_da:
+        mh = rb.get("macro_historie") or []
+        oi = rb.get("oi_historie") or []
+        print(f"\n14. Makro-Historie {len(mh)} Zeilen, "
+              f"OI-Historie {len(oi)} Zeilen")
+        if len(mh) < 40:
+            melde(f"Makro-Historie nur {len(mh)} Zeilen - Fenster bei "
+                  f"jedem Mischen beachten")
+    else:
+        # ⚠️ NICHT SCHWEIGEN, SONDERN UMLEITEN: die Frage *,ist die
+        # Makrohistorie da`* beantwortet `datenfrische` auch in der
+        # schlanken Fassung - und zwar naeher an der Quelle.
+        _lang = [q for q in (hole(d, "datenfrische") or {}).get("quellen", [])
+                 if isinstance(q, dict) and q.get("job") == "makro_analog"]
+        if _lang:
+            _q = _lang[0]
+            print("\n14. Makro-Historie: aus `rohdaten_fuer_backtest` "
+                  "UNGEPRUEFT (fehlt), aber")
+            print("    `datenfrische` meldet %s Zeilen, Datenstand %s, "
+                  "Abruf %s Tage alt -> %s"
+                  % (_q.get("zeilen"), _q.get("datenstand"),
+                     _q.get("abrufalter_tage"), _q.get("urteil")))
+            if _q.get("urteil") != "frisch":
+                melde("Makro-Historie laut datenfrische NICHT frisch: %s"
+                      % (_q,))
+        else:
+            print("\n14. Makro-Historie: UNGEPRUEFT - weder "
+                  "`rohdaten_fuer_backtest` noch eine `makro_analog`-Zeile "
+                  "in `datenfrische`")
 
     # 15 Watchlist-Stammdaten
     ws = hole(d, "watchlist_stammdaten") or {}
@@ -310,8 +370,24 @@ def main() -> None:
         verl = lauf.get("verloren") or {}
         print(f"      {str(lauf.get('erfasst_am'))[:16]} "
               f"{lauf.get('hinein')} hinein -> {lauf.get('heraus')} heraus")
-        for stufe in ("auftrag", "fakten", "lagebild", "urteil", "aktion",
-                      "geometrie", "risikoschicht", "entscheider"):
+        # ⚠️⚠️⚠️ DIE STUFEN WERDEN AUS DEN DATEN ABGELEITET, NICHT
+        # AUFGEZAEHLT (23.09.2026). Hier stand eine feste Liste von acht
+        # Stufen - und der Export fuehrt ZWOELF. Die vier fehlenden
+        # (`anlass`, `auswahl`, `terminmarkt`, `wiederholung`) sind genau
+        # die, die SPERREN.
+        #
+        # ⛔ DARAN HING DER OFFENE FALL "N hinein, 0 heraus": er sah
+        # unerklaert aus, WEIL DIE ERKLAERUNG NICHT ANGEZEIGT WURDE. Am
+        # 23.09. zeigte der 46er-Lauf lagebild 46 -> anlass 41 ->
+        # auswahl 23 -> wiederholung 1 -> urteil 1. Die Kette war nie
+        # kaputt; die Anzeige war es.
+        #
+        # ⚠️ Stehende Regel `pruefung-zaehlt-zustaende-auf`: was
+        # aufgezaehlt wird, veraltet still. `dict` haelt die
+        # Einfuegereihenfolge, also bleibt die Kettenreihenfolge
+        # erhalten; `verloren` liefert nach, was in `bestanden` fehlt.
+        _stufen = list(best) + [s for s in verl if s not in best]
+        for stufe in _stufen:
             if stufe in best or stufe in verl:
                 print(f"        {stufe:14s} bestanden {best.get(stufe, 0):3} "
                       f"| verloren {verl.get(stufe, 0):3}")
