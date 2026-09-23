@@ -1263,6 +1263,37 @@ nichts.~~
 live und am Notebook belegt; seit dem 22.09. 17:50 UTC tragen die Signale
 die neue Schwelle (2.540). Die Voranalyse ist damit abgearbeitet.
 
+#### ⛔⛔⛔ `funding` HAT KEINE FESTGELEGTE ANWENDUNG (23.09.2026)
+
+**Nutzerfrage, die alles davor einordnet:** *„haben wir schon die korrekte
+Anwendung festgelegt — Regler, Schalter, wann positiv oder negativ? Sonst
+haben wir einen Beitrag zu was?"*
+
+Der Beitrag wirkt an **drei Stellen verschieden**:
+
+| Wo | Als was | |
+|---|---|---|
+| **Betrieb** (`wahrscheinlichkeit`) | **Regler** | 5 Stufen auf die Quote, +0,82 … −1,70 |
+| **Messung** (`phase3_kette`, `n67`) | **Schalter** | oberstes Fünftel gesperrt |
+| **Mail** (`marktrang`) | **Text** | „Hohe Finanzierungskosten zeigen viele Long-Positionen an" |
+
+➔ **Die Messung modelliert einen Schalter, der Betrieb fährt einen Regler.**
+
+⚠️⚠️ **Alle vier Fundstellen des 23.09. sind Symptome derselben Ursache:**
+der nicht-monotone Buckel (2.550), die verletzte Monotonie-Vorabfestlegung,
+die willkürliche Rangvergabe bei **32,5 % Bindungen** (2.551) und die
+Lücke zwischen Messung und Betrieb. Keine davon ist der eigentliche
+Mangel — der ist die **fehlende Festlegung**.
+
+**Stand:** `Basisinfos/Vorabfestlegung_Funding_Form_23_09.md` führt drei
+Festlegungen. Nr. 3 legt die **Anwendung** fest — drei ökonomische
+Zustände (negativ / normal / hoch, geschnitten bei **0** und der
+**Standardrate**), erwartete **U-Form**, Entscheidungsregel vor der
+Messung. ⏳ **Messung steht aus.**
+
+⚠️ Was das **nicht** ist: ein Grund, `funding` abzuschalten. Der Beitrag
+trägt auf der vollen Menge, in beiden Fenstern (2.549).
+
 #### ➤➤➤ DIE ABHÄNGIGKEIT, DIE ALLES VEREINFACHT: ES LAUFEN DREI PAARE (23.09.)
 
 Gemessen an 1.866 Zellen der Produktionssicherung — **nicht** aus

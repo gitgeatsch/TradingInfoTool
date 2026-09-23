@@ -245,3 +245,87 @@ weg, wird ihre Wirkung genannt — bei `funding` waren sie **schlechter**
   eine Beobachtung an derselben Datenlage
 - **Keine** Änderung ohne **R-R9** (Neukalibrierung) und ohne neue
   Stufentabelle
+
+---
+
+# VORABFESTLEGUNG 3 — die ANWENDUNG, nicht die Form
+
+*23.09.2026, vor der Messung. Nutzerfrage, die alles davor einordnet:
+„haben wir schon die korrekte Anwendung festgelegt — Regler, Schalter,
+wann positiv oder negativ? Sonst haben wir einen Beitrag zu was?"*
+
+## ⛔⛔ Der Befund, der alle heutigen Fundstellen erklärt
+
+`funding` wird an **drei Stellen verschieden** angewandt, und keine davon
+wurde je gemeinsam festgelegt:
+
+| Wo | Als was | Wirkung |
+|---|---|---|
+| **Betrieb** (`wahrscheinlichkeit`) | **Regler** | 5 Stufen auf die Quote: +0,82 … −1,70 |
+| **Messung** (`phase3_kette`, `n67`) | **Schalter** | oberstes Fünftel wird gesperrt |
+| **Mail** (`marktrang`) | **Text** | „Hohe Finanzierungskosten zeigen viele Long-Positionen an" |
+
+➔ **Die Messung modelliert einen Schalter, der Betrieb fährt einen
+Regler.** Alle vier heutigen Fundstellen — Buckel, Monotonie, Bindungen,
+Messung≠Betrieb — sind Symptome derselben Ursache: **der Beitrag hat nie
+eine festgelegte Anwendung.**
+
+⚠️ Auch mein eigener Satz *„geprüft wird die Sperre — so wirkt der Beitrag
+im Betrieb"* war deshalb falsch.
+
+## Die Festlegung: drei ökonomische Zustände
+
+**Nutzervorgabe:** *„der Schalter sollte u. U. in drei Positionen gemessen
+werden — hoch, neutral, niedrig."* Dem folge ich, mit ökonomisch
+begründeten Grenzen statt Rangschnitten:
+
+| Zustand | Grenze | Anteil | Bedeutung |
+|---|---|---|---|
+| **negativ** | Funding < 0 | 22,6 % | Shorts zahlen Longs — Short-Crowding, Kapitulation |
+| **normal** | 0 ≤ Funding ≤ Standardrate | 30,2 % | kein Ungleichgewicht |
+| **hoch** | Funding > Standardrate | 47,3 % | Longs zahlen Prämie — Long-Crowding |
+
+⚠️⚠️ **Die Grenzen kommen aus der SACHE, nicht aus der Verteilung.** Damit
+entfallen Bindungsproblem, Monotoniefrage und die Abhängigkeit von der
+Tagesbesetzung auf einen Schlag — alle drei waren Folgen der Rangbildung.
+
+⛔ **Meine frühere Dreiteilung schnitt AN der Standardrate** und isolierte
+damit den Massepunkt statt eines ökonomischen Zustands. Ihr Negativergebnis
+(„über Standard am besten") zählt **nicht** — es beantwortete die falsche
+Frage.
+
+## Die Hypothese — sie muss scheitern können
+
+```
+negativ         schlechter als normal     ← Stress, Kapitulation
+normal          bestes
+hoch            schlechter als normal     ← Long-Crowding
+```
+
+➔ Eine **U-Form**, klar verschieden von der heutigen monotonen
+Stufentabelle.
+
+⚠️ **Was die Lehrmeinung leistet und wo sie aufhört:** sie sagt, was die
+Zustände **bedeuten** (Positionierung, Crowding, Stress). Sie sagt
+**nicht**, ob sie in unserer Messmenge **tragen**. Das entscheidet die
+Messung.
+
+## ⚠️⚠️⚠️ Die Entscheidungsregel — vor den Zahlen
+
+| Ergebnis | → Schluss |
+|---|---|
+| **normal** ist bestes **und** beide Ränder liegen unter ihm, Abstände über der Trennschärfe | **U-Form belegt** — die Anwendung wird auf drei Zustände umgestellt, R-R9 greift |
+| **hoch** ist am schlechtesten, **negativ** aber nicht (monoton fallend) | **Lehrmeinung nur halb** — dann einseitiger Schalter am oberen Ende, unteres Ende ohne Bonus |
+| kein Abstand übersteigt die Trennschärfe | **nichts entschieden** — die heutige Anwendung bleibt, Punkt bleibt offen |
+| **hoch** ist das beste | **Hypothese widerlegt** — dann ist die Lehrmeinung für unsere Menge falsch, und das wird so festgehalten |
+
+**Gemessen wird** nach Messstandard: gepaart auf derselben Tagesmenge,
+Band über Blockbootstrap (Blocklänge 60), **beide Historienhälften**
+(R-R8 B6), Häufigkeit je Zustand (B4), Zielgröße `bewegung_r` auf H20.
+
+## Was auch bei „belegt" NICHT folgt
+
+- **Keine** Umstellung ohne **R-R9** (Neukalibrierung) und neue Punktetabelle
+- **Keine** Übertragung auf `turnover` — dessen Werte sind stetig, die
+  Rangform dort unauffällig (3,2 % Bindungen)
+- **Keine** Aussage über die Mail-Formulierung — sie ist Text, kein Beitrag
