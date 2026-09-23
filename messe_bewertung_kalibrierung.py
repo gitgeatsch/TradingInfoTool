@@ -25,14 +25,25 @@ mue ist eine Formel ohne Eingabe.
                      Gezaehlt werden nur ENTSCHIEDENE Anker.
 
 3 ARITHMETIK      quote = 1/(1+CRV) = 33,3 % steht per Konstruktion fest.
-                  Die Behauptung ist ein Shift von 4,5 Prozentpunkten
-                  (0,000 -> 33,3 % · 0,080 -> 36,0 % · 0,133 -> 37,8 %).
-                  ⚠️ Die Beispielwerte stammen vom 05.09.; seit dem
-                     07.09. reicht das Potential nur bis +0,049 R.
-                  -> DAS ist die Pruefgroesse, nicht "traegt/traegt nicht".
+                  Die Behauptung ist ein Shift ueber den ERREICHBAREN
+                  Potentialbereich - DAS ist die Pruefgroesse, nicht
+                  "traegt/traegt nicht".
+                  ⚠️⚠️ DER BEREICH WANDERT MIT DEN STUFEN, und die hier
+                  frueher genannte Schranke *"seit dem 07.09. reicht das
+                  Potential nur bis +0,049 R"* WAR AM 23.09. VERALTET -
+                  der turnover-Stufenwechsel vom 22.09. hat die Spanne
+                  wieder geweitet. Nachgerechnet am 23.09.: -0,1428 bis
+                  +0,1086 R, Spanne 0,2514 R (111 % der 05.09.-Spanne),
+                  erwartete Quotenaenderung 8,4 Prozentpunkte.
+                  ⚠️ EINE ZAHL IM KOPF, DIE VON HAND NACHGEZOGEN WERDEN
+                  MUSS, VERALTET STILL. Wer sie braucht, rechnet sie:
+                  `potential.rechne()` ueber alle 25 Fuenftelkombinationen.
 
-4 MACHT           Vorab gerechnet: ~1.800 entschiedene Anker je Gruppe.
-                  Bindend ist die Blockzahl (~32), nicht die Ankerzahl.
+4 MACHT           Bindend ist die BLOCKZAHL, nicht die Ankerzahl.
+                  Gerechnet am 23.09.: freie Menge ~32 Bloecke, selektierte
+                  Menge 20 % noch 22 Bloecke (128.451 Anker, davon 64.225
+                  out-of-sample). Rauschen je Stufe rund +-2,5 Pp gegen
+                  8,4 Pp Signal - aufloesbar.
 
 ## Die echten Funktionen - nichts nachgebaut
 
@@ -42,7 +53,16 @@ mue ist eine Formel ohne Eingabe.
     Potential   agent.potential.rechne()  - mit VORUEBERGEHEND ersetzten
                 Stufen (die aus der ersten Haelfte), danach zurueckgesetzt
 
+## ⚠️⚠️ DIE MENGE IST SEIT DEM 23.09. EIN SCHALTER (Befund 2.558)
+
+Der Lauf vom 05.09. ging ueber die FREIE Menge. F-212 hat belegt: die
+Beitraege wirken auf 1,5 Prozent der Anker, naemlich auf der SELEKTIERTEN.
+Ein Befund von der freien Menge hat am 07.09. eine Live-Aenderung
+ausgeloest, die am selben Tag zurueckgenommen wurde (N-56/N-58).
+
     python messe_bewertung_kalibrierung.py [--selbsttest]
+    python messe_bewertung_kalibrierung.py --menge 20%
+    python messe_bewertung_kalibrierung.py --quelle frei --menge 20%
 """
 from __future__ import annotations
 
@@ -70,6 +90,75 @@ BLOCK = 90
 ZIEHUNGEN = 2000
 MISCHUNGEN = 10        # 2.104: eine Ziehung ist kein Nullpunkt
 SAAT = 20260905
+
+
+# ⚠️⚠️⚠️ VIER AENDERUNGEN AM 23.09.2026 (Befund 2.558, Voranalyse
+# `Basisinfos/Voranalyse_Kalibrierung_q_23_09.md`).
+#
+# ANLASS: der Lauf vom 05.09. ging ueber die FREIE Menge (745.036 Anker).
+# F-212 hat am 04.09. belegt, dass die Beitraege auf 1,5 Prozent der Anker
+# wirken - auf der SELEKTIERTEN Menge. Genau dieser Fehler hat am 07.09.
+# eine Live-Aenderung ausgeloest (N-56/N-58) und sie am selben Tag
+# zurueckgenommen.
+#
+#   1  `--menge`   die Auswahl vorschalten, ueber DIESELBEN Funktionen wie
+#                  F-212 (`messe_beitrag_auf_auswahl._auswahl_maske`), nicht
+#                  ueber eine Kopie
+#   2  `--quelle`  der turnover-Nenner stand FEST im Quelltext
+#                  (`data/onchain_historie.db` = Gesamtausgabe). Seit dem
+#                  22.09. ist `umschlag_frei` die LIVE-Groesse; ohne diesen
+#                  Schalter misst jede Wiederholung den ABGESCHALTETEN
+#                  Nenner. Dieselbe Falle wie in `phase3_reproduktion._zusatz`
+#   3  Kontrolle 1 liest die registrierten Stufen aus `W.BEITRAEGE` statt aus
+#                  einer eingefrorenen Liste - sie stand auf den am 07.09.
+#                  ZURUECKGENOMMENEN turnover-Werten
+#   4  die Bereichswarnung im Kopf war veraltet (siehe dort)
+#
+# ⚠️⚠️ DIE VORGABEN BLEIBEN `frei` UND `gesamt`. R-R11 verlangt, den
+# registrierten Befund ZUERST zu reproduzieren; ein geaenderter Vorgabewert
+# haette das stillschweigend unmoeglich gemacht.
+MENGE_VORGABE = "frei"
+QUELLE_VORGABE = "gesamt"
+
+
+def _argv_wert(name: str, vorgabe: str) -> str:
+    a = sys.argv[1:]
+    return a[a.index(name) + 1] if name in a and len(a) > a.index(name) + 1 \
+        else vorgabe
+
+
+def erlaubte_anker(reihen, menge: str) -> set | None:
+    """Die (tag, sym)-Paare der SELEKTIERTEN Menge - oder None bei `frei`.
+
+    ⚠️ Die Auswahl laeuft VOR der Bewertung, genau wie im Betrieb und wie
+    in F-212. `_auswahl_maske` ist dieselbe Funktion, kein Nachbau.
+    """
+    from messnorm_auswahl import MENGEN
+    import messe_beitrag_auf_auswahl as A
+    if menge == "frei" or MENGEN.get(menge, 1.0) >= 1.0:
+        return None
+    if menge not in MENGEN:
+        raise SystemExit("unbekannte Menge %r - erlaubt: %s"
+                         % (menge, ", ".join(sorted(MENGEN))))
+    mom = A.momentum250(reihen)
+    je_tag: dict = defaultdict(list)
+    for sym, roh in reihen.items():
+        for z in roh:
+            je_tag[z[0]].append({"sym": sym})
+    aus = set()
+    for tag, zeilen in je_tag.items():
+        if len(zeilen) < 12:
+            continue
+        m = A._auswahl_maske(zeilen, mom.get(tag) or {},
+                             MENGEN[menge], None)
+        if m is None:
+            continue
+        for x, ok in zip(zeilen, m):
+            if ok:
+                aus.add((tag, x["sym"]))
+    return aus
+
+
 VARIANTE = "ZIEL 2,0"          # genau der registrierte CRV-Wert
 STOP_RELATIV = 0.05            # nur fuer die Kostenebene; potential.rechne
                                # ruft gebuehrenfrei, der Wert wirkt nicht
@@ -223,8 +312,13 @@ def _steigung(gruppen: dict, rng) -> None:
 
 
 def baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=None,
-                 mische=None, pflanze=None):
-    """{Potentialstufe: {tag: [0/1, ...]}} - nur ENTSCHIEDENE Anker."""
+                 mische=None, pflanze=None, erlaubt=None):
+    """{Potentialstufe: {tag: [0/1, ...]}} - nur ENTSCHIEDENE Anker.
+
+    ⚠️ `erlaubt` ist die SELEKTIERTE Menge als (tag, sym)-Paare, oder None
+    fuer die freie Menge. Der Filter sitzt hier und nicht beim Aufrufer,
+    damit ALLE Pfade ihn durchlaufen - auch die Kontrollen.
+    """
     gruppen: dict = defaultdict(lambda: defaultdict(list))
     for z in zeilen:
         sym, i = z["sym"], z["i"]
@@ -233,6 +327,8 @@ def baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=None,
             continue
         tag = tage[i]
         if nur_tage is not None and tag not in nur_tage:
+            continue
+        if erlaubt is not None and (tag, sym) not in erlaubt:
             continue
         wert = z.get(VARIANTE)
         # ⚠️ NUR ENTSCHIEDENE: exakt +CRV (Ziel) oder exakt -1 (Stop).
@@ -357,8 +453,15 @@ def main() -> int:
     if "--selbsttest" in sys.argv:
         return 0 if selbsttest() else 1
 
+    menge_name = _argv_wert("--menge", MENGE_VORGABE)
+    quelle = _argv_wert("--quelle", QUELLE_VORGABE)
+    print("MENGE %s · QUELLE %s" % (menge_name, quelle))
+
     print("Lade Reihen...", flush=True)
     reihen = B.lade()
+    erlaubt = erlaubte_anker(reihen, menge_name)
+    if erlaubt is not None:
+        print("  SELEKTIERTE Menge: %d (tag, sym)-Paare" % len(erlaubt))
     tage_je_sym = {s: [z[0] for z in roh] for s, roh in reihen.items()}
     print("%d Krypto-Reihen (F-204-gefiltert)" % len(reihen))
 
@@ -367,7 +470,12 @@ def main() -> int:
     print("  %d Anker" % len(zeilen))
 
     print("Fuenftel je Kalendertag...", flush=True)
-    menge = MB.reihe("data/onchain_historie.db", "splycur")
+    # ⚠️⚠️ AENDERUNG 2 (23.09.): der Nenner stand hier FEST. Seit dem
+    # 22.09. ist `umschlag_frei` die LIVE-Groesse; ohne diesen Schalter
+    # misst jede Wiederholung den ABGESCHALTETEN Nenner. Die Vorgabe
+    # bleibt `gesamt`, damit der registrierte Befund reproduzierbar ist.
+    import phase3_reproduktion as _R3
+    menge = _R3._zusatz("turnover", quelle)
     fu_roh = K.baue(reihen, "funding", F.lade_funding(), horizont=20)
     tu_roh = K.baue(reihen, "turnover", menge, horizont=20)
     fu5, tu5 = _fuenftel_je_tag(fu_roh), _fuenftel_je_tag(tu_roh)
@@ -388,12 +496,25 @@ def main() -> int:
     print("Haelfte die registrierten Werte?")
     print("=" * 92)
     fit = {}
+    # ⚠️⚠️⚠️ AENDERUNG 3 (23.09.): die Vergleichswerte werden JETZT AUS
+    # `W.BEITRAEGE` GELESEN statt aus einer eingefrorenen Liste. Hier
+    # standen fuer `turnover` die Werte (+0.33/+0.33/+0.33/-0.48/-0.48) -
+    # und die sind am 07.09. ZURUECKGENOMMEN worden (2.141). Kontrolle 1
+    # verglich also seit dem 22.09. gegen eine Tabelle, die es im Betrieb
+    # nicht gibt, und meldete folgerichtig "Abweichung 2,13 Punkte GROSS".
+    #
+    # ⚠️ Eine Vergleichsgroesse, die von Hand nachgezogen werden muss,
+    # veraltet still - genau die Falle aus `feedback_pruefung_zaehlt_
+    # zustaende_auf`. Aus dem Modul gelesen kann sie nicht auseinanderlaufen.
+    def _live(merkmal):
+        for b in W.BEITRAEGE:
+            if b.merkmal == merkmal and b.stufen:
+                return tuple(b.stufen)
+        raise SystemExit("kein Beitrag mit Merkmal %r und Stufen" % merkmal)
+
     for name, roh, registriert in (
-            ("funding", fu_roh, (+0.82, +1.30, +0.12, -0.54, -1.70)),
-            # ⚠️ 07.09.2026: die registrierte Tabelle ist gefallen (2.141).
-            # Hier steht sie als VERGLEICHSGROESSE - dieses Werkzeug
-            # fittet seine Stufen ohnehin selbst auf der ersten Haelfte.
-            ("turnover", tu_roh, (+0.33, +0.33, +0.33, -0.48, -0.48))):
+            ("funding", fu_roh, _live("funding_fuenftel")),
+            ("turnover", tu_roh, _live("turnover_fuenftel"))):
         h1 = {t: z for t, z in roh.items() if t in erste}
         _w, punkte, _s = RB.beitragstabelle(h1)
         fit[name] = punkte if punkte else list(registriert)
@@ -409,7 +530,8 @@ def main() -> int:
     W.BEITRAEGE = _mit_stufen(fit["funding"], fit["turnover"])
     try:
         rng = np.random.default_rng(SAAT)
-        g2 = baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=zweite)
+        g2 = baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=zweite,
+                         erlaubt=erlaubt)
         print("=" * 92)
         print("DAS ERGEBNIS — zweite Haelfte, out-of-sample")
         print("=" * 92)
@@ -431,7 +553,8 @@ def main() -> int:
         werte = []
         for s in range(MISCHUNGEN):
             gz = baue_gruppen(zeilen, tage_je_sym, fu5, tu5, nur_tage=zweite,
-                              mische=np.random.default_rng(SAAT + 100 + s))
+                              mische=np.random.default_rng(SAAT + 100 + s),
+                              erlaubt=erlaubt)
             v = _steigung_wert(gz)
             if np.isfinite(v):
                 werte.append(v)
@@ -448,17 +571,54 @@ def main() -> int:
 
         print()
         print("=" * 92)
-        print("KONTROLLE 3 — BASISRATE: liegt die schwaechste Stufe bei 33,3 %?")
+        print("KONTROLLE 3 — BASISRATE: stimmt das NIVEAU der Barriere?")
         print("=" * 92)
+        # ⚠️⚠️⚠️ KORRIGIERT AM 23.09.2026 (Befund 2.560).
+        #
+        # DIE ALTE FASSUNG VERGLICH DIE SCHWAECHSTE STUFE GEGEN 33,3 % -
+        # und das ist die falsche Erwartung. Die 33,3 % gelten fuer
+        # Potential NULL; die schwaechste Stufe hat aber einen NEGATIVEN
+        # Zuschlag. Aus `p = q(1+CRV) - 1` folgt `q = (p+1)/(1+CRV)`, bei
+        # p = -0,141 also 28,6 % - nicht 33,3 %.
+        #
+        # GEMESSEN am 23.09.: selektierte Menge 27,9 % gegen richtig
+        # erwartete 28,6 % (Abstand 0,7 Pp), freie Menge 30,5 % gegen 28,6
+        # (1,9 Pp), Potential null 31,6 % gegen 33,3 (1,7 Pp). Die Barriere
+        # war die ganze Zeit in Ordnung; die Kontrolle hat sie zu Unrecht
+        # angezeigt und damit einen Befund blockiert.
+        #
+        # ⚠️ DIE RICHTIGE FRAGE IST DAS NIVEAU, NICHT DIE ORDNUNG: die
+        # Ordnung IST die Pruefgroesse (Steigung) - sie hier noch einmal zu
+        # pruefen waere zirkulaer. Geprueft wird deshalb, ob die GEMESSENE
+        # Gesamtquote zur MITTLEREN Vorhersage passt.
         if g2:
+            n_ges = tr_ges = 0.0
+            vorher = 0.0
+            for wr, je in g2.items():
+                n = sum(len(v) for v in je.values())
+                tr_ges += sum(sum(v) for v in je.values())
+                n_ges += n
+                vorher += n * (wr + 1.0) / (1.0 + CRV)
+            q = tr_ges / max(n_ges, 1)
+            erw = vorher / max(n_ges, 1)
+            ab = q - erw
+            print("  ueber ALLE %d entschiedenen Anker:" % int(n_ges))
+            print("    gemessene Quote      %.1f %%" % (100 * q))
+            print("    mittlere Vorhersage  %.1f %%" % (100 * erw))
+            print("    Abstand              %+.1f Prozentpunkte" % (100 * ab))
+            print("  %s" % ("OK - das NIVEAU der Barriere stimmt"
+                            if abs(ab) < 0.04 else
+                            "⚠️ NIVEAU WEICHT AB - erst die Barriere klaeren"))
             p0 = min(g2)
             je = g2[p0]
-            n = sum(len(v) for v in je.values())
-            q = sum(sum(v) for v in je.values()) / max(n, 1)
-            print("  schwaechste Stufe %+.3f R:  Quote %.1f %%  (erwartet ~33,3 %%)"
-                  % (p0, 100 * q))
-            print("  %s" % ("OK - die Barrieren-Rechnung stimmt" if abs(q - 1/3) < 0.04
-                            else "⚠️ WEICHT AB - erst die Barriere klaeren, nicht die Bewertung"))
+            n0 = sum(len(v) for v in je.values())
+            q0 = sum(sum(v) for v in je.values()) / max(n0, 1)
+            e0 = (p0 + 1.0) / (1.0 + CRV)
+            print("  nachrichtlich, die schwaechste Stufe %+.3f R:" % p0)
+            print("    %.1f %% gegen erwartete %.1f %% (%+.1f Pp, %d Anker)"
+                  % (100 * q0, 100 * e0, 100 * (q0 - e0), n0))
+            print("    ⚠️ KEIN Urteil - diese Zahl prueft die ORDNUNG, und")
+            print("       die ist die Pruefgroesse selbst (zirkulaer).")
     finally:
         W.BEITRAEGE = alt
     return 0
