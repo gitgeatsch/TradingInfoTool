@@ -184,3 +184,64 @@ stehen; er betrifft die Live-Bewertung, nicht nur diese Frage.
 sind stetig — aber das ist eine Vermutung, keine Messung.
 
 Befund **2.550-funding-form-nicht-entscheidbar**.
+
+---
+
+# NACHTRAG — VORABFESTLEGUNG 2: die Bindungs-Hypothese
+
+*Geschrieben am 23.09.2026 **nach** dem Bindungsfund, aber **vor** der
+Prüfung an `turnover`. Der Commit belegt die Reihenfolge.*
+
+## ⚠️⚠️ Warum die erste Festlegung geändert werden darf
+
+**Nutzerhinweis:** *„eine Hypothese auf falschen Annahmen muss geändert
+werden, so wie der Beitrag anders angewendet werden muss."*
+
+Die Monotonie-Bedingung in `rechne_funding_beitrag.py` setzt voraus, dass
+die **Rangbildung sauber trennt**. Bei **32,5 % Bindungen im Median** tut
+sie das nicht. Die Festlegung stand damit auf einer falschen Annahme —
+das ist kein Nachverhandeln, sondern Korrektur der Voraussetzung.
+
+## Der offene Mangel, den diese Festlegung heilt
+
+Die Differenz ordinal → Durchschnittsrang wurde **gemessen, bevor** eine
+Hypothese stand: +0,0046 R auf der gemeinsamen Menge, Band
+[+0,0006 .. +0,0070]. Sauber gerechnet, aber **Datenfischen** — zwei
+Varianten gerechnet, die bessere begründet.
+
+➔ Das macht sie zur **Beobachtung**, nicht zum Befund.
+
+## Die Hypothese — quantitativ, damit sie scheitern kann
+
+> **H-Bindung:** Der Unterschied zwischen ordinaler und
+> Durchschnittsrang-Behandlung entsteht **durch die Bindungsdichte**.
+> Er skaliert mit ihr.
+
+**Daraus die Vorhersage für `turnover`** (3,2 % Bindungen gegen 32,5 %):
+
+```
+erwartete Differenz  =  0,0046 R  ×  3,2 / 32,5  =  +0,00045 R
+```
+
+## ⚠️⚠️⚠️ Die Entscheidungsregel — vor der Messung
+
+| Differenz bei `turnover` | → Schluss |
+|---|---|
+| **< +0,0010 R** *(nahe der Vorhersage)* | **H-Bindung gestützt.** Der Effekt kommt von den Bindungen. Die Behandlung wird korrigiert — für `funding` mit Wirkung, für `turnover` folgenlos |
+| **> +0,0030 R** *(wie bei funding)* | **H-Bindung widerlegt.** Der Unterschied kommt woanders her; die Korrektur wäre nicht begründet und unterbleibt |
+| **dazwischen** | **nichts entschieden** — die Vorhersage trifft nicht, aber sie scheitert auch nicht. Der Punkt bleibt offen |
+
+⚠️ **Gemessen wird gepaart auf der GEMEINSAMEN Tagesmenge** — der Fehler
+aus dem ersten Anlauf (2.399 gegen 2.115 Tage) wird nicht wiederholt.
+Band über Blockbootstrap, Blocklänge 60.
+
+⚠️ **Und die Lückentage werden ausgewiesen**: fallen bei `turnover` Tage
+weg, wird ihre Wirkung genannt — bei `funding` waren sie **schlechter**
+(+0,0126 gegen +0,0257) und haben den ersten Vergleich geschönt.
+
+## Was auch bei „gestützt" NICHT folgt
+
+- **Keine** Aussage, dass `funding` besser wird — die +0,0046 R bleiben
+  eine Beobachtung an derselben Datenlage
+- **Keine** Änderung ohne **R-R9** (Neukalibrierung) und ohne neue
+  Stufentabelle
