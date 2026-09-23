@@ -19,7 +19,25 @@
 
 ⚠️ **Der Engpass ist das LLM-Kontingent** (2.459-llm-budget): 500/Tag je Modell, der Betrieb braucht im Mittel 245 (Spitze 565 — über der Grenze). Ohne Produktionsstillstand ist die LLM-Messung nicht planbar. Zuerst ein **Kalibrierlauf** (50 Anker, halber Stillstandstag), dann wird der Hauptlauf dimensioniert (**N13**).
 
-**Weg:** Phase 3 (Spot) → Phase 4 (Hebel) → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
+**Weg:** ~~Phase 3 (Spot)~~ → **Phase 4 (Hebel)** → Phase 8 gepaart (A/B/Zufall) → Phase 9 → Schritt 60 → Abnahme M1. Akkumulation läuft parallel. **Nicht** auf dem Weg: Ausstieg, Nicht-Krypto, Multiasset.
+
+### ✔✔ STAND 23.09.2026 — PHASE 3 IST DURCH, PHASE 4 IST DER NÄCHSTE SCHRITT
+
+| Phase-3-Punkt | |
+|---|---|
+| `turnover` einzeln | ✔ reproduziert → **TRÄGT** (2.535) — und das Urteil kippt wegen der **Trennschärfe**, nicht des Beitrags |
+| die Kette | ✔ reproduziert (0,5 %) → **TRÄGT** auf beiden Quellen (2.537) |
+| N-67 (`schnitt` über die Kette) | ✔ **TRÄGT zusätzlich**, beide Quellen (2.538) |
+
+⚠️ **Was Phase 3 NICHT geliefert hat:** einen belegten Qualitätsgewinn des
+Nennerwechsels. Der gepaarte Test kommt auf +0,0479 R bei einer
+Trennschärfe von 0,100 R — **nicht belegt**. Das ist kein Widerspruch zum
+Umbau: S6 war ausdrücklich ein **Abdeckungs**paket.
+
+➔ **Nächster Schritt: Phase 4, und dort der eine offene Punkt** — der
+Hebelfaktor unter der **jetzigen** Konfiguration. 2.533 hält fest: *„die
+Simulation lief auf der ALTEN Schwelle; unter 0,060 ist der genaue Faktor
+offen"*. Das ist M1-Kriterium 2 (*Zielzone 2–5x belegt*).
 
 ## ✔✔✔ A1 ist gefallen — der Hebel ist messbar
 

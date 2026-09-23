@@ -813,10 +813,10 @@ dann entsteht keine Nacharbeit.
    | 1 | **Vollabruf** nach `data/umlaufmenge_cg.db` | ✔ 71 Min, 321 ok |
    | 2 | **Nachzug** über den **Preisverlauf** | ✔ 55 von 73, **0 mehrdeutig** |
    | 3 | **Kalibrierung** H2/H3/H5, `bewegung_r` und `barriere` | ✔ gerechnet |
-   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | **offen** |
+   | 4 | **Entscheidung**, ob der Betriebsnenner wechselt | ✔ **22.09. ENTSCHIEDEN UND GEBAUT** (S6) — `umschlag_frei` ist live, am Notebook bestätigt (2.532), und die Signale tragen seit 22.09. die neue Schwelle (2.540) |
    | 5 | **Benennung** `umschlag_gesamt` / `umschlag_frei` | ✔ 21.09., 2.512 |
-   | 6 | `umschlag_frei` auf der **selektierten Menge** messen | ⛔ **offen — Registerauflage** |
-   | 7 | **Stufentabelle** für `umschlag_frei` | ⛔ offen |
+   | 6 | `umschlag_frei` auf der **selektierten Menge** messen | ✔ **22.09.** — Trefferquote +2,8 bis +4,2 Pp auf allen drei zulässigen Mengen (2.520) |
+   | 7 | **Stufentabelle** für `umschlag_frei` | ✔ **22.09. live** — `(+2.32, +0.50, +0.34, -0.11, -3.06)`, Schwelle auf 0,060 nachkalibriert |
    | 8 | **`umschlag_naeherung`** messen | ✔ **21.09. — trägt** |
    | 9 | Als **Sperre** registrieren? | ⚠️ **Nutzerentscheidung** |
 
@@ -1554,9 +1554,9 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 
 | # | Kriterium | Erfüllt, wenn | liefert |
 |---|---|---|---|
-| 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" | Phase 3 |
+| 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" ➔ ✔✔ **PHASE 3 IST DURCH (23.09.)**: `turnover` einzeln reproduziert und **TRÄGT** (2.535), die Kette reproduziert (0,5 % Abweichung) und **TRÄGT** auf beiden Quellen (2.537). ⚠️ Der *Unterschied* der Quellen ist **nicht belegt** (gepaart +0,0479 R bei Trennschärfe 0,100) — der Umbau war ein Abdeckungspaket, kein Qualitätspaket. ⚠️ Vorbehalt **N3(b)** gilt weiter: gemessen auf der Stellvertretermenge, nicht auf der Live-Menge | Phase 3 |
 | 2 | **Hebel gemessen** | Trägt die Quote den Hebel (r(q))? Zielzone 2–5x belegt; Blocker **A1** entschieden | Phase 4 |
-| 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch. ✔✔ **GEKLÄRT 20.09.:** das Maß ist `schnitt`/`UNTER_SMA`, und das Notebook rechnet es seit dem Schnitt-Job (2.487-schnittjob). Die Grundgesamtheit war zuerst eine andere (398 gegen 517) und verschob **18 von 31** Fünfteln — **gemessen, nicht vermutet**. Nach dem Umbau (beide Zustände, Aufbewahrung je Symbol, Mindestlänge 400) sind es **0 von 29** (2.487-grundgesamtheit). ⚠ Kein Blocker mehr für dieses Kriterium; offen bleibt allein 2.487-schnitt-frische (die Messdatei prüft die Frische nur global) | Phase 6 / Schritte 25–27 |
+| 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch. ✔✔ **GEKLÄRT 20.09.:** das Maß ist `schnitt`/`UNTER_SMA`, und das Notebook rechnet es seit dem Schnitt-Job (2.487-schnittjob). Die Grundgesamtheit war zuerst eine andere (398 gegen 517) und verschob **18 von 31** Fünfteln — **gemessen, nicht vermutet**. Nach dem Umbau (beide Zustände, Aufbewahrung je Symbol, Mindestlänge 400) sind es **0 von 29** (2.487-grundgesamtheit). ⚠ Kein Blocker mehr für dieses Kriterium; offen bleibt allein 2.487-schnitt-frische (die Messdatei prüft die Frische nur global). ➔ ✔✔ **GEMESSEN 23.09. (N-67)**: `schnitt` trägt **zusätzlich**, nachdem funding und turnover gewirkt haben — auf **beiden** Quellen (+0,0427 gegen registriert +0,0397 reproduziert; neu +0,0378), Trennschärfe je 0,02 R. ⚠️ n67 urteilte bis dahin **ohne Trennschärfe** (vom 07.09., Standard vom 09.09.) — nachgerüstet. ⛔ **Die beiden Zahlen dürfen NICHT verrechnet werden**: bei N-67 gibt es keinen unbeteiligten Arm, die Läufe messen auf verschiedenen Restmengen (2.538). ⛔ **Und der Weg liefert nichts**: `strategie='akkumulation'` hat in 7.544 Signalen **null** Treffer (2.540) — die Messung sagt, das Maß trägt; der Umbau steht nach M1 | Phase 6 / Schritte 25–27 |
 | 4 | **LLM-Kette gemessen** | **Gepaarter Versuch** auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall. **Produktiv geht die gemessene Fassung** | Phase 8 (neu zugeschnitten) |
 | 5 | **Durchgängig am Papier** | Je Stufe Quelle, Messstand, Kennzeichnung; keine ungemessene Größe in der Eingabe oder ausdrücklich ausgewiesen (2.459-ungemessen) | Phase 9 |
 | 6 | **Betrieb sauber** | Protokollierung läuft (✔ Phase 1), Sperren begründet, Mail korrekt | Schritt 60 |
