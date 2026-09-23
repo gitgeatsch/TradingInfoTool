@@ -1285,11 +1285,36 @@ die willkürliche Rangvergabe bei **32,5 % Bindungen** (2.551) und die
 Lücke zwischen Messung und Betrieb. Keine davon ist der eigentliche
 Mangel — der ist die **fehlende Festlegung**.
 
-**Stand:** `Basisinfos/Vorabfestlegung_Funding_Form_23_09.md` führt drei
-Festlegungen. Nr. 3 legt die **Anwendung** fest — drei ökonomische
-Zustände (negativ / normal / hoch, geschnitten bei **0** und der
-**Standardrate**), erwartete **U-Form**, Entscheidungsregel vor der
-Messung. ⏳ **Messung steht aus.**
+**Stand: GEMESSEN 23.09. - ⛔ B6 verletzt, KEIN Umbau** (Befund
+**2.553-funding-zustaende-b6**, Werkzeug `phase4_funding_zustaende.py`).
+
+Vorabfestlegung 3 schnitt drei **ökonomische** Zustände (negativ / normal /
+hoch, Grenzen bei **0** und der **Standardrate**) statt Rangfünftel. Damit
+entfielen Bindungsproblem, Monotoniefrage und Tagesbesetzung auf einen
+Schlag — alle drei waren Folgen der **Rangbildung**.
+
+| gepaarter Abstand (Blocklänge 60) | | |
+|---|---|---|
+| `normal minus hoch` | **+0,2331 R** [+0,0392 … +0,4623] | ✔ Null aus |
+| `normal minus negativ` | +0,0132 [−0,0714 … +0,0943] | ⚠️ Null ein |
+
+➔ **Die halbe Lehrmeinung trägt:** hohes Funding ist belegt schlechter.
+Für *„niedrig ist gut"* gibt es **keine** Stütze — die erwartete U-Form ist
+in Wahrheit eine Schräge am **oberen** Rand.
+
+⛔⛔ **Aber B6 kippt es:** 1. Hälfte +0,3623 [+0,1206 … +0,6822] ✔ ·
+2. Hälfte +0,1198 **[−0,1604 … +0,3603]** ⛔. Der Effekt trägt nur in der
+**älteren** Hälfte. R-R8 führt genau diesen Fall als Ausschlussgrund — die
+heutige Anwendung bleibt, obwohl sie unbefriedigend ist.
+
+⚠️⚠️ **Zwei eigene Werkzeugfehler, beide vor dem Ergebnis gefunden:** die
+erste Fassung entschied nach **ungepaarten** Mittelwerten (derselbe
+Selektionsfehler wie 2.545), und **B6 war nur ausgewiesen, nicht geprüft** —
+damit hätte ein Befund, der heute nicht trägt, einen Umbau ausgelöst.
+
+➔ **Drei Anläufe, keine belegte Form:** Form (nichts entschieden) ·
+Bindungen (Ursache geklärt, 2.551) · Zustände (B6 verletzt, 2.553).
+**2.552 bleibt offen.**
 
 ⚠️ Was das **nicht** ist: ein Grund, `funding` abzuschalten. Der Beitrag
 trägt auf der vollen Menge, in beiden Fenstern (2.549).

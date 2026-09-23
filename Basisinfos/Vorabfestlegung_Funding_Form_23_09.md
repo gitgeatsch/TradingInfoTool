@@ -329,3 +329,63 @@ Band über Blockbootstrap (Blocklänge 60), **beide Historienhälften**
 - **Keine** Übertragung auf `turnover` — dessen Werte sind stetig, die
   Rangform dort unauffällig (3,2 % Bindungen)
 - **Keine** Aussage über die Mail-Formulierung — sie ist Text, kein Beitrag
+
+---
+
+# ERGEBNIS zu Vorabfestlegung 3 — 23.09.2026
+
+## ⛔ B6 nicht erfüllt → **kein Umbau**
+
+| | Wirkung | Punkte | Tage |
+|---|---|---|---|
+| negativ | −0,0952 | 80.755 | 2.123 |
+| normal | −0,0023 | 235.619 | 2.322 |
+| hoch | +0,0219 | 40.379 | **1.217** |
+
+⚠️ Die ungepaarte Reihung ist **nicht entscheidungsfähig** — `hoch` kommt
+nur an der Hälfte der Tage vor.
+
+### Die gepaarten Abstände
+
+| | | |
+|---|---|---|
+| `normal minus hoch` | **+0,2331 R** [+0,0392 … +0,4623] | ✔ Null aus |
+| `normal minus negativ` | +0,0132 [−0,0714 … +0,0943] | ⚠️ Null ein |
+
+➔ **Die halbe Lehrmeinung trägt:** hohes Funding ist belegt schlechter.
+Für *„niedrig ist gut"* gibt es **keine** Stütze.
+
+### ⛔⛔ Aber B6 kippt es
+
+| `normal minus hoch` | |
+|---|---|
+| 1. Hälfte (2020–2023) | +0,3623 **[+0,1206 … +0,6822]** ✔ |
+| 2. Hälfte (2023–2026) | +0,1198 **[−0,1604 … +0,3603]** ⛔ |
+
+**Der Effekt trägt nur in der ersten Hälfte** — und die zweite ist die
+jüngere, also die für heute relevantere. R-R8 führt genau diesen Fall in
+der Spalte der **Ausschlussgründe**.
+
+➔ **Die heutige Anwendung bleibt**, obwohl sie unbefriedigend ist.
+
+## Zwei eigene Werkzeugfehler, beide vor dem Ergebnis gefunden
+
+1. Die erste Fassung entschied nach der **ungepaarten** Reihung und meldete
+   „Hypothese widerlegt", während der gepaarte Abstand das Gegenteil sagte.
+   Derselbe Selektionsfehler wie in 2.545.
+2. **B6 wurde nur ausgewiesen, nicht geprüft** — damit hätte ein Befund,
+   der in der jüngeren Hälfte nicht trägt, einen Umbau ausgelöst.
+
+## Der Stand nach drei Anläufen
+
+| Anlauf | Ergebnis |
+|---|---|
+| **1** Form (Dezile / absolutes Niveau) | nichts entschieden |
+| **2** Bindungen | H gestützt — aber nur Ursachenklärung, keine Anwendung |
+| **3** drei Zustände | **B6 verletzt, kein Umbau** |
+
+➔ **Die Anwendungsfrage (2.552) bleibt offen.** Der Beitrag trägt (2.549);
+was fehlt, ist eine **belegte Form** — und drei Anläufe haben sie nicht
+geliefert.
+
+Befund **2.553-funding-zustaende-b6**.
