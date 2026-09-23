@@ -2081,11 +2081,36 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # `belegt_eur=0.0` - der Topf meldete sich bei JEDEM Signal als vollstaendig
     # frei, und der Deckel konnte nie greifen. Im Live-Lauf bekamen drei
     # Hebel-Signale je 500 EUR aus einem 500-EUR-Topf.
-    # RM-4: was nach der Reserve ueberhaupt noch einsetzbar ist. Im
-    # Trockenlauf None - er hat keine Verbindung zu einer echten Lage.
-    cash_frei = TO.cash_frei_eur(conn, config) if betriebsart != TROCKEN else None
+    # RM-4: was nach der Reserve ueberhaupt noch einsetzbar ist.
+    #
+    # ⚠️⚠️ DER RIEGEL HAENGT SEIT DEM 23.09.2026 AN DER DATENLAGE, NICHT
+    # AN DER BETRIEBSART. Hier stand `if betriebsart != TROCKEN else None`,
+    # begruendet mit *„er hat keine Verbindung zu einer echten Lage"*.
+    #
+    # ⛔ DIE BEGRUENDUNG TRIFFT NICHT ZU: `toepfe.cash_frei_eur` und
+    # `cash_lage` lesen AUSSCHLIESSLICH aus der uebergebenen Verbindung
+    # (sqlite3 / database.db - kein Netz, kein Konto). Laeuft ein
+    # Trockenlauf gegen eine Kopie der Produktionssicherung, IST das die
+    # echte Lage - der Riegel schnitt sie ohne Grund ab.
+    #
+    # ⚠️ WAS ER GEKOSTET HAT: der Trockenlauf ist das EINZIGE Werkzeug fuer
+    # die Mail (versandte Mails werden nirgends gespeichert), und genau die
+    # Cash-Zeile blendete er aus. K11a war deshalb seit dem 16.09. nur
+    # durch einen BLICK in eine echte Mail zu beantworten - eine Pruefung,
+    # die niemand wiederholen kann (2.542).
+    #
+    # ⚠️ RISIKOARM, weil Cash NICHTS STEUERT: `cash_frei_eur`,
+    # `cash_wuerde_ueberschreiten` und `cash_reicht_mit_orders` werden
+    # ausschliesslich in `entscheidungsrechnung.cash_zeile` und `saetze`
+    # gelesen - kein Gate, keine Betragsrechnung (seit 15.08., 2.455:
+    # *„knappes Cash aendert den Betrag NICHT mehr"*).
+    #
+    # ⚠️ `conn is None` BLEIBT der Ausschluss: die Suite ruft `fuehre_lauf`
+    # auch ohne Verbindung. Ohne Verbindung gibt es keine Datenlage, und
+    # ohne gesetzte Meta-Werte liefert `cash_lage` von sich aus None.
+    cash_frei = TO.cash_frei_eur(conn, config) if conn is not None else None
     # F4 (16.09.2026): dazu das in offenen Orders gebundene Cash - nur fuer die Mailzeile.
-    cash_lage = TO.cash_lage(conn, config) if betriebsart != TROCKEN else None
+    cash_lage = TO.cash_lage(conn, config) if conn is not None else None
     # ⚠️ DER TOPF FOLGT DER ZAHL, NICHT DEM LAUF (19.08.2026).
     #
     # Vorher stand hier `instrument` - also das Etikett des LAUFS. Seit S5

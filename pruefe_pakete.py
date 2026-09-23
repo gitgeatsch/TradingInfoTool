@@ -5400,10 +5400,51 @@ def paket_15() -> None:
                      cash_frei_eur=None)["betrag_eur"] > 300,
            "eine Reserve, die wegen einer fehlenden Zahl ALLES sperrt, waere "
            "schlimmer als keine")
-    pruefe(P, "der Trockenlauf fragt das Cash gar nicht ab",
-           "if betriebsart != TROCKEN else None" in _nur_code(
+    # ⚠️⚠️⚠️ HIER STAND EINE TEXTSUCHE: `"if betriebsart != TROCKEN else
+    # None" in _nur_code(...)`, begruendet mit *„er hat keine Verbindung
+    # zu einer echten Lage"*. Zwei Dinge waren daran falsch (23.09.2026,
+    # 2.542):
+    #
+    # (1) DIE BEGRUENDUNG. `toepfe.cash_frei_eur` und `cash_lage` lesen
+    #     AUSSCHLIESSLICH aus der uebergebenen Verbindung - kein Netz,
+    #     kein Konto. Laeuft ein Trockenlauf gegen eine Kopie der
+    #     Produktionssicherung, IST das eine echte Lage.
+    # (2) DIE FORM. Eine Textsuche schreibt eine IMPLEMENTIERUNG fest,
+    #     keine Eigenschaft. Sie haette jede Umformulierung gemeldet und
+    #     jede echte Verletzung uebersehen, die anders geschrieben ist.
+    #
+    # ⚠️ Was wirklich geschuetzt gehoert, ist die Eigenschaft: OHNE
+    # VERBINDUNG gibt es kein Cash. Das wird jetzt am SEITENEFFEKT
+    # geprueft, nicht am Quelltext.
+    # ⚠️ `conn=None` LAESST SICH NICHT PRUEFEN: `fuehre_lauf` bricht ohne
+    # Verbindung mit `LaufAbgebrochen` ab (*„diese Kette schreibt"*). Der
+    # Fall kann also gar nicht eintreten - meine erste Fassung dieser
+    # Zeile prueft damit NICHTS. Die echte Datenlage-Bedingung sitzt eine
+    # Ebene tiefer, in `toepfe`: ohne gesetzte Meta-Werte liefert
+    # `cash_lage` von sich aus None. GENAU DAS wird hier geprueft, am
+    # Seiteneffekt gegen eine leere Verbindung.
+    import sqlite3 as _sqc                                # noqa: PLC0415
+    from agent import toepfe as _TOc                      # noqa: PLC0415
+    _leer = _sqc.connect(":memory:")
+    _leer.row_factory = _sqc.Row
+    try:
+        _leer.execute("CREATE TABLE meta (schluessel TEXT PRIMARY KEY, "
+                      "wert TEXT)")
+        _leer.commit()
+        pruefe(P, "⚠️⚠️ SEITENEFFEKT: ohne Datenlage gibt es KEIN Cash",
+               _TOc.cash_lage(_leer, _ohne_bremsen()) is None,
+               "eine Cash-Zeile ohne Datenquelle waere eine erfundene "
+               "Zahl - genau davor schuetzte der alte Riegel, nur an der "
+               "falschen Groesse (Betriebsart statt Datenlage)")
+    finally:
+        _leer.close()
+
+    pruefe(P, "⚠️ und der Riegel haengt an der DATENLAGE, nicht an der "
+              "Betriebsart",
+           "if conn is not None else None" in _nur_code(
                "agent/rollen_lauf.py"),
-           "er hat keine Verbindung zu einer echten Lage")
+           "sonst ist die Cash-Zeile im einzigen Werkzeug fuer die Mail "
+           "(Trockenlauf) nicht pruefbar - K11a hing seit 16.09. daran")
 
     # ------------------------------------------------------------------
     # N. WAS DER WATCHLIST-PROBELAUF GEFUNDEN HAT (13.08., 25 Symbole).

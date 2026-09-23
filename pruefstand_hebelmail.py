@@ -75,7 +75,23 @@ def betriebskonfiguration() -> dict:
 
 
 def baue(db_pfad: str, symbol: str = "SOL", stop_rel: float = 1 - 80.26 / 88.14,
-         instrument: str = "hebel", richtung: str = "LONG") -> dict:
+         instrument: str = "hebel", richtung: str = "LONG",
+         vorbereiten=None) -> dict:
+    """Die echte Kette gegen eine Kopie der Sicherung - ohne Produktion.
+
+    `vorbereiten` ist ein Haken auf die SPEICHERKOPIE, aufgerufen mit der
+    Verbindung, bevor die Kette laeuft.
+
+    ⚠️⚠️ WOZU (23.09.2026): `pruefstand_kaufmail` muss die Cash-Lage
+    STELLEN koennen - die drei Faelle der Cash-Zeile (F4) haengen an
+    Meta-Werten, und die echte Lage zeigt nur EINEN davon. Ohne den Haken
+    haette der Kaufmail-Pruefstand diese Funktion KOPIEREN muessen, und
+    zwei Kopien derselben Ladung sind zwei Stellen zum Auseinanderlaufen
+    (`test-ruft-echten-code-nicht-kopie`).
+
+    ⚠️ Die Kopie liegt im SPEICHER. Was der Haken schreibt, erreicht
+    weder die Sicherung noch die Produktion.
+    """
     from agent import rollen_eingabe as RE
     from agent import rollen_lauf as RL
     from backtest_llm1_historisch import lade_reihen_aus_db
@@ -94,6 +110,9 @@ def baue(db_pfad: str, symbol: str = "SOL", stop_rel: float = 1 - 80.26 / 88.14,
         pass
     con.commit()
     DBM.set_hebel_pruefung_erlaubt(con, symbol, True)
+    if vorbereiten is not None:
+        vorbereiten(con)
+        con.commit()
 
     reihen = lade_reihen_aus_db(db_pfad)
     if symbol not in reihen:
