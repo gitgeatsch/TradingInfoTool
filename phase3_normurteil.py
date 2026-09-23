@@ -91,6 +91,30 @@ def main() -> int:
         i = args.index("--quelle")
         quelle = args[i + 1]
         args = args[:i] + args[i + 2:]
+    # ⚠️⚠️ ZWEI ACHSEN SEIT DEM 23.09.2026 - FENSTER und MENGE.
+    #
+    # Anlass: `funding` traegt in der Registrierung (+0,1374 R, volles
+    # Fenster, Querschnitt) und ist im Normurteil ab 2023 auf der
+    # selektierten Menge NICHT von null zu trennen (+0,0236 bei
+    # Trennschaerfe 0,0401). Die beiden Messungen unterscheiden sich in
+    # ZWEI Groessen gleichzeitig - so ist die Ursache nicht zuzuordnen.
+    #
+    # ⚠️ DIE VORGABEN BLEIBEN `2023-01-01` und `20%`. R-R11: ein
+    # registrierter Befund wird zuerst REPRODUZIERT; ein geaenderter
+    # Vorgabewert haette das stillschweigend unmoeglich gemacht.
+    ab = AB_2023
+    if "--ab" in args:
+        i = args.index("--ab")
+        ab = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    if "--volles-fenster" in args:
+        ab = "1900-01-01"
+        args = [a for a in args if a != "--volles-fenster"]
+    menge = MENGE
+    if "--menge" in args:
+        i = args.index("--menge")
+        menge = args[i + 1]
+        args = args[:i] + args[i + 2:]
     nur = args or ["funding", "turnover", "oi_aenderung"]
     print("=" * 100)
     print("PHASE 3 · SCHRITT 1b - NORMURTEIL ZU DEN DREI BEITRAEGEN")
@@ -98,7 +122,7 @@ def main() -> int:
     print("  " + messmenge.zeile())
     print("  " + messnorm.standardzeile().replace("\n", "\n  "))
     print("  Fenster: ab %s · Horizont H%d · Menge %s (selektiert, Tagesklammer)"
-          % (AB_2023, R.HORIZONT, MENGE))
+          % (ab, R.HORIZONT, menge))
     print("  ⚠️ %s" % VORBEHALT)
     print("\n  Kursreihen laden ...")
     reihen = R.B.lade("krypto", "V1")
@@ -110,13 +134,13 @@ def main() -> int:
     for art in nur:
         t0 = time.time()
         je_tag = R._ab(R.K.baue(reihen, art, R._zusatz(art, quelle),
-                                horizont=R.HORIZONT), AB_2023)
+                                horizont=R.HORIZONT), ab)
         print("\n" + "-" * 100)
         print("  %s - %d Tage ab %s%s"
-              % (art.upper(), len(je_tag), AB_2023,
+              % (art.upper(), len(je_tag), ab,
                  ("  \u26a0 QUELLE: %s" % quelle)
                  if art == "turnover" else ""))
-        b = urteile(art, je_tag, mom, MENGE)
+        b = urteile(art, je_tag, mom, menge)
         if b is None:
             continue
         print("   " + b.zeile())

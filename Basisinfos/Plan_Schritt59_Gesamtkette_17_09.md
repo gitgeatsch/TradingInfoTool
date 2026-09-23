@@ -1263,6 +1263,48 @@ nichts.~~
 live und am Notebook belegt; seit dem 22.09. 17:50 UTC tragen die Signale
 die neue Schwelle (2.540). Die Voranalyse ist damit abgearbeitet.
 
+#### ➤➤➤ DIE ABHÄNGIGKEIT, DIE ALLES VEREINFACHT: ES LAUFEN DREI PAARE (23.09.)
+
+Gemessen an 1.866 Zellen der Produktionssicherung — **nicht** aus
+`ERLAUBTE_PAARE` abgelesen, die sagt nur, was **zulässig** ist:
+
+| Paar | Zellen | |
+|---|---|---|
+| `spot × einstieg` | **1.537** | 1.377 verloren, **160 durch** |
+| `spot × akkumulation` | 324 | **alle gesperrt** (`dca_erlaubt`) |
+| `absicherung × einstieg` | 5 | alle verloren |
+
+⛔ **`hebel × einstieg` läuft nicht als eigenes Paar**, `hebel × swing` und
+`spot × halten` kommen überhaupt nicht vor.
+
+✔✔ **Das ist kein Fehler, sondern der Bau:** seit S6b folgt der Topf dem
+**Ergebnis**, nicht dem Lauf — *„es gibt keinen Hebel-Lauf mehr"* (2.533).
+Die Kette läuft als `spot × einstieg`; ergibt die Rechnung einen Hebel,
+wird das Etikett `hebel`.
+
+➔ **Damit reduziert sich „die Ablaufkette je Strategie messen" auf EINE
+Kette — `spot × einstieg`. Und die ist gemessen** (2.537, reproduziert,
+trägt auf beiden Quellen). Eine eigene Hebelkette gibt es nicht zu messen,
+weil es sie nicht gibt.
+
+#### ⚠️⚠️ WO `funding` UND `turnover` GREIFEN — am Code geprüft (23.09.)
+
+| | |
+|---|---|
+| `klassen` | **nur `krypto`** |
+| `strategien` | **nur `einstieg`** |
+| Instrument | **egal** — Spot und Hebel bekommen dieselbe Quote (gemessen 0,3695 für beide). Das ist die Bauform von **Regel 3**: eine Bewertung für beide Lagen |
+| bei `akkumulation` | ⛔ **greifen gar nicht** — Quote bleibt auf der Basisrate 0,3333 |
+
+⛔⛔ **Die Akkumulation hat damit keine Bewertungsgrundlage.** Selbst wenn
+`dca_erlaubt` offen wäre, käme eine Quote **ohne jeden Beitrag** heraus.
+Das erklärt ihre null Signale über die Sperre hinaus — und gehört zum
+Akkumulations-Planpunkt nach M1.
+
+⚠️ Die übrigen Paare stehen **alle nach M1**: Akkumulation (Umbau, 2.540),
+Absicherung (Multiasset-Schiene), `spot × swing` (seit 14.08.
+ausgeschlossen — Spot ohne Stop-Loss). Befund **2.548**.
+
 #### ⚠️⚠️⚠️ WAS IN PHASE 4 WIRKLICH NOCH OFFEN IST (Stand 23.09.2026)
 
 | | | |
