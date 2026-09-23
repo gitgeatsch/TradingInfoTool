@@ -1566,6 +1566,32 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 der volle Rollenumbau (Schritt 33 über Kriterium 4 hinaus).
 
 
+### ⚠️⚠️⚠️ SPOT IST EIN EIGENES FACHLICHES THEMA — EIGENER PLANPUNKT NACH M1 (23.09.2026)
+
+> **Nutzerwortlaut 23.09.:** *„Hebel hat Priorität und muss funktionieren —
+> Spot ist als eigenes größeres fachliches Thema zu behandeln. **Warum:**
+> ohne sinnvolle Strategie als langfristiges Investment kommen die Signale
+> ohne Sinn und Ziel (Kauf und Verkauf), das kann das System nicht.
+> Eigener Planpunkt nach M1."*
+
+**Das präzisiert die Entscheidung vom 22.09., es ersetzt sie nicht:**
+
+| | |
+|---|---|
+| **Die Spot-MESSUNG bleibt in M1** | Kriterium 1 ist durch (Phase 3). Die Einstiegsbewertung ist für Spot und Hebel dieselbe (Regel 3) — sie lässt sich gar nicht trennen |
+| **Die Spot-STRATEGIE geht nach M1** | Kauf **und** Verkauf als langfristiges Investment, mit Ziel und Sinn. Das ist kein Messproblem, sondern ein fachliches |
+| **Hebel muss funktionieren** | er ist das Primärziel bis M1 |
+
+⚠️⚠️ **Und der Befund dazu liegt vor:** `strategie='akkumulation'` hat in
+**7.544 Signalen null** Treffer (2.540). Die Kette stellt die Frage, und
+es kommt nie eine Antwort heraus. Der Nutzer hat das am 22.09. „ein
+kaputtes DCA" genannt — die Zahl bestätigt es.
+
+➔ **Damit hat der Planpunkt nach M1 einen belegten Anlass**, keine
+Stimmung. Er gehört zu [[reference-index-nach-m1]] und umfasst: was ist
+das Ziel eines Spot-Kaufs, wann wird verkauft, und wie hängen Einstieg
+und Ausstieg zusammen.
+
 ### ⚠️⚠️⚠️ PRIORITÄT BIS M1 — HEBEL ZUERST, SPOT LÄUFT MIT (22.09.2026)
 
 > **Nutzerwortlaut:** *„aktuell ist spot und akkumulation getrennt und
