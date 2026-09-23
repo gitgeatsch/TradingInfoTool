@@ -28,6 +28,33 @@ Aufbau, die zweite den Beitrag von heute.
 
 ⚠️ NUR LESEND, am Desktop, gegen die Messbasis - kein LLM, kein Kontingent,
 keine Beruehrung der Produktion (Nutzerentscheidung E1).
+
+## Die turnover-QUELLE - hier wird sie gesetzt, nicht gewaehlt
+
+`_zusatz(art, quelle)` ist die gemeinsame Ladung fuer alle Messungen der
+Phase 3. Seit dem 22.09. ist `quelle` ein Parameter:
+
+    gesamt   `SplyCur` (Gesamtausgabe, 66 Symbole) - die VORGABE
+    frei     die NAEHERUNGSmenge (freier Umlauf, 366 Symbole)
+
+⚠⚠ DIESE DATEI SELBST HAT KEINEN SCHALTER, und das ist kein Versehen.
+Eine REPRODUKTION laeuft auf der Originalbasis - waehlbar waere sie keine
+Reproduktion mehr, sondern eine neue Messung unter altem Namen. Gewaehlt
+wird in den Dateien, die auf dieser Ladung aufsetzen:
+
+    phase3_normurteil.py --quelle frei
+    phase3_kette.py --quelle frei
+    n67_schnitt_ueber_die_kette.py --quelle frei
+
+⚠⚠ DIE QUELLE IST DIE GRUNDGESAMTHEIT, nicht nur ein Pfad. Ein Rang
+ist ein Perzentil - wer die Menge aendert, ueber die gerangt wird, aendert
+jeden Wert darin (CLAUDE.md, *,Die Grundgesamtheit ist keine
+Stellschraube`*). Am 22.09. wechselten dadurch 59 % der Symbol-Tage ihr
+Fuenftel. Eine Zahl ohne Quellenangabe ist deshalb kein Befund.
+
+⚠ Seit dem 22.09. ist `umschlag_frei` die LIVE-Groesse. `gesamt` misst
+also den ABGESCHALTETEN Nenner - richtig fuer eine Reproduktion, falsch
+fuer jede Aussage ueber den laufenden Betrieb.
 """
 from __future__ import annotations
 

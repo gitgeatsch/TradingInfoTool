@@ -24559,6 +24559,135 @@ def paket_nennertrennung() -> None:
         if _os.path.exists(_weg):
             _os.remove(_weg)
 
+    # ---- S9: WER DEN SCHALTER LIEST, MUSS IHN AUCH NENNEN ----------
+    #
+    # ⚠️⚠️ `--quelle gesamt|frei` wechselt die GRUNDGESAMTHEIT der
+    # turnover-Raenge - 59 % der Symbol-Tage wechseln dadurch ihr Fuenftel
+    # (2.514). Am 22.09. hatten VIER Aufrufer den Schalter und KEIN
+    # einziger Docstring nannte ihn: die Frage *,auf welcher Menge ist
+    # diese Zahl entstanden`* war nur durch Codelesen zu beantworten
+    # (2.537-quelle-undokumentiert).
+    #
+    # ⚠️ ABGELEITET, NICHT AUFGEZAEHLT (stehende Regel
+    # `pruefung-zaehlt-zustaende-auf`): eine Liste der vier Dateinamen
+    # haette die fuenfte Datei nie erfasst. Gesucht wird, WER den Schalter
+    # liest; gefordert wird, dass genau der ihn auch zeigt.
+    # ⚠️⚠️ ABGELEITET AM RUF, NICHT AM SCHALTERNAMEN. Mein erster Wurf
+    # suchte den String `--quelle` und fand zwei Fremde: `pruefe_pakete`
+    # (das ist der Suchstring SELBST) und `baue_messbasis_paket` (hat ein
+    # eigenes, unverwandtes `--quelle`, default "data"). Der Name ist im
+    # Projekt nicht eindeutig; die SACHE ist es: wer `_zusatz` mit einem
+    # ZWEITEN Argument ruft, waehlt die turnover-Grundgesamtheit.
+    # ⚠️ DIE ZULAESSIGEN QUELLENNAMEN WERDEN ABGELEITET, NICHT GEFUEHRT:
+    # gesucht sind die Literale, gegen die `_zusatz` seinen Parameter
+    # `quelle` prueft. Eine Liste hier waere `pruefung-zaehlt-zustaende-auf`
+    # - die dritte Quelle bekaeme nie eine Pruefung.
+    _quellennamen = set()
+    for _f in _AST.walk(_AST.parse(
+            io.open("phase3_reproduktion.py", encoding="utf-8").read())):
+        if isinstance(_f, _AST.FunctionDef) and _f.name == "_zusatz":
+            for _k in _AST.walk(_f):
+                if (isinstance(_k, _AST.Compare)
+                        and isinstance(_k.left, _AST.Name)
+                        and _k.left.id == "quelle"):
+                    _quellennamen |= {_c.value for _c in _k.comparators
+                                      if isinstance(_c, _AST.Constant)}
+    pruefe(P, "⚠ die zulaessigen Quellennamen sind aus `_zusatz` ableitbar",
+           len(_quellennamen) >= 2,
+           "ohne sie prueft die FESTE Haelfte unten nichts. Gefunden: %s"
+           % (sorted(_quellennamen),))
+
+    def _waehlt_quelle(baum) -> bool:
+        for _k in _AST.walk(baum):
+            if (isinstance(_k, _AST.Call)
+                    and isinstance(_k.func, _AST.Attribute)
+                    and _k.func.attr == "_zusatz"
+                    and len(_k.args) >= 2):
+                return True
+        return False
+
+    # ⚠️⚠️ ZWEI FAELLE, ZWEI ANFORDERUNGEN. Der Wurf davor forderte von
+    # JEDEM Rufer den Aufruf `--quelle` im Kopf und fand damit
+    # `phase3_kette_quellenvergleich.py` - zu Recht gefunden, falsch
+    # gefordert: die Datei rechnet BEIDE Quellen, ein Schalter waere dort
+    # sinnlos. Verlangt ist nicht *,zeig den Schalter`*, sondern
+    # *,beantworte die Quellenfrage`*.
+    _mit, _ohne, _fest = [], [], []
+    for _n in sorted(_os.listdir(".")):
+        if not _n.endswith(".py"):
+            continue
+        try:
+            _txt = io.open(_n, encoding="utf-8").read()
+            _b = _AST.parse(_txt)
+        except Exception:                                # noqa: BLE001
+            continue
+        if not _waehlt_quelle(_b):
+            continue
+        _d = _AST.get_docstring(_b) or ""
+        if '"--quelle"' in _txt:                       # WAEHLBAR
+            (_mit if ("python %s --quelle" % _n) in _d
+             else _ohne).append(_n)
+        else:                                            # FEST gesetzt
+            # ⚠️⚠️ FRUEHER STAND HIER `"quelle" in _d.lower()` - und das
+            # war in diesen Dateien immer wahr, das Wort steht ueberall.
+            # Die Mutation blieb gruen, obwohl der Kopf seine
+            # Quellenangabe verloren hatte. Gefordert ist jetzt ein
+            # ZULAESSIGER QUELLENNAME, und die Liste dazu wird aus
+            # `_zusatz` abgeleitet statt hier gefuehrt.
+            # ⚠⚠ GEFORDERT IST DIE WOERTLICHE QUELLENANGABE `--quelle`,
+            # nicht blosses Vorkommen eines Namens: `"frei" in _d` trifft
+            # schon auf "freier Umlauf" und blieb in der Mutation gruen.
+            # ⚠ WAS DIESE ZEILE NICHT LEISTET: sie prueft, DASS der Kopf
+            # die Quelle benennt - nicht, ob er die RICHTIGE benennt. Welche
+            # Quelle eine Schleifenvariable traegt, ist statisch nicht
+            # entscheidbar; das bleibt am Leser.
+            _fest.append((_n, "--quelle" in _d
+                          and any(_qn in _d for _qn in _quellennamen)))
+
+    pruefe(P, "⚠️⚠️ wer `--quelle` LIEST, zeigt den Aufruf im Kopf",
+           not _ohne,
+           "ohne den Aufruf im Docstring ist nicht zu erkennen, auf "
+           "welcher GRUNDGESAMTHEIT eine Zahl entstanden ist - und beide "
+           "Antworten sehen im Ergebnis gleich aus. Ohne Nennung: %s"
+           % (_ohne,))
+
+    pruefe(P, "⚠️⚠️ wer die Quelle FEST setzt, benennt sie im Kopf",
+           all(_x[1] for _x in _fest),
+           "eine fest gesetzte Quelle ist die gefaehrlichere Haelfte: "
+           "sie steht nirgends im Aufruf und ist nur durch Codelesen zu "
+           "finden. Ohne Nennung: %s"
+           % ([_x[0] for _x in _fest if not _x[1]],))
+
+    pruefe(P, "⚠ und es sind ueberhaupt welche gefunden worden",
+           len(_mit) + len(_fest) >= 3,
+           "findet die Suche nichts, prueft diese Zeile nichts - "
+           "eine gruene Pruefung ohne Pruefmenge ist schlimmer als "
+           "keine. Waehlbar: %s · fest: %s"
+           % (_mit, [_x[0] for _x in _fest]))
+
+    # ⚠️⚠️ DIE GEGENRICHTUNG, und sie ist die wichtigere: eine Datei
+    # darf keinen Aufruf zeigen, den sie gar nicht hat. Genau das war
+    # mein eigener Fehler am 22.09. - `phase3_reproduktion.py` bekam
+    # einen `--quelle frei`-Aufruf in den Kopf geschrieben und hat den
+    # Schalter nicht. Sie DARF ihn auch nicht haben: eine Reproduktion
+    # laeuft per Definition auf der Originalbasis.
+    _luegt = []
+    for _n in sorted(_os.listdir(".")):
+        if not _n.endswith(".py"):
+            continue
+        try:
+            _q = io.open(_n, encoding="utf-8").read()
+            _d = _AST.get_docstring(_AST.parse(_q)) or ""
+        except Exception:                                # noqa: BLE001
+            continue
+        if ("python %s --quelle" % _n) in _d and '"--quelle"' not in _q:
+            _luegt.append(_n)
+    pruefe(P, "⚠️⚠️ und KEINE zeigt einen Aufruf, den sie nicht hat",
+           not _luegt,
+           "ein Docstring, der einen Schalter verspricht, den der Code "
+           "nicht liest, ist schlimmer als gar keiner: der Aufruf laeuft "
+           "durch und misst still die Vorgabe. Betroffen: %s" % (_luegt,))
+
 
 def paket_gatedatenstand() -> None:
     """Sagt die Diagnose, WIE ALT die Quelle ihrer Gate-Zahlen ist?

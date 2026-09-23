@@ -20,6 +20,27 @@ ausdruecklich nur auf dieser Menge als validiert, NICHT auf der Live-Menge
 Zeile der Ausgabe.
 
 ⚠️ NUR LESEND, am Desktop. Kein LLM, kein Kontingent.
+
+## Womit es laeuft
+
+    python phase3_normurteil.py                  turnover auf `SplyCur` (Gesamtausgabe,
+                                    66 Symbole) - die VORGABE
+    python phase3_normurteil.py --quelle frei    turnover auf der NAEHERUNGSmenge
+                                    (freier Umlauf, 366 Symbole)
+
+⚠⚠⚠ DIE VORGABE BLEIBT DIE ALTE, und das ist Absicht. R-R11 verlangt,
+einen registrierten Befund ZUERST zu reproduzieren; ein geaenderter
+Vorgabewert haette das stillschweigend unmoeglich gemacht.
+
+⚠⚠ DIE QUELLE IST DIE GRUNDGESAMTHEIT, nicht nur ein Pfad. Ein Rang
+ist ein Perzentil - wer die Menge aendert, ueber die gerangt wird, aendert
+jeden Wert darin (CLAUDE.md, *,Die Grundgesamtheit ist keine
+Stellschraube`*). Am 22.09. wechselten dadurch 59 % der Symbol-Tage ihr
+Fuenftel. Eine Zahl ohne Quellenangabe ist deshalb kein Befund.
+
+⚠ Seit dem 22.09. ist `umschlag_frei` die LIVE-Groesse. `gesamt` misst
+also den ABGESCHALTETEN Nenner - richtig fuer eine Reproduktion, falsch
+fuer jede Aussage ueber den laufenden Betrieb.
 """
 from __future__ import annotations
 
