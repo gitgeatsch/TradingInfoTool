@@ -1314,7 +1314,126 @@ damit hätte ein Befund, der heute nicht trägt, einen Umbau ausgelöst.
 
 ➔ **Drei Anläufe, keine belegte Form:** Form (nichts entschieden) ·
 Bindungen (Ursache geklärt, 2.551) · Zustände (B6 verletzt, 2.553).
-**2.552 bleibt offen.**
+
+#### ⛔⛔⛔ VIERTER ANLAUF — UND ER BEENDET DIE MESSSPUR (2.554)
+
+**Nutzerhaltung:** *„entweder ich verstehe den Schalter nicht oder wir
+wenden den Beitrag falsch an."* ➔ **Das Zweite trifft zu.**
+
+**Zwei Code-Funde, keine Vermutungen:**
+
+| | |
+|---|---|
+| **1** | Die registrierte Wirkung **ist** eine Schalterwirkung. `messe_regel_wirksamkeit.py` misst `GRENZE = 0.80` — *„hohes Funding = überhitzt → **OBEN sperren**"*. **Fünf Stufen sind nie gemessen worden.** |
+| **2** | Die Live-Tabelle ist eine **Umrechnung**. `rechne_funding_beitrag.py` sagt selbst *„⚠️ IN-SAMPLE"* — kein Band, keine Trennschärfe, keine Kontrolle. Und sie verletzt die **eigene** Vorabfestlegung ihres Erzeugers (*„nutzbar nur wenn MONOTON"*) |
+
+**Reproduziert (R-R11, 2.399 Tage, Abweichung ≤ 0,09 Punkte):**
+−0,0639 / **−0,0262** ◀ das beste / −0,0962 / −0,1476 / −0,2127 R.
+**Fünftel 1 schlägt Fünftel 0** — die Tabelle ist nicht monoton und läuft
+seit dem 30.08. live.
+
+**Gemessen** (selektierte Menge 20 %, beide Formen mengenneutral, nur die
+unteren vier unterscheiden sich):
+
+| Quelle | `HEUTE minus SCHALTER` | Tage |
+|---|---|---|
+| `gesamt` | +0,00776 R [−0,04555 … +0,06605] | 1.006 |
+| **`frei`** (live) | −0,00499 R [−0,02916 … +0,01703] | 2.015 |
+
+⚠️ Die Formen wählen an **19,5 %** der Durchlässe verschiedene Werte — der
+Gleichstand kommt *nicht* daher, dass beide dasselbe täten.
+
+⛔⛔ **Aber der Gleichstand sagt nichts.** Pflanzt man genau die Ordnung
+ein, die die Live-Tabelle **behauptet** (Spanne 0,1104 R), findet die
+Anlage sie **nicht** — auf beiden Quellen.
+
+> **Die behauptete Abstufung liegt unter der Nachweisgrenze.** Sie ist mit
+> dieser Datenlage weder zu bestätigen noch zu widerlegen.
+
+➔ **Damit ist die Formfrage keine MESSfrage mehr.** Sie kann nur nach
+**Sparsamkeit** entschieden werden — und genau das lag am 06.09. schon
+als **N23-E1** vor (*„die fünfstufige Bauform ist für keine Größe
+belegt"*, Nutzerentscheidung). Umgesetzt wurde es nie.
+
+⛔ **Eigener Werkzeugfehler, vor dem Ergebnis gefunden:** die erste Fassung
+brach die Positivkontrolle bei *„3 von 5 Stärken"* ab und meldete einen
+**Messgleichstand**. Die Grenze war willkürlich — Auflösung 0,30 R Spanne
+gegen behauptete 0,11 R, **Faktor 2,7 zu grob**. Die Kontrolle prüft jetzt
+die **behauptete** Ordnung; damit kippt das Urteil auf *nichts
+entschieden*.
+
+#### ✔✔✔ AUFGELÖST — DAS ERGEBNIS LAG SEIT DEM 30.08. VOR (2.555)
+
+**Nutzerauftrag:** *„Ein Beitrag darf keine Userentscheidung sein. […]
+**nicht gemessen gibt es eigentlich nicht**. Deine Aussage funding trägt
+reicht nicht, **was trägt es und wie?**"*
+
+⛔⛔ **`pruefe_funding_monoton.py` (30.08.2026) meldet beim ersten Aufruf:**
+
+```
+monoton fallend? NEIN - kein stetiger Verlauf
+```
+
+und zieht im eigenen Kopf den Schluss: *„eine Größe ohne monotonen
+Verlauf **kann man nicht als Rangfolge benutzen**."* **Am selben Tag wurde
+die Rangfolge gebaut und live geschaltet.**
+
+➤ **Die Formfrage war also keine Entscheidung, sondern ein übergangenes
+Ergebnis.** Mein Satz von vorher (*„keine Messfrage mehr"*) ist damit
+widerlegt — er stand auf einer unvollständigen Recherche.
+
+### ➤➤ WAS `funding` TRÄGT UND WIE — vollständig
+
+**Die Regel:** *„kein Einstieg, dessen Finanzierungsrate heute im
+obersten Fünftel des Marktquerschnitts liegt."*
+
+| | |
+|---|---|
+| sperrt | **20,5 %** der Einstiege |
+| Gesperrte | **−0,1776 R** |
+| Übrige | −0,0943 R |
+| **netto** | **+0,0234 R** [+0,0099 … +0,0381] |
+| **B6** | ✔ **beide Hälften** (+0,0277 · +0,0191) |
+| bei 90 % statt 80 % | schwächer (+0,0154), zweite Hälfte fällt |
+
+**Vier Gegenproben vom 30.08., alle bestanden:**
+
+| | |
+|---|---|
+| **V1** Mitläufer | Korrelation zu Momentum **−0,000**; hält in jeder Momentum-Schicht |
+| **V2** Blocklänge | +0,1331 bei 90/180/250/400 Tagen — unverändert |
+| **V3** Survivorship | hält auf den 151 ältesten Symbolen (+0,1405) |
+| **Marktphase** | hält in **beiden** BTC-Phasen — kein Markt-Timing |
+
+### ➤➤➤ DIE WICHTIGSTE ZAHL: DER EFFEKT HÄNGT AM MARKTNIVEAU
+
+| Tage mit … | Wirkung |
+|---|---|
+| **hohem** Markt-Funding | **+0,4308 R** [+0,4005 … +0,4727] |
+| niedrigem | +0,0680 [+0,0350 … +0,0998] |
+
+➔ **Faktor 6,3.** `funding` ist weder Regler noch einfacher Schalter,
+sondern ein **zustandsabhängiger** Schalter: er wirkt, wenn der Markt
+überhitzt ist — und kaum sonst.
+
+⚠️ **Das ordnet 2.553 neu ein:** der B6-Bruch dort ist plausibel keine
+Instabilität, sondern die Folge davon, dass überhitzte Lagen in der
+jüngeren Hälfte seltener sind.
+
+⛔ **Eigene Zahl in der Gegenprüfung korrigiert:** die erste Rechnung ergab
+*„seit 2025 kein einziger Hoch-Funding-Tag"* — ein **Artefakt der
+Grenzziehung** (das 80. Perzentil liegt exakt auf dem Massepunkt 0,0003).
+Robust gemessen ist die Überhitzung **zurückgegangen, nicht verschwunden**:
+Breite 82,1 % → 72,9 %; 2021 95,2 % gegen 2025/2026 rund 61 %.
+
+⚠️ **Einschränkung:** alle Zahlen der 30.08.-Kette sind **Altbestand** —
+vor dem Messstandard, und die Werkzeuge warnen selbst *„nur 14 Blöcke —
+das Band deckt nicht"*. Die **Monotoniefrage** braucht den Standard
+allerdings nicht: die Fünftel sind schlicht nicht geordnet, gepoolt sogar
+völlig flach.
+
+➤ **Fünf unabhängige Wege zur Form:** V4 (30.08.) · N-56 (06.09.) ·
+2.133/N23 (06.09.) · 2.553 (23.09.) · 2.554 (23.09.).
 
 ⚠️ Was das **nicht** ist: ein Grund, `funding` abzuschalten. Der Beitrag
 trägt auf der vollen Menge, in beiden Fenstern (2.549).

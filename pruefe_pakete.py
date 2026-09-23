@@ -24753,17 +24753,65 @@ def paket_nennertrennung() -> None:
     # einen `--quelle frei`-Aufruf in den Kopf geschrieben und hat den
     # Schalter nicht. Sie DARF ihn auch nicht haben: eine Reproduktion
     # laeuft per Definition auf der Originalbasis.
+    #
+    # ⚠️⚠️⚠️ NACHGESCHAERFT 23.09.2026: die erste Fassung suchte den
+    # Literal `"--quelle"` im eigenen Quelltext. Das ist eine TEXTSUCHE,
+    # und sie hat `phase4_funding_abstufung.py` falsch angezeigt - die
+    # Datei liest den Schalter ueber `n67._quelle_aus_argv()`, also ueber
+    # den GEMEINSAMEN Helfer statt einer Kopie. Am Seiteneffekt
+    # nachgewiesen: `gesamt` 1.006 Tage, `frei` 2.015.
+    #
+    # Eine Kopie des Schalters waere die falsche Abhilfe gewesen - zwei
+    # Stellen zum Auseinanderlaufen. Die Pruefung LEITET jetzt AB, welche
+    # Funktionen im Projekt `--quelle` lesen, und akzeptiert den Aufruf
+    # einer davon. Damit braucht sie keine Aufzaehlung und veraltet nicht,
+    # wenn ein weiterer Helfer dazukommt (Regel 4 der Geraetevorgaben).
+    def _leser_funktionen() -> set:
+        """Namen aller Projektfunktionen, deren Rumpf `--quelle` liest."""
+        aus = set()
+        for _f in _os.listdir("."):
+            if not _f.endswith(".py"):
+                continue
+            try:
+                _baum = _AST.parse(io.open(_f, encoding="utf-8").read())
+            except Exception:                            # noqa: BLE001
+                continue
+            for _k in _AST.walk(_baum):
+                if not isinstance(_k, _AST.FunctionDef):
+                    continue
+                if any(isinstance(_s, _AST.Constant) and _s.value == "--quelle"
+                       for _s in _AST.walk(_k)):
+                    aus.add(_k.name)
+        return aus
+
+    _leser = _leser_funktionen()
+
+    def _ruft_leser(baum) -> bool:
+        for _k in _AST.walk(baum):
+            if not isinstance(_k, _AST.Call):
+                continue
+            _fn = _k.func
+            _nm = (_fn.attr if isinstance(_fn, _AST.Attribute)
+                   else _fn.id if isinstance(_fn, _AST.Name) else None)
+            if _nm in _leser:
+                return True
+        return False
+
     _luegt = []
     for _n in sorted(_os.listdir(".")):
         if not _n.endswith(".py"):
             continue
         try:
             _q = io.open(_n, encoding="utf-8").read()
-            _d = _AST.get_docstring(_AST.parse(_q)) or ""
+            _baum = _AST.parse(_q)
+            _d = _AST.get_docstring(_baum) or ""
         except Exception:                                # noqa: BLE001
             continue
-        if ("python %s --quelle" % _n) in _d and '"--quelle"' not in _q:
-            _luegt.append(_n)
+        if ("python %s --quelle" % _n) not in _d:
+            continue
+        if '"--quelle"' in _q or _ruft_leser(_baum):
+            continue
+        _luegt.append(_n)
     pruefe(P, "⚠️⚠️ und KEINE zeigt einen Aufruf, den sie nicht hat",
            not _luegt,
            "ein Docstring, der einen Schalter verspricht, den der Code "
