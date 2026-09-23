@@ -43,9 +43,19 @@ sie es nicht, laege der Unterschied am Pruefstand und nicht an der
 Quelle. Diese Datei prueft das als ZEILE VOR dem Ergebnis, nicht als
 Fussnote danach: bewegt sich der unbeteiligte Arm, bricht sie ab.
 
-## Womit es laeuft
+## Zwei Gegenstaende, dieselbe Frage
 
     python phase3_kette_quellenvergleich.py
+        die KETTE aus funding + turnover + oi_aenderung (Phase 3
+        Schritt 2), Fenster ab 2023
+
+    python phase3_kette_quellenvergleich.py --n67
+        `schnitt` NACH funding + turnover (N-67, M1-Kriterium 3),
+        volles Fenster - n67 filtert nicht ab 2023
+
+⚠️⚠️ DIE ZAHLEN DER BEIDEN LAEUFE SIND NICHT VERGLEICHBAR: anderer
+Gegenstand, anderes Fenster, andere Kettenstellung. Jeder Lauf
+beantwortet nur seine eigene Frage.
 
 ⚠️ NUR LESEND, am Desktop, gegen die Messbasis - kein LLM, kein
 Kontingent, keine Beruehrung der Produktion.
@@ -114,11 +124,30 @@ def main() -> int:
     anteil = MENGEN[PK.MENGE]
     block = messnorm._block(R.HORIZONT)
 
+    # ⚠️⚠️ `--n67` wechselt den GEGENSTAND, nicht nur eine Einstellung:
+    # gemessen wird dann `schnitt` NACH funding+turnover (M1-Kriterium 3)
+    # statt der Dreierkette. n67 braucht dafuer eine eigene Welt
+    # (`schnitt` und `zufall` zusaetzlich) und seine eigene
+    # `kette`-Funktion - die Reihenfolge ist eine andere.
+    n67 = "--n67" in sys.argv
+    if n67:
+        import n67_schnitt_ueber_die_kette as N67
+        laeufer, stufen_arg = N67.kette, "schnitt"
+        kontrollarm = "zufall"
+        arten = ("schnitt", "funding", "turnover", "zufall")
+        print("  ⚠️ GEGENSTAND: N-67 (`schnitt` nach der Kette), volles "
+              "Fenster")
+    else:
+        laeufer, stufen_arg = PK.kette, STUFEN
+        kontrollarm = None
+        arten = STUFEN
+        print("  ⚠️ GEGENSTAND: die Dreierkette, Fenster ab %s" % PK.AB)
+
     welt = {}
     for q in ("gesamt", "frei"):
         print("  Welten bauen, Quelle %s ..." % q)
         welt[q] = {a: R.K.baue(reihen, a, R._zusatz(a, q),
-                               horizont=R.HORIZONT) for a in STUFEN}
+                               horizont=R.HORIZONT) for a in arten}
     print("  fertig (%.0f s)" % (time.time() - t0))
 
     # ---- 1) DIE ZUSCHREIBUNGSKONTROLLE ZUERST ---------------------------
@@ -127,19 +156,63 @@ def main() -> int:
     # ist alles Weitere hinfaellig - dann misst der Pruefstand sich selbst.
     print("\n  KONTROLLE - der unbeteiligte Arm darf sich NICHT bewegen")
     print("  " + "-" * 84)
+    # ⚠️ DER UNBETEILIGTE ARM ist je Gegenstand ein anderer: bei der Kette
+    # `oi_aenderung` (haengt nicht an der turnover-Quelle), bei n67
+    # `zufall` (traegt per Bau keine Information). Beide muessen zwischen
+    # den Quellen gleich bleiben.
     oi = {}
+    _name = kontrollarm or "oi_aenderung"
     for q in ("gesamt", "frei"):
-        e, z = PK.kette(welt[q], mom, anteil, ("oi_aenderung",))
+        if n67:
+            e, z = laeufer(welt[q], mom, anteil, kontrollarm)
+            uebrig = float(np.mean(z["nach_beitraegen"]))
+        else:
+            e, z = PK.kette(welt[q], mom, anteil, ("oi_aenderung",))
+            uebrig = float(np.mean(z["uebrig"]))
         b = PK.band(e, block)
-        oi[q] = (b[0], float(np.mean(z["uebrig"])), len(e))
-        print("     nur oi_aenderung, Quelle %-7s %+.4f R · %.1f Anker "
-              "· %d Tage" % (q, b[0], oi[q][1], oi[q][2]))
+        oi[q] = (b[0], uebrig, len(e))
+        print("     nur %-12s Quelle %-7s %+.4f R · %.1f Anker · %d Tage"
+              % (_name, q, b[0], oi[q][1], oi[q][2]))
     gleich = abs(oi["gesamt"][0] - oi["frei"][0]) < 1e-9
     print("     %s  %s"
           % ("✔ IDENTISCH" if gleich else "⛔ ABWEICHUNG",
              "der Unterschied ist der Quelle zuschreibbar" if gleich
              else "der Pruefstand ist nicht neutral - ABBRUCH"))
     if not gleich:
+        if n67:
+            # ⚠️⚠️⚠️ BEI N-67 IST DAS KEIN DEFEKT, SONDERN DIE ANTWORT
+            # (23.09.2026, gemessen). `zufall` laeuft dort auf der
+            # RESTMENGE nach funding+turnover - und genau die aendert die
+            # Quelle (43,4 -> 37,3 Anker je Tag). Er MUSS sich bewegen.
+            #
+            # Damit gibt es bei n67 keinen unbeteiligten Arm, und die
+            # Folge ist groesser als eine fehlende Kontrollzeile: die
+            # beiden Laeufe messen `schnitt` auf VERSCHIEDENEN
+            # Restmengen. Das ist kein gepaarter Vergleich derselben
+            # Sache, sondern zwei verschiedene Fragen - ein Band um ihre
+            # Differenz waere eine Zahl ohne Gegenstand.
+            #
+            # ⚠️ Bei der KETTE liegt es anders: dort ist `oi_aenderung`
+            # eine eigene Stufe, die nicht an der turnover-Quelle haengt,
+            # und beide Laeufe laufen auf derselben Auswahl.
+            print()
+            print("     ⚠️⚠️ BEI N-67 IST DAS KEIN "
+                  "DEFEKT, SONDERN DIE ANTWORT:")
+            print("        `zufall` laeuft auf der RESTMENGE nach "
+                  "funding+turnover, und die")
+            print("        aendert die Quelle (%.1f -> %.1f Anker/Tag). "
+                  "Er MUSS sich bewegen."
+                  % (oi["gesamt"][1], oi["frei"][1]))
+            print("        ➤ Es gibt hier keinen unbeteiligten Arm - "
+                  "und damit messen die")
+            print("          beiden Laeufe `schnitt` auf VERSCHIEDENEN "
+                  "Restmengen. Ein Band")
+            print("          um ihre Differenz waere eine Zahl ohne "
+                  "Gegenstand.")
+            print("        ⚠️ Jeder Lauf gilt fuer sich "
+                  "(n67 --quelle gesamt|frei, je eigenes")
+            print("          Normurteil). Was NICHT geht, ist die "
+                  "Verrechnung der beiden.")
         return 1
 
     # ---- 2) DIE GEPAARTE DIFFERENZ --------------------------------------
@@ -147,9 +220,10 @@ def main() -> int:
     print("  " + "-" * 84)
     echt, anker = {}, {}
     for q in ("gesamt", "frei"):
-        e, z = PK.kette(welt[q], mom, anteil, STUFEN)
+        e, z = laeufer(welt[q], mom, anteil, stufen_arg)
         echt[q] = e
-        anker[q] = float(np.mean(z["uebrig"])) if z["uebrig"] else 0.0
+        _n = z["nach_beitraegen"] if n67 else z["uebrig"]
+        anker[q] = float(np.mean(_n)) if _n else 0.0
         b = PK.band(e, block)
         print("     %-7s %+.4f R [%+.4f .. %+.4f] · %.1f Anker/Tag "
               "· %d Tage" % (q, b[0], b[1], b[2], anker[q], len(e)))

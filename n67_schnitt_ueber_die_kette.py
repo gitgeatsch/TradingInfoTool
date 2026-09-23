@@ -78,6 +78,7 @@ import messe_kandidaten_als_regel as K                       # noqa: E402
 import messe_regel_wirksamkeit as RW                         # noqa: E402
 import phase3_reproduktion as R3                             # noqa: E402
 from messe_beitrag_auf_auswahl import momentum250            # noqa: E402
+import messnorm                                              # noqa: E402
 from messnorm import _block                                   # noqa: E402
 from messnorm_auswahl import MENGEN                           # noqa: E402
 from n64_schnitt_stufen import PUNKT_JE_R, band               # noqa: E402
@@ -117,7 +118,7 @@ def welten(reihen, quelle: str = "gesamt"):
             for a in ("schnitt", "funding", "turnover", "zufall")}
 
 
-def kette(w, mom, anteil, dritter, mische=None):
+def kette(w, mom, anteil, dritter, mische=None, pflanze: float = 0.0):
     """Die Reihenfolge Auswahl -> bestehende Beitraege -> `dritter`.
 
     Gibt (wirkung_je_tag, gezaehlt) zurueck. `gezaehlt` haelt fest, wie
@@ -163,7 +164,15 @@ def kette(w, mom, anteil, dritter, mische=None):
         if sperr.sum() < 1 or (~sperr).sum() < 1:
             continue
         z["gesperrt_dritter"].append(float(sperr.mean()))
-        yw = y[ok]
+        yw = y[ok].copy()
+        # ⚠⚠ DIE POSITIVKONTROLLE PFLANZT AUF DIE GESPERRTEN,
+        # nicht auf die Freien - dieselbe Mechanik wie
+        # `phase3_kette.kette` und `messe_regel_wirksamkeit.wirkung()`.
+        # Auf die Freien zu pflanzen hiesse, den EIGENEN Effekt zu
+        # messen; eine Kontrolle, die ihren eigenen Effekt frisst,
+        # belegt nichts (messnorm 06.09.).
+        if pflanze:
+            yw[sperr] -= pflanze
         aus[tag] = float(np.median(yw[~sperr])) - float(np.median(yw))
     return aus, z
 
@@ -204,6 +213,65 @@ def main() -> int:
         print("  %-10s %+9.4f [%+.4f .. %+.4f] %+10.4f %+9.4f %+11.2f"
               % (dritter, e[0], e[1], e[2], nw, e[0] - nw,
                  (e[0] - nw) * PUNKT_JE_R), flush=True)
+
+    # ---- DAS NORMURTEIL - es fehlte bis zum 23.09.2026 ------------------
+    #
+    # ⚠⚠⚠ n67 ist vom 07.09., der MESSSTANDARD vom 08./09.09.
+    # Es verglich gegen den Nullpunkt - das ist richtig - sagte aber
+    # nirgends, AB WELCHER HOEHE die Anlage etwas findet. Damit war sein
+    # Urteil *,traegt zusaetzlich`* nach heutiger Norm nicht belegt, und
+    # es beantwortet M1-Kriterium 3 (Akkumulation).
+    #
+    # ⚠ KEINE NACHBILDUNG DER NORM, SONDERN IHRE ANWENDUNG: die
+    # Groessen kommen aus `messnorm` (STAERKEN, ZIEHUNGEN,
+    # NULL_PERZENTIL), gebaut ist hier nur die Mechanik.
+    print()
+    print("  DAS NORMURTEIL AUF `schnitt` NACH DER KETTE")
+    null_s = []
+    for i in range(ZIEH):
+        n, _ = kette(w, mom, anteil, "schnitt",
+                     mische=np.random.default_rng(SAAT + i))
+        nb = band(n, block, zieh=300, saat=SAAT + i)
+        if nb:
+            null_s.append(nb[0])
+    null_oben = float(np.percentile(null_s, messnorm.NULL_PERZENTIL))
+    print("     Nullwelten    %d Ziehungen · Mittel %+.4f · %d. "
+          "Perzentil %+.4f"
+          % (len(null_s), float(np.mean(null_s)), messnorm.NULL_PERZENTIL,
+             null_oben))
+    print("     Bezug         nullpunkt (Messstandard 09.09.)")
+    print("     Positivkontrolle - gefunden = ueber dem %d. Perzentil"
+          % messnorm.NULL_PERZENTIL)
+    trennschaerfe = None
+    for staerke in messnorm.STAERKEN:
+        treffer = 0
+        for i in range(messnorm.ZIEHUNGEN):
+            pw, _ = kette(w, mom, anteil, "schnitt", pflanze=staerke)
+            pb = band(pw, block, zieh=300, saat=SAAT + 1000 + i)
+            if pb and pb[0] > null_oben:
+                treffer += 1
+        gefunden = treffer >= max(3, (4 * messnorm.ZIEHUNGEN) // 5)
+        print("       %.2f R: %d/%d %s"
+              % (staerke, treffer, messnorm.ZIEHUNGEN,
+                 "gefunden" if gefunden else ""))
+        if gefunden and trennschaerfe is None:
+            trennschaerfe = staerke
+    print("     Trennschaerfe %s"
+          % ("%.2f R" % trennschaerfe if trennschaerfe
+             else "> %.2f R" % messnorm.STAERKEN[-1]))
+    _e = erg.get("schnitt", {})
+    _traegt = (bool(_e) and _e["e"][0] > null_oben
+               and trennschaerfe is not None
+               and _e["wirkung"] >= trennschaerfe)
+    print("     ⚠️ URTEIL: %s"
+          % ("TRAEGT" if _traegt else "TRAEGT NICHT bis zur "
+             "Trennschaerfe"))
+    if not _traegt:
+        print("        ⚠️ Das ist KEIN Nullbefund: Effekte ab "
+              "dieser Groesse sind")
+        print("           ausgeschlossen, kleinere loest die Anlage bei "
+              "dieser Datenlage")
+        print("           nicht auf.")
 
     # ---- Die Zaehlung, vor der Deutung ---------------------------------
     z = erg.get("schnitt", {}).get("z")
