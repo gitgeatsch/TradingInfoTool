@@ -257,6 +257,24 @@ def main(argv: list[str] | None = None) -> int:
     saat = 20260909
     if "--saat" in args:
         saat = int(args[args.index("--saat") + 1])
+    # ⚠️⚠️⚠️ DER HORIZONT IST SEIT DEM 24.09.2026 EIN SCHALTER
+    # (Vorabfestlegung 7, Befund 2.571).
+    #
+    # Dieses Werkzeug hat `HORIZONT` bisher FEST aus `messe_alle_kandidaten`
+    # importiert - also 20. Genau darauf lief 2.490, das entschieden hat,
+    # dass der Hebel KEINE eigene Bewertung bekommt: es wechselte die
+    # ZIELGROESSE auf `barriere` und liess den Horizont auf dem SPOT-Wert.
+    #
+    # Die echten Hebelpositionen werden im Median 0,30 Tage gehalten (188
+    # Positionen, 2.493), der Betrieb rechnet mit rund 3 Handelstagen
+    # (2.513). `messnorm.HORIZONT_JE_LAGE` fuehrt seit dem 24.09. die 3.
+    #
+    # ⚠️ DIE VORGABE BLEIBT `HORIZONT` (20), damit ein Aufruf ohne Argument
+    # 2.490 weiter BITGLEICH reproduziert (R-R11). Ein geaenderter
+    # Vorgabewert haette den Vergleichspunkt stillschweigend geloescht.
+    hor = HORIZONT
+    if "--horizont" in args:
+        hor = int(args[args.index("--horizont") + 1])
     t0 = time.time()
     reihen = B.lade()
     mom = momentum250(reihen)
@@ -299,11 +317,11 @@ def main(argv: list[str] | None = None) -> int:
     erg, anteil = {}, None
     for kand in KANDIDATEN:
         try:
-            je0 = K.baue(reihen, kand, zus.get(kand), horizont=HORIZONT)
+            je0 = K.baue(reihen, kand, zus.get(kand), horizont=hor)
         except Exception as exc:                             # noqa: BLE001
             print("  %-14s -> %s" % (kand, str(exc)[:60]))
             continue
-        je, anteil = barriere_je_tag(je0, reihen, HORIZONT)
+        je, anteil = barriere_je_tag(je0, reihen, hor)
         # ⚠️ NACH der Umrechnung filtern, nicht davor: `barriere_je_reihe`
         # braucht die Kurse VOR dem Fenster nicht, aber die ATR-Spanne
         # schon. Wer die Reihe vorher kuerzt, misst eine andere Geometrie.
@@ -317,7 +335,7 @@ def main(argv: list[str] | None = None) -> int:
         # das wird ausgewiesen, nicht stillschweigend weggelassen.
         _m = wunsch
         if wunsch == "auto":
-            _m = MA.menge_nach_datenlage(je, mom, horizont=HORIZONT)
+            _m = MA.menge_nach_datenlage(je, mom, horizont=hor)
             if _m is None:
                 print("  %-14s %6s -> KEINE Menge haelt Anker UND Bloecke - die Frage"
                       "%s      ist auf dieser Datenlage keine Beitragsfrage" % (kand, "-", chr(10)), flush=True)
@@ -325,7 +343,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             b = MA.pruefe_auswahl(
                 kand, je, mom, lage=lage, menge=_m,
-                rng=np.random.default_rng(saat), horizont=HORIZONT,
+                rng=np.random.default_rng(saat), horizont=hor,
                 hypothese="K-1c Hebel", verwendung="Beitrag",
                 zielgroesse="barriere")
         except Exception as exc:                             # noqa: BLE001
@@ -343,7 +361,7 @@ def main(argv: list[str] | None = None) -> int:
     print("=" * 108)
     if anteil is not None:
         print("  ⚠️ Im Fenster von %d Tagen geloest: %.1f %% der Anker - "
-              "die uebrigen fielen heraus." % (HORIZONT, 100 * anteil))
+              "die uebrigen fielen heraus." % (hor, 100 * anteil))
         print("     Das ist eine AUSWAHL und verwandt mit den 79 % "
               "'Einstieg nie erreicht' (K-6).")
     kein = [k for k, b in erg.items()

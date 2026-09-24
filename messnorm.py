@@ -717,6 +717,38 @@ class Befund:
                    self.abdeckung_symbole, self.urteil))
 
 
+def warne_horizont(lage, horizont: int) -> bool:
+    """Passt der Horizont zur Lage? -> True, wenn gewarnt wurde.
+
+    ⚠️⚠️⚠️ WARNUNG, KEIN ABBRUCH und keine stille Umstellung. Ein Abbruch
+    haette jede laufende Messung gebrochen, eine Umstellung haette JEDEN
+    bestehenden Befund veraendert, ohne dass es jemand merkt - der Fehler
+    aus `feedback_umgedeutete_zahl_alle_leser_nachziehen`.
+
+    ⚠️ Der Kanarienvogel fuer den Fall, der `2.490` unbrauchbar gemacht
+    hat: dort wurde die ZIELGROESSE auf `barriere` gewechselt und der
+    Horizont auf H20 stehen gelassen - fuer eine Lage, die im Median 0,30
+    Tage gehalten wird.
+
+    ⚠️⚠️ WARUM EINE EIGENE FUNKTION UND KEINE ZEILE IN `pruefe`: es gibt
+    ZWEI Messanlagen. `messnorm.pruefe` und `messnorm_auswahl.
+    pruefe_auswahl` rechnen unabhaengig voneinander - die zweite ruft die
+    erste NICHT. Eine Warnung nur in `pruefe` haette genau die Laeufe
+    verfehlt, die `k1c_hebel_barriere` fuer den Hebel faehrt. Zwei Kopien
+    derselben Pruefung waeren zwei Stellen zum Auseinanderlaufen.
+    """
+    soll = HORIZONT_JE_LAGE.get((lage.instrument, lage.strategie))
+    if soll is None or int(horizont) == int(soll):
+        return False
+    print("⚠️⚠️ HORIZONT %d PASST NICHT ZUR LAGE %s - vorgesehen sind %d "
+          "(messnorm.HORIZONT_JE_LAGE)." % (horizont, lage, soll))
+    print("     Das Ergebnis beschreibt dann einen anderen Trade als den, "
+          "der in dieser Lage stattfindet.")
+    print("     ⚠️ Und die Blocklaenge folgt dem Horizont: %d statt %d."
+          % (_block(horizont), _block(soll)))
+    return True
+
+
 def _block(horizont: int) -> int:
     """Der Block muss laenger sein als die ABHAENGIGKEIT - gemessen, nicht
     gesetzt (06.09.2026).
@@ -778,26 +810,7 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     if zielgroesse not in ZIELGROESSEN:
         raise ValueError("unbekannte Zielgroesse: %r" % zielgroesse)
 
-    # ⚠️⚠️⚠️ PASST DER HORIZONT ZUR LAGE? (24.09.2026, Befund 2.571)
-    #
-    # ⚠️ WARNUNG, KEIN ABBRUCH und keine stille Umstellung. Ein Abbruch
-    # haette jede laufende Messung gebrochen, eine Umstellung haette jeden
-    # bestehenden Befund veraendert, ohne dass es jemand merkt. Beides
-    # waere schlimmer als der Fehler, den die Zeile faengt.
-    #
-    # ⚠️ Sie ist der Kanarienvogel fuer den Fall, der `2.490` unbrauchbar
-    # gemacht hat: dort wurde die ZIELGROESSE auf `barriere` gewechselt und
-    # der Horizont auf H20 stehen gelassen - fuer eine Lage, die 0,3 bis 3
-    # Tage gehalten wird.
-    _soll = HORIZONT_JE_LAGE.get((lage.instrument, lage.strategie))
-    if _soll is not None and int(horizont) != int(_soll):
-        print("⚠️⚠️ HORIZONT %d PASST NICHT ZUR LAGE %s - vorgesehen sind %d "
-              "(messnorm.HORIZONT_JE_LAGE)." % (horizont, lage, _soll))
-        print("     Das Ergebnis beschreibt dann einen anderen Trade als den, "
-              "der in dieser Lage stattfindet.")
-        print("     ⚠️ Und die Blocklaenge folgt dem Horizont: %d statt %d."
-              % (_block(horizont), _block(_soll)))
-
+    warne_horizont(lage, horizont)
     block = _block(horizont)
 
     def _band(d, titel):

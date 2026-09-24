@@ -365,6 +365,13 @@ def pruefe_auswahl(kandidat: str, je_tag: dict, mom: dict, *, lage: Lage,
             "%s verlangt die Zielgroesse %r, bekommen %r. Wer bewusst eine "
             "andere misst, ruft `messnorm.pruefe` und begruendet es im "
             "Befund." % (lage, soll, zielgroesse))
+    # ⚠️⚠️ ZWEITE MESSANLAGE - dieselbe Horizontpruefung wie in
+    # `messnorm.pruefe`. Diese Funktion ruft jene NICHT auf, deshalb
+    # steht der Aufruf hier eigens (Befund 2.572). Ohne ihn waeren
+    # genau die HEBELlaeufe ungeprueft, um die es geht -
+    # `k1c_hebel_barriere` fuehrt ausschliesslich ueber diesen Weg.
+    from messnorm import warne_horizont as _wh
+    _wh(lage, horizont)
     block = _block(horizont)
     anteil = MENGEN[menge]
 
