@@ -53,6 +53,8 @@ Hebel an die Barrieren-Quote haengt, bestraft also unaufgeloeste Trades.
     python phase4_vola_als_geometrie.py
     python phase4_vola_als_geometrie.py --menge 20%
     python phase4_vola_als_geometrie.py --quelle frei
+    python phase4_vola_als_geometrie.py --horizont 5   (nahe der echten
+                                        Haltedauer von rund 3 Tagen)
 """
 from __future__ import annotations
 
@@ -74,7 +76,17 @@ import messnorm                                              # noqa: E402
 import phase3_reproduktion as R3                             # noqa: E402
 
 CRV = 2.0
-BLOCK = 90
+# ⚠️⚠️⚠️ DIE BLOCKLAENGE KOMMT AUS DER NORM, NICHT AUS EINER SETZUNG.
+#
+# Die erste Fassung schrieb BLOCK = 90 fuer JEDEN Horizont. Die Norm sagt
+# `messnorm._block(H) = max(15, 3 x H)` - also 15 bei H5, 60 bei H20, 180
+# bei H60. Bei H5 war mein Block damit SECHSMAL zu lang (Band zu breit,
+# echte Effekte uebersehen), bei H60 zu kurz (Band zu eng, Fehlalarme).
+#
+# ⚠️ Und die Norm verlangt mehr als das Setzen: *"die Blocklaenge wird je
+# Messung NACHGEPRUEFT (`pruefe_block`), nicht angenommen. Wer sie nur
+# setzt, hat sie geraten."* Genau das hatte ich getan.
+BLOCK = None          # wird in main() aus dem Horizont gesetzt
 ZIEHUNGEN = 400
 MIN_ANKER = 500
 
@@ -179,11 +191,31 @@ def band(je_tag, wert_fn, rng):
 def main() -> int:
     menge = KAL._argv_wert("--menge", "frei")
     quelle = KAL._argv_wert("--quelle", "gesamt")
+    # ⚠️⚠️⚠️ DER HORIZONT IST SEIT DEM 24.09. EIN SCHALTER - UND DAS WAR
+    # EIN FUND AN DER EIGENEN MESSUNG.
+    #
+    # `messe_zielregel.HORIZONT` steht auf 60 Handelstagen. Die erste
+    # Fassung dieses Werkzeugs sprach von "H20" und mass in Wahrheit ueber
+    # 60 Tage - daher die Aufloesungsquote von 97,5 bis 99,8 Prozent, wo
+    # N10 fuer H20 7,39 Prozent OFFENE Trades ausweist.
+    #
+    # ⚠️ Und der Horizont ist hier nicht beliebig: die echten
+    # Hebelpositionen haben eine MEDIAN-HALTEDAUER VON 0,30 TAGEN (188
+    # Positionen, 2.493), der Betrieb rechnet mit rund 3 Handelstagen
+    # (2.513-horizont). Eine Bewertung ueber 60 Tage beschreibt etwas
+    # anderes als den Trade, der tatsaechlich stattfindet.
+    hor = int(KAL._argv_wert("--horizont", "60"))
+    ZR.HORIZONT = hor
+    global BLOCK
+    BLOCK = messnorm._block(hor)
     print("=" * 112)
     print("WELCHE VOLA-LAGE IST FUER DEN HEBEL OPTIMAL? (H-vola)")
     print("=" * 112)
-    print("  MENGE %s · QUELLE %s · CRV %.1f · Block %d"
-          % (menge, quelle, CRV, BLOCK))
+    print("  MENGE %s · QUELLE %s · CRV %.1f · HORIZONT %d Tage"
+          % (menge, quelle, CRV, hor))
+    print("  Blocklaenge %d = messnorm._block(%d) - aus der NORM, nicht gesetzt"
+          % (BLOCK, hor))
+    print("  " + messnorm.standardzeile())
     print("  Hypothese: Basisinfos/Hypothese_vola_als_Geometriegroesse_24_09.md")
     print("  ⚠️ vola = eigene ATR / eigener 250-Tage-Median, dann im")
     print("     Tagesquerschnitt gerangt (Definition aus dem Kandidatenblatt)")
@@ -223,14 +255,25 @@ def main() -> int:
             b = sum(1 for t in tg for e, _tr, _t, _f in _je.get(t, []) if e)
             return a / b if b else None
 
+        # ⚠️ DIE NORM VERLANGT DEN NACHWEIS DER BLOCKLAENGE, nicht ihre
+        # Setzung: `pruefe_block` misst die Autokorrelation der
+        # Tageswirkung beim Blockabstand. Ueber 0,15 ist der Block zu
+        # kurz und das Band zu eng.
+        _tw = {t: (sum(tr for e, tr, _t, _f in x if e)
+                   / max(sum(1 for e, _tr, _t, _f in x if e), 1))
+               for t, x in je.items()
+               if any(e for e, _tr, _t, _f in x)}
+        _bp = messnorm.pruefe_block(_tw, BLOCK)
         au, au_u, au_o = band(je, q_aufl, rng)
         tq, tq_u, tq_o = band(je, q_tref, rng)
         kelly = (tq * (1 + CRV) - 1) / CRV if np.isfinite(tq) else float("nan")
         ergebnis[v] = (n, au, au_u, au_o, tq, tq_u, tq_o, kelly)
-        print("  %-6d %9d  %5.1f %% [%4.1f .. %4.1f]      %5.1f %% [%4.1f .. %4.1f]"
-              "      %+.5f"
+        print("  %-6d %9d  %5.1f %% [%4.1f .. %4.1f]   %5.1f %% [%4.1f .. %4.1f]"
+              "   %+.5f  %s"
               % (v, n, 100 * au, 100 * au_u, 100 * au_o,
-                 100 * tq, 100 * tq_u, 100 * tq_o, kelly))
+                 100 * tq, 100 * tq_u, 100 * tq_o, kelly,
+                 "Block ok (ak %+.2f)" % _bp["ak"] if _bp["ok"]
+                 else "⚠ BLOCK ZU KURZ (ak %+.2f)" % _bp["ak"]))
 
     print("\n  Kelly-Nullstelle = %.1f %% · r_min 0,005 · r_max 0,0125"
           % (100 * null))
