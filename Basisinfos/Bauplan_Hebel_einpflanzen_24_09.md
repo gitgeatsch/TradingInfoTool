@@ -244,7 +244,29 @@ K1, K2, K3 aus § 1.2, in dieser Reihenfolge.
 ⛔ **Abbruch, wenn sich ein Spot-Fall bewegt.** Dann trifft K2 mehr als
 gedacht.
 
-## ⭐ Phase 2 — DIE GEOMETRIE *(Messung — jetzt die eigentliche Frage)*
+## ⭐ Phase 2 — **N19-E: die Stufen gegen die Barrieren-Quote** *(Messung)*
+
+> ⚠️⚠️ **PRÄZISIERT AM 24.09. nach vollständiger Recherche** (Befund 2.580,
+> `Vorabfestlegung_Geometrie_Hebel_24_09.md`). Die Frage lautet **nicht**
+> *„welche Geometrie ist optimal"*, sondern:
+>
+> **Wie hoch sind die Beitragsstufen, wenn man sie DIREKT gegen die
+> Barrieren-Quote misst statt aus einer R-Messung zu übersetzen?**
+>
+> Ursache ist der **Zielgrößenbruch**: `q` *ist* die Barrieren-Trefferquote,
+> die Stufen sind aber auf `bewegung_r` gemessen. Faktor **0,30 / 0,35** —
+> die Stufen sind **1,47×/1,85× zu groß**. N19-E steht seit dem **06.09.**
+> als Nutzerentscheidung und wurde nie umgesetzt.
+>
+> ✔ **Durchgerechnet, was das kostet:** Spreizung −67 %, aber
+> Rangkorrelation **+0,994**, Top-3 **identisch**, und nach R-R9 lässt die
+> Schwelle **dieselbe Menge** durch. *Die Skala war überhöht, die Ordnung
+> stimmt.*
+>
+> ⭐ Die Geometrie (Stop/CRV) bleibt **nachgeordnet**; der **Horizont** läuft
+> als Achse mit.
+
+### Der ursprüngliche Zuschnitt lautete:
 
 **Die Frage:** *Gibt es überhaupt eine Geometrie, in der `q` über der
 Nullstelle liegt?* Wenn nein, ist gleichgültig, was die Bewertung findet.
