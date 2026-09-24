@@ -127,17 +127,18 @@ eingeschaltet.**
 | Phase | braucht | vorhanden |
 |---|---|---|
 | **1 Kapselung** | nichts | ✔ |
-| **2 Geometrie H3** | Tages-OHLC, 534 Symbole, 32.040 Anker | ✔ **vollständig** |
+| **2 Geometrie** (Horizontachse 2–20) | Tages-OHLC, 534 Symbole, 32.040 Anker | ✔ **vollständig** |
 | **3 Quote** | Tages-Merkmale ✔ · stündlicher Terminmarkt ✔ (3,36 Mio) | ✔ |
 | **4 Einpflanzen** | nichts | ✔ |
 
 ➤ **Es fehlt allein die stündliche ZIELGRÖSSE (Kurse).** Sie ist an genau
-**einer** Stelle relevant: ob bei H3 Ziel und Stop am selben Tag fielen und
-in welcher Reihenfolge.
+**einer** Stelle relevant: ob Ziel und Stop am selben Tag fielen und in
+welcher Reihenfolge — und das betrifft **kurze** Horizonte stärker als lange.
 
 ⚠️ **Und dieser Vorbehalt wird nicht behauptet, sondern GEZÄHLT** (§ 2.3,
-Punkt 4). Damit wird aus *„das könnte verzerren"* eine Zahl — und erst wenn
-diese Zahl groß ist, entsteht überhaupt ein Bedarf an Stundenkursen.
+Punkt 4) — **über die ganze Horizontachse**. Damit sagt die Messung selbst,
+**ab welchem Horizont Tagesdaten nicht mehr tragen**. Das ist die
+belastbare Antwort auf *„brauchen wir Stundenkurse?"* statt einer Schätzung.
 
 ⛔ **Solange stirbt hier nichts.** Stündliche Kurse sind eine mögliche
 **Verbesserung**, kein Tor. Beschaffbar wären sie von derselben Quelle, die
@@ -187,7 +188,7 @@ Intraday-Kurse gibt es nirgends (jede Tabelle mit Kursspalte geprüft).
 | **Merkmale** | stündlich ✔ |
 | **Zielgröße** | täglich ⛔ |
 
-➤ **Messbar wird H3, nicht 0,30 Tage** — und H3 ist der Horizont, mit dem
+➤ **Messbar wird die Achse 2 bis 20 Tage, nicht 0,30 Tage** — und H3 ist der Horizont, mit dem
 der Betrieb ohnehin rechnet (2.513: Signal entschieden nach Median 4
 Kalendertagen, Ziel nach 2, geplanter Zielzeitraum 3,4 Tage). **H3 ist
 also nicht der Notbehelf, sondern die Betriebswirklichkeit.** Und bei H3 trägt die Tages-OHLC
@@ -217,15 +218,44 @@ K1, K2, K3 aus § 1.2, in dieser Reihenfolge.
 ⛔ **Abbruch, wenn sich ein Spot-Fall bewegt.** Dann trifft K2 mehr als
 gedacht.
 
-## ⭐ Phase 2 — DIE GEOMETRIE AUF H3 *(Messung — jetzt die eigentliche Frage)*
+## ⭐ Phase 2 — DIE GEOMETRIE *(Messung — jetzt die eigentliche Frage)*
 
-**Die Frage:** *Gibt es auf H3 überhaupt eine Geometrie, in der `q` über
-der Nullstelle liegt?* Wenn nein, ist gleichgültig, was die Bewertung
-findet.
+**Die Frage:** *Gibt es überhaupt eine Geometrie, in der `q` über der
+Nullstelle liegt?* Wenn nein, ist gleichgültig, was die Bewertung findet.
 
-### 2.1 ✔ Was schon gemessen ist — und warum es nicht gilt
+### 2.0 ⚠️⚠️⚠️ DER HORIZONT IST EINE ACHSE, KEINE VORGABE
 
-| Befund | gemessen auf | für H3 |
+**Nutzerhinweis 24.09.:** *„H3 war nur mein Beispiel — die Messung muss die
+optimalen Grenzen ergeben, H3, 5, 10, 20 etc."*
+
+> ⚠️ **Er trifft einen Fehler von mir.** Ich habe H20 kritisiert, *weil es
+> gesetzt war* — und dann H3 gesetzt. Beides sind Setzungen.
+
+`HORIZONT_JE_LAGE[("hebel","einstieg")] = 3` ist aus der **beobachteten
+Haltedauer** abgeleitet (Median 0,30 Tage, Betrieb rechnet 3,4 Tage). Das
+beschreibt den **Ist-Zustand**, nicht das Optimum.
+
+> **Die Frage „bei welcher Haltedauer ist die Geometrie am günstigsten?"
+> ist nie gestellt worden.**
+
+➤ **Gemessen wird über die Horizontachse: 2, 3, 5, 10, 20.** Das Ergebnis
+kann `HORIZONT_JE_LAGE` ändern — es ist dessen Begründung, nicht dessen
+Voraussetzung.
+
+⚠️ **Drei Achsen, und damit ein Suchpreis:** Horizont × Stopweite × CRV.
+Die Vorabfestlegung muss die Zahl der Kombinationen nennen und den
+Mehrfachtest korrigieren (Poisson gegen die Erwartung, Methodik 2.477),
+sonst findet man Rauschen.
+
+⚠️ **Und die Norm darf hier nicht dazwischenfunken:** `warne_horizont`
+meldet jede Abweichung von der Lagenvorgabe. Für eine **Geometrie**frage,
+die den Horizont *sucht*, ist das Rauschen — `FRAGEARTEN` trennt
+`beitrag` von `geometrie` bereits, die Warnung muss dieser Trennung
+folgen.
+
+### 2.1 ✔ Was schon gemessen ist — und auf welchem Horizont
+
+| Befund | gemessen auf | fehlt |
 |---|---|---|
 | **2.435** „Stopweite: Gipfel bei 7–9 %", 534 Symbole, 32.040 Anker, **sechs Weiten gepaart** | **H5, H10, H20** | ⛔ nein |
 | **2.435-richtung** „bei SHORT ist die Stopweite egal" | dieselben | ⛔ nein |
@@ -233,9 +263,12 @@ findet.
 | **2.544** Kennlinie, steuerndes Fenster 0,0095–0,0150 Quotenpunkte | H20 | ⛔ nein |
 | **2.570** Kelly je vola-Lage negativ | **H5** | ⚠️ am nächsten dran |
 
-➤ **Die Geometrie ist gründlich vermessen — nur nie auf dem Horizont des
-Hebels.** Das ist keine Doppelarbeit, sondern **R-R11**: dieselbe Frage auf
-dem richtigen Horizont.
+➤ **Die Geometrie ist gründlich vermessen — aber nie über die
+Horizontachse als Frage.** H5/H10/H20 lagen je einzeln vor; **H2 und H3
+fehlen ganz**, und niemand hat die Werte gegeneinander gestellt.
+
+⚠️ Das ist keine Doppelarbeit, sondern **R-R11**: dieselbe Frage, diesmal
+mit dem Horizont als **gemessener** statt gesetzter Größe.
 
 ### 2.2 ✔✔ Die Werkzeuge stehen bereits
 
@@ -252,24 +285,30 @@ dem richtigen Horizont.
 
 ### 2.3 Was gemessen wird
 
-1. **Stopweite auf H3**, sechs Weiten gepaart, LONG und SHORT getrennt —
-   liegt der Gipfel weiter woanders als bei 7–9 %?
-2. **CRV auf H3** — verschiebt sich das globale Optimum, wenn der Horizont
-   kurz ist?
+1. **Stopweite über die Horizontachse** (2/3/5/10/20), sechs Weiten
+   gepaart, LONG und SHORT getrennt — **wandert der Gipfel mit dem
+   Horizont?** Bei H5–H20 lag er bei 7–9 % (2.435); für H2/H3 ist er
+   ungemessen.
+2. **CRV über die Horizontachse** — 2.564 fand *ein globales* CRV, aber
+   auf H20 und über **Merkmals**lagen. Ob es über **Halte**dauern hält,
+   ist offen.
 3. **Beides je vola-Lage** — N-52 sagt, ruhige Assets lösen *öfter* auf.
    Der Verdacht: die Regel `max(5 % Kurs, 0,75 × ATR)` erzeugt **zwei
    Regime** — bei ruhigen bindet die 5 %-Grenze, bei volatilen der ATR.
    **Auf H3 nie geprüft.**
 4. ⚠️ **Der Pfad-Vorbehalt als ZAHL, nicht als Satz:** wie oft fallen Ziel
    und Stop am **selben Tag**? `barriere_je_reihe` zählt dann den Stop
-   (konservativ). Bei H20 marginal, bei H3 offen — **das wird gezählt.**
+   (konservativ). ⭐ **Über die Horizontachse gemessen sagt diese Zahl
+   zugleich, ab welchem Horizont Tagesdaten nicht mehr tragen** — also wo
+   die Grenze der vorhandenen Auflösung wirklich liegt, statt sie zu
+   schätzen.
 
 ### 2.4 Die Entscheidungsregel — vor der Messung
 
 | Ergebnis | |
 |---|---|
-| **Es gibt eine Geometrie mit `q > q₀`**, Kontrolle sauber | ✔ **Phase 3** — und erst dort ist die Quotenfrage sinnvoll |
-| **Kein Raum, Trennschärfe reicht** | ⛔ **Mit dieser Geometrie ist auf H3 kein Hebel möglich.** Dann geht die Frage an den **Horizont** (kürzer → braucht Stundenkurse) oder an die **Instrumentwahl**, nicht an die Bewertung |
+| **Es gibt eine Geometrie mit `q > q₀`**, Kontrolle sauber | ✔ **Phase 3** — und erst dort ist die Quotenfrage sinnvoll. ⭐ Der gefundene Horizont wird **Vorgabe** in `HORIZONT_JE_LAGE`, mit dieser Messung als Begründung |
+| **Kein Raum über die GANZE Achse**, Trennschärfe reicht | ⛔ **Mit Tagesdaten ist auf keinem Horizont von 2 bis 20 ein Hebel möglich.** Das ist dann ein belastbares Ergebnis — und die Frage geht an die **Auflösung** (Stundenkurse) oder an die **Instrumentwahl**, nicht an die Bewertung |
 | **Trennschärfe reicht nicht** | ⚠️ Datendecke, nichts entschieden |
 
 ## Phase 3 — die Quote *(nur wenn Phase 2 einen Raum findet)*

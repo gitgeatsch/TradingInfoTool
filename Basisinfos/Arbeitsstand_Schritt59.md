@@ -71,6 +71,34 @@ also M1-Kriterium 1): **Nutzerentscheidung**, bevor daran gearbeitet wird.
 
 ✔ **Schritt A bleibt** und trägt eigenständig (2.575).
 
+### ⭐⭐⭐ DAS VORGEHEN FÜR DEN HEBEL — Kapselung, dann GEOMETRIE, dann Quote
+
+Plan: **`Basisinfos/Bauplan_Hebel_einpflanzen_24_09.md`** · Befund **2.578**
+
+**Die Rechnung, die die Reihenfolge erzwingt:** Kelly wird null bei
+`q₀ = 1/(1+CRV) = 0,3333`. Gemessen auf H5 liegt q bei **0,284…0,323** —
+es fehlen **1,03 bis 4,93 Prozentpunkte**. Beiträge liefern **0,21 Pp**
+einzeln, **0,24 Pp** zusammen. ⛔ **Faktor 4 bis 21 zu wenig.**
+
+> **Die Quote kann den Hebel nicht retten — es ist keine Frage der
+> Messgenauigkeit, sondern der Größenordnung.**
+
+⚠️⚠️ **Der Horizont ist eine ACHSE, keine Vorgabe** (Nutzerhinweis): H3 war
+ein Beispiel. Gemessen wird über **2/3/5/10/20** — das Ergebnis *begründet*
+`HORIZONT_JE_LAGE`, statt daraus zu folgen. 2.435 lief auf H5/H10/H20,
+H2/H3 fehlen ganz.
+
+⭐⭐ **Der Hebel stirbt nicht an Stundendaten:** jede Phase läuft auf
+Tagesdaten. Der Pfad-Vorbehalt wird über die Horizontachse **gezählt** —
+damit sagt die Messung selbst, ab wann Tagesdaten nicht mehr tragen.
+
+✔ **Werkzeuge stehen:** `messe_stopweite_historisch.py` kennt `--horizont`
+bereits, keine Änderung nötig.
+
+**Kapselung K1→K2→K3** (Reihenfolge zwingend): `instrumente=()` heißt „gilt
+überall" — **der Hebel erbt heute jeden Spot-Beitrag durch einen
+Vorgabewert.**
+
 ### ⭐⭐⭐ RICHTUNGSENTSCHEID 24.09. — DREI GESCHÄFTE, DIE LAGE IST EINGANG
 
 **Nutzerentscheidung:** *„Spot bleibt vorerst als eigener offener Punkt.
