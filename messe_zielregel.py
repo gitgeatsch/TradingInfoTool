@@ -72,8 +72,47 @@ VARIANTEN = (("ZIEL 1,0", 1.0), ("ZIEL 1,5", 1.5), ("ZIEL 2,0", 2.0),
 BRUCH = 5.0     # Tagessprung ab diesem Faktor ist eine Token-Umstellung
 
 
-def ergebnisse(reihen, bereinigt=True, horizont=None):
+def ergebnisse(reihen, bereinigt=True, horizont=None, mit_gleichstand=False):
     """Je Anker: Ergebnis in R fuer jede Variante, plus Phase und Blockindex.
+
+    ⚠️⚠️⚠️ `mit_gleichstand` KAM AM 24.09.2026 DAZU (P-9, Stundenbasis).
+
+    DER ANLASS steht eine Zeile tiefer im Code: `stop_tag <= ziel_tag` -
+    werden Ziel und Stop am SELBEN TAG beruehrt, gewinnt der Stop. Auf
+    TAGESdaten ist die Reihenfolge unbekannt, also ist das die vorsichtige
+    Annahme - aber sie ist SYSTEMATISCH PESSIMISTISCH, und `q` (die
+    Barrieren-Trefferquote, an der der ganze Hebel haengt) ist genau diese
+    Zahl.
+
+    Seit dem 24.09. liegen 3,24 Mio STUNDENkerzen vor. Auf ihnen ist die
+    Reihenfolge aufloesbar - gemessen sind dort nur 0,00 bis 0,04 Prozent
+    der Faelle mehrdeutig (2.582-Nachfolge).
+
+    ⚠️ DIESER SCHALTER LOEST NICHTS AUF. Er MELDET nur, welche Anker
+    betroffen sind, damit ein zweites Werkzeug genau diese - und nur diese -
+    stuendlich nachrechnen kann. Chirurgisch statt reihenweise: was heute
+    eindeutig ist, bleibt bitgleich, und die Aenderung ist zuordenbar.
+
+    ⚠️⚠️ DIE VORGABE IST `False`, und dann ist die Rueckgabe UNVERAENDERT -
+    kein zusaetzlicher Schluessel, kein anderer Wert. 44 Skripte rufen diese
+    Funktion; R-R11 verlangt, dass sie alle bitgleich weiterrechnen.
+
+    Bei `True` kommt je Zeile dazu:
+
+        gleichstand    True, wenn Ziel UND Stop am selben Tag beruehrt
+                       werden (nur fuer CRV 2,0 - die Groesse, aus der
+                       `q` entsteht)
+        entscheid_tag  das DATUM des Tages, an dem die erste Barriere
+                       faellt - AUCH wenn er eindeutig ist. Genau das
+                       traegt die Gegenpruefung: an einem eindeutigen Tag
+                       muss die Stundenrechnung dieselbe Barriere zuerst
+                       sehen, sonst stimmt sie nicht
+        erwartet       'ziel' | 'stop' | 'unklar' | None - was die
+                       TAGESrechnung sagt, als Sollwert fuer ebendiese
+                       Gegenpruefung
+        anker_tag      das Datum des Ankers
+        stop_kurs      die beiden Schwellen, damit das zweite Werkzeug sie
+        ziel_kurs      nicht neu herleiten muss (und dabei abweichen kann)
 
     ⚠️⚠️⚠️ `horizont` KAM AM 24.09.2026 DAZU - vorher war der Wert ein
     Modul-Global (60), und jeder Aufrufer bekam ihn ungefragt.
@@ -143,6 +182,28 @@ def ergebnisse(reihen, bereinigt=True, horizont=None):
                     zeile[name] = float(crv)
                 else:
                     zeile[name] = float((pc[-1] - e) / r)
+                # ⚠️ NUR MELDEN, NICHT AUFLOESEN - und nur fuer CRV 2,0,
+                # weil `q` aus genau dieser Variante entsteht. Ohne den
+                # Schalter passiert hier nichts (R-R11).
+                if mit_gleichstand and crv == 2.0:
+                    _gleich = (stop_tag == ziel_tag) and stop_tag < H
+                    _erst = min(int(stop_tag), int(ziel_tag))
+                    zeile["gleichstand"] = bool(_gleich)
+                    zeile["anker_tag"] = roh[i][0]
+                    zeile["stop_kurs"] = float(stop)
+                    zeile["ziel_kurs"] = float(ziel)
+                    # ⚠️ DER ENTSCHEIDUNGSTAG, auch wenn er EINDEUTIG ist.
+                    # Er traegt die Gegenpruefung: an einem eindeutigen Tag
+                    # MUSS die Stundenrechnung dieselbe Barriere zuerst
+                    # sehen. Am ANKERtag zu pruefen waere falsch - der
+                    # Einstieg ist dessen SCHLUSSkurs, und die Kerzen davor
+                    # koennen die Schwelle laengst beruehrt haben.
+                    zeile["entscheid_tag"] = (roh[i + 1 + _erst][0]
+                                              if _erst < H else None)
+                    zeile["erwartet"] = (None if _erst >= H else
+                                         "unklar" if _gleich else
+                                         "stop" if stop_tag < ziel_tag
+                                         else "ziel")
             zeilen.append(zeile)
     return zeilen
 
