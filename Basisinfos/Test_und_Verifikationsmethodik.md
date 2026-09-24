@@ -3300,6 +3300,10 @@ vollständig **nicht** verzeichnet — dieselbe Falle in neuer Auflage.
 | `messe_umschlag_kontext.py` | Heißt hoher Umschlag nach einem Anstieg etwas anderes als in der Ruhe? (98) |
 | `messe_geometrie.py` | Welche Geometrie trägt sich — und hängt sie an der Lage? (101) |
 | `messe_drift_absolut.py` | Trägt die **absolute** Drift das Barrierensystem? (102) |
+| `messe_scharfe_bewegungen.py` | Wie scharf sind Bewegung und Gegenbewegung — MFE/MAE gegen den Schlusskurs, auf Stundenbasis (2.582-Nachfolge) |
+| `messe_gleichstand_stundenbasis.py` | Was kostet die Regel „bei Gleichstand gewinnt der Stop"? — stündlich aufgelöst (2.583) |
+| `messe_basisrate_vorhersagbar.py` | Schwankt die Basisrate echt, und ist sie vorhersagbar? (2.585) — P-9 Schicht 3 |
+| `messe_zusammenspiel_beitraege.py` | Spielen `funding` und `turnover` korrekt zusammen? — Korrelation und Additivität der 5×5-Tafel |
 | `messe_zeitteilung.py` | Wird aus dem Muster eine Regel? (109) — Zeitteilung |
 | `messe_kollinearitaet.py` | Sind zwei Hebel dasselbe? (103) |
 | `messe_struktur_bereinigt.py` | Trägt H über den Hochabstand hinaus? (108) |
