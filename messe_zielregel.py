@@ -72,8 +72,21 @@ VARIANTEN = (("ZIEL 1,0", 1.0), ("ZIEL 1,5", 1.5), ("ZIEL 2,0", 2.0),
 BRUCH = 5.0     # Tagessprung ab diesem Faktor ist eine Token-Umstellung
 
 
-def ergebnisse(reihen, bereinigt=True):
+def ergebnisse(reihen, bereinigt=True, horizont=None):
     """Je Anker: Ergebnis in R fuer jede Variante, plus Phase und Blockindex.
+
+    ⚠️⚠️⚠️ `horizont` KAM AM 24.09.2026 DAZU - vorher war der Wert ein
+    Modul-Global (60), und jeder Aufrufer bekam ihn ungefragt.
+
+    DER ANLASS: `phase4_n19e_pruefen` baut die Fuenftel mit `horizont=20`
+    und liess die Ergebnisse hier ueber 60 Tage rechnen - ein eingebauter
+    Horizontbruch, genau der, der am 24.09. schon einmal gekostet hat
+    (2.569: *„ich sprach von H20 und mass in Wahrheit ueber 60 Tage"*).
+    Gefunden VOR der Messung, nicht danach.
+
+    ⚠️ DIE VORGABE BLEIBT DER MODULWERT (60), damit jeder bestehende
+    Aufruf BITGLEICH weiterrechnet (R-R11). Wer einen anderen Horizont
+    will, sagt es ausdruecklich.
 
     ⚠️ `bereinigt`: Anker, deren VORWAERTSFENSTER einen Tagessprung ueber
     Faktor `BRUCH` enthaelt, werden uebersprungen. Grund (29.08.2026): in
@@ -85,6 +98,7 @@ def ergebnisse(reihen, bereinigt=True):
     Chirurgisch statt reihenweise: nur die betroffenen Anker fallen weg,
     die uebrige Historie derselben Reihe bleibt nutzbar.
     """
+    H = int(HORIZONT if horizont is None else horizont)
     zeilen = []
     for sym, roh in reihen.items():
         schluss = np.array([z[1] for z in roh])
@@ -94,11 +108,11 @@ def ergebnisse(reihen, bereinigt=True):
         n = len(schluss)
         verhaeltnis = schluss[1:] / np.maximum(schluss[:-1], 1e-12)
         bruch = (verhaeltnis > BRUCH) | (verhaeltnis < 1.0 / BRUCH)
-        for i in range(200, n - HORIZONT):
+        for i in range(200, n - H):
             r = breite[i]
             if not np.isfinite(r) or r <= 0:
                 continue
-            if bereinigt and bruch[i:i + HORIZONT].any():
+            if bereinigt and bruch[i:i + H].any():
                 continue
             schnitt = schluss[i - 200:i].mean()
             if schnitt <= 0:
@@ -106,26 +120,26 @@ def ergebnisse(reihen, bereinigt=True):
             e = schluss[i]
             stop = e - r
             # Pfad
-            ph = hoch[i + 1:i + 1 + HORIZONT]
-            pt = tief[i + 1:i + 1 + HORIZONT]
-            pc = schluss[i + 1:i + 1 + HORIZONT]
+            ph = hoch[i + 1:i + 1 + H]
+            pt = tief[i + 1:i + 1 + H]
+            pc = schluss[i + 1:i + 1 + H]
             # erster Tag, an dem der Stop beruehrt wird
-            stop_tag = np.argmax(pt <= stop) if (pt <= stop).any() else HORIZONT
+            stop_tag = np.argmax(pt <= stop) if (pt <= stop).any() else H
             zeile = {"sym": sym, "i": i, "steigend": bool(e > schnitt)}
             for name, crv in VARIANTEN:
                 if crv == "zeit":
                     zeile[name] = float((pc[-1] - e) / r)
                     continue
                 if crv is None:
-                    zeile[name] = (-1.0 if stop_tag < HORIZONT
+                    zeile[name] = (-1.0 if stop_tag < H
                                    else float((pc[-1] - e) / r))
                     continue
                 ziel = e + r * crv
                 ziel_tag = (np.argmax(ph >= ziel) if (ph >= ziel).any()
-                            else HORIZONT)
-                if stop_tag <= ziel_tag and stop_tag < HORIZONT:
+                            else H)
+                if stop_tag <= ziel_tag and stop_tag < H:
                     zeile[name] = -1.0          # Stop gewinnt bei Gleichstand
-                elif ziel_tag < HORIZONT:
+                elif ziel_tag < H:
                     zeile[name] = float(crv)
                 else:
                     zeile[name] = float((pc[-1] - e) / r)

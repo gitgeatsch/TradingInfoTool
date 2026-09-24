@@ -182,6 +182,45 @@ negativer Beitrag am Extrem.
 | **Positivkontrolle** | nach Norm, 5 Ziehungen |
 | **Statistik** | Blockbootstrap, `messnorm._block(H)`, Band je Stufe |
 
+## 4.0 ⚠️⚠️⚠️ DIE NORM — und warum das vorhandene Werkzeug sie NICHT erfüllt
+
+**Nutzerhinweis:** *„die Messungen sollten nach unseren Standards erfolgen —
+also welche Menge, Nullpunkt, Rauschen, etc."*
+
+**Geprüft:** `phase4_n19e_pruefen.py` (aus dieser Session) enthält
+**null** Verweise auf `messnorm`. ⛔ **Es ist Altbestand** — genau die
+Gruppe, zu der CLAUDE.md sagt: *„178 von 311 Messwerkzeugen (57 %) sind
+Altbestand; ein Befund aus dieser Gruppe gilt nur mit Vorbehalt."*
+
+➤ **Es wird nicht in dieser Form benutzt.** Ohne Nachrüstung fehlten
+Nullpunkt, Nullwelten, Trennschärfe, Positivkontrolle und Bänder.
+
+## 4.0a Die Zweiteilung, die die Norm selbst vorgibt
+
+`FRAGEARTEN` trennt sauber, und danach wird gebaut:
+
+| Teil | Frageart | Norm |
+|---|---|---|
+| **A — die Stufen SCHÄTZEN** je Fünftel | `zaehlung` (*„deskriptiv, kein Urteil"*) | ⚠️ **kein** Urteil, deshalb kein Nullpunkt nötig — aber **out-of-sample**: erste Hälfte fitten, zweite prüfen |
+| **B — die neue REGEL prüfen** gegen die alte | `beitrag` → **selektierte Menge** (F-212) | ✔ **volle Norm**: Nullpunkt aus 40 Nullwelten (90. Perzentil), Trennschärfe gegen denselben Bezug, Positivkontrolle 5 Ziehungen, Blockbootstrap mit `_block(H)` |
+
+⚠️⚠️ **Teil A allein ist KEIN Befund.** Eine geschätzte Stufe ist eine Zahl;
+ob die daraus gebaute Regel trägt, entscheidet erst Teil B — und der läuft
+über `messnorm_auswahl.pruefe_auswahl`, dieselbe Anlage wie `k1c`.
+
+## 4.0b ⛔ Und ein zweiter Bruch im Werkzeug, vor dem Lauf gefunden
+
+`messe_zielregel.HORIZONT` steht auf **60**, während die Stufen mit
+`horizont=20` gebaut werden. **Das Werkzeug trägt einen eingebauten
+Horizontbruch** — genau den, der 2.569 gekostet hat.
+
+➤ `ergebnisse()` bekommt den Horizont als **Parameter** (Vorgabe **60**,
+damit bestehende Aufrufe bitgleich bleiben, R-R11). Erst dann ist die
+Horizontachse überhaupt fahrbar.
+
+⚠️ **Beide Funde stehen hier, weil sie VOR der Messung gefunden wurden** —
+nicht als Entschuldigung danach.
+
 ## 4.1 Was mitläuft
 
 1. **R-R11:** die alte Umrechnung wird nachgerechnet und der Faktor
