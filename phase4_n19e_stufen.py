@@ -40,9 +40,22 @@ Kennzahl". Ein einzelnes Fuenftel ist genau das, wenn die Kennzahl ein
 INDIKATOR ist - 1 fuer "in diesem Fuenftel", 0 sonst. Mit `menge='20%'`
 waehlt die Anlage dann exakt dieses Fuenftel aus.
 
-➤ Damit beantwortet Teil B je Fuenftel: traegt es, und mit welchem
-VORZEICHEN? Genau die Nutzerfrage *„wo liegen positive oder negative
-Beitraege?"* - ein negativer Beitrag sagt „in dieser Lage KEIN Hebel".
+⚠️⚠️⚠️ UND DAS VORZEICHEN IST SPIEGELBILDLICH ZU TEIL A - das ist die
+Falle, und ich bin am 24.09. selbst hineingelaufen.
+
+`messnorm_auswahl` rechnet `mittel(frei) - mittel(alle)`, und `frei` sind
+die Anker, die die Regel DURCHLAESST. Teil B misst also die Wirkung des
+SPERRENS, nicht des Waehlens:
+
+    Teil B POSITIV   Sperren hilft    -> das Fuenftel ist SCHLECHT
+    Teil B NEGATIV   Sperren schadet  -> das Fuenftel ist GUT
+
+➤ Eine positive Stufe in Teil A gehoert also zu einer NEGATIVEN Wirkung in
+Teil B. Wer beide Vorzeichen gleichsetzt, liest einen Widerspruch, wo
+Uebereinstimmung steht - genau das ist mir bei `turnover`/H20 passiert
+(Teil A +1,75 Punkte, Teil B -0,0135; beides heisst *Fuenftel 0 ist gut*).
+
+⚠️ Die Ausgabe weist das Vorzeichen deshalb AUSDRUECKLICH aus.
 
 ═══════════════════════════════════════════════════════════════════════
  WAS DIESES WERKZEUG NICHT TUT
@@ -128,35 +141,67 @@ def fuenftel_je_tag(je0) -> dict:
     return aus
 
 
-def stufen_schaetzen(je_barriere, f5, tage) -> tuple:
-    """TEIL A: je Fuenftel die Verschiebung der Trefferquote, in Punkten.
+def stufen_schaetzen(je_welt, f5, tage, zielgroesse="barriere") -> tuple:
+    """TEIL A: je Fuenftel die Stufe - MIT TAGESKLAMMER und der Statistik
+    der Zielgroesse.
 
-    Rueckgabe: (stufen, belegung) - beides je Fuenftel.
+    ⚠️⚠️⚠️ AM 24.09.2026 KOMPLETT ERSETZT - die erste Fassung war FALSCH,
+    und R-R11 hat sie widerlegt.
 
-    ⚠️ Der Bezug ist das GESAMTmittel derselben Tagemenge, nicht null.
-    Eine Stufe sagt: *um wieviel verschiebt DIESES Fuenftel die
-    Trefferquote gegenueber dem Durchschnitt*.
+    Sie rechnete (a) Mittelwerte statt der Statistik aus der Zielgroesse
+    und (b) GEPOOLT ueber alle Anker statt je Tag geklammert. Ergebnis:
+    die registrierten Stufen kamen um Faktor 2,3 (funding) und 3,3
+    (turnover) zu GROSS heraus.
+
+    ⚠️ Genau dieselbe Signatur steht im Kopf von
+    `pruefe_n31_tagesklammer.je_tag_wirkung`: *„Das ist rund das
+    3,8-fache ... derselbe Faktor bei beiden, die Signatur eines
+    DEFINITIONSUNTERSCHIEDS. Gefunden hat es die Reproduktionskontrolle."*
+    Dieselbe Falle, dieselbe Kontrolle, achtzehn Tage spaeter.
+
+    ➤ JETZT WIRD DIE NORM BENUTZT statt nachgebaut: `je_tag_wirkung`
+    rechnet je Tag `stat(frei) - stat(ALLE)` - gegen ALLE, nicht gegen
+    die Gesperrten (auch das ein Faktor ~3,8, derselbe Kopf).
+
+    Rueckgabe: (stufen, belegung) je Fuenftel.
     """
-    tr = np.zeros(5)
-    n = np.zeros(5)
-    ges_t = ges_n = 0.0
-    for tag in tage:
-        rang = f5.get(tag)
-        if not rang:
-            continue
-        for x in je_barriere.get(tag, ()):
-            k = rang.get(x["sym"])
-            if k is None:
+    import numpy as _np
+    from pruefe_n31_tagesklammer import je_tag_wirkung as _jtw
+    from messnorm import ZIELGROESSEN as _ZG
+
+    stat = _ZG[zielgroesse].get("statistik", "median")
+    tage_s = set(tage)
+    stufen, belegung = [], []
+    for k in range(5):
+        # je Tag: die Anker DIESES Fuenftels als "frei", alle als Bezug -
+        # genau die Form, die `je_tag_wirkung` erwartet
+        # ⚠️⚠️ `je_tag_wirkung` rechnet `stat(y[~oben]) - stat(y)`, also
+        # FREI gegen ALLE - und `oben` sind die GESPERRTEN. Fuer die Stufe
+        # *dieses* Fuenftels muss es also umgekehrt belegt werden:
+        # `oben = (Fuenftel != k)`, damit `~oben` genau das Fuenftel ist.
+        # Wer hier `oben = (== k)` setzt, misst das SPERREN und bekommt
+        # das Vorzeichen verkehrt.
+        g = {}
+        n = 0
+        for tag in tage_s:
+            rang = f5.get(tag)
+            if not rang:
                 continue
-            tr[k] += x["in_r"]
-            n[k] += 1
-            ges_t += x["in_r"]
-            ges_n += 1
-    if not ges_n:
-        return [0.0] * 5, [0] * 5
-    ges = ges_t / ges_n
-    stufen = [100.0 * (tr[k] / n[k] - ges) if n[k] else 0.0 for k in range(5)]
-    return stufen, [int(x) for x in n]
+            zeilen = [(rang.get(x["sym"]), float(x["in_r"]))
+                      for x in je_welt.get(tag, ())
+                      if rang.get(x["sym"]) is not None]
+            if len(zeilen) < 12:
+                continue
+            oben = _np.array([r != k for r, _ in zeilen], bool)
+            y = _np.array([v for _, v in zeilen], float)
+            if (~oben).sum() < 3 or oben.sum() < 1:
+                continue
+            g[tag] = (oben, y)
+            n += int((~oben).sum())
+        d = _jtw(g, stat) if g else {}
+        stufen.append(100.0 * float(_np.mean(list(d.values()))) if d else 0.0)
+        belegung.append(n)
+    return stufen, belegung
 
 
 def indikatorwelt(je_barriere, f5, fuenftel: int) -> dict:
@@ -177,6 +222,73 @@ def indikatorwelt(je_barriere, f5, fuenftel: int) -> dict:
         if len(z) >= 12:
             aus[tag] = z
     return aus
+
+
+def r_r11(reihen, zus, merkmale, H, ab, gesperrt) -> None:
+    """R-R11: reproduziert das Werkzeug die REGISTRIERTEN Stufen?
+
+    ⚠️⚠️ OHNE DIESEN NACHWEIS IST DAS N19-E-ERGEBNIS WERTLOS. Findet das
+    Werkzeug auf `bewegung_r` NICHT die registrierten Stufen, dann liegt
+    der Unterschied am WERKZEUG und nicht an der Zielgroesse - und die
+    ganze Messung sagt nichts ueber den Zielgroessenbruch.
+
+    DER WEG, genau wie die Stufen entstanden sind:
+
+        1. die R-Wirkung je Fuenftel auf `bewegung_r` (das liefert
+           `K.baue` als `in_r` - die Kursbewegung in Stopeinheiten)
+        2. die Umrechnung `d(quote) = d(Potential) / (1 + CRV)`
+
+    ⚠️ Schritt 2 ist die Umrechnung, die N19 als ueberschaetzend
+    entlarvt hat. Sie wird hier BENUTZT, nicht geprueft - geprueft wird,
+    ob damit die registrierten Zahlen herauskommen.
+    """
+    print("=" * 108)
+    print("  R-R11: reproduziert das Werkzeug die REGISTRIERTEN Stufen?")
+    print("  Weg: R-Wirkung auf `bewegung_r` (H%d), dann d(quote)=d(Pot)/(1+CRV)"
+          % H)
+    print("=" * 108)
+    for kand, merkmal, live, name in merkmale:
+        if kand == "zufall":
+            continue
+        try:
+            je0 = K.baue(reihen, kand, zus.get(kand), horizont=H)
+        except Exception as exc:                             # noqa: BLE001
+            print("  %-22s -> %s" % (name[:22], str(exc)[:50]))
+            continue
+        if gesperrt:
+            je0 = {t: [x for x in z if (t, x["sym"]) not in gesperrt]
+                   for t, z in je0.items()}
+            je0 = {t: z for t, z in je0.items() if z}
+        f5 = fuenftel_je_tag(je0)
+        je0 = {t: z for t, z in je0.items() if str(t)[:10] >= ab}
+        tage = sorted(je0)
+        # ⚠️ `stufen_schaetzen` liefert 100 x (Mittel - Gesamt). Auf
+        # `bewegung_r` ist das die R-Wirkung in Hundertsteln; die
+        # Umrechnung teilt durch (1+CRV).
+        # ⚠️ Auf `bewegung_r` - deshalb MEDIAN, nicht Mittel. Die
+        # Zielgroesse steuert die Statistik, nicht der Aufruf.
+        roh, bel = stufen_schaetzen(je0, f5, tage,
+                                    zielgroesse="bewegung_r")
+        umger = [x / (1.0 + 2.0) for x in roh]
+        print()
+        print("  %s   (%d Tage)" % (name, len(tage)))
+        print("    %-12s %s" % ("registriert",
+                                " ".join("%+7.2f" % x for x in live)))
+        print("    %-12s %s" % ("reproduziert",
+                                " ".join("%+7.2f" % x for x in umger)))
+        abw = [abs(a - b) for a, b in zip(live, umger)]
+        vz = sum(1 for a, b in zip(live, umger) if (a > 0) == (b > 0))
+        sp_l, sp_r = max(live) - min(live), max(umger) - min(umger)
+        print("    ➤ Vorzeichen gleich in %d von 5 · Spanne %.2f gegen %.2f "
+              "(Verhaeltnis %.2f) · groesste Abweichung %.2f Pkt"
+              % (vz, sp_l, sp_r, sp_r / max(sp_l, 1e-9), max(abw)))
+        print("    ➤ %s"
+              % ("✔ REPRODUZIERT - Vorzeichen alle gleich, Spanne auf 30 % genau"
+                 if vz == 5 and 0.7 <= sp_r / max(sp_l, 1e-9) <= 1.43
+                 else "⚠️ TEILWEISE - Ordnung stimmt, Hoehe weicht ab"
+                 if vz >= 4
+                 else "⛔ NICHT REPRODUZIERT - das Werkzeug misst etwas anderes"))
+    print()
 
 
 def _wert(flag, vorgabe):
@@ -212,6 +324,15 @@ def main() -> int:
     mom = momentum250(reihen)
     zus = zusatzquellen()
     merkmale = merkmale_aus_register()
+    # ⚠️⚠️⚠️ DIE KONTROLLE IST PFLICHT, NICHT KUER (Vorabfestlegung § 4).
+    #
+    # Ohne sie ist nicht zu unterscheiden, ob "kleine, instabile Stufen"
+    # ein BEFUND ueber die Merkmale ist - oder schlicht das, was diese
+    # Anlage bei JEDEM beliebigen Merkmal ausgibt. `zufall` traegt keine
+    # Information; was dort herauskommt, ist der Massstab fuer alles andere.
+    if "--ohne-kontrolle" not in sys.argv:
+        merkmale = merkmale + [("zufall", "zufall_fuenftel",
+                                (0.0,) * 5, "KONTROLLE zufall")]
     print("  Merkmale aus dem Register: %s"
           % ", ".join(m[3] for m in merkmale))
 
@@ -231,6 +352,11 @@ def main() -> int:
         print("  ⚠️ Trichterstufe 6: %d Anker gesperrt (oberstes OI-Fuenftel, "
               "2.576)" % len(gesperrt))
     print()
+
+    if "--r-r11" in sys.argv:
+        r_r11(reihen, zus, merkmale, achse[0], ab, gesperrt)
+        print("  Dauer %.1f Minuten" % ((time.time() - t0) / 60.0))
+        return 0
 
     for H in achse:
         print("=" * 108)
@@ -274,15 +400,24 @@ def main() -> int:
                                     " ".join("%7d" % x for x in bel_a)))
             sp_live = max(live) - min(live)
             sp_neu = max(st_a) - min(st_a)
+            if sp_live <= 0:      # die Kontrolle hat keine registrierten Stufen
+                print("    ⚠️ KONTROLLE - hier gibt es nichts zu vergleichen. "
+                      "Was hier herauskommt, ist der MASSSTAB fuer oben.")
             gleich = sum(1 for a, b in zip(live, st_a)
                          if (a > 0) == (b > 0))
-            print("    ➤ Spanne %.2f gegen %.2f (Faktor %.2f) · Vorzeichen "
+            print("    ➤ Spanne %.2f gegen %.2f (Faktor %s) · Vorzeichen "
                   "gleich in %d von 5 · Haelften gleiches Vorzeichen in %d von 5"
-                  % (sp_live, sp_neu, sp_neu / max(sp_live, 1e-9), gleich,
+                  % (sp_live, sp_neu,
+                     ("%.2f" % (sp_neu / sp_live)) if sp_live > 0 else "-",
+                     gleich,
                      sum(1 for a, b in zip(st_a, st_b) if (a > 0) == (b > 0))))
 
             # ---- TEIL B: jedes Fuenftel normgerecht --------------------
-            print("    TEIL B - normgerecht je Fuenftel (selektierte Menge):")
+            print("    TEIL B - normgerecht je Fuenftel (selektierte Menge)")
+            print("      ⚠️ Wirkung = SPERREN dieses Fuenftels. POSITIV heisst "
+                  ",Sperren hilft` = Fuenftel schlecht;")
+            print("         NEGATIV heisst ,Sperren schadet` = Fuenftel gut. "
+                  "Spiegelbildlich zu Teil A.")
             for f in range(5):
                 welt = indikatorwelt(je, f5, f)
                 if len(welt) < 30:
@@ -298,10 +433,12 @@ def main() -> int:
                 except Exception as exc:                     # noqa: BLE001
                     print("      Fuenftel %d -> %s" % (f, str(exc)[:60]))
                     continue
+                deut = ("Fuenftel SCHLECHT" if b.wirkung > 0
+                        else "Fuenftel GUT" if b.wirkung < 0 else "-")
                 print("      Fuenftel %d  %+8.4f [%+.4f .. %+.4f]  %4d Tage "
-                      "%3d Bloecke  %s"
+                      "%3d Bloecke  %-22s %s"
                       % (f, b.wirkung, b.unten, b.oben, b.n_tage,
-                         b.n_bloecke, K1C.kurz(b.urteil)))
+                         b.n_bloecke, K1C.kurz(b.urteil), deut))
     print()
     print("  Dauer %.1f Minuten" % ((time.time() - t0) / 60.0))
     print()

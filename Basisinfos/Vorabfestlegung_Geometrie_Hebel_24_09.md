@@ -150,6 +150,61 @@ Vorabfestlegung**, nicht in die Auswertung.
 Fünftel aus — und die **Sperrform** ist nichts anderes als ein sehr großer
 negativer Beitrag am Extrem.
 
+## 2.5 ⭐⭐⭐ NUTZERHINWEIS 24.09. — UND ER KORRIGIERT DIE ZIELGRÖSSE
+
+> *„Dass der Hebeltrade nur 0,3 Tage hält, ist auch eine **Annäherung** und
+> keine fixe Zahl. Fakt ist nur: **je kürzer, desto geringer die
+> Wahrscheinlichkeit, in den Stop zu laufen**."*
+
+**Gemessen statt geglaubt** (120 Symbole, jeder 7. Anker, Produktionsgeometrie):
+
+| H | Ziel % | **Stop %** | offen % | **Ziel \| entschieden** |
+|---|---|---|---|---|
+| **2** | 9,2 | **29,5** | **61,3** | **23,7 %** |
+| 3 | 13,7 | 38,8 | 47,6 | 26,1 % |
+| 5 | 20,2 | 48,2 | 31,7 | 29,5 % |
+| 10 | 27,7 | 58,2 | 14,1 | 32,3 % |
+| **20** | 31,9 | **63,3** | 4,8 | **33,5 %** |
+| 40 | 32,7 | 65,2 | 2,1 | 33,4 % |
+
+✔ **Die Aussage stimmt:** kurz halten **halbiert** die Stop-Wahrscheinlichkeit
+(29,5 % gegen 63,3 %, Faktor 2,1).
+
+### ⭐ Der eigentliche Fund steht in der letzten Spalte
+
+Von den **entschiedenen** Trades gewinnen bei H20 genau **33,5 %** — das ist
+die Kelly-Nullstelle `1/(1+CRV) = 33,3 %`. Bei H2 nur **23,7 %**.
+
+> **Je kürzer das Fenster, desto SCHLECHTER die bedingte Trefferquote** —
+> der Stop ist nur halb so weit wie das Ziel und wird deshalb
+> überproportional zuerst getroffen. Erst mit der Zeit gleicht sich das zur
+> geometrischen Quote aus.
+
+### ⚠️⚠️ Und damit ist erklärt, warum bisher nichts zu finden war
+
+Bei H2 bleiben **61,3 %** der Trades offen. `barriere` mit
+`ungeloest=None` **wirft genau diese weg** — gemessen wird also ein Drittel
+der Wirklichkeit, und zwar das ungünstigste.
+
+➤ **Der reale Hebeltrade endet meist weder im Ziel noch im Stop, sondern
+durch ENTSCHEIDUNG.** Sein Ergebnis ist der Zwischenstand beim Ausstieg.
+
+### ➤ Die Zielgröße wird korrigiert
+
+| Fall | bisher | **richtig** |
+|---|---|---|
+| Ziel getroffen | `+CRV` | `+CRV` |
+| Stop getroffen | `−1` | `−1` |
+| **offen** | ⛔ **weggeworfen** | ⭐ **`(Kurs − Einstieg) / Stopabstand`** — was man beim Ausstieg bekommt |
+
+⚠️ **Das war in der ersten Fassung dieser Vorabfestlegung schon einmal
+richtig formuliert (§ 1.4) — ich hatte es fallen lassen.** Jetzt ist es
+gemessen begründet statt nur plausibel.
+
+⚠️⚠️ **Und es entwertet die „0,30 Tage" als feste Zahl:** die Haltedauer ist
+eine **Stellgröße**, keine Beobachtung. Je kürzer, desto weniger Stop — aber
+desto mehr hängt am Ausstiegskurs, den wir auf Tagesdaten **nicht kennen**.
+
 ---
 
 # § 3 ⚠️ Was aus dem Register NICHT mehr offen ist — nicht erneut messen
