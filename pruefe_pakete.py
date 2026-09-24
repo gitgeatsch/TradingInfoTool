@@ -17203,6 +17203,58 @@ def paket_beitrag_stufen() -> None:
     finally:
         _WK.BEITRAEGE = echte
 
+    # ---- ⚠️⚠️⚠️ DER BITGLEICHHEITSTEST LAEUFT HIER MIT (24.09.2026) ----
+    #
+    # DER ANLASS, und er ist gemessen: `pruefe_wahrscheinlichkeit_bitgleich`
+    # wird oben in diesem Docstring als DER Schutz genannt - und die Suite
+    # hat ihn nie ausgefuehrt. Am 24.09. stand er auf 432 von 432 rot, seit
+    # dem 11.09., ohne dass es auffiel.
+    #
+    # Ein Massstab, den niemand anlegt, schuetzt nichts. Deshalb gehoert er
+    # in den EINEN Befehl, der vor jedem Commit laeuft.
+    #
+    # ⚠️ Er prueft hier nur - er zeichnet NIE auf. Das Neuaufzeichnen
+    # bleibt ein Urteil mit eigener Sperre.
+    import json as _json
+
+    try:
+        import pruefe_wahrscheinlichkeit_bitgleich as _BG
+
+        _soll = _json.loads(io.open(_BG.REFERENZ, encoding="utf-8").read())
+        _ist = _BG.erfassen()
+        _ist.update(_BG.erfassen_lagen())
+        _ab = sorted(k for k in (set(_soll) | set(_ist))
+                     if _soll.get(k) != _ist.get(k))
+        pruefe(P, "⚠️⚠️ die Bewertung ist bitgleich zur Aufzeichnung",
+               not _ab,
+               "%d von %d Faellen weichen ab%s. Eine Aenderung an `rechne()` "
+               "oder an einem Beitrag verschiebt eine Zahl, die in jeder "
+               "Mail steht. Ist sie gewollt UND begruendet: `python "
+               "pruefe_wahrscheinlichkeit_bitgleich.py --aufzeichnen`"
+               % (len(_ab), len(_ist),
+                  (" - zuerst: %s" % _ab[0]) if _ab else ""))
+        # ⚠️ UND DIE ABDECKUNG WIRD MITGEPRUEFT. Die Lagenachse kam am
+        # 24.09. dazu, weil das alte Gitter `instrument` und `richtung`
+        # gar nicht uebergab und fuer beide Achsen BLIND war (gemessen:
+        # eine Mutation `instrumente=("hebel",)` ergab dort 0 FEHL, auf
+        # der Lagenachse 12). Faellt die Lagenachse weg, ist der Test
+        # still wieder blind - und das soll nicht stumm passieren.
+        _lagen = _BG.lagen()
+        pruefe(P, "⚠️ und sie deckt die Lage `hebel x einstieg` ab",
+               ("hebel", "einstieg", "") in _lagen,
+               "das ist die Lage des Hebelumbaus (2.574). Ohne sie faellt "
+               "eine Instrumenttrennung nicht auf. Die Lagen werden aus "
+               "`ERLAUBTE_PAARE` und den Beitraegen ABGELEITET - fehlt "
+               "diese, hat sich eine der beiden Quellen geaendert. "
+               "Abgedeckt: %s" % (", ".join("%s/%s" % (i or "-", s or "-")
+                                            for i, s, _ in _lagen)))
+    except Exception as _bgx:                                # noqa: BLE001
+        pruefe(P, "⚠️⚠️ die Bewertung ist bitgleich zur Aufzeichnung",
+               False,
+               "der Bitgleichheitstest liess sich nicht ausfuehren (%s: %s). "
+               "Fehlt die Referenz, muss sie VOR einer Aenderung "
+               "aufgezeichnet werden - danach ist sie wertlos"
+               % (type(_bgx).__name__, str(_bgx)[:120]))
 
 
 def paket_kalibrierung() -> None:

@@ -27,13 +27,44 @@ Alle Kombinationen, die im Betrieb vorkommen koennen:
 Das sind 4 x 3 x 4 x 3 x 2 = 288 Faelle. Erfasst wird nicht nur die Quote,
 sondern **jedes Feld** der Rueckgabe und **jede Zeile** von `saetze()` -
 inklusive Reihenfolge und Text.
+
+## ⚠️⚠️⚠️ DIE LAGENACHSE (24.09.2026, Befund 2.574, Umbauschritt A)
+
+Das Gitter oben laesst **drei der vier Achsen** von `_gilt()` unberuehrt:
+es uebergibt `klasse`, aber **nicht** `strategie`, `richtung`, `instrument`.
+Beide Folgen sind belegt:
+
+  1. Eine Aenderung an `strategien`/`richtungen`/`instrumente` eines
+     Beitrags waere hier **nicht aufgefallen**. Genau das steht beim
+     Hebelumbau an (`instrumente=("hebel",)`).
+  2. Schlimmer: mit `strategie=""` gilt `"" not in ("einstieg",)`, also
+     greifen die Beitraege mit `strategien=("einstieg",)` im ganzen
+     Gitter **gar nicht**. Der Test friert eine Rechnung ein, in der die
+     tragenden Beitraege stillgelegt sind.
+
+Deshalb ein **zweites** Gitter, unter eigenem Schluesselpraefix `lage|`.
+
+⚠️ DIE ALTEN SCHLUESSEL BLEIBEN UNVERAENDERT. Waeren sie umbenannt, waere
+die aufgezeichnete Referenz von 432 Faellen wertlos - und mit ihr der
+Massstab, wegen dem dieses Werkzeug existiert.
+
+⚠️⚠️ DIE LAGEN WERDEN ABGELEITET, NICHT AUFGEZAEHLT (CLAUDE.md, Regel 4:
+*„was aufgezaehlt wird, veraltet still"*). Quellen sind
+`handelsauftrag.ERLAUBTE_PAARE` und die Deklarationen der Beitraege
+selbst. Registriert jemand morgen einen Beitrag auf `richtungen=("short",)`,
+waechst das Gitter **von allein** mit - ohne Aenderung an dieser Datei.
 """
 import io
 import json
 import os
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+# ⚠️ NUR WENN ES GEHT (24.09.2026). Seit die Suite dieses Modul IMPORTIERT,
+# statt es als Programm zu starten, steht in `sys.stdout` ihr Mitschnitt -
+# und der kennt `reconfigure` nicht. Ohne diese Bedingung scheitert schon
+# der Import, und die Suite meldet den Schutz als nicht ausfuehrbar.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from agent import wahrscheinlichkeit as WK
 
@@ -45,8 +76,99 @@ H = (True, False, None)
 GEBUEHREN = (0.003, 0.015)
 
 
+# Das REDUZIERTE Gitter fuer die Lagenachse. Die fuenf Achsen oben wirken
+# auf die Lagenfrage nicht ein - `_gilt()` sieht von ihnen nur `klasse`.
+# Zwei CRV, ein Stop, zwei Klassen, zwei H, eine Gebuehr = 8 je Lage.
+L_CRV, L_STOP, L_KLASSEN, L_H, L_GEB = (2.0, 3.0), 0.05, ("krypto", ""), (True, None), 0.015
+
+
 def _schluessel(crv, stop, klasse, h, geb):
     return "crv%s|stop%s|kl%s|h%s|geb%s" % (crv, stop, klasse or "-", h, geb)
+
+
+def _ohne_text(fall: dict) -> dict:
+    """Denselben Fall ohne die FORMULIERUNGEN - nur was gerechnet wurde.
+
+    ⚠️ Fuer die Aufzeichnungssperre. Der Vergleich beim PRUEFEN bleibt
+    vollstaendig: eine geaenderte Mailzeile soll dort auffallen. Nur die
+    Frage *„darf ich ohne --auch-zahlen neu aufzeichnen?"* blendet Text aus.
+
+    Text ist `zeilen` (aus `saetze()`) und `beitraege[*][3]` (`warum`).
+    Name, Zustand und Punkte eines Beitrags bleiben drin - ein Sprung auf
+    `zustand="nie"` ist eine Wirkungsaenderung, auch bei 0,0 Punkten.
+    """
+    rest = {k: v for k, v in fall.items()
+            if k not in ("zeilen", "beitraege")}
+    if "beitraege" in fall:
+        rest["beitraege"] = [list(b[:3]) for b in fall["beitraege"]]
+    return rest
+
+
+def lagen() -> list:
+    """Welche (instrument, strategie, richtung) muss der Test abdecken?
+
+    ⚠️ ABGELEITET, NICHT AUFGEZAEHLT. Zwei Quellen, beide im Quelltext:
+
+        handelsauftrag.ERLAUBTE_PAARE   was der Betrieb zulaesst
+        WK.BEITRAEGE[*].instrumente     wo ein Beitrag registriert IST
+                     .strategien
+                     .richtungen
+
+    Dazu die leere Lage ("", "", "") - das ist der Zustand, in dem das
+    alte Gitter laeuft, und er muss mitgeprueft bleiben.
+    """
+    from agent import handelsauftrag as HA
+
+    paare = {("", "")}
+    for instrument, strategien in HA.ERLAUBTE_PAARE.items():
+        for strategie in strategien:
+            paare.add((instrument, strategie))
+    # Ein Beitrag, der auf einer Lage registriert ist, die ERLAUBTE_PAARE
+    # nicht kennt, muss trotzdem geprueft werden - sonst deckt der Test
+    # genau die Registrierung nicht ab, um die es geht.
+    for b in WK.BEITRAEGE:
+        for instrument in (b.instrumente or ("",)):
+            for strategie in (b.strategien or ("",)):
+                paare.add((instrument, strategie))
+    richtungen = {""}
+    for b in WK.BEITRAEGE:
+        richtungen.update(b.richtungen or ())
+    return sorted((i, s, r) for (i, s) in paare for r in sorted(richtungen))
+
+
+def erfassen_lagen() -> dict:
+    """Das zweite Gitter: dieselbe Rechnung ueber alle Lagen."""
+    aus = {}
+    for instrument, strategie, richtung in lagen():
+        vorne = "lage|i%s|s%s|r%s" % (instrument or "-", strategie or "-",
+                                      richtung or "-")
+        for crv in L_CRV:
+            for klasse in L_KLASSEN:
+                for h in L_H:
+                    s = "%s|%s" % (vorne, _schluessel(crv, L_STOP, klasse,
+                                                      h, L_GEB))
+                    try:
+                        r = WK.rechne(crv=crv, stop_relativ=L_STOP,
+                                      klasse=klasse, h=h,
+                                      gebuehr_je_seite=L_GEB,
+                                      strategie=strategie, richtung=richtung,
+                                      instrument=instrument)
+                        aus[s] = {
+                            "quote": round(r["quote"], 10),
+                            "zuschlag": round(r["zuschlag_punkte"], 10),
+                            # ⚠️ `zustand` UND `warum` gehoeren dazu: eine
+                            # Lagenaenderung zeigt sich zuerst darin, dass
+                            # ein Beitrag auf "nie" springt - die Punkte
+                            # koennen dabei gleich bleiben (0,0 war schon
+                            # vorher moeglich).
+                            "beitraege": [
+                                [b["name"], b["zustand"],
+                                 round(b["punkte"], 10), b["warum"]]
+                                for b in r["beitraege"]],
+                        }
+                    except WK.WahrscheinlichkeitUnbekannt as exc:
+                        aus[s] = {"fehler": str(exc)}
+    return aus
 
 
 def erfassen() -> dict:
@@ -96,6 +218,7 @@ def erfassen() -> dict:
 
 def main() -> int:
     jetzt = erfassen()
+    jetzt.update(erfassen_lagen())
     if "--aufzeichnen" in sys.argv:
         # ⚠️⚠️⚠️ DIE SPERRE GEGEN DAS BEQUEME NEUAUFZEICHNEN (11.09.2026).
         #
@@ -105,9 +228,26 @@ def main() -> int:
         # dieselbe Geste eine geaenderte ZAHL mitloeschen. Dann ist der
         # Massstab weg, und zwar genau dann, wenn er gebraucht wird.
         #
-        # DIE TRENNUNG STECKT SCHON IN DEN SCHLUESSELN: Text steht unter
-        # `...|saetze`, die Zahlen unter `...|geb<x>`. Sie wird hier nur
-        # ausgewertet.
+        # ⚠️⚠️⚠️ 24.09.2026: DIE TRENNUNG LAG AUF DER FALSCHEN EBENE, UND
+        # DADURCH WAR DIE SPERRE STUMPF.
+        #
+        # Sie trennte nach SCHLUESSEL - `|saetze` gilt als Text, alles
+        # andere als Zahl. Aber in einem `|geb<x>`-Schluessel steckt
+        # `beitraege[*][3]`, der WARUM-Text, und der aendert sich mit
+        # jedem Quellenverweis.
+        #
+        # GEMESSEN am 24.09.: die Referenz vom 11.09. war zu 100 % rot
+        # (432 von 432). Davon waren ECHTE Zahlen: NULL. 144 Faelle
+        # `saetze()`, 288 Faelle allein der `warum`-Text (504 Zeilen) -
+        # nachgezogene Quellenangaben aus dem Nennerwechsel.
+        #
+        # Die Sperre hat also 288 TEXTaenderungen als Zahlaenderung
+        # gemeldet und `--auch-zahlen` verlangt. Wer das tut, loescht
+        # genau die Zahl mit, die sie schuetzen sollte - der Fall, den
+        # ihr eigener Kommentar oben befuerchtet.
+        #
+        # DIE TRENNUNG LAEUFT JETZT NACH FELD: `warum` und `zeilen` sind
+        # Text, alles andere ist Zahl.
         #
         #     TEXT aendert sich absichtlich - Formulierungen werden besser
         #     ZAHLEN aendern sich NIE, ohne dass eine Messung es verlangt
@@ -119,9 +259,20 @@ def main() -> int:
             _alt = json.loads(io.open(REFERENZ, encoding="utf-8").read())
         except (OSError, ValueError):
             _alt = {}
-        _zahl = sorted(k for k in (set(_alt) | set(jetzt))
-                       if not k.endswith("saetze")
-                       and _alt.get(k) != jetzt.get(k))
+        # ⚠️ 24.09.2026: EIN NEUER FALL IST KEINE GEAENDERTE ZAHL. Als die
+        # Lagenachse dazukam, waren 64 Schluessel neu - die Sperre haette
+        # sie als "64 Zahlen geaendert" gemeldet und damit `--auch-zahlen`
+        # verlangt, obwohl sich keine einzige bestehende Zahl bewegt hat.
+        # Das ist keine Aufweichung: was es vorher nicht gab, kann sich
+        # nicht geaendert haben. Ein VERSCHWUNDENER Schluessel zaehlt
+        # dagegen weiter mit - das waere ein Verlust an Abdeckung.
+        _zahl = sorted(k for k in sorted(set(_alt) & set(jetzt))
+                       if _ohne_text(_alt[k]) != _ohne_text(jetzt[k]))
+        _neu = sorted(set(jetzt) - set(_alt))
+        _weg = sorted(set(_alt) - set(jetzt))
+        if _weg:
+            # Ein verschwundener Fall ist Verlust an Abdeckung, nie Text.
+            _zahl = sorted(set(_zahl) | set(_weg))
         if _zahl and "--auch-zahlen" not in sys.argv:
             print("=" * 66)
             print("⚠️⚠️⚠️ NICHT AUFGEZEICHNET - %d ZAHLEN haben sich "
@@ -138,12 +289,15 @@ def main() -> int:
             print("   python %s --aufzeichnen --auch-zahlen"
                   % os.path.basename(__file__))
             return 1
-        _text = sum(1 for k in (set(_alt) | set(jetzt))
-                    if k.endswith("saetze") and _alt.get(k) != jetzt.get(k))
+        # Textaenderungen: abweichend, aber NICHT in der Rechnung.
+        _text = sum(1 for k in sorted(set(_alt) & set(jetzt))
+                    if _alt[k] != jetzt[k]
+                    and _ohne_text(_alt[k]) == _ohne_text(jetzt[k]))
         io.open(REFERENZ, "w", encoding="utf-8").write(
             json.dumps(jetzt, ensure_ascii=False, indent=1, sort_keys=True))
         print("Aufgezeichnet: %d Faelle -> %s" % (len(jetzt), REFERENZ))
-        print("   %d TEXTzeilen neu, %d Zahlen veraendert" % (_text, len(_zahl)))
+        print("   %d TEXTzeilen neu, %d Zahlen veraendert, %d Faelle NEU"
+              % (_text, len(_zahl), len(_neu)))
         print("⚠️ Diese Datei ist der Massstab. Sie wird NUR neu geschrieben,")
         print("   wenn eine Aenderung ABSICHTLICH das Ergebnis verschiebt -")
         print("   und dann steht der Grund im Umbaudokument.")

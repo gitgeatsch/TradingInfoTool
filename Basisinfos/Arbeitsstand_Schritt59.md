@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 20.09.2026 · letzter Commit `1b743e3` (**A1 gefallen** – die Messanlage ist auf `barriere` geeicht) · Prüfsuite **2988 Prüfungen, 3 rot** (alle im Paket `Neuaufnahme`, reiner Desktop-Datenstand, kein Codefehler)
+**Stand:** 24.09.2026 · ⛔ Hebelumbau ABGESAGT - B0 zeigt, die Wirkung kam aus dem gesperrten Fuenftel (2.576); Schritt A bleibt (2.575) · zuvor 20.09.2026 · letzter Commit `1b743e3` (**A1 gefallen** – die Messanlage ist auf `barriere` geeicht) · Prüfsuite **3081 Prüfungen, 3 rot** (alle im Paket `Neuaufnahme`, reiner Desktop-Datenstand, kein Codefehler)
 
 **Am Notebook:** letzter Pull `7490586` (schlanke Diagnose) · Laufzeitcode aus `02eca50` (terminmarkt-Protokoll) und `f92205f` (Laufzeitwächter) ist **gepullt und neu gestartet**. ⚠️ Für den nächsten **Export** ist **kein Pull nötig** – die schlanke Diagnose liegt seit `7490586` dort. `1b743e3` enthält **keinen Laufzeitcode** (Messskript, Befunde, Dokumente).
 
@@ -38,6 +38,58 @@ Umbau: S6 war ausdrücklich ein **Abdeckungs**paket.
 Hebelfaktor unter der **jetzigen** Konfiguration. 2.533 hält fest: *„die
 Simulation lief auf der ALTEN Schwelle; unter 0,060 ist der genaue Faktor
 offen"*. Das ist M1-Kriterium 2 (*Zielzone 2–5x belegt*).
+
+## ⚠️⚠️⚠️ STAND 24.09.2026 — DER HEBEL SOLLTE SEINE EIGENE BEWERTUNG BEKOMMEN — ⛔ B0 HAT DAS GEKIPPT
+
+**Vor Phase 4 hat sich die Lage geändert.** Nutzerthese, belegt (2.571):
+*„HEBEL und SPOT sind dasselbe — das ist FALSCH."*
+
+| | |
+|---|---|
+| **Die Ursache** | 2.490 („kein Beitrag trägt auf `barriere`") lief auf **H20**. Die echten Hebelpositionen haben eine **Median-Haltedauer von 0,30 Tagen** (2.493) |
+| **Schritt 1** ✔ | `HORIZONT_JE_LAGE` steht in der Norm, beide Messanlagen warnen (2.572/2.573) |
+| **Schritt 2** ✔ | 2.490 auf **H3** wiederholt. **R-R11 bitgleich reproduziert.** `oi_aenderung` **+0,0069 [+0,0031 … +0,0108]**, Kontrolle sauber, Saatprobe bestanden (2.573) |
+| **Entscheidung** | ✔ nach der Vorabfestlegung: **der Hebel bekommt seine eigene Bewertung** |
+
+### ⛔⛔⛔ NACHTRAG SELBER TAG: **B0 hat den Umbau gekippt** (2.576)
+
+Pflichtschritt **B0** ist gelaufen. Ohne das von Stufe 6 gesperrte oberste
+Fünftel fällt `oi_aenderung` von **+0,0069 [+0,0031…+0,0108] TRÄGT** auf
+**−0,0002 [−0,0032…+0,0030] trägt nicht**. R-R11 vorher bitgleich,
+Kontrolle in beiden Läufen sauber.
+
+> **Die Wirkung kam aus dem Fünftel, das die Kette nie sieht.
+> Der Umbau entfällt.**
+
+⚠️⚠️ **Und der Nebenbefund wiegt schwerer: es fallen ALLE VIER.**
+funding +0,0002→−0,0005 · turnover +0,0040→+0,0021 · schnitt
++0,0066→+0,0003. **Das oberste OI-Fünftel ist der Ort, an dem die
+Trennkraft sitzt — und genau den sperrt die Kette weg.**
+
+➤ Offene **Messfrage** an Stufe 6 (betrifft auch `spot × einstieg`,
+also M1-Kriterium 1): **Nutzerentscheidung**, bevor daran gearbeitet wird.
+
+✔ **Schritt A bleibt** und trägt eigenständig (2.575).
+
+### ⛔⛔ Die vier Blocker — sie bleiben gültig für jede Instrumenttrennung
+
+Plan: **`Basisinfos/Umbauplan_Hebel_eigene_Bewertung_24_09.md`** · Befund **2.574**
+
+| | |
+|---|---|
+| **A** ⛔⛔ | **Das gemessene Fünftel 4 erreicht die Bewertung nie.** Trichterstufe 6 (`terminmarkt`) sperrt bei `oi_fuenftel >= 4` hart (`rollen_lauf.py:1608`) — genau für `einstieg` ohne Bestand, also die Hebel-Lage. 2.573 maß über **alle fünf** Fünftel. **Ob der Beitrag auf 0–3 noch trägt, ist ungemessen** → Pflichtschritt **B0**, und er kann den Umbau **kippen** |
+| **B** ⛔ | **`instrument` ist bei der Quotenrechnung immer `spot`** (`rollen_lauf.py:2165`; der Quelltext sagt es wörtlich). Ein Beitrag mit `instrumente=("hebel",)` griffe **nie**. Heute wirkungslos, weil kein Beitrag das Feld setzt — **die Falle schlägt erst beim Umbau zu**. Lösbar mit einer Zeile |
+| **C** ⛔⛔⛔ | **Ein Gleichheitswächter (`:2591`) verbietet genau diese Trennung** — er meldet einen Fehler, sobald Hebelquote und Bewertung abweichen. Sobald B gelöst ist, feuert er bei **jedem** Signal. ⚠️ **Nicht entfernen** — er schützt vor echtem Auseinanderlaufen; sein **Bezugspunkt** wird lagerichtig |
+| **D** ⚠️ | **Drei** Stellen rechnen die Bewertung (`:2162`, `:2579`, `:1192`), alle mit `instrument`. ⚠️ `:1192` entscheidet nichts, ist aber **die Messspur** — bliebe sie auf `spot`, wäre der Umbau **im Betrieb nicht nachmessbar** |
+
+### Die Ablaufkette — gegengeprüft, kein weiterer Blocker
+
+**LLM-Rollen** (Stufe 8) liefern **vor** der Bewertung (Stufe 12) und kennen
+sie nicht (2.398) → **der Umbau wirkt dort nicht**, die Lücke gehört in
+Block **L-ROLLEN** (*D vor L*). **Strategien:** nur `hebel × einstieg`
+betroffen, `spot × einstieg` unberührt. **Empfehlungen:** zwei Quoten
+heißen zwingend **zwei Schwellen** (R-R9); die Mail muss beide ausweisen.
+
 
 ## ✔✔✔ A1 ist gefallen — der Hebel ist messbar
 

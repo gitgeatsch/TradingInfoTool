@@ -275,6 +275,30 @@ def main(argv: list[str] | None = None) -> int:
     hor = HORIZONT
     if "--horizont" in args:
         hor = int(args[args.index("--horizont") + 1])
+    # ⚠️⚠️⚠️ B0 (24.09.2026, Vorabfestlegung 8, Blocker A aus 2.574).
+    #
+    # 2.573 hat `oi_aenderung` ueber ALLE FUENF Fuenftel gemessen. In der
+    # Kette erreicht das oberste die Bewertung aber nie - Trichterstufe 6
+    # (`terminmarkt`) bricht dort HART ab:
+    #
+    #     elif _oi_f >= 4:
+    #         durchlauf.verloren(symbol, "terminmarkt", ...)
+    #         return
+    #
+    # und zwar genau fuer `einstieg` OHNE Bestand, also die Hebel-Lage.
+    # Ein Beitrag, der auf der vollen Verteilung kalibriert ist, waere
+    # damit auf eine Menge geeicht, die es im Betrieb nicht gibt.
+    #
+    # ⚠️⚠️ DIE SPERRE IST EINE EIGENSCHAFT DES ANKERS, NICHT DES
+    # KANDIDATEN. Stufe 6 wirft den Anker aus der GANZEN Kette. Die
+    # gesperrten (Tag, Symbol) werden deshalb EINMAL aus der
+    # `oi_aenderung`-Welt bestimmt und aus ALLEN Kandidatenwelten
+    # entfernt - auch aus `zufall`. Nur die eine Welt zu kuerzen hiesse,
+    # Kontrolle und Kandidat auf verschiedenen Mengen zu messen.
+    #
+    # ⚠️ VORGABE AUS, damit ein Aufruf ohne Argument 2.573 weiter
+    # BITGLEICH reproduziert (R-R11).
+    ohne_f4 = "--ohne-oberstes-fuenftel" in args
     t0 = time.time()
     reihen = B.lade()
     mom = momentum250(reihen)
@@ -314,6 +338,34 @@ def main(argv: list[str] | None = None) -> int:
           % ("Kandidat", "Menge", "Wirkung", "Band", "Bezug", "Tage",
              "Bloecke", "Urteil"))
 
+    # ---- B0: die Anker bestimmen, die Trichterstufe 6 wegsperrt --------
+    #
+    # ⚠️ EINMAL, aus der `oi_aenderung`-Welt - und gleich unten aus ALLEN
+    # Kandidatenwelten heraus. Siehe die Begruendung oben bei `ohne_f4`.
+    gesperrt = set()
+    if ohne_f4:
+        _oi = K.baue(reihen, "oi_aenderung", zus.get("oi_aenderung"),
+                     horizont=hor)
+        for tag, zeilen in _oi.items():
+            werte = sorted(float(x["kennzahl"]) for x in zeilen)
+            if len(werte) < 5:
+                # ⚠️ Unter fuenf Werten gibt es kein Fuenftel. Der Tag
+                # bleibt UNGEKUERZT - nicht weggeworfen: `marktrang`
+                # vergibt dort ebenfalls keinen Rang, und ein Wert ohne
+                # Rang wird von Stufe 6 ausdruecklich NICHT gesperrt
+                # ("ein Wert ohne OI-Rang ist nicht schlecht, sondern
+                # unbekannt" - Regel 4, Sperre nach Datenlage).
+                continue
+            grenze = werte[int(round(0.8 * (len(werte) - 1)))]
+            for x in zeilen:
+                if float(x["kennzahl"]) >= grenze:
+                    gesperrt.add((tag, x["sym"]))
+        print("  ⚠️⚠️ B0: oberstes OI-Fuenftel GESPERRT (Trichterstufe 6) - "
+              "%d Anker an %d Tagen" % (len(gesperrt), len(_oi)))
+        print("     Die Sperre gilt dem ANKER, nicht dem Kandidaten - sie "
+              "wirkt auf alle fuenf, auch auf `zufall`.")
+        print()
+
     erg, anteil = {}, None
     for kand in KANDIDATEN:
         try:
@@ -321,6 +373,10 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:                             # noqa: BLE001
             print("  %-14s -> %s" % (kand, str(exc)[:60]))
             continue
+        if gesperrt:
+            je0 = {t: [x for x in z if (t, x["sym"]) not in gesperrt]
+                   for t, z in je0.items()}
+            je0 = {t: z for t, z in je0.items() if z}
         je, anteil = barriere_je_tag(je0, reihen, hor)
         # ⚠️ NACH der Umrechnung filtern, nicht davor: `barriere_je_reihe`
         # braucht die Kurse VOR dem Fenster nicht, aber die ATR-Spanne
