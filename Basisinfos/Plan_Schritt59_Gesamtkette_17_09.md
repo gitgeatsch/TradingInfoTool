@@ -2192,3 +2192,72 @@ vom 19.09.: *„Die Verkaufsseite ist heute unbrauchbar."*
 | `nur_eigen` entfernt nur den Rahmen (Börsenfluss), nicht OI/Funding | `positionierung.py:913-960`, `:1057-1077` | ✔ (Funding-Satz laut Code-Lesung enthalten) |
 
 **Quellen:** `soll_ist.py` (Schritte 25, 29, 30, 33, 35, 37, 42, 43, 52, 59, 60, 61), `messnorm.py`, `agent/rollen_lauf.py`, `agent/rollen_gate.py`, `agent/rollen_eingabe.py`, `agent/rolle_analyst.py`, `agent/rolle_trader.py`, `agent/zweite_meinung.py`, `agent/positionierung.py`, `agent/potential.py`, `agent/wahrscheinlichkeit.py`, `agent/hebelfuehrung.py`, `agent/krypto/backward_tracking.py`, `Basisinfos/REGISTER_Befunde.md`, `REGISTER_Kandidaten.md`, `REGISTER_Fakten.md`, `Regelwerksmanual.md` (R-R1, R-R7, R-R11), `Kette_Landkarte.md`, `Gesamtplan_Wo_wir_stehen_28_08.md`; Befunde 2.391, 2.398, 2.389-richtung, 2.401, 2.403, 2.432, 2.438, 2.451-absicherung, 2.455-hebelsignale, 2.455-hebel-nachkaufen; Fakten F-174, F-214.
+
+---
+
+# ⛔⛔⛔ STAND HEBEL / M1-KRITERIUM 2 — 24.09.2026
+
+**Elf Befunde (2.557–2.567), eine Kette.** Nutzerauftrag: *„halte den
+kompletten Stand fest."*
+
+## Die Kernaussage
+
+> **Mit den vorhandenen Daten ist ein Hebel nicht zu rechtfertigen.**
+> Nicht „noch nicht", sondern „mit dem, was da ist, nicht".
+
+⚠️ **Kein akutes Geldrisiko:** M1 ist die Freigabeschwelle, und M1 steht
+nicht. **M1-Kriterium 2 ist nicht erfüllt** — gemessen ja, tragfähig nein.
+
+## Die Mechanik
+
+| | |
+|---|---|
+| Basisrate ohne Beitrag | **0,3333** |
+| Kelly-Nullstelle bei CRV 2 | **0,3333** — dieselbe Zahl |
+| steuerndes Fenster | **1 Prozentpunkt** |
+| was `funding` allein bewegt | **3 Punkte** |
+| gar kein Hebel in | **44 %** der Merkmalslagen |
+| Quote steuert in | **20 %** |
+
+## ⚠️⚠️⚠️ N19 (06.09.) war die ganze Zeit die Antwort
+
+Die Umrechnung `d(quote) = d(Potential)/(1+CRV)` ist algebraisch exakt —
+**die Annahme steckt im Eingang:** eingesetzt wird die **R-Wirkung**
+(`bewegung_r`), gemeint ist ein **Barrieren**-Erwartungswert.
+
+| | vorhergesagt | tatsächlich | Faktor |
+|---|---|---|---|
+| `funding` | 5,744 | **1,715** | **0,30** |
+| `turnover` | 8,643 | **3,000** | **0,35** |
+| `vola` | 7,968 | 7,185 | 0,90 ✔ |
+
+Registrierte Stufen **1,47× / 1,85× zu groß**, Überhang **~3,4 Punkte**.
+
+✔✔ **Das ist der Versatz aus 2.561/2.562: −3,5 bis −4,0 Pp.** Dieselbe
+Zahl, zwei Wege, achtzehn Tage auseinander. **N19-E wurde nie umgesetzt.**
+
+## Der Zielgrößenbruch
+
+`q` **ist** die Barrieren-Trefferquote — die Beiträge sind auf
+`bewegung_r` gemessen und **1:1 übersetzt**.
+
+⚠️ Die Korrektur **macht die Lage schlechter** (~3,4 Punkte niedrigere
+Quote, noch weiter unter der Nullstelle). Richtig ist sie trotzdem.
+
+## Was geschlossen ist
+
+| | |
+|---|---|
+| ⛔ Kein ungehobener **Asset**-Beitrag | 3 tragen, 9 nicht, 4 offen — alle vier **Rahmen** oder Aktien |
+| ⛔ `vola` | geprüfte Umrechnung (0,90), aber **keine Richtung** (N24) |
+| ⛔ „Nachrichten" | waren **System**info fürs LLM — wirken auf den Prompt, nicht auf `q` |
+| ⛔ **CRV erhöhen** | bei CRV 5 wäre der Hebel *überall* maximal → er käme aus der **Zielregel** statt aus einer Asset-Aussage. **Regel 4.** Zurückgenommen (2.565) |
+| ✔ CRV global | Merkmalslage ändert die Geometrie nicht (Cochran Q, beide Mengen homogen) |
+
+## Was offen bleibt
+
+| | | |
+|---|---|---|
+| **1** | **N19-E umsetzen** — Stufen ehrlich stutzen, danach R-R9 | Messung + Bau |
+| **2** | `funding` auf **`verbilligung`** (Akkumulation) | ungemessen, andere Zielgröße |
+| **3** | Ob **M1 ohne Hebel** definierbar ist | ⚠️ **Frage an den Meilenstein**, kein Messergebnis |
