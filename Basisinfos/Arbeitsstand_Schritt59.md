@@ -71,6 +71,36 @@ also M1-Kriterium 1): **Nutzerentscheidung**, bevor daran gearbeitet wird.
 
 ✔ **Schritt A bleibt** und trägt eigenständig (2.575).
 
+### ⭐⭐⭐ RICHTUNGSENTSCHEID 24.09. — DREI GESCHÄFTE, DIE LAGE IST EINGANG
+
+**Nutzerentscheidung:** *„Spot bleibt vorerst als eigener offener Punkt.
+Und Hebel muss neu gedacht werden."* · **Reihenfolge: 1. Hebel ·
+2. Akkumulation · 3. Spot.**
+
+Konzept: **`Basisinfos/Konzept_Hebel_als_eigenes_Geschaeft_24_09.md`** ·
+Befund **2.577**
+
+| Lage | entsteht aus | Signale |
+|---|---|---|
+| `spot × einstieg` | **Vorgabe** — Rückfall für alles | 3.513 |
+| `spot × akkumulation` | ✔ **Nutzerschalter** (`dca_erlaubt`) | 0 |
+| `hebel × einstieg` | ⛔ **der Geometrie, nachträglich** | 0 |
+
+> **Die Lage ist EINGANG, nicht AUSGANG.** Die Akkumulation ist das
+> **Vorbild** (gewollte Lage), der Hebel ein **Ergebnis**.
+
+✔ **Ohne massiven Umbau möglich:** `assetklassen.py:167` iteriert bereits
+über `INSTRUMENTE_JE_GRUPPE` — die Schleife muss nur über **Lagen** laufen.
+Und der LLM-Prompt ist für Spot/Hebel **bitgleich** (gemessen), die teure
+Ressource muss also nicht verdoppelt werden.
+
+⛔ **Verworfen:** Verzweigung im Lauf (Trichterzähler-Umbau) · Kette zu
+100 % auf Hebel (schneidet die Verkaufsseite ab).
+
+⚠️⚠️ **M1-Kriterium 2 ist nicht erfüllbar**, solange der Hebel kein eigenes
+Geschäft ist. **M1 in seiner heutigen Definition ist kein Nahziel mehr** —
+Nutzerentscheidung offen.
+
 ### ⛔⛔ Die vier Blocker — sie bleiben gültig für jede Instrumenttrennung
 
 Plan: **`Basisinfos/Umbauplan_Hebel_eigene_Bewertung_24_09.md`** · Befund **2.574**
