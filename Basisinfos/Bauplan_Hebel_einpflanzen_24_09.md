@@ -205,7 +205,33 @@ Entscheidung und steht nicht in diesem Plan.**
 
 # § 4 Der Ablauf — vier Phasen mit Abbruchbedingung
 
-## Phase 1 — Kapselung bauen *(Bau, kein Messergebnis)*
+## ✔✔ Phase 1 — Kapselung **GEBAUT 24.09.** (Befund 2.579)
+
+**Aus drei Eingriffen wurden sieben** — die Kapselung hat einen
+Konstruktionsfehler an **fünf** Stationen freigelegt:
+
+| | Stelle | wie gefunden |
+|---|---|---|
+| **K1** | `_hq_quote` rechnete mit `spot` | Voranalyse |
+| **K1b** | `potential.rechne` → `WK.rechne` | Seiteneffekt-Test |
+| **K1c** | `Potential.vermessen` | **Suite** |
+| **K1d** | `erreichbar_voll` → `_gilt()` | **Suite** |
+| **K1e** | `saetze()` hatte **keinen** `instrument`-Parameter (Mail) | **Suite** |
+| **K1f** | der **zweite** `rechne`-Aufruf in `saetze()` | **Prüfung T7** |
+| **K2/K3** | Beiträge auf `("spot",)` · Wächter lagerichtig | — |
+
+✔ **Abgenommen:** `spot` 0,3452 (5 Mailzeilen, vermessen, 2 Beiträge) ·
+`hebel` 0,3333 (nicht vermessen, 0 Beiträge). Bitgleichheitstest **0 von
+488 FEHL**, Suite **3.086 Prüfungen, 3 rot** (die drei bekannten).
+
+⚠️⚠️ **Die Lehre:** `merkmale` (31.08.) → `strategie` (02.09.) →
+`instrument` (24.09.) ist derselbe Bruch zum dritten Mal. Der Merksatz
+dagegen stand im Code und verwies auf ein Prüfpaket, **das es nicht gab**.
+Jetzt gebaut — und aus `_gilt()` **abgeleitet**, nicht aufgezählt. Die
+vierte Achse (`richtung`) wurde gleich mitgeschlossen.
+
+### Der ursprüngliche Plan lautete:
+
 
 K1, K2, K3 aus § 1.2, in dieser Reihenfolge.
 
@@ -353,3 +379,72 @@ Daten ein fachlich und technisch korrekter Hebel erzeugbar ist.
 wird nicht ein Kandidat gegen eine Spot-Infrastruktur gemessen, sondern
 eine **gekapselte Hebelbewertung** gegen Daten in der Auflösung, die zu
 ihrem Horizont passt.
+
+---
+
+# § 7 ⭐ DIE PHASEN BIS M1 — Hebel End2End
+
+**Nutzerfrage 24.09.:** *„Ziel ist eine funktionierende Strategie ‚Hebel'
+über die gesamte Ablaufkette und LLM (anpassen, messen und prüfen),
+End2End — ist das noch so?"*
+
+> ✔ **Das Ziel steht unverändert. Aber dieser Plan deckte nur H1–H4 ab.
+> H5 bis H9 fehlten — sie stehen jetzt hier.**
+
+## 7.1 Die Kette
+
+| | Phase | Art | hängt ab von |
+|---|---|---|---|
+| **H1** | **Kapselung** K1 → K2 → K3 | Bau | — |
+| **H2** | ⭐ **Geometrie über die Horizontachse** 2/3/5/10/20 × Stopweite × CRV × vola | **Messung — GABELUNG** | H1 |
+| *H2a* | *(nur falls H2 leer)* **Auflösung**: stündliche Kurse beschaffen, H2 wiederholen | Daten + Bau | H2 negativ |
+| **H3** | **Quote** — Beiträge auf der gefundenen Geometrie, inkl. der 3,36 Mio stündlichen Terminmarktzeilen | Messung | H2 positiv |
+| **H4** | **Einpflanzen** — Beitrag `instrumente=("hebel",)`, Schwelle je Lage (R-R9), `KALIBRIERT_FUER` | Bau | H3 positiv |
+| **H5** | ⚠️ **Trichter lagerichtig** — Stufe 6 (F-168 auf H20/`bewegung_r`), dazu `anlass` und `auswahl` prüfen | Messung + Bau | H4 |
+| **H6** | **Mail** — Hebelsignal erklären, LONG **und** SHORT am Prüfstand | Bau | H4 |
+| **H7** | **Betriebsprüfung** — entstehen am Notebook tatsächlich Hebelsignale? | Betrieb | H4+H5+H6 |
+| **H8** | **LLM lagerichtig** — eigener Hebel-Prompt, **gepaart gemessen** gegen den heutigen | Messung + Bau | **H7** |
+| **H9** | **Wirksamkeit End2End** — M1-Kriterium 7 | Messung | H7+H8 |
+
+## 7.2 ⚠️ Die drei Lücken, die im Plan fehlten — offen benannt
+
+| | |
+|---|---|
+| **H5 Trichter** | Der Plan sagte *„Stufe 6 wird in Phase 2 umgangen, nicht geändert"*. Das ist für die **Messung** richtig und für den **Betrieb** falsch: F-168 ist auf **H20 und `bewegung_r`** gemessen (Spot-Lage) und greift ohne Instrumentbedingung. Solange sie steht, sperrt sie dem Hebel genau das Fünftel weg, in dem B0 die Trennkraft fand (2.576) |
+| **H8 LLM** | Der Plan schloss es aus — richtig **bis H7**, denn ein Prompt für eine Lage ohne Signale wäre Arbeit an einem toten Pfad. **Danach ist er Pflicht**: heute ist `_HANDELN["spot"] is _HANDELN["hebel"]`, das Modell weiß nicht, worüber es urteilt, und sein eigener Docstring warnt davor |
+| **H9 Wirksamkeit** | fehlte ganz. ⚠️ **Und sie hat ein eigenes Problem:** es gibt **null historische Hebelsignale**. Wirksamkeit ist damit nur **simuliert** oder am **Papier** messbar — wie das zählt, ist eine Frage an M1, keine Messfrage |
+
+## 7.3 Was an Infrastruktur **schon** steht — und deshalb keine Phase braucht
+
+| | |
+|---|---|
+| Hebeltopf, Aggregat-Deckel | ✔ `TO.frei_eur(_topf_instrument)`, `hebel_aggregat` |
+| Cooldown je Instrument | ✔ `WH.gesperrt_bis(..., instrument, ...)` |
+| Handelbarkeit je Klasse | ✔ `_AKL.hebel_handelbar` |
+| Geometrie, Liquidation (RM-11) | ✔ `entscheidungsrechnung` |
+| Positionsführung, Börsenabgleich | ✔ `hebelfuehrung`, `hebel_abgleich` |
+
+➤ **Die Ausführung ist vollständig. Es fehlt ausschließlich die
+Entstehung.**
+
+## 7.4 ⚠️ Das Betriebsrisiko, das erst ab H7 entsteht
+
+Heute gibt es **null** Hebelsignale — deshalb ist bis H6 nichts zu
+verlieren. **Ab H7 ändert sich das:** entstehen Signale, wird der
+Hebeltopf belegt, und der Nutzer bekommt Empfehlungen, die er ausführen
+soll.
+
+⚠️ Dazu gehört 2.489: *„nicht alle Hebel sind für alle Assets verfügbar"*
+— die Stufenliste (2/3/5/10) ist eine **Annahme**, welche Stufe ein Asset
+wirklich zulässt, weiß die Rechnung nicht. **Vor H7 zu klären, nicht
+danach.**
+
+## 7.5 Die Gabelung, ehrlich
+
+> **H2 entscheidet alles.** Findet die Geometrie über die ganze
+> Horizontachse keinen Raum mit `q > q₀`, dann sind H3 bis H9 gegenstandslos
+> — und die Frage geht an **H2a (Auflösung)** oder an M1 selbst.
+
+⚠️ **Das ist kein Grund, H2 zu verschieben, sondern es vorzuziehen.** Es
+ist die billigste Phase (Werkzeuge stehen, Betrieb unberührt) und die mit
+dem größten Informationsgewinn.

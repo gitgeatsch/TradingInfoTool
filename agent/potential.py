@@ -191,9 +191,26 @@ class Potential:
     def erreichbar_voll(self) -> float:
         """Das hoechste Potential bei VOLLER Datenlage - der Bezugswert."""
         from agent import wahrscheinlichkeit as _wk
+
+        # ⚠️⚠️⚠️ K1d (24.09.2026): DIE DRITTE STELLE IN DIESER DATEI, an der
+        # `instrument` verlorenging - `_gilt()` bekam nur Klasse und
+        # Strategie, `richtung` und `instrument` blieben auf ihren
+        # Vorgabewerten.
+        #
+        # Folge nach K2: `erreichbar_voll` faellt auf die Basisrate, weil
+        # kein Beitrag mehr passt - und damit kippt die SCHWELLE JE
+        # DATENLAGE, die sich daran bemisst. Die Suite hat es gemeldet
+        # ("die Schwelle richtet sich nach der Datenlage: 0,0600 gegen
+        # 0,0600" - beide Datenlagen bekamen dieselbe Zahl).
+        #
+        # ⚠️ `richtung` bleibt bewusst offen: dieser Bezugswert fragt, was
+        # bei VOLLER Datenlage erreichbar waere - nicht, was in EINER
+        # Richtung gilt. Traegt spaeter ein Beitrag `richtungen`, gehoert
+        # die Frage hier neu gestellt.
         punkte = sum(max(b.stufen) for b in _wk.BEITRAEGE
                      if b.zustand == "traegt" and b.stufen
-                     and _wk._gilt(b, self.klasse, self.strategie)[0])
+                     and _wk._gilt(b, self.klasse, self.strategie,
+                                   "", self.instrument)[0])
         q = self.basisrate + punkte / 100.0
         return q * self.crv - (1.0 - q)
 
@@ -306,7 +323,24 @@ class Potential:
         einzigen registrierten Beitrag.
         """
         from agent import wahrscheinlichkeit as _wk
-        return bool(_wk.vermessen(self.klasse, self.strategie))
+
+        # ⚠️⚠️⚠️ K1c (24.09.2026): `instrument` GING AUCH HIER VERLOREN -
+        # derselbe Fehler wie in `rechne()` oben, zweimal in dieser Datei.
+        #
+        # `self.instrument` steht bereit und wurde nicht uebergeben. Solange
+        # kein Beitrag eine Instrumentliste trug, war das folgenlos; mit K2
+        # wird es zur falschen Antwort: die Lage `hebel` haette weiter als
+        # *vermessen* gegolten, obwohl fuer sie kein einziger Beitrag mehr
+        # registriert ist.
+        #
+        # ⚠️ UND DIE FALSCHE ANTWORT WAERE TEUER GEWESEN. Stufe 11 liest
+        # genau dieses Feld: *„nicht vermessen -> wir wissen nichts, eine
+        # Sperre waere ein FAKT ueber unseren Kenntnisstand"*. Umgekehrt
+        # heisst *vermessen ohne Wert* -> Mangel DIESES Assets -> Sperre
+        # traegt. Fuer den Hebel waere damit gesperrt worden, wo in
+        # Wahrheit nichts gemessen ist.
+        return bool(_wk.vermessen(self.klasse, self.strategie,
+                                  instrument=self.instrument))
 
     @property
     def bewertbar(self) -> bool:
@@ -377,9 +411,27 @@ def rechne(*, crv: float, stop_relativ: float, klasse: str = "",
     # Wirft bei unerlaubter Kombination - `hebel x akkumulation` gibt es nicht.
     instrument, strategie = HA.pruefe(instrument, strategie)
     try:
+        # ⚠️⚠️⚠️ K1b (24.09.2026, Bauplan Phase 1): `instrument` GING HIER
+        # VERLOREN - und damit war die Instrumentachse DOPPELT tot.
+        #
+        # Es wurde oben von `HA.pruefe` validiert und unten in `Potential`
+        # zurueckgegeben - aber NIE an `WK.rechne` uebergeben. Dort kam
+        # also immer der Vorgabewert "" an, und `_gilt()` prueft
+        # `str(instrument or "").lower() not in b.instrumente`: ein Beitrag
+        # mit `instrumente=("spot",)` haette damit AUCH FUER SPOT nicht
+        # mehr gegolten.
+        #
+        # ⚠️ GEFUNDEN BEIM BAU VON K2, am Seiteneffekt: nach K2 lieferten
+        # `spot` UND `hebel` beide die nackte Basisrate 0,3333 - richtig
+        # waere 0,3452 fuer Spot gewesen.
+        #
+        # ⚠️⚠️ UND DER BITGLEICHHEITSTEST KONNTE DAS NICHT FINDEN: er ruft
+        # `wahrscheinlichkeit.rechne` DIREKT auf, die Kette geht aber ueber
+        # `potential.rechne`. Ein Test deckt die FUNKTION ab, nicht den PFAD.
         w = WK.rechne(crv=crv, stop_relativ=stop_relativ,
                       gebuehr_je_seite=0.0, klasse=klasse, h=h,
-                      strategie=strategie, merkmale=merkmale)
+                      strategie=strategie, instrument=instrument,
+                      merkmale=merkmale)
     except WK.WahrscheinlichkeitUnbekannt as exc:
         raise PotentialUnbekannt(str(exc)) from exc
 

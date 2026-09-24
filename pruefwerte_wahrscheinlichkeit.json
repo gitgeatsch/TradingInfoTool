@@ -20015,438 +20015,6 @@
   "quote": 0.25,
   "zuschlag": 0.0
  },
- "lage|i-|seinstieg|r-|crv2.0|stop0.05|kl-|hNone|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 125, 14.238 H-Anker mit Rangplatz steht auf Krypto"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_funding_beitrag.py, 2.369 Kalendertage, 290 Symbole, 6,3 Jahre; Regelwirkung +0,0246 R steht auf Krypto"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_turnover_beitrag.py --umschlag naeherung --ab 2023-01-01, H20; Nenner: freier Umlauf (CoinGecko), 366 Symbole, 2.956 Tage. Gewinnanteil +2,8 bis +4,2 Pp auf den selektierten Mengen (2.520). VORHER: umschlag_gesamt (+3,15/+0,83/+0,22/-1,79/-2,40), Regelwirkung +0,0616 R [+0,0203 .. +0,1111] steht auf Krypto"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 2.158 (Buckel, dreimal) + 2.222 (vier Fuenftel Auswahl-Artefakt) + 2.158-redundanz (Spearman +0,418 in der Auswahl). ⚠️ NICHT mehr die 31.08.-Messung - die ist durch 2.153 abgeloest (kontaminierte Basis) steht auf Krypto"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 93 C, gemessen 30.08.2026 auf 188 Reihen steht auf Krypto"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.3333333333,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv2.0|stop0.05|kl-|hTrue|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 125, 14.238 H-Anker mit Rangplatz steht auf Krypto"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_funding_beitrag.py, 2.369 Kalendertage, 290 Symbole, 6,3 Jahre; Regelwirkung +0,0246 R steht auf Krypto"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_turnover_beitrag.py --umschlag naeherung --ab 2023-01-01, H20; Nenner: freier Umlauf (CoinGecko), 366 Symbole, 2.956 Tage. Gewinnanteil +2,8 bis +4,2 Pp auf den selektierten Mengen (2.520). VORHER: umschlag_gesamt (+3,15/+0,83/+0,22/-1,79/-2,40), Regelwirkung +0,0616 R [+0,0203 .. +0,1111] steht auf Krypto"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 2.158 (Buckel, dreimal) + 2.222 (vier Fuenftel Auswahl-Artefakt) + 2.158-redundanz (Spearman +0,418 in der Auswahl). ⚠️ NICHT mehr die 31.08.-Messung - die ist durch 2.153 abgeloest (kontaminierte Basis) steht auf Krypto"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 93 C, gemessen 30.08.2026 auf 188 Reihen steht auf Krypto"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.3333333333,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv2.0|stop0.05|klkrypto|hNone|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "null",
-    0.0,
-    "gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "null",
-    0.0,
-    "als ZUSATZbedingung innerhalb von H 5,8 Punkte SCHLECHTER (Schwelle +1,8). Seit dem 23.08. steht er deshalb eine Ebene HOEHER: er waehlt aus, WELCHE Werte beurteilt werden, und geht in diese Zahl bewusst nicht ein - sonst zaehlte dieselbe Groesse zweimal"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "null",
-    0.0,
-    "Er TRAEGT - 2.219-schnitt nennt ihn den robustesten Kandidaten. Er scheitert an der FORM: als REGLER braucht er Monotonie, seine fuenf Stufen sind aber ein Buckel mit Hochpunkt bei Fuenftel 2, dreimal so gemessen. Dazu bildet er zu vier Fuenfteln die AUSWAHL der Kette nach. Als SPERRE dagegen traegt er zusaetzlich (+0,0397 R) - das ist eine andere Form und gehoert in eine Trichterstufe, nicht hierher"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "null",
-    0.0,
-    "gemessen und gefallen: TVL-Veraenderung, aktive Adressen und NVM trennen nicht (188 Reihen, Grenze 0,10 R)"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.3333333333,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv2.0|stop0.05|klkrypto|hTrue|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "null",
-    0.0,
-    "gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "null",
-    0.0,
-    "als ZUSATZbedingung innerhalb von H 5,8 Punkte SCHLECHTER (Schwelle +1,8). Seit dem 23.08. steht er deshalb eine Ebene HOEHER: er waehlt aus, WELCHE Werte beurteilt werden, und geht in diese Zahl bewusst nicht ein - sonst zaehlte dieselbe Groesse zweimal"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "null",
-    0.0,
-    "Er TRAEGT - 2.219-schnitt nennt ihn den robustesten Kandidaten. Er scheitert an der FORM: als REGLER braucht er Monotonie, seine fuenf Stufen sind aber ein Buckel mit Hochpunkt bei Fuenftel 2, dreimal so gemessen. Dazu bildet er zu vier Fuenfteln die AUSWAHL der Kette nach. Als SPERRE dagegen traegt er zusaetzlich (+0,0397 R) - das ist eine andere Form und gehoert in eine Trichterstufe, nicht hierher"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "null",
-    0.0,
-    "gemessen und gefallen: TVL-Veraenderung, aktive Adressen und NVM trennen nicht (188 Reihen, Grenze 0,10 R)"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.3333333333,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv3.0|stop0.05|kl-|hNone|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 125, 14.238 H-Anker mit Rangplatz steht auf Krypto"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_funding_beitrag.py, 2.369 Kalendertage, 290 Symbole, 6,3 Jahre; Regelwirkung +0,0246 R steht auf Krypto"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_turnover_beitrag.py --umschlag naeherung --ab 2023-01-01, H20; Nenner: freier Umlauf (CoinGecko), 366 Symbole, 2.956 Tage. Gewinnanteil +2,8 bis +4,2 Pp auf den selektierten Mengen (2.520). VORHER: umschlag_gesamt (+3,15/+0,83/+0,22/-1,79/-2,40), Regelwirkung +0,0616 R [+0,0203 .. +0,1111] steht auf Krypto"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 2.158 (Buckel, dreimal) + 2.222 (vier Fuenftel Auswahl-Artefakt) + 2.158-redundanz (Spearman +0,418 in der Auswahl). ⚠️ NICHT mehr die 31.08.-Messung - die ist durch 2.153 abgeloest (kontaminierte Basis) steht auf Krypto"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 93 C, gemessen 30.08.2026 auf 188 Reihen steht auf Krypto"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.25,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv3.0|stop0.05|kl-|hTrue|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 108-122 gepoolt +3,57; je Kalendertag -1,02 [-2,18 .. +0,14] (31.08.2026, 609.527 Anker) steht auf Krypto"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - Kapitel 125, 14.238 H-Anker mit Rangplatz steht auf Krypto"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_funding_beitrag.py, 2.369 Kalendertage, 290 Symbole, 6,3 Jahre; Regelwirkung +0,0246 R steht auf Krypto"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - rechne_turnover_beitrag.py --umschlag naeherung --ab 2023-01-01, H20; Nenner: freier Umlauf (CoinGecko), 366 Symbole, 2.956 Tage. Gewinnanteil +2,8 bis +4,2 Pp auf den selektierten Mengen (2.520). VORHER: umschlag_gesamt (+3,15/+0,83/+0,22/-1,79/-2,40), Regelwirkung +0,0616 R [+0,0203 .. +0,1111] steht auf Krypto"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 2.158 (Buckel, dreimal) + 2.222 (vier Fuenftel Auswahl-Artefakt) + 2.158-redundanz (Spearman +0,418 in der Auswahl). ⚠️ NICHT mehr die 31.08.-Messung - die ist durch 2.153 abgeloest (kontaminierte Basis) steht auf Krypto"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "nie",
-    0.0,
-    "auf ? nie gemessen - 93 C, gemessen 30.08.2026 auf 188 Reihen steht auf Krypto"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.25,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv3.0|stop0.05|klkrypto|hNone|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "null",
-    0.0,
-    "gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "null",
-    0.0,
-    "als ZUSATZbedingung innerhalb von H 5,8 Punkte SCHLECHTER (Schwelle +1,8). Seit dem 23.08. steht er deshalb eine Ebene HOEHER: er waehlt aus, WELCHE Werte beurteilt werden, und geht in diese Zahl bewusst nicht ein - sonst zaehlte dieselbe Groesse zweimal"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "null",
-    0.0,
-    "Er TRAEGT - 2.219-schnitt nennt ihn den robustesten Kandidaten. Er scheitert an der FORM: als REGLER braucht er Monotonie, seine fuenf Stufen sind aber ein Buckel mit Hochpunkt bei Fuenftel 2, dreimal so gemessen. Dazu bildet er zu vier Fuenfteln die AUSWAHL der Kette nach. Als SPERRE dagegen traegt er zusaetzlich (+0,0397 R) - das ist eine andere Form und gehoert in eine Trichterstufe, nicht hierher"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "null",
-    0.0,
-    "gemessen und gefallen: TVL-Veraenderung, aktive Adressen und NVM trennen nicht (188 Reihen, Grenze 0,10 R)"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.25,
-  "zuschlag": 0.0
- },
- "lage|i-|seinstieg|r-|crv3.0|stop0.05|klkrypto|hTrue|geb0.015": {
-  "beitraege": [
-   [
-    "Vorfilter H (Weg frei, Stop gedeckt)",
-    "null",
-    0.0,
-    "gepoolt gemessen und deshalb eine LAGE-Aussage: sagt, an welchen Tagen H auftritt, nicht welches Asset heute besser ist. Unter der Tagesklammer nicht von null zu trennen - ebenso A allein, B allein und der stetige Bodenabstand. Die Marken tragen weiterhin den Stop"
-   ],
-   [
-    "Rangplatz in der Anlageklasse",
-    "null",
-    0.0,
-    "als ZUSATZbedingung innerhalb von H 5,8 Punkte SCHLECHTER (Schwelle +1,8). Seit dem 23.08. steht er deshalb eine Ebene HOEHER: er waehlt aus, WELCHE Werte beurteilt werden, und geht in diese Zahl bewusst nicht ein - sonst zaehlte dieselbe Groesse zweimal"
-   ],
-   [
-    "Funding-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Turnover-Rang im Markt",
-    "nie",
-    0.0,
-    "an diesem Anker nicht bestimmbar"
-   ],
-   [
-    "Abstand zum eigenen 200-Tage-Schnitt",
-    "null",
-    0.0,
-    "Er TRAEGT - 2.219-schnitt nennt ihn den robustesten Kandidaten. Er scheitert an der FORM: als REGLER braucht er Monotonie, seine fuenf Stufen sind aber ein Buckel mit Hochpunkt bei Fuenftel 2, dreimal so gemessen. Dazu bildet er zu vier Fuenfteln die AUSWAHL der Kette nach. Als SPERRE dagegen traegt er zusaetzlich (+0,0397 R) - das ist eine andere Form und gehoert in eine Trichterstufe, nicht hierher"
-   ],
-   [
-    "Lebendigkeit des Projekts",
-    "null",
-    0.0,
-    "gemessen und gefallen: TVL-Veraenderung, aktive Adressen und NVM trennen nicht (188 Reihen, Grenze 0,10 R)"
-   ],
-   [
-    "Bekannte Termine",
-    "nie",
-    0.0,
-    "Anzeige, nie gegen den Zufall gemessen"
-   ],
-   [
-    "Trichter (uebliche Kursbewegung)",
-    "enthalten",
-    0.0,
-    "er BESTIMMT die Geometrie und damit die Basisrate - er ist schon drin und darf nicht zweimal zaehlen"
-   ]
-  ],
-  "quote": 0.25,
-  "zuschlag": 0.0
- },
  "lage|iabsicherung|seinstieg|r-|crv2.0|stop0.05|kl-|hNone|geb0.015": {
   "beitraege": [
    [
@@ -20573,13 +20141,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -20627,13 +20195,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -20789,13 +20357,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -20843,13 +20411,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument absicherung nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -21005,13 +20573,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -21059,13 +20627,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -21221,13 +20789,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",
@@ -21275,13 +20843,13 @@
     "Funding-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Funding-Rang im Markt ist auf spot belegt"
    ],
    [
     "Turnover-Rang im Markt",
     "nie",
     0.0,
-    "an diesem Anker nicht bestimmbar"
+    "fuer das Instrument hebel nie gemessen - Turnover-Rang im Markt ist auf spot belegt"
    ],
    [
     "Abstand zum eigenen 200-Tage-Schnitt",

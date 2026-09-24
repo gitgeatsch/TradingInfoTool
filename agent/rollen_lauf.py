@@ -2159,10 +2159,38 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # wird dort verglichen, damit die zwei Stellen nicht still
             # auseinanderlaufen.
             _mr_q = (marktraenge or {}).get(symbol) or {}
+            # ⚠️⚠️⚠️ K1 (24.09.2026, Bauplan Phase 1, Blocker B aus 2.574).
+            #
+            # HIER STAND `instrument=instrument` - UND DAS IST FUER KRYPTO
+            # IMMER "spot". Der Quelltext sagt es weiter unten selbst:
+            # *„seit S6b heisst `instrument` fuer Krypto immer spot"*.
+            #
+            # DIESE RECHNUNG IST ABER DIE HEBELQUOTE. Sie beantwortet eine
+            # KONTRAFAKTISCHE Frage - *„waere dies ein Hebeltrade, wie hoch
+            # waere die Quote?"* - und entscheidet damit gleich darunter, ob
+            # ueberhaupt einer entsteht. Die Lage ist also `hebel`, nicht
+            # `spot`, auch wenn das Etikett erst danach vergeben wird.
+            #
+            # ⚠️ KEIN ZIRKELSCHLUSS: die Frage ist kontrafaktisch gestellt,
+            # die Antwort entscheidet danach ueber das Etikett.
+            #
+            # ⚠️⚠️ OHNE DIESE ZEILE IST JEDE INSTRUMENTREGEL WIRKUNGSLOS.
+            # `wahrscheinlichkeit._gilt()` prueft `b.instrumente` gegen genau
+            # dieses Argument; mit "spot" haette ein Beitrag mit
+            # `instrumente=("hebel",)` hier NIE gegriffen - und es waere
+            # niemandem aufgefallen, weil heute kein Beitrag das Feld setzt.
+            #
+            # ⚠️ DIE STRATEGIE BLEIBT, WIE SIE IST. `_hq_rechnet` oben hat
+            # sie bereits durch `hebel_erlaubt_fuer()` geprueft (aus
+            # `ERLAUBTE_PAARE`), `akkumulation` kommt hier also nicht an.
+            #
+            # ⚠️ DIESER SCHRITT ALLEIN IST BITGLEICH: solange kein Beitrag
+            # `instrumente` setzt, aendert er keine einzige Zahl. Er ist die
+            # Voraussetzung fuer K2, nicht schon die Trennung.
             _hq_quote = _PTq.rechne(
                 crv=ER.GRENZEN["crv"],
                 stop_relativ=ER.GRENZEN["stop_min_relativ"],
-                klasse=assetklasse, instrument=instrument,
+                klasse=assetklasse, instrument="hebel",
                 strategie=strategie, h=None,
                 merkmale={k: _mr_q[k] for k in ("funding_fuenftel",
                                                 "turnover_fuenftel",
@@ -2588,14 +2616,47 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Bewertung hier. Die Quote haengt nicht am Stop (N-40); weicht sie
     # trotzdem ab, stimmt eine der beiden Annahmen nicht mehr - und das darf
     # nicht still passieren.
-    if (_hq_quote is not None and _potential is not None
-            and abs(float(_hq_quote) - float(_potential.quote)) > 1e-9):
+    #
+    # ⚠️⚠️⚠️ K3 (24.09.2026, Bauplan Phase 1): DER BEZUGSPUNKT WIRD
+    # LAGERICHTIG - der Waechter bleibt scharf.
+    #
+    # Seit K1/K2 rechnet die Hebelrechnung die HEBEL-Lage und die Bewertung
+    # die SPOT-Lage. Beide Quoten weichen jetzt ABSICHTLICH voneinander ab
+    # (Spot 0,3452 gegen Hebel 0,3333) - der alte Vergleich haette bei
+    # JEDEM Signal einen Fehler gemeldet.
+    #
+    # ⛔ ENTFERNEN WAERE FALSCH GEWESEN. Der Waechter schuetzt nicht die
+    # Gleichheit zweier LAGEN, sondern die Annahme aus N-40: dieselbe Lage
+    # muss mit dem MINDESTstop dasselbe ergeben wie mit dem ECHTEN. Genau
+    # das wird weiter geprueft - nur gegen eine Referenz IN DER HEBEL-LAGE
+    # statt gegen die Spot-Bewertung.
+    #
+    # ⚠️ Die Referenz ist billig (keine DB, keine Merkmalsabfrage - dieselben
+    # `_merkmale`, nur anderes Instrument und der echte Stop).
+    _hq_referenz = None
+    if _hq_quote is not None and _potential is not None:
+        try:
+            # ⚠️ EIGENER IMPORT: `_PT` oben steht in einem `try` - faellt es
+            # dort aus, waere der Name hier ungebunden.
+            from agent import potential as _PTr
+
+            _hq_referenz = _PTr.rechne(
+                crv=rechnung["crv"], stop_relativ=rechnung.get("stop_relativ"),
+                klasse=assetklasse, instrument="hebel", strategie=strategie,
+                h=(_vf_bewertung or {}).get("h"),
+                merkmale=_merkmale or None).quote
+        except Exception:                                    # noqa: BLE001
+            # Kein Urteil ohne Referenz - lieber schweigen als falsch melden.
+            _hq_referenz = None
+    if (_hq_quote is not None and _hq_referenz is not None
+            and abs(float(_hq_quote) - float(_hq_referenz)) > 1e-9):
         ergebnis.setdefault("fehler", []).append(
-            "%s: Quote der Hebelrechnung %.4f weicht von der Bewertung %.4f "
-            "ab" % (symbol, _hq_quote, _potential.quote))
+            "%s: Quote der Hebelrechnung %.4f weicht von der Hebel-Referenz "
+            "%.4f ab - die Quote sollte nicht am Stopabstand haengen (N-40)"
+            % (symbol, _hq_quote, _hq_referenz))
         logger.warning("%s: Quote der Hebelrechnung %.4f weicht von der "
-                       "Bewertung %.4f ab", symbol, _hq_quote,
-                       _potential.quote)
+                       "Hebel-Referenz %.4f ab (N-40)", symbol, _hq_quote,
+                       _hq_referenz)
 
     if _potential is None:
         # ⚠️ KEINE ZAHL HEISST NICHT "TRAEGT NICHT". Wer bei fehlender Rechnung
@@ -2973,7 +3034,24 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
             # fuehrt, muss ihre Argumente GEMEINSAM pflegen - sonst
             # driften sie bei jedem neuen Parameter erneut auseinander.
             # Die Dauerpruefung im Paket "Mailquote" haelt das jetzt fest.
+            #
+            # ⚠️⚠️⚠️ UND ES IST AM 24.09.2026 ZUM DRITTEN MAL PASSIERT:
+            # `merkmale` (31.08.), `strategie` (02.09.), `instrument`
+            # (heute). Der Merksatz stand hier und hat nicht geholfen - weil
+            # `saetze()` das Argument gar nicht ANNAHM. Ein Merksatz gegen
+            # eine fehlende Signatur ist wirkungslos; deshalb hat `saetze()`
+            # jetzt `instrument`, und die Dauerpruefung vergleicht die
+            # Argumente beider Rechnungen ABGELEITET statt aufgezaehlt.
             strategie=strategie,
+            # ⚠️ DIE LAGE DER MAIL IST DIE DES LAUFS. Fuer Krypto heisst
+            # `instrument` hier immer "spot" - und genau das ist richtig:
+            # die Mail beschreibt den Trade, der empfohlen wird, nicht die
+            # kontrafaktische Hebelrechnung (die steht in `_hq_quote`).
+            instrument=instrument,
+            # ⚠️ Und die RICHTUNG - die vierte Achse von `_gilt()`. Heute
+            # fuehrt sie kein Beitrag; sie wird trotzdem uebergeben, damit
+            # der Bruch nicht ein VIERTES Mal passiert.
+            richtung=str(befund.get("richtung") or ""),
             # ⚠️ HEBEL UND HALTEDAUER (01.09.2026). Ohne sie fehlte in der
             # Zeile "noetig X %" die Finanzierung - die Mail nannte fuer
             # einen Hebeltrade eine zu niedrige Huerde.

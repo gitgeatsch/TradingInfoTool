@@ -2387,9 +2387,18 @@ def paket_12c() -> None:
     # ⚠️ MIT STRATEGIE FRAGEN. Seit die Beitraege `strategien=("einstieg",)`
     # tragen, liefert ein Aufruf OHNE Strategie nichts - richtig so: ohne
     # Strategie ist nicht entschieden, welche Geometrie gemeint ist.
+    #
+    # ⚠️⚠️ UND SEIT DEM 24.09.2026 AUCH MIT INSTRUMENT (K2, Befund 2.579).
+    # Derselbe Fall eine Achse weiter: `funding` und `turnover` tragen
+    # `instrumente=("spot",)`, also liefert ein Aufruf ohne Instrument
+    # nichts. Der Vorgabewert von `vermessen` ist "" - unentschieden, nicht
+    # "spot"; das ist Absicht und dieselbe Linie wie bei Klasse und
+    # Strategie.
     pruefe(P, "und `vermessen` fragt die REGISTRIERUNG, nicht eine Liste",
-           len(_WKx.vermessen("krypto", "einstieg")) == 2
-           and _WKx.vermessen("aktien", "einstieg") == [],
+           len(_WKx.vermessen("krypto", "einstieg",
+                              instrument="spot")) == 2
+           and _WKx.vermessen("aktien", "einstieg",
+                              instrument="spot") == [],
            "eine handgeschriebene Klassenliste veraltet still, sobald ein "
            "Beitrag dazukommt - genau der Fehler aus `pruefe_beitragsabdeckung`")
     pruefe(P, "⚠️ `vermessen` und `bewertbar` sind NICHT dasselbe",
@@ -2634,8 +2643,9 @@ def paket_12c() -> None:
            "daraufhin 0 von 1.854")
 
     pruefe(P, "⚠️ und akkumulation gilt daher als NICHT vermessen",
-           _WKx.vermessen("krypto", "einstieg")
-           and not _WKx.vermessen("krypto", "akkumulation"),
+           _WKx.vermessen("krypto", "einstieg", instrument="spot")
+           and not _WKx.vermessen("krypto", "akkumulation",
+                                  instrument="spot"),
            "wer hier Beitraege fuer akkumulation erwartet, prueft den Stand "
            "vor dem 31.08. - dann wurde eine Einstiegsmessung auf eine "
            "Strategie angewandt, fuer die es keinen einzigen Anker gibt")
@@ -13889,13 +13899,16 @@ def paket_dimension() -> None:
     # WEITER - sie wird seit R1 nur an einem TRAGENDEN Beitrag geprueft.
     # An einem stillgelegten ist sie gegenstandslos: dort ist der
     # Eingabewert ohne Bedeutung, und beide Belegungen melden `null`.
-    # ⚠️ `strategie="einstieg"` ist seit dem 31.08. PFLICHT, sonst gilt kein
+    # ⚠️ `strategie="einstieg"` UND `instrument="spot"` sind PFLICHT (31.08.
+    # bzw. 24.09.) - ohne sie gilt kein
     # Beitrag - die Beschraenkung ist der Punkt, nicht ein Nebeneffekt.
     _r_f0 = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
                        klasse="krypto", strategie="einstieg",
+                       instrument="spot",
                        merkmale={"funding_fuenftel": 0})
     _r_fnix = _WK.rechne(crv=2.0, stop_relativ=0.05, gebuehr_je_seite=0.003,
-                         klasse="krypto", strategie="einstieg")
+                         klasse="krypto", strategie="einstieg",
+                         instrument="spot")
     _z_nix = [z for z in _r_fnix["beitraege"] if z["name"].startswith("Funding")]
     _z_0 = [z for z in _r_f0["beitraege"] if z["name"].startswith("Funding")]
     pruefe(P, "ein fehlender Merkmalswert heisst `nie`, nicht `null`",
@@ -17062,22 +17075,36 @@ def paket_beitrag_stufen() -> None:
 
     # ---- DIE NAHT: DIE INSTRUMENT-ACHSE (10.09.2026) ----
     #
-    # ⚠️⚠️ Sie ist gebaut, aber NICHT vollzogen. Entscheidung 10.09.: der
+    # ⚠️⚠️ Sie war gebaut, aber NICHT vollzogen. Entscheidung 10.09.: der
     # Hebel kommt vorerst aus dem Spot-Weg, weil eine eigene Bewertung
-    # heute nicht messbar ist (A1). Diese Pruefungen halten BEIDES offen:
-    # dass die Achse existiert UND dass sie heute nichts aendert.
+    # damals nicht messbar war (A1).
+    #
+    # ✔ VOLLZOGEN AM 24.09.2026 (K2, Bauplan Phase 1, Befund 2.578) auf
+    # Nutzerauftrag. `funding` und `turnover` tragen jetzt
+    # `instrumente=("spot",)`; die Hebelquote faellt damit auf die nackte
+    # Basisrate 0,3333 - und das kostet nichts, es gab ohnehin null
+    # Hebelsignale.
     from agent.wahrscheinlichkeit import _gilt as _gilt_x
     pruefe(P, "⚠️ die INSTRUMENT-Achse existiert",
            hasattr(Beitrag(punkte=1.0, **grund), "instrumente"),
            "ohne das Feld steckt die Antwort ,gilt fuer alle Instrumente' "
            "in der ABWESENHEIT eines Feldes - genau der Fehler, den "
            "`assetklassen.hebel_handelbar()` schon einmal behoben hat")
-    pruefe(P, "⚠️⚠️ und sie ist HEUTE bei allen Beitraegen leer",
-           all(not b.instrumente for b in BEITRAEGE),
-           "leer heisst ,gilt fuer alle'. Traegt einer eine Liste, ist die "
-           "Trennung STILL vollzogen worden - und die Hebel-Lage bekaeme "
-           "andere Beitraege als der Spot, ohne dass es jemand entschieden "
-           "hat")
+    # ⚠️ ABGELOEST AM 24.09.2026. Hier stand: *„und sie ist HEUTE bei allen
+    # Beitraegen leer"* - mit der Begruendung, eine gesetzte Liste hiesse,
+    # *„die Trennung ist STILL vollzogen worden"*. Sie hat exakt das
+    # gemeldet, wofuer sie gebaut war.
+    #
+    # ⚠️⚠️ SIE WIRD NICHT ENTFERNT, SONDERN UMGEDREHT. Die Trennung ist
+    # jetzt entschieden und begruendet (Bauplan, Nutzerauftrag), also ist
+    # die Gefahr die andere: ein TRAGENDER Beitrag OHNE Lage. Genau das
+    # prueft `K2b` weiter oben in diesem Paket - und zwar als REGEL, nicht
+    # als Aufzaehlung der heutigen zwei.
+    pruefe(P, "⚠️ die Trennung ist vollzogen, nicht mehr offen",
+           any(b.instrumente for b in BEITRAEGE),
+           "traegt KEIN Beitrag mehr eine Instrumentliste, ist K2 "
+           "zurueckgenommen worden - dann erbt die Hebelquote wieder jeden "
+           "Spot-Beitrag, und zwar still (2.578)")
     _probe = Beitrag(punkte=1.0, instrumente=("spot",), **grund)
     pruefe(P, "⚠️ und sie GREIFT, sobald ein Beitrag sie setzt",
            (not _gilt_x(_probe, "krypto", "", "", "hebel")[0])
@@ -17202,6 +17229,90 @@ def paket_beitrag_stufen() -> None:
                "'wir wissen es nicht' ist die wichtigste Information")
     finally:
         _WK.BEITRAEGE = echte
+
+    # ---- ⚠️⚠️⚠️ K2b: JEDER TRAGENDE BEITRAG DEKLARIERT SEINE LAGE -------
+    #
+    # DER ANLASS (24.09.2026, Bauplan Phase 1): `instrumente=()` heisst
+    # "gilt UEBERALL". Bis K2 trug KEIN Beitrag eine Instrumentliste - und
+    # deshalb erbte die HEBELQUOTE jeden Spot-Beitrag automatisch mit.
+    # Nicht durch eine Entscheidung, sondern durch einen Vorgabewert.
+    #
+    # ⚠️ EINE REGEL STATT EINER AUFZAEHLUNG (CLAUDE.md, Regel 4). Wer hier
+    # die zwei heutigen Beitraege aufzaehlte, haette eine Pruefung gebaut,
+    # die beim DRITTEN still veraltet. Gefordert wird stattdessen: wer
+    # traegt, sagt WO.
+    #
+    # ⚠️ Nur fuer `zustand="traegt"`. Ein Beitrag mit null Punkten kann
+    # nichts vererben - und `Vorfilter H` bewusst offen zu lassen ist eine
+    # andere Frage als ein tragender Beitrag ohne Lage.
+    _ohne_lage = [b.name for b in _WK.BEITRAEGE
+                  if b.zustand == "traegt" and not b.instrumente]
+    pruefe(P, "⚠️⚠️ jeder TRAGENDE Beitrag deklariert sein Instrument",
+           not _ohne_lage,
+           "ohne `instrumente` gilt ein Beitrag fuer JEDE Lage - auch fuer "
+           "die, auf der er nie gemessen wurde. Genau so erbte der Hebel "
+           "bis zum 24.09. die Spot-Bewertung (2.578). Ohne Liste: %s"
+           % (", ".join(_ohne_lage) or "keiner"))
+    _ohne_strat = [b.name for b in _WK.BEITRAEGE
+                   if b.zustand == "traegt" and not b.strategien]
+    pruefe(P, "⚠️ und seine Strategie",
+           not _ohne_strat,
+           "dieselbe Luecke eine Achse weiter - sie wurde am 31.08. fuer "
+           "`strategien` geschlossen (Akkumulation erbte den Einstieg). "
+           "Ohne Liste: %s" % (", ".join(_ohne_strat) or "keiner"))
+
+    # ---- ⚠️⚠️⚠️ MAILQUOTE: DIE ZWEI RECHNUNGEN MIT DERSELBEN ABSICHT ----
+    #
+    # DER ANLASS IST EIN DREIFACHER RUECKFALL, und er ist protokolliert:
+    #
+    #     31.08.  `merkmale` fehlte beim Mailaufruf  -> Mail ohne Beitraege
+    #     02.09.  `strategie` fehlte                  -> Mail ohne Beitraege
+    #     24.09.  `instrument` fehlte                 -> Mail ohne Beitraege
+    #
+    # In `rollen_lauf` steht seit dem 02.09. der Merksatz *„wer zwei
+    # Rechnungen mit derselben Absicht fuehrt, muss ihre Argumente
+    # GEMEINSAM pflegen"* - mit dem Zusatz, die Dauerpruefung im Paket
+    # „Mailquote" halte das fest.
+    #
+    # ⛔⛔ DIESES PAKET GAB ES NICHT. Der Verweis zeigte ins Leere, und
+    # genau deshalb ist es ein drittes Mal passiert.
+    #
+    # ⚠️⚠️ DIE ACHSEN WERDEN ABGELEITET, NICHT AUFGEZAEHLT: `_gilt()` ist
+    # die EINE Stelle, die weiss, wovon die Gueltigkeit eines Beitrags
+    # abhaengt. Kommt morgen eine fuenfte Achse dazu, waechst diese
+    # Pruefung von allein mit.
+    import inspect as _insp
+
+    _achsen = set(_insp.signature(_WK._gilt).parameters) - {"b"}
+    _p_rechne = set(_insp.signature(_WK.rechne).parameters)
+    _p_saetze = set(_insp.signature(_WK.saetze).parameters)
+    _fehlt_sig = sorted((_achsen & _p_rechne) - _p_saetze)
+    pruefe(P, "⚠️⚠️ `saetze` kennt jede Lageachse, die `rechne` kennt",
+           not _fehlt_sig,
+           "die Mail rechnet sonst mit einer anderen Lage als die "
+           "Entscheidung - dreimal passiert (merkmale 31.08., strategie "
+           "02.09., instrument 24.09.). Ein Merksatz gegen eine fehlende "
+           "SIGNATUR ist wirkungslos: man kann das Argument gar nicht "
+           "mitgeben. Fehlt in `saetze`: %s" % (", ".join(_fehlt_sig) or "-"))
+
+    # ⚠️ UND DIE ZWEITE HAELFTE: die Signatur zu haben reicht nicht, der
+    # Betriebsaufruf muss sie auch UEBERGEBEN. Das ist der Fehler von
+    # 02.09. - `saetze` kannte `strategie`, `rollen_lauf` gab es nicht mit.
+    # Am AST abgelesen, nicht per Textsuche.
+    _baum = _AST.parse(io.open("agent/rollen_lauf.py", encoding="utf-8").read())
+    _uebergeben = set()
+    for _k in _AST.walk(_baum):
+        if (isinstance(_k, _AST.Call)
+                and isinstance(_k.func, _AST.Attribute)
+                and _k.func.attr == "saetze"):
+            _uebergeben |= {kw.arg for kw in _k.keywords if kw.arg}
+    _fehlt_ruf = sorted((_achsen & _p_saetze) - _uebergeben)
+    pruefe(P, "⚠️ und der Mailaufruf UEBERGIBT sie auch",
+           _uebergeben and not _fehlt_ruf,
+           "`saetze` kannte am 02.09. bereits `strategie` - uebergeben "
+           "wurde es trotzdem nicht, und die Mail zeigte die nackte "
+           "Basisrate, waehrend Stufe 11 mit zwei Beitraegen entschied. "
+           "Nicht uebergeben: %s" % (", ".join(_fehlt_ruf) or "-"))
 
     # ---- ⚠️⚠️⚠️ DER BITGLEICHHEITSTEST LAEUFT HIER MIT (24.09.2026) ----
     #
@@ -18125,9 +18236,13 @@ def paket_terminmarkt() -> None:
     # einer vollstaendigen vergleichbar ist - ihre Skala haengt an der
     # Datenlage. In der Mail stand beides in derselben Liste.
     def _bt(**mm):
+        # ⚠️ `instrument="spot"` seit dem 24.09.2026 (K2): die Beitraege
+        # tragen jetzt `instrumente=("spot",)`, ein Aufruf ohne Instrument
+        # liefert also keinen einzigen - dieselbe Pflicht wie bei
+        # `strategie` seit dem 31.08.
         return _WK6.rechne(crv=2.0, stop_relativ=0.06, gebuehr_je_seite=0.003,
                            klasse="krypto", strategie="einstieg",
-                           merkmale=mm)["beitraege"]
+                           instrument="spot", merkmale=mm)["beitraege"]
     _nur_f = _bt(funding_fuenftel=3)
     _beide = _bt(funding_fuenftel=3, turnover_fuenftel=2)
     pruefe(P, "C: ein fehlender Wert wird als `luecke` markiert",
@@ -18149,10 +18264,12 @@ def paket_terminmarkt() -> None:
            "`pruefe_wahrscheinlichkeit_bitgleich.py` rot gemacht, obwohl "
            "sich rechnerisch nichts aendert - ein Fehlalarm in einem "
            "Bitgleichheitstest ist teurer als eine fehlende Unterscheidung")
+    # ⚠️ `instrument="spot"` seit dem 24.09.2026 (K2) - siehe `_bt` oben.
     _m1 = _WK6.saetze(crv=2.0, stop_relativ=0.06, klasse="krypto",
-                      strategie="einstieg", merkmale={"funding_fuenftel": 3})
+                      strategie="einstieg", instrument="spot",
+                      merkmale={"funding_fuenftel": 3})
     _m2 = _WK6.saetze(crv=2.0, stop_relativ=0.06, klasse="krypto",
-                      strategie="einstieg",
+                      strategie="einstieg", instrument="spot",
                       merkmale={"funding_fuenftel": 3, "turnover_fuenftel": 2})
     pruefe(P, "C: steht die Bewertung auf EINEM Beitrag, warnt die Mail",
            any("steht auf EINEM Beitrag" in z for z in _m1),
@@ -18671,12 +18788,38 @@ def paket_trennung() -> None:
            "Stopweite unabhaengig. Waere er es nicht, stecke eine "
            "Kostengroesse in der Bewertung - denn NUR ueber die Kosten "
            "wirkt der Stop auf die Wirtschaftlichkeit")
-    pruefe(P, "das Instrument verschiebt das Potential nicht",
-           all(abs(_pot(instrument=i) - _basis) < 1e-12
-               for i in ("spot", "hebel", "absicherung")),
-           "ein Hebeltrade traegt Finanzierung, ein Spot-Trade nicht - "
-           "wenn das Instrument die Bewertung bewegt, ist sie es, die "
-           "hier durchschlaegt")
+    # ⚠️⚠️⚠️ AM 24.09.2026 PRAEZISIERT, NICHT GELOCKERT (K2, Befund 2.579).
+    #
+    # Hier stand: *„das Instrument verschiebt das Potential nicht"* - ueber
+    # ALLE Instrumente, bei gesetzten Merkmalen. Seit `funding` und
+    # `turnover` `instrumente=("spot",)` tragen, ist das falsch: das
+    # Instrument entscheidet jetzt, WELCHE BEITRAEGE gelten, und das ist
+    # genau die gewollte Trennung.
+    #
+    # ⚠️ DIE FRAGE DAHINTER BLEIBT ABER RICHTIG und wird weiter gestellt:
+    # steckt eine KOSTENgroesse in der Bewertung? Ein Hebeltrade traegt
+    # Finanzierung, ein Spot-Trade nicht - das darf hier nicht
+    # durchschlagen (Regel 2).
+    #
+    # ⚠️⚠️ SIE WIRD JETZT OHNE MERKMALE GESTELLT. Dann gilt fuer jede Lage
+    # dieselbe (leere) Beitragsmenge, und was uebrig bliebe, KANN nur eine
+    # Kostengroesse sein. Das trennt die beiden Wirkungen sauber, statt sie
+    # zu vermischen.
+    pruefe(P, "das Instrument verschiebt das Potential nicht - OHNE Merkmale",
+           all(abs(_pot(instrument=i, merkmale=None) - _pot(merkmale=None))
+               < 1e-12 for i in ("spot", "hebel", "absicherung")),
+           "ohne Merkmale traegt kein Beitrag, also muss jede Lage dieselbe "
+           "Zahl liefern. Tut sie es nicht, steckt eine KOSTENgroesse in "
+           "der Bewertung - denn nur ueber Kosten unterscheiden sich die "
+           "Instrumente hier (Regel 2)")
+    # ⚠️ UND DIE GEGENPROBE ZUR PRAEZISIERUNG: mit Merkmalen MUSS sich das
+    # Instrument auswirken - sonst waere K2 still zurueckgenommen worden
+    # und der Hebel erbte wieder die Spot-Bewertung.
+    pruefe(P, "⚠️ MIT Merkmalen wirkt es sehr wohl - die Lagen sind getrennt",
+           abs(_pot(instrument="spot") - _pot(instrument="hebel")) > 1e-9,
+           "seit K2 gelten `funding` und `turnover` nur fuer Spot. Liefern "
+           "beide Lagen dasselbe, ist die Trennung aufgehoben - und das "
+           "waere still passiert (2.579)")
 
     # ⚠️ UND DIE GEGENPROBE: die Groessen MUESSEN wirken, sobald Gebuehren
     # im Spiel sind. Ohne sie waere die Invarianz oben auch dann gruen,

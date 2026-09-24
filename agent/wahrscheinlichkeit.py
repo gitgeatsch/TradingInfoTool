@@ -412,6 +412,20 @@ BEITRAEGE = (
         warum=("Querschnittsrang: wer heute am wenigsten Finanzierung zahlt. "
                "Traegt in beiden Historienhaelften und beiden Marktphasen, "
                "monoton ueber fuenf Fuenftel, Momentum-Korrelation +0,002"),
+        # ⚠️⚠️⚠️ K2 (24.09.2026, Bauplan Phase 1): DIE LAGE, AUF DER
+        # DIESER BEITRAG GEMESSEN WURDE - und nur sie.
+        #
+        # Bis heute stand hier nichts, und `instrumente=()` heisst "gilt
+        # UEBERALL". Damit erbte die HEBELQUOTE diesen Beitrag automatisch
+        # mit - nicht durch eine Entscheidung, sondern durch einen
+        # Vorgabewert. Gemessen wurde er auf H20 und `bewegung_r`, also auf
+        # der SPOT-Lage; der Hebel haelt im Median 0,30 Tage (2.493) und
+        # wird auf `barriere` beurteilt.
+        #
+        # ⚠️ DAS IST DIESELBE LUECKE WIE BEI `strategien` AM 31.08.: ein
+        # leeres Feld sieht aus wie eine Erlaubnis und ist eine offene
+        # Frage.
+        instrumente=("spot",),
         strategien=("einstieg",),
         klassen=("krypto",)),
     # ⚠️⚠️⚠️ TABELLE AM 07.09.2026 GEAENDERT UND AM SELBEN TAG
@@ -474,6 +488,10 @@ BEITRAEGE = (
                "Nachrechnen zuerst hier hinsehen. ⚠️ Und F-170: der "
                "Turnover-Rang ist zu 52 % eine ASSET-Eigenschaft - er "
                "sagt zur Haelfte, WELCHES Asset, nicht WANN"),
+        # ⚠️⚠️ K2 (24.09.2026): wie bei Funding - gemessen auf der SPOT-Lage
+        # (H20, `bewegung_r`), also gilt er auch nur dort. Ohne diese Zeile
+        # erbt die Hebelquote ihn mit.
+        instrumente=("spot",),
         strategien=("einstieg",),
         klassen=("krypto",)),
     # ---- P3: DER BEITRAG, DER BEI ALLEN ASSETS WIRKT (31.08.2026) -------
@@ -905,6 +923,12 @@ WARNUNG_KEIN_BEITRAG = "⚠️ KEIN gemessener Beitrag greift hier"
 def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
            h: bool | None = None, saetze_zum_berichten=None,
            merkmale: dict | None = None, strategie: str = "",
+           # ⚠️ `richtung` KAM AM 24.09.2026 GLEICH MIT - ohne dass sie
+           # heute ein Beitrag fuehrt. Grund: sie ist die vierte Achse von
+           # `_gilt()`, und drei Mal hintereinander ist genau dieser Bruch
+           # passiert (merkmale, strategie, instrument). Die vierte Achse
+           # jetzt offenzulassen hiesse, den vierten Durchgang einzuplanen.
+           instrument: str = "", richtung: str = "",
            hebel: float | None = None, tage: float | None = None,
            risiko_eur: float | None = None) -> list[str]:
     """Die Zeilen fuer den Kopf der Mail.
@@ -954,8 +978,19 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
         # stand der Funding-Rang als Fakt ("ein niedriges Fuenftel im
         # Marktvergleich (302 Werte)") - und zwei Zeilen darueber, er sei
         # "fuer die Strategie ? nie gemessen". Beides in derselben Mail.
+        # ⚠️⚠️⚠️ `instrument` FEHLTE BIS ZUM 24.09.2026 - UND DAS IST DER
+        # DRITTE DURCHGANG DESSELBEN BRUCHS: `merkmale` am 31.08.,
+        # `strategie` am 02.09., `instrument` heute. Der Merksatz von
+        # damals stand in `rollen_lauf` daneben und hat nicht geholfen,
+        # weil dieser Funktion das ARGUMENT fehlte - man konnte es gar
+        # nicht mitgeben.
+        #
+        # Seit K2 tragen beide Beitraege `instrumente=("spot",)`. Ohne das
+        # Argument fielen sie mit der Begruendung "fuer das Instrument ?
+        # nie gemessen" aus - in JEDER Mail, genau wie am 02.09.
         erste = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse,
-                       strategie=strategie,
+                       strategie=strategie, instrument=instrument,
+                       richtung=richtung,
                        h=h, gebuehr_je_seite=saetze_zum_berichten[0][1],
                        merkmale=merkmale)
     except WahrscheinlichkeitUnbekannt as exc:
@@ -1072,9 +1107,13 @@ def saetze(*, crv: float, stop_relativ: float, klasse: str = "",
         # 02.09. genau dafuer gebaut wurde: sie verglich Mail und Stufe 11,
         # aber nicht die beiden Rechnungen INNERHALB der Mail. Eine Pruefung,
         # die eine Naht bewacht, sieht die zweite daneben nicht.
+        # ⚠️⚠️ UND GENAU DAS IST AM 24.09.2026 WIEDER PASSIERT: `instrument`
+        # und `richtung` kamen oben dazu und fehlten hier. Gefangen hat es
+        # T7 - die Pruefung, die aus dem Kommentar darueber entstanden ist.
         r = rechne(crv=crv, stop_relativ=stop_relativ, klasse=klasse, h=h,
                    gebuehr_je_seite=satz, finanzierung_r=_fin_r,
-                   strategie=strategie, merkmale=merkmale)
+                   strategie=strategie, instrument=instrument,
+                   richtung=richtung, merkmale=merkmale)
         # ⚠️ DREI PROZENTZAHLEN OHNE BEZUG WAREN NICHT LESBAR (Nutzerfrage
         # 28.08.: *"1,5 Prozent traegt sich nicht und 60 % - was bedeutet das,
         # was sind die 60 %?"*).
