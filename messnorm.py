@@ -196,6 +196,52 @@ ZIELGROESSE_JE_LAGE = {
     ("absicherung", "einstieg"): "bewegung_r",
 }
 
+
+# ⚠️⚠️⚠️ DER HORIZONT GEHOERT ZUR LAGE - GENAU WIE DIE ZIELGROESSE
+# (24.09.2026, Befund 2.570/2.571).
+#
+# ANLASS, und er ist ein gemessener: `2.490-barriere-niemand` hat am
+# 20.09. entschieden, dass der Hebel KEINE eigene Bewertung bekommt. Die
+# Messung wechselte dafuer die ZIELGROESSE (`bewegung_r` -> `barriere`),
+# lief aber weiter auf **H20** - dem SPOT-Horizont. Die echten
+# Hebelpositionen haben eine MEDIAN-HALTEDAUER VON 0,30 TAGEN (188
+# Positionen, 2.493); der Betrieb rechnet mit rund 3 Handelstagen (2.513).
+#
+# ⚠️⚠️ WIE GROSS DER UNTERSCHIED IST, wurde am 24.09. gemessen: dieselben
+# Beitraege, dieselbe Zielgroesse, NUR ein anderer Horizont - und das
+# Vorzeichen dreht. H20 gibt kelly +0,047 bis -0,021, H5 gibt ueberall
+# NEGATIV (-0,015 bis -0,074). Der Grund ist die Barrierengeometrie:
+# `1/(1+CRV)` gilt fuer UNBEGRENZTE Zeit, bei begrenztem Horizont gewinnt
+# die NAEHERE Barriere.
+#
+# ⚠️⚠️⚠️ UND DIE BLOCKLAENGE HAENGT DARAN (`_block`). Ein falscher Horizont
+# zieht deshalb durch die GANZE Messanlage - genau das ist mir am 24.09.
+# selbst passiert (Block 90 statt 15 bei H5).
+#
+# ⚠️ DIESE TABELLE SETZT NICHTS UM. Sie ist eine AUSKUNFT: `pruefe()`
+# vergleicht den uebergebenen Horizont mit ihr und WARNT bei Abweichung.
+# Ein stiller Wechsel wuerde jeden bestehenden Befund veraendern, ohne
+# dass es jemand merkt - das waere der Fehler aus
+# `feedback_umgedeutete_zahl_alle_leser_nachziehen`.
+HORIZONT_JE_LAGE = {
+    # 20 Handelstage - der Wert, auf dem ALLE drei Live-Beitraege
+    # registriert sind (funding, turnover, oi_aenderung; 2.514).
+    ("spot", "einstieg"): 20,
+    # 90 - das Akkumulationsmass ist als `schnitt, H90` gefuehrt
+    # (Kandidatenregister), und `verbilligung` mittelt ueber H Tage.
+    ("spot", "akkumulation"): 90,
+    # ⚠️ 3 Handelstage - GEMESSEN, nicht gesetzt: Median-Haltedauer 0,30
+    # Tage ueber 188 geschlossene Positionen (2.493), Betrieb rund 3
+    # Handelstage (2.513-horizont).
+    ("hebel", "einstieg"): 3,
+    ("hebel", "swing"): 3,
+    # ⚠️ OFFEN: fuer die Absicherung gibt es keine gemessene Haltedauer.
+    # `None` heisst "nicht festgelegt" - `pruefe()` warnt dann NICHT, weil
+    # es nichts zu vergleichen gibt. Eine geratene Zahl waere schlimmer
+    # als keine.
+    ("absicherung", "einstieg"): None,
+}
+
 # ⚠️⚠️ STILLGELEGTE LAGEN - nicht geloescht, sondern gesperrt (Regel G-a)
 #
 # Nutzervorgabe 10.09.2026: *„Swing ist keine genutzte Strategie mehr."*
@@ -731,6 +777,27 @@ def pruefe(kandidat: str, je_tag: dict, *, lage: Lage, zielgroesse: str,
     """
     if zielgroesse not in ZIELGROESSEN:
         raise ValueError("unbekannte Zielgroesse: %r" % zielgroesse)
+
+    # ⚠️⚠️⚠️ PASST DER HORIZONT ZUR LAGE? (24.09.2026, Befund 2.571)
+    #
+    # ⚠️ WARNUNG, KEIN ABBRUCH und keine stille Umstellung. Ein Abbruch
+    # haette jede laufende Messung gebrochen, eine Umstellung haette jeden
+    # bestehenden Befund veraendert, ohne dass es jemand merkt. Beides
+    # waere schlimmer als der Fehler, den die Zeile faengt.
+    #
+    # ⚠️ Sie ist der Kanarienvogel fuer den Fall, der `2.490` unbrauchbar
+    # gemacht hat: dort wurde die ZIELGROESSE auf `barriere` gewechselt und
+    # der Horizont auf H20 stehen gelassen - fuer eine Lage, die 0,3 bis 3
+    # Tage gehalten wird.
+    _soll = HORIZONT_JE_LAGE.get((lage.instrument, lage.strategie))
+    if _soll is not None and int(horizont) != int(_soll):
+        print("⚠️⚠️ HORIZONT %d PASST NICHT ZUR LAGE %s - vorgesehen sind %d "
+              "(messnorm.HORIZONT_JE_LAGE)." % (horizont, lage, _soll))
+        print("     Das Ergebnis beschreibt dann einen anderen Trade als den, "
+              "der in dieser Lage stattfindet.")
+        print("     ⚠️ Und die Blocklaenge folgt dem Horizont: %d statt %d."
+              % (_block(horizont), _block(_soll)))
+
     block = _block(horizont)
 
     def _band(d, titel):

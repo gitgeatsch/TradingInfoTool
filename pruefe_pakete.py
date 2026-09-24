@@ -20553,6 +20553,42 @@ def paket_messmenge() -> None:
     """
     P = "Messmenge"
     import messnorm as _MN
+
+    # ⚠️⚠️⚠️ DER HORIZONT GEHOERT ZUR LAGE (24.09.2026, Befunde 2.570/2.571).
+    #
+    # ANLASS: `2.490-barriere-niemand` hat entschieden, dass der Hebel keine
+    # eigene Bewertung bekommt - und dafuer die ZIELGROESSE gewechselt, den
+    # HORIZONT aber auf H20 stehen gelassen. Die echten Hebelpositionen
+    # werden im Median 0,30 Tage gehalten. Dieselben Beitraege auf H5
+    # gemessen drehen das Vorzeichen von kelly.
+    #
+    # ⚠️ Die Tabelle ist eine AUSKUNFT, keine Umstellung - `pruefe()` warnt
+    # nur. Aber eine Auskunft, die still veraltet, ist schlimmer als keine:
+    # kommt eine Lage in `ZIELGROESSE_JE_LAGE` dazu und hier nicht, misst
+    # sie ab dann unbemerkt auf der Vorgabe.
+    _fehlt = [k for k in _MN.ZIELGROESSE_JE_LAGE
+              if k not in _MN.HORIZONT_JE_LAGE]
+    pruefe(P, "⚠️⚠️ jede Lage mit ZIELGROESSE hat auch einen HORIZONT",
+           not _fehlt,
+           "sonst misst sie unbemerkt auf der Vorgabe (20), und die "
+           "Blocklaenge folgt mit. Ohne Horizont: %s" % (_fehlt,))
+    # ⚠️ Und die Werte sind BELEGT, nicht gesetzt: spot x einstieg 20 (alle
+    # drei Live-Beitraege sind darauf registriert, 2.514), hebel 3 (Median
+    # 0,30 Tage ueber 188 Positionen, 2.493; Betrieb rund 3 Handelstage,
+    # 2.513). Ein Wert, der sich still aendert, faellt hier auf.
+    pruefe(P, "⚠️ der Hebel-Horizont steht auf der GEMESSENEN Haltedauer",
+           _MN.HORIZONT_JE_LAGE.get(("hebel", "einstieg")) == 3,
+           "gemessen sind rund 3 Handelstage (2.513), Median 0,30 Tage "
+           "(2.493). Steht dort etwas anderes, ist es gesetzt statt "
+           "gemessen. Gefunden: %r"
+           % (_MN.HORIZONT_JE_LAGE.get(("hebel", "einstieg")),))
+    pruefe(P, "⚠️ und der Spot-Horizont bleibt auf dem registrierten Wert",
+           _MN.HORIZONT_JE_LAGE.get(("spot", "einstieg")) == 20,
+           "alle drei Live-Beitraege sind auf H20 registriert (2.514) - "
+           "eine Aenderung hier verschoebe jeden bestehenden Befund. "
+           "Gefunden: %r"
+           % (_MN.HORIZONT_JE_LAGE.get(("spot", "einstieg")),))
+
     _L = _MN.Lage(instrument="spot", strategie="einstieg")
     _pr = _MN.Protokoll(
         wirkung_funktion="pruefung", band_funktion="pruefung",
