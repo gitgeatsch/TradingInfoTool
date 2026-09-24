@@ -53,6 +53,7 @@ S0 waere ein Nullergebnis nicht deutbar (Lehre aus Vorabfestlegung 4).
 """
 from __future__ import annotations
 
+import math
 import sys
 from collections import defaultdict
 
@@ -285,32 +286,46 @@ def main() -> int:
           % (np.median(w), w.min(), w.max()))
     print("  Lagen, in denen der Unterschied traegt: %d von %d"
           % (traegt_zahl, len(w)))
-    import math
     lam = 0.05 * len(w)
     p_zufall = 1.0 - sum(math.exp(-lam) * lam ** k / math.factorial(k)
                          for k in range(traegt_zahl))
     print("  ⚠️ Erwartung rein zufaellig: %.2f · Poisson p(>=%d) = %.4f"
           % (lam, traegt_zahl, p_zufall))
-    # ⚠️ DIE EIGENTLICHE FRAGE: streut die Differenz ZWISCHEN den Lagen
-    # mehr, als ihre eigenen Baender zulassen? Nur dann haengt das CRV
-    # von der Merkmalslage ab.
-    spann = float(w.max() - w.min())
-    band_med = float(np.median(breiten))
-    print("  ➤ Streut die Differenz ZWISCHEN den Lagen?")
-    print("     Spannweite der Punktwerte:    %+.4f" % spann)
-    print("     Median-Bandbreite EINER Lage: %+.4f" % band_med)
+    # ⚠️⚠️⚠️ DIE EIGENTLICHE FRAGE, UND MEIN ERSTES KRITERIUM WAR SCHWACH.
+    #
+    # Es hielt die SPANNWEITE der Punktwerte gegen die Median-Bandbreite.
+    # Die Spannweite ist aber ein EXTREMWERTmass: sie waechst mit der Zahl
+    # der Gruppen UND mit dem Rauschen, auch ganz ohne Heterogenitaet. Auf
+    # der selektierten Menge (weniger Anker, breitere Baender) meldete sie
+    # deshalb faelschlich "die Lagen streuen weiter" - 0,0675 gegen 0,0646,
+    # ein Unterschied von 4,5 Prozent, der nichts belegt.
+    #
+    # Richtig ist ein HETEROGENITAETSTEST: streuen die Punktwerte MEHR,
+    # als ihre eigenen Schaetzfehler erwarten lassen? Cochran Q vergleicht
+    # genau das, I-Quadrat gibt den Anteil echter Heterogenitaet.
+    sig = np.array([b / 3.92 for b in breiten])      # 95-%-Band -> sigma
+    gew = 1.0 / sig ** 2
+    mittel = float((gew * w).sum() / gew.sum())
+    Q = float((gew * (w - mittel) ** 2).sum())
+    fg = len(w) - 1
+    I2 = max(0.0, (Q - fg) / Q) if Q > 0 else 0.0
+    grenze = fg + 2.0 * math.sqrt(2.0 * fg)
+    print("  ➤ HETEROGENITAET - streuen die Lagen mehr als ihre Fehler?")
+    print("     gewichtetes Mittel   %+.4f" % mittel)
+    print("     Cochran Q            %.2f  bei %d Freiheitsgraden "
+          "(Grenze %.1f)" % (Q, fg, grenze))
+    print("     I-Quadrat            %.1f %%" % (100 * I2))
     print("-" * 112)
-    if spann <= band_med:
-        print("  ➤ EIN GLOBALES CRV - die Spannweite zwischen den Lagen")
-        print("    bleibt INNERHALB dessen, was eine einzelne Lage an")
-        print("    Unsicherheit hat. Die Merkmalslage aendert die richtige")
-        print("    Geometrie NICHT.")
+    if Q <= grenze:
+        print("  ➤ EIN GLOBALES CRV - die Streuung zwischen den Lagen")
+        print("    erklaert sich aus den SCHAETZFEHLERN. Die Merkmalslage")
+        print("    aendert die richtige Geometrie NICHT.")
         print("    ⚠️ Die WAHL des CRV bleibt eine Abwaegung Signalzahl")
         print("       gegen Qualitaet - nach 2.521 NUTZERENTSCHEIDUNG.")
     else:
-        print("  ⚠️ DIE LAGEN STREUEN WEITER als ihre eigenen Baender -")
-        print("    ein CRV je Lage ist damit begruendbar. Welche Lagen es",
-              "betrifft, steht in der Spaltenausgabe oben.")
+        print("  ⚠️ HETEROGEN - die Lagen streuen mehr als ihre Fehler.")
+        print("    Ein CRV je Lage ist damit begruendbar; welche Lagen es")
+        print("    betrifft, steht in der Spaltenausgabe oben.")
     print("=" * 112)
     return 0
 
