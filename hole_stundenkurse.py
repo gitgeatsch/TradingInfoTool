@@ -191,10 +191,31 @@ def main() -> int:
     c = lege_an(ZIEL)
     t0, geholt, fehler = time.time(), 0, []
     for i, (sym, von, bis, n) in enumerate(da, 1):
-        # ⚠️ WIEDERAUFNAHME: was schon dasteht, wird nicht neu geholt.
+        # ⚠️ WIEDERAUFNAHME: was schon dasteht, wird nicht neu geholt -
+        # MIT EINER AUSNAHME, und die ist der Grund fuer diese Zeilen.
+        #
+        # ⛔⛔ BEFUND 25.09.2026: die JEWEILS LETZTE Kerze war beim Laden
+        # noch OFFEN und blieb es fuer immer. Gemessen ueber 116 Symbole:
+        # Median-Volumenquote der letzten Kerze 0,720 (bei vollstaendiger
+        # Kerze 1,0), 43 von 116 unter 60 %. Am Einzelfall BTC, Stunde
+        # 2026-09-24 15:00, gegen eine frisch geholte Reihe:
+        #     hier:    high 84100,01  close 84080,01  vol  481,36
+        #     Binance: high 84468,01  close 84418,00  vol 1011,04
+        # `open` und `low` stimmen exakt - dieselbe Kerze, zu
+        # verschiedenen Zeitpunkten gelesen.
+        #
+        # ⚠️ Es war KEIN selbstheilendes Problem: der Start lag bei
+        # `MAX(stunde) + 1 Stunde`, die offene Kerze wurde also nie wieder
+        # abgerufen - und `INSERT OR IGNORE` haette sie ohnehin nicht
+        # ueberschrieben. 43 Symbole trugen eine unvollstaendige Kerze vom
+        # 24.09., und kein Lauf haette sie je korrigiert.
+        #
+        # ➤ Jetzt setzt der Start BEI `MAX(stunde)` an, und das Einfuegen
+        # ueberschreibt (siehe `INSERT OR REPLACE` unten). Kostet einen
+        # Abruf mehr je Symbol und macht die letzte Kerze richtig.
         vorh = c.execute("SELECT MAX(stunde) FROM stundenkurse WHERE symbol=?",
                          (sym,)).fetchone()[0]
-        start = _ms(vorh) + 3_600_000 if vorh else _ms(von)
+        start = _ms(vorh) if vorh else _ms(von)
         ende = _ms(bis) + 3_600_000
         if start >= ende:
             continue
@@ -205,7 +226,9 @@ def main() -> int:
             continue
         if k:
             c.executemany(
-                "INSERT OR IGNORE INTO stundenkurse VALUES (?,?,?,?,?,?,?)",
+                # ⚠️ REPLACE statt IGNORE - sonst bliebe die zuvor
+                # offene Kerze stehen, obwohl sie gerade neu geholt wurde.
+                "INSERT OR REPLACE INTO stundenkurse VALUES (?,?,?,?,?,?,?)",
                 [(sym, _stunde(x[0]), float(x[1]), float(x[2]), float(x[3]),
                   float(x[4]), float(x[5])) for x in k])
             c.commit()

@@ -13171,8 +13171,12 @@ def paket_dimension() -> None:
               # Waechter aber unsichtbar, weil er nur Praefixe kennt.
               # Ein Waechter mit Praefixliste uebersieht genau das,
               # was neu benannt wird.
+              # ⚠️ `korrigiere` am 25.09. ergaenzt: `korrigiere_letzte_kerze.py`
+              # war fuer diesen Waechter UNSICHTBAR, weil das Praefix fehlte -
+              # genau der Fall, den der Kommentar darueber beschreibt. Der
+              # Waechter hat sich also selbst bestaetigt, und zwar negativ.
               ("messe", "pruefe", "bewerte", "lade", "simuliere",
-               "uebernehme", "selbsttest")]
+               "uebernehme", "selbsttest", "korrigiere")]
     _ohne = sorted(x for x in _stamm if x[:-3] not in _kasten)
     pruefe(P, "jedes Messwerkzeug steht im Werkzeugkasten 2.13",
            not _ohne,

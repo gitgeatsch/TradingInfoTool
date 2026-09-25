@@ -117,6 +117,8 @@ SAAT = 20260925
 N_NULL = N.NULL_ZIEHUNGEN
 NULL_PERZ = N.NULL_PERZENTIL
 NULL_CRVS = (1.5, 2.0, 3.0)
+#: nur fuer den R-R11-Vergleich, siehe unten
+OHNE_NULLBAND = [False]
 #: Positivkontrolle: 5 Ziehungen je Stufe (Messstandard).
 N_POSITIV = 5
 #: Stufe 0,00 ist die Positivkontrolle nach unten - sie DARF nicht trennen.
@@ -188,6 +190,8 @@ def main() -> int:
     grenze = None
     if "--symbole" in sys.argv:
         grenze = int(sys.argv[sys.argv.index("--symbole") + 1])
+    if "--ohne-nullband" in sys.argv:
+        OHNE_NULLBAND[0] = True
 
     print("=" * 100)
     print("DER NEUE HEBEL-ARM, SCHRITT 1: EINE LAGENEUTRALE GEOMETRIE")
@@ -387,6 +391,15 @@ def main() -> int:
                 #
                 # Bezug = MITTELWERT der Nullwelten (Standard seit 2.216);
                 # das 90. Perzentil ist die ausgewiesene obere Grenze.
+                # ⚠️ `--ohne-nullband` ist AUSDRUECKLICH NUR fuer den
+                # R-R11-Vergleich gedacht: dort werden zwei Laeufe
+                # gegeneinander gehalten, und das Nullband ist in beiden
+                # dasselbe (es haengt an der Zufallssaat, nicht an den
+                # Kursen). Fuer ein URTEIL ueber einen Beitrag ist ein Lauf
+                # ohne Nullband wertlos - genau das steht als Lehre in
+                # 2.597 § 6.
+                if OHNE_NULLBAND[0]:
+                    continue
                 if not (art == "ATR" and abs(k - 1.0) < 1e-9
                         and crv in NULL_CRVS):
                     continue
