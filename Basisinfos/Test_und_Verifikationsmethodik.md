@@ -3304,6 +3304,8 @@ vollständig **nicht** verzeichnet — dieselbe Falle in neuer Auflage.
 | `messe_gleichstand_stundenbasis.py` | Was kostet die Regel „bei Gleichstand gewinnt der Stop"? — stündlich aufgelöst (2.583) |
 | `messe_basisrate_vorhersagbar.py` | Schwankt die Basisrate echt, und ist sie vorhersagbar? (2.585) — P-9 Schicht 3 |
 | `messe_zusammenspiel_beitraege.py` | Spielen `funding` und `turnover` korrekt zusammen? — Korrelation und Additivität der 5×5-Tafel |
+| `messe_hebel_dimension.py` | H-A: die Hebel-Dimension auf der Stundenbasis — Basislinie je Haltedauer/Stop (A1) und sechs Kandidaten (A2), Zielgröße `ergebnis_r` (2.586) |
+| `messe_hebel_nachpruefung.py` | H-A Nachprüfung: Entflechtung, Monotonie (B5), beide Hälften (B6), Trennschärfe in neutralisierter Menge, selektierte Menge nach F-212 (2.586, 2.587) |
 | `messe_zeitteilung.py` | Wird aus dem Muster eine Regel? (109) — Zeitteilung |
 | `messe_kollinearitaet.py` | Sind zwei Hebel dasselbe? (103) |
 | `messe_struktur_bereinigt.py` | Trägt H über den Hochabstand hinaus? (108) |

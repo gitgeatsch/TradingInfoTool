@@ -45,7 +45,8 @@ anderes sagt.
 korrelieren - damit die Redundanz auf dieser Zielgroesse reproduziert
 wird, statt sie zu unterstellen.
 
-    python n78_terminmarkt_kanaele.py
+    python n78_terminmarkt_kanaele.py                # spot, bewegung_r, H20
+    python n78_terminmarkt_kanaele.py --lage hebel   # hebel, barriere, H3
 """
 from __future__ import annotations
 
@@ -69,7 +70,51 @@ from messe_beitrag_auf_auswahl import (_auswahl_maske,       # noqa: E402
 
 HORIZONT = 20
 NEU = ("oi_je_umsatz", "long_bias", "top_bias", "taker_bias")
-REFERENZ = ("oi_aenderung", "zufall")
+# ⚠️⚠️ `funding` UND `turnover` SIND DIE POSITIVKONTROLLE (25.09.2026,
+# Nutzervorschlag *"zuerst die bekannten und tragenden Beitraege und dann
+# die offenen"*).
+#
+# Sie sind LIVE registriert und tragen auf `bewegung_r`. Tragen sie auf
+# `barriere` NICHT, ist die Zielgroesse das Problem - nicht die
+# Kandidaten. Ohne sie waere ein Nullbefund dort nicht interpretierbar:
+# man wuesste nicht, ob nichts da ist oder ob die Anlage auf dieser
+# Zielgroesse nichts findet.
+#
+# ⚠️ Auf `spot`/`bewegung_r` aendern sie die bestehenden Zeilen NICHT -
+# sie kommen als zusaetzliche Zeilen dazu (R-R11).
+REFERENZ = ("oi_aenderung", "funding", "turnover", "zufall")
+
+# ⚠️⚠️⚠️ `--lage hebel` KAM AM 25.09.2026 DAZU (O-1, Nutzerauftrag
+# *"status und weitere messungen nach standards und regeln"*).
+#
+# DER ANLASS steht im Kandidatenregister als LOESUNGSSPUR, nicht als
+# Vermutung: *"er ist gegen `bewegung_r` gefallen, also gegen die
+# SPOT-Frage. Die HEBEL-Frage ist `barriere` (Ziel vor Stop) - dagegen
+# ist er NIE gemessen."*
+#
+# ⚠️ DIE VORGABE BLEIBT `spot`, damit der registrierte Befund (N-9,
+# 06.09.) bitgleich reproduzierbar bleibt - R-R11. Nachgewiesen am
+# 25.09.: 122 Symbole, long_bias 0/3, top_bias 0/2, Referenz 3/3.
+#
+# ⚠️⚠️ ZWEI VORGABEN, DIE DIE NORM SELBST ERZWINGT:
+#
+#   ZIELGROESSE  `messnorm.ZIELGROESSE_JE_LAGE[(hebel, einstieg)]` =
+#                `barriere`. `pruefe_auswahl` WIRFT, wenn sie nicht
+#                passt (Zeile 363) - sie ist nicht waehlbar.
+#   HORIZONT     `messnorm.HORIZONT_JE_LAGE[(hebel, einstieg)]` = 3.
+#                NICHT 20 - der Hebeltrade ist kurz.
+#
+# ⚠️⚠️ UND `simuliert=True` IST PFLICHT. `messnorm.Lage` sagt warum:
+# *"`instrument='hebel'` hat es in der neuen Kette NIE gegeben (3.513
+# spot, 11 absicherung, 0 hebel). Deshalb traegt jede Hebel-Aussage die
+# Markierung `simuliert=True`."* Wer sie weglaesst, behauptet eine
+# Betriebslage, die es nicht gibt.
+LAGEN = {
+    "spot":  dict(instrument="spot", strategie="einstieg",
+                  simuliert=False, horizont=20, zielgroesse="bewegung_r"),
+    "hebel": dict(instrument="hebel", strategie="einstieg",
+                  simuliert=True, horizont=3, zielgroesse="barriere"),
+}
 
 
 def kurz(u: str) -> str:
@@ -83,7 +128,15 @@ def main() -> int:
     print("=" * 104)
     reihen = B.lade()
     mom = momentum250(reihen)
-    lage = N.Lage(instrument="spot", strategie="einstieg")
+    _wahl = "hebel" if "--lage" in sys.argv and         sys.argv[sys.argv.index("--lage") + 1] == "hebel" else "spot"
+    _L = LAGEN[_wahl]
+    globals()["HORIZONT"] = _L["horizont"]
+    zielgroesse = _L["zielgroesse"]
+    lage = N.Lage(instrument=_L["instrument"], strategie=_L["strategie"],
+                  simuliert=_L["simuliert"])
+    print("  LAGE %s x %s · Zielgroesse %s · Horizont %d%s"
+          % (_L["instrument"], _L["strategie"], zielgroesse, _L["horizont"],
+             "  ⚠️ SIMULIERT" if _L["simuliert"] else ""))
     tm = K.lade_terminmarkt()
     zus = {"oi_aenderung": tm["oi_aenderung"],
            "oi_je_umsatz": tm["oi_wert"],       # ⚠️ roh nicht vergleichbar
@@ -128,6 +181,7 @@ def main() -> int:
             try:
                 b = MA.pruefe_auswahl(a, welt[a], mom, lage=lage, menge=m,
                                       rng=rng, horizont=HORIZONT,
+                                      zielgroesse=zielgroesse,
                                       hypothese="N-9 Terminmarkt-Kanaele",
                                       verwendung="Beitrag")
             except Exception as exc:                         # noqa: BLE001
@@ -141,17 +195,28 @@ def main() -> int:
 
     # ---- 2  REDUNDANZ zu den registrierten drei ------------------------
     print("  2  ⚠️ REDUNDANZ — INNERHALB der Auswahl, nicht im Querschnitt")
-    for a in ("funding", "turnover"):
+    # ⚠️⚠️ `rsi` KAM AM 25.09.2026 DAZU - und zwar auf Nutzerauftrag.
+    #
+    # DER ANLASS: das Kandidatenregister nennt fuer `long_bias` eine ZWEITE
+    # Belastung neben dem Nullbefund - *"N-17b (05.09.): NICHT unabhaengig
+    # vom `rsi`"*. Diese Spalte fehlte hier, und damit blieb die Belastung
+    # unreproduziert, waehrend die Loesungsspur im Register sie ausdruecklich
+    # als offen fuehrt (*"selbst wenn er dort traegt, bliebe die Redundanz
+    # mit `rsi` zu klaeren"*).
+    #
+    # ⚠️ Die Spalte ist ADDITIV - die drei bestehenden Zahlen aendern sich
+    # nicht. Wer sie entfernt, macht die Belastung wieder unsichtbar.
+    for a in ("funding", "turnover", "rsi"):
         if a not in welt:
             welt[a] = K.baue(reihen, a, zus.get(a), horizont=HORIZONT)
     anteil = MA.MENGEN["20%"]
-    print("     %-14s %10s %10s %14s"
-          % ("Kandidat", "funding", "turnover", "oi_aenderung"))
+    print("     %-14s %10s %10s %14s %10s"
+          % ("Kandidat", "funding", "turnover", "oi_aenderung", "rsi"))
     for a in NEU:
         if a not in welt:
             continue
         zeile = []
-        for gegen in ("funding", "turnover", "oi_aenderung"):
+        for gegen in ("funding", "turnover", "oi_aenderung", "rsi"):
             r = []
             gt = {t: {x["sym"]: x["kennzahl"] for x in z}
                   for t, z in welt[gegen].items()}
@@ -171,7 +236,8 @@ def main() -> int:
                 if u.std() > 0 and w.std() > 0:
                     r.append(float(np.corrcoef(u, w)[0, 1]))
             zeile.append(float(np.mean(r)) if r else float("nan"))
-        print("     %-14s %+10.3f %+10.3f %+14.3f" % (a, *zeile), flush=True)
+        print("     %-14s %+10.3f %+10.3f %+14.3f %+10.3f"
+              % (a, *zeile), flush=True)
     # ⚠️ Und die Redundanz der beiden Bias-Kanaele UNTEREINANDER -
     # N-17b hat 0,955 gemessen, das gehoert reproduziert.
     if "long_bias" in welt and "top_bias" in welt:
