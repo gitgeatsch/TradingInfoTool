@@ -145,10 +145,43 @@ KANDIDATEN = ("funding", "turnover", "oi_aenderung", "schnitt", "zufall")
 
 def barriere_je_reihe(reihe, H: int, crv: float | None = None,
                       ungeloest: float | None = None):
-    """Ziel vor Stop, auf der PRODUKTIONSGEOMETRIE -> {tag: 1.0/0.0}.
+    """Ziel vor Stop auf dem RAUSCHBODEN der Produktion -> {tag: 1.0/0.0}.
 
-    ⚠️ Genau die Geometrie, die `entscheidungsrechnung` baut - sonst misst
-    der Test etwas anderes als das, was die App vorschlaegt.
+    ⚠️⚠️⚠️ HIER STAND BIS ZUM 25.09.2026 EINE FALSCHE BEHAUPTUNG:
+    *"Genau die Geometrie, die `entscheidungsrechnung` baut - sonst misst
+    der Test etwas anderes als das, was die App vorschlaegt."* Das ist
+    nachgemessen FALSCH (Befund 2.591, 781.164 Anker):
+
+        HIER        min(25%K, max(5%K, 0,75 x ATR))
+                    ➤ nur der RAUSCHBODEN. Der Zielwert fehlt
+
+        _stop_aus_atr  clamp(2,5 x ATR, max(5%K, 0,75 x ATR), 25%K)
+                    ➤ der Zielwert 2,5 x ATR, dann geklemmt
+
+        Stopweite Median   6,18 %  gegen  20,59 %
+        identisch in       3,31 %  der Anker, Verhaeltnis Median 3,333
+
+    ⚠️ NICHT die Ursache (eigens geprueft): die ATR-Definitionen. `B.spanne`
+    und `atr_wilder` liegen bei 8,236 gegen 8,679 Prozent des Kurses,
+    Verhaeltnis 1,0538. Es ist der MULTIPLIKATOR. Ebenfalls nicht die
+    Ursache: `config.yaml stop_min_atr` = 2,0 gegen `GRENZEN` = 0,75 - der
+    Zielwert 2,5 uebersteigt den Boden 2,0 immer, beide bitgleich.
+
+    ➤➤ DIE GEOMETRIE BLEIBT TROTZDEM (Nutzerentscheidung 25.09.2026,
+    *"Nur den Docstring richtigstellen"*), und zwar aus zwei Gruenden:
+      1. im Betrieb kommt der Stop in 81,5 Prozent der Faelle NICHT aus dem
+         ATR-Rueckfall, sondern aus dem Widerlegungspreis des Modells, und
+         dessen Median liegt bei 8 Prozent (2.438) - also naeher an diesen
+         6,18 Prozent als an 20,59. ⚠️ Diese Zahl ist laut Register NICHT
+         reproduzierbar (`messe_widerlegung.py` fehlt)
+      2. sechs Messwerkzeuge und mehrere Befunde stehen auf dieser Geometrie
+
+    ⚠️⚠️ WAS JEDER LESER WISSEN MUSS: der HORIZONT haengt am Stop. Anteil
+    AUFGELOESTER Anker bei H3 - hier 51,7 Prozent, beim Betriebsstop von
+    13 Prozent nur 20,3, beim ATR-Rueckfall nur 8,0. `HORIZONT_JE_LAGE`
+    = 3 ist der Aufloesungsmedian DIESER Geometrie, nicht der des Betriebs
+    (Befund 2.445 misst 3 Tage bei 0,75 ATR und 23 bei 2,5 ATR - am 25.09.
+    unabhaengig reproduziert).
 
     crv        Zielhoehe in Stop-Abstaenden. None = `GRENZEN['crv']`,
                also die Produktionsvorgabe 2,0. 2b variiert sie.

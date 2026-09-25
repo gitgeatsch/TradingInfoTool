@@ -19,12 +19,20 @@ Stufen sind dadurch 1,47x und 1,85x zu gross.
 
 ➤ HIER WIRD NICHT UEBERSETZT, SONDERN DIREKT GEMESSEN.
 
-`messnorm.ZIELGROESSEN["barriere"]` gibt die Statistik vor: **mittel**. Bei
-`barriere` ist y aus {+CRV, -1}, also
+`messnorm.ZIELGROESSEN["barriere"]` gibt die Statistik vor: **mittel**.
 
-    q = (mittel + 1) / (1 + CRV)
+⚠️⚠️⚠️ KORRIGIERT 25.09. (Befund 2.590). Die erste Fassung nahm `in_r`
+aus `K.baue` - das ist die KURSBEWEGUNG - und rechnete daraus mit
+q = (mittel+1)/(1+CRV) eine Quote. Die Formel gilt nur fuer y aus
+{+CRV,-1}; auf einer kontinuierlichen Groesse ist sie bedeutungslos.
+Befunde 2.588/2.589 sind daran gefallen.
 
-Die Stufe entsteht damit UNMITTELBAR in Quotenpunkten - kein Faktor, keine
+➤ JETZT liefert `k1c_hebel_barriere.barriere_je_tag` 1.0 (Ziel) / 0.0
+(Stop). Damit ist
+
+    q = mittel                                    DIREKT
+
+Die Stufe entsteht UNMITTELBAR in Quotenpunkten - kein Faktor, keine
 Uebersetzung, kein Bruch.
 
 ═══════════════════════════════════════════════════════════════════════
@@ -74,12 +82,35 @@ import messe_funding_niveau as F                             # noqa: E402
 import messe_kandidaten_als_regel as K                       # noqa: E402
 import messnorm as N                                         # noqa: E402
 import messnorm_auswahl as MA                                # noqa: E402
+import k1c_hebel_barriere as KB                              # noqa: E402
 
 # ⚠️ ALLES AUS DER NORM - keine eigenen Konstanten.
 LAGE = N.Lage(instrument="hebel", strategie="einstieg", simuliert=True)
 ZIELGROESSE = N.ZIELGROESSE_JE_LAGE[(LAGE.instrument, LAGE.strategie)]
 HORIZONT = N.HORIZONT_JE_LAGE[(LAGE.instrument, LAGE.strategie)]
 CRV = 2.0
+
+# ═══════════════════════════════════════════════════════════════════════
+#  ⚠️⚠️ DIE STAERKENLEITER MUSS NACH UNTEN VERLAENGERT WERDEN
+# ═══════════════════════════════════════════════════════════════════════
+# `messnorm.STAERKEN` = (0.02 ... 0.40) ist fuer R-Einheiten gebaut. Auf
+# der QUOTE bedeutet die unterste Sprosse 0.02 eine Spanne von 0.04 -
+# VIER Prozentpunkte Trefferquote. Die Kelly-Nullstelle liegt bei 0.3333
+# und die Fuenftel einer Quote liegen wenige Prozentpunkte auseinander:
+# eine Leiter, deren feinste Stufe groesser ist als der gesamte zu
+# erwartende Bereich, kann per Konstruktion nichts aufloesen.
+#
+# ➤ Die Norm-Leiter bleibt DRIN (sie ist die Vorgabe), drei feinere
+#   Sprossen kommen DAVOR. Das ist eine Verlaengerung, kein Ersatz.
+#
+# ⚠️ OFFENGELEGT: aus dem ungueltigen Lauf (2.588) hatte ich die Zahl
+# 0,0121 im Kopf, als ich das schrieb. Die Begruendung oben steht aber
+# allein auf der SKALA (Quote in [0,1], Nullstelle 0,3333) und braucht
+# kein Ergebnis - sie waere vor jedem Lauf dieselbe gewesen. Wer den
+# Einwand trotzdem erhebt, hat recht: es ist eine Verlaengerung nach dem
+# ersten Blick, und sie ist deshalb hier benannt statt stillschweigend
+# in `messnorm` gewandert.
+STAERKEN_Q = (0.0025, 0.005, 0.01) + tuple(N.STAERKEN)
 # ⚠️⚠️ `zufall` IST PFLICHT, NICHT KUER. Vorabfestlegung 13 Paragraf 4
 # nennt ihn als Negativkontrolle; mein erster Lauf hatte ihn vergessen.
 # Eine Stufenleiter ohne Gegenprobe ist eine Zahlenreihe.
@@ -95,10 +126,24 @@ def _quote_je_fuenftel(je_tag: dict, mom: dict, anteil: float,
     gebildet, damit die Marktlage festgehalten ist. Ohne sie misst man die
     Marktbewegung und nennt sie Beitrag.
 
-    ⚠️⚠️ `q` KOMMT AUS DEM MITTELWERT, nicht aus einer eigenen Zaehlung:
-    `messnorm.ZIELGROESSEN["barriere"]["statistik"]` = "mittel", und bei
-    y aus {+CRV, -1} gilt q = (mittel + 1) / (1 + CRV). Wer stattdessen
-    Treffer zaehlt, baut eine zweite Definition derselben Groesse.
+    ⚠️⚠️⚠️ KORRIGIERT AM 25.09.2026 (Befund 2.590). Die erste Fassung nahm
+    `in_r` aus `K.baue` und rechnete q = (mittel+1)/(1+CRV). ABER `in_r`
+    ist die KURSBEWEGUNG in R (`messe_kandidaten_als_regel` Zeile 382),
+    nicht der Barrierenausgang - die Umrechnung gilt nur fuer y aus
+    {+CRV,-1} und war auf einer kontinuierlichen Groesse bedeutungslos.
+    Befunde 2.588 und 2.589 sind daran gefallen.
+
+    ➤ JETZT kommt `in_r` aus `k1c_hebel_barriere.barriere_je_tag`, und das
+    liefert 1.0 (Ziel) oder 0.0 (Stop). Damit ist `q` der MITTELWERT
+    DIREKT - keine Umrechnung, kein Faktor.
+
+    ⚠️⚠️ `ungeloest=0.0` IST PFLICHT, nicht Geschmack. `barriere_je_reihe`
+    sagt es selbst: mit `None` fallen offene Anker heraus und gemessen wird
+    P(Ziel | aufgeloest), der RICHTUNGSKANAL; mit `0.0` zaehlen sie als
+    verfehlt und gemessen wird die unbedingte QUOTE - *"das ist `q` der
+    Potentialformel"*. Kelly braucht die Quote. ⚠️ Und die beiden koennen
+    GEGENEINANDER laufen (2.136: `turnover` traegt Richtung, auf der Quote
+    nicht).
     """
     sammel: dict = {k: [] for k in range(5)}
     n_tage = 0
@@ -124,9 +169,8 @@ def _quote_je_fuenftel(je_tag: dict, mom: dict, anteil: float,
             n_tage += 1
     if any(len(sammel[k]) < 30 for k in range(5)):
         return None, None, 0
-    mittel = [float(np.mean(sammel[k])) for k in range(5)]
-    # ⭐ DIE UMRECHNUNG - aus der Definition, nicht aus einem Faktor
-    q = [(m + 1.0) / (1.0 + CRV) for m in mittel]
+    # ⭐ KEINE UMRECHNUNG MEHR: `in_r` ist 1.0/0.0, der Mittelwert IST q
+    q = [float(np.mean(sammel[k])) for k in range(5)]
     q_alle = float(np.mean(q))
     punkte = [round(100.0 * (x - q_alle), 3) for x in q]
     return q, punkte, n_tage
@@ -162,8 +206,7 @@ def _nullpunkt_spanne(je_tag: dict, mom: dict, anteil: float, rng,
                 if sel.sum() >= 2:
                     sammel[k].append(float(np.mean(y[sel])))
         if all(len(sammel[k]) >= 30 for k in range(5)):
-            q = [(float(np.mean(sammel[k])) + 1.0) / (1.0 + CRV)
-                 for k in range(5)]
+            q = [float(np.mean(sammel[k])) for k in range(5)]
             aus.append(abs(q[0] - q[4]))
     return np.array(aus)
 
@@ -181,8 +224,10 @@ def _trennschaerfe(je_tag: dict, mom: dict, anteil: float, rng,
     ⚠️ ZENTRIERT: Fuenftel 0..4 bekommen -2s..+2s, die Summe ist null -
     der Gesamtmittelwert verschiebt sich NICHT (Messstandard).
 
-    ⚠️ Gepflanzt wird in R (die Einheit von `in_r`), gemessen wird die
-    Spanne in q - dieselbe Groesse wie im Hauptlauf.
+    ⚠️⚠️ GEPFLANZT WIRD IN QUOTENEINHEITEN, nicht in R. Nach
+    `barriere_je_tag` steht in `in_r` die Quote selbst (1.0/0.0), also ist
+    die Pflanzeinheit dieselbe wie die Messeinheit. Eine Leiter der
+    Staerke s laeuft von -s bis +s: Spanne 2s in q, OHNE Faktor.
     """
     aus = []
     for s in staerken:
@@ -205,8 +250,7 @@ def _trennschaerfe(je_tag: dict, mom: dict, anteil: float, rng,
                         sammel[k].append(float(np.mean(y[sel]))
                                          + (k - 2.0) * (s / 2.0))
             if all(len(sammel[k]) >= 30 for k in range(5)):
-                q = [(float(np.mean(sammel[k])) + 1.0) / (1.0 + CRV)
-                     for k in range(5)]
+                q = [float(np.mean(sammel[k])) for k in range(5)]
                 n += 1
                 if abs(q[0] - q[4]) > p90:
                     treffer += 1
@@ -246,6 +290,16 @@ def main() -> int:
         if not je:
             print("    leere Welt")
             continue
+        # ⭐⭐ HIER WIRD DIE ZIELGROESSE ZUR ZIELGROESSE (2.590).
+        # Ohne diesen Schritt steht in `in_r` die Bewegung, und jede
+        # Barrieren-Aussage darueber ist eine Etikettenluege.
+        je, anteil_geloest = KB.barriere_je_tag(je, reihen, HORIZONT,
+                                               ungeloest=0.0)
+        if not je:
+            print("    keine Barrieren-Welt")
+            continue
+        print("    Barrieren gerechnet · %.1f %% der Anker abgedeckt"
+              % (100 * anteil_geloest), flush=True)
         zul = MA.zulaessige_mengen(je, mom, horizont=HORIZONT)
         print("    %d Tage · zulaessige Mengen: %s"
               % (len(je), ", ".join(zul) or "⚠️ KEINE"), flush=True)
@@ -286,22 +340,22 @@ def main() -> int:
                          "UEBER dem Nullpunkt" if spanne > p90
                          else "⛔ IM RAUSCHEN"))
                 # ── ⭐ TRENNSCHAERFE - nur wo der Nullpunkt steht ──────
-                ts = _trennschaerfe(je, mom, anteil, rng, p90, N.STAERKEN)
+                ts = _trennschaerfe(je, mom, anteil, rng, p90, STAERKEN_Q)
                 gefunden = next((s for s, qu, _n in ts if qu >= 0.8), None)
                 print("       ⭐ Trennschaerfe (neutralisiert, 10 Ziehungen):")
                 print("          %s" % "  ".join(
-                    "%.2f:%.0f%%" % (s, 100 * qu) for s, qu, _n in ts))
+                    "%.4f:%.0f%%" % (s, 100 * qu) for s, qu, _n in ts))
                 print("          zuverlaessig (80 %%) ab: %s"
-                      % ("%.2f R" % gefunden if gefunden else "keiner"))
+                      % ("%.4f" % gefunden if gefunden else "keiner"))
                 if gefunden:
-                    # ⚠️⚠️ EINHEITEN: die Spanne steht in q, die gepflanzte
-                    # Staerke in R. Ein direkter Vergleich waere falsch.
-                    # Eine Leiter der Staerke s laeuft von -s bis +s, also
-                    # 2s in R; ueber q = (mittel+1)/(1+CRV) sind das
-                    # 2s/(1+CRV) in q.
-                    gef_q = 2.0 * gefunden / (1.0 + CRV)
-                    print("          ⚠️ Aufloesung %.2f R = %.4f in q"
-                          % (gefunden, gef_q))
+                    # ⚠️⚠️ EINHEITEN: nach `barriere_je_tag` IST `in_r` die
+                    # Quote. Gepflanzt und gemessen wird in derselben
+                    # Einheit - der CRV-Faktor der alten Fassung war ein
+                    # Ueberbleibsel der falschen Zielgroesse (2.590).
+                    # Eine Leiter der Staerke s: Spanne 2s.
+                    gef_q = 2.0 * gefunden
+                    print("          ⚠️ Aufloesung Staerke %.4f = Spanne "
+                          "%.4f in q" % (gefunden, gef_q))
                     print("          ⚠️ gemessene Spanne %.4f -> %s"
                           % (spanne,
                              "UEBER der Aufloesung" if spanne > gef_q
