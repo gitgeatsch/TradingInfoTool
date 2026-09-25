@@ -1,17 +1,17 @@
 # REGISTER — DIE WERKZEUGE (Altbestand gegen Neubestand)
 
-*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 317 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
+*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 323 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
 
 ⚠️ **Getrennt wird nach METHODIKSTAND, nicht nach Datum.** 178 von 384 Dateien wurden in 14 Tagen angefasst, die meisten nur vom N-19-Fix (Krypto-Filter, 44 Skripte). Das Datum sagt nichts darueber, ob ein Werkzeug der Norm genuegt.
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 23 | 7 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
-| **TAGESKLAMMER** | 27 | 9 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 86 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 181 | 57 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **NORM** | 28 | 9 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **TAGESKLAMMER** | 27 | 8 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
+| **BLOCK** | 87 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **ALTBESTAND** | 181 | 56 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **181 von 317 Werkzeugen (57 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **181 von 323 Werkzeugen (56 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,14 +21,15 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (23)
+## NORM (28)
 
-    messe_alle_kandidaten.py, messe_bewertung_kalibrierung.py, messe_haltedauer.py, messnorm_auswahl.py
+    messe_alle_kandidaten.py, messe_bewertung_kalibrierung.py, messe_funding_je_geometrie.py, messe_haltedauer.py
+    messe_hebel_geometrie_neutral.py, messe_q_beide_seiten.py, messe_reverse_scharfe_anstiege.py, messnorm_auswahl.py
     messnorm_rand.py, pruefe_audit_06_07_09.py, pruefe_datengrundlage.py, pruefe_messbasis_wechsel.py
     pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py
     pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py, pruefe_nullschwelle.py
-    pruefe_o4_stufenband.py, pruefe_pakete.py, pruefe_schichtentest_spiegelung.py, schritt3_gegenpruefung.py
-    schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
+    pruefe_o4_stufenband.py, pruefe_pakete.py, pruefe_schichtentest_spiegelung.py, pruefe_symbole_je_termin.py
+    schritt3_gegenpruefung.py, schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 
@@ -40,7 +41,7 @@
     pruefe_momentum_trennschaerfe.py, pruefe_n31_tagesklammer.py, pruefe_regel_trennschaerfe.py, pruefe_schwelle_gegenpruefung.py
     pruefe_turnover_befund.py, pruefe_turnover_und_kombination.py, rechne_sperren_zusammen.py
 
-## BLOCK (86)
+## BLOCK (87)
 
     messe_abstand_zum_zufall.py, messe_akkumulation_az4.py, messe_akkumulationsmass.py, messe_alle_groessen_neu.py
     messe_allocator_gegen_zufall.py, messe_alltagsmarkt.py, messe_asset_anteil_und_relativform.py, messe_ausstieg.py
@@ -55,15 +56,15 @@
     messe_stop_abstand_baender.py, messe_stopquelle.py, messe_stopweite_historisch.py, messe_stufen_aus_quote.py
     messe_tagewahl_je_eigenschaft.py, messe_top_fakten.py, messe_umbau_wirkung.py, messe_zeitschranke.py
     messe_zellen_ausgang.py, messe_zielregel.py, pruefe_alltagsmarkt.py, pruefe_amihud_handelbarkeit.py
-    pruefe_analogie_gross.py, pruefe_auswahl_produktion.py, pruefe_auswahl_schaedlich.py, pruefe_beitragszahl_sickert.py
-    pruefe_filter_am_befund.py, pruefe_filter_trennschaerfe.py, pruefe_funding_je_reihe.py, pruefe_gefallen_randpotential.py
-    pruefe_h_tageseffekt.py, pruefe_horizont_dimensionierung.py, pruefe_kandidaten_abdeckung_stabilitaet.py, pruefe_kandidaten_untereinander.py
-    pruefe_konsistenz_06_09.py, pruefe_n8_gegenpruefung.py, pruefe_ohne_widerstand.py, pruefe_persistenz_und_nullpunkt.py
-    pruefe_rangzugehoerigkeit.py, pruefe_regel_je_marktphase.py, pruefe_steigung_invarianz.py, pruefe_stopweite_gegen.py
-    pruefe_strukturstop.py, pruefe_stufen_gegen_quote.py, pruefe_stufen_stabilitaet.py, pruefe_trailing_je_instrument.py
-    pruefe_turnover_weglassen.py, pruefe_veraenderungsformen_unabhaengig.py, pruefe_vola_unabhaengig.py, pruefe_vola_zeitpunkt_oder_asset.py
-    pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
-    simuliere_hebelverteilung.py, simuliere_staffelung.py
+    pruefe_analogie_gross.py, pruefe_auswahl_produktion.py, pruefe_auswahl_schaedlich.py, pruefe_barrierengeometrie.py
+    pruefe_beitragszahl_sickert.py, pruefe_filter_am_befund.py, pruefe_filter_trennschaerfe.py, pruefe_funding_je_reihe.py
+    pruefe_gefallen_randpotential.py, pruefe_h_tageseffekt.py, pruefe_horizont_dimensionierung.py, pruefe_kandidaten_abdeckung_stabilitaet.py
+    pruefe_kandidaten_untereinander.py, pruefe_konsistenz_06_09.py, pruefe_n8_gegenpruefung.py, pruefe_ohne_widerstand.py
+    pruefe_persistenz_und_nullpunkt.py, pruefe_rangzugehoerigkeit.py, pruefe_regel_je_marktphase.py, pruefe_steigung_invarianz.py
+    pruefe_stopweite_gegen.py, pruefe_strukturstop.py, pruefe_stufen_gegen_quote.py, pruefe_stufen_stabilitaet.py
+    pruefe_trailing_je_instrument.py, pruefe_turnover_weglassen.py, pruefe_veraenderungsformen_unabhaengig.py, pruefe_vola_unabhaengig.py
+    pruefe_vola_zeitpunkt_oder_asset.py, pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py
+    rechne_nullpunkte_feiner.py, simuliere_hebelverteilung.py, simuliere_staffelung.py
 
 ## ALTBESTAND (181)
 
