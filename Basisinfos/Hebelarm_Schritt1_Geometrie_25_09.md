@@ -219,6 +219,46 @@ Ziehungen.
 nicht die **Daten**. Er sagt nichts darüber, ob die Messbasis kontaminiert
 ist.
 
+## 5.3 ⚠️⚠️⚠️ Die Einordnung, die den Fund kleiner macht — NIVEAU gegen QUERSCHNITT
+
+**Nachgezählt über alle 60 Zellen: `E[R]` brutto ist in 0 von 60 positiv.**
+Der beste Wert ist **−0,0034**, der schlechteste −0,0302.
+
+➤ **Damit beantworten 2.595 und 2.597 zwei verschiedene Fragen, und beide
+gelten:**
+
+| Frage | Maßstab | Antwort |
+|---|---|---|
+| **Querschnitt** — *welche Lage ist besser als die andere?* | **Netto** (gegen die Drift) | ✔ das oberste Momentumfünftel, in allen 12 Zellen, über dem Nullband |
+| **Niveau** — *soll überhaupt gehandelt werden?* | **Brutto** (gegen null) | ⛔ **nein, in 0 von 60 Zellen** |
+
+⚠️⚠️ **Der Hebel braucht die NIVEAUfrage.** Ein Hebelgeschäft ist nicht die
+Alternative zu *„diesen Wert halten"*, sondern zu *„kein Geschäft machen"* —
+und gegen „kein Geschäft" ist der Maßstab **null**, nicht die Drift.
+
+➤ **Mein Fund dreht also nicht das Hebelurteil, sondern nur die Aussage über
+die Ordenbarkeit** — und die war mit 2.594 schon beantwortet. **2.595 behält
+für die Hebelfrage recht.** Was fällt, ist allein seine *Begründung*
+(*„`E[R]` wird in der besten Lage schlechter"* ist ein Driftbefund, kein
+Lagebefund), nicht sein *Schluss*.
+
+⚠️ Das ist genau die schon registrierte Regel **Niveau → gepoolt, Querschnitt
+→ Klammer**, hier in anderer Gestalt: **wer den Maßstab wechselt, wechselt die
+Frage.** Ich hatte die Nettogröße als Antwort auf die Hebelfrage gelesen; sie
+ist es nicht.
+
+## 5.4 ⭐ Und was die Driftzeile dafür aufwirft
+
+Die Drift ist in **jedem** Fünftel und **jeder** Zelle negativ (−0,0014 bis
+−0,0210). Auf dem Niveau trägt Long also nirgends — **und die Spiegelrichtung
+ist damit die erste, die eine Niveauchance hat.**
+
+⚠️⚠️ **Aber das ist noch kein Argument, sondern eine Frage:** eine über 116
+Altcoins und vier Jahre durchgehend negative Drift ist ein Kandidat für
+**Regimewette und Überlebensverzerrung**, nicht für einen Beitrag. Wer darauf
+short geht, wettet auf das Fenster, nicht auf die Lage. ➤ Zu prüfen wäre die
+Drift **je Jahr** und **je Symbolklasse**, bevor daraus irgendetwas folgt.
+
 ---
 
 # § 7 ⛔ Was aus alldem NICHT folgt
