@@ -1,17 +1,17 @@
 # REGISTER — DIE WERKZEUGE (Altbestand gegen Neubestand)
 
-*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 327 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
+*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 328 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
 
 ⚠️ **Getrennt wird nach METHODIKSTAND, nicht nach Datum.** 178 von 384 Dateien wurden in 14 Tagen angefasst, die meisten nur vom N-19-Fix (Krypto-Filter, 44 Skripte). Das Datum sagt nichts darueber, ob ein Werkzeug der Norm genuegt.
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 30 | 9 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 31 | 9 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 8 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
 | **BLOCK** | 88 | 27 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 182 | 56 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **ALTBESTAND** | 182 | 55 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **182 von 327 Werkzeugen (56 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **182 von 328 Werkzeugen (55 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,16 +21,16 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (30)
+## NORM (31)
 
     messe_alle_kandidaten.py, messe_bewertung_kalibrierung.py, messe_drift_herkunft.py, messe_funding_je_geometrie.py
-    messe_haltedauer.py, messe_hebel_geometrie_neutral.py, messe_q_beide_seiten.py, messe_regime_rollierend.py
-    messe_reverse_scharfe_anstiege.py, messnorm_auswahl.py, messnorm_rand.py, pruefe_audit_06_07_09.py
-    pruefe_datengrundlage.py, pruefe_messbasis_wechsel.py, pruefe_n1_mehrfachmischung.py, pruefe_n1_rangtest.py
-    pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py
-    pruefe_n5_modi.py, pruefe_nullschwelle.py, pruefe_o4_stufenband.py, pruefe_pakete.py
-    pruefe_schichtentest_spiegelung.py, pruefe_symbole_je_termin.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py
-    schritt4a_gegenpruefung.py, schritt4a_matched.py
+    messe_haltedauer.py, messe_hebel_geometrie_neutral.py, messe_nachzieher.py, messe_q_beide_seiten.py
+    messe_regime_rollierend.py, messe_reverse_scharfe_anstiege.py, messnorm_auswahl.py, messnorm_rand.py
+    pruefe_audit_06_07_09.py, pruefe_datengrundlage.py, pruefe_messbasis_wechsel.py, pruefe_n1_mehrfachmischung.py
+    pruefe_n1_rangtest.py, pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py
+    pruefe_n5_mengenkontrolle.py, pruefe_n5_modi.py, pruefe_nullschwelle.py, pruefe_o4_stufenband.py
+    pruefe_pakete.py, pruefe_schichtentest_spiegelung.py, pruefe_symbole_je_termin.py, schritt3_gegenpruefung.py
+    schritt3_trennschaerfe.py, schritt4a_gegenpruefung.py, schritt4a_matched.py
 
 ## TAGESKLAMMER (27)
 

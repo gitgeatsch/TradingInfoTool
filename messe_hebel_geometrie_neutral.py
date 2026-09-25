@@ -142,7 +142,7 @@ def atr_tag_relativ(high, low, close):
     return m * np.sqrt(24.0)
 
 
-def ausgaenge(high, low, close, stop_rel, ziel_rel, H):
+def ausgaenge(high, low, close, stop_rel, ziel_rel, H, runter=False):
     """-> (ist_ziel, ist_stop, r_offen, gueltig, gleichstand).
 
     Stop zuerst (2.583) - und genau das ist NICHT neutral. Wenn in
@@ -160,8 +160,17 @@ def ausgaenge(high, low, close, stop_rel, ziel_rel, H):
     gueltig[:VORLAUF] = False
     gueltig[max(0, n - max(HORIZONTE)):] = False
     idx = np.arange(n)
-    stop_kurs = close * (1.0 - stop_rel)
-    ziel_kurs = close * (1.0 + ziel_rel)
+    # ⭐ `runter=True` spiegelt die GEOMETRIE fuer einen SHORT: Stop nach
+    # OBEN, Ziel nach UNTEN. Das ist die einzige korrekte Spiegelprobe -
+    # bloss das Vorzeichen der Zielgroesse zu drehen genuegt NICHT, weil
+    # dann dieselben Ausgaenge unterstellt wuerden. Vorgabe bleibt False,
+    # der bisherige Pfad ist also bitgleich (nachgewiesen).
+    if runter:
+        stop_kurs = close * (1.0 + stop_rel)
+        ziel_kurs = close * (1.0 - ziel_rel)
+    else:
+        stop_kurs = close * (1.0 - stop_rel)
+        ziel_kurs = close * (1.0 + ziel_rel)
     fertig = ~gueltig.copy()
     ist_ziel = np.zeros(n, bool)
     ist_stop = np.zeros(n, bool)
@@ -171,8 +180,12 @@ def ausgaenge(high, low, close, stop_rel, ziel_rel, H):
         offen = ~fertig
         if not offen.any():
             break
-        s_hit = offen & (low[j] <= stop_kurs)
-        z_roh = offen & (high[j] >= ziel_kurs)
+        if runter:
+            s_hit = offen & (high[j] >= stop_kurs)
+            z_roh = offen & (low[j] <= ziel_kurs)
+        else:
+            s_hit = offen & (low[j] <= stop_kurs)
+            z_roh = offen & (high[j] >= ziel_kurs)
         gleich |= (s_hit & z_roh)          # beide in DERSELBEN Stunde
         z_hit = z_roh & ~s_hit
         ist_stop |= s_hit
@@ -182,6 +195,8 @@ def ausgaenge(high, low, close, stop_rel, ziel_rel, H):
     with np.errstate(divide="ignore", invalid="ignore"):
         r_offen = (close[je] / np.maximum(close, 1e-12) - 1.0) / np.maximum(
             stop_rel, 1e-12)
+    if runter:
+        r_offen = -r_offen          # ein Short verdient am fallenden Kurs
     return (ist_ziel & gueltig, ist_stop & gueltig, r_offen, gueltig,
             gleich & gueltig)
 
