@@ -1836,7 +1836,7 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 | # | Kriterium | Erfüllt, wenn | liefert |
 |---|---|---|---|
 | 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" ➔ ✔✔ **PHASE 3 IST DURCH (23.09.)**: `turnover` einzeln reproduziert und **TRÄGT** (2.535), die Kette reproduziert (0,5 % Abweichung) und **TRÄGT** auf beiden Quellen (2.537). ⚠️ Der *Unterschied* der Quellen ist **nicht belegt** (gepaart +0,0479 R bei Trennschärfe 0,100) — der Umbau war ein Abdeckungspaket, kein Qualitätspaket. ⚠️ Vorbehalt **N3(b)** gilt weiter: gemessen auf der Stellvertretermenge, nicht auf der Live-Menge | Phase 3 |
-| 2 | **Hebel gemessen** | ⚠️ **NEU GEFASST 26.09.** — die Frage *trägt die QUOTE den Hebel* ist **beantwortet und verneint** (2.604: `E[R]` in 0 von 60 Zellen positiv). Erfüllt ist das Kriterium jetzt durch **2.607**: Selektion der Spitze + Trailing ergibt `E[R]` **+0,1155** bei 1 % Schärfe, signifikant (6× Tagesfehler), in **allen fünf Jahren** belegt | Phase 4 |
+| 2 | **Hebel gemessen** | ⚠️⚠️ **ZWEIMAL NEU GEFASST AM 26.09.** — morgens durch 2.607/2.608, **abends widerlegt durch 2.624**: die Nullwelt war gepoolt statt tagestreu, und mit dem Standardprüfstand trägt **keine** der sechs Schwellen. Die Achse war zudem **invertiert** (2.625). ✔ **Erfüllt ist das Kriterium jetzt durch 2.626/2.628**: die **inverse** Achse (täglich niedrigster `ema_abstand_atr`) trägt 12 von 12 out-of-sample und auf 115 von 115 Symbolen, **+1,5883 %** je Trade bei H24 / Stop 1,00 ATR / Trailing 1,5 / 0,5. ⛔ **Nicht verdrahtet** | Phase 4 |
 | 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch. ✔✔ **GEKLÄRT 20.09.:** das Maß ist `schnitt`/`UNTER_SMA`, und das Notebook rechnet es seit dem Schnitt-Job (2.487-schnittjob). Die Grundgesamtheit war zuerst eine andere (398 gegen 517) und verschob **18 von 31** Fünfteln — **gemessen, nicht vermutet**. Nach dem Umbau (beide Zustände, Aufbewahrung je Symbol, Mindestlänge 400) sind es **0 von 29** (2.487-grundgesamtheit). ⚠ Kein Blocker mehr für dieses Kriterium; offen bleibt allein 2.487-schnitt-frische (die Messdatei prüft die Frische nur global). ➔ ✔✔ **GEMESSEN 23.09. (N-67)**: `schnitt` trägt **zusätzlich**, nachdem funding und turnover gewirkt haben — auf **beiden** Quellen (+0,0427 gegen registriert +0,0397 reproduziert; neu +0,0378), Trennschärfe je 0,02 R. ⚠️ n67 urteilte bis dahin **ohne Trennschärfe** (vom 07.09., Standard vom 09.09.) — nachgerüstet. ⛔ **Die beiden Zahlen dürfen NICHT verrechnet werden**: bei N-67 gibt es keinen unbeteiligten Arm, die Läufe messen auf verschiedenen Restmengen (2.538). ⛔ **Und der Weg liefert nichts**: `strategie='akkumulation'` hat in 7.544 Signalen **null** Treffer (2.540) — die Messung sagt, das Maß trägt; der Umbau steht nach M1 | Phase 6 / Schritte 25–27 |
 | 4 | **LLM-Kette gemessen** | **Gepaarter Versuch** auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall. **Produktiv geht die gemessene Fassung** | Phase 8 (neu zugeschnitten) |
 | 5 | **Durchgängig am Papier** | Je Stufe Quelle, Messstand, Kennzeichnung; keine ungemessene Größe in der Eingabe oder ausdrücklich ausgewiesen (2.459-ungemessen) | Phase 9 |
@@ -1856,7 +1856,10 @@ Acht Befunde, 2.597 bis 2.607.
 | **Richtung** | 2.603 / 2.604 | ⚠️ neun Merkmale **haben** Richtung, **tragen** aber kein `E[R]` |
 | ⭐ **Selektion** | 2.605 | ✔✔ die **Spitze** trägt — MFE/MAE 1,44–1,80, Dosis-Wirkung |
 | **Bezugslänge** | 2.606 | ✔ EMA **48 h** gemessen (der klassische 50-Tage-EMA ist wertlos: MFE/MAE ≈ 1,00) |
-| ⭐⭐ **Trailing** | **2.607** | ✔✔ **`E[R]` = +0,1155** bei 1 % Schärfe und 1,0 ATR Trailing |
+| ⛔ **Trailing** | ~~2.607~~ | **WIDERLEGT 26.09. abends (2.624)** — gepoolte statt tagestreue Nullwelt |
+| ⭐⭐⭐ **inverse Achse** | **2.626** | ✔✔ 12 von 12 out-of-sample, 115 von 115 Symbolen, **+1,33 %** absolut, alle Horizonte |
+| ⭐⭐ **Geometrie invers** | **2.628** | ✔ H24 / Stop 1,00 / Trailing 1,5 / 0,5 → **+1,5883 %** je Trade |
+| ⭐ **Hebelhöhe** | **2.627** | ✔ 2–5× — begründet über RM-11 und Verlustserie, **nicht** über Kelly |
 
 #### Die Betriebsumlegung (2.607)
 
@@ -1871,7 +1874,7 @@ Acht Befunde, 2.597 bis 2.607.
 
 | # | |
 |---|---|
-| **1** | ✔✔ **ERLEDIGT 26.09. (2.608).** Die Umlegung ist gemessen — und die Bewertung ist eine **absolute Schwelle in ATR**, kein Perzentil. Damit ist sie von der Grundgesamtheit **unabhängig** und funktioniert bei einem Asset wie bei 116. Auf den 15 liquiden Watchlist-Symbolen: `E[R]` **+0,2079** bei Schwelle 1,0 ATR, 2,0 Signale/Tag, signifikant; monoton dosierbar von 0,3 bis 1,2 ATR |
+| **1** | ⛔⛔ **ZURÜCKGEZOGEN AM SELBEN ABEND (2.624).** Hier stand *erledigt durch 2.608, `E[R]` +0,2079*. Die Messung lief auf einer **gepoolten** Nullwelt; mit dem Standardprüfstand (tagestreu) trägt keine Schwelle. ✔ Ersetzt durch **2.626/2.628** — die inverse Achse, je Tag ausgewählt |
 | **2** | **Gebühren und Finanzierung** bleiben nach Regel 2 draußen. Ob +0,1155 R sie trägt, ist ungeprüft |
 | **3** | **Ausführbarkeit** (Liquidität, Slippage) ungeprüft |
 | **4** | Die **Hebelhöhe** selbst ist nicht gemessen — die Abstufung ist ein Verhältnis zwischen Schärfegraden |
