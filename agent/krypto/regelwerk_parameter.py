@@ -57,6 +57,42 @@ _PARAMETER: tuple[dict, ...] = (
             "schaedlich gemessen. Ohne Neustart steuerbar."),
         "geaendert_am": "2026-09-07",
     },
+    # ⚠️⚠️ DIE TREFFERQUOTE `q` STEHT DIREKT DAHINTER (26.09.2026) - sie ist
+    # der Parameter, der ueber die HOEHE des Hebels entscheidet, so wie die
+    # Schwelle darueber entscheidet, WIEVIELE Empfehlungen entstehen.
+    #
+    # NUTZERVORGABE 26.09., woertlich: *"Bitte diese beiden zentralen werte
+    # sauber in code Doku und Uebersicht etc. anzeigen"* - dieselbe Vorgabe
+    # wie am 07.09. fuer die Schwelle. Bis heute stand `q` NIRGENDS: nicht
+    # in config.yaml, nicht in der Mail, nicht in der GUI.
+    #
+    # ⚠️⚠️⚠️ UND ES IST NICHT KALIBRIERT (Befund 2.558, bestaetigt 2.622).
+    # `q = basisrate(CRV) + Beitragspunkte/100`, und `basisrate = 1/(1+CRV)`
+    # IST die Kelly-Nullstelle: ein Trade ohne Beitrag ist per Konstruktion
+    # break-even, jeder Hebel entsteht allein aus dem Beitragszuschlag.
+    # Im Betrieb zurueckgerechnet: q 0,3415 bis 0,3647 - bei NEUN VON ZWOELF
+    # Signalen exakt derselbe Wert, es differenziert also nicht. Gemessen
+    # waeren es 0,428 bis 0,480 je nach Lage (2.622).
+    #
+    # ⚠️ ANGEZEIGT WIRD DIE BASISRATE, nicht das fertige q: sie ist der
+    # Startwert, das q entsteht erst je Signal aus ihr plus den Beitraegen.
+    {
+        "bezeichnung": "Trefferquote q - Basisrate (Eingang der Hebelrechnung)",
+        "code_konstante": "BASISRATE_ARITHMETISCH",
+        "kategorie": KATEGORIE_C,
+        "begruendung": (
+            "Startwert jeder Hebelrechnung: q = Basisrate + "
+            "Beitragspunkte/100, daraus Kelly = (q*(1+CRV)-1)/CRV. Die "
+            "Basisrate ist 1/(1+CRV), die Trefferquote eines "
+            "Barrierensystems auf driftfreiem Pfad - gemessen bestaetigt "
+            "mit 34,0 % ueber 19.891 Anker. ⚠️⚠️ Sie ist zugleich die "
+            "KELLY-NULLSTELLE: ohne Beitrag kein Hebel, per Konstruktion. "
+            "⚠️ NICHT KALIBRIERT (2.558/2.622), und sie gilt fuer ein "
+            "BARRIERENSYSTEM mit festem Ziel - nicht fuer die "
+            "Trailing-Geometrie. Wer diese Zahl aendert, aendert die HOEHE "
+            "jedes Hebels."),
+        "geaendert_am": None,
+    },
     {
         "bezeichnung": "RM-2 Core-Allokations-Limit",
         "pfad": ("risiko", "max_allokation_pro_core_asset_prozent"),
@@ -321,8 +357,18 @@ def _resolve_regime_feld(config: dict, feld: str) -> str:
 
 def _resolve_code_konstante(name: str):
     from agent.krypto.risk_gate import CRV_MINIMUM, STOP_LOSS_ATR_MULTIPLE
+    from agent.wahrscheinlichkeit import basisrate
 
-    return {"CRV_MINIMUM": CRV_MINIMUM, "STOP_LOSS_ATR_MULTIPLE": STOP_LOSS_ATR_MULTIPLE}[name]
+    # ⚠️ Die Basisrate ist KEINE eigene Konstante, sondern folgt aus dem CRV -
+    # deshalb hier gerechnet und nicht abgeschrieben. Aendert sich
+    # CRV_MINIMUM, zieht die Anzeige von selbst nach; eine zweite Zahl
+    # koennte auseinanderlaufen (dieselbe Lehre wie bei der Schwelle, die
+    # aus `SCHWELLE_VORGABE` abgeleitet wird statt in der Suite zu stehen).
+    return {
+        "CRV_MINIMUM": CRV_MINIMUM,
+        "STOP_LOSS_ATR_MULTIPLE": STOP_LOSS_ATR_MULTIPLE,
+        "BASISRATE_ARITHMETISCH": basisrate(CRV_MINIMUM),
+    }[name]
 
 
 def build_parameter_overview(config: dict) -> list[dict]:
