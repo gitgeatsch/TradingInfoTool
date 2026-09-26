@@ -38,8 +38,15 @@ CREATE TABLE bitpanda_katalog (
 Bestandsabgleich genutzt, nicht als Anker für die Datenquellen. Eine
 **ISIN** führt der Katalog ebenfalls.
 
-⛔ **Nicht geprüft:** ob die Tabelle am **Notebook** gefüllt ist. Am
-Desktop existiert sie **nicht**, weil der Importer hier nie lief.
+✔✔ **NACHGEZOGEN am selben Tag, gegen das Produktionsbackup** (Nutzerhinweis
+*„du hast ein DB backup und den NB export oder?"*): **Der Katalog ist am
+Notebook gefüllt** — 14.054 Einträge, Stand 22.09. 19:57, Abgleich 23.09.
+01:57. Am Desktop existiert die Tabelle nicht, weil der Importer hier nie
+lief. Einzelheiten im Abschnitt **„Was das Produktionsbackup zeigt"**.
+
+⚠️ Das war genau der Fehler, vor dem die eigene Regel warnt: *„Nicht
+messbar ist keine Datenlage — die Produktionssicherung liegt im
+Austauschordner, VOR dem Satz nachsehen."* Beide Quellen lagen bereit.
 
 ---
 
@@ -150,6 +157,93 @@ die Trennung aus 2.610.
 
 ---
 
+---
+
+## ⭐⭐⭐ Was das Produktionsbackup zeigt (2.615)
+
+Gemessen gegen `DB_Backups/tradinginfotool_2026-09-23_0221.db.gz`
+(561 MB entpackt) — ⚠️ **in einer Wegwerfdatei im Scratchpad, mit
+`mode=ro`, nie gegen die Produktionsdatei**, und nach der Messung
+gelöscht.
+
+### Alle 15 „Fehlenden" stehen im Katalog — jedes mit `asset_id`
+
+| Ticker | `asset_id` | Name | Gruppe |
+|---|---|---|---|
+| **CC** | `1f0c940a-db04-…` | **Canton** | token |
+| ASTER | `1f097a29-a969-…` | Aster | token |
+| MON | `1f0c9240-9c4f-…` | Monad | token |
+| **XNO** | `050e9adf-d825-…` | **Nano** | coin |
+| AIOZ, AKT, BRETT, FLOKI, GRIFFAIN, HYPE, KAS, PLUME, SUPRA, VSN | | alle vorhanden | |
+
+⭐ **CANTON gibt es im Katalog nicht** — Bitpanda führt **CC**, genau wie
+der Override seit dem 09.07. sagt. ⭐ **XNO heißt „Nano"** — daher fehlte
+die CoinGecko-ID unter dem Ticker; die ID ist schlicht `nano`.
+
+### Die Mehrdeutigkeit — gemessen, nicht behauptet
+
+| | |
+|---|---|
+| Symbole im Katalog | 12.402 |
+| davon **mehrdeutig** | **1.625** |
+| relevante Symbole (gehalten oder Watchlist) | 48 |
+| ⛔ davon **mehrdeutig** | **11** — davon **5 gehalten** |
+
+| Ticker | Bedeutung 1 | Bedeutung 2 (und 3) |
+|---|---|---|
+| **ETH** *(gehalten)* | Ethereum *(coin)* | **Eurotech SpA** *(equity_stock)* |
+| **LINK** *(gehalten)* | Chainlink *(coin)* | **LINK Mobility Group** *(equity_stock)* |
+| **QNT** *(gehalten)* | Quant *(token)* | **Quantinuum Inc** *(equity_stock)* |
+| **BIO** *(gehalten)* | Bio Protocol *(token)* | **Bio-Rad Laboratories** *(stock)* |
+| **CAT** | Simon's Cat *(token)* | Caterpillar Inc · Caterpillar |
+| **HYPE** | Hyperliquid *(coin)* | iShares EUR High Yield Corp Bond ETF |
+| BNB, SUI, ALGO, SEI, ROL | | |
+
+### ✔✔ Und die Entwarnung — weil gemessen statt gewarnt
+
+**Alle elf sind in `price_cache` korrekt aufgelöst.** ETH → `ethereum`
+(1.790,56 USD), LINK → `chainlink` (7,99), CAT → `simon-s-cat`,
+QNT → `quant-network`. **Keine einzige Fehlzuordnung.**
+
+➤ **Die Gefahr ist latent, nicht akut.** Der Bestand stimmt. Aber bei
+einer **Neuaufnahme** entscheidet niemand ausdrücklich, welches der
+gleichnamigen Assets gemeint ist — und `holdings` führt **nur `symbol`**,
+keine `asset_id`. Die Auflösung passiert beim Import und wird **nicht
+festgehalten**.
+
+---
+
+## ⭐⭐ Was CoinGecko wirklich liefert — alle 15 geprüft
+
+⚠️ **Korrektur meiner eigenen Warnung:** Der erste Lauf lief **ohne
+Schlüssel** direkt über `urllib` und traf das **anonyme** Limit
+(30/Minute). Das Projekt hat einen Demo-Key (`COINGECKO_API_KEY`,
+`x-cg-demo-api-key`, **100/Minute**), und die Betriebszählung ist
+**monatlich** (4.113 im September). **Das Projektkontingent blieb
+unberührt** — meine Warnung war falsch.
+
+Mit Schlüssel nachgezogen, **alle 15**:
+
+| | Ergebnis |
+|---|---|
+| **Stündliche Preisreihe** (`market_chart?days=90`) | ✔ **15 von 15**, je 2.160–2.161 Punkte |
+| **OHLC** (`ohlc?days=30`) | ⛔ **180 Kerzen bei allen** = durchgängig **4-Stunden-Takt** |
+
+➤ Das ist keine Eigenheit einzelner Werte, sondern **die Regel der
+Schnittstelle**.
+
+⚠️⚠️ **Die Bilanz:** Die **Preisreihe reicht** — daraus lassen sich EMA
+und Momentum rechnen. Das **OHLC reicht nicht** in der Auflösung der
+Messbasis, und die **ATR braucht High/Low**.
+
+➤ **Die offene Messfrage:** Ist eine ATR aus **4-Stunden-Kerzen** mit der
+aus **1-Stunden-Kerzen** vergleichbar? Das ist **messbar** — an den 28
+Symbolen, die **beide** Auflösungen haben. Bevor eine zweite Stundenquelle
+dazukommt, ist das zu klären: eine gemischte Auflösung ist eine gemischte
+Grundgesamtheit.
+
+---
+
 ## Was der Stammsatz bräuchte
 
 | Feld | Woher |
@@ -169,7 +263,8 @@ die Trennung aus 2.610.
 | # | |
 |---|---|
 | **1** | ⛔ **Nichts davon ist gebaut.** Das ist eine Voranalyse |
-| **2** | Ob CoinGecko für die übrigen elf Symbole liefert, ist **ungeprüft** (429) |
-| **3** | Ob `bitpanda_katalog` am Notebook gefüllt ist, ist **ungeprüft** |
+| **2** | ✔ **ERLEDIGT** - alle 15 geprüft: Preisreihe ja, OHLC nur im 4-Stunden-Takt |
+| **3** | ✔ **ERLEDIGT** - der Katalog ist am Notebook gefüllt (14.054 Einträge, Stand 22.09.) |
 | **4** | Eine zweite Stundenquelle neben Binance ändert die **Grundgesamtheit** der Messbasis — das ist nach der stehenden Regel **zu messen**, bevor sie dazukommt |
-| **5** | CoinGecko-Stundenkurse sind **nicht OHLC** — `market_chart` liefert nur Preispunkte. ATR braucht High/Low. Ob `…/ohlc` in stündlicher Auflösung reicht, ist **ungeprüft** |
+| **5** | ⛔ **Der Kernpunkt:** CoinGecko-Stundenkurse sind **nicht OHLC** — `market_chart` liefert nur Preispunkte, und `…/ohlc` gibt bei allen 15 nur **4-Stunden-Kerzen**. Die ATR braucht High/Low. ➤ **Offene Messfrage:** ist eine ATR aus 4-h-Kerzen mit der aus 1-h-Kerzen vergleichbar? Messbar an den 28 Symbolen, die beide Auflösungen haben |
+| **6** | ⚠️ Die Mehrdeutigkeit ist **latent**, nicht akut — alle 11 sind heute korrekt aufgelöst. Das Risiko liegt in der **Neuaufnahme**, nicht im Bestand |
