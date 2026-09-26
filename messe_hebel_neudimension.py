@@ -115,11 +115,26 @@ def trailing_mit_ausloeser(high, low, close, atr, weite, ausloese_r,
     hoechst = close.copy()
     fertig = np.zeros(n, bool)
     ausstieg = np.full(n, np.nan)
+    # ⭐⭐ DIE TATSAECHLICHE HALTEDAUER. Ein Trade mit H=72 wird per Stop
+    # oft nach wenigen Stunden beendet - der Horizont ist die OBERGRENZE,
+    # nicht die Dauer. Heute steht `holding_duration` bei allen 22
+    # Hebel-Signalen auf NULL, und vier verschiedene Zahlen kursieren in
+    # Dokumenten und Rechnungen.
+    #
+    # ⚠️⚠️ SIE IST EIN FAKT, KEINE BEWERTUNGSGROESSE (Nutzerwarnung
+    # 26.09.: *"Finanzierung bitte aus den Bewertungen - nur rechnerisch
+    # in der Mail und u.U. bei der Positionsfuehrung"*). Die Haltedauer
+    # wird deshalb BERICHTET, damit Mail und Positionsfuehrung damit
+    # rechnen koennen - sie geht NICHT in die Auswahl der Dimensionierung
+    # ein. Die entscheidet sich ueber Bruttoertrag, Robustheit und den
+    # geometrischen Ertrag (Regel 2).
+    dauer = np.full(n, float(H))
     for s in range(1, H + 1):
         j = np.minimum(idx + s, n - 1)
         offen = ~fertig
         raus = offen & (low[j] <= stop)
         ausstieg[raus] = stop[raus]
+        dauer[raus] = float(s)
         fertig |= raus
         neu = ~fertig
         hoechst = np.where(neu & (high[j] > hoechst), high[j], hoechst)
@@ -132,7 +147,7 @@ def trailing_mit_ausloeser(high, low, close, atr, weite, ausloese_r,
     je = np.minimum(idx + H, n - 1)
     ausstieg = np.where(np.isnan(ausstieg), close[je], ausstieg)
     r = (ausstieg - close) / risiko
-    return r, (ausstieg - close) / np.maximum(close, 1e-12)
+    return r, (ausstieg - close) / np.maximum(close, 1e-12), dauer
 
 
 def laengste_verlustserie(werte):
@@ -222,19 +237,20 @@ def main() -> int:
     rng = np.random.default_rng(SAAT)
 
     def rechne(hz, weite, ausl, abst):
-        """-> (r, prozent) ueber die gemeinsame Ankermenge."""
-        rr, pp = [], []
+        """-> (r, prozent, dauer) ueber die gemeinsame Ankermenge."""
+        rr, pp, dd = [], [], []
         for idx, h, l, cc, atr, w, sel in daten:
-            a, b = trailing_mit_ausloeser(h, l, cc, atr, weite, ausl,
-                                          abst, hz)
-            rr.append(a[sel]); pp.append(b[sel])
-        return np.concatenate(rr), np.concatenate(pp)
+            a, b, d = trailing_mit_ausloeser(h, l, cc, atr, weite, ausl,
+                                             abst, hz)
+            rr.append(a[sel]); pp.append(b[sel]); dd.append(d[sel])
+        return (np.concatenate(rr), np.concatenate(pp),
+                np.concatenate(dd))
 
     # ══ P1: der Grenzfall muss 2.607 bitgleich reproduzieren ═════════
     print()
     d0 = daten[0]
-    a1, _ = trailing_mit_ausloeser(d0[1], d0[2], d0[3], d0[4], 1.0, 0.0,
-                                   1.0, 72)
+    a1, _p1, _d1 = trailing_mit_ausloeser(d0[1], d0[2], d0[3], d0[4],
+                                          1.0, 0.0, 1.0, 72)
     a2 = trailing(d0[1], d0[2], d0[3], d0[4], 1.0, 72)
     ok = bool(np.allclose(np.nan_to_num(a1), np.nan_to_num(a2),
                           rtol=0, atol=0))
@@ -255,7 +271,7 @@ def main() -> int:
           "hinweg - E[R] misst den Massstab mit")
     print()
     print("  %-5s %-6s %8s %8s %9s %10s %9s %9s %8s %7s  %s"
-          % ("H", "Stop", "Signale", "Sig/Tag", "E[R]", "Kurs %",
+          % ("H", "Stop", "Signale", "Dauer h", "E[R]", "Kurs %",
              "Median %", "geom %", "Treffer", "Serie", "Urteil"))
     # Referenzzelle gibt den Auswahlanteil vor (FALLE 2)
     k_soll = int((np.isfinite(W) & (W >= SCHWELLE)).sum())
@@ -268,8 +284,8 @@ def main() -> int:
     nullproben = []
     for hz in HORIZONTE:
         for weite in STOPWEITEN:
-            r, p = rechne(hz, weite, 0.0, weite)
-            rs, ps = r[ordn], p[ordn]
+            r, p, dv = rechne(hz, weite, 0.0, weite)
+            rs, ps, ds = r[ordn], p[ordn], dv[ordn]
             nb = [float(p[rng.choice(n, size=k_soll, replace=False)].mean())
                   for _ in range(N_NULL)]
             nullproben.append(nb)
@@ -280,10 +296,12 @@ def main() -> int:
             serie = laengste_verlustserie(rs[np.argsort(G[ordn])])
             zellen.append(dict(h=hz, weite=weite, er=float(rs.mean()),
                                pz=pz, ge=ge, tr=tr, serie=serie, b90=b90,
-                               med=100 * float(np.median(ps))))
+                               med=100 * float(np.median(ps)),
+                               dauer=float(ds.mean()),
+                               dauer_med=float(np.median(ds))))
             print("  %-5d %-6.1f %8d %8.2f %+9.4f %+10.4f %+9.4f %+9.5f "
                   "%7.1f%% %7d  %s"
-                  % (hz, weite, k_soll, k_soll / max(ntage, 1),
+                  % (hz, weite, k_soll, float(ds.mean()),
                      float(rs.mean()), pz, 100 * float(np.median(ps)), ge,
                      100 * tr, serie,
                      "✔" if pz > b90 else "⛔ im Band"), flush=True)
@@ -314,6 +332,68 @@ def main() -> int:
     print()
     print("  ⚠️ Gewaehlt wird die ROBUSTESTE, nicht die hoechste - eine")
     print("     Zelle mit flacher Umgebung haelt, eine Spitze nicht.")
+
+    # ══ STUFE T: Ausloeser x Abstand ═════════════════════════════════
+    #
+    # ⭐ Auf der BESTEN und der ZWEITBESTEN Geometrie. Die Staffelung
+    # kann eine Wechselwirkung zwischen Stopweite und Ausloeser nicht
+    # sehen; bleibt der Sieger auf beiden Geometrien derselbe, ist sie
+    # klein. Das war in der Vorabfestlegung zugesagt.
+    zwei = sorted(zellen, key=lambda x: -x["pz"])[:2]
+    for rang, geo in enumerate(zwei, 1):
+        print()
+        print("=" * 108)
+        print("STUFE T (%d. Geometrie) - AUSLOESER x ABSTAND auf H%d / "
+              "Stop %.1f" % (rang, geo["h"], geo["weite"]))
+        print("  ⚠️ Der Abstand steht in R, und R haengt an der Stopweite "
+              "- deshalb erst JETZT messbar")
+        print()
+        print("  %-9s %-8s %9s %10s %10s %8s %7s  %s"
+              % ("Ausloeser", "Abstand", "E[R]", "Kurs %", "geom %",
+                 "Dauer h", "Serie", "Urteil"))
+        tz, tnull = [], []
+        for ausl in AUSLOESER:
+            for abst in ABSTAENDE:
+                r, p, dv = rechne(geo["h"], geo["weite"], ausl, abst)
+                rs, ps, ds = r[ordn], p[ordn], dv[ordn]
+                nb = [float(p[rng.choice(n, size=k_soll,
+                                         replace=False)].mean())
+                      for _ in range(N_NULL)]
+                tnull.append(nb)
+                b90 = float(np.percentile(np.array(nb), NULL_PERZ)) * 100
+                pz = 100 * float(ps.mean())
+                ge = 100 * geometrisch(rs)
+                serie = laengste_verlustserie(rs[np.argsort(G[ordn])])
+                tz.append(dict(ausl=ausl, abst=abst, pz=pz, ge=ge,
+                               serie=serie, er=float(rs.mean()),
+                               dauer=float(ds.mean())))
+                print("  %-9.1f %-8.1f %+9.4f %+10.4f %+10.5f %8.1f %7d  %s"
+                      % (ausl, abst, float(rs.mean()), pz, ge,
+                         float(ds.mean()), serie,
+                         "✔" if pz > b90 else "⛔ im Band"), flush=True)
+        bt = max(tz, key=lambda z: z["pz"])
+        arrt = np.array(tnull) * 100
+        b90t = float(np.percentile(arrt.max(axis=0), NULL_PERZ))
+        print()
+        print("  P5  Bestes-von-%d-Band %.4f %% · beste Zelle "
+              "Ausloeser %.1f / Abstand %.1f mit %+.4f %%  -> %s"
+              % (len(tz), b90t, bt["ausl"], bt["abst"], bt["pz"],
+                 "✔✔ haelt" if bt["pz"] > b90t else "⛔ Auslese"))
+        print("      heute laeuft: Ausloeser 1,0 / Abstand 1,0 "
+              "(`ausstiegsregel.py`, +0,092 R gemessen am 04.08.)")
+        heute = [z for z in tz if z["ausl"] == 1.0 and z["abst"] == 1.0]
+        if heute:
+            hz_ = heute[0]
+            print("      dort: %+.4f %% (geom %+.5f, Serie %d) - "
+                  "Unterschied zur besten: %+.4f Prozentpunkte"
+                  % (hz_["pz"], hz_["ge"], hz_["serie"],
+                     bt["pz"] - hz_["pz"]))
+
+    print()
+    print("  ⚠️ Gebuehren und Finanzierung sind NICHT eingerechnet "
+          "(Regel 2, Nutzerwarnung 26.09.).")
+    print("     Die Haltedauer steht als FAKT dabei - fuer Mail und")
+    print("     Positionsfuehrung, nicht als Auswahlkriterium.")
     return 0
 
 
