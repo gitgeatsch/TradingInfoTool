@@ -227,19 +227,110 @@ def main() -> int:
         k = int(sig.sum())
         if k >= 200:
             frei = np.flatnonzero(pru & np.isfinite(W))
-            nb = [geometrisch(r_all[rng.choice(frei, size=k, replace=False)])
-                  for _ in range(N.NULL_ZIEHUNGEN)]
-            b90 = float(np.percentile(np.array(nb), N.NULL_PERZENTIL))
+
+            # ⚠️⚠️⚠️ DIE NULLWELT ERHAELT DIE TAGESSTRUKTUR (Messstandard,
+            # `messnorm`: *nur die Tagesklammer ist zulaessig*, null_
+            # konstruktion = *Raenge je Tag gemischt*). Frei gezogene Anker
+            # zerstoeren die Clusterung - echte Signale haeufen sich an
+            # wenigen Tagen (Median 7, Maximum 620), Zufallsziehungen nicht.
+            # Gemessen kostet das: *gepoolt statt Tagesklammer -> 12,4
+            # Punkte auf einem Nulleffekt* (messnorm.py:454).
+            #
+            # ➤ Gezogen wird deshalb JE TAG so viele Anker, wie die echte
+            # Auswahl an diesem Tag hat - nur WELCHE ist zufaellig.
+            tag_frei = G[frei] // 24
+            tag_sig = G[sig] // 24
+            je_tag = {}
+            for t, c in zip(*np.unique(tag_sig, return_counts=True)):
+                je_tag[int(t)] = int(c)
+            nach_tag = {}
+            for i_, t in enumerate(tag_frei):
+                nach_tag.setdefault(int(t), []).append(frei[i_])
+            nach_tag = {t: np.array(v) for t, v in nach_tag.items()}
+
+            def zieh_tagestreu():
+                aus = []
+                for t, c in je_tag.items():
+                    pool = nach_tag.get(t)
+                    if pool is None or not len(pool):
+                        continue
+                    aus.append(rng.choice(pool, size=min(c, len(pool)),
+                                          replace=False))
+                return np.concatenate(aus) if aus else np.array([], int)
+
+            # ⭐⭐ BEIDE NULLWELTEN, und die Differenz wird hingeschrieben
+            # (registrierte Regel *Gewichtung ausweisen: Tagesklammer oder
+            # gepoolt*). Sie beantworten VERSCHIEDENE Fragen:
+            #
+            #   TAGESTREU  "waren die ausgewaehlten Anker besser als andere
+            #              AM SELBEN TAG?" - die Auswahl allein.
+            #   GEPOOLT    "war die Auswahl besser als der Durchschnitt?" -
+            #              Auswahl PLUS die Wahl der Tage.
+            #
+            # ⚠️ Nutzervorgabe 26.09.: *an sehr guten Tagen kommen auch mehr
+            # Signale, im Baerenmarkt wenige oder keine* - die Tageswahl ist
+            # damit erwartetes Verhalten und nicht wegzurechnen. Der
+            # Messstandard verlangt umgekehrt die Tagesklammer, weil gepoolt
+            # 12,4 Punkte auf einem Nulleffekt erzeugt. BEIDES GILT, und
+            # deshalb steht beides da.
+            nb = np.array([geometrisch(r_all[zieh_tagestreu()])
+                           for _ in range(N.NULL_ZIEHUNGEN)])
+            nb_pool = np.array([geometrisch(
+                r_all[rng.choice(frei, size=k, replace=False)])
+                for _ in range(N.NULL_ZIEHUNGEN)])
+            # ⚠️⚠️ MESSSTANDARD (messnorm.standardzeile): der BEZUG ist der
+            # NULLPUNKT - der Mittelwert der Nullwelten -, das 90. Perzentil
+            # ist die ausgewiesene obere Grenze. Beides gehoert ausgewiesen,
+            # und die TRENNSCHAERFE misst gegen denselben Bezug (Fehler 2
+            # vom 08.09.: Urteil und Trennschaerfe liefen auseinander).
+            nullpunkt = float(nb.mean())
+            b90 = float(np.percentile(nb, N.NULL_PERZENTIL))
+            trennschaerfe = b90 - nullpunkt
             ge = geometrisch(r_all[sig])
             ok = ge > b90
             bestanden += 1 if ok else 0
-            print("    KETTE: %d Signale · geom %+.5f %% · Zufallsband "
-                  "%+.5f %% · %s"
-                  % (k, 100 * ge, 100 * b90,
-                     "✔ BESTANDEN" if ok else "⛔ im Zufallsband"))
+            print("    KETTE: %d Signale · geom %+.5f %%" % (k, 100 * ge))
+            np_p = float(nb_pool.mean())
+            b90_p = float(np.percentile(nb_pool, N.NULL_PERZENTIL))
+            ok_p = ge > b90_p
+            print("           TAGESTREU (Standard): Nullpunkt %+.5f %% · "
+                  "Band90 %+.5f %% · Trennschaerfe %.5f %% · %s"
+                  % (100 * nullpunkt, 100 * b90, 100 * trennschaerfe,
+                     "✔" if ok else "⛔ im Band"))
+            print("             Abstand %+.5f %% (%.1fx Trennschaerfe)"
+                  % (100 * (ge - nullpunkt),
+                     (ge - nullpunkt) / max(trennschaerfe, 1e-12)))
+            print("           GEPOOLT (Tageswahl zaehlt mit): Nullpunkt "
+                  "%+.5f %% · Band90 %+.5f %% · %s"
+                  % (100 * np_p, 100 * b90_p, "✔" if ok_p else "⛔ im Band"))
+            print("           ➤ DIFFERENZ der Nullpunkte: %+.5f Pp - so viel "
+                  "traegt allein die TAGESWAHL" % (100 * (nullpunkt - np_p)))
             print("           q-Treffer %d von %d Baendern · Serie %d"
                   % (treffer, geprueft,
                      laengste_verlustserie(r_all[sig])))
+
+            # ── POSITIVKONTROLLE (Messstandard: 5 Ziehungen) ─────────
+            #
+            # ⚠️ Ohne sie weiss man nicht, ob der Test einen ECHTEN Effekt
+            # ueberhaupt FINDEN wuerde. Gepflanzt wird auf der Pruefmenge
+            # ein bekannter Zuschlag auf die ausgewaehlten Anker; der Test
+            # muss ihn in allen Ziehungen ueber dem Band wiederfinden.
+            # ⚠️ AUCH TAGESTREU - sonst prueft die Positivkontrolle einen
+            # anderen Prueftstand als das Urteil.
+            gefunden = 0
+            for _z in range(5):
+                zus = zieh_tagestreu()
+                gepflanzt = r_all.copy()
+                gepflanzt[zus] += 0.10          # +0,10 R, klar ueber Band
+                nb2 = np.array([geometrisch(gepflanzt[zieh_tagestreu()])
+                                for _ in range(N.NULL_ZIEHUNGEN)])
+                if geometrisch(gepflanzt[zus]) > float(
+                        np.percentile(nb2, N.NULL_PERZENTIL)):
+                    gefunden += 1
+            print("           Positivkontrolle: %d von 5 gepflanzten "
+                  "Effekten gefunden  %s"
+                  % (gefunden,
+                     "✔" if gefunden >= 4 else "⛔ der Test ist zu stumpf"))
 
             # ── 5. DAS KERNSTUECK: bringt die DIFFERENZIERUNG etwas? ──
             #
