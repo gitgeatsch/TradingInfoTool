@@ -1871,11 +1871,19 @@ Acht Befunde, 2.597 bis 2.607.
 
 | # | |
 |---|---|
-| **1** | Die Messung lief auf **116 Symbolen** aus `stundenkurse.db` — der **Betrieb** hat eine andere Grundgesamtheit. Umlegung offen |
+| **1** | ✔✔ **ERLEDIGT 26.09. (2.608).** Die Umlegung ist gemessen — und die Bewertung ist eine **absolute Schwelle in ATR**, kein Perzentil. Damit ist sie von der Grundgesamtheit **unabhängig** und funktioniert bei einem Asset wie bei 116. Auf den 15 liquiden Watchlist-Symbolen: `E[R]` **+0,2079** bei Schwelle 1,0 ATR, 2,0 Signale/Tag, signifikant; monoton dosierbar von 0,3 bis 1,2 ATR |
 | **2** | **Gebühren und Finanzierung** bleiben nach Regel 2 draußen. Ob +0,1155 R sie trägt, ist ungeprüft |
 | **3** | **Ausführbarkeit** (Liquidität, Slippage) ungeprüft |
 | **4** | Die **Hebelhöhe** selbst ist nicht gemessen — die Abstufung ist ein Verhältnis zwischen Schärfegraden |
 | **5** | Der Einstieg ist **nicht verdrahtet** — es gibt kein Signal im Betrieb |
+
+#### ⛔⛔ Dazugekommen am 26.09. — zwei Sperren vor der Hebelhöhe
+
+| Befund | |
+|---|---|
+| **2.609** | ⛔ **Der Median ist negativ** (−0,1885 bei 16.059 Signalen). Der Erwartungswert kommt aus wenigen großen Gewinnern; getrimmt bleiben +0,0265 von +0,1467. Eine schiefe Verteilung verträgt **deutlich weniger Hebel** als ein symmetrischer Erwartungswert derselben Höhe ➤ **die Hebelhöhe darf NICHT aus `E[R]` allein folgen** — Schiefe, längste Verlustserie und geometrischer Ertrag sind vorher zu messen |
+| **2.611** | ⛔ **Abdeckung 15 von 43** liquide (35 %). Die Lücke ist **Beschaffung, keine Datenlage** — 9 von 15 wären holbar, und **drei davon (ASTER, CANTON, MON) sind offene Positionen** ohne Messreihe |
+| **2.610** | ✔ Die Bewertung braucht **10 Tage Historie**, nicht Jahre. ⚠️ Gehört als **Aufnahmebedingung in die Watchlist**, nicht in den Hebel-Arm (Nutzereinordnung) |
 
 ➤ **Kriterium 2 ist damit fachlich belegt, betrieblich offen.**
 
