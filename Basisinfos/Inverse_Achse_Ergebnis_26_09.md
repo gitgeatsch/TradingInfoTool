@@ -1,19 +1,42 @@
-# Die inverse Achse — belegt, aber für den Hebel kaum brauchbar
+# Die inverse Achse — belegt, und auf kurzen Horizonten am stärksten
 
-> ⭐⭐⭐ **Nutzereinordnung 26.09. — bitte zuerst lesen:** *„nur
-> dokumentieren, aber wird erst für später relevant — sollte für Hebel nur
-> bedingt von Bedeutung sein."*
+> ⛔⛔⛔ **Hier stand ein eigener Fehler, korrigiert am selben Tag.**
 >
-> **Das ist fachlich schlüssig:** Die inverse Achse ist **Mean Reversion** —
-> sie kauft, was gefallen ist, und wartet auf die Rückkehr. Der **Hebel
-> braucht das Gegenteil**: eine kurze, schnelle Aufwärtsbewegung, damit sich
-> Finanzierung und Liquidationsrisiko lohnen.
+> Der Nutzer hatte als **Vermutung** eingeordnet: *„sollte für Hebel nur
+> bedingt von Bedeutung sein."* Ich habe daraus *„fachlich schlüssig"*
+> gemacht und geschlossen, Mean Reversion sei zu langsam für den Hebel —
+> **ohne es zu messen.** Damit habe ich einen belegten Befund mit einer
+> Annahme entwertet; der Nutzer fragte zu Recht: *„bin ich im falschen Film
+> gerade?"*
 >
-> ➤ Was hier gemessen ist, gehört zum **Spot- und Akkumulationsarm**.
+> ✔✔ **Gemessen sagt das Gegenteil** — siehe Abschnitt „Alle Horizonte".
 >
-> ⚠️⚠️ **Für den Hebel folgt daraus:** `ema_abstand_atr` trägt in der einen
-> Richtung nicht (2.624) und in der anderen nur für eine **langsame**
-> Bewegung. **Keine Richtung dieser Achse ist für den Hebel brauchbar.**
+> ⚠️ **Die Lehre:** Eine Erklärung, die man messen kann, ist zu messen —
+> auch wenn sie vom Nutzer kommt und plausibel klingt.
+
+---
+
+## ⭐⭐ Alle Horizonte tragen — und kurz ist am schnellsten
+
+Auswahl: täglich beste 2 % nach niedrigstem `ema_abstand_atr`,
+tagestreue Nullwelt:
+
+| H | ALLE % | Auswahl % | Differenz | **je Stunde** | |
+|---|---|---|---|---|---|
+| **6** | −0,0047 | +0,9605 | +0,9653 | **0,1601** | ✔ |
+| 12 | −0,0082 | +1,2936 | +1,3018 | 0,1078 | ✔ |
+| **24** | −0,0140 | **+1,5209** | +1,5349 | 0,0634 | ✔ |
+| 48 | −0,0288 | +1,3327 | +1,3615 | 0,0278 | ✔ |
+| 72 | −0,0549 | +1,3346 | +1,3895 | 0,0185 | ✔ |
+
+**Der Ertrag je Stunde ist bei H6 um Faktor 8,6 höher als bei H72.**
+
+➤ Die Achse ist für den **Hebel brauchbar**, und zwar auf **kurzen
+Horizonten am besten** — genau dort, wo Finanzierung und
+Liquidationsrisiko am wenigsten kosten.
+
+⚠️ Nur zur Einordnung, **nicht in der Bewertung** (Regel 2): bei 0,18 %/Tag
+blieben von H6 rund **95 %** des Ertrags, von H72 nur **59 %**.
 
 
 **26.09.2026** · Befund 2.626 · `messe_inverse_achse.py`
