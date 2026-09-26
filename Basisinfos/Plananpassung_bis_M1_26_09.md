@@ -75,6 +75,7 @@ Betrieb"**, und er wiederholt sich hier.
 | **B** | **Positionsführung für den Hebel** — Trailing 1,0 ATR als Betriebsregel, deckungsgleich mit der Messung | **Bau + Nachweis am Seiteneffekt** | 2 |
 | **C** | **Verdrahten**: Bewertung → Signal → Mail, auf den 15 liquiden Symbolen | **Bau** | 5 |
 | **D** | **Hebel-Ausstieg** gegen die bestehende `ausstiegsrechnung` prüfen | Prüfung | 2 |
+| **D2** | ⛔ **Z-2 komplett entfernen** (Nutzerentscheidung 26.09., Befund 2.623) | Umbau | 2 |
 | **E** | **Durchgängigkeit am Papier** | Prüfung | **5** |
 | **F** | **Rudimentäre Wirksamkeit** beobachten | Beobachtung | **7** |
 
@@ -86,6 +87,35 @@ Verdrahtung eine leere Hülle.
 registrierte Regel *„Ein Test deckt die FUNKTION ab, nicht den PFAD"*
 (`potential.rechne` reichte `instrument` 14 Tage lang nicht weiter, der
 Test war grün).
+
+### ⛔⛔ D2 — Z-2 gehört entfernt (Nutzerentscheidung 26.09.)
+
+**Befund 2.623:** Z-2 (`crv_minimum` 2,0) ist **tautologisch**. Das Ziel
+wird als `Einstieg + CRV × Risiko` gesetzt, danach prüft Z-2, ob
+`(Ziel − Einstieg)/Risiko ≥ CRV` — **per Konstruktion immer erfüllt**.
+
+✔ Am Betrieb belegt: **alle 22 Signale tragen exakt CRV 2,29**, `risk_veto`
+überall 0. Der einzige Weg zu einem kleineren CRV wäre ein Widerstand, der
+das Ziel deckelt — **und dieser Deckel ist seit dem 17.08. abgeschaltet**.
+
+⚠️⚠️ **Warum Entfernen und nicht Stehenlassen:** Eine Regel, die heute
+folgenlos ist, wird gefährlich, sobald sich die Umgebung ändert. Wird das
+Ziel künftig **nicht mehr mechanisch** aus dem CRV gesetzt — und beim
+Trailing gibt es gar kein festes Ziel —, **fällt die Tautologie weg und
+Z-2 sperrt plötzlich alles** gegen ein gemessenes Verhältnis von 1,5.
+
+⚠️ **Nicht blind löschen:** `GRENZEN["crv"]` hat **drei** Verwendungen —
+das mechanische **Ziel**, die **Kelly-Nullstelle** 1/(1+CRV) und das
+**Veto**. **Nur die dritte ist tautologisch.** Betroffen:
+
+| Ort | |
+|---|---|
+| `risk_gate.CRV_MINIMUM` (36) | die Konstante |
+| `risk_gate` 1158 / 1215 | zwei Vetostellen Spot |
+| `hebel_risk_gate` 1271 | Vetostelle Hebel |
+| `crv_knapp_schwelle_relativ` | die Knapp-Warnung darauf |
+| `regelwerk_parameter.py` | Eintrag „Z-2 Mindest-CRV" in der GUI |
+| `config.yaml` | `risiko.crv_minimum` |
 
 ### Was in M1 NICHT mehr angefasst wird
 
