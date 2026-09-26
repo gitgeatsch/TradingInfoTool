@@ -108,3 +108,65 @@ auf **Tageskerzen** und entsprächen 1.200 bzw. 4.800 Stunden. Meine
 ➤ **Die Längen sind gesetzt, nicht gemessen.** Ob 48 h die richtige Wahl für
 einen 1- bis 3-Tage-Horizont ist, ist eine offene Frage — und sie ist als
 Achse messbar.
+
+---
+
+# § 6 Die EMA-Länge — gemessen statt gesetzt (Nachtrag, Befund 2.606)
+
+**Nutzerfrage:** *„EMA — was meinst du damit? dieser Indikator hat auch
+mehrere Bedeutungen und muss korrekt angewendet werden."*
+
+## 6.1 Was gemessen wurde
+
+`ema_abstand_atr = (close − EMA_L) / (ATR × close)` für **sieben Längen**
+von 12 bis 1.200 Stunden, also 0,5 bis 50 Tage. Die letzte entspricht dem
+**klassischen 50-Tage-EMA**.
+
+| Konstruktionspunkt | warum |
+|---|---|
+| **Vorlauf für ALLE gleich** (5 × 1.200 h) | sonst hätte jede Länge ihre eigene Ankermenge — verschiedene **Grundgesamtheiten** |
+| **Nullwelt zieht SIEBEN Zufallsreihen** und nimmt die beste | sieben Längen zu prüfen und die beste zu nehmen ist Auslese; so enthält die Nullwelt das **Mehrfachtesten** |
+| ⚠️ EMA vektorisiert (`lfilter`) | gegen die Schleifenfassung geprüft: relative Abweichung **1e-5** nach 5 × Periode |
+
+## 6.2 Das Ergebnis — MFE/MAE hat ein Optimum bei 2 Tagen
+
+| EMA | Tage | 1T/1 % | 1T/0,1 % | 3T/1 % | 3T/0,1 % |
+|---|---|---|---|---|---|
+| 12 h | 0,5 | 1,38 | 1,38 | 1,40 | 1,38 |
+| 24 h | 1,0 | 1,42 | 1,40 | 1,47 | 1,46 |
+| **48 h** | **2,0** | **1,42** | **1,45** | **1,55** | **1,58** |
+| 96 h | 4,0 | 1,39 | 1,36 | 1,54 | 1,48 |
+| 240 h | 10 | 1,26 | 1,33 | 1,32 | 1,41 |
+| 480 h | 20 | 1,05 | 1,32 | 1,12 | 1,30 |
+| **1.200 h** | **50** | **0,95** | **0,96** | **1,01** | **0,99** |
+
+➤ **In allen vier Zellen ist 48 h maximal**, und zum klassischen 50-Tage-EMA
+fällt MFE/MAE auf **≈ 1,00** — also auf **vollkommen symmetrisch**.
+
+⭐ **Die gesetzte Länge war richtig — aber das war Glück.** Jetzt ist sie
+gemessen, mit sauberer Dosis-Wirkung über die Länge.
+
+## 6.3 ⚠️ Warum MFE allein nicht genügt hätte
+
+Nach **MFE allein** liegen **alle sieben** Längen über dem Mehrfach-Band —
+das Maß unterscheidet nicht. Bei 0,1 %/3 Tagen wäre sogar **480 h** die
+„beste" Länge (MFE 1,776 gegen 1,694 bei 48 h).
+
+➤ **Erst MFE/MAE trennt.** Ein hoher MFE kann auch durch mehr **Bewegung**
+entstehen; die Asymmetrie zwischen Auf und Ab kann das nicht.
+
+## 6.4 Die fachliche Einordnung
+
+| | |
+|---|---|
+| **SMA** | einfacher Durchschnitt, alle Punkte gleich gewichtet |
+| **EMA** | exponentiell, Gewicht α = 2/(p+1) — reagiert schneller |
+| **klassisch** | EMA50/EMA200 auf **Tageskerzen** als mittelfristiger Trendfilter („liegt über dem 50er") |
+
+⚠️⚠️ **Für die Frage „springt dieser Wert in 1–3 Tagen" ist der klassische
+50er zu träge** — gemessen MFE/MAE ≈ 1,00, also keinerlei Asymmetrie.
+
+➤ **Die Bezugslänge muss zum Vorhersagehorizont passen.** Bei 1–3 Tagen sind
+das rund **2 Tage**. Das ist kein Widerspruch zur klassischen Verwendung,
+sondern eine andere Frage: der 50er misst, ob ein **Trend intakt** ist, nicht
+ob eine **schnelle Bewegung** bevorsteht.
