@@ -170,3 +170,100 @@ entstehen; die Asymmetrie zwischen Auf und Ab kann das nicht.
 das rund **2 Tage**. Das ist kein Widerspruch zur klassischen Verwendung,
 sondern eine andere Frage: der 50er misst, ob ein **Trend intakt** ist, nicht
 ob eine **schnelle Bewegung** bevorsteht.
+
+
+---
+
+# § 7 Absicherung, Umlegung und Trailing (Nachtrag, Befund 2.607)
+
+**Nutzerauftrag:** *„zuerst sichere die aktuelle messung ab dass diese auch
+zukünftig gültigkeit hat. Was du mir unterschlagen hast ist die UMLEGUNG und
+WIRKUNG AUF UNSER SYSTEM."*
+
+## 7.1 ✔✔ Absicherung — der Befund gilt in JEDEM Jahr
+
+| Jahr | Anker | MFE | Nullband | MFE/MAE | |
+|---|---|---|---|---|---|
+| 2022 | 344.849 | 1,193 | 1,001 | 1,34 | ✔ |
+| 2023 | 448.723 | 1,498 | 1,205 | 1,58 | ✔ |
+| 2024 | 705.730 | 1,328 | 1,070 | 1,47 | ✔ |
+| 2025 | 956.850 | 1,402 | 1,056 | 1,40 | ✔ |
+| **2026** | 708.146 | **1,848** | 1,244 | **1,82** | ✔ **am stärksten** |
+
+⭐ **Anders als alle Regime-Befunde ist dieser nicht fensterabhängig** — und
+das **jüngste** Jahr ist das beste. ⚠️ B6 allein hätte das nicht gezeigt: ein
+Effekt, der 2022 stark war und seit 2025 fehlt, bestünde B6 und wäre wertlos.
+
+## 7.2 Die Umlegung auf das System
+
+| Schärfe | **Signale/Tag** | MFE/MAE | Treffer 2R | `E[R]` (1 ATR Trail) |
+|---|---|---|---|---|
+| 20 % | 364 | 1,22 | 15,9 % | +0,0115 |
+| 5 % | 91 | 1,40 | 19,1 % | +0,0692 |
+| **1 %** | **18** | **1,55** | 22,8 % | **+0,1155** |
+| 0,1 % | **1,8** | 1,57 | 25,7 % | +0,1034 |
+
+⭐⭐ **Die Qualität steigt monoton, der Erwartungswert je Risiko aber
+nicht.** Bei **1 %** liegt das Optimum — mehr Schärfe bringt ab dort nur
+weniger Signale, keinen höheren Ertrag.
+
+➤ **Die Hebelabstufung ist damit ablesbar:** 20 % kein Hebel, 5 % klein,
+**1 % das Optimum**, 0,1 % nicht besser.
+
+## 7.3 ✔✔ Trailing — der erste positive Erwartungswert der Messreihe
+
+| Schärfe | 0,5 ATR | 1,0 ATR | 1,5 ATR | 2,0 ATR |
+|---|---|---|---|---|
+| 20 % | +0,0106* | +0,0115* | +0,0112* | +0,0105* |
+| 5 % | +0,0576* | +0,0692* | +0,0595* | +0,0496* |
+| 1 % | +0,1212* | **+0,1155*** | +0,1005* | +0,0808* |
+| 0,1 % | +0,1458* | +0,1034* | +0,0797* | +0,0598* |
+| **ALLE Anker** | **−0,0001** | −0,0020 | −0,0062 | −0,0091 |
+
+⭐ **Die Gesamtmenge liegt bei null** — der positive Wert kommt aus der
+**Selektion**, nicht aus der Geometrie. Genau wie 2.597 es verlangt.
+
+### Signifikanz und B6
+
+| Trailing | Schärfe | `E[R]` | ±Tagesfehler | H1 | H2 |
+|---|---|---|---|---|---|
+| **1,0 ATR** | **1,0 %** | **+0,1155** | 0,0188 | +0,0407 | **+0,1786** |
+| 1,0 ATR | 0,1 % | +0,1034 | 0,0355 | +0,0704 | +0,1260 |
+| 1,5 ATR | 1,0 % | +0,1005 | 0,0181 | +0,0699 | +0,1263 |
+| 1,5 ATR | 0,1 % | +0,0797 | 0,0324 | +0,0623 | +0,0916 |
+
+➤ `E[R]` ist das **Sechsfache** des Tagesfehlers, und die **jüngere** Hälfte
+ist in allen vier Fällen die stärkere.
+
+### ⚠️ Ein Darstellungsfehler, der dabei auffiel
+
+`R` ist in Einheiten des **Anfangsrisikos** (Weite × ATR). Bei 0,5 ATR ist
+der Nenner halb so groß — der Wert ist **anders skaliert**, nicht besser:
+
+| Schärfe 0,1 % | 0,5 ATR | 1,0 ATR | 1,5 ATR | 2,0 ATR |
+|---|---|---|---|---|
+| R | +0,1458 | +0,1034 | +0,0797 | +0,0598 |
+| **absolut in ATR** | 0,0729 | 0,1034 | **0,1196** | **0,1196** |
+
+➤ **Die Reihenfolge dreht sich.** Beide Sichten gelten: **R** ist die
+**Hebelfrage** (Ertrag je eingesetztem Risiko), **absolut** die Frage, ob der
+Trade Gebühren trägt.
+
+## 7.4 ✔✔ Die Trailing-Rechnung, an bekannter Wahrheit geprüft
+
+| Testfall | Ergebnis | erwartet | |
+|---|---|---|---|
+| monoton steigend | +5,2311 | +5,2311 | ✔ exakt |
+| monoton fallend | −1,0000 | −1,0000 | ✔ exakt |
+| hoch, dann Absturz | +4,2592 | Höchststand +5,2040 | ✔ sichert einen Teil |
+| engere Weite sichert mehr | 0,5→+9,52 · 1,0→+4,26 · 2,0→+1,63 | monoton | ✔ |
+| flach | +0,00000 | 0 | ✔ exakt |
+
+## 7.5 ⛔ Was weiter NICHT folgt
+
+| # | |
+|---|---|
+| **1** | ⛔ **Kein Ertrag im Betrieb.** Gebühren und Finanzierung bleiben draußen (Regel 2), die Ausführbarkeit ist ungeprüft |
+| **2** | ⚠️ **Die Messung lief auf 116 Symbolen** aus `stundenkurse.db` — der Betrieb hat eine **andere** Grundgesamtheit |
+| **3** | ⚠️ **Die Hebelhöhe selbst ist nicht gemessen** — die Abstufung ist ein Verhältnis zwischen Schärfegraden |
+| **4** | ⛔ Nichts über Short |

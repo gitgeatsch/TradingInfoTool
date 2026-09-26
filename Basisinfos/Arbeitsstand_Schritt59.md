@@ -2,7 +2,7 @@
 
 **Zweck:** Ein Sitzungswechsel soll jederzeit ohne Vorbereitung möglich sein (Nutzerentscheidung 17.09.2026: Sitzung stabil halten, Übergabe parallel mitziehen, Probelauf einer neuen Sitzung nach Phase 0). **Aktualisiert am Ende jedes Pakets.**
 
-**Stand:** 24.09.2026 · ⛔ Hebelumbau ABGESAGT - B0 zeigt, die Wirkung kam aus dem gesperrten Fuenftel (2.576); Schritt A bleibt (2.575) · zuvor 20.09.2026 · letzter Commit `1b743e3` (**A1 gefallen** – die Messanlage ist auf `barriere` geeicht) · Prüfsuite **3081 Prüfungen, 3 rot** (alle im Paket `Neuaufnahme`, reiner Desktop-Datenstand, kein Codefehler)
+**Stand:** 26.09.2026 · ⭐⭐ HEBEL-ARM NEU GEBAUT, erster positiver Erwartungswert: Selektion der Spitze (1 % nach `ema_abstand_atr`, EMA 48 h) plus Trailing 1,0 ATR ergibt E[R] +0,1155 - signifikant (6x Tagesfehler), in ALLEN funf Jahren belegt, 2026 am staerksten. Befunde 2.597-2.607. ⚠ Betrieblich offen: andere Grundgesamtheit, Gebuehren, Ausfuehrbarkeit, nicht verdrahtet. — vorher (24.09.): Hebelumbau abgesagt, B0 zeigte, die Wirkung kam aus dem gesperrten Fuenftel (2.57
 
 **Am Notebook:** letzter Pull `7490586` (schlanke Diagnose) · Laufzeitcode aus `02eca50` (terminmarkt-Protokoll) und `f92205f` (Laufzeitwächter) ist **gepullt und neu gestartet**. ⚠️ Für den nächsten **Export** ist **kein Pull nötig** – die schlanke Diagnose liegt seit `7490586` dort. `1b743e3` enthält **keinen Laufzeitcode** (Messskript, Befunde, Dokumente).
 

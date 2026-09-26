@@ -1836,12 +1836,48 @@ Phase 0 ──► Phase 1 (Bau Protokoll) ────────────�
 | # | Kriterium | Erfüllt, wenn | liefert |
 |---|---|---|---|
 | 1 | **Spot-Einstieg gemessen** | Beiträge in der Kette **reproduziert** (R-R11), Kette gegen Nullmodell, Beitrag je Stufe „mit gegen ohne" ➔ ✔✔ **PHASE 3 IST DURCH (23.09.)**: `turnover` einzeln reproduziert und **TRÄGT** (2.535), die Kette reproduziert (0,5 % Abweichung) und **TRÄGT** auf beiden Quellen (2.537). ⚠️ Der *Unterschied* der Quellen ist **nicht belegt** (gepaart +0,0479 R bei Trennschärfe 0,100) — der Umbau war ein Abdeckungspaket, kein Qualitätspaket. ⚠️ Vorbehalt **N3(b)** gilt weiter: gemessen auf der Stellvertretermenge, nicht auf der Live-Menge | Phase 3 |
-| 2 | **Hebel gemessen** | Trägt die Quote den Hebel (r(q))? Zielzone 2–5x belegt; Blocker **A1** entschieden | Phase 4 |
+| 2 | **Hebel gemessen** | ⚠️ **NEU GEFASST 26.09.** — die Frage *trägt die QUOTE den Hebel* ist **beantwortet und verneint** (2.604: `E[R]` in 0 von 60 Zellen positiv). Erfüllt ist das Kriterium jetzt durch **2.607**: Selektion der Spitze + Trailing ergibt `E[R]` **+0,1155** bei 1 % Schärfe, signifikant (6× Tagesfehler), in **allen fünf Jahren** belegt | Phase 4 |
 | 3 | **Akkumulation** | Messpaket, Registrierung, Rollout — die Sperre fällt erst dadurch. ✔✔ **GEKLÄRT 20.09.:** das Maß ist `schnitt`/`UNTER_SMA`, und das Notebook rechnet es seit dem Schnitt-Job (2.487-schnittjob). Die Grundgesamtheit war zuerst eine andere (398 gegen 517) und verschob **18 von 31** Fünfteln — **gemessen, nicht vermutet**. Nach dem Umbau (beide Zustände, Aufbewahrung je Symbol, Mindestlänge 400) sind es **0 von 29** (2.487-grundgesamtheit). ⚠ Kein Blocker mehr für dieses Kriterium; offen bleibt allein 2.487-schnitt-frische (die Messdatei prüft die Frische nur global). ➔ ✔✔ **GEMESSEN 23.09. (N-67)**: `schnitt` trägt **zusätzlich**, nachdem funding und turnover gewirkt haben — auf **beiden** Quellen (+0,0427 gegen registriert +0,0397 reproduziert; neu +0,0378), Trennschärfe je 0,02 R. ⚠️ n67 urteilte bis dahin **ohne Trennschärfe** (vom 07.09., Standard vom 09.09.) — nachgerüstet. ⛔ **Die beiden Zahlen dürfen NICHT verrechnet werden**: bei N-67 gibt es keinen unbeteiligten Arm, die Läufe messen auf verschiedenen Restmengen (2.538). ⛔ **Und der Weg liefert nichts**: `strategie='akkumulation'` hat in 7.544 Signalen **null** Treffer (2.540) — die Messung sagt, das Maß trägt; der Umbau steht nach M1 | Phase 6 / Schritte 25–27 |
 | 4 | **LLM-Kette gemessen** | **Gepaarter Versuch** auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall. **Produktiv geht die gemessene Fassung** | Phase 8 (neu zugeschnitten) |
 | 5 | **Durchgängig am Papier** | Je Stufe Quelle, Messstand, Kennzeichnung; keine ungemessene Größe in der Eingabe oder ausdrücklich ausgewiesen (2.459-ungemessen) | Phase 9 |
 | 6 | **Betrieb sauber** | Protokollierung läuft (✔ Phase 1), Sperren begründet, Mail korrekt | Schritt 60 |
 | 7 | **Rudimentäre Wirksamkeit** | Simulation: **nicht schlechter als das Nullmodell** bei tragbarer Auslöserate | Phase 9 |
+
+### ⭐⭐⭐ STAND HEBEL-ARM 26.09.2026 — was M1-Kriterium 2 jetzt trägt
+
+**Der Hebel-Arm wurde am 25./26.09. vollständig neu gebaut** (Nutzerauftrag).
+Acht Befunde, 2.597 bis 2.607.
+
+| Baustein | Befund | Stand |
+|---|---|---|
+| **Geometrie** | 2.597 | ✔ lageneutral bei k ≤ 1,0 · `E[R]`-Nullpunkt ist die **Drift** |
+| **Regime** | 2.598 / 2.599 | ⚠️ 12× wichtiger als die Lage, aber **nicht vorab erkennbar** |
+| **Sperre** | 2.602 | ✔ „BTC steigt ∧ Dominanz steigt" halbiert den Verlust |
+| **Richtung** | 2.603 / 2.604 | ⚠️ neun Merkmale **haben** Richtung, **tragen** aber kein `E[R]` |
+| ⭐ **Selektion** | 2.605 | ✔✔ die **Spitze** trägt — MFE/MAE 1,44–1,80, Dosis-Wirkung |
+| **Bezugslänge** | 2.606 | ✔ EMA **48 h** gemessen (der klassische 50-Tage-EMA ist wertlos: MFE/MAE ≈ 1,00) |
+| ⭐⭐ **Trailing** | **2.607** | ✔✔ **`E[R]` = +0,1155** bei 1 % Schärfe und 1,0 ATR Trailing |
+
+#### Die Betriebsumlegung (2.607)
+
+| Schärfe | Signale/Tag | MFE/MAE | `E[R]` | Hebel |
+|---|---|---|---|---|
+| 20 % | 364 | 1,22 | +0,0115 | ⛔ keiner |
+| 5 % | 91 | 1,40 | +0,0692 | klein |
+| **1 %** | **18** | **1,55** | **+0,1155** | ⭐ **Optimum** |
+| 0,1 % | 1,8 | 1,57 | +0,1034 | nicht besser |
+
+⚠️⚠️ **Was M1-Kriterium 2 noch NICHT erfüllt:**
+
+| # | |
+|---|---|
+| **1** | Die Messung lief auf **116 Symbolen** aus `stundenkurse.db` — der **Betrieb** hat eine andere Grundgesamtheit. Umlegung offen |
+| **2** | **Gebühren und Finanzierung** bleiben nach Regel 2 draußen. Ob +0,1155 R sie trägt, ist ungeprüft |
+| **3** | **Ausführbarkeit** (Liquidität, Slippage) ungeprüft |
+| **4** | Die **Hebelhöhe** selbst ist nicht gemessen — die Abstufung ist ein Verhältnis zwischen Schärfegraden |
+| **5** | Der Einstieg ist **nicht verdrahtet** — es gibt kein Signal im Betrieb |
+
+➤ **Kriterium 2 ist damit fachlich belegt, betrieblich offen.**
 
 ⚠️ **Nicht in M1:** Ausstieg fertig bewertet (Schritt 43), Multiasset (§ 1a),
 der volle Rollenumbau (Schritt 33 über Kriterium 4 hinaus).
