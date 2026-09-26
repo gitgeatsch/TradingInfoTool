@@ -180,3 +180,63 @@ sind Clusterung aus 5 Ziehungen (2.600 § 8.4), kein Fehlalarm.
 | **gilt** | Vorabfestlegung vor der Messung · Nullband 40 Ziehungen, 90. Perzentil · `zufall` **und** `beta` als Kontrollen · **Spiegelprobe** (nachgerüstet) · **Trennschärfe** (nachgerüstet) · Stundenklammer · Fenster als Achse · tagesgeblockter Fehlerbereich |
 | ⛔ **verletzt und behoben** | Spiegelprobe und Trennschärfe waren zugesagt und fehlten · `dominanz_wirkung` war arithmetisch unmöglich |
 | ➤ **Frageart** | **`beitrag`** für die Asset-Merkmale, **`markt`** für die Achsen — und die Trennung ist der Kern dieses Befunds |
+
+---
+
+# § 8 Was die Sperre bringt — gerechnet (Nachtrag 26.09., Befund 2.602)
+
+**Nutzerauftrag:** *„ja rechnen — prüfen und gegenprüfen"* ·
+`messe_sperre_wirkung.py` · **3.211.104 Anker**
+
+Die Sperre aus § 2: *BTC steigt (> +0,5 %/6 h) **und** Dominanz steigt* —
+**10,4 %** aller Anker, `E[R]` der Zelle **−0,0131** (H6).
+
+## 8.1 Die vier Prüfungen
+
+| | H6 | H24 |
+|---|---|---|
+| **P1 Selbstprobe** (arithmetisch = gemessen) | ✔ exakt | ✔ exakt |
+| Gewinn **in-sample** | +0,00120 (−0,00275 → **−0,00155**) | +0,00223 (−0,00901 → **−0,00679**) |
+| **P2 Nullwelt der Überanpassung** | +0,00120 gegen **+0,00020** → **Faktor 6** ✔✔ | +0,00223 gegen +0,00051 → **Faktor 4,4** ✔✔ |
+| **P3 out-of-sample (B6)** | ✔ **dieselbe Zelle**, Gewinn **+0,00182** | ✔ **dieselbe Zelle**, Gewinn **+0,00211** |
+
+⭐⭐ **P2 ist die eigentliche Gegenprobe.** Sie misst nicht, ob eine
+zufällige Sperre gleicher Größe hilft — das wäre die falsche Frage. Sie
+wendet **dieselbe Prozedur** auf Zufallsachsen an: Raster bilden,
+schlechteste Zelle suchen, sperren, Gewinn messen. Das ist der Anteil, der
+allein aus dem **Suchen** entsteht, und er liegt bei +0,00020.
+
+⭐⭐ **P3 ist der stärkste Teil:** die Sperre wird auf der ersten Hälfte
+gefunden und wirkt auf der zweiten **genauso stark** — bei H24 +0,00211
+gegen +0,00223. Keine Überanpassung.
+
+## 8.2 ⛔ Und trotzdem reicht es nicht
+
+> `E[R]` steigt von **−0,00275 auf −0,00155**. Die Sperre **halbiert den
+> Verlust, sie dreht ihn nicht.**
+
+Für null bräuchte es noch einmal das Doppelte. Und **P4** zeigt, dass mehr
+Sperren monoton mehr bringt (14,6 % gesperrt → +0,00143) — ⚠️ das ist
+genau der Weg in die Überanpassung, den P2 und P3 gerade ausgeschlossen
+haben. Er wird hier **nicht** beschritten.
+
+⚠️ **Der Gewinn ist nicht signifikant:** out-of-sample +0,00182 bei einem
+tagesgeblockten Fehler von **±0,00547**. Belegt ist, dass er **nicht aus der
+Suche stammt** (P2) und **out-of-sample hält** (P3) — nicht, dass er von
+null verschieden ist.
+
+## 8.3 ⚠️⚠️ Der Mini-Lauf hat zum dritten Mal in die Irre geführt
+
+Über **20 Symbole** meldete P3 das Gegenteil: auf Hälfte 1 war eine
+**andere** Zelle die schlechteste („BTC nicht + Dom steigt"), und der Gewinn
+auf Hälfte 2 lag bei **+0,00001**.
+
+| heute | klein | voll |
+|---|---|---|
+| `rueckstand` gegen `beta` | Faktor **3** | Faktor **1,13** |
+| Kreuztabelle „BTC fällt + Dom fällt" | +0,0156 | +0,0057 |
+| **P3 Sperrenstabilität** | ⛔ andere Zelle | ✔ dieselbe Zelle |
+
+➤ **Für diese Fragen taugen kleine Läufe nicht — auch nicht zur
+Vorabschätzung.** Sie haben heute dreimal ein anderes Vorzeichen oder eine
+andere Größenordnung geliefert als die volle Menge, in beide Richtungen.
