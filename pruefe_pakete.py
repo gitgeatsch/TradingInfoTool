@@ -30327,6 +30327,27 @@ def paket_hebelneubau() -> None:
         "Mehrfachtesten": ("mehrfach", "p5", "bestes-von", "bonferroni",
                            "band ueber", "bestes von"),
         "Ebene": ("ebene", "bewertung", "erfolgsmessung", "betrieb"),
+        # ⚠️⚠️⚠️ DIE SECHSTE, NACHGETRAGEN AM 27.09.2026 AUF
+        # NUTZERVORGABE: *"nicht den Markt alleine messen, sondern die
+        # Bewertung muss auf das Asset gehen."*
+        #
+        # ⛔ WAS SIE VERHINDERT: "+1,2568 % gegen Markt +0,0150 %" ist ein
+        # GEPOOLTER Vergleich. Treten die scharfen Lagen bevorzugt in
+        # wenigen volatilen Symbolen auf, misst diese Zahl die
+        # SYMBOLAUSWAHL - und ein Beitrag, der nur Symbole sortiert,
+        # verstoesst beim Hebel gegen Regel 3 (kein Asset-Rang).
+        #
+        # ➤ Der Beleg ist ein anderer BEZUG, keine andere Zahl: jeder
+        #   Anker gegen den Durchschnitt SEINES EIGENEN Symbols. Bei
+        #   2.647 blieben so +1,2301 von +1,2418 uebrig - der Effekt ist
+        #   die Lage, nicht das Asset.
+        #
+        # ⚠️ Sie steht als eigene Vorgabe im Memory
+        # (`feedback_nicht_den_markt_messen_sondern_beitraege_je_asset`)
+        # und galt schon vorher - sie war nur nicht bewacht.
+        "JeAsset": ("je asset", "je symbol", "eigenen symbol",
+                    "eigene symbol", "symbolneutral", "symbolintern",
+                    "innerhalb der symbole"),
     }
 
     def _fehlende(b):
@@ -30339,10 +30360,10 @@ def paket_hebelneubau() -> None:
             and b.kennung.startswith("2.6")
             and int(b.kennung.split("-")[0].split(".")[1]) >= 647]
     _luecke = {b.kennung: _fehlende(b) for b in _neu if _fehlende(b)}
-    pruefe(P, "⚠️⚠️ jeder Hebel-Befund ab 2.647 belegt die FUENF Pruefungen",
+    pruefe(P, "⚠️⚠️ jeder Hebel-Befund ab 2.647 belegt die SECHS Pruefungen",
            not _luecke,
            "Nullwelt · Zeitstabilitaet · Weglassprobe · Mehrfachtesten · "
-           "Ebene. Fehlend: %s"
+           "Ebene · JE ASSET. Fehlend: %s"
            % ("; ".join("%s -> %s" % (k, ", ".join(v))
                         for k, v in list(_luecke.items())[:4])
               if _luecke else "keine"))

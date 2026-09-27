@@ -136,8 +136,27 @@ RENDER**, die Grenze ist beweglich. Mit dem Laderfix → 86 %.
 | **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — bisher ist nur `ema_abstand_atr` betrachtet. Die übrigen sieben Beiträge in `wahrscheinlichkeit.py` stehen auf `null`/`nie` oder `instrumente=("spot",)` | ungeklärt |
 | **3** | **Die Quellenfrage**: Binance (28), CoinGecko (16) — oder eine dritte Quelle? | Nutzerentscheidung |
 | **4** | **Den Hebel kalibrieren** — aus dem Risiko, nicht aus der Statistik (2.627) | offen |
-| **5** | ⚠️ **Der Horizont widerspricht sich dreifach**: gemessen H24, Messnorm 3 Tage, real Median 0,30 Tage | offen seit 26.09. |
+| **5** | ✔✔ **ERLEDIGT (2.646)** — der Horizont widersprach sich dreifach, weil `HORIZONT_JE_LAGE` **keine Einheit** führte. Jetzt 24 **Stunden** für den Hebel, 20 **Handelstage** für Spot, Einheit in eigener Tabelle, Wächter in der Suite | *erledigt* |
 | **6** | **Stundendaten in den Betrieb** — technische Grundlage, ohne sie trägt nichts (2.635) | geplant, nicht gebaut |
+
+## ✔✔✔ Die Grundlage ist geprüft (2.647) — sie hält, und sie hält **je Asset**
+
+**Nutzereinwand:** *„wenn du falsch beginnst, sind die Messungen danach
+auch wertlos."* Berechtigt — 2.626 hatte nur **tagestreu** gemessen.
+
+| | |
+|---|---|
+| **absolut** | W ≤ −1,2881 → **+1,2568 %** gegen Markt +0,0150 % (**84×**), monoton über fünf Schwellen |
+| ⭐ **je Asset** | gepoolter Lift +1,2418 Pp, **symbolintern +1,2301 Pp** — **99,1 % bleiben übrig**; 84,7 % der Symbole positiv, Konzentration 17,5 % (gleichverteilt wären 9 %) |
+
+⛔ **Damit ist ausgeschlossen, dass die Achse Symbole statt Lagen
+sortiert** — der Verstoß gegen Regel 3, den der gepoolte Vergleich nicht
+gezeigt hätte.
+
+⚠️ **Die Prüfliste ist deshalb auf SECHS erweitert** (Nutzervorgabe
+27.09.: *„nicht den Markt alleine messen, sondern die Bewertung muss auf
+das Asset gehen"*). Werkzeug: `messe_grundlage_je_asset.py`, Wächter:
+`pruefe_pakete.py --paket Hebelneubau`.
 
 ## Was NICHT in Phase 1 gehört
 
