@@ -183,3 +183,38 @@ Jeder Befund ab 2.647 belegt **sechs** Prüfungen, bewacht von
 **je Asset**
 
 Für Bewertung 1 kommt die **Karenz als Achse** dazu (Abschnitt 2): k = 0 und der Vorlauf werden beide ausgewiesen.
+
+## ⚠️⚠️ Der HEBEL-Messstandard — was vom Spot-Standard gilt, was nicht (27.09. abends)
+
+**Nutzerauftrag:** *„beim Bauen Messstandards anwenden, wenn diese nicht
+mehr auf den Hebelstandard angewendet werden können, melden bzw.
+berücksichtigen und den Standard anpassen."*
+
+⛔ **Befund 2.653-hebel-messstandard:** Die Hebel-Werkzeuge 2.647 bis
+2.651 **drucken** `messnorm.standardzeile()` in den Kopf, **wenden aber
+nichts daraus an**. Die Zeile verspricht *„gepflanzte Stärken bis 0,40 R,
+Positivkontrolle 5 Ziehungen"* — keines der Werkzeuge pflanzt. Das
+Werkzeugregister führt sie trotzdem als **NORM**, weil es nur
+`import messnorm` zählt (14 von 60 NORM-Werkzeugen rufen direkt nichts
+außer der Kopfzeile).
+
+| Baustein | Spot-Standard (`messnorm`) | Hebel, wie gemessen (2.647–2.651) | Stand |
+|---|---|---|---|
+| **Zielgröße** | `bewegung_r` / `barriere` in R; `ZIELGROESSE_JE_LAGE[hebel] = barriere` | B1: **Ereignis** (+X % in Y h) als **Lift** je Asset; B2: **MAE in ATR** | ⚠️ `messnorm` widerspricht dem Regelwerk |
+| **Nullpunkt** | Mittel der Nullwelten (40) | **Lift = 1** (eigenes Symbol); B2: eigener Durchschnitts-MAE | eigene Form, passt zur Frage |
+| **Nullwelt** | 40 Ziehungen | tagestreu, 40 Ziehungen | ✔ gleichwertig |
+| **Mehrfachtesten** | Band je Urteil | **Bestes-von-N**, 90. Perzentil der Maxima aus 40 Ziehungen — nominell rund **10 %** Fehlalarm je Lauf über **alle** Zellen, bevor Spiegelprobe und 60-%-Symbolregel greifen | ⚠️ Fehlalarmquote nicht selbst geprüft |
+| **Richtung** | – | gerichtete **Spiegelprobe**, Schwelle 1,717 (2.603) | ✔ Hebel-eigen |
+| **Zeitstabilität, Weglassprobe, je Asset** | Tagesklammer / Blöcke | je Kalenderjahr (≥ 10 erwartete Ereignisse), 7 von 7, Lift je Symbol, ≥ 60 % Symbole positiv, ≥ 30 Treffer je Symbol, ≥ 20 Symbole | ✔ Hebel-eigen |
+| **Karenz / Vorlauf** | – | Achse, k = 0 Betriebsfall (E-9) | ✔ Hebel-eigen |
+| **Horizont** | `HORIZONT_JE_LAGE[hebel] = 24 h` (2.646) | Fenster 6 bis 48 h gemessen, 72/120 h geplant — das Fenster ist eine **Achse** | ⚠️ ein fester Wert passt nicht |
+| ⛔ **Positivkontrolle / Trennschärfe** | gepflanzte Stärken bis 0,40 R, Selbsttest 2.204 und 2.485 | **fehlt** — welcher Lift mit welcher Wahrscheinlichkeit gefunden wird, ist unbekannt | ⛔ **Lücke** |
+| ⛔ **Bekanntheitszeitpunkt** | – | nicht geprüft — genau daran hängt 2.652-vorgriff-funding | ⛔ **Lücke** |
+| ⛔ **Bewertung 2 (MAE)** | – | Nullwelt, Band und Stufung für MAE nicht festgelegt | ⛔ vor Messung 2 zu klären |
+
+➤ **Bis zur Anpassung im Code gilt:** Hebel-Befunde nennen die Prüfform
+dieser Tabelle, **nicht** die `messnorm`-Kopfzeile. Die Anpassung selbst
+(ein Hebel-Standard im Code, Positivkontrolle für den Lift, Prüfung des
+Bekanntheitszeitpunkts, Einstufung im Werkzeugregister) ist ein eigenes
+Paket mit Voranalyse.
+
