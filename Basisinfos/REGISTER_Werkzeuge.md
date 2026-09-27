@@ -1,17 +1,17 @@
 # REGISTER — DIE WERKZEUGE (Altbestand gegen Neubestand)
 
-*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 349 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
+*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 350 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
 
 ⚠️ **Getrennt wird nach METHODIKSTAND, nicht nach Datum.** 178 von 384 Dateien wurden in 14 Tagen angefasst, die meisten nur vom N-19-Fix (Krypto-Filter, 44 Skripte). Das Datum sagt nichts darueber, ob ein Werkzeug der Norm genuegt.
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 50 | 14 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 51 | 15 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 8 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
-| **BLOCK** | 89 | 26 % | eigener Blockbootstrap, ausserhalb der Norm |
+| **BLOCK** | 89 | 25 % | eigener Blockbootstrap, ausserhalb der Norm |
 | **ALTBESTAND** | 183 | 52 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **183 von 349 Werkzeugen (52 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **183 von 350 Werkzeugen (52 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -21,7 +21,7 @@
                         vorher unter die Norm gestellt zu werden
                         (R-R11: erst reproduzieren)
 
-## NORM (50)
+## NORM (51)
 
     messe_a_faktoren.py, messe_alle_kandidaten.py, messe_altersabschlag.py, messe_aufloesung_und_fallback.py
     messe_betrieb_umlegung.py, messe_bewertung_kalibrierung.py, messe_coingecko_gegen_binance.py, messe_drift_herkunft.py
@@ -35,7 +35,7 @@
     pruefe_n1_schichtung_gegen_partner.py, pruefe_n1_vorbedingungen.py, pruefe_n5_haelften_saaten.py, pruefe_n5_mengenkontrolle.py
     pruefe_n5_modi.py, pruefe_nullschwelle.py, pruefe_o4_stufenband.py, pruefe_pakete.py
     pruefe_schichtentest_spiegelung.py, pruefe_symbole_je_termin.py, schritt3_gegenpruefung.py, schritt3_trennschaerfe.py
-    schritt4a_gegenpruefung.py, schritt4a_matched.py
+    schritt4a_gegenpruefung.py, schritt4a_matched.py, simuliere_depot.py
 
 ## TAGESKLAMMER (27)
 

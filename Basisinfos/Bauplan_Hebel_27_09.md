@@ -17,7 +17,7 @@ Vorgänger: `Bestandsaufnahme_Hebel_26_09.md` (was baurelevant ist),
 | **Merkmal** | `ema_abstand_atr` = `(close − EMA48h) / (ATR × close)` | 2.625/2.626 |
 | **Richtung** | **invers** — niedrigster Wert ist der beste | 2.625 |
 | **EMA-Länge** | **48 Stunden** (nicht 50 Tage — dort fällt MFE/MAE auf 1,00) | **2.606** |
-| **Mindestschwelle** | **W ≤ −1,2881** — gerechnete Kelly-Nullstelle, nicht gesetzt | 2.632 |
+| **Mindestschwelle** | ⚠️ **NEU ZU RECHNEN** — −1,2881 ist die Kelly-Nullstelle über **alle** Anker; der Betrieb kauft nur **Streckenanfänge** | 2.632 → **2.638** |
 | **Hebelhöhe** | ⛔ **KONSTANT** — die Stufung nach Vierteln ist **nicht belegt** | **2.633** |
 | **Horizont** | H24 ⚠️ *(Widerspruch, siehe § 4)* | 2.628 |
 | **Stop** | **1,00 ATR** (auch Netto-Optimum nach Kosten) | 2.628/2.629 |
@@ -49,6 +49,14 @@ Vorgänger: `Bestandsaufnahme_Hebel_26_09.md` (was baurelevant ist),
 | **4** | **Signalmenge deckeln** | 3,2–11,7/Tag, heute ohne Grenze (2.633) |
 | **5** | **Z-2 entfernen** | tautologisch (2.623) |
 | **6** | **Prüftakt und Cooldown** prüfen | Nutzervorgabe: vor dem Produktivgang wichtig |
+
+## ⛔⛔⛔ Zwei Befunde vom 27.09. abends, die vor allem anderen stehen
+
+| | |
+|---|---|
+| **2.638** | **Der Betrieb kauft den Streckenanfang, die Messung mittelt die ganze Strecke.** Ein Symbol liegt im Schnitt 3,4 Stunden am Stück unter der Schwelle; nur 29,1 % der Anker sind Anfänge. Anfänge +0,3393 %, übrige +1,6334 % — Faktor 4,8. ✔ Die **Trennschärfe bleibt** (+2,78 gegen +2,83), nur der absolute Ertrag fällt. ⚠ **Alle bisherigen Ertragszahlen beschreiben einen Handel, den der Betrieb so nicht führen kann** |
+| **2.639** | **Das Depot verliert Geld bei jeder realistischen Kapazität.** Kapazität 2/3/5 → Wachstum −0,96 / −0,74 / −0,63 bei positivem Ertrag je Trade. Das bestätigt Kelly 0,0859 aus 2.630 unabhängig: der Kontoanteil darf ~8,6 % sein, nicht 50 %. ✔ Der CoinGecko-Unterschied ist dagegen klein (−0,06 Pp) |
+
 
 ## Die Dateien, die angefasst werden
 
@@ -97,7 +105,7 @@ die erste eröffnete Position.
 | # | offen | Quelle |
 |---|---|---|
 | **1** | ⚠️ **Der Horizont widerspricht sich dreifach**: gemessen **H24**, Messnorm `messnorm.py:226` **3 Tage**, real Median **0,30 Tage** (2.493). Solange das offen ist, beschreibt die Bewertung womöglich einen anderen Trade als den, der läuft | Voranalyse 26.09. |
-| **2** | **Welche Höhe** bekommt der konstante Hebel? ⭐ Das ist **dieselbe Frage** wie „wie viel Kapital insgesamt" — bei konstantem Hebel entscheidet nur das Produkt aus Einsatz und Hebel | 2.630/2.633 |
+| **2** | ✔ **TEILWEISE BEANTWORTET (2.639):** bei Kapazität 2–5 ist das Wachstum **negativ** — der Kontoanteil muss bei rund 8,6 % liegen (Kelly 0,0859), nicht bei 20–50 %. Offen bleibt die genaue Höhe. — **Welche Höhe** bekommt der konstante Hebel? ⭐ Das ist **dieselbe Frage** wie „wie viel Kapital insgesamt" — bei konstantem Hebel entscheidet nur das Produkt aus Einsatz und Hebel | 2.630/2.633 |
 | **3** | **Signalmenge ohne Deckel**: 3,2 bis 11,7 je Tag, Faktor 3,6 zwischen den Jahren | 2.633 |
 | **4** | **Gaps und Slippage** sind nicht modelliert | 2.627 |
 | **5** | **Verlustserie 198–199** — über alle Stopweiten gleich, nicht wegkalibrierbar | 2.621 |
