@@ -30300,6 +30300,53 @@ def paket_hebelneubau() -> None:
            "Beitraege verwenden - nur neu gemessen. Und der Terminmarkt "
            "IST die Hebelboerse")
 
+    # ── 3b. DIE FUENF PRUEFUNGEN VOR JEDER MELDUNG ───────────────────
+    #
+    # ⚠️⚠️⚠️ NUTZERKRITIK 27.09.2026: *"wie oft soll ich dich bitten, die
+    # Messungen zu pruefen - und immer wieder muessen wir bereits fertige
+    # Bereiche aufmachen ... dann kommst du nicht mit einem Fehler um die
+    # Ecke, sondern das ganze System kippt."*
+    #
+    # An EINEM Tag fuenfmal gemeldet, bevor fertig geprueft war - und
+    # jedes Mal war die Korrektur groesser als der Befund (2.626, 2.632,
+    # 2.639, 2.640, MFE/MAE). Die Pruefungen sind KEINE Entdeckungen; sie
+    # stehen alle im Regelwerk.
+    #
+    # ➤ Jeder Hebel-Befund AB 2.647 muss in seiner `basis` belegen, dass
+    #   alle fuenf gelaufen sind. Das ist keine Formalie: eine Messung
+    #   ohne Weglassprobe hat am 27.09. zweimal einen Befund getragen,
+    #   der dann fiel.
+    #
+    # ⚠️ Nur AB 2.647 - aeltere Befunde nachtraeglich zu pruefen waere
+    # eine Umdeutung, und ihre Basis ist unveraendert gueltig.
+    import bestand as _BE
+    _WOERTER = {
+        "Nullwelt": ("nullwelt", "tagestreu"),
+        "Zeitstabilitaet": ("jahr", "zeitstabil", "kalenderjahr"),
+        "Weglassprobe": ("weglass",),
+        "Mehrfachtesten": ("mehrfach", "p5", "bestes-von", "bonferroni",
+                           "band ueber", "bestes von"),
+        "Ebene": ("ebene", "bewertung", "erfolgsmessung", "betrieb"),
+    }
+
+    def _fehlende(b):
+        t = (b.basis or "").lower() + " " + (b.aussage or "").lower()
+        return [n for n, w in _WOERTER.items()
+                if not any(x in t for x in w)]
+
+    _neu = [b for b in _BE.BEFUNDE
+            if _AST is not None and b.kennung[:5].replace(".", "").isdigit()
+            and b.kennung.startswith("2.6")
+            and int(b.kennung.split("-")[0].split(".")[1]) >= 647]
+    _luecke = {b.kennung: _fehlende(b) for b in _neu if _fehlende(b)}
+    pruefe(P, "⚠️⚠️ jeder Hebel-Befund ab 2.647 belegt die FUENF Pruefungen",
+           not _luecke,
+           "Nullwelt · Zeitstabilitaet · Weglassprobe · Mehrfachtesten · "
+           "Ebene. Fehlend: %s"
+           % ("; ".join("%s -> %s" % (k, ", ".join(v))
+                        for k, v in list(_luecke.items())[:4])
+              if _luecke else "keine"))
+
     # ── 4. Der Bestand kennt die Trennung ────────────────────────────
     import bestand as _B
     _k = {b.kennung: b for b in _B.BEFUNDE}
