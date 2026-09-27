@@ -20772,15 +20772,33 @@ def paket_messmenge() -> None:
            "sonst misst sie unbemerkt auf der Vorgabe (20), und die "
            "Blocklaenge folgt mit. Ohne Horizont: %s" % (_fehlt,))
     # ⚠️ Und die Werte sind BELEGT, nicht gesetzt: spot x einstieg 20 (alle
-    # drei Live-Beitraege sind darauf registriert, 2.514), hebel 3 (Median
-    # 0,30 Tage ueber 188 Positionen, 2.493; Betrieb rund 3 Handelstage,
-    # 2.513). Ein Wert, der sich still aendert, faellt hier auf.
-    pruefe(P, "⚠️ der Hebel-Horizont steht auf der GEMESSENEN Haltedauer",
-           _MN.HORIZONT_JE_LAGE.get(("hebel", "einstieg")) == 3,
-           "gemessen sind rund 3 Handelstage (2.513), Median 0,30 Tage "
-           "(2.493). Steht dort etwas anderes, ist es gesetzt statt "
-           "gemessen. Gefunden: %r"
+    # drei Live-Beitraege sind darauf registriert, 2.514).
+    #
+    # ⚠️⚠️⚠️ DER HEBELWERT WURDE AM 27.09.2026 NEU DIMENSIONIERT (2.646) -
+    # UND MIT IHM DIE EINHEIT. Hier stand `== 3` und meinte 3 HANDELSTAGE
+    # (72 Stunden); alle Hebelmessungen laufen aber auf STUNDENKERZEN mit
+    # H6 und H24. Der Waechter verglich also Aepfel mit Birnen und haette
+    # die Verwechslung nie gefunden - `messe_q_beide_seiten.py:63` hat
+    # sie bemerkt und das Skript AUSGENOMMEN, statt den Standard zu
+    # korrigieren.
+    #
+    # ⭐ Der neue Wert ist GEMESSEN (2.642): sechs Fenster von 6 bis 120
+    # Stunden, Zielgroesse MFE/MAE in ATR, Mass Cohens d - Optimum bei
+    # H12 bis H24. Und die EINHEIT wird jetzt mitgeprueft, sonst waere
+    # der naechste Leser in dieselbe Falle gelaufen.
+    pruefe(P, "⚠️ der Hebel-Horizont steht auf dem GEMESSENEN Optimum",
+           _MN.HORIZONT_JE_LAGE.get(("hebel", "einstieg")) == 24,
+           "24 STUNDEN aus 2.642 (Optimum H12-H24, d(MAE) faellt von "
+           "0,521 auf 0,264 bei H120). Vorher 3 - gemeint waren 3 "
+           "HANDELSTAGE, gemessen wurde in Stunden. Gefunden: %r"
            % (_MN.HORIZONT_JE_LAGE.get(("hebel", "einstieg")),))
+    pruefe(P, "⚠️⚠️ und die EINHEIT ist ausgewiesen (der Mangel von 2.646)",
+           (_MN.HORIZONT_EINHEIT_JE_LAGE.get(("hebel", "einstieg"))
+            == "stunden"
+            and _MN.HORIZONT_EINHEIT_JE_LAGE.get(("spot", "einstieg"))
+            == "handelstage"),
+           "ohne Einheit war der Kanarienvogel stumm: er verglich 6 mit "
+           "3 und fand eine Abweichung, die niemand deuten konnte")
     pruefe(P, "⚠️ und der Spot-Horizont bleibt auf dem registrierten Wert",
            _MN.HORIZONT_JE_LAGE.get(("spot", "einstieg")) == 20,
            "alle drei Live-Beitraege sind auf H20 registriert (2.514) - "
@@ -30255,12 +30273,32 @@ def paket_hebelneubau() -> None:
            "RISIKOSPERRE als Einstiegssignal vermessen")
 
     # ── 3. Die Spot-Quellen sind konkret benannt ─────────────────────
-    pruefe(P, "⚠️ die Spot-Quellen sind EINZELN benannt, nicht pauschal",
-           len(_HN.SPOT_QUELLEN) >= 5
-           and "funding_fuenftel" in _HN.SPOT_QUELLEN
-           and "turnover_fuenftel" in _HN.SPOT_QUELLEN,
-           "ein allgemeines *keine Spot-Sachen* haette mich nicht "
-           "aufgehalten")
+    # ⚠️⚠️ DIESE PRUEFUNG WAR ZUERST FALSCH GEBAUT: sie verlangte
+    # `len(SPOT_QUELLEN) >= 5` - eine ANZAHL. Als E-3 den Riegel richtig
+    # kalibrierte (Rohgroessen frei, nur die alten MESSWERTE gesperrt),
+    # sank die Zahl auf drei und die Pruefung schlug an, OBWOHL die
+    # Aenderung richtig war. Das ist die registrierte Regel *eine
+    # Pruefung, die Zustaende AUFZAEHLT, veraltet still*.
+    #
+    # ➤ Jetzt wird die EIGENSCHAFT geprueft: sperrt der Riegel die alten
+    #   Messwerte, und laesst er die Rohgroessen durch?
+    def _sperrt(n):
+        try:
+            _HN.pruefe_quellen(n)
+            return False
+        except _HN.SpotVermischung:
+            return True
+
+    pruefe(P, "⚠️⚠️ die alten BEITRAGSSTUFEN sind gesperrt",
+           all(_sperrt(n) for n in ("funding_fuenftel", "turnover_fuenftel",
+                                    "schnitt_fuenftel")),
+           "sie sind auf H20 und bewegung_r gemessen - der Spot-Lage")
+    pruefe(P, "⚠️⚠️ die ROHGROESSEN sind FREI (E-3)",
+           not any(_sperrt(n) for n in ("funding", "oi_aenderung",
+                                        "taker_verh", "volumenschub")),
+           "Nutzerpraezisierung 27.09.: der Hebel darf teilweise DIESELBEN "
+           "Beitraege verwenden - nur neu gemessen. Und der Terminmarkt "
+           "IST die Hebelboerse")
 
     # ── 4. Der Bestand kennt die Trennung ────────────────────────────
     import bestand as _B

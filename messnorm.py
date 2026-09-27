@@ -230,17 +230,59 @@ HORIZONT_JE_LAGE = {
     # 90 - das Akkumulationsmass ist als `schnitt, H90` gefuehrt
     # (Kandidatenregister), und `verbilligung` mittelt ueber H Tage.
     ("spot", "akkumulation"): 90,
-    # ⚠️ 3 Handelstage - GEMESSEN, nicht gesetzt: Median-Haltedauer 0,30
-    # Tage ueber 188 geschlossene Positionen (2.493), Betrieb rund 3
-    # Handelstage (2.513-horizont).
-    ("hebel", "einstieg"): 3,
-    ("hebel", "swing"): 3,
+    # ⚠️⚠️⚠️ NEU DIMENSIONIERT AM 27.09.2026 FUER DEN HEBELNEUBAU -
+    # UND DIE EINHEIT IST JETZT STUNDEN, NICHT TAGE.
+    #
+    # ⛔ DER MANGEL, DER DAS AUSLOESTE: hier stand `3`, gemeint waren 3
+    # HANDELSTAGE (= 72 Stunden). Alle Hebelmessungen laufen aber auf
+    # STUNDENKERZEN mit H6 und H24. Faktor 3 bis 12 daneben - und
+    # `warne_horizont` schlug NIE an, weil die Einheit nirgends stand.
+    # Der Kanarienvogel war stumm, weil er die falsche Sprache sprach.
+    #
+    # ⭐ DER NEUE WERT IST GEMESSEN (2.642): ueber sechs Fenster von 6
+    # bis 120 Stunden, Zielgroesse MFE und MAE in ATR (regelfrei), Mass
+    # Cohens d. Das Optimum liegt bei H12 bis H24; d(MAE) faellt von
+    # 0,521 bei H24 auf 0,264 bei H120. Gewaehlt wird die obere Kante
+    # des Optimums.
+    #
+    # ⚠️ DIE ALTEN WERTE ZUM VERGLEICH, sie bleiben lesbar:
+    #     3 Handelstage   = 72 h   Betriebsannahme (2.513-horizont)
+    #     0,30 Tage       = 7,2 h  REALE Median-Haltedauer ueber 188
+    #                              geschlossene Positionen (2.493)
+    #     H3 (Messung)    = 3 h    Aufloesungsmedian der MESSgeometrie
+    #                              (2.591) - nicht der Betriebsgeometrie
+    # ⭐ 2.578 sagte es selbst: *das beschreibt den IST-Zustand, nicht das
+    # Optimum. Die Frage, bei welcher Haltedauer die Geometrie am
+    # guenstigsten ist, ist nie gestellt worden.* Jetzt ist sie gestellt.
+    #
+    # ⚠️ H24 ist das MESSFENSTER, nicht die Haltedauer (2.642). Es heisst
+    # *ich schaue 24 Stunden voraus*, nicht *der Trade dauert 24 Stunden*.
+    ("hebel", "einstieg"): 24,
+    ("hebel", "swing"): 24,
     # ⚠️ OFFEN: fuer die Absicherung gibt es keine gemessene Haltedauer.
     # `None` heisst "nicht festgelegt" - `pruefe()` warnt dann NICHT, weil
     # es nichts zu vergleichen gibt. Eine geratene Zahl waere schlimmer
     # als keine.
     ("absicherung", "einstieg"): None,
 }
+
+# ⚠️⚠️⚠️ DIE EINHEIT JE LAGE - SIE FEHLTE, UND DAS WAR DER MANGEL
+# (27.09.2026).
+#
+# `HORIZONT_JE_LAGE` trug Zahlen ohne Einheit. Spot rechnet auf
+# TAGESdaten, der Hebelneubau auf STUNDENkerzen - und niemand hat es
+# abgeglichen, weil nirgends stand, was `3` bedeutet.
+#
+# ⭐ Wer die Tabelle liest, MUSS hier nachsehen. `warne_horizont` nennt
+# die Einheit jetzt in der Warnung mit.
+HORIZONT_EINHEIT_JE_LAGE = {
+    ("spot", "einstieg"): "handelstage",
+    ("spot", "akkumulation"): "handelstage",
+    ("hebel", "einstieg"): "stunden",
+    ("hebel", "swing"): "stunden",
+    ("absicherung", "einstieg"): None,
+}
+
 
 # ⚠️⚠️ STILLGELEGTE LAGEN - nicht geloescht, sondern gesperrt (Regel G-a)
 #
@@ -740,8 +782,15 @@ def warne_horizont(lage, horizont: int) -> bool:
     soll = HORIZONT_JE_LAGE.get((lage.instrument, lage.strategie))
     if soll is None or int(horizont) == int(soll):
         return False
+    # ⚠️⚠️⚠️ DIE EINHEIT GEHOERT IN DIE WARNUNG (27.09.2026). Ohne sie war
+    # der Kanarienvogel stumm: fuer den Hebel stand `3` und meinte
+    # HANDELSTAGE, gemessen wurde mit H6 und H24 STUNDEN - Faktor 3 bis
+    # 12, und niemand hat es bemerkt, weil die Zahl keine Einheit trug.
+    einheit = HORIZONT_EINHEIT_JE_LAGE.get(
+        (lage.instrument, lage.strategie)) or "?"
     print("⚠️⚠️ HORIZONT %d PASST NICHT ZUR LAGE %s - vorgesehen sind %d "
-          "(messnorm.HORIZONT_JE_LAGE)." % (horizont, lage, soll))
+          "%s (messnorm.HORIZONT_JE_LAGE)." % (horizont, lage, soll,
+                                               einheit.upper()))
     print("     Das Ergebnis beschreibt dann einen anderen Trade als den, "
           "der in dieser Lage stattfindet.")
     print("     ⚠️ Und die Blocklaenge folgt dem Horizont: %d statt %d."

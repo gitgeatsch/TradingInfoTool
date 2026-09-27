@@ -124,6 +124,11 @@ def main() -> int:
     print("  ⚠️ Horizonte %s - die Achse IST die Frage, `HORIZONT_JE_LAGE`"
           % (HORIZONTE,))
     print("     steht auf %d und wird hier bewusst variiert."
+# ⚠️⚠️⚠️ ACHTUNG (27.09.2026, Befund 2.646): `messnorm.HORIZONT_JE_LAGE[(hebel,*)]`
+# steht seit heute auf 24 STUNDEN statt 3 (gemeint waren 3 Handelstage).
+# Dieses Skript LIEST den Wert und rechnet deshalb jetzt mit einem anderen
+# Horizont als bei seinen Befunden 2.588/2.589 - und beide sind ABGELOEST.
+# Wer es erneut laeuft, vergleicht NICHT mit den alten Zahlen.
           % N.HORIZONT_JE_LAGE[("hebel", "einstieg")])
     print("  ⚠️⚠️ Die FINANZIERUNG bleibt draussen (Regel 2).")
 

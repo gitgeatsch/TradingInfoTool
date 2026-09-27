@@ -87,27 +87,43 @@ KANDIDATEN = {
 # Alles hier drin gehoert zum SPOT-Arm und hat im Hebel-Neubau nichts zu
 # suchen. Die Liste ist bewusst KONKRET - ein allgemeines "keine
 # Spot-Sachen" haette mich nicht aufgehalten.
+# ⚠️⚠️ KORRIGIERT 27.09. (E-3): der erste Riegel war ZU SCHARF. Er
+# sperrte `terminmarkt` und `funding` komplett - und der Terminmarkt IST
+# die Hebelboerse. Nutzerpraezisierung: *"die alten - damit meinte ich
+# die Ergebnisse und Messungen der alten Regelwerke VOR dem Umbau. Spot
+# und Hebel war vorher ein Ablauf; Hebel ist nun ganz anders gebaut, mit
+# teilweise DENSELBEN Beitraegen."*
+#
+# ➤ Gesperrt sind die alten MESSWERTE (fertige Beitragsstufen aus H20 und
+#   `bewegung_r`), NICHT die Rohgroessen. Eine Rohgroesse darf im Neubau
+#   verwendet werden - sie muss nur NEU gemessen werden, auf der
+#   Hebel-Lage.
 SPOT_QUELLEN = {
-    "funding_fuenftel": "Spot-Beitrag, instrumente=('spot',), auf H20 und "
-                        "bewegung_r gemessen",
-    "turnover_fuenftel": "Spot-Beitrag, instrumente=('spot',)",
-    "schnitt_fuenftel": "Spot-Beitrag, zustand='null', seit 18.09. "
+    "funding_fuenftel": "ALTE Beitragsstufe (+0,82/+1,30/+0,12/-0,54/-1,70), "
+                        "gemessen auf H20 und bewegung_r - die Spot-Lage. "
+                        "Die ROHGROESSE `funding` ist frei",
+    "turnover_fuenftel": "ALTE Beitragsstufe, gemessen auf der Spot-Lage. "
+                         "Die Rohgroesse ist frei",
+    "schnitt_fuenftel": "ALTE Beitragsstufe, zustand='null', seit 18.09. "
                         "ausgefallen (2.486-schnitt-tot)",
-    "terminmarkt": "Spot-Quelle - der Hebel rechnet aus Stundenkerzen",
-    "umlaufmenge": "Spot-Quelle",
-    "funding_historie": "Spot-Quelle",
-    "onchain_historie": "Spot-Quelle",
 }
 
 # ⚠️ Kelly ist KEINE Spot-Quelle, aber die Formel, mit der ich zweimal
 # die Bewertung aus dem ERTRAG abgeleitet habe (2.641). Sie gehoert in
 # die Erfolgsmessung, nie in die Bewertung.
+# ⚠️ PRAEZISIERT 27.09. (E-2, Befund 2.644): `E[R]` ist als ZIELGROESSE
+# einer Messung erlaubt und sogar die beste Wahl (d 0,402 gegen 0,168 bei
+# MFE/MAE). Verboten ist es als EINGANG der Bewertung im Betrieb. Der
+# verbotene Fall war die RUECKWAERTSOPTIMIERUNG - eine Schwelle aus der
+# Kelly-Nullstelle ableiten.
 ERTRAGSGROESSEN = {
-    "kelly": "aus q und CRV, also aus ERTRAEGEN - 2.641 verbietet das in "
-             "der Bewertung",
+    "kelly": "als BEWERTUNGSEINGANG verboten (2.641): aus q und CRV, also "
+             "rueckwaerts aus Ertraegen. Als Kennzahl einer Messung "
+             "unproblematisch",
     "hebelrechnung": "agent/betraege.py - rechnet die Spot-Quote in einen "
                      "Hebel um; der Neubau ersetzt genau diese Kette",
-    "bewegung_r": "Spot-Zielgroesse (H20)",
+    "bewegung_r": "ALTE Spot-Zielgroesse (H20) - fuer den Hebel gilt E[R] "
+                  "auf der Hebel-Lage (2.644)",
 }
 
 
