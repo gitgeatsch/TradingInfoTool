@@ -74,8 +74,25 @@ def main() -> int:
     print("E2e - GEGENPRUEFUNG DER HOEHE (2.655): Reproduktion, strenger "
           "Bezug, Episoden, Stabilitaet, vorwaerts, Gegenproben")
     print("=" * 120)
-    D = E2.lade()
+    IN_ATR = "--atr" in sys.argv
+    D = E2.lade(mit_atr=IN_ATR)
     F, Z, SYM, STD, JAHR = D["F"], D["Z"], D["SYM"], D["STD"], D["JAHR"]
+    if IN_ATR:
+        # Probe zu 2.662: dieselbe Rechnung, mfe und maevp in eigener ATR
+        # (Tagesmass zum Anker) statt in Prozent. Anker ohne ATR fallen weg.
+        a = D["ATR"]
+        gut = np.isfinite(a) & (a > 0)
+        print("  ⭐ EINHEIT ATR (--atr): mfe und maevp geteilt durch die ATR "
+              "zum Anker · %d von %d Anker mit ATR" % (gut.sum(), len(a)))
+        for f in Z:
+            for z in ("mfe", "maevp"):
+                Z[f][z] = np.where(gut, Z[f][z] / (100.0 * np.where(gut, a, 1.0)),
+                                   np.nan)
+        keep = gut
+        F = {m: v[keep] for m, v in F.items()}
+        Z = {f: {z: v[keep] for z, v in d.items()} for f, d in Z.items()}
+        SYM, STD, JAHR = SYM[keep], STD[keep], JAHR[keep]
+        D["n"] = int(keep.sum())
     n = D["n"]
     nsym = int(SYM.max()) + 1
     MON = monat_von(STD)
@@ -292,8 +309,9 @@ def main() -> int:
             "%s %+.2f (%d)" % (k, np.mean(x), len(x))
             for k, x in sorted(lagen.items()))))
     print()
-    print("  Grundlage des Marktes (24 h, alle Stunden): mfe %.2f %% · "
-          "maevp %.2f %%" % (Z[H]["mfe"].mean(), Z[H]["maevp"].mean()))
+    print("  Grundlage des Marktes (24 h, alle Stunden): mfe %.2f · "
+          "maevp %.2f %s" % (Z[H]["mfe"].mean(), Z[H]["maevp"].mean(),
+                             "ATR" if IN_ATR else "%"))
     print("  * = jenseits der Grenze (Nullwelt symboltreu im Monat) · P2 muss "
           "halten, P4 muss ins Band fallen · P3 ist ein absichtlicher Vorgriff")
     print("  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).")

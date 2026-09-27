@@ -1,0 +1,29 @@
+==============================================================================================================
+E2h - funding auf UNBERUEHRTEN Daten (2021-12 bis 2022-12) und der Bezug als Erklaerung des alten Rufs
+==============================================================================================================
+  Schwellen aus dem SUCHzeitraum: P5 -0.000833 · P95 0.000611
+  Anker: Suche 2767250 · Pruefung 361913 (Symbole 40)
+
+--------------------------------------------------------------------------------------------------------------
+SUCHZEITRAUM 2023-01 bis 2026-08  (suche)
+  Auswahl                          Ziel  Epis. |  streng  locker   Markt |  z str |  P2 1h-  P4 tau | Monate gleiches Vorzeichen
+  F5  funding <= P5                q5     5772 |  +0.037  +0.040  +0.040 |   +4.0 |  +0.021  +0.012 | 24 von 40
+  F5  funding <= P5                q15    5772 |  +0.039  +0.118  +0.165 |   +1.4 |  +0.064  +0.024 | 20 von 40
+  F95 funding >= P95               q5     5772 |  -0.043  -0.029  -0.031 |   -5.7 |  -0.041  -0.003 | 8 von 13
+  F95 funding >= P95               q15    5772 |  -0.073  -0.086  -0.105 |   -2.3 |  -0.018  +0.008 | 5 von 13
+  2.651-Form funding <= -0,0040    q5     1189 |  +0.016  +0.029  +0.031 |   +1.5 |  +0.009  +0.041 | 10 von 20
+  2.651-Form funding <= -0,0040    q15    1189 |  -0.029  +0.067  +0.128 |   -0.7 |  -0.002  +0.038 | 11 von 20
+
+--------------------------------------------------------------------------------------------------------------
+PRUEFZEITRAUM 2021-12 bis 2022-12 - unberuehrt von E2f  (pruef)
+  Auswahl                          Ziel  Epis. |  streng  locker   Markt |  z str |  P2 1h-  P4 tau | Monate gleiches Vorzeichen
+  F5  funding <= P5                q5     1017 |  -0.040  -0.025  -0.022 |   -2.3 |  +0.037  +0.037 | 3 von 12
+  F5  funding <= P5                q15    1017 |  -0.052  -0.037  -0.021 |   -0.7 |  +0.060  -0.094 | 6 von 12
+  F95 funding >= P95               q5        4 |  +0.150  +0.203  +0.193 |   +0.5 |  +0.483  -0.017 | 0 von 0
+  F95 funding >= P95               q15       4 |    +nan    +nan    +nan |   +nan |    +nan    +nan | 0 von 0
+  2.651-Form funding <= -0,0040    q5      109 |  +0.012  +0.031  +0.037 |   +0.1 |  +0.087  -0.021 | 1 von 1
+  2.651-Form funding <= -0,0040    q15     109 |  +0.064  +0.119  +0.156 |   +0.4 |  +0.196  -0.400 | 1 von 1
+
+  streng = gegen das eigene Asset im selben Monat · locker = gegen das eigene Asset im ganzen Zeitraum · Markt = gegen alle Anker
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+exit=0

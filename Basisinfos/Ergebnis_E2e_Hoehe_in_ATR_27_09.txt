@@ -1,0 +1,69 @@
+========================================================================================================================
+E2e - GEGENPRUEFUNG DER HOEHE (2.655): Reproduktion, strenger Bezug, Episoden, Stabilitaet, vorwaerts, Gegenproben
+========================================================================================================================
+  ⭐ EINHEIT ATR (--atr): mfe und maevp geteilt durch die ATR zum Anker · 3166770 von 3166770 Anker mit ATR
+  3166770 Anker · 115 Symbole · Monate 24263 bis 24320
+
+SCHRITT 0 - REPRODUKTION von 2.655 (Stunden, Bezug eigenes Symbol ueber alle Zeit, 24 h)
+  2.655 meldet: vola_kausal hoch +6,5 / +2,1 · oi_je_umsatz tief +5,0 / +1,9 · oi_aenderung stark +4,7 / +1,3 · volumenschub hoch +3,6 / +1,4 (mfe / maevp)
+  Merkmal        Perz   Schwelle   Stunden |      mfe    maevp
+  vola_kausal    P1       0.4780     31643 |    +0.17    +0.09
+  vola_kausal    P5       0.5904    158212 |    +0.15    +0.06
+  vola_kausal    P95      1.9626    158212 |    -0.10    -0.06
+  vola_kausal    P99      3.2167     31643 |    -0.17    -0.08
+  oi_je_umsatz   P1       4.1886     30989 |    +0.06    +0.03
+  oi_je_umsatz   P5       9.5304    154945 |    +0.01    +0.01
+  oi_je_umsatz   P95    382.9465    154945 |    +0.06    +0.01
+  oi_je_umsatz   P99   1033.9449     30989 |    +0.11    +0.03
+  oi_aenderung   P1      -0.1886     30976 |    -0.10    -0.04
+  oi_aenderung   P5      -0.0970    154878 |    -0.07    -0.03
+  oi_aenderung   P95      0.1090    154878 |    -0.03    -0.03
+  oi_aenderung   P99      0.3421     30976 |    -0.04    -0.05
+  volumenschub   P1       0.0972     31668 |    +0.06    +0.00
+  volumenschub   P5       0.1915    158339 |    +0.01    +0.00
+  volumenschub   P95      2.8374    158339 |    +0.07    +0.03
+  volumenschub   P99      6.3060     31668 |    +0.15    +0.06
+
+========================================================================================================================
+SCHRITT 1 bis 4 - STRENG (eigenes Asset im selben Monat), EPISODEN (1 je Asset in 24 h), Lehrer 24 h
+  Grenze Bestes-von-16, z: mfe 2.50 · maevp 2.51
+  Merkmal        Perz  Epis. |     mfe   maevp |  6h mfe 72h mfe |  Jahre   Wegl Asset |  P2 1h-  P3 1h+  P4 tau | Vorwaerts mfe
+  vola_kausal    P1     2711 |  +0.14*  +0.07* |   +0.03   +0.48 |  6/6    6/6     84% |   +0.15   +0.10   -0.00 | 20/27 · nein
+  vola_kausal    P5    11472 |  +0.13*  +0.04* |   +0.03   +0.38 |  6/6    6/6     97% |   +0.15   +0.10   -0.00 | 26/32 ✔ TRAEGT
+  vola_kausal    P95    9426 |  -0.09*  -0.00  |   +0.01   -0.46 |  5/5    5/5     89% |   -0.12   +0.02   -0.01 | 27/32 ✔ TRAEGT
+  vola_kausal    P99    1943 |  -0.17*  -0.03* |   +0.02   -0.79 |  5/5    5/5     91% |   -0.22   +0.02   +0.01 | 21/24 ✔ TRAEGT
+  oi_je_umsatz   P1    11897 |  +0.07*  +0.07* |   +0.11   -0.10 |  6/6    6/6     81% |   +0.01   +0.44   -0.01 | 27/32 · nein
+  oi_je_umsatz   P5    35943 |  +0.05*  +0.04* |   +0.07   -0.05 |  6/6    6/6     89% |   +0.01   +0.20   -0.00 | 30/32 · nein
+  oi_je_umsatz   P95   25872 |  +0.00   -0.00  |   -0.02   +0.09 |  4/5    5/5     56% |   +0.01   -0.01   -0.00 | 18/32 · nein
+  oi_je_umsatz   P99    8123 |  +0.02   +0.00  |   -0.02   +0.14 |  3/5    5/5     51% |   +0.03   -0.00   -0.01 | 16/30 · nein
+  oi_aenderung   P1     3762 |  -0.16*  -0.02* |   -0.05   -0.40 |  6/6    6/6     94% |   -0.15   -0.17   -0.00 | 27/30 ✔ TRAEGT
+  oi_aenderung   P5    15022 |  -0.09*  -0.02* |   -0.03   -0.25 |  6/6    6/6     95% |   -0.09   -0.12   +0.01 | 30/32 ✔ TRAEGT
+  oi_aenderung   P95   13825 |  +0.05*  +0.02* |   +0.07   -0.08 |  5/6    6/6     68% |   +0.02   +0.31   -0.01 | 27/32 · nein
+  oi_aenderung   P99    2987 |  +0.08*  +0.03* |   +0.14   -0.22 |  5/5    5/5     60% |   -0.01   +0.67   +0.01 | 20/29 · nein
+  volumenschub   P1    12170 |  -0.02   -0.01* |   -0.03   +0.02 |  3/5    5/5     70% |   -0.00   -0.03   +0.00 | 20/32 · nein
+  volumenschub   P5    40451 |  -0.03*  -0.01* |   -0.03   -0.01 |  5/6    6/6     85% |   -0.02   -0.04   -0.00 | 22/32 · nein
+  volumenschub   P95   50021 |  +0.08*  +0.04* |   +0.08   +0.07 |  6/6    6/6     99% |   +0.04   +0.21   -0.00 | 30/32 ✔ TRAEGT
+  volumenschub   P99   15703 |  +0.13*  +0.08* |   +0.14   +0.06 |  5/6    6/6     97% |   +0.06   +0.47   -0.00 | 32/32 · nein
+
+  VORWAERTS JE BTC-MONATSLAGE (mfe, Mittel der Monatswerte, Anzahl Monate):
+  vola_kausal    P1    fallend +0.07 (8) · seitwaerts +0.17 (8) · steigend +0.15 (11)
+  vola_kausal    P5    fallend +0.14 (9) · seitwaerts +0.19 (9) · steigend +0.11 (14)
+  vola_kausal    P95   fallend -0.06 (9) · seitwaerts -0.07 (9) · steigend -0.13 (14)
+  vola_kausal    P99   fallend -0.07 (8) · seitwaerts -0.28 (6) · steigend -0.24 (10)
+  oi_je_umsatz   P1    fallend +0.13 (9) · seitwaerts +0.15 (9) · steigend +0.06 (14)
+  oi_je_umsatz   P5    fallend +0.06 (9) · seitwaerts +0.05 (9) · steigend +0.05 (14)
+  oi_je_umsatz   P95   fallend +0.02 (9) · seitwaerts +0.01 (9) · steigend -0.01 (14)
+  oi_je_umsatz   P99   fallend +0.00 (8) · seitwaerts +0.02 (9) · steigend -0.02 (13)
+  oi_aenderung   P1    fallend -0.13 (9) · seitwaerts -0.15 (9) · steigend -0.24 (12)
+  oi_aenderung   P5    fallend -0.09 (9) · seitwaerts -0.09 (9) · steigend -0.13 (14)
+  oi_aenderung   P95   fallend +0.07 (9) · seitwaerts +0.06 (9) · steigend +0.06 (14)
+  oi_aenderung   P99   fallend +0.09 (8) · seitwaerts +0.13 (9) · steigend +0.06 (12)
+  volumenschub   P1    fallend -0.01 (9) · seitwaerts -0.02 (9) · steigend -0.02 (14)
+  volumenschub   P5    fallend -0.02 (9) · seitwaerts -0.02 (9) · steigend -0.03 (14)
+  volumenschub   P95   fallend +0.08 (9) · seitwaerts +0.08 (9) · steigend +0.08 (14)
+  volumenschub   P99   fallend +0.14 (9) · seitwaerts +0.14 (9) · steigend +0.12 (14)
+
+  Grundlage des Marktes (24 h, alle Stunden): mfe 0.59 · maevp 0.23 ATR
+  * = jenseits der Grenze (Nullwelt symboltreu im Monat) · P2 muss halten, P4 muss ins Band fallen · P3 ist ein absichtlicher Vorgriff
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+exit=0

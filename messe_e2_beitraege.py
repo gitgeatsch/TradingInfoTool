@@ -137,7 +137,8 @@ def kursmerkmale(h, l, cc, vol):
         mit = pd.Series(vol).rolling(168, min_periods=168).mean().to_numpy()
         vs = vol / np.maximum(mit, 1e-12)
     return {"ema_abstand_atr": w, "momentum_kurz": mom, "rsi": _rsi14(cc),
-            "bandenge": bandenge, "vola_kausal": vola, "volumenschub": vs}
+            "bandenge": bandenge, "vola_kausal": vola, "volumenschub": vs,
+            "atr": atr}
 
 
 def ergebnisse(h, l, cc, hmax=None, erste=()):
@@ -182,13 +183,15 @@ def zielwerte(t, mfe_h, maevp_h, fenster):
             "mfe": 100.0 * mfe_h[fenster], "maevp": 100.0 * maevp_h[fenster]}
 
 
-def lade(hmax=None, erste=()):
+def lade(hmax=None, erste=(), mit_atr=False):
     """-> dict mit Merkmalen F, Zielwerten Z je Fenster und den Ankerspalten - NUR LESEND.
 
     Ohne Argumente genau die Menge von E2 (72 h Vorausblick). `hmax` und
     `erste` (weitere Schwellen, siehe `ergebnisse`) fuer E2c; dann kommen
     zusaetzlich T (erste Treffer je Schwelle), MFE/MAEVP bis `hmax` und X
     (eigene Rendite der letzten 24 und 120 h, kausal) zurueck.
+    `mit_atr`: zusaetzlich ATR (Tagesmass, relativ, kausal) je Anker - fuer
+    die Hoehe in ATR statt Prozent (2.662).
     """
     HMAX = globals()["HMAX"] if hmax is None else hmax
     cs = sqlite3.connect("file:%s?mode=ro" % STUNDEN_DB, uri=True)
@@ -201,6 +204,7 @@ def lade(hmax=None, erste=()):
     F = {m: [] for m in MERKMALE}
     Z = {f: {z: [] for z in ZIELE} for f in (H,) + KONTROLL_H}
     STD, SYM, CC, JAHR = [], [], [], []
+    ATR = []
     T = {k: [] for k, _g, _o in erste}
     X = {k: [] for k in ("vor24", "vor120", "mfe_max", "maevp_max")}
     ausgeschlossen = 0
@@ -274,6 +278,8 @@ def lade(hmax=None, erste=()):
             X["maevp_max"].append(100.0 * maevp_h[max(maevp_h)][sel])
         for m in MERKMALE:
             F[m].append(km[m][sel])
+        if mit_atr:
+            ATR.append(km["atr"][sel])
         STD.append(stunde[sel])
         SYM.append(np.full(len(sel), si, np.int32))
         CC.append(cc[sel])
@@ -287,6 +293,8 @@ def lade(hmax=None, erste=()):
     n = len(SYM)
     aus = dict(F=F, Z=Z, STD=STD, SYM=SYM, CC=CC, JAHR=JAHR, TAG=TAG,
                n=n, ausgeschlossen=ausgeschlossen)
+    if mit_atr:
+        aus["ATR"] = np.concatenate(ATR)
     if erste:
         aus["T"] = {k: np.concatenate(v) for k, v in T.items()}
         aus["X"] = {k: np.concatenate(v) for k, v in X.items()}

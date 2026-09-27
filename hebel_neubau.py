@@ -279,7 +279,7 @@ _L_KURS = "ja - Binance-Stundenkerzen"
 BEITRAGSLAGE = {
     # ── die drei registrierten Traeger ───────────────────────────────
     "funding": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663",),
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.665", "2.666"),
         beleg="mit dem VORTAGESWERT: Lift 4,45 bei <= -0,0040 auf +15 "
               "%/H12 (vorher 9,55 - die Haelfte war Vorgriff), traegt auf "
               "H6/H12/H24, +30 %/H48 nur Bewegung; >= 0,0016 zeigt nach "
@@ -289,18 +289,18 @@ BEITRAGSLAGE = {
         live="ja - aber als EINZELSATZ je Abrechnung; die Tagessumme ist "
              "erst nach Tagesende bekannt",
         spot="Regler, auf H20/bewegung_r vermessen (290 Symbole, 6,3 Jahre)",
-        vorbehalt="PFLICHTABLAUF OFFEN: der Vorgriff ist gemessen und "
-                  "entfernt (2.663), aber die verbliebenen Zellen stehen "
-                  "auf Stunden mit tagestreuer Nullwelt - ohne Episoden, "
-                  "ohne Vorwaertsrechnung, ohne Gegenpruefung"),
+        vorbehalt="PHASE UND MOMENT: als Moment im Monat klein, aber auf "
+                  "2022 bestaetigt (2.665/2.666, Mittel ueber Startstunden "
+                  "+0,025 / +0,028); gegen das Asset im ganzen Zeitraum und "
+                  "den Markt deutlich staerker - es markiert auch die Phase. "
+                  "Ob es die Phase VORHERSAGT, ist ungemessen"),
     "oi_aenderung": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.662"),
         beleg="Lift 6,23 bei >= 0,3355 auf +20 %/H24, 5,02 auf +30 %/H48; "
               ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67",
         quelle=_Q_TM, live=_L_TM,
         spot="Schalter, auf H20 vermessen (117 Symbole, 126.491 Anker)",
-        vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
-                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
+        vorbehalt=""),
     "turnover": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="ueber dem Band, aber NUR BEWEGUNG (Spiegel 0,76 bis 1,67 "
@@ -323,13 +323,14 @@ BEITRAGSLAGE = {
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 1,00 bis 1,53)",
         quelle=_Q_TM + " und Stundenvolumen", live=_L_TM, spot="",
-        vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
-                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
+        vorbehalt=""),
     "volumenschub": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
-        beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35)",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
-                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
+        b1="faellt", vorlauf=None, b2="ungemessen",
+        befund=("2.663", "2.662", "2.667"),
+        beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35). "
+              "HOEHE auch UEBER die ATR hinaus: P95 +0,08 ATR mfe, 30 von 32 "
+              "Monaten, jede BTC-Lage (2.667)",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
     "taker_verh": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="in keiner Zielgroesse ueber dem Suchband (Bestes-von-160, "
@@ -372,10 +373,13 @@ BEITRAGSLAGE = {
               "Bewegung. B2-Spur laut Register: *ueber hebel = "
               "verlustanteil / stop_rel faellt daraus der Hebel*. HOEHE "
               "(2.662, als vola_kausal): P99 +6,56 Prozentpunkte mfe, "
-              "vorwaerts in jeder BTC-Lage - aber maevp steigt mit",
+              "vorwaerts in jeder BTC-Lage - aber maevp steigt mit. IN ATR "
+              "(2.667) dreht es: P99 -0,17 ATR - die Bewegung ist gross, "
+              "WEIL die Spanne gross ist. Fuer die Liquidation (Prozent) ist "
+              "die ATR zum Einstieg selbst das Risikomass: 5x-Grenze binnen "
+              "72 h im obersten ATR-Fuenftel 26,9 %, im untersten 5,8 %",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt="EINHEIT OFFEN: 2.662 misst in Prozent, Bewertung 2 ist "
-                  "als MAE in ATR definiert; vola_kausal IST die ATR"),
+        vorbehalt=""),
     "bandenge": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.650",),
         beleg="Lift 0,84 bis 1,22 gegen ein Band von 2,77 - es haelt die "
@@ -441,12 +445,21 @@ NEUESTER_STAND = (
               "Zufall. Nur funding ist LAGE VORHER (Vortag negativ q5 +0,037, "
               "hoch = Sperre -0,043) - und klein. kaeufer_24h BEGLEITET die "
               "Bewegung, momentum_kurz IST sie. Such-/Pruef-Trennung fehlt"),
+    ("2.666", "FUNDING HAELT AUF 2022 (Mittel +0,028, 10 von 12 Startstunden; "
+              "Suchzeitraum +0,025). Die erste Fassung *dreht* war ein "
+              "Mitternachtseffekt der Episodenregel. Der alte gute Ruf kam "
+              "zusaetzlich aus dem BEZUG: funding markiert auch die PHASE"),
+    ("2.667", "HOEHE IN ATR: die Prozent-Hoehe ist groesstenteils die ATR "
+              "selbst; ueber sie hinaus traegt vor allem volumenschub. Fuer die "
+              "Liquidation ist die ATR zum Einstieg das Risikomass (5x binnen "
+              "72 h: 5,8 % im untersten, 26,9 % im obersten ATR-Fuenftel)"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
-               "bis wir die Grundlagen haben*): offen zur Abstimmung - "
-               "Such-/Pruef-Trennung (2022 fuer funding sofort, Kaeuferanteil "
-               "braucht eine Ladung 2021/22), Hoehe in Prozent gegen ATR, und "
-               "die Frage, ob eine kleine Richtung (q 0,53) reicht"),
+               "bis wir die Grundlagen haben*): bisher ist jeder Beitrag "
+               "EINZELN gemessen. Naechster Schritt ist die ANWENDUNGSEBENE - "
+               "die KOMBINATION der Beitraege je Asset und Zeitpunkt (Nutzer: "
+               "*ein Beitrag ist selbst schwach, in Kombination staerker*), "
+               "mit Voranalyse und Abstimmung vor dem Bau"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
@@ -501,15 +514,14 @@ def gemessene_merkmale() -> dict:
 #                  gemessen wurde
 # ⚠️ Der Laderfix 2.611 ist keine Messung und steht unter OFFENE_AUFGABEN.
 NAECHSTE_MESSUNGEN = (
-    dict(was="Pflichtablauf fuer `funding` (Vortag) auf BEWERTUNG 1",
-         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.663",
-         warum="der Vorgriff ist entfernt (2.663), die neun Zellen stehen "
-               "aber auf Stunden: Episoden, Vorwaertsrechnung 2024-2026 je "
-               "BTC-Lage und Gegenpruefung (1 h Versatz, Tausch) fehlen. "
-               "Laeuft mit E2 der neuen Richtungsdaten mit - funding_vortag "
-               "ist dort schon Kandidat. Die Stufe 2 (Summe der letzten drei "
-               "abgerechneten Saetze, live beschaffbar) nur, falls der "
-               "Vortag nicht traegt"),
+    dict(was="`funding`: sagt es die PHASE des Assets voraus?",
+         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.666",
+         warum="gegen das Asset im selben Monat traegt funding wenig, gegen "
+               "das Asset im ganzen Zeitraum und gegen den Markt deutlich mehr "
+               "(2.666). Zu messen mit dem lockeren Bezug und einer passenden "
+               "Nullwelt (symboltreu ueber den ganzen Zeitraum, tagestreu als "
+               "Kontrolle), vorwaerts und auf 2022 - gehoert in die "
+               "Voranalyse zur KOMBINATION (Anwendungsebene)"),
     dict(was="Vorlauf bei H72 und H120",
          art="vorlauf", bewertung="b1",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
@@ -524,16 +536,6 @@ NAECHSTE_MESSUNGEN = (
                "zweiter unabhaengiger macht die Stufung tragfaehig. Ob "
                "Nebenmerkmale, momentum_kurz/rsi und bandenge mitlaufen, "
                "entscheidet die Voranalyse dazu (E5, 27.09.)"),
-    dict(was="HOEHE in PROZENT und in ATR nebeneinander",
-         art="probe", bewertung="b2",
-         merkmale=("vola", "oi_je_umsatz", "oi_aenderung", "volumenschub"),
-         prueft="2.662",
-         warum="2.662 misst in Prozent, Bewertung 2 ist als MAE in ATR "
-               "definiert, und vola_kausal IST die ATR - ein Teil der "
-               "Wirkung ist damit mechanisch. Dieselbe Rechnung in beiden "
-               "Einheiten zeigt, wie viel uebrig bleibt. Die Wahl der "
-               "Einheit selbst ist danach eine Nutzerentscheidung "
-               "(Liquidation zaehlt in Prozent)"),
 )
 
 # ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der

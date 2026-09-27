@@ -1,0 +1,27 @@
+====================================================================================================
+E2i - LIQUIDATIONSNAEHE: MAE einer Long-Position binnen 24 / 72 h nach der ATR zum Einstieg
+====================================================================================================
+  3178050 Anker · ATR-Fuenftelgrenzen (Tagesmass): 4.6% · 5.9% · 7.4% · 9.7%
+
+  FENSTER 24 h - Anteil der Einstiege, bei denen der Kurs die Grenze unterschreitet
+  ATR-Schicht            MAE Median |    5x 12%     3x 27%     2x 45% | MAE P95
+  S1 ATR  0.0-  4.6%          1.75% |    1.040%     0.060%     0.026% |    7.0%
+  S2 ATR  4.6-  5.9%          2.46% |    1.912%     0.199%     0.118% |    8.6%
+  S3 ATR  5.9-  7.4%          2.96% |    2.722%     0.274%     0.131% |    9.9%
+  S4 ATR  7.4-  9.7%          3.56% |    4.717%     0.364%     0.099% |   11.8%
+  S5 ATR  9.7-113.5%          4.64% |    9.557%     0.711%     0.069% |   15.0%
+  ALLE                        2.90% |    3.990%     0.322%     0.089% |   11.1%
+  je Jahr, Anteil MAE >= 12 % (5x) in S1 / S5: 2022 1.14% / 13.21% · 2023 0.91% / 6.47% · 2024 1.50% / 9.74% · 2025 1.74% / 8.70% · 2026 0.45% / 9.60%
+
+  FENSTER 72 h - Anteil der Einstiege, bei denen der Kurs die Grenze unterschreitet
+  ATR-Schicht            MAE Median |    5x 12%     3x 27%     2x 45% | MAE P95
+  S1 ATR  0.0-  4.6%          3.29% |    5.796%     0.287%     0.088% |   12.6%
+  S2 ATR  4.6-  5.9%          4.60% |   11.212%     1.100%     0.417% |   16.0%
+  S3 ATR  5.9-  7.4%          5.48% |   15.594%     1.737%     0.459% |   18.7%
+  S4 ATR  7.4-  9.7%          6.26% |   20.429%     2.305%     0.371% |   21.3%
+  S5 ATR  9.7-113.5%          7.61% |   26.898%     2.943%     0.427% |   23.3%
+  ALLE                        5.26% |   15.986%     1.674%     0.352% |   19.1%
+  je Jahr, Anteil MAE >= 12 % (5x) in S1 / S5: 2022 6.72% / 33.70% · 2023 5.10% / 20.63% · 2024 9.46% / 25.40% · 2025 8.38% / 27.33% · 2026 2.75% / 26.41%
+
+  ⚠️ Die Liquidationsgrenzen sind Orientierung aus dem alten Code, keine nachgerechneten Boersenwerte.
+exit=0

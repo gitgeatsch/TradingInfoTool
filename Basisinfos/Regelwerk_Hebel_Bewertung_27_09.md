@@ -13,7 +13,7 @@ Faktenteil: `python hebel_neubau.py`
 # ⚠️⚠️ STAND 27.09. ABENDS — was von diesem Blatt noch gilt
 
 Dieses Blatt entstand am Mittag. Der Nachmittag hat es in wesentlichen
-Punkten überholt (Befunde 2.654 bis 2.665). **Der Stand im Code:**
+Punkten überholt (Befunde 2.654 bis 2.667). **Der Stand im Code:**
 `python hebel_neubau.py` (Abschnitt NEUESTER STAND).
 
 | | gilt noch | überholt |
@@ -27,6 +27,8 @@ Punkten überholt (Befunde 2.654 bis 2.665). **Der Stand im Code:**
 | **funding** | ✔ trägt mit dem **Vortageswert** (2.663) — aber auf Stunden, der Pflichtablauf fehlt | ⛔ 2.651: die Hälfte des Lifts war **Vorgriff** (9,55 → 4,45) |
 | **Datenfehler** 2.658 | ✔ gemessen ohne Wirkung auf die Urteile von 2.648/2.650 (2.664) | – |
 | **Richtung** (2.665) | ✔ nur **funding** ist Lage vorher (Vortag negativ: q5 0,531 statt 0,490; hoch = Sperre) — **klein**; Such-/Prüf-Trennung fehlt | ⛔ Käuferanteil **begleitet** die Bewegung, `momentum_kurz` **ist** sie (kein Einstieg nach OPTIMUM); Premium ohne Befund |
+| **funding auf 2022** (2.666) | ✔ **hält auf 2022** in derselben Größe (Mittel über 12 Startstunden +0,028, Suchzeitraum +0,025) und markiert zusätzlich die **Phase** des Assets | ⛔ die erste Fassung *das Vorzeichen dreht* war ein **Mitternachtseffekt** der Episodenregel — Tagesmerkmale künftig über Startstunden mitteln |
+| **Höhe in ATR** (2.667) | ✔ für die Liquidation zählt Prozent, und die **ATR zum Einstieg** ist das Risikomaß (5x binnen 72 h: 5,8 % gegen 26,9 %); über die ATR hinaus trägt vor allem `volumenschub` | ⛔ die Prozent-Höhe von vola ist größtenteils die ATR selbst |
 | **Nächste Messungen** (§ 5) | – | ⛔ ersetzt: neue Richtungsdaten (Käuferanteil, Premium-Index, BTC-Dominanz-Index) mit dem Pflichtablauf aus § 6 |
 
 ---
