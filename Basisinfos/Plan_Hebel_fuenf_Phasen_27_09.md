@@ -6,6 +6,32 @@
 > Bauplan bleibt gültig für die **technischen** Schritte (Dateien,
 > Reihenfolge, Fallen), ist aber der Phase 1 untergeordnet.
 
+### ⚠️⚠️ Der Faktenteil kommt aus Code — hier steht die Planung
+
+```bash
+python hebel_neubau.py
+```
+
+**Nutzerkritik 27.09.:** *„wir haben einen Hauptplan — wenn du wieder
+etwas Neues parallel machst, bringt das nichts."*
+
+| | |
+|---|---|
+| **Dieses Blatt** | die **Phasen**, die Reihenfolge, die Entscheidungen — die oberste Liste |
+| `hebel_neubau.stand()` | der **Faktenteil**: welche Rolle steht wo, auf welcher Geometrie, mit welchem Befund |
+
+⚠️ Und damit sie nicht auseinanderlaufen, **liest** `stand()` die Phasen
+aus *diesem* Blatt, statt sie zu kopieren. Ändert sich hier das Format,
+bricht es ab — es gibt keinen stillen Rückfall auf eine zweite Liste.
+
+⛔ **Wozu das gebaut wurde:** Auf die Frage *„zeige mir den aktuellen
+Hebel-Einstieg"* habe ich `agent/betraege.py` vorgelegt — Kelly,
+Basisrate, `funding_fuenftel`. Also den **alten Spot-Ablauf** als
+Ist-Stand des Hebels. Der Riegel dagegen (`pruefe_quellen`) stand seit
+dem Vortag da und griff nicht: er bewacht **Messskripte**, ein Bericht ist
+keines. Jetzt kommt der Bericht aus Code, der den Spot-Arm nicht kennt —
+nachgewiesen am **Seiteneffekt** (`python hebel_neubau.py --nachweis`).
+
 ---
 
 # Die fünf Phasen

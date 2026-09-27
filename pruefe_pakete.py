@@ -30234,6 +30234,7 @@ def paket_hebelneubau() -> None:
     ABBRUCH im Code (`hebel_neubau.pruefe_quellen`). Und weil ein Schutz,
     den niemand ausfuehrt, keiner ist, bewacht dieses Paket ihn."""
     P = "Hebelneubau"
+    import os as _os_pp
     import hebel_neubau as _HN
 
     # ── 1. Der Riegel muss ABBRECHEN, nicht warnen ───────────────────
@@ -30367,6 +30368,86 @@ def paket_hebelneubau() -> None:
            % ("; ".join("%s -> %s" % (k, ", ".join(v))
                         for k, v in list(_luecke.items())[:4])
               if _luecke else "keine"))
+
+    # ── 3c. DER STANDSBERICHT KOMMT AUS CODE, NICHT AUS MEINEM KOPF ──
+    #
+    # ⚠️⚠️⚠️ NUTZERKRITIK 27.09.2026: *"JETZT explodiere ich gleich - wenn
+    # du noch einmal Spot und Hebelgeschaeft vermischst [...] du kannst
+    # nichts trennen und vermischst wieder Altes mit Neuem."*
+    #
+    # ⛔ DER AUSLOESER: auf *"zeige mir den aktuellen Hebel-Einstieg"* habe
+    # ich `agent/betraege.py` vorgelegt - Kelly, Basisrate,
+    # `funding_fuenftel`. Also den ALTEN SPOT-ABLAUF als Ist-Stand des
+    # Hebels. Der Riegel `pruefe_quellen()` stand seit dem Vortag da und
+    # hat nicht gegriffen: er bewacht MESSSKRIPTE, ein Bericht ist keins.
+    #
+    # ➤ Deshalb kommt der Bericht jetzt aus `hebel_neubau.stand()`.
+    pruefe(P, "⚠️⚠️ `stand()` faehrt den Hebel-Neubau, nicht den Spot-Arm",
+           all(hasattr(_HN, n) for n in
+               ("stand", "GEOMETRIE", "EINBETTUNG", "OFFEN",
+                "nachweis_sauber")),
+           "der Standsbericht muss aus Code kommen - aus meinem Kopf "
+           "kommt er mit Spot darin")
+
+    # ⚠️⚠️ DER NACHWEIS IST EIN SEITENEFFEKT, KEINE TEXTSUCHE. `stand()`
+    # laeuft in einem FRISCHEN Interpreter, danach wird `sys.modules`
+    # gelesen. Ein Import INNERHALB einer Funktion - genau das, was eine
+    # Textsuche auf die Kopfzeilen uebersieht - faellt hier auf. Das ist
+    # die registrierte Regel *ein Test deckt die FUNKTION ab, nicht den
+    # PFAD - am SEITENEFFEKT nachweisen*.
+    _rein, _schmutz = _HN.nachweis_sauber()
+    pruefe(P, "⚠️⚠️⚠️ und `stand()` FASST den Spot-Arm nicht an (Seiteneffekt)",
+           _rein,
+           "nach dem Aufruf lagen diese Module in sys.modules: %s. "
+           "`stand()` liest bestand.py per AST, damit es NICHTS "
+           "importieren muss" % (", ".join(_schmutz) or "-"))
+
+    # ⚠️ GEGENPROBE: die Pruefung muss FEHLSCHLAGEN KOENNEN. Ohne sie
+    # waere ein `nachweis_sauber`, das immer True liefert, nicht von
+    # einem echten Nachweis zu unterscheiden - registrierte Regel *eine
+    # Abnahmeprobe muss fehlschlagen KOENNEN*.
+    # `ast` benutzt `stand()` nachweislich selbst, es MUSS also anschlagen.
+    # ⚠⚠ Die Liste geht als ARGUMENT in den Kindprozess - die erste
+    # Fassung setzte `_HN.VERBOTENE_MODULE` im Elternprozess, und dort kam
+    # sie nie an. Die Gegenprobe hat genau das gefunden.
+    _kippt, _ = _HN.nachweis_sauber(verboten=("ast",))
+    pruefe(P, "⚠️ und der Nachweis KANN fehlschlagen (Gegenprobe)",
+           not _kippt,
+           "mit `ast` auf der Verbotsliste muss er anschlagen - sonst "
+           "prueft er nichts und meldet trotzdem gruen")
+
+    # ⚠️⚠️ KEINE ZWEITE PLANUNGSLISTE. Nutzerkritik am selben Tag: *"wir
+    # haben einen HAUPTPLAN - wenn du wieder etwas NEUES PARALLEL machst,
+    # bringt das nichts."* `stand()` LIEST die Phasen aus dem Hauptplan,
+    # statt sie zu fuehren - laeuft der weg, faellt es auf.
+    pruefe(P, "⚠️⚠️ `stand()` liest die Phasen AUS dem Hauptplan",
+           _os_pp.path.exists(_HN.HAUPTPLAN.replace("/", _os_pp.sep))
+           and len(_HN._phasen_aus_hauptplan()[0]) == 5
+           and _HN._phasen_aus_hauptplan()[1] in (1, 2, 3, 4, 5),
+           "zwei Listen laufen auseinander; der Hauptplan fuehrt die "
+           "Phasen, dieses Modul nur den Faktenteil (%s)" % _HN.HAUPTPLAN)
+    pruefe(P, "⚠️ und der Hauptplan steht IM Bericht",
+           _HN.HAUPTPLAN in _HN.stand(mit_befunden=False),
+           "wer den Stand liest, muss sehen, wo die Planung steht")
+
+    # ⚠️⚠️ DER LESER DARF NICHT STILL LEER LAUFEN. Die erste Fassung las
+    # `"2.647".split(".")[1]` als 647 und verglich gegen die Grenze 2625 -
+    # damit fiel JEDER Befund heraus und das Blatt meldete "0 gelten".
+    # Ein Fehler, der sich selbst versteckt: eine leere Liste sieht aus
+    # wie ein Zustand. Der Punkt ist ein TAUSENDERtrennzeichen.
+    _bef = _HN._befunde_ab()
+    pruefe(P, "⚠️⚠️ der Befundleser findet die Neubau-Befunde (2.625 ff.)",
+           len(_bef) >= 19
+           and any(k.startswith("2.625") for k, _z, _a in _bef)
+           and any(k.startswith("2.647") for k, _z, _a in _bef),
+           "gefunden: %d, erste: %s - '2.647' ist 2647, nicht 647"
+           % (len(_bef), _bef[0][0] if _bef else "-"))
+    pruefe(P, "⚠️ und er laesst die Befunde VOR dem Neubau draussen",
+           not any(int(k.split("-")[0].replace(".", "")) < _HN.NEUBAU_AB
+                   for k, _z, _a in _bef),
+           "alles vor 2.625 gehoert zum alten Regelwerk (Nutzervorgabe "
+           "26.09.: *die alten - damit meinte ich die Ergebnisse und "
+           "Messungen der alten Regelwerke VOR dem Umbau*)")
 
     # ── 4. Der Bestand kennt die Trennung ────────────────────────────
     import bestand as _B
