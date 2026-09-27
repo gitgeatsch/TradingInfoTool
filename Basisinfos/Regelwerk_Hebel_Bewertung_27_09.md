@@ -13,17 +13,20 @@ Faktenteil: `python hebel_neubau.py`
 # ⚠️⚠️ STAND 27.09. ABENDS — was von diesem Blatt noch gilt
 
 Dieses Blatt entstand am Mittag. Der Nachmittag hat es in wesentlichen
-Punkten überholt (Befunde 2.654 bis 2.660). **Der Stand im Code:**
+Punkten überholt (Befunde 2.654 bis 2.665). **Der Stand im Code:**
 `python hebel_neubau.py` (Abschnitt NEUESTER STAND).
 
 | | gilt noch | überholt |
 |---|---|---|
 | **Ablauf** (§ 1) | ✔ zwei Bewertungen zum Prüfzeitpunkt, **neutral**: ohne Zeit, ohne Geometrie, ohne Ertrag | – |
 | **Bewertung 1** (§ 2) | Frage „kommt eine Bewegung nach oben?“ | ⛔ die **Zielgröße** (+X % in Y h) war **gesetzt, nicht gemessen**. Gemessen ist: der Bezug muss das **eigene Asset** sein (2.655); ein Lift allein zeigt vor allem **mehr Bewegung** (2.657) — entscheidend ist das Verhältnis Chance zuerst / Rückgang zuerst gegen das eigene Asset |
-| **Bewertung 2** (§ 2) | Risiko → Hebelhöhe | ⭐ die **Höhe** ist gut vorhersagbar (vola, oi_je_umsatz, oi_aenderung, volumenschub — 2.655); Grundlage der Hebelhöhe |
+| **Bewertung 2** (§ 2) | Risiko → Hebelhöhe | ✔ die **Höhe** hält den Pflichtablauf (2.662): 14 von 16 Auswahlen, streng gegen das eigene Asset im Monat, auf Episoden, vorwärts in **jeder** BTC-Lage. ⚠️ Aber der Rückgang vor dem Hoch steigt mit — es ist die **Größe** der Bewegung, kein Vorteil. ⚠️⚠️ **Einheit offen:** gemessen in Prozent, § 2 definiert MAE in ATR, und vola_kausal ist die ATR selbst — vor Messung 2 zu entscheiden |
 | **Karenz** (§ 2) | ✔ Achse, kein Filter | – |
 | **Beitragslage** (§ 3) | – | ⛔ Richtung schwach für alle Kandidaten (2.655), untere Achse = Trailing-Effekt (2.656), keine Lage regimefest (2.659/2.660) |
-| **Sperre** | ⭐ **viele Longs** (konten_verh hoch) — negativ in jedem Regime (2.660) | – |
+| **Sperre** | ⭐ **viele Longs** (konten_verh hoch) — negativ in jedem Regime (2.660); Kandidat **funding hoch** (≥ 0,0016, Spiegel 0,43 — 2.663, ohne Pflichtablauf) | – |
+| **funding** | ✔ trägt mit dem **Vortageswert** (2.663) — aber auf Stunden, der Pflichtablauf fehlt | ⛔ 2.651: die Hälfte des Lifts war **Vorgriff** (9,55 → 4,45) |
+| **Datenfehler** 2.658 | ✔ gemessen ohne Wirkung auf die Urteile von 2.648/2.650 (2.664) | – |
+| **Richtung** (2.665) | ✔ nur **funding** ist Lage vorher (Vortag negativ: q5 0,531 statt 0,490; hoch = Sperre) — **klein**; Such-/Prüf-Trennung fehlt | ⛔ Käuferanteil **begleitet** die Bewegung, `momentum_kurz` **ist** sie (kein Einstieg nach OPTIMUM); Premium ohne Befund |
 | **Nächste Messungen** (§ 5) | – | ⛔ ersetzt: neue Richtungsdaten (Käuferanteil, Premium-Index, BTC-Dominanz-Index) mit dem Pflichtablauf aus § 6 |
 
 ---
@@ -129,10 +132,12 @@ Quelltext der Messskripte ab.
 | **fällt** | `turnover` · `oi_je_umsatz` · `volumenschub` · `taker_verh` · `top_*` (2.651) · `ema_abstand_atr` · `vola` · `bandenge` (2.648/2.650) | – | – |
 | **ungemessen** | – | – | alle übrigen; `vola` als Spur |
 
-\* `funding` steht unter **Vorgriffsverdacht** (2.652-vorgriff-funding):
-der gespeicherte Tageswert ist die Summe aller Abrechnungen des Tages und
-steht an jeder Stunde desselben Tages. Die Probe (Vortageswert d−1) ist
-die nächste Messung; bis dahin baut nichts auf `funding` aus 2.651 auf.
+\* `funding`: der Vorgriffsverdacht (2.652-vorgriff-funding) ist
+**gemessen und bestätigt** (2.663). Mit dem Vortageswert halbiert sich der
+Lift (9,55 → 4,45 auf +15 %/H12), 13 tragende Zellen werden 9. funding trägt
+weiter — aber auf Stunden-Ankern, ohne Episoden, Vorwärtsrechnung und
+Gegenprüfung. Die Tabelle oben ist ein Schnappschuss vom Abend **vor** der
+Probe; die Wahrheit steht in `hebel_neubau.BEITRAGSLAGE`.
 
 ⚠️ **Vorher gemessen, nicht im Standblatt** (Kursmerkmale, abgeschlossen):
 `rsi_umkehr` · `ema_lage` · `ema_steigung` · `trendstruktur` fallen

@@ -279,28 +279,30 @@ _L_KURS = "ja - Binance-Stundenkerzen"
 BEITRAGSLAGE = {
     # ── die drei registrierten Traeger ───────────────────────────────
     "funding": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
-        beleg="Lift 9,55 bei <= -0,0040 auf +15 %/H12, traegt in allen "
-              "vier Fenstern; Haltequote k24/k0 0,29 bis 0,74",
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663",),
+        beleg="mit dem VORTAGESWERT: Lift 4,45 bei <= -0,0040 auf +15 "
+              "%/H12 (vorher 9,55 - die Haelfte war Vorgriff), traegt auf "
+              "H6/H12/H24, +30 %/H48 nur Bewegung; >= 0,0016 zeigt nach "
+              "UNTEN (Spiegel 0,43)",
         quelle="funding_historie.db - Binance fundingRate, gespeichert "
                "als TAGESSUMME der drei Abrechnungen (00/08/16 UTC)",
         live="ja - aber als EINZELSATZ je Abrechnung; die Tagessumme ist "
              "erst nach Tagesende bekannt",
         spot="Regler, auf H20/bewegung_r vermessen (290 Symbole, 6,3 Jahre)",
-        vorbehalt="VORGRIFF UNGEPRUEFT: die Tagessumme steht an JEDER "
-                  "Stunde desselben Tages (messe_traeger_auf_bewertung1"
-                  ".py:288, hole_fremdreihen.py:151-161) - ein Anker um "
-                  "01:00 kennt die Abrechnungen von 08:00 und 16:00. "
-                  "Groesse der Wirkung NICHT gemessen"),
+        vorbehalt="PFLICHTABLAUF OFFEN: der Vorgriff ist gemessen und "
+                  "entfernt (2.663), aber die verbliebenen Zellen stehen "
+                  "auf Stunden mit tagestreuer Nullwelt - ohne Episoden, "
+                  "ohne Vorwaertsrechnung, ohne Gegenpruefung"),
     "oi_aenderung": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.662"),
         beleg="Lift 6,23 bei >= 0,3355 auf +20 %/H24, 5,02 auf +30 %/H48; "
               ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67",
         quelle=_Q_TM, live=_L_TM,
         spot="Schalter, auf H20 vermessen (117 Symbole, 126.491 Anker)",
-        vorbehalt=""),
+        vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
+                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
     "turnover": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="ueber dem Band, aber NUR BEWEGUNG (Spiegel 0,76 bis 1,67 "
               "gegen 1,717) in allen vier Fenstern; die voll abgedeckte "
               "Schwestergroesse `volumenschub` faellt genauso",
@@ -313,31 +315,33 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     # ── Terminmarkt und Volumen, mitgemessen in 2.651 ───────────────
     "konten_verh": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663",),
         beleg="Lift 2,96 bei <= 0,5759 - traegt NUR auf H6 und H12; "
               "Haltequote 0,60 bis 0,66",
         quelle=_Q_TM, live=_L_TM, spot="", vorbehalt=""),
     "oi_je_umsatz": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 1,00 bis 1,53)",
         quelle=_Q_TM + " und Stundenvolumen", live=_L_TM, spot="",
-        vorbehalt=""),
+        vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
+                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
     "volumenschub": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35)",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt="EINHEIT OFFEN: die Hoehe aus 2.662 ist in Prozent "
+                  "gemessen, Bewertung 2 als MAE in ATR definiert"),
     "taker_verh": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="in keiner Zielgroesse ueber dem Suchband (Bestes-von-160, "
               "2,834)",
         quelle=_Q_TM, live=_L_TM, spot="", vorbehalt=""),
     "top_konten_verh": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="in keiner Zielgroesse ueber dem Suchband (2,834)",
         quelle=_Q_TM, live=_L_TM, spot="",
         vorbehalt=""),
     "top_summe_verh": dict(
-        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="in keiner Zielgroesse ueber dem Suchband (2,834)",
         quelle=_Q_TM, live=_L_TM, spot="",
         vorbehalt=""),
@@ -363,11 +367,15 @@ BEITRAGSLAGE = {
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650)",
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
     "vola": dict(
-        b1="faellt", vorlauf=None, b2="spur", befund=("2.650",),
+        b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
               "Bewegung. B2-Spur laut Register: *ueber hebel = "
-              "verlustanteil / stop_rel faellt daraus der Hebel*",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+              "verlustanteil / stop_rel faellt daraus der Hebel*. HOEHE "
+              "(2.662, als vola_kausal): P99 +6,56 Prozentpunkte mfe, "
+              "vorwaerts in jeder BTC-Lage - aber maevp steigt mit",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="EINHEIT OFFEN: 2.662 misst in Prozent, Bewertung 2 ist "
+                  "als MAE in ATR definiert; vola_kausal IST die ATR"),
     "bandenge": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.650",),
         beleg="Lift 0,84 bis 1,22 gegen ein Band von 2,77 - es haelt die "
@@ -401,8 +409,9 @@ NEUESTER_STAND = (
               "genannt - eine Deutung, keine Messung) haelt im unberuehrten "
               "Jahr 2024 NICHT. Risiko hoch: ueber alle Einstiege binnen 120 h "
               "im Median -10 bis -15 Prozent"),
-    ("2.658", "OFFEN: Vorgriff in vola (Median der ganzen Reihe, 2.650) und "
-              "Stundenluecken (Zeilen statt Stunden) in aelteren Werkzeugen"),
+    ("2.658", "Vorgriff in vola (Median der ganzen Reihe, 2.650) und "
+              "Stundenluecken (Zeilen statt Stunden) in aelteren Werkzeugen - "
+              "abgeloest durch 2.664"),
     ("2.659", "E3 VORWAERTS 2024-2026 (rollierend kalibriert): KEIN Einstieg "
               "traegt in jedem Regime - nach Nutzervorgabe ein Punkt zum Reden. "
               "Abgeloest durch 2.660"),
@@ -416,10 +425,28 @@ NEUESTER_STAND = (
               "2023-01 bis 2026-08, data/richtung_historie.db. Naechster "
               "Schritt: sie mit dem Pflichtablauf messen (E2 -> E3 -> "
               "Gegenpruefung)"),
+    ("2.662", "HOEHE GEGENGEPRUEFT: 14 von 16 Auswahlen tragen streng "
+              "gegen das eigene Asset im Monat, auf Episoden, vorwaerts in "
+              "JEDER BTC-Lage, P2/P4 bestanden. Aber maevp steigt mit: die "
+              "Groesse der Bewegung, kein Vorteil. Einheit fuer Bewertung 2 "
+              "(Prozent oder ATR) offen"),
+    ("2.663", "FUNDING-VORGRIFF GEMESSEN: 2.651 bitgleich reproduziert, mit "
+              "dem Vortageswert halbiert sich der Lift (9,55 auf 4,45), 13 "
+              "Zellen werden 9. funding traegt weiter, aber der Pflichtablauf "
+              "fehlt noch"),
+    ("2.664", "2.658 GEMESSEN: Luecken (0,4 Prozent der Anker) und kausale "
+              "vola verschieben kein Urteil von 2.648/2.650 - weiter 2 von 11 "
+              "bei k=0, 0 bei jeder Karenz; vola bleibt nur Bewegung"),
+    ("2.665", "RICHTUNG im Pflichtablauf (E2f/E2g): 4 von 88 halten, 0 von 80 "
+              "Zufall. Nur funding ist LAGE VORHER (Vortag negativ q5 +0,037, "
+              "hoch = Sperre -0,043) - und klein. kaeufer_24h BEGLEITET die "
+              "Bewegung, momentum_kurz IST sie. Such-/Pruef-Trennung fehlt"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
-               "Extremen). Offen zur Abstimmung: wie weiter ohne regimefesten "
-               "Einstieg - Vorwaertsmitschrift, neue Richtungsdaten, oder "
-               "Sperre und Hoehe zuerst bauen"),
+               "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
+               "bis wir die Grundlagen haben*): offen zur Abstimmung - "
+               "Such-/Pruef-Trennung (2022 fuer funding sofort, Kaeuferanteil "
+               "braucht eine Ladung 2021/22), Hoehe in Prozent gegen ATR, und "
+               "die Frage, ob eine kleine Richtung (q 0,53) reicht"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
@@ -428,7 +455,7 @@ NEUESTER_STAND = (
 # ⚠️ Das Skript muss im Quellenfeld des Befundes stehen; sonst bricht die
 # Wache ab (der Eintrag hier waere dann erfunden).
 MESSUNGEN_NEUBAU = {
-    "2.651": ("messe_traeger_auf_bewertung1.py", "GRUPPEN", "b1"),
+    "2.663": ("messe_traeger_auf_bewertung1.py", "GRUPPEN", "b1"),
     "2.650": ("messe_lage_vor_der_bewegung.py", "NAMEN", "b1"),
 }
 KONTROLLMERKMALE = ("zufall",)
@@ -474,19 +501,20 @@ def gemessene_merkmale() -> dict:
 #                  gemessen wurde
 # ⚠️ Der Laderfix 2.611 ist keine Messung und steht unter OFFENE_AUFGABEN.
 NAECHSTE_MESSUNGEN = (
-    dict(was="Vorgriffsprobe `funding` auf BEWERTUNG 1",
-         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.651",
-         warum="2.651 erst reproduzieren, dann mit dem VORTAGESWERT (d-1) "
-               "- streng vorgriffsfrei, ohne neuen Abruf. Nur falls noetig "
-               "Stufe 2: Summe der letzten drei ABGERECHNETEN Saetze "
-               "(braucht die Einzelsaetze, `hole_fremdreihen.py` fasst sie "
-               "zusammen). Das ist zugleich die Form, die live beschaffbar "
-               "ist. Vorher baut nichts auf `funding` aus 2.651 auf"),
+    dict(was="Pflichtablauf fuer `funding` (Vortag) auf BEWERTUNG 1",
+         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.663",
+         warum="der Vorgriff ist entfernt (2.663), die neun Zellen stehen "
+               "aber auf Stunden: Episoden, Vorwaertsrechnung 2024-2026 je "
+               "BTC-Lage und Gegenpruefung (1 h Versatz, Tausch) fehlen. "
+               "Laeuft mit E2 der neuen Richtungsdaten mit - funding_vortag "
+               "ist dort schon Kandidat. Die Stufe 2 (Summe der letzten drei "
+               "abgerechneten Saetze, live beschaffbar) nur, falls der "
+               "Vortag nicht traegt"),
     dict(was="Vorlauf bei H72 und H120",
          art="vorlauf", bewertung="b1",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
-         warum="die Haltequote steigt mit dem Fenster (0,29 bei H6, 0,74 "
-               "bei H48) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
+         warum="die Haltequote steigt mit dem Fenster (0,43 bei H6, 0,66 "
+               "bei H24, Vortag) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
                "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
                "`funding` in der Form, die die Probe ergibt"),
     dict(was="Messung 2 des Regelwerks: BEWERTUNG 2 (MAE)",
@@ -496,10 +524,16 @@ NAECHSTE_MESSUNGEN = (
                "zweiter unabhaengiger macht die Stufung tragfaehig. Ob "
                "Nebenmerkmale, momentum_kurz/rsi und bandenge mitlaufen, "
                "entscheidet die Voranalyse dazu (E5, 27.09.)"),
-    dict(was="`vola` in der HEBELHOEHE",
-         art="neu", bewertung="b2", merkmale=("vola",),
-         warum="das Register nennt es als Spur - Geometrie- und "
-               "Horizontwahl, nicht Einstieg"),
+    dict(was="HOEHE in PROZENT und in ATR nebeneinander",
+         art="probe", bewertung="b2",
+         merkmale=("vola", "oi_je_umsatz", "oi_aenderung", "volumenschub"),
+         prueft="2.662",
+         warum="2.662 misst in Prozent, Bewertung 2 ist als MAE in ATR "
+               "definiert, und vola_kausal IST die ATR - ein Teil der "
+               "Wirkung ist damit mechanisch. Dieselbe Rechnung in beiden "
+               "Einheiten zeigt, wie viel uebrig bleibt. Die Wahl der "
+               "Einheit selbst ist danach eine Nutzerentscheidung "
+               "(Liquidation zaehlt in Prozent)"),
 )
 
 # ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der

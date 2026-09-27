@@ -87,6 +87,15 @@ ZIEHUNGEN = 40
 SAAT = 20260927
 # ⚠️ Vorlaufschwellen ABSOLUT in eigener ATR, keine Perzentile (2.649).
 VORLAUF_GRENZEN = (-1.0, 0.0, 1.0, 2.0)
+# Probe 2.658 (27.09.2026) - die Vorgabe bleibt, damit 2.648/2.650 bitgleich
+# reproduzierbar sind:
+#   --vola-kausal   vola gegen den Median der VERGANGENEN 30 Tage (720 h,
+#                   mind. 240) statt der ganzen Reihe - wie E2
+#   --ohne-luecken  Anker, deren Rueckblick (VORLAUF) oder Vorausblick
+#                   (Karenz + Fenster) eine Stundenluecke ueberspannt, fallen
+#                   weg - Stunden statt Zeilen
+VOLA_KAUSAL = False
+OHNE_LUECKEN = False
 
 
 def merkmale(h, l, cc):
@@ -115,7 +124,13 @@ def merkmale(h, l, cc):
         sd = np.sqrt(np.maximum(mq - mit * mit, 0.0))
         bandenge = (4.0 * sd) / np.maximum(atr * cc, 1e-12)
         # vola_tief: die ATR selbst, relativ zum eigenen Median
-        vola = atr / np.maximum(np.nanmedian(atr), 1e-12)
+        if VOLA_KAUSAL:
+            import pandas as _pd
+            med = (_pd.Series(atr).rolling(720, min_periods=240)
+                   .median().to_numpy())
+            vola = atr / np.maximum(med, 1e-12)
+        else:
+            vola = atr / np.maximum(np.nanmedian(atr), 1e-12)
     return ({"bandenge": bandenge, "vola": vola, "ema_abstand_atr": w,
              "momentum_kurz": mom, "rsi_platzhalter": None},
             atr, vorlauf)
@@ -155,9 +170,17 @@ def ereignis_mit_karenz(h, l, cc, hoehe, fenster, karenz, runter=False):
 def main() -> int:
     grenze = (int(sys.argv[sys.argv.index("--symbole") + 1])
               if "--symbole" in sys.argv else None)
+    global VOLA_KAUSAL, OHNE_LUECKEN
+    VOLA_KAUSAL = "--vola-kausal" in sys.argv
+    OHNE_LUECKEN = "--ohne-luecken" in sys.argv
     print("=" * 106)
     print("DIE LAGE VOR DER BEWEGUNG - Optimum statt Fortsetzung")
     print("=" * 106)
+    if VOLA_KAUSAL or OHNE_LUECKEN:
+        print("  ⭐ PROBE 2.658:%s%s" % (
+            " vola kausal (Median 30 Tage)" if VOLA_KAUSAL else "",
+            " · Anker ueber Stundenluecken ausgeschlossen" if OHNE_LUECKEN
+            else ""))
     print("  " + N.standardzeile())
     print("  Ereignis +%.0f %% in %d h · Karenzen %s"
           % (100 * HOEHE, FENSTER, ", ".join(str(k) for k in KARENZEN)))
@@ -191,6 +214,18 @@ def main() -> int:
             gu &= np.isfinite(mk[k])
         gu[:VORLAUF] = False
         gu[-(max(KARENZEN) + FENSTER + 1):] = False
+        if OHNE_LUECKEN:
+            from datetime import datetime as _dt
+            _b = _dt(2020, 1, 1)
+            stu = np.array([int((_dt.strptime(x, "%Y-%m-%d %H:%M") - _b)
+                                .total_seconds() // 3600) for x in st],
+                           np.int64)
+            nn = len(stu)
+            ii = np.arange(nn)
+            vo = np.clip(ii - VORLAUF, 0, nn - 1)
+            aus_h = max(KARENZEN) + FENSTER
+            na = np.clip(ii + aus_h, 0, nn - 1)
+            gu &= ((stu - stu[vo]) == VORLAUF) & ((stu[na] - stu) == aus_h)
         s2 = np.flatnonzero(gu)
         if len(s2) < 500:
             continue

@@ -177,13 +177,20 @@ ist veraltet."*
 |---|---|---|
 | **0** | ✔✔ **1a ERLEDIGT (2.642)** — der Horizont ist kein Eingang, sondern ein **Messfenster**. Gemessen regelfrei in ATR: die Achse ist ein **Risiko-Filter** (d 0,521 auf MAE) und kein Ertragsfilter (d 0,267 auf MFE), stabil in 5 von 5 Jahren. ⛔ *Kurz* trifft nicht zu — die Auswahl braucht 10,5 % **laenger** bis zum Hoechstpunkt. ⭐ Die Bruecke zum Hebel steht damit **ohne Ertrag**: 0,75 statt 1,08 ATR Rueckgang heisst niedrigere Stopwahrscheinlichkeit, also mehr Hebel | *erledigt* |
 | **1** | ⭐ **Die Bewertungsebene neu aufsetzen — sie ist NEUTRAL.** Nutzer 27.09.: *„die BEWERTUNG soll, wenn möglich, OHNE auskommen — eine Zeitpunktbewertung, die Lage und das Risiko (Beiträge bestimmen) — ohne Geometrie, ohne Ertrag, das kommt danach. Zum MESSEN und PRÜFEN als Vergleich und Erfolgsrechnung — ja, da sollen Kurs und ggf. Stop, erreichtes Ziel etc. Verwendung finden, nicht in der Bewertung, die ist NEUTRAL."* ⛔ Hier stand bis 27.09. abends *„Chance-Risiko-Verhältnis aus Stop- und Zielabstand"* — das ist Geometrie in der Bewertung und widersprach dem Regelwerk. ➤ Bewertung 1 (Lage) und Bewertung 2 (Risiko) kommen aus den **Beiträgen**; Stop, Ziel und Kurs gehören in Ebene B/C (2.641) | *nächster Schritt* |
-| **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — ◐ **Teil erledigt (2.651, 27.09.):** die registrierten Träger und die Terminmarkt-Merkmale sind auf **Bewertung 1** gemessen — `funding`, `oi_aenderung`, `konten_verh` tragen bei k = 0, **keiner mit Vorlauf**; `turnover` und die übrigen fallen. Stand je Merkmal mit Befund, Quelle und Live-Beschaffbarkeit: `python hebel_neubau.py` (2.652-beitragslage-nachgezogen). **Offen, in dieser Reihenfolge:** (a) **Vorgriffsprobe `funding`** — der Tageswert stand an jeder Stunde desselben Tages (2.652-vorgriff-funding); (b) **Vorlauf** bei H72/H120; (c) **Bewertung 2** (MAE) für dieselben Träger; (d) `vola` in der Hebelhöhe | teilweise |
+| **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — ◐ **Teil erledigt:** die registrierten Träger und die Terminmarkt-Merkmale sind auf **Bewertung 1** gemessen — `funding` (mit dem **Vortageswert**, 2.663: die Hälfte des alten Lifts war Vorgriff), `oi_aenderung`, `konten_verh` tragen bei k = 0, **keiner mit Vorlauf**; `turnover` und die übrigen fallen. Die **Höhe** hält den Pflichtablauf (2.662); die Datenfehler aus 2.658 verschieben kein Urteil (2.664). Stand je Merkmal: `python hebel_neubau.py`. ✔ **E2 mit den Richtungsdaten ist gelaufen (2.665):** 4 von 88 halten den Pflichtablauf, 0 von 80 Zufallsauswahlen; nur **funding** ist Lage vorher — und klein; der Käuferanteil begleitet die Bewegung. **Offen, in dieser Reihenfolge (Nutzer 27.09.: *sauber und langsam, bis wir die Grundlagen haben*):** (a) **Such-/Prüf-Trennung** — 2022 für funding sofort möglich, der Käuferanteil braucht eine Ladung 2021/22 (Abstimmung); (b) **Höhe in Prozent und in ATR nebeneinander** — danach die Nutzerentscheidung, welche Einheit Bewertung 2 misst; (c) **Vorlauf** bei H72/H120; (d) **Bewertung 2** für dieselben Träger | teilweise |
 | **3** | **Die Quellenfrage**: Binance (28), CoinGecko (16) — oder eine dritte Quelle? | Nutzerentscheidung |
 | **4** | **Den Hebel kalibrieren** — aus dem Risiko, nicht aus der Statistik (2.627) | offen |
 | **5** | ✔✔ **ERLEDIGT (2.646)** — der Horizont widersprach sich dreifach, weil `HORIZONT_JE_LAGE` **keine Einheit** führte. Jetzt 24 **Stunden** für den Hebel, 20 **Handelstage** für Spot, Einheit in eigener Tabelle, Wächter in der Suite | *erledigt* |
 | **6** | **Stundendaten in den Betrieb** — technische Grundlage, ohne sie trägt nichts (2.635) | geplant, nicht gebaut |
 
-## ✔✔✔ Die Grundlage ist geprüft (2.647) — sie hält, und sie hält **je Asset**
+## ⛔ Die Grundlage aus 2.647 — ÜBERHOLT durch 2.656
+
+⛔⛔ **Der Ertrag unten (84×) kam aus der Trailing-Regel, nicht aus der
+Lage** (2.656: 2.626/2.631 bitgleich reproduziert, ohne Trailing ist das
+untere Ende der Achse kein Einstieg). Gültig bleibt die **Methodik** —
+gegen das eigene Symbol messen, 99,1 % blieben übrig, also kein
+Asset-Rang — und die **Risikorolle** von `ema_abstand_atr` aus 2.642.
+Der Rest dieses Abschnitts ist der Stand vom Vormittag.
 
 **Nutzereinwand:** *„wenn du falsch beginnst, sind die Messungen danach
 auch wertlos."* Berechtigt — 2.626 hatte nur **tagestreu** gemessen.

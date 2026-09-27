@@ -30619,7 +30619,12 @@ def paket_hebelneubau() -> None:
             if (b.lstrip().startswith("keine messung")
                     and not any(w in a for w in _MESSWORTE)):
                 continue
-            if not ("vorwaerts" in b and "gegenpruef" in b):
+            # ⚠️ die Worte allein genuegen nicht - *ohne Vorwaertsrechnung,
+            # ohne Gegenpruefung* enthielte beide (27.09., Gegenprobe unten)
+            verneint = any(v + " " + w in b for v in ("kein", "keine",
+                                                      "ohne", "nicht")
+                           for w in ("vorwaerts", "gegenpruef"))
+            if not ("vorwaerts" in b and "gegenpruef" in b) or verneint:
                 aus.append(kennung)
         return aus
     try:
@@ -30643,8 +30648,14 @@ def paket_hebelneubau() -> None:
              "KEINE MESSUNG - Datenbeschaffung"),
             ("2.997-getarnt", "gilt", "✔ der Kaeuferanteil traegt, Lift 1,4",
              "KEINE MESSUNG - nur eine Auswertung")])
+        _gegen_verneint = _pflicht_fehlt([
+            ("2.996-verneint", "gilt", "✔ traegt",
+             "Nullwelt, Jahre, ohne Vorwaertsrechnung, keine Gegenpruefung"),
+            ("2.995-echt", "gilt", "✔ traegt",
+             "Nullwelt, Vorwaertsrechnung 2024-2026, Gegenpruefung 1 h")])
     except Exception as _x:                                   # noqa: BLE001
         _pf, _gegen, _gegen_daten = ["ABBRUCH %r" % (_x,)], [], []
+        _gegen_verneint = []
     pruefe(P, "⭐⭐⭐ jeder POSITIVE Neubau-Befund ab 2.661 nennt Vorwaertsrechnung "
               "UND Gegenpruefung (Pflichtablauf)",
            not _pf,
@@ -30654,6 +30665,12 @@ def paket_hebelneubau() -> None:
            _gegen == ["2.999-probe"],
            "ein kuenstlicher positiver Befund ohne Vorwaerts/Gegenpruefung muss "
            "gemeldet werden - sonst prueft sie nichts")
+    pruefe(P, "⚠️ eine VERNEINTE Vorwaertsrechnung oder Gegenpruefung zaehlt "
+              "nicht als genannt (Gegenprobe)",
+           _gegen_verneint == ["2.996-verneint"],
+           "gemeldet: %s - erwartet nur 2.996-verneint (27.09.: die Wache "
+           "suchte nur die Worte, *ohne Gegenpruefung* haette gereicht)"
+           % (_gegen_verneint,))
     pruefe(P, "⚠️ die Ausnahme KEINE MESSUNG laesst Datenbefunde durch, "
               "aber keinen getarnten Messbefund (Gegenprobe)",
            _gegen_daten == ["2.997-getarnt"],

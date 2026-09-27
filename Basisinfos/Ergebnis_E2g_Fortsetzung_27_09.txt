@@ -1,0 +1,26 @@
+==============================================================================================================
+E2g - FORTSETZUNG ODER LAGE VORHER? Altersachse und Schichtung nach der Vorbewegung
+==============================================================================================================
+  2767250 Anker · 115 Symbole
+
+TEIL A - ALTERSACHSE: Merkmal L Stunden alt, Ausgang ab jetzt · Dq gegen das eigene Asset im Monat, Episoden
+        Merkmal          Schwelle |         L=0h          L=1h          L=3h          L=6h         L=12h         L=24h
+  F5    funding_vortag    -0.0008 | +0.037 (100%)  +0.021 ( 58%)  +0.018 ( 49%)  +0.028 ( 76%)  +0.031 ( 85%)  +0.025 ( 67%)
+  F95   funding_vortag     0.0006 | -0.043 (100%)  -0.041 ( 95%)  -0.040 ( 93%)  -0.083 (196%)  -0.056 (132%)  -0.025 ( 60%)
+  K95   kaeufer_24h        0.5429 | +0.140 (100%)  +0.107 ( 77%)  +0.089 ( 64%)  +0.096 ( 69%)  +0.042 ( 30%)  +0.025 ( 18%)
+  M95   momentum_kurz      0.5204 | +0.130 (100%)  +0.112 ( 86%)  +0.128 ( 98%)  +0.124 ( 96%)  +0.107 ( 83%)  +0.062 ( 48%)
+  (in Klammern: Haltequote gegen L = 0)
+
+TEIL B - SCHICHTUNG nach der eigenen 24-h-Rendite (Fuenftel): q der Auswahl minus q ALLER Anker derselben Schicht
+  Schichtgrenzen 24-h-Rendite: -3.50% · -1.10% · +0.71% · +3.12%
+  F5    funding_vortag  rho +0.01 | Anteil je Schicht 26% 18% 16% 17% 23%
+        S1 +0.031 (3325) · S2 +0.031 (4012) · S3 +0.042 (3955) · S4 +0.040 (3686) · S5 -0.006 (3022)
+  F95   funding_vortag  rho +0.01 | Anteil je Schicht 24% 18% 16% 17% 25%
+        S1 -0.013 (3072) · S2 -0.011 (3818) · S3 -0.022 (3918) · S4 -0.041 (3863) · S5 -0.064 (3251)
+  K95   kaeufer_24h     rho +0.29 | Anteil je Schicht 9% 16% 21% 28% 25%
+        S1 +0.098 (2140) · S2 -0.004 (4561) · S3 +0.024 (6591) · S4 +0.040 (7793) · S5 +0.107 (6430)
+  M95   momentum_kurz   rho +0.44 | Anteil je Schicht 1% 3% 8% 23% 63%
+        S1 +0.316 (1386) · S2 +0.092 (3462) · S3 +0.003 (8078) · S4 +0.059 (17154) · S5 +0.025 (23509)
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+exit=0

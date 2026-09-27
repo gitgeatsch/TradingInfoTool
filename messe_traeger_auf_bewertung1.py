@@ -66,6 +66,7 @@ from __future__ import annotations
 import os
 import sqlite3
 import sys
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -76,6 +77,9 @@ from hebel_neubau import pruefe_quellen                         # noqa: E402
 from messe_reverse_scharfe_anstiege import lade_kurse           # noqa: E402
 from messe_hebel_geometrie_neutral import atr_tag_relativ       # noqa: E402
 from messe_hebel_neudimension import VORLAUF                    # noqa: E402
+
+# --funding-vortag (Probe 2.652): funding als Tagessumme des Vortags
+VORTAG = False
 
 # ⚠️ Der Riegel: die ROHGROESSEN sind frei (E-3), die alten
 # Beitragsstufen nicht. `funding_fuenftel` wuerde hier abbrechen.
@@ -242,6 +246,8 @@ def _lift(treffer, ereig, si, n_sym):
 def main() -> int:
     grenze = (int(sys.argv[sys.argv.index("--symbole") + 1])
               if "--symbole" in sys.argv else None)
+    global VORTAG
+    VORTAG = "--funding-vortag" in sys.argv
     print("=" * 108)
     print("MESSUNG 1 - DIE DREI REGISTRIERTEN TRAEGER AUF BEWERTUNG 1")
     print("=" * 108)
@@ -250,6 +256,9 @@ def main() -> int:
     print("  ⚠️ Bewertung 1 = *kommt eine Bewegung nach oben?* ·")
     print("     Zielgroesse EREIGNIS, Bezug das EIGENE Symbol (Lift)")
     print("  ⚠️ Ohne Gebuehren und Finanzierung (Regel 2)")
+    if VORTAG:
+        print("  ⭐ PROBE 2.652: funding = Tagessumme des VORTAGS "
+              "(--funding-vortag)")
     print()
 
     kurse = lade_kurse(grenze)
@@ -284,7 +293,14 @@ def main() -> int:
         n = len(cc)
         atr = atr_tag_relativ(h, l, cc)
         tage = [str(x)[:10] for x in st]
-        fu = np.array([FU.get(sym, {}).get(d, np.nan) for d in tage])
+        if VORTAG:
+            # 2.652-vorgriff-funding: die Tagessumme des VORTAGS - zu jeder
+            # Stunde des Tages d vollstaendig abgerechnet und bekannt
+            fu = np.array([FU.get(sym, {}).get(
+                (datetime.strptime(d, "%Y-%m-%d") - timedelta(days=1))
+                .strftime("%Y-%m-%d"), np.nan) for d in tage])
+        else:
+            fu = np.array([FU.get(sym, {}).get(d, np.nan) for d in tage])
         um = np.array([UM.get(sym, {}).get(d, np.nan) for d in tage])
         tmm = termin_symbol(tmc, sym)
         L = (np.nan,) * 6

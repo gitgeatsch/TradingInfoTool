@@ -1,0 +1,201 @@
+==========================================================================================================
+DIE LAGE VOR DER BEWEGUNG - Optimum statt Fortsetzung
+==========================================================================================================
+  ⭐ PROBE 2.658: vola kausal (Median 30 Tage) · Anker ueber Stundenluecken ausgeschlossen
+  Messstandard ab 2026-09-09: Bezug = nullpunkt (Fehlalarme 2,7 % bei Soll 2,5 %, Fundquote 98 %) | Nullwelten = 90. Perzentil ueber 40 Ziehungen | Trennschaerfe gegen denselben Bezug | gepflanzte Staerken bis 0.40 R | Positivkontrolle 5 Ziehungen
+  Ereignis +15 % in 6 h · Karenzen 0, 3, 6, 12, 24
+  ⚠️ MODUS: messen. Keine Kalibrierung, keine Hebelhoehe.
+  ⚠️ Ohne Gebuehren und Finanzierung (Regel 2)
+
+  3170814 Anker · 1738 Tage · 115 Symbole
+
+==========================================================================================================
+TEIL 1 - DIE KARENZPROBE: bricht der Lift ein, wenn die Lage
+         weiter VOR dem Ereignis liegt?
+  ⭐ Ein Merkmal, das nur die FORTSETZUNG misst, verliert mit
+     wachsendem k. Eines, das die Lage VORHER kennt, haelt.
+  ⚠️ momentum_kurz und rsi laufen als KONTROLLE mit - sie
+     MUESSEN einbrechen. Tun sie es nicht, ist die Messung falsch.
+
+  Merkmal            Schwelle      k=0h      k=3h      k=6h     k=12h     k=24h
+  bandenge         <=    0.667     0.839     0.796     0.782     0.814     0.803
+  bandenge         <=    0.882     0.914     0.910     0.883     0.862     0.878
+  bandenge         >=    1.717     1.217     1.248     1.271     1.271     1.222
+  bandenge         >=    2.345     1.199     1.339     1.449     1.503     1.430
+  vola             <=    0.590     0.206     0.255     0.291     0.348     0.384
+  vola             <=    0.757     0.285     0.311     0.346     0.387     0.478
+  vola             >=    1.320     3.015     2.832     2.701     2.454     2.088
+  vola             >=    1.963     7.087     6.135     5.646     4.889     3.568
+  ema_abstand_atr  <=   -1.288     6.149     5.148     5.050     4.930     3.198
+  momentum_kurz    >=    0.851     6.920     5.018     4.103     3.214     2.144
+  rsi              >=   85.662     4.662     3.694     3.124     2.712     2.035
+
+  ➤ ABLESEN: Verhaeltnis k=24h zu k=0h
+  Merkmal            Schwelle Haltequote  Deutung
+  bandenge         <=    0.667       0.96  ⭐ haelt - Lage war VORHER da
+  bandenge         <=    0.882       0.96  ⭐ haelt - Lage war VORHER da
+  bandenge         >=    1.717       1.00  ⭐ haelt - Lage war VORHER da
+  bandenge         >=    2.345       1.19  ⭐ haelt - Lage war VORHER da
+  vola             <=    0.590       1.87  ⭐ haelt - Lage war VORHER da
+  vola             <=    0.757       1.68  ⭐ haelt - Lage war VORHER da
+  vola             >=    1.320       0.69  ⚠ faellt teilweise
+  vola             >=    1.963       0.50  ⚠ faellt teilweise
+  ema_abstand_atr  <=   -1.288       0.52  ⚠ faellt teilweise
+  momentum_kurz    >=    0.851       0.31  ⛔ bricht ein - war FORTSETZUNG
+  rsi              >=   85.662       0.44  ⛔ bricht ein - war FORTSETZUNG
+
+==========================================================================================================
+TEIL 2 - DER VORLAUF: wie wirkt es, wenn das Asset schon
+         gelaufen ist?
+  Nutzerbeispiel: *wenn das Asset bereits 50 Prozent gestiegen
+  ist, ist das Risiko einer Korrektur eher gegeben*
+  Vorlauf = Anstieg der letzten 24 h in eigener ATR
+
+  Merkmal            Schwelle          <-1    -1..0 ATR     0..1 ATR     1..2 ATR           >2
+  bandenge         <=    0.667            -        0.506        1.148            -            -
+  bandenge         <=    0.882            -        0.593        1.181            -            -
+  bandenge         >=    1.717        1.218        0.957        1.032        2.534       11.978
+  bandenge         >=    2.345        1.290        1.271        0.878        1.292            -
+  vola             <=    0.590        0.000        0.184        0.246        0.184            -
+  vola             <=    0.757        0.084        0.235        0.344        0.413            -
+  vola             >=    1.320        3.735        1.897        2.933        8.334       30.882
+  vola             >=    1.963        9.722        4.678        6.050       17.489            -
+  ema_abstand_atr  <=   -1.288        6.253            -            -            -            -
+  momentum_kurz    >=    0.851            -            -        4.031        6.968       26.082
+  rsi              >=   85.662            -            -        1.590        4.955       18.954
+
+  ⚠️ Eine Zeile, die im LINKEN Fach (wenig gelaufen) genauso
+     traegt wie rechts, ist das OPTIMUM. Eine, die nur rechts
+     traegt, ist Fortsetzung.
+
+==========================================================================================================
+TEIL 3 - DIE SECHS PRUEFUNGEN, je KARENZ
+  ⚠️ Teil 1 und 2 sind DIAGNOSE. Hier wird geurteilt.
+  ⭐⭐ UND ZWAR JE KARENZ, nicht nur bei der strengsten.
+     Die erste Fassung urteilte nur bei k=24h - damit war
+     ablesbar, OB etwas haelt, aber nicht, WO die Grenze liegt.
+     Genau das ist die Frage nach dem OPTIMUM.
+
+----------------------------------------------------------------------------------------------------------
+  KARENZ k=0h - zwischen Bewertung und Ereignisfenster
+
+  ➤ Bestes-von-11-Band (tagestreu, 40 Ziehungen): 2.5123
+
+  Merkmal           Schwelle  Symbole      Lift Einzelband  Spiegel  Urteil
+  bandenge         <=   0.667      114     0.839     0.992    0.944  ⛔ unter dem Band
+  bandenge         <=   0.882      114     0.914     0.983    1.216  ⛔ unter dem Band
+  bandenge         >=   1.717      114     1.217     1.103    0.814  ⛔ unter dem Band
+  bandenge         >=   2.345      114     1.199     1.165    0.531  ⛔ Richtung RUNTER
+  vola             <=   0.590      114     0.206     0.726    1.573  ⛔ unter dem Band
+  vola             <=   0.757      114     0.285     0.738    0.846  ⛔ unter dem Band
+  vola             >=   1.320      114     3.015     1.656    1.052  ⚠ nur Bewegung
+  vola             >=   1.963      114     7.087     2.512    1.324  ⚠ nur Bewegung
+  ema_abstand_atr  <=  -1.288      110     6.149     1.921    0.434  ⛔ Richtung RUNTER
+  momentum_kurz    >=   0.851      114     6.920     1.986    2.086  ✔
+  rsi              >=  85.662      114     4.662     1.600    1.894  ✔
+
+  ➤ 2 von 11 Zellen ueberleben Nullband, Mehrfachtesten, Richtung und je-Asset
+
+  momentum_kurz >= 0.8512  (Lift 6.920 bei Karenz 0h)
+      2021      205 Anker  Lift    0.000  zu duenn (0.5 erwartete Ereignisse)
+      2022     2423 Anker  Lift    7.453  ✔
+      2023     4930 Anker  Lift    7.152  ✔
+      2024     6222 Anker  Lift    7.535  ✔
+      2025    10158 Anker  Lift    6.942  ✔
+      2026     7771 Anker  Lift    9.176  ✔
+      ➤ Zeitstabil 5 von 5 · Weglassprobe 7 von 7  ✔ ALLE SECHS PRUEFUNGEN
+
+  rsi >= 85.6617  (Lift 4.662 bei Karenz 0h)
+      2021      177 Anker  Lift    0.000  zu duenn (0.4 erwartete Ereignisse)
+      2022     3082 Anker  Lift    5.088  ✔
+      2023     4575 Anker  Lift    4.321  ✔
+      2024     7180 Anker  Lift    4.227  ✔
+      2025     9563 Anker  Lift    5.212  ✔
+      2026     7132 Anker  Lift    5.930  ✔
+      ➤ Zeitstabil 5 von 5 · Weglassprobe 7 von 7  ✔ ALLE SECHS PRUEFUNGEN
+
+----------------------------------------------------------------------------------------------------------
+  KARENZ k=3h - zwischen Bewertung und Ereignisfenster
+
+  ➤ Bestes-von-11-Band (tagestreu, 40 Ziehungen): 2.4602
+
+  Merkmal           Schwelle  Symbole      Lift Einzelband  Spiegel  Urteil
+  bandenge         <=   0.667      115     0.796     0.977    1.046  ⛔ unter dem Band
+  bandenge         <=   0.882      115     0.910     0.970    1.286  ⛔ unter dem Band
+  bandenge         >=   1.717      115     1.248     1.117    0.774  ⛔ unter dem Band
+  bandenge         >=   2.345      115     1.339     1.187    0.552  ⛔ Richtung RUNTER
+  vola             <=   0.590      115     0.255     0.715    1.457  ⛔ unter dem Band
+  vola             <=   0.757      115     0.311     0.727    0.851  ⛔ unter dem Band
+  vola             >=   1.320      115     2.832     1.656    1.076  ⚠ nur Bewegung
+  vola             >=   1.963      115     6.135     2.460    1.264  ⚠ nur Bewegung
+  ema_abstand_atr  <=  -1.288      111     5.148     1.932    0.555  ⛔ Richtung RUNTER
+  momentum_kurz    >=   0.851      115     5.018     2.036    1.628  ⚠ nur Bewegung
+  rsi              >=  85.662      115     3.694     1.651    1.691  ⚠ nur Bewegung
+
+  ➤ 0 von 11 Zellen ueberleben Nullband, Mehrfachtesten, Richtung und je-Asset
+
+  ⛔ Nichts zu pruefen - keine Zelle haelt.
+----------------------------------------------------------------------------------------------------------
+  KARENZ k=6h - zwischen Bewertung und Ereignisfenster
+
+  ➤ Bestes-von-11-Band (tagestreu, 40 Ziehungen): 2.4394
+
+  Merkmal           Schwelle  Symbole      Lift Einzelband  Spiegel  Urteil
+  bandenge         <=   0.667      115     0.782     0.959    1.043  ⛔ unter dem Band
+  bandenge         <=   0.882      115     0.883     0.961    1.269  ⛔ unter dem Band
+  bandenge         >=   1.717      115     1.271     1.126    0.805  ⛔ unter dem Band
+  bandenge         >=   2.345      115     1.449     1.222    0.644  ⛔ unter dem Band
+  vola             <=   0.590      115     0.291     0.690    1.326  ⛔ unter dem Band
+  vola             <=   0.757      115     0.346     0.717    0.902  ⛔ unter dem Band
+  vola             >=   1.320      115     2.701     1.658    1.090  ⚠ nur Bewegung
+  vola             >=   1.963      115     5.646     2.439    1.229  ⚠ nur Bewegung
+  ema_abstand_atr  <=  -1.288      111     5.050     2.089    0.871  ⚠ nur Bewegung
+  momentum_kurz    >=   0.851      115     4.103     2.067    1.521  ⚠ nur Bewegung
+  rsi              >=  85.662      115     3.124     1.699    1.616  ⚠ nur Bewegung
+
+  ➤ 0 von 11 Zellen ueberleben Nullband, Mehrfachtesten, Richtung und je-Asset
+
+  ⛔ Nichts zu pruefen - keine Zelle haelt.
+----------------------------------------------------------------------------------------------------------
+  KARENZ k=12h - zwischen Bewertung und Ereignisfenster
+
+  ➤ Bestes-von-11-Band (tagestreu, 40 Ziehungen): 2.2850
+
+  Merkmal           Schwelle  Symbole      Lift Einzelband  Spiegel  Urteil
+  bandenge         <=   0.667      115     0.814     0.950    1.203  ⛔ unter dem Band
+  bandenge         <=   0.882      115     0.862     0.958    1.165  ⛔ unter dem Band
+  bandenge         >=   1.717      115     1.271     1.124    0.858  ⛔ unter dem Band
+  bandenge         >=   2.345      115     1.503     1.204    0.819  ⛔ unter dem Band
+  vola             <=   0.590      115     0.348     0.675    1.134  ⛔ unter dem Band
+  vola             <=   0.757      115     0.387     0.708    0.815  ⛔ unter dem Band
+  vola             >=   1.320      115     2.454     1.605    1.147  ⚠ nur Bewegung
+  vola             >=   1.963      115     4.889     2.285    1.205  ⚠ nur Bewegung
+  ema_abstand_atr  <=  -1.288      111     4.930     2.027    1.309  ⚠ nur Bewegung
+  momentum_kurz    >=   0.851      115     3.214     2.082    1.297  ⚠ nur Bewegung
+  rsi              >=  85.662      115     2.712     1.891    1.568  ⚠ nur Bewegung
+
+  ➤ 0 von 11 Zellen ueberleben Nullband, Mehrfachtesten, Richtung und je-Asset
+
+  ⛔ Nichts zu pruefen - keine Zelle haelt.
+----------------------------------------------------------------------------------------------------------
+  KARENZ k=24h - zwischen Bewertung und Ereignisfenster
+
+  ➤ Bestes-von-11-Band (tagestreu, 40 Ziehungen): 1.9134
+
+  Merkmal           Schwelle  Symbole      Lift Einzelband  Spiegel  Urteil
+  bandenge         <=   0.667      115     0.803     0.940    1.026  ⛔ unter dem Band
+  bandenge         <=   0.882      115     0.878     0.953    1.048  ⛔ unter dem Band
+  bandenge         >=   1.717      115     1.222     1.095    1.024  ⛔ unter dem Band
+  bandenge         >=   2.345      115     1.430     1.139    1.209  ⛔ unter dem Band
+  vola             <=   0.590      115     0.384     0.668    0.782  ⛔ unter dem Band
+  vola             <=   0.757      115     0.478     0.711    0.696  ⛔ unter dem Band
+  vola             >=   1.320      115     2.088     1.491    1.233  ⚠ nur Bewegung
+  vola             >=   1.963      115     3.568     1.913    1.140  ⚠ nur Bewegung
+  ema_abstand_atr  <=  -1.288      111     3.198     1.572    0.885  ⚠ nur Bewegung
+  momentum_kurz    >=   0.851      115     2.144     1.865    0.864  ⚠ nur Bewegung
+  rsi              >=  85.662      115     2.035     1.849    1.400  ⚠ nur Bewegung
+
+  ➤ 0 von 11 Zellen ueberleben Nullband, Mehrfachtesten, Richtung und je-Asset
+
+  ⛔ Nichts zu pruefen - keine Zelle haelt.
+==========================================================================================================
