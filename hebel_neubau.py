@@ -397,17 +397,20 @@ NEUESTER_STAND = (
               "TRAILING-Regel. Regelfrei ist das untere Ende kein Einstieg; "
               "2.643 (ganze Achse = Sperre) ist ueberholt. Die Trailing-Befunde "
               "gehoeren in die Positionsfuehrung"),
-    ("2.657", "Die Squeeze-Familie (hohe Vola & wenige Longs) haelt im "
-              "unberuehrten Jahr 2024 NICHT. Offene Hypothese: dieselbe Lage "
-              "waehrend BTC faellt. Risiko hoch: ueber alle Einstiege binnen "
-              "120 h im Median -10 bis -15 Prozent"),
+    ("2.657", "Die Lage hohe Vola & wenige Long-Konten (dort noch *Squeeze* "
+              "genannt - eine Deutung, keine Messung) haelt im unberuehrten "
+              "Jahr 2024 NICHT. Risiko hoch: ueber alle Einstiege binnen 120 h "
+              "im Median -10 bis -15 Prozent"),
     ("2.658", "OFFEN: Vorgriff in vola (Median der ganzen Reihe, 2.650) und "
               "Stundenluecken (Zeilen statt Stunden) in aelteren Werkzeugen"),
     ("2.659", "E3 VORWAERTS 2024-2026 (rollierend kalibriert): KEIN Einstieg "
-              "traegt in jedem Regime. Belastbar: die SPERRE viele Longs "
-              "(negativ in allen Regimen) und die BESTAETIGUNG (verbessert "
-              "jeden Kandidaten). Die Squeeze-Familie haengt an EINEM Quartal "
-              "(2025/Q4) - nach Nutzervorgabe ein Punkt zum Reden"),
+              "traegt in jedem Regime - nach Nutzervorgabe ein Punkt zum Reden. "
+              "Abgeloest durch 2.660"),
+    ("2.660", "GEGENPRUEFUNG E3: die Anlage haelt (Selbstprobe, Tausch, "
+              "Zufall, Vorgriff erkannt). ZURUECKGENOMMEN: hohe Vola & wenige "
+              "Long-Konten ist FRAGIL (1 h Versatz halbiert oder loescht es), "
+              "die Bestaetigung hilft nur bei 5 von 9. ROBUST: die SPERRE viele "
+              "Longs, in allen Regimen und Laeufen negativ"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Offen zur Abstimmung: wie weiter ohne regimefesten "
                "Einstieg - Vorwaertsmitschrift, neue Richtungsdaten, oder "
