@@ -130,6 +130,143 @@ AUSWAHLEBENE = {
                "2.647 (absolute Schwellen -1,0 bis -1,8)"),
 }
 
+# ══ ⛔⛔⛔ WAS ENDGUELTIG TOT IST ════════════════════════════════════
+#
+# NUTZERFESTLEGUNG 27.09.2026, woertlich: *"Zur Sicherheit: SPOT = HEBEL
+# ist TOT fuer IMMER und EWIG. Das Geruest von 22.08.26 ist ueberholt.
+# Bauformen 30.08. Optionen, aber keine Gueltigkeit."*
+#
+# ⚠️ Das ist keine Einordnung, sondern eine Anweisung - und sie schliesst
+# genau die drei Tueren, durch die ich immer wieder zurueckgekommen bin.
+TOT = {
+    "spot_gleich_hebel": (
+        "SPOT = HEBEL",
+        "TOT fuer immer und ewig. Die beiden Arme sind nicht dieselbe "
+        "Frage - nicht rechnerisch, nicht fachlich. Die EINZIGE "
+        "Gemeinsamkeit ist der Pruefzeitpunkt"),
+    "geruest_22_08": (
+        "`agent/wahrscheinlichkeit.rechne` - Basisrate + Beitraege = "
+        "Quote, Abstand = Quote - Breakeven (22.08.2026)",
+        "UEBERHOLT. Vier Stellen kollidieren mit den Festlegungen vom "
+        "27.09.: die Basisrate 1/(1+CRV) kommt aus der GEOMETRIE und ist "
+        "zugleich die Kelly-Nullstelle (2.634); der Breakeven enthaelt "
+        "GEBUEHREN (Regel 2); `stufen` je Fuenftel ist ein "
+        "QUERSCHNITTSRANG (2.649); und `Quote` setzt Barrieren voraus, "
+        "also wieder Geometrie"),
+    "bauformen_30_08": (
+        "SCHALTER und ABGESTUFT (G-2' Schritt 2b, 30.08.2026)",
+        "OPTIONEN, aber KEINE GUELTIGKEIT. Sie duerfen erwogen werden; "
+        "gesetzt ist keine von beiden. Und die Stufengrundlage *Fuenftel* "
+        "faellt ohnehin mit 2.649"),
+}
+
+# ⭐ WAS AUS DEM ALTEN GERUEST TROTZDEM UEBERTRAGBAR IST - und das ist
+# kein Widerspruch zu TOT, sondern die Unterscheidung zwischen einer
+# RECHNUNG (tot) und einer BUCHFUEHRUNG (brauchbar):
+UEBERTRAGBAR = {
+    "registrierung": "jeder Beitrag ist ein Eintrag mit Wert, Zustand, "
+                     "Quelle und Begruendung - ein neuer Beitrag ist EINE "
+                     "Zeile, kein Umbau der Rechnung",
+    "fuenf_zustaende": "traegt / enthalten / null / noch_nicht / nie, plus "
+                       "`luecke` additiv. Sie loesen die Frage *wurde hier "
+                       "gemessen oder war nur nichts da* - im Neubau "
+                       "unveraendert noetig",
+    "additiv_belegt": "die additive Verrechnung ist durch 2.302 BELEGT "
+                      "(turnover unabhaengig von funding), nicht "
+                      "angenommen - das Verfahren bleibt pruefbar",
+}
+
+# ══ ⚠️⚠️⚠️ EIN HINWEIS IST KEINE UMSTURZANWEISUNG ═══════════════════
+#
+# NUTZERMAHNUNG 27.09.2026, woertlich: *"bitte wirf nicht alle bisherigen
+# Festlegungen weg, und meine Aussagen sind oft NUR TEXT."*
+#
+# ⛔ MEIN MUSTER, an einem Tag mehrfach: auf einen Hinweis hin eine
+# ganze Befundlage in Frage stellen, statt den Hinweis EINZUORDNEN.
+#
+# ⭐ DER FALL, DER ES AUSGELOEST HAT - und er ist lehrreich, weil ich
+# fast das Gegenteil des Richtigen geschlossen haette: die Messung vom
+# 27.09. zeigt, dass `ema_abstand_atr <= -1,0` ABSTUERZE staerker
+# vorhersagt als Anstiege (Lift 6,71 nach unten gegen 2,67 nach oben).
+# Ich war dabei, daraus eine Abwertung zu machen.
+#
+# ⛔ FALSCH. `ema_abstand_atr` IST Rolle C, die RISIKOSPERRE (2.642,
+# 2.643). Dass sie Abstuerze anzeigt, ist GENAU IHRE AUFGABE. Die
+# Messung BESTAETIGT sie auf einer voellig anderen Zielgroesse - sie
+# widerlegt nichts. 2.647 bleibt unveraendert.
+#
+# ➤ DIE PRUEFFRAGE VOR JEDEM WIDERRUF:
+#     1.  Widerspricht der neue Befund dem alten wirklich - oder
+#         beantwortet er eine ANDERE Frage?
+#     2.  Ist der Hinweis eine ANWEISUNG oder eine EINORDNUNG?
+#     3.  R-R11: habe ich den alten Befund erst REPRODUZIERT?
+
+# ══ DIE HEBELSTUFEN - vom Nutzer festgelegt, nicht gemessen ═════════
+#
+# ⚠️⚠️ NUTZERFESTLEGUNG 27.09.2026: *"festgelegt ist aktuell 2x 3x und 5x
+# als Hoehe, das Chance-Risiko-Verhaeltnis kommt aus den MESSUNGEN."*
+#
+# ➤ Die STUFEN sind gesetzt (Risikoappetit - Nutzerentscheidung, siehe
+#   `Entscheidungen_Hebelneubau.md`, "Die Grenze"). Was GEMESSEN wird,
+#   ist die ZUORDNUNG: welche Lage bekommt welche Stufe.
+HEBELSTUFEN = (2, 3, 5)
+
+# ✔ GEKLAERT 27.09.2026 auf Nachfrage: *"2x 3x 5x entspricht den aktuell
+# HANDELBAREN Stufen, damit kannst du dann 4x weglassen."* Es ist also
+# keine Messfrage, sondern eine Eigenschaft der Boerse.
+#
+# ⚠️ Der frueher genannte Wert bleibt als Vergleich stehen - der
+# abgeloeste Befund 2.632 hiess *vier Hebelstufen 2x/3x/4x/5x tragen*,
+# und wer ihn liest, muss sehen, warum dort vier stehen.
+HEBELSTUFEN_FRUEHER = (2, 3, 4, 5)
+HEBELSTUFEN_GRUND = ("aktuell HANDELBARE Stufen (Nutzerauskunft 27.09.) - "
+                     "keine Messfrage, sondern eine Eigenschaft der Boerse")
+
+# ══ DIE ZWEI ZEITPUNKTE - und was an jedem gilt ═════════════════════
+#
+# ⚠️⚠️⚠️ NUTZERBEISPIEL 27.09.2026, woertlich: *"Annahme Hebel
+# funktioniert im System - 1. Neutrale Bewertung und Hebelhoehe bei
+# Pruefung, Ablaufkette, eMail. 2. ich sehe die Empfehlung, mache eine
+# Position auf UND DANN kommt eine NEUE Hebelposition ins Spiel, wo
+# wieder alle Parameter wie Stop etc. relevant sind."*
+#
+# ⭐ Und die Praezisierung dazu: *"Trailing ist NICHT FALSCH, sondern
+# nicht korrekt eingeordnet - diese kommt bei der Positionsfuehrung ins
+# Spiel. Dort sind wir noch nicht (Hauptplan)."*
+#
+# ⚠️ Das ist ein Unterschied, den ich vorher nicht gefuehrt habe: es sind
+# ZWEI Zeitpunkte mit verschiedenen Groessen, nicht eine Bewertung, die
+# alles auf einmal entscheidet.
+ZEITPUNKTE = {
+    "T1_bewertung": (
+        "Pruefzeitpunkt - die Empfehlung entsteht",
+        ["Einstieg: GUT oder SEHR GUT - der OPTIMALE Einstieg ist zu "
+         "MESSEN, daraus ergeben sich die Bewertungen",
+         "Hebelhoehe: die Stufen sind gesetzt (2x/3x/5x), die ZUORDNUNG "
+         "wird gemessen und kalibriert - Chance-Risiko aus den Messungen",
+         "dann weiter in der Kette wie heute -> Mail"],
+        "NEUTRAL: kein Kapital, keine Positionsgroesse, kein Ergebnis, "
+        "KEINE Geometrie. Es gibt noch keine Position, also auch keinen "
+        "Stop und kein Trailing"),
+    "T2_positionsfuehrung": (
+        "nach der Eroeffnung - eine NEUE Hebelposition existiert",
+        ["Stop", "Trailing", "Ausstieg", "Nachfuehrung"],
+        "HIER sind alle diese Parameter relevant und richtig. Phase 5 "
+        "des Hauptplans - dort sind wir noch nicht"),
+}
+
+# ⚠️⚠️ WAS DARAUS FUER DAS TRAILING FOLGT - und es ist NICHT "falsch":
+#
+#   in T1    hat es nichts zu suchen. Es gibt keine Position
+#   in T2    ist es die richtige Groesse - Positionsfuehrung
+#   im MESSEN  ist es ein WERKZEUG: um zu pruefen, ob eine Lage traegt,
+#              muss ein Ausgang definiert sein. Das ist Ebene B und
+#              sagt nichts darueber, wo es im BETRIEB steht
+#
+# ➤ Mein Fehler war die EINORDNUNG, nicht die Verwendung: ich habe die
+#   Messanordnung als Systemeigenschaft gefuehrt und daraus geschlossen,
+#   der Hebel "sei" H24 mit Trailing.
+
 # ══ DIE GEOMETRIE - MESSWERKZEUG, nicht Systemeigenschaft ═══════════
 #
 # ⚠️⚠️⚠️ NUTZERVORGABE 27.09.2026: *"hierbei ist die GEOMETRIE des Hebels
@@ -610,7 +747,51 @@ def stand(mit_befunden: bool = True) -> str:
     a("                         3. dann weiter in der Kette wie heute*")
     a("")
     a("  ⚠️ NEUTRAL: kein Kapital, keine Positionsgroesse, kein Ergebnis.")
-    a("     Gesteuert durch CHANCE und RISIKO -> 2x / 3x / 4x / 5x.")
+    a("  ⚠️ Das System arbeitet auf ASSETEBENE (Nutzervorgabe 27.09.).")
+    a("")
+    a("  Hebelstufen   %s  - vom Nutzer FESTGELEGT (Risikoappetit)"
+      % " / ".join("%dx" % x for x in HEBELSTUFEN))
+    a("  Gemessen wird die ZUORDNUNG: welche Lage bekommt welche Stufe.")
+    a("  Das Chance-Risiko-Verhaeltnis kommt aus den MESSUNGEN.")
+    a("  ✔ Grund: %s" % HEBELSTUFEN_GRUND)
+    a("     (der abgeloeste 2.632 nennt vier Stufen - daher die Differenz)")
+    a("")
+
+    # ── Was tot ist ──────────────────────────────────────────────────
+    a("-" * 98)
+    a("⛔⛔⛔ WAS ENDGUELTIG TOT IST")
+    a("  Nutzerfestlegung 27.09.: *SPOT = HEBEL ist TOT fuer IMMER und")
+    a("  EWIG. Das Geruest von 22.08.26 ist ueberholt. Bauformen 30.08.")
+    a("  Optionen, aber keine Gueltigkeit.*")
+    a("")
+    for _s, (was, warum) in TOT.items():
+        a("  ⛔ %s" % was)
+        for zeile in _umbruch(warum, 84):
+            a("       %s" % zeile)
+    a("")
+    a("  ⭐ UEBERTRAGBAR bleibt die BUCHFUEHRUNG, nicht die RECHNUNG:")
+    for was, warum in UEBERTRAGBAR.items():
+        a("      %-18s %s" % (was, _umbruch(warum, 60)[0]))
+        for zeile in _umbruch(warum, 60)[1:]:
+            a("      %-18s %s" % ("", zeile))
+    a("")
+
+    # ── Die zwei Zeitpunkte ──────────────────────────────────────────
+    a("-" * 98)
+    a("DIE ZWEI ZEITPUNKTE - Bewertung und Positionsfuehrung")
+    a("  Nutzerbeispiel 27.09.: *ich sehe die Empfehlung, mache eine")
+    a("  Position auf UND DANN kommt eine NEUE Hebelposition ins Spiel,")
+    a("  wo wieder alle Parameter wie Stop etc. relevant sind*")
+    a("")
+    for schl, (wann, was, regel) in ZEITPUNKTE.items():
+        a("  %s  %s" % (schl.split("_")[0], wann))
+        for x in was:
+            a("        · %s" % x)
+        for zeile in _umbruch(regel, 78):
+            a("      %s" % zeile)
+        a("")
+    a("  ⭐ Das TRAILING ist damit nicht falsch, sondern in T2 zu Hause -")
+    a("     und im Modus MESSEN ein Werkzeug. Beides gleichzeitig.")
     a("")
 
     # ── Die drei Arbeitsmodi ─────────────────────────────────────────

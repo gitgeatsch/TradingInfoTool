@@ -30402,6 +30402,69 @@ def paket_hebelneubau() -> None:
            "falschen Ebene steht - sonst wandert sie stillschweigend "
            "weiter")
 
+    # ── 3b2b. DIE HEBELSTUFEN SIND GESETZT, NICHT GEMESSEN ───────────
+    #
+    # ⚠️⚠️ NUTZERFESTLEGUNG 27.09.2026: *"festgelegt ist aktuell 2x 3x und
+    # 5x als Hoehe, das Chance-Risiko-Verhaeltnis kommt aus den
+    # MESSUNGEN."* Die STUFEN sind Risikoappetit und damit
+    # Nutzerentscheidung; gemessen wird die ZUORDNUNG.
+    pruefe(P, "⚠️ die Hebelstufen stehen als NUTZERFESTLEGUNG im Blatt",
+           _HN.HEBELSTUFEN == (2, 3, 5),
+           "sie sind gesetzt, nicht gemessen - gemessen wird, welche "
+           "Lage welche Stufe bekommt. Gefunden: %r"
+           % (_HN.HEBELSTUFEN,))
+    pruefe(P, "⚠️⚠️ und der GRUND steht dabei, nicht nur die Zahl",
+           (_HN.HEBELSTUFEN_FRUEHER == (2, 3, 4, 5)
+            and "handelbar" in _HN.HEBELSTUFEN_GRUND.lower()
+            and _HN.HEBELSTUFEN_GRUND in _HN.stand(mit_befunden=False)),
+           "4x faellt weg, weil es an der Boerse nicht handelbar ist "
+           "(Nutzerauskunft 27.09.) - keine Messfrage. Der abgeloeste "
+           "2.632 nennt vier Stufen; wer ihn liest, muss die Differenz "
+           "erklaert bekommen")
+
+    # ⚠️⚠️⚠️ EIN HINWEIS IST KEINE UMSTURZANWEISUNG. Nutzermahnung
+    # 27.09.: *"bitte wirf nicht alle bisherigen Festlegungen weg, und
+    # meine Aussagen sind oft NUR TEXT."* Der Fall, der es ausloeste: die
+    # Messung zeigt, dass `ema_abstand_atr` Abstuerze staerker vorhersagt
+    # als Anstiege - und ich war dabei, daraus eine Abwertung zu machen.
+    # Es ist die RISIKOSPERRE; genau das ist ihre Aufgabe.
+    pruefe(P, "⚠️⚠️⚠️ `ema_abstand_atr` steht WEITER als Rolle C und belegt",
+           any(n == "ema_abstand_atr" and z == "belegt"
+               for n, z, _b, _h in _HN.KANDIDATEN["C"]),
+           "dass es Abstuerze anzeigt, BESTAETIGT die Risikosperre - es "
+           "widerlegt sie nicht. 2.642/2.643/2.647 bleiben stehen")
+
+    # ── 3b2c. WAS ENDGUELTIG TOT IST ──────────────────
+    #
+    # ⚠️⚠️⚠️ NUTZERFESTLEGUNG 27.09.2026: *"Zur Sicherheit: SPOT =
+    # HEBEL ist TOT fuer IMMER und EWIG. Das Geruest von 22.08.26 ist
+    # ueberholt. Bauformen 30.08. Optionen, aber keine Gueltigkeit."*
+    #
+    # Drei Tueren, durch die ich immer wieder zurueckgekommen bin. Der
+    # Riegel `pruefe_quellen` bewacht die Groessen; diese Pruefung
+    # bewacht, dass die FESTLEGUNG im Blatt steht und nicht verblasst.
+    pruefe(P, "⛔⛔⛔ SPOT = HEBEL steht als TOT im Blatt",
+           ("spot_gleich_hebel" in _HN.TOT
+            and "immer und ewig" in _HN.TOT["spot_gleich_hebel"][1].lower()),
+           "die beiden Arme sind nicht dieselbe Frage - die EINZIGE "
+           "Gemeinsamkeit ist der Pruefzeitpunkt")
+    pruefe(P, "⛔⛔ das Geruest vom 22.08. ist als UEBERHOLT vermerkt",
+           ("geruest_22_08" in _HN.TOT
+            and "ueberholt" in _HN.TOT["geruest_22_08"][1].lower()),
+           "Basisrate aus der Geometrie, Breakeven mit Gebuehren, "
+           "Fuenftel als Querschnittsrang, Quote setzt Barrieren voraus")
+    pruefe(P, "⛔ und die Bauformen vom 30.08. sind OPTIONEN ohne Gueltigkeit",
+           ("bauformen_30_08" in _HN.TOT
+            and "keine gueltigkeit" in _HN.TOT["bauformen_30_08"][1].lower()),
+           "Schalter und abgestuft duerfen erwogen werden; gesetzt ist "
+           "keine von beiden")
+    pruefe(P, "⭐ und die BUCHFUEHRUNG bleibt trotzdem uebertragbar",
+           set(_HN.UEBERTRAGBAR) >= {"registrierung", "fuenf_zustaende",
+                                     "additiv_belegt"},
+           "Registrierung, die fuenf Zustaende und die durch 2.302 "
+           "BELEGTE Additivitaet - das ist Buchfuehrung, keine Rechnung. "
+           "Sie mit dem Geruest wegzuwerfen waere der umgekehrte Fehler")
+
     # ── 3b3. DIE DREI ARBEITSMODI ────────────────────────────────────
     #
     # ⚠️⚠️ NUTZERVORGABE 27.09.: *"Du musst sauber zwischen MESSEN,
