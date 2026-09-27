@@ -453,13 +453,19 @@ NEUESTER_STAND = (
               "selbst; ueber sie hinaus traegt vor allem volumenschub. Fuer die "
               "Liquidation ist die ATR zum Einstieg das Risikomass (5x binnen "
               "72 h: 5,8 % im untersten, 26,9 % im obersten ATR-Fuenftel)"),
+    ("2.668", "OFFEN: die Stundenkurse sind UEBERLEBENSVERZERRT - nur "
+              "TRADING-Paare, kein eingestelltes; BTC erst ab 2023-09. "
+              "Betrifft 2.647-2.667. Vor K3 nachladen und mit/ohne vergleichen"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
-               "bis wir die Grundlagen haben*): bisher ist jeder Beitrag "
-               "EINZELN gemessen. Naechster Schritt ist die ANWENDUNGSEBENE - "
-               "die KOMBINATION der Beitraege je Asset und Zeitpunkt (Nutzer: "
-               "*ein Beitrag ist selbst schwach, in Kombination staerker*), "
-               "mit Voranalyse und Abstimmung vor dem Bau"),
+               "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
+               "abgestimmt (K1-K7, Basisinfos/Voranalyse_Kombination_"
+               "Anwendungsebene_27_09.md): Wirkungskurven statt Schalter, "
+               "Urteil gegen die Phase, Schwelle auf kalibriertem q, Hebel aus "
+               "der Liquidationsgefahr. Erster Schritt (nach der Pruefung "
+               "von K1-K7): die MESSBASIS vervollstaendigen - eingestellte "
+               "Paare und BTC ab 2021-12 (2.668) -, dann die KONTEXTFLAECHE "
+               "BTC x Dominanz (K3), dann die Wirkungskurven je Beitrag"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
