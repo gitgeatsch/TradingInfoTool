@@ -83,6 +83,7 @@ Tabelle gelegt und daraus über A geurteilt.
 
 | # | offen | |
 |---|---|---|
+| **0** | ✔✔ **1a ERLEDIGT (2.642)** — der Horizont ist kein Eingang, sondern ein **Messfenster**. Gemessen regelfrei in ATR: die Achse ist ein **Risiko-Filter** (d 0,521 auf MAE) und kein Ertragsfilter (d 0,267 auf MFE), stabil in 5 von 5 Jahren. ⛔ *Kurz* trifft nicht zu — die Auswahl braucht 10,5 % **laenger** bis zum Hoechstpunkt. ⭐ Die Bruecke zum Hebel steht damit **ohne Ertrag**: 0,75 statt 1,08 ATR Rueckgang heisst niedrigere Stopwahrscheinlichkeit, also mehr Hebel | *erledigt* |
 | **1** | ⭐ **Die Bewertungsebene neu aufsetzen** — Chance-Risiko-Verhältnis aus Stop- und Zielabstand, ohne jede Ertragsgröße. Daraus die Schwelle **und** der Hebel | *nächster Schritt* |
 | **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — bisher ist nur `ema_abstand_atr` betrachtet. Die übrigen sieben Beiträge in `wahrscheinlichkeit.py` stehen auf `null`/`nie` oder `instrumente=("spot",)` | ungeklärt |
 | **3** | **Die Quellenfrage**: Binance (28), CoinGecko (16) — oder eine dritte Quelle? | Nutzerentscheidung |
