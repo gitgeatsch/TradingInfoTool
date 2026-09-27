@@ -58,7 +58,92 @@ ROLLEN = {
     "C": "Risikosperre - ueberdehnt, ueberhitzt?",
 }
 
-# ══ DIE GEOMETRIE DES NEUBAUS ═══════════════════════════════════════
+# ══ DIE DREI ARBEITSMODI - und warum ich sie verwechselt habe ═══════
+#
+# ⚠️⚠️⚠️ NUTZERVORGABE 27.09.2026: *"Du musst sauber zwischen MESSEN,
+# KALIBRIEREN und PRUEFEN AN ECHTDATEN umschalten koennen."*
+#
+# Es sind keine neuen Phasen - es ist die Feinstruktur von Phase 1 und 2
+# des Hauptplans. Aber sie beantworten VERSCHIEDENE Fragen, und ich habe
+# die Antworten wiederholt gegeneinander ausgespielt.
+MODI = {
+    "messen": (
+        "Phase 1",
+        "Wo liegen historisch die besten LAGEN und Risikobewertungen?",
+        "Erlaubt: jede Anordnung, auch Trailing und CRV - sie ist "
+        "MESSWERKZEUG, nicht Systemeigenschaft. Verboten: das Ergebnis "
+        "als Bewertungsgroesse weiterreichen (Ebene B, 2.641)"),
+    "kalibrieren": (
+        "Phase 1",
+        "Wie wird aus der Lage eine BEWERTUNG - Einstieg gut/sehr gut, "
+        "dann Hebelhoehe?",
+        "Erlaubt: nur was zum ENTSCHEIDUNGSZEITPUNKT bekannt ist - Kurs, "
+        "EMA, ATR, Chance und Risiko als Erwartung. Verboten: Kapital, "
+        "Positionsgroesse, Kapazitaet, Kelly, q aus Ertraegen, und die "
+        "GEOMETRIE (Nutzervorgabe 27.09.)"),
+    "pruefen": (
+        "Phase 2",
+        "Was kommt an Echtdaten heraus - wieviele Signale, welche Hoehen, "
+        "welches Ergebnis?",
+        "HIER kommen Hebel 2x bis 5x und die GEOMETRIE wieder ins Spiel "
+        "(Nutzervorgabe 27.09.). Und Takt, Cooldown, Kapazitaet - "
+        "Ebene C"),
+}
+
+# ⚠️⚠️ DIE VERWECHSLUNG, DIE ES ZU VERHINDERN GILT, ist konkret und
+# zweimal passiert:
+#
+#   messen -> kalibrieren   Ich habe `E[R]` (enthaelt CRV 1,5, also eine
+#                           REGEL) als Bewertungsgroesse gedacht. Es ist
+#                           eine MESSgroesse. Die Bewertung kennt nur
+#                           Chance und Risiko.
+#   pruefen -> kalibrieren  Ich habe aus dem Depot-Ergebnis auf die
+#                           Bewertung zurueckgeschlossen (2.639/2.640,
+#                           beide abgeloest).
+
+# ══ DIE EBENE DER AUSWAHL - Markt oder Asset ════════════════════════
+#
+# ⚠️⚠️⚠️ NUTZERENTSCHEIDUNG 26.09.2026 (Befunde 2.608 bis 2.610),
+# woertlich: *"Warum sprichst du von Rangfolge? Das System muss auch bei
+# nur 'Einem' Asset funktionieren und nicht besser oder schlechter durch
+# die Watchlist werden?!?!"*
+#
+# ⛔⛔ UND ICH HABE SIE AM SELBEN TAG WIEDER EINGEFUEHRT. `2.626` und
+# `2.628` waehlen *je Tag die besten 2 Prozent* - ein Querschnittsrang
+# ueber alle Assets, also MARKTEBENE. Im Quelltext steht es sogar so
+# (`messe_inverse_achse.taeglich_beste`: *welches Asset ist HEUTE das
+# beste?*).
+#
+# ➤ Ein Perzentil ist eine Aussage ueber die MENGE, keine ueber das
+#   ASSET. Dieselbe Lage bekaeme bei 116 Symbolen ein anderes Urteil als
+#   bei 28 - derselbe Fehler, vor dem die Regel *die Grundgesamtheit ist
+#   keine Stellschraube* warnt, nur in der ANWENDUNG statt in der Messung.
+#
+# ⚠️ `ema_abstand_atr` ist bereits normiert (Abstand zum 48-h-EMA in
+# Einheiten der EIGENEN Volatilitaet) und braucht keinen Vergleich.
+AUSWAHLEBENE = {
+    "gilt": "ASSET - eine ABSOLUTE Schwelle in ATR",
+    "verboten": "MARKT - ein Querschnittsrang oder Perzentil je Tag",
+    "betroffen": ("2.626 (Auswahl je Tag beste 1/2/5 Prozent)",
+                  "2.628 (Geometrie auf genau dieser Auswahl dimensioniert)"),
+    "sauber": ("2.608/2.609/2.610 (absolute Schwelle in ATR)",
+               "2.647 (absolute Schwellen -1,0 bis -1,8)"),
+}
+
+# ══ DIE GEOMETRIE - MESSWERKZEUG, nicht Systemeigenschaft ═══════════
+#
+# ⚠️⚠️⚠️ NUTZERVORGABE 27.09.2026: *"hierbei ist die GEOMETRIE des Hebels
+# bei der BEWERTUNG nicht direkt relevant, sondern wird durch CHANCE und
+# RISIKO gesteuert"* und *"Trailing ist SPAETER zur Positionsfuehrung"*.
+#
+# ⛔ Dieses Modul hat die Geometrie bis zum 27.09. als *die Geometrie des
+# Neubaus* gefuehrt, ganz oben, als waere sie eine Eigenschaft des
+# Systems. Sie ist es nicht: sie ist die ANORDNUNG, mit der gemessen
+# wird - Modus `messen`, Ebene B. In die Bewertung geht sie NICHT ein,
+# und das Trailing gehoert in Phase 5.
+#
+# ⚠️ Sie bleibt trotzdem stehen, weil eine Messung ohne Anordnung nicht
+# geht - aber sie steht jetzt dort, wo sie hingehoert.
 #
 # ⚠️⚠️ SIE IST NICHT DIE DES SPOT-ARMS, UND DAS IST DER GANZE PUNKT. Der
 # Spot-Arm misst auf H20 gegen `bewegung_r` mit fixen Barrieren. Hier
@@ -289,8 +374,25 @@ ERTRAGSGROESSEN = {
 }
 
 
+# ⚠️⚠️ DIE QUERSCHNITTSGROESSEN - gesperrt seit der Nutzerentscheidung
+# vom 26.09. (2.608-2.610, siehe AUSWAHLEBENE oben). Sie sind Aussagen
+# ueber die MENGE, nicht ueber das ASSET.
+QUERSCHNITT = {
+    "taeglich_beste": "waehlt je Tag die besten k Prozent - ein "
+                      "Querschnittsrang. 2.626 und 2.628 stehen darauf, "
+                      "und beide widersprechen der Nutzerentscheidung vom "
+                      "SELBEN Tag. Die Bewertung ist eine ABSOLUTE "
+                      "Schwelle in ATR",
+    "perzentil_je_stunde": "dasselbe auf Stundenebene",
+    "rangplatz": "ein Rang haengt an der Grundgesamtheit - dieselbe Lage "
+                 "bekaeme bei 116 Symbolen ein anderes Urteil als bei 28",
+    "querschnittsrang": "Sammelbegriff - siehe AUSWAHLEBENE",
+}
+
+
 class SpotVermischung(RuntimeError):
-    """Eine Hebel-Neubaumessung hat eine Spot-Groesse angefasst."""
+    """Eine Hebel-Neubaumessung hat eine Spot- oder Querschnittsgroesse
+    angefasst."""
 
 
 def pruefe_quellen(*namen: str, erlaubt: tuple = ()) -> None:
@@ -315,6 +417,8 @@ def pruefe_quellen(*namen: str, erlaubt: tuple = ()) -> None:
             schlecht.append("%s -> %s" % (n, SPOT_QUELLEN[k]))
         elif k in ERTRAGSGROESSEN:
             schlecht.append("%s -> %s" % (n, ERTRAGSGROESSEN[k]))
+        elif k in QUERSCHNITT:
+            schlecht.append("%s -> %s" % (n, QUERSCHNITT[k]))
     if schlecht:
         raise SpotVermischung(
             "HEBEL-NEUBAU: diese Groessen gehoeren zum SPOT-Arm oder sind "
@@ -498,9 +602,52 @@ def stand(mit_befunden: bool = True) -> str:
             a("      %-24s %s" % ("", zeile))
     a("")
 
+    # ── Der Ablauf zum Pruefzeitpunkt ────────────────────────────────
+    a("-" * 98)
+    a("DER ABLAUF ZUM PRUEFZEITPUNKT - hintereinander, nicht in einem")
+    a("  Nutzervorgabe 27.09.: *1. Einstieg GUT oder SEHR GUT")
+    a("                         2. Hebelerzeugung (kalibrierte Bewertung)")
+    a("                         3. dann weiter in der Kette wie heute*")
+    a("")
+    a("  ⚠️ NEUTRAL: kein Kapital, keine Positionsgroesse, kein Ergebnis.")
+    a("     Gesteuert durch CHANCE und RISIKO -> 2x / 3x / 4x / 5x.")
+    a("")
+
+    # ── Die drei Arbeitsmodi ─────────────────────────────────────────
+    a("-" * 98)
+    a("DIE DREI ARBEITSMODI - sie beantworten VERSCHIEDENE Fragen")
+    a("")
+    for name, (phase, frage, regel) in MODI.items():
+        a("  %-12s (%s)  %s" % (name.upper(), phase, frage))
+        for zeile in _umbruch(regel, 78):
+            a("       %s" % zeile)
+        a("")
+
+    # ── Die Auswahlebene ─────────────────────────────────────────────
+    a("-" * 98)
+    a("DIE AUSWAHLEBENE - Asset, nicht Markt")
+    a("  Nutzerentscheidung 26.09.: *das System muss auch bei nur EINEM")
+    a("  Asset funktionieren und nicht besser oder schlechter durch die")
+    a("  Watchlist werden*")
+    a("")
+    a("  ✔ GILT       %s" % AUSWAHLEBENE["gilt"])
+    a("  ⛔ VERBOTEN  %s" % AUSWAHLEBENE["verboten"])
+    a("")
+    a("  ⛔⛔ AUF DER FALSCHEN EBENE gemessen (Querschnittsrang):")
+    for x in AUSWAHLEBENE["betroffen"]:
+        a("       %s" % x)
+    a("  ✔ sauber (absolute Schwelle):")
+    for x in AUSWAHLEBENE["sauber"]:
+        a("       %s" % x)
+    a("")
+
     # ── Die Geometrie ────────────────────────────────────────────────
     a("-" * 98)
-    a("DIE GEOMETRIE - sie ist NICHT die des Spot-Arms")
+    a("DIE MESSANORDNUNG - Werkzeug des Modus MESSEN, NICHT Bewertung")
+    a("  ⚠️ Nutzervorgabe 27.09.: die Geometrie ist bei der BEWERTUNG")
+    a("     nicht relevant; das Trailing gehoert in die POSITIONSFUEHRUNG")
+    a("     (Phase 5). Sie steht hier, weil eine Messung ohne Anordnung")
+    a("     nicht geht - nicht als Eigenschaft des Systems.")
     a("")
     a("  Messfenster       H%d Stunden" % GEOMETRIE["fenster_stunden"])
     a("  Stop              %.2f x ATR" % GEOMETRIE["stop_atr"])

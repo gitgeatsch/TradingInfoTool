@@ -30369,6 +30369,62 @@ def paket_hebelneubau() -> None:
                         for k, v in list(_luecke.items())[:4])
               if _luecke else "keine"))
 
+    # ── 3b2. DIE AUSWAHL IST ASSET-, NICHT MARKTEBENE ────────────────
+    #
+    # ⚠️⚠️⚠️ NUTZERENTSCHEIDUNG 26.09.2026 (2.608-2.610), woertlich:
+    # *"Warum sprichst du von Rangfolge? Das System muss auch bei nur
+    # 'Einem' Asset funktionieren und nicht besser oder schlechter durch
+    # die Watchlist werden?!?!"*
+    #
+    # ⛔⛔ UND ICH HABE SIE AM SELBEN TAG WIEDER EINGEFUEHRT: 2.626 und
+    # 2.628 waehlen *je Tag die besten 2 Prozent*. Damit ist die
+    # Geometrie H24/Stop 1,00/Trailing auf einer Auswahl dimensioniert,
+    # die es nach der Entscheidung nicht geben soll.
+    #
+    # ➤ Ein Perzentil ist eine Aussage ueber die MENGE, keine ueber das
+    #   ASSET - derselbe Fehler, vor dem *die Grundgesamtheit ist keine
+    #   Stellschraube* warnt, nur in der ANWENDUNG statt in der Messung.
+    pruefe(P, "⚠️⚠️ der Riegel sperrt auch die QUERSCHNITTSgroessen",
+           all(_bricht(n) for n in ("taeglich_beste", "rangplatz",
+                                    "perzentil_je_stunde")),
+           "die Bewertung ist eine ABSOLUTE Schwelle in ATR "
+           "(Nutzerentscheidung 26.09.) - ein Rang haengt an der "
+           "Grundgesamtheit")
+    pruefe(P, "⚠️ und `ema_abstand_atr` geht weiter durch",
+           not _bricht("ema_abstand_atr", "momentum_kurz", "rsi"),
+           "es ist bereits normiert (Abstand zum 48-h-EMA in Einheiten "
+           "der EIGENEN Volatilitaet) und braucht keinen Vergleich")
+    pruefe(P, "⚠️⚠️ und der Stand WEIST die betroffenen Befunde AUS",
+           (_HN.AUSWAHLEBENE["gilt"].startswith("ASSET")
+            and any("2.626" in x for x in _HN.AUSWAHLEBENE["betroffen"])
+            and any("2.628" in x for x in _HN.AUSWAHLEBENE["betroffen"])),
+           "wer den Stand liest, muss sehen, welche Messung auf der "
+           "falschen Ebene steht - sonst wandert sie stillschweigend "
+           "weiter")
+
+    # ── 3b3. DIE DREI ARBEITSMODI ────────────────────────────────────
+    #
+    # ⚠️⚠️ NUTZERVORGABE 27.09.: *"Du musst sauber zwischen MESSEN,
+    # KALIBRIEREN und PRUEFEN AN ECHTDATEN umschalten koennen."* Und:
+    # *"hierbei ist die GEOMETRIE des Hebels bei der BEWERTUNG nicht
+    # direkt relevant, sondern wird durch CHANCE und RISIKO gesteuert"*.
+    pruefe(P, "⚠️⚠️ die drei Arbeitsmodi stehen im Blatt",
+           set(_HN.MODI) == {"messen", "kalibrieren", "pruefen"},
+           "messen · kalibrieren · pruefen an Echtdaten - sie beantworten "
+           "VERSCHIEDENE Fragen, und ich habe sie zweimal gegeneinander "
+           "ausgespielt")
+    pruefe(P, "⚠️⚠️⚠️ und KALIBRIEREN verbietet die Geometrie ausdruecklich",
+           ("geometrie" in _HN.MODI["kalibrieren"][2].lower()
+            and "verboten" in _HN.MODI["kalibrieren"][2].lower()),
+           "Nutzervorgabe 27.09.: die Bewertung wird durch CHANCE und "
+           "RISIKO gesteuert, nicht durch die Geometrie - und das "
+           "Trailing gehoert in die Positionsfuehrung (Phase 5)")
+    pruefe(P, "⚠️ waehrend PRUEFEN sie ausdruecklich zulaesst",
+           "geometrie" in _HN.MODI["pruefen"][2].lower()
+           and "2x" in _HN.MODI["pruefen"][2],
+           "*zur Erfolgsmessung wirst du die Hebel 2x und 5x pruefen "
+           "muessen, und dann kommt die Geometrie wieder ins Spiel*")
+
     # ── 3c. DER STANDSBERICHT KOMMT AUS CODE, NICHT AUS MEINEM KOPF ──
     #
     # ⚠️⚠️⚠️ NUTZERKRITIK 27.09.2026: *"JETZT explodiere ich gleich - wenn
