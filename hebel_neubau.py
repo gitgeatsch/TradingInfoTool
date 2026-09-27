@@ -403,10 +403,15 @@ NEUESTER_STAND = (
               "120 h im Median -10 bis -15 Prozent"),
     ("2.658", "OFFEN: Vorgriff in vola (Median der ganzen Reihe, 2.650) und "
               "Stundenluecken (Zeilen statt Stunden) in aelteren Werkzeugen"),
+    ("2.659", "E3 VORWAERTS 2024-2026 (rollierend kalibriert): KEIN Einstieg "
+              "traegt in jedem Regime. Belastbar: die SPERRE viele Longs "
+              "(negativ in allen Regimen) und die BESTAETIGUNG (verbessert "
+              "jeden Kandidaten). Die Squeeze-Familie haengt an EINEM Quartal "
+              "(2025/Q4) - nach Nutzervorgabe ein Punkt zum Reden"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
-               "Extremen). Naechster Schritt: VORWAERTS rechnen - Kalibrierung "
-               "auf Vergangenem, Pruefung auf dem jeweils naechsten Zeitraum, "
-               "rollierend; dazu Vorwaertsmitschrift ab jetzt"),
+               "Extremen). Offen zur Abstimmung: wie weiter ohne regimefesten "
+               "Einstieg - Vorwaertsmitschrift, neue Richtungsdaten, oder "
+               "Sperre und Hoehe zuerst bauen"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
