@@ -130,6 +130,66 @@ AUSWAHLEBENE = {
                "2.647 (absolute Schwellen -1,0 bis -1,8)"),
 }
 
+# ══ ⚠⚠⚠ DREI ABDECKUNGEN, DIE NICHT DASSELBE SIND ═════
+#
+# Nutzerhinweis 27.09.2026: *"wir sollten ueberall ca. 87 % Abdeckung mit
+# Workaround haben"* - und ich hatte gerade `turnover` mit *30 Prozent
+# Abdeckung, strukturell nicht zu retten* abgeschrieben. Beides stimmt,
+# weil es DREI verschiedene Groessen sind.
+ABDECKUNGEN = {
+    "mess": ("Anteil der ANKER mit Wert - fuer die MESSUNG",
+             "funding 99,1 % · oi_aenderung 98,0 % · "
+             "oi_je_umsatz 97,3 % · volumenschub 100 % · "
+             "konten_verh 97,6 % · turnover 30,0 %"),
+    "symbol": ("Anteil der SYMBOLE mit Wert - fuer den BETRIEB",
+               "funding 116/116 · Terminmarkt 116/116 · "
+               "turnover 113/116 (97 %) · onchain 17/116 · "
+               "tvl 36/116"),
+    "betrieb": ("Anteil der FREIGEGEBENEN Hebelsymbole mit Stundenkursen",
+                "28 von 43 = 65 % · mit dem Laderfix aus 2.611 +9 "
+                "auf 86 % · davon LIQUIDE (>100k USD/h) nur 15 = 35 %"),
+}
+
+# ⛔⛔ MEIN FEHLER, benannt: `turnover` hat 30 Prozent
+# ZEITabdeckung (die Umlaufmenge reicht nur 1 von 4,8 Jahren zurueck) und
+# 97 Prozent SYMBOLabdeckung. Fuer den BETRIEB zaehlt die zweite - er ist
+# dort fast vollstaendig da. Was fehlt, ist MESSHISTORIE, nicht
+# Verfuegbarkeit. Die Aussage *strukturell nicht zu retten* war falsch.
+#
+# ⚠ Und die Beschaffung ist versucht worden: `hole_umlaufmenge_cg.py`
+# haelt im Kopf fest, dass die Suche nach mehrjaehriger Historie am
+# 13.09. gescheitert ist - `market_chart?days=365` liefert genau ein Jahr.
+# Das ist eine Grenze der Quelle, kein Versaeumnis.
+#
+# ⭐ UND EINE FORMFRAGE STECKT DAHINTER: `turnover` = Volumen /
+# UMLAUFMENGE ist eine QUERSCHNITTSgroesse - sie vergleicht Assets. Die
+# Nutzerentscheidung vom 26.09. verlangt das Gegenteil (*muss auch bei
+# nur EINEM Asset funktionieren*). `volumenschub` (Volumen gegen den
+# eigenen Schnitt) und `oi_je_umsatz` erfuellen das, haben volle
+# Abdeckung und laufen seit 2.651 mit.
+
+OFFENE_AUFGABEN = (
+    ("Laderfix 2.611 - 65 % auf 86 % Betriebsabdeckung",
+     "`hole_stundenkurse.py` leitet die Symbolliste aus dem TERMINMARKT "
+     "ab (Binance Futures), prueft die Handelbarkeit dann aber gegen "
+     "api.binance.com - die SPOT-Boerse. Symbole, die es nur als "
+     "Perpetual gibt, fallen heraus, obwohl ihre Kurse ueber "
+     "fapi.binance.com verfuegbar waeren. 9 von 15 fehlenden waeren "
+     "beschaffbar. GEMESSEN am 26.09., NICHT GEBAUT - der Lader ist "
+     "unveraendert (Zeile 79/80)"),
+    ("Die Liquiditaetsgrenze bleibt",
+     "auch mit dem Laderfix erreichen nur 15 von 43 Symbolen 100.000 USD "
+     "Medianumsatz je Stunde. Das ist KEIN Asset-Vorurteil (Regel 3), "
+     "sondern eine physische Handelsgrenze - bei 13.000 USD "
+     "Stundenumsatz waere ein Trade von 5.000 USD 38 Prozent des Volumens"),
+    ("Vorlauf bei laengeren Fenstern",
+     "2.651 zeigt: je laenger das Fenster, desto hoeher die Haltequote "
+     "(0,29 bei H6, 0,74 bei H48). Ob sie bei H72 oder H120 die Schwelle "
+     "0,8 erreicht, ist NICHT gemessen - und das waere der erste Beitrag "
+     "mit echtem VORLAUF"),
+)
+
+
 # ══ DAS REGELWERK - zwei Bewertungen, zwei Zielgroessen ═════
 #
 # Ausfuehrlich: `Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md`
@@ -848,6 +908,10 @@ def stand(mit_befunden: bool = True) -> str:
     a("  NEU. Wenn Hebel funktioniert, dann gehen wir zu den anderen*")
     a("  ⛔ Dieses Blatt kennt den Spot-Arm NICHT - mit Absicht.")
     a("")
+    a("  ⭐⭐ NEU IN EINER SESSION? Zehn Fragen, zehn Antworten,")
+    a("     jede mit dem Befehl zum Selbstpruefen:")
+    a("     Basisinfos/UEBERGABE_Hebelneubau_27_09.md")
+    a("")
 
     # ── Der Hauptplan ────────────────────────────────────────────────
     a("-" * 98)
@@ -902,6 +966,28 @@ def stand(mit_befunden: bool = True) -> str:
     a("  Das Chance-Risiko-Verhaeltnis kommt aus den MESSUNGEN.")
     a("  ✔ Grund: %s" % HEBELSTUFEN_GRUND)
     a("     (der abgeloeste 2.632 nennt vier Stufen - daher die Differenz)")
+    a("")
+
+    # ── Die drei Abdeckungen ─────────────────────────────────────────
+    a("-" * 98)
+    a("⚠️⚠️ DREI ABDECKUNGEN, DIE NICHT DASSELBE SIND")
+    a("  Nutzerhinweis 27.09.: *wir sollten ueberall ca. 87 % Abdeckung")
+    a("  mit Workaround haben* - und ich hatte `turnover` gerade mit")
+    a("  *30 %, strukturell nicht zu retten* abgeschrieben. Beides stimmt.")
+    a("")
+    for schl, (was, zahlen) in ABDECKUNGEN.items():
+        a("  %-10s %s" % (schl.upper(), was))
+        for zeile in _umbruch(zahlen, 76):
+            a("             %s" % zeile)
+    a("")
+    a("  ⛔ `turnover` hat 30 % ZEIT- und 97 % SYMBOLabdeckung. Fuer den")
+    a("     BETRIEB zaehlt die zweite. Was fehlt, ist MESSHISTORIE.")
+    a("")
+    a("  ⚠️ OFFENE AUFGABEN:")
+    for was, warum in OFFENE_AUFGABEN:
+        a("      · %s" % was)
+        for zeile in _umbruch(warum, 76):
+            a("        %s" % zeile)
     a("")
 
     # ── Das Regelwerk ────────────────────────────────────────────────
