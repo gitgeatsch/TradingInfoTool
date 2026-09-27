@@ -17,7 +17,8 @@ Vorgänger: `Bestandsaufnahme_Hebel_26_09.md` (was baurelevant ist),
 | **Merkmal** | `ema_abstand_atr` = `(close − EMA48h) / (ATR × close)` | 2.625/2.626 |
 | **Richtung** | **invers** — niedrigster Wert ist der beste | 2.625 |
 | **EMA-Länge** | **48 Stunden** (nicht 50 Tage — dort fällt MFE/MAE auf 1,00) | **2.606** |
-| **Mindestschwelle** | ⚠️ **NEU ZU RECHNEN** — −1,2881 ist die Kelly-Nullstelle über **alle** Anker; der Betrieb kauft nur **Streckenanfänge** | 2.632 → **2.638** |
+| **Mindestschwelle Binance** | **W ≤ −1,65** — auf Streckenanfängen, erste zeitstabile; 0,42 Signale/Tag, +2,4701 % | **2.640** |
+| **Mindestschwelle CoinGecko** | **W ≤ −2,20** — 0,55 strenger, sonst feuert sie 2,29× so oft bei 38,6 % weniger Ertrag; 0,29 Signale/Tag, +2,6614 % | **2.640** |
 | **Hebelhöhe** | ⛔ **KONSTANT** — die Stufung nach Vierteln ist **nicht belegt** | **2.633** |
 | **Horizont** | H24 ⚠️ *(Widerspruch, siehe § 4)* | 2.628 |
 | **Stop** | **1,00 ATR** (auch Netto-Optimum nach Kosten) | 2.628/2.629 |
