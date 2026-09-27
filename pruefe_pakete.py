@@ -30593,6 +30593,18 @@ def paket_hebelneubau() -> None:
                   and "Bewertung 1 hat KEINEN" not in _st)
     except Exception as _x:                                   # noqa: BLE001
         _st_ok, _n1 = False, repr(_x)
+    try:
+        _nr = [k.split("-")[0] for k, _z, _a in _HN._befunde_ab()]
+        _neu = max(_nr, key=lambda x: int(x.replace(".", "")))
+        _st2 = _HN.stand(mit_befunden=False)
+        _kennt = _neu in _st2.split("NEUESTER STAND", 1)[-1].split("-" * 98)[0]
+    except Exception as _x:                                   # noqa: BLE001
+        _neu, _kennt = repr(_x), False
+    pruefe(P, "⚠️⚠️ das Standblatt nennt den NEUESTEN Neubau-Befund im "
+              "Abschnitt NEUESTER STAND",
+           _kennt,
+           "neuester Befund %s - fehlt er dort, veraltet das Blatt still "
+           "(27.09.: Beitragslage stand auf dem Stand vor 2.651)" % _neu)
     pruefe(P, "⚠️ das Standblatt LEITET die Traegerzahl ab, statt sie "
               "zu behaupten",
            _st_ok,

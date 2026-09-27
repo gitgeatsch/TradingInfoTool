@@ -377,6 +377,38 @@ BEITRAGSLAGE = {
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
 }
 
+# ⚠️⚠️ NEUESTER STAND (27.09. abends, E1 bis E2d) - er geht der Beitragslage
+# oben VOR. Die Beitragslage misst gegen die Zielgroessen des Regelwerks
+# (Ereignis-Lift, MAE); E2 misst gegen das EIGENE Asset und regelfrei. Wo sie
+# sich widersprechen, gilt E2, bis die Zielgroessen neu festgelegt sind.
+# Die Wache verlangt, dass hier der NEUESTE Neubau-Befund steht - sonst
+# veraltet dieses Blatt still, wie am 27.09. schon einmal.
+NEUESTER_STAND = (
+    ("2.654", "E1: Bewegungen erhoben. Ab +10 Prozent braucht es von einem "
+              "beliebigen Zeitpunkt meist mehr als 24 h; fuer 2x/3x ist die "
+              "Liquidation kaum der Engpass, das Risiko ist der Rueckgang VOR "
+              "dem Gewinn; die Grundrate schwankt je Asset um Faktor 2,6"),
+    ("2.655", "E2: die Beitraege sagen die HOEHE stark voraus (vola, "
+              "oi_je_umsatz, oi_aenderung, volumenschub), die RICHTUNG nur "
+              "schwach - kein Kandidat erreicht die Spiegelschwelle. Spuren: "
+              "hoch ueber dem Mittel und wenige Longs positiv, viele Longs "
+              "negativ. oi_aenderung ist Hoehe, nicht Richtung"),
+    ("2.656", "Der Ertrag der UNTEREN Achse (2.626/2.631/2.647) kam aus der "
+              "TRAILING-Regel. Regelfrei ist das untere Ende kein Einstieg; "
+              "2.643 (ganze Achse = Sperre) ist ueberholt. Die Trailing-Befunde "
+              "gehoeren in die Positionsfuehrung"),
+    ("2.657", "Die Squeeze-Familie (hohe Vola & wenige Longs) haelt im "
+              "unberuehrten Jahr 2024 NICHT. Offene Hypothese: dieselbe Lage "
+              "waehrend BTC faellt. Risiko hoch: ueber alle Einstiege binnen "
+              "120 h im Median -10 bis -15 Prozent"),
+    ("2.658", "OFFEN: Vorgriff in vola (Median der ganzen Reihe, 2.650) und "
+              "Stundenluecken (Zeilen statt Stunden) in aelteren Werkzeugen"),
+    ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
+               "Extremen). Naechster Schritt: VORWAERTS rechnen - Kalibrierung "
+               "auf Vergangenem, Pruefung auf dem jeweils naechsten Zeitraum, "
+               "rollierend; dazu Vorwaertsmitschrift ab jetzt"),
+)
+
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
 # Die Merkmalsliste wird aus dem QUELLTEXT gelesen (AST, kein Import) -
 # die Wache kann damit nicht hinter eine neue Messung zurueckfallen.
@@ -1091,6 +1123,16 @@ def stand(mit_befunden: bool = True) -> str:
     a("  ⭐⭐ NEU IN EINER SESSION? Zehn Fragen, zehn Antworten,")
     a("     jede mit dem Befehl zum Selbstpruefen:")
     a("     Basisinfos/UEBERGABE_Hebelneubau_27_09.md")
+    a("")
+
+    # ── Neuester Stand - VOR allem anderen, damit er nicht ueberlesen wird
+    a("-" * 98)
+    a("⚠️⚠️ NEUESTER STAND - er geht dem Rest dieses Blattes VOR")
+    for befund, text in NEUESTER_STAND:
+        zeilen = _umbruch(text, 86)
+        a("  %-6s %s" % (befund, zeilen[0]))
+        for z in zeilen[1:]:
+            a("  %-6s %s" % ("", z))
     a("")
 
     # ── Der Hauptplan ────────────────────────────────────────────────
