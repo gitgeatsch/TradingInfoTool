@@ -6,6 +6,17 @@
 > Bauplan bleibt gültig für die **technischen** Schritte (Dateien,
 > Reihenfolge, Fallen), ist aber der Phase 1 untergeordnet.
 
+### ⭐⭐⭐ Das REGELWERK zur Bewertung
+
+`Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md` — wie aus einer Messung
+eine Regel wird. **Einstieg misst gegen die CHANCE, Hebel gegen das RISIKO.**
+
+⛔ Entstanden aus der Nutzerkritik vom 27.09.: *„Was ist mit turnover und
+funding, diese waren bereits gesetzt oder?“* — an einem Tag zehn
+Kursmerkmale gemessen und die **drei registrierten Träger** nie geladen.
+
+---
+
 ### ⚠️⚠️ Der Faktenteil kommt aus Code — hier steht die Planung
 
 ```bash

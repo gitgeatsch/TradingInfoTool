@@ -130,6 +130,153 @@ AUSWAHLEBENE = {
                "2.647 (absolute Schwellen -1,0 bis -1,8)"),
 }
 
+# ══ DAS REGELWERK - zwei Bewertungen, zwei Zielgroessen ═════
+#
+# Ausfuehrlich: `Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md`
+#
+# ⛔⛔⛔ DER FEHLER, DER ES NOETIG MACHTE (Nutzerkritik 27.09.2026):
+# *"Was ist mit turnover und funding, diese waren bereits gesetzt oder?
+# Du hast recherchiert und noch immer keine Ahnung zum Einstieg und den
+# Merkmalen."*
+#
+# An einem Tag habe ich zehn KURSmerkmale gemessen - und die DREI
+# einzigen registrierten Traeger des Systems kein einziges Mal geladen.
+# Mein eigener Riegel hat sie mir aus dem Blick genommen: `SPOT_QUELLEN`
+# sperrt `funding_fuenftel`, und ich habe die Sperre stillschweigend auf
+# die ROHGROESSE `funding` ausgedehnt - obwohl E-3 sie ausdruecklich
+# freigibt.
+#
+# ⭐ DER KERN DES REGELWERKS, und er hat mir bis heute gefehlt:
+#
+#     EINSTIEG misst gegen die CHANCE, HEBEL gegen das RISIKO.
+#     Zwei Zielgroessen, zwei Messungen - ein Merkmal kann in der
+#     einen tragen und in der anderen nicht.
+REGELWERK = {
+    "bewertung_1": {
+        "name": "Einstieg - zulaessig?",
+        "frage": "Kommt eine Bewegung nach oben?",
+        "zielgroesse": "EREIGNIS (+X Prozent in Y Stunden), regelfrei",
+        "bezug": "das eigene Asset (Lift)",
+        "nullpunkt": "Lift = 1",
+        "ergebnis": "nein | gut | sehr gut",
+        "zusatzbedingung": "KARENZ - der Lift muss mindestens 3 Stunden "
+                           "Abstand zwischen Bewertung und Ereignisfenster "
+                           "ueberleben, sonst misst er die Fortsetzung "
+                           "einer laufenden Bewegung",
+    },
+    "bewertung_2": {
+        "name": "Hebelhoehe",
+        "frage": "Wie weit geht es gegen mich, bevor es fuer mich geht?",
+        "zielgroesse": "MAE in ATR - der maximale Rueckgang",
+        "bezug": "das eigene Asset",
+        "nullpunkt": "der eigene Durchschnitts-MAE",
+        "ergebnis": "2x | 3x | 5x",
+        "zusatzbedingung": "geringeres Risiko -> HOEHERE Stufe",
+    },
+}
+
+# ⚠⚠ WO WELCHER BEITRAG ZAEHLT - der Stand, ehrlich.
+#   "belegt"     gemessen auf DIESER Frage, alle sechs Pruefungen
+#   "ungemessen" auf dieser Frage NIE gemessen (nicht: gefallen)
+#   "faellt"     gemessen und durchgefallen
+#   "spur"       ein Hinweis im Register, nicht gemessen
+BEITRAGSLAGE = {
+    # die drei registrierten Traeger - auf H20/bewegung_r gemessen,
+    # also auf der SPOT-Lage. Auf beiden Hebel-Bewertungen UNGEMESSEN.
+    "funding": ("ungemessen", "ungemessen",
+                "Regler, traegt auf H20 (290 Symbole, 6,3 Jahre); auf "
+                "`barriere` Grauzone"),
+    "turnover": ("ungemessen", "ungemessen",
+                 "Regler, traegt; Richtung +0,00512 - der staerkste der "
+                 "drei; auf `barriere` untermaechtig (66 Symbole)"),
+    "oi_aenderung": ("ungemessen", "ungemessen",
+                     "Schalter, traegt (117 Symbole, 126.491 Anker); auf "
+                     "`barriere` Sperre, keine Hebelquelle"),
+    # gemessen auf den Hebel-Fragen
+    "ema_abstand_atr": ("faellt", "belegt",
+                        "2.642 d 0,521 auf MAE gegen 0,267 auf MFE; 2.648 "
+                        "sagt Abstuerze 9,8-fach voraus - Risiko, nicht "
+                        "Chance"),
+    "momentum_kurz": ("faellt", "ungemessen",
+                      "2.648 Lift 6,93 - bricht bei 3 h Karenz auf 0,31 "
+                      "ein. FORTSETZUNG, kein Optimum"),
+    "rsi": ("faellt", "ungemessen",
+            "2.648 Lift 4,67 - bricht auf 0,43 ein"),
+    "vola": ("faellt", "spur",
+             "Spiegelprobe 1,31 = nur Bewegung. ABER das Register sagt: "
+             "*gehoert in die Geometrie- und Horizontwahl, und ueber "
+             "hebel = verlustanteil / stop_rel faellt daraus der Hebel*"),
+    "bandenge": ("faellt", "faellt",
+                 "Lift 0,84 bis 1,22 gegen ein Band von 2,77 - es haelt "
+                 "die Karenz, weil es NICHTS misst"),
+}
+
+# ⭐ DIE NAECHSTEN DREI MESSUNGEN, in dieser Reihenfolge:
+NAECHSTE_MESSUNGEN = (
+    ("funding, turnover, oi_aenderung auf BEWERTUNG 1",
+     "mit Karenz, auf Assetebene, absolute Schwellen - es sind die "
+     "einzigen registrierten Traeger, und sie sind auf dieser Frage "
+     "ungemessen. Ohne sie ist Bewertung 1 LEER"),
+    ("dieselben drei auf BEWERTUNG 2 (MAE)",
+     "Bewertung 2 hat bisher EINEN Traeger; ein zweiter unabhaengiger "
+     "wuerde die Stufung tragfaehig machen"),
+    ("`vola` in der HEBELHOEHE statt in der Bewertung",
+     "das Register nennt es ausdruecklich als Spur"),
+)
+
+# ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der
+# EMA/RSI/ATR-Familie. Drei unabhaengige Messungen (2.578, 2.645, 2.650)
+# sagen dasselbe - dort ist nichts.
+
+# ══ ⭐⭐⭐ WAS *OPTIMUM* HEISST - die Zieldefinition ═════════════════
+#
+# NUTZERDEFINITION 27.09.2026, woertlich:
+#
+#   *"OPTIMUM ist: wir kennen die Bewertungen und die LAGE VOR DER
+#   BEWEGUNG. Das ist das Ziel, und ist fuer mich auch eine
+#   Wahrscheinlichkeit. Die Bewertung eines BEREITS GESTIEGENEN Assets
+#   ist weder das Ziel noch ist es ein Optimum - dazu brauche ich kein
+#   System, das sehe ich am Kurs, und dann steige ich ein und RATE, ob er
+#   noch weiter steigt."*
+#
+# ⛔⛔ DAS DISQUALIFIZIERT MEINEN EIGENEN BEFUND VON HEUTE ALS
+# EINSTIEGSSIGNAL - nicht als Messung, sondern als ZWECK. 2.648 hat
+# `momentum_kurz >= 0,8509` gemessen, und das heisst woertlich *in den
+# letzten 6 Stunden stark gestiegen*. Der Lift 6,931 auf *+15 Prozent in
+# den NAECHSTEN 6 Stunden* misst damit zu einem guten Teil die
+# FORTSETZUNG einer laufenden Bewegung.
+#
+# ⚠️ Der Befund BLEIBT - er ist gemessen und geprueft. Was sich aendert,
+# ist seine ROLLE: er beantwortet *wo ist eine Bewegung wahrscheinlich*,
+# nicht *wo ist noch etwas uebrig*.
+#
+# ➤ DIE UNTERSCHEIDUNG, DIE AB JETZT GILT:
+#
+#     WAHRSCHEINLICHKEIT   wo kommt am ehesten ein Anstieg?
+#                          -> auch mitten in der Bewegung. KEIN Optimum
+#     OPTIMUM              wo ist am meisten UEBRIG?
+#                          -> VOR der Bewegung. Das ist das Ziel
+#
+# ⚠️⚠️ DAS AUSSCHLUSSKRITERIUM, und es ist hart: ein Merkmal, das die
+# BEWEGUNG SELBST misst, ist kein Einstiegssignal. Wer erst kauft, wenn
+# der Kurs schon gestiegen ist, braucht dafuer kein System.
+OPTIMUM = {
+    "ist": "die Lage und Bewertung VOR der Bewegung - eine "
+           "Wahrscheinlichkeit dafuer, dass eine Bewegung BEGINNT",
+    "ist_nicht": "die Bewertung eines bereits gestiegenen Assets - das "
+                 "sieht man am Kurs, und der Einstieg dort ist Raten",
+    "ausschluss": "ein Merkmal, das die BEWEGUNG SELBST misst, ist kein "
+                  "Einstiegssignal (betrifft momentum_kurz und rsi aus "
+                  "2.648 in ihrer heutigen Form)",
+    "pruefform": "KARENZ - die Lage bei t, das Ereignis erst ab t+k. "
+                 "Bricht der Lift mit wachsendem k ein, war er "
+                 "Fortsetzung; haelt er, war die Lage VORHER erkennbar",
+    "zweite_achse": "VORLAUF - wie weit ist das Asset in den letzten "
+                    "Stunden schon gelaufen? Nutzerbeispiel: *wenn das "
+                    "Asset bereits 50 Prozent gestiegen ist, ist das "
+                    "Risiko einer Korrektur eher gegeben*",
+}
+
 # ══ ⛔⛔⛔ WAS ENDGUELTIG TOT IST ════════════════════════════════════
 #
 # NUTZERFESTLEGUNG 27.09.2026, woertlich: *"Zur Sicherheit: SPOT = HEBEL
@@ -755,6 +902,78 @@ def stand(mit_befunden: bool = True) -> str:
     a("  Das Chance-Risiko-Verhaeltnis kommt aus den MESSUNGEN.")
     a("  ✔ Grund: %s" % HEBELSTUFEN_GRUND)
     a("     (der abgeloeste 2.632 nennt vier Stufen - daher die Differenz)")
+    a("")
+
+    # ── Das Regelwerk ────────────────────────────────────────────────
+    a("-" * 98)
+    a("DAS REGELWERK - zwei Bewertungen, ZWEI ZIELGROESSEN")
+    a("  Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md")
+    a("")
+    a("  ⭐ EINSTIEG misst gegen die CHANCE, HEBEL gegen das RISIKO.")
+    a("     Ein Merkmal kann in der einen tragen und in der anderen nicht.")
+    a("")
+    for schl in ("bewertung_1", "bewertung_2"):
+        r = REGELWERK[schl]
+        a("  %s  %s" % (schl.upper().replace("_", " "), r["name"]))
+        a("      Frage        %s" % r["frage"])
+        a("      Zielgroesse  %s" % r["zielgroesse"])
+        a("      Bezug        %s" % r["bezug"])
+        a("      Nullpunkt    %s" % r["nullpunkt"])
+        a("      Ergebnis     %s" % r["ergebnis"])
+        for i, zeile in enumerate(_umbruch(r["zusatzbedingung"], 62)):
+            a("      %-12s %s" % ("Bedingung" if i == 0 else "", zeile))
+        a("")
+
+    # ── Wo welcher Beitrag zaehlt ────────────────────────────────────
+    a("-" * 98)
+    a("WO WELCHER BEITRAG ZAEHLT - der Stand, ehrlich")
+    a("  ⛔ Nutzerkritik 27.09.: *Was ist mit turnover und funding, diese")
+    a("     waren bereits gesetzt oder?* - An einem Tag zehn KURSmerkmale")
+    a("     gemessen und die DREI registrierten Traeger nie geladen.")
+    a("")
+    a("  %-18s %-12s %-12s %s"
+      % ("Merkmal", "Bewertung1", "Bewertung2", "Beleg"))
+    _mk = {"belegt": "✔✔ belegt", "ungemessen": "⬜ ungemessen",
+           "faellt": "⛔ faellt", "spur": "⭐ spur"}
+    for name, (b1, b2, beleg) in BEITRAGSLAGE.items():
+        a("  %-18s %-12s %-12s %s"
+          % (name, _mk.get(b1, b1), _mk.get(b2, b2),
+             _umbruch(beleg, 46)[0]))
+        for zeile in _umbruch(beleg, 46)[1:]:
+            a("  %-18s %-12s %-12s %s" % ("", "", "", zeile))
+    a("")
+    _off1 = [n for n, v in BEITRAGSLAGE.items() if v[0] == "ungemessen"]
+    _tr2 = [n for n, v in BEITRAGSLAGE.items() if v[1] == "belegt"]
+    a("  ➤ Bewertung 2 hat %d Traeger (%s)." % (len(_tr2), ", ".join(_tr2)))
+    a("  ⛔ Bewertung 1 hat KEINEN - und %d Merkmale sind dort NIE"
+      % len(_off1))
+    a("     gemessen worden: %s" % ", ".join(_off1))
+    a("     Das ist eine LUECKE, keine Sackgasse.")
+    a("")
+    a("  ⭐ DIE NAECHSTEN DREI MESSUNGEN:")
+    for i, (was, warum) in enumerate(NAECHSTE_MESSUNGEN, 1):
+        a("      %d. %s" % (i, was))
+        for zeile in _umbruch(warum, 76):
+            a("         %s" % zeile)
+    a("")
+
+    # ── Was OPTIMUM heisst ───────────────────────────────────────────
+    a("-" * 98)
+    a("⭐⭐⭐ WAS *OPTIMUM* HEISST - die Zieldefinition")
+    a("  Nutzerdefinition 27.09.: *OPTIMUM ist, wir kennen die Bewertungen")
+    a("  und die LAGE VOR DER BEWEGUNG. Die Bewertung eines bereits")
+    a("  gestiegenen Assets ist weder das Ziel noch ein Optimum - dazu")
+    a("  brauche ich kein System, das sehe ich am Kurs.*")
+    a("")
+    for schl in ("ist", "ist_nicht", "ausschluss", "pruefform",
+                 "zweite_achse"):
+        a("  %-14s %s" % (schl.upper(), _umbruch(OPTIMUM[schl], 76)[0]))
+        for zeile in _umbruch(OPTIMUM[schl], 76)[1:]:
+            a("  %-14s %s" % ("", zeile))
+    a("")
+    a("  ⛔⛔ Das disqualifiziert 2.648 als EINSTIEGSSIGNAL - nicht als")
+    a("     Messung, sondern als ZWECK. Der Befund bleibt; seine ROLLE")
+    a("     aendert sich.")
     a("")
 
     # ── Was tot ist ──────────────────────────────────────────────────

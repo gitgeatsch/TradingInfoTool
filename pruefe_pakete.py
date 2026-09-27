@@ -30434,6 +30434,54 @@ def paket_hebelneubau() -> None:
            "dass es Abstuerze anzeigt, BESTAETIGT die Risikosperre - es "
            "widerlegt sie nicht. 2.642/2.643/2.647 bleiben stehen")
 
+    # ── 3b1. DAS REGELWERK - und die drei vergessenen Traeger ───
+    #
+    # ⛔⛔⛔ NUTZERKRITIK 27.09.2026: *"Was ist mit turnover und
+    # funding, diese waren bereits gesetzt oder? Du hast recherchiert und
+    # noch immer keine Ahnung zum Einstieg und den Merkmalen."*
+    #
+    # An EINEM Tag habe ich zehn KURSmerkmale gemessen und die DREI
+    # einzigen registrierten Traeger des Systems kein einziges Mal
+    # geladen. Der eigene Riegel hat sie mir aus dem Blick genommen:
+    # `SPOT_QUELLEN` sperrt `funding_fuenftel`, und ich habe die Sperre
+    # stillschweigend auf die ROHGROESSE `funding` ausgedehnt - obwohl
+    # E-3 sie ausdruecklich freigibt.
+    pruefe(P, "⭐ das Regelwerk fuehrt ZWEI Bewertungen mit ZWEI Zielgroessen",
+           (set(_HN.REGELWERK) == {"bewertung_1", "bewertung_2"}
+            and "EREIGNIS" in _HN.REGELWERK["bewertung_1"]["zielgroesse"]
+            and "MAE" in _HN.REGELWERK["bewertung_2"]["zielgroesse"]),
+           "Einstieg misst gegen die CHANCE, Hebel gegen das RISIKO - ein "
+           "Merkmal kann in der einen tragen und in der anderen nicht")
+    pruefe(P, "⚠️⚠️ Bewertung 1 verlangt die KARENZ",
+           "karenz" in _HN.REGELWERK["bewertung_1"]["zusatzbedingung"].lower(),
+           "ohne sie misst man die Fortsetzung einer laufenden Bewegung - "
+           "und *die Bewertung eines bereits gestiegenen Assets ist weder "
+           "das Ziel noch ein Optimum* (Nutzerdefinition 27.09.)")
+    pruefe(P, "⛔⛔⛔ die DREI registrierten Traeger stehen in der Beitragslage",
+           all(n in _HN.BEITRAGSLAGE
+               for n in ("funding", "turnover", "oi_aenderung")),
+           "funding, turnover und oi_aenderung sind die einzigen "
+           "registrierten Traeger des Systems - sie duerfen im Neubau "
+           "nicht aus dem Blick geraten")
+    pruefe(P, "⚠️⚠️ und sie sind als UNGEMESSEN gefuehrt, nicht als gefallen",
+           all(_HN.BEITRAGSLAGE[n][0] == "ungemessen"
+               for n in ("funding", "turnover", "oi_aenderung")),
+           "sie sind auf H20 gegen `bewegung_r` gemessen - der Spot-Lage. "
+           "Auf den beiden Hebel-Bewertungen sind sie UNGEPRUEFT. Das ist "
+           "eine Luecke, keine Sackgasse - und der Unterschied ist genau "
+           "der zwischen `null` und `nie` aus dem alten Zustandsmodell")
+    pruefe(P, "⚠️ der Riegel laesst die ROHGROESSEN durch (E-3)",
+           not any(_bricht(n) for n in ("funding", "turnover",
+                                        "oi_aenderung")),
+           "gesperrt sind `funding_fuenftel` und `turnover_fuenftel` - "
+           "die alten BEITRAGSSTUFEN. Die Rohgroessen sind frei, und "
+           "genau das habe ich uebersehen")
+    pruefe(P, "⭐ und die naechsten Messungen stehen fest",
+           (len(_HN.NAECHSTE_MESSUNGEN) >= 3
+            and "funding" in _HN.NAECHSTE_MESSUNGEN[0][0]),
+           "erst die drei Traeger auf Bewertung 1, dann auf Bewertung 2, "
+           "dann vola in der Hebelhoehe - keine weiteren Kursmerkmale")
+
     # ── 3b2c. WAS ENDGUELTIG TOT IST ──────────────────
     #
     # ⚠️⚠️⚠️ NUTZERFESTLEGUNG 27.09.2026: *"Zur Sicherheit: SPOT =
