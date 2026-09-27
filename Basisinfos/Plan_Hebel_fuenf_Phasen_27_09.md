@@ -79,6 +79,54 @@ Tabelle gelegt und daraus über A geurteilt.
 
 ---
 
+# ⛔⛔⛔ Die Korrektur vom 27.09. abends — ich war im falschen Arm
+
+> **Nutzervorgabe:** *„WIR sind bei einem NEUBAU des Hebels, die alten
+> Beiträge sind nicht relevant. NUR HEBEL UMBAU … trenne ALT von NEU,
+> sonst killt uns der Umbau."*
+
+## Die drei Rollen — aus dem Neubauplan vom 25.09.
+
+| Rolle | Frage | Testform | Kandidaten | Stand |
+|---|---|---|---|---|
+| **A Richtung** | geht es aufwärts? Trendumkehr? | monotone Ordnung **plus Spiegelprobe** | `trendstruktur` (mehrere Zeitebenen), `ema_lage`, `ema_steigung`, **`rsi_aenderung`** (tief *und steigend*) | ⛔ **nicht gebaut** |
+| **B Bewegungserwartung** | kommt überhaupt etwas? | gegen die **Auflösungsrate**, nicht gegen `q` — B ist richtungslos | `bandenge` (Squeeze) | ⛔ **nicht gebaut** |
+| **C Risikosperre** | überdehnt, überhitzt? | **Ausschlusstest** — verbessert das Weglassen des Extrems den Rest? | **`ema_abstand_atr`** | ✔ gemessen (2.642) |
+
+**Anordnung: `A ∧ B ∧ ¬C`** — keine Summe, kein gemeinsames Fünftel.
+
+⭐⭐ **`ema_abstand_atr` ist Rolle C.** Ich habe sie zwei Tage lang als
+Einstiegssignal vermessen. 2.642 („Risiko-Filter, kein Ertragsfilter")
+ist damit **kein Rückschlag, sondern die Bestätigung ihrer Rolle**.
+
+## ⛔ Dreimal in den Spot-Arm zurückgerutscht
+
+| | |
+|---|---|
+| **1** | `funding_fuenftel` / `turnover_fuenftel` als „unsere Beiträge" behandelt — beide `instrumente=("spot",)`, auf H20 und `bewegung_r` gemessen |
+| **2** | die **Kelly-Nullstelle** als Bewertungsschwelle benutzt — dieselbe Formel, mit der der Spot-Arm seine Quote rechnet |
+| **3** | die **Risikosperre** als Einstiegssignal vermessen |
+
+✔ **Der Riegel steht jetzt im Code** (`hebel_neubau.pruefe_quellen`) und
+wird vom Suite-Paket **`Hebelneubau`** bewacht (10 Prüfungen).
+⛔ **Der produktive Spot-Arm wurde NICHT stillgelegt** — er führt offene
+Positionen; das braucht einen eigenen Auftrag.
+
+## Die Abdeckung für den Hebel — gemessen 27.09.
+
+| | Symbole | Anteil |
+|---|---|---|
+| `asset_hebel_settings` freigegeben | 43 | 100 % |
+| mit Stundenkursen (≥ 300 h) | 28 | **65,1 %** |
+| ⚠️ **davon liquide** (≥ 100.000 USD/h) | **15** | **34,9 %** |
+
+APT · AVAX · BNB · BTC · ETH · INJ · **KAITO** · LINK · NEAR · ONDO ·
+SOL · SUI · TAO · VIRTUAL · XLM — ⚠️ gegenüber 2.611 **KAITO statt
+RENDER**, die Grenze ist beweglich. Mit dem Laderfix → 86 %.
+
+⚠️ `funding` und `turnover` kommen aus Terminmarkt und Umlaufmenge —
+**Spot-Quellen, hier irrelevant**.
+
 # Was Phase 1 noch verlangt
 
 | # | offen | |

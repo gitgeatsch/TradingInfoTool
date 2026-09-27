@@ -30201,6 +30201,81 @@ def paket_protokoll() -> None:
 
 
 
+def paket_hebelneubau() -> None:
+    """Der HEBEL-NEUBAU und die Trennung von SPOT (27.09.2026).
+
+    ⚠️⚠️ WARUM ES DIESES PAKET GIBT: ich bin am 26. und 27.09. DREIMAL in
+    den Spot-Arm zurueckgerutscht - `funding_fuenftel`/`turnover_fuenftel`
+    als *unsere Beitraege* behandelt, die Kelly-Nullstelle als
+    Bewertungsschwelle benutzt, und `ema_abstand_atr` als Einstiegssignal
+    vermessen, obwohl es im Neubauplan die RISIKOSPERRE ist.
+
+    Nutzervorgabe 27.09.: *trenne ALT von NEU, sonst killt uns der Umbau.*
+
+    ⚠️ Ein Hinweis in der Doku hat das nicht verhindert - deshalb ein
+    ABBRUCH im Code (`hebel_neubau.pruefe_quellen`). Und weil ein Schutz,
+    den niemand ausfuehrt, keiner ist, bewacht dieses Paket ihn."""
+    P = "Hebelneubau"
+    import hebel_neubau as _HN
+
+    # ── 1. Der Riegel muss ABBRECHEN, nicht warnen ───────────────────
+    def _bricht(*n, **kw):
+        try:
+            _HN.pruefe_quellen(*n, **kw)
+            return False
+        except _HN.SpotVermischung:
+            return True
+
+    pruefe(P, "⚠️⚠️ der Riegel BRICHT AB bei einer Spot-Groesse",
+           _bricht("funding_fuenftel"),
+           "eine Warnung haette ich dreimal ueberlesen - es muss ein "
+           "Abbruch sein")
+    pruefe(P, "⚠️ und bei einer ERTRAGSgroesse (2.641)",
+           _bricht("kelly"),
+           "Kelly kommt aus q und CRV, also aus Ertraegen - in der "
+           "Bewertung verboten")
+    pruefe(P, "er laesst die Hebel-Kandidaten durch",
+           not _bricht("ema_abstand_atr", "bandenge", "trendstruktur"),
+           "sonst waere er unbrauchbar und wuerde umgangen")
+    pruefe(P, "⚠️ eine Ausnahme ist nur SICHTBAR moeglich",
+           not _bricht("funding_fuenftel", erlaubt=("funding_fuenftel",)),
+           "`erlaubt=(...)` steht im Aufruf und ist beim Lesen zu sehen - "
+           "kein Vorgabewert, in dem sie sich versteckt")
+
+    # ── 2. Die drei Rollen stehen, und die Anordnung auch ────────────
+    pruefe(P, "die drei Rollen A/B/C sind hinterlegt",
+           set(_HN.ROLLEN) == {"A", "B", "C"},
+           "A Richtung, B Bewegungserwartung, C Risikosperre - "
+           "Anordnung A und B und NICHT C")
+    pruefe(P, "⚠️⚠️ `ema_abstand_atr` steht bei C, nicht bei A",
+           any(k[0] == "ema_abstand_atr" for k in _HN.KANDIDATEN["C"])
+           and not any(k[0] == "ema_abstand_atr"
+                       for k in _HN.KANDIDATEN["A"]),
+           "genau diese Verwechslung war der Fehler vom 27.09.: eine "
+           "RISIKOSPERRE als Einstiegssignal vermessen")
+
+    # ── 3. Die Spot-Quellen sind konkret benannt ─────────────────────
+    pruefe(P, "⚠️ die Spot-Quellen sind EINZELN benannt, nicht pauschal",
+           len(_HN.SPOT_QUELLEN) >= 5
+           and "funding_fuenftel" in _HN.SPOT_QUELLEN
+           and "turnover_fuenftel" in _HN.SPOT_QUELLEN,
+           "ein allgemeines *keine Spot-Sachen* haette mich nicht "
+           "aufgehalten")
+
+    # ── 4. Der Bestand kennt die Trennung ────────────────────────────
+    import bestand as _B
+    _k = {b.kennung: b for b in _B.BEFUNDE}
+    pruefe(P, "2.641 (drei Ebenen) gilt",
+           any(x.startswith("2.641") and _k[x].stand == "gilt" for x in _k),
+           "Bewertung / Erfolgsmessung / Betriebsbedingungen")
+    pruefe(P, "⚠️ die vier ertragsabgeleiteten Befunde sind ABGELOEST",
+           all(any(x.startswith(n) and _k[x].stand == "abgeloest"
+                   for x in _k)
+               for n in ("2.630", "2.632", "2.639", "2.640")),
+           "2.630/2.632/2.640 leiteten die Schwelle aus Kelly ab, 2.639 "
+           "rechnete mit 20 bis 50 Prozent Einsatz statt 1,2 bis 7,8")
+
+
 def paket_zaehlung() -> None:
     """Schritt 59 Phase 2 (18.09.2026) - die Live-Zaehlung (D1-D6).
 
@@ -30359,6 +30434,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "NurLesend": paket_nur_lesend,
           "Mailabschnitte": paket_mailabschnitte,
           "Protokoll": paket_protokoll,
+          "Hebelneubau": paket_hebelneubau,
           "Zaehlung": paket_zaehlung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,
