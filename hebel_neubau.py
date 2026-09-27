@@ -411,6 +411,11 @@ NEUESTER_STAND = (
               "Long-Konten ist FRAGIL (1 h Versatz halbiert oder loescht es), "
               "die Bestaetigung hilft nur bei 5 von 9. ROBUST: die SPERRE viele "
               "Longs, in allen Regimen und Laeufen negativ"),
+    ("2.661", "RICHTUNGSDATEN geladen und geprueft: Kaeuferanteil, "
+              "Premium-Index, BTC-Dominanz-Index (BTCDOMUSDT), stuendlich "
+              "2023-01 bis 2026-08, data/richtung_historie.db. Naechster "
+              "Schritt: sie mit dem Pflichtablauf messen (E2 -> E3 -> "
+              "Gegenpruefung)"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Offen zur Abstimmung: wie weiter ohne regimefesten "
                "Einstieg - Vorwaertsmitschrift, neue Richtungsdaten, oder "

@@ -30597,6 +30597,8 @@ def paket_hebelneubau() -> None:
     # POSITIVER Neubau-Befund ab 2.661 (Aussage beginnt mit ✔ oder ⭐) muss in
     # seiner Basis die Vorwaertsrechnung und die Gegenpruefung nennen. Heute
     # waeren ohne beide zwei Aussagen stehen geblieben (2.660).
+    _MESSWORTE = ("traegt", "tragen", "lift", "e[r]", "signifikant",
+                  "q =", "q=", "vorhersag", "trefferquote")
     def _pflicht_fehlt(befunde):
         aus = []
         for kennung, zustand, aussage, basis in befunde:
@@ -30609,6 +30611,14 @@ def paket_hebelneubau() -> None:
             if not aussage.lstrip().startswith(("✔", "⭐")):
                 continue
             b = (basis or "").lower()
+            # Daten- oder Code-Befunde sind keine Lagemessung - sie sagen es
+            # selbst am Anfang der Basis. ⚠️ Die Ausnahme gilt NUR, wenn die
+            # Aussage auch nichts Gemessenes behauptet - sonst waere die
+            # Beschriftung ein Weg am Pflichtablauf vorbei (Gegenprobe unten)
+            a = aussage.lower()
+            if (b.lstrip().startswith("keine messung")
+                    and not any(w in a for w in _MESSWORTE)):
+                continue
             if not ("vorwaerts" in b and "gegenpruef" in b):
                 aus.append(kennung)
         return aus
@@ -30626,8 +30636,15 @@ def paket_hebelneubau() -> None:
                               str(_k.args[1].value), _bas))
         _pf = _pflicht_fehlt(_alle)
         _gegen = _pflicht_fehlt([("2.999-probe", "gilt", "✔ traegt", "Nullwelt, Jahre")])
+        # die Ausnahme fuer Datenbefunde: ein echter bleibt frei, ein
+        # getarnter (behauptet Tragen, beschriftet als KEINE MESSUNG) nicht
+        _gegen_daten = _pflicht_fehlt([
+            ("2.998-daten", "gilt", "✔ Daten geladen und geprueft",
+             "KEINE MESSUNG - Datenbeschaffung"),
+            ("2.997-getarnt", "gilt", "✔ der Kaeuferanteil traegt, Lift 1,4",
+             "KEINE MESSUNG - nur eine Auswertung")])
     except Exception as _x:                                   # noqa: BLE001
-        _pf, _gegen = ["ABBRUCH %r" % (_x,)], []
+        _pf, _gegen, _gegen_daten = ["ABBRUCH %r" % (_x,)], [], []
     pruefe(P, "⭐⭐⭐ jeder POSITIVE Neubau-Befund ab 2.661 nennt Vorwaertsrechnung "
               "UND Gegenpruefung (Pflichtablauf)",
            not _pf,
@@ -30637,6 +30654,11 @@ def paket_hebelneubau() -> None:
            _gegen == ["2.999-probe"],
            "ein kuenstlicher positiver Befund ohne Vorwaerts/Gegenpruefung muss "
            "gemeldet werden - sonst prueft sie nichts")
+    pruefe(P, "⚠️ die Ausnahme KEINE MESSUNG laesst Datenbefunde durch, "
+              "aber keinen getarnten Messbefund (Gegenprobe)",
+           _gegen_daten == ["2.997-getarnt"],
+           "gemeldet: %s - erwartet nur 2.997-getarnt (27.09.: die Ausnahme "
+           "kam mit 2.661, dem Datenbefund zu den Richtungsdaten)" % (_gegen_daten,))
     try:
         _nr = [k.split("-")[0] for k, _z, _a in _HN._befunde_ab()]
         _neu = max(_nr, key=lambda x: int(x.replace(".", "")))
