@@ -219,10 +219,16 @@ REGELWERK = {
         "bezug": "das eigene Asset (Lift)",
         "nullpunkt": "Lift = 1",
         "ergebnis": "nein | gut | sehr gut",
-        "zusatzbedingung": "KARENZ - der Lift muss mindestens 3 Stunden "
-                           "Abstand zwischen Bewertung und Ereignisfenster "
-                           "ueberleben, sonst misst er die Fortsetzung "
-                           "einer laufenden Bewegung",
+        # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
+        # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
+        # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
+        # Messung als Annahme siehst oder wir gute Signale kappen.*
+        "zusatzbedingung": "KARENZ als ACHSE, nicht als Filter (2.650): "
+                           "k=0 ist der BETRIEBSFALL, im Betrieb steigt "
+                           "man sofort ein. k>0 ist die Diagnose, ob das "
+                           "Merkmal die Bewegung VORHERSAGT oder nur "
+                           "begleitet (VORLAUF). Beide Zahlen werden "
+                           "ausgewiesen, keine kappt die andere",
     },
     "bewertung_2": {
         "name": "Hebelhoehe",
@@ -236,52 +242,219 @@ REGELWERK = {
 }
 
 # ⚠⚠ WO WELCHER BEITRAG ZAEHLT - der Stand, ehrlich.
+#
+# ⛔⛔ BIS 27.09. ABENDS STAND HIER DER STAND VOR 2.651 - und die Suite
+# erzwang ihn: eine Pruefung verlangte `funding`, `turnover` und
+# `oi_aenderung` als "ungemessen". Das Blatt schickte jede neue Session
+# auf eine Messung, die schon gelaufen war. Deshalb traegt jetzt JEDER
+# Eintrag seinen Befund, und die Wache leitet die gemessenen Merkmale aus
+# dem QUELLTEXT der Messskripte ab (`gemessene_merkmale`), nicht aus
+# einer Liste, die man vergisst.
+#
+# Zustaende je Bewertung:
 #   "belegt"     gemessen auf DIESER Frage, alle sechs Pruefungen
+#   "faellt"     gemessen und durchgefallen (Band, Spiegelprobe, Richtung)
 #   "ungemessen" auf dieser Frage NIE gemessen (nicht: gefallen)
-#   "faellt"     gemessen und durchgefallen
 #   "spur"       ein Hinweis im Register, nicht gemessen
+#
+# ⭐ `vorlauf` ist ein EIGENES Feld (E1/E2, 27.09.): die Karenz ist eine
+#   ACHSE. "belegt" heisst: traegt beim sofortigen Einstieg (k=0).
+#   `vorlauf` sagt, ob es die Bewegung auch VORHER anzeigt - das
+#   Optimum laut Nutzerdefinition. None = entfaellt, weil b1 nicht traegt.
+#
+# ⭐ `live` fragt nach der QUELLE, nicht nach dem heutigen Sammler -
+#   Nutzerhinweis 27.09.: *der aktuelle Betriebscode ist veraltet.*
+#
+# ⭐ `spot` (E-8, Nutzervorgabe 27.09.): die Spot-Quellen sind NICHT
+#   irrelevant. Sie wurden fuer H20 optimiert und vermessen - nur die
+#   ANWENDUNG ist auf den Hebel zu dimensionieren (kurzer, intensiver
+#   Handel). Die Spot-MESSWERTE gelten fuer den Hebel nicht (Riegel).
+_Q_TM = ("terminmarkt_historie.db - Binance-Archiv data.binance.vision, "
+         "5 min, je Stunde der LETZTE Wert (~HH:55)")
+_L_TM = ("ja - dieselben Kennzahlen ueber die Binance-Futures-"
+         "Datenendpunkte (an der echten API zu bestaetigen; das Archiv "
+         "selbst gibt es nur tageweise)")
+_Q_KURS = "stundenkurse.db - Binance-Stundenkerzen"
+_L_KURS = "ja - Binance-Stundenkerzen"
 BEITRAGSLAGE = {
-    # die drei registrierten Traeger - auf H20/bewegung_r gemessen,
-    # also auf der SPOT-Lage. Auf beiden Hebel-Bewertungen UNGEMESSEN.
-    "funding": ("ungemessen", "ungemessen",
-                "Regler, traegt auf H20 (290 Symbole, 6,3 Jahre); auf "
-                "`barriere` Grauzone"),
-    "turnover": ("ungemessen", "ungemessen",
-                 "Regler, traegt; Richtung +0,00512 - der staerkste der "
-                 "drei; auf `barriere` untermaechtig (66 Symbole)"),
-    "oi_aenderung": ("ungemessen", "ungemessen",
-                     "Schalter, traegt (117 Symbole, 126.491 Anker); auf "
-                     "`barriere` Sperre, keine Hebelquelle"),
-    # gemessen auf den Hebel-Fragen
-    "ema_abstand_atr": ("faellt", "belegt",
-                        "2.642 d 0,521 auf MAE gegen 0,267 auf MFE; 2.648 "
-                        "sagt Abstuerze 9,8-fach voraus - Risiko, nicht "
-                        "Chance"),
-    "momentum_kurz": ("faellt", "ungemessen",
-                      "2.648 Lift 6,93 - bricht bei 3 h Karenz auf 0,31 "
-                      "ein. FORTSETZUNG, kein Optimum"),
-    "rsi": ("faellt", "ungemessen",
-            "2.648 Lift 4,67 - bricht auf 0,43 ein"),
-    "vola": ("faellt", "spur",
-             "Spiegelprobe 1,31 = nur Bewegung. ABER das Register sagt: "
-             "*gehoert in die Geometrie- und Horizontwahl, und ueber "
-             "hebel = verlustanteil / stop_rel faellt daraus der Hebel*"),
-    "bandenge": ("faellt", "faellt",
-                 "Lift 0,84 bis 1,22 gegen ein Band von 2,77 - es haelt "
-                 "die Karenz, weil es NICHTS misst"),
+    # ── die drei registrierten Traeger ───────────────────────────────
+    "funding": dict(
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
+        beleg="Lift 9,55 bei <= -0,0040 auf +15 %/H12, traegt in allen "
+              "vier Fenstern; Haltequote k24/k0 0,29 bis 0,74",
+        quelle="funding_historie.db - Binance fundingRate, gespeichert "
+               "als TAGESSUMME der drei Abrechnungen (00/08/16 UTC)",
+        live="ja - aber als EINZELSATZ je Abrechnung; die Tagessumme ist "
+             "erst nach Tagesende bekannt",
+        spot="Regler, auf H20/bewegung_r vermessen (290 Symbole, 6,3 Jahre)",
+        vorbehalt="VORGRIFF UNGEPRUEFT: die Tagessumme steht an JEDER "
+                  "Stunde desselben Tages (messe_traeger_auf_bewertung1"
+                  ".py:288, hole_fremdreihen.py:151-161) - ein Anker um "
+                  "01:00 kennt die Abrechnungen von 08:00 und 16:00. "
+                  "Groesse der Wirkung NICHT gemessen"),
+    "oi_aenderung": dict(
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
+        beleg="Lift 6,23 bei >= 0,3355 auf +20 %/H24, 5,02 auf +30 %/H48; "
+              ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67",
+        quelle=_Q_TM, live=_L_TM,
+        spot="Schalter, auf H20 vermessen (117 Symbole, 126.491 Anker)",
+        vorbehalt=""),
+    "turnover": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="ueber dem Band, aber NUR BEWEGUNG (Spiegel 0,76 bis 1,67 "
+              "gegen 1,717) in allen vier Fenstern; die voll abgedeckte "
+              "Schwestergroesse `volumenschub` faellt genauso",
+        quelle="Stundenvolumen / freier Umlauf (umlaufmenge_cg.db) - der "
+               "Nenner reicht nur 2025-09 bis 2026-09: 30 % der Anker, "
+               "113 von 116 Symbolen",
+        live="ja - Stundenkerzen und CoinGecko-Umlauf (taeglich)",
+        spot="Regler, auf H20 vermessen - die Spot-Form (Tageskerze, "
+             "Fuenftel) ist davon UNBERUEHRT",
+        vorbehalt=""),
+    # ── Terminmarkt und Volumen, mitgemessen in 2.651 ───────────────
+    "konten_verh": dict(
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.651",),
+        beleg="Lift 2,96 bei <= 0,5759 - traegt NUR auf H6 und H12; "
+              "Haltequote 0,60 bis 0,66",
+        quelle=_Q_TM, live=_L_TM, spot="", vorbehalt=""),
+    "oi_je_umsatz": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="ueber dem Band, aber nur Bewegung (Spiegel 1,00 bis 1,53)",
+        quelle=_Q_TM + " und Stundenvolumen", live=_L_TM, spot="",
+        vorbehalt=""),
+    "volumenschub": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35)",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    "taker_verh": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="in keiner Zielgroesse ueber dem Suchband (Bestes-von-160, "
+              "2,834)",
+        quelle=_Q_TM, live=_L_TM, spot="", vorbehalt=""),
+    "top_konten_verh": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="in keiner Zielgroesse ueber dem Suchband (2,834)",
+        quelle=_Q_TM, live=_L_TM, spot="",
+        vorbehalt=""),
+    "top_summe_verh": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.651",),
+        beleg="in keiner Zielgroesse ueber dem Suchband (2,834)",
+        quelle=_Q_TM, live=_L_TM, spot="",
+        vorbehalt=""),
+    # ── Kursmerkmale (EMA/RSI/ATR-Familie, abgeschlossen) ──────────
+    "ema_abstand_atr": dict(
+        b1="faellt", vorlauf=None, b2="belegt",
+        befund=("2.642", "2.647", "2.648", "2.650"),
+        beleg="B2: d 0,521 auf MAE gegen 0,267 auf MFE (2.642), absolut "
+              "und je Asset (2.647). B1: Richtung RUNTER - Abstuerze "
+              "9,8-fach (2.648), bei Karenz null von 11 (2.650). "
+              "Risikosperre, keine Chance",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    "momentum_kurz": dict(
+        b1="belegt", vorlauf="nein", b2="ungemessen",
+        befund=("2.648", "2.650"),
+        beleg="Lift 6,93 auf +15 %/H6, alle sechs Pruefungen (2.648); "
+              "Haltequote k24/k0 0,31, bei k=3 schon null von 11 (2.650) - "
+              "BEGLEITET, sagt nicht vorher",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    "rsi": dict(
+        b1="belegt", vorlauf="nein", b2="ungemessen",
+        befund=("2.648", "2.650"),
+        beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650)",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    "vola": dict(
+        b1="faellt", vorlauf=None, b2="spur", befund=("2.650",),
+        beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
+              "Bewegung. B2-Spur laut Register: *ueber hebel = "
+              "verlustanteil / stop_rel faellt daraus der Hebel*",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    "bandenge": dict(
+        b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.650",),
+        beleg="Lift 0,84 bis 1,22 gegen ein Band von 2,77 - es haelt die "
+              "Karenz, weil es NICHTS misst. ⚠ Der fruehere Eintrag "
+              "*faellt* auf B2 hatte KEINEN Befund: 2.645 mass gegen E[R], "
+              "2.650 gegen das Ereignis - keines gegen MAE",
+        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
 }
 
-# ⭐ DIE NAECHSTEN DREI MESSUNGEN, in dieser Reihenfolge:
+# ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
+# Die Merkmalsliste wird aus dem QUELLTEXT gelesen (AST, kein Import) -
+# die Wache kann damit nicht hinter eine neue Messung zurueckfallen.
+# ⚠️ Das Skript muss im Quellenfeld des Befundes stehen; sonst bricht die
+# Wache ab (der Eintrag hier waere dann erfunden).
+MESSUNGEN_NEUBAU = {
+    "2.651": ("messe_traeger_auf_bewertung1.py", "GRUPPEN", "b1"),
+    "2.650": ("messe_lage_vor_der_bewegung.py", "NAMEN", "b1"),
+}
+KONTROLLMERKMALE = ("zufall",)
+
+
+def gemessene_merkmale() -> dict:
+    """-> {befund: (bewertung, {merkmal, ...})} aus dem Quelltext, OHNE Import.
+
+    ⚠️ Fehlt ein Skript oder die Variable, wird abgebrochen - eine leere
+    Menge saehe aus wie *nichts gemessen*, und genau diesen Fehler
+    beseitigt dieses Paket.
+    """
+    import ast
+    import io as _io
+    import os as _os
+
+    aus = {}
+    hier = _os.path.dirname(_os.path.abspath(__file__))
+    for befund, (skript, variable, bewertung) in MESSUNGEN_NEUBAU.items():
+        baum = ast.parse(_io.open(_os.path.join(hier, skript),
+                                  encoding="utf-8").read())
+        wert = None
+        for k in ast.walk(baum):
+            if (isinstance(k, ast.Assign) and len(k.targets) == 1
+                    and getattr(k.targets[0], "id", "") == variable):
+                wert = ast.literal_eval(k.value)
+                break
+        if wert is None:
+            raise RuntimeError("%s: `%s` nicht gefunden in %s"
+                               % (befund, variable, skript))
+        namen = ([n for g in wert.values() for n in g]
+                 if isinstance(wert, dict) else list(wert))
+        aus[befund] = (bewertung, {n for n in namen
+                                   if n not in KONTROLLMERKMALE})
+    return aus
+
+
+# ⭐ DIE NAECHSTEN MESSUNGEN, in dieser Reihenfolge.
+#   art "probe"    prueft einen Vorbehalt an einem geltenden Befund (R-R11:
+#                  erst reproduzieren, dann die vorgriffsfreie Form)
+#   art "vorlauf"  dieselben Traeger auf laengeren Fenstern - die ACHSE
+#   art "neu"      ein Merkmal auf einer Bewertung, auf der es NIE
+#                  gemessen wurde
+# ⚠️ Der Laderfix 2.611 ist keine Messung und steht unter OFFENE_AUFGABEN.
 NAECHSTE_MESSUNGEN = (
-    ("funding, turnover, oi_aenderung auf BEWERTUNG 1",
-     "mit Karenz, auf Assetebene, absolute Schwellen - es sind die "
-     "einzigen registrierten Traeger, und sie sind auf dieser Frage "
-     "ungemessen. Ohne sie ist Bewertung 1 LEER"),
-    ("dieselben drei auf BEWERTUNG 2 (MAE)",
-     "Bewertung 2 hat bisher EINEN Traeger; ein zweiter unabhaengiger "
-     "wuerde die Stufung tragfaehig machen"),
-    ("`vola` in der HEBELHOEHE statt in der Bewertung",
-     "das Register nennt es ausdruecklich als Spur"),
+    dict(was="Vorgriffsprobe `funding` auf BEWERTUNG 1",
+         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.651",
+         warum="2.651 erst reproduzieren, dann mit dem VORTAGESWERT (d-1) "
+               "- streng vorgriffsfrei, ohne neuen Abruf. Nur falls noetig "
+               "Stufe 2: Summe der letzten drei ABGERECHNETEN Saetze "
+               "(braucht die Einzelsaetze, `hole_fremdreihen.py` fasst sie "
+               "zusammen). Das ist zugleich die Form, die live beschaffbar "
+               "ist. Vorher baut nichts auf `funding` aus 2.651 auf"),
+    dict(was="Vorlauf bei H72 und H120",
+         art="vorlauf", bewertung="b1",
+         merkmale=("funding", "oi_aenderung", "konten_verh"),
+         warum="die Haltequote steigt mit dem Fenster (0,29 bei H6, 0,74 "
+               "bei H48) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
+               "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
+               "`funding` in der Form, die die Probe ergibt"),
+    dict(was="Messung 2 des Regelwerks: BEWERTUNG 2 (MAE)",
+         art="neu", bewertung="b2",
+         merkmale=("funding", "oi_aenderung", "konten_verh"),
+         warum="Bewertung 2 hat EINEN Traeger (ema_abstand_atr); ein "
+               "zweiter unabhaengiger macht die Stufung tragfaehig. Ob "
+               "Nebenmerkmale, momentum_kurz/rsi und bandenge mitlaufen, "
+               "entscheidet die Voranalyse dazu (E5, 27.09.)"),
+    dict(was="`vola` in der HEBELHOEHE",
+         art="neu", bewertung="b2", merkmale=("vola",),
+         warum="das Register nennt es als Spur - Geometrie- und "
+               "Horizontwahl, nicht Einstieg"),
 )
 
 # ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der
@@ -635,10 +808,16 @@ EINBETTUNG = {
          "Stufen, Mailausgabe - sie ist der Rahmen und wird NICHT "
          "neu gebaut"),
         ("Der Pruefzeitpunkt", "Spot und Hebel werden zum SELBEN Zeitpunkt "
-         "bewertet. Das ist laut Nutzervorgabe 27.09. die einzige "
+         "bewertet - ZWEI unterschiedliche Pruefungen, EIN Gewinner "
+         "(E-8). Das ist laut Nutzervorgabe 27.09. die einzige "
          "Gemeinsamkeit der beiden Arme - und sie bleibt"),
+        ("Die Datenquellen", "die Spot-Quellen sind NICHT irrelevant: sie "
+         "wurden fuer H20 optimiert und vermessen. Nur ihre ANWENDUNG wird "
+         "auf den Hebel dimensioniert - kurzer, intensiver Handel (E-8)"),
         ("Der Spot-Arm", "laeuft unveraendert weiter und fuehrt die offenen "
-         "Positionen. Er wird NICHT stillgelegt und ist hier kein Thema"),
+         "Positionen. In seiner HEUTIGEN Form (Code und Produktion) ist er "
+         "fuer den Hebel TOT. Er wird selbst neu gebaut, wenn der Hebel in "
+         "der ganzen Ablaufkette funktioniert (E-8)"),
         ("Die Betriebsbedingungen", "Takt, Cooldown, Kapazitaet, "
          "Aggregatdeckel - Ebene C (2.641). Sie gelten, gehoeren aber "
          "NICHT in die Bewertung"),
@@ -656,9 +835,10 @@ EINBETTUNG = {
 
 # ══ WAS NOCH FEHLT, bevor der Neubau ein EINSTIEG ist ═══════════════
 #
-# ⚠️⚠️ Der Neubau hat HEUTE KEINEN EINSTIEG. Das ist kein Mangel, den man
-# verschweigt, sondern der Stand: belegt ist eine Sperre (C), nicht ein
-# Ausloeser. Wer nach "dem aktuellen Hebel-Einstieg" fragt, bekommt
+# ⚠️⚠️ Der Neubau hat HEUTE KEINE EINSTIEGSREGEL. Bewertung 1 hat Traeger
+# beim sofortigen Einstieg (2.648, 2.651), aber keinen mit Vorlauf, und
+# kalibriert ist nichts - die Zahlen leitet `stand()` aus BEITRAGSLAGE ab.
+# Wer nach "dem aktuellen Hebel-Einstieg" fragt, bekommt
 # deshalb DIESE Liste - und nicht die Spot-Kette aus agent/betraege.py.
 OFFEN = [
     ("A auf dieser Geometrie", "momentum_kurz und rsi tragen RICHTUNG, "
@@ -1015,31 +1195,68 @@ def stand(mit_befunden: bool = True) -> str:
     a("WO WELCHER BEITRAG ZAEHLT - der Stand, ehrlich")
     a("  ⛔ Nutzerkritik 27.09.: *Was ist mit turnover und funding, diese")
     a("     waren bereits gesetzt oder?* - An einem Tag zehn KURSmerkmale")
-    a("     gemessen und die DREI registrierten Traeger nie geladen.")
+    a("     gemessen und die DREI registrierten Traeger nie geladen -")
+    a("     nachgeholt in 2.651.")
+    a("  ⭐ Bewertung 1 gilt bei k=0 (Betriebsfall); VORLAUF ist eine")
+    a("     eigene Spalte, die Karenz ist eine ACHSE (2.650).")
     a("")
-    a("  %-18s %-12s %-12s %s"
-      % ("Merkmal", "Bewertung1", "Bewertung2", "Beleg"))
+    a("  %-16s %-13s %-8s %-13s %s"
+      % ("Merkmal", "Bewertung1", "Vorlauf", "Bewertung2", "Befund"))
     _mk = {"belegt": "✔✔ belegt", "ungemessen": "⬜ ungemessen",
            "faellt": "⛔ faellt", "spur": "⭐ spur"}
-    for name, (b1, b2, beleg) in BEITRAGSLAGE.items():
-        a("  %-18s %-12s %-12s %s"
-          % (name, _mk.get(b1, b1), _mk.get(b2, b2),
-             _umbruch(beleg, 46)[0]))
-        for zeile in _umbruch(beleg, 46)[1:]:
-            a("  %-18s %-12s %-12s %s" % ("", "", "", zeile))
+    for name, e in BEITRAGSLAGE.items():
+        b1 = _mk.get(e["b1"], e["b1"]) + ("*" if e["vorbehalt"] else "")
+        a("  %-16s %-13s %-8s %-13s %s"
+          % (name, b1, e["vorlauf"] or "-", _mk.get(e["b2"], e["b2"]),
+             ", ".join(e["befund"])))
+        for zeile in _umbruch(e["beleg"], 76):
+            a("  %-16s %s" % ("", zeile))
+        if e["vorbehalt"]:
+            for i, zeile in enumerate(_umbruch(e["vorbehalt"], 74)):
+                a("  %-16s %s %s" % ("", "* " if i == 0 else "  ", zeile))
     a("")
-    _off1 = [n for n, v in BEITRAGSLAGE.items() if v[0] == "ungemessen"]
-    _tr2 = [n for n, v in BEITRAGSLAGE.items() if v[1] == "belegt"]
+    _tr1 = [n for n, e in BEITRAGSLAGE.items() if e["b1"] == "belegt"]
+    _vl1 = [n for n in _tr1 if BEITRAGSLAGE[n]["vorlauf"] == "ja"]
+    _vb1 = [n for n in _tr1 if BEITRAGSLAGE[n]["vorbehalt"]]
+    _tr2 = [n for n, e in BEITRAGSLAGE.items() if e["b2"] == "belegt"]
+    _off2 = [n for n, e in BEITRAGSLAGE.items()
+             if e["b2"] in ("ungemessen", "spur")]
+    a("  ➤ Bewertung 1 hat %d Traeger beim sofortigen Einstieg (%s)."
+      % (len(_tr1), ", ".join(_tr1)))
+    a("    ⚠️ davon mit VORLAUF: %s" % (", ".join(_vl1) or "KEINER"))
+    if _vb1:
+        a("    ⚠️ unter Vorbehalt (*): %s" % ", ".join(_vb1))
     a("  ➤ Bewertung 2 hat %d Traeger (%s)." % (len(_tr2), ", ".join(_tr2)))
-    a("  ⛔ Bewertung 1 hat KEINEN - und %d Merkmale sind dort NIE"
-      % len(_off1))
-    a("     gemessen worden: %s" % ", ".join(_off1))
-    a("     Das ist eine LUECKE, keine Sackgasse.")
+    a("    ungemessen: %s" % ", ".join(_off2))
     a("")
-    a("  ⭐ DIE NAECHSTEN DREI MESSUNGEN:")
-    for i, (was, warum) in enumerate(NAECHSTE_MESSUNGEN, 1):
-        a("      %d. %s" % (i, was))
-        for zeile in _umbruch(warum, 76):
+    a("  QUELLEN - und ob sie LIVE beschaffbar sind (nicht: ob der heutige")
+    a("  Betriebscode sie sammelt; der ist veraltet, Nutzer 27.09.)")
+    _gesehen = set()
+    for name, e in BEITRAGSLAGE.items():
+        if (e["quelle"], e["live"]) in _gesehen:
+            continue
+        _gesehen.add((e["quelle"], e["live"]))
+        _wer = [n for n, x in BEITRAGSLAGE.items()
+                if (x["quelle"], x["live"]) == (e["quelle"], e["live"])]
+        a("    · %s" % ", ".join(_wer))
+        for zeile in _umbruch("Quelle: " + e["quelle"], 86):
+            a("        %s" % zeile)
+        for zeile in _umbruch("live:   " + e["live"], 86):
+            a("        %s" % zeile)
+    _sp = [(n, e["spot"]) for n, e in BEITRAGSLAGE.items() if e["spot"]]
+    if _sp:
+        a("")
+        a("  SPOT-VERMESSUNG (E-8): fuer H20 optimiert und vermessen - nur")
+        a("  die ANWENDUNG wird auf den Hebel dimensioniert")
+        for n, t in _sp:
+            a("    · %-14s %s" % (n, t))
+    a("")
+    a("  ⭐ DIE NAECHSTEN MESSUNGEN:")
+    for i, m in enumerate(NAECHSTE_MESSUNGEN, 1):
+        a("      %d. %s  [%s · %s: %s]"
+          % (i, m["was"], m["art"], m["bewertung"].upper(),
+             ", ".join(m["merkmale"])))
+        for zeile in _umbruch(m["warum"], 76):
             a("         %s" % zeile)
     a("")
 
@@ -1169,8 +1386,14 @@ def stand(mit_befunden: bool = True) -> str:
 
     # ── Was fehlt ────────────────────────────────────────────────────
     a("-" * 98)
-    a("⛔⛔ ES GIBT HEUTE KEINEN EINSTIEG - belegt ist eine SPERRE, kein")
-    a("    AUSLOESER. Das ist der Stand, nicht ein Versaeumnis.")
+    _t1 = [n for n, e in BEITRAGSLAGE.items() if e["b1"] == "belegt"]
+    _v1 = [n for n in _t1 if BEITRAGSLAGE[n]["vorlauf"] == "ja"]
+    a("⛔⛔ ES GIBT HEUTE KEINE EINSTIEGSREGEL - Bewertung 1 hat %d Traeger"
+      % len(_t1))
+    a("    beim sofortigen Einstieg, davon %d mit VORLAUF, und kalibriert"
+      % len(_v1))
+    a("    (nein / gut / sehr gut) ist nichts. Das ist der Stand, nicht ein")
+    a("    Versaeumnis.")
     a("")
     for titel, text in OFFEN:
         a("  ⚠️ %s" % titel)

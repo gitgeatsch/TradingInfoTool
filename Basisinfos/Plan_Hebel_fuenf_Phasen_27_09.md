@@ -161,8 +161,15 @@ APT · AVAX · BNB · BTC · ETH · INJ · **KAITO** · LINK · NEAR · ONDO ·
 SOL · SUI · TAO · VIRTUAL · XLM — ⚠️ gegenüber 2.611 **KAITO statt
 RENDER**, die Grenze ist beweglich. Mit dem Laderfix → 86 %.
 
-⚠️ `funding` und `turnover` kommen aus Terminmarkt und Umlaufmenge —
-**Spot-Quellen, hier irrelevant**.
+⛔ **Korrigiert 27.09. abends (E-8):** hier stand *„`funding` und
+`turnover` … Spot-Quellen, hier irrelevant"*. Das war falsch und genau
+der Fehler, den 2.651 benennt. Die Spot-**Quellen** sind nicht
+irrelevant — sie wurden für H20 optimiert und vermessen; nur ihre
+**Anwendung** wird auf den Hebel dimensioniert (kurzer, intensiver
+Handel). Tot für den Hebel ist Spot in seiner **heutigen Form** (Code und
+Produktion). Beim Betrieb zählt, ob die **Quelle live beschaffbar** ist,
+nicht was der heutige Sammler holt — Nutzer: *„der aktuelle Betriebscode
+ist veraltet."*
 
 # Was Phase 1 noch verlangt
 
@@ -170,7 +177,7 @@ RENDER**, die Grenze ist beweglich. Mit dem Laderfix → 86 %.
 |---|---|---|
 | **0** | ✔✔ **1a ERLEDIGT (2.642)** — der Horizont ist kein Eingang, sondern ein **Messfenster**. Gemessen regelfrei in ATR: die Achse ist ein **Risiko-Filter** (d 0,521 auf MAE) und kein Ertragsfilter (d 0,267 auf MFE), stabil in 5 von 5 Jahren. ⛔ *Kurz* trifft nicht zu — die Auswahl braucht 10,5 % **laenger** bis zum Hoechstpunkt. ⭐ Die Bruecke zum Hebel steht damit **ohne Ertrag**: 0,75 statt 1,08 ATR Rueckgang heisst niedrigere Stopwahrscheinlichkeit, also mehr Hebel | *erledigt* |
 | **1** | ⭐ **Die Bewertungsebene neu aufsetzen** — Chance-Risiko-Verhältnis aus Stop- und Zielabstand, ohne jede Ertragsgröße. Daraus die Schwelle **und** der Hebel | *nächster Schritt* |
-| **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — bisher ist nur `ema_abstand_atr` betrachtet. Die übrigen sieben Beiträge in `wahrscheinlichkeit.py` stehen auf `null`/`nie` oder `instrumente=("spot",)` | ungeklärt |
+| **2** | ⚠️ **„muss sauber über ALLE Beiträge funktionieren"** — ◐ **Teil erledigt (2.651, 27.09.):** die registrierten Träger und die Terminmarkt-Merkmale sind auf **Bewertung 1** gemessen — `funding`, `oi_aenderung`, `konten_verh` tragen bei k = 0, **keiner mit Vorlauf**; `turnover` und die übrigen fallen. Stand je Merkmal mit Befund, Quelle und Live-Beschaffbarkeit: `python hebel_neubau.py` (2.652-beitragslage-nachgezogen). **Offen, in dieser Reihenfolge:** (a) **Vorgriffsprobe `funding`** — der Tageswert stand an jeder Stunde desselben Tages (2.652-vorgriff-funding); (b) **Vorlauf** bei H72/H120; (c) **Bewertung 2** (MAE) für dieselben Träger; (d) `vola` in der Hebelhöhe | teilweise |
 | **3** | **Die Quellenfrage**: Binance (28), CoinGecko (16) — oder eine dritte Quelle? | Nutzerentscheidung |
 | **4** | **Den Hebel kalibrieren** — aus dem Risiko, nicht aus der Statistik (2.627) | offen |
 | **5** | ✔✔ **ERLEDIGT (2.646)** — der Horizont widersprach sich dreifach, weil `HORIZONT_JE_LAGE` **keine Einheit** führte. Jetzt 24 **Stunden** für den Hebel, 20 **Handelstage** für Spot, Einheit in eigener Tabelle, Wächter in der Suite | *erledigt* |

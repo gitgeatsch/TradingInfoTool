@@ -69,44 +69,57 @@ kein Ergebniswert, **keine Geometrie**.
 | **Ergebnis** | nein / gut / sehr gut | 2× · 3× · 5× |
 | **Richtung** | geringes Risiko → **höhere** Stufe | |
 
-## ⚠️ Die Karenzbedingung für Bewertung 1
+## ⚠️ Die Karenz für Bewertung 1 — eine ACHSE, kein Filter
 
 **Nutzerdefinition:** *„OPTIMUM ist, wir kennen die Lage VOR der Bewegung.
 Die Bewertung eines bereits gestiegenen Assets ist weder das Ziel noch ein
 Optimum — dazu brauche ich kein System."*
 
-➤ **Ein Merkmal qualifiziert sich für Bewertung 1 nur, wenn sein Lift eine
-Karenz von mindestens 3 Stunden überlebt.** Ohne diese Bedingung misst man
-die Fortsetzung einer laufenden Bewegung.
+⛔ **Bis 27.09. abends stand hier ein Filter:** *„qualifiziert sich nur,
+wenn sein Lift eine Karenz von mindestens 3 Stunden überlebt"*. Der
+Nutzer hatte ihn schon in 2.650 verworfen: *„bin mir nicht sicher, ob du
+dies nur für die Messung als Annahme siehst oder wir gute Signale
+kappen."* (E-9)
+
+➤ **Bewertung 1 gilt bei k = 0** — das ist der Betriebsfall, im Betrieb
+steigt man sofort ein. **Der Vorlauf (k > 0) wird daneben ausgewiesen**:
+er sagt, ob ein Merkmal die Bewegung **vorhersagt** oder nur
+**begleitet**. Das Optimum ist ein Träger **mit** Vorlauf; ein Träger
+ohne ist brauchbar, aber kein Optimum. Keine der beiden Zahlen kappt die
+andere.
 
 ---
 
-# 3. Wo welcher Beitrag zählt — der Stand, ehrlich
+# 3. Wo welcher Beitrag zählt — die Wahrheit steht im CODE
 
-| Merkmal | Bewertung 1 (Chance) | Bewertung 2 (Risiko) | Beleg |
+```bash
+python hebel_neubau.py | sed -n '/WO WELCHER BEITRAG ZAEHLT/,/WAS \*OPTIMUM\*/p'
+```
+
+⛔ **Warum hier keine Tabelle mehr steht:** Bis 27.09. abends stand sie
+**doppelt** — hier und in `hebel_neubau.BEITRAGSLAGE`. Nach 2.651 wurde
+keine von beiden nachgezogen, und die Suite **erzwang** sogar den alten
+Stand (2.652-beitragslage-nachgezogen). Jetzt nennt jeder Eintrag im Code
+seinen Befund, und die Wache leitet die gemessenen Merkmale aus dem
+Quelltext der Messskripte ab.
+
+**Schnappschuss 27.09. abends** — nur zur Orientierung:
+
+| | Bewertung 1 (Chance, k = 0) | Vorlauf | Bewertung 2 (Risiko, MAE) |
 |---|---|---|---|
-| **`funding`** | ⬜ **ungemessen** | ⬜ **ungemessen** | trägt auf H20/`bewegung_r`; auf `barriere` Grauzone |
-| **`turnover`** | ⬜ **ungemessen** | ⬜ **ungemessen** | trägt; auf `barriere` untermächtig (66 Symbole) |
-| **`oi_aenderung`** | ⬜ **ungemessen** | ⬜ **ungemessen** | trägt als Schalter; auf `barriere` Sperre |
-| **`ema_abstand_atr`** | ⛔ **nein** | ✔✔ **belegt** | 2.642: d 0,521 auf MAE gegen 0,267 auf MFE · 2.648: sagt Abstürze 9,8-fach voraus |
-| **`momentum_kurz`** | ⛔ **Fortsetzung** | ⬜ ungemessen | 2.648: Lift 6,93 — bricht bei 3 h Karenz auf 0,31 ein |
-| **`rsi`** | ⛔ **Fortsetzung** | ⬜ ungemessen | 2.648: Lift 4,67 — bricht auf 0,43 ein |
-| **`vola`** | ⛔ **nur Bewegung** | ⭐ **Spur** | Spiegelprobe 1,31 · Register: *„gehört in die Geometrie- und Horizontwahl, und über `hebel = verlustanteil / stop_rel` fällt daraus der Hebel"* |
-| **`bandenge`** | ⛔ **misst nichts** | ⛔ | Lift 0,84–1,22 gegen Band 2,77 |
-| `rsi_umkehr` · `ema_lage` · `ema_steigung` · `trendstruktur` | ⛔ | ⬜ | 2.645 |
-| `amihud` · `funding_extrem` · `oi_je_umsatz` · `long_bias` · `top_bias` · `taker_bias` | ⛔ | ⬜ | Register: tragen nicht |
+| **trägt** | `funding`* · `oi_aenderung` · `konten_verh` (2.651) · `momentum_kurz` · `rsi` (2.648) | **keiner** | `ema_abstand_atr` (2.642/2.647) |
+| **fällt** | `turnover` · `oi_je_umsatz` · `volumenschub` · `taker_verh` · `top_*` (2.651) · `ema_abstand_atr` · `vola` · `bandenge` (2.648/2.650) | – | – |
+| **ungemessen** | – | – | alle übrigen; `vola` als Spur |
 
-## ➤ Was diese Tabelle sagt
+\* `funding` steht unter **Vorgriffsverdacht** (2.652-vorgriff-funding):
+der gespeicherte Tageswert ist die Summe aller Abrechnungen des Tages und
+steht an jeder Stunde desselben Tages. Die Probe (Vortageswert d−1) ist
+die nächste Messung; bis dahin baut nichts auf `funding` aus 2.651 auf.
 
-| | |
-|---|---|
-| **Bewertung 2 hat einen Träger** | `ema_abstand_atr`, belegt — und eine Spur (`vola`) |
-| ⛔ **Bewertung 1 hat keinen** | und die drei registrierten Träger sind dort **nie gemessen worden** |
-
-⚠️ **Das ist keine Sackgasse, sondern eine Lücke.** `funding`, `turnover`
-und `oi_aenderung` sind auf **H20 gegen `bewegung_r`** gemessen — der
-Spot-Lage. Auf der Frage *„kommt ein Anstieg von +15 % in 6 Stunden, und
-zwar mit Karenz"* sind sie **ungeprüft**.
+⚠️ **Vorher gemessen, nicht im Standblatt** (Kursmerkmale, abgeschlossen):
+`rsi_umkehr` · `ema_lage` · `ema_steigung` · `trendstruktur` fallen
+(2.645); `amihud` · `funding_extrem` · `long_bias` · `top_bias` ·
+`taker_bias` laut Register ohne Beitrag.
 
 ---
 
@@ -136,13 +149,23 @@ gelten nicht.
 
 ---
 
-# 5. Was als Nächstes zu messen ist — in dieser Reihenfolge
+# 5. Was als Nächstes zu messen ist — die Reihenfolge steht im CODE
 
-| # | Messung | warum zuerst |
-|---|---|---|
-| **1** | **`funding`, `turnover`, `oi_aenderung` auf Bewertung 1**, mit Karenz, auf Assetebene, absolute Schwellen | Es sind die einzigen registrierten Träger. Sie sind auf dieser Frage **ungemessen**. Ohne sie ist Bewertung 1 leer |
-| **2** | dieselben drei auf **Bewertung 2** (MAE) | Bewertung 2 hat bisher **einen** Träger; ein zweiter unabhängiger würde die Stufung tragfähig machen |
-| **3** | **`vola` in der Hebelhöhe** statt in der Bewertung | Register nennt es ausdrücklich als Spur: *„über `hebel = verlustanteil / stop_rel` fällt daraus der Hebel"* |
+```bash
+python hebel_neubau.py | sed -n '/DIE NAECHSTEN MESSUNGEN/,/^---/p'
+```
+
+**Schnappschuss 27.09. abends** (`hebel_neubau.NAECHSTE_MESSUNGEN`):
+
+| # | Messung | Art | warum |
+|---|---|---|---|
+| **1** | **Vorgriffsprobe `funding`** auf Bewertung 1 | Probe | 2.651 reproduzieren, dann mit dem Vortageswert d−1 — vorgriffsfrei und die Form, die live beschaffbar ist (2.652-vorgriff-funding) |
+| **2** | **Vorlauf bei H72 und H120** für die B1-Träger | Vorlauf | die Haltequote steigt mit dem Fenster (0,29 bei H6, 0,74 bei H48) — erreicht sie 0,8? |
+| **3** | **Messung 2: Bewertung 2 (MAE)** für `funding`, `oi_aenderung`, `konten_verh` | neu | Bewertung 2 hat **einen** Träger; was mitläuft, entscheidet die Voranalyse (E5) |
+| **4** | **`vola` in der Hebelhöhe** | neu | Register-Spur: *„über `hebel = verlustanteil / stop_rel` fällt daraus der Hebel"* |
+
+⚠️ Messung 1 aus der früheren Fassung (*„funding, turnover, oi_aenderung
+auf Bewertung 1"*) ist **gelaufen** — 2.651.
 
 ⚠️ **Und was NICHT mehr gemessen wird:** weitere Kursmerkmale aus der
 EMA/RSI/ATR-Familie. Drei unabhängige Messungen (2.578, 2.645, 2.650) sagen
@@ -159,4 +182,4 @@ Jeder Befund ab 2.647 belegt **sechs** Prüfungen, bewacht von
 **Weglassprobe** · **Mehrfachtesten** (Bestes-von-N) · **Ebene** (A/B/C) ·
 **je Asset**
 
-Für Bewertung 1 kommt die **Karenzbedingung** dazu (Abschnitt 2).
+Für Bewertung 1 kommt die **Karenz als Achse** dazu (Abschnitt 2): k = 0 und der Vorlauf werden beide ausgewiesen.

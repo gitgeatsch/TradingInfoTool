@@ -44,6 +44,15 @@ ist der **Prüfzeitpunkt**.
 ⚠️ Der produktive Spot-Arm **läuft weiter** und führt offene Positionen.
 Er wird nicht angefasst und ist kein Thema.
 
+**E-8 — mehr gibt es zu Spot im Umbau nicht zu sagen** (Nutzer, 27.09.):
+
+| | |
+|---|---|
+| Spot in der **heutigen** Form (Code und Produktion) | für den Hebel **tot** |
+| Spot-**Quellen** | **nicht** irrelevant — für H20 optimiert und vermessen; nur die **Anwendung** wird auf den Hebel dimensioniert (kurzer, intensiver Handel) |
+| Prüfzeitpunkt | **gleichzeitig** — zwei unterschiedliche Prüfungen, **ein Gewinner** |
+| später | Spot wird selbst neu gebaut, wenn der Hebel in der ganzen Ablaufkette funktioniert |
+
 ```bash
 python hebel_neubau.py | sed -n '/WAS ENDGUELTIG TOT IST/,/UEBERTRAGBAR/p'
 ```
@@ -112,15 +121,30 @@ keinen Stop.
 python hebel_neubau.py | sed -n '/WO WELCHER BEITRAG ZAEHLT/,/DIE NAECHSTEN/p'
 ```
 
-| Merkmal | Bewertung 1 | Bewertung 2 | Beleg |
-|---|---|---|---|
-| **`funding` ≤ −0,0040** | ✔✔ **belegt**, Lift 9,55 | ⬜ ungemessen | 2.651 |
-| **`oi_aenderung` ≥ 0,3355** | ✔✔ **belegt**, Lift 6,23 | ⬜ ungemessen | 2.651 |
-| `konten_verh` ≤ 0,5759 | ✔ belegt, Lift 2,96 | ⬜ | 2.651 |
-| **`ema_abstand_atr`** | ⛔ fällt (Richtung runter) | ✔✔ **belegt** | 2.642 / 2.647 |
-| `momentum_kurz`, `rsi` | ⚠️ trägt bei k=0, **kein Vorlauf** | ⬜ | 2.648 / 2.650 |
-| `vola` | ⛔ nur Bewegung | ⭐ Spur (Geometrie) | 2.650 |
-| `turnover` | ⬜ ungemessen | ⬜ | Abdeckung, siehe F7 |
+⛔ **Bis 27.09. abends gab dieser Befehl den Stand VOR 2.651 aus** — und
+die Suite erzwang ihn (2.652-beitragslage-nachgezogen). Jetzt nennt jeder
+Eintrag seinen Befund, und die Wache leitet aus dem Quelltext der
+Messskripte ab. **Die Tabelle unten ist ein Schnappschuss; die Wahrheit
+steht im Befehl.**
+
+| Merkmal | Bewertung 1 (k = 0) | Vorlauf | Bewertung 2 | Beleg |
+|---|---|---|---|---|
+| **`funding` ≤ −0,0040** | ✔✔ belegt, Lift 9,55 — ⚠️ **Vorgriff ungeprüft** | nein | ⬜ | 2.651 · 2.652-vorgriff-funding |
+| **`oi_aenderung` ≥ 0,3355** | ✔✔ belegt, Lift 6,23 | nein | ⬜ | 2.651 |
+| `konten_verh` ≤ 0,5759 | ✔✔ belegt, Lift 2,96 (nur H6/H12) | nein | ⬜ | 2.651 |
+| `momentum_kurz`, `rsi` | ✔✔ belegt, Lift 6,93 / 4,67 | nein | ⬜ | 2.648 / 2.650 |
+| **`ema_abstand_atr`** | ⛔ fällt (Richtung runter) | – | ✔✔ **belegt** | 2.642 / 2.647 / 2.648 |
+| `turnover` | ⛔ **gemessen, fällt** — nur Bewegung (ein Jahr Messbasis) | – | ⬜ | 2.651 |
+| `oi_je_umsatz`, `volumenschub` | ⛔ fällt — nur Bewegung | – | ⬜ | 2.651 |
+| `taker_verh`, `top_konten_verh`, `top_summe_verh` | ⛔ fällt — unter dem Suchband | – | ⬜ | 2.651 |
+| `vola` | ⛔ nur Bewegung | – | ⭐ Spur (Geometrie) | 2.650 |
+| `bandenge` | ⛔ misst nichts | – | ⬜ (vorher „fällt" ohne Befund) | 2.650 |
+
+⚠️ **`funding` unter Vorbehalt:** der gespeicherte Tageswert ist die Summe
+der drei Abrechnungen des UTC-Tages und steht an **jeder** Stunde
+desselben Tages — ein Anker um 01:00 kennt die Abrechnungen von 08:00 und
+16:00. Die Wirkung ist **nicht gemessen**; die Probe ist die nächste
+Messung (Frage 10).
 
 ⚠️ **Die wichtigste Einschränkung:** **alle** Treffer von 2.651 haben
 *Vorlauf nein* — Haltequote 0,29 bis 0,74, unter 0,8. Sie **begleiten**
@@ -215,6 +239,8 @@ dass sie richtig gerechnet wurden.
 | **Jahr aus dem Index statt aus dem Datum** | die Reihe beginnt am 01.12.2021, „Jahr 2022" lief Dez 2021 bis Nov 2022 |
 | **Alles in den Speicher geladen** | ein Dict mit 3,3 Mio Keys (>1 GB) für Daten, die symbolweise verarbeitet werden |
 | **Zwei Abdeckungen verwechselt** | siehe Frage 7 |
+| **Standblatt nicht nachgezogen — und die Wache hielt es fest** | nach 2.651 stand `BEITRAGSLAGE` weiter auf „ungemessen", und eine Prüfung **verlangte** das. 38 von 38 grün bei falschem Stand. Jetzt leitet die Wache aus dem Quelltext der Messskripte ab (2.652-beitragslage-nachgezogen) |
+| **Tageswert an alle Stunden des Tages** | `funding` als Tagessumme an jeder Stunde desselben Tages — möglicher Vorgriff, ungemessen (2.652-vorgriff-funding) |
 
 ⭐ **Das Muster dahinter:** melden, bevor fertig geprüft ist. Die
 Gegenmaßnahme sind die sechs Prüfungen **vor** der Meldung.
@@ -232,12 +258,26 @@ eine **Anweisung** oder eine **Einordnung**? (3) R-R11: erst
 
 **In dieser Reihenfolge:**
 
+```bash
+python hebel_neubau.py | sed -n '/DIE NAECHSTEN MESSUNGEN/,/^---/p'
+```
+
+**Die Messungen** (`hebel_neubau.NAECHSTE_MESSUNGEN`, Stand 27.09. abends):
+
 | # | | |
 |---|---|---|
-| **1** | **Laderfix 2.611** | `hole_stundenkurse.handelbar()` (Zeile 114) fragt nur `api.binance.com/api/v3/exchangeInfo` — die **Spot**-Börse. Die Symbolliste kommt aber aus dem **Terminmarkt** (Futures). Lösung: zusätzlich `fapi.binance.com/fapi/v1/exchangeInfo` abfragen, Vereinigung bilden, und beim Kursabruf die passende URL wählen. **9 Symbole, 65 % → 86 %.** ⚠️ Gegen die echte API testen, nicht blind ändern |
-| **2** | **Vorlauf bei H72 / H120** | die Haltequote steigt mit dem Fenster (0,74 bei H48). Erreicht sie 0,8? Werkzeug steht: `messe_traeger_auf_bewertung1.py`, nur `ZIELE` erweitern |
-| **3** | **Messung 2 des Regelwerks** | dieselben Merkmale auf **Bewertung 2** (MAE). Bewertung 2 hat bisher **einen** Träger |
+| **1** | **Vorgriffsprobe `funding`** | 2.651 zuerst reproduzieren (R-R11), dann mit dem **Vortageswert d−1** — vorgriffsfrei, ohne Abruf, und die Form, die live beschaffbar ist. **Vorher baut nichts auf `funding` aus 2.651 auf** (2.652-vorgriff-funding) |
+| **2** | **Vorlauf bei H72 / H120** | die Haltequote steigt mit dem Fenster (0,74 bei H48). Erreicht sie 0,8? Werkzeug steht: `messe_traeger_auf_bewertung1.py`, nur `ZIELE` erweitern; `funding` in der Form, die die Probe ergibt |
+| **3** | **Messung 2 des Regelwerks** | `funding`, `oi_aenderung`, `konten_verh` auf **Bewertung 2** (MAE). Ob Nebenmerkmale, `momentum_kurz`/`rsi` und `bandenge` mitlaufen, entscheidet die Voranalyse (E5) |
 | **4** | **`vola` in der Hebelhöhe** | das Register nennt es als Spur: *„über `hebel = verlustanteil / stop_rel` fällt daraus der Hebel"* |
+
+**Unabhängig davon, keine Messung:** **Laderfix 2.611** —
+`hole_stundenkurse.handelbar()` (Zeile 114) fragt nur
+`api.binance.com/api/v3/exchangeInfo`, die **Spot**-Börse. Die Symbolliste
+kommt aber aus dem **Terminmarkt** (Futures). Lösung: zusätzlich
+`fapi.binance.com/fapi/v1/exchangeInfo` abfragen, Vereinigung bilden, beim
+Kursabruf die passende URL wählen. **9 Symbole, 65 % → 86 %.** ⚠️ Gegen
+die echte API testen, nicht blind ändern.
 
 ⛔ **Was NICHT mehr gemessen wird:** weitere Kursmerkmale aus der
 EMA/RSI/ATR-Familie. Drei unabhängige Messungen (2.578, 2.645, 2.650)

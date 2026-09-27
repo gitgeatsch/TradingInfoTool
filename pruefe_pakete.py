@@ -30463,24 +30463,141 @@ def paket_hebelneubau() -> None:
            "funding, turnover und oi_aenderung sind die einzigen "
            "registrierten Traeger des Systems - sie duerfen im Neubau "
            "nicht aus dem Blick geraten")
-    pruefe(P, "⚠️⚠️ und sie sind als UNGEMESSEN gefuehrt, nicht als gefallen",
-           all(_HN.BEITRAGSLAGE[n][0] == "ungemessen"
-               for n in ("funding", "turnover", "oi_aenderung")),
-           "sie sind auf H20 gegen `bewegung_r` gemessen - der Spot-Lage. "
-           "Auf den beiden Hebel-Bewertungen sind sie UNGEPRUEFT. Das ist "
-           "eine Luecke, keine Sackgasse - und der Unterschied ist genau "
-           "der zwischen `null` und `nie` aus dem alten Zustandsmodell")
+    # ⛔⛔⛔ BIS 27.09. ABENDS stand hier eine Pruefung, die die drei
+    # Traeger als "ungemessen" VERLANGTE. Nach 2.651 hielt sie den alten
+    # Stand fest - die Suite blieb gruen, das Standblatt schickte jede neue
+    # Session auf eine Messung, die schon gelaufen war. Ersetzt durch
+    # Pruefungen, die aus dem QUELLTEXT der Messskripte und den geltenden
+    # Befunden ABLEITEN, statt einen Zustand aufzuzaehlen.
+    _bl_fehler = []
+    try:
+        _gilt = {k.split("-")[0] for k, z, _a in _HN._befunde_ab()
+                 if z == "gilt"}
+        _ok_b = {"belegt", "faellt", "ungemessen", "spur"}
+        _felder = {"b1", "vorlauf", "b2", "befund", "quelle", "live",
+                   "beleg", "vorbehalt", "spot"}
+        for _n, _e in _HN.BEITRAGSLAGE.items():
+            if set(_e) != _felder:
+                _bl_fehler.append("%s: Felder %s" % (_n, sorted(set(_e) ^ _felder)))
+                continue
+            if _e["b1"] not in _ok_b or _e["b2"] not in _ok_b:
+                _bl_fehler.append("%s: Zustand %s/%s" % (_n, _e["b1"], _e["b2"]))
+            if ({_e["b1"], _e["b2"]} & {"belegt", "faellt"}) and not _e["befund"]:
+                _bl_fehler.append("%s: gemessen, aber ohne Befund" % _n)
+            for _b in _e["befund"]:
+                if _b not in _gilt:
+                    _bl_fehler.append("%s: Befund %s gilt nicht" % (_n, _b))
+            if _e["b1"] == "belegt" and _e["vorlauf"] not in ("ja", "nein",
+                                                             "ungemessen"):
+                _bl_fehler.append("%s: traegt auf B1 ohne Vorlauf-Angabe" % _n)
+            if _e["b1"] != "belegt" and _e["vorlauf"] is not None:
+                _bl_fehler.append("%s: Vorlauf ohne Traeger" % _n)
+    except Exception as _x:                                   # noqa: BLE001
+        _bl_fehler.append("ABBRUCH: %r" % (_x,))
+    pruefe(P, "⚠️⚠️ jeder GEMESSENE Eintrag der Beitragslage nennt einen "
+              "GELTENDEN Neubau-Befund",
+           not _bl_fehler,
+           "; ".join(_bl_fehler[:4]) or
+           "belegt/faellt ohne Befund ist eine Behauptung; ein abgeloester "
+           "Befund ein alter Stand. Vorlauf ist ein eigenes Feld (E2)")
+
+    _gm_fehler = []
+    try:
+        import ast as _ast
+        _q = {}
+        import os as _os_bl
+        _bp = _os_bl.path.join(_os_bl.path.dirname(_os_bl.path.abspath(__file__)),
+                               "bestand.py")
+        for _k in _ast.walk(_ast.parse(open(_bp, encoding="utf-8").read())):
+            if (isinstance(_k, _ast.Call)
+                    and getattr(_k.func, "id", "") == "Befundlage"
+                    and len(_k.args) >= 4
+                    and isinstance(_k.args[0], _ast.Constant)
+                    and isinstance(_k.args[3], _ast.Constant)):
+                _q[str(_k.args[0].value).split("-")[0]] = str(_k.args[3].value)
+        _gm = _HN.gemessene_merkmale()
+        for _b, (_bew, _namen) in _gm.items():
+            _skript = _HN.MESSUNGEN_NEUBAU[_b][0]
+            if _skript not in _q.get(_b, ""):
+                _gm_fehler.append("%s nennt %s nicht als Quelle" % (_b, _skript))
+            if not _namen:
+                _gm_fehler.append("%s: keine Merkmale gelesen" % _b)
+            for _n in sorted(_namen):
+                _e = _HN.BEITRAGSLAGE.get(_n)
+                if _e is None:
+                    _gm_fehler.append("%s fehlt (gemessen in %s)" % (_n, _b))
+                elif _e[_bew] in ("ungemessen", "spur"):
+                    _gm_fehler.append("%s steht auf %s als %s, gemessen in %s"
+                                      % (_n, _bew, _e[_bew], _b))
+                elif _b not in _e["befund"]:
+                    _gm_fehler.append("%s nennt %s nicht" % (_n, _b))
+    except Exception as _x:                                   # noqa: BLE001
+        _gm_fehler.append("ABBRUCH: %r" % (_x,))
+    pruefe(P, "⛔⛔⛔ was ein Messskript gemessen hat, steht NICHT als "
+              "ungemessen (abgeleitet aus dem Quelltext)",
+           not _gm_fehler,
+           "; ".join(_gm_fehler[:4]) or
+           "die Merkmale kommen aus GRUPPEN/NAMEN der Skripte in "
+           "MESSUNGEN_NEUBAU, und der Befund muss das Skript als Quelle "
+           "nennen - eine neue Messung kann nicht mehr hinter dem Blatt "
+           "zurueckbleiben")
     pruefe(P, "⚠️ der Riegel laesst die ROHGROESSEN durch (E-3)",
            not any(_bricht(n) for n in ("funding", "turnover",
                                         "oi_aenderung")),
            "gesperrt sind `funding_fuenftel` und `turnover_fuenftel` - "
            "die alten BEITRAGSSTUFEN. Die Rohgroessen sind frei, und "
            "genau das habe ich uebersehen")
-    pruefe(P, "⭐ und die naechsten Messungen stehen fest",
-           (len(_HN.NAECHSTE_MESSUNGEN) >= 3
-            and "funding" in _HN.NAECHSTE_MESSUNGEN[0][0]),
-           "erst die drei Traeger auf Bewertung 1, dann auf Bewertung 2, "
-           "dann vola in der Hebelhoehe - keine weiteren Kursmerkmale")
+    _nm_fehler = []
+    try:
+        _gilt2 = {k.split("-")[0] for k, z, _a in _HN._befunde_ab()
+                  if z == "gilt"}
+        _geprueft = set()
+        for _m in _HN.NAECHSTE_MESSUNGEN:
+            _bew, _art = _m["bewertung"], _m["art"]
+            for _n in _m["merkmale"]:
+                _e = _HN.BEITRAGSLAGE.get(_n)
+                if _e is None:
+                    _nm_fehler.append("%s: %s unbekannt" % (_m["was"], _n))
+                elif _art == "neu" and _e[_bew] not in ("ungemessen", "spur"):
+                    _nm_fehler.append("%s: %s ist auf %s schon %s"
+                                      % (_m["was"], _n, _bew, _e[_bew]))
+                elif _art == "vorlauf" and not (_bew == "b1"
+                                                and _e["b1"] == "belegt"
+                                                and _e["vorlauf"] != "ja"):
+                    _nm_fehler.append("%s: %s ist kein B1-Traeger ohne Vorlauf"
+                                      % (_m["was"], _n))
+                elif _art == "probe":
+                    if (_m.get("prueft") not in _gilt2
+                            or _m["prueft"] not in _e["befund"]
+                            or not _e["vorbehalt"]):
+                        _nm_fehler.append("%s: %s ohne Vorbehalt/Befund"
+                                          % (_m["was"], _n))
+                    _geprueft.add(_n)
+                elif _art not in ("neu", "vorlauf", "probe"):
+                    _nm_fehler.append("%s: Art %s" % (_m["was"], _art))
+        for _n, _e in _HN.BEITRAGSLAGE.items():
+            if _e["vorbehalt"] and _n not in _geprueft:
+                _nm_fehler.append("Vorbehalt %s ohne Probe" % _n)
+    except Exception as _x:                                   # noqa: BLE001
+        _nm_fehler.append("ABBRUCH: %r" % (_x,))
+    pruefe(P, "⭐ die naechsten Messungen messen nichts ERNEUT, und jeder "
+              "Vorbehalt hat eine Probe",
+           not _nm_fehler,
+           "; ".join(_nm_fehler[:4]) or
+           "neu = auf dieser Bewertung ungemessen; vorlauf = B1-Traeger "
+           "ohne Vorlauf; probe = geltender Befund mit Vorbehalt (R-R11)")
+    try:
+        _st = _HN.stand(mit_befunden=False)
+        _n1 = sum(1 for _e in _HN.BEITRAGSLAGE.values() if _e["b1"] == "belegt")
+        _st_ok = ("Bewertung 1 hat %d Traeger" % _n1 in _st
+                  and "Bewertung 1 hat KEINEN" not in _st)
+    except Exception as _x:                                   # noqa: BLE001
+        _st_ok, _n1 = False, repr(_x)
+    pruefe(P, "⚠️ das Standblatt LEITET die Traegerzahl ab, statt sie "
+              "zu behaupten",
+           _st_ok,
+           "erwartet: *Bewertung 1 hat %s Traeger* - der alte Satz *hat "
+           "KEINEN* stand fest im Code" % _n1)
 
     # ── 3b2c. WAS ENDGUELTIG TOT IST ──────────────────
     #

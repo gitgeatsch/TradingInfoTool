@@ -168,3 +168,52 @@ isolierbar**.
 **Entscheidung:** Rolle A gilt mit den vorhandenen Merkmalen als
 **nicht lösbar**. Was als Nächstes zu prüfen ist, lege ich dem Nutzer
 vor — es ist eine Richtungsfrage, keine Messfrage.
+
+---
+
+# E-8 · Spot im Umbau — was gilt, und mehr nicht
+
+**27.09.2026** · Nutzervorgaben wörtlich, in zwei Nachrichten:
+
+> *„Spot Quellen sind nicht irrelevant für sich, sondern diese wurden für
+> H20 optimiert und vermessen – d.h. nur die Anwendung ist auf Hebel zu
+> dimensionieren – kurzer intensiver Handel. […] Auch Spot muss später
+> neu gebaut werden, wenn Hebel in der ganzen Ablaufkette funktioniert.
+> Ein Detail: die Prüfung für Spot und Hebel soll weiterhin gleichzeitig
+> erfolgen (aber zwei unterschiedliche Prüfungen, ein Gewinner) – mehr
+> gibt es zu Spot im ganzen Umbau nicht zu sagen."*
+>
+> *„Wichtige Korrektur: Spot in der heutigen Form ist für Hebel tot."*
+
+| | gilt |
+|---|---|
+| **Spot-Quellen** | **nicht irrelevant** — für H20 optimiert und vermessen. Nur die **Anwendung** wird auf den Hebel dimensioniert (kurzer, intensiver Handel) |
+| **Spot in der heutigen Form** (Code und Produktion) | für den Hebel **tot** |
+| **Spot später** | wird selbst **neu gebaut**, wenn der Hebel in der ganzen Ablaufkette funktioniert |
+| **Prüfzeitpunkt** | Spot und Hebel werden **gleichzeitig** geprüft — **zwei unterschiedliche Prüfungen, ein Gewinner** |
+
+⚠️ **Das korrigiert einen Satz im Hauptplan:** *„`funding` und `turnover`
+… Spot-Quellen, hier irrelevant"*. Irrelevant sind die Spot-**Messwerte**
+(Riegel, E-3), nicht die **Quellen**.
+
+⚠️ **Folge für das Standblatt:** `BEITRAGSLAGE` führt je Merkmal die
+Spot-Vermessung als Information (`spot`) und fragt beim Betrieb nach der
+**Quelle**, nicht nach dem heutigen Sammler — Nutzerhinweis 27.09.:
+*„der aktuelle Betriebscode ist veraltet."* (2.652-beitragslage-nachgezogen)
+
+---
+
+# E-9 · Die Karenz ist eine Achse — Regelwerk und Code ziehen nach
+
+**27.09.2026** · Nutzerentscheidung E1/E2 der Voranalyse zur Beitragslage.
+
+Die Achsenregel stand seit 2.650 fest (Nutzereinwand: *„bin mir nicht
+sicher, ob du dies nur für die Messung als Annahme siehst oder wir gute
+Signale kappen"*). Das Regelwerk (§ 2) und `REGELWERK` im Code führten
+trotzdem weiter einen **Filter** („muss mindestens 3 Stunden Karenz
+überleben").
+
+**Entscheidung:** Bewertung 1 gilt bei **k = 0** (Betriebsfall). Der
+**Vorlauf** (k > 0) ist ein **eigenes Feld** je Merkmal — er zeigt das
+Optimum („Lage **vor** der Bewegung"), ohne einen Träger beim
+sofortigen Einstieg zu kappen.
