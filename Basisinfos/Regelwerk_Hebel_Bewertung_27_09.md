@@ -10,6 +10,24 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⚠️⚠️ STAND 27.09. ABENDS — was von diesem Blatt noch gilt
+
+Dieses Blatt entstand am Mittag. Der Nachmittag hat es in wesentlichen
+Punkten überholt (Befunde 2.654 bis 2.660). **Der Stand im Code:**
+`python hebel_neubau.py` (Abschnitt NEUESTER STAND).
+
+| | gilt noch | überholt |
+|---|---|---|
+| **Ablauf** (§ 1) | ✔ zwei Bewertungen zum Prüfzeitpunkt, **neutral**: ohne Zeit, ohne Geometrie, ohne Ertrag | – |
+| **Bewertung 1** (§ 2) | Frage „kommt eine Bewegung nach oben?“ | ⛔ die **Zielgröße** (+X % in Y h) war **gesetzt, nicht gemessen**. Gemessen ist: der Bezug muss das **eigene Asset** sein (2.655); ein Lift allein zeigt vor allem **mehr Bewegung** (2.657) — entscheidend ist das Verhältnis Chance zuerst / Rückgang zuerst gegen das eigene Asset |
+| **Bewertung 2** (§ 2) | Risiko → Hebelhöhe | ⭐ die **Höhe** ist gut vorhersagbar (vola, oi_je_umsatz, oi_aenderung, volumenschub — 2.655); Grundlage der Hebelhöhe |
+| **Karenz** (§ 2) | ✔ Achse, kein Filter | – |
+| **Beitragslage** (§ 3) | – | ⛔ Richtung schwach für alle Kandidaten (2.655), untere Achse = Trailing-Effekt (2.656), keine Lage regimefest (2.659/2.660) |
+| **Sperre** | ⭐ **viele Longs** (konten_verh hoch) — negativ in jedem Regime (2.660) | – |
+| **Nächste Messungen** (§ 5) | – | ⛔ ersetzt: neue Richtungsdaten (Käuferanteil, Premium-Index, BTC-Dominanz-Index) mit dem Pflichtablauf aus § 6 |
+
+---
+
 # ⛔ Der Fehler, der dieses Blatt nötig macht
 
 Am 27.09. habe ich **sieben Kursmerkmale** gemessen — `ema_abstand_atr`,
@@ -183,6 +201,28 @@ Jeder Befund ab 2.647 belegt **sechs** Prüfungen, bewacht von
 **je Asset**
 
 Für Bewertung 1 kommt die **Karenz als Achse** dazu (Abschnitt 2): k = 0 und der Vorlauf werden beide ausgewiesen.
+
+## ⭐⭐⭐ DER PFLICHTABLAUF für jede Hebel-Messung (27.09. abends)
+
+Jeder Schritt steht hier, weil er heute **mindestens einmal gefehlt** hat —
+und das Ergebnis dadurch falsch war. Keine Meldung eines tragenden
+Befundes, bevor alle Schritte gelaufen sind.
+
+| # | Schritt | was passiert war |
+|---|---|---|
+| 1 | **Bezug = das EIGENE Asset** (symboltreue Nullwelt); die tagestreue Nullwelt nur als Kontrolle | der Vergleich mit dem gleichen Tag misst die Auswahl zwischen Assets — der Nutzer vergleicht keine Assets (2.655) |
+| 2 | **Kein Trailing, kein Stop, kein Ertrag aus einer Regel** in der Zielgröße der Bewertung; feste Barrieren, MFE/MAE oder Ereignisse | der Ertrag der unteren Achse kam aus der Trailing-Regel (2.656) |
+| 3 | **Episoden statt Stunden**: Einstieg beim Erscheinen der Lage, je Asset höchstens einer in 24 h | Anker-Stunden täuschen Seltenheit und Menge vor (E2b) |
+| 4 | **Absolut UND relativ**: Lift und P(Ziel zuerst), P(Rückgang zuerst), q gegen das eigene Asset und gegen die Gewinnschwelle | Lifts von 7 bis 10 waren vor allem mehr Bewegung (2.657) |
+| 5 | **Bekanntheitszeitpunkt** jedes Merkmals prüfen: Tageswerte nur vom Vortag, Normierungen nur aus der Vergangenheit | funding-Tagessumme (2.652), vola-Median der ganzen Reihe (2.658) |
+| 6 | **Stunden, nicht Zeilen**: Anker über Lücken der Stundenreihe ausschließen | 47 Symbole mit Lücken (2.658) |
+| 7 | **Trennung**: Suche und Prüfung getrennt; Mehrfachtesten nur über die geprüfte Auswahl | Suche versprach +12 bis +21, die Prüfung hielt 0 bis +9 (2.657) |
+| 8 | **Vorwärts rechnen** (E3): jeder Prüfmonat gegen die Schwellen der 12 Monate davor, Maßstab 2024 bis 2026; Auswertung je Quartal und je BTC-Lage — **regimefest** heißt in jedem Regime | eine Lage hing an einem Quartal (2.659) |
+| 9 | **Gegenprüfung** (E3-Gegenprüfung): Selbstprobe, Merkmale 1 h älter, absichtlicher Vorgriff, Etikettentausch, Zufallslagen **in der Größe des Kandidaten** | ohne sie wären zwei Aussagen stehen geblieben (2.660) |
+| 10 | **Erklärung ist kein Befund**: Namen beschreiben die Lage, nicht eine Deutung | *Squeeze* war eine Deutung (2.660) |
+
+➤ Bewacht im Paket Hebelneubau: ein **positiver** Neubau-Befund ab 2.661
+muss in seiner Basis die Vorwärtsrechnung und die Gegenprüfung nennen.
 
 ## ⚠️⚠️ Der HEBEL-Messstandard — was vom Spot-Standard gilt, was nicht (27.09. abends)
 

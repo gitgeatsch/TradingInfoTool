@@ -30593,6 +30593,50 @@ def paket_hebelneubau() -> None:
                   and "Bewertung 1 hat KEINEN" not in _st)
     except Exception as _x:                                   # noqa: BLE001
         _st_ok, _n1 = False, repr(_x)
+    # ⭐⭐⭐ DER PFLICHTABLAUF (Regelwerk Paragraf 6, 27.09. abends): ein
+    # POSITIVER Neubau-Befund ab 2.661 (Aussage beginnt mit ✔ oder ⭐) muss in
+    # seiner Basis die Vorwaertsrechnung und die Gegenpruefung nennen. Heute
+    # waeren ohne beide zwei Aussagen stehen geblieben (2.660).
+    def _pflicht_fehlt(befunde):
+        aus = []
+        for kennung, zustand, aussage, basis in befunde:
+            try:
+                nr = int(kennung.split("-")[0].replace(".", ""))
+            except ValueError:
+                continue
+            if nr < 2661 or zustand != "gilt":
+                continue
+            if not aussage.lstrip().startswith(("✔", "⭐")):
+                continue
+            b = (basis or "").lower()
+            if not ("vorwaerts" in b and "gegenpruef" in b):
+                aus.append(kennung)
+        return aus
+    try:
+        import ast as _ast2
+        import os as _os_pf
+        _bp2 = _os_pf.path.join(_os_pf.path.dirname(_os_pf.path.abspath(__file__)), "bestand.py")
+        _alle = []
+        for _k in _ast2.walk(_ast2.parse(open(_bp2, encoding="utf-8").read())):
+            if (isinstance(_k, _ast2.Call) and getattr(_k.func, "id", "") == "Befundlage"
+                    and len(_k.args) >= 3 and all(isinstance(x, _ast2.Constant) for x in _k.args[:3])):
+                _bas = next((kw.value.value for kw in _k.keywords
+                             if kw.arg == "basis" and isinstance(kw.value, _ast2.Constant)), "")
+                _alle.append((str(_k.args[0].value), str(_k.args[2].value),
+                              str(_k.args[1].value), _bas))
+        _pf = _pflicht_fehlt(_alle)
+        _gegen = _pflicht_fehlt([("2.999-probe", "gilt", "✔ traegt", "Nullwelt, Jahre")])
+    except Exception as _x:                                   # noqa: BLE001
+        _pf, _gegen = ["ABBRUCH %r" % (_x,)], []
+    pruefe(P, "⭐⭐⭐ jeder POSITIVE Neubau-Befund ab 2.661 nennt Vorwaertsrechnung "
+              "UND Gegenpruefung (Pflichtablauf)",
+           not _pf,
+           "fehlt bei: %s" % ", ".join(_pf[:4]) if _pf else
+           "Regelwerk Paragraf 6 - ohne beide waeren am 27.09. zwei Aussagen stehen geblieben")
+    pruefe(P, "⚠️ und die Pflichtpruefung KANN fehlschlagen (Gegenprobe)",
+           _gegen == ["2.999-probe"],
+           "ein kuenstlicher positiver Befund ohne Vorwaerts/Gegenpruefung muss "
+           "gemeldet werden - sonst prueft sie nichts")
     try:
         _nr = [k.split("-")[0] for k, _z, _a in _HN._befunde_ab()]
         _neu = max(_nr, key=lambda x: int(x.replace(".", "")))
