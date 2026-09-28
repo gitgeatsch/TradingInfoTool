@@ -40,6 +40,22 @@ VORAB FESTGELEGT (W1-W13 der Voranalyse)
                  bekannter Staerke gepflanzt) · G7 Korrelationsmatrix ·
                  Altersachse (Merkmal 6/12/24 h alt)
 
+    RANDKRITERIUM - VORAB FESTGELEGT 28.09.2026, VOR jeder Randrechnung
+    (Nutzer: *"Randkriterium fuer naechste Messungen ja ... so festlegen und
+    neu rechnen"*):
+        Rand      oben = Stufen P90-P99 und > P99, unten = < P1 und P1-P10
+        Kennzahl  Dq des Rands gegen die Phase (Anker-gewichtet)
+        Nullwelt  dieselbe wie fuer die Kurve (je Asset, bzw. --gemeinsam);
+                  Grenze Bestes-von-(2 x Kurven), zweiseitig, 90. Perzentil
+        TRAEGT    jenseits der Grenze (Suche) UND gleiches Vorzeichen in der
+                  Pruefung UND >= 3 von 4 Jahren UND >= 60 % der Assets
+                  gleiches Vorzeichen UND gleiches Vorzeichen 2022 (Moment-
+                  Bezug, von der Kurvenmessung unberuehrt)
+        Rolle     positiv -> Einstieg (nur mit Altersachse und A4
+                  *bestaetigt*), negativ -> Sperre
+    --nur-eigen: bei den Teilungsgruppen nur die _eigen-Kurven (die _markt-
+    Kurven werden nur mit --nur-markt --gemeinsam beurteilt)
+
     python messe_k1_wirkungskurven.py --menge unverzerrt:1 --gruppe voll
 
 NUR LESEND (`mode=ro`). Kein Stop, kein Trailing, keine Gebuehren (Regel 2).
@@ -152,7 +168,8 @@ def main() -> int:
             FV[m + "_markt"] = mk.astype(np.float32)
             FV[m + "_eigen"] = (FV[m] - mk).astype(np.float32)
             del FV[m]
-        teil_t = ("_markt",) if "--nur-markt" in sys.argv else ("_markt", "_eigen")
+        teil_t = (("_markt",) if "--nur-markt" in sys.argv else
+                  ("_eigen",) if "--nur-eigen" in sys.argv else ("_markt", "_eigen"))
         MERK = tuple(m + t for m in MERK for t in teil_t)
         for m in list(FV):
             if m not in MERK:
@@ -253,11 +270,22 @@ def main() -> int:
             r = int(rng.integers(MIN_VERSATZ, max(MIN_VERSATZ + 1, L - MIN_VERSATZ))) if L > 2 * MIN_VERSATZ else 0
             aus[tl] = np.roll(v[tl], r)
         return aus
+    def raender(d, cnt):
+        """-> (unten, oben): Anker-gewichtetes Dq der Randstufen (0,1 bzw. 10,11)."""
+        aus = []
+        for sl in (slice(0, 2), slice(10, 12)):
+            ok = np.isfinite(d[sl]) & (cnt[sl] > 0)
+            aus.append(float(np.sum(d[sl][ok] * cnt[sl][ok]) / cnt[sl][ok].sum()) if ok.any() else np.nan)
+        return aus
+
     s_null = {k: np.zeros(ZIEHUNGEN) for k in namen}
+    r_null = {k: np.zeros((ZIEHUNGEN, 2)) for k in namen}
     for zi in range(ZIEHUNGEN):
         for k in namen:
             st = stufen(verschiebe(KURVEN[k]), GRENZEN[k])
-            s_null[k][zi] = S(*profil(st, such))
+            dn, cn = profil(st, such)
+            s_null[k][zi] = S(dn, cn)
+            r_null[k][zi] = raender(dn, cn)
     mu = {k: s_null[k].mean() for k in namen}
     sd = {k: max(s_null[k].std(ddof=1), 1e-12) for k in namen}
     maxz = np.max(np.stack([(s_null[k] - mu[k]) / sd[k] for k in namen], axis=1), axis=1)
@@ -306,6 +334,57 @@ def main() -> int:
             ("✔ TRAEGT" + (" · TEILEN (Tag < 1/2)" if st_tag < 0.5 * s_wert[k] else "")) if traegt else "· nein"))
     print()
     print("  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)")
+
+    # ══ RANDKRITERIUM (vorab 28.09.) ══════════════════════════════════
+    rmu = {k: np.nanmean(r_null[k], axis=0) for k in namen}
+    rsd = {k: np.maximum(np.nanstd(r_null[k], axis=0, ddof=1), 1e-9) for k in namen}
+    rz = np.stack([np.abs((r_null[k] - rmu[k]) / rsd[k]) for k in namen], axis=1).reshape(ZIEHUNGEN, -1)
+    rgrenze = float(np.nanpercentile(np.nanmax(rz, axis=1), 90))
+    gitter22 = np.isin(STD % 24, GITTER) & (JAHR == 2022)
+    print()
+    print("=" * 120)
+    print("RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-%d Raendern: |z| %.2f" % (2 * len(namen), rgrenze))
+    print("  %-26s %-5s %8s %6s | %8s | %5s | %6s | %8s %6s | %s" % (
+        "Kurve", "Rand", "Dq Such", "z", "Dq Pruef", "Jahre", "Asset", "Dq 2022", "Anker", "Urteil"))
+    rand_traeger = []
+    nsy = int(SYM.max()) + 1
+    for k in namen:
+        d, cnt = wert[k]
+        ru = raender(d, cnt)
+        dp, cp = profil(ST[k], pruef)
+        rp = raender(dp, cp)
+        d22, c22 = profil(ST[k], gitter22, na=MA, nb=MB, minn=20)
+        r22 = raender(d22, c22)
+        jahre = []
+        for y in (2023, 2024, 2025, 2026):
+            dy, cy = profil(ST[k], gitter & (JAHR == y), minn=20)
+            jahre.append(raender(dy, cy))
+        ix = np.flatnonzero((such | pruef) & (ST[k] >= 0))
+        for ri, (sl, name) in enumerate(((slice(0, 2), "unten"), (slice(10, 12), "oben"))):
+            w = ru[ri]
+            z = (w - rmu[k][ri]) / rsd[k][ri] if np.isfinite(w) else np.nan
+            vz = np.sign(w)
+            j_ok = sum(1 for y in jahre if np.isfinite(y[ri]) and np.sign(y[ri]) == vz)
+            # je Asset: Rand-Dq je Asset (mind. 20 Anker im Rand)
+            im = ix[np.isin(ST[k][ix], (0, 1) if ri == 0 else (10, 11))]
+            sa = np.bincount(SYM[im], weights=A[im], minlength=nsy); sb = np.bincount(SYM[im], weights=B[im], minlength=nsy)
+            sna = np.bincount(SYM[im], weights=NA[im], minlength=nsy); snb = np.bincount(SYM[im], weights=NB[im], minlength=nsy)
+            sc = np.bincount(SYM[im], minlength=nsy)
+            with np.errstate(divide="ignore", invalid="ignore"):
+                da = sa / (sa + sb) - sna / (sna + snb)
+            ok = (sc >= 20) & np.isfinite(da)
+            asset = float(np.mean(np.sign(da[ok]) == vz)) if ok.any() else np.nan
+            n22 = int(c22[sl].sum())
+            traegt = (np.isfinite(z) and abs(z) > rgrenze and np.sign(rp[ri]) == vz and j_ok >= 3
+                      and np.isfinite(asset) and asset >= 0.6 and np.isfinite(r22[ri]) and np.sign(r22[ri]) == vz)
+            rolle = ("✔ EINSTIEG (Alter/A4 pruefen)" if vz > 0 else "⛔ SPERRE") if traegt else "· nein"
+            if traegt:
+                rand_traeger.append((k, name, vz))
+            print("  %-26s %-5s %+8.4f %+6.2f | %+8.4f | %d/4   | %5.0f%% | %+8.4f %6d | %s" % (
+                k, name, w, z, rp[ri], j_ok, 100 * asset if np.isfinite(asset) else float("nan"),
+                r22[ri], n22, rolle))
+    print("  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung")
+    traeger = sorted(set(traeger) | {k for k, _n, v in rand_traeger if v > 0})
 
     # A4 / W12: Randstufen je bisherigem Anstieg in ATR, fuer die tragenden Kurven
     print()

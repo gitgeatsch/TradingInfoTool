@@ -167,3 +167,28 @@ Zeitverschiebung **je Asset** ist für Marktmerkmale die falsche Nullwelt
 ⚠️⚠️ **Zur Entscheidung:** das Formkriterium (Rangkorrelation über alle
 12 Stufen) lässt einseitige Kurven an der flachen Mitte scheitern. Eine
 Änderung gilt nur **für die nächste Messung**, nie rückwirkend.
+
+---
+
+## 8. ⭐ VORABFESTLEGUNG RANDKRITERIUM (28.09.2026) — committet VOR jeder Randrechnung
+
+**Nutzer:** *„Randkriterium für nächste Messungen ja — falls erforderlich
+müssen wir wichtige Messungen erneut durchführen. Wenn du die Ränder sauber
+einordnen kannst und die Wirkung nachgewiesen ist, würde ich das so sehen."*
+Und: *„wir haben einen Kuchen, den wir vermessen können, mehr gibt es nicht
+... 1 Meter bleibt 1 Meter auch nach 10 Messungen."*
+
+➤ Einverstanden — das Risiko liegt nicht im Nachmessen, sondern im **Maßband**,
+das man nach dem Ergebnis wählt. Deshalb: festgelegt und committet **vor**
+dem ersten Lauf, Grenze über **alle** Ränder, und **2022** als unberührte
+Bestätigung.
+
+| | Festlegung |
+|---|---|
+| **Rand** | oben = Stufen P90–P99 und > P99, unten = < P1 und P1–P10 |
+| **Kennzahl** | Dq des Rands gegen die Phase (Anker-gewichtet) |
+| **Nullwelt** | dieselbe wie für die Kurve — je Asset, bei Marktmerkmalen **gemeinsam**; Grenze **Bestes-von-(2 × Kurven)**, zweiseitig, 90. Perzentil |
+| **Rand trägt** | jenseits der Grenze (Suche) **und** gleiches Vorzeichen in der Prüfung **und** ≥ 3 von 4 Jahren **und** ≥ 60 % der Assets **und** gleiches Vorzeichen **2022** (Moment-Bezug, von der Kurvenmessung unberührt) |
+| **Rolle** | positiv → Einstieg, nur mit Altersachse und A4 *bestätigt*; negativ → Sperre |
+| **neu gerechnet** | alle K1-Gruppen (voll, termin; teilung und termin_teilung je `--nur-eigen` und `--nur-markt --gemeinsam`) auf `unverzerrt:1..3` und `bestand` |
+| **unverändert** | das Kurvenurteil W10 bleibt daneben stehen — das Randkriterium **ergänzt**, es ersetzt nicht |
