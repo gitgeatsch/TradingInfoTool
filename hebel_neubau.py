@@ -550,6 +550,13 @@ NEUESTER_STAND = (
               "+0,03..+0,06); der Marktmedian steht fuer die Zeit, 12 Monate "
               "reichen fuer 12-Stufen-Kurven nicht. Die Wirkung ist da: dort, wo "
               "*oben gestreckt*, liegt q ungesehen +0,07..+0,10 ueber der Schaetzung"),
+    ("2.678", "K1 SCHRITT 2b: traegt nach dem Vorabkriterium NICHT (T2-T5; die "
+              "Kombination ist schlechter als rsi allein). Ursache: wer nach Normal "
+              "+ Beitrag auswaehlt, waehlt das PHASE-NORMAL, und das kehrt zur Mitte "
+              "zurueck. Nach dem BEITRAG allein ausgewaehlt: q im obersten Zehntel "
+              "+0,05 ueber dem Normal in allen vier Mengen, auch rollierend - etwa "
+              "so viel wie der rsi-Rand allein. K5 (Schwelle auf Normal + Kurven) "
+              "ist damit eine Nutzerentscheidung"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -560,11 +567,13 @@ NEUESTER_STAND = (
                "(2.669, --menge unverzerrt). K3 ist gemessen (2.670: der "
                "Kontext geht derzeit ohne Gewicht ein), K1 Schritt 1 samt "
                "Randkriterium und Altersachse auch (2.671-2.676), K1 Schritt 2 "
-               "als Kurvenmodell verworfen (2.677). Naechster Schritt: eine NEUE "
-               "Vorabfestlegung fuer Schritt 2 - Asset-Beitraege ohne "
-               "Marktkurven, in der Form, die Schritt 1 belegt (Raender), "
-               "laengeres Fenster, Aufloesung vorab nachgewiesen; vor jeder "
-               "Verwendung die Simulation (Ebene 3)"),
+               "als Kurvenmodell verworfen (2.677), der zweite Anlauf traegt nach "
+               "dem Vorabkriterium nicht, zeigt aber die Ursache (2.678: das "
+               "Normal). Offen zur Entscheidung: K5 Schwelle auf dem BEITRAG statt "
+               "auf Normal + Kurven, oder ein gedaempftes Normal (K2); dann die "
+               "Frage, ob die Kombination nach dem Beitrag mehr bringt als rsi "
+               "allein. K6 (Hebelstufe) laeuft parallel an. Vor jeder Verwendung "
+               "die Simulation (Ebene 3)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.

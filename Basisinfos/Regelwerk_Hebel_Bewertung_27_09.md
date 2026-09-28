@@ -294,6 +294,7 @@ mit dem Anlass:
 | 23 | ⭐ **Kein künstlicher Blocker** (Nutzer 28.09.): Achsen wie Alter und A4 prüfen die **Gültigkeit** und liefern **Gewichte** — keine Schwelle *erst ab X*, kein Schnitt | Nutzervorgabe *keine Alles-oder-nichts-Schwelle* |
 | 24 | **Anker sind nicht unabhängig** (vier je Tag, überlappende Fenster, ein Markttag für alle Assets): ein geschätztes Modell bekommt seine Dämpfung **aus den Daten** (zeitlich geblockte Kreuzvalidierung im Trainingsfenster), nie eine feste | die feste Dämpfung lernte Rauschen, Nullwelt −17 (2.677) |
 | 25 | **Auflösung vor dem Urteil**: die Pflanzung muss eine Wirkung **in der Größe der gesuchten** sicher finden — sonst ist *trägt nicht* ein Befund über die Messform, nicht über den Beitrag | das Kurvenmodell fand erst +0,16, gesucht waren +0,03…+0,06 (2.677) |
+| 26 | **Auswahl nach Bezug + Beitrag immer auch nach dem Beitrag allein** ausweisen, mit eigener Nullwelt; liegt die Nullwelt der Auswahl nicht bei 0, ist das ein Befund über den **Bezug** | die Auswahl nach Normal + Beitrag wählte das Phase-Normal, das zur Mitte zurückkehrt (2.678) |
 
 ⚠️ **Nicht mehr Pflicht:** Episoden (Schritt 3 alt) und die Karenz als
 eigener Lauf — beide sind durch Tagesanker, Altersachse und A4 ersetzt.

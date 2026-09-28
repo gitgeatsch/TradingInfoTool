@@ -160,3 +160,53 @@ Normal), mit eigener Nullwelt, fest und rollierend — sie beantwortet sauberer,
 ob die **Beiträge** besser auswählen. ➤ **Nebenbefund für K2:** das
 12-Monats-Normal kehrt bei hohen Werten zur Mitte zurück — eine gedämpfte
 Form des Normals wäre eine eigene Messung.
+
+---
+
+## 9. ⛔⭐ ERGEBNIS (28.09.2026) — Befund 2.678
+
+Vier Mengen, alle am Inhalt vollständig. Dq der Auswahl = q im obersten
+Zehntel des geschätzten q minus Phase-Normal.
+
+### 9a. Die vorab festgelegten Urteile
+
+| | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|
+| **T0** Tor | ✔ | | | | ✔ |
+| **T1** fest / Grenze | +0,031 / −0,009 | +0,021 / −0,019 | +0,022 / −0,018 | +0,017 / −0,017 | fest ✔ |
+| **T1** rollierend > 0 | +0,010 | −0,002 | −0,001 | +0,001 | ⛔ 2 von 4 |
+| **T2** A − rsi allein | −0,019 | −0,018 | −0,020 | −0,018 | ⛔ schlechter als rsi |
+| **T3** Rangordnung | 0,25 | 0,25 | 0,23 | 0,24 | ⛔ |
+| **T4** Jahre / BTC | 2024, 2025 negativ | | | | ⛔ |
+| **T5** Assets | 59 % | 58 % | 48 % | 53 % | ⛔ |
+| **R** Zufall | ✔ | ✔ | ✔ | ✔ | ✔ |
+| **S** unterstes Zehntel | +0,016 | +0,014 | +0,016 | +0,018 | keine Sperre |
+
+### 9b. ⚠️⚠️ Gegenprüfung — die Ursache ist das Normal
+
+| # | Befund |
+|---|---|
+| 1 | schon **ohne** Wirkung liegt die Auswahl **unter** dem Normal (Nullwelt −0,014 bis −0,027): nach Normal + Beiträgen ausgewählt, wählt das Modell die Anker mit dem höchsten **Phase-Normal** — und dort kehrt q zur Mitte zurück. Diese Spreizung des Normals bläht T3 auf |
+| 2 | die Kreuzvalidierung wählt **in jedem Monat** die stärkste Dämpfung (20.000, der Rand des Gitters) — die Beiträge werden flach, das Normal bleibt |
+| 3 | die **Summe** der einzeln geschätzten Familien wählt besser (+0,049 bis +0,058) als die gemeinsame Schätzung (+0,017 bis +0,031) |
+
+### 9c. ⭐ Auskunft — nach dem Beitrag allein (vor den Läufen festgelegt, ändert kein Urteil)
+
+| | bestand | unv:1 | unv:2 | unv:3 |
+|---|---|---|---|---|
+| fest, oberstes Zehntel / Nullwelt 90. P. | **+0,061** / +0,022 | **+0,057** / +0,016 | **+0,054** / +0,015 | **+0,055** / +0,016 |
+| rollierend, oberstes Zehntel (10 %) | **+0,057** | **+0,051** | **+0,050** | **+0,052** |
+| fest, unterstes Zehntel | −0,016 | −0,005 | −0,007 | −0,005 |
+
+⚠️ Das ist etwa, was der **obere Rand von rsi allein** bringt (2.675:
+Prüfzeit +0,038 bis +0,054) — ein **Mehrwert der Kombination ist damit nicht
+gezeigt**.
+
+### 9d. Was daraus folgt
+
+| | |
+|---|---|
+| **K5 zur Entscheidung** | die Schwelle *auf dem kalibrierten q = Normal + Kurven* trägt so nicht — **Schwelle auf dem Beitrag** (Vorsprung gegen das eigene Normal) oder ein **gedämpftes Normal** (eigene Messung, K2) |
+| Werkzeug | das Dämpfungsgitter endet zu früh (immer 20.000) |
+| nächste Messfrage | bringt die Kombination **nach dem Beitrag** mehr als rsi allein? — neu vorab festzulegen |
+| Schritt 3 | wo *oben gestreckt*, liegt q weiter über der Schätzung (rsi +0,03 bis +0,05, ema_abstand +0,05 bis +0,065, rsi bei 1–2 ATR +0,05 bis +0,06) |

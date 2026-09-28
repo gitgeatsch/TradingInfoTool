@@ -5373,6 +5373,9 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `messe_k3_reproduktion_e2f_kontext.py` | **R-R11 zu K3**: die Kontextzeile aus E2f exakt nachrechnen, dann gegen die Zeitverschiebung | **Befund 2.670**: −0,0198 reproduziert, z −1,52 statt −6,9 — die Episoden-Nullwelt war für marktweite Größen zu optimistisch |
 | `messe_k1_wirkungskurven.py` | **K1 Schritt 1: Wirkungskurven je Beitrag** (12 Stufen, roh und selbstbezogen) gegen die Phase des Assets | **Befunde 2.671, 2.673–2.676 (28.09.2026)**: `--gruppe voll / termin / teilung`, `--nur-markt`, `--gemeinsam` (Nullwelt für Marktmerkmale: dieselbe Verschiebung für alle Assets); Kennzahl S über die ganze Kurve, Formkriterium Suche/Prüfung, A4-Achse (bisheriger Anstieg in ATR), Altersachse, Positivkontrolle in eine wirkungslose Kopie, Korrelationsmatrix; `--menge`. **Seit 2.675:** das vorab festgelegte **Randkriterium** (Rand oben P90–>P99, unten <P1–P10; Grenze Bestes-von-(2 × Kurven); Prüfzeit, 3/4 Jahre, 60 % Assets, 2022), `--gruppe altersachse` (**2.676**: Alter 0–48 h auf demselben Rand, Nullwelt, Bestes-von-132, Gegenprüfung Tageszeit) und `--gruppe regeltest` — 10 Zufallsmerkmale durch die Regel (Soll 0) plus gepflanzter Rand bekannter Größe; mit `--nur-markt --gemeinsam` als Zufalls-**Markt**reihe gegen die gemeinsame Nullwelt ⚠️ Die Pflanzung prüft die Asset-Bedingung nicht |
 | `messe_k1_schritt2_kombination.py` | **K1 Schritt 2: die Beiträge gemeinsam geschätzt** (logistisch additiv auf Log-Odds gegen das Phase-Normal) | **Befund 2.677 (28.09.2026)**: feste Teilung mit Nullwelt (Zeitverschiebung je Asset und gemeinsam für den Markt), rollierend 12 Monate, Dämpfung per zeitlich geblockter Kreuzvalidierung, Familien einzeln und ihre Summe, Regeltest (Zufall, Pflanzung bis +0,16), K5-Tabelle; `--probe` Werkzeugtest, `--diag-suche` nur innerhalb der Suche; `--menge` |
+| `messe_k1_schritt2b_kombination.py` | **K1 Schritt 2b: Kombination, zweiter Anlauf** — nur Asset-Beiträge, glatte Kurven, Hauptmaß *Dq der Auswahl* | **Befund 2.678 (28.09.2026)**: `--tor` Auflösungs-Tor (gepflanzt +0,02/+0,04/+0,08), `--form b|a`, Auswahl nach dem Beitrag allein als Auskunft, rollierend wachsend; `--probe`; `--menge` |
+| `messe_k6_hebelstufe.py` | **K6 R: Hebelstufe aus der Liquidationsgefahr** | Voranalyse K6 (28.09.2026): Bitpanda-Formel mit Finanzierung je Stunde, 5x/3x/2x × 24/72/120 h, mit/ohne Stop −5 %, `--kurs spot|mark`, R-R11 gegen E2i, `--tor`, Tabelle je Grenze; `--probe`; `--menge` |
+| `hole_markpreis.py` | **Binance-Markpreis** (Terminmarkt, 1 h) aus dem Archiv für K6/K7 | Voranalyse K6 H9: eigene Datei `data/markpreis_historie.db`, verweigert Produktion und Messbasen, `--teil`, `--zusammen`, `--kontrolle` (P1–P3) |
 | `messe_e3_gegenpruefung.py` | **nach** jeder Vorwärtsrechnung, bevor ihr Ergebnis weiterverwendet wird | **Befund 2.660 (27.09.2026)**: die E3-Kernrechnung fünfmal mit vorher bekanntem Ausgang — Selbstprobe, Merkmale 1 h älter (muss ähnlich bleiben), absichtlicher Vorgriff 1 h (muss steigen), Etikettentausch in Symbol × Monat (muss null sein), 50 Zufallslagen (Fehlalarm). ⚠️ Zufallslagen nur in der Größe der breiten Kandidaten |
 | `messe_e3_vorwaerts.py` | wenn eine Lage **vorwärts** geprüft werden soll — jeder Monat gegen seine eigene Kalibrierung | **Befund 2.659 (27.09.2026)**: 32 Prüfmonate 2024-01 bis 2026-08, Schwellen je Monat nur aus den 12 Monaten davor; 9 vorab festgelegte Kandidaten × beim Erscheinen / 1 h bestätigt, mit Gegenprobe (viele Longs, muss negativ sein); Ausgang +20 / −10 / sonst Kurs nach 120 h gegen das eigene Asset im **selben Monat**; Bestes-von-18, Quartale, BTC-Monatslage (Regime). Kein Stop, kein Trailing |
 | `messe_e2d_pruefung_squeeze.py` | wenn eine gefundene Lage **vorab festgelegt** gegen einen unberührten Zeitraum geprüft werden soll | **Befund 2.657 (27.09.2026)**: Lage *hohe Vola bzw. Volumenschub & wenige Long-Konten* (dort noch *Squeeze* genannt — eine Deutung, gemessen ist nur die Lage, 2.660) × Varianten (beim Erscheinen, 1 h / 3 h später bestätigt). Schwellen nur aus 2021–2023, 2024 unberührt, 2025/26 als gesehen markiert; je Asset höchstens ein Einstieg in 24 h; Ziel +20 / −10 % / sonst Kurs nach 120 h → Erwartungswert gegen das eigene Asset (symboltreue Nullwelt, Bestes-von-12); Rückgang vor dem Ziel; BTC-Kontext. Kein Stop, kein Trailing |
@@ -11376,3 +11379,33 @@ zeigt es sofort (konten_markt +19 gegen −0,1).
 ⚠️ **Verwandt:** 2.675 (die Urteilsregel selbst prüfen), 2.204/2.485
 (Selbsttest der Anlage). Werkzeug: `messe_k1_schritt2_kombination.py`
 (`--probe` Werkzeugtest, `--diag-suche` Diagnose nur innerhalb der Suche).
+
+---
+
+## 2.678 ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026)
+
+**Anlass:** K1 Schritt 2b (Hebel-Neubau) wählte das oberste Zehntel des
+geschätzten q aus — q = eigenes 12-Monats-Normal **plus** die Beiträge. Schon
+die **Nullwelt** (Beiträge ohne Wirkung) lag dabei **unter** dem Normal
+(−0,014 bis −0,027).
+
+### Warum
+
+Ohne echte Beiträge rangiert das Modell nach dem **Normal** — und das Normal
+**kehrt zur Mitte zurück**: ein Asset, das zwölf Monate gut lief, läuft im
+nächsten Monat schlechter, als sein Normal sagt. Die Spreizung des Normals
+zwischen den Assets ist also nicht vorhersagend; sie verdünnt jede echte
+Wirkung und bläht die Rangordnung auf (Steigung 0,24 statt 1).
+
+### Die Regel
+
+| # | |
+|---|---|
+| **1** | Eine Auswahl nach **Bezug + Beitrag** wird **immer** auch nach dem **Beitrag allein** ausgewiesen — mit eigener Nullwelt |
+| **2** | Liegt die Nullwelt der Auswahl nicht bei 0, ist das ein **Befund über den Bezug**, nicht über die Beiträge — erst klären, dann urteilen |
+| **3** | Ein Dämpfungsgitter, dessen **Rand** in jedem Fenster gewählt wird, ist zu kurz — das Ergebnis ist dann ein Randwert, keine Wahl |
+
+➤ Nach dem Beitrag allein ausgewählt lag q in allen vier Mengen +0,05 über
+dem Normal, auch rollierend.
+
+Werkzeug: `messe_k1_schritt2b_kombination.py` (`--tor` Auflösungs-Tor).

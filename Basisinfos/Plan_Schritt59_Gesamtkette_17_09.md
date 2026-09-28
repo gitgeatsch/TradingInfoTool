@@ -2359,5 +2359,8 @@ weiter.
 ➤ **M1-Kriterium 2 bleibt offen.** Nichts davon ist verdrahtet; die
 Betriebsumstellung kommt erst nach der ganzen Kette einschließlich der
 LLM-Rollen. K1 Schritt 2 ist als Kurvenmodell gemessen und verworfen (2.677:
-die Auflösung reicht nicht, der Marktmedian steht für die Zeit). Nächster
-Schritt: eine neue Vorabfestlegung für Schritt 2, dann K6, K7, Simulation Ebene 3.
+die Auflösung reicht nicht, der Marktmedian steht für die Zeit); der zweite
+Anlauf 2b trägt nach dem Vorabkriterium ebenfalls nicht (2.678) — die Auswahl
+nach Normal + Beitrag wird vom Phase-Normal beherrscht; nach dem Beitrag allein
+liegt q +0,05 über dem Normal. Offen: die Entscheidung zu K5 (Schwelle auf dem
+Beitrag); K6 (Hebelstufe) läuft; dann K7, Simulation Ebene 3.

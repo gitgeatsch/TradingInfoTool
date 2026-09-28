@@ -182,3 +182,15 @@ Juli sind enthalten) — ein neuer Export erst, wenn K7 ansteht.
 | **H9** | Markpreis aus dem Archiv laden — **Freigabe der Abrufe** |
 | **H10** | Long, vier Mengen, Hebelwerte als Auskunft |
 | **V0–V3, R, T** | wie Abschnitt 4 |
+
+---
+
+## 9. Umsetzung — festgehalten VOR dem ersten Lauf (28.09.2026)
+
+| | |
+|---|---|
+| Werkzeug | `messe_k6_hebelstufe.py` (Mechanik aus `messe_k1_schritt2b_kombination.py`: glatte Kurven, Kreuzvalidierung) · Lader `hole_markpreis.py` |
+| **rollierend je Quartal** | wachsend, nur Vergangenheit, auf die drei Monate danach angewandt — statt monatlich: 3 Stufen × 3 Haltedauern × 2 Modelle, je mit Kreuzvalidierung, wären ~10.000 Schätzungen je Menge |
+| **Markpreis-Lücken** | ein Anker mit einer fehlenden Markpreis-Stunde im Fenster fällt heraus — sonst zählte die Lücke still als *nicht liquidiert* |
+| Nullwelt-Versatz | ≥ 360 Gitteranker (= 90 Tage) je Asset |
+| Reihenfolge | Werkzeugtest → R-R11 und Tor (Bestand, Spot-Tief) → vier Mengen mit dem Spot-Tief → nach dem Laden mit dem Markpreis (nie zwei Rechnungen zugleich) |
