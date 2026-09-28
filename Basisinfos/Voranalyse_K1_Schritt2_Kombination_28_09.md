@@ -243,3 +243,47 @@ das der Hinweis für Schritt 3 — gemessen, nicht vermutet.
 |---|---|
 | C1–C8, T1–T5, R | **unverändert** |
 | C7 | **(f)** Marktmedian nur über die Hebelwerte · **(g)** Vorprüfung W1/W2 — beide **Auskunft**, festgelegt **vor** der Messung |
+
+---
+
+## 9. ⛔ WERKZEUGTEST (28.09.2026) — die vorab festgelegte Dämpfung ist zu schwach, die Marktkurven zu fein
+
+Der Werkzeugtest (Bestand, 3 Nullwelten, 3 Monate) prüfte nur die Mechanik —
+und fand, dass sie **so nicht trägt**. Inhaltlich wird daraus nichts gewertet.
+
+| Befund | Beleg |
+|---|---|
+| die **Nullwelt** liegt im Mittel bei **−17** statt nahe 0 | Werkzeugtest, feste Teilung |
+| die **Kalibrierung** ist unbrauchbar (Steigung 0,01; geschätzt 0,15 gegen beobachtet 0,39) | Werkzeugtest |
+| die **Marktkurven** mit 12 Stufen verlieren auf ungesehener Zeit stark (konten_markt rollierend −74) | Werkzeugtest |
+
+**Ursache, geprüft NUR innerhalb der Suche** (2023 schätzen → 2024 anwenden;
+die Prüfzeit 2025/26 bleibt unberührt, damit nichts nach dem Ergebnis gewählt
+wird) — Gewinn auf 2024 in tausendstel nat, bestand / unverzerrt:1:
+
+| Dämpfung | ema_abstand allein | rsi allein | Kombination ohne Markt | Kombination, Markt in Dritteln |
+|---|---|---|---|---|
+| 20 (vorab) | +1,28 / +1,76 | +0,91 / +1,37 | −1,21 / −0,17 | −6,92 / −9,62 |
+| 200 | +1,95 / +2,13 | +1,32 / +1,64 | +0,75 / +1,15 | −0,47 / −4,37 |
+| 2.000 | +0,95 / +1,21 | +0,65 / +0,89 | +1,28 / +1,63 | +6,92 / +4,42 |
+| 20.000 | +0,14 / +0,20 | +0,09 / +0,14 | +0,26 / +0,39 | +2,43 / +2,53 |
+
+| | Lehre |
+|---|---|
+| 1 | **Die Anker sind nicht unabhängig** — vier je Tag mit überlappenden 24-h-Fenstern, alle Assets am selben Markttag. Die Schätzung zählt jeden Anker voll und lernt Rauschen; eine **feste** Dämpfung kann das nicht für jedes Modell richtig treffen |
+| 2 | Die nötige Stärke **hängt am Modell**: eine Familie verträgt ~200, die Kombination braucht ~2.000 |
+| 3 | Ein Marktwert gilt für alle Assets einer Stunde — mit 12 Stufen stehen hinter einer Stufe nur ~30 Markttage (dieselbe Lage wie K3a) |
+| 4 | ⚠️ Die Tabelle zeigt die **Empfindlichkeit** — aus ihr wird die Dämpfung **nicht gewählt** |
+
+### 9a. ✔ ABGESTIMMT 28.09. (Nutzer: *ja, Ä1 bis Ä3 wie empfohlen, committen, dann messen*) — festgelegt VOR der Messung
+
+| # | Änderung an C2 | warum |
+|---|---|---|
+| **Ä1** | **Dämpfung je Modell und Trainingsfenster selbst bestimmt**: zeitlich geblockte Kreuzvalidierung **innerhalb** des Fensters (4 Blöcke), Gitter 20 / 200 / 2.000 / 20.000, das beste nach Log-Loss auf dem ausgelassenen Block. Jede Familie und jede Kombination bekommt ihre eigene | nur Vergangenheit, kein Blick auf die Prüfzeit; im Betrieb genauso anwendbar; T2 vergleicht dann fair (jedes Modell in seiner besten Form) |
+| **Ä2** | **Marktkurven in Dritteln** | Fallzahl = Markttage; derselbe Schritt wie K3a (5 × 5 → 3 × 3) |
+| **Ä3** | die **Nullwelt** bekommt dieselbe Kreuzvalidierung je Ziehung | sonst wäre sie mit einer fremden Dämpfung zu weit oder zu eng |
+| — | C1, C3–C8, T1–T5, R | **unverändert** |
+
+**Preis:** rund 13 Schätzungen statt einer je Modell — etwa **1,5 bis 2 Stunden
+je Menge**, **6 bis 8 Stunden** für alle vier, nacheinander (auch über Nacht).
+Ein Werkzeugtest geht voraus.
