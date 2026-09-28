@@ -227,16 +227,26 @@ eigene Voranalyse zum Importer.
 
 ## 11. Nachtrag: ein Bitpanda-Liquidationspreis aus der App (offene BTC-Position, 28.09. abends)
 
-**Nutzer:** Screenshot der Bitpanda-App, *„nein, kein Teilverkauf"*.
+**Nutzer:** Screenshots der Bitpanda-App und der eigenen Hebel-Tabelle,
+*„nein, kein Teilverkauf"*, *„wir waren noch vorsichtiger"*.
+
+⛔ **Erste Fassung falsch** (Commit 26c821a): Ich hatte die 2,83x als
+**aktuellen** Hebel gelesen und den Kredit aus dem heutigen Wert abgeleitet
+(1.072 €). App und Tabelle zeigen den Hebel **beim Einstieg** (Positionswert /
+Eigenkapital). Daraus folgte eine zu hohe Marge (5,8 %) und ein zu kleiner
+Abstand unserer Anzeige (3,5 %).
 
 | | |
 |---|---|
-| App | 0,02255012 BTC, Wert 1.657,76 €, **2,83x Long**, Liquidationspreis **≈ 50.466,83 €** (−31,35 %) |
-| nachgerechnet | Kurs 73.514 €; Kredit = Wert × (1 − 1/2,83) ≈ 1.072 €; −31,35 % ✔ |
-| **Bitpandas Marge** | 1 − Kredit / (Menge × Liquidationspreis) ≈ **5,8 %** (5,7–5,9 % je nach Rundung des Hebels, Finanzierung vernachlässigt) |
-| unsere Formel, m 0,09 | ≈ **52.240 €** plus Finanzierung, also rund 3,5 % **über** Bitpanda, die **vorsichtige** Seite |
+| App | 0,02255012 BTC, Wert jetzt 1.657,76 €, **2,83x** (beim Einstieg), Performance −52,51 € = **−8,75 % auf 600 € Eigenkapital**, Liquidationspreis **≈ 50.466,83 €** |
+| Tabelle (unser Betrieb) | Eigenkapital 600,00 €, eröffnet 23.09.2026, Liq.-Preis **54.393,76 €** |
+| nachgerechnet | Positionswert beim Einstieg 2,83 × 600 = **1.698 €**, Kredit **1.098 €**, Einstieg ≈ 75.300 €; unsere Formel 75.300 × (1 − 1/2,83 + 5,9 Tage × 0,18 %) / 0,91 ≈ **54.390 €** ✔ |
+| **Abstand** | unsere Anzeige liegt **7,8 % über** Bitpanda, die **vorsichtige** Seite |
+| **Bitpandas Marge für BTC** | 1 − Kredit / (Menge × Liquidationspreis): **≈ 3,5 %** ohne Finanzierung, **≈ 2 %**, wenn die aufgelaufene Finanzierung (≈ 18 €) mitzählt, also **unter** dem Doku-Band 4,76–9,09 % |
 | Importer | ohne Teilverkauf stimmen Position und Buch überein, die Betriebsanzeige ist hier richtig |
 
-Das passt zu 2.679: Die Marge ist **je Asset** verschieden (SUI 3,7–6,9 %) und
-liegt **unter** 9 %. m = 0,09 bleibt vorsichtig. Ein einzelner Punkt, keine
-Kalibrierung.
+Das passt zu 2.679: Die Marge ist **je Asset** verschieden (SUI 3,7–6,9 %, BTC
+2–3,5 %) und liegt **unter** 9 %. m = 0,09 ist vorsichtig, bei BTC deutlich. Es
+ist ein einzelner Punkt, keine Kalibrierung. Für K6 heißt das: Das Band aus H8
+(0,0476 als Auskunft) reicht nach unten womöglich nicht. Das ist eine Frage
+für die K6-Auswertung, keine Änderung jetzt.
