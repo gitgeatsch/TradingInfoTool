@@ -171,3 +171,26 @@ Z6 (neue Monate) und die Simulation (Ebene 3).
 2. Werkzeug `messe_k5_lage_vorlauf.py` (Datenaufbereitung aus 2c übernommen, die neuen Fenster dazu), vorab committet
 3. Tor und R-R11 (bestand), dann vier Mengen, **nach** K6 mit dem Markpreis (nie zwei große Rechnungen zugleich)
 4. Befund, Vorlage — und die Regel für Z6 einfrieren
+
+---
+
+## 9. ✔ ABGESTIMMT (29.09.2026) — V1 bis V10 wie empfohlen
+
+**Nutzer:** *„ja, V1 bis V10 wie empfohlen — prüfen und gegenprüfen."* Dazu der
+Auftrag, unsere Erkenntnisse **extern zu recherchieren** (tragende Beiträge,
+Problemstellung, Lösungsansätze, wie es andere technische Systeme machen), um
+Phasen und Messungen zu optimieren. Ergebnis kommt als eigener Abschnitt.
+
+---
+
+## 10. Bauentscheidungen — vor den Läufen festgelegt (Werkzeug `messe_k5_lage_vorlauf.py`)
+
+| # | Entscheidung | Warum |
+|---|---|---|
+| **B1** | T2 **rollierend** wird gegen das Nullband der **festen** Teilung gehalten | eine rollierende Nullwelt mit 40 Ziehungen hieße rund 6.400 Modellschätzungen je Menge, also Tage. Dieselbe Prüfzeit, derselbe Prüfstand |
+| **B2** | Die Nachkalibrierung nutzt **nur ungesehene** Schätzungen früherer Monate (Ausgang vor dem Zielmonat bekannt). Monate ohne 3 bzw. 12 Monate Vorgeschichte gehen **nicht** in T3 ein; Z4 vergleicht auf gemeinsamen Monaten | keine Kalibrierung auf Daten, die das Modell schon gesehen hat |
+| **B3** | Die Familiengewichte (Stacking) werden auf den **Trainings**schätzungen bestimmt, nicht über eine eigene Kreuzvalidierung | 4 Gewichte auf rund 130.000 Ankern; ein überangepasstes Gewicht kann in der Prüfzeit nur schaden, nicht helfen |
+| **B4** | Die T2-Nullwelt verschiebt **nur die Lage** (alle neun Spalten gemeinsam je Asset), rsi bleibt echt | geprüft wird, ob die Lage etwas **dazu** bringt |
+| **B5** | Tor: gepflanzt auf dem obersten Zehntel von `oi_24` (Lage verschoben), gemessen an der T2-Differenz | das Tor muss die Messgröße von T2 treffen |
+| **B6** | Lage **roh** (wie als Träger gemessen, 2.651/2.663), rsi selbstbezogen (wie 2c) | Formwahl begründet: die Terminmarkt-Beiträge sind in roher Form registriert |
+| **B7** | Reihenfolge: Werkzeugtest (3 Ziehungen, 6 Monate) → Tor + T1 (bestand) → vier Mengen, **nach** K6 mit dem Markpreis | nie zwei große Rechnungen zugleich |
