@@ -266,3 +266,42 @@ bei oi_aenderung, funding_markt und konten_verh_markt.
 ➤ **In die nächste Vorabfestlegung** gehört das als Bedingung, nicht als
 Nachtrag: der Versatz wird im selben Lauf mitgerechnet (Zufallsmerkmale
 laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
+
+---
+
+# E-12 · K7 zählt am BUCH je Symbol, nicht an den Importer-Positionen
+
+**28.09.2026** · fachliche Entscheidung beim Bau von K7 (2.679).
+⚠️ Sie **ändert kein Kriterium** (J5/J6) — sie korrigiert die Zähleinheit.
+
+**Anlass:** 278 von 315 Schlussbuchungen sind Teilschließungen; der Importer schließt bei jeder ab. Nur 15 von 188 Positionen zahlen den summierten Kredit zurück. Das Buch je Symbol geht dagegen auf (Menge und Kredit exakt auf 0, 37 Abschnitte).
+
+**Entscheidung:** Einheit ist der Abschnitt des Buchs (Kredit von 0 bis 0); er endet, sobald der Kredit unter 1 € fällt (Staubreste zählen sonst als Unterdeckung). Der Lauf auf den Importer-Positionen bleibt als ungültiger Beleg liegen.
+
+---
+
+# E-13 · Die Wahrheit über Liquidationen kommt aus der GEBÜHR, gerechnet mit dem Alter der Posten
+
+**28.09.2026** · fachliche Entscheidung aus R1 der K7-Voranalyse; der Nutzer erinnert sich nicht.
+
+**Anlass:** Mit dem Alter der Posten trifft das Gebührenmodell 0,30 + 0,18 × Tage die Teilschließungen auf −0,01 Punkte; sieben Schlüsse liegen bei +0,97 bis +1,05 (1-%-Zwangsgebühr), alle übrigen bei höchstens +0,01. Die Gebühr hängt nicht an den Kursreihen, die K7 vergleicht.
+
+**Entscheidung:** K7 rechnet **beide** Fassungen — vorab (4 geführte) und korrigiert (7 aus der Gebühr) — und weist beide aus. Das Urteil (J6) ist in beiden gleich.
+
+---
+
+# E-14 · J10 nimmt die STUNDEN des 10./11.10.2025 heraus, nicht ganze Abschnitte
+
+**28.09.2026** · Korrektur der eigenen ersten Umsetzung.
+
+**Entscheidung:** Ein Crash-Fall **endet** am 10./11.10.; in der Ansicht *ohne* fallen diese Abschnitte weg und bei allen anderen die Stunden dieser zwei Tage. Die erste Fassung hatte TAO/87 und SUI/54 (begonnen am 10.10. abends, liquidiert am 22.10. und 03.11.) als Crash gezählt.
+
+---
+
+# E-15 · Markpreis: ein Monat mit mehr als 1 % Abstand zum Spot ist ein anderes Instrument
+
+**28.09.2026** · Datenentscheidung beim Laden (H9).
+
+**Anlass:** Unter Vorgängernamen läuft im Archiv ein anderer Kontrakt weiter (A←EOS, KAIA←KLAY, S←FTM, RENDER←RNDR, POL←MATIC). Die Monatsmediane |Markpreis/Spot − 1| haben eine Lücke zwischen 0,53 % und 1,15 %.
+
+**Entscheidung:** Grenze 1 % je Monat, gesperrte Monate zählen als fehlend (`hole_markpreis.py --sperre`). Im Markpreis-Modus von K6 kommen Einstieg und Tief aus **derselben** Reihe.

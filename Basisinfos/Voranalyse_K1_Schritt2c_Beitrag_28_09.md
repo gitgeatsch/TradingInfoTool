@@ -135,3 +135,23 @@ Monate es bestätigen.
 | **F8** | Nullwelt, Regeltest, neues Tor auf der Beitragsauswahl |
 | **F9** | Gegenprüfungen, K5-Tabelle auf dem Beitrag |
 | **T0–T6, R, S** | wie Abschnitt 2 — fällt T6 oder T3, wird K5 neu vorgelegt; fällt nur T2, gilt die einfachere Regel (rsi allein) |
+
+---
+
+## 6. Ergebnis (29.09.2026) — Befund 2.680
+
+Beleg `Basisinfos/K1_Schritt2c_29_09/`. Tor ✔ (+0,04 in 5 von 5), R-R11 bitgleich (+0,0611 / +0,0569 / +0,0543 / +0,0549), Rand des Gitters in 0 / 0 / 9 / 16 % der Monate.
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 | |
+|---|---|---|---|---|---|
+| **T1** fest | +0,061 | +0,057 | +0,054 | +0,055 | ✔ (Nullwelt P90 +0,015..+0,022) |
+| T1 rollierend | +0,057 | +0,050 | +0,049 | +0,051 | ✔ |
+| **T2** A − rsi allein | −0,021 | −0,014 | −0,016 | −0,018 | ⛔ in 4 von 4 |
+| **T3** Steigung | 0,55 | 0,42 | 0,50 | 0,47 | ⛔ (Soll 0,7–1,3) |
+| **T4** Jahre / BTC-Lage | alle > 0 | alle > 0 | alle > 0 | alle > 0 | ✔ |
+| **T5** Assets mit Dq > 0 | 86 % | 83 % | 80 % | 80 % | ✔ |
+| **T6** Normal unten / Mitte / oben | +0,10 / +0,03 / +0,04 | +0,09 / +0,03 / +0,02 | +0,09 / +0,02 / +0,03 | +0,09 / +0,03 / +0,03 | ✔ überall positiv |
+| R Zufall | im Band | im Band | im Band | im Band | ✔ |
+| Auskunft 2022 oben | −0,012 | −0,016 | −0,023 | −0,017 | kehrt |
+
+➤ **Folge nach Abschnitt 2:** T3 fällt → **K5 wird neu vorgelegt**; T2 fällt → die einfachere Regel **rsi allein** zur Bestätigung. ⚠️ Dabei gilt OPTIMUM: rsi misst zu einem guten Teil die laufende Bewegung; vertretbar ist es als Einstieg nur mit dem 24 h alten Wert und A4.

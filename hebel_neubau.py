@@ -233,9 +233,13 @@ REGELWERK = {
         # VORLAEUFIG - *wenn das auch nicht klappt, muessen wir wieder
         # abstimmen*): nach 2.678 waehlt eine Schwelle auf Normal + Kurven das
         # Phase-Normal, und das kehrt zur Mitte zurueck
+        # ⛔ 29.09. (2.680): die Beitragsauswahl ist robust (T6), aber der
+        # Beitrag ist NICHT kalibriert (T3) und nicht besser als rsi allein
+        # (T2) - nach der Vorabfestlegung wird K5 NEU VORGELEGT
         "ergebnis": "nein | 3 bis 5 Stufen, so viele wie trennscharf, Schwelle "
                     "auf dem BEITRAG - dem kalibrierten Vorsprung gegen das eigene "
-                    "Normal (K5, vorlaeufig)",
+                    "Normal (K5, vorlaeufig; 2.680: nicht kalibriert, K5 neu "
+                    "vorzulegen)",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
@@ -255,7 +259,9 @@ REGELWERK = {
         "frage": "Wie weit geht es gegen mich, bevor es fuer mich geht?",
         "zielgroesse": "MAE in PROZENT gegen den Liquidationsabstand der Stufe "
                        "- die LIQUIDATIONSGEFAHR je Stufe (K6), am Markpreis "
-                       "(K7, Bitpanda-Formel m = 0,09; Orientierung 5x ~ -12 "
+                       "(K7: Hauptmass bestaetigt 2.679; Bitpanda-Formel m = "
+                       "0,09 vorsichtig, bis 5x an echten Positionen kein "
+                       "Fehlalarm; Orientierung 5x ~ -12 "
                        "%, 3x ~ -27 %, 2x ~ -45 %). ATR zum Einstieg ist das "
                        "Risikomass (2.667)",
         "bezug": "das eigene Asset",
@@ -568,6 +574,12 @@ NEUESTER_STAND = (
               "m = 0,09 liquidiert zu frueh, nie zu spaet; alle Fehlalarme in "
               "Buechern ueber 5x. Der Importer teilt die Positionen falsch ein "
               "(Teilschliessungen) und uebersah 3 von 7 Liquidationen"),
+    ("2.680", "K1 SCHRITT 2c: die Auswahl nach dem BEITRAG ist robust - in jedem "
+              "Drittel des Normals positiv (T6), in jedem Jahr und bei 80-86 % "
+              "der Assets. Aber sie bringt NICHT mehr als rsi allein (T2), und der "
+              "Beitrag ist nicht kalibriert (T3, Steigung 0,42-0,55). Nach der "
+              "Vorabfestlegung: K5 neu vorlegen; rsi allein als einfachere Regel "
+              "zur Bestaetigung - mit OPTIMUM (rsi misst die Bewegung)"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -580,11 +592,12 @@ NEUESTER_STAND = (
                "Randkriterium und Altersachse auch (2.671-2.676), K1 Schritt 2 "
                "als Kurvenmodell verworfen (2.677), der zweite Anlauf traegt nach "
                "dem Vorabkriterium nicht, zeigt aber die Ursache (2.678: das "
-               "Normal). ENTSCHIEDEN (vorlaeufig): K5 Schwelle auf dem BEITRAG. "
-               "Naechste Messfrage: bringt die Kombination nach dem Beitrag mehr "
-               "als rsi allein - mit der Pflicht, dass die Auswahl in jedem "
-               "Drittel des Normals positiv ist. K6 (Hebelstufe) laeuft, Tor "
-               "bestanden. Vor jeder Verwendung die Simulation (Ebene 3)"),
+               "Normal). K5 vorlaeufig auf dem BEITRAG; der dritte Anlauf (2.680) "
+               "loest die Rueckkehr zur Mitte, ist aber nicht besser als rsi "
+               "allein und nicht kalibriert - K5 wird NEU VORGELEGT. K7 gemessen "
+               "(2.679): Markpreis ist Hauptmass, m 0,09 vorsichtig. K6 "
+               "(Hebelstufe) mit dem Spot-Tief gelaufen, mit dem Markpreis "
+               "laeuft. Vor jeder Verwendung die Simulation (Ebene 3)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.

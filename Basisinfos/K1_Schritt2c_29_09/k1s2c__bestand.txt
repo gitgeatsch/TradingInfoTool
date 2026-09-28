@@ -1,0 +1,52 @@
+========================================================================================================================
+K1 SCHRITT 2c - KOMBINATION NACH DEM BEITRAG · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+
+R-R11 (altes Gitter bis 20.000): Beitragsauswahl A oben +0.0611 · 2.678: +0.0611 -> ✔ bitgleich
+  ab hier Gitter 20/200/2000/20000/200000/2000000
+
+========================================================================================================================
+FESTE TEILUNG Suche 2023-2024 -> Pruefung 2025-01..2026-08 · Dq der BEITRAGSauswahl
+  A           oben +0.0611 (Anteil 9.8 %) · unten -0.0156 · eigenes Zehntel +0.0602 · Daempfung 20000
+  B           oben +0.0597 (Anteil 9.3 %) · unten -0.0165 · eigenes Zehntel +0.0588 · Daempfung 20000
+  rsi allein  oben +0.0808 (Anteil 10.3 %) · unten -0.0072 · eigenes Zehntel +0.0808 · Daempfung 2000
+  Familien (eigenes Zehntel): momentum +0.0427 · ema_abstand +0.0497 · anstieg +0.0173 · einfache Regel rsi selbst (oberstes Zehntel im Test) +0.0540
+  Nullwelt (Bestes-von-2): Mittel +0.0165 · 90. Perzentil +0.0215
+  T1 fest: ✔ jenseits
+  T2 A minus rsi allein -0.0206 gegen Nullband +0.0070 -> · nicht mehr als rsi allein
+     Auskunft: A minus einfache rsi-Regel +0.0062 gegen Nullband +0.0096 -> nicht mehr
+  S  unterstes Zehntel A -0.0156 · B -0.0165
+  R  Zufallseingaenge: +0.0152 gegen +0.0215 -> ✔ im Nullband
+  Summe der einzeln geschaetzten Familien: +0.0704 (gemeinsam +0.0611)
+  Eingaenge 1 h aelter: +0.0684
+  2022 (Moment-Bezug): oben -0.0122 · unten -0.0562 (Anteil oben 9.5 %)
+
+========================================================================================================================
+ROLLIEREND, WACHSEND: 32 Monate, Beitragsauswahl mit Grenze aus dem Training
+  Daempfung je Monat: 20000 20000 20000 20000 20000 20000 20000 200000 20000 20000 20000 20000 20000 20000 20000 20000 20000 20000 20000 20000 20000 20000 200000 20000 20000 20000 20000 20000 20000 20000 20000 20000 · Rand (2000000) gewaehlt in 0 % der Monate
+  T1 rollierend: A oben +0.0571 (Anteil 9.9 %) · unten -0.0024 · rsi allein oben +0.0685 (Anteil 9.9 %)
+     gleicher Anteil (oberstes Zehntel im Test): A +0.0345 · rsi allein +0.0517
+  T6 je Drittel des Normals: Normal unten +0.1011 (11319) · Normal mitte +0.0308 (10071) · Normal oben +0.0364 (7828) -> ✔ ueberall positiv
+  T3 Beitrag kalibriert: Steigung im Monat 0.55 · oberstes Zehntel geschaetzt +0.0434 beobachtet +0.0346 -> ⛔ nicht kalibriert
+     Zehntel geschaetzt (gegen Monatsmittel): -0.032 -0.023 -0.016 -0.010 -0.004 +0.001 +0.007 +0.014 +0.023 +0.040
+     Zehntel beobachtet (gegen Monatsmittel): +0.003 -0.009 -0.026 -0.016 -0.023 -0.002 +0.019 +0.022 +0.011 +0.022
+  T4 je Jahr und BTC-Drittel: 2024 +0.0586 · 2025 +0.0207 · 2026 +0.1018 · BTC tief +0.0377 (8908) · BTC mitte +0.0893 (9619) · BTC hoch +0.0462 (10691) -> ✔
+  T5 je Asset (>= 50 Auswahlanker): 107 Assets, Dq > 0 bei 86 % -> ✔
+  nur Hebelwerte (Namensgleichheit, Vorbehalt 2.612): 26 Symbole · +0.0802 (6252)
+  W1/W2 (Hinweis fuer Schritt 3): beobachteter minus geschaetzter Vorsprung
+     W2 rsi         beide oben +0.047 (1517) · nur jetzt +0.035 (13834) · nur 24 h +0.028 (13806) · keiner -0.001 (114335)
+     W2 momentum    beide oben -0.004 (1532) · nur jetzt +0.022 (14232) · nur 24 h +0.005 (14000) · keiner +0.004 (113728)
+     W2 ema_abstand beide oben +0.066 (3865) · nur jetzt +0.025 (11682) · nur 24 h +0.003 (11904) · keiner +0.002 (116041)
+
+========================================================================================================================
+K5-TABELLE AUF DEM BEITRAG (Ausgabe, KEINE Schwelle) - rollierend, Variante A, Beitrag in q-Punkten
+  Beitrag >= +0.02  Anker   61323 · je Asset/Monat  16.81 · beobachteter Vorsprung +0.0350 · je Jahr +0.0073 / +0.0057 / +0.0972
+  Beitrag >= +0.04  Anker   14500 · je Asset/Monat   3.97 · beobachteter Vorsprung +0.0390 · je Jahr -0.1235 / +0.0132 / +0.1051
+  Beitrag >= +0.06  Anker    1493 · je Asset/Monat   0.41 · beobachteter Vorsprung +0.1533 · je Jahr - / +0.1033 / +0.2658
+  Beitrag >= +0.08  Anker       0 · je Asset/Monat   0.00 · beobachteter Vorsprung +nan · je Jahr - / - / -
+  Beitrag <= -0.02  Anker   51358 · je Asset/Monat  14.08 · beobachteter Vorsprung +0.0148 · je Jahr +0.0184 / -0.0012 / +0.0359
+  Beitrag <= -0.04  Anker     677 · je Asset/Monat   0.19 · beobachteter Vorsprung +0.1879 · je Jahr - / +0.1850 / -
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig

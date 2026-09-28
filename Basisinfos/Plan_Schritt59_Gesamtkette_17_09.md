@@ -2364,3 +2364,5 @@ Anlauf 2b trägt nach dem Vorabkriterium ebenfalls nicht (2.678) — die Auswahl
 nach Normal + Beitrag wird vom Phase-Normal beherrscht; nach dem Beitrag allein
 liegt q +0,05 über dem Normal. Offen: die Entscheidung zu K5 (Schwelle auf dem
 Beitrag); K6 (Hebelstufe) läuft; dann K7, Simulation Ebene 3.
+
+**Nachtrag 29.09.2026:** K7 gemessen (2.679) — der Binance-Markpreis ist Hauptmaß, m = 0,09 vorsichtig, Fehlalarme nur über 5x; ⚠️ der Bitpanda-Importer teilt Teilschließungen als Vollschluss ein und übersah 3 von 7 Liquidationen (Betrieb unverändert, eigene Voranalyse). K1 Schritt 2c (2.680): die Beitragsauswahl ist robust, aber nicht besser als rsi allein und nicht kalibriert — **K5 wird neu vorgelegt**. K6 mit dem Spot-Tief gelaufen (die ATR trägt, die Risikokurven nicht), mit dem Markpreis in Rechnung. M1-Kriterium 2 bleibt offen.

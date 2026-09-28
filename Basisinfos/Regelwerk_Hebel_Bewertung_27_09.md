@@ -10,6 +10,16 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⭐⭐ NACHTRAG STAND 29.09.2026
+
+| | |
+|---|---|
+| **K5** | ⛔ die Schwelle auf dem **Beitrag** (vorläufig seit 28.09.) ist nach 2c **nicht kalibriert** (T3, Steigung 0,42–0,55) und **nicht besser als rsi allein** (T2) — robust ist sie gegen die Rückkehr zur Mitte (T6). Nach der Vorabfestlegung **neu vorzulegen** (2.680) |
+| **K7** | ✔ der **Binance-Markpreis** ist Hauptmaß für Bewertung 2 (2.679); m = 0,09 bleibt die vorsichtige Hauptrechnung — an echten Positionen bis 5x kein Fehlalarm; die echte Bitpanda-Marge ist **je Asset** verschieden (SUI 3,7–6,9 %, BTC 2–3,5 %) |
+| **Pflichtablauf** | ⚠️ neue Falle, gefunden an K7: eine **Wahrheit aus einer Quelle** (hier `hebel_positions`) wird vor der Messung am **Buch** geprüft — der Importer teilte Teilschließungen als Vollschluss ein und übersah 3 von 7 Liquidationen |
+
+---
+
 # ⭐⭐ STAND 28.09.2026 — die abgestimmte Anwendungsebene gilt
 
 Seit dem 27.09. abends ist mit dem Nutzer Punkt für Punkt die
