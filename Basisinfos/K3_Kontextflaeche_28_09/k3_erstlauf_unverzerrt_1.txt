@@ -1,0 +1,90 @@
+========================================================================================================================
+K3 - KONTEXTFLAECHE BTC-Rendite x Dominanz-Aenderung (3 x 3) · MENGE unverzerrt:1
+========================================================================================================================
+  Anker (Tagesanker, Phase gueltig): Suche 175946 · Pruefung 232730 · 2022 (Moment) 79557 · Symbole 125
+
+  Grenze Bestes-von-27 (Zeitverschiebung, 40 Ziehungen): z 2.78
+
+------------------------------------------------------------------------------------------------------------------------
+FENSTER 24 h - Dq gegen die PHASE (q5, 24 h) · Suche 2023-24 urteilt
+  Feld                  Dq Suche      z | Dq Pruef |   Moment  2022 Mo |  q abs | Jahre  vorw.  Asset | Urteil
+  BTC tief / Dom tief    +0.0501  +0.70 |  -0.0579 |  +0.0625  +0.1083 |  0.495 | 2/4   28/44     50% | · nein
+  BTC tief / Dom mitte   +0.0225  +0.34 |  +0.0233 |  +0.0225  +0.0337 |  0.507 | 3/4   28/44     67% | · nein
+  BTC tief / Dom hoch    -0.0175  -0.57 |  +0.0312 |  -0.0023  +0.0532 |  0.498 | 1/4   17/44     31% | · nein
+  BTC mitte / Dom tief   +0.0183  +0.52 |  -0.0193 |  +0.0019  -0.0166 |  0.481 | 2/4   19/44     50% | · nein
+  BTC mitte / Dom mitte  -0.0273  -0.76 |  -0.0199 |  -0.0319  -0.0964 |  0.462 | 3/4   25/44     71% | · nein
+  BTC mitte / Dom hoch   -0.0411  -1.52 |  +0.0411 |  -0.0357  +0.0151 |  0.491 | 1/4   21/44     45% | · nein
+  BTC hoch / Dom tief    -0.0384  -0.70 |  +0.0067 |  -0.0614  +0.0162 |  0.475 | 2/4   24/44     51% | · nein
+  BTC hoch / Dom mitte   +0.0182  +0.64 |  +0.0032 |  +0.0162  -0.0578 |  0.494 | 3/4   23/44     61% | · nein
+  BTC hoch / Dom hoch    +0.0173  +0.01 |  +0.0674 |  +0.0091  -0.1070 |  0.526 | 3/4   28/44     84% | · nein
+  Additivitaet: Wechselwirkung 0.005421 · Nullwelt Mittel 0.005467, 90. Perzentil 0.010053 -> additiv - zwei Kontextkurven reichen
+  Klumpen: im Feld BTC hoch / Dom tief liegen je Tag im Mittel 75 Assets zugleich
+
+------------------------------------------------------------------------------------------------------------------------
+FENSTER 72 h - Dq gegen die PHASE (q5, 24 h) · Suche 2023-24 urteilt
+  Feld                  Dq Suche      z | Dq Pruef |   Moment  2022 Mo |  q abs | Jahre  vorw.  Asset | Urteil
+  BTC tief / Dom tief    +0.0017  -0.03 |  -0.0987 |  +0.0177  +0.1811 |  0.448 | 1/4   23/41     15% | · nein
+  BTC tief / Dom mitte   -0.0356  -0.90 |  -0.0166 |  -0.0242  -0.0164 |  0.459 | 2/4   24/43     67% | · nein
+  BTC tief / Dom hoch    -0.0461  -1.10 |  +0.0213 |  -0.0159  -0.0037 |  0.480 | 3/4   16/41     52% | · nein
+  BTC mitte / Dom tief   -0.0058  -0.07 |  -0.0413 |  -0.0217  -0.0339 |  0.460 | 3/4   24/43     76% | · nein
+  BTC mitte / Dom mitte  -0.0312  -0.87 |  +0.0069 |  -0.0352  +0.0208 |  0.477 | 2/4   24/44     52% | · nein
+  BTC mitte / Dom hoch   +0.0361  +0.76 |  +0.1319 |  +0.0278  -0.0572 |  0.575 | 3/4   30/43     96% | · nein
+  BTC hoch / Dom tief    +0.0551  +1.22 |  -0.0173 |  +0.0208  +0.0212 |  0.492 | 3/4   23/43     54% | · nein
+  BTC hoch / Dom mitte   +0.0037  +0.05 |  +0.0347 |  +0.0024  -0.0769 |  0.507 | 2/4   27/44     69% | · nein
+  BTC hoch / Dom hoch    +0.0418  +0.49 |  +0.1447 |  +0.0272  -0.1449 |  0.565 | 4/4   30/42     93% | · nein
+  Additivitaet: Wechselwirkung 0.002506 · Nullwelt Mittel 0.007371, 90. Perzentil 0.015999 -> additiv - zwei Kontextkurven reichen
+  Klumpen: im Feld BTC hoch / Dom tief liegen je Tag im Mittel 80 Assets zugleich
+
+------------------------------------------------------------------------------------------------------------------------
+FENSTER 120 h - Dq gegen die PHASE (q5, 24 h) · Suche 2023-24 urteilt
+  Feld                  Dq Suche      z | Dq Pruef |   Moment  2022 Mo |  q abs | Jahre  vorw.  Asset | Urteil
+  BTC tief / Dom tief    +0.0270  +0.44 |  -0.0256 |  +0.0401  +0.0788 |  0.489 | 2/4   24/41     46% | · nein
+  BTC tief / Dom mitte   -0.0729  -1.81 |  -0.0459 |  -0.0549  -0.1309 |  0.428 | 3/4   23/42     89% | · nein
+  BTC tief / Dom hoch    -0.0184  -0.39 |  +0.0386 |  +0.0185  +0.0134 |  0.501 | 3/4   14/38     28% | · nein
+  BTC mitte / Dom tief   +0.0259  +0.60 |  -0.0558 |  +0.0176  +0.0685 |  0.461 | 2/4   18/43     25% | · nein
+  BTC mitte / Dom mitte  -0.0668  -2.14 |  -0.0162 |  -0.0670  +0.0004 |  0.450 | 3/4   26/43     73% | · nein
+  BTC mitte / Dom hoch   +0.0153  +0.18 |  +0.1158 |  +0.0169  -0.1165 |  0.558 | 3/4   27/39     93% | · nein
+  BTC hoch / Dom tief    +0.0392  +0.86 |  +0.0118 |  +0.0037  -0.0107 |  0.509 | 3/4   16/37     70% | · nein
+  BTC hoch / Dom mitte   +0.0119  -0.03 |  +0.0653 |  +0.0042  -0.0539 |  0.529 | 2/4   23/40     80% | · nein
+  BTC hoch / Dom hoch    +0.0349  +0.78 |  +0.0871 |  +0.0106  -0.0706 |  0.540 | 2/4   25/38     84% | · nein
+  Additivitaet: Wechselwirkung 0.001975 · Nullwelt Mittel 0.008961, 90. Perzentil 0.017281 -> additiv - zwei Kontextkurven reichen
+  Klumpen: im Feld BTC hoch / Dom tief liegen je Tag im Mittel 81 Assets zugleich
+
+========================================================================================================================
+V10 - DEINE HYPOTHESE: (BTC hoch, Dom tief) UND (BTC mitte, Dom tief) positiv, Suche UND Pruefung
+   24 h  BTC hoch: Suche -0.0384, Pruef +0.0067 · BTC mitte: Suche +0.0183, Pruef -0.0193  ->  ⛔ nicht wie vermutet
+   72 h  BTC hoch: Suche +0.0551, Pruef -0.0173 · BTC mitte: Suche -0.0058, Pruef -0.0413  ->  ⛔ nicht wie vermutet
+  120 h  BTC hoch: Suche +0.0392, Pruef +0.0118 · BTC mitte: Suche +0.0259, Pruef -0.0558  ->  ⛔ nicht wie vermutet
+
+========================================================================================================================
+ACHSE (Form, urteilt nicht): Dq gegen die Phase, Suche+Pruefung, fuer die Hypothesenfelder und die Sperre
+   24 h BTC hoch/Dom tief    3%/24h -0.029 · 3%/72h -0.027 · 3%/120h -0.028 · 5%/24h -0.009 · 5%/72h -0.014 · 5%/120h -0.020 · 10%/24h +0.099 · 10%/72h +0.018 · 10%/120h -0.004
+   24 h BTC mitte/Dom tief   3%/24h -0.020 · 3%/72h -0.024 · 3%/120h -0.024 · 5%/24h -0.005 · 5%/72h -0.023 · 5%/120h -0.022 · 10%/24h +0.041 · 10%/72h -0.026 · 10%/120h -0.023
+   24 h BTC hoch/Dom hoch    3%/24h +0.031 · 3%/72h +0.029 · 3%/120h +0.029 · 5%/24h +0.037 · 5%/72h +0.037 · 5%/120h +0.036 · 10%/24h +0.021 · 10%/72h +0.065 · 10%/120h +0.046
+   72 h BTC hoch/Dom tief    3%/24h -0.010 · 3%/72h -0.010 · 3%/120h -0.010 · 5%/24h +0.008 · 5%/72h -0.010 · 5%/120h -0.012 · 10%/24h +0.102 · 10%/72h +0.029 · 10%/120h +0.019
+   72 h BTC mitte/Dom tief   3%/24h -0.033 · 3%/72h -0.028 · 3%/120h -0.027 · 5%/24h -0.027 · 5%/72h -0.019 · 5%/120h -0.012 · 10%/24h +0.005 · 10%/72h -0.025 · 10%/120h -0.004
+   72 h BTC hoch/Dom hoch    3%/24h +0.047 · 3%/72h +0.039 · 3%/120h +0.039 · 5%/24h +0.075 · 5%/72h +0.059 · 5%/120h +0.056 · 10%/24h +0.050 · 10%/72h +0.091 · 10%/120h +0.070
+  120 h BTC hoch/Dom tief    3%/24h +0.008 · 3%/72h +0.007 · 3%/120h +0.007 · 5%/24h +0.023 · 5%/72h +0.009 · 5%/120h +0.006 · 10%/24h +0.090 · 10%/72h +0.038 · 10%/120h +0.027
+  120 h BTC mitte/Dom tief   3%/24h -0.031 · 3%/72h -0.018 · 3%/120h -0.017 · 5%/24h -0.024 · 5%/72h -0.001 · 5%/120h -0.001 · 10%/24h +0.013 · 10%/72h -0.009 · 10%/120h +0.005
+  120 h BTC hoch/Dom hoch    3%/24h +0.027 · 3%/72h +0.024 · 3%/120h +0.024 · 5%/24h +0.050 · 5%/72h +0.042 · 5%/120h +0.042 · 10%/24h +0.046 · 10%/72h +0.091 · 10%/120h +0.083
+
+========================================================================================================================
+PFLICHTPROBEN (Suche, q5/24 h, Felder: BTC hoch/Dom tief · BTC mitte/Dom tief · BTC hoch/Dom hoch)
+   24 h  Wert -0.0384 +0.0183 +0.0173
+        G1 Vorgriff im Normal (Differenz zum Wert): -0.0008 -0.0004 -0.0004
+        G5 ohne Indexspruenge: -0.0458 -0.0060 +0.0477 · G6 feste Grenzen: -0.0249 +0.0024 +0.0058
+        G9 Altersachse: 6h alt: -0.0274 +0.0210 +0.0066 · 12h alt: +0.0076 -0.0201 +0.0133 · 24h alt: +0.0560 -0.0448 +0.0333
+   72 h  Wert +0.0551 -0.0058 +0.0418
+        G1 Vorgriff im Normal (Differenz zum Wert): -0.0006 -0.0002 -0.0003
+        G5 ohne Indexspruenge: +0.0703 +0.0121 +0.0412 · G6 feste Grenzen: +0.0544 -0.0165 +0.0336
+        G9 Altersachse: 6h alt: +0.0498 -0.0004 +0.0425 · 12h alt: +0.0330 +0.0116 +0.0268 · 24h alt: +0.0708 -0.0388 +0.0354
+  120 h  Wert +0.0392 +0.0259 +0.0349
+        G1 Vorgriff im Normal (Differenz zum Wert): -0.0005 -0.0002 -0.0002
+        G5 ohne Indexspruenge: +0.1134 +0.0174 +0.0085 · G6 feste Grenzen: +0.0368 +0.0394 +0.0427
+        G9 Altersachse: 6h alt: +0.0373 +0.0138 +0.0244 · 12h alt: +0.0310 +0.0361 +0.0217 · 24h alt: +0.0370 +0.0326 +0.0350
+  G4 Positivkontrolle (72 h, BTC hoch/Dom tief): Dq + d gepflanzt - gefunden (|z| > Grenze)?
+     +0.01: gefunden 0 von 5
+     +0.02: gefunden 0 von 5
+     +0.04: gefunden 0 von 5
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

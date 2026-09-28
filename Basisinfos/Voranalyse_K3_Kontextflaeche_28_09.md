@@ -118,3 +118,19 @@ auf **G2**, eine bewusste Abweichung von K2, die du entscheiden sollst. G1
 **Nutzer 28.09.:** *„ja, A1 bis A4 wie empfohlen, committen, dann K3 messen."*
 
 ⭐ **Umsetzungsdetail, vorab festgelegt:** die Episoden werden als **feste Tagesanker** gebildet — je Asset ein Anker um **00, 06, 12 und 18 Uhr UTC** (gepoolt). Das vermeidet den Mitternachtseffekt der Episodenregel (2.666) und macht die Auswahl unabhängig vom Feld, sodass die Zeitverschiebungs-Nullwelt vektoriell gerechnet werden kann. Der Phasen-Bezug wird aus **allen** Stundenankern des Assets gebildet (stabiler), nur aus Ausgängen ≤ t − Fenster (G1).
+
+---
+
+## 6. ✔ ERGEBNIS (28.09.2026) — Befund 2.670
+
+| | Ergebnis |
+|---|---|
+| Felder jenseits der Grenze | **0 von 27**, in allen Mengen (unverzerrt 1–3, bestand) |
+| V10 deine Hypothese | in **keinem** Fenster beide Felder positiv in Suche und Prüfung |
+| Additivität | ✔ additiv überall |
+| R-R11 Sperre aus 2.665 | exakt reproduziert (−0,0198, 56.298 Episoden) — gegen die Zeitverschiebung **z −1,52**: fällt |
+| **Auflösung** (Positivkontrolle) | +0,04 → 0 von 5 · **+0,08 → 5 von 5** — Kontext-Effekte unter ~0,06–0,08 sind nicht messbar |
+| Pflichtproben | G1 sauber (≤ 0,001); G5/G6/G9 verschieben die Werte deutlich — Rauschen |
+| offen | 2.601 (Dominanz als Achse) nicht reproduziert — Vorbehalt |
+
+➤ Der Kontext geht in die Kombination **derzeit ohne Gewicht** ein.

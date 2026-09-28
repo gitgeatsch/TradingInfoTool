@@ -459,6 +459,10 @@ NEUESTER_STAND = (
               "Hoehe halten, Kontext stabil; die LIQUIDATIONSGEFAHR bei 3x/2x "
               "steigt um 17-65 Prozent - der Boden fehlte. Richtungsurteile am "
               "Rand kippen, die Werte bleiben. Messbasis ab jetzt --menge unverzerrt"),
+    ("2.670", "K3 KONTEXTFLAECHE: kein Feld traegt, deine Hypothese (BTC hoch/"
+              "mitte und Dominanz faellt) haelt nicht; die Sperre aus 2.665 "
+              "faellt nach R-R11 (z -1,52 statt -6,9). ABER die Anlage sieht "
+              "Kontext erst ab ~0,06-0,08 - Kontext wirkt auf Markttage, nicht Anker"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -468,7 +472,8 @@ NEUESTER_STAND = (
                "der Liquidationsgefahr. Die Messbasis ist vervollstaendigt "
                "(2.669, --menge unverzerrt). Naechster Schritt: die "
                "KONTEXTFLAECHE BTC x Dominanz (K3), dann die Wirkungskurven "
-               "je Beitrag"),
+               "je Beitrag (K3 ist gemessen, 2.670: der Kontext geht derzeit "
+               "ohne Gewicht ein)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.

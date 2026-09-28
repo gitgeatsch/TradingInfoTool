@@ -1,0 +1,3 @@
+R-R11 - E2f-Kontextzeilen exakt nachgerechnet (Menge bestand, E2f-Anker und -Episoden)
+  BTC 24h > 0 UND Dominanz 24h > 0 (2.601-Sperre)  Dq -0.0198 (registriert -0.020) · Episoden 56298 · Zeitverschiebung: Mittel -0.0002, Streuung 0.0128, z -1.52
+  BTC 24h > 0 UND Dominanz 24h < 0                 Dq -0.0029 (registriert -0.003) · Episoden 59397 · Zeitverschiebung: Mittel +0.0035, Streuung 0.0152, z -0.43
