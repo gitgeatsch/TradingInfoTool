@@ -1,0 +1,3 @@
+Vorab-Pruefsummen K1 Schritt 2b - geschrieben 2026-09-28 18:56 VOR dem ersten Lauf (Tor und Messung)
+c64c5aca3c49a286d49aed10b7c0c7907fb02c880e49771937258eaa02ac87d9  Voranalyse_K1_Schritt2b_Kombination_28_09.md
+0cb7a0e424399bc5e01201f171c65a79e05dbd173aea1b67c32fdaa27947476d  messe_k1_schritt2b_kombination.py

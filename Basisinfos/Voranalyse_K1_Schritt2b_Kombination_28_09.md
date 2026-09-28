@@ -109,7 +109,14 @@ je Stärke): er entscheidet, ob (b) oder (a) gerechnet wird — oder gar nicht.
 
 ---
 
-## 7. Zur Abstimmung
+## 7. ✔ ABGESTIMMT (28.09.2026) — E1 bis E9 wie empfohlen
+
+**Nutzer:** *„ja, E1 bis E9 wie empfohlen, dann bauen und messen, prüfen und
+gegenprüfen."* Festgelegt **vor** dem Bau; die Prüfsummen von Voranalyse und
+Werkzeug stehen vor dem ersten Lauf im Messprotokoll
+(`Basisinfos/K1_Schritt2b_28_09/vorab_pruefsummen.txt`).
+
+## 7a. Die Empfehlung, wie abgestimmt
 
 | # | Empfehlung |
 |---|---|
