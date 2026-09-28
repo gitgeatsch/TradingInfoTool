@@ -472,6 +472,10 @@ NEUESTER_STAND = (
     ("2.673", "funding/Premium GETEILT: Asset-Anteil traegt nicht, Marktanteil "
               "mit der richtigen (gemeinsamen) Nullwelt nicht nachweisbar - "
               "Aufloesung fuer Marktmerkmale grober als 0,04"),
+    ("2.674", "VIELE LONGS: marktweit ueber der gemeinsamen Nullwelt in allen "
+              "4 Mengen (wenige Longs +0,14..+0,39, viele -0,13..-0,25) und je "
+              "Asset als oberer Rand eine Sperre (-0,09..-0,14). Formal traegt "
+              "keines - das Formkriterium scheitert an der flachen Mitte"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "

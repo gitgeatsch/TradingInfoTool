@@ -68,7 +68,10 @@ GRUPPEN = {"voll": ("funding_vortag", "kaeufer_1h", "kaeufer_6h", "kaeufer_24h",
            # W11 (Voranalyse K1): gegen die Tages-Kontrolle blieb von funding 3 %,
            # von premium_24h 8 % - Teilung in Markt (Median aller Assets zur
            # Stunde, ein KONTEXT) und eigen (Asset minus Markt, ein BEITRAG)
-           "teilung": ("funding_vortag", "premium_jetzt", "premium_24h")}
+           "teilung": ("funding_vortag", "premium_jetzt", "premium_24h"),
+           # W11 fuer den Terminmarkt (28.09.): konten_verh und top_konten_verh
+           # behielten gegen die Tages-Kontrolle nur 5 bis 20 Prozent
+           "termin_teilung": ("konten_verh", "top_konten_verh")}
 PERZ = (1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99)
 GITTER = (0, 6, 12, 18)
 JAHR_H = 8760
@@ -139,7 +142,7 @@ def main() -> int:
                 w[ok] = M[m][pos[ok]]
                 FV[m][mk] = w
 
-    if gruppe == "teilung":
+    if gruppe in ("teilung", "termin_teilung"):
         # Markt = Median aller Assets zur selben Stunde (Bestand + Eingestellte der
         # Menge); eigen = Asset minus Markt. Beide werden als eigene Merkmale
         # gefuehrt (roh und selbstbezogen wie alle anderen)

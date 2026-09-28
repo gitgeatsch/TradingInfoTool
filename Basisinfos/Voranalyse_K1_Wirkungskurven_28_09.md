@@ -153,3 +153,17 @@ erhalten, ohne eine bestätigte, frühe Bewegung zu blockieren.
 Positivkontrolle pflanzte in ein schon starkes Merkmal (wertlos); die
 Zeitverschiebung **je Asset** ist für Marktmerkmale die falsche Nullwelt
 (z bis 118) — für _markt gilt die **gemeinsame** Verschiebung.
+
+## 7. ✔ ERGEBNIS Terminmarkt-Gruppe (28.09.2026) — Befund 2.674
+
+| | Ergebnis |
+|---|---|
+| Teil B | 142 Paare, 87.862 Tage, 0 Fehler; P1 ohne Abweichung; Abdeckung der Eingestellten 0 → 83 % |
+| **viele Longs, Marktanteil** | über der **gemeinsamen** Nullwelt in **allen 4 Mengen** (z 2,6–4,7 gegen 2,2–2,4); marktweit wenige Longs +0,14…+0,39, viele −0,13…−0,25 — formal nicht tragend (Form −0,10…+0,50) |
+| **viele Longs, Asset-Anteil** | oberer Rand −0,09…−0,14 in allen 4 Mengen (z 8,8–15,5), Mitte flach — eine **Sperre je Asset**; bestätigt 2.660 |
+| oi_aenderung | trägt in 1–2 von 4 Mengen, nicht monoton, teils begleitend — nicht belastbar |
+| taker_verh | ohne Befund |
+
+⚠️⚠️ **Zur Entscheidung:** das Formkriterium (Rangkorrelation über alle
+12 Stufen) lässt einseitige Kurven an der flachen Mitte scheitern. Eine
+Änderung gilt nur **für die nächste Messung**, nie rückwirkend.

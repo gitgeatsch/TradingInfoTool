@@ -292,6 +292,11 @@ def lade(hmax=None, erste=(), mit_atr=False, ab=None, bis=None):
     """
     HMAX = globals()["HMAX"] if hmax is None else hmax
     ct = sqlite3.connect("file:%s?mode=ro" % TERMIN_DB, uri=True)
+    ce_tm = None
+    if MENGE != "bestand" and os.path.exists(EINGESTELLT_DB):
+        ce_tm = sqlite3.connect("file:%s?mode=ro" % EINGESTELLT_DB, uri=True)
+        if not ce_tm.execute("SELECT COUNT(*) FROM sqlite_master WHERE name='terminmarkt'").fetchone()[0]:
+            ce_tm.close(); ce_tm = None
     reihen = kursreihen()
     syms = [r[0] for r in reihen]
     basis = datetime(2020, 1, 1)
@@ -346,6 +351,15 @@ def lade(hmax=None, erste=(), mit_atr=False, ab=None, bis=None):
             "SELECT stunde, oi, oi_wert, taker_verh, konten_verh, "
             "top_konten_verh, top_summe_verh FROM terminmarkt WHERE symbol=?",
             (sym,))}
+        if ce_tm is not None:
+            # Teil B (28.09.): Terminmarkt der Eingestellten und der
+            # Vorgeschichte - ergaenzt, was im Bestand fehlt; bei derselben
+            # Stunde gilt der Bestand
+            for r in ce_tm.execute(
+                    "SELECT stunde, oi, oi_wert, taker_verh, konten_verh, "
+                    "top_konten_verh, top_summe_verh FROM terminmarkt WHERE symbol=?",
+                    (sym,)):
+                tm.setdefault(str(r[0]), r[1:])
         leer = (None,) * 6
 
         def spalte(i):
@@ -388,6 +402,8 @@ def lade(hmax=None, erste=(), mit_atr=False, ab=None, bis=None):
         CC.append(cc[sel])
         JAHR.append(np.array([int(st[i][:4]) for i in sel], np.int16))
     ct.close()
+    if ce_tm is not None:
+        ce_tm.close()
     F = {m: np.concatenate(v) for m, v in F.items()}
     Z = {f: {z: np.concatenate(v) for z, v in d.items()} for f, d in Z.items()}
     STD = np.concatenate(STD); SYM = np.concatenate(SYM)

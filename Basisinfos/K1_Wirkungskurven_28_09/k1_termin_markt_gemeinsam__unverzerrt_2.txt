@@ -1,0 +1,35 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE unverzerrt:2 · GRUPPE termin_teilung · NULLWELT GEMEINSAM (Kontext-Methode)
+========================================================================================================================
+  Tagesanker mit Phase: Suche 167840 · Pruefung 218803 · Symbole 124 · Kurven 4
+  Grenze Bestes-von-4 (Zeitverschiebung GEMEINSAM fuer alle Assets, 40 Ziehungen): z 2.37
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  konten_verh_markt roh  949.10  +3.72 | +0.41  nein | 3/4    99% |   0.08   0.56 | +0.387 +0.080 +0.063 +0.082 -0.030 +0.081 -0.022 -0.018 -0.070 -0.023 -0.099 -0.163 | · nein
+  konten_verh_markt selbst 565.64  +1.69 | -0.18  nein | 3/4    78% |   0.15   1.36 | -0.001 +0.083 +0.090 +0.007 +0.068 -0.046 -0.025 -0.075 -0.018 +0.014 -0.036 -0.222 | · nein
+  top_konten_verh_markt roh 687.89  +2.65 | +0.25  nein | 4/4    90% |   0.07   0.60 | +0.139 +0.140 +0.075 +0.057 -0.023 -0.065 -0.008 -0.033 -0.022 +0.012 -0.060 -0.166 | · nein
+  top_konten_verh_markt selbst 155.07  -0.70 | -0.25  nein | 3/4    59% |   0.80   2.32 | -0.006 +0.055 +0.015 -0.005 +0.047 +0.001 -0.012 -0.028 -0.021 -0.016 +0.000 -0.160 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  (keine tragende Kurve)
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.010
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von konten_verh_markt roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.37:
+     ohne Pflanzung: z -0.19
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 0 von 5
+     d = 0.040: gefunden 0 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     konten_verh_markt roh  ~ konten_verh_markt selbst +0.55
+     konten_verh_markt roh  ~ top_konten_verh_markt roh +0.73
+     konten_verh_markt selbst ~ top_konten_verh_markt selbst +0.88
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

@@ -1,0 +1,51 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE unverzerrt:2 · GRUPPE termin
+========================================================================================================================
+  Tagesanker mit Phase: Suche 167840 · Pruefung 218803 · Symbole 124 · Kurven 8
+  Grenze Bestes-von-8 (Zeitverschiebung je Asset, 40 Ziehungen): z 2.49
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  konten_verh roh        226.99 +36.92 | +0.80  nein | 3/4    79% |   0.16   0.29 | +0.094 +0.033 +0.024 +0.026 +0.021 +0.012 +0.026 +0.006 -0.028 -0.042 -0.079 -0.112 | · nein
+  konten_verh selbst     221.03 +47.18 | +0.09  nein | 3/4    67% |   0.08   0.71 | +0.034 +0.048 +0.038 +0.041 +0.016 +0.002 -0.006 -0.001 -0.027 -0.042 -0.060 -0.144 | · nein
+  top_konten_verh roh    150.29 +21.93 | +0.76    ja | 4/4    64% |   0.20   0.21 | +0.084 +0.033 +0.024 +0.023 +0.017 +0.020 +0.009 -0.002 -0.033 -0.023 -0.052 -0.123 | ✔ TRAEGT · TEILEN (Tag < 1/2)
+  top_konten_verh selbst 129.02 +26.16 | +0.56    ja | 3/4    67% |   0.05   0.71 | +0.014 +0.031 +0.040 +0.028 +0.014 +0.007 -0.006 -0.017 -0.018 -0.019 -0.045 -0.125 | ✔ TRAEGT · TEILEN (Tag < 1/2)
+  taker_verh roh          11.23  +1.65 | -0.34  nein | 2/4    55% |   1.91   1.16 | -0.059 +0.002 +0.008 +0.002 -0.007 +0.003 -0.007 +0.004 -0.005 +0.002 +0.005 -0.032 | · nein
+  taker_verh selbst       11.67  +3.06 | -0.13  nein | 2/4    54% |   1.71   1.09 | -0.047 +0.002 +0.009 +0.002 -0.014 +0.007 -0.001 +0.002 -0.007 +0.003 +0.004 -0.028 | · nein
+  oi_aenderung roh        52.77 +12.52 | +0.69    ja | 3/4    70% |   1.00   0.61 | -0.018 +0.038 +0.022 +0.009 -0.010 -0.014 -0.022 -0.017 -0.014 +0.001 -0.000 -0.004 | ✔ TRAEGT
+  oi_aenderung selbst     51.35 +14.25 | +0.54    ja | 3/4    67% |   1.04   0.64 | -0.022 +0.041 +0.023 +0.003 -0.011 -0.017 -0.017 -0.015 -0.011 -0.004 +0.001 -0.001 | ✔ TRAEGT
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  top_konten_verh roh    hoch: < 0 -0.041 (19836) · 0-0,5 -0.049 (9323) · 0,5-1 -0.031 (4362) · 1-2 +0.026 (1184) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.016 (32769) · 0-0,5 +0.017 (17089) · 0,5-1 +0.031 (9326) · 1-2 +0.039 (4125) · 2-3 -0.043 (204) · > 3   -  
+  top_konten_verh selbst hoch: < 0 -0.028 (18730) · 0-0,5 -0.036 (8623) · 0,5-1 -0.010 (3670) · 1-2 +0.082 (1021) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.030 (16844) · 0-0,5 +0.017 (10586) · 0,5-1 +0.012 (6660) · 1-2 +0.022 (3098) · 2-3 -0.049 (180) · > 3   -  
+  oi_aenderung roh       hoch: < 0 +0.010 (11208) · 0-0,5 +0.003 (7832) · 0,5-1 +0.017 (7571) · 1-2 +0.005 (4993) · 2-3 -0.026 (284) · > 3   -  
+                         tief: < 0 +0.021 (18724) · 0-0,5 +0.023 (5991) · 0,5-1 +0.032 (2676) · 1-2 +0.096 (897) · 2-3   -   · > 3   -  
+  oi_aenderung selbst    hoch: < 0 +0.013 (10840) · 0-0,5 +0.003 (7794) · 0,5-1 +0.018 (7447) · 1-2 +0.003 (4850) · 2-3 -0.027 (280) · > 3   -  
+                         tief: < 0 +0.020 (18986) · 0-0,5 +0.028 (6158) · 0,5-1 +0.031 (2750) · 1-2 +0.103 (950) · 2-3   -   · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  top_konten_verh roh    6h: S 150.87 (100%) Rand +0.081/-0.120 · 12h: S 149.12 (99%) Rand +0.074/-0.120 · 24h: S 159.44 (106%) Rand +0.041/-0.149
+  top_konten_verh selbst 6h: S 127.85 (99%) Rand +0.032/-0.114 · 12h: S 130.97 (102%) Rand +0.040/-0.120 · 24h: S 151.92 (118%) Rand +0.027/-0.144
+  oi_aenderung roh       6h: S 36.14 (68%) Rand -0.010/+0.022 · 12h: S 31.66 (60%) Rand +0.003/+0.012 · 24h: S 16.09 (30%) Rand -0.012/+0.003
+  oi_aenderung selbst    6h: S 33.72 (66%) Rand -0.015/+0.025 · 12h: S 27.37 (53%) Rand +0.004/+0.012 · 24h: S 11.84 (23%) Rand -0.007/+0.005
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.018
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von konten_verh roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.49:
+     ohne Pflanzung: z -0.38
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 5 von 5
+     d = 0.020: gefunden 5 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     konten_verh roh        ~ top_konten_verh roh    +0.92
+     konten_verh selbst     ~ top_konten_verh selbst +0.92
+     taker_verh roh         ~ taker_verh selbst      +1.00
+     oi_aenderung roh       ~ oi_aenderung selbst    +0.98
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
