@@ -1,0 +1,110 @@
+==============================================================================================================
+K7 - ABGLEICH AM ECHTEN BITPANDA-HEBELBUCH · Sicherung nb_2026-09-23.db · Buchungen bitpanda_transaktionen.json
+==============================================================================================================
+P1 Buch: 11 Symbole · 37 Abschnitte (Kredit von 0 bis 0) · offen am Dateiende 0 · Kaeufe 917 · Teilschliessungen 278 · Importer-Positionen dagegen 188
+P2 jeder Abschnitt endet mit Kredit unter 1 EUR: groesster Restkredit 0.45 EUR, groesster Staubrest 0.45 EUR ✔
+P4 Gebuehrensignatur (Alter der Posten): 315 Schluesse · ueber +0.5 Punkte: 7 (AVAX 2025-10-10 21:00 +0.98, MORPHO 2025-10-10 21:00 +1.05, LINK 2025-10-11 04:00 +0.97, TAO 2025-10-10 21:00 +0.99, TAO 2025-10-22 21:00 +0.99, SUI 2025-11-03 15:00 +1.02, TAO 2025-11-21 07:00 +1.01) · alle uebrigen zwischen -0.44 und +0.01, Median -0.01
+   gefuehrte Liquidationen mit Signatur: 4 von 4 · Signatur ohne Vermerk: AVAX 2025-10-10 21:00, MORPHO 2025-10-10 21:00, TAO 2025-11-21 07:00 · alle Signaturen sind Vollschluesse: ✔
+   ➤ WAHRHEIT = Gebuehrensignatur: 7 Liquidationen
+   die 4 gefuehrten Liquidationen beenden je einen Abschnitt: 4 ✔
+P3 Formelgleichheit (ein Kauf, ein Schluss; 7 Abschnitte) gegen K6 liq_schwelle: max. Abweichung 3.33e-16 ✔
+
+DIE ABSCHNITTE
+   0 LINK   2025-09-22 04:00 bis 2025-10-06 21:00 ·   9 Kaeufe ·   5 Teilschliessungen · Hebel bis 5.1x
+   1 SEI    2025-09-22 11:00 bis 2025-10-05 05:00 ·   4 Kaeufe ·   1 Teilschliessungen · Hebel bis 4.0x
+   2 AVAX   2025-09-24 04:00 bis 2025-10-10 21:00 ·   8 Kaeufe ·   0 Teilschliessungen · Hebel bis 7.6x  ⚡ LIQUIDIERT (neu2)  · 10./11.10.
+   3 SUI    2025-09-25 04:00 bis 2025-10-06 21:00 ·  12 Kaeufe ·   5 Teilschliessungen · Hebel bis 7.2x
+   4 MORPHO 2025-10-03 10:00 bis 2025-10-10 21:00 ·  17 Kaeufe ·   0 Teilschliessungen · Hebel bis 9.4x  ⚡ LIQUIDIERT (neu4)  · 10./11.10.
+   5 TAO    2025-10-06 13:00 bis 2025-10-10 15:00 ·   7 Kaeufe ·   2 Teilschliessungen · Hebel bis 5.3x  · 10./11.10.
+   6 LINK   2025-10-07 04:00 bis 2025-10-11 04:00 ·   6 Kaeufe ·   0 Teilschliessungen · Hebel bis 13.2x  ⚡ LIQUIDIERT (5)  · 10./11.10.
+   7 TAO    2025-10-10 19:00 bis 2025-10-10 21:00 ·   2 Kaeufe ·   0 Teilschliessungen · Hebel bis 5.9x  ⚡ LIQUIDIERT (77)  · 10./11.10.
+   8 TAO    2025-10-10 22:00 bis 2025-10-22 21:00 ·  87 Kaeufe ·  12 Teilschliessungen · Hebel bis 9.6x  ⚡ LIQUIDIERT (87)
+   9 SUI    2025-10-10 23:00 bis 2025-10-28 08:00 ·  71 Kaeufe ·  14 Teilschliessungen · Hebel bis 9.4x
+  10 ETH    2025-10-13 06:00 bis 2025-11-04 20:00 ·  54 Kaeufe ·  13 Teilschliessungen · Hebel bis 9.9x
+  11 TAO    2025-10-22 21:00 bis 2025-10-23 11:00 ·   4 Kaeufe ·   0 Teilschliessungen · Hebel bis 7.9x
+  12 TAO    2025-10-23 11:00 bis 2025-11-06 10:00 · 173 Kaeufe ·  66 Teilschliessungen · Hebel bis 9.9x
+  13 SUI    2025-10-28 13:00 bis 2025-11-03 15:00 ·  36 Kaeufe ·   1 Teilschliessungen · Hebel bis 10.0x  ⚡ LIQUIDIERT (54)
+  14 LINK   2025-11-02 13:00 bis 2025-11-13 14:00 · 131 Kaeufe ·  50 Teilschliessungen · Hebel bis 9.3x
+  15 SUI    2025-11-03 16:00 bis 2025-11-18 11:00 ·  74 Kaeufe ·  32 Teilschliessungen · Hebel bis 8.2x
+  16 BTC    2025-11-03 17:00 bis 2025-11-21 12:00 ·  30 Kaeufe ·   8 Teilschliessungen · Hebel bis 8.2x
+  17 TAO    2025-11-06 10:00 bis 2025-11-21 07:00 · 114 Kaeufe ·  54 Teilschliessungen · Hebel bis 8.9x  ⚡ LIQUIDIERT (neu17)
+  18 LINK   2025-11-13 14:00 bis 2025-11-21 07:00 ·  52 Kaeufe ·   7 Teilschliessungen · Hebel bis 7.3x
+  19 SUI    2025-11-20 05:00 bis 2025-11-21 07:00 ·   3 Kaeufe ·   0 Teilschliessungen · Hebel bis 4.2x
+  20 BTC    2026-01-29 15:00 bis 2026-01-30 01:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 2.0x
+  21 ETH    2026-01-29 15:00 bis 2026-01-30 01:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 3.0x
+  22 ETH    2026-02-02 06:00 bis 2026-02-02 20:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  23 TAO    2026-02-02 16:00 bis 2026-02-03 02:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 5.0x
+  24 SUI    2026-02-02 16:00 bis 2026-02-03 02:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 5.0x
+  25 ETH    2026-02-03 16:00 bis 2026-02-03 17:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  26 CC     2026-02-06 17:00 bis 2026-02-06 18:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 2.0x
+  27 ETH    2026-02-06 17:00 bis 2026-02-06 17:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  28 ETH    2026-02-06 17:00 bis 2026-02-06 18:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  29 ETH    2026-02-14 20:00 bis 2026-02-15 07:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 3.0x
+  30 BTC    2026-03-06 06:00 bis 2026-03-13 17:00 ·   6 Kaeufe ·   1 Teilschliessungen · Hebel bis 3.2x
+  31 ETH    2026-03-17 06:00 bis 2026-03-22 10:00 ·   2 Kaeufe ·   1 Teilschliessungen · Hebel bis 3.4x
+  32 BTC    2026-04-19 13:00 bis 2026-04-20 21:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  33 BTC    2026-05-04 02:00 bis 2026-05-07 03:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+  34 LINK   2026-07-16 14:00 bis 2026-07-20 15:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 5.0x
+  35 NEAR   2026-07-22 04:00 bis 2026-07-27 16:00 ·   1 Kaeufe ·   1 Teilschliessungen · Hebel bis 3.0x
+  36 HYPE   2026-07-22 09:00 bis 2026-07-26 16:00 ·   1 Kaeufe ·   0 Teilschliessungen · Hebel bis 3.0x
+
+J8 in beiden Reihen vollstaendig: 34 von 37 Abschnitten · heraus: 4 MORPHO, 26 CC, 36 HYPE
+J2 Faktor EUR (Bitpanda) / USDT je Kauf, spot: Median 0.8643 · 5.-95. Perzentil 0.8517-0.8768 · Kaeufe 898
+J2 Faktor EUR (Bitpanda) / USDT je Kauf, mark: Median 0.8647 · 5.-95. Perzentil 0.8520-0.8770 · Kaeufe 898
+
+==============================================================================================================
+J5 ALLE - Liquidationen 6 (AVAX/neu2 Crash, LINK/5 Crash, TAO/77 Crash, TAO/87 ruhig, SUI/54 ruhig, TAO/neu17 ruhig) · Gegenfaelle 28 Abschnitte
+  mark m 0.0900: Treffer 6 von 6 (AVAX/neu2 1 h vorher (Buchungsstunde); LINK/5 9 h vorher (Buchungsstunde); TAO/77 in der Schlussstunde; TAO/87 23 h vorher (Buchungsstunde); SUI/54 107 h vorher; TAO/neu17 in der Schlussstunde) · Fehlalarme 5 von 28 [9 SUI 266 h vor dem Schluss, Hebel nach dem letzten Kauf 8.1x, 10 ETH 444 h vor dem Schluss, Hebel nach dem letzten Kauf 6.6x, 12 TAO 206 h vor dem Schluss, Hebel nach dem letzten Kauf 8.2x, 14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x, 15 SUI 342 h vor dem Schluss, Hebel nach dem letzten Kauf 7.7x] · nur in der Schlussstunde 1
+  mark m 0.0476: Treffer 5 von 6 (AVAX/neu2 1 h vorher (Buchungsstunde); LINK/5 8 h vorher (Buchungsstunde); TAO/77 in der Schlussstunde; TAO/87 KEIN Treffer; SUI/54 in der Schlussstunde; TAO/neu17 in der Schlussstunde) · Fehlalarme 0 von 28 · nur in der Schlussstunde 0
+  mark m-Intervall: m >= 0.0759 (alle Liquidationen loesen aus) und m < 0.0506 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+  spot m 0.0900: Treffer 6 von 6 (AVAX/neu2 1 h vorher (Buchungsstunde); LINK/5 9 h vorher (Buchungsstunde); TAO/77 in der Schlussstunde; TAO/87 23 h vorher (Buchungsstunde); SUI/54 107 h vorher; TAO/neu17 in der Schlussstunde) · Fehlalarme 5 von 28 [9 SUI 266 h vor dem Schluss, Hebel nach dem letzten Kauf 8.1x, 10 ETH 444 h vor dem Schluss, Hebel nach dem letzten Kauf 6.6x, 12 TAO 206 h vor dem Schluss, Hebel nach dem letzten Kauf 8.2x, 14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x, 15 SUI 342 h vor dem Schluss, Hebel nach dem letzten Kauf 7.7x] · nur in der Schlussstunde 1
+  spot m 0.0476: Treffer 5 von 6 (AVAX/neu2 1 h vorher (Buchungsstunde); LINK/5 8 h vorher (Buchungsstunde); TAO/77 in der Schlussstunde; TAO/87 KEIN Treffer; SUI/54 in der Schlussstunde; TAO/neu17 in der Schlussstunde) · Fehlalarme 1 von 28 [14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x] · nur in der Schlussstunde 0
+  spot m-Intervall: m >= 0.0712 (alle Liquidationen loesen aus) und m < 0.0449 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+
+==============================================================================================================
+J5 OHNE 10./11.10.2025 - Liquidationen 3 (TAO/87 ruhig, SUI/54 ruhig, TAO/neu17 ruhig) · Gegenfaelle 27 Abschnitte
+  mark m 0.0900: Treffer 3 von 3 (TAO/87 23 h vorher (Buchungsstunde); SUI/54 107 h vorher; TAO/neu17 in der Schlussstunde) · Fehlalarme 5 von 27 [9 SUI 266 h vor dem Schluss, Hebel nach dem letzten Kauf 8.1x, 10 ETH 444 h vor dem Schluss, Hebel nach dem letzten Kauf 6.6x, 12 TAO 206 h vor dem Schluss, Hebel nach dem letzten Kauf 8.2x, 14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x, 15 SUI 342 h vor dem Schluss, Hebel nach dem letzten Kauf 7.7x] · nur in der Schlussstunde 1
+  mark m 0.0476: Treffer 2 von 3 (TAO/87 KEIN Treffer; SUI/54 in der Schlussstunde; TAO/neu17 in der Schlussstunde) · Fehlalarme 0 von 27 · nur in der Schlussstunde 0
+  mark m-Intervall: m >= 0.0759 (alle Liquidationen loesen aus) und m < 0.0506 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+  spot m 0.0900: Treffer 3 von 3 (TAO/87 23 h vorher (Buchungsstunde); SUI/54 107 h vorher; TAO/neu17 in der Schlussstunde) · Fehlalarme 5 von 27 [9 SUI 266 h vor dem Schluss, Hebel nach dem letzten Kauf 8.1x, 10 ETH 444 h vor dem Schluss, Hebel nach dem letzten Kauf 6.6x, 12 TAO 206 h vor dem Schluss, Hebel nach dem letzten Kauf 8.2x, 14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x, 15 SUI 342 h vor dem Schluss, Hebel nach dem letzten Kauf 7.7x] · nur in der Schlussstunde 1
+  spot m 0.0476: Treffer 2 von 3 (TAO/87 KEIN Treffer; SUI/54 in der Schlussstunde; TAO/neu17 in der Schlussstunde) · Fehlalarme 1 von 27 [14 LINK 239 h vor dem Schluss, Hebel nach dem letzten Kauf 7.1x] · nur in der Schlussstunde 0
+  spot m-Intervall: m >= 0.0712 (alle Liquidationen loesen aus) und m < 0.0449 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+
+==============================================================================================================
+J3 BITPANDA-AUSFUEHRUNG DER LIQUIDATIONEN (EUR, Bitpanda-Kurs, Buch unmittelbar vor dem Schluss)
+  AVAX/neu2 Crash · Buch Menge 106.2640, Kredit 2000.00 EUR · Ausfuehrung 20.4000 EUR · Grenze (m 0,09) 20.8765 EUR · Ausfuehrung -2.28 % zur Grenze · Marge zur Ausfuehrung 6.87 %
+  MORPHO/neu4 Crash · Buch Menge 2619.1784, Kredit 2992.00 EUR · Ausfuehrung 1.2212 EUR · Grenze (m 0,09) 1.2699 EUR · Ausfuehrung -3.83 % zur Grenze · Marge zur Ausfuehrung 5.37 %
+  LINK/5 Crash · Buch Menge 165.6635, Kredit 2450.00 EUR · Ausfuehrung 15.1691 EUR · Grenze (m 0,09) 16.3861 EUR · Ausfuehrung -7.43 % zur Grenze · Marge zur Ausfuehrung 1.70 %
+  TAO/77 Crash · Buch Menge 2.3883, Kredit 600.00 EUR · Ausfuehrung 259.0042 EUR · Grenze (m 0,09) 276.1188 EUR · Ausfuehrung -6.20 % zur Grenze · Marge zur Ausfuehrung 2.99 %
+  TAO/87 ruhig · Buch Menge 19.6220, Kredit 5760.90 EUR · Ausfuehrung 317.1298 EUR · Grenze (m 0,09) 323.2141 EUR · Ausfuehrung -1.88 % zur Grenze · Marge zur Ausfuehrung 7.25 %
+  SUI/54 ruhig · Buch Menge 4218.5728, Kredit 6869.41 EUR · Ausfuehrung 1.7513 EUR · Grenze (m 0,09) 1.8043 EUR · Ausfuehrung -2.94 % zur Grenze · Marge zur Ausfuehrung 6.24 %
+  TAO/neu17 ruhig · Buch Menge 0.5000, Kredit 116.02 EUR · Ausfuehrung 246.2050 EUR · Grenze (m 0,09) 255.1597 EUR · Ausfuehrung -3.51 % zur Grenze · Marge zur Ausfuehrung 5.69 %
+  R-R11 zur Kalibrierung vom 19.07. (hebel_risk_gate.py): SUI 6,75 %, TAO/87 8,4 % - ⚠️ die stand auf den Importer-Positionen (zu kleines Buch)
+
+==============================================================================================================
+GEGENPRUEFUNG R1 - Schluesse am 10./11.10. OHNE Liquidationsvermerk: Ausfuehrung gegen die Grenze, Schlussgebuehr gegen das Modell 0,30 + 0,18 x Tage
+  TAO 10.10. 15:22 · 7 Kaeufe · Ausfuehrung 320.9456 EUR · Grenze (m 0,09) 262.1300 EUR -> Ausfuehrung +22.44 % zur Grenze · Gebuehr 1.06 % des Verkaufs gegen Modell 1.03 % (ab dem ersten Kauf, 4.1 Tage)
+
+==============================================================================================================
+GEGENPRUEFUNG m JE SYMBOL - ⚠️ nachtraeglich, nicht vorab festgelegt, nur Auskunft (Bitpanda-Doku: Schwelle je Asset verschieden) · Reihe Markpreis, alle Stunden
+  AVAX  Abschnitte  1, davon liquidiert 1 · m >= -1.6472 · m < - -> nur eine Seite
+  BTC   Abschnitte  5, davon liquidiert 0 · m >= - · m < 0.0978 -> nur eine Seite
+  ETH   Abschnitte  8, davon liquidiert 0 · m >= - · m < 0.0794 -> nur eine Seite
+  LINK  Abschnitte  5, davon liquidiert 1 · m >= -1.2159 · m < 0.0506 -> vereinbar
+  NEAR  Abschnitte  1, davon liquidiert 0 · m >= - · m < 0.2658 -> nur eine Seite
+  SEI   Abschnitte  1, davon liquidiert 0 · m >= - · m < 0.1916 -> nur eine Seite
+  SUI   Abschnitte  6, davon liquidiert 1 · m >= 0.0369 · m < 0.0693 -> vereinbar
+  TAO   Abschnitte  7, davon liquidiert 3 · m >= 0.0759 · m < 0.0706 -> ⛔ nicht vereinbar
+
+==============================================================================================================
+J7 NULLWELT - Abschnitte um +-7..60 Tage verschoben, 40 Ziehungen, m 0,09
+  mark verschobene Liquidationen loesen aus in 44.2 % (5: 10/40, 54: 24/40, 77: 0/40, 87: 39/40, neu17: 26/40, neu2: 7/40) · verschobene Gegenfaelle mit Treffer vor dem Schluss 25.9 % · echt: 6 von 6, Fehlalarme 5 von 28
+  spot verschobene Liquidationen loesen aus in 44.2 % (5: 9/40, 54: 23/40, 77: 0/40, 87: 37/40, neu17: 28/40, neu2: 9/40) · verschobene Gegenfaelle mit Treffer vor dem Schluss 24.6 % · echt: 6 von 6, Fehlalarme 5 von 28
+
+==============================================================================================================
+J6 Markpreis: Treffer 6/6, Zeitfehler im Mittel 23.3 h, Fehlalarme 5/28 · Spot-Tief: 6/6, 23.3 h, 5/28
+   -> ✔ der MARKPREIS wird Hauptmass fuer K6
+   -> m = 0,09 HAELT NICHT (Intervall 0.0759 bis 0.0506, Reihe mark)
+
+P0 Sicherung unveraendert (Groesse, Zeitstempel): ✔ ja
+SCHLUSS: vollstaendig

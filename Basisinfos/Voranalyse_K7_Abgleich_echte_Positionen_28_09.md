@@ -188,3 +188,37 @@ beantworten.** Bis dahin zählen sie als Gegenfall, AVAX damit als Fehlalarm.
 | K6 rechnet mit dem **Markpreis** als Hauptmaß weiter | kein neues m. Die Daten lösen m nur auf etwa ±0,02 auf |
 | m = 0,09 bleibt in K6 als **vorsichtige** Wahl, 0,0476 als Auskunft (H8), ab jetzt **begründet**: im Bereich bis 5x an echten Daten kein Fehlalarm | keine Aussage über 10x (dort sind es 6 von 6 Fehlalarmen) |
 | der Importer braucht eine eigene Voranalyse (Buch statt Position) | keine Änderung am Betrieb aus K7 |
+
+---
+
+## 10. ⭐ Nachtrag: die Wahrheit aus den Gebühren — 7 Liquidationen, nicht 4 (Befund 2.679)
+
+**Nutzer:** *„ich kann mich leider nicht erinnern, wie viele tatsächlich
+liquidiert wurden."* Die Screenshots bestätigen die Buchungen auf die Stelle
+(AVAX 6,2060 Stück = 126,64 €, MORPHO 113,9113 = 139,11 €), tragen aber dasselbe
+Etikett *Margin Trading Close* wie ein normaler Schluss. Entschieden hat die
+**Schlussgebühr**:
+
+| | |
+|---|---|
+| **Modell mit dem Alter der Posten** (statt ab dem ersten Kauf) | trifft die 278 Teilschließungen auf **−0,01** Punkte (80 % zwischen −0,08 und 0,00) |
+| **Sieben Schlüsse** | **+0,97 bis +1,05**: Bitpandas 1-%-Zwangsgebühr |
+| **alle 308 übrigen** | höchstens **+0,01**, dazwischen **nichts** |
+| **die sieben** | LINK/5, TAO/77, TAO/87, SUI/54 (geführt) · **AVAX** 10.10. 21:14 · **MORPHO** 10.10. 21:00 · **TAO 21.11.2025 07:00** (übersehen) |
+| **Rest an den Nutzer** | bei den sieben 0,6–6 % der Menge, normale Vollschließungen Median **24,7 %** |
+
+⚠️ Die Gebühr hängt **nicht** an den Kursreihen, die K7 vergleicht. Die
+korrigierte Wahrheit ist deshalb nicht zirkulär. Beide Fassungen laufen:
+`--wahrheit gefuehrt` (vorab, 4) und `--wahrheit gebuehr` (7).
+
+| m = 0,09 | vorab (4) | Gebühr (7; MORPHO ohne Markpreis → 6) |
+|---|---|---|
+| Treffer Markpreis | 4 von 4 | **6 von 6** |
+| Fehlalarme Markpreis | 6 von 30 | **5 von 28**, alle 6,6x–8,2x |
+| m = 0,0476, Markpreis | 3 von 4, 1 Fehlalarm | 5 von 6, **0** Fehlalarme |
+| Spot-Tief | gleich / 1 Fehlalarm mehr bei 0,0476 | gleich / 1 Fehlalarm mehr bei 0,0476 |
+
+**Urteil unverändert:** Der Markpreis wird Hauptmaß. m = 0,09 hält nach der
+Regel nicht, liquidiert aber nur zu früh, und bis 5x kommt kein Fehlalarm vor.
+Die Liquidationserkennung des Importers übersah **3 von 7**. Sie gehört in die
+eigene Voranalyse zum Importer.

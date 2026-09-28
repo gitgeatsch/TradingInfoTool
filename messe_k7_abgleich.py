@@ -275,6 +275,45 @@ def eur_grenze(ab: dict, m: float = 0.09):
     return K, F, Q, (K + F) / (Q * (1 - m))
 
 
+SIGNATUR = 0.5      # Prozentpunkte ueber dem Modell - Bitpanda-Zwangsgebuehr 1 %
+
+
+def gebuehr_signatur(abs_: list, pfad: str) -> list:
+    """Schlussgebuehr gegen das Modell 0,30 % + 0,18 %/Tag, mit dem ALTER DER
+    POSTEN (mengengewichtet, bei Teilschliessungen anteilig gekuerzt) statt
+    ab dem ersten Kauf. -> [(differenz, k, ts, vollschluss, rest_anteil)].
+    Nutzerfrage 28.09. (AVAX/MORPHO am 10.10.): die alte Erkennung rechnet die
+    Haltedauer ab dem ersten Kauf - bei Nachkaeufen zu lang, das Modell zu
+    hoch, und die +1 % gehen darin unter."""
+    roh = json.load(io.open(pfad, encoding="utf-8"))
+    byts = defaultdict(list)
+    for t in roh["transaktionen"]:
+        if any("margin" in g for g in t.get("tags", [])):
+            byts[t["unix_timestamp"]].append(t)
+    aus = []
+    for k, ab in enumerate(abs_):
+        for ts, art, e in ab["ereignisse"]:
+            if art != "zu" or not e["raus"]:
+                continue
+            grp = byts[ts]
+            fee = sum(t["amount_cryptocoin_wallet"] for t in grp if "margin_trading.fee" in t["tags"])
+            zur = sum(t["amount_cryptocoin_wallet"] for t in grp
+                      if "margin_trading.close" in t["tags"] and t["in_or_out"] == "incoming")
+            posten = []
+            for ts2, a2, e2 in ab["ereignisse"]:
+                if ts2 >= ts:
+                    break
+                if a2 == "auf":
+                    posten.append([ts2, e2["menge"]])
+                else:
+                    for q in posten:
+                        q[1] *= e2["rQ"]
+            q = sum(x[1] for x in posten)
+            alter = sum(x[1] * (ts - x[0]) for x in posten) / q / 86400.0 if q else 0.0
+            aus.append((100 * fee / e["raus"] - (0.30 + 0.18 * alter), k, ts, ts == ab["zu"], zur / e["raus"]))
+    return aus
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -284,6 +323,9 @@ def main() -> int:
     ap.add_argument("--db", required=True, help="die SICHERUNGSKOPIE, nie die Standard-DB")
     ap.add_argument("--buchungen", default=BUCHUNGEN)
     ap.add_argument("--spur", type=int, help="nur dieser Abschnitt (Nummer aus der Liste), mit Stundenspur")
+    ap.add_argument("--wahrheit", choices=("gefuehrt", "gebuehr"), default="gefuehrt",
+                    help="gefuehrt = status wahrscheinlich_liquidiert (vorab festgelegt); gebuehr = Gebuehrensignatur "
+                         "mit dem Alter der Posten (R1-Korrektur, Nutzerfrage AVAX/MORPHO)")
     a = ap.parse_args()
     if os.path.abspath(a.db).lower() == os.path.abspath(STANDARD_DB).lower() \
             or os.path.basename(a.db).lower() == "tradinginfotool.db":
@@ -309,11 +351,29 @@ def main() -> int:
     print("P2 jeder Abschnitt endet mit Kredit unter 1 EUR: groesster Restkredit %.2f EUR, groesster Staubrest %.2f EUR %s" % (
         rest, staub, "✔" if rest < 1 and staub < 5 and not offen else "⛔"))
     for ab in abs_:
-        ab["liq"] = next((i for s, z, i in liqs if s == ab["symbol"] and ab["zu"] and abs(z - ab["zu"]) <= 1), None)
+        ab["liq"] = next((str(i) for s, z, i in liqs if s == ab["symbol"] and ab["zu"] and abs(z - ab["zu"]) <= 1), None)
         # J10: ein CRASH-Fall ENDET am 10./11.10.; bei allen anderen fallen in der
         # Ansicht OHNE die Stunden dieser zwei Tage heraus
         ab["schwarz"] = ab["zu"] is not None and SCHWARZ[0] <= stunde(ab["zu"]) < SCHWARZ[1]
     zugeordnet = sum(1 for ab in abs_ if ab["liq"])
+    sig = gebuehr_signatur(abs_, a.buchungen)
+    hoch = [x for x in sig if x[0] > SIGNATUR]
+    rest_d = sorted(x[0] for x in sig if x[0] <= SIGNATUR)
+    print("P4 Gebuehrensignatur (Alter der Posten): %d Schluesse · ueber +%.1f Punkte: %d (%s) · alle uebrigen "
+          "zwischen %+.2f und %+.2f, Median %+.2f" % (
+              len(sig), SIGNATUR, len(hoch), ", ".join("%s %s %+.2f" % (abs_[x[1]]["symbol"], stunde(x[2]), x[0]) for x in hoch),
+              rest_d[0], rest_d[-1], rest_d[len(rest_d) // 2]))
+    gef = {k for k, ab in enumerate(abs_) if ab["liq"]}
+    sigk = {x[1] for x in hoch if x[3]}
+    print("   gefuehrte Liquidationen mit Signatur: %d von %d · Signatur ohne Vermerk: %s · alle Signaturen sind Vollschluesse: %s" % (
+        len(gef & sigk), len(gef), ", ".join("%s %s" % (abs_[k]["symbol"], stunde(abs_[k]["zu"])) for k in sorted(sigk - gef)) or "keine",
+        "✔" if all(x[3] for x in hoch) else "⛔"))
+    if a.wahrheit == "gebuehr":
+        for k in sigk - gef:
+            abs_[k]["liq"] = "neu%d" % k
+        print("   ➤ WAHRHEIT = Gebuehrensignatur: %d Liquidationen" % sum(1 for ab in abs_ if ab["liq"]))
+    else:
+        print("   ➤ WAHRHEIT = gefuehrter Status (vorab festgelegt): %d Liquidationen" % zugeordnet)
     print("   die %d gefuehrten Liquidationen beenden je einen Abschnitt: %d %s" % (
         len(liqs), zugeordnet, "✔" if zugeordnet == len(liqs) else "⛔ nicht alle"))
 
@@ -344,7 +404,7 @@ def main() -> int:
         print("  %2d %-6s %s bis %s · %3d Kaeufe · %3d Teilschliessungen · Hebel bis %.1fx%s%s" % (
             k, ab["symbol"], stunde(ab["auf"]), stunde(ab["zu"]) if ab["zu"] else "offen",
             ab.get("kaeufe", 0), ab.get("teil", 0), ab["max_hebel"],
-            "  ⚡ LIQUIDIERT (id %d)" % ab["liq"] if ab["liq"] else "", "  · 10./11.10." if ab["schwarz"] else ""))
+            "  ⚡ LIQUIDIERT (%s)" % ab["liq"] if ab["liq"] else "", "  · 10./11.10." if ab["schwarz"] else ""))
 
     if a.spur is not None:
         ab = abs_[a.spur]
@@ -380,7 +440,7 @@ def main() -> int:
         L_ = [k for k in beide if abs_[k]["liq"] and teil(abs_[k])]
         G_ = [k for k in beide if not abs_[k]["liq"] and teil(abs_[k])]
         print("J5 %s - Liquidationen %d (%s) · Gegenfaelle %d Abschnitte" % (
-            name, len(L_), ", ".join("%s/%d %s" % (abs_[k]["symbol"], abs_[k]["liq"],
+            name, len(L_), ", ".join("%s/%s %s" % (abs_[k]["symbol"], abs_[k]["liq"],
                                                    "Crash" if abs_[k]["schwarz"] else "ruhig") for k in L_), len(G_)))
         for art in ("mark", "spot"):
             for m in MARGEN:
@@ -388,7 +448,7 @@ def main() -> int:
                 for k in L_:
                     erst, sch, bh = auswerten(erg[art][k], m)
                     hz = hstart(abs_[k]["zu"])
-                    nm = "%s/%d" % (abs_[k]["symbol"], abs_[k]["liq"])
+                    nm = "%s/%s" % (abs_[k]["symbol"], abs_[k]["liq"])
                     if erst is not None:
                         tr += 1; zf.append((hz - erst) / 3600)
                         zeilen.append("%s %.0f h vorher%s" % (nm, (hz - erst) / 3600, " (Buchungsstunde)" if bh else ""))
@@ -423,7 +483,7 @@ def main() -> int:
         e = ab["ereignisse"][-1][2]
         K, F, Q, grenze = eur_grenze(ab)
         m_exec = 1 - (K + F) / (Q * e["preis"])
-        print("  %s/%d %s · Buch Menge %.4f, Kredit %.2f EUR · Ausfuehrung %.4f EUR · Grenze (m 0,09) %.4f EUR · "
+        print("  %s/%s %s · Buch Menge %.4f, Kredit %.2f EUR · Ausfuehrung %.4f EUR · Grenze (m 0,09) %.4f EUR · "
               "Ausfuehrung %+.2f %% zur Grenze · Marge zur Ausfuehrung %.2f %%" % (
                   ab["symbol"], ab["liq"], "Crash" if ab["schwarz"] else "ruhig", Q, K, e["preis"], grenze,
                   100 * (e["preis"] / grenze - 1), 100 * m_exec))
@@ -490,7 +550,7 @@ def main() -> int:
         e_ = ergebnis[("ALLE", art, 0.09)]
         print("  %-4s verschobene Liquidationen loesen aus in %.1f %% (%s) · verschobene Gegenfaelle mit Treffer vor dem "
               "Schluss %.1f %% · echt: %d von %d, Fehlalarme %d von %d" % (
-                  art, 100 * tl / max(nl, 1), ", ".join("%d: %d/%d" % (i, x[0], x[1]) for i, x in sorted(je.items())),
+                  art, 100 * tl / max(nl, 1), ", ".join("%s: %d/%d" % (i, x[0], x[1]) for i, x in sorted(je.items())),
                   100 * tg / max(ng, 1), e_[0], e_[1], e_[3], e_[4]))
 
     # ── J6

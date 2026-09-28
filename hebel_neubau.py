@@ -563,6 +563,11 @@ NEUESTER_STAND = (
               "+0,05 ueber dem Normal in allen vier Mengen, auch rollierend - etwa "
               "so viel wie der rsi-Rand allein. K5 (Schwelle auf Normal + Kurven) "
               "ist damit eine Nutzerentscheidung"),
+    ("2.679", "K7: der Binance-MARKPREIS wird Hauptmass fuer K6 (am echten "
+              "Bitpanda-Buch fast gleich dem Spot-Tief, nirgends schlechter). "
+              "m = 0,09 liquidiert zu frueh, nie zu spaet; alle Fehlalarme in "
+              "Buechern ueber 5x. Der Importer teilt die Positionen falsch ein "
+              "(Teilschliessungen) und uebersah 3 von 7 Liquidationen"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
