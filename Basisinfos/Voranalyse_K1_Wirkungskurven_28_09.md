@@ -192,3 +192,80 @@ Bestätigung.
 | **Rolle** | positiv → Einstieg, nur mit Altersachse und A4 *bestätigt*; negativ → Sperre |
 | **neu gerechnet** | alle K1-Gruppen (voll, termin; teilung und termin_teilung je `--nur-eigen` und `--nur-markt --gemeinsam`) auf `unverzerrt:1..3` und `bestand` |
 | **unverändert** | das Kurvenurteil W10 bleibt daneben stehen — das Randkriterium **ergänzt**, es ersetzt nicht |
+
+**Nutzer 28.09.:** *„ja korrekt — darum muss die Regel dann auch in unseren
+Tests und Simulationen funktionieren."*
+
+| Pflicht | Wann |
+|---|---|
+| **Regeltest Zufall:** Zufallsmerkmale (geglättet wie echte) durch das Randkriterium — es darf fast nie *trägt* melden | direkt nach der Neuberechnung |
+| **Regeltest Pflanzung:** ein Randeffekt bekannter Größe in einer wirkungslosen Kopie — ab welcher Größe findet das Kriterium ihn sicher? | direkt nach der Neuberechnung |
+| **Simulation (Ebene 3):** ein tragender Rand muss in der Erfolgsrechnung wirken — Signale mit der Regel gehen auf ungesehenen Monaten messbar anders aus als ohne | vor jeder Verwendung im Betrieb |
+
+---
+
+## 9. ✔ ERGEBNIS RANDKRITERIUM (28.09.2026) — Befund 2.675, löst 2.673 und 2.674 ab
+
+24 Läufe (alle Gruppen × 4 Mengen), alle fehlerfrei. **R-R11:** kein
+Kurvenurteil hat sich geändert (16 Läufe zeilengleich, in den 8
+`_eigen`-Läufen nur z anders — andere Ziehfolge der Nullwelt).
+
+### 9a. Der Regeltest — die Regel funktioniert in unseren Tests
+
+| | je Asset | als Marktreihe (gemeinsame Nullwelt) |
+|---|---|---|
+| **Zufall** (10 geglättete Merkmale × roh/selbst = 40 Ränder) | **0 von 40** (beide Mengen) | **0 von 40** (beide Mengen) |
+| **Pflanzung** gefunden ab | **+0,02** (5 von 5), +0,01 in 1–2 von 5 | erst **~0,08** (3 von 5 bestand, 0 von 5 unverzerrt:1) |
+| Streuung Dq Prüfzeit / 2022 | 0,005 / 0,007–0,010 | **0,034–0,038 / 0,035** |
+| Versatz der Prüfzeit | **+0,009 / +0,013** | ≈ 0 (im Rauschen) |
+
+⚠️⚠️ **Gegenprüfung, nachträglich — ändert kein Urteil, ordnet ein:** die
+Prüfzeit liegt insgesamt über ihrem 12-Monats-Normal. *Gleiches Vorzeichen
+in der Prüfung* winkt positive Ränder je Asset damit fast umsonst durch.
+Bei Markträndern sind Prüfzeit und 2022 fast ein Münzwurf, und die
+Asset-Bedingung sagt dort nichts (alle Assets sehen dieselben Markttage).
+Ein Einstieg gilt hier deshalb nur als **unabhängig bestätigt**, wenn Dq
+Prüf den Versatz klar übersteigt.
+
+### 9b. W11 gilt auch für die Ränder (vorab festgelegt)
+
+Tag/Phase < 0,5 → geteilt beurteilen. **Überwiegend Markt:** funding
+(0,02–0,31), premium (0,08–0,37), konten_verh/top_konten_verh (0,07–0,18)
+— ihre Ränder in *voll* und *termin* stehen auf der falschen Nullwelt.
+**Asset-eigen:** rsi, momentum_kurz, ema_abstand_atr (2,6–18,5),
+oi_aenderung (0,8–0,9).
+
+### 9c. Die Urteile
+
+| Rand | Mengen | Suche | Prüfzeit | 2022 | Einordnung |
+|---|---|---|---|---|---|
+| **rsi** roh + selbst **oben** | **4/4** | +0,043…+0,057 (z 5,2–9,6) | **+0,038…+0,054** | +0,002…+0,012 | ✔ trägt, bestätigt · A4 bestätigt |
+| **momentum_kurz** selbst **oben** (roh 3/4) | **4/4** | +0,029…+0,036 | **+0,022…+0,035** | +0,007…+0,013 | ✔ trägt, bestätigt · A4 bestätigt |
+| funding_vortag_**markt** roh **unten** | 4/4 | **+0,10…+0,14** (z 4,1–6,3) | +0,024…+0,032 | +0,031…+0,040 | ⚠ nur in der Suche nachgewiesen |
+| konten_verh_**markt** roh unten | 3/4 | +0,09…+0,11 | +0,026…+0,028 | +0,06…+0,07 | ⚠ nur in der Suche |
+| oi_aenderung unten | 3/4 | +0,033…+0,036 | +0,011…+0,015 = Versatz | +0,01 | ⚠ ohne unabhängige Bestätigung |
+| ema_abstand_atr selbst oben | 0/4 | +0,051…+0,054 | +0,050…+0,063 | **−0,014…−0,020** | ⛔ kehrt 2022 — Vorbehalt *jedes Regime* |
+| viele Longs **je Asset** (konten_verh_eigen oben) | 0/4 | −0,044…−0,052 | +0,004…+0,026 = Versatz | −0,017…−0,030 | ⛔ in der Prüfzeit nicht zu sehen (löst 2.674 ab) |
+| viele Longs Markt oben | 0/4 | — | — | — | ⛔ gegen die gemeinsame Nullwelt z −0,3…−1,3 |
+| Premium (markt, eigen) | ≤ 2/4 | | | | ⛔ sporadisch |
+| Käuferanteil, taker_verh, bandenge | ≤ 1/4 | | | | ohne Befund |
+
+⚠️⚠️ **Altersachse ungeklärt — in allen vier Mengen gleich, bei rsi,
+momentum UND ema_abstand:** der obere Rand trägt mit dem **aktuellen**
+Wert (+0,03…+0,06) und mit dem **24 h alten** (+0,07…+0,15), der **6 h
+alte** dagegen fast nicht (−0,025…+0,033). Die Vorabfestlegung verlangt
+für die Rolle *Einstieg* eine bestätigte Altersachse → **die Rolle ist
+offen**, bis das geklärt ist.
+
+⚠️ momentum korreliert mit rsi und ema_abstand (Rang +0,56…+0,62): das
+ist **eine** Information *oben gestreckt*, nicht drei — in K1 Schritt 2
+gemeinsam zu schätzen.
+
+### 9d. Was daraus folgt
+
+| | |
+|---|---|
+| für K1 Schritt 2 | je Asset *oben gestreckt* (rsi/momentum/ema_abstand gemeinsam), als Kontext-Kandidat funding_markt unten |
+| vorher | die Altersachse klären — warum trägt der 6 h alte Wert nicht? |
+| ⛔ nicht | eine Sperre *viele Longs je Asset* — in der ungesehenen Zeit nicht vorhanden |
+| vor jedem Betrieb | Simulation Ebene 3 |

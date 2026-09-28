@@ -87,7 +87,11 @@ GRUPPEN = {"voll": ("funding_vortag", "kaeufer_1h", "kaeufer_6h", "kaeufer_24h",
            "teilung": ("funding_vortag", "premium_jetzt", "premium_24h"),
            # W11 fuer den Terminmarkt (28.09.): konten_verh und top_konten_verh
            # behielten gegen die Tages-Kontrolle nur 5 bis 20 Prozent
-           "termin_teilung": ("konten_verh", "top_konten_verh")}
+           "termin_teilung": ("konten_verh", "top_konten_verh"),
+           # REGELTEST (Nutzer 28.09.: *die Regel muss auch in unseren Tests
+           # funktionieren*): Zufallsmerkmale - das Randkriterium darf fast
+           # nie *traegt* melden; dazu gepflanzte Raender (--gruppe regeltest)
+           "regeltest": ("ema_abstand_atr",)}
 PERZ = (1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99)
 GITTER = (0, 6, 12, 18)
 JAHR_H = 8760
@@ -174,6 +178,33 @@ def main() -> int:
         for m in list(FV):
             if m not in MERK:
                 del FV[m]
+    if gruppe == "regeltest":
+        o_ = np.lexsort((STD, SYM))
+        gr_ = np.flatnonzero(np.diff(SYM[o_])) + 1
+        for glatt in (1, 6, 24, 72, 168):
+            for saat in (1, 2):
+                r_ = np.random.default_rng(3000 * glatt + saat)
+                if "--nur-markt" in sys.argv:
+                    # Zufalls-MARKTreihe: ein Wert je Stunde, fuer alle Assets
+                    # gleich - prueft die Regel dort, wo _markt-Urteile stehen
+                    # (mit --gemeinsam: gemeinsame Zeitverschiebung)
+                    h_ = (STD - STD.min()).astype(np.int64)
+                    x_ = r_.standard_normal(int(h_.max()) + 1)
+                    c_ = np.concatenate([[0.0], np.cumsum(x_)])
+                    kk = np.arange(1, len(x_) + 1)
+                    lo_ = np.maximum(0, kk - glatt)
+                    FV["zufall_markt_g%d_s%d" % (glatt, saat)] = ((c_[kk] - c_[lo_]) / (kk - lo_))[h_].astype(np.float32)
+                    continue
+                x_ = r_.standard_normal(n)
+                v_ = np.empty(n, np.float32)
+                for tl_ in np.split(o_, gr_):
+                    c_ = np.concatenate([[0.0], np.cumsum(x_[tl_])])
+                    kk = np.arange(1, len(tl_) + 1)
+                    lo_ = np.maximum(0, kk - glatt)
+                    v_[tl_] = (c_[kk] - c_[lo_]) / (kk - lo_)
+                FV["zufall_g%d_s%d" % (glatt, saat)] = v_
+        MERK = tuple(m for m in FV if m.startswith("zufall"))
+        del FV["ema_abstand_atr"]
     # je Asset sortiert (lade liefert je Symbol zeitlich geordnet)
     ordnung = np.lexsort((STD, SYM))
     teile = np.split(ordnung, np.flatnonzero(np.diff(SYM[ordnung])) + 1)
@@ -385,6 +416,34 @@ def main() -> int:
                 r22[ri], n22, rolle))
     print("  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung")
     traeger = sorted(set(traeger) | {k for k, _n, v in rand_traeger if v > 0})
+    if gruppe == "regeltest":
+        print()
+        print("  REGELTEST ZUFALL: %d von %d Raendern *tragen* (Soll: fast keiner)" % (
+            len(rand_traeger), 2 * len(namen)))
+        print("  REGELTEST PFLANZUNG: oberer Rand um +d gehoben (Suche, Pruefung UND 2022), in einer "
+              "zeitverschobenen Kopie der ersten Zufallskurve - gefunden, wenn alle Randbedingungen gelten:")
+        k0 = namen[0]
+        for dd in (0.01, 0.02, 0.04, 0.08):
+            gef = 0
+            for _ in range(5):
+                st0 = stufen(verschiebe(KURVEN[k0]), GRENZEN[k0])
+                a = A.copy(); b = B.copy()
+                oben = np.isin(st0, (10, 11)) & np.isin(STD % 24, GITTER)
+                tr = np.flatnonzero(oben & ((a + b) > 0) & (b == 1))
+                m_ = int(round(dd * (oben & ((a + b) > 0)).sum()))
+                w_ = rng.choice(tr, size=min(m_, len(tr)), replace=False)
+                a[w_], b[w_] = 1, 0
+                d_, c_ = profil(st0, such, a=a, b=b); ro = raender(d_, c_)[1]
+                z_ = (ro - rmu[k0][1]) / rsd[k0][1]
+                dp_, cp_ = profil(st0, pruef, a=a, b=b); rp_ = raender(dp_, cp_)[1]
+                d22_, c22_ = profil(st0, gitter22, a=a, b=b, na=MA, nb=MB, minn=20); r22_ = raender(d22_, c22_)[1]
+                jj = 0
+                for y in (2023, 2024, 2025, 2026):
+                    dy_, cy_ = profil(st0, gitter & (JAHR == y), a=a, b=b, minn=20)
+                    ry = raender(dy_, cy_)[1]
+                    jj += int(np.isfinite(ry) and ry > 0)
+                gef += int(z_ > rgrenze and rp_ > 0 and r22_ > 0 and jj >= 3)
+            print("     d = +%.2f: gefunden %d von 5" % (dd, gef))
 
     # A4 / W12: Randstufen je bisherigem Anstieg in ATR, fuer die tragenden Kurven
     print()

@@ -1,0 +1,59 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE unverzerrt:2 · GRUPPE teilung
+========================================================================================================================
+  Tagesanker mit Phase: Suche 167840 · Pruefung 218803 · Symbole 124 · Kurven 6
+  Grenze Bestes-von-6 (Zeitverschiebung je Asset, 40 Ziehungen): z 2.50
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  funding_vortag_eigen roh  60.57  +9.67 | -0.09  nein | 3/4    68% |   0.10   1.19 | +0.022 +0.009 -0.001 +0.009 +0.003 -0.023   -     -   +0.035 -0.002 +0.025 -0.028 | · nein
+  funding_vortag_eigen selbst  38.51  +4.25 | +0.67    ja | 4/4    72% |   0.13   0.95 | +0.020 +0.005 +0.017 +0.010 +0.003 -0.027   -   +0.005 -0.007 +0.009 +0.011 +0.008 | ✔ TRAEGT · TEILEN (Tag < 1/2)
+  premium_jetzt_eigen roh  16.34  +3.57 | -0.40  nein | 3/4    55% |   0.30   0.99 | +0.010 +0.017 +0.006 -0.006 +0.008 -0.009 +0.016 +0.002 -0.014 +0.012 +0.000 -0.018 | · nein
+  premium_jetzt_eigen selbst  11.38  +2.20 | -0.54  nein | 2/4    57% |   0.34   1.19 | +0.009 +0.007 +0.006 +0.004 -0.005 -0.005 -0.017 -0.001 -0.014 +0.010 +0.001 -0.023 | · nein
+  premium_24h_eigen roh    9.25  -0.10 | +0.01  nein | 2/4    56% |   0.50   0.52 | -0.002 +0.017 +0.012 +0.003 -0.001 -0.003 -0.003 -0.007 -0.008 -0.003 +0.002 -0.005 | · nein
+  premium_24h_eigen selbst  11.02  +0.57 | +0.14  nein | 4/4    62% |   0.61   0.94 | -0.007 +0.022 -0.004 -0.000 -0.001 -0.007 -0.006 -0.009 -0.003 +0.002 -0.007 -0.010 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-12 Raendern: |z| 2.55
+  Kurve                      Rand   Dq Such      z | Dq Pruef | Jahre |  Asset |  Dq 2022  Anker | Urteil
+  funding_vortag_eigen roh   unten  +0.0102  +1.72 |  +0.0373 | 3/4   |    71% |  +0.0047  15236 | · nein
+  funding_vortag_eigen roh   oben   +0.0194  +3.00 |  +0.0253 | 4/4   |    68% |  +0.0380  13044 | ✔ EINSTIEG (Alter/A4 pruefen)
+  funding_vortag_eigen selbst unten  +0.0068  +1.01 |  +0.0350 | 3/4   |    70% |  +0.0058  12429 | · nein
+  funding_vortag_eigen selbst oben   +0.0109  +1.48 |  +0.0242 | 4/4   |    69% |  +0.0226  13761 | · nein
+  premium_jetzt_eigen roh    unten  +0.0166  +2.90 |  +0.0144 | 2/4   |    66% |  +0.0116   3164 | · nein
+  premium_jetzt_eigen roh    oben   -0.0015  -0.09 |  +0.0135 | 2/4   |    45% |  +0.0106   2360 | · nein
+  premium_jetzt_eigen selbst unten  +0.0069  +1.23 |  +0.0142 | 2/4   |    58% |  +0.0206   2885 | · nein
+  premium_jetzt_eigen selbst oben   -0.0014  +0.04 |  +0.0185 | 3/4   |    38% |  +0.0106   2529 | · nein
+  premium_24h_eigen roh      unten  +0.0152  +1.96 |  +0.0252 | 4/4   |    70% |  -0.0014   2810 | · nein
+  premium_24h_eigen roh      oben   +0.0015  +0.32 |  +0.0115 | 2/4   |    53% |  +0.0034   2704 | · nein
+  premium_24h_eigen selbst   unten  +0.0187  +2.47 |  +0.0338 | 4/4   |    71% |  -0.0082   2632 | · nein
+  premium_24h_eigen selbst   oben   -0.0077  -0.96 |  +0.0139 | 3/4   |    43% |  +0.0039   2578 | · nein
+  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  funding_vortag_eigen roh hoch: < 0 +0.029 (24809) · 0-0,5 +0.019 (13609) · 0,5-1 +0.014 (6797) · 1-2 +0.044 (2051) · 2-3 -0.004 (47) · > 3   -  
+                         tief: < 0 +0.025 (29524) · 0-0,5 +0.027 (15274) · 0,5-1 +0.042 (7646) · 1-2 +0.075 (2740) · 2-3 -0.094 (64) · > 3   -  
+  funding_vortag_eigen selbst hoch: < 0 +0.018 (24348) · 0-0,5 +0.011 (13328) · 0,5-1 +0.021 (6654) · 1-2 +0.098 (2213) · 2-3 +0.063 (47) · > 3   -  
+                         tief: < 0 +0.025 (24847) · 0-0,5 +0.018 (13026) · 0,5-1 +0.037 (6671) · 1-2 +0.045 (2404) · 2-3 -0.100 (53) · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  funding_vortag_eigen roh 6h: S 71.64 (118%) Rand +0.023/-0.030 · 12h: S 82.56 (136%) Rand +0.019/-0.039 · 24h: S 94.59 (156%) Rand +0.012/-0.064
+  funding_vortag_eigen selbst 6h: S 54.16 (141%) Rand +0.025/+0.010 · 12h: S 66.72 (173%) Rand +0.022/+0.007 · 24h: S 58.79 (153%) Rand +0.015/-0.020
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.014
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von funding_vortag_eigen roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.50:
+     ohne Pflanzung: z -0.80
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 5 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     funding_vortag_eigen roh ~ funding_vortag_eigen selbst +0.77
+     premium_jetzt_eigen roh ~ premium_jetzt_eigen selbst +0.95
+     premium_24h_eigen roh  ~ premium_24h_eigen selbst +0.77
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

@@ -1,0 +1,47 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE bestand · GRUPPE termin_teilung
+========================================================================================================================
+  Tagesanker mit Phase: Suche 130578 · Pruefung 220843 · Symbole 114 · Kurven 4
+  Grenze Bestes-von-4 (Zeitverschiebung je Asset, 40 Ziehungen): z 2.43
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  konten_verh_eigen roh   77.04 +14.44 | +0.20  nein | 4/4    64% |   0.53   0.58 | +0.005 -0.015 -0.010 +0.003 +0.016 +0.043 +0.026 +0.027 -0.003 -0.012 -0.039 -0.090 | · nein
+  konten_verh_eigen selbst  51.24  +7.15 | +0.20  nein | 3/4    51% |   0.32   0.27 | +0.032 +0.025 +0.016 +0.012 +0.006 +0.005 +0.011 +0.010 -0.002 -0.003 -0.037 -0.121 | · nein
+  top_konten_verh_eigen roh  68.42  +9.41 | +0.23  nein | 4/4    69% |   0.43   0.53 | -0.034 -0.002 -0.020 +0.008 +0.016 +0.028 +0.024 +0.026 +0.017 -0.015 -0.040 -0.074 | · nein
+  top_konten_verh_eigen selbst  45.60  +6.28 | +0.70    ja | 4/4    55% |   0.33   0.28 | +0.012 +0.026 +0.015 +0.017 +0.011 -0.001 -0.004 +0.003 +0.005 +0.001 -0.027 -0.127 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-8 Raendern: |z| 2.37
+  Kurve                      Rand   Dq Such      z | Dq Pruef | Jahre |  Asset |  Dq 2022  Anker | Urteil
+  konten_verh_eigen roh      unten  -0.0126  -1.16 |  +0.0028 | 3/4   |    58% |  -0.0323   6108 | · nein
+  konten_verh_eigen roh      oben   -0.0438  -7.06 |  +0.0152 | 3/4   |    56% |  -0.0191   7506 | · nein
+  konten_verh_eigen selbst   unten  +0.0252  +1.86 |  +0.0203 | 3/4   |    63% |  -0.0169   7654 | · nein
+  konten_verh_eigen selbst   oben   -0.0454  -4.77 |  +0.0086 | 3/4   |    54% |  -0.0299   7019 | · nein
+  top_konten_verh_eigen roh  unten  -0.0049  -0.54 |  -0.0026 | 2/4   |    55% |  -0.1246    397 | · nein
+  top_konten_verh_eigen roh  oben   -0.0434  -4.97 |  +0.0107 | 3/4   |    63% |  -0.0259    549 | · nein
+  top_konten_verh_eigen selbst unten  +0.0247  +1.75 |  +0.0169 | 3/4   |    60% |  +0.0511    237 | · nein
+  top_konten_verh_eigen selbst oben   -0.0373  -3.49 |  +0.0125 | 3/4   |    53% |  +0.0068     87 | · nein
+  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  (keine tragende Kurve)
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.018
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von konten_verh_eigen roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.43:
+     ohne Pflanzung: z -0.77
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 0 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     konten_verh_eigen roh  ~ top_konten_verh_eigen roh +0.95
+     konten_verh_eigen selbst ~ top_konten_verh_eigen selbst +0.91
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

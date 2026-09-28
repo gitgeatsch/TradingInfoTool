@@ -1,0 +1,66 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE bestand · GRUPPE termin
+========================================================================================================================
+  Tagesanker mit Phase: Suche 130578 · Pruefung 220843 · Symbole 114 · Kurven 8
+  Grenze Bestes-von-8 (Zeitverschiebung je Asset, 40 Ziehungen): z 2.77
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  konten_verh roh        200.47 +28.91 | +0.53  nein | 3/4    80% |   0.11   0.29 | +0.071 +0.039 +0.026 +0.037 +0.033 +0.019 +0.026 +0.009 -0.017 -0.041 -0.085 -0.110 | · nein
+  konten_verh selbst     182.78 +38.15 | -0.08  nein | 3/4    61% |   0.07   0.74 | +0.050 +0.052 +0.044 +0.046 +0.019 +0.004 -0.001 +0.008 -0.027 -0.041 -0.056 -0.140 | · nein
+  top_konten_verh roh    138.79 +26.89 | +0.43  nein | 3/4    69% |   0.12   0.21 | +0.080 +0.031 +0.035 +0.028 +0.022 +0.025 +0.018 +0.010 -0.021 -0.023 -0.066 -0.105 | · nein
+  top_konten_verh selbst 104.38 +16.75 | +0.35    ja | 3/4    63% |   0.07   0.73 | +0.027 +0.043 +0.034 +0.033 +0.009 +0.015 +0.004 -0.009 -0.017 -0.020 -0.039 -0.129 | · nein
+  taker_verh roh          14.02  +2.80 | -0.72  nein | 2/4    39% |   1.57   0.96 | -0.064 +0.009 +0.009 +0.009 -0.005 +0.010 -0.003 +0.007 +0.001 +0.002 +0.008 -0.046 | · nein
+  taker_verh selbst       16.17  +3.87 | -0.55  nein | 2/4    47% |   1.37   0.91 | -0.063 +0.009 +0.011 +0.008 -0.012 +0.013 +0.002 +0.005 +0.000 +0.003 +0.006 -0.045 | · nein
+  oi_aenderung roh        50.98 +10.70 | +0.48  nein | 4/4    62% |   0.82   0.64 | -0.026 +0.045 +0.028 +0.020 -0.011 -0.010 -0.014 -0.013 -0.018 +0.005 +0.001 -0.012 | · nein
+  oi_aenderung selbst     45.04  +7.83 | +0.50    ja | 4/4    56% |   0.89   0.68 | -0.027 +0.044 +0.032 +0.008 -0.002 -0.012 -0.011 -0.017 -0.008 -0.002 +0.003 -0.015 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-16 Raendern: |z| 2.57
+  Kurve                      Rand   Dq Such      z | Dq Pruef | Jahre |  Asset |  Dq 2022  Anker | Urteil
+  konten_verh roh            unten  +0.0420  +7.01 |  +0.0169 | 3/4   |    67% |  -0.0036   6088 | · nein
+  konten_verh roh            oben   -0.0878  -9.08 |  -0.0039 | 3/4   |    81% |  -0.0462   7113 | ⛔ SPERRE
+  konten_verh selbst         unten  +0.0518  +3.88 |  +0.0111 | 4/4   |    69% |  +0.0086   8175 | ✔ EINSTIEG (Alter/A4 pruefen)
+  konten_verh selbst         oben   -0.0647  -5.72 |  -0.0018 | 3/4   |    63% |  -0.0748   6519 | ⛔ SPERRE
+  top_konten_verh roh        unten  +0.0355  +4.77 |  +0.0159 | 3/4   |    66% |  -0.0274   1057 | · nein
+  top_konten_verh roh        oben   -0.0696  -5.79 |  -0.0106 | 3/4   |    77% |  -0.2595    168 | ⛔ SPERRE
+  top_konten_verh selbst     unten  +0.0416  +3.13 |  +0.0185 | 4/4   |    69% |  +0.0490    264 | ✔ EINSTIEG (Alter/A4 pruefen)
+  top_konten_verh selbst     oben   -0.0483  -4.96 |  +0.0114 | 3/4   |    62% |  -0.1367     52 | · nein
+  taker_verh roh             unten  +0.0020  -0.67 |  +0.0057 | 2/4   |    53% |  -0.0502   3013 | · nein
+  taker_verh roh             oben   +0.0028  -0.17 |  +0.0390 | 3/4   |    76% |  +0.0272   3252 | · nein
+  taker_verh selbst          unten  +0.0022  -0.26 |  +0.0045 | 2/4   |    52% |  -0.0476   2955 | · nein
+  taker_verh selbst          oben   +0.0013  -0.67 |  +0.0393 | 3/4   |    75% |  +0.0317   3149 | · nein
+  oi_aenderung roh           unten  +0.0375  +3.48 |  +0.0078 | 4/4   |    59% |  +0.0109   8818 | · nein
+  oi_aenderung roh           oben   -0.0007  -0.76 |  +0.0191 | 1/4   |    42% |  -0.0110   9171 | · nein
+  oi_aenderung selbst        unten  +0.0369  +3.28 |  +0.0098 | 4/4   |    60% |  +0.0136   8779 | · nein
+  oi_aenderung selbst        oben   +0.0015  -0.41 |  +0.0198 | 3/4   |    61% |  -0.0101   9149 | · nein
+  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  konten_verh selbst     hoch: < 0 -0.051 (12464) · 0-0,5 -0.043 (4947) · 0,5-1 -0.027 (1775) · 1-2 +0.101 (415) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.046 (10063) · 0-0,5 +0.019 (6925) · 0,5-1 +0.015 (4777) · 1-2 +0.036 (2433) · 2-3 -0.102 (111) · > 3   -  
+  top_konten_verh selbst hoch: < 0 -0.025 (15349) · 0-0,5 -0.026 (7103) · 0,5-1 +0.000 (2993) · 1-2 +0.075 (793) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.040 (14568) · 0-0,5 +0.016 (9188) · 0,5-1 +0.013 (5882) · 1-2 +0.030 (2752) · 2-3 -0.073 (149) · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  konten_verh selbst     6h: S 159.96 (88%) Rand +0.050/-0.135 · 12h: S 164.91 (90%) Rand +0.068/-0.136 · 24h: S 166.81 (91%) Rand +0.043/-0.162
+  top_konten_verh selbst 6h: S 106.74 (102%) Rand +0.049/-0.137 · 12h: S 114.65 (110%) Rand +0.056/-0.138 · 24h: S 141.94 (136%) Rand +0.042/-0.168
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.018
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von konten_verh roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.77:
+     ohne Pflanzung: z +3.43
+     d = 0.005: gefunden 5 von 5
+     d = 0.010: gefunden 5 von 5
+     d = 0.020: gefunden 5 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     konten_verh roh        ~ top_konten_verh roh    +0.92
+     konten_verh selbst     ~ top_konten_verh selbst +0.92
+     taker_verh roh         ~ taker_verh selbst      +1.00
+     oi_aenderung roh       ~ oi_aenderung selbst    +0.98
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

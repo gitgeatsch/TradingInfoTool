@@ -471,11 +471,20 @@ NEUESTER_STAND = (
               "reproduziert (-0,0134), gegen die Zeitverschiebung z -1,59"),
     ("2.673", "funding/Premium GETEILT: Asset-Anteil traegt nicht, Marktanteil "
               "mit der richtigen (gemeinsamen) Nullwelt nicht nachweisbar - "
-              "Aufloesung fuer Marktmerkmale grober als 0,04"),
+              "Aufloesung fuer Marktmerkmale grober als 0,04 - abgeloest durch 2.675"),
     ("2.674", "VIELE LONGS: marktweit ueber der gemeinsamen Nullwelt in allen "
               "4 Mengen (wenige Longs +0,14..+0,39, viele -0,13..-0,25) und je "
               "Asset als oberer Rand eine Sperre (-0,09..-0,14). Formal traegt "
-              "keines - das Formkriterium scheitert an der flachen Mitte"),
+              "keines - das Formkriterium scheitert an der flachen Mitte - "
+              "abgeloest durch 2.675 (die Sperre je Asset haelt in der Pruefzeit nicht)"),
+    ("2.675", "RANDKRITERIUM (vorab festgelegt), Regeltest bestanden (Zufall 0 von "
+              "40 je Asset und als Marktreihe; Aufloesung je Asset +0,02, Markt "
+              "~0,08): rsi und momentum tragen am OBEREN Rand je Asset in allen 4 "
+              "Mengen, in der Pruefzeit drei- bis sechsmal ueber dem Versatz, A4 "
+              "bestaetigt - Altersachse ungeklaert (6 h alt traegt fast nichts), "
+              "Rolle Einstieg offen. funding_markt unten nur in der Suche "
+              "nachgewiesen. ema_abstand oben kehrt 2022. Viele Longs je Asset "
+              "haelt in der Pruefzeit nicht"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -483,10 +492,13 @@ NEUESTER_STAND = (
                "Anwendungsebene_27_09.md): Wirkungskurven statt Schalter, "
                "Urteil gegen die Phase, Schwelle auf kalibriertem q, Hebel aus "
                "der Liquidationsgefahr. Die Messbasis ist vervollstaendigt "
-               "(2.669, --menge unverzerrt). Naechster Schritt: die "
-               "KONTEXTFLAECHE BTC x Dominanz (K3), dann die Wirkungskurven "
-               "je Beitrag (K3 ist gemessen, 2.670: der Kontext geht derzeit "
-               "ohne Gewicht ein)"),
+               "(2.669, --menge unverzerrt). K3 ist gemessen (2.670: der "
+               "Kontext geht derzeit ohne Gewicht ein), K1 Schritt 1 samt "
+               "Randkriterium auch (2.671-2.675). Naechster Schritt: die "
+               "Altersachse von *oben gestreckt* klaeren (6 h alt traegt fast "
+               "nichts), dann K1 Schritt 2 - rsi/momentum/ema_abstand GEMEINSAM "
+               "schaetzen, funding_markt als Kontext-Kandidat; vor jeder "
+               "Verwendung die Simulation (Ebene 3)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.

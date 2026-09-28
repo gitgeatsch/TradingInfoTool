@@ -1,0 +1,148 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE bestand · GRUPPE voll
+========================================================================================================================
+  Tagesanker mit Phase: Suche 130578 · Pruefung 220843 · Symbole 114 · Kurven 22
+  Grenze Bestes-von-22 (Zeitverschiebung je Asset, 40 Ziehungen): z 3.54
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  funding_vortag roh     137.15 +27.31 | +0.21  nein | 4/4    89% |   0.04   1.20 | +0.067 +0.064 +0.041 +0.037 -0.001   -     -     -     -   +0.007 -0.059 -0.044 | · nein
+  funding_vortag selbst   55.76  +9.63 | +0.20    ja | 3/4    70% |   0.12   2.64 | +0.064 +0.038 -0.013 +0.001 +0.000   -     -   +0.000 +0.017 +0.031 -0.035 +0.015 | · nein
+  kaeufer_1h roh          10.79  +0.41 | +0.08  nein | 3/4    57% |   1.65   0.83 | -0.033 +0.001 +0.016 +0.012 -0.005 -0.001 +0.005 +0.000 +0.004 +0.002 +0.015 +0.024 | · nein
+  kaeufer_1h selbst        8.02  -0.32 | -0.04  nein | 3/4    57% |   2.10   0.99 | -0.034 -0.007 +0.012 +0.000 +0.002 -0.004 +0.001 -0.003 +0.005 -0.001 +0.016 +0.017 | · nein
+  kaeufer_6h roh          12.21  +1.11 | +0.18  nein | 3/4    65% |   4.78   0.61 | -0.034 -0.000 -0.007 +0.000 -0.006 +0.014 +0.015 +0.001 +0.013 +0.009 +0.000 +0.026 | · nein
+  kaeufer_6h selbst       12.87  +1.10 | +0.03  nein | 3/4    58% |   4.55   0.80 | -0.043 -0.012 -0.002 -0.006 -0.003 +0.014 +0.004 +0.001 +0.003 +0.018 -0.003 +0.025 | · nein
+  kaeufer_24h roh         12.59  +0.38 | +0.43    ja | 4/4    63% |   2.61   0.80 | +0.012 -0.010 -0.001 +0.007 -0.007 +0.013 +0.003 +0.004 -0.003 +0.019 +0.015 +0.004 | · nein
+  kaeufer_24h selbst      18.79  +2.54 | +0.58  nein | 4/4    66% |   1.91   0.92 | -0.008 -0.011 -0.001 +0.007 -0.018 -0.007 +0.002 +0.007 -0.004 +0.019 +0.022 +0.022 | · nein
+  kaeufer_rel roh          8.45  +0.01 | -0.06  nein | 3/4    56% |   7.06   0.73 | -0.036 -0.002 -0.008 -0.000 +0.010 +0.005 +0.016 +0.003 +0.000 +0.004 -0.000 +0.022 | · nein
+  kaeufer_rel selbst       8.00  -0.45 | -0.27  nein | 3/4    53% |   7.24   0.84 | -0.050 -0.009 -0.007 -0.002 +0.007 +0.002 +0.007 +0.006 -0.010 +0.000 -0.002 +0.008 | · nein
+  premium_jetzt roh       81.74 +17.68 | +0.19  nein | 3/4    77% |   0.34   1.73 | +0.037 +0.050 +0.030 +0.019 +0.015 +0.008   -     -   -0.002 -0.017 -0.042 -0.065 | · nein
+  premium_jetzt selbst    24.71  +3.79 | +0.08  nein | 3/4    60% |   1.21   4.75 | +0.014 +0.026 -0.009 -0.003 -0.016 +0.016 +0.027 -0.004 +0.001 +0.005 -0.012 -0.040 | · nein
+  premium_24h roh        125.05 +18.75 | -0.15  nein | 4/4    73% |   0.13   1.16 | +0.068 +0.053 +0.024 +0.024 +0.017 -0.005 -0.012 -0.023 +0.026 +0.015 -0.046 -0.135 | · nein
+  premium_24h selbst      27.95  +3.10 | -0.89  nein | 1/4    49% |   0.32   4.06 | -0.017 -0.023 -0.016 -0.004 +0.001 +0.013 +0.022 +0.013 -0.008 +0.007 +0.022 -0.029 | · nein
+  momentum_kurz roh       28.34  +6.97 | -0.05  nein | 3/4    65% |  17.37   0.57 | -0.011 -0.014 +0.015 +0.002 -0.006 -0.009 -0.001 -0.008 +0.015 +0.021 +0.030 +0.033 | · nein
+  momentum_kurz selbst    31.90 +10.22 | +0.06    ja | 3/4    71% |  14.82   0.53 | +0.000 -0.018 +0.009 +0.002 -0.011 -0.009 -0.004 +0.008 +0.019 +0.012 +0.036 +0.036 | · nein
+  rsi roh                 52.12 +13.95 | +0.10  nein | 3/4    70% |   9.61   0.44 | +0.015 -0.030 -0.006 +0.007 -0.010 +0.005 +0.000 -0.001 +0.011 +0.019 +0.052 -0.009 | · nein
+  rsi selbst              67.04 +21.85 | +0.50    ja | 4/4    85% |   7.13   0.52 | +0.025 -0.024 -0.019 +0.005 -0.009 -0.001 -0.004 +0.004 +0.018 +0.016 +0.062 +0.013 | ✔ TRAEGT
+  ema_abstand_atr roh     76.46 +13.07 | +0.24  nein | 3/4    72% |   5.05   0.16 | -0.023 -0.034 -0.024 -0.022 +0.009 -0.005 +0.013 +0.013 +0.026 +0.033 +0.040 +0.008 | · nein
+  ema_abstand_atr selbst 114.24 +30.08 | +0.78    ja | 4/4    93% |   3.27   0.32 | +0.024 -0.035 -0.027 -0.019 -0.018 +0.003 +0.009 +0.011 +0.023 +0.049 +0.056 +0.039 | ✔ TRAEGT
+  bandenge roh            39.23  +6.44 | -0.40  nein | 3/4    46% |   0.24   0.53 | -0.059 -0.006 +0.018 +0.020 +0.021 +0.012 +0.003 +0.013 +0.005 -0.011 -0.018 -0.084 | · nein
+  bandenge selbst         40.78 +10.56 | -0.41  nein | 3/4    42% |   0.13   0.43 | +0.031 +0.005 +0.019 +0.017 +0.015 +0.022 +0.007 +0.001 +0.001 -0.009 -0.031 -0.080 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-44 Raendern: |z| 2.80
+  Kurve                      Rand   Dq Such      z | Dq Pruef | Jahre |  Asset |  Dq 2022  Anker | Urteil
+  funding_vortag roh         unten  +0.0642  +9.14 |  +0.0359 | 4/4   |    84% |  +0.0219  19136 | ✔ EINSTIEG (Alter/A4 pruefen)
+  funding_vortag roh         oben   -0.0573  -3.85 |  +0.1462 | 2/4   |    81% |     +nan     12 | · nein
+  funding_vortag selbst      unten  +0.0410  +4.89 |  +0.0429 | 4/4   |    81% |  +0.0270  10478 | ✔ EINSTIEG (Alter/A4 pruefen)
+  funding_vortag selbst      oben   -0.0296  -3.22 |  +0.0381 | 1/4   |    44% |  -0.0161   4690 | · nein
+  kaeufer_1h roh             unten  -0.0026  -0.62 |  +0.0203 | 2/4   |    33% |     +nan      0 | · nein
+  kaeufer_1h roh             oben   +0.0162  +2.07 |  +0.0278 | 2/4   |    75% |     +nan      0 | · nein
+  kaeufer_1h selbst          unten  -0.0094  -1.66 |  +0.0197 | 3/4   |    37% |     +nan      0 | · nein
+  kaeufer_1h selbst          oben   +0.0160  +3.01 |  +0.0243 | 3/4   |    74% |     +nan      0 | · nein
+  kaeufer_6h roh             unten  -0.0035  -0.82 |  +0.0182 | 2/4   |    40% |     +nan      0 | · nein
+  kaeufer_6h roh             oben   +0.0030  +0.02 |  +0.0267 | 2/4   |    73% |     +nan      0 | · nein
+  kaeufer_6h selbst          unten  -0.0154  -2.41 |  +0.0183 | 3/4   |    42% |     +nan      0 | · nein
+  kaeufer_6h selbst          oben   -0.0005  -0.18 |  +0.0238 | 2/4   |    35% |     +nan      0 | · nein
+  kaeufer_24h roh            unten  -0.0080  -1.56 |  +0.0122 | 2/4   |    46% |     +nan      0 | · nein
+  kaeufer_24h roh            oben   +0.0142  +1.29 |  +0.0354 | 3/4   |    75% |     +nan      0 | · nein
+  kaeufer_24h selbst         unten  -0.0111  -1.59 |  +0.0072 | 3/4   |    44% |     +nan      0 | · nein
+  kaeufer_24h selbst         oben   +0.0223  +2.22 |  +0.0362 | 4/4   |    72% |     +nan      0 | · nein
+  kaeufer_rel roh            unten  -0.0054  -1.36 |  +0.0197 | 2/4   |    37% |     +nan      0 | · nein
+  kaeufer_rel roh            oben   +0.0019  +0.03 |  +0.0205 | 2/4   |    60% |     +nan      0 | · nein
+  kaeufer_rel selbst         unten  -0.0132  -1.87 |  +0.0200 | 3/4   |    39% |     +nan      0 | · nein
+  kaeufer_rel selbst         oben   -0.0012  -0.42 |  +0.0210 | 2/4   |    38% |     +nan      0 | · nein
+  premium_jetzt roh          unten  +0.0486  +6.64 |  +0.0181 | 3/4   |    76% |     +nan      0 | · nein
+  premium_jetzt roh          oben   -0.0447  -4.17 |  +0.0234 | 3/4   |    75% |     +nan      0 | · nein
+  premium_jetzt selbst       unten  +0.0253  +3.05 |  +0.0174 | 3/4   |    68% |     +nan      0 | · nein
+  premium_jetzt selbst       oben   -0.0146  -2.05 |  +0.0134 | 2/4   |    51% |     +nan      0 | · nein
+  premium_24h roh            unten  +0.0547  +7.01 |  +0.0283 | 4/4   |    78% |     +nan      0 | · nein
+  premium_24h roh            oben   -0.0546  -3.60 |  +0.1159 | 3/4   |    84% |     +nan      0 | · nein
+  premium_24h selbst         unten  -0.0221  -1.95 |  +0.0416 | 1/4   |    50% |     +nan      0 | · nein
+  premium_24h selbst         oben   +0.0171  +0.80 |  -0.0170 | 2/4   |    54% |     +nan      0 | · nein
+  momentum_kurz roh          unten  -0.0138  -3.87 |  +0.0260 | 1/4   |    33% |  +0.0172   6959 | · nein
+  momentum_kurz roh          oben   +0.0304  +4.02 |  +0.0316 | 3/4   |    88% |  -0.0003   5009 | · nein
+  momentum_kurz selbst       unten  -0.0159  -3.52 |  +0.0256 | 1/4   |    38% |  +0.0153   6819 | · nein
+  momentum_kurz selbst       oben   +0.0357  +5.21 |  +0.0351 | 3/4   |    90% |  +0.0070   5143 | ✔ EINSTIEG (Alter/A4 pruefen)
+  rsi roh                    unten  -0.0253  -5.73 |  +0.0257 | 2/4   |    38% |  +0.0203   7021 | · nein
+  rsi roh                    oben   +0.0462  +5.18 |  +0.0473 | 4/4   |    89% |  +0.0022   5264 | ✔ EINSTIEG (Alter/A4 pruefen)
+  rsi selbst                 unten  -0.0196  -3.32 |  +0.0196 | 2/4   |    41% |  +0.0179   6563 | · nein
+  rsi selbst                 oben   +0.0570  +7.17 |  +0.0537 | 4/4   |    93% |  +0.0051   5778 | ✔ EINSTIEG (Alter/A4 pruefen)
+  ema_abstand_atr roh        unten  -0.0329  -5.42 |  +0.0187 | 2/4   |    47% |  -0.0022   7729 | · nein
+  ema_abstand_atr roh        oben   +0.0372  +4.43 |  +0.0616 | 4/4   |    87% |  -0.0173   4105 | · nein
+  ema_abstand_atr selbst     unten  -0.0294  -4.68 |  +0.0168 | 1/4   |    53% |  -0.0031   6427 | · nein
+  ema_abstand_atr selbst     oben   +0.0541  +8.27 |  +0.0631 | 4/4   |    93% |  -0.0170   5213 | · nein
+  bandenge roh               unten  -0.0114  -1.99 |  -0.0171 | 3/4   |    59% |  -0.0517   5130 | · nein
+  bandenge roh               oben   -0.0245  -3.35 |  +0.0384 | 2/4   |    36% |  -0.0194   5784 | · nein
+  bandenge selbst            unten  +0.0079  +0.56 |  -0.0081 | 2/4   |    49% |  -0.0490   5647 | · nein
+  bandenge selbst            oben   -0.0358  -6.39 |  +0.0410 | 2/4   |    38% |  -0.0234   5605 | · nein
+  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  ema_abstand_atr selbst hoch: < 0 +0.087 (222) · 0-0,5 +0.087 (4299) · 0,5-1 +0.056 (16654) · 1-2 +0.059 (14661) · 2-3 +0.024 (395) · > 3   -  
+                         tief: < 0 -0.000 (34024) · 0-0,5 -0.084 (318) · 0,5-1   -   · 1-2   -   · 2-3   -   · > 3   -  
+  funding_vortag roh     hoch: < 0 -0.057 (6765) · 0-0,5 -0.048 (4107) · 0,5-1 -0.046 (1922) · 1-2 -0.089 (510) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.033 (39904) · 0-0,5 +0.046 (20557) · 0,5-1 +0.039 (10420) · 1-2 +0.095 (3729) · 2-3 +0.068 (89) · > 3   -  
+  funding_vortag selbst  hoch: < 0 +0.004 (14452) · 0-0,5 -0.005 (8487) · 0,5-1 +0.013 (4104) · 1-2 +0.037 (1315) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.046 (22299) · 0-0,5 +0.035 (11731) · 0,5-1 +0.032 (6050) · 1-2 +0.081 (2132) · 2-3 -0.011 (40) · > 3   -  
+  momentum_kurz selbst   hoch: < 0 +0.023 (6232) · 0-0,5 +0.015 (10756) · 0,5-1 +0.041 (11334) · 1-2 +0.062 (7767) · 2-3 +0.019 (334) · > 3   -  
+                         tief: < 0 +0.013 (31730) · 0-0,5 +0.015 (3928) · 0,5-1 -0.066 (764) · 1-2 -0.166 (91) · 2-3   -   · > 3   -  
+  rsi roh                hoch: < 0 +0.020 (2076) · 0-0,5 +0.040 (7473) · 0,5-1 +0.037 (12483) · 1-2 +0.067 (10851) · 2-3 +0.023 (386) · > 3   -  
+                         tief: < 0 +0.011 (37159) · 0-0,5 -0.008 (2212) · 0,5-1 -0.103 (293) · 1-2   -   · 2-3   -   · > 3   -  
+  rsi selbst             hoch: < 0 +0.007 (2732) · 0-0,5 +0.057 (8707) · 0,5-1 +0.045 (13298) · 1-2 +0.077 (10938) · 2-3 +0.027 (385) · > 3   -  
+                         tief: < 0 +0.009 (34276) · 0-0,5 -0.031 (2047) · 0,5-1 -0.091 (281) · 1-2   -   · 2-3   -   · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  ema_abstand_atr selbst 6h: S 116.94 (102%) Rand +0.013/+0.013 · 12h: S 121.23 (106%) Rand -0.028/+0.077 · 24h: S 148.21 (130%) Rand -0.021/+0.147
+  funding_vortag roh     6h: S 137.89 (101%) Rand +0.065/-0.046 · 12h: S 145.48 (106%) Rand +0.054/-0.042 · 24h: S 179.19 (131%) Rand +0.023/-0.105
+  funding_vortag selbst  6h: S 59.74 (107%) Rand +0.066/+0.019 · 12h: S 69.40 (124%) Rand +0.061/+0.042 · 24h: S 70.51 (126%) Rand +0.033/-0.012
+  momentum_kurz selbst   6h: S 44.13 (138%) Rand -0.084/+0.013 · 12h: S 57.14 (179%) Rand -0.160/+0.030 · 24h: S 84.85 (266%) Rand -0.166/+0.069
+  rsi roh                6h: S 46.05 (88%) Rand -0.034/-0.025 · 12h: S 39.20 (75%) Rand -0.039/+0.010 · 24h: S 95.60 (183%) Rand -0.007/+0.084
+  rsi selbst             6h: S 49.89 (74%) Rand -0.045/+0.007 · 12h: S 46.61 (70%) Rand -0.044/+0.044 · 24h: S 102.62 (153%) Rand -0.037/+0.113
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.065
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von ema_abstand_atr selbst gepflanzt, gegen deren eigene Nullwelt und die Grenze 3.54:
+     ohne Pflanzung: z -1.14
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 0 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     funding_vortag roh     ~ funding_vortag selbst  +0.61
+     funding_vortag roh     ~ premium_jetzt roh      +0.61
+     funding_vortag roh     ~ premium_24h roh        +0.83
+     funding_vortag selbst  ~ premium_24h selbst     +0.66
+     kaeufer_1h roh         ~ kaeufer_1h selbst      +0.99
+     kaeufer_6h roh         ~ kaeufer_6h selbst      +0.97
+     kaeufer_6h roh         ~ kaeufer_rel roh        +0.94
+     kaeufer_6h roh         ~ kaeufer_rel selbst     +0.93
+     kaeufer_6h selbst      ~ kaeufer_rel roh        +0.96
+     kaeufer_6h selbst      ~ kaeufer_rel selbst     +0.96
+     kaeufer_24h roh        ~ kaeufer_24h selbst     +0.92
+     kaeufer_rel roh        ~ kaeufer_rel selbst     +0.99
+     premium_jetzt roh      ~ premium_jetzt selbst   +0.76
+     premium_jetzt roh      ~ premium_24h roh        +0.74
+     premium_jetzt selbst   ~ premium_24h selbst     +0.60
+     premium_24h roh        ~ premium_24h selbst     +0.57
+     momentum_kurz roh      ~ momentum_kurz selbst   +1.00
+     momentum_kurz roh      ~ rsi roh                +0.62
+     momentum_kurz roh      ~ rsi selbst             +0.62
+     momentum_kurz roh      ~ ema_abstand_atr roh    +0.58
+     momentum_kurz roh      ~ ema_abstand_atr selbst +0.58
+     momentum_kurz selbst   ~ rsi roh                +0.61
+     momentum_kurz selbst   ~ rsi selbst             +0.62
+     momentum_kurz selbst   ~ ema_abstand_atr roh    +0.56
+     momentum_kurz selbst   ~ ema_abstand_atr selbst +0.58
+     rsi roh                ~ rsi selbst             +0.99
+     rsi roh                ~ ema_abstand_atr roh    +0.77
+     rsi roh                ~ ema_abstand_atr selbst +0.76
+     rsi selbst             ~ ema_abstand_atr roh    +0.74
+     rsi selbst             ~ ema_abstand_atr selbst +0.77
+     ema_abstand_atr roh    ~ ema_abstand_atr selbst +0.96
+     bandenge roh           ~ bandenge selbst        +0.96
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

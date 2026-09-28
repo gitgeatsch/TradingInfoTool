@@ -1,0 +1,53 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE unverzerrt:1 · GRUPPE termin_teilung · NULLWELT GEMEINSAM (Kontext-Methode)
+========================================================================================================================
+  Tagesanker mit Phase: Suche 176386 · Pruefung 232884 · Symbole 125 · Kurven 4
+  Grenze Bestes-von-4 (Zeitverschiebung GEMEINSAM fuer alle Assets, 40 Ziehungen): z 2.23
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  konten_verh_markt roh  899.13  +3.44 | +0.03  nein | 3/4    97% |   0.05   0.53 | +0.280 +0.087 +0.057 +0.065 +0.020 +0.086 -0.002 -0.054 -0.047 -0.082 -0.090 -0.128 | · nein
+  konten_verh_markt selbst 424.65  +0.63 | -0.22  nein | 3/4    73% |   0.17   1.69 | +0.034 +0.094 +0.064 +0.037 -0.003 -0.006 +0.003 -0.071 -0.020 -0.003 -0.043 -0.187 | · nein
+  top_konten_verh_markt roh 973.22  +4.03 | +0.37  nein | 4/4    94% |   0.06   0.54 | +0.230 +0.154 +0.063 +0.043 -0.023 -0.056 +0.016 -0.042 -0.032 +0.055 -0.104 -0.180 | · nein
+  top_konten_verh_markt selbst 249.61  -0.58 | -0.08  nein | 3/4    65% |   0.48   2.06 | -0.005 +0.060 +0.068 +0.000 +0.011 -0.037 -0.021 -0.019 -0.028 +0.009 -0.005 -0.181 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+RANDKRITERIUM (vorab 28.09.) - Grenze Bestes-von-8 Raendern: |z| 2.98
+  Kurve                      Rand   Dq Such      z | Dq Pruef | Jahre |  Asset |  Dq 2022  Anker | Urteil
+  konten_verh_markt roh      unten  +0.1071  +4.38 |  +0.0268 | 4/4   |    95% |  +0.0599  13877 | ✔ EINSTIEG (Alter/A4 pruefen)
+  konten_verh_markt roh      oben   -0.0938  -1.01 |     +nan | 2/4   |    99% |  -0.0583   9191 | · nein
+  konten_verh_markt selbst   unten  +0.0878  +1.60 |  +0.0114 | 2/4   |    73% |  +0.0350  11457 | · nein
+  konten_verh_markt selbst   oben   -0.0574  -0.43 |     +nan | 2/4   |    94% |  -0.0870   9634 | · nein
+  top_konten_verh_markt roh  unten  +0.1620  +3.48 |  +0.0265 | 4/4   |    88% |  +0.0142  43368 | ✔ EINSTIEG (Alter/A4 pruefen)
+  top_konten_verh_markt roh  oben   -0.1118  -0.65 |  -0.0857 | 2/4   |    99% |     +nan      0 | · nein
+  top_konten_verh_markt selbst unten  +0.0532  +1.31 |  +0.0394 | 3/4   |    88% |  -0.0047   9860 | · nein
+  top_konten_verh_markt selbst oben   -0.0218  -0.35 |  -0.0119 | 3/4   |    66% |  -0.0122  10143 | · nein
+  Dq 2022: Moment-Bezug (Asset im selben Monat) - 2022 hat noch kein 12-Monats-Normal; unberuehrt von der Kurvenmessung
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  konten_verh_markt roh  hoch: < 0 -0.107 (9822) · 0-0,5 -0.089 (4919) · 0,5-1 -0.071 (2236) · 1-2 -0.029 (616) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.021 (115969) · 0-0,5 +0.036 (60843) · 0,5-1 +0.047 (31344) · 1-2 +0.086 (11219) · 2-3 +0.066 (285) · > 3   -  
+  top_konten_verh_markt roh hoch: < 0 -0.108 (13854) · 0-0,5 -0.108 (6843) · 0,5-1 -0.085 (3396) · 1-2 -0.082 (1046) · 2-3   -   · > 3   -  
+                         tief: < 0 +0.019 (77088) · 0-0,5 +0.063 (39269) · 0,5-1 +0.084 (19887) · 1-2 +0.092 (7137) · 2-3 -0.003 (183) · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  konten_verh_markt roh  6h: S 878.99 (98%) Rand +0.265/-0.064 · 12h: S 1071.07 (119%) Rand +0.258/-0.154 · 24h: S 863.61 (96%) Rand +0.179/-0.166
+  top_konten_verh_markt roh 6h: S 1082.14 (111%) Rand +0.313/-0.122 · 12h: S 1162.44 (119%) Rand +0.390/-0.137 · 24h: S 905.76 (93%) Rand +0.296/-0.245
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.009
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von konten_verh_markt roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 2.23:
+     ohne Pflanzung: z +0.33
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 0 von 5
+     d = 0.040: gefunden 0 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     konten_verh_markt roh  ~ konten_verh_markt selbst +0.53
+     konten_verh_markt roh  ~ top_konten_verh_markt roh +0.73
+     konten_verh_markt selbst ~ top_konten_verh_markt selbst +0.89
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
