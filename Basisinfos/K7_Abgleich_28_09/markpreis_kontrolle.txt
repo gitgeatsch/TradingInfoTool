@@ -1,0 +1,10 @@
+P1 Symbole mit Markpreis 253 · Stunden 6582872 · Monate {'fehlt': 5297, 'ok': 9124}
+   Symbole mit Faktor 1000 (Spot-Name ohne 1000): keine
+P0  gesperrte Symbol-Monate 1494 (anderes Instrument 82) in 153 Symbolen - P2 bis P3 laufen auf dem Rest
+   Zeitraum 2025-01-01 bis 2025-07-01 · Symbole in beiden Dateien 116, davon mit >= 500 Stunden 110
+P2  Niveau: Median |Markpreis/Spot - 1| unter 0,2 % in 108 von 110 (98.2 %) · Mitte 0.0593 % · groesste: CVC 0.168 %, CTK 0.252 %, POL 0.335 %
+    Aufschlag Markpreis gegen Spot (Median ueber die Symbole) -0.0545 %
+P2b Zeitlage: ohne Versatz naeher als bei +-1 h in 110 von 110 (100.0 %)
+P3  Docht je Reihe: Markpreis flacher in (Median ueber 110 Symbole) 56.8 % der Stunden · tiefste 1 %: Markpreis 6.075 % gegen Spot 6.399 % (Mittel) · Markpreis dort tiefer bei: TRX
+PRUEFUNG ✔ bestanden (P2 >= 95 %, P2b >= 95 %, P3 Median > 50 % und tiefste 1 % flacher)
+rc=0

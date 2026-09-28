@@ -1,0 +1,51 @@
+==============================================================================================================
+K7 - ABGLEICH AN DEN ECHTEN POSITIONEN · Sicherung nb_2026-09-23.db · Buchungen bitpanda_transaktionen.json
+==============================================================================================================
+P1 Positionen 188 · liquidiert 4 · ohne Kaufbuchung keine
+P2 Rekonstruktion gegen die Sicherung: max. Abweichung Kaufwert 0.00 EUR · Kredit 0.00 EUR · Menge 0.0000 %
+   ✔ bitgleich zur Sicherung (Kaufwert, Kredit, Menge)
+P3 Formelgleichheit bei einem Kauf gegen K6 liq_schwelle: max. Abweichung 3.33e-16 ✔
+
+J8 in beiden Reihen vollstaendig: 185 von 188 · heraus: [(74, 'MORPHO'), (185, 'CC'), (595, 'HYPE')]
+J2 Faktor EUR (Bitpanda) / USDT je Kauf - Spot: Median 0.8643 (5.-95. 0.8517-0.8768) · Markpreis: Median 0.8646 (5.-95. 0.8519-0.8774)
+
+==============================================================================================================
+J5 ALLE - Liquidationen 4 (LINK/5 Crash, TAO/77 Crash, TAO/87 ruhig, SUI/54 ruhig) · Gegenfaelle 181
+  mark m 0.0900: Treffer 4 von 4 · Zeitfehler (Stunden vor dem echten Schluss) LINK/5 -9 h (Kaufstunde), TAO/77 in der Schlussstunde, TAO/87 in der Schlussstunde, SUI/54 -107 h · Fehlalarme 15 von 181 [AVAX/38 4.1x, SUI/40 9.2x, ETH/159 6.0x, SUI/47 10.0x, TAO/85 8.5x, SUI/48 7.0x, ETH/160 6.8x, TAO/99 7.8x, ETH/161 8.3x, TAO/112 6.7x, TAO/113 5.7x, TAO/116 10.0x ...] · nur in der Schlussstunde 9
+  mark m 0.0476: Treffer 3 von 4 · Zeitfehler (Stunden vor dem echten Schluss) LINK/5 -8 h (Kaufstunde), TAO/77 in der Schlussstunde, TAO/87 KEIN Treffer, SUI/54 in der Schlussstunde · Fehlalarme 1 von 181 [AVAX/38 4.1x] · nur in der Schlussstunde 1
+  mark m-Intervall, mit allen Faellen vereinbar: m >= 0.0874 (alle 4 loesen aus) und m < 0.0448 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+  spot m 0.0900: Treffer 4 von 4 · Zeitfehler (Stunden vor dem echten Schluss) LINK/5 -9 h (Kaufstunde), TAO/77 in der Schlussstunde, TAO/87 in der Schlussstunde, SUI/54 -107 h · Fehlalarme 16 von 181 [AVAX/38 4.1x, SUI/40 9.2x, ETH/159 6.0x, SUI/47 10.0x, TAO/85 8.5x, SUI/48 7.0x, ETH/160 6.8x, TAO/99 7.8x, ETH/161 8.3x, TAO/112 6.7x, TAO/113 5.7x, TAO/116 10.0x ...] · nur in der Schlussstunde 8
+  spot m 0.0476: Treffer 3 von 4 · Zeitfehler (Stunden vor dem echten Schluss) LINK/5 -8 h (Kaufstunde), TAO/77 in der Schlussstunde, TAO/87 KEIN Treffer, SUI/54 in der Schlussstunde · Fehlalarme 2 von 181 [AVAX/38 4.1x, LINK/6 6.5x] · nur in der Schlussstunde 1
+  spot m-Intervall, mit allen Faellen vereinbar: m >= 0.0826 (alle 4 loesen aus) und m < 0.0404 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+
+==============================================================================================================
+J5 OHNE 10./11.10.2025 - Liquidationen 2 (TAO/87 ruhig, SUI/54 ruhig) · Gegenfaelle 175
+  mark m 0.0900: Treffer 2 von 2 · Zeitfehler (Stunden vor dem echten Schluss) TAO/87 in der Schlussstunde, SUI/54 -107 h · Fehlalarme 14 von 175 [SUI/40 9.2x, ETH/159 6.0x, SUI/47 10.0x, TAO/85 8.5x, SUI/48 7.0x, ETH/160 6.8x, TAO/99 7.8x, ETH/161 8.3x, TAO/112 6.7x, TAO/113 5.7x, TAO/116 10.0x, LINK/6 6.5x ...] · nur in der Schlussstunde 8
+  mark m 0.0476: Treffer 1 von 2 · Zeitfehler (Stunden vor dem echten Schluss) TAO/87 KEIN Treffer, SUI/54 in der Schlussstunde · Fehlalarme 0 von 175 · nur in der Schlussstunde 1
+  mark m-Intervall, mit allen Faellen vereinbar: m >= 0.0874 (alle 4 loesen aus) und m < 0.0506 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+  spot m 0.0900: Treffer 2 von 2 · Zeitfehler (Stunden vor dem echten Schluss) TAO/87 in der Schlussstunde, SUI/54 -107 h · Fehlalarme 15 von 175 [SUI/40 9.2x, ETH/159 6.0x, SUI/47 10.0x, TAO/85 8.5x, SUI/48 7.0x, ETH/160 6.8x, TAO/99 7.8x, ETH/161 8.3x, TAO/112 6.7x, TAO/113 5.7x, TAO/116 10.0x, LINK/6 6.5x ...] · nur in der Schlussstunde 7
+  spot m 0.0476: Treffer 1 von 2 · Zeitfehler (Stunden vor dem echten Schluss) TAO/87 KEIN Treffer, SUI/54 in der Schlussstunde · Fehlalarme 1 von 175 [LINK/6 6.5x] · nur in der Schlussstunde 1
+  spot m-Intervall, mit allen Faellen vereinbar: m >= 0.0826 (alle 4 loesen aus) und m < 0.0449 (kein Fehlalarm) -> ⛔ KEIN m ist mit allen Faellen vereinbar
+
+==============================================================================================================
+J3 BITPANDA-AUSFUEHRUNG DER LIQUIDATIONEN (EUR, Bitpanda-Kurs)
+  LINK/5 Crash · Ausfuehrung 15.1691 EUR · Grenze der Formel (m 0,09) zur Schlusszeit 16.3861 EUR · Ausfuehrung -7.43 % zur Grenze · Marge zur Ausfuehrung 1.70 % · Kredit zurueck 2450.00 / 2450.00 EUR
+  TAO/77 Crash · Ausfuehrung 259.0042 EUR · Grenze der Formel (m 0,09) zur Schlusszeit 276.1188 EUR · Ausfuehrung -6.20 % zur Grenze · Marge zur Ausfuehrung 2.99 % · Kredit zurueck 600.00 / 600.00 EUR
+  TAO/87 ruhig · Ausfuehrung 317.1298 EUR · Grenze der Formel (m 0,09) zur Schlusszeit 319.6390 EUR · Ausfuehrung -0.79 % zur Grenze · Marge zur Ausfuehrung 8.28 % · Kredit zurueck 5760.85 / 4619.00 EUR
+  SUI/54 ruhig · Ausfuehrung 1.7513 EUR · Grenze der Formel (m 0,09) zur Schlusszeit 1.7884 EUR · Ausfuehrung -2.07 % zur Grenze · Marge zur Ausfuehrung 7.07 % · Kredit zurueck 6869.77 / 6544.68 EUR
+  R-R11 zur Kalibrierung vom 19.07. (hebel_risk_gate.py): SUI 6,75 %, TAO/87 8,4 % - Marge zur Ausfuehrung oben ablesen
+
+==============================================================================================================
+J7 NULLWELT - dieselben Positionen um +-7..60 Tage verschoben, 40 Ziehungen, m 0,09
+  mark Liquidationen verschoben: loesen aus in 26.2 % (5: 7/40, 54: 26/40, 77: 0/40, 87: 9/40) · Gegenfaelle verschoben: Treffer vor dem Schluss in 9.2 %
+       echt: 4 von 4 Liquidationen, 15 von 181 Gegenfaellen
+  spot Liquidationen verschoben: loesen aus in 25.0 % (5: 4/40, 54: 29/40, 77: 0/40, 87: 7/40) · Gegenfaelle verschoben: Treffer vor dem Schluss in 9.1 %
+       echt: 4 von 4 Liquidationen, 16 von 181 Gegenfaellen
+
+==============================================================================================================
+J6 Markpreis: Treffer 4/4, Zeitfehler im Mittel 29.0 h, Fehlalarme 15 · Spot-Tief: 4/4, 29.0 h, 16
+   -> ✔ der MARKPREIS wird Hauptmass fuer K6
+   -> m = 0,09 HAELT NICHT (Intervall 0.0874 bis 0.0448 auf der Reihe mark)
+
+P0 Sicherung unveraendert (Groesse, Zeitstempel): ✔ ja
+SCHLUSS: vollstaendig

@@ -112,3 +112,79 @@ Spot-Läufe sind davon nicht betroffen.
 2. Werkzeug bauen, Probelauf an **einer** Position mit einem Kauf, von Hand nachgerechnet
 3. Lauf, Befund, Vorlage — parallel zu K6/2c möglich (Sekunden, kein Speicherbedarf)
 4. K6-Werkzeug auf *eine Reihe für Einstieg und Tief* umstellen (siehe 2a), **dann** der K6-Markpreis-Lauf
+
+---
+
+## 7. ✔ ABGESTIMMT (28.09.2026) — J1 bis J10 wie empfohlen
+
+**Nutzer:** *„ja, J1 bis J10 wie empfohlen, bauen und messen."* Werkzeug
+`messe_k7_abgleich.py`, Beleg `Basisinfos/K7_Abgleich_28_09/`.
+
+---
+
+## 8. ⛔ ZUERST EIN FEHLER IN DER QUELLE: der Importer teilt die Positionen falsch ein
+
+Der erste Lauf rechnete auf den **188 Positionen** aus `hebel_positions` und
+ist **ungültig** (`k7_abgleich_UNGUELTIG_importerpositionen.txt`).
+
+| | |
+|---|---|
+| **Befund** | `importer/bitpanda_margin_positions.py` schließt bei **jeder** Schlussbuchung die Position ab. Aber **278 von 315** Schlussbuchungen sind **Teilschließungen**, der Kredit bleibt stehen. Nur bei **15 von 188** Positionen war die Rückzahlung gleich dem summierten Kredit (118 weniger, 55 mehr) |
+| **Das Buch dagegen geht auf** | je Symbol laufen Menge **und** Kredit exakt auf 0 zurück (größter Restkredit 0,45 €), in **37 Abschnitten** (Kredit von 0 bis 0) |
+| **Vor der Liquidation** | TAO/87: Importer 15,90 TAO / 4.619 € Kredit, Buch **19,62 TAO / 5.761 €** · SUI/54: 4.054 / 6.545 €, Buch **4.219 / 6.869 €** |
+| **Folge im Betrieb** | ⚠️ Hebel, Kredit und Eigenkapital je Position in `hebel_positions` sind bei den meisten Positionen falsch; die Liquidationserkennung rechnet die Haltedauer ab einem falschen Beginn (2.493 hat genau diese Gebühren gemessen). **Nicht angefasst**, Produktionscode, eigener Punkt |
+| **Einheit ab jetzt** | der **Abschnitt** des Buchs; Frage und Kriterien J5/J6 unverändert |
+
+Zweiter eigener Fehler, am Seiteneffekt gefunden: **Staubreste** (18.11. SUI:
+0,1 Stück gegen 0,26 € Kredit) hielten einen Abschnitt offen und sahen aus wie
+eine Unterdeckung um das Doppelte. Jetzt endet ein Abschnitt, sobald der Kredit
+unter 1 € fällt. **J10** zuerst falsch umgesetzt (ganze Abschnitte statt der
+Stunden) und korrigiert: Crash-Fall = endet am 10./11.10.; in der Ansicht *ohne*
+fallen die Stunden dieser zwei Tage heraus.
+
+---
+
+## 9. Ergebnis
+
+| Prüfung | |
+|---|---|
+| P0 Sicherung unverändert | ✔ |
+| P2 Buch geht auf | ✔ 37 Abschnitte, 4 Liquidationen beenden je einen |
+| P3 Formel = K6 `liq_schwelle` bei einem Kauf | ✔ 3,3·10⁻¹⁶ |
+| Probe von Hand | ✔ TAO/75 (ein Kauf) und TAO/77 (zwei Käufe) nachgerechnet |
+
+| m = 0,09 | Markpreis | Spot-Tief |
+|---|---|---|
+| Treffer | **4 von 4** | 4 von 4 |
+| Zeitfehler | LINK 9 h · TAO/77 Schlussstunde · TAO/87 23 h · SUI 107 h **zu früh** | gleich |
+| Fehlalarme | **6 von 30** | 6 von 30 |
+| bei m = 0,0476 | 3 von 4 (TAO/87 fehlt), **1** Fehlalarm | 3 von 4, **2** Fehlalarme |
+
+| | |
+|---|---|
+| **J6 Kursreihe** | ✔ der **Markpreis** wird Hauptmaß für K6 (nirgends schlechter, bei 0,0476 ein Fehlalarm weniger). Ehrlich: an diesen Fällen sind beide Reihen **fast gleich**, auch im Crash (TAO-Markpreis fiel um 21 Uhr bis 135 $, das Spot-Tief bis 140 $) |
+| **J6 m = 0,09** | ⛔ **hält nach der Regel nicht**: kein einzelnes m passt zu allen Fällen (Liquidationen brauchen m ≥ 0,076, fehlalarmfrei nur m < 0,045) |
+| **aber: wo die Fehlalarme liegen** | **alle 6** in Büchern mit **6,6x bis 8,2x** nach dem letzten Kauf, also **über dem K6-Deckel 5x**. Im Bereich 2x–5x **kein** Fehlalarm |
+| **Richtung** | m = 0,09 liquidiert **zu früh**, nie zu spät. Das ist die sichere Seite |
+| **Auflösung** | der Umrechnungsfaktor Bitpanda/Binance streut 0,852–0,877 (±1,5 %). Ein genaueres m als etwa ±0,02 kann Binance für Bitpanda **nicht** liefern. Je Symbol (nachträglich, nur Auskunft): SUI 0,037–0,069 vereinbar, LINK vereinbar, TAO knapp nicht (0,076 gegen 0,071) |
+| **J3 Ausführung** | Bitpanda führt **unter** der Formelgrenze aus: im Crash 6–7 %, in der Ruhe 2–3 %. Marge zur Ausführung TAO/87 7,25 %, SUI/54 6,24 % (die Kalibrierung vom 19.07. mit 8,4 / 6,75 % stand auf dem zu kleinen Importer-Buch) |
+| **J7 Nullwelt** | verschoben lösen die Liquidationen in **46 %** aus (echt 100 %), die Gegenfälle in **27 %** (echt 20 %). TAO/87 hätte fast überall ausgelöst (39 von 40), das Buch war so hoch gehebelt |
+| **J10 ohne 10./11.10.** | die Ruhefälle TAO/87 und SUI/54 bleiben getroffen; 5 von 28 Fehlalarmen, alle ≥ 6,6x |
+
+### ⚠️ R1 bestätigt: zwei vermutlich übersehene Liquidationen
+
+| Buch | Schluss | Ausführung zur Formelgrenze | Gebühr gegen Modell |
+|---|---|---|---|
+| **AVAX** (8 Käufe, bis 7,6x) | 10.10. **21:14**, in einem Zug | **−2,3 %** | 2,09 % gegen 3,30 % |
+| **MORPHO** (17 Käufe, bis 9,4x) | 10.10. **21:00**, in einem Zug | **−3,8 %** | 2,26 % gegen 1,64 % (**+0,62**, knapp unter der Schwelle 0,7) |
+
+Beide im selben Crash-Fenster wie TAO/77 (21:16). **Nur der Nutzer kann das
+beantworten.** Bis dahin zählen sie als Gegenfall, AVAX damit als Fehlalarm.
+
+### Was daraus folgt, und was NICHT
+
+| folgt | folgt nicht |
+|---|---|
+| K6 rechnet mit dem **Markpreis** als Hauptmaß weiter | kein neues m. Die Daten lösen m nur auf etwa ±0,02 auf |
+| m = 0,09 bleibt in K6 als **vorsichtige** Wahl, 0,0476 als Auskunft (H8), ab jetzt **begründet**: im Bereich bis 5x an echten Daten kein Fehlalarm | keine Aussage über 10x (dort sind es 6 von 6 Fehlalarmen) |
+| der Importer braucht eine eigene Voranalyse (Buch statt Position) | keine Änderung am Betrieb aus K7 |

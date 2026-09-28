@@ -1,0 +1,10 @@
+SPERRE Grenze 1.0 % je Monat · Symbol-Monate 9124 · gesperrt 1494 (anderes Instrument 82, ohne Spot-Vergleich 1412)
+   A        15 Monate 2025-06 bis 2026-08
+   CVC       1 Monate 2023-05 bis 2023-05
+   FLOW      1 Monate 2026-01 bis 2026-01
+   KAIA     21 Monate 2024-12 bis 2026-08
+   NFP       1 Monate 2026-07 bis 2026-07
+   POL      11 Monate 2025-10 bis 2026-08
+   RENDER   12 Monate 2024-08 bis 2025-07
+   S        20 Monate 2025-01 bis 2026-08
+rc=0
