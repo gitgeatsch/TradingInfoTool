@@ -194,3 +194,29 @@ Phasen und Messungen zu optimieren. Ergebnis kommt als eigener Abschnitt.
 | **B5** | Tor: gepflanzt auf dem obersten Zehntel von `oi_24` (Lage verschoben), gemessen an der T2-Differenz | das Tor muss die Messgröße von T2 treffen |
 | **B6** | Lage **roh** (wie als Träger gemessen, 2.651/2.663), rsi selbstbezogen (wie 2c) | Formwahl begründet: die Terminmarkt-Beiträge sind in roher Form registriert |
 | **B7** | Reihenfolge: Werkzeugtest (3 Ziehungen, 6 Monate) → Tor + T1 (bestand) → vier Mengen, **nach** K6 mit dem Markpreis | nie zwei große Rechnungen zugleich |
+
+---
+
+## 11. Externe Recherche (29.09.2026) — Einordnung gegen unseren Stand
+
+Recherche per Hintergrund-Agent (Literatur, Preprints, Börsendoku, Praxis). **Stichprobe geprüft**: Presto Research
+(Funding erklärt 12,5 % derselben 7-Tage-Periode, 0 % der nächsten), BIS WP 1087 *Crypto Carry* (hoher Carry sagt
+**Crashs** voraus, getrieben von gehebelten Trendjägern), arXiv 2608.21888 (15-min-Umkehr in 90 % von 183
+Binance-Paaren, stärker nach Taker-Flow) — alle drei stimmen. Preprints von 2026 sind nicht begutachtet.
+
+| Punkt der Recherche | bei uns | Folge |
+|---|---|---|
+| Krypto-Momentum ist **regimeabhängig**, Effekte zerfallen, teils von Einzelcoins getragen | ✔ genau unser Zeitfaktor (Faktor 5, 2022 kehrt) | bestätigt T4 mit 2022 als Kriterium und Z6 (neue Monate) |
+| **Forecast-Combination-Puzzle**: einzeln geschätzt und einfach kombiniert schlägt gemeinsam geschätzte Gewichte | ✔ 2.680: einzeln + addiert besser als gemeinsam | bestätigt V4. ➤ **Vorschlag für danach:** Stacking mit **nicht-negativen** Gewichten auf **Out-of-Fold**-Schätzungen und die **gleichgewichtete** Summe als Referenz (Breiman 1996) — unser B3 schätzt die Gewichte auf dem Training |
+| je glattem Term **eigene** Glättung (GAM/mgcv) | ✔ V4 | bestätigt |
+| Funding/OI sagen die **gleiche** Periode, nicht die nächste | ✔ 2.651/2.663 | Vorlauf-Messung mit schwacher Erwartung; ➤ **Vorschlag:** Carry/Funding + steigendes OI als **Risikomerkmal für die Hebelstufe** (K6 R+S), nicht als Richtung |
+| Kalibrierung: Platt auf dem Logit robuster als Isotonic bei wenigen unabhängigen Ereignissen; Steigung lang, Achsenabschnitt kurz nachführen | ◐ V6 ist monoton (Isotonic-artig, 20 Stufen) mit 3/12 Monaten | ➤ **Vorschlag für danach:** Platt mit Steigung aus ~24 Monaten und Achsenabschnitt aus ~3 Monaten als Vergleich |
+| **Winner's Curse**: das Phase-Normal vor der Auswahl per Empirical Bayes zur Mitte ziehen | ◐ 2.678-Problem; mit der Auswahl nach dem Beitrag (T6) umgangen, nicht behoben | ➤ **Vorschlag:** geschrumpftes Normal als Bezug prüfen (Abnahmeprobe muss fehlschlagen können) |
+| q5 zerlegen: P(Schranke erreicht) × P(oben zuerst \| erreicht) | ✔ unser Dq zählt nur Anker mit Treffer — wir messen bereits den **zweiten** Faktor; 2.655: Höhe gut, Richtung schwach vorhersagbar | bestätigt |
+| Stundenebene: kurzfristig eher **Umkehr** (15 min bis Stunden) | ◐ unser rsi-Rand trägt als **Fortsetzung** auf 24 h | kein Widerspruch zur Messung, aber Warnung: Einstiegszeitpunkt nicht direkt nach einem Taker-Stoß |
+| Validierung: Purging/Embargo 24 h, CPCV, **PBO** über alle getesteten Varianten | ✔ 24 h Abstand in CV und rollierend; ⛔ kein PBO | ➤ **Vorschlag:** PBO über 2b/2c/K5 neu — misst den *dritten Anlauf auf derselben Prüfzeit* als Zahl |
+| Liquidation: Mark Price, **gestaffelte** Wartungsmarge; Extremwerte statt Normalverteilung; **Stress-Deckel** (10.10.) | ✔ K7 Markpreis; ◐ m je Asset verschieden (2.679) | ➤ **Vorschlag K6:** Tail-Quantil der ungünstigsten Bewegung je Asset und ein Stresstag-Deckel |
+| Positionsgröße: Volatility Targeting, Bruchteil-Kelly mit dem **schwächsten** Jahr; Hebel ist Folge der Größe | Phase 2 (Positionsgröße gehört nicht in Phase 1) | für Phase 2 vorgemerkt |
+
+➤ **Was NICHT folgt:** Der abgestimmte K5-Lauf bleibt unverändert, er ist vorab festgelegt und gültig. Die
+Vorschläge oben sind **Folgemessungen**, jede mit eigener Abstimmung.
