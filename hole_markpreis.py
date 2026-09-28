@@ -24,6 +24,7 @@ Wiederaufnahme ueber `_geladen`.
     python hole_markpreis.py --symbole ETH,PEPE --db data/_teile/mp_probe.db   # Probelauf
     python hole_markpreis.py --teil 0/2 --db data/_teile/mp_0.db             # Arbeiter
     python hole_markpreis.py --zusammen data/_teile/mp_*.db
+    python hole_markpreis.py --sperre                                         # andere Instrumente sperren
     python hole_markpreis.py --kontrolle                                      # Pruefungen
 """
 from __future__ import annotations
@@ -127,35 +128,161 @@ def lade(c, sym, paare, pause, zaehl):
     c.commit()
 
 
+SPERRE_GRENZE = 0.01
+
+
+def spot_quellen() -> list:
+    """Die Spot-Stundenkurse, gegen die gemessen wird: Bestand und Eingestellte."""
+    q = [STUNDEN_DB]
+    if os.path.exists(EINGESTELLT_DB):
+        q.append(EINGESTELLT_DB)
+    return q
+
+
+def sperre(pfad: str) -> int:
+    """Sperrt Symbol-Monate, in denen der Markpreis ein ANDERES Instrument ist.
+
+    Gemessen 28.09. abends: unter dem Namen des Vorgaengers laeuft im
+    Terminmarkt-Archiv ein anderer Kontrakt weiter, waehrend der Spot schon das
+    neue Token ist - A <- EOSUSDT (11-54 %), KAIA <- KLAYUSDT (16-40 %),
+    S <- FTMUSDT (25-43 %), RENDER <- RNDRUSDT in der Uebergangszeit (bis 12 %).
+    Die Verteilung der Monatsmediane |Markpreis/Spot - 1| hat eine LUECKE: kein
+    Monat liegt zwischen 0,53 % und 1,15 %. Darunter liegt der Aufschlag, darueber
+    ein anderes Instrument -> Grenze 1 % je Monat (SPERRE_GRENZE).
+    Schreibt NUR die Tabelle `_abweichung` in die eigene Markpreis-Datei; ein
+    Monat ohne Spot-Vergleich (< 100 gemeinsame Stunden) wird ebenfalls gesperrt -
+    ungeprueft ist nicht gueltig."""
+    c = lege_an(pfad)                     # derselbe Schutz wie beim Laden
+    c.execute("DROP TABLE IF EXISTS _abweichung")
+    c.execute("CREATE TABLE _abweichung (symbol TEXT, monat TEXT, stunden INTEGER, "
+              "median_abw REAL, gesperrt INTEGER, grund TEXT, PRIMARY KEY (symbol, monat))")
+    spots = [sqlite3.connect("file:%s?mode=ro" % q, uri=True) for q in spot_quellen()]
+    zeilen = []
+    for (sym,) in c.execute("SELECT DISTINCT symbol FROM markpreis").fetchall():
+        sp = {}
+        for s in spots:
+            for st_, cl in s.execute("SELECT stunde, close FROM stundenkurse WHERE symbol=?", (sym,)):
+                if cl:
+                    sp.setdefault(st_, cl)
+        je = {}
+        for st_, cl in c.execute("SELECT stunde, close / faktor FROM markpreis WHERE symbol=?", (sym,)):
+            je.setdefault(st_[:7], []).append(abs(cl / sp[st_] - 1) if st_ in sp else None)
+        for monat, v in je.items():
+            w = sorted(x for x in v if x is not None)
+            if len(w) < 100:
+                zeilen.append((sym, monat, len(w), None, 1, "ohne Spot-Vergleich"))
+            else:
+                med = w[len(w) // 2]
+                zeilen.append((sym, monat, len(w), med, int(med > SPERRE_GRENZE),
+                               "anderes Instrument" if med > SPERRE_GRENZE else ""))
+    c.executemany("INSERT INTO _abweichung VALUES (?,?,?,?,?,?)", zeilen)
+    c.commit()
+    g = [z for z in zeilen if z[4]]
+    print("SPERRE Grenze %.1f %% je Monat · Symbol-Monate %d · gesperrt %d (anderes Instrument %d, ohne Spot-Vergleich %d)" % (
+        100 * SPERRE_GRENZE, len(zeilen), len(g), sum(1 for z in g if z[3] is not None),
+        sum(1 for z in g if z[3] is None)))
+    je_sym = {}
+    for z in g:
+        if z[3] is not None:
+            je_sym.setdefault(z[0], []).append(z[1])
+    for sym, ms in sorted(je_sym.items()):
+        print("   %-8s %2d Monate %s bis %s" % (sym, len(ms), min(ms), max(ms)))
+    return 0
+
+
 def kontrolle(pfad: str) -> int:
-    """P1 Abdeckung je Quelle · P2 Markpreis gegen Spot-Schluss (Median der
-    relativen Abweichung je Symbol) · P3 Tief: Markpreis-Tief ueber dem Spot-Tief
-    in den meisten Stunden (Markpreis ist geglaettet) · P4 Luecken."""
+    """Pruefungen des geladenen Markpreises gegen den Spot (Bestand, stundenkurse).
+
+    ⚠️ 28.09. abends neu gefasst - die erste Fassung verglich das Markpreis-Tief
+    mit dem Spot-Tief ALS NIVEAU. Der Markpreis liegt aber um einen kleinen,
+    gleichbleibenden Aufschlag neben dem Spot (gemessen rund -0,04 %); bei BTC lag
+    das Markpreis-Tief darum in 96,6 % der Stunden UNTER dem Spot-Tief. Gemessen
+    war der Aufschlag, nicht der Docht. Zudem waehlte sie DOGE, das gar nicht in
+    der Messbasis liegt. Jetzt:
+
+    P1  Abdeckung je Quelle und Ladestatus
+    P2  Niveau: Median |Markpreis-Schluss / Spot-Schluss - 1| je Symbol; ⛔ wenn
+        nicht mindestens 95 % der Symbole unter 0,2 % liegen
+    P2b Zeitlage: die Abweichung ist ohne Versatz kleiner als bei +-1 Stunde;
+        ⛔ wenn nicht in mindestens 95 % der Symbole
+    P3  Docht JE REIHE - Tief gegen den Schluss der Vorstunde DERSELBEN Reihe
+        (der Aufschlag kuerzt sich heraus); ⛔ wenn der Markpreis-Docht nicht im
+        Median ueber die Symbole in mehr als der Haelfte der Stunden flacher ist
+        und nicht bei den tiefsten 1 % der Spot-Dochte im Mittel flacher
+    Symbole: ALLE, die in beiden Dateien liegen (abgeleitet, nicht aufgezaehlt);
+    Zeitraum fest 2025-01 bis 2025-06."""
     c = sqlite3.connect("file:%s?mode=ro" % pfad, uri=True)
     s = sqlite3.connect("file:%s?mode=ro" % STUNDEN_DB, uri=True)
     n = c.execute("SELECT COUNT(DISTINCT symbol), COUNT(*) FROM markpreis").fetchone()
     st = dict(c.execute("SELECT status, COUNT(*) FROM _geladen GROUP BY status").fetchall())
     print("P1 Symbole mit Markpreis %d · Stunden %d · Monate %s" % (n[0], n[1], st))
     fak = c.execute("SELECT symbol, faktor FROM markpreis WHERE faktor <> 1 GROUP BY symbol").fetchall()
-    print("   Symbole mit 1000er-Kontrakt: %s" % (", ".join(r[0] for r in fak) or "keine"))
-    abw, tief = [], []
-    for sym in ("ETH", "SOL", "LINK", "BNB", "DOGE", "AVAX"):
-        mp = {r[0]: (r[1], r[2]) for r in c.execute(
-            "SELECT stunde, close / faktor, low / faktor FROM markpreis WHERE symbol=? "
-            "AND stunde >= '2024-01-01' AND stunde < '2024-07-01'", (sym,))}
+    print("   Symbole mit Faktor 1000 (Spot-Name ohne 1000): %s" % (", ".join(r[0] for r in fak) or "keine"))
+    if not c.execute("SELECT 1 FROM sqlite_master WHERE name='_abweichung'").fetchone():
+        print("⛔ Tabelle _abweichung fehlt - erst  python hole_markpreis.py --sperre"); return 1
+    gs = c.execute("SELECT COUNT(*), SUM(median_abw IS NOT NULL), COUNT(DISTINCT symbol) "
+                   "FROM _abweichung WHERE gesperrt=1").fetchone()
+    print("P0  gesperrte Symbol-Monate %d (anderes Instrument %d) in %d Symbolen - "
+          "P2 bis P3 laufen auf dem Rest" % (gs[0], gs[1] or 0, gs[2]))
+    gesperrt = {(r[0], r[1]) for r in c.execute("SELECT symbol, monat FROM _abweichung WHERE gesperrt=1")}
+    von, bis = "2025-01-01", "2025-07-01"
+    beide = sorted(set(r[0] for r in c.execute("SELECT DISTINCT symbol FROM markpreis"))
+                   & set(r[0] for r in s.execute("SELECT DISTINCT symbol FROM stundenkurse")))
+    niveau, lage_ok, flacher, tief_m, tief_s, basis, aus = [], 0, [], [], [], [], []
+    for sym in beide:
+        mp = c.execute("SELECT stunde, close / faktor, low / faktor FROM markpreis WHERE symbol=? "
+                       "AND stunde >= ? AND stunde < ? ORDER BY stunde", (sym, von, bis)).fetchall()
+        mp = [r for r in mp if (sym, r[0][:7]) not in gesperrt]
         sp = {r[0]: (r[1], r[2]) for r in s.execute(
-            "SELECT stunde, close, low FROM stundenkurse WHERE symbol=? "
-            "AND stunde >= '2024-01-01' AND stunde < '2024-07-01'", (sym,))}
-        k = sorted(set(mp) & set(sp))
-        if not k:
-            print("P2 %s: keine gemeinsamen Stunden" % sym); continue
-        d = sorted(abs(mp[x][0] / sp[x][0] - 1) for x in k)
-        t = sum(1 for x in k if mp[x][1] >= sp[x][1]) / len(k)
-        abw.append(d[len(d) // 2]); tief.append(t)
-        print("P2/P3 %-5s Stunden %5d · Median |Markpreis/Spot - 1| %.4f %% · Markpreis-Tief >= Spot-Tief in %.1f %%" % (
-            sym, len(k), 100 * d[len(d) // 2], 100 * t))
-    ok = bool(abw) and max(abw) < 0.002 and min(tief) > 0.5
-    print("PRUEFUNG %s (Median-Abweichung unter 0,2 %%, Markpreis-Tief meist ueber dem Spot-Tief)" % (
+            "SELECT stunde, close, low FROM stundenkurse WHERE symbol=? AND stunde >= ? AND stunde < ?",
+            (sym, von, bis))}
+        k = [r for r in mp if r[0] in sp and sp[r[0]][0]]
+        if len(k) < 500:
+            continue
+        d = sorted(abs(r[1] / sp[r[0]][0] - 1) for r in k)
+        niveau.append((d[len(d) // 2], sym))
+        basis.append(sorted(r[1] / sp[r[0]][0] - 1 for r in k)[len(k) // 2])
+        # P2b: Versatz um eine Stunde in beide Richtungen
+        spl = [sp[r[0]][0] for r in k]
+        mpl = [r[1] for r in k]
+        def med(xs):
+            xs = sorted(xs); return xs[len(xs) // 2]
+        m0 = med(abs(a / b - 1) for a, b in zip(mpl, spl))
+        mv = med(abs(a / b - 1) for a, b in zip(mpl[1:], spl[:-1]))
+        mn = med(abs(a / b - 1) for a, b in zip(mpl[:-1], spl[1:]))
+        lage_ok += m0 < min(mv, mn)
+        # P3: Docht je Reihe gegen den Schluss der Vorstunde derselben Reihe
+        dm, ds = [], []
+        for (t0, c0, _), (t1, c1, l1) in zip(mp, mp[1:]):
+            if t0 in sp and t1 in sp and c0 and sp[t0][0]:
+                dm.append(1 - l1 / c0); ds.append(1 - sp[t1][1] / sp[t0][0])
+        if len(dm) < 500:
+            continue
+        flacher.append(sum(a <= b for a, b in zip(dm, ds)) / len(dm))
+        q = sorted(ds)[int(0.99 * len(ds))]
+        paare = [(a, b) for a, b in zip(dm, ds) if b >= q]
+        tief_m.append(sum(a for a, _ in paare) / len(paare)); tief_s.append(sum(b for _, b in paare) / len(paare))
+        if tief_m[-1] > tief_s[-1]:
+            aus.append(sym)
+    z = len(niveau)
+    if not z:
+        print("⛔ keine gemeinsamen Symbole im Zeitraum"); return 1
+    unter = sum(1 for x, _ in niveau if x < 0.002)
+    niveau.sort()
+    print("   Zeitraum %s bis %s · Symbole in beiden Dateien %d, davon mit >= 500 Stunden %d" % (von, bis, len(beide), z))
+    print("P2  Niveau: Median |Markpreis/Spot - 1| unter 0,2 %% in %d von %d (%.1f %%) · Mitte %.4f %% · groesste: %s" % (
+        unter, z, 100 * unter / z, 100 * niveau[z // 2][0],
+        ", ".join("%s %.3f %%" % (sy, 100 * x) for x, sy in niveau[-3:])))
+    print("    Aufschlag Markpreis gegen Spot (Median ueber die Symbole) %+.4f %%" % (100 * sorted(basis)[len(basis) // 2]))
+    print("P2b Zeitlage: ohne Versatz naeher als bei +-1 h in %d von %d (%.1f %%)" % (lage_ok, z, 100 * lage_ok / z))
+    fl = sorted(flacher)
+    print("P3  Docht je Reihe: Markpreis flacher in (Median ueber %d Symbole) %.1f %% der Stunden · "
+          "tiefste 1 %%: Markpreis %.3f %% gegen Spot %.3f %% (Mittel) · Markpreis dort tiefer bei: %s" % (
+              len(fl), 100 * fl[len(fl) // 2], 100 * sum(tief_m) / len(tief_m), 100 * sum(tief_s) / len(tief_s),
+              ", ".join(aus) or "keinem"))
+    ok = (unter / z >= 0.95 and lage_ok / z >= 0.95 and fl[len(fl) // 2] > 0.5
+          and sum(tief_m) < sum(tief_s))
+    print("PRUEFUNG %s (P2 >= 95 %%, P2b >= 95 %%, P3 Median > 50 %% und tiefste 1 %% flacher)" % (
         "✔ bestanden" if ok else "⛔ NICHT bestanden"))
     return 0 if ok else 1
 
@@ -172,7 +299,10 @@ def main() -> int:
     ap.add_argument("--pause", type=float, default=0.3)
     ap.add_argument("--zusammen", nargs="*")
     ap.add_argument("--kontrolle", action="store_true")
+    ap.add_argument("--sperre", action="store_true")
     a = ap.parse_args()
+    if a.sperre:
+        return sperre(a.db)
     if a.kontrolle:
         return kontrolle(a.db)
     if a.zusammen is not None:
