@@ -90,6 +90,8 @@ Spot-Läufe sind davon nicht betroffen.
 | **J8** | **Grenzen der Aussage** | vier Liquidationen sind **kein statistischer Nachweis**, sondern ein **Abgleich**; die Gegenfälle (184) tragen die Hauptlast. Zwei Positionen ohne Markpreis (CC, HYPE) fallen heraus | Ehrlichkeit über die Fallzahl |
 | **J9** | **Werkzeug** | `messe_k7_abgleich.py`: liest die Sicherungskopie (`immutable=1`) und die Buchungsdatei, **schreibt nichts** außer seiner Ausgabe; Laufzeit Sekunden, läuft **neben** K6/2c; der Pfad auf die Sicherung ist **Pflicht**, eine Vorgabe auf die Standard-DB gibt es nicht | Regel *Standard-DB nie beschreiben*, am Seiteneffekt geprüft |
 
+| **J10** | **Der 10.10.2025 gesondert** | **Nutzer 28.09.:** *„der 10. war ein Black Swan — für Sekunden waren einige Assets zum Teil gegen null.“* → in K7 **und** in der K6-Auswertung eine Auskunft **mit und ohne** den 10./11.10.2025 (nur Auskunft, kein neues Kriterium): wie viel der Liquidationsrate, besonders bei **2x/3x**, stammt aus diesem einen Tag, getrennt nach Spot-Tief und Markpreis | ein Sekundendocht gegen null steht im **Spot-Tief** der Stunde voll drin und liquidiert **jede** Stufe; der Markpreis (geglätteter Index) zeigt ihn kaum. Ein einziger Tag kann so die seltenen 2x-Ereignisse (0,4–0,7 % binnen 72–120 h) tragen. ⚠️ Herausnehmen wäre falsch, denn Black Swans gibt es, und genau davor soll der Hebel schützen. Aber man muss **sehen**, ob die Tabelle auf einem Tag steht |
+
 ---
 
 ## 5. Gegenprüfung dieser Voranalyse
