@@ -43,18 +43,15 @@ def main() -> int:
     print("E2i - LIQUIDATIONSNAEHE: MAE einer Long-Position binnen 24 / 72 h "
           "nach der ATR zum Einstieg")
     print("=" * 100)
-    cs = sqlite3.connect("file:%s?mode=ro" % E2.STUNDEN_DB, uri=True)
-    syms = [r[0] for r in cs.execute(
-        "SELECT symbol FROM stundenkurse GROUP BY symbol "
-        "HAVING COUNT(*) > 2000 ORDER BY COUNT(*) DESC")]
+    E2.menge_aus_argv()
+    print("  MENGE: %s  (--menge bestand | mit | unverzerrt:<saat>, Befund 2.668)" % E2.MENGE)
+    reihen = E2.kursreihen()
     b0 = datetime(2020, 1, 1)
     ATR, JAHR = [], []
     MAE = {f: [] for f in FENSTER}
-    for sym in syms:
+    for sym, rows, bis_ende in reihen:
         if sym.upper() == "BTC":
             continue
-        rows = cs.execute("SELECT stunde, high, low, close FROM stundenkurse "
-                          "WHERE symbol=? ORDER BY stunde", (sym,)).fetchall()
         if len(rows) < 500:
             continue
         st = [r[0] for r in rows]
@@ -68,9 +65,16 @@ def main() -> int:
         atr = E2._atr(h, l, cc)
         gu = np.isfinite(atr) & (cc > 0)
         gu[:E2.VORLAUF] = False
-        gu[max(0, n - max(FENSTER)):] = False
         nach = np.clip(idx + max(FENSTER), 0, n - 1)
-        gu &= (std[nach] - std) == max(FENSTER)
+        if bis_ende:
+            # N3: eingestellte Reihe - Anker bis zum echten Ende, der Rueckgang
+            # zaehlt bis zum letzten echten Kurs (die Position wird abgerechnet)
+            drin = idx + max(FENSTER) < n
+            rest_lueckenlos = (std[n - 1] - std) == (n - 1 - idx)
+            gu &= np.where(drin, (std[nach] - std) == max(FENSTER), rest_lueckenlos)
+        else:
+            gu[max(0, n - max(FENSTER)):] = False
+            gu &= (std[nach] - std) == max(FENSTER)
         sel = np.flatnonzero(gu)
         if not len(sel):
             continue
@@ -81,7 +85,6 @@ def main() -> int:
                 MAE[s].append((1.0 - tief / cc)[sel])
         ATR.append(atr[sel])
         JAHR.append(np.array([int(st[i][:4]) for i in sel], np.int16))
-    cs.close()
     ATR = np.concatenate(ATR); JAHR = np.concatenate(JAHR)
     MAE = {f: np.concatenate(v) for f, v in MAE.items()}
     q = np.percentile(ATR, [20, 40, 60, 80])

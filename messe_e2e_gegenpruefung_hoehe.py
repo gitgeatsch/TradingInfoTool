@@ -75,6 +75,8 @@ def main() -> int:
           "Bezug, Episoden, Stabilitaet, vorwaerts, Gegenproben")
     print("=" * 120)
     IN_ATR = "--atr" in sys.argv
+    E2.menge_aus_argv()
+    print("  MENGE: %s  (--menge bestand | mit | unverzerrt:<saat>, Befund 2.668)" % E2.MENGE)
     D = E2.lade(mit_atr=IN_ATR)
     F, Z, SYM, STD, JAHR = D["F"], D["Z"], D["SYM"], D["STD"], D["JAHR"]
     if IN_ATR:

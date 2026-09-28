@@ -1,0 +1,21 @@
+====================================================================================================
+PRUEFUNG EINGESTELLTE - D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\eingestellt_historie.db
+====================================================================================================
+  P1 DOGE  nicht im Bestand - keine Kontrolle moeglich (zaehlt nicht)
+  P1 ETH   Kurs 1440 Stunden gemeinsam, 0 abweichend, nur neu 0, nur Bestand 0, Quelle ['spot'] · fluss 0 abw. · premium 0 abw. · funding 60 Tage, 0 abw.  ✔
+  P1 LINK  Kurs 1440 Stunden gemeinsam, 0 abweichend, nur neu 0, nur Bestand 0, Quelle ['spot'] · fluss 0 abw. · premium 0 abw. · funding 60 Tage, 0 abw.  ✔
+  P1 SOL   Kurs 1440 Stunden gemeinsam, 0 abweichend, nur neu 0, nur Bestand 0, Quelle ['spot'] · fluss 0 abw. · premium 0 abw. · funding 60 Tage, 0 abw.  ✔
+  P5 Einordnung {'eingestellt': 137, 'ergaenzung': 1, 'kein_krypto': 22, 'umbenennung': 7, 'vorgeschichte': 5} · geladen 143 Symbole · falsch geladen 0  ✔
+  P7 Zombie-Laeufe >= 72 h MITTEN in der Reihe: 0 []  ✔
+  P8 Quellenwechsel OHNE Luecke mit Kurssprung > 25 %: 0 []  ✔
+     Info: Spruenge > Faktor 3 UEBER eine Luecke (Umstellung, Neustart - die Messung schliesst Fenster ueber Luecken aus): 4 [('AERGO', '2025-03-28 02:00', '2025-04-16 11:00', 6.131), ('BNX', '2023-02-16 02:00', '2023-02-22 08:00', 0.009), ('LUNA', '2022-05-13 00:00', '2022-05-31 06:00', 171116.0), ('STRAX', '2024-03-20 02:00', '2024-03-28 08:00', 0.108)]
+  P2 Zombie-Laeufe >= 72 h am Reihenende: 0 []  ✔
+  P3 Zeitformat-Fehler 0 · Stundenluecken: 53 Symbole mit Luecken, groesste [('FTT', 7467), ('ALPHA', 670), ('LEVER', 670)]  ✔
+  P4 EOSUSDT    -> A      alt endet 2025-05-26 02:00 (0.7799) · Bestand beginnt 2025-05-28 08:00 (0.7593) · Verhaeltnis 0.974 · Luecke 2 Tage · Ueberlappung 0 Stunden  ✔
+  P4 FTMUSDT    -> S      alt endet 2025-01-13 02:00 (0.6994) · Bestand beginnt 2025-01-16 10:00 (0.7875) · Verhaeltnis 1.126 · Luecke 3 Tage · Ueberlappung 0 Stunden  ✔
+  P4 KLAYUSDT   -> KAIA   alt endet 2024-10-28 02:00 (0.1255) · Bestand beginnt 2024-12-04 14:00 (0.3648) · Verhaeltnis 2.907 · Luecke 37 Tage · Markt-Median 1.67, relativ 1.74 · Ueberlappung 0 Stunden  ✔
+  P4 MATICUSDT  -> POL    alt endet 2024-09-10 02:00 (0.3794) · Bestand beginnt 2024-09-13 12:00 (0.4255) · Verhaeltnis 1.122 · Luecke 3 Tage · Ueberlappung 0 Stunden  ✔
+  P4 RNDRUSDT   -> RENDER alt endet 2024-07-22 02:00 (7.03) · Bestand beginnt 2024-07-26 10:00 (6.881) · Verhaeltnis 0.979 · Luecke 4 Tage · Ueberlappung 0 Stunden  ✔
+  P6 Kaeufer > Volumen: 0 Stunden · Premium |Median| 0.00010 · Reihen, deren letzte 30 Tage zu > 50 % ohne Volumen sind: 0 []  ✔
+
+ERGEBNIS: ✔ Inhalt wie erwartet

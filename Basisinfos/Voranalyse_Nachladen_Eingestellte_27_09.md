@@ -174,3 +174,75 @@ zählt nicht zur Stichprobe).
 Zwei Funde aus der Prüfung stehen **vor** jeder Ladung fest: die
 **Zombie-Monate** (Reihenende = letzter Monat mit Volumen) und die
 **Umbenennungen** (nicht als eingestellt zählen).
+
+---
+
+## 8. ✔ UMSETZUNG UND VORAB FESTGELEGTER VERGLEICH (27.09.2026 abends)
+
+**Nutzer:** *„N1 bis N5 wie empfohlen — bin mir nicht sicher, ob das hilft,
+aber u. U. bringt es etwas. OK — prüfen und gegenprüfen."*
+
+### 8a. Gebaut und geprüft, bevor die Vollladung lief
+
+| | Stand |
+|---|---|
+| Lader `hole_eingestellte.py` | Einordnung aus dem **amtlichen** `underlyingType` (fand PAYP als Aktie, das die Namensliste übersehen hatte); 137 eingestellt, 5 Vorgeschichte (EOS→A, FTM→S, MATIC→POL, RNDR→RENDER, KLAY→KAIA), 7 Umbenennungen ohne Nachfolger in der Menge, 22 kein Krypto. ⚠️ **LUNA** und **NEIROETH** gelten als eingestellt — LUNA2 ist eine neue Kette, NEIRO ein anderer Token |
+| Probelauf | 5 Paare, 0 Fehler; Zombie abgeschnitten: SRM 13.063 Stunden ab 01.12.2022, WAVES 19.007 ab 01.07.2024 |
+| **P1 Archiv gegen Bestand** | ETH, SOL, LINK je 1.440 Stunden und 60 funding-Tage — **null Abweichungen** in Kurs, Käuferanteil, Premium und funding-Tagessumme |
+| **Gegenprobe der Prüfung** | drei absichtlich eingebaute Fehler (ein Kurs +0,1 %, ein Zombie-Schwanz, eine Aktie in der Menge) — **alle drei erkannt** |
+| P4 Übergang EOS → A | Verhältnis 0,974, keine Überlappung (die Vorgeschichte wird am Beginn des Bestands abgeschnitten) |
+| Lader `messe_e2_beitraege` | Schalter `--menge`; ⚠️ **Gegenprobe:** mit `bestand` ist die Startstunden-Probe **bitgleich** zur gespeicherten Ausgabe (nur die neue Kopfzeile) |
+| N3 | Anker bis zum echten Ende **nur**, wenn die Reihe vor dem Ladefenster endet (sonst ist das Ende unser Schnitt, keine Einstellung) |
+
+### 8b. Der Ziehrahmen
+
+Die 100 wurden am **01.09.2026** gezogen aus *Perpetual mit Status TRADING
+∩ `messdaten.db`* — heute sind das **305**, die Ziehrate also **≈ 1 : 3**.
+Der Rahmen am Ziehtag ist nicht gespeichert; 305 ist eine Näherung. Von den
+Eingestellten liegen **117** im selben Rahmen (in `messdaten.db`). In
+unserer E2-Menge sind **98 Gezogene und 17 Watchlist-Symbole**.
+
+### 8c. Die drei Mengen
+
+| Menge | Inhalt |
+|---|---|
+| `bestand` | wie bisher (115) — überlebensverzerrt |
+| `mit` | Bestand + alle Eingestellten (+ Vorgeschichte) — überzeichnet die Eingestellten |
+| `unverzerrt:<saat>` | nur die **98 Gezogenen** + die Eingestellten **aus demselben Rahmen** mit **derselben Ziehrate**, Saaten 1, 2, 3 — die Streuung über die Saaten wird ausgewiesen |
+
+### 8d. Was verglichen wird — und was als *kippt* zählt (vorab)
+
+| Befund | Werkzeug | kippt, wenn |
+|---|---|---|
+| 2.662 Höhe | `messe_e2e_gegenpruefung_hoehe.py` | eine der 14 tragenden Auswahlen nicht mehr trägt, oder eine nicht tragende trägt |
+| 2.665 Richtung | `messe_e2f_richtungsdaten.py` | eine der vier tragenden Auswahlen nicht mehr trägt, oder eine neue trägt |
+| 2.666 funding | `messe_e2h_startstunde.py` | das Mittel über die Startstunden das Vorzeichen wechselt oder um mehr als die Hälfte schrumpft |
+| 2.667 Liquidationsnähe | `messe_e2i_liquidationsnaehe.py` | der Anteil −12 % binnen 72 h im obersten ATR-Fünftel um mehr als **2 Prozentpunkte** steigt |
+
+Gerechnet wird je Werkzeug in der Reihenfolge `bestand` (Reproduktion) →
+`mit` → `unverzerrt:1..3`, **nacheinander** (nie zwei große Läufe
+gleichzeitig — 27.09.: Speicherabbruch). Terminmarkt-Merkmale
+(oi_aenderung, konten_verh, oi_je_umsatz) haben für die Eingestellten noch
+**keine Daten** (Teil B) — ihre Auswahlen vergleichen nur Symbole mit Daten;
+das wird im Ergebnis ausgewiesen.
+
+---
+
+## 9. ✔ ERGEBNIS (28.09.2026) — Befund 2.669
+
+| Befund | kippt? | Kern |
+|---|---|---|
+| 2.666 funding (Startstunden) | **nein** | negativ +0,025 / +0,026 / +0,025 / +0,025 (bestand / unverzerrt 1–3), 2022 bestätigt, Sperre −0,045 … −0,048 |
+| 2.662 Höhe | 1 von 16 in 1 von 3 Saaten | vola P95 an der Tauschprobe P4 (Einzelziehung) — Werte eher stärker |
+| 2.667 Liquidationsnähe | **nein** bei 5x (+1 Punkt), aber | **3x +17 bis +25 %, 2x +42 bis +65 %** — der Boden fehlte |
+| 2.665 Richtung | Randurteile | Werte stabil; funding-Urteil 1/3, Sperre 0/3 (Jahre 2/4, Mitternachtsregel in E2f); Käuferanteil hoch 3/3; neu rsi hoch 3/3, Käuferanteil tief als Sperre 2/3 |
+| Kontext | nein | BTC↑ und Dominanz↑ q5 −0,019 überall; BTC↑ und Dominanz↓ q15 +0,10 |
+
+⛔⛔ **Die Prüfung P1–P6 hatte eine Lücke**, die erst der Vergleich zeigte:
+N3 schaltete die Lückenprüfung ab (LUNA: Anker sahen ins neue LUNA,
+50 Mio % Anstieg, 71 % der MFE-Summe) und Zombies mitten in Reihen blieben
+stehen (FTT 6.575 h). Behoben, P7/P8 ergänzt, beide mit Gegenprobe.
+Der erste Vergleichslauf wurde verworfen und ganz neu gerechnet.
+
+➤ **Folge:** Messbasis für die Kombination ist `--menge unverzerrt`
+(mehrere Saaten); der dickere Liquidationsrand gehört in K6.

@@ -106,12 +106,24 @@ def _summe(x, k):
     return aus
 
 
-def richtungsmerkmale(sym, cr):
-    """-> (stunde0, dict Merkmal -> Array je Stunde ab stunde0) oder None."""
+def richtungsmerkmale(sym, cr, cr2=None):
+    """-> (stunde0, dict Merkmal -> Array je Stunde ab stunde0) oder None.
+
+    `cr2`: die Datei der Eingestellten (Befund 2.668) - ergaenzt, was im
+    Bestand fehlt; bei derselben Stunde gilt der Bestand.
+    """
     fl = cr.execute("SELECT stunde, volumen, kauf_volumen FROM fluss "
                     "WHERE symbol=? ORDER BY stunde", (sym,)).fetchall()
     pr = cr.execute("SELECT stunde, close FROM premium WHERE symbol=? "
                     "ORDER BY stunde", (sym,)).fetchall()
+    if cr2 is not None:
+        da = {r[0] for r in fl}
+        fl = sorted(fl + [r for r in cr2.execute(
+            "SELECT stunde, volumen, kauf_volumen FROM fluss WHERE symbol=?", (sym,))
+            if r[0] not in da])
+        da = {r[0] for r in pr}
+        pr = sorted(pr + [r for r in cr2.execute(
+            "SELECT stunde, close FROM premium WHERE symbol=?", (sym,)) if r[0] not in da])
     if not fl:
         return None
     hf = _stunden([r[0] for r in fl])
@@ -144,7 +156,10 @@ def main() -> int:
     print("E2f - DIE RICHTUNG: neue Richtungsdaten und die alten Traeger im "
           "Pflichtablauf (2023-01 bis 2026-08)")
     print("=" * 124)
-    D = E2.lade(hmax=72, erste=(("up15", 1.15, True), ("dn15", 0.85, False)))
+    E2.menge_aus_argv()
+    print("  MENGE: %s  (--menge bestand | mit | unverzerrt:<saat>, Befund 2.668)" % E2.MENGE)
+    D = E2.lade(hmax=72, erste=(("up15", 1.15, True), ("dn15", 0.85, False)),
+                ab=AB, bis=BIS)
     im = (D["STD"] >= AB) & (D["STD"] < BIS)
     SYM, STD, JAHR = D["SYM"][im], D["STD"][im], D["JAHR"][im]
     F = {m: D["F"][m][im].astype(np.float32) for m in ALT}
@@ -163,10 +178,12 @@ def main() -> int:
     # ── Richtungsmerkmale an die Anker (kausal: Wert der Stunde ist zum
     # Schlusskurs des Ankers HH:59 bekannt)
     cr = sqlite3.connect("file:%s?mode=ro" % RICHTUNG_DB, uri=True)
+    cr2 = (sqlite3.connect("file:%s?mode=ro" % E2.EINGESTELLT_DB, uri=True)
+           if E2.MENGE != "bestand" else None)
     for m in NEU:
         F[m] = np.full(n, np.nan, np.float32)
     for si in np.unique(SYM):
-        r = richtungsmerkmale(syms[si], cr)
+        r = richtungsmerkmale(syms[si], cr, cr2)
         if r is None:
             continue
         h0, M = r

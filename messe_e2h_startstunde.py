@@ -33,6 +33,8 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:                                         # noqa: BLE001
         pass
+    E2.menge_aus_argv()
+    print("  MENGE: %s  (--menge bestand | mit | unverzerrt:<saat>, Befund 2.668)" % E2.MENGE)
     D = E2.lade()
     SYM, STD = D["SYM"], D["STD"]
     FU = D["F"]["funding_vortag"]

@@ -91,6 +91,99 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 STUNDEN_DB = os.path.join(HIER, "data", "stundenkurse.db")
 TERMIN_DB = os.path.join(HIER, "data", "terminmarkt_historie.db")
 FUNDING_DB = os.path.join(HIER, "data", "funding_historie.db")
+EINGESTELLT_DB = os.path.join(HIER, "data", "eingestellt_historie.db")
+MESSDATEN_DB = os.path.join(HIER, "data", "messdaten.db")
+
+# ⭐ MENGENWAHL (Befund 2.668, Voranalyse Nachladen 27.09.2026). Die Vorgabe
+# ist der BESTAND - jeder Befund bis 2.667 bleibt bitgleich reproduzierbar.
+#   bestand          data/stundenkurse.db wie bisher (ueberlebensverzerrt)
+#   mit              Bestand + alle eingestellten Paare (+ Vorgeschichte)
+#   unverzerrt:<s>   nur die 100 zufaellig GEZOGENEN (ohne Watchlist) + eine
+#                    Stichprobe der Eingestellten mit DERSELBEN Ziehrate, aus
+#                    demselben Rahmen (in messdaten.db) - Saat <s>
+# Die Ziehrate: 100 aus rund 305 (heute gehandelte Perpetuals in messdaten.db,
+# Ziehtag 01.09.2026) - eine Naeherung, der Rahmen am Ziehtag ist nicht
+# gespeichert.
+MENGE = "bestand"
+ZIEHRATE = 100.0 / 305.0
+# das Ladefenster von hole_eingestellte.py endet 2026-08; eine Reihe, die in
+# den letzten Tagen davor endet, ist abgeschnitten, nicht eingestellt
+FENSTERENDE_EINGESTELLT = "2026-08-28 00:00"
+
+
+def menge_aus_argv(argv=None) -> str:
+    """Liest `--menge ...` aus der Befehlszeile und setzt MENGE."""
+    global MENGE
+    argv = sys.argv if argv is None else argv
+    if "--menge" in argv:
+        MENGE = argv[argv.index("--menge") + 1]
+    return MENGE
+
+
+def kursreihen() -> list:
+    """-> [(symbol, rows, bis_ende)] nach MENGE; rows = (stunde, high, low, close, volumen).
+
+    `bis_ende`: eingestellte Reihen - Anker bis zum echten Ende zugelassen
+    (Nutzerentscheidung N3: eine offene Position wird bei der Einstellung
+    abgerechnet; sonst fehlt genau der Absturz).
+    """
+    cs = sqlite3.connect("file:%s?mode=ro" % STUNDEN_DB, uri=True)
+    bestand = [r[0] for r in cs.execute(
+        "SELECT symbol FROM stundenkurse GROUP BY symbol "
+        "HAVING COUNT(*) > 2000 ORDER BY COUNT(*) DESC")]
+    q = "SELECT stunde, high, low, close, volumen FROM stundenkurse WHERE symbol=? ORDER BY stunde"
+    if MENGE == "bestand":
+        aus = [(sym, cs.execute(q, (sym,)).fetchall(), False) for sym in bestand]
+        cs.close()
+        return aus
+    ce = sqlite3.connect("file:%s?mode=ro" % EINGESTELLT_DB, uri=True)
+    art = {r[0]: r[1] for r in ce.execute(
+        "SELECT symbol, art FROM symbole WHERE art IN ('eingestellt','vorgeschichte')")}
+    eing = [r[0] for r in ce.execute(
+        "SELECT s.symbol FROM stundenkurse s JOIN symbole y ON s.symbol=y.symbol "
+        "WHERE y.art='eingestellt' GROUP BY s.symbol HAVING COUNT(*) > 2000 ORDER BY s.symbol")]
+    if MENGE.startswith("unverzerrt"):
+        ct = sqlite3.connect("file:%s?mode=ro" % TERMIN_DB, uri=True)
+        gezogen = {r[0] for r in ct.execute("SELECT symbol FROM messbasis")}
+        ct.close()
+        md = sqlite3.connect("file:%s?mode=ro" % MESSDATEN_DB, uri=True)
+        rahmen = {str(r[0]).upper() for r in md.execute(
+            "SELECT DISTINCT symbol FROM price_history_ohlc WHERE currency='USD'")}
+        md.close()
+        saat = int(MENGE.split(":")[1]) if ":" in MENGE else 1
+        rng = np.random.default_rng(saat)
+        bestand = [x for x in bestand if x in gezogen]
+        kand = [x for x in eing if x in rahmen]
+        eing = [x for x in kand if rng.random() < ZIEHRATE]
+    elif MENGE != "mit":
+        raise SystemExit("unbekannte --menge %r (bestand | mit | unverzerrt:<saat>)" % MENGE)
+    aus = []
+    for sym in bestand:
+        rows = cs.execute(q, (sym,)).fetchall()
+        if art.get(sym) == "vorgeschichte":
+            rows = ce.execute(q, (sym,)).fetchall() + rows
+        aus.append((sym, rows, False))
+    for sym in eing:
+        rows = ce.execute(q, (sym,)).fetchall()
+        # ⚠️ N3 nur, wenn die Reihe VOR dem Ladefenster endet (2026-08) - endet
+        # sie am Fensterrand, ist das kein Einstellen, sondern unser Schnitt
+        aus.append((sym, rows, bool(rows) and rows[-1][0] < FENSTERENDE_EINGESTELLT))
+    cs.close(); ce.close()
+    return aus
+
+
+def funding_je_tag(sym: str) -> dict:
+    """funding-Tagessummen - Bestand, bei MENGE != bestand ergaenzt um die Eingestellten."""
+    cf = sqlite3.connect("file:%s?mode=ro" % FUNDING_DB, uri=True)
+    fu = {str(d)[:10]: float(v) for d, v in cf.execute(
+        "SELECT datum, wert FROM funding WHERE symbol=? AND wert IS NOT NULL", (sym,))}
+    cf.close()
+    if MENGE != "bestand" and os.path.exists(EINGESTELLT_DB):
+        ce = sqlite3.connect("file:%s?mode=ro" % EINGESTELLT_DB, uri=True)
+        for d, v in ce.execute("SELECT datum, wert FROM funding WHERE symbol=?", (sym,)):
+            fu.setdefault(str(d)[:10], float(v))
+        ce.close()
+    return fu
 
 EMA_L, VORLAUF, HMAX, H = 48, 240, 72, 24
 KONTROLL_H = (6, 72)
@@ -183,7 +276,7 @@ def zielwerte(t, mfe_h, maevp_h, fenster):
             "mfe": 100.0 * mfe_h[fenster], "maevp": 100.0 * maevp_h[fenster]}
 
 
-def lade(hmax=None, erste=(), mit_atr=False):
+def lade(hmax=None, erste=(), mit_atr=False, ab=None, bis=None):
     """-> dict mit Merkmalen F, Zielwerten Z je Fenster und den Ankerspalten - NUR LESEND.
 
     Ohne Argumente genau die Menge von E2 (72 h Vorausblick). `hmax` und
@@ -192,14 +285,15 @@ def lade(hmax=None, erste=(), mit_atr=False):
     (eigene Rendite der letzten 24 und 120 h, kausal) zurueck.
     `mit_atr`: zusaetzlich ATR (Tagesmass, relativ, kausal) je Anker - fuer
     die Hoehe in ATR statt Prozent (2.662).
+    `ab` / `bis`: nur Anker in [ab, bis) (Stunden seit 2020-01-01) behalten -
+    spart Speicher (E2f mit den Eingestellten: 5,5 Mio Anker). Die Merkmale
+    werden weiter aus der GANZEN Reihe gerechnet; die behaltenen Anker sind
+    bitgleich zu einem Lauf ohne Grenze.
     """
     HMAX = globals()["HMAX"] if hmax is None else hmax
-    cs = sqlite3.connect("file:%s?mode=ro" % STUNDEN_DB, uri=True)
     ct = sqlite3.connect("file:%s?mode=ro" % TERMIN_DB, uri=True)
-    cf = sqlite3.connect("file:%s?mode=ro" % FUNDING_DB, uri=True)
-    syms = [r[0] for r in cs.execute(
-        "SELECT symbol FROM stundenkurse GROUP BY symbol "
-        "HAVING COUNT(*) > 2000 ORDER BY COUNT(*) DESC")]
+    reihen = kursreihen()
+    syms = [r[0] for r in reihen]
     basis = datetime(2020, 1, 1)
     F = {m: [] for m in MERKMALE}
     Z = {f: {z: [] for z in ZIELE} for f in (H,) + KONTROLL_H}
@@ -208,12 +302,9 @@ def lade(hmax=None, erste=(), mit_atr=False):
     T = {k: [] for k, _g, _o in erste}
     X = {k: [] for k in ("vor24", "vor120", "mfe_max", "maevp_max")}
     ausgeschlossen = 0
-    for si, sym in enumerate(syms):
+    for si, (sym, rows, bis_ende) in enumerate(reihen):
         if sym.upper() == "BTC":
             continue
-        rows = cs.execute("SELECT stunde, high, low, close, volumen FROM "
-                          "stundenkurse WHERE symbol=? ORDER BY stunde",
-                          (sym,)).fetchall()
         if len(rows) < 500:
             continue
         st = [r[0] for r in rows]
@@ -227,12 +318,26 @@ def lade(hmax=None, erste=(), mit_atr=False):
         idx = np.arange(n)
         gu = np.isfinite(cc) & (cc > 0)
         gu[:VORLAUF] = False
-        gu[max(0, n - HMAX):] = False
         vor = np.clip(idx - VORLAUF, 0, n - 1)
         nach = np.clip(idx + HMAX, 0, n - 1)
-        luecke = ((stunde - stunde[vor]) != VORLAUF) | ((stunde[nach] - stunde) != HMAX)
+        if bis_ende:
+            # N3: Anker bis zum echten Ende. ⚠️ Auch dann muss der Rest der
+            # Reihe LUECKENLOS sein - sonst schaut ein Anker ueber die Luecke
+            # in ein anderes Asset (LUNA: das neue LUNA unter altem Ticker,
+            # Anstieg 50 Mio Prozent; gefunden 28.09. im Vergleich)
+            drin = idx + HMAX < n
+            rest_lueckenlos = (stunde[n - 1] - stunde) == (n - 1 - idx)
+            luecke = ((stunde - stunde[vor]) != VORLAUF) | np.where(
+                drin, (stunde[nach] - stunde) != HMAX, ~rest_lueckenlos)
+        else:
+            gu[max(0, n - HMAX):] = False
+            luecke = ((stunde - stunde[vor]) != VORLAUF) | ((stunde[nach] - stunde) != HMAX)
         ausgeschlossen += int((gu & luecke).sum())
         gu &= ~luecke
+        if ab is not None:
+            gu &= stunde >= ab
+        if bis is not None:
+            gu &= stunde < bis
         sel = np.flatnonzero(gu)
         if not len(sel):
             continue
@@ -253,9 +358,7 @@ def lade(hmax=None, erste=(), mit_atr=False):
             km["oi_je_umsatz"] = oiw / np.maximum(vol * cc, 1e-12)
         km["taker_verh"], km["konten_verh"] = spalte(2), spalte(3)
         km["top_konten_verh"], km["top_summe_verh"] = spalte(4), spalte(5)
-        fu = {str(d)[:10]: float(v) for d, v in cf.execute(
-            "SELECT datum, wert FROM funding WHERE symbol=? AND wert IS NOT NULL",
-            (sym,))}
+        fu = funding_je_tag(sym)
         vortag = {}
         km["funding_vortag"] = np.array([
             fu.get(vortag.setdefault(x[:10], (datetime.strptime(x[:10], "%Y-%m-%d")
@@ -284,7 +387,7 @@ def lade(hmax=None, erste=(), mit_atr=False):
         SYM.append(np.full(len(sel), si, np.int32))
         CC.append(cc[sel])
         JAHR.append(np.array([int(st[i][:4]) for i in sel], np.int16))
-    cs.close(); ct.close(); cf.close()
+    ct.close()
     F = {m: np.concatenate(v) for m, v in F.items()}
     Z = {f: {z: np.concatenate(v) for z, v in d.items()} for f, d in Z.items()}
     STD = np.concatenate(STD); SYM = np.concatenate(SYM)

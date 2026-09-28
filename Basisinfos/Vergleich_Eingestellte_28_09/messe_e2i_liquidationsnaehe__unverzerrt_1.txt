@@ -1,0 +1,27 @@
+====================================================================================================
+E2i - LIQUIDATIONSNAEHE: MAE einer Long-Position binnen 24 / 72 h nach der ATR zum Einstieg
+====================================================================================================
+  MENGE: unverzerrt:1  (--menge bestand | mit | unverzerrt:<saat>, Befund 2.668)
+  3643694 Anker · ATR-Fuenftelgrenzen (Tagesmass): 4.6% · 6.0% · 7.5% · 9.8%
+
+  FENSTER 24 h - Anteil der Einstiege, bei denen der Kurs die Grenze unterschreitet
+  ATR-Schicht            MAE Median |    5x 12%     3x 27%     2x 45% | MAE P95
+  S1 ATR  0.0-  4.6%          1.80% |    1.178%     0.081%     0.029% |    7.2%
+  S2 ATR  4.6-  6.0%          2.49% |    2.065%     0.208%     0.111% |    8.9%
+  S3 ATR  6.0-  7.5%          3.00% |    3.008%     0.286%     0.123% |   10.2%
+  S4 ATR  7.5-  9.8%          3.59% |    5.054%     0.414%     0.092% |   12.0%
+  S5 ATR  9.8-158.6%          4.70% |   10.256%     0.933%     0.120% |   15.6%
+  ALLE                        2.94% |    4.312%     0.384%     0.095% |   11.4%
+  je Jahr, Anteil MAE >= 12 % (5x) in S1 / S5: 2021 0.90% / 2.52% · 2022 1.27% / 13.47% · 2023 0.97% / 7.40% · 2024 1.66% / 10.12% · 2025 1.92% / 9.51% · 2026 0.55% / 11.16%
+
+  FENSTER 72 h - Anteil der Einstiege, bei denen der Kurs die Grenze unterschreitet
+  ATR-Schicht            MAE Median |    5x 12%     3x 27%     2x 45% | MAE P95
+  S1 ATR  0.0-  4.6%          3.42% |    6.495%     0.434%     0.109% |   13.1%
+  S2 ATR  4.6-  6.0%          4.70% |   12.081%     1.255%     0.395% |   16.6%
+  S3 ATR  6.0-  7.5%          5.54% |   16.383%     1.890%     0.452% |   19.1%
+  S4 ATR  7.5-  9.8%          6.32% |   21.006%     2.519%     0.385% |   21.8%
+  S5 ATR  9.8-158.6%          7.71% |   27.807%     3.444%     0.613% |   24.1%
+  ALLE                        5.36% |   16.754%     1.908%     0.390% |   19.6%
+  je Jahr, Anteil MAE >= 12 % (5x) in S1 / S5: 2021 16.86% / 17.75% · 2022 7.05% / 34.14% · 2023 5.61% / 22.59% · 2024 10.35% / 25.84% · 2025 9.15% / 28.12% · 2026 3.09% / 28.70%
+
+  ⚠️ Die Liquidationsgrenzen sind Orientierung aus dem alten Code, keine nachgerechneten Boersenwerte.
