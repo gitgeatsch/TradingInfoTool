@@ -157,7 +157,16 @@ echten Positionen (K7, Notebook-Kopie) · Betrieb.
 
 ---
 
-## 8. Zur Abstimmung
+## 8. ✔ ABGESTIMMT (28.09.2026) — H0 bis H10 wie empfohlen, H9 freigegeben
+
+**Nutzer:** *„ja, H0 bis H10 wie empfohlen, H9 freigegeben."* Damit gilt die
+Abstimmung *„erst, wenn die Kombination trägt"* für die **Verwendung** von K6;
+gemessen wird jetzt, die Prüfung auf der Einstiegsauswahl bleibt **Pflicht**.
+Zum Notebook: für K7 genügt vorerst die Sicherung vom 23.09. im Austauschordner
+(`DB_Backups/tradinginfotool_2026-09-23_0221.db.gz`, die vier Liquidationen vom
+Juli sind enthalten) — ein neuer Export erst, wenn K7 ansteht.
+
+## 8a. Die Empfehlung, wie abgestimmt
 
 | # | Empfehlung |
 |---|---|
