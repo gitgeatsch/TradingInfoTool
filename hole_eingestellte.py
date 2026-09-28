@@ -49,6 +49,7 @@ Pause je Datei 0,3 s, bei 418/429 eine Minute (Nutzer: *nicht zu schnell*).
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import sqlite3
@@ -118,6 +119,10 @@ def lege_an(pfad: str) -> sqlite3.Connection:
             PRIMARY KEY (symbol, reihe, monat));
         CREATE TABLE IF NOT EXISTS _herkunft (schluessel TEXT PRIMARY KEY, wert TEXT);
         CREATE TABLE IF NOT EXISTS _nur_messbasis (hinweis TEXT);
+        CREATE TABLE IF NOT EXISTS terminmarkt (symbol TEXT NOT NULL, stunde TEXT NOT NULL,
+            oi REAL, oi_wert REAL, top_konten_verh REAL, top_summe_verh REAL,
+            konten_verh REAL, taker_verh REAL, punkte INTEGER NOT NULL,
+            PRIMARY KEY (symbol, stunde));
     """)
     c.executemany("INSERT OR REPLACE INTO _herkunft VALUES (?,?)", list(HERKUNFT.items()))
     if not c.execute("SELECT COUNT(*) FROM _nur_messbasis").fetchone()[0]:
@@ -213,6 +218,48 @@ def lade_monat(c, sym, paar, m, erledigt, pause, zaehl, nur=("kurs", "premium", 
             print("  %s funding %s: %s" % (sym, m, str(exc)[:80]), flush=True)
         c.execute("INSERT OR REPLACE INTO _geladen VALUES (?,?,?,?,?,?)",
                   (sym, "funding", m, status, len(zeilen or []), jetzt))
+        zaehl[status] += 1
+    c.commit()
+
+
+def lade_terminmarkt(c, sym, paar, tage, erledigt, pause, zaehl, sitzung):
+    """Teil B (Voranalyse K1, A1): Terminmarkt-Tagesdateien, je Stunde der
+    LETZTE 5-Minuten-Wert - dieselbe Verdichtung wie hole_terminmarkt_historie.py."""
+    import csv
+    import io as _io
+    import zipfile
+    from hole_terminmarkt_historie import verdichte
+    jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for tag in tage:
+        if (sym, "terminmarkt", tag) in erledigt:
+            continue
+        url = "%s/futures/um/daily/metrics/%s/%s-metrics-%s.zip" % (BASIS, paar, paar, tag)
+        status, n = "fehler", 0
+        for versuch in range(4):
+            try:
+                r = sitzung.get(url, timeout=60)
+            except Exception:                                  # noqa: BLE001
+                time.sleep(10 * (versuch + 1))
+                continue
+            time.sleep(pause)
+            if r.status_code == 404:
+                status = "fehlt"
+                break
+            if r.status_code in (418, 429):
+                time.sleep(60)
+                continue
+            if r.status_code != 200:
+                time.sleep(10 * (versuch + 1))
+                continue
+            z = zipfile.ZipFile(_io.BytesIO(r.content))
+            roh = list(csv.DictReader(_io.StringIO(z.read(z.namelist()[0]).decode("utf-8", "replace"))))
+            w = verdichte(roh)
+            c.executemany("INSERT OR REPLACE INTO terminmarkt VALUES (?,?,?,?,?,?,?,?,?)",
+                          [(sym, st) + v for st, v in w.items()])
+            status, n = "ok", len(w)
+            break
+        c.execute("INSERT OR REPLACE INTO _geladen VALUES (?,?,?,?,?,?)",
+                  (sym, "terminmarkt", tag, status, n, jetzt))
         zaehl[status] += 1
     c.commit()
 
@@ -317,6 +364,14 @@ def main() -> int:
     ap.add_argument("--abschliessen", action="store_true")
     ap.add_argument("--kontrolle", default="",
                     help="heute gehandelte Symbole in eine EIGENE --db laden (Pruefung P1)")
+    ap.add_argument("--terminmarkt", action="store_true",
+                    help="Teil B: Terminmarkt-Tagesdateien der geladenen Paare (nur Tage mit echtem Handel)")
+    ap.add_argument("--quelle-db", default=VORGABE_DB,
+                    help="aus welcher Datei die Handelstage je Paar gelesen werden (--terminmarkt)")
+    ap.add_argument("--bedarf", default="",
+                    help="Datei mit Symbolen, die zuerst geladen werden (eine Zeile je Symbol)")
+    ap.add_argument("--bekannt", nargs="*", default=[],
+                    help="Dateien, deren _geladen-Eintraege als erledigt gelten (Weiterfuehrung mit neuer Aufteilung)")
     ap.add_argument("--von", default=FENSTER[0])
     ap.add_argument("--bis", default=FENSTER[1])
     a = ap.parse_args()
@@ -325,7 +380,7 @@ def main() -> int:
         c = lege_an(a.db)
         for teil in a.zusammen:
             c.execute("ATTACH DATABASE ? AS t", (os.path.abspath(teil),))
-            for tab in ("stundenkurse", "fluss", "premium", "funding", "btcdom", "symbole"):
+            for tab in ("stundenkurse", "fluss", "premium", "funding", "btcdom", "symbole", "terminmarkt"):
                 if c.execute("SELECT COUNT(*) FROM t.sqlite_master WHERE name=?", (tab,)).fetchone()[0]:
                     c.execute("INSERT OR IGNORE INTO %s SELECT * FROM t.%s" % (tab, tab))
             c.execute("INSERT OR REPLACE INTO _geladen SELECT * FROM t._geladen")
@@ -343,15 +398,56 @@ def main() -> int:
     c = lege_an(a.db)
     erledigt = {(r[0], r[1], r[2]) for r in c.execute(
         "SELECT symbol, reihe, monat FROM _geladen WHERE status IN ('ok','fehlt')")}
+    for alt in a.bekannt:
+        q_ = sqlite3.connect("file:%s?mode=ro" % os.path.abspath(alt), uri=True)
+        erledigt |= {(r[0], r[1], r[2]) for r in q_.execute(
+            "SELECT symbol, reihe, monat FROM _geladen WHERE status IN ('ok','fehlt')")}
+        q_.close()
     zaehl = {"ok": 0, "fehlt": 0, "fehler": 0}
     t0 = time.time()
 
     if a.kontrolle:
+        import requests
+        sitzung = requests.Session()
         for sym in [x.strip().upper() for x in a.kontrolle.split(",") if x.strip()]:
             for m in monate(a.von, a.bis):
                 lade_monat(c, sym, sym + "USDT", m, erledigt, a.pause, zaehl)
+            if a.terminmarkt:
+                tage = sorted({r[0][:10] for r in c.execute(
+                    "SELECT stunde FROM stundenkurse WHERE symbol=?", (sym,))})
+                lade_terminmarkt(c, sym, sym + "USDT", tage, erledigt, a.pause, zaehl, sitzung)
             print("  Kontrolle %s fertig" % sym, flush=True)
         c.close()
+        return 0
+
+    if a.terminmarkt:
+        import requests
+        sitzung = requests.Session()
+        q = sqlite3.connect("file:%s?mode=ro" % a.quelle_db, uri=True)
+        paare = q.execute("SELECT paar, symbol FROM symbole WHERE art IN ('eingestellt','vorgeschichte') "
+                          "ORDER BY paar").fetchall()
+        if a.symbole:
+            wahl = {x.strip().upper() for x in a.symbole.split(",") if x.strip()}
+            paare = [x for x in paare if x[0][:-4] in wahl]
+        # ⭐ Reihenfolge nach Bedarf (28.09.): zuerst die Paare der unverzerrten
+        # Stichproben 1-3 (messe_e2_beitraege.kursreihen), damit die Messung
+        # vor dem Ende der Ladung beginnen kann
+        bedarf = set()
+        if a.bedarf and os.path.exists(a.bedarf):
+            bedarf = {z.strip() for z in io.open(a.bedarf, encoding="utf-8") if z.strip()}
+        paare.sort(key=lambda x: (x[1] not in bedarf, x[0]))
+        if a.teil:
+            i_, n_ = map(int, a.teil.split("/"))
+            paare = paare[i_::n_]
+        print("Terminmarkt (Teil B): %d Paare -> %s (Pause %.1f s)" % (len(paare), a.db, a.pause), flush=True)
+        for i, (paar, sym) in enumerate(paare, 1):
+            tage = sorted({r[0][:10] for r in q.execute(
+                "SELECT stunde FROM stundenkurse WHERE symbol=? AND stunde < ?", (sym, "2026-09-01"))})
+            lade_terminmarkt(c, sym, paar, tage, erledigt, a.pause, zaehl, sitzung)
+            print("  [%3d/%3d] %-12s %4d Tage · ok %d · fehlt %d · Fehler %d · %.1f Min" % (
+                i, len(paare), paar, len(tage), zaehl["ok"], zaehl["fehlt"], zaehl["fehler"],
+                (time.time() - t0) / 60), flush=True)
+        q.close(); c.close()
         return 0
 
     if a.btc:

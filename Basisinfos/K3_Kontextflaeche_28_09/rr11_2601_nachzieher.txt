@@ -1,0 +1,183 @@
+====================================================================================================
+DER NACHZIEHER: welches Asset hat auf BTC noch nicht reagiert?
+====================================================================================================
+  Vorabfestlegung 18 · Frageart BEITRAG · k = 1.00 x ATR
+  ⚠️ Das Merkmal unterscheidet ASSETS - anders als 2.599, das
+     einen Marktzustand mass (ein Wert fuer alle).
+  ⭐ Deshalb: STUNDENKLAMMER und die einfache Nullwelt.
+  116 Symbole · 42207 Stunden
+  BTC-Leitwert: 42207 von 42207 Stunden belegt
+  Dominanz-Aenderung (BTC minus Alt-Mittel, 6 h): 42201 Stunden belegt
+  115 Symbole mit Merkmalen (BTC selbst ausgeschlossen)
+
+====================================================================================================
+CRV 1.5 · H6 · 3131754 Anker · E[R] brutto -0.00259 · Drift -0.00292
+  ⭐ KREUZ  BTC x DOMINANZ  (E[R] brutto, Anker in Klammern)
+                             Dominanz FAELLT        Dominanz STEIGT
+     BTC faellt        +0.0057±0.0078 ⚠  (279k) [ZV z +1.21]  +0.0042±0.0063 ⚠  (492k) [ZV z +1.22]
+     BTC seitwaerts    -0.0014±0.0052 ⚠  (808k) [ZV z +0.30]  -0.0106±0.0060 ✔  (736k) [ZV z -1.67]
+     BTC steigt        +0.0030±0.0054 ⚠  (489k) [ZV z +1.49]  -0.0134±0.0077 ✔  (324k) [ZV z -1.59]
+     ✔ = vom Null verschieden (tagesgeblockt) · ⚠ = nicht zu trennen
+
+  BTC-Lage              Anker        F0        F1        F2        F3   F4 (zurueck)
+  BTC faellt stark     143174   +0.0147   +0.0179   +0.0185   +0.0215   +0.0217   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0188 ± 0.0100 (ueber 529 Tage) ✔ vom Null verschieden
+                              Ordnung F4-F0 +0.0070 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC faellt           629508   -0.0026   +0.0014   +0.0014   +0.0038   +0.0038   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0016 ± 0.0061 (ueber 1506 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0064 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC seitwaerts      1544697   -0.0085   -0.0078   -0.0060   -0.0039   -0.0027   ⭐ F4 bestes
+                              Niveau -0.0058 ± 0.0046 (ueber 1724 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0058 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt           670540   -0.0066   -0.0082   -0.0076   -0.0069   -0.0056   ⭐ F4 bestes
+                              Niveau -0.0070 ± 0.0054 (ueber 1546 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0010 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt stark     143835   +0.0095   +0.0135   +0.0138   +0.0154   +0.0117   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0128 ± 0.0096 (ueber 554 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0022 (Querschnitt, von der Clusterung UNberuehrt)
+
+  rueckstand_beta  NETTO +0.0016 -0.0000 +0.0002 +0.0000 -0.0002
+      Spanne(4-0) -0.00177 · Nullpunkt +0.00015 · 90. Perz +0.00027 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0050 -0.0039 -0.0028 -0.0009 -0.0002 · bestes Fuenftel -0.00024 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00236 · Verhaeltnis 0.75 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:80% 0.50:100% 1.00:100%
+  rueckstand_roh   NETTO +0.0016 -0.0000 +0.0002 +0.0001 -0.0003
+      Spanne(4-0) -0.00197 · Nullpunkt +0.00019 · 90. Perz +0.00041 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0047 -0.0043 -0.0030 -0.0009 +0.0001 · bestes Fuenftel +0.00008 ⭐⭐ UEBER NULL
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00249 · Verhaeltnis 0.79 · ⚠️ BEWEGUNG OHNE RICHTUNG - kein Beitrag
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:40% 0.50:100% 1.00:100%
+  rueckstand_alt   NETTO +0.0016 -0.0000 +0.0002 +0.0001 -0.0003
+      Spanne(4-0) -0.00197 · Nullpunkt +0.00017 · 90. Perz +0.00035 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0047 -0.0043 -0.0030 -0.0009 +0.0001 · bestes Fuenftel +0.00008 ⭐⭐ UEBER NULL
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00249 · Verhaeltnis 0.79 · ⚠️ BEWEGUNG OHNE RICHTUNG - kein Beitrag
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:20% 0.10:20% 0.25:100% 0.50:100% 1.00:100%
+  mitlauf          NETTO +0.0010 +0.0001 +0.0007 -0.0001 -0.0002
+      Spanne(4-0) -0.00124 · Nullpunkt +0.00018 · 90. Perz +0.00036 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0038 -0.0018 -0.0024 -0.0027 -0.0023 · bestes Fuenftel -0.00181 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00247 · Verhaeltnis 0.50 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:40% 0.25:60% 0.50:100% 1.00:100%
+  beta             NETTO +0.0013 +0.0010 -0.0003 -0.0001 -0.0003
+      Spanne(4-0) -0.00157 · Nullpunkt +0.00015 · 90. Perz +0.00031 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0011 -0.0029 -0.0037 -0.0028 -0.0025 · bestes Fuenftel -0.00108 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00226 · Verhaeltnis 0.69 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:20% 0.25:80% 0.50:100% 1.00:100%
+  zufall           NETTO +0.0004 +0.0003 +0.0004 +0.0001 +0.0004
+      Spanne(4-0) -0.00005 · Nullpunkt +0.00019 · 90. Perz +0.00040 · - im Nullband
+      brutto -0.0025 -0.0020 -0.0031 -0.0026 -0.0028 · bestes Fuenftel -0.00204 (unter null)
+
+====================================================================================================
+CRV 1.5 · H24 · 3131754 Anker · E[R] brutto -0.00872 · Drift -0.01190
+  ⭐ KREUZ  BTC x DOMINANZ  (E[R] brutto, Anker in Klammern)
+                             Dominanz FAELLT        Dominanz STEIGT
+     BTC faellt        +0.0057±0.0145 ⚠  (279k) [ZV z +0.98]  +0.0030±0.0132 ⚠  (492k) [ZV z +0.99]
+     BTC seitwaerts    -0.0080±0.0117 ⚠  (808k) [ZV z +0.07]  -0.0273±0.0123 ✔  (736k) [ZV z -1.76]
+     BTC steigt        +0.0106±0.0122 ⚠  (489k) [ZV z +1.67]  -0.0279±0.0147 ✔  (324k) [ZV z -1.63]
+     ✔ = vom Null verschieden (tagesgeblockt) · ⚠ = nicht zu trennen
+
+  BTC-Lage              Anker        F0        F1        F2        F3   F4 (zurueck)
+  BTC faellt stark     143174   +0.0389   +0.0484   +0.0479   +0.0516   +0.0521   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0477 ± 0.0206 (ueber 529 Tage) ✔ vom Null verschieden
+                              Ordnung F4-F0 +0.0132 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC faellt           629508   -0.0115   -0.0065   -0.0050   -0.0026   -0.0040   
+                              Niveau -0.0059 ± 0.0124 (ueber 1506 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0076 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC seitwaerts      1544697   -0.0200   -0.0179   -0.0167   -0.0154   -0.0158   
+                              Niveau -0.0172 ± 0.0112 (ueber 1724 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0043 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt           670540   -0.0062   -0.0026   -0.0037   -0.0041   -0.0091   
+                              Niveau -0.0051 ± 0.0118 (ueber 1546 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 -0.0030 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt stark     143835   -0.0060   +0.0023   +0.0031   -0.0001   -0.0139   
+                              Niveau -0.0029 ± 0.0188 (ueber 554 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 -0.0079 (Querschnitt, von der Clusterung UNberuehrt)
+
+  rueckstand_beta  NETTO +0.0063 +0.0022 +0.0033 +0.0025 +0.0015
+      Spanne(4-0) -0.00483 · Nullpunkt +0.00060 · 90. Perz +0.00112 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0120 -0.0084 -0.0077 -0.0067 -0.0088 · bestes Fuenftel -0.00666 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00782 · Verhaeltnis 0.62 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:20% 0.25:40% 0.50:100% 1.00:100%
+  rueckstand_roh   NETTO +0.0064 +0.0021 +0.0033 +0.0027 +0.0013
+      Spanne(4-0) -0.00506 · Nullpunkt +0.00051 · 90. Perz +0.00107 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0114 -0.0091 -0.0084 -0.0066 -0.0080 · bestes Fuenftel -0.00660 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00763 · Verhaeltnis 0.66 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:40% 0.10:0% 0.25:80% 0.50:100% 1.00:100%
+  rueckstand_alt   NETTO +0.0064 +0.0021 +0.0033 +0.0027 +0.0013
+      Spanne(4-0) -0.00506 · Nullpunkt +0.00054 · 90. Perz +0.00108 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0114 -0.0091 -0.0084 -0.0066 -0.0080 · bestes Fuenftel -0.00660 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00763 · Verhaeltnis 0.66 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:20% 0.25:100% 0.50:100% 1.00:100%
+  mitlauf          NETTO +0.0071 +0.0012 +0.0054 +0.0021 -0.0000
+      Spanne(4-0) -0.00715 · Nullpunkt +0.00045 · 90. Perz +0.00100 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0120 -0.0066 -0.0078 -0.0099 -0.0072 · bestes Fuenftel -0.00658 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.01574 · Verhaeltnis 0.45 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:20% 0.10:60% 0.25:80% 0.50:100% 1.00:100%
+  beta             NETTO +0.0093 +0.0083 +0.0002 -0.0008 -0.0011
+      Spanne(4-0) -0.01039 · Nullpunkt +0.00051 · 90. Perz +0.00104 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0017 -0.0092 -0.0125 -0.0104 -0.0101 · bestes Fuenftel -0.00169 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.01290 · Verhaeltnis 0.81 · ⚠️ BEWEGUNG OHNE RICHTUNG - kein Beitrag
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:40% 0.25:100% 0.50:100% 1.00:100%
+  zufall           NETTO +0.0032 +0.0025 +0.0038 +0.0027 +0.0037
+      Spanne(4-0) +0.00051 · Nullpunkt +0.00045 · 90. Perz +0.00100 · - im Nullband
+      brutto -0.0087 -0.0094 -0.0074 -0.0088 -0.0093 · bestes Fuenftel -0.00740 (unter null)
+
+====================================================================================================
+CRV 2.0 · H6 · 3131754 Anker · E[R] brutto -0.00273 · Drift -0.00292
+  ⭐ KREUZ  BTC x DOMINANZ  (E[R] brutto, Anker in Klammern)
+                             Dominanz FAELLT        Dominanz STEIGT
+     BTC faellt        +0.0055±0.0078 ⚠  (279k) [ZV z +1.19]  +0.0041±0.0064 ⚠  (492k) [ZV z +1.21]
+     BTC seitwaerts    -0.0016±0.0052 ⚠  (808k) [ZV z +0.28]  -0.0107±0.0060 ✔  (736k) [ZV z -1.64]
+     BTC steigt        +0.0030±0.0054 ⚠  (489k) [ZV z +1.53]  -0.0139±0.0077 ✔  (324k) [ZV z -1.63]
+     ✔ = vom Null verschieden (tagesgeblockt) · ⚠ = nicht zu trennen
+
+  BTC-Lage              Anker        F0        F1        F2        F3   F4 (zurueck)
+  BTC faellt stark     143174   +0.0140   +0.0173   +0.0186   +0.0212   +0.0216   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0185 ± 0.0100 (ueber 529 Tage) ✔ vom Null verschieden
+                              Ordnung F4-F0 +0.0075 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC faellt           629508   -0.0032   +0.0015   +0.0014   +0.0038   +0.0039   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0015 ± 0.0061 (ueber 1506 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0072 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC seitwaerts      1544697   -0.0090   -0.0078   -0.0060   -0.0039   -0.0027   ⭐ F4 bestes
+                              Niveau -0.0059 ± 0.0046 (ueber 1724 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0063 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt           670540   -0.0072   -0.0082   -0.0074   -0.0070   -0.0058   ⭐ F4 bestes
+                              Niveau -0.0071 ± 0.0054 (ueber 1546 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0014 (Querschnitt, von der Clusterung UNberuehrt)
+  BTC steigt stark     143835   +0.0087   +0.0126   +0.0138   +0.0152   +0.0114   ⭐⭐ F4 UEBER NULL
+                              Niveau +0.0123 ± 0.0096 (ueber 554 Tage) ⚠ NICHT von null zu trennen
+                              Ordnung F4-F0 +0.0027 (Querschnitt, von der Clusterung UNberuehrt)
+
+  rueckstand_beta  NETTO +0.0010 -0.0001 +0.0002 -0.0000 -0.0002
+      Spanne(4-0) -0.00125 · Nullpunkt +0.00017 · 90. Perz +0.00039 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0056 -0.0039 -0.0028 -0.0010 -0.0003 · bestes Fuenftel -0.00026 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00240 · Verhaeltnis 0.52 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:0% 0.50:100% 1.00:100%
+  rueckstand_roh   NETTO +0.0011 -0.0001 +0.0002 +0.0001 -0.0003
+      Spanne(4-0) -0.00143 · Nullpunkt +0.00017 · 90. Perz +0.00037 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0053 -0.0044 -0.0030 -0.0010 +0.0001 · bestes Fuenftel +0.00007 ⭐⭐ UEBER NULL
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00252 · Verhaeltnis 0.57 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:20% 0.50:100% 1.00:100%
+  rueckstand_alt   NETTO +0.0011 -0.0001 +0.0002 +0.0001 -0.0003
+      Spanne(4-0) -0.00143 · Nullpunkt +0.00015 · 90. Perz +0.00039 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0053 -0.0044 -0.0030 -0.0010 +0.0001 · bestes Fuenftel +0.00007 ⭐⭐ UEBER NULL
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00252 · Verhaeltnis 0.57 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:60% 0.50:100% 1.00:100%
+  mitlauf          NETTO +0.0007 -0.0002 +0.0007 -0.0001 -0.0002
+      Spanne(4-0) -0.00084 · Nullpunkt +0.00017 · 90. Perz +0.00037 · ✔ TRENNT  ⭐ Richtung: zurueckgeblieben bleibt SCHWACH
+      brutto -0.0041 -0.0021 -0.0024 -0.0028 -0.0022 · bestes Fuenftel -0.00206 (unter null)
+      ⭐ SPIEGELPROBE Gegenrichtung +0.00272 · Verhaeltnis 0.31 · ✔ inverse Richtung (<=0,77)
+      ⭐ TRENNSCHAERFE (Anteil:Fundquote) 0.00:0% 0.10:0% 0.25:40% 0.50:100% 1.00:100%
+Traceback (most recent call last):
+  File "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_nachzieher.py", line 598, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_nachzieher.py", line 509, in main
+    fzz = fuenftel_je_stunde(G, rng.random(len(G)))
+  File "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_q_beide_seiten.py", line 191, in fuenftel_je_stunde
+    pos = np.arange(len(gs)) - np.repeat(start, groesse)
+                               ~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "D:\Python\Lib\site-packages\numpy\_core\fromnumeric.py", line 481, in repeat
+    return _wrapfunc(a, 'repeat', repeats, axis=axis)
+  File "D:\Python\Lib\site-packages\numpy\_core\fromnumeric.py", line 54, in _wrapfunc
+    return bound(*args, **kwds)
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 23.9 MiB for an array with shape (3131754,) and data type int64
+exit=1

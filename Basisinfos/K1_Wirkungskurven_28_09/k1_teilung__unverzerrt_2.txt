@@ -1,0 +1,53 @@
+========================================================================================================================
+K1 SCHRITT 1 - WIRKUNGSKURVEN · MENGE unverzerrt:2 · GRUPPE teilung
+========================================================================================================================
+  Tagesanker mit Phase: Suche 167840 · Pruefung 218803 · Symbole 124 · Kurven 12
+  Grenze Bestes-von-12 (Zeitverschiebung je Asset, 40 Ziehungen): z 3.01
+
+  Kurve                       S      z |  Form  Rand | Jahre  Asset | Tag/Ph  Mo/Ph | Dq je Stufe (Suche, <P1 ... >P99) | Urteil
+  funding_vortag_markt roh 567.60 +117.66 | -0.20  nein | 3/4    99% |   0.04   1.13 | -0.023 +0.164 -0.006 +0.015 -0.006   -     -     -   -0.209 +0.017 -0.065 -0.066 | · nein
+  funding_vortag_markt selbst 239.28 +41.64 | +0.52  nein | 3/4    74% |   0.13   1.53 | +0.181 +0.015 -0.015 +0.006 -0.017   -   -0.021 -0.019 +0.050 +0.054 -0.062 +0.052 | · nein
+  funding_vortag_eigen roh  60.57  +9.77 | -0.09  nein | 3/4    68% |   0.10   1.19 | +0.022 +0.009 -0.001 +0.009 +0.003 -0.023   -     -   +0.035 -0.002 +0.025 -0.028 | · nein
+  funding_vortag_eigen selbst  38.51  +5.03 | +0.67    ja | 4/4    72% |   0.13   0.95 | +0.020 +0.005 +0.017 +0.010 +0.003 -0.027   -   +0.005 -0.007 +0.009 +0.011 +0.008 | ✔ TRAEGT · TEILEN (Tag < 1/2)
+  premium_jetzt_markt roh 196.00 +52.97 | -0.10  nein | 3/4    75% |   0.26   1.49 | +0.073 +0.065 +0.048 +0.011 +0.006 -0.008   -     -   +0.017 -0.005 -0.066 -0.078 | · nein
+  premium_jetzt_markt selbst  68.89 +19.20 | +0.23  nein | 4/4    72% |   1.03   3.74 | -0.004 +0.016 -0.034 +0.018 -0.013 -0.001 +0.006 +0.022 +0.031 +0.006 -0.025 -0.042 | · nein
+  premium_jetzt_eigen roh  16.34  +2.62 | -0.40  nein | 3/4    55% |   0.30   0.99 | +0.010 +0.017 +0.006 -0.006 +0.008 -0.009 +0.016 +0.002 -0.014 +0.012 +0.000 -0.018 | · nein
+  premium_jetzt_eigen selbst  11.38  +2.64 | -0.54  nein | 2/4    57% |   0.34   1.19 | +0.009 +0.007 +0.006 +0.004 -0.005 -0.005 -0.017 -0.001 -0.014 +0.010 +0.001 -0.023 | · nein
+  premium_24h_markt roh  484.63 +104.85 | +0.28  nein | 4/4    88% |   0.09   0.97 | +0.132 +0.022 +0.084 +0.030 +0.028 +0.010 -0.060 -0.066 +0.066 +0.004 -0.066 -0.123 | · nein
+  premium_24h_markt selbst 264.50 +60.99 | -0.02  nein | 3/4    81% |   0.22   1.54 | +0.153 -0.063 -0.055 +0.040 +0.046 -0.003 +0.032 -0.006 -0.001 +0.013 +0.031 -0.101 | · nein
+  premium_24h_eigen roh    9.25  -0.06 | +0.01  nein | 2/4    56% |   0.50   0.52 | -0.002 +0.017 +0.012 +0.003 -0.001 -0.003 -0.003 -0.007 -0.008 -0.003 +0.002 -0.005 | · nein
+  premium_24h_eigen selbst  11.02  +0.53 | +0.14  nein | 4/4    62% |   0.61   0.94 | -0.007 +0.022 -0.004 -0.000 -0.001 -0.007 -0.006 -0.009 -0.003 +0.002 -0.007 -0.010 | · nein
+
+  Tag/Ph, Mo/Ph = S gegen Tages- bzw. Monatsbezug geteilt durch S gegen die Phase (W11: < 0,5 -> teilen)
+
+========================================================================================================================
+A4 - BESTAETIGT ODER GELAUFEN: Dq der Randstufen (hoch = P90-P99 und > P99, tief = < P1 und P1-P10) je Anstieg der letzten 24 h in eigener ATR, Suche+Pruefung
+  funding_vortag_eigen selbst hoch: < 0 +0.018 (24348) · 0-0,5 +0.011 (13328) · 0,5-1 +0.021 (6654) · 1-2 +0.098 (2213) · 2-3 +0.063 (47) · > 3   -  
+                         tief: < 0 +0.025 (24847) · 0-0,5 +0.018 (13026) · 0,5-1 +0.037 (6671) · 1-2 +0.045 (2404) · 2-3 -0.100 (53) · > 3   -  
+
+ALTERSACHSE (Merkmal L Stunden alt): S und Randstufen, Suche
+  funding_vortag_eigen selbst 6h: S 54.16 (141%) Rand +0.025/+0.010 · 12h: S 66.72 (173%) Rand +0.022/+0.007 · 24h: S 58.79 (153%) Rand +0.015/-0.020
+
+========================================================================================================================
+PFLICHTPROBEN
+  G1 Vorgriff im Normal: groesste relative Aenderung von S 0.014
+  G4 Positivkontrolle: lineare Kurve von -d bis +d ueber die 12 Stufen einer ZEITVERSCHOBENEN (wirkungslosen) Kopie von funding_vortag_markt roh gepflanzt, gegen deren eigene Nullwelt und die Grenze 3.01:
+     ohne Pflanzung: z +0.37
+     d = 0.005: gefunden 0 von 5
+     d = 0.010: gefunden 0 von 5
+     d = 0.020: gefunden 5 von 5
+     d = 0.040: gefunden 5 von 5
+  G7 Korrelationsmatrix (Rang, Suche, Tagesanker) - |rho| >= 0,5:
+     funding_vortag_markt roh ~ funding_vortag_markt selbst +0.55
+     funding_vortag_markt roh ~ premium_jetzt_markt roh +0.74
+     funding_vortag_markt roh ~ premium_24h_markt roh  +0.90
+     funding_vortag_markt selbst ~ premium_jetzt_markt selbst +0.58
+     funding_vortag_markt selbst ~ premium_24h_markt selbst +0.73
+     funding_vortag_eigen roh ~ funding_vortag_eigen selbst +0.77
+     premium_jetzt_markt roh ~ premium_jetzt_markt selbst +0.67
+     premium_jetzt_markt roh ~ premium_24h_markt roh  +0.83
+     premium_jetzt_markt selbst ~ premium_24h_markt selbst +0.73
+     premium_jetzt_eigen roh ~ premium_jetzt_eigen selbst +0.95
+     premium_24h_eigen roh  ~ premium_24h_eigen selbst +0.77
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).

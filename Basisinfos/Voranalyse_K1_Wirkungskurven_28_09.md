@@ -135,3 +135,21 @@ Fortsetzungsprobe nicht besteht, wird zusätzlich gemessen:
 
 ➤ So bleibt die OPTIMUM-Regel (*nicht kaufen, was schon gelaufen ist*)
 erhalten, ohne eine bestätigte, frühe Bewegung zu blockieren.
+
+---
+
+## 6. ✔ ERGEBNIS Gruppe voll und Teilung (28.09.2026) — Befunde 2.671, 2.673
+
+| | Ergebnis |
+|---|---|
+| **Auflösung** (Positivkontrolle, gültige Fassung) | Beiträge je Asset: **±0,02** (unverzerrt), ±0,04 (bestand) · Marktmerkmale: gröber als **0,04** |
+| **trägt** | **ema_abstand_atr selbstbezogen** — 3 von 4 Mengen, monoton (−0,04 … +0,055), asset-eigen (Tag/Phase 2,6–3,3), Lage vorher (Altersachse 94–130 %) |
+| **A4 bestätigt/gelaufen** | obere Randstufe: 0–0,5 ATR +0,085…0,090 · 0,5–2 ATR +0,045…0,059 · 2–3 ATR +0,02…0,03 · > 3 ATR kommt nicht vor — **bestätigt bis ~2 ATR** |
+| ohne Befund | Käuferanteil (alle Formen), momentum_kurz, rsi (nur im Bestand), bandenge, Premium |
+| **Markt-Timing** | funding, Premium: geteilt — _eigen trägt nicht, _markt mit der gemeinsamen Nullwelt nicht nachweisbar (2.673) |
+| offen | Terminmarkt-Gruppe (konten_verh, top_konten_verh, taker_verh, oi_aenderung) — nach Teil B |
+
+⛔ Zwei eigene Fehler, beide vor der Deutung gefunden: die erste
+Positivkontrolle pflanzte in ein schon starkes Merkmal (wertlos); die
+Zeitverschiebung **je Asset** ist für Marktmerkmale die falsche Nullwelt
+(z bis 118) — für _markt gilt die **gemeinsame** Verschiebung.

@@ -360,6 +360,17 @@ def main() -> int:
         # wird, ob es DANACH weitergeht - sonst waere es Rueckschau.
         d_bei = dom_aenderung[G]
         b_bei = btc_r6[G]
+        # ⭐ R-R11-Probe 28.09.2026 (Befund 2.670 fand die Sperre in K3 nicht):
+        # --zeitverschiebung haelt jede Zelle zusaetzlich gegen eine
+        # ZEITVERSCHIEBUNGS-Nullwelt - BTC- und Dominanzreihe gemeinsam um
+        # einen Zufallsversatz >= 60 Tage verschoben, 40 Ziehungen. Ohne die
+        # Option rechnet das Werkzeug unveraendert wie am 25.09.
+        zv = "--zeitverschiebung" in sys.argv
+        if zv:
+            rng_zv = np.random.default_rng(20261008)
+            versatz = [int(rng_zv.integers(60 * 24, T - 60 * 24)) for _ in range(40)]
+            null_b = [np.roll(btc_r6, v)[G] for v in versatz]
+            null_d = [np.roll(dom_aenderung, v)[G] for v in versatz]
         print("  ⭐ KREUZ  BTC x DOMINANZ  (E[R] brutto, Anker in Klammern)")
         print("     %-16s %22s %22s" % ("", "Dominanz FAELLT",
                                         "Dominanz STEIGT"))
@@ -393,6 +404,19 @@ def main() -> int:
                 zeile.append("%+8.4f±%.4f %s %7s"
                              % (mw, se, zeichen,
                                 "(%dk)" % (m.sum() // 1000)))
+                if zv:
+                    nw = []
+                    for bs, ds in zip(null_b, null_d):
+                        mm = np.isfinite(bs) & np.isfinite(ds)
+                        if unten is not None:
+                            mm &= bs >= unten
+                        if oben is not None:
+                            mm &= bs < oben
+                        mm &= (ds < 0) if dom_faellt else (ds >= 0)
+                        if mm.sum() >= MIND_JE_FUENFTEL:
+                            nw.append(float(r[mm].mean()))
+                    nw = np.array(nw)
+                    zeile.append("[ZV z %+.2f]" % ((mw - nw.mean()) / max(nw.std(ddof=1), 1e-12)))
             print("     %-16s %s" % (etikett, " ".join(zeile)))
         print("     ✔ = vom Null verschieden (tagesgeblockt) · "
               "⚠ = nicht zu trennen")

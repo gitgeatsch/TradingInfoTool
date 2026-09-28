@@ -463,6 +463,15 @@ NEUESTER_STAND = (
               "mitte und Dominanz faellt) haelt nicht; die Sperre aus 2.665 "
               "faellt nach R-R11 (z -1,52 statt -6,9). ABER die Anlage sieht "
               "Kontext erst ab ~0,06-0,08 - Kontext wirkt auf Markttage, nicht Anker"),
+    ("2.671", "K1 WIRKUNGSKURVEN (11 Merkmale): ema_abstand_atr SELBSTBEZOGEN "
+              "traegt (3 von 4 Mengen, monoton, asset-eigen, Lage vorher); A4: "
+              "bestaetigt bis ~2 ATR bisherigen Anstieg, danach schwaecher. "
+              "Aufloesung +-0,02. Kaeuferanteil, momentum ohne Befund"),
+    ("2.672", "Die Dominanz-Sperre aus 2.601 faellt ebenfalls: bitgleich "
+              "reproduziert (-0,0134), gegen die Zeitverschiebung z -1,59"),
+    ("2.673", "funding/Premium GETEILT: Asset-Anteil traegt nicht, Marktanteil "
+              "mit der richtigen (gemeinsamen) Nullwelt nicht nachweisbar - "
+              "Aufloesung fuer Marktmerkmale grober als 0,04"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
