@@ -350,3 +350,66 @@ Etikett.
 
 **Laufzeit:** je Menge etwa 5 bis 8 Minuten, nacheinander (nie zwei große
 Läufe parallel).
+
+---
+
+## 11. ✔ ERGEBNIS ALTERSACHSE (28.09.2026) — Befund 2.676, löst 2.675 ab
+
+Vorab festgelegt (Abschnitt 10, Commit 1a6e539), vier Mengen, alle Ausgaben
+**am Inhalt** geprüft (Schlusszeile, kein Traceback). Alter 0 h gibt die
+Randtabelle desselben Laufs exakt wieder; der zweite Lauf (mit Tageszeit)
+reproduziert den vorab festgelegten Teil zeilengleich.
+
+### 11a. Gültigkeit — keine Umkehr
+
+| | |
+|---|---|
+| **Umkehr** (10c) | **keine** — 6 Kurven × 11 Alter × 4 Mengen |
+| **Regeltest** | 1, 0, 0, 0 von 88 Zufallsrändern jenseits der Grenze (Bestes-von-132, \|z\| 3,05–3,21) |
+| ➤ | die Vorabbedingung *Altersachse bestätigt* ist erfüllt — die Einstiegsrolle ist **nicht mehr blockiert** |
+
+### 11b. Der Verlauf — oberer Rand, Suche / Prüfzeit minus Versatz
+
+| | 0–2 h | 6–12 h | 24 h | 36 h | 48 h |
+|---|---|---|---|---|---|
+| **rsi** | +0,038…+0,057 / +0,030…+0,050 | +0,016…+0,034 / +0,022…+0,048 | **+0,042…+0,049 / +0,049…+0,062** | klein | Suche +, **Prüfzeit −0,045…−0,052** |
+| **momentum** | am stärksten 1–3 h und 9 h: +0,040…+0,059 | 12 h +0,011…+0,017, 18 h ≈ 0 | **+0,015…+0,026 / +0,019…+0,026** | ≈ 0 | ≈ 0 / − |
+| **ema_abstand** | flach hoch +0,034…+0,082 (bis 24 h) | Prüfzeit bis 12 h +0,034…+0,050 | **+0,057…+0,082 / +0,019…+0,032** | Prüfzeit − | Prüfzeit − |
+
+⭐ **Der 24 h alte Wert trägt bei allen sechs Kurven in allen drei
+Zeiträumen und allen vier Mengen** — Suche +0,015…+0,082, Prüfzeit minus
+Versatz +0,019…+0,062, **2022 +0,026…+0,073**. Das löst den 2022-Vorbehalt
+von ema_abstand: er gilt nur für den **aktuellen** Wert (2022
+−0,014…−0,023), 24 h alt ist 2022 positiv (+0,026…+0,049). Und ein 24 h
+alter Wert **ist** Lage vor der jetzigen Bewegung (OPTIMUM).
+
+⚠️ **48 h ist nicht verwertbar:** Suche positiv, Prüfzeit negativ.
+
+### 11c. Gegenprüfung Tageszeit — nachträglich, ändert kein Urteil
+
+Die Wirkung ist über das Alter **tagesperiodisch** (hoch bei 0/24 h, tief bei
+6–12/36 h). Geprüft, ob das an der **Uhrzeit** der festen Anker hängt:
+
+| | Ergebnis |
+|---|---|
+| T1 Uhrzeiteffekt auf q5 | vorhanden, klein — Suche 18 h +0,016…+0,020, 06 h −0,008…−0,012 |
+| T2 Häufung der Randanker | kaum — 21 bis 29 % je Ankerstunde (gleichverteilt 25 %) |
+| T3 tagesbereinigt | der Rand ändert sich um höchstens 0,005, **das Muster bleibt** |
+| T4 tagesgleiche Nullwelt | z bleibt hoch; in den unverzerrten Mengen Zufall bis \|z\| 2,8 — im Bestand erreichte ein Zufallsmerkmal 4,0, dort ist diese Nullwelt zu eng |
+
+➤ **Kein Artefakt der Ankeruhrzeit.** Eine Erklärung ist das nicht — und
+keine wird hier behauptet.
+
+### 11d. Was daraus folgt — kein Blocker
+
+| | |
+|---|---|
+| **K1 Schritt 2** | *oben gestreckt* (rsi/momentum/ema_abstand, **gemeinsam** — sie korrelieren) geht mit dem **aktuellen und dem 24 h alten Wert** als zwei abgestufte Beiträge ein, jeder mit seinem gemessenen Gewicht; A4 als abnehmendes Gewicht |
+| ⛔ nicht | eine Schwelle *erst ab X Stunden*, ein Schnitt bei 2 ATR, 48 h als Beitrag |
+
+### 11e. Zwei Werkzeugfehler, beide dabei gefunden
+
+| | |
+|---|---|
+| **Lesefehler 2.675** | die alte Altersachse druckte nur `d[0]`/`d[11]` (äußerste Einzelstufe); ich habe sie gegen den Zweistufen-Rand gelesen. Das Werkzeug druckt jetzt den Rand |
+| **Exit-Code** | die Kettenskripte schrieben `exit=$?` hinter `$(date …)` — das gab den Exit-Code von `date` wieder, immer 0. Die Tageszeit-Läufe brachen **nach** den benötigten Abschnitten mit Speichermangel ab und meldeten trotzdem 0. Vollständigkeit wird am **Inhalt** geprüft |

@@ -42,7 +42,8 @@ die Zielgrößen aus § 2. Der Stand im Code: `python hebel_neubau.py`
 | | |
 |---|---|
 | ✔ **trägt, unabhängig bestätigt** | rsi und momentum_kurz **oberer Rand** je Asset (4 von 4 Mengen, A4 bestätigt) · ema_abstand_atr selbstbezogen als **Kurve** (2.671) |
-| ⚠️ **Rolle offen** | *oben gestreckt* ist eine **laufende** Bewegung — nach OPTIMUM (§ 2) eine *Wahrscheinlichkeit*, nach A4 bestätigt. Die **Altersachse** ist ungeklärt (6 h alt trägt fast nichts) — vorher kein Einstieg |
+| ✔ **Altersachse gültig** (2.676) | keine Umkehr in irgendeinem Alter; der **24 h alte** Wert trägt am oberen Rand in Suche, Prüfzeit **und 2022** — auch bei ema_abstand, das mit dem aktuellen Wert 2022 kehrt. Ein 24 h alter Wert ist Lage **vor** der jetzigen Bewegung (OPTIMUM). ⛔ Die frühere Aussage *6 h alt trägt fast nichts* (2.675) war ein Lesefehler |
+| ⭐ **kein Blocker** (Nutzer 28.09.) | Altersachse und A4 sperren nichts — *oben gestreckt* geht mit dem aktuellen und dem 24 h alten Wert als zwei **abgestufte** Beiträge in K1 Schritt 2 ein, A4 als abnehmendes Gewicht |
 | ⚠️ **nur in der Suche** | funding_markt und konten_verh_markt **unterer Rand** (niedriges Funding, wenige Longs **marktweit**) — Kontext-Kandidat |
 | ⛔ **fällt** | Sperre *viele Longs je Asset* (in der Prüfzeit nicht da) · ema_abstand oberer Rand als Rand (kehrt 2022) · Premium · Käuferanteil · taker_verh · Kontextfläche (2.670) · Dominanz-Sperren 2.601/2.665 (2.670/2.672) |
 
@@ -269,7 +270,7 @@ Befundes, bevor alle Schritte gelaufen sind.
 ➤ Bewacht im Paket Hebelneubau: ein **positiver** Neubau-Befund ab 2.661
 muss in seiner Basis die Vorwärtsrechnung und die Gegenprüfung nennen.
 
-## ⭐⭐⭐ DER PFLICHTABLAUF — Fassung 28.09.2026 (K1 bis 2.675)
+## ⭐⭐⭐ DER PFLICHTABLAUF — Fassung 28.09.2026 (K1 bis 2.676)
 
 Die zehn Schritte oben gelten weiter. Geändert oder dazugekommen, jeweils
 mit dem Anlass:
@@ -287,6 +288,10 @@ mit dem Anlass:
 | 17 | ⭐ **REGELTEST vor der Verwendung**: Zufallsmerkmale (geglättet wie echte, je Asset **und** als Marktreihe) durch die Regel — Soll: fast nie *trägt*; dazu eine gepflanzte Wirkung bekannter Größe → die Auflösung | Nutzer 28.09.: *die Regel muss in unseren Tests und Simulationen funktionieren* (2.675: 0 von 40, Auflösung +0,02 je Asset, ~0,08 Markt) |
 | 18 | **Bestätigung gegen den Versatz, nicht gegen null**: ein Vorzeichen in der Prüfzeit zählt erst, wenn es den Versatz der Zufallsränder klar übersteigt; bei Markträndern ist die Marktstreuung der Maßstab | die Prüfzeit liegt +0,01 über ihrem Normal, Marktränder streuen 0,035 (2.675) |
 | 19 | **Simulation (Ebene 3)** vor jeder Verwendung im Betrieb: Signale mit der Regel gehen auf ungesehenen Monaten messbar anders aus als ohne | Nutzer 28.09. |
+| 20 | **Über eine Achse dasselbe Maß an jedem Punkt**: wer ein Merkmal über Alter, Anstieg oder Zeitraum verfolgt, vergleicht an jedem Punkt **denselben** Rand (Stufen 10+11), nie eine Einzelstufe gegen den Rand | die Altersachse druckte nur die äußerste Stufe und wurde gegen den Rand gelesen (2.675 → 2.676) |
+| 21 | **Uhrzeit prüfen** bei festen Ankern: T1 q5 je Ankerstunde, Rand **tagesbereinigt**; eine Periode über 24 h ist erst nach dieser Prüfung eine Aussage | die Nullwelt (Verschiebung um beliebige Stunden) zieht einen Uhrzeiteffekt nicht ab (2.676) |
+| 22 | **Vollständigkeit am Inhalt**: ein Lauf gilt erst mit Schlusszeile und ohne Traceback — ein Exit-Code im Kettenprotokoll allein genügt nicht | `exit=$?` hinter `$(date …)` meldete immer 0 (2.676) |
+| 23 | ⭐ **Kein künstlicher Blocker** (Nutzer 28.09.): Achsen wie Alter und A4 prüfen die **Gültigkeit** und liefern **Gewichte** — keine Schwelle *erst ab X*, kein Schnitt | Nutzervorgabe *keine Alles-oder-nichts-Schwelle* |
 
 ⚠️ **Nicht mehr Pflicht:** Episoden (Schritt 3 alt) und die Karenz als
 eigener Lauf — beide sind durch Tagesanker, Altersachse und A4 ersetzt.

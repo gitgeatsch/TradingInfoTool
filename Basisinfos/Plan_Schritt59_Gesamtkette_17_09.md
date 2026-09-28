@@ -2346,17 +2346,17 @@ weiter.
 | **die Übergabe** | `Basisinfos/UEBERGABE_Hebelneubau_27_09.md` (Nachtrag 28.09. zuerst) |
 | **die fachlichen Entscheidungen** | `Basisinfos/Entscheidungen_Hebelneubau.md` (E-1 bis E-11) |
 
-**Was seit dem 24.09. gemessen ist** (Befunde 2.625–2.675, Register):
+**Was seit dem 24.09. gemessen ist** +–2.675, Register):
 
 | | |
 |---|---|
 | ✔ Grundlagen | Horizont 24 h als Messfenster (2.642/2.646); die Anwendungsebene K1–K7 abgestimmt (27.09.) |
 | ✔ Messbasis | überlebensverzerrt gefunden (2.668) und mit 137 eingestellten Paaren plus Terminmarkt vervollständigt (2.669) |
-| ✔ trägt | rsi und momentum oberer Rand je Asset, ema_abstand selbstbezogen als Kurve (2.671, 2.675) — ⚠️ Altersachse ungeklärt, Einstiegsrolle offen |
+| ✔ trägt | rsi und momentum oberer Rand je Asset, ema_abstand selbstbezogen als Kurve (2.671, 2.675) — Altersachse gültig, der 24 h alte Wert trägt in jedem Zeitraum (2.676) |
 | ⚠️ nur in der Suche | funding und wenige Longs **marktweit** am unteren Rand (2.675) |
 | ⛔ gefallen | Kontextfläche BTC × Dominanz (2.670), Dominanz-Sperren (2.672), funding/Premium je Asset (2.673), Sperre viele Longs je Asset (2.675) |
 
 ➤ **M1-Kriterium 2 bleibt offen.** Nichts davon ist verdrahtet; die
 Betriebsumstellung kommt erst nach der ganzen Kette einschließlich der
-LLM-Rollen. Nächster Schritt: die Altersachse, dann K1 Schritt 2, K6, K7,
-Simulation Ebene 3.
+LLM-Rollen. Nächster Schritt: K1 Schritt 2 (die Altersachse ist gemessen,
+2.676), dann K6, K7, Simulation Ebene 3.

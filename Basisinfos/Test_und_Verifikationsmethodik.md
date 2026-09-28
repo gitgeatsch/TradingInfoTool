@@ -5371,7 +5371,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `pruefe_eingestellte.py` | **Inhaltsprüfung** der Nachladung (P1 Archiv gegen Bestand, P2 Zombie, P3 Zeit, P4 Vorgeschichte, P5 Einordnung, P6 Plausibilität) | **Befund 2.668**: P1 ETH/SOL/LINK null Abweichungen; Gegenprobe mit drei eingebauten Fehlern — alle erkannt. ⚠️ Die Messwerkzeuge lesen die Datei nur über `messe_e2_beitraege --menge mit / unverzerrt:<saat>` |
 | `messe_k3_kontextflaeche.py` | **K3: Kontextfläche BTC × Dominanz** (3 × 3, 24/72/120 h) gegen die Phase des Assets | **Befund 2.670 (28.09.2026)**: Drittel rollierend aus 12 Monaten, feste Tagesanker 00/06/12/18 UTC, **Zeitverschiebungs-Nullwelt** (Bestes-von-27), Such-/Prüf-Trennung, Additivität, Hypothese V10, Pflichtproben G1/G4/G5/G6/G9, R-R11-Zeile; `--menge` |
 | `messe_k3_reproduktion_e2f_kontext.py` | **R-R11 zu K3**: die Kontextzeile aus E2f exakt nachrechnen, dann gegen die Zeitverschiebung | **Befund 2.670**: −0,0198 reproduziert, z −1,52 statt −6,9 — die Episoden-Nullwelt war für marktweite Größen zu optimistisch |
-| `messe_k1_wirkungskurven.py` | **K1 Schritt 1: Wirkungskurven je Beitrag** (12 Stufen, roh und selbstbezogen) gegen die Phase des Assets | **Befunde 2.671, 2.673–2.675 (28.09.2026)**: `--gruppe voll / termin / teilung`, `--nur-markt`, `--gemeinsam` (Nullwelt für Marktmerkmale: dieselbe Verschiebung für alle Assets); Kennzahl S über die ganze Kurve, Formkriterium Suche/Prüfung, A4-Achse (bisheriger Anstieg in ATR), Altersachse, Positivkontrolle in eine wirkungslose Kopie, Korrelationsmatrix; `--menge`. **Seit 2.675:** das vorab festgelegte **Randkriterium** (Rand oben P90–>P99, unten <P1–P10; Grenze Bestes-von-(2 × Kurven); Prüfzeit, 3/4 Jahre, 60 % Assets, 2022) und `--gruppe regeltest` — 10 Zufallsmerkmale durch die Regel (Soll 0) plus gepflanzter Rand bekannter Größe; mit `--nur-markt --gemeinsam` als Zufalls-**Markt**reihe gegen die gemeinsame Nullwelt ⚠️ Die Pflanzung prüft die Asset-Bedingung nicht |
+| `messe_k1_wirkungskurven.py` | **K1 Schritt 1: Wirkungskurven je Beitrag** (12 Stufen, roh und selbstbezogen) gegen die Phase des Assets | **Befunde 2.671, 2.673–2.676 (28.09.2026)**: `--gruppe voll / termin / teilung`, `--nur-markt`, `--gemeinsam` (Nullwelt für Marktmerkmale: dieselbe Verschiebung für alle Assets); Kennzahl S über die ganze Kurve, Formkriterium Suche/Prüfung, A4-Achse (bisheriger Anstieg in ATR), Altersachse, Positivkontrolle in eine wirkungslose Kopie, Korrelationsmatrix; `--menge`. **Seit 2.675:** das vorab festgelegte **Randkriterium** (Rand oben P90–>P99, unten <P1–P10; Grenze Bestes-von-(2 × Kurven); Prüfzeit, 3/4 Jahre, 60 % Assets, 2022), `--gruppe altersachse` (**2.676**: Alter 0–48 h auf demselben Rand, Nullwelt, Bestes-von-132, Gegenprüfung Tageszeit) und `--gruppe regeltest` — 10 Zufallsmerkmale durch die Regel (Soll 0) plus gepflanzter Rand bekannter Größe; mit `--nur-markt --gemeinsam` als Zufalls-**Markt**reihe gegen die gemeinsame Nullwelt ⚠️ Die Pflanzung prüft die Asset-Bedingung nicht |
 | `messe_e3_gegenpruefung.py` | **nach** jeder Vorwärtsrechnung, bevor ihr Ergebnis weiterverwendet wird | **Befund 2.660 (27.09.2026)**: die E3-Kernrechnung fünfmal mit vorher bekanntem Ausgang — Selbstprobe, Merkmale 1 h älter (muss ähnlich bleiben), absichtlicher Vorgriff 1 h (muss steigen), Etikettentausch in Symbol × Monat (muss null sein), 50 Zufallslagen (Fehlalarm). ⚠️ Zufallslagen nur in der Größe der breiten Kandidaten |
 | `messe_e3_vorwaerts.py` | wenn eine Lage **vorwärts** geprüft werden soll — jeder Monat gegen seine eigene Kalibrierung | **Befund 2.659 (27.09.2026)**: 32 Prüfmonate 2024-01 bis 2026-08, Schwellen je Monat nur aus den 12 Monaten davor; 9 vorab festgelegte Kandidaten × beim Erscheinen / 1 h bestätigt, mit Gegenprobe (viele Longs, muss negativ sein); Ausgang +20 / −10 / sonst Kurs nach 120 h gegen das eigene Asset im **selben Monat**; Bestes-von-18, Quartale, BTC-Monatslage (Regime). Kein Stop, kein Trailing |
 | `messe_e2d_pruefung_squeeze.py` | wenn eine gefundene Lage **vorab festgelegt** gegen einen unberührten Zeitraum geprüft werden soll | **Befund 2.657 (27.09.2026)**: Lage *hohe Vola bzw. Volumenschub & wenige Long-Konten* (dort noch *Squeeze* genannt — eine Deutung, gemessen ist nur die Lage, 2.660) × Varianten (beim Erscheinen, 1 h / 3 h später bestätigt). Schwellen nur aus 2021–2023, 2024 unberührt, 2025/26 als gesehen markiert; je Asset höchstens ein Einstieg in 24 h; Ziel +20 / −10 % / sonst Kurs nach 120 h → Erwartungswert gegen das eigene Asset (symboltreue Nullwelt, Bestes-von-12); Rückgang vor dem Ziel; BTC-Kontext. Kein Stop, kein Trailing |
@@ -11322,3 +11322,30 @@ alle Assets dieselben Markttage sehen.
 die auf der Anlage sitzt. Beides ersetzt die Simulation (Ebene 3) nicht.
 Werkzeug: `messe_k1_wirkungskurven.py --gruppe regeltest` (mit
 `--nur-markt --gemeinsam` als Marktreihe).
+
+---
+
+## 2.676 ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026)
+
+**Anlass:** die Altersachse (Hebel-Neubau, K1) meldete in 2.675 *der 6 h
+alte Wert trägt fast nichts*. Das war ein **Lesefehler**: das Werkzeug
+druckte für das Alter nur die äußerste Einzelstufe (> P99, ~1 % der
+Anker), für das Alter 0 stand daneben der Rand aus zwei Stufen (P90–P99 und
+> P99). Auf demselben Maß trug der 6 h alte Wert (+0,016…+0,030).
+
+### Die drei Regeln
+
+| # | Regel | Anlass |
+|---|---|---|
+| **1** | Wer eine Größe **über eine Achse** verfolgt (Alter, Anstieg, Zeitraum), misst an **jedem** Punkt mit **demselben** Maß — und das Werkzeug druckt das Maß mit | Einzelstufe gegen Zweistufen-Rand (2.675) |
+| **2** | Bei **festen Ankern** (00/06/12/18 UTC) ist eine Periode über **24 h** erst nach der Uhrzeitprüfung eine Aussage: Zielgröße je Ankerstunde, Häufung je Stunde, Wert **tagesbereinigt**, dazu eine Nullwelt, die nur um ganze Tage verschiebt | die Zeitverschiebung um beliebige Stunden zieht einen Uhrzeiteffekt nicht ab |
+| **3** | Ein Lauf ist **am Inhalt** vollständig (Schlusszeile, kein Traceback), nicht am Exit-Code im Protokoll | `echo "$(date +%H:%M) … exit=$?"` gibt den Code von `date` wieder — immer 0; ein Lauf mit Speicherabbruch meldete 0 |
+
+➤ **Ergebnis der Prüfung nach Regel 2:** q5 hängt an der Ankerstunde
+(±0,01 bis 0,02), der Rand tagesbereinigt ändert sich um höchstens 0,005 —
+die Periode ist **kein** Artefakt der Uhrzeit. ⚠️ Die tagesgleiche Nullwelt
+ist auf kleinen Mengen zu eng (Bestand: Zufall |z| 4,0) — dort zählt die
+Bereinigung, nicht diese Nullwelt.
+
+➤ **Für Regel 3 im Skript:** den Code **direkt** nach dem Aufruf sichern —
+`python … ; rc=$?; echo "… exit=$rc"`.

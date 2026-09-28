@@ -299,7 +299,7 @@ BEITRAGSLAGE = {
     # ── die drei registrierten Traeger ───────────────────────────────
     "funding": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.663", "2.665", "2.666", "2.675"),
+        befund=("2.663", "2.665", "2.666", "2.676"),
         beleg="mit dem VORTAGESWERT: Lift 4,45 bei <= -0,0040 auf +15 "
               "%/H12 (vorher 9,55 - die Haelfte war Vorgriff), traegt auf "
               "H6/H12/H24, +30 %/H48 nur Bewegung; >= 0,0016 zeigt nach "
@@ -319,7 +319,7 @@ BEITRAGSLAGE = {
                   "Kandidat, nicht als Beitrag je Asset"),
     "oi_aenderung": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.663", "2.662", "2.675"),
+        befund=("2.663", "2.662", "2.676"),
         beleg="Lift 6,23 bei >= 0,3355 auf +20 %/H24, 5,02 auf +30 %/H48; "
               ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67. K1: "
               "asset-eigen (Tag/Phase 0,8-0,9), Kurve nicht monoton; UNTERER "
@@ -343,7 +343,7 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     # ── Terminmarkt und Volumen, mitgemessen in 2.651 ───────────────
     "konten_verh": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.675"),
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.676"),
         beleg="Lift 2,96 bei <= 0,5759 - traegt NUR auf H6 und H12; "
               "Haltequote 0,60 bis 0,66. K1: ueberwiegend MARKT (Tag/Phase "
               "0,07-0,18). Marktanteil am UNTEREN Rand (wenige Longs "
@@ -383,7 +383,7 @@ BEITRAGSLAGE = {
     # ── Kursmerkmale (EMA/RSI/ATR-Familie, abgeschlossen) ──────────
     "ema_abstand_atr": dict(
         b1="faellt", vorlauf=None, b2="belegt",
-        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.675"),
+        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.676"),
         beleg="B2: d 0,521 auf MAE gegen 0,267 auf MFE (2.642), absolut "
               "und je Asset (2.647). B1: Richtung RUNTER - Abstuerze "
               "9,8-fach (2.648), bei Karenz null von 11 (2.650). "
@@ -392,32 +392,32 @@ BEITRAGSLAGE = {
               "A4 bestaetigt bis ~2 ATR (2.671); der OBERE Rand kehrt aber 2022 "
               "in allen 4 Mengen (-0,014..-0,020, 2.675)",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt="ALTERSACHSE UNGEKLAERT (2.675): der obere Rand traegt mit "
-                  "dem aktuellen und dem 24 h alten Wert, der 6 h alte fast "
-                  "nicht - bei ema_abstand, rsi und momentum gleich"),
+        vorbehalt="2022 (2.676): der AKTUELLE Wert am oberen Rand kehrt 2022 "
+                  "(-0,014..-0,023), der 24 h alte nicht (+0,026..+0,049) - in "
+                  "der Kombination mit dem Alter gewichten, nicht sperren"),
     "momentum_kurz": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650", "2.675"),
+        befund=("2.648", "2.650", "2.676"),
         beleg="Lift 6,93 auf +15 %/H6, alle sechs Pruefungen (2.648); "
               "Haltequote k24/k0 0,31, bei k=3 schon null von 11 (2.650) - "
               "BEGLEITET, sagt nicht vorher. K1: OBERER Rand (selbst) traegt "
               "in 4 von 4 Mengen, Pruefzeit +0,026..+0,035 - rund dreimal "
-              "der Versatz; A4 bestaetigt, nicht gelaufen (2.675)",
+              "der Versatz; A4 bestaetigt, nicht gelaufen (2.675). ALTERSACHSE "
+              "gueltig (2.676): am staerksten 1-9 h alt, 24 h alt traegt in "
+              "Suche, Pruefzeit und 2022",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt="ALTERSACHSE UNGEKLAERT (2.675), dazu die ROLLE: der obere "
-                  "Rand misst eine laufende Bewegung - nach OPTIMUM eine "
-                  "WAHRSCHEINLICHKEIT, nach A4 (Nutzer 28.09.) bestaetigt; "
-                  "Einstieg erst nach geklaerter Altersachse"),
+        vorbehalt=""),
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650", "2.675"),
+        befund=("2.648", "2.650", "2.676"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
-              "Versatz; A4 bestaetigt; korreliert mit momentum (+0,62, 2.675)",
+              "Versatz; A4 bestaetigt; korreliert mit momentum (+0,62, 2.675). "
+              "ALTERSACHSE gueltig (2.676): Delle bei 6-12 h, 24 h alt wieder "
+              "voll - in Suche, Pruefzeit und 2022",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt="ALTERSACHSE UNGEKLAERT und ROLLE offen (2.675) - wie "
-                  "momentum_kurz"),
+        vorbehalt=""),
     "vola": dict(
         b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
@@ -535,7 +535,14 @@ NEUESTER_STAND = (
               "bestaetigt - Altersachse ungeklaert (6 h alt traegt fast nichts), "
               "Rolle Einstieg offen. funding_markt unten nur in der Suche "
               "nachgewiesen. ema_abstand oben kehrt 2022. Viele Longs je Asset "
-              "haelt in der Pruefzeit nicht"),
+              "haelt in der Pruefzeit nicht - abgeloest durch 2.676 (der "
+              "Altersachsen-Satz war ein Lesefehler, alles uebrige gilt)"),
+    ("2.676", "ALTERSACHSE (vorab festgelegt) GUELTIG: keine Umkehr in 11 "
+              "Altern x 6 Kurven x 4 Mengen, Regeltest 1/0/0/0 von 88. Der 24 h "
+              "ALTE Wert traegt am oberen Rand in Suche, Pruefzeit und 2022 - "
+              "auch ema_abstand, das mit dem aktuellen Wert 2022 kehrt. Die "
+              "Tagesperiode ist kein Artefakt der Ankeruhrzeit. Kein Blocker: "
+              "aktueller und 24 h alter Wert als zwei abgestufte Beitraege"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -545,10 +552,10 @@ NEUESTER_STAND = (
                "der Liquidationsgefahr. Die Messbasis ist vervollstaendigt "
                "(2.669, --menge unverzerrt). K3 ist gemessen (2.670: der "
                "Kontext geht derzeit ohne Gewicht ein), K1 Schritt 1 samt "
-               "Randkriterium auch (2.671-2.675). Naechster Schritt: die "
-               "Altersachse von *oben gestreckt* klaeren (6 h alt traegt fast "
-               "nichts), dann K1 Schritt 2 - rsi/momentum/ema_abstand GEMEINSAM "
-               "schaetzen, funding_markt als Kontext-Kandidat; vor jeder "
+               "Randkriterium und Altersachse auch (2.671-2.676). Naechster "
+               "Schritt: K1 Schritt 2 - rsi/momentum/ema_abstand GEMEINSAM "
+               "schaetzen, je mit dem aktuellen und dem 24 h alten Wert, A4 als "
+               "Gewicht; funding_markt als Kontext-Kandidat; vor jeder "
                "Verwendung die Simulation (Ebene 3)"),
 )
 
@@ -603,6 +610,9 @@ def gemessene_merkmale() -> dict:
 #   art "neu"      ein Merkmal auf einer Bewertung, auf der es NIE
 #                  gemessen wurde
 # ⚠️ Der Laderfix 2.611 ist keine Messung und steht unter OFFENE_AUFGABEN.
+# ⚠️ 28.09. abends: die Probe ALTERSACHSE ist gelaufen (2.676) - gueltig,
+# keine Umkehr, der 24 h alte Wert traegt in jedem Zeitraum; sie ist hier
+# gestrichen. Naechster Schritt ist K1 Schritt 2 (im Hauptplan).
 # ⚠️ 28.09. nachgezogen: die Probe *funding gegen die Phase* (2.666) ist
 # durch K1 beantwortet (2.673, 2.675) - der Asset-Anteil traegt nicht, der
 # Marktanteil am unteren Rand nur in der Suche. Neu: die Altersachse von
@@ -610,22 +620,14 @@ def gemessene_merkmale() -> dict:
 # Zeit. Danach K1 Schritt 2 (gemeinsame Schaetzung) - eine Kombination,
 # kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
-    dict(was="ALTERSACHSE *oben gestreckt*: warum traegt der 6 h alte Wert nicht?",
-         art="probe", bewertung="b1",
-         merkmale=("rsi", "momentum_kurz", "ema_abstand_atr"), prueft="2.675",
-         warum="in allen vier Mengen gleich: der obere Rand traegt mit dem "
-               "aktuellen Wert (+0,03..+0,06) und dem 24 h alten (+0,07.."
-               "+0,15), der 6 h alte fast nicht (-0,025..+0,033). Zuerst ein "
-               "Artefakt der Rechnung ausschliessen (Tagesanker 00/06/12/18 "
-               "gegen das Alter 6 h, Stufengrenzen), dann die Achse fein (0 bis "
-               "48 h). Die Vorabfestlegung verlangt fuer die Rolle Einstieg "
-               "eine bestaetigte Altersachse"),
     dict(was="Die Suche-Raender in UNGESEHENER Zeit bestaetigen",
          art="probe", bewertung="b1",
-         merkmale=("funding", "konten_verh", "oi_aenderung"), prueft="2.675",
+         merkmale=("funding", "konten_verh", "oi_aenderung", "ema_abstand_atr"),
+         prueft="2.676",
          warum="funding_markt und konten_verh_markt unten stehen nur in der "
                "Suche (Pruefzeit und 2022 im Marktrauschen), oi_aenderung "
-               "unten nur auf dem Versatz. Mehr Pruefzeit gibt es nicht - die "
+               "unten nur auf dem Versatz, ema_abstand oben kehrt 2022 mit dem "
+               "aktuellen Wert (mit 24 h Alter nicht). Mehr Pruefzeit gibt es nicht - die "
                "Bestaetigung kommt aus der Simulation (Ebene 3) auf "
                "ungesehenen Monaten, mit der Marktstreuung als Massstab"),
     dict(was="Vorlauf bei H72 und H120",

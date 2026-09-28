@@ -19,10 +19,11 @@ Die zehn Antworten unten sind vom 27.09. abends. **Seitdem geändert:**
 | Frage | neu |
 |---|---|
 | **3/4 · Ablauf und Regelwerk** | die **Anwendungsebene K1–K7** ist abgestimmt — Wirkungskurven statt Schalter, Urteil gegen die **Phase** des Assets, Ereignis **q5** (+5 vor −5 % in 24 h), Schwelle auf kalibriertem q mit 3–5 Stufen, Hebelstufe aus der **Liquidationsgefahr**, Messbasis Binance. `Regelwerk_Hebel_Bewertung_27_09.md`, Block *Stand 28.09.* und *Pflichtablauf Fassung 28.09.* |
-| **5 · Was trägt** | ✔ rsi und momentum_kurz **oberer Rand** je Asset (4 von 4 Mengen, A4 bestätigt) · ema_abstand selbstbezogen als **Kurve** · ⚠️ funding_markt / konten_verh_markt **unterer Rand** nur in der Suche · ⛔ *viele Longs je Asset*, Premium, Käuferanteil, Kontextfläche, Dominanz-Sperren. Befunde 2.668–2.675 |
+| **5 · Was trägt** | ✔ rsi und momentum_kurz **oberer Rand** je Asset (4 von 4 Mengen, A4 bestätigt, Altersachse gültig) · ema_abstand selbstbezogen als **Kurve** · ⭐ der **24 h alte** Wert oben in jedem Zeitraum · ⚠️ funding_markt / konten_verh_markt **unterer Rand** nur in der Suche · ⛔ *viele Longs je Asset*, Premium, Käuferanteil, Kontextfläche, Dominanz-Sperren. Befunde 2.668–2.676 |
 | **6 · Was darf eine Messung** | Grundgesamtheit `--menge unverzerrt:1..3` **und** `bestand`; Nullwelt Zeitverschiebung (je Asset, **gemeinsam** für Marktmerkmale); **Regeltest** vor jeder Verwendung einer Urteilsregel |
 | **8 · Messstandard** | Positivkontrolle, Bekanntheitszeitpunkt und Fehlalarmquote sind geschlossen (Regelwerk § 6, Stand 28.09.) |
-| **10 · Nächster Schritt** | **die Altersachse** von *oben gestreckt* klären — der 6 h alte Wert trägt fast nichts, der aktuelle und der 24 h alte schon; erst danach eine Einstiegsrolle. Dann K1 Schritt 2 (gemeinsam schätzen), K6, K7, Simulation Ebene 3, Stammsatz |
+| **10 · Nächster Schritt** | ✔ die Altersachse ist gemessen (2.676): gültig, der **24 h alte** Wert trägt am oberen Rand in Suche, Prüfzeit und 2022, die Tagesperiode ist kein Uhrzeit-Artefakt — ⛔ *6 h alt trägt fast nichts* (2.675) war ein Lesefehler. **Kein Blocker** (Nutzer): Alter und A4 werden Gewichte. ➤ **K1 Schritt 2** (gemeinsam schätzen, aktueller und 24 h alter Wert), dann K6, K7, Simulation Ebene 3, Stammsatz |
+| **Werkzeug** | Kettenskripte: der Exit-Code hinter `$(date …)` war immer 0 — Vollständigkeit **am Inhalt** prüfen (Schlusszeile, kein Traceback) |
 
 ```bash
 python hebel_neubau.py | sed -n '/NEUESTER STAND/,/DIE NAECHSTEN/p'
