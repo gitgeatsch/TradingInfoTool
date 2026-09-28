@@ -24,7 +24,7 @@ die Zielgrößen aus § 2. Der Stand im Code: `python hebel_neubau.py`
 | **K2** | Urteil gegen die **PHASE** — eigenes Asset, eigene letzte 12 Monate, nur bekannte Ausgänge; Kontrollen Moment (Monat) und Tag; trägt der Markt viel → teilen in `_markt` (Kontext) und `_eigen` (Beitrag) = **W11** | Bezug *Asset im selben Monat* (meine Verschärfung, 2.666) |
 | **K3** | Kontextfläche BTC-Rendite × Dominanz-Änderung, Zeitverschiebungs-Nullwelt | – |
 | **K4** | Ereignis **q5**: +5 % vor −5 % binnen 24 h als Ausgangsbasis; Höhe × Fenster als Achse; ein späterer Erfolg zählt | *+X % in Y h* (gesetzt) |
-| **K5** | Schwelle auf **kalibriertem q**, Höhe nach Tabelle durch den Nutzer; **3–5 Stufen**, so viele wie trennscharf, symmetrisch mit Sperren | *nein / gut / sehr gut* |
+| **K5** | ⭐ **geändert 28.09. (vorläufig):** Schwelle auf dem **Beitrag** — dem kalibrierten Vorsprung gegen das eigene Normal; das Normal ist Bezugspunkt, entscheidet nicht mit (2.678: eine Schwelle auf Normal + Kurven wählt das Normal, und das kehrt zur Mitte zurück). Höhe nach Tabelle durch den Nutzer; **3–5 Stufen**, symmetrisch mit Sperren. *Trägt auch das nicht, wird neu abgestimmt* | *nein / gut / sehr gut*; zuerst *Schwelle auf kalibriertem q* (27.09.) |
 | **K6** | Hebelstufe = **höchste Stufe mit Liquidationswahrscheinlichkeit unter einer Nutzergrenze**; zuerst R (nur Risiko), R+S als Folgemessung | *MAE in ATR* |
 | **K7** | Messbasis **Binance** (Nutzer: *echte Börse, Bitpanda ein Broker*), Markpreis vor Spot-Tief, Bitpanda-Formel m = 0,09, Abgleich an 4 echten Liquidationen | – |
 

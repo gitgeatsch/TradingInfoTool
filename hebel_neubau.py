@@ -227,9 +227,15 @@ REGELWERK = {
                        "ein spaeterer Erfolg zaehlt mit)",
         "bezug": "die PHASE des eigenen Assets - seine letzten 12 Monate, nur "
                  "bekannte Ausgaenge (K2); Kontrollen: Moment (Monat) und Tag",
-        "nullpunkt": "q der Phase (Dq = q(Lage) - q(Phase))",
+        "nullpunkt": "q der Phase (Dq = q(Lage) - q(Phase)) - das Normal ist der "
+                     "BEZUGSPUNKT, es entscheidet nicht mit (K5 geaendert 28.09.)",
+        # ⭐ K5 GEAENDERT 28.09. (Nutzer: *ja, K5 Schwelle auf den Beitrag*,
+        # VORLAEUFIG - *wenn das auch nicht klappt, muessen wir wieder
+        # abstimmen*): nach 2.678 waehlt eine Schwelle auf Normal + Kurven das
+        # Phase-Normal, und das kehrt zur Mitte zurueck
         "ergebnis": "nein | 3 bis 5 Stufen, so viele wie trennscharf, Schwelle "
-                    "auf kalibriertem q (K5)",
+                    "auf dem BEITRAG - dem kalibrierten Vorsprung gegen das eigene "
+                    "Normal (K5, vorlaeufig)",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
@@ -569,11 +575,11 @@ NEUESTER_STAND = (
                "Randkriterium und Altersachse auch (2.671-2.676), K1 Schritt 2 "
                "als Kurvenmodell verworfen (2.677), der zweite Anlauf traegt nach "
                "dem Vorabkriterium nicht, zeigt aber die Ursache (2.678: das "
-               "Normal). Offen zur Entscheidung: K5 Schwelle auf dem BEITRAG statt "
-               "auf Normal + Kurven, oder ein gedaempftes Normal (K2); dann die "
-               "Frage, ob die Kombination nach dem Beitrag mehr bringt als rsi "
-               "allein. K6 (Hebelstufe) laeuft parallel an. Vor jeder Verwendung "
-               "die Simulation (Ebene 3)"),
+               "Normal). ENTSCHIEDEN (vorlaeufig): K5 Schwelle auf dem BEITRAG. "
+               "Naechste Messfrage: bringt die Kombination nach dem Beitrag mehr "
+               "als rsi allein - mit der Pflicht, dass die Auswahl in jedem "
+               "Drittel des Normals positiv ist. K6 (Hebelstufe) laeuft, Tor "
+               "bestanden. Vor jeder Verwendung die Simulation (Ebene 3)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.

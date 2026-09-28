@@ -194,3 +194,15 @@ Juli sind enthalten) — ein neuer Export erst, wenn K7 ansteht.
 | **Markpreis-Lücken** | ein Anker mit einer fehlenden Markpreis-Stunde im Fenster fällt heraus — sonst zählte die Lücke still als *nicht liquidiert* |
 | Nullwelt-Versatz | ≥ 360 Gitteranker (= 90 Tage) je Asset |
 | Reihenfolge | Werkzeugtest → R-R11 und Tor (Bestand, Spot-Tief) → vier Mengen mit dem Spot-Tief → nach dem Laden mit dem Markpreis (nie zwei Rechnungen zugleich) |
+
+---
+
+## 10. ✔ WERKZEUGTEST, R-R11 und TOR (28.09.2026, Bestand, Spot-Tief)
+
+| | Ergebnis |
+|---|---|
+| **R-R11** E2i | ✔ **reproduziert**: 5x binnen 72 h ATR-Fünftel 1 / 5 **5,80 % / 26,90 %**, 24 h 1,04 % / 9,56 %; 3x 72 h 0,29 % / **2,94 %**; 2x 72 h 0,09 % / **0,43 %** — wie 2.667/2.669 |
+| **Tor** (H7) 5x / 72 h | ✔ **bestanden, 5 von 5**: eine gepflanzte Verdopplung im obersten Zehntel eines verschobenen Eingangs gibt Mehrwert +6,6 bis +8,2 gegen die Grenze −1,3 (Nullwelt Mittel −1,35) → die **Risikokurven werden gemessen** |
+| Werkzeugtest | alle Abschnitte liefern; 2x / 24 h hat in drei Quartalen zu wenige Liquidationen (erwartet) |
+
+➤ Danach die vier Mengen mit dem Spot-Tief (`data/_vergleich/k6_spot__*.txt`).

@@ -189,6 +189,33 @@ Frage der **Positionsführung**, nicht der Bewertung.
 | **Hebelstufe** | nicht hier — K6, aus dem Risiko |
 | **Zahl der Stufen** | ✔ siehe **K5b** unten |
 
+### ⭐⭐ K5 GEÄNDERT (28.09.2026) — die Schwelle liegt auf dem BEITRAG
+
+**Nutzer:** *„ja, K5 Schwelle auf den Beitrag — prüfen und gegenprüfen."*
+Und: *„Hinweis: vorerst — wenn das auch nicht klappt, müssen wir wieder
+abstimmen."* → **vorläufig**; trägt die Schwelle auf dem Beitrag in der
+nächsten Messung nicht, wird K5 **neu abgestimmt**, nicht still angepasst.
+**Anlass:** Befund 2.678 — wer nach *Normal + Kurven* auswählt, wählt das
+**Phase-Normal**, und das kehrt zur Mitte zurück (Nullwelt der Auswahl −0,014
+bis −0,027); nach dem **Beitrag** allein ausgewählt liegt q in allen vier
+Mengen +0,05 über dem Normal, auch rollierend.
+
+| | gilt ab jetzt |
+|---|---|
+| **Schwelle auf** | dem **Beitrag** = der geschätzte Vorsprung gegen das **eigene** Normal (Summe der Kurven auf Log-Odds, ohne das Normal) |
+| **das Normal** | bleibt der **Bezugspunkt** (K2: *läuft dieses Asset jetzt besser, als es normalerweise läuft?*), entscheidet aber **nicht mehr mit** |
+| **Kalibrierung vorwärts** (Pflicht) | gilt für den **Beitrag**: sagt das System *+0,05 über dem Normal*, müssen auf ungesehenen Monaten rund +0,05 eintreten |
+| **K5b** | 3 bis 5 Stufen, symmetrisch mit Sperren — **auf dem Beitrag** |
+| **Tabelle für den Nutzer** | je Beitragsschwelle: Signale je Monat und Asset, beobachteter Vorsprung, je Regime |
+| **Mail** | Normal und Beitrag **getrennt** (das Normal allein ist verzerrt), nicht als eine Summe q |
+| unberührt | K6 (Hebel aus dem Risiko), K4 (q5), K1 (Kurven) |
+
+⚠️⚠️ **Gegenprüfung — die Restgefahr:** die Beiträge werden **gegen** das
+Normal geschätzt. Hängen hohe Beiträge mit einem hohen Normal zusammen, holt
+die Rückkehr zur Mitte die Auswahl über die Hintertür wieder ein. **Pflicht
+in der nächsten Messung:** die Beitragsauswahl muss in **jedem Drittel des
+Normals** positiv sein.
+
 ### K5b ✔ ENTSCHIEDEN (27.09.2026) — wie viele Stufen
 
 **Nutzer:** *„gut und sehr gut waren nur ein Beispiel — 3 oder 5 wären eher

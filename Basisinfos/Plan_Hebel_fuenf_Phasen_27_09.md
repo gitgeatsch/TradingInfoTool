@@ -28,7 +28,8 @@ Kursmerkmale gemessen und die **drei registrierten Träger** nie geladen.
 | ✔ **Altersachse gemessen** | gültig, keine Umkehr; der **24 h alte** Wert trägt in Suche, Prüfzeit und 2022; die Tagesperiode ist kein Uhrzeit-Artefakt (2.676, löst 2.675 ab — dessen Altersachsen-Satz war ein Lesefehler). **Kein Blocker**: Alter und A4 werden Gewichte |
 | ⛔ **K1 Schritt 2 gemessen** (2.677) | die Kombination als **Kurvenmodell** trägt nicht (T1–T3 in keiner Menge) — die Regel ist sauber (Zufall schweigt), aber die **Auflösung** reicht nicht (+0,16 statt der gesuchten +0,03…+0,06); der Marktmedian steht für die Zeit. Die Wirkung ist da: wo *oben gestreckt*, liegt q ungesehen +0,07…+0,10 über der Schätzung |
 | ⛔⭐ **K1 Schritt 2b gemessen** (2.678) | trägt nach dem Vorabkriterium nicht — die Kombination ist schlechter als rsi allein. **Ursache**: wer nach Normal + Beitrag auswählt, wählt das **Phase-Normal**, und das kehrt zur Mitte zurück. Nach dem **Beitrag** allein ausgewählt: q +0,05 über dem Normal in allen vier Mengen, auch rollierend — etwa so viel wie der rsi-Rand allein |
-| ➤ **offen zur Entscheidung** | **K5**: Schwelle auf dem **Beitrag** (Vorsprung gegen das eigene Normal) statt auf Normal + Kurven — oder ein gedämpftes Normal (K2); dann: bringt die Kombination nach dem Beitrag mehr als rsi allein? · **K6** läuft (Voranalyse abgestimmt, Werkzeugtest) · dann **K7**, **Simulation Ebene 3** |
+| ✔ **K5 entschieden** (28.09., vorläufig) | Schwelle auf dem **Beitrag** (Vorsprung gegen das eigene Normal) — *trägt auch das nicht, wird neu abgestimmt* |
+| ➤ **nächster Schritt** | Voranalyse *Kombination nach dem Beitrag gegen rsi allein* (Pflicht: Auswahl in jedem Drittel des Normals positiv; Dämpfungsgitter erweitert) · **K6** rechnet (Tor bestanden, vier Mengen mit dem Spot-Tief, danach der Markpreis) · dann **K7**, **Simulation Ebene 3** |
 
 Die Reihenfolge im Einzelnen steht unter *Was Phase 1 noch verlangt*, Zeile 2.
 

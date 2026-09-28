@@ -1,0 +1,21 @@
+﻿========================================================================================================================
+K6 R - HEBELSTUFE AUS DER LIQUIDATIONSGEFAHR · MENGE bestand · KURS spot · TOR
+========================================================================================================================
+R-R11 E2i (alle Stundenanker, Spot-Tief, feste Grenzen, ohne Finanzierung): 3178050 Anker
+   24 h: 5x ATR-S1 1.04 % / S5 9.56 % · 3x ATR-S1 0.06 % / S5 0.71 % · 2x ATR-S1 0.03 % / S5 0.07 %
+   72 h: 5x ATR-S1 5.80 % / S5 26.90 % · 3x ATR-S1 0.29 % / S5 2.94 % · 2x ATR-S1 0.09 % / S5 0.43 %
+
+K6-Anker (Gitter, volles Fenster 120 h): 528413 · Suche 191476 · Pruefung 271120 · Symbole 115
+  Liquidationsraten (alle Anker, m 0,09 / 0,0476, ohne Stop | mit Stop -5 %):
+   5x:  24 h 4.084% / 1.794% | 0.542% ·  72 h 16.953% / 8.762% | 1.039% · 120 h 28.184% / 16.719% | 1.389%
+   3x:  24 h 0.331% / 0.220% | 0.023% ·  72 h 1.833% / 1.209% | 0.049% · 120 h 3.972% / 2.657% | 0.062%
+   2x:  24 h 0.089% / 0.086% | 0.005% ·  72 h 0.365% / 0.315% | 0.014% · 120 h 0.696% / 0.589% | 0.019%
+
+TOR (H7) 5x / 72 h: Nullwelt Mehrwert ueber ATR Mittel -1.352, 90. Perzentil -1.287 (40 Ziehungen)
+  gepflanzte Verdopplung (Rate 0.166 -> 0.333) im obersten Zehntel von volumenschub (verschoben): Mehrwert +8.211 -> gefunden
+  gepflanzte Verdopplung (Rate 0.168 -> 0.336) im obersten Zehntel von volumenschub (verschoben): Mehrwert +7.414 -> gefunden
+  gepflanzte Verdopplung (Rate 0.164 -> 0.329) im obersten Zehntel von volumenschub (verschoben): Mehrwert +6.551 -> gefunden
+  gepflanzte Verdopplung (Rate 0.169 -> 0.338) im obersten Zehntel von volumenschub (verschoben): Mehrwert +7.582 -> gefunden
+  gepflanzte Verdopplung (Rate 0.167 -> 0.334) im obersten Zehntel von volumenschub (verschoben): Mehrwert +8.200 -> gefunden
+  TOR: ✔ BESTANDEN (5 von 5) - die Risikokurven werden gemessen
+SCHLUSS: vollstaendig

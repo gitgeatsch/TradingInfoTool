@@ -5134,6 +5134,7 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | Regel | Nutzer | Inhalt |
 |---|---|---|
 | **K1–K7** | 27.09., je Punkt *„ja, so eintragen“* | Wirkungskurven statt Schalter · Urteil gegen die **Phase** des eigenen Assets · Kontextfläche · Ereignis q5 · Schwelle auf kalibriertem q, 3–5 Stufen · Hebelstufe aus der Liquidationsgefahr · Messbasis Binance |
+| **K5 geändert** | 28.09.: *„ja, K5 Schwelle auf den Beitrag"* — und *„vorerst: wenn das auch nicht klappt, müssen wir wieder abstimmen"* | die Schwelle liegt auf dem **Beitrag** (Vorsprung gegen das eigene Normal), nicht auf Normal + Kurven; vorläufig |
 | **Beitragssystem** | E-4: *„der HEBEL ist ein Beitragssystem und KEIN Blocksystem“* | ein Beitrag ist schwach, die **Kombination** ist die Anwendung |
 | **Grundgesamtheit** | 27./28.09. (N1–N5 *„wie empfohlen“*) | die eingestellten Paare gehören dazu — Messbasis `--menge unverzerrt`; ohne sie ist jede Messung überlebensverzerrt (2.668/2.669) |
 | **A4 — bestätigt oder gelaufen** | 28.09.: *„nur bestätigte Bewegung, also positiv, oder die Bewegung ist bereits gelaufen … sonst wird es ein Blocker“* | jeder Einstiegsträger wird je bisherigem Anstieg in eigener ATR ausgewiesen |
