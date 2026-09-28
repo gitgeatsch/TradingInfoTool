@@ -292,6 +292,8 @@ mit dem Anlass:
 | 21 | **Uhrzeit prüfen** bei festen Ankern: T1 q5 je Ankerstunde, Rand **tagesbereinigt**; eine Periode über 24 h ist erst nach dieser Prüfung eine Aussage | die Nullwelt (Verschiebung um beliebige Stunden) zieht einen Uhrzeiteffekt nicht ab (2.676) |
 | 22 | **Vollständigkeit am Inhalt**: ein Lauf gilt erst mit Schlusszeile und ohne Traceback — ein Exit-Code im Kettenprotokoll allein genügt nicht | `exit=$?` hinter `$(date …)` meldete immer 0 (2.676) |
 | 23 | ⭐ **Kein künstlicher Blocker** (Nutzer 28.09.): Achsen wie Alter und A4 prüfen die **Gültigkeit** und liefern **Gewichte** — keine Schwelle *erst ab X*, kein Schnitt | Nutzervorgabe *keine Alles-oder-nichts-Schwelle* |
+| 24 | **Anker sind nicht unabhängig** (vier je Tag, überlappende Fenster, ein Markttag für alle Assets): ein geschätztes Modell bekommt seine Dämpfung **aus den Daten** (zeitlich geblockte Kreuzvalidierung im Trainingsfenster), nie eine feste | die feste Dämpfung lernte Rauschen, Nullwelt −17 (2.677) |
+| 25 | **Auflösung vor dem Urteil**: die Pflanzung muss eine Wirkung **in der Größe der gesuchten** sicher finden — sonst ist *trägt nicht* ein Befund über die Messform, nicht über den Beitrag | das Kurvenmodell fand erst +0,16, gesucht waren +0,03…+0,06 (2.677) |
 
 ⚠️ **Nicht mehr Pflicht:** Episoden (Schritt 3 alt) und die Karenz als
 eigener Lauf — beide sind durch Tagesanker, Altersachse und A4 ersetzt.

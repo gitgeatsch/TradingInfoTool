@@ -1,0 +1,10 @@
+﻿========================================================================================================================
+K1 SCHRITT 2 - KOMBINATION · MENGE unverzerrt:1
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 176386 · Pruefung 232884 · mit Treffer 84225 / 112118 · Symbole 125
+  Eingaenge A: rsi_s, rsi_s24, mom_s, mom_s24, ema_s, ema_s24, fund_m, kv_m, anstieg · B: + oi · LAMBDA 20 · Stufen 12 · Nullwelt 40 Ziehungen
+
+WERKZEUGDIAGNOSE innerhalb der Suche: 2023 -> 2024 (Anker 29176 / 55049)
+  Marktkurven 12 Stufen    (G in der Schaetzung / auf 2024): rsi +3.09/+1.37 · momentum +2.06/+0.03 · ema_abstand +2.97/+1.76 · funding_markt +7.13/-2.57 · konten_markt +29.82/-9.27 · anstieg +0.93/+0.88 · A gesamt +39.73/-15.67 · A ohne Markt +5.80/-0.17
+  Marktkurven in Dritteln  (G in der Schaetzung / auf 2024): rsi +3.09/+1.37 · momentum +2.06/+0.03 · ema_abstand +2.97/+1.76 · funding_markt +4.24/-0.11 · konten_markt +18.92/-0.73 · anstieg +0.93/+0.88 · A gesamt +26.76/-9.62 · A ohne Markt +5.80/-0.17
+SCHLUSS: vollstaendig

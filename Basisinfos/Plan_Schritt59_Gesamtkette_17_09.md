@@ -2358,5 +2358,6 @@ weiter.
 
 ➤ **M1-Kriterium 2 bleibt offen.** Nichts davon ist verdrahtet; die
 Betriebsumstellung kommt erst nach der ganzen Kette einschließlich der
-LLM-Rollen. Nächster Schritt: K1 Schritt 2 (die Altersachse ist gemessen,
-2.676), dann K6, K7, Simulation Ebene 3.
+LLM-Rollen. K1 Schritt 2 ist als Kurvenmodell gemessen und verworfen (2.677:
+die Auflösung reicht nicht, der Marktmedian steht für die Zeit). Nächster
+Schritt: eine neue Vorabfestlegung für Schritt 2, dann K6, K7, Simulation Ebene 3.

@@ -289,3 +289,58 @@ je Menge**, **6 bis 8 Stunden** für alle vier, nacheinander (auch über Nacht).
 Ein Werkzeugtest geht voraus.
 
 **Zweiter Werkzeugtest (28.09.):** Mechanik in Ordnung - Nullwelt im Mittel -0,67 (vorher -17), 90. Perzentil +0,08, Zufall im Nullband, die Kreuzvalidierung waehlt 2.000 fuer die Kombination. Die Pflanzung fand +0,02 und +0,04 nicht; die Leiter ist deshalb nach dem Messstandard auf +0,08 und +0,16 verlaengert - das beschreibt nur die Aufloesung, T1-T5 unveraendert. Festgelegt VOR den vier Laeufen.
+
+---
+
+## 10. ⛔ ERGEBNIS (28.09.2026) — Befund 2.677: die Kombination als Kurvenmodell trägt nicht
+
+Vier Mengen, alle **am Inhalt** vollständig (Schlusszeile, kein Traceback,
+Exit-Code direkt gesichert). G in tausendstel nat je Anker, ungesehen.
+
+### 10a. Die vorab festgelegten Urteile
+
+| | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|
+| **T1** G(A) feste Teilung / Grenze | −4,45 / +0,31 | −2,63 / +0,39 | −2,03 / +0,42 | −4,77 / +0,52 | ⛔ in keiner Menge |
+| **T2** A minus beste Familie (rsi) | −5,56 | −3,65 | −3,25 | −5,79 | ⛔ |
+| **T3** Kalibrierung (Steigung) | −0,05 | −0,01 | −0,03 | 0,00 | ⛔ |
+| **T4** überall positiv | nein | nein | ja | nein | ⛔ 1 von 4 |
+| **T5** Assets mit G > 0 | 45 % | 44 % | 67 % | 56 % | ◐ |
+| **R** Zufall im Nullband | ✔ | ✔ | ✔ | ✔ | ✔ |
+| **K5** q ≥ 0,55 → beobachtet | 0,452 | 0,495 | 0,510 | 0,484 | = Grundrate 0,49 |
+
+### 10b. ⚠️⚠️ Die Auflösung reicht nicht — das Urteil gilt der Modellform
+
+| gepflanzt auf den oberen Rand eines Eingangs | +0,02 | +0,04 | +0,08 | +0,16 |
+|---|---|---|---|---|
+| gefunden (von 5, je Menge) | 1 / 0 / 0 / 0 | 2 / 1 / 1 / 0 | 1 / 0 / 1 / 2 | **3 / 4 / 5 / 4** |
+
+Die Ränder aus Schritt 1 liegen bei **+0,03 bis +0,06**. Ein Modell, das eine
+Wirkung dieser Größe nicht findet, kann sie auch nicht bestätigen: *trägt
+nicht* ist ein Befund über die **Modellform**, nicht über die Beiträge.
+
+### 10c. Woran es liegt — Gegenprüfung
+
+| # | Befund |
+|---|---|
+| 1 | die **Marktfamilie** konten_markt kostet allein −2,9 bis −4,8; ein Marktmedian steht für die **Zeit** und überträgt sich nicht (2.675: nur in der Suche) |
+| 2 | die **Asset-Familien** tragen einzeln in der festen Teilung: rsi **+1,02 bis +1,22 in allen vier Mengen**, ema_abstand +0,50 bis +0,73, momentum +0,10 (Auskunft, ohne eigene Nullwelt) |
+| 3 | **rollierend 12 Monate**: die Kreuzvalidierung wählt meist die stärkste Dämpfung (20.000) — aus einem Jahr sind 12-Stufen-Kurven nicht zu schätzen |
+| 4 | ⭐ **die Wirkung ist da**: wo *oben gestreckt*, liegt q ungesehen **über** der Schätzung — rsi jetzt und 24 h alt oben +0,068…+0,081, ema_abstand beide oben +0,091…+0,099, rsi oben bei 1–2 ATR Anstieg +0,064…+0,078; sonst ≈ 0 |
+| 5 | C7a: die Summe einzeln geschätzter Familien wäre noch schlechter (−7,2 bis −11,1) — gemeinsam schätzen ist nötig (K1a bestätigt) |
+| 6 | C7f: der Marktmedian nur über die Hebelwerte korreliert 0,93 (funding) / 0,82–0,85 (Long-Anteil) mit dem über alle — nicht gleichwertig |
+| 7 | 2022 mit Moment-Bezug +1,2 bis +2,3 (Auskunft) |
+
+### 10d. Was daraus folgt — eine neue Vorabfestlegung, keine Nachbesserung
+
+Diese Form (9 Kurven × 12 Stufen, eine Dämpfung für alle, Markt
+eingeschlossen, 12-Monats-Fenster) ist **verworfen**. Was die Messung
+nahelegt, gehört in eine **neue** Voranalyse zur Abstimmung:
+
+| | Richtung | Beleg |
+|---|---|---|
+| Eingänge | **nur Asset-Beiträge**, Marktkurven heraus (später als Kontext) | 10c 1, 2.670, 2.675 |
+| Form | die Form, die Schritt 1 **belegt**: **Ränder** (unten / Mitte / oben) statt voller 12-Stufen-Kurven | 2.675, 10c 4 |
+| Fenster | **länger** als 12 Monate (wachsend, nur Vergangenheit) | 10c 3 |
+| Auflösung | **vorab nachgewiesen**: die Pflanzung muss +0,04 sicher finden, sonst kein Urteil | 10b |
+| Wechselwirkung | *beide oben* (W2) und *1–2 ATR* (W1) sind als **Hinweis** gemessen — Schritt 3 | 10c 4 |

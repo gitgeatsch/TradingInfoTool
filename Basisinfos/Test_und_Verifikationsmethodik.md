@@ -5372,6 +5372,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `messe_k3_kontextflaeche.py` | **K3: Kontextfläche BTC × Dominanz** (3 × 3, 24/72/120 h) gegen die Phase des Assets | **Befund 2.670 (28.09.2026)**: Drittel rollierend aus 12 Monaten, feste Tagesanker 00/06/12/18 UTC, **Zeitverschiebungs-Nullwelt** (Bestes-von-27), Such-/Prüf-Trennung, Additivität, Hypothese V10, Pflichtproben G1/G4/G5/G6/G9, R-R11-Zeile; `--menge` |
 | `messe_k3_reproduktion_e2f_kontext.py` | **R-R11 zu K3**: die Kontextzeile aus E2f exakt nachrechnen, dann gegen die Zeitverschiebung | **Befund 2.670**: −0,0198 reproduziert, z −1,52 statt −6,9 — die Episoden-Nullwelt war für marktweite Größen zu optimistisch |
 | `messe_k1_wirkungskurven.py` | **K1 Schritt 1: Wirkungskurven je Beitrag** (12 Stufen, roh und selbstbezogen) gegen die Phase des Assets | **Befunde 2.671, 2.673–2.676 (28.09.2026)**: `--gruppe voll / termin / teilung`, `--nur-markt`, `--gemeinsam` (Nullwelt für Marktmerkmale: dieselbe Verschiebung für alle Assets); Kennzahl S über die ganze Kurve, Formkriterium Suche/Prüfung, A4-Achse (bisheriger Anstieg in ATR), Altersachse, Positivkontrolle in eine wirkungslose Kopie, Korrelationsmatrix; `--menge`. **Seit 2.675:** das vorab festgelegte **Randkriterium** (Rand oben P90–>P99, unten <P1–P10; Grenze Bestes-von-(2 × Kurven); Prüfzeit, 3/4 Jahre, 60 % Assets, 2022), `--gruppe altersachse` (**2.676**: Alter 0–48 h auf demselben Rand, Nullwelt, Bestes-von-132, Gegenprüfung Tageszeit) und `--gruppe regeltest` — 10 Zufallsmerkmale durch die Regel (Soll 0) plus gepflanzter Rand bekannter Größe; mit `--nur-markt --gemeinsam` als Zufalls-**Markt**reihe gegen die gemeinsame Nullwelt ⚠️ Die Pflanzung prüft die Asset-Bedingung nicht |
+| `messe_k1_schritt2_kombination.py` | **K1 Schritt 2: die Beiträge gemeinsam geschätzt** (logistisch additiv auf Log-Odds gegen das Phase-Normal) | **Befund 2.677 (28.09.2026)**: feste Teilung mit Nullwelt (Zeitverschiebung je Asset und gemeinsam für den Markt), rollierend 12 Monate, Dämpfung per zeitlich geblockter Kreuzvalidierung, Familien einzeln und ihre Summe, Regeltest (Zufall, Pflanzung bis +0,16), K5-Tabelle; `--probe` Werkzeugtest, `--diag-suche` nur innerhalb der Suche; `--menge` |
 | `messe_e3_gegenpruefung.py` | **nach** jeder Vorwärtsrechnung, bevor ihr Ergebnis weiterverwendet wird | **Befund 2.660 (27.09.2026)**: die E3-Kernrechnung fünfmal mit vorher bekanntem Ausgang — Selbstprobe, Merkmale 1 h älter (muss ähnlich bleiben), absichtlicher Vorgriff 1 h (muss steigen), Etikettentausch in Symbol × Monat (muss null sein), 50 Zufallslagen (Fehlalarm). ⚠️ Zufallslagen nur in der Größe der breiten Kandidaten |
 | `messe_e3_vorwaerts.py` | wenn eine Lage **vorwärts** geprüft werden soll — jeder Monat gegen seine eigene Kalibrierung | **Befund 2.659 (27.09.2026)**: 32 Prüfmonate 2024-01 bis 2026-08, Schwellen je Monat nur aus den 12 Monaten davor; 9 vorab festgelegte Kandidaten × beim Erscheinen / 1 h bestätigt, mit Gegenprobe (viele Longs, muss negativ sein); Ausgang +20 / −10 / sonst Kurs nach 120 h gegen das eigene Asset im **selben Monat**; Bestes-von-18, Quartale, BTC-Monatslage (Regime). Kein Stop, kein Trailing |
 | `messe_e2d_pruefung_squeeze.py` | wenn eine gefundene Lage **vorab festgelegt** gegen einen unberührten Zeitraum geprüft werden soll | **Befund 2.657 (27.09.2026)**: Lage *hohe Vola bzw. Volumenschub & wenige Long-Konten* (dort noch *Squeeze* genannt — eine Deutung, gemessen ist nur die Lage, 2.660) × Varianten (beim Erscheinen, 1 h / 3 h später bestätigt). Schwellen nur aus 2021–2023, 2024 unberührt, 2025/26 als gesehen markiert; je Asset höchstens ein Einstieg in 24 h; Ziel +20 / −10 % / sonst Kurs nach 120 h → Erwartungswert gegen das eigene Asset (symboltreue Nullwelt, Bestes-von-12); Rückgang vor dem Ziel; BTC-Kontext. Kein Stop, kein Trailing |
@@ -11349,3 +11350,29 @@ Bereinigung, nicht diese Nullwelt.
 
 ➤ **Für Regel 3 im Skript:** den Code **direkt** nach dem Aufruf sichern —
 `python … ; rc=$?; echo "… exit=$rc"`.
+
+---
+
+## 2.677 ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026)
+
+**Anlass:** K1 Schritt 2 (Hebel-Neubau) schätzte die Beiträge gemeinsam in
+einem logistischen Modell. Der Werkzeugtest zeigte eine Nullwelt im Mittel
+bei **−17** statt nahe 0; die volle Messung danach ein *trägt nicht* in allen
+vier Mengen — bei einer Pflanzung, die erst **+0,16** sicher fand.
+
+### Die zwei Regeln
+
+| # | Regel | Anlass |
+|---|---|---|
+| **1** | **Anker sind keine unabhängigen Fälle**: vier Anker je Tag mit überlappenden 24-h-Fenstern, und ein Marktwert gilt für alle Assets derselben Stunde. Ein Modell, das jeden Anker voll zählt, lernt Rauschen. Die Dämpfung kommt deshalb **aus den Daten** — zeitlich geblockte Kreuzvalidierung **innerhalb** des Trainingsfensters, mit Abstand an den Blockgrenzen —, **je Modell** (ein kleines Modell verträgt weniger Dämpfung als ein großes) | feste Dämpfung 20: Nullwelt −17; per Kreuzvalidierung: −0,13 bis −0,47 |
+| **2** | **Auflösung vor dem Urteil**: bevor eine Messform *trägt nicht* sagen darf, muss sie eine gepflanzte Wirkung **in der Größe der gesuchten** sicher finden. Sonst ist das Urteil ein Befund über die **Messform** | das Kurvenmodell fand +0,04 in 0–2 von 5, gesucht waren +0,03…+0,06 |
+
+➤ **Und eine dritte, kleinere:** ein Marktwert, der sich langsam ändert
+(Median aller Assets), steht in einem geschätzten Modell für die **Zeit** — er
+erklärt, welche Monate des Trainingsjahres gut liefen, und überträgt sich
+nicht. Ein Blick auf *Gewinn in der Schätzung gegen Gewinn auf dem Folgejahr*
+zeigt es sofort (konten_markt +19 gegen −0,1).
+
+⚠️ **Verwandt:** 2.675 (die Urteilsregel selbst prüfen), 2.204/2.485
+(Selbsttest der Anlage). Werkzeug: `messe_k1_schritt2_kombination.py`
+(`--probe` Werkzeugtest, `--diag-suche` Diagnose nur innerhalb der Suche).

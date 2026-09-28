@@ -543,6 +543,13 @@ NEUESTER_STAND = (
               "auch ema_abstand, das mit dem aktuellen Wert 2022 kehrt. Die "
               "Tagesperiode ist kein Artefakt der Ankeruhrzeit. Kein Blocker: "
               "aktueller und 24 h alter Wert als zwei abgestufte Beitraege"),
+    ("2.677", "K1 SCHRITT 2: die Kombination als gemeinsames Kurvenmodell "
+              "traegt NICHT (T1-T3 in keiner der vier Mengen, K5-Auswahl q >= "
+              "0,55 = Grundrate). Die Regel ist sauber (Zufall schweigt), aber "
+              "die Aufloesung reicht nicht (gepflanzt erst +0,16 sicher, gesucht "
+              "+0,03..+0,06); der Marktmedian steht fuer die Zeit, 12 Monate "
+              "reichen fuer 12-Stufen-Kurven nicht. Die Wirkung ist da: dort, wo "
+              "*oben gestreckt*, liegt q ungesehen +0,07..+0,10 ueber der Schaetzung"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -552,10 +559,11 @@ NEUESTER_STAND = (
                "der Liquidationsgefahr. Die Messbasis ist vervollstaendigt "
                "(2.669, --menge unverzerrt). K3 ist gemessen (2.670: der "
                "Kontext geht derzeit ohne Gewicht ein), K1 Schritt 1 samt "
-               "Randkriterium und Altersachse auch (2.671-2.676). Naechster "
-               "Schritt: K1 Schritt 2 - rsi/momentum/ema_abstand GEMEINSAM "
-               "schaetzen, je mit dem aktuellen und dem 24 h alten Wert, A4 als "
-               "Gewicht; funding_markt als Kontext-Kandidat; vor jeder "
+               "Randkriterium und Altersachse auch (2.671-2.676), K1 Schritt 2 "
+               "als Kurvenmodell verworfen (2.677). Naechster Schritt: eine NEUE "
+               "Vorabfestlegung fuer Schritt 2 - Asset-Beitraege ohne "
+               "Marktkurven, in der Form, die Schritt 1 belegt (Raender), "
+               "laengeres Fenster, Aufloesung vorab nachgewiesen; vor jeder "
                "Verwendung die Simulation (Ebene 3)"),
 )
 

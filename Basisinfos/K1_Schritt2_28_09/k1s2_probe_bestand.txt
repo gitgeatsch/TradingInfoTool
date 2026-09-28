@@ -1,0 +1,54 @@
+﻿========================================================================================================================
+K1 SCHRITT 2 - KOMBINATION · MENGE bestand · WERKZEUGTEST (--probe)
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · mit Treffer 61225 / 103000 · Symbole 114
+  Eingaenge A: rsi_s, rsi_s24, mom_s, mom_s24, ema_s, ema_s24, fund_m, kv_m, anstieg · B: + oi · LAMBDA 20 · Stufen 12 · Nullwelt 3 Ziehungen
+
+========================================================================================================================
+FESTE TEILUNG Suche 2023-2024 -> Pruefung 2025-01..2026-08 · G in tausendstel nat je Anker
+  Kombination A  G -12.665 · Kombination B  G -13.170 · Nullwelt (Bestes-von-2) Mittel -17.245, 90. Perzentil -8.424
+  Familien einzeln: rsi +1.585 · momentum +0.739 · ema_abstand -0.216 · funding_markt -9.282 · konten_markt -5.184 · anstieg -0.626
+  T2 A minus beste Familie (rsi): -14.250 gegen Nullband 90. Perzentil -8.324
+  T1 · nicht jenseits · T2 · nicht mehr als der beste Teil
+  R  Zufallseingaenge (A-Aufbau): G -4.073 gegen die Grenze -8.424 -> ⛔ JENSEITS - die Regel meldet Zufall
+  R  Pflanzung +0.02 auf den oberen Rand (P90+) einer verschobenen Kopie: gefunden 0 von 2
+  R  Pflanzung +0.04 auf den oberen Rand (P90+) einer verschobenen Kopie: gefunden 0 von 2
+  C7a Summe der einzeln geschaetzten Familien: G -17.692 (gemeinsam -12.665) · Kalibrierungssteigung Summe 0.21 / gemeinsam 0.01
+  C7b Eingaenge 1 h aelter: G -14.359 (aktuell -12.665)
+  C7d 2022 (Moment-Bezug, Modell aus der Suche): G -12.593 auf 33258 Ankern
+  C7f Marktmedian nur ueber die Hebelwerte (27 von 43 der Liste in der Menge, Namensgleichheit - Vorbehalt 2.612): Korrelation mit dem Median ueber alle 0.938 / 0.852 · G -79.182 (alle -12.665)
+
+========================================================================================================================
+ROLLIEREND: 3 Monate 2024-01 bis 2024-03, je auf den 12 Monaten davor geschaetzt
+  G rollierend: A -56.184 · B -55.963 · Familien rsi -0.535 · momentum -1.916 · ema_abstand +5.217 · funding_markt +0.906 · konten_markt -74.457 · anstieg -0.216
+  Spanne 24 h: q beobachtet unterstes Zehntel 0.3900 · alle 0.4794 · oberstes Zehntel 0.6250 (geschaetzt 0.1533 / 0.5615)
+  C4 Spanne 72 h (dasselbe Modell): unterstes Zehntel 0.3756 · alle 0.5034 · oberstes Zehntel 0.6133
+  T3 Kalibrierung: Steigung 0.44 · groesste Abweichung je Zehntel nan · · NICHT kalibriert
+     Zehntel geschaetzt: 0.153 0.185 0.210 0.242 0.299 0.353 0.389 0.422 0.465 0.561
+     Zehntel beobachtet: 0.390 0.418 0.452 0.486 0.463 0.446 0.491 0.469 0.554 0.625
+     ohne Monatsversatz (Diagnose, nutzt den Monatsausgang): Steigung 0.85 · groesste Abweichung nan
+  T4 je Jahr und BTC-Drittel (30 Tage): 2024 -56.184 (8631) · 2025 +nan (0) · 2026 +nan (0) · BTC tief +33.363 (2889) · BTC mitte -116.683 (2872) · BTC hoch -85.784 (2870) · ⚠ NICHT ueberall positiv - reden
+  T5 je Asset (>= 200 Anker): 19 Assets, G > 0 bei 5 % · Median -45.205 · ·
+  C7g Vorpruefung Wechselwirkungen (rollierend, beobachtet minus geschaetzt, Anker):
+     W1 rsi         oben x Anstieg: Anstieg <0 - · 0-1 +0.176 (433) · 1-2 +0.260 (248) · >=2 -
+     W2 rsi         jetzt x 24 h:   beide oben - · nur jetzt +0.197 (690) · nur 24 h +0.080 (805) · keiner +0.154 (7089)
+     W1 momentum    oben x Anstieg: Anstieg <0 - · 0-1 +0.179 (439) · 1-2 +0.237 (198) · >=2 -
+     W2 momentum    jetzt x 24 h:   beide oben - · nur jetzt +0.204 (681) · nur 24 h +0.079 (753) · keiner +0.154 (7153)
+     W1 ema_abstand oben x Anstieg: Anstieg <0 - · 0-1 +0.153 (284) · 1-2 +0.234 (308) · >=2 -
+     W2 ema_abstand jetzt x 24 h:   beide oben - · nur jetzt +0.214 (527) · nur 24 h +0.072 (601) · keiner +0.154 (7417)
+
+========================================================================================================================
+K5-TABELLE (C8: Ausgabe, KEINE Schwelle) - rollierend, Modell A, alle Gitteranker mit Normal
+  Schwelle      Anker je Asset/Monat    q beob  ohne Tr. q je Jahr 2024 / 2025 / 2026
+  q >= 0.52      1780          12.62    0.6308     63.5% 0.6308 / - / -
+  q >= 0.55      1155           8.19    0.6175     62.4% 0.6175 / - / -
+  q >= 0.58       700           4.96    0.5795     62.3% 0.5795 / - / -
+  q >= 0.60       475           3.37    0.5912     61.9% 0.5912 / - / -
+  q >= 0.65       181           1.28    0.6034     68.0% 0.6034 / - / -
+  q <= 0.45     11723          83.14    0.4550     39.4% 0.4550 / - / -
+  q <= 0.42     10406          73.80    0.4525     38.2% 0.4525 / - / -
+  q <= 0.40      9417          66.79    0.4482     37.4% 0.4482 / - / -
+  Grundrate (alle Anker mit Treffer): 0.4794 · Anker gesamt 15640 · Monate 3 · Assets 47
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig

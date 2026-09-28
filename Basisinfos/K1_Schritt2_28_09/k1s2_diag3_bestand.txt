@@ -1,0 +1,14 @@
+﻿========================================================================================================================
+K1 SCHRITT 2 - KOMBINATION · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · mit Treffer 61225 / 103000 · Symbole 114
+  Eingaenge A: rsi_s, rsi_s24, mom_s, mom_s24, ema_s, ema_s24, fund_m, kv_m, anstieg · B: + oi · LAMBDA 20 · Stufen 12 · Nullwelt 40 Ziehungen
+
+WERKZEUGDIAGNOSE innerhalb der Suche: 2023 -> 2024 (Anker 20733 / 40492)
+  Marktkurven 12 Stufen    (G in der Schaetzung / auf 2024): rsi +3.57/+0.91 · momentum +2.53/-0.44 · ema_abstand +3.73/+1.28 · funding_markt +7.53/-7.38 · konten_markt +25.13/-10.74 · anstieg +0.64/+0.76 · A gesamt +36.83/-17.58 · A ohne Markt +6.90/-1.21
+  Marktkurven in Dritteln  (G in der Schaetzung / auf 2024): rsi +3.57/+0.91 · momentum +2.53/-0.44 · ema_abstand +3.73/+1.28 · funding_markt +5.28/+3.06 · konten_markt +19.87/-0.14 · anstieg +0.64/+0.76 · A gesamt +28.57/-6.92 · A ohne Markt +6.90/-1.21
+  LAMBDA      20 (G auf 2024): ema_abstand +1.28 · rsi +0.91 · A ohne Markt -1.21 · A gesamt (Markt in Dritteln) -6.92
+  LAMBDA     200 (G auf 2024): ema_abstand +1.95 · rsi +1.32 · A ohne Markt +0.75 · A gesamt (Markt in Dritteln) -0.47
+  LAMBDA    2000 (G auf 2024): ema_abstand +0.95 · rsi +0.65 · A ohne Markt +1.28 · A gesamt (Markt in Dritteln) +6.92
+  LAMBDA   20000 (G auf 2024): ema_abstand +0.14 · rsi +0.09 · A ohne Markt +0.26 · A gesamt (Markt in Dritteln) +2.43
+SCHLUSS: vollstaendig
