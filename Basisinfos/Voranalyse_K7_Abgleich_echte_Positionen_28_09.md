@@ -222,3 +222,21 @@ korrigierte Wahrheit ist deshalb nicht zirkulär. Beide Fassungen laufen:
 Regel nicht, liquidiert aber nur zu früh, und bis 5x kommt kein Fehlalarm vor.
 Die Liquidationserkennung des Importers übersah **3 von 7**. Sie gehört in die
 eigene Voranalyse zum Importer.
+
+---
+
+## 11. Nachtrag: ein Bitpanda-Liquidationspreis aus der App (offene BTC-Position, 28.09. abends)
+
+**Nutzer:** Screenshot der Bitpanda-App, *„nein, kein Teilverkauf"*.
+
+| | |
+|---|---|
+| App | 0,02255012 BTC, Wert 1.657,76 €, **2,83x Long**, Liquidationspreis **≈ 50.466,83 €** (−31,35 %) |
+| nachgerechnet | Kurs 73.514 €; Kredit = Wert × (1 − 1/2,83) ≈ 1.072 €; −31,35 % ✔ |
+| **Bitpandas Marge** | 1 − Kredit / (Menge × Liquidationspreis) ≈ **5,8 %** (5,7–5,9 % je nach Rundung des Hebels, Finanzierung vernachlässigt) |
+| unsere Formel, m 0,09 | ≈ **52.240 €** plus Finanzierung, also rund 3,5 % **über** Bitpanda, die **vorsichtige** Seite |
+| Importer | ohne Teilverkauf stimmen Position und Buch überein, die Betriebsanzeige ist hier richtig |
+
+Das passt zu 2.679: Die Marge ist **je Asset** verschieden (SUI 3,7–6,9 %) und
+liegt **unter** 9 %. m = 0,09 bleibt vorsichtig. Ein einzelner Punkt, keine
+Kalibrierung.
