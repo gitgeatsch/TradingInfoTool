@@ -1892,6 +1892,11 @@ Acht Befunde, 2.597 bis 2.607.
 > zwingende Reihenfolge der sechs Schritte, die zwölf Dateien die
 > angefasst werden, die zehn Fallen die schon zugeschnappt sind,
 > und **zwölf offene Punkte**. Vor jedem Bauschritt dort lesen.
+>
+> ⚠️ **28.09.: als oberste Liste abgelöst** durch
+> `Basisinfos/Plan_Hebel_fuenf_Phasen_27_09.md` (Hebel-Neubau) — der
+> Bauplan gilt nur noch für die technischen Schritte. Stand: Abschnitt
+> *STAND HEBEL 28.09.2026* am Ende dieses Plans.
 
 #### ⛔⛔ Dazugekommen am 26.09. — zwei Sperren vor der Hebelhöhe
 
@@ -2321,3 +2326,37 @@ Quote, noch weiter unter der Nullstelle). Richtig ist sie trotzdem.
 | **1** | **N19-E umsetzen** — Stufen ehrlich stutzen, danach R-R9 | Messung + Bau |
 | **2** | `funding` auf **`verbilligung`** (Akkumulation) | ungemessen, andere Zielgröße |
 | **3** | Ob **M1 ohne Hebel** definierbar ist | ⚠️ **Frage an den Meilenstein**, kein Messergebnis |
+
+---
+
+# ⭐⭐⭐ STAND HEBEL / M1-KRITERIUM 2 — 28.09.2026: DER HEBEL-ARM WIRD NEU GEBAUT
+
+⚠️ **Der Abschnitt oben (24.09.) und der Verweis auf `Bauplan_Hebel_27_09.md`
+sind überholt.** Seit dem 25.09. wird der Hebel-Arm **vollständig neu
+gebaut** (Nutzer: *„wir bauen den Hebel-Arm vollständig neu. Wenn Hebel
+funktioniert, dann gehen wir zu den anderen Strategien."*). Mitgenommen
+werden **Befunde, kein Code**; der produktive Spot-Arm läuft unverändert
+weiter.
+
+| | wo |
+|---|---|
+| **der Plan** (fünf Phasen, wir sind in Phase 1) | `Basisinfos/Plan_Hebel_fuenf_Phasen_27_09.md` — löst den Bauplan als oberste Liste ab |
+| **das Regelwerk** (Anwendungsebene K1–K7, Pflichtablauf Fassung 28.09.) | `Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md` |
+| **der Stand aus Code** | `python hebel_neubau.py` · Wache `pruefe_pakete.py --paket Hebelneubau` |
+| **die Übergabe** | `Basisinfos/UEBERGABE_Hebelneubau_27_09.md` (Nachtrag 28.09. zuerst) |
+| **die fachlichen Entscheidungen** | `Basisinfos/Entscheidungen_Hebelneubau.md` (E-1 bis E-11) |
+
+**Was seit dem 24.09. gemessen ist** (Befunde 2.625–2.675, Register):
+
+| | |
+|---|---|
+| ✔ Grundlagen | Horizont 24 h als Messfenster (2.642/2.646); die Anwendungsebene K1–K7 abgestimmt (27.09.) |
+| ✔ Messbasis | überlebensverzerrt gefunden (2.668) und mit 137 eingestellten Paaren plus Terminmarkt vervollständigt (2.669) |
+| ✔ trägt | rsi und momentum oberer Rand je Asset, ema_abstand selbstbezogen als Kurve (2.671, 2.675) — ⚠️ Altersachse ungeklärt, Einstiegsrolle offen |
+| ⚠️ nur in der Suche | funding und wenige Longs **marktweit** am unteren Rand (2.675) |
+| ⛔ gefallen | Kontextfläche BTC × Dominanz (2.670), Dominanz-Sperren (2.672), funding/Premium je Asset (2.673), Sperre viele Longs je Asset (2.675) |
+
+➤ **M1-Kriterium 2 bleibt offen.** Nichts davon ist verdrahtet; die
+Betriebsumstellung kommt erst nach der ganzen Kette einschließlich der
+LLM-Rollen. Nächster Schritt: die Altersachse, dann K1 Schritt 2, K6, K7,
+Simulation Ebene 3.

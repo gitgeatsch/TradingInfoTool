@@ -12,6 +12,29 @@
 
 ---
 
+# ⭐⭐⭐ NACHTRAG STAND 28.09.2026 — zuerst lesen
+
+Die zehn Antworten unten sind vom 27.09. abends. **Seitdem geändert:**
+
+| Frage | neu |
+|---|---|
+| **3/4 · Ablauf und Regelwerk** | die **Anwendungsebene K1–K7** ist abgestimmt — Wirkungskurven statt Schalter, Urteil gegen die **Phase** des Assets, Ereignis **q5** (+5 vor −5 % in 24 h), Schwelle auf kalibriertem q mit 3–5 Stufen, Hebelstufe aus der **Liquidationsgefahr**, Messbasis Binance. `Regelwerk_Hebel_Bewertung_27_09.md`, Block *Stand 28.09.* und *Pflichtablauf Fassung 28.09.* |
+| **5 · Was trägt** | ✔ rsi und momentum_kurz **oberer Rand** je Asset (4 von 4 Mengen, A4 bestätigt) · ema_abstand selbstbezogen als **Kurve** · ⚠️ funding_markt / konten_verh_markt **unterer Rand** nur in der Suche · ⛔ *viele Longs je Asset*, Premium, Käuferanteil, Kontextfläche, Dominanz-Sperren. Befunde 2.668–2.675 |
+| **6 · Was darf eine Messung** | Grundgesamtheit `--menge unverzerrt:1..3` **und** `bestand`; Nullwelt Zeitverschiebung (je Asset, **gemeinsam** für Marktmerkmale); **Regeltest** vor jeder Verwendung einer Urteilsregel |
+| **8 · Messstandard** | Positivkontrolle, Bekanntheitszeitpunkt und Fehlalarmquote sind geschlossen (Regelwerk § 6, Stand 28.09.) |
+| **10 · Nächster Schritt** | **die Altersachse** von *oben gestreckt* klären — der 6 h alte Wert trägt fast nichts, der aktuelle und der 24 h alte schon; erst danach eine Einstiegsrolle. Dann K1 Schritt 2 (gemeinsam schätzen), K6, K7, Simulation Ebene 3, Stammsatz |
+
+```bash
+python hebel_neubau.py | sed -n '/NEUESTER STAND/,/DIE NAECHSTEN/p'
+python hebel_neubau.py | sed -n '/DIE NAECHSTEN MESSUNGEN/,/^---/p'
+```
+
+⚠️ Die Pflichtprüfung heißt jetzt **45 Prüfungen** (`--paket Hebelneubau`),
+nicht 38. Entscheidungen **E-1 bis E-11** (`Entscheidungen_Hebelneubau.md`).
+Der Plan mit dem Stand: `Plan_Hebel_fuenf_Phasen_27_09.md`, Block *Stand 28.09.*
+
+---
+
 ## Der eine Befehl, mit dem du anfängst
 
 ```bash

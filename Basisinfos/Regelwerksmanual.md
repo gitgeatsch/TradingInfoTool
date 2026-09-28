@@ -5111,3 +5111,35 @@ gemessen misst man etwas anderes.
 **Verwandt:** R-R9 (Beitragswechsel = Neukalibrierung) · R-R10 (Dokumente
 öffnen, nicht greppen) · Methodik 2.119
 
+---
+
+# ⭐⭐⭐ R-R13 — DER HEBEL-NEUBAU HAT EIN EIGENES REGELWERK (28.09.2026)
+
+> ⚠️ **Dieser Abschnitt ist NACH dem Messstandard entstanden** (28.09.2026) —
+> der Standkopf oben gilt für den Rest des Manuals, nicht für ihn.
+
+**Seit dem 25.09. wird der Hebel-Arm vollständig neu gebaut** (Nutzer:
+*„wir bauen den Hebel-Arm vollständig neu"*). Die RM-10/RM-11-Hebelregeln
+dieses Manuals beschreiben die **alte** Kette (Standvermerk 22.08.). Wie
+aus einer Messung eine **Hebelregel** wird, steht in:
+
+| | |
+|---|---|
+| **Regelwerk** | `Basisinfos/Regelwerk_Hebel_Bewertung_27_09.md` — die Anwendungsebene K1–K7 und der **Pflichtablauf** (Fassung 28.09.) |
+| **Stand aus Code** | `python hebel_neubau.py` (`REGELWERK`, `BEITRAGSLAGE`) · Wache `pruefe_pakete.py --paket Hebelneubau` |
+| **Plan** | `Basisinfos/Plan_Hebel_fuenf_Phasen_27_09.md` |
+
+## Die vom Nutzer entschiedenen Regeln (Wortlaut und Datum)
+
+| Regel | Nutzer | Inhalt |
+|---|---|---|
+| **K1–K7** | 27.09., je Punkt *„ja, so eintragen“* | Wirkungskurven statt Schalter · Urteil gegen die **Phase** des eigenen Assets · Kontextfläche · Ereignis q5 · Schwelle auf kalibriertem q, 3–5 Stufen · Hebelstufe aus der Liquidationsgefahr · Messbasis Binance |
+| **Beitragssystem** | E-4: *„der HEBEL ist ein Beitragssystem und KEIN Blocksystem“* | ein Beitrag ist schwach, die **Kombination** ist die Anwendung |
+| **Grundgesamtheit** | 27./28.09. (N1–N5 *„wie empfohlen“*) | die eingestellten Paare gehören dazu — Messbasis `--menge unverzerrt`; ohne sie ist jede Messung überlebensverzerrt (2.668/2.669) |
+| **A4 — bestätigt oder gelaufen** | 28.09.: *„nur bestätigte Bewegung, also positiv, oder die Bewegung ist bereits gelaufen … sonst wird es ein Blocker“* | jeder Einstiegsträger wird je bisherigem Anstieg in eigener ATR ausgewiesen |
+| **Randkriterium, vorab** | 28.09.: *„so festlegen und neu rechnen … 1 Meter bleibt 1 Meter auch nach 10 Messungen“* | eine Urteilsregel wird **vor** der Rechnung festgelegt und committet; nachgemessen werden darf beliebig oft, das **Maßband** wird nicht nach dem Ergebnis gewählt |
+| **Regeltest** | 28.09.: *„darum muss die Regel dann auch in unseren Tests und Simulationen funktionieren“* | jede Urteilsregel geht vor der Verwendung durch **Zufallsmerkmale** (Soll: fast nie *trägt*) und eine **gepflanzte** Wirkung bekannter Größe; im Betrieb erst nach der **Simulation** (Ebene 3) |
+
+➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
+eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
+2.675).

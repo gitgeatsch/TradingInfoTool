@@ -11273,3 +11273,52 @@ genau die, die den Prüfling betrafen.
 ⚠️ **Verwandt, aber nicht dasselbe:** 2.509 verlangt den Nachweis am
 Seiteneffekt statt am Quelltext. Hier ist er vorhanden **und trotzdem
 blind** — weil er auf der falschen Ebene sitzt.
+
+---
+
+## 2.675 ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026)
+
+**Anlass:** das Randkriterium (Hebel-Neubau, K1) war vorab festgelegt und
+committet. Der Nutzer verlangte dazu: *„darum muss die Regel dann auch in
+unseren Tests und Simulationen funktionieren."* Der Regeltest fand, dass
+die Regel **schweigt, wo nichts ist** — und dass eine ihrer Bedingungen
+**fast nichts** prüft.
+
+### Der Aufbau — Zufall und Pflanzung, in beiden Nullwelten
+
+| | |
+|---|---|
+| **Zufall** | 10 Zufallsmerkmale, geglättet wie echte (1 bis 168 h), roh und selbstbezogen = 40 Ränder, **durch dieselbe Regel** |
+| **Pflanzung** | in einer **zeitverschobenen** (wirkungslosen) Kopie wird der Rand um +d gehoben — gefunden, wenn alle Bedingungen gelten |
+| **zweimal** | je Asset (Nullwelt je Asset) **und** als Marktreihe (ein Wert je Stunde, gemeinsame Nullwelt) |
+
+Ergebnis: 0 von 40 in allen vier Läufen; Auflösung je Asset +0,02, am
+Markt erst ~0,08.
+
+### ⚠️⚠️ Die Falle: *gleiches Vorzeichen in der Prüfung* gegen NULL
+
+Die Zufallsränder haben in der Prüfzeit ein Dq von **+0,009 / +0,013**
+(37 bzw. 40 von 40 positiv), Streuung 0,005. Die Prüfzeit liegt als
+Ganzes über ihrem 12-Monats-Normal. Die Bedingung bestätigt damit einen
+**positiven** Rand fast umsonst und macht eine **Sperre** schwerer — ein
+einseitiger Fehler, den ein Blick auf die echten Merkmale nicht zeigt,
+weil dort jeder positive Rand „bestätigt" aussieht.
+
+Und am Markt streuen Prüfzeit und 2022 mit **0,035** — dort ist die
+Bedingung fast ein Münzwurf, und *≥ 60 % der Assets* sagt nichts, weil
+alle Assets dieselben Markttage sehen.
+
+### Die Regel
+
+| # | |
+|---|---|
+| **1** | Jede Urteilsregel läuft **vor** der Verwendung über Zufallsmerkmale **derselben Art** (je Asset, Markt) — Soll: fast nie *trägt* |
+| **2** | Die Auflösung kommt aus einer **Pflanzung in eine wirkungslose Kopie**, nie in ein schon starkes Merkmal (die erste K1-Positivkontrolle war dadurch wertlos) |
+| **3** | Eine Bestätigungsbedingung wird **gegen den Versatz der Zufallsränder** gelesen, nicht gegen null — am besten laufen die Zufallsmerkmale im selben Lauf mit |
+| **4** | Für Marktmerkmale gilt die **gemeinsame** Zeitverschiebung; die Verschiebung je Asset zerstört die Gleichzeitigkeit (z bis 118) |
+
+⚠️ **Verwandt:** 2.204/2.485 (Selbsttest der Messanlage) prüfen die
+**Anlage** an bekannter Wahrheit; hier wird die **Urteilsregel** geprüft,
+die auf der Anlage sitzt. Beides ersetzt die Simulation (Ebene 3) nicht.
+Werkzeug: `messe_k1_wirkungskurven.py --gruppe regeltest` (mit
+`--nur-markt --gemeinsam` als Marktreihe).

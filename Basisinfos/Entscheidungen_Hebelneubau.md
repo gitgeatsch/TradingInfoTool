@@ -217,3 +217,52 @@ trotzdem weiter einen **Filter** („muss mindestens 3 Stunden Karenz
 **Vorlauf** (k > 0) ist ein **eigenes Feld** je Merkmal — er zeigt das
 Optimum („Lage **vor** der Bewegung"), ohne einen Träger beim
 sofortigen Einstieg zu kappen.
+
+---
+
+# E-10 · Marktmerkmale gegen die GEMEINSAME Nullwelt — und W11 auch für die Ränder
+
+**28.09.2026** · fachliche Entscheidung, gemessen begründet (2.673, 2.675).
+
+**Anlass:** gegen die Zeitverschiebung **je Asset** kam der Marktanteil von
+funding mit z 40 bis 118 heraus. Die Verschiebung je Asset zerstört die
+**Gleichzeitigkeit** — alle Assets sehen am selben Tag dieselbe
+Marktlage, und genau die trägt das Merkmal. Die Nullwelt war damit zu eng,
+nicht das Merkmal zu stark.
+
+**Entscheidung:**
+
+| | |
+|---|---|
+| Merkmal **je Asset** (Tag/Phase ≥ 0,5) | Zeitverschiebung je Asset |
+| **Marktmerkmal** (`_markt`, zur selben Stunde für alle gleich) | **gemeinsame** Verschiebung — derselbe Versatz für alle Assets (die K3-Methode) |
+| Merkmal mit Tag/Phase **< 0,5** | nach W11 geteilt — und zwar für die **Kurve und für die Ränder**. Die Ränder in *voll* und *termin* (funding, premium, konten_verh, top_konten_verh) zählen nicht; es gelten die `_markt`- und `_eigen`-Läufe |
+
+⚠️ **Was daraus folgt:** Marktmerkmale haben nur so viele unabhängige
+Fälle, wie es **Markttage** gibt. Ihre Auflösung ist grob (~0,08 am Rand,
+Regeltest 2.675) — ein Marktsignal ist nur nachweisbar, **weil** es groß
+ist. Die Asset-Bedingung (≥ 60 % der Assets) sagt bei ihnen nichts.
+
+---
+
+# E-11 · Eine Bestätigung zählt gegen den VERSATZ, nicht gegen null
+
+**28.09.2026** · fachliche Entscheidung aus dem Regeltest (2.675).
+⚠️ Sie **ändert kein vorab festgelegtes Urteil** — sie ordnet es ein.
+
+**Anlass:** Zufallsränder haben in der Prüfzeit ein Dq von **+0,009**
+(unverzerrt:1, 37 von 40 positiv) bzw. **+0,013** (bestand, 40 von 40),
+Streuung 0,005. Die Prüfzeit liegt insgesamt über ihrem 12-Monats-Normal.
+*Gleiches Vorzeichen in der Prüfung* ist damit für einen **positiven**
+Rand fast umsonst zu haben — und für eine **Sperre** schwerer.
+Bei Markträndern streuen Prüfzeit und 2022 mit 0,034 bis 0,038.
+
+**Entscheidung:** ein Träger heißt **unabhängig bestätigt**, wenn sein Dq
+in der Prüfzeit den Versatz der Zufallsränder **klar** übersteigt (je
+Asset um ein Mehrfaches der Streuung 0,005; am Markt gemessen an 0,035).
+Sonst: *trägt nach der Regel, ohne unabhängige Bestätigung*. So steht es
+bei oi_aenderung, funding_markt und konten_verh_markt.
+
+➤ **In die nächste Vorabfestlegung** gehört das als Bedingung, nicht als
+Nachtrag: der Versatz wird im selben Lauf mitgerechnet (Zufallsmerkmale
+laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.

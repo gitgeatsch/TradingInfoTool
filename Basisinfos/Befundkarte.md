@@ -18,6 +18,11 @@
 
 ---
 
+> ⭐⭐ **NACHTRAG 28.09.2026:** diese Karte steht auf dem 30.08. Die
+> Befundlage des **Hebel-Neubaus** (2.625–2.675) führt sie nicht — sie
+> steht im Register (`REGISTER_Befunde.md`), als Stand aus Code in
+> `python hebel_neubau.py` und als Plan in `Plan_Hebel_fuenf_Phasen_27_09.md`.
+
 # Befundkarte — was steht, was fiel, was fehlt
 
 **Lebende Datei.** Jedes neue Kapitel wird hier eingetragen, bevor es als

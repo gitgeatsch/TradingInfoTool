@@ -10,6 +10,44 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⭐⭐ STAND 28.09.2026 — die abgestimmte Anwendungsebene gilt
+
+Seit dem 27.09. abends ist mit dem Nutzer Punkt für Punkt die
+**Anwendungsebene K1–K7** abgestimmt (*„ja, so eintragen“* je Punkt;
+Volltext `Voranalyse_Kombination_Anwendungsebene_27_09.md`). Sie ersetzt
+die Zielgrößen aus § 2. Der Stand im Code: `python hebel_neubau.py`
+(`REGELWERK`, `BEITRAGSLAGE`, `NEUESTER_STAND`).
+
+| # | abgestimmt | ersetzt |
+|---|---|---|
+| **K1** | **Wirkungskurve je Beitrag** — Regler, Optimum erlaubt, **fest** (nicht je Regime); roh und selbstbezogen (gegen die eigenen 30 Tage) nebeneinander; Summe der Kurven, Wechselwirkungen nur als Suche | Schalter mit einer Schwelle |
+| **K2** | Urteil gegen die **PHASE** — eigenes Asset, eigene letzte 12 Monate, nur bekannte Ausgänge; Kontrollen Moment (Monat) und Tag; trägt der Markt viel → teilen in `_markt` (Kontext) und `_eigen` (Beitrag) = **W11** | Bezug *Asset im selben Monat* (meine Verschärfung, 2.666) |
+| **K3** | Kontextfläche BTC-Rendite × Dominanz-Änderung, Zeitverschiebungs-Nullwelt | – |
+| **K4** | Ereignis **q5**: +5 % vor −5 % binnen 24 h als Ausgangsbasis; Höhe × Fenster als Achse; ein späterer Erfolg zählt | *+X % in Y h* (gesetzt) |
+| **K5** | Schwelle auf **kalibriertem q**, Höhe nach Tabelle durch den Nutzer; **3–5 Stufen**, so viele wie trennscharf, symmetrisch mit Sperren | *nein / gut / sehr gut* |
+| **K6** | Hebelstufe = **höchste Stufe mit Liquidationswahrscheinlichkeit unter einer Nutzergrenze**; zuerst R (nur Risiko), R+S als Folgemessung | *MAE in ATR* |
+| **K7** | Messbasis **Binance** (Nutzer: *echte Börse, Bitpanda ein Broker*), Markpreis vor Spot-Tief, Bitpanda-Formel m = 0,09, Abgleich an 4 echten Liquidationen | – |
+
+**Dazu am 28.09. abgestimmt oder gemessen:**
+
+| | |
+|---|---|
+| **Grundgesamtheit** | `--menge unverzerrt:<saat>` — der Bestand plus die **eingestellten** Paare aus demselben Rahmen (2.668/2.669). Ohne sie war jede Neubau-Messung überlebensverzerrt |
+| **A4** (Nutzer) | *„wichtig zu unterscheiden, wie weit gestiegen — nur bestätigte Bewegung, also positiv, oder die Bewegung ist bereits gelaufen … sonst wird es ein Blocker“* → Randstufen je bisherigem Anstieg in eigener ATR |
+| **Randkriterium** (Nutzer: *„so festlegen und neu rechnen“*) | vorab festgelegt und committet vor der ersten Rechnung (6a9638f) — § 6, Fassung 28.09. |
+| **Regeltest** (Nutzer: *„darum muss die Regel dann auch in unseren Tests und Simulationen funktionieren“*) | jede Urteilsregel geht vor der Verwendung durch Zufallsmerkmale und eine gepflanzte Wirkung — § 6 |
+
+**Die Beitragslage nach K1** (Befunde 2.671–2.675, Stand im Code):
+
+| | |
+|---|---|
+| ✔ **trägt, unabhängig bestätigt** | rsi und momentum_kurz **oberer Rand** je Asset (4 von 4 Mengen, A4 bestätigt) · ema_abstand_atr selbstbezogen als **Kurve** (2.671) |
+| ⚠️ **Rolle offen** | *oben gestreckt* ist eine **laufende** Bewegung — nach OPTIMUM (§ 2) eine *Wahrscheinlichkeit*, nach A4 bestätigt. Die **Altersachse** ist ungeklärt (6 h alt trägt fast nichts) — vorher kein Einstieg |
+| ⚠️ **nur in der Suche** | funding_markt und konten_verh_markt **unterer Rand** (niedriges Funding, wenige Longs **marktweit**) — Kontext-Kandidat |
+| ⛔ **fällt** | Sperre *viele Longs je Asset* (in der Prüfzeit nicht da) · ema_abstand oberer Rand als Rand (kehrt 2022) · Premium · Käuferanteil · taker_verh · Kontextfläche (2.670) · Dominanz-Sperren 2.601/2.665 (2.670/2.672) |
+
+---
+
 # ⚠️⚠️ STAND 27.09. ABENDS — was von diesem Blatt noch gilt
 
 Dieses Blatt entstand am Mittag. Der Nachmittag hat es in wesentlichen
@@ -231,6 +269,28 @@ Befundes, bevor alle Schritte gelaufen sind.
 ➤ Bewacht im Paket Hebelneubau: ein **positiver** Neubau-Befund ab 2.661
 muss in seiner Basis die Vorwärtsrechnung und die Gegenprüfung nennen.
 
+## ⭐⭐⭐ DER PFLICHTABLAUF — Fassung 28.09.2026 (K1 bis 2.675)
+
+Die zehn Schritte oben gelten weiter. Geändert oder dazugekommen, jeweils
+mit dem Anlass:
+
+| # | Schritt | geändert, weil |
+|---|---|---|
+| 1 | **Bezug = die PHASE des eigenen Assets** (letzte 12 Monate, nur Ausgänge ≤ t − W); Kontrollen **Moment** (Asset im Monat) und **Tag** (alle Assets am Tag) | K2, Nutzer: der Monatsbezug nahm die Phase heraus (2.666) |
+| 3 | **Feste Tagesanker 00/06/12/18 UTC** statt Episoden; ein Tagesmerkmal wird über die Startstunden gemittelt | der „Vorzeichenwechsel 2022“ war ein Mitternachtseffekt der Episodenregel (2.666) |
+| 11 | **Grundgesamtheit** `unverzerrt:1..3` **und** `bestand` — ein Urteil muss in allen vier stehen; der Bestand bleibt bitgleich reproduzierbar | Überlebensverzerrung (2.668/2.669) |
+| 12 | **Nullwelt = Zeitverschiebung**: je Asset für Merkmale je Asset, **gemeinsam für alle Assets** für Marktmerkmale — sonst z bis 118 | die Verschiebung je Asset zerstört die Gleichzeitigkeit (2.673) |
+| 13 | **W11 — teilen, wenn der Markt trägt**: Tag/Phase < 0,5 → `_markt` gegen die gemeinsame, `_eigen` gegen die Nullwelt je Asset; das gilt **auch für die Ränder** | funding, premium, Long-Anteile sind überwiegend Markt (2.675) |
+| 14 | **Kurve UND Rand**: das Kurvenurteil (S, Form Suche/Prüfung) und das **Randkriterium** stehen nebeneinander — Rand oben P90–P99 + > P99, unten < P1 + P1–P10; trägt, wenn jenseits der Grenze Bestes-von-(2 × Kurven) **und** gleiches Vorzeichen in Prüfzeit, ≥ 3/4 Jahren, ≥ 60 % der Assets **und 2022** (Moment-Bezug); positiv → Einstieg nur mit bestätigter Altersachse und A4, negativ → Sperre | einseitige Kurven scheiterten an der flachen Mitte (2.674); vorab festgelegt 6a9638f |
+| 15 | **A4 und Altersachse** für jeden positiven Träger: Randstufen je bisherigem Anstieg in eigener ATR (*bestätigt oder gelaufen*), das Merkmal 6/12/24 h alt | Nutzer 28.09.; Lage **vor** der Bewegung (OPTIMUM) |
+| 16 | **Positivkontrolle in eine WIRKUNGSLOSE Kopie** (zeitverschoben) — nie in ein schon starkes Merkmal | die erste Fassung pflanzte in funding und war wertlos (2.671) |
+| 17 | ⭐ **REGELTEST vor der Verwendung**: Zufallsmerkmale (geglättet wie echte, je Asset **und** als Marktreihe) durch die Regel — Soll: fast nie *trägt*; dazu eine gepflanzte Wirkung bekannter Größe → die Auflösung | Nutzer 28.09.: *die Regel muss in unseren Tests und Simulationen funktionieren* (2.675: 0 von 40, Auflösung +0,02 je Asset, ~0,08 Markt) |
+| 18 | **Bestätigung gegen den Versatz, nicht gegen null**: ein Vorzeichen in der Prüfzeit zählt erst, wenn es den Versatz der Zufallsränder klar übersteigt; bei Markträndern ist die Marktstreuung der Maßstab | die Prüfzeit liegt +0,01 über ihrem Normal, Marktränder streuen 0,035 (2.675) |
+| 19 | **Simulation (Ebene 3)** vor jeder Verwendung im Betrieb: Signale mit der Regel gehen auf ungesehenen Monaten messbar anders aus als ohne | Nutzer 28.09. |
+
+⚠️ **Nicht mehr Pflicht:** Episoden (Schritt 3 alt) und die Karenz als
+eigener Lauf — beide sind durch Tagesanker, Altersachse und A4 ersetzt.
+
 ## ⚠️⚠️ Der HEBEL-Messstandard — was vom Spot-Standard gilt, was nicht (27.09. abends)
 
 **Nutzerauftrag:** *„beim Bauen Messstandards anwenden, wenn diese nicht
@@ -258,6 +318,16 @@ außer der Kopfzeile).
 | ⛔ **Positivkontrolle / Trennschärfe** | gepflanzte Stärken bis 0,40 R, Selbsttest 2.204 und 2.485 | **fehlt** — welcher Lift mit welcher Wahrscheinlichkeit gefunden wird, ist unbekannt | ⛔ **Lücke** |
 | ⛔ **Bekanntheitszeitpunkt** | – | nicht geprüft — genau daran hängt 2.652-vorgriff-funding | ⛔ **Lücke** |
 | ⛔ **Bewertung 2 (MAE)** | – | Nullwelt, Band und Stufung für MAE nicht festgelegt | ⛔ vor Messung 2 zu klären |
+
+✔ **Stand 28.09. — drei der Lücken sind geschlossen, eine ist neu:**
+
+| Baustein | geschlossen durch |
+|---|---|
+| ✔ **Positivkontrolle / Trennschärfe** | Pflanzung in eine wirkungslose Kopie (2.671); Auflösung je Asset **±0,02** (unverzerrt), ±0,04 (bestand); Marktmerkmale gröber als 0,04, Kontext 0,06–0,08 (2.670/2.673) |
+| ✔ **Bekanntheitszeitpunkt** | Vortageswert für Tagesgrößen (2.663), Normierung nur aus der Vergangenheit, Anker am Ende eingestellter Reihen nur bei lückenlosem Rest (2.669) |
+| ✔ **Fehlalarmquote** | Regeltest: 0 von 40 Zufallsrändern, je Asset und als Marktreihe (2.675) |
+| ⚠️ **Zielgröße** | seit K4 **q5** gegen die Phase — `messnorm.ZIELGROESSE_JE_LAGE[hebel] = barriere` ist damit vereinbar, der Code-Standard ist aber nicht nachgezogen |
+| ⚠️ neu: **Prüfzeit-Versatz** | +0,009/+0,013 je Asset — ein Vorzeichen in der Prüfzeit ist gegen ihn zu lesen (Schritt 18) |
 
 ➤ **Bis zur Anpassung im Code gilt:** Hebel-Befunde nennen die Prüfform
 dieser Tabelle, **nicht** die `messnorm`-Kopfzeile. Die Anpassung selbst

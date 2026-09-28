@@ -18,6 +18,15 @@
 
 ---
 
+> ⭐⭐ **NACHTRAG 28.09.2026 — für den HEBEL gelten eigene Zielgrößen.**
+> Der Hebel-Arm wird seit dem 25.09. neu gebaut. Mit dem Nutzer abgestimmt
+> (K4–K6, 27.09.): **Bewertung 1 (Einstieg)** misst das Ereignis **q5**
+> (+5 % vor −5 % binnen 24 h) gegen die **Phase** des eigenen Assets;
+> **Bewertung 2 (Hebelstufe)** misst die **Liquidationsgefahr** je Stufe
+> am Markpreis. Gebühren bleiben draußen (Regel 2). Maßgeblich:
+> `Regelwerk_Hebel_Bewertung_27_09.md` und `python hebel_neubau.py`.
+> Die Kennzahlen unten gelten für den Spot-Arm und die alte Kette.
+
 # Zielgrößen und Erfolgsmaße — woran wir Erfolg messen
 
 **Zweck:** Dauerhaftes Referenzdokument (analog `Regler_Signal_Pipeline_

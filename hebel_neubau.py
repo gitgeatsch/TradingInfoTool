@@ -211,14 +211,25 @@ OFFENE_AUFGABEN = (
 #     EINSTIEG misst gegen die CHANCE, HEBEL gegen das RISIKO.
 #     Zwei Zielgroessen, zwei Messungen - ein Merkmal kann in der
 #     einen tragen und in der anderen nicht.
+# ⭐ 27./28.09. NACHGEZOGEN auf die abgestimmte ANWENDUNGSEBENE K1-K7
+# (Basisinfos/Voranalyse_Kombination_Anwendungsebene_27_09.md, Nutzer je
+# Punkt *ja, so eintragen*): K4 legt das Ereignis fest (q5), K2 den Bezug
+# (die PHASE des eigenen Assets), K5 die Schwelle auf kalibriertem q und
+# 3-5 Stufen, K6 die Hebelstufe aus der Liquidationsgefahr. Vorher stand
+# hier *+X Prozent in Y Stunden, Lift gegen das eigene Asset* und *MAE in
+# ATR* - beides war gesetzt, nicht gemessen (2.655, 2.667).
 REGELWERK = {
     "bewertung_1": {
         "name": "Einstieg - zulaessig?",
         "frage": "Kommt eine Bewegung nach oben?",
-        "zielgroesse": "EREIGNIS (+X Prozent in Y Stunden), regelfrei",
-        "bezug": "das eigene Asset (Lift)",
-        "nullpunkt": "Lift = 1",
-        "ergebnis": "nein | gut | sehr gut",
+        "zielgroesse": "EREIGNIS q5: +5 Prozent vor -5 Prozent binnen 24 h "
+                       "(K4 - Ausgangsbasis; Hoehe x Fenster ist eine Achse, "
+                       "ein spaeterer Erfolg zaehlt mit)",
+        "bezug": "die PHASE des eigenen Assets - seine letzten 12 Monate, nur "
+                 "bekannte Ausgaenge (K2); Kontrollen: Moment (Monat) und Tag",
+        "nullpunkt": "q der Phase (Dq = q(Lage) - q(Phase))",
+        "ergebnis": "nein | 3 bis 5 Stufen, so viele wie trennscharf, Schwelle "
+                    "auf kalibriertem q (K5)",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
@@ -228,15 +239,23 @@ REGELWERK = {
                            "man sofort ein. k>0 ist die Diagnose, ob das "
                            "Merkmal die Bewegung VORHERSAGT oder nur "
                            "begleitet (VORLAUF). Beide Zahlen werden "
-                           "ausgewiesen, keine kappt die andere",
+                           "ausgewiesen, keine kappt die andere. In K1 "
+                           "gemessen als ALTERSACHSE (das Merkmal L Stunden "
+                           "alt) und A4 (bisheriger Anstieg in eigener ATR: "
+                           "bestaetigt oder gelaufen - Nutzer 28.09.)",
     },
     "bewertung_2": {
         "name": "Hebelhoehe",
         "frage": "Wie weit geht es gegen mich, bevor es fuer mich geht?",
-        "zielgroesse": "MAE in ATR - der maximale Rueckgang",
+        "zielgroesse": "MAE in PROZENT gegen den Liquidationsabstand der Stufe "
+                       "- die LIQUIDATIONSGEFAHR je Stufe (K6), am Markpreis "
+                       "(K7, Bitpanda-Formel m = 0,09; Orientierung 5x ~ -12 "
+                       "%, 3x ~ -27 %, 2x ~ -45 %). ATR zum Einstieg ist das "
+                       "Risikomass (2.667)",
         "bezug": "das eigene Asset",
-        "nullpunkt": "der eigene Durchschnitts-MAE",
-        "ergebnis": "2x | 3x | 5x",
+        "nullpunkt": "die Nutzergrenze fuer die Liquidationswahrscheinlichkeit",
+        "ergebnis": "2x | 3x | 5x - die HOECHSTE Stufe unter der Grenze (K6); "
+                    "zuerst nur Risiko (R), R+S als Folgemessung",
         "zusatzbedingung": "geringeres Risiko -> HOEHERE Stufe",
     },
 }
@@ -279,28 +298,37 @@ _L_KURS = "ja - Binance-Stundenkerzen"
 BEITRAGSLAGE = {
     # ── die drei registrierten Traeger ───────────────────────────────
     "funding": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.665", "2.666"),
+        b1="belegt", vorlauf="nein", b2="ungemessen",
+        befund=("2.663", "2.665", "2.666", "2.675"),
         beleg="mit dem VORTAGESWERT: Lift 4,45 bei <= -0,0040 auf +15 "
               "%/H12 (vorher 9,55 - die Haelfte war Vorgriff), traegt auf "
               "H6/H12/H24, +30 %/H48 nur Bewegung; >= 0,0016 zeigt nach "
-              "UNTEN (Spiegel 0,43)",
+              "UNTEN (Spiegel 0,43). K1 (q5 gegen die Phase): die Wirkung ist "
+              "MARKT (Tag/Phase 0,02-0,31); geteilt traegt der Asset-Anteil "
+              "nicht, der Marktanteil am UNTEREN Rand gegen die gemeinsame "
+              "Nullwelt in 4 von 4 Mengen (Suche +0,10..+0,14, 2.675)",
         quelle="funding_historie.db - Binance fundingRate, gespeichert "
                "als TAGESSUMME der drei Abrechnungen (00/08/16 UTC)",
         live="ja - aber als EINZELSATZ je Abrechnung; die Tagessumme ist "
              "erst nach Tagesende bekannt",
         spot="Regler, auf H20/bewegung_r vermessen (290 Symbole, 6,3 Jahre)",
-        vorbehalt="PHASE UND MOMENT: als Moment im Monat klein, aber auf "
-                  "2022 bestaetigt (2.665/2.666, Mittel ueber Startstunden "
-                  "+0,025 / +0,028); gegen das Asset im ganzen Zeitraum und "
-                  "den Markt deutlich staerker - es markiert auch die Phase. "
-                  "Ob es die Phase VORHERSAGT, ist ungemessen"),
+        vorbehalt="NUR IN DER SUCHE NACHGEWIESEN (2.675): Pruefzeit +0,024.."
+                  "+0,032 und 2022 +0,031..+0,040 liegen je innerhalb EINER "
+                  "Streuung des Marktrauschens (0,035) - die Groesse in "
+                  "ungesehener Zeit ist nicht gesichert; als KONTEXT-"
+                  "Kandidat, nicht als Beitrag je Asset"),
     "oi_aenderung": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.662"),
+        b1="belegt", vorlauf="nein", b2="ungemessen",
+        befund=("2.663", "2.662", "2.675"),
         beleg="Lift 6,23 bei >= 0,3355 auf +20 %/H24, 5,02 auf +30 %/H48; "
-              ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67",
+              ">= 0,1088 traegt auf H12/H24; Haltequote 0,55 bis 0,67. K1: "
+              "asset-eigen (Tag/Phase 0,8-0,9), Kurve nicht monoton; UNTERER "
+              "Rand nach dem Randkriterium in 3 von 4 Mengen (2.675)",
         quelle=_Q_TM, live=_L_TM,
         spot="Schalter, auf H20 vermessen (117 Symbole, 126.491 Anker)",
-        vorbehalt=""),
+        vorbehalt="OHNE UNABHAENGIGE BESTAETIGUNG (2.675): der untere Rand "
+                  "liegt in der Pruefzeit bei +0,011..+0,015 - gleich dem "
+                  "Versatz der Zufallsraender (+0,009/+0,013)"),
     "turnover": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="ueber dem Band, aber NUR BEWEGUNG (Spiegel 0,76 bis 1,67 "
@@ -315,10 +343,16 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     # ── Terminmarkt und Volumen, mitgemessen in 2.651 ───────────────
     "konten_verh": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663",),
+        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.675"),
         beleg="Lift 2,96 bei <= 0,5759 - traegt NUR auf H6 und H12; "
-              "Haltequote 0,60 bis 0,66",
-        quelle=_Q_TM, live=_L_TM, spot="", vorbehalt=""),
+              "Haltequote 0,60 bis 0,66. K1: ueberwiegend MARKT (Tag/Phase "
+              "0,07-0,18). Marktanteil am UNTEREN Rand (wenige Longs "
+              "marktweit) in 3 von 4 Mengen; die SPERRE viele Longs JE ASSET "
+              "(2.660/2.674) haelt in der Pruefzeit NICHT (2.675)",
+        quelle=_Q_TM, live=_L_TM, spot="",
+        vorbehalt="NUR IN DER SUCHE NACHGEWIESEN (2.675): Pruefzeit "
+                  "+0,026..+0,028 innerhalb der Marktstreuung; die Sperre je "
+                  "Asset ist in der ungesehenen Zeit nicht vorhanden"),
     "oi_je_umsatz": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 1,00 bis 1,53)",
@@ -349,24 +383,41 @@ BEITRAGSLAGE = {
     # ── Kursmerkmale (EMA/RSI/ATR-Familie, abgeschlossen) ──────────
     "ema_abstand_atr": dict(
         b1="faellt", vorlauf=None, b2="belegt",
-        befund=("2.642", "2.647", "2.648", "2.650"),
+        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.675"),
         beleg="B2: d 0,521 auf MAE gegen 0,267 auf MFE (2.642), absolut "
               "und je Asset (2.647). B1: Richtung RUNTER - Abstuerze "
               "9,8-fach (2.648), bei Karenz null von 11 (2.650). "
-              "Risikosperre, keine Chance",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+              "Risikosperre, keine Chance. ⚠ K1 (q5 gegen die PHASE, andere "
+              "Frage): SELBSTBEZOGEN traegt die Kurve, monoton, asset-eigen, "
+              "A4 bestaetigt bis ~2 ATR (2.671); der OBERE Rand kehrt aber 2022 "
+              "in allen 4 Mengen (-0,014..-0,020, 2.675)",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="ALTERSACHSE UNGEKLAERT (2.675): der obere Rand traegt mit "
+                  "dem aktuellen und dem 24 h alten Wert, der 6 h alte fast "
+                  "nicht - bei ema_abstand, rsi und momentum gleich"),
     "momentum_kurz": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650"),
+        befund=("2.648", "2.650", "2.675"),
         beleg="Lift 6,93 auf +15 %/H6, alle sechs Pruefungen (2.648); "
               "Haltequote k24/k0 0,31, bei k=3 schon null von 11 (2.650) - "
-              "BEGLEITET, sagt nicht vorher",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+              "BEGLEITET, sagt nicht vorher. K1: OBERER Rand (selbst) traegt "
+              "in 4 von 4 Mengen, Pruefzeit +0,026..+0,035 - rund dreimal "
+              "der Versatz; A4 bestaetigt, nicht gelaufen (2.675)",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="ALTERSACHSE UNGEKLAERT (2.675), dazu die ROLLE: der obere "
+                  "Rand misst eine laufende Bewegung - nach OPTIMUM eine "
+                  "WAHRSCHEINLICHKEIT, nach A4 (Nutzer 28.09.) bestaetigt; "
+                  "Einstieg erst nach geklaerter Altersachse"),
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650"),
-        beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650)",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+        befund=("2.648", "2.650", "2.675"),
+        beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
+              "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
+              "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
+              "Versatz; A4 bestaetigt; korreliert mit momentum (+0,62, 2.675)",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="ALTERSACHSE UNGEKLAERT und ROLLE offen (2.675) - wie "
+                  "momentum_kurz"),
     "vola": dict(
         b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
@@ -552,15 +603,31 @@ def gemessene_merkmale() -> dict:
 #   art "neu"      ein Merkmal auf einer Bewertung, auf der es NIE
 #                  gemessen wurde
 # ⚠️ Der Laderfix 2.611 ist keine Messung und steht unter OFFENE_AUFGABEN.
+# ⚠️ 28.09. nachgezogen: die Probe *funding gegen die Phase* (2.666) ist
+# durch K1 beantwortet (2.673, 2.675) - der Asset-Anteil traegt nicht, der
+# Marktanteil am unteren Rand nur in der Suche. Neu: die Altersachse von
+# *oben gestreckt*, und die Bestaetigung der Suche-Raender in ungesehener
+# Zeit. Danach K1 Schritt 2 (gemeinsame Schaetzung) - eine Kombination,
+# kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
-    dict(was="`funding`: sagt es die PHASE des Assets voraus?",
-         art="probe", bewertung="b1", merkmale=("funding",), prueft="2.666",
-         warum="gegen das Asset im selben Monat traegt funding wenig, gegen "
-               "das Asset im ganzen Zeitraum und gegen den Markt deutlich mehr "
-               "(2.666). Zu messen mit dem lockeren Bezug und einer passenden "
-               "Nullwelt (symboltreu ueber den ganzen Zeitraum, tagestreu als "
-               "Kontrolle), vorwaerts und auf 2022 - gehoert in die "
-               "Voranalyse zur KOMBINATION (Anwendungsebene)"),
+    dict(was="ALTERSACHSE *oben gestreckt*: warum traegt der 6 h alte Wert nicht?",
+         art="probe", bewertung="b1",
+         merkmale=("rsi", "momentum_kurz", "ema_abstand_atr"), prueft="2.675",
+         warum="in allen vier Mengen gleich: der obere Rand traegt mit dem "
+               "aktuellen Wert (+0,03..+0,06) und dem 24 h alten (+0,07.."
+               "+0,15), der 6 h alte fast nicht (-0,025..+0,033). Zuerst ein "
+               "Artefakt der Rechnung ausschliessen (Tagesanker 00/06/12/18 "
+               "gegen das Alter 6 h, Stufengrenzen), dann die Achse fein (0 bis "
+               "48 h). Die Vorabfestlegung verlangt fuer die Rolle Einstieg "
+               "eine bestaetigte Altersachse"),
+    dict(was="Die Suche-Raender in UNGESEHENER Zeit bestaetigen",
+         art="probe", bewertung="b1",
+         merkmale=("funding", "konten_verh", "oi_aenderung"), prueft="2.675",
+         warum="funding_markt und konten_verh_markt unten stehen nur in der "
+               "Suche (Pruefzeit und 2022 im Marktrauschen), oi_aenderung "
+               "unten nur auf dem Versatz. Mehr Pruefzeit gibt es nicht - die "
+               "Bestaetigung kommt aus der Simulation (Ebene 3) auf "
+               "ungesehenen Monaten, mit der Marktstreuung als Massstab"),
     dict(was="Vorlauf bei H72 und H120",
          art="vorlauf", bewertung="b1",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
@@ -568,13 +635,16 @@ NAECHSTE_MESSUNGEN = (
                "bei H24, Vortag) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
                "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
                "`funding` in der Form, die die Probe ergibt"),
-    dict(was="Messung 2 des Regelwerks: BEWERTUNG 2 (MAE)",
+    dict(was="K6: BEWERTUNG 2 als Liquidationsgefahr je Stufe (zuerst R)",
          art="neu", bewertung="b2",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
          warum="Bewertung 2 hat EINEN Traeger (ema_abstand_atr); ein "
-               "zweiter unabhaengiger macht die Stufung tragfaehig. Ob "
-               "Nebenmerkmale, momentum_kurz/rsi und bandenge mitlaufen, "
-               "entscheidet die Voranalyse dazu (E5, 27.09.)"),
+               "zweiter unabhaengiger macht die Stufung tragfaehig. Seit K6 "
+               "(27.09. abgestimmt) ist die Zielgroesse die "
+               "Liquidationswahrscheinlichkeit je Stufe am Markpreis (K7), "
+               "der Liquidationsrand ist mit den Eingestellten 17-65 % "
+               "dicker (2.669). Ob momentum_kurz/rsi und bandenge "
+               "mitlaufen, entscheidet die Voranalyse dazu"),
 )
 
 # ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der
