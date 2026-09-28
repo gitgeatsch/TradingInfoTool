@@ -269,3 +269,84 @@ gemeinsam zu schätzen.
 | vorher | die Altersachse klären — warum trägt der 6 h alte Wert nicht? |
 | ⛔ nicht | eine Sperre *viele Longs je Asset* — in der ungesehenen Zeit nicht vorhanden |
 | vor jedem Betrieb | Simulation Ebene 3 |
+
+---
+
+## 10. VORANALYSE ALTERSACHSE *oben gestreckt* (28.09.2026) — ✔ ABGESTIMMT, B1–B4 wie empfohlen
+
+**Nutzer 28.09.:** *„ja, B1 bis B4 wie empfohlen scheint ein guter Vorschlag
+zu sein, committen, dann messen — prüfen und gegenprüfen."* Festgelegt und
+committet **vor** der Messung; das Ergebnis steht in Abschnitt 11.
+
+**Nutzer:** *„ja committen und pushen, dann Altersachse klären — prüfen und
+gegenprüfen"* und *„wenn möglich sollte Bewegung und Altersachse ebenfalls
+kein künstlicher Blocker bzw. keine Alles-oder-nichts-Schwelle werden."*
+
+### 10a. ⛔ Zuerst ein eigener Fehler — die Meldung aus 2.675 war zum Teil ein Artefakt
+
+Die Altersachse im Werkzeug druckt als „Rand" `d[0]` und `d[11]` — nur die
+**äußerste Einzelstufe** (< P1 bzw. > P99, je ~1 % der Anker). Der Rand des
+Randkriteriums ist **P90–P99 und > P99** (Stufen 10+11, gewichtet). Ich habe
+die gealterte > P99-Stufe gegen den Zweistufen-Rand gestellt. Auf **derselben**
+Stufe (> P99), Suche, alle vier Mengen:
+
+| | jetzt | 6 h alt | 12 h | 24 h |
+|---|---|---|---|---|
+| rsi roh | −0,021…−0,009 | −0,025…−0,023 | +0,010…+0,015 | +0,072…+0,085 |
+| rsi selbst | +0,002…+0,013 | −0,002…+0,007 | +0,040…+0,045 | +0,083…+0,113 |
+| momentum selbst | +0,032…+0,039 | +0,006…+0,013 | +0,020…+0,034 | +0,066…+0,076 |
+| ema_abstand selbst | +0,035…+0,042 | +0,013…+0,033 | +0,077…+0,095 | +0,122…+0,147 |
+
+➤ **rsi hat keinen 6-h-Einbruch** — schon der aktuelle Wert trägt ganz oben
+nichts; der rsi-Rand lebt von **P90–P99** (+0,05…+0,06). Das ist ein
+**Optimum der Kurve** (K1 erlaubt es), keine Altersfrage.
+➤ **momentum und ema_abstand**: von jetzt auf 6 h fällt die Stufe, bis 24 h
+steigt sie **über** den aktuellen Wert. Das ist bisher nur eine Stufe, nur
+Suche, ohne Nullwelt — also **noch kein Befund**.
+
+⚠️ Am Code: momentum_kurz ist die **6-h-Rendite in ATR**, rsi der **14-h**-RSI,
+ema_abstand gegen die **48-h**-EMA. Der 6 h alte momentum-Wert beschreibt die
+Bewegung von **vor 12 bis 6 h** — er überlappt das aktuelle Fenster nicht.
+
+### 10b. Der Aufbau — vorab festzulegen
+
+| # | Festlegung | Empfehlung |
+|---|---|---|
+| **B1** | **Rand** | derselbe wie im Randkriterium (Stufen 10+11 bzw. 0+1, gewichtet), dazu die zwei Stufen **einzeln** als Auskunft — nie wieder Einzelstufe gegen Rand |
+| **B2** | **Alter** | 0, 1, 2, 3, 6, 9, 12, 18, 24, 36, 48 h — fein genug, um *Einbruch* von *Rauschen* zu trennen |
+| **B3** | **Merkmale** | die Familie *oben gestreckt*: rsi, momentum_kurz, ema_abstand_atr, je roh und selbstbezogen; dazu **zwei Zufallsmerkmale** durch dieselbe Rechnung (Regeltest) |
+| **B4** | **Prüfform** | je Alter Suche **und** Prüfzeit getrennt, Nullwelt Zeitverschiebung je Asset (40 Ziehungen) → z je Alter; Prüfzeit gegen den **Versatz** der Zufallsmerkmale (E-11); Mengen unverzerrt:1–3 und bestand; 2022 als Auskunft |
+
+### 10c. ⭐ Kein Blocker — was die Altersachse entscheidet und was NICHT
+
+Nach der Nutzervorgabe entscheidet die Altersachse **nicht**, ob gehandelt
+wird. Sie klärt zwei Dinge:
+
+| | Frage | Folge |
+|---|---|---|
+| **Gültigkeit der Messung** | kehrt der Rand in irgendeinem Alter das Vorzeichen um (jenseits der Nullwelt, in Suche **und** Prüfzeit)? | nein → die Wirkung ist kein Zufall eines Zeitpunkts, die Vorabbedingung *Altersachse bestätigt* ist erfüllt. ja → der Rand ist ein Zeitartefakt und geht nicht ein |
+| **Form der Wirkung** | wie verläuft Dq über das Alter? | geht als **abgestufter** Beitrag in K1 Schritt 2 ein — z. B. der aktuelle **und** der 24 h alte Wert als zwei Beiträge auf den Log-Odds, jeder mit seinem gemessenen Gewicht. **Keine Schwelle** „erst ab X Stunden" |
+
+Dasselbe gilt für **A4** (*wie weit schon gestiegen*): der gemessene Verlauf
+(rsi/momentum oben: bis 2 ATR +0,01…+0,08, bei 2–3 ATR +0,006…+0,034) wird ein **Gewicht**, das
+mit dem Anstieg abnimmt — **kein Schnitt** bei 2 ATR. Ein Rand mit
+schwächerer Wirkung trägt weniger bei, er sperrt nicht.
+
+⚠️ **Die OPTIMUM-Frage** (*Lage vor der Bewegung*) wird damit ebenfalls
+nicht zur Sperre: trägt ein 24 h alter Wert, **ist** das Lage vor der
+jetzigen Bewegung. Die Rolle ergibt sich aus der Messung, nicht aus einem
+Etikett.
+
+### 10d. Prüfung und Gegenprüfung dieser Voranalyse
+
+| | |
+|---|---|
+| ✔ Bekanntheitszeitpunkt | der L Stunden alte Wert ist zum Anker bekannt; das Normal nutzt nur Ausgänge ≤ t − 24 h |
+| ✔ Grenzen | die Stufengrenzen bleiben die des **aktuellen** Merkmals aus der Suche — die gealterte Reihe hat dieselbe Verteilung, bis auf die ersten L Stunden je Asset |
+| ⚠️ Mehrfachtesten | 11 Alter × 6 Kurven × 2 Ränder = 132 Werte — die Grenze wird **Bestes-von-132** aus derselben Nullwelt, sonst findet man im Alter, was man sucht |
+| ⚠️ Abhängigkeit | benachbarte Alter sind stark korreliert — der Verlauf ist **eine** Kurve, keine elf Befunde |
+| ⚠️ Artefakt Tagesanker | Anker 00/06/12/18: das Alter 6 h fällt genau auf den vorigen Anker. Die Zwischenalter 1–3 und 9 h zeigen, ob die Delle an diesem Gitter hängt |
+| ⚠️ Zufallsmerkmale | laufen mit — zeigen sie über das Alter ein Muster, ist es die Rechnung, nicht der Markt |
+
+**Laufzeit:** je Menge etwa 5 bis 8 Minuten, nacheinander (nie zwei große
+Läufe parallel).
