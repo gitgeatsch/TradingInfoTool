@@ -130,3 +130,33 @@ Werkzeug stehen vor dem ersten Lauf im Messprotokoll
 | **E8** | Gegenprüfungen (a)–(h) |
 | **E9** | stetiges q, K5-Tabelle, keine Schwelle |
 | **T0–T5, R, S** | wie Abschnitt 3 |
+
+---
+
+## 8. ✔ AUFLÖSUNGS-TOR (E7) — Form (b) bestanden (28.09.2026, Bestand, 40 Nullwelten)
+
+| gepflanzt auf P90+ von rsi_s (verschobene Kopie) | Dq der Auswahl (5 Ziehungen) | gefunden |
+|---|---|---|
+| +0,02 | −0,003 … −0,020 | 2 von 5 |
+| **+0,04** | −0,003 … −0,010 | **5 von 5** |
+| +0,08 | +0,034 … +0,087 | 5 von 5 |
+
+Nullwelt: Mittel **−0,0163**, Streuung 0,0054, 90. Perzentil −0,0110. ➤ **Form (b)
+wird gemessen** (vorab festgelegte Reihenfolge).
+
+⚠️⚠️ **Gegenprüfung des Tors — die Nullwelt liegt nicht bei 0:** ohne jede
+Wirkung hat das oberste Zehntel des geschätzten q ein **schlechteres** q als
+sein Normal. Ausgewählt wird nach dem **ganzen** q (Normal plus Beiträge);
+ohne echte Beiträge wählt das Modell die Anker mit dem höchsten
+**Phase-Normal** — und dort kehrt das q zur Mitte zurück (das Normal
+überschätzt Assets, die zuletzt gut liefen). Eine gepflanzte +0,04 hebt die
+Auswahl darum nur um rund +0,011 über die Nullwelt: der Normal-Anteil
+verdünnt sie.
+
+➤ **Die vorab festgelegten Urteile bleiben gültig** — jede Zahl wird gegen
+dieselbe Nullwelt gelesen, die diesen Effekt enthält. ➤ **Nachträglich
+ergänzt, ändert kein Urteil:** die **Auswahl nach dem Beitrag allein** (ohne
+Normal), mit eigener Nullwelt, fest und rollierend — sie beantwortet sauberer,
+ob die **Beiträge** besser auswählen. ➤ **Nebenbefund für K2:** das
+12-Monats-Normal kehrt bei hohen Werten zur Mitte zurück — eine gedämpfte
+Form des Normals wäre eine eigene Messung.

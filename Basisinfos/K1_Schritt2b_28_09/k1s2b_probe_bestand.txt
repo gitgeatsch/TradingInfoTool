@@ -1,0 +1,56 @@
+﻿========================================================================================================================
+K1 SCHRITT 2b - KOMBINATION · MENGE bestand · FORM (b) glatte 12-Stufen-Kurve · WERKZEUGTEST (--probe)
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · mit Treffer 61225 / 103000 · Symbole 114
+  Eingaenge A: rsi_s, rsi_s24, mom_s, mom_s24, ema_s, ema_s24, anstieg · B: + oi · Daempfung per Kreuzvalidierung 20/200/2000/20000 · Nullwelt 3 Ziehungen
+
+========================================================================================================================
+FESTE TEILUNG Suche 2023-2024 -> Pruefung 2025-01..2026-08 · Dq der AUSWAHL (oberstes Zehntel des geschaetzten q, Grenze aus dem Training)
+  A: oben +0.0308 (Anteil im Test 4.5 %) · unten +0.0163 · G +1.233 · Daempfung 20000
+  B: oben +0.0234 (Anteil 4.4 %) · unten +0.0126 · G +1.087 · Daempfung 20000
+  Nullwelt (Bestes-von-2): Mittel -0.0067 · 90. Perzentil -0.0020
+  Familien einzeln (eigenes Zehntel): rsi +0.0386 · momentum -0.0014 · ema_abstand +0.0085 · anstieg -0.0071
+  T2 A (eigenes Zehntel +0.0198) minus beste Familie rsi (+0.0386) = -0.0187 gegen Nullband 90. Perzentil -0.0002
+  T1 ✔ jenseits der Nullwelt · T2 · nicht mehr als der beste Teil
+  S  unterstes Zehntel: A +0.0163 · B +0.0126 (Sperre, wenn negativ)
+  AUSKUNFT Auswahl nach dem BEITRAG allein (ohne Normal): A oben +0.0611 · unten -0.0156 · Nullwelt Mittel +0.0110, 90. Perzentil +0.0135 -> jenseits
+  R  Zufallseingaenge: Dq der Auswahl -0.0150 gegen die Grenze -0.0020 -> ✔ im Nullband
+  Summe der einzeln geschaetzten Familien: Dq der Auswahl +0.0578 (gemeinsam +0.0308)
+  Eingaenge 1 h aelter: Dq der Auswahl +0.0327 (aktuell +0.0308)
+  2022 (Moment-Bezug, Modell aus der Suche): oben +0.0070 · unten -0.0098 (Anteil oben 24.4 %)
+
+========================================================================================================================
+ROLLIEREND, WACHSEND: 3 Monate 2024-01 bis 2024-03, je auf allen Ankern ab 2023-01 davor
+  gewaehlte Daempfung je Monat: 20000 20000 20000
+  Dq der Auswahl rollierend: oben -0.0724 (Anteil 13.4 %) · unten +0.0542 · G +1.017
+  AUSKUNFT Auswahl nach dem BEITRAG allein (rollierend): oben -0.0345 (Anteil 9.1 %)
+  Familien rollierend (eigenes Zehntel): rsi -0.0889 · momentum -0.1280 · ema_abstand -0.0960 · anstieg -0.1073 · A (eigenes Zehntel) -0.0931
+  72 h (Auskunft): q der Auswahl 0.5115 gegen alle 0.5034
+  T3 Rangordnung innerhalb des Monats: Steigung 0.15 -> · nicht kalibriert
+     Zehntel geschaetzt (gegen Monatsmittel): -0.061 -0.039 -0.026 -0.016 -0.006 +0.003 +0.013 +0.023 +0.035 +0.074
+     Zehntel beobachtet (gegen Monatsmittel): -0.010 +0.001 -0.004 +0.018 -0.026 -0.022 +0.017 +0.001 +0.015 +0.010
+     Niveau (Auskunft): geschaetzt 0.5132 · beobachtet 0.4794
+  T4 je Jahr und BTC-Drittel: 2024 -0.0724 · 2025 +nan · 2026 +nan · BTC tief -0.0508 (610) · BTC mitte -0.0230 (715) · BTC hoch -0.1187 (767) · ⚠ NICHT ueberall positiv - reden
+  T5 je Asset (>= 50 Auswahlanker): 9 Assets, Dq > 0 bei 11 % · ·
+  nur Hebelwerte des Betriebs (Namensgleichheit, Vorbehalt 2.612): 4 Symbole · Dq der Auswahl -0.0953 (494)
+  W1/W2 (Hinweis fuer Schritt 3, rollierend, beobachtet minus geschaetzt q):
+     W2 rsi         beide oben - · nur jetzt +0.048 (690) · nur 24 h -0.084 (805) · keiner -0.037 (7089)
+     W1 rsi         oben x Anstieg: <0 - · 0-1 +0.051 (433) · 1-2 +0.060 (248) · >=2 -
+     W2 momentum    beide oben - · nur jetzt +0.031 (681) · nur 24 h -0.094 (753) · keiner -0.034 (7153)
+     W1 momentum    oben x Anstieg: <0 - · 0-1 +0.017 (439) · 1-2 +0.039 (198) · >=2 -
+     W2 ema_abstand beide oben - · nur jetzt +0.038 (527) · nur 24 h -0.072 (601) · keiner -0.035 (7417)
+     W1 ema_abstand oben x Anstieg: <0 - · 0-1 +0.013 (284) · 1-2 +0.034 (308) · >=2 -
+
+========================================================================================================================
+K5-TABELLE (E9: Ausgabe, KEINE Schwelle) - rollierend, Variante A
+  q >= 0.52  Anker    5918 · je Asset/Monat  41.97 · q beob 0.4705 · Dq -0.0577 · je Jahr 0.4705 / - / -
+  q >= 0.55  Anker    2090 · je Asset/Monat  14.82 · q beob 0.4665 · Dq -0.0876 · je Jahr 0.4665 / - / -
+  q >= 0.58  Anker     668 · je Asset/Monat   4.74 · q beob 0.5629 · Dq -0.0500 · je Jahr 0.5629 / - / -
+  q >= 0.60  Anker     460 · je Asset/Monat   3.26 · q beob 0.5833 · Dq -0.0475 · je Jahr 0.5833 / - / -
+  q <= 0.45  Anker     914 · je Asset/Monat   6.48 · q beob 0.5820 · Dq +0.1471 · je Jahr 0.5820 / - / -
+  q <= 0.42  Anker      59 · je Asset/Monat   0.42 · q beob 0.7308 · Dq +0.3132 · je Jahr - / - / -
+  q <= 0.40  Anker       3 · je Asset/Monat   0.02 · q beob 1.0000 · Dq +0.5896 · je Jahr - / - / -
+  Grundrate 0.4794 · Anker 15640 · Monate 3 · Assets 47
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig

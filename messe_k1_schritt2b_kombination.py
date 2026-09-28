@@ -326,6 +326,13 @@ def main() -> int:
         aus["oben_eigen"] = dq_y(r_pa[z_te >= e_hi]); aus["unten_eigen"] = dq_y(r_pa[z_te <= e_lo])
         zb = b.z(EE, r_p, OFF[r_p]); zm = m.z(EE, r_p, OFF[r_p])
         aus["G"] = 1000 * (logloss(zb, y[r_p]) - logloss(zm, y[r_p]))
+        # AUSKUNFT (nachtraeglich 28.09., aendert kein Urteil): Auswahl nach dem
+        # BEITRAG allein (z minus Normal) - das Tor zeigte, dass die Auswahl nach
+        # dem gesamten q vom Phase-Normal beherrscht wird (Nullwelt -0,016:
+        # hohes Normal kehrt zur Mitte zurueck)
+        c_tr, c_te = z_tr - OFF[r_sa], z_te - OFF[r_pa]
+        aus["beitrag_oben"] = dq_y(r_pa[c_te >= np.quantile(c_tr, 0.9)])
+        aus["beitrag_unten"] = dq_y(r_pa[c_te <= np.quantile(c_tr, 0.1)])
         return aus
 
     def verschoben(EE):
@@ -377,14 +384,15 @@ def main() -> int:
     # ══ FESTE TEILUNG: T1, T2, R, Gegenpruefungen ═════════════════════════
     rA, rB = fest(E, VAR_A), fest(E, VAR_B)
     rF = {f: fest(E, ks) for f, ks in FAM.items()}
-    nO, nD = [], []
+    nO, nD, nC = [], [], []
     for _ in range(zieh):
         EV = verschoben(E)
         a_, b_ = fest(EV, VAR_A), fest(EV, VAR_B)
         f_ = {f: fest(EV, ks) for f, ks in FAM.items()}
         nO.append(max(a_["oben"], b_["oben"]))
         nD.append(a_["oben_eigen"] - max(v["oben_eigen"] for v in f_.values()))
-    nO, nD = np.array(nO), np.array(nD)
+        nC.append(a_["beitrag_oben"])
+    nO, nD, nC = np.array(nO), np.array(nD), np.array(nC)
     g1, g2 = float(np.nanpercentile(nO, 90)), float(np.nanpercentile(nD, 90))
     print()
     print("=" * 120)
@@ -404,6 +412,10 @@ def main() -> int:
     print("  T1 %s · T2 %s" % ("✔ jenseits der Nullwelt" if max(rA["oben"], rB["oben"]) > g1 else "· nicht jenseits",
                                "✔ mehr als der beste Teil" if d2 > g2 else "· nicht mehr als der beste Teil"))
     print("  S  unterstes Zehntel: A %+.4f · B %+.4f (Sperre, wenn negativ)" % (rA["unten"], rB["unten"]))
+    print("  AUSKUNFT Auswahl nach dem BEITRAG allein (ohne Normal): A oben %+.4f · unten %+.4f · Nullwelt Mittel "
+          "%+.4f, 90. Perzentil %+.4f -> %s" % (rA["beitrag_oben"], rA["beitrag_unten"], float(np.nanmean(nC)),
+                                               float(np.nanpercentile(nC, 90)),
+                                               "jenseits" if rA["beitrag_oben"] > np.nanpercentile(nC, 90) else "nicht jenseits"))
     # R Zufall
     rz = np.random.default_rng(SAAT + 1)
     EZ = dict(E)
@@ -443,7 +455,7 @@ def main() -> int:
     print("ROLLIEREND, WACHSEND: %d Monate %04d-%02d bis %04d-%02d, je auf allen Ankern ab 2023-01 davor" % (
         len(monate), monate[0][0], monate[0][1], monate[-1][0], monate[-1][1]))
     ZA, Z0 = np.full(n, np.nan), np.full(n, np.nan)
-    SEL, SELU = np.zeros(n, bool), np.zeros(n, bool)
+    SEL, SELU, SELC = np.zeros(n, bool), np.zeros(n, bool), np.zeros(n, bool)
     ZF = {f: np.full(n, np.nan) for f in FAM}
     lams = []
     ab = _h(datetime(2023, 1, 1))
@@ -463,6 +475,7 @@ def main() -> int:
         ZA[ziel] = m.z(E, ziel, OFF[ziel])
         SEL[ziel] = ZA[ziel] >= np.quantile(zt, 0.9)
         SELU[ziel] = ZA[ziel] <= np.quantile(zt, 0.1)
+        SELC[ziel] = (ZA[ziel] - OFF[ziel]) >= np.quantile(zt - OFF[ra], 0.9)
         for f, ks in FAM.items():
             ZF[f][ziel] = fit_cv(ks, E, ra, rt, y, off, STD)[0].z(E, ziel, OFF[ziel])
     alle = np.flatnonzero(np.isfinite(ZA))
@@ -472,6 +485,8 @@ def main() -> int:
     print("  Dq der Auswahl rollierend: oben %+.4f (Anteil %.1f %%) · unten %+.4f · G %+.3f" % (
         dq(sel), 100 * SEL[alle].mean(), dq(selu),
         1000 * (logloss(Z0[ev], A24[ev]) - logloss(ZA[ev], A24[ev]))))
+    print("  AUSKUNFT Auswahl nach dem BEITRAG allein (rollierend): oben %+.4f (Anteil %.1f %%)" % (
+        dq(alle[SELC[alle]]), 100 * SELC[alle].mean()))
     fz = []
     for f in FAM:
         zf = ZF[f][alle]
