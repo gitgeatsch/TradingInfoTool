@@ -287,3 +287,5 @@ wird) — Gewinn auf 2024 in tausendstel nat, bestand / unverzerrt:1:
 **Preis:** rund 13 Schätzungen statt einer je Modell — etwa **1,5 bis 2 Stunden
 je Menge**, **6 bis 8 Stunden** für alle vier, nacheinander (auch über Nacht).
 Ein Werkzeugtest geht voraus.
+
+**Zweiter Werkzeugtest (28.09.):** Mechanik in Ordnung - Nullwelt im Mittel -0,67 (vorher -17), 90. Perzentil +0,08, Zufall im Nullband, die Kreuzvalidierung waehlt 2.000 fuer die Kombination. Die Pflanzung fand +0,02 und +0,04 nicht; die Leiter ist deshalb nach dem Messstandard auf +0,08 und +0,16 verlaengert - das beschreibt nur die Aufloesung, T1-T5 unveraendert. Festgelegt VOR den vier Laeufen.
