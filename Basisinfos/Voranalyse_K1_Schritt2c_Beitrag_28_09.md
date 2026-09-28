@@ -109,7 +109,20 @@ Stunden**, nach der K6-Kette.
 
 ---
 
-## 5. Zur Abstimmung
+## 5. ✔ ABGESTIMMT (28.09.2026) — F1 bis F9 wie empfohlen
+
+**Nutzer:** *„ja, F1 bis F9 wie empfohlen, bauen — prüfen und gegenprüfen.
+… zu deiner Anmerkung, du prüfst jetzt das dritte Mal: ja, verstehe ich —
+aber wenn ein bekannter Fehler oder eine Ungenauigkeit vorhanden ist, zählen
+die vorherigen nicht, zumindest als dritter Anlauf kann man nichts machen."*
+
+➤ Festgehalten: die **Rechnungen** von 2.677/2.678 zählen wegen ihrer
+bekannten Fehler (feste Dämpfung, Auswahl vom Normal beherrscht) **nicht**
+als gültige Anläufe. Was bleibt, ist nur, dass die Prüfzeit **gesehen** ist —
+darum bleibt ein *trägt* aus 2c ein Kandidat, bis 2022, Simulation und neue
+Monate es bestätigen.
+
+## 5a. Die Empfehlung, wie abgestimmt
 
 | # | Empfehlung |
 |---|---|
