@@ -136,11 +136,21 @@ def main() -> int:
         n = len(cc)
         idx = np.arange(n)
         if mark is not None:
-            mp = {r[0]: r[1] for r in mark.execute(
-                "SELECT stunde, low / faktor FROM markpreis WHERE symbol=?", (sym,))}
-            tief = np.array([mp.get(x, np.nan) for x in st], float)
+            # ⚠️ 28.09. abends (Markpreis-Kontrolle, K7): Einstieg UND Tief aus
+            # DERSELBEN Reihe - der Markpreis liegt gleichbleibend rund -0,05 %
+            # neben dem Spot, mit dem Spot-Schluss als Einstieg stuende dieser
+            # Aufschlag als Fehler in der Liquidationsdistanz. Monate mit einem
+            # FREMDEN Instrument (hole_markpreis --sperre) zaehlen als fehlend.
+            gesperrt = {r[0] for r in mark.execute(
+                "SELECT monat FROM _abweichung WHERE symbol=? AND gesperrt=1", (sym,))}
+            mp = {r[0]: (r[1], r[2]) for r in mark.execute(
+                "SELECT stunde, low / faktor, close / faktor FROM markpreis WHERE symbol=?", (sym,))
+                if r[0][:7] not in gesperrt}
+            tief = np.array([mp[x][0] if x in mp else np.nan for x in st], float)
+            einstieg = np.array([mp[x][1] if x in mp else np.nan for x in st], float)
         else:
             tief = l
+            einstieg = cc
         km = E2.kursmerkmale(h, l, cc, vol)
         atr = km["atr"]
         # R-R11: genau wie E2i (alle Stundenanker, 24/72 h, feste Grenzen, Spot-Tief)
@@ -180,10 +190,11 @@ def main() -> int:
             # liquidiert* zaehlen - solche Anker fallen heraus
             fehlt = np.concatenate([[0], np.cumsum(~np.isfinite(tief))])
             g2 &= (fehlt[np.minimum(idx + HM + 1, n)] - fehlt[np.minimum(idx + 1, n)]) == 0
+            g2 &= np.isfinite(einstieg)          # der Einstieg braucht den Markpreis der Ankerstunde
         a = np.flatnonzero(g2)
         if not len(a):
             continue
-        E0 = cc[a]
+        E0 = einstieg[a]                        # spot: cc; mark: Markpreis-Schluss (dieselbe Reihe wie das Tief)
         erste_liq = {(L, m): np.full(len(a), 10 ** 6) for L in STUFEN for m in MARGEN}
         erste_stop = np.full(len(a), 10 ** 6)
         for s in range(1, HM + 1):
