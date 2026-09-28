@@ -425,7 +425,9 @@ def main() -> int:
     gZ = g_fest(EZ, VAR_A)[0]
     print("  R  Zufallseingaenge (A-Aufbau): G %+.3f gegen die Grenze %+.3f -> %s" % (
         gZ, grenze1, "✔ im Nullband" if gZ <= grenze1 else "⛔ JENSEITS - die Regel meldet Zufall"))
-    # Leiter nach dem Messstandard verlaengert (Werkzeugtest 28.09.: +0,04 nicht\n    # gefunden - ohne hoehere Sprossen waere keine Aufloesung benennbar)\n    for d in (0.02, 0.04, 0.08, 0.16):
+    # Leiter nach dem Messstandard verlaengert (Werkzeugtest 28.09.: +0,04 nicht
+    # gefunden - ohne hoehere Sprossen waere keine Aufloesung benennbar)
+    for d in (0.02, 0.04, 0.08, 0.16):
         gef = 0
         for _ in range(2 if probe else 5):
             EV = verschoben(E)
