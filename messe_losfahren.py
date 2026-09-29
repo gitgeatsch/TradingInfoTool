@@ -294,7 +294,7 @@ def main() -> int:
     # der Einstiegsauswahl minus Niveau - beides gegen das geschrumpfte Normal.
     # Wetter = BTC-Rendite 30 Tage, Drittel nach dem RANG gegen die eigenen letzten 12
     # Monate (kausal). WEITER nur, wenn Zuwachs(hoch) - Zuwachs(tief) >= +0,04 in 2025 UND 2026.
-    if "--wetter" in sys.argv:
+    if "--wetter" in sys.argv or "--wetter2" in sys.argv:
         WEITER = 0.04
         m0, sel0 = rsi_auswahl(E)
         ct0 = m0.z(E, r_pa, OFF[r_pa]) - OFF[r_pa]
@@ -326,13 +326,13 @@ def main() -> int:
             z[ok_std] = zh[(STD[ok_std] + versatz) % LH]
             return z
 
-        def zerlege(Z, sel, ix_jahr):
+        def zerlege(Z, sel, ix_jahr, y=A24):
             aus = []
             for w in range(3):
                 alle = ix_jahr[Z[ix_jahr] == w]
                 s_ = np.intersect1d(sel, alle)
-                niv = dqs(alle)
-                aus.append((niv, dqs(s_) - niv, len(alle), len(s_)))
+                niv = dqs(alle, y)
+                aus.append((niv, dqs(s_, y) - niv, len(alle), len(s_)))
             return aus
 
         def episoden(zh, jj):
@@ -399,6 +399,122 @@ def main() -> int:
         print()
         print("  WEITER-SCHWELLE Zuwachs hoch - tief >= +%.2f in 2025 UND 2026: %s" % (
             WEITER, "✔ ERREICHT - W2 vorlegen" if weiter else "⛔ NICHT erreicht - keine W2 aus diesem Grund, Ergebnis vorlegen"))
+        if "--wetter2" in sys.argv:
+            # ══ W2 (Voranalyse_W2_Wetter_Gewicht_29_09.md): Urteil 2024-01..2026-08, rollierende
+            # Einstiegsregel (jeder Monat fuer rsi ungesehen), Wetter unveraendert aus W1 ══════
+            print()
+            print("=" * 120)
+            print("W2 · ROLLIEREND 2024-01 bis 2026-08, Training wachsend ab 2023-01, Grenze aus dem Training")
+            SEL = np.zeros(n, bool)
+            ab = H(datetime(2023, 1, 1))
+            for (j, mo) in monate:
+                mi = j * 12 + (mo - 1)
+                start = H(datetime(j, mo, 1))
+                fen = BASIS & (STD >= ab) & (MON < mi) & (STD < start - 24)
+                ra = np.flatnonzero(fen); rt = np.flatnonzero(fen & HIT)
+                ziel = np.flatnonzero(BASIS & (MON == mi))
+                if len(rt) < 5000 or not len(ziel):
+                    continue
+                _m, sv = rsi_auswahl(E, ra=ra, rt=rt, ziel=ziel)
+                SEL[sv] = True
+            sel = np.flatnonzero(SEL)
+            urteil = np.flatnonzero(BASIS & (MON >= 2024 * 12) & (MON <= 2026 * 12 + 7) & np.isfinite(QS))
+            sel = np.intersect1d(sel, urteil)
+            print("  Urteilsanker %d · Auswahl %d (%.1f %%)" % (len(urteil), len(sel), 100 * len(sel) / max(len(urteil), 1)))
+
+            def G_von(Zx, y=A24, ix=urteil):
+                e_ = zerlege(Zx, sel, ix, y)
+                return e_[2][1] - e_[0][1], e_[2][0] - e_[0][0], e_
+            g, gn, e_all = G_von(Z)
+            for w in range(3):
+                print("    %-9s Niveau %+.4f · Zuwachs %+.4f · %6d / %5d" % (WN[w], e_all[w][0], e_all[w][1], e_all[w][2], e_all[w][3]))
+            null40, nulln40, null400 = [], [], []
+            for i_ in range(440):
+                k_ = int(rng.integers(1440, LH - 1440))
+                gv, gnv, _e = G_von(zustand(zust_h, k_))
+                (null40 if i_ < zieh else null400).append(gv)
+                if i_ < zieh:
+                    nulln40.append(gnv)
+            p90 = float(np.nanpercentile(null40, 90))
+            p90_400 = float(np.nanpercentile(null40 + null400, 90))
+            anteil = float(np.mean(np.array(null40 + null400) >= g))
+            print("  G = Zuwachs hoch - tief %+.4f · Nullwelt (40) Mittel %+.4f, P90 %+.4f · (440) P90 %+.4f, Anteil >= G %.3f" % (
+                g, float(np.nanmean(null40)), p90, p90_400, anteil))
+            print("  Kontext: Niveau hoch - tief %+.4f · Nullwelt (40) Mittel %+.4f, P90 %+.4f" % (
+                gn, float(np.nanmean(nulln40)), float(np.nanpercentile(nulln40, 90))))
+            # Leiter (vorab): in der VERSCHOBENEN Welt +d auf die Auswahl im Zustand hoch
+            aufl = None
+            for d in (0.04, 0.08, 0.12):
+                gef, werte = 0, []
+                for _ in range(5):
+                    k_ = int(rng.integers(1440, LH - 1440))
+                    Zv = zustand(zust_h, k_)
+                    ziel_h = sel[(Zv[sel] == 2) & HIT[sel]]
+                    kand = ziel_h[B24[ziel_h] == 1]
+                    y = A24.copy()
+                    w_ = rng.choice(kand, size=min(int(round(d * len(ziel_h))), len(kand)), replace=False)
+                    y[w_] = 1.0
+                    gv, _gn, _e = G_von(Zv, y)
+                    werte.append(gv); gef += int(gv > p90)
+                print("  Leiter +%.2f: %s -> gefunden %d von 5" % (d, " ".join("%+.4f" % x for x in werte), gef))
+                if aufl is None and gef >= 4:
+                    aufl = d
+            print("  G1 Aufloesung: %s" % ("+%.2f" % aufl if aufl else "keine Stufe bis +0,12 -> NICHT AUFLOESBAR"))
+            # G3 je Jahr, Episoden
+            g3 = []
+            for jj in (2024, 2025, 2026):
+                ixj = urteil[JAHR[urteil] == jj]
+                e_ = zerlege(Z, sel, ixj)
+                ep = episoden(zust_h, jj)
+                g3.append(e_[2][1] > e_[0][1])
+                print("  %d: Zuwachs tief %+.4f · mitte %+.4f · hoch %+.4f · Niveau tief %+.4f / hoch %+.4f · Episoden %s" % (
+                    jj, e_[0][1], e_[1][1], e_[2][1], e_[0][0], e_[2][0], "/".join(map(str, ep))))
+            # G4 je Asset
+            ga = []
+            for si in np.unique(SYM[sel]):
+                ixa = urteil[SYM[urteil] == si]
+                e_ = zerlege(Z, sel, ixa)
+                if e_[0][3] >= 30 and e_[2][3] >= 30:
+                    ga.append(e_[2][1] > e_[0][1])
+            g4 = float(np.mean(ga)) if ga else np.nan
+            # G6 Auskunft: Log-Loss Wechselwirkung gegen Addition, Zeitbloecke
+            from scipy.special import expit as _ex
+
+            def fit_logit(X, yy, off):
+                b = np.zeros(X.shape[1])
+                for _ in range(30):
+                    z = off + X @ b; pp = _ex(z); W = pp * (1 - pp)
+                    Hm = X.T @ (X * W[:, None]) + 1e-6 * np.eye(X.shape[1])
+                    b = b + np.linalg.solve(Hm, X.T @ (yy - pp))
+                return b
+
+            def ll_gewinn(Zx):
+                ix = urteil[HIT[urteil] & (Zx[urteil] >= 0)]
+                yy = A24[ix]; off = logit_q(QS[ix], 1 - QS[ix])
+                s_ = np.isin(ix, sel).astype(float)
+                wt = (Zx[ix] == 0).astype(float); wh = (Zx[ix] == 2).astype(float)
+                Xa = np.column_stack([np.ones(len(ix)), s_, wt, wh])
+                Xi = np.column_stack([Xa, s_ * wt, s_ * wh])
+                kanten = np.quantile(STD[ix], (0.25, 0.5, 0.75)); blk = np.searchsorted(kanten, STD[ix], "right")
+                la = li = 0.0
+                for b_ in range(4):
+                    te, tr = blk == b_, blk != b_
+                    ba = fit_logit(Xa[tr], yy[tr], off[tr]); bi = fit_logit(Xi[tr], yy[tr], off[tr])
+                    za = off[te] + Xa[te] @ ba; zi = off[te] + Xi[te] @ bi
+                    la += float(np.sum(np.logaddexp(0, za) - yy[te] * za)); li += float(np.sum(np.logaddexp(0, zi) - yy[te] * zi))
+                return 1000.0 * (la - li) / len(ix)
+            g6 = ll_gewinn(Z)
+            n6 = [ll_gewinn(zustand(zust_h, int(rng.integers(1440, LH - 1440)))) for _ in range(zieh)]
+            print("  G6 (Auskunft) Log-Loss-Gewinn Wechselwirkung ueber Addition %+.4f milli-nat je Anker · Nullwelt Mittel %+.4f, P90 %+.4f" % (
+                g6, float(np.mean(n6)), float(np.percentile(n6, 90))))
+            print()
+            print("  G1 Aufloesung <= +0,12: %s" % ("✔" if aufl else "⛔"))
+            print("  G2 G ueber P90 (40) UND ueber der Aufloesung: %s" % (
+                "✔" if aufl and g > p90 and g > aufl else "⛔ nicht nachweisbar"))
+            print("  G3 hoch > tief in jedem Jahr 2024/2025/2026: %s" % ("✔" if all(g3) else "⛔ %s" % g3))
+            print("  G4 je Asset (>= 30 Auswahlanker in hoch und tief): %d Assets, hoch > tief bei %.0f %% -> %s" % (
+                len(ga), 100 * g4, "✔" if g4 >= 0.6 else "⛔"))
+            print("  G5 Kontext kleiner als Gewicht: Niveau-Differenz %+.4f gegen G %+.4f -> %s" % (gn, g, "✔" if gn < g else "⛔"))
         print("SCHLUSS: vollstaendig")
         return 0
 

@@ -125,3 +125,22 @@ einem Jahr oder wenigen Assets hängt, nicht die Fallzahl.
 
 Werkzeug (Modus `--wetter2` in `messe_losfahren.py`) bauen und vorab committen · ein Lauf `bestand`, etwa
 **30–40 Minuten** (die rollierende Schätzung braucht die Zeit, Nullwelt und Leiter sind billig) · dann Stopp.
+
+---
+
+## 9. ✔ ABGESTIMMT (29.09.2026) — Q1 bis Q5 wie empfohlen, Q6 entfällt
+
+**Nutzer:** *„ja, Q1 bis Q5 wie empfohlen — prüfen und gegenprüfen; der Regenbogen war nur als Hinweis gedacht, nicht
+als Anweisung — übergeordnete Wetterlagen."* ➤ **Q6 entfällt**: kein Regenbogen-Maß, auch nicht in W3; festgehalten nur
+als Hinweis auf *übergeordnete Wetterlagen*.
+
+**Zwei Nutzerhinweise, die W2 mitbestimmen:**
+
+| | |
+|---|---|
+| *„Wenn wir ein Regelwerk haben, das annähernd funktioniert, sollte das auch über mehrere Phasen funktionieren — kannst du auch nach vorne simulieren?"* | ✔ **2022 bleibt Gegenprobe** (Auskunft): eine Regel darf dort nicht **kippen**. Q1 regelt, welche Zeit **entscheidet**, nicht welche **geprüft** wird. *Nach vorne:* die rollierende Rechnung ist bereits eine Vorwärtsrechnung auf der Geschichte (jeder Monat nur aus der Vergangenheit); die echte Zukunft sind die **Monate ab 2026-09** mit eingefrorener Regel (Z6), dazu die **Simulation Ebene 3** im Plan |
+| *„Wenn das Wetter nur mehr Messungen produziert ohne Nutzen, konzentrieren wir uns wieder auf das Regelwerk mit echten Beiträgen."* | ⛔ **ABBRUCHREGEL, vorab:** trägt **G2 nicht**, ist W2 die **letzte** Wettermessung — das Wetter bleibt **Auskunft**, W3–W5 entfallen, und es geht zurück zur Hauptlinie (K5 Schwelle auf rsi, B, H0, Simulation). Nur wenn G2 trägt, wird W3/W4 vorgelegt |
+
+| umgesetzt VOR dem Lauf | |
+|---|---|
+| Werkzeug | `messe_losfahren.py --wetter2` — führt W1 **unverändert** zuerst aus (R-R11: die W1-Zeilen müssen bitgleich zu `W1_Wetter_29_09/w1__bestand.txt` sein), dann die rollierende Auswahl 2024-01 bis 2026-08, Nullwelt 40 (+400 Auskunft), Leiter +0,04/+0,08/+0,12, G3 je Jahr mit Episoden, G4 je Asset, G5, G6 (Log-Loss, vier Zeitblöcke) |
