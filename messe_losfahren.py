@@ -21,6 +21,7 @@ eigener Schritt: `messe_e2g_fortsetzung.py` unveraendert, Ausgabe bitgleich.
 """
 from __future__ import annotations
 
+import io
 import os
 import sys
 from datetime import datetime
@@ -83,6 +84,7 @@ def main() -> int:
     ATR = D["ATR"].astype(np.float64)
     V24 = D["X"]["vor24"].astype(np.float64); V120 = D["X"]["vor120"].astype(np.float64)
     FR = {m: D["F"][m].astype(np.float64) for m in ("rsi", "oi_aenderung", "konten_verh", "funding_vortag")}
+    SYMS = list(D.get("syms", []))
     del D
     MON = monat_von(STD)
     JAHR = (MON // 12).astype(np.int16)
@@ -298,7 +300,7 @@ def main() -> int:
         best = "--bestaetigen" in sys.argv
         s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
         sp_best = float(sys.argv[sys.argv.index("--sperre") + 1]) if "--sperre" in sys.argv else None
-        JAHRE = (2025, 2026) if best else (2024,)
+        JAHRE = (2024, 2025, 2026) if "--export" in sys.argv else ((2025, 2026) if best else (2024,))
         SCHW = (0.02, 0.04, 0.06, 0.08)
         SPERR = (-0.02, -0.04)
         m0, _s0 = rsi_auswahl(E)
@@ -396,6 +398,41 @@ def main() -> int:
                 return v
             print()
             print("=" * 120)
+            if "--export" in sys.argv:
+                # ══ KERN SCHRITT 2 (Voranalyse_Kern_Schritt2_H0_29_09.md): die Ersteintritte 2024-01..2026-08 fuer
+                # H0 exportieren und die CHANCE im selben Fenster 6/12/24 h (Vergleich, keine Kalibrierung) ══
+                s = float(sys.argv[sys.argv.index("--export") + 1])
+                ee = np.sort(erst_v(VH, s))
+                print("KERN SCHRITT 2 · EXPORT der Ersteintritte s = %+.3f, 2024-01..2026-08, Menge %s: %d Einstiege, %d Tage" % (
+                    s, E2.MENGE, len(ee), len(np.unique(STD[ee] // 24))))
+                print("  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):")
+                for w in (6, 12, 24):
+                    Aw = ((t_u <= w) & (t_u < t_d)).astype(np.float64); Bw = ((t_d <= w) & (t_d <= t_u)).astype(np.float64)
+                    NAw, NBw = normal(Aw, Bw, w)
+                    hw = (Aw + Bw) > 0
+                    jz = " · ".join("%d %+.4f" % (jj, dq(ee[JAHR[ee] == jj], Aw, NAw, NBw, hw)) for jj in (2024, 2025, 2026))
+                    print("    %2d h: +5 %% vor -5 %% bei %.1f %% der Einstiege (-5 %% zuerst %.1f %%) · Dq gesamt %+.4f · %s" % (
+                        w, 100 * Aw[ee].mean(), 100 * Bw[ee].mean(), dq(ee, Aw, NAw, NBw, hw), jz))
+                up = t_u[ee][(t_u[ee] < t_d[ee]) & np.isfinite(t_u[ee]) & (t_u[ee] <= 72)]
+                dn = t_d[ee][(t_d[ee] <= t_u[ee]) & np.isfinite(t_d[ee]) & (t_d[ee] <= 72)]
+                print("  Zeit bis +5 %% (wo zuerst, binnen 72 h, %d): Median %.0f h · Quartile %.0f / %.0f h · binnen 2/4/6/12 h %s" % (
+                    len(up), np.median(up), np.percentile(up, 25), np.percentile(up, 75),
+                    " / ".join("%.0f %%" % (100 * np.mean(up <= k)) for k in (2, 4, 6, 12))))
+                print("  Zeit bis -5 %% (wo zuerst, binnen 72 h, %d): Median %.0f h · Quartile %.0f / %.0f h · binnen 2/4/6/12 h %s" % (
+                    len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
+                    " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
+                ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
+                                    "kern_einstiege_%s.csv" % E2.MENGE.replace(":", "_"))
+                os.makedirs(os.path.dirname(ziel), exist_ok=True)
+                with io.open(ziel, "w", encoding="utf-8") as f_:
+                    f_.write("symbol;stunde;jahr;t_u;t_d\n")
+                    for i in ee:
+                        f_.write("%s;%d;%d;%s;%s\n" % (SYMS[int(SYM[i])], int(STD[i]), int(JAHR[i]),
+                                                       "%.0f" % t_u[i] if np.isfinite(t_u[i]) else "",
+                                                       "%.0f" % t_d[i] if np.isfinite(t_d[i]) else ""))
+                print("  geschrieben: %s" % ziel)
+                print("SCHLUSS: vollstaendig")
+                return 0
             if not best:
                 RASTER = [round(0.010 + 0.005 * i, 3) for i in range(9)]
                 print("KERN SCHRITT 1 · WAHL DER SCHWELLE auf 2024 (Menge %s) - 2025-26 wird NICHT ausgewertet" % E2.MENGE)

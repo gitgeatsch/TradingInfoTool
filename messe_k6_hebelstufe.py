@@ -98,6 +98,17 @@ def main() -> int:
     kurs = sys.argv[sys.argv.index("--kurs") + 1] if "--kurs" in sys.argv else "spot"
     tor = "--tor" in sys.argv
     probe = "--probe" in sys.argv
+    # ⭐ KERN SCHRITT 2 / H0 (Basisinfos/Voranalyse_Kern_Schritt2_H0_29_09.md): --einstiege <csv> wertet das
+    # ATR-Risikomodell zusaetzlich an den Ersteintritten aus, Fensterachse 6/12/24 h (72 h Anschluss an K6)
+    ein_datei = sys.argv[sys.argv.index("--einstiege") + 1] if "--einstiege" in sys.argv else None
+    global HALTE
+    EIN, TU = {}, {}
+    if ein_datei:
+        HALTE = (6, 12, 24, 72, 120)
+        for zeile in open(ein_datei, encoding="utf-8").read().splitlines()[1:]:
+            sy, st_, _j, tu_, _td = zeile.split(";")
+            EIN.setdefault(sy, set()).add(int(st_))
+            TU[(sy, int(st_))] = float(tu_) if tu_ else np.inf
     zieh = 3 if probe else ZIEHUNGEN
     monate = ROLL[:3] if probe else ROLL
     K2.FORM = "b"
@@ -122,6 +133,7 @@ def main() -> int:
                 for stop in (False, True):
                     EV[(L, H, m, stop)] = []
     syms = []
+    SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2")}
     for si, (sym, rows, bis_ende) in enumerate(E2.kursreihen()):
         syms.append(sym)
         if sym.upper() == "BTC" or len(rows) < 500:
@@ -213,6 +225,33 @@ def main() -> int:
                 for H in HALTE:
                     EV[(L, H, m, False)].append(fl <= H)
                     EV[(L, H, m, True)].append((fl <= H) & (fl <= erste_stop))
+        if ein_datei and sym in EIN:
+            ge = np.isfinite(atr) & (cc > 0)
+            ge[:E2.VORLAUF] = False
+            if bis_ende:
+                ge &= np.where(idx + HM < n, (std[nachH] - std) == HM, (std[n - 1] - std) == (n - 1 - idx))
+            else:
+                ge[max(0, n - HM):] = False
+                ge &= (std[nachH] - std) == HM
+            if mark is not None:
+                fehlt_e = np.concatenate([[0], np.cumsum(~np.isfinite(tief))])
+                ge &= (fehlt_e[np.minimum(idx + HM + 1, n)] - fehlt_e[np.minimum(idx + 1, n)]) == 0
+                ge &= np.isfinite(einstieg)
+            ge &= np.isin(std, np.fromiter(EIN[sym], np.int64))
+            ae = np.flatnonzero(ge)
+            if len(ae):
+                E0e = einstieg[ae]
+                fle = {L: np.full(len(ae), 10 ** 6) for L in STUFEN}
+                for s in range(1, HM + 1):
+                    j = np.minimum(ae + s, n - 1)
+                    r = np.where((ae + s) < n, tief[j] / E0e, np.inf)
+                    r = np.where(np.isfinite(r), r, np.inf)
+                    for L in STUFEN:
+                        fle[L] = np.where((fle[L] > s) & (r <= liq_schwelle(L, 0.09, s)), s, fle[L])
+                for L in STUFEN:
+                    SPE["fl%d" % L].append(fle[L])
+                SPE["atr"].append(atr[ae]); SPE["std"].append(std[ae]); SPE["sym"].append(np.full(len(ae), si))
+                SPE["tu"].append(np.array([TU.get((sym, int(x)), np.inf) for x in std[ae]]))
         # Merkmale
         tm = {str(r_[0]): r_[1] for r_ in ct.execute("SELECT stunde, oi FROM terminmarkt WHERE symbol=?", (sym,))}
         if ce is not None:
@@ -310,29 +349,30 @@ def main() -> int:
         print("SCHLUSS: vollstaendig")
         return 0
 
-    # ══ V2 Mehrwert ueber die ATR (feste Teilung), je Stufe, Hauptfall 72 h ══
-    print()
-    print("=" * 120)
-    print("V2 MEHRWERT UEBER DIE ATR - feste Teilung, Log-Loss-Gewinn in tausendstel nat, Hauptfall 72 h, m 0,09")
-    v2 = {}
-    for L in (5, 3):
-        y = Y[(L, 72, 0.09, False)]
-        ga, _m = g_fest(E, EIN_ATR, y); gk, _m = g_fest(E, EIN_KOMB, y)
-        nd = []
-        for _ in range(zieh):
-            EV_ = verschoben(E)
-            nd.append(g_fest(EV_, EIN_KOMB, y)[0] - g_fest(EV_, EIN_ATR, y)[0])
-        gr = float(np.percentile(nd, 90))
-        v2[L] = (gk - ga) > gr
-        print("  %dx: ATR allein %+.3f · Kombination %+.3f · Mehrwert %+.3f gegen Nullband %+.3f -> %s" % (
-            L, ga, gk, gk - ga, gr, "✔ traegt" if v2[L] else "· nicht"))
-    ez = dict(E)
-    rz = np.random.default_rng(SAAT + 1)
-    for k in ("volumenschub", "oi", "ema"):
-        ez[k] = rz.standard_normal(n)
-    y = Y[haupt]
-    zd = g_fest(ez, EIN_KOMB, y)[0] - g_fest(ez, EIN_ATR, y)[0]
-    print("  R  Zufallseingaenge statt der Risikokurven (5x/72 h): Mehrwert %+.3f" % zd)
+    if not ein_datei:
+        # ══ V2 Mehrwert ueber die ATR (feste Teilung), je Stufe, Hauptfall 72 h ══
+        print()
+        print("=" * 120)
+        print("V2 MEHRWERT UEBER DIE ATR - feste Teilung, Log-Loss-Gewinn in tausendstel nat, Hauptfall 72 h, m 0,09")
+        v2 = {}
+        for L in (5, 3):
+            y = Y[(L, 72, 0.09, False)]
+            ga, _m = g_fest(E, EIN_ATR, y); gk, _m = g_fest(E, EIN_KOMB, y)
+            nd = []
+            for _ in range(zieh):
+                EV_ = verschoben(E)
+                nd.append(g_fest(EV_, EIN_KOMB, y)[0] - g_fest(EV_, EIN_ATR, y)[0])
+            gr = float(np.percentile(nd, 90))
+            v2[L] = (gk - ga) > gr
+            print("  %dx: ATR allein %+.3f · Kombination %+.3f · Mehrwert %+.3f gegen Nullband %+.3f -> %s" % (
+                L, ga, gk, gk - ga, gr, "✔ traegt" if v2[L] else "· nicht"))
+        ez = dict(E)
+        rz = np.random.default_rng(SAAT + 1)
+        for k in ("volumenschub", "oi", "ema"):
+            ez[k] = rz.standard_normal(n)
+        y = Y[haupt]
+        zd = g_fest(ez, EIN_KOMB, y)[0] - g_fest(ez, EIN_ATR, y)[0]
+        print("  R  Zufallseingaenge statt der Risikokurven (5x/72 h): Mehrwert %+.3f" % zd)
 
     # ══ ROLLIEREND: Kalibrierung (V1/V3) und Tabelle (T) ═════════════════
     btc = reihe([(E2.EINGESTELLT_DB, "SELECT stunde, close FROM stundenkurse WHERE symbol='BTC'"),
@@ -342,11 +382,17 @@ def main() -> int:
     with np.errstate(divide="ignore", invalid="ignore"):
         b30[okb] = btc[STD[okb]] / btc[STD[okb] - 720] - 1.0
     PRED = {}
+    if ein_datei:
+        XE = {k: np.concatenate(v) if v else np.zeros(0) for k, v in SPE.items()}
+        STDe = XE["std"].astype(np.int64); MONe = monat_von(STDe); JAHRe = (MONe // 12)
+        EEe = {"atr": XE["atr"].astype(np.float64)}
+        PE = {}
     for L in STUFEN:
         for H in HALTE:
-            for ein, nm in ((EIN_ATR, "atr"), (EIN_KOMB, "komb")):
+            for ein, nm in (((EIN_ATR, "atr"),) if ein_datei else ((EIN_ATR, "atr"), (EIN_KOMB, "komb"))):
                 y = Y[(L, H, 0.09, False)]
                 p = np.full(n, np.nan)
+                pe = np.full(len(STDe), np.nan) if ein_datei else None
                 for (j, mo) in monate:
                     mi = j * 12 + (mo - 1)
                     start = _h(datetime(j, mo, 1))
@@ -356,13 +402,21 @@ def main() -> int:
                         continue
                     m_, _l = K2.fit_cv(ein, E, fen, fen, y[fen], null0[fen], STD)
                     p[ziel] = expit(m_.z(E, ziel, null0[ziel]))
+                    if ein_datei:
+                        ze = np.flatnonzero((MONe >= mi) & (MONe < mi + 3) & (MONe <= 2026 * 12 + 7))
+                        if len(ze):
+                            pe[ze] = expit(m_.z(EEe, ze, np.zeros(len(ze))))
                 PRED[(L, H, nm)] = p
+                if ein_datei:
+                    PE[(L, H)] = pe
     print()
     print("=" * 120)
     print("V1/V3 KALIBRIERUNG VORWAERTS (rollierend, wachsend, m 0,09, ohne Stop)")
     for L in STUFEN:
         for H in HALTE:
             for nm in ("atr", "komb"):
+                if (L, H, nm) not in PRED:
+                    continue
                 p = PRED[(L, H, nm)]; y = Y[(L, H, 0.09, False)]
                 ix = np.flatnonzero(np.isfinite(p))
                 if not len(ix):
@@ -397,6 +451,45 @@ def main() -> int:
                           L, H, nm, 100 * y[ix].mean(), 100 * p[ix].mean(), sl, sum(gut), len(gut),
                           "✔" if v1 else "·", "✔" if v3 else "·",
                           " ".join("%.2f" % r_ for r_ in ratios), tq))
+    if ein_datei:
+        print()
+        print("=" * 120)
+        soll = (17.493, 17.627)
+        yy = Y[(5, 72, 0.09, False)]; pp = PRED[(5, 72, "atr")]; ii = np.flatnonzero(np.isfinite(pp))
+        rb, rg = round(100 * yy[ii].mean(), 3), round(100 * pp[ii].mean(), 3)
+        print("H0-0 R-R11 (Gitter, 5x/72 h atr, derselbe Codepfad): beob %.3f %% gesch %.3f %% · 2.681 %.3f / %.3f -> %s" % (
+            rb, rg, soll[0], soll[1], "✔ bitgleich" if (rb, rg) == soll or E2.MENGE != "bestand" or kurs != "mark" else "⛔ ABWEICHUNG"))
+        n_datei = sum(len(v) for v in EIN.values())
+        print("H0 · EINSTIEGE aus %s: %d in der Datei, %d mit vollstaendigem Fenster und Markpreis ausgewertet" % (
+            os.path.basename(ein_datei), n_datei, len(STDe)))
+        bs0, bs1 = _h(datetime(2025, 10, 10)), _h(datetime(2025, 10, 12))
+        for L in STUFEN:
+            fl = XE["fl%d" % L]
+            for H in (6, 12, 24, 72):
+                y = (fl <= H).astype(np.float64); pe = PE[(L, H)]
+                ok_ = np.isfinite(pe)
+                if not ok_.any():
+                    continue
+                nl_ = int(y[ok_].sum()); beob = y[ok_].mean(); ges = pe[ok_].mean()
+                vj = []
+                for jj in (2024, 2025, 2026):
+                    sj = ok_ & (JAHRe == jj)
+                    if y[sj].sum() >= 30:
+                        vj.append("%d %.2f" % (jj, y[sj].mean() / max(pe[sj].mean(), 1e-12)))
+                    else:
+                        vj.append("%d (%d Liq., zu wenige)" % (jj, int(y[sj].sum())))
+                oh = ok_ & ~((STDe >= bs0 - H) & (STDe < bs1))
+                vor5 = np.mean((XE["tu"][ok_] <= H) & (XE["tu"][ok_] < fl[ok_]))
+                urteil = ""
+                if L == 5 and H in (6, 12, 24):
+                    q = beob / max(ges, 1e-12)
+                    urteil = " -> H0-1 %s" % ("✔" if nl_ >= 30 and 0.5 <= q <= 1.25 else ("zu wenige" if nl_ < 30 else "⛔ / H0-2 Faktor %.2f" % q))
+                print("  %dx %3d h: %6d Einstiege · Liq. %5d · beob %.3f %% · gesch %.3f %% · beob/gesch %.2f · je Jahr %s · ohne 10./11.10. %.2f · +5 %% vor Liq. %.1f %%%s" % (
+                    L, H, int(ok_.sum()), nl_, 100 * beob, 100 * ges, beob / max(ges, 1e-12), " · ".join(vj),
+                    y[oh].mean() / max(pe[oh].mean(), 1e-12), 100 * vor5, urteil))
+        print("  ⚠️ Kalibrierung nur aus der Liquidation; '+5 % vor Liq.' ist NUR Vergleich (Nutzer 29.09.)")
+        print("SCHLUSS: vollstaendig")
+        return 0
     print()
     print("=" * 120)
     print("TABELLE JE GRENZE (T: Ausgabe, KEINE Grenze gesetzt) - rollierend, gewaehlt wird die HOECHSTE Stufe mit "

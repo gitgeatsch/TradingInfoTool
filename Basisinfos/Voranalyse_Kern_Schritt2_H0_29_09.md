@@ -105,3 +105,16 @@ auf die deine Frage zeigt.
 
 Export der Einstiege (je Menge ein kurzer Lauf) · `messe_k6_hebelstufe.py --einstiege` mit der Fensterachse bauen und
 vorab committen · R-R11 · `bestand` (etwa 1–1,5 h) · Stopp · die übrigen drei Mengen.
+
+---
+
+## 8. ✔ ABGESTIMMT (29.09.2026) — H1 bis H4; Umsetzung VOR dem Lauf
+
+**Nutzer:** *„ja, H1 bis H4 wie empfohlen — prüfen und gegenprüfen — dann Ergebnis bewerten, detailliert."*
+
+| | |
+|---|---|
+| **Export** | `messe_losfahren.py --kern --export 0.035` je Menge → `data/_vergleich/kern_einstiege_<menge>.csv` (Symbol, Stunde, Jahr, Zeit bis +5 %, Zeit bis −5 %), 2024-01 bis 2026-08. Derselbe Lauf gibt die **Chance im Fenster** 6 / 12 / 24 h aus (gegen den rohen 12-Monats-Normal **je Fenster** — nur Vergleich) und die **Zeit bis +5 % / −5 %** |
+| **H0** | `messe_k6_hebelstufe.py --kurs mark --einstiege <csv>`: Fensterachse 6 / 12 / 24 / 72 / 120 h; Modell ATR allein rollierend auf dem Gitter wie 2.681; Liquidation an den **Einstiegsstunden** mit Markpreis (Einstieg und Tief aus derselben Reihe, Fenster ohne fehlende Stunde) |
+| ⚠️ **Abweichung H0-0** | die Reproduktion von 2.681 läuft **im selben Lauf** über den unveränderten Gitter-Codepfad (5x/72 h atr: 17,493 / 17,627) statt in einem **eigenen** Lauf ohne `--einstiege`. **Grund:** das spart 1–1,5 h je Menge; die 72-h-Zahlen hängen nicht an den zusätzlichen Fenstern (je Fenster ein eigenes Modell). Im Einstiegsmodus entfallen **V2** (Mehrwert der Risikokurven, in 2.681 entschieden) und die **Tabelle** |
+| Ablauf | Export für alle vier Mengen · H0 `bestand` · technische Prüfung · H0 für die übrigen drei · Stopp · detaillierte Bewertung |
