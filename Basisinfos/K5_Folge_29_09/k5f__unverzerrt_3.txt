@@ -1,0 +1,80 @@
+========================================================================================================================
+K5-FOLGEMESSUNG · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+
+S0 R-R11: K0 rsi allein oben +0.0703 · 2.680: +0.0703 -> ✔ bitgleich
+  Gewichte K2 (Training): rsi +1.016, funding +1.047, oi +0.974, konten +0.787 · K3 (OOF, >= 0): rsi +0.241, funding +0.000, oi +0.000, konten +0.649
+
+========================================================================================================================
+F1 FESTE TEILUNG Suche 2023-2024 -> Pruefung 2025-01..2026-08 (eigenes Zehntel, Differenz zu rsi allein)
+  Nullband Bestes-von-3 (nur Lage verschoben, 40 Ziehungen): 90. Perzentil +0.0026 · je Variante K1 +0.0016 · K2 +0.0019 · K3 +0.0000
+  K0 rsi allein         oben +0.0703 · eigenes Zehntel +0.0703 · Differenz +0.0000
+  K1 Summe gleich       oben +0.0444 · eigenes Zehntel +0.0452 · Differenz -0.0251 -> ·
+  K2 Stacking Training  oben +0.0463 · eigenes Zehntel +0.0467 · Differenz -0.0237 -> ·
+  K3 Stacking OOF >= 0  oben +0.0473 · eigenes Zehntel +0.0473 · Differenz -0.0231 -> ·
+  K4 gemeinsam          oben +0.0445 · eigenes Zehntel +0.0517 · Differenz -0.0187 (Kontrolle)
+  2022 (Moment-Bezug) oben: K0 +0.0208 · K1 +0.0291 · K2 +0.0298 · K3 +0.0012 · K4 +0.0231
+
+========================================================================================================================
+F5 WIRKUNGSKURVEN je Beitrag (feste Teilung, Familie einzeln; Log-Odds je Stufe relativ zur mittleren Stufe)
+  rsi      rsi_s   <P1:-0.04 P1-10:-0.05 P10-20:-0.04 P20-30:-0.01 P30-40:-0.02 P40-50:-0.00 P50-60:+0.00 P60-70:+0.04 P70-80:+0.08 P80-90:+0.12 P90-99:+0.18 >P99:+0.16
+                   Grenzen -35.48 -20.98 -14 -8.77 -4.25 0 4.314 8.942 14.12 21.15 35.94
+  rsi      rsi_s24 <P1:-0.07 P1-10:-0.07 P10-20:-0.09 P20-30:-0.08 P30-40:-0.07 P40-50:-0.03 P50-60:+0.03 P60-70:+0.07 P70-80:+0.09 P80-90:+0.11 P90-99:+0.15 >P99:+0.18
+                   Grenzen -35.48 -20.99 -14 -8.766 -4.238 0.01203 4.343 8.978 14.16 21.17 35.95
+  funding  fu_0    <P1:+0.06 P1-10:+0.06 P10-20:+0.05 P20-30:+0.03 P30-40:+0.01 P40-50:+0.00 P50-60:-0.00 P60-70:-0.01 P70-80:-0.02 P80-90:-0.03 P90-99:-0.04 >P99:-0.04
+                   Grenzen -0.001471 -1.291e-05 0.0001641 0.0002566 0.0003 0.0003 0.0003 0.0003 0.0003 0.0006377 0.002129
+  funding  fu_24   <P1:+0.06 P1-10:+0.06 P10-20:+0.05 P20-30:+0.03 P30-40:+0.01 P40-50:+0.00 P50-60:-0.00 P60-70:-0.01 P70-80:-0.02 P80-90:-0.02 P90-99:-0.04 >P99:-0.05
+                   Grenzen -0.001472 -1.438e-05 0.0001634 0.0002563 0.0003 0.0003 0.0003 0.0003 0.0003 0.0006391 0.002131
+  funding  fu_48   <P1:+0.05 P1-10:+0.05 P10-20:+0.05 P20-30:+0.02 P30-40:+0.00 P40-50:+0.00 P50-60:-0.00 P60-70:-0.00 P70-80:-0.00 P80-90:-0.01 P90-99:-0.02 >P99:-0.02
+                   Grenzen -0.001496 -1.569e-05 0.0001623 0.0002557 0.0003 0.0003 0.0003 0.0003 0.0003 0.0006402 0.002134
+  oi       oi_0    <P1:+0.11 P1-10:+0.12 P10-20:+0.10 P20-30:+0.06 P30-40:+0.00 P40-50:-0.03 P50-60:-0.05 P60-70:-0.05 P70-80:-0.04 P80-90:-0.01 P90-99:-0.00 >P99:+0.00
+                   Grenzen -0.207 -0.07484 -0.0445 -0.02719 -0.01433 -0.003108 0.007762 0.02034 0.03726 0.06941 0.3885
+  oi       oi_24   <P1:+0.03 P1-10:+0.04 P10-20:+0.03 P20-30:+0.02 P30-40:-0.02 P40-50:-0.03 P50-60:-0.02 P60-70:-0.01 P70-80:-0.02 P80-90:-0.01 P90-99:+0.01 >P99:+0.01
+                   Grenzen -0.207 -0.07482 -0.04451 -0.02718 -0.01432 -0.003108 0.00777 0.02036 0.03732 0.06946 0.3884
+  oi       oi_48   <P1:+0.10 P1-10:+0.09 P10-20:+0.09 P20-30:+0.07 P30-40:+0.04 P40-50:+0.01 P50-60:-0.01 P60-70:-0.02 P70-80:-0.03 P80-90:-0.03 P90-99:-0.02 >P99:-0.02
+                   Grenzen -0.207 -0.07489 -0.04455 -0.02721 -0.01433 -0.003104 0.007801 0.02041 0.03737 0.06954 0.3864
+  konten   ko_0    <P1:+0.16 P1-10:+0.14 P10-20:+0.11 P20-30:+0.09 P30-40:+0.06 P40-50:+0.01 P50-60:-0.01 P60-70:-0.07 P70-80:-0.12 P80-90:-0.19 P90-99:-0.26 >P99:-0.29
+                   Grenzen 0.6829 1.464 1.786 2.006 2.194 2.382 2.587 2.815 3.097 3.559 5.278
+  konten   ko_24   <P1:+0.01 P1-10:-0.00 P10-20:-0.00 P20-30:+0.00 P30-40:+0.00 P40-50:+0.01 P50-60:+0.03 P60-70:+0.01 P70-80:-0.01 P80-90:-0.06 P90-99:-0.10 >P99:-0.13
+                   Grenzen 0.6827 1.463 1.786 2.006 2.193 2.382 2.587 2.815 3.098 3.559 5.279
+  konten   ko_48   <P1:-0.10 P1-10:-0.10 P10-20:-0.07 P20-30:-0.02 P30-40:-0.01 P40-50:+0.00 P50-60:+0.00 P60-70:+0.02 P70-80:+0.02 P80-90:+0.02 P90-99:+0.02 >P99:-0.00
+                   Grenzen 0.682 1.462 1.785 2.005 2.192 2.382 2.587 2.816 3.098 3.559 5.28
+
+========================================================================================================================
+ROLLIEREND, WACHSEND: 32 Monate
+  gleicher Anteil (oberstes Zehntel im Test): K0 +0.0487 · K1 +0.0359 · K2 +0.0447 · K3 +0.0371 · K4 +0.0470
+  K1 Summe gleich       Differenz zu rsi allein -0.0127 gegen Band +0.0026 -> ·
+  K2 Stacking Training  Differenz zu rsi allein -0.0040 gegen Band +0.0026 -> ·
+  K3 Stacking OOF >= 0  Differenz zu rsi allein -0.0116 gegen Band +0.0026 -> ·
+  S1: · keine Variante schlaegt rsi allein fest UND rollierend
+  S2 Kontrolle K4 gemeinsam: Differenz -0.0017
+  S4 K3 Stacking OOF >= 0  2024 +0.0449 · 2025 +0.0347 · 2026 +0.0877 · BTC tief +0.0352 · BTC mitte +0.0567 · BTC hoch +0.0649 · 2022 +0.0012 -> ✔ zeitstabil · Normal-Drittel +0.0784 / +0.0378 / +0.0306 · Assets > 0: 84 %
+  S4 K0 rsi allein         2024 +0.0353 · 2025 +0.0408 · 2026 +0.1090 · BTC tief +0.0572 · BTC mitte +0.0657 · BTC hoch +0.0543 · 2022 +0.0208 -> ✔ zeitstabil · Normal-Drittel +0.0965 / +0.0408 / +0.0262 · Assets > 0: 86 %
+
+========================================================================================================================
+F2 KALIBRIERUNG aus UNGESEHENEN Schaetzungen (nur Ausgaenge vor dem Zielmonat bekannt)
+  K3 Stacking OOF >= 0  roh: Steigung 0.90 · oberstes Zehntel geschaetzt +0.0624 beobachtet +0.0280 (gemeinsame Monate, 106827 Ereignisse)
+     Platt 24/3                  Steigung 1.36 · oberstes Zehntel +0.0877 / -0.0421 -> · · je Jahr 2025 +0.072|-0.017 / 2026 +0.088|-0.043
+     Platt 24 ohne Nachfuehrung  Steigung 1.35 · oberstes Zehntel +0.0283 / +0.0338 -> · · je Jahr 2025 +0.030|-0.007 / 2026 +0.027|+0.074
+     monoton 3                   Steigung 0.66 · oberstes Zehntel +0.1165 / -0.0283 -> · · je Jahr 2025 +0.144|-0.034 / 2026 +0.091|-0.023
+     monoton 12                  Steigung 0.91 · oberstes Zehntel +0.0707 / +0.0259 -> · · je Jahr 2025 +0.071|+0.026
+  K0 rsi allein         roh: Steigung 0.71 · oberstes Zehntel geschaetzt +0.0550 beobachtet +0.0565 (gemeinsame Monate, 106827 Ereignisse)
+     Platt 24/3                  Steigung 0.70 · oberstes Zehntel +0.0859 / -0.0435 -> · · je Jahr 2025 +0.080|-0.137 / 2026 +0.086|-0.036
+     Platt 24 ohne Nachfuehrung  Steigung 0.70 · oberstes Zehntel +0.0347 / +0.0517 -> · · je Jahr 2025 +0.035|-0.005 / 2026 +0.035|+0.081
+     monoton 3                   Steigung 0.50 · oberstes Zehntel +0.1119 / +0.0034 -> · · je Jahr 2025 +0.126|+0.002 / 2026 +0.101|+0.004
+     monoton 12                  Steigung 0.56 · oberstes Zehntel +0.0732 / +0.0402 -> · · je Jahr 2025 +0.075|+0.023 / 2026 +0.050|+0.218
+
+========================================================================================================================
+F3 PBO (CSCV, 32 Monate in 8 Gruppen, 70 Aufteilungen, Varianten K0/K1/K2/K3/K4): PBO 0.64 · Median logit 0.00
+   Monatsmittel je Variante: K0 +0.0399 · K1 +0.0570 · K2 +0.0478 · K3 +0.0609 · K4 +0.0595
+
+========================================================================================================================
+F4 EMPIRICAL-BAYES-SCHRUMPFUNG DES PHASE-NORMALS (Abnahmeprobe: oberstes Normal-Zehntel je Monat)
+  Schrumpfungsfaktor B (Median je Monat): 0.00 bis 0.53
+  oberstes Normal-Zehntel: beobachtet minus Normal roh -0.0358 · minus geschrumpftes Normal +0.0113
+  unterstes Normal-Zehntel: roh +0.0564 · geschrumpft +0.0161
+  S6 -> ✔ die Rueckkehr zur Mitte ist mindestens halbiert
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig

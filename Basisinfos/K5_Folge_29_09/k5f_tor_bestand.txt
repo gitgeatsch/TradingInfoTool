@@ -1,0 +1,10 @@
+========================================================================================================================
+K5-FOLGEMESSUNG · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+
+TOR Bestes-von-3-Differenz mit verschobener Lage: Nullwelt Mittel +0.0002, Streuung 0.0005, 90. Perzentil +0.0005
+  gepflanzt +0.02 auf P90+ von oi_24 (Lage verschoben): +0.0000 +0.0005 +0.0000 +0.0000 +0.0013 -> gefunden 1 von 5
+  gepflanzt +0.04 auf P90+ von oi_24 (Lage verschoben): -0.0006 +0.0018 +0.0000 +0.0000 +0.0000 -> gefunden 1 von 5
+  TOR: ⛔ NICHT BESTANDEN - S1 bleibt Auskunft
+SCHLUSS: vollstaendig

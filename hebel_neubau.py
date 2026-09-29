@@ -589,6 +589,11 @@ NEUESTER_STAND = (
               "bestimmt rsi die Auswahl, eine Wirkung der Lage wird verdeckt. Die "
               "Lage muss ZUERST fuer sich als Beitrag gemessen werden, mit eigenem "
               "Tor; K5 bleibt neu vorzulegen"),
+    ("2.683", "K5-FOLGE: rsi allein ist zeitstabil (jedes Jahr, auch 2022, jedes "
+              "Normal-Drittel) und roh fast kalibriert; das Phase-Normal ist "
+              "groesstenteils Rauschen, seine Schrumpfung behebt die Rueckkehr zur "
+              "Mitte. Die Lage hat einzeln klare Kurven, in der Kombination kommt "
+              "nichts an (Tor nicht bestanden) - sie ist FUER SICH zu messen"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "

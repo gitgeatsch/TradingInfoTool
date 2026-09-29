@@ -74,3 +74,19 @@ S1 stützte sich auf das Tor von K5 neu (gleiche Familien, gleiche Statistik). D
 | S2–S7 | unberührt (Kalibrierung, PBO, Schrumpfung, Kurven hängen nicht an diesem Tor) |
 
 Die Vorabfestlegung wird **nicht** geändert, nur ihre Gültigkeit für S1 eingeschränkt. Die Kette läuft unverändert weiter.
+
+---
+
+## 6. Ergebnis (29.09.2026) — Befund 2.683
+
+Beleg `Basisinfos/K5_Folge_29_09/`. R-R11 bitgleich in allen vier Mengen.
+
+| | Ergebnis |
+|---|---|
+| **Tor** (Nachtrag) | ⛔ +0,04 in 1 von 5 — die nicht-negativen Gewichte setzen die Lage auf 0. **S1 nur Auskunft** |
+| **S1** (Auskunft) | keine Variante schlägt rsi allein, in keiner Menge, fest wie rollierend; K4 gemeinsam etwa gleich |
+| **S4** Zeit | ✔ rsi allein in 4 von 4: jedes Jahr, jede BTC-Lage, **2022 +0,014..+0,022**, jedes Normal-Drittel, 84–90 % der Assets |
+| **S3** Kalibrierung rsi allein | **roh** Steigung 0,77 / 0,69 / 0,73 / 0,71, Niveau ±0,006 → fast kalibriert · Platt ohne Nachführung ✔ in 2 von 4 · ⛔ **Platt mit 3-Monats-Achsenabschnitt in 4 von 4** (Niveau kippt: geschätzt +0,08, beobachtet −0,04) |
+| **S6** Schrumpfung | ✔ in 4 von 4 (roh −0,036..−0,042 → geschrumpft +0,002..+0,011); Schrumpfungsfaktor 0 bis 0,53: das Phase-Normal ist **größtenteils Rauschen** |
+| **S7** Kurven | rsi steigend; funding fallend (Extreme oben Risiko); oi fallend; **konten am stärksten** (wenige Longs +0,15, viele −0,25); leichtes Optimum bei ko_48/fu_48 |
+| **S5** PBO | ⛔ **nicht auswertbar** — Auswahlanteil nicht angeglichen (eigener Fehler) |
