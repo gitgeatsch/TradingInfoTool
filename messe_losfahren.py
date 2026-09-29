@@ -436,6 +436,21 @@ def main() -> int:
                 print("  B2 Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (zieh, float(np.nanmean(nv)), p90, "✔" if b2 else "⛔"))
                 print("  B4 je Asset (>= 20 Einstiege): %d Assets, Dq > 0 bei %.0f %% -> %s" % (len(ga), 100 * b4, "✔" if b4 >= 0.6 else "⛔"))
                 print("  B5 ohne 10./11.10.2025: %d Einstiege, Dq %+.4f (mit %+.4f)" % (len(ohne), dqh(ohne), gesamt))
+                # B6 (Voranalyse Abschnitt 10, vor der Bestaetigung): Tagesblock-Bootstrap - die Einstiege TAGEWEISE
+                # gezogen (die Ballung an Markttagen ist normales Marktverhalten und bleibt drin; nur die
+                # Unsicherheit wird ueber die Tage statt ueber die Einstiege gerechnet), 1.000 Ziehungen
+                tage = STD[ee] // 24
+                ut, tinv = np.unique(tage, return_inverse=True)
+                je_tag = [ee[tinv == k] for k in range(len(ut))]
+                rb = np.random.default_rng(SAAT + 6)
+                boot = []
+                for _ in range(1000):
+                    w_ = rb.integers(0, len(ut), len(ut))
+                    boot.append(dqh(np.concatenate([je_tag[k] for k in w_])))
+                lo95, hi95 = np.nanpercentile(boot, [2.5, 97.5])
+                b6 = lo95 > 0
+                print("  B6 Tagesblock-Bootstrap (%d Tage, 1.000 Ziehungen): 95-%%-Intervall %+.4f .. %+.4f -> %s" % (
+                    len(ut), lo95, hi95, "✔" if b6 else "⛔"))
                 zst = dqs(g[VH[g] >= s])
                 print("  Auskunft Zustand (Gitteranker vh >= s): %+.4f gegen Ersteintritt %+.4f" % (zst, gesamt))
                 for k in (2, 6):
@@ -446,8 +461,8 @@ def main() -> int:
                     print("  Auskunft Einstieg %d h nach dem Signal: %d · Dq %+.4f" % (k, int(okp.sum()), dqh(pos[okp])))
                 print("  Auskunft je Monat: " + " · ".join("%d-%02d %+.3f (%d)" % (mm // 12, mm % 12 + 1, dqh(ee[MON[ee] == mm]), int((MON[ee] == mm).sum()))
                                                           for mm in np.unique(MON[ee])))
-                print("  URTEIL SCHRITT 1 (Menge %s): B1 %s · B2 %s · B4 %s  (B3 ueber die vier Mengen)" % (
-                    E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b4 >= 0.6 else "⛔"))
+                print("  URTEIL SCHRITT 1 (Menge %s): B1 %s · B2 %s · B4 %s · B6 %s  (B3 ueber die vier Mengen)" % (
+                    E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b4 >= 0.6 else "⛔", "✔" if b6 else "⛔"))
             print("SCHLUSS: vollstaendig")
             return 0
 

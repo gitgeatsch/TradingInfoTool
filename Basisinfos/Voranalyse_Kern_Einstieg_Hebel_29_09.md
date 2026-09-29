@@ -154,3 +154,21 @@ wahre Fallzahl sind eher die **Tage** als die Einstiege.
 ➤ **Lösungsvorschlag (neue Vorabfestlegung, VOR der Bestätigung):** **B6** — ein **Tagesblock-Bootstrap** (die Einstiege
 tageweise gezogen, 1.000 Ziehungen): das 95-%-Intervall des Dq muss in der Bestätigung **über null** liegen. Das ist
 **strenger**, nicht milder, und prüft genau die Annahme, die nicht zutrifft.
+
+---
+
+## 10. ✔ B6 AUFGENOMMEN — festgehalten VOR der Bestätigung (29.09.2026)
+
+**Nutzer:** *„ja, B6 aufnehmen und Bestätigung starten — prüfen und gegenprüfen. Hinweis: Vorsicht, wenn du die
+Konzentration der steigenden Assets, also der Gesamtmarkt steigt, als Anomalie siehst, dann ist das falsch — es ist
+normales Marktverhalten, wenn BTC steigt und vorläuft. Wenn nicht, dann ist die Messung und Prüfung ok."*
+
+➤ **So ist B6 gemeint und gebaut:** die Ballung ist **normales Marktverhalten** und bleibt **vollständig drin** — kein Tag,
+kein Einstieg wird entfernt. B6 rechnet nur die **Unsicherheit** über die **Tage** statt über die einzelnen Einstiege,
+weil Einstiege am selben Markttag keine unabhängigen Beobachtungen sind.
+
+| | |
+|---|---|
+| **B6** | Tagesblock-Bootstrap: die Einstiege tageweise mit Zurücklegen gezogen, 1.000 Ziehungen (eigene Saat), 95-%-Intervall des Dq **> 0** |
+| Lauf | `--kern --bestaetigen 0.035` in `bestand`, `unverzerrt:1`, `unverzerrt:2`, `unverzerrt:3` — nacheinander, **einmal**; danach Stopp |
+| Urteil | B1, B2, B4, B6 je Menge; **B3** = B1 und B2 in ≥ 3 von 4 Mengen; B5 als mit/ohne ausgewiesen |
