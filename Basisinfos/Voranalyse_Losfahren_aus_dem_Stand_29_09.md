@@ -147,3 +147,31 @@ selten. Meine Annahme in P3 war falsch skaliert — die Schicht S5 aus E2g (+3,1
 (nur Ziehungen und Monate waren verkürzt) — ihre Kurve ist also **gesehen**. Sie **steigt** mit der Nadel
 (früh +0,057 gegen 1..2 ATR +0,123). Die neue Grenze begünstigt die Hypothese daher **nicht**, sie macht L2 nur
 auswertbar. Die übrigen drei Mengen und alle rollierenden Werte sind ungesehen.
+
+---
+
+## 10. ⚠️ NEUE VORABFESTLEGUNG nach dem Tor (29.09.2026) — Tor als LEITER, Urteil nur oberhalb der Auflösung
+
+**Anlass:** Beide Tore sind an +0,04 **nicht bestanden** (`Losfahren_29_09/tor__bestand.txt`):
+
+| | Nullwelt | gefunden bei +0,04 |
+|---|---|---|
+| Teil 1 (früh − spät) | Mittel −0,063, Streuung 0,019, P90 −0,040 | **2 von 5** (+0,02: 1 von 5) |
+| Teil 2 (Bestes-von-3) | Mittel +0,006, P90 +0,016 | **3 von 5** |
+
+➤ Nach Abschnitt 4 heißt das: **kein Urteil** zu L2 und L5 **aus diesem Tor**. Die vier Mengen laufen weiter, ihre
+Werte sind vorerst nur **Auskunft**.
+
+**Warum nicht einfach weiter?** Ein Tor, das nicht besteht, sagt nur: *+0,04 ist unter der Auflösung dieser
+Anlage.* Ob der Effekt, den wir suchen, **größer** ist (der E2g-Hinweis war rund +0,29), bleibt offen. Das beantwortet
+die **Leiter**, die der Messstandard ohnehin vorsieht (*gepflanzte Leiter bis 0,40*):
+
+| | |
+|---|---|
+| **Leiter** | +0,04 · +0,08 · +0,12 · +0,20, je 5 Wiederholungen, Teil 1 und Teil 2 (`--leiter`) |
+| **Auflösung** | die kleinste Stufe mit ≥ 4 von 5 |
+| **Ursache mitmessen** | Teil 1: wie viel der Pflanzung in der frühen Auswahl **ankommt** und wie viel des Pflanzbereichs die Auswahl **deckt**; Teil 2: Deckung der oi-Auswahl — *Erklärung messen statt vermuten* |
+| **Urteil L2/L5** | nur, wenn der gemessene Abstand zum Nullmittel **größer als die Auflösung** ist **und** über dem Band liegt; sonst **„nicht auflösbar“** — ausdrücklich **nicht** „trägt nicht“ |
+| **keine Stufe bis +0,20** | die Anlage kann die Frage nicht beantworten → die Kurve bleibt **Auskunft**, und die Form der Messung muss neu vorgelegt werden |
+
+⚠️ Die Kriterien L2–L7 selbst bleiben **unverändert**. Die Leiter läuft nach der Kette auf `bestand`.

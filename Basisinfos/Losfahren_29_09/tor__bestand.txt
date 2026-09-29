@@ -1,0 +1,15 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand · TOR
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+TOR TEIL 1 (L1) frueh - spaet mit verschobenem rsi: Nullwelt Mittel -0.0627, Streuung 0.0193, 90. Perzentil -0.0395
+  gepflanzt +0.02 in der fruehen Klasse (P90+ rsi, verschoben): -0.0438 -0.0496 -0.0564 -0.0270 -0.0880 -> gefunden 1 von 5
+  gepflanzt +0.04 in der fruehen Klasse (P90+ rsi, verschoben): -0.0434 -0.0445 -0.0028 -0.0616 -0.0035 -> gefunden 2 von 5
+  TOR TEIL 1: ⛔ NICHT BESTANDEN - kein Urteil zu L2
+TOR TEIL 2 Bestes-von-3 Lage auf stehenden Ankern (Lage verschoben): Nullwelt Mittel +0.0060, 90. Perzentil +0.0158
+  gepflanzt +0,04 auf P90+ von oi_24 (stehend, verschoben): +0.0267 +0.0156 +0.0273 +0.0183 +0.0142 -> gefunden 3 von 5
+  TOR TEIL 2: ⛔ NICHT BESTANDEN - kein Urteil zu L5
+SCHLUSS: vollstaendig
+exit=0

@@ -61,7 +61,10 @@ def main() -> int:
     E2.menge_aus_argv()
     K2.FORM = "b"
     K2.LAMBDAS = GITTER_NEU
-    tor = "--tor" in sys.argv
+    leiter = "--leiter" in sys.argv          # Abschnitt 10: Tor als LEITER - Aufloesung und Uebertragung messen
+    tor = "--tor" in sys.argv or leiter
+    D1 = (0.04, 0.08, 0.12, 0.20) if leiter else (0.02, 0.04)
+    D2 = (0.04, 0.08, 0.12, 0.20) if leiter else (0.04,)
     probe = "--probe" in sys.argv
     zieh = 3 if probe else ZIEHUNGEN
     monate = ROLL[:8] if probe else ROLL
@@ -231,8 +234,8 @@ def main() -> int:
         print("TOR TEIL 1 (L1) frueh - spaet mit verschobenem rsi: Nullwelt Mittel %+.4f, Streuung %.4f, 90. Perzentil %+.4f" % (
             float(np.nanmean(null)), float(np.nanstd(null, ddof=1)), grenze))
         erg = {}
-        for d in (0.02, 0.04):
-            gef, werte = 0, []
+        for d in D1:
+            gef, werte, ueb, deck = 0, [], [], []
             for _ in range(5):
                 EV = verschoben(E, RSI)
                 gr = np.nanpercentile(EV["rsi_s"][r_sa], 90)
@@ -242,12 +245,22 @@ def main() -> int:
                 w = rng.choice(kand, size=min(int(round(d * len(oben))), len(kand)), replace=False)
                 y[w] = 1.0
                 _m, sv = rsi_auswahl(EV, y)
-                dd = frueh_spaet(sv, y)[0]
+                dd, fz, _sz = frueh_spaet(sv, y)
                 werte.append(dd); gef += int(dd > grenze)
+                # Uebertragung: wie viel der Pflanzung kommt in der fruehen Auswahl an (gleiche Auswahl, y ohne Pflanzung)
+                ueb.append(dqs(fz, y) - dqs(fz, A24))
+                op = np.intersect1d(oben, r_pa)
+                deck.append(len(np.intersect1d(op, sv)) / max(len(op), 1))
             erg[d] = gef
             print("  gepflanzt +%.2f in der fruehen Klasse (P90+ rsi, verschoben): %s -> gefunden %d von 5" % (
                 d, " ".join("%+.4f" % x for x in werte), gef))
-        print("  TOR TEIL 1: %s" % ("✔ BESTANDEN" if erg[0.04] >= 4 else "⛔ NICHT BESTANDEN - kein Urteil zu L2"))
+            print("      angekommen in der fruehen Auswahl %s · Deckung Auswahl/Pflanzbereich %s" % (
+                " ".join("%+.4f" % x for x in ueb), " ".join("%.2f" % x for x in deck)))
+        if leiter:
+            auf = [d for d in D1 if erg[d] >= 4]
+            print("  AUFLOESUNG TEIL 1: %s" % ("+%.2f (kleinste Stufe mit >= 4 von 5)" % auf[0] if auf else "keine Stufe bis +0,20"))
+        else:
+            print("  TOR TEIL 1: %s" % ("✔ BESTANDEN" if erg[0.04] >= 4 else "⛔ NICHT BESTANDEN - kein Urteil zu L2"))
         # Teil 2
         st_sa = r_sa[np.abs(NADEL[r_sa]) < STEHEND]; st_s = r_s[np.abs(NADEL[r_s]) < STEHEND]
         st_pa = r_pa[np.abs(NADEL[r_pa]) < STEHEND]
@@ -263,21 +276,32 @@ def main() -> int:
         g2 = float(np.nanpercentile(null2, 90))
         print("TOR TEIL 2 Bestes-von-3 Lage auf stehenden Ankern (Lage verschoben): Nullwelt Mittel %+.4f, 90. Perzentil %+.4f" % (
             float(np.nanmean(null2)), g2))
-        gef, werte = 0, []
-        for _ in range(5):
+        erg2 = {}
+        for d in D2:
+          gef, werte, deck = 0, [], []
+          for _ in range(5):
             EV = verschoben(E, LAGE_SP)
             gr = np.nanpercentile(EV["oi_24"][st_sa], 90)
             y = A24.copy()
             steh = np.abs(NADEL) < STEHEND
             oben = np.flatnonzero((EV["oi_24"] >= gr) & HIT & (such | pruef) & steh)
             kand = oben[B24[oben] == 1]
-            w = rng.choice(kand, size=min(int(round(0.04 * len(oben))), len(kand)), replace=False)
+            w = rng.choice(kand, size=min(int(round(d * len(oben))), len(kand)), replace=False)
             y[w] = 1.0
             dd = bestes_lage(EV, y)
             werte.append(dd); gef += int(dd > g2)
-        print("  gepflanzt +0,04 auf P90+ von oi_24 (stehend, verschoben): %s -> gefunden %d von 5" % (
-            " ".join("%+.4f" % x for x in werte), gef))
-        print("  TOR TEIL 2: %s" % ("✔ BESTANDEN" if gef >= 4 else "⛔ NICHT BESTANDEN - kein Urteil zu L5"))
+            m, _l = K2.fit_cv(LAGE["oi"], EV, st_sa, st_s, y[st_s], OFF[st_s], STD)
+            cz = m.z(EV, st_pa, OFF[st_pa]) - OFF[st_pa]
+            op = np.intersect1d(oben, st_pa)
+            deck.append(len(np.intersect1d(op, st_pa[cz >= np.quantile(cz, 0.9)])) / max(len(op), 1))
+          erg2[d] = gef
+          print("  gepflanzt +%.2f auf P90+ von oi_24 (stehend, verschoben): %s -> gefunden %d von 5 · Deckung oi-Auswahl/Pflanzbereich %s" % (
+              d, " ".join("%+.4f" % x for x in werte), gef, " ".join("%.2f" % x for x in deck)))
+        if leiter:
+            auf = [d for d in D2 if erg2[d] >= 4]
+            print("  AUFLOESUNG TEIL 2: %s" % ("+%.2f (kleinste Stufe mit >= 4 von 5)" % auf[0] if auf else "keine Stufe bis +0,20"))
+        else:
+            print("  TOR TEIL 2: %s" % ("✔ BESTANDEN" if erg2[0.04] >= 4 else "⛔ NICHT BESTANDEN - kein Urteil zu L5"))
         print("SCHLUSS: vollstaendig")
         return 0
 
