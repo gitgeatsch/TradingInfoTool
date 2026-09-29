@@ -52,10 +52,32 @@ EINE Rangliste geworfen und nach 'oberstes Fuenftel' gefragt."* - und am
 from __future__ import annotations
 
 # ══ DIE ROLLEN ══════════════════════════════════════════════════════
+#
+# ⭐⭐⭐ 29.09.2026 GEPRUEFT UND PRAEZISIERT (Basisinfos/Einordnung_Beitraege_29_09.md,
+# Abschnitte 8-9; Nutzer: *JA - DU musst noch pruefen und gegenpruefen, ob der
+# Vorschlag halten kann*). Das Schema vom 25.09. HAELT - aber B und C wirken
+# NICHT als Gewichte auf das Signal, sondern auf ANDERE Ausgaben:
+#
+#   A  entscheidet OB        - P(oben zuerst), die Richtung. Zeitpunkt:
+#                              VORHER (OPTIMUM) oder WAEHREND (Fortsetzung,
+#                              eigener Einstiegstyp - Nutzer: Quant +400 %)
+#   B  entscheidet WIE WEIT  - richtungslos (oi_aenderung Spiegel 1,02-1,07,
+#                              2.655); vergroessert Anstieg UND Rueckgang
+#                              (2.655/2.662); in ATR kaum groesser (2.667) ->
+#                              Potential und Geometrie, nicht die Wahrscheinlichkeit
+#   C  entscheidet WIE VIEL HEBEL - Pfadrisiko: hohes ema_abstand setzt sich
+#                              nach OBEN fort (2.655), aber mit groesserem
+#                              Rueckgang (2.642) -> Bewertung 2 (Hebel, Stop)
+#
+# ➤ *A und B und NICHT C* heisst damit: drei verschiedene Ausgaben, keine
+#   Summe, kein Blocker (Nutzer 28.09.: *Achsen sind Gewichte*).
 ROLLEN = {
-    "A": "Richtung - geht es aufwaerts? Trendumkehr?",
-    "B": "Bewegungserwartung - kommt ueberhaupt etwas? (richtungslos)",
-    "C": "Risikosperre - ueberdehnt, ueberhitzt?",
+    "A": "Richtung - kommt es eher nach OBEN? (P oben zuerst) - liefert das SIGNAL; "
+         "vorher (OPTIMUM) oder waehrend (Fortsetzung)",
+    "B": "Bewegungserwartung - wie WEIT kann es gehen? (richtungslos) - bestimmt "
+         "Potential und Geometrie, nicht die Wahrscheinlichkeit",
+    "C": "Risikosperre - wie weit geht es GEGEN mich? - wirkt ueber Bewertung 2 auf "
+         "Hebelstufe und Stop, nicht auf das Signal",
 }
 
 # ══ DIE DREI ARBEITSMODI - und warum ich sie verwechselt habe ═══════
@@ -311,7 +333,7 @@ BEITRAGSLAGE = {
     # ── die drei registrierten Traeger ───────────────────────────────
     "funding": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.663", "2.665", "2.666", "2.676"),
+        befund=("2.663", "2.665", "2.666", "2.676", "2.683"),
         beleg="mit dem VORTAGESWERT: Lift 4,45 bei <= -0,0040 auf +15 "
               "%/H12 (vorher 9,55 - die Haelfte war Vorgriff), traegt auf "
               "H6/H12/H24, +30 %/H48 nur Bewegung; >= 0,0016 zeigt nach "
@@ -328,7 +350,9 @@ BEITRAGSLAGE = {
                   "+0,032 und 2022 +0,031..+0,040 liegen je innerhalb EINER "
                   "Streuung des Marktrauschens (0,035) - die Groesse in "
                   "ungesehener Zeit ist nicht gesichert; als KONTEXT-"
-                  "Kandidat, nicht als Beitrag je Asset"),
+                  "Kandidat, nicht als Beitrag je Asset. KURVE (2.683): stark "
+                  "negativ +0,11, sehr hoch -0,10 - vorher A-Kandidat, Extreme "
+                  "C-Kandidat (KANDIDATEN)"),
     "oi_aenderung": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
         befund=("2.663", "2.662", "2.676"),
@@ -355,7 +379,8 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     # ── Terminmarkt und Volumen, mitgemessen in 2.651 ───────────────
     "konten_verh": dict(
-        b1="belegt", vorlauf="nein", b2="ungemessen", befund=("2.663", "2.676"),
+        b1="belegt", vorlauf="nein", b2="ungemessen",
+        befund=("2.663", "2.676", "2.683"),
         beleg="Lift 2,96 bei <= 0,5759 - traegt NUR auf H6 und H12; "
               "Haltequote 0,60 bis 0,66. K1: ueberwiegend MARKT (Tag/Phase "
               "0,07-0,18). Marktanteil am UNTEREN Rand (wenige Longs "
@@ -364,7 +389,8 @@ BEITRAGSLAGE = {
         quelle=_Q_TM, live=_L_TM, spot="",
         vorbehalt="NUR IN DER SUCHE NACHGEWIESEN (2.675): Pruefzeit "
                   "+0,026..+0,028 innerhalb der Marktstreuung; die Sperre je "
-                  "Asset ist in der ungesehenen Zeit nicht vorhanden"),
+                  "Asset ist in der ungesehenen Zeit nicht vorhanden. KURVE "
+                  "(2.683): die staerkste - wenige Longs +0,15, viele -0,25"),
     "oi_je_umsatz": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663", "2.662"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 1,00 bis 1,53)",
@@ -372,10 +398,11 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     "volumenschub": dict(
         b1="faellt", vorlauf=None, b2="ungemessen",
-        befund=("2.663", "2.662", "2.667"),
+        befund=("2.663", "2.662", "2.667", "2.681"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35). "
               "HOEHE auch UEBER die ATR hinaus: P95 +0,08 ATR mfe, 30 von 32 "
-              "Monaten, jede BTC-Lage (2.667)",
+              "Monaten, jede BTC-Lage (2.667) - ROLLE B (Hoehe). Als "
+              "Risikokurve der Hebelstufe kein Mehrwert ueber die ATR (2.681)",
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
     "taker_verh": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
@@ -421,15 +448,20 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650", "2.676"),
+        befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
               "Versatz; A4 bestaetigt; korreliert mit momentum (+0,62, 2.675). "
               "ALTERSACHSE gueltig (2.676): Delle bei 6-12 h, 24 h alt wieder "
-              "voll - in Suche, Pruefzeit und 2022",
+              "voll - in Suche, Pruefzeit und 2022. ALLEIN waehlt es besser aus "
+              "als jede Kombination (2.680, 2.683); keine Normal-Verzerrung, "
+              "roh fast kalibriert (2.683, 2.684)",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt=""),
+        vorbehalt="ROLLE A WAEHREND (Fortsetzung), nicht OPTIMUM: der RSI der "
+                  "letzten 14 h kann einen Anstieg nie VORHER anzeigen (Nutzer "
+                  "29.09.: *Sportwagen, der schon 200 faehrt*); 2024 schwach, "
+                  "zeitstabil nur in der Betriebsform (2.684)"),
     "vola": dict(
         b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
@@ -450,6 +482,16 @@ BEITRAGSLAGE = {
               "*faellt* auf B2 hatte KEINEN Befund: 2.645 mass gegen E[R], "
               "2.650 gegen das Ereignis - keines gegen MAE",
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+    # ── das Risikomodell der Hebelstufe (29.09.) ────────────────────────
+    "atr": dict(
+        b1="ungemessen", vorlauf=None, b2="belegt", befund=("2.667", "2.681"),
+        beleg="die ATR zum Einstieg sagt die Liquidationsgefahr je Stufe voraus "
+              "(2.667); am Markpreis und am Spot-Tief, vier Mengen: 5x vorwaerts "
+              "kalibriert, 3x nur geordnet, 2x zu selten; Risikokurven bringen "
+              "nichts dazu (2.681). Die Tabelle je Grenze liegt vor",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="H0 offen: die Gefahr auf der tatsaechlichen EINSTIEGSAUSWAHL "
+                  "ist Pflicht vor jeder Verwendung (2.681)"),
 }
 
 # ⚠️⚠️ NEUESTER STAND (27.09. abends, E1 bis E2d) - er geht der Beitragslage
@@ -598,24 +640,17 @@ NEUESTER_STAND = (
               "gegen das geschrumpfte, Verzerrungsanteil ~0), aber 2024 ist schwach "
               "und zeitstabil nur in der Betriebsform. rsi ist ein Fortsetzungs-"
               "Beitrag, kein Kandidat fuer das OPTIMUM"),
-    ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
-               "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
-               "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
-               "abgestimmt (K1-K7, Basisinfos/Voranalyse_Kombination_"
-               "Anwendungsebene_27_09.md): Wirkungskurven statt Schalter, "
-               "Urteil gegen die Phase, Schwelle auf kalibriertem q, Hebel aus "
-               "der Liquidationsgefahr. Die Messbasis ist vervollstaendigt "
-               "(2.669, --menge unverzerrt). K3 ist gemessen (2.670: der "
-               "Kontext geht derzeit ohne Gewicht ein), K1 Schritt 1 samt "
-               "Randkriterium und Altersachse auch (2.671-2.676), K1 Schritt 2 "
-               "als Kurvenmodell verworfen (2.677), der zweite Anlauf traegt nach "
-               "dem Vorabkriterium nicht, zeigt aber die Ursache (2.678: das "
-               "Normal). K5 vorlaeufig auf dem BEITRAG; der dritte Anlauf (2.680) "
-               "loest die Rueckkehr zur Mitte, ist aber nicht besser als rsi "
-               "allein und nicht kalibriert - K5 wird NEU VORGELEGT. K7 gemessen "
-               "(2.679): Markpreis ist Hauptmass, m 0,09 vorsichtig. K6 "
-               "(Hebelstufe) mit dem Spot-Tief gelaufen, mit dem Markpreis "
-               "laeuft. Vor jeder Verwendung die Simulation (Ebene 3)"),
+    ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
+               "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
+               "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
+               "VIEL HEBEL - keine Summe, kein Blocker. A WAEHREND (Fortsetzung) ist mit "
+               "rsi belegt und ein eigener Einstiegstyp (die Positionsfuehrung "
+               "entscheidet); A VORHER (OPTIMUM) hat nur Kandidaten (funding negativ, "
+               "wenige Longs) - weitgehend schon gemessen (2.650, 2.657, 2.665). B ist "
+               "robust (2.655/2.662), in ATR groesstenteils die ATR. Bewertung 2: die "
+               "ATR (2.681). Naechste Schritte: K6 R+S (Extreme der Lage), K5 neu "
+               "vorlegen, H0, Simulation Ebene 3 und neue Monate ab 2026-09. Black "
+               "Swans nur als Stoerfaktor (Nutzer 29.09.)"),
 )
 
 # ⭐ WELCHES MESSSKRIPT WELCHE MERKMALE AUF WELCHER BEWERTUNG GEMESSEN HAT.
@@ -696,17 +731,29 @@ NAECHSTE_MESSUNGEN = (
                "bei H24, Vortag) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
                "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
                "`funding` in der Form, die die Probe ergibt"),
-    dict(was="K6 H0 und R+S: Liquidationsgefahr auf der EINSTIEGSAUSWAHL; dann "
-             "Funding/Carry, Tail-Quantil und Stresstag als Risikomerkmale (2.681)",
+    dict(was="K6 H0: die Liquidationsgefahr der ATR-Stufen auf der tatsaechlichen "
+             "EINSTIEGSAUSWAHL (Pflicht vor jeder Verwendung)",
+         art="probe", bewertung="b2", merkmale=("atr",), prueft="2.681",
+         warum="K6 hat auf ALLEN Ankern gemessen; der Einstieg waehlt besondere "
+               "Zeitpunkte (Fortsetzung, Squeeze-Lage) - stehende Regel *unbedingte "
+               "Messung nicht auf eine Teilmenge uebertragen*. Braucht die "
+               "Einstiegsregel (K5)"),
+    dict(was="rsi (Rolle A waehrend) auf UNGESEHENEN Monaten und 2024 - traegt die "
+             "Fortsetzung ueber die Zeit?",
+         art="probe", bewertung="b1", merkmale=("rsi",), prueft="2.684",
+         warum="2024 ist schwach, zeitstabil nur in der Betriebsform (2.684); die "
+               "Pruefzeit ist mehrfach gesehen - die Antwort kommt aus der "
+               "Simulation (Ebene 3) und den Monaten ab 2026-09 (Z6)"),
+    dict(was="K6 R+S: die EXTREME der Lage (funding hoch, viele Longs) als "
+             "Risikogewicht der Hebelstufe - Black Swans nur als Stoerfaktor",
          art="neu", bewertung="b2",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
-         warum="Bewertung 2 hat EINEN Traeger (ema_abstand_atr); ein "
-               "zweiter unabhaengiger macht die Stufung tragfaehig. Seit K6 "
-               "(27.09. abgestimmt) ist die Zielgroesse die "
-               "Liquidationswahrscheinlichkeit je Stufe am Markpreis (K7), "
-               "der Liquidationsrand ist mit den Eingestellten 17-65 % "
-               "dicker (2.669). Ob momentum_kurz/rsi und bandenge "
-               "mitlaufen, entscheidet die Voranalyse dazu"),
+         warum="Bewertung 2 traegt heute nur die ATR (2.681); die ATR misst die "
+               "Schwankung, nicht wie EINSEITIG der Markt gehebelt ist. Kurven "
+               "(2.683) und Recherche (hoher Carry -> Crash) zeigen in diese "
+               "Richtung; die drei Risikokurven aus K6 trugen nichts dazu, die "
+               "Erwartung ist bescheiden. Der 10./11.10. nur mit/ohne (Nutzer: "
+               "*Black Swans haben keine Moeglichkeit der Messung*)"),
 )
 
 # ⛔ UND WAS NICHT MEHR GEMESSEN WIRD: weitere Kursmerkmale aus der
@@ -948,13 +995,22 @@ GEOMETRIE = {
 # Genau das ist am 27.09. zweimal passiert.
 KANDIDATEN = {
     "A": [
-        ("momentum_kurz", "teilbelegt", "2.594/2.603",
-         "RICHTUNG belegt: Lift 1,937 bis zur strengsten Vola-Kontrolle, "
-         "Spiegelprobe bestanden (geeichte Schwelle 1,717). ABER auf einem "
-         "EREIGNIS (+10 %/6 h) gemessen, nie auf dieser Geometrie"),
-        ("rsi", "teilbelegt", "2.594",
-         "RICHTUNG belegt: Lift 1,893 unter strengster Kontrolle. Dieselbe "
-         "Einschraenkung wie momentum_kurz"),
+        # WAEHREND - Fortsetzung, gemessen
+        ("rsi", "belegt", "2.675/2.683/2.684",
+         "WAEHREND (Fortsetzung): RSI der letzten 14 h, traegt je Asset auf q5 "
+         "gegen die Phase; keine Normal-Verzerrung, roh fast kalibriert, 2024 "
+         "schwach. Karenz 0,43 (2.650) - sagt nicht VORHER"),
+        ("momentum_kurz", "belegt", "2.675/2.680",
+         "WAEHREND (Fortsetzung): dieselbe Familie wie rsi (+0,62), schwaecher - "
+         "nicht zusaetzlich zaehlen. Karenz 0,31 (2.650)"),
+        # VORHER - Kandidaten, kein Nachweis in ungesehener Zeit
+        ("funding", "kandidat", "2.663/2.665/2.675/2.683",
+         "VORHER-Kandidat: negativ = Shorts zahlen (Spiegel 1,10, Kurve +0,11); "
+         "einzige 'Lage vorher' in 2.665, aber klein und nur in der Suche (2.675)"),
+        ("konten_verh", "kandidat", "2.663/2.655/2.675/2.683",
+         "VORHER-Kandidat: wenige Longs (Spiegel 1,18, Kurve +0,15); vor allem "
+         "Markt, nur in der Suche (2.675). ⛔ die Squeeze-Familie mit vola haelt "
+         "2024 nicht (2.657)"),
         ("trendstruktur", "faellt", "2.645",
          "E[R] +0,00032, Tagesfehler +-0,00294 - Faktor 9 zu klein"),
         ("ema_lage", "faellt", "2.645", "E[R] +0,00037, nicht von null zu trennen"),
@@ -964,6 +1020,17 @@ KANDIDATEN = {
          "mit rsi kombiniert nur 1 von 5 Jahren positiv"),
     ],
     "B": [
+        ("vola_kausal", "belegt", "2.655/2.662/2.667",
+         "HOEHE: P99 +6,56 Prozentpunkte mfe, vorwaerts in jeder BTC-Lage; in ATR "
+         "ist es die ATR selbst (2.667) - die Hebelstufe gleicht das aus"),
+        ("volumenschub", "belegt", "2.655/2.662/2.667",
+         "HOEHE: P99 +1,82 mfe; traegt auch UEBER die ATR (+0,08 ATR, 30 von 32 "
+         "Monaten)"),
+        ("oi_je_umsatz", "belegt", "2.655/2.662",
+         "HOEHE: tief = mehr Bewegung (P1 +2,18 mfe); in ATR nicht mehr (2.667)"),
+        ("oi_aenderung", "belegt", "2.655/2.662/2.667",
+         "HOEHE, reine Bewegung (Spiegel 1,02-1,07): stark = mehr (P99 +3,23); "
+         "tief = weniger - in Prozent NICHT tragend (2.662), in ATR -0,16 (2.667)"),
         ("bandenge", "offen", "",
          "Squeeze. ⚠️ In 2.645 lief es MIT, aber gegen `E[R]` - das ist die "
          "A-Frage. Die B-Testform ist die AUFLOESUNGSRATE (kommt ueberhaupt "
@@ -973,7 +1040,15 @@ KANDIDATEN = {
         ("ema_abstand_atr", "belegt", "2.642/2.647",
          "RISIKOSPERRE: d 0,521 auf MAE gegen 0,267 auf MFE (2.642). Traegt "
          "absolut (84-facher Markt) UND je Asset (99,1 % des Lifts bleiben "
-         "symbolintern), alle sechs Pruefungen (2.647)"),
+         "symbolintern), alle sechs Pruefungen (2.647). ⚠ fuer die LIQUIDATION "
+         "kein Mehrwert ueber die ATR (2.681) - wirkt ueber Bewertung 2"),
+        ("funding", "kandidat", "2.655/2.663/2.683",
+         "Extrem HOCH: Spiegel 0,85, >= 0,0016 zeigt nach unten, Kurve -0,10; "
+         "Recherche: hoher Carry sagt Crashs voraus (BIS) - ungemessen gegen die "
+         "Liquidation (K6 R+S)"),
+        ("konten_verh", "kandidat", "2.655/2.683",
+         "Extrem viele Longs: Spiegel 0,63, Kurve -0,25 - ungemessen gegen die "
+         "Liquidation (K6 R+S)"),
     ],
 }
 

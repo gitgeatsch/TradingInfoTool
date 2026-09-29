@@ -35,6 +35,7 @@ Kursmerkmale gemessen und die **drei registrierten Träger** nie geladen.
 | ⛔ **K5 neu gemessen** (2.682, 29.09.) | **Tor nicht bestanden — kein Urteil.** In der Kombination bestimmt rsi die Auswahl, eine Wirkung der Lage wird verdeckt (gepflanzte +0,04 kommen als +0,004 an). Die Lage muss **zuerst für sich** gemessen werden |
 | ◐ **K5-Folge gemessen** (2.683, 29.09.) | **rsi allein zeitstabil** (jedes Jahr, auch 2022) und **roh fast kalibriert**; das Phase-Normal ist größtenteils Rauschen, die **Schrumpfung** behebt die Rückkehr zur Mitte; die Lage hat einzeln klare Kurven, in der Kombination kommt nichts an (Tor ⛔) |
 | ◐ **Gegenprüfung** (2.684, 29.09.) | rsi hält gegen das **geschrumpfte** Normal (Verzerrungsanteil ~0), 2024 schwach; rsi misst die **laufende** Bewegung (RSI der letzten 14 h) — Fortsetzung, kein OPTIMUM |
+| ✔ **Rollen geprüft und im Standblatt** (29.09.) | das Schema vom 25.09. hält: **A** Richtung entscheidet **OB** (vorher = OPTIMUM, nur Kandidaten; während = Fortsetzung mit rsi, eigener Einstiegstyp) · **B** Bewegungserwartung **WIE WEIT** (robust, 2.655/2.662) · **C** Risikosperre mit der ATR **WIE VIEL HEBEL** — keine Summe, kein Blocker (`Einordnung_Beitraege_29_09.md`) |
 | ➤ **nächster Schritt** | **K5 neu abstimmen** (Nutzer) — mit der einfacheren Regel *rsi allein* zur Bestätigung und der OPTIMUM-Frage (rsi misst die Bewegung) · **K6** mit dem Markpreis auswerten (danach H0: auf der Einstiegsauswahl) · dann **Simulation Ebene 3** |
 
 Die Reihenfolge im Einzelnen steht unter *Was Phase 1 noch verlangt*, Zeile 2.

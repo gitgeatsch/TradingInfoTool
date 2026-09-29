@@ -178,3 +178,22 @@ wirken als Gewichte** (B hebt, C senkt), keine harte Sperre.
 ⚠️ **Folge für Schritt 2 (*Losfahren*):** Die Frage *Lage vorher* ist durch 2.650, 2.651/2.663, 2.657 und 2.665
 **weitgehend schon gestellt** — mit niedriger Erwartung. Neu wäre nur: Anker ohne bisherigen Anstieg, Vorlauf mit
 Einstieg jetzt, Bezug geschrumpftes Normal. Vorher R-R11 auf 2.657/2.665.
+
+---
+
+## 9. ✔ GEPRÜFT (29.09.2026) — das Schema hält, B und C wirken auf ANDERE Ausgaben
+
+**Nutzer:** *„JA von mir, hört sich schlüssig an — DU musst noch prüfen und gegenprüfen, ob der Vorschlag halten
+kann und fachlich in die richtige Richtung geht."*
+
+| Prüfung | Messung | Ergebnis |
+|---|---|---|
+| A liefert das Signal | unser Dq zählt nur Anker mit Treffer = P(oben zuerst); rsi/momentum tragen (2.675, 2.683) | ✔ hält |
+| **B als Gewicht auf das Signal?** | B ist richtungslos (oi_aenderung Spiegel 1,02–1,07, vola fällt als Richtung, 2.655/2.650); vergrößert Anstieg **und** Rückgang (2.655/2.662); in ATR kaum größer (2.667) | ⛔ **hält nicht** → B bestimmt **wie weit** (Potential, Geometrie), nicht *ob* |
+| **C als Gewicht auf das Signal?** | hohes ema_abstand setzt sich nach **oben** fort (2.655, 6 von 6 Jahren), aber mit größerem Rückgang (2.642: *Risikofilter, kein Ertragsfilter*) | ⛔ **hält nicht** → C wirkt über **Bewertung 2** auf Hebelstufe und Stop |
+| Regel 1–4 (Takt, Gebühren, Asset-Rang, Fakt) | feste Werte gegen das eigene Normal; alles Bewertungen | ✔ |
+| Recherche | P(Schranke) × P(oben \| Schranke) — genau B × A | ✔ |
+
+➤ **Geprüfte Fassung:** **A entscheidet OB · B entscheidet WIE WEIT · C mit der ATR entscheidet WIE VIEL HEBEL.**
+Drei Ausgaben, keine Summe, kein Blocker. Umgesetzt im bestehenden `hebel_neubau.ROLLEN`/`KANDIDATEN` (kein zweites
+Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi und ATR/H0, K6 R+S ohne Stresstag).
