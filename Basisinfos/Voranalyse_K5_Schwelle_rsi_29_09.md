@@ -172,3 +172,18 @@ Zustandswerts. Bei Nein: die Betriebsform (Auslösen am Überschreiten) muss **g
 | Leiter (K5-4) | in der verschobenen Welt +0,04 / +0,08 auf die oberste Stufe (v̂ ≥ 0,08), Unterschied Stufe 3 → 4 gegen das P90 der Nullwelt |
 | Stufen (Auskunft zur Wahl) | Bereiche +0,02..0,04 · 0,04..0,06 · 0,06..0,08 · ≥ 0,08, benachbarte Unterschiede gegen die Nullwelt |
 | Ablauf | kurzer Funktionstest (8 Monate, 3 Ziehungen — **ohne** inhaltliche Meldung) → Lauf `bestand` → **Stopp**, Tabelle 2024 an den Nutzer |
+
+---
+
+## 11. GEGENPRÜFUNG nach dem Wahllauf — festgehalten VOR dem Lauf (29.09.2026)
+
+Der Wahllauf (`K5_Schwelle_29_09/wahl__bestand.txt`, R-R11 +0,0808 und 29.390 bitgleich) zeigt zwei Dinge, die vor jeder
+Meldung gegengeprüft werden:
+
+| Auffällig | Verdacht (Erklärung, noch kein Befund) | Gegenprüfung (`--k5 --gegen6`, nur 2024) |
+|---|---|---|
+| **K5-6** Ersteintritt +0,091 / +0,085 (bei +0,02 / +0,04) — weit **über** dem Zustand (+0,016 / −0,027) | ⚠️ **Werkzeugfehler möglich**: das Fenster *„davor 24 h darunter“* zählt **ungültige** Stunden (kein Wert) als *darunter*, und beim **Modellwechsel** am Monatsanfang springt der Beitrag — beides erzeugt **Schein-Übertritte** | (a) wie registriert · (b) Fenster nur aus **gültigen** Stunden · (c) dazu **ohne** die ersten 24 h eines Monats · (d) **Nullwelt**: dieselben Übertritte auf verschobenem rsi (40 Ziehungen) |
+| **K5-1** Steigung −0,14; das **unterste** Zehntel läuft am besten (+0,057), v̂ ≤ −0,04 sogar +0,186 | Monatskontext (die großen \|v̂\| stammen aus wenigen Monaten) **oder** v̂ mischt den Beitrag mit dem Normal | (e) Zehntel gegen den **Moment-Bezug** (Asset im Monat) · (f) Zehntel des **Beitrags** statt v̂ · (g) Anteil großer \|v̂\| je Monat |
+
+➤ Das **K5-1-Urteil** (nicht kalibriert) hängt an keinem der Verdachte — es steht. Die Gegenprüfung klärt **warum**, und ob
+der **Ersteintritt** echt ist. Maßgeblich für K5-6 ist dann (c) mit (d).

@@ -468,6 +468,68 @@ def main() -> int:
                 dd = kennz(vv, y)[2][2]
                 werte.append(dd); gef += int(dd > p90d)
             print("    Leiter oberste Stufe +%.2f: %s -> gefunden %d von 5" % (d, " ".join("%+.4f" % x for x in werte), gef))
+        # ══ GEGENPRUEFUNG K5-6 und K5-1 (--gegen6; Voranalyse Abschnitt 11, VOR dem Lauf festgehalten) ══
+        if "--gegen6" in sys.argv:
+            MON_START = np.array([H(datetime(2020 + mm // 12, mm % 12 + 1, 1)) for mm in range(0, 12 * 8)])
+
+            def erst_v(VHx, s, streng, ohne_wechsel):
+                aus = []
+                for tl in teile:
+                    st = STD[tl]; vv = VHx[tl]
+                    fin = np.isfinite(vv)
+                    ab_ = np.where(fin, vv >= s, False)
+                    cs = np.concatenate([[0], np.cumsum(ab_)]); cf = np.concatenate([[0], np.cumsum(fin)])
+                    lo = np.searchsorted(st, st - 24, "left")
+                    idx = np.arange(len(tl))
+                    if streng:
+                        erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((cf[idx] - cf[lo]) >= 20)
+                    else:
+                        erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((idx - lo) >= 20)
+                    if ohne_wechsel:
+                        ms = MON_START[np.clip(MON[tl] - 2020 * 12, 0, len(MON_START) - 1)]
+                        erst &= (st - ms) >= 24
+                    i_ = np.flatnonzero(erst)
+                    i_ = i_[i_ + 1 < len(tl)]
+                    i_ = i_[st[i_ + 1] == st[i_] + 1]
+                    aus.append(tl[i_ + 1])
+                e_ = np.concatenate(aus) if aus else np.zeros(0, int)
+                return e_[np.isin(JAHR[e_], JAHRE) & np.isfinite(QSh[e_])]
+            print()
+            print("  GEGENPRUEFUNG K5-6 (Ersteintritt): wie registriert / Fenster nur aus gueltigen Stunden / dazu ohne die ersten 24 h eines Monats (Modellwechsel)")
+            for s in (0.02, 0.04):
+                e1, e2, e3 = erst_v(VH, s, False, False), erst_v(VH, s, True, False), erst_v(VH, s, True, True)
+                am1 = np.isin(e1 - 1, e1 - 1)
+                w1 = e1[(STD[e1] - MON_START[np.clip(MON[e1] - 2020 * 12, 0, len(MON_START) - 1)]) < 25]
+                print("    %+.2f: %d -> %+.4f · %d -> %+.4f · %d -> %+.4f · davon im Monatsanfang %d (%+.4f)" % (
+                    s, len(e1), dqh(e1), len(e2), dqh(e2), len(e3), dqh(e3), len(w1), dqh(w1) if len(w1) else np.nan))
+            # Nullwelt fuer den Ersteintritt: die rollierenden Modelle auf verschobenem rsi, STUENDLICH
+            h24 = np.flatnonzero(np.isfinite(QSh) & np.isin(JAHR, JAHRE) & np.isfinite(OFF))
+
+            def vh_stuendlich(EE):
+                v = np.full(n, np.nan)
+                for mi, m in modelle:
+                    ixm = h24[MON[h24] == mi]
+                    if len(ixm):
+                        c = m.z(EE, ixm, OFF[ixm]) - OFF[ixm]
+                        v[ixm] = _ex(np.log(QSh[ixm] / (1 - QSh[ixm])) + c) - QSh[ixm]
+                return v
+            for s in (0.02, 0.04):
+                echt3 = dqh(erst_v(VH, s, True, True))
+                nv = []
+                for _ in range(zieh):
+                    EV = verschoben(E, RSI)
+                    nv.append(dqh(erst_v(vh_stuendlich(EV), s, True, True)))
+                print("    Nullwelt %+.2f (streng, ohne Monatsanfang, %d Ziehungen): echt %+.4f · Null Mittel %+.4f, P90 %+.4f -> %s" % (
+                    s, zieh, echt3, float(np.nanmean(nv)), float(np.nanpercentile(nv, 90)),
+                    "✔ jenseits" if echt3 > np.nanpercentile(nv, 90) else "· nicht jenseits"))
+            # K5-1 Gegenpruefung: Zehntel von vh gegen den MOMENT-Bezug (Asset im selben Monat) - nimmt den Monatskontext heraus
+            print()
+            print("  GEGENPRUEFUNG K5-1: Zehntel von vh, beobachtet gegen das geschrumpfte Normal | gegen den Moment-Bezug (Asset im Monat)")
+            print("    " + " · ".join("%+.3f|%+.3f" % (dqs(g[zg == d_]), dq(g[zg == d_], A24, MA, MB)) for d_ in range(10)))
+            kc = np.quantile(Ch[g], np.linspace(0, 1, 11)[1:-1]); zc = np.searchsorted(kc, Ch[g], "right")
+            print("    Zehntel des BEITRAGS c (statt vh): " + " · ".join("%+.3f|%+.3f" % (dqs(g[zc == d_]), dq(g[zc == d_], A24, MA, MB)) for d_ in range(10)))
+            mz = np.unique(MON[g])
+            print("    je Monat Anteil |vh| >= 0,04: " + " · ".join("%d-%02d %.1f%%" % (mm // 12, mm % 12 + 1, 100 * np.mean(np.abs(VH[g[MON[g] == mm]]) >= 0.04)) for mm in mz))
         if best:
             print()
             zst, ers = dqs(g[VH[g] >= s_best]), dqh(ersteintritte(s_best))
