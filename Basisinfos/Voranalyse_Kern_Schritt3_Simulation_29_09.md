@@ -104,3 +104,24 @@ ich hoffe, das ergibt sich aus der Messung für Schritt 3."*
 
 Werkzeug `messe_kern_simulation.py` (liest die Einstiege, den Markpreis mit Hoch/Tief und das ATR-Modell wie K6) bauen und
 vorab committen · Funktionstest · Wahl 2024 (`bestand`) · Stopp · Bestätigung in vier Mengen · Stopp · Bewertung.
+
+---
+
+## 8. ✔ FREIGEGEBEN (29.09.2026) — Z1 bis Z5 nach Expertenurteil, kein Veto (Z6)
+
+**Nutzer:** *„sonst kann ich zu Z1 bis Z5 so nichts sagen — wenn du der Meinung bist, so ist es ok, starten wir."* Frage
+dazu: *„das mit Spot habe ich nicht verstanden — ist das nur wegen der Dauer, die ein Trade dauert, also die
+Hebelgebühr?"*
+
+➤ **Zum Spot-Arm:** er ist ein **Maßstab**, kein Vorschlag für Spot-Handel. Er beantwortet *„lohnt der Hebel überhaupt?"*:
+der Hebel vervielfacht Gewinn **und** Verlust, dazu kommen Finanzierung (0,18 %/Tag auf den Positionswert) und die
+Liquidationen. Bei einem **kleinen** Vorteil kann das Hebelkonto darum **schlechter** laufen als dieselben Einstiege ohne
+Hebel — dann zerstört der Hebel den Vorteil. Die Gebühr ist ein Teil davon, die Liquidation der größere.
+
+| umgesetzt VOR dem Lauf | |
+|---|---|
+| Werkzeug | `messe_k6_hebelstufe.py --kurs mark --einstiege <csv> --simulation` (Wahl) bzw. `--simulation H,Z,g` (Bestätigung) — statt eines eigenen Skripts, weil dort Markpreis, ATR-Modell und die Einstiege schon stehen (R-R11 2.681 und 2.689 im selben Lauf) |
+| Konto | Kontowachstum als Summe von log(1 + f·r) über die Handel, geordnet nach der Ausstiegszeit (Rückgang, Serie, Monate daraus) — mit f = 1 % ist der Unterschied zur exakten Mitbuchung gleichzeitiger Handel vernachlässigbar |
+| Rendite je Handel (auf den Einsatz) | Ziel: L·Z · Zeit: L·(Schluss/Einstieg − 1) · Liquidation: −1 − L·1 % · jeweils minus L·(0,3 % + 0,18 %/Tag·Dauer); Spot: ohne Liquidation und Finanzierung |
+| Nullwelt | die Einstiege 2025–26 je Asset um ≥ 1.440 gültige Stunden zeitverschoben (innerhalb 2025–26), Hebelstufe aus dem ATR-Modell am neuen Zeitpunkt, 40 Ziehungen |
+| Ablauf | Funktionstest · Wahl 2024 (`bestand`) · Stopp · Bestätigung vier Mengen · Stopp · Bewertung |

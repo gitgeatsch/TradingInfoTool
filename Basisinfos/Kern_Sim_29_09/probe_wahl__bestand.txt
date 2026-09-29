@@ -1,0 +1,99 @@
+========================================================================================================================
+K6 R - HEBELSTUFE AUS DER LIQUIDATIONSGEFAHR · MENGE bestand · KURS mark · WERKZEUGTEST
+========================================================================================================================
+R-R11 E2i (alle Stundenanker, Spot-Tief, feste Grenzen, ohne Finanzierung): 3178050 Anker
+   24 h: 5x ATR-S1 1.04 % / S5 9.56 % · 3x ATR-S1 0.06 % / S5 0.71 % · 2x ATR-S1 0.03 % / S5 0.07 %
+   72 h: 5x ATR-S1 5.80 % / S5 26.90 % · 3x ATR-S1 0.29 % / S5 2.94 % · 2x ATR-S1 0.09 % / S5 0.43 %
+
+K6-Anker (Gitter, volles Fenster 120 h): 506093 · Suche 189727 · Pruefung 257401 · Symbole 112
+  Liquidationsraten (alle Anker, m 0,09 / 0,0476, ohne Stop | mit Stop -5 %):
+   5x:   6 h 0.519% / 0.234% | 0.193% ·  12 h 1.434% / 0.624% | 0.313% ·  24 h 4.001% / 1.754% | 0.496% ·  72 h 16.895% / 8.747% | 0.959% · 120 h 28.172% / 16.778% | 1.278%
+   3x:   6 h 0.042% / 0.029% | 0.005% ·  12 h 0.109% / 0.071% | 0.009% ·  24 h 0.313% / 0.205% | 0.016% ·  72 h 1.806% / 1.183% | 0.031% · 120 h 3.944% / 2.629% | 0.041%
+   2x:   6 h 0.020% / 0.019% | 0.001% ·  12 h 0.040% / 0.039% | 0.001% ·  24 h 0.083% / 0.081% | 0.002% ·  72 h 0.344% / 0.295% | 0.008% · 120 h 0.666% / 0.556% | 0.013%
+
+========================================================================================================================
+V1/V3 KALIBRIERUNG VORWAERTS (rollierend, wachsend, m 0,09, ohne Stop)
+  5x   6 h atr  Rate beob 0.743 % gesch 0.593 % · Steigung 0.97 · Zehntel ok 5/6 · V1 · · V3 ✔ (beob/gesch 1.25 0.79 1.45 1.51) · rsi oben beob/gesch 0.56
+  5x  12 h atr  Rate beob 1.863 % gesch 1.630 % · Steigung 0.86 · Zehntel ok 6/9 · V1 · · V3 ✔ (beob/gesch 1.14 0.83 1.25 1.34) · rsi oben beob/gesch 0.62
+  5x  24 h atr  Rate beob 4.770 % gesch 4.378 % · Steigung 0.85 · Zehntel ok 6/10 · V1 · · V3 ✔ (beob/gesch 1.09 0.81 1.10 1.34) · rsi oben beob/gesch 0.59
+  5x  72 h atr  Rate beob 19.954 % gesch 17.216 % · Steigung 0.75 · Zehntel ok 5/10 · V1 · · V3 ✔ (beob/gesch 1.16 0.91 1.15 1.41) · rsi oben beob/gesch 0.90
+  5x 120 h atr  Rate beob 31.985 % gesch 27.459 % · Steigung 0.65 · Zehntel ok 5/10 · V1 · · V3 ✔ (beob/gesch 1.16 0.93 1.09 1.46) · rsi oben beob/gesch 1.03
+  3x   6 h atr  Rate beob 0.043 % gesch 0.035 % · Steigung -0.15 · Zehntel ok 0/0 · V1 · · V3 ✔ (beob/gesch 1.23) · rsi oben beob/gesch 0.63
+  3x  12 h atr  Rate beob 0.143 % gesch 0.099 % · Steigung 1.25 · Zehntel ok 1/1 · V1 ✔ · V3 ✔ (beob/gesch 1.45 1.30 1.96 1.13) · rsi oben beob/gesch 0.64
+  3x  24 h atr  Rate beob 0.411 % gesch 0.289 % · Steigung 0.88 · Zehntel ok 4/4 · V1 ✔ · V3 ✔ (beob/gesch 1.42 1.30 1.55 1.43) · rsi oben beob/gesch 0.51
+  3x  72 h atr  Rate beob 2.352 % gesch 1.812 % · Steigung 0.58 · Zehntel ok 2/10 · V1 · · V3 · (beob/gesch 1.30 1.06 2.08 0.82) · rsi oben beob/gesch 0.75
+  3x 120 h atr  Rate beob 5.300 % gesch 4.017 % · Steigung 0.53 · Zehntel ok 2/10 · V1 · · V3 · (beob/gesch 1.32 0.96 2.11 0.94) · rsi oben beob/gesch 1.07
+  2x  72 h atr  Rate beob 0.073 % gesch 0.193 % · Steigung 0.03 · Zehntel ok 0/0 · V1 · · V3 · (beob/gesch 0.38 1.10) · rsi oben beob/gesch 0.17
+  2x 120 h atr  Rate beob 0.325 % gesch 0.529 % · Steigung -0.05 · Zehntel ok 4/5 · V1 · · V3 ✔ (beob/gesch 0.61 1.71) · rsi oben beob/gesch 0.38
+
+========================================================================================================================
+H0-0 R-R11 (Gitter, 5x/72 h atr, derselbe Codepfad): beob 19.954 % gesch 17.216 % · 2.681 17.493 / 17.627 -> ⛔ ABWEICHUNG
+H0 · EINSTIEGE aus kern_einstiege_bestand.csv: 12629 in der Datei, 12163 mit vollstaendigem Fenster und Markpreis ausgewertet
+  5x   6 h:   1048 Einstiege · Liq.     4 · beob 0.382 % · gesch 0.535 % · beob/gesch 0.71 · je Jahr 2024 (4 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.71 · +5 % vor Liq. 8.6 % -> H0-1 zu wenige
+  5x  12 h:   1048 Einstiege · Liq.    17 · beob 1.622 % · gesch 1.494 % · beob/gesch 1.09 · je Jahr 2024 (17 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 1.09 · +5 % vor Liq. 14.6 % -> H0-1 zu wenige
+  5x  24 h:   1048 Einstiege · Liq.    30 · beob 2.863 % · gesch 4.074 % · beob/gesch 0.70 · je Jahr 2024 0.70 · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.70 · +5 % vor Liq. 25.2 % -> H0-1 ✔
+  5x  72 h:   1048 Einstiege · Liq.   152 · beob 14.504 % · gesch 16.507 % · beob/gesch 0.88 · je Jahr 2024 0.88 · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.88 · +5 % vor Liq. 49.9 %
+  3x   6 h:   1048 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.032 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 8.6 %
+  3x  12 h:   1048 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.088 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 14.6 %
+  3x  24 h:   1048 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.258 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 25.2 %
+  3x  72 h:   1048 Einstiege · Liq.     0 · beob 0.000 % · gesch 1.738 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 50.9 %
+  2x  72 h:   1048 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.191 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 50.9 %
+  ⚠️ Kalibrierung nur aus der Liquidation; '+5 % vor Liq.' ist NUR Vergleich (Nutzer 29.09.)
+
+========================================================================================================================
+KERN SCHRITT 3 · WAHL 2024 (Menge bestand) - Konto f = 1 % je Handel, Kosten nach Doku; 2025-26 NICHT ausgewertet
+    H    Ziel   Grenze Handel    Liq.%     Konto   Rueckg.    Serie    Hebel  schl.Mon |      Spot
+    6    +3%      0.5%   1048    0.10%    -0.224     0.225       30     4.52    -0.123 |    -0.030
+    6    +3%      1.0%   1048    0.19%    -0.235     0.237       30     4.79    -0.125 |    -0.030
+    6    +3%      2.0%   1048    0.38%    -0.231     0.233       30     4.99    -0.135 |    -0.030
+    6    +3%      5.0%   1048    0.38%    -0.231     0.233       30     4.99    -0.135 |    -0.030
+    6    +5%      0.5%   1048    0.10%    -0.186     0.191       30     4.52    -0.121 |    -0.014
+    6    +5%      1.0%   1048    0.19%    -0.193     0.200       30     4.79    -0.122 |    -0.014
+    6    +5%      2.0%   1048    0.38%    -0.180     0.187       30     4.99    -0.135 |    -0.014
+    6    +5%      5.0%   1048    0.38%    -0.181     0.188       30     4.99    -0.135 |    -0.014
+    6    ohne     0.5%   1048    0.10%    -0.167     0.173       30     4.52    -0.124 |    -0.005
+    6    ohne     1.0%   1048    0.19%    -0.177     0.185       30     4.79    -0.126 |    -0.005
+    6    ohne     2.0%   1048    0.38%    -0.155     0.163       30     4.99    -0.138 |    -0.005
+    6    ohne     5.0%   1048    0.38%    -0.156     0.164       30     4.99    -0.138 |    -0.005
+    12   +3%      0.5%   1045    0.00%    -0.115     0.133       33     3.28    -0.066 |    +0.009
+    12   +3%      1.0%   1048    0.10%    -0.161     0.183       33     4.25    -0.084 |    +0.009
+    12   +3%      2.0%   1048    0.29%    -0.192     0.221       33     4.60    -0.094 |    +0.009
+    12   +3%      5.0%   1048    0.76%    -0.224     0.251       33     4.79    -0.093 |    +0.009
+    12   +5%      0.5%   1045    0.00%    -0.095     0.121       30     3.28    -0.065 |    +0.032
+    12   +5%      1.0%   1048    0.10%    -0.135     0.167       30     4.25    -0.082 |    +0.032
+    12   +5%      2.0%   1048    0.29%    -0.158     0.203       30     4.60    -0.090 |    +0.032
+    12   +5%      5.0%   1048    0.86%    -0.197     0.240       30     4.79    -0.092 |    +0.032
+    12   ohne     0.5%   1045    0.00%    -0.051     0.080       30     3.28    -0.049 |    +0.058
+    12   ohne     1.0%   1048    0.10%    -0.079     0.110       30     4.25    -0.058 |    +0.058
+    12   ohne     2.0%   1048    0.29%    -0.096     0.139       30     4.60    -0.070 |    +0.058
+    12   ohne     5.0%   1048    1.05%    -0.147     0.187       30     4.79    -0.077 |    +0.058
+    24   +3%      0.5%    936    0.00%    -0.040     0.092       28     3.00    -0.027 |    +0.032
+    24   +3%      1.0%    936    0.00%    -0.054     0.105       28     3.17    -0.033 |    +0.032
+    24   +3%      2.0%   1045    0.00%    -0.037     0.087       25     3.51    -0.042 |    +0.032
+    24   +3%      5.0%   1048    0.95%    -0.098     0.160       25     4.56    -0.070 |    +0.032
+    24   +5%      0.5%    936    0.00%    -0.029     0.079       28     3.00    -0.024 |    +0.073
+    24   +5%      1.0%    936    0.11%    -0.053     0.093       28     3.17    -0.036 |    +0.073
+    24   +5%      2.0%   1045    0.10%    -0.030     0.092       29     3.51    -0.056 |    +0.073
+    24   +5%      5.0%   1048    1.05%    -0.074     0.143       28     4.56    -0.088 |    +0.073
+    24   ohne     0.5%    936    0.00%    -0.006     0.069       28     3.00    -0.027 |    +0.135
+    24   ohne     1.0%    936    0.11%    -0.030     0.075       28     3.17    -0.039 |    +0.135
+    24   ohne     2.0%   1045    0.10%    +0.037     0.067       29     3.51    -0.056 |    +0.135
+    24   ohne     5.0%   1048    1.05%    -0.008     0.157       29     4.56    -0.092 |    +0.135
+    72   +3%      0.5%    936    0.00%    -0.101     0.141       26     2.12    -0.048 |    +0.024
+    72   +3%      1.0%   1045    0.00%    -0.101     0.139       26     2.30    -0.061 |    +0.024
+    72   +3%      2.0%   1048    0.00%    -0.113     0.175       26     2.73    -0.066 |    +0.024
+    72   +3%      5.0%   1048    0.10%    -0.105     0.172       26     3.03    -0.068 |    +0.024
+    72   +5%      0.5%    936    0.00%    -0.091     0.147       37     2.12    -0.054 |    +0.092
+    72   +5%      1.0%   1045    0.00%    -0.095     0.151       39     2.30    -0.073 |    +0.092
+    72   +5%      2.0%   1048    0.00%    -0.098     0.181       39     2.73    -0.080 |    +0.092
+    72   +5%      5.0%   1048    0.10%    -0.082     0.180       39     3.03    -0.083 |    +0.092
+    72   ohne     0.5%    936    0.00%    -0.006     0.139       56     2.12    -0.064 |    +0.218
+    72   ohne     1.0%   1045    0.00%    +0.007     0.125       55     2.30    -0.084 |    +0.218
+    72   ohne     2.0%   1048    0.00%    +0.020     0.167       58     2.73    -0.093 |    +0.218
+    72   ohne     5.0%   1048    0.10%    +0.058     0.178       58     3.03    -0.097 |    +0.218
+  REGEL groesstes Kontowachstum (Gleichstand < 1 %% Endwert -> kleinere Grenze, dann kuerzere Haltedauer):
+    GEWAEHLT H = 72 h · Ziel ohne · Grenze 5.0 % · Konto log +0.058 (x1.060) · Rueckgang 0.178
+    Auskunft f = 0,5 %: bestes H 72, Ziel ohne, Grenze 5.0 % - gleich
+    Auskunft f = 2 %: bestes H 72, Ziel ohne, Grenze 5.0 % - gleich
+SCHLUSS: vollstaendig
+exit=0

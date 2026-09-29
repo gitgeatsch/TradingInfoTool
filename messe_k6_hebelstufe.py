@@ -109,6 +109,17 @@ def main() -> int:
             sy, st_, _j, tu_, _td = zeile.split(";")
             EIN.setdefault(sy, set()).add(int(st_))
             TU[(sy, int(st_))] = float(tu_) if tu_ else np.inf
+    # ⭐ KERN SCHRITT 3 (Basisinfos/Voranalyse_Kern_Schritt3_Simulation_29_09.md): --simulation (WAHL 2024)
+    # oder --simulation H,Z,g (BESTAETIGUNG 2025-01..2026-08, einmal); nur mit --einstiege und --kurs mark
+    sim = "--simulation" in sys.argv
+    sim_zelle = None
+    if sim:
+        i_ = sys.argv.index("--simulation")
+        if i_ + 1 < len(sys.argv) and "," in sys.argv[i_ + 1]:
+            a_, b_, c_ = sys.argv[i_ + 1].split(",")
+            sim_zelle = (int(a_), (None if b_ in ("-", "ohne") else float(b_)), float(c_))
+    SIM_H, SIM_Z, SIM_G = (6, 12, 24, 72), (0.03, 0.05, None), (0.005, 0.01, 0.02, 0.05)
+    SIM_JAHRE = (2025, 2026) if sim_zelle else (2024,)
     zieh = 3 if probe else ZIEHUNGEN
     monate = ROLL[:3] if probe else ROLL
     K2.FORM = "b"
@@ -134,6 +145,8 @@ def main() -> int:
                     EV[(L, H, m, stop)] = []
     syms = []
     SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2")}
+    SIMR, SIMT, NSR, NSA = {}, {}, {}, {"atr": [], "std": [], "welt": []}
+    SIM_RNG = np.random.default_rng(SAAT + 33)
     for si, (sym, rows, bis_ende) in enumerate(E2.kursreihen()):
         syms.append(sym)
         if sym.upper() == "BTC" or len(rows) < 500:
@@ -155,14 +168,16 @@ def main() -> int:
             # FREMDEN Instrument (hole_markpreis --sperre) zaehlen als fehlend.
             gesperrt = {r[0] for r in mark.execute(
                 "SELECT monat FROM _abweichung WHERE symbol=? AND gesperrt=1", (sym,))}
-            mp = {r[0]: (r[1], r[2]) for r in mark.execute(
-                "SELECT stunde, low / faktor, close / faktor FROM markpreis WHERE symbol=?", (sym,))
+            mp = {r[0]: (r[1], r[2], r[3]) for r in mark.execute(
+                "SELECT stunde, low / faktor, close / faktor, high / faktor FROM markpreis WHERE symbol=?", (sym,))
                 if r[0][:7] not in gesperrt}
             tief = np.array([mp[x][0] if x in mp else np.nan for x in st], float)
             einstieg = np.array([mp[x][1] if x in mp else np.nan for x in st], float)
+            hoch = np.array([mp[x][2] if x in mp else np.nan for x in st], float)
         else:
             tief = l
             einstieg = cc
+            hoch = h
         km = E2.kursmerkmale(h, l, cc, vol)
         atr = km["atr"]
         # R-R11: genau wie E2i (alle Stundenanker, 24/72 h, feste Grenzen, Spot-Tief)
@@ -237,6 +252,7 @@ def main() -> int:
                 fehlt_e = np.concatenate([[0], np.cumsum(~np.isfinite(tief))])
                 ge &= (fehlt_e[np.minimum(idx + HM + 1, n)] - fehlt_e[np.minimum(idx + 1, n)]) == 0
                 ge &= np.isfinite(einstieg)
+            ge_basis = ge.copy()
             ge &= np.isin(std, np.fromiter(EIN[sym], np.int64))
             ae = np.flatnonzero(ge)
             if len(ae):
@@ -252,6 +268,54 @@ def main() -> int:
                     SPE["fl%d" % L].append(fle[L])
                 SPE["atr"].append(atr[ae]); SPE["std"].append(std[ae]); SPE["sym"].append(np.full(len(ae), si))
                 SPE["tu"].append(np.array([TU.get((sym, int(x)), np.inf) for x in std[ae]]))
+                if sim:
+                    jr = np.array([int(x[:4]) for x in st], np.int16)
+
+                    def ausgang(anker, zellen):
+                        """-> {(H, Z, L): (Rendite auf den Einsatz, Ausstiegsstunde)} - Ziel am Markpreis-Hoch,
+                        Liquidation am Markpreis-Tief (in derselben Stunde zaehlt die Liquidation), sonst Zeit."""
+                        E0_ = einstieg[anker]
+                        fl_ = {L: np.full(len(anker), 10 ** 6) for L in STUFEN}
+                        fz_ = {Z: np.full(len(anker), 10 ** 6) for Z in SIM_Z if Z}
+                        for s in range(1, max(SIM_H) + 1):
+                            j = np.minimum(anker + s, n - 1)
+                            gu_ = (anker + s) < n
+                            lo_ = np.where(gu_, tief[j] / E0_, np.inf); hi_ = np.where(gu_, hoch[j] / E0_, -np.inf)
+                            for L in STUFEN:
+                                fl_[L] = np.where((fl_[L] > s) & (lo_ <= liq_schwelle(L, 0.09, s)), s, fl_[L])
+                            for Z in fz_:
+                                fz_[Z] = np.where((fz_[Z] > s) & (hi_ >= 1 + Z), s, fz_[Z])
+                        aus = {}
+                        for (H_, Z_) in zellen:
+                            schluss = einstieg[np.minimum(anker + H_, n - 1)] / E0_
+                            zt = fz_[Z_] if Z_ else np.full(len(anker), 10 ** 6)
+                            for L in (1,) + STUFEN:
+                                lt = fl_[L] if L > 1 else np.full(len(anker), 10 ** 6)
+                                liq = (lt <= H_) & (lt <= zt)
+                                zi = ~liq & (zt <= H_)
+                                te = np.where(liq, lt, np.where(zi, zt, H_))
+                                kosten = L * (0.003 + (0.0018 * te / 24.0 if L > 1 else 0.0))
+                                roh = np.where(zi, L * (Z_ or 0.0), L * (schluss - 1.0))
+                                r_ = np.where(liq, -1.0 - L * 0.01, roh) - kosten
+                                aus[(H_, Z_, L)] = (r_, te)
+                        return aus
+                    zellen = [(sim_zelle[0], sim_zelle[1])] if sim_zelle else [(H_, Z_) for H_ in SIM_H for Z_ in SIM_Z]
+                    ao = ausgang(ae, zellen)
+                    for k_, (r_, te_) in ao.items():
+                        SIMR.setdefault(k_, []).append(r_); SIMT.setdefault(k_, []).append(te_)
+                    if sim_zelle:
+                        # Nullwelt: die Einstiege je Asset ZEITVERSCHOBEN innerhalb der gueltigen Stunden 2025-26
+                        W_ = np.flatnonzero(ge_basis & np.isin(jr, SIM_JAHRE))
+                        pos = np.searchsorted(W_, ae)
+                        drin = (pos < len(W_)) & (W_[np.minimum(pos, len(W_) - 1)] == ae)
+                        if len(W_) > 2 * 1440 + 10 and drin.any():
+                            for w_ in range(zieh):
+                                k = int(SIM_RNG.integers(1440, len(W_) - 1440))
+                                an = W_[(pos[drin] + k) % len(W_)]
+                                a2 = ausgang(an, zellen)
+                                for L in (1,) + STUFEN:
+                                    NSR.setdefault(L, []).append(a2[(sim_zelle[0], sim_zelle[1], L)][0])
+                                NSA["atr"].append(atr[an]); NSA["std"].append(std[an]); NSA["welt"].append(np.full(len(an), w_))
         # Merkmale
         tm = {str(r_[0]): r_[1] for r_ in ct.execute("SELECT stunde, oi FROM terminmarkt WHERE symbol=?", (sym,))}
         if ce is not None:
@@ -387,12 +451,20 @@ def main() -> int:
         STDe = XE["std"].astype(np.int64); MONe = monat_von(STDe); JAHRe = (MONe // 12)
         EEe = {"atr": XE["atr"].astype(np.float64)}
         PE = {}
+        if sim and sim_zelle and NSA["std"]:
+            XN = {k: np.concatenate(v) for k, v in NSA.items()}
+            STDn = XN["std"].astype(np.int64); MONn = monat_von(STDn)
+            EEn = {"atr": XN["atr"].astype(np.float64)}
+        else:
+            STDn = np.zeros(0, np.int64); MONn = np.zeros(0, int); EEn = {"atr": np.zeros(0)}
+        PN = {}
     for L in STUFEN:
         for H in HALTE:
             for ein, nm in (((EIN_ATR, "atr"),) if ein_datei else ((EIN_ATR, "atr"), (EIN_KOMB, "komb"))):
                 y = Y[(L, H, 0.09, False)]
                 p = np.full(n, np.nan)
                 pe = np.full(len(STDe), np.nan) if ein_datei else None
+                pn = np.full(len(STDn), np.nan) if ein_datei else None
                 for (j, mo) in monate:
                     mi = j * 12 + (mo - 1)
                     start = _h(datetime(j, mo, 1))
@@ -406,9 +478,13 @@ def main() -> int:
                         ze = np.flatnonzero((MONe >= mi) & (MONe < mi + 3) & (MONe <= 2026 * 12 + 7))
                         if len(ze):
                             pe[ze] = expit(m_.z(EEe, ze, np.zeros(len(ze))))
+                        zn = np.flatnonzero((MONn >= mi) & (MONn < mi + 3) & (MONn <= 2026 * 12 + 7))
+                        if len(zn):
+                            pn[zn] = expit(m_.z(EEn, zn, np.zeros(len(zn))))
                 PRED[(L, H, nm)] = p
                 if ein_datei:
                     PE[(L, H)] = pe
+                    PN[(L, H)] = pn
     print()
     print("=" * 120)
     print("V1/V3 KALIBRIERUNG VORWAERTS (rollierend, wachsend, m 0,09, ohne Stop)")
@@ -492,6 +568,114 @@ def main() -> int:
                     L, H, int(ok_.sum()), nl_, 100 * beob, 100 * ges, beob / max(ges, 1e-12), " · ".join(vj),
                     y[oh].mean() / max(pe[oh].mean(), 1e-12), 100 * vor5, urteil))
         print("  ⚠️ Kalibrierung nur aus der Liquidation; '+5 % vor Liq.' ist NUR Vergleich (Nutzer 29.09.)")
+        if sim:
+            R_ = {k: np.concatenate(v) for k, v in SIMR.items()}; T_ = {k: np.concatenate(v) for k, v in SIMT.items()}
+            bs0_, bs1_ = _h(datetime(2025, 10, 10)), _h(datetime(2025, 10, 12))
+
+            def stufe(P, H_, g_):
+                Ls = np.zeros(len(P[(5, H_)]), np.int8)
+                for L in sorted(STUFEN):
+                    Ls = np.where(np.isfinite(P[(L, H_)]) & (P[(L, H_)] <= g_), L, Ls)
+                return Ls
+
+            def kennz(r, stdx, te, f=0.01, maske=None):
+                ok_ = np.isfinite(r) if maske is None else (np.isfinite(r) & maske)
+                if not ok_.any():
+                    return dict(G=np.nan, n=0, dd=np.nan, serie=0, schlecht=np.nan, mon={})
+                o = np.argsort(stdx[ok_] + te[ok_]); rr = r[ok_][o]
+                lg = np.log1p(f * rr); kum = np.cumsum(lg)
+                dd = float(np.max(np.maximum.accumulate(np.r_[0.0, kum])[1:] - kum)) if len(kum) else 0.0
+                verl = (rr < 0).astype(int); serie = 0; best = 0
+                for v in verl:
+                    serie = serie + 1 if v else 0; best = max(best, serie)
+                mon = monat_von((stdx[ok_] + te[ok_]).astype(np.int64))[o]
+                um = np.unique(mon); mw = [float(lg[mon == u].sum()) for u in um]
+                return dict(G=float(kum[-1]), n=int(ok_.sum()), dd=dd, serie=best, schlecht=min(mw) if mw else np.nan,
+                            mon=dict(zip(um.tolist(), mw)))
+            per = np.isin(JAHRe, SIM_JAHRE)
+            print()
+            print("=" * 120)
+            if not sim_zelle:
+                print("KERN SCHRITT 3 · WAHL 2024 (Menge %s) - Konto f = 1 %% je Handel, Kosten nach Doku; 2025-26 NICHT ausgewertet" % E2.MENGE)
+                print("    %-4s %-6s %-6s %6s %8s %9s %9s %8s %8s %9s | %9s" % ("H", "Ziel", "Grenze", "Handel", "Liq.%", "Konto", "Rueckg.", "Serie", "Hebel", "schl.Mon", "Spot"))
+                erg = []
+                for H_ in SIM_H:
+                    for Z_ in SIM_Z:
+                        rs, ts = R_[(H_, Z_, 1)], T_[(H_, Z_, 1)]
+                        ks = kennz(np.where(per, rs, np.nan), STDe, ts)
+                        for g_ in SIM_G:
+                            Ls = stufe(PE, H_, g_)
+                            r = np.full(len(Ls), np.nan); te = np.zeros(len(Ls))
+                            for L in STUFEN:
+                                w = Ls == L
+                                r[w] = R_[(H_, Z_, L)][w]; te[w] = T_[(H_, Z_, L)][w]
+                            r = np.where(per, r, np.nan)
+                            k = kennz(r, STDe, te)
+                            liq = np.mean([(r[(Ls == L) & per] <= -1.0).mean() if ((Ls == L) & per).any() else 0 for L in STUFEN])
+                            hb = float(np.mean(Ls[per & (Ls > 0)])) if (per & (Ls > 0)).any() else np.nan
+                            k05, k2 = kennz(r, STDe, te, 0.005), kennz(r, STDe, te, 0.02)
+                            erg.append((H_, Z_, g_, k, k05, k2))
+                            print("    %-4d %-6s %5.1f%% %6d %7.2f%% %+9.3f %9.3f %8d %8.2f %+9.3f | %+9.3f" % (
+                                H_, "ohne" if Z_ is None else "+%d%%" % round(100 * Z_), 100 * g_, k["n"],
+                                100 * float(np.mean(r[per & np.isfinite(r)] <= -1.0)) if k["n"] else np.nan,
+                                k["G"], k.get("dd", np.nan), k.get("serie", 0), hb, k.get("schlecht", np.nan), ks["G"]))
+                gut = [e for e in erg if np.isfinite(e[3]["G"])]
+                mx = max(e[3]["G"] for e in gut)
+                kand = [e for e in gut if e[3]["G"] >= mx - np.log(1.01)]
+                kand.sort(key=lambda e: (e[2], e[0]))
+                w_ = kand[0]
+                print("  REGEL groesstes Kontowachstum (Gleichstand < 1 %% Endwert -> kleinere Grenze, dann kuerzere Haltedauer):")
+                print("    GEWAEHLT H = %d h · Ziel %s · Grenze %.1f %% · Konto log %+.3f (x%.3f) · Rueckgang %.3f" % (
+                    w_[0], "ohne" if w_[1] is None else "+%d %%" % round(100 * w_[1]), 100 * w_[2], w_[3]["G"], np.exp(w_[3]["G"]), w_[3]["dd"]))
+                for fi, nm_ in ((4, "f = 0,5 %"), (5, "f = 2 %")):
+                    mb = max(gut, key=lambda e: e[fi]["G"])
+                    print("    Auskunft %s: bestes H %d, Ziel %s, Grenze %.1f %% - %s" % (
+                        nm_, mb[0], "ohne" if mb[1] is None else "+%d %%" % round(100 * mb[1]), 100 * mb[2],
+                        "gleich" if mb[:3] == w_[:3] else "ANDERS"))
+            else:
+                H_, Z_, g_ = sim_zelle
+                print("KERN SCHRITT 3 · BESTAETIGUNG 2025-01..2026-08 (EINMAL), H %d h, Ziel %s, Grenze %.1f %%, Menge %s" % (
+                    H_, "ohne" if Z_ is None else "+%d %%" % round(100 * Z_), 100 * g_, E2.MENGE))
+                Ls = stufe(PE, H_, g_)
+                r = np.full(len(Ls), np.nan); te = np.zeros(len(Ls))
+                for L in STUFEN:
+                    w = Ls == L
+                    r[w] = R_[(H_, Z_, L)][w]; te[w] = T_[(H_, Z_, L)][w]
+                r = np.where(per, r, np.nan)
+                rs = np.where(per, R_[(H_, Z_, 1)], np.nan); ts = T_[(H_, Z_, 1)]
+                k = kennz(r, STDe, te); ks = kennz(rs, STDe, ts)
+                jz = [(jj, kennz(r, STDe, te, maske=(JAHRe == jj))["G"]) for jj in SIM_JAHRE]
+                print("  Handel %d · Hebel im Mittel %.2f · Liquidationen %.2f %% · Konto log %+.4f (x%.3f) · Rueckgang %.3f · Serie %d · schlechtester Monat %+.4f" % (
+                    k["n"], float(np.mean(Ls[per & (Ls > 0)])), 100 * float(np.mean(r[np.isfinite(r)] <= -1.0)),
+                    k["G"], np.exp(k["G"]), k["dd"], k["serie"], k["schlecht"]))
+                print("  S1 je Jahr: %s -> %s" % (" · ".join("%d %+.4f" % x for x in jz), "✔" if all(x[1] > 0 for x in jz) else "⛔"))
+                # Nullwelt
+                XNw = np.concatenate(NSA["welt"]) if NSA["welt"] else np.zeros(0)
+                RN = {L: np.concatenate(NSR[L]) for L in NSR}
+                Gn = []
+                for w_ in range(zieh):
+                    mw = XNw == w_
+                    if not mw.any():
+                        continue
+                    Pw = {(L, H_): PN[(L, H_)][mw] for L in STUFEN}
+                    Lw = stufe(Pw, H_, g_)
+                    rw = np.full(int(mw.sum()), np.nan)
+                    for L in STUFEN:
+                        rw[Lw == L] = RN[L][mw][Lw == L]
+                    Gn.append(float(np.nansum(np.log1p(0.01 * rw))))
+                p90 = float(np.percentile(Gn, 90)) if Gn else np.nan
+                print("  S2 Nullwelt (Einstiege je Asset zeitverschoben, %d Ziehungen): Mittel %+.4f, P90 %+.4f -> %s" % (
+                    len(Gn), float(np.mean(Gn)) if Gn else np.nan, p90, "✔" if k["G"] > p90 else "⛔"))
+                print("  S4 Hebel gegen Spot (dieselben Einstiege und Geometrie, 1x): Hebel %+.4f · Spot %+.4f -> %s" % (
+                    k["G"], ks["G"], "✔ Hebel lohnt" if k["G"] > ks["G"] else "⛔ Hebel lohnt nicht"))
+                oh = ~((STDe >= bs0_ - H_) & (STDe < bs1_))
+                print("  S5 ohne 10./11.10.2025: Konto log %+.4f (mit %+.4f)" % (kennz(r, STDe, te, maske=oh)["G"], k["G"]))
+                print("  Pflichtauskunft Regime (Monatsbeitrag zum log-Konto): " + " · ".join(
+                    "%d-%02d %+.4f" % (mm // 12, mm % 12 + 1, v) for mm, v in sorted(k["mon"].items())))
+                h2 = np.isfinite(r) & (MONe >= 2025 * 12 + 6) & (MONe <= 2025 * 12 + 11)
+                k2 = kennz(r, STDe, te, maske=h2)
+                print("  Juli-Dezember 2025: %d Handel · Konto log %+.4f (x%.3f) · Rueckgang %.3f · Liquidationen %.2f %%" % (
+                    k2["n"], k2["G"], np.exp(k2["G"]), k2["dd"], 100 * float(np.mean(r[h2] <= -1.0)) if h2.any() else np.nan))
         print("SCHLUSS: vollstaendig")
         return 0
     print()
