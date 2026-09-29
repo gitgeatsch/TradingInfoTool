@@ -306,8 +306,9 @@ def main() -> int:
                     if sim_zelle:
                         # Nullwelt: die Einstiege je Asset ZEITVERSCHOBEN innerhalb der gueltigen Stunden 2025-26
                         W_ = np.flatnonzero(ge_basis & np.isin(jr, SIM_JAHRE))
-                        pos = np.searchsorted(W_, ae)
-                        drin = (pos < len(W_)) & (W_[np.minimum(pos, len(W_) - 1)] == ae)
+                        # 29.09. behoben: eingestellte Paare ohne Stunden in 2025-26 haben ein LEERES W_
+                        pos = np.searchsorted(W_, ae) if len(W_) else np.zeros(len(ae), int)
+                        drin = ((pos < len(W_)) & (W_[np.minimum(pos, len(W_) - 1)] == ae)) if len(W_) else np.zeros(len(ae), bool)
                         if len(W_) > 2 * 1440 + 10 and drin.any():
                             for w_ in range(zieh):
                                 k = int(SIM_RNG.integers(1440, len(W_) - 1440))
