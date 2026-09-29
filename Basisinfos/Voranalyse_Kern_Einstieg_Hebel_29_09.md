@@ -123,3 +123,34 @@ falsch und widerspricht der stehenden Regel *kein Beitrag fällt ohne Lösungssu
 |---|---|
 | ⛔ **nicht** | an der Messung schrauben, bis sie passt (Schwelle, Fenster, Definition nachträglich ändern) |
 | ✔ **Pflicht** | (1) **Fehler prüfen** — Werkzeug, Daten, Vorgriff; (2) **Annahmen prüfen** — welche Annahme der Messung trifft nicht zu, und das **gemessen**, nicht vermutet; (3) **Aussage zum Ergebnis** — was genau hält nicht, wo, wie groß; (4) **Lösungsvorschläge** — jeder als **neue** Vorabfestlegung, zur Abstimmung |
+
+---
+
+## 9. ERGEBNIS WAHL 2024 (bestand) — Stopp
+
+Beleg `Kern_29_09/wahl__bestand.txt`. ✔ R-R11: rsi allein +0,0808, Auswahl 29.390, Normal gleich, **2.687 (c) bitgleich**
+(+0,0928 / +0,0759).
+
+| Stufe | Einstiege | Tage | echt | Null Mittel | Null P90 | Abstand |
+|---|---|---|---|---|---|---|
+| +0,010 | 2.381 | 222 | +0,058 | +0,039 | +0,053 | +0,005 |
+| +0,015 | 2.709 | 248 | +0,072 | +0,034 | +0,052 | +0,020 |
+| +0,020 | 2.524 | 229 | +0,093 | +0,031 | +0,047 | +0,046 |
+| +0,025 | 2.449 | 206 | +0,089 | +0,021 | +0,037 | +0,052 |
+| +0,030 | 2.157 | 186 | +0,110 | +0,024 | +0,037 | +0,073 |
+| **+0,035** | **2.095** | **190** | **+0,110** | +0,014 | +0,030 | **+0,079** |
+| +0,040 | 1.871 | 178 | +0,076 | −0,000 | +0,014 | +0,062 |
+| +0,045 | 1.631 | 157 | +0,037 | −0,019 | −0,007 | +0,044 |
+| +0,050 | 1.357 | 135 | +0,030 | −0,023 | −0,006 | +0,036 |
+
+➤ **Nach der Regel gewählt: s = +0,035** (Abstand +0,079; +0,030 liegt 0,006 darunter — kein Gleichstand).
+Die Kurve ist ein **glatter Bogen** mit Gipfel bei +0,030..+0,035, kein einzelner Ausreißer.
+
+⚠️ **Gegenprüfung — eine Annahme, die nicht zutrifft:** die Einstiege **ballen sich**: 2.095 Einstiege an nur **190 Tagen**
+(rund 11 je aktivem Tag) — viele Assets laufen an denselben Tagen los. Die Nullwelt verschiebt rsi **je Asset** und
+zerstört diese Ballung; ihr Band ist darum vermutlich **zu eng** (dieselbe Falle wie 2.673 bei Marktmerkmalen). Die
+wahre Fallzahl sind eher die **Tage** als die Einstiege.
+
+➤ **Lösungsvorschlag (neue Vorabfestlegung, VOR der Bestätigung):** **B6** — ein **Tagesblock-Bootstrap** (die Einstiege
+tageweise gezogen, 1.000 Ziehungen): das 95-%-Intervall des Dq muss in der Bestätigung **über null** liegen. Das ist
+**strenger**, nicht milder, und prüft genau die Annahme, die nicht zutrifft.
