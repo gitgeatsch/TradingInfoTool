@@ -1,0 +1,70 @@
+========================================================================================================================
+K6 R - HEBELSTUFE AUS DER LIQUIDATIONSGEFAHR · MENGE unverzerrt:1 · KURS mark
+========================================================================================================================
+R-R11 E2i (alle Stundenanker, Spot-Tief, feste Grenzen, ohne Finanzierung): 3643694 Anker
+   24 h: 5x ATR-S1 1.18 % / S5 10.26 % · 3x ATR-S1 0.08 % / S5 0.93 % · 2x ATR-S1 0.03 % / S5 0.12 %
+   72 h: 5x ATR-S1 6.49 % / S5 27.81 % · 3x ATR-S1 0.43 % / S5 3.44 % · 2x ATR-S1 0.11 % / S5 0.61 %
+
+K6-Anker (Gitter, volles Fenster 120 h): 585941 · Suche 240790 · Pruefung 263306 · Symbole 130
+  Liquidationsraten (alle Anker, m 0,09 / 0,0476, ohne Stop | mit Stop -5 %):
+   5x:  24 h 4.244% / 1.890% | 0.560% ·  72 h 17.486% / 9.160% | 1.076% · 120 h 28.857% / 17.376% | 1.430%
+   3x:  24 h 0.362% / 0.236% | 0.024% ·  72 h 2.000% / 1.348% | 0.045% · 120 h 4.294% / 2.947% | 0.057%
+   2x:  24 h 0.084% / 0.080% | 0.002% ·  72 h 0.362% / 0.306% | 0.006% · 120 h 0.720% / 0.588% | 0.010%
+
+========================================================================================================================
+V2 MEHRWERT UEBER DIE ATR - feste Teilung, Log-Loss-Gewinn in tausendstel nat, Hauptfall 72 h, m 0,09
+  5x: ATR allein +21.413 · Kombination +18.733 · Mehrwert -2.679 gegen Nullband +0.359 -> · nicht
+  3x: ATR allein +2.821 · Kombination +1.465 · Mehrwert -1.356 gegen Nullband +0.022 -> · nicht
+  R  Zufallseingaenge statt der Risikokurven (5x/72 h): Mehrwert -0.012
+
+========================================================================================================================
+V1/V3 KALIBRIERUNG VORWAERTS (rollierend, wachsend, m 0,09, ohne Stop)
+  5x  24 h atr  Rate beob 4.389 % gesch 4.533 % · Steigung 0.86 · Zehntel ok 10/10 · V1 ✔ · V3 ✔ (beob/gesch 1.05 0.99 0.77 0.98 0.83 1.07) · rsi oben beob/gesch 0.79
+  5x  24 h komb Rate beob 4.389 % gesch 4.641 % · Steigung 0.88 · Zehntel ok 10/10 · V1 ✔ · V3 ✔ (beob/gesch 1.05 0.93 0.77 0.90 0.80 1.11) · rsi oben beob/gesch 0.94
+  5x  72 h atr  Rate beob 18.352 % gesch 18.087 % · Steigung 0.90 · Zehntel ok 9/10 · V1 · · V3 ✔ (beob/gesch 1.07 1.11 0.74 1.05 0.84 1.14) · rsi oben beob/gesch 0.93
+  5x  72 h komb Rate beob 18.352 % gesch 18.361 % · Steigung 0.85 · Zehntel ok 10/10 · V1 ✔ · V3 ✔ (beob/gesch 1.07 1.08 0.73 1.01 0.82 1.14) · rsi oben beob/gesch 1.01
+  5x 120 h atr  Rate beob 30.472 % gesch 29.166 % · Steigung 0.92 · Zehntel ok 9/10 · V1 · · V3 ✔ (beob/gesch 1.09 1.16 0.77 1.08 0.86 1.17) · rsi oben beob/gesch 1.03
+  5x 120 h komb Rate beob 30.472 % gesch 29.435 % · Steigung 0.87 · Zehntel ok 10/10 · V1 ✔ · V3 ✔ (beob/gesch 1.08 1.14 0.77 1.06 0.85 1.17) · rsi oben beob/gesch 1.06
+  3x  24 h atr  Rate beob 0.403 % gesch 0.363 % · Steigung 0.50 · Zehntel ok 10/10 · V1 · · V3 · (beob/gesch 1.26 1.39 0.33 0.60 1.34 1.39) · rsi oben beob/gesch 0.63
+  3x  24 h komb Rate beob 0.403 % gesch 0.366 % · Steigung 0.72 · Zehntel ok 10/10 · V1 ✔ · V3 · (beob/gesch 1.29 1.31 0.34 0.52 1.32 1.60) · rsi oben beob/gesch 1.21
+  3x  72 h atr  Rate beob 2.117 % gesch 2.133 % · Steigung 0.67 · Zehntel ok 6/10 · V1 · · V3 ✔ (beob/gesch 1.33 0.94 0.56 0.67 0.83 1.43) · rsi oben beob/gesch 0.63
+  3x  72 h komb Rate beob 2.117 % gesch 2.201 % · Steigung 0.54 · Zehntel ok 7/10 · V1 · · V3 ✔ (beob/gesch 1.34 0.87 0.55 0.60 0.80 1.52) · rsi oben beob/gesch 1.05
+  3x 120 h atr  Rate beob 4.503 % gesch 4.561 % · Steigung 0.83 · Zehntel ok 7/10 · V1 · · V3 ✔ (beob/gesch 1.32 0.87 0.68 0.72 0.82 1.38) · rsi oben beob/gesch 0.85
+  3x 120 h komb Rate beob 4.503 % gesch 4.638 % · Steigung 0.67 · Zehntel ok 8/10 · V1 · · V3 ✔ (beob/gesch 1.33 0.83 0.68 0.68 0.80 1.43) · rsi oben beob/gesch 1.05
+  2x  24 h atr  Rate beob 0.113 % gesch 0.034 % · Steigung -1.53 · Zehntel ok 4/5 · V1 · · V3 · (beob/gesch 20.31 2.35 7.88) · rsi oben beob/gesch 2.75
+  2x  24 h komb Rate beob 0.113 % gesch 0.034 % · Steigung -1.39 · Zehntel ok 7/7 · V1 · · V3 · (beob/gesch 20.06 2.32 8.17) · rsi oben beob/gesch 2.90
+  2x  72 h atr  Rate beob 0.428 % gesch 0.255 % · Steigung -0.51 · Zehntel ok 4/8 · V1 · · V3 · (beob/gesch 0.29 5.12 0.16 0.41 0.75 3.64) · rsi oben beob/gesch 1.19
+  2x  72 h komb Rate beob 0.428 % gesch 0.256 % · Steigung -0.37 · Zehntel ok 6/10 · V1 · · V3 · (beob/gesch 0.29 4.82 0.17 0.37 0.76 3.93) · rsi oben beob/gesch 1.69
+  2x 120 h atr  Rate beob 0.802 % gesch 0.597 % · Steigung -0.69 · Zehntel ok 3/10 · V1 · · V3 · (beob/gesch 0.44 3.43 0.21 0.38 0.73 2.72) · rsi oben beob/gesch 1.34
+  2x 120 h komb Rate beob 0.802 % gesch 0.614 % · Steigung -0.46 · Zehntel ok 3/10 · V1 · · V3 · (beob/gesch 0.42 3.26 0.21 0.35 0.71 2.77) · rsi oben beob/gesch 1.76
+
+========================================================================================================================
+TABELLE JE GRENZE (T: Ausgabe, KEINE Grenze gesetzt) - rollierend, gewaehlt wird die HOECHSTE Stufe mit geschaetzter Liquidationswahrscheinlichkeit <= Grenze
+   24 h atr  Grenze  0.5 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 88.5% (liq 0.33% / m0,0476 0.24%) · 2x 11.5% (liq 0.14% / m0,0476 0.12%) · kein Hebel  0.0% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   24 h atr  Grenze  1.0 %: 5x  2.2% (liq 0.73% / m0,0476 0.23%) · 3x 88.1% (liq 0.34% / m0,0476 0.24%) · 2x  9.7% (liq 0.16% / m0,0476 0.15%) · kein Hebel  0.0% · 5x je Jahr 2024 0.99% 2025 0.84% 2026 0.05% · Hebelwerte: 5x 2.2%
+   24 h atr  Grenze  2.0 %: 5x 22.5% (liq 1.64% / m0,0476 0.76%) · 3x 76.5% (liq 0.46% / m0,0476 0.31%) · 2x  1.0% (liq 0.48% / m0,0476 0.46%) · kein Hebel  0.0% · 5x je Jahr 2024 2.38% 2025 2.17% 2026 0.58% · Hebelwerte: 5x 24.3%
+   24 h atr  Grenze  5.0 %: 5x 69.0% (liq 2.62% / m0,0476 1.21%) · 3x 31.0% (liq 0.65% / m0,0476 0.39%) · 2x  0.0% (liq nan% / m0,0476 nan%) · kein Hebel  0.0% · 5x je Jahr 2024 3.08% 2025 3.22% 2026 1.31% · Hebelwerte: 5x 69.1%
+   24 h komb Grenze  0.5 %: 5x  0.2% (liq 0.29% / m0,0476 0.15%) · 3x 81.6% (liq 0.26% / m0,0476 0.18%) · 2x 18.2% (liq 0.19% / m0,0476 0.18%) · kein Hebel  0.0% · 5x je Jahr 2024 0.74% 2025 0.00% · Hebelwerte: 5x 0.0%
+   24 h komb Grenze  1.0 %: 5x  4.8% (liq 0.89% / m0,0476 0.28%) · 3x 88.6% (liq 0.34% / m0,0476 0.24%) · 2x  6.7% (liq 0.19% / m0,0476 0.18%) · kein Hebel  0.0% · 5x je Jahr 2024 1.04% 2025 1.23% 2026 0.29% · Hebelwerte: 5x 4.3%
+   24 h komb Grenze  2.0 %: 5x 27.1% (liq 1.38% / m0,0476 0.58%) · 3x 70.6% (liq 0.46% / m0,0476 0.31%) · 2x  2.2% (liq 0.15% / m0,0476 0.13%) · kein Hebel  0.0% · 5x je Jahr 2024 1.62% 2025 1.91% 2026 0.59% · Hebelwerte: 5x 27.4%
+   24 h komb Grenze  5.0 %: 5x 70.8% (liq 2.44% / m0,0476 1.06%) · 3x 28.8% (liq 0.80% / m0,0476 0.50%) · 2x  0.4% (liq 0.40% / m0,0476 0.27%) · kein Hebel  0.0% · 5x je Jahr 2024 2.85% 2025 2.99% 2026 1.21% · Hebelwerte: 5x 70.4%
+   72 h atr  Grenze  0.5 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  8.0% (liq 0.28% / m0,0476 0.21%) · 2x 83.9% (liq 0.45% / m0,0476 0.39%) · kein Hebel  8.2% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h atr  Grenze  1.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 20.0% (liq 0.55% / m0,0476 0.39%) · 2x 78.2% (liq 0.50% / m0,0476 0.43%) · kein Hebel  1.8% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h atr  Grenze  2.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 51.6% (liq 1.49% / m0,0476 1.11%) · 2x 48.4% (liq 0.45% / m0,0476 0.37%) · kein Hebel  0.0% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h atr  Grenze  5.0 %: 5x  0.7% (liq 1.83% / m0,0476 0.56%) · 3x 98.2% (liq 2.03% / m0,0476 1.36%) · 2x  1.2% (liq 2.57% / m0,0476 2.29%) · kein Hebel  0.0% · 5x je Jahr 2025 2.35% 2026 1.68% · Hebelwerte: 5x 0.5%
+   72 h komb Grenze  0.5 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  9.4% (liq 0.43% / m0,0476 0.26%) · 2x 80.1% (liq 0.49% / m0,0476 0.43%) · kein Hebel 10.5% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h komb Grenze  1.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 28.7% (liq 0.86% / m0,0476 0.62%) · 2x 69.0% (liq 0.53% / m0,0476 0.47%) · kein Hebel  2.3% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h komb Grenze  2.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 58.0% (liq 1.40% / m0,0476 1.00%) · 2x 41.5% (liq 0.58% / m0,0476 0.51%) · kein Hebel  0.5% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+   72 h komb Grenze  5.0 %: 5x  1.1% (liq 2.60% / m0,0476 0.96%) · 3x 91.2% (liq 1.97% / m0,0476 1.34%) · 2x  7.6% (liq 0.39% / m0,0476 0.32%) · kein Hebel  0.0% · 5x je Jahr 2024 4.78% 2025 1.41% 2026 1.57% · Hebelwerte: 5x 0.5%
+  120 h atr  Grenze  0.5 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  0.0% (liq nan% / m0,0476 nan%) · 2x 42.6% (liq 1.21% / m0,0476 1.05%) · kein Hebel 57.4% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h atr  Grenze  1.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  0.0% (liq nan% / m0,0476 nan%) · 2x 88.0% (liq 0.81% / m0,0476 0.68%) · kein Hebel 12.0% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h atr  Grenze  2.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 14.7% (liq 1.71% / m0,0476 1.29%) · 2x 84.9% (liq 0.83% / m0,0476 0.68%) · kein Hebel  0.4% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h atr  Grenze  5.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 57.4% (liq 3.15% / m0,0476 2.26%) · 2x 42.6% (liq 0.86% / m0,0476 0.67%) · kein Hebel  0.0% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h komb Grenze  0.5 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  0.0% (liq 0.00% / m0,0476 0.00%) · 2x 45.9% (liq 1.14% / m0,0476 0.98%) · kein Hebel 54.1% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h komb Grenze  1.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x  1.2% (liq 1.26% / m0,0476 0.73%) · 2x 86.8% (liq 0.84% / m0,0476 0.70%) · kein Hebel 12.0% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h komb Grenze  2.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 14.4% (liq 1.92% / m0,0476 1.36%) · 2x 83.4% (liq 0.88% / m0,0476 0.73%) · kein Hebel  2.2% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+  120 h komb Grenze  5.0 %: 5x  0.0% (liq nan% / m0,0476 nan%) · 3x 61.7% (liq 3.25% / m0,0476 2.30%) · 2x 38.2% (liq 0.91% / m0,0476 0.71%) · kein Hebel  0.1% · 5x je Jahr - · Hebelwerte: 5x 0.0%
+
+  ⚠️ Kurs mark: Binance-Markpreis
+  ⚠️ Gueltigkeit fuer die Anwendung erst auf der Einstiegsauswahl aus K1 Schritt 2 (H0, Pflicht).
+SCHLUSS: vollstaendig

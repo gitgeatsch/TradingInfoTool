@@ -17,7 +17,7 @@
 | Frage | neu |
 |---|---|
 | **5 · Was trägt** | die **Auswahl nach dem Beitrag** ist robust (2.680, T6/T4/T5), aber **rsi allein** wählt besser aus; die Kombination bringt nichts dazu |
-| **9 · Hebel** | K7 (2.679): **Markpreis** Hauptmaß, m = 0,09 vorsichtig, Fehlalarme nur über 5x · K6 mit dem Spot-Tief: die **ATR allein** trägt die Liquidationsgefahr, die Risikokurven nicht; Markpreis-Lauf rechnet |
+| **9 · Hebel** | K7 (2.679): **Markpreis** Hauptmaß, m = 0,09 vorsichtig, Fehlalarme nur über 5x · K6 (2.681): die **ATR allein** trägt die Liquidationsgefahr, die Risikokurven nicht; 5x kalibriert, 3x geordnet, 2x zu selten; H0 und J10 offen |
 | **10 · Nächster Schritt** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
 
 ```bash

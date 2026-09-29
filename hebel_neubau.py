@@ -580,6 +580,11 @@ NEUESTER_STAND = (
               "Beitrag ist nicht kalibriert (T3, Steigung 0,42-0,55). Nach der "
               "Vorabfestlegung: K5 neu vorlegen; rsi allein als einfachere Regel "
               "zur Bestaetigung - mit OPTIMUM (rsi misst die Bewegung)"),
+    ("2.681", "K6: die ATR zum Einstieg ALLEIN sagt die Liquidationsgefahr je "
+              "Stufe voraus - die Risikokurven bringen nichts dazu; 5x vorwaerts "
+              "kalibriert, 3x nur geordnet, 2x zu selten. Die Tabelle liegt vor, "
+              "die Grenze ist eine Nutzerentscheidung - erst nach H0 (Pruefung auf "
+              "der Einstiegsauswahl)"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "
@@ -678,7 +683,8 @@ NAECHSTE_MESSUNGEN = (
                "bei H24, Vortag) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
                "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
                "`funding` in der Form, die die Probe ergibt"),
-    dict(was="K6: BEWERTUNG 2 als Liquidationsgefahr je Stufe (zuerst R)",
+    dict(was="K6 H0 und R+S: Liquidationsgefahr auf der EINSTIEGSAUSWAHL; dann "
+             "Funding/Carry, Tail-Quantil und Stresstag als Risikomerkmale (2.681)",
          art="neu", bewertung="b2",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
          warum="Bewertung 2 hat EINEN Traeger (ema_abstand_atr); ein "

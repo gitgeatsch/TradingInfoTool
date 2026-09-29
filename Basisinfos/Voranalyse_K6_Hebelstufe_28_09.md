@@ -206,3 +206,20 @@ Juli sind enthalten) — ein neuer Export erst, wenn K7 ansteht.
 | Werkzeugtest | alle Abschnitte liefern; 2x / 24 h hat in drei Quartalen zu wenige Liquidationen (erwartet) |
 
 ➤ Danach die vier Mengen mit dem Spot-Tief (`data/_vergleich/k6_spot__*.txt`).
+
+---
+
+## 11. Ergebnis (29.09.2026) — Befund 2.681
+
+Beleg `Basisinfos/K6_Hebelstufe_28_09/` (Spot-Tief und Markpreis, je vier Mengen, Ketten). R-R11 zu E2i in allen acht Läufen bitgleich.
+
+| | Markpreis (Hauptmaß) | |
+|---|---|---|
+| **V0** Tor | ✔ 5 von 5 | |
+| **V2** Mehrwert der Risikokurven über die ATR | ⛔ in 4 von 4 negativ | es bleibt die **ATR allein** |
+| **V1** kalibriert vorwärts, 72 h | 5x ✔ in 3 von 4 (Steigung 0,90–0,93) · 3x ⛔ (0,63–0,72) · 2x ⛔ | |
+| **V3** stabil je Jahr und BTC-Drittel | 5x ✔ (0,71–1,14) · 3x ✔ (0,51–1,43) · 2x ⛔ | |
+| **Tabelle**, Grenze 1 % / 72 h | 5x 0 % · 3x 20–25 % · 2x 75–78 % · kein Hebel 0,6–2,7 % | eingetreten 3x 0,52–0,74 %, 2x 0,42–0,55 % |
+| Markpreis gegen Spot-Tief | fast gleich (5x/72 h 16,90 gegen 16,95 %) | wie K7 |
+
+⚠️ **Offen:** H0 (auf der Einstiegsauswahl, hängt an K5 neu) · J10 (10./11.10. gesondert) · R+S mit Funding/Carry, Tail-Quantil und Stresstag (Recherche).
