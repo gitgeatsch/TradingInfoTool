@@ -109,3 +109,14 @@ Monaten ab 2026-09 (Z6).
 
 Werkzeug bauen und vorab committen · R-R11 E2g (einige Minuten) · Werkzeugtest · Tor · vier Mengen — nacheinander,
 geschätzt 3–4 Stunden.
+
+---
+
+## 8. ✔ ABGESTIMMT (29.09.2026) — P1 bis P8 wie empfohlen
+
+**Nutzer:** *„ja, P1 bis P8 wie empfohlen, bauen und messen, prüfen und gegenprüfen. Nur Hinweis: Ich kann deiner
+Hypothese bzw. deinem Ansatz folgen — ob dies fachlich und technisch passt, musst du bestimmen, und wenn wir u. U.
+auf Probleme stoßen oder die Annahmen nicht zutreffen, müssen wir vorsichtig nachjustieren und die Probleme lösen."*
+
+➤ Festgehalten: Ein Nachjustieren **nach** einem Ergebnis ist eine **neue** Vorabfestlegung (mit Begründung, vor dem
+nächsten Lauf committet) — nie ein stilles Anpassen der Kriterien an das Ergebnis.
