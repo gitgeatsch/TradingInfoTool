@@ -46,7 +46,9 @@ LAGE = {"funding": ("fu_0", "fu_24", "fu_48"), "oi": ("oi_0", "oi_24", "oi_48"),
 LAGE_SP = tuple(x for f in LAGE.values() for x in f)
 KLASSEN = (-np.inf, -1.0, 0.0, 0.5, 1.0, 2.0, np.inf)
 KLNAME = ("< -1", "-1..0", "0..0,5", "0,5..1", "1..2", "> 2")
-FRUEH, SPAET = 0.5, 2.0
+# SPAET 2,0 -> 1,0 (Voranalyse Abschnitt 9, NEUE Vorabfestlegung nach dem Werkzeugtest): > 2 ATR hatte
+# 0 % der Anker und 150 Auswahlanker (< 200, zaehlt nach eigener Regel nicht) - L2 war nicht auswertbar
+FRUEH, SPAET = 0.5, 1.0
 STEHEND = 0.5
 MIN_KLASSE = 200
 

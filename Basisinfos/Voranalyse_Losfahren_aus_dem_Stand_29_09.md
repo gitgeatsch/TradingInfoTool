@@ -120,3 +120,30 @@ auf Probleme stoßen oder die Annahmen nicht zutreffen, müssen wir vorsichtig n
 
 ➤ Festgehalten: Ein Nachjustieren **nach** einem Ergebnis ist eine **neue** Vorabfestlegung (mit Begründung, vor dem
 nächsten Lauf committet) — nie ein stilles Anpassen der Kriterien an das Ergebnis.
+
+---
+
+## 9. ⚠️ NEUE VORABFESTLEGUNG nach dem Werkzeugtest (29.09.2026) — spät = > 1 ATR statt > 2 ATR
+
+**Anlass (Struktur, nicht Ergebnis):** Der Werkzeugtest (`Losfahren_29_09/probe__bestand.txt`, R-R11 rsi allein
++0,0808 bitgleich, L0 E2g bitgleich) zeigt die Tachonadel in der Prüfzeit so verteilt:
+
+| < −1 | −1..0 | 0..0,5 | 0,5..1 | 1..2 | > 2 |
+|---|---|---|---|---|---|
+| 5 % | 48 % | 29 % | 14 % | 5 % | **0 %** |
+
+Die rsi-Auswahl hat in „> 2 ATR“ nur **150** Anker — unter der eigenen Mindestzahl von 200 (Abschnitt 4). **L2 wäre
+damit nicht auswertbar.** Ursache: die ATR ist ein **Tagesmaß**; ein Anstieg von 2 Tages-ATR binnen 24 h ist
+selten. Meine Annahme in P3 war falsch skaliert — die Schicht S5 aus E2g (+3,12 % in 24 h) entspricht etwa
+**> 0,5 ATR**, nicht > 2.
+
+| | vorher | jetzt |
+|---|---|---|
+| früh | ≤ 0,5 ATR | **unverändert** ≤ 0,5 ATR (50 % der Auswahl) |
+| spät | > 2 ATR | **> 1 ATR** (rund 18 % der Auswahl — die höchste Grenze mit genügend Ankern) |
+| alles andere | | **unverändert** (Klassen der Kurve, Kriterien L1–L7, Nullwelt, Tor) |
+
+⚠️ **Offen ausgewiesen:** Die **feste Teilung** der Menge `bestand` ist im Werkzeugtest bereits voll gerechnet
+(nur Ziehungen und Monate waren verkürzt) — ihre Kurve ist also **gesehen**. Sie **steigt** mit der Nadel
+(früh +0,057 gegen 1..2 ATR +0,123). Die neue Grenze begünstigt die Hypothese daher **nicht**, sie macht L2 nur
+auswertbar. Die übrigen drei Mengen und alle rollierenden Werte sind ungesehen.
