@@ -197,3 +197,42 @@ kann und fachlich in die richtige Richtung geht."*
 ➤ **Geprüfte Fassung:** **A entscheidet OB · B entscheidet WIE WEIT · C mit der ATR entscheidet WIE VIEL HEBEL.**
 Drei Ausgaben, keine Summe, kein Blocker. Umgesetzt im bestehenden `hebel_neubau.ROLLEN`/`KANDIDATEN` (kein zweites
 Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi und ATR/H0, K6 R+S ohne Stresstag).
+
+---
+
+## 10. Stand, Anfahren, Fahrt — der Sweet Spot (Nutzeranalogie 29.09.)
+
+> *„Optimal wäre, als weitere Analogie: optimale Voraussetzung (Auto steht noch, wann fahren wir los?) — Sweet Spot (Kurve oder Schwelle) — das Auto hat sich in Bewegung gesetzt, nicht von 0 auf 200 mögliche Endgeschwindigkeit, sondern als Beispiel 0 auf 20 (Auslöser, geht?).“* — ausdrücklich *kein Gesetz*, fachlich eingeordnet:
+
+| Phase | Bild | was wir messen | Befund |
+|---|---|---|---|
+| **Stand** | Motor läuft, Auto steht | die Lage (Positionierung am Terminmarkt) | A vorher — Kandidaten (2.665, 2.683) |
+| **Anfahren** | 0 auf 20 — *geht es los?* | bisheriger Anstieg in eigener ATR (A4) **klein**, Bewegung bestätigt | ⭐ **Sweet Spot** — Hinweis: die Auswahl wirkte bei < 1 ATR, war nach > 1–2 ATR negativ (K5-Werkzeugtest, kleine Stichprobe); Recherche: nach schnellen Stößen eher Umkehr |
+| **Fahrt** | schon 200 | rsi, momentum — Fortsetzung | A während — belegt (2.675, 2.683, 2.684) |
+
+➤ **Fachlich:** Die Analogie trägt. Der bisherige Anstieg in eigener ATR ist die **Tachonadel**. Gemessen wird der Sweet Spot als **Kurve** über diese Achse (keine Schwelle festlegen, die Daten zeigen, wo er liegt) — in der Messung *Losfahren aus dem Stand*.
+
+---
+
+## 11. Kalibrierung — was, worauf, wann
+
+| was | übersetzt | Stand | im Plan |
+|---|---|---|---|
+| **A · Signal** | Modellwert → echte Wahrscheinlichkeit *oben zuerst* | rsi roh fast kalibriert; kurze Nachführung scheitert (2.683) | **K5**, auf der Rolle aus *Losfahren* |
+| **C/ATR · Hebel** | ATR → Liquidationswahrscheinlichkeit je Stufe | ✔ 5x kalibriert, 3x geordnet (2.681) | **H0** auf der Einstiegsauswahl; die Grenze setzt der Nutzer |
+| **B · Potential** | Lage → erwartete Größe der Bewegung | gemessen (2.662), nicht als kalibrierte Vorhersage | **nachgelagert** — Geometrie (Ziel, Stop), Phase 2/5 |
+
+---
+
+## 12. Der Plan ab 29.09. (ersetzt Abschnitt 6)
+
+| # | Schritt | Stand |
+|---|---|---|
+| 1 | Rollen im Standblatt | ✔ 028a0f9 |
+| 2 | ⭐ **Losfahren aus dem Stand** — R-R11 auf 2.665/2.657, stehende Anker, Lage für sich, Anfahr-Kurve, rsi als Gegenprobe | Voranalyse als Nächstes |
+| 3 | **K6 R+S** — Extreme der Lage als Risiko (Black Swans nur Störfaktor) | danach |
+| 4 | **K5** neu vorlegen, mit der Kalibrierung von A | nach 2 |
+| 5 | **H0** | nach 4 |
+| 6 | **Simulation Ebene 3**, Regel einfrieren, neue Monate ab 2026-09 | nach 5 |
+
+➤ **Warum *Losfahren* nicht zurückgestellt wird (29.09., meine erste Empfehlung war falsch begründet):** die früheren Messungen der *Lage vorher* (2.650, 2.657, 2.665) liefen über ALLE Anker, auch die fahrenden — und rsi verdeckt die Lage (2.682/2.683). Ein schwaches Ergebnis von damals kann ein verdecktes sein.

@@ -2370,3 +2370,5 @@ Beitrag); K6 (Hebelstufe) läuft; dann K7, Simulation Ebene 3.
 **Nachtrag 29.09.2026 (2):** K6 gemessen (2.681) — die ATR zum Einstieg allein sagt die Liquidationsgefahr je Stufe voraus (Spot-Tief und Markpreis gleich), 5x kalibriert, 3x nur geordnet; die Grenze ist eine Nutzerentscheidung nach H0. K5 neu (Lage mit Vorlauf) und die Folgemessung rechnen.
 
 **Nachtrag 29.09.2026 (3):** K5 neu (2.682) ohne Urteil (Tor nicht bestanden); K5-Folge (2.683): rsi allein zeitstabil und roh fast kalibriert, das Phase-Normal größtenteils Rauschen (Schrumpfung behebt die Rückkehr zur Mitte), die Lage kommt in der Kombination nicht an — sie ist für sich zu messen. K5 wird neu vorgelegt.
+
+**Nachtrag 29.09.2026 (4):** Gegenprüfung 2.684 — rsi hält gegen das geschrumpfte Normal, 2024 schwach. Die Rollen vom 25.09. gelten und sind geprüft (A ob, B wie weit, C mit der ATR wie viel Hebel). Nächster Schritt: *Losfahren aus dem Stand* mit der Anfahr-Kurve; dann K6 R+S, K5 mit Kalibrierung, H0, Simulation. Black Swans nur als Störfaktor. Importer-Befund (Teilschließungen) für Phase 2 vorgemerkt. M1-Kriterium 2 bleibt offen.

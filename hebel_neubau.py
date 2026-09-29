@@ -724,13 +724,19 @@ NAECHSTE_MESSUNGEN = (
                "aktuellen Wert (mit 24 h Alter nicht). Mehr Pruefzeit gibt es nicht - die "
                "Bestaetigung kommt aus der Simulation (Ebene 3) auf "
                "ungesehenen Monaten, mit der Marktstreuung als Massstab"),
-    dict(was="Vorlauf bei H72 und H120",
+    dict(was="⭐ LOSFAHREN AUS DEM STAND - Rolle A VORHER: die Lage auf 'stehenden' "
+             "Ankern, mit Vorlauf, fuer sich, und die ANFAHR-Kurve (0 auf 20)",
          art="vorlauf", bewertung="b1",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
-         warum="die Haltequote steigt mit dem Fenster (0,43 bei H6, 0,66 "
-               "bei H24, Vortag) - erreicht sie 0,8? Teil 0 von 2.651 kennt die "
-               "brauchbaren Ziele schon (+20 %/H72, +30 %/H72, +30 %/H120). "
-               "`funding` in der Form, die die Probe ergibt"),
+         warum="Nutzer 29.09.: *Auto steht noch, wann fahren wir los? - Sweet Spot "
+               "(Kurve oder Schwelle) - das Auto hat sich in Bewegung gesetzt, nicht "
+               "0 auf 200, sondern 0 auf 20 (Ausloeser, geht?)*. Die frueheren Messungen "
+               "(2.650, 2.657, 2.665) hatten die FAHRENDEN Autos dabei - rsi verdeckt die "
+               "Lage (2.682/2.683). Zuerst R-R11 auf 2.665/2.657; dann nur Anker ohne "
+               "bisherigen Anstieg, die Lage fuer sich (eigenes Tor, geschrumpftes "
+               "Normal), und der bisherige Anstieg in eigener ATR (A4) als KURVE - "
+               "Stand, Anfahren, Fahrt; rsi als Gegenprobe. Hinweis aus dem "
+               "K5-Werkzeugtest: nach > 1 ATR Anstieg war die Auswahl negativ"),
     dict(was="K6 H0: die Liquidationsgefahr der ATR-Stufen auf der tatsaechlichen "
              "EINSTIEGSAUSWAHL (Pflicht vor jeder Verwendung)",
          art="probe", bewertung="b2", merkmale=("atr",), prueft="2.681",

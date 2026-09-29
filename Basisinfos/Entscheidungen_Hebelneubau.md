@@ -305,3 +305,33 @@ laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
 **Anlass:** Unter Vorgängernamen läuft im Archiv ein anderer Kontrakt weiter (A←EOS, KAIA←KLAY, S←FTM, RENDER←RNDR, POL←MATIC). Die Monatsmediane |Markpreis/Spot − 1| haben eine Lücke zwischen 0,53 % und 1,15 %.
 
 **Entscheidung:** Grenze 1 % je Monat, gesperrte Monate zählen als fehlend (`hole_markpreis.py --sperre`). Im Markpreis-Modus von K6 kommen Einstieg und Tief aus **derselben** Reihe.
+
+---
+
+# E-16 · Die Rollen wirken auf verschiedene Ausgaben — keine Gewichte auf das Signal
+
+**29.09.2026** · fachliche Prüfung auf Nutzerauftrag (*du musst prüfen und gegenprüfen, ob der Vorschlag halten kann*).
+
+**Befund:** B (Bewegungserwartung) ist richtungslos (2.655: Spiegel 1,02–1,07; vola fällt als Richtung) und vergrößert Anstieg **und** Rückgang (2.655/2.662), in ATR kaum (2.667). C (ema_abstand) setzt sich nach oben fort (2.655), aber mit größerem Rückgang (2.642).
+
+**Entscheidung:** A entscheidet **ob** (Signal), B **wie weit** (Potential, Geometrie), C mit der ATR **wie viel Hebel** (Bewertung 2). Umgesetzt im bestehenden `ROLLEN`/`KANDIDATEN`.
+
+---
+
+# E-17 · *Losfahren aus dem Stand* zuerst — die früheren Messungen waren verdeckt
+
+**29.09.2026** · Korrektur meiner eigenen Empfehlung (*zurückstellen*), auf Nutzerfrage.
+
+**Begründung:** 2.650/2.657/2.665 liefen über alle Anker, auch die fahrenden; rsi verdeckt die Lage (2.682/2.683). Vor der Messung R-R11 auf 2.665 und 2.657.
+
+---
+
+# E-18 · Der Sweet Spot wird als KURVE über den bisherigen Anstieg gemessen
+
+**29.09.2026** · Nutzeranalogie *0 auf 20* fachlich eingeordnet: Stand, Anfahren, Fahrt; die Achse ist der bisherige Anstieg in eigener ATR (A4) — als Kurve, keine vorgegebene Schwelle.
+
+---
+
+# E-19 · PBO nur bei angeglichenem Auswahlanteil
+
+**29.09.2026** · eigener Fehler in F3 der K5-Folge: die Varianten hatten verschiedene Anteile; die PBO-Werte (0,03–0,64) sind nicht auswertbar. Jede künftige PBO-Rechnung wählt je Variante denselben Anteil.

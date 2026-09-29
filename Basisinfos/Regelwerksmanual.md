@@ -5140,6 +5140,10 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **A4 — bestätigt oder gelaufen** | 28.09.: *„nur bestätigte Bewegung, also positiv, oder die Bewegung ist bereits gelaufen … sonst wird es ein Blocker“* | jeder Einstiegsträger wird je bisherigem Anstieg in eigener ATR ausgewiesen |
 | **Randkriterium, vorab** | 28.09.: *„so festlegen und neu rechnen … 1 Meter bleibt 1 Meter auch nach 10 Messungen“* | eine Urteilsregel wird **vor** der Rechnung festgelegt und committet; nachgemessen werden darf beliebig oft, das **Maßband** wird nicht nach dem Ergebnis gewählt |
 | **Regeltest** | 28.09.: *„darum muss die Regel dann auch in unseren Tests und Simulationen funktionieren“* | jede Urteilsregel geht vor der Verwendung durch **Zufallsmerkmale** (Soll: fast nie *trägt*) und eine **gepflanzte** Wirkung bekannter Größe; im Betrieb erst nach der **Simulation** (Ebene 3) |
+| **Rollen, geprüft** | 29.09.: *JA … DU musst noch prüfen und gegenprüfen* | A Richtung entscheidet **ob**, B Bewegungserwartung **wie weit**, C Risikosperre mit der ATR **wie viel Hebel** — keine Summe, kein Blocker (E-16) |
+| **Black Swans** | 29.09.: *so ein Ereignis kann man nicht abfangen … Black-Swan-Events haben keine Möglichkeit der Messung* | nur als Störfaktor mit/ohne ausweisen; kein Modell, keine Schwelle, kein Deckel daran |
+| **Fortsetzung als Einstieg** | 29.09.: *Quant hat 400 % gemacht … u. U. ist ein Einstieg möglich, und man nimmt 300 statt 400 mit* | A *während* ist ein eigener Einstiegstyp; die Positionsführung entscheidet (2.656) |
+| **Archiv** | 29.09.: *erst wenn wir die Daten nicht mehr aktiv benötigen, frühestens ab M1* | `archiv.py` vorbereitet, Einsatz erst dann |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,

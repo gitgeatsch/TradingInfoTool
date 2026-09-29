@@ -36,7 +36,8 @@ Kursmerkmale gemessen und die **drei registrierten Träger** nie geladen.
 | ◐ **K5-Folge gemessen** (2.683, 29.09.) | **rsi allein zeitstabil** (jedes Jahr, auch 2022) und **roh fast kalibriert**; das Phase-Normal ist größtenteils Rauschen, die **Schrumpfung** behebt die Rückkehr zur Mitte; die Lage hat einzeln klare Kurven, in der Kombination kommt nichts an (Tor ⛔) |
 | ◐ **Gegenprüfung** (2.684, 29.09.) | rsi hält gegen das **geschrumpfte** Normal (Verzerrungsanteil ~0), 2024 schwach; rsi misst die **laufende** Bewegung (RSI der letzten 14 h) — Fortsetzung, kein OPTIMUM |
 | ✔ **Rollen geprüft und im Standblatt** (29.09.) | das Schema vom 25.09. hält: **A** Richtung entscheidet **OB** (vorher = OPTIMUM, nur Kandidaten; während = Fortsetzung mit rsi, eigener Einstiegstyp) · **B** Bewegungserwartung **WIE WEIT** (robust, 2.655/2.662) · **C** Risikosperre mit der ATR **WIE VIEL HEBEL** — keine Summe, kein Blocker (`Einordnung_Beitraege_29_09.md`) |
-| ➤ **nächster Schritt** | **K5 neu abstimmen** (Nutzer) — mit der einfacheren Regel *rsi allein* zur Bestätigung und der OPTIMUM-Frage (rsi misst die Bewegung) · **K6** mit dem Markpreis auswerten (danach H0: auf der Einstiegsauswahl) · dann **Simulation Ebene 3** |
+| ➤ **nächster Schritt (29.09.)** | ⭐ **Losfahren aus dem Stand** (Voranalyse zur Abstimmung): R-R11 auf 2.665/2.657, nur stehende Anker, die Lage für sich, die **Anfahr-Kurve** (Nutzer: *0 auf 20*), rsi als Gegenprobe · danach K6 R+S · K5 mit Kalibrierung · H0 · Simulation. Plan: `Einordnung_Beitraege_29_09.md` Abschnitt 12 |
+| ⏸ *überholt* | **K5 neu abstimmen** (Nutzer) — mit der einfacheren Regel *rsi allein* zur Bestätigung und der OPTIMUM-Frage (rsi misst die Bewegung) · **K6** mit dem Markpreis auswerten (danach H0: auf der Einstiegsauswahl) · dann **Simulation Ebene 3** |
 
 Die Reihenfolge im Einzelnen steht unter *Was Phase 1 noch verlangt*, Zeile 2.
 

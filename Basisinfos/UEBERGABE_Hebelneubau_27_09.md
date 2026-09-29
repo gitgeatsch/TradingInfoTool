@@ -18,7 +18,9 @@
 |---|---|
 | **5 · Was trägt** | **rsi allein**: kein Normal-Artefakt (2.684), roh fast kalibriert, zeitstabil in der Betriebsform (2024 schwach, 2.684) — aber ein **Fortsetzungs**-Beitrag: der RSI der letzten 14 h kann einen Anstieg nie vorher anzeigen (Nutzer: *Sportwagen, der schon 200 fährt*); die Kombination mit Momentum/EMA (2.680) oder mit der Lage (2.682/2.683) bringt nichts dazu; die Lage hat einzeln klare Kurven und ist **für sich** zu messen |
 | **9 · Hebel** | K7 (2.679): **Markpreis** Hauptmaß, m = 0,09 vorsichtig, Fehlalarme nur über 5x · K6 (2.681): die **ATR allein** trägt die Liquidationsgefahr, die Risikokurven nicht; 5x kalibriert, 3x geordnet, 2x zu selten; H0 und J10 offen |
-| **10 · Nächster Schritt** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
+| **3/4 · Ablauf** | die **Rollen vom 25.09.** gelten und sind geprüft (A OB, B WIE WEIT, C mit der ATR WIE VIEL HEBEL) — `python -c "import hebel_neubau as H; print(H.rollenblatt())"` · Einordnung: `Einordnung_Beitraege_29_09.md` |
+| **10 · Nächster Schritt (29.09. aktuell)** | ⭐ **Losfahren aus dem Stand** mit der Anfahr-Kurve (Einordnung Abschnitt 10/12) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
+| **10 · (vorher)** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
 
 ```bash
 python hebel_neubau.py | sed -n '/NEUESTER STAND/,/DIE NAECHSTEN/p'
