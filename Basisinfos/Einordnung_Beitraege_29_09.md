@@ -124,7 +124,19 @@ Fortsetzungssignal (B). Ob das für den Hebel reicht, ist eine **Nutzerentscheid
 |---|---|---|
 | **1** | diese Einordnung abstimmen; danach `BEITRAGSLAGE` im Standblatt auf die Rollen umstellen | Zustand im Code = Zustand im Kopf |
 | **2** | ⭐ **Losfahren aus dem Stand** — Voranalyse, dann messen: nur Anker ohne bisherigen Anstieg; Lage **für sich**, mit Vorlauf, eigenes Tor; rsi als Gegenprobe | füllt **A** oder zeigt, dass es leer ist |
-| **3** | **K6 R+S** — Extreme der Lage und Stresstag als Risikogewicht; J10 (10./11.10.) | vervollständigt **C** |
+| **3** | **K6 R+S** — Extreme der Lage als Risikogewicht; der 10./11.10. nur als **Störfaktor** ausgewiesen | vervollständigt **C** |
 | **4** | **K5** neu vorlegen — auf dem Ergebnis von 2 | die Schwelle auf der richtigen Rolle |
 | **5** | **H0** — Liquidationsgefahr auf der tatsächlichen Einstiegsauswahl | Pflicht vor der Verwendung |
 | **6** | **Simulation Ebene 3** und neue Monate ab 2026-09 (Z6) | die Zeitfrage endgültig |
+
+---
+
+## 7. ⚠️ Black Swans — Nutzervorgabe 29.09.2026
+
+> *„Du kannst den 10. und 11.10. zwar als Störfaktor mitführen, ABER so ein Ereignis kann man nicht abfangen — dies war Marktmanipulation, und es wurden Existenzen zerstört. Black-Swan-Events haben keine Möglichkeit der Messung.“*
+
+| | |
+|---|---|
+| **mitführen** | jede betroffene Zahl **mit und ohne** den 10./11.10. ausweisen (Störfaktor, J10) |
+| **nicht** | kein Modell, keine Schwelle, kein Deckel wird an einem solchen Ereignis ausgerichtet; der *Stresstag-Deckel* aus der Recherche entfällt als Messziel |
+| **Schutz dagegen** | liegt nicht in der Vorhersage, sondern in der **Hebelhöhe und Positionsgröße** (Rolle C/D) — die Frage ist, ob eine Stufe einen solchen Tag **übersteht**, nicht, ob man ihn kommen sieht |
