@@ -155,3 +155,20 @@ Zustand, ist **nicht gemessen**.
 Stunde, in der v̂ die Schwelle überschreitet (davor 24 h darunter) — mit Einstieg **eine Stunde später** (Betriebsverzug,
 aufgerundet). Kriterium: der Vorsprung am Ersteintritt ist in 2024 **> 0** und **nicht kleiner als die Hälfte** des
 Zustandswerts. Bei Nein: die Betriebsform (Auslösen am Überschreiten) muss **geändert** werden, bevor K5 gilt.
+
+---
+
+## 10. ✔ K5-6 AUFGENOMMEN — Umsetzung, festgehalten VOR dem Lauf (29.09.2026)
+
+**Nutzer:** *„ja, K5-6 aufnehmen, bauen und messen — prüfen und gegenprüfen."*
+
+| | |
+|---|---|
+| Werkzeug | `messe_losfahren.py --k5` (Wahl: **nur 2024** wird ausgewertet und ausgegeben) · `--k5 --bestaetigen <s> [--sperre <−s>]` (einmal 2025-01..2026-08) |
+| Normal stündlich | dieselbe Schrumpfung je Monat und Asset (aus den Gitterankern) auf **jede Stunde** angewandt — für den Ersteintritt nötig; das Werkzeug prüft, dass sie auf den Gitterankern **gleich** dem bisherigen ist |
+| Beitrag | je Monat das rollierende Modell, auf **jede Stunde** des Monats angewandt; die Auswahl (Trainingsgrenze P90) wie W2 — R-R11: **29.390** Anker |
+| **K5-6** | Ersteintritt = die erste Stunde mit v̂ ≥ s, davor 24 h darunter (mindestens 20 Stunden Daten); Einstieg in der **nächsten** Stunde; Dq gegen das stündliche geschrumpfte Normal |
+| ⚠️ **Nullwelt — Abweichung von Abschnitt 3** | statt der festen Teilung (Suche → Prüfzeit **2025–26**) laufen die **rollierenden Modelle auf verschobenem rsi** (je Asset, 40 Ziehungen, ohne Neuschätzung). **Grund:** die Wahl darf 2025–26 **nicht berühren**; eine Nullwelt mit gleicher Verteilung der Beiträge prüft dieselbe Frage (*ordnet echtes rsi besser als zufällig verschobenes?*) auf 2024 |
+| Leiter (K5-4) | in der verschobenen Welt +0,04 / +0,08 auf die oberste Stufe (v̂ ≥ 0,08), Unterschied Stufe 3 → 4 gegen das P90 der Nullwelt |
+| Stufen (Auskunft zur Wahl) | Bereiche +0,02..0,04 · 0,04..0,06 · 0,06..0,08 · ≥ 0,08, benachbarte Unterschiede gegen die Nullwelt |
+| Ablauf | kurzer Funktionstest (8 Monate, 3 Ziehungen — **ohne** inhaltliche Meldung) → Lauf `bestand` → **Stopp**, Tabelle 2024 an den Nutzer |

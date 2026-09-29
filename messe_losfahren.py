@@ -289,6 +289,199 @@ def main() -> int:
         s = sel[np.isfinite(NADEL[sel]) & (NADEL[sel] > SPAET)]
         return dqs(f, y) - dqs(s, y), f, s
 
+    # ══ K5 (Voranalyse_K5_Schwelle_rsi_29_09.md, S1-S7 + K5-6) ════════════════════════
+    # Signal rsi allein rollierend (Betriebsform); Vorsprung vh = expit(logit(QS) + Beitrag) - QS.
+    # ZWEI SCHRITTE: ohne --bestaetigen wird NUR 2024 ausgewertet und ausgegeben (Wahl);
+    # --bestaetigen <s> [--sperre <-s>] wertet einmal 2025-01..2026-08 aus (Bestaetigung).
+    if "--k5" in sys.argv:
+        from scipy.special import expit as _ex
+        best = "--bestaetigen" in sys.argv
+        s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
+        sp_best = float(sys.argv[sys.argv.index("--sperre") + 1]) if "--sperre" in sys.argv else None
+        JAHRE = (2025, 2026) if best else (2024,)
+        SCHW = (0.02, 0.04, 0.06, 0.08)
+        SPERR = (-0.02, -0.04)
+        m0, _s0 = rsi_auswahl(E)
+        ct0 = m0.z(E, r_pa, OFF[r_pa]) - OFF[r_pa]
+        rr11 = dq(r_pa[ct0 >= np.quantile(m0.z(E, r_sa, OFF[r_sa]) - OFF[r_sa], 0.9)])
+        print()
+        print("=" * 120)
+        print("K5 · %s · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal" % (
+            "BESTAETIGUNG 2025-01..2026-08, Schwelle %+.2f" % s_best if best else "WAHL 2024 (2025-26 wird NICHT ausgewertet)"))
+        print("  K5-0 R-R11 rsi allein oben (fest, rohes Normal) %+.4f · 2.680: +0,0808 -> %s" % (
+            rr11, "✔ bitgleich" if abs(round(rr11, 4) - 0.0808) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
+        # geschrumpftes Normal STUENDLICH: dieselbe Schrumpfung je Monat und Asset (aus den Gitterankern) auf jede Stunde
+        QSh = np.full(n, np.nan)
+        for mi in np.unique(MON[basis]):
+            ix = basis[MON[basis] == mi]
+            q = QN[ix]; okq = np.isfinite(q); ix, q = ix[okq], q[okq]
+            if len(ix) < 500:
+                continue
+            us, inv = np.unique(SYM[ix], return_inverse=True)
+            qa = np.bincount(inv, weights=q) / np.bincount(inv)
+            rate = np.bincount(inv, weights=(NA[ix] + NB[ix])) / np.bincount(inv)
+            rausch = qa * (1 - qa) / np.maximum(rate * 365.0, 5.0)
+            mitte = float(np.mean(qa)); tau2 = max(float(np.var(qa)) - float(np.mean(rausch)), 0.0)
+            Bm = dict(zip(us.tolist(), (tau2 / (tau2 + rausch)).tolist()))
+            ixh = np.flatnonzero((MON == mi) & np.isfinite(QN) & np.isin(SYM, us))
+            bb = np.array([Bm[int(x)] for x in SYM[ixh]])
+            QSh[ixh] = mitte + bb * (QN[ixh] - mitte)
+        chk = np.flatnonzero(np.isfinite(QS))
+        print("  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern %.2e" % float(np.nanmax(np.abs(QSh[chk] - QS[chk]))))
+        # rollierend: Modell je Monat nur auf der Vergangenheit, Beitrag fuer JEDE Stunde des Monats
+        Ch = np.full(n, np.nan); SEL = np.zeros(n, bool); modelle = []
+        ab = H(datetime(2023, 1, 1))
+        for (j, mo) in monate:
+            mi = j * 12 + (mo - 1)
+            start = H(datetime(j, mo, 1))
+            fen = BASIS & (STD >= ab) & (MON < mi) & (STD < start - 24)
+            ra = np.flatnonzero(fen); rt = np.flatnonzero(fen & HIT)
+            ziel = np.flatnonzero(BASIS & (MON == mi))
+            if len(rt) < 5000 or not len(ziel):
+                continue
+            m, _l = K2.fit_cv(RSI, E, ra, rt, A24[rt], OFF[rt], STD)
+            thr = np.quantile(m.z(E, ra, OFF[ra]) - OFF[ra], 0.9)
+            alle_h = np.flatnonzero((MON == mi) & np.isfinite(OFF))
+            Ch[alle_h] = m.z(E, alle_h, OFF[alle_h]) - OFF[alle_h]
+            SEL[ziel[Ch[ziel] >= thr]] = True
+            modelle.append((mi, m))
+        urteil_all = np.flatnonzero(BASIS & (MON >= 2024 * 12) & (MON <= 2026 * 12 + 7) & np.isfinite(QS))
+        print("  K5-0 rollierende Auswahl im Urteilszeitraum %d (W2: 29.390) -> %s" % (
+            int(SEL[urteil_all].sum()), "✔" if int(SEL[urteil_all].sum()) == 29390 or E2.MENGE != "bestand" else "⛔"))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            VH = _ex(np.log(QSh / (1 - QSh)) + Ch) - QSh
+        g = np.flatnonzero(BASIS & np.isfinite(VH) & np.isfinite(QS) & np.isin(JAHR, JAHRE))
+        print("  Gitteranker im Auswertungszeitraum %d · Symbole %d" % (len(g), len(np.unique(SYM[g]))))
+        # Auskunft (vor dem Lauf ergaenzt, 29.09.): Verteilung von vh - KEINE Schwelle daraus (K5: absolut, kein Rang)
+        print("  Auskunft Verteilung vh: P50 %+.4f · P90 %+.4f · P95 %+.4f · P99 %+.4f · Max %+.4f" % tuple(
+            np.percentile(VH[g], [50, 90, 95, 99, 100])))
+
+        # ── K5-1 Kalibrierung je Zehntel von vh ──
+        kant = np.quantile(VH[g], np.linspace(0, 1, 11)[1:-1]); zg = np.searchsorted(kant, VH[g], "right")
+        ges, beo = [], []
+        for d_ in range(10):
+            ix = g[zg == d_]
+            ges.append(float(np.mean(VH[ix]))); beo.append(dqs(ix))
+        steig = float(np.polyfit(ges, beo, 1)[0])
+        print()
+        print("  K5-1 KALIBRIERUNG je Zehntel (geschaetzt -> beobachtet): " + " · ".join("%+.3f->%+.3f" % (a, b) for a, b in zip(ges, beo)))
+        print("       Steigung %.2f (Soll 0,7-1,3) · oberstes Zehntel |gesch - beob| %.4f (Soll <= 0,02) -> %s" % (
+            steig, abs(ges[-1] - beo[-1]), "✔" if 0.7 <= steig <= 1.3 and abs(ges[-1] - beo[-1]) <= 0.02 else "⛔"))
+        for jj in JAHRE:
+            ixj = g[JAHR[g] == jj]
+            kj = np.quantile(VH[ixj], np.linspace(0, 1, 11)[1:-1]); zj = np.searchsorted(kj, VH[ixj], "right")
+            gj = [float(np.mean(VH[ixj[zj == d_]])) for d_ in range(10)]; bj = [dqs(ixj[zj == d_]) for d_ in range(10)]
+            print("       %d: Steigung %.2f · oberstes Zehntel gesch %+.4f beob %+.4f" % (jj, float(np.polyfit(gj, bj, 1)[0]), gj[-1], bj[-1]))
+        sel_g = g[SEL[g]]
+        print("  Auswahl (Trainingsgrenze P90): %d Anker · geschaetzt %+.4f · beobachtet %+.4f" % (
+            len(sel_g), float(np.mean(VH[sel_g])), dqs(sel_g)))
+
+        # ── K5-6 Ersteintritt (stuendlich, Einstieg eine Stunde spaeter) ──
+        def ersteintritte(s):
+            aus = []
+            for tl in teile:
+                st = STD[tl]; vv = VH[tl]
+                ab_ = np.where(np.isfinite(vv), vv >= s, False)
+                cs = np.concatenate([[0], np.cumsum(ab_)])
+                lo = np.searchsorted(st, st - 24, "left")
+                idx = np.arange(len(tl))
+                erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((idx - lo) >= 20)
+                i_ = np.flatnonzero(erst)
+                i_ = i_[i_ + 1 < len(tl)]
+                i_ = i_[st[i_ + 1] == st[i_] + 1]
+                aus.append(tl[i_ + 1])
+            e_ = np.concatenate(aus) if aus else np.zeros(0, int)
+            return e_[np.isin(JAHR[e_], JAHRE) & np.isfinite(QSh[e_])]
+
+        def dqh(ix, y=A24):
+            ix = ix[np.isfinite(QSh[ix])]
+            w = NA[ix] + NB[ix]
+            return dq(ix, y, QSh * (NA + NB), (1 - QSh) * (NA + NB))
+        am = np.unique(SYM[g].astype(np.int64) * 100000 + MON[g])
+        print()
+        print("  K5-2 TABELLE (Signal) und K5-6 ERSTEINTRITT (Einstieg 1 h nach dem ersten Ueberschreiten, davor 24 h darunter)")
+        print("    %-8s %8s %8s %10s %10s | %10s %10s %10s %s" % (
+            "Schwelle", "Anteil", "Anker", "gesch.", "beob.", "Ersteintr.", "je As.-Mo.", "beob.", "K5-6"))
+        tab = {}
+        for s in SCHW:
+            ix = g[VH[g] >= s]
+            ee = ersteintritte(s)
+            zst, ers = dqs(ix), dqh(ee)
+            ok6 = ers > 0 and ers >= 0.5 * zst
+            tab[s] = (zst, ers)
+            print("    %+.2f    %7.1f%% %8d %+10.4f %+10.4f | %10d %10.2f %+10.4f %s" % (
+                s, 100 * len(ix) / len(g), len(ix), float(np.mean(VH[ix])) if len(ix) else np.nan, zst,
+                len(ee), len(ee) / max(len(am), 1), ers, "✔" if ok6 else "⛔"))
+        print("  K5-3 SPERRE (unten):")
+        for s in SPERR:
+            ix = g[VH[g] <= s]
+            print("    %+.2f    %7.1f%% %8d %+10.4f %+10.4f" % (
+                s, 100 * len(ix) / len(g), len(ix), float(np.mean(VH[ix])) if len(ix) else np.nan, dqs(ix)))
+        # ── Nullwelt: die rollierenden Modelle auf rsi, je Asset verschoben (ohne Neuschaetzung) ──
+        def vh_welt(EE):
+            v = np.full(n, np.nan)
+            for mi, m in modelle:
+                ixm = g[MON[g] == mi]
+                if len(ixm):
+                    c = m.z(EE, ixm, OFF[ixm]) - OFF[ixm]
+                    v[ixm] = _ex(np.log(QS[ixm] / (1 - QS[ixm])) + c) - QS[ixm]
+            return v
+        BINS = ((0.02, 0.04), (0.04, 0.06), (0.06, 0.08), (0.08, np.inf))
+
+        def kennz(v, y=A24):
+            sig = [dqs(g[v[g] >= s], y) for s in SCHW]
+            spe = [dqs(g[v[g] <= s], y) for s in SPERR]
+            b_ = [dqs(g[(v[g] >= lo_) & (v[g] < hi_)], y) for lo_, hi_ in BINS]
+            return sig, spe, [b_[i + 1] - b_[i] for i in range(3)], b_
+        echt = kennz(VH)
+        nsig, nspe, ndif = [], [], []
+        for _ in range(zieh):
+            EV = verschoben(E, RSI)
+            k_ = kennz(vh_welt(EV)); nsig.append(k_[0]); nspe.append(k_[1]); ndif.append(k_[2])
+        nsig, nspe, ndif = np.array(nsig), np.array(nspe), np.array(ndif)
+        print()
+        print("  NULLWELT (rollierende Modelle auf verschobenem rsi, %d Ziehungen):" % zieh)
+        for i, s in enumerate(SCHW):
+            print("    Signal %+.2f: beob %+.4f · Null Mittel %+.4f, P90 %+.4f" % (
+                s, echt[0][i], float(np.nanmean(nsig[:, i])), float(np.nanpercentile(nsig[:, i], 90))))
+        for i, s in enumerate(SPERR):
+            lo10 = float(np.nanpercentile(nspe[:, i], 10))
+            print("    Sperre %+.2f: beob %+.4f · Null Mittel %+.4f, P10 %+.4f -> %s" % (
+                s, echt[1][i], float(np.nanmean(nspe[:, i])), lo10, "UMKEHR ✔" if echt[1][i] < lo10 and echt[1][i] < 0 else "keine Umkehr"))
+        print("  K5-4 STUFEN (Bereiche %s): beob %s" % (
+            " · ".join("%+.2f..%s" % (lo_, "" if hi_ == np.inf else "%+.2f" % hi_) for lo_, hi_ in BINS),
+            " · ".join("%+.4f" % x for x in echt[3])))
+        for i in range(3):
+            print("    Unterschied Stufe %d->%d: %+.4f · Null P90 %+.4f -> %s" % (
+                i + 1, i + 2, echt[2][i], float(np.nanpercentile(ndif[:, i], 90)),
+                "trennscharf" if echt[2][i] >= 0.04 and echt[2][i] > np.nanpercentile(ndif[:, i], 90) else "nicht trennscharf"))
+        # Leiter fuer die oberste Stufe (Unterschied Stufe 3 -> 4)
+        p90d = float(np.nanpercentile(ndif[:, 2], 90))
+        for d in (0.04, 0.08):
+            gef, werte = 0, []
+            for _ in range(5):
+                EV = verschoben(E, RSI); vv = vh_welt(EV)
+                top = g[(vv[g] >= 0.08) & HIT[g]]; kand = top[B24[top] == 1]
+                y = A24.copy()
+                w_ = rng.choice(kand, size=min(int(round(d * len(top))), len(kand)), replace=False)
+                y[w_] = 1.0
+                dd = kennz(vv, y)[2][2]
+                werte.append(dd); gef += int(dd > p90d)
+            print("    Leiter oberste Stufe +%.2f: %s -> gefunden %d von 5" % (d, " ".join("%+.4f" % x for x in werte), gef))
+        if best:
+            print()
+            zst, ers = dqs(g[VH[g] >= s_best]), dqh(ersteintritte(s_best))
+            jz = [(jj, dqs(g[(VH[g] >= s_best) & (JAHR[g] == jj)])) for jj in JAHRE]
+            print("  K5-5 BESTAETIGUNG Schwelle %+.2f: %s · Kalibrierung Steigung %.2f -> %s" % (
+                s_best, " · ".join("%d %+.4f" % x for x in jz), steig,
+                "✔" if all(x[1] > 0 for x in jz) and 0.7 <= steig <= 1.3 else "⛔ nicht bestaetigt"))
+            print("  K5-6 BESTAETIGUNG Ersteintritt %+.4f gegen Zustand %+.4f -> %s" % (
+                ers, zst, "✔" if ers > 0 and ers >= 0.5 * zst else "⛔"))
+            if sp_best is not None:
+                print("  Sperre %+.2f: beob %+.4f" % (sp_best, dqs(g[VH[g] <= sp_best])))
+        print("SCHLUSS: vollstaendig")
+        return 0
+
     # ══ W1 (Voranalyse_Beitrag_Kontext_Gewicht_29_09.md, Abschnitte 6 und 10) ══════════
     # Zerlegung je Wetter-Drittel W und Jahr: NIVEAU(W) = Dq aller Anker, ZUWACHS(W) = Dq
     # der Einstiegsauswahl minus Niveau - beides gegen das geschrumpfte Normal.
