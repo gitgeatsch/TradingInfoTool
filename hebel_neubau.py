@@ -498,7 +498,7 @@ BEITRAGSLAGE = {
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
     # ── das Risikomodell der Hebelstufe (29.09.) ────────────────────────
     "atr": dict(
-        b1="ungemessen", vorlauf=None, b2="belegt", befund=("2.667", "2.681", "2.689"),
+        b1="ungemessen", vorlauf=None, b2="belegt", befund=("2.667", "2.681", "2.689", "2.690"),
         beleg="die ATR zum Einstieg sagt die Liquidationsgefahr je Stufe voraus "
               "(2.667); am Markpreis und am Spot-Tief, vier Mengen: 5x vorwaerts "
               "kalibriert, 3x nur geordnet, 2x zu selten; Risikokurven bringen "
@@ -507,8 +507,9 @@ BEITRAGSLAGE = {
               "5x beob/gesch 12 h 0,40-0,45, 24 h 0,48-0,59, 72 h 0,76-0,81",
         quelle=_Q_KURS, live=_L_KURS, spot="",
         vorbehalt="im schwachen Regime (2025) ist der Abstand bei 72 h fast weg "
-                  "(0,94-0,95, 2.689); 2x-Liquidationen nur am 10./11.10. - die "
-                  "Grenze und die Haltedauer klaert die Simulation (Kern Schritt 3)"),
+                  "(0,94-0,95, 2.689); 2x-Liquidationen nur am 10./11.10.; die "
+                  "Simulation (2.690) zeigt: nicht das Risiko, sondern die KOSTEN "
+                  "machen den Hebel auf dem Kern unrentabel"),
 }
 
 # ⚠️⚠️ NEUESTER STAND (27.09. abends, E1 bis E2d) - er geht der Beitragslage
@@ -686,6 +687,12 @@ NEUESTER_STAND = (
               "Liquidationen nur am 10./11.10. Der Kern ist ein TAGESHANDEL: +5 % im "
               "Median nach 19-20 h, binnen 6 h nur bei 16 %. Haltedauer und Ziel in "
               "Schritt 3 als Achse messen"),
+    ("2.690", "KERN SCHRITT 3 SIMULATION: das Hebelkonto verliert 2025-26 in 4 von 4 "
+              "Mengen (x0,26-x0,62), Spot um null - das Signal schlaegt den Zufall "
+              "klar (S2), aber der Rohvorteil je Handel (+0,12..+0,33 % auf den "
+              "Positionswert, 2024 +0,95 %) ist kleiner als die Bitpanda-Kosten eines "
+              "Tageshandels (0,48 %). Kostenbasis am echten Buch geprueft. Loesungen "
+              "L1-L4 zur Abstimmung"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
@@ -784,14 +791,15 @@ NAECHSTE_MESSUNGEN = (
                "darunter, und vor allem im Markt-Anteil. Nur sinnvoll, wenn K5 eine "
                "VORHER-Rolle braucht - sonst zurueckstellen; die Anfahr-Kurve ist "
                "beantwortet (kein Sweet Spot, rsi traegt in jeder Phase)"),
-    dict(was="⭐ KERN SCHRITT 3 - SIMULATION: die Hebelstufe aus der ATR auf den "
-             "Ersteintritten, Haltedauer und Ziel als ACHSE, Kosten, das schwache "
-             "Regime - und die Grenze per Regel",
-         art="probe", bewertung="b2", merkmale=("atr",), prueft="2.689",
-         warum="H0 (2.689): die Tabelle ist auf den Einstiegen vorsichtig, aber im "
-               "schwachen Regime (2025) ist der Abstand bei 72 h fast weg; der Kern "
-               "ist ein Tageshandel (+5 % nach 19-20 h). Ob nach Kosten etwas "
-               "bleibt und welche Grenze, beantwortet nur die Simulation"),
+    dict(was="⭐ KERN nach 2.690 - LOESUNGEN L1-L4: Kostenachse (Terminboerse als "
+             "Auskunft), weniger/staerkere Signale, laenger halten ohne Hebel, Summe "
+             "der Beitraege - je neue Vorabfestlegung",
+         art="probe", bewertung="b2", merkmale=("atr",), prueft="2.690",
+         warum="die Simulation (2.690): das Signal traegt (ueber der Nullwelt), aber "
+               "der Rohvorteil je Handel (+0,12..+0,33 %) liegt unter den Bitpanda-"
+               "Kosten eines Tageshandels (0,48 %); der Hebel vervielfacht den "
+               "Nettoverlust. Zu klaeren: liegt es an der Plattform oder am Kern, und "
+               "hebt eine staerkere Auswahl den Vorteil ueber die Kosten?"),
     dict(was="rsi (Rolle A waehrend) - der Kern im schwachen Regime und auf den "
              "Monaten ab 2026-09",
          art="probe", bewertung="b1", merkmale=("rsi",), prueft="2.688",

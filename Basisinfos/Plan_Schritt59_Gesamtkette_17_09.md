@@ -2375,3 +2375,6 @@ Beitrag); K6 (Hebelstufe) läuft; dann K7, Simulation Ebene 3.
 
 
 **Nachtrag 29.09.2026 (5, abends):** Losfahren aus dem Stand (2.685): kein Sweet Spot, rsi trägt in jeder Phase. Begriffe Beitrag/Kontext/Gewicht/Sperre abgestimmt; das Wetter als Gewicht ab 2024 nicht nachweisbar (2.686). K5 **zurückgestellt** — die Schwelle gehört auf die **Summe** der Chance-Beiträge (Nutzer). Stattdessen der **KERN** (rsi-Einstieg + ATR-Hebel) als Test Ende zu Ende: ✔ Schritt 1 — der **Ersteintritt** (s = +0,035, per Regel auf 2024 gemessen) trägt einmal bestätigt 2025–26 in 4 von 4 Mengen (+0,059..+0,076), nicht besser als der Zustand, stark regimeabhängig (2.688); ✔ Schritt 2 **H0** — die ATR-Tabelle unterschätzt das Risiko der Einstiege nirgends, der Kern ist ein **Tageshandel** (2.689); ➤ Schritt 3 **Simulation**. Urteilszeitraum ab 2024 (Nutzer). M1-Kriterium 2 bleibt offen bis zur Simulation.
+
+
+**Nachtrag 29.09.2026 (6, spät):** KERN Schritt 3 Simulation (2.690): Wahl 2024 (24 h, ohne Ziel, Grenze 2 %, Konto ×1,24); **Bestätigung 2025–26: das Hebelkonto verliert in 4 von 4 Mengen** (×0,26–×0,62), Spot um null. Das Signal schlägt den Zufall klar — aber der Rohvorteil je Handel (+0,12..+0,33 %) liegt unter den Bitpanda-Kosten eines Tageshandels (0,48 %, am Buch geprüft). Lösungen L1–L4 zur Abstimmung. M1-Kriterium 2 bleibt offen.

@@ -155,3 +155,42 @@ größter Rückgang 0,209 (log), längste Verlustserie 29, schlechtester Monat �
 2. Die Wahl aus 48 Zellen **überschätzt** 2024 sicher; auch Spot ist 2024 positiv — ein Teil ist **Markt**. Beides prüft
    erst die Bestätigung (Nullwelt, Spot-Vergleich).
 3. Der Rückgang von 0,21 (log) bei nur 1 % Einsatz je Handel ist **groß** — die Ballung vieler Handel an Markttagen.
+
+
+---
+
+## 10. ERGEBNIS BESTÄTIGUNG 2025-01 bis 2026-08 — Befund 2.690 (Stopp)
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| **Hebelkonto** (log / Faktor) | −0,484 / ×0,62 | −1,335 / ×0,26 | −1,087 / ×0,34 | −1,262 / ×0,28 |
+| S1 2025 / 2026 | −0,195 / −0,289 ⛔ | −0,715 / −0,620 ⛔ | −0,525 / −0,562 ⛔ | −0,611 / −0,651 ⛔ |
+| S2 Nullwelt P90 | −2,310 ✔ | −2,725 ✔ | −2,403 ✔ | −2,443 ✔ |
+| S4 **Spot** | +0,029 ⛔ | −0,176 ⛔ | −0,127 ⛔ | −0,189 ⛔ |
+| S5 ohne 10./11.10. | −0,382 | −0,954 | −0,756 | −0,974 |
+| Juli–Dezember 2025 | ×0,69 | ×0,43 | ×0,50 | ×0,44 |
+| Liquidationen | 0,18 % | 0,50 % | 0,44 % | 0,47 % |
+
+➤ **Schritt 3 NICHT bestanden** — der Hebel verliert, Spot liegt um null. **Das Signal selbst ist echt** (S2: zufällige
+Einstiege verlieren weit mehr).
+
+**Ursache — gemessen, nicht vermutet (E-25):**
+
+| Prüfung | Ergebnis |
+|---|---|
+| **Kostenbasis** | am echten Bitpanda-Buch (K7-Gebührensignatur, 2.679): 0,30 % + 0,18 %/Tag auf den **Positionswert** — die Annahme stimmt, eher zu mild (eine Eröffnungsgebühr wäre zusätzlich) |
+| **Rohvorteil je Handel** (auf den Positionswert, aus Spot und Hebel unabhängig gleich) | 2025–26: **+0,33 / +0,14 / +0,17 / +0,12 %** · 2024: **+0,95 %** |
+| **Kosten je Tageshandel** | **0,48 %** (0,30 % Gebühr + 0,18 % Finanzierung) |
+| **Kostenblock im Hebelkonto** | 1,71 bis 1,90 (log) — erklärt das Ergebnis allein |
+
+➤ Der Hebel **vervielfacht einen Nettoverlust**: der Vorteil je Handel ist kleiner als das, was ein Handel kostet — 2024
+war er dreimal so groß (Regime).
+
+**Lösungsvorschläge** (je neue Vorabfestlegung, zur Abstimmung):
+
+| # | Lösung | beantwortet |
+|---|---|---|
+| **L1** | **Kostenachse**: dieselbe Simulation mit den Kosten einer Terminbörse (Auskunft) | liegt es an der **Plattform** oder am **Kern**? |
+| **L2** | **weniger, stärkere Signale** — Signalstärke als Achse (K6 S Stufe 1: oben etwa doppelter Vorteil) | hebt eine strengere Auswahl den Vorteil **über 0,48 %**? |
+| **L3** | **länger halten ohne Hebel** — die feste Gebühr auf größere Bewegungen (2024: 72 h Spot vorn) | ein **Spot-Kern** statt Hebel-Kern? |
+| **L4** | die **Summe der Beiträge** — ein zweiter tragender Beitrag | größerer Vorteil je Handel |
