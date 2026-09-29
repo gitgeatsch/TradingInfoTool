@@ -236,6 +236,75 @@ def main() -> int:
             aus[k] = v
         return aus
 
+    # ══ GEGENPRUEFUNG (Abschnitt 7): rsi allein gegen das GESCHRUMPFTE Normal ══════
+    if "--gegen" in sys.argv:
+        basis = np.flatnonzero(BASIS & (MON >= 2024 * 12))
+        QS = np.full(n, np.nan)
+        for mi in np.unique(MON[basis]):
+            ix = basis[MON[basis] == mi]
+            q = QN[ix]; ok = np.isfinite(q); ix, q = ix[ok], q[ok]
+            if len(ix) < 500:
+                continue
+            us, inv = np.unique(SYM[ix], return_inverse=True)
+            qa = np.bincount(inv, weights=q) / np.bincount(inv)
+            rate = np.bincount(inv, weights=(NA[ix] + NB[ix])) / np.bincount(inv)
+            rausch = qa * (1 - qa) / np.maximum(rate * 365.0, 5.0)
+            mitte = float(np.mean(qa)); tau2 = max(float(np.var(qa)) - float(np.mean(rausch)), 0.0)
+            B = tau2 / (tau2 + rausch)
+            QS[ix] = mitte + B[inv] * (q - mitte)
+        NAs, NBs = QS * (NA + NB), (1 - QS) * (NA + NB)
+
+        def dqs(ix):
+            ix = ix[np.isfinite(QS[ix])]
+            return dq(ix, A24, NAs, NBs)
+        m0, _l = K2.fit_cv(RSI, E, r_sa, r_s, A24[r_s], OFF[r_s], STD)
+        c_te = m0.z(E, r_pa, OFF[r_pa]) - OFF[r_pa]
+        sel = r_pa[c_te >= np.quantile(c_te, 0.9)]
+        roh_f, sch_f = dq(sel), dqs(sel)
+        null = []
+        for _ in range(zieh):
+            EV = verschoben(E, RSI)
+            mv, _l = K2.fit_cv(RSI, EV, r_sa, r_s, A24[r_s], OFF[r_s], STD)
+            cv = mv.z(EV, r_pa, OFF[r_pa]) - OFF[r_pa]
+            null.append(dqs(r_pa[cv >= np.quantile(cv, 0.9)]))
+        g = float(np.nanpercentile(null, 90))
+        zr, zs = [], []
+        for _ in range(zieh):
+            z_ = rng.choice(r_pa, size=len(sel), replace=False)
+            zr.append(dq(z_)); zs.append(dqs(z_))
+        print()
+        print("GEGENPRUEFUNG rsi allein gegen das GESCHRUMPFTE Normal (Abschnitt 7)")
+        print("  G1 fest (eigenes Zehntel): roh %+.4f · geschrumpft %+.4f · Nullwelt (rsi verschoben) Mittel %+.4f, 90. Perzentil %+.4f -> %s" % (
+            roh_f, sch_f, float(np.nanmean(null)), g, "✔ jenseits" if sch_f > g else "⛔ nicht jenseits"))
+        print("  G4 Zufallsauswahl gleicher Groesse: roh %+.4f · geschrumpft %+.4f · Verzerrungsanteil der rsi-Auswahl %+.4f" % (
+            float(np.mean(zr)), float(np.mean(zs)), roh_f - sch_f))
+        ZR = np.full(n, np.nan); DR = np.full(n, -1, np.int8)
+        ab = H(datetime(2023, 1, 1))
+        for (j, mo) in monate:
+            mi = j * 12 + (mo - 1)
+            start = H(datetime(j, mo, 1))
+            fen = BASIS & (STD >= ab) & (MON < mi) & (STD < start - 24)
+            ra = np.flatnonzero(fen); rt = np.flatnonzero(fen & HIT)
+            ziel = np.flatnonzero(BASIS & (MON == mi))
+            if len(rt) < 5000 or not len(ziel):
+                continue
+            m, _l = K2.fit_cv(RSI, E, ra, rt, A24[rt], OFF[rt], STD)
+            ZR[ziel] = m.z(E, ziel, OFF[ziel]) - OFF[ziel]
+            q1, q2 = np.nanquantile(QN[ra], (1 / 3, 2 / 3))
+            DR[ziel] = np.where(QN[ziel] <= q1, 0, np.where(QN[ziel] <= q2, 1, 2))
+        alle = np.flatnonzero(np.isfinite(ZR))
+        sr = alle[ZR[alle] >= np.quantile(ZR[alle], 0.9)]
+        jj_ = [(jj, dq(sr[JAHR[sr] == jj]), dqs(sr[JAHR[sr] == jj])) for jj in (2024, 2025, 2026)]
+        print("  G2 rollierend (gleicher Anteil): gesamt roh %+.4f · geschrumpft %+.4f · je Jahr %s -> %s" % (
+            dq(sr), dqs(sr), " · ".join("%d %+.4f|%+.4f" % x for x in jj_),
+            "✔ jedes Jahr > 0" if all(x[2] > 0 for x in jj_) else "⛔ nicht jedes Jahr"))
+        dd = [(nm, dq(sr[DR[sr] == d_]), dqs(sr[DR[sr] == d_]), int((DR[sr] == d_).sum())) for d_, nm in
+              ((0, "unten"), (1, "Mitte"), (2, "oben"))]
+        print("  G3 je Drittel des Normals (roh|geschrumpft): %s -> %s" % (
+            " · ".join("%s %+.4f|%+.4f (%d)" % x for x in dd), "✔ jedes > 0" if all(x[2] > 0 for x in dd) else "⛔ nicht jedes"))
+        print("SCHLUSS: vollstaendig")
+        return 0
+
     # ══ TOR (Nachtrag 29.09., Voranalyse Abschnitt 5 - VOR der Auswertung festgelegt) ══
     if "--tor" in sys.argv:
         r0, s0 = fest(E, varianten=("K0",))

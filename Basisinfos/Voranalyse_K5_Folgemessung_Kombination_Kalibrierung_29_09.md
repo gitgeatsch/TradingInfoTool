@@ -90,3 +90,21 @@ Beleg `Basisinfos/K5_Folge_29_09/`. R-R11 bitgleich in allen vier Mengen.
 | **S6** Schrumpfung | ✔ in 4 von 4 (roh −0,036..−0,042 → geschrumpft +0,002..+0,011); Schrumpfungsfaktor 0 bis 0,53: das Phase-Normal ist **größtenteils Rauschen** |
 | **S7** Kurven | rsi steigend; funding fallend (Extreme oben Risiko); oi fallend; **konten am stärksten** (wenige Longs +0,15, viele −0,25); leichtes Optimum bei ko_48/fu_48 |
 | **S5** PBO | ⛔ **nicht auswertbar** — Auswahlanteil nicht angeglichen (eigener Fehler) |
+
+---
+
+## 7. Gegenprüfung (Nutzer 29.09.: *„kannst du zur Sicherheit die letzten Messungen noch einmal prüfen und gegenprüfen"*) — vorab festgelegt
+
+**Der Verdacht, aus S6:** Das Phase-Normal ist größtenteils Rauschen. Assets mit **niedrigem** Normal liegen darum
+ohne jedes Signal über ihrem Normal (unterstes Zehntel roh +0,06). Wählt rsi bevorzugt solche Assets, wäre ein Teil
+des rsi-Effekts (2.680, 2.683) nur **diese Verzerrung**. Die Frage: *Hält rsi allein auch gegen das geschrumpfte
+Normal?*
+
+| # | Bedingung | bei Nein |
+|---|---|---|
+| **G1** | feste Teilung: Dq der rsi-Auswahl (eigenes Zehntel) gegen das **geschrumpfte** Normal über dem 90. Perzentil der Nullwelt (rsi verschoben, 40 Ziehungen, ebenfalls gegen das geschrumpfte Normal), in ≥ 3 von 4 Mengen | der rsi-Effekt ist zum großen Teil Normal-Verzerrung → 2.680/2.683 einschränken |
+| **G2** | rollierend (gleicher Anteil) gegen das geschrumpfte Normal > 0 in **jedem** Jahr 2024/2025/2026, in ≥ 3 von 4 | nicht zeitstabil gegen den richtigen Bezug |
+| **G3** | in **jedem** Drittel des Normals > 0 (gegen das geschrumpfte Normal), in ≥ 3 von 4 | der Effekt sitzt in einer Normal-Lage |
+| **G4** | Auskunft: wie viel des Effekts auf die Verzerrung entfällt (roh minus geschrumpft), und derselbe Abstand für eine **Zufallsauswahl** | – |
+
+Werkzeug: `messe_k5_folge.py --gegen` (Schrumpfung wie F4/B4), vier Mengen, nacheinander.
