@@ -1,0 +1,11 @@
+========================================================================================================================
+K5-FOLGEMESSUNG · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+
+GEGENPRUEFUNG rsi allein gegen das GESCHRUMPFTE Normal (Abschnitt 7)
+  G1 fest (eigenes Zehntel): roh +0.0808 · geschrumpft +0.0815 · Nullwelt (rsi verschoben) Mittel +0.0148, 90. Perzentil +0.0222 -> ✔ jenseits
+  G4 Zufallsauswahl gleicher Groesse: roh +0.0133 · geschrumpft +0.0146 · Verzerrungsanteil der rsi-Auswahl -0.0007
+  G2 rollierend (gleicher Anteil): gesamt roh +0.0517 · geschrumpft +0.0531 · je Jahr 2024 -0.0139|-0.0125 · 2025 +0.0315|+0.0324 · 2026 +0.1155|+0.1176 -> ⛔ nicht jedes Jahr
+  G3 je Drittel des Normals (roh|geschrumpft): unten +0.1040|+0.0808 (10343) · Mitte +0.0344|+0.0363 (10891) · oben +0.0185|+0.0457 (8417) -> ✔ jedes > 0
+SCHLUSS: vollstaendig

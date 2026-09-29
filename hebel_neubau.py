@@ -594,6 +594,10 @@ NEUESTER_STAND = (
               "groesstenteils Rauschen, seine Schrumpfung behebt die Rueckkehr zur "
               "Mitte. Die Lage hat einzeln klare Kurven, in der Kombination kommt "
               "nichts an (Tor nicht bestanden) - sie ist FUER SICH zu messen"),
+    ("2.684", "GEGENPRUEFUNG: der rsi-Effekt ist keine Verzerrung des Normals (haelt "
+              "gegen das geschrumpfte, Verzerrungsanteil ~0), aber 2024 ist schwach "
+              "und zeitstabil nur in der Betriebsform. rsi ist ein Fortsetzungs-"
+              "Beitrag, kein Kandidat fuer das OPTIMUM"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "

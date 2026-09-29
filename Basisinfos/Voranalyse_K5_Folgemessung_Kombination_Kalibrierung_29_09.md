@@ -108,3 +108,15 @@ Normal?*
 | **G4** | Auskunft: wie viel des Effekts auf die Verzerrung entfällt (roh minus geschrumpft), und derselbe Abstand für eine **Zufallsauswahl** | – |
 
 Werkzeug: `messe_k5_folge.py --gegen` (Schrumpfung wie F4/B4), vier Mengen, nacheinander.
+
+---
+
+## 8. Ergebnis der Gegenprüfung (29.09.2026) — Befund 2.684
+
+| | |
+|---|---|
+| Querabgleich | ✔ rsi allein in 2c und Folge identisch; K5 neu = Folge K2; K6 Spot/Markpreis R-R11 identisch |
+| **G1** gegen das geschrumpfte Normal | ✔ 4 von 4 (+0,069..+0,082, Nullwelt P90 +0,017..+0,022) |
+| **G4** Verzerrungsanteil | ~0 (−0,001) — **keine** Normal-Verzerrung |
+| **G3** Normal-Drittel | ✔ 4 von 4 |
+| **G2** jedes Jahr, gleicher Anteil | ⛔ 2024 negativ in 3 von 4; mit Trainingsgrenze (Betriebsform) 2024 positiv → *zeitstabil* nur in der Betriebsform, 2024 schwach |
