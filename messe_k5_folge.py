@@ -236,6 +236,43 @@ def main() -> int:
             aus[k] = v
         return aus
 
+    # ══ TOR (Nachtrag 29.09., Voranalyse Abschnitt 5 - VOR der Auswertung festgelegt) ══
+    if "--tor" in sys.argv:
+        r0, s0 = fest(E, varianten=("K0",))
+        rsi_mod0 = {"rsi": s0["mods"]["rsi"]}
+
+        def bestes(EE, y=A24):
+            s = schaetze(EE, r_sa, r_s, y[r_s], OFF[r_s], mit_k4=False, fertig=rsi_mod0)
+            e = {}
+            for v in ("K0", "K1", "K2", "K3"):
+                c_te = s["beitr"](r_pa, OFF[r_pa], v)
+                e[v] = dq(r_pa[c_te >= np.quantile(c_te, 0.9)], y)
+            return max(e[v] - e["K0"] for v in ("K1", "K2", "K3"))
+        null = np.array([bestes(verschoben(E, LAGE_SP)) for _ in range(zieh)])
+        grenze = float(np.nanpercentile(null, 90))
+        print()
+        print("TOR Bestes-von-3-Differenz mit verschobener Lage: Nullwelt Mittel %+.4f, Streuung %.4f, 90. Perzentil %+.4f" % (
+            float(np.nanmean(null)), float(np.nanstd(null, ddof=1)), grenze))
+        erg = {}
+        for d in (0.02, 0.04):
+            gef, werte = 0, []
+            for _ in range(5):
+                EV = verschoben(E, LAGE_SP)
+                gr = np.nanpercentile(EV["oi_24"][r_sa], 90)
+                y = A24.copy()
+                oben = np.flatnonzero((EV["oi_24"] >= gr) & HIT & (such | pruef))
+                kand = oben[B24[oben] == 1]
+                w = rng.choice(kand, size=min(int(round(d * len(oben))), len(kand)), replace=False)
+                y[w] = 1.0
+                dd = bestes(EV, y)
+                werte.append(dd); gef += int(dd > grenze)
+            erg[d] = gef
+            print("  gepflanzt +%.2f auf P90+ von oi_24 (Lage verschoben): %s -> gefunden %d von 5" % (
+                d, " ".join("%+.4f" % x for x in werte), gef))
+        print("  TOR: %s" % ("✔ BESTANDEN" if erg[0.04] >= 4 else "⛔ NICHT BESTANDEN - S1 bleibt Auskunft"))
+        print("SCHLUSS: vollstaendig")
+        return 0
+
     # ══ F1 FESTE TEILUNG ════════════════════════════════════════════════
     haupt, sh = fest(E)
     soll = RR11_2680.get(E2.MENGE)
