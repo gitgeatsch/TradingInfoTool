@@ -124,3 +124,34 @@ Werkzeug (Modus `--k5` in `messe_losfahren.py`) bauen und vorab committen · ein
 | 3 | **Simulation Ebene 3** | läuft die ganze Regel (Einstieg, Hebel, Stop) vorwärts auf 2024–26 |
 | 4 | ⭐ **A vorher — neue Datenquelle** | dein Einwand: vorhanden sind z. B. aktive Adressen und Umlaufmenge (täglich, `onchain_historie.db`); ob gemessen, und welche Quellen (Optionen, Liquidationen, Börsenzuflüsse) frei verfügbar sind, prüft eine eigene Voranalyse |
 | 5 | neue Monate ab 2026-09 | die Regel eingefroren, echter ungesehener Nachweis |
+
+---
+
+## 9. ✔ ABGESTIMMT UNTER PROTEST (29.09.2026) — S1 bis S7; dazu ein neuer Einwand
+
+**Nutzer:** *„OK — S1 und S7 weiter unter Protest. Wie sollen wir auf ein fahrendes Auto aufspringen, wenn diese
+Anstiege durch unser System mit Prüftakt und Cooldown bereits auf 150 sind, ohne dass wir echte und gute Signale haben?
+Ein steigender RSI ist wie: ich schau aufs Mobiltelefon, sehe, der Kurs steigt, und reite die Welle, solang es dauert,
+auf gut Glück."*
+
+**Am Code nachgesehen (Betrieb):** `HEBEL_SCREENING_INTERVAL_MINUTES = 15` (scheduler/background.py) — geprüft wird alle
+**15 Minuten** auf Stundenkerzen; der **Cooldown** (3,5 h, `budget_allocator.cooldown_stunden`) greift erst **nach** einem
+Signal auf demselben Asset, er verzögert das **erste** nicht. Der Verzug bis zum Einstieg liegt damit bei rund
+**0–75 Minuten** nach dem Stundenschluss.
+
+**Was schon gemessen ist:**
+
+| Einwand | Befund |
+|---|---|
+| *„schon auf 150“* | der Einstieg mit einem **1–2 h alten** rsi-Signal trägt noch +0,030..+0,050, mit einem **24 h alten** +0,049..+0,062 (Prüfzeit, 2.676) — ein Verzug von Stunden macht das Signal nicht wertlos. Nach > 1 ATR Anstieg trägt die Auswahl sogar **mehr** (2.685) |
+| *„Kurs steigt, aufs Handy schauen“* | das ist die **Tachonadel** — und genau die ist gemessen: *alle* Anker mit demselben Anstieg gegen die rsi-Auswahl im selben Anstieg: rsi bringt **zusätzlich** rund +0,05..+0,07 (2.685, Tabelle je Klasse; ⚠️ als Differenz nachträglich gelesen). rsi ist **nicht** „der Kurs steigt“, sondern *„für dieses Asset ungewöhnlich stark, gemessen an seinen eigenen 30 Tagen“* — das zeigt kein Handy |
+| *„auf gut Glück“* | ein **kleiner** Vorteil, kein Glück — aber ob er nach Gebühren, Hebel und Stop **etwas einbringt**, zeigt erst die **Simulation** (Plan Schritt 3). Fällt er dort durch, fällt die Regel |
+
+**⭐ Eine echte Lücke, die dein Einwand aufdeckt:** gemessen wird der **Zustand** (rsi oben, an festen Ankern alle
+6 h); der Betrieb löst beim **ersten Überschreiten** der Schwelle aus. Ob der **Ersteintritt** so viel trägt wie der
+Zustand, ist **nicht gemessen**.
+
+➤ **Vorschlag K5-6 (zur Abstimmung, noch nicht gebaut):** im selben Lauf zusätzlich der **Ersteintritt** — die erste
+Stunde, in der v̂ die Schwelle überschreitet (davor 24 h darunter) — mit Einstieg **eine Stunde später** (Betriebsverzug,
+aufgerundet). Kriterium: der Vorsprung am Ersteintritt ist in 2024 **> 0** und **nicht kleiner als die Hälfte** des
+Zustandswerts. Bei Nein: die Betriebsform (Auslösen am Überschreiten) muss **geändert** werden, bevor K5 gilt.
