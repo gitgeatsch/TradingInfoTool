@@ -658,6 +658,11 @@ NEUESTER_STAND = (
               "Monatskontext). Der ERSTEINTRITT (erstes Ueberschreiten, Einstieg "
               "1 h spaeter) traegt +0,076..+0,093, weit jenseits der Nullwelt - "
               "Kandidat fuer die Einstiegsform; Bestaetigung 2025-26 ausstehend"),
+    ("2.688", "KERN SCHRITT 1 BESTANDEN: der Ersteintritt (s = +0,035, per Regel auf "
+              "2024 gewaehlt) traegt einmal bestaetigt 2025-26 in 4 von 4 Mengen "
+              "(+0,059..+0,076, jede Bedingung inkl. Tagesblock-Bootstrap). Aber: nicht "
+              "besser als der Zustand, und stark regimeabhaengig (2025 klein, zweites "
+              "Halbjahr 2025 negativ). Weiter mit Schritt 2 (H0)"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

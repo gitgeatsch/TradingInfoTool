@@ -172,3 +172,30 @@ weil Einstiege am selben Markttag keine unabhängigen Beobachtungen sind.
 | **B6** | Tagesblock-Bootstrap: die Einstiege tageweise mit Zurücklegen gezogen, 1.000 Ziehungen (eigene Saat), 95-%-Intervall des Dq **> 0** |
 | Lauf | `--kern --bestaetigen 0.035` in `bestand`, `unverzerrt:1`, `unverzerrt:2`, `unverzerrt:3` — nacheinander, **einmal**; danach Stopp |
 | Urteil | B1, B2, B4, B6 je Menge; **B3** = B1 und B2 in ≥ 3 von 4 Mengen; B5 als mit/ohne ausgewiesen |
+
+
+---
+
+## 11. ERGEBNIS BESTÄTIGUNG 2025-01 bis 2026-08 — Befund 2.688 (Stopp, gemeinsame Bewertung)
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| Einstiege / Tage | 10.534 / 517 | 11.844 / 544 | 10.703 / 533 | 11.079 / 545 |
+| **Dq gesamt** | **+0,076** | **+0,064** | **+0,059** | **+0,061** |
+| B1 2025 / 2026 | +0,026 / +0,132 | +0,031 / +0,115 | +0,034 / +0,098 | +0,024 / +0,113 |
+| B2 Nullwelt P90 | +0,031 ✔ | +0,019 ✔ | +0,026 ✔ | +0,022 ✔ |
+| B4 Assets positiv | 85 % ✔ | 80 % ✔ | 75 % ✔ | 80 % ✔ |
+| B6 95-%-Intervall (Tage) | +0,020..+0,128 ✔ | +0,016..+0,115 ✔ | +0,006..+0,112 ✔ | +0,011..+0,112 ✔ |
+| B5 ohne 10./11.10. | +0,079 | +0,071 | +0,066 | +0,069 |
+| Auskunft Zustand | +0,066 | +0,058 | +0,066 | +0,057 |
+| Einstieg +2 h / +6 h | +0,079 / +0,075 | +0,059 / +0,055 | +0,056 / +0,049 | +0,060 / +0,053 |
+
+➤ **Schritt 1 BESTANDEN:** B1–B6 in 4 von 4 Mengen (B3 ✔).
+
+⚠️ **Gegenprüfung, ehrlich:**
+1. Der **Vorsprung des Ersteintritts vor dem Zustand** aus 2024 **wiederholt sich nicht** — ungesehen tragen **beide** etwa
+   gleich. Bestätigt ist: der Ersteintritt **trägt**, nicht: er ist **besser**.
+2. **Regime:** 2025 trägt nur ein Viertel von 2026; **Juli bis Dezember 2025** sind in allen vier Mengen überwiegend
+   **negativ** — sechs Monate Gegenwind. Das ist für Hebel und Verlustserie (Schritt 2/3) entscheidend.
+3. Die **Größe** ist unsicher: das Tagesintervall reicht von etwa +0,01 bis +0,12.
+4. Der **Verzug** des Betriebs (2–6 h) zerstört das Signal nicht.

@@ -1,0 +1,29 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 223003 · Symbole 118
+  Auskunft Verteilung vh: P50 -0.0037 · P90 +0.0374 · P95 +0.0495 · P99 +0.0734 · Max +0.1149
+
+========================================================================================================================
+KERN SCHRITT 1 · BESTAETIGUNG 2025-01..2026-08, Stufe +0.035, Menge unverzerrt:3 (EINMAL)
+  Einstiege 11079 an 545 verschiedenen Tagen · Dq gesamt +0.0613
+  B1 je Jahr: 2025 +0.0240 (5887) · 2026 +0.1131 (5192) -> ✔
+  B2 Nullwelt (40 Ziehungen) Mittel +0.0127, P90 +0.0216 -> ✔
+  B4 je Asset (>= 20 Einstiege): 114 Assets, Dq > 0 bei 80 % -> ✔
+  B5 ohne 10./11.10.2025: 10988 Einstiege, Dq +0.0685 (mit +0.0613)
+  B6 Tagesblock-Bootstrap (545 Tage, 1.000 Ziehungen): 95-%-Intervall +0.0106 .. +0.1119 -> ✔
+  Auskunft Zustand (Gitteranker vh >= s): +0.0570 gegen Ersteintritt +0.0613
+  Auskunft Einstieg 2 h nach dem Signal: 11079 · Dq +0.0602
+  Auskunft Einstieg 6 h nach dem Signal: 11079 · Dq +0.0527
+  Auskunft je Monat: 2025-01 +0.043 (436) · 2025-02 -0.029 (513) · 2025-03 +0.060 (602) · 2025-04 +0.085 (566) · 2025-05 +0.222 (563) · 2025-06 +0.147 (484) · 2025-07 -0.042 (620) · 2025-08 -0.061 (607) · 2025-09 +0.003 (558) · 2025-10 -0.128 (618) · 2025-11 -0.023 (128) · 2025-12 -0.101 (192) · 2026-01 +0.203 (141) · 2026-02 +0.087 (608) · 2026-03 +0.199 (640) · 2026-04 +0.237 (701) · 2026-05 +0.080 (866) · 2026-06 -0.070 (754) · 2026-07 +0.104 (755) · 2026-08 +0.184 (727)
+  URTEIL SCHRITT 1 (Menge unverzerrt:3): B1 ✔ · B2 ✔ · B4 ✔ · B6 ✔  (B3 ueber die vier Mengen)
+SCHLUSS: vollstaendig
+exit=0
