@@ -1,0 +1,23 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K6 S STUFE 1 · SIGNALSTAERKE (rsi_s feste Richtung, Grenzen aus der Suche) · feste Teilung, Pruefzeit
+  Querabgleich: oberstes Zehntel gesamt, rohes Normal +0.0541 (2.680: einfache rsi-Regel etwa +0,073..+0,078) · geschrumpft +0.0540
+  P90-92   Anker   4400 · Dq +0.0384
+  P92-94   Anker   4475 · Dq +0.0346
+  P94-96   Anker   4437 · Dq +0.0526
+  P96-98   Anker   4805 · Dq +0.0585
+  P98-100  Anker   4906 · Dq +0.0793
+  unter P90 (Vergleich): Dq +0.0094
+  oberste minus unterste +0.0408 · Zufallswelt (rsi verschoben, 40 Ziehungen) Mittel -0.0005, 90. Perzentil +0.0159
+  Auskunft: Kurve monoton steigend? nein
+  Auskunft 72 h (rohes 72-h-Normal): P90-92 +0.0277 · P92-94 +0.0137 · P94-96 +0.0351 · P96-98 +0.0397 · P98-100 +0.0436
+  Auskunft je Jahr (oberste minus unterste): 2025 +0.0824 · 2026 -0.0110
+  Auskunft WETTER (BTC 30 Tage, Drittel aus der Suche): BTC tief: Zehntel +0.0119, oberste +0.0090, unterste +0.0179 (10307) · BTC mitte: Zehntel +0.0876, oberste +0.1080, unterste +0.0582 (9978) · BTC hoch: Zehntel +0.0927, oberste +0.1957, unterste +0.0457 (2738)
+  WEITER-SCHWELLE +0.04: ✔ ERREICHT - Vollmessung vorlegen
+SCHLUSS: vollstaendig
+exit=0

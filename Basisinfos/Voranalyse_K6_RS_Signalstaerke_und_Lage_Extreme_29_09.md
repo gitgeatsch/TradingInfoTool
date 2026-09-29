@@ -164,3 +164,45 @@ Tests oder kleinere Läufe schon ein Erfolg zu erwarten ist."*
 | **Auskunft** (kein Urteil) | Nullwelt (rsi verschoben, 40 Ziehungen, ohne Modell billig) · monoton? · 72 h · je Jahr · ⭐ **Wetter**: dasselbe je Drittel der BTC-Lage (30 Tage, Grenzen aus der Suche) — *wirkt das Signal bei anderem Wetter anders?* |
 | **R2** | **zurückgestellt** (geringe Erwartung, 2.681) |
 | **danach** | **voller Stopp**, Ergebnis mit Zwischenfazit zum Ziel vorlegen |
+
+---
+
+## 12. ERGEBNIS STUFE 1 (29.09.2026, bestand, feste Teilung) — voller Stopp, zur Bewertung
+
+Beleg `Basisinfos/K6_S_Stufe1_29_09/stufe1__bestand.txt`.
+
+| Stärkeklasse | Anker | Dq (geschrumpft) |
+|---|---|---|
+| P90–92 | 4.400 | +0,038 |
+| P92–94 | 4.475 | +0,035 |
+| P94–96 | 4.437 | +0,053 |
+| P96–98 | 4.805 | +0,059 |
+| **P98–100** | 4.906 | **+0,079** |
+| unter P90 | | +0,009 |
+
+| Prüfung | Ergebnis |
+|---|---|
+| Querabgleich | ✔ oberstes Zehntel +0,0541 — 2.680 *einfache Regel rsi selbst* +0,0540 (mein Erwartungswert im Ausgabetext war falsch, korrigiert) |
+| **Weiter-Schwelle** | oberste − unterste **+0,0408** ≥ +0,04 → **formal erreicht — aber auf der Kante** (+0,0008 darüber) |
+| Zufallswelt | Mittel −0,0005, P90 +0,016 — der Unterschied ist **kein Zufall** |
+| monoton | **nein** (P92–94 unter P90–92, im Rauschen) — der Anstieg sitzt **oben** (P98–100) |
+| ⛔ je Jahr | **2025 +0,082 · 2026 −0,011** — der ganze Unterschied kommt aus **2025** |
+| ⭐ **Wetter** (BTC 30 Tage) | **BTC tief: das ganze Zehntel nur +0,012**, keine Abstufung · BTC mitte +0,088 (oben +0,108) · BTC hoch +0,093 (oben +0,196) |
+| Form | die **feste** Regel (rsi selbst) wählt +0,054, das **Modell** aus rsi jetzt und 24 h alt +0,081 (2.680) — die feste Richtung verliert ein Drittel |
+
+**Gegenprüfung der Wetter-Zahl:** (1) die Drittel-Grenzen stammen aus der Suche 2023–24 (starker Anstieg) — in der
+Prüfzeit liegen 45 % der Anker in *BTC tief*, nur 12 % in *hoch*; (2) *BTC tief* und das Jahr 2026 sind vermutlich
+**verschränkt** (nicht gemessen) — Stufe 1 kann Jahr und Wetter nicht trennen; (3) eine Menge, feste Teilung,
+**Auskunft**, kein Urteil. Früher gemessen: rsi allein ist in jeder BTC-Lage **positiv** (2.683 S4) — das bleibt
+richtig (+0,012 ist positiv), aber die **Größe** unterscheidet sich um das Siebenfache.
+
+➤ **Bewertung:** Die Schwelle ist erreicht, aber S steht auf schwachen Beinen (Kante, nur 2025, nicht monoton, und
+die feste Regel ist nicht die Einstiegsregel). **Der stärkere Befund ist das Wetter** — genau die Nutzerfrage
+*„sollten wir doch vorher auf das Wetter achten?“*. **Nicht** als Vorhersage des Wetters (2.599: nicht vorab
+erkennbar), sondern als **Gewicht**: das **aktuelle** Wetter (BTC der letzten 30 Tage, bekannt zur Ankerstunde)
+entscheidet mit, wie viel das Signal wert ist.
+
+➤ **Vorschlag zur Abstimmung** (noch nicht gebaut): vor einer Vollmessung S zuerst **das Wetter als Gewicht auf A**
+sauber messen — Jahr und Wetter getrennt (Wetter **innerhalb** jedes Jahres), Grenzen rollierend aus der
+Vergangenheit, Nullwelt mit **gemeinsamer** Verschiebung der BTC-Reihe (Marktmerkmal, 2.673), Tor, vier Mengen, auf
+der **Einstiegsregel** (Modell, +0,081). Wieder zuerst als **Stufe 1**.

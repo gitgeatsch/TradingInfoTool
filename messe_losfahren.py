@@ -237,7 +237,7 @@ def main() -> int:
         print()
         print("=" * 120)
         print("K6 S STUFE 1 · SIGNALSTAERKE (rsi_s feste Richtung, Grenzen aus der Suche) · feste Teilung, Pruefzeit")
-        print("  Querabgleich: oberstes Zehntel gesamt, rohes Normal %+.4f (2.680: einfache rsi-Regel etwa +0,073..+0,078) "
+        print("  Querabgleich: oberstes Zehntel gesamt, rohes Normal %+.4f (2.680: einfache Regel rsi selbst +0,0540 bestand) "
               "· geschrumpft %+.4f" % (dq(r_pa[KS[r_pa] >= 0]), dqs(r_pa[KS[r_pa] >= 0])))
         for c in range(5):
             s_ = r_pa[KS[r_pa] == c]
