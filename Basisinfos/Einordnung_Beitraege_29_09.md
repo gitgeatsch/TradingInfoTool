@@ -140,3 +140,41 @@ Fortsetzungssignal (B). Ob das für den Hebel reicht, ist eine **Nutzerentscheid
 | **mitführen** | jede betroffene Zahl **mit und ohne** den 10./11.10. ausweisen (Störfaktor, J10) |
 | **nicht** | kein Modell, keine Schwelle, kein Deckel wird an einem solchen Ereignis ausgerichtet; der *Stresstag-Deckel* aus der Recherche entfällt als Messziel |
 | **Schutz dagegen** | liegt nicht in der Vorhersage, sondern in der **Hebelhöhe und Positionsgröße** (Rolle C/D) — die Frage ist, ob eine Stufe einen solchen Tag **übersteht**, nicht, ob man ihn kommen sieht |
+
+---
+
+## 8. ⛔ KORREKTUR (29.09.2026, beim Umbau des Standblatts gefunden) — es gibt schon ein Rollen-Schema
+
+**Nutzerfrage:** *„Irgendwie hat dieser Plan Ähnlichkeit mit bereits besprochenem Vorgehen — einige der
+Messungen haben wir doch für die Beiträge gemacht, oder?"* — **Ja.** Im Standblatt (`hebel_neubau.ROLLEN`,
+Neubauplan 25.09.) steht:
+
+| Rolle (25.09.) | Frage | Anordnung |
+|---|---|---|
+| **A · Richtung** | geht es aufwärts? | |
+| **B · Bewegungserwartung** | kommt **überhaupt** etwas? (richtungslos) | **A und B und NICHT C** — keine Summe |
+| **C · Risikosperre** | überdehnt, überhitzt? | |
+
+Meine Einordnung (Abschnitte 1–6) hat dieselbe Einsicht neu erfunden (*getrennte Rollen, keine Summe*) — und dabei
+**einen Fehler** gemacht: vola, volumenschub, oi_je_umsatz, oi_aenderung standen unter *gefallen*. Das gilt nur für
+die **Richtung**. Für die **Höhe** sind sie die robustesten Beiträge überhaupt (2.655/2.662: 14 von 16 Auswahlen,
+vorwärts in 24–32 von 32 Monaten, jede BTC-Lage) — **Rolle B**.
+
+### Vorschlag: das Schema vom 25.09. bleibt, die Zeitfrage von heute wird darin eingeordnet
+
+| Rolle | Beiträge | Stand |
+|---|---|---|
+| **A · Richtung — vorher** (OPTIMUM) | funding negativ, wenige Longs (Spiegel 1,10 / 1,18, 2.655; Kurven 2.683), oi_aenderung | ⭐ Kandidaten, kein Nachweis in ungesehener Zeit (2.657, 2.665, 2.675) |
+| **A · Richtung — während** (Fortsetzung) | rsi, momentum_kurz (eine Familie) | ✔ gemessen (2.648, 2.675, 2.683, 2.684) — **eigener Einstiegstyp** (Nutzer: Quant +400 %, *300 mitnehmen*); die Positionsführung entscheidet (2.656) |
+| **B · Bewegungserwartung** (Höhe, richtungslos) | vola_kausal/ATR, volumenschub, oi_je_umsatz, oi_aenderung | ✔ **robust** (2.655, 2.662); in ATR gemessen größtenteils die ATR selbst, darüber hinaus volumenschub und oi_aenderung tief (2.667) |
+| **C · Risikosperre** | ema_abstand hoch (2.642/2.643); **Kandidaten**: funding hoch, viele Longs (Spiegel 0,85 / 0,63, 2.655; Kurven 2.683) | ✔ ema_abstand; die Extreme der Lage ungemessen als Sperre |
+| **Bewertung 2 · Hebelhöhe** | ATR zum Einstieg | ✔ 2.681 (5x kalibriert, 3x geordnet) |
+| **Kontext** | Regime | nicht vorhersagbar (2.599) → Positionsgröße |
+
+⚠️ **Eine offene Spannung, zur Entscheidung:** *„A und B und NICHT C"* (25.09.) ist eine **Und-Verknüpfung** — der
+Nutzer hat am 28.09. entschieden: *Achsen sind Gewichte, keine Blocker*. Vorschlag: A liefert das Signal, **B und C
+wirken als Gewichte** (B hebt, C senkt), keine harte Sperre.
+
+⚠️ **Folge für Schritt 2 (*Losfahren*):** Die Frage *Lage vorher* ist durch 2.650, 2.651/2.663, 2.657 und 2.665
+**weitgehend schon gestellt** — mit niedriger Erwartung. Neu wäre nur: Anker ohne bisherigen Anstieg, Vorlauf mit
+Einstieg jetzt, Bezug geschrumpftes Normal. Vorher R-R11 auf 2.657/2.665.
