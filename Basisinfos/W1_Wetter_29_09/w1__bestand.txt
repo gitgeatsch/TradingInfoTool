@@ -1,0 +1,31 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+W1 · WETTER: KONTEXT ODER GEWICHT? (Einstiegsregel rsi allein, feste Teilung, geschrumpftes Normal)
+  R-R11 rsi allein oben (rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+
+  2025 · Niveau (alle Anker) · Zuwachs der Einstiegsauswahl · Anker alle/Auswahl · Episoden (Tage-Laeufe)
+    BTC tief  Niveau -0.0233 · Zuwachs +0.0420 ·  54900 /  4722 · Episoden 18
+    BTC mitte Niveau +0.0094 · Zuwachs +0.0612 ·  39902 /  5244 · Episoden 25
+    BTC hoch  Niveau -0.0073 · Zuwachs +0.1183 ·  22536 /  2463 · Episoden 8
+    Auskunft feste Regel (rsi_s >= P90 Suche): Zuwachs tief -0.0068 · mitte +0.0659 · hoch +0.0793
+
+  2026 · Niveau (alle Anker) · Zuwachs der Einstiegsauswahl · Anker alle/Auswahl · Episoden (Tage-Laeufe)
+    BTC tief  Niveau -0.0159 · Zuwachs +0.0068 ·  31665 /  2901 · Episoden 5
+    BTC mitte Niveau +0.1466 · Zuwachs +0.0291 ·  32872 /  2927 · Episoden 20
+    BTC hoch  Niveau +0.0454 · Zuwachs +0.1075 ·  38968 /  4389 · Episoden 16
+    Auskunft feste Regel (rsi_s >= P90 Suche): Zuwachs tief -0.0077 · mitte +0.0387 · hoch +0.0658
+
+  2025 · GEWICHT: Zuwachs hoch - tief +0.0764 (Nullwelt Mittel -0.0013, 90. Perzentil +0.1563) · KONTEXT: Niveau hoch - tief +0.0160 (Nullwelt Mittel +0.0119, 90. Perzentil +0.0718)
+  2026 · GEWICHT: Zuwachs hoch - tief +0.1008 (Nullwelt Mittel +0.0182, 90. Perzentil +0.1456) · KONTEXT: Niveau hoch - tief +0.0612 (Nullwelt Mittel -0.0009, 90. Perzentil +0.1381)
+  Auskunft absolut 2025: BTC 30 T < 0: Niveau -0.0139, Zuwachs +0.0371 (5912) · BTC 30 T >= 0: Niveau -0.0049, Zuwachs +0.0958 (6517)
+  Auskunft absolut 2026: BTC 30 T < 0: Niveau +0.0128, Zuwachs +0.0197 (4440) · BTC 30 T >= 0: Niveau +0.0840, Zuwachs +0.0801 (5777)
+  Auskunft 2022 (Moment-Bezug) Zuwachs: BTC tief -0.0592 (883) · BTC mitte +0.0171 (886) · BTC hoch +0.0485 (1216)
+
+  WEITER-SCHWELLE Zuwachs hoch - tief >= +0.04 in 2025 UND 2026: ✔ ERREICHT - W2 vorlegen
+SCHLUSS: vollstaendig
+exit=0

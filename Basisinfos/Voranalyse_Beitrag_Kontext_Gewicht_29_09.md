@@ -171,3 +171,46 @@ bisherigen Messungen und Ergebnissen aufgebaut werden, damit es trägt."*
 | **P7** | `Einordnung_Beitraege_29_09.md` Abschnitt 5 als **überholt** gekennzeichnet, Verweis auf 8–9 |
 | **W1** | `messe_losfahren.py --wetter` (Auswahl `rsi_auswahl`, R-R11 +0,0808; Wetter-Rang über 8.760 h, mindestens 4.000 h; Nullwelt: Wetterreihe für alle Assets gemeinsam um ≥ 1.440 h verschoben, 40 Ziehungen; Episoden = Läufe des Zustands auf Tagesbasis, 00 UTC) |
 | **danach** | Stopp, Ergebnis mit Zwischenfazit zum Ziel |
+
+---
+
+## 11. ERGEBNIS W1 (29.09.2026, bestand, feste Teilung) — Stopp, zur Bewertung
+
+Beleg `Basisinfos/W1_Wetter_29_09/w1__bestand.txt`. R-R11 rsi allein **+0,0808 bitgleich**.
+
+| Jahr | Wetter | Niveau (alle Anker) | **Zuwachs** der Einstiegsauswahl | Auswahl | Episoden |
+|---|---|---|---|---|---|
+| 2025 | BTC tief | −0,023 | **+0,042** | 4.722 | 18 |
+| | BTC mitte | +0,009 | +0,061 | 5.244 | 25 |
+| | BTC hoch | −0,007 | **+0,118** | 2.463 | **8** |
+| 2026 | BTC tief | −0,016 | **+0,007** | 2.901 | **5** |
+| | BTC mitte | +0,147 | +0,029 | 2.927 | 20 |
+| | BTC hoch | +0,045 | **+0,108** | 4.389 | 16 |
+
+| Prüfung | 2025 | 2026 |
+|---|---|---|
+| **Gewicht**: Zuwachs hoch − tief | **+0,076** | **+0,101** |
+| Nullwelt (gemeinsam verschoben) Mittel / P90 | −0,001 / **+0,156** | +0,018 / **+0,146** |
+| **Kontext**: Niveau hoch − tief | +0,016 | +0,061 |
+| Nullwelt Mittel / P90 | +0,012 / +0,072 | −0,001 / +0,138 |
+
+| Auskunft | Ergebnis |
+|---|---|
+| absolut (BTC 30 Tage < 0 gegen ≥ 0), Zuwachs | 2025 +0,037 → +0,096 · 2026 +0,020 → +0,080 — **dieselbe Richtung** |
+| feste Regel (rsi_s ≥ P90), Zuwachs tief / hoch | 2025 −0,007 / +0,079 · 2026 −0,008 / +0,066 — **dieselbe Richtung** |
+| 2022 (Moment-Bezug, ungesehen), Zuwachs tief / mitte / hoch | **−0,059 / +0,017 / +0,049** — **dieselbe Richtung** |
+
+➤ **Bewertung:**
+1. **Weiter-Schwelle erreicht** (+0,076 und +0,101 ≥ 0,04) → nach Abschnitt 6 **W2 vorlegen**.
+2. **Es sieht nach Gewicht aus, nicht nach Kontext:** der **Zuwachs** von rsi hängt am Wetter (bei BTC tief fast null,
+   2022 sogar negativ), das **Niveau** aller Anker kaum. Die Richtung ist in **jeder** Sicht gleich — 2025, 2026, 2022,
+   absolutes Maß, feste Regel.
+3. ⛔ **Aber gegen die Nullwelt nicht unterscheidbar:** beide Differenzen liegen **unter** dem 90. Perzentil
+   (+0,156 / +0,146). Die Ursache ist gemessen und steht in Abschnitt 5 vorab: **wenige Episoden** (BTC hoch 2025: 8,
+   BTC tief 2026: 5). Mit so wenigen Wetterlagen erzeugt schon eine zufällige Zuordnung Unterschiede dieser Größe (2.599).
+
+➤ **Folge für W2 (Vorschlag, nicht abgestimmt):** Vier **Mengen** helfen hier **nicht** — sie haben dieselbe Zeit und
+dasselbe BTC-Wetter. Mehr **Episoden** gibt es nur über **mehr Zeit**: W2 muss **alle Jahre 2022–2026** gemeinsam
+gegen **eine** Nullwelt prüfen (2023–24 mit dem Vorbehalt, dass rsi dort trainiert wurde — das Wetter aber nicht).
+Ob das reicht, ist offen; wenn nicht, ist das Wetter-Gewicht mit unseren Daten **nicht nachweisbar** — nicht
+**widerlegt**.
