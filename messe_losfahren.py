@@ -293,7 +293,7 @@ def main() -> int:
     # Signal rsi allein rollierend (Betriebsform); Vorsprung vh = expit(logit(QS) + Beitrag) - QS.
     # ZWEI SCHRITTE: ohne --bestaetigen wird NUR 2024 ausgewertet und ausgegeben (Wahl);
     # --bestaetigen <s> [--sperre <-s>] wertet einmal 2025-01..2026-08 aus (Bestaetigung).
-    if "--k5" in sys.argv:
+    if "--k5" in sys.argv or "--kern" in sys.argv:
         from scipy.special import expit as _ex
         best = "--bestaetigen" in sys.argv
         s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
@@ -355,6 +355,101 @@ def main() -> int:
         # Auskunft (vor dem Lauf ergaenzt, 29.09.): Verteilung von vh - KEINE Schwelle daraus (K5: absolut, kein Rang)
         print("  Auskunft Verteilung vh: P50 %+.4f · P90 %+.4f · P95 %+.4f · P99 %+.4f · Max %+.4f" % tuple(
             np.percentile(VH[g], [50, 90, 95, 99, 100])))
+        # ══ KERNMESSUNG Schritt 1 (Voranalyse_Kern_Einstieg_Hebel_29_09.md, N1-N4) ══════════════
+        # Ersteintritt in der gegengeprueften Fassung: erste Stunde mit vh >= s, davor 24 h mit >= 20 GUELTIGEN
+        # Stunden alle darunter, nicht in den ersten 24 h eines Monats; Einstieg eine Stunde spaeter.
+        # WAHL (ohne --bestaetigen): nur 2024, Raster +0,010..+0,050, Regel: groesster Abstand echt - P90 Nullwelt,
+        # bei Gleichstand (< 0,005) die niedrigere Stufe. BESTAETIGUNG (--bestaetigen s): einmal 2025-01..2026-08.
+        if "--kern" in sys.argv:
+            MS = np.array([H(datetime(2020 + mm // 12, mm % 12 + 1, 1)) for mm in range(0, 12 * 8)])
+
+            def erst_v(VHx, s):
+                aus = []
+                for tl in teile:
+                    st = STD[tl]; vv = VHx[tl]
+                    fin = np.isfinite(vv)
+                    ab_ = np.where(fin, vv >= s, False)
+                    cs = np.concatenate([[0], np.cumsum(ab_)]); cf = np.concatenate([[0], np.cumsum(fin)])
+                    lo = np.searchsorted(st, st - 24, "left")
+                    idx = np.arange(len(tl))
+                    erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((cf[idx] - cf[lo]) >= 20)
+                    erst &= (st - MS[np.clip(MON[tl] - 2020 * 12, 0, len(MS) - 1)]) >= 24
+                    i_ = np.flatnonzero(erst)
+                    i_ = i_[i_ + 1 < len(tl)]
+                    i_ = i_[st[i_ + 1] == st[i_] + 1]
+                    aus.append(tl[i_ + 1])
+                e_ = np.concatenate(aus) if aus else np.zeros(0, int)
+                return e_[np.isin(JAHR[e_], JAHRE) & np.isfinite(QSh[e_])]
+
+            def dqh(ix, y=A24):
+                ix = ix[np.isfinite(QSh[ix])]
+                return dq(ix, y, QSh * (NA + NB), (1 - QSh) * (NA + NB)) if len(ix) else np.nan
+            h_ab = np.flatnonzero(np.isfinite(QSh) & np.isin(JAHR, JAHRE) & np.isfinite(OFF))
+
+            def vh_stuendlich(EE):
+                v = np.full(n, np.nan)
+                for mi, m in modelle:
+                    ixm = h_ab[MON[h_ab] == mi]
+                    if len(ixm):
+                        c = m.z(EE, ixm, OFF[ixm]) - OFF[ixm]
+                        v[ixm] = _ex(np.log(QSh[ixm] / (1 - QSh[ixm])) + c) - QSh[ixm]
+                return v
+            print()
+            print("=" * 120)
+            if not best:
+                RASTER = [round(0.010 + 0.005 * i, 3) for i in range(9)]
+                print("KERN SCHRITT 1 · WAHL DER SCHWELLE auf 2024 (Menge %s) - 2025-26 wird NICHT ausgewertet" % E2.MENGE)
+                EE_ = {s: erst_v(VH, s) for s in RASTER}
+                echt = {s: dqh(EE_[s]) for s in RASTER}
+                for s, soll in ((0.02, 0.0928), (0.04, 0.0759)):
+                    print("  R-R11 2.687 (c) Stufe %+.3f: %+.4f · Soll %+.4f -> %s" % (
+                        s, echt[s], soll, "✔ bitgleich" if abs(round(echt[s], 4) - soll) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
+                null = {s: [] for s in RASTER}
+                for _ in range(zieh):
+                    v_ = vh_stuendlich(verschoben(E, RSI))
+                    for s in RASTER:
+                        null[s].append(dqh(erst_v(v_, s)))
+                print("    %-8s %8s %8s %10s %10s %10s %10s" % ("Stufe", "Einstiege", "Tage", "echt", "Null Mittel", "Null P90", "Abstand"))
+                abst = {}
+                for s in RASTER:
+                    p90 = float(np.nanpercentile(null[s], 90)); abst[s] = echt[s] - p90
+                    print("    %+.3f   %8d %8d %+10.4f %+10.4f %+10.4f %+10.4f" % (
+                        s, len(EE_[s]), len(np.unique(STD[EE_[s]] // 24)), echt[s], float(np.nanmean(null[s])), p90, abst[s]))
+                mx = max(abst.values())
+                wahl = min(s for s in RASTER if abst[s] >= mx - 0.005)
+                print("  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand %+.4f -> GEWAEHLT s = %+.3f" % (mx, wahl))
+            else:
+                s = s_best
+                print("KERN SCHRITT 1 · BESTAETIGUNG 2025-01..2026-08, Stufe %+.3f, Menge %s (EINMAL)" % (s, E2.MENGE))
+                ee = erst_v(VH, s)
+                gesamt = dqh(ee)
+                jz = [(jj, dqh(ee[JAHR[ee] == jj]), int((JAHR[ee] == jj).sum())) for jj in JAHRE]
+                b1 = all(x[1] > 0 for x in jz)
+                nv = [dqh(erst_v(vh_stuendlich(verschoben(E, RSI)), s)) for _ in range(zieh)]
+                p90 = float(np.nanpercentile(nv, 90)); b2 = gesamt > p90
+                ga = [dqh(ee[SYM[ee] == si]) > 0 for si in np.unique(SYM[ee]) if (SYM[ee] == si).sum() >= 20]
+                b4 = float(np.mean(ga)) if ga else np.nan
+                bs0, bs1 = H(datetime(2025, 10, 10)) - 24, H(datetime(2025, 10, 12))
+                ohne = ee[(STD[ee] < bs0) | (STD[ee] >= bs1)]
+                print("  Einstiege %d an %d verschiedenen Tagen · Dq gesamt %+.4f" % (len(ee), len(np.unique(STD[ee] // 24)), gesamt))
+                print("  B1 je Jahr: %s -> %s" % (" · ".join("%d %+.4f (%d)" % x for x in jz), "✔" if b1 else "⛔"))
+                print("  B2 Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (zieh, float(np.nanmean(nv)), p90, "✔" if b2 else "⛔"))
+                print("  B4 je Asset (>= 20 Einstiege): %d Assets, Dq > 0 bei %.0f %% -> %s" % (len(ga), 100 * b4, "✔" if b4 >= 0.6 else "⛔"))
+                print("  B5 ohne 10./11.10.2025: %d Einstiege, Dq %+.4f (mit %+.4f)" % (len(ohne), dqh(ohne), gesamt))
+                zst = dqs(g[VH[g] >= s])
+                print("  Auskunft Zustand (Gitteranker vh >= s): %+.4f gegen Ersteintritt %+.4f" % (zst, gesamt))
+                for k in (2, 6):
+                    pos = ee + (k - 1)
+                    okp = (pos < n)
+                    pos = pos[okp]; e0 = ee[okp]
+                    okp = (SYM[pos] == SYM[e0]) & (STD[pos] == STD[e0] + (k - 1))
+                    print("  Auskunft Einstieg %d h nach dem Signal: %d · Dq %+.4f" % (k, int(okp.sum()), dqh(pos[okp])))
+                print("  Auskunft je Monat: " + " · ".join("%d-%02d %+.3f (%d)" % (mm // 12, mm % 12 + 1, dqh(ee[MON[ee] == mm]), int((MON[ee] == mm).sum()))
+                                                          for mm in np.unique(MON[ee])))
+                print("  URTEIL SCHRITT 1 (Menge %s): B1 %s · B2 %s · B4 %s  (B3 ueber die vier Mengen)" % (
+                    E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b4 >= 0.6 else "⛔"))
+            print("SCHLUSS: vollstaendig")
+            return 0
 
         # ── K5-1 Kalibrierung je Zehntel von vh ──
         kant = np.quantile(VH[g], np.linspace(0, 1, 11)[1:-1]); zg = np.searchsorted(kant, VH[g], "right")

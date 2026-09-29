@@ -107,3 +107,19 @@ Liquidationsgrenze) kommt erst in Schritt 3.
 
 Werkzeug (Modus in `messe_losfahren.py`) bauen und vorab committen · Funktionstest · **Wahllauf 2024** (etwa 40 Min) ·
 Stopp mit der gewählten Stufe · **Bestätigung** 2025–26 in vier Mengen (je etwa 40 Min, nacheinander) · Stopp.
+
+---
+
+## 8. ✔ ABGESTIMMT (29.09.2026) — N1 bis N4, mit einer Korrektur
+
+**Nutzer:** *„ja, N1 bis N4 wie empfohlen — prüfen und gegenprüfen. Wir brauchen Lösungen, und nicht nur, damit wir eine
+Regel einhalten, weil eine Messung u. U. einen Fehler oder falsche Annahmen getroffen hat — also an der Messung
+herumschrauben NEIN, aber Fehler oder eine Aussage zum Ergebnis und mögliche Lösungen JA, MUSS."*
+
+⛔ **Korrigiert:** Abschnitt 1 und 4 sagten *„fällt ein Schritt … dann ist der Kern in dieser Form widerlegt“*. Das war
+falsch und widerspricht der stehenden Regel *kein Beitrag fällt ohne Lösungssuche*. **Es gilt:**
+
+| fällt ein Schritt | |
+|---|---|
+| ⛔ **nicht** | an der Messung schrauben, bis sie passt (Schwelle, Fenster, Definition nachträglich ändern) |
+| ✔ **Pflicht** | (1) **Fehler prüfen** — Werkzeug, Daten, Vorgriff; (2) **Annahmen prüfen** — welche Annahme der Messung trifft nicht zu, und das **gemessen**, nicht vermutet; (3) **Aussage zum Ergebnis** — was genau hält nicht, wo, wie groß; (4) **Lösungsvorschläge** — jeder als **neue** Vorabfestlegung, zur Abstimmung |
