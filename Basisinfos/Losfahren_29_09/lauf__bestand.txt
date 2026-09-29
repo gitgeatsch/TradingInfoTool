@@ -1,0 +1,55 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+R-R11 rsi allein oben (rohes Normal) +0.0808 · 2.680: +0.0808 -> ✔ bitgleich
+
+========================================================================================================================
+TEIL 1 · FESTE TEILUNG - die ANFAHR-KURVE der rsi-Auswahl (Dq gegen das geschrumpfte Normal)
+  < -1    Auswahl     34 ( 0.2 %) · Dq -0.3416 (zu wenige) · alle Anker der Klasse +0.0082
+  -1..0   Auswahl   3743 (16.5 %) · Dq +0.0249 · alle Anker der Klasse +0.0070
+  0..0,5  Auswahl   7497 (33.1 %) · Dq +0.0761 · alle Anker der Klasse +0.0109
+  0,5..1  Auswahl   7181 (31.7 %) · Dq +0.0862 · alle Anker der Klasse +0.0262
+  1..2    Auswahl   4041 (17.8 %) · Dq +0.1232 · alle Anker der Klasse +0.0701
+  > 2     Auswahl    150 ( 0.7 %) · Dq +0.0899 (zu wenige) · alle Anker der Klasse +0.0556
+  L2 fest: frueh (<= 0,5 ATR) +0.0574 (11274) minus spaet (> 2 ATR) +0.1216 (4191) = -0.0642 gegen Nullband Mittel -0.0627, 90. Perzentil -0.0395 -> · nicht jenseits
+  Auskunft 72 h (rohes 72-h-Normal): frueh +0.0123 · spaet +0.0614
+  Auskunft 120-h-Nadel: < -1 -0.0004 (2726) · -1..0 +0.0705 (4781) · 0..0,5 +0.0793 (3033) · 0,5..1 +0.0818 (3117) · 1..2 +0.0962 (5619) · > 2 +0.1198 (3370)
+  2022 (Moment-Bezug): frueh +0.0279 (2886) · spaet +0.0355 (892)
+
+========================================================================================================================
+TEIL 1 · ROLLIEREND, WACHSEND: 32 Monate, Grenze aus dem Training
+  < -1    Auswahl    304 ( 1.0 %) · Dq +0.1450
+  -1..0   Auswahl   7091 (24.1 %) · Dq +0.0620
+  0..0,5  Auswahl   9504 (32.3 %) · Dq +0.0551
+  0,5..1  Auswahl   8112 (27.6 %) · Dq +0.0717
+  1..2    Auswahl   4251 (14.5 %) · Dq +0.0994
+  > 2     Auswahl    128 ( 0.4 %) · Dq +0.0561 (zu wenige)
+  L2 rollierend: frueh +0.0598 minus spaet +0.0976 = -0.0378 gegen das feste Nullband -0.0395 -> ✔
+  L3 frueh je Jahr: 2024 +0.0416 (3973) · 2025 +0.0461 (6933) · 2026 +0.0907 (5993) · 2022 +0.0279 -> ✔ jedes > 0
+  L4 je Asset (frueh, >= 30 Auswahlanker): 104 Assets, Dq > 0 bei 83 % -> ✔
+  L7 Signale: frueh 57.5 % · spaet 14.9 % der Auswahl
+
+========================================================================================================================
+TEIL 2 · LAGE AUF STEHENDEN ANKERN (|Anstieg 24 h| < 0.5 ATR), eigenes Zehntel, gegen das geschrumpfte Normal
+  stehende Pruefanker 129532 (59 %) · ihr Dq gegen das geschrumpfte Normal +0.0082
+  funding  oberstes Zehntel minus alle stehenden +0.0298 -> ✔ ueber dem Band
+  oi       oberstes Zehntel minus alle stehenden -0.0028 -> ·
+  konten   oberstes Zehntel minus alle stehenden -0.0097 -> ·
+  Nullband Bestes-von-3 (Lage verschoben): Mittel +0.0035, 90. Perzentil +0.0125
+  Gegenprobe rsi auf stehenden Ankern: +0.0527
+  L6 funding_markt   +0.0479 gegen +0.0872 -> ·
+  L6 funding_eigen   +0.0199 gegen +0.0143 -> ✔
+  L6 oi_markt        +0.0078 gegen +0.0872 -> ·
+  L6 oi_eigen        +0.0013 gegen +0.0143 -> ·
+  L6 konten_markt    -0.0404 gegen +0.0872 -> ·
+  L6 konten_eigen    -0.0184 gegen +0.0143 -> ·
+  L5 rollierend funding  +0.0350 (27912) gegen das feste Band +0.0125 -> ✔
+  L5 rollierend oi       +0.0089 (12279) gegen das feste Band +0.0125 -> ·
+  L5 rollierend konten   +0.0091 (17846) gegen das feste Band +0.0125 -> ·
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig
+exit=0

@@ -175,3 +175,34 @@ die **Leiter**, die der Messstandard ohnehin vorsieht (*gepflanzte Leiter bis 0,
 | **keine Stufe bis +0,20** | die Anlage kann die Frage nicht beantworten → die Kurve bleibt **Auskunft**, und die Form der Messung muss neu vorgelegt werden |
 
 ⚠️ Die Kriterien L2–L7 selbst bleiben **unverändert**. Die Leiter läuft nach der Kette auf `bestand`.
+
+
+---
+
+## 11. ERGEBNIS (29.09.2026) — Befund 2.685
+
+> **Urteil in einer Zeile:** Kein Sweet Spot beim Anfahren nachweisbar — die rsi-Auswahl trägt in **jeder** Phase,
+> absolut am meisten in der **Fahrt**; ein Anfahr-Vorteil von +0,08 oder mehr ist **ausgeschlossen**, kleinere kann die
+> Anlage nicht auflösen.
+
+| # | Ergebnis (bestand / unverzerrt:1 / :2 / :3) |
+|---|---|
+| **L0** | ✔ E2g bitgleich; rsi allein bitgleich zu 2.680 in allen vier Mengen |
+| **L1** | ⛔ an +0,04 (2 von 5, 3 von 5) · **Leiter: Auflösung +0,08 in beiden Teilen**; Ursache gemessen: bei +0,04 deckt die geschätzte Auswahl den Pflanzbereich nur zu 0,26–0,98 |
+| **L2** | früh − spät fest −0,064 / −0,043 / −0,051 / −0,049 = **das Nullmittel** (Abstand −0,007..+0,005) → **nicht auflösbar**; rollierend 2 von 4 knapp über dem Band |
+| **L3** | ✔ früh > 0 in jedem Jahr, auch 2022 (4 von 4) |
+| **L4** | ✔ früh bei 77–86 % der Assets positiv |
+| **L5** | funding 4 von 4 fest und rollierend über dem Band — aber +0,014..+0,026 über dem Nullmittel, **unter** der Auflösung → nicht auflösbar · oi 0 von 4 · konten nur rollierend |
+| **L6** | ⛔ funding Eigen 1 von 4, Markt 2 von 4 → Rolle **Kontext** |
+| **L7** | die Kurve **steigt** mit der Nadel (fest 0..0,5 +0,076..+0,080 · 1..2 +0,104..+0,123) — aber alle Anker der Klasse steigen mit: die Nadel ist **selbst Fortsetzung**; 72 h holt das Anfahren nichts auf; rsi auf stehenden Ankern +0,053..+0,061 |
+
+**Was folgt:**
+1. Die Tachonadel ist **kein Gewicht** auf A (Doppelzählung mit rsi) — sie gehört als **Fakt** in die Mail.
+2. rsi (A während) trägt auch beim Anfahren und auf stehenden Ankern — **keine Phasensperre** für K5.
+3. A **vorher** bleibt ohne Beleg: funding klein und vor allem Markt.
+4. Die Messform mit geschätztem Modell löst auf Teilmengen erst +0,08 auf — für kleine Effekte braucht es eine Auswahl
+   mit fester Richtung aus dem Training.
+
+⚠️ **Nachträglich gesehen, nur Hypothese:** Der Zuwachs von rsi innerhalb der Klasse ist bei 0..0,5 ATR am größten
+(+0,065..+0,072) und nach einem Rückgang (−1..0) fast null — das ist das Nutzerbild *0 auf 20*, aber unter der
+Auflösung und nicht vorab benannt.

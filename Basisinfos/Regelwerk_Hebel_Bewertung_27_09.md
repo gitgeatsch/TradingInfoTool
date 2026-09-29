@@ -20,6 +20,8 @@ Faktenteil: `python hebel_neubau.py`
 | **Rollen** | ✔ das Schema vom 25.09. **gilt** und ist geprüft: **A** Richtung entscheidet **OB** (vorher = OPTIMUM; während = Fortsetzung, eigener Einstiegstyp) · **B** Bewegungserwartung **WIE WEIT** · **C** Risikosperre mit der ATR **WIE VIEL HEBEL** — keine Summe, kein Blocker (`hebel_neubau.ROLLEN`) |
 | **Black Swans** | nur als **Störfaktor** mit/ohne ausweisen, nie ein Modell, eine Schwelle oder einen Deckel daran ausrichten (Nutzer 29.09.) |
 | **Normal** | das Phase-Normal ist größtenteils Rauschen — Bezug künftig das **geschrumpfte** Normal (2.683, 2.684) |
+| **Anfahren** | die Tachonadel (Anstieg 24 h in eigener ATR) ist **kein Gewicht** auf A — sie ist selbst Fortsetzung; **Fakt in der Mail**; rsi braucht keine Phasensperre (2.685) |
+| **Pflichtablauf (3)** | ⚠️ ein Tor, das an der vorab gewählten Stufe fällt, wird als **Leiter** nachgemessen (neue Vorabfestlegung) — ein Urteil gilt nur oberhalb der gemessenen **Auflösung**; die Messform mit geschätztem Modell löst auf Teilmengen erst +0,08 auf (2.685) |
 | **Kalibrierung** | A: auf dem Signal der Rolle, **nicht** kurz nachgeführt (2.683) · C/ATR: je Stufe (2.681) · B: nachgelagert (Einordnung Abschnitt 11) |
 | **Pflichtablauf (2)** | ⚠️ Vergleich zweier Regeln: **Auswahlanteil angleichen** — sonst ist eine PBO- oder Monatsmittel-Zahl nicht auswertbar (F3 der K5-Folge) · ⚠️ vor einem neuen Ordnungsschema das **bestehende** im Standblatt suchen (29.09.) |
 | **Pflichtablauf** | ⚠️ neue Falle, gefunden an K7: eine **Wahrheit aus einer Quelle** (hier `hebel_positions`) wird vor der Messung am **Buch** geprüft — der Importer teilte Teilschließungen als Vollschluss ein und übersah 3 von 7 Liquidationen |

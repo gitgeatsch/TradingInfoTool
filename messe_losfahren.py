@@ -328,7 +328,7 @@ def main() -> int:
         print("  %-7s Auswahl %6d (%4.1f %%) · Dq %+.4f%s · alle Anker der Klasse %+.4f" % (
             KLNAME[k], len(s_), 100 * len(s_) / max(len(sel0), 1), dqs(s_),
             "" if len(s_) >= MIN_KLASSE else " (zu wenige)", dqs(r_pa[KL[r_pa] == k])))
-    print("  L2 fest: frueh (<= 0,5 ATR) %+.4f (%d) minus spaet (> 2 ATR) %+.4f (%d) = %+.4f gegen Nullband Mittel %+.4f, 90. Perzentil %+.4f -> %s" % (
+    print("  L2 fest: frueh (<= 0,5 ATR) %+.4f (%d) minus spaet (> 1 ATR, Abschnitt 9) %+.4f (%d) = %+.4f gegen Nullband Mittel %+.4f, 90. Perzentil %+.4f -> %s" % (
         dqs(f0), len(f0), dqs(s0), len(s0), d_f, float(np.nanmean(null)), g1, "✔ frueh besser" if d_f > g1 else "· nicht jenseits"))
     print("  Auskunft 72 h (rohes 72-h-Normal): frueh %+.4f · spaet %+.4f" % (
         dq(f0, A72, NA72, NB72, HIT72), dq(s0, A72, NA72, NB72, HIT72)))

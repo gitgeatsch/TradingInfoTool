@@ -1,0 +1,24 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand · TOR
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+TOR TEIL 1 (L1) frueh - spaet mit verschobenem rsi: Nullwelt Mittel -0.0627, Streuung 0.0193, 90. Perzentil -0.0395
+  gepflanzt +0.04 in der fruehen Klasse (P90+ rsi, verschoben): -0.0627 -0.0350 -0.0569 -0.0167 -0.0197 -> gefunden 3 von 5
+      angekommen in der fruehen Auswahl +0.0273 +0.0245 +0.0156 +0.0341 +0.0364 · Deckung Auswahl/Pflanzbereich 0.74 0.65 0.36 0.89 0.98
+  gepflanzt +0.08 in der fruehen Klasse (P90+ rsi, verschoben): -0.0131 +0.0124 -0.0049 -0.0026 -0.0142 -> gefunden 5 von 5
+      angekommen in der fruehen Auswahl +0.0800 +0.0785 +0.0715 +0.0750 +0.0801 · Deckung Auswahl/Pflanzbereich 1.00 1.00 0.97 0.98 1.00
+  gepflanzt +0.12 in der fruehen Klasse (P90+ rsi, verschoben): +0.0392 +0.0345 +0.0263 +0.0596 +0.0252 -> gefunden 5 von 5
+      angekommen in der fruehen Auswahl +0.1065 +0.1191 +0.1170 +0.1174 +0.1153 · Deckung Auswahl/Pflanzbereich 0.95 1.00 1.00 1.00 1.00
+  gepflanzt +0.20 in der fruehen Klasse (P90+ rsi, verschoben): +0.0864 +0.1292 +0.0918 +0.1095 +0.0972 -> gefunden 5 von 5
+      angekommen in der fruehen Auswahl +0.1910 +0.2035 +0.1796 +0.1983 +0.1969 · Deckung Auswahl/Pflanzbereich 1.00 1.00 1.00 1.00 1.00
+  AUFLOESUNG TEIL 1: +0.08 (kleinste Stufe mit >= 4 von 5)
+TOR TEIL 2 Bestes-von-3 Lage auf stehenden Ankern (Lage verschoben): Nullwelt Mittel +0.0078, 90. Perzentil +0.0145
+  gepflanzt +0.04 auf P90+ von oi_24 (stehend, verschoben): +0.0012 +0.0073 +0.0314 +0.0233 +0.0171 -> gefunden 3 von 5 · Deckung oi-Auswahl/Pflanzbereich 0.26 0.52 0.69 0.55 0.78
+  gepflanzt +0.08 auf P90+ von oi_24 (stehend, verschoben): +0.0547 +0.0659 +0.0540 +0.0772 +0.0645 -> gefunden 5 von 5 · Deckung oi-Auswahl/Pflanzbereich 0.94 1.00 1.00 0.99 1.00
+  gepflanzt +0.12 auf P90+ von oi_24 (stehend, verschoben): +0.0981 +0.1045 +0.0985 +0.0972 +0.0950 -> gefunden 5 von 5 · Deckung oi-Auswahl/Pflanzbereich 1.00 1.00 1.00 1.00 1.00
+  gepflanzt +0.20 auf P90+ von oi_24 (stehend, verschoben): +0.1417 +0.1875 +0.1704 +0.1490 +0.1583 -> gefunden 5 von 5 · Deckung oi-Auswahl/Pflanzbereich 1.00 1.00 1.00 1.00 1.00
+  AUFLOESUNG TEIL 2: +0.08 (kleinste Stufe mit >= 4 von 5)
+SCHLUSS: vollstaendig
+exit=0
