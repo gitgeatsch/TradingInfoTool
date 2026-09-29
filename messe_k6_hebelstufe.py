@@ -483,7 +483,11 @@ def main() -> int:
                 urteil = ""
                 if L == 5 and H in (6, 12, 24):
                     q = beob / max(ges, 1e-12)
-                    urteil = " -> H0-1 %s" % ("✔" if nl_ >= 30 and 0.5 <= q <= 1.25 else ("zu wenige" if nl_ < 30 else "⛔ / H0-2 Faktor %.2f" % q))
+                    # Beschriftung korrigiert 29.09. (nach dem Lauf, Zahlen unveraendert): H0-2 gilt nur UEBER 1,25;
+                    # unter 0,5 ist *sicherer als geschaetzt* - nach Abschnitt 4 bleibt die Tabelle dann vorsichtig
+                    urteil = " -> H0-1 %s" % ("✔" if nl_ >= 30 and 0.5 <= q <= 1.25 else (
+                        "zu wenige" if nl_ < 30 else ("⛔ H0-2 Aufschlag %.2f" % q if q > 1.25 else
+                                                      "unter 0,5: sicherer als geschaetzt, Tabelle bleibt")))
                 print("  %dx %3d h: %6d Einstiege · Liq. %5d · beob %.3f %% · gesch %.3f %% · beob/gesch %.2f · je Jahr %s · ohne 10./11.10. %.2f · +5 %% vor Liq. %.1f %%%s" % (
                     L, H, int(ok_.sum()), nl_, 100 * beob, 100 * ges, beob / max(ges, 1e-12), " · ".join(vj),
                     y[oh].mean() / max(pe[oh].mean(), 1e-12), 100 * vor5, urteil))

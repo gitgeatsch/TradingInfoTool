@@ -23,7 +23,8 @@
 | **5c · Wetter (2.686)** | Begriffe Beitrag/Kontext/Gewicht/Sperre im Regelwerk; das Wetter als Gewicht ist ab 2024 **nicht nachweisbar**, bleibt Auskunft; rsi trägt in jedem Wetter · K6 S Stufe 1 nur auf der Kante, R2 zurückgestellt |
 | **5d · K5 Wahl 2024 (2.687)** | Zustand nicht kalibriert → keine Schwelle darauf; **Ersteintritt** trägt +0,076..+0,093 jenseits der Nullwelt — Kandidat, Bestätigung 2025–26 ausstehend |
 | **5e · KERN Schritt 1 (2.688)** | der Ersteintritt trägt ungesehen 2025–26 in 4 von 4 Mengen; nicht besser als der Zustand; stark regimeabhängig (zweites Halbjahr 2025 negativ) |
-| **10 · Nächster Schritt (29.09. aktuell)** | KERN Schritt 2 **H0**, dann Schritt 3 Simulation (`Voranalyse_Kern_Einstieg_Hebel_29_09.md`) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
+| **5f · KERN Schritt 2 H0 (2.689)** | die ATR-Tabelle gilt auf den Einstiegen und ist vorsichtig; der Kern ist ein Tageshandel (+5 % im Median nach 19–20 h) |
+| **10 · Nächster Schritt (29.09. aktuell)** | KERN Schritt 3 **Simulation** (Haltedauer/Ziel als Achse, Kosten, schwaches Regime, Liquidationsgrenze als Nutzerentscheidung) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
 | **10 · (vorher)** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
 
 ```bash

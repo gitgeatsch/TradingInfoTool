@@ -118,3 +118,40 @@ vorab committen · R-R11 · `bestand` (etwa 1–1,5 h) · Stopp · die übrigen 
 | **H0** | `messe_k6_hebelstufe.py --kurs mark --einstiege <csv>`: Fensterachse 6 / 12 / 24 / 72 / 120 h; Modell ATR allein rollierend auf dem Gitter wie 2.681; Liquidation an den **Einstiegsstunden** mit Markpreis (Einstieg und Tief aus derselben Reihe, Fenster ohne fehlende Stunde) |
 | ⚠️ **Abweichung H0-0** | die Reproduktion von 2.681 läuft **im selben Lauf** über den unveränderten Gitter-Codepfad (5x/72 h atr: 17,493 / 17,627) statt in einem **eigenen** Lauf ohne `--einstiege`. **Grund:** das spart 1–1,5 h je Menge; die 72-h-Zahlen hängen nicht an den zusätzlichen Fenstern (je Fenster ein eigenes Modell). Im Einstiegsmodus entfallen **V2** (Mehrwert der Risikokurven, in 2.681 entschieden) und die **Tabelle** |
 | Ablauf | Export für alle vier Mengen · H0 `bestand` · technische Prüfung · H0 für die übrigen drei · Stopp · detaillierte Bewertung |
+
+
+---
+
+## 9. ERGEBNIS — Befund 2.689 (Stopp, gemeinsame Bewertung)
+
+**Risiko: beobachtet / geschätzt** (Kalibrierung nur aus der Liquidation)
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 | Liquidationen |
+|---|---|---|---|---|---|
+| 5x · 6 h | 0,36 | 0,41 | 0,35 | 0,52 | 22–35 (Fallgrenze) |
+| 5x · 12 h | 0,42 | 0,43 | 0,40 | 0,45 | 71–85 |
+| **5x · 24 h** | **0,48** | **0,56** | **0,56** | **0,59** | 228–304 (1,9–2,5 % der Einstiege) |
+| 5x · 72 h | 0,76 | 0,81 | 0,80 | 0,81 | 1.563–1.825 |
+| 3x · 24 h / 72 h | 0,50 / 0,47 | 0,88 / 0,59 | 0,73 / 0,56 | 0,94 / 0,59 | 18–40 / 107–158 |
+
+- ✔ H0-0 bitgleich. Nirgends über 1,25 — **die Tabelle unterschätzt das Risiko der Einstiege nie**; sie ist **vorsichtig**.
+- ⚠️ 2025 bei 72 h 0,94–0,95 — im schwachen Regime ist der Sicherheitsabstand fast weg.
+- ⚠️ 2x: alle Liquidationen am **10./11.10.2025** (ohne ihn 0,0–0,4) — Black Swan, nur Störfaktor.
+- H0-1 formal (0,5–1,25) in 12 h nicht erfüllt, in 24 h in 3 von 4 — jeweils auf der **sicheren** Seite; nach Abschnitt 4
+  bleibt die Tabelle, wie sie ist.
+
+**Chance im selben Fenster** (nur Vergleich)
+
+| Fenster | +5 % zuerst | −5 % zuerst | Dq gegen den Normal |
+|---|---|---|---|
+| 6 h | 6,7–7,0 % | 4,4–4,7 % | +0,10 |
+| 12 h | 14,3–15,0 % | 9,7–10,3 % | +0,10 |
+| 24 h | 25,1–26,0 % | 19,8–20,8 % | +0,07..+0,08 |
+
+**Zeit bis +5 %** (wo zuerst): Median **19–20 h**, Quartile 9 / 35 h, binnen 6 h nur **16 %**, binnen 12 h 33–34 %.
+**Zeit bis −5 %**: Median 24–25 h.
+
+➤ **Folge:** (1) Bewertung 2 für den Kern belegt — die ATR-Tabelle gilt und ist vorsichtig, **kein Aufschlag**. (2) Der
+Kern ist ein **Tageshandel**, kein Stundenhandel — ein Hebel über wenige Stunden erreicht +5 % selten; **Haltedauer und
+Zielhöhe** werden in Schritt 3 als **Achse** gemessen, nicht gesetzt. (3) Das schwache Regime ist Pflichtfrage für
+Schritt 3.

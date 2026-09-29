@@ -663,6 +663,12 @@ NEUESTER_STAND = (
               "(+0,059..+0,076, jede Bedingung inkl. Tagesblock-Bootstrap). Aber: nicht "
               "besser als der Zustand, und stark regimeabhaengig (2025 klein, zweites "
               "Halbjahr 2025 negativ). Weiter mit Schritt 2 (H0)"),
+    ("2.689", "KERN SCHRITT 2 (H0): die ATR-Hebeltabelle unterschaetzt das Risiko der "
+              "Ersteintritte nirgends - sie ist vorsichtig (12-24 h etwa halb so viele "
+              "Liquidationen wie geschaetzt, 72 h 0,8; 2025 bei 72 h 0,95). 2x-"
+              "Liquidationen nur am 10./11.10. Der Kern ist ein TAGESHANDEL: +5 % im "
+              "Median nach 19-20 h, binnen 6 h nur bei 16 %. Haltedauer und Ziel in "
+              "Schritt 3 als Achse messen"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

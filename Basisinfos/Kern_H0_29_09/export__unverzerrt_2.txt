@@ -1,0 +1,25 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:2
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 167840 · Pruefung 218803 · Symbole 124
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0700 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31061 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 313345 · Symbole 124
+  Auskunft Verteilung vh: P50 -0.0038 · P90 +0.0327 · P95 +0.0449 · P99 +0.0685 · Max +0.2242
+
+========================================================================================================================
+KERN SCHRITT 2 · EXPORT der Ersteintritte s = +0.035, 2024-01..2026-08, Menge unverzerrt:2: 12493 Einstiege, 681 Tage
+  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):
+     6 h: +5 % vor -5 % bei 6.7 % der Einstiege (-5 % zuerst 4.4 %) · Dq gesamt +0.1047 · 2024 +0.0512 · 2025 +0.0674 · 2026 +0.1953
+    12 h: +5 % vor -5 % bei 14.3 % der Einstiege (-5 % zuerst 10.0 %) · Dq gesamt +0.0990 · 2024 +0.0929 · 2025 +0.0568 · 2026 +0.1666
+    24 h: +5 % vor -5 % bei 25.1 % der Einstiege (-5 % zuerst 20.6 %) · Dq gesamt +0.0687 · 2024 +0.1175 · 2025 +0.0331 · 2026 +0.0968
+  Zeit bis +5 % (wo zuerst, binnen 72 h, 5404): Median 20 h · Quartile 10 / 35 h · binnen 2/4/6/12 h 4 % / 10 % / 16 % / 33 %
+  Zeit bis -5 % (wo zuerst, binnen 72 h, 5041): Median 24 h · Quartile 13 / 40 h · binnen 2/4/6/12 h 2 % / 7 % / 11 % / 25 %
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern_einstiege_unverzerrt_2.csv
+SCHLUSS: vollstaendig
+exit=0
