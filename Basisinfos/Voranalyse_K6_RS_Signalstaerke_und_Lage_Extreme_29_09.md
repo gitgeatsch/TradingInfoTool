@@ -146,3 +146,21 @@ Abstimmungspunkt — nach K5, weil erst dann feststeht, was das Signal ausmacht.
 
 Werkzeug erweitern und vorab committen · W0 (R-R11 2.681) · Werkzeugtest · Tor-Leiter · vier Mengen mit dem Markpreis —
 nacheinander, geschätzt **6–7 Stunden** (K6 brauchte 1–1,5 h je Menge; dazu S1 und die Leiter).
+
+---
+
+## 11. ✔ ABGESTIMMT (29.09.2026) — erst STUFE 1, R2 zurückgestellt
+
+**Nutzer:** *„ja, beides wie empfohlen — Stufe 1 starten, prüfen und gegenprüfen — dann voller Stopp,
+Ergebnisbewertung und langsame Detailabstimmung."* Dazu: *„Eine so lange Messung sollten wir nur machen, wenn über
+Tests oder kleinere Läufe schon ein Erfolg zu erwarten ist."*
+
+| | festgelegt VOR dem Lauf |
+|---|---|
+| **Hauptlinie** | A = Fortsetzung (rsi) bleibt die Hauptlinie; *A vorher* wird ein **eigener Suchpfad nur mit einer neuen Datenquelle** (gesondert vorzulegen) |
+| **Stufe 1** | nur **Teil S**, nur `bestand`, **feste Teilung auf den vollen Daten**; Werkzeug `messe_losfahren.py --stark` (Aufbereitung, geschrumpftes Normal und Nullwelt dort schon geprüft, R-R11 2.680) |
+| **Signal** | `rsi_s` mit fester Richtung; fünf Klassen P90–92 · 92–94 · 94–96 · 96–98 · 98–100, Grenzen aus der Suche |
+| **Weiter-Schwelle** | Dq oberste minus unterste Klasse **≥ +0,04** → Vollmessung (S1/S2/Tor, vier Mengen) **vorlegen**; darunter keine Vollmessung |
+| **Auskunft** (kein Urteil) | Nullwelt (rsi verschoben, 40 Ziehungen, ohne Modell billig) · monoton? · 72 h · je Jahr · ⭐ **Wetter**: dasselbe je Drittel der BTC-Lage (30 Tage, Grenzen aus der Suche) — *wirkt das Signal bei anderem Wetter anders?* |
+| **R2** | **zurückgestellt** (geringe Erwartung, 2.681) |
+| **danach** | **voller Stopp**, Ergebnis mit Zwischenfazit zum Ziel vorlegen |

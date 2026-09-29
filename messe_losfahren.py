@@ -212,6 +212,72 @@ def main() -> int:
             aus[k] = v
         return aus
 
+    # ══ K6 S STUFE 1 (Voranalyse_K6_RS_Signalstaerke_und_Lage_Extreme_29_09.md, Abschnitt 11) ══
+    # Signalstaerke: rsi_s mit FESTER Richtung (kein Modell), fuenf Klassen im obersten
+    # Zehntel, Grenzen aus der SUCHE; Dq auf q5 gegen das geschrumpfte Normal, feste
+    # Teilung auf den VOLLEN Daten. WEITER nur, wenn oberste minus unterste >= +0,04.
+    if "--stark" in sys.argv:
+        WEITER = 0.04
+        KANTEN = (90, 92, 94, 96, 98)
+        KNAME = ("P90-92", "P92-94", "P94-96", "P96-98", "P98-100")
+
+        def klassen(v, idx_train):
+            g = np.nanpercentile(v[idx_train], KANTEN)
+            k = np.full(n, -1, np.int8)
+            fin = np.isfinite(v)
+            k[fin] = np.searchsorted(g, v[fin], side="right") - 1        # -1 unter P90, 0..4
+            return k
+
+        def stufen(v, y=A24):
+            k = klassen(v, r_sa)
+            werte = [dqs(r_pa[k[r_pa] == c], y) for c in range(5)]
+            return k, werte
+        KS, W = stufen(E["rsi_s"])
+        dif = W[4] - W[0]
+        print()
+        print("=" * 120)
+        print("K6 S STUFE 1 · SIGNALSTAERKE (rsi_s feste Richtung, Grenzen aus der Suche) · feste Teilung, Pruefzeit")
+        print("  Querabgleich: oberstes Zehntel gesamt, rohes Normal %+.4f (2.680: einfache rsi-Regel etwa +0,073..+0,078) "
+              "· geschrumpft %+.4f" % (dq(r_pa[KS[r_pa] >= 0]), dqs(r_pa[KS[r_pa] >= 0])))
+        for c in range(5):
+            s_ = r_pa[KS[r_pa] == c]
+            print("  %-8s Anker %6d · Dq %+.4f" % (KNAME[c], len(s_), W[c]))
+        print("  unter P90 (Vergleich): Dq %+.4f" % dqs(r_pa[KS[r_pa] == -1]))
+        null = []
+        for _ in range(zieh):
+            EV = verschoben(E, ("rsi_s",))
+            _k, wv = stufen(EV["rsi_s"])
+            null.append(wv[4] - wv[0])
+        print("  oberste minus unterste %+.4f · Zufallswelt (rsi verschoben, %d Ziehungen) Mittel %+.4f, 90. Perzentil %+.4f" % (
+            dif, zieh, float(np.nanmean(null)), float(np.nanpercentile(null, 90))))
+        mono = all(W[c + 1] >= W[c] for c in range(4))
+        print("  Auskunft: Kurve monoton steigend? %s" % ("ja" if mono else "nein"))
+        print("  Auskunft 72 h (rohes 72-h-Normal): %s" % " · ".join(
+            "%s %+.4f" % (KNAME[c], dq(r_pa[KS[r_pa] == c], A72, NA72, NB72, HIT72)) for c in range(5)))
+        jz = []
+        for jj in (2025, 2026):
+            ix = r_pa[JAHR[r_pa] == jj]
+            jz.append("%d %+.4f" % (jj, dqs(ix[KS[ix] == 4]) - dqs(ix[KS[ix] == 0])))
+        print("  Auskunft je Jahr (oberste minus unterste): %s" % " · ".join(jz))
+        # Wetter: BTC-Lage der letzten 30 Tage, Drittel-Grenzen aus der SUCHE (kausal)
+        btc = reihe([(E2.EINGESTELLT_DB, "SELECT stunde, close FROM stundenkurse WHERE symbol='BTC'"),
+                     (E2.STUNDEN_DB, "SELECT stunde, close FROM stundenkurse WHERE symbol='BTC'")])
+        b30 = np.full(n, np.nan)
+        okb = (STD < len(btc)) & (STD >= 720)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            b30[okb] = btc[STD[okb]] / btc[STD[okb] - 720] - 1.0
+        bq1, bq2 = np.nanquantile(b30[r_sa], (1 / 3, 2 / 3))
+        wz = []
+        for nm, lo_, hi_ in (("BTC tief", -np.inf, bq1), ("BTC mitte", bq1, bq2), ("BTC hoch", bq2, np.inf)):
+            ix = r_pa[np.isfinite(b30[r_pa]) & (b30[r_pa] > lo_) & (b30[r_pa] <= hi_)]
+            wz.append("%s: Zehntel %+.4f, oberste %+.4f, unterste %+.4f (%d)" % (
+                nm, dqs(ix[KS[ix] >= 0]), dqs(ix[KS[ix] == 4]), dqs(ix[KS[ix] == 0]), int((KS[ix] >= 0).sum())))
+        print("  Auskunft WETTER (BTC 30 Tage, Drittel aus der Suche): " + " · ".join(wz))
+        print("  WEITER-SCHWELLE +%.2f: %s" % (WEITER, "✔ ERREICHT - Vollmessung vorlegen" if dif >= WEITER
+                                              else "⛔ NICHT erreicht - keine Vollmessung, Ergebnis vorlegen"))
+        print("SCHLUSS: vollstaendig")
+        return 0
+
     # ══ TEIL 1 · feste Teilung ══════════════════════════════════════════
     def rsi_auswahl(EE, y=A24, ra=r_sa, rt=r_s, ziel=r_pa):
         m, _l = K2.fit_cv(RSI, EE, ra, rt, y[rt], OFF[rt], STD)
