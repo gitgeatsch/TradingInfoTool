@@ -125,3 +125,33 @@ Hebel — dann zerstört der Hebel den Vorteil. Die Gebühr ist ein Teil davon, 
 | Rendite je Handel (auf den Einsatz) | Ziel: L·Z · Zeit: L·(Schluss/Einstieg − 1) · Liquidation: −1 − L·1 % · jeweils minus L·(0,3 % + 0,18 %/Tag·Dauer); Spot: ohne Liquidation und Finanzierung |
 | Nullwelt | die Einstiege 2025–26 je Asset um ≥ 1.440 gültige Stunden zeitverschoben (innerhalb 2025–26), Hebelstufe aus dem ATR-Modell am neuen Zeitpunkt, 40 Ziehungen |
 | Ablauf | Funktionstest · Wahl 2024 (`bestand`) · Stopp · Bestätigung vier Mengen · Stopp · Bewertung |
+
+---
+
+## 9. ERGEBNIS WAHL 2024 (bestand) — Stopp
+
+Beleg `Kern_Sim_29_09/wahl__bestand.txt`. ✔ R-R11: 2.681 bitgleich, 12.163 Einstiege wie 2.689 (davon 2.095 in 2024).
+
+**Kontowachstum 2024** (log, f = 1 % Einsatz je Handel, nach Kosten) — Auszug, ohne Ziel:
+
+| Haltedauer | Grenze 0,5 % | 1 % | 2 % | 5 % | Spot 1x |
+|---|---|---|---|---|---|
+| 6 h | −0,111 | −0,123 | −0,102 | −0,108 | −0,005 |
+| 12 h | +0,077 | +0,067 | +0,131 | +0,079 | +0,058 |
+| **24 h** | +0,147 | +0,121 | **+0,215** | +0,222 | +0,135 |
+| 72 h | +0,091 | +0,166 | +0,175 | +0,123 | +0,218 |
+
+- **Ziel +3 % / +5 %** ist in **jeder** Haltedauer schlechter als **ohne Ziel** — das Ziel kappt die Gewinner.
+- **6 h** ist überall negativ — zu kurz: die Kosten fressen den Vorteil (der Kern ist ein Tageshandel, 2.689).
+- **72 h**: Spot (+0,218) schlägt jeden Hebel — Finanzierung und Rückgang (bis 0,71) wiegen schwerer.
+
+➤ **Nach der Regel gewählt: H = 24 h, ohne Ziel, Grenze 2 %** (log +0,215 = Konto ×1,24; die Grenze 5 % mit +0,222 liegt
+0,7 % Endwert darüber — **Gleichstand**, darum die vorsichtigere). Hebel im Mittel 3,4, Liquidationen 0,43 % der Handel,
+größter Rückgang 0,209 (log), längste Verlustserie 29, schlechtester Monat −0,129.
+
+⚠️ **Gegenprüfung:**
+1. Mit f = 0,5 % und 2 % gewinnt jeweils der **Gleichstandspartner** (Grenze 5 %) — das ist dieselbe Zelle bis auf die
+   Grenze, keine Instabilität der Wahl.
+2. Die Wahl aus 48 Zellen **überschätzt** 2024 sicher; auch Spot ist 2024 positiv — ein Teil ist **Markt**. Beides prüft
+   erst die Bestätigung (Nullwelt, Spot-Vergleich).
+3. Der Rückgang von 0,21 (log) bei nur 1 % Einsatz je Handel ist **groß** — die Ballung vieler Handel an Markttagen.
