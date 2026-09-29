@@ -644,7 +644,7 @@ NEUESTER_STAND = (
               "die rsi-Auswahl traegt in jeder Phase (jedes Jahr, 77-86 % der "
               "Assets), absolut am meisten in der Fahrt; ein Anfahr-Vorteil >= +0,08 "
               "ist ausgeschlossen, kleinere nicht aufloesbar (Aufloesung +0,08). Die "
-              "Tachonadel ist selbst Fortsetzung - Fakt fuer die Mail, kein Gewicht. "
+              "Tachonadel ist selbst Fortsetzung - kein Gewicht; Mail offen (Nutzer). "
               "funding auf stehenden Ankern ueber dem Band, aber unter der Aufloesung "
               "und vor allem Markt -> Kontext"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
@@ -657,8 +657,8 @@ NEUESTER_STAND = (
                "robust (2.655/2.662), in ATR groesstenteils die ATR. Bewertung 2: die "
                "ATR (2.681). Losfahren (2.685): kein Sweet Spot, rsi traegt in jeder "
                "Phase - keine Phasensperre fuer K5. Naechste Schritte: K6 R+S (Extreme "
-               "der Lage), K5 neu vorlegen (rsi allein, die Nadel als Fakt in der "
-               "Mail), H0, Simulation Ebene 3 und neue Monate ab 2026-09. Black "
+               "der Lage), K5 neu vorlegen (rsi allein; die Nadel kein Gewicht, Mail"
+               " offen), H0, Simulation Ebene 3 und neue Monate ab 2026-09. Black "
                "Swans nur als Stoerfaktor (Nutzer 29.09.)"),
 )
 

@@ -212,7 +212,7 @@ Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi u
 
 ➤ **Fachlich:** Die Analogie trägt. Der bisherige Anstieg in eigener ATR ist die **Tachonadel**. Gemessen wird der Sweet Spot als **Kurve** über diese Achse (keine Schwelle festlegen, die Daten zeigen, wo er liegt) — in der Messung *Losfahren aus dem Stand*.
 
-✔ **Gemessen (2.685, 29.09.):** **kein Sweet Spot beim Anfahren** nachweisbar. Die rsi-Auswahl trägt in jeder Phase, absolut am meisten in der **Fahrt** (0..0,5 ATR +0,076..+0,080, 1..2 ATR +0,104..+0,123) — aber alle Anker steigen mit: die Nadel ist **selbst Fortsetzung**. Ein Anfahr-Vorteil ≥ +0,08 ist ausgeschlossen, kleinere kann die Anlage nicht auflösen. ➤ Die Nadel wird **Fakt in der Mail** (*die Bewegung läuft seit x ATR*), kein Gewicht; der Hinweis aus dem K5-Werkzeugtest (*nach > 1 ATR negativ*) hat sich auf der vollen Menge **nicht** bestätigt. Der Stand (Lage vorher): funding über dem Band, aber unter der Auflösung und vor allem Markt.
+✔ **Gemessen (2.685, 29.09.):** **kein Sweet Spot beim Anfahren** nachweisbar. Die rsi-Auswahl trägt in jeder Phase, absolut am meisten in der **Fahrt** (0..0,5 ATR +0,076..+0,080, 1..2 ATR +0,104..+0,123) — aber alle Anker steigen mit: die Nadel ist **selbst Fortsetzung**. Ein Anfahr-Vorteil ≥ +0,08 ist ausgeschlossen, kleinere kann die Anlage nicht auflösen. ➤ Die Nadel ist **kein Gewicht**; ob sie in die Mail gehört, ist **offen** (Nutzer: *abstrakte Zahl, bereits jetzt zu viel Information*); der Hinweis aus dem K5-Werkzeugtest (*nach > 1 ATR negativ*) hat sich auf der vollen Menge **nicht** bestätigt. Der Stand (Lage vorher): funding über dem Band, aber unter der Auflösung und vor allem Markt.
 
 ---
 

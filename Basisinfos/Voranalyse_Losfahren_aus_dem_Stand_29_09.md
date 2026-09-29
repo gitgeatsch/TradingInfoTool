@@ -197,7 +197,7 @@ die **Leiter**, die der Messstandard ohnehin vorsieht (*gepflanzte Leiter bis 0,
 | **L7** | die Kurve **steigt** mit der Nadel (fest 0..0,5 +0,076..+0,080 · 1..2 +0,104..+0,123) — aber alle Anker der Klasse steigen mit: die Nadel ist **selbst Fortsetzung**; 72 h holt das Anfahren nichts auf; rsi auf stehenden Ankern +0,053..+0,061 |
 
 **Was folgt:**
-1. Die Tachonadel ist **kein Gewicht** auf A (Doppelzählung mit rsi) — sie gehört als **Fakt** in die Mail.
+1. Die Tachonadel ist **kein Gewicht** auf A (Doppelzählung mit rsi) — sie geht **nicht** in die Auslösung. Ob in die Mail: **offen** (Nutzer: *abstrakte Zahl, bereits jetzt zu viel Information — das müssen wir besprechen*).
 2. rsi (A während) trägt auch beim Anfahren und auf stehenden Ankern — **keine Phasensperre** für K5.
 3. A **vorher** bleibt ohne Beleg: funding klein und vor allem Markt.
 4. Die Messform mit geschätztem Modell löst auf Teilmengen erst +0,08 auf — für kleine Effekte braucht es eine Auswahl
@@ -206,3 +206,25 @@ die **Leiter**, die der Messstandard ohnehin vorsieht (*gepflanzte Leiter bis 0,
 ⚠️ **Nachträglich gesehen, nur Hypothese:** Der Zuwachs von rsi innerhalb der Klasse ist bei 0..0,5 ATR am größten
 (+0,065..+0,072) und nach einem Rückgang (−1..0) fast null — das ist das Nutzerbild *0 auf 20*, aber unter der
 Auflösung und nicht vorab benannt.
+
+---
+
+## 12. ZWISCHENFAZIT ZUM ZIEL — Vorschlag, noch NICHT abgestimmt (29.09.2026)
+
+**Ziel:** je Asset und Handlung eine begründete Aussage über das **Potential**; ein Signal, wenn ein bestimmtes
+Potential erreicht ist.
+
+| Baustein | Stand nach 2.685 |
+|---|---|
+| **A · OB** (Signal) | ✔ **ein** belegtes Signal: rsi (Fortsetzung) — P(+5 % vor −5 %) im obersten Zehntel rund **5–8 Punkte über dem Normal** des Assets, in jeder Phase, fast kalibriert. *Vorher* (früher Einstieg): **nichts** Belegtes |
+| **B · WIE WEIT** | gemessen, aber **keine Zahl** je Signal (nicht kalibriert) |
+| **C · WIE VIEL HEBEL** | ✔ die ATR sagt die Liquidationsgefahr; 5x kalibriert |
+| **K5 · ab wann** | offen — Schwelle und Stufen |
+| **Nachweis ungesehen** | offen — Simulation, Monate ab 2026-09 |
+
+**Was 2.685 zum Ziel beiträgt:** Der Einstieg wird **einfacher** (keine Phasenregel), und ein **früherer** Einstieg
+bringt nach unseren Daten nichts. Das Potential zeigt sich **während** der Bewegung, nicht davor.
+
+**Was fehlt zum Potential:** Heute kann das System sagen *„hier ist die Chance erhöht“*, aber noch nicht *„wie viel“*.
+Der nächste Schritt in diese Richtung ist **K6 S** (stärkeres Signal → mehr Einsatz?), danach **K5** (ab welcher
+Stärke) und **B** (wie weit).
