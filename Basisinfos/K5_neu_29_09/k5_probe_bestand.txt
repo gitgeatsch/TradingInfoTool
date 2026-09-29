@@ -1,0 +1,57 @@
+========================================================================================================================
+K5 NEU - LAGE MIT VORLAUF + rsi JETZT · MENGE bestand · WERKZEUGTEST
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Abdeckung Lage (Anteil der Pruefanker mit Wert): fu_0 100 % · fu_24 100 % · fu_48 100 % · oi_0 100 % · oi_24 100 % · oi_48 100 % · ko_0 100 % · ko_24 100 % · ko_48 100 %
+
+T1 R-R11: rsi allein oben +0.0808 · 2.680: +0.0808 -> ✔ bitgleich
+  Daempfung je Familie: rsi 2000 · funding 2000 · oi 2000 · konten 2000 · Gewichte: Achse -0.039, rsi +1.008, funding +0.914, oi +1.092, konten +0.790
+
+========================================================================================================================
+FESTE TEILUNG Suche 2023-2024 -> Pruefung 2025-01..2026-08
+  rsi + Lage   oben +0.0526 · unten -0.0154 · eigenes Zehntel +0.0548
+  rsi allein   oben +0.0808 · eigenes Zehntel +0.0808
+  Nullwelt (alles verschoben): 90. Perzentil +0.0221 -> Auswahl ✔ jenseits
+  T2 fest: rsi+Lage minus rsi allein -0.0260 gegen Nullband (nur Lage verschoben) Mittel -0.0031, 90. Perzentil -0.0005 -> · Lage bringt nichts dazu
+  T7 nur die Lage (ohne rsi): oben +0.0254 (Anteil 22.1 %) · eigenes Zehntel +0.0248
+     Weglassprobe: rsi + nur funding  eigenes Zehntel +0.0803 (Differenz zu rsi allein -0.0005)
+     Weglassprobe: rsi + nur oi       eigenes Zehntel +0.0543 (Differenz zu rsi allein -0.0265)
+     Weglassprobe: rsi + nur konten   eigenes Zehntel +0.0666 (Differenz zu rsi allein -0.0141)
+  Z3 je Fenster allein (oberstes Zehntel, 2025 / 2026):
+     funding  fu_0 +0.0193 / +0.0598 · fu_24 +0.0135 / +0.0601 · fu_48 +0.0013 / +0.0369
+     oi       oi_0 -0.0031 / +0.0192 · oi_24 +0.0117 / +0.0328 · oi_48 -0.0324 / +0.0339
+     konten   ko_0 -0.0135 / +0.0407 · ko_24 +0.0066 / +0.0445 · ko_48 -0.0005 / +0.0451
+  R  Zufallslage: T2-Differenz +0.0009 gegen -0.0005 -> ⛔ JENSEITS
+  V9 Eingaenge 1 h aelter: rsi + Lage oben +0.0508
+  2022 (Moment-Bezug): rsi + Lage oben +0.0316 · rsi allein oben +0.0180
+
+========================================================================================================================
+ROLLIEREND, WACHSEND: 6 Monate, Auswahl mit Grenze aus dem Training
+  Randwahl der Daempfung: 4 % (Familie x Monat) · mittlere Gewichte: rsi +1.921, funding +9.901, oi +1.228, konten +0.957
+  Auswahl rsi + Lage oben -0.0077 (Anteil 6.4 %) · rsi allein -0.0404 · nur Lage -0.0023
+  T2 rollierend (gleicher Anteil, B1: gegen das feste Nullband -0.0005): +0.0025 - -0.0486 = +0.0510 -> ✔
+  T7 Signale von rsi + Lage, bei denen rsi NICHT im oberen Drittel liegt: 56.9 % (Dq dort -0.0011, 1206)
+  A4 (ausgewiesen, keine Sperre): Anstieg < 0 +0.0105 (985) · 0-1 ATR -0.0161 (1020) · 1-2 ATR -0.1059 (110) · > 2 ATR -0.3002 (3)
+  T6 je Drittel des Normals: Normal unten -0.0053 (406) · Normal mitte +0.0344 (504) · Normal oben -0.0237 (1208) -> ⛔ NICHT ueberall positiv
+  T4 je Jahr, BTC-Lage und 2022: 2024 -0.0077 · 2025 +nan · 2026 +nan · BTC tief -0.0171 (1049) · BTC mitte +0.0179 (691) · BTC hoch -0.0397 (378) · 2022 +0.0316 -> ⛔ NICHT zeitstabil
+  T5 je Asset (>= 50 Auswahlanker): 14 Assets, Dq > 0 bei 50 % -> ·
+
+========================================================================================================================
+NACHKALIBRIERUNG - Uebersetzung Beitrag -> beobachteter Vorsprung aus den UNGESEHENEN Schaetzungen
+  ohne Nachkalibrierung: Steigung 0.82 · oberstes Zehntel geschaetzt +0.1030 beobachtet +0.0214
+  Gedaechtnis  3 Monate (gemeinsame Monate): Steigung nan · oberstes Zehntel geschaetzt +nan beobachtet +nan · je Jahr 
+  Gedaechtnis 12 Monate (gemeinsame Monate): Steigung nan · oberstes Zehntel geschaetzt +nan beobachtet +nan · je Jahr 
+  Z4: gewaehlt 3 Monate (die kuerzere ist in keinem Jahr schlechter)
+  T3 nachkalibriert: Steigung nan · oberstes Zehntel |geschaetzt - beobachtet| nan -> ⛔ nicht kalibriert
+
+========================================================================================================================
+K5-TABELLE AUF DEM NACHKALIBRIERTEN BEITRAG (Gedaechtnis 3 Monate; Ausgabe, KEINE Schwelle)
+  Beitrag >= +0.02  Anker     737 · je Asset/Monat   5.01 · beobachteter Vorsprung -0.0518 · je Jahr -0.0518 / - / -
+  Beitrag >= +0.04  Anker       0 · je Asset/Monat   0.00 · beobachteter Vorsprung +nan · je Jahr - / - / -
+  Beitrag >= +0.06  Anker       0 · je Asset/Monat   0.00 · beobachteter Vorsprung +nan · je Jahr - / - / -
+  Beitrag >= +0.08  Anker       0 · je Asset/Monat   0.00 · beobachteter Vorsprung +nan · je Jahr - / - / -
+  Beitrag <= -0.02  Anker    7116 · je Asset/Monat  48.41 · beobachteter Vorsprung -0.0815 · je Jahr -0.0815 / - / -
+  Beitrag <= -0.04  Anker    2390 · je Asset/Monat  16.26 · beobachteter Vorsprung -0.0299 · je Jahr -0.0299 / - / -
+
+  ⚠️ Gebuehren und Finanzierung sind nicht eingerechnet (Regel 2).
+SCHLUSS: vollstaendig

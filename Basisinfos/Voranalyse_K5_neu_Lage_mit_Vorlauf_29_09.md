@@ -220,3 +220,24 @@ Binance-Paaren, stärker nach Taker-Flow) — alle drei stimmen. Preprints von 2
 
 ➤ **Was NICHT folgt:** Der abgestimmte K5-Lauf bleibt unverändert, er ist vorab festgelegt und gültig. Die
 Vorschläge oben sind **Folgemessungen**, jede mit eigener Abstimmung.
+
+---
+
+## 12. Ergebnis (29.09.2026) — Befund 2.682: Tor nicht bestanden, kein Urteil
+
+Beleg `Basisinfos/K5_neu_29_09/`. T1 (R-R11) ✔ bitgleich. **Tor ⛔:** +0,04 auf dem obersten Zehntel von `oi_24` nur **3 von 5** gefunden (+0,02: 1 von 5); Nullwelt der T2-Differenz Mittel −0,0039, 90. Perzentil +0,0001. Die Kette hat die vier Mengen **nicht** gerechnet, wie vorab festgelegt.
+
+**Ursache:** Die Auswahl der Kombination bestimmt rsi. Eine Wirkung, die nur in einem Lage-Beitrag steckt, gelangt nur zum Teil in deren oberstes Zehntel. Die gepflanzten +0,04 kommen im Mittel als +0,004 an.
+
+**Auskunft aus dem Werkzeugtest** (feste Teilung auf allen Daten, Nullwelt nur 3 Ziehungen, rollierend 6 Monate — **kein Urteil**):
+
+| | |
+|---|---|
+| rsi + Lage / rsi allein (eigenes Zehntel) | +0,055 / +0,081 |
+| Weglassprobe: rsi + nur funding / oi / konten | −0,0005 / −0,027 / −0,014 gegen rsi allein |
+| Lage allein | +0,025 |
+| Fenster je Jahr | alle 2026 deutlich stärker als 2025 (Zeitfaktor) |
+| 2022 (Moment-Bezug) | rsi + Lage +0,032 · rsi allein +0,018 |
+| Stacking-Gewichte rollierend | instabil (funding im Mittel +9,9) — das Forecast-Combination-Puzzle der Recherche |
+
+➤ **Folge:** Ob die Lage **vor** der Bewegung trägt (OPTIMUM), lässt sich in der Kombination nicht klären. Die Lage muss **zuerst für sich** als Beitrag gemessen werden, mit eigenem Tor. K5 bleibt neu vorzulegen.

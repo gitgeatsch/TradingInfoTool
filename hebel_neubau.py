@@ -585,6 +585,10 @@ NEUESTER_STAND = (
               "kalibriert, 3x nur geordnet, 2x zu selten. Die Tabelle liegt vor, "
               "die Grenze ist eine Nutzerentscheidung - erst nach H0 (Pruefung auf "
               "der Einstiegsauswahl)"),
+    ("2.682", "K5 NEU: Tor nicht bestanden - kein Urteil. In der Kombination "
+              "bestimmt rsi die Auswahl, eine Wirkung der Lage wird verdeckt. Die "
+              "Lage muss ZUERST fuer sich als Beitrag gemessen werden, mit eigenem "
+              "Tor; K5 bleibt neu vorzulegen"),
     ("weiter", "Markt-Massstab 2024 bis 2026 (Nutzer: 2021/22 Fruehphase mit "
                "Extremen). Reihenfolge (Nutzer 27.09.: *sauber und langsam, "
                "bis wir die Grundlagen haben*): die ANWENDUNGSEBENE ist "

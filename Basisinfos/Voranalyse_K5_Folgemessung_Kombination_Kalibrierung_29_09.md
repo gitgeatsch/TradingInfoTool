@@ -60,3 +60,17 @@ und der Simulation.
 
 Kein Betrieb, keine Hebelstufe, keine Änderung an K5 neu. Die Ergebnisse zeigen, **wo** wir
 ansetzen (Nutzer), und werden vorgelegt.
+
+---
+
+## 5. ⚠️ Nachtrag VOR der Auswertung (29.09.2026, 03:40) — das K5-Tor ist nicht bestanden
+
+S1 stützte sich auf das Tor von K5 neu (gleiche Familien, gleiche Statistik). Dieses Tor ist **nicht bestanden** (2.682: +0,04 in 3 von 5). Darum, festgehalten **bevor** ein Ergebnis der Folgemessung gelesen wurde:
+
+| | |
+|---|---|
+| **S1** | gilt nur als **Auskunft**, bis ein eigenes Tor für die Varianten K1–K3 bestanden ist |
+| **Tor der Folgemessung** | nach der Kette, eigener Lauf (`--tor`, Menge bestand): gepflanzt +0,04 auf dem obersten Zehntel von `oi_24` (Lage verschoben), gemessen an der **Bestes-von-3**-Differenz gegen rsi allein, 40 Ziehungen; bestanden bei ≥ 4 von 5 |
+| S2–S7 | unberührt (Kalibrierung, PBO, Schrumpfung, Kurven hängen nicht an diesem Tor) |
+
+Die Vorabfestlegung wird **nicht** geändert, nur ihre Gültigkeit für S1 eingeschränkt. Die Kette läuft unverändert weiter.

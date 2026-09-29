@@ -1,0 +1,14 @@
+========================================================================================================================
+K5 NEU - LAGE MIT VORLAUF + rsi JETZT · MENGE bestand · TOR
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Abdeckung Lage (Anteil der Pruefanker mit Wert): fu_0 100 % · fu_24 100 % · fu_48 100 % · oi_0 100 % · oi_24 100 % · oi_48 100 % · ko_0 100 % · ko_24 100 % · ko_48 100 %
+
+T1 R-R11: rsi allein oben +0.0808 · 2.680: +0.0808 -> ✔ bitgleich
+  Daempfung je Familie: rsi 2000 · funding 2000 · oi 2000 · konten 2000 · Gewichte: Achse -0.039, rsi +1.008, funding +0.914, oi +1.092, konten +0.790
+
+TOR (V8) T2-Differenz mit verschobener Lage: Nullwelt Mittel -0.0039, Streuung 0.0041, 90. Perzentil +0.0001
+  gepflanzt +0.02 auf P90+ von oi_24 (Lage verschoben): -0.0081 +0.0005 -0.0041 -0.0058 -0.0075 -> gefunden 1 von 5
+  gepflanzt +0.04 auf P90+ von oi_24 (Lage verschoben): +0.0040 +0.0049 -0.0050 -0.0047 +0.0004 -> gefunden 3 von 5
+  TOR: ⛔ NICHT BESTANDEN - kein Urteil
+SCHLUSS: vollstaendig
