@@ -335,3 +335,52 @@ laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
 # E-19 · PBO nur bei angeglichenem Auswahlanteil
 
 **29.09.2026** · eigener Fehler in F3 der K5-Folge: die Varianten hatten verschiedene Anteile; die PBO-Werte (0,03–0,64) sind nicht auswertbar. Jede künftige PBO-Rechnung wählt je Variante denselben Anteil.
+
+
+---
+
+# E-20 · Beitrag, Kontext, Gewicht, Sperre — prüfbare Begriffe
+
+**29.09.2026** · Nutzer *„präziser werden … mehrere Messungen, um das zu belegen"*, P1–P8 abgestimmt. **Beitrag** je Asset verschieden · **Kontext** für alle gleich, verschiebt alle Anker · **Gewicht** verändert, wie viel ein Beitrag wert ist (Zuwachs im selben Zustand) · **Sperre** nur bei Umkehr. Der Wirkort (A / C / D) wird gemessen.
+
+---
+
+# E-21 · Urteil ab 2024, 2022 nur Gegenprobe
+
+**29.09.2026** · Nutzer *„der Markt hat sich seit 2021 massiv geändert … Fokus ab 2023 bzw. 2024"*. Fallzahl wird **nie** mit alten Jahren aufgefüllt; 2022 prüft nur, ob eine Regel dort **kippt**.
+
+---
+
+# E-22 · Das Wetter bleibt Auskunft (Abbruchregel)
+
+**29.09.2026** · W2 (2.686): als Gewicht ab 2024 nicht nachweisbar (+0,029, Nullwelt P90 +0,112). Nach der vorab festgelegten Abbruchregel die letzte Wettermessung (Nutzer: *keine Messungen ohne Nutzen*).
+
+---
+
+# E-23 · Die Schwelle gehört auf die Summe — Kern zuerst
+
+**29.09.2026** · Nutzer: *„wie können wir das festlegen, ohne die LAGE der ANDEREN Beiträge zu kennen?"* K5 ist zurückgestellt, bis die Summe steht. Stattdessen der **Kern** (Bewertung 1 = rsi, Bewertung 2 = ATR) Ende zu Ende als Test: Schritt 1 Bestätigung (2.688), Schritt 2 H0 (2.689), Schritt 3 Simulation.
+
+---
+
+# E-24 · Zahlen werden gemessen, nicht gewählt
+
+**29.09.2026** · Nutzer: *„deine Wahl ist wie immer keine Wahl"*. Schwellen und Parameter per **vorab festgelegter Regel** auf dem Wahlzeitraum, **einmal** auf ungesehener Zeit bestätigt (so s = +0,035). Der Nutzer entscheidet nur Ziel, Risikobereitschaft (Veto) und Betrieb.
+
+---
+
+# E-25 · Fällt ein Schritt: Lösung, nicht *widerlegt*
+
+**29.09.2026** · Nutzer: *„an der Messung herumschrauben NEIN — aber Fehler oder eine Aussage zum Ergebnis und mögliche Lösungen JA, MUSS."* Fehler prüfen, Annahmen **messen**, Aussage zum Ergebnis, Lösung als neue Vorabfestlegung.
+
+---
+
+# E-26 · Chance und Risiko im selben Fenster — das Fenster ist eine Achse
+
+**29.09.2026** · Nutzer: *„Hebel ist kurz, schnell, hoch — hier entscheiden Stunden … es geht um das ZEITFENSTER."* H0 über 6 / 12 / 24 h (2.689). Befund: der Kern ist ein **Tageshandel** (+5 % im Median nach 19–20 h) — Haltedauer und Ziel werden in Schritt 3 gemessen.
+
+---
+
+# E-27 · Die Liquidationsgrenze wird in der Simulation gemessen (Vorschlag)
+
+**29.09.2026** · Nutzer: *„ich stelle das Risiko über den Hebel ein … ich hoffe, das ergibt sich aus der Messung für Schritt 3."* Vorschlag für die Voranalyse Schritt 3: jede Grenze (0,5 / 1 / 2 / 5 %) simulieren, gewählt nach vorab festgelegter Regel (größtes Kontowachstum nach Kosten, bei Gleichstand die vorsichtigere); das Risikomodell bleibt nur aus der Liquidation kalibriert; Nutzer-Veto möglich.

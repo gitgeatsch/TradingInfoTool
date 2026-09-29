@@ -233,10 +233,11 @@ Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi u
 | # | Schritt | Stand |
 |---|---|---|
 | 1 | Rollen im Standblatt | ✔ 028a0f9 |
-| 2 | ⭐ **Losfahren aus dem Stand** — R-R11 auf 2.665/2.657, stehende Anker, Lage für sich, Anfahr-Kurve, rsi als Gegenprobe | Voranalyse als Nächstes |
-| 3 | **K6 R+S** — Extreme der Lage als Risiko (Black Swans nur Störfaktor) | danach |
-| 4 | **K5** neu vorlegen, mit der Kalibrierung von A | nach 2 |
-| 5 | **H0** | nach 4 |
-| 6 | **Simulation Ebene 3**, Regel einfrieren, neue Monate ab 2026-09 | nach 5 |
+| 2 | ⭐ **Losfahren aus dem Stand** | ✔ 2.685 — kein Sweet Spot, rsi trägt in jeder Phase |
+| 3 | **K6 R+S** | ◐ S Stufe 1 auf der Kante; R2 zurückgestellt · Wetter (2.686) nicht nachweisbar |
+| 4 | **K5** | ⏸ zurückgestellt — die Schwelle gehört auf die Summe (E-23); Wahl 2024: Zustand nicht kalibriert, Ersteintritt trägt (2.687) |
+| 5 | ⭐ **KERN** Schritt 1 Bestätigung · Schritt 2 **H0** | ✔ 2.688 · ✔ 2.689 |
+| 6 | **KERN Schritt 3: Simulation**, Grenze per Regel, Haltedauer/Ziel als Achse; danach Regel einfrieren, neue Monate ab 2026-09 | ➤ Voranalyse als Nächstes |
+| 7 | danach: Summe der Beiträge (Lage mit auflösender Messform) · A vorher mit neuer Datenquelle | offen |
 
 ➤ **Warum *Losfahren* nicht zurückgestellt wird (29.09., meine erste Empfehlung war falsch begründet):** die früheren Messungen der *Lage vorher* (2.650, 2.657, 2.665) liefen über ALLE Anker, auch die fahrenden — und rsi verdeckt die Lage (2.682/2.683). Ein schwaches Ergebnis von damals kann ein verdecktes sein.

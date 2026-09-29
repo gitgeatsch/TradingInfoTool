@@ -5144,6 +5144,12 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Black Swans** | 29.09.: *so ein Ereignis kann man nicht abfangen … Black-Swan-Events haben keine Möglichkeit der Messung* | nur als Störfaktor mit/ohne ausweisen; kein Modell, keine Schwelle, kein Deckel daran |
 | **Fortsetzung als Einstieg** | 29.09.: *Quant hat 400 % gemacht … u. U. ist ein Einstieg möglich, und man nimmt 300 statt 400 mit* | A *während* ist ein eigener Einstiegstyp; die Positionsführung entscheidet (2.656) |
 | **Archiv** | 29.09.: *erst wenn wir die Daten nicht mehr aktiv benötigen, frühestens ab M1* | `archiv.py` vorbereitet, Einsatz erst dann |
+| **Begriffe** | 29.09.: *präziser werden … mehrere Messungen, um das zu belegen* (P1–P8 *ok*) | Beitrag · Kontext · Gewicht · Sperre, je mit Prüfung (E-20) |
+| **Urteil ab 2024** | 29.09.: *der Markt hat sich seit 2021 massiv geändert … Fokus ab 2023 bzw. 2024* | 2022 nur Gegenprobe, Fallzahl nie mit alten Jahren auffüllen (E-21) |
+| **Schwelle auf der Summe, Kern zuerst** | 29.09.: *wie können wir das festlegen, ohne die LAGE der ANDEREN Beiträge zu kennen* · *ja, Kern zuerst* | K5 zurückgestellt; der Kern Ende zu Ende als Test (E-23) |
+| **Zahlen gemessen, nicht gewählt** | 29.09.: *deine Wahl ist wie immer keine Wahl* | Schwellen und Grenzen per vorab festgelegter Regel, einmal bestätigt (E-24) |
+| **Lösungspflicht** | 29.09.: *an der Messung herumschrauben NEIN, aber … mögliche Lösungen JA, MUSS* | fällt ein Schritt: Fehler, Annahmen, Aussage, Lösung (E-25) |
+| **Zeitfenster** | 29.09.: *Hebel ist kurz, schnell, hoch — es geht um das ZEITFENSTER* | Chance und Risiko im selben Fenster, das Fenster als Achse (E-26) |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,

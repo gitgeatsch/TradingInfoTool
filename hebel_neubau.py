@@ -258,10 +258,15 @@ REGELWERK = {
         # ⛔ 29.09. (2.680): die Beitragsauswahl ist robust (T6), aber der
         # Beitrag ist NICHT kalibriert (T3) und nicht besser als rsi allein
         # (T2) - nach der Vorabfestlegung wird K5 NEU VORGELEGT
-        "ergebnis": "nein | 3 bis 5 Stufen, so viele wie trennscharf, Schwelle "
-                    "auf dem BEITRAG - dem kalibrierten Vorsprung gegen das eigene "
-                    "Normal (K5, vorlaeufig; 2.680: nicht kalibriert, K5 neu "
-                    "vorzulegen)",
+        # ⭐ 29.09. abends (Nutzer): die Schwelle gehoert auf die SUMME der
+        # Chance-Beitraege - K5 ist zurueckgestellt, bis die Summe steht. Der
+        # KERN (Summe mit EINEM Glied, rsi) ist als Test gemessen: Einstieg am
+        # ERSTEINTRITT, Schwelle per vorab festgelegter Regel (2.688)
+        "ergebnis": "KERN (Test): Ersteintritt des rsi-Beitrags, s = +0,035 per "
+                    "Regel auf 2024 gemessen, einmal bestaetigt 2025-26 in 4 von 4 "
+                    "Mengen (2.688) - der ZUSTAND ist als Zahl nicht kalibriert "
+                    "(2.687). Stufen (3 bis 5) und die Schwelle auf der SUMME erst, "
+                    "wenn weitere Beitraege in der Summe stehen (K5 zurueckgestellt)",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
@@ -287,9 +292,13 @@ REGELWERK = {
                        "%, 3x ~ -27 %, 2x ~ -45 %). ATR zum Einstieg ist das "
                        "Risikomass (2.667)",
         "bezug": "das eigene Asset",
-        "nullpunkt": "die Nutzergrenze fuer die Liquidationswahrscheinlichkeit",
-        "ergebnis": "2x | 3x | 5x - die HOECHSTE Stufe unter der Grenze (K6); "
-                    "zuerst nur Risiko (R), R+S als Folgemessung",
+        "nullpunkt": "die Grenze fuer die Liquidationswahrscheinlichkeit - im KERN "
+                     "Schritt 3 per vorab festgelegter Regel aus der Simulation "
+                     "gemessen (Vorschlag: groesstes Kontowachstum nach Kosten, bei "
+                     "Gleichstand die vorsichtigere), Nutzer-Veto moeglich",
+        "ergebnis": "2x | 3x | 5x - die HOECHSTE Stufe unter der Grenze (K6), nur "
+                    "aus dem RISIKO (ATR, 2.681); auf den Ersteintritten vorsichtig "
+                    "(H0 2.689); Signalstaerke (S) traegt nicht genug (K6 S Stufe 1)",
         "zusatzbedingung": "geringeres Risiko -> HOEHERE Stufe",
     },
 }
@@ -448,7 +457,8 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
-        befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684"),
+        befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684", "2.685",
+                "2.686", "2.687", "2.688"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
@@ -456,12 +466,16 @@ BEITRAGSLAGE = {
               "ALTERSACHSE gueltig (2.676): Delle bei 6-12 h, 24 h alt wieder "
               "voll - in Suche, Pruefzeit und 2022. ALLEIN waehlt es besser aus "
               "als jede Kombination (2.680, 2.683); keine Normal-Verzerrung, "
-              "roh fast kalibriert (2.683, 2.684)",
+              "roh fast kalibriert (2.683, 2.684). Traegt in jeder Phase (2.685) "
+              "und jedem Wetter (2.686). KERN: der ERSTEINTRITT (s = +0,035) traegt "
+              "einmal bestaetigt 2025-26 in 4 von 4 Mengen +0,059..+0,076 (2.688); "
+              "der Zustand ist als Zahl nicht kalibriert (2.687)",
         quelle=_Q_KURS, live=_L_KURS, spot="",
         vorbehalt="ROLLE A WAEHREND (Fortsetzung), nicht OPTIMUM: der RSI der "
                   "letzten 14 h kann einen Anstieg nie VORHER anzeigen (Nutzer "
-                  "29.09.: *Sportwagen, der schon 200 faehrt*); 2024 schwach, "
-                  "zeitstabil nur in der Betriebsform (2.684)"),
+                  "29.09.: *Sportwagen, der schon 200 faehrt*); stark REGIMEABHAENGIG: "
+                  "2025 nur ein Viertel von 2026, Juli-Dezember 2025 negativ (2.688); "
+                  "ein TAGESHANDEL - +5 % im Median nach 19-20 h (2.689)"),
     "vola": dict(
         b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
@@ -484,14 +498,17 @@ BEITRAGSLAGE = {
         quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
     # ── das Risikomodell der Hebelstufe (29.09.) ────────────────────────
     "atr": dict(
-        b1="ungemessen", vorlauf=None, b2="belegt", befund=("2.667", "2.681"),
+        b1="ungemessen", vorlauf=None, b2="belegt", befund=("2.667", "2.681", "2.689"),
         beleg="die ATR zum Einstieg sagt die Liquidationsgefahr je Stufe voraus "
               "(2.667); am Markpreis und am Spot-Tief, vier Mengen: 5x vorwaerts "
               "kalibriert, 3x nur geordnet, 2x zu selten; Risikokurven bringen "
-              "nichts dazu (2.681). Die Tabelle je Grenze liegt vor",
+              "nichts dazu (2.681). Die Tabelle je Grenze liegt vor. H0 (2.689): "
+              "auf den Ersteintritten unterschaetzt sie das Risiko nirgends - "
+              "5x beob/gesch 12 h 0,40-0,45, 24 h 0,48-0,59, 72 h 0,76-0,81",
         quelle=_Q_KURS, live=_L_KURS, spot="",
-        vorbehalt="H0 offen: die Gefahr auf der tatsaechlichen EINSTIEGSAUSWAHL "
-                  "ist Pflicht vor jeder Verwendung (2.681)"),
+        vorbehalt="im schwachen Regime (2025) ist der Abstand bei 72 h fast weg "
+                  "(0,94-0,95, 2.689); 2x-Liquidationen nur am 10./11.10. - die "
+                  "Grenze und die Haltedauer klaert die Simulation (Kern Schritt 3)"),
 }
 
 # ⚠️⚠️ NEUESTER STAND (27.09. abends, E1 bis E2d) - er geht der Beitragslage
@@ -767,20 +784,22 @@ NAECHSTE_MESSUNGEN = (
                "darunter, und vor allem im Markt-Anteil. Nur sinnvoll, wenn K5 eine "
                "VORHER-Rolle braucht - sonst zurueckstellen; die Anfahr-Kurve ist "
                "beantwortet (kein Sweet Spot, rsi traegt in jeder Phase)"),
-    dict(was="K6 H0: die Liquidationsgefahr der ATR-Stufen auf der tatsaechlichen "
-             "EINSTIEGSAUSWAHL (Pflicht vor jeder Verwendung)",
-         art="probe", bewertung="b2", merkmale=("atr",), prueft="2.681",
-         warum="K6 hat auf ALLEN Ankern gemessen; der Einstieg waehlt besondere "
-               "Zeitpunkte (Fortsetzung, Squeeze-Lage) - stehende Regel *unbedingte "
-               "Messung nicht auf eine Teilmenge uebertragen*. Braucht die "
-               "Einstiegsregel (K5)"),
-    dict(was="rsi (Rolle A waehrend) auf UNGESEHENEN Monaten und 2024 - traegt die "
-             "Fortsetzung ueber die Zeit?",
-         art="probe", bewertung="b1", merkmale=("rsi",), prueft="2.684",
-         warum="2024 ist schwach, zeitstabil nur in der Betriebsform (2.684); die "
-               "Pruefzeit ist mehrfach gesehen - die Antwort kommt aus der "
-               "Simulation (Ebene 3) und den Monaten ab 2026-09 (Z6)"),
-    dict(was="K6 R+S: die EXTREME der Lage (funding hoch, viele Longs) als "
+    dict(was="⭐ KERN SCHRITT 3 - SIMULATION: die Hebelstufe aus der ATR auf den "
+             "Ersteintritten, Haltedauer und Ziel als ACHSE, Kosten, das schwache "
+             "Regime - und die Grenze per Regel",
+         art="probe", bewertung="b2", merkmale=("atr",), prueft="2.689",
+         warum="H0 (2.689): die Tabelle ist auf den Einstiegen vorsichtig, aber im "
+               "schwachen Regime (2025) ist der Abstand bei 72 h fast weg; der Kern "
+               "ist ein Tageshandel (+5 % nach 19-20 h). Ob nach Kosten etwas "
+               "bleibt und welche Grenze, beantwortet nur die Simulation"),
+    dict(was="rsi (Rolle A waehrend) - der Kern im schwachen Regime und auf den "
+             "Monaten ab 2026-09",
+         art="probe", bewertung="b1", merkmale=("rsi",), prueft="2.688",
+         warum="einmal bestaetigt 2025-26 (2.688), aber Juli-Dezember 2025 negativ "
+               "und 2025 nur ein Viertel von 2026 - die Antwort kommt aus der "
+               "Simulation (Kern Schritt 3) und den neuen Monaten ab 2026-09 (Z6)"),
+    dict(was="K6 R2 (ZURUECKGESTELLT 29.09., geringe Erwartung, Nutzer: lange Messung "
+             "nur nach Stufe 1): die EXTREME der Lage (funding hoch, viele Longs) als "
              "Risikogewicht der Hebelstufe - Black Swans nur als Stoerfaktor",
          art="neu", bewertung="b2",
          merkmale=("funding", "oi_aenderung", "konten_verh"),
