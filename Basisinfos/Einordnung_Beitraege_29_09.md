@@ -104,6 +104,8 @@ Käuferanteil und Premium (begleiten die Bewegung, 2.665).
 
 ## 5. Der Ansatz — getrennte Rollen statt einer Summe
 
+> ⛔ **ÜBERHOLT (29.09.2026, Voranalyse Beitrag/Kontext/Gewicht P7):** Dieser Abschnitt benutzt eine **andere Buchstabenfolge** (A Lage · B Fortsetzung · C Risiko · D Kontext) als das gültige Rollenschema und nennt rsi ein „Gewicht“. **Es gilt** das Schema aus den Abschnitten **8–9** (A OB · B WIE WEIT · C WIE VIEL HEBEL) und die Begriffe **Beitrag · Kontext · Gewicht** im Regelwerk. Stehen gelassen als Verlauf, nicht als Grundlage.
+
 | Stufe | Frage | Eingänge heute | Ausgabe |
 |---|---|---|---|
 | **A · Lage** (Chance vorher) | baut sich etwas auf? | ⭐ **offen** — Kandidaten 2a | Wahrscheinlichkeit, dass es **losgeht** |

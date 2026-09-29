@@ -289,6 +289,119 @@ def main() -> int:
         s = sel[np.isfinite(NADEL[sel]) & (NADEL[sel] > SPAET)]
         return dqs(f, y) - dqs(s, y), f, s
 
+    # ══ W1 (Voranalyse_Beitrag_Kontext_Gewicht_29_09.md, Abschnitte 6 und 10) ══════════
+    # Zerlegung je Wetter-Drittel W und Jahr: NIVEAU(W) = Dq aller Anker, ZUWACHS(W) = Dq
+    # der Einstiegsauswahl minus Niveau - beides gegen das geschrumpfte Normal.
+    # Wetter = BTC-Rendite 30 Tage, Drittel nach dem RANG gegen die eigenen letzten 12
+    # Monate (kausal). WEITER nur, wenn Zuwachs(hoch) - Zuwachs(tief) >= +0,04 in 2025 UND 2026.
+    if "--wetter" in sys.argv:
+        WEITER = 0.04
+        m0, sel0 = rsi_auswahl(E)
+        ct0 = m0.z(E, r_pa, OFF[r_pa]) - OFF[r_pa]
+        rr11 = dq(r_pa[ct0 >= np.quantile(m0.z(E, r_sa, OFF[r_sa]) - OFF[r_sa], 0.9)])
+        print()
+        print("=" * 120)
+        print("W1 · WETTER: KONTEXT ODER GEWICHT? (Einstiegsregel rsi allein, feste Teilung, geschrumpftes Normal)")
+        print("  R-R11 rsi allein oben (rohes Normal) %+.4f · 2.680: +0,0808 -> %s" % (
+            rr11, "✔ bitgleich" if abs(round(rr11, 4) - 0.0808) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
+        btc = reihe([(E2.EINGESTELLT_DB, "SELECT stunde, close FROM stundenkurse WHERE symbol='BTC'"),
+                     (E2.STUNDEN_DB, "SELECT stunde, close FROM stundenkurse WHERE symbol='BTC'")])
+        LH = len(btc)
+        b30h = np.full(LH, np.nan)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            b30h[720:] = btc[720:] / btc[:-720] - 1.0
+        rang = pd.Series(b30h).rolling(8760, min_periods=4000).rank(pct=True).to_numpy()
+        zust_h = np.full(LH, -1, np.int8)
+        fin = np.isfinite(rang)
+        zust_h[fin] = np.where(rang[fin] <= 1 / 3, 0, np.where(rang[fin] <= 2 / 3, 1, 2))
+        abs_h = np.full(LH, -1, np.int8)
+        fa = np.isfinite(b30h)
+        abs_h[fa] = (b30h[fa] >= 0).astype(np.int8)
+        ok_std = STD < LH
+        WN = ("BTC tief", "BTC mitte", "BTC hoch")
+        feste = r_pa[np.isfinite(E["rsi_s"][r_pa]) & (E["rsi_s"][r_pa] >= np.nanpercentile(E["rsi_s"][r_sa], 90))]
+
+        def zustand(zh, versatz=0):
+            z = np.full(n, -1, np.int8)
+            z[ok_std] = zh[(STD[ok_std] + versatz) % LH]
+            return z
+
+        def zerlege(Z, sel, ix_jahr):
+            aus = []
+            for w in range(3):
+                alle = ix_jahr[Z[ix_jahr] == w]
+                s_ = np.intersect1d(sel, alle)
+                niv = dqs(alle)
+                aus.append((niv, dqs(s_) - niv, len(alle), len(s_)))
+            return aus
+
+        def episoden(zh, jj):
+            hs = np.arange(LH)
+            tag = hs[(hs % 24 == 0)]
+            tag = tag[(monat_von(tag) // 12) == jj]
+            s = zh[tag]
+            s = s[s >= 0]
+            if not len(s):
+                return (0, 0, 0)
+            start = np.r_[True, s[1:] != s[:-1]]
+            return tuple(int(((s == w) & start).sum()) for w in range(3))
+        Z = zustand(zust_h)
+        jahre = (2025, 2026)
+        erg = {}
+        for jj in jahre:
+            ixj = r_pa[JAHR[r_pa] == jj]
+            erg[jj] = zerlege(Z, sel0, ixj)
+            ep = episoden(zust_h, jj)
+            print()
+            print("  %d · Niveau (alle Anker) · Zuwachs der Einstiegsauswahl · Anker alle/Auswahl · Episoden (Tage-Laeufe)" % jj)
+            for w in range(3):
+                niv, zuw, na_, ns_ = erg[jj][w]
+                print("    %-9s Niveau %+.4f · Zuwachs %+.4f · %6d / %5d · Episoden %d" % (WN[w], niv, zuw, na_, ns_, ep[w]))
+            fz = zerlege(Z, feste, ixj)
+            print("    Auskunft feste Regel (rsi_s >= P90 Suche): Zuwachs tief %+.4f · mitte %+.4f · hoch %+.4f" % (
+                fz[0][1], fz[1][1], fz[2][1]))
+        # Nullwelt: die Wetterreihe fuer ALLE Assets gemeinsam verschoben (>= 60 Tage)
+        null_z = {jj: [] for jj in jahre}; null_n = {jj: [] for jj in jahre}
+        for _ in range(zieh):
+            k_ = int(rng.integers(1440, LH - 1440))
+            Zv = zustand(zust_h, k_)
+            for jj in jahre:
+                e_ = zerlege(Zv, sel0, r_pa[JAHR[r_pa] == jj])
+                null_z[jj].append(e_[2][1] - e_[0][1]); null_n[jj].append(e_[2][0] - e_[0][0])
+        print()
+        weiter = True
+        for jj in jahre:
+            dz = erg[jj][2][1] - erg[jj][0][1]; dn = erg[jj][2][0] - erg[jj][0][0]
+            weiter &= dz >= WEITER
+            print("  %d · GEWICHT: Zuwachs hoch - tief %+.4f (Nullwelt Mittel %+.4f, 90. Perzentil %+.4f) · "
+                  "KONTEXT: Niveau hoch - tief %+.4f (Nullwelt Mittel %+.4f, 90. Perzentil %+.4f)" % (
+                      jj, dz, float(np.nanmean(null_z[jj])), float(np.nanpercentile(null_z[jj], 90)),
+                      dn, float(np.nanmean(null_n[jj])), float(np.nanpercentile(null_n[jj], 90))))
+        # Auskunft absolut: BTC 30 Tage < 0 gegen >= 0
+        Za = zustand(abs_h)
+        for jj in jahre:
+            ixj = r_pa[JAHR[r_pa] == jj]
+            t_ = []
+            for w, nm in ((0, "BTC 30 T < 0"), (1, "BTC 30 T >= 0")):
+                alle = ixj[Za[ixj] == w]; s_ = np.intersect1d(sel0, alle); niv = dqs(alle)
+                t_.append("%s: Niveau %+.4f, Zuwachs %+.4f (%d)" % (nm, niv, dqs(s_) - niv, len(s_)))
+            print("  Auskunft absolut %d: %s" % (jj, " · ".join(t_)))
+        # Auskunft 2022 (Moment-Bezug: das Niveau ist je Asset und Monat herausgenommen, nur der Zuwachs zaehlt)
+        r22 = np.flatnonzero(GRID & (JAHR == 2022) & np.isfinite(OFF_M))
+        if len(r22):
+            c22 = m0.z(E, r22, OFF_M[r22]) - OFF_M[r22]
+            s22 = r22[c22 >= np.quantile(m0.z(E, r_sa, OFF[r_sa]) - OFF[r_sa], 0.9)]
+            t_ = []
+            for w in range(3):
+                alle = r22[Z[r22] == w]; s_ = np.intersect1d(s22, alle)
+                t_.append("%s %+.4f (%d)" % (WN[w], dq(s_, A24, MA, MB) - dq(alle, A24, MA, MB), len(s_)))
+            print("  Auskunft 2022 (Moment-Bezug) Zuwachs: %s" % " · ".join(t_))
+        print()
+        print("  WEITER-SCHWELLE Zuwachs hoch - tief >= +%.2f in 2025 UND 2026: %s" % (
+            WEITER, "✔ ERREICHT - W2 vorlegen" if weiter else "⛔ NICHT erreicht - keine W2 aus diesem Grund, Ergebnis vorlegen"))
+        print("SCHLUSS: vollstaendig")
+        return 0
+
     if tor:
         null = []
         for _ in range(zieh):

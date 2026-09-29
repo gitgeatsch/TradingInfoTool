@@ -156,3 +156,18 @@ Jede weitere Stufe bekommt eine **eigene** Voranalyse mit Vorabfestlegung — hi
 
 W1: Werkzeug (Modus in `messe_losfahren.py`, Aufbereitung dort geprüft) bauen und vorab committen · ein Lauf, etwa
 **20–30 Minuten** · dann Stopp.
+
+
+---
+
+## 10. ✔ ABGESTIMMT (29.09.2026) — P1 bis P8 wie empfohlen
+
+**Nutzer:** *„ok"* (auf die Frage *P1–P8 wie empfohlen?*), zuvor: *„Das Regelwerk muss langsam und sauber auf den
+bisherigen Messungen und Ergebnissen aufgebaut werden, damit es trägt."*
+
+| | umgesetzt VOR dem Lauf |
+|---|---|
+| **P1** | die Begriffe stehen im Regelwerk (`Regelwerk_Hebel_Bewertung_27_09.md`, Zeile *Begriffe*) |
+| **P7** | `Einordnung_Beitraege_29_09.md` Abschnitt 5 als **überholt** gekennzeichnet, Verweis auf 8–9 |
+| **W1** | `messe_losfahren.py --wetter` (Auswahl `rsi_auswahl`, R-R11 +0,0808; Wetter-Rang über 8.760 h, mindestens 4.000 h; Nullwelt: Wetterreihe für alle Assets gemeinsam um ≥ 1.440 h verschoben, 40 Ziehungen; Episoden = Läufe des Zustands auf Tagesbasis, 00 UTC) |
+| **danach** | Stopp, Ergebnis mit Zwischenfazit zum Ziel |
