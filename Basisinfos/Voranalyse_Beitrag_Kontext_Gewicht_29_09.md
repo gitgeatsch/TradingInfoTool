@@ -214,3 +214,12 @@ dasselbe BTC-Wetter. Mehr **Episoden** gibt es nur über **mehr Zeit**: W2 muss 
 gegen **eine** Nullwelt prüfen (2023–24 mit dem Vorbehalt, dass rsi dort trainiert wurde — das Wetter aber nicht).
 Ob das reicht, ist offen; wenn nicht, ist das Wetter-Gewicht mit unseren Daten **nicht nachweisbar** — nicht
 **widerlegt**.
+
+
+---
+
+## 12. ABSCHLUSS (29.09.2026) — W2 gelaufen, W3–W5 entfallen
+
+W2 (`Voranalyse_W2_Wetter_Gewicht_29_09.md`, Befund **2.686**): das Wetter-Gewicht ist ab 2024 **nicht nachweisbar**
+(+0,029, Nullwelt P90 +0,112, Leiter bis +0,12 nicht aufgelöst). Nach der vorab festgelegten **Abbruchregel** entfallen
+W3–W5. **Bleibt:** die Begriffe (im Regelwerk) und der Befund, dass rsi in **jedem** Wetter trägt.

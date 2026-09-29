@@ -144,3 +144,32 @@ als Hinweis auf *übergeordnete Wetterlagen*.
 | umgesetzt VOR dem Lauf | |
 |---|---|
 | Werkzeug | `messe_losfahren.py --wetter2` — führt W1 **unverändert** zuerst aus (R-R11: die W1-Zeilen müssen bitgleich zu `W1_Wetter_29_09/w1__bestand.txt` sein), dann die rollierende Auswahl 2024-01 bis 2026-08, Nullwelt 40 (+400 Auskunft), Leiter +0,04/+0,08/+0,12, G3 je Jahr mit Episoden, G4 je Asset, G5, G6 (Log-Loss, vier Zeitblöcke) |
+
+
+---
+
+## 10. ERGEBNIS W2 (29.09.2026, bestand) — Befund 2.686
+
+> **Urteil in einer Zeile:** Das Wetter-Gewicht ist ab 2024 **nicht nachweisbar** — in der Betriebsform schrumpft es
+> auf +0,029 und liegt mitten in der Nullwelt. Nach der **Abbruchregel** ist das die letzte Wettermessung. Positiv:
+> **rsi trägt in jedem Wetter.**
+
+| | tief | mitte | hoch |
+|---|---|---|---|
+| Zuwachs rsi 2024–2026 (rollierend) | **+0,047** | +0,048 | +0,076 |
+| 2024 / 2025 / 2026 | +0,003 / +0,068 / +0,043 | +0,064 / +0,031 / +0,055 | +0,034 / +0,107 / +0,085 |
+| Episoden 2024 / 2025 / 2026 | 22 / 18 / 5 | 31 / 25 / 20 | 9 / 8 / 16 |
+
+| # | Ergebnis |
+|---|---|
+| G0 | ✔ W1 im selben Lauf bitgleich; rsi allein +0,0808 |
+| G1 | ⛔ Leiter: +0,04 0 von 5 · +0,08 1 von 5 · +0,12 3 von 5 → **nicht auflösbar** |
+| G2 | ⛔ G = **+0,029** gegen Nullwelt P90 +0,112; 39 % der Zufallszuordnungen erreichen G |
+| G3 | ✔ hoch > tief in jedem Jahr |
+| G4 | ✔ 62 % von 92 Assets (knapp) |
+| G5 | Kontext +0,029 = Gewicht +0,029 — **nicht zu trennen** |
+| G6 | Wechselwirkung **schlechter** als Addition (−0,18 milli-nat je Anker) |
+
+➤ **Folge (Abbruchregel):** W3–W5 entfallen; das Wetter bleibt **Auskunft** (nicht widerlegt, ab 2024 nicht
+nachweisbar). **Zurück zur Hauptlinie:** K5 (Schwelle auf rsi, Kalibrierung), B, H0, Simulation.
+➤ **Ursache gemessen:** die Fallzahl sind die **Wetterlagen**; die W1-Größe hing zum Teil an der **festen** Auswahl.

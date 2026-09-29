@@ -647,6 +647,12 @@ NEUESTER_STAND = (
               "Tachonadel ist selbst Fortsetzung - kein Gewicht; Mail offen (Nutzer). "
               "funding auf stehenden Ankern ueber dem Band, aber unter der Aufloesung "
               "und vor allem Markt -> Kontext"),
+    ("2.686", "WETTER (BTC 30 Tage) als Gewicht auf rsi: ab 2024 NICHT nachweisbar - "
+              "in der Betriebsform nur +0,029 hoch gegen tief, mitten in der "
+              "Nullwelt; die wenigen Wetterlagen loesen nicht einmal +0,12 auf. "
+              "Nach der Abbruchregel die letzte Wettermessung, das Wetter bleibt "
+              "Auskunft. rsi traegt in JEDEM Wetter und Jahr positiv. Begriffe "
+              "Beitrag/Kontext/Gewicht/Sperre im Regelwerk"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
@@ -656,7 +662,9 @@ NEUESTER_STAND = (
                "wenige Longs) - weitgehend schon gemessen (2.650, 2.657, 2.665). B ist "
                "robust (2.655/2.662), in ATR groesstenteils die ATR. Bewertung 2: die "
                "ATR (2.681). Losfahren (2.685): kein Sweet Spot, rsi traegt in jeder "
-               "Phase - keine Phasensperre fuer K5. Naechste Schritte: K6 R+S (Extreme "
+               "Phase - keine Phasensperre fuer K5. Wetter (2.686): nicht nachweisbar, "
+               "rsi traegt in jedem Wetter; K6 S Stufe 1 nur auf der Kante, R2 "
+               "zurueckgestellt. Naechste Schritte: K6 R+S (Extreme "
                "der Lage), K5 neu vorlegen (rsi allein; die Nadel kein Gewicht, Mail"
                " offen), H0, Simulation Ebene 3 und neue Monate ab 2026-09. Black "
                "Swans nur als Stoerfaktor (Nutzer 29.09.)"),

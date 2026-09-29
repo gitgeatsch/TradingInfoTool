@@ -20,7 +20,8 @@
 | **9 · Hebel** | K7 (2.679): **Markpreis** Hauptmaß, m = 0,09 vorsichtig, Fehlalarme nur über 5x · K6 (2.681): die **ATR allein** trägt die Liquidationsgefahr, die Risikokurven nicht; 5x kalibriert, 3x geordnet, 2x zu selten; H0 und J10 offen |
 | **3/4 · Ablauf** | die **Rollen vom 25.09.** gelten und sind geprüft (A OB, B WIE WEIT, C mit der ATR WIE VIEL HEBEL) — `python -c "import hebel_neubau as H; print(H.rollenblatt())"` · Einordnung: `Einordnung_Beitraege_29_09.md` |
 | **5b · Losfahren (2.685)** | **kein Sweet Spot beim Anfahren**: rsi trägt in jeder Phase, absolut am meisten in der Fahrt; Anfahr-Vorteil ≥ +0,08 ausgeschlossen, kleinere nicht auflösbar; die Nadel ist Fortsetzung → kein Gewicht, Mail offen (Nutzer: abstrakt, zu viel Information); funding auf stehenden Ankern unter der Auflösung, vor allem Markt |
-| **10 · Nächster Schritt (29.09. aktuell)** | **K6 R+S** · **K5** neu vorlegen (rsi allein, keine Phasensperre) · H0 · Simulation (Einordnung Abschnitt 12) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
+| **5c · Wetter (2.686)** | Begriffe Beitrag/Kontext/Gewicht/Sperre im Regelwerk; das Wetter als Gewicht ist ab 2024 **nicht nachweisbar**, bleibt Auskunft; rsi trägt in jedem Wetter · K6 S Stufe 1 nur auf der Kante, R2 zurückgestellt |
+| **10 · Nächster Schritt (29.09. aktuell)** | **K5** neu vorlegen (rsi allein, keine Phasen-/Wetterregel, Kalibrierung) · H0 · Simulation (Einordnung Abschnitt 12) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
 | **10 · (vorher)** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
 
 ```bash
