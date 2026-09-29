@@ -187,3 +187,26 @@ Meldung gegengeprüft werden:
 
 ➤ Das **K5-1-Urteil** (nicht kalibriert) hängt an keinem der Verdachte — es steht. Die Gegenprüfung klärt **warum**, und ob
 der **Ersteintritt** echt ist. Maßgeblich für K5-6 ist dann (c) mit (d).
+
+
+---
+
+## 12. ERGEBNIS WAHL 2024 und GEGENPRÜFUNG — Befund 2.687 (Stopp, zur Entscheidung)
+
+Belege `K5_Schwelle_29_09/wahl__bestand.txt`, `gegen6__bestand.txt` (Wahlteil bitgleich wiederholt).
+
+| # | Ergebnis (nur 2024) |
+|---|---|
+| K5-0 | ✔ rsi allein +0,0808, rollierende Auswahl 29.390, stündliches Normal = bisheriges (0,0) |
+| **K5-1** | ⛔ **nicht kalibriert**: Steigung −0,14; oberstes Zehntel geschätzt +0,042, beobachtet +0,010. Gegenprüfung: das starke unterste Zehntel ist **Monatskontext** (Moment-Bezug −0,007); große Vorsprünge stammen aus wenigen Monaten |
+| K5-2 Zustand | +0,02: +0,016 · +0,04: −0,027 · +0,06: −0,064 · +0,08: leer |
+| K5-3 | keine Sperre (keine Umkehr) |
+| K5-4 | Stufen nicht trennscharf, Leiter zu grob |
+| ⭐ **K5-6 Ersteintritt** | +0,02: **+0,093** (2.524, ~4 je Asset und Monat) · +0,04: **+0,076** (1.871, ~3) — nach beiden Fehlerprüfungen; Nullwelt P90 +0,046 / +0,014 → **jenseits** |
+
+➤ **Bewertung:** Der **Zustand** taugt nicht als Schwelle. Der **Ersteintritt** — das erste Überschreiten, also das
+**Losfahren in rsi** — trägt 2024 deutlich. ⚠️ Nur 2024, eine Menge, als Überlegenheit nicht vorab benannt.
+
+➤ **Zur Entscheidung (neue Vorabfestlegung):** E1 Einstiegsform = **Ersteintritt** statt Zustand · E2 Schwelle
+**+0,02** oder **+0,04** (deine Wahl nach der Tabelle) · E3 **einmalige** Bestätigung 2025-01 bis 2026-08: Ersteintritt
+> 0 in **beiden** Jahren **und** jenseits der Nullwelt, dazu die vier Mengen.

@@ -1,0 +1,55 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 75584 · Symbole 68
+  Auskunft Verteilung vh: P50 +0.0009 · P90 +0.0284 · P95 +0.0391 · P99 +0.0583 · Max +0.0758
+
+  K5-1 KALIBRIERUNG je Zehntel (geschaetzt -> beobachtet): -0.033->+0.057 · -0.019->-0.030 · -0.010->-0.011 · -0.005->-0.008 · -0.002->-0.011 · +0.003->+0.002 · +0.008->-0.039 · +0.014->+0.010 · +0.022->+0.015 · +0.042->+0.010
+       Steigung -0.14 (Soll 0,7-1,3) · oberstes Zehntel |gesch - beob| 0.0319 (Soll <= 0,02) -> ⛔
+       2024: Steigung -0.14 · oberstes Zehntel gesch +0.0417 beob +0.0098
+  Auswahl (Trainingsgrenze P90): 7720 Anker · geschaetzt +0.0289 · beobachtet +0.0354
+
+  K5-2 TABELLE (Signal) und K5-6 ERSTEINTRITT (Einstieg 1 h nach dem ersten Ueberschreiten, davor 24 h darunter)
+    Schwelle   Anteil    Anker     gesch.      beob. | Ersteintr. je As.-Mo.      beob. K5-6
+    +0.02       16.9%    12776    +0.0344    +0.0157 |       2652       4.22    +0.0910 ✔
+    +0.04        4.6%     3473    +0.0514    -0.0267 |       1990       3.16    +0.0853 ✔
+    +0.06        0.8%      596    +0.0647    -0.0641 |        782       1.24    -0.0036 ⛔
+    +0.08        0.0%        0       +nan       +nan |          3       0.00    -0.1527 ⛔
+  K5-3 SPERRE (unten):
+    -0.02       14.3%    10807    -0.0297    +0.0174
+    -0.04        1.0%      739    -0.0433    +0.1857
+
+  NULLWELT (rollierende Modelle auf verschobenem rsi, 40 Ziehungen):
+    Signal +0.02: beob +0.0157 · Null Mittel -0.0202, P90 -0.0142
+    Signal +0.04: beob -0.0267 · Null Mittel -0.0361, P90 -0.0268
+    Signal +0.06: beob -0.0641 · Null Mittel -0.0476, P90 -0.0203
+    Signal +0.08: beob +nan · Null Mittel -0.0054, P90 +0.0485
+    Sperre -0.02: beob +0.0174 · Null Mittel +0.0536, P10 +0.0450 -> keine Umkehr
+    Sperre -0.04: beob +0.1857 · Null Mittel +0.1069, P10 +0.0748 -> keine Umkehr
+  K5-4 STUFEN (Bereiche +0.02..+0.04 · +0.04..+0.06 · +0.06..+0.08 · +0.08..): beob +0.0334 · -0.0183 · -0.0641 · +nan
+    Unterschied Stufe 1->2: -0.0517 · Null P90 -0.0017 -> nicht trennscharf
+    Unterschied Stufe 2->3: -0.0458 · Null P90 -0.0132 -> nicht trennscharf
+    Unterschied Stufe 3->4: +nan · Null P90 +0.1351 -> nicht trennscharf
+    Leiter oberste Stufe +0.04: +0.0486 +0.1476 +0.1870 +0.1275 +0.1139 -> gefunden 2 von 5
+    Leiter oberste Stufe +0.08: +0.1123 +0.1627 +0.1970 +0.1451 +0.0888 -> gefunden 3 von 5
+
+  GEGENPRUEFUNG K5-6 (Ersteintritt): wie registriert / Fenster nur aus gueltigen Stunden / dazu ohne die ersten 24 h eines Monats (Modellwechsel)
+    +0.02: 2652 -> +0.0910 · 2594 -> +0.0864 · 2524 -> +0.0928 · davon im Monatsanfang 114 (+0.0849)
+    +0.04: 1990 -> +0.0853 · 1947 -> +0.0807 · 1871 -> +0.0759 · davon im Monatsanfang 114 (+0.2184)
+    Nullwelt +0.02 (streng, ohne Monatsanfang, 40 Ziehungen): echt +0.0928 · Null Mittel +0.0270, P90 +0.0463 -> ✔ jenseits
+    Nullwelt +0.04 (streng, ohne Monatsanfang, 40 Ziehungen): echt +0.0759 · Null Mittel -0.0033, P90 +0.0142 -> ✔ jenseits
+
+  GEGENPRUEFUNG K5-1: Zehntel von vh, beobachtet gegen das geschrumpfte Normal | gegen den Moment-Bezug (Asset im Monat)
+    +0.057|-0.007 · -0.030|-0.028 · -0.011|+0.008 · -0.008|+0.019 · -0.011|+0.013 · +0.002|-0.005 · -0.039|-0.036 · +0.010|+0.016 · +0.015|+0.016 · +0.010|+0.013
+    Zehntel des BEITRAGS c (statt vh): +0.058|-0.006 · -0.030|-0.029 · -0.010|+0.008 · -0.008|+0.020 · -0.011|+0.013 · +0.001|-0.005 · -0.039|-0.036 · +0.010|+0.016 · +0.016|+0.016 · +0.009|+0.013
+    je Monat Anteil |vh| >= 0,04: 2024-01 21.7% · 2024-02 0.0% · 2024-03 16.3% · 2024-04 0.0% · 2024-05 8.6% · 2024-06 0.0% · 2024-07 0.0% · 2024-08 0.0% · 2024-09 7.3% · 2024-10 2.4% · 2024-11 6.1% · 2024-12 6.6%
+SCHLUSS: vollstaendig
+exit=0

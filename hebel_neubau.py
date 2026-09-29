@@ -653,6 +653,11 @@ NEUESTER_STAND = (
               "Nach der Abbruchregel die letzte Wettermessung, das Wetter bleibt "
               "Auskunft. rsi traegt in JEDEM Wetter und Jahr positiv. Begriffe "
               "Beitrag/Kontext/Gewicht/Sperre im Regelwerk"),
+    ("2.687", "K5 WAHL 2024: der ZUSTAND (rsi steht oben) ist als Zahl nicht "
+              "kalibriert und ordnet 2024 nicht (Steigung -0,14; Extreme sind "
+              "Monatskontext). Der ERSTEINTRITT (erstes Ueberschreiten, Einstieg "
+              "1 h spaeter) traegt +0,076..+0,093, weit jenseits der Nullwelt - "
+              "Kandidat fuer die Einstiegsform; Bestaetigung 2025-26 ausstehend"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
