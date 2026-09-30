@@ -156,3 +156,51 @@ Signal muss auch im anderen Regime wenigstens nicht **schaden**, und genau das h
 davor keinerlei Blick auf 2025–26. Die je Menge gewählten Stufen (0,050 / 0,045 / 0,015 / 0,035) sind nur Auskunft. Die Stufe
 0,035 in unverzerrt:3 ist dabei ohnehin dieselbe.
 
+
+---
+
+## 9. ERGEBNIS BESTÄTIGUNG (K1, s = 0,035, 4 Mengen) und DIAGNOSE — Befund 2.696
+
+Belege `Kern_Short_30_09/best__<menge>.txt`, Diagnose `diag__bestand.txt`.
+
+| | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|
+| R-R11 Long-Kern im selben Lauf | ✔ 6.328 / +0,1039 | 7.121 / +0,077 | 6.463 / +0,070 | 6.782 / +0,078 | ✔ |
+| Short-Einstiege / Dq gesamt | 4.174 / +0,030 | 6.286 / +0,040 | 5.763 / +0,034 | 5.794 / +0,033 | |
+| B1 2025 / 2026 | ✔ +0,022 / +0,046 | ✔ +0,045 / +0,031 | ⛔ +0,054 / −0,010 | ⛔ +0,049 / −0,007 | 2/4 |
+| B2 Nullwelt P90 | ✔ −0,014 | ✔ −0,006 | ✔ −0,005 | ✔ −0,015 | **4/4** |
+| B4 je Asset | ⛔ 58 % | ✔ 64 % | ⛔ 58 % | ✔ 65 % | 2/4 |
+| **B6** Tagesblock untere Grenze | ⛔ −0,048 | ⛔ −0,021 | ⛔ −0,029 | ⛔ −0,027 | **0/4** |
+| **B7 Spiegel** 2025 / 2026 | ✔ +0,017 / +0,077 | ✔ +0,033 / +0,067 | ✔ +0,043 / +0,032 | ✔ +0,042 / +0,035 | **4/4** |
+| Halbjahre (H1 / H2 2025 · H1 / H2 2026) | +0,06 / −0,08 · +0,06 / −0,02 | +0,09 / −0,01 · +0,09 / −0,15 | +0,10 / −0,01 · +0,04 / −0,12 | +0,08 / +0,01 · +0,03 / −0,10 | H1 positiv, H2 negativ |
+| Überlappung mit dem Long-Kern (Asset und Woche) | 71 % | 74 % | 75 % | 75 % | die Arme melden meist in denselben Wochen |
+
+➤ **Schritt 1 NICHT bestanden** (B6 0/4). Es ist aber ein **echtes Richtungssignal**: B2 und **B7** sind in 4/4 Mengen erfüllt,
+unten wird es mehr und oben weniger. Das ist das Gegenteil der Wucht (2.693).
+
+**DIAGNOSE — warum Monate leer sind (nachgemessen, nur das Signal, bitgleich zum Kettenlauf):**
+
+| Monat (bestand) | Anteil v̂ ≤ −0,035 | P1 / P99 von v̂ | Short / Long |
+|---|---|---|---|
+| 2025-01..04, 06..08 | 4–17 % | ≈ −0,045 / +0,07..+0,10 | 288–395 / 221–427 |
+| **2025-05** | **0 %** | −0,026 / +0,039 | **1** / 258 |
+| **2025-09..2026-01** | **0 %** | −0,020..−0,026 / +0,032..+0,040 | **0** / 51–318 |
+| 2026-02..04, 07 | 3–13 % | ≈ −0,04 / +0,07 | 357–522 / 380–464 |
+| **2026-05, 06, 08** | **0 %** | −0,021..−0,034 / +0,05..+0,07 | **0–2** / 423–472 |
+
+➤ Das monatlich geschätzte rsi-Modell ist in **8 von 20 Monaten fast flach**, in **beide** Richtungen. Dann kann der Short nicht
+auslösen, und der Long nur mit extremem rsi (Januar 2026: 51 Einstiege). Das trifft genau den **Gegenwind** September 2025 bis
+Januar 2026.
+
+⭐ **Einordnung:** Das Modell sagt in diesen Monaten selbst, dass rsi **gerade keine Information** trägt. Das erklärt die
+**Regimeabhängigkeit** des Kerns (2.688, 2.694) **mechanisch**. Im Gegenwind fehlt der Kurs-Fortsetzung die Aussagekraft, und kein
+Filter auf rsi kann das beheben. ⚠️ Dass die **Dämpfung** der Kreuzvalidierung (λ bis 20.000) die Flachheit verursacht, ist
+plausibel, aber **nicht nachgemessen**.
+
+**Lösungsvorschläge (E-25), zur Abstimmung:**
+
+| # | Weg | Bewertung |
+|---|---|---|
+| **M1** ⭐ | **Modell-Aussagekraft als Kontext**: die Spannweite von v̂ im Monat (vorab bekannt, weil das Modell aus der Vergangenheit geschätzt ist, und für alle Assets gleich, also *Kontext* nach E-20). Hypothese: Long-Einstiege in flachen Monaten sind schlechter, dort wird nicht gehandelt. **Schritt 0:** nur die v̂-Verteilung 2024 ansehen, ob es dort überhaupt flache Monate gibt (ohne Ergebnisse). Sonst ist eine Wahl auf 2024 unmöglich | mechanisch begründet und direkt am Verlust. ⚠️ Wenige Regimewechsel (wie das Wetter, 2.686), und 2025–26 ist schon gesehen |
+| M2 | Kern-Short als **Spur** festhalten (B2/B7 4/4) und mit M1 später erneut prüfen | kostet nichts |
+| M3 | **W4** Positionsführung (Erfolgsmessung) | offen, unabhängig davon |

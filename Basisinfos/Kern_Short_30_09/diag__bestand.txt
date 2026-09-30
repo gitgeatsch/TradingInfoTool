@@ -1,0 +1,78 @@
+D:\Python\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 220843 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0011 · P90 +0.0363 · P95 +0.0471 · P99 +0.0719 · Max +0.1089
+
+========================================================================================================================
+KERN SCHRITT 1 · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %) · BESTAETIGUNG 2025-01..2026-08, Stufe +0.035, Menge bestand, Ruhe 48 h (EINMAL)
+  R-R11 Long-Kern im selben Lauf (Ruhe 48 h, s +0,035): 6328 Einstiege · Dq +0.1039 (Soll bestand Ruhe 48 h 6.328 / +0,1039)
+  Einstiege 4174 an 289 verschiedenen Tagen · Dq gesamt +0.0303
+  B1 je Jahr: 2025 +0.0217 (2369) · 2026 +0.0464 (1805) -> ✔
+  B2 Nullwelt (40 Ziehungen) Mittel -0.0279, P90 -0.0140 -> ✔
+  B4 je Asset (>= 20 Einstiege): 86 Assets, Dq > 0 bei 58 % -> ⛔
+  B5 ohne 10./11.10.2025: 4174 Einstiege, Dq +0.0303 (mit +0.0303)
+  B6 Tagesblock-Bootstrap (289 Tage, 1.000 Ziehungen): 95-%-Intervall -0.0480 .. +0.1005 -> ⛔
+  Auskunft Zustand (Gitteranker vh <= -s, gespiegelt): -0.0424 gegen Ersteintritt +0.0303
+  B7 SPIEGEL (-5 % binnen 24 h minus +5 % binnen 24 h, Zuwachs gegen alle Stunden): 2025 +0.017 (unten +0.030 / oben +0.013) · 2026 +0.077 (unten +0.037 / oben -0.040) -> ✔
+  DIAGNOSE v-dach je Monat (Stunden · Anteil v<=-s · P1 · P50 · P99 · Anteil v>=+s · Short-/Long-Einstiege):
+    2025-01   51252 ·  5.79 % · -0.0426 · +0.0083 · +0.0654 · 15.39 % ·  327 /  307
+    2025-02   47093 ·  8.80 % · -0.0441 · +0.0048 · +0.0699 · 17.01 % ·  290 /  237
+    2025-03   54533 · 15.66 % · -0.0505 · -0.0035 · +0.0627 · 15.65 % ·  288 /  238
+    2025-04   55363 · 10.50 % · -0.0461 · -0.0027 · +0.0709 · 16.64 % ·  324 /  274
+    2025-05   58162 ·  0.00 % · -0.0262 · -0.0032 · +0.0387 ·  4.16 % ·    1 /  258
+    2025-06   57191 · 17.25 % · -0.0507 · -0.0036 · +0.0966 · 26.58 % ·  356 /  221
+    2025-07   60264 ·  7.93 % · -0.0479 · -0.0012 · +0.0911 · 18.93 % ·  388 /  287
+    2025-08   61068 ·  4.18 % · -0.0402 · +0.0013 · +0.0758 · 15.21 % ·  395 /  427
+    2025-09   61405 ·  0.00 % · -0.0202 · +0.0024 · +0.0399 ·  3.07 % ·    0 /  277
+    2025-10   65472 ·  0.00 % · -0.0211 · +0.0032 · +0.0391 ·  2.42 % ·    0 /  318
+    2025-11   64417 ·  0.00 % · -0.0219 · -0.0014 · +0.0351 ·  1.38 % ·    0 /  198
+    2025-12   67878 ·  0.00 % · -0.0259 · -0.0050 · +0.0319 ·  0.79 % ·    0 /  182
+    2026-01   71641 ·  0.00 % · -0.0253 · -0.0073 · +0.0341 ·  0.31 % ·    0 /   51
+    2026-02   66757 ·  7.97 % · -0.0389 · -0.0017 · +0.0780 · 10.45 % ·  410 /  464
+    2026-03   75107 · 13.49 % · -0.0428 · -0.0089 · +0.0674 ·  6.46 % ·  357 /  460
+    2026-04   75022 ·  3.32 % · -0.0372 · -0.0001 · +0.0694 · 13.32 % ·  522 /  380
+    2026-05   81872 ·  0.00 % · -0.0315 · -0.0044 · +0.0731 · 13.52 % ·    2 /  433
+    2026-06   81208 ·  0.00 % · -0.0338 · -0.0027 · +0.0681 · 15.15 % ·    0 /  423
+    2026-07   84730 ·  7.48 % · -0.0410 · -0.0060 · +0.0739 · 18.05 % ·  514 /  421
+    2026-08   84724 ·  0.00 % · -0.0211 · +0.0019 · +0.0495 ·  7.90 % ·    0 /  472
+Traceback (most recent call last):
+  File "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_losfahren.py", line 1959, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_losfahren.py", line 1276, in main
+    mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -s), *np.percentile(vv, [1, 50, 99]),
+                                                              ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Python\Lib\site-packages\numpy\lib\_function_base_impl.py", line 4246, in percentile
+    return _quantile_unchecked(
+        a, q, axis, out, overwrite_input, method, keepdims, weights, weak_q)
+  File "D:\Python\Lib\site-packages\numpy\lib\_function_base_impl.py", line 4510, in _quantile_unchecked
+    return _ureduce(a,
+                    func=_quantile_ureduce_func,
+    ...<6 lines>...
+                    method=method,
+                    weak_q=weak_q)
+  File "D:\Python\Lib\site-packages\numpy\lib\_function_base_impl.py", line 3880, in _ureduce
+    r = func(a, **kwargs)
+  File "D:\Python\Lib\site-packages\numpy\lib\_function_base_impl.py", line 4669, in _quantile_ureduce_func
+    result = _quantile(arr,
+                       quantiles=q,
+    ...<3 lines>...
+                       weights=wgt,
+                       weak_q=weak_q)
+  File "D:\Python\Lib\site-packages\numpy\lib\_function_base_impl.py", line 4793, in _quantile
+    slices_having_nans = np.isnan(arr[-1, ...])
+                                  ~~~^^^^^^^^^
+IndexError: index -1 is out of bounds for axis 0 with size 0

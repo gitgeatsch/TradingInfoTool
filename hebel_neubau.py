@@ -472,7 +472,7 @@ BEITRAGSLAGE = {
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
         befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684", "2.685",
-                "2.686", "2.687", "2.688", "2.695"),
+                "2.686", "2.687", "2.688", "2.695", "2.696"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
@@ -731,6 +731,10 @@ NEUESTER_STAND = (
               "zeigt aber ein gleiches Regimemuster (2025 +0,05..+0,07, 2026 negativ); "
               "Tiefe davor faellt, ist in unverzerrt wegen der v-dach-Skala je Menge nicht "
               "auswertbar; Tempo knapp gefallen. Naechster Schritt Kern-Short (W3)"),
+    ("2.696", "KERN-SHORT Schritt 1 nicht bestanden (Tagesblock 0/4), aber echte Richtung "
+              "(Nullwelt 4/4, Spiegel 4/4). URSACHE der Luecken: das monatliche rsi-Modell "
+              "ist in 8 von 20 Monaten fast flach (v-dach -0,03..+0,04) - genau im "
+              "Gegenwind. Das erklaert die Regimeabhaengigkeit des Kerns mechanisch"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

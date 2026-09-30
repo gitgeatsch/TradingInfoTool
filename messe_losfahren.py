@@ -1272,6 +1272,8 @@ def main() -> int:
                         print("  DIAGNOSE v-dach je Monat (Stunden · Anteil v<=-s · P1 · P50 · P99 · Anteil v>=+s · Short-/Long-Einstiege):")
                         for mm in np.unique(MON[h_ab]):
                             hm = h_ab[MON[h_ab] == mm]; vv = VH[hm]; vv = vv[np.isfinite(vv)]
+                            if not len(vv):
+                                continue
                             print("    %d-%02d %7d · %5.2f %% · %+.4f · %+.4f · %+.4f · %5.2f %% · %4d / %4d" % (
                                 mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -s), *np.percentile(vv, [1, 50, 99]),
                                 100 * np.mean(vv >= s), int((MON[ee] == mm).sum()), int((MON[eL] == mm).sum())))
