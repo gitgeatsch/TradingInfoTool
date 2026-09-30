@@ -696,6 +696,17 @@ def main() -> int:
                           100 * float(np.mean(roh_[okr])), int(okr.sum()),
                           " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[okr & (JAHRe == jj)]))) for jj in SIM_JAHRE),
                           len(ga_), 100 * np.mean(ga_) if ga_ else np.nan))
+                if "--wenig" in sys.argv:
+                    # M1-2 A4 (Auskunft): Rohvorteil und Konto in den wenig-Monaten (K_IG < 1) gegen die uebrigen
+                    wl_ = {z_.strip() for z_ in open(sys.argv[sys.argv.index("--wenig") + 1], encoding="utf-8") if z_.strip()}
+                    wmi = np.isin(MONe, [int(x[:4]) * 12 + int(x[5:7]) - 1 for x in wl_])
+                    for nm_, m_ in (("wenig", wmi), ("uebrig", ~wmi)):
+                        mm_ = okr & m_
+                        kw_ = kennz(r, STDe, te, maske=m_)
+                        print("  M1-2 A4 %-7s: %5d Handel · Rohvorteil %+.3f %% · Hebelkonto log %+.4f · Spotkonto log %+.4f" % (
+                            nm_, int(mm_.sum()), 100 * float(np.mean(roh_[mm_])) if mm_.any() else np.nan, kw_["G"],
+                            kennz(rs, STDe, ts, maske=m_)["G"]))
+                    print("  M1-2 A4 wenig-Monate: %s · Kosten je Tageshandel 0,48 %%" % ", ".join(sorted(wl_)))
                 if WU:
                     wu_ = XE["wu"].astype(bool); mf_ = XE["mfe24"]
                     for nm_, m_ in (("beide oben", wu_), ("Rest", ~wu_)):

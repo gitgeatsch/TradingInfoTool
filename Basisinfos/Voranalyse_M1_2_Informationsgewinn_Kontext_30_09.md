@@ -111,3 +111,23 @@ das Signalangebot heute zufällig springt. Das ändert den Kern, also gibt es ei
 | **T2** | Teil A **nur als Auskunft** auf 2025–26 (A1–A5), ausdrücklich kein Urteil |
 | **T3** | Teil B: das **Urteil** auf den Monaten ab 2026-09, Regel unverändert |
 | **T4** | danach die **Abstimmung und Bewertung der Lage** (wie von dir vorgegeben). M1-3 bleibt vorgemerkt |
+
+---
+
+## 8. ✔ ABGESTIMMT (30.09.2026) — T1 bis T4; Erläuterung Teil B
+
+**Nutzer:** *„Ja, nur der Punkt ab Sept. 2026 ist mir nicht klar, bitte Info dazu."*
+
+**Teil B in einfachen Worten:** Die Messdaten reichen bis 2026-08. Alles davor ist mehrfach angesehen, 2025–26 besonders oft. Eine
+Regel, die dort gefunden **und** dort bestätigt wird, prüft sich zum Teil selbst. **Ungesehen** sind nur die Monate, die jetzt erst
+entstehen. Darum gilt:
+1. Die Regel (K_IG < 1) wird **heute eingefroren**.
+2. Die neuen Monate werden **nach Monatsende** nachgeladen, am Desktop wie bisher mit langsamen Abrufen. Ein laufender Monat ist nie abgeschlossen (Regel *die letzte Periode ist nicht abgeschlossen*).
+3. Das **Urteil** fällt, sobald ≥ 3 *wenig*- und ≥ 3 übrige Monate mit Einstiegen vorliegen. Das kann ein halbes Jahr oder länger dauern.
+
+Das blockiert nichts. Teil B steht als **Wiedervorlage** im Plan.
+
+**Umsetzung Teil A (vor dem Lauf):** `messe_losfahren.py --kern --ruhe 48 --m1 --bestaetigen 0.035` berechnet K_IG **je Menge** aus deren
+eigenen Monatsmodellen (E-31) und schreibt die *wenig*-Monate nach `data/_vergleich/m1_wenig_<menge>.txt`. Die Simulation liest sie mit
+`--wenig <datei>` (A4). Alles ist ausdrücklich **Auskunft**.
+

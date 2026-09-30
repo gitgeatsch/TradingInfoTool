@@ -1187,6 +1187,60 @@ def main() -> int:
                     print("  Wucht beide oben: %d von %d (%.1f %%) -> %s" % (int(wo.sum()), len(ee), 100 * wo.mean(), zw))
                 print("SCHLUSS: vollstaendig")
                 return 0
+            if "--m1" in sys.argv and best:
+                # ══ M1-2 TEIL A (Voranalyse_M1_2_Informationsgewinn_Kontext_30_09.md, T1-T4): AUSKUNFT, kein Urteil -
+                # K_IG = Informationsgewinn des Monatsmodells / Median der 6 Vormonate, Grenze 1 vorab fest ══
+                s = s_best
+                ig = {mi: 1000.0 * (vl[max(vl)] - min(vl.values())) / nt for mi, _lam, nt, vl in LAM_LOG if vl}
+                mons = sorted(ig); kig = {}
+                for i_, mi in enumerate(mons):
+                    vor = [ig[m_] for m_ in mons[max(0, i_ - 6):i_]]
+                    kig[mi] = ig[mi] / float(np.median(vor)) if len(vor) >= 3 else np.nan
+                wenig = sorted(mi for mi in kig if np.isfinite(kig[mi]) and kig[mi] < 1 and mi >= 2025 * 12)
+                print("M1-2 TEIL A · AUSKUNFT (kein Urteil) · Menge %s · Kern Ruhe %d h, s %+.3f · 2025-01..2026-08" % (E2.MENGE, RUHE, s))
+                print("  R-R11 IG je 1.000 Anker / K_IG (bestand M1-1: 2025-09 0,934 / 0,63 · 2025-11 0,595 / 0,44 · 2026-08 1,103 / 0,78): " +
+                      " · ".join("%d-%02d %.3f/%.2f" % (mi // 12, mi % 12 + 1, ig[mi], kig[mi]) for mi in mons if mi >= 2025 * 12))
+                print("  wenig-Monate (K_IG < 1): %s" % ", ".join("%d-%02d" % (mi // 12, mi % 12 + 1) for mi in wenig))
+                ee = erst_v(VH, s)
+                print("  R-R11 Kern-Einstiege %d · Dq %+.4f (bestand Ruhe 48 h: 6.328 / +0,1039)" % (len(ee), dqh(ee)))
+                wm = np.isin(MON[ee], wenig)
+                AUFa = np.where(np.isfinite(t_u), t_u <= 24, False).astype(float); ABa = np.where(np.isfinite(t_d), t_d <= 24, False).astype(float)
+
+                def diff(m_):
+                    return dqh(ee[~m_]) - dqh(ee[m_])
+                d0 = diff(wm)
+                print("  A1 Chance wenig %+.4f (%d Einstiege, %d Monate) · uebrig %+.4f (%d, %d Monate) · Unterschied uebrig minus wenig %+.4f" % (
+                    dqh(ee[wm]), int(wm.sum()), len(np.unique(MON[ee[wm]])), dqh(ee[~wm]), int((~wm).sum()), len(np.unique(MON[ee[~wm]])), d0))
+                for jj in JAHRE:
+                    mj = JAHR[ee] == jj
+                    print("     %d: wenig %+.4f (%d) · uebrig %+.4f (%d)" % (jj, dqh(ee[wm & mj]), int((wm & mj).sum()), dqh(ee[~wm & mj]), int((~wm & mj).sum())))
+                print("  A2 %s" % ("UMKEHR: Dq in wenig-Monaten <= 0 - eine Sperre waere zulaessig (E-20)" if dqh(ee[wm]) <= 0 else
+                                  "keine Umkehr: Dq in wenig-Monaten > 0 - hoechstens ein Gewicht"))
+                um = np.unique(MON[ee]); lab = np.isin(um, wenig)
+                rp = np.random.default_rng(SAAT + 71); nd = []
+                for _ in range(1000):
+                    pl = rp.permutation(lab)
+                    nd.append(diff(np.isin(MON[ee], um[pl])))
+                nd = np.array(nd)
+                print("  A3 Monats-Nullwelt (%d Monate, %d wenig, 1.000 Vertauschungen): P90 %+.4f · Anteil >= echt %.1f %%" % (
+                    len(um), int(lab.sum()), float(np.nanpercentile(nd, 90)), 100 * float(np.mean(nd >= d0))))
+                tage = STD[ee] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                je_tag = [np.flatnonzero(tinv == k) for k in range(len(ut))]
+                rb = np.random.default_rng(SAAT + 72); bo = []
+                for _ in range(300):
+                    w_ = np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])
+                    bo.append(dqh(ee[w_][~wm[w_]]) - dqh(ee[w_][wm[w_]]))
+                sp_w = AUFa[ee[wm]].mean() - ABa[ee[wm]].mean(); sp_u = AUFa[ee[~wm]].mean() - ABa[ee[~wm]].mean()
+                bs0, bs1 = H(datetime(2025, 10, 10)) - 24, H(datetime(2025, 10, 12))
+                oh = (STD[ee] < bs0) | (STD[ee] >= bs1)
+                print("  A5 Tagesblock untere Grenze %+.4f · Spiegel (+5 %% minus -5 %% binnen 24 h) wenig %+.3f / uebrig %+.3f · ohne 10./11.10.: Unterschied %+.4f" % (
+                    float(np.nanpercentile(bo, 2.5)), sp_w, sp_u, dqh(ee[~wm & oh]) - dqh(ee[wm & oh])))
+                zw = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "m1_wenig_%s.txt" % E2.MENGE.replace(":", "_"))
+                with io.open(zw, "w", encoding="utf-8") as f_:
+                    f_.write("\n".join("%d-%02d" % (mi // 12, mi % 12 + 1) for mi in wenig) + "\n")
+                print("  geschrieben: %s" % zw)
+                print("SCHLUSS: vollstaendig")
+                return 0
             if not best:
                 if "--diag-vh" in sys.argv:
                     # M1 SCHRITT 0 (Voranalyse_Kern_Short_30_09.md Abschnitt 9): NUR das Signal - v-dach je Monat im Wahljahr,
