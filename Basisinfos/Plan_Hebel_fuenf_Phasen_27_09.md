@@ -95,7 +95,7 @@ Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter al
 | O3 | Datenlage am Notebook **bestätigen** (B1–B5), mit einem sparsamen Export und nur den nötigen Tabellen. ✔ **Vorbereitet (01.10.):** `nb_teilexport_betriebsdaten.py`, nur lesend, ohne Netz, Ausgabe nur auf stdout. Aufruf am Notebook: `python nb_teilexport_betriebsdaten.py > nb_betriebsdaten.txt`, dann die Datei in den Austauschordner. Es zeigt Datenbanken, Tabellen, Zeiträume, Symbole, die Hebel-Liste und die Pakete. Am Desktop getestet (44 s, Produktion unverändert). ⏳ Start durch den Nutzer | Schritt 4 |
 | O4 | Wo und wie das Modell im Betrieb trainiert wird (B2/B3), **ohne Desktop** | Schritt 4, Voranalyse |
 | O5 | Die 15 Assets ohne Stundendaten: Beschaffung oder Ausschluss? Deine Entscheidung. ✔ **BTC** (Nutzer 01.10.: *„BTC soll dann am NB auch Hebel nutzen können“*): Heute schließt der Lader BTC als Leitwert aus. Nötig ist ein **eigener Schritt analog zu J**: Modell und Marktmitte bleiben ohne BTC (REGEL0 bitgleich), BTC wird zusätzlich ausgewertet und gemessen, ob es trägt | nach Schritt 5 |
-| O6 | Reihenfolge von A, B, R, L und Käuferanteil | nach Schritt 5 |
+| O6 | Reihenfolge von A, B, R, L und Käuferanteil. ✔ **Entwurf A** (01.10.): `Voranalyse_A_Positionsfuehrung_01_10.md`, ein nachgezogener Stop in ATR (k × H), Einstieg REGEL0 unverändert, nur Erfolgsmessung. Zur Abstimmung, dazu die Nutzerfrage A-B1: Kann Bitpanda einen nachgezogenen Stop? | nach Schritt 5 |
 | O7 | Mindestbedingungen Betrieb, Ersatz der Achse | Schritt 7 (Nutzer) |
 | O8 | Spot-Zugänge PLUME, XDC, INJ | Spot-Arm, später |
 
