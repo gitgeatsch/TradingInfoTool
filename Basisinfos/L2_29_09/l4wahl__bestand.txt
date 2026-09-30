@@ -1,0 +1,41 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 75584 · Symbole 68
+  Auskunft Verteilung vh: P50 +0.0009 · P90 +0.0284 · P95 +0.0391 · P99 +0.0583 · Max +0.0758
+
+========================================================================================================================
+L2 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · Menge bestand · Kern-Ersteintritte s = +0.035: 2095 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 2095 mit Potential und Risiko (Tage 190)
+  Kern gesamt: Chance Dq +0.1095 · Potential +0.059 ATR ueber dem Normal (MFE 24 h) · Risiko -0.003 ATR (Rueckgang vor dem Hoch)
+
+  L4 R-R11 48-h-Einstiege mit Potential: 1486 · Potential +0.069
+
+  L4 · WAHL 2024 · Kern-Ersteintritte mit 48 h Ruhe: 1486 (R-R11: 2024 bestand 1.486 / +0,069 · 2025-26 bestand 6.328 / +0,087) · Chance +0.1615 · Potential +0.069 · Risiko -0.023 · Einstiege je Tag 9.3
+  Arm A Beitrag(ema) je Fuenftel: -0.080 / -0.020 / -0.036 / +0.094 / +0.043 ATR
+  Arm B gemeinsam: ema-Stufen +0.057 / +0.031 / +0.147 / +0.051 · volumenschub-Stufen +0.032 / -0.002 / +0.039 / +0.163 (gegen das unterste Fuenftel)
+  Arm A · Stufen (Regel: groesster Abstand echt - Null-P90, Gleichstand < 0,01 -> die niedrigere):
+    oberste 100 % (tatsaechlich 100.0 %, 1486, Schwelle -): Potential +0.069 · Null-P90 +0.069 · Abstand +0.000 · Chance +0.1615 · Risiko -0.023 · Spiegel +0.000 · Prozent +0.00
+    oberste  50 % (tatsaechlich 60.0 %,  892, Schwelle -0.020): Potential +0.108 · Null-P90 +0.069 · Abstand +0.039 · Chance +0.1795 · Risiko -0.016 · Spiegel +0.019 · Prozent +0.25
+    oberste  33 % (tatsaechlich 40.0 %,  595, Schwelle +0.043): Potential +0.137 · Null-P90 +0.105 · Abstand +0.032 · Chance +0.1814 · Risiko -0.005 · Spiegel +0.023 · Prozent +0.66
+    oberste  20 % (tatsaechlich 40.0 %,  595, Schwelle +0.043): Potential +0.137 · Null-P90 +0.107 · Abstand +0.031 · Chance +0.1814 · Risiko -0.005 · Spiegel +0.023 · Prozent +0.66
+    oberste  10 % (tatsaechlich 20.0 %,  297, Schwelle +0.094): Potential +0.163 · Null-P90 +0.119 · Abstand +0.044 · Chance +0.1629 · Risiko -0.023 · Spiegel +0.007 · Prozent +0.83
+    ➤ Arm A Stufe per Regel: oberste 50 % (Schwelle -0.020)
+  Arm B · Stufen (Regel: groesster Abstand echt - Null-P90, Gleichstand < 0,01 -> die niedrigere):
+    oberste 100 % (tatsaechlich 100.0 %, 1486, Schwelle -): Potential +0.069 · Null-P90 +0.069 · Abstand +0.000 · Chance +0.1615 · Risiko -0.023 · Spiegel +0.000 · Prozent +0.00
+    oberste  50 % (tatsaechlich 50.7 %,  754, Schwelle -0.021): Potential +0.132 · Null-P90 +0.089 · Abstand +0.044 · Chance +0.1826 · Risiko -0.016 · Spiegel +0.032 · Prozent +0.55
+    oberste  33 % (tatsaechlich 35.8 %,  532, Schwelle +0.041): Potential +0.159 · Null-P90 +0.098 · Abstand +0.061 · Chance +0.1904 · Risiko -0.008 · Spiegel +0.048 · Prozent +1.00
+    oberste  20 % (tatsaechlich 25.0 %,  371, Schwelle +0.082): Potential +0.185 · Null-P90 +0.113 · Abstand +0.072 · Chance +0.1918 · Risiko -0.008 · Spiegel +0.066 · Prozent +1.44
+    oberste  10 % (tatsaechlich 15.9 %,  237, Schwelle +0.110): Potential +0.209 · Null-P90 +0.128 · Abstand +0.081 · Chance +0.2034 · Risiko +0.006 · Spiegel +0.090 · Prozent +1.80
+    ➤ Arm B Stufe per Regel: oberste 20 % (Schwelle +0.082)
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\l2_l4_wahl_bestand.json
+  Arm C (Auskunft) beide oben auf 48 h: 323 (21.7 %) · Potential +0.185 · Chance +0.1937 · Risiko -0.008 · Spiegel +0.068
+SCHLUSS: vollstaendig
+exit=0

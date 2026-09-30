@@ -128,3 +128,32 @@ Prüfung als Urteil dazu. Sie **verschärft** die Vorlage und stützt sich auf d
 - Die Schwelle ist ein **fester Wert** der Summe aus 2024. In 2025–26 wird sie nicht neu als Quantil bestimmt.
 - Arm B nimmt beide Fünftel-Kurven in eine gemeinsame lineare Rechnung auf 2024 (je vier Stufenmerkmale).
 - Die Nullwelt verschiebt in Arm A ema je Asset, in Arm B ema und volumenschub.
+
+
+---
+
+## 8. ERGEBNIS WAHL 2024 (bestand) — Stopp, zur Abstimmung
+
+Beleg `L2_29_09/l4wahl__bestand.txt`, Parameter in `data/_vergleich/l2_l4_wahl_bestand.json`. ✔ **R-R11:** 1.486 Einstiege mit
+48 h Ruhe, Potential +0,069, bitgleich zu 2.691 N2. Alle 48-h-Einstiege 2024: Chance +0,162, Potential +0,069 ATR, 9,3 je Tag.
+
+| Arm | Stufe per Regel | ausgewählt | Potential (alle +0,069) | Chance (alle +0,162) | Spiegel | Prozent MFE |
+|---|---|---|---|---|---|---|
+| **A** ema (Urteil) | *oberste 50 %* → tatsächlich **60 %** | 892 | **+0,108** | +0,180 | +0,019 | +0,25 Pp |
+| **B** ema + volumenschub (Vergleich) | *oberste 20 %* → tatsächlich **25 %** | 371 | **+0,185** | +0,192 | **+0,066** | +1,44 Pp |
+| C beide oben (Auskunft) | — | 323 (22 %) | +0,185 | +0,194 | +0,068 | |
+
+**Die Regel angewandt (nachgerechnet):**
+- Arm A: Die Abstände sind +0,039 / +0,032 / +0,031 / +0,044. Die schärfste Stufe liegt nur 0,005 höher, das gilt als Gleichstand, also bleibt es bei **50 %**.
+- Arm B: +0,044 → +0,061 → **+0,072** → +0,081. Der letzte Schritt liegt unter 0,01, also bleibt es bei **20 %**.
+
+⚠️ **Gegenprüfung:**
+1. **Die ema-Kurve von Arm A ist nicht monoton.** Die Fünftel liegen bei −0,080 / −0,020 / −0,036 / **+0,094** / +0,043. Die
+   Schwelle nimmt darum Fünftel 2 mit und lässt Fünftel 3 weg. Das ist sehr wahrscheinlich **Rauschen** der Fünftel-Mittel (je
+   etwa 300 Einstiege) und kein Befund. Die Form war vorab festgelegt und bleibt. Die Bestätigung zeigt, ob die Kurve hält (L4-2).
+2. **Arm B** ist 2024 deutlich stärker. Das Potential liegt beim 2,7-Fachen von *alle*, der Spiegel ist positiv, in Prozent sind es +1,44
+   Prozentpunkte, und die Chance steigt mit. Das passt zu N3, wonach volumenschub 2025–26 eigen ist. Arm B bleibt aber
+   **Vergleich**, wie abgestimmt.
+3. Der **Spiegel ist 2024 in allen Armen positiv**: Oben steigt es stärker als unten, es ist also nicht nur Bewegung. Das Urteil fällt erst 2025–26.
+4. Die **Chance** steigt 2024 mit (+0,18..+0,19 gegen +0,16). In 2025–26 tat sie das bei N3 nicht, 2024 ist ein Bullenjahr.
+5. Nur **2024**, 190 Tage.
