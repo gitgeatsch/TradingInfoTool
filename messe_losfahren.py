@@ -85,7 +85,8 @@ def main() -> int:
     V24 = D["X"]["vor24"].astype(np.float64); V120 = D["X"]["vor120"].astype(np.float64)
     FR = {m: D["F"][m].astype(np.float64) for m in ("rsi", "oi_aenderung", "konten_verh", "funding_vortag")}
     SYMS = list(D.get("syms", []))
-    if "--l2" in sys.argv:
+    RUHE = int(sys.argv[sys.argv.index("--ruhe") + 1]) if "--ruhe" in sys.argv else 24   # N4: Ruhe vor dem Ersteintritt
+    if "--l2" in sys.argv or "--ruhe" in sys.argv:
         # L2 (Voranalyse_L2_Kern_anheben_30_09.md): Potential (MFE) und Risiko (Rueckgang VOR dem Hoch) je Fenster, in %,
         # und alle Kandidaten aus dem Bestand
         L2_MFE = {w: D["Z"][w]["mfe"].astype(np.float64) for w in (6, 24, 72)}
@@ -380,9 +381,9 @@ def main() -> int:
                     fin = np.isfinite(vv)
                     ab_ = np.where(fin, vv >= s, False)
                     cs = np.concatenate([[0], np.cumsum(ab_)]); cf = np.concatenate([[0], np.cumsum(fin)])
-                    lo = np.searchsorted(st, st - 24, "left")
+                    lo = np.searchsorted(st, st - RUHE, "left")
                     idx = np.arange(len(tl))
-                    erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((cf[idx] - cf[lo]) >= 20)
+                    erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((cf[idx] - cf[lo]) >= (20 if RUHE == 24 else int(RUHE * 20 / 24)))
                     erst &= (st - MS[np.clip(MON[tl] - 2020 * 12, 0, len(MS) - 1)]) >= 24
                     i_ = np.flatnonzero(erst)
                     i_ = i_[i_ + 1 < len(tl)]
@@ -1025,7 +1026,9 @@ def main() -> int:
                     len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
                     " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
                 ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
-                                    "kern_einstiege_%s.csv" % E2.MENGE.replace(":", "_"))
+                                    ("kern_einstiege_%s.csv" if RUHE == 24 else "kern%d_einstiege_%%s.csv" % RUHE) % E2.MENGE.replace(":", "_"))
+                if "--ziel" in sys.argv:                     # Werkzeugtest: in eine Wegwerfdatei schreiben
+                    ziel = sys.argv[sys.argv.index("--ziel") + 1]
                 os.makedirs(os.path.dirname(ziel), exist_ok=True)
                 with io.open(ziel, "w", encoding="utf-8") as f_:
                     f_.write("symbol;stunde;jahr;t_u;t_d\n")
@@ -1033,7 +1036,19 @@ def main() -> int:
                         f_.write("%s;%d;%d;%s;%s\n" % (SYMS[int(SYM[i])], int(STD[i]), int(JAHR[i]),
                                                        "%.0f" % t_u[i] if np.isfinite(t_u[i]) else "",
                                                        "%.0f" % t_d[i] if np.isfinite(t_d[i]) else ""))
-                print("  geschrieben: %s" % ziel)
+                print("  geschrieben: %s (Ruhe %d h)" % (ziel, RUHE))
+                if "--ruhe" in sys.argv:
+                    # N4-W (Auskunft): die Wucht *beide oben* mit den Kanten aus der L2-Wahl 2024 (wie N3)
+                    import json
+                    cfg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "l2_wahl_bestand.json"), encoding="utf-8"))
+                    kE, kV = cfg["kanten"]["ema_abstand_atr"], cfg["kanten"]["volumenschub"]
+                    wo = (L2_F["ema_abstand_atr"][ee] > kE[1]) & (L2_F["volumenschub"][ee] > kV[1])
+                    zw = ziel.replace("_einstiege_", "_wucht_")
+                    with io.open(zw, "w", encoding="utf-8") as f_:
+                        f_.write("symbol;stunde;beide_oben\n")
+                        for i, w_ in zip(ee, wo):
+                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(w_)))
+                    print("  Wucht beide oben: %d von %d (%.1f %%) -> %s" % (int(wo.sum()), len(ee), 100 * wo.mean(), zw))
                 print("SCHLUSS: vollstaendig")
                 return 0
             if not best:

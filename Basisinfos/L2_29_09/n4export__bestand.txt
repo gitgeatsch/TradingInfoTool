@@ -1,0 +1,25 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 296427 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0005 · P90 +0.0347 · P95 +0.0458 · P99 +0.0681 · Max +0.1089
+
+========================================================================================================================
+KERN SCHRITT 2 · EXPORT der Ersteintritte s = +0.035, 2024-01..2026-08, Menge bestand: 7814 Einstiege, 627 Tage
+  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):
+     6 h: +5 % vor -5 % bei 7.6 % der Einstiege (-5 % zuerst 4.4 %) · Dq gesamt +0.1331 · 2024 +0.1407 · 2025 +0.0666 · 2026 +0.2133
+    12 h: +5 % vor -5 % bei 15.5 % der Einstiege (-5 % zuerst 8.6 %) · Dq gesamt +0.1534 · 2024 +0.1925 · 2025 +0.0898 · 2026 +0.2013
+    24 h: +5 % vor -5 % bei 26.8 % der Einstiege (-5 % zuerst 18.0 %) · Dq gesamt +0.1162 · 2024 +0.1596 · 2025 +0.0620 · 2026 +0.1516
+  Zeit bis +5 % (wo zuerst, binnen 72 h, 3474): Median 19 h · Quartile 9 / 34 h · binnen 2/4/6/12 h 5 % / 11 % / 17 % / 35 %
+  Zeit bis -5 % (wo zuerst, binnen 72 h, 3077): Median 27 h · Quartile 14 / 44 h · binnen 2/4/6/12 h 2 % / 6 % / 11 % / 22 %
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern48_einstiege_bestand.csv (Ruhe 48 h)
+  Wucht beide oben: 1163 von 7814 (14.9 %) -> D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern48_wucht_bestand.csv
+SCHLUSS: vollstaendig

@@ -144,7 +144,14 @@ def main() -> int:
                 for stop in (False, True):
                     EV[(L, H, m, stop)] = []
     syms = []
-    SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2")}
+    SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2", "mfe24", "wu")}
+    # N4 (Basisinfos/Voranalyse_N4_Simulation_Ruhe48_30_09.md): --wucht <csv> markiert *beide oben* (Auskunft N4-W)
+    WU = set()
+    if "--wucht" in sys.argv:
+        for zeile in open(sys.argv[sys.argv.index("--wucht") + 1], encoding="utf-8").read().splitlines()[1:]:
+            sy_, st_, w_ = zeile.split(";")
+            if w_ == "1":
+                WU.add((sy_, int(st_)))
     SIMR, SIMT, NSR, NSA = {}, {}, {}, {"atr": [], "std": [], "welt": []}
     SIM_RNG = np.random.default_rng(SAAT + 33)
     for si, (sym, rows, bis_ende) in enumerate(E2.kursreihen()):
@@ -268,6 +275,13 @@ def main() -> int:
                     SPE["fl%d" % L].append(fle[L])
                 SPE["atr"].append(atr[ae]); SPE["std"].append(std[ae]); SPE["sym"].append(np.full(len(ae), si))
                 SPE["tu"].append(np.array([TU.get((sym, int(x)), np.inf) for x in std[ae]]))
+                # N4-W Auskunft: hoechstes Hoch binnen 24 h ueber dem Einstieg (MFE) und die Wucht-Marke
+                mx_ = np.full(len(ae), -np.inf)
+                for s in range(1, 25):
+                    j = np.minimum(ae + s, n - 1)
+                    mx_ = np.maximum(mx_, np.where(((ae + s) < n) & np.isfinite(hoch[j]), hoch[j] / E0e, -np.inf))
+                SPE["mfe24"].append(mx_ - 1.0)
+                SPE["wu"].append(np.array([(sym, int(x)) in WU for x in std[ae]], bool))
                 if sim:
                     jr = np.array([int(x[:4]) for x in st], np.int16)
 
@@ -671,6 +685,25 @@ def main() -> int:
                     k["G"], ks["G"], "✔ Hebel lohnt" if k["G"] > ks["G"] else "⛔ Hebel lohnt nicht"))
                 oh = ~((STDe >= bs0_ - H_) & (STDe < bs1_))
                 print("  S5 ohne 10./11.10.2025: Konto log %+.4f (mit %+.4f)" % (kennz(r, STDe, te, maske=oh)["G"], k["G"]))
+                # N4-R (Auskunft): Rohvorteil je Handel auf den Positionswert = Spot ohne Kosten (0,3 % zurueckgerechnet)
+                roh_ = rs + 0.003
+                okr = np.isfinite(roh_)
+                SYMe_ = XE["sym"].astype(int)
+                ga_ = [float(np.mean(roh_[okr & (SYMe_ == s_)])) > 0 for s_ in np.unique(SYMe_[okr]) if (okr & (SYMe_ == s_)).sum() >= 10]
+                print("  N4-R Rohvorteil je Handel (Spot, ohne Kosten, auf den Positionswert): %+.3f %% (%d Handel) · je Jahr %s · "
+                      "Kosten je Tageshandel 0,48 %% · Assets mit positivem Rohvorteil %d, %.0f %%" % (
+                          100 * float(np.mean(roh_[okr])), int(okr.sum()),
+                          " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[okr & (JAHRe == jj)]))) for jj in SIM_JAHRE),
+                          len(ga_), 100 * np.mean(ga_) if ga_ else np.nan))
+                if WU:
+                    wu_ = XE["wu"].astype(bool); mf_ = XE["mfe24"]
+                    for nm_, m_ in (("beide oben", wu_), ("Rest", ~wu_)):
+                        mm_ = okr & m_
+                        kw_ = kennz(r, STDe, te, maske=m_)
+                        print("  N4-W %-10s: %5d Handel · Rohvorteil %+.3f %% · Hoch binnen 24 h (MFE) %+.2f %% · Hebelkonto log %+.4f · je Jahr Rohvorteil %s" % (
+                            nm_, int(mm_.sum()), 100 * float(np.mean(roh_[mm_])) if mm_.any() else np.nan,
+                            100 * float(np.nanmean(np.where(np.isfinite(mf_[mm_]), mf_[mm_], np.nan))) if mm_.any() else np.nan, kw_["G"],
+                            " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[mm_ & (JAHRe == jj)]))) for jj in SIM_JAHRE)))
                 print("  Pflichtauskunft Regime (Monatsbeitrag zum log-Konto): " + " · ".join(
                     "%d-%02d %+.4f" % (mm // 12, mm % 12 + 1, v) for mm, v in sorted(k["mon"].items())))
                 h2 = np.isfinite(r) & (MONe >= 2025 * 12 + 6) & (MONe <= 2025 * 12 + 11)

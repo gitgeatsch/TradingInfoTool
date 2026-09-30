@@ -100,3 +100,22 @@ gerechnet (Abbruchregel)"* ausgewiesen.
 | **R2** | Einstiege Kern + Ruhe 48 h (Export mit `--ruhe 48`), Kriterien S1–S5 wie 2.690 |
 | **R3** | Auskunft N4-R (Rohvorteil gegen 0,48 %) und N4-W (Wucht: Rohvorteil, Konto, MFE) |
 | **R4** | **schrittweise**: Stufe 0 Werkzeugtest, Stufe 1 bestand, Stufe 2 nur nach der Regel aus Abschnitt 4 |
+
+---
+
+## 7. ✔ ABGESTIMMT (30.09.2026) — R1 bis R4; Stufe 0 bestanden
+
+**Nutzer:** *„Ja, bitte prüfen und gegenprüfen."*
+
+| Stufe 0 (Werkzeugtest) | Ergebnis |
+|---|---|
+| Export `--ruhe 24` in eine Wegwerfdatei | ✔ **bitgleich** zu `kern_einstiege_bestand.csv` aus 2.689 (12.630 Zeilen, `cmp`) |
+| Export `--ruhe 48` (bestand) | 2024 **1.486** · 2025 **3.224** · 2026 **3.104**, ✔ bitgleich zu L2/N2 (2.691) |
+| 48 h in 24 h enthalten | 100 % |
+| Auskunft Chance 24 h (Export) | 48 h +0,116 gegen 24 h +0,082 (2024 +0,160 / 2025 +0,062 / 2026 +0,152) |
+| Wucht *beide oben* | 1.163 von 7.814 (14,9 %), `kern48_wucht_bestand.csv` |
+| Fehler im Test, behoben | Die Wucht-Kanten wurden neben der Wegwerfdatei gesucht statt in `data/_vergleich`. Der Pfad ist jetzt fest, am Inhalt ändert sich nichts |
+
+Simulation: `messe_k6_hebelstufe.py --kurs mark --einstiege kern48_einstiege_<m>.csv --wucht kern48_wucht_<m>.csv --simulation 24,ohne,0.02`,
+neu sind nur die Auskünfte N4-R und N4-W.
+
