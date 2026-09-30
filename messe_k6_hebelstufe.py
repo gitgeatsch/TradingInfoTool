@@ -704,6 +704,19 @@ def main() -> int:
                           100 * float(np.mean(roh_[okr])), int(okr.sum()),
                           " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[okr & (JAHRe == jj)]))) for jj in SIM_JAHRE),
                           len(ga_), 100 * np.mean(ga_) if ga_ else np.nan))
+                if "--je-asset" in sys.argv:
+                    # Schritt 5 (Voranalyse_REGEL0_Hebelliste_30_09.md): je Asset Handel, Rohvorteil, Log-Beitrag zum Konto
+                    # (additiv ueber Assets), Liquidationen - Auskunft fuer die Auswahl des Nutzers, keine Bewertung von Assets
+                    SYMe_ = XE["sym"].astype(int)
+                    lg_ = np.where(np.isfinite(r), np.log1p(0.01 * np.where(np.isfinite(r), r, 0.0)), 0.0)
+                    print("  JE ASSET (symbol;handel;rohvorteil_prozent;konto_log;liquidationen;spot_log)")
+                    for s_ in np.unique(SYMe_):
+                        m_ = SYMe_ == s_
+                        mr_ = m_ & np.isfinite(r); ms_ = m_ & np.isfinite(rs)
+                        print("  ASSET;%s;%d;%.4f;%.5f;%d;%.5f" % (
+                            syms[s_], int(ms_.sum()), 100 * float(np.mean(roh_[ms_])) if ms_.any() else float("nan"),
+                            float(lg_[mr_].sum()), int((r[mr_] <= -1.0).sum()),
+                            float(np.log1p(0.01 * rs[ms_]).sum()) if ms_.any() else 0.0))
                 if GR:
                     gr_ = XE["gr"].astype(bool)
                     for nm_, m_ in (("neu", gr_), ("reif", ~gr_)):

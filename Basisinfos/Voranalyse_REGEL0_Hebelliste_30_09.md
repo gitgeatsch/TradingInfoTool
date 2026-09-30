@@ -92,3 +92,17 @@ XDC Network, Injective. Anmerkung: Die erforderliche Mindesthistorie ist eigentl
 - Die Spot-Zugänge PLUME, XDC und INJ betreffen den **Spot-Arm**, nicht diese Messung. Notiert.
 - ⛔ Die Mindesthistorie ist als **Showstopper** eingestuft (`REGEL0_Hebel_Entwurf_30_09.md` Abschnitt 8). Vorschlag: **zuerst beheben**, dann diese
   Messung. Sonst fehlen die 12 jungen Assets der Liste gerade in ihrer Anfangszeit.
+
+---
+
+## 7. ✔ START (Nutzer 01.10.2026) — Umsetzung mit der FESTGESCHRIEBENEN REGEL0 (mit J)
+
+**Nutzer:** *„Ja, mit 5 Hebel-Liste weiter, prüfen und gegenprüfen."* Einen Export vom Notebook braucht es dafür nicht, die Hebel-Liste ist unverändert.
+
+- **Einstiege:** `kern48j_einstiege_bestand.csv` (REGEL0 mit J), gefiltert auf die Liste → `kern48j_einstiege_liste.csv`. **27 Assets** (mit J jetzt auch MORPHO)
+  und **2.247 Einstiege**, davon 570 neu durch J. Ohne Einstiege: BTC (Leitwert) und die 15 Assets ohne Stundendaten.
+- **Lauf 1:** alle bestand-Einstiege mit `--je-asset` (neu: je Asset Handel, Rohvorteil, Log-Beitrag zum Konto, Liquidationen). **R-R11:** muss die REGEL0-Referenz
+  bestand treffen (9.905 · +0,2634 · +0,583 %), und die Summe der Log-Beiträge je Asset muss das Konto ergeben.
+- **Lauf 2:** nur die Liste mit `--je-asset --gruppe`: S1–S5 mit eigener Nullwelt, dazu neu gegen reif.
+- **Danach, rein rechnerisch aus Lauf 1:** die Liste gegen den Rest und gegen **40 zufällige Listen** aus 27 bestand-Assets (Rohvorteil je Handel und Konto).
+
