@@ -1187,6 +1187,20 @@ def main() -> int:
                 print("SCHLUSS: vollstaendig")
                 return 0
             if not best:
+                if "--diag-vh" in sys.argv:
+                    # M1 SCHRITT 0 (Voranalyse_Kern_Short_30_09.md Abschnitt 9): NUR das Signal - v-dach je Monat im Wahljahr,
+                    # keine Ergebnisse; beantwortet, ob es 2024 flache Monate gibt (sonst ist keine Wahl moeglich)
+                    print("M1 SCHRITT 0 · v-dach je Monat, Menge %s, Jahre %s (Stunden · Anteil v<=-0,035 · P1 · P50 · P99 · Anteil v>=+0,035 · Spannweite P99-P1)" % (
+                        E2.MENGE, JAHRE))
+                    for mm in np.unique(MON[h_ab]):
+                        vv = VH[h_ab[MON[h_ab] == mm]]; vv = vv[np.isfinite(vv)]
+                        if not len(vv):
+                            continue
+                        q_ = np.percentile(vv, [1, 50, 99])
+                        print("    %d-%02d %7d · %5.2f %% · %+.4f · %+.4f · %+.4f · %5.2f %% · %.4f" % (
+                            mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -0.035), *q_, 100 * np.mean(vv >= 0.035), q_[2] - q_[0]))
+                    print("SCHLUSS: vollstaendig")
+                    return 0
                 RASTER = [round(0.010 + 0.005 * i, 3) for i in range(9)]
                 print("KERN SCHRITT 1%s · WAHL DER SCHWELLE auf 2024 (Menge %s, Ruhe %d h) - 2025-26 wird NICHT ausgewertet" % (
                     " · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %)" if KURZ else "", E2.MENGE, RUHE))
