@@ -1,0 +1,54 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand · WERKZEUGTEST
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 4708 (W2: 29.390) -> ⛔
+  Gitteranker im Auswertungszeitraum 45483 · Symbole 52
+  Auskunft Verteilung vh: P50 +0.0014 · P90 +0.0250 · P95 +0.0384 · P99 +0.0596 · Max +0.0725
+
+========================================================================================================================
+L2 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · Menge bestand · Kern-Ersteintritte s = +0.035: 780 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 780 mit Potential und Risiko (Tage 82)
+  Kern gesamt: Chance Dq +0.0013 · Potential -0.045 ATR ueber dem Normal (MFE 24 h) · Risiko +0.030 ATR (Rueckgang vor dem Hoch)
+
+  TEIL A1 Staerke (Vorsprung in der Signalstunde), fuenf Klassen:
+    Klasse 1 (156): Chance +0.0814 · Potential +0.053 ATR · Risiko -0.001 ATR
+    Klasse 2 (96): Chance -0.0449 · Potential -0.127 ATR · Risiko -0.005 ATR
+    Klasse 3 (206): Chance +0.0057 · Potential -0.037 ATR · Risiko +0.001 ATR
+    Klasse 4 (148): Chance -0.0451 · Potential -0.040 ATR · Risiko +0.132 ATR
+    Klasse 5 (174): Chance -0.0245 · Potential -0.100 ATR · Risiko +0.026 ATR
+    staerkste minus schwaechste: Chance -0.1060 · Potential -0.154 · Risiko +0.027
+  TEIL A3 Regelparameter (Auskunft, 2024): Wartezeit / Verzug -> Einstiege, Chance, Potential
+    12 h / 1 h:  1741 · Chance -0.0216 · Potential -0.052 ATR
+    24 h / 1 h:   780 · Chance +0.0013 · Potential -0.045 ATR
+    48 h / 1 h:   462 · Chance +0.0666 · Potential -0.040 ATR
+    24 h / 2 h:   780 · Chance +0.0183 · Potential -0.031 ATR
+    24 h / 4 h:   780 · Chance +0.0357 · Potential -0.019 ATR
+
+  TEIL B Kandidaten auf den Kern-Einstiegen (oberes minus unteres Drittel; Nullwelt 3 Ziehungen, P75 |Delta|):
+    volumenschub      oben/unten  260/ 260 · dChance +0.1501 (P75 0.0605) · dPotential +0.080 (P75 0.072) · dRisiko -0.091 (P75 0.058)
+    vola_kausal       oben/unten  260/ 260 · dChance +0.1644 (P75 0.0209) · dPotential -0.083 (P75 0.064) · dRisiko -0.104 (P75 0.037)
+    oi_aenderung      oben/unten  255/ 255 · dChance +0.0461 (P75 0.0876) · dPotential +0.078 (P75 0.065) · dRisiko +0.017 (P75 0.019)
+    oi_je_umsatz      oben/unten  255/ 255 · dChance -0.1440 (P75 0.0398) · dPotential -0.061 (P75 0.057) · dRisiko +0.050 (P75 0.024)
+    bandenge          oben/unten  260/ 260 · dChance +0.2214 (P75 0.0864) · dPotential -0.026 (P75 0.074) · dRisiko -0.056 (P75 0.019)
+    ema_abstand_atr   oben/unten  260/ 260 · dChance +0.0362 (P75 0.0617) · dPotential +0.128 (P75 0.057) · dRisiko -0.086 (P75 0.026)
+    taker_verh        oben/unten  255/ 255 · dChance -0.1055 (P75 0.0608) · dPotential -0.017 (P75 0.065) · dRisiko +0.012 (P75 0.016)
+    top_konten_verh   oben/unten  255/ 255 · dChance -0.0035 (P75 0.0380) · dPotential +0.012 (P75 0.116) · dRisiko +0.020 (P75 0.015)
+    funding_eigen     oben/unten  192/ 260 · dChance +0.0831 (P75 0.1303) · dPotential +0.124 (P75 0.078) · dRisiko -0.008 (P75 0.049)
+    konten_eigen      oben/unten  255/ 255 · dChance -0.0206 (P75 0.0759) · dPotential -0.049 (P75 0.076) · dRisiko +0.034 (P75 0.027)
+    funding_markt     oben/unten  252/ 511 · dChance +0.1201 (P75 0.0974) · dPotential +0.148 (P75 0.166) · dRisiko -0.004 (P75 0.154)
+    konten_markt      oben/unten  258/ 261 · dChance -0.1119 (P75 0.1285) · dPotential +0.161 (P75 0.126) · dRisiko +0.022 (P75 0.114)
+  WEITER (Chance): vola_kausal (oben), oi_je_umsatz (unten), bandenge (oben)
+  WEITER (Potential): funding_eigen (oben), ema_abstand_atr (oben), volumenschub (oben)
+  WEITER (Risiko): ema_abstand_atr (oben), bandenge (oben), vola_kausal (oben)
+  festgehalten fuer die Bestaetigung: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\l2_wahl_bestand.json
+  Leiter Potential +0.1 ATR (volumenschub verschoben): gefunden 4 von 5
+  Leiter Potential +0.2 ATR (volumenschub verschoben): gefunden 4 von 5
+  Leiter Potential +0.4 ATR (volumenschub verschoben): gefunden 5 von 5
+SCHLUSS: vollstaendig
+exit=0
