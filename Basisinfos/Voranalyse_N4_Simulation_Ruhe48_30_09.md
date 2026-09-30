@@ -119,3 +119,56 @@ gerechnet (Abbruchregel)"* ausgewiesen.
 Simulation: `messe_k6_hebelstufe.py --kurs mark --einstiege kern48_einstiege_<m>.csv --wucht kern48_wucht_<m>.csv --simulation 24,ohne,0.02`,
 neu sind nur die Auskünfte N4-R und N4-W.
 
+
+---
+
+## 8. ERGEBNIS — Befund 2.694
+
+Belege `Basisinfos/N4_Sim_30_09/` (`best__<menge>.txt`, `export__<menge>.txt`, `rr11_probe24__bestand.txt`, `_kette.log`).
+**Ablauf nach R4:** In Stufe 1 hielt bestand S1, und der Rohvorteil lag bei 0,573 % ≥ 0,48 %. Darum folgte Stufe 2 mit allen Mengen.
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| **Hebelkonto** 48 h Ruhe (log / Faktor) | **+0,204 / ×1,23** | −0,466 / ×0,63 | −0,417 / ×0,66 | −0,382 / ×0,68 |
+| zum Vergleich 2.690 (24 h Ruhe) | ×0,62 | ×0,26 | ×0,34 | ×0,28 |
+| S1 2025 / 2026 | ✔ +0,189 / +0,015 | ⛔ −0,187 / −0,279 | ⛔ −0,152 / −0,265 | ⛔ −0,050 / −0,333 |
+| S2 Nullwelt P90 | ✔ −1,342 | ✔ −1,563 | ✔ −1,420 | ✔ −1,515 |
+| S4 Spot | ✔ +0,165 | ⛔ −0,005 | ⛔ +0,006 | ⛔ +0,005 |
+| S5 ohne 10./11.10. | +0,307 | −0,201 | −0,132 | −0,284 |
+| **N4-R Rohvorteil je Handel** | **+0,573 %** | **+0,294 %** | **+0,311 %** | **+0,309 %** |
+| zum Vergleich 2.690 | +0,33 % | +0,14 % | +0,17 % | +0,12 % |
+| Juli–Dezember 2025 | ×0,80 | ×0,56 | ×0,59 | ×0,66 |
+| Assets mit positivem Rohvorteil | 83 % | 72 % | 68 % | 67 % |
+
+➤ **N4 NICHT bestanden** (S3: nur 1 von 4). Die **Richtung wirkt aber im Geld:** Der Rohvorteil je Handel verdoppelt sich in allen 4
+Mengen, Spot verliert nicht mehr, und die **Lücke** zu den 0,48 % Kosten **halbiert** sich auf etwa **0,17–0,19 Prozentpunkte**
+(unverzerrt).
+
+**N4-W Wucht (Auskunft):**
+
+| | bestand | unv:1 | unv:2 | unv:3 |
+|---|---|---|---|---|
+| *beide oben*: Rohvorteil / Hoch binnen 24 h | +0,55 % / +5,54 % | −0,03 % / +5,90 % | +0,13 % / +5,81 % | −0,15 % / +5,92 % |
+| Rest: Rohvorteil / Hoch binnen 24 h | +0,58 % / +3,92 % | +0,33 % / +3,89 % | +0,34 % / +3,90 % | +0,37 % / +3,92 % |
+
+➤ Die Wucht bringt **mehr Hoch** und **weniger Rohvorteil**: Die großen Bewegungen kehren binnen 24 h wieder um. Das bestätigt
+2.693 (Bewegung, keine Richtung). Für die **Positionsführung** (W4, nachgezogener Stop) liegt darin ein Kandidat. Ob sich davon
+etwas **halten** lässt, zeigt nur eine Messung. Das MFE ist das Höchste, was möglich gewesen wäre, kein erreichbarer Wert.
+
+**Prüfung und Gegenprüfung:**
+1. **R-R11** ist vierfach erfüllt: Export `--ruhe 24` bitgleich (cmp), 48-h-Einstiege bitgleich zu N2, der neue Rohvorteil-Code
+   reproduziert 2.690 (+0,330 %, Spot +0,0286), und H0-0 ist je Menge bitgleich zu den 2.690-Läufen.
+2. ⚠️ **Die Beschriftung** der R-R11-Zeile zeigte bei unverzerrt *„✔ bitgleich“*, obwohl dort nur bestand eine Referenz hat.
+   Sie ist nach dem Lauf korrigiert, die Zahlen sind unverändert (wie beim K6-Label am 29.09.).
+3. ⚠️ **Überlebensverzerrung:** bestand gewinnt als einzige Menge. Dort fehlen die **eingestellten** Paare (2.668/2.669), und der
+   Rohvorteil liegt fast doppelt so hoch wie in unverzerrt. Das Urteil gilt auf **unverzerrt**. Das entspricht der Regel *die
+   Grundgesamtheit ist keine Stellschraube*.
+4. **Regime:** Der Verlust sitzt vor allem im zweiten Halbjahr 2025 und in 2026-06/07.
+
+**Zwischenfazit zum Ziel:**
+
+| | |
+|---|---|
+| ✔ | Der Weg **Richtung** trägt messbar ins Geld. Mit einer einzigen Regel am Kern (Ruhe 48 h) hat sich der Vorteil je Handel verdoppelt |
+| offen | 0,17–0,19 Prozentpunkte je Handel fehlen noch bis zu den Kosten. Die Verluste liegen im Gegenwind-Regime |
+| ➤ Wege | (1) **Richtung weiter** (H-Schalter, Short-Kern W3 für das Regime) · (2) **Positionsführung W4** (die Wucht bringt Hoch, das heute wieder verloren geht) · (3) Börse/Kosten L1 erst Phase 4/5 (Nutzerentscheidung) |

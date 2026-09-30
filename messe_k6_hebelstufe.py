@@ -549,7 +549,8 @@ def main() -> int:
         yy = Y[(5, 72, 0.09, False)]; pp = PRED[(5, 72, "atr")]; ii = np.flatnonzero(np.isfinite(pp))
         rb, rg = round(100 * yy[ii].mean(), 3), round(100 * pp[ii].mean(), 3)
         print("H0-0 R-R11 (Gitter, 5x/72 h atr, derselbe Codepfad): beob %.3f %% gesch %.3f %% · 2.681 %.3f / %.3f -> %s" % (
-            rb, rg, soll[0], soll[1], "✔ bitgleich" if (rb, rg) == soll or E2.MENGE != "bestand" or kurs != "mark" else "⛔ ABWEICHUNG"))
+            rb, rg, soll[0], soll[1], ("✔ bitgleich" if (rb, rg) == soll else "⛔ ABWEICHUNG") if E2.MENGE == "bestand" and kurs == "mark"
+            else "(Referenz 2.681 nur fuer bestand/mark - Beschriftung korrigiert 30.09., Zahlen unveraendert)"))
         n_datei = sum(len(v) for v in EIN.values())
         print("H0 · EINSTIEGE aus %s: %d in der Datei, %d mit vollstaendigem Fenster und Markpreis ausgewertet" % (
             os.path.basename(ein_datei), n_datei, len(STDe)))

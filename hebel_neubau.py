@@ -407,7 +407,7 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     "volumenschub": dict(
         b1="faellt", vorlauf=None, b2="ungemessen",
-        befund=("2.663", "2.662", "2.667", "2.681", "2.691", "2.692", "2.693"),
+        befund=("2.663", "2.662", "2.667", "2.681", "2.691", "2.692", "2.693", "2.694"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35). "
               "HOEHE auch UEBER die ATR hinaus: P95 +0,08 ATR mfe, 30 von 32 "
               "Monaten, jede BTC-Lage (2.667) - ROLLE B (Hoehe). Als "
@@ -441,7 +441,7 @@ BEITRAGSLAGE = {
     # ── Kursmerkmale (EMA/RSI/ATR-Familie, abgeschlossen) ──────────
     "ema_abstand_atr": dict(
         b1="faellt", vorlauf=None, b2="belegt",
-        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.676", "2.691", "2.692", "2.693"),
+        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.676", "2.691", "2.692", "2.693", "2.694"),
         beleg="B2: d 0,521 auf MAE gegen 0,267 auf MFE (2.642), absolut "
               "und je Asset (2.647). B1: Richtung RUNTER - Abstuerze "
               "9,8-fach (2.648), bei Karenz null von 11 (2.650). "
@@ -718,6 +718,11 @@ NEUESTER_STAND = (
               "Richtung (2025 nach unten, 2026 nach oben). Rolle B gehoert in "
               "Positionsfuehrung und Hebelstufe; E-28 greift nicht. Es traegt Kern + "
               "Ruhe 48 h; der Engpass ist die RICHTUNG (Rolle A) und das Regime"),
+    ("2.694", "N4 SIMULATION Kern + Ruhe 48 h: der Rohvorteil je Handel verdoppelt sich "
+              "(unverzerrt +0,29..+0,31 %), Spot um null, die Luecke zu 0,48 % halbiert - "
+              "der Hebel verliert aber weiter in 3/4 (nur das ueberlebensverzerrte bestand "
+              "gewinnt). Wucht: mehr Hoch, weniger Rohvorteil - Fall fuer W4. Verlust im "
+              "Regime (Juli-Dezember 2025)"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
@@ -796,12 +801,12 @@ def gemessene_merkmale() -> dict:
 # Zeit. Danach K1 Schritt 2 (gemeinsame Schaetzung) - eine Kombination,
 # kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
-    dict(was="⭐ nach 2.693 (zur Abstimmung): N4 Simulation mit Kern + Ruhe 48 h (die Richtung, "
-             "die traegt); die Wucht als Auskunftsarm fuer die POSITIONSFUEHRUNG (Rolle B, "
-             "wie weit) und die Hebelstufe; danach die RICHTUNG (Rolle A) weiter ausreizen: "
-             "H-Schalter, Short-Kern (W3) gegen das Regime",
+    dict(was="⭐ nach 2.694 (zur Abstimmung): die RICHTUNG (Rolle A) weiter ausreizen - "
+             "H-Schalter (andere rsi-Staerkeform), Short-Kern (W3) gegen das Regime; "
+             "daneben W4 Positionsfuehrung mit der Wucht als Bewegungsgroesse "
+             "(Erfolgsmessung)",
          art="probe", bewertung="b1", merkmale=("ema_abstand_atr", "volumenschub"),
-         prueft="2.693",
+         prueft="2.694",
          warum="L4 (2.693): die Wucht waehlt groessere Bewegungen in BEIDE Richtungen "
                "(2025 nach unten, 2026 nach oben) - als Einstieg keine Verbesserung, als "
                "Bewegungsgroesse fuer Ziel/Nachziehen und Hebel aber genau Rolle B"),
