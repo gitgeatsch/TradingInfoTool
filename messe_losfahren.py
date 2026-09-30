@@ -374,12 +374,15 @@ def main() -> int:
         if "--kern" in sys.argv or "--l2" in sys.argv:
             MS = np.array([H(datetime(2020 + mm // 12, mm % 12 + 1, 1)) for mm in range(0, 12 * 8)])
 
-            def erst_v(VHx, s):
+            KURZ = "--short" in sys.argv          # KERN-SHORT (Voranalyse_Kern_Short_30_09.md): der Kern gespiegelt
+
+            def erst_v(VHx, s, kurz=None):
+                kurz = KURZ if kurz is None else kurz
                 aus = []
                 for tl in teile:
                     st = STD[tl]; vv = VHx[tl]
                     fin = np.isfinite(vv)
-                    ab_ = np.where(fin, vv >= s, False)
+                    ab_ = np.where(fin, (vv <= -s) if kurz else (vv >= s), False)
                     cs = np.concatenate([[0], np.cumsum(ab_)]); cf = np.concatenate([[0], np.cumsum(fin)])
                     lo = np.searchsorted(st, st - RUHE, "left")
                     idx = np.arange(len(tl))
@@ -392,8 +395,11 @@ def main() -> int:
                 e_ = np.concatenate(aus) if aus else np.zeros(0, int)
                 return e_[np.isin(JAHR[e_], JAHRE) & np.isfinite(QSh[e_])]
 
-            def dqh(ix, y=A24):
+            def dqh(ix, y=A24, kurz=None):
+                kurz = KURZ if kurz is None else kurz
                 ix = ix[np.isfinite(QSh[ix])]
+                if kurz:                            # Spiegel von q5: -5 % vor +5 %, Normal vertauscht (= -Dq)
+                    return dq(ix, B24, (1 - QSh) * (NA + NB), QSh * (NA + NB)) if len(ix) else np.nan
                 return dq(ix, y, QSh * (NA + NB), (1 - QSh) * (NA + NB)) if len(ix) else np.nan
             h_ab = np.flatnonzero(np.isfinite(QSh) & np.isin(JAHR, JAHRE) & np.isfinite(OFF))
 
@@ -1182,12 +1188,18 @@ def main() -> int:
                 return 0
             if not best:
                 RASTER = [round(0.010 + 0.005 * i, 3) for i in range(9)]
-                print("KERN SCHRITT 1 · WAHL DER SCHWELLE auf 2024 (Menge %s) - 2025-26 wird NICHT ausgewertet" % E2.MENGE)
+                print("KERN SCHRITT 1%s · WAHL DER SCHWELLE auf 2024 (Menge %s, Ruhe %d h) - 2025-26 wird NICHT ausgewertet" % (
+                    " · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %)" if KURZ else "", E2.MENGE, RUHE))
                 EE_ = {s: erst_v(VH, s) for s in RASTER}
                 echt = {s: dqh(EE_[s]) for s in RASTER}
-                for s, soll in ((0.02, 0.0928), (0.04, 0.0759)):
-                    print("  R-R11 2.687 (c) Stufe %+.3f: %+.4f · Soll %+.4f -> %s" % (
-                        s, echt[s], soll, "✔ bitgleich" if abs(round(echt[s], 4) - soll) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
+                if KURZ:
+                    eL = erst_v(VH, 0.035, kurz=False)
+                    print("  KERN-SHORT · R-R11 Long-Kern im selben Lauf (Ruhe %d h, s +0,035): %d Einstiege · Dq %+.4f "
+                          "(Soll bestand 2024: Ruhe 48 h 1.486 / +0,1615 · Ruhe 24 h 2.095 / +0,1095)" % (RUHE, len(eL), dqh(eL, kurz=False)))
+                else:
+                    for s, soll in ((0.02, 0.0928), (0.04, 0.0759)):
+                        print("  R-R11 2.687 (c) Stufe %+.3f: %+.4f · Soll %+.4f -> %s" % (
+                            s, echt[s], soll, "✔ bitgleich" if abs(round(echt[s], 4) - soll) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
                 null = {s: [] for s in RASTER}
                 for _ in range(zieh):
                     v_ = vh_stuendlich(verschoben(E, RSI))
@@ -1204,7 +1216,12 @@ def main() -> int:
                 print("  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand %+.4f -> GEWAEHLT s = %+.3f" % (mx, wahl))
             else:
                 s = s_best
-                print("KERN SCHRITT 1 · BESTAETIGUNG 2025-01..2026-08, Stufe %+.3f, Menge %s (EINMAL)" % (s, E2.MENGE))
+                print("KERN SCHRITT 1%s · BESTAETIGUNG 2025-01..2026-08, Stufe %+.3f, Menge %s, Ruhe %d h (EINMAL)" % (
+                    " · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %)" if KURZ else "", s, E2.MENGE, RUHE))
+                if KURZ:
+                    eL = erst_v(VH, 0.035, kurz=False)
+                    print("  R-R11 Long-Kern im selben Lauf (Ruhe %d h, s +0,035): %d Einstiege · Dq %+.4f (Soll bestand Ruhe 48 h 6.328 / +0,1039)" % (
+                        RUHE, len(eL), dqh(eL, kurz=False)))
                 ee = erst_v(VH, s)
                 gesamt = dqh(ee)
                 jz = [(jj, dqh(ee[JAHR[ee] == jj]), int((JAHR[ee] == jj).sum())) for jj in JAHRE]
@@ -1235,8 +1252,33 @@ def main() -> int:
                 b6 = lo95 > 0
                 print("  B6 Tagesblock-Bootstrap (%d Tage, 1.000 Ziehungen): 95-%%-Intervall %+.4f .. %+.4f -> %s" % (
                     len(ut), lo95, hi95, "✔" if b6 else "⛔"))
-                zst = dqs(g[VH[g] >= s])
-                print("  Auskunft Zustand (Gitteranker vh >= s): %+.4f gegen Ersteintritt %+.4f" % (zst, gesamt))
+                if KURZ:
+                    zst = dq(g[np.isfinite(QS[g]) & (VH[g] <= -s)], B24, NBs, NAs)
+                    print("  Auskunft Zustand (Gitteranker vh <= -s, gespiegelt): %+.4f gegen Ersteintritt %+.4f" % (zst, gesamt))
+                    # B7 SPIEGEL (E-29): Zuwachs -5 % binnen 24 h minus Zuwachs +5 % binnen 24 h gegen alle Stunden der Menge
+                    AUFa = np.where(np.isfinite(t_u), t_u <= 24, False); ABa = np.where(np.isfinite(t_d), t_d <= 24, False)
+                    sp_ = []
+                    for jj in JAHRE:
+                        sj, bj = ee[JAHR[ee] == jj], h_ab[JAHR[h_ab] == jj]
+                        sp_.append((jj, (ABa[sj].mean() - ABa[bj].mean()) - (AUFa[sj].mean() - AUFa[bj].mean()),
+                                    ABa[sj].mean() - ABa[bj].mean(), AUFa[sj].mean() - AUFa[bj].mean()))
+                    b7 = all(x[1] > 0 for x in sp_)
+                    print("  B7 SPIEGEL (-5 %% binnen 24 h minus +5 %% binnen 24 h, Zuwachs gegen alle Stunden): %s -> %s" % (
+                        " · ".join("%d %+.3f (unten %+.3f / oben %+.3f)" % x for x in sp_), "✔" if b7 else "⛔ nur Bewegung"))
+                    # Pflichtauskunft Halbjahre und Ueberlappung mit dem Long-Kern
+                    hj = (MON[ee] % 12) // 6
+                    print("  Pflichtauskunft Halbjahre: " + " · ".join(
+                        "%d-H%d %+.4f (%d)" % (jj, h_ + 1, dqh(ee[(JAHR[ee] == jj) & (hj == h_)]), int(((JAHR[ee] == jj) & (hj == h_)).sum()))
+                        for jj in JAHRE for h_ in (0, 1)))
+                    wl = set(zip(SYM[eL].tolist(), (STD[eL] // 168).tolist())); ws = list(zip(SYM[ee].tolist(), (STD[ee] // 168).tolist()))
+                    mwl, mws = set(STD[eL] // 168), set(STD[ee] // 168)
+                    print("  Pflichtauskunft Ueberlappung: Short-Einstiege mit Long-Einstieg desselben Assets in derselben Woche %.1f %% · "
+                          "Wochen mit beiden Armen %d von %d mit Short" % (100 * np.mean([w in wl for w in ws]) if ws else np.nan,
+                                                                          len(mwl & mws), len(mws)))
+                else:
+                    b7 = True
+                    zst = dqs(g[VH[g] >= s])
+                    print("  Auskunft Zustand (Gitteranker vh >= s): %+.4f gegen Ersteintritt %+.4f" % (zst, gesamt))
                 for k in (2, 6):
                     pos = ee + (k - 1)
                     okp = (pos < n)
@@ -1245,8 +1287,9 @@ def main() -> int:
                     print("  Auskunft Einstieg %d h nach dem Signal: %d · Dq %+.4f" % (k, int(okp.sum()), dqh(pos[okp])))
                 print("  Auskunft je Monat: " + " · ".join("%d-%02d %+.3f (%d)" % (mm // 12, mm % 12 + 1, dqh(ee[MON[ee] == mm]), int((MON[ee] == mm).sum()))
                                                           for mm in np.unique(MON[ee])))
-                print("  URTEIL SCHRITT 1 (Menge %s): B1 %s · B2 %s · B4 %s · B6 %s  (B3 ueber die vier Mengen)" % (
-                    E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b4 >= 0.6 else "⛔", "✔" if b6 else "⛔"))
+                print("  URTEIL SCHRITT 1%s (Menge %s): B1 %s · B2 %s · B4 %s · B6 %s%s  (B3 ueber die vier Mengen)" % (
+                    " KERN-SHORT" if KURZ else "", E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b4 >= 0.6 else "⛔",
+                    "✔" if b6 else "⛔", (" · B7 %s" % ("✔" if b7 else "⛔")) if KURZ else ""))
             print("SCHLUSS: vollstaendig")
             return 0
 

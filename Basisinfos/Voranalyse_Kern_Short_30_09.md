@@ -99,3 +99,20 @@ Menge (etwa 4 × 8 Minuten, wegen E-31) → **Stopp und Bericht** → Bestätigu
 | **S3** | Bestätigung B1–B7, einmal, ≥ 3/4 Mengen, Urteil auf unverzerrt, wenn es auseinanderläuft |
 | **S4** | Pflichtauskunft Halbjahre und Überlappung mit dem Long-Kern |
 | **S5** | Schritt 2 (H0 short) und Schritt 3 (Simulation) erst nach bestandenem Schritt 1, je mit eigener Voranalyse |
+
+---
+
+## 7. ✔ ABGESTIMMT (30.09.2026) — S1 bis S5, Umsetzung VOR dem Lauf
+
+**Nutzer:** *„Ja, wie vorgeschlagen durchführen, prüfen und gegenprüfen."*
+
+- Werkzeug `messe_losfahren.py --kern --short --ruhe 48`, ohne `--bestaetigen` die Wahl 2024, mit `--bestaetigen <s>` einmal 2025–26.
+- Der Spiegel steckt in `erst_v` (v̂ ≤ −s) und `dqh` (Ereignis *−5 % vor +5 %*, Normal vertauscht, also genau −Dq). Ohne `--short` ist alles unverändert.
+- **R-R11:** Der Long-Kern wird im selben Lauf mitgerechnet (Ruhe 48 h, s +0,035).
+- Funktionstest der Wahl technisch sauber (`Kern_Short_30_09/probe_wahl__bestand.txt`, Inhalt nicht gewertet). Die
+  **Bestätigung** lässt sich in der Probe nicht testen, weil die verkürzten Monate kein 2025–26 haben. Bei `--kern
+  --bestaetigen` ist das genauso. Ein Probelauf auf echtem 2025–26 hieße, die ungesehenen Daten vorab anzusehen. Der neue Teil
+  (B7, Halbjahre, Überlappung) ist deshalb nur gegengelesen. Bricht er ab, wird er behoben und neu gestartet, ohne Blick auf die
+  Ergebnisse.
+- **Wahl je Menge** (E-31): 4 Läufe, danach Stopp und Bericht.
+
