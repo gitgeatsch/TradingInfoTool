@@ -1,0 +1,28 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 315847 · Symbole 123
+  Auskunft Verteilung vh: P50 -0.0028 · P90 +0.0338 · P95 +0.0452 · P99 +0.0684 · Max +0.2131
+
+========================================================================================================================
+J · Menge unverzerrt:3 · Kern Ruhe 48 h, s +0.035 · Einstiege gesamt 9956, davon NEU 1930 (19.4 %), Assets neu 74
+  R-R11 reif 2024: 1246 Einstiege · Dq +0.1713 (REGEL0 bestand Ruhe 48 h: 2024 1.486 / +0,1615 · 2025-26 6.328 / +0,1039)
+  R-R11 reif 2025: 3518 Einstiege · Dq +0.0442 (REGEL0 bestand Ruhe 48 h: 2024 1.486 / +0,1615 · 2025-26 6.328 / +0,1039)
+  R-R11 reif 2026: 3262 Einstiege · Dq +0.1220 (REGEL0 bestand Ruhe 48 h: 2024 1.486 / +0,1615 · 2025-26 6.328 / +0,1039)
+  R-R11 reif 2025-26 zusammen: 6780 · Dq +0.0783
+  J1 neu je Jahr: 2024 +0.1271 (542) · 2025 +0.0512 (1213) · 2026 +0.1942 (175) -> ✔
+  J2 neu gesamt Dq +0.0858 · Nullwelt (40 Ziehungen) Mittel +0.0115, P90 +0.0268 -> ✔
+  J3 Tagesblock (424 Tage) untere Grenze +0.0308 · Spiegel je Jahr 2024 +0.185 · 2025 +0.090 · 2026 +0.128 · je Asset (>= 20 neu) 46 Assets, 85 % -> ✔
+  J5 neu gegen reif (2024-26): neu Dq +0.0858 (1930) · reif Dq +0.0961 (8026)
+  J6 nach Alter der Historie: 10 Tage-3 Monate +0.0624 (395) · 3-6 Monate +0.1009 (451) · 6-12 Monate +0.0906 (1078)
+  URTEIL J (Menge unverzerrt:3): J1 ✔ · J2 ✔ · J3 ✔  (J4 ueber die vier Mengen)
+SCHLUSS: vollstaendig
+exit=0

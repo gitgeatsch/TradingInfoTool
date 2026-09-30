@@ -325,7 +325,8 @@ def main() -> int:
         best = "--bestaetigen" in sys.argv
         s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
         sp_best = float(sys.argv[sys.argv.index("--sperre") + 1]) if "--sperre" in sys.argv else None
-        JAHRE = (2024, 2025, 2026) if ("--export" in sys.argv or "--junge" in sys.argv) else ((2025, 2026) if best else (2024,))
+        # 30.09.: --junge erweitert die Jahre NUR fuer die J-Auswertung (mit --bestaetigen); die WAHL bleibt auf 2024
+        JAHRE = (2024, 2025, 2026) if ("--export" in sys.argv or ("--junge" in sys.argv and best)) else ((2025, 2026) if best else (2024,))
         SCHW = (0.02, 0.04, 0.06, 0.08)
         SPERR = (-0.02, -0.04)
         m0, _s0 = rsi_auswahl(E)

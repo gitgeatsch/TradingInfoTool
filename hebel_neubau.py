@@ -270,7 +270,9 @@ REGELWERK = {
                     "30.09.: Kern + RUHE 48 h (2.691/2.692, Rohvorteil je Handel "
                     "verdoppelt 2.694); die Staerke ordnet nicht (Schalter, 2.691); "
                     "die Wucht ist Bewegung, keine Richtung (2.693, E-28 greift "
-                    "nicht); Kurs-Vorgeschichte ausgereizt bis aufs Regime (2.695)",
+                    "nicht); Kurs-Vorgeschichte ausgereizt bis aufs Regime (2.695). "
+                    "J (2.698): das eigene Normal ab 240 h ueber die bestehende "
+                    "Schrumpfung statt 12 Monate - junge Assets tragen ab 10 Tagen",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die
@@ -472,7 +474,7 @@ BEITRAGSLAGE = {
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
         befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684", "2.685",
-                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697"),
+                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697", "2.698"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
@@ -739,6 +741,10 @@ NEUESTER_STAND = (
               "verliert der Kern in unverzerrt 3/3 seinen Vorteil (Rohvorteil -0,08..-1,16 % "
               "gegen +0,38..+0,59 %), statistisch aber schwach (nur 1/4 jenseits der "
               "Monats-Nullwelt). Urteil vorab festgelegt ab 2026-09 (Teil B)"),
+    ("2.698", "J BESTANDEN: der Showstopper Mindesthistorie ist behoben - das eigene Normal "
+              "ab 240 h ueber die bestehende Schrumpfung; 18-21 % neue Einstiege auf 72-74 "
+              "Assets tragen in 4/4 Mengen (Chance +0,08..+0,09, jedes Jahr, ab 10 Tagen), "
+              "Rohvorteil der neuen nicht schlechter. J wird Teil der REGEL0"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

@@ -123,3 +123,38 @@ sind **kein Showstopper**, sondern eine Bauaufgabe (Plan, Schwäche S2).
 3. ✔ **R-R11:** Die reifen Einstiege sind mit `--junge` **zeilengleich** zum Export ohne `--junge` (462 von 462, inklusive der Ausgänge t_u und t_d).
 4. Behoben: Bei einem frei gewählten Zielnamen (`--ziel`, nur in Tests) überschrieben die Wucht- und Gruppendatei die Einstiegsdatei. Die echten Dateinamen waren nie betroffen.
 
+
+---
+
+## 9. ERGEBNIS (4 Mengen) — Befund 2.698: ✔ J BESTANDEN
+
+Belege `Basisinfos/J_30_09/` (`kern__`, `export__`, `sim__<menge>.txt`, `_kette.log`).
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| Einstiege gesamt / davon **neu** | 9.905 / 2.094 (21,1 %) | 10.337 / 1.836 (17,8 %) | 9.670 / 1.954 (20,2 %) | 9.956 / 1.930 (19,4 %) |
+| Assets mit neuen Einstiegen | 74 | 72 | 74 | 74 |
+| R-R11 reif 2025–26 (REGEL0) | 6.326 / +0,1037 (6.328 / +0,1039) | 7.119 / +0,0776 | 6.461 / +0,0696 | 6.780 / +0,0783 |
+| **J1** Chance neu 2024 / 2025 / 2026 | +0,091 / +0,069 / +0,204 | +0,111 / +0,050 / +0,183 | +0,135 / +0,060 / +0,174 | +0,127 / +0,051 / +0,194 |
+| **J2** neu gesamt · Null-P90 | +0,090 · +0,028 | +0,081 · +0,023 | +0,091 · +0,032 | +0,086 · +0,027 |
+| **J3** Tagesblock · Spiegel · je Asset | +0,033 · ✔ · 85 % | +0,019 · ✔ · 80 % | +0,024 · ✔ · 81 % | +0,031 · ✔ · 85 % |
+| Urteil | ✔ | ✔ | ✔ | ✔ |
+| J5 Chance neu / reif | +0,090 / +0,117 | +0,081 / +0,097 | +0,091 / +0,090 | +0,086 / +0,096 |
+| **J6** nach Alter: 10 T–3 M · 3–6 M · 6–12 M | +0,046 · +0,082 · +0,113 | +0,074 · +0,109 · +0,076 | +0,059 · +0,091 · +0,104 | +0,062 · +0,101 · +0,091 |
+| **Simulation** Rohvorteil neu / reif | +0,64 % / +0,57 % | +0,48 % / +0,29 % | +0,42 % / +0,31 % | +0,50 % / +0,31 % |
+| Rohvorteil gesamt (REGEL0 ohne J) | +0,58 % (+0,57) | +0,32 % (+0,29) | +0,33 % (+0,31) | +0,34 % (+0,31) |
+| Hebelkonto gesamt (REGEL0 ohne J) | +0,263 (+0,204) | −0,488 (−0,466) | −0,454 (−0,417) | −0,406 (−0,382) |
+| Liquidationen neu / reif | 0,32 / 0,21 % | 0,72 / 0,53 % | 0,65 / 0,49 % | 0,72 / 0,30 % |
+
+➤ **J besteht in 4 von 4 Mengen** (J1–J4). Die neuen Einstiege tragen in **jedem Jahr**, schon ab **10 Tagen Historie**, und sind wirtschaftlich
+**nicht schlechter** als die reifen. In den unverzerrten Mengen liegt ihr Rohvorteil sogar höher.
+
+**Prüfung und Gegenprüfung:**
+1. **R-R11:** Die reifen Einstiege sind zeilengleich zur REGEL0, bis auf **2–3 Randfälle je Menge** an der 12-Monats-Grenze (in bestand geprüft: BNB und SXT gelten
+   als *neu*, IO entfällt, weil in den Stunden vor der Grenze schon ein Signal lag). Das ist erklärt und gewollt.
+2. Die neuen Einstiege sind **vollständig ungesehen** (nie ausgewertet), auch in 2024. Das ist der sauberste Beleg des ganzen Tages.
+3. In den **ersten 3 Monaten** ist die Chance etwas kleiner (+0,05..+0,07), aber positiv. Das passt dazu, dass das Normal dort noch nahe am Markt liegt.
+4. ⚠️ **Liquidationen** der neuen etwas höher. Junge Assets sind unruhiger. Das ist ein Hinweis für **L** (Liquidität in Bewertung 2).
+5. Das Hebelkonto verliert in unverzerrt etwas mehr, weil **mehr Handel** zur selben Kostenlücke stattfinden. Das ist die bekannte Schwäche S3, keine von J.
+
+➤ **Folge:** J wird **Teil der REGEL0**. Nächster Schritt nach Plan: die **Schwellenwahl** auf der vollständigen 2024-Menge.

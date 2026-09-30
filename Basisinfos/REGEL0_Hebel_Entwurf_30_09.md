@@ -67,7 +67,7 @@ Aufruf: `messe_losfahren.py --kern --export 0.035 --ruhe 48` und `messe_k6_hebel
 |---|---|---|
 | 1 | Vorteil je Handel (+0,29..+0,31 %) **unter den Kosten** (0,48 %) | **A** Positionsführung (W4): nachgezogener Stop oder Ziel, die Wucht als Bewegungsgröße (Rolle B) |
 | 2 | Das Signalangebot **springt**, weil die Dämpfungswahl im groben Raster kippt | **B** Kern stabilisieren (M1-3) |
-| 4 | ⛔ **SHOWSTOPPER (Nutzer 30.09.), nicht nur Schwäche:** **Mindesthistorie 12 Monate** für das eigene Normal (`JAHR_H = 8760`, im Code `normal()`). Junge Assets bekommen im **ersten Jahr kein Signal**, obwohl rsi, Ruhe und ATR nur Tage brauchen. Auf der Hebel-Liste sind **12 von 28** Assets jung (TAO, ONDO, RENDER, MORPHO, KAIA, S, W, BIO, TURBO, IO, VIRTUAL, KAITO). Nutzer 30.09.: *„Das System braucht keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“* (vgl. 2.610) | **J** junge Assets: das Normal anfangs aus dem **Markt**, mit wachsender eigener Historie überblendet (die Schrumpfung gibt es schon), gemessen gegen REGEL0 |
+| 4 | ✔ **BEHOBEN (2.698, J):** ~~Showstopper~~ **Mindesthistorie 12 Monate** für das eigene Normal (`JAHR_H = 8760`, im Code `normal()`). Junge Assets bekommen im **ersten Jahr kein Signal**, obwohl rsi, Ruhe und ATR nur Tage brauchen. Auf der Hebel-Liste sind **12 von 28** Assets jung (TAO, ONDO, RENDER, MORPHO, KAIA, S, W, BIO, TURBO, IO, VIRTUAL, KAITO). Nutzer 30.09.: *„Das System braucht keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“* (vgl. 2.610) | **J** junge Assets: das Normal anfangs aus dem **Markt**, mit wachsender eigener Historie überblendet (die Schrumpfung gibt es schon), gemessen gegen REGEL0 |
 | 3 | im Gegenwind **stumpf** (Modell flach) | innerhalb von A und B zu lösen, zum Beispiel ob die Stabilisierung das Regime anders abbildet |
 
 ➤ **Ablauf der Optimierung (Vorschlag):** Jede Änderung wird **einzeln** gegen REGEL0 gemessen, mit Voranalyse, Wahl 2024 und einmaliger
@@ -103,3 +103,26 @@ Normal, also kein QSh, kein v̂, kein Signal.
 | Mindesthistorie danach | nur noch, was das **Signal** braucht: rsi-Monatsabstand (10 Tage), ATR (etwa 14 Tage). Abgeleitet, nicht gewählt |
 | **R-R11** | Marktmitte, τ² und das rsi-Modell werden weiter **nur aus den reifen Assets** geschätzt. Für Assets mit ≥ 12 Monaten ändert sich damit **nichts**, und die Referenzzahlen der REGEL0 bleiben bitgleich. Junge Assets kommen **zusätzlich** hinzu |
 | Messung | Kern-Einstiege junger Assets in ihrem ersten Jahr: Chance gegen ihr Normal, Spiegel, Nullwelt, je Jahr, Rohvorteil in der Simulation. **Kriterium:** nicht schlechter als die reifen Assets (Dq > 0 in beiden Jahren, über der Nullwelt) |
+
+
+---
+
+## 9. ✔ J ist Teil der REGEL0 (Befund 2.698)
+
+| Parameter | REGEL0 mit J |
+|---|---|
+| **eigenes Normal** | aus der **vorhandenen** Historie (höchstens 12 Monate), ab **240 h**. Geschrumpft an derselben Marktmitte und τ², das Rauschen aus Rate × min(365, Tage der Historie). Ohne eigene Historie: Marktmitte |
+| Training des rsi-Modells, Marktmitte, τ² | weiter **nur aus reifen** Stunden (≥ 12 Monate), damit bitgleich |
+| **Mindesthistorie der Regel** | **10 Tage** (rsi-Monatsabstand, 240 h) |
+| Wirkung | +18–21 % Einstiege auf 72–74 zusätzlichen Assets, tragen in 4/4 Mengen |
+
+**Referenzzahlen mit J** (ersetzen Abschnitt 5 nach der Festschreibung):
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| Einstiege 2024–26 | 9.905 | 10.337 | 9.670 | 9.956 |
+| Rohvorteil je Handel 2025–26 | +0,583 % | +0,324 % | +0,331 % | +0,343 % |
+| Hebelkonto 2025–26 (log) | +0,2634 | −0,4877 | −0,4543 | −0,4058 |
+
+Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_k6_hebelstufe.py --kurs mark --einstiege kern48j_einstiege_<m>.csv --simulation 24,ohne,0.02`.
+⚠️ Vor der Festschreibung offen: Schritt 2 im Plan, die **Schwellenwahl auf der vollständigen 2024-Menge**.
