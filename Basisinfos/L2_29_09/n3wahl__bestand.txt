@@ -1,0 +1,39 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 75584 · Symbole 68
+  Auskunft Verteilung vh: P50 +0.0009 · P90 +0.0284 · P95 +0.0391 · P99 +0.0583 · Max +0.0758
+
+========================================================================================================================
+L2 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · Menge bestand · Kern-Ersteintritte s = +0.035: 2095 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 2095 mit Potential und Risiko (Tage 190)
+  Kern gesamt: Chance Dq +0.1095 · Potential +0.059 ATR ueber dem Normal (MFE 24 h) · Risiko -0.003 ATR (Rueckgang vor dem Hoch)
+
+  N3 · WAHL 2024 · 2095 Kern-Einstiege mit beiden Beitraegen (von 2095)
+  R-R11 Roheffekt Potential (alle Kern-Einstiege): ema_abstand_atr +0.1743 · volumenschub +0.1286 (Wahl 2024 bestand +0,174 / +0,129 · 2.691 bestand +0,1619 / +0,0953)
+  N3-1 rho(ema_abstand, volumenschub) +0.45 · 3x3-Tafel (Zeile ema-Drittel, Spalte volumenschub-Drittel):
+    ema unten |  356 · C +0.031 · P -0.022 · R +0.056 |  234 · C +0.080 · P -0.026 · R -0.022 |  109 · C +0.138 · P +0.015 · R -0.006
+    ema mitte |  242 · C +0.039 · P +0.044 · R -0.024 |  274 · C +0.093 · P +0.019 · R -0.041 |  182 · C +0.165 · P +0.058 · R -0.028
+    ema oben  |  101 · C +0.207 · P +0.084 · R +0.027 |  190 · C +0.094 · P +0.063 · R -0.012 |  407 · C +0.181 · P +0.218 · R +0.002
+  N3-2 EIGENANTEIL Potential (Regel: > 0 und >= 50 % des Roheffekts):
+    ema_abstand_atr  gegeben volumenschub    : roh +0.1743 · eigen +0.1328 (76 %) · je Jahr 2024 +0.1328 · Chance eigen 2024 +0.0774 · Assets 0, nan % -> ✔ EIGEN
+    volumenschub     gegeben ema_abstand_atr : roh +0.1286 · eigen +0.0619 (48 %) · je Jahr 2024 +0.0619 · Chance eigen 2024 +0.0687 · Assets 0, nan % -> ⛔ nicht eigen
+    Prozentmass (Auskunft, Prozentpunkte MFE 24 h): ema eigen +0.635 · volumenschub eigen +1.974
+  N3-3 RUHE 48 h gegen 24 h (Regel: innerhalb BEIDER Schichtungen > 0 und >= 50 % des Roheffekts) · 24 h 2095, 48 h 1486, davon in 24 h enthalten 100.0 %:
+    geschichtet nach ema_abstand_atr : roh +0.0105 · geschichtet +0.0060 (57 %) · je Jahr 2024 +0.0060 -> ✔
+    geschichtet nach volumenschub    : roh +0.0105 · geschichtet +0.0094 (89 %) · je Jahr 2024 +0.0094 -> ✔
+    RUHE 48 h ✔ EIGEN
+    Auskunft auf den 48-h-Einstiegen (1486): ema eigen +0.0718 · volumenschub eigen +0.0828
+  N3-4 ZUSAMMENTREFFEN Potential: beide oben +0.218 (407) · nur ema oben +0.070 (291) · nur volumenschub oben +0.042 (291) · Kern gesamt +0.059 · ema oben ausgeduennt auf 407 P90 +0.190
+    je Jahr beide oben: 2024 +0.218 · Chance beide oben +0.1807 · Risiko beide oben +0.002
+  ➤ FORM per Regel (Wahl 2024): ein Glied: ema_abstand_atr · Ruhe 48 h eigen
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\l2_n3_wahl_bestand.json
+SCHLUSS: vollstaendig
+exit=0

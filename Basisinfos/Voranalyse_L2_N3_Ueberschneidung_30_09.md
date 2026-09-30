@@ -142,3 +142,43 @@ Umsetzung genau nach den Abschnitten 3 und 4, ohne neue Zahl:
 - Die Wahl schreibt die Form nach `data/_vergleich/l2_n3_wahl_bestand.json`.
 - Eine fehlende Zelle (< 30 Einstiege) ergibt **kein** Urteil *eigen* (wie G-ATR).
 - Funktionstest, Commit, **Wahl**, dann **Stopp und kurzer Bericht** (Nutzer unterwegs, Telefon).
+
+
+---
+
+## 9. ERGEBNIS WAHL 2024 (bestand) — Stopp, zur Abstimmung
+
+Beleg `L2_29_09/n3wahl__bestand.txt`, Form in `data/_vergleich/l2_n3_wahl_bestand.json`. ✔ **R-R11:** 2.095 Einstiege, Roheffekt
+ema +0,1743 und volumenschub +0,1286, bitgleich zu §12 der L2-Voranalyse.
+
+| | Ergebnis 2024 | Regel |
+|---|---|---|
+| N3-1 | ρ(ema, volumenschub) **+0,45** — sie hängen zusammen, sind aber nicht dasselbe | Auskunft |
+| N3-2 ema gegeben volumenschub | eigen +0,133 = **76 %** des Roheffekts | ✔ **eigen** |
+| N3-2 volumenschub gegeben ema | eigen +0,062 = **48 %** des Roheffekts | ⛔ nicht eigen — **knapp** an der 50-%-Grenze |
+| N3-3 Ruhe 48 h | geschichtet nach ema 57 %, nach volumenschub 89 % | ✔ **eigen** |
+| ➤ **Form per Regel** | **ein Glied `ema_abstand_atr` + Ruhe 48 h** | für die Bestätigung festgelegt |
+
+**N3-4 Zusammentreffen (Auskunft), Potential in ATR über dem Normal:**
+
+| | Einstiege | Potential | Chance |
+|---|---|---|---|
+| Kern gesamt | 2.095 | +0,059 | +0,110 |
+| nur ema oben | 291 | +0,070 | |
+| nur volumenschub oben | 291 | +0,042 | |
+| **beide oben** | 407 | **+0,218** | **+0,181** |
+| ema oben, zufällig auf 407 ausgedünnt (P90) | | +0,190 | |
+
+⚠️ **Gegenprüfung — was die Regel nicht sieht:**
+1. Die 3×3-Tafel zeigt ein **Zusammenwirken**, keine Summe. volumenschub wirkt fast nur, **wenn ema oben** steht (in der
+   Zeile *ema oben*: +0,084 / +0,063 / **+0,218**; in der Zeile *ema unten*: −0,022 / −0,026 / +0,015). Das ist nach den
+   Begriffen (E-20) ein **Gewicht** auf ema, kein eigener Beitrag. Der Mittelwert über die Schichten (die Regel) verdünnt genau das.
+2. Im **Prozentmaß** ist es umgekehrt: volumenschub eigen +1,97 Prozentpunkte, ema +0,64. Auf den 48-h-Einstiegen liegt
+   volumenschub mit +0,083 vor ema (+0,072). Die 48 % sind also kein klares *nicht eigen*.
+3. *Beide oben* liegt über dem ausgedünnten ema-oben (P90). Das Zusammentreffen ist mehr als die Härte der Auswahl.
+4. Der Anteil je Asset ist 2024 nicht auswertbar (zu wenige Einstiege je Asset für ≥ 10 je Zelle). Nur Auskunft, ohne Einfluss auf das Urteil.
+5. Nur **2024**, 190 Tage, ein Bullenjahr.
+
+➤ **Keine Umdeutung der Regel:** Die Bestätigung prüft die gewählte Form (ema + Ruhe 48 h). Das Zusammentreffen läuft wie
+festgelegt als Auskunft mit. **Vorschlag:** Hält das Zusammenwirken auch 2025–26, wird *volumenschub als Gewicht auf ema* die
+**nächste Ebene des Optimierungsloops**, mit eigener Vorab-Festlegung. Die Zahl 50 % wird dafür nicht geändert.
