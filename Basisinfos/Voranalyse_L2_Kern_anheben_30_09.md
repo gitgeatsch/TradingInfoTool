@@ -185,3 +185,53 @@ Erkenntnisse und (neuen) fachlichen Hypothesen zur Optimierung messen."*
 | Bestätigung | Richtung einseitig, gegen das **P90 des Bestes-von-k** (k = weitergereichte je Maß), 2025 **und** 2026 > 0, ≥ 60 % der Assets (≥ 10 je Drittel), Tagesblock-Bootstrap untere Grenze > 0 — je Menge; dann ≥ 3 von 4 Mengen |
 | Leiter | Potential +0,1 / +0,2 / +0,4 ATR auf das obere Drittel von volumenschub (verschoben), 5 Wiederholungen |
 | Ablauf | Funktionstest · Wahl 2024 (`bestand`) · Stopp · Bestätigung vier Mengen · Stopp · Bewertung |
+
+---
+
+## 12. ERGEBNIS WAHL 2024 (bestand) — Stopp, zur Abstimmung
+
+Beleg `L2_29_09/wahl__bestand.txt`. ✔ R-R11: 2.095 Kern-Einstiege (= Kern-Wahl), Chance +0,1095 (= 2.688 Wahl), rsi allein
++0,0808. Kern gesamt 2024: Potential +0,059 ATR über dem Normal, Risiko −0,003 ATR.
+
+**Teil A1 — Stärke:** keine Abstufung. Klassen 1–5 Chance +0,087 / −0,016 / **+0,289** / +0,078 / +0,086, stärkste minus
+schwächste −0,001. Die Spitze in Klasse 3 ist ohne Muster (vermutlich Tages-Klumpen).
+
+**Teil A3 — Regelparameter (Auskunft):**
+
+| Wartezeit davor / Verzug | Einstiege | Chance | Potential |
+|---|---|---|---|
+| 12 h / 1 h | 3.907 | +0,071 | +0,029 ATR |
+| 24 h / 1 h (Regel) | 2.095 | +0,110 | +0,059 ATR |
+| **48 h / 1 h** | 1.486 | **+0,162** | **+0,069 ATR** |
+| 24 h / 2 h · 4 h | 2.095 | +0,105 · +0,085 | +0,060 · +0,055 |
+
+➤ **Je länger die Ruhe vor dem Überschreiten, desto besser** — monoton über 12 / 24 / 48 h. Verzug bis 2 h unschädlich.
+
+**Teil B — Kandidaten** (oberes minus unteres Drittel; P75 der Nullwelt in Klammern):
+
+| Kandidat | Chance | Potential (ATR) | Risiko (ATR) |
+|---|---|---|---|
+| **volumenschub** | **+0,114** (0,035) | **+0,129** (0,052) | **−0,031** (0,017) |
+| **vola_kausal** | **+0,132** (0,043) | +0,024 | **−0,040** (0,017) |
+| **ema_abstand_atr** | **+0,097** (0,038) | **+0,174** (0,056) | **−0,019** (0,012) |
+| **top_konten_verh** (Gegenprobe) | **−0,097** (0,038) | **−0,145** (0,053) | +0,019 (0,014) |
+| funding_eigen | +0,037 | **+0,121** (0,050) | +0,006 |
+| oi_je_umsatz | −0,037 | **−0,081** (0,039) | −0,005 |
+| konten_markt / funding_markt | −0,243 / −0,168 (P75 0,155 / 0,151) | – | – |
+| oi_aenderung · bandenge · taker_verh · konten_eigen | im Band oder schwach | | |
+
+**Weitergereicht** (je Maß die drei stärksten, Richtung aus 2024): Chance: volumenschub ↑, vola_kausal ↑, top_konten_verh ↓ ·
+Potential: ema_abstand ↑, top_konten_verh ↓, volumenschub ↑ · Risiko: vola_kausal ↑, volumenschub ↑, ema_abstand ↑.
+**Auflösung** (Leiter Potential): +0,1 ATR 3 von 5, **+0,2 ATR 5 von 5**.
+
+⚠️ **Gegenprüfung:**
+1. **Mehrfachtesten:** 12 Kandidaten × 3 Maße; der P75-Filter lässt im Zufall etwa ein Viertel durch — die weitergereichten
+   liegen aber meist beim **Dreifachen** des P75. Das Urteil fällt erst gegen Bestes-von-k auf 2025–26.
+2. **ema_abstand senkt hier das Risiko** — auf allen Ankern war es ein Risiko-Merkmal (2.642). Anderer Bezug (nur
+   Kern-Einstiege, Rückgang *vor dem Hoch*, gegen das Normal) — die Bestätigung entscheidet, ohne Vorurteil.
+3. **top_konten_verh** war als **Gegenprobe** gedacht (fiel auf allen Ankern, 2.663) — auf den Kern-Einstiegen zeigt es eine
+   Wirkung (wenige Top-Trader-Longs → besser). Offen ausgewiesen, keine Umdeutung.
+4. **volumenschub, vola_kausal, ema_abstand** hängen vermutlich zusammen (*Anfahren mit Wucht*) — eine Information, nicht
+   drei; das prüft die Summe (L4) nach der Bestätigung.
+5. Die **Marktanteile** (funding, konten) streuen im Zufall stark (P75 0,15) — Kontext, nicht Beitrag (E-20).
+6. Nur **2024** (ein Bullenjahr), 190 Tage.
