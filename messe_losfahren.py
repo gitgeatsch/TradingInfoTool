@@ -1202,8 +1202,8 @@ def main() -> int:
                             mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -0.035), *q_, 100 * np.mean(vv >= 0.035), q_[2] - q_[0]))
                     # M1-1 (Voranalyse_Kern_Short_30_09.md Abschnitt 11): die gewaehlte Daempfung und der Validierungsverlust
                     # ALLER Stufen je Monat (alle Monate 2024-01..2026-08, nur das Modell, keine Ergebnisse)
-                    print("M1-1 · Daempfung je Monat (Training ab 2023, 4 Stufen, 4 Validierungsbloecke): gewaehlt · Trainingsanker · "
-                          "Verlust je Stufe minus bester (20 / 200 / 2.000 / 20.000) · Abstand zur zweitbesten Stufe in Promille des Verlusts · Spannweite des Beitrags P99-P1")
+                    print("M1-1 · Daempfung je Monat (Training ab 2023, 6 Stufen GITTER_NEU, 4 Validierungsbloecke): gewaehlt · Trainingsanker · "
+                          "Verlust je Stufe minus bester (20 / 200 / 2.000 / 20.000 / 200.000 / 2.000.000) · Abstand zur zweitbesten Stufe in Promille des Verlusts · Spannweite des Beitrags P99-P1")
                     for mi, lam, nt, vl in LAM_LOG:
                         ixm = np.flatnonzero((MON == mi) & np.isfinite(Ch))
                         sp_ = float(np.subtract(*np.percentile(Ch[ixm], [99, 1]))) if len(ixm) else np.nan

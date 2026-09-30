@@ -232,3 +232,40 @@ Beleg `Kern_Short_30_09/m1_schritt0__bestand.txt`:
 ➤ **Folge:** Bevor die Flachheit ein Kontext wird, muss klar sein, **was** sie misst, echtes Fehlen von Information oder das
 Springen der Dämpfungswahl. Das ist messbar: λ und Validierungsverlust je Monat protokollieren (ohne Ergebnisse). Vorschlag M1 Schritt 1.
 
+---
+
+## 11. M1-1 — die Dämpfung je Monat (nur das Modell, keine Ergebnisse)
+
+Nutzer: *„Ja, deine Auslegung teile ich, prüfen und gegenprüfen."* Beleg `Kern_Short_30_09/m1_1__bestand.txt`. ✔ **R-R11:** Die
+Schritt-0-Tabelle 2024 ist bitgleich, die K5-0-Auswahl liegt bei 29.390. Das Mitschreiben ändert nichts.
+⚠️ Korrektur: Die Dämpfung wird aus **6** Stufen gewählt (`GITTER_NEU`: 20 bis 2.000.000), nicht aus 4 wie in Abschnitt 10 und in der Ausgabe
+zunächst beschriftet. Die Beschriftung ist korrigiert, die Zahlen sind unverändert.
+
+| Monate | gewählt | Abstand zur zweitbesten Stufe (Verlust) | Informationsgewinn je 1.000 Anker (flach minus bester) |
+|---|---|---|---|
+| 2024 Feb, Apr, Jun, Jul | 20.000 | **1,9–6,9 (knapp)** | 0,07–0,30 |
+| 2024 Aug | 200.000 | **0,1** | 0,002 |
+| 2024 Jan, Mär, Mai, Sep–Dez | 2.000 | 2,4–18,2 | 0,43–1,01 |
+| 2025 Jan–Apr, Jun–Aug | 2.000 | 5,6–27,3 | 0,92–**2,49** |
+| **2025-05, 2025-09, 2026-01, 2026-08** | 20.000 | **2,5–7,8 (knapp)** | 0,86–1,10 |
+| **2025-10, 11, 12** | 20.000 | **18,2–48,6 (deutlich)** | **0,60–0,82** |
+| 2026 Feb–Jul | 2.000 | 11,9–26,4 | 1,40–1,50 |
+
+**Befund M1-1:**
+1. **Beides ist wahr.** In vielen flachen Monaten ist die Wahl **knapp**: Die Stufen 2.000 und 20.000 liegen fast gleichauf, und die
+   Flachheit ist dann ein **Kippen des Schätzers**. Das gilt für 2024 fast überall sowie für Mai und September 2025, Januar 2026 und August 2026.
+   Im Kern des Gegenwinds, **Oktober bis Dezember 2025**, ist sie dagegen **deutlich**. Dort trägt rsi nach dem Modell wirklich keine
+   verallgemeinerbare Information.
+2. Das grobe Stufenraster (Faktor 10) macht aus kleinen Unterschieden **große Sprünge** in der Spannweite (0,47 gegen 0,24). Das
+   Signalangebot des Kerns springt dadurch von Monat zu Monat. Das ist eine **Schwäche des Kerns selbst** und für den Betrieb wichtig.
+3. ⭐ Der **Informationsgewinn** (wie viel besser das rsi-Modell ist als ein flaches) ist ein **stetiges** Maß und springt nicht. Er ist
+   **vorab bekannt**, weil nur Vergangenheit in das Training geht, und für alle Assets gleich, also *Kontext* nach E-20. Er fällt genau im Gegenwind:
+   0,60–0,93 gegen 1,4–2,5 sonst in 2025–26. 2024 streut er breit (0,002–1,01). Das ist eine Voraussetzung für eine Wahl auf 2024.
+4. ⚠️ Der Short fehlt 2026-05/06 auch **ohne** Dämpfung (Stufe 2.000, Spannweite normal). Dort ist die rsi-Kurve **einseitig**, unten
+   flach und oben nicht. Das ist ein zweiter Grund und betrifft nur den Short.
+5. ⚠️ Das Training wächst ab 2023 (keine rollierenden 12 Monate). Der Informationsgewinn ist deshalb **träge** und reagiert
+   **verspätet** auf ein neues Regime.
+
+➤ **Folge:** Als **Regime-Messgerät** eignet sich der stetige **Informationsgewinn** und nicht die sprunghafte Stufenwahl. Getrennt
+davon ist die Stabilität des Kerns eine eigene Aufgabe: ein feineres Raster oder eine über Monate geglättete Dämpfung.
+
