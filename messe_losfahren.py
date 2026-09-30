@@ -584,6 +584,31 @@ def main() -> int:
                         " · ".join("%d %+.4f / %+.3f" % x for x in jA)))
                     gk = [cfg["kal"][c][1] for c in range(5)]; bk = [beob[c][1] for c in range(5)]
                     print("    A2 Kalibrierung Potential (Wahl -> beobachtet je Klasse): Steigung %.2f" % float(np.polyfit(gk, bk, 1)[0]))
+                    # ── N2 (Voranalyse L2 Abschnitt 13, VOR der Bestaetigung): die laengere RUHE vor dem Ueberschreiten ──
+                    print()
+                    print("  N2 RUHE davor (Kriterium: 48 h schlaegt 24 h in Chance UND Potential, 2025 und 2026; 72/96 h Auskunft):")
+                    A3 = {}
+                    for fe in (24, 48, 72, 96):
+                        e3, _s3 = erst_p(VH, S_KERN, fe, 1)
+                        e3 = e3[np.isfinite(POTn[e3])]
+                        A3[fe] = e3
+                        jz = " · ".join("%d %+.4f / %+.3f (%d)" % (jj, *mass(e3[JAHR[e3] == jj])[:2], int((JAHR[e3] == jj).sum())) for jj in JAHRE)
+                        print("    %2d h: %5d Einstiege · Chance %+.4f · Potential %+.3f ATR · je Jahr %s" % (fe, len(e3), *mass(e3)[:2], jz))
+                    n2 = []
+                    for jj in JAHRE:
+                        m48 = mass(A3[48][JAHR[A3[48]] == jj]); m24 = mass(A3[24][JAHR[A3[24]] == jj])
+                        n2.append((jj, m48[0] - m24[0], m48[1] - m24[1]))
+                    ok2 = all(x[1] > 0 and x[2] > 0 for x in n2)
+                    # Gegenpruefung Auswahlanteil: 24 h zufaellig auf die Zahl von 48 h ausgeduennt (40 Ziehungen)
+                    rz = np.random.default_rng(SAAT + 48); dd = []
+                    for _ in range(zieh):
+                        sub = rz.choice(A3[24], size=len(A3[48]), replace=False)
+                        dd.append(mass(sub)[:2])
+                    dd = np.array(dd)
+                    print("    48 h minus 24 h je Jahr: %s -> %s" % (" · ".join("%d Chance %+.4f / Potential %+.3f" % x for x in n2),
+                                                               "✔ (diese Menge)" if ok2 else "⛔"))
+                    print("    Gegenpruefung: 24 h auf %d ausgeduennt - Chance P90 %+.4f, Potential P90 %+.3f gegen 48 h %+.4f / %+.3f" % (
+                        len(A3[48]), float(np.nanpercentile(dd[:, 0], 90)), float(np.nanpercentile(dd[:, 1], 90)), *mass(A3[48])[:2]))
                     # TEIL B: nur die weitergereichten Kandidaten, Bestes-von-k
                     print()
                     print("  TEIL B Bestaetigung (nur die auf 2024 weitergereichten, Richtung aus der Wahl, Bestes-von-k):")

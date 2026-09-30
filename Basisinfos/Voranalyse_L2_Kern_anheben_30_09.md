@@ -235,3 +235,18 @@ Potential: ema_abstand ↑, top_konten_verh ↓, volumenschub ↑ · Risiko: vol
    drei; das prüft die Summe (L4) nach der Bestätigung.
 5. Die **Marktanteile** (funding, konten) streuen im Zufall stark (P75 0,15) — Kontext, nicht Beitrag (E-20).
 6. Nur **2024** (ein Bullenjahr), 190 Tage.
+
+---
+
+## 13. ✔ ABGESTIMMT (30.09.2026) — N1 bis N4; N2 VOR der Bestätigung eingebaut
+
+**Nutzer:** *„ja, N1 bis N4 wie empfohlen, N2 einbauen — prüfen und gegenprüfen. Hinweis: das Optimierungsthema werden wir
+über mehrere Ebenen ausreizen. N2 ist nur der erste Schritt dazu — Optimierungsloop."*
+
+| | festgelegt VOR der Bestätigung |
+|---|---|
+| **N1** | Bestätigung wie Abschnitte 6 und 11 (A1, A2, B mit den 9 weitergereichten, Bestes-von-k) |
+| **N2** ⭐ | **Ruhe davor**: Wartezeit 24 / 48 / 72 / 96 h (Verzug 1 h). **Kriterium:** 48 h minus 24 h > 0 in **Chance und Potential**, in **2025 und 2026**, in ≥ 3 von 4 Mengen; 72/96 h Auskunft |
+| Gegenprüfung N2 | *Zwei Regeln vergleichen: erst den Auswahlanteil angleichen* — 24 h zufällig auf die Zahl von 48 h ausgedünnt (40 Ziehungen); 48 h muss darüber liegen, sonst misst es nur die **Härte** |
+| **N3 / N4** | danach Überschneidung der tragenden Beiträge und Summe (L4), dann Simulation als Erfolgsmessung |
+| **Optimierungsloop** | N2 ist die erste Ebene; jede weitere Ebene (Parameter, Beiträge, Summe, Positionsführung) wieder mit Wahl auf 2024, einmaliger Bestätigung und — sobald vorhanden — den neuen Monaten ab 2026-09 |
