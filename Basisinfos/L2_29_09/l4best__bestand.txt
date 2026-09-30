@@ -1,0 +1,34 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 220843 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0011 · P90 +0.0363 · P95 +0.0471 · P99 +0.0719 · Max +0.1089
+
+========================================================================================================================
+L2 · BESTAETIGUNG 2025-01..2026-08 (EINMAL) · Menge bestand · Kern-Ersteintritte s = +0.035: 10534 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 10534 mit Potential und Risiko (Tage 517)
+  Kern gesamt: Chance Dq +0.0762 · Potential +0.059 ATR ueber dem Normal (MFE 24 h) · Risiko -0.012 ATR (Rueckgang vor dem Hoch)
+
+  L4 R-R11 48-h-Einstiege mit Potential: 6328 · Potential +0.087
+
+  L4 · BESTAETIGUNG 2025-26 (EINMAL) · Kern-Ersteintritte mit 48 h Ruhe: 6328 (R-R11: 2024 bestand 1.486 / +0,069 · 2025-26 bestand 6.328 / +0,087) · Chance +0.1039 · Potential +0.087 · Risiko -0.007 · Einstiege je Tag 13.6
+  Arm A (URTEIL) · Schwelle -0.020 (oberste 50 % in 2024) · ausgewaehlt 2973 von 6328 (47.0 %, 6.4 je Tag)
+    L4-1 Potential ausgewaehlt minus alle +0.020 ATR · Null-P90 +0.019 · gleich viele zufaellig P90 +0.013 · je Jahr 2025 +0.002 · 2026 +0.043 · Tagesblock unten -0.027 -> ⛔
+    L4-2 ordnet die Summe? vorhergesagt -0.080 / -0.020 / -0.036 / +0.094 / +0.043 · beobachtet -0.017 / -0.098 / -0.018 / -0.001 / +0.277 · Steigung 0.84 -> ✔ (diese Menge)
+    L4-5 SPIEGEL (+5 % binnen 24 h minus -5 % binnen 24 h, Zuwachs gegen alle): gesamt -0.020 · je Jahr 2025 -0.049 · 2026 +0.015 · oben -0.010 / unten +0.010 -> ⛔ nur Bewegung
+    L4-3 Auskunft: Chance +0.0882 gegen alle +0.1039 · Risiko -0.001 gegen -0.007 · Prozent MFE +0.06 Prozentpunkte · je Asset 102, 57 % ueber dem eigenen
+  Arm B (Vergleich) · Schwelle +0.082 (oberste 20 % in 2024) · ausgewaehlt 1155 von 6328 (18.3 %, 2.5 je Tag)
+    L4-1 Potential ausgewaehlt minus alle +0.111 ATR · Null-P90 +0.060 · gleich viele zufaellig P90 +0.038 · je Jahr 2025 +0.071 · 2026 +0.149 · Tagesblock unten +0.022 -> ✔ (diese Menge)
+    L4-2 ordnet die Summe? vorhergesagt -0.106 / -0.087 / -0.051 / -0.005 / +0.111 · beobachtet -0.018 / -0.010 / -0.041 / -0.021 / +0.075 · Steigung 0.43 -> ⛔
+    L4-5 SPIEGEL (+5 % binnen 24 h minus -5 % binnen 24 h, Zuwachs gegen alle): gesamt -0.022 · je Jahr 2025 -0.074 · 2026 +0.028 · oben +0.060 / unten +0.082 -> ⛔ nur Bewegung
+    L4-3 Auskunft: Chance +0.0790 gegen alle +0.1039 · Risiko -0.007 gegen -0.007 · Prozent MFE +1.18 Prozentpunkte · je Asset 65, 69 % ueber dem eigenen
+  Arm C (Auskunft) beide oben auf 48 h: 840 (13.3 %) · Potential +0.279 · Chance +0.0869 · Risiko -0.001 · Spiegel -0.007
+SCHLUSS: vollstaendig
+exit=0

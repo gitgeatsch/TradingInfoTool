@@ -157,3 +157,42 @@ Beleg `L2_29_09/l4wahl__bestand.txt`, Parameter in `data/_vergleich/l2_l4_wahl_b
 3. Der **Spiegel ist 2024 in allen Armen positiv**: Oben steigt es stärker als unten, es ist also nicht nur Bewegung. Das Urteil fällt erst 2025–26.
 4. Die **Chance** steigt 2024 mit (+0,18..+0,19 gegen +0,16). In 2025–26 tat sie das bei N3 nicht, 2024 ist ein Bullenjahr.
 5. Nur **2024**, 190 Tage.
+
+
+---
+
+## 9. ERGEBNIS BESTÄTIGUNG 2025-01..2026-08 (4 Mengen) — Befund 2.693
+
+**Urteil:** ⛔ Die Potential-Summe **verbessert den Einstieg nicht**. Der Spiegel fällt in 4 von 4 Mengen, in beiden Armen. Die
+Wucht wählt **größere Bewegungen in beide Richtungen**, nicht die bessere Richtung.
+
+| | Kriterium | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|---|
+| R-R11 | 48-h-Einstiege bitgleich 2.691 | ✔ 6.328 / +0,087 | 7.121 | 6.463 | 6.782 | ✔ |
+| **A** L4-1 Potential über allen | > Null-P90, beide Jahre, Tagesblock | ⛔ +0,020 | ⛔ −0,001 | ⛔ −0,009 | ⛔ −0,005 | ⛔ **0/4** |
+| **A** L4-2 ordnet | Steigung > 0,5 | ✔ 0,84 | ✔ 0,73 | ⛔ 0,47 | ✔ 0,61 | 3/4, aber nur das oberste Fünftel trägt (+0,14..+0,28) |
+| **A** L4-5 **Spiegel** | oben stärker als unten, 2025 und 2026 | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ **0/4** |
+| B L4-1 (Vergleich) | | ✔ +0,111 | ✔ +0,115 | ✔ +0,082 | ✔ +0,088 | 4/4, +1,2..+1,6 Prozentpunkte MFE |
+| B L4-2 | | ⛔ 0,43 | ⛔ 0,32 | ⛔ 0,17 | ⛔ 0,18 | 0/4 |
+| B L4-5 **Spiegel** | oben / unten | +0,060 / +0,082 | +0,074 / +0,079 | +0,058 / +0,079 | +0,068 / +0,074 | ⛔ **0/4** |
+| Spiegel je Jahr (B) | | 2025 −0,074 · 2026 +0,028 | −0,081 · +0,053 | −0,073 · +0,018 | −0,083 · +0,044 | 2025 nach unten, 2026 nach oben |
+| Chance der Ausgewählten (A / B) | Auskunft | 0,088 / 0,079 gegen 0,104 | 0,048 / 0,074 gegen 0,077 | 0,031 / 0,057 gegen 0,070 | 0,054 / 0,077 gegen 0,078 | **unter** allen |
+
+**Prüfung und Gegenprüfung:**
+1. **Der Spiegel hat gegriffen, bevor die Simulation lief.** Genau davor warnt das Regelwerk (2.657/2.662): mehr Potential ist oft
+   nur mehr Bewegung. Die Ereignisse +5 % **und** −5 % binnen 24 h steigen beide, unten sogar etwas mehr.
+2. ⚠️ **Selbstkritik:** Das Maß *Risiko* (Rückgang **vor** dem Hoch) hat das nicht gezeigt, weil es den Rückgang **nach** dem Hoch
+   nicht zählt. Die Spiegelprobe gehört nach der stehenden Vorgabe (25.09., *bei jedem gerichteten Maß auch das gespiegelte*)
+   schon in L2 Teil B. Ab jetzt läuft sie bei jedem Potential-Maß mit.
+3. **Das Regime entscheidet die Richtung der großen Bewegungen:** 2025 nach unten, 2026 nach oben. Das deckt sich mit 2.598
+   (*das Regime ist zwölfmal wichtiger als die Lage*) und 2.688 (Kern regimeabhängig).
+4. **Arm A:** Die Fünftel-Kurve aus 2024 war Rauschen (die Schwelle nahm Fünftel 2 mit). Beobachtet trägt nur das oberste Fünftel.
+5. **E-28 greift nicht.** Seine Bedingung, dass der Spiegel hält, ist nicht erfüllt. Bewertung 1 bleibt **Ereignis + Chance**.
+
+**Zwischenfazit zum Ziel:**
+
+| | Stand |
+|---|---|
+| ✔ trägt | **Kern + Ruhe 48 h**: Richtung und Potential besser (2.691/2.692) |
+| ➤ Rolle B (Wucht) | kein Einstiegsmerkmal, sondern **Bewegungsgröße**. Sie gehört in die **Positionsführung** (Ziel, nachgezogener Stop, W4) und in die **Hebelstufe** (Bewertung 2). So stand es in den Rollen vom 25.09. |
+| ⛔ Engpass | die **Richtung** (Rolle A) und das **Regime**. Große Bewegungen erkennen wir, ihre Richtung nicht |

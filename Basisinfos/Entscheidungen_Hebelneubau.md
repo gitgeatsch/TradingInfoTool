@@ -394,3 +394,8 @@ laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
 - **Warum:** Die Glieder, die tragen (ema_abstand_atr, volumenschub, Ruhe 48 h), heben das **Potential** und nicht die Chance (2.692). Auf der Chance summiert fielen sie heraus.
 - **Die Form:** Der Kern bleibt das **Ereignis** (*ob*), die **Summe** misst das erwartete Potential (*wie weit*, Rolle B), und die Schwelle wird per Regel gemessen.
 - **Die Absicherung:** das Regelwerk 2.657/2.662, *mehr Potential ist oft nur mehr Bewegung*. Das Potential zählt nur, wenn der **Spiegel** hält: Das Ereignis oben muss stärker zunehmen als das Ereignis unten (L4-5, vor der Rechnung festgelegt).
+
+
+**Nachtrag 30.09. (2.693):** Die Bedingung ist **nicht erfüllt**. Der Spiegel fällt in 4 von 4 Mengen. E-28 greift damit **nicht**,
+und Bewertung 1 bleibt **Ereignis (Kern + Ruhe 48 h) + Chance**. Die Potential-Glieder (Wucht) sind Rolle B und gehen in die
+Positionsführung und die Hebelstufe. Es ist keine neue Entscheidung nötig: E-28 hatte diese Bedingung von Anfang an.
