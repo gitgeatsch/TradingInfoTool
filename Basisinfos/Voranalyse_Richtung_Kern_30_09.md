@@ -83,7 +83,17 @@ Bestätigung (4 × etwa 8 Minuten).
 
 ---
 
-## 6. Danach als eigener Schritt: der SHORT-KERN (W3)
+## 6. Danach als eigener Schritt: der KERN-SHORT (W3) — nicht zu verwechseln
+
+⚠️ **Abgrenzung (Nutzer 30.09.: *„bitte abgrenzen zur Short-Strategie Krypto, damit keine Verwechslung passiert"*):**
+
+| Begriff | was | wo | berührt vom Kern-Short? |
+|---|---|---|---|
+| ⭐ **Kern-Short** (W3, Messarm) | der Kern **gespiegelt** als **Messung** im Hebel-Neubau, Phase 1, Ebene A (neutral) und B (Simulation) | `messe_losfahren.py`, `messe_k6_hebelstufe.py`, Befunde ab 2.695 | – |
+| **SHORT-Signale im Betrieb** (Krypto, alter Hebelarm) | die heutige Signalkette mit Richtung LONG/SHORT in der Mail | Betrieb am Notebook, Agent und Regeln | ⛔ **nein**: Der Betrieb wird erst nach der ganzen Kette samt LLM-Rollen umgestellt |
+| **Absicherung** (Short-Produkte als Schutz) | Short-ETPs decken Long-Bestand, leverage-adjustiert | `agent/absicherung_fakten.py` | ⛔ **nein**: Portfolioschutz, kein Signal |
+
+Der Name im Neubau ist ausschließlich **„Kern-Short“** und nie *Short-Strategie*.
 
 Der Kern **gespiegelt**: Nach 48 h Ruhe fällt der Vorsprung unter −s, Einstieg short. Er würde das Gegenwind-Regime nutzen,
 in dem der Long-Kern verliert (Juli–Dezember 2025). Der Short-Kern bekommt eine eigene Voranalyse, weil er ein neuer Arm mit
@@ -100,3 +110,26 @@ bleibt neutral.
 | **P2** | Urteilsmaß **Chance**, **Spiegel als Pflicht**, Potential als Auskunft |
 | **P3** | Wahl auf 2024, einmalige Bestätigung 2025–26 in 4 Mengen, Kriterien wie Abschnitt 3 |
 | **P4** | der Short-Kern danach als eigener Schritt |
+
+
+---
+
+## 8. ✔ ABGESTIMMT (30.09.2026) — P1 bis P4
+
+**Nutzer:** *„Ok, ja. Gute Idee mit Short-Kern — bitte abgrenzen zur Short-Strategie Krypto, damit keine Verwechslung passiert.
+Kleiner Hinweis: Ich finde, die Richtung der Hebungen geht etwas in Richtung der Lage (wie war diese kurz vorher). Finde ich
+ok, aber das würde u. U. auch wieder Beiträge oder Gewichtungen ins Spiel bringen können, die mehrmals verworfen wurden.
+Kein Auftrag, sollte aber in unseren Lösungsansätzen und Messungen nicht ausgeschlossen werden."*
+
+- **Abgrenzung** eingetragen (Abschnitt 6, Regelwerk-Zeile *Begriff Kern-Short*).
+- **Lage kurz vorher:** Regelwerk-Zeile und Plan (Optimierungsloop). Früher verworfene Beiträge sind auf dem Kern **nicht
+  ausgeschlossen**. Fachlich passt das: Die meisten sind auf **allen** Stundenankern verworfen worden (2.645/2.655/2.663). Auf
+  dem **Kern-Ereignis** ist das eine andere Frage. Genauso ist top_konten_verh auf allen Ankern gefallen (2.663) und zeigt auf
+  dem Kern eine Spur (2.691).
+- Umsetzung: `messe_losfahren.py --l2 --richtung`, Funktionstest, Commit, Wahl 2024, Stopp.
+- **Umsetzungsnotiz (vor dem Lauf):** Die Nullwelt für R-a, R-b und R-c **mischt die Werte innerhalb desselben Assets unter seinen
+  Einstiegen** (40 Ziehungen). Diese Kandidaten gibt es nur an den Einstiegen, eine Zeitverschiebung der Stundenreihe griffe dort
+  ins Leere. Die Verteilung je Asset bleibt erhalten, nur der Bezug zum Zeitpunkt wird zerstört. R-d (Stundenreihe) wird wie in
+  2.691 je Asset verschoben. R-c ist als 0/1-Merkmal umgesetzt: 72 h Ruhe gegen nur 48 h Ruhe auf den 48-h-Einstiegen.
+  Funktionstest technisch sauber (`L2_29_09/richtungprobe__bestand.txt`, Inhalt nicht gewertet).
+

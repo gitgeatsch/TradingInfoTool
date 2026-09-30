@@ -487,6 +487,135 @@ def main() -> int:
                     oben = ix[fin & (w > kanten[1])]; unten = ix[fin & (w <= kanten[0])]
                     mo, mu = mass(oben), mass(unten)
                     return tuple(a - b for a, b in zip(mo, mu)), len(oben), len(unten)
+                if "--richtung" in sys.argv:
+                    # ══ RICHTUNG (Voranalyse_Richtung_Kern_30_09.md, P1-P4): Rolle A auf dem Kern mit 48 h Ruhe -
+                    # R-a Tempo, R-b Tiefe davor, R-c Ruhe 72 h, R-d top_konten_verh; Chance mit Pflicht-Spiegel ══
+                    JSR = os.path.join(os.path.dirname(JS), "l2_richtung_wahl_bestand.json")
+                    AUF = np.where(np.isfinite(t_u), t_u <= 24, False).astype(np.float64)
+                    AB = np.where(np.isfinite(t_d), t_d <= 24, False).astype(np.float64)
+                    e48, s48 = erst_p(VH, S_KERN, 48, 1)
+                    f_ = np.isfinite(POTn[e48]); e48, s48 = e48[f_], s48[f_]
+                    print()
+                    print("  RICHTUNG · %s · Kern mit 48 h Ruhe: %d Einstiege (R-R11 2.691 N2: 2024 bestand 1.486 / Chance +0,162 · "
+                          "2025-26 bestand 6.328 / +0,1039) · Chance %+.4f · Potential %+.3f · Risiko %+.3f" % (
+                              "WAHL 2024" if wahl else "BESTAETIGUNG 2025-26 (EINMAL)", len(e48), *mass(e48)))
+                    # Kandidaten an den Einstiegen (Werte aus der Signalstunde und davor - kein Vorgriff)
+                    pos_in = np.zeros(n, np.int64)
+                    for tl in teile:
+                        pos_in[tl] = np.arange(len(tl))
+                    asset_tl = {int(SYM[tl[0]]): tl for tl in teile}
+                    RC = {k: np.full(n, np.nan) for k in ("tempo6", "tempo3", "tiefe48", "ruhe72")}
+                    for e_, s_ in zip(e48, s48):
+                        tl = asset_tl[int(SYM[s_])]; st = STD[tl]; p_ = int(pos_in[s_])
+                        for lag, nm_ in ((6, "tempo6"), (3, "tempo3")):
+                            q_ = np.searchsorted(st, st[p_] - lag)
+                            if q_ < len(st) and st[q_] == st[p_] - lag and np.isfinite(VH[tl[q_]]):
+                                RC[nm_][e_] = VH[s_] - VH[tl[q_]]
+                        lo_ = np.searchsorted(st, st[p_] - 48)
+                        w_ = VH[tl[lo_:p_]]
+                        if np.isfinite(w_).sum() >= 40:
+                            RC["tiefe48"][e_] = np.nanmin(w_)
+                    e72, _x = erst_p(VH, S_KERN, 72, 1)
+                    RC["ruhe72"][e48] = np.isin(e48, e72).astype(float)
+                    RC["top_konten_verh"] = CAND["top_konten_verh"]
+                    NAMEN = ("tempo6", "tiefe48", "ruhe72", "top_konten_verh")
+                    rj = np.random.default_rng(SAAT + 61)
+
+                    def null_werte(nm_):
+                        if nm_ == "top_konten_verh":
+                            return verschiebe(nm_, RC[nm_])
+                        v_ = RC[nm_].copy()             # innerhalb des Assets unter seinen Einstiegen mischen
+                        for si in np.unique(SYM[e48]):
+                            ix_ = e48[SYM[e48] == si]
+                            v_[ix_] = rj.permutation(RC[nm_][ix_])
+                        return v_
+
+                    def gruppen(w, ix, k_):
+                        wi = w[ix]; fi = np.isfinite(wi)
+                        return ix[fi & (wi > k_[1])], ix[fi & (wi <= k_[0])]
+
+                    def spiegel(sel, alle):
+                        return (AUF[sel].mean() - AUF[alle].mean()) - (AB[sel].mean() - AB[alle].mean()) if len(sel) else np.nan
+                    print("  Auskunft Zusammenhang: rho(tempo6, tiefe48) %+.2f · rho(tempo6, tempo3) %+.2f · Anteil 72 h unter den 48-h-Einstiegen %.1f %%" % (
+                        float(pd.Series(RC["tempo6"][e48]).corr(pd.Series(RC["tiefe48"][e48]), method="spearman")),
+                        float(pd.Series(RC["tempo6"][e48]).corr(pd.Series(RC["tempo3"][e48]), method="spearman")),
+                        100 * float(np.nanmean(RC["ruhe72"][e48]))))
+                    if wahl:
+                        par = {"kanten": {}, "rich": {}, "weiter": []}
+                        for nm_ in NAMEN:
+                            w = RC[nm_][e48]; fi = np.isfinite(w)
+                            k_ = [0.5, 0.5] if nm_ == "ruhe72" else np.quantile(w[fi], [1 / 3, 2 / 3]).tolist()
+                            ob, un = gruppen(RC[nm_], e48, k_)
+                            d_ = mass(ob)[0] - mass(un)[0]
+                            nu = []
+                            for _ in range(zieh):
+                                vv = null_werte(nm_); w2 = vv[e48]; f2 = np.isfinite(w2)
+                                k2 = [0.5, 0.5] if nm_ == "ruhe72" else np.quantile(w2[f2], [1 / 3, 2 / 3]).tolist()
+                                o2, u2 = gruppen(vv, e48, k2)
+                                nu.append(abs(mass(o2)[0] - mass(u2)[0]))
+                            p75 = float(np.percentile(nu, 75))
+                            rich = 1 if d_ > 0 else -1
+                            gut_ = ob if rich > 0 else un
+                            par["kanten"][nm_] = k_; par["rich"][nm_] = rich
+                            weiter = abs(d_) > p75
+                            if weiter:
+                                par["weiter"].append(nm_)
+                            print("    %-16s (%d / %d): Chance oben minus unten %+.4f · Null-P75 %.4f · Potential %+.3f · Spiegel der besseren Gruppe %+.3f -> %s" % (
+                                nm_, len(ob), len(un), d_, p75, mass(ob)[1] - mass(un)[1], spiegel(gut_, e48),
+                                ("weiter (%s)" % ("oben" if rich > 0 else "unten")) if weiter else "faellt in der Wahl"))
+                        if E2.MENGE == "bestand" and "--probe" not in sys.argv:
+                            with io.open(JSR, "w", encoding="utf-8") as fr:
+                                json.dump(par, fr, ensure_ascii=False, indent=1)
+                            print("  geschrieben: %s" % JSR)
+                    else:
+                        par = json.load(open(JSR, encoding="utf-8"))
+                        liste = par["weiter"]
+                        print("  Weitergereicht aus der Wahl 2024: %s" % (", ".join(liste) or "keiner"))
+                        if liste:
+                            nmax = []
+                            for _ in range(zieh):
+                                b_ = -np.inf
+                                for nm_ in liste:
+                                    vv = null_werte(nm_); w2 = vv[e48]; f2 = np.isfinite(w2)
+                                    k2 = [0.5, 0.5] if nm_ == "ruhe72" else np.quantile(w2[f2], [1 / 3, 2 / 3]).tolist()
+                                    o2, u2 = gruppen(vv, e48, k2)
+                                    b_ = max(b_, (mass(o2)[0] - mass(u2)[0]) * par["rich"][nm_])
+                                nmax.append(b_)
+                            p90 = float(np.nanpercentile(nmax, 90))
+                            for nm_ in liste:
+                                k_, rich = par["kanten"][nm_], par["rich"][nm_]
+                                ob, un = gruppen(RC[nm_], e48, k_)
+                                echt = (mass(ob)[0] - mass(un)[0]) * rich
+                                gut_ = ob if rich > 0 else un
+                                jz, sj = [], []
+                                for jj in JAHRE:
+                                    ej = e48[JAHR[e48] == jj]; o_, u_ = gruppen(RC[nm_], ej, k_)
+                                    jz.append((mass(o_)[0] - mass(u_)[0]) * rich)
+                                    sj.append(spiegel(o_ if rich > 0 else u_, ej))
+                                ga = []
+                                for si in np.unique(SYM[e48]):
+                                    ea = e48[SYM[e48] == si]; o_, u_ = gruppen(RC[nm_], ea, k_)
+                                    if len(o_) >= 10 and len(u_) >= 10:
+                                        ga.append((mass(o_)[0] - mass(u_)[0]) * rich > 0)
+                                tage = STD[e48] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                                je_tag = [e48[tinv == k] for k in range(len(ut))]
+                                rb = np.random.default_rng(SAAT + 62); bo = []
+                                for _ in range(300):
+                                    ixb = np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])
+                                    o_, u_ = gruppen(RC[nm_], ixb, k_)
+                                    bo.append((mass(o_)[0] - mass(u_)[0]) * rich)
+                                lo95 = float(np.nanpercentile(bo, 2.5))
+                                urteil = (echt > p90 and all(x > 0 for x in jz) and (np.mean(ga) >= 0.6 if ga else False)
+                                          and lo95 > 0 and all(np.isfinite(x) and x > 0 for x in sj))
+                                print("    %-16s (%s): Chance %+.4f gegen Bestes-von-%d P90 %+.4f · je Jahr %s · Spiegel je Jahr %s · Assets %d, %.0f %% · "
+                                      "Tagesblock unten %+.4f · Potential %+.3f -> %s" % (
+                                          nm_, "oben" if rich > 0 else "unten", echt, len(liste), p90,
+                                          " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, jz)),
+                                          " · ".join("%d %+.3f" % (jj, x) for jj, x in zip(JAHRE, sj)),
+                                          len(ga), 100 * np.mean(ga) if ga else np.nan, lo95, (mass(ob)[1] - mass(un)[1]) * rich,
+                                          "✔ TRAEGT (diese Menge)" if urteil else "⛔"))
+                    print("SCHLUSS: vollstaendig")
+                    return 0
                 if "--l4" in sys.argv:
                     # ══ L4 (Voranalyse_L4_Summe_30_09.md, Q1-Q5 + L4-5 abgestimmt): die POTENTIAL-SUMME auf dem Kern mit
                     # 48 h Ruhe - Arm A ema (Urteil), Arm B ema + volumenschub gemeinsam (Vergleich), Arm C 3x3 (Auskunft) ══
