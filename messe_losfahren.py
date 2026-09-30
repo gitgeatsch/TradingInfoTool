@@ -340,7 +340,7 @@ def main() -> int:
         chk = np.flatnonzero(np.isfinite(QS))
         print("  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern %.2e" % float(np.nanmax(np.abs(QSh[chk] - QS[chk]))))
         # rollierend: Modell je Monat nur auf der Vergangenheit, Beitrag fuer JEDE Stunde des Monats
-        Ch = np.full(n, np.nan); SEL = np.zeros(n, bool); modelle = []
+        Ch = np.full(n, np.nan); SEL = np.zeros(n, bool); modelle = []; LAM_LOG = []
         ab = H(datetime(2023, 1, 1))
         for (j, mo) in monate:
             mi = j * 12 + (mo - 1)
@@ -351,6 +351,7 @@ def main() -> int:
             if len(rt) < 5000 or not len(ziel):
                 continue
             m, _l = K2.fit_cv(RSI, E, ra, rt, A24[rt], OFF[rt], STD)
+            LAM_LOG.append((mi, _l, len(rt), dict(getattr(m, "cv_verlust", {}))))
             thr = np.quantile(m.z(E, ra, OFF[ra]) - OFF[ra], 0.9)
             alle_h = np.flatnonzero((MON == mi) & np.isfinite(OFF))
             Ch[alle_h] = m.z(E, alle_h, OFF[alle_h]) - OFF[alle_h]
@@ -1199,6 +1200,18 @@ def main() -> int:
                         q_ = np.percentile(vv, [1, 50, 99])
                         print("    %d-%02d %7d · %5.2f %% · %+.4f · %+.4f · %+.4f · %5.2f %% · %.4f" % (
                             mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -0.035), *q_, 100 * np.mean(vv >= 0.035), q_[2] - q_[0]))
+                    # M1-1 (Voranalyse_Kern_Short_30_09.md Abschnitt 11): die gewaehlte Daempfung und der Validierungsverlust
+                    # ALLER Stufen je Monat (alle Monate 2024-01..2026-08, nur das Modell, keine Ergebnisse)
+                    print("M1-1 · Daempfung je Monat (Training ab 2023, 4 Stufen, 4 Validierungsbloecke): gewaehlt · Trainingsanker · "
+                          "Verlust je Stufe minus bester (20 / 200 / 2.000 / 20.000) · Abstand zur zweitbesten Stufe in Promille des Verlusts · Spannweite des Beitrags P99-P1")
+                    for mi, lam, nt, vl in LAM_LOG:
+                        ixm = np.flatnonzero((MON == mi) & np.isfinite(Ch))
+                        sp_ = float(np.subtract(*np.percentile(Ch[ixm], [99, 1]))) if len(ixm) else np.nan
+                        if vl:
+                            b_ = min(vl.values()); zw = sorted(vl.values())[1] if len(vl) > 1 else np.nan
+                            print("    %d-%02d  lambda %6.0f · %7d · %s · %.3f Promille · %.3f" % (
+                                mi // 12, mi % 12 + 1, lam, nt, " / ".join("%+8.1f" % (vl[k] - b_) for k in sorted(vl)),
+                                1000 * (zw - b_) / max(abs(b_), 1e-12), sp_))
                     print("SCHLUSS: vollstaendig")
                     return 0
                 RASTER = [round(0.010 + 0.005 * i, 3) for i in range(9)]

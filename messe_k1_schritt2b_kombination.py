@@ -176,6 +176,7 @@ def fit_cv(namen, E, ra, rt, y, off, std):
     kanten = np.quantile(st, np.linspace(0, 1, CV_BLOECKE + 1)[1:-1])
     blk = np.searchsorted(kanten, st, "right"); blka = np.searchsorted(kanten, sta, "right")
     bester, wert = LAMBDAS[-1], np.inf
+    verl = {}                                   # M1-1 (30.09.): Validierungsverlust je Stufe, nur mitgeschrieben
     for lam in LAMBDAS:
         tot = 0.0
         for b in range(CV_BLOECKE):
@@ -190,9 +191,12 @@ def fit_cv(namen, E, ra, rt, y, off, std):
             m = Modell(namen, lam).fit(E, ra[tra], rt[tr], y[tr], off[tr])
             z = m.z(E, rt[te], off[te])
             tot += float(np.sum(np.logaddexp(0.0, z) - y[te] * z))
+        verl[lam] = tot
         if tot < wert:
             bester, wert = lam, tot
-    return Modell(namen, bester).fit(E, ra, rt, y, off), bester
+    m_ = Modell(namen, bester).fit(E, ra, rt, y, off)
+    m_.cv_verlust = verl
+    return m_, bester
 
 
 def main() -> int:
