@@ -486,6 +486,156 @@ def main() -> int:
                     oben = ix[fin & (w > kanten[1])]; unten = ix[fin & (w <= kanten[0])]
                     mo, mu = mass(oben), mass(unten)
                     return tuple(a - b for a, b in zip(mo, mu)), len(oben), len(unten)
+                if "--n3" in sys.argv:
+                    # ══ N3 (Voranalyse_L2_N3_Ueberschneidung_30_09.md, P1-P5 abgestimmt): EIGENE Information von
+                    # ema_abstand_atr, volumenschub und der Ruhe 48 h - Kanten und Richtungen aus der Wahl 2024 ══
+                    from scipy.stats import spearmanr
+                    cfg = json.load(open(JS, encoding="utf-8"))
+                    JS3 = os.path.join(os.path.dirname(JS), "l2_n3_wahl_bestand.json")
+                    NM = ("ema_abstand_atr", "volumenschub")
+                    rich3 = {nm_: dict(cfg["weiter"]["Potential"])[nm_] for nm_ in NM}
+                    assert all(r_ == 1 for r_ in rich3.values()), rich3
+
+                    def drittel(nm_):
+                        w = CAND[nm_]; k_ = cfg["kanten"][nm_]
+                        d_ = np.where(w > k_[1], 2, np.where(w <= k_[0], 0, 1))
+                        return np.where(np.isfinite(w), d_, -1)
+                    DR = {nm_: drittel(nm_) for nm_ in NM}
+
+                    def eigen(dx, dy, ix, j_=1, mind=30):
+                        # Effekt von X (oben minus unten) INNERHALB jedes Drittels von Y, gemittelt; fehlende Zelle -> nan
+                        w_ = []
+                        for c in range(3):
+                            o_ = ix[(dx[ix] == 2) & (dy[ix] == c)]; u_ = ix[(dx[ix] == 0) & (dy[ix] == c)]
+                            w_.append(mass(o_)[j_] - mass(u_)[j_] if min(len(o_), len(u_)) >= mind else np.nan)
+                        return float(np.mean(w_))
+
+                    def roh(dx, ix, j_=1):
+                        return mass(ix[dx[ix] == 2])[j_] - mass(ix[dx[ix] == 0])[j_]
+                    ok_ = np.isfinite(CAND[NM[0]][ee]) & np.isfinite(CAND[NM[1]][ee]); e3 = ee[ok_]
+                    print()
+                    print("  N3 · %s · %d Kern-Einstiege mit beiden Beitraegen (von %d)" % (
+                        "WAHL 2024" if wahl else "BESTAETIGUNG 2025-26 (EINMAL)", len(e3), len(ee)))
+                    print("  R-R11 Roheffekt Potential (alle Kern-Einstiege): ema_abstand_atr %+.4f · volumenschub %+.4f "
+                          "(Wahl 2024 bestand +0,174 / +0,129 · 2.691 bestand +0,1619 / +0,0953)" % (
+                              drittel_diff(CAND[NM[0]], ee, cfg["kanten"][NM[0]])[0][1],
+                              drittel_diff(CAND[NM[1]], ee, cfg["kanten"][NM[1]])[0][1]))
+                    # N3-1 Auskunft
+                    print("  N3-1 rho(ema_abstand, volumenschub) %+.2f · 3x3-Tafel (Zeile ema-Drittel, Spalte volumenschub-Drittel):" % (
+                        float(spearmanr(CAND[NM[0]][e3], CAND[NM[1]][e3])[0])))
+                    for a_ in range(3):
+                        zel = []
+                        for b_ in range(3):
+                            ix_ = e3[(DR[NM[0]][e3] == a_) & (DR[NM[1]][e3] == b_)]
+                            zel.append("%4d · C %+.3f · P %+.3f · R %+.3f" % (len(ix_), *mass(ix_)))
+                        print("    ema %s | %s" % (("unten", "mitte", "oben ")[a_], " | ".join(zel)))
+                    # N3-2 Eigenanteil
+                    print("  N3-2 EIGENANTEIL Potential (Regel: > 0 und >= 50 %% des Roheffekts%s):" % (
+                        "" if wahl else ", > Null-P90 Bestes-von-2, 2025 und 2026 > 0, Tagesblock unten > 0"))
+                    eig_ok = {}
+                    nullmax = []
+                    if not wahl:
+                        for _ in range(zieh):
+                            b_ = -np.inf
+                            for x_, y_ in ((0, 1), (1, 0)):
+                                vv = verschiebe(NM[x_], CAND[NM[x_]])
+                                w2 = vv[e3]; f2 = np.isfinite(w2); k2 = np.quantile(w2[f2], [1 / 3, 2 / 3])
+                                dxs = np.full(n, -1); dxs[e3[f2]] = np.where(w2[f2] > k2[1], 2, np.where(w2[f2] <= k2[0], 0, 1))
+                                b_ = max(b_, eigen(dxs, DR[NM[y_]], e3))
+                            nullmax.append(b_)
+                        p90n = float(np.nanpercentile(nullmax, 90))
+                    for x_, y_ in ((0, 1), (1, 0)):
+                        dx, dy = DR[NM[x_]], DR[NM[y_]]
+                        r_ = roh(dx, e3); g_ = eigen(dx, dy, e3)
+                        jz = [eigen(dx, dy, e3[JAHR[e3] == jj]) for jj in JAHRE]
+                        pz = [eigen(dx, dy, e3[JAHR[e3] == jj], 0) for jj in JAHRE]
+                        ga = []
+                        for si in np.unique(SYM[e3]):
+                            ixa = e3[SYM[e3] == si]
+                            v_ = [mass(ixa[(dx[ixa] == 2) & (dy[ixa] == c)])[1] - mass(ixa[(dx[ixa] == 0) & (dy[ixa] == c)])[1]
+                                  for c in range(3) if min(((dx[ixa] == 2) & (dy[ixa] == c)).sum(), ((dx[ixa] == 0) & (dy[ixa] == c)).sum()) >= 10]
+                            if len(v_) >= 2:
+                                ga.append(np.mean(v_) > 0)
+                        regel = bool(np.isfinite(g_) and g_ > 0 and r_ > 0 and g_ >= 0.5 * r_)
+                        if wahl:
+                            urteil = regel
+                            zus = ""
+                        else:
+                            tage = STD[e3] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                            je_tag = [e3[tinv == k] for k in range(len(ut))]
+                            rb = np.random.default_rng(SAAT + 33 + x_); bo = []
+                            for _ in range(300):
+                                w_ = rb.integers(0, len(ut), len(ut))
+                                bo.append(eigen(dx, dy, np.concatenate([je_tag[k] for k in w_])))
+                            lo95 = float(np.nanpercentile(bo, 2.5))
+                            urteil = regel and g_ > p90n and all(np.isfinite(x) and x > 0 for x in jz) and lo95 > 0
+                            zus = " · Null-P90 %+.4f · Tagesblock unten %+.4f" % (p90n, lo95)
+                        eig_ok[NM[x_]] = urteil
+                        print("    %-16s gegeben %-16s: roh %+.4f · eigen %+.4f (%.0f %%) · je Jahr %s%s · Chance eigen %s · Assets %d, %.0f %% -> %s" % (
+                            NM[x_], NM[y_], r_, g_, 100 * g_ / r_ if r_ else np.nan,
+                            " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, jz)), zus,
+                            " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, pz)), len(ga), 100 * np.mean(ga) if ga else np.nan,
+                            ("✔ EIGEN" if urteil else "⛔ nicht eigen") + ("" if wahl else " (diese Menge)")))
+                    # Prozentmass (Auskunft)
+                    POTa = POTn
+                    POTn = L2_MFE[24] - normal_mittel(L2_MFE[24])
+                    print("    Prozentmass (Auskunft, Prozentpunkte MFE 24 h): ema eigen %+.3f · volumenschub eigen %+.3f" % (
+                        eigen(DR[NM[0]], DR[NM[1]], e3), eigen(DR[NM[1]], DR[NM[0]], e3)))
+                    POTn = POTa
+                    # N3-3 Ruhe gegen Wucht
+                    A24_, _x = erst_p(VH, S_KERN, 24, 1); A48_, _x = erst_p(VH, S_KERN, 48, 1)
+                    A24_ = A24_[np.isfinite(POTn[A24_])]; A48_ = A48_[np.isfinite(POTn[A48_])]
+                    print("  N3-3 RUHE 48 h gegen 24 h (Regel: innerhalb BEIDER Schichtungen > 0 und >= 50 %% des Roheffekts%s) · "
+                          "24 h %d, 48 h %d, davon in 24 h enthalten %.1f %%:" % (
+                              "" if wahl else ", 2025 und 2026", len(A24_), len(A48_), 100 * np.isin(A48_, A24_).mean()))
+
+                    def ruhe(ix24, ix48, dy=None, j_=1):
+                        if dy is None:
+                            return mass(ix48)[j_] - mass(ix24)[j_]
+                        w_ = []
+                        for c in range(3):
+                            a_, b_ = ix48[dy[ix48] == c], ix24[dy[ix24] == c]
+                            w_.append(mass(a_)[j_] - mass(b_)[j_] if min(len(a_), len(b_)) >= 30 else np.nan)
+                        return float(np.mean(w_))
+                    r0 = ruhe(A24_, A48_)
+                    ru_ok = r0 > 0
+                    for nm_ in NM:
+                        g_ = ruhe(A24_, A48_, DR[nm_])
+                        jz = [ruhe(A24_[JAHR[A24_] == jj], A48_[JAHR[A48_] == jj], DR[nm_]) for jj in JAHRE]
+                        ok3 = bool(np.isfinite(g_) and g_ > 0 and g_ >= 0.5 * r0 and (wahl or all(np.isfinite(x) and x > 0 for x in jz)))
+                        ru_ok = ru_ok and ok3
+                        print("    geschichtet nach %-16s: roh %+.4f · geschichtet %+.4f (%.0f %%) · je Jahr %s -> %s" % (
+                            nm_, r0, g_, 100 * g_ / r0 if r0 else np.nan, " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, jz)),
+                            "✔" if ok3 else "⛔"))
+                    print("    RUHE 48 h %s" % ("✔ EIGEN" if ru_ok else "⛔ nicht eigen") + ("" if wahl else " (diese Menge)"))
+                    f48 = np.isfinite(CAND[NM[0]][A48_]) & np.isfinite(CAND[NM[1]][A48_]); e48 = A48_[f48]
+                    print("    Auskunft auf den 48-h-Einstiegen (%d): ema eigen %+.4f · volumenschub eigen %+.4f" % (
+                        len(e48), eigen(DR[NM[0]], DR[NM[1]], e48), eigen(DR[NM[1]], DR[NM[0]], e48)))
+                    # N3-4 Zusammentreffen, mit Gegenpruefung Auswahlanteil
+                    de, dv = DR[NM[0]][e3], DR[NM[1]][e3]
+                    beide, nur_e, nur_v = e3[(de == 2) & (dv == 2)], e3[(de == 2) & (dv != 2)], e3[(de != 2) & (dv == 2)]
+                    eo = e3[de == 2]
+                    rz = np.random.default_rng(SAAT + 34)
+                    dd = [mass(rz.choice(eo, size=len(beide), replace=False))[1] for _ in range(zieh)] if 0 < len(beide) < len(eo) else [np.nan]
+                    print("  N3-4 ZUSAMMENTREFFEN Potential: beide oben %+.3f (%d) · nur ema oben %+.3f (%d) · nur volumenschub oben %+.3f (%d) · "
+                          "Kern gesamt %+.3f · ema oben ausgeduennt auf %d P90 %+.3f" % (
+                              mass(beide)[1], len(beide), mass(nur_e)[1], len(nur_e), mass(nur_v)[1], len(nur_v), mass(e3)[1],
+                              len(beide), float(np.nanpercentile(dd, 90))))
+                    print("    je Jahr beide oben: %s · Chance beide oben %+.4f · Risiko beide oben %+.3f" % (
+                        " · ".join("%d %+.3f" % (jj, mass(beide[JAHR[beide] == jj])[1]) for jj in JAHRE), mass(beide)[0], mass(beide)[2]))
+                    if wahl:
+                        e_, v_ = eig_ok[NM[0]], eig_ok[NM[1]]
+                        form = ("zwei Glieder" if e_ and v_ else ("ein Glied: " + NM[0] if e_ else ("ein Glied: " + NM[1] if v_ else
+                                "eine Information: " + (NM[0] if roh(DR[NM[0]], e3) >= roh(DR[NM[1]], e3) else NM[1]))))
+                        print("  ➤ FORM per Regel (Wahl 2024): %s · Ruhe 48 h %s" % (form, "eigen" if ru_ok else "nicht eigen"))
+                        if E2.MENGE == "bestand" and "--probe" not in sys.argv:
+                            with io.open(JS3, "w", encoding="utf-8") as f_:
+                                json.dump({"eigen": eig_ok, "ruhe_eigen": bool(ru_ok), "form": form}, f_, ensure_ascii=False, indent=1)
+                            print("  geschrieben: %s" % JS3)
+                    elif os.path.exists(JS3):
+                        print("  Form aus der Wahl 2024: %s" % json.load(open(JS3, encoding="utf-8"))["form"])
+                    print("SCHLUSS: vollstaendig")
+                    return 0
                 ST = VH[es]
                 if wahl:
                     # ── TEIL A: Staerke (Vorsprung in der Signalstunde), fuenf Klassen, Grenzen aus 2024 ──

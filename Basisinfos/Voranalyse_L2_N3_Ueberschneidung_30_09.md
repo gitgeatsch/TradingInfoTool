@@ -128,3 +128,17 @@ Hypothese, die **nach Kern heben** (nach L4) zu prüfen ist:
 | Hypothese | die **Summe** ordnet monoton (je höher, desto mehr Potential und Chance) — die Abstufung, die rsi allein nicht hat |
 | Gegenhypothese | eine andere **Stärkeform** des rsi ordnet doch: Anstieg des Vorsprungs über die letzten Stunden, Abstand über der Schwelle nach 1–3 h (Positionsführung), Zustandsdauer |
 | Bewertung | Vor- und Nachteile oben gegen das Ergebnis halten; entscheiden, ob der Kern Schalter bleibt |
+
+
+---
+
+## 8. ✔ ABGESTIMMT (30.09.2026) — P1 bis P5 wie empfohlen
+
+**Nutzer:** *„ja, P1 bis P5 wie empfohlen — prüfen und gegenprüfen; in den Plan und die Dokumente eintragen bzw. das Regelwerk
+nachziehen. Bin ab jetzt unterwegs."*
+
+Umsetzung genau nach den Abschnitten 3 und 4, ohne neue Zahl:
+- Werkzeug `messe_losfahren.py --l2 --n3` (ohne `--bestaetigen`: Wahl 2024; mit `--bestaetigen 0.035`: einmal 2025–26).
+- Die Wahl schreibt die Form nach `data/_vergleich/l2_n3_wahl_bestand.json`.
+- Eine fehlende Zelle (< 30 Einstiege) ergibt **kein** Urteil *eigen* (wie G-ATR).
+- Funktionstest, Commit, **Wahl**, dann **Stopp und kurzer Bericht** (Nutzer unterwegs, Telefon).
