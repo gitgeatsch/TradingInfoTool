@@ -106,3 +106,49 @@ XDC Network, Injective. Anmerkung: Die erforderliche Mindesthistorie ist eigentl
 - **Lauf 2:** nur die Liste mit `--je-asset --gruppe`: S1–S5 mit eigener Nullwelt, dazu neu gegen reif.
 - **Danach, rein rechnerisch aus Lauf 1:** die Liste gegen den Rest und gegen **40 zufällige Listen** aus 27 bestand-Assets (Rohvorteil je Handel und Konto).
 
+
+---
+
+## 8. ERGEBNIS — Befund 2.700
+
+Belege `Basisinfos/Hebelliste_01_10/` (`alle__bestand.txt`, `liste__bestand.txt`).
+
+| | deine Liste | alle bestand-Assets (REGEL0-Referenz) |
+|---|---|---|
+| Assets mit Handel 2025–26 | **25** (von 43) | 112 |
+| Handel | 1.598 | 7.322 |
+| **Hebelkonto** (log) | **+0,2063 (×1,23)** | +0,2634 (×1,30) |
+| S1 2025 / 2026 | ✔ +0,127 / +0,080 | ✔ +0,253 / +0,010 |
+| S2 Nullwelt P90 | ✔ −0,269 | ✔ |
+| S4 Hebel gegen Spot | ✔ +0,206 gegen +0,091 | ✔ |
+| ohne 10./11.10.2025 | +0,227 | |
+| **Rohvorteil je Handel** | **+0,87 %** gegen 0,48 % Kosten | +0,58 % |
+| größter Rückgang (log) | **0,083** | 0,637 |
+| Juli–Dezember 2025 (Gegenwind) | **+0,006** | |
+| Assets mit positivem Rohvorteil | **96 %** | 84 % |
+| junge Assets (J) | +1,19 % Rohvorteil (268 Handel) | |
+
+**Gegenprüfung — trägt die Auswahl selbst?**
+
+| | Rohvorteil je Handel |
+|---|---|
+| deine Liste (25) | **+0,87 %** |
+| der Rest von bestand (87) | +0,50 % |
+| 1.000 zufällige Listen zu 25 Assets | Mittel +0,59 %, P90 +0,73 %. **Nur 0,4 %** erreichen deine Liste |
+
+✔ **R-R11:** Der Lauf über alle ist bitgleich zur REGEL0-Referenz. Die Summe der Beiträge je Asset ergibt das Konto, und die Liste ist in beiden Läufen gleich (+0,2063).
+
+**Je Asset** (Rohvorteil je Handel, Auskunft für deine Auswahl, keine Bewertung von Assets): TAO +2,51 · VIRTUAL +2,32 · KAITO +1,81 · RENDER +1,54 ·
+NEAR +1,47 · W +1,26 · QNT +1,22 · IMX +1,21 · IO +1,10 · AVAX +0,92 · BEAMX +0,81 · BIO +0,76 · ALGO +0,73 · BNB +0,72 · SOL +0,66 · SUI +0,64 ·
+ETH +0,57 · MORPHO +0,52 · APT +0,51 · ONDO +0,44 · LINK +0,43 · INJ +0,39 · SEI +0,23 · TURBO +0,00 · XLM −0,48 (Prozent).
+
+**Ohne Handel:** KAIA und S. Ihre Markpreis-Monate sind **gesperrt**, weil unter dem Ticker früher ein anderes Instrument lief (K7). Dazu BTC (Leitwert, eigener Schritt
+analog J) und 15 Assets ohne Stundendaten.
+
+⚠️ **Der Vorbehalt, ehrlich:** Deine Liste ist die **heutige**, gewählt in Kenntnis der Entwicklung. Assets, die schlecht liefen, sind vermutlich nicht
+mehr darin. Die Vergangenheit sieht dadurch zu gut aus, und der Abstand zu den Zufallslisten ist zum Teil **Rückschau**. Der echte Beleg kommt aus dem
+**Betrieb** mit deiner Liste ab jetzt, wie du es gesagt hast.
+
+**Zwischenfazit zum Ziel:** Zum ersten Mal ist die REGEL0 auf der **praktisch gehandelten** Grundgesamtheit **nach Kosten mit Hebel positiv**, in beiden
+Jahren, mit kleinem Rückgang und ohne Verlust im Gegenwind. Die Kostenlücke der REGEL0 (S3) sitzt vor allem in den Assets, die du **nicht**
+handelst.

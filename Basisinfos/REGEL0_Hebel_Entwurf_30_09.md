@@ -147,6 +147,10 @@ Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_
 
 ---
 
+## 10a. Auskunft — REGEL0 auf der Hebel-Liste des Nutzers (2.700)
+
+Auf den 25 gehandelten Assets der Liste: Hebelkonto **+0,2063 (×1,23)**, beide Jahre positiv, Rohvorteil **+0,87 %** gegen 0,48 % Kosten, Rückgang 0,083. Die Auswahl trägt: Zufallslisten liegen bei +0,59 %. ⚠️ Rückschau-Vorbehalt, die Liste ist die heutige. Das ist **keine** neue Referenz, die REGEL0-Referenz bleibt Abschnitt 5.
+
 ## 10. ✔ FESTSCHREIBUNG (01.10.2026, E-36)
 
 | Prüfung vor der Festschreibung | Ergebnis |
