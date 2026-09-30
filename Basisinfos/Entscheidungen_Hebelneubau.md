@@ -445,3 +445,19 @@ optimieren und ausreizen."*
 - **REGEL0** ist der Nullstand. Jede Optimierung wird gegen REGEL0 gemessen (R-R11: erst reproduzieren).
 - Der Entwurf steht in `Basisinfos/REGEL0_Hebel_Entwurf_30_09.md` und wird erst nach Nutzer-Ja festgeschrieben.
 - Der Vorwärtstest (M1-2 Teil B) ist zurückgestellt. Die Regel K_IG < 1 bleibt eingefroren, aber ohne laufenden Auftrag.
+
+
+---
+
+# E-34 · Optionen R und L; Einordnung zur Produktion (Nutzer 30.09. abends)
+
+**30.09.2026** · Nutzer: *„Ja, R und L in den Plan aufnehmen."* Dazu:
+- *„Die Konzentrationen sind marktgetrieben … in der Praxis irrelevant. Es wird eine von mir selektierte Assetliste gehebelt. Die Anzahl
+  und Auswahl der Signale nehme ich vor."* ➤ Die **Ballung** der Signale und der **Rückgang** des Simulationskontos, das *jedes* Signal
+  gleichzeitig handelt, sind **kein** Grund gegen den Einsatz. Das ist eine Eigenschaft der Messanlage und nicht des Betriebs. Mein Punkt 2 aus der
+  Einschätzung zur Produktionsreife ist **zurückgenommen**.
+- *„Der Beleg kann nur in Produktion erfolgen … aktuell haben wir ein nicht funktionierendes System — wenn dieses durch ein ‚nicht 100
+  Prozent optimales' ersetzt wird, ist es ein Erfolg. Das bedeutet nicht, dass es sofort eingesetzt werden soll, aber die
+  Rahmenbedingungen lassen es nicht zu, es zu perfektionieren."* ➤ Der Maßstab ist **besser als heute und ehrlich belegt**, nicht perfekt.
+- **Messbar nachzuziehen (Vorschlag):** REGEL0 auf der **Hebel-Assetliste des Nutzers** (`asset_hebel_settings`, nur lesend), damit die
+  Grundgesamtheit dem Betrieb entspricht.

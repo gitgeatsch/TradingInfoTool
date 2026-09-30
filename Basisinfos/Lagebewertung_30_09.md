@@ -105,3 +105,14 @@ optimieren und ausreizen."*
 | ✔ | **A** (W4 Positionsführung) und **B** (M1-3 Kern stabilisieren) |
 | ⏸ | **C** Vorwärtstest, **D** Datenquellen, **E** Börse/Kosten derzeit **nicht** Teil des Umbaus |
 | ⭐ | **REGEL0** festschreiben, als Entwurf in `REGEL0_Hebel_Entwurf_30_09.md`, zur Prüfung, wenn du am Rechner bist |
+
+
+---
+
+## 8. Nachtrag (30.09. abends, Nutzer) — Korrektur meiner Einschätzung zur Produktionsreife
+
+| mein Punkt | Nutzer | jetzt |
+|---|---|---|
+| 1 Erwartungswert negativ | *„war mir so nicht bewusst — wie ist das festgelegt?"* | erläutert: Rohvorteil je Handel (+0,29..+0,31 %) minus Kosten (0,48 %), **unter der Messgeometrie der REGEL0** (24 h, ohne Ziel und Stop, jedes Signal). Das ist kein Urteil über jeden Hebeltrade |
+| 2 Rückgänge und Ballung | *„vollständig auszuschließen … marktgetrieben … die Anzahl und Auswahl der Signale nehme ich vor"* | ⛔ **zurückgenommen**, das ist eine Eigenschaft der Messanlage (alle Signale gleichzeitig) |
+| 5 Beleg aus dem Handel | *„kann nur in Produktion erfolgen … ‚nicht 100 % optimal' statt nicht funktionierend ist ein Erfolg"* | geteilt. Der Maßstab ist *besser als heute, ehrlich belegt*, dazu ein **Schattenbetrieb** als Beleg in der Produktion (nach der ganzen Kette) |
