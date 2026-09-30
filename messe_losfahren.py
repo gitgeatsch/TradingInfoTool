@@ -85,6 +85,14 @@ def main() -> int:
     V24 = D["X"]["vor24"].astype(np.float64); V120 = D["X"]["vor120"].astype(np.float64)
     FR = {m: D["F"][m].astype(np.float64) for m in ("rsi", "oi_aenderung", "konten_verh", "funding_vortag")}
     SYMS = list(D.get("syms", []))
+    if "--l2" in sys.argv:
+        # L2 (Voranalyse_L2_Kern_anheben_30_09.md): Potential (MFE) und Risiko (Rueckgang VOR dem Hoch) je Fenster, in %,
+        # und alle Kandidaten aus dem Bestand
+        L2_MFE = {w: D["Z"][w]["mfe"].astype(np.float64) for w in (6, 24, 72)}
+        L2_MAE = {w: D["Z"][w]["maevp"].astype(np.float64) for w in (6, 24, 72)}
+        L2_F = {m: D["F"][m].astype(np.float64) for m in (
+            "volumenschub", "vola_kausal", "oi_aenderung", "oi_je_umsatz", "bandenge", "funding_vortag",
+            "konten_verh", "ema_abstand_atr", "taker_verh", "top_konten_verh")}
     del D
     MON = monat_von(STD)
     JAHR = (MON // 12).astype(np.int16)
@@ -295,7 +303,7 @@ def main() -> int:
     # Signal rsi allein rollierend (Betriebsform); Vorsprung vh = expit(logit(QS) + Beitrag) - QS.
     # ZWEI SCHRITTE: ohne --bestaetigen wird NUR 2024 ausgewertet und ausgegeben (Wahl);
     # --bestaetigen <s> [--sperre <-s>] wertet einmal 2025-01..2026-08 aus (Bestaetigung).
-    if "--k5" in sys.argv or "--kern" in sys.argv:
+    if "--k5" in sys.argv or "--kern" in sys.argv or "--l2" in sys.argv:
         from scipy.special import expit as _ex
         best = "--bestaetigen" in sys.argv
         s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
@@ -362,7 +370,7 @@ def main() -> int:
         # Stunden alle darunter, nicht in den ersten 24 h eines Monats; Einstieg eine Stunde spaeter.
         # WAHL (ohne --bestaetigen): nur 2024, Raster +0,010..+0,050, Regel: groesster Abstand echt - P90 Nullwelt,
         # bei Gleichstand (< 0,005) die niedrigere Stufe. BESTAETIGUNG (--bestaetigen s): einmal 2025-01..2026-08.
-        if "--kern" in sys.argv:
+        if "--kern" in sys.argv or "--l2" in sys.argv:
             MS = np.array([H(datetime(2020 + mm // 12, mm % 12 + 1, 1)) for mm in range(0, 12 * 8)])
 
             def erst_v(VHx, s):
@@ -398,6 +406,235 @@ def main() -> int:
                 return v
             print()
             print("=" * 120)
+            if "--l2" in sys.argv:
+                import json
+                S_KERN = 0.035
+                wahl = not best
+                JS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "l2_wahl_bestand.json")
+
+                def erst_p(VHx, s, fenster=24, verzug=1):
+                    aus = []
+                    for tl in teile:
+                        st = STD[tl]; vv = VHx[tl]
+                        fin = np.isfinite(vv)
+                        ab_ = np.where(fin, vv >= s, False)
+                        cs = np.concatenate([[0], np.cumsum(ab_)]); cf = np.concatenate([[0], np.cumsum(fin)])
+                        lo = np.searchsorted(st, st - fenster, "left")
+                        idx = np.arange(len(tl))
+                        erst = ab_ & ((cs[idx] - cs[lo]) == 0) & ((cf[idx] - cf[lo]) >= int(fenster * 20 / 24))
+                        erst &= (st - MS[np.clip(MON[tl] - 2020 * 12, 0, len(MS) - 1)]) >= 24
+                        i_ = np.flatnonzero(erst)
+                        i_ = i_[i_ + verzug < len(tl)]
+                        i_ = i_[st[i_ + verzug] == st[i_] + verzug]
+                        aus.append(np.stack([tl[i_ + verzug], tl[i_]]) if len(i_) else np.zeros((2, 0), int))
+                    e_ = np.concatenate(aus, axis=1) if aus else np.zeros((2, 0), int)
+                    ok_ = np.isin(JAHR[e_[0]], JAHRE) & np.isfinite(QSh[e_[0]])
+                    return e_[0][ok_], e_[1][ok_]          # Einstieg, Signalstunde
+
+                # Normal fuer Potential und Risiko: eigenes Asset, eigene letzte 12 Monate, nur bekannte Ausgaenge (t-24)
+                def normal_mittel(v, W=24):
+                    out = np.full(n, np.nan)
+                    for tl in teile:
+                        st = STD[tl]; x = v[tl]; ok_ = np.isfinite(x)
+                        cx = np.concatenate([[0.0], np.cumsum(np.where(ok_, x, 0.0))]); ck = np.concatenate([[0], np.cumsum(ok_)])
+                        lo = np.searchsorted(st, st - K2.JAHR_H, "left"); hi = np.searchsorted(st, st - W, "right")
+                        k = ck[hi] - ck[lo]
+                        out[tl] = np.where(k > 1000, (cx[hi] - cx[lo]) / np.maximum(k, 1), np.nan)
+                    return out
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    POT = L2_MFE[24] / (100.0 * np.maximum(ATR, 1e-12)); RIS = L2_MAE[24] / (100.0 * np.maximum(ATR, 1e-12))
+                POTn, RISn = POT - normal_mittel(POT), RIS - normal_mittel(RIS)
+                ee, es = erst_p(VH, S_KERN)
+                n_roh = len(ee)
+                ok = np.isfinite(POTn[ee]) & np.isfinite(RISn[ee])
+                ee, es = ee[ok], es[ok]
+                print("L2 · %s · Menge %s · Kern-Ersteintritte s = %+.3f: %d vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), %d mit Potential und Risiko (Tage %d)" % (
+                    "WAHL 2024 (2025-26 wird NICHT ausgewertet)" if wahl else "BESTAETIGUNG 2025-01..2026-08 (EINMAL)",
+                    E2.MENGE, S_KERN, n_roh, len(ee), len(np.unique(STD[ee] // 24))))
+                print("  Kern gesamt: Chance Dq %+.4f · Potential %+.3f ATR ueber dem Normal (MFE 24 h) · Risiko %+.3f ATR (Rueckgang vor dem Hoch)" % (
+                    dqh(ee), float(np.mean(POTn[ee])), float(np.mean(RISn[ee]))))
+
+                def mass(ix):
+                    return (dqh(ix), float(np.mean(POTn[ix])) if len(ix) else np.nan, float(np.mean(RISn[ix])) if len(ix) else np.nan)
+                # Kandidaten: roh, funding/konten in Markt und Eigen geteilt
+                CAND = {k: L2_F[k] for k in ("volumenschub", "vola_kausal", "oi_aenderung", "oi_je_umsatz", "bandenge",
+                                             "ema_abstand_atr", "taker_verh", "top_konten_verh")}
+                ko24 = mittel24(L2_F["konten_verh"])
+                MARKT = {}
+                for kurz, v in (("funding", L2_F["funding_vortag"]), ("konten", ko24)):
+                    mk = pd.Series(v).groupby(STD).median().reindex(STD).to_numpy()
+                    MARKT[kurz + "_markt"] = mk
+                    CAND[kurz + "_eigen"] = v - mk
+                CAND.update(MARKT)
+                stunden = np.unique(STD)
+                idx_st = np.searchsorted(stunden, STD)
+
+                def verschiebe(name, v):
+                    if name.endswith("_markt"):
+                        ser = pd.Series(v).groupby(STD).first().to_numpy()
+                        k_ = int(rng.integers(1440, len(stunden) - 1440))
+                        return ser[(idx_st + k_) % len(stunden)]
+                    out = np.empty(n)
+                    for tl in teile:
+                        L_ = len(tl)
+                        k_ = int(rng.integers(K2.MIN_VERSATZ, L_ - K2.MIN_VERSATZ)) if L_ > 2 * K2.MIN_VERSATZ else 0
+                        out[tl] = np.roll(v[tl], k_)
+                    return out
+
+                def drittel_diff(werte, ix, kanten):
+                    w = werte[ix]; fin = np.isfinite(w)
+                    oben = ix[fin & (w > kanten[1])]; unten = ix[fin & (w <= kanten[0])]
+                    mo, mu = mass(oben), mass(unten)
+                    return tuple(a - b for a, b in zip(mo, mu)), len(oben), len(unten)
+                ST = VH[es]
+                if wahl:
+                    # ── TEIL A: Staerke (Vorsprung in der Signalstunde), fuenf Klassen, Grenzen aus 2024 ──
+                    kA = np.quantile(ST, [0.2, 0.4, 0.6, 0.8]).tolist()
+                    kl = np.searchsorted(kA, ST, "right")
+                    print()
+                    print("  TEIL A1 Staerke (Vorsprung in der Signalstunde), fuenf Klassen:")
+                    kal = []
+                    for c in range(5):
+                        m_ = mass(ee[kl == c]); kal.append(m_)
+                        print("    Klasse %d (%d): Chance %+.4f · Potential %+.3f ATR · Risiko %+.3f ATR" % (c + 1, int((kl == c).sum()), *m_))
+                    print("    staerkste minus schwaechste: Chance %+.4f · Potential %+.3f · Risiko %+.3f" % tuple(a - b for a, b in zip(kal[4], kal[0])))
+                    print("  TEIL A3 Regelparameter (Auskunft, 2024): Wartezeit / Verzug -> Einstiege, Chance, Potential")
+                    for fe, vz in ((12, 1), (24, 1), (48, 1), (24, 2), (24, 4)):
+                        e2_, _s2 = erst_p(VH, S_KERN, fe, vz)
+                        e2_ = e2_[np.isfinite(POTn[e2_])]
+                        m_ = mass(e2_)
+                        print("    %2d h / %d h: %5d · Chance %+.4f · Potential %+.3f ATR" % (fe, vz, len(e2_), m_[0], m_[1]))
+                    # ── TEIL B: Kandidaten, Drittel-Grenzen aus 2024, Nullwelt je Kandidat ──
+                    print()
+                    print("  TEIL B Kandidaten auf den Kern-Einstiegen (oberes minus unteres Drittel; Nullwelt %d Ziehungen, P75 |Delta|):" % zieh)
+                    kanten, ergebnis = {}, {}
+                    for nm_, v in CAND.items():
+                        w = v[ee]; fin = np.isfinite(w)
+                        if fin.sum() < 300:
+                            print("    %-17s zu wenige Werte (%d)" % (nm_, int(fin.sum())))
+                            continue
+                        kk = np.quantile(w[fin], [1 / 3, 2 / 3]).tolist(); kanten[nm_] = kk
+                        d_, no, nu = drittel_diff(v, ee, kk)
+                        nd = []
+                        for _ in range(zieh):
+                            vv = verschiebe(nm_, v)
+                            w2 = vv[ee]; f2 = np.isfinite(w2)
+                            k2 = np.quantile(w2[f2], [1 / 3, 2 / 3]) if f2.sum() > 30 else kk
+                            nd.append(drittel_diff(vv, ee, k2)[0])
+                        nd = np.array(nd)
+                        ergebnis[nm_] = dict(d=d_, p75=np.nanpercentile(np.abs(nd), 75, axis=0).tolist(),
+                                             sd=np.nanstd(nd, axis=0, ddof=1).tolist(), n=(no, nu))
+                        print("    %-17s oben/unten %4d/%4d · dChance %+.4f (P75 %.4f) · dPotential %+.3f (P75 %.3f) · dRisiko %+.3f (P75 %.3f)" % (
+                            nm_, no, nu, d_[0], ergebnis[nm_]["p75"][0], d_[1], ergebnis[nm_]["p75"][1], d_[2], ergebnis[nm_]["p75"][2]))
+                    # Filter: je Mass hoechstens drei, |Delta| ueber P75, erwartete Richtung = Chance/Potential hoch, Risiko tief
+                    weiter = {}
+                    for j_, nm_mass, gut in ((0, "Chance", 1), (1, "Potential", 1), (2, "Risiko", -1)):
+                        kand = []
+                        for nm_, e_ in ergebnis.items():
+                            d = e_["d"][j_]
+                            if np.isfinite(d) and abs(d) > e_["p75"][j_]:
+                                # Richtung: das Drittel, das im Sinn des Masses besser ist, wird Kennzeichen
+                                kand.append((abs(d) / max(e_["sd"][j_], 1e-12), nm_, 1 if d * gut > 0 else -1))
+                        kand.sort(reverse=True)
+                        weiter[nm_mass] = [(nm_, rich) for _z, nm_, rich in kand[:3]]
+                        print("  WEITER (%s): %s" % (nm_mass, ", ".join("%s (%s)" % (a, "oben" if r > 0 else "unten") for a, r in weiter[nm_mass]) or "keiner"))
+                    json.dump(dict(kA=kA, kal=kal, kanten=kanten, weiter=weiter), open(JS, "w", encoding="utf-8"), indent=1)
+                    print("  festgehalten fuer die Bestaetigung: %s" % JS)
+                    # Leiter (Aufloesung) auf 2024 fuer das Potential, an volumenschub (verschoben)
+                    if "volumenschub" in kanten:
+                        p75 = ergebnis["volumenschub"]["p75"][1]
+                        for d_pl in (0.1, 0.2, 0.4):
+                            gef = 0
+                            for _ in range(5):
+                                vv = verschiebe("volumenschub", CAND["volumenschub"])
+                                w2 = vv[ee]; f2 = np.isfinite(w2); k2 = np.quantile(w2[f2], [1 / 3, 2 / 3])
+                                POT_s = POTn.copy()
+                                ob = ee[f2 & (w2 > k2[1])]
+                                POTn[ob] = POTn[ob] + d_pl
+                                gef += int(abs(drittel_diff(vv, ee, k2)[0][1]) > p75)
+                                POTn[:] = POT_s
+                            print("  Leiter Potential +%.1f ATR (volumenschub verschoben): gefunden %d von 5" % (d_pl, gef))
+                else:
+                    cfg = json.load(open(JS, encoding="utf-8"))
+                    kA = cfg["kA"]
+                    kl = np.searchsorted(kA, ST, "right")
+                    print()
+                    print("  TEIL A1 Staerke (Grenzen aus der Wahl 2024):")
+                    beob = []
+                    for c in range(5):
+                        m_ = mass(ee[kl == c]); beob.append(m_)
+                        print("    Klasse %d (%d): Chance %+.4f · Potential %+.3f · Risiko %+.3f   (Wahl: %+.4f / %+.3f / %+.3f)" % (
+                            c + 1, int((kl == c).sum()), *m_, *cfg["kal"][c]))
+                    dA = [a - b for a, b in zip(beob[4], beob[0])]
+                    jA = []
+                    for jj in JAHRE:
+                        mj = np.isin(ee, ee[JAHR[ee] == jj])
+                        a4 = mass(ee[(kl == 4) & mj]); a0 = mass(ee[(kl == 0) & mj])
+                        jA.append((jj, a4[0] - a0[0], a4[1] - a0[1]))
+                    nA = []
+                    for _ in range(zieh):
+                        v_ = vh_stuendlich(verschoben(E, RSI))
+                        e2_, s2_ = erst_p(v_, S_KERN)
+                        f_ = np.isfinite(POTn[e2_]); e2_, s2_ = e2_[f_], s2_[f_]
+                        k2 = np.searchsorted(kA, v_[s2_], "right")
+                        nA.append([a - b for a, b in zip(mass(e2_[k2 == 4]), mass(e2_[k2 == 0]))])
+                    nA = np.array(nA)
+                    print("    A1 staerkste minus schwaechste: Chance %+.4f (Null P90 %+.4f) · Potential %+.3f (Null P90 %+.3f) · je Jahr %s" % (
+                        dA[0], float(np.nanpercentile(nA[:, 0], 90)), dA[1], float(np.nanpercentile(nA[:, 1], 90)),
+                        " · ".join("%d %+.4f / %+.3f" % x for x in jA)))
+                    gk = [cfg["kal"][c][1] for c in range(5)]; bk = [beob[c][1] for c in range(5)]
+                    print("    A2 Kalibrierung Potential (Wahl -> beobachtet je Klasse): Steigung %.2f" % float(np.polyfit(gk, bk, 1)[0]))
+                    # TEIL B: nur die weitergereichten Kandidaten, Bestes-von-k
+                    print()
+                    print("  TEIL B Bestaetigung (nur die auf 2024 weitergereichten, Richtung aus der Wahl, Bestes-von-k):")
+                    for j_, nm_mass, gut in ((0, "Chance", 1), (1, "Potential", 1), (2, "Risiko", -1)):
+                        liste = cfg["weiter"].get(nm_mass, [])
+                        if not liste:
+                            print("    %s: keiner weitergereicht" % nm_mass)
+                            continue
+                        echt = {}
+                        for nm_, rich in liste:
+                            d_, _no, _nu = drittel_diff(CAND[nm_], ee, cfg["kanten"][nm_])
+                            echt[nm_] = d_[j_] * rich * gut           # positiv = im Sinn des Masses besser
+                        nmax = []
+                        for _ in range(zieh):
+                            best_ = -np.inf
+                            for nm_, rich in liste:
+                                vv = verschiebe(nm_, CAND[nm_])
+                                w2 = vv[ee]; f2 = np.isfinite(w2)
+                                k2 = np.quantile(w2[f2], [1 / 3, 2 / 3]) if f2.sum() > 30 else cfg["kanten"][nm_]
+                                best_ = max(best_, drittel_diff(vv, ee, k2)[0][j_] * rich * gut)
+                            nmax.append(best_)
+                        p90 = float(np.nanpercentile(nmax, 90))
+                        for nm_, rich in liste:
+                            jz = []
+                            for jj in JAHRE:
+                                ixj = ee[JAHR[ee] == jj]
+                                jz.append(drittel_diff(CAND[nm_], ixj, cfg["kanten"][nm_])[0][j_] * rich * gut)
+                            # je Asset
+                            ga = []
+                            for si in np.unique(SYM[ee]):
+                                ixa = ee[SYM[ee] == si]
+                                w = CAND[nm_][ixa]
+                                o_ = ixa[w > cfg["kanten"][nm_][1]]; u_ = ixa[w <= cfg["kanten"][nm_][0]]
+                                if len(o_) >= 10 and len(u_) >= 10:
+                                    ga.append((mass(o_)[j_] - mass(u_)[j_]) * rich * gut > 0)
+                            # Tagesblock-Bootstrap
+                            tage = STD[ee] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                            je_tag = [ee[tinv == k] for k in range(len(ut))]
+                            rb = np.random.default_rng(SAAT + 7); bo = []
+                            for _ in range(300):
+                                w_ = rb.integers(0, len(ut), len(ut))
+                                ixb = np.concatenate([je_tag[k] for k in w_])
+                                bo.append(drittel_diff(CAND[nm_], ixb, cfg["kanten"][nm_])[0][j_] * rich * gut)
+                            lo95 = float(np.nanpercentile(bo, 2.5))
+                            urteil = (echt[nm_] > p90 and all(x > 0 for x in jz) and (np.mean(ga) >= 0.6 if ga else False) and lo95 > 0)
+                            print("    %s · %-17s (%s): %+.4f gegen Bestes-von-%d P90 %+.4f · je Jahr %s · Assets %d, %.0f %% · Tagesblock unten %+.4f -> %s" % (
+                                nm_mass, nm_, "oben" if rich > 0 else "unten", echt[nm_], len(liste), p90,
+                                " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, jz)), len(ga),
+                                100 * np.mean(ga) if ga else np.nan, lo95, "✔ TRAEGT (diese Menge)" if urteil else "⛔"))
+                print("SCHLUSS: vollstaendig")
+                return 0
             if "--export" in sys.argv:
                 # ══ KERN SCHRITT 2 (Voranalyse_Kern_Schritt2_H0_29_09.md): die Ersteintritte 2024-01..2026-08 fuer
                 # H0 exportieren und die CHANCE im selben Fenster 6/12/24 h (Vergleich, keine Kalibrierung) ══

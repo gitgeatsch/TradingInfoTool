@@ -165,3 +165,23 @@ Plan eintragen."*
 fachlich teile ich sie — ein einzelnes Fortsetzungssignal erfasst den **Beginn** großer Bewegungen nicht. Darum stehen W2
 (Potential messen statt nur Wahrscheinlichkeit), W4 (große Bewegungen laufen lassen) und W5 (neue Quellen für *vorher*) im
 Weg. **Welche** davon trägt, zeigen die Messungen.
+
+---
+
+## 11. ✔ ABGESTIMMT (30.09.2026) — M1 bis M6 und W1 bis W6; Umsetzung VOR dem Lauf
+
+**Nutzer:** *„ja, M1 bis M6 und W1 bis W6 wie empfohlen — wichtig, diese Schritte sind jetzt essentiell. Offenbar haben
+wir wichtige Fortschritte gemacht; jetzt müssen wir selektiv den Kern bzw. das Regelwerk der Beiträge über die
+Erkenntnisse und (neuen) fachlichen Hypothesen zur Optimierung messen."*
+
+| | umgesetzt |
+|---|---|
+| Werkzeug | `messe_losfahren.py --l2` (Wahl 2024) · `--l2 --bestaetigen 0.035` (einmal 2025–26) |
+| Potential | MFE binnen 24 h (Höchststand) ÷ eigene Tages-ATR, **minus** das eigene Normal (Mittel der letzten 12 Monate, nur Ausgänge bis t − 24 h) |
+| Risiko | der **Rückgang vor dem Höchststand** binnen 24 h (`maevp`, *wie weit gegen mich, bevor es für mich geht* — Regelwerk Bewertung 2) ÷ ATR, minus das eigene Normal |
+| Stärke (A1) | der Vorsprung v̂ in der **Signalstunde**; Klassen-Grenzen aus 2024 in `data/_vergleich/l2_wahl_bestand.json` |
+| Kandidaten (B) | volumenschub, vola_kausal, oi_aenderung, oi_je_umsatz, bandenge, ema_abstand_atr, taker_verh, top_konten_verh (roh); funding und konten_verh (24 h) je in **Markt** (Median der Assets zur Stunde) und **Eigen** — zusammen 12 |
+| Wahl-Filter | je Maß höchstens **drei** mit \|Δ\| über dem P75 der Nullwelt (Kandidat je Asset verschoben, Marktanteil gemeinsam), **Richtung aus 2024** festgehalten |
+| Bestätigung | Richtung einseitig, gegen das **P90 des Bestes-von-k** (k = weitergereichte je Maß), 2025 **und** 2026 > 0, ≥ 60 % der Assets (≥ 10 je Drittel), Tagesblock-Bootstrap untere Grenze > 0 — je Menge; dann ≥ 3 von 4 Mengen |
+| Leiter | Potential +0,1 / +0,2 / +0,4 ATR auf das obere Drittel von volumenschub (verschoben), 5 Wiederholungen |
+| Ablauf | Funktionstest · Wahl 2024 (`bestand`) · Stopp · Bestätigung vier Mengen · Stopp · Bewertung |
