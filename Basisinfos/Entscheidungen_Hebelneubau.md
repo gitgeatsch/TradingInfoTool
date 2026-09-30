@@ -433,3 +433,15 @@ berührt (Einstiege je Menge 10.534–11.844). Für den Betrieb heißt das: dies
 **30.09.2026** · Nutzer: *„bitte abgrenzen zur Short-Strategie Krypto, damit keine Verwechslung passiert."* ➤ Der Messarm W3 heißt
 ausschließlich **Kern-Short**. Er ist **nicht** die SHORT-Richtung der heutigen Betriebssignale und **nicht** die Absicherung mit
 Short-Produkten (`agent/absicherung_fakten.py`). Beide bleiben unberührt. Den Namen *Short-Strategie* verwendet der Neubau nicht.
+
+
+---
+
+# E-33 · REGEL0 als festgeschriebene Ausgangslage; A und B, nicht C/D/E (Nutzer 30.09.)
+
+**30.09.2026** · Nutzer: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E sehe ich aktuell gar nicht als Option für unseren
+Umbau … eine REGEL0 mit allen korrekten Parametern festschreiben und mit allen zur Verfügung stehenden Mitteln das Regelwerk
+optimieren und ausreizen."*
+- **REGEL0** ist der Nullstand. Jede Optimierung wird gegen REGEL0 gemessen (R-R11: erst reproduzieren).
+- Der Entwurf steht in `Basisinfos/REGEL0_Hebel_Entwurf_30_09.md` und wird erst nach Nutzer-Ja festgeschrieben.
+- Der Vorwärtstest (M1-2 Teil B) ist zurückgestellt. Die Regel K_IG < 1 bleibt eingefroren, aber ohne laufenden Auftrag.

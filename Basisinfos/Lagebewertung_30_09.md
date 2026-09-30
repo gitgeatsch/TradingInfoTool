@@ -89,3 +89,19 @@ verbleibende Lücke sitzt jetzt in **Positionsführung, Regime und Kosten** und 
 | **1** | Reihenfolge **A (W4 Positionsführung) → B (Kern stabilisieren)**, dazu **C** monatlich ab Oktober? |
 | **2** | Soll ich für **C** das monatliche Nachladen der Messbasis vorbereiten (Desktop, langsame Abrufe, eine Voranalyse vorab)? |
 | **3** | Hältst du die Einschätzung in Abschnitt 4 für richtig, insbesondere *Phase 1 steht weitgehend, die Lücke sitzt in Positionsführung, Regime und Kosten*? |
+
+
+---
+
+## 7. ✔ ENTSCHEIDUNG DES NUTZERS (30.09.2026)
+
+*„Ok, machen wir Pause, bis ich vorm Rechner bin. Vorab: A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E sehe ich aktuell gar nicht
+als Option für unseren Umbau. Wie bereits angemerkt, haben wir offenbar einen stabilen Stand bzw. eine Ausgangslage, welche in eine
+REGEL0 mit allen korrekten Parametern festgeschrieben werden muss, und mit allen uns zur Verfügung stehenden Mitteln das Regelwerk
+optimieren und ausreizen."*
+
+| | |
+|---|---|
+| ✔ | **A** (W4 Positionsführung) und **B** (M1-3 Kern stabilisieren) |
+| ⏸ | **C** Vorwärtstest, **D** Datenquellen, **E** Börse/Kosten derzeit **nicht** Teil des Umbaus |
+| ⭐ | **REGEL0** festschreiben, als Entwurf in `REGEL0_Hebel_Entwurf_30_09.md`, zur Prüfung, wenn du am Rechner bist |
