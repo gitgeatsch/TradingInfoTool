@@ -607,9 +607,9 @@ def main() -> int:
                                 lo95 = float(np.nanpercentile(bo, 2.5))
                                 urteil = (echt > p90 and all(x > 0 for x in jz) and (np.mean(ga) >= 0.6 if ga else False)
                                           and lo95 > 0 and all(np.isfinite(x) and x > 0 for x in sj))
-                                print("    %-16s (%s): Chance %+.4f gegen Bestes-von-%d P90 %+.4f · je Jahr %s · Spiegel je Jahr %s · Assets %d, %.0f %% · "
+                                print("    %-16s (%s, Gruppen %d / %d): Chance %+.4f gegen Bestes-von-%d P90 %+.4f · je Jahr %s · Spiegel je Jahr %s · Assets %d, %.0f %% · "
                                       "Tagesblock unten %+.4f · Potential %+.3f -> %s" % (
-                                          nm_, "oben" if rich > 0 else "unten", echt, len(liste), p90,
+                                          nm_, "oben" if rich > 0 else "unten", len(ob), len(un), echt, len(liste), p90,
                                           " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, jz)),
                                           " · ".join("%d %+.3f" % (jj, x) for jj, x in zip(JAHRE, sj)),
                                           len(ga), 100 * np.mean(ga) if ga else np.nan, lo95, (mass(ob)[1] - mass(un)[1]) * rich,
