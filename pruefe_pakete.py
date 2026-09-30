@@ -30841,6 +30841,28 @@ def paket_hebelneubau() -> None:
            "2.630/2.632/2.640 leiteten die Schwelle aus Kelly ab, 2.639 "
            "rechnete mit 20 bis 50 Prozent Einsatz statt 1,2 bis 7,8")
 
+    # ── REGEL0 (E-36, 01.10.2026): festgeschrieben, Referenzzahlen = Belegdateien ──
+    _r0 = getattr(_HN, "REGEL0", None)
+    pruefe(P, "⭐⭐⭐ REGEL0 ist FESTGESCHRIEBEN und vollstaendig",
+           bool(_r0) and "FESTGESCHRIEBEN" in _r0.get("stand", "")
+           and all(k in _r0 for k in ("grundgesamtheit", "einstieg", "hebel", "erfolgsmessung", "referenz", "aufruf"))
+           and _r0["einstieg"].get("schwelle") == 0.035 and _r0["einstieg"].get("ruhe_h") == 48
+           and _r0["hebel"].get("grenze") == 0.02 and "--junge" in _r0["aufruf"][0],
+           "jede Optimierung (REGEL1 ...) misst gegen REGEL0 und muss sie zuerst bitgleich treffen (R-R11)")
+    _abw = _HN.regel0_gegen_belege() if _r0 else ["REGEL0 fehlt"]
+    pruefe(P, "⭐⭐ die REGEL0-Referenzzahlen stimmen mit den BELEGDATEIEN ueberein",
+           not _abw, "; ".join(_abw) or "Einstiege, Hebelkonto und Rohvorteil je Menge aus Basisinfos/J_30_09/sim__*.txt")
+    if _r0:
+        _falsch = {k: dict(v) for k, v in _r0["referenz"].items()}
+        _falsch["bestand"]["konto"] += 0.1
+        pruefe(P, "⚠️ und die Referenz-Wache KANN anschlagen (Gegenprobe)",
+               bool(_HN.regel0_gegen_belege(_falsch)),
+               "eine manipulierte Referenz muss als Abweichung gemeldet werden - sonst prueft sie nichts")
+    _doc = _os_pp.path.join(_os_pp.path.dirname(_os_pp.path.abspath(__file__)), "Basisinfos", "REGEL0_Hebel_Entwurf_30_09.md")
+    pruefe(P, "⭐ das REGEL0-Dokument traegt den Stand FESTGESCHRIEBEN",
+           _os_pp.path.exists(_doc) and "FESTGESCHRIEBEN" in open(_doc, encoding="utf-8").read(2000),
+           "Basisinfos/REGEL0_Hebel_Entwurf_30_09.md (Dateiname historisch)")
+
 
 def paket_zaehlung() -> None:
     """Schritt 59 Phase 2 (18.09.2026) - die Live-Zaehlung (D1-D6).

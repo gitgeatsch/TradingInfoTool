@@ -240,6 +240,91 @@ OFFENE_AUFGABEN = (
 # 3-5 Stufen, K6 die Hebelstufe aus der Liquidationsgefahr. Vorher stand
 # hier *+X Prozent in Y Stunden, Lift gegen das eigene Asset* und *MAE in
 # ATR* - beides war gesetzt, nicht gemessen (2.655, 2.667).
+# ═══════════════════════════════════════════════════════════════════════
+# ⭐⭐⭐ REGEL0 — FESTGESCHRIEBEN 01.10.2026 (Nutzer-Ja, E-36)
+# ═══════════════════════════════════════════════════════════════════════
+# Die Ausgangslage des Hebel-Neubaus mit ALLEN Parametern (Befunde 2.688-2.699).
+# Jede Optimierung (REGEL1 ...) wird GEGEN REGEL0 gemessen und muss sie
+# zuerst bitgleich treffen (R-R11). Dokument: Basisinfos/REGEL0_Hebel_Entwurf_30_09.md
+# (Dateiname historisch). Die Wache (pruefe_pakete.py --paket Hebelneubau)
+# vergleicht die Referenzzahlen mit den BELEGDATEIEN - Dokument und Messung
+# koennen so nicht auseinanderlaufen.
+REGEL0 = dict(
+    stand="FESTGESCHRIEBEN 01.10.2026 (Nutzer-Ja, E-36) - Befunde 2.688-2.699",
+    grundgesamtheit=dict(
+        menge="Binance-Stundenkurse und Terminmarkt, MIT eingestellten Paaren (--menge unverzerrt); bestand ist Auskunft",
+        urteil=">= 3 von 4 Mengen (bestand, unverzerrt:1-3); laufen sie auseinander, gilt unverzerrt (E-30)",
+        zeitraum="Wahl 2024, einmal bestaetigt 2025-01..2026-08",
+        betrieb="Betrieb und Messung brauchen DIESELBE Grundgesamtheit (E-31, E-35)",
+        btc="BTC ist Leitwert, nicht handelbares Asset (Lader)"),
+    einstieg=dict(
+        rolle="A - ob (Ereignis)",
+        beitrag="rsi: Kurvenmodell Form b (12 Stufen, rsi_s und rsi_s24), monatlich neu geschaetzt, "
+                "Training ab 2023-01 bis Monatsbeginn -24 h, nur REIFE Stunden",
+        daempfung="Kreuzvalidierung ueber 4 Zeitbloecke, Raster GITTER_NEU (20 ... 2.000.000)",
+        vorsprung="v = expit(logit(QSh) + Beitrag) - QSh; QSh = geschrumpftes Normal, stuendlich",
+        normal="eigenes Normal ab 240 h Historie (J, 2.698), geschrumpft an Marktmitte und tau2 der reifen Assets; "
+               "Rauschen = q(1-q) / max(Rate x min(365, Tage), 5)",
+        mindesthistorie_tage=10,
+        schwelle=0.035,
+        ruhe_h=48, ruhe_min_gueltig=40,
+        verzug_h=1, monatsanfang_ausschluss_h=24,
+        ereignis="q5: +5 % vor -5 % binnen 24 h, gegen das geschrumpfte Normal"),
+    hebel=dict(
+        rolle="C - wie viel",
+        risikomodell="ATR zum Einstieg, rollierend geschaetzt; Liquidationsgefahr je Stufe",
+        stufen=(2, 3, 5), grenze=0.02,
+        regel="hoechste Stufe mit geschaetzter Liquidationswahrscheinlichkeit binnen H <= Grenze, sonst kein Handel",
+        kurs="Markpreis", marge=0.09),
+    erfolgsmessung=dict(
+        halten_h=24, ziel=None, stop=None,
+        gebuehr=0.003, finanzierung_tag=0.0018, liquidation_aufschlag=0.01, einsatz_f=0.01,
+        pflicht="Nullwelt, je Jahr, Spot-Vergleich, mit/ohne 10./11.10.2025, Spiegel bei Potential-Massen (E-29)"),
+    aufruf=("python messe_losfahren.py --menge <m> --kern --ruhe 48 --junge --export 0.035",
+            "python messe_k6_hebelstufe.py --menge <m> --kurs mark --einstiege data/_vergleich/kern48j_einstiege_<m>.csv "
+            "--simulation 24,ohne,0.02"),
+    belege="Basisinfos/J_30_09/sim__<m>.txt",
+    referenz={
+        "bestand":      dict(einstiege=9905,  konto=+0.2634, rohvorteil=+0.583),
+        "unverzerrt:1": dict(einstiege=10337, konto=-0.4877, rohvorteil=+0.324),
+        "unverzerrt:2": dict(einstiege=9670,  konto=-0.4543, rohvorteil=+0.331),
+        "unverzerrt:3": dict(einstiege=9956,  konto=-0.4058, rohvorteil=+0.343),
+    },
+    nicht_teil=("Staerke (Schalter, 2.691)", "Wucht als Einstieg (Bewegung, 2.693)",
+                "Tempo, Tiefe, Ruhe 72 h (2.695)", "Kern-Short (Spur, 2.696)", "K_IG-Kontext (Auskunft, 2.697)"),
+    schwaechen=("S3 Rohvorteil unter den Kosten (0,48 %) in der Messgeometrie -> A, R, L",
+                "S4 Signalangebot springt (grobes Daempfungsraster) -> B",
+                "S5 im Gegenwind stumpf (Modell flach) -> R",
+                "Betrieb: Uebertragung der Historie, Datenanbindung, Monatstraining am NB (Bauaufgabe, Schritt 7)"),
+)
+
+
+def regel0_gegen_belege(referenz=None) -> list:
+    """-> Liste der Abweichungen zwischen REGEL0-Referenzzahlen und den Belegdateien (leer = stimmig).
+
+    `referenz` nur fuer die Gegenprobe der Wache (eine manipulierte Kopie muss ANSCHLAGEN)."""
+    import os as _os
+    import re as _re
+    ref = REGEL0["referenz"] if referenz is None else referenz
+    aus = []
+    basis = _os.path.dirname(_os.path.abspath(__file__))
+    for menge, soll in ref.items():
+        pf = _os.path.join(basis, *REGEL0["belege"].replace("<m>", menge.replace(":", "_")).split("/"))
+        if not _os.path.exists(pf):
+            aus.append("%s: Beleg fehlt (%s)" % (menge, pf))
+            continue
+        tx = open(pf, encoding="utf-8").read()
+        m1 = _re.search(r"(\d+) in der Datei", tx)
+        m2 = _re.search(r"Konto log ([+-][0-9.]+)", tx)
+        m3 = _re.search(r"Rohvorteil je Handel \(Spot, ohne Kosten, auf den Positionswert\): ([+-][0-9.]+) %", tx)
+        ist = dict(einstiege=int(m1.group(1)) if m1 else None, konto=float(m2.group(1)) if m2 else None,
+                   rohvorteil=float(m3.group(1)) if m3 else None)
+        for k, v in soll.items():
+            if ist[k] is None or abs(ist[k] - v) > 1e-9:
+                aus.append("%s: %s Referenz %s, Beleg %s" % (menge, k, v, ist[k]))
+    return aus
+
+
 REGELWERK = {
     "bewertung_1": {
         "name": "Einstieg - zulaessig?",

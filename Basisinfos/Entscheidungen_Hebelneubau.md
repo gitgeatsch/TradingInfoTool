@@ -476,3 +476,13 @@ optimieren und ausreizen."*
 ➤ Eine Regel ist erst dann fertig, wenn sie **am Notebook** mit den dort verfügbaren Daten, derselben Grundgesamtheit und ohne
 Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn bekommt die Betriebsprüfung B1–B9
 (`Plan_Hebel_fuenf_Phasen_27_09.md` (Abschnitt PLAN UND VORGEHEN AB 30.09.)). Ein monatliches Training am Desktop mit Übergabe von Hand ist ebenfalls FAIL.
+
+
+---
+
+# E-36 · REGEL0 festgeschrieben (Nutzer 01.10.2026)
+
+**01.10.2026** · Nutzer: *„Ja, REGEL0 festschreiben, prüfen und gegenprüfen."*
+- **REGEL0** = Kern (rsi-Ersteintritt s = +0,035, Ruhe 48 h, Einstieg 1 h später, eigenes Normal ab 240 h, J) · Hebel (ATR, Grenze 2 %, Markpreis) · Erfolgsmessung (24 h ohne Ziel und Stop, Bitpanda-Kosten).
+- Die Grundlage: 2.688–2.699, der Showstopper Mindesthistorie behoben (2.698), die Schwelle auf der vollständigen Menge bestätigt (2.699).
+- Festgeschrieben im Dokument `REGEL0_Hebel_Entwurf_30_09.md` (Dateiname historisch) und im Code `hebel_neubau.REGEL0`. Die Wache prüft die Referenzzahlen gegen die Belege.

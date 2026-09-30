@@ -37,7 +37,7 @@ Zugehörige Dokumente: `REGEL0_Hebel_Entwurf_30_09.md` (Parameter und Referenzza
 |---|---|---|---|
 | 1 | ✔ **J Showstopper Mindesthistorie — BESTANDEN (2.698)** | Das eigene Normal gilt ab 240 h statt 12 Monate, über die bestehende Schrumpfung, reife Assets bitgleich | Voranalyse zur Abstimmung (J-a bis J-d) |
 | 2 | ✔ **Schwellenwahl prüfen — bestätigt s = +0,035 (2.699)** | Wählt die Regel auf der **vollständigen** 2024-Menge (nach J) wieder s = +0,035? (49 von 116 Symbolen fehlten 2024 großenteils) | nach J |
-| 3 | ⭐ **REGEL0 festschreiben** | Parameter und Referenzzahlen (mit J), im Dokument **und im Code** (eine Konstante, von der Wache geprüft) | nach 1–2, Nutzer-Ja |
+| 3 | ✔ **REGEL0 festschreiben — FESTGESCHRIEBEN 01.10.2026 (E-36)** | Parameter und Referenzzahlen (mit J), im Dokument **und im Code** (eine Konstante, von der Wache geprüft) | nach 1–2, Nutzer-Ja |
 | 4 | **Betriebsprüfung REGEL0** (Abschnitt 3) | Welche Daten und Rechenwege hat das Notebook, was fehlt? Das ist eine **Befundaufnahme** und noch kein Bau | nach 3 |
 | 5 | **Messung auf der Hebel-Liste** | REGEL0 auf deinen 43 Assets (28 mit Daten, dazu die jungen durch J) | nach 3 |
 | 6 | **REGEL1 … n** — ausreizen | je ein Schritt gegen die Vorstufe: **A** Positionsführung · **B** Kern stabilisieren (Dämpfung) · **R** Regime-Kontext aus der Überfüllung · **L** Liquidität in Bewertung 2 · Käuferanteil auf dem Kern | Reihenfolge je Stufe abstimmen |

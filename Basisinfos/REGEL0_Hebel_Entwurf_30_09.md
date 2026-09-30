@@ -1,11 +1,15 @@
-# REGEL0 — die festgeschriebene Ausgangslage des Hebel-Neubaus (ENTWURF 30.09.2026, zur Abstimmung)
+# REGEL0 — die festgeschriebene Ausgangslage des Hebel-Neubaus — ✔ FESTGESCHRIEBEN 01.10.2026
+
+> ⭐ **Stand: FESTGESCHRIEBEN 01.10.2026** (Nutzer: *„Ja, REGEL0 festschreiben, prüfen und gegenprüfen“*, E-36), mit **J** (2.698) und der bestätigten
+> **Schwellenwahl** (2.699). Im Code: `hebel_neubau.REGEL0`. Die Wache vergleicht die Referenzzahlen mit den Belegdateien.
+> Der Dateiname mit *Entwurf* ist historisch und bleibt, damit die Verweise gelten. Entstanden als Entwurf am 30.09.2026.
 
 **Nutzer 30.09.2026:** *„Offenbar haben wir einen stabilen Stand bzw. eine Ausgangslage, welche in eine REGEL0 mit allen
 korrekten Parametern festgeschrieben werden muss, und mit allen uns zur Verfügung stehenden Mitteln das Regelwerk optimieren und
 ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E sehe ich aktuell gar nicht als Option für unseren Umbau."*
 
 > **Zweck:** REGEL0 ist der **Nullstand**. Jede weitere Optimierung wird **gegen REGEL0** gemessen (R-R11: erst REGEL0 bitgleich
-> reproduzieren, dann ändern). ⚠️ **Entwurf:** Die Parameter stammen aus den Befunden. Festgeschrieben wird REGEL0 erst nach deinem Ja.
+> reproduzieren, dann ändern). Die Parameter stammen aus den Befunden 2.688–2.699.
 
 ---
 
@@ -22,7 +26,8 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 
 | Parameter | REGEL0 | Befund |
 |---|---|---|
-| Beitrag | **rsi**: rollierendes Kurvenmodell (Form b, 12 Stufen, `rsi_s` und `rsi_s24`), **monatlich** neu geschätzt, Training ab 2023-01 bis Monatsbeginn −24 h | 2.683/2.684, 2.688 |
+| Beitrag | **rsi**: rollierendes Kurvenmodell (Form b, 12 Stufen, `rsi_s` und `rsi_s24`), **monatlich** neu geschätzt, Training ab 2023-01 bis Monatsbeginn −24 h, nur **reife** Stunden. ⚠️ Im Betrieb ist das ein Monatstraining am Notebook (Bauaufgabe, Schritt 7) | 2.683/2.684, 2.688 |
+| **eigenes Normal** (J) | aus der vorhandenen Historie ab **240 h**, geschrumpft an Marktmitte und τ² der reifen Assets. **Mindesthistorie der Regel: 10 Tage** | 2.698 |
 | Dämpfung | Kreuzvalidierung über 4 Zeitblöcke, Raster `GITTER_NEU` (20 … 2.000.000) | M1-1 ⚠️ grob, siehe B |
 | Vorsprung | v̂ = expit(logit(QSh) + Beitrag) − QSh, **QSh** = geschrumpftes Normal (stündlich) | 2.684 |
 | **Ereignis** | **Ersteintritt**: erste Stunde mit **v̂ ≥ +0,035** | 2.687/2.688 (per Regel auf 2024) |
@@ -52,6 +57,18 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 
 ## 5. Die Referenzzahlen — REGEL0 muss sie bitgleich treffen (R-R11)
 
+**✔ GÜLTIG (mit J, 2.698), von der Wache gegen `Basisinfos/J_30_09/sim__<m>.txt` geprüft:**
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| Einstiege 2024–26 (Export) | 9.905 | 10.337 | 9.670 | 9.956 |
+| Hebelkonto 2025–26 (log) | +0,2634 | −0,4877 | −0,4543 | −0,4058 |
+| Rohvorteil je Handel 2025–26 | +0,583 % | +0,324 % | +0,331 % | +0,343 % |
+
+Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_k6_hebelstufe.py --kurs mark --einstiege kern48j_einstiege_<m>.csv --simulation 24,ohne,0.02`.
+
+*Zum Vergleich — die Zahlen **ohne J** (Stand 30.09., nicht mehr gültig als Referenz):*
+
 | | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
 |---|---|---|---|---|
 | Einstiege 2024 / 2025–26 | 1.486 / 6.328 | – / 7.121 | – / 6.463 | – / 6.782 |
@@ -59,7 +76,7 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 | Hebelkonto 2025–26 (log) | +0,2038 | −0,4662 | −0,4166 | −0,3824 |
 | Rohvorteil je Handel | +0,573 % | +0,294 % | +0,311 % | +0,309 % |
 
-Aufruf: `messe_losfahren.py --kern --export 0.035 --ruhe 48` und `messe_k6_hebelstufe.py --kurs mark --einstiege kern48_einstiege_<m>.csv --simulation 24,ohne,0.02`.
+(damaliger Aufruf ohne `--junge`, `kern48_einstiege_<m>.csv`)
 
 ## 6. Bekannte Schwächen von REGEL0 — der Optimierungsauftrag
 
@@ -82,7 +99,7 @@ C Vorwärtstest ab 2026-09 (die Regel K_IG < 1 bleibt eingefroren, aber kein lau
 
 ---
 
-## 8. ⛔ SHOWSTOPPER vor der Festschreibung — die Mindesthistorie (Nutzer 30.09.)
+## 8. ✔ BEHOBEN (2.698) — war: SHOWSTOPPER vor der Festschreibung, die Mindesthistorie (Nutzer 30.09.)
 
 **Nutzer:** *„Die erforderliche Mindesthistorie ist eigentlich ein Showstopper und keine Schwäche, finde ich, und war so nicht geplant
 und gewünscht, vor allem wenn man unsere Datenlage berücksichtigt."*
@@ -126,3 +143,19 @@ Normal, also kein QSh, kein v̂, kein Signal.
 
 Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_k6_hebelstufe.py --kurs mark --einstiege kern48j_einstiege_<m>.csv --simulation 24,ohne,0.02`.
 ✔ Schritt 2 erledigt (2.699): Die Schwellenwahl auf der vollständigen 2024-Menge ergibt wieder **s = +0,035**, in der REGEL0-Form mit dem Abstand +0,088 gegen +0,066. **Die REGEL0 kann festgeschrieben werden** (Nutzer-Ja).
+
+
+---
+
+## 10. ✔ FESTSCHREIBUNG (01.10.2026, E-36)
+
+| Prüfung vor der Festschreibung | Ergebnis |
+|---|---|
+| Showstopper Mindesthistorie | ✔ behoben mit J (2.698), 4/4 Mengen |
+| Schwellenwahl auf der vollständigen 2024-Menge | ✔ wieder s = +0,035 (2.699), Abstand +0,088 gegen +0,066 |
+| R-R11 der Referenzzahlen | ✔ die Zahlen in Abschnitt 5 = Belegdateien (Wache `regel0_gegen_belege`, 0 Abweichungen), mit Gegenprobe |
+| Code | ✔ `hebel_neubau.REGEL0` mit allen Parametern, Aufruf und Referenz |
+
+➤ **Ab jetzt:** Jede Optimierung wird eine **REGEL1 …** mit Voranalyse, Vorab-Festlegung und der Betriebsprüfung B1–B9 (E-35). Sie reproduziert zuerst REGEL0
+(Referenzzahlen Abschnitt 5) und wird nur mit Nutzer-Ja festgeschrieben. Nächste Schritte nach Plan: **4** Betriebsprüfung am Notebook (Befundaufnahme) ·
+**5** Messung auf der Hebel-Liste · **6** REGEL1..n (A, B, R, L, Käuferanteil).
