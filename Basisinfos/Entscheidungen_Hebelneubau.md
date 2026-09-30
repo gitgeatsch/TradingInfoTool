@@ -461,3 +461,8 @@ optimieren und ausreizen."*
   Rahmenbedingungen lassen es nicht zu, es zu perfektionieren."* ➤ Der Maßstab ist **besser als heute und ehrlich belegt**, nicht perfekt.
 - **Messbar nachzuziehen (Vorschlag):** REGEL0 auf der **Hebel-Assetliste des Nutzers** (`asset_hebel_settings`, nur lesend), damit die
   Grundgesamtheit dem Betrieb entspricht.
+
+- **Nachtrag (Nutzer 30.09. spät):** *„Bei 3. zu den Mindestbedingungen reden wir noch einmal, wenn wir zu diesem Schritt kommen. Ich denke,
+  wir können und müssen die bestehende Hebel- und Spot-Achse (laut Plan) ersetzen, ein Parallelbetrieb wird schwierig. Nach der
+  Assetliste gehen wir nach deinem korrigierten Plan und REGEL0 (auf REGEL1 etc.) vor."* ➤ Der Schattenbetrieb ist **nicht** gesetzt.
+  Die Mindestbedingungen werden beim Schritt Betrieb abgestimmt.
