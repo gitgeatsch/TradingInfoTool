@@ -1,0 +1,34 @@
+D:\Python\Lib\site-packages\numpy\lib\_nanfunctions_impl.py:1396: RuntimeWarning: All-NaN slice encountered
+  return _nanquantile_unchecked(
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\messe_losfahren.py:1213: RuntimeWarning: Mean of empty slice
+  s, len(EE_[s]), len(np.unique(STD[EE_[s]] // 24)), echt[s], float(np.nanmean(null[s])), p90, abst[s]))
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:1
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 176386 · Pruefung 232884 · Symbole 125
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0696 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 33350 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 100719 · Symbole 83
+  Auskunft Verteilung vh: P50 +0.0000 · P90 +0.0236 · P95 +0.0358 · P99 +0.0587 · Max +0.2189
+
+========================================================================================================================
+KERN SCHRITT 1 · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %) · WAHL DER SCHWELLE auf 2024 (Menge unverzerrt:1, Ruhe 48 h) - 2025-26 wird NICHT ausgewertet
+  KERN-SHORT · R-R11 Long-Kern im selben Lauf (Ruhe 48 h, s +0,035): 1382 Einstiege · Dq +0.1713 (Soll bestand 2024: Ruhe 48 h 1.486 / +0,1615 · Ruhe 24 h 2.095 / +0,1095)
+    Stufe    Einstiege     Tage       echt Null Mittel   Null P90    Abstand
+    +0.010       2164      246    +0.0341    +0.0339    +0.0523    -0.0182
+    +0.015       2547      226    +0.0030    +0.0348    +0.0558    -0.0528
+    +0.020       1857      165    -0.0227    +0.0019    +0.0209    -0.0436
+    +0.025       1166      110    -0.0776    -0.0050    +0.0214    -0.0990
+    +0.030        958       96    -0.1014    -0.0631    -0.0345    -0.0668
+    +0.035        944       71    -0.0760    -0.0966    -0.0666    -0.0093
+    +0.040        653       55    -0.0419    -0.0543    -0.0206    -0.0213
+    +0.045        206       25    -0.0176    -0.0908    -0.0346    +0.0170
+    +0.050          0        0       +nan       +nan       +nan       +nan
+  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand +0.0170 -> GEWAEHLT s = +0.045
+SCHLUSS: vollstaendig
+exit=0

@@ -116,3 +116,38 @@ Menge (etwa 4 × 8 Minuten, wegen E-31) → **Stopp und Bericht** → Bestätigu
   Ergebnisse.
 - **Wahl je Menge** (E-31): 4 Läufe, danach Stopp und Bericht.
 
+---
+
+## 8. ERGEBNIS WAHL 2024 je Menge — Stopp, zur Abstimmung
+
+Belege `Kern_Short_30_09/wahl__<menge>.txt`. ✔ **R-R11:** Long-Kern im selben Lauf bestand 1.486 / +0,1615, bitgleich (unverzerrt
+1.382 / 1.255 / 1.246, je +0,171..+0,172).
+
+| Menge | nach der Regel gewählt | dort: Einstiege / Tage | echt | Null-P90 | Abstand | übrige Stufen |
+|---|---|---|---|---|---|---|
+| bestand | s = 0,050 | **28 / 8** | +0,238 | +0,117 | +0,121 | alle anderen Abstände **negativ** außer 0,030 (+0,009) |
+| unverzerrt:1 | s = 0,045 | 206 / 25 | −0,018 | −0,035 | +0,017 | sonst negativ |
+| unverzerrt:2 | s = 0,015 | 1.250 / 125 | +0,043 | +0,059 | **−0,016** | **alle negativ**, die Regel nimmt den am wenigsten schlechten |
+| unverzerrt:3 | s = 0,035 | 880 / 74 | −0,078 | −0,085 | +0,007 | sonst negativ |
+
+➤ **Urteil der Wahl:** Der Kern-Short hat **2024 in keiner Menge ein Signal über der Nullwelt**. Die gewählten Stufen streuen von 0,015
+bis 0,050, und das ist das Zeichen, dass die Regel im Rauschen wählt. In bestand trifft sie eine Stufe mit **28 Einstiegen an 8 Tagen**.
+
+⚠️ **Gegenprüfung:**
+1. Die Regel hat **keine Mindestzahl**. In 2.688 war das kein Problem, weil dort ein klares Signal vorlag. Hier greift sie ins Leere.
+2. **2024 ist ein Bullenjahr.** Short-Einstiege nach einem Fall aus der Ruhe schneiden fast überall **schlechter** ab als das Normal
+   (echt −0,03..−0,20). Nach dem Fall erholt sich der Kurs eher. Genau das Regime, für das der Kern-Short gedacht ist (Gegenwind),
+   kommt im Wahljahr kaum vor.
+3. Auch die Nullwelt ist auf den hohen Stufen negativ (−0,08..−0,11). Short gegen das Normal lag 2024 **strukturell** im Minus.
+
+**Lösungsvorschläge (Lösungspflicht, E-25) — zur Abstimmung, VOR jedem Blick auf 2025–26:**
+
+| # | Weg | Bewertung |
+|---|---|---|
+| **K1** ⭐ | **Symmetrie** statt Wahl: Bestätigung einmal mit der **gespiegelten Long-Schwelle s = 0,035**, für alle Mengen gleich, als vorab festgelegte Annahme (keine datengetriebene Wahl). Die je Menge gewählten Stufen laufen als Auskunft mit. B1–B7 unverändert | sauber, weil nichts aus 2025–26 gewählt wird. Die Annahme *derselbe Signalabstand in beide Richtungen* ist fachlich die einfachste |
+| K2 | Bestätigung wie festgelegt mit den gewählten Stufen je Menge | formal korrekt, aber die Stufen sind Rauschen. Ein *bestanden* wäre Glück, ein *gefallen* sagt wenig |
+| K3 | Kern-Short **zurückstellen**, weiter mit W4 | verschenkt die Frage, ob der Short im Gegenwind trägt |
+
+⚠️ **B1** verlangt Dq > 0 in **2025 und 2026**. Ein Arm, der nur im Gegenwind trägt, fällt daran. Das ist gewollt: Ein echtes
+Signal muss auch im anderen Regime wenigstens nicht **schaden**, und genau das hat der Long-Kern geschafft (2.688).
+

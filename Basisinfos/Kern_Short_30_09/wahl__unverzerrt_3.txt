@@ -1,0 +1,30 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 92844 · Symbole 79
+  Auskunft Verteilung vh: P50 -0.0010 · P90 +0.0220 · P95 +0.0345 · P99 +0.0553 · Max +0.2131
+
+========================================================================================================================
+KERN SCHRITT 1 · KERN-SHORT (v-dach <= -s, Ereignis -5 % vor +5 %) · WAHL DER SCHWELLE auf 2024 (Menge unverzerrt:3, Ruhe 48 h) - 2025-26 wird NICHT ausgewertet
+  KERN-SHORT · R-R11 Long-Kern im selben Lauf (Ruhe 48 h, s +0,035): 1246 Einstiege · Dq +0.1713 (Soll bestand 2024: Ruhe 48 h 1.486 / +0,1615 · Ruhe 24 h 2.095 / +0,1095)
+    Stufe    Einstiege     Tage       echt Null Mittel   Null P90    Abstand
+    +0.010       1249      139    +0.0013    +0.0218    +0.0487    -0.0474
+    +0.015        901      101    -0.0110    +0.0262    +0.0580    -0.0690
+    +0.020       1085      107    -0.0463    +0.0131    +0.0490    -0.0953
+    +0.025       1017      108    -0.0954    -0.0162    +0.0123    -0.1076
+    +0.030        745       66    -0.1306    -0.0981    -0.0675    -0.0630
+    +0.035        880       74    -0.0784    -0.1070    -0.0852    +0.0067
+    +0.040        288       29    -0.1972    -0.1107    -0.0626    -0.1345
+    +0.045          0        0       +nan    -0.0994    +0.2305       +nan
+    +0.050          0        0       +nan    -0.0994    +0.2305       +nan
+  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand +0.0067 -> GEWAEHLT s = +0.035
+SCHLUSS: vollstaendig
+exit=0
