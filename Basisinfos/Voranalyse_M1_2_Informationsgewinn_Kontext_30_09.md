@@ -131,3 +131,33 @@ Das blockiert nichts. Teil B steht als **Wiedervorlage** im Plan.
 eigenen Monatsmodellen (E-31) und schreibt die *wenig*-Monate nach `data/_vergleich/m1_wenig_<menge>.txt`. Die Simulation liest sie mit
 `--wenig <datei>` (A4). Alles ist ausdrücklich **Auskunft**.
 
+
+---
+
+## 9. ERGEBNIS TEIL A (AUSKUNFT) — Befund 2.697
+
+Belege `Basisinfos/M1_30_09/` (`kern__<menge>.txt`, `sim__<menge>.txt`, `_kette.log`, darin ein behobener Abbruch).
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| *wenig*-Monate (je Menge eigene Modelle) | 2025-05, 09–12, 2026-01, 08 | 2025-05, 09–12, 2026-01 | 2025-10–12, 2026-01, 02 | 2025-10–12, 2026-01, 08 |
+| A1 Chance *wenig* / übrig | +0,115 / +0,099 | +0,050 / +0,086 | **−0,040** / +0,094 | +0,049 / +0,084 |
+| Unterschied übrig − *wenig* | −0,015 | +0,036 | **+0,134** | +0,035 |
+| A3 Monats-Nullwelt: Anteil ≥ echt | 59 % | 27 % | **4,5 %** | 33 % |
+| A2 Umkehr | nein | nein | **ja** | nein (2025 *wenig* −0,045) |
+| A5 Tagesblock untere Grenze | −0,146 | −0,114 | −0,027 | −0,116 |
+| Unterschied ohne 10./11.10.2025 | −0,030 | +0,016 | +0,105 | +0,007 |
+| **A4 Rohvorteil je Handel *wenig* / übrig** | +0,74 % / +0,51 % | **−0,18 % / +0,43 %** | **−1,16 % / +0,59 %** | **−0,08 % / +0,38 %** |
+| Hebelkonto übrig (Monate ohne *wenig*) | +0,029 | −0,107 | **+0,160** | −0,222 |
+| Spotkonto übrig | +0,093 | +0,069 | +0,146 | +0,041 |
+
+**Prüfung und Gegenprüfung:**
+1. **Wirtschaftlich ein deutlicher Hinweis:** In allen 3 unverzerrten Mengen ist der Rohvorteil in den *wenig*-Monaten **negativ**,
+   ohne sie liegt er bei +0,38..+0,59 %. In unverzerrt:2 liegt er über den Kosten, und das Hebelkonto wird positiv.
+2. **Statistisch schwach:** Beim Chance-Maß liegt nur unverzerrt:2 jenseits der Monats-Nullwelt, der Tagesblock ist überall negativ, und es gibt 5–7 Monate je Menge.
+   Ohne 10./11.10.2025 schrumpft der Unterschied in unverzerrt:1 und :3 fast auf null.
+3. **bestand umgekehrt**, und zwar überlebensverzerrt (E-30). Im Gegenwind ziehen die **später eingestellten** Paare den Kern nach unten, und die fehlen in bestand.
+   Das deutet darauf, dass der Gegenwind vor allem die **schwachen Assets** trifft.
+4. Die *wenig*-Monate hängen an den **Modellen je Menge** (M1-1, das Kippen der Stufen). Gemeinsam ist allen Mengen **Oktober 2025 bis Januar 2026**.
+
+➤ **Auskunft, kein Urteil:** Das Werkzeug ist im Gegenwind **wahrscheinlich stumpf**, und der Informationsgewinn zeigt das an. Der Nachweis kommt aus **Teil B** (ab 2026-09, Regel K_IG < 1 eingefroren).

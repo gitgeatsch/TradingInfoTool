@@ -1,0 +1,28 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:1
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 176386 · Pruefung 232884 · Symbole 125
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0696 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 33350 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 232884 · Symbole 121
+  Auskunft Verteilung vh: P50 -0.0043 · P90 +0.0377 · P95 +0.0501 · P99 +0.0754 · Max +0.2173
+
+========================================================================================================================
+M1-2 TEIL A · AUSKUNFT (kein Urteil) · Menge unverzerrt:1 · Kern Ruhe 48 h, s +0.035 · 2025-01..2026-08
+  R-R11 IG je 1.000 Anker / K_IG (bestand M1-1: 2025-09 0,934 / 0,63 · 2025-11 0,595 / 0,44 · 2026-08 1,103 / 0,78): 2025-01 1.227/1.57 · 2025-02 1.507/1.67 · 2025-03 1.557/1.49 · 2025-04 1.455/1.23 · 2025-05 1.315/0.98 · 2025-06 1.695/1.22 · 2025-07 1.952/1.32 · 2025-08 1.828/1.19 · 2025-09 1.438/0.88 · 2025-10 1.029/0.65 · 2025-11 0.752/0.48 · 2025-12 0.596/0.38 · 2026-01 0.536/0.43 · 2026-02 0.941/1.06 · 2026-03 1.270/1.50 · 2026-04 1.091/1.29 · 2026-05 1.175/1.39 · 2026-06 1.155/1.14 · 2026-07 1.425/1.27 · 2026-08 1.269/1.09
+  wenig-Monate (K_IG < 1): 2025-05, 2025-09, 2025-10, 2025-11, 2025-12, 2026-01
+  R-R11 Kern-Einstiege 7121 · Dq +0.0774 (bestand Ruhe 48 h: 6.328 / +0,1039)
+  A1 Chance wenig +0.0502 (1596 Einstiege, 6 Monate) · uebrig +0.0861 (5525, 14 Monate) · Unterschied uebrig minus wenig +0.0359
+     2025: wenig +0.0347 (1467) · uebrig +0.0577 (2415)
+     2026: wenig +0.2533 (129) · uebrig +0.1125 (3110)
+  A2 keine Umkehr: Dq in wenig-Monaten > 0 - hoechstens ein Gewicht
+  A3 Monats-Nullwelt (20 Monate, 6 wenig, 1.000 Vertauschungen): P90 +0.0760 · Anteil >= echt 27.1 %
+  A5 Tagesblock untere Grenze -0.1142 · Spiegel (+5 % minus -5 % binnen 24 h) wenig +0.026 / uebrig +0.053 · ohne 10./11.10.: Unterschied +0.0159
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\m1_wenig_unverzerrt_1.txt
+SCHLUSS: vollstaendig
+exit=0
