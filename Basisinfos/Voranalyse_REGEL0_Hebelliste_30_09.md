@@ -84,3 +84,11 @@ keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“*
 - **MORPHO, geprüft am Code:** Das Signal braucht wenige Tage (rsi 14 h und 10 Tage für den Monatsabstand, Ruhe 48 h, ATR etwa 14 Tage). Nur das
   **eigene Normal** verlangt **volle 12 Monate** (`normal()`: `st - st[0] >= JAHR_H` mit 8.760 h). MORPHO (ab 2025-10) hätte erst ab 2026-10 Signale.
   Das betrifft **12 von 28** Assets der Liste in ihrem ersten Jahr. ➤ Eingetragen als **Schwäche 4** der REGEL0 und Kandidat **J** (Marktnormal für junge Assets).
+
+
+**Rückmeldung 2 (Nutzer 30.09.):** *„1. An den Hebelassets (Hebelschalter) hat sich nichts geändert. 2. An Spot-Assets hinzugekommen: PLUME,
+XDC Network, Injective. Anmerkung: Die erforderliche Mindesthistorie ist eigentlich ein Showstopper und keine Schwäche."*
+- ✔ **H1 erfüllt:** Die Hebel-Liste (43) vom 24.09. gilt unverändert.
+- Die Spot-Zugänge PLUME, XDC und INJ betreffen den **Spot-Arm**, nicht diese Messung. Notiert.
+- ⛔ Die Mindesthistorie ist als **Showstopper** eingestuft (`REGEL0_Hebel_Entwurf_30_09.md` Abschnitt 8). Vorschlag: **zuerst beheben**, dann diese
+  Messung. Sonst fehlen die 12 jungen Assets der Liste gerade in ihrer Anfangszeit.

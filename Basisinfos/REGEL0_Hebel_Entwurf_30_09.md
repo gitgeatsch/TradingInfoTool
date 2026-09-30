@@ -67,7 +67,7 @@ Aufruf: `messe_losfahren.py --kern --export 0.035 --ruhe 48` und `messe_k6_hebel
 |---|---|---|
 | 1 | Vorteil je Handel (+0,29..+0,31 %) **unter den Kosten** (0,48 %) | **A** Positionsführung (W4): nachgezogener Stop oder Ziel, die Wucht als Bewegungsgröße (Rolle B) |
 | 2 | Das Signalangebot **springt**, weil die Dämpfungswahl im groben Raster kippt | **B** Kern stabilisieren (M1-3) |
-| 4 | ⭐ **Mindesthistorie 12 Monate** für das eigene Normal (`JAHR_H = 8760`, im Code `normal()`). Junge Assets bekommen im **ersten Jahr kein Signal**, obwohl rsi, Ruhe und ATR nur Tage brauchen. Auf der Hebel-Liste sind **12 von 28** Assets jung (TAO, ONDO, RENDER, MORPHO, KAIA, S, W, BIO, TURBO, IO, VIRTUAL, KAITO). Nutzer 30.09.: *„Das System braucht keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“* (vgl. 2.610) | **J** junge Assets: das Normal anfangs aus dem **Markt**, mit wachsender eigener Historie überblendet (die Schrumpfung gibt es schon), gemessen gegen REGEL0 |
+| 4 | ⛔ **SHOWSTOPPER (Nutzer 30.09.), nicht nur Schwäche:** **Mindesthistorie 12 Monate** für das eigene Normal (`JAHR_H = 8760`, im Code `normal()`). Junge Assets bekommen im **ersten Jahr kein Signal**, obwohl rsi, Ruhe und ATR nur Tage brauchen. Auf der Hebel-Liste sind **12 von 28** Assets jung (TAO, ONDO, RENDER, MORPHO, KAIA, S, W, BIO, TURBO, IO, VIRTUAL, KAITO). Nutzer 30.09.: *„Das System braucht keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“* (vgl. 2.610) | **J** junge Assets: das Normal anfangs aus dem **Markt**, mit wachsender eigener Historie überblendet (die Schrumpfung gibt es schon), gemessen gegen REGEL0 |
 | 3 | im Gegenwind **stumpf** (Modell flach) | innerhalb von A und B zu lösen, zum Beispiel ob die Stabilisierung das Regime anders abbildet |
 
 ➤ **Ablauf der Optimierung (Vorschlag):** Jede Änderung wird **einzeln** gegen REGEL0 gemessen, mit Voranalyse, Wahl 2024 und einmaliger
@@ -78,3 +78,28 @@ Bestätigung. Was trägt, wird **REGEL1** usw., und jede Stufe wird mit ihren Re
 ## 7. Zurückgestellt (Nutzer 30.09.: *„aktuell gar nicht als Option für unseren Umbau"*)
 
 C Vorwärtstest ab 2026-09 (die Regel K_IG < 1 bleibt eingefroren, aber kein laufender Prüfauftrag) · D neue Datenquellen · E Börse/Kosten.
+
+
+---
+
+## 8. ⛔ SHOWSTOPPER vor der Festschreibung — die Mindesthistorie (Nutzer 30.09.)
+
+**Nutzer:** *„Die erforderliche Mindesthistorie ist eigentlich ein Showstopper und keine Schwäche, finde ich, und war so nicht geplant
+und gewünscht, vor allem wenn man unsere Datenlage berücksichtigt."*
+
+➤ **Folge:** REGEL0 wird **erst nach der Behebung** festgeschrieben. Die 12-Monats-Bedingung ist kein *korrekter Parameter* (E-33),
+denn sie widerspricht der Grundanforderung *„muss auch bei nur EINEM Asset funktionieren“* (2.608) und *„10 Tage Historie, nicht
+Jahre“* (2.610).
+
+**Wo sie sitzt (Code):** `normal()` verlangt `st - st[0] >= JAHR_H` (8.760 h) und mehr als 1.000 Stunden. Ohne das gibt es kein eigenes
+Normal, also kein QSh, kein v̂, kein Signal.
+
+**Lösungsweg — auf dem Bestehenden, ohne neue Zahl:**
+
+| | |
+|---|---|
+| Schrumpfung (besteht) | je Monat QSh = Marktmitte + B × (eigenes Normal − Marktmitte), mit B = τ² / (τ² + Rauschen). Je weniger eigene Ereignisse, desto mehr Rauschen und desto näher an der **Marktmitte** |
+| **Änderung** | Das eigene Normal wird aus der **vorhandenen** Historie gerechnet (höchstens 12 Monate). Das Rauschen wird aus der **tatsächlichen** Zahl eigener Ereignisse bestimmt. Ohne eigene Historie ist QSh = Marktmitte. Ein junges Asset startet so auf dem **Marktnormal** und wächst mit seiner Historie hinein |
+| Mindesthistorie danach | nur noch, was das **Signal** braucht: rsi-Monatsabstand (10 Tage), ATR (etwa 14 Tage). Abgeleitet, nicht gewählt |
+| **R-R11** | Marktmitte, τ² und das rsi-Modell werden weiter **nur aus den reifen Assets** geschätzt. Für Assets mit ≥ 12 Monaten ändert sich damit **nichts**, und die Referenzzahlen der REGEL0 bleiben bitgleich. Junge Assets kommen **zusätzlich** hinzu |
+| Messung | Kern-Einstiege junger Assets in ihrem ersten Jahr: Chance gegen ihr Normal, Spiegel, Nullwelt, je Jahr, Rohvorteil in der Simulation. **Kriterium:** nicht schlechter als die reifen Assets (Dq > 0 in beiden Jahren, über der Nullwelt) |
