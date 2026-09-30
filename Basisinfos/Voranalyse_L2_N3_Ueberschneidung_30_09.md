@@ -182,3 +182,46 @@ ema +0,1743 und volumenschub +0,1286, bitgleich zu §12 der L2-Voranalyse.
 ➤ **Keine Umdeutung der Regel:** Die Bestätigung prüft die gewählte Form (ema + Ruhe 48 h). Das Zusammentreffen läuft wie
 festgelegt als Auskunft mit. **Vorschlag:** Hält das Zusammenwirken auch 2025–26, wird *volumenschub als Gewicht auf ema* die
 **nächste Ebene des Optimierungsloops**, mit eigener Vorab-Festlegung. Die Zahl 50 % wird dafür nicht geändert.
+
+
+---
+
+## 10. ERGEBNIS BESTÄTIGUNG 2025-01..2026-08 (4 Mengen) — Befund 2.692, zur Abstimmung
+
+Nutzer: *„Ja, prüfen und gegenprüfen, Doku."* Belege `L2_29_09/n3best__<menge>.txt`.
+
+| | Kriterium (vorab) | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|---|
+| R-R11 Roheffekte | bitgleich 2.691 | ✔ | ✔ | ✔ | ✔ | ✔ |
+| ρ(ema, volumenschub) | Auskunft | +0,33 | | | | hängen zusammen, sind nicht dasselbe |
+| **ema eigen** (gewählte Form) | > 0, ≥ 50 %, > Null-P90, beide Jahre, Tagesblock > 0 | ✔ 77 % | ✔ 78 % | ✔ 67 % | ⛔ Tagesblock −0,003 | ✔ **3/4** |
+| **Ruhe 48 h eigen** | beide Schichtungen, beide Jahre | ✔ | ✔ | ✔ | ✔ | ✔ **4/4** |
+| volumenschub eigen (2024 nicht gewählt) | dieselben Bedingungen | ✔ 78 % | ✔ 80 % | ✔ 87 % | ✔ 101 % | 4/4 (siehe unten) |
+| **beide oben**, Potential | Auskunft | +0,224 | +0,220 | +0,233 | +0,224 | Kern +0,055..+0,059 |
+| beide oben gegen ausgedünntes ema oben (P90) | Gegenprüfung | +0,209 | +0,205 | +0,184 | +0,187 | ✔ 4/4 darüber |
+| beide oben, **Chance** | Auskunft | +0,066 | +0,053 | +0,055 | +0,055 | Kern +0,061..+0,076, **nicht** höher |
+| Prozentmaß eigen (ema / volumenschub) | Auskunft | +0,41 / +1,24 | +0,35 / +1,43 | +0,18 / +1,32 | +0,22 / +1,45 | Prozentpunkte MFE 24 h |
+
+**Prüfung und Gegenprüfung:**
+1. **Die Form trägt.** ema und Ruhe 48 h tragen eigene Information, wie auf 2024 gewählt.
+2. **volumenschub** ist 2025–26 in allen 4 Mengen eigen. Auf 2024 lag er mit 48 % knapp darunter. Die Regel wird **nicht**
+   nachträglich geändert: 2025–26 zur Aufnahme zu verwenden, hieße, auf der Bestätigung zu wählen. **Vorschlag:** volumenschub
+   läuft in L4 und N4 als **vorab festgelegter Vergleichsarm** mit, und die Aufnahme entscheiden die ungesehenen Monate ab 2026-09.
+3. **Potential ja, Chance nein.** Das Zusammentreffen macht die Bewegungen **größer**: Potential etwa das Vierfache des Kerns,
+   beide Jahre, über der Härte der Auswahl. Die Wahrscheinlichkeit *+5 % vor −5 %* steigt dagegen **nicht**. ema eigen senkt die
+   Chance sogar (−0,04..−0,10), volumenschub eigen hebt sie meist. Das passt zu 2.642: ema ist zum Teil Bewegung.
+4. In **Prozent** trägt volumenschub deutlich mehr als ema. Fachlich spricht das eher für volumenschub. Die Regel hat nach der
+   ATR-Einheit gewählt, und das bleibt so. Die Simulation (N4) vergleicht beide Arme als Erfolgsmessung.
+5. **Je Asset** ist nicht auswertbar: 3–23 Assets erreichen ≥ 10 je Zelle. Das bleibt Auskunft und ist nicht als Urteil gezählt.
+6. **2026 > 2025** überall (beide oben 2025 +0,10..+0,19, 2026 +0,27..+0,35). Die Regimeabhängigkeit des Kerns (2.688) bleibt bestehen.
+
+**Zwischenfazit zum Ziel (*optimale Lage und Risiko*):**
+
+| | für das Ziel |
+|---|---|
+| **optimale Lage** | Kern + Ruhe 48 h + Wucht (ema, volumenschub) markiert die Einstiege mit den **größten** Anstiegen: etwa das Vierfache an Potential. Das ist die Richtung *hohe Anstiege erfassen* |
+| **Risiko** | Rückgang vor dem Hoch kaum verändert (+0,003..+0,009 ATR). Die ATR bleibt das Risikomodell |
+| **offen** | die **Chance** steigt nicht, und die Wirtschaftlichkeit ist ungeprüft. Beides beantwortet erst **N4** |
+
+**Vorschlag, nächster Schritt:** **L4 Summe** mit eigener Voranalyse: Kern + Ruhe 48 h + ema (Form per Regel), volumenschub als
+Vergleichsarm, Wahl auf 2024, einmal bestätigt. Danach **N4** Simulation als Erfolgsmessung, danach **H-Schalter**.
