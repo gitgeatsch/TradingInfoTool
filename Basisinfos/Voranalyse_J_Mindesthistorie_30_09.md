@@ -158,3 +158,22 @@ Belege `Basisinfos/J_30_09/` (`kern__`, `export__`, `sim__<menge>.txt`, `_kette.
 5. Das Hebelkonto verliert in unverzerrt etwas mehr, weil **mehr Handel** zur selben Kostenlücke stattfinden. Das ist die bekannte Schwäche S3, keine von J.
 
 ➤ **Folge:** J wird **Teil der REGEL0**. Nächster Schritt nach Plan: die **Schwellenwahl** auf der vollständigen 2024-Menge.
+
+---
+
+## 10. SCHRITT 2 — die Schwellenwahl auf der vollständigen 2024-Menge (vorab festgelegt, Nutzer-Ja 30.09.)
+
+**Nutzer:** *„Ja, Schwellenwahl starten, prüfen und gegenprüfen."*
+
+Die Schwelle s = +0,035 wurde mit **24 h Ruhe ohne J** gewählt (2.687/2.688). Die Ruhe 48 h kam später (2.691). Die Wahlregel bleibt **unverändert**:
+Raster +0,010..+0,050, größter Abstand *echt − P90 Nullwelt*, bei Gleichstand (< 0,005) die niedrigere Stufe, nur 2024, Menge bestand.
+
+| Lauf | Form | Zweck |
+|---|---|---|
+| **W0** | Ruhe 24 h, ohne J | **R-R11**: muss bitgleich zu 2.687 wählen (Stufe 0,02 = +0,0928, 0,04 = +0,0759, gewählt +0,035) |
+| **W1** | Ruhe 24 h, mit J | Wirkung der vollständigen Menge allein |
+| **W2** ⭐ | **Ruhe 48 h, mit J** | die REGEL0-Form, **entscheidend** |
+
+**Folge:** Wählt W2 **+0,035**, wird die REGEL0 festgeschrieben. Wählt W2 eine **andere** Stufe, wird das vorgelegt, denn die neue Stufe braucht eine
+eigene einmalige Bestätigung auf 2025–26 (Nutzer-Ja).
+
