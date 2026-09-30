@@ -204,3 +204,31 @@ plausibel, aber **nicht nachgemessen**.
 | **M1** ⭐ | **Modell-Aussagekraft als Kontext**: die Spannweite von v̂ im Monat (vorab bekannt, weil das Modell aus der Vergangenheit geschätzt ist, und für alle Assets gleich, also *Kontext* nach E-20). Hypothese: Long-Einstiege in flachen Monaten sind schlechter, dort wird nicht gehandelt. **Schritt 0:** nur die v̂-Verteilung 2024 ansehen, ob es dort überhaupt flache Monate gibt (ohne Ergebnisse). Sonst ist eine Wahl auf 2024 unmöglich | mechanisch begründet und direkt am Verlust. ⚠️ Wenige Regimewechsel (wie das Wetter, 2.686), und 2025–26 ist schon gesehen |
 | M2 | Kern-Short als **Spur** festhalten (B2/B7 4/4) und mit M1 später erneut prüfen | kostet nichts |
 | M3 | **W4** Positionsführung (Erfolgsmessung) | offen, unabhängig davon |
+
+---
+
+## 10. M1 SCHRITT 0 — v̂ je Monat 2024 (nur das Signal, keine Ergebnisse)
+
+Nutzer: *„Ja, prüfen. Jetzt sollten wir nachdenken und fachlich vorgehen. Diese zum Teil langen Schwächephasen sind in diesem Markt
+gegeben, und wir müssen u. U. zwischen Regime und kürzeren Wetterwechseln, also Trendumkehr, unterscheiden können."*
+
+Beleg `Kern_Short_30_09/m1_schritt0__bestand.txt`:
+
+| 2024 | Spannweite P99−P1 von v̂ | Anteil v̂ ≥ +0,035 |
+|---|---|---|
+| Jan, Mär, Mai, Sep, Okt, Nov, Dez | 0,087–0,094 (**normal**) | 4,6–26,9 % |
+| **Feb, Apr, Jun, Jul, Aug** | **0,003–0,033 (flach)**, August fast null | **0 %**: dort **kein einziger** Kern-Einstieg |
+
+**Befund Schritt 0:**
+1. 2024 hat flache Monate (5 von 12), eine Wahl auf 2024 wäre also **möglich**.
+2. ⚠️ Die Flachheit **springt** 2024 von Monat zu Monat (Feb flach, Mär normal, Apr flach, Mai normal, Jun bis Aug flach, Sep normal). Die
+   Spannweite ist **zweigeteilt** (≈ 0,09 oder ≤ 0,03), dazwischen fast nichts. Das passt zu einer **Schätzergröße** und nicht zu einem
+   Marktzustand: Die Dämpfung wird je Monat aus nur **4 Stufen** (λ 20 / 200 / 2.000 / 20.000) über **4 Kreuzvalidierungsblöcke**
+   gewählt. Kippt die Wahl eine Stufe, wird das Modell flach oder voll.
+3. 2025–26 dagegen: **September 2025 bis Januar 2026 fünf Monate am Stück** flach. Das ist **anhaltend** und passt zu einem Regime.
+4. In voll flachen Monaten schaltet sich der Kern **selbst ab** (2024: 0 Einstiege). In halbflachen Monaten (2025-09: P99 +0,040)
+   gibt es noch Einstiege, und genau dort ist offen, ob sie schlechter sind.
+
+➤ **Folge:** Bevor die Flachheit ein Kontext wird, muss klar sein, **was** sie misst, echtes Fehlen von Information oder das
+Springen der Dämpfungswahl. Das ist messbar: λ und Validierungsverlust je Monat protokollieren (ohne Ergebnisse). Vorschlag M1 Schritt 1.
+
