@@ -486,6 +486,158 @@ def main() -> int:
                     oben = ix[fin & (w > kanten[1])]; unten = ix[fin & (w <= kanten[0])]
                     mo, mu = mass(oben), mass(unten)
                     return tuple(a - b for a, b in zip(mo, mu)), len(oben), len(unten)
+                if "--l4" in sys.argv:
+                    # ══ L4 (Voranalyse_L4_Summe_30_09.md, Q1-Q5 + L4-5 abgestimmt): die POTENTIAL-SUMME auf dem Kern mit
+                    # 48 h Ruhe - Arm A ema (Urteil), Arm B ema + volumenschub gemeinsam (Vergleich), Arm C 3x3 (Auskunft) ══
+                    JS4 = os.path.join(os.path.dirname(JS), "l2_l4_wahl_bestand.json")
+                    NM = ("ema_abstand_atr", "volumenschub")
+                    AUF = np.where(np.isfinite(t_u), t_u <= 24, False).astype(np.float64)
+                    AB = np.where(np.isfinite(t_d), t_d <= 24, False).astype(np.float64)
+                    POTp = L2_MFE[24] - normal_mittel(L2_MFE[24])
+                    e48, _x = erst_p(VH, S_KERN, 48, 1)
+                    e48r = e48[np.isfinite(POTn[e48])]
+                    print()
+                    print("  L4 R-R11 48-h-Einstiege mit Potential: %d · Potential %+.3f" % (len(e48r), float(np.mean(POTn[e48r]))))
+                    f_ = np.isfinite(POTn[e48]) & np.isfinite(RISn[e48]) & np.isfinite(CAND[NM[0]][e48]) & np.isfinite(CAND[NM[1]][e48])
+                    e48 = e48[f_]
+                    print()
+                    print("  L4 · %s · Kern-Ersteintritte mit 48 h Ruhe: %d (R-R11: 2024 bestand 1.486 / +0,069 · 2025-26 bestand 6.328 / +0,087) · "
+                          "Chance %+.4f · Potential %+.3f · Risiko %+.3f · Einstiege je Tag %.1f" % (
+                              "WAHL 2024" if wahl else "BESTAETIGUNG 2025-26 (EINMAL)", len(e48), *mass(e48),
+                              len(e48) / max(len(np.unique(STD[e48] // 24)), 1)))
+
+                    def klasse(v, k_):
+                        return np.searchsorted(k_, v, "right")
+
+                    def summe(arm, par, werte):
+                        # werte: dict Name -> Werte an den Einstiegen; Rueckgabe: Summe (erwartetes Potential minus Mittel 2024)
+                        if arm == "A":
+                            return np.asarray(par["bA"])[klasse(werte[NM[0]], par["kE"])]
+                        X_ = np.column_stack([np.ones(len(werte[NM[0]]))] + [(klasse(werte[nm_], par["k" + nm_[0].upper()]) == c).astype(float)
+                                                                            for nm_ in NM for c in range(1, 5)])
+                        return X_ @ np.asarray(par["bB"]) - par["mB"]
+
+                    def wert(ix, vv=None):
+                        return {nm_: (CAND[nm_] if vv is None or nm_ not in vv else vv[nm_])[ix] for nm_ in NM}
+
+                    def spiegel(sel, alle):
+                        return (AUF[sel].mean() - AUF[alle].mean()) - (AB[sel].mean() - AB[alle].mean())
+                    if wahl:
+                        par = {"kE": np.quantile(CAND[NM[0]][e48], [0.2, 0.4, 0.6, 0.8]).tolist(),
+                               "kV": np.quantile(CAND[NM[1]][e48], [0.2, 0.4, 0.6, 0.8]).tolist()}
+                        mu = float(np.mean(POTn[e48]))
+                        kl = klasse(CAND[NM[0]][e48], par["kE"])
+                        par["bA"] = [float(np.mean(POTn[e48[kl == c]]) - mu) for c in range(5)]
+                        X_ = np.column_stack([np.ones(len(e48))] + [(klasse(CAND[nm_][e48], par["k" + nm_[0].upper()]) == c).astype(float)
+                                                                   for nm_ in NM for c in range(1, 5)])
+                        par["bB"] = np.linalg.lstsq(X_, POTn[e48], rcond=None)[0].tolist(); par["mB"] = mu
+                        print("  Arm A Beitrag(ema) je Fuenftel: %s ATR" % " / ".join("%+.3f" % b for b in par["bA"]))
+                        print("  Arm B gemeinsam: ema-Stufen %s · volumenschub-Stufen %s (gegen das unterste Fuenftel)" % (
+                            " / ".join("%+.3f" % b for b in par["bB"][1:5]), " / ".join("%+.3f" % b for b in par["bB"][5:9])))
+                        wahl4 = {}
+                        for arm in ("A", "B"):
+                            S_ = summe(arm, par, wert(e48))
+                            print("  Arm %s · Stufen (Regel: groesster Abstand echt - Null-P90, Gleichstand < 0,01 -> die niedrigere):" % arm)
+                            best_ = None
+                            for anteil in (1.0, 0.5, 1 / 3, 0.2, 0.1):
+                                thr = -np.inf if anteil == 1.0 else float(np.quantile(S_, 1 - anteil))
+                                sel = e48[S_ >= thr - 1e-12]
+                                echt = float(np.mean(POTn[sel]))
+                                nu = []
+                                for _ in range(zieh):
+                                    vv = {nm_: verschiebe(nm_, CAND[nm_]) for nm_ in (NM[:1] if arm == "A" else NM)}
+                                    ok_ = np.all([np.isfinite(vv[nm_][e48]) for nm_ in vv], axis=0)
+                                    en = e48[ok_]; Sn = summe(arm, par, wert(en, vv))
+                                    tn = -np.inf if anteil == 1.0 else float(np.quantile(Sn, 1 - anteil))
+                                    nu.append(float(np.mean(POTn[en[Sn >= tn - 1e-12]])))
+                                p90 = float(np.percentile(nu, 90)); ab_ = echt - p90
+                                print("    oberste %3.0f %% (tatsaechlich %4.1f %%, %4d, Schwelle %s): Potential %+.3f · Null-P90 %+.3f · Abstand %+.3f · "
+                                      "Chance %+.4f · Risiko %+.3f · Spiegel %+.3f · Prozent %+.2f" % (
+                                          100 * anteil, 100 * len(sel) / len(e48), len(sel), "-" if anteil == 1.0 else "%+.3f" % thr, echt, p90, ab_,
+                                          *[mass(sel)[k] for k in (0, 2)], spiegel(sel, e48), float(np.mean(POTp[sel])) - float(np.mean(POTp[e48]))))
+                                if best_ is None or ab_ > best_[0] + 0.01 - 1e-12:
+                                    best_ = (ab_, anteil, thr)
+                            wahl4[arm] = {"anteil": best_[1], "schwelle": best_[2] if np.isfinite(best_[2]) else None}
+                            print("    ➤ Arm %s Stufe per Regel: oberste %.0f %% (Schwelle %s)" % (
+                                arm, 100 * best_[1], "-" if not np.isfinite(best_[2]) else "%+.3f" % best_[2]))
+                        par["wahl"] = wahl4
+                        if E2.MENGE == "bestand" and "--probe" not in sys.argv:
+                            with io.open(JS4, "w", encoding="utf-8") as f4:
+                                json.dump(par, f4, ensure_ascii=False, indent=1)
+                            print("  geschrieben: %s" % JS4)
+                    else:
+                        par = json.load(open(JS4, encoding="utf-8"))
+                        for arm in ("A", "B"):
+                            thr = par["wahl"][arm]["schwelle"]; thr = -np.inf if thr is None else thr
+                            S_ = summe(arm, par, wert(e48))
+                            sel = e48[S_ >= thr - 1e-12]
+                            d_ = float(np.mean(POTn[sel]) - np.mean(POTn[e48]))
+                            nu = []
+                            for _ in range(zieh):
+                                vv = {nm_: verschiebe(nm_, CAND[nm_]) for nm_ in (NM[:1] if arm == "A" else NM)}
+                                ok_ = np.all([np.isfinite(vv[nm_][e48]) for nm_ in vv], axis=0)
+                                en = e48[ok_]; Sn = summe(arm, par, wert(en, vv))
+                                sn = en[Sn >= thr - 1e-12]
+                                nu.append(float(np.mean(POTn[sn]) - np.mean(POTn[en])) if len(sn) else np.nan)
+                            p90 = float(np.nanpercentile(nu, 90))
+                            rz = np.random.default_rng(SAAT + 44)
+                            za = [float(np.mean(POTn[rz.choice(e48, size=len(sel), replace=False)]) - np.mean(POTn[e48]))
+                                  for _ in range(zieh)] if 0 < len(sel) < len(e48) else [np.nan]
+                            jz = [(float(np.mean(POTn[sel[JAHR[sel] == jj]]) - np.mean(POTn[e48[JAHR[e48] == jj]])),
+                                   spiegel(sel[JAHR[sel] == jj], e48[JAHR[e48] == jj])) for jj in JAHRE]
+                            tage = STD[e48] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                            je_tag = [np.flatnonzero(tinv == k) for k in range(len(ut))]
+                            ist = S_ >= thr - 1e-12
+                            rb = np.random.default_rng(SAAT + 45); bo = []
+                            for _ in range(300):
+                                w_ = np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])
+                                bo.append(float(np.mean(POTn[e48[w_][ist[w_]]]) - np.mean(POTn[e48[w_]])) if ist[w_].any() else np.nan)
+                            lo95 = float(np.nanpercentile(bo, 2.5))
+                            l41 = d_ > p90 and all(x[0] > 0 for x in jz) and lo95 > 0
+                            l45 = all(x[1] > 0 for x in jz)
+                            # L4-2: ordnet die Summe? vorhergesagt (Summe) gegen beobachtet je Summenwert-Gruppe (Fuenftel der Summe)
+                            if arm == "A":
+                                gr = klasse(CAND[NM[0]][e48], par["kE"]); pred = np.asarray(par["bA"])
+                            else:
+                                gr = np.clip(np.searchsorted(np.quantile(S_, [0.2, 0.4, 0.6, 0.8]), S_, "right"), 0, 4)
+                                pred = np.array([np.mean(S_[gr == c]) for c in range(5)])
+                            beo = np.array([np.mean(POTn[e48[gr == c]]) - np.mean(POTn[e48]) for c in range(5)])
+                            stg = float(np.polyfit(pred, beo, 1)[0])
+                            # je Asset (Auskunft)
+                            ga = []
+                            for si in np.unique(SYM[sel]):
+                                a_s, a_a = sel[SYM[sel] == si], e48[SYM[e48] == si]
+                                if len(a_s) >= 10:
+                                    ga.append(np.mean(POTn[a_s]) > np.mean(POTn[a_a]))
+                            print("  Arm %s%s · Schwelle %s (oberste %.0f %% in 2024) · ausgewaehlt %d von %d (%.1f %%, %.1f je Tag)" % (
+                                arm, " (URTEIL)" if arm == "A" else " (Vergleich)", "-" if not np.isfinite(thr) else "%+.3f" % thr,
+                                100 * par["wahl"][arm]["anteil"], len(sel), len(e48), 100 * len(sel) / len(e48),
+                                len(sel) / max(len(np.unique(STD[e48] // 24)), 1)))
+                            print("    L4-1 Potential ausgewaehlt minus alle %+.3f ATR · Null-P90 %+.3f · gleich viele zufaellig P90 %+.3f · je Jahr %s · "
+                                  "Tagesblock unten %+.3f -> %s" % (
+                                      d_, p90, float(np.nanpercentile(za, 90)), " · ".join("%d %+.3f" % (jj, x[0]) for jj, x in zip(JAHRE, jz)),
+                                      lo95, "✔ (diese Menge)" if l41 else "⛔"))
+                            print("    L4-2 ordnet die Summe? vorhergesagt %s · beobachtet %s · Steigung %.2f -> %s" % (
+                                " / ".join("%+.3f" % x for x in pred), " / ".join("%+.3f" % x for x in beo), stg,
+                                "✔ (diese Menge)" if stg > 0.5 else "⛔"))
+                            print("    L4-5 SPIEGEL (+5 %% binnen 24 h minus -5 %% binnen 24 h, Zuwachs gegen alle): gesamt %+.3f · je Jahr %s · "
+                                  "oben %+.3f / unten %+.3f -> %s" % (
+                                      spiegel(sel, e48), " · ".join("%d %+.3f" % (jj, x[1]) for jj, x in zip(JAHRE, jz)),
+                                      AUF[sel].mean() - AUF[e48].mean(), AB[sel].mean() - AB[e48].mean(),
+                                      "✔ VORTEIL (diese Menge)" if l45 else "⛔ nur Bewegung"))
+                            print("    L4-3 Auskunft: Chance %+.4f gegen alle %+.4f · Risiko %+.3f gegen %+.3f · Prozent MFE %+.2f Prozentpunkte · "
+                                  "je Asset %d, %.0f %% ueber dem eigenen" % (
+                                      mass(sel)[0], mass(e48)[0], mass(sel)[2], mass(e48)[2],
+                                      float(np.mean(POTp[sel]) - np.mean(POTp[e48])), len(ga), 100 * np.mean(ga) if ga else np.nan))
+                    # Arm C Auskunft: 3x3 mit den N3-Kanten
+                    cfg = json.load(open(JS, encoding="utf-8"))
+                    dE = np.where(CAND[NM[0]][e48] > cfg["kanten"][NM[0]][1], 2, np.where(CAND[NM[0]][e48] <= cfg["kanten"][NM[0]][0], 0, 1))
+                    dV = np.where(CAND[NM[1]][e48] > cfg["kanten"][NM[1]][1], 2, np.where(CAND[NM[1]][e48] <= cfg["kanten"][NM[1]][0], 0, 1))
+                    bo_ = e48[(dE == 2) & (dV == 2)]
+                    print("  Arm C (Auskunft) beide oben auf 48 h: %d (%.1f %%) · Potential %+.3f · Chance %+.4f · Risiko %+.3f · Spiegel %+.3f" % (
+                        len(bo_), 100 * len(bo_) / len(e48), *[mass(bo_)[k] for k in (1, 0, 2)], spiegel(bo_, e48)))
+                    print("SCHLUSS: vollstaendig")
+                    return 0
                 if "--n3" in sys.argv:
                     # ══ N3 (Voranalyse_L2_N3_Ueberschneidung_30_09.md, P1-P5 abgestimmt): EIGENE Information von
                     # ema_abstand_atr, volumenschub und der Ruhe 48 h - Kanten und Richtungen aus der Wahl 2024 ══

@@ -102,3 +102,29 @@ Bericht** → nach deinem Ja die Bestätigung (4 × etwa 8 Minuten). Danach **N4
 | **Q3** | Schwelle **per Regel** auf 2024: fünf Stufen, größter Abstand zur Nullwelt, bei Gleichstand die niedrigere |
 | **Q4** | Bestätigung einmal 2025–26, L4-1 und L4-2 als Urteil, ≥ 3/4 Mengen |
 | **Q5** | danach N4 (Arm A, Arm B als Vergleich) und H-Schalter |
+
+
+---
+
+## 7. ✔ ABGESTIMMT (30.09.2026) — Q1 bis Q5; Umsetzung VOR dem Lauf
+
+**Nutzer:** *„Ja — planen, prüfen, gegenprüfen, Doku, dann messen, Ergebnisse abstimmen mit weiterem Zwischenfazit."*
+
+**Gegenprüfung der Vorlage gegen das Regelwerk.** Die Zeile *Bewertung 1* hält fest: *ein Lift allein zeigt vor allem **mehr
+Bewegung** (2.657)*, und *der Rückgang vor dem Hoch steigt mit, das ist die **Größe** der Bewegung, kein Vorteil (2.662)*. Ein
+höheres Potential kann also bloß **mehr Bewegung in beide Richtungen** sein. Darum kommt, **vor** der Rechnung, eine fünfte
+Prüfung als Urteil dazu. Sie **verschärft** die Vorlage und stützt sich auf die bestehende Regel, sie ist keine neue Zahl:
+
+| # | Kriterium | Art |
+|---|---|---|
+| **L4-5** ⭐ | **Spiegel — Vorteil oder nur Bewegung?** Anteil *+5 % binnen 24 h* (gleich, was zuerst kommt) und Anteil *−5 % binnen 24 h*, jeweils Ausgewählte minus alle 48-h-Einstiege. **Vorteil**, wenn der Zuwachs oben **größer** ist als unten, in **2025 und 2026**, in **≥ 3 von 4 Mengen** | **Urteil** |
+
+➤ Q1 gilt damit **so**: Die Summe misst das erwartete Potential, und das Potential zählt nur, wenn der Spiegel hält.
+
+**Umsetzung (keine neue Wahl):**
+- Werkzeug `messe_losfahren.py --l2 --l4`. Ohne `--bestaetigen` rechnet es die Wahl 2024 und schreibt `data/_vergleich/l2_l4_wahl_bestand.json`.
+- Mit `--bestaetigen 0.035` wird einmal 2025–26 ausgewertet.
+- Arm A hat nur **fünf** Summenwerte (die Fünftel). Die Stufen *50 / 33 / 20 / 10 %* fallen deshalb auf die nächste Fünftelgrenze. Der tatsächliche Anteil wird ausgewiesen, und *10 %* fällt mit *20 %* zusammen.
+- Die Schwelle ist ein **fester Wert** der Summe aus 2024. In 2025–26 wird sie nicht neu als Quantil bestimmt.
+- Arm B nimmt beide Fünftel-Kurven in eine gemeinsame lineare Rechnung auf 2024 (je vier Stufenmerkmale).
+- Die Nullwelt verschiebt in Arm A ema je Asset, in Arm B ema und volumenschub.

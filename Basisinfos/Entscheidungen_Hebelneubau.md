@@ -384,3 +384,13 @@ laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
 # E-27 · Die Liquidationsgrenze wird in der Simulation gemessen (Vorschlag)
 
 **29.09.2026** · Nutzer: *„ich stelle das Risiko über den Hebel ein … ich hoffe, das ergibt sich aus der Messung für Schritt 3."* Vorschlag für die Voranalyse Schritt 3: jede Grenze (0,5 / 1 / 2 / 5 %) simulieren, gewählt nach vorab festgelegter Regel (größtes Kontowachstum nach Kosten, bei Gleichstand die vorsichtigere); das Risikomodell bleibt nur aus der Liquidation kalibriert; Nutzer-Veto möglich.
+
+
+---
+
+# E-28 · Bewertung 1 = Ereignis + Potential-Summe; die Chance ist Auskunft, der Spiegel ist Pflicht
+
+**30.09.2026** · Nutzer-Ja zu L4 Q1 (`Voranalyse_L4_Summe_30_09.md`).
+- **Warum:** Die Glieder, die tragen (ema_abstand_atr, volumenschub, Ruhe 48 h), heben das **Potential** und nicht die Chance (2.692). Auf der Chance summiert fielen sie heraus.
+- **Die Form:** Der Kern bleibt das **Ereignis** (*ob*), die **Summe** misst das erwartete Potential (*wie weit*, Rolle B), und die Schwelle wird per Regel gemessen.
+- **Die Absicherung:** das Regelwerk 2.657/2.662, *mehr Potential ist oft nur mehr Bewegung*. Das Potential zählt nur, wenn der **Spiegel** hält: Das Ereignis oben muss stärker zunehmen als das Ereignis unten (L4-5, vor der Rechnung festgelegt).
