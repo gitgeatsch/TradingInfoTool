@@ -1371,7 +1371,9 @@ def main() -> int:
                 else:
                     for s, soll in ((0.02, 0.0928), (0.04, 0.0759)):
                         print("  R-R11 2.687 (c) Stufe %+.3f: %+.4f · Soll %+.4f -> %s" % (
-                            s, echt[s], soll, "✔ bitgleich" if abs(round(echt[s], 4) - soll) < 1e-9 or E2.MENGE != "bestand" else "⛔ ABWEICHUNG"))
+                            s, echt[s], soll, ("✔ bitgleich" if abs(round(echt[s], 4) - soll) < 1e-9 else "⛔ ABWEICHUNG")
+                            if E2.MENGE == "bestand" and RUHE == 24 and not JUNGE else
+                            "(Soll gilt nur fuer Ruhe 24 h ohne J in bestand - Beschriftung korrigiert 30.09.)"))
                 null = {s: [] for s in RASTER}
                 for _ in range(zieh):
                     v_ = vh_stuendlich(verschoben(E, RSI))

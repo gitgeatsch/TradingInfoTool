@@ -474,7 +474,7 @@ BEITRAGSLAGE = {
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
         befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684", "2.685",
-                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697", "2.698"),
+                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697", "2.698", "2.699"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
@@ -745,6 +745,9 @@ NEUESTER_STAND = (
               "ab 240 h ueber die bestehende Schrumpfung; 18-21 % neue Einstiege auf 72-74 "
               "Assets tragen in 4/4 Mengen (Chance +0,08..+0,09, jedes Jahr, ab 10 Tagen), "
               "Rohvorteil der neuen nicht schlechter. J wird Teil der REGEL0"),
+    ("2.699", "SCHWELLENWAHL bestaetigt: die unveraenderte Regel waehlt auch auf der "
+              "vollstaendigen 2024-Menge und in der REGEL0-Form (Ruhe 48 h mit J) s = +0,035 "
+              "(Abstand +0,088, kein Gleichstand). Die REGEL0 kann festgeschrieben werden"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

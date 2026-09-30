@@ -125,4 +125,4 @@ Normal, also kein QSh, kein v̂, kein Signal.
 | Hebelkonto 2025–26 (log) | +0,2634 | −0,4877 | −0,4543 | −0,4058 |
 
 Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_k6_hebelstufe.py --kurs mark --einstiege kern48j_einstiege_<m>.csv --simulation 24,ohne,0.02`.
-⚠️ Vor der Festschreibung offen: Schritt 2 im Plan, die **Schwellenwahl auf der vollständigen 2024-Menge**.
+✔ Schritt 2 erledigt (2.699): Die Schwellenwahl auf der vollständigen 2024-Menge ergibt wieder **s = +0,035**, in der REGEL0-Form mit dem Abstand +0,088 gegen +0,066. **Die REGEL0 kann festgeschrieben werden** (Nutzer-Ja).

@@ -177,3 +177,14 @@ Raster +0,010..+0,050, größter Abstand *echt − P90 Nullwelt*, bei Gleichstan
 **Folge:** Wählt W2 **+0,035**, wird die REGEL0 festgeschrieben. Wählt W2 eine **andere** Stufe, wird das vorgelegt, denn die neue Stufe braucht eine
 eigene einmalige Bestätigung auf 2025–26 (Nutzer-Ja).
 
+
+**ERGEBNIS Schritt 2 (Befund 2.699):**
+
+| Lauf | gewählt | Einstiege 2024 | Abstand gewählt / nächstbester |
+|---|---|---|---|
+| W0 Ruhe 24 h ohne J | +0,035 ✔ bitgleich zu 2.687 | 2.095 | +0,079 / +0,073 (0,030) |
+| W1 Ruhe 24 h mit J | +0,035 | 3.145 | +0,060 / +0,045 (0,030) |
+| **W2 Ruhe 48 h mit J** | **+0,035** | 2.198 (= 1.485 reif + 713 neu, stimmig zu 2.698) | **+0,088 / +0,066 (0,040)** |
+
+➤ **Die Schwelle bleibt +0,035**, jetzt auf der vollständigen Grundlage gewählt. ⚠️ Die R-R11-Zeile zeigte in W2 *ABWEICHUNG*, weil ihre Sollwerte nur für Ruhe 24 h ohne J gelten.
+Die Beschriftung ist korrigiert, die Zahlen sind unverändert.
