@@ -106,7 +106,7 @@ Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter al
 | # | Schwäche | Einstufung | Weg |
 |---|---|---|---|
 | S1 | **Mindesthistorie 12 Monate** | ⛔ **Showstopper** (Nutzer) | J |
-| S2 | **Betriebsdaten und Training am Notebook** (B1–B3, B5) | ⛔ **Showstopper-Kandidat** (E-35) | Schritt 4 |
+| S2 | **Betriebsdaten und Training am Notebook** (B1–B3, B5) | ✔ **Bauaufgabe Betrieb, kein Showstopper** (Nutzer 30.09.: *„Wenn es erforderlich ist, Daten vom Desktop auf das NB zu übertragen, dann werden wir dies natürlich machen, das ist gelebte Praxis — aber für den laufenden Betrieb brauchen wir ohnehin eine Datenanbindung.“*): einmal die Historie übertragen, dann die laufende Datenanbindung, dazu das Monatstraining als Job am Notebook. Bedingung bleibt **dieselbe Grundgesamtheit** | Schritt 7 |
 | S3 | Vorteil je Handel (+0,29..+0,31 %) unter den Kosten (0,48 %) in der Messgeometrie | Schwäche | A (Positionsführung), R, L |
 | S4 | Das Signalangebot springt (grobes Dämpfungsraster) | Schwäche, Betrieb: unberechenbar | B |
 | S5 | Im Gegenwind stumpf (Modell flach) | Schwäche | R, dazu der Informationsgewinn als Auskunft |

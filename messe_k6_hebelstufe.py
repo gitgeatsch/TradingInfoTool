@@ -144,7 +144,14 @@ def main() -> int:
                 for stop in (False, True):
                     EV[(L, H, m, stop)] = []
     syms = []
-    SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2", "mfe24", "wu")}
+    SPE = {k: [] for k in ("atr", "std", "sym", "tu", "fl5", "fl3", "fl2", "mfe24", "wu", "gr")}
+    # J (Voranalyse_J_Mindesthistorie_30_09.md): --gruppe <csv> markiert die NEU hinzugekommenen Einstiege (Auskunft J5)
+    GR = set()
+    if "--gruppe" in sys.argv:
+        for zeile in open(sys.argv[sys.argv.index("--gruppe") + 1], encoding="utf-8").read().splitlines()[1:]:
+            sy_, st_, g_ = zeile.split(";")
+            if g_ == "1":
+                GR.add((sy_, int(st_)))
     # N4 (Basisinfos/Voranalyse_N4_Simulation_Ruhe48_30_09.md): --wucht <csv> markiert *beide oben* (Auskunft N4-W)
     WU = set()
     if "--wucht" in sys.argv:
@@ -282,6 +289,7 @@ def main() -> int:
                     mx_ = np.maximum(mx_, np.where(((ae + s) < n) & np.isfinite(hoch[j]), hoch[j] / E0e, -np.inf))
                 SPE["mfe24"].append(mx_ - 1.0)
                 SPE["wu"].append(np.array([(sym, int(x)) in WU for x in std[ae]], bool))
+                SPE["gr"].append(np.array([(sym, int(x)) in GR for x in std[ae]], bool))
                 if sim:
                     jr = np.array([int(x[:4]) for x in st], np.int16)
 
@@ -696,6 +704,15 @@ def main() -> int:
                           100 * float(np.mean(roh_[okr])), int(okr.sum()),
                           " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[okr & (JAHRe == jj)]))) for jj in SIM_JAHRE),
                           len(ga_), 100 * np.mean(ga_) if ga_ else np.nan))
+                if GR:
+                    gr_ = XE["gr"].astype(bool)
+                    for nm_, m_ in (("neu", gr_), ("reif", ~gr_)):
+                        mm_ = okr & m_
+                        kw_ = kennz(r, STDe, te, maske=m_)
+                        print("  J5 %-5s: %5d Handel · Rohvorteil %+.3f %% · Hebelkonto log %+.4f · Spotkonto log %+.4f · Liquidationen %.2f %% · je Jahr Rohvorteil %s" % (
+                            nm_, int(mm_.sum()), 100 * float(np.mean(roh_[mm_])) if mm_.any() else np.nan, kw_["G"],
+                            kennz(rs, STDe, ts, maske=m_)["G"], 100 * float(np.mean(r[np.isfinite(r) & m_] <= -1.0)) if (np.isfinite(r) & m_).any() else np.nan,
+                            " · ".join("%d %+.3f %%" % (jj, 100 * float(np.mean(roh_[mm_ & (JAHRe == jj)]))) for jj in SIM_JAHRE if (mm_ & (JAHRe == jj)).any())))
                 if "--wenig" in sys.argv:
                     # M1-2 A4 (Auskunft): Rohvorteil und Konto in den wenig-Monaten (K_IG < 1) gegen die uebrigen
                     wl_ = {z_.strip() for z_ in open(sys.argv[sys.argv.index("--wenig") + 1], encoding="utf-8") if z_.strip()}

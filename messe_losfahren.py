@@ -101,7 +101,17 @@ def main() -> int:
     ordnung = np.lexsort((STD, SYM))
     teile = np.split(ordnung, np.flatnonzero(np.diff(SYM[ordnung])) + 1)
 
-    def normal(a, b, W):
+    # ⭐ J (Voranalyse_J_Mindesthistorie_30_09.md): --junge laesst das eigene Normal ab 240 h Historie zu (statt 12 Monate);
+    # REIF merkt, wo die alte 12-Monats-Bedingung gilt - Training, Marktmitte und tau2 bleiben NUR auf reifen Stunden (R-R11)
+    JUNGE = "--junge" in sys.argv
+    REIF = np.zeros(n, bool); HIST_T = np.full(n, np.nan)
+
+    def reif_e(e_):
+        # 30.09. (Gegenpruefung): ein Einstieg ist REIF nur, wenn auch sein Ruhefenster (Signal - Ruhe) reif war -
+        # sonst entsteht er erst durch J (die Ruhe davor hat jetzt Werte) und zaehlt zu NEU
+        return REIF[e_] & (HIST_T[e_] >= 365.0 + (RUHE + 1) / 24.0)
+
+    def normal(a, b, W, merke=False):
         na, nb = np.full(n, np.nan), np.full(n, np.nan)
         for tl in teile:
             st = STD[tl]
@@ -110,10 +120,14 @@ def main() -> int:
             hi = np.searchsorted(st, st - W, "right")
             k = hi - lo
             gut = (st - st[0] >= K2.JAHR_H) & (k > 1000)
+            if merke:
+                REIF[tl] = gut; HIST_T[tl] = (st - st[0]) / 24.0
+            if JUNGE:
+                gut = gut | (((st - st[0]) >= 240 + W) & (k > 0))
             na[tl] = np.where(gut, (ca[hi] - ca[lo]) / np.maximum(k, 1), np.nan)
             nb[tl] = np.where(gut, (cb[hi] - cb[lo]) / np.maximum(k, 1), np.nan)
         return na, nb
-    NA, NB = normal(A24, B24, 24)
+    NA, NB = normal(A24, B24, 24, merke=True)
     NA72, NB72 = normal(A72, B72, 72)
     SM = SYM.astype(np.int64) * 1000 + (MON - MON.min())
     _u, smi = np.unique(SM, return_inverse=True)
@@ -167,6 +181,8 @@ def main() -> int:
     KL[~np.isfinite(NADEL)] = -1
     GRID = np.isin(STD % 24, K2.GITTER)
     BASIS = GRID & np.isfinite(OFF)
+    if JUNGE:
+        BASIS &= REIF                       # J: Training, Suche/Pruefung und Marktmitte nur auf reifen Stunden
     HIT = (A24 + B24) > 0
     such = BASIS & (STD >= SUCHE[0]) & (STD < SUCHE[1])
     pruef = BASIS & (STD >= PRUEF[0]) & (STD < PRUEF[1])
@@ -309,7 +325,7 @@ def main() -> int:
         best = "--bestaetigen" in sys.argv
         s_best = float(sys.argv[sys.argv.index("--bestaetigen") + 1]) if best else None
         sp_best = float(sys.argv[sys.argv.index("--sperre") + 1]) if "--sperre" in sys.argv else None
-        JAHRE = (2024, 2025, 2026) if "--export" in sys.argv else ((2025, 2026) if best else (2024,))
+        JAHRE = (2024, 2025, 2026) if ("--export" in sys.argv or "--junge" in sys.argv) else ((2025, 2026) if best else (2024,))
         SCHW = (0.02, 0.04, 0.06, 0.08)
         SPERR = (-0.02, -0.04)
         m0, _s0 = rsi_auswahl(E)
@@ -337,6 +353,17 @@ def main() -> int:
             ixh = np.flatnonzero((MON == mi) & np.isfinite(QN) & np.isin(SYM, us))
             bb = np.array([Bm[int(x)] for x in SYM[ixh]])
             QSh[ixh] = mitte + bb * (QN[ixh] - mitte)
+            if JUNGE:
+                # J: junge Stunden an DERSELBEN Marktmitte/tau2 schrumpfen; Rauschen aus der tatsaechlichen Historie
+                # (Rate x min(365, Tage)) - fuer reife Assets waere das genau die alte Formel mit 365
+                jh = np.flatnonzero((MON == mi) & np.isfinite(QN) & ~REIF)
+                for sj in np.unique(SYM[jh]):
+                    hj = jh[SYM[jh] == sj]; gj = hj[GRID[hj]]
+                    gj = gj if len(gj) else hj
+                    qa_j = float(np.mean(QN[gj])); rate_j = float(np.mean(NA[gj] + NB[gj]))
+                    tage_j = min(365.0, float(np.mean(HIST_T[gj])))
+                    r_j = qa_j * (1 - qa_j) / max(rate_j * tage_j, 5.0)
+                    QSh[hj] = mitte + (tau2 / (tau2 + r_j)) * (QN[hj] - mitte)
         chk = np.flatnonzero(np.isfinite(QS))
         print("  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern %.2e" % float(np.nanmax(np.abs(QSh[chk] - QS[chk]))))
         # rollierend: Modell je Monat nur auf der Vergangenheit, Beitrag fuer JEDE Stunde des Monats
@@ -1143,6 +1170,11 @@ def main() -> int:
                 # H0 exportieren und die CHANCE im selben Fenster 6/12/24 h (Vergleich, keine Kalibrierung) ══
                 s = float(sys.argv[sys.argv.index("--export") + 1])
                 ee = np.sort(erst_v(VH, s))
+                if "--debug-vh" in sys.argv:          # Diagnose J (nur Ausgabe): v-dach um eine Stunde eines Symbols
+                    dsy, dst = sys.argv[sys.argv.index("--debug-vh") + 1].split(":")
+                    si_ = SYMS.index(dsy); m_ = np.flatnonzero((SYM == si_) & (STD >= int(dst) - 60) & (STD <= int(dst) + 1))
+                    for i_ in m_:
+                        print("  DEBUG %s %d reif %d QSh %.5f Ch %.5f VH %+.5f QN %.5f" % (dsy, STD[i_], REIF[i_], QSh[i_], Ch[i_], VH[i_], QN[i_]))
                 print("KERN SCHRITT 2 · EXPORT der Ersteintritte s = %+.3f, 2024-01..2026-08, Menge %s: %d Einstiege, %d Tage" % (
                     s, E2.MENGE, len(ee), len(np.unique(STD[ee] // 24))))
                 print("  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):")
@@ -1162,7 +1194,7 @@ def main() -> int:
                     len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
                     " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
                 ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
-                                    ("kern_einstiege_%s.csv" if RUHE == 24 else "kern%d_einstiege_%%s.csv" % RUHE) % E2.MENGE.replace(":", "_"))
+                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, "j" if JUNGE else "")) % E2.MENGE.replace(":", "_"))
                 if "--ziel" in sys.argv:                     # Werkzeugtest: in eine Wegwerfdatei schreiben
                     ziel = sys.argv[sys.argv.index("--ziel") + 1]
                 os.makedirs(os.path.dirname(ziel), exist_ok=True)
@@ -1173,18 +1205,75 @@ def main() -> int:
                                                        "%.0f" % t_u[i] if np.isfinite(t_u[i]) else "",
                                                        "%.0f" % t_d[i] if np.isfinite(t_d[i]) else ""))
                 print("  geschrieben: %s (Ruhe %d h)" % (ziel, RUHE))
+                if JUNGE:
+                    zg = ziel.replace("_einstiege_", "_gruppe_") if "_einstiege_" in ziel else ziel.replace(".csv", "_gruppe.csv")
+                    with io.open(zg, "w", encoding="utf-8") as f_:
+                        f_.write("symbol;stunde;neu\n")
+                        for i in ee:
+                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(not reif_e(np.array([i]))[0])))
+                    print("  J-Gruppe (neu = bisher durch die 12-Monats-Bedingung gesperrt): %d von %d neu -> %s" % (
+                        int((~reif_e(ee)).sum()), len(ee), zg))
                 if "--ruhe" in sys.argv:
                     # N4-W (Auskunft): die Wucht *beide oben* mit den Kanten aus der L2-Wahl 2024 (wie N3)
                     import json
                     cfg = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "l2_wahl_bestand.json"), encoding="utf-8"))
                     kE, kV = cfg["kanten"]["ema_abstand_atr"], cfg["kanten"]["volumenschub"]
                     wo = (L2_F["ema_abstand_atr"][ee] > kE[1]) & (L2_F["volumenschub"][ee] > kV[1])
-                    zw = ziel.replace("_einstiege_", "_wucht_")
+                    zw = ziel.replace("_einstiege_", "_wucht_") if "_einstiege_" in ziel else ziel.replace(".csv", "_wucht.csv")
                     with io.open(zw, "w", encoding="utf-8") as f_:
                         f_.write("symbol;stunde;beide_oben\n")
                         for i, w_ in zip(ee, wo):
                             f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(w_)))
                     print("  Wucht beide oben: %d von %d (%.1f %%) -> %s" % (int(wo.sum()), len(ee), 100 * wo.mean(), zw))
+                print("SCHLUSS: vollstaendig")
+                return 0
+            if JUNGE and best and "--export" not in sys.argv:
+                # ══ J (Voranalyse_J_Mindesthistorie_30_09.md, J-a bis J-d): die NEU hinzukommenden Einstiege (bisher durch
+                # die 12-Monats-Bedingung gesperrt) - 2024-2026, alle ungesehen; reife Einstiege muessen bitgleich zu REGEL0 sein ══
+                s = s_best
+                ee = erst_v(VH, s)
+                neu = ~reif_e(ee)
+                print("J · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon NEU %d (%.1f %%), Assets neu %d" % (
+                    E2.MENGE, RUHE, s, len(ee), int(neu.sum()), 100 * neu.mean(), len(np.unique(SYM[ee[neu]]))))
+                for jj in JAHRE:
+                    rj = ee[~neu & (JAHR[ee] == jj)]
+                    print("  R-R11 reif %d: %d Einstiege · Dq %+.4f (REGEL0 bestand Ruhe 48 h: 2024 1.486 / +0,1615 · 2025-26 6.328 / +0,1039)" % (
+                        jj, len(rj), dqh(rj)))
+                rr = ee[~neu & np.isin(JAHR[ee], (2025, 2026))]
+                print("  R-R11 reif 2025-26 zusammen: %d · Dq %+.4f" % (len(rr), dqh(rr)))
+                en = ee[neu]
+                jz = [(jj, dqh(en[JAHR[en] == jj]), int((JAHR[en] == jj).sum())) for jj in JAHRE]
+                j1 = all(x[1] > 0 for x in jz if x[2] >= 100) and any(x[2] >= 100 for x in jz)
+                print("  J1 neu je Jahr: %s -> %s" % (" · ".join("%d %+.4f (%d)" % x for x in jz), "✔" if j1 else "⛔"))
+                nv = []
+                for _ in range(zieh):
+                    e2 = erst_v(vh_stuendlich(verschoben(E, RSI)), s)
+                    nv.append(dqh(e2[~reif_e(e2)]))
+                p90 = float(np.nanpercentile(nv, 90)); gs = dqh(en); j2 = gs > p90
+                print("  J2 neu gesamt Dq %+.4f · Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (
+                    gs, zieh, float(np.nanmean(nv)), p90, "✔" if j2 else "⛔"))
+                tage = STD[en] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                je_tag = [en[tinv == k] for k in range(len(ut))]
+                rb = np.random.default_rng(SAAT + 81)
+                bo = [dqh(np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])) for _ in range(1000)]
+                lo95 = float(np.nanpercentile(bo, 2.5))
+                AUFa = np.where(np.isfinite(t_u), t_u <= 24, False).astype(float); ABa = np.where(np.isfinite(t_d), t_d <= 24, False).astype(float)
+                sp_ = []
+                for jj in JAHRE:
+                    sj, bj = en[JAHR[en] == jj], h_ab[JAHR[h_ab] == jj]
+                    if len(sj) >= 100:
+                        sp_.append((jj, (AUFa[sj].mean() - AUFa[bj].mean()) - (ABa[sj].mean() - ABa[bj].mean())))
+                ga = [dqh(en[SYM[en] == si]) > 0 for si in np.unique(SYM[en]) if (SYM[en] == si).sum() >= 20]
+                j3 = lo95 > 0 and all(x[1] > 0 for x in sp_) and (np.mean(ga) >= 0.6 if ga else False)
+                print("  J3 Tagesblock (%d Tage) untere Grenze %+.4f · Spiegel je Jahr %s · je Asset (>= 20 neu) %d Assets, %.0f %% -> %s" % (
+                    len(ut), lo95, " · ".join("%d %+.3f" % x for x in sp_), len(ga), 100 * np.mean(ga) if ga else np.nan, "✔" if j3 else "⛔"))
+                print("  J5 neu gegen reif (2024-26): neu Dq %+.4f (%d) · reif Dq %+.4f (%d)" % (gs, len(en), dqh(ee[~neu]), int((~neu).sum())))
+                ht = HIST_T[en]
+                print("  J6 nach Alter der Historie: " + " · ".join(
+                    "%s %+.4f (%d)" % (nm_, dqh(en[(ht >= lo_) & (ht < hi_)]), int(((ht >= lo_) & (ht < hi_)).sum()))
+                    for nm_, lo_, hi_ in (("10 Tage-3 Monate", 10, 91), ("3-6 Monate", 91, 182), ("6-12 Monate", 182, 366))))
+                print("  URTEIL J (Menge %s): J1 %s · J2 %s · J3 %s  (J4 ueber die vier Mengen)" % (
+                    E2.MENGE, "✔" if j1 else "⛔", "✔" if j2 else "⛔", "✔" if j3 else "⛔"))
                 print("SCHLUSS: vollstaendig")
                 return 0
             if "--m1" in sys.argv and best:

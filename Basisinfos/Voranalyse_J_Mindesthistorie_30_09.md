@@ -101,3 +101,25 @@ Gruppenmarke *neu/reif*. Der Export der Einstiege bekommt dieselbe Marke, damit 
 | **J-b** | Messung Abschnitt 4: J1–J4 als Urteil auf den **neuen** Einstiegen 2024–26, J5/J6 als Auskunft, reif bitgleich |
 | **J-c** | Bestanden, dann wird J Teil der REGEL0. Danach die Prüfung der Schwellenwahl auf der vollständigen 2024-Menge (Abschnitt 5) |
 | **J-d** | erst dann die Messung auf deiner **Hebel-Liste**, mit den jungen Assets |
+
+---
+
+## 8. ✔ ABGESTIMMT (30.09.2026) — J-a bis J-d; Umsetzung und Gegenprüfung VOR dem Lauf
+
+**Nutzer:** *„Ja, mit J beginnen, prüfen und gegenprüfen."* Dazu die Einordnung zum Betrieb: Übertragung und laufende Datenanbindung
+sind **kein Showstopper**, sondern eine Bauaufgabe (Plan, Schwäche S2).
+
+**Umsetzung** (`messe_losfahren.py --junge`, ohne den Schalter bitgleich wie bisher):
+- `normal()` lässt das eigene Normal ab **240 h + Fenster** zu. `REIF` merkt die alte 12-Monats-Bedingung.
+- `BASIS &= REIF`: Das Training, die Suche/Prüfung und die Marktmitte bleiben auf reifen Stunden.
+- Junge Stunden werden an **derselben** Marktmitte und τ² geschrumpft. Das Rauschen ergibt sich aus Rate × min(365, Tage der Historie).
+- Die Auswertung J1–J6 steht mit `--bestaetigen 0.035` für die Jahre 2024–2026. Der Export mit `--junge` schreibt `kern48j_einstiege_<m>.csv` und die Gruppenmarke `kern48j_gruppe_<m>.csv`, die Simulation liest `--gruppe` (J5).
+
+**Gegenprüfung (Probe, bestand, 8 Monate):**
+1. v̂ ist auf allen reifen Stunden **bitgleich** (Diagnose `--debug-vh` an EDU).
+2. ⚠️ **Randfälle an der 12-Monats-Grenze:** 3 Einstiege (EDU, STX, SUI) entstehen erst durch J. Das Signal kam kurz nach der Grenze, und ohne
+   J hatte das Ruhefenster davor weniger als 40 gültige Stunden. Das ist die **gewollte** Wirkung und kein Fehler. ➤ *Reif* ist deshalb auf Einstiegsebene
+   präzisiert: Auch das **ganze Ruhefenster** muss reif sein (`reif_e`). Diese Randfälle zählen zu *neu*.
+3. ✔ **R-R11:** Die reifen Einstiege sind mit `--junge` **zeilengleich** zum Export ohne `--junge` (462 von 462, inklusive der Ausgänge t_u und t_d).
+4. Behoben: Bei einem frei gewählten Zielnamen (`--ziel`, nur in Tests) überschrieben die Wucht- und Gruppendatei die Einstiegsdatei. Die echten Dateinamen waren nie betroffen.
+
