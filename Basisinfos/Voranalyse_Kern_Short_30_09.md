@@ -151,3 +151,8 @@ bis 0,050, und das ist das Zeichen, dass die Regel im Rauschen wählt. In bestan
 ⚠️ **B1** verlangt Dq > 0 in **2025 und 2026**. Ein Arm, der nur im Gegenwind trägt, fällt daran. Das ist gewollt: Ein echtes
 Signal muss auch im anderen Regime wenigstens nicht **schaden**, und genau das hat der Long-Kern geschafft (2.688).
 
+**✔ ABGESTIMMT (30.09.2026): K1.** Nutzer: *„Ok, ja, starten, prüfen und gegenprüfen."* Die Bestätigung läuft einmal mit **s = 0,035**
+(Symmetrie) in allen 4 Mengen, mit den Kriterien B1–B7 wie Abschnitt 3. Aufruf `--kern --short --ruhe 48 --bestaetigen 0.035`,
+davor keinerlei Blick auf 2025–26. Die je Menge gewählten Stufen (0,050 / 0,045 / 0,015 / 0,035) sind nur Auskunft. Die Stufe
+0,035 in unverzerrt:3 ist dabei ohnehin dieselbe.
+
