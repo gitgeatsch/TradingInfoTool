@@ -556,6 +556,45 @@ def main() -> int:
                             print("  Leiter Potential +%.1f ATR (volumenschub verschoben): gefunden %d von 5" % (d_pl, gef))
                 else:
                     cfg = json.load(open(JS, encoding="utf-8"))
+                    if "--gegen-atr" in sys.argv:
+                        # ── G-ATR (Voranalyse L2 Abschnitt 14, vorab): traegt Teil B auch OHNE die ATR beim Einstieg? ──
+                        from scipy.stats import spearmanr
+                        ATRrel = ATR / normal_mittel(ATR, W=1)
+                        ok_ = np.isfinite(ATRrel[ee]); ee = ee[ok_]
+                        print()
+                        print("  G-ATR · %d Einstiege · ATRrel P10/P50/P90 %.2f / %.2f / %.2f" % (
+                            len(ee), *np.percentile(ATRrel[ee], [10, 50, 90])))
+                        POTp = L2_MFE[24] - normal_mittel(L2_MFE[24]); RISp = L2_MAE[24] - normal_mittel(L2_MAE[24])
+                        POTa, RISa = POTn, RISn
+
+                        def geschichtet(nm_, ix, j_, rich, gut):
+                            kr = np.quantile(ATRrel[ix], [1 / 3, 2 / 3]); ka = np.searchsorted(kr, ATRrel[ix], "right")
+                            w_ = []
+                            for c in range(3):
+                                d_, no_, nu_ = drittel_diff(CAND[nm_], ix[ka == c], cfg["kanten"][nm_])
+                                w_.append(d_[j_] * rich * gut if min(no_, nu_) >= 30 else np.nan)
+                            return float(np.mean(w_)), w_
+                        for j_, nm_mass, gut in ((0, "Chance", 1), (1, "Potential", 1), (2, "Risiko", -1)):
+                            for nm_, rich in cfg["weiter"].get(nm_mass, []):
+                                w = CAND[nm_][ee]; f_ = np.isfinite(w)
+                                rho = float(spearmanr(w[f_], ATRrel[ee][f_])[0])
+                                roh = drittel_diff(CAND[nm_], ee, cfg["kanten"][nm_])[0][j_] * rich * gut
+                                g_all, g_c = geschichtet(nm_, ee, j_, rich, gut)
+                                gj = [geschichtet(nm_, ee[JAHR[ee] == jj], j_, rich, gut)[0] for jj in JAHRE]
+                                POTn, RISn = POTp, RISp
+                                pz = drittel_diff(CAND[nm_], ee, cfg["kanten"][nm_])[0][j_] * rich * gut
+                                pzj = [drittel_diff(CAND[nm_], ee[JAHR[ee] == jj], cfg["kanten"][nm_])[0][j_] * rich * gut for jj in JAHRE]
+                                POTn, RISn = POTa, RISa
+                                g1 = all(x > 0 for x in gj) and roh > 0 and g_all >= 0.5 * roh
+                                print("    %s · %-17s (%s): rho(ATRrel) %+.2f · roh %+.4f · geschichtet %+.4f (Drittel %s) · je Jahr %s · %s"
+                                      " · Prozentmass %+.3f (%s)" % (
+                                          nm_mass, nm_, "oben" if rich > 0 else "unten", rho, roh, g_all,
+                                          " / ".join("%+.4f" % x for x in g_c),
+                                          " · ".join("%d %+.4f" % (jj, x) for jj, x in zip(JAHRE, gj)),
+                                          "✔ G1 ATR-frei (diese Menge)" if g1 else "⛔ G1",
+                                          pz, " · ".join("%d %+.3f" % (jj, x) for jj, x in zip(JAHRE, pzj))))
+                        print("SCHLUSS: vollstaendig")
+                        return 0
                     kA = cfg["kA"]
                     kl = np.searchsorted(kA, ST, "right")
                     print()

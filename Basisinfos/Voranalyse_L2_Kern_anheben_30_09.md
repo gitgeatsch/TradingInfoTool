@@ -250,3 +250,27 @@ Potential: ema_abstand ↑, top_konten_verh ↓, volumenschub ↑ · Risiko: vol
 | Gegenprüfung N2 | *Zwei Regeln vergleichen: erst den Auswahlanteil angleichen* — 24 h zufällig auf die Zahl von 48 h ausgedünnt (40 Ziehungen); 48 h muss darüber liegen, sonst misst es nur die **Härte** |
 | **N3 / N4** | danach Überschneidung der tragenden Beiträge und Summe (L4), dann Simulation als Erfolgsmessung |
 | **Optimierungsloop** | N2 ist die erste Ebene; jede weitere Ebene (Parameter, Beiträge, Summe, Positionsführung) wieder mit Wahl auf 2024, einmaliger Bestätigung und — sobald vorhanden — den neuen Monaten ab 2026-09 |
+
+---
+
+## 14. GEGENPRÜFUNG G-ATR — vorab festgelegt (30.09.2026, VOR der Rechnung, nach Sicht auf 3 von 4 Bestätigungsmengen)
+
+**Anlass (prüfen und gegenprüfen):** In Teil B tragen bisher `ema_abstand_atr` (Potential) und `vola_kausal` (Risiko), dazu
+teils `volumenschub` (Potential). Potential und Risiko sind **in eigener ATR** gemessen. `ema_abstand_atr` hat die ATR ebenfalls
+im **Nenner**, und `vola_kausal` ist laut **2.667** in ATR-Einheiten im Wesentlichen die ATR selbst. Eine beim Einstieg
+**ungewöhnlich kleine oder große ATR** könnte beide Seiten gemeinsam bewegen. Das wäre ein Artefakt des Maßes und keine Information
+über das, was kommt.
+
+⚠️ Das ändert **kein** Kriterium der Bestätigung (N1, N2, B bleiben wie festgelegt). Es ist eine **zusätzliche Prüfung**, ob ein
+tragendes Ergebnis auf dem Maß beruht.
+
+| | festgelegt vor der Rechnung |
+|---|---|
+| **ATRrel** | ATR beim Einstieg ÷ Mittel der **eigenen** ATR der letzten 12 Monate, nur Vergangenheit |
+| Auskunft | Spearman-ρ(Kandidat, ATRrel) auf den Kern-Einstiegen 2025–26 |
+| **G1 (Urteil)** | Der Effekt aus Teil B (oben minus unten, Wahlkanten, Richtung aus der Wahl) wird **innerhalb** jedes ATRrel-Drittels gerechnet. Die Drittelgrenzen liegen auf den Einstiegen der Menge, jede Zelle braucht ≥ 30 Einstiege. Daraus der Mittelwert über die drei Drittel. **ATR-frei tragend**, wenn dieser Mittelwert in **2025 und 2026 > 0** liegt **und ≥ 50 % des Roheffekts** derselben Menge beträgt, in **≥ 3 von 4 Mengen** |
+| Auskunft | dasselbe im **Prozentmaß** (MFE bzw. Rückgang vor dem Hoch in %, minus eigenes Normal in %). Nur Auskunft, weil das Prozentmaß in die Gegenrichtung verzerrt: große Spanne bedeutet große Prozentbewegung |
+| Umfang | alle 9 Paare aus Teil B. Das Urteil zählt nur für die, die B in ≥ 3/4 Mengen bestehen |
+| Folge | Fällt G1: der Beitrag fällt **nicht**, es gilt die Lösungspflicht. Er wird als **ATR-Anteil** eingeordnet (Bewertung 2 hat die ATR schon), und die Lösung ist eine ATR-freie Form. Besteht G1: der Beitrag geht so in N3 |
+
+Aufruf: `python messe_losfahren.py --menge <m> --l2 --bestaetigen 0.035 --gegen-atr`. Er rechnet nur G-ATR, A1/N2/B nicht erneut.
