@@ -29,7 +29,7 @@ Kursmerkmale gemessen und die **drei registrierten Träger** nie geladen.
 | ◐ **Erfolgsmessung** | Hebel mit Kern + Ruhe 48 h verliert weiter in 3/4 (unverzerrt ×0,63..×0,68). Rohvorteil **+0,29..+0,31 %** gegen **0,48 %** Kosten, die Lücke beträgt etwa **0,18 Prozentpunkte** (2.694) |
 | ⭐ **Engpass** | das **Regime**: Verluste und Kippeffekte liegen im Gegenwind (zweites Halbjahr 2025) |
 | ⚠️ **neue Pflichten** | **Spiegelprobe** bei jedem Potential- und Bewegungsmaß (E-29) · **Urteil auf unverzerrt**, bestand ist überlebensverzerrt (E-30) · **untere v̂-Grenzen** gelten nur in ihrer Menge (E-31) |
-| ➤ **nächster Schritt** | **Kern-Short** (W3, E-32: nicht der Betriebs-SHORT, nicht die Absicherung), danach **W4** Positionsführung (Erfolgsmessung) |
+| ➤ **nächster Schritt** | **Kern-Short** (W3, E-32: nicht der Betriebs-SHORT, nicht die Absicherung), **Voranalyse Schritt 1 zur Abstimmung** (`Voranalyse_Kern_Short_30_09.md`, S1–S5), danach **W4** Positionsführung (Erfolgsmessung) |
 
 Einzelheiten in den Voranalysen `Voranalyse_L2_Kern_anheben_30_09.md`, `…_L2_N3_Ueberschneidung_…`, `…_L4_Summe_…`,
 `…_N4_Simulation_Ruhe48_…` und `…_Richtung_Kern_…` sowie in `python hebel_neubau.py`.
