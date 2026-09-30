@@ -152,7 +152,7 @@ def kursreihen() -> list:
         md.close()
         saat = int(MENGE.split(":")[1]) if ":" in MENGE else 1
         rng = np.random.default_rng(saat)
-        bestand = [x for x in bestand if x in gezogen]
+        bestand = [x for x in bestand if x in gezogen or ("--mit-btc" in sys.argv and x.upper() == "BTC")]
         kand = [x for x in eing if x in rahmen]
         eing = [x for x in kand if rng.random() < ZIEHRATE]
     elif MENGE != "mit":
@@ -308,7 +308,7 @@ def lade(hmax=None, erste=(), mit_atr=False, ab=None, bis=None):
     X = {k: [] for k in ("vor24", "vor120", "mfe_max", "maevp_max")}
     ausgeschlossen = 0
     for si, (sym, rows, bis_ende) in enumerate(reihen):
-        if sym.upper() == "BTC":
+        if sym.upper() == "BTC" and "--mit-btc" not in sys.argv:   # 01.10.: BTC als Asset nur mit --mit-btc (Leitwert)
             continue
         if len(rows) < 500:
             continue

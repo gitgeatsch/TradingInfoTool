@@ -128,6 +128,13 @@ def main() -> int:
             nb[tl] = np.where(gut, (cb[hi] - cb[lo]) / np.maximum(k, 1), np.nan)
         return na, nb
     NA, NB = normal(A24, B24, 24, merke=True)
+    # ⭐ BTC als handelbares Asset (Voranalyse_J_Mindesthistorie_30_09.md Abschnitt 11): nur mit --mit-btc und --junge;
+    # BTC-Stunden gelten als NICHT reif (kein Training, keine Marktmitte), das Normal kommt ueber den J-Weg
+    MITBTC = "--mit-btc" in sys.argv
+    BTC_I = SYMS.index("BTC") if (MITBTC and "BTC" in SYMS) else -1
+    if MITBTC:
+        assert JUNGE, "--mit-btc verlangt --junge (das BTC-Normal laeuft ueber den J-Weg)"
+        REIF[SYM == BTC_I] = False
     NA72, NB72 = normal(A72, B72, 72)
     SM = SYM.astype(np.int64) * 1000 + (MON - MON.min())
     _u, smi = np.unique(SM, return_inverse=True)
@@ -183,6 +190,8 @@ def main() -> int:
     BASIS = GRID & np.isfinite(OFF)
     if JUNGE:
         BASIS &= REIF                       # J: Training, Suche/Pruefung und Marktmitte nur auf reifen Stunden
+    if MITBTC:
+        BASIS &= SYM != BTC_I               # BTC: nie in Training und Marktmitte
     HIT = (A24 + B24) > 0
     such = BASIS & (STD >= SUCHE[0]) & (STD < SUCHE[1])
     pruef = BASIS & (STD >= PRUEF[0]) & (STD < PRUEF[1])
@@ -1195,7 +1204,7 @@ def main() -> int:
                     len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
                     " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
                 ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
-                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, "j" if JUNGE else "")) % E2.MENGE.replace(":", "_"))
+                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, ("j" if JUNGE else "") + ("b" if MITBTC else ""))) % E2.MENGE.replace(":", "_"))
                 if "--ziel" in sys.argv:                     # Werkzeugtest: in eine Wegwerfdatei schreiben
                     ziel = sys.argv[sys.argv.index("--ziel") + 1]
                 os.makedirs(os.path.dirname(ziel), exist_ok=True)
@@ -1211,9 +1220,9 @@ def main() -> int:
                     with io.open(zg, "w", encoding="utf-8") as f_:
                         f_.write("symbol;stunde;neu\n")
                         for i in ee:
-                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(not reif_e(np.array([i]))[0])))
-                    print("  J-Gruppe (neu = bisher durch die 12-Monats-Bedingung gesperrt): %d von %d neu -> %s" % (
-                        int((~reif_e(ee)).sum()), len(ee), zg))
+                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(SYM[i] == BTC_I) if MITBTC else int(not reif_e(np.array([i]))[0])))
+                    print(("  BTC-Gruppe (1 = BTC): %d von %d -> %s" if MITBTC else "  J-Gruppe (neu = bisher durch die 12-Monats-Bedingung gesperrt): %d von %d neu -> %s") % (
+                        int((SYM[ee] == BTC_I).sum()) if MITBTC else int((~reif_e(ee)).sum()), len(ee), zg))
                 if "--ruhe" in sys.argv:
                     # N4-W (Auskunft): die Wucht *beide oben* mit den Kanten aus der L2-Wahl 2024 (wie N3)
                     import json
@@ -1226,6 +1235,42 @@ def main() -> int:
                         for i, w_ in zip(ee, wo):
                             f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(w_)))
                     print("  Wucht beide oben: %d von %d (%.1f %%) -> %s" % (int(wo.sum()), len(ee), 100 * wo.mean(), zw))
+                print("SCHLUSS: vollstaendig")
+                return 0
+            if MITBTC and best and "--export" not in sys.argv:
+                # ══ BTC (Abschnitt 11): die BTC-Einstiege der REGEL0 (s, Ruhe 48 h, J), 2024-2026 ══
+                s = s_best
+                ee = erst_v(VH, s)
+                bm = SYM[ee] == BTC_I
+                eb = ee[bm]
+                print("BTC · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon BTC %d · uebrige %d" % (
+                    E2.MENGE, RUHE, s, len(ee), len(eb), int((~bm).sum())))
+                jz = [(jj, dqh(eb[JAHR[eb] == jj]), int((JAHR[eb] == jj).sum())) for jj in JAHRE]
+                b1 = all(x[1] > 0 for x in jz if x[2] >= 30) and any(x[2] >= 30 for x in jz)
+                print("  B-1 BTC je Jahr: %s -> %s" % (" · ".join("%d %+.4f (%d)" % x for x in jz), "✔" if b1 else "⛔"))
+                nv = []
+                for _ in range(zieh):
+                    e2 = erst_v(vh_stuendlich(verschoben(E, RSI)), s)
+                    nv.append(dqh(e2[SYM[e2] == BTC_I]))
+                p90 = float(np.nanpercentile(nv, 90)); gs = dqh(eb); b2 = gs > p90
+                print("  B-2 BTC gesamt Dq %+.4f · Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (
+                    gs, zieh, float(np.nanmean(nv)), p90, "✔" if b2 else "⛔"))
+                tage = STD[eb] // 24; ut, tinv = np.unique(tage, return_inverse=True)
+                je_tag = [eb[tinv == k] for k in range(len(ut))]
+                rb = np.random.default_rng(SAAT + 91)
+                bo = [dqh(np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])) for _ in range(1000)]
+                lo95 = float(np.nanpercentile(bo, 2.5))
+                AUFa = np.where(np.isfinite(t_u), t_u <= 24, False).astype(float); ABa = np.where(np.isfinite(t_d), t_d <= 24, False).astype(float)
+                hb = h_ab[SYM[h_ab] == BTC_I]
+                sp_ = [(jj, (AUFa[eb[JAHR[eb] == jj]].mean() - AUFa[hb[JAHR[hb] == jj]].mean())
+                        - (ABa[eb[JAHR[eb] == jj]].mean() - ABa[hb[JAHR[hb] == jj]].mean()))
+                       for jj in JAHRE if (JAHR[eb] == jj).sum() >= 30]
+                b3 = lo95 > 0 and all(x[1] > 0 for x in sp_)
+                print("  B-3 Tagesblock (%d Tage) untere Grenze %+.4f · Spiegel je Jahr (gegen alle BTC-Stunden) %s -> %s" % (
+                    len(ut), lo95, " · ".join("%d %+.3f" % x for x in sp_), "✔" if b3 else "⛔"))
+                print("  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq %+.4f (%d)" % (dqh(ee[~bm]), int((~bm).sum())))
+                print("  URTEIL BTC (Menge %s): B-1 %s · B-2 %s · B-3 %s  (B-4 ueber die vier Mengen)" % (
+                    E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b3 else "⛔"))
                 print("SCHLUSS: vollstaendig")
                 return 0
             if JUNGE and best and "--export" not in sys.argv:

@@ -188,3 +188,43 @@ eigene einmalige Bestätigung auf 2025–26 (Nutzer-Ja).
 
 ➤ **Die Schwelle bleibt +0,035**, jetzt auf der vollständigen Grundlage gewählt. ⚠️ Die R-R11-Zeile zeigte in W2 *ABWEICHUNG*, weil ihre Sollwerte nur für Ruhe 24 h ohne J gelten.
 Die Beschriftung ist korrigiert, die Zahlen sind unverändert.
+
+---
+
+## 11. BTC ALS HANDELBARES ASSET — analog J (vorab festgelegt, Nutzer 01.10.2026)
+
+**Nutzer:** *„BTC soll dann am NB auch Hebel nutzen können."* · *„Ja, mit BTC weiter, prüfen und gegenprüfen und Doku."*
+
+**Stand:** BTC ist der **Leitwert** des Marktes und wird an zwei Stellen ausgeschlossen: im Messlader (`messe_e2_beitraege.lade`) und in der Simulation
+(`messe_k6_hebelstufe`). In den unverzerrten Stichproben ist BTC **nicht gezogen**. Die Daten: Stundenkurse erst ab 2023-09 (Datenartefakt wie bei J), Markpreis
+vollständig, keine gesperrten Monate.
+
+| | Umsetzung (Schalter `--mit-btc`, ohne ihn bitgleich wie bisher) |
+|---|---|
+| Laden | BTC wird **nicht** übersprungen und in allen 4 Mengen hinzugenommen |
+| Modell, Marktmitte, τ² | **ohne** BTC. BTC-Stunden gelten als *nicht reif* und sind aus Training und Marktmitte ausgeschlossen, damit die REGEL0 für alle anderen **bitgleich** bleibt |
+| BTC selbst | eigenes Normal über den J-Weg (ab 240 h, geschrumpft an der Marktmitte der übrigen). Beitrag aus demselben Monatsmodell |
+| Simulation | BTC wird nicht übersprungen. Die Hebelstufe kommt aus dem ATR-Modell wie für jedes Asset |
+
+**Kriterien für die BTC-Einstiege** (REGEL0: s = +0,035, Ruhe 48 h, J; 2024–2026):
+| # | Kriterium | Art |
+|---|---|---|
+| B-1 | Chance Dq > 0 in jedem Jahr mit ≥ 30 BTC-Einstiegen | Urteil |
+| B-2 | über dem P90 der Nullwelt (rollierende Modelle auf verschobenem rsi, 40 Ziehungen) | Urteil |
+| B-3 | Tagesblock untere Grenze > 0 und Spiegel > 0 | Urteil |
+| B-4 | ≥ 3 von 4 Mengen | Urteil |
+| B-5 | Simulation: Handel, Rohvorteil je Handel gegen 0,48 %, Hebelkonto, Hebelstufe, Liquidationen | Auskunft |
+
+**R-R11:** Alle übrigen Einstiege sind **zeilengleich** zur REGEL0 (Vergleich des Exports mit und ohne `--mit-btc`).
+⚠️ **Ehrlich:** Ein einzelnes Asset hat nur wenige Einstiege (geschätzt einige hundert in 3 Jahren), die Aussage ist also statistisch **schwach**. Besteht BTC,
+kommt es in die handelbare Assetmenge der REGEL0 (Betrieb: BTC mit Hebel). Besteht es nicht, gilt die Lösungspflicht (E-25), etwa BTC als Auskunft in der Mail.
+
+**Umsetzung und Gegenprüfung vor dem Lauf (01.10.2026):**
+- `--mit-btc` (verlangt `--junge`) im Messlader, im Lader der Mengen (BTC in unverzerrt hinzugenommen), in `messe_losfahren.py` (BTC nicht reif, nie in
+  Training und Marktmitte) und in der Simulation (BTC-Anker **nicht** ins ATR-Training, BTC-Einstiege werden simuliert). Export `kern48jb_einstiege_<m>.csv`,
+  die Gruppenmarke `kern48jb_gruppe_<m>.csv` (1 = BTC).
+- ✔ **R-R11 (Probe):** Die übrigen Einstiege sind **zeilengleich** zur J-Probe (722 von 722), BTC kommt hinzu. Das ATR-Modell ist mit und ohne BTC **identisch**
+  (die R-R11-Zeile der Simulation beide Male 19,954 / 17,216).
+- Die Probe hat nur 2024, die Simulation bestätigt aber 2025–26. Die Simulationsausgaben sind deshalb erst im vollen Lauf prüfbar. Dort muss das Konto der Nicht-BTC-Handel die REGEL0-Referenz treffen.
+- ⚠️ Die Nullwelt zieht mit BTC in anderer Reihenfolge. Ihre Werte für die übrigen Assets sind deshalb nicht bitgleich, die **Einstiege** schon.
+

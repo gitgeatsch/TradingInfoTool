@@ -163,7 +163,7 @@ def main() -> int:
     SIM_RNG = np.random.default_rng(SAAT + 33)
     for si, (sym, rows, bis_ende) in enumerate(E2.kursreihen()):
         syms.append(sym)
-        if sym.upper() == "BTC" or len(rows) < 500:
+        if (sym.upper() == "BTC" and "--mit-btc" not in sys.argv) or len(rows) < 500:
             continue
         st = [r[0] for r in rows]
         h = np.array([r[1] for r in rows], float)
@@ -367,6 +367,12 @@ def main() -> int:
         print("  %3d h: %s" % (f, " · ".join(teil)))
     X = {k: np.concatenate(v) for k, v in SP.items()}
     Y = {k: np.concatenate(v).astype(np.float64) for k, v in EV.items()}
+    if "--mit-btc" in sys.argv and "BTC" in syms:
+        # 01.10. (BTC analog J): BTC-Anker NICHT ins ATR-Training - die Hebelstufe der uebrigen bleibt bitgleich;
+        # die BTC-EINSTIEGE werden weiter simuliert (Vorhersage aus demselben Modell)
+        keep_ = X["sym"] != syms.index("BTC")
+        X = {k: v[keep_] for k, v in X.items()}; Y = {k: v[keep_] for k, v in Y.items()}
+        print("  --mit-btc: %d BTC-Anker aus dem ATR-Training genommen" % int((~keep_).sum()))
     STD, SYM, JAHR = X["std"], X["sym"], X["jahr"]
     n = len(STD)
     MON = monat_von(STD)
