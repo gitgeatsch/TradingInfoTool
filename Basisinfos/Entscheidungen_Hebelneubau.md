@@ -399,3 +399,37 @@ laufen mit), die Prüfzeit-Bedingung lautet *über dem Versatz*.
 **Nachtrag 30.09. (2.693):** Die Bedingung ist **nicht erfüllt**. Der Spiegel fällt in 4 von 4 Mengen. E-28 greift damit **nicht**,
 und Bewertung 1 bleibt **Ereignis (Kern + Ruhe 48 h) + Chance**. Die Potential-Glieder (Wucht) sind Rolle B und gehen in die
 Positionsführung und die Hebelstufe. Es ist keine neue Entscheidung nötig: E-28 hatte diese Bedingung von Anfang an.
+
+
+---
+
+# E-29 · Spiegelprobe ist Pflicht bei jedem Potential- oder Bewegungsmaß
+
+**30.09.2026** · Aus 2.693. Die Wucht hob das Potential in 4/4 Mengen, und erst der Spiegel (+5 % binnen 24 h gegen −5 % binnen
+24 h) zeigte, dass es **mehr Bewegung in beide Richtungen** ist. Das Maß *Rückgang vor dem Hoch* sieht den Rückgang nach dem Hoch
+nicht. ➤ Ab jetzt läuft der Spiegel bei jeder Messung mit, die Potential, MFE oder eine Bewegungsgröße hebt, als **Urteilsbedingung**.
+
+---
+
+# E-30 · Urteil auf den unverzerrten Mengen; bestand ist Auskunft, wenn die Mengen auseinanderlaufen
+
+**30.09.2026** · Aus 2.694. Nur bestand gewann (×1,23), die drei unverzerrten Mengen verloren (×0,63..×0,68). Der Rohvorteil liegt in
+bestand fast doppelt so hoch, weil dort die **eingestellten** Paare fehlen (2.668/2.669). ➤ Die Regel ≥ 3/4 bleibt. Laufen bestand
+und unverzerrt auseinander, gilt das Urteil der **unverzerrten** Mengen, und bestand wird als überlebensverzerrt ausgewiesen.
+
+---
+
+# E-31 · Untere Grenzen in v̂ gelten nur in der Menge, auf der sie gemessen sind
+
+**30.09.2026** · Aus 2.695. Der Vorsprung v̂ kommt je Menge aus eigenen rollierenden Modellen und eigenem geschrumpftem Normal. Die
+Kanten der *Tiefe davor* aus bestand 2024 trennten in unverzerrt:1 **335 gegen 5.326** Einstiege. ➤ Kandidaten, die aus v̂
+abgeleitet sind, bekommen Kanten **je Menge** (auf deren 2024) oder werden nur in bestand beurteilt. Die Kern-Schwelle s ist kaum
+berührt (Einstiege je Menge 10.534–11.844). Für den Betrieb heißt das: dieselbe Grundgesamtheit wie in der Messung.
+
+---
+
+# E-32 · Begriff „Kern-Short“ (Nutzer 30.09.)
+
+**30.09.2026** · Nutzer: *„bitte abgrenzen zur Short-Strategie Krypto, damit keine Verwechslung passiert."* ➤ Der Messarm W3 heißt
+ausschließlich **Kern-Short**. Er ist **nicht** die SHORT-Richtung der heutigen Betriebssignale und **nicht** die Absicherung mit
+Short-Produkten (`agent/absicherung_fakten.py`). Beide bleiben unberührt. Den Namen *Short-Strategie* verwendet der Neubau nicht.

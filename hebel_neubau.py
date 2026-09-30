@@ -266,7 +266,11 @@ REGELWERK = {
                     "Regel auf 2024 gemessen, einmal bestaetigt 2025-26 in 4 von 4 "
                     "Mengen (2.688) - der ZUSTAND ist als Zahl nicht kalibriert "
                     "(2.687). Stufen (3 bis 5) und die Schwelle auf der SUMME erst, "
-                    "wenn weitere Beitraege in der Summe stehen (K5 zurueckgestellt)",
+                    "wenn weitere Beitraege in der Summe stehen (K5 zurueckgestellt). "
+                    "30.09.: Kern + RUHE 48 h (2.691/2.692, Rohvorteil je Handel "
+                    "verdoppelt 2.694); die Staerke ordnet nicht (Schalter, 2.691); "
+                    "die Wucht ist Bewegung, keine Richtung (2.693, E-28 greift "
+                    "nicht); Kurs-Vorgeschichte ausgereizt bis aufs Regime (2.695)",
         # ⚠️ Bis 27.09. abends stand hier ein FILTER (*muss mindestens 3
         # Stunden Karenz ueberleben*). Der Nutzer hatte ihn schon in 2.650
         # verworfen: *bin mir nicht sicher, ob du dies nur fuer die

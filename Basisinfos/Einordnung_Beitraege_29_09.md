@@ -237,7 +237,27 @@ Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi u
 | 3 | **K6 R+S** | ◐ S Stufe 1 auf der Kante; R2 zurückgestellt · Wetter (2.686) nicht nachweisbar |
 | 4 | **K5** | ⏸ zurückgestellt — die Schwelle gehört auf die Summe (E-23); Wahl 2024: Zustand nicht kalibriert, Ersteintritt trägt (2.687) |
 | 5 | ⭐ **KERN** Schritt 1 Bestätigung · Schritt 2 **H0** | ✔ 2.688 · ✔ 2.689 |
-| 6 | **KERN Schritt 3: Simulation**, Grenze per Regel, Haltedauer/Ziel als Achse; danach Regel einfrieren, neue Monate ab 2026-09 | ➤ Voranalyse als Nächstes |
+| 6 | **KERN Schritt 3: Simulation**, Grenze per Regel, Haltedauer/Ziel als Achse; danach Regel einfrieren, neue Monate ab 2026-09 | ⛔ 2.690 (verliert an den Kosten) · N4 mit Ruhe 48 h: 2.694 (Lücke halbiert) |
+| 6b | **Kern heben** (L2, N3, L4, Richtung) | ✔ Ruhe 48 h (2.691/2.692) · ⛔ Wucht als Einstieg (2.693) · ⛔ Richtung weiter (2.695) |
+| 6c | ➤ **Kern-Short** (W3), danach **W4** Positionsführung | offen, zur Abstimmung |
 | 7 | danach: Summe der Beiträge (Lage mit auflösender Messform) · A vorher mit neuer Datenquelle | offen |
 
 ➤ **Warum *Losfahren* nicht zurückgestellt wird (29.09., meine erste Empfehlung war falsch begründet):** die früheren Messungen der *Lage vorher* (2.650, 2.657, 2.665) liefen über ALLE Anker, auch die fahrenden — und rsi verdeckt die Lage (2.682/2.683). Ein schwaches Ergebnis von damals kann ein verdecktes sein.
+
+
+---
+
+## 13. Die Rollen nach dem 30.09. (Befunde 2.691–2.695) — das Schema vom 25.09. hält
+
+| Beitrag | Rolle | gemessen auf dem Kern |
+|---|---|---|
+| rsi-Ersteintritt | **A** während (Ereignis, *ob*) | ✔ Kern (2.688). Die Stärke in der Übertrittsstunde ordnet nicht (2.691) |
+| **Ruhe 48 h** | **A**, Regel am Kern (*Lage kurz vorher*) | ✔ eigen (2.692), Rohvorteil verdoppelt (2.694) |
+| Ruhe 72 h · Tiefe davor · Tempo | A-Kandidaten | ⛔ (2.695). Ruhe 72 h ist regimeabhängig |
+| **ema_abstand_atr**, **volumenschub** | **B** (*wie weit*) | eigen fürs Potential (2.692), aber **keine Richtung** (Spiegel, 2.693). Einsatz: Positionsführung (W4) und Hebelstufe |
+| vola_kausal | **C** über die ATR | ist die ATR selbst (G-ATR, 2.691) |
+| top_konten_verh (wenige Top-Longs) | A-Kandidat | Spur auf 24 h (2.691), kippt auf 48 h (2.695) |
+| ATR | **C** (*wie viel Hebel*) | unverändert Bewertung 2 |
+
+⚠️ **Nutzerhinweis 30.09. (kein Auftrag):** Die Hebungen gehen in Richtung der **Lage kurz vorher**. Früher verworfene Beiträge
+bleiben auf dem Kern **nicht ausgeschlossen**, denn dort ist es eine andere Frage als auf allen Stundenankern.

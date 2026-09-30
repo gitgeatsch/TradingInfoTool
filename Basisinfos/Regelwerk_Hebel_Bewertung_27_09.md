@@ -10,6 +10,22 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⭐⭐⭐ NACHTRAG STAND 30.09.2026 (nachmittags)
+
+| | Stand 30.09.2026 nachmittags (Befunde 2.691–2.695) |
+|---|---|
+| ✔ **Bewertung 1** | **Kern** (rsi-Ersteintritt, s = +0,035) **+ Ruhe 48 h** davor. Die Ruhe trägt eigene Information (2.691/2.692) und **verdoppelt** den Rohvorteil je Handel (2.694) |
+| ✔ **Bewertung 2** | die **ATR** bleibt das Risikomodell. vola_kausal ist die ATR selbst (G-ATR, 2.691) |
+| ⛔ **Stärke** | Die Stärke in der Übertrittsstunde ordnet nicht, der Kern ist ein **Schalter**. Das folgt zum Teil aus der Einstiegsform, weil 80 % der Einstiege zwischen +0,035 und +0,044 liegen (2.691; H-Schalter im Plan) |
+| ⛔ **Wucht** (ema_abstand, volumenschub) | Sie trägt eigene Information für das **Potential** (2.692), wählt aber **größere Bewegungen in beide Richtungen**, keine bessere Richtung: Der Spiegel fällt 4/4 (2.693). **Rolle B** gehört in Positionsführung und Hebelstufe. E-28 greift nicht |
+| ⛔ **Richtung weiter** (Tempo, Tiefe davor, Ruhe 72 h, top_konten_verh) | kein neuer Beitrag (2.695). Ruhe 72 h zeigt ein **gleiches Regimemuster** (2025 +, 2026 −) |
+| ◐ **Erfolgsmessung** | Hebel mit Kern + Ruhe 48 h verliert weiter in 3/4 (unverzerrt ×0,63..×0,68). Rohvorteil **+0,29..+0,31 %** gegen **0,48 %** Kosten, die Lücke beträgt etwa **0,18 Prozentpunkte** (2.694) |
+| ⭐ **Engpass** | das **Regime**: Verluste und Kippeffekte liegen im Gegenwind (zweites Halbjahr 2025) |
+| ⚠️ **neue Pflichten** | **Spiegelprobe** bei jedem Potential- und Bewegungsmaß (E-29) · **Urteil auf unverzerrt**, bestand ist überlebensverzerrt (E-30) · **untere v̂-Grenzen** gelten nur in ihrer Menge (E-31) |
+| ➤ **nächster Schritt** | **Kern-Short** (W3, E-32: nicht der Betriebs-SHORT, nicht die Absicherung), danach **W4** Positionsführung (Erfolgsmessung) |
+
+---
+
 # ⭐⭐ NACHTRAG STAND 29.09.2026
 
 | | |

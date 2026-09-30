@@ -2378,3 +2378,10 @@ Beitrag); K6 (Hebelstufe) läuft; dann K7, Simulation Ebene 3.
 
 
 **Nachtrag 29.09.2026 (6, spät):** KERN Schritt 3 Simulation (2.690): Wahl 2024 (24 h, ohne Ziel, Grenze 2 %, Konto ×1,24); **Bestätigung 2025–26: das Hebelkonto verliert in 4 von 4 Mengen** (×0,26–×0,62), Spot um null. Das Signal schlägt den Zufall klar — aber der Rohvorteil je Handel (+0,12..+0,33 %) liegt unter den Bitpanda-Kosten eines Tageshandels (0,48 %, am Buch geprüft). Lösungen L1–L4 zur Abstimmung. M1-Kriterium 2 bleibt offen.
+
+
+**Nachtrag 30.09.2026 (7):** *Kern heben* (L2 bis Richtung, Befunde 2.691–2.695). Bewertung 1 = Kern + **Ruhe 48 h**. Die
+Stärke ordnet nicht (Schalter), die Wucht (ema_abstand, volumenschub) ist Bewegung und keine Richtung (Spiegel fällt, Rolle B).
+Die Kurs-Vorgeschichte ist ausgereizt, Ruhe 72 h ist regimeabhängig. Simulation (2.694): Rohvorteil je Handel +0,29..+0,31 %
+(verdoppelt) gegen 0,48 % Kosten, der Hebel verliert weiter in 3/4. Engpass ist das **Regime**. Nächster Schritt: Kern-Short
+(W3), dann W4 Positionsführung. **M1-Kriterium 2 bleibt offen**, nichts ist verdrahtet.

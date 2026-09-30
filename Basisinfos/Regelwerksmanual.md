@@ -5150,6 +5150,11 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Zahlen gemessen, nicht gewählt** | 29.09.: *deine Wahl ist wie immer keine Wahl* | Schwellen und Grenzen per vorab festgelegter Regel, einmal bestätigt (E-24) |
 | **Lösungspflicht** | 29.09.: *an der Messung herumschrauben NEIN, aber … mögliche Lösungen JA, MUSS* | fällt ein Schritt: Fehler, Annahmen, Aussage, Lösung (E-25) |
 | **Zeitfenster** | 29.09.: *Hebel ist kurz, schnell, hoch — es geht um das ZEITFENSTER* | Chance und Risiko im selben Fenster, das Fenster als Achse (E-26) |
+| **Bewertung neutral** | 30.09.: *die neutrale Bewertung beim Einstieg, ohne Wirtschaftlichkeit — die Börse ist kein Thema, erst mit Eröffnen des Trades und der Positionsführung* | Kosten nie in Bewertung oder Beitragsauswahl, nur in Erfolgsmessung (Simulation) und Positionsführung |
+| **Optimierungsloop** | 30.09.: *das Optimierungsthema werden wir über mehrere Ebenen ausreizen* | je Ebene Wahl auf 2024, einmalige Bestätigung, später die Monate ab 2026-09 |
+| **Bewertung 1 mit Potential (bedingt)** | 30.09.: Ja zu L4 Q1 | E-28: Ereignis + Potential-Summe, **nur wenn der Spiegel hält**. ⛔ Er hielt nicht (2.693), Bewertung 1 bleibt Ereignis + Chance |
+| **Kern-Short** | 30.09.: *bitte abgrenzen zur Short-Strategie Krypto* | E-32: Messarm W3, nicht der Betriebs-SHORT, nicht die Absicherung |
+| **Lage kurz vorher** (Haltung, kein Auftrag) | 30.09.: *sollte in unseren Lösungsansätzen und Messungen nicht ausgeschlossen werden* | früher verworfene Beiträge sind auf dem Kern neu messbar (R-R11, andere Frage) |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
