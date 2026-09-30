@@ -157,3 +157,35 @@ Einstiege, Chance +0,1615, bitgleich zu 2.691 N2.
 4. **top_konten_verh** kippt auf der 48-h-Basis. Die Spur aus 2.691 (24 h) hält hier nicht.
 5. Nur **2024**, 190 Tage.
 
+
+---
+
+## 10. ERGEBNIS BESTÄTIGUNG 2025-01..2026-08 (4 Mengen) — Befund 2.695
+
+Belege `L2_29_09/richtungbest__<menge>.txt`, Diagnose `richtungdiag__unverzerrt_1.txt`.
+
+| | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|
+| R-R11 48-h-Einstiege / Chance | ✔ 6.328 / +0,1039 | 7.121 | 6.463 | 6.782 | ✔ |
+| **Ruhe 72 h** Chance (P90) | +0,033 (0,034) | +0,029 (0,025) | +0,002 (0,026) | +0,034 (0,031) | ⛔ **0/4** (Tagesblock überall negativ) |
+| Ruhe 72 h **2025** / **2026** | **+0,068** / −0,008 | **+0,056** / −0,029 | **+0,052** / −0,092 | **+0,066** / −0,030 | ⭐ gleiches **Regimemuster** in 4/4 |
+| Ruhe 72 h Spiegel 2025 / 2026 | +0,025 / +0,003 | +0,026 / −0,004 | +0,021 / −0,024 | +0,028 / −0,003 | 2025 positiv in 4/4 |
+| **Tiefe davor** Chance (P90) | −0,012 (0,034) | +0,092 | +0,186 | +0,056 | ⛔ bestand; unverzerrt **nicht auswertbar** |
+| Tiefe davor Tagesblock unten | −0,141 | −0,076 | −0,005 | −0,082 | ⛔ |
+
+**Prüfung und Gegenprüfung:**
+1. **Ruhe 72 h** fällt nach der Regel in allen Mengen. Das Muster ist aber **gleich** und kein Rauschen: 2025 (Gegenwind) hilft
+   längere Ruhe, mit positivem Spiegel, 2026 (Rückenwind) schadet sie. Der Effekt ist **regimeabhängig**. Als Regel ohne
+   Regime-Erkennung trägt er nicht, und der Markt-Zustand ist vorab nicht erkennbar (2.599), Wetter als Gewicht nicht nachweisbar (2.686).
+2. ⚠️ **Tiefe davor, Skala:** In unverzerrt:1 trennen die absoluten Kanten aus bestand 2024 die Einstiege in **335 gegen 5.326**
+   (nachgemessen, Diagnoselauf bitgleich zum Kettenlauf). Der Vorsprung v̂ kommt je Menge aus **eigenen** rollierenden Modellen
+   und einem **eigenen** geschrumpften Normal, deshalb verschiebt sich sein unteres Ende mit der Grundgesamtheit. Der Test ist dort
+   nicht der vorab festgelegte Vergleich. Gültig ist er nur in **bestand**, und dort fällt er sauber.
+3. ⚠️ **Folge für alle v̂-Größen:** Die Kern-Schwelle s = +0,035 ist davon kaum berührt, die Zahl der Einstiege ist je Menge
+   ähnlich (10.534 bis 11.844). Grenzen **unten** in v̂ gelten aber nur für die Menge, auf der sie gemessen sind. Das ist die Regel *die
+   Grundgesamtheit ist keine Stellschraube*, angewandt auf die Bewertung: Betrieb und Messung brauchen dieselbe.
+4. **Tempo** fiel knapp schon in der Wahl, **top_konten_verh** kippt auf der 48-h-Basis.
+
+**Zwischenfazit zum Ziel:** Mit der **Vorgeschichte des Kurses** (Ruhe, Tempo, Tiefe) ist die Long-Richtung auf dem Kern
+**ausgereizt**. Übrig bleibt das **Regime**: Die Effekte drehen zwischen 2025 und 2026 in allen Mengen gleich. Das spricht für den
+**Kern-Short** (W3), der im Gegenwind arbeitet, und für die Positionsführung (W4), nicht für weitere Long-Filter.

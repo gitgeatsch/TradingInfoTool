@@ -1,0 +1,25 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:2
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 167840 · Pruefung 218803 · Symbole 124
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0700 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31061 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 218803 · Symbole 120
+  Auskunft Verteilung vh: P50 -0.0046 · P90 +0.0366 · P95 +0.0486 · P99 +0.0722 · Max +0.1289
+
+========================================================================================================================
+L2 · BESTAETIGUNG 2025-01..2026-08 (EINMAL) · Menge unverzerrt:2 · Kern-Ersteintritte s = +0.035: 10703 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 10703 mit Potential und Risiko (Tage 533)
+  Kern gesamt: Chance Dq +0.0587 · Potential +0.057 ATR ueber dem Normal (MFE 24 h) · Risiko -0.010 ATR (Rueckgang vor dem Hoch)
+
+  RICHTUNG · BESTAETIGUNG 2025-26 (EINMAL) · Kern mit 48 h Ruhe: 6463 Einstiege (R-R11 2.691 N2: 2024 bestand 1.486 / Chance +0,162 · 2025-26 bestand 6.328 / +0,1039) · Chance +0.0697 · Potential +0.074 · Risiko -0.005
+  Auskunft Zusammenhang: rho(tempo6, tiefe48) -0.30 · rho(tempo6, tempo3) +0.54 · Anteil 72 h unter den 48-h-Einstiegen 58.8 %
+  Weitergereicht aus der Wahl 2024: tiefe48, ruhe72
+    tiefe48          (unten): Chance +0.1862 gegen Bestes-von-2 P90 +0.0260 · je Jahr 2025 +0.1294 · 2026 +0.2549 · Spiegel je Jahr 2025 +0.023 · 2026 +0.030 · Assets 1, 100 % · Tagesblock unten -0.0052 · Potential +0.056 -> ⛔
+    ruhe72           (oben): Chance +0.0016 gegen Bestes-von-2 P90 +0.0260 · je Jahr 2025 +0.0517 · 2026 -0.0922 · Spiegel je Jahr 2025 +0.021 · 2026 -0.024 · Assets 96, 56 % · Tagesblock unten -0.0832 · Potential +0.047 -> ⛔
+SCHLUSS: vollstaendig
+exit=0
