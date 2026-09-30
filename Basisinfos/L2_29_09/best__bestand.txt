@@ -1,0 +1,47 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 220843 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0011 · P90 +0.0363 · P95 +0.0471 · P99 +0.0719 · Max +0.1089
+
+========================================================================================================================
+L2 · BESTAETIGUNG 2025-01..2026-08 (EINMAL) · Menge bestand · Kern-Ersteintritte s = +0.035: 10534 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 10534 mit Potential und Risiko (Tage 517)
+  Kern gesamt: Chance Dq +0.0762 · Potential +0.059 ATR ueber dem Normal (MFE 24 h) · Risiko -0.012 ATR (Rueckgang vor dem Hoch)
+
+  TEIL A1 Staerke (Grenzen aus der Wahl 2024):
+    Klasse 1 (2269): Chance +0.1110 · Potential +0.096 · Risiko -0.017   (Wahl: +0.0870 / +0.008 / -0.009)
+    Klasse 2 (440): Chance +0.1205 · Potential +0.049 · Risiko -0.018   (Wahl: -0.0156 / -0.085 / -0.026)
+    Klasse 3 (1358): Chance +0.0215 · Potential +0.047 · Risiko -0.012   (Wahl: +0.2888 / +0.274 / -0.005)
+    Klasse 4 (2872): Chance +0.0812 · Potential +0.042 · Risiko -0.008   (Wahl: +0.0778 / +0.082 / +0.025)
+    Klasse 5 (3595): Chance +0.0672 · Potential +0.053 · Risiko -0.012   (Wahl: +0.0861 / +0.015 / -0.002)
+    A1 staerkste minus schwaechste: Chance -0.0438 (Null P90 +0.0228) · Potential -0.043 (Null P90 +0.018) · je Jahr 2025 +0.0065 / -0.020 · 2026 -0.1217 / -0.072
+    A2 Kalibrierung Potential (Wahl -> beobachtet je Klasse): Steigung -0.04
+
+  N2 RUHE davor (Kriterium: 48 h schlaegt 24 h in Chance UND Potential, 2025 und 2026; 72/96 h Auskunft):
+    24 h: 10534 Einstiege · Chance +0.0762 · Potential +0.059 ATR · je Jahr 2025 +0.0260 / +0.037 (5094) · 2026 +0.1322 / +0.079 (5440)
+    48 h:  6328 Einstiege · Chance +0.1039 · Potential +0.087 ATR · je Jahr 2025 +0.0625 / +0.064 (3224) · 2026 +0.1529 / +0.111 (3104)
+    72 h:  3823 Einstiege · Chance +0.1165 · Potential +0.116 ATR · je Jahr 2025 +0.0887 / +0.093 (2005) · 2026 +0.1499 / +0.142 (1818)
+    96 h:  2491 Einstiege · Chance +0.1169 · Potential +0.137 ATR · je Jahr 2025 +0.0985 / +0.135 (1368) · 2026 +0.1427 / +0.140 (1123)
+    48 h minus 24 h je Jahr: 2025 Chance +0.0365 / Potential +0.027 · 2026 Chance +0.0207 / Potential +0.032 -> ✔ (diese Menge)
+    Gegenpruefung: 24 h auf 6328 ausgeduennt - Chance P90 +0.0824, Potential P90 +0.066 gegen 48 h +0.1039 / +0.087
+
+  TEIL B Bestaetigung (nur die auf 2024 weitergereichten, Richtung aus der Wahl, Bestes-von-k):
+    Chance · volumenschub      (oben): +0.0016 gegen Bestes-von-3 P90 +0.0436 · je Jahr 2025 -0.0696 · 2026 +0.0752 · Assets 103, 53 % · Tagesblock unten -0.0718 -> ⛔
+    Chance · vola_kausal       (oben): -0.0684 gegen Bestes-von-3 P90 +0.0436 · je Jahr 2025 -0.0626 · 2026 -0.0808 · Assets 106, 35 % · Tagesblock unten -0.1724 -> ⛔
+    Chance · top_konten_verh   (unten): +0.0584 gegen Bestes-von-3 P90 +0.0436 · je Jahr 2025 +0.0460 · 2026 +0.0299 · Assets 37, 57 % · Tagesblock unten -0.0036 -> ⛔
+    Potential · ema_abstand_atr   (oben): +0.1619 gegen Bestes-von-3 P90 +0.0300 · je Jahr 2025 +0.1042 · 2026 +0.2410 · Assets 93, 81 % · Tagesblock unten +0.0488 -> ✔ TRAEGT (diese Menge)
+    Potential · top_konten_verh   (unten): +0.0442 gegen Bestes-von-3 P90 +0.0300 · je Jahr 2025 +0.0897 · 2026 -0.0306 · Assets 37, 59 % · Tagesblock unten -0.0116 -> ⛔
+    Potential · volumenschub      (oben): +0.0953 gegen Bestes-von-3 P90 +0.0300 · je Jahr 2025 +0.0366 · 2026 +0.1442 · Assets 103, 67 % · Tagesblock unten +0.0307 -> ✔ TRAEGT (diese Menge)
+    Risiko · vola_kausal       (oben): +0.0696 gegen Bestes-von-3 P90 +0.0090 · je Jahr 2025 +0.0789 · 2026 +0.0605 · Assets 106, 91 % · Tagesblock unten +0.0411 -> ✔ TRAEGT (diese Menge)
+    Risiko · volumenschub      (oben): -0.0035 gegen Bestes-von-3 P90 +0.0090 · je Jahr 2025 -0.0101 · 2026 +0.0022 · Assets 103, 42 % · Tagesblock unten -0.0219 -> ⛔
+    Risiko · ema_abstand_atr   (oben): -0.0275 gegen Bestes-von-3 P90 +0.0090 · je Jahr 2025 -0.0320 · 2026 -0.0209 · Assets 93, 32 % · Tagesblock unten -0.0562 -> ⛔
+SCHLUSS: vollstaendig
+exit=0

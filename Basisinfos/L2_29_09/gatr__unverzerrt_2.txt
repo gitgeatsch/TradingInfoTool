@@ -1,0 +1,30 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:2
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 167840 · Pruefung 218803 · Symbole 124
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0700 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31061 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 218803 · Symbole 120
+  Auskunft Verteilung vh: P50 -0.0046 · P90 +0.0366 · P95 +0.0486 · P99 +0.0722 · Max +0.1289
+
+========================================================================================================================
+L2 · BESTAETIGUNG 2025-01..2026-08 (EINMAL) · Menge unverzerrt:2 · Kern-Ersteintritte s = +0.035: 10703 vor dem Potential-Filter (R-R11: Wahl 2024 bestand 2.095, Bestaetigung bestand 10.534), 10703 mit Potential und Risiko (Tage 533)
+  Kern gesamt: Chance Dq +0.0587 · Potential +0.057 ATR ueber dem Normal (MFE 24 h) · Risiko -0.010 ATR (Rueckgang vor dem Hoch)
+
+  G-ATR · 10703 Einstiege · ATRrel P10/P50/P90 0.51 / 0.80 / 1.35
+    Chance · volumenschub      (oben): rho(ATRrel) +0.17 · roh +0.0288 · geschichtet +0.0536 (Drittel +0.1074 / +0.0753 / -0.0221) · je Jahr 2025 +0.0235 · 2026 +0.0760 · ✔ G1 ATR-frei (diese Menge) · Prozentmass +0.029 (2025 +0.001 · 2026 +0.057)
+    Chance · vola_kausal       (oben): rho(ATRrel) +0.81 · roh -0.0432 · geschichtet -0.0001 (Drittel +0.0789 / +0.0267 / -0.1058) · je Jahr 2025 -0.1069 · 2026 +0.0878 · ⛔ G1 · Prozentmass -0.043 (2025 -0.049 · 2026 -0.035)
+    Chance · top_konten_verh   (unten): rho(ATRrel) -0.01 · roh +0.0658 · geschichtet +0.0731 (Drittel +0.1060 / +0.0642 / +0.0491) · je Jahr 2025 +0.0573 · 2026 +0.0675 · ✔ G1 ATR-frei (diese Menge) · Prozentmass +0.066 (2025 +0.055 · 2026 +0.045)
+    Potential · ema_abstand_atr   (oben): rho(ATRrel) -0.07 · roh +0.1414 · geschichtet +0.1319 (Drittel +0.0476 / +0.1408 / +0.2074) · je Jahr 2025 +0.0927 · 2026 +0.1781 · ✔ G1 ATR-frei (diese Menge) · Prozentmass +0.893 (2025 +0.447 · 2026 +1.418)
+    Potential · top_konten_verh   (unten): rho(ATRrel) -0.01 · roh +0.0254 · geschichtet +0.0209 (Drittel +0.0111 / -0.0384 / +0.0900) · je Jahr 2025 +0.0467 · 2026 -0.0331 · ⛔ G1 · Prozentmass +0.514 (2025 +0.591 · 2026 +0.280)
+    Potential · volumenschub      (oben): rho(ATRrel) +0.17 · roh +0.0873 · geschichtet +0.1152 (Drittel +0.1377 / +0.1490 / +0.0590) · je Jahr 2025 +0.1069 · 2026 +0.1289 · ✔ G1 ATR-frei (diese Menge) · Prozentmass +1.266 (2025 +1.100 · 2026 +1.453)
+    Risiko · vola_kausal       (oben): rho(ATRrel) +0.81 · roh +0.0553 · geschichtet +0.0125 (Drittel +0.0180 / +0.0154 / +0.0043) · je Jahr 2025 +0.0355 · 2026 -0.0137 · ⛔ G1 · Prozentmass -0.727 (2025 -0.674 · 2026 -0.793)
+    Risiko · volumenschub      (oben): rho(ATRrel) +0.17 · roh +0.0118 · geschichtet +0.0051 (Drittel +0.0242 / +0.0092 / -0.0181) · je Jahr 2025 +0.0055 · 2026 +0.0019 · ⛔ G1 · Prozentmass -0.256 (2025 -0.267 · 2026 -0.245)
+    Risiko · ema_abstand_atr   (oben): rho(ATRrel) -0.07 · roh -0.0171 · geschichtet -0.0143 (Drittel -0.0008 / +0.0077 / -0.0497) · je Jahr 2025 -0.0059 · 2026 -0.0190 · ⛔ G1 · Prozentmass -0.122 (2025 -0.018 · 2026 -0.251)
+SCHLUSS: vollstaendig
+exit=0

@@ -407,12 +407,18 @@ BEITRAGSLAGE = {
         vorbehalt=""),
     "volumenschub": dict(
         b1="faellt", vorlauf=None, b2="ungemessen",
-        befund=("2.663", "2.662", "2.667", "2.681"),
+        befund=("2.663", "2.662", "2.667", "2.681", "2.691"),
         beleg="ueber dem Band, aber nur Bewegung (Spiegel 0,95 bis 1,35). "
               "HOEHE auch UEBER die ATR hinaus: P95 +0,08 ATR mfe, 30 von 32 "
               "Monaten, jede BTC-Lage (2.667) - ROLLE B (Hoehe). Als "
-              "Risikokurve der Hebelstufe kein Mehrwert ueber die ATR (2.681)",
-        quelle=_Q_KURS, live=_L_KURS, spot="", vorbehalt=""),
+              "Risikokurve der Hebelstufe kein Mehrwert ueber die ATR (2.681). "
+              "L2 (2.691): auf den Kern-Einstiegen oben +0,08..+0,10 ATR "
+              "Potential in 3 von 4 Mengen, ATR-frei in 4 von 4 - hebt nicht "
+              "die Chance und nicht das Risiko",
+        quelle=_Q_KURS, live=_L_KURS, spot="",
+        vorbehalt="L2 (2.691): in unverzerrt:2 an der Breite knapp verfehlt "
+                  "(59 statt 60 Prozent der Assets); ob es neben ema_abstand_atr "
+                  "etwas EIGENES traegt, ist offen (N3)"),
     "taker_verh": dict(
         b1="faellt", vorlauf=None, b2="ungemessen", befund=("2.663",),
         beleg="in keiner Zielgroesse ueber dem Suchband (Bestes-von-160, "
@@ -431,7 +437,7 @@ BEITRAGSLAGE = {
     # ── Kursmerkmale (EMA/RSI/ATR-Familie, abgeschlossen) ──────────
     "ema_abstand_atr": dict(
         b1="faellt", vorlauf=None, b2="belegt",
-        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.676"),
+        befund=("2.642", "2.647", "2.648", "2.650", "2.671", "2.676", "2.691"),
         beleg="B2: d 0,521 auf MAE gegen 0,267 auf MFE (2.642), absolut "
               "und je Asset (2.647). B1: Richtung RUNTER - Abstuerze "
               "9,8-fach (2.648), bei Karenz null von 11 (2.650). "
@@ -477,7 +483,7 @@ BEITRAGSLAGE = {
                   "2025 nur ein Viertel von 2026, Juli-Dezember 2025 negativ (2.688); "
                   "ein TAGESHANDEL - +5 % im Median nach 19-20 h (2.689)"),
     "vola": dict(
-        b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662"),
+        b1="faellt", vorlauf=None, b2="spur", befund=("2.650", "2.662", "2.691"),
         beleg="Lift 7,81, faellt an der Spiegelprobe (1,31) = nur "
               "Bewegung. B2-Spur laut Register: *ueber hebel = "
               "verlustanteil / stop_rel faellt daraus der Hebel*. HOEHE "
@@ -693,6 +699,11 @@ NEUESTER_STAND = (
               "Positionswert, 2024 +0,95 %) ist kleiner als die Bitpanda-Kosten eines "
               "Tageshandels (0,48 %). Kostenbasis am echten Buch geprueft. Loesungen "
               "L1-L4 zur Abstimmung"),
+    ("2.691", "L2 BESTAETIGUNG: die Staerke des Ersteintritts ordnet nicht (Schalter); "
+              "48 h Ruhe davor hebt Chance und Potential (3 von 4); ema_abstand_atr oben "
+              "(4/4) und volumenschub oben (3/4) heben das POTENTIAL, ATR-frei gegen"
+              "geprueft, nicht die Chance; vola_kausal senkt das Risiko nur in ATR - es "
+              "ist die ATR (G-ATR 0/4). Naechster Schritt N3 Ueberschneidung, dann Summe"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
@@ -771,6 +782,15 @@ def gemessene_merkmale() -> dict:
 # Zeit. Danach K1 Schritt 2 (gemeinsame Schaetzung) - eine Kombination,
 # kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
+    dict(was="⭐ L2 N3 (nach 2.691, zur Abstimmung): UEBERSCHNEIDUNG von ema_abstand_atr "
+             "und volumenschub auf den Kern-Einstiegen - eine Information (*Anfahren mit "
+             "Wucht*) oder zwei? Dann die Summe (L4) und N4 Simulation als Erfolgsmessung",
+         art="probe", bewertung="b1", merkmale=("ema_abstand_atr", "volumenschub"),
+         prueft="2.691",
+         warum="beide heben das Potential auf den Kern-Einstiegen ATR-frei (2.691), "
+               "aber nicht die Chance; ob sie sich addieren, entscheidet, ob die Summe "
+               "zwei Glieder bekommt oder eines. vola_kausal ist die ATR (G-ATR) und "
+               "bleibt in Bewertung 2"),
     dict(was="Die Suche-Raender in UNGESEHENER Zeit bestaetigen",
          art="probe", bewertung="b1",
          merkmale=("funding", "konten_verh", "oi_aenderung", "ema_abstand_atr"),

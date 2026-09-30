@@ -274,3 +274,56 @@ tragendes Ergebnis auf dem Maß beruht.
 | Folge | Fällt G1: der Beitrag fällt **nicht**, es gilt die Lösungspflicht. Er wird als **ATR-Anteil** eingeordnet (Bewertung 2 hat die ATR schon), und die Lösung ist eine ATR-freie Form. Besteht G1: der Beitrag geht so in N3 |
 
 Aufruf: `python messe_losfahren.py --menge <m> --l2 --bestaetigen 0.035 --gegen-atr`. Er rechnet nur G-ATR, A1/N2/B nicht erneut.
+
+
+---
+
+## 15. ERGEBNIS BESTÄTIGUNG 2025-01..2026-08 und G-ATR (30.09.2026) — Befund 2.691, zur Abstimmung
+
+**Urteil:** Der Kern lässt sich anheben, allerdings beim **Potential** (wie weit es läuft) und nicht bei der **Chance** (+5 % vor
+−5 %). Die Stärke des Signals bringt nichts. Die Ruhe davor und zwei Beiträge bringen etwas.
+
+Rohdaten: `Basisinfos/L2_29_09/best__<menge>.txt` (Bestätigung) und `gatr__<menge>.txt` (G-ATR), Kette `_kette.log`.
+
+| | Kriterium (vorab) | bestand | unv:1 | unv:2 | unv:3 | Urteil |
+|---|---|---|---|---|---|---|
+| Kern allein | — | Chance +0,076 · Pot +0,059 | +0,064 · +0,055 | +0,059 · +0,057 | +0,061 · +0,057 | Auskunft |
+| **A1** Stärke | stärkste − schwächste > Null-P90, beide Jahre | ⛔ | ⛔ | ⛔ | ⛔ (2026 −0,011) | ⛔ **0/4**: der Kern ist ein **Schalter** |
+| **A2** Kalibrierung | Steigung | −0,04 | −0,22 | 0,16 | 0,15 | keine; die Klasse 3 aus 2024 (+0,29) war Zufall |
+| **N2** 48 h vs 24 h | Chance und Potential > 0, 2025 und 2026 | ✔ | ✔ | ⛔ (2026 Chance −0,002) | ✔ | ✔ **3/4** |
+| N2 Gegenprüfung | 48 h über P90 der ausgedünnten 24 h (Chance / Potential) | ✔ / ✔ | ✔ / ✔ | ⛔ / ✔ | ✔ / ✔ | Potential 4/4, Chance 3/4 |
+| **B** Potential · ema_abstand_atr oben | alle B-Bedingungen | ✔ +0,162 | ✔ +0,158 | ✔ +0,141 | ✔ +0,145 | ✔ **4/4** |
+| **B** Potential · volumenschub oben | | ✔ +0,095 | ✔ +0,086 | ⛔ (59 % Assets) | ✔ +0,084 | ✔ **3/4** |
+| **B** Risiko · vola_kausal oben | | ✔ +0,070 | ✔ +0,055 | ✔ +0,055 | ✔ +0,058 | 4/4, **aber G-ATR** |
+| übrige 6 Paare | | ⛔ | ⛔ | ⛔ | ⛔ | fallen in B |
+
+**G-ATR (Abschnitt 14):**
+
+| | ρ zur relativen ATR | geschichtet / roh | G1 | im Prozentmaß |
+|---|---|---|---|---|
+| ema_abstand_atr · Potential | −0,07 | 0,91–0,94 | ✔ **4/4** | +0,9..+1,0 Prozentpunkte MFE |
+| volumenschub · Potential | +0,17 | 1,25–1,32 | ✔ **4/4** | +1,25..+1,39 Prozentpunkte MFE |
+| vola_kausal · Risiko | **+0,81** | 0,12–0,45 | ⛔ **0/4** | Rückgang **größer** (−0,54..−0,75 Prozentpunkte) |
+| top_konten_verh · Chance (fällt in B) | −0,02 | ≈ 1 | ✔ 4/4 | +0,06 |
+
+**Prüfung und Gegenprüfung:**
+- **R-R11:** Kern-Einstiege bestand 10.534, bitgleich mit 2.688. rsi allein und Auswahl bitgleich mit K5-0.
+- **Nullwelt:** A1 mit verschobenem rsi, B Bestes-von-3 je Maß, 40 Ziehungen. **Tagesblock** 300. **Je Asset** mindestens 60 %.
+- **Auswahlanteil angeglichen** (N2). **ATR-Schichtung** (G-ATR).
+- Das **Prozentmaß** zeigt für ema_abstand und volumenschub dieselbe Richtung, für vola_kausal die **Gegenrichtung**. Damit ist das Artefakt bei vola_kausal belegt, nicht nur vermutet (passt zu 2.667: *die Bewegung ist groß, WEIL die Spanne groß ist*).
+- ⚠ Die Teil-B-Effekte sind oberes **gegen unteres** Drittel. Gegen den ganzen Kern hebt das obere Drittel etwa die Hälfte davon.
+- ⚠ ema_abstand oben bringt etwas **mehr** Rückgang vor dem Hoch (−0,016..−0,028 ATR). Das passt zu Rolle C am anderen Ende (2.642) und geht in Bewertung 2.
+
+**Zwischenfazit zum Ziel (*optimale Lage und Risiko*):**
+
+| | Ergebnis | für das Ziel |
+|---|---|---|
+| Teil A | die Kernregel ist ausgereizt, was die **Stärke** angeht: ein Schalter, keine Skala | eine höhere Schwelle bringt nichts. Hebel für den Kern ist die **Ruhe davor** (Regelparameter, erste Ebene des Optimierungsloops) |
+| Teil B | **zwei** Beiträge heben das **Potential** je Einstieg: der Kurs läuft weiter (Rolle B, *wie weit*) | das ist genau die Lücke aus 2.690 (Vorteil je Handel zu klein). Ob es für die Kosten reicht, zeigt erst die Simulation (N4, Erfolgsmessung) |
+| Risiko | **kein** neuer Risikobeitrag, die ATR bleibt das Risikomodell | vola_kausal fällt **nicht** (Lösungspflicht): es ist ATR-Anteil und steckt schon in Bewertung 2 |
+| Chance | kein Beitrag hebt die Chance (q5) ungesehen | offen. W5 (Datenquellen *A vorher*) bleibt der Weg dorthin |
+
+**Vorschlag zur Abstimmung:**
+- **N3:** Überschneidung ema_abstand und volumenschub. Sind sie eine Information oder zwei?
+- Danach die **Summe (L4)** mit der Ruhe 48 h.
+- **N4:** Simulation als Erfolgsmessung.
