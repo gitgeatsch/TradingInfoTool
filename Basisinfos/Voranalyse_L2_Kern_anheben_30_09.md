@@ -141,3 +141,27 @@ Drittel des Kandidaten in Chance, Potential oder Risiko? Das ist der **Zuwachs**
 
 Werkzeug (Modus in `messe_losfahren.py`, dort liegen Kern, Normal und alle Kandidaten) bauen und vorab committen ·
 Funktionstest · Wahl 2024 (etwa 40–60 Min) · Stopp · Bestätigung vier Mengen · Stopp · Bewertung.
+
+
+---
+
+## 10. DER LÖSUNGSWEG ZUM ZIEL — Vorschlag des Experten (30.09.2026), zur Abstimmung
+
+**Nutzer:** *„Wenn du als Experte zustimmst und hier Lösungsvorschläge hast, bitte dies vorschlagen, abstimmen und in den
+Plan eintragen."*
+
+➤ **Ich stimme L2 als Hauptteil zu** — und schlage dazu den Weg vor, der sich aus den Messungen ergibt:
+
+| # | Lösung (Vorschlag 30.09., **zur Abstimmung**) | warum — aus den Messungen | wann |
+|---|---|---|---|
+| **W1** | **L2** — den Kern anheben: Teil A (Stärke, Kalibrierung), Teil B (neun Beiträge **auf** den Kern-Einstiegen) | der Vorteil je Handel ist zu klein (2.690) — ein stärkeres Signal oder ein zweiter Beitrag hebt ihn, **neutral** gemessen | **jetzt** (Voranalyse L2) |
+| **W2** | **Potential als zweite Zielgröße** der Bewertung 1 — neben der Chance (q5) die **Bewegungsgröße** (MFE in eigener ATR) | das Ziel ist *wie viel ist zu holen* (CLAUDE.md), q5 misst nur *ob*; K4 nennt Höhe × Fenster eine Achse | in L2 gemessen; trägt es, ins Regelwerk |
+| **W3** | **Short-Kern** — derselbe Einstieg gespiegelt (Ersteintritt nach unten) | der Kern hängt am **Regime** (Juli–Dezember 2025 negativ, 2.688/2.690); ein gespiegelter Arm arbeitet in genau diesen Phasen | nach L2, eigene Voranalyse |
+| **W4** | **Positionsführung**: nachgezogener Stop statt fester 24 h | *ohne Ziel* schlägt jedes feste Ziel (2.690) — die Gewinner laufen lassen (Nutzer: *300 statt 400 mitnehmen*); das hebt den Vorteil je Handel ohne neues Signal | Phase 5, Simulation als Erfolgsmessung |
+| **W5** | **A vorher — Datenquellen-Voranalyse**: welche Quellen stündlich und **historisch ab 2024** frei verfügbar sind (Liquidationen, Optionen, Börsenzuflüsse) und was davon schon gemessen ist | der Einstieg **vor** der Bewegung fehlt; mit Kurs- und Terminmarktdaten nicht gefunden (E-23) | parallel, reine Schreib-/Prüfarbeit |
+| **W6** | L3 (länger halten ohne Hebel) und L1 (Börse) | Erfolgsmessung bzw. Phase 4/5 | später |
+
+⚠️ **Zu deiner Einschätzung** *„mit zwei Beiträgen wird es schwierig, die optimale Lage mit hohen Anstiegen zu erfassen“*:
+fachlich teile ich sie — ein einzelnes Fortsetzungssignal erfasst den **Beginn** großer Bewegungen nicht. Darum stehen W2
+(Potential messen statt nur Wahrscheinlichkeit), W4 (große Bewegungen laufen lassen) und W5 (neue Quellen für *vorher*) im
+Weg. **Welche** davon trägt, zeigen die Messungen.
