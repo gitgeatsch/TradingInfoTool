@@ -475,4 +475,4 @@ optimieren und ausreizen."*
 **30.09.2026** · Nutzer: *„Wenn wir eine Lösung haben, die nur am Desktop im Labor funktioniert, ist es ein FAIL."*
 ➤ Eine Regel ist erst dann fertig, wenn sie **am Notebook** mit den dort verfügbaren Daten, derselben Grundgesamtheit und ohne
 Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn bekommt die Betriebsprüfung B1–B9
-(`Plan_Vorgehen_REGEL0_bis_Betrieb_30_09.md` Abschnitt 3). Ein monatliches Training am Desktop mit Übergabe von Hand ist ebenfalls FAIL.
+(`Plan_Hebel_fuenf_Phasen_27_09.md` (Abschnitt PLAN UND VORGEHEN AB 30.09.)). Ein monatliches Training am Desktop mit Übergabe von Hand ist ebenfalls FAIL.
