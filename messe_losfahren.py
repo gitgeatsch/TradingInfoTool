@@ -1195,7 +1195,8 @@ def main() -> int:
                 mons = sorted(ig); kig = {}
                 for i_, mi in enumerate(mons):
                     vor = [ig[m_] for m_ in mons[max(0, i_ - 6):i_]]
-                    kig[mi] = ig[mi] / float(np.median(vor)) if len(vor) >= 3 else np.nan
+                    md_ = float(np.median(vor)) if len(vor) >= 3 else np.nan
+                    kig[mi] = ig[mi] / md_ if np.isfinite(md_) and md_ > 0 else np.nan   # 30.09.: Median 0 (flachste Stufe) -> nicht bestimmbar
                 wenig = sorted(mi for mi in kig if np.isfinite(kig[mi]) and kig[mi] < 1 and mi >= 2025 * 12)
                 print("M1-2 TEIL A · AUSKUNFT (kein Urteil) · Menge %s · Kern Ruhe %d h, s %+.3f · 2025-01..2026-08" % (E2.MENGE, RUHE, s))
                 print("  R-R11 IG je 1.000 Anker / K_IG (bestand M1-1: 2025-09 0,934 / 0,63 · 2025-11 0,595 / 0,44 · 2026-08 1,103 / 0,78): " +
