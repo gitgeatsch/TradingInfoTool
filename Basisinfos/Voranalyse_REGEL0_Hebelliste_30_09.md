@@ -71,3 +71,16 @@ Zwei Läufe zu je etwa 12 Minuten. **R-R11:** Der Lauf auf allen Einstiegen muss
 
 **Notiert (Nutzer):** Die Mindestbedingungen für den Betrieb besprechen wir, wenn der Schritt kommt. Die bestehende Hebel- und Spot-Achse wird
 laut Plan **ersetzt**, ein Parallelbetrieb ist schwierig.
+
+
+---
+
+## 6. Rückmeldung des Nutzers (30.09.) — Liste und MORPHO
+
+**Nutzer:** *„Nein, es haben sich einige Assets geändert, aber der Großteil ist noch ok. MORPHO verstehe ich nicht. Das System braucht
+keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“*
+
+- **Liste:** Die Desktop-Kopie ist **nicht aktuell**. Die aktuelle Liste kommt vom Nutzer (Änderungen nennen oder eine Mini-Abfrage am Notebook, nur lesend, nur diese Tabelle).
+- **MORPHO, geprüft am Code:** Das Signal braucht wenige Tage (rsi 14 h und 10 Tage für den Monatsabstand, Ruhe 48 h, ATR etwa 14 Tage). Nur das
+  **eigene Normal** verlangt **volle 12 Monate** (`normal()`: `st - st[0] >= JAHR_H` mit 8.760 h). MORPHO (ab 2025-10) hätte erst ab 2026-10 Signale.
+  Das betrifft **12 von 28** Assets der Liste in ihrem ersten Jahr. ➤ Eingetragen als **Schwäche 4** der REGEL0 und Kandidat **J** (Marktnormal für junge Assets).
