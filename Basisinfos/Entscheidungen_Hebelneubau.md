@@ -466,3 +466,13 @@ optimieren und ausreizen."*
   wir können und müssen die bestehende Hebel- und Spot-Achse (laut Plan) ersetzen, ein Parallelbetrieb wird schwierig. Nach der
   Assetliste gehen wir nach deinem korrigierten Plan und REGEL0 (auf REGEL1 etc.) vor."* ➤ Der Schattenbetrieb ist **nicht** gesetzt.
   Die Mindestbedingungen werden beim Schritt Betrieb abgestimmt.
+
+
+---
+
+# E-35 · Labor-only ist FAIL — die Betriebsprüfung gehört in jeden Schritt (Nutzer 30.09.)
+
+**30.09.2026** · Nutzer: *„Wenn wir eine Lösung haben, die nur am Desktop im Labor funktioniert, ist es ein FAIL."*
+➤ Eine Regel ist erst dann fertig, wenn sie **am Notebook** mit den dort verfügbaren Daten, derselben Grundgesamtheit und ohne
+Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn bekommt die Betriebsprüfung B1–B9
+(`Plan_Vorgehen_REGEL0_bis_Betrieb_30_09.md` Abschnitt 3). Ein monatliches Training am Desktop mit Übergabe von Hand ist ebenfalls FAIL.
