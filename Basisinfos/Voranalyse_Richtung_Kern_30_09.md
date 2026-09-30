@@ -133,3 +133,27 @@ Kein Auftrag, sollte aber in unseren Lösungsansätzen und Messungen nicht ausge
   2.691 je Asset verschoben. R-c ist als 0/1-Merkmal umgesetzt: 72 h Ruhe gegen nur 48 h Ruhe auf den 48-h-Einstiegen.
   Funktionstest technisch sauber (`L2_29_09/richtungprobe__bestand.txt`, Inhalt nicht gewertet).
 
+---
+
+## 9. ERGEBNIS WAHL 2024 (bestand) — Stopp, zur Abstimmung
+
+Beleg `L2_29_09/richtungwahl__bestand.txt`, Richtungen in `data/_vergleich/l2_richtung_wahl_bestand.json`. ✔ **R-R11:** 1.486
+Einstiege, Chance +0,1615, bitgleich zu 2.691 N2.
+
+| Kandidat | Gruppen | Chance besser minus schlechter | Null-P75 | Potential | Spiegel (bessere Gruppe) | Wahl |
+|---|---|---|---|---|---|---|
+| R-a **Tempo** 6 h | 493 / 498 | +0,033 (oben) | 0,035 | −0,017 | +0,007 | ⛔ fällt, **knapp** |
+| R-b **Tiefe davor** | 421 / 499 | **+0,158 (tiefer = besser)** | 0,047 | +0,124 | **−0,031** | ✔ weiter |
+| R-c **Ruhe 72 h** | 1.096 / 390 | **+0,131** (72 h besser als nur 48 h) | 0,047 | +0,137 | +0,034 | ✔ weiter |
+| R-d top_konten_verh | 480 / 480 | −0,025 | 0,052 | −0,102 | −0,011 | ⛔ fällt (auf 48 h, anders als die 24-h-Spur in 2.691) |
+
+⚠️ **Gegenprüfung:**
+1. **Tiefe davor:** Die Chance steigt deutlich, das ist eine Wende aus einem echten Tief, wie vermutet. Der **Spiegel** der besseren Gruppe
+   ist 2024 aber **negativ** (−0,031): Oben **und** unten wird es mehr, unten etwas stärker. Die Chance misst die Reihenfolge,
+   der Spiegel die Häufigkeit. In der Bestätigung ist der Spiegel **Pflicht**, damit entscheidet sich das dort.
+2. **Ruhe 72 h:** 74 % der 48-h-Einstiege haben auch 72 h Ruhe. Die Gegengruppe *nur 48 h* ist klein (390) und schwach. Die Wirkung
+   ist also eher *eine kurze Ruhe schadet*.
+3. **Tempo** fällt knapp (0,033 gegen 0,035). Das ist kein Urteil über die ganze Idee, aber nach der Regel geht es nicht weiter.
+4. **top_konten_verh** kippt auf der 48-h-Basis. Die Spur aus 2.691 (24 h) hält hier nicht.
+5. Nur **2024**, 190 Tage.
+
