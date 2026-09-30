@@ -1267,6 +1267,14 @@ def main() -> int:
                         " · ".join("%d %+.3f (unten %+.3f / oben %+.3f)" % x for x in sp_), "✔" if b7 else "⛔ nur Bewegung"))
                     # Pflichtauskunft Halbjahre und Ueberlappung mit dem Long-Kern
                     hj = (MON[ee] % 12) // 6
+                    if "--diag-vh" in sys.argv:
+                        # DIAGNOSE (nur das Signal, keine Ergebnisse): je Monat die Verteilung von v-dach und die Signale
+                        print("  DIAGNOSE v-dach je Monat (Stunden · Anteil v<=-s · P1 · P50 · P99 · Anteil v>=+s · Short-/Long-Einstiege):")
+                        for mm in np.unique(MON[h_ab]):
+                            hm = h_ab[MON[h_ab] == mm]; vv = VH[hm]; vv = vv[np.isfinite(vv)]
+                            print("    %d-%02d %7d · %5.2f %% · %+.4f · %+.4f · %+.4f · %5.2f %% · %4d / %4d" % (
+                                mm // 12, mm % 12 + 1, len(vv), 100 * np.mean(vv <= -s), *np.percentile(vv, [1, 50, 99]),
+                                100 * np.mean(vv >= s), int((MON[ee] == mm).sum()), int((MON[eL] == mm).sum())))
                     print("  Pflichtauskunft Halbjahre: " + " · ".join(
                         "%d-H%d %+.4f (%d)" % (jj, h_ + 1, dqh(ee[(JAHR[ee] == jj) & (hj == h_)]), int(((JAHR[ee] == jj) & (hj == h_)).sum()))
                         for jj in JAHRE for h_ in (0, 1)))
