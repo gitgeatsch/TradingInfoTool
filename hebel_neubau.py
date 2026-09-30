@@ -791,9 +791,10 @@ NAECHSTE_MESSUNGEN = (
                "darunter, und vor allem im Markt-Anteil. Nur sinnvoll, wenn K5 eine "
                "VORHER-Rolle braucht - sonst zurueckstellen; die Anfahr-Kurve ist "
                "beantwortet (kein Sweet Spot, rsi traegt in jeder Phase)"),
-    dict(was="⭐ KERN nach 2.690 - LOESUNGEN L1-L4: Kostenachse (Terminboerse als "
-             "Auskunft), weniger/staerkere Signale, laenger halten ohne Hebel, Summe "
-             "der Beitraege - je neue Vorabfestlegung",
+    dict(was="⭐ KERN nach 2.690 - L2 ZUERST (Nutzer 30.09.): staerkere Signale NEUTRAL "
+             "messen (Potential je Handel gegen das eigene Normal, keine Kosten in der "
+             "Auswahl), danach die Simulation als Erfolgsmessung; L4 Summe der "
+             "Beitraege, L3 Haltedauer ohne Hebel; L1 (Boerse/Kosten) erst Phase 4/5",
          art="probe", bewertung="b2", merkmale=("atr",), prueft="2.690",
          warum="die Simulation (2.690): das Signal traegt (ueber der Nullwelt), aber "
                "der Rohvorteil je Handel (+0,12..+0,33 %) liegt unter den Bitpanda-"

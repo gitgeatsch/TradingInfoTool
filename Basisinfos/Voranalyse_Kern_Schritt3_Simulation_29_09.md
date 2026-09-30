@@ -194,3 +194,21 @@ war er dreimal so groß (Regime).
 | **L2** | **weniger, stärkere Signale** — Signalstärke als Achse (K6 S Stufe 1: oben etwa doppelter Vorteil) | hebt eine strengere Auswahl den Vorteil **über 0,48 %**? |
 | **L3** | **länger halten ohne Hebel** — die feste Gebühr auf größere Bewegungen (2024: 72 h Spot vorn) | ein **Spot-Kern** statt Hebel-Kern? |
 | **L4** | die **Summe der Beiträge** — ein zweiter tragender Beitrag | größerer Vorteil je Handel |
+
+
+---
+
+## 11. EINORDNUNG (30.09.2026, Nutzer) — die Bewertung bleibt neutral; L2 vor L1
+
+**Nutzer:** *„dann bleibt uns erstmal eher L2 als L1 — Hinweis: es gibt eine Regel, die deiner zum Teil widerspricht, und
+diese ist die neutrale Bewertung beim Einstieg, ohne Wirtschaftlichkeit; die Börse ist kein Thema, erst mit Eröffnen des
+Trades und der Positionsführung wird es eines. Meinung: mit zwei Beiträgen wird es schwierig, das Ziel der optimalen Lage
+mit hohen Anstiegen zu erfassen — aber ich möchte nicht vorgreifen, die Messungen zur Optimierung der Wirtschaftlichkeit
+werden es zeigen."*
+
+| | korrigiert |
+|---|---|
+| mein Satz in 2.690 *„der Rohvorteil je Handel muss über 0,48 %“* (L2) | ⛔ so **nicht**: das hätte die Kosten zur **Auswahlregel** gemacht. **L2 heißt:** stärkere Signale **neutral** messen (höheres **Potential** je Handel, gegen das eigene Normal) — ob das dann wirtschaftlich reicht, zeigt **danach** die Simulation (Erfolgsmessung) |
+| L1 (Börse / Kostenachse) | **zurückgestellt** — Plattform und Kosten gehören in Phase 4/5 (Eröffnung, Positionsführung), nicht in die Grundlage |
+| Regelwerk-Zeile *Kosten* | korrigiert: Kosten nie in Bewertung oder Beitragsauswahl, nur in Erfolgsmessung und Positionsführung |
+| Reihenfolge | **L2** (stärkere Signale, neutral) · L4 (Summe der Beiträge) · L3 (Haltedauer ohne Hebel, Erfolgsmessung) · L1 später |

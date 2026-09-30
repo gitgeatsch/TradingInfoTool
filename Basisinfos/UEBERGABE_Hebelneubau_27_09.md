@@ -25,7 +25,7 @@
 | **5e · KERN Schritt 1 (2.688)** | der Ersteintritt trägt ungesehen 2025–26 in 4 von 4 Mengen; nicht besser als der Zustand; stark regimeabhängig (zweites Halbjahr 2025 negativ) |
 | **5f · KERN Schritt 2 H0 (2.689)** | die ATR-Tabelle gilt auf den Einstiegen und ist vorsichtig; der Kern ist ein Tageshandel (+5 % im Median nach 19–20 h) |
 | **5g · KERN Schritt 3 (2.690)** | das Hebelkonto verliert 2025–26 in 4 von 4 Mengen; Spot um null; das Signal ist echt, aber der Vorteil je Handel ist kleiner als die Bitpanda-Kosten (0,48 % je Tageshandel) |
-| **10 · Nächster Schritt (30.09. aktuell)** | Lösungen **L1–L4** zur Abstimmung (`Voranalyse_Kern_Schritt3_Simulation_29_09.md` Abschnitt 10) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
+| **10 · Nächster Schritt (30.09. aktuell)** | **L2** — stärkere Signale neutral messen, Wirtschaftlichkeit danach in der Simulation; L1 (Börse) erst Phase 4/5 (Nutzer: *die Bewertung ist neutral*) · (Voranalyse Schritt 3 Abschnitte 10–11) · Black Swans nur Störfaktor · Archiv erst, wenn die Daten nicht mehr aktiv gebraucht werden (frühestens M1) |
 | **10 · (vorher)** | **K5 neu abstimmen** (die Nutzervorgabe *wenn das auch nicht klappt, müssen wir wieder abstimmen* ist eingetreten) · K6 mit dem Markpreis auswerten · die Importer-Voranalyse (Buch statt Position) **im Hauptfenster** vorlegen, spätestens in Phase 2 |
 
 ```bash
