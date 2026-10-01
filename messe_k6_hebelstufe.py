@@ -682,6 +682,22 @@ def main() -> int:
                 return dict(G=float(kum[-1]), n=int(ok_.sum()), dd=dd, serie=best, schlecht=min(mw) if mw else np.nan,
                             mon=dict(zip(um.tolist(), mw)))
             per = np.isin(JAHRe, SIM_JAHRE)
+            if "--spur-regel0" in sys.argv and sim_zelle and not isinstance(sim_zelle[1], tuple):
+                # B Teil 0 (Voranalyse_B_Kern_stabilisieren_01_10.md Abschnitt 1, nur Auskunft, aendert nichts): je Handel der
+                # Simulationszelle Symbol, Stunde, Hebelstufe, Hebelrendite, Kosten, Haltedauer, Liquidation und Spotrendite
+                import csv as _csv
+                H9_, Z9_, g9_ = sim_zelle
+                L9 = stufe(PE, H9_, g9_)
+                with open(sys.argv[sys.argv.index("--spur-regel0") + 1], "w", newline="", encoding="utf-8") as f_:
+                    w_ = _csv.writer(f_, delimiter=";")
+                    w_.writerow(["symbol", "std", "jahr", "stufe", "r", "kosten", "te", "liq", "spot"])
+                    for i_ in np.flatnonzero(per & (L9 > 0)):
+                        L_ = int(L9[i_]); r_ = float(R_[(H9_, Z9_, L_)][i_]); te_ = float(T_[(H9_, Z9_, L_)][i_])
+                        if not np.isfinite(r_):
+                            continue
+                        ko_ = L_ * (0.003 + 0.0018 * te_ / 24.0)
+                        w_.writerow([syms[int(XE["sym"][i_])], int(STDe[i_]), int(JAHRe[i_]), L_, "%.10g" % r_, "%.10g" % ko_,
+                                     "%d" % te_, int(r_ <= -1.0), "%.10g" % float(R_[(H9_, Z9_, 1)][i_])])
             print()
             print("=" * 120)
             if STOPWAHL:

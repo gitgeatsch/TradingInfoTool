@@ -116,3 +116,23 @@ Monat / Spannweite Vormonat)|** über die Monate. Dazu die Zahl der **Abschaltmo
 | **B2** | **F1** feines Raster und **F2** stetige Dämpfung gegen F0, Schwelle je Form neu gemessen |
 | **B3** | Wahl 2024 per Regel (weniger Springen als Pflicht, dann Chance, dann die einfachere Form), Bestätigung einmal in 4 Mengen |
 | **B4** | Besteht B: Vermerk **bestätigt, Vorwärtstest ausstehend** |
+
+---
+
+## 7. ✔ ABGESTIMMT (Nutzer 01.10.2026) — B1 bis B4; Vorab-Festlegung VOR dem Bau
+
+**Nutzer:** *„Ja, natürlich. Der Datenmangel, den wir beim Messen und Prüfen haben, ist ein Fakt, und die komprimierten Phasen bei
+anstieg und fallenden Assets auch, aber das können wir nur über unser Regelwerk abfangen. Marktänderungen, z. B. sind nun auch
+Institutionen und Wall Street in Krypto tätig, globale Krisen, Ölpreis, Zinsen etc., sind übergeordnete Kräfte, die wirken. Aber
+dies können wir nur gewichten, denke ich, das muss ich dann in den laufenden Trades selbst bewerten."*
+
+➤ **Einordnung:** Übergeordnete Kräfte werden **nicht** zur Regel. Sie sind höchstens ein Gewicht oder eine Information (Mail), und die Bewertung liegt
+beim Nutzer. Datenmangel und gestauchte Phasen fängt das **Regelwerk** ab (J, Grundgesamtheit, Ruhe, Hebelstufe).
+
+**Teil 0, festgelegt:**
+- `messe_k6_hebelstufe.py --simulation 24,ohne,0.02 --spur-regel0 <csv>` (REGEL0-Aufruf mit `--mit-btc`, Einstiege `kern48jb_*`) schreibt je Handel 2025–26
+  Symbol, Stunde, Hebelstufe, Hebelrendite, Kosten, Haltedauer, Liquidation und Spot. Die Ausgabe muss **zeilengleich** zum REGEL0-Beleg sein.
+- `messe_b0_verlustaufteilung.py <csv> <menge>`: R-R11 Summe = REGEL0-Konto, Achsen Kosten, Monatsklasse (K_IG aus 2.697,
+  `data/_vergleich/m1_wenig_<m>.txt`, ⚠️ Modelle vor J), Dämpfungswahl knapp/deutlich (Grenze 10, nur bestand, M1-1), später eingestellt
+  (nur unverzerrt), Hebelstufe, Jahr, 10 größte Verlustbringer.
+- **Stopp und Bericht** nach Teil 0 **und** Wahl (wie Abschnitt 5).
