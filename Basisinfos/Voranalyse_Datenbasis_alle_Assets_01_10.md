@@ -120,3 +120,32 @@ Mit allen 668 Assets wird die Frage wichtiger als vorher:
 - **Die Richtung der Abweichung ist ungefährlich:** Die ATR ist auf Futures **etwa 3 % höher**. Die Hebelstufe wird dadurch eher **vorsichtiger**, nicht kühner.
 - ✔ **Gegenprüfung von Hand** (LINK, drei Stunden): Stunden deckungsgleich (UTC), Schluss −0,07..−0,09 % (Basis). ⚠️ Im Absturz vom 10.10.2025 war das Futures-Tief **weniger tief** (8,16 gegen 7,90). In Extremstunden können die Dochte auseinanderlaufen.
 - ⚠️ **Grenze:** Assets, die es nur als Futures gibt, sind meist jünger und dünner, dort ist eher mit der größeren Abweichung zu rechnen. ➤ Ihr Signal trägt in der Mail den Vermerk **„Kurs aus Futures“**.
+
+---
+
+## 7. ✔ UMGESETZT (Nutzer 01.10.: *Ja wie empfohlen, prüfen und gegenprüfen*) — Befund 2.705
+
+| | |
+|---|---|
+| **Daten** | `data/stundenkurse_alle.db`: **537** Assets ab 2023, 8,36 Mio Kerzen, 898 MB, ohne Fehler. Die Messbasis `stundenkurse.db` ist **unberührt** (Dateidatum unverändert) |
+| **Quelle je Asset** | **356 Spot, 181 Futures.** Je Asset gilt **eine** Quelle, und zwar der Markt mit der **längeren** Historie. 18 Assets wechselten deshalb zu Futures, z. B. **HYPE**: Spot erst ab 24.09.2026 (173 h, zu kurz für J), Futures ab 30.05.2025 |
+| **Zuordnung** | `Basisinfos/symbol_zuordnung.csv` (CANTON → CC, CAT → 1000CAT). Preisprüfung `pruefe_symbol_zuordnung.py`: **40/40 OK, 0 gesperrt**, größte Abweichung 1,24 %. CAT lag schon in der Messbasis (als 1000CAT) und hatte Signale, die bisher unter *CAT* nicht gefunden wurden |
+| **Bewertung** | `messe_losfahren.py --zusatz`: Die neuen Assets werden bewertet, aber **nicht trainiert** (wie BTC). ✔ **R-R11:** Die 10.000 REGEL0-Einstiege sind **zeilengleich** |
+
+**Signalbilanz** (Beleg `Datenbasis_01_10/signalbilanz_zusatz__bestand.txt`): **40 statt 29** von 58 Assets bekommen Signale, 2.418 → 3.150 Signale 2024–26.
+
+| neu | 2024 | 2025 | 2026 (bis Aug.) |
+|---|---|---|---|
+| AKT · BRETT · FLOKI · KAS · XNO | 4–29 | 36–44 | 27–32 |
+| GRIFFAIN · HYPE · PLUME | 0 | 19–38 | 26–29 |
+| ASTER · CANTON · MON (jung) | 0 | 2–4 | 26–33 |
+
+Ohne Signal bleiben AIOZ, XDC, VSN, SUPRA (nicht bei Binance), EURCV (Stablecoin) und 13 Aktien/ETFs aus dem Bestand.
+
+**Gegenprüfung:** R-R11 zeilengleich. Die Zählung je Asset stimmt mit der Exportdatei überein. Die Preisprüfung läuft je Zuordnung gegen CoinGecko. Beim Prüfen gefunden und behoben:
+(1) Die Signalbilanz zählte nur Assets mit Signalen *vorher*, die neuen standen deshalb unter *ohne Signal*. (2) Die Preisprüfung suchte CAT nur unter dem Bitpanda-Kürzel.
+
+⚠️ **Was damit NICHT gesagt ist:**
+1. **Ob die REGEL0 für die neuen Assets trägt.** Sie werden mit demselben Modell bewertet. Ein Nachweis wie bei BTC (2.701) steht aus, mit dem Vermerk *nicht nachgewiesen*
+2. **Handel:** Für Hebelstufe und Liquidation fehlen den neuen Assets die **Markpreise** (`markpreis_historie.db`). Das ist der nächste Bauschritt
+3. **Bestand:** Er stammt noch aus der Desktop-Kopie (19.07.). Der NB-Teilexport nach `git pull` liefert den aktuellen Stand

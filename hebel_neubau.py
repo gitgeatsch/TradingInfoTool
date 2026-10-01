@@ -858,6 +858,10 @@ NEUESTER_STAND = (
               "Spiegel ebenfalls, ueberwiegend ATR-frei); jeder Filter nimmt die besseren weg. L2 nicht "
               "messbar. Signalbilanz: 25-45 Signale je Asset und Jahr, 16 Krypto-Assets der Listen ohne "
               "Stundenkurse"),
+    ("2.705", "DATENBASIS ALLE ASSETS: 537 Assets zusaetzlich stuendlich (Spot oder Futures, je die "
+              "laengere Historie), Zuordnung Bitpanda-Binance mit Preispruefung, bewertet und nicht "
+              "trainiert (REGEL0 zeilengleich). 40 statt 29 deiner Assets bekommen Signale. Offen: traegt "
+              "die REGEL0 fuer die neuen, und ihre Handelbarkeit (Markpreis)"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

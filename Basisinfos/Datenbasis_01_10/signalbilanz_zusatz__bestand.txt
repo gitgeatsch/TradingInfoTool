@@ -1,0 +1,50 @@
+==============================================================================================================
+SIGNALBILANZ JE ASSET · kern48jb_einstiege_bestand.csv -> kern48jbz_einstiege_bestand.csv · Jahre 2024, 2025, 2026
+Listen: NB-Teilexport 2026-10-01 07:10 (nb_betriebsdaten_T440.txt) - unvollstaendig, Rest aus der Desktop-Kopie · Watchlist 44 · Bestand 28 · Hebel-Liste 25 · zusammen 58
+==============================================================================================================
+  Asset     W B H | 2024 vorher->nachher | 2025 vorher->nachher | 2026 vorher->nachher | gesamt
+  AKT       x . x |    0 ->    4      |    0 ->   42      |    0 ->   30      |    0 ->   76
+  ALGO      x . x |   26 ->   26      |   40 ->   40      |   33 ->   33      |   99 ->   99
+  APT       x . . |   23 ->   23      |   42 ->   42      |   27 ->   27      |   92 ->   92
+  ASTER     x x . |    0 ->    0      |    0 ->    3      |    0 ->   33      |    0 ->   36
+  AVAX      x . . |   22 ->   22      |   40 ->   40      |   30 ->   30      |   92 ->   92
+  BEAMX     x . x |   24 ->   24      |   38 ->   38      |   27 ->   27      |   89 ->   89
+  BIO       x x . |    0 ->    0      |   35 ->   35      |   31 ->   31      |   66 ->   66
+  BNB       x . x |   25 ->   25      |   41 ->   41      |   28 ->   28      |   94 ->   94
+  BRETT     x x . |    0 ->   15      |    0 ->   36      |    0 ->   31      |    0 ->   82
+  BTC       x x x |   24 ->   24      |   42 ->   42      |   29 ->   29      |   95 ->   95
+  CANTON    x x . |    0 ->    0      |    0 ->    4      |    0 ->   31      |    0 ->   35
+  CAT       x . x |    0 ->    0      |   45 ->   45      |   31 ->   31      |   76 ->   76
+  ETH       x . x |   28 ->   28      |   39 ->   39      |   24 ->   24      |   91 ->   91
+  FLOKI     x . . |    0 ->   28      |    0 ->   44      |    0 ->   32      |    0 ->  104
+  GRIFFAIN  x . x |    0 ->    0      |    0 ->   38      |    0 ->   26      |    0 ->   64
+  HYPE      x . x |    0 ->    0      |    0 ->   19      |    0 ->   29      |    0 ->   48
+  IMX       x . . |   25 ->   25      |   43 ->   43      |   30 ->   30      |   98 ->   98
+  INJ       x . x |   25 ->   25      |   45 ->   45      |   29 ->   29      |   99 ->   99
+  IO        x . . |   21 ->   21      |   36 ->   36      |   35 ->   35      |   92 ->   92
+  KAIA      x x x |    0 ->    0      |   40 ->   40      |   26 ->   26      |   66 ->   66
+  KAITO     x . x |    0 ->    0      |   32 ->   32      |   28 ->   28      |   60 ->   60
+  KAS       x x . |    0 ->   29      |    0 ->   42      |    0 ->   32      |    0 ->  103
+  LINK      x x x |   27 ->   27      |   45 ->   45      |   28 ->   28      |  100 ->  100
+  MON       x x . |    0 ->    0      |    0 ->    2      |    0 ->   26      |    0 ->   28
+  MORPHO    x x x |    0 ->    0      |    3 ->    3      |   29 ->   29      |   32 ->   32
+  NEAR      x . x |   25 ->   25      |   42 ->   42      |   28 ->   28      |   95 ->   95
+  ONDO      x . x |    0 ->    0      |   28 ->   28      |   29 ->   29      |   57 ->   57
+  PLUME     x . . |    0 ->    0      |    0 ->   31      |    0 ->   29      |    0 ->   60
+  QNT       x x . |   26 ->   26      |   43 ->   43      |   34 ->   34      |  103 ->  103
+  RENDER    x . x |   18 ->   18      |   36 ->   36      |   26 ->   26      |   80 ->   80
+  S         x . . |    0 ->    0      |   38 ->   38      |   31 ->   31      |   69 ->   69
+  SEI       x . x |   21 ->   21      |   36 ->   36      |   27 ->   27      |   84 ->   84
+  SOL       x . x |   27 ->   27      |   37 ->   37      |   26 ->   26      |   90 ->   90
+  SUI       x . x |   25 ->   25      |   44 ->   44      |   30 ->   30      |   99 ->   99
+  TAO       x . x |   21 ->   21      |   41 ->   41      |   25 ->   25      |   87 ->   87
+  TURBO     x . x |    9 ->    9      |   37 ->   37      |   31 ->   31      |   77 ->   77
+  VIRTUAL   x . x |    0 ->    0      |   24 ->   24      |   28 ->   28      |   52 ->   52
+  W         x . . |   22 ->   22      |   41 ->   41      |   27 ->   27      |   90 ->   90
+  XLM       x x x |   25 ->   25      |   41 ->   41      |   28 ->   28      |   94 ->   94
+  XNO       x . . |    0 ->   26      |    0 ->   43      |    0 ->   27      |    0 ->   96
+  SUMME (40 gemessene Assets dieser Listen): 2418 -> 3150 (130 %) · Median je Asset 78 -> 88
+  mehr als die Haelfte verloren (0): keine
+  OHNE Signal in der Messmenge (18, keine Stundenkurse oder kein Krypto): 3QSS [. x .], AIOZ [x . .], CEBS [. x .], DBPK [. x .], EURCV [x x .], EXH3 [. x .], ISOC [. x .], OD7C [. x .], OD7H [. x .], OD7L [. x .], OD7N [. x .], PLTR [. x .], SUPRA [x x .], VSN [x x .], VST [. x .], VVMX [. x .], X136 [. x .], XDC [. . x]
+  Legende W B H = Watchlist / Bestand / Hebel-Liste
+SCHLUSS: vollstaendig

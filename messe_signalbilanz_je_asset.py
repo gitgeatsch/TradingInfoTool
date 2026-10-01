@@ -110,7 +110,7 @@ def main() -> int:
     v = Counter({(next((b for b, bn in zu.items() if bn == s), s), j): k for (s, j), k in v.items()})
     n_ = Counter({(next((b for b, bn in zu.items() if bn == s), s), j): k for (s, j), k in n_.items()})
     jahre = sorted({j for _, j in v} | {j for _, j in n_})
-    gemessen = {s for s, _ in v}
+    gemessen = {s for s, _ in v} | {s for s, _ in n_}       # vorher ODER nachher - neue Assets haben vorher null
     alle = sorted(set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"]))
     print("=" * 110)
     print("SIGNALBILANZ JE ASSET · %s · Jahre %s" % (was, ", ".join(map(str, jahre))))

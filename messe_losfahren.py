@@ -143,6 +143,13 @@ def main() -> int:
     if MITBTC:
         assert JUNGE, "--mit-btc verlangt --junge (das BTC-Normal laeuft ueber den J-Weg)"
         REIF[SYM == BTC_I] = False
+    # ⭐ O11 --zusatz: die neuen Assets aus stundenkurse_alle.db - bewerten, NICHT trainieren (wie BTC): nicht reif, nicht in BASIS
+    ZUSATZ = "--zusatz" in sys.argv
+    ZUS = np.isin(SYM, [SYMS.index(s_) for s_ in E2.ZUSATZ_SYMBOLE if s_ in SYMS]) if ZUSATZ else np.zeros(n, bool)
+    if ZUSATZ:
+        assert JUNGE, "--zusatz verlangt --junge (das Normal der neuen Assets laeuft ueber den J-Weg)"
+        REIF[ZUS] = False
+        print("  O11 --zusatz: %d neue Assets bewertet, nicht trainiert: %s" % (len(E2.ZUSATZ_SYMBOLE), ", ".join(sorted(E2.ZUSATZ_SYMBOLE))))
     NA72, NB72 = normal(A72, B72, 72)
     SM = SYM.astype(np.int64) * 1000 + (MON - MON.min())
     _u, smi = np.unique(SM, return_inverse=True)
@@ -200,6 +207,8 @@ def main() -> int:
         BASIS &= REIF                       # J: Training, Suche/Pruefung und Marktmitte nur auf reifen Stunden
     if MITBTC:
         BASIS &= SYM != BTC_I               # BTC: nie in Training und Marktmitte
+    if ZUSATZ:
+        BASIS &= ~ZUS                       # O11: nie in Training und Marktmitte
     HIT = (A24 + B24) > 0
     such = BASIS & (STD >= SUCHE[0]) & (STD < SUCHE[1])
     pruef = BASIS & (STD >= PRUEF[0]) & (STD < PRUEF[1])
@@ -1216,7 +1225,7 @@ def main() -> int:
                     len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
                     " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
                 ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
-                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, ("j" if JUNGE else "") + ("b" if MITBTC else ""))) % E2.MENGE.replace(":", "_"))
+                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, ("j" if JUNGE else "") + ("b" if MITBTC else "") + ("z" if ZUSATZ else ""))) % E2.MENGE.replace(":", "_"))
                 if "--ziel" in sys.argv:                     # Werkzeugtest: in eine Wegwerfdatei schreiben
                     ziel = sys.argv[sys.argv.index("--ziel") + 1]
                 os.makedirs(os.path.dirname(ziel), exist_ok=True)

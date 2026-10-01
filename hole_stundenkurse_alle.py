@@ -7,6 +7,9 @@ es im Bestand ist*; Frage 1 *alles halten statt nach Listen nachladen*; Frage 3 
 WAS geladen wird (eine Regel, keine Liste):
     Spot      jedes USDT-Paar im Handel, ohne Stablecoins und Fiat (Liste ``OHNE`` unten)
     Futures   jedes USDT-Perpetual im Handel mit ``underlyingType = COIN``, dessen Basis es NICHT als Spot gibt (auch nicht ohne 1000-Praefix)
+    ⭐ je Asset EINE Quelle: der Markt mit der LAENGEREN Historie (ab 2023). Beginnt der Futures-Kurs mehr als 30 Tage vor dem Spot
+              (z. B. HYPE: Spot erst ab 24.09.2026, Futures ab 30.05.2025), wird Futures genommen - gleichwertig nach Frage 3. Kein Stueckeln.
+              Die Entscheidung haengt nur an den Startdaten und ist damit ueber die Zeit stabil
     ab        2023-01-01 (Trainingsbeginn der REGEL0; fuer die Bewertung reichen 240 h, fuer die Signalbilanz 2024-26)
     ohne      die Symbole der MESSBASIS ``data/stundenkurse.db`` (116) - die liegen dort und bleiben unberuehrt
 
@@ -62,6 +65,7 @@ def universum():
     fu = requests.get(FUT[0], timeout=30).json()["symbols"]
     fut = {x["baseAsset"]: x["symbol"] for x in fu if x["quoteAsset"] == "USDT" and x.get("contractType") == "PERPETUAL"
            and x["status"] == "TRADING" and x.get("underlyingType") == "COIN" and x["baseAsset"] not in OHNE}
+    onboard = {x["baseAsset"]: x.get("onboardDate") for x in fu if x["baseAsset"] in fut}
 
     def ohne_praefix(b):
         m = re.match(r"^(1000000|1000|1M)(.+)$", b)
@@ -69,7 +73,19 @@ def universum():
     c = sqlite3.connect("file:%s?mode=ro" % MESSBASIS.replace("\\", "/"), uri=True)
     mb = {r[0] for r in c.execute("SELECT DISTINCT symbol FROM stundenkurse")}
     c.close()
-    aus = [(b, "spot", p) for b, p in sorted(spot.items()) if b not in mb]
+    aus = []
+    for b, p in sorted(spot.items()):
+        if b in mb:
+            continue
+        if b in fut and onboard.get(b):
+            r = requests.get(SPOT[1], params={"symbol": p, "interval": "1h", "limit": 1, "startTime": _ms(AB)}, timeout=30).json()
+            s0 = r[0][0] if r else None
+            f0 = max(int(onboard[b]), _ms(AB))
+            time.sleep(PAUSE_S)
+            if s0 is not None and f0 < s0 - 30 * 24 * 3_600_000:
+                aus.append((b, "futures", fut[b]))
+                continue
+        aus.append((b, "spot", p))
     for b, p in sorted(fut.items()):
         if b in spot or ohne_praefix(b) in spot or b in mb or ohne_praefix(b) in mb:
             continue
@@ -131,6 +147,11 @@ def main() -> int:
     t0, geholt, fehler = time.time(), 0, []
     jetzt = int(time.time() * 1000)
     for i, (sym, markt, paar) in enumerate(u, 1):
+        alt = c.execute("SELECT markt FROM _quelle WHERE symbol=?", (sym,)).fetchone()
+        if alt and alt[0] != markt:                 # Quelle gewechselt (laengere Historie): die alte Reihe ganz ersetzen, nicht stueckeln
+            c.execute("DELETE FROM stundenkurse WHERE symbol=?", (sym,))
+            c.commit()
+            print("  %-12s Quelle %s -> %s (laengere Historie), Reihe neu" % (sym, alt[0], markt))
         vorh = c.execute("SELECT MAX(stunde) FROM stundenkurse WHERE symbol=?", (sym,)).fetchone()[0]
         start = _ms(vorh) if vorh else _ms(AB)
         try:

@@ -135,7 +135,7 @@ def kursreihen() -> list:
     if MENGE == "bestand":
         aus = [(sym, cs.execute(q, (sym,)).fetchall(), False) for sym in bestand]
         cs.close()
-        return aus
+        return aus + _zusatz(q)
     ce = sqlite3.connect("file:%s?mode=ro" % EINGESTELLT_DB, uri=True)
     art = {r[0]: r[1] for r in ce.execute(
         "SELECT symbol, art FROM symbole WHERE art IN ('eingestellt','vorgeschichte')")}
@@ -169,6 +169,33 @@ def kursreihen() -> list:
         # sie am Fensterrand, ist das kein Einstellen, sondern unser Schnitt
         aus.append((sym, rows, bool(rows) and rows[-1][0] < FENSTERENDE_EINGESTELLT))
     cs.close(); ce.close()
+    return aus + _zusatz(q)
+
+
+ZUSATZ_SYMBOLE: set = set()
+
+
+def _zusatz(q) -> list:
+    """O11 (Voranalyse_Datenbasis_alle_Assets_01_10.md, Frage 4 *bewerten, nicht trainieren*): mit --zusatz die Reihen aus
+    data/stundenkurse_alle.db fuer die Assets aus Watchlist, Bestand und Hebel-Liste (Zuordnung Basisinfos/symbol_zuordnung.csv),
+    die NICHT in der Messbasis liegen - HINTEN angehaengt, damit die Indizes der Messbasis unveraendert bleiben. Die Leser
+    (messe_losfahren) schliessen sie aus Training und Marktmitte aus (wie BTC, E-37)."""
+    ZUSATZ_SYMBOLE.clear()
+    if "--zusatz" not in sys.argv:
+        return []
+    import csv as _csv
+    import messe_signalbilanz_je_asset as _SB
+    _q, L = _SB.listen()
+    zu = {}
+    with open(os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv"), encoding="utf-8") as f_:
+        for r_ in _csv.DictReader(f_, delimiter=";"):
+            zu[r_["bitpanda"]] = r_["binance"]
+    ziel = sorted({zu.get(s, s) for s in set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"])})
+    ca = sqlite3.connect("file:%s?mode=ro" % os.path.join(HIER, "data", "stundenkurse_alle.db").replace("\\", "/"), uri=True)
+    da = {r[0] for r in ca.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) >= 500")}
+    aus = [(s, ca.execute(q, (s,)).fetchall(), False) for s in ziel if s in da]
+    ca.close()
+    ZUSATZ_SYMBOLE.update(s for s, _r, _b in aus)
     return aus
 
 

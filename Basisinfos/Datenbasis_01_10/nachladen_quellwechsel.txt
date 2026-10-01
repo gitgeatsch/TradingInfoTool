@@ -1,0 +1,46 @@
+================================================================================================
+STUENDLICHE KURSE - ALLE KRYPTO-ASSETS BEI BINANCE (O11) -> data\stundenkurse_alle.db
+================================================================================================
+  Binance: Spot 490 · Futures (COIN) 523 · Messbasis 116 (bleibt unberuehrt) · NEU zu laden: 537 (Spot 356, nur Futures 181)
+  AERO         Quelle spot -> futures (laengere Historie), Reihe neu
+  [ 25/537] ALT          16.035 Kerzen · 0.4 Min
+  [ 50/537] AWE          16.085 Kerzen · 0.7 Min
+  BANK         Quelle spot -> futures (laengere Historie), Reihe neu
+  [ 75/537] CATI         28.876 Kerzen · 1.1 Min
+  [100/537] DEXE         28.926 Kerzen · 1.4 Min
+  DOLO         Quelle spot -> futures (laengere Historie), Reihe neu
+  F            Quelle spot -> futures (laengere Historie), Reihe neu
+  [125/537] FET          52.703 Kerzen · 2.0 Min
+  GENIUS       Quelle spot -> futures (laengere Historie), Reihe neu
+  [150/537] GRAM         56.797 Kerzen · 2.3 Min
+  HYPE         Quelle spot -> futures (laengere Historie), Reihe neu
+  [175/537] IRENB        68.588 Kerzen · 2.7 Min
+  KMNO         Quelle spot -> futures (laengere Historie), Reihe neu
+  LA           Quelle spot -> futures (laengere Historie), Reihe neu
+  [200/537] LUNA         95.844 Kerzen · 3.3 Min
+  MEGA         Quelle spot -> futures (laengere Historie), Reihe neu
+  MET          Quelle spot -> futures (laengere Historie), Reihe neu
+  [225/537] NBISB        110.301 Kerzen · 3.7 Min
+  NIGHT        Quelle spot -> futures (laengere Historie), Reihe neu
+  [250/537] PLTRB        117.460 Kerzen · 4.1 Min
+  PLUME        Quelle spot -> futures (laengere Historie), Reihe neu
+  PUMP         Quelle spot -> futures (laengere Historie), Reihe neu
+  [275/537] RESOLV       141.713 Kerzen · 4.6 Min
+  SAPIEN       Quelle spot -> futures (laengere Historie), Reihe neu
+  SENT         Quelle spot -> futures (laengere Historie), Reihe neu
+  [300/537] SNXXB        159.248 Kerzen · 5.1 Min
+  [325/537] TOWNS        159.298 Kerzen · 5.3 Min
+  WAL          Quelle spot -> futures (laengere Historie), Reihe neu
+  [350/537] WIN          172.621 Kerzen · 5.7 Min
+  XPL          Quelle spot -> futures (laengere Historie), Reihe neu
+  币安人生         Quelle spot -> futures (laengere Historie), Reihe neu
+  [375/537] 1000000BOB   190.707 Kerzen · 6.2 Min
+  [400/537] BEAT         190.757 Kerzen · 6.5 Min
+  [425/537] DATAIP       190.807 Kerzen · 6.7 Min
+  [450/537] ICNT         190.857 Kerzen · 7.0 Min
+  [475/537] NAORIS       190.907 Kerzen · 7.3 Min
+  [500/537] SONIC        190.957 Kerzen · 7.6 Min
+  [525/537] VVV          191.007 Kerzen · 7.9 Min
+  [537/537] 龙虾           191.031 Kerzen · 8.0 Min
+  FERTIG: 8.356.982 Zeilen · 537 Symbole · 898 MB · 8.0 Min
+SCHLUSS: vollstaendig
