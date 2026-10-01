@@ -68,3 +68,30 @@ bringt +5,9 % Hoch binnen 24 h, das bis zum Ausstieg wieder verloren geht. 2.700
 | **A1** | Stop in ATR mit k ∈ {1,0; 1,5; 2,0; 3,0} × H ∈ {24, 72}, Referenz REGEL0 |
 | **A2** | Wahl 2024 per Regel, einmal bestätigt, ≥ 3/4 Mengen und besser als REGEL0 |
 | **A3** | Die Antwort zu A-B1 (Bitpanda) von dir, bevor A in den Betrieb geht |
+
+---
+
+## 5. ✔ ABGESTIMMT (Nutzer 01.10.2026) — mit der Antwort zu A-B1; Vorab-Festlegung VOR dem Bau
+
+**Nutzer:** *„Ja, BTC aufnehmen, weiter mit A, prüfen und gegenprüfen. Zu deiner Frage: BP bietet keinen Trailing-Stop als Funktion an, das muss ich
+händisch erledigen, soweit mir bekannt."*
+
+➤ **Folge für die Messung (E-35, Betriebstauglichkeit):** Der Stop wird im Betrieb **vom System stündlich berechnet und gemeldet**, und der Nutzer schließt **von
+Hand**. Gemessen wird deshalb der Ausstieg **mit Ausführungsverzug**:
+
+| | festgelegt |
+|---|---|
+| Einstiege | REGEL0 mit BTC (`kern48jb_einstiege_<m>.csv`), Hebel REGEL0 (ATR, Grenze **2 %**, unverändert) |
+| Stop-Linie | höchstes Markpreis-Hoch seit dem Einstieg (bis zur **Vor**stunde) minus **k × ATR** zum Einstieg (Tages-ATR, relativ) |
+| Auslösung | erste Stunde, deren Markpreis-Tief die Linie erreicht |
+| **Ausstieg (Urteil)** | **Verzug v = 1 h**: zum Markpreis-Schluss der Stunde **nach** der Auslösung (Meldung, dann Handgriff) |
+| Ausstieg (Auskunft) | v = 0 an der Linie (Obergrenze, nicht erreichbar), dazu in der Bestätigung v = 2 und 4 h (Empfindlichkeit) |
+| Liquidation | hat Vorrang, auch während des Verzugs |
+| Achsen | k ∈ {ohne, 1,0, 1,5, 2,0, 3,0} × H ∈ {24, 72} (Zeitausstieg nach H) |
+| **Wahl 2024** (bestand) | nur die v = 1-Zellen: größtes Hebelkonto, bei Gleichstand (< 1 % Endwert) die einfachere Zelle (ohne Stop vor mit Stop, dann größeres k, dann kürzeres H) |
+| R-R11 | Die Zelle *ohne Stop, 24 h* muss die bisherige Rechnung (24 h, ohne Ziel) **bitgleich** treffen |
+| **Bestätigung** | einmal 2025–26, 4 Mengen: S1–S5 wie 2.690/2.694, dazu **besser als die REGEL0-Referenz** (Hebelkonto) in ≥ 3/4 Mengen |
+| Auskunft | die gewählte Zelle auf deiner Hebel-Liste |
+
+⚠️ **Betrieb:** Die Meldung *„Stop erreicht“* gehört in die Mail (Phase 5). Verkaufen musst du selbst, deshalb gibt es den Verzug. Ein Verzug von mehreren Stunden (nachts) zeigt die Empfindlichkeit.
+
