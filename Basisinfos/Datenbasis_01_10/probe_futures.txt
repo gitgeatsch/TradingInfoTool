@@ -1,0 +1,10 @@
+==============================================================================================================
+FUTURES GEGEN SPOT · 3 Assets (Saat 20261001, gleichmaessig ueber die Liquiditaet) · 2025-01-01 00:00 .. 2026-08-31 23:00
+==============================================================================================================
+  CHR       14592 h · Korrelation 0.9754 · rsi |d| Median 0.79 / P95 4.55 · ATR F/S 1.071 · Rendite 24 h |d| 0.117 Pp
+  APE       14592 h · Korrelation 0.9979 · rsi |d| Median 0.27 / P95 1.52 · ATR F/S 1.030 · Rendite 24 h |d| 0.041 Pp
+  ETHFI     14592 h · Korrelation 0.9962 · rsi |d| Median 0.37 / P95 2.06 · ATR F/S 1.012 · Rendite 24 h |d| 0.066 Pp
+  MEDIAN · Korrelation 0.9962 ✔ · rsi |d| 0.37 / P95 2.06 ✔ · ATR F/S 1.030 ✔ · Rendite 24 h |d| 0.066 Pp ✔
+  schlechtestes Asset (Korrelation): CHR 0.9754 · rsi P95 4.55 · ATR F/S 1.071
+  URTEIL: ✔ GLEICHWERTIG - Futures-Kurse fuer Assets ohne Spot zulaessig
+SCHLUSS: vollstaendig
