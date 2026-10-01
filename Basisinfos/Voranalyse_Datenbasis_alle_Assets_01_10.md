@@ -102,3 +102,21 @@ Mit allen 668 Assets wird die Frage wichtiger als vorher:
 3. R-R11: Die 116 bisherigen Reihen bleiben **zeilengleich**, die REGEL0-Belege bleiben gleich
 4. Signalbilanz je Asset neu: Wie viele der 58 bekommen jetzt Signale?
 5. Notebook: Betriebskopie und laufendes Nachladen gehören zu Schritt 7 (Bauaufgabe S2)
+
+---
+
+## 6. ERGEBNIS Frage 3 — Futures-Kurse sind gleichwertig (Beleg `Datenbasis_01_10/futures_gegen_spot.txt`)
+
+> **Urteil in einer Zeile:** ✔ **Alle vier Kriterien erfüllt.** Futures-Kurse dürfen für Assets ohne Spot verwendet werden, mit Vermerk.
+
+| Größe (Median über 20 Assets) | gemessen | Kriterium |
+|---|---|---|
+| Stundenrendite, Korrelation | **0,9926** | ≥ 0,99 ✔ |
+| rsi 14, Median \|Δ\| / P95 | **0,43 / 2,42** Punkte | ≤ 1,0 / ≤ 3,0 ✔ |
+| ATR relativ Futures/Spot | **1,032** | 0,95–1,05 ✔ |
+| Rendite 24 h, Median \|Δ\| | **0,061** Pp | ≤ 0,10 ✔ |
+
+- **Je Asset:** Große Werte sind nahezu identisch (ETH 0,9999, HBAR 0,9997, LINK 0,9982). Dünnere weichen mehr ab (IOST 0,978, IO 0,980): Bei 6 von 20 liegt die rsi-P95 über 3 Punkten (bis 4,8).
+- **Die Richtung der Abweichung ist ungefährlich:** Die ATR ist auf Futures **etwa 3 % höher**. Die Hebelstufe wird dadurch eher **vorsichtiger**, nicht kühner.
+- ✔ **Gegenprüfung von Hand** (LINK, drei Stunden): Stunden deckungsgleich (UTC), Schluss −0,07..−0,09 % (Basis). ⚠️ Im Absturz vom 10.10.2025 war das Futures-Tief **weniger tief** (8,16 gegen 7,90). In Extremstunden können die Dochte auseinanderlaufen.
+- ⚠️ **Grenze:** Assets, die es nur als Futures gibt, sind meist jünger und dünner, dort ist eher mit der größeren Abweichung zu rechnen. ➤ Ihr Signal trägt in der Mail den Vermerk **„Kurs aus Futures“**.

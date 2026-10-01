@@ -1,0 +1,4 @@
+GEGENPRUEFUNG von Hand: LINK, Spot (stundenkurse.db) gegen Futures (fapi, Rohantwort), Stundenbeginn UTC
+  2025-03-10 14:00 · Spot H/L/C (13.75, 13.25, 13.39) · Futures H/L/C 13.740/13.238/13.381 · Abweichung Schluss -0.067 %
+  2025-10-10 21:00 · Spot H/L/C (19.78, 7.9, 17.02) · Futures H/L/C 19.773/8.164/17.005 · Abweichung Schluss -0.088 %
+  2026-08-31 23:00 · Spot H/L/C (11.38, 11.242, 11.325) · Futures H/L/C 11.356/11.276/11.316 · Abweichung Schluss -0.079 %

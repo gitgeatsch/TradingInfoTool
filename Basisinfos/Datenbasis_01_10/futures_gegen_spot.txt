@@ -1,0 +1,27 @@
+==============================================================================================================
+FUTURES GEGEN SPOT · 20 Assets (Saat 20261001, gleichmaessig ueber die Liquiditaet) · 2025-01-01 00:00 .. 2026-08-31 23:00
+==============================================================================================================
+  SFP       14592 h · Korrelation 0.9925 · rsi |d| Median 0.58 / P95 2.67 · ATR F/S 1.057 · Rendite 24 h |d| 0.062 Pp
+  IOST      14592 h · Korrelation 0.9782 · rsi |d| Median 0.62 / P95 3.12 · ATR F/S 1.068 · Rendite 24 h |d| 0.075 Pp
+  METIS     14592 h · Korrelation 0.9908 · rsi |d| Median 0.53 / P95 3.43 · ATR F/S 1.041 · Rendite 24 h |d| 0.083 Pp
+  BLUR      14592 h · Korrelation 0.9865 · rsi |d| Median 0.46 / P95 2.28 · ATR F/S 1.047 · Rendite 24 h |d| 0.062 Pp
+  1INCH     14592 h · Korrelation 0.9943 · rsi |d| Median 0.53 / P95 2.57 · ATR F/S 1.048 · Rendite 24 h |d| 0.060 Pp
+  SUN       14592 h · Korrelation 0.9916 · rsi |d| Median 0.88 / P95 3.98 · ATR F/S 1.117 · Rendite 24 h |d| 0.054 Pp
+  SSV       14592 h · Korrelation 0.9961 · rsi |d| Median 0.37 / P95 2.02 · ATR F/S 1.034 · Rendite 24 h |d| 0.062 Pp
+  IMX       14592 h · Korrelation 0.9916 · rsi |d| Median 0.58 / P95 2.63 · ATR F/S 1.020 · Rendite 24 h |d| 0.084 Pp
+  GRT       14592 h · Korrelation 0.9971 · rsi |d| Median 0.36 / P95 1.53 · ATR F/S 1.019 · Rendite 24 h |d| 0.048 Pp
+  SNX       14592 h · Korrelation 0.9845 · rsi |d| Median 0.81 / P95 4.76 · ATR F/S 1.055 · Rendite 24 h |d| 0.132 Pp
+  APE       14592 h · Korrelation 0.9979 · rsi |d| Median 0.27 / P95 1.52 · ATR F/S 1.030 · Rendite 24 h |d| 0.041 Pp
+  JTO       14592 h · Korrelation 0.9950 · rsi |d| Median 0.26 / P95 1.58 · ATR F/S 1.028 · Rendite 24 h |d| 0.044 Pp
+  IO        14592 h · Korrelation 0.9799 · rsi |d| Median 0.55 / P95 4.46 · ATR F/S 1.008 · Rendite 24 h |d| 0.093 Pp
+  INIT      11869 h · Korrelation 0.9807 · rsi |d| Median 0.39 / P95 2.59 · ATR F/S 1.065 · Rendite 24 h |d| 0.074 Pp
+  RENDER    14592 h · Korrelation 0.9988 · rsi |d| Median 0.23 / P95 1.27 · ATR F/S 1.014 · Rendite 24 h |d| 0.039 Pp
+  KAITO     13379 h · Korrelation 0.9893 · rsi |d| Median 0.25 / P95 1.56 · ATR F/S 1.020 · Rendite 24 h |d| 0.041 Pp
+  RUNE      14592 h · Korrelation 0.9927 · rsi |d| Median 0.67 / P95 3.73 · ATR F/S 1.054 · Rendite 24 h |d| 0.081 Pp
+  HBAR      14592 h · Korrelation 0.9997 · rsi |d| Median 0.14 / P95 0.60 · ATR F/S 1.021 · Rendite 24 h |d| 0.019 Pp
+  LINK      14592 h · Korrelation 0.9982 · rsi |d| Median 0.28 / P95 1.49 · ATR F/S 0.989 · Rendite 24 h |d| 0.034 Pp
+  ETH       14592 h · Korrelation 0.9999 · rsi |d| Median 0.09 / P95 0.36 · ATR F/S 1.026 · Rendite 24 h |d| 0.008 Pp
+  MEDIAN · Korrelation 0.9926 ✔ · rsi |d| 0.43 / P95 2.42 ✔ · ATR F/S 1.032 ✔ · Rendite 24 h |d| 0.061 Pp ✔
+  schlechtestes Asset (Korrelation): IOST 0.9782 · rsi P95 3.12 · ATR F/S 1.068
+  URTEIL: ✔ GLEICHWERTIG - Futures-Kurse fuer Assets ohne Spot zulaessig
+SCHLUSS: vollstaendig
