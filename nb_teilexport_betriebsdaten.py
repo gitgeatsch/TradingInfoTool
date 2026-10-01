@@ -8,10 +8,17 @@ Historie, welche Symbole (Grundgesamtheit), die aktuelle Hebel-Liste, Python-Pak
   - jede Datenbank nur mit ``mode=ro`` - kein Schreibzugriff, auch nicht auf die Produktion ``tradinginfotool.db``
   - keine Netzabfrage, kein Import von Projektmodulen mit Seiteneffekten
   - leichtgewichtig: Zeilenzahlen ueber ``max(rowid)`` (Schaetzung, keine Vollzaehlung), Symbole nur bei kleinen Tabellen
-  - Ausgabe NUR auf stdout - der Nutzer leitet sie selbst in eine Datei um:
-        python nb_teilexport_betriebsdaten.py > nb_betriebsdaten.txt
+  - Ausgabe auf stdout UND direkt in den Austauschordner (Nutzer 01.10.: *das Ergebnis direkt in den Austauschordner*):
+        <Google Drive>/Claude_Austauschordner/Notebook_Analysedaten/nb_betriebsdaten_<GERAET>.txt
+    Der Geraetename steht im Dateinamen, damit ein Desktop-Testlauf (9900K) das Notebook-Ergebnis (T440) NIE
+    ueberschreibt (Lehre 24.08., Pruefungen-Ordner). Der Drive-Buchstabe wird gesucht, nicht geraten (G, K, H, E, F x
+    "My Drive"/"Meine Ablage", wie ``extract_notebook_diagnose._google_drive_wurzel`` - hier nachgebaut, um keine
+    Projektmodule mit Seiteneffekten zu importieren). Die Datei wird auch bei einem Abbruch geschrieben; fehlt die
+    Zeile ``SCHLUSS: vollstaendig``, ist der Lauf abgebrochen.
 
-Aufruf am Desktop zum Test ist unschaedlich (dieselben Regeln).
+Aufruf am Notebook nach ``git pull``:
+        python nb_teilexport_betriebsdaten.py
+Am Desktop zum Test unschaedlich (dieselben Regeln, eigene Datei ``..._9900K.txt``). ``--ohne-ablage``: nur stdout.
 """
 from __future__ import annotations
 
@@ -39,7 +46,57 @@ def spalten(c, t):
     return [r[1] for r in c.execute('PRAGMA table_info("%s")' % t)]
 
 
+def _drive_wurzel():
+    for b in ("G", "K", "H", "E", "F"):
+        for o in ("My Drive", "Meine Ablage"):
+            k = "%s:/%s" % (b, o)
+            if os.path.isdir(k):
+                return k
+    return None
+
+
+class _Zwei:
+    """stdout UND Puffer - der Puffer geht am Ende in den Austauschordner."""
+
+    def __init__(self, a):
+        self.a, self.teile = a, []
+
+    def write(self, s):
+        self.teile.append(s)
+        return self.a.write(s)
+
+    def flush(self):
+        self.a.flush()
+
+
 def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:                                            # noqa: BLE001
+        pass
+    if "--ohne-ablage" in sys.argv:
+        return _inhalt()
+    zw = _Zwei(sys.stdout)
+    sys.stdout = zw
+    rc = 1
+    try:
+        rc = _inhalt()
+    finally:
+        sys.stdout = zw.a
+        w = _drive_wurzel()
+        if w is None:
+            print("⚠️ Google Drive nicht gefunden (G/K/H/E/F) - Ergebnis nur oben auf dem Bildschirm")
+        else:
+            ziel = os.path.join(w, "Claude_Austauschordner", "Notebook_Analysedaten")
+            os.makedirs(ziel, exist_ok=True)
+            pf = os.path.join(ziel, "nb_betriebsdaten_%s.txt" % platform.node())
+            with open(pf, "w", encoding="utf-8") as f:
+                f.write("".join(zw.teile))
+            print("➤ geschrieben nach %s" % pf)
+    return rc
+
+
+def _inhalt() -> int:
     print("=" * 100)
     print("NB-TEILEXPORT BETRIEBSDATEN (Schritt 4, nur lesen) - %s - Geraet %s - Python %s" % (
         datetime.now().strftime("%Y-%m-%d %H:%M"), platform.node(), sys.version.split()[0]))
