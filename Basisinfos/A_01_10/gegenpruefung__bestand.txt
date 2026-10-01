@@ -1,0 +1,24 @@
+GEGENPRUEFUNG A - unabhaengig nachgerechnet, Stichprobe 400 von 2204 Einstiegen 2024
+  24_Stop ohne v0        gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop ohne v1        gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 1.0 ATR v0     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 1.0 ATR v1     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 1.5 ATR v0     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 1.5 ATR v1     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 2.0 ATR v0     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 2.0 ATR v1     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 3.0 ATR v0     gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 3.0 ATR v1     gleich  400/400 · groesste Abweichung 4.84e-11
+  72_Stop ohne v0        gleich  400/400 · groesste Abweichung 4.93e-11
+  72_Stop ohne v1        gleich  400/400 · groesste Abweichung 4.93e-11
+  72_Stop 1.0 ATR v0     gleich  400/400 · groesste Abweichung 4.82e-11
+  72_Stop 1.0 ATR v1     gleich  400/400 · groesste Abweichung 4.95e-11
+  72_Stop 1.5 ATR v0     gleich  400/400 · groesste Abweichung 5.00e-11
+  72_Stop 1.5 ATR v1     gleich  400/400 · groesste Abweichung 5.00e-11
+  72_Stop 2.0 ATR v0     gleich  400/400 · groesste Abweichung 4.91e-11
+  72_Stop 2.0 ATR v1     gleich  400/400 · groesste Abweichung 4.98e-11
+  72_Stop 3.0 ATR v0     gleich  400/400 · groesste Abweichung 4.96e-11
+  72_Stop 3.0 ATR v1     gleich  400/400 · groesste Abweichung 4.93e-11
+  24_ohne                gleich  400/400 · groesste Abweichung 4.84e-11
+SCHLUSS: ✔ alle gleich
+exit=0

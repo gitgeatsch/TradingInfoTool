@@ -40,7 +40,7 @@ Zugehörige Dokumente: `REGEL0_Hebel_Entwurf_30_09.md` (Parameter und Referenzza
 | 3 | ✔ **REGEL0 festschreiben — FESTGESCHRIEBEN 01.10.2026 (E-36)** | Parameter und Referenzzahlen (mit J), im Dokument **und im Code** (eine Konstante, von der Wache geprüft) | nach 1–2, Nutzer-Ja |
 | 4 | **Betriebsprüfung REGEL0** (Abschnitt 3) | Welche Daten und Rechenwege hat das Notebook, was fehlt? Das ist eine **Befundaufnahme** und noch kein Bau | nach 3 |
 | 5 | ✔ **Messung auf der Hebel-Liste — nach Kosten positiv (2.700)**: ×1,23, Rohvorteil +0,87 %, Rückgang 0,08; die Auswahl trägt (Zufallslisten +0,59 %). ⚠️ Rückschau-Vorbehalt | REGEL0 auf deinen 43 Assets (28 mit Daten, dazu die jungen durch J) | nach 3 |
-| 6 | **REGEL1 … n** — ausreizen | je ein Schritt gegen die Vorstufe: **A** Positionsführung · **B** Kern stabilisieren (Dämpfung) · **R** Regime-Kontext aus der Überfüllung · **L** Liquidität in Bewertung 2 · Käuferanteil auf dem Kern | Reihenfolge je Stufe abstimmen |
+| 6 | **REGEL1 … n** — ausreizen | je ein Schritt gegen die Vorstufe: **A** Positionsführung (◐ 01.10. Wahl 2024: 72 h · Stop 1,5 ATR · Verzug 1 h, Konto +0,287 gegen REGEL0 +0,250, Gipfel schmal; unabhängig nachgerechnet 400/400; Bestätigung zur Abstimmung — `Voranalyse_A_Positionsfuehrung_01_10.md` Abschnitt 6) · **B** Kern stabilisieren (Dämpfung) · **R** Regime-Kontext aus der Überfüllung · **L** Liquidität in Bewertung 2 · Käuferanteil auf dem Kern | Reihenfolge je Stufe abstimmen |
 | 7 | **Betriebsvorbereitung** | Mindestbedingungen abstimmen (Nutzer: *„reden wir, wenn wir zu diesem Schritt kommen“*). Die bestehende Hebel- und Spot-Achse wird **ersetzt**, kein Parallelbetrieb | später |
 | 8 | **Umstellung** | nach der ganzen Kette samt LLM-Rollen und Mail | später |
 

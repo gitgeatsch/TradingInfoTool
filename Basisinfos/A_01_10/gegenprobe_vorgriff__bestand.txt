@@ -1,0 +1,64 @@
+GEGENPRUEFUNG A (GEGENPROBE mit Vorgriff - muss abweichen) - unabhaengig nachgerechnet, Stichprobe 400 von 2204 Einstiegen 2024
+  24_Stop ohne v0        gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop ohne v1        gleich  400/400 · groesste Abweichung 4.84e-11
+  24_Stop 1.0 ATR v0     gleich  388/400 · groesste Abweichung 1.70e-01
+      ⛔ NOT 2024-11-23 01:00: eigen +0.037952 te 15 · Werkzeug +0.036983 te 15
+      ⛔ GMX 2024-05-20 12:00: eigen +0.055908 te 7 · Werkzeug +0.151890 te 24
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.040619 te 2 · Werkzeug +0.040619 te 3
+  24_Stop 1.0 ATR v1     gleich  389/400 · groesste Abweichung 6.85e-02
+      ⛔ GMX 2024-05-20 12:00: eigen +0.122368 te 8 · Werkzeug +0.151890 te 24
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.041853 te 3 · Werkzeug +0.024331 te 4
+      ⛔ RSR 2024-12-03 08:00: eigen +0.407312 te 10 · Werkzeug +0.338829 te 11
+  24_Stop 1.5 ATR v0     gleich  398/400 · groesste Abweichung 6.40e-02
+      ⛔ RSR 2024-12-03 08:00: eigen +0.253639 te 9 · Werkzeug +0.317679 te 18
+      ⛔ ONT 2024-11-16 11:00: eigen +0.001854 te 5 · Werkzeug +0.001854 te 15
+  24_Stop 1.5 ATR v1     gleich  398/400 · groesste Abweichung 2.25e-02
+      ⛔ RSR 2024-12-03 08:00: eigen +0.407312 te 10 · Werkzeug +0.386701 te 19
+      ⛔ ONT 2024-11-16 11:00: eigen +0.040650 te 6 · Werkzeug +0.018126 te 16
+  24_Stop 2.0 ATR v0     gleich  398/400 · groesste Abweichung 1.25e-01
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.123370 te 21 · Werkzeug +0.248586 te 23
+      ⛔ RSR 2024-12-03 08:00: eigen +0.117003 te 9 · Werkzeug +0.181042 te 24
+  24_Stop 2.0 ATR v1     gleich  398/400 · groesste Abweichung 1.64e-01
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.295714 te 22 · Werkzeug +0.249181 te 24
+      ⛔ RSR 2024-12-03 08:00: eigen +0.407312 te 10 · Werkzeug +0.243659 te 25
+  24_Stop 3.0 ATR v0     gleich  399/400 · groesste Abweichung 4.75e-02
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.201643 te 22 · Werkzeug +0.249181 te 24
+  24_Stop 3.0 ATR v1     gleich  399/400 · groesste Abweichung 4.61e-02
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.295244 te 23 · Werkzeug +0.249181 te 24
+  72_Stop ohne v0        gleich  400/400 · groesste Abweichung 4.93e-11
+  72_Stop ohne v1        gleich  400/400 · groesste Abweichung 4.93e-11
+  72_Stop 1.0 ATR v0     gleich  380/400 · groesste Abweichung 3.74e-01
+      ⛔ NOT 2024-11-23 01:00: eigen +0.037952 te 15 · Werkzeug +0.036983 te 15
+      ⛔ GMX 2024-05-20 12:00: eigen +0.055908 te 7 · Werkzeug +0.111452 te 29
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.040619 te 2 · Werkzeug +0.040619 te 3
+  72_Stop 1.0 ATR v1     gleich  381/400 · groesste Abweichung 1.49e-01
+      ⛔ GMX 2024-05-20 12:00: eigen +0.122368 te 8 · Werkzeug +0.110420 te 30
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.041853 te 3 · Werkzeug +0.024331 te 4
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.229956 te 61 · Werkzeug +0.378761 te 64
+  72_Stop 1.5 ATR v0     gleich  393/400 · groesste Abweichung 6.40e-02
+      ⛔ NOT 2024-11-23 01:00: eigen +0.235483 te 39 · Werkzeug +0.235483 te 40
+      ⛔ XTZ 2024-11-28 20:00: eigen +0.341365 te 49 · Werkzeug +0.341365 te 50
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.406205 te 62 · Werkzeug +0.406205 te 63
+  72_Stop 1.5 ATR v1     gleich  393/400 · groesste Abweichung 6.81e-02
+      ⛔ NOT 2024-11-23 01:00: eigen +0.195446 te 40 · Werkzeug +0.146960 te 41
+      ⛔ XTZ 2024-11-28 20:00: eigen +0.309838 te 50 · Werkzeug +0.321845 te 51
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.405695 te 63 · Werkzeug +0.378761 te 64
+  72_Stop 2.0 ATR v0     gleich  393/400 · groesste Abweichung 1.25e-01
+      ⛔ NOT 2024-11-23 01:00: eigen +0.191726 te 39 · Werkzeug +0.191726 te 40
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.123370 te 21 · Werkzeug +0.248586 te 23
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.364285 te 62 · Werkzeug +0.364285 te 63
+  72_Stop 2.0 ATR v1     gleich  393/400 · groesste Abweichung 1.64e-01
+      ⛔ NOT 2024-11-23 01:00: eigen +0.195446 te 40 · Werkzeug +0.146960 te 41
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.295714 te 22 · Werkzeug +0.249181 te 24
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.405695 te 63 · Werkzeug +0.378761 te 64
+  72_Stop 3.0 ATR v0     gleich  396/400 · groesste Abweichung 1.46e-02
+      ⛔ NOT 2024-11-23 01:00: eigen +0.104211 te 39 · Werkzeug +0.118795 te 41
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.201643 te 22 · Werkzeug +0.201643 te 55
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.280443 te 62 · Werkzeug +0.280443 te 68
+  72_Stop 3.0 ATR v1     gleich  396/400 · groesste Abweichung 1.63e-01
+      ⛔ NOT 2024-11-23 01:00: eigen +0.195446 te 40 · Werkzeug +0.154966 te 42
+      ⛔ KAVA 2024-09-18 09:00: eigen +0.295244 te 23 · Werkzeug +0.203109 te 56
+      ⛔ MOVR 2024-11-06 07:00: eigen +0.405695 te 63 · Werkzeug +0.242800 te 69
+  24_ohne                gleich  400/400 · groesste Abweichung 4.84e-11
+SCHLUSS: ⛔ Abweichungen
+exit=1

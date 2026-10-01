@@ -100,3 +100,39 @@ und die REGEL0-Zelle im selben Lauf). Probe (3 Monate) technisch sauber. ✔ **R
 ⚠️ Beobachtung in der Probe (Inhalt nicht gewertet): Der Ausstieg **genau an der Linie** (v = 0) war schlechter als mit 1 h Verzug. Nach einem Stop-Treffer erholt sich der Kurs
 innerhalb der Stunde oft wieder. v = 0 ist also **keine** Obergrenze. Es bleibt Auskunft, das Urteil fällt auf v = 1.
 
+---
+
+## 6. WAHL 2024 (bestand) — gemessen 01.10.2026 früh, Beleg `Basisinfos/A_01_10/wahl__bestand.txt`
+
+> **Urteil in einer Zeile:** Die Regel wählt **72 h · Stop 1,5 ATR · Verzug 1 h**, Hebelkonto 2024 **+0,287** gegen REGEL0 **+0,250** (×1,33 gegen ×1,28).
+> Der Abstand ist klar (Zweite +0,270, mehr als 1 %). ⚠️ Der Gipfel ist aber **schmal**, und der Rückgang steigt von 0,189 auf 0,279.
+
+| H | Ausstieg (v = 1 h) | Konto log | Rückgang | Ø Hebel | Spot |
+|---|---|---|---|---|---|
+| 24 | **ohne Stop = REGEL0** | **+0,250** | 0,189 | 3,34 | +0,143 |
+| 24 | Stop 1,0 / 1,5 / 2,0 / 3,0 ATR | +0,247 / +0,257 / +0,270 / +0,264 | 0,159 / 0,174 / 0,182 / 0,190 | 3,34 | +0,130 / +0,140 / +0,145 / +0,144 |
+| 72 | ohne Stop | +0,192 | **0,400** | 2,53 | +0,221 |
+| 72 | Stop 1,0 / **1,5** / 2,0 / 3,0 ATR | +0,244 / **+0,287** / +0,240 / +0,179 | 0,196 / **0,279** / 0,346 / 0,400 | 2,53 | +0,192 / **+0,234** / +0,226 / +0,211 |
+
+**Prüfung:**
+- ✔ **R-R11:** *ohne Stop, 24 h* über den neuen Stop-Pfad = bisherige Rechnung, **bitgleich** (+0,2498).
+- ✔ **Wiederholung:** Ein zweiter Lauf mit Spur ist zeilengleich.
+- ✔ **Liquidation hat Vorrang:** Mit Verzug liegt die Liquidationsquote über der ohne Verzug (0,09 % gegen 0,00 % bei 1,0 ATR/24 h), mit wachsendem k nähert sie sich *ohne Stop* (0,37 %).
+- ℹ️ 2204 statt 2188 Handel bei 72 h: Das ATR-Modell hat für 2x bei 24 h nicht überall eine Schätzung, deshalb entfallen bei 24 h 16 Einstiege. Das ist dieselbe Regel wie in der REGEL0, nicht neu.
+
+**Gegenprüfung (unabhängig nachgerechnet):** `pruefe_a_stop_unabhaengig.py` rechnet die Spot-Rendite aller 21 Zellen direkt aus den Rohdaten nach: eigene ATR, über die **Stunde** statt den Zeilenindex adressiert, eigene Linie und eigener Ausstieg.
+- ✔ **400 von 400** Einstiegen in **21 von 21** Zellen gleich (größte Abweichung 5·10⁻¹¹, Rundung der Spur). Beleg `gegenpruefung__bestand.txt`.
+- ✔ **Die Prüfung kann fehlschlagen:** Mit Vorgriff aufs Hoch der laufenden Stunde (`--gegenprobe`) weicht sie in **allen Stop-Zellen** ab, die Zellen ohne Stop bleiben gleich. Beleg `gegenprobe_vorgriff__bestand.txt`.
+
+**Was die Zahlen sagen (Auskunft, kein Urteil):**
+
+| | |
+|---|---|
+| **Die Haltedauer trägt, der Stop macht sie tragbar** | 72 h ohne Stop bringt Spot mehr (+0,221 gegen +0,143), mit Hebel aber Rückgang 0,400. Der Stop halbiert fast den Rückgang und hebt das Konto |
+| **Der Gipfel ist schmal** | Bei 72 h liegen die Nachbarn 1,0 und 2,0 ATR auf REGEL0-Höhe (+0,244 / +0,240). Bei 24 h ist es breiter: 1,5 bis 3,0 ATR liegen alle über REGEL0. Bei 10 Zellen ist ein Gewinn von +0,037 log aus der Auswahl allein nicht auszuschließen. Deshalb gibt es die **einmalige Bestätigung** |
+| **Verzug 1 h ist besser als Ausstieg an der Linie** | in **allen** k und H. Nach dem Stop-Treffer erholt sich der Kurs in der Stunde danach im Mittel. Für den Handgriff ist das günstig: Der Verzug kostet nichts. Er heißt aber auch, dass ein Teil der Stop-Treffer Rücksetzer im laufenden Rückkehrhandel sind |
+| **Vergleich (vor dem Neubau, keine Grundlage)** | 2.628 (26.09.) fand Trailing 1,5 ATR auf einer anderen Auswahl. Das ist gleiche Größenordnung, aber kein Beleg |
+
+**Betrieb (E-35):** 72 h heißt, dass bis zu drei Tage gleichzeitig Positionen offen sind und der Stop stündlich gemeldet wird, auch nachts. Die Auskunft v = 2/4 in der Bestätigung zeigt, was ein späterer Handgriff kostet.
+
+➤ **Zur Abstimmung:** Bestätigung 2025–26 in 4 Mengen mit `--stop 72,1.5,1` (Kriterien S1–S5, besser als REGEL0 in ≥ 3/4 Mengen), Auskunft v = 0/2/4. Danach Auskunft auf der Hebel-Liste.

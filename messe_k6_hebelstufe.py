@@ -649,6 +649,16 @@ def main() -> int:
         print("  ⚠️ Kalibrierung nur aus der Liquidation; '+5 % vor Liq.' ist NUR Vergleich (Nutzer 29.09.)")
         if sim:
             R_ = {k: np.concatenate(v) for k, v in SIMR.items()}; T_ = {k: np.concatenate(v) for k, v in SIMT.items()}
+            if "--spur" in sys.argv:
+                # Gegenpruefung A (nur Auskunft, aendert nichts): je Einstieg Symbol, Stunde, Spot-Rendite und Ausstiegsstunde der Stop-Zellen
+                import csv as _csv
+                with open(sys.argv[sys.argv.index("--spur") + 1], "w", newline="", encoding="utf-8") as f_:
+                    w_ = _csv.writer(f_, delimiter=";")
+                    ks_ = [k_ for k_ in R_ if k_[2] == 1]
+                    w_.writerow(["symbol", "std", "jahr"] + sum([["%d_%s_r" % (k_[0], fz(k_[1])), "%d_%s_te" % (k_[0], fz(k_[1]))] for k_ in ks_], []))
+                    for i_ in range(len(STDe)):
+                        w_.writerow([syms[int(XE["sym"][i_])], int(STDe[i_]), int(JAHRe[i_])] + sum(
+                            [["%.10g" % R_[k_][i_], "%d" % T_[k_][i_]] for k_ in ks_], []))
             bs0_, bs1_ = _h(datetime(2025, 10, 10)), _h(datetime(2025, 10, 12))
 
             def stufe(P, H_, g_):
