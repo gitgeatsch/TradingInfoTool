@@ -102,6 +102,13 @@ def main() -> int:
         v = lies(arg[arg.index("--vorher") + 1]); n_ = lies(arg[arg.index("--nachher") + 1])
         was = "%s -> %s" % (os.path.basename(arg[arg.index("--vorher") + 1]), os.path.basename(arg[arg.index("--nachher") + 1]))
     quelle, L = listen(arg[arg.index("--nb") + 1] if "--nb" in arg else None)
+    # Zuordnung Bitpanda -> Binance (Basisinfos/symbol_zuordnung.csv): die Einstiegsdateien tragen das BINANCE-Kuerzel (z. B. 1000CAT, CC)
+    zu = {}
+    with open(os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv"), encoding="utf-8") as f_:
+        for r_ in csv.DictReader(f_, delimiter=";"):
+            zu[r_["bitpanda"]] = r_["binance"]
+    v = Counter({(next((b for b, bn in zu.items() if bn == s), s), j): k for (s, j), k in v.items()})
+    n_ = Counter({(next((b for b, bn in zu.items() if bn == s), s), j): k for (s, j), k in n_.items()})
     jahre = sorted({j for _, j in v} | {j for _, j in n_})
     gemessen = {s for s, _ in v}
     alle = sorted(set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"]))

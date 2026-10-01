@@ -1,0 +1,29 @@
+================================================================================================
+STUENDLICHE KURSE - ALLE KRYPTO-ASSETS BEI BINANCE (O11) -> data\stundenkurse_alle.db
+================================================================================================
+  Binance: Spot 490 · Futures (COIN) 523 · Messbasis 116 (bleibt unberuehrt) · NEU zu laden: 537 (Spot 374, nur Futures 163)
+  [ 25/537] ALT          382.824 Kerzen · 4.4 Min
+  [ 50/537] AWE          828.322 Kerzen · 9.4 Min
+  [ 75/537] CATI         1.275.861 Kerzen · 14.5 Min
+  [100/537] DEXE         1.686.699 Kerzen · 19.1 Min
+  [125/537] FET          2.199.176 Kerzen · 24.8 Min
+  [150/537] GRAM         2.602.479 Kerzen · 29.4 Min
+  [175/537] IRENB        2.946.981 Kerzen · 33.3 Min
+  [200/537] LUNA         3.499.198 Kerzen · 39.4 Min
+  [225/537] NBISB        3.789.099 Kerzen · 42.7 Min
+  [250/537] PLTRB        4.225.988 Kerzen · 47.6 Min
+  [275/537] RESOLV       4.731.128 Kerzen · 53.2 Min
+  [300/537] SNXXB        5.136.701 Kerzen · 57.9 Min
+  [325/537] TOWNS        5.601.927 Kerzen · 63.1 Min
+  [350/537] WIN          6.040.740 Kerzen · 68.1 Min
+  [375/537] 1000000BOB   6.549.327 Kerzen · 73.8 Min
+  [400/537] BEAT         6.827.942 Kerzen · 77.1 Min
+  [425/537] DATAIP       7.045.092 Kerzen · 79.7 Min
+  [450/537] ICNT         7.324.803 Kerzen · 83.0 Min
+  [475/537] NAORIS       7.635.509 Kerzen · 86.7 Min
+  [500/537] SONIC        7.871.296 Kerzen · 89.5 Min
+  [525/537] VVV          8.110.606 Kerzen · 92.4 Min
+  [537/537] 龙虾           8.242.023 Kerzen · 93.9 Min
+  FERTIG: 8.293.468 Zeilen · 537 Symbole · 891 MB · 93.9 Min
+SCHLUSS: vollstaendig
+exit=0

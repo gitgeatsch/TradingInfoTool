@@ -1,0 +1,63 @@
+==============================================================================================================
+PREISPRUEFUNG ZUORDNUNG Bitpanda -> Binance · Listen: NB-Teilexport 2026-10-01 07:10 (nb_betriebsdaten_T440.txt) - unvollstaendig, Rest aus der Desktop-Kopie · Grenze ±5 %
+==============================================================================================================
+  3QSS      -> –          kein Krypto
+  AIOZ      -> –          ohne Binance
+  AKT       -> AKT       futures  alle      Binance 0.6543 / 1 · CoinGecko 0.657941 · Abweichung -0.55 % -> OK
+  ALGO      -> ALGO      spot     Messbasis Binance 0.1232 / 1 · CoinGecko 0.123563 · Abweichung -0.29 % -> OK
+  APT       -> APT       spot     Messbasis Binance 0.7622 / 1 · CoinGecko 0.767608 · Abweichung -0.70 % -> OK
+  ASTER     -> ASTER     spot     alle      Binance 0.7342 / 1 · CoinGecko 0.737738 · Abweichung -0.48 % -> OK
+  AVAX      -> AVAX      spot     Messbasis Binance 10.87 / 1 · CoinGecko 10.93 · Abweichung -0.55 % -> OK
+  BEAMX     -> BEAMX     spot     Messbasis Binance 0.002 / 1 · CoinGecko 0.0020095 · Abweichung -0.47 % -> OK
+  BIO       -> BIO       spot     Messbasis Binance 0.02983 / 1 · CoinGecko 0.0300271 · Abweichung -0.66 % -> OK
+  BNB       -> BNB       spot     Messbasis Binance 766.71 / 1 · CoinGecko 768.12 · Abweichung -0.18 % -> OK
+  BRETT     -> BRETT     futures  alle      Binance 0.0056 / 1 · CoinGecko 0.00560926 · Abweichung -0.17 % -> OK
+  BTC       -> BTC       spot     Messbasis Binance 84230 / 1 · CoinGecko 84437 · Abweichung -0.25 % -> OK
+  CANTON    -> CC        futures  alle      Binance 0.12017 / 1 · CoinGecko 0.120585 · Abweichung -0.34 % -> OK
+  CAT       -> 1000CAT   spot     Messbasis Binance 0.002218 / 1000 · CoinGecko 2.22e-06 · Abweichung -0.09 % -> OK
+  CEBS      -> –          kein Krypto
+  DBPK      -> –          kein Krypto
+  ETH       -> ETH       spot     Messbasis Binance 2680.86 / 1 · CoinGecko 2688.84 · Abweichung -0.30 % -> OK
+  EURCV     -> –          ohne Binance
+  EXH3      -> –          kein Krypto
+  FLOKI     -> FLOKI     spot     alle      Binance 2.727e-05 / 1 · CoinGecko 2.743e-05 · Abweichung -0.58 % -> OK
+  GRIFFAIN  -> GRIFFAIN  futures  alle      Binance 0.016444 / 1 · CoinGecko 0.0163021 · Abweichung +0.87 % -> OK
+  HYPE      -> HYPE      spot     alle      Binance 86.99 / 1 · CoinGecko 87.45 · Abweichung -0.53 % -> OK
+  IMX       -> IMX       spot     Messbasis Binance 0.1717 / 1 · CoinGecko 0.172409 · Abweichung -0.41 % -> OK
+  INJ       -> INJ       spot     Messbasis Binance 7.408 / 1 · CoinGecko 7.46 · Abweichung -0.70 % -> OK
+  IO        -> IO        spot     Messbasis Binance 0.1581 / 1 · CoinGecko 0.158879 · Abweichung -0.49 % -> OK
+  ISOC      -> –          kein Krypto
+  KAIA      -> KAIA      spot     Messbasis Binance 0.0376 / 1 · CoinGecko 0.0377963 · Abweichung -0.52 % -> OK
+  KAITO     -> KAITO     spot     Messbasis Binance 0.3381 / 1 · CoinGecko 0.340036 · Abweichung -0.57 % -> OK
+  KAS       -> KAS       futures  alle      Binance 0.04186 / 1 · CoinGecko 0.0420632 · Abweichung -0.48 % -> OK
+  LINK      -> LINK      spot     Messbasis Binance 14.286 / 1 · CoinGecko 14.35 · Abweichung -0.45 % -> OK
+  MON       -> MON       futures  alle      Binance 0.03261 / 1 · CoinGecko 0.0329284 · Abweichung -0.97 % -> OK
+  MORPHO    -> MORPHO    spot     Messbasis Binance 2.484 / 1 · CoinGecko 2.51 · Abweichung -1.04 % -> OK
+  NEAR      -> NEAR      spot     Messbasis Binance 4.871 / 1 · CoinGecko 4.91 · Abweichung -0.79 % -> OK
+  OD7C      -> –          kein Krypto
+  OD7H      -> –          kein Krypto
+  OD7L      -> –          kein Krypto
+  OD7N      -> –          kein Krypto
+  ONDO      -> ONDO      spot     Messbasis Binance 0.4866 / 1 · CoinGecko 0.491153 · Abweichung -0.93 % -> OK
+  PLTR      -> –          kein Krypto
+  PLUME     -> PLUME     spot     alle      Binance 0.0185 / 1 · CoinGecko 0.0186726 · Abweichung -0.92 % -> OK
+  QNT       -> QNT       spot     Messbasis Binance 260.8 / 1 · CoinGecko 263.06 · Abweichung -0.86 % -> OK
+  RENDER    -> RENDER    spot     Messbasis Binance 1.9 / 1 · CoinGecko 1.91 · Abweichung -0.52 % -> OK
+  S         -> S         spot     Messbasis Binance 0.03934 / 1 · CoinGecko 0.0396665 · Abweichung -0.82 % -> OK
+  SEI       -> SEI       spot     Messbasis Binance 0.0715 / 1 · CoinGecko 0.071777 · Abweichung -0.39 % -> OK
+  SOL       -> SOL       spot     Messbasis Binance 117.2 / 1 · CoinGecko 117.69 · Abweichung -0.42 % -> OK
+  SUI       -> SUI       spot     Messbasis Binance 1.1517 / 1 · CoinGecko 1.16 · Abweichung -0.72 % -> OK
+  SUPRA     -> –          ohne Binance
+  TAO       -> TAO       spot     Messbasis Binance 302.4 / 1 · CoinGecko 305.3 · Abweichung -0.95 % -> OK
+  TURBO     -> TURBO     spot     Messbasis Binance 0.001016 / 1 · CoinGecko 0.00101959 · Abweichung -0.35 % -> OK
+  VIRTUAL   -> VIRTUAL   spot     Messbasis Binance 0.7786 / 1 · CoinGecko 0.783548 · Abweichung -0.63 % -> OK
+  VSN       -> –          ohne Binance
+  VST       -> –          kein Krypto
+  VVMX      -> –          kein Krypto
+  W         -> W         spot     Messbasis Binance 0.01338 / 1 · CoinGecko 0.0134612 · Abweichung -0.60 % -> OK
+  X136      -> –          kein Krypto
+  XDC       -> –          ohne Binance
+  XLM       -> XLM       spot     Messbasis Binance 0.2184 / 1 · CoinGecko 0.219628 · Abweichung -0.56 % -> OK
+  XNO       -> XNO       spot     alle      Binance 0.364 / 1 · CoinGecko 0.361814 · Abweichung +0.60 % -> OK
+  ZUSAMMEN: OK 40 · GESPERRT 0 · ohne Binance 5 · ohne Vergleich 0 · kein Krypto 13
+SCHLUSS: vollstaendig
