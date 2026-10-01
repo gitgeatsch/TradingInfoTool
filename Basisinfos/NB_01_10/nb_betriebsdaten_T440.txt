@@ -1,0 +1,137 @@
+====================================================================================================
+NB-TEILEXPORT BETRIEBSDATEN (Schritt 4, nur lesen) - 2026-10-01 07:10 - Geraet T440 - Python 3.13.14
+Projekt: C:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool
+====================================================================================================
+  Paket numpy   2.5.1
+  Paket pandas  3.0.3
+  Paket scipy   FEHLT (ModuleNotFoundError)
+  freier Speicher am Projektlaufwerk: 60.2 GB
+
+DATENBANKEN in data/ (7):
+  funding_historie.db                                  0.0 MB  geaendert 2026-09-02 10:16
+  messdaten.db                                        42.3 MB  geaendert 2026-10-01 07:10
+  onchain_historie.db                                  0.0 MB  geaendert 2026-09-02 10:16
+  terminmarkt_historie.db                              0.0 MB  geaendert 2026-09-02 10:16
+  trading.db                                           0.0 MB  geaendert 2026-07-15 18:58
+  tradinginfotool.db                                 645.7 MB  geaendert 2026-10-01 07:10
+  umlaufmenge_cg.db                                    0.5 MB  geaendert 2026-10-01 06:35
+
+----------------------------------------------------------------------------------------------------
+funding_historie.db
+  _nur_symbolliste                 ~1 Zeilen · Spalten hinweis, herkunft, gebaut_am
+  funding                          ~302 Zeilen · Spalten symbol
+      Symbole: 302
+
+----------------------------------------------------------------------------------------------------
+messdaten.db
+  _nur_betrieb                     ~1 Zeilen · Spalten hinweis, behalte_tage, mindest_kerzen, gebaut_am, herkunft
+  messreihen                       ~577 Zeilen · Spalten symbol, assetklasse
+      Symbole: 577
+  messreihen_status                ~13031 Zeilen · Spalten symbol, assetklasse, status
+      Symbole: 577
+  price_history_ohlc               ~458267 Zeilen · Spalten symbol, assetklasse, currency, date, open, high, low, close, volume, fetched_at …
+      Zeitraum date: 2019-02-14 .. 2026-10-01
+      Symbole: 529
+      Beispiel 1000CAT: 2025-05-19 | 2025-05-20 | 2025-05-21
+
+----------------------------------------------------------------------------------------------------
+onchain_historie.db
+  _nur_symbolliste                 ~1 Zeilen · Spalten hinweis, herkunft, gebaut_am
+  splycur                          ~66 Zeilen · Spalten symbol
+      Symbole: 66
+
+----------------------------------------------------------------------------------------------------
+terminmarkt_historie.db
+  _nur_symbolliste                 ~1 Zeilen · Spalten hinweis, herkunft, gebaut_am
+  terminmarkt                      ~32 Zeilen · Spalten symbol
+      Symbole: 32
+  terminmarkt_tag                  ~100 Zeilen · Spalten symbol
+      Symbole: 100
+
+----------------------------------------------------------------------------------------------------
+tradinginfotool.db
+  anlass_beobachtung               ~259627 Zeilen · Spalten id, erfasst_am, symbol, instrument, fingerabdruck_voll, fingerabdruck_asset, gleich_voll, gleich_asset, alter_stunden, wuerde_sperren_voll …
+      Symbole: 60
+  api_call_kontingent              ~17 Zeilen · Spalten source, monat, anzahl
+  api_call_kontingent_taeglich     ~218 Zeilen · Spalten source, tag, anzahl
+      Zeitraum tag: 2026-08-01 .. 2026-10-01
+  api_call_kontingent_warnung_gesendet ~? Zeilen · Spalten source, monat, schwelle_prozent, gesendet_am
+  api_health_status                ~30 Zeilen · Spalten source, last_success_at, last_error_at, last_error_type, last_error_message
+  asset_bitpanda_override          ~13 Zeilen · Spalten symbol, bitpanda_gelistet_override
+      Symbole: 13
+  asset_dca_settings               ~1 Zeilen · Spalten symbol, dca_erlaubt
+      Symbole: 1
+  asset_hebel_settings             ~44 Zeilen · Spalten symbol, hebel_pruefung_erlaubt
+      Symbole: 44
+  auswahl_schatten                 ~205016 Zeilen · Spalten id, lauf, gruppe, symbol, platz, von, k, gewaehlt, entwicklung, marktzustand …
+      Symbole: 60
+  bitpanda_katalog                 ~14054 Zeilen · Spalten asset_id, symbol, name, gruppe, isin, geholt_am
+      Symbole: 12402
+  bitpanda_wallet_saldo            ~208 Zeilen · Spalten asset_id, wallet_owner, wallet_id, saldo, zeitpunkt, geaendert_am
+  externe_reihe                    ~6573 Zeilen · Spalten quelle, schluessel, datum, wert, geholt_am
+      Zeitraum datum: 2017-12-29 .. 2026-10-01
+  fuehrung_lauf                    ~2242 Zeilen · Spalten id, erfasst_am, art, symbol, signal_id, tier, ist_hebel, richtung, ur_aktion, seit …
+      Symbole: 32
+  gate_durchlaessigkeit            ~22078 Zeilen · Spalten id, lauf, erfasst_am, hinein, heraus, daten_json
+  groq_exhaustion_status           ~1 Zeilen · Spalten id, datum, fehlschlaege, erschoepft
+      Zeitraum datum: 2026-07-21 .. 2026-07-21
+  hebel_positions                  ~1387 Zeilen · Spalten id, symbol, richtung, status, eroeffnet_am, geschlossen_am, hebel_effektiv, positionswert_eur, kreditbetrag_eur, eigenkapital_eur …
+      Symbole: 11
+  hebel_signals                    ~1998 Zeilen · Spalten id, symbol, created_at, pipeline_version, richtung, action, hebel_vorschlag, hebel_final, hebel_korrektur_hinweis, trade_thesis_typ …
+      Symbole: 33
+  hebel_triggers                   ~112775 Zeilen · Spalten id, symbol, richtung, screened_at, screening_run_id, trigger_zweig, score_gesamt, score_details_json, oi_change_pct_lookback, kursaenderung_pct_lookback …
+      Symbole: 43
+  holdings                         ~60 Zeilen · Spalten symbol, quantity, updated_at, source, avg_buy_price_tracked_qty, avg_buy_price_computed_at, avg_buy_price_eur, avg_buy_price_manual_eur, staked_quantity
+      Symbole: 60
+  job_laeufe                       ~33 Zeilen · Spalten job_id, zuletzt_am
+  kategorie_synthese_ergebnis      ~284 Zeilen · Spalten erstellt_am, kategorie_ergebnisse_json, llm_model
+  lagebilder                       ~386 Zeilen · Spalten id, datum, erstellt_am, lage, belege_json, klassen_json, gleichlauf, fakten_json, prompt_stand, modell
+      Zeitraum datum: 2026-08-14 .. 2026-09-30
+  lebendigkeit_beobachtung         ~7327 Zeilen · Spalten id, erfasst_am, symbol, quelle, zustand, wert, kennzahlen_json, grund
+      Symbole: 201
+  macro_snapshot                   ~3434 Zeilen · Spalten date, btc_dominance_pct, fear_greed_value, fear_greed_label, fetched_at, fed_funds_rate, m2_geldmenge, cpi_headline, cpi_core, ezb_einlagensatz …
+      Zeitraum date: 2017-01-03 .. 2026-10-01
+  makro_analog_ergebnis            ~66 Zeilen · Spalten berechnet_am, ergebnis_json
+  makro_historie_monat             ~1186 Zeilen · Spalten monat, dxy_proxy, fed_funds_rate, rendite_10y, cpi_yoy_prozent, oel_wti, spx_close, spx_trend_deviation_std, btc_close
+  marktscan_candidates             ~5256 Zeilen · Spalten id, coingecko_id, symbol, name, discovered_at, discovery_source, scan_run_id, filter_a_bestanden, tier, market_cap_usd …
+      Symbole: 914
+  meta                             ~23 Zeilen · Spalten key, value
+  oi_abdeckung_status              ~44 Zeilen · Spalten symbol, konsekutive_fehlschlaege, letzter_erfolg_at, zuletzt_gemeldet_at
+      Symbole: 44
+  open_interest_snapshot           ~553168 Zeilen · Spalten symbol, exchange, open_interest, open_interest_usd, funding_rate, long_account_pct, fetched_at
+      Symbole: 40
+  portfolio_wert_historie          ~120 Zeilen · Spalten datum, wert_eur, cash_eur, symbole_gesamt, symbole_ohne_kurs, quelle, berechnet_am, index_wert, mengen_json
+      Zeitraum datum: 2026-05-08 .. 2026-09-30
+  price_cache                      ~375195 Zeilen · Spalten symbol, coingecko_id, price_usd, price_eur, market_cap_usd, volume_24h_usd, change_24h_pct, fetched_at
+      Symbole: 61
+  price_history                    ~76975 Zeilen · Spalten coingecko_id, date, price_usd, price_eur, fetched_at
+      Zeitraum date: 2025-07-07 .. 2026-10-01
+  price_history_ohlc               ~262265 Zeilen · Spalten symbol, currency, date, open, high, low, close, volume, fetched_at, quelle
+      Zeitraum date: 1980-03-17 .. 2026-09-30
+      Symbole: 67
+      Beispiel 3QSS: 2024-07-10 | 2024-07-11 | 2024-07-12
+  signals                          ~8026 Zeilen · Spalten id, symbol, created_at, pipeline_version, action, confidence_pct, short_reasoning, long_reasoning_technisch, long_reasoning_fundamental, long_reasoning_makro …
+      Symbole: 60
+  sqlite_sequence                  ~11 Zeilen · Spalten name, seq
+  these_aenderungsvorschlaege      ~53 Zeilen · Spalten id, mechanismus_typ, vorgeschlagene_richtung, begruendung, beobachtung_seit, these_id, hauptgruppe, unterkategorie, datenstand, erkannt_am …
+  thesen                           ~11 Zeilen · Spalten id, hauptgruppe, unterkategorie, richtung, staerke, begruendung, pruef_mechanismus, gesetzt_am, review_am, status …
+  vorfilter_schatten               ~1076 Zeilen · Spalten id, erfasst_am, signal_id, symbol, assetklasse, instrument, ist_short, h, frei, gedeckt …
+      Symbole: 55
+  zellen_lauf                      ~4389 Zeilen · Spalten id, lauf_id, erfasst_am, gruppe, symbol, instrument, strategie, stufe, ergebnis, grund …
+      Symbole: 60
+
+----------------------------------------------------------------------------------------------------
+umlaufmenge_cg.db
+  _nur_betrieb                     ~1 Zeilen · Spalten hinweis, tage, gebaut_am
+  _quelle                          ~1 Zeilen · Spalten hinweis, groesse, tage, gebaut_am, buendelfaktor
+  abruf_symbol                     ~407 Zeilen · Spalten symbol, coingecko_id, status, punkte, verworfen, spruenge, groesster_sprung, urteil, geholt_am
+      Symbole: 407
+  umlaufmenge                      ~8587 Zeilen · Spalten symbol, datum, wert
+      Zeitraum datum: 2026-09-08 .. 2026-10-01
+      Symbole: 374
+      Beispiel 1000CHEEMS: 2026-09-08 | 2026-09-09 | 2026-09-10
+
+----------------------------------------------------------------------------------------------------
+HEBEL-LISTE (asset_hebel_settings, erlaubt): 25 - AKT, ALGO, BEAMX, BNB, BTC, CAT, ETH, GRIFFAIN, HYPE, INJ, KAIA, KAITO, LINK, MORPHO, NEAR, ONDO, RENDER, SEI, SOL, SUI, TAO, TURBO, VIRTUAL, XDC, XLM
+
+SCHLUSS: vollstaendig

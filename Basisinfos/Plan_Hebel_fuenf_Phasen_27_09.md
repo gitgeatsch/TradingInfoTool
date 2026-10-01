@@ -80,6 +80,19 @@ Stand laut Doku (`project_messbasen_geraeteaufteilung`, CLAUDE.md). ⚠️ **Das
 | **B8** | das **Normal** (12 Monate beziehungsweise nach J ab 240 h) | aus der Historie | braucht B1 | hängt an B1 |
 | **B9** | **Mail, LLM-Rollen, Importer** | – | kennen die neue Bewertung nicht; der Importer teilt Teilschließungen falsch ein (2.679) | Betriebsvorbereitung (Schritt 7) |
 
+**✔ NB-BEFUND 01.10.2026 07:10** (`nb_teilexport_betriebsdaten.py` am T440, nur lesend; Beleg `Basisinfos/NB_01_10/nb_betriebsdaten_T440.txt`):
+
+| | am Notebook vorgefunden | Folge |
+|---|---|---|
+| B1 Stundenkurse | ⛔ **keine** stündliche OHLC-Reihe. `stundenkurse.db` fehlt; `messdaten.db` (Betriebskopie, 42 MB) und `tradinginfotool.db` haben nur **Tageskerzen**, `price_cache` hat Schnappschüsse ohne Hoch und Tief | Bauaufgabe S2: Historie übertragen (346 MB) und laufend stündlich nachladen |
+| B2/B3 Training | ⛔ **`scipy` FEHLT** (numpy 2.5.1 statt 2.4.6 am Desktop, pandas gleich, Python 3.13.14 gleich). Das rsi-Modell (`minimize`, `sparse`) und die Hebelstufe (`expit`) brauchen scipy | `pip install scipy`, danach R-R11 am NB gegen die REGEL0-Belege (bitgleich trotz anderer numpy-Version?) |
+| B4 Markpreis | ⛔ `markpreis_historie.db` fehlt. Die Binance-Anbindung besteht aber (`open_interest_snapshot`, 40 Symbole) | Historie übertragen (722 MB) und laufend nachladen |
+| B5 Grundgesamtheit | ⛔ Die Betriebskopie trägt 529 Symbole als **Tageskerzen**, die REGEL0 rechnet auf **116 Symbolen stündlich** | mit B1 dieselbe Menge herstellen |
+| Speicher | ✔ 60 GB frei | reicht |
+| B7 Hebel-Liste | ⚠️ **25 erlaubt** (am Desktop-Stand 24.09. waren es 43): 19 weggefallen (AIOZ, APT, ASTER, AVAX, BIO, BRETT, CANTON, FLOKI, IMX, IO, KAS, MON, PLUME, QNT, S, SUPRA, VSN, W, XNO), **XDC** neu. Ohne Messung bleiben AKT, CAT, GRIFFAIN, HYPE, XDC (keine Stundendaten) und KAIA (kein gültiger Markpreis) | 2.700 auf der heutigen Liste aus den Werten je Asset nachgerechnet (Summe der alten Liste bitgleich ×1,229): **18 Assets, 1.112 Handel, Konto ×1,144, Rohvorteil +0,815 %**, 2 Liquidationen. Weiter positiv nach Kosten. Beleg `Basisinfos/NB_01_10/liste_nb_aus_2700.txt` |
+
+➤ **Urteil Schritt 4:** Am Notebook kann die REGEL0 **heute nicht** laufen: Es fehlen Stundenkurse, Markpreise und scipy. Das sind **Bauaufgaben** (S2, Nutzer 30.09.), kein Showstopper. Die Daten gibt es am Desktop. Laufend nachladen lassen sie sich über die Binance-Anbindung, die am Notebook schon besteht.
+
 ➤ **Folge für den Plan:** Jede **REGELn** wird nur dann festgeschrieben, wenn ihre zusätzlichen Größen die Prüfung B1–B9 bestehen
 oder ein **Weg am Notebook** feststeht. R (Überfüllung marktweit) und L (Umsatz in USD, Marktkapitalisierung) nutzen Terminmarkt- und
 Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter als die Historie.
@@ -92,7 +105,7 @@ Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter al
 |---|---|---|
 | O1 | Abstimmung J (J-a bis J-d) | **jetzt** |
 | O2 | Schwellenwahl auf der vollständigen 2024-Menge | nach J |
-| O3 | Datenlage am Notebook **bestätigen** (B1–B5), mit einem sparsamen Export und nur den nötigen Tabellen. ✔ **Vorbereitet (01.10.):** `nb_teilexport_betriebsdaten.py`, nur lesend, ohne Netz, Ausgabe nur auf stdout. Aufruf am Notebook: `python nb_teilexport_betriebsdaten.py > nb_betriebsdaten.txt`, dann die Datei in den Austauschordner. Es zeigt Datenbanken, Tabellen, Zeiträume, Symbole, die Hebel-Liste und die Pakete. Am Desktop getestet (44 s, Produktion unverändert). ⏳ Start durch den Nutzer | Schritt 4 |
+| O3 | Datenlage am Notebook **bestätigen** (B1–B5), mit einem sparsamen Export und nur den nötigen Tabellen. ✔ **Vorbereitet (01.10.):** `nb_teilexport_betriebsdaten.py`, nur lesend, ohne Netz, Ausgabe nur auf stdout. Aufruf am Notebook: `python nb_teilexport_betriebsdaten.py > nb_betriebsdaten.txt`, dann die Datei in den Austauschordner. Es zeigt Datenbanken, Tabellen, Zeiträume, Symbole, die Hebel-Liste und die Pakete. Am Desktop getestet (44 s, Produktion unverändert). ✔ **Gelaufen 01.10. 07:10 am T440** (Ergebnis direkt im Austauschordner): Es fehlen Stundenkurse, Markpreise und scipy, die Hebel-Liste ist 25 statt 43 (siehe NB-BEFUND oben) | erledigt, Bauaufgaben in Schritt 7 |
 | O4 | Wo und wie das Modell im Betrieb trainiert wird (B2/B3), **ohne Desktop** | Schritt 4, Voranalyse |
 | O5 | Die 15 Assets ohne Stundendaten: Beschaffung oder Ausschluss? Deine Entscheidung. ✔ **BTC** (Nutzer 01.10.: *„BTC soll dann am NB auch Hebel nutzen können“*): Heute schließt der Lader BTC als Leitwert aus. Nötig ist ein **eigener Schritt analog zu J**: Modell und Marktmitte bleiben ohne BTC (REGEL0 bitgleich), BTC wird zusätzlich ausgewertet und gemessen, ob es trägt. ◐ **Gemessen (2.701):** technisch sauber (die übrigen bitgleich), statistisch nicht nachweisbar (nur ~30 Signale je Jahr), wirtschaftlich unschädlich (Konto um null, keine Liquidation). ✔ **Nutzer 01.10.: aufgenommen (E-37)**, Vermerk *nicht nachgewiesen, unschädlich*; REGEL0-Referenz jetzt mit BTC | erledigt |
 | O6 | Reihenfolge von A, B, R, L und Käuferanteil. ✔ **Entwurf A** (01.10.): `Voranalyse_A_Positionsfuehrung_01_10.md`, ein nachgezogener Stop in ATR (k × H), Einstieg REGEL0 unverändert, nur Erfolgsmessung. Zur Abstimmung, dazu die Nutzerfrage A-B1: Kann Bitpanda einen nachgezogenen Stop? | nach Schritt 5 |

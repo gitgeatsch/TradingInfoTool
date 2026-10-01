@@ -1,0 +1,7 @@
+Assets in der Messung 112
+NB-Liste gemessen: ['ALGO', 'BEAMX', 'BNB', 'ETH', 'INJ', 'KAITO', 'LINK', 'MORPHO', 'NEAR', 'ONDO', 'RENDER', 'SEI', 'SOL', 'SUI', 'TAO', 'TURBO', 'VIRTUAL', 'XLM']
+NB-Liste ohne Messung: ['AKT', 'BTC', 'CAT', 'GRIFFAIN', 'HYPE', 'KAIA', 'XDC']
+weggefallen, gemessen: ['APT', 'AVAX', 'BIO', 'IMX', 'IO', 'QNT', 'W']
+NB-Liste heute    Assets 18 Handel 1112 Konto log +0.1343 (x1.144) Rohvorteil +0.815 % Liq 2 Spot +0.0571
+Liste 24.09.      Assets 25 Handel 1598 Konto log +0.2063 (x1.229) Rohvorteil +0.872 % Liq 2 Spot +0.0912
+nur weggefallene  Assets  7 Handel  486 Konto log +0.0720 (x1.075) Rohvorteil +1.003 % Liq 0 Spot +0.0341
