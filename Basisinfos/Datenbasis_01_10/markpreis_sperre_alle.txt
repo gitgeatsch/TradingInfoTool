@@ -1,0 +1,4 @@
+SPERRE Grenze 1.0 % je Monat · Symbol-Monate 9142 · gesperrt 153 (anderes Instrument 25, ohne Spot-Vergleich 128)
+   AUDIO    12 Monate 2024-08 bis 2025-07
+   MBL      12 Monate 2024-08 bis 2025-07
+   ONE       1 Monate 2026-08 bis 2026-08

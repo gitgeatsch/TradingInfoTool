@@ -243,3 +243,8 @@ Die bekannten 40 Zuordnungen aus der Preisprüfung dürfen **nicht** als Kollisi
 **40 Assets bekommen Signale.** Ohne Binance bleiben **AIOZ, SUPRA, VSN, XDC** und der Stablecoin EURCV. Dazu kommen 15 Aktien/ETFs.
 
 **Im Betrieb (Schritt 7):** `pruefe_bitpanda_katalog.py` und `pruefe_symbol_zuordnung.py` laufen täglich im Betriebsjob, eine Abweichung wird gemeldet.
+
+**Nachtrag Markpreise aller Assets (01.10. spät):** `data/markpreis_alle.db` enthält **411 Assets** mit 6,54 Mio Stunden. Die übrigen 126 sind reine Spot-Assets ohne Futures,
+also ohne Markpreis: Signale ja, Hebel nein (wie XNO). Sperre gegen die eigenen Stundenkurse: 153 von 9.142 Symbol-Monaten gesperrt. 128 davon sind Anfangsmonate ohne
+ausreichenden Vergleich, **25 betreffen ein anderes Instrument** (AUDIO, MBL je 12 Monate, ONE 1 Monat), keines davon in deinen Listen. Die 10 Assets aus deinen Listen sind unverändert.
+Beleg `Datenbasis_01_10/markpreis_sperre_alle.txt`.
