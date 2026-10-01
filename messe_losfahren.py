@@ -1389,6 +1389,101 @@ def main() -> int:
                 print("  geschrieben: %s" % zw)
                 print("SCHLUSS: vollstaendig")
                 return 0
+            if not best and "--liq" in sys.argv:
+                # ⭐ L (Basisinfos/Voranalyse_L_Liquiditaet_01_10.md Abschnitte 1, 2, 9): LIQUIDITAET ZUM ZEITPUNKT = USD-Volumen der
+                # letzten 24 Stunden bis einschliesslich der Einstiegsstunde (Volumen x Schluss aus den Stundenkursen, kausal).
+                # L0 Dosis-Wirkung (Auskunft) · L1 Filter >= X mit Wahl 2024 per Regel · Qualitaetsgewinn · Signalbilanz je Asset
+                LIQ = np.full(n, np.nan); R24S = np.full(n, np.nan)
+                pos_ = {s_: i_ for i_, s_ in enumerate(SYMS)}
+                for sym_, rows_, _be in E2.kursreihen():
+                    if sym_ not in pos_:
+                        continue
+                    st_ = np.array([H(datetime.strptime(r_[0], "%Y-%m-%d %H:%M")) for r_ in rows_], np.int64)
+                    cc_ = np.array([r_[3] for r_ in rows_], float)
+                    us_ = np.array([(r_[4] or 0.0) for r_ in rows_], float) * cc_
+                    cs_ = np.concatenate([[0.0], np.cumsum(us_)])
+                    ix_ = np.flatnonzero(SYM == pos_[sym_])
+                    k_ = np.searchsorted(st_, STD[ix_], "left")
+                    ok_ = (k_ < len(st_)) & (st_[np.minimum(k_, len(st_) - 1)] == STD[ix_])
+                    k_, ix_ = k_[ok_], ix_[ok_]
+                    lo_ = np.searchsorted(st_, st_[k_] - 23, "left")
+                    voll = (st_[k_] - st_[lo_] == 23) & (k_ - lo_ == 23)        # 24 lueckenlose Stunden
+                    LIQ[ix_[voll]] = (cs_[k_ + 1] - cs_[lo_])[voll]
+                    k24 = np.searchsorted(st_, st_[k_] + 24, "left")
+                    g24 = (k24 < len(st_)) & (st_[np.minimum(k24, len(st_) - 1)] == st_[k_] + 24)
+                    R24S[ix_[g24]] = cc_[k24[g24]] / cc_[k_[g24]] - 1.0
+                AUF_ = np.where(np.isfinite(t_u), t_u <= 24, False).astype(np.float64)
+                AB_ = np.where(np.isfinite(t_d), t_d <= 24, False).astype(np.float64)
+                S0 = 0.035
+                e0 = erst_v(VH, S0)
+                print("L · LIQUIDITAET ZUM ZEITPUNKT (USD-Volumen 24 h) · Menge %s · Jahre %s · Schwelle %+.3f (REGEL0) · %d Einstiege, Liquiditaet bekannt %d" % (
+                    E2.MENGE, JAHRE, S0, len(e0), int(np.isfinite(LIQ[e0]).sum())))
+                spg = lambda ix: float(AUF_[ix].mean() - AB_[ix].mean()) if len(ix) else np.nan
+                STUF = [0.0, 0.5e6, 1e6, 2e6, 5e6, 10e6, 20e6, np.inf]
+                at_ = ATR[e0]; k1_, k2_ = np.nanpercentile(at_, [100 / 3.0, 200 / 3.0])
+                print("  L0 DOSIS-WIRKUNG (feste USD-Stufen, Auskunft): Stufe · Einstiege · Chance Dq · Spiegel (+5 % zuerst minus -5 % zuerst) · "
+                      "Spot 24 h ohne Kosten · Chance je ATR-Drittel (niedrig / mittel / hoch)")
+                for a_, b_ in zip(STUF[:-1], STUF[1:]):
+                    w_ = e0[np.isfinite(LIQ[e0]) & (LIQ[e0] >= a_) & (LIQ[e0] < b_)]
+                    atd = []
+                    for lo3, hi3 in ((-np.inf, k1_), (k1_, k2_), (k2_, np.inf)):
+                        w3 = w_[(ATR[w_] >= lo3) & (ATR[w_] < hi3)]
+                        atd.append("%+.3f (%d)" % (dqh(w3), len(w3)) if len(w3) >= 30 else "– (%d)" % len(w3))
+                    print("    %5.1f-%-5s Mio · %5d · %+.4f · %+.3f · %+.3f %% · %s" % (
+                        a_ / 1e6, ("%.1f" % (b_ / 1e6)) if np.isfinite(b_) else "∞", len(w_), dqh(w_) if len(w_) else np.nan, spg(w_),
+                        100 * float(np.nanmean(R24S[w_])) if len(w_) else np.nan, " / ".join(atd)))
+                print("    ohne Liquiditaet: %d · rho(log Liquiditaet, ATR) %+.2f" % (
+                    int((~np.isfinite(LIQ[e0])).sum()),
+                    float(pd.Series(np.log(LIQ[e0][np.isfinite(LIQ[e0]) & (LIQ[e0] > 0)])).corr(
+                        pd.Series(ATR[e0][np.isfinite(LIQ[e0]) & (LIQ[e0] > 0)]), method="spearman"))))
+                RASTER_X = (0.0, 0.5e6, 1e6, 2e6, 5e6, 10e6, 20e6)
+                nul_e = [erst_v(vh_stuendlich(verschoben(E, RSI)), S0) for _ in range(zieh)]
+                print("  L1 WAHL (Filter Liquiditaet >= X, Eintrag faellt ersatzlos weg): X · Einstiege · Assets · echt · Null P90 · Abstand · "
+                      "Spiegel minus X=0 · weggenommen: Chance / Spot 24 h · behalten: Spot 24 h")
+                abst_x, zeile_x = {}, {}
+                for X in RASTER_X:
+                    keep = e0[(LIQ[e0] >= X) if X > 0 else np.ones(len(e0), bool)]
+                    weg = np.setdiff1d(e0, keep)
+                    echt_ = dqh(keep)
+                    nz = [dqh(en[(LIQ[en] >= X) if X > 0 else np.ones(len(en), bool)]) for en in nul_e]
+                    p90_ = float(np.nanpercentile(nz, 90)); abst_x[X] = echt_ - p90_
+                    zeile_x[X] = (keep, weg)
+                    print("    %5.1f Mio · %5d · %3d · %+.4f · %+.4f · %+.4f · %+.4f · %s / %s · %+.3f %%" % (
+                        X / 1e6, len(keep), len(np.unique(SYM[keep])), echt_, p90_, abst_x[X], spg(keep) - spg(e0),
+                        ("%+.4f" % dqh(weg)) if len(weg) else "–", ("%+.3f %%" % (100 * float(np.nanmean(R24S[weg])))) if len(weg) else "–",
+                        100 * float(np.nanmean(R24S[keep]))))
+                mxx = max(abst_x.values())
+                Xw = min(X for X in RASTER_X if abst_x[X] >= mxx - 0.005)
+                keep, weg = zeile_x[Xw]
+                if Xw == 0.0:
+                    print("  L1 REGEL: groesster Abstand %+.4f, Gleichstand < 0,005 -> kleineres X -> GEWAEHLT X = 0 (REGEL0): L1 TRAEGT NICHT" % mxx)
+                else:
+                    sp_ok = spg(keep) - spg(e0) > 0
+                    q_ok = len(weg) > 0 and dqh(weg) < dqh(keep) and float(np.nanmean(R24S[weg])) < float(np.nanmean(R24S[keep]))
+                    print("  L1 REGEL: groesster Abstand %+.4f -> GEWAEHLT X = %.1f Mio USD · Spiegel besser als X=0: %s · Qualitaetsgewinn "
+                          "(weggenommene schlechter in Chance UND Spot 24 h): %s -> %s" % (
+                              mxx, Xw / 1e6, "✔" if sp_ok else "⛔", "✔" if q_ok else "⛔",
+                              "L1 BESTEHT DIE WAHL" if (sp_ok and q_ok) else "L1 NICHT BESTANDEN"))
+                # Signalbilanz je Asset (Nutzer 01.10.: bei jeder Aenderung der REGEL0 konkret)
+                NBL = "AKT ALGO BEAMX BNB BTC CAT ETH GRIFFAIN HYPE INJ KAIA KAITO LINK MORPHO NEAR ONDO RENDER SEI SOL SUI TAO TURBO VIRTUAL XDC XLM".split()
+                c0 = {s_: int((SYM[e0] == i_).sum()) for s_, i_ in pos_.items()}
+                c1 = {s_: int((SYM[keep] == i_).sum()) for s_, i_ in pos_.items()}
+                hat = [s_ for s_ in c0 if c0[s_] > 0]
+                print("  SIGNALBILANZ je Asset %s (X = %.1f Mio): Signale gesamt %d -> %d (%.0f %%) · Median je Asset %.0f -> %.0f · Assets ganz ohne Signal danach %d" % (
+                    JAHRE, Xw / 1e6, len(e0), len(keep), 100.0 * len(keep) / max(len(e0), 1),
+                    float(np.median([c0[s_] for s_ in hat])) if hat else np.nan, float(np.median([c1[s_] for s_ in hat])) if hat else np.nan,
+                    sum(1 for s_ in hat if c1[s_] == 0)))
+                print("    Hebel-Liste (NB, 25): " + " · ".join("%s %d->%d" % (s_, c0.get(s_, 0), c1.get(s_, 0)) for s_ in NBL))
+                ver = sorted((s_ for s_ in hat if c1[s_] < 0.5 * c0[s_]), key=lambda s_: c1[s_] / c0[s_])
+                print("    mehr als die Haelfte verloren (%d): %s" % (len(ver), ", ".join("%s %d->%d" % (s_, c0[s_], c1[s_]) for s_ in ver[:30])))
+                zl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "l_liq_%s.csv" % E2.MENGE.replace(":", "_"))
+                with io.open(zl, "w", encoding="utf-8") as f_:
+                    f_.write("symbol;stunde;liq_usd;atr\n")
+                    for e_ in e0:
+                        f_.write("%s;%d;%.6g;%.6g\n" % (SYMS[SYM[e_]], STD[e_], LIQ[e_], ATR[e_]))
+                print("  geschrieben: %s" % zl)
+                print("SCHLUSS: vollstaendig")
+                return 0
             if not best:
                 if "--diag-vh" in sys.argv:
                     # M1 SCHRITT 0 (Voranalyse_Kern_Short_30_09.md Abschnitt 9): NUR das Signal - v-dach je Monat im Wahljahr,

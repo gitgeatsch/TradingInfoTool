@@ -691,7 +691,8 @@ def main() -> int:
                 with open(sys.argv[sys.argv.index("--spur-regel0") + 1], "w", newline="", encoding="utf-8") as f_:
                     w_ = _csv.writer(f_, delimiter=";")
                     w_.writerow(["symbol", "std", "jahr", "stufe", "r", "kosten", "te", "liq", "spot"])
-                    for i_ in np.flatnonzero(per & (L9 > 0)):
+                    # --spur-alle: alle Jahre (L2 braucht 2024), sonst nur der Bestaetigungszeitraum
+                    for i_ in np.flatnonzero(((per | ("--spur-alle" in sys.argv)) & (L9 > 0))):
                         L_ = int(L9[i_]); r_ = float(R_[(H9_, Z9_, L_)][i_]); te_ = float(T_[(H9_, Z9_, L_)][i_])
                         if not np.isfinite(r_):
                             continue

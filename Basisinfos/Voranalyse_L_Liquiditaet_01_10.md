@@ -105,3 +105,27 @@ L0, L1-Wahl, L2 und O9-Auskunft auf 2024, etwa 1–1,5 h, dann **Stopp und Beric
 | **L-b** | Raster 0 … 20 Mio USD, absolute Stufen, Gleichstand zum kleineren X |
 | **L-c** | Spiegel als Pflicht an der gewählten Stufe |
 | **L-d** | Stopp und Bericht nach der Wahl, Bestätigung erst nach deinem Ja |
+
+---
+
+## 9. ✔ ABGESTIMMT (Nutzer 01.10.2026) — mit zwei Ergänzungen; Vorab-Festlegung VOR dem Lauf
+
+**Nutzer:** *„Ok. Anmerkung zum Handel: Zusätzliche Sperren oder Filter sehe ich kritisch, wenn diese nur Einstiege wegnehmen ohne Qualitätsgewinn.
+Hier musst du mir die Auswirkungen konkret mitteilen. Aktuell wissen wir nicht, ob überhaupt und wie viele echte Signale je Asset ankommen
+werden, z. B. BTC, ETH, LINK. Dies müssen wir ohnehin je Anpassung der REGEL0 durchführen."* — und: *„bitte für alle Assets, welche in der
+Watchlist, im Portfolio bzw. Bestand sind."*
+
+**Ergänzung 1, Qualitätsgewinn (Pflicht für L1):** An der gewählten Stufe X müssen die **weggenommenen** Einstiege **schlechter** sein als die
+behaltenen, und zwar in der Chance (Dq) **und** in der Spot-Rendite 24 h ohne Kosten. Sonst ist L1 nicht bestanden, auch wenn der Abstand steigt.
+
+**Ergänzung 2, Signalbilanz je Asset (stehend bei jeder REGELn):** `messe_signalbilanz.py` zeigt die Signale vorher und nachher je Jahr für **alle** Assets
+aus **Watchlist (Krypto), Bestand und Hebel-Liste**. Quelle ist der NB-Teilexport, der dafür um Watchlist und Bestand erweitert wurde (nur Symbole). Bis zum
+nächsten NB-Lauf kommt der Bestand aus der Desktop-Kopie (Stand 19.07.), mit Vermerk.
+
+**Festgelegt:**
+- `messe_losfahren.py --kern --ruhe 48 --junge --mit-btc --liq` in 4 Mengen, Wahl nur auf **bestand**, die übrigen nur L0-Auskunft.
+- Fällt ein Einstieg unter X, entfällt er **ersatzlos**. Eine spätere Stunde rückt nicht nach.
+- Liquidität = Summe Volumen × Schluss über **24 lückenlose** Stunden bis zur Einstiegsstunde, sonst unbekannt (und bei X > 0 nicht zugelassen).
+- L2: `messe_k6_hebelstufe.py --simulation 24,ohne,0.02 --spur-regel0 <csv> --spur-alle` (bestand), dann `messe_l2_liq_risiko.py` auf 2024.
+- R-R11: Bei X = 0 sind die Einstiege die der REGEL0, die Simulation mit Spur ist zeilengleich zum REGEL0-Beleg.
+- **Stopp und Bericht** nach L0, Wahl, L2 und Signalbilanz.

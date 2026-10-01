@@ -181,6 +181,25 @@ def _inhalt() -> int:
             c.close()
         except sqlite3.Error as ex:
             print("  ⛔ Hebel-Liste nicht lesbar: %s" % ex)
+    # Watchlist (Krypto) und Bestand - nur SYMBOLE, keine Mengen (Signalbilanz je Asset, Nutzer 01.10.)
+    print()
+    print("-" * 100)
+    try:
+        import yaml
+        cfg = yaml.safe_load(open(os.path.join(HIER, "Basisinfos", "config.yaml"), encoding="utf-8")) or {}
+        wl = cfg.get("watchlist") or []
+        kr = sorted(str(e.get("symbol")) for e in wl if (e.get("assetklasse") or "krypto") == "krypto")
+        print("WATCHLIST krypto (config.yaml): %d - %s" % (len(kr), ", ".join(kr)))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Watchlist nicht lesbar: %s" % ex.__class__.__name__)
+    if os.path.exists(prod):
+        try:
+            c = ro(prod)
+            rows = c.execute("SELECT symbol FROM holdings WHERE COALESCE(quantity, 0) > 0 ORDER BY symbol").fetchall()
+            print("BESTAND (holdings, Menge > 0, nur Symbole): %d - %s" % (len(rows), ", ".join(r[0] for r in rows)))
+            c.close()
+        except sqlite3.Error as ex:
+            print("  ⛔ Bestand nicht lesbar: %s" % ex)
     print()
     print("SCHLUSS: vollstaendig")
     return 0
