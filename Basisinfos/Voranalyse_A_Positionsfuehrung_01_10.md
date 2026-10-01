@@ -95,3 +95,8 @@ Hand**. Gemessen wird deshalb der Ausstieg **mit Ausführungsverzug**:
 
 ⚠️ **Betrieb:** Die Meldung *„Stop erreicht“* gehört in die Mail (Phase 5). Verkaufen musst du selbst, deshalb gibt es den Verzug. Ein Verzug von mehreren Stunden (nachts) zeigt die Empfindlichkeit.
 
+**Umsetzung und Funktionstest (vor dem Lauf):** `messe_k6_hebelstufe.py --stop-wahl` (Wahl 2024) bzw. `--stop H,k,v` (Bestätigung, dazu Auskunft v = 0/2/4
+und die REGEL0-Zelle im selben Lauf). Probe (3 Monate) technisch sauber. ✔ **R-R11:** *ohne Stop, 24 h* = bisherige Rechnung bitgleich (+0,0743).
+⚠️ Beobachtung in der Probe (Inhalt nicht gewertet): Der Ausstieg **genau an der Linie** (v = 0) war schlechter als mit 1 h Verzug. Nach einem Stop-Treffer erholt sich der Kurs
+innerhalb der Stunde oft wieder. v = 0 ist also **keine** Obergrenze. Es bleibt Auskunft, das Urteil fällt auf v = 1.
+

@@ -119,6 +119,21 @@ def main() -> int:
             a_, b_, c_ = sys.argv[i_ + 1].split(",")
             sim_zelle = (int(a_), (None if b_ in ("-", "ohne") else float(b_)), float(c_))
     SIM_H, SIM_Z, SIM_G = (6, 12, 24, 72), (0.03, 0.05, None), (0.005, 0.01, 0.02, 0.05)
+    # ⭐ A (Basisinfos/Voranalyse_A_Positionsfuehrung_01_10.md Abschnitt 5): nachgezogener Stop k x ATR unter dem hoechsten
+    # Markpreis-Hoch, Ausstieg mit Verzug v h (von Hand); Z-Platz traegt ("S", k, v), k None = ohne Stop
+    STOPWAHL = "--stop-wahl" in sys.argv
+    STOP_K, STOP_H, STOP_V = (None, 1.0, 1.5, 2.0, 3.0), (24, 72), (0, 1)
+    if "--stop" in sys.argv:
+        sim = True
+        a_, b_, c_ = sys.argv[sys.argv.index("--stop") + 1].split(",")
+        sim_zelle = (int(a_), ("S", None if b_ in ("-", "ohne") else float(b_), int(c_)), 0.02)
+    if STOPWAHL:
+        sim = True
+
+    def fz(Z_):
+        if isinstance(Z_, tuple):
+            return "Stop %s v%d" % ("ohne" if Z_[1] is None else "%.1f ATR" % Z_[1], Z_[2])
+        return "ohne" if Z_ is None else "+%d %%" % round(100 * Z_)
     SIM_JAHRE = (2025, 2026) if sim_zelle else (2024,)
     zieh = 3 if probe else ZIEHUNGEN
     monate = ROLL[:3] if probe else ROLL
@@ -299,7 +314,8 @@ def main() -> int:
                         E0_ = einstieg[anker]
                         fl_ = {L: np.full(len(anker), 10 ** 6) for L in STUFEN}
                         fz_ = {Z: np.full(len(anker), 10 ** 6) for Z in SIM_Z if Z}
-                        for s in range(1, max(SIM_H) + 1):
+                        sm_ = max(SIM_H) + (5 if any(isinstance(z_[1], tuple) for z_ in zellen) else 0)
+                        for s in range(1, sm_ + 1):
                             j = np.minimum(anker + s, n - 1)
                             gu_ = (anker + s) < n
                             lo_ = np.where(gu_, tief[j] / E0_, np.inf); hi_ = np.where(gu_, hoch[j] / E0_, -np.inf)
@@ -308,7 +324,34 @@ def main() -> int:
                             for Z in fz_:
                                 fz_[Z] = np.where((fz_[Z] > s) & (hi_ >= 1 + Z), s, fz_[Z])
                         aus = {}
-                        for (H_, Z_) in zellen:
+                        for (H_, Z_) in [z_ for z_ in zellen if isinstance(z_[1], tuple)]:
+                            # A: Stop-Linie = hoechstes Hoch bis zur VORSTUNDE minus k x ATR (Tages-ATR relativ zum Einstieg)
+                            _s, k_, v_ = Z_
+                            schluss = einstieg[np.minimum(anker + H_, n - 1)] / E0_
+                            ts = np.full(len(anker), 10 ** 6); lv = np.full(len(anker), np.nan)
+                            if k_ is not None:
+                                a0 = atr[anker]; mx = np.ones(len(anker))
+                                for s in range(1, H_ + 1):
+                                    j = np.minimum(anker + s, n - 1); gu_ = (anker + s) < n
+                                    lo_ = np.where(gu_, tief[j] / E0_, np.inf); hi_ = np.where(gu_, hoch[j] / E0_, -np.inf)
+                                    lvl = mx - k_ * a0
+                                    tr = (ts > s) & (lo_ <= lvl)
+                                    ts = np.where(tr, s, ts); lv = np.where(tr, lvl, lv)
+                                    mx = np.maximum(mx, np.where(np.isfinite(hi_), hi_, mx))
+                            ausg = ts <= H_
+                            te_s = np.where(ausg, ts + v_, H_)
+                            if v_ == 0:
+                                px = np.where(ausg, lv, schluss)
+                            else:
+                                px = np.where(ausg, einstieg[np.minimum(anker + te_s, n - 1)] / E0_, schluss)
+                            for L in (1,) + STUFEN:
+                                lt = fl_[L] if L > 1 else np.full(len(anker), 10 ** 6)
+                                liq = lt <= te_s
+                                te = np.where(liq, lt, te_s)
+                                kosten = L * (0.003 + (0.0018 * te / 24.0 if L > 1 else 0.0))
+                                r_ = np.where(liq, -1.0 - L * 0.01, L * (px - 1.0)) - kosten
+                                aus[(H_, Z_, L)] = (r_, te)
+                        for (H_, Z_) in [z_ for z_ in zellen if not isinstance(z_[1], tuple)]:
                             schluss = einstieg[np.minimum(anker + H_, n - 1)] / E0_
                             zt = fz_[Z_] if Z_ else np.full(len(anker), 10 ** 6)
                             for L in (1,) + STUFEN:
@@ -322,6 +365,12 @@ def main() -> int:
                                 aus[(H_, Z_, L)] = (r_, te)
                         return aus
                     zellen = [(sim_zelle[0], sim_zelle[1])] if sim_zelle else [(H_, Z_) for H_ in SIM_H for Z_ in SIM_Z]
+                    if STOPWAHL:
+                        zellen = [(24, None)] + [(H_, ("S", k_, v_)) for H_ in STOP_H for k_ in STOP_K for v_ in STOP_V]
+                    elif sim_zelle and isinstance(sim_zelle[1], tuple):
+                        # Bestaetigung A: dazu Auskunft v = 0/2/4 und die REGEL0-Zelle (24 h ohne Ziel) im selben Lauf
+                        H0_, (_s, k0_, _v) = sim_zelle[0], sim_zelle[1]
+                        zellen = zellen + [(H0_, ("S", k0_, vv)) for vv in (0, 2, 4) if vv != sim_zelle[1][2]] + [(24, None)]
                     ao = ausgang(ae, zellen)
                     for k_, (r_, te_) in ao.items():
                         SIMR.setdefault(k_, []).append(r_); SIMT.setdefault(k_, []).append(te_)
@@ -625,7 +674,37 @@ def main() -> int:
             per = np.isin(JAHRe, SIM_JAHRE)
             print()
             print("=" * 120)
-            if not sim_zelle:
+            if STOPWAHL:
+                g_ = 0.02
+                print("A · WAHL 2024 (Menge %s) - nachgezogener Stop, Grenze 2 %% (REGEL0), Kosten nach Doku; 2025-26 NICHT ausgewertet" % E2.MENGE)
+                print("    %-4s %-18s %6s %7s %9s %9s %8s %9s | %9s" % ("H", "Ausstieg", "Handel", "Liq.%", "Konto", "Rueckg.", "Hebel", "schl.Mon", "Spot"))
+                erg = []
+                for (H_, Z_) in [(24, None)] + [(H_, ("S", k_, v_)) for H_ in STOP_H for k_ in STOP_K for v_ in STOP_V]:
+                    Ls = stufe(PE, H_, g_)
+                    r = np.full(len(Ls), np.nan); te = np.zeros(len(Ls))
+                    for L in STUFEN:
+                        w = Ls == L
+                        r[w] = R_[(H_, Z_, L)][w]; te[w] = T_[(H_, Z_, L)][w]
+                    r = np.where(per, r, np.nan)
+                    k = kennz(r, STDe, te)
+                    ks = kennz(np.where(per, R_[(H_, Z_, 1)], np.nan), STDe, T_[(H_, Z_, 1)])
+                    hb = float(np.mean(Ls[per & (Ls > 0)])) if (per & (Ls > 0)).any() else np.nan
+                    erg.append((H_, Z_, k))
+                    print("    %-4d %-18s %6d %6.2f%% %+9.3f %9.3f %8.2f %+9.3f | %+9.3f" % (
+                        H_, fz(Z_), k["n"], 100 * float(np.mean(r[per & np.isfinite(r)] <= -1.0)) if k["n"] else np.nan,
+                        k["G"], k["dd"], hb, k["schlecht"], ks["G"]))
+                a0_ = [e for e in erg if e[1] is None][0][2]["G"]; b0_ = [e for e in erg if e[1] == ("S", None, 1) and e[0] == 24][0][2]["G"]
+                print("  R-R11 'ohne Stop, 24 h' (Stop-Rechnung, v1) %+.4f gegen die bisherige Rechnung (24 h, ohne Ziel) %+.4f -> %s" % (
+                    b0_, a0_, "✔ bitgleich" if abs(a0_ - b0_) < 1e-12 else "⛔ ABWEICHUNG"))
+                kand = [e for e in erg if isinstance(e[1], tuple) and e[1][2] == 1 and np.isfinite(e[2]["G"])]
+                mx = max(e[2]["G"] for e in kand)
+                gl = [e for e in kand if e[2]["G"] >= mx - np.log(1.01)]
+                gl.sort(key=lambda e: (e[1][1] is not None, -(e[1][1] or 0.0), e[0]))
+                w_ = gl[0]
+                print("  REGEL (nur v = 1 h): groesstes Hebelkonto, Gleichstand < 1 % -> ohne Stop, dann groesseres k, dann kuerzeres H")
+                print("    GEWAEHLT H = %d h · %s · Konto log %+.3f (x%.3f) · Rueckgang %.3f" % (
+                    w_[0], fz(w_[1]), w_[2]["G"], np.exp(w_[2]["G"]), w_[2]["dd"]))
+            elif not sim_zelle:
                 print("KERN SCHRITT 3 · WAHL 2024 (Menge %s) - Konto f = 1 %% je Handel, Kosten nach Doku; 2025-26 NICHT ausgewertet" % E2.MENGE)
                 print("    %-4s %-6s %-6s %6s %8s %9s %9s %8s %8s %9s | %9s" % ("H", "Ziel", "Grenze", "Handel", "Liq.%", "Konto", "Rueckg.", "Serie", "Hebel", "schl.Mon", "Spot"))
                 erg = []
@@ -646,7 +725,7 @@ def main() -> int:
                             k05, k2 = kennz(r, STDe, te, 0.005), kennz(r, STDe, te, 0.02)
                             erg.append((H_, Z_, g_, k, k05, k2))
                             print("    %-4d %-6s %5.1f%% %6d %7.2f%% %+9.3f %9.3f %8d %8.2f %+9.3f | %+9.3f" % (
-                                H_, "ohne" if Z_ is None else "+%d%%" % round(100 * Z_), 100 * g_, k["n"],
+                                H_, fz(Z_), 100 * g_, k["n"],
                                 100 * float(np.mean(r[per & np.isfinite(r)] <= -1.0)) if k["n"] else np.nan,
                                 k["G"], k.get("dd", np.nan), k.get("serie", 0), hb, k.get("schlecht", np.nan), ks["G"]))
                 gut = [e for e in erg if np.isfinite(e[3]["G"])]
@@ -665,7 +744,7 @@ def main() -> int:
             else:
                 H_, Z_, g_ = sim_zelle
                 print("KERN SCHRITT 3 · BESTAETIGUNG 2025-01..2026-08 (EINMAL), H %d h, Ziel %s, Grenze %.1f %%, Menge %s" % (
-                    H_, "ohne" if Z_ is None else "+%d %%" % round(100 * Z_), 100 * g_, E2.MENGE))
+                    H_, fz(Z_), 100 * g_, E2.MENGE))
                 Ls = stufe(PE, H_, g_)
                 r = np.full(len(Ls), np.nan); te = np.zeros(len(Ls))
                 for L in STUFEN:
@@ -700,6 +779,27 @@ def main() -> int:
                     k["G"], ks["G"], "✔ Hebel lohnt" if k["G"] > ks["G"] else "⛔ Hebel lohnt nicht"))
                 oh = ~((STDe >= bs0_ - H_) & (STDe < bs1_))
                 print("  S5 ohne 10./11.10.2025: Konto log %+.4f (mit %+.4f)" % (kennz(r, STDe, te, maske=oh)["G"], k["G"]))
+                if isinstance(Z_, tuple):
+                    # A: Auskunft Verzug und die REGEL0-Zelle im selben Lauf; Urteil *besser als REGEL0*
+                    def konto_zelle(Hz, Zz):
+                        Lz = stufe(PE, Hz, g_)
+                        rz = np.full(len(Lz), np.nan); tz = np.zeros(len(Lz))
+                        for L in STUFEN:
+                            w = Lz == L
+                            rz[w] = R_[(Hz, Zz, L)][w]; tz[w] = T_[(Hz, Zz, L)][w]
+                        rz = np.where(per, rz, np.nan)
+                        return kennz(rz, STDe, tz), rz
+                    k0, r0 = konto_zelle(24, None)
+                    print("  A R-R11 REGEL0-Zelle (24 h ohne Ziel) im selben Lauf: Konto log %+.4f · Rohvorteil %+.3f %%" % (
+                        k0["G"], 100 * float(np.nanmean(np.where(per, R_[(24, None, 1)], np.nan) + 0.003))))
+                    print("  A BESSER ALS REGEL0: Stop %+.4f gegen REGEL0 %+.4f -> %s · je Jahr Stop %s gegen REGEL0 %s" % (
+                        k["G"], k0["G"], "✔" if k["G"] > k0["G"] else "⛔",
+                        " · ".join("%d %+.4f" % (jj, kennz(r, STDe, te, maske=(JAHRe == jj))["G"]) for jj in SIM_JAHRE),
+                        " · ".join("%d %+.4f" % (jj, kennz(r0, STDe, np.zeros(len(r0)), maske=(JAHRe == jj))["G"]) for jj in SIM_JAHRE)))
+                    for vv in (0, 1, 2, 4):
+                        if (H_, ("S", Z_[1], vv), 1) in R_:
+                            kv_, _r = konto_zelle(H_, ("S", Z_[1], vv))
+                            print("  A Auskunft Verzug %d h: Konto log %+.4f · Rueckgang %.3f" % (vv, kv_["G"], kv_["dd"]))
                 # N4-R (Auskunft): Rohvorteil je Handel auf den Positionswert = Spot ohne Kosten (0,3 % zurueckgerechnet)
                 roh_ = rs + 0.003
                 okr = np.isfinite(roh_)
