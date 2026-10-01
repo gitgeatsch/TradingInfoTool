@@ -507,3 +507,12 @@ Dazu: *„die Minus-Trades und die Marktphasen sind ohnehin ein eigenes Thema un
 - **A ist abgeschlossen** (2.702, 0/4). Keine weitere Ursachenmessung zu A auf 2025–26. Die REGEL0 bleibt 24 h ohne Stop.
 - **Nächster Schritt B** (M1-3 Kern stabilisieren), Entwurf `Voranalyse_B_Kern_stabilisieren_01_10.md`. Die Ursache der Verluste geht als **Auskunft** (Teil 0) hinein, wo sie zu B passt.
 - **Marktphasen** (Regime, Verlusthandel im Gegenwind) bleiben ein **eigenes Thema** (R), nicht durch eine einfache Rechnung zu lösen.
+
+---
+
+# E-39 · B vorläufig geschlossen, weiter mit L (Nutzer 01.10.2026)
+
+**01.10.2026** · Nutzer: *„Zu B: ja, vorläufig schließen. Die 2x als max. Hebel ist eigenartig, lassen wir es so stehen. Ja, Voranalyse L."*
+- **B** (2.703) ist **vorläufig geschlossen**. F0 bleibt. Das Springen des Signalangebots bleibt eine bekannte Eigenschaft und ist kein Verlusttreiber.
+- **Stufe 2x** (nur bei sehr hoher ATR gewählt, in 4/4 Mengen roh negativ, 25–98 Handel): Die Beobachtung bleibt **stehen**, es gibt **keine** Regel daraus.
+- **Nächster Schritt L** (Liquidität). Vor dem Entwurf gibt es ein Gespräch über die offenen Grundfragen.
