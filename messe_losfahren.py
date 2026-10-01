@@ -1241,9 +1241,9 @@ def main() -> int:
                     with io.open(zg, "w", encoding="utf-8") as f_:
                         f_.write("symbol;stunde;neu\n")
                         for i in ee:
-                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(SYM[i] == BTC_I) if MITBTC else int(not reif_e(np.array([i]))[0])))
-                    print(("  BTC-Gruppe (1 = BTC): %d von %d -> %s" if MITBTC else "  J-Gruppe (neu = bisher durch die 12-Monats-Bedingung gesperrt): %d von %d neu -> %s") % (
-                        int((SYM[ee] == BTC_I).sum()) if MITBTC else int((~reif_e(ee)).sum()), len(ee), zg))
+                            f_.write("%s;%d;%d\n" % (SYMS[int(SYM[i])], int(STD[i]), int(ZUS[i]) if ZUSATZ else (int(SYM[i] == BTC_I) if MITBTC else int(not reif_e(np.array([i]))[0]))))
+                    print(("  NEU-Gruppe O11 (1 = neues Asset): %d von %d -> %s" if ZUSATZ else "  BTC-Gruppe (1 = BTC): %d von %d -> %s" if MITBTC else "  J-Gruppe (neu = bisher durch die 12-Monats-Bedingung gesperrt): %d von %d neu -> %s") % (
+                        int(ZUS[ee].sum()) if ZUSATZ else int((SYM[ee] == BTC_I).sum()) if MITBTC else int((~reif_e(ee)).sum()), len(ee), zg))
                 if "--ruhe" in sys.argv:
                     # N4-W (Auskunft): die Wucht *beide oben* mit den Kanten aus der L2-Wahl 2024 (wie N3)
                     import json
@@ -1258,13 +1258,16 @@ def main() -> int:
                     print("  Wucht beide oben: %d von %d (%.1f %%) -> %s" % (int(wo.sum()), len(ee), 100 * wo.mean(), zw))
                 print("SCHLUSS: vollstaendig")
                 return 0
-            if MITBTC and best and "--export" not in sys.argv:
+            if (MITBTC or ZUSATZ) and best and "--export" not in sys.argv:
                 # ══ BTC (Abschnitt 11): die BTC-Einstiege der REGEL0 (s, Ruhe 48 h, J), 2024-2026 ══
                 s = s_best
+                # O11 (Voranalyse_Datenbasis_alle_Assets_01_10.md Abschnitt 8): mit --zusatz pruefen wir die Gruppe NEU statt BTC -
+                # dieselben Kriterien B-1 bis B-3 wie 2.701; ohne --zusatz bleibt die BTC-Ausgabe unveraendert
+                GRP = ZUS if ZUSATZ else (SYM == BTC_I)
                 ee = erst_v(VH, s)
-                bm = SYM[ee] == BTC_I
+                bm = GRP[ee]
                 eb = ee[bm]
-                print("BTC · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon BTC %d · uebrige %d" % (
+                print(("NEU (O11)" if ZUSATZ else "BTC") + " · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon BTC %d · uebrige %d" % (
                     E2.MENGE, RUHE, s, len(ee), len(eb), int((~bm).sum())))
                 jz = [(jj, dqh(eb[JAHR[eb] == jj]), int((JAHR[eb] == jj).sum())) for jj in JAHRE]
                 b1 = all(x[1] > 0 for x in jz if x[2] >= 30) and any(x[2] >= 30 for x in jz)
@@ -1272,7 +1275,7 @@ def main() -> int:
                 nv = []
                 for _ in range(zieh):
                     e2 = erst_v(vh_stuendlich(verschoben(E, RSI)), s)
-                    nv.append(dqh(e2[SYM[e2] == BTC_I]))
+                    nv.append(dqh(e2[GRP[e2]]))
                 p90 = float(np.nanpercentile(nv, 90)); gs = dqh(eb); b2 = gs > p90
                 print("  B-2 BTC gesamt Dq %+.4f · Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (
                     gs, zieh, float(np.nanmean(nv)), p90, "✔" if b2 else "⛔"))
@@ -1282,7 +1285,7 @@ def main() -> int:
                 bo = [dqh(np.concatenate([je_tag[k] for k in rb.integers(0, len(ut), len(ut))])) for _ in range(1000)]
                 lo95 = float(np.nanpercentile(bo, 2.5))
                 AUFa = np.where(np.isfinite(t_u), t_u <= 24, False).astype(float); ABa = np.where(np.isfinite(t_d), t_d <= 24, False).astype(float)
-                hb = h_ab[SYM[h_ab] == BTC_I]
+                hb = h_ab[GRP[h_ab]]
                 sp_ = [(jj, (AUFa[eb[JAHR[eb] == jj]].mean() - AUFa[hb[JAHR[hb] == jj]].mean())
                         - (ABa[eb[JAHR[eb] == jj]].mean() - ABa[hb[JAHR[hb] == jj]].mean()))
                        for jj in JAHRE if (JAHR[eb] == jj).sum() >= 30]
@@ -1290,7 +1293,9 @@ def main() -> int:
                 print("  B-3 Tagesblock (%d Tage) untere Grenze %+.4f · Spiegel je Jahr (gegen alle BTC-Stunden) %s -> %s" % (
                     len(ut), lo95, " · ".join("%d %+.3f" % x for x in sp_), "✔" if b3 else "⛔"))
                 print("  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq %+.4f (%d)" % (dqh(ee[~bm]), int((~bm).sum())))
-                print("  URTEIL BTC (Menge %s): B-1 %s · B-2 %s · B-3 %s  (B-4 ueber die vier Mengen)" % (
+                if ZUSATZ:
+                    print("  Auskunft je neuem Asset (Einstiege, Dq): " + " · ".join("%s %d %+.3f" % (SYMS[k_], int((SYM[eb] == k_).sum()), dqh(eb[SYM[eb] == k_])) for k_ in np.unique(SYM[eb])))
+                print("  URTEIL " + ("NEU" if ZUSATZ else "BTC") + " (Menge %s): B-1 %s · B-2 %s · B-3 %s  (B-4 ueber die vier Mengen)" % (
                     E2.MENGE, "✔" if b1 else "⛔", "✔" if b2 else "⛔", "✔" if b3 else "⛔"))
                 print("SCHLUSS: vollstaendig")
                 return 0

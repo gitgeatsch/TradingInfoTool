@@ -145,6 +145,9 @@ def main() -> int:
     mark = None
     if kurs == "mark":
         mark = sqlite3.connect("file:%s?mode=ro" % MARK_DB, uri=True)
+    # O11 --zusatz: der Markpreis der neuen Assets liegt in einer EIGENEN Datei (hole_markpreis.py --zusatz)
+    mark_z = (sqlite3.connect("file:%s?mode=ro" % os.path.join(os.path.dirname(MARK_DB), "markpreis_alle.db"), uri=True)
+              if (kurs == "mark" and "--zusatz" in sys.argv) else None)
     ct = sqlite3.connect("file:%s?mode=ro" % E2.TERMIN_DB, uri=True)
     ce = (sqlite3.connect("file:%s?mode=ro" % E2.EINGESTELLT_DB, uri=True)
           if E2.MENGE != "bestand" and os.path.exists(E2.EINGESTELLT_DB) else None)
@@ -195,9 +198,10 @@ def main() -> int:
             # neben dem Spot, mit dem Spot-Schluss als Einstieg stuende dieser
             # Aufschlag als Fehler in der Liquidationsdistanz. Monate mit einem
             # FREMDEN Instrument (hole_markpreis --sperre) zaehlen als fehlend.
-            gesperrt = {r[0] for r in mark.execute(
+            mk_ = mark_z if (mark_z is not None and sym in E2.ZUSATZ_SYMBOLE) else mark
+            gesperrt = {r[0] for r in mk_.execute(
                 "SELECT monat FROM _abweichung WHERE symbol=? AND gesperrt=1", (sym,))}
-            mp = {r[0]: (r[1], r[2], r[3]) for r in mark.execute(
+            mp = {r[0]: (r[1], r[2], r[3]) for r in mk_.execute(
                 "SELECT stunde, low / faktor, close / faktor, high / faktor FROM markpreis WHERE symbol=?", (sym,))
                 if r[0][:7] not in gesperrt}
             tief = np.array([mp[x][0] if x in mp else np.nan for x in st], float)
@@ -422,6 +426,11 @@ def main() -> int:
         keep_ = X["sym"] != syms.index("BTC")
         X = {k: v[keep_] for k, v in X.items()}; Y = {k: v[keep_] for k, v in Y.items()}
         print("  --mit-btc: %d BTC-Anker aus dem ATR-Training genommen" % int((~keep_).sum()))
+    if "--zusatz" in sys.argv and E2.ZUSATZ_SYMBOLE:
+        # O11: die neuen Assets NICHT ins ATR-Training (bewerten, nicht trainieren) - die Hebelstufe der uebrigen bleibt bitgleich
+        keep_ = ~np.isin(X["sym"], [syms.index(s_) for s_ in E2.ZUSATZ_SYMBOLE if s_ in syms])
+        X = {k: v[keep_] for k, v in X.items()}; Y = {k: v[keep_] for k, v in Y.items()}
+        print("  --zusatz: %d Anker der neuen Assets aus dem ATR-Training genommen" % int((~keep_).sum()))
     STD, SYM, JAHR = X["std"], X["sym"], X["jahr"]
     n = len(STD)
     MON = monat_von(STD)

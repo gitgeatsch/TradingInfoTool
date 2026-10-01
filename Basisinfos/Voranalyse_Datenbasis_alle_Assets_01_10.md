@@ -149,3 +149,28 @@ Ohne Signal bleiben AIOZ, XDC, VSN, SUPRA (nicht bei Binance), EURCV (Stablecoin
 1. **Ob die REGEL0 für die neuen Assets trägt.** Sie werden mit demselben Modell bewertet. Ein Nachweis wie bei BTC (2.701) steht aus, mit dem Vermerk *nicht nachgewiesen*
 2. **Handel:** Für Hebelstufe und Liquidation fehlen den neuen Assets die **Markpreise** (`markpreis_historie.db`). Das ist der nächste Bauschritt
 3. **Bestand:** Er stammt noch aus der Desktop-Kopie (19.07.). Der NB-Teilexport nach `git pull` liefert den aktuellen Stand
+
+---
+
+## 8. Markpreise und Nachweis für die neuen Assets — Vorab-Festlegung (Nutzer 01.10.: *Ja, so vorgehen, prüfen und gegenprüfen*)
+
+**Markpreise:** `hole_markpreis.py --zusatz` lädt die Binance-Markpreise (Monatsarchive ab 2023-01) in die **eigene** Datei `data/markpreis_alle.db`, nie in die Messbasis.
+Die Sperre gegen fremde Instrumente (`--sperre --zusatz`, Grenze 1 % je Monat) misst gegen `stundenkurse_alle.db`. Zuerst laden die 11 Assets deiner Listen,
+die übrigen 526 folgen im Hintergrund (alles halten).
+
+**Nachweis wie BTC (2.701)**, die Gruppe **NEU** = die 11 bewerteten Assets (AKT, ASTER, BRETT, CANTON/CC, FLOKI, GRIFFAIN, HYPE, KAS, MON, PLUME, XNO), REGEL0 unverändert (s +0,035, Ruhe 48 h, J, BTC), 2024–2026:
+
+| | Kriterium | Art |
+|---|---|---|
+| N-1 | Chance Dq > 0 in jedem Jahr mit ≥ 30 NEU-Einstiegen | Urteil |
+| N-2 | gesamt über dem P90 der Nullwelt (rollierende Modelle auf verschobenem rsi, 40 Ziehungen) | Urteil |
+| N-3 | Tagesblock untere Grenze > 0 und Spiegel > 0 je Jahr | Urteil |
+| N-4 | ≥ 3 von 4 Mengen | Urteil |
+| N-5 | Simulation (REGEL0-Erfolgsmessung): Handel, Rohvorteil je Handel gegen 0,48 %, Hebelkonto, Hebelstufe, Liquidationen | Auskunft |
+| je Asset | Einstiege und Dq je neuem Asset | Auskunft, **kein** Urteil je Asset (zu wenige Fälle) |
+
+**R-R11:** Die übrigen Einstiege sind zeilengleich zur REGEL0 (je Menge), und das Konto der übrigen ist in der Simulation **bitgleich** zur REGEL0-Referenz.
+Die neuen Assets sind **nicht** im ATR-Training (`messe_k6_hebelstufe.py --zusatz`).
+
+**Folge:** Besteht NEU, erhalten die neuen Assets denselben Status wie die übrigen. Besteht NEU **nicht**, gilt wie bei BTC *nicht nachgewiesen*. Die Lösungspflicht
+(E-25) gilt: Fehlt ein Beleg dagegen, entscheidest du über die Aufnahme.
