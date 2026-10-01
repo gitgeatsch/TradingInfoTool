@@ -1,0 +1,8 @@
+GEGENPRUEFUNG A - unabhaengig nachgerechnet, Stichprobe 404 von 8068 Einstiegen 2025/2026 (davon 5 am Reihenende)
+  72_Stop 1.5 ATR v1     gleich  404/404 · groesste Abweichung 4.99e-11
+  72_Stop 1.5 ATR v0     gleich  404/404 · groesste Abweichung 4.99e-11
+  72_Stop 1.5 ATR v2     gleich  404/404 · groesste Abweichung 4.99e-11
+  72_Stop 1.5 ATR v4     gleich  404/404 · groesste Abweichung 4.99e-11
+  24_ohne                gleich  404/404 · groesste Abweichung 4.71e-11
+SCHLUSS: ✔ alle gleich
+exit=0

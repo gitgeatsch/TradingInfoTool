@@ -136,3 +136,38 @@ innerhalb der Stunde oft wieder. v = 0 ist also **keine** Obergrenze. Es bleibt 
 **Betrieb (E-35):** 72 h heißt, dass bis zu drei Tage gleichzeitig Positionen offen sind und der Stop stündlich gemeldet wird, auch nachts. Die Auskunft v = 2/4 in der Bestätigung zeigt, was ein späterer Handgriff kostet.
 
 ➤ **Zur Abstimmung:** Bestätigung 2025–26 in 4 Mengen mit `--stop 72,1.5,1` (Kriterien S1–S5, besser als REGEL0 in ≥ 3/4 Mengen), Auskunft v = 0/2/4. Danach Auskunft auf der Hebel-Liste.
+
+---
+
+## 7. ⛔ BESTÄTIGUNG 2025–26 (4 Mengen) — Befund 2.702, gemessen 01.10.2026
+
+> **Urteil in einer Zeile:** **Nicht bestätigt, 0 von 4.** Die Zelle 72 h · Stop 1,5 ATR · Verzug 1 h verliert 2025–26 in allen Mengen deutlich
+> gegen die REGEL0. **Die REGEL0 bleibt unverändert** (24 h, ohne Stop).
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| ✔ R-R11 REGEL0-Zelle im selben Lauf = Referenz | +0,2708 / +0,583 % | −0,4887 / +0,325 % | −0,4592 / +0,331 % | −0,4065 / +0,345 % |
+| **A: Konto log 2025–26** | **−1,62** | **−2,01** | **−1,93** | **−1,99** |
+| besser als REGEL0 | ⛔ | ⛔ | ⛔ | ⛔ |
+| S1 je Jahr (2025 · 2026) | −1,31 · −0,32 ⛔ | −1,36 · −0,65 ⛔ | −1,41 · −0,52 ⛔ | −1,26 · −0,73 ⛔ |
+| S2 über der Nullwelt-P90 | ✔ (−2,01) | ✔ (−2,30) | ✔ (−2,14) | ✔ (−2,26) |
+| S4 Hebel gegen Spot | ⛔ | ⛔ | ⛔ | ⛔ |
+| Rohvorteil je Handel (REGEL0 → A) | +0,58 → −0,24 % | +0,33 → −0,31 % | +0,33 → −0,29 % | +0,35 → −0,35 % |
+| Verzug 0 / 1 / 2 / 4 h | −1,49 / −1,62 / −1,66 / −1,77 | −1,66 / −2,01 / −2,16 / −2,31 | −1,57 / −1,93 / −2,14 / −2,30 | −1,73 / −1,99 / −2,05 / −2,21 |
+
+**Prüfung und Gegenprüfung:**
+- ✔ **R-R11:** Die REGEL0-Zelle im selben Lauf trifft in 4 von 4 Mengen die festgeschriebene Referenz.
+- ✔ **Unabhängig nachgerechnet:** unverzerrt:1 mit Spur, der Lauf ist zeilengleich. `pruefe_a_stop_unabhaengig.py` ergibt **404 von 404** Einstiegen 2025–26 in allen 5 Zellen gleich, auch am Reihenende eingestellter Paare. Beleg `gegenpruefung__unverzerrt_1.txt`.
+- ℹ️ **Fehler im Prüfskript selbst gefunden und behoben:** Es las bei Paaren mit Vorgeschichte (z. B. `A`) nur die neue Reihe. Danach stimmte alles, auch 2024 erneut.
+
+**Was das heißt:**
+
+| | |
+|---|---|
+| **Die Einstiege tragen weiter** | S2 4/4: Über der Nullwelt derselben Stop-Regel. Gescheitert ist die **Ausstiegsform**, nicht das Signal |
+| **Die Wahl lag auf einem Aufwärtsjahr** | 2024 belohnte langes Halten, 2025–26 bestraft es. Schon in der Wahl war der Gipfel schmal (Abschnitt 6) |
+| **Der Verzug ist NICHT kostenlos** | 2024 war 1 h Verzug besser, 2025–26 ist der Ausstieg an der Linie besser, und jede weitere Stunde kostet. Die Lehre aus Abschnitt 6 hält also **nicht** |
+| **Nicht getrennt** | Ob die **Haltedauer 72 h** oder der **Stop selbst** scheitert, sagt diese Messung nicht. Bestätigt wurde nur die gewählte Zelle |
+| **Betrieb** | Kein Trailing-Stop von Hand nötig. Die REGEL0 bleibt 24 h ohne Stop |
+
+➤ **Zur Abstimmung** (Nutzer): wie mit A weiter, siehe Arbeitsstand.

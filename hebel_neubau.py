@@ -844,6 +844,11 @@ NEUESTER_STAND = (
               "nachweisbar (nur ~30 Einstiege je Jahr), wirtschaftlich unschaedlich (Konto um null, "
               "keine Liquidation, Rohvorteil um die Kosten). Ob BTC handelbar wird, entscheidet "
               "der Nutzer"),
+    ("2.702", "A POSITIONSFUEHRUNG NICHT BESTAETIGT (0/4): nachgezogener Stop von Hand, auf 2024 "
+              "gewaehlt 72 h / 1,5 ATR / Verzug 1 h, verliert 2025-26 in allen Mengen deutlich gegen "
+              "die REGEL0 (Rohvorteil +0,33..+0,58 % -> -0,24..-0,35 %); die Einstiege tragen weiter "
+              "(ueber der Nullwelt). Die REGEL0 bleibt: 24 h, ohne Stop. Haltedauer oder Stop als "
+              "Ursache ist nicht getrennt"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

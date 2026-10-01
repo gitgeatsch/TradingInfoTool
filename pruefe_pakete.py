@@ -30358,7 +30358,8 @@ def paket_hebelneubau() -> None:
 
     _neu = [b for b in _BE.BEFUNDE
             if _AST is not None and b.kennung[:5].replace(".", "").isdigit()
-            and b.kennung.startswith("2.6")
+            and b.kennung.startswith("2.")
+            # 01.10.2026: vorher startswith("2.6") - ab 2.700 lief jeder Befund STILL an der Wache vorbei
             and int(b.kennung.split("-")[0].split(".")[1]) >= 647]
     _luecke = {b.kennung: _fehlende(b) for b in _neu if _fehlende(b)}
     pruefe(P, "⚠️⚠️ jeder Hebel-Befund ab 2.647 belegt die SECHS Pruefungen",

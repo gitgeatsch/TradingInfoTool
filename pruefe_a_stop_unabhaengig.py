@@ -57,13 +57,12 @@ def main() -> int:
     cs = ro(os.path.join(HIER, "data", "stundenkurse.db"))
     ce = ro(os.path.join(HIER, "data", "eingestellt_historie.db"))
     cm = ro(os.path.join(HIER, "data", "markpreis_historie.db"))
-    quelle, letzte = {}, {}
+    # Spot-Reihe wie der Lader (messe_e2_beitraege.kursreihen): bestand aus stundenkurse.db, eingestellte aus
+    # eingestellt_historie.db, Paare mit VORGESCHICHTE aus beiden (alt + neu) - hier als Vereinigung je Stunde
+    letzte = {}
     for sym in sorted({z[0] for z in zeilen}):
-        for c_ in (cs, ce):
-            x = c_.execute("SELECT COUNT(*), MAX(stunde) FROM stundenkurse WHERE symbol=?", (sym,)).fetchone()
-            if x[0] > 2000:
-                quelle[sym], letzte[sym] = c_, x[1]
-                break
+        letzte[sym] = max(x for x in (c_.execute("SELECT MAX(stunde) FROM stundenkurse WHERE symbol=?", (sym,)).fetchone()[0]
+                                      for c_ in (cs, ce)) if x is not None)
     hmax = max(int(n.split("_")[0]) for n in zellen) + 5
     ende = [z for z in zeilen if stunde(int(z[1]) + hmax) > letzte[z[0]]]
     random.seed(20261001)
@@ -74,8 +73,10 @@ def main() -> int:
     for z in probe:
         sym, std = z[0], int(z[1])
         if sym not in cache:
-            sp = {r[0]: r[1:] for r in quelle[sym].execute(
-                "SELECT stunde, high, low, close FROM stundenkurse WHERE symbol=? ORDER BY stunde", (sym,))}
+            sp = {}
+            for c_ in (ce, cs):
+                sp.update({r[0]: r[1:] for r in c_.execute(
+                    "SELECT stunde, high, low, close FROM stundenkurse WHERE symbol=? ORDER BY stunde", (sym,))})
             reihe = sorted(sp)
             mp = {r[0]: (r[1], r[2], r[3]) for r in cm.execute(
                 "SELECT stunde, low / faktor, close / faktor, high / faktor FROM markpreis WHERE symbol=?", (sym,))}
