@@ -1,0 +1,64 @@
+D:\Python\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+========================================================================================================================
+K6 R - HEBELSTUFE AUS DER LIQUIDATIONSGEFAHR · MENGE bestand · KURS mark · WERKZEUGTEST
+========================================================================================================================
+R-R11 E2i (alle Stundenanker, Spot-Tief, feste Grenzen, ohne Finanzierung): 3204610 Anker
+   24 h: 5x ATR-S1 1.00 % / S5 9.53 % · 3x ATR-S1 0.06 % / S5 0.71 % · 2x ATR-S1 0.03 % / S5 0.07 %
+   72 h: 5x ATR-S1 5.57 % / S5 26.85 % · 3x ATR-S1 0.27 % / S5 2.94 % · 2x ATR-S1 0.08 % / S5 0.43 %
+  --mit-btc: 4300 BTC-Anker aus dem ATR-Training genommen
+
+K6-Anker (Gitter, volles Fenster 120 h): 506093 · Suche 189727 · Pruefung 257401 · Symbole 112
+  Liquidationsraten (alle Anker, m 0,09 / 0,0476, ohne Stop | mit Stop -5 %):
+   5x:   6 h 0.519% / 0.234% | 0.193% ·  12 h 1.434% / 0.624% | 0.313% ·  24 h 4.001% / 1.754% | 0.496% ·  72 h 16.895% / 8.747% | 0.959% · 120 h 28.172% / 16.778% | 1.278%
+   3x:   6 h 0.042% / 0.029% | 0.005% ·  12 h 0.109% / 0.071% | 0.009% ·  24 h 0.313% / 0.205% | 0.016% ·  72 h 1.806% / 1.183% | 0.031% · 120 h 3.944% / 2.629% | 0.041%
+   2x:   6 h 0.020% / 0.019% | 0.001% ·  12 h 0.040% / 0.039% | 0.001% ·  24 h 0.083% / 0.081% | 0.002% ·  72 h 0.344% / 0.295% | 0.008% · 120 h 0.666% / 0.556% | 0.013%
+
+========================================================================================================================
+V1/V3 KALIBRIERUNG VORWAERTS (rollierend, wachsend, m 0,09, ohne Stop)
+  5x   6 h atr  Rate beob 0.743 % gesch 0.593 % · Steigung 0.97 · Zehntel ok 5/6 · V1 · · V3 ✔ (beob/gesch 1.25 0.79 1.45 1.51) · rsi oben beob/gesch 0.56
+  5x  12 h atr  Rate beob 1.863 % gesch 1.630 % · Steigung 0.86 · Zehntel ok 6/9 · V1 · · V3 ✔ (beob/gesch 1.14 0.83 1.25 1.34) · rsi oben beob/gesch 0.62
+  5x  24 h atr  Rate beob 4.770 % gesch 4.378 % · Steigung 0.85 · Zehntel ok 6/10 · V1 · · V3 ✔ (beob/gesch 1.09 0.81 1.10 1.34) · rsi oben beob/gesch 0.59
+  5x  72 h atr  Rate beob 19.954 % gesch 17.216 % · Steigung 0.75 · Zehntel ok 5/10 · V1 · · V3 ✔ (beob/gesch 1.16 0.91 1.15 1.41) · rsi oben beob/gesch 0.90
+  5x 120 h atr  Rate beob 31.985 % gesch 27.459 % · Steigung 0.65 · Zehntel ok 5/10 · V1 · · V3 ✔ (beob/gesch 1.16 0.93 1.09 1.46) · rsi oben beob/gesch 1.03
+  3x   6 h atr  Rate beob 0.043 % gesch 0.035 % · Steigung -0.15 · Zehntel ok 0/0 · V1 · · V3 ✔ (beob/gesch 1.23) · rsi oben beob/gesch 0.63
+  3x  12 h atr  Rate beob 0.143 % gesch 0.099 % · Steigung 1.25 · Zehntel ok 1/1 · V1 ✔ · V3 ✔ (beob/gesch 1.45 1.30 1.96 1.13) · rsi oben beob/gesch 0.64
+  3x  24 h atr  Rate beob 0.411 % gesch 0.289 % · Steigung 0.88 · Zehntel ok 4/4 · V1 ✔ · V3 ✔ (beob/gesch 1.42 1.30 1.55 1.43) · rsi oben beob/gesch 0.51
+  3x  72 h atr  Rate beob 2.352 % gesch 1.812 % · Steigung 0.58 · Zehntel ok 2/10 · V1 · · V3 · (beob/gesch 1.30 1.06 2.08 0.82) · rsi oben beob/gesch 0.75
+  3x 120 h atr  Rate beob 5.300 % gesch 4.017 % · Steigung 0.53 · Zehntel ok 2/10 · V1 · · V3 · (beob/gesch 1.32 0.96 2.11 0.94) · rsi oben beob/gesch 1.07
+  2x  72 h atr  Rate beob 0.073 % gesch 0.193 % · Steigung 0.03 · Zehntel ok 0/0 · V1 · · V3 · (beob/gesch 0.38 1.10) · rsi oben beob/gesch 0.17
+  2x 120 h atr  Rate beob 0.325 % gesch 0.529 % · Steigung -0.05 · Zehntel ok 4/5 · V1 · · V3 ✔ (beob/gesch 0.61 1.71) · rsi oben beob/gesch 0.38
+
+========================================================================================================================
+H0-0 R-R11 (Gitter, 5x/72 h atr, derselbe Codepfad): beob 19.954 % gesch 17.216 % · 2.681 17.493 / 17.627 -> ⛔ ABWEICHUNG
+H0 · EINSTIEGE aus kern48jb_einstiege_bestand.csv: 10000 in der Datei, 9596 mit vollstaendigem Fenster und Markpreis ausgewertet
+  5x   6 h:   1061 Einstiege · Liq.     2 · beob 0.189 % · gesch 0.601 % · beob/gesch 0.31 · je Jahr 2024 (2 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.31 · +5 % vor Liq. 9.0 % -> H0-1 zu wenige
+  5x  12 h:   1061 Einstiege · Liq.     4 · beob 0.377 % · gesch 1.684 % · beob/gesch 0.22 · je Jahr 2024 (4 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.22 · +5 % vor Liq. 16.9 % -> H0-1 zu wenige
+  5x  24 h:   1061 Einstiege · Liq.    13 · beob 1.225 % · gesch 4.543 % · beob/gesch 0.27 · je Jahr 2024 (13 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.27 · +5 % vor Liq. 28.7 % -> H0-1 zu wenige
+  5x  72 h:   1061 Einstiege · Liq.   149 · beob 14.043 % · gesch 17.749 % · beob/gesch 0.79 · je Jahr 2024 0.79 · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.79 · +5 % vor Liq. 52.8 %
+  3x   6 h:   1061 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.035 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 9.0 %
+  3x  12 h:   1061 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.098 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 16.9 %
+  3x  24 h:   1061 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.292 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 28.8 %
+  3x  72 h:   1061 Einstiege · Liq.     0 · beob 0.000 % · gesch 1.882 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 53.6 %
+  2x  72 h:   1061 Einstiege · Liq.     0 · beob 0.000 % · gesch 0.216 % · beob/gesch 0.00 · je Jahr 2024 (0 Liq., zu wenige) · 2025 (0 Liq., zu wenige) · 2026 (0 Liq., zu wenige) · ohne 10./11.10. 0.00 · +5 % vor Liq. 53.6 %
+  ⚠️ Kalibrierung nur aus der Liquidation; '+5 % vor Liq.' ist NUR Vergleich (Nutzer 29.09.)
+
+========================================================================================================================
+KERN SCHRITT 3 · BESTAETIGUNG 2025-01..2026-08 (EINMAL), H 72 h, Ziel Stop 1.5 ATR v1, Grenze 2.0 %, Menge bestand
+  Handel 0 · Hebel im Mittel nan · Liquidationen nan % · Konto log +nan (xnan) · Rueckgang nan · Serie 0 · schlechtester Monat +nan
+  S1 je Jahr: 2025 +nan · 2026 +nan -> ⛔
+  S2 Nullwelt (Einstiege je Asset zeitverschoben, 3 Ziehungen): Mittel +0.0000, P90 +0.0000 -> ⛔
+  S4 Hebel gegen Spot (dieselben Einstiege und Geometrie, 1x): Hebel +nan · Spot -0.4051 -> ⛔ Hebel lohnt nicht
+  S5 ohne 10./11.10.2025: Konto log +nan (mit +nan)
+  A R-R11 REGEL0-Zelle (24 h ohne Ziel) im selben Lauf: Konto log +nan · Rohvorteil +0.583 %
+  A BESSER ALS REGEL0: Stop +nan gegen REGEL0 +nan -> ⛔ · je Jahr Stop 2025 +nan · 2026 +nan gegen REGEL0 2025 +nan · 2026 +nan
+  A Auskunft Verzug 0 h: Konto log +nan · Rueckgang nan
+  A Auskunft Verzug 1 h: Konto log +nan · Rueckgang nan
+  A Auskunft Verzug 2 h: Konto log +nan · Rueckgang nan
+  A Auskunft Verzug 4 h: Konto log +nan · Rueckgang nan
+  N4-R Rohvorteil je Handel (Spot, ohne Kosten, auf den Positionswert): -0.244 % (7392 Handel) · je Jahr 2025 -0.577 % · 2026 +0.213 % · Kosten je Tageshandel 0,48 % · Assets mit positivem Rohvorteil 113, 35 %
+  Pflichtauskunft Regime (Monatsbeitrag zum log-Konto): 
+  Juli-Dezember 2025: 0 Handel · Konto log +nan (xnan) · Rueckgang nan · Liquidationen nan %
+SCHLUSS: vollstaendig

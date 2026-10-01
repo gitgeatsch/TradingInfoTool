@@ -11,7 +11,10 @@ Stop-Linie, eigener Ausstieg, ueber die STUNDE (nicht den Zeilenindex) adressier
     Spot     = Ausstieg/Einstieg - 1 - 0,3 %
 
 Nur lesen (``mode=ro``), keine Netzabfrage. Aufruf:
-    python pruefe_a_stop_unabhaengig.py <spur.csv> [anzahl] [--gegenprobe]
+    python pruefe_a_stop_unabhaengig.py <spur.csv> [anzahl] [--gegenprobe] [--jahr 2025,2026]
+
+``--jahr``: welche Jahre der Spur (Vorgabe 2024 = Wahl). Eingestellte Paare (Menge unverzerrt) werden am ENDE der Reihe
+abgerechnet (N3); Einstiege, deren Fenster ueber das Reihenende reicht, kommen ALLE zusaetzlich in die Stichprobe.
 
 ``--gegenprobe``: hebt die Linie schon mit dem Hoch der LAUFENDEN Stunde (Vorgriff) - die Pruefung MUSS dann abweichen.
 """
@@ -43,29 +46,47 @@ def main() -> int:
     except Exception:                                         # noqa: BLE001
         pass
     gp = "--gegenprobe" in sys.argv
-    arg = [a for a in sys.argv[1:] if not a.startswith("--")]
+    jahre = set(sys.argv[sys.argv.index("--jahr") + 1].split(",")) if "--jahr" in sys.argv else {"2024"}
+    arg = [a for i, a in enumerate(sys.argv[1:], 1) if not a.startswith("--") and sys.argv[i - 1] != "--jahr"]
     spur, anz = arg[0], int(arg[1]) if len(arg) > 1 else 300
     with open(spur, encoding="utf-8") as f:
         rd = csv.reader(f, delimiter=";")
         kopf = next(rd)
-        zeilen = [z for z in rd if z[2] == "2024"]
+        zeilen = [z for z in rd if z[2] in jahre]
     zellen = [k[:-2] for k in kopf[3::2]]
+    cs = ro(os.path.join(HIER, "data", "stundenkurse.db"))
+    ce = ro(os.path.join(HIER, "data", "eingestellt_historie.db"))
+    cm = ro(os.path.join(HIER, "data", "markpreis_historie.db"))
+    quelle, letzte = {}, {}
+    for sym in sorted({z[0] for z in zeilen}):
+        for c_ in (cs, ce):
+            x = c_.execute("SELECT COUNT(*), MAX(stunde) FROM stundenkurse WHERE symbol=?", (sym,)).fetchone()
+            if x[0] > 2000:
+                quelle[sym], letzte[sym] = c_, x[1]
+                break
+    hmax = max(int(n.split("_")[0]) for n in zellen) + 5
+    ende = [z for z in zeilen if stunde(int(z[1]) + hmax) > letzte[z[0]]]
     random.seed(20261001)
     probe = random.sample(zeilen, min(anz, len(zeilen)))
-    cs = ro(os.path.join(HIER, "data", "stundenkurse.db"))
-    cm = ro(os.path.join(HIER, "data", "markpreis_historie.db"))
+    probe += [z for z in ende if z not in probe][:300]
     cache = {}
     abw = {z: [] for z in zellen}
     for z in probe:
         sym, std = z[0], int(z[1])
         if sym not in cache:
-            sp = {r[0]: r[1:] for r in cs.execute(
+            sp = {r[0]: r[1:] for r in quelle[sym].execute(
                 "SELECT stunde, high, low, close FROM stundenkurse WHERE symbol=? ORDER BY stunde", (sym,))}
             reihe = sorted(sp)
             mp = {r[0]: (r[1], r[2], r[3]) for r in cm.execute(
                 "SELECT stunde, low / faktor, close / faktor, high / faktor FROM markpreis WHERE symbol=?", (sym,))}
             cache[sym] = (sp, reihe, {s: i for i, s in enumerate(reihe)}, mp)
         sp, reihe, pos, mp = cache[sym]
+        t_end = reihe[-1]
+
+        def bei(s_):
+            # Stunde s_ nach dem Einstieg; hinter dem Reihenende gilt der letzte Schluss (Abrechnung bei der Einstellung)
+            t_ = stunde(std + s_)
+            return (None if t_ > t_end else mp[t_]), mp[min(t_, t_end)][1]
         t0 = stunde(std)
         i0 = pos[t0]
         spann = [(sp[reihe[i]][0] - sp[reihe[i]][1]) / sp[reihe[i]][2] for i in range(i0 - 23, i0 + 1)]
@@ -80,7 +101,10 @@ def main() -> int:
             mx, ts, lv = 1.0, None, None
             if k is not None:
                 for s in range(1, H + 1):
-                    lo, _c, hi = mp[stunde(std + s)]
+                    b_, _c = bei(s)
+                    if b_ is None:
+                        break
+                    lo, _c, hi = b_
                     if gp:
                         mx = max(mx, hi / E0)
                     lin = mx - k * atr
@@ -89,15 +113,17 @@ def main() -> int:
                         break
                     mx = max(mx, hi / E0)
             if ts is None:
-                px, te = mp[stunde(std + H)][1] / E0, H
+                px, te = bei(H)[1] / E0, H
             elif v == 0:
                 px, te = lv, ts
             else:
-                px, te = mp[stunde(std + ts + v)][1] / E0, ts + v
+                px, te = bei(ts + v)[1] / E0, ts + v
             r = px - 1.0 - 0.003
             r_tool, te_tool = float(z[3 + 2 * zi]), int(z[4 + 2 * zi])
             abw[name].append((abs(r - r_tool), te == te_tool, sym, std, r, r_tool, te, te_tool))
-    print("GEGENPRUEFUNG A%s - unabhaengig nachgerechnet, Stichprobe %d von %d Einstiegen 2024" % (" (GEGENPROBE mit Vorgriff - muss abweichen)" if gp else "", len(probe), len(zeilen)))
+    print("GEGENPRUEFUNG A%s - unabhaengig nachgerechnet, Stichprobe %d von %d Einstiegen %s (davon %d am Reihenende)" % (
+        " (GEGENPROBE mit Vorgriff - muss abweichen)" if gp else "", len(probe), len(zeilen), "/".join(sorted(jahre)),
+        sum(1 for z in probe if z in ende)))
     fehler = 0
     for name in zellen:
         a = abw[name]
