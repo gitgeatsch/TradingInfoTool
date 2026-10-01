@@ -250,13 +250,14 @@ OFFENE_AUFGABEN = (
 # vergleicht die Referenzzahlen mit den BELEGDATEIEN - Dokument und Messung
 # koennen so nicht auseinanderlaufen.
 REGEL0 = dict(
-    stand="FESTGESCHRIEBEN 01.10.2026 (Nutzer-Ja, E-36) - Befunde 2.688-2.699",
+    stand="FESTGESCHRIEBEN 01.10.2026 (Nutzer-Ja, E-36) - Befunde 2.688-2.699; BTC aufgenommen 01.10. (E-37, 2.701)",
     grundgesamtheit=dict(
         menge="Binance-Stundenkurse und Terminmarkt, MIT eingestellten Paaren (--menge unverzerrt); bestand ist Auskunft",
         urteil=">= 3 von 4 Mengen (bestand, unverzerrt:1-3); laufen sie auseinander, gilt unverzerrt (E-30)",
         zeitraum="Wahl 2024, einmal bestaetigt 2025-01..2026-08",
         betrieb="Betrieb und Messung brauchen DIESELBE Grundgesamtheit (E-31, E-35)",
-        btc="BTC ist Leitwert, nicht handelbares Asset (Lader)"),
+        btc="BTC ist handelbares Asset (E-37, Nutzer 01.10.) - Vermerk: NICHT NACHGEWIESEN (~30 Signale je Jahr), "
+            "UNSCHAEDLICH (2.701); Modell, Marktmitte und ATR-Training OHNE BTC (--mit-btc), die uebrigen bitgleich"),
     einstieg=dict(
         rolle="A - ob (Ereignis)",
         beitrag="rsi: Kurvenmodell Form b (12 Stufen, rsi_s und rsi_s24), monatlich neu geschaetzt, "
@@ -280,15 +281,17 @@ REGEL0 = dict(
         halten_h=24, ziel=None, stop=None,
         gebuehr=0.003, finanzierung_tag=0.0018, liquidation_aufschlag=0.01, einsatz_f=0.01,
         pflicht="Nullwelt, je Jahr, Spot-Vergleich, mit/ohne 10./11.10.2025, Spiegel bei Potential-Massen (E-29)"),
-    aufruf=("python messe_losfahren.py --menge <m> --kern --ruhe 48 --junge --export 0.035",
-            "python messe_k6_hebelstufe.py --menge <m> --kurs mark --einstiege data/_vergleich/kern48j_einstiege_<m>.csv "
+    aufruf=("python messe_losfahren.py --menge <m> --kern --ruhe 48 --junge --mit-btc --export 0.035",
+            "python messe_k6_hebelstufe.py --menge <m> --kurs mark --mit-btc --einstiege data/_vergleich/kern48jb_einstiege_<m>.csv "
             "--simulation 24,ohne,0.02"),
-    belege="Basisinfos/J_30_09/sim__<m>.txt",
+    belege="Basisinfos/BTC_01_10/sim__<m>.txt",
+    # mit BTC (E-37); ohne BTC (Vergleich, Basisinfos/J_30_09/sim__<m>.txt): 9905/+0,2634/+0,583 · 10337/-0,4877/+0,324 ·
+    # 9670/-0,4543/+0,331 · 9956/-0,4058/+0,343 - die uebrigen Handel sind in beiden Laeufen bitgleich (2.701)
     referenz={
-        "bestand":      dict(einstiege=9905,  konto=+0.2634, rohvorteil=+0.583),
-        "unverzerrt:1": dict(einstiege=10337, konto=-0.4877, rohvorteil=+0.324),
-        "unverzerrt:2": dict(einstiege=9670,  konto=-0.4543, rohvorteil=+0.331),
-        "unverzerrt:3": dict(einstiege=9956,  konto=-0.4058, rohvorteil=+0.343),
+        "bestand":      dict(einstiege=10000, konto=+0.2708, rohvorteil=+0.583),
+        "unverzerrt:1": dict(einstiege=10429, konto=-0.4887, rohvorteil=+0.325),
+        "unverzerrt:2": dict(einstiege=9761,  konto=-0.4592, rohvorteil=+0.331),
+        "unverzerrt:3": dict(einstiege=10049, konto=-0.4065, rohvorteil=+0.345),
     },
     nicht_teil=("Staerke (Schalter, 2.691)", "Wucht als Einstieg (Bewegung, 2.693)",
                 "Tempo, Tiefe, Ruhe 72 h (2.695)", "Kern-Short (Spur, 2.696)", "K_IG-Kontext (Auskunft, 2.697)"),

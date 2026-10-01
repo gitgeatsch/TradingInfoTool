@@ -486,3 +486,13 @@ Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn 
 - **REGEL0** = Kern (rsi-Ersteintritt s = +0,035, Ruhe 48 h, Einstieg 1 h später, eigenes Normal ab 240 h, J) · Hebel (ATR, Grenze 2 %, Markpreis) · Erfolgsmessung (24 h ohne Ziel und Stop, Bitpanda-Kosten).
 - Die Grundlage: 2.688–2.699, der Showstopper Mindesthistorie behoben (2.698), die Schwelle auf der vollständigen Menge bestätigt (2.699).
 - Festgeschrieben im Dokument `REGEL0_Hebel_Entwurf_30_09.md` (Dateiname historisch) und im Code `hebel_neubau.REGEL0`. Die Wache prüft die Referenzzahlen gegen die Belege.
+
+
+---
+
+# E-37 · BTC in die REGEL0 aufgenommen (Nutzer 01.10.2026)
+
+**01.10.2026** · Nutzer: *„Ja, BTC aufnehmen."* Grundlage 2.701: technisch sauber (die übrigen bitgleich), statistisch nicht nachweisbar (~30 Signale je Jahr),
+wirtschaftlich unschädlich (Konto um null, keine Liquidation).
+- BTC ist **handelbares Asset** der REGEL0, mit dem Vermerk **nicht nachgewiesen, unschädlich**.
+- Modell, Marktmitte und ATR-Training bleiben **ohne** BTC (`--mit-btc`). Die REGEL0-Referenz gilt ab jetzt mit BTC (`hebel_neubau.REGEL0`, Belege `Basisinfos/BTC_01_10/`).

@@ -30847,11 +30847,11 @@ def paket_hebelneubau() -> None:
            bool(_r0) and "FESTGESCHRIEBEN" in _r0.get("stand", "")
            and all(k in _r0 for k in ("grundgesamtheit", "einstieg", "hebel", "erfolgsmessung", "referenz", "aufruf"))
            and _r0["einstieg"].get("schwelle") == 0.035 and _r0["einstieg"].get("ruhe_h") == 48
-           and _r0["hebel"].get("grenze") == 0.02 and "--junge" in _r0["aufruf"][0],
+           and _r0["hebel"].get("grenze") == 0.02 and "--junge" in _r0["aufruf"][0] and "--mit-btc" in _r0["aufruf"][0],
            "jede Optimierung (REGEL1 ...) misst gegen REGEL0 und muss sie zuerst bitgleich treffen (R-R11)")
     _abw = _HN.regel0_gegen_belege() if _r0 else ["REGEL0 fehlt"]
     pruefe(P, "⭐⭐ die REGEL0-Referenzzahlen stimmen mit den BELEGDATEIEN ueberein",
-           not _abw, "; ".join(_abw) or "Einstiege, Hebelkonto und Rohvorteil je Menge aus Basisinfos/J_30_09/sim__*.txt")
+           not _abw, "; ".join(_abw) or "Einstiege, Hebelkonto und Rohvorteil je Menge aus den Belegdateien (seit E-37 mit BTC: Basisinfos/BTC_01_10/sim__*.txt)")
     if _r0:
         _falsch = {k: dict(v) for k, v in _r0["referenz"].items()}
         _falsch["bestand"]["konto"] += 0.1

@@ -57,7 +57,17 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 
 ## 5. Die Referenzzahlen — REGEL0 muss sie bitgleich treffen (R-R11)
 
-**✔ GÜLTIG (mit J, 2.698), von der Wache gegen `Basisinfos/J_30_09/sim__<m>.txt` geprüft:**
+**✔ GÜLTIG (mit J und BTC, E-37), von der Wache gegen `Basisinfos/BTC_01_10/sim__<m>.txt` geprüft:**
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| Einstiege 2024–26 (Export) | 10.000 | 10.429 | 9.761 | 10.049 |
+| Hebelkonto 2025–26 (log) | +0,2708 | −0,4887 | −0,4592 | −0,4065 |
+| Rohvorteil je Handel 2025–26 | +0,583 % | +0,325 % | +0,331 % | +0,345 % |
+
+Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --mit-btc --export 0.035` und `messe_k6_hebelstufe.py --kurs mark --mit-btc --einstiege kern48jb_einstiege_<m>.csv --simulation 24,ohne,0.02`.
+
+*Ohne BTC (mit J, 2.698), die übrigen Handel sind bitgleich zu oben:*
 
 | | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
 |---|---|---|---|---|
@@ -147,9 +157,9 @@ Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_
 
 ---
 
-## 10b. BTC (2.701)
+## 10b. BTC (2.701) — ✔ AUFGENOMMEN (Nutzer 01.10., E-37)
 
-Mit `--mit-btc` wird BTC zusätzlich ausgewertet, ohne die REGEL0 für die anderen zu ändern (bitgleich). Mit etwa 30 Signalen je Jahr ist BTC **nicht nachweisbar**, aber **unschädlich** (Konto um null, keine Liquidation). Ob BTC in die handelbare Menge kommt, entscheidet der Nutzer.
+Mit `--mit-btc` wird BTC zusätzlich ausgewertet, ohne die REGEL0 für die anderen zu ändern (bitgleich). Mit etwa 30 Signalen je Jahr ist BTC **nicht nachweisbar**, aber **unschädlich** (Konto um null, keine Liquidation). ✔ **Nutzer 01.10.: *„Ja, BTC aufnehmen.“*** BTC ist handelbar, mit dem Vermerk *nicht nachgewiesen, unschädlich*. Die Referenz in Abschnitt 5 gilt jetzt mit BTC.
 
 ## 10a. Auskunft — REGEL0 auf der Hebel-Liste des Nutzers (2.700)
 
