@@ -496,3 +496,14 @@ Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn 
 wirtschaftlich unschädlich (Konto um null, keine Liquidation).
 - BTC ist **handelbares Asset** der REGEL0, mit dem Vermerk **nicht nachgewiesen, unschädlich**.
 - Modell, Marktmitte und ATR-Training bleiben **ohne** BTC (`--mit-btc`). Die REGEL0-Referenz gilt ab jetzt mit BTC (`hebel_neubau.REGEL0`, Belege `Basisinfos/BTC_01_10/`).
+
+
+---
+
+# E-38 · A abgeschlossen (nicht bestätigt), weiter mit B (Nutzer 01.10.2026)
+
+**01.10.2026** · Nutzer: *„deine Empfehlung – A, dann B, und eigentlich kannst du, wenn es passt, die Ursache für die Verluste behandeln – aber du bist hier der Experte."*
+Dazu: *„die Minus-Trades und die Marktphasen sind ohnehin ein eigenes Thema und können nicht vollends durch eine einfache mathematische Rechnung gelöst werden."*
+- **A ist abgeschlossen** (2.702, 0/4). Keine weitere Ursachenmessung zu A auf 2025–26. Die REGEL0 bleibt 24 h ohne Stop.
+- **Nächster Schritt B** (M1-3 Kern stabilisieren), Entwurf `Voranalyse_B_Kern_stabilisieren_01_10.md`. Die Ursache der Verluste geht als **Auskunft** (Teil 0) hinein, wo sie zu B passt.
+- **Marktphasen** (Regime, Verlusthandel im Gegenwind) bleiben ein **eigenes Thema** (R), nicht durch eine einfache Rechnung zu lösen.
