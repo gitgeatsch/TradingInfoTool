@@ -5381,6 +5381,7 @@ Verwandt: 2.80 · Regel 3 (`CLAUDE.md`) · N-13b · F-170
 | `messe_l2_liq_risiko.py` | **L2: Liquidation und Spot je Liquiditätsstufe innerhalb Hebelstufe und ATR** | Spur `--spur-regel0 --spur-alle` plus `l_liq_<m>.csv`. 2.704 |
 | `messe_futures_gegen_spot.py` | **O11 Frage 3: Futures-Kurse gegen Spot** | 20 Assets, Korrelation, rsi, ATR, 24-h-Rendite gegen vorab festgelegte Grenzen. 2.705 |
 | `pruefe_symbol_zuordnung.py` | **O11: Preisprüfung der Zuordnung Bitpanda → Binance** | `Basisinfos/symbol_zuordnung.csv`, Ticker gegen CoinGecko, > 5 % → gesperrt. 2.705 |
+| `pruefe_bitpanda_katalog.py` | **O11: der ganze Bitpanda-Krypto-Katalog gegen Binance** | gleich / Faktor-Ausnahme / Kollision (gesperrt) / ohne Binance; nur Paare im Handel; `--eintragen` schreibt Faktor-Ausnahmen und Sperren in `symbol_zuordnung.csv`. 2.707 |
 | `hole_stundenkurse_alle.py` | **O11: alle Krypto-Assets stündlich** in `data/stundenkurse_alle.db` (nicht die Messbasis) | je Asset die längere Historie (Spot oder Futures); `--pruefen`, `--symbole N`. 2.705 |
 | `pruefe_a_stop_unabhaengig.py` | **Gegenprüfung A: nachgezogener Stop unabhängig nachgerechnet** | liest die Spur von `messe_k6_hebelstufe.py --spur` und rechnet ATR, Stop-Linie und Ausstieg direkt aus den Rohdaten nach (über die Stunde adressiert, Vorgeschichte und Reihenende wie der Lader); `--jahr`, `--gegenprobe` (Vorgriff, muss abweichen). 2.702 |
 | `messe_k1_schritt2c_beitrag.py` | **K1 Schritt 2c: Beitrag robust, aber nicht kalibriert** | Befund 2.680 (28.09.2026) |

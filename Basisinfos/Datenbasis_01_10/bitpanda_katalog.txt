@@ -1,0 +1,28 @@
+==============================================================================================================
+BITPANDA-KATALOG GEGEN BINANCE · Bitpanda-Ticker 880 (ohne Edelmetalle/Stablecoins 864) · Binance Spot 503, Futures 528
+==============================================================================================================
+  gleich            433   davon mit Stundenkursen bei uns 433
+  Faktor-Ausnahme     1   davon mit Stundenkursen bei uns 1
+  Kollision           5   davon mit Stundenkursen bei uns 5: LIT, NEIRO, ONE, QUICK, ZK
+  ohne Binance      425
+  FAKTOR-AUSNAHME:
+      CAT        -> 1000CAT      spot     Faktor 1000    Abweichung +0.45 %
+  KOLLISION:
+      LIT        -> LIT          gesperrt Faktor 1       Abweichung +2507.58 %
+      NEIRO      -> NEIRO        gesperrt Faktor 1       Abweichung -70.45 %
+      ONE        -> ONE          gesperrt Faktor 1       Abweichung +23.70 %
+      QUICK      -> QUICK        gesperrt Faktor 1       Abweichung -99.99 %
+      ZK         -> ZK           gesperrt Faktor 1       Abweichung +87.66 %
+  KANDIDATEN fuer umbenannte Kuerzel (genau ein Binance-Coin mit Kurs +-1 %): 98 - ⚠️ UNBRAUCHBAR: Kursgleichheit allein paart fremde Coins (01.10.), nur Auskunft
+      AGI        ?-> HEMI         (Bitpanda 0.00638 USD)
+      AGIX       ?-> EVAA         (Bitpanda 0.6365 USD)
+      AIOZ       ?-> 龙虾           (Bitpanda 0.1113 USD)
+      ANT        ?-> PROM         (Bitpanda 6.5415 USD)
+      ARTY       ?-> GPS          (Bitpanda 0.0103 USD)
+      AVAX2L     ?-> PENDLE       (Bitpanda 2.3878 USD)
+      BAKE       ?-> DOOD         (Bitpanda 0.0018 USD)
+      BCH2L      ?-> SMCIB        (Bitpanda 41.6749 USD)
+      BCUT       ?-> MEW          (Bitpanda 0.0005 USD)
+      BENDOG     ?-> JCT          (Bitpanda 0.0017 USD)
+  GEGENPROBE: CAT -> 1000CAT als Faktor-Ausnahme ✔ · CC gleich ueber Futures ✔
+SCHLUSS: vollstaendig

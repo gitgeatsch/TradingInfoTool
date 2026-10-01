@@ -202,3 +202,44 @@ GRIFFAIN in 3 von 4 Mengen negativ, HYPE gemischt (−0,09..+0,07).
 5. ⚠️ In den Belegdateien steht in den Zeilen B-1/B-2 noch *BTC*, gemeint ist die Gruppe NEU. Die Beschriftung ist im Werkzeug inzwischen korrigiert, die Zahlen sind unverändert.
 
 **Markpreise der übrigen 526 Assets:** laden im Hintergrund (vier Arbeiter, gut die Hälfte erledigt). Danach folgen Zusammenführung und Sperre.
+
+---
+
+## 10. Bitpanda-Katalog gegen Binance — Vorab-Festlegung (Nutzer 01.10.: *Ja, Bitpanda-Katalog prüfen, prüfen und gegenprüfen*)
+
+**Quelle:** der öffentliche Bitpanda-Ticker (880 Einträge, USD-Kurse), ohne Edelmetalle (XAU, XAG, XPT, XPD) und Stablecoins. Binance: Spot- und Futures-Ticker (USDT).
+Das ist eine einmalige Prüfung und später ein Baustein für den täglichen Betriebsjob.
+
+**Regel je Bitpanda-Symbol** (Abweichung = Binance-Kurs / Faktor gegen Bitpanda-Kurs):
+
+| Ergebnis | Bedingung | Folge |
+|---|---|---|
+| **gleich** | dasselbe Kürzel (Spot, sonst Futures), Abweichung ≤ 5 % | keine Zeile nötig (Vorgabe) |
+| **Faktor-Ausnahme** | Treffer erst mit Präfix 1000 / 1000000 / 1M, Abweichung ≤ 2 % | Zeile wird **automatisch** in `symbol_zuordnung.csv` eingetragen |
+| **Kollision** | dasselbe Kürzel gibt es bei Binance, der Kurs weicht aber > 5 % ab, und kein Präfix passt | Zeile mit Markt **gesperrt**, es entsteht **kein** Signal (anderer Coin unter gleichem Kürzel) |
+| **ohne Binance** | kein Kürzel passt | nur Meldung. Gibt es **genau einen** Binance-Coin mit Kurs ±1 %, wird er als **Kandidat** (umbenannt?) genannt, aber **nicht** eingetragen (von Hand bestätigen) |
+
+**Gegenprobe, die bestehen muss:** CAT muss als Faktor-Ausnahme 1000CAT erkannt werden, und CC (so heißt Canton bei Bitpanda) als *gleich* über Futures.
+Die bekannten 40 Zuordnungen aus der Preisprüfung dürfen **nicht** als Kollision erscheinen.
+
+---
+
+## 11. ERGEBNIS Bitpanda-Katalog (Befund 2.707) — Belege `Datenbasis_01_10/bitpanda_katalog.txt`, `zuordnung_pruefung.txt`, `signalbilanz_zusatz__bestand.txt`
+
+| Ergebnis (864 Krypto-Assets bei Bitpanda) | Anzahl | Folge |
+|---|---|---|
+| gleich | **433** | alle mit Stundenkursen bei uns, keine Zeile nötig |
+| Faktor-Ausnahme | 1 | CAT → 1000CAT (war schon eingetragen) |
+| **Kollision** (anderer Coin unter gleichem Kürzel) | **5** | **LIT, NEIRO, ONE, QUICK, ZK**, als **gesperrt** eingetragen. Keines davon steht in deinen Listen |
+| ohne Binance | 425 | nur Meldung |
+
+- ✔ **Gegenprobe:** CAT als Faktor-Ausnahme und CC (so heißt Canton bei Bitpanda) als *gleich* über Futures erkannt.
+- ⚠️ **Beim Gegenprüfen gefunden:** Der erste Lauf zählte **108** Kollisionen, weil der Binance-Ticker auch **eingestellte** Paare mit altem Kurs führt (MKR, FTM, EOS, OCEAN …). Korrigiert: Es zählen nur Paare im Handel.
+- ⚠️ **Die Suche nach umbenannten Kürzeln über Kursgleichheit ist unbrauchbar.** Sie paart fremde Coins (z. B. AIOZ mit einem chinesischen Meme-Kürzel). Sie bleibt Auskunft, eingetragen wird daraus nie etwas.
+- **Gesperrt wirkt überall:** Die Bewertung (`messe_e2_beitraege._zusatz`), die Signalbilanz und die Preisprüfung beachten die Sperre.
+- **Krypto oder nicht** entscheidet jetzt der Bitpanda-Krypto-Ticker, nicht mehr die Watchlist (BW, G2X, ROL im Bestand sind Aktien/ETFs).
+
+**Mit den Betriebslisten** (NB-Teilexport 01.10. 19:26: Watchlist 45, Bestand 36, Hebel-Liste 25, zusammen 60):
+**40 Assets bekommen Signale.** Ohne Binance bleiben **AIOZ, SUPRA, VSN, XDC** und der Stablecoin EURCV. Dazu kommen 15 Aktien/ETFs.
+
+**Im Betrieb (Schritt 7):** `pruefe_bitpanda_katalog.py` und `pruefe_symbol_zuordnung.py` laufen täglich im Betriebsjob, eine Abweichung wird gemeldet.

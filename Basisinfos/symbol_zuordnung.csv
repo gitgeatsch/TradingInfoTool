@@ -1,3 +1,8 @@
 bitpanda;binance;markt;faktor;vermerk
 CANTON;CC;futures;1;Canton Coin heisst bei Binance CC (Futures, kein Spot) - 01.10.2026
 CAT;1000CAT;spot;1000;Binance fuehrt das 1000er-Paar: Kurs 1000CAT = 1000 x CAT - 01.10.2026
+LIT;LIT;gesperrt;1;Kollision laut pruefe_bitpanda_katalog.py (Abweichung +2506.10 %) - 01.10.2026
+NEIRO;NEIRO;gesperrt;1;Kollision laut pruefe_bitpanda_katalog.py (Abweichung -70.47 %) - 01.10.2026
+ONE;ONE;gesperrt;1;Kollision laut pruefe_bitpanda_katalog.py (Abweichung +23.76 %) - 01.10.2026
+QUICK;QUICK;gesperrt;1;Kollision laut pruefe_bitpanda_katalog.py (Abweichung -99.99 %) - 01.10.2026
+ZK;ZK;gesperrt;1;Kollision laut pruefe_bitpanda_katalog.py (Abweichung +87.66 %) - 01.10.2026

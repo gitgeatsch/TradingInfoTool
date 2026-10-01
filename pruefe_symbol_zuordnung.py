@@ -26,7 +26,7 @@ def zuordnung():
     z = {}
     with open(os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv"), encoding="utf-8") as f:
         for r in csv.DictReader(f, delimiter=";"):
-            z[r["bitpanda"]] = (r["binance"], r["markt"], float(r["faktor"]))
+            z[r["bitpanda"]] = (r["binance"], r["markt"], float(r["faktor"]))   # markt 'gesperrt' = anderer Coin
     return z
 
 
@@ -40,7 +40,8 @@ def main() -> int:
     import config as C
     quelle, L = SB.listen()
     cg = {a.symbol: a.coingecko_id for a in C.get_watchlist() if a.coingecko_id}
-    kr = {a.symbol for a in C.get_watchlist() if a.assetklasse == "krypto"}
+    # Krypto oder nicht: der Bitpanda-Krypto-Ticker entscheidet (nicht die Watchlist - ein gehaltener Coin ausserhalb der Watchlist waere sonst "kein Krypto")
+    kr = {a.symbol for a in C.get_watchlist() if a.assetklasse == "krypto"} | set(requests.get("https://api.bitpanda.com/v1/ticker", timeout=30).json())
     alle = sorted((set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"])))
     zu = zuordnung()
     mb = {r[0] for r in sqlite3.connect("file:%s?mode=ro" % os.path.join(HIER, "data", "stundenkurse.db").replace("\\", "/"), uri=True)
@@ -57,6 +58,10 @@ def main() -> int:
     zahl = {"OK": 0, "GESPERRT": 0, "ohne Binance": 0, "ohne Vergleich": 0, "kein Krypto": 0}
     for s in alle:
         bn, markt, fak = zu.get(s, (s, None, 1.0))
+        if markt == "gesperrt":
+            zahl["GESPERRT"] += 1
+            print("  %-9s -> %-9s  GESPERRT (Tabelle: anderer Coin unter gleichem Kuerzel)" % (s, bn))
+            continue
         if s in mb or bn in mb:
             wo, markt = "Messbasis", markt or "spot"
         elif bn in za:

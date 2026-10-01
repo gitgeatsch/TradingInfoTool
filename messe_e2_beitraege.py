@@ -186,11 +186,14 @@ def _zusatz(q) -> list:
     import csv as _csv
     import messe_signalbilanz_je_asset as _SB
     _q, L = _SB.listen()
-    zu = {}
+    zu, gesperrt = {}, set()
     with open(os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv"), encoding="utf-8") as f_:
         for r_ in _csv.DictReader(f_, delimiter=";"):
-            zu[r_["bitpanda"]] = r_["binance"]
-    ziel = sorted({zu.get(s, s) for s in set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"])})
+            if r_["markt"] == "gesperrt":          # anderer Coin unter gleichem Kuerzel (pruefe_bitpanda_katalog.py): kein Signal
+                gesperrt.add(r_["bitpanda"])
+            else:
+                zu[r_["bitpanda"]] = r_["binance"]
+    ziel = sorted({zu.get(s, s) for s in set(L["Watchlist"]) | set(L["Bestand"]) | set(L["Hebel"]) if s not in gesperrt})
     ca = sqlite3.connect("file:%s?mode=ro" % os.path.join(HIER, "data", "stundenkurse_alle.db").replace("\\", "/"), uri=True)
     da = {r[0] for r in ca.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) >= 500")}
     aus = [(s, ca.execute(q, (s,)).fetchall(), False) for s in ziel if s in da]

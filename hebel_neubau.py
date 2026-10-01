@@ -866,6 +866,9 @@ NEUESTER_STAND = (
               "(Chance je Jahr positiv, ueber der Nullwelt, Tagesblock und Spiegel positiv). In der "
               "Simulation verhalten sie sich wie die breite Menge (Rohvorteil +0,27..+0,40 %, unter "
               "den Kosten). Die uebrigen bleiben bitgleich. XNO ohne Markpreis"),
+    ("2.707", "BITPANDA-KATALOG: 433 Assets gleich, 1 Faktor-Ausnahme (CAT), 5 Kollisionen gesperrt "
+              "(LIT, NEIRO, ONE, QUICK, ZK). Mit den Betriebslisten bekommen 40 von 60 Assets "
+              "Signale; ohne Binance bleiben AIOZ, SUPRA, VSN, XDC"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
