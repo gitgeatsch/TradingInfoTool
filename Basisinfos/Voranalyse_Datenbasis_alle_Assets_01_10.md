@@ -174,3 +174,31 @@ Die neuen Assets sind **nicht** im ATR-Training (`messe_k6_hebelstufe.py --zusat
 
 **Folge:** Besteht NEU, erhalten die neuen Assets denselben Status wie die übrigen. Besteht NEU **nicht**, gilt wie bei BTC *nicht nachgewiesen*. Die Lösungspflicht
 (E-25) gilt: Fehlt ein Beleg dagegen, entscheidest du über die Aufnahme.
+
+---
+
+## 9. ERGEBNIS Nachweis NEU (Befund 2.706)
+
+> **Urteil in einer Zeile:** ✔ **Die REGEL0 trägt auch für die 11 neuen Assets, in 4 von 4 Mengen.** In der Simulation verhalten sie sich wie die breite
+> Menge: Der Vorteil je Handel liegt knapp unter den Kosten. Die bisherigen Assets bleiben **bitgleich**.
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| NEU-Einstiege 2024 / 2025 / 2026 | 102 / 304 / 326 | 69 / 324 / 355 | 68 / 327 / 325 | 67 / 316 / 361 |
+| N-1 Chance je Jahr | +0,17 · +0,02 · +0,14 ✔ | +0,25 · +0,01 · +0,11 ✔ | +0,24 · +0,01 · +0,11 ✔ | +0,20 · +0,01 · +0,11 ✔ |
+| N-2 gesamt gegen Nullwelt-P90 | +0,085 gegen +0,053 ✔ | +0,076 gegen +0,041 ✔ | +0,069 gegen +0,055 ✔ | +0,069 gegen +0,048 ✔ |
+| N-3 Tagesblock untere Grenze, Spiegel | +0,020, alle Jahre + ✔ | +0,013 ✔ | +0,007 ✔ | +0,009 ✔ |
+| **N-5** Handel · Rohvorteil · Hebelkonto · Liq. | 550 · +0,40 % · −0,018 · 0,37 % | 586 · +0,36 % · −0,024 · 0,17 % | 563 · +0,30 % · −0,025 · 0,18 % | 584 · +0,27 % · −0,049 · 0,34 % |
+| ✔ R-R11 Konto der übrigen = Referenz | +0,2708 | −0,4887 | −0,4592 | −0,4065 |
+
+**Je Asset** (Auskunft, kein Urteil, 28–104 Einstiege): KAS (+0,16..+0,23) und CANTON (+0,12..+0,22) durchweg stark, ASTER und FLOKI meist gut,
+GRIFFAIN in 3 von 4 Mengen negativ, HYPE gemischt (−0,09..+0,07).
+
+**Was das heißt:**
+1. Die neuen Assets bekommen **gleichwertige** Signale. Sie haben jetzt denselben Status wie die übrigen.
+2. 2025 ist bei ihnen schwach (+0,01..+0,02), wie bei der ganzen Menge im Gegenwind.
+3. Wirtschaftlich gilt dasselbe wie für die breite Menge: Der Vorteil je Handel liegt unter den Kosten (2.703). Die Auswahl und die Kosten bleiben die Hebel.
+4. **XNO** hat **keinen Markpreis** (Binance führt dafür keine Futures). Signale ja, Hebelstufe nein. Auf deiner Hebel-Liste steht es nicht.
+5. ⚠️ In den Belegdateien steht in den Zeilen B-1/B-2 noch *BTC*, gemeint ist die Gruppe NEU. Die Beschriftung ist im Werkzeug inzwischen korrigiert, die Zahlen sind unverändert.
+
+**Markpreise der übrigen 526 Assets:** laden im Hintergrund (vier Arbeiter, gut die Hälfte erledigt). Danach folgen Zusammenführung und Sperre.

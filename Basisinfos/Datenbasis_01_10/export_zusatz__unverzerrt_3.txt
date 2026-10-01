@@ -1,0 +1,28 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  O11 --zusatz: 11 neue Assets bewertet, nicht trainiert: AKT, ASTER, BRETT, CC, FLOKI, GRIFFAIN, HYPE, KAS, MON, PLUME, XNO
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 117 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 315847 · Symbole 123
+  Auskunft Verteilung vh: P50 -0.0028 · P90 +0.0338 · P95 +0.0452 · P99 +0.0684 · Max +0.2131
+
+========================================================================================================================
+KERN SCHRITT 2 · EXPORT der Ersteintritte s = +0.035, 2024-01..2026-08, Menge unverzerrt:3: 10793 Einstiege, 664 Tage
+  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):
+     6 h: +5 % vor -5 % bei 8.5 % der Einstiege (-5 % zuerst 5.5 %) · Dq gesamt +0.1030 · 2024 +0.1098 · 2025 +0.0417 · 2026 +0.2042
+    12 h: +5 % vor -5 % bei 16.8 % der Einstiege (-5 % zuerst 11.0 %) · Dq gesamt +0.1138 · 2024 +0.1348 · 2025 +0.0626 · 2026 +0.1829
+    24 h: +5 % vor -5 % bei 27.7 % der Einstiege (-5 % zuerst 20.7 %) · Dq gesamt +0.0908 · 2024 +0.1538 · 2025 +0.0438 · 2026 +0.1229
+  Zeit bis +5 % (wo zuerst, binnen 72 h, 4813): Median 18 h · Quartile 8 / 33 h · binnen 2/4/6/12 h 6 % / 12 % / 19 % / 38 %
+  Zeit bis -5 % (wo zuerst, binnen 72 h, 4425): Median 24 h · Quartile 12 / 40 h · binnen 2/4/6/12 h 3 % / 8 % / 13 % / 27 %
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern48jbz_einstiege_unverzerrt_3.csv (Ruhe 48 h)
+  NEU-Gruppe O11 (1 = neues Asset): 744 von 10793 -> D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern48jbz_gruppe_unverzerrt_3.csv
+  Wucht beide oben: 1484 von 10793 (13.7 %) -> D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\kern48jbz_wucht_unverzerrt_3.csv
+SCHLUSS: vollstaendig

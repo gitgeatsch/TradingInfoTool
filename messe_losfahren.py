@@ -1267,17 +1267,17 @@ def main() -> int:
                 ee = erst_v(VH, s)
                 bm = GRP[ee]
                 eb = ee[bm]
-                print(("NEU (O11)" if ZUSATZ else "BTC") + " · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon BTC %d · uebrige %d" % (
+                print(("NEU (O11)" if ZUSATZ else "BTC") + " · Menge %s · Kern Ruhe %d h, s %+.3f · Einstiege gesamt %d, davon in der Gruppe %d · uebrige %d" % (
                     E2.MENGE, RUHE, s, len(ee), len(eb), int((~bm).sum())))
                 jz = [(jj, dqh(eb[JAHR[eb] == jj]), int((JAHR[eb] == jj).sum())) for jj in JAHRE]
                 b1 = all(x[1] > 0 for x in jz if x[2] >= 30) and any(x[2] >= 30 for x in jz)
-                print("  B-1 BTC je Jahr: %s -> %s" % (" · ".join("%d %+.4f (%d)" % x for x in jz), "✔" if b1 else "⛔"))
+                print("  B-1 " + ("NEU" if ZUSATZ else "BTC") + " je Jahr: %s -> %s" % (" · ".join("%d %+.4f (%d)" % x for x in jz), "✔" if b1 else "⛔"))
                 nv = []
                 for _ in range(zieh):
                     e2 = erst_v(vh_stuendlich(verschoben(E, RSI)), s)
                     nv.append(dqh(e2[GRP[e2]]))
                 p90 = float(np.nanpercentile(nv, 90)); gs = dqh(eb); b2 = gs > p90
-                print("  B-2 BTC gesamt Dq %+.4f · Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (
+                print("  B-2 " + ("NEU" if ZUSATZ else "BTC") + " gesamt Dq %+.4f · Nullwelt (%d Ziehungen) Mittel %+.4f, P90 %+.4f -> %s" % (
                     gs, zieh, float(np.nanmean(nv)), p90, "✔" if b2 else "⛔"))
                 tage = STD[eb] // 24; ut, tinv = np.unique(tage, return_inverse=True)
                 je_tag = [eb[tinv == k] for k in range(len(ut))]
@@ -1290,7 +1290,7 @@ def main() -> int:
                         - (ABa[eb[JAHR[eb] == jj]].mean() - ABa[hb[JAHR[hb] == jj]].mean()))
                        for jj in JAHRE if (JAHR[eb] == jj).sum() >= 30]
                 b3 = lo95 > 0 and all(x[1] > 0 for x in sp_)
-                print("  B-3 Tagesblock (%d Tage) untere Grenze %+.4f · Spiegel je Jahr (gegen alle BTC-Stunden) %s -> %s" % (
+                print("  B-3 Tagesblock (%d Tage) untere Grenze %+.4f · Spiegel je Jahr (gegen alle Stunden der Gruppe) %s -> %s" % (
                     len(ut), lo95, " · ".join("%d %+.3f" % x for x in sp_), "✔" if b3 else "⛔"))
                 print("  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq %+.4f (%d)" % (dqh(ee[~bm]), int((~bm).sum())))
                 if ZUSATZ:

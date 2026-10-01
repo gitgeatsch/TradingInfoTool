@@ -862,6 +862,10 @@ NEUESTER_STAND = (
               "laengere Historie), Zuordnung Bitpanda-Binance mit Preispruefung, bewertet und nicht "
               "trainiert (REGEL0 zeilengleich). 40 statt 29 deiner Assets bekommen Signale. Offen: traegt "
               "die REGEL0 fuer die neuen, und ihre Handelbarkeit (Markpreis)"),
+    ("2.706", "NEUE ASSETS: die REGEL0 traegt fuer die 11 neu bewerteten Assets in 4 von 4 Mengen "
+              "(Chance je Jahr positiv, ueber der Nullwelt, Tagesblock und Spiegel positiv). In der "
+              "Simulation verhalten sie sich wie die breite Menge (Rohvorteil +0,27..+0,40 %, unter "
+              "den Kosten). Die uebrigen bleiben bitgleich. XNO ohne Markpreis"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

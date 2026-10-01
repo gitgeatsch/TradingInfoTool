@@ -1,0 +1,12 @@
+[  1/ 11] AKT        {'ok': 22, 'fehlt': 22, 'fehler': 0}
+[  2/ 11] ASTER      {'ok': 34, 'fehlt': 54, 'fehler': 0}
+[  3/ 11] BRETT      {'ok': 59, 'fehlt': 73, 'fehler': 0}
+[  4/ 11] CC         {'ok': 70, 'fehlt': 106, 'fehler': 0}
+[  5/ 11] FLOKI      {'ok': 110, 'fehlt': 110, 'fehler': 0}
+[  6/ 11] GRIFFAIN   {'ok': 130, 'fehlt': 134, 'fehler': 0}
+[  7/ 11] HYPE       {'ok': 146, 'fehlt': 162, 'fehler': 0}
+[  8/ 11] KAS        {'ok': 180, 'fehlt': 172, 'fehler': 0}
+[  9/ 11] MON        {'ok': 191, 'fehlt': 205, 'fehler': 0}
+[ 10/ 11] PLUME      {'ok': 209, 'fehlt': 231, 'fehler': 0}
+[ 11/ 11] XNO        {'ok': 209, 'fehlt': 275, 'fehler': 0}
+FERTIG {'ok': 209, 'fehlt': 275, 'fehler': 0}

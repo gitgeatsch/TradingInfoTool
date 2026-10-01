@@ -1,0 +1,25 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:2
+========================================================================================================================
+  O11 --zusatz: 11 neue Assets bewertet, nicht trainiert: AKT, ASTER, BRETT, CC, FLOKI, GRIFFAIN, HYPE, KAS, MON, PLUME, XNO
+  Anker (Gitter, mit Phase-Normal): Suche 167840 · Pruefung 218803 · Symbole 124
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0700 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 128 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 31061 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 313345 · Symbole 124
+  Auskunft Verteilung vh: P50 -0.0038 · P90 +0.0327 · P95 +0.0449 · P99 +0.0685 · Max +0.2242
+
+========================================================================================================================
+NEU (O11) · Menge unverzerrt:2 · Kern Ruhe 48 h, s +0.035 · Einstiege gesamt 10481, davon BTC 720 · uebrige 9761
+  B-1 BTC je Jahr: 2024 +0.2445 (68) · 2025 +0.0075 (327) · 2026 +0.1131 (325) -> ✔
+  B-2 BTC gesamt Dq +0.0687 · Nullwelt (40 Ziehungen) Mittel +0.0222, P90 +0.0546 -> ✔
+  B-3 Tagesblock (355 Tage) untere Grenze +0.0070 · Spiegel je Jahr (gegen alle BTC-Stunden) 2024 +0.304 · 2025 +0.033 · 2026 +0.050 -> ✔
+  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq +0.0905 (9761)
+  Auskunft je neuem Asset (Einstiege, Dq): AKT 71 +0.074 · ASTER 40 +0.152 · BRETT 86 +0.014 · CC 33 +0.191 · FLOKI 97 +0.157 · GRIFFAIN 68 -0.016 · HYPE 51 -0.006 · KAS 96 +0.160 · MON 28 +0.052 · PLUME 61 +0.095 · XNO 89 +0.020
+  URTEIL NEU (Menge unverzerrt:2): B-1 ✔ · B-2 ✔ · B-3 ✔  (B-4 ueber die vier Mengen)
+SCHLUSS: vollstaendig
