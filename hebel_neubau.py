@@ -853,6 +853,11 @@ NEUESTER_STAND = (
               "aber Chance 2024 (Abstand +0,061/+0,068 gegen +0,088). TEIL 0: ohne Kosten ist die REGEL0 "
               "in 4/4 Mengen positiv, die KOSTEN sind der groesste Posten; dazu Gegenwind-Monate und "
               "spaeter eingestellte Paare; das Springen ist kein Verlusttreiber"),
+    ("2.704", "L1 MINDESTLIQUIDITAET NICHT BESTANDEN, die Beziehung ist UMGEKEHRT: 2024 haben "
+              "Einstiege bei geringer Liquiditaet die bessere Chance und mehr Spot-Vorteil (4/4 Mengen, "
+              "Spiegel ebenfalls, ueberwiegend ATR-frei); jeder Filter nimmt die besseren weg. L2 nicht "
+              "messbar. Signalbilanz: 25-45 Signale je Asset und Jahr, 16 Krypto-Assets der Listen ohne "
+              "Stundenkurse"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

@@ -1,0 +1,40 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 70 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 75584 · Symbole 68
+  Auskunft Verteilung vh: P50 +0.0009 · P90 +0.0284 · P95 +0.0391 · P99 +0.0583 · Max +0.0758
+
+========================================================================================================================
+L · LIQUIDITAET ZUM ZEITPUNKT (USD-Volumen 24 h) · Menge bestand · Jahre (2024,) · Schwelle +0.035 (REGEL0) · 2222 Einstiege, Liquiditaet bekannt 2222
+  L0 DOSIS-WIRKUNG (feste USD-Stufen, Auskunft): Stufe · Einstiege · Chance Dq · Spiegel (+5 % zuerst minus -5 % zuerst) · Spot 24 h ohne Kosten · Chance je ATR-Drittel (niedrig / mittel / hoch)
+      0.0-0.5   Mio ·    17 · +0.5185 · +0.118 · +1.572 % · – (15) / – (2) / – (0)
+      0.5-1.0   Mio ·    76 · +0.2168 · +0.105 · +0.821 % · +0.239 (72) / – (4) / – (0)
+      1.0-2.0   Mio ·   146 · +0.2657 · +0.185 · +1.334 % · +0.218 (113) / +0.444 (30) / – (3)
+      2.0-5.0   Mio ·   428 · +0.2293 · +0.208 · +1.412 % · +0.182 (217) / +0.278 (178) / +0.194 (33)
+      5.0-10.0  Mio ·   386 · +0.1250 · +0.132 · +0.896 % · +0.138 (91) / +0.113 (191) / +0.138 (104)
+     10.0-20.0  Mio ·   325 · +0.1063 · +0.123 · +0.621 % · -0.085 (59) / +0.127 (113) / +0.133 (153)
+     20.0-∞     Mio ·   844 · +0.0977 · +0.102 · +0.783 % · +0.066 (174) / +0.145 (222) / +0.084 (448)
+    ohne Liquiditaet: 0 · rho(log Liquiditaet, ATR) +0.44
+  L1 WAHL (Filter Liquiditaet >= X, Eintrag faellt ersatzlos weg): X · Einstiege · Assets · echt · Null P90 · Abstand · Spiegel minus X=0 · weggenommen: Chance / Spot 24 h · behalten: Spot 24 h
+      0.0 Mio ·  2222 ·  91 · +0.1344 · +0.0462 · +0.0882 · +0.0000 · – / – · +0.944 %
+      0.5 Mio ·  2205 ·  91 · +0.1337 · +0.0453 · +0.0885 · +0.0001 · +0.5185 / +1.572 % · +0.939 %
+      1.0 Mio ·  2129 ·  91 · +0.1324 · +0.0457 · +0.0867 · +0.0013 · +0.2444 / +0.958 % · +0.943 %
+      2.0 Mio ·  1983 ·  91 · +0.1266 · +0.0462 · +0.0803 · -0.0022 · +0.2594 / +1.188 % · +0.914 %
+      5.0 Mio ·  1555 ·  90 · +0.1055 · +0.0372 · +0.0683 · -0.0225 · +0.2374 / +1.332 % · +0.777 %
+     10.0 Mio ·  1169 ·  88 · +0.1001 · +0.0368 · +0.0633 · -0.0286 · +0.1882 / +1.172 % · +0.738 %
+     20.0 Mio ·   844 ·  76 · +0.0977 · +0.0401 · +0.0576 · -0.0345 · +0.1633 / +1.042 % · +0.783 %
+  L1 REGEL: groesster Abstand +0.0885, Gleichstand < 0,005 -> kleineres X -> GEWAEHLT X = 0 (REGEL0): L1 TRAEGT NICHT
+  SIGNALBILANZ je Asset (2024,) (X = 0.0 Mio): Signale gesamt 2222 -> 2222 (100 %) · Median je Asset 25 -> 25 · Assets ganz ohne Signal danach 0
+    Hebel-Liste (NB, 25): AKT 0->0 · ALGO 26->26 · BEAMX 24->24 · BNB 25->25 · BTC 24->24 · CAT 0->0 · ETH 28->28 · GRIFFAIN 0->0 · HYPE 0->0 · INJ 25->25 · KAIA 0->0 · KAITO 0->0 · LINK 27->27 · MORPHO 0->0 · NEAR 25->25 · ONDO 0->0 · RENDER 18->18 · SEI 21->21 · SOL 27->27 · SUI 25->25 · TAO 21->21 · TURBO 9->9 · VIRTUAL 0->0 · XDC 0->0 · XLM 25->25
+    mehr als die Haelfte verloren (0): 
+  geschrieben: D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_vergleich\l_liq_bestand.csv
+SCHLUSS: vollstaendig

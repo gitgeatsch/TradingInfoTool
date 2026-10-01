@@ -118,7 +118,7 @@ Watchlist, im Portfolio bzw. Bestand sind."*
 **Ergänzung 1, Qualitätsgewinn (Pflicht für L1):** An der gewählten Stufe X müssen die **weggenommenen** Einstiege **schlechter** sein als die
 behaltenen, und zwar in der Chance (Dq) **und** in der Spot-Rendite 24 h ohne Kosten. Sonst ist L1 nicht bestanden, auch wenn der Abstand steigt.
 
-**Ergänzung 2, Signalbilanz je Asset (stehend bei jeder REGELn):** `messe_signalbilanz.py` zeigt die Signale vorher und nachher je Jahr für **alle** Assets
+**Ergänzung 2, Signalbilanz je Asset (stehend bei jeder REGELn):** `messe_signalbilanz_je_asset.py` zeigt die Signale vorher und nachher je Jahr für **alle** Assets
 aus **Watchlist (Krypto), Bestand und Hebel-Liste**. Quelle ist der NB-Teilexport, der dafür um Watchlist und Bestand erweitert wurde (nur Symbole). Bis zum
 nächsten NB-Lauf kommt der Bestand aus der Desktop-Kopie (Stand 19.07.), mit Vermerk.
 
@@ -129,3 +129,52 @@ nächsten NB-Lauf kommt der Bestand aus der Desktop-Kopie (Stand 19.07.), mit Ve
 - L2: `messe_k6_hebelstufe.py --simulation 24,ohne,0.02 --spur-regel0 <csv> --spur-alle` (bestand), dann `messe_l2_liq_risiko.py` auf 2024.
 - R-R11: Bei X = 0 sind die Einstiege die der REGEL0, die Simulation mit Spur ist zeilengleich zum REGEL0-Beleg.
 - **Stopp und Bericht** nach L0, Wahl, L2 und Signalbilanz.
+
+---
+
+## 10. ERGEBNIS (Befund 2.704) — Stopp und Bericht
+
+> **Urteil in einer Zeile:** **L1 ist nicht bestanden, und zwar aus einem lehrreichen Grund: Die Beziehung ist umgekehrt.** 2024 hatten die Einstiege
+> bei **geringer** Liquidität die **bessere** Chance und mehr Vorteil, in allen vier Mengen gleich. Jeder Mindestfilter hätte die **besseren** Einstiege weggenommen.
+
+### L0 — Dosis und Wirkung 2024 (Belege `L_01_10/liq__<m>.txt`)
+
+| Liquidität 24 h | Chance bestand / unverzerrt:1–3 | Spiegel | Spot 24 h ohne Kosten |
+|---|---|---|---|
+| < 0,5 Mio (17–33 Einstiege) | +0,27..+0,52 | +0,07..+0,18 | +1,3..+1,6 % |
+| 0,5–1 Mio | +0,20..+0,24 | +0,11..+0,14 | +0,8..+1,0 % |
+| **1–2 Mio** | **+0,27..+0,36** | **+0,19..+0,28** | **+1,3..+2,0 %** |
+| **2–5 Mio** | **+0,23..+0,26** | **+0,21..+0,26** | **+1,4..+2,0 %** |
+| 5–10 Mio | +0,09..+0,14 | +0,08..+0,16 | +0,8..+0,9 % |
+| 10–20 Mio | +0,09..+0,11 | +0,12..+0,15 | +0,6..+1,6 % |
+| ≥ 20 Mio | +0,09..+0,10 | +0,10..+0,13 | +0,75..+1,1 % |
+
+- **Richtung, nicht nur Bewegung:** Der Spiegel (+5 % zuerst minus −5 % zuerst) ist unten ebenfalls höher.
+- **Überwiegend ATR-frei:** Innerhalb der ATR-Drittel bleibt das Muster meist erhalten (z. B. niedrige ATR, 1–5 Mio: +0,15..+0,30 gegen ≥ 20 Mio: +0,02..+0,09).
+- **Gegenprüfung:** Die Liquidität ist für 200 Einstiege unabhängig aus der Datenbank nachgerechnet, 200/200 gleich. R-R11: X = 0 trifft die REGEL0 (bestand 2.222, Abstand +0,0882).
+
+### L1 — die Regel (Wahl 2024)
+
+Jedes X > 0 senkt den Abstand. Die weggenommenen Einstiege sind **besser** als die behaltenen (z. B. X = 5 Mio bestand: weggenommen Chance +0,24 / Spot +1,33 %,
+behalten Spot +0,78 %). Die Regel wählt **X = 0 in 4 von 4 Mengen**. Der Qualitätsgewinn ist negativ. ➤ **L1 nicht bestanden**, es gibt keinen Filter.
+
+### L2 — Risiko über die ATR hinaus (Beleg `L_01_10/l2__bestand.txt`)
+
+Nicht messbar: 2024 gab es nur **8 Liquidationen** in 2.188 Handeln und **keine** Stufe 2x. Auch hier ist der Spot-Vorteil unten höher.
+
+### Signalbilanz REGEL0 (Beleg `L_01_10/signalbilanz_regel0__bestand.txt`)
+
+- Je Asset **25–45 Signale im Jahr**, sehr gleichmäßig. Beispiele 2024 / 2025 / 2026 (bis August): BTC 24 / 42 / 29 · ETH 28 / 39 / 24 · LINK 27 / 45 / 28 · SOL 27 / 37 / 26.
+- Von **58** Assets aus Watchlist, Bestand und Hebel-Liste bekommen **28** Signale. **16 Krypto-Assets haben keine Stundenkurse**: Hebel-Liste HYPE, AKT, CAT, GRIFFAIN, XDC, dazu
+  gehaltene bzw. beobachtete ASTER, CANTON, KAS, MON, SUPRA, VSN, BRETT, AIOZ, FLOKI, PLUME, XNO. Die übrigen 14 sind Aktien, ETFs oder Cash.
+- ⚠️ Der Bestand stammt aus der Desktop-Kopie (19.07.). Der nächste NB-Teilexport liefert den aktuellen Stand.
+
+### Was das heißt (Einordnung, zur Abstimmung)
+
+| # | |
+|---|---|
+| 1 | **Kein Filter.** Dünn gehandelte Werte sind für den Kern **kein** Problem, 2024 waren sie sogar besser. Das passt zum Grundsatz *kein Asset-Vorurteil* (Regel 3) |
+| 2 | **Ein neuer Hinweis**, noch keine Regel: Die Wirkung läuft in Gegenrichtung (geringe Liquidität hebt die Chance). Das wäre eine **eigene Hypothese**, vorab festzulegen und auf 2025–26 einmal zu bestätigen. 2025–26 ist für die Liquidität noch **unberührt** |
+| 3 | ⚠️ **Was die Messung nicht sieht:** Bei dünnem Handel sind **Spread und Ausführung** teurer. Unser Kostenmodell rechnet pauschal 0,3 %. Der Vorteil unten kann im echten Handel teilweise verloren gehen, und das ist ohne Orderbuchdaten (D) nicht messbar |
+| 4 | **Spannung zu Teil 0 (2.703):** 2025–26 brachten später eingestellte Paare weniger. Ob die mit geringer Liquidität dieselben sind, ist offen und wäre in der Bestätigung als Auskunft zu klären |
+| 5 | **Die größte konkrete Lücke im Betrieb** sind die **16 Krypto-Assets ohne Stundenkurse**. Für sie kommt **kein** Signal an, auch für HYPE auf der Hebel-Liste nicht. Das ist O5 (Beschaffung derselben Datenart) |

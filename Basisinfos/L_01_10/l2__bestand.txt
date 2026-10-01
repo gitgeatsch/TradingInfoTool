@@ -1,0 +1,14 @@
+L2 · LIQUIDATION UND SPOT JE LIQUIDITAETSSTUFE innerhalb Hebelstufe und ATR-Drittel · Jahr 2024 · 2188 Handel mit Liquiditaet (Auskunft)
+    3x  · ATR hoch    · 2-10 Mio  ·   142 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten +1.390 %
+    3x  · ATR hoch    · < 2 Mio   ·     3 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten -2.923 %
+    3x  · ATR hoch    · >= 10 Mio ·   584 Handel · Liquidationen   2 (0.34 %) · Spot ohne Kosten +1.030 %
+    3x  · ATR mittel  · 2-10 Mio  ·   370 Handel · Liquidationen   1 (0.27 %) · Spot ohne Kosten +1.283 %
+    3x  · ATR mittel  · < 2 Mio   ·    38 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten +2.412 %
+    3x  · ATR mittel  · >= 10 Mio ·   322 Handel · Liquidationen   2 (0.62 %) · Spot ohne Kosten +0.675 %
+    3x  · ATR niedrig · 2-10 Mio  ·   178 Handel · Liquidationen   1 (0.56 %) · Spot ohne Kosten +1.269 %
+    3x  · ATR niedrig · < 2 Mio   ·    84 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten +1.685 %
+    3x  · ATR niedrig · >= 10 Mio ·    94 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten +0.104 %
+    5x  · ATR niedrig · 2-10 Mio  ·   123 Handel · Liquidationen   1 (0.81 %) · Spot ohne Kosten +0.429 %
+    5x  · ATR niedrig · < 2 Mio   ·   114 Handel · Liquidationen   1 (0.88 %) · Spot ohne Kosten +0.502 %
+    5x  · ATR niedrig · >= 10 Mio ·   136 Handel · Liquidationen   0 (0.00 %) · Spot ohne Kosten +0.104 %
+SCHLUSS: vollstaendig

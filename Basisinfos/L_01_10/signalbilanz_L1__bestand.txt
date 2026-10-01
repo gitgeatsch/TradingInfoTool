@@ -1,0 +1,31 @@
+==============================================================================================================
+SIGNALBILANZ JE ASSET · Filter Liquiditaet >= 0.0 Mio USD (l_liq_bestand.csv) · Jahre 2024
+Listen: NB-Teilexport 2026-10-01 07:10 (nb_betriebsdaten_T440.txt) - unvollstaendig, Rest aus der Desktop-Kopie · Watchlist 44 · Bestand 28 · Hebel-Liste 25 · zusammen 58
+==============================================================================================================
+  Asset     W B H | 2024 vorher->nachher | gesamt
+  ALGO      x . x |   26 ->   26      |   26 ->   26
+  APT       x . . |   23 ->   23      |   23 ->   23
+  AVAX      x . . |   22 ->   22      |   22 ->   22
+  BEAMX     x . x |   24 ->   24      |   24 ->   24
+  BNB       x . x |   25 ->   25      |   25 ->   25
+  BTC       x x x |   24 ->   24      |   24 ->   24
+  ETH       x . x |   28 ->   28      |   28 ->   28
+  IMX       x . . |   25 ->   25      |   25 ->   25
+  INJ       x . x |   25 ->   25      |   25 ->   25
+  IO        x . . |   21 ->   21      |   21 ->   21
+  LINK      x x x |   27 ->   27      |   27 ->   27
+  NEAR      x . x |   25 ->   25      |   25 ->   25
+  QNT       x x . |   26 ->   26      |   26 ->   26
+  RENDER    x . x |   18 ->   18      |   18 ->   18
+  SEI       x . x |   21 ->   21      |   21 ->   21
+  SOL       x . x |   27 ->   27      |   27 ->   27
+  SUI       x . x |   25 ->   25      |   25 ->   25
+  TAO       x . x |   21 ->   21      |   21 ->   21
+  TURBO     x . x |    9 ->    9      |    9 ->    9
+  W         x . . |   22 ->   22      |   22 ->   22
+  XLM       x x x |   25 ->   25      |   25 ->   25
+  SUMME (21 gemessene Assets dieser Listen): 489 -> 489 (100 %) · Median je Asset 25 -> 25
+  mehr als die Haelfte verloren (0): keine
+  OHNE Signal in der Messmenge (37, keine Stundenkurse oder kein Krypto): 3QSS [. x .], AIOZ [x . .], AKT [x . x], ASTER [x x .], BIO [x x .], BRETT [x x .], CANTON [x x .], CAT [x . x], CEBS [. x .], DBPK [. x .], EURCV [x x .], EXH3 [. x .], FLOKI [x . .], GRIFFAIN [x . x], HYPE [x . x], ISOC [. x .], KAIA [x x x], KAITO [x . x], KAS [x x .], MON [x x .], MORPHO [x x x], OD7C [. x .], OD7H [. x .], OD7L [. x .], OD7N [. x .], ONDO [x . x], PLTR [. x .], PLUME [x . .], S [x . .], SUPRA [x x .], VIRTUAL [x . x], VSN [x x .], VST [. x .], VVMX [. x .], X136 [. x .], XDC [. . x], XNO [x . .]
+  Legende W B H = Watchlist / Bestand / Hebel-Liste
+SCHLUSS: vollstaendig
