@@ -82,6 +82,9 @@ ZIEHUNGEN, SAAT = 40, 20261009
 LAMBDAS = (20.0, 200.0, 2000.0, 20000.0)
 GRUND = 1.0            # (b): kleine feste Grunddaempfung, macht b0/Stufen eindeutig
 CV_BLOECKE = 4
+# B F2 (Voranalyse_B_Kern_stabilisieren_01_10.md): Tiefpunkt der Verlustkurve ueber log lambda per Parabel durch die drei
+# besten Nachbarn - Vorgabe AUS, damit jede bisherige Messung bitgleich bleibt
+STETIG = False
 HEBEL_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "tradinginfotool.db")
 FORM = "b"
 
@@ -194,6 +197,16 @@ def fit_cv(namen, E, ra, rt, y, off, std):
         verl[lam] = tot
         if tot < wert:
             bester, wert = lam, tot
+    if STETIG and len(verl) >= 3:
+        ks_ = sorted(verl); i_ = ks_.index(bester)
+        if 0 < i_ < len(ks_) - 1:
+            a_, b_, c_ = verl[ks_[i_ - 1]], verl[ks_[i_]], verl[ks_[i_ + 1]]
+            x0, x1, x2 = np.log(ks_[i_ - 1]), np.log(ks_[i_]), np.log(ks_[i_ + 1])
+            nen = (x1 - x0) * (b_ - c_) - (x1 - x2) * (b_ - a_)
+            if nen != 0.0:
+                xs = x1 - 0.5 * ((x1 - x0) ** 2 * (b_ - c_) - (x1 - x2) ** 2 * (b_ - a_)) / nen
+                if x0 < xs < x2:
+                    bester = float(np.exp(xs))
     m_ = Modell(namen, bester).fit(E, ra, rt, y, off)
     m_.cv_verlust = verl
     return m_, bester

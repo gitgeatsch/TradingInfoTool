@@ -62,6 +62,14 @@ def main() -> int:
     E2.menge_aus_argv()
     K2.FORM = "b"
     K2.LAMBDAS = GITTER_NEU
+    # B (Voranalyse_B_Kern_stabilisieren_01_10.md Abschnitt 2/7): --daempfung F0 (REGEL0, 6 Stufen Faktor 10) | F1 (16 Stufen,
+    # drei je Zehnerschritt) | F2 (F1 + Parabel-Tiefpunkt); ohne Angabe F0 - bitgleich zur REGEL0
+    DAEMPFUNG = sys.argv[sys.argv.index("--daempfung") + 1] if "--daempfung" in sys.argv else "F0"
+    if DAEMPFUNG in ("F1", "F2"):
+        K2.LAMBDAS = tuple(20.0 * 10.0 ** (k_ // 3) * (1.0, 10.0 ** (1.0 / 3.0), 10.0 ** (2.0 / 3.0))[k_ % 3] for k_ in range(16))
+        K2.STETIG = DAEMPFUNG == "F2"
+    elif DAEMPFUNG != "F0":
+        raise SystemExit("--daempfung F0 | F1 | F2")
     leiter = "--leiter" in sys.argv          # Abschnitt 10: Tor als LEITER - Aufloesung und Uebertragung messen
     tor = "--tor" in sys.argv or leiter
     D1 = (0.04, 0.08, 0.12, 0.20) if leiter else (0.02, 0.04)
@@ -379,6 +387,8 @@ def main() -> int:
         # rollierend: Modell je Monat nur auf der Vergangenheit, Beitrag fuer JEDE Stunde des Monats
         Ch = np.full(n, np.nan); SEL = np.zeros(n, bool); modelle = []; LAM_LOG = []
         ab = H(datetime(2023, 1, 1))
+        import time as _time
+        _t0 = _time.time()
         for (j, mo) in monate:
             mi = j * 12 + (mo - 1)
             start = H(datetime(j, mo, 1))
@@ -394,6 +404,8 @@ def main() -> int:
             Ch[alle_h] = m.z(E, alle_h, OFF[alle_h]) - OFF[alle_h]
             SEL[ziel[Ch[ziel] >= thr]] = True
             modelle.append((mi, m))
+        print("  B Daempfung %s (%d Stufen%s): Monatstraining %d Monate in %.0f s (Desktop)" % (
+            DAEMPFUNG, len(K2.LAMBDAS), ", Parabel" if K2.STETIG else "", len(LAM_LOG), _time.time() - _t0))
         urteil_all = np.flatnonzero(BASIS & (MON >= 2024 * 12) & (MON <= 2026 * 12 + 7) & np.isfinite(QS))
         print("  K5-0 rollierende Auswahl im Urteilszeitraum %d (W2: 29.390) -> %s" % (
             int(SEL[urteil_all].sum()), "✔" if int(SEL[urteil_all].sum()) == 29390 or E2.MENGE != "bestand" else "⛔"))
@@ -1433,6 +1445,21 @@ def main() -> int:
                 mx = max(abst.values())
                 wahl = min(s for s in RASTER if abst[s] >= mx - 0.005)
                 print("  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand %+.4f -> GEWAEHLT s = %+.3f" % (mx, wahl))
+                if "--daempfung" in sys.argv:
+                    # B Springen (vorab festgelegt): Median |log(Spannweite Monat / Vormonat)| der v-dach-Spannweite P99-P1,
+                    # Abschaltmonate = Monate des Wahljahres ohne einen Einstieg an der gewaehlten Schwelle
+                    sp_m = []
+                    for mm in np.unique(MON[h_ab]):
+                        vv = VH[h_ab[MON[h_ab] == mm]]; vv = vv[np.isfinite(vv)]
+                        if len(vv):
+                            q_ = np.percentile(vv, [1, 99]); sp_m.append((int(mm), float(q_[1] - q_[0])))
+                    spr = float(np.median([abs(np.log(b[1] / a[1])) for a, b in zip(sp_m, sp_m[1:]) if a[1] > 0 and b[1] > 0]))
+                    mon_e = set(MON[EE_[wahl]].tolist())
+                    ab_ = [m for m, _ in sp_m if m not in mon_e]
+                    lam_ = {mi: lam for mi, lam, _nt, _vl in LAM_LOG}
+                    print("  B SPRINGEN Form %s: Median |log Spannweite-Verhaeltnis| %.4f · Abschaltmonate %d (%s) · Abstand an der Schwelle %+.4f" % (
+                        DAEMPFUNG, spr, len(ab_), ", ".join("%d-%02d" % (m // 12, m % 12 + 1) for m in ab_) or "keine", abst[wahl]))
+                    print("    je Monat Spannweite / lambda: " + " · ".join("%d-%02d %.3f / %.0f" % (m // 12, m % 12 + 1, s_, lam_.get(m, np.nan)) for m, s_ in sp_m))
             else:
                 s = s_best
                 print("KERN SCHRITT 1%s · BESTAETIGUNG 2025-01..2026-08, Stufe %+.3f, Menge %s, Ruhe %d h (EINMAL)" % (
