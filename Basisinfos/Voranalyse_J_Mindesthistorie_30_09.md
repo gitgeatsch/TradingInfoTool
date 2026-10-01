@@ -228,3 +228,19 @@ kommt es in die handelbare Assetmenge der REGEL0 (Betrieb: BTC mit Hebel). Beste
 - Die Probe hat nur 2024, die Simulation bestätigt aber 2025–26. Die Simulationsausgaben sind deshalb erst im vollen Lauf prüfbar. Dort muss das Konto der Nicht-BTC-Handel die REGEL0-Referenz treffen.
 - ⚠️ Die Nullwelt zieht mit BTC in anderer Reihenfolge. Ihre Werte für die übrigen Assets sind deshalb nicht bitgleich, die **Einstiege** schon.
 
+
+**ERGEBNIS BTC (4 Mengen) — Befund 2.701:**
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| R-R11 übrige Einstiege zeilengleich / Konto der übrigen | ✔ / +0,2634 | ✔ / −0,4877 | ✔ / −0,4543 | ✔ / −0,4058 |
+| BTC-Einstiege 2024 / 2025 / 2026 | 24 / 42 / 29 | 16 / 43 / 33 | 17 / 41 / 33 | 18 / 41 / 34 |
+| B-1 Chance je Jahr (≥ 30) | 2025 +0,18 · 2026 +0,33 ✔ | +0,02 · +0,53 ✔ | +0,02 · +0,53 ✔ | +0,02 · +0,53 ✔ |
+| B-2 gesamt gegen Null-P90 | +0,133 gegen +0,214 ⛔ | +0,091 gegen +0,108 ⛔ | +0,119 gegen +0,235 ⛔ | +0,090 gegen +0,186 ⛔ |
+| B-3 Tagesblock untere Grenze | −0,149 ⛔ | −0,337 ⛔ | −0,481 ⛔ | −0,480 ⛔ |
+| Simulation: Handel · Rohvorteil · Hebelkonto · Liquidationen | 70 · +0,67 % · +0,008 · 0 | 74 · +0,48 % · −0,001 · 0 | 72 · +0,35 % · −0,005 · 0 | 73 · +0,48 % · −0,001 · 0 |
+
+➤ **Technisch sauber** (R-R11 4/4). **Statistisch nicht nachweisbar**: Mit etwa 30 Signalen im Jahr streut der Zufall stärker als der Effekt. **Wirtschaftlich
+unschädlich**: Das Konto liegt um null, es gibt keine Liquidation, und der Rohvorteil liegt um die Kosten. 2026 ist deutlich positiv, 2024 bei sehr wenigen Fällen meist negativ.
+⚠️ Nach der Vorab-Festlegung ist B **nicht bestanden**. Lösungspflicht (E-25): Es liegt kein Beleg **gegen** BTC vor. Ob BTC im Betrieb handelbar wird, wie es der
+Nutzer wünscht, ist eine **Nutzerentscheidung** auf dieser Grundlage. Möglich wäre eine Aufnahme mit dem Vermerk *nicht nachgewiesen, unschädlich*, oder BTC als Auskunft.

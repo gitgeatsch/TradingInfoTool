@@ -1,0 +1,23 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 296427 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0005 · P90 +0.0347 · P95 +0.0458 · P99 +0.0681 · Max +0.1089
+
+========================================================================================================================
+BTC · Menge bestand · Kern Ruhe 48 h, s +0.035 · Einstiege gesamt 10000, davon BTC 95 · uebrige 9905
+  B-1 BTC je Jahr: 2024 -0.0868 (24) · 2025 +0.1838 (42) · 2026 +0.3264 (29) -> ✔
+  B-2 BTC gesamt Dq +0.1331 · Nullwelt (40 Ziehungen) Mittel +0.0419, P90 +0.2135 -> ⛔
+  B-3 Tagesblock (95 Tage) untere Grenze -0.1487 · Spiegel je Jahr (gegen alle BTC-Stunden) 2025 +0.045 -> ⛔
+  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq +0.1100 (9905)
+  URTEIL BTC (Menge bestand): B-1 ✔ · B-2 ⛔ · B-3 ⛔  (B-4 ueber die vier Mengen)
+SCHLUSS: vollstaendig
+exit=0

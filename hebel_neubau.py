@@ -559,7 +559,7 @@ BEITRAGSLAGE = {
     "rsi": dict(
         b1="belegt", vorlauf="nein", b2="ungemessen",
         befund=("2.648", "2.650", "2.676", "2.680", "2.683", "2.684", "2.685",
-                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697", "2.698", "2.699", "2.700"),
+                "2.686", "2.687", "2.688", "2.695", "2.696", "2.697", "2.698", "2.699", "2.700", "2.701"),
         beleg="Lift 4,67 auf +15 %/H6 (2.648); Haltequote 0,43 (2.650). K1: "
               "OBERER Rand (roh und selbst) traegt in 4 von 4 Mengen, "
               "Pruefzeit +0,038..+0,054 - drei- bis sechsmal ueber dem "
@@ -837,6 +837,10 @@ NEUESTER_STAND = (
               "beide Jahre, Rohvorteil +0,87 % gegen 0,48 %, Rueckgang 0,08, kein Verlust im "
               "Gegenwind); die Auswahl traegt (Zufallslisten +0,59 %, nur 0,4 % erreichen sie). "
               "Vorbehalt Rueckschau: der Beleg kommt aus dem Betrieb"),
+    ("2.701", "BTC ALS ASSET: technisch sauber (uebrige bitgleich zur REGEL0), statistisch nicht "
+              "nachweisbar (nur ~30 Einstiege je Jahr), wirtschaftlich unschaedlich (Konto um null, "
+              "keine Liquidation, Rohvorteil um die Kosten). Ob BTC handelbar wird, entscheidet "
+              "der Nutzer"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

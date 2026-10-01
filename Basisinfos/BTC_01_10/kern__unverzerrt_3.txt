@@ -1,0 +1,23 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · BESTAETIGUNG 2025-01..2026-08, Schwelle +0.04 · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 315847 · Symbole 123
+  Auskunft Verteilung vh: P50 -0.0028 · P90 +0.0338 · P95 +0.0452 · P99 +0.0684 · Max +0.2131
+
+========================================================================================================================
+BTC · Menge unverzerrt:3 · Kern Ruhe 48 h, s +0.035 · Einstiege gesamt 10049, davon BTC 93 · uebrige 9956
+  B-1 BTC je Jahr: 2024 -0.1554 (18) · 2025 +0.0172 (41) · 2026 +0.5266 (34) -> ✔
+  B-2 BTC gesamt Dq +0.0896 · Nullwelt (40 Ziehungen) Mittel +0.0096, P90 +0.1857 -> ⛔
+  B-3 Tagesblock (93 Tage) untere Grenze -0.4800 · Spiegel je Jahr (gegen alle BTC-Stunden) 2025 +0.021 · 2026 +0.050 -> ⛔
+  Auskunft uebrige Einstiege (muessen zu J/REGEL0 passen): Dq +0.0936 (9956)
+  URTEIL BTC (Menge unverzerrt:3): B-1 ✔ · B-2 ⛔ · B-3 ⛔  (B-4 ueber die vier Mengen)
+SCHLUSS: vollstaendig
+exit=0

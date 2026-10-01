@@ -147,6 +147,10 @@ Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_
 
 ---
 
+## 10b. BTC (2.701)
+
+Mit `--mit-btc` wird BTC zusätzlich ausgewertet, ohne die REGEL0 für die anderen zu ändern (bitgleich). Mit etwa 30 Signalen je Jahr ist BTC **nicht nachweisbar**, aber **unschädlich** (Konto um null, keine Liquidation). Ob BTC in die handelbare Menge kommt, entscheidet der Nutzer.
+
 ## 10a. Auskunft — REGEL0 auf der Hebel-Liste des Nutzers (2.700)
 
 Auf den 25 gehandelten Assets der Liste: Hebelkonto **+0,2063 (×1,23)**, beide Jahre positiv, Rohvorteil **+0,87 %** gegen 0,48 % Kosten, Rückgang 0,083. Die Auswahl trägt: Zufallslisten liegen bei +0,59 %. ⚠️ Rückschau-Vorbehalt, die Liste ist die heutige. Das ist **keine** neue Referenz, die REGEL0-Referenz bleibt Abschnitt 5.
