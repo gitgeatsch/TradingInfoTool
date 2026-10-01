@@ -26,6 +26,10 @@ Wiederaufnahme ueber `_geladen`.
     python hole_markpreis.py --zusammen data/_teile/mp_*.db
     python hole_markpreis.py --sperre                                         # andere Instrumente sperren
     python hole_markpreis.py --kontrolle                                      # Pruefungen
+
+⭐ O11 (Voranalyse_Datenbasis_alle_Assets_01_10.md Abschnitt 8): ``--zusatz`` laedt den Markpreis fuer die Assets aus
+``data/stundenkurse_alle.db`` (Paar aus deren Tabelle ``_quelle``, ab 2023-01) in die EIGENE Datei ``data/markpreis_alle.db`` -
+nie in die Messbasis. ``--sperre --zusatz`` misst dann gegen ``stundenkurse_alle.db``.
 """
 from __future__ import annotations
 
@@ -40,6 +44,9 @@ from hole_richtungsdaten import BASIS, hole, monate, stunde
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 VORGABE_DB = os.path.join(HIER, "data", "markpreis_historie.db")
+ZUSATZ_DB = os.path.join(HIER, "data", "markpreis_alle.db")
+ALLE_STUNDEN = os.path.join(HIER, "data", "stundenkurse_alle.db")
+ZUSATZ = "--zusatz" in sys.argv
 STUNDEN_DB = os.path.join(HIER, "data", "stundenkurse.db")
 EINGESTELLT_DB = os.path.join(HIER, "data", "eingestellt_historie.db")
 URL_MP = BASIS + "/futures/um/monthly/markPriceKlines/{p}/1h/{p}-1h-{m}.zip"
@@ -82,7 +89,12 @@ def lege_an(pfad: str) -> sqlite3.Connection:
 
 
 def kandidaten() -> list:
-    """-> [(symbol, [paare])] - Bestand und Eingestellte samt Vorgeschichte."""
+    """-> [(symbol, [paare])] - Bestand und Eingestellte samt Vorgeschichte; mit --zusatz die Assets aus stundenkurse_alle.db."""
+    if ZUSATZ:
+        a = sqlite3.connect("file:%s?mode=ro" % ALLE_STUNDEN, uri=True)
+        aus = sorted((s, [p]) for s, p in a.execute("SELECT symbol, paar FROM _quelle"))
+        a.close()
+        return aus
     s = sqlite3.connect("file:%s?mode=ro" % STUNDEN_DB, uri=True)
     bestand = sorted(r[0] for r in s.execute("SELECT DISTINCT symbol FROM stundenkurse"))
     s.close()
@@ -103,7 +115,7 @@ def lade(c, sym, paare, pause, zaehl):
     jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
     # das zuletzt erfolgreiche Paar zuerst - spart Abrufe (Nutzer: nicht zu schnell)
     folge = [(p, f) for paar in paare for p, f in ((paar, 1.0), ("1000" + paar, 1000.0))]
-    for m in monate(*FENSTER):
+    for m in monate("2023-01" if ZUSATZ else FENSTER[0], FENSTER[1]):
         if m in erledigt:
             continue
         status, zeilen, benutzt, faktor = "fehlt", None, None, 1.0
@@ -133,6 +145,8 @@ SPERRE_GRENZE = 0.01
 
 def spot_quellen() -> list:
     """Die Spot-Stundenkurse, gegen die gemessen wird: Bestand und Eingestellte."""
+    if ZUSATZ:
+        return [ALLE_STUNDEN]
     q = [STUNDEN_DB]
     if os.path.exists(EINGESTELLT_DB):
         q.append(EINGESTELLT_DB)
@@ -293,7 +307,8 @@ def main() -> int:
     except Exception:                                         # noqa: BLE001
         pass
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", default=VORGABE_DB)
+    ap.add_argument("--db", default=ZUSATZ_DB if ZUSATZ else VORGABE_DB)
+    ap.add_argument("--zusatz", action="store_true")
     ap.add_argument("--symbole")
     ap.add_argument("--teil")
     ap.add_argument("--pause", type=float, default=0.3)
