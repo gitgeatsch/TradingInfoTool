@@ -136,3 +136,54 @@ beim Nutzer. Datenmangel und gestauchte Phasen fängt das **Regelwerk** ab (J, G
   `data/_vergleich/m1_wenig_<m>.txt`, ⚠️ Modelle vor J), Dämpfungswahl knapp/deutlich (Grenze 10, nur bestand, M1-1), später eingestellt
   (nur unverzerrt), Hebelstufe, Jahr, 10 größte Verlustbringer.
 - **Stopp und Bericht** nach Teil 0 **und** Wahl (wie Abschnitt 5).
+
+---
+
+## 8. ERGEBNIS — Teil 0 und Wahl 2024 (Befund 2.703), Stopp und Bericht
+
+> **Urteil in einer Zeile:** **B ist nicht bestanden.** Die feinere Dämpfung springt viel weniger, kostet aber Chance. **Teil 0 zeigt
+> die Ursache der Verluste:** Ohne Kosten ist die REGEL0 in allen vier Mengen **positiv**. Die Kosten sind der größte Posten, danach kommen die
+> Gegenwind-Monate und die später eingestellten Paare. Das Springen ist **kein** Verlusttreiber.
+
+### Wahl 2024 (bestand) — Belege `B_01_10/wahl_*__bestand.txt`
+
+| Form | Springen (Median \|log\|) | Abschaltmonate 2024 | gewählte Schwelle | Abstand echt − P90 | zählt? |
+|---|---|---|---|---|---|
+| **F0** (REGEL0) | 1,04 | 5 | +0,035 | **+0,088** | Referenz |
+| F1 (16 Stufen) | 0,43 | 3 | +0,030 | +0,061 | ⛔ Abstand mehr als 0,005 unter F0 |
+| F2 (Parabel) | **0,27** | 3 | +0,030 | +0,068 | ⛔ Abstand mehr als 0,005 unter F0 |
+
+- ✔ **R-R11:** F0 ohne BTC ist **zeilengleich** zur Schwellenwahl 2.699 (W2, +0,0882 bei +0,035).
+- ➤ **Nach der Regel** erfüllt keine Form Punkt 1, also ist B **nicht bestanden, ohne Bestätigung**. Die Bestätigungsjahre 2025–26 bleiben unberührt.
+- **Woran es liegt:** In normalen Monaten wählen F1/F2 eine **stärkere** Dämpfung (≈ 4.300 statt 2.000). Die Kreuzvalidierung mag sie, weil sie über **alle**
+  Stunden besser vorhersagt. Die Spitze, auf die der Kern zielt, wird dabei aber flacher (Spannweite 0,07 statt 0,09). Stabilität und Schärfe am oberen
+  Rand ziehen also in **verschiedene** Richtungen.
+- ⚠️ **Offen benannt:** Die Toleranz 0,005 ist eng gegen die Streuung des Abstands. Ob der Unterschied von 0,02–0,03 echt ist, sagt die Wahl nicht. Die Regel stand vorab
+  und gilt. Ein neuer Anlauf wäre ein **eigener** vorab festgelegter Schritt.
+- **Betrieb:** Das Monatstraining dauerte 74 s (F0) gegen 190 s (F1/F2) am Desktop.
+
+### Teil 0 — Verlustaufteilung der REGEL0 2025–26 — Belege `B_01_10/teil0__*.txt`
+
+| | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| ✔ R-R11 Summe = REGEL0-Konto | +0,2708 | −0,4887 | −0,4592 | −0,4065 |
+| **ohne Kosten** | **+1,53** | **+0,88** | **+0,82** | **+0,92** |
+| **Kosten** (Gebühr + Finanzierung) | −1,26 | −1,37 | −1,28 | −1,32 |
+| Gegenwind-Monate (K_IG < 1): Konto / Rohvorteil | +0,26 / +0,83 % | −0,37 / −0,04 % | **−0,62 / −0,99 %** | −0,22 / −0,15 % |
+| übrige Monate: Konto / Rohvorteil | +0,01 / +0,50 % | −0,12 / +0,44 % | **+0,16** / +0,59 % | −0,19 / +0,43 % |
+| später eingestellt: Handel / Konto / Rohvorteil | – | 1.236 / −0,14 / +0,20 % | 970 / −0,11 / +0,24 % | 1.105 / −0,20 / −0,04 % |
+| bestehende: Rohvorteil | – | +0,35 % | +0,36 % | +0,41 % |
+| Stufe 2x (selten, hohe ATR): Handel / Rohvorteil | 25 / −4,98 % | 87 / −3,60 % | 68 / −1,19 % | 98 / −2,54 % |
+| 10 größte Verlustbringer / übrige | −0,24 / +0,51 | −0,35 / −0,13 | −0,32 / −0,13 | −0,34 / −0,07 |
+
+Nur bestand, Dämpfungswahl (M1-1): **knappe** Monate 1.564 Handel, Konto **+0,56**, Rohvorteil **+1,46 %**; deutliche Monate −0,29 / +0,36 %.
+
+**Was das heißt (Auskunft):**
+
+| # | |
+|---|---|
+| 1 | **Das Signal verdient, die Kosten fressen es.** Ohne Kosten ist das Konto in 4/4 positiv. Die Kosten (Gebühr 0,3 % plus Finanzierung, mal Hebel) sind in jeder Menge der größte Einzelposten |
+| 2 | **Der Gegenwind ist der zweite Posten.** In den unverzerrten Mengen ist der Rohvorteil dort um null oder negativ. Ohne diese Monate wäre unverzerrt:2 nach Kosten positiv. Das ist das Thema **Marktphasen** (R, eigenes Thema). Die Regel K_IG < 1 ist für den Vorwärtstest ab 2026-09 eingefroren (2.697) |
+| 3 | **Schwache Assets ziehen.** Später eingestellte Paare haben weniger Rohvorteil. Weil man das nur im Nachhinein weiß, ist der kausale Stellvertreter eine Größe **zum Zeitpunkt**, z. B. Liquidität (**L**) oder die Größenklasse (deine Idee O9) |
+| 4 | **Das Springen ist kein Verlusttreiber.** Die knappen Monate waren die guten. B hätte das Konto nicht gerettet, das Springen bleibt eine Eigenschaft des Signalangebots |
+| 5 | Die Stufe **2x** (nur bei sehr hoher ATR) ist in 4/4 roh negativ, aber selten (25–98 Handel). Ein Hinweis für **L**/Bewertung 2, keine Regel |

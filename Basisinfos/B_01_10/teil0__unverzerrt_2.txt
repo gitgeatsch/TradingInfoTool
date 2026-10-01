@@ -1,0 +1,21 @@
+==============================================================================================================
+B TEIL 0 · VERLUSTAUFTEILUNG DER REGEL0 2025-26 · Menge unverzerrt:2 · 7550 Handel (nur Auskunft)
+==============================================================================================================
+  R-R11 Konto aus der Spur -0.4592 gegen Referenz -0.4592 -> ✔ bitgleich
+  KOSTEN: Konto -0.4592 = ohne Kosten +0.8211  +  Kostenanteil -1.2803  (Kosten je Handel im Mittel 1.696 % des Einsatzes, Rohvorteil Spot +0.341 %)
+  MONATSKLASSE (K_IG aus 2.697):
+      Gegenwind (K_IG<1)      1182 Handel · Konto -0.6241 · davon Kosten -0.1930 · ohne Kosten -0.4311 · Rohvorteil -0.992 % · Liq 26
+      uebrig                  6368 Handel · Konto +0.1649 · davon Kosten -1.0874 · ohne Kosten +1.2523 · Rohvorteil +0.588 % · Liq 13
+  SPAETER EINGESTELLT:
+      besteht                 6580 Handel · Konto -0.3451 · davon Kosten -1.1244 · ohne Kosten +0.7793 · Rohvorteil +0.355 % · Liq 25
+      eingestellt              970 Handel · Konto -0.1141 · davon Kosten -0.1559 · ohne Kosten +0.0419 · Rohvorteil +0.244 % · Liq 14
+  HEBELSTUFE:
+      2x                        68 Handel · Konto -0.0229 · davon Kosten -0.0065 · ohne Kosten -0.0164 · Rohvorteil -1.190 % · Liq 0
+      3x                      5430 Handel · Konto -0.1823 · davon Kosten -0.7817 · ohne Kosten +0.5994 · Rohvorteil +0.379 % · Liq 23
+      5x                      2052 Handel · Konto -0.2539 · davon Kosten -0.4921 · ohne Kosten +0.2381 · Rohvorteil +0.289 % · Liq 16
+  JAHR:
+      2025                    4780 Handel · Konto -0.1673 · davon Kosten -0.7778 · ohne Kosten +0.6104 · Rohvorteil +0.424 % · Liq 37
+      2026                    2770 Handel · Konto -0.2919 · davon Kosten -0.5026 · ohne Kosten +0.2107 · Rohvorteil +0.197 % · Liq 2
+  ASSETS: 123 mit Handel · die 10 groessten Verlustbringer zusammen -0.3249 · die uebrigen -0.1343 · Assets im Plus 50
+      QTUM -0.0418 (80) · ACX -0.0389 (72, eingestellt) · FIO -0.0384 (56, eingestellt) · RUNE -0.0348 (73) · SFP -0.0317 (77) · WCT -0.0312 (53) · CRV -0.0281 (75) · SXT -0.0279 (55) · SCR -0.0278 (75) · NTRN -0.0243 (57, eingestellt)
+SCHLUSS: vollstaendig

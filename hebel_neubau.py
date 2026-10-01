@@ -849,6 +849,10 @@ NEUESTER_STAND = (
               "die REGEL0 (Rohvorteil +0,33..+0,58 % -> -0,24..-0,35 %); die Einstiege tragen weiter "
               "(ueber der Nullwelt). Die REGEL0 bleibt: 24 h, ohne Stop. Haltedauer oder Stop als "
               "Ursache ist nicht getrennt"),
+    ("2.703", "B KERN STABILISIEREN NICHT BESTANDEN: feinere Daempfung springt viel weniger, kostet "
+              "aber Chance 2024 (Abstand +0,061/+0,068 gegen +0,088). TEIL 0: ohne Kosten ist die REGEL0 "
+              "in 4/4 Mengen positiv, die KOSTEN sind der groesste Posten; dazu Gegenwind-Monate und "
+              "spaeter eingestellte Paare; das Springen ist kein Verlusttreiber"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

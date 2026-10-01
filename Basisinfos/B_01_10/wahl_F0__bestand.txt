@@ -1,0 +1,33 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 0.00e+00
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 74 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  Gitteranker im Auswertungszeitraum 75584 · Symbole 68
+  Auskunft Verteilung vh: P50 +0.0009 · P90 +0.0284 · P95 +0.0391 · P99 +0.0583 · Max +0.0758
+
+========================================================================================================================
+KERN SCHRITT 1 · WAHL DER SCHWELLE auf 2024 (Menge bestand, Ruhe 48 h) - 2025-26 wird NICHT ausgewertet
+  R-R11 2.687 (c) Stufe +0.020: +0.0861 · Soll +0.0928 -> (Soll gilt nur fuer Ruhe 24 h ohne J in bestand - Beschriftung korrigiert 30.09.)
+  R-R11 2.687 (c) Stufe +0.040: +0.0984 · Soll +0.0759 -> (Soll gilt nur fuer Ruhe 24 h ohne J in bestand - Beschriftung korrigiert 30.09.)
+    Stufe    Einstiege     Tage       echt Null Mittel   Null P90    Abstand
+    +0.010       1227      153    +0.0604    +0.0385    +0.0584    +0.0020
+    +0.015       1964      202    +0.0540    +0.0321    +0.0493    +0.0047
+    +0.020       2027      199    +0.0861    +0.0398    +0.0587    +0.0274
+    +0.025       2282      185    +0.0832    +0.0343    +0.0546    +0.0285
+    +0.030       2228      172    +0.1206    +0.0406    +0.0602    +0.0604
+    +0.035       2222      174    +0.1344    +0.0294    +0.0462    +0.0882
+    +0.040       2056      179    +0.0984    +0.0139    +0.0283    +0.0701
+    +0.045       1837      162    +0.0517    -0.0011    +0.0187    +0.0330
+    +0.050       1547      141    +0.0283    -0.0125    +0.0077    +0.0206
+  REGEL groesster Abstand (Gleichstand < 0,005 -> niedrigere Stufe): hoechster Abstand +0.0882 -> GEWAEHLT s = +0.035
+  B SPRINGEN Form F0: Median |log Spannweite-Verhaeltnis| 1.0444 · Abschaltmonate 5 (2024-02, 2024-04, 2024-06, 2024-07, 2024-08) · Abstand an der Schwelle +0.0882
+    je Monat Spannweite / lambda: 2024-01 0.091 / 2000 · 2024-02 0.026 / 20000 · 2024-03 0.089 / 2000 · 2024-04 0.032 / 20000 · 2024-05 0.091 / 2000 · 2024-06 0.030 / 20000 · 2024-07 0.024 / 20000 · 2024-08 0.003 / 200000 · 2024-09 0.092 / 2000 · 2024-10 0.087 / 2000 · 2024-11 0.090 / 2000 · 2024-12 0.093 / 2000
+SCHLUSS: vollstaendig

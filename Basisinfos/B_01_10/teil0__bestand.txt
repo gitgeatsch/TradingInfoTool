@@ -1,0 +1,21 @@
+==============================================================================================================
+B TEIL 0 · VERLUSTAUFTEILUNG DER REGEL0 2025-26 · Menge bestand · 7376 Handel (nur Auskunft)
+==============================================================================================================
+  R-R11 Konto aus der Spur +0.2708 gegen Referenz +0.2708 -> ✔ bitgleich
+  KOSTEN: Konto +0.2708 = ohne Kosten +1.5277  +  Kostenanteil -1.2569  (Kosten je Handel im Mittel 1.704 % des Einsatzes, Rohvorteil Spot +0.590 %)
+  MONATSKLASSE (K_IG aus 2.697):
+      Gegenwind (K_IG<1)      2017 Handel · Konto +0.2620 · davon Kosten -0.3502 · ohne Kosten +0.6122 · Rohvorteil +0.827 % · Liq 14
+      uebrig                  5359 Handel · Konto +0.0088 · davon Kosten -0.9067 · ohne Kosten +0.9156 · Rohvorteil +0.501 % · Liq 3
+  DAEMPFUNGSWAHL (M1-1, nur bestand):
+      deutlich                5812 Handel · Konto -0.2876 · davon Kosten -0.9845 · ohne Kosten +0.6969 · Rohvorteil +0.355 % · Liq 16
+      knapp                   1564 Handel · Konto +0.5585 · davon Kosten -0.2724 · ohne Kosten +0.8308 · Rohvorteil +1.462 % · Liq 1
+  HEBELSTUFE:
+      2x                        25 Handel · Konto -0.0274 · davon Kosten -0.0024 · ohne Kosten -0.0250 · Rohvorteil -4.982 % · Liq 0
+      3x                      5305 Handel · Konto +0.1521 · davon Kosten -0.7638 · ohne Kosten +0.9159 · Rohvorteil +0.595 % · Liq 13
+      5x                      2046 Handel · Konto +0.1461 · davon Kosten -0.4907 · ohne Kosten +0.6368 · Rohvorteil +0.645 % · Liq 4
+  JAHR:
+      2025                    4262 Handel · Konto +0.2569 · davon Kosten -0.6953 · ohne Kosten +0.9521 · Rohvorteil +0.690 % · Liq 15
+      2026                    3114 Handel · Konto +0.0140 · davon Kosten -0.5616 · ohne Kosten +0.5756 · Rohvorteil +0.453 % · Liq 2
+  ASSETS: 113 mit Handel · die 10 groessten Verlustbringer zusammen -0.2409 · die uebrigen +0.5118 · Assets im Plus 70
+      QTUM -0.0424 (73) · SXT -0.0320 (54) · EDU -0.0306 (64) · ASR -0.0240 (44) · SCR -0.0210 (69) · XLM -0.0203 (68) · WCT -0.0197 (53) · USTC -0.0178 (67) · FIDA -0.0167 (64) · SFP -0.0164 (74)
+SCHLUSS: vollstaendig

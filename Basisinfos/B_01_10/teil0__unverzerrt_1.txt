@@ -1,0 +1,21 @@
+==============================================================================================================
+B TEIL 0 · VERLUSTAUFTEILUNG DER REGEL0 2025-26 · Menge unverzerrt:1 · 8068 Handel (nur Auskunft)
+==============================================================================================================
+  R-R11 Konto aus der Spur -0.4887 gegen Referenz -0.4887 -> ✔ bitgleich
+  KOSTEN: Konto -0.4887 = ohne Kosten +0.8765  +  Kostenanteil -1.3652  (Kosten je Handel im Mittel 1.692 % des Einsatzes, Rohvorteil Spot +0.325 %)
+  MONATSKLASSE (K_IG aus 2.697):
+      Gegenwind (K_IG<1)      1928 Handel · Konto -0.3688 · davon Kosten -0.3200 · ohne Kosten -0.0489 · Rohvorteil -0.043 % · Liq 31
+      uebrig                  6140 Handel · Konto -0.1199 · davon Kosten -1.0452 · ohne Kosten +0.9253 · Rohvorteil +0.441 % · Liq 14
+  SPAETER EINGESTELLT:
+      besteht                 6832 Handel · Konto -0.3492 · davon Kosten -1.1680 · ohne Kosten +0.8188 · Rohvorteil +0.348 % · Liq 29
+      eingestellt             1236 Handel · Konto -0.1395 · davon Kosten -0.1972 · ohne Kosten +0.0577 · Rohvorteil +0.199 % · Liq 16
+  HEBELSTUFE:
+      2x                        87 Handel · Konto -0.0712 · davon Kosten -0.0084 · ohne Kosten -0.0628 · Rohvorteil -3.596 % · Liq 0
+      3x                      5809 Handel · Konto -0.2424 · davon Kosten -0.8362 · ohne Kosten +0.5938 · Rohvorteil +0.360 % · Liq 27
+      5x                      2172 Handel · Konto -0.1752 · davon Kosten -0.5206 · ohne Kosten +0.3455 · Rohvorteil +0.389 % · Liq 18
+  JAHR:
+      2025                    4904 Handel · Konto -0.1942 · davon Kosten -0.7973 · ohne Kosten +0.6031 · Rohvorteil +0.415 % · Liq 39
+      2026                    3164 Handel · Konto -0.2945 · davon Kosten -0.5679 · ohne Kosten +0.2734 · Rohvorteil +0.186 % · Liq 6
+  ASSETS: 124 mit Handel · die 10 groessten Verlustbringer zusammen -0.3549 · die uebrigen -0.1338 · Assets im Plus 46
+      HFT -0.0522 (70, eingestellt) · SCR -0.0454 (80) · QTUM -0.0433 (79) · EDU -0.0392 (66) · IOTX -0.0331 (73) · HOOK -0.0306 (54, eingestellt) · WCT -0.0287 (58) · CRV -0.0282 (76) · SFP -0.0273 (80) · FIDA -0.0268 (65)
+SCHLUSS: vollstaendig

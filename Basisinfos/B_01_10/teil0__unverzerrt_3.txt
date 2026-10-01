@@ -1,0 +1,21 @@
+==============================================================================================================
+B TEIL 0 · VERLUSTAUFTEILUNG DER REGEL0 2025-26 · Menge unverzerrt:3 · 7873 Handel (nur Auskunft)
+==============================================================================================================
+  R-R11 Konto aus der Spur -0.4065 gegen Referenz -0.4065 -> ✔ bitgleich
+  KOSTEN: Konto -0.4065 = ohne Kosten +0.9165  +  Kostenanteil -1.3231  (Kosten je Handel im Mittel 1.681 % des Einsatzes, Rohvorteil Spot +0.345 %)
+  MONATSKLASSE (K_IG aus 2.697):
+      Gegenwind (K_IG<1)      1140 Handel · Konto -0.2199 · davon Kosten -0.1954 · ohne Kosten -0.0245 · Rohvorteil -0.151 % · Liq 16
+      uebrig                  6733 Handel · Konto -0.1866 · davon Kosten -1.1276 · ohne Kosten +0.9410 · Rohvorteil +0.428 % · Liq 13
+  SPAETER EINGESTELLT:
+      besteht                 6768 Handel · Konto -0.2087 · davon Kosten -1.1491 · ohne Kosten +0.9404 · Rohvorteil +0.407 % · Liq 17
+      eingestellt             1105 Handel · Konto -0.1979 · davon Kosten -0.1740 · ohne Kosten -0.0239 · Rohvorteil -0.037 % · Liq 12
+  HEBELSTUFE:
+      2x                        98 Handel · Konto -0.0595 · davon Kosten -0.0094 · ohne Kosten -0.0501 · Rohvorteil -2.536 % · Liq 0
+      3x                      5746 Handel · Konto -0.1862 · davon Kosten -0.8271 · ohne Kosten +0.6409 · Rohvorteil +0.385 % · Liq 19
+      5x                      2029 Handel · Konto -0.1608 · davon Kosten -0.4866 · ohne Kosten +0.3257 · Rohvorteil +0.369 % · Liq 10
+  JAHR:
+      2025                    4678 Handel · Konto -0.0542 · davon Kosten -0.7558 · ohne Kosten +0.7016 · Rohvorteil +0.477 % · Liq 23
+      2026                    3195 Handel · Konto -0.3523 · davon Kosten -0.5673 · ohne Kosten +0.2149 · Rohvorteil +0.151 % · Liq 6
+  ASSETS: 120 mit Handel · die 10 groessten Verlustbringer zusammen -0.3385 · die uebrigen -0.0680 · Assets im Plus 49
+      HFT -0.0412 (68, eingestellt) · QTUM -0.0405 (77) · SCRT -0.0390 (80, eingestellt) · SCR -0.0364 (79) · SFP -0.0324 (78) · ACX -0.0322 (76, eingestellt) · WCT -0.0301 (56) · IOTX -0.0294 (71) · EDU -0.0287 (65) · ASR -0.0286 (54)
+SCHLUSS: vollstaendig
