@@ -539,3 +539,18 @@ Dazu: *„die Minus-Trades und die Marktphasen sind ohnehin ein eigenes Thema un
 - Inhalt: Stundenkurse und Markpreise am Notebook (Historie übertragen, dann laufend nachladen), Monatstraining als Job, R-R11 am Notebook gegen die REGEL0-Belege,
   täglicher Katalog- und Preisabgleich mit Meldung, Mail, Mindestbedingungen (Nutzer: *„reden wir, wenn wir zu diesem Schritt kommen“*).
 - Zuerst eine **Voranalyse** zur Abstimmung (Ist-Stand am Notebook, Leser und Schreiber, Risiken). Gebaut wird nach dem Ja.
+
+
+---
+
+# E-42 · Schritt 7: Umfang, Rollen, Datenübertragung, Betriebsparameter (Nutzer 02.10.2026)
+
+**02.10.2026** · Nutzer: *„Ja, F1 bis F2 wie vorgeschlagen"* · *„rascher Einsatz am NB, würde eine fertige und geprüfte Datei auf das NB per USB kopieren"* ·
+*„Dateien sind am NB und korrekt"* · *„Ja, so eintragen, Fortsetzung als REGEL1-Kandidat aufnehmen – die Themen Positionsführung und Ausstieg sind ohnehin im Plan
+zu berücksichtigen – nur echte offene Positionen."*
+- **F1:** Die REGEL0 ersetzt **nur den Hebel**. Die Rollen-Kette schlägt keinen Hebel mehr vor, ihre Spot-Entscheidungen laufen weiter.
+- **F2:** Die REGEL0 **löst aus**, die LLM-Rollen prüfen und kommentieren nur.
+- **F3:** Die Historie (vier Datenbanken, 2,7 GB) kam **per USB** ans Notebook, mit SHA-256-Prüfsummen auf beiden Seiten (`pruefe_uebertragung.py`). Laufend lädt ein **eigener Nachlader** im Betrieb.
+- **Betriebsparameter der REGEL0** (ohne neue Zahl): Prüfzeitpunkt jede volle Stunde, alle Assets. **Kein eigener Cooldown**, die Ruhe 48 h wirkt je Asset (gemessen mindestens 49 h, Median 6,8 Tage).
+- **REGEL1-Kandidaten** (O13): Fortsetzung als Einstiegstyp · Positionsführung und Ausstieg **nur für echte offene Positionen**.
+- **F4** (Mindestbedingungen, versionierte Regeln, offene Punkte 4–7) ist noch im Gespräch.

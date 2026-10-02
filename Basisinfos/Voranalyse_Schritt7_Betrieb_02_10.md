@@ -131,3 +131,11 @@ ggf. weitere Simulationen zur Stabilität und fachlichen Funktionalität."*
 **Beim Prüfen von F3 gefunden:** Der Messbasis-Lader `hole_stundenkurse.py` leitet Symbole und Zeitspannen aus `terminmarkt_historie.db` ab. Am Notebook liegt davon
 **nur die Symbolliste** (12 KB, Sollzustand). Er wäre dort also **nicht** lauffähig. Für das laufende Nachladen braucht der Betrieb ohnehin einen **eigenen Nachlader**.
 
+
+### Nachtrag 02.10. — F3 erledigt, Betriebsparameter, REGEL1-Kandidaten (E-42)
+
+- ✔ **F3:** Das USB-Paket (L:\ClaudeSync\Schritt7_Datenbasis, 823 MB gepackt) wurde vom Stick ausgepackt und am Desktop gegengeprüft. **Am Notebook ausgepackt und geprüft: korrekt** (Nutzer).
+  Die vier Dateien liegen dort **ungenutzt**, bis die Betriebsrechnung gebaut ist (kein Leser im Produktionspfad).
+- ✔ **Prüfzeitpunkt und Cooldown** stehen in der REGEL0 (Dokument und `hebel_neubau.REGEL0`): stündlich, alle Assets, kein eigener Cooldown, Ruhe 48 h je Asset (gemessen mindestens 49 h).
+- ✔ **REGEL1-Kandidaten** im Plan (O13): Fortsetzung; Positionsführung und Ausstieg nur für echte offene Positionen.
+- ◐ **F4 offen:** versionierte Regeln (Vorschlag: live eine festgeschriebene Fassung, Wechsel nur zu festgelegten, freigegebenen Zeitpunkten, nie mitten in einer Testwoche) und die Punkte 4–7 (Ausstiegserinnerung, Positionsgröße, Bitpanda-Stufen, Spot gegen Hebel auf demselben Asset).

@@ -270,7 +270,11 @@ REGEL0 = dict(
         schwelle=0.035,
         ruhe_h=48, ruhe_min_gueltig=40,
         verzug_h=1, monatsanfang_ausschluss_h=24,
-        ereignis="q5: +5 % vor -5 % binnen 24 h, gegen das geschrumpfte Normal"),
+        ereignis="q5: +5 % vor -5 % binnen 24 h, gegen das geschrumpfte Normal",
+        # 02.10. (Nutzer: so eintragen) - im Betrieb ausgeschrieben, KEINE neue Zahl:
+        pruefzeitpunkt="jede volle Stunde nach Kerzenschluss (UTC), alle Assets",
+        cooldown="kein eigener - die Ruhe 48 h wirkt je Asset; gemessen kleinster Abstand zweier Signale 49 h, "
+                 "Median 6,8 Tage (kern48jbz_einstiege_bestand.csv); hoechstens eine Position je Asset (24 h < Ruhe)"),
     hebel=dict(
         rolle="C - wie viel",
         risikomodell="ATR zum Einstieg, rollierend geschaetzt; Liquidationsgefahr je Stufe",

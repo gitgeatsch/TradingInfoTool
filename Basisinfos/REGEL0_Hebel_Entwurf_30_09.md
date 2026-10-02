@@ -33,7 +33,10 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 | **Ereignis** | **Ersteintritt**: erste Stunde mit **v̂ ≥ +0,035** | 2.687/2.688 (per Regel auf 2024) |
 | **Ruhe davor** | **48 h** unter der Schwelle (≥ 40 gültige Stunden) | 2.691/2.692/2.694 |
 | Einstieg | **1 h** nach dem Signal, nicht in den ersten 24 h eines Monats | 2.688 |
+| **Prüfzeitpunkt** (Betrieb, 02.10.) | **jede volle Stunde** nach Kerzenschluss (UTC), **alle** Assets. Eine Änderung der Lage sieht das System also spätestens nach einer Stunde | Nutzer 02.10. |
+| **Cooldown** (Betrieb, 02.10.) | **kein eigener.** Die Ruhe 48 h wirkt **je Asset**. Gemessen: Zwei Signale desselben Assets liegen mindestens **49 h** auseinander, im Median **6,8 Tage**. Damit gibt es höchstens **eine** Position je Asset (Haltedauer 24 h < Ruhe). Andere Assets können in jeder Stunde signalisieren | gemessen 02.10. |
 | Zielgröße (Maß) | q5: +5 % vor −5 % binnen 24 h, gegen das geschrumpfte Normal | K4 |
+| **REGEL1-Kandidat** (Nutzer 02.10.) | **Fortsetzung**: ein eigener Einstiegstyp für Assets, die nach dem Signal stark weiterlaufen. Heute ist ein zweiter Einstieg erst nach der Ruhe möglich | offen |
 | **nicht** Teil von REGEL0 | Stärke (ordnet nicht, 2.691) · Wucht als Einstieg (Bewegung, 2.693) · Tempo, Tiefe, Ruhe 72 h (2.695) · Kern-Short (Spur, 2.696) · K_IG-Kontext (Auskunft, 2.697) | |
 
 ## 3. Bewertung 2 — der Hebel (Rolle C, *wie viel*)
