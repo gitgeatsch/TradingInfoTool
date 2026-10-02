@@ -1,0 +1,14 @@
+Hebel-Anker 506093, Modelle 25 (Quartal x Stufe) in 135 s
+1) R-R11-2 gegen die Referenz aus B-5
+  ✔ alle 10222 Referenzzeilen im Rechenkern vorhanden
+  ✔ P(Liquidation) je Stufe gleich (Toleranz 1e-12), fehlende Vorhersagen an denselben Stellen - max |Abw| 5.0e-13
+  ✔ gewaehlte Stufe zeilengleich - abweichend 0 · Stufen Referenz {0: 40, 2: 25, 3: 7634, 5: 2523}
+2) Gegenprobe Grenze 0,019
+  ✔ die Pruefung schlaegt an - 155 Stufen anders
+3) B-10: Training wie im Betrieb (nur abgeschlossene 120-h-Fenster zum Quartalsbeginn)
+    gleiche Stufe 99.84 % · anders 17 von 10732 · max |dP| 1.49e-01
+    Stufen Messung {0: 40, 2: 28, 3: 8003, 5: 2661} · Betrieb {0: 34, 2: 28, 3: 8004, 5: 2666}
+  ✔ B-10 unerheblich (vorab: >= 99 % gleiche Stufen) - 99.84 %
+4) Abdeckung: Einstiege mit Stufe
+    Messung bewertet 10222 von 10732 Einstiegen (volles Zukunftsfenster) · Rechenkern 10732 (ATR und Modell vorhanden)
+SCHLUSS: ✔ bestanden (5 von 5) · 259 s

@@ -495,3 +495,46 @@ eingeschaltet, gegen das Opt-in vom 15.08. Drei Leser nehmen ohne Eintrag ebenfa
 die einmal im Monat mit dem Training berechnet wird. Beleg: `Basisinfos/Teil0_02_10/`.
 
 **Nächster Schritt:** B-5, die Referenz der Hebelstufe je Handel erzeugen. Danach der Bau des Rechenkerns (12.4).
+
+---
+
+## 13. DER RECHENKERN — gebaut und geprüft (02.10.2026, S7-2 mit S7-3; Nutzer: *„Ja, B-5 und Rechenkern, prüfen und gegenprüfen"*)
+
+**Was gebaut ist:** `agent/regel0_rechnung.py`. Er rechnet die **REGEL0.1** und nimmt die Rechenbausteine **direkt aus den Messmodulen**
+(`E2._rsi14`, `E2.ergebnisse`, `E2._atr`, `K2.Modell`/`K2.fit_cv`, `liq_schwelle`). Gleichheit ist damit eingebaut, nicht nachgebaut.
+Er liest nur (`mode=ro`), schreibt nichts in die Produktion und fragt kein Netz ab.
+
+| Teil | Funktion |
+|---|---|
+| Daten | `lade_reihen` (Messbasis + Zusatz-Assets, optional ab einer Stunde), `betriebs_zusatz` (alle aus `stundenkurse_alle.db`, ohne die gesperrten: 519) |
+| Einstieg | `anker` (Ankermaske wie die Messung; im Betrieb ohne Zukunft), `rechne` (Normal mit J, Schrumpfung kausal, Monatsmodell, Ersteintritt mit Ruhe 48 h) |
+| Hebelstufe | `hebel_anker`, `hebel_modelle` (je Quartal, im Betrieb nur abgeschlossene 120-h-Fenster, B-10), `hebelstufe` (höchste Stufe mit P ≤ 2 %; **ohne ATR keine Stufe**) |
+| Monatsjob (S7-3) | `trainiere_monat` → Paket mit rsi-Modell des Monats und des Vormonats, ATR-Modellen des Quartals, erstem Anker je Asset; `speichere_paket`/`lade_paket` mit **Prüfsumme und Regelversion** |
+| Stundenlauf (S7-2) | `bewerte`: 460-Tage-Fenster, bewertet die jüngste abgeschlossene Stunde. *Neu*: Signale mit **vorläufiger** Stufe (ATR der Signalstunde). *Endgültig* eine Stunde später mit der Stufe aus der ATR der Einstiegsstunde. Dazu die **Frische** je Asset |
+
+**Gegenprüfung** (Belege `Basisinfos/Rechenkern_02_10/`):
+
+| # | Prüfung | Ergebnis |
+|---|---|---|
+| B-5 | Referenz der Hebelstufe je Einstieg (`--spur-stufen`) | ✔ Kennzahlen gleich dem 01.10. (7.922 Handel, Konto +0,2524, Rohvorteil +0,570 %), 10.222 Stufen: 3x 7.634 · 5x 2.523 · 2x 25 · keine 40 |
+| R-R11-1 | Einstiege der Nachrechnung 2024-01 bis 2026-08 | ✔ **zeilengleich** zur Betriebsreferenz (10.732, 127 Assets) · Gegenprobe Schwelle 0,034: 2.939 abweichend |
+| Live | 20 vergangene Zeitpunkte, nur Kerzen bis T−1, Ankermaske ohne Zukunft | ✔ **20 von 20** Signale gleich, v̂ zur jüngsten Stunde **0,0** Abweichung (2.231 Werte) |
+| R-R11-2 | Hebelstufe je Einstieg | ✔ P(Liquidation) bis 5·10⁻¹³ gleich, **alle 10.222 Stufen zeilengleich** · Gegenprobe Grenze 0,019: 155 anders |
+| B-10 | Training des ATR-Modells wie im Betrieb (nur abgeschlossene 120-h-Fenster) | ✔ **99,84 %** gleiche Stufen (17 von 10.732), vorab ≥ 99 % |
+| Monatsjob | Pakete 2026-03 und 2026-04 (Quartalsbeginn) nur aus den Daten zum Monatsbeginn, alle 650 Assets | ✔ rsi-Modelle **exakt** gleich der Nachrechnung, ATR-Modelle exakt gleich der Betriebsform · verändertes Byte wird erkannt |
+| Stundenlauf | 7 Zeitpunkte, davon Monats- und Quartalsgrenze, alle Assets | ✔ neue Signale 7/7, endgültige Stufe 7/7, v̂ 0,0 Abweichung |
+| Frische | einem Signal-Asset fehlt die jüngste Stunde | ✔ kein Signal, steht unter *veraltet* |
+| Wache | `--paket Regel0Betrieb` 15/15: liest nur, Modelldatei geschützt, ohne ATR keine Stufe, **R-R11-1 zeilengleich** (nur mit voller Messbasis, am NB übersprungen) | ✔ |
+
+⚠️ **Zwei eigene Fehler beim Bauen, beide durch die Gegenprüfung gefunden:** (1) In `bewerte` hätte an der Monatsgrenze das rsi-Modell des falschen Monats gegriffen.
+Behoben: Das rsi-Modell kommt aus dem Monat der Signalstunde, das ATR-Modell aus dem Quartal der Einstiegsstunde. (2) `atr_je_stunde` übersprang die
+gekürzte Reihe des Stundenlaufs (Mindestlänge 500). Die fehlende ATR ordnete das Modell **still** einer Klasse zu (NEO 3x statt 5x). Behoben, und
+`hebelstufe` gibt ohne ATR jetzt ausdrücklich **keine** Stufe. Die Wache prüft das.
+
+**Last** (Desktop): Stundenlauf über alle rund 650 Assets **124 s**, am NB also rund **7 min**. Dazu kommen der Nachlader mit etwa 1,5 min und der Monatsjob mit etwa 4,5 min am Desktop (NB rund 15 min, einmal im Monat).
+
+**B-9 gemessen** (Auskunft für S7-4, `b9_vorstufe.txt`): Die vorläufige Stufe (ATR der Signalstunde) gleicht der endgültigen in **98,37 %** der Einstiege.
+88-mal ist sie **höher** (fast immer 5x statt 3x), 87-mal tiefer. ➤ **Für S7-4 zu entscheiden:** Was nennt die Mail, wenn sie sofort kommt?
+
+**Was NICHT gebaut ist:** das Einhängen am Notebook (Monatsjob und Stundenlauf als Jobs, Ablage der Signale) und die Mail. Das ist eine **Betriebsänderung**
+und braucht dein Ja (**S7-2b**). Danach kommt S7-4.

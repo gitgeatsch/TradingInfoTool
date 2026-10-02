@@ -31068,6 +31068,58 @@ def paket_regel0_betrieb() -> None:
                len(reg) == 1 and kw.get("minute") == "5" and kw.get("timezone") == "timezone.utc" and kw.get("max_instances") == "1", str(kw))
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "Stundenjob: Desktop-Zustand wird NICHT beschrieben", False, repr(ex))
+    # S7-2 Rechenkern (02.10.): liest nur, Modelldatei geschuetzt, ohne ATR keine Stufe, R-R11-1 zeilengleich (nur mit Daten)
+    try:
+        import pickle as _pk
+        import numpy as _np
+        import agent.regel0_rechnung as RK
+        import messe_k1_schritt2b_kombination as _K2
+        _q = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "regel0_rechnung.py"), encoding="utf-8").read()
+        _baum = _ast.parse(_q)
+        _verb = [k for k in _ast.walk(_baum) if isinstance(k, _ast.Call) and getattr(k.func, "attr", "") == "connect"]
+        _schreib = [w for w in ("INSERT ", "UPDATE ", "DELETE ", "CREATE ", "DROP ") if w in _q]
+        pruefe(P, "Rechenkern liest nur: genau EINE Verbindungsstelle (mode=ro), kein Schreibbefehl",
+               len(_verb) == 1 and "mode=ro" in _q and not _schreib, "connect %d · Schreibbefehle %s" % (len(_verb), _schreib))
+        with _tf.TemporaryDirectory() as d:
+            pf = os.path.join(d, "m.pkl")
+            RK.speichere_paket({"version": RK.REGELVERSION, "monat": "2026-10"}, pf)
+            ok1 = RK.lade_paket(pf)["monat"] == "2026-10"
+            roh = bytearray(open(pf, "rb").read()); roh[-3] ^= 1
+            open(pf, "wb").write(bytes(roh))
+            try:
+                RK.lade_paket(pf); ok2 = False
+            except SystemExit:
+                ok2 = True
+            RK.speichere_paket({"version": "REGEL9", "monat": "2026-10"}, pf)
+            try:
+                RK.lade_paket(pf); ok3 = False
+            except SystemExit:
+                ok3 = True
+        pruefe(P, "Modelldatei: laedt, und ein veraendertes Byte wie eine fremde Regelversion brechen ab", ok1 and ok2 and ok3, "%s %s %s" % (ok1, ok2, ok3))
+        _rng = _np.random.default_rng(1)
+        _E = {"atr": _rng.uniform(0.01, 0.2, 6000)}
+        _y = (_rng.uniform(size=6000) < _E["atr"] * 0.1).astype(float)
+        with RK._modellform("b", (20.0, 200.0)):
+            _m = _K2.Modell(("atr",), 20.0).fit(_E, _np.arange(6000), _np.arange(6000), _y, _np.zeros(6000))
+        _mi = 2026 * 12 + 9
+        _P, _L = RK.hebelstufe(_np.array([0.01, _np.nan]), _np.array([_mi, _mi]), {(_mi, 5): _m, (_mi, 3): _m, (_mi, 2): _m})
+        pruefe(P, "Hebelstufe: kleine ATR -> hoechste zulaessige Stufe, FEHLENDE ATR -> keine Stufe (nicht still eingeordnet)",
+               int(_L[0]) == 5 and int(_L[1]) == 0 and not _np.isfinite(_P[5][1]), "Stufen %s, p5 %s" % (list(_L), list(_P[5])))
+        _ref = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich", "kern48jbz_einstiege_bestand.csv")
+        _gr = _ref.replace("_einstiege_", "_gruppe_")
+        import agent.regel0_nachlader as _NL
+        if os.path.exists(_ref) and os.path.exists(_gr) and not _NL.betrieb_erlaubt(RK.DATEN_VORGABE)[0]:
+            _z = RK.zusatz_aus_gruppe(_gr)
+            _R = RK.rechne(RK.anker(RK.lade_reihen(RK.DATEN_VORGABE, _z), zukunft_bekannt=True), set(_z), _K2.ROLL_MONATE)
+            with _tf.TemporaryDirectory() as d:
+                RK.schreibe_einstiege(_R, os.path.join(d, "e.csv"))
+                gleich = io.open(os.path.join(d, "e.csv"), encoding="utf-8").read() == io.open(_ref, encoding="utf-8").read()
+            pruefe(P, "⭐⭐ R-R11-1: der Rechenkern trifft die Betriebsreferenz ZEILENGLEICH (Nachrechnung 2024-01..2026-08)", gleich,
+                   "%d Einstiege · Referenz kern48jbz_einstiege_bestand.csv (= Fassung 0.1, 2.708)" % len(_R["einstiege"]))
+        else:
+            pruefe(P, "R-R11-1 uebersprungen: keine volle Messbasis an diesem Geraet (Sollzustand am Notebook)", True)
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "Rechenkern: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

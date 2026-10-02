@@ -1,0 +1,29 @@
+Nachrechnung in 110 s
+1) R-R11-1 Nachrechnung
+  ✔ zeilengleich zur Betriebsreferenz (symbol, stunde) - 10732 / 10732
+2) Gegenprobe Schwelle 0,034
+  ✔ die Pruefung schlaegt an (andere Einstiege) - 2939 abweichende Einstiege
+3) Live-Probe: nur Kerzen bis T-1, Ankermaske ohne Zukunft
+    T 2024-01-08 06:00: live ['ORDI'] · Referenz ['ORDI'] · v-dach 72 Assets, max |Abw| 0.0e+00
+    T 2024-05-07 09:00: live ['ETH', 'ETHFI', 'INJ', 'ORDI', 'RUNE', 'XNO'] · Referenz ['ETH', 'ETHFI', 'INJ', 'ORDI', 'RUNE', 'XNO'] · v-dach 82 Assets, max |Abw| 0.0e+00
+    T 2024-05-11 05:00: live ['IOTX'] · Referenz ['IOTX'] · v-dach 82 Assets, max |Abw| 0.0e+00
+    T 2024-05-21 09:00: live ['DYM', 'FLOW', 'NEO', 'RVN'] · Referenz ['DYM', 'FLOW', 'NEO', 'RVN'] · v-dach 82 Assets, max |Abw| 0.0e+00
+    T 2024-07-16 03:00: live - · Referenz - · v-dach 85 Assets, max |Abw| 0.0e+00
+    T 2024-10-19 02:00: live ['ALGO', 'APE', 'ARPA', 'BAND', 'BEAMX', 'C98', 'CHR', 'EDU', 'FLOW', 'GALA', 'ICP', 'IMX', 'KAVA', 'MAGIC', 'MANA', 'MOVR', 'POL', 'SAND', 'ZIL'] · Referenz ['ALGO', 'APE', 'ARPA', 'BAND', 'BEAMX', 'C98', 'CHR', 'EDU', 'FLOW', 'GALA', 'ICP', 'IMX', 'KAVA', 'MAGIC', 'MANA', 'MOVR', 'POL', 'SAND', 'ZIL'] · v-dach 93 Assets, max |Abw| 0.0e+00
+    T 2025-01-22 16:00: live - · Referenz - · v-dach 101 Assets, max |Abw| 0.0e+00
+    T 2025-06-10 20:00: live ['WCT'] · Referenz ['WCT'] · v-dach 120 Assets, max |Abw| 0.0e+00
+    T 2025-06-23 12:00: live ['BIGTIME', 'BNB', 'ETHFI', 'IOTX', 'ORDI', 'QNT', 'SNX', 'SUI'] · Referenz ['BIGTIME', 'BNB', 'ETHFI', 'IOTX', 'ORDI', 'QNT', 'SNX', 'SUI'] · v-dach 122 Assets, max |Abw| 0.0e+00
+    T 2025-06-24 06:00: live ['BAND', 'C98', 'NOT', 'PENDLE', 'VELODROME'] · Referenz ['BAND', 'C98', 'NOT', 'PENDLE', 'VELODROME'] · v-dach 122 Assets, max |Abw| 0.0e+00
+    T 2025-11-22 21:00: live - · Referenz - · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2025-12-04 21:00: live - · Referenz - · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-01-02 23:00: live ['CTSI', 'DYM', 'HBAR', 'RVN', 'S', 'SEI', 'W', 'ZIL'] · Referenz ['CTSI', 'DYM', 'HBAR', 'RVN', 'S', 'SEI', 'W', 'ZIL'] · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-02-25 16:00: live ['APE', 'AVAX', 'CHR', 'CRV', 'ETH', 'GRT', 'KAIA', 'KAVA', 'LINK', 'METIS', 'MINA', 'ONDO', 'RENDER', 'STX', 'TURBO', 'WIF'] · Referenz ['APE', 'AVAX', 'CHR', 'CRV', 'ETH', 'GRT', 'KAIA', 'KAVA', 'LINK', 'METIS', 'MINA', 'ONDO', 'RENDER', 'STX', 'TURBO', 'WIF'] · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-05-08 10:00: live - · Referenz - · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-05-09 10:00: live - · Referenz - · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-06-15 04:00: live ['BAND', 'MEME'] · Referenz ['BAND', 'MEME'] · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-06-18 17:00: live ['ZK'] · Referenz ['ZK'] · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-07-26 03:00: live ['FLOKI', 'TAO'] · Referenz ['FLOKI', 'TAO'] · v-dach 127 Assets, max |Abw| 0.0e+00
+    T 2026-08-27 21:00: live ['KAS'] · Referenz ['KAS'] · v-dach 127 Assets, max |Abw| 0.0e+00
+  ✔ Live-Signale = Referenz-Einstiege an allen 20 Zeitpunkten - 20 von 20
+  ✔ v-dach zur juengsten Stunde gleich der Nachrechnung (Toleranz 1e-9) - 2231 Werte, max 0.0e+00
+SCHLUSS: ✔ bestanden (4 von 4) · 547 s

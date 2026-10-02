@@ -1,0 +1,23 @@
+Betrieb bewertet zusaetzlich 519 Assets (Referenz: 11) - AKT, ASTER, BRETT, CC, FLOKI, GRIFFAIN, HYPE, KAS, MON, PLUME, XNO
+Referenz gerechnet in 170 s
+1) Monatsjob
+  ✔ Paket 2026-03: rsi-Modelle (Vormonat und Monat) gleich der Nachrechnung - max |dBeitrag| 0.0e+00 ueber 179832 Anker · 526 Assets mit erstem Anker · 255 s
+  ✔ Paket 2026-03: ATR-Modelle (Quartal 2026-01) gleich der Betriebsform B-10 - max |dz| 0.0e+00
+  ✔ Paket 2026-04: rsi-Modelle (Vormonat und Monat) gleich der Nachrechnung - max |dBeitrag| 0.0e+00 ueber 185928 Anker · 531 Assets mit erstem Anker · 267 s
+  ✔ Paket 2026-04: ATR-Modelle (Quartal 2026-04) gleich der Betriebsform B-10 - max |dz| 0.0e+00
+  ✔ Gegenprobe: ein veraendertes Byte in der Modelldatei wird erkannt
+2) Stundenlauf (Fenster 460 Tage, alle Assets)
+    jetzt 2026-03-09 12:00: neu ['CHR'] (Referenz ['CHR']) · endgueltig - (B-10 -) · zusaetzlich 2 · frisch 531/531 · 125 s
+    jetzt 2026-03-11 13:00: neu ['APE', 'MANA'] (Referenz ['APE', 'MANA']) · endgueltig - (B-10 -) · zusaetzlich 1 · frisch 532/532 · 121 s
+    jetzt 2026-04-01 00:00: neu ['A', 'NEO'] (Referenz ['A', 'NEO']) · endgueltig - (B-10 -) · zusaetzlich 2 · frisch 537/537 · 121 s
+    jetzt 2026-04-01 01:00: neu - (Referenz -) · endgueltig {('NEO', 54768): 5, ('A', 54768): 5} (B-10 {('NEO', 54768): 5, ('A', 54768): 5}) · zusaetzlich 0 · frisch 537/537 · 122 s
+    jetzt 2026-04-02 01:00: neu ['KAS', 'MINA', 'PORTAL', 'SSV', 'USTC'] (Referenz ['KAS', 'MINA', 'PORTAL', 'SSV', 'USTC']) · endgueltig - (B-10 -) · zusaetzlich 19 · frisch 538/538 · 126 s
+    jetzt 2026-04-09 08:00: neu ['KAITO'] (Referenz ['KAITO']) · endgueltig - (B-10 -) · zusaetzlich 2 · frisch 538/538 · 125 s
+    jetzt 2026-04-20 16:00: neu ['QTUM', 'ZIL'] (Referenz ['QTUM', 'ZIL']) · endgueltig {('BAND', 55239): 3, ('GRT', 55239): 3, ('RVN', 55239): 5, ('MINA', 55239): 3, ('IMX', 55239): 3, ('BEAMX', 55239): 3, ('JTO', 55239): 3, ('DOGS', 55239): 2, ('S', 55239): 3} (B-10 {('BAND', 55239): 3, ('GRT', 55239): 3, ('RVN', 55239): 5, ('MINA', 55239): 3, ('IMX', 55239): 3, ('BEAMX', 55239): 3, ('JTO', 55239): 3, ('DOGS', 55239): 2, ('S', 55239): 3}) · zusaetzlich 7 · frisch 539/539 · 124 s
+  ✔ neue Signale = Referenz-Einstiege an allen 7 Zeitpunkten - 7 von 7
+  ✔ endgueltige Stufe = Betriebsform B-10 an allen Zeitpunkten - 7 von 7
+  ✔ v-dach zur juengsten Stunde gleich der Nachrechnung (Toleranz 1e-9) - max 0.0e+00
+3) Frische: einem Signal-Asset fehlt die juengste Stunde
+  ✔ CHR ohne die Stunde 2026-03-09 11:00: kein Signal, steht unter veraltet - ['CHR']
+4) Laufzeit Stundenlauf (Desktop): Median 124 s, max 126 s - am NB rund Faktor 3,5
+SCHLUSS: ✔ bestanden (9 von 9) · 1705 s

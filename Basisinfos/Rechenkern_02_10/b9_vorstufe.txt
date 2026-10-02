@@ -1,0 +1,9 @@
+B-9 vorlaeufige (ATR Signalstunde) gegen endgueltige Stufe (ATR Einstiegsstunde), 10732 Einstiege, Betriebsform B-10
+endgueltig   0   2     3     5
+vorlaeufig                    
+0           32   0     1     0
+2            0  26     1     0
+3            2   2  7918    85
+5            0   0    84  2581
+gleich 98.37 % · vorlaeufig HOEHER als endgueltig 88 (Risiko: zu viel Hebel) · tiefer 87
+SCHLUSS: vollstaendig

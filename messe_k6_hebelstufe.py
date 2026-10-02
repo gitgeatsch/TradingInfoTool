@@ -708,6 +708,22 @@ def main() -> int:
                         ko_ = L_ * (0.003 + 0.0018 * te_ / 24.0)
                         w_.writerow([syms[int(XE["sym"][i_])], int(STDe[i_]), int(JAHRe[i_]), L_, "%.10g" % r_, "%.10g" % ko_,
                                      "%d" % te_, int(r_ <= -1.0), "%.10g" % float(R_[(H9_, Z9_, 1)][i_])])
+            if "--spur-stufen" in sys.argv and sim_zelle and not isinstance(sim_zelle[1], tuple):
+                # S7-2 B-5 (Voranalyse_Schritt7_Betrieb_02_10.md 12.2, nur Auskunft, aendert nichts): JEDER Einstieg mit
+                # vorhergesagter Liquidationswahrscheinlichkeit je Stufe (H der Simulationszelle) und der gewaehlten Stufe,
+                # AUCH Stufe 0 und alle Jahre - die Referenz, gegen die der Rechenkern seine Hebelstufe zeilengleich prueft
+                import csv as _csv
+                H9_, _z9, g9_ = sim_zelle
+                L9 = stufe(PE, H9_, g9_)
+                with open(sys.argv[sys.argv.index("--spur-stufen") + 1], "w", newline="", encoding="utf-8") as f_:
+                    w_ = _csv.writer(f_, delimiter=";")
+                    w_.writerow(["symbol", "std", "jahr"] + ["p%d" % L_ for L_ in sorted(STUFEN)] + ["stufe"])
+                    for i_ in range(len(STDe)):
+                        pv_ = [float(PE[(L_, H9_)][i_]) for L_ in sorted(STUFEN)]
+                        if not any(np.isfinite(pv_)):
+                            continue
+                        w_.writerow([syms[int(XE["sym"][i_])], int(STDe[i_]), int(JAHRe[i_])]
+                                    + ["%.12g" % x_ if np.isfinite(x_) else "" for x_ in pv_] + [int(L9[i_])])
             print()
             print("=" * 120)
             if STOPWAHL:
