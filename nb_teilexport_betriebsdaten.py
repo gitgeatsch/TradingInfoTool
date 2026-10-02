@@ -200,6 +200,29 @@ def _inhalt() -> int:
             c.close()
         except sqlite3.Error as ex:
             print("  ⛔ Bestand nicht lesbar: %s" % ex)
+    # Schritt 7, O15: die LAUFENDEN Werte der Groessen-Deckel aus der config.yaml DIESES Geraets (die Desktop-Kopie kann abweichen) -
+    # gesucht nach Schluesselnamen, damit die Pfade nicht aufgezaehlt werden muessen
+    print()
+    print("-" * 100)
+    try:
+        import yaml
+        cfg = yaml.safe_load(open(os.path.join(HIER, "Basisinfos", "config.yaml"), encoding="utf-8")) or {}
+        such = ("hebel_aus_quote", "cooldown_stunden_wenn_gehebelt", "stop_min_atr", "verlustanteil", "toepfe_deckel_eur",
+                "cash_reserve_min_fixed_eur", "hebel_richtung_modus", "aktiv_fuer", "betriebsart")
+        gef = []
+
+        def lauf(d, pfad):
+            if isinstance(d, dict):
+                for k, v in d.items():
+                    if k in such:
+                        gef.append((("%s.%s" % (pfad, k)).strip("."), v))
+                    lauf(v, "%s.%s" % (pfad, k))
+        lauf(cfg, "")
+        print("DECKEL UND GROESSEN (config.yaml dieses Geraets):")
+        for k, v in gef:
+            print("    %-55s %s" % (k, v))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Deckel nicht lesbar: %s" % ex.__class__.__name__)
     # Schritt 7, O15 Positionsgroesse (E-43 Punkt 3): Altbestand der Hebelpositionen und Kontowert - nur lesen
     if os.path.exists(prod):
         print()
