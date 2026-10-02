@@ -371,7 +371,19 @@ Binance-Daten (AIOZ, SUPRA, VSN, XDC; Aktien und ETFs sind nicht Teil der REGEL0
 | | |
 |---|---|
 | **Mail-Schalter** | `benachrichtigung.aktiv` gegen `benachrichtigung.email.aktiv`: als eigene Aufgabe vorgeschlagen, nicht erledigt |
-| alte NB-Kontrollen | K5, K6, K11a, K13, K14 (Memory *ausstehende NB-Kontrollen*), beim nächsten Export mit abarbeiten |
+| alte NB-Kontrollen | ✔ **keine offen** — die Liste ist seit 23.09. leer (K5, K14 bestätigt, K6 nie fällig, K11a am Prüfstand belegt, K13 erledigt). ⚠️ Der Memory-Index nannte sie noch als offen und wurde hier zuerst ungeprüft übernommen (korrigiert 02.10.) |
+| ⛔ **Alarmmails kommen nie an** (gefunden im NB-Export 02.10.) | `_melde_laufzeitluecke` (Stillstand) und `_melde_datenausfall` (*alle Kurse veraltet*) holen den Empfänger über `config.get_config()`. Die Funktion **gibt es nicht** (nur `load_config`), also ist der Empfänger `None`. Und selbst mit ihr wäre es das ganze `email`-Bündel statt `email.empfaenger`. Am NB um 07:29 belegt: Stillstand 2,1 h, Mail *fehlgeschlagen* (`'NoneType' object has no attribute 'strip'`). Beide melden trotzdem *gesendet* (Rückgabewert nicht geprüft). Besteht seit f92205f (20.09.); K25 *beim nächsten echten Ausfall muss eine Mail kommen* war damit nie erfüllt. ➤ Reparatur zur Abstimmung |
 | Grundgesamtheit `schnitt` am NB | 398 statt 517 Symbole, **vor** einer Freischaltung von `schnitt` zu entscheiden (CLAUDE.md) |
 | CLAUDE.md | wird nicht über git verteilt; ans Notebook nur über den Drive-Abgleich, wenn der Nutzer will |
 | Suite | 4 bekannte rote Zeilen (Datenstand am Desktop) |
+
+### Ergebnis der Kontrollen am Notebook (02.10.2026, Teilexport 12:38, NB-Export 12:42, Neustart 11:33)
+
+| # | Ergebnis |
+|---|---|
+| ✔ **K-S7-1** | *schreibt* (Betriebsgerät erkannt). Stand aller vier Dateien 09:00 UTC = letzte abgeschlossene Stunde zum Zeitpunkt 10:38 UTC. 116/116 · 537/537 · 112/253 · 399/411 Symbole auf Stand, der Rest sind genau die 141 und 12 nicht mehr gehandelten Paare. 2 Läufe, 0 Fehler |
+| ✔ **K-S7-2** | seit dem Neustart **0 Tracebacks, 0 ERROR-Zeilen** (die 22 Tracebacks im 72-h-Fenster liegen alle davor). Erster Lauf **186 s** (am Desktop 785 s nacheinander), Stundenlauf **101 s**, 0 Symbolfehler. Keine Jobfehlermail. Terminmarkt auch während des Nachholens 40 von 44 (wie vorher; ohne Börse SUPRA, CANTON, VSN, XNO). Warnungen dieselben Muster und Häufigkeiten wie gestern im selben Fenster |
+| Hinweis | neu seit heute: Bitpanda-Bestand **Concrete (CT)** ohne Watchlist-Eintrag (Mail 11:34). Eine Bestandsfrage beim Nutzer, kein Fehler |
+| ⛔ Nebenbefund | Stillstandsmail 07:29 nicht zugestellt — siehe Abschnitt D, *Alarmmails kommen nie an* |
+
+➤ **S7-1/S7-1b sind im Betrieb bestätigt.** Die REGEL0-Datenbasis läuft am Notebook stündlich und ohne Desktop-Handgriff (E-35).
