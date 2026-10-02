@@ -554,3 +554,19 @@ zu berücksichtigen – nur echte offene Positionen."*
 - **Betriebsparameter der REGEL0** (ohne neue Zahl): Prüfzeitpunkt jede volle Stunde, alle Assets. **Kein eigener Cooldown**, die Ruhe 48 h wirkt je Asset (gemessen mindestens 49 h, Median 6,8 Tage).
 - **REGEL1-Kandidaten** (O13): Fortsetzung als Einstiegstyp · Positionsführung und Ausstieg **nur für echte offene Positionen**.
 - **F4** (Mindestbedingungen, versionierte Regeln, offene Punkte 4–7) ist noch im Gespräch.
+
+
+---
+
+# E-43 · Schritt 7, F4 Punkt für Punkt (Nutzer 02.10.2026)
+
+**02.10.2026** · Nutzer: *„Punkte 1 bis 5 müssen wir Schritt für Schritt durchgehen. 1. Ja, aber bei kritischen Punkten ist eine Änderung unter der Woche auch zulässig.
+2. Ja, als START in der ersten Phase für M1 der Einstiegskette – die echten und korrekten Ausstiegsmails und Regeln über die Positionsführung müssen nachgelagert korrekt
+umgesetzt werden. 3. Hier gibt es schon Deckel und Altbestand, das müssen wir analysieren und festlegen. 4. Ja, aber nicht bei allen Assets, ist zu vernachlässigen.
+5. Wieder ein eigener großer Punkt, ich möchte die alte und falsche SPOT-Kette nach dem Hebel ersetzen, und somit kann diese vorerst stillgelegt werden. Du musst nur
+einplanen, dass die Einstiege gleichzeitig geprüft werden, aber später eigenständig bewertet werden – je Strategie ein eigener Pfad für die Ablaufkette."*
+- **1 Versionierte Regeln:** Live läuft eine festgeschriebene Fassung, gewechselt wird zu festgelegten Zeitpunkten mit Freigabe. **Ausnahme:** Kritische Punkte dürfen auch unter der Woche geändert werden (neue Version, Vermerk).
+- **2 Ausstieg (Start M1):** Ausstiegszeit in der Einstiegsmail und eine Erinnerung nach 24 h. Die echten Ausstiegsmails und Regeln zur Positionsführung kommen nachgelagert (O13).
+- **3 Positionsgröße:** offen. Bestehende Deckel und Altbestand werden **analysiert**, dann festgelegt.
+- **4 Hebelstufen 2/3/5x:** gedeckelt auf das, was das Asset bei Bitpanda erlaubt. Dass nicht jedes Asset alle anbietet, ist vernachlässigbar.
+- **5 Spot:** Die alte Spot-Kette wird **nach dem Hebel ersetzt** und kann **vorerst stillgelegt** werden. **Architektur:** gemeinsame stündliche Einstiegsprüfung, **je Strategie ein eigener Bewertungspfad und eine eigene Ablaufkette** (Hebel = REGEL0, Spot später eigene Regel).

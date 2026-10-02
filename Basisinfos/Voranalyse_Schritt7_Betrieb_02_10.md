@@ -139,3 +139,14 @@ ggf. weitere Simulationen zur Stabilität und fachlichen Funktionalität."*
 - ✔ **Prüfzeitpunkt und Cooldown** stehen in der REGEL0 (Dokument und `hebel_neubau.REGEL0`): stündlich, alle Assets, kein eigener Cooldown, Ruhe 48 h je Asset (gemessen mindestens 49 h).
 - ✔ **REGEL1-Kandidaten** im Plan (O13): Fortsetzung; Positionsführung und Ausstieg nur für echte offene Positionen.
 - ◐ **F4 offen:** versionierte Regeln (Vorschlag: live eine festgeschriebene Fassung, Wechsel nur zu festgelegten, freigegebenen Zeitpunkten, nie mitten in einer Testwoche) und die Punkte 4–7 (Ausstiegserinnerung, Positionsgröße, Bitpanda-Stufen, Spot gegen Hebel auf demselben Asset).
+
+
+### Nachtrag 02.10. — F4 Punkt für Punkt (E-43)
+
+| | |
+|---|---|
+| ✔ 1 | versionierte Regeln, kritische Punkte auch unter der Woche änderbar (neue Version, Vermerk) |
+| ✔ 2 | Start M1: Ausstiegszeit in der Einstiegsmail und Erinnerung nach 24 h. Echte Ausstiegsmails und Positionsführung folgen (O13) |
+| ◐ 3 | **Positionsgröße:** Deckel und Altbestand analysieren (O15), ➤ nächster Punkt |
+| ✔ 4 | Hebelstufe gedeckelt auf das, was das Asset bei Bitpanda erlaubt |
+| ◐ 5 | Spot-Kette nach dem Hebel ersetzen und vorerst stilllegen. **Je Strategie ein eigener Pfad** (O14). ⚠️ Das ändert F1: Statt *Spot läuft weiter wie heute* wird die Spot-Kette nach dem Hebel stillgelegt. Bis dahin läuft sie wie heute |
