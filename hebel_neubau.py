@@ -992,7 +992,7 @@ def gemessene_merkmale() -> dict:
 NAECHSTE_MESSUNGEN = (
     dict(was="⭐ NAECHSTER SCHRITT (E-41, Nutzer 02.10.): Schritt 7 Betriebsvorbereitung am Notebook - "
              "Stunden- und Markpreise dort (Historie per USB, laufend Job regel0_nachlader seit S7-1b), "
-             "S7-2/S7-3 Rechenkern agent/regel0_rechnung.py gebaut und geprueft (R-R11 zeilengleich, Live 20/20), als naechstes S7-2b Einhaengen am NB, R-R11 am NB, "
+             "S7-2/S7-3 Rechenkern, S7-2b Betriebslauf, S7-4 REGEL0-Mails + alter Hebelweg aus (E-46, Testwoche bis 10.10.) gebaut; als naechstes NB-Kontrollen, S7-5 bis S7-7, O13, "
              "Aufnahme NEU gelisteter Binance-Paare am NB (Luecke 02.10., S7-5), alles Offene Voranalyse_Schritt7 Par. 11, "
              "taeglicher Katalog-/Preisabgleich, Mail; zuerst die Voranalyse. Danach offen: O12 Lernmenge "
              "per Regel, Liquiditaet als Gewicht (2.704), R, Kaeuferanteil, W4 mit der Wucht",

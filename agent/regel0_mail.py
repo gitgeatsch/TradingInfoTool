@@ -1,0 +1,170 @@
+"""Mails der REGEL0 (Schritt 7, S7-4, E-46; Nutzer 03.10.2026: *"Ja D1 bis D4 wie vorgeschlagen"*).
+
+Drei Mails, alle aus der Ablage ``data/regel0_signale.db`` (agent/regel0_ablage.py):
+
+    SIGNAL       je neuem Signal mit eingeschaltetem Hebel-Schalter und Stufe > 0 - Asset, Einstieg und Ausstieg (wie gemessen),
+                 Hebelstufe, Einsatz (regel0_betrieb.yaml), Vermerke. Die Stufe ist zuerst VORLAEUFIG (ATR der Signalstunde, D1)
+    KORREKTUR    nur wenn die ENDGUELTIGE Stufe (eine Stunde spaeter) von der gemailten abweicht (B-9: rund 1,6 %)
+    ERINNERUNG   wenn die 24 h um sind: Ausstieg faellig (E-43 Punkt 2)
+
+D2: die Stufen, die Bitpanda je Asset anbietet, sind noch nicht als Daten da - die Mail sagt das. D3: kein LLM-Kommentar in
+dieser Fassung. D4: bis ``testwoche_bis`` (regel0_betrieb.yaml) tragen Betreff und Text den Vermerk TESTWOCHE.
+
+⚠️ Eine Mail gilt erst als versandt, wenn der Versand True meldet - sonst wird sie in der naechsten Stunde wieder versucht.
+⚠️ Kein Netz und keine Produktion hier: das Senden kommt von aussen (der Stundenjob gibt ``_sende_hinweismail`` mit).
+"""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+
+import agent.regel0_ablage as AB
+import agent.regel0_groesse as G
+
+NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
+ERINNERUNG_BIS_H = 6      # eine Erinnerung, deren Ausstieg laenger vorbei ist, entfaellt (z. B. nach langem Stillstand)
+
+
+def _t(txt: str) -> datetime:
+    return datetime.strptime(txt, "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+
+
+def _zeit(dt: datetime) -> str:
+    """'03.10. 14:00 UTC (16:00 Ortszeit)' - die Ortszeit aus der Uhr des Geraets."""
+    return "%s UTC (%s Ortszeit)" % (dt.strftime("%d.%m. %H:%M"), dt.astimezone().strftime("%H:%M"))
+
+
+def _pct(x) -> str:
+    return "-" if x is None else ("%.1f %%" % (100.0 * x)).replace(".", ",")
+
+
+def _testwoche(werte: dict, jetzt: datetime) -> str:
+    bis = werte.get("testwoche_bis") or ""
+    return bis if (bis and jetzt.strftime("%Y-%m-%d") <= bis) else ""
+
+
+def _vermerke(r: dict) -> list:
+    v = []
+    if r.get("kurs_markt") == "futures":
+        v.append("Kurs aus Futures (Binance fuehrt dieses Asset nicht als Spot)")
+    if r.get("zusatz"):
+        v.append("bewertet, nicht trainiert (Asset ausserhalb der Messbasis, E-40)")
+    if r.get("btc"):
+        v.append("BTC: nicht nachgewiesen (rund 30 Signale je Jahr), unschaedlich (E-37)")
+    return v
+
+
+def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime) -> tuple:
+    tw = _testwoche(werte, jetzt)
+    ein = _t(r["einstieg"]) + timedelta(hours=1)          # Schlusskurs der Einstiegsstunde
+    aus = _t(r["ausstieg"]) + timedelta(hours=1)
+    sig = _t(r["signalstunde"])
+    betreff = "%sREGEL0 Hebel LONG %s %dx - Einstieg %s" % ("[TESTWOCHE] " if tw else "", r["bitpanda"] or r["symbol"], stufe,
+                                                            ein.astimezone().strftime("%d.%m. %H:%M"))
+    z = ["REGEL0.1 - HEBEL-SIGNAL LONG%s" % ("   ·   TESTWOCHE bis %s" % tw if tw else ""), "",
+         "Asset:      %s%s" % (r["bitpanda"] or r["symbol"], "" if (r["bitpanda"] or r["symbol"]) == r["symbol"] else " (Binance %s)" % r["symbol"]),
+         "Signal:     Stunde ab %s, abgeschlossen um %s" % (_zeit(sig), _zeit(sig + timedelta(hours=1))),
+         "",
+         "EINSTIEG    zum Schlusskurs der Folgestunde: %s" % _zeit(ein),
+         "            (so ist die REGEL0 gemessen - wer frueher oder spaeter einsteigt, handelt etwas anderes)",
+         "AUSSTIEG    24 Stunden danach: %s - ohne Stop, ohne Ziel (REGEL0)" % _zeit(aus),
+         "",
+         "HEBEL       %dx%s" % (stufe, "  (VORLAEUFIG aus der ATR der Signalstunde - die endgueltige Stufe steht eine Stunde spaeter fest;"
+                                     " weicht sie ab, kommt eine kurze Korrektur)" if vorlaeufig else "  (endgueltig)"),
+         "            geschaetzte Liquidationsgefahr binnen 24 h: 2x %s · 3x %s · 5x %s (Grenze 2 %%)" % (
+             _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5"))),
+         "            ⚠️ Pruefe, welche Hebelstufen Bitpanda fuer dieses Asset anbietet - die Stufen je Asset sind noch nicht als Daten"
+         " hinterlegt (D2). Bietet Bitpanda weniger an, die naechst kleinere nehmen.",
+         "EINSATZ     %s EUR  (Positionswert %s EUR / %dx, Startwerte in regel0_betrieb.yaml)" % (
+             ("%.0f" % groesse.einsatz_eur), ("%.0f" % groesse.positionswert_eur), stufe)]
+    if groesse.vermerk:
+        z.append("            %s" % groesse.vermerk)
+    if r.get("kurs"):
+        z.append("Kurs zur Signalstunde: %s USDT (Binance %s, nur Orientierung - Bitpanda handelt in EUR)" % (
+            ("%.6g" % r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot"))
+    vm = _vermerke(r)
+    if vm:
+        z += ["", "Vermerke:"] + ["  - " + x for x in vm]
+    z += ["", "Regel: REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
+              ("%+.4f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-"),
+          "Das ist eine Auskunft deines Systems, kein Auftrag - du entscheidest."]
+    return betreff, "\n".join(z)
+
+
+def korrektur_mail(r: dict, alt: int, neu: int, werte: dict, jetzt: datetime) -> tuple:
+    tw = _testwoche(werte, jetzt)
+    ein = _t(r["einstieg"]) + timedelta(hours=1)
+    name = r["bitpanda"] or r["symbol"]
+    if neu > 0:
+        g = G.rechne(neu, 0, werte)
+        kern = "Endgueltige Hebelstufe %dx statt %dx - Einsatz dann %.0f EUR (Positionswert %.0f EUR)." % (neu, alt, g.einsatz_eur, g.positionswert_eur)
+    else:
+        kern = "Endgueltig KEIN HANDEL: mit der ATR der Einstiegsstunde liegt keine Stufe unter der Liquidationsgrenze 2 %."
+    betreff = "%sREGEL0 KORREKTUR %s: %s" % ("[TESTWOCHE] " if tw else "", name, ("%dx statt %dx" % (neu, alt)) if neu > 0 else "kein Handel")
+    text = "\n".join(["REGEL0.1 - KORREKTUR zum Signal %s (Einstieg %s)" % (name, _zeit(ein)), "", kern, "",
+                      "Grund: die vorlaeufige Stufe kam aus der ATR der Signalstunde, die endgueltige aus der ATR der Einstiegsstunde"
+                      " - so wie die REGEL0 gemessen ist (B-9)."])
+    return betreff, text
+
+
+def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
+    tw = _testwoche(werte, jetzt)
+    aus = _t(r["ausstieg"]) + timedelta(hours=1)
+    name = r["bitpanda"] or r["symbol"]
+    betreff = "%sREGEL0 AUSSTIEG faellig: %s %dx" % ("[TESTWOCHE] " if tw else "", name, stufe)
+    text = "\n".join(["REGEL0.1 - AUSSTIEG FAELLIG", "",
+                      "%s, Hebel %dx, Einstieg %s" % (name, stufe, _zeit(_t(r["einstieg"]) + timedelta(hours=1))),
+                      "Die 24 Stunden sind um: Ausstieg zum Schlusskurs %s." % _zeit(aus), "",
+                      "Gilt nur, wenn du die Position eroeffnet hast. Die Fuehrung offener Positionen kommt spaeter (O13)."])
+    return betreff, text
+
+
+def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None) -> dict:
+    """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    werte = werte if werte is not None else G.lade()
+    jt = jetzt.strftime("%Y-%m-%d %H:%M")
+    grenze_alt = (jetzt - timedelta(hours=NICHT_AELTER_H)).strftime("%Y-%m-%d %H:%M")
+    grenze_erin = (jetzt - timedelta(hours=ERINNERUNG_BIS_H + 1)).strftime("%Y-%m-%d %H:%M")
+    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0)
+    c = AB.oeffne(ordner_ablage)
+    c.row_factory = __import__("sqlite3").Row
+    try:
+        # 1  SIGNAL: Schalter an, Stufe > 0, noch nicht gemailt, Einstieg nicht laenger als NICHT_AELTER_H vorbei
+        for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND COALESCE(stufe, stufe_vorlaeufig) > 0 "
+                           "AND einstieg >= ? ORDER BY signalstunde", (grenze_alt,)).fetchall():
+            r = dict(r)
+            stufe = int(r["stufe"] if r["stufe"] is not None else r["stufe_vorlaeufig"])
+            offen = c.execute("SELECT COUNT(*) FROM signal WHERE mail_signal_am IS NOT NULL AND COALESCE(stufe, mail_signal_stufe) > 0 "
+                              "AND ausstieg > ? AND NOT (symbol=? AND signalstunde=?)", (jt, r["symbol"], r["signalstunde"])).fetchone()[0]
+            g = G.rechne(stufe, int(offen), werte)
+            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt)
+            if senden(b, t):
+                c.execute("UPDATE signal SET mail_signal_am=?, mail_signal_stufe=? WHERE symbol=? AND signalstunde=?",
+                          (jt, stufe, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["signal"] += 1
+            else:
+                zaehl["fehlgeschlagen"] += 1
+        # 2  KORREKTUR: die endgueltige Stufe weicht von der gemailten ab
+        for r in c.execute("SELECT * FROM signal WHERE mail_signal_am IS NOT NULL AND stufe IS NOT NULL AND mail_korrektur_am IS NULL "
+                           "AND stufe != mail_signal_stufe").fetchall():
+            r = dict(r)
+            b, t = korrektur_mail(r, int(r["mail_signal_stufe"]), int(r["stufe"]), werte, jetzt)
+            if senden(b, t):
+                c.execute("UPDATE signal SET mail_korrektur_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["korrektur"] += 1
+            else:
+                zaehl["fehlgeschlagen"] += 1
+        # 3  ERINNERUNG: 24 h um (Schluss der Ausstiegsstunde erreicht), Handel nicht auf 0 korrigiert
+        for r in c.execute("SELECT * FROM signal WHERE mail_signal_am IS NOT NULL AND mail_erinnerung_am IS NULL "
+                           "AND COALESCE(stufe, mail_signal_stufe) > 0 AND ausstieg <= ? AND ausstieg >= ?",
+                           ((jetzt - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M"), grenze_erin)).fetchall():
+            r = dict(r)
+            b, t = erinnerung_mail(r, int(r["stufe"] if r["stufe"] is not None else r["mail_signal_stufe"]), werte, jetzt)
+            if senden(b, t):
+                c.execute("UPDATE signal SET mail_erinnerung_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["erinnerung"] += 1
+            else:
+                zaehl["fehlgeschlagen"] += 1
+    finally:
+        c.close()
+    return zaehl

@@ -1675,7 +1675,17 @@ def _migrate_hebel_schalter_geradeziehen(conn: sqlite3.Connection) -> list[str]:
     und seit dem 15.08. auch in `agent/asset_schalter.py`. Fuer EURCV gibt es
     keine Hebelfrage, also auch keine Antwort, die man festhalten muesste.
 
-    Idempotent: beim zweiten Lauf gibt es nichts mehr zu tun."""
+    Idempotent: beim zweiten Lauf gibt es nichts mehr zu tun.
+
+    ⛔⛔ ABER NUR EINMAL (O18, 03.10.2026). Bis hierher lief sie bei JEDEM Start - und ein Asset, das NACH dem 15.08. neu in die
+    Watchlist kam, hatte keine Zeile und wurde beim naechsten Neustart still auf *an* gesetzt. Genau das, was die Vorgabe
+    *keine Zeile heisst aus* verhindern sollte. Seit S7-4 bestimmt der Schalter, wer REGEL0-Hebelmails bekommt (E-45 F-d).
+    Jetzt: Marke `hebel_schalter_geradegezogen` in `meta` - ist sie gesetzt, tut die Migration nichts mehr."""
+    try:
+        if get_meta_wert(conn, MARKE_HEBEL_SCHALTER):
+            return []
+    except sqlite3.Error:
+        pass
     try:
         import config as config_module
 
@@ -1707,7 +1717,15 @@ def _migrate_hebel_schalter_geradeziehen(conn: sqlite3.Connection) -> list[str]:
         logger.info("Hebel-Schalter geradegezogen: %d Symbole ausdruecklich "
                     "auf 'an' gesetzt (bisher ohne Zeile) - %s",
                     len(ergaenzt), ", ".join(sorted(ergaenzt)))
+    try:
+        set_meta_wert(conn, MARKE_HEBEL_SCHALTER, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"))
+    except sqlite3.Error:
+        logger.info("Hebel-Schalter: Marke nicht gesetzt - die Migration laeuft beim naechsten Start noch einmal")
     return ergaenzt
+
+
+# O18 (03.10.2026): die Migration oben laeuft nur EINMAL - danach heisst *keine Zeile* wirklich *aus*
+MARKE_HEBEL_SCHALTER = "hebel_schalter_geradegezogen"
 
 
 def is_first_run(conn: sqlite3.Connection) -> bool:
@@ -2059,9 +2077,9 @@ def get_hebel_pruefung_toggle_map(conn: sqlite3.Connection) -> dict[str, bool]:
     """Bulk-Variante von get_hebel_pruefung_erlaubt() (2026-07-27, Hebel-Tab-
     Anzeigefilter fuer deaktivierte Symbole ohne offene Position) - vermeidet
     eine Einzelabfrage je angezeigtem Signal. Ein Symbol, das in
-    asset_hebel_settings fehlt, gilt als erlaubt (Default True) - der
-    Aufrufer muss das selbst per .get(symbol, True) abbilden, dieses Dict
-    enthaelt nur explizite Zeilen."""
+    asset_hebel_settings fehlt, gilt als NICHT erlaubt (O18, 03.10.2026: Opt-in
+    seit 15.08., vorher stand hier *Default True*) - der Aufrufer bildet das per
+    .get(symbol, False) ab, dieses Dict enthaelt nur explizite Zeilen."""
     rows = conn.execute("SELECT symbol, hebel_pruefung_erlaubt FROM asset_hebel_settings").fetchall()
     return {r["symbol"]: bool(r["hebel_pruefung_erlaubt"]) for r in rows}
 
@@ -3893,7 +3911,7 @@ def get_pending_hebel_candidates(conn: sqlite3.Connection) -> list[HebelTrigger]
            AND t.screened_at = latest.max_screened_at
         LEFT JOIN asset_hebel_settings s ON s.symbol = t.symbol
         WHERE t.ist_kandidat = 1 AND t.status = 'neu'
-              AND COALESCE(s.hebel_pruefung_erlaubt, 1) = 1
+              AND COALESCE(s.hebel_pruefung_erlaubt, 0) = 1        -- O18: keine Zeile = aus (Opt-in)
         ORDER BY t.score_gesamt DESC
         """
     ).fetchall()
@@ -5284,7 +5302,7 @@ def get_symbole_mit_ueberschrittener_oi_schwelle(
         "LEFT JOIN asset_hebel_settings s ON s.symbol = o.symbol "
         "WHERE o.konsekutive_fehlschlaege >= ? "
         "AND (o.zuletzt_gemeldet_at IS NULL OR o.zuletzt_gemeldet_at < ?) "
-        "AND COALESCE(s.hebel_pruefung_erlaubt, 1) = 1",
+        "AND COALESCE(s.hebel_pruefung_erlaubt, 0) = 1",        # O18: keine Zeile = aus (Opt-in)
         (schwelle, grenze),
     ).fetchall()
     return [row["symbol"] for row in rows]

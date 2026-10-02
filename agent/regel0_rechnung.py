@@ -538,7 +538,10 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
         P, L = hebelstufe(a_, np.full(len(syms), me_), pe_["atr"]) if syms else ({2: [], 3: [], 5: []}, [])
         aus[name] = [dict(symbol=s, signalstunde=_stunde_txt(sh), einstieg=_stunde_txt(sh + 1), ausstieg=_stunde_txt(sh + 25),
                           vh=float(R["VH"][i]), stufe=int(L[k]), p2=float(P[2][k]), p3=float(P[3][k]), p5=float(P[5][k]),
-                          zusatz=s in zusatz, btc=s.upper() == "BTC")
+                          zusatz=s in zusatz, btc=s.upper() == "BTC",
+                          # Schlusskurs der Signalstunde (Binance, USDT) - nur Orientierung fuer die Mail
+                          kurs=(float(unterwegs[s][1][-1][3]) if unterwegs.get(s) and unterwegs[s][1]
+                                and unterwegs[s][1][-1][0] == _stunde_txt(sh) else None))
                      for k, (s, i) in enumerate(zip(syms, ix))]
     aus["frische"] = dict(jetzt=_stunde_txt(jetzt), aktiv=len(aktiv), frisch=len(frisch),
                           veraltet=sorted(aktiv - frisch), nicht_im_handel=len(letzte) - len(aktiv))

@@ -356,7 +356,7 @@ class HebelView(ttk.Frame):
                 # Position -> dauerhaft ausblenden, unabhaengig vom Alter
                 # (2026-07-27, Nutzer-Wunsch: "fuer Assets die nicht mehr auf
                 # Hebel stehen aus der Hebel-Liste entfernen").
-                if not hebel_toggle_map.get(sig.symbol, True):
+                if not hebel_toggle_map.get(sig.symbol, False):     # O18: keine Zeile = aus (Opt-in)
                     continue
                 # Zeit-Switch (2026-07-27) - reiner Anzeige-Deckel gegen alte,
                 # aber weiterhin aktive (Toggle an) Eintraege. Offene Positionen

@@ -598,3 +598,13 @@ längeren Punkt behandeln – aktuell sind es nicht so viele Assets mit Hebelsch
 - **Nachtrag 02.10. (Teil 0, 2.708):** Die Regel aus F-a ist in **4 von 4** Mengen erfüllt (3 bitgleich, unverzerrt:3 98,7 %, Betriebsreferenz bitgleich).
   Damit gilt **REGEL0.1** (kausale Schrumpfung aus dem Vormonat) als Fassung für den Betrieb. Das ist **keine neue Nutzerentscheidung**, sondern die Folge der vorab
   festgelegten Regel.
+
+# E-46 · S7-4: die REGEL0 in der Mail, der alte Hebelweg aus (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„Ja S7-2b so vorbereiten … aber ich möchte sehr rasch in Produktion damit, am besten sofort"* und *„Ja D1 bis D4 wie vorgeschlagen,
+prüfen und gegenprüfen"*.
+- **D1 (B-9):** Die Signalmail kommt **sofort** mit der **vorläufigen** Stufe. Weicht die endgültige ab (rund 1,6 %), folgt eine kurze **Korrektur**.
+- **D2:** Die Hebelstufen je Asset bei Bitpanda sind noch nicht als Daten da. Die Mail nennt die REGEL0-Stufe mit dem Hinweis, das Bitpanda-Angebot zu prüfen.
+- **D3:** **kein** Kommentar der LLM-Rollen in dieser Fassung (F2 kommt in der zweiten).
+- **D4:** **Testwoche** bis 10.10. als Vermerk in Betreff und Text (E-43). **O18** behoben: Die Migration der Hebel-Schalter läuft nur einmal, ohne Eintrag gilt *aus*.
+- Mit S7-4 gilt F1 vollständig: **Neue Hebel-Einstiege kommen nur noch aus der REGEL0.** Schalter `alter_hebelweg_aus` in `Basisinfos/regel0_betrieb.yaml`.

@@ -3631,7 +3631,24 @@ def _ohne_bremsen() -> dict:
             "budget_allocator": budget}
 
 
+# S7-4 (E-46, 03.10.2026): Paket B1 prueft den ALTEN Hebelweg der Rollen-Kette (Hebelmail, Richtung, Kursmarken). Im Betrieb ist
+# er seit S7-4 aus (regel0_betrieb.yaml alter_hebelweg_aus) - die Hebel-Einstiege kommen aus der REGEL0. Damit der alte Code
+# geprueft bleibt (falls der Schalter je zurueckgestellt wird), laeuft B1 SICHTBAR mit ausgeschaltetem Schalter.
+# Dass der Schalter an wirkt, prueft Basisinfos/Rechenkern_02_10/pruefe_s74.py (B1 mit Schalter AN: keine Hebelmail).
+B1_ALTER_HEBELWEG_AUS = False
+
+
 def paket_b1() -> None:
+    import agent.regel0_groesse as _R0G
+    _alt = _R0G.alter_hebelweg_aus
+    _R0G.alter_hebelweg_aus = lambda *a, **k: B1_ALTER_HEBELWEG_AUS
+    try:
+        _paket_b1_rumpf()
+    finally:
+        _R0G.alter_hebelweg_aus = _alt
+
+
+def _paket_b1_rumpf() -> None:
     """B1 - der eine Ort, an dem die Kette zusammengesetzt wird."""
     P = "B1"
     import sqlite3
@@ -31153,6 +31170,39 @@ def paket_regel0_betrieb() -> None:
                "%s / %s" % (SL.benoetigte_pakete(_h0), SL.benoetigte_pakete(_h0 + 5)))
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "Stundenlauf: Wache lief durch", False, repr(ex))
+    # S7-4 (E-46, 03.10.): Mails, alter Hebelweg aus, O18 Migration einmalig
+    try:
+        import agent.regel0_mail as RM
+        import agent.regel0_ablage as AB
+        import agent.regel0_groesse as G
+        from datetime import timezone as _tz
+        with _tf.TemporaryDirectory() as d:
+            c = AB.oeffne(d)
+            c.execute("INSERT INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, stufe_vorlaeufig, hebel_schalter, bitpanda) "
+                      "VALUES ('AAA','2026-10-05 10:00','2026-10-05 11:00','2026-10-06 11:00',0.04,3,1,'AAA'),"
+                      "('BBB','2026-10-05 10:00','2026-10-05 11:00','2026-10-06 11:00',0.04,3,0,'BBB')")
+            c.commit(); c.close()
+            _j = _dt.datetime(2026, 10, 5, 11, 5, tzinfo=_tz.utc)
+            _w = dict(G.lade(), testwoche_bis="")
+            z0 = RM.versende(d, lambda b, t: False, _j, _w)
+            post = []
+            z1 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w)
+            z2 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w)
+            z3 = RM.versende(d, lambda b, t: post.append(b) or True, _j + _dt.timedelta(hours=25), _w)
+        pruefe(P, "REGEL0-Mails: nur Schalter an; gescheiterter Versand wiederholt; kein Doppel; Erinnerung nach 24 h",
+               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0)
+               and z3["erinnerung"] == 1 and len(post) == 2 and "AAA" in post[0], "%s %s %s %s" % (z0, z1, z2, z3))
+        _rq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "rollen_lauf.py"), encoding="utf-8").read()
+        pruefe(P, "alter Hebelweg aus (F1/E-46): Etikett UND Rechnung der Rollen-Kette lesen den Schalter aus regel0_betrieb.yaml",
+               "_alt_hebel_aus = _R0G.alter_hebelweg_aus()" in _rq and 'if _etikett == "hebel" and _alt_hebel_aus:' in _rq
+               and "and not _alt_hebel_aus" in _rq and G.alter_hebelweg_aus() is True,
+               "Schalter jetzt: %s (im Zweifel AN)" % G.alter_hebelweg_aus())
+        _dq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "database", "db.py"), encoding="utf-8").read()
+        pruefe(P, "O18: Migration der Hebel-Schalter nur EINMAL (Marke), kein Leser nimmt ohne Zeile *an* an",
+               "if get_meta_wert(conn, MARKE_HEBEL_SCHALTER):" in _dq and "COALESCE(s.hebel_pruefung_erlaubt, 1)" not in _dq
+               and "hebel_toggle_map.get(sig.symbol, True)" not in io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "hebel_view.py"), encoding="utf-8").read())
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "S7-4: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

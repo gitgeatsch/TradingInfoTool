@@ -28,12 +28,13 @@ HIER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if HIER not in sys.path:
     sys.path.insert(0, HIER)
 
+import agent.regel0_ablage as _AB                                  # noqa: E402
 from agent.regel0_rechnung import (DATEN_VORGABE, REGELVERSION, _ro, _stunde_txt, betriebs_zusatz, bewerte,   # noqa: E402
                                    lade_paket, monat_von, speichere_paket, trainiere_monat)
 
 
 # ══ S7-2b═════════════════════════════════
-ABLAGE_NAME = "regel0_signale.db"
+ABLAGE_NAME = _AB.ABLAGE_NAME
 MODELL_ORDNER = "regel0_modelle"
 VERALTET_MELDEN_AB = 0.10          # Anteil veralteter aktiver Assets, ab dem der Lauf eine Meldung verlangt
 
@@ -50,17 +51,22 @@ def benoetigte_pakete(jetzt: int) -> list:
 
 
 def _ablage(ordner_ablage: str):
-    """Verbindung zur Signalablage - SCHREIBT NUR in ``regel0_signale.db`` (nie in die Produktion)."""
-    p = os.path.join(ordner_ablage, ABLAGE_NAME)
-    if os.path.basename(p) != ABLAGE_NAME or os.path.basename(p).lower() == "tradinginfotool.db":
-        raise SystemExit("⛔ verweigert: %s" % p)
-    c = sqlite3.connect(p, timeout=30)
-    c.execute("CREATE TABLE IF NOT EXISTS lauf (jetzt TEXT PRIMARY KEY, gerechnet_am TEXT, sekunden REAL, pakete TEXT, aktiv INTEGER, "
-              "frisch INTEGER, veraltet INTEGER, veraltet_liste TEXT, nicht_im_handel INTEGER, neu INTEGER, endgueltig INTEGER, meldung TEXT)")
-    c.execute("CREATE TABLE IF NOT EXISTS signal (symbol TEXT, signalstunde TEXT, einstieg TEXT, ausstieg TEXT, vh REAL, "
-              "stufe_vorlaeufig INTEGER, stufe INTEGER, p2 REAL, p3 REAL, p5 REAL, hebel_schalter INTEGER, bitpanda TEXT, "
-              "zusatz INTEGER, btc INTEGER, version TEXT, erfasst_am TEXT, endgueltig_am TEXT, PRIMARY KEY (symbol, signalstunde))")
-    return c
+    """Verbindung zur Signalablage - ueber die EINE Stelle (agent/regel0_ablage.py), schreibt nur ``regel0_signale.db``."""
+    return _AB.oeffne(ordner_ablage)
+
+
+def _kurs_markt(ordner: str) -> dict:
+    """{Symbol: 'spot'|'futures'} der Zusatz-Assets (stundenkurse_alle.db, Tabelle _quelle) - fuer den Vermerk *Kurs aus Futures*."""
+    p = os.path.join(ordner, "stundenkurse_alle.db")
+    if not os.path.exists(p):
+        return {}
+    c = _ro(p)
+    try:
+        return {r[0]: r[1] for r in c.execute("SELECT symbol, markt FROM _quelle")}
+    except sqlite3.Error:
+        return {}
+    finally:
+        c.close()
 
 
 def _hebel_schalter(ordner: str) -> dict:
@@ -119,6 +125,7 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
     fr = B["frische"]
     schalter = _hebel_schalter(ordner)
     zu_bp = _binance_zu_bitpanda()
+    markt = _kurs_markt(ordner)
     meldung = ""
     if fr["aktiv"] and len(fr["veraltet"]) / fr["aktiv"] > VERALTET_MELDEN_AB:
         meldung = "%d von %d aktiven Assets ohne die Stunde %s - Datenbasis veraltet (Nachlader?)" % (
@@ -130,9 +137,10 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
             bp = zu_bp.get(x["symbol"], x["symbol"])
             sch = schalter.get(bp.upper())
             c.execute("INSERT OR IGNORE INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, stufe_vorlaeufig, p2, p3, p5, hebel_schalter, "
-                      "bitpanda, zusatz, btc, version, erfasst_am) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                      "bitpanda, zusatz, btc, version, erfasst_am, kurs, kurs_markt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                       (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], x["stufe"], x["p2"], x["p3"], x["p5"],
-                       None if sch is None else int(sch), bp, int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt))
+                       None if sch is None else int(sch), bp, int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt,
+                       x.get("kurs"), markt.get(x["symbol"], "spot")))
         for x in B["endgueltig"]:
             bp = zu_bp.get(x["symbol"], x["symbol"])
             sch = schalter.get(bp.upper())

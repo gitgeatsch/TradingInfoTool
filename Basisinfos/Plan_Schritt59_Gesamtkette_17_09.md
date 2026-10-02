@@ -2393,3 +2393,8 @@ Datenbasis O11 (2.705–2.707): alle Binance-Krypto-Assets stündlich, Zuordnung
 Nächster Schritt: **Schritt 7 Betriebsvorbereitung** am Notebook (E-41). **M1-Kriterium 2 bleibt offen**, nichts ist verdrahtet.
 
 **Nachtrag 02.10.2026 (9) — Schritt 7 läuft:** Datenbasis per USB am Notebook, Nachlader (S7-1) und Stundenjob (S7-1b, 6cfd240) gebaut, am NB gezogen und gestartet; Positionsgröße mit Startwerten (E-44). Der Job **liest** noch niemand: **nichts ist für Signale verdrahtet**, M1-Kriterium 2 bleibt offen. Offen: Kontrolle am NB, S7-2 bis S7-7, dazu die Lücke *neu gelistete Binance-Paare* (S7-5). Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11, Plan Hebel O16/O17.
+
+**Nachtrag 03.10.2026 (10) — die REGEL0 geht in den Betrieb:** Rechenkern (`agent/regel0_rechnung.py`, R-R11 zeilengleich, Live-Probe 20/20), Betriebslauf
+als eigener Prozess nach dem Nachlader (S7-2b), REGEL0-Mails mit Testwoche bis 10.10. und der alte Hebelweg der Rollen-Kette aus (S7-4, E-46). **M1-Kriterium 2:**
+Die REGEL0 ist am Notebook verdrahtet, sobald der Pull gezogen ist. Bestätigt ist das erst mit den Kontrollen K-S7-3/K-S7-4 und der Testwoche (S7-7).
+Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.

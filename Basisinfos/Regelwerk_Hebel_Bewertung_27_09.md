@@ -22,7 +22,9 @@ Faktenteil: `python hebel_neubau.py`
 | ✔ **Datenbasis** | 537 Assets zusätzlich, je Asset **eine** Quelle (die längere Historie), Futures gleichwertig. **Bewertet, nicht trainiert** (2.705), die neuen tragen 4/4 (2.706). Zuordnung mit Preisprüfung und **Sperren** (2.707) |
 | ⚠️ **neue Pflichten** | **Signalbilanz je Asset** bei jeder Regeländerung (Watchlist, Bestand, Hebel-Liste; `messe_signalbilanz_je_asset.py`) · ein Filter nur mit **Qualitätsgewinn** (die weggenommenen schlechter) · übergeordnete Kräfte nur **gewichten** (Nutzer 01.10.) · neue Assets **bewerten, nicht trainieren**, bis O12 gemessen ist |
 | ✔ **Betrieb, Daten** | Nachlader und Stundenjob am NB (S7-1/S7-1b), Positionsgröße als Startwerte (E-44, `regel0_betrieb.yaml`). Die REGEL0 selbst ist **unverändert** |
-| ➤ **nächster Schritt** | Schritt 7: Kontrolle am NB, dann **S7-2** Betriebsrechnung (R-R11 zeilengleich, Frischeprüfung am Leser). Alles Offene: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 |
+| ✔ **Fassung 0.1** | kausale Schrumpfung (2.708). Die Bewertung vergleicht praktisch gegen die **Marktmitte** des Monats (τ² in 31/33 Monaten null) |
+| ✔ **Betrieb** | Rechenkern, Betriebslauf und Mails (S7-2 bis S7-4, E-45/E-46); der alte Hebelweg der Rollen-Kette ist aus |
+| ➤ **nächster Schritt** | NB pull + K-S7-3/K-S7-4, Testwoche bis 10.10., dann S7-5 bis S7-7. Alles Offene: `Voranalyse_Schritt7_Betrieb_02_10.md` §11–§15 |
 
 ---
 

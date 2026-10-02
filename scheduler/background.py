@@ -1543,6 +1543,26 @@ def regel0_nachlader_job() -> None:
                 time.time() - t0, sum(x["neue_stunden"] for x in bericht.values()), fehler,
                 " · ".join("%s %s" % (k.replace(".db", ""), v["bis"]) for k, v in bericht.items()))
     _regel0_rechnung_starten()
+    _regel0_mails()
+
+
+def _regel0_mails() -> None:
+    """S7-4 (E-46, 03.10.2026): faellige REGEL0-Mails aus der Ablage verschicken - Signal (Hebel-Schalter an, Stufe > 0),
+    Korrektur (endgueltige Stufe weicht ab), Erinnerung (24 h um). Laeuft auch, wenn die Rechnung dieser Stunde scheiterte -
+    die Erinnerungen haengen nicht an ihr. Versand ueber `_sende_hinweismail` (True nur bei echtem Versand); was nicht rausging,
+    wird in der naechsten Stunde wieder versucht."""
+    try:
+        import agent.regel0_mail as _RM
+        import agent.regel0_nachlader as _NL
+        z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail)
+        if any(z.values()):
+            logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt",
+                        z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"])
+        if z["fehlgeschlagen"]:
+            logger.error("REGEL0-Mails: %d nicht zugestellt - naechster Versuch in einer Stunde", z["fehlgeschlagen"])
+    except Exception as exc:                                 # noqa: BLE001
+        logger.exception("REGEL0-Mails: fehlgeschlagen")
+        _notify_job_failure("regel0_mails", "%s: %s" % (type(exc).__name__, exc))
 
 
 REGEL0_RECHNUNG_ZEITGRENZE_S = 50 * 60   # erster Lauf mit Monatstraining am NB rund 25 min; danach rund 7 min

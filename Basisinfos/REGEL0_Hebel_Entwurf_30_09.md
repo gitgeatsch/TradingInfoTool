@@ -230,3 +230,9 @@ fast immer die **Marktmitte** des Monats. Das eigene Normal eines Assets wirkt n
 Rauschen*). Die Beschreibung *Vorsprung gegen die eigene Phase* trifft für die Bewertung also nicht zu: Es ist ein Vorsprung gegen die **Marktmitte**.
 
 ⚠️ Offen und **nicht geklärt:** Warum in unverzerrt:3 gerade der Januar 2026 die Schwelle anders sieht (674 Stunden).
+
+## 14. Betrieb — Rechenkern und Mail (S7-2 bis S7-4, 02./03.10.2026)
+
+Die REGEL0.1 läuft am Notebook stündlich in `agent/regel0_rechnung.py`, zeilengleich zur Messung (R-R11). Neue Signale für Assets mit eingeschaltetem
+Hebel-Schalter kommen als Mail: Einstieg zum Schluss der Folgestunde, Ausstieg 24 h danach, Hebelstufe zuerst vorläufig (Korrektur nur bei Abweichung),
+Einsatz aus `Basisinfos/regel0_betrieb.yaml`. Der alte Hebelvorschlag der Rollen-Kette ist aus (E-46). Ausführlich: `Voranalyse_Schritt7_Betrieb_02_10.md` §13 bis §15.

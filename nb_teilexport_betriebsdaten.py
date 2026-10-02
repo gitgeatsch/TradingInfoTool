@@ -291,11 +291,17 @@ def _inhalt() -> int:
                     r[0], r[1] or 0, r[2], r[4], r[3], r[5], r[6], r[7], r[8], (" · ⚠️ " + r[9]) if r[9] else ""))
             n_ = c.execute("SELECT COUNT(*), SUM(hebel_schalter=1) FROM signal").fetchone()
             print("    Signale gesamt %d, davon Hebel-Schalter an %d" % (n_[0], n_[1] or 0))
-            for r in c.execute("SELECT symbol, bitpanda, signalstunde, einstieg, vh, stufe_vorlaeufig, stufe, p5, hebel_schalter FROM signal "
-                               "ORDER BY signalstunde DESC LIMIT 15"):
-                print("      %-9s (%s) Signal %s · Einstieg %s · v %.4f · Stufe vorl. %s / endg. %s · p5 %s · Schalter %s" % (
+            sp_ = {r[1] for r in c.execute("PRAGMA table_info(signal)")}
+            mail_ = "mail_signal_am" in sp_
+            if mail_:
+                m_ = c.execute("SELECT COUNT(mail_signal_am), COUNT(mail_korrektur_am), COUNT(mail_erinnerung_am) FROM signal").fetchone()
+                print("    Mails (S7-4): Signal %d · Korrektur %d · Erinnerung %d" % m_)
+            for r in c.execute("SELECT symbol, bitpanda, signalstunde, einstieg, vh, stufe_vorlaeufig, stufe, p5, hebel_schalter%s FROM signal "
+                               "ORDER BY signalstunde DESC LIMIT 15" % (", mail_signal_am, mail_korrektur_am, mail_erinnerung_am" if mail_ else "")):
+                print("      %-9s (%s) Signal %s · Einstieg %s · v %.4f · Stufe vorl. %s / endg. %s · p5 %s · Schalter %s%s" % (
                     r[0], r[1], r[2], r[3], r[4] or 0, r[5], r[6], "%.4f" % r[7] if r[7] is not None else "-",
-                    {1: "an", 0: "aus"}.get(r[8], "?")))
+                    {1: "an", 0: "aus"}.get(r[8], "?"),
+                    (" · Mail %s%s%s" % (r[9] or "-", " · Korr. %s" % r[10] if r[10] else "", " · Erinn. %s" % r[11] if r[11] else "")) if mail_ else ""))
             c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Rechnung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))

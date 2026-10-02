@@ -18,7 +18,11 @@ DATEI = os.path.join(HIER, "Basisinfos", "regel0_betrieb.yaml")
 
 # Rueckfall, falls die Datei fehlt - dieselben Startwerte wie in der Datei (E-44)
 VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=800.0,
-               richtwert_gleichzeitig=4, sperre_ab_richtwert=False)
+               richtwert_gleichzeitig=4, sperre_ab_richtwert=False,
+               # S7-4 (E-46, 03.10.2026): die REGEL0 ersetzt den Hebel - der alte Hebelvorschlag der Rollen-Kette ist aus (F1)
+               alter_hebelweg_aus=True,
+               # D4: bis zu diesem Tag (einschliesslich) tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43)
+               testwoche_bis="2026-10-10")
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -36,7 +40,21 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: einsatz_min_eur muss > 0 und <= einsatz_max_eur sein")
     if werte["positionswert_eur"] <= 0 or int(werte["richtwert_gleichzeitig"]) < 1:
         raise ValueError("regel0_betrieb.yaml: positionswert_eur > 0 und richtwert_gleichzeitig >= 1")
+    if not isinstance(werte["alter_hebelweg_aus"], bool):
+        raise ValueError("regel0_betrieb.yaml: alter_hebelweg_aus muss true oder false sein")
+    werte["testwoche_bis"] = str(werte["testwoche_bis"] or "")
+    if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
+        raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")
     return werte
+
+
+def alter_hebelweg_aus(werte: dict | None = None) -> bool:
+    """Ist der alte Hebelvorschlag der Rollen-Kette abgeschaltet? (F1/E-46) - im Zweifel (Datei unlesbar) JA, damit kein
+    Parallelbetrieb entsteht."""
+    try:
+        return bool((werte if werte is not None else lade())["alter_hebelweg_aus"])
+    except Exception:                                          # noqa: BLE001
+        return True
 
 
 @dataclass(frozen=True)

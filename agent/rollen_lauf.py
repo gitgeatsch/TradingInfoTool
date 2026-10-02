@@ -2140,6 +2140,11 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
     # Strategie erlaubt) und nur mit Schalter. Ohne Kapital oder Quote: KEIN
     # Hebel, der Grund steht in der Mail - nie ein stiller Vorgabewert (P-2).
     _hq_einst = BE.hebel_aus_quote_einstellungen(config)
+    # ⚠️⚠️ S7-4 (E-46, 03.10.2026): DIE REGEL0 ERSETZT DEN HEBEL (F1). Neue Hebel-Einstiege kommen nur noch aus der REGEL0
+    # (agent/regel0_stundenlauf.py, eigene Mail); hier wird aus einem neuen Einstieg kein Hebel mehr. Schalter in
+    # Basisinfos/regel0_betrieb.yaml (alter_hebelweg_aus), im Zweifel AN. Die Fuehrung ECHTER Hebelpositionen bleibt.
+    from agent import regel0_groesse as _R0G
+    _alt_hebel_aus = _R0G.alter_hebelweg_aus()
     _hq_rechnet = bool(_hq_einst.get("aktiv")) and bool(
         _AKL.hebel_handelbar(assetklasse) and _HA_HEBEL_OK(strategie))
     _hq = _hq_quote = _hq_kapital = None
@@ -2318,6 +2323,15 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
         # (LINK, TAO, ...) behaelt seinen Einstieg unveraendert - ob er als
         # Spot oder gehebelt ausgefuehrt wird, faellt dort weiterhin aus der
         # Rechnung an und aus dem Freigabeschalter.
+        if _etikett == "hebel" and _alt_hebel_aus:
+            if befund.get("richtung") == "SHORT":
+                # Spot kann bei Bitpanda nicht short - ohne den alten Hebelweg ist ein SHORT-Einstieg nicht handelbar
+                durchlauf.verloren(
+                    symbol, "geometrie",
+                    "SHORT nur mit Hebel - neue Hebel-Einstiege kommen seit S7-4 aus der REGEL0 (alter Hebelweg aus)")
+                return
+            _etikett = "spot"
+            ergebnis.setdefault("alter_hebelweg_aus", []).append(symbol)
         if ist_taktisch and _etikett != "hebel":
             durchlauf.verloren(
                 symbol, "geometrie",
@@ -2462,6 +2476,7 @@ def _ein_asset(*, symbol, reihen, tag, lagebild, lagebild_id, gleichlauf,
                              hebel_handelbar=(
                                  _AKL.hebel_handelbar(assetklasse)
                                  and _HA_HEBEL_OK(strategie)
+                                 and not _alt_hebel_aus          # S7-4: kein Hebel aus der Rechnung (E-46)
                                  and (not _hq_rechnet
                                       or _topf_instrument == "hebel")),
                              hebel_grenze=(_hq_einst["hebel_grenze"]

@@ -1,0 +1,78 @@
+A) Mails aus der Ablage
+  ✔ Signalmail nur bei Schalter an, Stufe > 0, frisch - ['AAA', 'BBB', 'CANTON'] · {'signal': 3, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 0}
+  ✔ Testwoche im Betreff und im Text - [TESTWOCHE] REGEL0 Hebel LONG AAA 3x - Einstieg 05.10. 14:00
+  ✔ Einstieg = Schluss der Folgestunde (05.10. 12:00 UTC), Ausstieg 24 h danach (06.10. 12:00 UTC)
+  ✔ vorlaeufige Stufe vermerkt, Bitpanda-Hinweis (D2), Einsatz 500 EUR bei 3x
+  ✔ Zusatz-Asset: Bitpanda-Name, Kurs aus Futures, bewertet nicht trainiert
+  ✔ zweiter Durchgang: keine Doppel - {'signal': 0, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 0}
+  ✔ Korrektur nur fuer BBB (5x -> 3x), EEE bekommt jetzt die Signalmail (Stufe erst endgueltig > 0) - ['[TESTWOCHE] REGEL0 Hebel LONG EEE 3x - Einstieg 05.10. 14:00', '[TESTWOCHE] REGEL0 KORREKTUR BBB: 3x statt 5x']
+  ✔ die spaete Signalmail nennt die Stufe endgueltig
+  ✔ gescheiterter Versand wird NICHT vermerkt und beim naechsten Mal wiederholt - {'signal': 0, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 1} / {'signal': 1, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 0}
+  ✔ ab dem 5. offenen Trade: Vermerk Richtwert, Signal kommt trotzdem - 3 Mails, 3 mit Vermerk
+  ✔ Erinnerung nach 24 h fuer die gemailten Trades (AAA, BBB, CANTON, EEE) - ['AAA', 'BBB', 'CANTON', 'EEE'] · {'signal': 0, 'korrektur': 0, 'erinnerung': 4, 'fehlgeschlagen': 0}
+  ✔ keine doppelte Erinnerung
+  ✔ eine Erinnerung, die laenger als 6 h ueberfaellig ist, entfaellt
+  ✔ nach der Testwoche kein TESTWOCHE-Vermerk - REGEL0 Hebel LONG X 3x - Einstieg 12.10. 14:00
+B) Ende zu Ende: Stundenlauf -> Ablage -> Mails
+  ✔ Mails genau fuer die Signale mit Schalter an und Stufe > 0 (darunter ETH), mit Kurs - Signale [('ETH', 5, 1), ('GMX', 5, None), ('BTC', 5, 1), ('QNT', 5, 0), ('TAO', 5, 1), ('ARMB', 5, None), ('COINB', 5, None), ('EVAA', 3, None), ('GNO', 5, None), ('MITO', 3, None), ('NOKB', 5, None), ('POWER', 3, None), ('QCOMB', 5, None), ('SOXLB', 3, None), ('WBTC', 5, None), ('WDCB', 5, None)] · Mails ['BTC', 'ETH', 'TAO'] · 218 s
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (LINK/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (LINK/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (LINK/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (BTC/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (LINK/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/spot): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+Rolle BC (ETH/hebel): Mindestgrundlage unvollstaendig - BC3: kein Fakt ausserhalb der Kursreihe
+    Beispiel:
+      REGEL0.1 - HEBEL-SIGNAL LONG   ·   TESTWOCHE bis 2026-10-10
+      
+      Asset:      ETH
+      Signal:     Stunde ab 12.08. 11:00 UTC (13:00 Ortszeit), abgeschlossen um 12.08. 12:00 UTC (14:00 Ortszeit)
+      
+      EINSTIEG    zum Schlusskurs der Folgestunde: 12.08. 13:00 UTC (15:00 Ortszeit)
+                  (so ist die REGEL0 gemessen - wer frueher oder spaeter einsteigt, handelt etwas anderes)
+      AUSSTIEG    24 Stunden danach: 13.08. 13:00 UTC (15:00 Ortszeit) - ohne Stop, ohne Ziel (REGEL0)
+      
+      HEBEL       5x  (VORLAEUFIG aus der ATR der Signalstunde - die endgueltige Stufe steht eine Stunde spaeter fest; weicht sie ab, kommt eine kurze Korrektur)
+                  geschaetzte Liquidationsgefahr binnen 24 h: 2x 0,1 % · 3x 0,1 % · 5x 1,0 % (Grenze 2 %)
+                  ⚠️ Pruefe, welche Hebelstufen Bitpanda fuer dieses Asset anbietet - die Stufen je Asset sind noch nicht als Daten hinterlegt (D2). Bietet Bitpanda weniger an, die naechst kleinere nehmen.
+      EINSATZ     300 EUR  (Positionswert 1500 EUR / 5x, Startwerte in regel0_betrieb.yaml)
+      Kurs zur Signalstunde: 1915.57 USDT (Binance Spot, nur Orientierung - Bitpanda handelt in EUR)
+      
+      Regel: REGEL0.1 (rsi-Ersteintritt, v-dach +0,0495, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %)
+      Das ist eine Auskunft deines Systems, kein Auftrag - du entscheidest.
+C) Rollen-Kette: der alte Hebelweg (Suite-Paket B1: echte Kette im Trockenlauf mit gestelltem Hebel-Lauf)
+  ✔ Gegenprobe: Schalter AUS -> der Hebel-Lauf erzeugt wie bisher eine Hebelmail - 28 von 28 Pruefungen in B1 gruen
+  ✔ Schalter AN -> derselbe Lauf erzeugt KEINE Hebelmail mehr - in B1 anders als mit Schalter aus: ['bei LONG liegt der Stop unter dem Kurs, bei SHORT darueber', 'beide Richtungsläufe erzeugen eine Mail MIT Kursmarken', 'das Ziel dreht mit', 'ein Hebel-Lauf ebenfalls', 'ein Spot-Lauf erzeugt je durchgekommener Zelle eine Mail', 'und die Liquidation auch']
+D) O18: Migration der Hebel-Schalter nur einmal
+  ✔ erster Lauf setzt die Marke, ein danach neues Watchlist-Asset bleibt ohne Zeile = AUS - Marke 2026-10-02 22:42 · zweiter Lauf [] · NEUCOIN Zeile None, erlaubt False
+  ✔ Gegenprobe: ohne Marke haette die Migration NEUCOIN still eingeschaltet (so war es bisher) - ['NEUCOIN']
+SCHLUSS: ✔ bestanden (19 von 19)

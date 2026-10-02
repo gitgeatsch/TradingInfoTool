@@ -584,3 +584,51 @@ Lauf zu **kontrollieren** (K-S7-3).
    es mindestens zwei Läufe mit *frisch* nahe *aktiv* gibt und keine Meldung kommt.
 3. Danach den NB-Export (schlank). Bestanden ist er, wenn keine ERROR- oder Traceback-Zeile von `regel0` darin steht und keine Mail *Job 'regel0_rechnung'
    fehlgeschlagen* kam. Die anderen Jobs dürfen keine neuen Zeitüberschreitungen zeigen. Dazu die Zeile `REGEL0-ERGEBNIS` mit `sekunden`.
+
+---
+
+## 15. S7-4 — die REGEL0 geht in die Mail, der alte Hebelweg ist aus (03.10.2026; E-46, Nutzer: *„Ja D1 bis D4 wie vorgeschlagen, prüfen und gegenprüfen"*)
+
+**Voranalyse am Code (kurz):**
+
+| Frage | Befund |
+|---|---|
+| Wo entsteht heute ein Hebel? | **Nur** in der Rollen-Kette, in `_ein_asset` (`agent/rollen_lauf.py`): Das Etikett „Hebel" kommt aus r(q) oder der Geometrie, ein SHORT ist immer Hebel. Das alte Hebel-Screening ist am NB aus (`hebel_screening.aktiv=false`). In 72 h gab es **keine** Hebelmail |
+| Warum nicht `hebel_handelbar` abschalten? | Den Schalter liest auch die **Führung echter Hebelpositionen** (`rollen_lauf.py:977`) und die Lagebeschreibung der Prompts. Abgeschaltet wird gezielt dort, wo ein **neuer Einstieg** Hebel wird |
+| Wohin mit den Mails? | Der Stundenjob der App liest die Ablage `regel0_signale.db` und schickt über `_sende_hinweismail`. Der Rechenprozess selbst schickt nichts |
+| O18 | Die Migration der Hebel-Schalter lief bei **jedem** Start und schaltete neue Watchlist-Assets still ein. Drei Leser nahmen ohne Eintrag *an* an |
+
+**Gebaut:**
+
+| Teil | |
+|---|---|
+| `Basisinfos/regel0_betrieb.yaml` | `alter_hebelweg_aus: true` (F1, im Zweifel AN) · `testwoche_bis: "2026-10-10"` (D4) |
+| `agent/rollen_lauf.py` | in `_ein_asset`: Wird ein neuer Einstieg Hebel, wird er **Spot**. Ein **SHORT** geht verloren, denn Spot kann bei Bitpanda nicht short. Die Rechnung bekommt `hebel_handelbar=False`. Die taktische Zelle der Kern-Assets entfällt (sie besteht nur mit Hebel, Entscheidung 01.09.). **Spot und die Hebelführung echter Positionen bleiben unverändert** |
+| `agent/regel0_ablage.py` | die EINE Stelle für `regel0_signale.db`, neu mit Kurs, Kursquelle und Mailspalten |
+| `agent/regel0_mail.py` | **Signalmail** (Schalter an, Stufe > 0, Einstieg nicht älter als 3 h): Asset (Bitpanda-Name), Signal, **Einstieg** zum Schluss der Folgestunde und **Ausstieg** 24 h danach (UTC und Ortszeit), Hebel **vorläufig** (D1) mit Liquidationsgefahr je Stufe, **Bitpanda-Hinweis** (D2), Einsatz aus `regel0_betrieb.yaml` mit Richtwert-Vermerk, Kurs zur Signalstunde, Vermerke (Futures, nicht trainiert, BTC), Regelversion. **Korrektur** nur, wenn die endgültige Stufe abweicht (auch *kein Handel*). **Erinnerung**, wenn die 24 h um sind. Kein LLM-Kommentar (D3). **TESTWOCHE** in Betreff und Text bis 10.10. (D4). Vermerkt wird nur ein echter Versand, sonst neuer Versuch in der nächsten Stunde |
+| Stundenjob | `regel0_nachlader_job` → Rechnung (eigener Prozess) → `_regel0_mails()`; die Mails laufen auch, wenn die Rechnung scheiterte |
+| O18 | Die Migration läuft **einmal** (Marke `hebel_schalter_geradegezogen` in `meta`). Ohne Eintrag gilt **aus**, auch in den beiden Abfragen und in der Oberfläche |
+| Paket B1 | prüft den **alten** Hebelweg und läuft deshalb sichtbar mit Schalter **aus** (`B1_ALTER_HEBELWEG_AUS`). So bleibt der alte Code geprüft, falls der Schalter je zurückgestellt wird |
+| Teilexport | zeigt die Mails je Signal |
+
+**Gegenprüfung** (`Basisinfos/Rechenkern_02_10/pruefe_s74.py` gegen die NB-Sicherung vom 02.10. 16:37, Beleg `pruefung_s74.txt`):
+
+| | |
+|---|---|
+| A Mails (gestellte Signale, Versand abgefangen) | nur Schalter an, Stufe > 0 und frisch · Testwoche · Einstieg und Ausstieg wie gemessen · vorläufig, Bitpanda-Hinweis, Einsatz · Zusatz-Asset mit Bitpanda-Namen und Futures-Vermerk · kein Doppel · Korrektur nur bei Abweichung · späte Signalmail, wenn die Stufe erst endgültig > 0 wird · gescheiterter Versand wird wiederholt · Richtwert-Vermerk · Erinnerung, kein Doppel, verfällt nach 6 h · nach der Testwoche kein Vermerk |
+| B Ende zu Ende | echter Stundenlauf (ETH am 12.08. 12:00, alle Assets) → Ablage → Mails genau für die Signale mit Schalter an (Schalter aus der NB-Sicherung) |
+| C Rollen-Kette | Paket B1 mit Schalter **aus**: der Hebel-Lauf erzeugt wie bisher eine Hebelmail (Gegenprobe) · mit Schalter **an**: **keine** Hebelmail |
+| D O18 | Der erste Lauf setzt die Marke, ein danach neues Watchlist-Asset bleibt ohne Eintrag = **aus**. Gegenprobe: ohne Marke wäre es still eingeschaltet worden |
+
+⚠️ **Zwei Befunde beim Prüfen:** (1) `pruefstand_hebelmail.py` liefert gegen die NB-Sicherung **keine** Signale: SOL wird akkumuliert, LINK und NEAR scheitern an *Risikobudget fehlt*. Als Gegenprobe taugt er so nicht, deshalb Paket B1. (2) In B1 fiel mit Schalter an auch die „Spot"-Mail weg. Sie war die **taktische Hebel-Zelle** von ETH; die Akkumulationszelle verliert in **beiden** Stellungen am Entscheider. **Spot ist nicht betroffen.**
+
+⚠️ **Für dich wichtig (O13):** Die alte **Hebelführung** echter Positionen bleibt an. Eröffnest du eine REGEL0-Position bei Bitpanda, kann sie dafür Mails nach dem **alten** Plan schicken (z. B. *Stop nachziehen*). Die REGEL0 hat aber keinen Stop: Es gilt die Ausstiegszeit aus der REGEL0-Mail. Die Führung für REGEL0-Positionen kommt mit O13.
+
+**Am Notebook zu tun (nach dem Commit):**
+1. `git pull`, dann die App neu starten. Der Schalter ist sofort an: Ab dann schlägt die Rollen-Kette keinen Hebel mehr vor.
+2. Kontrolle **K-S7-3** (Teilexport, REGEL0-RECHNUNG) wie in §14, dazu **K-S7-4**:
+   - Kommt ein Signal für ein Asset mit Hebel-Schalter an, muss die Mail *[TESTWOCHE] REGEL0 Hebel LONG …* kommen.
+   - Der Teilexport zeigt bei diesem Signal *Mail <Zeit>*.
+   - Eine Stunde später kommt höchstens eine Korrektur, nach 24 h die Erinnerung.
+   - Im NB-Export: keine Zeile *REGEL0-Mails: … nicht zugestellt*, keine Fehlermail für `regel0_mails`.
+3. Erwartung: Bei 25 Assets mit Hebel-Schalter sind es nach der Referenz **rund 2–3 Signale am Tag**. Davon sind fast alle handelbar (3x/5x).

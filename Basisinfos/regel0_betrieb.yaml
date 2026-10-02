@@ -18,3 +18,7 @@ einsatz_max_eur: 800
 richtwert_gleichzeitig: 4      # Nutzer: max. 4 Trades gleichzeitig - als RICHTWERT, nicht als Sperre
 sperre_ab_richtwert: false     # false = Signal kommt trotzdem, die Mail vermerkt "Richtwert erreicht"
                                # (gemessen 02.10.: 41 % der Signale der Hebel-Liste kamen bei schon 4 offenen, und sie waren nicht schlechter)
+
+# S7-4 (E-46, Nutzer 03.10.2026: "Ja D1 bis D4 wie vorgeschlagen")
+alter_hebelweg_aus: true       # die REGEL0 ersetzt den Hebel (F1): die Rollen-Kette schlaegt keinen Hebel mehr vor; Spot laeuft weiter
+testwoche_bis: "2026-10-10"    # bis einschliesslich diesem Tag tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43); leer = aus
