@@ -238,3 +238,48 @@ Nachrechnung, mit ihnen werden die Ballungen etwas häufiger.
 
 **Gebaut und geprüft:** `agent/regel0_groesse.py` (reine Rechnung) und `pruefe_pakete.py --paket Regel0Betrieb`, 8/8 grün. Geprüft wird das **Verhalten**: Die Rechnung folgt der Datei
 (Wegwerfdatei mit anderen Werten), sperrt nicht ohne Sperre, und ein Tippfehler oder min über max **bricht ab**.
+
+---
+
+## 9. S7-1 — Der Nachlader (gebaut und geprüft 02.10.2026)
+
+**Nutzer:** *„Ja, prüfen und gegenprüfen, dann Doku."*
+
+**Was er tut:** `agent/regel0_nachlader.py` hält die vier Dateien der REGEL0-Datenbasis aktuell. Je Asset lädt er **ab der letzten gespeicherten Stunde** nach, holt diese
+Stunde neu und überschreibt sie. Gespeichert werden **nur abgeschlossene Stunden**. Paare, die nicht mehr gehandelt werden, überspringt er, ihre Historie bleibt.
+Die Abfragen laufen **parallel** (8 gleichzeitig), geschrieben wird nacheinander. Das Binance-Gewicht wird an den Antwortköpfen überwacht.
+Symbole und Märkte kommen **aus den Dateien selbst**, nicht aus `terminmarkt_historie.db` (am Notebook nur Symbolliste).
+
+| Datei | Quelle | Symbole |
+|---|---|---|
+| `stundenkurse.db` | Spot-Kerzen | aus der Datei (116) |
+| `stundenkurse_alle.db` | Spot oder Futures je `_quelle` | 537 |
+| `markpreis_historie.db` · `markpreis_alle.db` | Markpreis live (`markPriceKlines`), Paar und Faktor aus der letzten Zeile | 253 · 411 |
+
+**Schutz:** Er schreibt nur in diese vier Dateien und verweigert jede andere, auch `tradinginfotool.db`. Bewacht wird das von `pruefe_pakete.py --paket Regel0Betrieb` (9/9).
+
+**Gegenprüfung** auf Wegwerfkopien (Beleg `Datenbasis_01_10/gegenpruefung_nachlader.txt`): Für 6 Assets aus allen vier Dateien (BTC, 1000CAT, HYPE, CC, FLOKI, ASTER) wurden die
+letzten 48 gespeicherten Stunden gelöscht und vom Nachlader neu geholt.
+
+| | Ergebnis |
+|---|---|
+| Messbasis (Spot) | ✔ Stunde für Stunde gleich |
+| **Markpreise, Monatsarchiv gegen Live-Schnittstelle** | ✔ **gleich**. Das in Abschnitt 5 genannte Risiko ist ausgeräumt |
+| `stundenkurse_alle.db` | ✔ gleich bis auf die **letzte** Stunde, die beim Laden am 01.10. **noch offen** war. Nachgeprüft: das gilt bei **535 von 537** Assets. Der Nachlader ersetzt sie beim ersten Lauf durch die abgeschlossene |
+| nur abgeschlossene Stunden gespeichert | ✔ |
+| zweiter Lauf holt nichts doppelt | ✔ |
+| Produktionsdatei verweigert | ✔ |
+
+**Last** (Desktop, Wegwerfkopie):
+
+| Lauf | Dauer | Arbeitsspeicher | Fehler |
+|---|---|---|---|
+| **erster Lauf** (holt etwa einen Monat nach, wie am Notebook) | 785 s (nacheinander) | 0,17 GB | 0 |
+| normaler Stundenlauf, **nacheinander** | 766 s ⛔ zu langsam für den Stundentakt | 0,17 GB | 0 |
+| normaler Stundenlauf, **parallel** | **59 s** | 0,17 GB | 0 |
+
+Übersprungen, weil nicht mehr im Handel: 141 Markpreis-Reihen eingestellter Paare der Messbasis (erwartet) und 12 Futures, die Binance seither eingestellt hat.
+
+➤ **Nächster Schritt S7-1b:** den Nachlader am Notebook als **Stundenjob** einhängen (etwa 5 Minuten nach jeder vollen Stunde). Danach am Notebook `git pull` und
+Neustart. Die Kontrolle läuft über den Teilexport (die letzte Stunde je Datei rückt vor). Das ist eine Änderung am Betrieb und braucht dein Ja.
+

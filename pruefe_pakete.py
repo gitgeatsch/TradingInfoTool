@@ -31005,6 +31005,22 @@ def paket_regel0_betrieb() -> None:
     importe = {n.names[0].name.split(".")[0] for n in _ast.walk(baum) if isinstance(n, _ast.Import)} |               {(n.module or "").split(".")[0] for n in _ast.walk(baum) if isinstance(n, _ast.ImportFrom)}
     pruefe(P, "reine Rechnung: keine Datenbank, kein Netz (sqlite3/requests nicht importiert)", not (importe & {"sqlite3", "requests", "urllib"}),
            str(sorted(importe)))
+    # S7-1 Nachlader (02.10.): schreibt NUR in die vier REGEL0-Dateien - Gegenprobe ohne Netz und ohne Daten
+    try:
+        import agent.regel0_nachlader as NL
+        verweigert = []
+        with _tf.TemporaryDirectory() as d:
+            for name in ("tradinginfotool.db", "messdaten.db", "terminmarkt_historie.db"):
+                io.open(os.path.join(d, name), "w").close()
+                try:
+                    NL._pruefe_ziel(d, name)
+                except SystemExit:
+                    verweigert.append(name)
+        pruefe(P, "Nachlader verweigert jede Datei ausser den vier REGEL0-Dateien (auch die Produktion)",
+               len(verweigert) == 3 and set(NL.DATEIEN) == {"stundenkurse.db", "stundenkurse_alle.db", "markpreis_historie.db", "markpreis_alle.db"},
+               "verweigert: %s" % verweigert)
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "Nachlader verweigert jede Datei ausser den vier REGEL0-Dateien (auch die Produktion)", False, repr(ex))
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),

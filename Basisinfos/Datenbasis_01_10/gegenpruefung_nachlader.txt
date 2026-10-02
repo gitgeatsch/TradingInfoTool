@@ -1,0 +1,30 @@
+Kopien angelegt in C:\Users\Geatsch\AppData\Local\Temp\claude\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\db18e928-7ab8-4d7a-a4da-6a068bf34900\scratchpad\nl_test
+geloescht und gemerkt: {('stundenkurse.db', 'BTC'): 48, ('stundenkurse.db', '1000CAT'): 48, ('stundenkurse_alle.db', 'CC'): 48, ('stundenkurse_alle.db', 'FLOKI'): 48, ('stundenkurse_alle.db', 'ASTER'): 48, ('stundenkurse_alle.db', 'HYPE'): 48, ('markpreis_historie.db', 'BTC'): 48, ('markpreis_historie.db', '1000CAT'): 48, ('markpreis_alle.db', 'CC'): 48, ('markpreis_alle.db', 'FLOKI'): 48, ('markpreis_alle.db', 'ASTER'): 48, ('markpreis_alle.db', 'HYPE'): 48}
+--- Lauf 1
+  stundenkurse.db          neue Stunden     973 · ersetzt     2 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  stundenkurse_alle.db     neue Stunden     247 · ersetzt     4 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_historie.db    neue Stunden    1598 · ersetzt     2 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_alle.db        neue Stunden    3196 · ersetzt     4 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  stundenkurse.db        BTC      48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  stundenkurse.db        1000CAT  48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  stundenkurse_alle.db   CC       48 Stunden neu geholt gegen gespeichert: ✔ gleich bis auf die letzte Stunde, die beim Laden OFFEN war (2026-10-01 17:00) - jetzt durch die abgeschlossene ersetzt
+  stundenkurse_alle.db   FLOKI    48 Stunden neu geholt gegen gespeichert: ✔ gleich bis auf die letzte Stunde, die beim Laden OFFEN war (2026-10-01 16:00) - jetzt durch die abgeschlossene ersetzt
+  stundenkurse_alle.db   ASTER    48 Stunden neu geholt gegen gespeichert: ✔ gleich bis auf die letzte Stunde, die beim Laden OFFEN war (2026-10-01 16:00) - jetzt durch die abgeschlossene ersetzt
+  stundenkurse_alle.db   HYPE     48 Stunden neu geholt gegen gespeichert: ✔ gleich bis auf die letzte Stunde, die beim Laden OFFEN war (2026-10-01 16:00) - jetzt durch die abgeschlossene ersetzt
+  markpreis_historie.db  BTC      48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  markpreis_historie.db  1000CAT  48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  markpreis_alle.db      CC       48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  markpreis_alle.db      FLOKI    48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  markpreis_alle.db      ASTER    48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  markpreis_alle.db      HYPE     48 Stunden neu geholt gegen gespeichert: ✔ gleich
+  stundenkurse.db        letzte Stunde 2026-10-02 06:00 · laufende Stunde 2026-10-02 07:00 -> ✔ nur abgeschlossene
+  stundenkurse_alle.db   letzte Stunde 2026-10-02 06:00 · laufende Stunde 2026-10-02 07:00 -> ✔ nur abgeschlossene
+  markpreis_historie.db  letzte Stunde 2026-10-02 06:00 · laufende Stunde 2026-10-02 07:00 -> ✔ nur abgeschlossene
+  markpreis_alle.db      letzte Stunde 2026-10-02 06:00 · laufende Stunde 2026-10-02 07:00 -> ✔ nur abgeschlossene
+--- Lauf 2 (muss nichts Neues holen ausser einer inzwischen abgeschlossenen Stunde)
+  stundenkurse.db          neue Stunden       0 · ersetzt     2 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  stundenkurse_alle.db     neue Stunden       0 · ersetzt     4 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_historie.db    neue Stunden       0 · ersetzt     2 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_alle.db        neue Stunden       0 · ersetzt     4 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+Gegenprobe Schutz: tradinginfotool.db verweigert -> ✔
+SCHLUSS: ✔ bestanden

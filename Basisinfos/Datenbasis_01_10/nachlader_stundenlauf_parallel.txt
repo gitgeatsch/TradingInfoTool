@@ -1,0 +1,6 @@
+REGEL0-NACHLADER · Ordner C:\Users\Geatsch\AppData\Local\Temp\claude\D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool\db18e928-7ab8-4d7a-a4da-6a068bf34900\scratchpad\nl_voll
+  stundenkurse.db          neue Stunden     116 · ersetzt   116 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  stundenkurse_alle.db     neue Stunden     537 · ersetzt   537 · nicht im Handel   0 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_historie.db    neue Stunden     112 · ersetzt   112 · nicht im Handel 141 · Fehler 0 · bis 2026-10-02 06:00
+  markpreis_alle.db        neue Stunden     399 · ersetzt   399 · nicht im Handel  12 · Fehler 0 · bis 2026-10-02 06:00
+FERTIG in 59 s · Fehler gesamt 0
