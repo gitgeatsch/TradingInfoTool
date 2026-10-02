@@ -394,3 +394,79 @@ Binance-Daten (AIOZ, SUPRA, VSN, XDC; Aktien und ETFs sind nicht Teil der REGEL0
 |---|---|---|
 | **K-ALARM-1** | nächster NB-Export nach Pull und Neustart | keine Zeile *Stillstandsmail NICHT zugestellt* / *Datenausfall-Meldung NICHT zugestellt*, keine neue *E-Mail-Benachrichtigung fehlgeschlagen* |
 | **K-ALARM-2** | der nächste Halt über 45 min (geplant oder nicht) | die Mail *… STUNDEN STILLSTAND - die Anwendung war weg* kommt an. Wer es sofort wissen will: die App einmal **länger als 45 min** beendet lassen |
+
+
+---
+
+## 12. VORANALYSE S7-2 — die Betriebsrechnung (02.10.2026, zur Abstimmung)
+
+**Ziel:** Am Notebook entstehen stündlich **dieselben** REGEL0-Einstiege und Hebelstufen wie in der Messung. Nur dann gilt der gemessene Beitrag für das,
+was läuft (E-31, E-35).
+
+**Stand:** Die Datenbasis läuft am NB (S7-1/S7-1b bestätigt). Gerechnet wird dort noch nichts.
+
+**Test oder Betrieb:** Gebaut und geprüft wird am Desktop gegen die Messbelege (R-R11). Erst danach kommt der Betrieb (S7-4).
+
+### 12.1 Ist-Stand: wie die Messung rechnet (am Code nachgesehen)
+
+| Schritt | wo | was |
+|---|---|---|
+| Menge | `messe_e2_beitraege.py:123-172`, `:176-202` | *bestand* = `stundenkurse.db`, Symbole mit mehr als 2.000 Zeilen (116 mit BTC), **sortiert nach Zeilenzahl**. Mit `--zusatz` kommen die Assets aus deinen Listen (Watchlist, Bestand, Hebel-Liste) dazu, die nicht in der Messbasis liegen, aus `stundenkurse_alle.db`. Sie werden **bewertet, nicht trainiert**. *unverzerrt:1–3* zieht 100 von 305 eingestellten Paaren aus **`data/eingestellt_historie.db`** (950 MB, **nur am Desktop**) |
+| Anker | `messe_e2_beitraege.py:356-372` | eine Stunde zählt nur mit **240 h lückenlosem Vorlauf und 72 h lückenloser Zukunft** |
+| Merkmale | `messe_e2_beitraege.py:233-264` | rsi über **14 Zeilen** (einfache Summe, nicht Wilder), ATR über **24 Zeilen** von (H−T)/C × √24 |
+| rsi_s, rsi_s24 | `messe_losfahren.py:166-195` | rsi minus Median der letzten 720 h (mindestens 240 Werte), dazu derselbe Wert 24 h früher |
+| eigenes Normal | `messe_losfahren.py:122-138` | Mittel der Ausgänge q5 im Fenster [t−1 Jahr, t−24 h]. Reif nach 12 Monaten; mit J (`--junge`) ab 240 h |
+| Schrumpfung (QSh) | `messe_losfahren.py:368-393` | Marktmitte, tau2 und Schrumpfungsfaktor je Asset **je Monat**, aus den Gitterstunden (0/6/12/18 UTC) der reifen Messbasis |
+| Monatsmodell | `messe_losfahren.py:401-415`, `messe_k1_schritt2b_kombination.py:109-212` | Kurvenmodell Form b (12 Stufen) auf rsi_s und rsi_s24. Training ab 2023-01 bis Monatsbeginn −24 h, nur Stunden mit Treffer. Dämpfung per Kreuzvalidierung über 4 Zeitblöcke, Raster GITTER_NEU. Rechnet mit `scipy` (L-BFGS-B, sparse) |
+| Einstieg | `messe_losfahren.py:421-455` | Bedingungen: (1) v̂ = expit(logit(QSh) + Beitrag) − QSh ≥ +0,035; (2) in den 48 h davor keine Stunde darüber und mindestens 40 gültige; (3) nicht in den ersten 24 h eines Monats. **Einstieg eine Stunde später** |
+| Einstiegspreis | `messe_e2_beitraege.py:265-300` | **Schlusskurs** der Einstiegsstunde |
+| Hebelstufe | `messe_k6_hebelstufe.py:81-89`, `:238-290`, `:555-570`, `:673-677` | ATR-Modell **je Quartal** neu (Form b, Standard-Dämpfung), Ziel *erste Liquidation binnen H* am **Markpreis** (gesperrte Monate ausgelassen), Marge 0,09. Gewählt wird die höchste Stufe von 2/3/5 mit P(Liquidation in 24 h) ≤ 2 % |
+| Belege | `data/_vergleich/` | `kern48jbz_einstiege_bestand.csv`: **10.732 Einstiege, 127 Assets** (116 plus 11 aus deinen Listen), 2024–2026. `kern48jb_*` ist eine echte Teilmenge davon (die 116 sind bitgleich). ⚠️ Die **Hebelstufe je Handel steht in keiner Datei**: `b0_spur_bestand.csv` hat nur 2025–26 und keine Zusatz-Assets |
+
+### 12.2 ⚠️ Wo Messung und Betrieb auseinanderlaufen — acht Befunde
+
+| # | Befund | Folge für den Betrieb |
+|---|---|---|
+| **B-1** ⛔ | **Die Schrumpfung greift innerhalb des Monats vor.** Marktmitte, tau2 und der Mittelwert je Asset kommen aus **allen** Gitterstunden des laufenden Monats (`messe_losfahren.py:369-393`). Eine Stunde am 10. nutzt also Werte vom 11. bis zum 31. Im Betrieb kennt man nur die Stunden bis jetzt | **So nicht zeilengleich nachbaubar.** Die Wirkung ist zu **messen**, nicht anzunehmen. Weil das Normal über ein Jahr läuft und sich langsam ändert, erwarte ich eine kleine Wirkung. Das ist eine Vermutung, kein Befund ➤ **Teil 0** |
+| **B-2** | **Grundgesamtheit des Trainings.** Am NB liegen die 116 der Messbasis. *unverzerrt* braucht `eingestellt_historie.db` und ist eine **Zufallsziehung**, also keine Betriebsform | Betrieb = **bestand**: Training auf den 116, bewertet werden dazu BTC und deine Listen. Referenz ist `kern48jbz_einstiege_bestand.csv`. Eine andere Lernmenge entscheidet **O12**, und dann ziehen beide Seiten nach |
+| **B-3** | **Die Ankermaske verlangt 72 h Zukunft.** Live hat keine Stunde eine Zukunft | Die Betriebsrechnung nimmt **jede lückenlose abgeschlossene Stunde**. Rückwirkend sind das dieselben Stunden wie in der Messung; Abweichungen gibt es nur an Datenlücken. Sie werden **ausgewiesen** |
+| **B-4** | **Reihenfolge der Symbole** nach Zeilenzahl. Am NB wachsen die Dateien stündlich, die Reihenfolge kann kippen | feste Reihenfolge (alphabetisch). Die Modellparameter können sich dadurch an späten Nachkommastellen verschieben. Die Toleranz wird vorab festgelegt (12.4) |
+| **B-5** | **Die Referenz für die Hebelstufe je Handel fehlt** | einmal am Desktop erzeugen: `messe_k6_hebelstufe.py … --zusatz --spur-regel0 <csv> --spur-alle`, nur lesend, rund 15 min |
+| **B-6** | **Die Messung endet 2026-08.** Monats- und ATR-Modell gibt es nur bis August, die Monatsanfänge im Code nur bis 2027 | Ohne Monatstraining gibt es im Oktober kein Signal ➤ **S7-2 und S7-3 gehören zusammen**: ein Rechenkern mit Training und Bewertung |
+| **B-7** | **Geometrie.** Signal zur Stunde s, bekannt ab s+1:00. Einstieg in der Messung zum **Schluss von s+1**, also um s+2:00 UTC. Die Mail kommt etwa um s+1:10 | Die Mail nennt den **Messeinstieg** (Uhrzeit und Schlusskurs) und den **Ausstieg 24 h danach**. Wer früher einsteigt, handelt eine **andere** Geometrie als gemessen (*Messgeometrie ist nicht Betrieb*) |
+| **B-8** | **Frische.** Fehlt einem Asset die letzte Stunde, rechnet die Messung dort gar nicht | **kein Signal**, wenn die letzte abgeschlossene Stunde fehlt. Fehlt sie bei vielen Assets, kommt eine **Meldung**, kein stilles Nichts |
+
+### 12.3 TEIL 0 — die Wirkung von B-1 messen, vor dem Bau und vorab festgelegt
+
+| | |
+|---|---|
+| **Frage** | Wie viel von der REGEL0 hängt am Vorgriff innerhalb des Monats? |
+| **kausale Fassung K** | Marktmitte, tau2 und Schrumpfungsfaktor je Asset kommen aus dem **Vormonat** und werden mit dem Monatstraining einmal berechnet. Ein Asset ohne Vormonat (jung oder neu) nimmt seine Gitterstunden des laufenden Monats **bis zur Stunde t** |
+| **Messung** | `messe_losfahren.py` bekommt den Schalter `--normal kausal`. Ohne Schalter bleibt das Ergebnis **bitgleich**, das wird geprüft. Dann laufen Einstiege und Simulation in allen **4 Mengen**, dazu die Signalbilanz je Asset für deine Listen aus dem NB-Teilexport. Etwa 1–1,5 h am Desktop |
+| **Regel, vorab** | ✔ **K wird REGEL0.1** (neue Version nach E-43, Referenz für den Betrieb), wenn in mindestens 3 von 4 Mengen gilt: (1) die Einstiege sind zu **≥ 95 %** gleich, und (2) der Rohvorteil je Handel ändert sich um **≤ 0,05 Prozentpunkte**. ⛔ Sonst wird das Ergebnis **vorgelegt**. Dann hat der Vorgriff zum gemessenen Ergebnis **beigetragen**, und die REGEL0-Zahlen gelten nur mit Vorbehalt |
+| **Pflichten** | Nullwelt, je Jahr, mit und ohne 10./11.10.2025, Spiegel (E-29), **Signalbilanz je Asset** vorher und nachher |
+
+### 12.4 Bau nach Teil 0: der Rechenkern `agent/regel0_rechnung.py` (S7-2 zusammen mit S7-3)
+
+| Teil | Inhalt |
+|---|---|
+| **Daten** | nur lesend (`mode=ro`) aus den vier REGEL0-Dateien, nie aus der Produktion |
+| **Monatsjob** (S7-3) | am 1. jedes Monats: rsi-Modell wie 12.1, Schrumpfung nach K, zu jedem Quartalsbeginn zusätzlich das ATR-Modell. Abgelegt als **Modelldatei je Monat** (`data/regel0_modell_<JJJJ-MM>`), mit Prüfsumme und Regelversion |
+| **Stundenlauf** (S7-2) | nach dem Nachlader, für jedes Asset: Merkmale, Normal und v̂, dann Ersteintritt mit Ruhe 48 h, Hebelstufe aus dem ATR-Modell am Markpreis und die Frischeprüfung B-8. Ergebnis je Signal: Asset, Signalstunde, **Messeinstieg (Uhrzeit, Kurs)**, Ausstieg 24 h später, v̂, Stufe, P(Liquidation), Vermerke (*Kurs aus Futures*, *nicht trainiert*, *BTC nicht nachgewiesen*) |
+| **Nachrechnungsmodus** | derselbe Code rückwirkend über 2024-01 bis 2026-08, für R-R11 |
+| **R-R11-1** | Einstiege **zeilengleich** zur Referenz, erst in der Fassung *wie Messung*, dann in K. Gegenprobe: mit Schwelle 0,034 **muss** die Prüfung abweichen |
+| **R-R11-2** | Hebelstufe je Handel gleich der Referenz aus B-5 |
+| **R-R11-3** | Abweichung der Modellparameter ausgewiesen (Reihenfolge B-4, später die numpy-Version am NB). Maßstab sind gleiche **Signale** |
+| **Last** | am Desktop gemessen und hochgerechnet (Faktor 3,5), danach am NB bestätigt |
+| **Wache** | `--paket Regel0Betrieb` prüft: Der Rechenkern liest nur. Die Frischeprüfung greift (eine veraltete Wegwerfdatei ergibt kein Signal). Die Nachrechnung stimmt mit dem Beleg |
+
+⚠️ Bis dahin geht **nichts** an die Mail oder in die Produktion. Das ist erst S7-4.
+
+### 12.5 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **F-a** | Teil 0 wie in 12.3 festgelegt messen? | ➤ **Ja**. Ohne die Messung wäre die Betriebsform eine Annahme |
+| **F-b** | Grundgesamtheit im Betrieb = **bestand** (Training auf den 116, bewertet werden BTC und deine Listen), bis O12 entscheidet? | ➤ **Ja**. Die Daten liegen am NB, die Referenz gibt es, und eine Zufallsziehung ist keine Betriebsform |
+| **F-c** | S7-2 und S7-3 als **einen** Rechenkern bauen? | ➤ **Ja** (B-6) |
+| **F-d** | **Für welche Assets** sollen Signale kommen? Die Messung bewertet die 116 der Messbasis **und** deine Listen. Der heutige Betrieb prüft den Hebel nur bei eingeschaltetem Hebel-Schalter (`asset_hebel_settings`, heute 25) | ➤ **Signal nur bei eingeschaltetem Hebel-Schalter.** Bewertet werden alle mit Daten (Auskunft, z. B. für die Signalbilanz). So bleibt die Auswahl bei dir. **Gemessen** auf der Referenz: Die 25 der Hebel-Liste (24 mit Daten, XDC fehlt) hatten 2025 **2,4** und 2026 **2,8** Einstiege am Tag. Alle 127 hätten **13–15** am Tag. Wie viele davon nach der Hebelstufe handelbar sind, zeigt erst B-5 |
