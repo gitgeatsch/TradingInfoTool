@@ -31060,6 +31060,64 @@ def paket_regel0_betrieb() -> None:
         pruefe(P, "Stundenjob: Desktop-Zustand wird NICHT beschrieben", False, repr(ex))
 
 
+def paket_alarmmail(B=None) -> None:
+    """Die beiden Alarmmails kommen beim EMPFAENGER an (Reparatur 02.10.2026).
+
+    ⛔⛔ DER BEFUND: `_melde_laufzeitluecke` (Stillstand) und `_melde_datenausfall` (*alle Kurse veraltet*) holten den Empfaenger
+    ueber `config.get_config()` - die Funktion gibt es nicht. Der Empfaenger war seit 20.09. IMMER None, jede Mail scheiterte
+    (am NB belegt 02.10. 07:29), und beide meldeten trotzdem True. Die alten Proben bildeten den Versand mit `e=None` nach und
+    sahen den Empfaenger nie an: sie deckten die FUNKTION ab, nicht den PFAD.
+
+    ➤ Deshalb hier am SEITENEFFEKT: was kommt beim Versand als Empfaenger an? Die Konfiguration ist eine WEGWERFFASSUNG
+    (nicht die des Geraets - die ist am Notebook eine andere), der Versand ist nachgebildet, die DB ist im Speicher.
+    ``B`` erlaubt die Gegenprobe gegen eine fruehere Fassung des Moduls."""
+    import sqlite3 as _sq
+    import config as _C
+    import api.email_notify as _EN
+    P = "Alarmmail"
+    if B is None:
+        import scheduler.background as B
+    adresse = "probe@beispiel.invalid"
+    ankunft, ergebnis = [], {"ok": True}
+    alt_lade, alt_send, alt_rec = _C.load_config, _EN.send_notification_email, B.db.record_api_health_error
+    alt_sperre = B._datenausfall_zuletzt
+
+    def _cfg(aktiv):
+        return lambda *a, **k: {"benachrichtigung": {"email": {"aktiv": aktiv, "empfaenger": adresse}}}
+
+    def _send(betreff, text, empfaenger=None, *a, **k):
+        ankunft.append(empfaenger)
+        return ergebnis["ok"]
+    c = _sq.connect(":memory:")
+    try:
+        _EN.send_notification_email = _send
+        B.db.record_api_health_error = lambda *a, **k: None
+        _C.load_config = _cfg(True)
+        B._datenausfall_zuletzt = None
+        r1 = B._melde_laufzeitluecke(c, 126.0, "2026-10-02T03:24:33")
+        r2 = B._melde_datenausfall(3, 3)
+        an = list(ankunft)
+        pruefe(P, "⛔⛔ Stillstandsmail: beim Versand kommt die ADRESSE an, und gemeldet wird erst danach", r1 is True and an[:1] == [adresse],
+               "Empfaenger beim Versand: %r, Rueckgabe %r" % (an[:1], r1))
+        pruefe(P, "⛔⛔ Datenausfallmail: beim Versand kommt die ADRESSE an", r2 is True and an[1:2] == [adresse],
+               "Empfaenger beim Versand: %r, Rueckgabe %r" % (an[1:2], r2))
+        ankunft.clear(); ergebnis["ok"] = False; B._datenausfall_zuletzt = None
+        r3 = B._melde_laufzeitluecke(c, 126.0, "x")
+        r4 = B._melde_datenausfall(3, 3)
+        pruefe(P, "scheitert der Versand, meldet keine der beiden *gesendet* - und die Sperrfrist beginnt nicht",
+               r3 is False and r4 is False and B._datenausfall_zuletzt is None, "Rueckgaben %r %r" % (r3, r4))
+        ankunft.clear(); ergebnis["ok"] = True
+        _C.load_config = _cfg(False)
+        r5 = B._melde_laufzeitluecke(c, 126.0, "x")
+        pruefe(P, "Mail abgeschaltet (email.aktiv false): kein Versand, Rueckgabe False", r5 is False and not ankunft, str(ankunft))
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "⛔⛔ Alarmmails: Probe lief durch", False, repr(ex))
+    finally:
+        _C.load_config, _EN.send_notification_email, B.db.record_api_health_error = alt_lade, alt_send, alt_rec
+        B._datenausfall_zuletzt = alt_sperre
+        c.close()
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -31146,6 +31204,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Entscheiderstufe": paket_entscheiderstufe,
           "Terminmarktstufe": paket_terminmarktstufe,
           "Laufzeitwaechter": paket_laufzeitwaechter,
+          "Alarmmail": paket_alarmmail,
           "Referenzstaerke": paket_referenzstaerke,
           "Diagnoseumfang": paket_diagnoseumfang,
           "A1Eichung": paket_a1eichung,

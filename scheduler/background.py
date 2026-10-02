@@ -4581,8 +4581,6 @@ def _melde_datenausfall(veraltet: int, gesamt: int) -> bool:
     if (_datenausfall_zuletzt is not None
             and time.monotonic() - _datenausfall_zuletzt < DATENAUSFALL_SPERRE_MINUTEN * 60):
         return False
-    from api.email_notify import send_notification_email
-    import config as config_module
 
     text = chr(10).join([
         f"Fuer ALLE {gesamt} beobachteten Werte ist der zuletzt gespeicherte "
@@ -4599,18 +4597,24 @@ def _melde_datenausfall(veraltet: int, gesamt: int) -> bool:
         "Kommt diese Nachricht erneut, hakt die Quelle selbst (CoinGecko-"
         "Kontingent, Netz, API-Schluessel).",
     ])
+    # ⛔⛔ REPARIERT 02.10.2026: hier stand `config_module.get_config()` - die
+    # Funktion gibt es nicht. Der Empfaenger war damit IMMER None, die Mail
+    # scheiterte, und die Funktion meldete trotzdem True. Jetzt ueber den
+    # gemeinsamen Helfer `_sende_hinweismail` (richtiger Schluessel
+    # `email.empfaenger`, Schalter `email.aktiv`, True NUR bei echtem Versand).
+    # Die Sperrfrist beginnt nur nach einem echten Versand - scheitert er,
+    # versucht der naechste Waechterlauf es wieder.
     try:
-        empfaenger = config_module.get_config().get("benachrichtigung", {}).get("email")
-    except Exception:
-        empfaenger = None
-    try:
-        send_notification_email(
-            "TradingInfoTool: KEINE ANALYSE - alle Kurse veraltet", text, empfaenger)
-        _datenausfall_zuletzt = time.monotonic()
-        return True
+        gesendet = _sende_hinweismail(
+            "TradingInfoTool: KEINE ANALYSE - alle Kurse veraltet", text)
     except Exception:
         logger.exception("Datenausfall-Meldung konnte nicht gesendet werden")
         return False
+    if gesendet:
+        _datenausfall_zuletzt = time.monotonic()
+    else:
+        logger.error("Datenausfall-Meldung NICHT zugestellt (Mail aus oder Versand gescheitert)")
+    return gesendet
 
 
 # ⚠️⚠️ DIE LAUFZEITLUECKE - GEBAUT AM 19.09.2026 NACH EINEM SECHS-STUNDEN-
@@ -4685,10 +4689,7 @@ def _laufzeitluecke(conn) -> float | None:
 
 
 def _melde_laufzeitluecke(conn, minuten: float, seit: str) -> bool:
-    """True, wenn eine Nachricht rausging."""
-    from api.email_notify import send_notification_email
-    import config as config_module
-
+    """True, wenn eine Nachricht WIRKLICH rausging (nicht: versucht)."""
     stunden = minuten / 60.0
     text = chr(10).join([
         "Die Anwendung war %.1f Stunden lang nicht in Betrieb "
@@ -4711,11 +4712,6 @@ def _melde_laufzeitluecke(conn, minuten: float, seit: str) -> bool:
         "War es ein geplanter Neustart, ist diese Nachricht der Beleg "
         "dafuer, dass die Ueberwachung greift.",
     ])
-    try:
-        empfaenger = config_module.get_config().get(
-            "benachrichtigung", {}).get("email")
-    except Exception:                                        # noqa: BLE001
-        empfaenger = None
     # ⚠️ DIE SPUR GEHOERT AUCH IN DIE DATENBANK, nicht nur in die Mail -
     # sonst findet die Diagnose den Ausfall spaeter nicht wieder, und genau
     # daran ist die Ursachensuche am 19.09. gescheitert.
@@ -4727,14 +4723,20 @@ def _melde_laufzeitluecke(conn, minuten: float, seit: str) -> bool:
         conn.commit()
     except Exception:                                        # noqa: BLE001
         logger.exception("Laufzeitluecke nicht in api_health vermerkt")
+    # ⛔⛔ REPARIERT 02.10.2026: der Empfaenger kam aus `config_module.get_config()`
+    # - die Funktion gibt es nicht, er war IMMER None. Belegt am NB 02.10. 07:29
+    # (Stillstand 2,1 h, Mail gescheitert, Funktion meldete trotzdem True). Jetzt
+    # der gemeinsame Helfer, True NUR bei echtem Versand.
     try:
-        send_notification_email(
+        gesendet = _sende_hinweismail(
             "TradingInfoTool: %.1f STUNDEN STILLSTAND - die Anwendung war weg"
-            % stunden, text, empfaenger)
-        return True
+            % stunden, text)
     except Exception:                                        # noqa: BLE001
         logger.exception("Laufzeitluecke konnte nicht gemeldet werden")
         return False
+    if not gesendet:
+        logger.error("Stillstandsmail NICHT zugestellt (Mail aus oder Versand gescheitert)")
+    return gesendet
 
 
 def _ohlc_data_is_stale(conn, watchlist) -> bool:

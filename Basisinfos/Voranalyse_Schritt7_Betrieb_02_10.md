@@ -372,7 +372,7 @@ Binance-Daten (AIOZ, SUPRA, VSN, XDC; Aktien und ETFs sind nicht Teil der REGEL0
 |---|---|
 | **Mail-Schalter** | `benachrichtigung.aktiv` gegen `benachrichtigung.email.aktiv`: als eigene Aufgabe vorgeschlagen, nicht erledigt |
 | alte NB-Kontrollen | ✔ **keine offen** — die Liste ist seit 23.09. leer (K5, K14 bestätigt, K6 nie fällig, K11a am Prüfstand belegt, K13 erledigt). ⚠️ Der Memory-Index nannte sie noch als offen und wurde hier zuerst ungeprüft übernommen (korrigiert 02.10.) |
-| ⛔ **Alarmmails kommen nie an** (gefunden im NB-Export 02.10.) | `_melde_laufzeitluecke` (Stillstand) und `_melde_datenausfall` (*alle Kurse veraltet*) holen den Empfänger über `config.get_config()`. Die Funktion **gibt es nicht** (nur `load_config`), also ist der Empfänger `None`. Und selbst mit ihr wäre es das ganze `email`-Bündel statt `email.empfaenger`. Am NB um 07:29 belegt: Stillstand 2,1 h, Mail *fehlgeschlagen* (`'NoneType' object has no attribute 'strip'`). Beide melden trotzdem *gesendet* (Rückgabewert nicht geprüft). Besteht seit f92205f (20.09.); K25 *beim nächsten echten Ausfall muss eine Mail kommen* war damit nie erfüllt. ➤ Reparatur zur Abstimmung |
+| ⛔ **Alarmmails kommen nie an** (gefunden im NB-Export 02.10.) | `_melde_laufzeitluecke` (Stillstand) und `_melde_datenausfall` (*alle Kurse veraltet*) holen den Empfänger über `config.get_config()`. Die Funktion **gibt es nicht** (nur `load_config`), also ist der Empfänger `None`. Und selbst mit ihr wäre es das ganze `email`-Bündel statt `email.empfaenger`. Am NB um 07:29 belegt: Stillstand 2,1 h, Mail *fehlgeschlagen* (`'NoneType' object has no attribute 'strip'`). Beide melden trotzdem *gesendet* (Rückgabewert nicht geprüft). Besteht seit f92205f (20.09.); K25 *beim nächsten echten Ausfall muss eine Mail kommen* war damit nie erfüllt. ✔ **REPARIERT 02.10.** (Nutzer: *Ja, Reparatur durchführen*): beide über den bestehenden Helfer `_sende_hinweismail` (Schlüssel `email.empfaenger`, Schalter `email.aktiv`, *gesendet* nur bei echtem Versand; die Sperrfrist der Datenausfallmail beginnt nur nach echtem Versand). Wache `--paket Alarmmail` 4/4 am Seiteneffekt (was kommt beim Versand als Empfänger an?), Gegenprobe gegen die alte Fassung **4/4 rot** (Empfänger `None`, Rückgabe *gesendet*). Die übrigen 20 Mailstellen lesen den Empfänger richtig. Der Stillstand 02.10. 05:24–07:29 war ein **geplanter** Halt (Nutzer: *App beendet und verzögert gestartet*), die Mail wäre richtig gewesen. ➤ Kontrolle K-ALARM nach dem Pull |
 | Grundgesamtheit `schnitt` am NB | 398 statt 517 Symbole, **vor** einer Freischaltung von `schnitt` zu entscheiden (CLAUDE.md) |
 | CLAUDE.md | wird nicht über git verteilt; ans Notebook nur über den Drive-Abgleich, wenn der Nutzer will |
 | Suite | 4 bekannte rote Zeilen (Datenstand am Desktop) |
@@ -387,3 +387,10 @@ Binance-Daten (AIOZ, SUPRA, VSN, XDC; Aktien und ETFs sind nicht Teil der REGEL0
 | ⛔ Nebenbefund | Stillstandsmail 07:29 nicht zugestellt — siehe Abschnitt D, *Alarmmails kommen nie an* |
 
 ➤ **S7-1/S7-1b sind im Betrieb bestätigt.** Die REGEL0-Datenbasis läuft am Notebook stündlich und ohne Desktop-Handgriff (E-35).
+
+### Kontrolle nach dem Pull der Alarmmail-Reparatur
+
+| # | Kontrolle | bestanden, wenn |
+|---|---|---|
+| **K-ALARM-1** | nächster NB-Export nach Pull und Neustart | keine Zeile *Stillstandsmail NICHT zugestellt* / *Datenausfall-Meldung NICHT zugestellt*, keine neue *E-Mail-Benachrichtigung fehlgeschlagen* |
+| **K-ALARM-2** | der nächste Halt über 45 min (geplant oder nicht) | die Mail *… STUNDEN STILLSTAND - die Anwendung war weg* kommt an. Wer es sofort wissen will: die App einmal **länger als 45 min** beendet lassen |
