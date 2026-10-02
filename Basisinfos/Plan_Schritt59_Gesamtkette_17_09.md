@@ -2391,3 +2391,5 @@ Die Kurs-Vorgeschichte ist ausgereizt, Ruhe 72 h ist regimeabhängig. Simulation
 L Mindestliquidität (2.704) verbessern sie **nicht**. Teil 0 (2.703): Ohne Kosten ist die REGEL0 in 4/4 Mengen positiv, und die **Kosten** sind der größte Posten.
 Datenbasis O11 (2.705–2.707): alle Binance-Krypto-Assets stündlich, Zuordnung mit Sperren, **40 von 60** Assets aus Watchlist, Bestand und Hebel-Liste bekommen Signale.
 Nächster Schritt: **Schritt 7 Betriebsvorbereitung** am Notebook (E-41). **M1-Kriterium 2 bleibt offen**, nichts ist verdrahtet.
+
+**Nachtrag 02.10.2026 (9) — Schritt 7 läuft:** Datenbasis per USB am Notebook, Nachlader (S7-1) und Stundenjob (S7-1b, 6cfd240) gebaut, am NB gezogen und gestartet; Positionsgröße mit Startwerten (E-44). Der Job **liest** noch niemand: **nichts ist für Signale verdrahtet**, M1-Kriterium 2 bleibt offen. Offen: Kontrolle am NB, S7-2 bis S7-7, dazu die Lücke *neu gelistete Binance-Paare* (S7-5). Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11, Plan Hebel O16/O17.

@@ -334,3 +334,44 @@ er sich mit `betriebsreihen` und `terminmarkt`; die Bremse hält ihn unter 70 % 
 3. nach etwa 1–2 Stunden: `python nb_teilexport_betriebsdaten.py`. Im Abschnitt REGEL0-DATENBASIS muss *schreibt* stehen, der Stand muss bei der letzten vollen
    Stunde liegen, und es muss mindestens zwei Läufe ohne Fehler geben.
 
+
+## 11. ⭐ ALLES, WAS IN SCHRITT 7 NOCH OFFEN IST — Stand 02.10.2026, nach dem NB-Pull von 6cfd240
+
+**Nutzer:** *„Schreibe alles, was noch offen ist, in die zentralen Dokumente und den Plan."* Diese Liste ist der **Zustand**. Erledigtes wird hier abgehakt,
+nicht gelöscht.
+
+### A. Betriebskontrolle jetzt (nach dem Pull 02.10., App neu gestartet)
+
+| # | Kontrolle | wann | bestanden, wenn |
+|---|---|---|---|
+| **K-S7-1** | Teilexport `python nb_teilexport_betriebsdaten.py` | 1–2 h nach dem Start | Abschnitt REGEL0-DATENBASIS: *schreibt*; Stand je Datei = letzte volle Stunde (UTC); mindestens 2 Läufe mit Fehler 0; „nicht im Handel" bei den Markpreisen etwa 141 und 12 (erwartet) |
+| **K-S7-2** | **NB-Export** `extract_notebook_diagnose.py` (schlank, **nicht** `--voll`). Stehende Regel: jede Änderung mit Laufzeitcode wird im Betrieb auf Fehler geprüft | **nach** dem ersten Lauf (Logzeile `REGEL0-Nachlader: fertig in …`), etwa 45–60 min nach dem Start. Nicht während des ersten Laufs, weil der Upload sonst mit dem Nachholen um die Leitung konkurriert | kein ERROR/Traceback aus `regel0_nachlader` oder `background`; keine Mail *Job 'regel0_nachlader' fehlgeschlagen*; die anderen Binance-Jobs (`terminmarkt`, `hebel_screening`, `betriebsreihen`) **ohne neue** Zeitüberschreitungen oder Jobfehler während des Nachholens; ein einzelnes *maximum number of running instances* ist zulässig |
+
+### B. Die Bauschritte von Schritt 7 (je mit Voranalyse und Nutzer-Ja)
+
+| # | Inhalt | offen dabei |
+|---|---|---|
+| ✔ S7-1 | Nachlader | — |
+| ✔ S7-1b | Stundenjob | Kontrolle K-S7-1/K-S7-2 |
+| ➤ **S7-2** | **Betriebsrechnung** `regel0_betrieb`: Normal, rsi, v̂, Ersteintritt mit Ruhe 48 h, J (240 h), Hebelstufe aus dem ATR-Modell (P(liq) ≤ 2 %). Training auf den **116** der Messbasis (Grundgesamtheit), bewertet werden auch die übrigen (`--zusatz`, *bewertet, nicht trainiert*) | **R-R11:** zeilengleich zu `kern48jbz_einstiege_bestand.csv`, dieselbe Hebelstufe je Handel. ⚠️⚠️ **Frischeprüfung am Leser:** Ist die letzte Stunde veraltet, kommt **kein** Signal, sondern eine Meldung (heute überwacht nur der Teilexport die Frische) |
+| S7-3 | Monatstraining als Job (rsi- und ATR-Modell speichern) | dieselben Parameter wie die Messung; die Abweichung durch numpy 2.5.1 ausweisen, Maßstab sind gleiche **Signale** |
+| S7-4 | **Einhängen in die Rollen-Kette** (F1/F2): den alten Hebelvorschlag **abschalten** (kein Parallelbetrieb); LLM-Rollen prüfen und kommentieren nur | Mailblock: Einstieg, Hebelstufe **gedeckelt auf das Bitpanda-Angebot** (⚠️ **Quelle der Bitpanda-Stufen je Asset klären**), Einsatz aus `regel0_betrieb.yaml`, **Ausstiegszeit** plus **Erinnerung nach 24 h** (E-43), Richtwert-Vermerk, Vermerke *Kurs aus Futures*, *gesperrt*, *BTC nicht nachgewiesen*, **Regelversion** (E-43). Prüfstand mit echter `config.yaml`, Mail per diff, LONG **und** SHORT |
+| S7-5 | täglicher Abgleich: Bitpanda-Katalog und Zuordnung (`pruefe_bitpanda_katalog.py`, `pruefe_symbol_zuordnung.py`), Meldung bei Sperre oder neuer Ausnahme | ⚠️⚠️ **LÜCKE (gefunden 02.10.):** E-40 heißt *alles, was Binance stündlich führt*. Der Nachlader führt aber nur fort, was **schon** in den Dateien steht. **Neu gelistete Binance-Paare kommen nicht dazu.** S7-5 muss sie am Notebook aufnehmen: Historie ab dem Listing, `_quelle`, Markpreis. Nie in die Messbasis `stundenkurse.db` (Grundgesamtheit). Gegenprobe: eine absichtlich falsche Zuordnung muss gemeldet werden |
+| S7-6 | R-R11 **am Notebook**: die Signale einer vergangenen Woche nachrechnen, als Kopie gegen den Desktop halten | zeilengleich |
+| S7-7 | **Mindestbedingungen** (O7, F4: sofortiger Ersatz, eine Woche testen und optimieren, dazu Simulationen zu Stabilität und Funktion), dann **Schritt 8 Umstellung** | mit dem Nutzer festlegen, bevor S7-7 beginnt |
+
+### C. Fachlich offen, nach der Umstellung (im Plan unter Offene Punkte)
+
+O12 Lernmenge per Regel · O13 Fortsetzung und Positionsführung **echter** Positionen, dazu der Importer-Fehler (2.679) · O14 Spot-Kette anpassen oder stilllegen
+(nicht sofort) · R Regime-Kontext mit O10 · Käuferanteil auf dem Kern · Liquidität als **Gewicht** (2.704) · O9 Messmenge nach Größenklassen (später) · Assets ohne
+Binance-Daten (AIOZ, SUPRA, VSN, XDC; Aktien und ETFs sind nicht Teil der REGEL0)
+
+### D. Nebenbefunde und Altlasten — nicht vergessen
+
+| | |
+|---|---|
+| **Mail-Schalter** | `benachrichtigung.aktiv` gegen `benachrichtigung.email.aktiv`: als eigene Aufgabe vorgeschlagen, nicht erledigt |
+| alte NB-Kontrollen | K5, K6, K11a, K13, K14 (Memory *ausstehende NB-Kontrollen*), beim nächsten Export mit abarbeiten |
+| Grundgesamtheit `schnitt` am NB | 398 statt 517 Symbole, **vor** einer Freischaltung von `schnitt` zu entscheiden (CLAUDE.md) |
+| CLAUDE.md | wird nicht über git verteilt; ans Notebook nur über den Drive-Abgleich, wenn der Nutzer will |
+| Suite | 4 bekannte rote Zeilen (Datenstand am Desktop) |

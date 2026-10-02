@@ -17,7 +17,8 @@
 | Frage | neu | selbst prüfen |
 |---|---|---|
 | **Wo stehen wir** | REGEL0 fest (E-36/E-37). A, B, L haben sie **nicht** verbessert (2.702–2.704). Die Verluste kommen aus den **Kosten** (2.703). Die Datenbasis ist vollständig (O11, 2.705–2.707) | `python hebel_neubau.py` |
-| **Was als Nächstes** | **Schritt 7 Betriebsvorbereitung** am Notebook (E-41), zuerst die Voranalyse | Plan, Abschnitt *PLAN UND VORGEHEN*, Zeile 7 |
+| **Was als Nächstes** | **Schritt 7** läuft: ✔ S7-1 Nachlader, ✔ S7-1b Stundenjob (am NB gestartet 02.10.), ➤ Kontrolle am NB (O17), dann **S7-2** Betriebsrechnung mit Frischeprüfung | `Voranalyse_Schritt7_Betrieb_02_10.md` **§11** (alles Offene), Plan O16/O17 |
+| **Wer schreibt die REGEL0-Dateien** | am NB stündlich der Job `regel0_nachlader` (:05 UTC); am Desktop **niemand automatisch**, die vier sind dort Messbasen (Sperre `betrieb_erlaubt`) | `python nb_teilexport_betriebsdaten.py`, Abschnitt REGEL0-DATENBASIS |
 | **Wo liegen die Daten** | Messbasis `data/stundenkurse.db` (116, **nie** um Assets erweitern: `kursreihen()` nimmt jedes Symbol auf) · neu `data/stundenkurse_alle.db` (537, ab 2023) · `data/markpreis_alle.db` (411) · Zuordnung `Basisinfos/symbol_zuordnung.csv` | `python hole_stundenkurse_alle.py --pruefen` |
 | **Neue Assets bewerten** | `messe_losfahren.py … --mit-btc --zusatz` (bewertet, nicht trainiert) und `messe_k6_hebelstufe.py … --zusatz`. R-R11: die übrigen bleiben **zeilengleich** | Belege `Basisinfos/Datenbasis_01_10/` |
 | **Wie viele Signale je Asset** | REGEL0 25–45 je Asset und Jahr. 40 von 60 Assets der Listen bekommen Signale | `python messe_signalbilanz_je_asset.py --vorher … --nachher …` |

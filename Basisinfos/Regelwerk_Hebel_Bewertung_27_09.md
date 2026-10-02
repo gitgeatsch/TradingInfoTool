@@ -21,7 +21,8 @@ Faktenteil: `python hebel_neubau.py`
 | ⛔⭐ **L Liquidität** | Mindestfilter nicht bestanden: Geringe Liquidität hatte 2024 die **bessere** Chance (4/4, Spiegel ✔, überwiegend ATR-frei). Ein Filter nimmt die besseren weg (2.704). Offen als Gewicht. ⚠️ Spread ist nicht gemessen |
 | ✔ **Datenbasis** | 537 Assets zusätzlich, je Asset **eine** Quelle (die längere Historie), Futures gleichwertig. **Bewertet, nicht trainiert** (2.705), die neuen tragen 4/4 (2.706). Zuordnung mit Preisprüfung und **Sperren** (2.707) |
 | ⚠️ **neue Pflichten** | **Signalbilanz je Asset** bei jeder Regeländerung (Watchlist, Bestand, Hebel-Liste; `messe_signalbilanz_je_asset.py`) · ein Filter nur mit **Qualitätsgewinn** (die weggenommenen schlechter) · übergeordnete Kräfte nur **gewichten** (Nutzer 01.10.) · neue Assets **bewerten, nicht trainieren**, bis O12 gemessen ist |
-| ➤ **nächster Schritt** | **Schritt 7 Betriebsvorbereitung** (E-41) |
+| ✔ **Betrieb, Daten** | Nachlader und Stundenjob am NB (S7-1/S7-1b), Positionsgröße als Startwerte (E-44, `regel0_betrieb.yaml`). Die REGEL0 selbst ist **unverändert** |
+| ➤ **nächster Schritt** | Schritt 7: Kontrolle am NB, dann **S7-2** Betriebsrechnung (R-R11 zeilengleich, Frischeprüfung am Leser). Alles Offene: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 |
 
 ---
 
