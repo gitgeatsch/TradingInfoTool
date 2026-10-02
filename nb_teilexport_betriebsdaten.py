@@ -244,6 +244,33 @@ def _inhalt() -> int:
             c.close()
         except sqlite3.Error as ex:
             print("  ⛔ Positionen nicht lesbar: %s" % ex)
+    # Schritt 7, S7-1b: laeuft der Stundenjob `regel0_nachlader`? Je Datei der Stand, wie viele Symbole ihn erreichen, die letzten Laeufe
+    print()
+    print("-" * 100)
+    try:
+        import agent.regel0_nachlader as NL
+        ok, grund = NL.betrieb_erlaubt(DATEN)
+        print("REGEL0-DATENBASIS (Stundenjob regel0_nachlader): %s - %s" % ("schreibt" if ok else "schreibt NICHT", grund))
+        for d in NL.DATEIEN:
+            p = os.path.join(DATEN, d)
+            if not os.path.exists(p):
+                print("    %-24s FEHLT" % d)
+                continue
+            c = ro(p)
+            tab = "markpreis" if d.startswith("markpreis") else "stundenkurse"
+            je = [m for (m,) in c.execute("SELECT MAX(stunde) FROM %s GROUP BY symbol" % tab)]
+            hoch = max(je) if je else None
+            aktuell = sum(1 for m in je if hoch and NL._ms(m) >= NL._ms(hoch) - 2 * NL.H_MS)
+            print("    %-24s Stand %s · %d von %d Symbolen auf Stand (der Rest: nicht mehr im Handel oder Rueckstand)" % (
+                d, hoch, aktuell, len(je)))
+            if "_nachlader" in tabellen(c):
+                for r in c.execute("SELECT * FROM _nachlader ORDER BY rowid DESC LIMIT 3"):
+                    print("        Lauf %s · neu %d · ersetzt %d · nicht im Handel %d · Fehler %d" % r)
+            else:
+                print("        noch kein Lauf des Nachladers")
+            c.close()
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ REGEL0-Datenbasis nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     print()
     print("SCHLUSS: vollstaendig")
     return 0

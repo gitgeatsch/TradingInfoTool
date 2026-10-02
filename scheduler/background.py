@@ -1506,6 +1506,44 @@ def betriebsreihen_job(conn_factory) -> None:
         logger.exception("Betriebsreihen: Jobmarke nicht geschrieben")
 
 
+def regel0_nachlader_job() -> None:
+    """Haelt die REGEL0-Datenbasis stuendlich aktuell (Schritt 7, S7-1b, 02.10.2026).
+
+    Vier Dateien in data/ (Stundenkurse und Markpreise, `agent/regel0_nachlader.py`), je Symbol ab der letzten
+    gespeicherten Stunde, nur abgeschlossene Stunden. Am Desktop gemessen: Stundenlauf 59 s, ein Monat Rueckstand 13 min.
+
+    ⚠️⚠️ NUR AM BETRIEBSGERAET. Am Desktop liegen unter denselben Namen die MESSBASEN; die aendern sich nur von Hand,
+    sonst ist keine Messung reproduzierbar (R-R11). Die Bedingung steht im Helfer `betrieb_erlaubt` (Datenzustand, kein
+    Geraetename) - am Desktop ist das Ablehnen der Normalfall und KEIN Fehler, deshalb nur eine Logzeile.
+
+    ⚠️ Schreibt NICHT in die Produktionsdatenbank - der Nachlader verweigert jede Datei ausser den vier
+    (`--paket Regel0Betrieb`). Einzelne Symbolfehler zaehlt er nur: der naechste Lauf setzt dort ohne Luecke fort.
+    Eine Fehlermail gibt es, wenn der ganze Lauf scheitert (z. B. Binance nicht erreichbar).
+    """
+    import agent.regel0_nachlader as NL
+    ordner = NL.DATEN_VORGABE
+    erlaubt, grund = NL.betrieb_erlaubt(ordner)
+    if not erlaubt:
+        logger.info("REGEL0-Nachlader: uebersprungen - %s", grund)
+        return
+    t0 = time.time()
+    try:
+        bericht = NL.lauf(ordner, ausgabe=lambda s: logger.info("REGEL0-Nachlader: %s", s.strip()))
+    except SystemExit as stop:
+        # `_pruefe_ziel` wirft SystemExit (erbt von BaseException, wie bei `betriebsreihen_job`)
+        logger.error("REGEL0-Nachlader: abgelehnt - %s", stop)
+        _notify_job_failure("regel0_nachlader", "abgelehnt: %s" % stop)
+        return
+    except Exception as exc:                                 # noqa: BLE001
+        logger.exception("REGEL0-Nachlader: Lauf fehlgeschlagen")
+        _notify_job_failure("regel0_nachlader", "%s: %s" % (type(exc).__name__, exc))
+        return
+    fehler = sum(x["fehler"] for x in bericht.values())
+    logger.info("REGEL0-Nachlader: fertig in %.0f s - %d neue Stunden, %d Symbolfehler, Stand %s",
+                time.time() - t0, sum(x["neue_stunden"] for x in bericht.values()), fehler,
+                " · ".join("%s %s" % (k.replace(".db", ""), v["bis"]) for k, v in bericht.items()))
+
+
 def externe_reihen_job(conn_factory) -> None:
     """Die Fremdquellen der Rolle G auffrischen (2026-08-16, Schritt 3).
 
@@ -5169,6 +5207,27 @@ def build_scheduler(
         # einem Neustart bis 03:30 UTC nicht zur Verfuegung.
         next_run_time=_staggered_start(2),
         misfire_grace_time=_IMMEDIATE_START_MISFIRE_GRACE_SECONDS,
+    )
+    # ⚠️⚠️ REGEL0-DATENBASIS (Schritt 7, S7-1b, 02.10.2026) - stuendlich um :05 UTC.
+    # Binance schliesst die Stundenkerze um :00; fuenf Minuten spaeter ist sie sicher
+    # abgeschlossen (E-42: Pruefzeitpunkt jede volle Stunde nach Kerzenschluss).
+    # Sofortstart nach einem Neustart: sonst fehlten bis zur naechsten :05 alle Stunden
+    # der Ausfallzeit. Index 10 - nach den bisherigen Sofortstartern; die Binance-Last
+    # mit `betriebsreihen` teilt er sich ueber die Gewichtsbremse im Nachlader.
+    # misfire 30 min + coalesce: ein kurzes Standby holt EINEN Lauf nach, keine
+    # Fehlermail; der Nachlader setzt ohnehin an der letzten Stunde je Symbol an.
+    # Laeuft ein Lauf laenger als eine Stunde (erster Lauf nach langem Ausfall),
+    # ueberspringt APScheduler den naechsten (max_instances=1) - ohne Mail.
+    scheduler.add_job(
+        regel0_nachlader_job,
+        "cron",
+        minute=5,
+        timezone=timezone.utc,
+        id="regel0_nachlader",
+        coalesce=True,
+        max_instances=1,
+        misfire_grace_time=1800,
+        next_run_time=_staggered_start(10),
     )
     # Fremdquellen der Rolle G (2026-08-16) - taeglich um 06:35, also VOR den
     # Signallaeufen. Der Zeitpunkt ist nicht beliebig: die Rollen-Kette liest

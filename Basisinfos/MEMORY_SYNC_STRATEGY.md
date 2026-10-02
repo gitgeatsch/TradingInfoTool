@@ -371,8 +371,19 @@ Nutze diesen Ablauf, wenn sich **nur** eine CLAUDE.md-Datei geändert hat (ohne 
 
 | Datei | Desktop | Notebook |
 |---|---|---|
-| `data/stundenkurse_alle.db` | 898 MB, 537 Assets stündlich ab 2023 (Spot/Futures), Marke `_nur_bewertung` | **fehlt** — kommt mit Schritt 7 (Historie übertragen, dann laufend nachladen) |
-| `data/markpreis_alle.db` | 411 Assets, 6,54 Mio Stunden, Sperrtabelle `_abweichung` | **fehlt** — Schritt 7 |
+| `data/stundenkurse_alle.db` | 898 MB, 537 Assets stündlich ab 2023 (Spot/Futures), Marke `_nur_bewertung` | ✔ per USB übertragen 02.10. (SHA-256 gleich), **laufend** stündlich vom Job `regel0_nachlader` |
+| `data/markpreis_alle.db` | 411 Assets, 6,54 Mio Stunden, Sperrtabelle `_abweichung` | ✔ per USB 02.10., laufend vom Job `regel0_nachlader` |
 | `Basisinfos/symbol_zuordnung.csv` | im Repo (Code-Stand, per `git pull`) | per `git pull` |
 
 ⚠️ Die Messbasis `stundenkurse.db` wird **nie** um diese Assets erweitert (sonst ändert `kursreihen()` die Grundgesamtheit jeder Messung).
+
+**Nachtrag S7-1b (02.10.2026) — wer die vier REGEL0-Dateien schreibt:**
+
+| | Desktop | Notebook |
+|---|---|---|
+| `stundenkurse.db` · `stundenkurse_alle.db` · `markpreis_historie.db` · `markpreis_alle.db` | nur **von Hand** (`hole_*.py`), das sind die **Messbasen** | **stündlich :05 UTC** der Job `regel0_nachlader` (Betriebskopie, per USB angelegt) |
+
+⚠️ Der Job **erkennt das Gerät am Datenzustand**: Er schreibt nur, wenn `terminmarkt_historie.db` die Marke `_nur_symbolliste` trägt (Notebook-Sollzustand).
+Am Desktop lehnt er ab, das ist eine Logzeile und keine Mail. ⚠️⚠️ Wird am Notebook irgendwann eine **volle** `terminmarkt_historie.db` abgelegt, hört der
+Job dort **still** auf. Die Kontrolle ist der Teilexport, Abschnitt REGEL0-DATENBASIS.
+⚠️ Nach einem Pull ändern sich die Dateien des Notebooks **nicht**. Eine Rückübertragung NB → Desktop ist **nie** vorgesehen, die Messbasen bleiben am Desktop.

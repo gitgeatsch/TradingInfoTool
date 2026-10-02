@@ -31021,6 +31021,43 @@ def paket_regel0_betrieb() -> None:
                "verweigert: %s" % verweigert)
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "Nachlader verweigert jede Datei ausser den vier REGEL0-Dateien (auch die Produktion)", False, repr(ex))
+    # S7-1b Stundenjob (02.10.): schreibt NUR am Betriebsgeraet - erkannt am Datenzustand (terminmarkt_historie.db nur Symbolliste).
+    # Am SEITENEFFEKT nachgewiesen: im Desktop-Zustand wird der Nachlader gar nicht erst aufgerufen. Ohne Netz, Wegwerfordner.
+    try:
+        import sqlite3 as _sq
+        import agent.regel0_nachlader as NL
+        import scheduler.background as BG
+
+        def _ordner(d, marke):
+            for n in NL.DATEIEN:
+                io.open(os.path.join(d, n), "w").close()
+            c = _sq.connect(os.path.join(d, "terminmarkt_historie.db"))
+            c.execute("CREATE TABLE terminmarkt (symbol TEXT)")
+            if marke:
+                c.execute("CREATE TABLE _nur_symbolliste (hinweis TEXT)")
+            c.commit(); c.close()
+        aufrufe, alt_lauf, alt_ordner = [], NL.lauf, NL.DATEN_VORGABE
+        with _tf.TemporaryDirectory() as dd, _tf.TemporaryDirectory() as dn:
+            _ordner(dd, False); _ordner(dn, True)
+            erk = (not NL.betrieb_erlaubt(dd)[0]) and NL.betrieb_erlaubt(dn)[0]
+            try:
+                NL.lauf = lambda *a, **k: aufrufe.append(a[0]) or {}
+                NL.DATEN_VORGABE = dd
+                BG.regel0_nachlader_job()
+                NL.DATEN_VORGABE = dn
+                BG.regel0_nachlader_job()
+            finally:
+                NL.lauf, NL.DATEN_VORGABE = alt_lauf, alt_ordner
+        pruefe(P, "Stundenjob: Desktop-Zustand (volle terminmarkt_historie.db) wird NICHT beschrieben, Betriebszustand schon",
+               erk and aufrufe == [dn], "Aufrufe des Nachladers: %d (erwartet 1, nur Betriebszustand)" % len(aufrufe))
+        baum = _ast.parse(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read())
+        reg = [k for k in _ast.walk(baum) if isinstance(k, _ast.Call) and getattr(k.func, "attr", "") == "add_job"
+               and k.args and getattr(k.args[0], "id", "") == "regel0_nachlader_job"]
+        kw = {x.arg: _ast.unparse(x.value) for x in reg[0].keywords} if reg else {}
+        pruefe(P, "Stundenjob im Scheduler eingehaengt: cron, Minute 5 UTC, ein Lauf zugleich",
+               len(reg) == 1 and kw.get("minute") == "5" and kw.get("timezone") == "timezone.utc" and kw.get("max_instances") == "1", str(kw))
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "Stundenjob: Desktop-Zustand wird NICHT beschrieben", False, repr(ex))
 
 
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),

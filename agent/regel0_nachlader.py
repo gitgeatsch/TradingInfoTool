@@ -112,6 +112,33 @@ def _pruefe_ziel(ordner: str, name: str) -> str:
     return p
 
 
+def betrieb_erlaubt(ordner: str) -> tuple[bool, str]:
+    """Darf der STUNDENJOB in diesem Ordner schreiben? (S7-1b, 02.10.)
+
+    Nur am BETRIEBSGERAET. Erkannt an einem Zustand, den es nur dort gibt (CLAUDE.md, *12 KB sind der SOLLZUSTAND*):
+    ``terminmarkt_historie.db`` traegt die Marke ``_nur_symbolliste``. Am Desktop ist sie voll - dort liegen unter denselben
+    Namen die MESSBASEN, und die aendern sich nur von Hand (``hole_*.py``), sonst ist keine Messung reproduzierbar (R-R11).
+    Kein Geraetename, keine Aufzaehlung. Gelesen nur mit ``mode=ro``. Im Zweifel NEIN.
+    Der Aufruf von Hand (``--ordner <kopie>``) ist davon nicht betroffen."""
+    p = os.path.join(ordner, "terminmarkt_historie.db")
+    if not os.path.exists(p):
+        return False, "terminmarkt_historie.db fehlt - Geraet nicht erkannt"
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=5)
+        try:
+            marke = c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='_nur_symbolliste'").fetchone()
+        finally:
+            c.close()
+    except sqlite3.Error as ex:
+        return False, "terminmarkt_historie.db nicht lesbar (%s)" % ex
+    if not marke:
+        return False, "volle Messbasis (Desktop) - dort schreiben nur die hole_*.py von Hand"
+    fehlt = [d for d in DATEIEN if not os.path.exists(os.path.join(ordner, d))]
+    if fehlt:
+        return False, "REGEL0-Datenbasis unvollstaendig, es fehlt: %s" % ", ".join(fehlt)
+    return True, "Betriebsgeraet (terminmarkt_historie.db nur Symbolliste), vier Dateien vorhanden"
+
+
 def lauf(ordner: str, symbole: set | None = None, ausgabe=print) -> dict:
     jetzt = int(time.time() * 1000)
     sp, fu = _im_handel()

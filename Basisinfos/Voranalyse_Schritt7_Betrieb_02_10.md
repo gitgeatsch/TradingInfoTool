@@ -283,3 +283,54 @@ letzten 48 gespeicherten Stunden gelöscht und vom Nachlader neu geholt.
 ➤ **Nächster Schritt S7-1b:** den Nachlader am Notebook als **Stundenjob** einhängen (etwa 5 Minuten nach jeder vollen Stunde). Danach am Notebook `git pull` und
 Neustart. Die Kontrolle läuft über den Teilexport (die letzte Stunde je Datei rückt vor). Das ist eine Änderung am Betrieb und braucht dein Ja.
 
+## 10. S7-1b — Der Stundenjob (gebaut und geprüft 02.10.2026)
+
+**Nutzer:** *„Ja, prüfen, gegenprüfen und Doku."*
+
+**Was gebaut ist:** `scheduler/background.py` → `regel0_nachlader_job`, eingehängt in `build_scheduler` als Job `regel0_nachlader`.
+
+| | |
+|---|---|
+| **Takt** | jede Stunde um **:05 UTC** (Binance schließt die Kerze um :00; E-42 *Prüfzeitpunkt nach Kerzenschluss*) |
+| **nach einem Neustart** | **sofort** (50 s nach dem Start, Index 10 der gestaffelten Sofortstarter), sonst fehlten bis :05 alle Stunden der Ausfallzeit |
+| **ein Lauf zugleich** | dauert ein Lauf länger als eine Stunde (erster Lauf nach langem Ausfall), überspringt APScheduler den nächsten, **ohne Mail** |
+| **Standby** | ein Lauf, der bis zu 30 min zu spät kommt, wird **einmal** nachgeholt (`coalesce`); der Nachlader setzt ohnehin an der letzten Stunde je Symbol an |
+| **Fehlermail** | nur wenn der **ganze** Lauf scheitert (z. B. Binance nicht erreichbar), mit dem üblichen 60-min-Spamschutz. Fehler einzelner Symbole werden gezählt (`_nachlader`) und beim nächsten Lauf ohne Lücke nachgeholt |
+
+**⚠️⚠️ Nur am Betriebsgerät.** Am Desktop liegen unter **denselben Namen die Messbasen**. Die ändern sich nur von Hand (`hole_*.py`), sonst ist keine Messung
+reproduzierbar (R-R11). Der Helfer `regel0_nachlader.betrieb_erlaubt` erkennt das Gerät **am Datenzustand, nicht am Gerätenamen**: `terminmarkt_historie.db` trägt
+die Marke `_nur_symbolliste`. Das ist laut CLAUDE.md der Sollzustand am Notebook, am Desktop ist die Datei voll. Außerdem müssen alle vier Dateien vorhanden sein.
+**Im Zweifel nein.** Am Desktop ist das Ablehnen der Normalfall: eine Logzeile, keine Mail. Der Aufruf von Hand auf einer Kopie (`--ordner`) ist davon nicht betroffen.
+
+**Gegenprüfung** (Wegwerfordner, `data/` nur lesend; Beleg `Datenbasis_01_10/gegenpruefung_stundenjob.txt`): **20 von 20 Punkten bestanden.**
+
+| | Ergebnis |
+|---|---|
+| Desktop `data/` | ✔ verweigert (*volle Messbasis*) |
+| Nachbau Notebook (Marke gesetzt, 6 Assets in allen vier Dateien) | ✔ erlaubt. Der **Job selbst** brachte alle vier Dateien bis zur letzten **abgeschlossenen** Stunde, in 5 s, ohne Fehlermail |
+| Nachbau Desktop (volle `terminmarkt_historie.db`) | ✔ **kein Schreibzugriff**, die SHA-256 aller Dateien ist vor und nach dem Job gleich |
+| fehlende `terminmarkt_historie.db` · eine der vier Dateien fehlt | ✔ verweigert |
+| ganzer Lauf scheitert (Netz) · Nachlader verweigert (`SystemExit`) | ✔ Fehlermail, der Scheduler-Faden läuft weiter |
+| Einhängen | ✔ aus dem Quelltext gelesen: cron, Minute 5, UTC, Sofortstart. Mit echtem APScheduler 3.11 angelegt: `cron[minute='5']`, coalesce, max 1, grace 1800 |
+
+**Wache:** `pruefe_pakete.py --paket Regel0Betrieb` hat jetzt 11 Prüfungen. Neu ist erstens, dass der Desktop-Zustand **nicht beschrieben** wird. Das ist am Seiteneffekt
+nachgewiesen: Der Nachlader wird dort gar nicht erst aufgerufen. Die **Gegenprobe** mit entfernter Sperre wird rot (2 Aufrufe statt 1). Neu ist zweitens, dass der Job
+eingehängt ist.
+
+**Kontrolle am Notebook:** Der Teilexport (`nb_teilexport_betriebsdaten.py`) hat einen neuen Abschnitt **REGEL0-DATENBASIS**. Er zeigt, ob der Job schreiben darf und
+warum. Je Datei zeigt er den Stand, wie viele Symbole ihn erreichen, und die letzten drei Läufe.
+
+⚠️ **Die Frische überwacht noch niemand außer dem Teilexport.** Das ist Absicht: Heute **liest** im Betrieb noch niemand diese Dateien. Die Prüfung gehört an den
+**Leser**, also an S7-2. Die Betriebsrechnung muss vor jeder Bewertung das Alter der letzten Stunde prüfen und bei veralteten Daten **kein** Signal geben, sondern melden.
+Das wird dort gebaut und hier nicht vergessen (Plan, Schritt 7, S7-2).
+
+**Erwartung am Notebook:** Der erste Lauf holt bei den Markpreisen ab dem 31.08. nach, bei der Messbasis ab dem 24.09. Am Desktop dauerte das 13 min. Am Notebook
+rechne ich mit **15–30 min**, weil die Abfragen vom Netz abhängen, nicht von der Rechenleistung. Danach braucht ein Stundenlauf etwa 1–4 min. Die Binance-Last teilt
+er sich mit `betriebsreihen` und `terminmarkt`; die Bremse hält ihn unter 70 % des Minutengewichts.
+
+**Am Notebook zu tun:**
+1. `git pull`
+2. App neu starten
+3. nach etwa 1–2 Stunden: `python nb_teilexport_betriebsdaten.py`. Im Abschnitt REGEL0-DATENBASIS muss *schreibt* stehen, der Stand muss bei der letzten vollen
+   Stunde liegen, und es muss mindestens zwei Läufe ohne Fehler geben.
+

@@ -1,0 +1,24 @@
+1) Erkennung des Geraets am DATENZUSTAND (Helfer betrieb_erlaubt)
+  ✔ Desktop data/: verweigert - volle Messbasis (Desktop) - dort schreiben nur die hole_*.py von Hand
+  ✔ NB-Nachbau (Marke _nur_symbolliste): erlaubt - Betriebsgeraet (terminmarkt_historie.db nur Symbolliste), vier Dateien vorhanden
+  ✔ Desktop-Nachbau (volle terminmarkt_historie.db): verweigert - volle Messbasis (Desktop) - dort schreiben nur die hole_*.py von Hand
+  ✔ Ordner ohne terminmarkt_historie.db: verweigert - terminmarkt_historie.db fehlt - Geraet nicht erkannt
+  ✔ NB-Nachbau mit fehlender Datei: verweigert - REGEL0-Datenbasis unvollstaendig, es fehlt: markpreis_alle.db
+2) Der JOB selbst (scheduler.background.regel0_nachlader_job), Vorgabeordner auf Wegwerfordner gebogen
+  ✔ Desktop-Nachbau: KEIN Schreibzugriff (SHA-256 aller Dateien gleich)
+  ✔ Desktop-Nachbau: keine Fehlermail
+  ✔ NB-Nachbau stundenkurse.db        bis zur letzten ABGESCHLOSSENEN Stunde - Stand 2026-10-02 06:00, erwartet 2026-10-02 06:00, Lauf ('2026-10-02 07:47', 1657, 4, 0, 0)
+  ✔ NB-Nachbau stundenkurse_alle.db   bis zur letzten ABGESCHLOSSENEN Stunde - Stand 2026-10-02 06:00, erwartet 2026-10-02 06:00, Lauf ('2026-10-02 07:47', 27, 2, 0, 0)
+  ✔ NB-Nachbau markpreis_historie.db  bis zur letzten ABGESCHLOSSENEN Stunde - Stand 2026-10-02 06:00, erwartet 2026-10-02 06:00, Lauf ('2026-10-02 07:47', 3004, 4, 0, 0)
+  ✔ NB-Nachbau markpreis_alle.db      bis zur letzten ABGESCHLOSSENEN Stunde - Stand 2026-10-02 06:00, erwartet 2026-10-02 06:00, Lauf ('2026-10-02 07:47', 1502, 2, 0, 0)
+  ✔ NB-Nachbau: keine Fehlermail - 5 s
+  ✔ zweiter Lauf direkt danach: laeuft, vermerkt sich (2 Laeufe in _nachlader)
+  ✔ ganzer Lauf scheitert: Fehlermail an regel0_nachlader - [('regel0_nachlader', 'ConnectionError: Binance nicht erreichbar (Probe)')]
+  ✔ SystemExit reisst den Scheduler-Faden NICHT mit, Mail kommt
+3) Einhaengen im Scheduler (aus dem Quelltext von build_scheduler gelesen, nicht nachgebaut)
+  ✔ add_job(regel0_nachlader_job, ...) in build_scheduler
+  ✔ Ausloeser cron, minute 5, UTC - {'minute': 5, 'id': 'regel0_nachlader', 'coalesce': True, 'max_instances': 1, 'misfire_grace_time': 1800}
+  ✔ Sofortstart nach Neustart - _staggered_start(10)
+  ✔ naechste Ausloesungen - 08:05 UTC · 09:05 UTC · 10:05 UTC
+  ✔ Sofortstart-Index 10 von keinem anderen Job belegt - belegt: [0, 1, 2, 3, 4, 5, 6, 7, 8, 10]
+SCHLUSS: ✔ bestanden (20 von 20)

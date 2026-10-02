@@ -952,7 +952,8 @@ def gemessene_merkmale() -> dict:
 # kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
     dict(was="⭐ NAECHSTER SCHRITT (E-41, Nutzer 02.10.): Schritt 7 Betriebsvorbereitung am Notebook - "
-             "Stunden- und Markpreise dort (Historie + laufend), Monatstraining als Job, R-R11 am NB, "
+             "Stunden- und Markpreise dort (Historie per USB, laufend Job regel0_nachlader seit S7-1b), "
+             "als naechstes S7-2 Betriebsrechnung MIT Frischepruefung am Leser, Monatstraining als Job, R-R11 am NB, "
              "taeglicher Katalog-/Preisabgleich, Mail; zuerst die Voranalyse. Danach offen: O12 Lernmenge "
              "per Regel, Liquiditaet als Gewicht (2.704), R, Kaeuferanteil, W4 mit der Wucht",
          art="probe", bewertung="b1", merkmale=("ema_abstand_atr", "volumenschub"),
