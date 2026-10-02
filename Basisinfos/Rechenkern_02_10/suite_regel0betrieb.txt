@@ -1,0 +1,39 @@
+REGEL0-Rechnung: 519 von 519 aktiven Assets ohne die Stunde 2026-10-02 19:00 - Datenbasis veraltet (Nachlader?)
+
+--- PAKET Regel0Betrieb --------------------------------------------------------
+  OK    die echte regel0_betrieb.yaml ist gueltig und vollstaendig
+        (['einsatz_max_eur', 'einsatz_min_eur', 'positionswert_eur', 'richtwert_gleichzeitig', 'sperre_ab_richtwert'])
+  OK    Einsatz = Positionswert / Stufe, begrenzt auf [min, max] - fuer jede Stufe der REGEL0
+  OK    die Rechnung FOLGT der Datei (Wegwerfdatei mit anderen Werten -> andere Einsaetze)
+  OK    Richtwert erreicht ohne Sperre: Signal bleibt, nur Vermerk
+  OK    Gegenprobe: ein Tippfehler in der Datei bricht ab (unbekannter Schluessel)
+  OK    Gegenprobe: min ueber max bricht ab
+  OK    reine Rechnung: keine Datenbank, kein Netz (sqlite3/requests nicht importiert)
+        (['__future__', 'dataclasses', 'os', 'yaml'])
+  OK    Nachlader verweigert jede Datei ausser den vier REGEL0-Dateien (auch die Produktion)
+        (verweigert: ['tradinginfotool.db', 'messdaten.db', 'terminmarkt_historie.db'])
+  OK    Stundenjob: Desktop-Zustand (volle terminmarkt_historie.db) wird NICHT beschrieben, Betriebszustand schon
+        (Aufrufe des Nachladers: 1 (erwartet 1, nur Betriebszustand))
+  OK    Stundenjob im Scheduler eingehaengt: cron, Minute 5 UTC, ein Lauf zugleich
+        ({'minute': '5', 'timezone': 'timezone.utc', 'id': "'regel0_nachlader'", 'coalesce': 'True', 'max_instances': '1', 'misfire_grace_time': '1800', 'next_run_time': '_staggered_start(10)'})
+  OK    Rechenkern liest nur: genau EINE Verbindungsstelle (mode=ro), kein Schreibbefehl
+        (connect 1 · Schreibbefehle [])
+  OK    Modelldatei: laedt, und ein veraendertes Byte wie eine fremde Regelversion brechen ab
+        (True True True)
+  OK    Hebelstufe: kleine ATR -> hoechste zulaessige Stufe, FEHLENDE ATR -> keine Stufe (nicht still eingeordnet)
+        (Stufen [np.int8(5), np.int8(0)], p5 [np.float64(0.005016153194854579), np.float64(nan)])
+  OK    ⭐⭐ R-R11-1: der Rechenkern trifft die Betriebsreferenz ZEILENGLEICH (Nachrechnung 2024-01..2026-08)
+        (10732 Einstiege · Referenz kern48jbz_einstiege_bestand.csv (= Fassung 0.1, 2.708))
+  OK    Stundenjob startet nach dem Nachladen den Betriebslauf als EIGENEN Prozess, mit Zeitgrenze
+  OK    die Ablage legt GENAU regel0_signale.db an (nie die Produktion)
+        (['regel0_signale.db'])
+  OK    an der Monatsgrenze verlangt der Lauf BEIDE Monatspakete (rsi alter Monat, ATR neuer Monat)
+        (['2026-10', '2026-11'] / ['2026-11'])
+
+--- PAKET Standard-DB --------------------------------------------------------
+  OK    ⚠️⚠️⚠️ kein Paket schreibt in data/tradinginfotool.db (am Notebook die PRODUKTION)
+
+====================================================================
+18 Pruefungen, ALLE BESTANDEN
+
+(Volltext geschrieben nach K:\My Drive\Claude_Austauschordner\Pruefungen\pruefe_pakete_ausgabe_9900K.txt)

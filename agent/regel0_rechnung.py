@@ -25,7 +25,7 @@ import os
 import sqlite3
 import sys
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
@@ -64,21 +64,35 @@ def _ro(pfad):
     return sqlite3.connect("file:%s?mode=ro" % pfad.replace("\\", "/"), uri=True)
 
 
+def lade_reihen_iter(ordner: str, zusatz: list, ab: str | None = None, bis: str | None = None):
+    """Wie ``lade_reihen``, aber JE ASSET nacheinander (Generator): die Rohzeilen eines Assets sind nach seiner Verarbeitung frei.
+    Gemessen 02.10.: alle Rohzeilen auf einmal kosten im Stundenlauf 1,5 GB (Python-Tupel), die Ankerreihe daraus 0,16 GB -
+    am Notebook (8,3 GB, 1,8 GB frei) waere das der Engpass. ``bis``: einschliesslich dieser Stunde."""
+    bed = "".join([" AND stunde >= '%s'" % ab if ab else "", " AND stunde <= '%s'" % bis if bis else ""])
+    q = "SELECT stunde, high, low, close FROM stundenkurse WHERE symbol=?%s ORDER BY stunde" % bed
+    cs = _ro(os.path.join(ordner, "stundenkurse.db"))
+    try:
+        bestand = [r[0] for r in cs.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) > 2000 ORDER BY COUNT(*) DESC")]
+        for s in bestand:
+            yield s, cs.execute(q, (s,)).fetchall()
+    finally:
+        cs.close()
+    if zusatz:
+        ca = _ro(os.path.join(ordner, "stundenkurse_alle.db"))
+        try:
+            da = {r[0] for r in ca.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) >= 500")}
+            for s in sorted(set(zusatz) - set(bestand)):
+                if s in da:
+                    yield s, ca.execute(q, (s,)).fetchall()
+        finally:
+            ca.close()
+
+
 def lade_reihen(ordner: str, zusatz: list, ab: str | None = None) -> list:
     """-> [(symbol, rows)] wie ``E2.kursreihen`` (Menge bestand) plus ``E2._zusatz``: zuerst die Messbasis (mehr als 2.000 Zeilen,
     Reihenfolge nach Zeilenzahl wie die Messung), dahinter die Zusatz-Assets aus stundenkurse_alle.db (mindestens 500 Zeilen),
-    alphabetisch. rows = (stunde, high, low, close)."""
-    q = "SELECT stunde, high, low, close FROM stundenkurse WHERE symbol=?%s ORDER BY stunde" % (" AND stunde >= '%s'" % ab if ab else "")
-    cs = _ro(os.path.join(ordner, "stundenkurse.db"))
-    bestand = [r[0] for r in cs.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) > 2000 ORDER BY COUNT(*) DESC")]
-    aus = [(s, cs.execute(q, (s,)).fetchall()) for s in bestand]
-    cs.close()
-    if zusatz:
-        ca = _ro(os.path.join(ordner, "stundenkurse_alle.db"))
-        da = {r[0] for r in ca.execute("SELECT symbol FROM stundenkurse GROUP BY symbol HAVING COUNT(*) >= 500")}
-        aus += [(s, ca.execute(q, (s,)).fetchall()) for s in sorted(set(zusatz) - set(bestand)) if s in da]
-        ca.close()
-    return aus
+    alphabetisch. rows = (stunde, high, low, close). Haelt ALLES im Speicher - im Betrieb ``lade_reihen_iter``."""
+    return list(lade_reihen_iter(ordner, zusatz, ab))
 
 
 def anker(reihen: list, zukunft_bekannt: bool = True) -> dict:
@@ -88,8 +102,9 @@ def anker(reihen: list, zukunft_bekannt: bool = True) -> dict:
     zukunft_bekannt=False: Betrieb - eine Stunde ohne volle Zukunft zaehlt, wenn die Reihe ab ihr bis zum Ende lueckenlos ist."""
     basis = datetime(2020, 1, 1)
     STD, SYM, RSI14, TU, TD = [], [], [], [], []
-    syms = [s for s, _r in reihen]
+    syms = []
     for si, (sym, rows) in enumerate(reihen):
+        syms.append(sym)
         if len(rows) < 500:
             continue
         stunde = np.array([int((datetime.strptime(r[0], "%Y-%m-%d %H:%M") - basis).total_seconds() // 3600) for r in rows], np.int64)
@@ -220,7 +235,8 @@ def rechne(A: dict, zusatz: set, monate: list, modelle: dict | None = None, mit_
             qa_j = np.where(vor, qg, qh); rate_j = np.where(vor, rg, rh)
             tage_j = np.minimum(365.0, np.where(vor, tg, th))
             r_j = qa_j * (1 - qa_j) / np.maximum(rate_j * tage_j, 5.0)
-            QSh[hj] = mitte + (tau2 / (tau2 + r_j)) * (QN[hj] - mitte)
+            with np.errstate(divide="ignore", invalid="ignore"):          # 0/0 wie in der Messung: QSh bleibt dort NaN
+                QSh[hj] = mitte + (tau2 / (tau2 + r_j)) * (QN[hj] - mitte)
 
     # Monatsmodell und Beitrag (messe_losfahren.py:397-415)
     Ch = np.full(n, np.nan)
@@ -432,8 +448,7 @@ def trainiere_monat(ordner: str, jahr: int, monat: int, zusatz: list | None = No
     t0 = time.time()
     zusatz = betriebs_zusatz(ordner) if zusatz is None else zusatz
     start = K2._h(datetime(jahr, monat, 1))
-    reihen = [(s, [r for r in rows if r[0] < _stunde_txt(start)]) for s, rows in lade_reihen(ordner, zusatz)]
-    A = anker(reihen, zukunft_bekannt=False)
+    A = anker(lade_reihen_iter(ordner, zusatz, bis=_stunde_txt(start - 1)), zukunft_bekannt=False)
     mi = jahr * 12 + monat - 1
     vm = ((mi - 1) // 12, (mi - 1) % 12 + 1)
     R = rechne(A, set(zusatz), [vm, (jahr, monat)], jahre=None)
@@ -442,9 +457,9 @@ def trainiere_monat(ordner: str, jahr: int, monat: int, zusatz: list | None = No
         erster[A["syms"][int(si)]] = int(A["STD"][A["SYM"] == si].min())
     qi = quartal(mi)
     qj, qm = qi // 12, qi % 12 + 1
-    X = hebel_anker(ordner, reihen, set(zusatz))
+    X = hebel_anker(ordner, lade_reihen_iter(ordner, [], bis=_stunde_txt(start - 1)), set(zusatz))   # Zusatz nie im ATR-Training
     atr_m = hebel_modelle(X, [(qj, qm)], bis_stunde=K2._h(datetime(qj, qm, 1)))
-    return dict(version=REGELVERSION, monat="%04d-%02d" % (jahr, monat), trainiert_am=datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+    return dict(version=REGELVERSION, monat="%04d-%02d" % (jahr, monat), trainiert_am=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
                 rsi={k: v for k, v in R["modelle"].items() if k in (mi - 1, mi)}, atr=atr_m, quartal=qi,
                 erster_anker=erster, lage={k: v for k, v in R["lage"].items() if k in (mi - 1, mi)},
                 assets=len(erster), zusatz=len(zusatz), sekunden=round(time.time() - t0))
@@ -487,12 +502,16 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
     ``pakete`` {"JJJJ-MM": Paket}: das rsi-Modell kommt aus dem Paket des Monats der SIGNALstunde, das ATR-Modell aus dem
     Paket des Monats der EINSTIEGSstunde (an der Monats- und Quartalsgrenze sind das zwei verschiedene) - wie die Messung."""
     zusatz = betriebs_zusatz(ordner) if zusatz is None else zusatz
-    reihen = [(s, [r for r in rows if r[0] <= _stunde_txt(jetzt - 1)])
-              for s, rows in lade_reihen(ordner, zusatz, ab=_stunde_txt(jetzt - FENSTER_H))]
-    letzte = {s: (K2._h(datetime.strptime(rows[-1][0], "%Y-%m-%d %H:%M")) if rows else None) for s, rows in reihen}
+    unterwegs = {}
+
+    def _strom():
+        for s_, rows_ in lade_reihen_iter(ordner, zusatz, ab=_stunde_txt(jetzt - FENSTER_H), bis=_stunde_txt(jetzt - 1)):
+            unterwegs[s_] = (rows_[-1][0] if rows_ else None, rows_[-30:])
+            yield s_, rows_
+    A = anker(_strom(), zukunft_bekannt=False)
+    letzte = {s: (K2._h(datetime.strptime(lt, "%Y-%m-%d %H:%M")) if lt else None) for s, (lt, _r) in unterwegs.items()}
     aktiv = {s for s, h in letzte.items() if h is not None and h >= jetzt - AKTIV_H}
     frisch = {s for s in aktiv if letzte[s] == jetzt - 1}
-    A = anker(reihen, zukunft_bekannt=False)
     def _paket(h):
         m_ = int(monat_von(np.array([h]))[0])
         k_ = "%04d-%02d" % (m_ // 12, m_ % 12 + 1)
@@ -506,7 +525,7 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
     mi, paket = _paket(jetzt - 1)
     monate = [((m_ // 12), (m_ % 12) + 1) for m_ in sorted({mi - 1, mi, int(monat_von(np.array([jetzt - 2]))[0])})]
     R = rechne(A, set(zusatz), monate, modelle=rsi_m, jahre=None, erster_anker=paket["erster_anker"])
-    atr = atr_je_stunde([(s, rows[-30:]) for s, rows in reihen], mindest=24)     # die letzten 24 Zeilen genuegen fuer die ATR
+    atr = atr_je_stunde([(s, r30) for s, (_lt, r30) in unterwegs.items()], mindest=24)     # die letzten 24 Zeilen genuegen
     aus = {}
     for name, sh, atr_h in (("neu", jetzt - 1, jetzt - 1), ("endgueltig", jetzt - 2, jetzt - 1)):
         ix = R["signale"][R["STD"][R["signale"]] == sh]

@@ -271,6 +271,34 @@ def _inhalt() -> int:
             c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Datenbasis nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # Schritt 7, S7-2b: der Rechenkern im Betrieb - Modelldateien, letzte Laeufe, Signale (nur lesen)
+    print()
+    print("-" * 100)
+    try:
+        md = os.path.join(DATEN, "regel0_modelle")
+        pk = sorted(f for f in os.listdir(md) if f.endswith(".pkl")) if os.path.isdir(md) else []
+        print("REGEL0-RECHNUNG: Modelldateien %d - %s" % (len(pk), ", ".join(
+            "%s (%s)" % (f.replace("regel0_modell_", "").replace(".pkl", ""),
+                         open(os.path.join(md, f + ".sha256"), encoding="utf-8").read().strip()[:12] if os.path.exists(os.path.join(md, f + ".sha256")) else "ohne Pruefsumme")
+            for f in pk) or "-"))
+        ab = os.path.join(DATEN, "regel0_signale.db")
+        if not os.path.exists(ab):
+            print("    regel0_signale.db fehlt - noch kein Lauf")
+        else:
+            c = ro(ab)
+            for r in c.execute("SELECT jetzt, sekunden, pakete, aktiv, frisch, veraltet, nicht_im_handel, neu, endgueltig, meldung FROM lauf ORDER BY jetzt DESC LIMIT 6"):
+                print("    Lauf %s · %.0f s · Pakete %s · frisch %d/%d · veraltet %d · nicht im Handel %d · neu %d · endgueltig %d%s" % (
+                    r[0], r[1] or 0, r[2], r[4], r[3], r[5], r[6], r[7], r[8], (" · ⚠️ " + r[9]) if r[9] else ""))
+            n_ = c.execute("SELECT COUNT(*), SUM(hebel_schalter=1) FROM signal").fetchone()
+            print("    Signale gesamt %d, davon Hebel-Schalter an %d" % (n_[0], n_[1] or 0))
+            for r in c.execute("SELECT symbol, bitpanda, signalstunde, einstieg, vh, stufe_vorlaeufig, stufe, p5, hebel_schalter FROM signal "
+                               "ORDER BY signalstunde DESC LIMIT 15"):
+                print("      %-9s (%s) Signal %s · Einstieg %s · v %.4f · Stufe vorl. %s / endg. %s · p5 %s · Schalter %s" % (
+                    r[0], r[1], r[2], r[3], r[4] or 0, r[5], r[6], "%.4f" % r[7] if r[7] is not None else "-",
+                    {1: "an", 0: "aus"}.get(r[8], "?")))
+            c.close()
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ REGEL0-Rechnung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     print()
     print("SCHLUSS: vollstaendig")
     return 0

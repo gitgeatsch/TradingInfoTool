@@ -1,0 +1,26 @@
+1) + 2) Lauf zur Stunde 2026-08-27 21:00 (Paket 2026-08 fehlt noch)
+REGEL0-Rechnung: Monatspaket 2026-08 trainiert in 176 s (580 Assets, Pruefsumme 5b104dc860d6)
+REGEL0-ERGEBNIS {"jetzt": "2026-08-27 21:00", "sekunden": 238.6, "neu": 2, "endgueltig": 2, "neu_schalter_an": 1, "aktiv": 625, "frisch": 625, "veraltet": 0, "trainiert": ["2026-08"], "meldung": ""}
+  ✔ Monatspaket trainiert und mit Pruefsumme abgelegt - ['2026-08']
+  ✔ neue Signale = Referenz-Einstiege der Stunde 2026-08-27 21:00 - ['KAS'] / ['KAS']
+  ✔ vorlaeufige Stufe gesetzt, endgueltige noch leer - [('KAS', 3, None, 1, 'KAS'), ('ZORA', 3, None, None, 'ZORA')]
+3) Lauf zur Stunde T+1 - endgueltige Stufe
+REGEL0-ERGEBNIS {"jetzt": "2026-08-27 22:00", "sekunden": 62.8, "neu": 5, "endgueltig": 2, "neu_schalter_an": 0, "aktiv": 625, "frisch": 625, "veraltet": 0, "trainiert": [], "meldung": ""}
+  ✔ zweiter Lauf trainiert NICHT neu - []
+  ✔ endgueltige Stufe = Betriebsform B-10 - [('KAS', 3, 3), ('ZORA', 3, 3)]
+4) zweiter Lauf zur selben Stunde T+1
+REGEL0-ERGEBNIS {"jetzt": "2026-08-27 22:00", "sekunden": 62.7, "neu": 5, "endgueltig": 2, "neu_schalter_an": 0, "aktiv": 625, "frisch": 625, "veraltet": 0, "trainiert": [], "meldung": ""}
+  ✔ keine Doppel, Lauf-Zeile ersetzt - Signale 9 -> 9, Laeufe 2
+5) kein Seiteneffekt
+  ✔ data/*.db unveraendert (Groesse und Aenderungszeit), auch die Produktion - geaendert: []
+  ✔ die Ablage legt in einem leeren Ordner GENAU regel0_signale.db an, sonst nichts - ['regel0_signale.db']
+REGEL0-Rechnung: 40 von 500 veraltet
+REGEL0-Rechnung: Rueckgabe 1 nach 0 s - Traceback ... | ValueError: Probe
+REGEL0-Rechnung: Zeitgrenze 3000 s ueberschritten - abgebrochen
+6) Stundenjob wertet den Prozess aus
+  ✔ Erfolg ohne Mail, Frische-Meldung / Fehler / Zeitgrenze je mit Fehlermail - [('regel0_rechnung', '40 von 500 veraltet'), ('regel0_rechnung', 'Rueckgabe 1: Traceback ... | ValueError: Probe'), ('regel0_rechnung', 'Zeitgrenze 3000 s ueberschritten')]
+7) Laufzeit und Speicher als eigener Prozess (Stunde T+2)
+    ['REGEL0-ERGEBNIS {"jetzt": "2026-08-27 23:00", "sekunden": 63.4, "neu": 2, "endgueltig": 5, "neu_schalter_an": 1, "aktiv": 625, "frisch": 625, "veraltet": 0, "trainiert": [], "meldung": ""}']
+  ✔ Prozess laeuft durch (Rueckgabe 0)
+    Laufzeit 65 s · Spitzenspeicher 0.99 GB (Desktop; am NB rund Faktor 3,5 in der Zeit)
+SCHLUSS: ✔ bestanden (10 von 10) · 508 s

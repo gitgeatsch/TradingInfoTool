@@ -118,20 +118,20 @@ pruef("v-dach zur juengsten Stunde gleich der Nachrechnung (Toleranz 1e-9)", dv 
 print("3) Frische: einem Signal-Asset fehlt die juengste Stunde")
 T = zeiten[0]
 opfer = sorted(ref.symbol[ref.stunde == T])[0] if (ref.stunde == T).any() else "BTC"
-orig = RK.lade_reihen
+orig = RK.lade_reihen_iter
 
 
-def ohne_letzte(ordner, zusatz, ab=None):
-    aus = orig(ordner, zusatz, ab)
+def ohne_letzte(ordner, zusatz, ab=None, bis=None):
     grenze = RK._stunde_txt(T - 1)
-    return [(s, [r for r in rows if not (s == opfer and r[0] >= grenze)]) for s, rows in aus]
+    for s, rows in orig(ordner, zusatz, ab, bis):
+        yield s, [r for r in rows if not (s == opfer and r[0] >= grenze)]
 
 
-RK.lade_reihen = ohne_letzte
+RK.lade_reihen_iter = ohne_letzte          # der Stundenlauf laedt je Asset (lade_reihen_iter)
 try:
     Bf = RK.bewerte(RK.DATEN_VORGABE, pakete, T, zusatz=zus)
 finally:
-    RK.lade_reihen = orig
+    RK.lade_reihen_iter = orig
 pruef("%s ohne die Stunde %s: kein Signal, steht unter veraltet" % (opfer, RK._stunde_txt(T - 1)),
       opfer not in [x["symbol"] for x in Bf["neu"]] and opfer in Bf["frische"]["veraltet"], str(Bf["frische"]["veraltet"][:5]))
 

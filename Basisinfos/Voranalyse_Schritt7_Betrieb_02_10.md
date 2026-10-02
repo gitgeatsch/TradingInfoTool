@@ -538,3 +538,49 @@ gekürzte Reihe des Stundenlaufs (Mindestlänge 500). Die fehlende ATR ordnete d
 
 **Was NICHT gebaut ist:** das Einhängen am Notebook (Monatsjob und Stundenlauf als Jobs, Ablage der Signale) und die Mail. Das ist eine **Betriebsänderung**
 und braucht dein Ja (**S7-2b**). Danach kommt S7-4.
+
+---
+
+## 14. S7-2b — der Rechenkern im Betrieb eingehängt (02.10.2026; Nutzer: *„Ja, S7-2b so vorbereiten, prüfen und gegenprüfen, aber ich möchte sehr rasch in Produktion damit, am besten sofort"*)
+
+**Was gebaut ist:**
+
+| Teil | |
+|---|---|
+| `agent/regel0_stundenlauf.py` | der Betriebslauf als **eigener Prozess** (`python -m agent.regel0_stundenlauf --betrieb`). Ablauf: (1) Fehlen die Monatspakete, die der Lauf braucht, werden sie trainiert (`data/regel0_modelle/`, Prüfsumme und Regelversion). (2) Bewerten. (3) Ablegen in **`data/regel0_signale.db`**: ein neues Signal mit der **vorläufigen** Stufe, eine Stunde später mit der **endgültigen**. Dazu der **Hebel-Schalter** des Assets, aus der Produktion **nur gelesen**, und je Lauf die Frische |
+| `scheduler/background.py` | der Stundenjob `regel0_nachlader` startet den Betriebslauf **nach** dem Nachladen, mit 50 min Zeitgrenze. Seine Ergebniszeile `REGEL0-ERGEBNIS {...}` kommt ins Log. Rückgabe ≠ 0, Zeitgrenze oder veraltete Datenbasis (> 10 % der aktiven Assets ohne die jüngste Stunde) → **Fehlermail** |
+| Rechenkern | bleibt **rein lesend**. Er lädt jetzt **je Asset** (`lade_reihen_iter`): Die Rohzeilen aller Assets auf einmal kosteten **1,5 GB** |
+| Teilexport | Abschnitt **REGEL0-RECHNUNG**: Modelldateien mit Prüfsumme, letzte Läufe, Signale mit Stufen und Schalter |
+| Wache | `--paket Regel0Betrieb` **19/19**: Der Stundenjob startet den eigenen Prozess mit Zeitgrenze, die Ablage legt genau `regel0_signale.db` an, an der Monatsgrenze werden beide Pakete verlangt |
+
+⚠️ **Nicht in der Mail, nicht in der Produktion.** Die Signale liegen in der eigenen Ablage. In die Mail kommen sie mit **S7-4**.
+
+**Gegenprüfung** (Wegwerfordner, Daten nur gelesen; Belege `Basisinfos/Rechenkern_02_10/pruefung_stundenlauf.txt`, `pruefung_betrieb.txt`):
+
+| | Ergebnis |
+|---|---|
+| fehlendes Monatspaket wird im Lauf trainiert und mit Prüfsumme abgelegt, beim zweiten Lauf nicht neu | ✔ |
+| neue Signale = Referenz-Einstiege, vorläufige Stufe gesetzt, endgültige leer | ✔ (KAS am 27.08. 21:00) |
+| eine Stunde später endgültige Stufe = Betriebsform B-10 | ✔ |
+| zweiter Lauf zur selben Stunde: keine Doppel | ✔ |
+| **kein Seiteneffekt**: alle `data/*.db` und die Produktion unverändert, die Ablage legt nur ihre Datei an | ✔ |
+| Stundenjob: Erfolg ohne Mail, Meldung, Fehler und Zeitgrenze je mit Fehlermail | ✔ |
+| nach dem Umbau auf Laden je Asset: Modelle, Signale, Stufen und v̂ unverändert (7/7, Abweichung 0,0) | ✔ |
+
+⛔ **Vorfall beim Bauen, behoben:** Eine Prüfung der Suite rief den Stundenjob in einem nachgebauten Notebook-Zustand auf. Der neue Prozessstart war dort
+nicht abgefangen und startete einen **echten** Betriebslauf im Datenordner des Desktops. Danach lagen `data/regel0_signale.db` und ein Oktober-Paket am Desktop
+(in den Scratchpad verschoben, nicht gelöscht). **Zwei Sperren:** (1) Die Wache fängt den Start ab und prüft nur, dass er erfolgt. (2) Der Betriebslauf
+**verweigert sich selbst** außerhalb des Betriebsgeräts (dieselbe Sperre wie beim Nachlader), sofern Ablage und Modelle nicht ausdrücklich als Wegwerfordner
+angegeben sind. Bewacht von `--paket Regel0Betrieb` (19/19): Rückgabe 3 und keine Spur im Datenordner. Genau dafür gilt *eine Prüfung hat keinen Seiteneffekt*.
+
+**Last nach dem Umbau** (Desktop): Spitzenspeicher **0,99 GB statt 2,48 GB**, Stundenlauf **52–65 s** (vorher 118 s), Monatspaket 150–180 s.
+Am Notebook ist mit rund **3–4 min** je Stunde zu rechnen, dazu einmal je Monat rund **10 min** für das Training. ⚠️ Das Notebook hat 8,3 GB, bei der
+Lastprobe waren **1,8 GB frei**. Der Lauf läuft deshalb als eigener Prozess, damit sein Speicher danach wieder frei ist. Der Speicher am NB ist beim ersten
+Lauf zu **kontrollieren** (K-S7-3).
+
+**Am Notebook zu tun:**
+1. `git pull`, dann die App neu starten. Der erste Lauf trainiert das Paket für **Oktober** (rund 10 min) und rechnet dann die erste Stunde.
+2. Nach etwa 1–2 Stunden den Teilexport laufen lassen. Bestanden ist **K-S7-3**, wenn im Abschnitt REGEL0-RECHNUNG ein Paket `2026-10` mit Prüfsumme steht,
+   es mindestens zwei Läufe mit *frisch* nahe *aktiv* gibt und keine Meldung kommt.
+3. Danach den NB-Export (schlank). Bestanden ist er, wenn keine ERROR- oder Traceback-Zeile von `regel0` darin steht und keine Mail *Job 'regel0_rechnung'
+   fehlgeschlagen* kam. Die anderen Jobs dürfen keine neuen Zeitüberschreitungen zeigen. Dazu die Zeile `REGEL0-ERGEBNIS` mit `sekunden`.

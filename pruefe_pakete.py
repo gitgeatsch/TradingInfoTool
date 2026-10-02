@@ -31047,19 +31047,24 @@ def paket_regel0_betrieb() -> None:
                 c.execute("CREATE TABLE _nur_symbolliste (hinweis TEXT)")
             c.commit(); c.close()
         aufrufe, alt_lauf, alt_ordner = [], NL.lauf, NL.DATEN_VORGABE
+        starts, alt_start = [], BG._regel0_rechnung_starten
         with _tf.TemporaryDirectory() as dd, _tf.TemporaryDirectory() as dn:
             _ordner(dd, False); _ordner(dn, True)
             erk = (not NL.betrieb_erlaubt(dd)[0]) and NL.betrieb_erlaubt(dn)[0]
             try:
                 NL.lauf = lambda *a, **k: aufrufe.append(a[0]) or {}
+                # ⚠️ der Prozessstart wird ABGEFANGEN - ein echter Start rechnete im Datenordner (02.10. passiert)
+                BG._regel0_rechnung_starten = lambda: starts.append(1)
                 NL.DATEN_VORGABE = dd
                 BG.regel0_nachlader_job()
                 NL.DATEN_VORGABE = dn
                 BG.regel0_nachlader_job()
             finally:
                 NL.lauf, NL.DATEN_VORGABE = alt_lauf, alt_ordner
+                BG._regel0_rechnung_starten = alt_start
         pruefe(P, "Stundenjob: Desktop-Zustand (volle terminmarkt_historie.db) wird NICHT beschrieben, Betriebszustand schon",
-               erk and aufrufe == [dn], "Aufrufe des Nachladers: %d (erwartet 1, nur Betriebszustand)" % len(aufrufe))
+               erk and aufrufe == [dn] and starts == [1],
+               "Aufrufe des Nachladers: %d (erwartet 1, nur Betriebszustand) · Rechnung gestartet %d (erwartet 1)" % (len(aufrufe), len(starts)))
         baum = _ast.parse(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read())
         reg = [k for k in _ast.walk(baum) if isinstance(k, _ast.Call) and getattr(k.func, "attr", "") == "add_job"
                and k.args and getattr(k.args[0], "id", "") == "regel0_nachlader_job"]
@@ -31120,6 +31125,34 @@ def paket_regel0_betrieb() -> None:
             pruefe(P, "R-R11-1 uebersprungen: keine volle Messbasis an diesem Geraet (Sollzustand am Notebook)", True)
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "Rechenkern: Wache lief durch", False, repr(ex))
+    # S7-2b Stundenlauf (02.10.): eingehaengt nach dem Nachlader, eigener Prozess, schreibt nur seine Ablage
+    try:
+        import agent.regel0_stundenlauf as SL
+        _bq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        _job = _bq.split("def regel0_nachlader_job(", 1)[1].split("\ndef ", 1)[0]
+        _st = _bq.split("def _regel0_rechnung_starten(", 1)[1].split("\ndef ", 1)[0]
+        pruefe(P, "Stundenjob startet nach dem Nachladen den Betriebslauf als EIGENEN Prozess, mit Zeitgrenze",
+               "_regel0_rechnung_starten()" in _job and '"agent.regel0_stundenlauf", "--betrieb"' in _st and "timeout=" in _st)
+        with _tf.TemporaryDirectory() as d:
+            SL._ablage(d).close()
+            _da = sorted(os.listdir(d))
+        pruefe(P, "die Ablage legt GENAU regel0_signale.db an (nie die Produktion)", _da == ["regel0_signale.db"], str(_da))
+        _vor = sorted(os.listdir(RK.DATEN_VORGABE)) if os.path.isdir(RK.DATEN_VORGABE) else []
+        _alt_argv = sys.argv
+        try:
+            sys.argv = ["regel0_stundenlauf", "--betrieb"]
+            _rc = SL.main() if not _NL.betrieb_erlaubt(RK.DATEN_VORGABE)[0] else 3
+        finally:
+            sys.argv = _alt_argv
+        _nach = sorted(os.listdir(RK.DATEN_VORGABE)) if os.path.isdir(RK.DATEN_VORGABE) else []
+        pruefe(P, "⚠️⚠️ der Betriebslauf VERWEIGERT sich ausserhalb des Betriebsgeraets, ohne Spur im Datenordner",
+               _rc == 3 and _vor == _nach, "Rueckgabe %s · neu im Datenordner: %s" % (_rc, sorted(set(_nach) - set(_vor))))
+        _h0 = int((_dt.datetime(2026, 11, 1) - _dt.datetime(2020, 1, 1)).total_seconds() // 3600)
+        pruefe(P, "an der Monatsgrenze verlangt der Lauf BEIDE Monatspakete (rsi alter Monat, ATR neuer Monat)",
+               SL.benoetigte_pakete(_h0) == ["2026-10", "2026-11"] and SL.benoetigte_pakete(_h0 + 5) == ["2026-11"],
+               "%s / %s" % (SL.benoetigte_pakete(_h0), SL.benoetigte_pakete(_h0 + 5)))
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "Stundenlauf: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

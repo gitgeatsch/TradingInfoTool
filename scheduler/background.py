@@ -1542,6 +1542,52 @@ def regel0_nachlader_job() -> None:
     logger.info("REGEL0-Nachlader: fertig in %.0f s - %d neue Stunden, %d Symbolfehler, Stand %s",
                 time.time() - t0, sum(x["neue_stunden"] for x in bericht.values()), fehler,
                 " · ".join("%s %s" % (k.replace(".db", ""), v["bis"]) for k, v in bericht.items()))
+    _regel0_rechnung_starten()
+
+
+REGEL0_RECHNUNG_ZEITGRENZE_S = 50 * 60   # erster Lauf mit Monatstraining am NB rund 25 min; danach rund 7 min
+REGEL0_PROJEKT = __import__("os").path.dirname(__import__("os").path.dirname(__import__("os").path.abspath(__file__)))
+
+
+def _regel0_rechnung_starten() -> None:
+    """S7-2b (02.10.2026): der REGEL0.1-Stundenlauf als EIGENER PROZESS (``python -m agent.regel0_stundenlauf --betrieb``).
+
+    ⚠️ Warum ein eigener Prozess: die Rechnung haelt rund 650 Assets ueber 460 Tage im Speicher - im Prozess der App waere jeder
+    Speicherhoechststand und jeder Absturz einer der App. So ist beides nach dem Lauf vorbei.
+    Schreibt nur `data/regel0_signale.db` und `data/regel0_modelle/`; nichts geht an die Mail (S7-4). Die Ergebniszeile
+    ``REGEL0-ERGEBNIS {...}`` kommt ins Log; ein Fehlschlag oder eine Frische-Meldung geht als Fehlermail raus."""
+    import json as _json
+    import subprocess
+    import sys
+    t0 = time.time()
+    try:
+        p = subprocess.run([sys.executable, "-m", "agent.regel0_stundenlauf", "--betrieb"],
+                           cwd=REGEL0_PROJEKT,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=REGEL0_RECHNUNG_ZEITGRENZE_S)
+    except subprocess.TimeoutExpired:
+        logger.error("REGEL0-Rechnung: Zeitgrenze %d s ueberschritten - abgebrochen", REGEL0_RECHNUNG_ZEITGRENZE_S)
+        _notify_job_failure("regel0_rechnung", "Zeitgrenze %d s ueberschritten" % REGEL0_RECHNUNG_ZEITGRENZE_S)
+        return
+    except Exception as exc:                                 # noqa: BLE001
+        logger.exception("REGEL0-Rechnung: Start fehlgeschlagen")
+        _notify_job_failure("regel0_rechnung", "%s: %s" % (type(exc).__name__, exc))
+        return
+    zeilen = [z for z in (p.stdout or "").splitlines() if z.startswith("REGEL0-")]
+    for z in zeilen:
+        logger.info("%s", z)
+    if p.returncode != 0:
+        rest = (p.stderr or "").strip().splitlines()[-5:]
+        logger.error("REGEL0-Rechnung: Rueckgabe %d nach %.0f s - %s", p.returncode, time.time() - t0, " | ".join(rest))
+        _notify_job_failure("regel0_rechnung", "Rueckgabe %d: %s" % (p.returncode, " | ".join(rest)[-500:]))
+        return
+    try:
+        erg = _json.loads(zeilen[-1].split(" ", 1)[1]) if zeilen and zeilen[-1].startswith("REGEL0-ERGEBNIS") else {}
+    except ValueError:
+        erg = {}
+    if erg.get("meldung"):
+        logger.warning("REGEL0-Rechnung: %s", erg["meldung"])
+        _notify_job_failure("regel0_rechnung", erg["meldung"])
 
 
 def externe_reihen_job(conn_factory) -> None:
