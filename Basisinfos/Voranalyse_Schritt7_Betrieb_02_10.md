@@ -150,3 +150,24 @@ ggf. weitere Simulationen zur Stabilität und fachlichen Funktionalität."*
 | ◐ 3 | **Positionsgröße:** Deckel und Altbestand analysieren (O15), ➤ nächster Punkt |
 | ✔ 4 | Hebelstufe gedeckelt auf das, was das Asset bei Bitpanda erlaubt |
 | ◐ 5 | Spot-Kette nach dem Hebel ersetzen und vorerst stilllegen. **Je Strategie ein eigener Pfad** (O14). ⚠️ Das ändert F1: Statt *Spot läuft weiter wie heute* wird die Spot-Kette nach dem Hebel stillgelegt. Bis dahin läuft sie wie heute |
+
+### Nachtrag 02.10. — Lastprobe am Notebook, Spot präzisiert, Punkt 3 begonnen
+
+**Lastprobe T440** (Nutzer, gleiche Prüfsumme 0,991801 wie am Desktop, trotz numpy 2.5.1):
+
+| | Desktop | Notebook | Faktor |
+|---|---|---|---|
+| gesamt | 17,9 s | 63,0 s | 3,5 |
+| Monatstraining (Probe) | 15,6 s | 56,0 s | 3,6 |
+| eine Stunde bewerten | < 0,01 s | < 0,01 s | — |
+| Spitze Arbeitsspeicher | 0,79 GB | 0,79 GB (9,5 % des freien) | — |
+
+➤ Die echte REGEL0 braucht im Monatstraining am Desktop etwa 2,1 s je Monat, am Notebook also **rund 8 s**. Die stündliche Bewertung ist vernachlässigbar. **Die Rechenlast ist kein Engpass.**
+⚠️ Betriebsbereit ist damit die **Rechenleistung**, nicht die REGEL0 (Betriebsrechnung, Nachlader und Einhängen fehlen noch).
+
+**Spot (Nutzer):** *„es muss nicht sofort sein – es geht um die Frage, wann der korrekte Zeitpunkt ist, wenn der Hebel läuft, die alte Kette Spot an die neuen Anforderungen
+anzupassen – deine Frage Spot oder Hebel Signal ist obsolet, da die Spot-Signale keine Bedeutung mehr für den echten Handel haben und nur Last erzeugen."* → O14 präzisiert.
+
+**Punkt 3 Positionsgröße (O15) begonnen:** Die Deckel im Code werden kartiert. Der NB-Teilexport ist um den **Altbestand** erweitert (Hebelpositionen je Status, offene Positionen mit Hebel,
+Wert und Eigenkapital, Portfoliowert der letzten 3 Tage), nur lesend.
+

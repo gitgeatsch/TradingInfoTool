@@ -200,6 +200,27 @@ def _inhalt() -> int:
             c.close()
         except sqlite3.Error as ex:
             print("  ⛔ Bestand nicht lesbar: %s" % ex)
+    # Schritt 7, O15 Positionsgroesse (E-43 Punkt 3): Altbestand der Hebelpositionen und Kontowert - nur lesen
+    if os.path.exists(prod):
+        print()
+        print("-" * 100)
+        try:
+            c = ro(prod)
+            st = c.execute("SELECT status, COUNT(*) FROM hebel_positions GROUP BY status ORDER BY 2 DESC").fetchall()
+            print("HEBEL-POSITIONEN je Status: " + " · ".join("%s %d" % (s, n) for s, n in st))
+            offen = c.execute("SELECT symbol, richtung, status, hebel_effektiv, positionswert_eur, eigenkapital_eur, kreditbetrag_eur, "
+                              "eroeffnet_am, liquidationspreis_geschaetzt_eur FROM hebel_positions WHERE geschlossen_am IS NULL "
+                              "ORDER BY eroeffnet_am").fetchall()
+            print("OFFEN (geschlossen_am leer): %d · Positionswert %.0f EUR · Eigenkapital %.0f EUR · Kredit %.0f EUR" % (
+                len(offen), sum(r[4] or 0 for r in offen), sum(r[5] or 0 for r in offen), sum(r[6] or 0 for r in offen)))
+            for r in offen:
+                print("    %-8s %-5s %-10s Hebel %4.1f · Wert %8.0f · Eigenkapital %7.0f · seit %s · Liq. geschaetzt %s" % (
+                    r[0], r[1], r[2], r[3] or 0, r[4] or 0, r[5] or 0, str(r[7])[:16], r[8]))
+            pw = c.execute("SELECT datum, wert_eur, cash_eur FROM portfolio_wert_historie ORDER BY datum DESC LIMIT 3").fetchall()
+            print("PORTFOLIOWERT (letzte 3 Tage): " + " · ".join("%s %.0f EUR (Cash %.0f)" % (d, w or 0, ca or 0) for d, w, ca in pw))
+            c.close()
+        except sqlite3.Error as ex:
+            print("  ⛔ Positionen nicht lesbar: %s" % ex)
     print()
     print("SCHLUSS: vollstaendig")
     return 0
