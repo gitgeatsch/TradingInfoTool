@@ -171,3 +171,53 @@ anzupassen – deine Frage Spot oder Hebel Signal ist obsolet, da die Spot-Signa
 **Punkt 3 Positionsgröße (O15) begonnen:** Die Deckel im Code werden kartiert. Der NB-Teilexport ist um den **Altbestand** erweitert (Hebelpositionen je Status, offene Positionen mit Hebel,
 Wert und Eigenkapital, Portfoliowert der letzten 3 Tage), nur lesend.
 
+---
+
+## 8. Punkt 3 — Positionsgröße (O15): Analyse zur Entscheidung
+
+### 8.1 Wie die Kette die Größe heute rechnet (Code kartiert, Werte aus dem NB-Teilexport 02.10.)
+
+| | heute | Wert am Notebook |
+|---|---|---|
+| Einsatz je Hebeltrade | fest | **500 €** (`hebel_aus_quote.hebelnenner_eur`) |
+| Risiko je Trade | halbes Kelly aus der alten Trefferquote, geklemmt | **0,5–1,25 %** des Kapitals (`r_min`, `r_max`) |
+| Hebel | Risiko / Stopabstand / 500, Spot unter 2x, höchstens 5x | `hebel_ab` 2,0 · `hebel_grenze` 5,0 |
+| **Gesamtdeckel** | alle offenen Hebelrisiken (Verlust bis zum Stop) zusammen | **3 %** des Kapitals (`aggregat_anteil`) |
+| Kapitalbasis | Wert des Spot-Bestands **ohne** Cash und ohne Hebelpositionen | 20.868 € (Cash 3.874 €) am 01.10. |
+| Töpfe | nur Information in der Mail, **keine** Blockierung | Spot 4.000 € · Hebel 3.000 € |
+| Altbestand | zählt nur zum Gesamtdeckel. Keine Sperre gegen eine zweite Position im selben Asset | **keine offene Hebelposition** (185 geschlossen, 4 wahrscheinlich liquidiert) |
+
+⚠️ **Der Gesamtdeckel passt nicht zur REGEL0.** Er misst das Risiko **bis zum Stop**, die REGEL0 hat aber keinen Stop. Ihr Risiko je Handel ist der **ganze Einsatz** (Liquidation).
+Bei einem Einsatz von 1 % des Kapitals erlaubte er nur **drei** gleichzeitige Positionen.
+
+### 8.2 Wie viele REGEL0-Positionen gleichzeitig offen sind (gemessen 2025–26)
+
+| | alle bewerteten Assets | **deine Hebel-Liste** |
+|---|---|---|
+| Signale je Tag | 13,9 | **2,6** |
+| gleichzeitig offen: Mittel · P95 · P99 · Maximum | 13,8 · 58 · 86 · 112 | **2,5 · 11 · 17 · 23** |
+
+Die Signale kommen in **Ballungen** (marktweite Bewegungen).
+
+**Sind Signale in einer Ballung schlechter?** Die Antwort ist **widersprüchlich**. Über die 116 Assets sind die **vereinzelten** am schlechtesten (Rohvorteil −0,59 %), auf deiner Liste die **in der Ballung**
+(11–20 offen: −0,84 % gegen +1,05 % bei 0–2). Die Jahre sind schon gesehen, es ist also nur Auskunft. ➤ **Ein Deckel bringt keinen nachgewiesenen Qualitätsgewinn.** Er ist **Kapitalschutz**, kein Signalfilter (Nutzerregel 01.10.).
+
+### 8.3 Varianten — gebundener Einsatz bei 2,5 / 11 / 23 gleichzeitig offenen Positionen (Hebel-Liste)
+
+| Variante | Einsatz je Handel | gebunden im Mittel · P95 · Maximum | Bemerkung |
+|---|---|---|---|
+| **A** wie gemessen | **1 %** des Kapitals (bei 24.700 € inkl. Cash ≈ 250 €) | ≈ 620 € · 2.700 € · 5.700 € | entspricht der REGEL0-Erfolgsmessung (2.700: auf der Liste ×1,14..×1,23, Rückgang 8 %) |
+| **B** wie heute | fest **500 €** | ≈ 1.250 € · 5.500 € · 11.500 € | doppelte Größe, Gewinne und Rückgänge etwa doppelt. Ab P95 über dem Hebeltopf |
+| **C** aus dem Hebeltopf | Topf 3.000 € / 11 (P95) ≈ **270 €** | ≈ 680 € · 3.000 € · 6.200 € | Der Topf reicht in 95 % der Stunden |
+
+Der höchstmögliche Verlust je Handel ist bei der REGEL0 etwa der **Einsatz** (Liquidation) plus Gebühren.
+
+### 8.4 Zur Entscheidung
+
+| # | Frage |
+|---|---|
+| **G1** | **Kapitalbasis:** Hebeltopf (3.000 €), Gesamtvermögen inkl. Cash, oder ein fester Betrag? |
+| **G2** | **Einsatz je Handel:** A, B oder C? |
+| **G3** | **Wenn der Topf voll ist** (Ballung): Signal trotzdem mailen mit Vermerk *Topf voll* (keine Blockierung, wie 19.08. für die Töpfe entschieden), oder in Reihenfolge des Eintreffens nur bis zum Topf? |
+| **G4** | Den alten **Gesamtdeckel** (3 % Risiko bis zum Stop) für die REGEL0 durch einen Deckel auf den **gebundenen Einsatz** ersetzen? |
+
