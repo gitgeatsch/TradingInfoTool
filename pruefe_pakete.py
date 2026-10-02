@@ -30859,6 +30859,16 @@ def paket_hebelneubau() -> None:
         pruefe(P, "⚠️ und die Referenz-Wache KANN anschlagen (Gegenprobe)",
                bool(_HN.regel0_gegen_belege(_falsch)),
                "eine manipulierte Referenz muss als Abweichung gemeldet werden - sonst prueft sie nichts")
+    # ── REGEL0.1 (2.708, 02.10.2026): kausale Schrumpfung - eigene Referenz fuer unverzerrt:3, sonst bitgleich zu Fassung 0 ──
+    if _r0 and "fassung_0_1" in _r0:
+        _a01 = _HN.regel0_1_gegen_beleg()
+        pruefe(P, "⭐⭐ REGEL0.1: die Referenz fuer unverzerrt:3 stimmt mit dem BELEG (Teil0_02_10) ueberein",
+               not _a01 and _r0.get("fassung") == "0.1" and "--normal kausal" in _r0["fassung_0_1"]["aufruf"],
+               "; ".join(_a01) or "die uebrigen Mengen sind bitgleich zu Fassung 0 und pruefen sich oben mit")
+        _f01 = {k: dict(v) for k, v in _r0["fassung_0_1"]["referenz"].items()}
+        _f01["unverzerrt:3"]["rohvorteil"] += 0.01
+        pruefe(P, "⚠️ und die REGEL0.1-Wache KANN anschlagen (Gegenprobe)", bool(_HN.regel0_1_gegen_beleg(_f01)),
+               "eine manipulierte Referenz muss als Abweichung gemeldet werden")
     _doc = _os_pp.path.join(_os_pp.path.dirname(_os_pp.path.abspath(__file__)), "Basisinfos", "REGEL0_Hebel_Entwurf_30_09.md")
     pruefe(P, "⭐ das REGEL0-Dokument traegt den Stand FESTGESCHRIEBEN",
            _os_pp.path.exists(_doc) and "FESTGESCHRIEBEN" in open(_doc, encoding="utf-8").read(2000),

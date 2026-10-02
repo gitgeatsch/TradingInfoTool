@@ -583,3 +583,18 @@ baue es so, dass dies einfach und flexibel angepasst werden kann bei Bedarf."*
 - **Richtwert 4 gleichzeitig, keine Sperre:** Ab dem fünften Trade vermerkt die Mail *Richtwert erreicht*, das Signal kommt trotzdem (gemessen: 41 % der Signale der Hebel-Liste kamen bei schon 4 offenen und waren nicht schlechter).
 - Der alte **Gesamtdeckel** (3 % Risiko bis zum Stop) gilt für die REGEL0 nicht (sie hat keinen Stop).
 - **Anpassbar** in `Basisinfos/regel0_betrieb.yaml` (bewusst nicht in `config.yaml`, die am Notebook lokal abweicht), Rechnung `agent/regel0_groesse.py`, bewacht von `pruefe_pakete.py --paket Regel0Betrieb` (prüft das Verhalten, nicht die Werte).
+
+# E-45 · S7-2 Betriebsrechnung: Teil 0, Grundgesamtheit, ein Rechenkern, Signalkreis (Nutzer 02.10.2026)
+
+**02.10.2026** · Nutzer: *„Ja F-a bis F-d wie vorgeschlagen, prüfen und gegenprüfen – das Thema Einstiege und Anzahl der Signale müssen wir als eigenen und
+längeren Punkt behandeln – aktuell sind es nicht so viele Assets mit Hebelschalter, denke ich. Aber das solltest du über den NB-Export ohnehin feststellen können."*
+- **F-a Teil 0:** Die Wirkung des Vorgriffs in der Schrumpfung (B-1) wird **gemessen**, mit der kausalen Fassung K (Vormonat) und der vorab festgelegten Regel aus
+  `Voranalyse_Schritt7_Betrieb_02_10.md` §12.3.
+- **F-b Grundgesamtheit:** Der Betrieb trainiert auf **bestand** (die 116 der Messbasis), bewertet werden zusätzlich BTC und die Listen. Das gilt bis O12.
+- **F-c:** S7-2 und S7-3 sind **ein Rechenkern** (`agent/regel0_rechnung.py`).
+- **F-d Signalkreis:** Signale kommen nur für Assets mit **eingeschaltetem Hebel-Schalter**. Bewertet werden alle mit Daten, als Auskunft.
+  NB-Export 02.10. 12:42: **25 von 44** Einträgen an (Opt-in, ohne Eintrag = aus).
+- **Eigener, längerer Punkt O18:** Einstiege und Signalanzahl. Er wird **nicht** in S7-2 entschieden.
+- **Nachtrag 02.10. (Teil 0, 2.708):** Die Regel aus F-a ist in **4 von 4** Mengen erfüllt (3 bitgleich, unverzerrt:3 98,7 %, Betriebsreferenz bitgleich).
+  Damit gilt **REGEL0.1** (kausale Schrumpfung aus dem Vormonat) als Fassung für den Betrieb. Das ist **keine neue Nutzerentscheidung**, sondern die Folge der vorab
+  festgelegten Regel.

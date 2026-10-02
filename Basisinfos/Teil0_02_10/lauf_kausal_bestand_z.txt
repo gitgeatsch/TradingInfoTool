@@ -1,0 +1,32 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE bestand
+========================================================================================================================
+  O11 --zusatz: 11 neue Assets bewertet, nicht trainiert: AKT, ASTER, BRETT, CC, FLOKI, GRIFFAIN, HYPE, KAS, MON, PLUME, XNO
+  Anker (Gitter, mit Phase-Normal): Suche 130578 · Pruefung 220843 · Symbole 114
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0808 · 2.680: +0,0808 -> ✔ bitgleich
+  ⭐ TEIL 0 --normal kausal: Schrumpfung aus dem VORMONAT (ohne Vormonat: laufender Monat bis t) - 2550321 Stunden mit QSh
+  ⭐ TEIL 0 je Monat Marktmitte/tau2 - kausal (Vormonat) | Messung (Monat selbst): 2024-01 0.5097/0.00000|0.4981/0.00000 · 2024-02 0.4981/0.00000|0.4885/0.00000 · 2024-03 0.4885/0.00000|0.5000/0.00000 · 2024-04 0.5000/0.00000|0.4858/0.00000 · 2024-05 0.4858/0.00000|0.4880/0.00000 · 2024-06 0.4880/0.00000|0.4887/0.00000 · 2024-07 0.4887/0.00000|0.4789/0.00000 · 2024-08 0.4789/0.00000|0.4753/0.00000 · 2024-09 0.4753/0.00000|0.4813/0.00000 · 2024-10 0.4813/0.00000|0.4817/0.00000 · 2024-11 0.4817/0.00000|0.4811/0.00000 · 2024-12 0.4811/0.00000|0.4861/0.00000 · 2025-01 0.4861/0.00000|0.4854/0.00000 · 2025-02 0.4854/0.00000|0.4773/0.00000 · 2025-03 0.4773/0.00000|0.4693/0.00000 · 2025-04 0.4693/0.00000|0.4737/0.00000 · 2025-05 0.4737/0.00000|0.4827/0.00000 · 2025-06 0.4827/0.00000|0.4821/0.00000 · 2025-07 0.4821/0.00000|0.4896/0.00000 · 2025-08 0.4896/0.00000|0.4945/0.00000 · 2025-09 0.4945/0.00000|0.4927/0.00000 · 2025-10 0.4927/0.00000|0.4877/0.00000 · 2025-11 0.4877/0.00000|0.4742/0.00000 · 2025-12 0.4742/0.00000|0.4643/0.00000 · 2026-01 0.4643/0.00000|0.4702/0.00000 · 2026-02 0.4702/0.00000|0.4665/0.00000 · 2026-03 0.4665/0.00000|0.4732/0.00000 · 2026-04 0.4732/0.00000|0.4825/0.00000 · 2026-05 0.4825/0.00000|0.4820/0.00000 · 2026-06 0.4820/0.00000|0.4771/0.00000 · 2026-07 0.4771/0.00000|0.4734/0.00000 · 2026-08 0.4734/0.00000|0.4791/0.00102 · 2026-09 0.4791/0.00102|0.4879/0.00145
+  ⭐ TEIL 0 |QSh kausal - QSh Messung| ueber 2550321 Stunden: P50 5.04e-03 · P90 1.15e-02 · P99 1.57e-02 · P99,9 3.41e-02 · Max 7.94e-02 · nur eine Seite endlich 0
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 7.94e-02
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 67 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 29390 (W2: 29.390) -> ✔
+  ⭐ TEIL 0 |vh kausal - vh Messung| ueber 2504895 Stunden: P50 7.58e-06 · P90 5.17e-05 · P99 1.16e-04 · Max 1.06e-03 · Stunden, die die Schwelle +0,035 anders sehen: 0
+  Gitteranker im Auswertungszeitraum 296427 · Symbole 114
+  Auskunft Verteilung vh: P50 -0.0005 · P90 +0.0347 · P95 +0.0458 · P99 +0.0681 · Max +0.1089
+
+========================================================================================================================
+KERN SCHRITT 2 · EXPORT der Ersteintritte s = +0.035, 2024-01..2026-08, Menge bestand: 10732 Einstiege, 671 Tage
+  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):
+     6 h: +5 % vor -5 % bei 8.7 % der Einstiege (-5 % zuerst 5.2 %) · Dq gesamt +0.1194 · 2024 +0.1217 · 2025 +0.0616 · 2026 +0.2241
+    12 h: +5 % vor -5 % bei 17.1 % der Einstiege (-5 % zuerst 10.0 %) · Dq gesamt +0.1362 · 2024 +0.1536 · 2025 +0.0863 · 2026 +0.1999
+    24 h: +5 % vor -5 % bei 28.3 % der Einstiege (-5 % zuerst 19.7 %) · Dq gesamt +0.1068 · 2024 +0.1334 · 2025 +0.0610 · 2026 +0.1528
+  Zeit bis +5 % (wo zuerst, binnen 72 h, 4864): Median 18 h · Quartile 8 / 33 h · binnen 2/4/6/12 h 5 % / 13 % / 19 % / 38 %
+  Zeit bis -5 % (wo zuerst, binnen 72 h, 4312): Median 25 h · Quartile 13 / 42 h · binnen 2/4/6/12 h 3 % / 8 % / 13 % / 25 %
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_bestand_z.csv (Ruhe 48 h)
+  NEU-Gruppe O11 (1 = neues Asset): 732 von 10732 -> C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_bestand_z_gruppe.csv
+  Wucht beide oben: 1631 von 10732 (15.2 %) -> C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_bestand_z_wucht.csv
+SCHLUSS: vollstaendig

@@ -150,6 +150,10 @@ def main() -> int:
         assert JUNGE, "--zusatz verlangt --junge (das Normal der neuen Assets laeuft ueber den J-Weg)"
         REIF[ZUS] = False
         print("  O11 --zusatz: %d neue Assets bewertet, nicht trainiert: %s" % (len(E2.ZUSATZ_SYMBOLE), ", ".join(sorted(E2.ZUSATZ_SYMBOLE))))
+    # ⭐ S7-2 Teil 0 (E-45): --normal kausal - Schrumpfung ohne Vorgriff innerhalb des Monats (siehe QSh unten)
+    KAUSAL = "--normal" in sys.argv and sys.argv[sys.argv.index("--normal") + 1] == "kausal"
+    if "--normal" in sys.argv and not KAUSAL:
+        raise SystemExit("--normal kausal (ohne Angabe: wie REGEL0)")
     NA72, NB72 = normal(A72, B72, 72)
     SM = SYM.astype(np.int64) * 1000 + (MON - MON.min())
     _u, smi = np.unique(SM, return_inverse=True)
@@ -391,6 +395,65 @@ def main() -> int:
                     tage_j = min(365.0, float(np.mean(HIST_T[gj])))
                     r_j = qa_j * (1 - qa_j) / max(rate_j * tage_j, 5.0)
                     QSh[hj] = mitte + (tau2 / (tau2 + r_j)) * (QN[hj] - mitte)
+        if KAUSAL:
+            # ⭐ S7-2 TEIL 0 (Voranalyse_Schritt7_Betrieb_02_10.md 12.3, E-45): die Schrumpfung oben nimmt Marktmitte, tau2 und
+            # den Mittelwert je Asset aus ALLEN Gitterstunden des laufenden Monats - ein Vorgriff innerhalb des Monats (B-1), im
+            # Betrieb nicht nachbaubar. Kausale Fassung K: Marktmitte, tau2 und Schrumpfung je Asset aus dem VORMONAT (reife
+            # Gitterstunden, dieselbe Formel); ein Asset ohne Vormonat (jung, BTC, neu, oder erstmals reif) nimmt seine
+            # Gitterstunden des laufenden Monats BIS ZUR STUNDE t (vor dem ersten Gitteranker: seine Stunden bis t).
+            # Ohne --normal kausal laeuft dieser Zweig nicht - die Ausgabe bleibt bitgleich.
+            QSh_vorgriff = QSh.copy()
+            T0_LOG = []
+            QSh = np.full(n, np.nan)
+            for mi in np.unique(MON[basis]):
+                ixp = np.flatnonzero(BASIS & (MON == mi - 1))
+                qp = QN[ixp]; okp = np.isfinite(qp); ixp, qp = ixp[okp], qp[okp]
+                if len(ixp) < 500:
+                    continue
+                us, inv = np.unique(SYM[ixp], return_inverse=True)
+                qa = np.bincount(inv, weights=qp) / np.bincount(inv)
+                rate = np.bincount(inv, weights=(NA[ixp] + NB[ixp])) / np.bincount(inv)
+                rausch = qa * (1 - qa) / np.maximum(rate * 365.0, 5.0)
+                mitte = float(np.mean(qa)); tau2 = max(float(np.var(qa)) - float(np.mean(rausch)), 0.0)
+                Bm = dict(zip(us.tolist(), (tau2 / (tau2 + rausch)).tolist()))
+                # Auskunft je Monat: Marktmitte und tau2 aus dem Vormonat gegen die des Monats selbst (wie die Messung)
+                _ix0 = basis[MON[basis] == mi]; _q0 = QN[_ix0]; _o0 = np.isfinite(_q0); _ix0, _q0 = _ix0[_o0], _q0[_o0]
+                if len(_ix0) >= 500:
+                    _u0, _i0 = np.unique(SYM[_ix0], return_inverse=True)
+                    _qa0 = np.bincount(_i0, weights=_q0) / np.bincount(_i0)
+                    _ra0 = np.bincount(_i0, weights=(NA[_ix0] + NB[_ix0])) / np.bincount(_i0)
+                    _rs0 = _qa0 * (1 - _qa0) / np.maximum(_ra0 * 365.0, 5.0)
+                    T0_LOG.append((int(mi), mitte, tau2, float(np.mean(_qa0)), max(float(np.var(_qa0)) - float(np.mean(_rs0)), 0.0)))
+                ixh = np.flatnonzero((MON == mi) & np.isfinite(QN))
+                mit_vm = REIF[ixh] & np.isin(SYM[ixh], us)
+                hv = ixh[mit_vm]
+                if len(hv):
+                    QSh[hv] = mitte + np.array([Bm[int(x)] for x in SYM[hv]]) * (QN[hv] - mitte)
+                rest = ixh[~mit_vm]
+                for sj in np.unique(SYM[rest]):
+                    hj = rest[SYM[rest] == sj]; hj = hj[np.argsort(STD[hj], kind="stable")]
+                    gj = hj[GRID[hj]]
+                    def _bis_t(ix_, auf_):
+                        # Mittel von QN, Rate und Historie ueber ix_ (zeitlich sortiert), jeweils bis einschliesslich STD[auf_]
+                        k_ = np.searchsorted(STD[ix_], STD[auf_], "right")
+                        cq = np.concatenate([[0.0], np.cumsum(QN[ix_])])
+                        cr = np.concatenate([[0.0], np.cumsum(NA[ix_] + NB[ix_])])
+                        ct = np.concatenate([[0.0], np.cumsum(HIST_T[ix_])])
+                        kk = np.maximum(k_, 1)
+                        return k_, cq[k_] / kk, cr[k_] / kk, ct[k_] / kk
+                    kg, qg, rg, tg = _bis_t(gj, hj) if len(gj) else (np.zeros(len(hj), int),) * 4
+                    kh, qh, rh, th = _bis_t(hj, hj)
+                    vor = kg > 0
+                    qa_j = np.where(vor, qg, qh); rate_j = np.where(vor, rg, rh)
+                    tage_j = np.minimum(365.0, np.where(vor, tg, th))
+                    r_j = qa_j * (1 - qa_j) / np.maximum(rate_j * tage_j, 5.0)
+                    QSh[hj] = mitte + (tau2 / (tau2 + r_j)) * (QN[hj] - mitte)
+            print("  ⭐ TEIL 0 --normal kausal: Schrumpfung aus dem VORMONAT (ohne Vormonat: laufender Monat bis t) - %d Stunden mit QSh" % int(np.isfinite(QSh).sum()))
+            print("  ⭐ TEIL 0 je Monat Marktmitte/tau2 - kausal (Vormonat) | Messung (Monat selbst): " + " · ".join(
+                "%d-%02d %.4f/%.5f|%.4f/%.5f" % (mi_ // 12, mi_ % 12 + 1, a_, b_, c_, d_) for mi_, a_, b_, c_, d_ in T0_LOG))
+            _d = np.abs(QSh - QSh_vorgriff); _d = _d[np.isfinite(_d)]
+            print("  ⭐ TEIL 0 |QSh kausal - QSh Messung| ueber %d Stunden: P50 %.2e · P90 %.2e · P99 %.2e · P99,9 %.2e · Max %.2e · nur eine Seite endlich %d" % (
+                len(_d), *np.percentile(_d, [50, 90, 99, 99.9, 100]), int((np.isfinite(QSh) != np.isfinite(QSh_vorgriff)).sum())))
         chk = np.flatnonzero(np.isfinite(QS))
         print("  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern %.2e" % float(np.nanmax(np.abs(QSh[chk] - QS[chk]))))
         # rollierend: Modell je Monat nur auf der Vergangenheit, Beitrag fuer JEDE Stunde des Monats
@@ -420,6 +483,12 @@ def main() -> int:
             int(SEL[urteil_all].sum()), "✔" if int(SEL[urteil_all].sum()) == 29390 or E2.MENGE != "bestand" else "⛔"))
         with np.errstate(divide="ignore", invalid="ignore"):
             VH = _ex(np.log(QSh / (1 - QSh)) + Ch) - QSh
+        if KAUSAL:
+            with np.errstate(divide="ignore", invalid="ignore"):
+                _vm = _ex(np.log(QSh_vorgriff / (1 - QSh_vorgriff)) + Ch) - QSh_vorgriff
+            _dv = np.abs(VH - _vm); _ok = np.isfinite(_dv)
+            print("  ⭐ TEIL 0 |vh kausal - vh Messung| ueber %d Stunden: P50 %.2e · P90 %.2e · P99 %.2e · Max %.2e · Stunden, die die Schwelle +0,035 anders sehen: %d" % (
+                int(_ok.sum()), *np.percentile(_dv[_ok], [50, 90, 99, 100]), int(((VH >= 0.035) != (_vm >= 0.035))[_ok].sum())))
         g = np.flatnonzero(BASIS & np.isfinite(VH) & np.isfinite(QS) & np.isin(JAHR, JAHRE))
         print("  Gitteranker im Auswertungszeitraum %d · Symbole %d" % (len(g), len(np.unique(SYM[g]))))
         # Auskunft (vor dem Lauf ergaenzt, 29.09.): Verteilung von vh - KEINE Schwelle daraus (K5: absolut, kein Rang)
@@ -1225,7 +1294,7 @@ def main() -> int:
                     len(dn), np.median(dn), np.percentile(dn, 25), np.percentile(dn, 75),
                     " / ".join("%.0f %%" % (100 * np.mean(dn <= k)) for k in (2, 4, 6, 12))))
                 ziel = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "_vergleich",
-                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, ("j" if JUNGE else "") + ("b" if MITBTC else "") + ("z" if ZUSATZ else ""))) % E2.MENGE.replace(":", "_"))
+                                    ("kern_einstiege_%s.csv" if RUHE == 24 and not JUNGE else "kern%d%s_einstiege_%%s.csv" % (RUHE, ("j" if JUNGE else "") + ("b" if MITBTC else "") + ("z" if ZUSATZ else "") + ("k" if KAUSAL else ""))) % E2.MENGE.replace(":", "_"))
                 if "--ziel" in sys.argv:                     # Werkzeugtest: in eine Wegwerfdatei schreiben
                     ziel = sys.argv[sys.argv.index("--ziel") + 1]
                 os.makedirs(os.path.dirname(ziel), exist_ok=True)

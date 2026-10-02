@@ -1,0 +1,14 @@
+S7-2 TEIL 0 - kausale Schrumpfung (--normal kausal) gegen die REGEL0-Referenz, 02.10.2026 (Voranalyse_Schritt7_Betrieb_02_10.md 12.3, E-45)
+Regel vorab: K wird REGEL0.1, wenn in >= 3 von 4 Mengen Einstiege >= 95 % gleich UND Rohvorteil je Handel um <= 0,05 Prozentpunkte veraendert
+
+bestand       Referenz 10000 · kausal 10000 · gleich 10000 (100.0 %) · nur Referenz   0 · nur kausal   0 · Monate der Abweichung -
+              Einstiege bitgleich -> Simulation identisch (Rohvorteil-Differenz 0) -> erfuellt
+unverzerrt_1  Referenz 10429 · kausal 10429 · gleich 10429 (100.0 %) · nur Referenz   0 · nur kausal   0 · Monate der Abweichung -
+              Einstiege bitgleich -> Simulation identisch (Rohvorteil-Differenz 0) -> erfuellt
+unverzerrt_2  Referenz  9761 · kausal  9761 · gleich  9761 (100.0 %) · nur Referenz   0 · nur kausal   0 · Monate der Abweichung -
+              Einstiege bitgleich -> Simulation identisch (Rohvorteil-Differenz 0) -> erfuellt
+unverzerrt_3  Referenz 10049 · kausal  9958 · gleich  9923 (98.7 %) · nur Referenz 126 · nur kausal  35 · Monate der Abweichung {'2026-01': 161}
+              Rohvorteil +0.350 % gegen +0.345 % (Differenz +0.005 Pp) · Konto -0.3840 gegen -0.4065 -> erfuellt
+
+BETRIEBSREFERENZ (bestand + Zusatz-Assets der Listen, kern48jbz): kausal bitgleich: True (10732 Einstiege, 127 Assets) -> Signalbilanz je Asset unveraendert
+SCHLUSS: 4 von 4 Mengen erfuellen die Regel -> K wird REGEL0.1

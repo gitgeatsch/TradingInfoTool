@@ -3,6 +3,7 @@
 > ⭐ **Stand: FESTGESCHRIEBEN 01.10.2026** (Nutzer: *„Ja, REGEL0 festschreiben, prüfen und gegenprüfen“*, E-36), mit **J** (2.698) und der bestätigten
 > **Schwellenwahl** (2.699). Im Code: `hebel_neubau.REGEL0`. Die Wache vergleicht die Referenzzahlen mit den Belegdateien.
 > Der Dateiname mit *Entwurf* ist historisch und bleibt, damit die Verweise gelten. Entstanden als Entwurf am 30.09.2026.
+> ⭐ **Fassung 0.1 seit 02.10.2026** (2.708, Abschnitt 13): dieselbe Regel in **kausaler** Rechenform. Die Einstiege sind in 3 von 4 Mengen und in der Betriebsreferenz **bitgleich**.
 
 **Nutzer 30.09.2026:** *„Offenbar haben wir einen stabilen Stand bzw. eine Ausgangslage, welche in eine REGEL0 mit allen
 korrekten Parametern festgeschrieben werden muss, und mit allen uns zur Verfügung stehenden Mitteln das Regelwerk optimieren und
@@ -29,7 +30,7 @@ ausreizen."* Dazu: *„A und B sind Optionen, die ohnehin sinnvoll sind. C, D, E
 | Beitrag | **rsi**: rollierendes Kurvenmodell (Form b, 12 Stufen, `rsi_s` und `rsi_s24`), **monatlich** neu geschätzt, Training ab 2023-01 bis Monatsbeginn −24 h, nur **reife** Stunden. ⚠️ Im Betrieb ist das ein Monatstraining am Notebook (Bauaufgabe, Schritt 7) | 2.683/2.684, 2.688 |
 | **eigenes Normal** (J) | aus der vorhandenen Historie ab **240 h**, geschrumpft an Marktmitte und τ² der reifen Assets. **Mindesthistorie der Regel: 10 Tage** | 2.698 |
 | Dämpfung | Kreuzvalidierung über 4 Zeitblöcke, Raster `GITTER_NEU` (20 … 2.000.000) | M1-1 ⚠️ grob, siehe B |
-| Vorsprung | v̂ = expit(logit(QSh) + Beitrag) − QSh, **QSh** = geschrumpftes Normal (stündlich) | 2.684 |
+| Vorsprung | v̂ = expit(logit(QSh) + Beitrag) − QSh, **QSh** = geschrumpftes Normal (stündlich). **Fassung 0.1:** Marktmitte, τ² und Schrumpfung aus dem **Vormonat** (kausal). ⚠️ τ² ist in 31 von 33 Monaten **null**: QSh ist damit fast immer die **Marktmitte** des Monats | 2.684, **2.708** |
 | **Ereignis** | **Ersteintritt**: erste Stunde mit **v̂ ≥ +0,035** | 2.687/2.688 (per Regel auf 2024) |
 | **Ruhe davor** | **48 h** unter der Schwelle (≥ 40 gültige Stunden) | 2.691/2.692/2.694 |
 | Einstieg | **1 h** nach dem Signal, nicht in den ersten 24 h eines Monats | 2.688 |
@@ -200,3 +201,32 @@ Auf den 25 gehandelten Assets der Liste: Hebelkonto **+0,2063 (×1,23)**, beide 
 Die REGEL0 liefert **Signal** und **Hebelstufe**. Die **Positionsgröße** ist eine Betriebsfestlegung, die der Nutzer anpasst. Startwerte stehen in `Basisinfos/regel0_betrieb.yaml`:
 Positionswert 1.500 € je Trade, Einsatz = Positionswert / Stufe (5x 300 €, 3x 500 €, 2x 750 €), begrenzt auf 300–800 €, Richtwert 4 gleichzeitig **ohne Sperre**.
 Die Erfolgsmessung oben (Einsatz 1 % des Kontos) bleibt die **Referenz** für jede REGELn.
+
+## 13. Fassung 0.1 — die Schrumpfung kausal (2.708, 02.10.2026)
+
+**Anlass (Schritt 7, S7-2, B-1):** Die Messung nahm Marktmitte, τ² und Schrumpfungsfaktor je Asset aus **allen** Gitterstunden des **laufenden** Monats. Eine Stunde
+am 10. nutzte also Werte vom 11. bis zum 31. Das ist ein Vorgriff, und im Betrieb ist es nicht nachbaubar.
+
+**Fassung 0.1:** Diese Größen kommen aus dem **Vormonat**. Ein Asset ohne Vormonat (jung, BTC, neu) nimmt seine Gitterstunden des laufenden Monats **bis zur
+Stunde t**. Aufruf mit `--normal kausal`, im Code `hebel_neubau.REGEL0["fassung_0_1"]`.
+
+**Teil 0** (Regel vorab, E-45; Beleg `Basisinfos/Teil0_02_10/ergebnis_teil0.txt`):
+
+| Menge | Einstiege gleich | Rohvorteil je Handel | Konto |
+|---|---|---|---|
+| bestand | **bitgleich** (10.000) | unverändert +0,583 % | unverändert |
+| unverzerrt:1 · :2 | **bitgleich** | unverändert | unverändert |
+| unverzerrt:3 | 98,7 % (161 Abweichungen, **alle im Januar 2026**, 85 Assets) | **+0,350 %** statt +0,345 % | −0,384 statt −0,407 |
+| **Betriebsreferenz** (mit den Zusatz-Assets deiner Listen, 127 Assets) | **bitgleich** (10.732) | — | — |
+
+→ 4 von 4 Mengen erfüllen die Regel. **Fassung 0.1 gilt**, und der Betrieb rechnet sie. Die Referenzzahlen in Abschnitt 5 gelten für bestand, unverzerrt:1 und :2
+unverändert. unverzerrt:3 hat in Fassung 0.1 die Referenz 9.958 Einstiege, Konto −0,3840, Rohvorteil +0,350 %. Die Signalbilanz je Asset ist **unverändert**.
+
+**Warum so klein:** v̂ ist der Vorsprung **gegen** das Normal. Eine Verschiebung des Normals hebt sich bei q um 0,47 fast vollständig auf: |ΔQSh| im Median 0,005,
+|Δv̂| im Median 0,0000075.
+
+⭐⭐ **Nebenbefund:** τ² ist in **31 von 33 Monaten null**, in bestand wie in unverzerrt:3 und in beiden Fassungen. Das geschrumpfte Normal ist damit in der Bewertung
+fast immer die **Marktmitte** des Monats. Das eigene Normal eines Assets wirkt nur noch über den Offset im **Training**. Das passt zu 2.683 (*das Normal ist meist
+Rauschen*). Die Beschreibung *Vorsprung gegen die eigene Phase* trifft für die Bewertung also nicht zu: Es ist ein Vorsprung gegen die **Marktmitte**.
+
+⚠️ Offen und **nicht geklärt:** Warum in unverzerrt:3 gerade der Januar 2026 die Schwelle anders sieht (674 Stunden).

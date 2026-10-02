@@ -1,0 +1,31 @@
+========================================================================================================================
+LOSFAHREN AUS DEM STAND · MENGE unverzerrt:3
+========================================================================================================================
+  Anker (Gitter, mit Phase-Normal): Suche 162110 · Pruefung 223003 · Symbole 123
+  Tachonadel (Pruefung): Anteil je Klasse < -1 5 % · -1..0 48 % · 0..0,5 29 % · 0,5..1 14 % · 1..2 5 % · > 2 0 %
+
+========================================================================================================================
+K5 · WAHL 2024 (2025-26 wird NICHT ausgewertet) · rsi allein rollierend, Vorsprung gegen das geschrumpfte Normal
+  K5-0 R-R11 rsi allein oben (fest, rohes Normal) +0.0703 · 2.680: +0,0808 -> ✔ bitgleich
+  ⭐ TEIL 0 --normal kausal: Schrumpfung aus dem VORMONAT (ohne Vormonat: laufender Monat bis t) - 2453315 Stunden mit QSh
+  ⭐ TEIL 0 je Monat Marktmitte/tau2 - kausal (Vormonat) | Messung (Monat selbst): 2024-01 0.5116/0.00000|0.4999/0.00000 · 2024-02 0.4999/0.00000|0.4914/0.00000 · 2024-03 0.4914/0.00000|0.5024/0.00000 · 2024-04 0.5024/0.00000|0.4882/0.00000 · 2024-05 0.4882/0.00000|0.4899/0.00000 · 2024-06 0.4899/0.00000|0.4900/0.00000 · 2024-07 0.4900/0.00000|0.4806/0.00000 · 2024-08 0.4806/0.00000|0.4780/0.00000 · 2024-09 0.4780/0.00000|0.4803/0.00000 · 2024-10 0.4803/0.00000|0.4801/0.00000 · 2024-11 0.4801/0.00000|0.4804/0.00000 · 2024-12 0.4804/0.00000|0.4859/0.00000 · 2025-01 0.4859/0.00000|0.4853/0.00000 · 2025-02 0.4853/0.00000|0.4774/0.00000 · 2025-03 0.4774/0.00000|0.4699/0.00000 · 2025-04 0.4699/0.00000|0.4742/0.00000 · 2025-05 0.4742/0.00000|0.4817/0.00000 · 2025-06 0.4817/0.00000|0.4811/0.00000 · 2025-07 0.4811/0.00000|0.4883/0.00000 · 2025-08 0.4883/0.00000|0.4934/0.00000 · 2025-09 0.4934/0.00000|0.4913/0.00000 · 2025-10 0.4913/0.00000|0.4864/0.00000 · 2025-11 0.4864/0.00000|0.4734/0.00000 · 2025-12 0.4734/0.00000|0.4631/0.00000 · 2026-01 0.4631/0.00000|0.4692/0.00000 · 2026-02 0.4692/0.00000|0.4659/0.00000 · 2026-03 0.4659/0.00000|0.4718/0.00000 · 2026-04 0.4718/0.00000|0.4814/0.00000 · 2026-05 0.4814/0.00000|0.4822/0.00000 · 2026-06 0.4822/0.00000|0.4778/0.00000 · 2026-07 0.4778/0.00000|0.4730/0.00000 · 2026-08 0.4730/0.00000|0.4788/0.00113 · 2026-09 0.4788/0.00113|0.4883/0.00173
+  ⭐ TEIL 0 |QSh kausal - QSh Messung| ueber 2453315 Stunden: P50 5.03e-03 · P90 1.10e-02 · P99 1.45e-02 · P99,9 3.58e-02 · Max 9.22e-02 · nur eine Seite endlich 0
+  Pruefung stuendliches Normal: max |QSh - QS| auf den Gitterankern 9.22e-02
+  B Daempfung F0 (6 Stufen): Monatstraining 32 Monate in 112 s (Desktop)
+  K5-0 rollierende Auswahl im Urteilszeitraum 31407 (W2: 29.390) -> ✔
+  ⭐ TEIL 0 |vh kausal - vh Messung| ueber 2422599 Stunden: P50 7.31e-06 · P90 5.66e-05 · P99 1.22e-04 · Max 1.95e-03 · Stunden, die die Schwelle +0,035 anders sehen: 674
+  Gitteranker im Auswertungszeitraum 315847 · Symbole 123
+  Auskunft Verteilung vh: P50 -0.0028 · P90 +0.0337 · P95 +0.0452 · P99 +0.0683 · Max +0.2151
+
+========================================================================================================================
+KERN SCHRITT 2 · EXPORT der Ersteintritte s = +0.035, 2024-01..2026-08, Menge unverzerrt:3: 9958 Einstiege, 637 Tage
+  Chance im Fenster (roher 12-Monats-Normal je Fenster, NUR Vergleich):
+     6 h: +5 % vor -5 % bei 8.3 % der Einstiege (-5 % zuerst 5.4 %) · Dq gesamt +0.1011 · 2024 +0.1141 · 2025 +0.0410 · 2026 +0.2008
+    12 h: +5 % vor -5 % bei 16.7 % der Einstiege (-5 % zuerst 10.8 %) · Dq gesamt +0.1156 · 2024 +0.1357 · 2025 +0.0656 · 2026 +0.1867
+    24 h: +5 % vor -5 % bei 27.6 % der Einstiege (-5 % zuerst 20.5 %) · Dq gesamt +0.0917 · 2024 +0.1538 · 2025 +0.0463 · 2026 +0.1218
+  Zeit bis +5 % (wo zuerst, binnen 72 h, 4440): Median 18 h · Quartile 8 / 33 h · binnen 2/4/6/12 h 6 % / 12 % / 19 % / 38 %
+  Zeit bis -5 % (wo zuerst, binnen 72 h, 4071): Median 24 h · Quartile 12 / 40 h · binnen 2/4/6/12 h 3 % / 8 % / 13 % / 26 %
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_unverzerrt_3b.csv (Ruhe 48 h)
+  BTC-Gruppe (1 = BTC): 91 von 9958 -> C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_unverzerrt_3b_gruppe.csv
+  Wucht beide oben: 1348 von 9958 (13.5 %) -> C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/teil0/kausal_unverzerrt_3b_wucht.csv
+SCHLUSS: vollstaendig

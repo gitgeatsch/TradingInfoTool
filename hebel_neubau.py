@@ -297,6 +297,19 @@ REGEL0 = dict(
         "unverzerrt:2": dict(einstiege=9761,  konto=-0.4592, rohvorteil=+0.331),
         "unverzerrt:3": dict(einstiege=10049, konto=-0.4065, rohvorteil=+0.345),
     },
+    # ⭐ FASSUNG 0.1 (02.10.2026, 2.708, Regel aus E-45): dieselbe Regel in KAUSALER Rechenform - die Schrumpfung des Normals nimmt
+    # Marktmitte, tau2 und Faktor je Asset aus dem VORMONAT statt aus dem laufenden Monat (der war ein Vorgriff, B-1). Einstiege in
+    # bestand, unverzerrt:1, unverzerrt:2 und in der Betriebsreferenz (mit den Zusatz-Assets) BITGLEICH zu Fassung 0, deshalb gelten
+    # die Referenzzahlen oben dort unveraendert; unverzerrt:3 hat die eigene Referenz unten. Der Betrieb rechnet Fassung 0.1.
+    fassung="0.1",
+    fassung_0_1=dict(
+        aenderung="Schrumpfung kausal aus dem Vormonat; ohne Vormonat (jung, BTC, neu) die eigenen Gitterstunden des Monats bis t",
+        befund="2.708", entscheidung="E-45 (Regel vorab, 4 von 4 erfuellt)",
+        aufruf="python messe_losfahren.py --menge <m> --kern --ruhe 48 --junge --mit-btc --export 0.035 --normal kausal",
+        bitgleich=("bestand", "unverzerrt:1", "unverzerrt:2", "Betriebsreferenz kern48jbz_einstiege_bestand.csv"),
+        beleg="Basisinfos/Teil0_02_10/sim_kausal_unverzerrt_3.txt",
+        referenz={"unverzerrt:3": dict(einstiege=9958, konto=-0.3840, rohvorteil=+0.350)},
+        tau2="in 31 von 33 Monaten NULL - das geschrumpfte Normal ist fast immer die Marktmitte des Monats (2.708)"),
     nicht_teil=("Staerke (Schalter, 2.691)", "Wucht als Einstieg (Bewegung, 2.693)",
                 "Tempo, Tiefe, Ruhe 72 h (2.695)", "Kern-Short (Spur, 2.696)", "K_IG-Kontext (Auskunft, 2.697)"),
     schwaechen=("S3 Rohvorteil unter den Kosten (0,48 %) in der Messgeometrie -> A, R, L",
@@ -326,6 +339,29 @@ def regel0_gegen_belege(referenz=None) -> list:
         m3 = _re.search(r"Rohvorteil je Handel \(Spot, ohne Kosten, auf den Positionswert\): ([+-][0-9.]+) %", tx)
         ist = dict(einstiege=int(m1.group(1)) if m1 else None, konto=float(m2.group(1)) if m2 else None,
                    rohvorteil=float(m3.group(1)) if m3 else None)
+        for k, v in soll.items():
+            if ist[k] is None or abs(ist[k] - v) > 1e-9:
+                aus.append("%s: %s Referenz %s, Beleg %s" % (menge, k, v, ist[k]))
+    return aus
+
+
+def regel0_1_gegen_beleg(referenz=None) -> list:
+    """-> Abweichungen der Fassung-0.1-Referenz (unverzerrt:3) gegen ihren Beleg (leer = stimmig). `referenz` fuer die Gegenprobe."""
+    import os as _os
+    import re as _re
+    f = REGEL0["fassung_0_1"]
+    ref = f["referenz"] if referenz is None else referenz
+    pf = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), *f["beleg"].split("/"))
+    if not _os.path.exists(pf):
+        return ["Beleg fehlt (%s)" % pf]
+    tx = open(pf, encoding="utf-8").read()
+    m1 = _re.search(r"(\d+) in der Datei", tx)
+    m2 = _re.search(r"Konto log ([+-][0-9.]+)", tx)
+    m3 = _re.search(r"Rohvorteil je Handel \(Spot, ohne Kosten, auf den Positionswert\): ([+-][0-9.]+) %", tx)
+    ist = dict(einstiege=int(m1.group(1)) if m1 else None, konto=float(m2.group(1)) if m2 else None,
+               rohvorteil=float(m3.group(1)) if m3 else None)
+    aus = []
+    for menge, soll in ref.items():
         for k, v in soll.items():
             if ist[k] is None or abs(ist[k] - v) > 1e-9:
                 aus.append("%s: %s Referenz %s, Beleg %s" % (menge, k, v, ist[k]))
@@ -873,6 +909,9 @@ NEUESTER_STAND = (
     ("2.707", "BITPANDA-KATALOG: 433 Assets gleich, 1 Faktor-Ausnahme (CAT), 5 Kollisionen gesperrt "
               "(LIT, NEIRO, ONE, QUICK, ZK). Mit den Betriebslisten bekommen 40 von 60 Assets "
               "Signale; ohne Binance bleiben AIOZ, SUPRA, VSN, XDC"),
+    ("2.708", "REGEL0.1: die Schrumpfung griff in der Messung innerhalb des Monats vor; kausal (Vormonat) sind die Einstiege in 3 von 4 "
+              "Mengen und in der Betriebsreferenz BITGLEICH, in unverzerrt:3 zu 98,7 % (Rohvorteil +0,350 gegen +0,345 %). Nebenbefund: tau2 ist "
+              "in 31 von 33 Monaten null - das Normal ist in der Bewertung fast immer die Marktmitte"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

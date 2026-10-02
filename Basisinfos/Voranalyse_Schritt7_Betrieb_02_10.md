@@ -470,3 +470,28 @@ was läuft (E-31, E-35).
 | **F-b** | Grundgesamtheit im Betrieb = **bestand** (Training auf den 116, bewertet werden BTC und deine Listen), bis O12 entscheidet? | ➤ **Ja**. Die Daten liegen am NB, die Referenz gibt es, und eine Zufallsziehung ist keine Betriebsform |
 | **F-c** | S7-2 und S7-3 als **einen** Rechenkern bauen? | ➤ **Ja** (B-6) |
 | **F-d** | **Für welche Assets** sollen Signale kommen? Die Messung bewertet die 116 der Messbasis **und** deine Listen. Der heutige Betrieb prüft den Hebel nur bei eingeschaltetem Hebel-Schalter (`asset_hebel_settings`, heute 25) | ➤ **Signal nur bei eingeschaltetem Hebel-Schalter.** Bewertet werden alle mit Daten (Auskunft, z. B. für die Signalbilanz). So bleibt die Auswahl bei dir. **Gemessen** auf der Referenz: Die 25 der Hebel-Liste (24 mit Daten, XDC fehlt) hatten 2025 **2,4** und 2026 **2,8** Einstiege am Tag. Alle 127 hätten **13–15** am Tag. Wie viele davon nach der Hebelstufe handelbar sind, zeigt erst B-5 |
+
+### 12.6 Abstimmung (Nutzer 02.10.2026, E-45)
+
+✔ **F-a bis F-d wie vorgeschlagen.** Signalkreis = Hebel-Schalter an: laut NB-Export 02.10. 12:42 sind es **25 von 44** (Opt-in, ohne Eintrag = aus).
+Einstiege und Signalanzahl werden ein **eigener, längerer Punkt (O18)**.
+⚠️ **Nebenbefund dabei:** `_migrate_hebel_schalter_geradeziehen` (`database/db.py:1643`) läuft bei **jedem** Start und setzt Krypto-Assets der Watchlist **ohne**
+Eintrag auf *an*. Den Eintrag schreibt nur der Schalter der Oberfläche (`ui/app.py:982`). Ein neu aufgenommenes Asset wird beim nächsten Neustart also still
+eingeschaltet, gegen das Opt-in vom 15.08. Drei Leser nehmen ohne Eintrag ebenfalls *an* an (`db.py:2062`, `:3877`, `:5279`). → O18, spätestens mit S7-4.
+
+### 12.7 ERGEBNIS TEIL 0 (02.10.2026, Befund 2.708) — ✔ bestanden, Fassung 0.1 gilt
+
+| Menge | Ergebnis |
+|---|---|
+| bestand · unverzerrt:1 · unverzerrt:2 | Einstiege **bitgleich**, also auch Konto und Rohvorteil |
+| unverzerrt:3 | **98,7 %** gleich. Alle 161 Abweichungen liegen im **Januar 2026**. Rohvorteil +0,350 % gegen +0,345 % (+0,005 Pp), Nullwelt ✔ |
+| **Betriebsreferenz** `kern48jbz` (127 Assets) | **bitgleich**. Die Signalbilanz je Asset ist unverändert |
+| Gegenprobe | **ohne** Schalter bitgleich zur Referenz; der Zweig wirkt nachweislich (|ΔQSh| bis 0,079) |
+
+➤ Nach der vorab festgelegten Regel sind **4 von 4** Mengen erfüllt: **REGEL0.1 gilt.** Der Rechenkern rechnet die kausale Fassung, und R-R11 wird
+**zeilengleich** gegen `kern48jbz_einstiege_bestand.csv` geprüft (= `kern48jbzk_…`).
+
+⭐ **Für den Bau vereinfacht sich B-1:** τ² ist in 31 von 33 Monaten null. Die Schrumpfung braucht im Betrieb also im Wesentlichen die **Marktmitte des Vormonats**,
+die einmal im Monat mit dem Training berechnet wird. Beleg: `Basisinfos/Teil0_02_10/`.
+
+**Nächster Schritt:** B-5, die Referenz der Hebelstufe je Handel erzeugen. Danach der Bau des Rechenkerns (12.4).
