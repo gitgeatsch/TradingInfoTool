@@ -193,3 +193,10 @@ Auf den 25 gehandelten Assets der Liste: Hebelkonto **+0,2063 (×1,23)**, beide 
 | **Ohne Markpreis** | 126 reine Spot-Assets (z. B. XNO): Sie bekommen Signale, aber **keine** Hebelstufe |
 | **Signalbilanz** | 25–45 Signale je Asset und Jahr. 40 von 60 Assets aus Watchlist, Bestand und Hebel-Liste bekommen Signale. Ohne Binance bleiben AIOZ, SUPRA, VSN, XDC |
 | **Optimierungsversuche** | A (2.702), B (2.703), L (2.704) haben die REGEL0 **nicht** verbessert. Sie bleibt unverändert |
+
+
+## 12. Betrieb — Positionsgröße (E-44, 02.10.2026; nicht Teil der Bewertung)
+
+Die REGEL0 liefert **Signal** und **Hebelstufe**. Die **Positionsgröße** ist eine Betriebsfestlegung, die der Nutzer anpasst. Startwerte stehen in `Basisinfos/regel0_betrieb.yaml`:
+Positionswert 1.500 € je Trade, Einsatz = Positionswert / Stufe (5x 300 €, 3x 500 €, 2x 750 €), begrenzt auf 300–800 €, Richtwert 4 gleichzeitig **ohne Sperre**.
+Die Erfolgsmessung oben (Einsatz 1 % des Kontos) bleibt die **Referenz** für jede REGELn.

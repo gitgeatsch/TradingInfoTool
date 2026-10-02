@@ -570,3 +570,16 @@ einplanen, dass die Einstiege gleichzeitig geprüft werden, aber später eigenst
 - **3 Positionsgröße:** offen. Bestehende Deckel und Altbestand werden **analysiert**, dann festgelegt.
 - **4 Hebelstufen 2/3/5x:** gedeckelt auf das, was das Asset bei Bitpanda erlaubt. Dass nicht jedes Asset alle anbietet, ist vernachlässigbar.
 - **5 Spot:** Die alte Spot-Kette wird **nach dem Hebel ersetzt** und kann **vorerst stillgelegt** werden. **Architektur:** gemeinsame stündliche Einstiegsprüfung, **je Strategie ein eigener Bewertungspfad und eine eigene Ablaufkette** (Hebel = REGEL0, Spot später eigene Regel).
+
+
+---
+
+# E-44 · Positionsgröße der REGEL0: Startwerte, jederzeit anpassbar (Nutzer 02.10.2026)
+
+**02.10.2026** · Nutzer: *„Müssen wir dies final festlegen? Kapitalschutz ist meine Angelegenheit und sollte nicht im Mittelpunkt stehen. Wenn das System funktioniert,
+kann man nachschärfen."* · *„Mach einen Vorschlag für je Trade von 300 bis 800 Euro max. Einsatz, für max. 4 Trades gleichzeitig"* · *„Ja, so als Startwerte eintragen …
+baue es so, dass dies einfach und flexibel angepasst werden kann bei Bedarf."*
+- **Gleicher Positionswert je Trade 1.500 €.** Der Einsatz folgt aus der Hebelstufe der REGEL0: 5x → 300 €, 3x → 500 €, 2x → 750 €, begrenzt auf 300–800 €.
+- **Richtwert 4 gleichzeitig, keine Sperre:** Ab dem fünften Trade vermerkt die Mail *Richtwert erreicht*, das Signal kommt trotzdem (gemessen: 41 % der Signale der Hebel-Liste kamen bei schon 4 offenen und waren nicht schlechter).
+- Der alte **Gesamtdeckel** (3 % Risiko bis zum Stop) gilt für die REGEL0 nicht (sie hat keinen Stop).
+- **Anpassbar** in `Basisinfos/regel0_betrieb.yaml` (bewusst nicht in `config.yaml`, die am Notebook lokal abweicht), Rechnung `agent/regel0_groesse.py`, bewacht von `pruefe_pakete.py --paket Regel0Betrieb` (prüft das Verhalten, nicht die Werte).

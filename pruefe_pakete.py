@@ -30958,6 +30958,55 @@ def paket_zaehlung() -> None:
     finally:
         _sh.rmtree(tmpz, ignore_errors=True)
 
+def paket_regel0_betrieb() -> None:
+    """E-44 (02.10.2026): Positionsgroesse der REGEL0 im Betrieb - agent/regel0_groesse.py + Basisinfos/regel0_betrieb.yaml.
+
+    ⚠️ Prueft das VERHALTEN, nicht die Startwerte: der Nutzer will sie *einfach und flexibel anpassen* - eine Pruefung, die
+    1500/300/800/4 verlangt, wuerde jede Anpassung rot machen (Memory: eine Pruefung, die einen Stand VERLANGT, friert ihn ein).
+    Alle Proben laufen gegen WEGWERFDATEIEN im Temp-Verzeichnis, nie gegen die echte Datei."""
+    import ast as _ast
+    import os
+    import tempfile as _tf
+    P = "Regel0Betrieb"
+    try:
+        import agent.regel0_groesse as G
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "agent/regel0_groesse.py laedt", False, repr(ex))
+        return
+    w = G.lade()
+    pruefe(P, "die echte regel0_betrieb.yaml ist gueltig und vollstaendig", set(w) == set(G.VORGABE), str(sorted(w)))
+    ok_rechnung = all(
+        abs(G.rechne(s, 0, w).einsatz_eur - min(max(w["positionswert_eur"] / s, w["einsatz_min_eur"]), w["einsatz_max_eur"])) < 1e-9
+        and w["einsatz_min_eur"] <= G.rechne(s, 0, w).einsatz_eur <= w["einsatz_max_eur"] for s in (2, 3, 5))
+    pruefe(P, "Einsatz = Positionswert / Stufe, begrenzt auf [min, max] - fuer jede Stufe der REGEL0", ok_rechnung)
+    with _tf.TemporaryDirectory() as d:
+        pf = os.path.join(d, "r.yaml")
+        io.open(pf, "w", encoding="utf-8").write(chr(10).join([
+            "positionswert_eur: 2400", "einsatz_min_eur: 300", "einsatz_max_eur: 800",
+            "richtwert_gleichzeitig: 2", "sperre_ab_richtwert: false", ""]))
+        w2 = G.lade(pf)
+        folgt = (G.rechne(3, 0, w2).einsatz_eur == 800.0 and G.rechne(5, 0, w2).einsatz_eur == 480.0)
+        pruefe(P, "die Rechnung FOLGT der Datei (Wegwerfdatei mit anderen Werten -> andere Einsaetze)", folgt)
+        g = G.rechne(3, 2, w2)
+        pruefe(P, "Richtwert erreicht ohne Sperre: Signal bleibt, nur Vermerk", g.richtwert_erreicht and not g.gesperrt and "Richtwert" in g.vermerk)
+        io.open(pf, "w", encoding="utf-8").write("positionswert_eur: 1500\neinsatz_maxx_eur: 800\n")
+        try:
+            G.lade(pf); tipp = False
+        except ValueError:
+            tipp = True
+        pruefe(P, "Gegenprobe: ein Tippfehler in der Datei bricht ab (unbekannter Schluessel)", tipp)
+        io.open(pf, "w", encoding="utf-8").write("einsatz_min_eur: 900\neinsatz_max_eur: 800\n")
+        try:
+            G.lade(pf); grenz = False
+        except ValueError:
+            grenz = True
+        pruefe(P, "Gegenprobe: min ueber max bricht ab", grenz)
+    baum = _ast.parse(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "regel0_groesse.py"), encoding="utf-8").read())
+    importe = {n.names[0].name.split(".")[0] for n in _ast.walk(baum) if isinstance(n, _ast.Import)} |               {(n.module or "").split(".")[0] for n in _ast.walk(baum) if isinstance(n, _ast.ImportFrom)}
+    pruefe(P, "reine Rechnung: keine Datenbank, kein Netz (sqlite3/requests nicht importiert)", not (importe & {"sqlite3", "requests", "urllib"}),
+           str(sorted(importe)))
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -31024,6 +31073,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Mailabschnitte": paket_mailabschnitte,
           "Protokoll": paket_protokoll,
           "Hebelneubau": paket_hebelneubau,
+          "Regel0Betrieb": paket_regel0_betrieb,
           "Zaehlung": paket_zaehlung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,

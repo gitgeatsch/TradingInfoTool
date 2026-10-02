@@ -221,3 +221,20 @@ Der höchstmögliche Verlust je Handel ist bei der REGEL0 etwa der **Einsatz** (
 | **G3** | **Wenn der Topf voll ist** (Ballung): Signal trotzdem mailen mit Vermerk *Topf voll* (keine Blockierung, wie 19.08. für die Töpfe entschieden), oder in Reihenfolge des Eintreffens nur bis zum Topf? |
 | **G4** | Den alten **Gesamtdeckel** (3 % Risiko bis zum Stop) für die REGEL0 durch einen Deckel auf den **gebundenen Einsatz** ersetzen? |
 
+
+### 8.5 ✔ Startfestlegung (E-44, Nutzer 02.10.)
+
+Nicht final, sondern **Startwerte**, die im Betrieb nachgeschärft werden. Der Kapitalschutz liegt beim Nutzer.
+
+| | Startwert | anpassen in |
+|---|---|---|
+| Positionswert je Trade | **1.500 €** (gleich groß im Markt) | `Basisinfos/regel0_betrieb.yaml` → `positionswert_eur` |
+| Einsatz | Positionswert / Hebelstufe: **5x 300 € · 3x 500 € · 2x 750 €**, begrenzt auf **300–800 €** | `einsatz_min_eur`, `einsatz_max_eur` |
+| gleichzeitig | **Richtwert 4**, keine Sperre, nur Vermerk in der Mail | `richtwert_gleichzeitig`, `sperre_ab_richtwert` |
+
+**Gemessen zur Entscheidung (Hebel-Liste 2025–26, in Reihenfolge des Eintreffens):** Bei höchstens 4 gleichzeitig passen **59 %** der Signale. Die 41 % darüber hatten
+**mehr** Vorteil je Handel (+0,91 % gegen +0,70 %). Bei 6 passen 75 %, bei 8 passen 85 %. Auf der Liste kamen nur die Stufen 3x und 5x vor. ⚠️ Die neuen Assets (HYPE, GRIFFAIN …) fehlen in dieser
+Nachrechnung, mit ihnen werden die Ballungen etwas häufiger.
+
+**Gebaut und geprüft:** `agent/regel0_groesse.py` (reine Rechnung) und `pruefe_pakete.py --paket Regel0Betrieb`, 8/8 grün. Geprüft wird das **Verhalten**: Die Rechnung folgt der Datei
+(Wegwerfdatei mit anderen Werten), sperrt nicht ohne Sperre, und ein Tippfehler oder min über max **bricht ab**.

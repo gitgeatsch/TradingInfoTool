@@ -1,0 +1,20 @@
+# REGEL0 im Betrieb - Startwerte der Positionsgroesse (E-44, Nutzer 02.10.2026)
+#
+# Nutzer: "Ja, so als Startwerte eintragen ... wenn moeglich baue es so, dass dies einfach und flexibel angepasst werden kann bei Bedarf."
+# Und davor: "Kapitalschutz ist meine Angelegenheit und sollte nicht im Mittelpunkt stehen. Wenn das System funktioniert, kann man nachschaerfen."
+#
+# ⚠️ Bewusst NICHT in config.yaml: die config.yaml am Notebook wird bei Watchlist-Aenderungen beschrieben und weicht vom Repo ab
+#    (z. B. XDC). Eine Aenderung dort wuerde beim git pull kollidieren. Diese Datei gehoert nur der REGEL0 im Betrieb.
+#
+# Rechnung je Trade (agent/regel0_groesse.py):
+#   Einsatz = Positionswert / Hebelstufe der REGEL0, begrenzt auf [einsatz_min_eur, einsatz_max_eur]
+#   5x -> 300 EUR, 3x -> 500 EUR, 2x -> 750 EUR bei Positionswert 1.500 EUR
+#   hoechster Verlust je Trade = etwa der Einsatz (Liquidation, selten) plus Gebuehren
+# Die Hebelstufe selbst kommt aus der REGEL0 (ATR-Modell, Grenze 2 %) und wird HIER NICHT veraendert.
+
+positionswert_eur: 1500        # gleicher Positionswert je Trade: jeder Trade ist im Markt gleich gross
+einsatz_min_eur: 300           # Nutzer: 300 bis 800 EUR je Trade
+einsatz_max_eur: 800
+richtwert_gleichzeitig: 4      # Nutzer: max. 4 Trades gleichzeitig - als RICHTWERT, nicht als Sperre
+sperre_ab_richtwert: false     # false = Signal kommt trotzdem, die Mail vermerkt "Richtwert erreicht"
+                               # (gemessen 02.10.: 41 % der Signale der Hebel-Liste kamen bei schon 4 offenen, und sie waren nicht schlechter)

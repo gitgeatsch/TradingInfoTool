@@ -1,17 +1,17 @@
 # REGISTER — DIE WERKZEUGE (Altbestand gegen Neubestand)
 
-*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 393 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
+*Erzeugt aus `bestand.py` durch **Scan**, nicht gepflegt — 394 Eintraege von Hand zu fuehren waere dieselbe Falle noch einmal.*
 
 ⚠️ **Getrennt wird nach METHODIKSTAND, nicht nach Datum.** 178 von 384 Dateien wurden in 14 Tagen angefasst, die meisten nur vom N-19-Fix (Krypto-Filter, 44 Skripte). Das Datum sagt nichts darueber, ob ein Werkzeug der Norm genuegt.
 
 | Stufe | Anzahl | Anteil | Bedeutung |
 |---|---|---|---|
-| **NORM** | 61 | 16 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
+| **NORM** | 61 | 15 % | ruft `messnorm` - der aktuelle Stand, Trennschaerfe Pflicht |
 | **TAGESKLAMMER** | 27 | 7 % | Tagesklammer und Band, aber keine Trennschaerfe-Pflicht |
 | **BLOCK** | 114 | 29 % | eigener Blockbootstrap, ausserhalb der Norm |
-| **ALTBESTAND** | 191 | 49 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
+| **ALTBESTAND** | 192 | 49 % | weder Norm noch Tagesklammer - Befunde nur mit Vorbehalt |
 
-> ⚠️ **191 von 393 Werkzeugen (49 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
+> ⚠️ **192 von 394 Werkzeugen (49 %) sind Altbestand.** Ein Befund aus dieser Gruppe gilt nur mit Vorbehalt — er hat weder Tagesklammer noch Trennschaerfe.
 
 ## Die Regel fuer neue Arbeit
 
@@ -82,7 +82,7 @@
     pruefe_zielregel_befund.py, pruefe_zielregel_robust.py, pruefe_zielweite.py, rechne_nullpunkte_feiner.py
     simuliere_hebelverteilung.py, simuliere_staffelung.py
 
-## ALTBESTAND (191)
+## ALTBESTAND (192)
 
     messe_abgleich_alt_neu.py, messe_akkumulation.py, messe_akkumulation_phasen.py, messe_alter_vs_zeit.py
     messe_anlass.py, messe_anreicherung.py, messe_ausstiegsguete.py, messe_auswahl.py
@@ -128,8 +128,8 @@
     pruefe_rollenkette.py, pruefe_rollout_14_09.py, pruefe_rr11_stundenkerze.py, pruefe_s6a_rollen.py
     pruefe_short_ursache.py, pruefe_sperrquote_wirkung.py, pruefe_sprung_bei_crv4.py, pruefe_symbol_zuordnung.py
     pruefe_szenario_stufe0.py, pruefe_trader_merkmale.py, pruefe_tvl_abdeckung.py, pruefe_u1_wirkung.py
-    pruefe_waehrungen.py, pruefe_wahrscheinlichkeit_bitgleich.py, pruefe_watchlist.py, pruefe_zahlen_in_prompts.py
-    rechne_einordnung_vorschau.py, rechne_funding_beitrag.py, rechne_kandidaten_beitrag.py, rechne_oi_beitrag.py
-    rechne_redundanz_je_asset.py, rechne_takt_je_asset.py, rechne_turnover_beitrag.py, simuliere_bremse.py
-    simuliere_h_varianten.py, simuliere_kette.py, simuliere_rollout_gegen_nb.py
+    pruefe_uebertragung.py, pruefe_waehrungen.py, pruefe_wahrscheinlichkeit_bitgleich.py, pruefe_watchlist.py
+    pruefe_zahlen_in_prompts.py, rechne_einordnung_vorschau.py, rechne_funding_beitrag.py, rechne_kandidaten_beitrag.py
+    rechne_oi_beitrag.py, rechne_redundanz_je_asset.py, rechne_takt_je_asset.py, rechne_turnover_beitrag.py
+    simuliere_bremse.py, simuliere_h_varianten.py, simuliere_kette.py, simuliere_rollout_gegen_nb.py
 
