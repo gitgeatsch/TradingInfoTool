@@ -2385,3 +2385,9 @@ Stärke ordnet nicht (Schalter), die Wucht (ema_abstand, volumenschub) ist Beweg
 Die Kurs-Vorgeschichte ist ausgereizt, Ruhe 72 h ist regimeabhängig. Simulation (2.694): Rohvorteil je Handel +0,29..+0,31 %
 (verdoppelt) gegen 0,48 % Kosten, der Hebel verliert weiter in 3/4. Engpass ist das **Regime**. Nächster Schritt: Kern-Short
 (W3), dann W4 Positionsführung. **M1-Kriterium 2 bleibt offen**, nichts ist verdrahtet.
+
+
+**Nachtrag 02.10.2026 (8):** REGEL0 festgeschrieben (E-36, mit BTC E-37). Die Optimierungsversuche A Positionsführung (2.702), B Kern stabilisieren (2.703) und
+L Mindestliquidität (2.704) verbessern sie **nicht**. Teil 0 (2.703): Ohne Kosten ist die REGEL0 in 4/4 Mengen positiv, und die **Kosten** sind der größte Posten.
+Datenbasis O11 (2.705–2.707): alle Binance-Krypto-Assets stündlich, Zuordnung mit Sperren, **40 von 60** Assets aus Watchlist, Bestand und Hebel-Liste bekommen Signale.
+Nächster Schritt: **Schritt 7 Betriebsvorbereitung** am Notebook (E-41). **M1-Kriterium 2 bleibt offen**, nichts ist verdrahtet.

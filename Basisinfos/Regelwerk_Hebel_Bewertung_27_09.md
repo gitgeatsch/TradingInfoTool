@@ -10,6 +10,21 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⭐⭐⭐ NACHTRAG STAND 02.10.2026 — vor allen älteren lesen
+
+| | Stand 02.10.2026 (Befunde 2.696–2.707) |
+|---|---|
+| ✔ **REGEL0** | festgeschrieben (E-36): Kern (rsi-Ersteintritt, s = +0,035, Ruhe 48 h, J ab 240 h) + ATR-Hebelstufe (Grenze 2 %) + Erfolgsmessung 24 h ohne Ziel und ohne Stop. BTC handelbar (E-37). Wache gegen die Belege `BTC_01_10` |
+| ⛔ **A Positionsführung** | nachgezogener Stop von Hand (Bitpanda hat keinen Trailing-Stop) **nicht bestätigt** (2.702, 0/4). Der Verzug ist 2025–26 **nicht** kostenlos |
+| ⛔ **B Kern stabilisieren** | feinere Dämpfung springt weniger, kostet aber Chance (2.703). Das Springen ist **kein** Verlusttreiber |
+| ⭐ **Ursache der Verluste** | ohne Kosten 4/4 positiv. Kosten > Gegenwind > schwache Assets (2.703 Teil 0) |
+| ⛔⭐ **L Liquidität** | Mindestfilter nicht bestanden: Geringe Liquidität hatte 2024 die **bessere** Chance (4/4, Spiegel ✔, überwiegend ATR-frei). Ein Filter nimmt die besseren weg (2.704). Offen als Gewicht. ⚠️ Spread ist nicht gemessen |
+| ✔ **Datenbasis** | 537 Assets zusätzlich, je Asset **eine** Quelle (die längere Historie), Futures gleichwertig. **Bewertet, nicht trainiert** (2.705), die neuen tragen 4/4 (2.706). Zuordnung mit Preisprüfung und **Sperren** (2.707) |
+| ⚠️ **neue Pflichten** | **Signalbilanz je Asset** bei jeder Regeländerung (Watchlist, Bestand, Hebel-Liste; `messe_signalbilanz_je_asset.py`) · ein Filter nur mit **Qualitätsgewinn** (die weggenommenen schlechter) · übergeordnete Kräfte nur **gewichten** (Nutzer 01.10.) · neue Assets **bewerten, nicht trainieren**, bis O12 gemessen ist |
+| ➤ **nächster Schritt** | **Schritt 7 Betriebsvorbereitung** (E-41) |
+
+---
+
 # ⭐⭐⭐ NACHTRAG STAND 30.09.2026 (nachmittags)
 
 | | Stand 30.09.2026 nachmittags (Befunde 2.691–2.695) |

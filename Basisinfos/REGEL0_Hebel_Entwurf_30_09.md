@@ -92,8 +92,8 @@ Aufruf: `messe_losfahren.py --kern --ruhe 48 --junge --export 0.035` und `messe_
 
 | | Schwäche | Weg |
 |---|---|---|
-| 1 | Vorteil je Handel (+0,29..+0,31 %) **unter den Kosten** (0,48 %) | **A** Positionsführung (W4): nachgezogener Stop oder Ziel, die Wucht als Bewegungsgröße (Rolle B) |
-| 2 | Das Signalangebot **springt**, weil die Dämpfungswahl im groben Raster kippt | **B** Kern stabilisieren (M1-3) |
+| 1 | Vorteil je Handel (+0,29..+0,31 %) **unter den Kosten** (0,48 %) | **A** Positionsführung (W4): nachgezogener Stop oder Ziel, die Wucht als Bewegungsgröße (Rolle B) · ⛔ **versucht (2.702):** nachgezogener Stop von Hand nicht bestätigt (0/4). ⭐ 2.703 Teil 0: ohne Kosten 4/4 positiv, die Kosten sind der größte Posten |
+| 2 | Das Signalangebot **springt**, weil die Dämpfungswahl im groben Raster kippt | **B** Kern stabilisieren (M1-3) · ⛔ **versucht (2.703):** feinere Dämpfung springt weniger, kostet aber Chance. Das Springen ist kein Verlusttreiber, F0 bleibt (E-39) |
 | 4 | ✔ **BEHOBEN (2.698, J):** ~~Showstopper~~ **Mindesthistorie 12 Monate** für das eigene Normal (`JAHR_H = 8760`, im Code `normal()`). Junge Assets bekommen im **ersten Jahr kein Signal**, obwohl rsi, Ruhe und ATR nur Tage brauchen. Auf der Hebel-Liste sind **12 von 28** Assets jung (TAO, ONDO, RENDER, MORPHO, KAIA, S, W, BIO, TURBO, IO, VIRTUAL, KAITO). Nutzer 30.09.: *„Das System braucht keine Historie, um bei der Prüfung den Einstieg zu bewerten, oder?“* (vgl. 2.610) | **J** junge Assets: das Normal anfangs aus dem **Markt**, mit wachsender eigener Historie überblendet (die Schrumpfung gibt es schon), gemessen gegen REGEL0 |
 | 3 | im Gegenwind **stumpf** (Modell flach) | innerhalb von A und B zu lösen, zum Beispiel ob die Stabilisierung das Regime anders abbildet |
 
@@ -177,3 +177,16 @@ Auf den 25 gehandelten Assets der Liste: Hebelkonto **+0,2063 (×1,23)**, beide 
 ➤ **Ab jetzt:** Jede Optimierung wird eine **REGEL1 …** mit Voranalyse, Vorab-Festlegung und der Betriebsprüfung B1–B9 (E-35). Sie reproduziert zuerst REGEL0
 (Referenzzahlen Abschnitt 5) und wird nur mit Nutzer-Ja festgeschrieben. Nächste Schritte nach Plan: **4** Betriebsprüfung am Notebook (Befundaufnahme) ·
 **5** Messung auf der Hebel-Liste · **6** REGEL1..n (A, B, R, L, Käuferanteil).
+
+
+## 11. Die REGEL0 auf der vollständigen Datenbasis (O11, 01.10.2026, E-40) — Befunde 2.705–2.707
+
+| | |
+|---|---|
+| **Geltungsbereich** | jedes Krypto-Asset, das Binance stündlich führt (Spot oder Futures, je die längere Historie). Messbasis bleiben die **116** Assets in `data/stundenkurse.db` |
+| **Neue Assets** | werden **bewertet, nicht trainiert** (`--zusatz`): Modell, Marktmitte und ATR-Training kommen aus der Messbasis. Die REGEL0-Referenz oben bleibt **bitgleich** (R-R11 zeilengleich, Konto der übrigen = Referenz in 4/4) |
+| **Nachweis** | Die REGEL0 trägt für die 11 neu bewerteten Assets in 4/4 Mengen (2.706), wirtschaftlich wie die breite Menge |
+| **Zuordnung** | `Basisinfos/symbol_zuordnung.csv`: nur Ausnahmen (CANTON → CC, CAT → 1000CAT). **Gesperrt** sind LIT, NEIRO, ONE, QUICK, ZK (anderer Coin unter gleichem Kürzel, 2.707) |
+| **Ohne Markpreis** | 126 reine Spot-Assets (z. B. XNO): Sie bekommen Signale, aber **keine** Hebelstufe |
+| **Signalbilanz** | 25–45 Signale je Asset und Jahr. 40 von 60 Assets aus Watchlist, Bestand und Hebel-Liste bekommen Signale. Ohne Binance bleiben AIOZ, SUPRA, VSN, XDC |
+| **Optimierungsversuche** | A (2.702), B (2.703), L (2.704) haben die REGEL0 **nicht** verbessert. Sie bleibt unverändert |

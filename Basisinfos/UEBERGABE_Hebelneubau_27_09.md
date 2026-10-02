@@ -12,6 +12,21 @@
 
 ---
 
+# ⭐⭐⭐ NACHTRAG STAND 02.10.2026 — vor allen älteren lesen
+
+| Frage | neu | selbst prüfen |
+|---|---|---|
+| **Wo stehen wir** | REGEL0 fest (E-36/E-37). A, B, L haben sie **nicht** verbessert (2.702–2.704). Die Verluste kommen aus den **Kosten** (2.703). Die Datenbasis ist vollständig (O11, 2.705–2.707) | `python hebel_neubau.py` |
+| **Was als Nächstes** | **Schritt 7 Betriebsvorbereitung** am Notebook (E-41), zuerst die Voranalyse | Plan, Abschnitt *PLAN UND VORGEHEN*, Zeile 7 |
+| **Wo liegen die Daten** | Messbasis `data/stundenkurse.db` (116, **nie** um Assets erweitern: `kursreihen()` nimmt jedes Symbol auf) · neu `data/stundenkurse_alle.db` (537, ab 2023) · `data/markpreis_alle.db` (411) · Zuordnung `Basisinfos/symbol_zuordnung.csv` | `python hole_stundenkurse_alle.py --pruefen` |
+| **Neue Assets bewerten** | `messe_losfahren.py … --mit-btc --zusatz` (bewertet, nicht trainiert) und `messe_k6_hebelstufe.py … --zusatz`. R-R11: die übrigen bleiben **zeilengleich** | Belege `Basisinfos/Datenbasis_01_10/` |
+| **Wie viele Signale je Asset** | REGEL0 25–45 je Asset und Jahr. 40 von 60 Assets der Listen bekommen Signale | `python messe_signalbilanz_je_asset.py --vorher … --nachher …` |
+| **Zuordnung prüfen** | 40/40 OK. Kollisionen LIT, NEIRO, ONE, QUICK, ZK sind gesperrt | `python pruefe_symbol_zuordnung.py` · `python pruefe_bitpanda_katalog.py` |
+| **NB-Stand** | Teilexport (nur lesend) liefert Datenbanken, Pakete, Hebel-Liste, Watchlist, Bestand direkt in den Austauschordner | `python nb_teilexport_betriebsdaten.py` (am NB) |
+| ⚠️ **Fallen von 01.10.** | (1) Ein Werkzeug gleichen Namens überschrieben (`messe_signalbilanz.py`, wiederhergestellt). Vor jedem neuen Skript den Namen prüfen. (2) Der Binance-Ticker führt eingestellte Paare mit altem Kurs, also nur Paare **im Handel** nehmen. (3) Die Wache *SECHS Prüfungen* griff ab 2.700 nicht (behoben) | `git log --oneline` |
+
+---
+
 # ⭐⭐⭐ NACHTRAG STAND 29.09.2026 — vor dem vom 28.09. lesen
 
 | Frage | neu |

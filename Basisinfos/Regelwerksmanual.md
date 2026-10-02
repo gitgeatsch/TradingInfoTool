@@ -5156,6 +5156,14 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Kern-Short** | 30.09.: *bitte abgrenzen zur Short-Strategie Krypto* | E-32: Messarm W3, nicht der Betriebs-SHORT, nicht die Absicherung |
 | **Lage kurz vorher** (Haltung, kein Auftrag) | 30.09.: *sollte in unseren Lösungsansätzen und Messungen nicht ausgeschlossen werden* | früher verworfene Beiträge sind auf dem Kern neu messbar (R-R11, andere Frage) |
 
+| **Stop von Hand** | 01.10.: *BP bietet keinen Trailing-Stop als Funktion, das muss ich händisch erledigen* | Positionsführung wird **mit Ausführungsverzug** gemessen (A, 2.702) |
+| **Kein Filter ohne Qualitätsgewinn** | 01.10.: *zusätzliche Sperre oder Filter sehe ich kritisch, wenn diese nur Einstiege wegnehmen ohne Qualitätsgewinn* | ein Filter besteht nur, wenn die weggenommenen schlechter sind (vorab festgelegt) |
+| **Signalbilanz je Asset** | 01.10.: *das müssen wir ohnehin je Anpassung der REGEL0 durchführen* · *für alle Assets in Watchlist, Portfolio bzw. Bestand* | jede REGELn meldet die Signale je Asset vorher/nachher (`messe_signalbilanz_je_asset.py`) |
+| **Übergeordnete Kräfte gewichten** | 01.10.: *Institutionen, Krisen, Ölpreis, Zinsen … können wir nur gewichten, das muss ich in den laufenden Trades selbst bewerten* | keine Regel daraus, höchstens Information in der Mail. Datenmangel und gestauchte Phasen fängt das Regelwerk ab |
+| **Datenbasis: alles halten** | 01.10.: *wir nehmen alles, was es gibt, vor allem, wenn es im Bestand ist* | E-40: alle Binance-Krypto-Assets stündlich, Zuordnung mit Preisprüfung und Sperren |
+| **Bewerten, nicht trainieren** | 01.10.: *Ja wie empfohlen* (Frage 4) | neue Assets nutzen das Modell, verändern es aber nicht; die Lernmenge per Regel (O12) ist eigener Schritt |
+| **Nächster Schritt Betrieb** | 02.10.: *Ja, 1. wie von dir empfohlen* | E-41: Schritt 7 Betriebsvorbereitung, zuerst die Voranalyse |
+
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
 2.675).

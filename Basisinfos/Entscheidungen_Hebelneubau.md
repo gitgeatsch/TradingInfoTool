@@ -516,3 +516,26 @@ Dazu: *„die Minus-Trades und die Marktphasen sind ohnehin ein eigenes Thema un
 - **B** (2.703) ist **vorläufig geschlossen**. F0 bleibt. Das Springen des Signalangebots bleibt eine bekannte Eigenschaft und ist kein Verlusttreiber.
 - **Stufe 2x** (nur bei sehr hoher ATR gewählt, in 4/4 Mengen roh negativ, 25–98 Handel): Die Beobachtung bleibt **stehen**, es gibt **keine** Regel daraus.
 - **Nächster Schritt L** (Liquidität). Vor dem Entwurf gibt es ein Gespräch über die offenen Grundfragen.
+
+
+---
+
+# E-40 · Datenbasis: alles halten, was Binance stündlich führt (Nutzer 01.10.2026, O11)
+
+**01.10.2026** · Nutzer: *„Wir benötigen die notwendige Datenbasis … eine Selektion auf bestimmte Assets ist nicht sehr sinnvoll"* ·
+*„wir nehmen alles, was es gibt, vor allem, wenn es im Bestand ist"* · *„Ja wie empfohlen"* (Frage 4) · *„AIOZ und XDC nehmen wir aktuell in Kauf"*.
+- **Alles halten statt nach Listen nachladen:** alle Krypto-Assets mit Binance-Stundenkursen (Spot oder Futures, je Asset die **längere** Historie), in **eigenen**
+  Dateien `data/stundenkurse_alle.db` und `data/markpreis_alle.db`. Die Messbasis bleibt unberührt.
+- **Futures nur als Kursquelle**, gehandelt wird bei Bitpanda. Gleichwertigkeit gemessen (2.705).
+- **Zuordnung Bitpanda → Binance** in **einer** Tabelle `Basisinfos/symbol_zuordnung.csv` (nur Ausnahmen) mit Preisprüfung. Eine **Kollision** (anderer Coin unter gleichem Kürzel)
+  wird **gesperrt** (2.707).
+- **Frage 4: bewerten, nicht trainieren** (wie BTC E-37). Das Modell, die Marktmitte und das ATR-Training bleiben bei der Messbasis (116), damit die REGEL0 für alle bisherigen Assets **bitgleich** bleibt.
+  Die neuen Assets tragen nachweislich (2.706).
+- Die **Lernmenge per Regel** (O12) ist ein eigener, späterer Schritt (Nutzer: *„die müssen wir stabil über die Zeit hinbekommen"*).
+
+# E-41 · Nächster Schritt: Schritt 7, die Betriebsvorbereitung am Notebook (Nutzer 02.10.2026)
+
+**02.10.2026** · Nutzer: *„Ja, 1. wie von dir empfohlen."* Die Alternativen O12 (Lernmenge per Regel) und die umgekehrte Liquidität als Gewicht (2.704) bleiben offen.
+- Inhalt: Stundenkurse und Markpreise am Notebook (Historie übertragen, dann laufend nachladen), Monatstraining als Job, R-R11 am Notebook gegen die REGEL0-Belege,
+  täglicher Katalog- und Preisabgleich mit Meldung, Mail, Mindestbedingungen (Nutzer: *„reden wir, wenn wir zu diesem Schritt kommen“*).
+- Zuerst eine **Voranalyse** zur Abstimmung (Ist-Stand am Notebook, Leser und Schreiber, Risiken). Gebaut wird nach dem Ja.

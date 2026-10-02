@@ -261,3 +261,14 @@ Schema), Belege der Beitragslage und der Messplan nachgezogen (Proben für rsi u
 
 ⚠️ **Nutzerhinweis 30.09. (kein Auftrag):** Die Hebungen gehen in Richtung der **Lage kurz vorher**. Früher verworfene Beiträge
 bleiben auf dem Kern **nicht ausgeschlossen**, denn dort ist es eine andere Frage als auf allen Stundenankern.
+
+
+## 14. Nach dem 01.10. (Befunde 2.702–2.707) — was sich an den Rollen ändert
+
+| Beitrag / Größe | Rolle | Stand |
+|---|---|---|
+| **Liquidität** (USD-Volumen 24 h, kausal) | Kandidat **Lage vorher** (A) — **umgekehrt**: geringe Liquidität hebt 2024 die Chance (4/4, Spiegel ✔, überwiegend ATR-frei) | ⛔ als **Filter** nicht bestanden (2.704). Offen als **Gewicht** mit eigener Vorab-Festlegung; 2025–26 ist dafür noch unberührt. ⚠️ Spread nicht gemessen |
+| Positionsführung (nachgezogener Stop) | **B** wie weit (Ausstieg) | ⛔ 2.702: Die Wahl auf einem Aufwärtsjahr scheitert 2025–26. Rolle B bleibt offen, die Wucht ist unverbraucht |
+| Dämpfung des rsi-Modells | Werkzeug von A | ⛔ 2.703: Das Springen ist kein Verlusttreiber |
+| Stufe 2x (sehr hohe ATR) | **C** Risiko | roh negativ in 4/4, selten. Nur Beobachtung (Nutzer: *so stehen lassen*) |
+| neue Assets (O11) | dieselben Rollen | ✔ 2.706: Die REGEL0 trägt für sie 4/4 |

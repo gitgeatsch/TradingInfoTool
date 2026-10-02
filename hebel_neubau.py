@@ -947,10 +947,10 @@ def gemessene_merkmale() -> dict:
 # Zeit. Danach K1 Schritt 2 (gemeinsame Schaetzung) - eine Kombination,
 # kein Merkmal, deshalb nicht in dieser Liste, sondern im Hauptplan.
 NAECHSTE_MESSUNGEN = (
-    dict(was="⭐ nach 2.694 (zur Abstimmung): die RICHTUNG (Rolle A) weiter ausreizen - "
-             "H-Schalter (andere rsi-Staerkeform), Short-Kern (W3) gegen das Regime; "
-             "daneben W4 Positionsfuehrung mit der Wucht als Bewegungsgroesse "
-             "(Erfolgsmessung)",
+    dict(was="⭐ NAECHSTER SCHRITT (E-41, Nutzer 02.10.): Schritt 7 Betriebsvorbereitung am Notebook - "
+             "Stunden- und Markpreise dort (Historie + laufend), Monatstraining als Job, R-R11 am NB, "
+             "taeglicher Katalog-/Preisabgleich, Mail; zuerst die Voranalyse. Danach offen: O12 Lernmenge "
+             "per Regel, Liquiditaet als Gewicht (2.704), R, Kaeuferanteil, W4 mit der Wucht",
          art="probe", bewertung="b1", merkmale=("ema_abstand_atr", "volumenschub"),
          prueft="2.694",
          warum="L4 (2.693): die Wucht waehlt groessere Bewegungen in BEIDE Richtungen "

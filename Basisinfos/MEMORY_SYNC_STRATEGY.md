@@ -365,3 +365,14 @@ Nutze diesen Ablauf, wenn sich **nur** eine CLAUDE.md-Datei geändert hat (ohne 
 ---
 
 **Erstellt:** 2026-07-06 | **Korrigiert:** 2026-07-06 (Pfade auf tatsächliche User-Profil-Location korrigiert) | **Erweitert:** 2026-07-06 (CLAUDE.md-Sync ergänzt) | **Strategie:** Manueller Drive-Sync mit lokalen Backups, kein Git für Memory/CLAUDE.md
+
+
+## Nachtrag 02.10.2026 — neue Dateien der Datenbasis (O11, E-40)
+
+| Datei | Desktop | Notebook |
+|---|---|---|
+| `data/stundenkurse_alle.db` | 898 MB, 537 Assets stündlich ab 2023 (Spot/Futures), Marke `_nur_bewertung` | **fehlt** — kommt mit Schritt 7 (Historie übertragen, dann laufend nachladen) |
+| `data/markpreis_alle.db` | 411 Assets, 6,54 Mio Stunden, Sperrtabelle `_abweichung` | **fehlt** — Schritt 7 |
+| `Basisinfos/symbol_zuordnung.csv` | im Repo (Code-Stand, per `git pull`) | per `git pull` |
+
+⚠️ Die Messbasis `stundenkurse.db` wird **nie** um diese Assets erweitert (sonst ändert `kursreihen()` die Grundgesamtheit jeder Messung).
