@@ -618,5 +618,5 @@ prüfen und gegenprüfen"*.
 - **F-2:** Ist der Ticker nicht erreichbar, geht die Mail **trotzdem** raus, mit dem Vermerk *Kurs nicht gegengeprüft*.
 - **F-3:** Tokenisierte Aktien und Wrapped Token **bleiben** in der Datenbasis, ohne Aufzählungsliste. In der Signalbilanz werden sie getrennt ausgewiesen.
 - **F-4:** Die Neuaufnahme läuft täglich, ab 02:00 UTC im Stundenjob, vor dem Nachladen.
-- **F-5:** S7-5 kommt ans NB **nach** den Kontrollen K-S7-3/K-S7-4. Die sind am 03.10. bestanden.
+- **F-5:** S7-5 kommt ans NB **nach** den Kontrollen K-S7-3/K-S7-4. Am 03.10. ist K-S7-3 bestanden und K-S7-4 fehlerfrei; die erste REGEL0-Mail steht noch aus.
 - Gegenprüfung `Basisinfos/Rechenkern_02_10/pruefe_s75.py` 15/15. Wache `--paket Regel0Betrieb` 26/26.
